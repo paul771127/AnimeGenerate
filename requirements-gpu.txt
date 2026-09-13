@@ -1,0 +1,12 @@
+# 真正的影片生成模型需要的套件。
+# PyTorch 請先依照 https://pytorch.org/get-started/locally/ 安裝符合你 CUDA 版本的 torch,
+# 例如: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+torch>=2.4
+torchvision
+diffusers>=0.35.0
+transformers>=4.46
+accelerate>=0.34
+huggingface_hub>=0.25
+sentencepiece
+ftfy
+protobuf

@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "animegen"
+version = "0.1.0"
+description = "全地端、免費的角色動畫生成器:一張角色圖 + 動作描述 → 該角色做出動作的動畫"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pillow>=10.0",
+  "numpy>=1.24",
+  "imageio>=2.31",
+  "imageio-ffmpeg>=0.4.9",
+  "pyyaml>=6.0",
+  "gradio>=4.44",
+  "requests>=2.31",
+]
+
+[project.optional-dependencies]
+gpu = [
+  "torch>=2.4",
+  "torchvision",
+  "diffusers>=0.35.0",
+  "transformers>=4.46",
+  "accelerate>=0.34",
+  "huggingface_hub>=0.25",
+  "sentencepiece",
+  "ftfy",
+  "protobuf",
+]
+dev = ["pytest>=7"]
+
+[project.scripts]
+animegen = "animegen.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["animegen*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

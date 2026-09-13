@@ -1,0 +1,8 @@
+# 核心套件(不含 PyTorch;mock 後端 / UI / 測試只需要這些)
+pillow>=10.0
+numpy>=1.24
+imageio>=2.31
+imageio-ffmpeg>=0.4.9
+pyyaml>=6.0
+gradio>=4.44
+requests>=2.31
