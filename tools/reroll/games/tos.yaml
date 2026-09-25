@@ -1,0 +1,113 @@
+# 神魔之塔 刷初始號設定
+#
+# ⚠️ 這是骨架:按鈕名稱、階段順序是依一般手遊新手流程推測的,
+#    第一次請手動玩一遍新手教學,邊玩邊用 capture.py 截取下面列到的模板,
+#    再依實際畫面增刪規則。缺哪些模板可用 `python run.py games/tos.yaml --check` 查。
+#
+# 8591 行情(2026-09 成交紀錄):
+#   純石頭號 400 石約 150~400 元、600 石 500~600、800 石約 700、1000 石約 800、1400 石約 1600
+#   合作角色(遊戲王、圖靈、阿賴耶識、帝釋天)可加價;帳號用「引繼碼」交給買家
+
+game: 神魔之塔
+package: com.madhead.tos.zh     # 請確認:adb shell pm list packages | findstr tos
+templates: tos                  # 模板放在 templates/tos/
+resolution: [720, 1280]         # 雷電設定成直向 720x1280、DPI 320,模板要用同一個解析度截
+threshold: 0.85                 # 預設比對門檻
+reset: clear_data               # 每輪開始清除遊戲資料 = 新遊客帳號
+on_keep: continue               # 好號:存完引繼碼截圖就繼續刷(pause = 停住這台 / backup = 整台備份)
+
+phases:
+  # 1) 開遊戲到主畫面:同意條款、取名、新手教學
+  - name: tutorial
+    timeout: 900                # 超過 15 分鐘視為卡住,這輪算失敗
+    stuck_after: 15             # 15 秒沒有任何規則命中 → 執行 stuck 動作
+    stuck: {tap_at: [360, 1000]}
+    until: home_screen          # 看到主畫面(例如底部選單列)就結束這階段
+    rules:
+      - name: 下載資源
+        when: btn_download
+        tap: btn_download
+      - name: 同意條款
+        when: btn_agree
+        tap: btn_agree
+      - name: 取名
+        when: name_input
+        do:
+          - tap: name_input
+          - text: tos{rand}      # {rand} 會換成 4 位隨機數字
+          - tap: btn_ok
+      - name: 跳過劇情
+        when: btn_skip
+        tap: btn_skip
+      - name: 教學轉珠
+        when: tut_hand          # 教學手指提示;路徑要照實際畫面填
+        swipe: [120, 900, 600, 900]
+      - name: 確認
+        when: btn_ok
+        tap: btn_ok
+      - name: 關閉
+        when: btn_close
+        tap: btn_close
+
+  # 2) 領獎勵:禮物箱、新手任務
+  - name: rewards
+    timeout: 300
+    until_hits: {rule: 全部領取, count: 1}
+    rules:
+      - name: 公告關閉
+        when: btn_close
+        tap: btn_close
+      - name: 開禮物箱
+        when: [home_screen, icon_gift]
+        tap: icon_gift
+      - name: 全部領取
+        when: btn_claim_all
+        tap: btn_claim_all
+
+  # 3) 讀魔法石數量
+  - name: count_stones
+    timeout: 120
+    until_hits: {rule: 讀數字, count: 1}
+    rules:
+      - name: 回主畫面
+        when_not: home_screen
+        back: true
+      - name: 讀數字
+        when: home_screen
+        read_number: stones
+
+  # 4)(選用)抽合作卡池。石頭號賣得比較穩的話可以整段刪掉,不抽直接賣石頭
+  # - name: pull
+  #   timeout: 300
+  #   until_hits: {rule: 看結果, count: 1}
+  #   rules:
+  #     - {name: 進卡池, when: [home_screen, icon_summon], tap: icon_summon}
+  #     - {name: 抽, when: btn_pull, tap: btn_pull}
+  #     - name: 看結果
+  #       when: pull_result
+  #       do: [{scan_cards: true}, {snap: pull}, {tap: btn_ok}]
+
+  # 5) 只有好號才跑:打開引繼碼畫面並截圖(之後照截圖上架)
+  - name: transfer_code
+    on_keep: true
+    timeout: 180
+    until_hits: {rule: 截圖, count: 1}
+    rules:
+      - {name: 設定, when: [home_screen, icon_settings], tap: icon_settings}
+      - {name: 引繼, when: btn_transfer, tap: btn_transfer}
+      - {name: 截圖, when: transfer_screen, snap: transfer_code}
+
+evaluate:
+  numbers:
+    stones:
+      region: [480, 20, 220, 50]   # 主畫面魔法石數字的位置,用 capture.py tos --region 量
+      digits: digits/stone         # templates/tos/digits/stone/0.png ~ 9.png
+  cards:                           # 有抽卡才用得到;value = 加價估計(元)
+    atem:    {template: cards/atem, value: 200}      # 遊戲王 亞圖姆
+    turing:  {template: cards/turing, value: 150}    # 圖靈
+    alaya:   {template: cards/alaya, value: 150}     # 阿賴耶識
+    indra:   {template: cards/indra, value: 150}     # 帝釋天
+  # 留號條件(Python 運算式,可用 stones、各角色數量、card_value)
+  keep_if: "stones >= 500 or card_value >= 300"
+  # 預估賣價:依上方行情擬合,600 石約 520、1000 石約 1060
+  price: "max(0, stones * 1.35 - 290) + card_value"
