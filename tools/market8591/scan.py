@@ -23,6 +23,7 @@ import json
 import statistics
 import sys
 import time
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -136,6 +137,10 @@ def deep(g: dict, now: datetime) -> dict:
         s = stats(rows, now)
         s["active"] = active_count(gid, tag)
         out[key] = s
+    sellers = Counter(r["sell_user"] for r in init)
+    out["init"]["sellers"] = len(sellers)
+    out["init"]["top3_share"] = (round(sum(n for _, n in sellers.most_common(3)) / len(init), 2)
+                                 if init else None)
     out["init_samples"] = [(r["ware_price"], r["ware_title"][:60]) for r in init[:8]]
     return out
 
