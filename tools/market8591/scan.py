@@ -77,14 +77,18 @@ def parse_time(s: str, now: datetime) -> datetime:
     return t
 
 
+class FetchError(Exception):
+    pass
+
+
 def completed(gid: str, limit: int, account_tag: int | None = None) -> list[dict]:
     p = {"game_id": gid, "ware_type": 2, "limit": limit}
     if account_tag:
         p["account_tag"] = account_tag
     j = get(f"{API}/v5/mall/completed-lists", p)
     if not j or not j.get("status"):
-        return []
-    return j["data"].get("list") or []
+        raise FetchError(gid)  # 請求失敗 ≠ 沒有成交,不能當成空清單
+    return (j.get("data") or {}).get("list") or []
 
 
 def active_count(gid: str, account_tag: int | None = None) -> int:
@@ -120,17 +124,35 @@ def stats(rows: list[dict], now: datetime) -> dict:
 
 
 def probe(gid: str, now: datetime) -> dict | None:
-    rows = completed(gid, 30)
+    """回傳 None = 沒有帳號成交;{"failed": True} = 請求失敗,稍後重試。"""
+    try:
+        rows = completed(gid, 30)
+    except FetchError:
+        return {"id": gid, "failed": True}
     if not rows:
         return None
     return {"id": gid, "name": rows[0]["game_info"]["game"]["name"], **stats(rows, now)}
 
 
-def deep(g: dict, now: datetime) -> dict:
+def completed_retry(gid: str, limit: int, account_tag: int | None = None, tries: int = 3) -> list[dict]:
+    for i in range(tries):
+        try:
+            return completed(gid, limit, account_tag)
+        except FetchError:
+            if i == tries - 1:
+                raise
+            time.sleep(10)
+
+
+def deep(g: dict, now: datetime) -> dict | None:
     gid = g["id"]
-    allrows = completed(gid, 200)
-    init = completed(gid, 200, account_tag=2)
-    prog = completed(gid, 200, account_tag=3)
+    try:
+        allrows = completed_retry(gid, 200)
+        init = completed_retry(gid, 200, account_tag=2)
+        prog = completed_retry(gid, 200, account_tag=3)
+    except FetchError:
+        print(f"深度掃描失敗:{g['name']}", file=sys.stderr)
+        return None
     out = {"id": gid, "name": g["name"],
            "url": f"https://www.8591.com.tw/v3/mall/list/{gid}?searchType=2"}
     for key, rows, tag in (("all", allrows, None), ("init", init, 2), ("prog", prog, 3)):
@@ -162,19 +184,37 @@ def main():
     print(f"遊戲數:{len(ids)}", file=sys.stderr)
 
     probes: list[dict] = []
+    failed: list[str] = []
     with ThreadPoolExecutor(a.workers) as ex:
         for i, r in enumerate(ex.map(lambda g: probe(g, now), ids), 1):
-            if r:
+            if r and r.get("failed"):
+                failed.append(r["id"])
+            elif r:
                 probes.append(r)
             if i % 200 == 0:
                 print(f"  probe {i}/{len(ids)}  有成交 {len(probes)}", file=sys.stderr)
+    # 失敗的慢慢重試,避免漏掉熱門遊戲、讓 watch.py 誤判成「新遊戲」
+    for attempt in range(3):
+        if not failed:
+            break
+        time.sleep(10)
+        retry, failed = failed, []
+        for gid in retry:
+            r = probe(gid, now)
+            if r and r.get("failed"):
+                failed.append(gid)
+            elif r:
+                probes.append(r)
+    if failed:
+        print(f"仍失敗 {len(failed)} 款:{failed[:20]}", file=sys.stderr)
     probes.sort(key=lambda r: -r["per_day"])
     (out / "probe.json").write_text(json.dumps(probes, ensure_ascii=False, indent=1))
+    (out / "failed.json").write_text(json.dumps(failed))
 
     cands = [p for p in probes if p["per_day"] >= a.min_per_day]
     print(f"深度掃描:{len(cands)} 款", file=sys.stderr)
     with ThreadPoolExecutor(a.workers) as ex:
-        results = list(ex.map(lambda g: deep(g, now), cands))
+        results = [r for r in ex.map(lambda g: deep(g, now), cands) if r]
     results.sort(key=lambda r: -r["all"]["gmv_per_day"])
     (out / "deep.json").write_text(json.dumps(results, ensure_ascii=False, indent=1))
 

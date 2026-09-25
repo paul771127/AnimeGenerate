@@ -47,11 +47,16 @@ def snapshot() -> dict:
     return games
 
 
-def previous(today: str) -> tuple[str, dict] | None:
+def previous(today: str, days: int = 7) -> tuple[str, dict, dict] | None:
+    """回傳 (上一份日期, 上一份快照, 近 N 份快照裡每款遊戲的最高帳號成交/天)。"""
     files = sorted(f for f in HIST.glob("20*.json") if f.stem < today)
     if not files:
         return None
-    return files[-1].stem, json.loads(files[-1].read_text())
+    seen: dict[str, float] = {}
+    for f in files[-days:]:
+        for gid, g in json.loads(f.read_text()).items():
+            seen[gid] = max(seen.get(gid, 0), g.get("per_day", 0))
+    return files[-1].stem, json.loads(files[-1].read_text()), seen
 
 
 def init_line(g: dict) -> str:
@@ -61,14 +66,16 @@ def init_line(g: dict) -> str:
             f"(庫存 {inv} 天)、前三大賣家佔 {i.get('top3_share')}")
 
 
-def compare(prev: dict, cur: dict) -> list[str]:
+def compare(prev: dict, cur: dict, seen: dict | None = None) -> list[str]:
+    """seen:近幾天每款遊戲的最高成交/天。某天漏抓不會被誤判成新遊戲。"""
+    seen = seen if seen is not None else {k: v.get("per_day", 0) for k, v in prev.items()}
     out = []
     for gid, g in cur.items():
         url = f"https://www.8591.com.tw/v3/mall/list/{gid}?searchType=2"
         p = prev.get(gid)
         if (g.get("init") or {}).get("sellers") == 1:
             continue  # 單一賣家一次大量出貨,不是真需求
-        if g.get("per_day", 0) >= NEW_MIN and (not p or p.get("per_day", 0) < NEW_PREV_MAX):
+        if g.get("per_day", 0) >= NEW_MIN and seen.get(gid, 0) < NEW_PREV_MAX:
             out.append(f"- 🆕 **{g['name']}**:帳號 {g['per_day']} 筆/天(上次 "
                        f"{p.get('per_day') if p else '無'}),{init_line(g)} [8591]({url})")
             continue
@@ -94,7 +101,7 @@ def main():
     if prev is None:
         lines = ["第一份快照,下次開始比對。"]
     else:
-        lines = compare(prev[1], cur) or ["無"]
+        lines = compare(prev[1], cur, prev[2]) or ["無"]
         lines.insert(0, f"比對基準:{prev[0]}")
     text = f"# 8591 市場警示 {today}\n\n" + "\n".join(lines) + "\n"
     (HIST / f"alerts-{today}.md").write_text(text)
