@@ -12,6 +12,7 @@
 用法:
   python tools/market8591/scan.py            # 完整掃描,輸出 out/ 下的 json/csv
   python tools/market8591/scan.py --top 50   # 只掃熱門 S 群組前 50 款(快速測試)
+  python tools/market8591/scan.py --platform pc   # 線上遊戲(PC),輸出到 out/pc/
 """
 
 from __future__ import annotations
@@ -49,11 +50,18 @@ def get(url: str, params: dict | None = None, retries: int = 4):
     return None
 
 
-def all_mobile_game_ids() -> list[str]:
-    j = get("https://www.8591.com.tw/mobileGame.html", {"toJson": 1, "computer": 1})
+PLATFORM_PAGES = {"mobile": "mobileGame", "pc": "pcGame", "steam": "steam", "web": "webGame"}
+
+
+def all_game_ids(platform: str = "mobile") -> list[str]:
+    j = get(f"https://www.8591.com.tw/{PLATFORM_PAGES[platform]}.html", {"toJson": 1, "computer": 1})
     ids: list[str] = []
     for group in j.values():
+        if not isinstance(group, list):
+            continue
         for g in group:
+            if not isinstance(g, dict):
+                continue
             gid = g.get("id") or g.get("gameId")
             if gid and 2 in (g.get("wareType") or []) and str(gid) not in ids:
                 ids.append(str(gid))
@@ -134,17 +142,19 @@ def deep(g: dict, now: datetime) -> dict:
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--platform", choices=list(PLATFORM_PAGES), default="mobile")
     ap.add_argument("--top", type=int, default=0, help="只掃前 N 款(測試用)")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--min-per-day", type=float, default=1.0, help="進入深度掃描的帳號成交門檻(筆/天)")
     a = ap.parse_args()
-    OUT.mkdir(exist_ok=True)
+    out = OUT if a.platform == "mobile" else OUT / a.platform
+    out.mkdir(parents=True, exist_ok=True)
     now = datetime.now(TW).replace(tzinfo=None)
 
-    ids = all_mobile_game_ids()
+    ids = all_game_ids(a.platform)
     if a.top:
         ids = ids[: a.top]
-    print(f"手遊數:{len(ids)}", file=sys.stderr)
+    print(f"遊戲數:{len(ids)}", file=sys.stderr)
 
     probes: list[dict] = []
     with ThreadPoolExecutor(a.workers) as ex:
@@ -154,16 +164,16 @@ def main():
             if i % 200 == 0:
                 print(f"  probe {i}/{len(ids)}  有成交 {len(probes)}", file=sys.stderr)
     probes.sort(key=lambda r: -r["per_day"])
-    (OUT / "probe.json").write_text(json.dumps(probes, ensure_ascii=False, indent=1))
+    (out / "probe.json").write_text(json.dumps(probes, ensure_ascii=False, indent=1))
 
     cands = [p for p in probes if p["per_day"] >= a.min_per_day]
     print(f"深度掃描:{len(cands)} 款", file=sys.stderr)
     with ThreadPoolExecutor(a.workers) as ex:
         results = list(ex.map(lambda g: deep(g, now), cands))
     results.sort(key=lambda r: -r["all"]["gmv_per_day"])
-    (OUT / "deep.json").write_text(json.dumps(results, ensure_ascii=False, indent=1))
+    (out / "deep.json").write_text(json.dumps(results, ensure_ascii=False, indent=1))
 
-    with open(OUT / "deep.csv", "w", newline="", encoding="utf-8-sig") as f:
+    with open(out / "deep.csv", "w", newline="", encoding="utf-8-sig") as f:
         w = csv.writer(f)
         w.writerow(["id", "遊戲",
                     "帳號 成交/天", "帳號 中位價", "帳號 日成交額", "帳號 在架",
@@ -175,7 +185,7 @@ def main():
                         A["per_day"], A["median"], A["gmv_per_day"], A["active"],
                         I["per_day"], I["p25"], I["median"], I["p75"], I["gmv_per_day"], I["active"],
                         P["per_day"], P["median"], P["active"], r["url"]])
-    print(f"完成 → {OUT}", file=sys.stderr)
+    print(f"完成 → {out}", file=sys.stderr)
 
 
 if __name__ == "__main__":
