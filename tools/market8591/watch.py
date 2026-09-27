@@ -9,7 +9,7 @@
   history/alerts-YYYY-MM-DD.md 今天的警示;沒有警示時只寫一行「無」
 
 警示規則:
-  新遊戲    上次快照沒有、或帳號成交 < 0.3 筆/天,今天 ≥ 1 筆/天
+  新遊戲    近 7 天帳號成交 < 0.3 筆/天,今天帳號與初始號都 ≥ 1 筆/天
   成交暴增  初始號成交/天 ≥ 3,且是上次的 2 倍以上
   價格上漲  初始號成交/天 ≥ 3,中位價比上次高 30% 以上
   (初始號成交全來自同一個賣家的遊戲會略過)
@@ -75,7 +75,8 @@ def compare(prev: dict, cur: dict, seen: dict | None = None) -> list[str]:
         p = prev.get(gid)
         if (g.get("init") or {}).get("sellers") == 1:
             continue  # 單一賣家一次大量出貨,不是真需求
-        if g.get("per_day", 0) >= NEW_MIN and seen.get(gid, 0) < NEW_PREV_MAX:
+        if (g.get("per_day", 0) >= NEW_MIN and seen.get(gid, 0) < NEW_PREV_MAX
+                and (g.get("init") or {}).get("per_day", 0) >= NEW_MIN):  # 只在意初始號市場
             out.append(f"- 🆕 **{g['name']}**:帳號 {g['per_day']} 筆/天(上次 "
                        f"{p.get('per_day') if p else '無'}),{init_line(g)} [8591]({url})")
             continue
