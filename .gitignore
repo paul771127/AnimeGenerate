@@ -11,3 +11,5 @@ outputs/
 models/
 hf_cache/
 *.log
+fbsearch.db
+*.db-journal

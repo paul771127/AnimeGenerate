@@ -34,9 +34,13 @@ dev = ["pytest>=7"]
 
 [project.scripts]
 animegen = "animegen.cli:main"
+fbsearch = "fbsearch.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["animegen*"]
+include = ["animegen*", "fbsearch*"]
+
+[tool.setuptools.package-data]
+fbsearch = ["static/*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

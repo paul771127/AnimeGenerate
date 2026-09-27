@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FB 資料搜尋</title>
+<style>
+:root {
+  --bg: #f3f4f6; --panel: #ffffff; --text: #111827; --muted: #6b7280; --line: #e5e7eb;
+  --accent: #1877f2; --accent-soft: #e7f0fd; --price: #047857; --price-soft: #d1fae5;
+  --mark: #fde68a; --danger: #dc2626;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111318; --panel: #1b1e25; --text: #e5e7eb; --muted: #9ca3af; --line: #2d313a;
+    --accent: #4d9bff; --accent-soft: #1d2a3f; --price: #34d399; --price-soft: #11322a;
+    --mark: #7c5e10; --danger: #f87171;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 15px/1.55 system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif; }
+header { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line);
+  padding: 10px 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+header h1 { font-size: 17px; margin: 0; color: var(--accent); white-space: nowrap; }
+#q { flex: 1 1 260px; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--bg); color: var(--text); font-size: 15px; }
+button, .btn { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 8px;
+  padding: 7px 12px; font-size: 14px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:hover, .btn:hover { filter: brightness(0.96); }
+main { display: grid; grid-template-columns: 260px 1fr; gap: 16px; max-width: 1180px; margin: 16px auto; padding: 0 16px; }
+aside { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; align-self: start;
+  position: sticky; top: 70px; }
+aside h3 { font-size: 13px; color: var(--muted); margin: 14px 0 6px; font-weight: 600; }
+aside h3:first-child { margin-top: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg);
+  cursor: pointer; user-select: none; }
+.chip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.row { display: flex; gap: 6px; align-items: center; }
+.row input { width: 100%; min-width: 0; }
+input[type=number], input[type=date], select, textarea, input[type=text], input[type=url] {
+  padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--text);
+  font: inherit; font-size: 14px; }
+select { width: 100%; }
+label.check { display: flex; gap: 6px; align-items: center; font-size: 14px; margin-top: 8px; }
+#summary { color: var(--muted); font-size: 14px; margin: 0 0 10px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+.card .meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.tag { padding: 1px 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); }
+.price { font-weight: 700; color: var(--price); background: var(--price-soft); padding: 1px 9px; border-radius: 999px; font-size: 13.5px; }
+.card h4 { margin: 6px 0 2px; font-size: 15.5px; word-break: break-word; }
+.card h4 a { color: var(--text); text-decoration: none; }
+.card h4 a:hover { color: var(--accent); text-decoration: underline; }
+.card .body { white-space: pre-wrap; word-break: break-word; font-size: 14px; max-height: 7.8em; overflow: hidden; }
+.card .body.open { max-height: none; }
+.card .actions { display: flex; gap: 12px; margin-top: 6px; font-size: 13px; }
+.card .actions a { color: var(--muted); cursor: pointer; text-decoration: none; }
+.card .actions a:hover { color: var(--accent); }
+.card .note { font-size: 13px; color: var(--muted); margin-top: 4px; }
+mark { background: var(--mark); color: inherit; border-radius: 2px; }
+.empty { text-align: center; color: var(--muted); padding: 48px 12px; background: var(--panel); border: 1px dashed var(--line); border-radius: 12px; }
+.empty b { color: var(--text); }
+#more { width: 100%; margin: 6px 0 30px; }
+dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--text); padding: 18px;
+  width: min(560px, calc(100vw - 32px)); }
+dialog::backdrop { background: rgba(0,0,0,.45); }
+dialog h2 { margin: 0 0 12px; font-size: 18px; }
+dialog form > label { display: block; font-size: 13px; color: var(--muted); margin-top: 10px; }
+dialog form input, dialog form textarea, dialog form select { width: 100%; margin-top: 3px; }
+dialog .foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+dialog ol { padding-left: 20px; font-size: 14px; }
+dialog code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+.bm { display: inline-block; padding: 6px 12px; border-radius: 8px; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; }
+#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #111827; color: #fff;
+  padding: 9px 16px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; }
+#toast.show { opacity: 1; }
+#filterToggle { display: none; }
+@media (max-width: 760px) {
+  main { grid-template-columns: 1fr; }
+  aside { position: static; display: none; }
+  aside.open { display: block; }
+  #filterToggle { display: inline-block; }
+  header h1 { display: none; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>FB 資料搜尋</h1>
+  <input id="q" type="search" placeholder="搜尋關鍵字… 可用 &quot;完整片語&quot; 或 -排除字" autocomplete="off">
+  <button id="filterToggle">篩選</button>
+  <button id="btnAdd" class="primary">＋ 收藏</button>
+  <button id="btnImport">匯入</button>
+</header>
+
+<main>
+  <aside id="filters">
+    <h3>快速篩選</h3>
+    <div class="chips" id="presets">
+      <span class="chip" data-preset="viewed_video">最近看的影片</span>
+      <span class="chip" data-preset="viewed_post">最近看的文章</span>
+      <span class="chip" data-preset="market">市集商品</span>
+      <span class="chip" data-preset="saved">我的收藏</span>
+      <span class="chip" data-preset="all">全部</span>
+    </div>
+
+    <h3>類型</h3>
+    <div class="chips" data-group="kind">
+      <span class="chip" data-v="post">文章</span>
+      <span class="chip" data-v="video">影片</span>
+      <span class="chip" data-v="marketplace">市集</span>
+      <span class="chip" data-v="link">連結</span>
+      <span class="chip" data-v="photo">相片</span>
+      <span class="chip" data-v="other">其他</span>
+    </div>
+
+    <h3>來源</h3>
+    <div class="chips" data-group="source">
+      <span class="chip" data-v="viewed">看過的</span>
+      <span class="chip" data-v="saved">收藏的</span>
+      <span class="chip" data-v="posted">我發的</span>
+      <span class="chip" data-v="manual">手動加入</span>
+      <span class="chip" data-v="other">其他</span>
+    </div>
+
+    <h3>價格區間</h3>
+    <div class="row">
+      <input id="pmin" type="number" min="0" placeholder="最低">
+      <span>–</span>
+      <input id="pmax" type="number" min="0" placeholder="最高">
+    </div>
+    <label class="check"><input id="hasPrice" type="checkbox"> 只顯示有標價的</label>
+
+    <h3>日期</h3>
+    <div class="row">
+      <input id="dfrom" type="date">
+      <span>–</span>
+      <input id="dto" type="date">
+    </div>
+    <div class="chips" style="margin-top:6px" id="dateQuick">
+      <span class="chip" data-days="1">今天</span>
+      <span class="chip" data-days="7">7 天</span>
+      <span class="chip" data-days="30">30 天</span>
+      <span class="chip" data-days="0">不限</span>
+    </div>
+
+    <h3>排序</h3>
+    <select id="sort">
+      <option value="recent">最近的在前</option>
+      <option value="oldest">最舊的在前</option>
+      <option value="relevance">最相關</option>
+      <option value="price_asc">價格低 → 高</option>
+      <option value="price_desc">價格高 → 低</option>
+    </select>
+
+    <h3>&nbsp;</h3>
+    <div class="row">
+      <button id="btnReset" style="flex:1">清除篩選</button>
+      <a class="btn" href="/api/export" style="flex:1;text-align:center">匯出 JSON</a>
+    </div>
+  </aside>
+
+  <section>
+    <div id="summary"><span id="count"></span><span id="stats"></span></div>
+    <div id="results"></div>
+    <button id="more" hidden>載入更多</button>
+  </section>
+</main>
+
+<!-- 新增 / 編輯 -->
+<dialog id="dlgItem">
+  <form id="formItem" method="dialog">
+    <h2 id="dlgItemTitle">收藏一則貼文</h2>
+    <input type="hidden" name="id">
+    <label>網址<input name="url" type="url" placeholder="https://www.facebook.com/..."></label>
+    <label>標題<input name="title" type="text"></label>
+    <label>內文(可直接貼上貼文文字,價格會自動抓)<textarea name="text" rows="6"></textarea></label>
+    <div class="row" style="gap:10px">
+      <label style="flex:1">類型
+        <select name="kind">
+          <option value="post">文章</option><option value="video">影片</option>
+          <option value="marketplace">市集</option><option value="link">連結</option>
+          <option value="photo">相片</option><option value="other">其他</option>
+        </select></label>
+      <label style="flex:1">來源
+        <select name="source">
+          <option value="manual">手動加入</option><option value="viewed">看過的</option>
+          <option value="saved">收藏的</option><option value="posted">我發的</option>
+          <option value="other">其他</option>
+        </select></label>
+      <label style="flex:1">價格<input name="price" type="number" min="0" step="any" placeholder="自動"></label>
+    </div>
+    <label>標籤(空白分隔)<input name="tags" type="text" placeholder="例如:相機 二手 待聯絡"></label>
+    <label>備註<input name="note" type="text"></label>
+    <div class="foot">
+      <button type="button" data-close>取消</button>
+      <button type="submit" class="primary">儲存</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 匯入 -->
+<dialog id="dlgImport">
+  <h2>匯入 Facebook 資料</h2>
+  <ol>
+    <li>到 Facebook:<b>設定和隱私 → 設定 → 帳號管理中心 → 你的資訊和權限 → 下載你的資訊</b></li>
+    <li>格式選 <b>JSON</b>,媒體畫質選「低」(或只勾需要的項目:<i>最近觀看、已儲存的項目、你的貼文、Marketplace</i>)</li>
+    <li>下載完成後,把 <code>.zip</code>(或裡面的 <code>.json</code>)拖進下面:</li>
+  </ol>
+  <input id="importFile" type="file" accept=".zip,.json" multiple>
+  <p id="importStatus" style="font-size:14px;color:var(--muted)"></p>
+  <h2 style="margin-top:18px">瀏覽時一鍵收藏</h2>
+  <p style="font-size:14px;margin:0 0 8px">把這個按鈕拖到瀏覽器書籤列。在 Facebook 看到想留的文章/影片時,<b>先反白貼文文字(含價格)</b>再按它:</p>
+  <a class="bm" id="bookmarklet" href="#">📌 存到 FB 搜尋</a>
+  <div class="foot"><button type="button" data-close>關閉</button></div>
+</dialog>
+
+<div id="toast"></div>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const KIND = {post: "文章", video: "影片", marketplace: "市集", link: "連結", photo: "相片", other: "其他"};
+const SOURCE = {viewed: "看過", saved: "收藏", posted: "我發的", manual: "手動加入", other: "其他"};
+const PAGE = 50;
+let offset = 0, loading = false, lastTerms = [];
+
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2200);
+}
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function highlight(s) {
+  let h = esc(s);
+  for (const t of lastTerms) {
+    if (!t) continue;
+    const re = new RegExp(esc(t).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+    h = h.replace(re, m => `<mark>${m}</mark>`);
+  }
+  return h;
+}
+function fmtPrice(p) { return p == null ? "" : "$" + Number(p).toLocaleString("zh-TW", {maximumFractionDigits: 2}); }
+function fmtDate(ts) {
+  if (!ts) return "";
+  const d = new Date(ts * 1000);
+  return d.toLocaleDateString("zh-TW") + " " + d.toLocaleTimeString("zh-TW", {hour: "2-digit", minute: "2-digit"});
+}
+function ymd(d) { return d.toISOString().slice(0, 10); }
+function safeUrl(u) { return /^https?:\/\//i.test(u || "") ? u : ""; }
+
+function terms(q) {
+  const out = []; const re = /"([^"]+)"|(\S+)/g; let m;
+  while ((m = re.exec(q))) { const t = m[1] || m[2]; if (!t.startsWith("-")) out.push(t); }
+  return out;
+}
+
+// ---------------------------------------------------------------- 篩選狀態
+function groupVals(g) { return $$(`[data-group=${g}] .chip.on`).map(c => c.dataset.v).join(","); }
+function setGroup(g, vals) { $$(`[data-group=${g}] .chip`).forEach(c => c.classList.toggle("on", vals.includes(c.dataset.v))); }
+
+function params() {
+  const p = new URLSearchParams();
+  const put = (k, v) => { if (v) p.set(k, v); };
+  put("q", $("#q").value.trim()); put("kind", groupVals("kind")); put("source", groupVals("source"));
+  put("price_min", $("#pmin").value); put("price_max", $("#pmax").value);
+  if ($("#hasPrice").checked) p.set("has_price", "1");
+  put("date_from", $("#dfrom").value); put("date_to", $("#dto").value);
+  if ($("#sort").value !== "recent") p.set("sort", $("#sort").value);
+  return p;
+}
+function restore(p) {
+  $("#q").value = p.get("q") || "";
+  setGroup("kind", (p.get("kind") || "").split(",")); setGroup("source", (p.get("source") || "").split(","));
+  $("#pmin").value = p.get("price_min") || ""; $("#pmax").value = p.get("price_max") || "";
+  $("#hasPrice").checked = p.get("has_price") === "1";
+  $("#dfrom").value = p.get("date_from") || ""; $("#dto").value = p.get("date_to") || "";
+  $("#sort").value = p.get("sort") || "recent";
+}
+
+// ---------------------------------------------------------------- 搜尋
+async function search(append = false) {
+  if (loading) return; loading = true;
+  if (!append) offset = 0;
+  const p = params();
+  history.replaceState(null, "", "#" + p.toString());
+  lastTerms = terms($("#q").value);
+  p.set("limit", PAGE); p.set("offset", offset);
+  try {
+    const r = await fetch("/api/search?" + p); const data = await r.json();
+    const box = $("#results");
+    if (!append) box.innerHTML = "";
+    data.items.forEach(it => box.appendChild(card(it)));
+    offset += data.items.length;
+    $("#count").textContent = `找到 ${data.total.toLocaleString()} 筆`;
+    $("#more").hidden = offset >= data.total;
+    if (!data.total) box.innerHTML = emptyHtml();
+  } catch (e) { toast("搜尋失敗:" + e); }
+  loading = false;
+}
+function emptyHtml() {
+  const any = [...params().keys()].length;
+  return any ? `<div class="empty">沒有符合條件的資料,試試放寬篩選。</div>`
+    : `<div class="empty">資料庫還是空的。<br><br>按右上角 <b>匯入</b> 放入 Facebook 匯出的資料,<br>或用 <b>＋ 收藏</b> 手動加入貼文。</div>`;
+}
+
+function card(it) {
+  const el = document.createElement("div"); el.className = "card";
+  const url = safeUrl(it.url);
+  const title = it.title || (it.text || "").split("\n")[0] || it.url || "(無標題)";
+  const body = it.title ? it.text : (it.text || "").split("\n").slice(1).join("\n");
+  el.innerHTML = `
+    <div class="meta">
+      ${it.price != null ? `<span class="price">${fmtPrice(it.price)}</span>` : ""}
+      <span class="tag">${KIND[it.kind] || it.kind}</span>
+      <span class="tag">${SOURCE[it.source] || it.source}</span>
+      ${it.author ? `<span>${esc(it.author)}</span>` : ""}
+      <span>${fmtDate(it.ts)}</span>
+      ${(it.tags || "").split(/\s+/).filter(Boolean).map(t => `<span class="tag">#${esc(t)}</span>`).join("")}
+    </div>
+    <h4>${url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${highlight(title)}</a>` : highlight(title)}</h4>
+    ${body ? `<div class="body">${highlight(body)}</div>` : ""}
+    ${it.note ? `<div class="note">📝 ${highlight(it.note)}</div>` : ""}
+    <div class="actions">
+      ${body && body.length > 200 ? `<a data-act="expand">展開</a>` : ""}
+      ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">開啟</a>` : ""}
+      <a data-act="edit">編輯 / 標籤</a>
+      <a data-act="del">刪除</a>
+    </div>`;
+  el.addEventListener("click", async e => {
+    const act = e.target.dataset.act; if (!act) return;
+    if (act === "expand") { const b = $(".body", el); b.classList.toggle("open"); e.target.textContent = b.classList.contains("open") ? "收合" : "展開"; }
+    if (act === "edit") openItem(it);
+    if (act === "del" && confirm("確定刪除這筆?")) {
+      await fetch("/api/items/" + it.id, {method: "DELETE"}); el.remove(); toast("已刪除"); loadStats();
+    }
+  });
+  return el;
+}
+
+async function loadStats() {
+  try {
+    const s = await (await fetch("/api/stats")).json();
+    $("#stats").textContent = `資料庫共 ${s.total.toLocaleString()} 筆 · 有標價 ${s.with_price.toLocaleString()} 筆`;
+  } catch (e) {}
+}
+
+// ---------------------------------------------------------------- 新增 / 編輯
+function openItem(it = {}, isNew = false) {
+  const f = $("#formItem"); f.reset();
+  $("#dlgItemTitle").textContent = it.id ? "編輯" : "收藏一則貼文";
+  for (const k of ["id", "url", "title", "text", "kind", "source", "price", "tags", "note"]) {
+    if (it[k] != null && f.elements[k]) f.elements[k].value = it[k];
+  }
+  if (!it.id && !it.kind && /\/(watch|reel|videos?)\b|fb\.watch/i.test(it.url || "")) f.elements.kind.value = "video";
+  if (!it.id && !it.kind && /marketplace/i.test(it.url || "")) f.elements.kind.value = "marketplace";
+  $("#dlgItem").showModal();
+}
+$("#formItem").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target, data = Object.fromEntries(new FormData(f));
+  const id = data.id; delete data.id;
+  if (data.price === "") data.price = id ? null : undefined;
+  const r = await fetch(id ? "/api/items/" + id : "/api/items", {
+    method: id ? "PATCH" : "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data)});
+  const res = await r.json();
+  if (!r.ok) return toast(res.error || "儲存失敗");
+  $("#dlgItem").close();
+  toast(id ? "已更新" : `已收藏${res.price != null ? "(價格 " + fmtPrice(res.price) + ")" : ""}`);
+  if (location.pathname === "/add" && window.opener) { setTimeout(() => window.close(), 700); return; }
+  search(); loadStats();
+});
+
+// ---------------------------------------------------------------- 匯入
+$("#importFile").addEventListener("change", async e => {
+  const st = $("#importStatus");
+  for (const file of e.target.files) {
+    st.textContent = `上傳並解析 ${file.name}(${(file.size / 1048576).toFixed(1)} MB)…`;
+    try {
+      const r = await fetch("/api/import?name=" + encodeURIComponent(file.name), {method: "POST", body: file});
+      const res = await r.json();
+      if (!r.ok) { st.textContent = "失敗:" + res.error; continue; }
+      st.innerHTML = `✅ ${esc(file.name)}:新增 <b>${res.new}</b> 筆,已存在 ${res.existing} 筆` +
+        (res.files.length ? `<br><small>${res.files.map(f => esc(f.file) + "(" + f.records + ")").join("<br>")}</small>` : "<br>(沒找到可用的紀錄,請確認匯出格式是 JSON)");
+    } catch (err) { st.textContent = "失敗:" + err; }
+  }
+  e.target.value = ""; search(); loadStats();
+});
+
+const bm = `javascript:(()=>{const s=String(getSelection()).slice(0,4000);` +
+  `open('${location.origin}/add?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title)+'&text='+encodeURIComponent(s),'fbsave','width=560,height=720')})()`;
+$("#bookmarklet").href = bm;
+$("#bookmarklet").addEventListener("click", e => { e.preventDefault(); toast("請把按鈕拖到書籤列再使用"); });
+
+// ---------------------------------------------------------------- 事件
+let timer;
+$("#q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => search(), 250); });
+for (const id of ["#pmin", "#pmax", "#dfrom", "#dto"]) $(id).addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => search(), 350); });
+for (const id of ["#hasPrice", "#sort"]) $(id).addEventListener("change", () => search());
+$$("[data-group] .chip").forEach(c => c.addEventListener("click", () => { c.classList.toggle("on"); $$("#presets .chip").forEach(x => x.classList.remove("on")); search(); }));
+$$("#dateQuick .chip").forEach(c => c.addEventListener("click", () => {
+  const days = +c.dataset.days;
+  $("#dto").value = ""; $("#dfrom").value = days ? ymd(new Date(Date.now() - (days - 1) * 864e5)) : "";
+  search();
+}));
+$$("#presets .chip").forEach(c => c.addEventListener("click", () => {
+  const p = new URLSearchParams();
+  const preset = {
+    viewed_video: {kind: "video", source: "viewed"},
+    viewed_post: {kind: "post,link,photo", source: "viewed"},
+    market: {kind: "marketplace"},
+    saved: {source: "saved,manual"},
+    all: {},
+  }[c.dataset.preset];
+  for (const [k, v] of Object.entries(preset)) p.set(k, v);
+  if ($("#q").value.trim()) p.set("q", $("#q").value.trim());
+  restore(p);
+  $$("#presets .chip").forEach(x => x.classList.toggle("on", x === c));
+  search();
+}));
+$("#btnReset").addEventListener("click", () => { restore(new URLSearchParams()); $$("#presets .chip").forEach(x => x.classList.remove("on")); search(); });
+$("#btnAdd").addEventListener("click", () => openItem({}, true));
+$("#btnImport").addEventListener("click", () => $("#dlgImport").showModal());
+$("#filterToggle").addEventListener("click", () => $("#filters").classList.toggle("open"));
+$("#more").addEventListener("click", () => search(true));
+$$("[data-close]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
+
+// ---------------------------------------------------------------- 啟動
+restore(new URLSearchParams(location.hash.slice(1)));
+if (location.pathname === "/add") {
+  const p = new URLSearchParams(location.search);
+  let title = (p.get("title") || "").replace(/\s*\|\s*Facebook\s*$/i, "").replace(/^\(\d+\)\s*/, "");
+  openItem({url: p.get("url") || "", title, text: p.get("text") || ""}, true);
+}
+search(); loadStats();
+</script>
+</body>
+</html>
