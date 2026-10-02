@@ -4,6 +4,7 @@
 "per_day": 78.17,
 "median": 900,
 "init": {
+"deals": 200,
 "per_day": 118.98,
 "median": 600,
 "p75": 1000,
@@ -18,6 +19,7 @@
 "per_day": 67.44,
 "median": 148,
 "init": {
+"deals": 200,
 "per_day": 299.5,
 "median": 170,
 "p75": 235,
@@ -32,6 +34,7 @@
 "per_day": 48.56,
 "median": 3723,
 "init": {
+"deals": 129,
 "per_day": 4.36,
 "median": 400,
 "p75": 2200,
@@ -46,6 +49,7 @@
 "per_day": 22.02,
 "median": 350,
 "init": {
+"deals": 155,
 "per_day": 5.19,
 "median": 299,
 "p75": 590,
@@ -60,6 +64,7 @@
 "per_day": 21.22,
 "median": 106,
 "init": {
+"deals": 200,
 "per_day": 17.12,
 "median": 150,
 "p75": 300,
@@ -74,6 +79,7 @@
 "per_day": 20.34,
 "median": 150,
 "init": {
+"deals": 167,
 "per_day": 5.61,
 "median": 150,
 "p75": 248,
@@ -88,6 +94,7 @@
 "per_day": 19.99,
 "median": 420,
 "init": {
+"deals": 200,
 "per_day": 23.79,
 "median": 252,
 "p75": 588,
@@ -102,6 +109,7 @@
 "per_day": 19.63,
 "median": 1425,
 "init": {
+"deals": 200,
 "per_day": 14.85,
 "median": 950,
 "p75": 1450,
@@ -116,6 +124,7 @@
 "per_day": 17.07,
 "median": 775,
 "init": {
+"deals": 200,
 "per_day": 26.65,
 "median": 700,
 "p75": 1200,
@@ -130,6 +139,7 @@
 "per_day": 16.27,
 "median": 1000,
 "init": {
+"deals": 200,
 "per_day": 9.26,
 "median": 1000,
 "p75": 1200,
@@ -144,6 +154,7 @@
 "per_day": 15.22,
 "median": 395,
 "init": {
+"deals": 140,
 "per_day": 4.71,
 "median": 550,
 "p75": 900,
@@ -158,6 +169,7 @@
 "per_day": 12.68,
 "median": 914,
 "init": {
+"deals": 95,
 "per_day": 3.21,
 "median": 1200,
 "p75": 2000,
@@ -172,6 +184,7 @@
 "per_day": 8.08,
 "median": 950,
 "init": {
+"deals": 32,
 "per_day": 1.11,
 "median": 1220,
 "p75": 2425,
@@ -186,6 +199,7 @@
 "per_day": 7.99,
 "median": 550,
 "init": {
+"deals": 200,
 "per_day": 8.76,
 "median": 500,
 "p75": 900,
@@ -200,6 +214,7 @@
 "per_day": 7.8,
 "median": 625,
 "init": {
+"deals": 62,
 "per_day": 2.1,
 "median": 361,
 "p75": 650,
@@ -214,6 +229,7 @@
 "per_day": 6.74,
 "median": 1235,
 "init": {
+"deals": 135,
 "per_day": 4.52,
 "median": 797,
 "p75": 1170,
@@ -228,6 +244,7 @@
 "per_day": 6.09,
 "median": 300,
 "init": {
+"deals": 81,
 "per_day": 2.71,
 "median": 300,
 "p75": 500,
@@ -242,6 +259,7 @@
 "per_day": 5.23,
 "median": 1250,
 "init": {
+"deals": 104,
 "per_day": 4.0,
 "median": 995,
 "p75": 1800,
@@ -256,6 +274,7 @@
 "per_day": 5.2,
 "median": 940,
 "init": {
+"deals": 169,
 "per_day": 5.65,
 "median": 500,
 "p75": 800,
@@ -270,6 +289,7 @@
 "per_day": 5.17,
 "median": 500,
 "init": {
+"deals": 40,
 "per_day": 5.43,
 "median": 516,
 "p75": 700,
@@ -284,6 +304,7 @@
 "per_day": 5.16,
 "median": 200,
 "init": {
+"deals": 3,
 "per_day": 5.16,
 "median": 200,
 "p75": 600,
@@ -298,6 +319,7 @@
 "per_day": 5.14,
 "median": 531,
 "init": {
+"deals": 76,
 "per_day": 2.56,
 "median": 300,
 "p75": 851,
@@ -312,6 +334,7 @@
 "per_day": 4.51,
 "median": 1498,
 "init": {
+"deals": 175,
 "per_day": 5.87,
 "median": 800,
 "p75": 1900,
@@ -326,6 +349,7 @@
 "per_day": 4.5,
 "median": 1340,
 "init": {
+"deals": 109,
 "per_day": 3.64,
 "median": 580,
 "p75": 1278,
@@ -340,6 +364,7 @@
 "per_day": 4.47,
 "median": 865,
 "init": {
+"deals": 31,
 "per_day": 1.04,
 "median": 1100,
 "p75": 1450,
@@ -354,6 +379,7 @@
 "per_day": 4.47,
 "median": 3298,
 "init": {
+"deals": 16,
 "per_day": 0.54,
 "median": 650,
 "p75": 1391,
@@ -368,6 +394,7 @@
 "per_day": 4.44,
 "median": 1282,
 "init": {
+"deals": 23,
 "per_day": 0.8,
 "median": 1063,
 "p75": 1600,
@@ -382,6 +409,7 @@
 "per_day": 4.37,
 "median": 2000,
 "init": {
+"deals": 26,
 "per_day": 0.88,
 "median": 1225,
 "p75": 2000,
@@ -396,6 +424,7 @@
 "per_day": 4.04,
 "median": 880,
 "init": {
+"deals": 64,
 "per_day": 2.15,
 "median": 880,
 "p75": 880,
@@ -410,6 +439,7 @@
 "per_day": 3.9,
 "median": 300,
 "init": {
+"deals": 105,
 "per_day": 3.51,
 "median": 300,
 "p75": 300,
@@ -424,6 +454,7 @@
 "per_day": 3.58,
 "median": 2850,
 "init": {
+"deals": 9,
 "per_day": 0.33,
 "median": 2000,
 "p75": 2766,
@@ -438,6 +469,7 @@
 "per_day": 3.52,
 "median": 270,
 "init": {
+"deals": 138,
 "per_day": 4.64,
 "median": 350,
 "p75": 550,
@@ -452,6 +484,7 @@
 "per_day": 3.51,
 "median": 1750,
 "init": {
+"deals": 19,
 "per_day": 1.24,
 "median": 430,
 "p75": 2980,
@@ -466,6 +499,7 @@
 "per_day": 3.51,
 "median": 1063,
 "init": {
+"deals": 88,
 "per_day": 2.95,
 "median": 1000,
 "p75": 1058,
@@ -480,6 +514,7 @@
 "per_day": 3.5,
 "median": 3096,
 "init": {
+"deals": 51,
 "per_day": 1.73,
 "median": 3000,
 "p75": 10000,
@@ -494,6 +529,7 @@
 "per_day": 3.46,
 "median": 3528,
 "init": {
+"deals": 30,
 "per_day": 1.05,
 "median": 700,
 "p75": 1300,
@@ -508,6 +544,7 @@
 "per_day": 3.46,
 "median": 5500,
 "init": {
+"deals": 4,
 "per_day": 0.14,
 "median": 375,
 "p75": 7600,
@@ -522,6 +559,7 @@
 "per_day": 3.19,
 "median": 625,
 "init": {
+"deals": 36,
 "per_day": 1.22,
 "median": 510,
 "p75": 875,
@@ -536,6 +574,7 @@
 "per_day": 2.9,
 "median": 3939,
 "init": {
+"deals": 9,
 "per_day": 0.31,
 "median": 1063,
 "p75": 2746,
@@ -550,6 +589,7 @@
 "per_day": 2.87,
 "median": 3000,
 "init": {
+"deals": 39,
 "per_day": 1.32,
 "median": 2500,
 "p75": 3200,
@@ -564,6 +604,7 @@
 "per_day": 2.64,
 "median": 1200,
 "init": {
+"deals": 51,
 "per_day": 1.77,
 "median": 570,
 "p75": 1200,
@@ -578,6 +619,7 @@
 "per_day": 2.63,
 "median": 970,
 "init": {
+"deals": 105,
 "per_day": 3.52,
 "median": 900,
 "p75": 1500,
@@ -592,6 +634,7 @@
 "per_day": 2.63,
 "median": 295,
 "init": {
+"deals": 72,
 "per_day": 2.41,
 "median": 295,
 "p75": 700,
@@ -606,6 +649,7 @@
 "per_day": 2.62,
 "median": 2200,
 "init": {
+"deals": 33,
 "per_day": 1.14,
 "median": 2200,
 "p75": 3600,
@@ -620,6 +664,7 @@
 "per_day": 2.62,
 "median": 1280,
 "init": {
+"deals": 65,
 "per_day": 2.18,
 "median": 600,
 "p75": 955,
@@ -634,6 +679,7 @@
 "per_day": 2.57,
 "median": 235,
 "init": {
+"deals": 81,
 "per_day": 2.74,
 "median": 235,
 "p75": 500,
@@ -648,6 +694,7 @@
 "per_day": 2.55,
 "median": 900,
 "init": {
+"deals": 95,
 "per_day": 3.18,
 "median": 350,
 "p75": 1800,
@@ -662,6 +709,7 @@
 "per_day": 2.54,
 "median": 750,
 "init": {
+"deals": 53,
 "per_day": 1.78,
 "median": 300,
 "p75": 400,
@@ -676,6 +724,7 @@
 "per_day": 2.4,
 "median": 500,
 "init": {
+"deals": 51,
 "per_day": 1.72,
 "median": 500,
 "p75": 550,
@@ -690,6 +739,7 @@
 "per_day": 2.39,
 "median": 1263,
 "init": {
+"deals": 48,
 "per_day": 1.62,
 "median": 845,
 "p75": 1474,
@@ -704,6 +754,7 @@
 "per_day": 2.39,
 "median": 462,
 "init": {
+"deals": 102,
 "per_day": 3.45,
 "median": 500,
 "p75": 952,
@@ -718,6 +769,7 @@
 "per_day": 2.39,
 "median": 300,
 "init": {
+"deals": 58,
 "per_day": 1.95,
 "median": 300,
 "p75": 400,
@@ -732,6 +784,7 @@
 "per_day": 2.32,
 "median": 360,
 "init": {
+"deals": 46,
 "per_day": 1.54,
 "median": 350,
 "p75": 538,
@@ -746,6 +799,7 @@
 "per_day": 2.23,
 "median": 345,
 "init": {
+"deals": 144,
 "per_day": 4.83,
 "median": 300,
 "p75": 600,
@@ -760,6 +814,7 @@
 "per_day": 2.22,
 "median": 275,
 "init": {
+"deals": 77,
 "per_day": 2.58,
 "median": 300,
 "p75": 650,
@@ -774,6 +829,7 @@
 "per_day": 2.18,
 "median": 2550,
 "init": {
+"deals": 3,
 "per_day": 0.17,
 "median": 1600,
 "p75": 1600,
@@ -788,6 +844,7 @@
 "per_day": 2.04,
 "median": 945,
 "init": {
+"deals": 27,
 "per_day": 0.9,
 "median": 690,
 "p75": 990,
@@ -802,6 +859,7 @@
 "per_day": 2.03,
 "median": 4150,
 "init": {
+"deals": 8,
 "per_day": 0.29,
 "median": 320,
 "p75": 1086,
@@ -816,6 +874,7 @@
 "per_day": 2.01,
 "median": 1050,
 "init": {
+"deals": 45,
 "per_day": 1.51,
 "median": 950,
 "p75": 1288,
@@ -830,6 +889,7 @@
 "per_day": 2.0,
 "median": 1650,
 "init": {
+"deals": 21,
 "per_day": 0.7,
 "median": 1276,
 "p75": 2925,
@@ -844,6 +904,7 @@
 "per_day": 1.92,
 "median": 350,
 "init": {
+"deals": 44,
 "per_day": 1.47,
 "median": 400,
 "p75": 750,
@@ -858,6 +919,7 @@
 "per_day": 1.92,
 "median": 1100,
 "init": {
+"deals": 44,
 "per_day": 1.54,
 "median": 800,
 "p75": 1200,
@@ -872,6 +934,7 @@
 "per_day": 1.91,
 "median": 5980,
 "init": {
+"deals": 23,
 "per_day": 0.84,
 "median": 2000,
 "p75": 4500,
@@ -886,6 +949,7 @@
 "per_day": 1.9,
 "median": 5320,
 "init": {
+"deals": 0,
 "per_day": 0.0,
 "median": null,
 "p75": null,
@@ -900,6 +964,7 @@
 "per_day": 1.81,
 "median": 200,
 "init": {
+"deals": 50,
 "per_day": 1.67,
 "median": 165,
 "p75": 305,
@@ -914,6 +979,7 @@
 "per_day": 1.79,
 "median": 8255,
 "init": {
+"deals": 3,
 "per_day": 0.13,
 "median": 920,
 "p75": 920,
@@ -928,6 +994,7 @@
 "per_day": 1.74,
 "median": 1000,
 "init": {
+"deals": 45,
 "per_day": 1.63,
 "median": 1000,
 "p75": 1285,
@@ -942,6 +1009,7 @@
 "per_day": 1.62,
 "median": 1548,
 "init": {
+"deals": 17,
 "per_day": 0.57,
 "median": 638,
 "p75": 1300,
@@ -956,6 +1024,7 @@
 "per_day": 1.6,
 "median": 1864,
 "init": {
+"deals": 33,
 "per_day": 1.11,
 "median": 950,
 "p75": 1150,
@@ -970,6 +1039,7 @@
 "per_day": 1.59,
 "median": 1814,
 "init": {
+"deals": 7,
 "per_day": 0.31,
 "median": 3200,
 "p75": 3700,
@@ -984,6 +1054,7 @@
 "per_day": 1.59,
 "median": 4255,
 "init": {
+"deals": 1,
 "per_day": 1.59,
 "median": 4255,
 "p75": 4255,
@@ -998,6 +1069,7 @@
 "per_day": 1.58,
 "median": 5428,
 "init": {
+"deals": 0,
 "per_day": 0.0,
 "median": null,
 "p75": null,
@@ -1012,6 +1084,7 @@
 "per_day": 1.58,
 "median": 350,
 "init": {
+"deals": 36,
 "per_day": 1.21,
 "median": 250,
 "p75": 450,
@@ -1026,6 +1099,7 @@
 "per_day": 1.54,
 "median": 250,
 "init": {
+"deals": 31,
 "per_day": 1.09,
 "median": 250,
 "p75": 380,
@@ -1040,6 +1114,7 @@
 "per_day": 1.47,
 "median": 3444,
 "init": {
+"deals": 2,
 "per_day": 0.08,
 "median": 356,
 "p75": 572,
@@ -1054,6 +1129,7 @@
 "per_day": 1.44,
 "median": 785,
 "init": {
+"deals": 35,
 "per_day": 1.18,
 "median": 630,
 "p75": 820,
@@ -1068,6 +1144,7 @@
 "per_day": 1.44,
 "median": 468,
 "init": {
+"deals": 26,
 "per_day": 0.87,
 "median": 150,
 "p75": 1350,
@@ -1082,6 +1159,7 @@
 "per_day": 1.41,
 "median": 50,
 "init": {
+"deals": 0,
 "per_day": 0.0,
 "median": null,
 "p75": null,
@@ -1096,6 +1174,7 @@
 "per_day": 1.4,
 "median": 465,
 "init": {
+"deals": 41,
 "per_day": 1.37,
 "median": 450,
 "p75": 790,
@@ -1110,6 +1189,7 @@
 "per_day": 1.39,
 "median": 2754,
 "init": {
+"deals": 4,
 "per_day": 0.18,
 "median": 3177,
 "p75": 5575,
@@ -1124,6 +1204,7 @@
 "per_day": 1.38,
 "median": 450,
 "init": {
+"deals": 40,
 "per_day": 1.34,
 "median": 450,
 "p75": 1212,
@@ -1138,6 +1219,7 @@
 "per_day": 1.37,
 "median": 750,
 "init": {
+"deals": 34,
 "per_day": 1.14,
 "median": 600,
 "p75": 1200,
@@ -1152,6 +1234,7 @@
 "per_day": 1.34,
 "median": 2150,
 "init": {
+"deals": 31,
 "per_day": 1.05,
 "median": 2000,
 "p75": 4500,
@@ -1166,6 +1249,7 @@
 "per_day": 1.33,
 "median": 425,
 "init": {
+"deals": 41,
 "per_day": 1.38,
 "median": 330,
 "p75": 600,
@@ -1180,6 +1264,7 @@
 "per_day": 1.22,
 "median": 150,
 "init": {
+"deals": 34,
 "per_day": 1.14,
 "median": 160,
 "p75": 452,
@@ -1194,6 +1279,7 @@
 "per_day": 1.21,
 "median": 3302,
 "init": {
+"deals": 18,
 "per_day": 0.61,
 "median": 1180,
 "p75": 2180,
@@ -1208,6 +1294,7 @@
 "per_day": 1.18,
 "median": 1314,
 "init": {
+"deals": 0,
 "per_day": 0.0,
 "median": null,
 "p75": null,
@@ -1222,6 +1309,7 @@
 "per_day": 1.18,
 "median": 11819,
 "init": {
+"deals": 5,
 "per_day": 0.2,
 "median": 900,
 "p75": 3810,
@@ -1236,6 +1324,7 @@
 "per_day": 1.16,
 "median": 5660,
 "init": {
+"deals": 1,
 "per_day": 0.09,
 "median": 8000,
 "p75": 8000,
@@ -1250,6 +1339,7 @@
 "per_day": 1.13,
 "median": 3000,
 "init": {
+"deals": 1,
 "per_day": 0.05,
 "median": 4255,
 "p75": 4255,
@@ -1264,6 +1354,7 @@
 "per_day": 1.12,
 "median": 1200,
 "init": {
+"deals": 30,
 "per_day": 1.05,
 "median": 1200,
 "p75": 1400,
@@ -1278,6 +1369,7 @@
 "per_day": 1.08,
 "median": 1063,
 "init": {
+"deals": 31,
 "per_day": 1.09,
 "median": 1063,
 "p75": 1063,
@@ -1292,6 +1384,7 @@
 "per_day": 1.05,
 "median": 450,
 "init": {
+"deals": 27,
 "per_day": 1.02,
 "median": 400,
 "p75": 650,
@@ -1306,6 +1399,7 @@
 "per_day": 1.05,
 "median": 270,
 "init": {
+"deals": 31,
 "per_day": 1.05,
 "median": 300,
 "p75": 392,
@@ -1320,6 +1414,7 @@
 "per_day": 1.01,
 "median": 400,
 "init": {
+"deals": 16,
 "per_day": 0.56,
 "median": 200,
 "p75": 250,
@@ -1334,6 +1429,7 @@
 "per_day": 1.0,
 "median": 410,
 "init": {
+"deals": 27,
 "per_day": 0.9,
 "median": 400,
 "p75": 800,

@@ -12,7 +12,7 @@
   新遊戲    近 7 天帳號成交 < 0.3 筆/天,今天帳號與初始號都 ≥ 1 筆/天
   成交暴增  初始號成交/天 ≥ 3,且是上次的 2 倍以上
   價格上漲  初始號成交/天 ≥ 3,中位價比上次高 30% 以上
-  (初始號成交全來自同一個賣家的遊戲會略過)
+  (初始號成交全來自同一個賣家、或新遊戲初始號樣本少於 10 筆的會略過)
 """
 
 from __future__ import annotations
@@ -32,6 +32,7 @@ NEW_PREV_MAX = 0.3
 SURGE_MIN = 3.0
 SURGE_RATIO = 2.0
 PRICE_RATIO = 1.3
+MIN_DEALS = 10
 
 
 def snapshot() -> dict:
@@ -43,7 +44,7 @@ def snapshot() -> dict:
         g = games.setdefault(d["id"], {"name": d["name"]})
         i = d["init"]
         g["init"] = {k: i.get(k) for k in
-                     ("per_day", "median", "p75", "gmv_per_day", "active", "sellers", "top3_share")}
+                     ("deals", "per_day", "median", "p75", "gmv_per_day", "active", "sellers", "top3_share")}
     return games
 
 
@@ -76,12 +77,13 @@ def compare(prev: dict, cur: dict, seen: dict | None = None) -> list[str]:
         if (g.get("init") or {}).get("sellers") == 1:
             continue  # 單一賣家一次大量出貨,不是真需求
         if (g.get("per_day", 0) >= NEW_MIN and seen.get(gid, 0) < NEW_PREV_MAX
-                and (g.get("init") or {}).get("per_day", 0) >= NEW_MIN):  # 只在意初始號市場
+                and (g.get("init") or {}).get("per_day", 0) >= NEW_MIN  # 只在意初始號市場
+                and (g.get("init") or {}).get("deals", 0) >= MIN_DEALS):  # 幾筆成交換算的速度不可信
             out.append(f"- 🆕 **{g['name']}**:帳號 {g['per_day']} 筆/天(上次 "
                        f"{p.get('per_day') if p else '無'}),{init_line(g)} [8591]({url})")
             continue
         ci, pi = g.get("init") or {}, (p or {}).get("init") or {}
-        if not ci or ci.get("per_day", 0) < SURGE_MIN:
+        if not ci or ci.get("per_day", 0) < SURGE_MIN or ci.get("deals", MIN_DEALS) < MIN_DEALS:
             continue
         if ci["per_day"] >= SURGE_RATIO * max(pi.get("per_day") or 0, 0.5):
             out.append(f"- 📈 **{g['name']}** 成交暴增:{pi.get('per_day')} → {ci['per_day']} 筆/天,"
