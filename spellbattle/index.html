@@ -17,6 +17,17 @@
     <h2>選擇 3 個技能 <span id="equipCount">0/3</span></h2>
     <div id="skillPicker" class="skill-grid"></div>
 
+    <h2>語音辨識</h2>
+    <div class="voice-row">
+      <select id="voiceMode">
+        <option value="auto">自動（有錄咒語就用本機）</option>
+        <option value="local">本機咒語辨識（離線、最快）</option>
+        <option value="cloud">線上 Google 辨識</option>
+      </select>
+      <button id="btnEnroll">🎙️ 錄製咒語</button>
+    </div>
+    <p id="enrollState" class="tip"></p>
+
     <div class="menu">
       <button id="btnHost" class="primary">建立房間</button>
       <div class="join-row">
@@ -68,7 +79,7 @@
     </div>
 
     <div id="bottomHud" class="hud">
-      <div class="voice"><span id="voiceStatus">🎙️</span> <span id="transcript"></span></div>
+      <div id="voiceBar" class="voice"><span id="voiceStatus">🎙️</span> <span id="transcript"></span></div>
       <div id="hint" class="hint"></div>
       <div class="bars">
         <div class="row"><b>HP</b><div class="bar hp"><i id="hpBar"></i></div><span id="hpText">100</span></div>
@@ -89,6 +100,22 @@
       <p id="loadingText">準備中…</p>
     </div>
   </section>
+
+  <!-- 錄製咒語 -->
+  <div id="enroll" class="overlay enroll">
+    <h2>🎙️ 錄製咒語</h2>
+    <p id="enrollReason" class="tip"></p>
+    <p class="tip">手機拿在平常玩的位置，用平常施法的音量唸。周圍安靜一點效果最好。</p>
+    <div id="enrollList" class="enroll-list"></div>
+    <div class="meter"><i id="enrollLevel"></i></div>
+    <p id="enrollPrompt" class="prompt"></p>
+    <p id="enrollResult" class="result"></p>
+    <div class="enroll-btns">
+      <button id="enrollRedo" class="ghost">重錄</button>
+      <button id="enrollDone" class="primary" disabled>完成</button>
+    </div>
+    <button id="enrollCancel" class="ghost small">取消</button>
+  </div>
 
   <script type="module" src="js/game.js"></script>
 </body>

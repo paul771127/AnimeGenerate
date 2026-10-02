@@ -1,6 +1,7 @@
 // 咒術對決 主遊戲邏輯
 import { SKILLS, DEFAULT_LOADOUT, MAX_EQUIP, STATS } from './skills.js';
 import { VoiceCaster } from './voice.js';
+import { LocalSpotter, classify, finalizeSkill, loadTemplates, saveTemplates, hasTemplates } from './voice-local.js';
 import { Net } from './net.js';
 
 const $ = (id) => document.getElementById(id);
@@ -36,6 +37,91 @@ function renderPicker() {
   $('equipCount').textContent = `${loadout.length}/${MAX_EQUIP}`;
 }
 renderPicker();
+
+// ---------------------------------------------------------------- 語音設定 / 錄製咒語
+$('voiceMode').value = loadPref('voiceMode', 'auto');
+$('voiceMode').onchange = () => { savePref('voiceMode', $('voiceMode').value); renderEnrollState(); };
+$('btnEnroll').onclick = () => {
+  if (loadout.length !== MAX_EQUIP) { $('homeStatus').textContent = `請先裝備 ${MAX_EQUIP} 個技能`; return; }
+  initAudio();
+  runEnrollment(loadout.map((id) => SKILLS[id])).then(renderEnrollState);
+};
+
+function renderEnrollState() {
+  const t = loadTemplates();
+  $('enrollState').textContent = '已錄製：' + loadout.map((id) => `${SKILLS[id].name} ${t[id] ? '✅' : '—'}`).join('　');
+}
+
+// 錄製咒語：每個技能唸 2 次 → 計算門檻 → 進入試唸測試
+function runEnrollment(skills, reason) {
+  return new Promise((resolve) => {
+    const box = $('enroll');
+    const all = loadTemplates();
+    const queue = skills.flatMap((s) => [s, s]);
+    const fresh = {};
+    let testing = false;
+    box.classList.add('show');
+    $('enrollReason').textContent = reason || '';
+    $('enrollDone').disabled = true;
+    $('enrollResult').textContent = '';
+
+    const renderList = () => {
+      $('enrollList').innerHTML = skills.map((s) => {
+        const n = fresh[s.id] ? fresh[s.id].templates.length : 0;
+        return `<span style="--c:${s.color}">${s.icon} ${s.name} ${'●'.repeat(n)}${'○'.repeat(2 - n)}</span>`;
+      }).join('');
+      if (queue.length) {
+        const s = queue[0];
+        $('enrollPrompt').innerHTML = `請對手機唸：<b style="color:${s.color}">「${s.name}」</b>（第 ${(fresh[s.id]?.templates.length || 0) + 1}/2 次）`;
+      } else {
+        $('enrollPrompt').textContent = '✅ 錄製完成！試唸看看任一咒語，確認辨識正確';
+      }
+    };
+
+    const spotter = new LocalSpotter({
+      audioCtx: audio,
+      onLevel: (rms, thr) => {
+        $('enrollLevel').style.width = `${Math.min(100, (rms / (thr * 3)) * 100)}%`;
+        $('enrollLevel').style.background = rms > thr ? '#3dff7a' : '#4da3ff';
+      },
+      onUtterance: (u) => {
+        if (!testing) {
+          const s = queue.shift();
+          const e = (fresh[s.id] ||= { templates: [], peaks: [] });
+          e.templates.push(u.seq); e.peaks.push(u.peak);
+          if (e.templates.length === 2) {
+            e.peak = (e.peaks[0] + e.peaks[1]) / 2;
+            finalizeSkill(e);
+            delete e.peaks;
+            all[s.id] = e;
+          }
+          sfx('tick');
+          if (!queue.length) { saveTemplates(all); testing = true; $('enrollDone').disabled = false; sfx('lock'); }
+          renderList();
+          return;
+        }
+        const r = classify(u.seq, u.peak, skills.map((s) => s.id), all);
+        $('enrollResult').textContent = r.id
+          ? `辨識為：${SKILLS[r.id].icon} ${SKILLS[r.id].name}（差異 ${r.best.d.toFixed(1)} / 門檻 ${r.best.thr.toFixed(1)}）`
+          : `沒有觸發：${r.reason || '—'}${r.best ? `（最像 ${SKILLS[r.best.id].name}，差異 ${r.best.d.toFixed(1)} / 門檻 ${r.best.thr.toFixed(1)}）` : ''}`;
+        if (r.id) sfx('chant'); else sfx('fail');
+      },
+    });
+
+    const close = () => { spotter.stop(); box.classList.remove('show'); resolve(); };
+    $('enrollRedo').onclick = () => {
+      // 重錄：把目前這個技能（或測試中則全部）清掉重來
+      if (testing) { testing = false; queue.length = 0; queue.push(...skills.flatMap((s) => [s, s])); for (const k in fresh) delete fresh[k]; $('enrollDone').disabled = true; }
+      else { const s = queue[0]; if (fresh[s.id]) { const n = fresh[s.id].templates.length; delete fresh[s.id]; for (let i = 0; i < n; i++) queue.unshift(s); } }
+      renderList();
+    };
+    $('enrollDone').onclick = close;
+    $('enrollCancel').onclick = close;
+    renderList();
+    spotter.start().catch((err) => { $('enrollPrompt').textContent = '無法開啟麥克風：' + err.message; });
+  });
+}
+renderEnrollState();
 
 function canStart() {
   if (loadout.length !== MAX_EQUIP) { $('homeStatus').textContent = `請裝備剛好 ${MAX_EQUIP} 個技能`; return false; }
@@ -120,6 +206,70 @@ function boxToScreen(b) {
   return { x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y };
 }
 
+// ---------------------------------------------------------------- 語音：本機辨識優先，線上失敗時自動切換
+function voiceLog(line) { M.voiceLog.push(line); if (M.voiceLog.length > 6) M.voiceLog.shift(); }
+function setVoiceStatus(t) { $('voiceStatus').textContent = t; }
+
+function startVoice() {
+  const mode = loadPref('voiceMode', 'auto');
+  if (mode === 'local' || (mode === 'auto' && hasTemplates(loadout))) return startLocalVoice();
+  const cloud = new VoiceCaster({
+    skills: S.skills,
+    onSkill: (s, info) => { if (chant(s, 'voice')) M.voiceDelay.push(info.sinceFirstTextMs); },
+    onTranscript: (t, isFinal, skill) => { $('transcript').textContent = t; if (isFinal) voiceLog(`${skill ? '✅' : '❌'} ${t}`); },
+    onStatus: setVoiceStatus,
+    onFatal: (code, msg) => {
+      voiceLog(`⚠ 線上辨識錯誤 ${code}`);
+      if (mode === 'cloud') setVoiceStatus(`⚠ 語音錯誤：${msg}`);
+      else fallbackToLocal(`線上語音辨識無法使用：${msg}`);
+    },
+  });
+  voice = cloud;
+  if (!cloud.supported) {
+    if (mode === 'cloud') setVoiceStatus('⚠ 此瀏覽器不支援線上語音辨識');
+    else fallbackToLocal('此瀏覽器不支援線上語音辨識');
+    return;
+  }
+  cloud.start();
+}
+
+// 點語音狀態列＝手動改用本機辨識（或重錄咒語）
+$('voiceBar').onclick = () => {
+  if (voice && voice.stop) voice.stop();
+  voice = null;
+  runEnrollment(S.skills, '重新錄製咒語').then(startLocalVoice);
+};
+
+async function fallbackToLocal(reason) {
+  setVoiceStatus('改用本機咒語辨識');
+  if (!hasTemplates(loadout)) await runEnrollment(S.skills, `${reason}\n改用本機咒語辨識：先錄下你唸的咒語（每個 2 次，約 20 秒）。`);
+  startLocalVoice();
+}
+
+async function startLocalVoice() {
+  if (!hasTemplates(loadout)) return fallbackToLocal('尚未錄製咒語');
+  const templates = loadTemplates();
+  const ids = loadout.slice();
+  const local = new LocalSpotter({
+    audioCtx: audio,
+    onUtterance: (u) => {
+      const r = classify(u.seq, u.peak, ids, templates);
+      const b = r.best;
+      const detail = b ? `${SKILLS[b.id].name} ${b.d.toFixed(1)}/${b.thr.toFixed(1)}` : '';
+      voiceLog(r.id ? `✅ ${detail}` : `❌ ${r.reason} ${detail}`);
+      $('transcript').textContent = r.id ? `${SKILLS[r.id].icon} ${SKILLS[r.id].name}` : `（${r.reason}）`;
+      if (r.id && chant(SKILLS[r.id], 'voice')) M.voiceDelay.push(now() - u.endedAt);
+    },
+  });
+  voice = local;
+  try {
+    await local.start();
+    setVoiceStatus('🎙️ 本機咒語辨識：聆聽中');
+  } catch (e) {
+    setVoiceStatus('⚠ 無法開啟麥克風：' + e.message);
+  }
+}
+
 // ---------------------------------------------------------------- 進入遊戲
 async function enterGame(mode, code) {
   $('home').classList.remove('active');
@@ -156,17 +306,6 @@ async function enterGame(mode, code) {
     toast('影像辨識載入失敗，改用點擊模式', '#ffd04a');
   }
 
-  voice = new VoiceCaster({
-    skills: S.skills,
-    onSkill: (s, info) => { if (chant(s, 'voice')) M.voiceDelay.push(info.sinceFirstTextMs); },
-    onTranscript: (t, isFinal, skill) => {
-      $('transcript').textContent = t;
-      if (isFinal) { M.voiceLog.push(`${skill ? '✅' : '❌'} ${t}`); if (M.voiceLog.length > 6) M.voiceLog.shift(); }
-    },
-    onStatus: (t) => { $('voiceStatus').textContent = t; },
-  });
-  if (!voice.supported) $('voiceStatus').textContent = '此瀏覽器不支援語音辨識，請點技能格詠唱';
-  else voice.start();
 
   if (S.mode === 'online') {
     net = new Net({
@@ -192,6 +331,7 @@ async function enterGame(mode, code) {
 
   hideLoading();
   enterScan();
+  startVoice();
   requestAnimationFrame(loop);
 }
 
@@ -835,7 +975,7 @@ function updateDebug(t) {
     `FPS ${Math.round(M.fps)} | 辨識 ${vision ? Math.round(vision.lastMs || 0) : '-'}ms | ${v}`,
     `人數 ${vision ? vision.people.length : '-'} | 目標 ${targetVisible() ? '可見' : '遺失'} (miss ${S.enemy.missFrames})`,
     `手 ${h ? `${h.gesture} ${(h.score * 100) | 0}%` : '無'}`,
-    `語音延遲(首字→觸發) ${avg(M.voiceDelay)}ms`,
+    `語音延遲 ${avg(M.voiceDelay)}ms（本機：說完→觸發；線上：首字→觸發）`,
     ...M.voiceLog,
   ].join('\n');
 }
@@ -862,6 +1002,7 @@ function warn(text) {
 
 // ---------------------------------------------------------------- 音效（WebAudio 合成）
 function initAudio() {
+  if (audio) { audio.resume(); return; }
   try { audio = new (window.AudioContext || window.webkitAudioContext)(); audio.resume(); } catch (_) { audio = null; }
 }
 function tone(freq, dur, type = 'sine', vol = 0.15, slide = 0, delay = 0) {

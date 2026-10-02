@@ -60,7 +60,7 @@ h2 { font-size: 1.05rem; margin: 20px 0 10px; display: flex; justify-content: sp
 .bars { display: grid; gap: 4px; margin: 6px 0 8px; }
 .bars .row b { width: 26px; } .bars .row span { width: 30px; text-align: right; font-variant-numeric: tabular-nums; }
 .bars .bar { margin-top: 0; height: 12px; }
-.voice { font-size: .85rem; color: #e8e2ff; min-height: 1.3em; text-shadow: 0 1px 3px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.voice { pointer-events: auto; cursor: pointer; font-size: .85rem; color: #e8e2ff; min-height: 1.3em; text-shadow: 0 1px 3px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #voiceStatus { color: var(--muted); }
 .hint { font-size: .8rem; color: #ffd04a; min-height: 1.2em; text-shadow: 0 1px 3px #000; }
 .slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -101,3 +101,19 @@ h2 { font-size: 1.05rem; margin: 20px 0 10px; display: flex; justify-content: sp
 .stats table { border-collapse: collapse; font-size: .85rem; text-align: left; }
 .stats td { padding: 3px 8px; border-bottom: 1px solid rgba(255,255,255,.1); }
 .stats td:last-child { color: #ffd04a; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* 語音設定 / 錄製咒語 */
+.voice-row { display: flex; gap: 10px; }
+.voice-row select { flex: 1; min-width: 0; font: inherit; color: var(--fg); background: #181238; border: 1px solid #4a3f88; border-radius: 10px; padding: 10px; }
+.overlay.enroll { position: fixed; z-index: 50; background: var(--bg); }
+#enrollReason { white-space: pre-line; color: #ffb36b; }
+.overlay.enroll h2 { font-size: 1.6rem; margin: 0; }
+.enroll-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.enroll-list span { border: 2px solid var(--c); border-radius: 10px; padding: 6px 10px; }
+.meter { width: min(320px, 90%); height: 10px; background: rgba(255,255,255,.12); border-radius: 6px; overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; transition: width .05s; }
+.prompt { font-size: 1.2rem; margin: 4px 0; }
+.result { color: #ffd04a; min-height: 1.4em; margin: 0; }
+.enroll-btns { display: flex; gap: 10px; }
+.enroll-btns button { min-width: 120px; }
+.overlay button.small { min-width: 0; padding: 6px 14px; font-size: .85rem; }
