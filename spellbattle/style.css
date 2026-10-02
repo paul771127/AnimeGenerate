@@ -93,3 +93,11 @@ h2 { font-size: 1.05rem; margin: 20px 0 10px; display: flex; justify-content: sp
 .overlay button { min-width: 200px; }
 .spinner { width: 46px; height: 46px; border-radius: 50%; border: 4px solid #3a3070; border-top-color: var(--accent); animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* 驗證用 */
+.debug { position: absolute; left: 8px; top: 72px; margin: 0; padding: 6px 8px; font: 11px/1.4 ui-monospace, monospace;
+  background: rgba(0,0,0,.6); color: #9f9; border-radius: 8px; pointer-events: none; max-width: 70%; white-space: pre-wrap; display: none; }
+.debug:not(:empty) { display: block; }
+.stats table { border-collapse: collapse; font-size: .85rem; text-align: left; }
+.stats td { padding: 3px 8px; border-bottom: 1px solid rgba(255,255,255,.1); }
+.stats td:last-child { color: #ffd04a; text-align: right; font-variant-numeric: tabular-nums; }

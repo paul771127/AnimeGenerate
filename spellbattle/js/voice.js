@@ -7,6 +7,7 @@ export class VoiceCaster {
     this.onStatus = onStatus || (() => {});
     this.running = false;
     this.lastFire = new Map();       // 去抖動：同一句話的 interim 結果不要重複觸發
+    this.firstSeen = new Map();      // 除錯用：每句話第一次出現文字的時間
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     this.supported = !!SR;
     if (!SR) return;
@@ -24,7 +25,7 @@ export class VoiceCaster {
       // 瀏覽器會自動停止辨識，持續重啟以保持監聽
       if (this.running) setTimeout(() => { try { rec.start(); } catch (_) {} }, 150);
     };
-    rec.onstart = () => this.onStatus('🎙️ 聆聽中…');
+    rec.onstart = () => { this.firstSeen.clear(); this.onStatus('🎙️ 聆聽中…'); };
     this.rec = rec;
   }
 
@@ -45,15 +46,18 @@ export class VoiceCaster {
       const texts = [];
       for (let a = 0; a < res.length; a++) texts.push(res[a].transcript);
       const text = texts.join(' ').toLowerCase().replace(/\s+/g, '');
-      this.onTranscript(res[0].transcript, res.isFinal);
+      const t = performance.now();
+      if (!this.firstSeen.has(i)) this.firstSeen.set(i, t);
       const skill = this.match(text);
+      this.onTranscript(res[0].transcript, res.isFinal, skill);
+      if (res.isFinal) this.firstSeen.delete(i);
       if (!skill) continue;
       // 同一個 result（含 interim 更新）只觸發一次
       const key = `${i}:${skill.id}`;
       const now = performance.now();
       if (this.lastFire.has(key) && now - this.lastFire.get(key) < 4000) continue;
       this.lastFire.set(key, now);
-      this.onSkill(skill);
+      this.onSkill(skill, { sinceFirstTextMs: t - (this.firstSeen.get(i) ?? t) });
     }
   }
 

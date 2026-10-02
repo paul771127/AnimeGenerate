@@ -85,6 +85,21 @@ const S = {
 };
 window.__spellduel = S;   // 方便除錯
 
+// ---------------------------------------------------------------- 驗證用統計
+const DEBUG = new URLSearchParams(location.search).has('debug');
+const M = {};
+function resetMetrics() {
+  Object.assign(M, {
+    voiceChants: 0, tapChants: 0, timeouts: 0,
+    fires: { fist: 0, flick: 0, tap: 0 },
+    hits: 0, misses: 0, dodged: 0, hurt: 0,
+    chantToFire: [], voiceDelay: [], voiceLog: [], fps: 0, lostFrames: 0, frames: 0,
+  });
+}
+resetMetrics();
+const avg = (a) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : '-');
+const pct = (a, b) => (a + b ? `${Math.round((a / (a + b)) * 100)}%` : '-');
+
 function resize() {
   DPR = Math.min(window.devicePixelRatio || 1, 2);
   W = window.innerWidth; H = window.innerHeight;
@@ -143,8 +158,11 @@ async function enterGame(mode, code) {
 
   voice = new VoiceCaster({
     skills: S.skills,
-    onSkill: (s) => chant(s),
-    onTranscript: (t) => { $('transcript').textContent = t; },
+    onSkill: (s, info) => { if (chant(s, 'voice')) M.voiceDelay.push(info.sinceFirstTextMs); },
+    onTranscript: (t, isFinal, skill) => {
+      $('transcript').textContent = t;
+      if (isFinal) { M.voiceLog.push(`${skill ? '✅' : '❌'} ${t}`); if (M.voiceLog.length > 6) M.voiceLog.shift(); }
+    },
     onStatus: (t) => { $('voiceStatus').textContent = t; },
   });
   if (!voice.supported) $('voiceStatus').textContent = '此瀏覽器不支援語音辨識，請點技能格詠唱';
@@ -261,6 +279,7 @@ function resetStats() {
   S.me.hp = STATS.maxHp; S.me.mp = STATS.maxMp; S.me.cooldowns = {};
   S.enemy.hp = S.enemy.maxHp = STATS.maxHp;
   S.charging = null; S.projectiles = []; S.incoming = [];
+  resetMetrics();
   $('result').classList.remove('show');
 }
 
@@ -274,28 +293,32 @@ function buildSlots() {
     d.className = 'slot';
     d.style.setProperty('--c', s.color);
     d.innerHTML = `<span class="ic">${s.icon}</span>${s.name}<div class="cost">MP ${s.cost}</div><div class="cd"></div>`;
-    d.onpointerdown = (ev) => { ev.stopPropagation(); chant(s); };
+    d.onpointerdown = (ev) => { ev.stopPropagation(); chant(s, 'tap'); };
     box.appendChild(d);
     S.slotEls[s.id] = d;
   }
 }
 
-function chant(skill) {
-  if (S.phase !== 'battle') { if (S.phase !== 'over') hint('戰鬥開始後才能施法'); return; }
+function chant(skill, via) {
+  if (S.phase !== 'battle') { if (S.phase !== 'over') hint('戰鬥開始後才能施法'); return false; }
   const t = now();
-  if ((S.me.cooldowns[skill.id] || 0) > t) { toast(`${skill.name} 冷卻中`, '#aaa'); return; }
-  if (S.me.mp < skill.cost) { toast('MP 不足', '#4da3ff'); sfx('fail'); return; }
+  if ((S.me.cooldowns[skill.id] || 0) > t) { toast(`${skill.name} 冷卻中`, '#aaa'); return false; }
+  if (S.me.mp < skill.cost) { toast('MP 不足', '#4da3ff'); sfx('fail'); return false; }
   S.charging = { skill, since: t };
+  if (via === 'voice') M.voiceChants++; else M.tapChants++;
   sfx('chant');
   hint(skill.self ? `${skill.icon} ${skill.name}：握拳後張開手掌發動` : `${skill.icon} ${skill.name}：手指對準敵人，握拳→張開手掌發射`);
   if (net) net.send({ t: 'charge', skill: skill.id });
+  return true;
 }
 
-function release(aim) {
+function release(aim, via) {
   const c = S.charging;
   if (!c || S.phase !== 'battle') return;
   const s = c.skill;
   if (S.me.mp < s.cost) { S.charging = null; toast('MP 不足', '#4da3ff'); return; }
+  M.fires[via]++;
+  M.chantToFire.push(now() - c.since);
   S.me.mp -= s.cost;
   S.me.cooldowns[s.id] = now() + s.cooldownMs;
   S.charging = null;
@@ -327,10 +350,12 @@ function impact(p) {
   if (hit) {
     floater(p.to.x, p.to.y - 30, `-${s.damage}`, '#ff4d6d', 1.4);
     sfx('hit');
+    M.hits++;
     e.hp = Math.max(0, e.hp - s.damage);   // 先行預測，連線時以對手回報為準
     if (S.mode === 'practice' && e.hp <= 0) finish(true);
   } else {
     floater(p.to.x, p.to.y - 30, 'MISS', '#ccc');
+    M.misses++;
     sfx('miss');
   }
   if (net) net.send({ t: 'result', id: p.id, hit, dmg: hit ? s.damage : 0 });
@@ -338,6 +363,7 @@ function impact(p) {
 
 function takeDamage(dmg, skillId) {
   S.me.hp = Math.max(0, S.me.hp - dmg);
+  M.hurt++;
   S.flash = 1; S.shake = 18;
   const s = SKILLS[skillId];
   burst(W / 2, H / 2, s ? s.color : '#ff4d6d', 70, 1.6);
@@ -355,6 +381,7 @@ function finish(win) {
   S.phase = 'over';
   S.charging = null;
   $('resultText').textContent = win ? '🏆 勝利！' : '💀 敗北…';
+  $('resultStats').innerHTML = statsHtml();
   $('result').classList.add('show');
   sfx(win ? 'win' : 'lose');
 }
@@ -402,7 +429,7 @@ function onNet(m) {
       const inc = S.incoming.find((i) => i.id === m.id);
       if (inc) inc.resolved = true;
       if (m.hit) takeDamage(m.dmg, inc && inc.skill.id);
-      else { floater(W / 2, H * 0.45, '閃避成功！', '#7dffb0', 1.4); sfx('dodge'); }
+      else { floater(W / 2, H * 0.45, '閃避成功！', '#7dffb0', 1.4); sfx('dodge'); M.dodged++; }
       break;
     }
     case 'state':
@@ -419,7 +446,8 @@ function onNet(m) {
 let lastT = now();
 function loop() {
   const t = now();
-  const dt = Math.min(0.05, (t - lastT) / 1000);
+  const rawDt = Math.max(0.001, (t - lastT) / 1000);
+  const dt = Math.min(0.05, rawDt);
   lastT = t;
 
   if (vision) {
@@ -433,7 +461,7 @@ function loop() {
   if (S.phase === 'battle') {
     S.me.mp = Math.min(STATS.maxMp, S.me.mp + STATS.mpRegenPerSec * dt);
     if (S.charging && t - S.charging.since > STATS.chargeTimeoutMs) {
-      S.charging = null; hint('詠唱逾時'); sfx('fail');
+      S.charging = null; hint('詠唱逾時'); sfx('fail'); M.timeouts++;
     }
   }
 
@@ -441,8 +469,11 @@ function loop() {
   S.projectiles = S.projectiles.filter((p) => !p.done);
   S.incoming = S.incoming.filter((i) => t - i.start < i.dur + 1500 && !(i.resolved && t - i.start > i.dur));
 
+  M.fps = M.fps ? lerp(M.fps, 1 / rawDt, 0.05) : 1 / rawDt;
+  if (S.phase === 'battle' && S.enemy.locked) { M.frames++; if (!targetVisible()) M.lostFrames++; }
   render(t, dt);
   updateHud(t);
+  if (DEBUG) updateDebug(t);
   requestAnimationFrame(loop);
 }
 
@@ -513,19 +544,19 @@ function updateHand(t) {
   if (!S.charging) return;
   if (h.gesture === 'Open_Palm' && t - S.lastFist < 1500 && t - S.charging.since > 250) {
     S.lastFist = 0;
-    release(S.aim);
+    release(S.aim, 'fist');
     return;
   }
   const h0 = S.palmHist[0];
   if (h0 && t - h0.t > 60) {
     const vy = (palm.y - h0.y) / ((t - h0.t) / 1000);
-    if (vy < -H * 2.2 && t - S.charging.since > 250) { S.palmHist.length = 0; release(S.aim); }
+    if (vy < -H * 2.2 && t - S.charging.since > 250) { S.palmHist.length = 0; release(S.aim, 'flick'); }
   }
 }
 
 // 詠唱中點擊畫面＝往點擊處發射（測試/備援用）
 canvas.addEventListener('pointerdown', (ev) => {
-  if (S.charging) release({ x: ev.clientX, y: ev.clientY });
+  if (S.charging) release({ x: ev.clientX, y: ev.clientY }, 'tap');
 });
 
 // ---------------------------------------------------------------- 繪圖
@@ -775,6 +806,38 @@ function updateHud(t) {
     el.classList.toggle('charging', !!S.charging && S.charging.skill.id === s.id);
     el.classList.toggle('nomp', me.mp < s.cost);
   }
+}
+
+// 驗證用：結算畫面的統計
+function statsHtml() {
+  const f = M.fires;
+  const rows = [
+    ['詠唱（語音 / 點擊）', `${M.voiceChants} / ${M.tapChants}`],
+    ['發射（握拳張開 / 揮手 / 點擊）', `${f.fist} / ${f.flick} / ${f.tap}`],
+    ['詠唱逾時（手勢沒觸發）', M.timeouts],
+    ['詠唱→發射 平均', `${avg(M.chantToFire)} ms`],
+    ['命中率', `${pct(M.hits, M.misses)}（${M.hits} 中 / ${M.misses} 失）`],
+    ['閃避率', `${pct(M.dodged, M.hurt)}（${M.dodged} 閃 / ${M.hurt} 中）`],
+    ['目標遺失時間', M.frames ? `${Math.round((M.lostFrames / M.frames) * 100)}%` : '-'],
+    ['平均 FPS', Math.round(M.fps)],
+  ];
+  return '<table>' + rows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('') + '</table>';
+}
+
+// 除錯面板（網址加 ?debug=1）
+let debugAt = 0;
+function updateDebug(t) {
+  if (t - debugAt < 250) return;
+  debugAt = t;
+  const h = vision && vision.hand;
+  const v = video.videoWidth ? `${video.videoWidth}x${video.videoHeight}` : '-';
+  $('debug').textContent = [
+    `FPS ${Math.round(M.fps)} | 辨識 ${vision ? Math.round(vision.lastMs || 0) : '-'}ms | ${v}`,
+    `人數 ${vision ? vision.people.length : '-'} | 目標 ${targetVisible() ? '可見' : '遺失'} (miss ${S.enemy.missFrames})`,
+    `手 ${h ? `${h.gesture} ${(h.score * 100) | 0}%` : '無'}`,
+    `語音延遲(首字→觸發) ${avg(M.voiceDelay)}ms`,
+    ...M.voiceLog,
+  ].join('\n');
 }
 
 function hint(t) { $('hint').textContent = t; }

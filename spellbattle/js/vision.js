@@ -46,6 +46,7 @@ export class Vision {
     if (ts <= this.lastTs) ts = this.lastTs + 1;
     this.lastTs = ts;
     this.frame++;
+    const t0 = performance.now();
 
     const g = this.gesture.recognizeForVideo(video, ts);
     if (g.landmarks && g.landmarks.length) {
@@ -60,6 +61,7 @@ export class Vision {
       this.lastTs = ts + 0.5;
       this.people = (p.landmarks || []).map((lm) => ({ landmarks: lm, box: poseBox(lm) })).filter((x) => x.box);
     }
+    this.lastMs = performance.now() - t0;   // 除錯用：本幀辨識耗時
   }
 }
 
