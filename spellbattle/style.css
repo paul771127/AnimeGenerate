@@ -1,0 +1,95 @@
+:root {
+  --bg: #0b0820; --panel: rgba(16, 12, 40, .78); --fg: #f2eeff; --muted: #a59fc7;
+  --accent: #9b6bff; --hp: #ff4d6d; --mp: #4da3ff; --ok: #3dff7a;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg);
+  font-family: system-ui, -apple-system, "PingFang TC", "Noto Sans TC", sans-serif; overscroll-behavior: none; }
+button { font: inherit; color: inherit; border: 1px solid #5a4d99; background: #221a4d; padding: 12px 16px;
+  border-radius: 12px; cursor: pointer; }
+button.primary { background: linear-gradient(135deg, #7b4dff, #c04dff); border: none; font-weight: 700; }
+button.ghost { background: transparent; }
+button:disabled { opacity: .4; }
+input { font: inherit; color: var(--fg); background: #181238; border: 1px solid #4a3f88; border-radius: 10px; padding: 10px 12px; }
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* 主選單 */
+#home { max-width: 520px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { text-align: center; font-size: 2.2rem; margin: 8px 0 20px; letter-spacing: .1em;
+  background: linear-gradient(90deg, #ffd04a, #ff7a1a, #c04dff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+h1 small { display: block; font-size: .8rem; letter-spacing: .3em; color: var(--muted); -webkit-text-fill-color: var(--muted); }
+h2 { font-size: 1.05rem; margin: 20px 0 10px; display: flex; justify-content: space-between; }
+.field { display: flex; gap: 10px; align-items: center; }
+.field input { flex: 1; }
+.skill-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.skill-card { padding: 10px; border-radius: 12px; border: 2px solid #3a3070; background: #15103a; text-align: left; }
+.skill-card.on { border-color: var(--c); box-shadow: 0 0 14px -2px var(--c); }
+.skill-card .t { font-weight: 700; font-size: 1.05rem; }
+.skill-card .s { font-size: .75rem; color: var(--muted); margin-top: 4px; }
+.menu { display: grid; gap: 10px; margin-top: 22px; }
+.join-row { display: flex; gap: 10px; }
+.join-row input { flex: 1; min-width: 0; text-align: center; letter-spacing: .3em; }
+.status { text-align: center; color: var(--muted); min-height: 1.4em; }
+.howto { margin-top: 16px; background: #120e30; border-radius: 12px; padding: 10px 14px; color: #cfc8f0; font-size: .9rem; }
+.howto summary { cursor: pointer; font-weight: 700; }
+.howto li { margin: 6px 0; }
+.tip { color: var(--muted); font-size: .8rem; }
+
+/* 戰鬥畫面 */
+#game { position: fixed; inset: 0; overflow: hidden; background: #000; touch-action: none; }
+#game.active { display: block; }
+#cam, #fx { position: absolute; inset: 0; width: 100%; height: 100%; }
+#cam { object-fit: cover; }
+.hud { position: absolute; left: 0; right: 0; padding: 10px 12px; pointer-events: none; }
+.hud button, .hud .slot { pointer-events: auto; }
+#topHud { top: 0; padding-top: max(10px, env(safe-area-inset-top)); display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.enemy-card { display: flex; gap: 8px; align-items: center; background: var(--panel); padding: 6px 10px 6px 6px; border-radius: 12px; min-width: 52%; }
+.enemy-card img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: #222; border: 2px solid var(--hp); }
+.enemy-card img:not([src]) { visibility: hidden; }
+.col { flex: 1; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .85rem; }
+.pill { background: var(--panel); border-radius: 999px; padding: 6px 10px; font-size: .75rem; color: var(--muted); max-width: 44%; }
+.bar { flex: 1; height: 10px; border-radius: 6px; background: rgba(255,255,255,.12); overflow: hidden; margin-top: 4px; }
+.bar i { display: block; height: 100%; width: 100%; transition: width .2s; }
+.bar.hp i { background: linear-gradient(90deg, #ff2d55, #ff8a5c); }
+.bar.mp i { background: linear-gradient(90deg, #2d7dff, #5ce1ff); }
+#bottomHud { bottom: 0; padding-bottom: max(12px, env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, rgba(5,3,20,.85) 30%); }
+.bars { display: grid; gap: 4px; margin: 6px 0 8px; }
+.bars .row b { width: 26px; } .bars .row span { width: 30px; text-align: right; font-variant-numeric: tabular-nums; }
+.bars .bar { margin-top: 0; height: 12px; }
+.voice { font-size: .85rem; color: #e8e2ff; min-height: 1.3em; text-shadow: 0 1px 3px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#voiceStatus { color: var(--muted); }
+.hint { font-size: .8rem; color: #ffd04a; min-height: 1.2em; text-shadow: 0 1px 3px #000; }
+.slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.slot { position: relative; overflow: hidden; border-radius: 12px; padding: 8px 6px; text-align: center; background: rgba(20,14,50,.85);
+  border: 2px solid var(--c); font-size: .8rem; user-select: none; }
+.slot .ic { font-size: 1.4rem; display: block; }
+.slot .cost { color: #8fc4ff; font-size: .7rem; }
+.slot .cd { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.65); height: 0; }
+.slot.charging { box-shadow: 0 0 18px var(--c); animation: pulse .6s infinite alternate; }
+.slot.nomp { filter: grayscale(.8); }
+@keyframes pulse { to { transform: scale(1.05); } }
+
+.banner { position: absolute; top: 38%; left: 0; right: 0; text-align: center; font-size: 3rem; font-weight: 900; pointer-events: none;
+  text-shadow: 0 0 20px #c04dff, 0 2px 4px #000; opacity: 0; transition: opacity .2s; }
+.banner.show { opacity: 1; }
+.warn { position: absolute; top: 90px; left: 50%; transform: translateX(-50%); background: rgba(255,40,60,.85); padding: 6px 14px;
+  border-radius: 999px; font-weight: 700; font-size: .9rem; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; }
+.warn.show { opacity: 1; animation: blink .4s infinite alternate; }
+@keyframes blink { to { background: rgba(255,120,40,.9); } }
+
+.panel { position: absolute; left: 16px; right: 16px; bottom: 30%; background: var(--panel); border-radius: 16px; padding: 14px;
+  display: none; gap: 10px; text-align: center; backdrop-filter: blur(6px); }
+.panel.show { display: grid; }
+.panel p { margin: 0; }
+
+.overlay { position: absolute; inset: 0; background: rgba(5,3,20,.82); display: none; flex-direction: column; gap: 14px;
+  align-items: center; justify-content: center; padding: 16px; text-align: center; }
+.overlay.show { display: flex; }
+.overlay h2 { font-size: 2.6rem; margin: 0 0 10px; display: block; }
+.overlay button { min-width: 200px; }
+.spinner { width: 46px; height: 46px; border-radius: 50%; border: 4px solid #3a3070; border-top-color: var(--accent); animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }

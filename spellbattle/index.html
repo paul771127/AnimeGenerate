@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0820">
+  <title>咒術對決 Spell Duel</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body>
+  <!-- 主選單 -->
+  <section id="home" class="screen active">
+    <h1>咒術對決<small>SPELL DUEL · AR Demo</small></h1>
+    <label class="field">名稱 <input id="nameInput" maxlength="10" placeholder="魔法師"></label>
+
+    <h2>選擇 3 個技能 <span id="equipCount">0/3</span></h2>
+    <div id="skillPicker" class="skill-grid"></div>
+
+    <div class="menu">
+      <button id="btnHost" class="primary">建立房間</button>
+      <div class="join-row">
+        <input id="codeInput" inputmode="numeric" maxlength="4" placeholder="房號">
+        <button id="btnJoin">加入房間</button>
+      </div>
+      <button id="btnPractice" class="ghost">單人練習</button>
+    </div>
+    <p id="homeStatus" class="status"></p>
+
+    <details class="howto">
+      <summary>玩法說明</summary>
+      <ol>
+        <li>兩人各拿一支手機，用<b>後鏡頭</b>對準對方，按「鎖定目標」擷取對手影像。</li>
+        <li><b>唸出技能名稱</b>（例如「火球」）開始詠唱，畫面上的手會出現魔法陣。</li>
+        <li>把手伸到鏡頭前（只要拍到手腕與手指），<b>手指方向 = 瞄準方向</b>。</li>
+        <li><b>握拳蓄力 → 張開手掌</b>即發射（或手往前快速一揮）。</li>
+        <li>法術飛行需要時間，看到對手法術飛來時<b>移動身體</b>就能閃避！</li>
+        <li>施法消耗 MP，MP 會隨時間恢復；HP 歸零者敗北。</li>
+      </ol>
+      <p class="tip">語音辨識不靈時可點畫面下方技能格詠唱；詠唱中點擊畫面也可直接發射。</p>
+    </details>
+  </section>
+
+  <!-- 戰鬥畫面 -->
+  <section id="game" class="screen">
+    <video id="cam" playsinline muted autoplay></video>
+    <canvas id="fx"></canvas>
+
+    <div id="topHud" class="hud">
+      <div class="enemy-card">
+        <img id="enemyThumb" alt="">
+        <div class="col">
+          <div class="row"><span id="enemyName">對手</span><span id="enemyHpText">100</span></div>
+          <div class="bar hp"><i id="enemyHpBar"></i></div>
+        </div>
+      </div>
+      <div id="netStatus" class="pill"></div>
+    </div>
+
+    <div id="banner" class="banner"></div>
+    <div id="warn" class="warn"></div>
+
+    <div id="scanPanel" class="panel">
+      <p id="scanText">將鏡頭對準對手全身…</p>
+      <button id="btnLock" class="primary" disabled>🎯 鎖定目標</button>
+      <button id="btnDummy" class="ghost">使用虛擬標靶</button>
+    </div>
+
+    <div id="bottomHud" class="hud">
+      <div class="voice"><span id="voiceStatus">🎙️</span> <span id="transcript"></span></div>
+      <div id="hint" class="hint"></div>
+      <div class="bars">
+        <div class="row"><b>HP</b><div class="bar hp"><i id="hpBar"></i></div><span id="hpText">100</span></div>
+        <div class="row"><b>MP</b><div class="bar mp"><i id="mpBar"></i></div><span id="mpText">100</span></div>
+      </div>
+      <div id="slots" class="slots"></div>
+    </div>
+
+    <div id="result" class="overlay">
+      <h2 id="resultText"></h2>
+      <button id="btnRematch" class="primary">再來一局</button>
+      <button id="btnHome" class="ghost">回主選單</button>
+    </div>
+
+    <div id="loading" class="overlay show">
+      <div class="spinner"></div>
+      <p id="loadingText">準備中…</p>
+    </div>
+  </section>
+
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>
