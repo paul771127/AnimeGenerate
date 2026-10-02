@@ -124,3 +124,26 @@ export function signatureSimilarity(a, b) {
   for (let i = 0; i < a.length; i++) s += Math.min(a[i], b[i]);
   return s;
 }
+
+// 用畫面中的身體大小估算對手距離（公尺）。
+// 針孔相機模型：距離 = 焦距(px) × 真實長度(m) / 畫面長度(px)。
+// 取「肩寬」與「軀幹長」中換算比例較大的那個（較不受側身、彎腰影響）。
+export function estimateDistance(lm, vw, vh, cfg) {
+  const f = Math.max(vw, vh) / 2 / Math.tan(((cfg.cameraFovDeg / 2) * Math.PI) / 180);
+  const ok = (i) => lm[i] && (lm[i].visibility ?? 1) > 0.5;
+  const px = (a, b) => Math.hypot((a.x - b.x) * vw, (a.y - b.y) * vh);
+  const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+  let ppm = 0, method = '';
+  if (ok(11) && ok(12)) { ppm = px(lm[11], lm[12]) / cfg.shoulderM; method = '肩寬'; }
+  if (ok(11) && ok(12) && ok(23) && ok(24)) {
+    const t = px(mid(lm[11], lm[12]), mid(lm[23], lm[24])) / cfg.torsoM;
+    if (t > ppm) { ppm = t; method = '軀幹'; }
+  }
+  if (!ppm) {
+    const ys = lm.filter((p) => (p.visibility ?? 1) > 0.4).map((p) => p.y);
+    if (ys.length < 5) return null;
+    ppm = ((Math.max(...ys) - Math.min(...ys)) * vh) / cfg.bodyM;
+    method = '身高';
+  }
+  return ppm > 0 ? { d: f / ppm, method } : null;
+}

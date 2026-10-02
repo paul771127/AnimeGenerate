@@ -1,5 +1,5 @@
 // 咒術對決 主遊戲邏輯
-import { SKILLS, DEFAULT_LOADOUT, MAX_EQUIP, STATS } from './skills.js';
+import { SKILLS, DEFAULT_LOADOUT, MAX_EQUIP, STATS, rangeText } from './skills.js';
 import { VoiceCaster } from './voice.js';
 import { LocalSpotter, classify, finalizeSkill, loadTemplates, saveTemplates, hasTemplates } from './voice-local.js';
 import { Net } from './net.js';
@@ -23,7 +23,7 @@ function renderPicker() {
     const b = document.createElement('button');
     b.className = 'skill-card' + (loadout.includes(s.id) ? ' on' : '');
     b.style.setProperty('--c', s.color);
-    const eff = s.self ? `回復 ${s.heal}` : `傷害 ${s.damage} · 射程${s.rangeLabel}`;
+    const eff = s.self ? `回復 ${s.heal}` : `傷害 ${s.damage} · 射程 ${rangeText(s)}`;
     b.innerHTML = `<div class="t">${s.icon} ${s.name}</div><div class="s">MP ${s.cost} · ${eff}<br>${s.desc}</div>`;
     b.onclick = () => {
       if (loadout.includes(s.id)) loadout = loadout.filter((x) => x !== s.id);
@@ -154,7 +154,7 @@ const S = {
   me: { name: '', hp: STATS.maxHp, mp: STATS.maxMp, cooldowns: {} },
   skills: [],
   enemy: { name: '對手', hp: STATS.maxHp, maxHp: STATS.maxHp, locked: false, virtual: false,
-    signature: null, box: null, lastSeen: 0, missFrames: 99, ready: false, loadout: [] },
+    signature: null, box: null, lastSeen: 0, missFrames: 99, distance: null, distMethod: '', ready: false, loadout: [] },
   candidate: null,           // 掃描階段偵測到的人
   charging: null,            // { skill, since }
   hand: null,                // 螢幕座標的手部資訊
@@ -178,7 +178,7 @@ function resetMetrics() {
   Object.assign(M, {
     voiceChants: 0, tapChants: 0, timeouts: 0,
     fires: { fist: 0, flick: 0, tap: 0 },
-    hits: 0, misses: 0, dodged: 0, hurt: 0,
+    hits: 0, misses: 0, dodged: 0, hurt: 0, outOfRange: 0,
     chantToFire: [], voiceDelay: [], voiceLog: [], fps: 0, lostFrames: 0, frames: 0,
   });
 }
@@ -301,6 +301,7 @@ async function enterGame(mode, code) {
     S.vision = vision;   // 方便除錯
     S.torsoSignature = mod.torsoSignature;
     S.signatureSimilarity = mod.signatureSimilarity;
+    S.estimateDistance = mod.estimateDistance;
   } catch (e) {
     console.error(e);
     vision = null;
@@ -366,6 +367,7 @@ function lockTarget(virtual) {
     if (S.mode === 'practice') e.name = '訓練木人';
   }
   e.locked = true;
+  e.distance = null;
   e.lastSeen = now();
   e.missFrames = 0;
   $('scanPanel').classList.remove('show');
@@ -486,7 +488,9 @@ function impact(p) {
   const s = p.skill, e = S.enemy;
   const r = s.radius * Math.min(W, H);
   const b = targetVisible() ? e.box : null;
-  const hit = !!b && p.to.x > b.x0 - r && p.to.x < b.x1 + r && p.to.y > b.y0 - r && p.to.y < b.y1 + r;
+  const onTarget = !!b && p.to.x > b.x0 - r && p.to.x < b.x1 + r && p.to.y > b.y0 - r && p.to.y < b.y1 + r;
+  const range = rangeState(s);
+  const hit = onTarget && range !== 'far' && range !== 'near';
   burst(p.to.x, p.to.y, s.color, hit ? 60 : 20, hit ? 1.4 : 0.7);
   if (hit) {
     floater(p.to.x, p.to.y - 30, `-${s.damage}`, '#ff4d6d', 1.4);
@@ -495,8 +499,10 @@ function impact(p) {
     e.hp = Math.max(0, e.hp - s.damage);   // 先行預測，連線時以對手回報為準
     if (S.mode === 'practice' && e.hp <= 0) finish(true);
   } else {
-    floater(p.to.x, p.to.y - 30, 'MISS', '#ccc');
+    const why = onTarget && range === 'far' ? '射程外' : onTarget && range === 'near' ? '太近' : 'MISS';
+    floater(p.to.x, p.to.y - 30, why, '#ccc');
     M.misses++;
+    if (why !== 'MISS') M.outOfRange++;
     sfx('miss');
   }
   if (net) net.send({ t: 'result', id: p.id, hit, dmg: hit ? s.damage : 0 });
@@ -621,8 +627,11 @@ function loop() {
 function updateTarget(t) {
   const e = S.enemy;
   if (e.virtual) {
-    const cx = W * (0.5 + 0.3 * Math.sin(t / 1300)), cy = H * (0.42 + 0.04 * Math.sin(t / 700));
-    const bw = Math.min(W, H) * 0.28, bh = bw * 2.2;
+    // 木人前後移動 1～6 公尺，畫面大小跟著變
+    e.distance = 3.5 + 2.5 * Math.sin(t / 2600);
+    e.distMethod = '模擬';
+    const cx = W * (0.5 + 0.3 * Math.sin(t / 1300)), cy = H * 0.45;
+    const bh = clamp(H * 1.3 / e.distance, 60, H * 0.9), bw = bh / 2.2;
     e.box = { x0: cx - bw / 2, x1: cx + bw / 2, y0: cy - bh / 2, y1: cy + bh / 2 };
     e.lastSeen = t;
     e.missFrames = 0;
@@ -660,7 +669,41 @@ function updateTarget(t) {
   } else e.box = nb;
   e.lastSeen = t;
   e.missFrames = 0;
+  const est = rawDistance(pick);
+  if (est) {
+    const d = est.d * distCalib;
+    e.distance = e.distance ? lerp(e.distance, d, 0.25) : d;
+    e.distMethod = est.method;
+  }
 }
+
+// ---------------------------------------------------------------- 距離 / 射程
+let distCalib = loadPref('distCalib', 1);
+function rawDistance(person) {
+  if (!S.estimateDistance || !video.videoWidth) return null;
+  return S.estimateDistance(person.landmarks, video.videoWidth, video.videoHeight, STATS);
+}
+// 回傳 null（距離未知，不限制）、'ok'、'far'、'near'
+function rangeState(skill) {
+  const d = S.enemy.distance;
+  if (!skill.range || !d) return null;
+  if (d > skill.range[1]) return 'far';
+  if (d < skill.range[0]) return 'near';
+  return 'ok';
+}
+
+// 掃描時校正：輸入對手實際距離，修正鏡頭視角等假設造成的誤差
+$('btnCalib').onclick = () => {
+  const c = S.candidate;
+  const est = c && rawDistance(c);
+  if (!est) { $('scanText').textContent = '需要先偵測到對手的肩膀'; return; }
+  const ans = prompt(`估算距離 ${(est.d * distCalib).toFixed(1)} 公尺。\n請輸入對手實際距離（公尺）：`);
+  const real = parseFloat(ans);
+  if (!(real > 0.3 && real < 30)) return;
+  distCalib = real / est.d;
+  savePref('distCalib', distCalib);
+  $('scanText').textContent = `已校正（係數 ${distCalib.toFixed(2)}）`;
+};
 
 function updateHand(t) {
   const h = vision.hand;
@@ -761,7 +804,8 @@ function drawEnemy(t) {
   ctx.fillStyle = 'rgba(0,0,0,.6)'; roundRect(bx - 2, by - 2, bw + 4, 14, 6); ctx.fill();
   ctx.fillStyle = '#ff2d55'; roundRect(bx, by, bw * (e.hp / e.maxHp), 10, 5); ctx.fill();
   ctx.fillStyle = '#fff'; ctx.font = 'bold 13px system-ui'; ctx.textAlign = 'center';
-  ctx.fillText(`${e.name}  ${Math.ceil(e.hp)}/${e.maxHp}`, (b.x0 + b.x1) / 2, by - 6);
+  const dist = e.distance ? `  ·  ${e.distance.toFixed(1)}m` : '';
+  ctx.fillText(`${e.name}  ${Math.ceil(e.hp)}/${e.maxHp}${dist}`, (b.x0 + b.x1) / 2, by - 6);
 }
 
 function drawDummy(b) {
@@ -800,9 +844,14 @@ function drawHand(t) {
       ctx.strokeStyle = s.color; ctx.globalAlpha = 0.6; ctx.lineWidth = 2; ctx.setLineDash([4, 8]); ctx.lineDashOffset = -t / 20;
       ctx.beginPath(); ctx.moveTo(tip.x, tip.y); ctx.lineTo(S.aim.x, S.aim.y); ctx.stroke();
       ctx.restore();
-      drawReticle(S.aim, s.color, t);
-      ctx.fillStyle = s.color; ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center';
-      ctx.fillText(`射程 ${s.rangeLabel}`, S.aim.x, S.aim.y - 30);
+      const rs = rangeState(s);
+      const bad = rs === 'far' || rs === 'near';
+      drawReticle(S.aim, bad ? '#888' : s.color, t);
+      const d = S.enemy.distance;
+      const label = `射程 ${rangeText(s)}` + (d ? (bad ? `　✗ ${rs === 'far' ? '太遠' : '太近'} ${d.toFixed(1)}m` : `　✓ ${d.toFixed(1)}m`) : '');
+      ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center';
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.strokeText(label, S.aim.x, S.aim.y - 30);
+      ctx.fillStyle = bad ? '#bbb' : s.color; ctx.fillText(label, S.aim.x, S.aim.y - 30);
     }
   } else if (S.aim && S.phase === 'battle') {
     drawReticle(S.aim, 'rgba(255,255,255,.35)', t);
@@ -970,7 +1019,7 @@ function statsHtml() {
     ['發射（握拳張開 / 揮手 / 點擊）', `${f.fist} / ${f.flick} / ${f.tap}`],
     ['詠唱逾時（手勢沒觸發）', M.timeouts],
     ['詠唱→發射 平均', `${avg(M.chantToFire)} ms`],
-    ['命中率', `${pct(M.hits, M.misses)}（${M.hits} 中 / ${M.misses} 失）`],
+    ['命中率', `${pct(M.hits, M.misses)}（${M.hits} 中 / ${M.misses} 失，其中射程外 ${M.outOfRange}）`],
     ['閃避率', `${pct(M.dodged, M.hurt)}（${M.dodged} 閃 / ${M.hurt} 中）`],
     ['目標遺失時間', M.frames ? `${Math.round((M.lostFrames / M.frames) * 100)}%` : '-'],
     ['平均 FPS', Math.round(M.fps)],
@@ -988,6 +1037,7 @@ function updateDebug(t) {
   $('debug').textContent = [
     `FPS ${Math.round(M.fps)} | 辨識 ${vision ? Math.round(vision.lastMs || 0) : '-'}ms | ${v}`,
     `人數 ${vision ? vision.people.length : '-'} | 目標 ${targetVisible() ? '可見' : '遺失'} (miss ${S.enemy.missFrames})`,
+    `距離 ${S.enemy.distance ? S.enemy.distance.toFixed(2) + 'm' : '-'} (${S.enemy.distMethod || '-'}) 校正 ${distCalib.toFixed(2)}`,
     `手 ${h ? `${h.gesture} ${(h.score * 100) | 0}%` : '無'}`,
     `語音延遲 ${avg(M.voiceDelay)}ms（本機：說完→觸發；線上：首字→觸發）`,
     ...M.voiceLog,
