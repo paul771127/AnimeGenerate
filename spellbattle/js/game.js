@@ -23,7 +23,7 @@ function renderPicker() {
     const b = document.createElement('button');
     b.className = 'skill-card' + (loadout.includes(s.id) ? ' on' : '');
     b.style.setProperty('--c', s.color);
-    const eff = s.self ? `回復 ${s.heal}` : `傷害 ${s.damage}`;
+    const eff = s.self ? `回復 ${s.heal}` : `傷害 ${s.damage} · 射程${s.rangeLabel}`;
     b.innerHTML = `<div class="t">${s.icon} ${s.name}</div><div class="s">MP ${s.cost} · ${eff}<br>${s.desc}</div>`;
     b.onclick = () => {
       if (loadout.includes(s.id)) loadout = loadout.filter((x) => x !== s.id);
@@ -298,6 +298,7 @@ async function enterGame(mode, code) {
     const mod = await import('./vision.js');
     vision = new mod.Vision();
     await vision.init(setLoading);
+    S.vision = vision;   // 方便除錯
     S.torsoSignature = mod.torsoSignature;
     S.signatureSimilarity = mod.signatureSimilarity;
   } catch (e) {
@@ -473,7 +474,7 @@ function release(aim, via) {
     return;
   }
 
-  const from = S.hand ? { x: S.hand.palm.x, y: S.hand.palm.y } : { x: W / 2, y: H * 0.9 };
+  const from = S.hand ? { x: S.hand.tip.x, y: S.hand.tip.y } : { x: W / 2, y: H * 0.9 };
   const to = aim || S.aim || { x: W / 2, y: H * 0.4 };
   const id = S.nextId++;
   S.projectiles.push({ id, skill: s, from, to: { ...to }, start: now(), dur: s.travelMs });
@@ -667,14 +668,17 @@ function updateHand(t) {
   const lm = h.landmarks.map((p) => v2s(p.x, p.y));
   const ids = [0, 5, 9, 13, 17];
   const palm = { x: ids.reduce((a, i) => a + lm[i].x, 0) / 5, y: ids.reduce((a, i) => a + lm[i].y, 0) / 5 };
-  // 瞄準方向：手腕 → 中指根部，沿手指方向延伸到場景中
+  // 瞄準：方向＝手腕 → 中指根部（握拳、張開都穩定），
+  // 起點＝指尖附近（中指根部再往前一個手掌長），準星＝起點沿方向延伸「技能射程」
   let dx = lm[9].x - lm[0].x, dy = lm[9].y - lm[0].y;
   const len = Math.hypot(dx, dy) || 1;
   dx /= len; dy /= len;
-  const reach = H * 0.55;
-  const raw = { x: clamp(palm.x + dx * reach, 10, W - 10), y: clamp(palm.y + dy * reach, 10, H - 10) };
+  const tip = { x: lm[9].x + dx * len * 0.9, y: lm[9].y + dy * len * 0.9 };
+  const sk = S.charging && !S.charging.skill.self ? S.charging.skill : null;
+  const reach = H * (sk ? sk.reach : 0.2);
+  const raw = { x: clamp(tip.x + dx * reach, 10, W - 10), y: clamp(tip.y + dy * reach, 10, H - 10) };
   S.aim = S.aim ? { x: lerp(S.aim.x, raw.x, 0.35), y: lerp(S.aim.y, raw.y, 0.35) } : raw;
-  S.hand = { lm, palm, gesture: h.gesture };
+  S.hand = { lm, palm, tip, gesture: h.gesture };
 
   // 速度偵測（快速前揮）
   S.palmHist.push({ t, x: palm.x, y: palm.y });
@@ -789,7 +793,17 @@ function drawHand(t) {
     const r = 40 + 25 * prog + (gesture === 'Closed_Fist' ? 10 * Math.sin(t / 60) : 0);
     magicCircle(palm.x, palm.y, r, s.color, t);
     if (Math.random() < 0.6) spawn(palm.x + (Math.random() - 0.5) * r, palm.y + (Math.random() - 0.5) * r, s.color, 0.5);
-    if (!s.self && S.aim) drawReticle(S.aim, s.color, t);
+    if (!s.self && S.aim) {
+      // 射程線：指尖 → 準星
+      const tip = S.hand.tip;
+      ctx.save();
+      ctx.strokeStyle = s.color; ctx.globalAlpha = 0.6; ctx.lineWidth = 2; ctx.setLineDash([4, 8]); ctx.lineDashOffset = -t / 20;
+      ctx.beginPath(); ctx.moveTo(tip.x, tip.y); ctx.lineTo(S.aim.x, S.aim.y); ctx.stroke();
+      ctx.restore();
+      drawReticle(S.aim, s.color, t);
+      ctx.fillStyle = s.color; ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center';
+      ctx.fillText(`射程 ${s.rangeLabel}`, S.aim.x, S.aim.y - 30);
+    }
   } else if (S.aim && S.phase === 'battle') {
     drawReticle(S.aim, 'rgba(255,255,255,.35)', t);
   }
