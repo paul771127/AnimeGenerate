@@ -1,0 +1,105 @@
+# SpellDuel（Unity 版）— 共用房間座標的 AR 對戰
+
+網頁版（`spellbattle/`）每支手機各自用 2D 畫面判斷，兩邊看到的法術位置對不上。
+這個 Unity 版改成**兩支手機共用同一套房間座標**：
+
+1. **6DoF 追蹤**：ARKit（iPhone）／ARCore（Android）即時知道手機在房間裡的位置與朝向。
+2. **共同標記圖**：兩支手機都掃描地上同一張印出來的圖，以它為世界原點 → 座標對齊。
+3. **法術用世界座標模擬**：發射時只送「起點、方向、速度、半徑、發射時間」，兩邊用同一公式算位置，所以兩邊看到的一定是同一個點、大小也符合透視。
+4. **被攻擊方判定命中**：用自己最準的位置檢查法術有沒有碰到身體，再廣播結果 → 不會一邊中、一邊沒中。
+
+## 目前進度：第 1 階段（座標對齊 + 連線 + 測試用法術）
+
+- [x] 程式建立 AR 鏡頭、執行期載入標記圖（不需要在編輯器建資產）
+- [x] 掃描標記圖對齊世界座標（靠近標記圖時會持續修正）
+- [x] 區域網路連線（同一個 Wi-Fi，輸入對方 IP）、對時
+- [x] 每秒 20 次同步雙方位置，顯示對手的身體判定框（半透明膠囊）
+- [x] 點螢幕發射測試法術，兩邊同步飛行、被攻擊方判定命中、HP
+- [x] 單人「練習假人」（站在標記圖上）
+- [ ] 第 2 階段：職業與技能（沿用網頁版數值）、3D 特效
+- [ ] 第 3 階段：手勢（MediaPipe）、語音唸咒
+- [ ] 第 4 階段：陷阱放在地板、介面
+
+## 一次性設定
+
+### 1. Unity 授權（免費個人版）
+雲端編譯需要你的 Unity 授權檔。Unity 已經不能在雲端直接啟用免費授權，所以要在自己電腦上做一次：
+
+1. 安裝 [Unity Hub](https://unity.com/download)，登入 Unity 帳號。
+2. Unity Hub → 偏好設定（Preferences）→ Licenses → Add → **Get a free personal license**。
+3. 找到授權檔 `Unity_lic.ulf`：
+   - Windows：`C:\ProgramData\Unity\Unity_lic.ulf`
+   - macOS：`/Library/Application Support/Unity/Unity_lic.ulf`
+4. 到 GitHub → 這個 repo → Settings → Secrets and variables → Actions → New repository secret，新增三個：
+   | 名稱 | 內容 |
+   |---|---|
+   | `UNITY_LICENSE` | `Unity_lic.ulf` 的**完整檔案內容**（用記事本打開全選複製） |
+   | `UNITY_EMAIL` | Unity 帳號 email |
+   | `UNITY_PASSWORD` | Unity 帳號密碼 |
+
+> 帳號若開啟兩步驟驗證或用 Google/Apple 登入，雲端啟用可能失敗；建議用 email + 密碼登入的帳號。
+
+### 2. 雲端編譯
+設定好 Secrets 後，推送 `spellduel-unity/` 的變更會自動編譯（也可以在 GitHub → Actions → **SpellDuel Unity build** → Run workflow 手動執行）。
+第一次約 40～60 分鐘（之後有快取會快很多）。完成後在該次執行頁面最下方的 **Artifacts** 下載：
+
+| Artifact | 用途 |
+|---|---|
+| `SpellDuel-Android-APK` | Android 安裝檔，傳到手機直接安裝（要允許「安裝未知來源 App」） |
+| `SpellDuel-iOS-unsigned-IPA` | iPhone 安裝檔（未簽署），用 Sideloadly 安裝 |
+| `SpellDuel-iOS-XcodeProject` | iOS 的 Xcode 專案（之後要上 TestFlight 時用） |
+
+### 3. iPhone 安裝（Sideloadly，免費）
+1. 電腦安裝 [Sideloadly](https://sideloadly.io/)（Windows 需先裝 iTunes 與 iCloud 的**官網下載版**）。
+2. iPhone 用傳輸線接電腦，信任這台電腦。
+3. 把 `SpellDuel-unsigned.ipa` 拖進 Sideloadly，輸入你的 Apple ID，按 Start。
+4. iPhone：設定 → 一般 → VPN 與裝置管理 → 信任你的 Apple ID。iOS 16 以上還要開啟 設定 → 隱私權與安全性 → **開發者模式**。
+5. 免費 Apple ID 簽的 App **7 天後失效**，到時用 Sideloadly 再裝一次即可。
+
+### 4. 列印標記圖
+列印 [`marker/spellduel_marker_A4.pdf`](marker/spellduel_marker_A4.pdf)，**用 100% 實際大小列印**（不要「縮放至頁面大小」）。
+印好後量一下圖的寬度應為 **20 公分**（不是的話，對齊的距離會等比例偏差）。
+平放在兩人中間的地上，不要反光、不要皺。
+
+## 怎麼測（第 1 階段）
+
+1. 兩支手機連上**同一個 Wi-Fi**，打開 SpellDuel。
+2. **對齊座標**：蹲低把鏡頭對準地上的標記圖（約 30～80 公分距離），等上方顯示「座標：✅ 已對齊」。標記圖上會出現綠色方塊和箭頭，應該剛好蓋在圖上。
+3. **連線**：一支按「建立房間」，上方會顯示它的 IP；另一支在輸入框填這個 IP，按「加入」。
+4. 對齊後，兩人站開 2～3 公尺。你應該會看到對手身上套著一個**半透明的藍色膠囊**——這是對手手機回報的位置，應該跟真人重疊。
+5. **點螢幕發射**：橘色球從你手機往點擊方向飛。對手畫面會看到紫色球飛來；被打中的一方會震動並扣 HP，閃開則顯示「閃過了！」。
+6. 單人測試：不連線時按「假人:開」，標記圖上會站一個橘色假人，可以練習打它。
+
+**要確認的重點**
+
+| 項目 | 看什麼 |
+|---|---|
+| 對齊準不準 | 綠色方塊是否貼合標記圖；走動後再回來看是否還貼合 |
+| 雙方位置對不對 | 藍色膠囊是否跟對手真人重疊（誤差幾公分～十幾公分屬正常） |
+| 法術是否一致 | 兩邊同時錄影：同一顆球在兩邊的位置、命中與否是否一致 |
+| 延遲 | 上方「時鐘差／來回」：來回時間一般 20～80ms |
+
+**位置偏掉時**：按「重新對齊」再掃一次標記圖。靠近標記圖（1.5 公尺內）時會自動持續修正。
+
+## 架構
+
+| 檔案 | 功能 |
+|---|---|
+| `Assets/SpellDuel/Runtime/GameRoot.cs` | 啟動時用程式建立 AR 鏡頭、標記圖追蹤、雙方位置同步、法術模擬與命中判定、介面 |
+| `Assets/SpellDuel/Runtime/WorldFrame.cs` | 共用世界座標（以標記圖為原點）與 AR 座標的換算 |
+| `Assets/SpellDuel/Runtime/NetLink.cs` | 區域網路 TCP 連線（一行一個 JSON） |
+| `Assets/SpellDuel/Runtime/Messages.cs` | 網路訊息格式 |
+| `Assets/SpellDuel/Editor/BuildScript.cs` | 雲端編譯入口：用程式建立場景、玩家設定、ARCore/ARKit 設定、iOS 權限說明 |
+| `Assets/Resources/marker.bytes` | 內建標記圖（PNG），與列印版是同一張圖 |
+| `../.github/workflows/spellduel-unity.yml` | GitHub Actions：Android APK、iOS Xcode 專案、未簽署 IPA |
+
+場景是空的：所有物件都在 `GameRoot` 啟動時建立，所以不需要 Unity 編輯器就能開發。
+
+**同步協定**（世界座標，單位公尺）：`ping/pong` 對時（房主時鐘為共同時間）、`pose` 雙方位置（20Hz）、`shot` 發射、`hit/miss` 被攻擊方的判定結果。
+
+## 已知限制
+
+- 兩支手機必須在同一個 Wi-Fi（區域網路直連）。之後可改用網路配對伺服器。
+- 標記圖要平放在地上（身體判定框沿重力方向往下延伸，與標記圖方向無關，但地板高度以手機下方 1.45 公尺估算）。
+- AR 追蹤在太暗、白牆、快速晃動時會暫時失效；長時間遊玩可能累積幾公分到十幾公分的偏移，靠近標記圖會自動修正。
+- 這個 repo 是公開的，所以 GitHub 的 macOS 編譯免費；若改成私人 repo，iOS 編譯步驟可改用 Codemagic（只編 Xcode 專案，不需要 Unity 授權）。
