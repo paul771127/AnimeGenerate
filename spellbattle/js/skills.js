@@ -17,28 +17,28 @@ export const SKILLS = {
     cls: 'archer', type: 'projectile', fx: 'arrow',
     id: 'quickshot', name: '速射', icon: '🏹', color: '#d9f99d', glow: '#ffffff',
     keywords: ['速射', '素射', '速設', '快射', 'quick'],
-    cost: 12, damage: 12, chargeMs: 1000, travelMs: 220, radius: 0.035, range: [0, 12], reach: 0.4, cooldownMs: 900,
+    cost: 12, damage: 12, chargeMs: 1000, travelMs: 220, radius: 0.035, range: [0, 12], reach: 0.15, cooldownMs: 900,
     desc: '基本箭矢，蓄力 1 秒',
   },
   snipe: {
     cls: 'archer', type: 'projectile', fx: 'arrow',
     id: 'snipe', name: '狙擊', icon: '🎯', color: '#fde047', glow: '#ffffff',
     keywords: ['狙擊', '狙击', '阻擊', '組擊', 'snipe'],
-    cost: 30, damage: 34, chargeMs: 2200, travelMs: 260, radius: 0.025, range: [3, 15], reach: 0.5, cooldownMs: 3000,
-    desc: '蓄力最久的重箭，3 公尺內無法使用',
+    cost: 30, damage: 34, chargeMs: 2200, travelMs: 260, radius: 0.025, range: [0, 15], reach: 0.15, cooldownMs: 3000,
+    desc: '蓄力最久的重箭，判定最小',
   },
   triple: {
     cls: 'archer', type: 'projectile', fx: 'arrow', multi: { count: 3, spread: 0.09 },
     id: 'triple', name: '三連矢', icon: '🔱', color: '#a3e635', glow: '#ecfccb',
     keywords: ['三連矢', '三連', '三连', '三聯', '散射', 'triple'],
-    cost: 24, damage: 9, chargeMs: 1600, travelMs: 260, radius: 0.03, range: [0, 10], reach: 0.4, cooldownMs: 2000,
+    cost: 24, damage: 9, chargeMs: 1600, travelMs: 260, radius: 0.03, range: [0, 10], reach: 0.15, cooldownMs: 2000,
     desc: '一次三箭扇形散開，每箭 9 傷害',
   },
   snaretrap: {
     cls: 'archer', type: 'trap', fx: 'trap',
     id: 'snaretrap', name: '捕獸夾', icon: '🪤', color: '#fb923c', glow: '#fed7aa',
     keywords: ['捕獸夾', '捕兽夹', '補獸夾', '獸夾', '陷阱', 'trap'],
-    cost: 18, damage: 12, chargeMs: 1200, radius: 0.09, reach: 0.25, cooldownMs: 4000,
+    cost: 18, damage: 12, chargeMs: 1200, radius: 0.09, reach: 0.12, cooldownMs: 4000,
     trap: { lifeMs: 30000, armMs: 1200, max: 2 }, effect: { kind: 'snare', dur: 2500 },
     desc: '設在地上，踩到受傷並定身 2.5 秒（不能施法）；對手的雷達看得到',
   },
@@ -46,7 +46,7 @@ export const SKILLS = {
     cls: 'archer', type: 'trap', fx: 'trap',
     id: 'blasttrap', name: '爆裂陷阱', icon: '💣', color: '#f87171', glow: '#fecaca',
     keywords: ['爆裂陷阱', '爆裂', '爆炸', '炸彈', 'bomb'],
-    cost: 28, damage: 28, chargeMs: 1500, radius: 0.12, reach: 0.25, cooldownMs: 6000,
+    cost: 28, damage: 28, chargeMs: 1500, radius: 0.12, reach: 0.12, cooldownMs: 6000,
     trap: { lifeMs: 30000, armMs: 1500, max: 2 },
     desc: '設在地上，踩到爆炸 28 傷害',
   },
@@ -56,21 +56,21 @@ export const SKILLS = {
     cls: 'mage', type: 'projectile', fx: 'orb',
     id: 'fire', name: '火球術', icon: '🔥', color: '#ff7a1a', glow: '#ffd04a',
     keywords: ['火球', '火求', '火秋', '活球', 'fireball', 'fire'],
-    cost: 20, damage: 24, chargeMs: 1500, travelMs: 900, radius: 0.09, range: [0, 5], reach: 0.22, cooldownMs: 1200,
+    cost: 20, damage: 24, chargeMs: 1500, travelMs: 900, radius: 0.09, range: [0, 5], reach: 0.12, cooldownMs: 1200,
     desc: '中速火球，平衡型',
   },
   ice: {
     cls: 'mage', type: 'projectile', fx: 'orb',
     id: 'ice', name: '冰槍', icon: '🧊', color: '#5fd7ff', glow: '#e0f8ff',
     keywords: ['冰槍', '冰枪', '兵槍', '冰矛', '冰箭', 'ice'],
-    cost: 25, damage: 28, chargeMs: 1400, travelMs: 650, radius: 0.06, range: [0, 6], reach: 0.32, cooldownMs: 1500,
+    cost: 25, damage: 28, chargeMs: 1400, travelMs: 650, radius: 0.06, range: [0, 6], reach: 0.15, cooldownMs: 1500,
     desc: '快速穿刺，判定較窄',
   },
   thunder: {
     cls: 'mage', type: 'projectile', fx: 'orb',
     id: 'thunder', name: '雷擊', icon: '⚡', color: '#c08bff', glow: '#ffffff',
     keywords: ['雷擊', '雷击', '雷電', '雷电', '打雷', '落雷', 'thunder'],
-    cost: 35, damage: 38, chargeMs: 2200, travelMs: 300, radius: 0.045, range: [0, 9], reach: 0.48, cooldownMs: 2500,
+    cost: 35, damage: 38, chargeMs: 2200, travelMs: 300, radius: 0.045, range: [0, 9], reach: 0.15, cooldownMs: 2500,
     desc: '幾乎瞬發，判定極窄',
   },
   wind: {
@@ -84,8 +84,8 @@ export const SKILLS = {
     cls: 'mage', type: 'projectile', fx: 'orb',
     id: 'meteor', name: '隕石', icon: '☄️', color: '#ff3b3b', glow: '#ffb36b',
     keywords: ['隕石', '陨石', '引石', '允石', '流星', 'meteor'],
-    cost: 50, damage: 58, chargeMs: 3000, travelMs: 1700, radius: 0.18, range: [2, 7], reach: 0.38, cooldownMs: 4000,
-    desc: '蓄力 3 秒、超大範圍，2 公尺內不能用',
+    cost: 50, damage: 58, chargeMs: 3000, travelMs: 1700, radius: 0.18, range: [0, 7], reach: 0.15, cooldownMs: 4000,
+    desc: '蓄力 3 秒、超大範圍、飛很慢',
   },
   heal: {
     cls: 'mage', type: 'self', self: 'heal', fx: 'orb',
@@ -213,7 +213,7 @@ export const CLASSES = {
 export const MAX_EQUIP = 3;
 
 // 版本號：每次更新要和 index.html 的 data-version、game.js 的 VERSION 一起改（用來偵測檔案新舊混在一起）
-export const SKILLS_VERSION = '2026.10.03-1';
+export const SKILLS_VERSION = '2026.10.03-2';
 
 export const STATS = {
   chargeTimeoutMs: 7000,  // 蓄力完成後還能維持多久（刺客另外加長，方便走近）

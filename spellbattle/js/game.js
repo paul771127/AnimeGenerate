@@ -8,7 +8,7 @@ import { Net } from './net.js';
 const $ = (id) => document.getElementById(id);
 
 // 版本檢查：githack 會各別更新每個檔案，剛推新版時可能新舊混在一起
-const VERSION = '2026.10.03-1';
+const VERSION = '2026.10.03-2';
 {
   const htmlVer = document.documentElement.dataset.version;
   $('verText').textContent = VERSION;
