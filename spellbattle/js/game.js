@@ -1,5 +1,6 @@
 // 咒術對決 主遊戲邏輯
-import { SKILLS, DEFAULT_LOADOUT, MAX_EQUIP, STATS, rangeText } from './skills.js';
+import { SKILLS, CLASSES, MAX_EQUIP, STATS, rangeText, effectText } from './skills.js';
+import { Orientation } from './orient.js';
 import { VoiceCaster } from './voice.js';
 import { LocalSpotter, classify, finalizeSkill, loadTemplates, saveTemplates, hasTemplates } from './voice-local.js';
 import { Net } from './net.js';
@@ -10,32 +11,59 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 
 // ---------------------------------------------------------------- 主選單
-let loadout = loadPref('loadout', DEFAULT_LOADOUT).filter((id) => SKILLS[id]).slice(0, MAX_EQUIP);
+let cls = CLASSES[loadPref('cls', 'mage')] ? loadPref('cls', 'mage') : 'mage';
+let loadout = [];
+function loadLoadout() {
+  const C = CLASSES[cls];
+  loadout = loadPref('loadout_' + cls, C.defaultLoadout).filter((id) => C.skills.includes(id)).slice(0, MAX_EQUIP);
+}
+loadLoadout();
 $('nameInput').value = loadPref('name', '');
 
 function loadPref(k, d) { try { const v = localStorage.getItem('sb_' + k); return v ? JSON.parse(v) : d; } catch (_) { return d; } }
 function savePref(k, v) { try { localStorage.setItem('sb_' + k, JSON.stringify(v)); } catch (_) {} }
 
+function renderClasses() {
+  const box = $('classPicker');
+  box.innerHTML = '';
+  for (const C of Object.values(CLASSES)) {
+    const b = document.createElement('button');
+    b.className = 'class-card' + (C.id === cls ? ' on' : '');
+    b.style.setProperty('--c', C.color);
+    b.innerHTML = `<span class="ic">${C.icon}</span>${C.name}`;
+    b.onclick = () => {
+      cls = C.id;
+      savePref('cls', cls);
+      loadLoadout();
+      renderClasses(); renderPicker(); renderEnrollState();
+    };
+    box.appendChild(b);
+  }
+  const C = CLASSES[cls];
+  $('classDesc').innerHTML = `${C.desc}<br><span class="tip">HP ${C.stats.maxHp} · MP ${C.stats.maxMp} · 每秒回魔 ${C.stats.mpRegen}</span>`;
+}
+
 function renderPicker() {
   const box = $('skillPicker');
   box.innerHTML = '';
-  for (const s of Object.values(SKILLS)) {
+  for (const s of CLASSES[cls].skills.map((id) => SKILLS[id])) {
     const b = document.createElement('button');
     b.className = 'skill-card' + (loadout.includes(s.id) ? ' on' : '');
     b.style.setProperty('--c', s.color);
-    const eff = s.self ? `回復 ${s.heal}` : `傷害 ${s.damage} · 射程 ${rangeText(s)}`;
-    b.innerHTML = `<div class="t">${s.icon} ${s.name}</div><div class="s">MP ${s.cost} · ${eff}<br>${s.desc}</div>`;
+    b.innerHTML = `<div class="t">${s.icon} ${s.name}</div><div class="s">MP ${s.cost} · 蓄力 ${(s.chargeMs / 1000).toFixed(1)}s · ${effectText(s)}<br>${s.desc}</div>`;
     b.onclick = () => {
       if (loadout.includes(s.id)) loadout = loadout.filter((x) => x !== s.id);
       else if (loadout.length < MAX_EQUIP) loadout.push(s.id);
       else { loadout.shift(); loadout.push(s.id); }
-      savePref('loadout', loadout);
+      savePref('loadout_' + cls, loadout);
       renderPicker();
+      renderEnrollState();
     };
     box.appendChild(b);
   }
   $('equipCount').textContent = `${loadout.length}/${MAX_EQUIP}`;
 }
+renderClasses();
 renderPicker();
 
 // ---------------------------------------------------------------- 語音設定 / 錄製咒語
@@ -147,13 +175,19 @@ let vision = null;
 let voice = null;
 let net = null;
 let audio = null;
+const orient = new Orientation();
 
 const S = {
   mode: 'practice',          // practice | online
   phase: 'loading',          // loading | scan | waiting | countdown | battle | over
-  me: { name: '', hp: STATS.maxHp, mp: STATS.maxMp, cooldowns: {} },
+  cls: 'mage',
+  me: { name: '', hp: 100, mp: 100, maxHp: 100, maxMp: 100, regen: 6, cooldowns: {},
+    dots: [], buffs: {}, snaredUntil: 0 },
+  blindUntil: 0,             // 被煙霧彈致盲
+  traps: [],                 // 我方設置的陷阱
+  dummyNextAttack: 0,        // 練習模式：木人反擊時間
   skills: [],
-  enemy: { name: '對手', hp: STATS.maxHp, maxHp: STATS.maxHp, locked: false, virtual: false,
+  enemy: { name: '對手', cls: null, buffs: {}, dots: [], hp: 100, maxHp: 100, locked: false, virtual: false,
     signature: null, box: null, lastSeen: 0, missFrames: 99, distance: null, distMethod: '', ready: false, loadout: [] },
   candidate: null,           // 掃描階段偵測到的人
   charging: null,            // { skill, since }
@@ -178,7 +212,7 @@ function resetMetrics() {
   Object.assign(M, {
     voiceChants: 0, tapChants: 0, timeouts: 0,
     fires: { fist: 0, flick: 0, tap: 0 },
-    hits: 0, misses: 0, dodged: 0, hurt: 0, outOfRange: 0,
+    hits: 0, misses: 0, dodged: 0, hurt: 0, outOfRange: 0, mitigated: 0, trapHits: 0,
     chantToFire: [], voiceDelay: [], voiceLog: [], fps: 0, lostFrames: 0, frames: 0,
   });
 }
@@ -276,8 +310,12 @@ async function enterGame(mode, code) {
   $('game').classList.add('active');
   resize();
   S.mode = mode === 'practice' ? 'practice' : 'online';
-  S.me.name = $('nameInput').value.trim() || '魔法師';
+  S.cls = cls;
+  const C = CLASSES[cls];
+  S.me.name = $('nameInput').value.trim() || C.name;
+  Object.assign(S.me, { maxHp: C.stats.maxHp, maxMp: C.stats.maxMp, regen: C.stats.mpRegen });
   S.skills = loadout.map((id) => SKILLS[id]);
+  orient.request();   // 陀螺儀（陷阱定位用）；iOS 需在點擊當下請求權限
   buildSlots();
   setLoading('開啟相機…');
   initAudio();
@@ -313,7 +351,7 @@ async function enterGame(mode, code) {
     net = new Net({
       onMessage: onNet,
       onStatus: (t) => { $('netStatus').textContent = t; },
-      onOpen: () => net.send({ t: 'hello', name: S.me.name, loadout }),
+      onOpen: () => net.send({ t: 'hello', name: S.me.name, loadout, cls: S.cls, maxHp: S.me.maxHp }),
       onClose: () => { if (S.phase !== 'over') banner('對手斷線', 2000); },
     });
     setLoading('連線中…');
@@ -364,7 +402,7 @@ function lockTarget(virtual) {
   } else {
     e.signature = null;
     $('enemyThumb').removeAttribute('src');
-    if (S.mode === 'practice') e.name = '訓練木人';
+    if (S.mode === 'practice') { e.name = '訓練木人'; e.cls = null; }
   }
   e.locked = true;
   e.distance = null;
@@ -419,9 +457,12 @@ function startCountdown() {
 }
 
 function resetStats() {
-  S.me.hp = STATS.maxHp; S.me.mp = STATS.maxMp; S.me.cooldowns = {};
-  S.enemy.hp = S.enemy.maxHp = STATS.maxHp;
-  S.charging = null; S.projectiles = []; S.incoming = [];
+  Object.assign(S.me, { hp: S.me.maxHp, mp: S.me.maxMp, cooldowns: {}, dots: [], buffs: {}, snaredUntil: 0 });
+  if (S.mode === 'practice') S.enemy.maxHp = 100;
+  S.enemy.hp = S.enemy.maxHp;
+  S.enemy.buffs = {}; S.enemy.dots = [];
+  S.charging = null; S.projectiles = []; S.incoming = []; S.traps = []; S.blindUntil = 0;
+  S.dummyNextAttack = now() + 9000;
   resetMetrics();
   $('result').classList.remove('show');
 }
@@ -447,19 +488,36 @@ function chant(skill, via) {
   const t = now();
   if ((S.me.cooldowns[skill.id] || 0) > t) { toast(`${skill.name} 冷卻中`, '#aaa'); return false; }
   if (S.me.mp < skill.cost) { toast('MP 不足', '#4da3ff'); sfx('fail'); return false; }
+  if (S.me.snaredUntil > t) { toast('🪤 被困住，暫時不能施法', '#fb923c'); sfx('fail'); return false; }
   S.charging = { skill, since: t };
   if (via === 'voice') M.voiceChants++; else M.tapChants++;
   sfx('chant');
-  hint(skill.self ? `${skill.icon} ${skill.name}：握拳後張開手掌發動` : `${skill.icon} ${skill.name}：手指對準敵人，握拳→張開手掌發射`);
+  const how = skill.type === 'self' ? '握拳後張開手掌發動'
+    : skill.type === 'trap' ? '手指指向地面，握拳→張開手掌設置陷阱'
+    : skill.releaseNear ? '可先蓄力，靠近到射程內再握拳→張開出手'
+    : '手指對準敵人，握拳→張開手掌發射';
+  hint(`${skill.icon} ${skill.name}：${how}`);
   if (net) net.send({ t: 'charge', skill: skill.id });
   return true;
 }
 
+// 回傳 true＝已出手；false＝條件不足（保留蓄力）
 function release(aim, via) {
   const c = S.charging;
-  if (!c || S.phase !== 'battle') return;
+  if (!c || S.phase !== 'battle') return false;
   const s = c.skill;
-  if (S.me.mp < s.cost) { S.charging = null; toast('MP 不足', '#4da3ff'); return; }
+  if (S.me.mp < s.cost) { S.charging = null; toast('MP 不足', '#4da3ff'); return false; }
+  const elapsed = now() - c.since;
+  if (elapsed < s.chargeMs) {
+    toast(`蓄力中 ${Math.floor((elapsed / s.chargeMs) * 100)}%`, s.color);
+    sfx('fail');
+    return false;
+  }
+  if (s.releaseNear && rangeState(s) === 'far') {
+    toast(`再靠近！${S.enemy.distance.toFixed(1)}m → ${rangeText(s)}`, s.color);
+    sfx('fail');
+    return false;
+  }
   M.fires[via]++;
   M.chantToFire.push(now() - c.since);
   S.me.mp -= s.cost;
@@ -467,21 +525,47 @@ function release(aim, via) {
   S.charging = null;
   hint('');
 
-  if (s.self) {
-    S.me.hp = Math.min(STATS.maxHp, S.me.hp + s.heal);
-    burst(W / 2, H * 0.8, s.color, 50);
-    floater(W / 2, H * 0.7, `+${s.heal}`, s.color);
-    sfx('heal');
-    if (net) { net.send({ t: 'cast', skill: s.id }); sendState(); }
-    return;
+  if (s.type === 'self') {
+    castSelf(s);
+    return true;
+  }
+
+  const to = aim || S.aim || { x: W / 2, y: H * 0.4 };
+  if (s.type === 'trap') {
+    placeTrap(s, to);
+    return true;
   }
 
   const from = S.hand ? { x: S.hand.tip.x, y: S.hand.tip.y } : { x: W / 2, y: H * 0.9 };
-  const to = aim || S.aim || { x: W / 2, y: H * 0.4 };
-  const id = S.nextId++;
-  S.projectiles.push({ id, skill: s, from, to: { ...to }, start: now(), dur: s.travelMs });
-  sfx('cast');
-  if (net) net.send({ t: 'cast', id, skill: s.id, ax: to.x / W, ay: to.y / H, dur: s.travelMs });
+  const n = s.multi ? s.multi.count : 1;
+  for (let i = 0; i < n; i++) {
+    const off = s.multi ? (i - (n - 1) / 2) * s.multi.spread * W : 0;
+    const p = { x: to.x + off, y: to.y };
+    const id = S.nextId++;
+    S.projectiles.push({ id, skill: s, from, to: p, start: now(), dur: s.travelMs });
+    if (net) net.send({ t: 'cast', id, skill: s.id, ax: p.x / W, ay: p.y / H, dur: s.travelMs });
+  }
+  sfx(s.fx === 'arrow' ? 'arrow' : s.fx === 'slash' || s.fx === 'dagger' ? 'slash' : 'cast');
+  return true;
+}
+
+// 治療 / 防禦
+function castSelf(s) {
+  const t = now();
+  if (s.self === 'heal') {
+    S.me.hp = Math.min(S.me.maxHp, S.me.hp + s.heal);
+    floater(W / 2, H * 0.7, `+${s.heal}`, s.color);
+    sfx('heal');
+  } else {
+    const b = { until: t + s.buff.dur, ...s.buff };
+    if (s.self === 'shield') b.left = s.buff.amount;
+    S.me.buffs[s.self] = b;
+    floater(W / 2, H * 0.7, `${s.icon} ${s.name}`, s.color);
+    sfx('shield');
+    if (net) net.send({ t: 'buff', kind: s.self, dur: s.buff.dur });
+  }
+  burst(W / 2, H * 0.8, s.color, 50);
+  if (net) { net.send({ t: 'cast', skill: s.id }); sendState(); }
 }
 
 function impact(p) {
@@ -493,11 +577,11 @@ function impact(p) {
   const hit = onTarget && range !== 'far' && range !== 'near';
   burst(p.to.x, p.to.y, s.color, hit ? 60 : 20, hit ? 1.4 : 0.7);
   if (hit) {
-    floater(p.to.x, p.to.y - 30, `-${s.damage}`, '#ff4d6d', 1.4);
+    floater(p.to.x, p.to.y - 30, s.damage ? `-${s.damage}` : `${s.icon}`, '#ff4d6d', 1.4);
+    if (s.effect) floater(p.to.x, p.to.y - 60, effectLabel(s.effect), s.color, 0.8);
     sfx('hit');
     M.hits++;
-    e.hp = Math.max(0, e.hp - s.damage);   // 先行預測，連線時以對手回報為準
-    if (S.mode === 'practice' && e.hp <= 0) finish(true);
+    hitEnemyLocal(s.damage, s.effect);
   } else {
     const why = onTarget && range === 'far' ? '射程外' : onTarget && range === 'near' ? '太近' : 'MISS';
     floater(p.to.x, p.to.y - 30, why, '#ccc');
@@ -505,7 +589,62 @@ function impact(p) {
     if (why !== 'MISS') M.outOfRange++;
     sfx('miss');
   }
-  if (net) net.send({ t: 'result', id: p.id, hit, dmg: hit ? s.damage : 0 });
+  if (net) net.send({ t: 'result', id: p.id, hit, dmg: hit ? s.damage : 0, eff: hit ? s.effect : null, skill: s.id });
+}
+
+// 對手（或木人）的 HP 預測：連線時以對手回報的 state 為準
+function hitEnemyLocal(dmg, eff) {
+  const e = S.enemy;
+  e.hp = Math.max(0, e.hp - dmg);
+  if (S.mode === 'practice') {
+    if (eff && eff.kind === 'dot') e.dots.push({ dps: eff.dps, until: now() + eff.dur, acc: 0 });
+    if (e.hp <= 0) finish(true);
+  }
+}
+
+function effectLabel(eff) {
+  return { dot: '☠ 中毒', blind: '💨 致盲', snare: '🪤 定身' }[eff.kind] || '';
+}
+
+// 被打中：先算防禦（反擊 → 格擋 → 護盾），再套用附加效果
+// 回傳實際受到的傷害
+function receiveHit(dmg, skillId, eff, attackId) {
+  const t = now(), B = S.me.buffs;
+  if (B.counter && B.counter.until > t) {
+    const reflect = B.counter.reflect;
+    delete B.counter;
+    floater(W / 2, H * 0.45, '↩️ 反擊！', '#f472b6', 1.6);
+    sfx('shield');
+    M.mitigated++;
+    if (net) net.send({ t: 'countered', id: attackId, dmg: reflect });
+    else if (S.mode === 'practice') hitEnemyLocal(reflect);
+    return 0;
+  }
+  let note = '';
+  if (B.block && B.block.until > t && dmg > 0) {
+    dmg = Math.round(dmg * (1 - B.block.reduce));
+    delete B.block;
+    note = '🛡️ 格擋';
+  }
+  if (B.shield && B.shield.until > t && dmg > 0) {
+    const absorb = Math.min(B.shield.left, dmg);
+    B.shield.left -= absorb; dmg -= absorb;
+    if (B.shield.left <= 0) delete B.shield;
+    note = note ? note + '＋🧱' : '🧱 護盾吸收';
+  }
+  if (note) { M.mitigated++; floater(W / 2, H * 0.36, note, '#93c5fd', 1.1); if (net) net.send({ t: 'mitigated', note }); }
+  if (eff) applyEffect(eff);
+  if (dmg > 0 || !note) takeDamage(dmg, skillId);
+  else sendState();
+  return dmg;
+}
+
+function applyEffect(eff) {
+  const t = now();
+  if (eff.kind === 'dot') S.me.dots.push({ dps: eff.dps, until: t + eff.dur, acc: 0 });
+  if (eff.kind === 'blind') S.blindUntil = t + eff.dur;
+  if (eff.kind === 'snare') { S.me.snaredUntil = t + eff.dur; S.charging = null; }
+  floater(W / 2, H * 0.55, effectLabel(eff), '#fbbf24', 1.2);
 }
 
 function takeDamage(dmg, skillId) {
@@ -514,14 +653,14 @@ function takeDamage(dmg, skillId) {
   S.flash = 1; S.shake = 18;
   const s = SKILLS[skillId];
   burst(W / 2, H / 2, s ? s.color : '#ff4d6d', 70, 1.6);
-  floater(W / 2, H * 0.45, `-${dmg}`, '#ff4d6d', 1.8);
+  if (dmg > 0) floater(W / 2, H * 0.45, `-${dmg}`, '#ff4d6d', 1.8);
   sfx('hurt');
   if (navigator.vibrate) navigator.vibrate(220);
   sendState();
   if (S.me.hp <= 0) { if (net) net.send({ t: 'ko' }); finish(false); }
 }
 
-function sendState() { if (net) net.send({ t: 'state', hp: S.me.hp, mp: Math.round(S.me.mp) }); }
+function sendState() { if (net) net.send({ t: 'state', hp: Math.ceil(S.me.hp), maxHp: S.me.maxHp, mp: Math.round(S.me.mp) }); }
 
 function finish(win) {
   if (S.phase === 'over') return;
@@ -546,6 +685,9 @@ function onNet(m) {
     case 'hello':
       e.name = m.name || '對手';
       e.loadout = m.loadout || [];
+      e.cls = CLASSES[m.cls] ? m.cls : null;
+      if (m.maxHp) e.maxHp = e.hp = m.maxHp;
+      if (e.cls) e.name = `${CLASSES[e.cls].icon} ${e.name}`;
       toast(`⚔️ ${e.name} 加入對戰`, '#c04dff');
       break;
     case 'ready':
@@ -566,7 +708,7 @@ function onNet(m) {
       const s = SKILLS[m.skill];
       if (!s) break;
       warn('');
-      if (s.self) { floater(W / 2, H * 0.25, `${e.name} 治癒 +${s.heal}`, s.color); break; }
+      if (s.type === 'self') { floater(W / 2, H * 0.25, `${e.name} ${s.icon} ${s.name}`, s.color); break; }
       // 對手瞄準我的位置，左右在我的視角是鏡像
       S.incoming.push({ id: m.id, skill: s, ax: 1 - m.ax, ay: m.ay, start: now(), dur: m.dur, resolved: false });
       sfx('incoming');
@@ -575,12 +717,31 @@ function onNet(m) {
     case 'result': {
       const inc = S.incoming.find((i) => i.id === m.id);
       if (inc) inc.resolved = true;
-      if (m.hit) takeDamage(m.dmg, inc && inc.skill.id);
+      if (m.hit) receiveHit(m.dmg, m.skill || (inc && inc.skill.id), m.eff, m.id);
       else { floater(W / 2, H * 0.45, '閃避成功！', '#7dffb0', 1.4); sfx('dodge'); M.dodged++; }
       break;
     }
     case 'state':
       e.hp = m.hp;
+      if (m.maxHp) e.maxHp = m.maxHp;
+      break;
+    case 'buff':        // 對手開了防禦，畫在對手身上
+      e.buffs[m.kind] = now() + m.dur;
+      break;
+    case 'mitigated':   // 我的攻擊被對手防禦
+      if (e.box) floater((e.box.x0 + e.box.x1) / 2, e.box.y0 + 20, m.note, '#93c5fd', 1.1);
+      break;
+    case 'countered':   // 我的攻擊被反擊
+      floater(W / 2, H * 0.4, '被反擊！', '#f472b6', 1.4);
+      e.buffs.counter = 0;
+      takeDamage(m.dmg, 'counter');
+      break;
+    case 'trapSet':
+      warn(`⚠ ${e.name} 在地上設了 ${SKILLS[m.skill] ? SKILLS[m.skill].icon : ''} 陷阱，小心腳下`, 3500);
+      break;
+    case 'trap':        // 我踩到對手的陷阱
+      banner('踩到陷阱！', 1200);
+      receiveHit(m.dmg, m.skill, m.eff, null);
       break;
     case 'ko':
       e.hp = 0;
@@ -594,7 +755,8 @@ let lastT = now();
 function loop() {
   const t = now();
   const rawDt = Math.max(0.001, (t - lastT) / 1000);
-  const dt = Math.min(0.05, rawDt);
+  const dt = Math.min(0.05, rawDt);      // 動畫用（避免卡頓時跳太大）
+  const realDt = Math.min(0.5, rawDt);   // 遊戲數值用（回魔、中毒），幀率低時也不會變慢
   lastT = t;
 
   if (vision) {
@@ -606,13 +768,19 @@ function loop() {
   }
 
   if (S.phase === 'battle') {
-    S.me.mp = Math.min(STATS.maxMp, S.me.mp + STATS.mpRegenPerSec * dt);
-    if (S.charging && t - S.charging.since > STATS.chargeTimeoutMs) {
+    S.me.mp = Math.min(S.me.maxMp, S.me.mp + S.me.regen * realDt);
+    const c = S.charging;
+    // 蓄力完成後還能維持一段時間；刺客（靠近才能出手）多給 8 秒走過去
+    if (c && t - c.since > c.skill.chargeMs + STATS.chargeTimeoutMs + (c.skill.releaseNear ? 8000 : 0)) {
       S.charging = null; hint('詠唱逾時'); sfx('fail'); M.timeouts++;
     }
+    tickDots(realDt);
+    updateTraps(t);
+    if (S.mode === 'practice') dummyAttack(t);
   }
 
   for (const p of S.projectiles) if (!p.done && t - p.start >= p.dur) { p.done = true; impact(p); }
+  for (const i of S.incoming) if (i.dummy && !i.resolved && t - i.start >= i.dur) { i.resolved = true; receiveHit(i.dmg, null, null, null); }
   S.projectiles = S.projectiles.filter((p) => !p.done);
   S.incoming = S.incoming.filter((i) => t - i.start < i.dur + 1500 && !(i.resolved && t - i.start > i.dur));
 
@@ -692,6 +860,83 @@ function rangeState(skill) {
   return 'ok';
 }
 
+// ---------------------------------------------------------------- 持續傷害
+function tickDots(dt) {
+  for (const [who, list] of [['me', S.me.dots], ['enemy', S.enemy.dots]]) {
+    for (const d of list) {
+      d.acc += dt;
+      if (d.acc < 1) continue;
+      d.acc -= 1;
+      if (who === 'me') {
+        S.me.hp = Math.max(0, S.me.hp - d.dps);
+        floater(W / 2 + 60, H * 0.5, `☠ -${d.dps}`, '#4ade80', 0.9);
+        sendState();
+        if (S.me.hp <= 0) { if (net) net.send({ t: 'ko' }); finish(false); }
+      } else {
+        if (S.enemy.box) floater((S.enemy.box.x0 + S.enemy.box.x1) / 2, S.enemy.box.y0 + 30, `☠ -${d.dps}`, '#4ade80', 0.9);
+        hitEnemyLocal(d.dps);
+      }
+    }
+    const t = now();
+    const keep = list.filter((d) => d.until > t);
+    list.length = 0; list.push(...keep);
+  }
+}
+
+// ---------------------------------------------------------------- 陷阱
+// 螢幕上的焦距（px）：影片焦距 × object-fit: cover 的縮放
+function focalScreen() {
+  const vw = video.videoWidth || W, vh = video.videoHeight || H;
+  const f = Math.max(vw, vh) / 2 / Math.tan(((STATS.cameraFovDeg / 2) * Math.PI) / 180);
+  return f * Math.max(W / vw, H / vh);
+}
+
+function placeTrap(s, at) {
+  const t = now();
+  const world = orient.toWorld(at.x, at.y, focalScreen(), W / 2, H / 2);
+  const mine = S.traps.filter((x) => x.skill.id === s.id);
+  if (mine.length >= s.trap.max) S.traps.splice(S.traps.indexOf(mine[0]), 1);
+  S.traps.push({ id: S.nextId++, skill: s, world, x: at.x, y: at.y, pos: { ...at }, armAt: t + s.trap.armMs, until: t + s.trap.lifeMs });
+  floater(at.x, at.y - 30, `${s.icon} 陷阱設置`, s.color);
+  burst(at.x, at.y, s.color, 25, 0.6);
+  sfx('trap');
+  if (net) net.send({ t: 'trapSet', skill: s.id });
+}
+
+function updateTraps(t) {
+  const e = S.enemy, f = focalScreen();
+  S.traps = S.traps.filter((tr) => tr.until > t);
+  for (const tr of S.traps) {
+    // 有陀螺儀：陷阱固定在世界方向上，手機轉動時跟著移動；沒有：固定在螢幕上
+    tr.pos = tr.world ? orient.toScreen(tr.world, f, W / 2, H / 2) : { x: tr.x, y: tr.y };
+    if (!tr.pos || t < tr.armAt || !targetVisible()) continue;
+    const b = e.box;
+    const feet = { x: (b.x0 + b.x1) / 2, y: b.y1 };
+    const r = tr.skill.radius * Math.min(W, H) + (b.x1 - b.x0) * 0.3;
+    if (Math.hypot(feet.x - tr.pos.x, feet.y - tr.pos.y) > r) continue;
+    // 觸發！
+    tr.until = 0;
+    const s = tr.skill;
+    burst(tr.pos.x, tr.pos.y, s.color, 70, 1.5);
+    floater(tr.pos.x, tr.pos.y - 30, `${s.icon} -${s.damage}`, '#ff4d6d', 1.4);
+    if (s.effect) floater(tr.pos.x, tr.pos.y - 60, effectLabel(s.effect), s.color, 0.8);
+    sfx('boom');
+    M.trapHits++; M.hits++;
+    hitEnemyLocal(s.damage, s.effect);
+    if (net) net.send({ t: 'trap', skill: s.id, dmg: s.damage, eff: s.effect || null });
+  }
+}
+
+// ---------------------------------------------------------------- 練習模式：木人每 8～12 秒反擊一次（練習防禦技能）
+const DUMMY_SKILL = { id: 'dummy', name: '木人拳', icon: '🪵', color: '#d08a40', glow: '#ffe0b0', fx: 'orb' };
+function dummyAttack(t) {
+  if (t < S.dummyNextAttack) return;
+  S.dummyNextAttack = t + 8000 + Math.random() * 4000;
+  S.incoming.push({ id: 'd' + S.nextId++, skill: DUMMY_SKILL, ax: 0.3 + Math.random() * 0.4, ay: 0.4, start: t, dur: 1400, resolved: false, dummy: true, dmg: 8 });
+  warn('⚠ 木人反擊！可以用防禦技能擋', 1400);
+  sfx('incoming');
+}
+
 // 掃描時校正：輸入對手實際距離，修正鏡頭視角等假設造成的誤差
 $('btnCalib').onclick = () => {
   const c = S.candidate;
@@ -756,6 +1001,7 @@ function render(t, dt) {
   }
 
   if (S.phase === 'scan' && S.candidate) drawBrackets(boxToScreen(S.candidate.box), '#ffd04a', t, true);
+  for (const tr of S.traps) drawTrap(tr, t);
   if (S.enemy.locked) drawEnemy(t);
   if (S.hand) drawHand(t);
 
@@ -765,6 +1011,7 @@ function render(t, dt) {
   drawFloaters(dt);
   ctx.restore();
 
+  if (t < S.blindUntil) drawSmoke(t);
   if (S.flash > 0) {
     ctx.fillStyle = `rgba(255,30,60,${S.flash * 0.45})`;
     ctx.fillRect(0, 0, W, H);
@@ -799,6 +1046,21 @@ function drawEnemy(t) {
   const aimed = S.aim && S.charging && S.aim.x > b.x0 && S.aim.x < b.x1 && S.aim.y > b.y0 && S.aim.y < b.y1;
   drawBrackets(b, aimed ? '#ff2d55' : '#ff7a8a', t, false);
   if (e.virtual) drawDummy(b);
+  // 對手的防禦狀態
+  const tn = now();
+  const shielded = ['block', 'shield', 'counter'].filter((k) => e.buffs[k] > tn);
+  if (shielded.length) {
+    const col = { block: '#60a5fa', shield: '#94a3b8', counter: '#f472b6' }[shielded[0]];
+    ctx.save();
+    ctx.strokeStyle = col; ctx.fillStyle = col; ctx.globalAlpha = 0.25 + 0.1 * Math.sin(t / 120);
+    ctx.beginPath();
+    ctx.ellipse((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, (b.x1 - b.x0) * 0.75, (b.y1 - b.y0) * 0.6, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.globalAlpha = 0.9; ctx.lineWidth = 3; ctx.stroke();
+    ctx.restore();
+    ctx.font = 'bold 13px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = col;
+    ctx.fillText(shielded.map((k) => ({ block: '🛡️格擋', shield: '🧱鐵壁', counter: '↩️反擊' }[k])).join(' '), (b.x0 + b.x1) / 2, b.y1 + 18);
+  }
+  if (e.dots.length) { ctx.fillStyle = '#4ade80'; ctx.font = 'bold 13px system-ui'; ctx.fillText('☠ 中毒', (b.x0 + b.x1) / 2, b.y1 + 34); }
   // 頭頂血條
   const bw = Math.max(90, b.x1 - b.x0), bx = (b.x0 + b.x1) / 2 - bw / 2, by = Math.max(24, b.y0 - 22);
   ctx.fillStyle = 'rgba(0,0,0,.6)'; roundRect(bx - 2, by - 2, bw + 4, 14, 6); ctx.fill();
@@ -833,11 +1095,14 @@ function drawHand(t) {
 
   if (S.charging) {
     const s = S.charging.skill;
-    const prog = Math.min(1, (t - S.charging.since) / 600);
+    const prog = Math.min(1, (t - S.charging.since) / Math.max(1, s.chargeMs));
     const r = 40 + 25 * prog + (gesture === 'Closed_Fist' ? 10 * Math.sin(t / 60) : 0);
     magicCircle(palm.x, palm.y, r, s.color, t);
+    drawChargeRing(palm.x, palm.y, r + 14, prog, s, t);
     if (Math.random() < 0.6) spawn(palm.x + (Math.random() - 0.5) * r, palm.y + (Math.random() - 0.5) * r, s.color, 0.5);
-    if (!s.self && S.aim) {
+    if (s.type === 'trap' && S.aim) {
+      drawTrapMarker(S.aim.x, S.aim.y, s.radius * Math.min(W, H), s.color, t, 0.6);
+    } else if (s.type === 'projectile' && S.aim) {
       // 射程線：指尖 → 準星
       const tip = S.hand.tip;
       ctx.save();
@@ -850,14 +1115,32 @@ function drawHand(t) {
       const d = S.enemy.distance;
       const label = `射程 ${rangeText(s)}` + (d ? (bad ? `　✗ ${rs === 'far' ? '太遠' : '太近'} ${d.toFixed(1)}m` : `　✓ ${d.toFixed(1)}m`) : '');
       ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center';
-      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.strokeText(label, S.aim.x, S.aim.y - 30);
-      ctx.fillStyle = bad ? '#bbb' : s.color; ctx.fillText(label, S.aim.x, S.aim.y - 30);
+      const lw = ctx.measureText(label).width / 2 + 6, lx = clamp(S.aim.x, lw, W - lw);
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.strokeText(label, lx, S.aim.y - 30);
+      ctx.fillStyle = bad ? '#bbb' : s.color; ctx.fillText(label, lx, S.aim.y - 30);
     }
   } else if (S.aim && S.phase === 'battle') {
     drawReticle(S.aim, 'rgba(255,255,255,.35)', t);
   }
   ctx.fillStyle = '#fff'; ctx.font = '12px system-ui'; ctx.textAlign = 'center';
   ctx.fillText(gestureLabel(gesture), palm.x, palm.y + 70);
+}
+
+// 蓄力環：滿了才能發射；刺客技能在射程外時提示靠近
+function drawChargeRing(x, y, r, prog, s, t) {
+  ctx.save();
+  ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(255,255,255,.15)';
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = prog >= 1 ? '#fff' : s.color; ctx.shadowColor = s.color; ctx.shadowBlur = prog >= 1 ? 20 : 6;
+  ctx.beginPath(); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + prog * Math.PI * 2); ctx.stroke();
+  ctx.restore();
+  ctx.font = 'bold 13px system-ui'; ctx.textAlign = 'center';
+  let label = prog >= 1 ? '蓄力完成！' : `蓄力 ${Math.floor(prog * 100)}%`;
+  let col = prog >= 1 ? '#fff' : s.color;
+  if (prog >= 1 && s.releaseNear && rangeState(s) === 'far') { label = `靠近到 ${rangeText(s)} 才能出手`; col = '#fbbf24'; }
+  const lw = ctx.measureText(label).width / 2 + 6, lx = clamp(x, lw, W - lw);
+  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.strokeText(label, lx, y - r - 10);
+  ctx.fillStyle = col; ctx.fillText(label, lx, y - r - 10);
 }
 
 function gestureLabel(g) {
@@ -899,6 +1182,42 @@ function drawReticle(p, color, t) {
   ctx.stroke();
 }
 
+// 依技能外觀畫出飛行物：ang＝飛行方向（弧度）
+function drawShape(x, y, r, s, t, ang) {
+  const fx = s.fx || 'orb';
+  if (fx === 'orb') return orb(x, y, r, s, t);
+  ctx.save();
+  ctx.translate(x, y); ctx.rotate(ang);
+  ctx.shadowColor = s.color; ctx.shadowBlur = 14;
+  if (fx === 'arrow') {
+    const L = Math.max(34, r * 3);
+    ctx.strokeStyle = s.glow; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-L, 0); ctx.lineTo(L * 0.6, 0); ctx.stroke();
+    ctx.fillStyle = s.color;
+    ctx.beginPath(); ctx.moveTo(L * 0.9, 0); ctx.lineTo(L * 0.5, -7); ctx.lineTo(L * 0.5, 7); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = s.color; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-L, 0); ctx.lineTo(-L - 8, -7); ctx.moveTo(-L, 0); ctx.lineTo(-L - 8, 7); ctx.stroke();
+  } else if (fx === 'dagger') {
+    const L = Math.max(26, r * 2.2);
+    ctx.fillStyle = s.glow;
+    ctx.beginPath(); ctx.moveTo(L, 0); ctx.lineTo(0, -6); ctx.lineTo(-L * 0.3, 0); ctx.lineTo(0, 6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = s.color; ctx.fillRect(-L * 0.6, -3, L * 0.3, 6); ctx.fillRect(-L * 0.32, -9, 4, 18);
+  } else if (fx === 'slash') {
+    const R = Math.max(30, r * 1.6);
+    ctx.strokeStyle = s.glow; ctx.lineWidth = 7; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(-R * 0.4, 0, R, -1.1, 1.1); ctx.stroke();
+    ctx.strokeStyle = s.color; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(-R * 0.55, 0, R, -1.0, 1.0); ctx.stroke();
+  } else if (fx === 'smoke') {
+    ctx.fillStyle = s.color;
+    for (let i = 0; i < 5; i++) {
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath(); ctx.arc(Math.cos(i * 1.3 + t / 200) * r * 0.5, Math.sin(i * 1.7 + t / 260) * r * 0.5, r * 0.6, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
 function orb(x, y, r, s, t) {
   if (s.id === 'thunder') {
     ctx.strokeStyle = s.glow; ctx.lineWidth = 3; ctx.shadowColor = s.color; ctx.shadowBlur = 20;
@@ -921,7 +1240,8 @@ function drawProjectile(p, t) {
   const e = 1 - Math.pow(1 - k, 2);
   const x = lerp(p.from.x, p.to.x, e), y = lerp(p.from.y, p.to.y, e) - Math.sin(k * Math.PI) * 30;
   const r = lerp(55, Math.max(14, p.skill.radius * Math.min(W, H)), e);
-  orb(x, y, r, p.skill, t);
+  const ang = Math.atan2(p.to.y - p.from.y, p.to.x - p.from.x);
+  drawShape(x, y, p.skill.fx === 'orb' ? r : r * 0.6, p.skill, t, ang);
   spawn(x, y, p.skill.color, 0.6);
   if (p.skill.id === 'thunder') {
     ctx.strokeStyle = p.skill.glow; ctx.lineWidth = 2;
@@ -942,7 +1262,8 @@ function drawIncoming(i, t) {
   const x = lerp(sx, ex, k), y = lerp(sy, ey, k);
   const r = lerp(10, Math.min(W, H) * 0.32, k * k);
   ctx.globalAlpha = i.resolved ? 0.3 : 1;
-  orb(x, y, r, i.skill, t);
+  // 朝鏡頭飛來：箭/刀從畫面上方斜斜飛向觀看者
+  drawShape(x, y, i.skill.fx === 'orb' || i.skill.fx === 'smoke' ? r : r * 0.5, i.skill, t, Math.atan2(ey - sy, ex - sx));
   ctx.globalAlpha = 1;
   if (!i.resolved && k < 1) {
     ctx.strokeStyle = `rgba(255,60,80,${0.5 + 0.5 * Math.sin(t / 60)})`; ctx.lineWidth = 6;
@@ -951,6 +1272,45 @@ function drawIncoming(i, t) {
     ctx.fillText('快閃開！', W / 2, H * 0.2);
   }
   if (Math.random() < 0.7) spawn(x, y, i.skill.color, 0.4 + k);
+}
+
+function drawTrapMarker(x, y, r, color, t, alpha) {
+  ctx.save();
+  ctx.translate(x, y); ctx.scale(1, 0.4);   // 壓扁成地面上的橢圓
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.lineDashOffset = -t / 30;
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+}
+
+function drawTrap(tr, t) {
+  if (!tr.pos) return;
+  const s = tr.skill, r = s.radius * Math.min(W, H);
+  const armed = t >= tr.armAt;
+  const fade = Math.min(1, (tr.until - t) / 3000);
+  drawTrapMarker(tr.pos.x, tr.pos.y, r, armed ? s.color : '#999', t, 0.4 + 0.5 * fade);
+  ctx.globalAlpha = 0.5 + 0.5 * fade;
+  ctx.font = '22px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText(s.icon, tr.pos.x, tr.pos.y + 8);
+  ctx.font = 'bold 11px system-ui'; ctx.fillStyle = armed ? s.color : '#ccc';
+  ctx.fillText(armed ? `${Math.ceil((tr.until - t) / 1000)}s` : '佈置中…', tr.pos.x, tr.pos.y + 26);
+  ctx.globalAlpha = 1;
+}
+
+function drawSmoke(t) {
+  const left = (S.blindUntil - t) / 1000;
+  ctx.save();
+  ctx.fillStyle = `rgba(120,120,130,${Math.min(0.9, left)})`;
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = Math.min(0.6, left);
+  ctx.fillStyle = '#d4d4d8';
+  for (let i = 0; i < 9; i++) {
+    const x = W * (0.5 + 0.45 * Math.sin(i * 2.1 + t / 900)), y = H * (0.5 + 0.4 * Math.cos(i * 1.7 + t / 1100));
+    ctx.beginPath(); ctx.arc(x, y, Math.min(W, H) * 0.25, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 20px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText(`💨 煙霧中… ${left.toFixed(1)}s`, W / 2, H * 0.3);
 }
 
 function spawn(x, y, color, speed = 1) {
@@ -995,8 +1355,18 @@ function roundRect(x, y, w, h, r) {
 // ---------------------------------------------------------------- HUD
 function updateHud(t) {
   const me = S.me, e = S.enemy;
-  $('hpBar').style.width = `${(me.hp / STATS.maxHp) * 100}%`;
-  $('mpBar').style.width = `${(me.mp / STATS.maxMp) * 100}%`;
+  $('hpBar').style.width = `${(me.hp / me.maxHp) * 100}%`;
+  $('mpBar').style.width = `${(me.mp / me.maxMp) * 100}%`;
+  // 自身狀態：防禦、中毒、定身
+  const st = [];
+  for (const [k, ic] of [['block', '🛡️'], ['shield', '🧱'], ['counter', '↩️']]) {
+    const b = me.buffs[k];
+    if (b && b.until > t) st.push(`${ic}${Math.ceil((b.until - t) / 1000)}s${k === 'shield' ? `(${b.left})` : ''}`);
+  }
+  if (me.dots.length) st.push('☠中毒');
+  if (me.snaredUntil > t) st.push(`🪤定身${((me.snaredUntil - t) / 1000).toFixed(1)}s`);
+  if (S.traps.length) st.push(`陷阱×${S.traps.length}`);
+  $('status').textContent = st.join('　');
   $('hpText').textContent = Math.ceil(me.hp);
   $('mpText').textContent = Math.floor(me.mp);
   $('enemyHpBar').style.width = `${(e.hp / e.maxHp) * 100}%`;
@@ -1021,6 +1391,8 @@ function statsHtml() {
     ['詠唱→發射 平均', `${avg(M.chantToFire)} ms`],
     ['命中率', `${pct(M.hits, M.misses)}（${M.hits} 中 / ${M.misses} 失，其中射程外 ${M.outOfRange}）`],
     ['閃避率', `${pct(M.dodged, M.hurt)}（${M.dodged} 閃 / ${M.hurt} 中）`],
+    ['防禦成功（格擋/護盾/反擊）', M.mitigated],
+    ['陷阱觸發', M.trapHits],
     ['目標遺失時間', M.frames ? `${Math.round((M.lostFrames / M.frames) * 100)}%` : '-'],
     ['平均 FPS', Math.round(M.fps)],
   ];
@@ -1056,12 +1428,12 @@ function banner(text, ms) {
 function toast(text, color) { floater(W / 2, H * 0.32, text, color || '#fff', 0.8); }
 
 let warnTimer = 0;
-function warn(text) {
+function warn(text, ms = STATS.chargeTimeoutMs) {
   const w = $('warn');
   clearTimeout(warnTimer);
   if (!text) { w.classList.remove('show'); return; }
   w.textContent = text; w.classList.add('show');
-  warnTimer = setTimeout(() => w.classList.remove('show'), STATS.chargeTimeoutMs);
+  warnTimer = setTimeout(() => w.classList.remove('show'), ms);
 }
 
 // ---------------------------------------------------------------- 音效（WebAudio 合成）
@@ -1094,6 +1466,11 @@ function sfx(name) {
     case 'fight': tone(330, 0.4, 'sawtooth', 0.15, 330); break;
     case 'fail': tone(200, 0.2, 'square', 0.08); break;
     case 'win': [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.3, 'triangle', 0.15, 0, i * 0.12)); break;
+    case 'arrow': tone(900, 0.08, 'triangle', 0.12, -500); tone(180, 0.15, 'sine', 0.1, -60); break;
+    case 'slash': tone(1600, 0.12, 'sawtooth', 0.06, -1300); break;
+    case 'shield': tone(520, 0.25, 'square', 0.08, 120); tone(780, 0.3, 'triangle', 0.08, 0, 0.05); break;
+    case 'trap': tone(300, 0.08, 'square', 0.1); tone(200, 0.1, 'square', 0.1, 0, 0.08); break;
+    case 'boom': tone(80, 0.6, 'sawtooth', 0.3, -40); tone(400, 0.2, 'square', 0.15, -300); break;
     case 'lose': [400, 300, 200].forEach((f, i) => tone(f, 0.4, 'sawtooth', 0.12, 0, i * 0.2)); break;
   }
 }

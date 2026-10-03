@@ -14,6 +14,10 @@
     <h1>咒術對決<small>SPELL DUEL · AR Demo</small></h1>
     <label class="field">名稱 <input id="nameInput" maxlength="10" placeholder="魔法師"></label>
 
+    <h2>選擇職業</h2>
+    <div id="classPicker" class="class-grid"></div>
+    <p id="classDesc" class="class-desc"></p>
+
     <h2>選擇 3 個技能 <span id="equipCount">0/3</span></h2>
     <div id="skillPicker" class="skill-grid"></div>
 
@@ -44,7 +48,7 @@
         <li>兩人各拿一支手機，用<b>後鏡頭</b>對準對方，按「鎖定目標」擷取對手影像。</li>
         <li><b>唸出技能名稱</b>（例如「火球」）開始詠唱，畫面上的手會出現魔法陣。</li>
         <li>把手伸到鏡頭前（只要拍到手腕與手指），<b>手指方向 = 瞄準方向</b>。</li>
-        <li><b>握拳蓄力 → 張開手掌</b>即發射（或手往前快速一揮）。</li>
+        <li><b>握拳蓄力 → 張開手掌</b>即發射（或手往前快速一揮）。每個技能有<b>蓄力時間</b>，蓄力環滿了才能發射。</li>
         <li>法術飛行需要時間，看到對手法術飛來時<b>移動身體</b>就能閃避！</li>
         <li>每個技能有<b>射程（公尺）</b>，距離由畫面中對手身體大小估算；<b>後退拉開距離</b>也能躲掉短射程技能。</li>
         <li>施法消耗 MP，MP 會隨時間恢復；HP 歸零者敗北。</li>
@@ -83,6 +87,7 @@
     <div id="bottomHud" class="hud">
       <div id="voiceBar" class="voice"><span id="voiceStatus">🎙️</span> <span id="transcript"></span></div>
       <div id="hint" class="hint"></div>
+      <div id="status" class="status-line"></div>
       <div class="bars">
         <div class="row"><b>HP</b><div class="bar hp"><i id="hpBar"></i></div><span id="hpText">100</span></div>
         <div class="row"><b>MP</b><div class="bar mp"><i id="mpBar"></i></div><span id="mpText">100</span></div>

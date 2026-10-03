@@ -117,3 +117,11 @@ h2 { font-size: 1.05rem; margin: 20px 0 10px; display: flex; justify-content: sp
 .enroll-btns { display: flex; gap: 10px; }
 .enroll-btns button { min-width: 120px; }
 .overlay button.small { min-width: 0; padding: 6px 14px; font-size: .85rem; }
+
+/* 職業 */
+.class-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.class-card { padding: 8px 4px; border-radius: 12px; border: 2px solid #3a3070; background: #15103a; font-size: .85rem; }
+.class-card .ic { display: block; font-size: 1.5rem; }
+.class-card.on { border-color: var(--c); box-shadow: 0 0 14px -2px var(--c); }
+.class-desc { font-size: .85rem; color: #cfc8f0; margin: 8px 2px 0; }
+.status-line { font-size: .8rem; color: #93c5fd; min-height: 1.1em; text-shadow: 0 1px 3px #000; }
