@@ -8,6 +8,7 @@
 //   reach       準星距離：準星從指尖沿手指方向延伸多遠（螢幕高度的比例）
 //   radius      命中判定半徑（螢幕短邊的比例），越大越好打中
 //   travelMs    飛行時間，越短對手越難閃
+//   trapRange   陷阱只能設在離自己幾公尺內的地面（近距離）
 //   multi       一次射出多發 { count, spread（螢幕寬比例）}
 //   effect      命中附加效果 dot（持續傷害）/ blind（致盲）/ snare（定身：暫時不能施法）
 //   keywords    線上語音辨識的關鍵字（含常見同音誤判）
@@ -39,16 +40,16 @@ export const SKILLS = {
     id: 'snaretrap', name: '捕獸夾', icon: '🪤', color: '#fb923c', glow: '#fed7aa',
     keywords: ['捕獸夾', '捕兽夹', '補獸夾', '獸夾', '陷阱', 'trap'],
     cost: 18, damage: 12, chargeMs: 1200, radius: 0.09, reach: 0.12, cooldownMs: 4000,
-    trap: { lifeMs: 30000, armMs: 1200, max: 2 }, effect: { kind: 'snare', dur: 2500 },
-    desc: '設在地上，踩到受傷並定身 2.5 秒（不能施法）；對手的雷達看得到',
+    trapRange: 3, trap: { lifeMs: 30000, armMs: 1200, max: 2 }, effect: { kind: 'snare', dur: 2500 },
+    desc: '近距離：設在自己 3 公尺內的地上，踩到受傷並定身 2.5 秒；對手的雷達看得到',
   },
   blasttrap: {
     cls: 'archer', type: 'trap', fx: 'trap',
     id: 'blasttrap', name: '爆裂陷阱', icon: '💣', color: '#f87171', glow: '#fecaca',
     keywords: ['爆裂陷阱', '爆裂', '爆炸', '炸彈', 'bomb'],
     cost: 28, damage: 28, chargeMs: 1500, radius: 0.12, reach: 0.12, cooldownMs: 6000,
-    trap: { lifeMs: 30000, armMs: 1500, max: 2 },
-    desc: '設在地上，踩到爆炸 28 傷害',
+    trapRange: 3, trap: { lifeMs: 30000, armMs: 1500, max: 2 },
+    desc: '近距離：設在自己 3 公尺內的地上，踩到爆炸 28 傷害',
   },
 
   // ---------------------------------------------------------- 法師：攻擊力最強、蓄力最長、範圍多樣
@@ -213,7 +214,7 @@ export const CLASSES = {
 export const MAX_EQUIP = 3;
 
 // 版本號：每次更新要和 index.html 的 data-version、game.js 的 VERSION 一起改（用來偵測檔案新舊混在一起）
-export const SKILLS_VERSION = '2026.10.03-4';
+export const SKILLS_VERSION = '2026.10.03-5';
 
 export const STATS = {
   chargeTimeoutMs: 7000,  // 蓄力完成後還能維持多久（刺客另外加長，方便走近）
@@ -233,6 +234,6 @@ export function effectText(s) {
     return '防禦';
   }
   const dmg = s.multi ? `${s.damage}×${s.multi.count}` : s.damage;
-  if (s.type === 'trap') return `陷阱 ${dmg} 傷害`;
+  if (s.type === 'trap') return `陷阱 ${dmg} 傷害 · 設置 ≤${s.trapRange}m`;
   return `傷害 ${dmg} · 射程 ${rangeText(s)}`;
 }

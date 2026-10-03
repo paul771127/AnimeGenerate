@@ -9,7 +9,7 @@ import { Net } from './net.js';
 const $ = (id) => document.getElementById(id);
 
 // 版本檢查：githack 會各別更新每個檔案，剛推新版時可能新舊混在一起
-const VERSION = '2026.10.03-4';
+const VERSION = '2026.10.03-5';
 {
   const htmlVer = document.documentElement.dataset.version;
   $('verText').textContent = VERSION;
@@ -532,6 +532,15 @@ function release(aim, via) {
     sfx('fail');
     return false;
   }
+  if (s.type === 'trap' && s.trapRange) {
+    // 陷阱是近距離技能：只能設在自己 trapRange 公尺內的地面
+    const gd = groundDistanceAt((aim || S.aim || { y: H * 0.6 }).y);
+    if (gd != null && gd > s.trapRange) {
+      toast(`陷阱只能設在 ${s.trapRange}m 內（準星處約 ${gd > 20 ? '20+' : gd.toFixed(1)}m）`, s.color);
+      sfx('fail');
+      return false;
+    }
+  }
   M.fires[via]++;
   M.chantToFire.push(now() - c.since);
   S.me.mp -= s.cost;
@@ -657,7 +666,8 @@ function reflectAttack(sk, dmg, eff, attackId) {
   M.mitigated++;
   const inc = S.incoming.find((i) => i.id === attackId);
   if (inc) inc.resolved = true;
-  const from = inc ? { x: lerp(inc.ax * W, W / 2, 0.4), y: H * 0.5 } : { x: W / 2, y: H * 0.6 };
+  const ip = inc && incomingPos(inc, clamp((t - inc.start) / inc.dur, 0, 1));
+  const from = ip ? { x: ip.x, y: ip.y } : { x: W / 2, y: H * 0.6 };
   const b = targetVisible() ? S.enemy.box : null;
   const to = b ? { x: (b.x0 + b.x1) / 2, y: b.y0 + (b.y1 - b.y0) * 0.35 } : { x: W / 2, y: H * 0.35 };
   const dur = Math.max(sk.travelMs || 600, 600);
@@ -991,6 +1001,15 @@ function trapRelative(pos) {
   const dt = pos.y - horizon > 5 ? clamp((f * CAM_HEIGHT) / (pos.y - horizon), 0.3, d + 5) : d + 5;
   const lateral = ((pos.x - feet.x) * dt) / f;   // 我的畫面右方＝對手的左方
   return { x: +(-lateral).toFixed(2), z: +(d - dt).toFixed(2) };
+}
+
+// 畫面上某個高度的地面離我幾公尺（用對手腳的位置與距離推算地平線）；推算不了時回傳 null（不限制）
+function groundDistanceAt(y) {
+  const e = S.enemy;
+  if (!targetVisible() || !e.distance) return null;
+  const f = focalScreen();
+  const horizon = e.box.y1 - (f * CAM_HEIGHT) / e.distance;
+  return y - horizon > 5 ? (f * CAM_HEIGHT) / (y - horizon) : Infinity;
 }
 
 let trapSyncAt = 0, trapSyncCount = 0;
@@ -1384,7 +1403,14 @@ function drawHand(t) {
     drawChargeRing(palm.x, palm.y, r + 14, prog, s, t);
     if (Math.random() < 0.6) spawn(palm.x + (Math.random() - 0.5) * r, palm.y + (Math.random() - 0.5) * r, s.color, 0.5);
     if (s.type === 'trap' && S.aim) {
-      drawTrapMarker(S.aim.x, S.aim.y, s.radius * Math.min(W, H), s.color, t, 0.6);
+      const gd = groundDistanceAt(S.aim.y);
+      const bad = s.trapRange && gd != null && gd > s.trapRange;
+      drawTrapMarker(S.aim.x, S.aim.y, s.radius * Math.min(W, H), bad ? '#888' : s.color, t, 0.6);
+      const label = `設置 ≤${s.trapRange}m` + (gd == null ? '' : bad ? `　✗ ${gd > 20 ? '20+' : gd.toFixed(1)}m 太遠` : `　✓ ${gd.toFixed(1)}m`);
+      ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center';
+      const lw = ctx.measureText(label).width / 2 + 6, lx = clamp(S.aim.x, lw, W - lw);
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.strokeText(label, lx, S.aim.y - 24);
+      ctx.fillStyle = bad ? '#bbb' : s.color; ctx.fillText(label, lx, S.aim.y - 24);
     } else if (s.type === 'projectile' && S.aim) {
       // 射程線：指尖 → 準星
       const tip = S.hand.tip;
@@ -1538,23 +1564,42 @@ function drawProjectile(p, t) {
 }
 
 // 對手法術：從遠處朝鏡頭飛來，越來越大
+// 對手的法術：從對手身上（看得到時）朝鏡頭飛來，用透視計算——離我越近越大、移動越快
+const INCOMING_END_Z = 0.3;   // 法術飛到離鏡頭 0.3 公尺處結束
+function incomingPos(i, k) {
+  const e = S.enemy, f = focalScreen(), cx = W / 2, cy = H / 2;
+  const b = e.locked && targetVisible() ? e.box : null;
+  const sx = b ? (b.x0 + b.x1) / 2 : i.ax * W, sy = b ? b.y0 + (b.y1 - b.y0) * 0.35 : H * 0.35;
+  const ex = cx + (i.ax - 0.5) * W * 0.4, ey = H * 0.55;          // 落點：畫面中間偏下（我的身體）
+  const d0 = Math.max(1, e.distance || 3);
+  const z = lerp(d0, INCOMING_END_Z, k);                         // 法術離我幾公尺
+  // 起點/終點換成實際的橫向位置（公尺），沿直線移動，再投影回畫面
+  const lx = lerp(((sx - cx) * d0) / f, ((ex - cx) * INCOMING_END_Z) / f, k);
+  const ly = lerp(((sy - cy) * d0) / f, ((ey - cy) * INCOMING_END_Z) / f, k);
+  return { x: cx + (lx * f) / z, y: cy + (ly * f) / z, z, f, sx, sy };
+}
+
 function drawIncoming(i, t) {
   const k = clamp((t - i.start) / i.dur, 0, 1);
-  const sx = i.ax * W, sy = H * 0.3;
-  const ex = lerp(sx, W / 2, 0.4), ey = H * 0.5;
-  const x = lerp(sx, ex, k), y = lerp(sy, ey, k);
-  const r = lerp(10, Math.min(W, H) * 0.32, k * k);
+  const p = incomingPos(i, k);
+  const sizeM = 0.12 + (i.skill.radius || 0.08) * 1.2;           // 法術實際大小（公尺）
+  const r = clamp((sizeM * p.f) / p.z / 2, 5, Math.min(W, H) * 0.75);
+  const prev = incomingPos(i, Math.max(0, k - 0.05));
   ctx.globalAlpha = i.resolved ? 0.3 : 1;
-  // 朝鏡頭飛來：箭/刀從畫面上方斜斜飛向觀看者
-  drawShape(x, y, i.skill.fx === 'orb' || i.skill.fx === 'smoke' ? r : r * 0.5, i.skill, t, Math.atan2(ey - sy, ex - sx));
+  const fx = i.skill.fx;
+  drawShape(p.x, p.y, fx === 'orb' || fx === 'smoke' ? r : r * 0.5, i.skill, t, Math.atan2(p.y - prev.y, p.x - prev.x));
   ctx.globalAlpha = 1;
   if (!i.resolved && k < 1) {
     ctx.strokeStyle = `rgba(255,60,80,${0.5 + 0.5 * Math.sin(t / 60)})`; ctx.lineWidth = 6;
     ctx.strokeRect(3, 3, W - 6, H - 6);
     ctx.fillStyle = '#fff'; ctx.font = 'bold 20px system-ui'; ctx.textAlign = 'center';
     ctx.fillText('快閃開！', W / 2, H * 0.2);
+    // 剩餘距離
+    ctx.font = 'bold 13px system-ui'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.7)';
+    const label = `${i.skill.icon} ${p.z.toFixed(1)}m`;
+    ctx.strokeText(label, p.x, p.y - r - 8); ctx.fillStyle = i.skill.color; ctx.fillText(label, p.x, p.y - r - 8);
   }
-  if (Math.random() < 0.7) spawn(x, y, i.skill.color, 0.4 + k);
+  if (Math.random() < 0.7) spawn(p.x, p.y, i.skill.color, 0.4 + k);
 }
 
 function drawTrapMarker(x, y, r, color, t, alpha) {
