@@ -18,21 +18,21 @@ export const SKILLS = {
     id: 'quickshot', name: '速射', icon: '🏹', color: '#d9f99d', glow: '#ffffff',
     keywords: ['速射', '素射', '速設', '快射', 'quick'],
     cost: 12, damage: 12, chargeMs: 1000, travelMs: 220, radius: 0.035, range: [0, 12], reach: 0.15, cooldownMs: 900,
-    desc: '基本箭矢，蓄力 1 秒',
+    desc: '弓箭手唯一的近距離技能，貼身也能射',
   },
   snipe: {
     cls: 'archer', type: 'projectile', fx: 'arrow',
     id: 'snipe', name: '狙擊', icon: '🎯', color: '#fde047', glow: '#ffffff',
     keywords: ['狙擊', '狙击', '阻擊', '組擊', 'snipe'],
-    cost: 30, damage: 34, chargeMs: 2200, travelMs: 260, radius: 0.025, range: [0, 15], reach: 0.15, cooldownMs: 3000,
-    desc: '蓄力最久的重箭，判定最小',
+    cost: 30, damage: 34, chargeMs: 2200, travelMs: 260, radius: 0.025, range: [3, 15], reach: 0.15, cooldownMs: 3000,
+    desc: '蓄力最久的重箭，判定最小；3 公尺內打不到',
   },
   triple: {
     cls: 'archer', type: 'projectile', fx: 'arrow', multi: { count: 3, spread: 0.09 },
     id: 'triple', name: '三連矢', icon: '🔱', color: '#a3e635', glow: '#ecfccb',
     keywords: ['三連矢', '三連', '三连', '三聯', '散射', 'triple'],
-    cost: 24, damage: 9, chargeMs: 1600, travelMs: 260, radius: 0.03, range: [0, 10], reach: 0.15, cooldownMs: 2000,
-    desc: '一次三箭扇形散開，每箭 9 傷害',
+    cost: 24, damage: 9, chargeMs: 1600, travelMs: 260, radius: 0.03, range: [2, 10], reach: 0.15, cooldownMs: 2000,
+    desc: '一次三箭扇形散開，每箭 9 傷害；2 公尺內打不到',
   },
   snaretrap: {
     cls: 'archer', type: 'trap', fx: 'trap',
@@ -56,36 +56,36 @@ export const SKILLS = {
     cls: 'mage', type: 'projectile', fx: 'orb',
     id: 'fire', name: '火球術', icon: '🔥', color: '#ff7a1a', glow: '#ffd04a',
     keywords: ['火球', '火求', '火秋', '活球', 'fireball', 'fire'],
-    cost: 20, damage: 24, chargeMs: 1500, travelMs: 900, radius: 0.09, range: [0, 5], reach: 0.12, cooldownMs: 1200,
-    desc: '中速火球，平衡型',
+    cost: 20, damage: 24, chargeMs: 1500, travelMs: 900, radius: 0.09, range: [2, 6], reach: 0.12, cooldownMs: 1200,
+    desc: '中速火球；2 公尺內打不到',
   },
   ice: {
     cls: 'mage', type: 'projectile', fx: 'orb',
     id: 'ice', name: '冰槍', icon: '🧊', color: '#5fd7ff', glow: '#e0f8ff',
     keywords: ['冰槍', '冰枪', '兵槍', '冰矛', '冰箭', 'ice'],
-    cost: 25, damage: 28, chargeMs: 1400, travelMs: 650, radius: 0.06, range: [0, 6], reach: 0.15, cooldownMs: 1500,
-    desc: '快速穿刺，判定較窄',
+    cost: 25, damage: 28, chargeMs: 1400, travelMs: 650, radius: 0.06, range: [2, 7], reach: 0.15, cooldownMs: 1500,
+    desc: '快速穿刺，判定較窄；2 公尺內打不到',
   },
   thunder: {
     cls: 'mage', type: 'projectile', fx: 'orb',
     id: 'thunder', name: '雷擊', icon: '⚡', color: '#c08bff', glow: '#ffffff',
     keywords: ['雷擊', '雷击', '雷電', '雷电', '打雷', '落雷', 'thunder'],
-    cost: 35, damage: 38, chargeMs: 2200, travelMs: 300, radius: 0.045, range: [0, 9], reach: 0.15, cooldownMs: 2500,
-    desc: '幾乎瞬發，判定極窄',
+    cost: 35, damage: 38, chargeMs: 2200, travelMs: 300, radius: 0.045, range: [3, 10], reach: 0.15, cooldownMs: 2500,
+    desc: '幾乎瞬發，判定極窄；3 公尺內打不到',
   },
   wind: {
     cls: 'mage', type: 'projectile', fx: 'orb',
     id: 'wind', name: '風刃', icon: '🌪️', color: '#7dffb0', glow: '#e8fff0',
     keywords: ['風刃', '风刃', '風刀', '风刀', '風人', '封刃', 'wind'],
     cost: 12, damage: 16, chargeMs: 1000, travelMs: 600, radius: 0.14, range: [0, 2.5], reach: 0.1, cooldownMs: 800,
-    desc: '範圍超大，只能近身',
+    desc: '法師唯一的近距離技能，範圍超大、只能近身',
   },
   meteor: {
     cls: 'mage', type: 'projectile', fx: 'orb',
     id: 'meteor', name: '隕石', icon: '☄️', color: '#ff3b3b', glow: '#ffb36b',
     keywords: ['隕石', '陨石', '引石', '允石', '流星', 'meteor'],
-    cost: 50, damage: 58, chargeMs: 3000, travelMs: 1700, radius: 0.18, range: [0, 7], reach: 0.15, cooldownMs: 4000,
-    desc: '蓄力 3 秒、超大範圍、飛很慢',
+    cost: 50, damage: 58, chargeMs: 3000, travelMs: 1700, radius: 0.18, range: [3, 8], reach: 0.15, cooldownMs: 4000,
+    desc: '蓄力 3 秒、超大範圍、飛很慢；3 公尺內打不到',
   },
   heal: {
     cls: 'mage', type: 'self', self: 'heal', fx: 'orb',
@@ -182,14 +182,14 @@ export const SKILLS = {
 export const CLASSES = {
   archer: {
     id: 'archer', name: '弓箭手', icon: '🏹', color: '#a3e635',
-    desc: '箭速快、射程遠、判定小；蓄力時間長。可在地上設陷阱，對手踩到就觸發。',
+    desc: '箭速快、射程遠、判定小；蓄力時間長。近距離只有速射能打。可在地上設陷阱，對手踩到就觸發。',
     stats: { maxHp: 100, maxMp: 100, mpRegen: 7 },
     skills: ['quickshot', 'snipe', 'triple', 'snaretrap', 'blasttrap'],
     defaultLoadout: ['quickshot', 'snipe', 'snaretrap'],
   },
   mage: {
     id: 'mage', name: '法師', icon: '🔮', color: '#c084fc',
-    desc: '攻擊力最強、蓄力時間最長；法術的射程與範圍變化最多。',
+    desc: '攻擊力最強、蓄力時間最長；遠程為主，近距離只有風刃能打。',
     stats: { maxHp: 90, maxMp: 120, mpRegen: 7 },
     skills: ['fire', 'ice', 'thunder', 'wind', 'meteor', 'heal'],
     defaultLoadout: ['fire', 'thunder', 'meteor'],
@@ -213,7 +213,7 @@ export const CLASSES = {
 export const MAX_EQUIP = 3;
 
 // 版本號：每次更新要和 index.html 的 data-version、game.js 的 VERSION 一起改（用來偵測檔案新舊混在一起）
-export const SKILLS_VERSION = '2026.10.03-2';
+export const SKILLS_VERSION = '2026.10.03-3';
 
 export const STATS = {
   chargeTimeoutMs: 7000,  // 蓄力完成後還能維持多久（刺客另外加長，方便走近）
