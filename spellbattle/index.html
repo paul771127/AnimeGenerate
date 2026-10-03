@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-version="2026.10.03-1">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -12,6 +12,7 @@
   <!-- 主選單 -->
   <section id="home" class="screen active">
     <h1>咒術對決<small>SPELL DUEL · AR Demo</small></h1>
+    <div id="loadError" class="load-error"></div>
     <label class="field">名稱 <input id="nameInput" maxlength="10" placeholder="魔法師"></label>
 
     <h2>選擇職業</h2>
@@ -42,6 +43,7 @@
     </div>
     <p id="homeStatus" class="status"></p>
 
+    <p class="version">版本 <span id="verText"></span></p>
     <details class="howto">
       <summary>玩法說明</summary>
       <ol>
@@ -124,6 +126,20 @@
     <button id="enrollCancel" class="ghost small">取消</button>
   </div>
 
+  <!-- 載入檢查：模組載入失敗（例如 githack 正在同步新版、檔案新舊混在一起）時，直接在畫面上顯示原因 -->
+  <script>
+    (function () {
+      function show(msg) {
+        var el = document.getElementById('loadError');
+        el.innerHTML = '⚠ 程式載入失敗：' + msg + '<br>可能是新版本還在同步，請等 1～2 分鐘後重新整理。';
+        el.style.display = 'block';
+      }
+      window.__showLoadError = show;
+      window.addEventListener('error', function (e) { if (!window.__spellduel) show((e.message || '未知錯誤') + (e.filename ? '（' + e.filename.split('/').pop() + '）' : '')); });
+      window.addEventListener('unhandledrejection', function (e) { if (!window.__spellduel) show(String(e.reason && e.reason.message || e.reason)); });
+      setTimeout(function () { if (!window.__spellduel) show('主程式沒有啟動（逾時）'); }, 10000);
+    })();
+  </script>
   <script type="module" src="js/game.js"></script>
 </body>
 </html>

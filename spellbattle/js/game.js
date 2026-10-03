@@ -1,11 +1,21 @@
 // 咒術對決 主遊戲邏輯
-import { SKILLS, CLASSES, MAX_EQUIP, STATS, rangeText, effectText } from './skills.js';
+import { SKILLS, CLASSES, MAX_EQUIP, STATS, rangeText, effectText, SKILLS_VERSION } from './skills.js';
 import { Orientation } from './orient.js';
 import { VoiceCaster } from './voice.js';
 import { LocalSpotter, classify, finalizeSkill, loadTemplates, saveTemplates, hasTemplates } from './voice-local.js';
 import { Net } from './net.js';
 
 const $ = (id) => document.getElementById(id);
+
+// 版本檢查：githack 會各別更新每個檔案，剛推新版時可能新舊混在一起
+const VERSION = '2026.10.03-1';
+{
+  const htmlVer = document.documentElement.dataset.version;
+  $('verText').textContent = VERSION;
+  if (htmlVer !== VERSION || SKILLS_VERSION !== VERSION) {
+    window.__showLoadError(`檔案版本不一致（頁面 ${htmlVer}／主程式 ${VERSION}／技能 ${SKILLS_VERSION}）`);
+  }
+}
 const now = () => performance.now();
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;

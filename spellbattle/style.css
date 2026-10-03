@@ -125,3 +125,6 @@ h2 { font-size: 1.05rem; margin: 20px 0 10px; display: flex; justify-content: sp
 .class-card.on { border-color: var(--c); box-shadow: 0 0 14px -2px var(--c); }
 .class-desc { font-size: .85rem; color: #cfc8f0; margin: 8px 2px 0; }
 .status-line { font-size: .8rem; color: #93c5fd; min-height: 1.1em; text-shadow: 0 1px 3px #000; }
+
+.load-error { display: none; background: #7f1d1d; color: #fff; border-radius: 12px; padding: 10px 12px; margin: 0 0 12px; font-size: .9rem; }
+.version { text-align: center; color: #6b6496; font-size: .75rem; margin: 12px 0 0; }
