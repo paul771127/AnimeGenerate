@@ -214,7 +214,7 @@ export const CLASSES = {
 export const MAX_EQUIP = 3;
 
 // 版本號：每次更新要和 index.html 的 data-version、game.js 的 VERSION 一起改（用來偵測檔案新舊混在一起）
-export const SKILLS_VERSION = '2026.10.03-5';
+export const SKILLS_VERSION = '2026.10.03-6';
 
 export const STATS = {
   chargeTimeoutMs: 7000,  // 蓄力完成後還能維持多久（刺客另外加長，方便走近）

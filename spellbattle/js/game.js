@@ -9,7 +9,7 @@ import { Net } from './net.js';
 const $ = (id) => document.getElementById(id);
 
 // 版本檢查：githack 會各別更新每個檔案，剛推新版時可能新舊混在一起
-const VERSION = '2026.10.03-5';
+const VERSION = '2026.10.03-6';
 {
   const htmlVer = document.documentElement.dataset.version;
   $('verText').textContent = VERSION;
@@ -888,8 +888,9 @@ function updateTarget(t) {
 // 背景追蹤得到畫面縮放 S 與平移 T：
 //   距離 = 電腦自己的距離 ÷ S（玩家後退 → 背景變小 → S 變小 → 距離變遠）
 //   位置 = 以畫面中心縮放後再加上平移（轉動手機時電腦留在原地）
-// 電腦自己也會走位：刺客逼近、劍士約 2 公尺、法師/弓箭手拉開距離，並左右移動。
-const AI_PREF_DIST = { assassin: 1.2, swordsman: 2, archer: 5, mage: 4.5 };
+// 電腦平常站在原地（只會左右移動）；只有「正在蓄力的技能不在射程內」時才走近或退開，
+// 所以玩家自己後退，距離就會確實變遠。
+const AI_WALK_SPEED = 0.35;   // m/s
 const V = { dist: 3, strafe: 0, offX: 0, offscreenSince: 0, lastT: 0, frame: 0 };
 
 function resetVirtualEnemy() {
@@ -901,13 +902,16 @@ function updateVirtualEnemy(t) {
   const e = S.enemy;
   const dt = Math.min(0.5, (t - (V.lastT || t)) / 1000);
   V.lastT = t;
-  if (video.videoWidth && V.frame++ % 2 === 0) zoom.update(video);
+  if (video.videoWidth) zoom.update(video);
   const Sz = clamp(zoom.scale, 0.2, 5);
-  // 電腦走位（只在戰鬥中）：朝偏好距離移動，每秒最多 0.5 公尺
   if (S.phase === 'battle' && S.ai && !(S.ai.snaredUntil > t)) {
-    const pref = AI_PREF_DIST[S.ai.cls] || 3;
-    const eff = V.dist / Sz;
-    if (Math.abs(eff - pref) > 0.2) V.dist -= Math.sign(eff - pref) * 0.5 * dt * Sz;
+    const c = S.ai.charging, eff = V.dist / Sz;
+    const r = c && c.skill.type === 'projectile' && c.skill.range;
+    let target = null;
+    if (r && eff > r[1]) target = r[1] * 0.85;          // 太遠：走近
+    else if (r && eff < r[0]) target = r[0] * 1.15;     // 太近：退開
+    V.walking = target != null ? (eff > target ? 'in' : 'out') : null;
+    if (V.walking) V.dist -= Math.sign(eff - target) * AI_WALK_SPEED * dt * Sz;
     V.strafe += dt;
   }
   V.dist = clamp(V.dist, 0.3 * Sz, 12 * Sz);
@@ -1115,7 +1119,8 @@ function aiUpdate(t, dt) {
   if (!pick) {
     const atk = ready.filter((s) => s.type !== 'self');
     const good = atk.filter(aiInRange);
-    const list = good.length ? good : atk;
+    // 大多選射程內的技能；偶爾選射程外的（電腦會走過去或退開再放）
+    const list = good.length && Math.random() < 0.85 ? good : atk;
     pick = list[Math.floor(Math.random() * list.length)];
   }
   if (pick) aiCharge(pick, t, rand(200, 900));
@@ -1373,6 +1378,10 @@ function drawDummy(b) {
   if (S.enemy.cls) {
     ctx.font = `${Math.round(w * 0.3)}px system-ui`; ctx.textAlign = 'center';
     ctx.fillText(CLASSES[S.enemy.cls].icon, cx, b.y0 + w * 0.36);
+  }
+  if (V.walking) {
+    ctx.font = 'bold 13px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#fbbf24';
+    ctx.fillText(V.walking === 'in' ? '🚶 走近中…' : '🚶 退開中…', cx, b.y1 + 16);
   }
   // 電腦蓄力中：頭上顯示蓄力環
   const c = S.ai && S.ai.charging;
@@ -1780,7 +1789,7 @@ function updateDebug(t) {
     `FPS ${Math.round(M.fps)} | 辨識 ${vision ? Math.round(vision.lastMs || 0) : '-'}ms | ${v}`,
     `人數 ${vision ? vision.people.length : '-'} | 目標 ${targetVisible() ? '可見' : '遺失'} (miss ${S.enemy.missFrames})`,
     `距離 ${S.enemy.distance ? S.enemy.distance.toFixed(2) + 'm' : '-'} (${S.enemy.distMethod || '-'}) 校正 ${distCalib.toFixed(2)}`,
-    S.enemy.virtual ? `背景追蹤 縮放 ${zoom.scale.toFixed(3)} 平移 ${zoom.txNorm.toFixed(2)},${zoom.tyNorm.toFixed(2)} 誤差 ${zoom.quality.toFixed(1)}` : '',
+    S.enemy.virtual ? `背景追蹤${V.walking ? '（電腦走位中）' : ''} 縮放 ${zoom.scale.toFixed(3)} 平移 ${zoom.txNorm.toFixed(2)},${zoom.tyNorm.toFixed(2)} 誤差 ${zoom.quality.toFixed(1)}` : '',
     `手 ${h ? `${h.gesture} ${(h.score * 100) | 0}%` : '無'} | 動作感測 ${orient.motionOk ? `有 ${orient.peakSince(now() - 500).toFixed(1)}m/s²` : '無（閃避用機率）'}`,
     `語音延遲 ${avg(M.voiceDelay)}ms（本機：說完→觸發；線上：首字→觸發）`,
     ...M.voiceLog,
