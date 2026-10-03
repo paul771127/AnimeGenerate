@@ -19,10 +19,15 @@ export class Orientation {
   constructor() {
     this.R = null;
     this.ok = false;
+    // 加速度感測（單人模式判斷玩家有沒有移動身體閃避）
+    this.motionOk = false;
+    this.motion = [];          // 最近幾秒的 { t, a }，a＝去掉重力後的加速度大小 (m/s²)
+    this.gravity = null;
   }
 
   // iOS 必須在使用者點擊當下呼叫（requestPermission 需要使用者手勢）
   request() {
+    this._requestMotion();
     const DOE = window.DeviceOrientationEvent;
     if (!DOE) return Promise.resolve(false);
     const listen = () => {
@@ -37,6 +42,40 @@ export class Orientation {
       return DOE.requestPermission().then((r) => (r === 'granted' ? listen() : false)).catch(() => false);
     }
     return Promise.resolve(listen());
+  }
+
+  _requestMotion() {
+    const DME = window.DeviceMotionEvent;
+    if (!DME) return;
+    const listen = () => window.addEventListener('devicemotion', (e) => this._onMotion(e));
+    if (typeof DME.requestPermission === 'function') DME.requestPermission().then((r) => r === 'granted' && listen()).catch(() => {});
+    else listen();
+  }
+
+  _onMotion(e) {
+    let mag;
+    const a = e.acceleration;
+    if (a && a.x != null) {
+      mag = Math.hypot(a.x, a.y, a.z);
+    } else {
+      // 只有含重力的數值：用低通濾波估出重力再扣掉
+      const g = e.accelerationIncludingGravity;
+      if (!g || g.x == null) return;
+      const v = [g.x, g.y, g.z];
+      this.gravity = this.gravity ? this.gravity.map((x, i) => x * 0.9 + v[i] * 0.1) : v;
+      mag = Math.hypot(v[0] - this.gravity[0], v[1] - this.gravity[1], v[2] - this.gravity[2]);
+    }
+    const t = performance.now();
+    this.motionOk = true;
+    this.motion.push({ t, a: mag });
+    while (this.motion.length && t - this.motion[0].t > 6000) this.motion.shift();
+  }
+
+  // 從 t0 到現在的最大加速度（m/s²）
+  peakSince(t0) {
+    let m = 0;
+    for (const x of this.motion) if (x.t >= t0 && x.a > m) m = x.a;
+    return m;
   }
 
   // 螢幕座標的旋轉角（直拿 0、橫拿 90/270）

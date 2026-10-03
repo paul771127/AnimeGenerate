@@ -187,7 +187,7 @@ const S = {
   traps: [],                 // 我方設置的陷阱
   enemyTraps: [],            // 對手的陷阱（相對我的位置，公尺）
   enemyTrapsSeen: true,
-  dummyNextAttack: 0,        // 練習模式：木人反擊時間
+  ai: null,                  // 練習模式的電腦對手
   skills: [],
   enemy: { name: '對手', cls: null, buffs: {}, dots: [], hp: 100, maxHp: 100, locked: false, virtual: false,
     signature: null, box: null, lastSeen: 0, missFrames: 99, distance: null, distMethod: '', ready: false, loadout: [] },
@@ -206,6 +206,7 @@ const S = {
   nextId: 1,
 };
 window.__spellduel = S;   // 方便除錯
+window.__skills = SKILLS;
 
 // ---------------------------------------------------------------- 驗證用統計
 const DEBUG = new URLSearchParams(location.search).has('debug');
@@ -404,7 +405,6 @@ function lockTarget(virtual) {
   } else {
     e.signature = null;
     $('enemyThumb').removeAttribute('src');
-    if (S.mode === 'practice') { e.name = '訓練木人'; e.cls = null; }
   }
   e.locked = true;
   e.distance = null;
@@ -448,6 +448,7 @@ function maybeStart() {
 
 function startCountdown() {
   S.phase = 'countdown';
+  if (S.mode === 'practice') setupAI();   // 每局隨機一個電腦職業
   resetStats();
   hint('');
   let n = 3;
@@ -460,11 +461,9 @@ function startCountdown() {
 
 function resetStats() {
   Object.assign(S.me, { hp: S.me.maxHp, mp: S.me.maxMp, cooldowns: {}, dots: [], buffs: {}, snaredUntil: 0 });
-  if (S.mode === 'practice') S.enemy.maxHp = 100;
   S.enemy.hp = S.enemy.maxHp;
   S.enemy.buffs = {}; S.enemy.dots = [];
   S.charging = null; S.projectiles = []; S.incoming = []; S.traps = []; S.enemyTraps = []; S.blindUntil = 0;
-  S.dummyNextAttack = now() + 9000;
   resetMetrics();
   $('result').classList.remove('show');
 }
@@ -584,7 +583,7 @@ function impact(p) {
     if (eff) floater(p.to.x, p.to.y - 60, effectLabel(eff), s.color, 0.8);
     sfx('hit');
     M.hits++;
-    hitEnemyLocal(dmg, eff);
+    if (S.ai) aiTakeHit(dmg, eff, p); else hitEnemyLocal(dmg, eff);
   } else {
     const why = onTarget && range === 'far' ? '射程外' : onTarget && range === 'near' ? '太近' : 'MISS';
     floater(p.to.x, p.to.y - 30, why, '#ccc');
@@ -800,11 +799,11 @@ function loop() {
     }
     tickDots(realDt);
     updateTraps(t);
-    if (S.mode === 'practice') dummyAttack(t);
+    if (S.ai) aiUpdate(t, realDt);
   }
 
   for (const p of S.projectiles) if (!p.done && t - p.start >= p.dur) { p.done = true; impact(p); }
-  for (const i of S.incoming) if (i.dummy && !i.resolved && t - i.start >= i.dur) { i.resolved = true; receiveHit(i.dmg, null, null, i.id); }
+  for (const i of S.incoming) if (i.ai && !i.resolved && t - i.start >= i.dur) aiResolve(i);
   S.projectiles = S.projectiles.filter((p) => !p.done);
   S.incoming = S.incoming.filter((i) => t - i.start < i.dur + 1500 && !(i.resolved && t - i.start > i.dur));
 
@@ -970,19 +969,189 @@ function updateTraps(t) {
     if (s.effect) floater(tr.pos.x, tr.pos.y - 60, effectLabel(s.effect), s.color, 0.8);
     sfx('boom');
     M.trapHits++; M.hits++;
-    hitEnemyLocal(s.damage, s.effect);
+    if (S.ai) aiTakeHit(s.damage, s.effect, null); else hitEnemyLocal(s.damage, s.effect);
     if (net) net.send({ t: 'trap', skill: s.id, dmg: s.damage, eff: s.effect || null });
   }
 }
 
-// ---------------------------------------------------------------- 練習模式：木人每 8～12 秒反擊一次（練習防禦技能）
-const DUMMY_SKILL = { id: 'dummy', name: '木人拳', icon: '🪵', color: '#d08a40', glow: '#ffe0b0', fx: 'orb' };
-function dummyAttack(t) {
-  if (t < S.dummyNextAttack) return;
-  S.dummyNextAttack = t + 8000 + Math.random() * 4000;
-  S.incoming.push({ id: 'd' + S.nextId++, skill: DUMMY_SKILL, ax: 0.3 + Math.random() * 0.4, ay: 0.4, start: t, dur: 1400, resolved: false, dummy: true, dmg: 8 });
-  warn('⚠ 木人反擊！可以用防禦技能擋', 1400);
+// ---------------------------------------------------------------- 練習模式：電腦對手
+// 每局隨機一個職業與 3 個技能，跟玩家用一樣的規則：MP、冷卻、蓄力時間、射程、防禦、陷阱。
+// 閃避判定：沒有對手的鏡頭，所以改用手機加速度感測器——法術飛行期間玩家有明顯移動就算閃開；
+// 沒有感測器（例如電腦）時依飛行時間給閃避機率。
+const DUMMY_SKILL = { id: 'dummy', name: '木人拳', icon: '🪵', color: '#d08a40', glow: '#ffe0b0', fx: 'orb', travelMs: 1000 };
+const DODGE_ACCEL = 3;            // m/s²：側移一步大約 3～6
+const AI_THINK_MS = [2500, 5000]; // 出招間隔（越短越難）
+const AI_DAMAGE = 0.8;             // 電腦傷害倍率（越大越難）
+const rand = (a, b) => a + Math.random() * (b - a);
+const shuffle = (arr) => arr.map((x) => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
+
+function setupAI() {
+  const forced = new URLSearchParams(location.search).get('ai');   // 網址加 ?ai=archer 可指定電腦職業
+  const C = CLASSES[forced] || CLASSES[shuffle(Object.keys(CLASSES))[0]];
+  const atk = shuffle(C.skills.filter((id) => SKILLS[id].type !== 'self'));
+  const rest = shuffle([...atk.slice(2), ...C.skills.filter((id) => SKILLS[id].type === 'self')]);
+  const skills = [...atk.slice(0, 2), rest[0]].map((id) => SKILLS[id]);   // 至少 2 個攻擊技能
+  S.ai = {
+    cls: C.id, skills, mp: C.stats.maxMp, maxMp: C.stats.maxMp, regen: C.stats.mpRegen,
+    cooldowns: {}, charging: null, nextThink: now() + 4500, buffs: {}, snaredUntil: 0, blindUntil: 0, reactedAt: 0,
+  };
+  const e = S.enemy;
+  e.cls = C.id;
+  e.name = `${C.icon} 電腦${C.name}`;
+  e.maxHp = C.stats.maxHp;
+  setTimeout(() => warn(`🤖 對手：${C.icon}${C.name}｜${skills.map((x) => x.icon + x.name).join('・')}`, 3500), 50);
+}
+
+function aiInRange(s) {
+  const d = S.enemy.distance;
+  return !s.range || !d || (d >= s.range[0] && d <= s.range[1]);
+}
+
+function aiUpdate(t, dt) {
+  const ai = S.ai, e = S.enemy;
+  ai.mp = Math.min(ai.maxMp, ai.mp + ai.regen * dt);
+  updateAiTraps(t);
+  if (ai.snaredUntil > t) return;
+
+  // 蓄力中：時間到、而且距離在射程內才出手（刺客會等你走近、狙擊會等你拉遠）
+  if (ai.charging) {
+    const c = ai.charging, s = c.skill;
+    if (t - c.since < s.chargeMs + c.delay) return;
+    if (s.type === 'projectile' && !aiInRange(s)) {
+      if (t - c.since > s.chargeMs + 8000) { ai.charging = null; warn(''); }
+      return;
+    }
+    ai.charging = null;
+    warn('');
+    aiRelease(s, t);
+    return;
+  }
+
+  const ready = ai.skills.filter((s) => (ai.cooldowns[s.id] || 0) <= t && ai.mp >= s.cost);
+  const guards = ready.filter((s) => s.type === 'self' && s.self !== 'heal');
+  // 看到玩家的攻擊飛來：有一半機率立刻開防禦
+  const newShot = S.projectiles.find((p) => !p.reflected && p.start > ai.reactedAt);
+  if (newShot) {
+    ai.reactedAt = t;
+    if (guards.length && Math.random() < 0.5) return aiCharge(guards[0], t, rand(0, 150));
+  }
+  if (t < ai.nextThink) return;
+  ai.nextThink = t + rand(...AI_THINK_MS);
+  let pick = null;
+  if (e.hp < e.maxHp * 0.4) pick = ready.find((s) => s.self === 'heal');
+  if (!pick) {
+    const atk = ready.filter((s) => s.type !== 'self');
+    const good = atk.filter(aiInRange);
+    const list = good.length ? good : atk;
+    pick = list[Math.floor(Math.random() * list.length)];
+  }
+  if (pick) aiCharge(pick, t, rand(200, 900));
+}
+
+function aiCharge(s, t, delay) {
+  const ai = S.ai;
+  ai.mp -= s.cost;
+  ai.cooldowns[s.id] = t + s.cooldownMs;
+  ai.charging = { skill: s, since: t, delay };
+  warn(`⚠ ${S.enemy.name} 正在詠唱 ${s.icon}${s.name}`, s.chargeMs + delay + 1500);
+}
+
+function aiRelease(s, t) {
+  const ai = S.ai, e = S.enemy, b = e.box;
+  const at = b ? { x: (b.x0 + b.x1) / 2, y: (b.y0 + b.y1) / 2 } : { x: W / 2, y: H / 2 };
+  if (s.type === 'self') {
+    if (s.self === 'heal') {
+      e.hp = Math.min(e.maxHp, e.hp + s.heal);
+      floater(at.x, at.y - 40, `+${s.heal}`, s.color, 1.2);
+      sfx('heal');
+    } else {
+      ai.buffs[s.self] = { until: t + s.buff.dur, ...s.buff, left: s.buff.amount };
+      e.buffs[s.self] = t + s.buff.dur;
+      floater(at.x, at.y - 40, `${s.icon} ${s.name}`, s.color, 1.1);
+      sfx('shield');
+    }
+    burst(at.x, at.y, s.color, 40);
+    return;
+  }
+  if (s.type === 'trap') {
+    // 電腦的陷阱直接設在你腳下：在生效前移動身體就能避開
+    const armAt = t + Math.max(s.trap.armMs, 2000);
+    S.enemyTraps.push({ id: 'ai' + S.nextId++, s: s.id, x: rand(-0.25, 0.25), z: rand(-0.25, 0.25), armed: false, armAt, placedAt: t, ai: true });
+    warn(`⚠ ${s.icon} 陷阱設在你腳下！${((armAt - t) / 1000).toFixed(0)} 秒內移動身體避開`, armAt - t);
+    sfx('trap');
+    return;
+  }
+  const n = s.multi ? s.multi.count : 1;
+  const base = rand(0.35, 0.65);
+  for (let k = 0; k < n; k++) {
+    const ax = base + (s.multi ? (k - (n - 1) / 2) * s.multi.spread : 0);
+    S.incoming.push({ id: 'ai' + S.nextId++, skill: s, ax, ay: 0.4, start: t, dur: s.travelMs, resolved: false, ai: true, dmg: Math.round(s.damage * AI_DAMAGE), eff: s.effect || null });
+  }
+  if (s.travelMs > 400) warn('⚠ 法術飛來了！移動身體閃避', s.travelMs);
   sfx('incoming');
+}
+
+// 電腦的攻擊飛到：判斷玩家有沒有閃開
+function playerDodged(since, dur) {
+  if (orient.motionOk) return orient.peakSince(since) >= DODGE_ACCEL;
+  return Math.random() < clamp((dur - 250) / 2500, 0.05, 0.5);
+}
+
+function aiResolve(i) {
+  i.resolved = true;
+  const ai = S.ai;
+  const accuracy = ai && ai.blindUntil > now() ? 0.4 : 0.9;   // 被煙霧彈致盲時很容易打偏
+  if (playerDodged(i.start, i.dur) || Math.random() > accuracy) {
+    floater(W / 2, H * 0.45, '閃避成功！', '#7dffb0', 1.4);
+    sfx('dodge');
+    M.dodged++;
+    return;
+  }
+  receiveHit(i.dmg, i.skill.id, i.eff, i.id);
+}
+
+function updateAiTraps(t) {
+  for (const tr of S.enemyTraps) {
+    if (!tr.ai || tr.armed || t < tr.armAt) continue;
+    const s = SKILLS[tr.s];
+    tr.done = true;
+    if (playerDodged(tr.placedAt, tr.armAt - tr.placedAt + 800)) {
+      floater(W / 2, H * 0.5, '避開陷阱！', '#7dffb0', 1.3);
+      sfx('dodge');
+      M.dodged++;
+    } else {
+      banner('踩到陷阱！', 1200);
+      receiveHit(Math.round(s.damage * AI_DAMAGE), s.id, s.effect || null, null);
+    }
+  }
+  if (S.enemyTraps.some((x) => x.done)) S.enemyTraps = S.enemyTraps.filter((x) => !x.done);
+}
+
+// 玩家打中電腦：電腦也會格擋、護盾、反擊
+function aiTakeHit(dmg, eff, p) {
+  const ai = S.ai, e = S.enemy, t = now(), B = ai.buffs;
+  const at = e.box ? { x: (e.box.x0 + e.box.x1) / 2, y: e.box.y0 + 20 } : { x: W / 2, y: H * 0.3 };
+  if (B.counter && B.counter.until > t && p) {
+    delete B.counter; e.buffs.counter = 0;
+    const dur = Math.max(p.skill.travelMs || 600, 600);
+    S.incoming.push({ id: 'ai' + S.nextId++, skill: p.skill, ax: clamp(p.to.x / W, 0.2, 0.8), ay: 0.4, start: t, dur, resolved: false, ai: true, dmg, eff, refl: true });
+    floater(at.x, at.y, '↩️ 反擊！', '#f472b6', 1.3);
+    warn('↩️ 你的攻擊被打回來了！快閃開', dur);
+    sfx('shield');
+    return;
+  }
+  let note = '';
+  if (B.block && B.block.until > t && dmg > 0) { dmg = Math.round(dmg * (1 - B.block.reduce)); delete B.block; e.buffs.block = 0; note = '🛡️ 格擋'; }
+  if (B.shield && B.shield.until > t && dmg > 0) {
+    const absorb = Math.min(B.shield.left, dmg);
+    B.shield.left -= absorb; dmg -= absorb;
+    if (B.shield.left <= 0) { delete B.shield; e.buffs.shield = 0; }
+    note = note ? note + '＋🧱' : '🧱 護盾吸收';
+  }
+  if (note) floater(at.x, at.y + 30, note, '#93c5fd', 1.1);
+  if (eff && eff.kind === 'blind') ai.blindUntil = t + eff.dur;
+  if (eff && eff.kind === 'snare') { ai.snaredUntil = t + eff.dur; ai.charging = null; warn(''); }
+  hitEnemyLocal(dmg, eff);
 }
 
 // 掃描時校正：輸入對手實際距離，修正鏡頭視角等假設造成的誤差
@@ -1128,6 +1297,17 @@ function drawDummy(b) {
   ctx.fillRect(cx - w * 0.06, b.y0 + w * 0.5 + h * 0.45, w * 0.12, h * 0.3);
   ctx.strokeStyle = '#c33'; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.arc(cx, b.y0 + w * 0.5 + h * 0.2, w * 0.15, 0, Math.PI * 2); ctx.stroke();
+  if (S.enemy.cls) {
+    ctx.font = `${Math.round(w * 0.3)}px system-ui`; ctx.textAlign = 'center';
+    ctx.fillText(CLASSES[S.enemy.cls].icon, cx, b.y0 + w * 0.36);
+  }
+  // 電腦蓄力中：頭上顯示蓄力環
+  const c = S.ai && S.ai.charging;
+  if (c) {
+    const prog = Math.min(1, (now() - c.since) / Math.max(1, c.skill.chargeMs));
+    ctx.strokeStyle = c.skill.color; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(cx, b.y0 + w * 0.25, w * 0.32, -Math.PI / 2, -Math.PI / 2 + prog * Math.PI * 2); ctx.stroke();
+  }
 }
 
 const BONES = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [5, 9], [9, 10], [10, 11], [11, 12],
@@ -1501,7 +1681,7 @@ function updateDebug(t) {
     `FPS ${Math.round(M.fps)} | 辨識 ${vision ? Math.round(vision.lastMs || 0) : '-'}ms | ${v}`,
     `人數 ${vision ? vision.people.length : '-'} | 目標 ${targetVisible() ? '可見' : '遺失'} (miss ${S.enemy.missFrames})`,
     `距離 ${S.enemy.distance ? S.enemy.distance.toFixed(2) + 'm' : '-'} (${S.enemy.distMethod || '-'}) 校正 ${distCalib.toFixed(2)}`,
-    `手 ${h ? `${h.gesture} ${(h.score * 100) | 0}%` : '無'}`,
+    `手 ${h ? `${h.gesture} ${(h.score * 100) | 0}%` : '無'} | 動作感測 ${orient.motionOk ? `有 ${orient.peakSince(now() - 500).toFixed(1)}m/s²` : '無（閃避用機率）'}`,
     `語音延遲 ${avg(M.voiceDelay)}ms（本機：說完→觸發；線上：首字→觸發）`,
     ...M.voiceLog,
   ].join('\n');
