@@ -185,6 +185,8 @@ const S = {
     dots: [], buffs: {}, snaredUntil: 0 },
   blindUntil: 0,             // 被煙霧彈致盲
   traps: [],                 // 我方設置的陷阱
+  enemyTraps: [],            // 對手的陷阱（相對我的位置，公尺）
+  enemyTrapsSeen: true,
   dummyNextAttack: 0,        // 練習模式：木人反擊時間
   skills: [],
   enemy: { name: '對手', cls: null, buffs: {}, dots: [], hp: 100, maxHp: 100, locked: false, virtual: false,
@@ -461,7 +463,7 @@ function resetStats() {
   if (S.mode === 'practice') S.enemy.maxHp = 100;
   S.enemy.hp = S.enemy.maxHp;
   S.enemy.buffs = {}; S.enemy.dots = [];
-  S.charging = null; S.projectiles = []; S.incoming = []; S.traps = []; S.blindUntil = 0;
+  S.charging = null; S.projectiles = []; S.incoming = []; S.traps = []; S.enemyTraps = []; S.blindUntil = 0;
   S.dummyNextAttack = now() + 9000;
   resetMetrics();
   $('result').classList.remove('show');
@@ -570,18 +572,19 @@ function castSelf(s) {
 
 function impact(p) {
   const s = p.skill, e = S.enemy;
-  const r = s.radius * Math.min(W, H);
+  const dmg = p.dmg ?? s.damage, eff = p.eff !== undefined ? p.eff : s.effect;   // 反擊打回去的攻擊沿用原本的傷害/效果
+  const r = (s.radius || 0.08) * Math.min(W, H);
   const b = targetVisible() ? e.box : null;
   const onTarget = !!b && p.to.x > b.x0 - r && p.to.x < b.x1 + r && p.to.y > b.y0 - r && p.to.y < b.y1 + r;
-  const range = rangeState(s);
+  const range = p.reflected ? null : rangeState(s);
   const hit = onTarget && range !== 'far' && range !== 'near';
   burst(p.to.x, p.to.y, s.color, hit ? 60 : 20, hit ? 1.4 : 0.7);
   if (hit) {
-    floater(p.to.x, p.to.y - 30, s.damage ? `-${s.damage}` : `${s.icon}`, '#ff4d6d', 1.4);
-    if (s.effect) floater(p.to.x, p.to.y - 60, effectLabel(s.effect), s.color, 0.8);
+    floater(p.to.x, p.to.y - 30, dmg ? `-${dmg}` : `${s.icon}`, '#ff4d6d', 1.4);
+    if (eff) floater(p.to.x, p.to.y - 60, effectLabel(eff), s.color, 0.8);
     sfx('hit');
     M.hits++;
-    hitEnemyLocal(s.damage, s.effect);
+    hitEnemyLocal(dmg, eff);
   } else {
     const why = onTarget && range === 'far' ? '射程外' : onTarget && range === 'near' ? '太近' : 'MISS';
     floater(p.to.x, p.to.y - 30, why, '#ccc');
@@ -589,7 +592,7 @@ function impact(p) {
     if (why !== 'MISS') M.outOfRange++;
     sfx('miss');
   }
-  if (net) net.send({ t: 'result', id: p.id, hit, dmg: hit ? s.damage : 0, eff: hit ? s.effect : null, skill: s.id });
+  if (net) net.send({ t: 'result', id: p.id, hit, dmg: hit ? dmg : 0, eff: hit ? eff : null, skill: s.id });
 }
 
 // 對手（或木人）的 HP 預測：連線時以對手回報的 state 為準
@@ -611,13 +614,8 @@ function effectLabel(eff) {
 function receiveHit(dmg, skillId, eff, attackId) {
   const t = now(), B = S.me.buffs;
   if (B.counter && B.counter.until > t) {
-    const reflect = B.counter.reflect;
     delete B.counter;
-    floater(W / 2, H * 0.45, '↩️ 反擊！', '#f472b6', 1.6);
-    sfx('shield');
-    M.mitigated++;
-    if (net) net.send({ t: 'countered', id: attackId, dmg: reflect });
-    else if (S.mode === 'practice') hitEnemyLocal(reflect);
+    reflectAttack(SKILLS[skillId] || DUMMY_SKILL, dmg, eff, attackId);
     return 0;
   }
   let note = '';
@@ -637,6 +635,28 @@ function receiveHit(dmg, skillId, eff, attackId) {
   if (dmg > 0 || !note) takeDamage(dmg, skillId);
   else sendState();
   return dmg;
+}
+
+// 反擊：把飛來的攻擊原樣打回去，朝對手目前的位置飛（對手移動就能閃開）
+function reflectAttack(sk, dmg, eff, attackId) {
+  const t = now();
+  floater(W / 2, H * 0.45, '↩️ 反擊！打回去', '#f472b6', 1.5);
+  sfx('shield');
+  M.mitigated++;
+  const inc = S.incoming.find((i) => i.id === attackId);
+  if (inc) inc.resolved = true;
+  const from = inc ? { x: lerp(inc.ax * W, W / 2, 0.4), y: H * 0.5 } : { x: W / 2, y: H * 0.6 };
+  const b = targetVisible() ? S.enemy.box : null;
+  const to = b ? { x: (b.x0 + b.x1) / 2, y: b.y0 + (b.y1 - b.y0) * 0.35 } : { x: W / 2, y: H * 0.35 };
+  const dur = Math.max(sk.travelMs || 600, 600);
+  const id = S.nextId++;
+  S.projectiles.push({ id, skill: sk, from, to, start: t, dur, dmg, eff: eff || null, reflected: true });
+  burst(from.x, from.y, '#f472b6', 40, 1.2);
+  if (net) {
+    net.send({ t: 'countered', id: attackId });
+    net.send({ t: 'cast', id, skill: sk.id, ax: to.x / W, ay: to.y / H, dur, refl: true });
+    sendState();   // 修正對手畫面上「預測已命中」的血量
+  }
 }
 
 function applyEffect(eff) {
@@ -710,7 +730,8 @@ function onNet(m) {
       warn('');
       if (s.type === 'self') { floater(W / 2, H * 0.25, `${e.name} ${s.icon} ${s.name}`, s.color); break; }
       // 對手瞄準我的位置，左右在我的視角是鏡像
-      S.incoming.push({ id: m.id, skill: s, ax: 1 - m.ax, ay: m.ay, start: now(), dur: m.dur, resolved: false });
+      S.incoming.push({ id: m.id, skill: s, ax: 1 - m.ax, ay: m.ay, start: now(), dur: m.dur, resolved: false, refl: !!m.refl });
+      if (m.refl) warn('↩️ 你的攻擊被打回來了！快閃開', m.dur);
       sfx('incoming');
       break;
     }
@@ -731,13 +752,16 @@ function onNet(m) {
     case 'mitigated':   // 我的攻擊被對手防禦
       if (e.box) floater((e.box.x0 + e.box.x1) / 2, e.box.y0 + 20, m.note, '#93c5fd', 1.1);
       break;
-    case 'countered':   // 我的攻擊被反擊
-      floater(W / 2, H * 0.4, '被反擊！', '#f472b6', 1.4);
+    case 'countered':   // 我的攻擊被反擊，接著會收到打回來的 cast
+      floater(W / 2, H * 0.4, '被反擊！攻擊被打回來', '#f472b6', 1.2);
       e.buffs.counter = 0;
-      takeDamage(m.dmg, 'counter');
       break;
     case 'trapSet':
-      warn(`⚠ ${e.name} 在地上設了 ${SKILLS[m.skill] ? SKILLS[m.skill].icon : ''} 陷阱，小心腳下`, 3500);
+      warn(`⚠ ${e.name} 設了 ${SKILLS[m.skill] ? SKILLS[m.skill].icon : ''} 陷阱，看右上角雷達`, 3500);
+      break;
+    case 'traps':       // 對手陷阱在我周圍的位置（由對手的鏡頭計算）
+      S.enemyTraps = m.list;
+      S.enemyTrapsSeen = m.seen;
       break;
     case 'trap':        // 我踩到對手的陷阱
       banner('踩到陷阱！', 1200);
@@ -780,7 +804,7 @@ function loop() {
   }
 
   for (const p of S.projectiles) if (!p.done && t - p.start >= p.dur) { p.done = true; impact(p); }
-  for (const i of S.incoming) if (i.dummy && !i.resolved && t - i.start >= i.dur) { i.resolved = true; receiveHit(i.dmg, null, null, null); }
+  for (const i of S.incoming) if (i.dummy && !i.resolved && t - i.start >= i.dur) { i.resolved = true; receiveHit(i.dmg, null, null, i.id); }
   S.projectiles = S.projectiles.filter((p) => !p.done);
   S.incoming = S.incoming.filter((i) => t - i.start < i.dur + 1500 && !(i.resolved && t - i.start > i.dur));
 
@@ -903,12 +927,36 @@ function placeTrap(s, at) {
   if (net) net.send({ t: 'trapSet', skill: s.id });
 }
 
+// 陷阱相對於對手的位置（公尺，對手視角：x 右、z 前＝朝向我）
+// 用「對手腳的位置＋距離」反推地平線，再把陷阱在畫面上的位置換算成地面距離（假設手機離地約 1.3m）
+const CAM_HEIGHT = 1.3;
+function trapRelative(pos) {
+  const e = S.enemy, b = e.box, f = focalScreen();
+  const d = e.distance || 3;
+  const feet = { x: (b.x0 + b.x1) / 2, y: b.y1 };
+  const horizon = feet.y - (f * CAM_HEIGHT) / d;
+  const dt = pos.y - horizon > 5 ? clamp((f * CAM_HEIGHT) / (pos.y - horizon), 0.3, d + 5) : d + 5;
+  const lateral = ((pos.x - feet.x) * dt) / f;   // 我的畫面右方＝對手的左方
+  return { x: +(-lateral).toFixed(2), z: +(d - dt).toFixed(2) };
+}
+
+let trapSyncAt = 0, trapSyncCount = 0;
+function syncTraps(t) {
+  if (!net || (t - trapSyncAt < 250 && S.traps.length === trapSyncCount)) return;
+  trapSyncAt = t; trapSyncCount = S.traps.length;
+  const seen = targetVisible();
+  const list = S.traps.filter((tr) => tr.rel).map((tr) => ({ id: tr.id, s: tr.skill.id, x: tr.rel.x, z: tr.rel.z, armed: t >= tr.armAt }));
+  net.send({ t: 'traps', list, seen });
+}
+
 function updateTraps(t) {
   const e = S.enemy, f = focalScreen();
   S.traps = S.traps.filter((tr) => tr.until > t);
+  syncTraps(t);
   for (const tr of S.traps) {
     // 有陀螺儀：陷阱固定在世界方向上，手機轉動時跟著移動；沒有：固定在螢幕上
     tr.pos = tr.world ? orient.toScreen(tr.world, f, W / 2, H / 2) : { x: tr.x, y: tr.y };
+    if (tr.pos && targetVisible()) tr.rel = trapRelative(tr.pos);
     if (!tr.pos || t < tr.armAt || !targetVisible()) continue;
     const b = e.box;
     const feet = { x: (b.x0 + b.x1) / 2, y: b.y1 };
@@ -1011,6 +1059,7 @@ function render(t, dt) {
   drawFloaters(dt);
   ctx.restore();
 
+  if (S.enemyTraps.length && S.phase === 'battle') drawRadar(t);
   if (t < S.blindUntil) drawSmoke(t);
   if (S.flash > 0) {
     ctx.fillStyle = `rgba(255,30,60,${S.flash * 0.45})`;
@@ -1295,6 +1344,48 @@ function drawTrap(tr, t) {
   ctx.font = 'bold 11px system-ui'; ctx.fillStyle = armed ? s.color : '#ccc';
   ctx.fillText(armed ? `${Math.ceil((tr.until - t) / 1000)}s` : '佈置中…', tr.pos.x, tr.pos.y + 26);
   ctx.globalAlpha = 1;
+}
+
+// 腳下雷達：中心是自己，上方是對手的方向；外圈 2.5 公尺
+let radarBeepAt = 0;
+function drawRadar(t) {
+  const R = 58, cx = W - R - 12, cy = 70 + R, scale = R / 2.5;
+  ctx.save();
+  ctx.fillStyle = 'rgba(10,8,30,.75)';
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 1;
+  for (const m of [1, 2]) { ctx.beginPath(); ctx.arc(cx, cy, m * scale, 0, Math.PI * 2); ctx.stroke(); }
+  ctx.font = '10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,255,255,.6)';
+  ctx.fillText('▲ 對手方向', cx, cy - R + 12);
+  ctx.fillStyle = '#7dd3fc';
+  ctx.beginPath(); ctx.moveTo(cx, cy - 7); ctx.lineTo(cx - 5, cy + 5); ctx.lineTo(cx + 5, cy + 5); ctx.closePath(); ctx.fill();
+  let nearest = null;
+  for (const tr of S.enemyTraps) {
+    const s = SKILLS[tr.s] || {};
+    let px = tr.x * scale, py = -tr.z * scale;
+    const len = Math.hypot(px, py);
+    if (len > R - 8) { px *= (R - 8) / len; py *= (R - 8) / len; }
+    const dist = Math.hypot(tr.x, tr.z);
+    if (tr.armed && (!nearest || dist < nearest.dist)) nearest = { ...tr, dist };
+    ctx.globalAlpha = tr.armed ? 1 : 0.5;
+    ctx.fillStyle = tr.armed ? (s.color || '#f87171') : '#999';
+    ctx.beginPath(); ctx.arc(cx + px, cy + py, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.font = '12px system-ui'; ctx.fillText(s.icon || '!', cx + px, cy + py - 9);
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+  if (nearest) {
+    const dir = (nearest.x > 0.3 ? '右' : nearest.x < -0.3 ? '左' : '') + (nearest.z > 0.3 ? '前' : nearest.z < -0.3 ? '後' : '');
+    const danger = nearest.dist < 0.8;
+    ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center';
+    ctx.fillStyle = danger ? `rgba(255,80,80,${0.6 + 0.4 * Math.sin(t / 80)})` : '#fbbf24';
+    ctx.fillText(`${danger ? '⚠ ' : ''}陷阱 ${dir || '腳下'} ${nearest.dist.toFixed(1)}m`, cx, cy + R + 16);
+    if (danger && t - radarBeepAt > 600) { radarBeepAt = t; sfx('tick'); }
+  }
+  if (!S.enemyTrapsSeen) {
+    ctx.font = '10px system-ui'; ctx.fillStyle = '#aaa'; ctx.textAlign = 'center';
+    ctx.fillText('（對手看不到你，位置可能過時）', cx - 20, cy + R + 30);
+  }
 }
 
 function drawSmoke(t) {

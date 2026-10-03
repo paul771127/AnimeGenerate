@@ -40,7 +40,7 @@ export const SKILLS = {
     keywords: ['捕獸夾', '捕兽夹', '補獸夾', '獸夾', '陷阱', 'trap'],
     cost: 18, damage: 12, chargeMs: 1200, radius: 0.09, reach: 0.25, cooldownMs: 4000,
     trap: { lifeMs: 30000, armMs: 1200, max: 2 }, effect: { kind: 'snare', dur: 2500 },
-    desc: '設在地上，踩到受傷並定身 2.5 秒（不能施法）',
+    desc: '設在地上，踩到受傷並定身 2.5 秒（不能施法）；對手的雷達看得到',
   },
   blasttrap: {
     cls: 'archer', type: 'trap', fx: 'trap',
@@ -174,8 +174,8 @@ export const SKILLS = {
     cls: 'swordsman', type: 'self', self: 'counter', fx: 'shield',
     id: 'counter', name: '反擊', icon: '↩️', color: '#f472b6', glow: '#fce7f3',
     keywords: ['反擊', '反击', '返擊', '反機', 'counter'],
-    cost: 18, chargeMs: 200, cooldownMs: 6000, buff: { dur: 1500, reflect: 20 },
-    desc: '1.5 秒內被打中：無傷並反彈 20 傷害',
+    cost: 18, chargeMs: 200, cooldownMs: 6000, buff: { dur: 1500 },
+    desc: '1.5 秒內被打中：無傷，並把對手的攻擊打回去（對手可閃避）',
   },
 };
 
