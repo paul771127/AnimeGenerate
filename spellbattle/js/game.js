@@ -1,6 +1,7 @@
 // 咒術對決 主遊戲邏輯
 import { SKILLS, CLASSES, MAX_EQUIP, STATS, rangeText, effectText, SKILLS_VERSION } from './skills.js';
 import { Orientation } from './orient.js';
+import { ZoomTracker } from './odometry.js';
 import { VoiceCaster } from './voice.js';
 import { LocalSpotter, classify, finalizeSkill, loadTemplates, saveTemplates, hasTemplates } from './voice-local.js';
 import { Net } from './net.js';
@@ -8,7 +9,7 @@ import { Net } from './net.js';
 const $ = (id) => document.getElementById(id);
 
 // 版本檢查：githack 會各別更新每個檔案，剛推新版時可能新舊混在一起
-const VERSION = '2026.10.03-3';
+const VERSION = '2026.10.03-4';
 {
   const htmlVer = document.documentElement.dataset.version;
   $('verText').textContent = VERSION;
@@ -186,6 +187,7 @@ let voice = null;
 let net = null;
 let audio = null;
 const orient = new Orientation();
+const zoom = new ZoomTracker();   // 背景追蹤：玩家前後移動、轉動手機
 
 const S = {
   mode: 'practice',          // practice | online
@@ -418,6 +420,7 @@ function lockTarget(virtual) {
   }
   e.locked = true;
   e.distance = null;
+  if (virtual) resetVirtualEnemy();
   e.lastSeen = now();
   e.missFrames = 0;
   $('scanPanel').classList.remove('show');
@@ -828,14 +831,7 @@ function loop() {
 function updateTarget(t) {
   const e = S.enemy;
   if (e.virtual) {
-    // 木人前後移動 1～6 公尺，畫面大小跟著變
-    e.distance = 3.5 + 2.5 * Math.sin(t / 2600);
-    e.distMethod = '模擬';
-    const cx = W * (0.5 + 0.3 * Math.sin(t / 1300)), cy = H * 0.45;
-    const bh = clamp(H * 1.3 / e.distance, 60, H * 0.9), bw = bh / 2.2;
-    e.box = { x0: cx - bw / 2, x1: cx + bw / 2, y0: cy - bh / 2, y1: cy + bh / 2 };
-    e.lastSeen = t;
-    e.missFrames = 0;
+    updateVirtualEnemy(t);
     return;
   }
   if (!vision) return;
@@ -876,6 +872,54 @@ function updateTarget(t) {
     e.distance = e.distance ? lerp(e.distance, d, 0.25) : d;
     e.distMethod = est.method;
   }
+}
+
+// ---------------------------------------------------------------- 虛擬對手（電腦）放在真實空間裡
+// 背景追蹤得到畫面縮放 S 與平移 T：
+//   距離 = 電腦自己的距離 ÷ S（玩家後退 → 背景變小 → S 變小 → 距離變遠）
+//   位置 = 以畫面中心縮放後再加上平移（轉動手機時電腦留在原地）
+// 電腦自己也會走位：刺客逼近、劍士約 2 公尺、法師/弓箭手拉開距離，並左右移動。
+const AI_PREF_DIST = { assassin: 1.2, swordsman: 2, archer: 5, mage: 4.5 };
+const V = { dist: 3, strafe: 0, offX: 0, offscreenSince: 0, lastT: 0, frame: 0 };
+
+function resetVirtualEnemy() {
+  zoom.reset();
+  Object.assign(V, { dist: 3, strafe: 0, offX: 0, offscreenSince: 0, lastT: now(), frame: 0 });
+}
+
+function updateVirtualEnemy(t) {
+  const e = S.enemy;
+  const dt = Math.min(0.5, (t - (V.lastT || t)) / 1000);
+  V.lastT = t;
+  if (video.videoWidth && V.frame++ % 2 === 0) zoom.update(video);
+  const Sz = clamp(zoom.scale, 0.2, 5);
+  // 電腦走位（只在戰鬥中）：朝偏好距離移動，每秒最多 0.5 公尺
+  if (S.phase === 'battle' && S.ai && !(S.ai.snaredUntil > t)) {
+    const pref = AI_PREF_DIST[S.ai.cls] || 3;
+    const eff = V.dist / Sz;
+    if (Math.abs(eff - pref) > 0.2) V.dist -= Math.sign(eff - pref) * 0.5 * dt * Sz;
+    V.strafe += dt;
+  }
+  V.dist = clamp(V.dist, 0.3 * Sz, 12 * Sz);
+  e.distance = V.dist / Sz;
+  e.distMethod = `模擬（背景縮放 ${Sz.toFixed(2)}）`;
+  // 平移：追蹤影像比例 → 螢幕像素
+  const vw = video.videoWidth || W, vh = video.videoHeight || H;
+  const sc = Math.max(W / vw, H / vh);
+  const Tx = zoom.txNorm * vw * sc, Ty = zoom.tyNorm * vh * sc;
+  const worldX = W / 2 + W * 0.25 * Math.sin(V.strafe / 1.6) + V.offX;
+  let cx = W / 2 + Sz * (worldX - W / 2) + Tx;
+  const cy = H * 0.45 + Ty;
+  // 跑出畫面太久（例如手機轉開又轉回來時追蹤偏掉）：慢慢走回畫面中
+  if (cx < -W * 0.1 || cx > W * 1.1) {
+    if (!V.offscreenSince) V.offscreenSince = t;
+    if (t - V.offscreenSince > 4000) V.offX -= (cx - W / 2) * Math.min(1, dt * 1.5) / Sz;
+  } else V.offscreenSince = 0;
+  const bh = clamp((H * 1.3) / e.distance, 40, H * 0.95), bw = bh / 2.2;
+  e.box = { x0: cx - bw / 2, x1: cx + bw / 2, y0: cy - bh / 2, y1: cy + bh / 2 };
+  // 完全在畫面外就算看不到（打不中）
+  const inView = e.box.x1 > 0 && e.box.x0 < W && e.box.y1 > 0 && e.box.y0 < H;
+  if (inView) { e.lastSeen = t; e.missFrames = 0; } else e.missFrames = 99;
 }
 
 // ---------------------------------------------------------------- 距離 / 射程
@@ -1691,6 +1735,7 @@ function updateDebug(t) {
     `FPS ${Math.round(M.fps)} | 辨識 ${vision ? Math.round(vision.lastMs || 0) : '-'}ms | ${v}`,
     `人數 ${vision ? vision.people.length : '-'} | 目標 ${targetVisible() ? '可見' : '遺失'} (miss ${S.enemy.missFrames})`,
     `距離 ${S.enemy.distance ? S.enemy.distance.toFixed(2) + 'm' : '-'} (${S.enemy.distMethod || '-'}) 校正 ${distCalib.toFixed(2)}`,
+    S.enemy.virtual ? `背景追蹤 縮放 ${zoom.scale.toFixed(3)} 平移 ${zoom.txNorm.toFixed(2)},${zoom.tyNorm.toFixed(2)} 誤差 ${zoom.quality.toFixed(1)}` : '',
     `手 ${h ? `${h.gesture} ${(h.score * 100) | 0}%` : '無'} | 動作感測 ${orient.motionOk ? `有 ${orient.peakSince(now() - 500).toFixed(1)}m/s²` : '無（閃避用機率）'}`,
     `語音延遲 ${avg(M.voiceDelay)}ms（本機：說完→觸發；線上：首字→觸發）`,
     ...M.voiceLog,
