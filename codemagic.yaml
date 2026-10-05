@@ -1,0 +1,52 @@
+# Codemagic：把 Windows 上 Unity 匯出的 Xcode 專案編成「未簽署 IPA」（給 Sideloadly 安裝）。
+# 這份檔案由 export_ios.ps1 複製到 spellduel-ios-xcode 分支的根目錄，檔名改為 codemagic.yaml。
+# 完全不需要 Unity 授權：Mac 上只跑 Xcode。
+workflows:
+  spellduel-ios-unsigned:
+    name: SpellDuel iOS unsigned IPA
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      xcode: latest
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: spellduel-ios-xcode
+          include: true
+          source: true
+      cancel_previous_builds: true
+    scripts:
+      - name: 還原被切割的大檔（GitHub 單檔上限 100 MB）
+        script: |
+          set -e
+          cd xcode
+          find . -name "*.part00" | while read -r p; do
+            base="${p%.part00}"
+            cat "$base".part* > "$base"
+            rm "$base".part*
+            echo "joined: $base ($(du -h "$base" | cut -f1))"
+          done
+          chmod -R +x Il2CppOutputProject/IL2CPP/build || true
+      - name: Xcode 編譯（不簽署）
+        script: |
+          set -eo pipefail
+          cd xcode
+          xcodebuild -project Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath "$CM_BUILD_DIR/dd" \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            build > "$CM_BUILD_DIR/xcodebuild.log" 2>&1 || { tail -n 150 "$CM_BUILD_DIR/xcodebuild.log"; exit 1; }
+          grep -E "warning:|error:" "$CM_BUILD_DIR/xcodebuild.log" | sort | uniq -c | sort -rn | head -20 || true
+      - name: 打包 IPA
+        script: |
+          set -e
+          APP=$(find "$CM_BUILD_DIR/dd/Build/Products" -maxdepth 3 -name "*.app" | head -1)
+          echo "App: $APP"
+          mkdir -p "$CM_BUILD_DIR/Payload"
+          cp -R "$APP" "$CM_BUILD_DIR/Payload/"
+          cd "$CM_BUILD_DIR"
+          zip -qry SpellDuel-unsigned.ipa Payload
+          ls -la SpellDuel-unsigned.ipa
+    artifacts:
+      - SpellDuel-unsigned.ipa
+      - xcodebuild.log
