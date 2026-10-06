@@ -240,7 +240,6 @@ IL2CPP_EXTERN_C RuntimeClass* InputUser_tD938B6FAC4D79FB2BA7040DE247549A4F832000
 IL2CPP_EXTERN_C RuntimeClass* InvalidCastException_t47FC62F21A3937E814D20381DDACEF240E95AC2E_il2cpp_TypeInfo_var;
 IL2CPP_EXTERN_C RuntimeClass* InvalidOperationException_t5DDE4D49B7405FAAB1E4576F4715A42A3FAD4BAB_il2cpp_TypeInfo_var;
 IL2CPP_EXTERN_C RuntimeClass* Matrix4x4_tDB70CF134A14BA38190C59AA700BCE10E2AED3E6_il2cpp_TypeInfo_var;
-IL2CPP_EXTERN_C RuntimeClass* NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_il2cpp_TypeInfo_var;
 IL2CPP_EXTERN_C RuntimeClass* NSString_t0191BA1064CD5FA606A88A32045C88E6C52623B3_il2cpp_TypeInfo_var;
 IL2CPP_EXTERN_C RuntimeClass* ObjectU5BU5D_t8061030B0A12A55D5AD8652A20C922FE99450918_il2cpp_TypeInfo_var;
 IL2CPP_EXTERN_C RuntimeClass* Quaternion_tDA59F214EF07D7700B26E40E562F267AF7306974_il2cpp_TypeInfo_var;
@@ -2733,10 +2732,6 @@ struct Vector4_t58B63D32F48C0DBF50DE2C60794C4676C80EDBE3_StaticFields
 	Vector4_t58B63D32F48C0DBF50DE2C60794C4676C80EDBE3 ___oneVector;
 	Vector4_t58B63D32F48C0DBF50DE2C60794C4676C80EDBE3 ___positiveInfinityVector;
 	Vector4_t58B63D32F48C0DBF50DE2C60794C4676C80EDBE3 ___negativeInfinityVector;
-};
-struct NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
 };
 struct NSString_t0191BA1064CD5FA606A88A32045C88E6C52623B3_StaticFields
 {
@@ -32510,12 +32505,6 @@ IL2CPP_EXTERN_C  NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD Nullabl
 }
 IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR bool Nullable_1_Equals_mC65F1940AF902CCD6BF82ABDEAA23A06CC8C9489_gshared (Nullable_1_t4B2D86FC8FAFDA460CEDCCB8205E7256E08FA9A7* __this, RuntimeObject* ___0_other, const RuntimeMethod* method) 
 {
-	static bool s_Il2CppMethodInitialized;
-	if (!s_Il2CppMethodInitialized)
-	{
-		il2cpp_codegen_initialize_runtime_metadata((uintptr_t*)&NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_il2cpp_TypeInfo_var);
-		s_Il2CppMethodInitialized = true;
-	}
 	{
 		bool L_0 = __this->___hasValue;
 		if (L_0)
@@ -32544,7 +32533,6 @@ IL_0012:
 	{
 		NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD* L_3 = (NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD*)(&__this->___value);
 		RuntimeObject* L_4 = ___0_other;
-		il2cpp_codegen_runtime_class_init_inline(NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_il2cpp_TypeInfo_var);
 		bool L_5;
 		L_5 = NSMutableData_Equals_mF4B09F7E6B075507E73117050BD72C9FB8A6282E(L_3, L_4, il2cpp_rgctx_method(InitializedTypeInfo(method->klass)->rgctx_data, 2));
 		return L_5;
@@ -32563,12 +32551,6 @@ IL2CPP_EXTERN_C  bool Nullable_1_Equals_mC65F1940AF902CCD6BF82ABDEAA23A06CC8C948
 }
 IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR int32_t Nullable_1_GetHashCode_m69BED3E1E6398D34FAEA27A8F9B8F09895A40ACF_gshared (Nullable_1_t4B2D86FC8FAFDA460CEDCCB8205E7256E08FA9A7* __this, const RuntimeMethod* method) 
 {
-	static bool s_Il2CppMethodInitialized;
-	if (!s_Il2CppMethodInitialized)
-	{
-		il2cpp_codegen_initialize_runtime_metadata((uintptr_t*)&NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_il2cpp_TypeInfo_var);
-		s_Il2CppMethodInitialized = true;
-	}
 	{
 		bool L_0 = __this->___hasValue;
 		if (L_0)
@@ -32583,7 +32565,6 @@ IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR int32_t Nullable_1_GetHashCode_m69BED3E1E6398
 IL_000a:
 	{
 		NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD* L_1 = (NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD*)(&__this->___value);
-		il2cpp_codegen_runtime_class_init_inline(NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_il2cpp_TypeInfo_var);
 		int32_t L_2;
 		L_2 = NSMutableData_GetHashCode_m8C6D2F97E14284F21079E45E49993700187D6A0B(L_1, il2cpp_rgctx_method(InitializedTypeInfo(method->klass)->rgctx_data, 3));
 		return L_2;

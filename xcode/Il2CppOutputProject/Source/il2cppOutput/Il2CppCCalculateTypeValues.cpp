@@ -46871,10 +46871,6 @@ struct ActivationServices_t688315315A97608B7C0ACD314FCECFD6ED5AE2CF_StaticFields
 {
 	RuntimeObject* ____constructionActivator;
 };
-struct Api_t470F25B777C6B022CAC62831CEEF793CBB27591C_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
-};
 struct AppContextSwitches_t542F10E9BE2333B7BE24C8858C8A24EFA6C06D38_StaticFields
 {
 	bool ___EnforceJapaneseEraYearRanges;
@@ -48604,30 +48600,6 @@ struct XmlReader_t4C709DEF5F01606ECB60B638F1BD6F6E0A9116FD_StaticFields
 	uint32_t ___CanReadContentAsBitmap;
 	uint32_t ___HasValueBitmap;
 };
-struct NativeApi_t2D9D2B3E6A711977F3C23A10973FE15644BC03A0_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
-};
-struct NativeApi_t5D19B31937F8C54440B231339FD88D1D0B4E96F3_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
-};
-struct NativeApi_tA075534F0DAA97BB7F9C800259061921B375CCCD_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
-};
-struct NativeApi_t548E3D9F9A7833CF1E3F1B070CE79721F61C293E_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
-};
-struct NativeApi_t7353853701D4F1DBB2C647EE3A69C5DA3FE5802B_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
-};
-struct NativeApi_t0F540686783A93DF3B9EAC18376DA4265C35303E_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
-};
 struct ArrayListEnumeratorSimple_tB829A175318C37ED5427A14633AC85D5816CF2DA_StaticFields
 {
 	RuntimeObject* ___s_dummyObject;
@@ -49926,10 +49898,6 @@ struct UsingEntry_t0454AD34026FDFD1733CE07BD4AE807B0FBCE484_StaticFields
 {
 	RuntimeObject* ___comparer;
 };
-struct ARCollaborationData_tD6250A7140E37CAAE7166DCCBAD8028C96D40C2F_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
-};
 struct ARKitImageDatabase_tDC12F69141C54AB9E3E630968DB44FC565EE1367_StaticFields
 {
 	TextureFormatU5BU5D_t57C94D6A95145D00C2952E20E5E1E531EB1364C9* ___k_SupportedFormats;
@@ -50067,17 +50035,9 @@ struct Match_tFBEBCF225BD8EA17BCE6CE3FE5C1BD8E3074105F_StaticFields
 {
 	Match_tFBEBCF225BD8EA17BCE6CE3FE5C1BD8E3074105F* ___U3CEmptyU3Ek__BackingField;
 };
-struct NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
-};
 struct NSString_t0191BA1064CD5FA606A88A32045C88E6C52623B3_StaticFields
 {
 	NSString_t0191BA1064CD5FA606A88A32045C88E6C52623B3 ___underscore;
-};
-struct NativeChanges_t4525FB4889FDF4771EA635BD2946336D911F8E09_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
 };
 struct Object_tC12DECB6760A7F2CBF65D9DCF18D044C2D97152C_StaticFields
 {
@@ -50594,18 +50554,6 @@ struct ARKitProvider_t84890F8DDBFCA8A2A687B5FC326BE7FADE328564_StaticFields
 	List_1_tF470A3BE5C1B5B68E1325EF3F109D172E60BD7CD* ___m_EnvironmentDepthEnabledMaterialKeywords;
 	List_1_tF470A3BE5C1B5B68E1325EF3F109D172E60BD7CD* ___m_AllDisabledMaterialKeywords;
 };
-struct ARKitProvider_t0241E3BE4F5FAC1A5082B930D77BC477C521E4AF_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
-};
-struct ARKitProvider_t950991619EE098CC2E46187486BBA730C3A23E33_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
-};
-struct ARKitProvider_tBB59BBA46E3F493799654E097A3261975722A639_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
-};
 struct TextureInfo_t1CEA0DD342E63322DEA32A9C25EB4B01AB000A9F_StaticFields
 {
 	LinkedPool_1_tC5395F299B7B9824571198DF9F00CAC6033CD7D6* ___pool;
@@ -50619,10 +50567,6 @@ struct FirstQueryMatcher_t155DC2AB451449FC24BE54267962172CD085960C_StaticFields
 	FirstQueryMatcher_t155DC2AB451449FC24BE54267962172CD085960C* ___Instance;
 };
 struct ARKitFaceSubsystem_t4F84E4DD9313FD287CDBD2800AEFD79604C714B3_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
-};
-struct ARKitImageTrackingSubsystem_tAA877D185F10F54FB10813E0B87B031B5DD424D4_StaticFields
 {
 	String_t* ___k_ExceptionMsg;
 };
@@ -60664,7 +60608,7 @@ const Il2CppTypeDefinitionSizes g_typeDefinitionSize4534 = { sizeof(ARKitProvide
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4535;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4535 = { sizeof(ARKitAnchorSubsystem_t8D59904F1B5D2FDCDBB0C22FE0A9949105C486C3), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4536;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize4536 = { sizeof(Api_t470F25B777C6B022CAC62831CEEF793CBB27591C), -1, sizeof(Api_t470F25B777C6B022CAC62831CEEF793CBB27591C_StaticFields), 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize4536 = { sizeof(Api_t470F25B777C6B022CAC62831CEEF793CBB27591C), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4537;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4537 = { sizeof(ARKitProvider_t5F42218DE1119850E2E6975266B739CEBD3AC7DC), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4538;
@@ -60680,13 +60624,13 @@ const Il2CppTypeDefinitionSizes g_typeDefinitionSize4542 = { sizeof(ARKitLoaderC
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4543;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4543 = { sizeof(ARKitLoaderSettings_t00D76153D7033FBE76BCBF26EF4495DBBF740A46), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4544;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize4544 = { sizeof(NativeApi_t5D19B31937F8C54440B231339FD88D1D0B4E96F3), -1, sizeof(NativeApi_t5D19B31937F8C54440B231339FD88D1D0B4E96F3_StaticFields), 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize4544 = { sizeof(NativeApi_t5D19B31937F8C54440B231339FD88D1D0B4E96F3), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4545;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4545 = { sizeof(ARKitMeshSubsystemExtensions_t0991C8EB54035EF2A304747CF8CFFB66415E66CF), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4546;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4546 = { sizeof(ARKitProvider_tFEE275823742D2C0A5ED38904C6635EE4F1927CF), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4547;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize4547 = { sizeof(NativeApi_t548E3D9F9A7833CF1E3F1B070CE79721F61C293E), -1, sizeof(NativeApi_t548E3D9F9A7833CF1E3F1B070CE79721F61C293E_StaticFields), 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize4547 = { sizeof(NativeApi_t548E3D9F9A7833CF1E3F1B070CE79721F61C293E), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4548;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4548 = { sizeof(ARKitRaycastSubsystem_tE6496EB399893B8F77CB27B268DB20672F64D742), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4549;
@@ -60698,7 +60642,7 @@ const Il2CppTypeDefinitionSizes g_typeDefinitionSize4551 = { sizeof(int32_t)+ si
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4552;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4552 = { sizeof(OnAsyncConversionCompleteDelegate_tD5FD51626EC39F0569D6155E2CD240033A70EE96), sizeof(Il2CppMethodPointer), 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4553;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize4553 = { sizeof(NativeApi_t7353853701D4F1DBB2C647EE3A69C5DA3FE5802B), -1, sizeof(NativeApi_t7353853701D4F1DBB2C647EE3A69C5DA3FE5802B_StaticFields), 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize4553 = { sizeof(NativeApi_t7353853701D4F1DBB2C647EE3A69C5DA3FE5802B), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4554;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4554 = { sizeof(ARKitSessionSubsystem_tD70AFD32017AF902DBF6594B5B0418A4E46C3601), -1, sizeof(ARKitSessionSubsystem_tD70AFD32017AF902DBF6594B5B0418A4E46C3601_StaticFields), 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4555;
@@ -60766,7 +60710,7 @@ const Il2CppTypeDefinitionSizes g_typeDefinitionSize4585 = { sizeof(int32_t)+ si
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4586;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4586 = { sizeof(int32_t)+ sizeof(RuntimeObject), sizeof(int32_t), 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4587;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize4587 = { sizeof(ARCollaborationData_tD6250A7140E37CAAE7166DCCBAD8028C96D40C2F)+ sizeof(RuntimeObject), sizeof(ARCollaborationData_tD6250A7140E37CAAE7166DCCBAD8028C96D40C2F), sizeof(ARCollaborationData_tD6250A7140E37CAAE7166DCCBAD8028C96D40C2F_StaticFields), 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize4587 = { sizeof(ARCollaborationData_tD6250A7140E37CAAE7166DCCBAD8028C96D40C2F)+ sizeof(RuntimeObject), sizeof(ARCollaborationData_tD6250A7140E37CAAE7166DCCBAD8028C96D40C2F), 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4588;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4588 = { sizeof(int32_t)+ sizeof(RuntimeObject), sizeof(int32_t), 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4589;
@@ -60800,7 +60744,7 @@ const Il2CppTypeDefinitionSizes g_typeDefinitionSize4602 = { sizeof(int32_t)+ si
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4603;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4603 = { sizeof(NSKeyedUnarchiver_t89998590F395AA9675A1576B95E75DB3AA1ED4BE), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4604;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize4604 = { sizeof(NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD)+ sizeof(RuntimeObject), sizeof(NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD), sizeof(NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_StaticFields), 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize4604 = { sizeof(NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD)+ sizeof(RuntimeObject), sizeof(NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD), 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4605;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4605 = { 0, 0, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4606;
@@ -60834,7 +60778,7 @@ const Il2CppTypeDefinitionSizes g_typeDefinitionSize4619 = { sizeof(Class_tB57A7
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4620;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4620 = { sizeof(ARKitProvider_tD783EC1F6879311B8FCFBC9D742156EF3844EF26), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4621;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize4621 = { sizeof(NativeApi_t2D9D2B3E6A711977F3C23A10973FE15644BC03A0), -1, sizeof(NativeApi_t2D9D2B3E6A711977F3C23A10973FE15644BC03A0_StaticFields), 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize4621 = { sizeof(NativeApi_t2D9D2B3E6A711977F3C23A10973FE15644BC03A0), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4622;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4622 = { sizeof(ARKitHumanBodySubsystem_tE336E49A4FDEA2805CCCD2148ACFBF6FB9ED1CCA), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4623;
@@ -60846,7 +60790,7 @@ const Il2CppTypeDefinitionSizes g_typeDefinitionSize4625 = { sizeof(ARKitImageDa
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4626;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4626 = { sizeof(ARKitProvider_t6E79AB7FA2A56543AC0E42A7F4578F6545D35E09), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4627;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize4627 = { sizeof(ARKitImageTrackingSubsystem_tAA877D185F10F54FB10813E0B87B031B5DD424D4), -1, sizeof(ARKitImageTrackingSubsystem_tAA877D185F10F54FB10813E0B87B031B5DD424D4_StaticFields), 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize4627 = { sizeof(ARKitImageTrackingSubsystem_tAA877D185F10F54FB10813E0B87B031B5DD424D4), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4628;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4628 = { sizeof(ManagedReferenceImage_t0A3DD612124CB7A073A99C12E370F58A25D93337)+ sizeof(RuntimeObject), sizeof(ManagedReferenceImage_t0A3DD612124CB7A073A99C12E370F58A25D93337), 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4629;
@@ -60856,7 +60800,7 @@ const Il2CppTypeDefinitionSizes g_typeDefinitionSize4630 = { sizeof(InputLayoutL
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4631;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4631 = { sizeof(MemoryLayout_t5C60A35F2C48B83D4D30AC3BE8504C1BF7B7544B)+ sizeof(RuntimeObject), sizeof(MemoryLayout_t5C60A35F2C48B83D4D30AC3BE8504C1BF7B7544B), 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4632;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize4632 = { sizeof(NativeChanges_t4525FB4889FDF4771EA635BD2946336D911F8E09)+ sizeof(RuntimeObject), sizeof(NativeChanges_t4525FB4889FDF4771EA635BD2946336D911F8E09), sizeof(NativeChanges_t4525FB4889FDF4771EA635BD2946336D911F8E09_StaticFields), 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize4632 = { sizeof(NativeChanges_t4525FB4889FDF4771EA635BD2946336D911F8E09)+ sizeof(RuntimeObject), sizeof(NativeChanges_t4525FB4889FDF4771EA635BD2946336D911F8E09), 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4633;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4633 = { sizeof(NativeView_t8847AA803BCE2115FE1B924903924BF62265510A)+ sizeof(RuntimeObject), sizeof(NativeView_t8847AA803BCE2115FE1B924903924BF62265510A), 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4634;
@@ -60864,13 +60808,13 @@ const Il2CppTypeDefinitionSizes g_typeDefinitionSize4634 = { sizeof(NativeViewEx
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4635;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4635 = { sizeof(ARKitReferenceObjectEntry_t081BB3A8B1EDC944D86183F3C7FAE334BBFF2589), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4636;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize4636 = { sizeof(ARKitProvider_t950991619EE098CC2E46187486BBA730C3A23E33), -1, sizeof(ARKitProvider_t950991619EE098CC2E46187486BBA730C3A23E33_StaticFields), 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize4636 = { sizeof(ARKitProvider_t950991619EE098CC2E46187486BBA730C3A23E33), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4637;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4637 = { sizeof(ARKitXRObjectTrackingSubsystem_t25059D9797F528FD6C72FC5EABD029F7C133214A), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4638;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4638 = { sizeof(ARKitProvider_t84890F8DDBFCA8A2A687B5FC326BE7FADE328564), -1, sizeof(ARKitProvider_t84890F8DDBFCA8A2A687B5FC326BE7FADE328564_StaticFields), 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4639;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize4639 = { sizeof(NativeApi_tA075534F0DAA97BB7F9C800259061921B375CCCD), -1, sizeof(NativeApi_tA075534F0DAA97BB7F9C800259061921B375CCCD_StaticFields), 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize4639 = { sizeof(NativeApi_tA075534F0DAA97BB7F9C800259061921B375CCCD), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4640;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4640 = { sizeof(ARKitOcclusionSubsystem_tD7E1E5050F9930ABE2DC458CF623823A3A0B7B48), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4641;
@@ -60888,17 +60832,17 @@ const Il2CppTypeDefinitionSizes g_typeDefinitionSize4646 = { sizeof(TransformBou
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4647;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4647 = { sizeof(ARKitProvider_t67972F4979F23E350E067A5D8CC748421E983F07), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4648;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize4648 = { sizeof(NativeApi_t0F540686783A93DF3B9EAC18376DA4265C35303E), -1, sizeof(NativeApi_t0F540686783A93DF3B9EAC18376DA4265C35303E_StaticFields), 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize4648 = { sizeof(NativeApi_t0F540686783A93DF3B9EAC18376DA4265C35303E), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4649;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4649 = { sizeof(ARKitXRPlaneSubsystem_tD907C6181A16A332D5BC3EEB27FEC22B099C8C63), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4650;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize4650 = { sizeof(ARKitProvider_t0241E3BE4F5FAC1A5082B930D77BC477C521E4AF), -1, sizeof(ARKitProvider_t0241E3BE4F5FAC1A5082B930D77BC477C521E4AF_StaticFields), 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize4650 = { sizeof(ARKitProvider_t0241E3BE4F5FAC1A5082B930D77BC477C521E4AF), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4651;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4651 = { sizeof(TransformPositionsJob_t3211ABBFB066E13AA3BE3D0C4DC1694EAE5AA706)+ sizeof(RuntimeObject), sizeof(TransformPositionsJob_t3211ABBFB066E13AA3BE3D0C4DC1694EAE5AA706), 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4652;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4652 = { sizeof(ARKitXRDepthSubsystem_t246278BCDC2E47337FFB830525E6B15C64A2914B), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4653;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize4653 = { sizeof(ARKitProvider_tBB59BBA46E3F493799654E097A3261975722A639), -1, sizeof(ARKitProvider_tBB59BBA46E3F493799654E097A3261975722A639_StaticFields), 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize4653 = { sizeof(ARKitProvider_tBB59BBA46E3F493799654E097A3261975722A639), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4654;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize4654 = { sizeof(TransformPositionsJob_t83DB5EC0B9CEACBACF5A4629AF311118B239D248)+ sizeof(RuntimeObject), sizeof(TransformPositionsJob_t83DB5EC0B9CEACBACF5A4629AF311118B239D248), 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize4655;

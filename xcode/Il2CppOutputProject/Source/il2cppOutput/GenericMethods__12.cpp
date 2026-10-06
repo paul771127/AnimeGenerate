@@ -635,7 +635,6 @@ IL2CPP_EXTERN_C RuntimeClass* InvalidOperationException_t5DDE4D49B7405FAAB1E4576
 IL2CPP_EXTERN_C RuntimeClass* Label_tC160668F9119CE0F5567021FB208E64A5B1C5B70_il2cpp_TypeInfo_var;
 IL2CPP_EXTERN_C RuntimeClass* Math_tEB65DE7CA8B083C412C969C92981C030865486CE_il2cpp_TypeInfo_var;
 IL2CPP_EXTERN_C RuntimeClass* MultiColumnController_t25BFE9B50BC0D69925EC7EEE090F256FFE1244B6_il2cpp_TypeInfo_var;
-IL2CPP_EXTERN_C RuntimeClass* NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_il2cpp_TypeInfo_var;
 IL2CPP_EXTERN_C RuntimeClass* NSString_t0191BA1064CD5FA606A88A32045C88E6C52623B3_il2cpp_TypeInfo_var;
 IL2CPP_EXTERN_C RuntimeClass* ObjectDisposedException_tC5FB29E8E980E2010A2F6A5B9B791089419F89EB_il2cpp_TypeInfo_var;
 IL2CPP_EXTERN_C RuntimeClass* ObjectU5BU5D_t8061030B0A12A55D5AD8652A20C922FE99450918_il2cpp_TypeInfo_var;
@@ -4309,10 +4308,6 @@ struct ColorBlock_tDD7C62E7AFE442652FC98F8D058CE8AE6BFD7C11_StaticFields
 struct Exception_t_StaticFields
 {
 	RuntimeObject* ___s_EDILock;
-};
-struct NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_StaticFields
-{
-	String_t* ___k_ExceptionMsg;
 };
 struct NSString_t0191BA1064CD5FA606A88A32045C88E6C52623B3_StaticFields
 {
@@ -8889,11 +8884,7 @@ IL_0094:
 }
 IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR bool NSObject_ArePointersEqual_TisNSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_m068A02DA80BB45DBE0D07563E8945E51340649ED_gshared (Nullable_1_t4B2D86FC8FAFDA460CEDCCB8205E7256E08FA9A7 ___0_lhs, Nullable_1_t4B2D86FC8FAFDA460CEDCCB8205E7256E08FA9A7 ___1_rhs, const RuntimeMethod* method) 
 {
-	if (!il2cpp_rgctx_is_initialized(method))
-	{
-		il2cpp_codegen_initialize_runtime_metadata((uintptr_t*)&NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_il2cpp_TypeInfo_var);
-		il2cpp_rgctx_method_init(method);
-	}
+	il2cpp_rgctx_method_init(method);
 	NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD V_0;
 	memset((&V_0), 0, sizeof(V_0));
 	{
@@ -8916,7 +8907,6 @@ IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR bool NSObject_ArePointersEqual_TisNSMutableDa
 		NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD L_2;
 		L_2 = Nullable_1_get_Value_m040A12F9EA5CEED6F5B7AD30D47087D3803D78C5((&___0_lhs), il2cpp_rgctx_method(method->rgctx_data, 3));
 		V_0 = L_2;
-		il2cpp_codegen_runtime_class_init_inline(NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_il2cpp_TypeInfo_var);
 		intptr_t L_3;
 		L_3 = NSMutableData_AsIntPtr_m6224C54804C8378F892389D06D7938E378408AE3_inline((&V_0), il2cpp_rgctx_method(method->rgctx_data, 5));
 		NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD L_4;
@@ -8942,7 +8932,6 @@ IL_0042:
 		NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD L_8;
 		L_8 = Nullable_1_get_Value_m040A12F9EA5CEED6F5B7AD30D47087D3803D78C5((&___0_lhs), il2cpp_rgctx_method(method->rgctx_data, 3));
 		V_0 = L_8;
-		il2cpp_codegen_runtime_class_init_inline(NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_il2cpp_TypeInfo_var);
 		intptr_t L_9;
 		L_9 = NSMutableData_AsIntPtr_m6224C54804C8378F892389D06D7938E378408AE3_inline((&V_0), il2cpp_rgctx_method(method->rgctx_data, 5));
 		bool L_10;
@@ -8963,7 +8952,6 @@ IL_006b:
 		NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD L_12;
 		L_12 = Nullable_1_get_Value_m040A12F9EA5CEED6F5B7AD30D47087D3803D78C5((&___1_rhs), il2cpp_rgctx_method(method->rgctx_data, 3));
 		V_0 = L_12;
-		il2cpp_codegen_runtime_class_init_inline(NSMutableData_tD8A9B0E8B362DFF9E6ADF4C4E5F7C3101EA99BBD_il2cpp_TypeInfo_var);
 		intptr_t L_13;
 		L_13 = NSMutableData_AsIntPtr_m6224C54804C8378F892389D06D7938E378408AE3_inline((&V_0), il2cpp_rgctx_method(method->rgctx_data, 5));
 		bool L_14;
