@@ -1,0 +1,26 @@
+# 複製成 config.yaml 後修改;沒寫到的欄位使用預設值(見 animegen/config.py)
+backend: auto          # auto | wan22 | wan21 | ltx | cogvideox | mock
+device: auto           # auto | cuda | mps | cpu
+memory_mode: auto      # auto | full | model_offload | sequential_offload
+output_dir: outputs
+model_cache_dir: null  # 模型下載位置;null = ~/.cache/huggingface
+
+generation:
+  num_frames: null     # null = 模型預設(Wan2.2: 81 幀 ≈ 3.4 秒)
+  num_inference_steps: null
+  seed: -1
+  resolution: auto     # 或 832x480
+  fit_mode: crop       # crop | pad | stretch
+  background: [255, 255, 255]
+
+prompt:
+  enhancer: none       # none | ollama(用本機 Ollama 把簡短描述改寫成詳細提示詞)
+  ollama:
+    host: http://127.0.0.1:11434
+    model: qwen2.5:7b
+
+export:
+  formats: [gif, mp4]
+  pingpong: false
+  interpolate: 1       # 2 = ffmpeg 補幀成兩倍 fps
+  gif_max_width: 512

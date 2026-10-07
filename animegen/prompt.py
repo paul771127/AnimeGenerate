@@ -23,6 +23,7 @@ GENERIC_NEGATIVE = (
 )
 
 _WS_RE = re.compile(r"\s+")
+_CJK_RE = re.compile(r"[\u3040-\u30ff\u3400-\u9fff]")
 
 
 def _clean(text: str | None) -> str:
@@ -50,7 +51,8 @@ def build_prompt(
     character_desc = _clean(character_desc)
     if character_desc:
         parts.append(character_desc)
-    parts.append(f"The character {action}")
+    # 中文描述(Wan 看得懂中文)就用中文句型,避免 "The character 揮手" 這種混搭
+    parts.append(f"角色動作:{action}" if _CJK_RE.search(action) else f"The character {action}")
     parts.append(_clean(prompt_cfg.get("style_suffix")))
     prompt = ". ".join(p for p in parts if p) + "."
 
