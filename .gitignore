@@ -12,3 +12,4 @@ models/
 hf_cache/
 *.log
 trendscout/out/
+homechat/data/
