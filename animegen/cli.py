@@ -75,6 +75,8 @@ def cmd_frames(args: argparse.Namespace, cfg: dict) -> int:
         include_original=False if args.no_original else None,
         pingpong=args.pingpong or None,
         tweens=args.tweens,
+        inbetween=args.inbetween,
+        fast=False if args.no_fast else None,
         use_ollama=args.ollama or None,
         output_dir=args.output,
         progress=_progress,
@@ -153,7 +155,10 @@ def build_parser() -> argparse.ArgumentParser:
     k.add_argument("-n", "--num-poses", type=int, help="沒有內建範本時要拆成幾格(預設 4)")
     k.add_argument("--seed", type=int, help="隨機種子;每一格都用同一個 seed")
     k.add_argument("--steps", type=int, help="每格推論步數(越多越精細越慢)")
-    k.add_argument("--frame-ms", type=int, help="每格停留毫秒數(預設 180)")
+    k.add_argument("-b", "--inbetween", type=int, choices=[0, 1, 2, 3],
+                   help="補間層數:每兩個姿勢之間再補 0/1/3/7 張 AI 畫的中間格,越多越連續也越久(預設 1)")
+    k.add_argument("--no-fast", action="store_true", help="不用加速 LoRA(Qwen 改用 40 步,品質略好但慢約 5 倍)")
+    k.add_argument("--frame-ms", type=int, help="每格停留毫秒數(預設依補間層數自動)")
     k.add_argument("--tweens", type=int, help="每兩格之間插入幾張淡入淡出過渡格(預設 0)")
     k.add_argument("--pingpong", action="store_true", help="正放 + 倒放")
     k.add_argument("--no-original", action="store_true", help="第一格不放角色原圖")

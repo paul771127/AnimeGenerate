@@ -17,6 +17,8 @@ SPEC = EditorSpec(
     vram_4bit_gb=0,
     language="zh",
     notes="不會真的改姿勢,只會位移並標上姿勢文字,用來測試流程。",
+    max_images=3,
+    fast_steps=1,
 )
 
 
@@ -28,6 +30,11 @@ class MockEditor(ImageEditor):
 
     def edit(self, req: EditRequest) -> Image.Image:
         self.load()
+        if len(req.extra_images) >= 2:  # 補間格:前後兩格的平均
+            a, b = (im.convert("RGB").resize(req.image.size) for im in req.extra_images[:2])
+            out = Image.blend(a, b, 0.5)
+            ImageDraw.Draw(out).text((6, req.image.height - 16), "in-between", fill=(0, 0, 255))
+            return out
         img = req.image.convert("RGB")
         w, h = img.size
         digest = hashlib.md5(f"{req.prompt}|{req.seed}".encode()).digest()

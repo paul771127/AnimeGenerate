@@ -29,6 +29,7 @@ def character(tmp_path: Path) -> Path:
 def anim() -> KeyframeAnimator:
     cfg = load_config()
     cfg["keyframe"]["editor"] = "mock"
+    cfg["keyframe"]["inbetween"] = 0
     return KeyframeAnimator(cfg)
 
 
@@ -145,6 +146,9 @@ class FakePipe:
         pipe.model_id, pipe.kwargs = model_id, kwargs
         return pipe
 
+    def load_lora_weights(self, repo, weight_name=None, **kwargs):
+        self.lora = (repo, weight_name)
+
     def enable_model_cpu_offload(self, device=None):
         self.placed = ("offload", device)
 
@@ -167,6 +171,7 @@ def fake_diffusers(monkeypatch):
     diffusers = types.ModuleType("diffusers")
     diffusers.QwenImageEditPlusPipeline = FakePipe
     diffusers.FluxKontextPipeline = FakePipe
+    diffusers.FlowMatchEulerDiscreteScheduler = types.SimpleNamespace(from_config=lambda c: ("sched", c))
     quantizers = types.ModuleType("diffusers.quantizers")
     quantizers.PipelineQuantizationConfig = lambda **kw: ("quant", kw)
     monkeypatch.setitem(sys.modules, "torch", torch)
@@ -205,8 +210,62 @@ def test_kontext_editor_call(fake_diffusers):
 def test_animator_with_fake_qwen(fake_diffusers, character, tmp_path):
     cfg = load_config()
     a = KeyframeAnimator(cfg, device=gpu(24))
-    result = a.generate(character, "鞠躬", seed=5, output_dir=tmp_path)
+    result = a.generate(character, "鞠躬", seed=5, inbetween=0, fast=False, output_dir=tmp_path)
     assert result.editor == "qwen"
     assert all(k.size == (300, 400) for k in result.keyframes)  # 輸出尺寸統一回原圖大小
     assert all(c["generator"] == ("gen", 5) for c in fake_diffusers.calls)  # 每格同一個 seed
     assert "只改變姿勢" in fake_diffusers.calls[0]["prompt"]
+
+
+# ---- 補間(用時間換連續性) ----------------------------------------------------------
+@pytest.mark.parametrize("levels,pingpong,expected_frames", [
+    (0, False, 6),        # 原圖 + 5 個揮手姿勢
+    (1, False, 6 + 6),    # 6 個間隔(含最後一格回到第一格)各補 1 格
+    (2, False, 6 + 18),   # 各補 3 格
+    (1, True, 6 + 5),     # 來回播放不需要補「最後 → 第一格」
+])
+def test_inbetween_counts(anim, character, tmp_path, levels, pingpong, expected_frames):
+    result = anim.generate(character, "揮手", seed=1, inbetween=levels, pingpong=pingpong, output_dir=tmp_path)
+    assert len(result.keyframes) == expected_frames
+    assert result.kinds.count("inbetween") == expected_frames - 6
+    assert result.kinds[0] == "original"
+    assert result.settings["frame_ms"] == max(50, round(180 / 2 ** levels))
+
+
+def test_inbetween_order(anim, character, tmp_path):
+    result = anim.generate(character, "", poses=["A", "B"], seed=1, inbetween=2, output_dir=tmp_path)
+    labels = [p.split(":")[0] for p in result.poses]
+    assert labels[:5] == ["(原圖)", "補間 25%", "補間 50%", "補間 75%", "A"]
+    # mock 的補間格 = 前後兩格的平均,所以 50% 那格應該在原圖與 A 之間
+    assert all(k.size == (300, 400) for k in result.keyframes)
+
+
+def test_redraw_inbetween_uses_neighbours(anim, character, tmp_path):
+    result = anim.generate(character, "點頭", seed=1, inbetween=1, output_dir=tmp_path)
+    i = result.kinds.index("inbetween")
+    anim.redraw(result, i, seed=3)
+    assert result.kinds[i] == "inbetween"  # 沒給新描述 → 還是補間格
+    anim.redraw(result, i, pose="頭往右歪")
+    assert result.kinds[i] == "key" and result.poses[i] == "頭往右歪"
+
+
+def test_qwen_fast_inbetween(fake_diffusers, character, tmp_path):
+    a = KeyframeAnimator(load_config(), device=gpu(24))
+    result = a.generate(character, "", poses=["舉起右手"], seed=2, inbetween=1, fast=True, output_dir=tmp_path)
+    ed = a._editor
+    assert ed.fast and ed.pipe.lora[0] == "lightx2v/Qwen-Image-Lightning"
+    assert "Edit-2509" in ed.pipe.lora[1] and ed.pipe.kwargs["scheduler"][0] == "sched"
+    calls = fake_diffusers.calls
+    assert all(c["num_inference_steps"] == 8 and c["true_cfg_scale"] == 1.0 for c in calls)
+    between = [c for c in calls if len(c["image"]) == 3]  # 原圖 + 前一格 + 後一格
+    assert len(between) == 1 and "Picture 2" in between[0]["prompt"]
+    assert len(result.keyframes) == 3  # 原圖、補間、舉起右手(只有 2 格時不補回頭的間隔)
+
+
+def test_kontext_inbetween_falls_back_to_text(fake_diffusers, character, tmp_path):
+    a = KeyframeAnimator(load_config(), device=gpu(12))
+    a.generate(character, "", poses=["raise hand", "wave"], seed=2, inbetween=1, editor="kontext",
+               output_dir=tmp_path)
+    prompts = [c["prompt"] for c in fake_diffusers.calls]
+    assert any("halfway between" in p for p in prompts)
+    assert all(not isinstance(c["image"], list) for c in fake_diffusers.calls)

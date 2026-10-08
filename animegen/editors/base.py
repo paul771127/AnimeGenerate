@@ -4,7 +4,7 @@ from __future__ import annotations
 import gc
 import logging
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from PIL import Image
@@ -31,6 +31,8 @@ class EditorSpec:
     notes: str = ""
     license_note: str = ""
     gated: bool = False  # Hugging Face 上需要先同意授權才能下載
+    max_images: int = 1  # 一次能參考幾張圖(補間格需要 3 張:原圖 + 前一格 + 後一格)
+    fast_steps: int | None = None  # 支援加速 LoRA 時的步數
 
 
 @dataclass
@@ -42,18 +44,20 @@ class EditRequest:
     max_area: int
     negative_prompt: str = ""
     progress: ProgressFn | None = None
+    extra_images: list[Image.Image] = field(default_factory=list)  # 額外參考圖(Picture 2, 3...)
 
 
 class ImageEditor(ABC):
     spec: EditorSpec
 
     def __init__(self, editor_cfg: dict[str, Any], device_info: DeviceInfo, *, memory_mode: str = "auto",
-                 quantize: str = "auto", cache_dir: str | None = None):
+                 quantize: str = "auto", cache_dir: str | None = None, fast: bool = False):
         self.cfg = editor_cfg or {}
         self.device_info = device_info
         self.model_id: str = self.cfg.get("model_id") or self.spec.default_model_id
         self.cache_dir = cache_dir
         self.quantize, self.memory_mode = self._resolve_memory(quantize, memory_mode)
+        self.fast = bool(fast and self.spec.fast_steps)
         self.pipe: Any = None
 
     def _resolve_memory(self, quantize: str, memory_mode: str) -> tuple[str, str]:
@@ -76,7 +80,12 @@ class ImageEditor(ABC):
 
     def describe(self) -> str:
         q = "4-bit 量化" if self.quantize == "4bit" else "bf16"
-        return f"{self.spec.display_name}({q}, {self.memory_mode})"
+        fast = f", 加速 {self.spec.fast_steps} 步" if self.fast else ""
+        return f"{self.spec.display_name}({q}, {self.memory_mode}{fast})"
+
+    @property
+    def default_steps(self) -> int:
+        return self.spec.fast_steps if self.fast and self.spec.fast_steps else self.spec.default_steps
 
     # ---- diffusers 共用 ---------------------------------------------------------
     def _torch(self):

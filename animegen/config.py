@@ -65,7 +65,9 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "steps": None,  # None = 模型預設(qwen 40、kontext 28)
         "seed": -1,
         "max_area": "auto",  # 工作解析度(像素總數);auto = VRAM 20GB+ 用 1024², 否則 768²
-        "frame_ms": 180,  # 每格停留毫秒數
+        "inbetween": 1,  # 補間層數:0 = 只畫關鍵姿勢;1/2/3 = 每兩格之間補 1/3/7 格(更連續、更花時間)
+        "fast": True,  # Qwen 用 Lightning LoRA 8 步出圖(約快 5 倍),格數多時建議開啟
+        "frame_ms": None,  # 每格停留毫秒數;None = 依補間層數自動(0 層 180ms、1 層 90ms、2 層 50ms)
         "include_original": True,  # 第一格放角色原圖
         "pingpong": False,
         "tweens": 0,  # 每兩格之間插入幾張淡入淡出過渡格

@@ -20,7 +20,9 @@ keyframe:
   num_poses: 4         # 沒有內建範本時拆成幾格
   steps: null          # null = 模型預設
   max_area: auto       # 工作解析度(像素總數),out of memory 時改成 589824 (768x768)
-  frame_ms: 180        # 每格停留毫秒數
+  inbetween: 1         # 補間層數 0-3:每兩個姿勢之間補 0/1/3/7 張(越多越連續、越久)
+  fast: true           # Qwen 加速(Lightning LoRA 8 步)
+  frame_ms: null       # 每格停留毫秒數;null = 依補間層數自動
   tweens: 0            # 每兩格之間的淡入淡出過渡格數
   pingpong: false
   include_original: true
