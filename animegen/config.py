@@ -56,6 +56,26 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "gif_max_width": 512,
         "save_frames": False,  # 另存每一幀 PNG
     },
+    # 多張圖逐格動畫模式(animegen frames / 網頁介面第一個分頁)
+    "keyframe": {
+        "editor": "auto",  # auto | qwen | kontext | mock
+        "quantize": "auto",  # auto | none | 4bit(auto = VRAM 不夠時自動 4-bit 量化)
+        "memory_mode": "auto",  # auto | full | model_offload | sequential_offload
+        "num_poses": 4,  # 沒有內建範本時,要拆成幾個姿勢
+        "steps": None,  # None = 模型預設(qwen 40、kontext 28)
+        "seed": -1,
+        "max_area": "auto",  # 工作解析度(像素總數);auto = VRAM 20GB+ 用 1024², 否則 768²
+        "frame_ms": 180,  # 每格停留毫秒數
+        "include_original": True,  # 第一格放角色原圖
+        "pingpong": False,
+        "tweens": 0,  # 每兩格之間插入幾張淡入淡出過渡格
+        "gif_max_width": 512,
+    },
+    "editors": {
+        "qwen": {"model_id": "Qwen/Qwen-Image-Edit-2509"},
+        "kontext": {"model_id": "black-forest-labs/FLUX.1-Kontext-dev"},
+        "mock": {},
+    },
     "backends": {
         "wan22": {"model_id": "Wan-AI/Wan2.2-TI2V-5B-Diffusers"},
         "wan21": {"model_id": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers"},

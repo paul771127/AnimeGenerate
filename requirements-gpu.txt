@@ -3,7 +3,8 @@
 # 例如: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
 torch>=2.4
 torchvision
-diffusers>=0.35.0
+diffusers>=0.36.0
+bitsandbytes>=0.45; sys_platform != "darwin"   # 顯卡記憶體不夠時做 4-bit 量化
 transformers>=4.46
 accelerate>=0.34
 huggingface_hub>=0.25

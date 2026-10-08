@@ -59,6 +59,27 @@ class GenerationRequest:
     extra: dict[str, Any] = field(default_factory=dict)
 
 
+def apply_memory_mode(pipe, device: str, mode: str) -> None:
+    """依記憶體模式把 diffusers pipeline 放到 GPU / 開啟 CPU offload,並開啟 VAE slicing / tiling。"""
+    log.info("記憶體模式: %s (裝置 %s)", mode, device)
+    if mode == "full":
+        pipe.to(device)
+    elif mode == "model_offload":
+        pipe.enable_model_cpu_offload(device=device)
+    elif mode == "sequential_offload":
+        pipe.enable_sequential_cpu_offload(device=device)
+    else:
+        raise ValueError(f"未知的 memory_mode: {mode!r}")
+    vae = getattr(pipe, "vae", None)
+    if vae is not None:
+        for fn in ("enable_slicing", "enable_tiling"):
+            if hasattr(vae, fn):
+                try:
+                    getattr(vae, fn)()
+                except Exception as exc:  # noqa: BLE001
+                    log.debug("VAE %s 失敗: %s", fn, exc)
+
+
 class VideoBackend(ABC):
     spec: BackendSpec
 
@@ -140,25 +161,7 @@ class DiffusersBackend(VideoBackend):
         return kwargs
 
     def _apply_memory_mode(self, pipe) -> None:
-        device = self.device_info.device
-        mode = self.memory_mode
-        log.info("記憶體模式: %s (裝置 %s)", mode, device)
-        if mode == "full":
-            pipe.to(device)
-        elif mode == "model_offload":
-            pipe.enable_model_cpu_offload(device=device)
-        elif mode == "sequential_offload":
-            pipe.enable_sequential_cpu_offload(device=device)
-        else:
-            raise ValueError(f"未知的 memory_mode: {mode!r}")
-        vae = getattr(pipe, "vae", None)
-        if vae is not None:
-            for fn in ("enable_slicing", "enable_tiling"):
-                if hasattr(vae, fn):
-                    try:
-                        getattr(vae, fn)()
-                    except Exception as exc:  # noqa: BLE001
-                        log.debug("VAE %s 失敗: %s", fn, exc)
+        apply_memory_mode(pipe, self.device_info.device, self.memory_mode)
 
     def _generator(self, seed: int):
         torch = self._torch()

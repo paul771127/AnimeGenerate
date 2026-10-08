@@ -93,6 +93,12 @@ class AnimeGenerator:
         )
         return self._backend
 
+    def release(self) -> None:
+        """卸載模型,釋放顯卡記憶體(切換到另一種模式前呼叫)。"""
+        if self._backend is not None:
+            self._backend.unload()
+            self._backend = None
+
     # ---- 生成 -----------------------------------------------------------------
     def generate(
         self,

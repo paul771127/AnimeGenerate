@@ -1,6 +1,7 @@
 """命令列介面。
 
-  animegen generate -i 角色.png -a "揮手打招呼"     # 產生 GIF + MP4
+  animegen frames -i 角色.png -a "揮手打招呼"       # 多張圖逐格動畫 → GIF(推薦)
+  animegen generate -i 角色.png -a "揮手打招呼"     # 影片模型 → GIF + MP4
   animegen ui                                      # 網頁介面
   animegen info                                    # 顯示硬體與可用後端
   animegen download wan22                          # 預先下載模型(之後可離線使用)
@@ -14,6 +15,7 @@ from typing import Sequence
 
 from . import __version__
 from .backends import BACKENDS, all_specs, get_spec
+from .editors import EDITORS
 from .config import load_config
 
 
@@ -56,6 +58,31 @@ def cmd_generate(args: argparse.Namespace, cfg: dict) -> int:
     return 0
 
 
+def cmd_frames(args: argparse.Namespace, cfg: dict) -> int:
+    from .keyframes import KeyframeAnimator
+
+    anim = KeyframeAnimator(cfg)
+    result = anim.generate(
+        args.image,
+        args.action or "",
+        poses=args.pose,
+        character_desc=args.character or "",
+        editor=args.model,
+        num_poses=args.num_poses,
+        seed=args.seed,
+        steps=args.steps,
+        frame_ms=args.frame_ms,
+        include_original=False if args.no_original else None,
+        pingpong=args.pingpong or None,
+        tweens=args.tweens,
+        use_ollama=args.ollama or None,
+        output_dir=args.output,
+        progress=_progress,
+    )
+    print(result.summary())
+    return 0
+
+
 def cmd_info(args: argparse.Namespace, cfg: dict) -> int:
     from .device import choose_backend, detect_device
 
@@ -63,10 +90,21 @@ def cmd_info(args: argparse.Namespace, cfg: dict) -> int:
     name, reason = choose_backend(info)
     print(f"animegen {__version__}")
     print(f"裝置: {info.describe()}")
-    print(f"自動選擇的後端: {name} — {reason}")
+    from .editors import choose_editor
+
+    ed_name, ed_reason = choose_editor(info)
+    print(f"多張圖模式(frames)的圖片模型: {ed_name} — {ed_reason}")
+    print(f"影片模式(generate)的後端: {name} — {reason}")
     if cfg.get("_config_path"):
         print(f"設定檔: {cfg['_config_path']}")
-    print("\n可用後端:")
+    print("\n多張圖模式的圖片模型:")
+    for cls in EDITORS.values():
+        spec = cls.spec
+        vram = f"4-bit 約 {spec.vram_4bit_gb:g} GB / bf16 {spec.vram_offload_gb:g} GB+" if spec.vram_4bit_gb else "不需 GPU"
+        print(f"  {spec.name:<10} {spec.display_name}  [{vram}]  {spec.license_note}")
+        if spec.notes:
+            print(f"  {'':<10} {spec.notes}")
+    print("\n影片模式的後端:")
     for spec in all_specs():
         vram = f"最低 {spec.vram_min_gb:g} GB / 建議 {spec.vram_offload_gb:g} GB+" if spec.vram_min_gb else "不需 GPU"
         print(f"  {spec.name:<10} {spec.display_name}  [{vram}]")
@@ -82,10 +120,10 @@ def cmd_download(args: argparse.Namespace, cfg: dict) -> int:
         print("需要 huggingface_hub:pip install -r requirements-gpu.txt", file=sys.stderr)
         return 1
     for name in args.backends:
-        spec = get_spec(name)
-        if name == "mock":
-            continue
-        model_id = cfg.get("backends", {}).get(name, {}).get("model_id") or spec.default_model_id
+        if name in EDITORS:
+            model_id = cfg.get("editors", {}).get(name, {}).get("model_id") or EDITORS[name].spec.default_model_id
+        else:
+            model_id = cfg.get("backends", {}).get(name, {}).get("model_id") or get_spec(name).default_model_id
         print(f"下載 {model_id} ...")
         path = snapshot_download(model_id, cache_dir=cfg.get("model_cache_dir"))
         print(f"  完成: {path}")
@@ -106,7 +144,24 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--version", action="version", version=f"animegen {__version__}")
     sub = ap.add_subparsers(dest="command", required=True)
 
-    g = sub.add_parser("generate", aliases=["gen"], help="產生動畫")
+    k = sub.add_parser("frames", help="多張圖逐格動畫:AI 依序畫出每個姿勢,串成 GIF(推薦)")
+    k.add_argument("-i", "--image", required=True, help="角色圖片")
+    k.add_argument("-a", "--action", help="動作描述,例如「揮手打招呼」;也可以每行寫一個姿勢")
+    k.add_argument("-p", "--pose", nargs="+", help="直接指定每一格的姿勢,例如 -p 舉起右手 右手揮向左 右手揮向右")
+    k.add_argument("-c", "--character", help="(選用)角色外觀描述,幫助維持角色一致")
+    k.add_argument("-m", "--model", choices=["auto", *EDITORS], help="圖片模型(預設 auto 依顯卡選擇)")
+    k.add_argument("-n", "--num-poses", type=int, help="沒有內建範本時要拆成幾格(預設 4)")
+    k.add_argument("--seed", type=int, help="隨機種子;每一格都用同一個 seed")
+    k.add_argument("--steps", type=int, help="每格推論步數(越多越精細越慢)")
+    k.add_argument("--frame-ms", type=int, help="每格停留毫秒數(預設 180)")
+    k.add_argument("--tweens", type=int, help="每兩格之間插入幾張淡入淡出過渡格(預設 0)")
+    k.add_argument("--pingpong", action="store_true", help="正放 + 倒放")
+    k.add_argument("--no-original", action="store_true", help="第一格不放角色原圖")
+    k.add_argument("--ollama", action="store_true", help="沒有內建範本的動作,用本機 Ollama 拆成姿勢")
+    k.add_argument("-o", "--output", help="輸出資料夾(預設 outputs/)")
+    k.set_defaults(func=cmd_frames)
+
+    g = sub.add_parser("generate", aliases=["gen"], help="影片模型產生動畫(GIF + MP4)")
     g.add_argument("-i", "--image", required=True, help="角色圖片")
     g.add_argument("-a", "--action", required=True, help="要角色做的動作,例如「揮手打招呼然後跳起來」")
     g.add_argument("-c", "--character", help="(選用)角色外觀描述,幫助模型維持角色一致")
@@ -135,7 +190,9 @@ def build_parser() -> argparse.ArgumentParser:
     i.set_defaults(func=cmd_info)
 
     d = sub.add_parser("download", help="預先下載模型權重")
-    d.add_argument("backends", nargs="+", choices=[b for b in BACKENDS if b != "mock"])
+    d.add_argument("backends", nargs="+", metavar="MODEL",
+                   choices=[*(e for e in EDITORS if e != "mock"), *(b for b in BACKENDS if b != "mock")],
+                   help="qwen / kontext(多張圖模式)或 wan22 / wan21 / ltx / cogvideox(影片模式)")
     d.set_defaults(func=cmd_download)
     return ap
 
