@@ -34,7 +34,8 @@ namespace SpellDuel
         class Floater { public Vector3 posMap; public string text; public Color color; public float born; public bool screen; }
         readonly List<Floater> floaters = new List<Floater>();
         string message = ""; float messageUntil;
-        float incomingFlash;
+        float incomingFlash, hitFlash;
+        bool paused;   // AR 追蹤中斷：整場戰鬥暫停（敵人、法術、判定都停住）
         GUIStyle label, small, button, big, center;
 
         Fighter Me => battle?.player;
@@ -119,7 +120,9 @@ namespace SpellDuel
             if (battle == null) return;
             SyncPlayer(Me);
             float dt = Mathf.Min(Time.deltaTime, 0.1f);
-            if (phase == Phase.Fighting)
+            hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
+            paused = phase == Phase.Fighting && !Tracking.Ok;
+            if (phase == Phase.Fighting && !paused)
             {
                 ai.Update(dt);
                 battle.Update(dt);
@@ -142,6 +145,7 @@ namespace SpellDuel
         {
             if (!Input.GetMouseButtonDown(0) || GUIUtility.hotControl != 0) return;
             var sp = Input.mousePosition;
+            if (paused) return;
             if (!InTapZone(new Vector2(sp.x, Screen.height - sp.y))) return;
             if (Me.charging == null) { Say("先點下方的技能開始詠唱", 1.5f); return; }
 
@@ -162,12 +166,15 @@ namespace SpellDuel
                     if (kind == "hit" || kind == "trap") Burst(at, c);
                     break;
                 case "hurt":
+                    // 被打中：震動＋整個畫面閃紅＋扣血（血量已在 Battle 裡扣掉）
                     floaters.Add(new Floater { text = text, color = new Color(1f, 0.3f, 0.3f), born = Time.time, screen = true });
-                    incomingFlash = 1f;
+                    hitFlash = 1f;
                     Handheld.Vibrate();
                     break;
                 case "dot":
-                    floaters.Add(new Floater { posMap = at, text = "毒 " + text, color = Color.green, born = Time.time, screen = at == Me.Chest });
+                    bool onMe = at == Me.Chest;
+                    floaters.Add(new Floater { posMap = at, text = "毒 " + text, color = Color.green, born = Time.time, screen = onMe });
+                    if (onMe) hitFlash = Mathf.Max(hitFlash, 0.4f);   // 中毒扣血：淡一點的紅
                     break;
                 case "miss":
                     break;
@@ -364,6 +371,9 @@ namespace SpellDuel
             float top = H - Screen.safeArea.yMax + pad;
             var me = Me; var en = En; float now = battle.now;
 
+            // 被打中：整個畫面閃紅
+            if (hitFlash > 0.01f) { GUI.color = new Color(1f, 0f, 0.05f, hitFlash * 0.45f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
+
             // 致盲：畫面蓋上煙霧
             if (me.blindUntil > now) { GUI.color = new Color(0.55f, 0.55f, 0.6f, 0.92f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; GUI.Label(new Rect(0, H * 0.3f, W, lh * 2), $"煙霧中… {me.blindUntil - now:F1}s", big); }
             // 敵人法術逼近：邊框閃紅
@@ -446,11 +456,18 @@ namespace SpellDuel
                 float cd = me.cooldownUntil.TryGetValue(s.id, out var u) ? Mathf.Max(0, u - now) : 0;
                 bool charging = me.charging == s;
                 GUI.color = charging ? s.color : (me.mp < s.cost || cd > 0 ? new Color(0.6f, 0.6f, 0.6f) : Color.white);
-                if (GUI.Button(r, $"{s.name}\nMP {s.cost}{(cd > 0 ? $"　{cd:F1}s" : "")}", button) && phase == Phase.Fighting)
+                if (GUI.Button(r, $"{s.name}\nMP {s.cost}{(cd > 0 ? $"　{cd:F1}s" : "")}", button) && phase == Phase.Fighting && !paused)
                 {
                     if (!battle.TryChant(me, s, out var why)) Say(why, 1.5f);
                 }
                 GUI.color = Color.white;
+            }
+
+            if (paused)
+            {
+                Panel(new Rect(0, H * 0.32f, W, H * 0.2f), 0.8f);
+                GUI.Label(new Rect(0, H * 0.33f, W, H * 0.08f), "⏸ AR 追蹤中斷，戰鬥暫停", big);
+                GUI.Label(new Rect(pad, H * 0.42f, W - pad * 2, lh * 2), Tracking.Reason + "\n恢復追蹤後自動繼續", center);
             }
 
             if (phase == Phase.Over)

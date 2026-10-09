@@ -9,6 +9,8 @@ namespace SpellDuel
     ///   pose         我的手機在世界座標的位置與朝向（每秒 20 次）
     ///   shot         發射法術：起點、方向、速度、半徑、發射時間（共同時間）
     ///   hit / miss   被攻擊方判定的結果
+    ///   void         被攻擊方 AR 追蹤中斷，這招不計
+    ///   track        AR 追蹤狀態改變（中斷／恢復）
     /// 座標一律是世界座標（以標記圖為原點，單位公尺）。
     /// </summary>
     [Serializable]
@@ -26,6 +28,7 @@ namespace SpellDuel
         public double t0;        // 共同時間（秒）
         public double c;         // ping：送出時的本機時間
         public double h;         // pong：房主收到時的時間
+        public bool ok;          // track：AR 追蹤是否正常
 
         public string ToJson() => JsonUtility.ToJson(this);
         public static Msg FromJson(string json) => JsonUtility.FromJson<Msg>(json);
