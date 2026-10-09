@@ -29,6 +29,8 @@ namespace SpellDuel.EditorTools
         {
             var target = EditorUserBuildSettings.activeBuildTarget;
             Configure(target);
+            if (EnsureArKitDefine())
+                Debug.LogWarning("[SpellDuel] 剛加入 UNITY_XR_ARKIT_LOADER_ENABLED；ARKit 原生程式庫要在下一次開啟 Unity 才會生效。雲端請先執行 ConfigureCI。");
             string scene = CreateScene();
 
             string path = Arg("-customBuildPath");
@@ -51,7 +53,34 @@ namespace SpellDuel.EditorTools
 
         // 方便在編輯器選單手動測試
         [MenuItem("SpellDuel/Configure Project")]
-        public static void ConfigureMenu() { Configure(EditorUserBuildSettings.activeBuildTarget); CreateScene(); }
+        public static void ConfigureMenu() { Configure(EditorUserBuildSettings.activeBuildTarget); EnsureArKitDefine(); CreateScene(); }
+
+        /// <summary>
+        /// 雲端第一階段：只做設定、不建置。
+        /// ARKit 外掛靠 UNITY_XR_ARKIT_LOADER_ENABLED 這個編譯符號決定要不要把原生程式庫（libUnityARKit.a）打包進去，
+        /// 但批次模式下它不會自己加，而且要「下一次開啟 Unity」重新編譯後才生效。
+        /// 所以雲端先跑這個方法存好設定，第二階段再開 Unity 建置。
+        /// </summary>
+        public static void ConfigureCI()
+        {
+            var target = EditorUserBuildSettings.activeBuildTarget;
+            Configure(target);
+            EnsureArKitDefine();
+            CreateScene();
+            AssetDatabase.SaveAssets();
+            Debug.Log("[SpellDuel] ConfigureCI done; iOS defines = " + PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.iOS));
+        }
+
+        /// <summary>確保 iOS 有 ARKit 的編譯符號；回傳 true 表示這次才加上</summary>
+        static bool EnsureArKitDefine()
+        {
+            const string define = "UNITY_XR_ARKIT_LOADER_ENABLED";
+            var defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.iOS);
+            if (defines.Split(';').Contains(define)) return false;
+            PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.iOS, string.IsNullOrEmpty(defines) ? define : defines + ";" + define);
+            AssetDatabase.SaveAssets();
+            return true;
+        }
 
         static string Arg(string name)
         {

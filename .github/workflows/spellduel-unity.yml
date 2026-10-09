@@ -93,7 +93,21 @@ jobs:
           path: ${{ env.PROJECT_PATH }}/Library
           key: Library-iOS-${{ hashFiles('spellduel-unity/Packages/manifest.json', 'spellduel-unity/ProjectSettings/ProjectVersion.txt') }}
           restore-keys: Library-iOS-
-      - uses: game-ci/unity-builder@v4
+      # 第一階段：只做設定（加入 ARKit 編譯符號），第二階段重新開 Unity 才會把 ARKit 原生程式庫打包進去
+      - name: Unity 設定（第一階段）
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: ${{ env.PROJECT_PATH }}
+          targetPlatform: iOS
+          buildName: SpellDuel
+          buildMethod: SpellDuel.EditorTools.BuildScript.ConfigureCI
+          allowDirtyBuild: true
+      - name: Unity 匯出 Xcode 專案（第二階段）
+        uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
