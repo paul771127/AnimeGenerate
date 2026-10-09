@@ -8,33 +8,71 @@
 - 匯入聯絡人名單,也能匯入 **LINE 匯出的聊天紀錄**,把舊對話一起搬過來
 - 即時收訊息、已讀、未讀數、桌面通知、匯出 .txt
 
+## 安裝(只要做一次)
+
+### 1. Python
+
+- **Windows**:到 <https://www.python.org/downloads/> 下載安裝,**第一個畫面一定要勾「Add python.exe to PATH」**
+- **Mac**:打開「終端機」輸入 `python3 --version`,跳出安裝開發者工具就按「安裝」
+
+### 2. Tailscale(讓你在外面、朋友在任何地方都能連)
+
+HomeChat 用 Tailscale 的 **Funnel** 功能,幫家裡電腦開一個**固定不變**的 https 網址,
+例如 `https://home-pc.tail1234.ts.net`。免費、不用買網域、不用設定路由器。
+**只有家裡這台電腦要裝**,你的手機和朋友都不用裝,直接用瀏覽器開網址就好。
+
+1. 到 <https://tailscale.com/download> 下載安裝到**家裡電腦**
+2. 打開 Tailscale,用 Google / Microsoft / Apple 帳號登入
+3. 第一次啟動 HomeChat 時,畫面上會出現一個 `https://login.tailscale.com/...` 的網址,
+   用瀏覽器打開,按「啟用」(Enable HTTPS / Funnel)就完成了,之後不用再做
+
+> Linux 要先執行一次 `sudo tailscale set --operator=$USER`,HomeChat 才有權限開 Funnel。
+
+### 3. 下載 HomeChat
+
+登入 GitHub 後下載 zip 解壓縮:
+<https://github.com/paul771127/animegenerate/archive/refs/heads/claude/homechat-self-hosted-chat.zip>
+
+或用 git:`git clone -b claude/homechat-self-hosted-chat https://github.com/paul771127/animegenerate.git homechat`
+
 ## 啟動
 
-```bash
-git clone -b claude/homechat-self-hosted-chat https://github.com/paul771127/animegenerate.git homechat
-cd homechat
-python homechat.py --name 你的名字
+- **Windows**:打開有 `homechat.py` 的資料夾,在上方網址列輸入 `cmd` 按 Enter,然後輸入
+  `python homechat.py --name 你的名字`
+- **Mac**:終端機輸入 `cd `(後面有空格)再把資料夾拖進來按 Enter,然後輸入
+  `python3 homechat.py --name 你的名字`
+
+第一次執行會要你設定主人密碼(打字時畫面不會顯示,正常)。接著會自動開外部連線,看到這樣就成功了:
+
+```
+============================================================
+  在外面(4G/5G、別的 Wi-Fi、朋友):https://home-pc.tail1234.ts.net
+  這台電腦:http://127.0.0.1:8800
+  同 Wi-Fi:http://192.168.1.23:8800
+============================================================
+這個視窗不要關。按 Ctrl+C 結束
 ```
 
-第一次執行會要你設定主人密碼。啟動後畫面會顯示網址:
-
-```
-HomeChat 已啟動,資料存在 ~/homechat/data/homechat.db
-  這台電腦:   http://127.0.0.1:8800
-  同 Wi-Fi 手機: http://192.168.1.23:8800
-```
-
-- 電腦:開 `http://127.0.0.1:8800`
-- 手機(跟電腦連同一個 Wi-Fi):開上面第二個網址。在手機瀏覽器選「加入主畫面」就像 App 一樣
-- Windows 第一次執行時防火牆會問要不要允許,請選「允許私人網路」
+- **手機**:開「在外面」那個網址並登入,**不管在家還是在外面都用這個網址**。
+  在瀏覽器選「加入主畫面」就像 App 一樣
+- **電腦**:開 `http://127.0.0.1:8800`
+- Windows 第一次執行時防火牆會問要不要允許,請選「允許」
+- **視窗不能關、電腦不能關機或睡眠**,不然大家都連不上(見下面「開機自動執行」)
 
 | 參數 | 預設 | 說明 |
 |---|---|---|
-| `--port` | 8800 | 埠號 |
 | `--name` | 主人 | 你的顯示名稱(也可以在網頁「設定」改) |
+| `--tunnel` | `auto` | 外部連線:`auto` 有 Tailscale 用 Tailscale,沒有就用 cloudflared;`tailscale`、`cloudflare`、`off`(只在家裡 Wi-Fi 用) |
+| `--public-url` | | 你自己有固定網域時填這個,就不會自動開通道 |
+| `--port` | 8800 | 埠號 |
 | `--db` | `data/homechat.db` | 資料庫位置 |
-| `--public-url` | | 對外網址,邀請連結會用這個(也可以在網頁「設定」填) |
 | `--set-password` | | 改密碼(會登出所有裝置) |
+
+### 不想裝 Tailscale:Cloudflare 臨時網址
+
+裝 cloudflared(Windows:cmd 輸入 `winget install --id Cloudflare.cloudflared`;Mac:`brew install cloudflared`)
+後啟動 HomeChat,也會自動拿到一個 `https://xxxx.trycloudflare.com` 網址,不用註冊帳號。
+缺點是**每次重開 HomeChat 網址都會變**,朋友手上的舊邀請連結會失效、要重傳,所以比較適合先試試看。
 
 ## 匯入聯絡人
 
@@ -57,29 +95,8 @@ python -m pytest tests
 ## 跟朋友聊天
 
 1. 點開聯絡人 → 右上角 ⋯ →「邀請連結」→「用 LINE 傳送」(或複製後自己貼)
-2. 對方在 LINE 點連結就會打開聊天室,之後再開同一條連結就會回到同一個對話
+2. 對方在 LINE 點連結就會打開聊天室(對方不用裝任何東西,在哪裡都能連),之後再開同一條連結就會回到同一個對話
 3. **拿到連結的人就能以對方的身分聊天**,請只私訊給本人。外流了就按「換新連結」,舊連結和已打開的手機會立刻失效
-
-## 讓外面連進來
-
-只在家裡 Wi-Fi 用,上面就夠了。要**在外面用手機連**,或**讓朋友連進來**,需要一個對外網址。
-不建議直接在路由器開 port(沒有 HTTPS,家裡 IP 會曝光),建議用下面其中一種:
-
-**A. Cloudflare Tunnel(朋友也要連時推薦,免費、自動 HTTPS)**
-
-```bash
-# 安裝 cloudflared: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
-cloudflared tunnel --url http://localhost:8800
-```
-
-會給你一個 `https://xxxx.trycloudflare.com` 網址,到 HomeChat「設定」填進「對外網址」,之後產生的邀請連結就會用它。
-
-> 快速通道的網址**每次重開都會變**,舊的邀請連結會連不到。長期使用請在 Cloudflare 綁自己的網域建立固定通道
-> (`cloudflared tunnel create homechat`,見 Cloudflare 文件),網址就不會變。
-
-**B. Tailscale(只有你自己的手機要連時最簡單)**
-
-電腦和手機都裝 [Tailscale](https://tailscale.com/) 並登入同一個帳號,手機就能用 `http://電腦的Tailscale IP:8800` 從任何地方連回家。朋友沒有裝就連不到,所以不適合給朋友用。
 
 ## 開機自動執行
 
@@ -97,7 +114,8 @@ cloudflared tunnel --url http://localhost:8800
 
 - 主人密碼用 PBKDF2 雜湊儲存;同一來源 10 分鐘內錯 10 次會暫時鎖住
 - 訪客只能看到、發送自己那一個對話,看不到聯絡人列表或其他人的訊息
-- 讓外面連進來時請一定用 HTTPS(Cloudflare Tunnel 會自動提供),並設一個夠長的密碼
+- 外部連線一律走 HTTPS(Tailscale / Cloudflare 自動提供),不用在路由器開 port,家裡 IP 不會曝光
+- 網址是公開的,任何人都能看到登入頁,所以請設一個夠長的密碼
 
 ## 目前沒有
 

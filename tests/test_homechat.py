@@ -225,3 +225,76 @@ def test_pagination(server, monkeypatch):
     top = first["messages"][0]
     older = owner.req(f"/api/messages?contact={cid}&before_at={top['created_at']}&before_id={top['id']}")[1]
     assert not older["more"] and len(older["messages"]) == 50 and older["messages"][0]["body"] == "m0"
+
+
+# ---------------------------------------------------------------- 外部連線
+
+def fake_program(tmp_path, name, script):
+    path = tmp_path / name
+    path.write_text(f"#!{sys.executable}\nimport sys, time, json\n{script}\n")
+    path.chmod(0o755)
+    return str(path)
+
+
+def test_cloudflared_quick_tunnel_url(tmp_path):
+    # 照 cloudflared 2026.10 真實輸出格式
+    exe = fake_program(tmp_path, "cloudflared", """
+print("2026-10-09T22:45:42Z INF Requesting new quick Tunnel on trycloudflare.com...", flush=True)
+print("2026-10-09T22:45:45Z INF |  https://manufacture-capacity-heads-aquarium.trycloudflare.com    |", flush=True)
+print("2026-10-09T22:45:46Z INF Registered tunnel connection connIndex=0", flush=True)
+time.sleep(30)
+""")
+    url, proc = homechat.start_cloudflared(exe, 8800, timeout=10)
+    try:
+        assert url == "https://manufacture-capacity-heads-aquarium.trycloudflare.com"
+        assert proc.poll() is None  # 通道要一直開著
+    finally:
+        proc.terminate()
+
+
+def test_cloudflared_failure(tmp_path):
+    exe = fake_program(tmp_path, "cloudflared", "print('ERR failed'); sys.exit(1)")
+    assert homechat.start_cloudflared(exe, 8800, timeout=5) == (None, None)
+
+
+def test_tailscale_funnel_url(tmp_path):
+    exe = fake_program(tmp_path, "tailscale", """
+if sys.argv[1] == "status":
+    print(json.dumps({"BackendState": "Running", "Self": {"DNSName": "home-pc.tail1234.ts.net."}}))
+else:
+    print("Available on the internet:\\n\\nhttps://home-pc.tail1234.ts.net/\\n|-- proxy http://127.0.0.1:8800\\n")
+""")
+    assert homechat.start_tailscale(exe, 8800, timeout=10) == "https://home-pc.tail1234.ts.net"
+
+
+def test_tailscale_logged_out(tmp_path):
+    exe = fake_program(tmp_path, "tailscale", """
+print(json.dumps({"BackendState": "NeedsLogin"}))
+""")
+    assert homechat.start_tailscale(exe, 8800, timeout=10) is None
+
+
+def test_open_tunnel_falls_back_to_cloudflare(tmp_path, monkeypatch):
+    ts = fake_program(tmp_path, "tailscale", "print(json.dumps({'BackendState': 'Running'})) if sys.argv[1] == 'status' else sys.exit(1)")
+    cf = fake_program(tmp_path, "cloudflared", "print('https://abc-def.trycloudflare.com', flush=True); time.sleep(30)")
+    monkeypatch.setattr(homechat, "find_tailscale", lambda: ts)
+    monkeypatch.setattr(homechat, "find_cloudflared", lambda: cf)
+    url, kind, proc = homechat.open_tunnel("auto", 8800)
+    proc.terminate()
+    assert (url, kind) == ("https://abc-def.trycloudflare.com", "cloudflare")
+    monkeypatch.setattr(homechat, "find_tailscale", lambda: None)
+    monkeypatch.setattr(homechat, "find_cloudflared", lambda: None)
+    assert homechat.open_tunnel("auto", 8800) == (None, None, None)
+
+
+def test_proxy_rewrites_host(server):
+    """經過通道時 Host 可能是 127.0.0.1,瀏覽器的 Origin 是對外網址,要能正常登入和送訊息。"""
+    base, app = server
+    app.store.set_setting("public_url", "https://home-pc.tail1234.ts.net")
+    c = Client(base)
+    origin = {"Origin": "https://home-pc.tail1234.ts.net"}
+    assert c.req("/api/login", {"password": "secret123"}, headers=origin)[0] == 200
+    status, data = c.req("/api/contacts", {"name": "外面的朋友"}, headers=origin)
+    assert status == 200
+    assert data["contact"]["invite_url"].startswith("https://home-pc.tail1234.ts.net/c/")
+    assert c.req("/api/contacts", {"name": "x"}, headers={"Origin": "https://evil.example"})[0] == 403

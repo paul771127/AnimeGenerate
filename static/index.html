@@ -199,7 +199,8 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
   <h3 id="invite-title">邀請連結</h3>
   <p class="hint" style="margin-top:0">把這條連結傳給對方,對方用手機瀏覽器打開就能跟你聊天,不用裝 App。<b>拿到連結的人就能以對方的身分聊天</b>,請只私訊給本人。</p>
   <div class="field invite-url" id="invite-url" style="margin-top:10px"></div>
-  <div class="warn hidden" id="invite-warn">這個網址只有在同一個 Wi-Fi 才連得到。要讓朋友從外面連進來,請照 README「讓外面連進來」設定,並在「設定」填上對外網址。</div>
+  <div class="warn hidden" id="invite-warn">這個網址只有在同一個 Wi-Fi 才連得到。要讓朋友從外面連進來,請照 README 安裝 Tailscale,然後重新啟動 HomeChat。</div>
+  <div class="warn hidden" id="invite-temp">這是 Cloudflare 臨時網址,HomeChat 重開後會變,到時要重傳連結。改用 Tailscale 就會是固定網址(見 README)。</div>
   <div class="actions">
     <button class="btn secondary" type="button" id="invite-reset">換新連結</button>
     <button class="btn secondary" type="button" id="invite-copy">複製</button>
@@ -317,7 +318,7 @@ const isTouch = matchMedia("(pointer: coarse)").matches;
 async function boot() {
   closeEvents();
   const me = await api("/api/me").catch(() => ({ role: null }));
-  state.role = me.role; state.ownerName = me.owner_name || ""; state.publicUrl = me.public_url || "";
+  state.role = me.role; state.ownerName = me.owner_name || ""; state.publicUrl = me.public_url || ""; state.tunnel = me.tunnel || "";
   $("#login").classList.toggle("hidden", !!me.role);
   $("#app").classList.toggle("hidden", !me.role);
   if (!me.role) { $("#password").focus(); return; }
@@ -703,6 +704,7 @@ function openInvite(c) {
   $("#invite-url").textContent = c.invite_url;
   $("#invite-line").href = "https://line.me/R/share?text=" + encodeURIComponent(inviteText(c));
   $("#invite-warn").classList.toggle("hidden", !isLocalUrl(c.invite_url));
+  $("#invite-temp").classList.toggle("hidden", state.tunnel !== "cloudflare" || !c.invite_url.startsWith(state.publicUrl));
   $("#dlg-invite").showModal();
 }
 $("#invite-copy").addEventListener("click", async () => {

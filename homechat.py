@@ -4,12 +4,13 @@
 - 你(主人)用密碼登入,電腦、手機瀏覽器都能開
 - 每個聯絡人有一條專屬邀請連結,透過 LINE 傳給對方,對方用手機瀏覽器打開就能跟你聊,不用裝 App
 - 可匯入聯絡人名單(一行一個名字,或 CSV),也可匯入 LINE 匯出的聊天紀錄 .txt,把舊對話一起搬過來
+- 啟動時自動用 Tailscale Funnel(或 Cloudflare 通道)開一個 https 網址,在外面用 4G / 別的 Wi-Fi 也能連
 
 用法:
   python homechat.py                      # 第一次執行會要你設定主人密碼
   python homechat.py --port 8800 --name 小明
   python homechat.py --set-password       # 改密碼
-  python homechat.py --public-url https://xxx.trycloudflare.com   # 邀請連結用的對外網址
+  python homechat.py --tunnel off         # 只在家裡 Wi-Fi 用,不開外部連線
 """
 from __future__ import annotations
 
@@ -22,8 +23,10 @@ import os
 import queue
 import re
 import secrets
+import shutil
 import socket
 import sqlite3
+import subprocess
 import sys
 import threading
 import time
@@ -603,7 +606,14 @@ class Handler(BaseHTTPRequestHandler):
 
     def _check_origin(self) -> None:
         origin = self.headers.get("Origin")
-        if origin and urlsplit(origin).netloc != self.headers.get("Host", ""):
+        if not origin:
+            return
+        # 經過 Tailscale / Cloudflare 時 Host 可能被改成 localhost,所以也接受對外網址
+        allowed = {self.headers.get("Host", ""), self.headers.get("X-Forwarded-Host", "")}
+        public = self.app.store.get_setting("public_url")
+        if public:
+            allowed.add(urlsplit(public).netloc)
+        if urlsplit(origin).netloc not in allowed:
             raise ApiError(403, "來源不符")
 
     def _require(self, role: str | None = None) -> dict:
@@ -729,6 +739,7 @@ class Handler(BaseHTTPRequestHandler):
                 "role": "owner",
                 "owner_name": self.app.owner_name,
                 "public_url": self.app.store.get_setting("public_url"),
+                "tunnel": self.app.store.get_setting("public_url_auto"),
             })
         contact = self.app.store.get_contact(sess["contact_id"])
         return self._json({
@@ -932,7 +943,9 @@ class Handler(BaseHTTPRequestHandler):
             url = self._clean(data["public_url"], 300).rstrip("/")
             if url and not re.match(r"^https?://", url):
                 raise ApiError(400, "對外網址要以 http:// 或 https:// 開頭")
-            self.app.store.set_setting("public_url", url)
+            if url != self.app.store.get_setting("public_url"):
+                self.app.store.set_setting("public_url", url)
+                self.app.store.set_setting("public_url_auto", "")  # 手動設定的,啟動時不要蓋掉
         self._json({"ok": True})
 
 
@@ -954,6 +967,139 @@ def lan_addresses() -> list[str]:
     return [ip for ip in ips if not ip.startswith("127.")]
 
 
+# ---------------------------------------------------------------- 讓外面連進來
+
+TS_URL_RE = re.compile(r"https://[a-z0-9-]+(?:\.[a-z0-9-]+)*\.ts\.net")
+CF_URL_RE = re.compile(r"https://[a-z0-9-]+\.trycloudflare\.com")
+
+
+def find_program(name: str, extra: list[str]) -> str | None:
+    found = shutil.which(name)
+    if found:
+        return found
+    for path in extra:
+        if Path(path).is_file():
+            return path
+    return None
+
+
+def find_tailscale() -> str | None:
+    return find_program("tailscale", [
+        r"C:\Program Files\Tailscale\tailscale.exe",
+        "/Applications/Tailscale.app/Contents/MacOS/Tailscale",
+    ])
+
+
+def find_cloudflared() -> str | None:
+    return find_program("cloudflared", [
+        r"C:\Program Files (x86)\cloudflared\cloudflared.exe",
+        r"C:\Program Files\cloudflared\cloudflared.exe",
+        "/opt/homebrew/bin/cloudflared",
+        "/usr/local/bin/cloudflared",
+    ])
+
+
+def start_tailscale(exe: str, port: int, timeout: float = 300) -> str | None:
+    """用 Tailscale Funnel 開一個固定的 https 網址。回傳網址或 None。"""
+    try:
+        status = subprocess.run([exe, "status", "--json"], capture_output=True, text=True, timeout=20)
+        info = json.loads(status.stdout or "{}")
+    except (OSError, subprocess.SubprocessError, json.JSONDecodeError):
+        info = {}
+    if info.get("BackendState") not in (None, "Running"):
+        print("  Tailscale 還沒登入:請打開 Tailscale App 登入後再重新啟動 HomeChat。")
+        return None
+    print("  正在開啟 Tailscale Funnel…(第一次使用時,如果下面出現網址,請用瀏覽器打開並按「啟用」)")
+    try:
+        proc = subprocess.Popen([exe, "funnel", "--bg", str(port)], stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
+    except OSError as e:
+        print(f"  無法執行 Tailscale:{e}")
+        return None
+    timer = threading.Timer(timeout, proc.kill)
+    timer.start()
+    url = None
+    try:
+        for line in proc.stdout:
+            line = line.rstrip()
+            m = TS_URL_RE.search(line)
+            if m:
+                url = m.group(0)
+            elif line.strip():
+                print("    " + line.strip())  # 例如「Funnel is not enabled…請到這個網址啟用」
+        proc.wait()
+    finally:
+        timer.cancel()
+    if proc.returncode != 0 and not url:
+        return None
+    if not url:  # 有些版本不印網址,改從 status 讀機器的網域
+        try:
+            info = json.loads(subprocess.run([exe, "status", "--json"], capture_output=True,
+                                             text=True, timeout=20).stdout)
+            dns = info["Self"]["DNSName"].rstrip(".")
+            url = f"https://{dns}" if dns else None
+        except (OSError, subprocess.SubprocessError, json.JSONDecodeError, KeyError, TypeError):
+            url = None
+    return url
+
+
+def start_cloudflared(exe: str, port: int, timeout: float = 60) -> tuple[str | None, subprocess.Popen | None]:
+    """用 Cloudflare 快速通道開一個臨時 https 網址(每次啟動都會變)。"""
+    try:
+        proc = subprocess.Popen([exe, "tunnel", "--no-autoupdate", "--url", f"http://127.0.0.1:{port}"],
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                                encoding="utf-8", errors="replace")
+    except OSError as e:
+        print(f"  無法執行 cloudflared:{e}")
+        return None, None
+    found: dict = {}
+    ready = threading.Event()
+
+    def pump() -> None:
+        # 一直讀輸出,不然 cloudflared 的輸出塞滿會卡住
+        for line in proc.stdout:
+            if "url" not in found:
+                m = CF_URL_RE.search(line)
+                if m:
+                    found["url"] = m.group(0)
+                    ready.set()
+            if "Registered tunnel connection" in line and not found.get("connected"):
+                found["connected"] = True
+                print("  Cloudflare 通道已連上")
+        ready.set()
+
+    threading.Thread(target=pump, daemon=True).start()
+    ready.wait(timeout)
+    if "url" not in found:
+        proc.terminate()
+        return None, None
+    return found["url"], proc
+
+
+def open_tunnel(kind: str, port: int) -> tuple[str | None, str | None, subprocess.Popen | None]:
+    """回傳 (對外網址, 用的是哪種, 要在結束時關掉的程式)。"""
+    if kind in ("auto", "tailscale"):
+        exe = find_tailscale()
+        if exe:
+            url = start_tailscale(exe, port)
+            if url:
+                return url, "tailscale", None
+            print("  Tailscale Funnel 沒有開成功。")
+        elif kind == "tailscale":
+            print("  找不到 Tailscale,請先安裝:https://tailscale.com/download")
+    if kind in ("auto", "cloudflare"):
+        exe = find_cloudflared()
+        if exe:
+            print("  正在開啟 Cloudflare 快速通道…")
+            url, proc = start_cloudflared(exe, port)
+            if url:
+                return url, "cloudflare", proc
+            print("  Cloudflare 通道沒有開成功。")
+        elif kind == "cloudflare":
+            print("  找不到 cloudflared,請先安裝(見 README)")
+    return None, None, None
+
+
 def ask_password() -> str:
     while True:
         pw = getpass.getpass("設定主人密碼(至少 6 個字): ")
@@ -972,9 +1118,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--port", type=int, default=8800)
     p.add_argument("--db", default=str(DEFAULT_DB), help="資料庫檔案位置")
     p.add_argument("--name", help="你的顯示名稱(朋友會看到)")
-    p.add_argument("--public-url", default="", help="對外網址,例如 Cloudflare Tunnel 給的 https 網址")
+    p.add_argument("--tunnel", choices=["auto", "tailscale", "cloudflare", "off"], default="auto",
+                   help="自動開外部連線,讓不同 Wi-Fi / 4G 也能連(預設 auto:有 Tailscale 用 Tailscale,否則 cloudflared)")
+    p.add_argument("--public-url", default="", help="自己的固定對外網址(設定後不會自動開通道)")
     p.add_argument("--set-password", action="store_true", help="設定 / 更改主人密碼後結束")
     args = p.parse_args(argv)
+    for stream in (sys.stdout, sys.stderr):  # Windows 輸出到檔案時遇到特殊字元不要當掉
+        try:
+            stream.reconfigure(errors="replace")
+        except (AttributeError, ValueError):
+            pass
 
     store = Store(args.db)
     env_pw = os.environ.get("HOMECHAT_PASSWORD")
@@ -992,22 +1145,61 @@ def main(argv: list[str] | None = None) -> int:
             print("還沒設定密碼:請先執行 python homechat.py --set-password", file=sys.stderr)
             return 1
 
-    app = App(store, owner_name=args.name, public_url=args.public_url)
-    server = make_server(app, args.host, args.port)
-    print(f"HomeChat 已啟動,資料存在 {Path(args.db).resolve()}")
-    print(f"  這台電腦:   http://127.0.0.1:{args.port}")
-    for ip in lan_addresses():
-        print(f"  同 Wi-Fi 手機: http://{ip}:{args.port}")
-    print("  在外面 / 給朋友連:見 README 的「讓外面連進來」")
-    print("按 Ctrl+C 結束")
+    app = App(store, owner_name=args.name)
     try:
-        server.serve_forever()
+        server = make_server(app, args.host, args.port)
+    except OSError as e:
+        print(f"無法使用 port {args.port}({e})。HomeChat 是不是已經開著了?", file=sys.stderr)
+        return 1
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    print(f"HomeChat 已啟動,資料存在 {Path(args.db).resolve()}")
+
+    tunnel_proc = None
+    if args.public_url:
+        # 自己有固定網域(例如 Cloudflare 具名通道)
+        store.set_setting("public_url", args.public_url.rstrip("/"))
+        store.set_setting("public_url_auto", "")
+    elif args.tunnel != "off":
+        print("設定外部連線…")
+        url, kind, tunnel_proc = open_tunnel(args.tunnel, args.port)
+        if url:
+            store.set_setting("public_url", url)
+            store.set_setting("public_url_auto", kind)
+        elif store.get_setting("public_url_auto"):
+            store.set_setting("public_url", "")  # 上次自動設的網址已經失效
+            store.set_setting("public_url_auto", "")
+    elif store.get_setting("public_url_auto"):
+        store.set_setting("public_url", "")
+        store.set_setting("public_url_auto", "")
+
+    public = store.get_setting("public_url")
+    kind = store.get_setting("public_url_auto")
+    print()
+    print("=" * 60)
+    if public:
+        print(f"  在外面(4G/5G、別的 Wi-Fi、朋友):{public}")
+        if kind == "cloudflare":
+            print("  ⚠ 這是 Cloudflare 臨時網址,每次重開 HomeChat 都會變,")
+            print("    舊的邀請連結會失效。要固定網址請改用 Tailscale(見 README)。")
+    else:
+        print("  ⚠ 目前只有同一個 Wi-Fi 連得到。要在外面也能連,請照 README")
+        print("    安裝 Tailscale(推薦)或 cloudflared,然後重新啟動 HomeChat。")
+    print(f"  這台電腦:http://127.0.0.1:{args.port}")
+    for ip in lan_addresses():
+        print(f"  同 Wi-Fi:http://{ip}:{args.port}")
+    print("=" * 60)
+    print("這個視窗不要關。按 Ctrl+C 結束")
+    try:
+        while True:
+            time.sleep(3600)
     except KeyboardInterrupt:
         print("\n已關閉")
     finally:
+        server.shutdown()
         server.server_close()
+        if tunnel_proc:
+            tunnel_proc.terminate()
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())
