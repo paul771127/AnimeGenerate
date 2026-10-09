@@ -150,6 +150,35 @@ namespace SpellDuel.EditorTools
             plist.ReadFromFile(plistPath);
             plist.root.SetString("NSLocalNetworkUsageDescription", "與同一個 Wi-Fi 的對手連線對戰");
             plist.WriteToFile(plistPath);
+
+            // 人體偵測（Assets/Plugins/iOS/PoseBridge.mm）用到 Apple Vision
+            var projPath = UnityEditor.iOS.Xcode.PBXProject.GetPBXProjectPath(path);
+            var proj = new UnityEditor.iOS.Xcode.PBXProject();
+            proj.ReadFromFile(projPath);
+            proj.AddFrameworkToProject(proj.GetUnityFrameworkTargetGuid(), "Vision.framework", false);
+            proj.WriteToFile(projPath);
+        }
+#endif
+
+#if UNITY_ANDROID
+        // Android：人體偵測（Assets/Plugins/Android/PoseBridge.java）用 Google ML Kit，
+        // 在 Unity 產生 Gradle 專案後把相依套件加進 unityLibrary（不必維護整份 Gradle 範本）
+        class AndroidGradle : UnityEditor.Android.IPostGenerateGradleAndroidProject
+        {
+            public int callbackOrder => 100;
+            public void OnPostGenerateGradleAndroidProject(string path)
+            {
+                const string dep = "implementation 'com.google.mlkit:pose-detection:18.0.0-beta3'";
+                var gradle = Path.Combine(path, "build.gradle");
+                var text = File.ReadAllText(gradle);
+                if (!text.Contains(dep)) File.AppendAllText(gradle, "\n// SpellDuel：人體偵測\ndependencies {\n    " + dep + "\n}\n");
+
+                var props = Path.Combine(path, "..", "gradle.properties");
+                var p = File.Exists(props) ? File.ReadAllText(props) : "";
+                if (!p.Contains("android.useAndroidX")) p += "\nandroid.useAndroidX=true";
+                if (!p.Contains("android.enableJetifier")) p += "\nandroid.enableJetifier=true";
+                File.WriteAllText(props, p + "\n");
+            }
         }
 #endif
     }

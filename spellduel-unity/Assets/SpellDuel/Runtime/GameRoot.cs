@@ -14,8 +14,9 @@ namespace SpellDuel
     ///   2. 掃描地上的標記圖 → 以它為世界原點（WorldFrame）。
     ///   3. 區域網路連線、對時（房主時鐘為共同時間）。
     ///   4. 每秒 20 次交換雙方手機在世界座標的位置 → 顯示對手的身體判定框。
-    ///   5. 對手出現在畫面中才能鎖定、施法。點螢幕發射法術：送出「起點、方向、速度、半徑、發射時間」，
-    ///      兩邊用同一公式模擬，位置必定一致；由「攻擊方」用對手回報的世界座標判定是否命中，
+    ///   5. 攻擊方鏡頭偵測畫面中的人（PoseDetector），和對手回報的位置融合；
+    ///      鏡頭真的看到對手才能鎖定、施法。點螢幕發射法術：送出「起點、方向、速度、半徑、發射時間」，
+    ///      兩邊用同一公式模擬，位置必定一致；由「攻擊方」用融合後的對手位置判定是否命中，
     ///      再廣播結果——對手手機轉向哪裡、追蹤有沒有中斷，都不影響判定。
     /// 場景裡不需要任何物件：遊戲啟動後由這支程式建立一切。
     /// </summary>
@@ -88,6 +89,21 @@ namespace SpellDuel
         readonly HashSet<int> damaged = new HashSet<int>();   // 已扣過血的法術（避免重複扣）
         bool targetOnScreen;      // 對手（或假人）有沒有出現在我的畫面中
         Rect targetRect;          // 對手在螢幕上的範圍（GUI 座標），畫鎖定框用
+        bool hasTarget;           // 這一幀有沒有可攻擊的目標
+        Vector3 tgtHeadW, tgtFwdW; string tgtSrc = "";   // 目標的判定位置（世界座標）與來源
+
+        // ---------------------------------------------------------------- 鏡頭偵測對手
+        const float AnkleHeight = 0.08f;   // 腳踝離地高度
+        const float MinConf = 0.3f;        // 關鍵點可信度門檻
+        PoseDetector poseDet;
+        ARCameraBackground cameraBackground;
+        bool showPoseDebug = true;
+        float lastObsTime = -1f;
+        // 最近一次鏡頭看到的人（世界座標）
+        bool obsSeen, obsFoot;             // 有看到人／有看到腳（可以算出站的位置）
+        float obsTime = -999f, obsHeadY;
+        Vector3 obsOrigin, obsBearing, obsGround;   // 拍攝時我的位置、往對手的水平方向、對手站的位置
+        GameObject obsMarker;
 
         // ---------------------------------------------------------------- 顯示
         Material mat;
@@ -130,7 +146,7 @@ namespace SpellDuel
             cam.nearClipPlane = 0.05f;
             cam.farClipPlane = 60f;
             camGo.AddComponent<ARCameraManager>();
-            camGo.AddComponent<ARCameraBackground>();
+            cameraBackground = camGo.AddComponent<ARCameraBackground>();
             var tpd = camGo.AddComponent<TrackedPoseDriver>();
             tpd.SetPoseSource(TrackedPoseDriver.DeviceType.GenericXRDevice, TrackedPoseDriver.TrackedPose.ColorCamera);
             tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
@@ -149,6 +165,9 @@ namespace SpellDuel
 
             playArea = new GameObject("Play Area").AddComponent<PlayArea>();
             playArea.Init(cam, planeManager, mat);
+
+            poseDet = new PoseDetector();
+            poseDet.Init(cam, cameraBackground);
 
             solo = gameObject.AddComponent<SoloBattle>();
             solo.Init(cam, playArea, mat);
@@ -241,10 +260,18 @@ namespace SpellDuel
                     hp = hp,
                 }.ToJson());
             }
+            UpdateObservation();
             UpdateTarget();
             HandleFire();
             UpdateShots();
             UpdateVisuals();
+        }
+
+        void LateUpdate()
+        {
+            // 人體偵測只在雙人模式需要（單人的敵人是虛擬的）
+            poseDet.Enabled = mode == Mode.Duo && WorldFrame.Calibrated && Tracking.Ok;
+            poseDet.Tick();
         }
 
         // ---------------------------------------------------------------- 模式切換與單人場地
@@ -372,8 +399,8 @@ namespace SpellDuel
             if (mode == Mode.Solo && playArea.state != PlayArea.State.Done) return;   // 畫場地時按螢幕是在畫線
             if (!WorldFrame.Calibrated) { Log(mode == Mode.Solo ? "請先畫好場地" : "請先掃描標記圖對齊座標"); return; }
             if (!Tracking.Ok) { Log("AR 追蹤中斷，暫時不能施法"); return; }
-            if (!HasTarget) { Log("還沒有對手：請先連線（或開練習假人）"); return; }
-            if (!targetOnScreen) { Log("🎯 對手不在畫面中，無法鎖定"); return; }
+            if (!hasTarget) { Log("還沒有目標：請先連線、開練習假人，或讓鏡頭拍到一個人"); return; }
+            if (!targetOnScreen) { Log("🎯 鏡頭沒看到對手，無法鎖定"); return; }
             if (Time.time - lastShot < ShotCooldown) return;
             lastShot = Time.time;
 
@@ -408,17 +435,135 @@ namespace SpellDuel
             go.transform.position = WorldFrame.FromWorld(s.WorldAt(SharedTime));
         }
 
+        // ---------------------------------------------------------------- 鏡頭偵測 → 世界座標
+        static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
+
+        /// <summary>把最新的骨架偵測結果換算成世界座標：腳踝射線與地板的交點＝對手站的位置</summary>
+        void UpdateObservation()
+        {
+            var r = poseDet.Latest;
+            if (r == null || r.time <= lastObsTime) return;
+            lastObsTime = r.time;
+            if (!r.found || !WorldFrame.Calibrated) { obsSeen = false; return; }
+
+            Vector3 O(int i, out Vector3 d)
+            {
+                var ray = r.RayThrough(i);
+                d = WorldFrame.DirToWorld(ray.direction).normalized;
+                return WorldFrame.ToWorld(ray.origin);
+            }
+            bool Ok(int i) => r.conf[i] >= MinConf;
+
+            // 方向：優先用軀幹中心（肩、髖的平均），其次鼻子、腳踝
+            var origin = WorldFrame.ToWorld(r.camPos);
+            Vector3 sum = Vector3.zero; int n = 0;
+            foreach (var i in new[] { PoseDetector.LShoulder, PoseDetector.RShoulder, PoseDetector.LHip, PoseDetector.RHip })
+                if (Ok(i)) { O(i, out var d); sum += d; n++; }
+            if (n == 0 && Ok(PoseDetector.Nose)) { O(PoseDetector.Nose, out var d); sum += d; n++; }
+            if (n == 0) foreach (var i in new[] { PoseDetector.LAnkle, PoseDetector.RAnkle }) if (Ok(i)) { O(i, out var d); sum += d; n++; }
+            var bearing = Flat(sum);
+            if (n == 0 || bearing.sqrMagnitude < 1e-6f) { obsSeen = false; return; }
+
+            // 腳踝：射線和地板（y = 腳踝高度）的交點。腳在畫面最下緣時可能被切掉，不採用
+            Vector3 ground = Vector3.zero; int g = 0;
+            foreach (var i in new[] { PoseDetector.LAnkle, PoseDetector.RAnkle })
+            {
+                if (!Ok(i) || r.pt[i].y < 0.03f) continue;
+                var o = O(i, out var d);
+                if (d.y > -0.03f) continue;   // 射線沒有往下，碰不到地板
+                float t = (AnkleHeight - o.y) / d.y;
+                if (t < 0.3f || t > 15f) continue;
+                ground += o + d * t; g++;
+            }
+
+            bool fresh = obsSeen && r.time - obsTime < 0.35f;
+            obsSeen = true;
+            obsTime = r.time;
+            obsOrigin = origin;
+            obsBearing = bearing.normalized;
+            obsFoot = g > 0;
+            if (obsFoot)
+            {
+                var gNew = ground / g;
+                // 輕微平滑，減少偵測抖動
+                obsGround = fresh && Vector3.Distance(Flat(obsGround), Flat(gNew)) < 0.6f ? Vector3.Lerp(obsGround, gNew, 0.6f) : gNew;
+                obsGround.y = 0f;
+                // 頭的高度：鼻子射線走到對手所在距離時的高度
+                obsHeadY = 1.55f;
+                if (Ok(PoseDetector.Nose))
+                {
+                    var o = O(PoseDetector.Nose, out var d);
+                    float dist = Flat(obsGround - o).magnitude, dh = Flat(d).magnitude;
+                    if (dh > 1e-3f) obsHeadY = Mathf.Clamp((o + d * (dist / dh)).y, 1.0f, 2.0f);
+                }
+            }
+        }
+
+        bool ObsFresh => obsSeen && Time.time - obsTime < 0.4f;
+
+        /// <summary>鏡頭看到的人是不是對手回報的那個位置（畫面裡可能有別人）</summary>
+        bool ObsMatches(Vector3 bodyW)
+        {
+            if (obsFoot) return Vector3.Distance(Flat(obsGround), Flat(bodyW)) < 1.0f;
+            var rel = Flat(bodyW - obsOrigin);
+            float lateral = Mathf.Abs(Vector3.Dot(rel, new Vector3(obsBearing.z, 0f, -obsBearing.x)));
+            return Vector3.Dot(rel, obsBearing) > 0f && lateral < 0.8f;
+        }
+
+        /// <summary>
+        /// 融合：鏡頭判斷「左右方向」很準（角度），對手回報的位置判斷「前後距離」較穩。
+        /// 左右以鏡頭為主；前後距離近時多信鏡頭（腳踝落點準），遠時多信回報。
+        /// </summary>
+        Vector3 Fuse(Vector3 bodyW)
+        {
+            var u = obsBearing; var v = new Vector3(u.z, 0f, -u.x);
+            var rel = Flat(bodyW - obsOrigin);
+            float depthR = Vector3.Dot(rel, u), latR = Vector3.Dot(rel, v);
+            float depth = depthR;
+            if (obsFoot)
+            {
+                float depthO = Flat(obsGround - obsOrigin).magnitude;
+                depth = Mathf.Lerp(depthR, depthO, Mathf.Clamp(1.1f - 0.2f * depthR, 0.2f, 0.8f));
+            }
+            var f = Flat(obsOrigin) + u * depth + v * (latR * 0.1f);
+            return new Vector3(f.x, bodyW.y, f.z);
+        }
+
         // ---------------------------------------------------------------- 鎖定目標
         bool DummyActive => practiceDummy && !net.Connected;
-        bool HasTarget => WorldFrame.Calibrated && (DummyActive || (net.Connected && remoteSeen > 0f));
-        Vector3 TargetHeadW => DummyActive ? dummyHeadW : remoteHeadW;
 
-        /// <summary>對手（或假人）的身體有沒有出現在我的畫面中；同時算出畫鎖定框的範圍</summary>
+        /// <summary>
+        /// 這一幀要攻擊的目標：假人 → 對手（鏡頭＋回報融合，鏡頭沒看到就只用回報）→ 沒連線時鏡頭看到的真人（練習用）
+        /// </summary>
+        bool TryGetTarget(out Vector3 headW, out Vector3 fwdW, out string src)
+        {
+            headW = Vector3.zero; fwdW = Vector3.zero; src = "";
+            if (!WorldFrame.Calibrated) return false;
+            if (DummyActive) { headW = dummyHeadW; src = "假人"; return true; }
+            if (net.Connected && remoteSeen > 0f)
+            {
+                var fwd = remoteRotW * Vector3.forward;
+                var back = Flat(fwd);
+                back = back.sqrMagnitude > 1e-4f ? -back.normalized * 0.12f : Vector3.zero;
+                var body = remoteHeadW + back;   // 手機拿在身體前方 → 往後退一點才是身體中心
+                if (ObsFresh && ObsMatches(body)) { headW = Fuse(body); src = "鏡頭＋回報"; return true; }
+                headW = remoteHeadW; fwdW = fwd; src = "回報"; return true;
+            }
+            if (!net.Connected && ObsFresh && obsFoot)
+            {
+                headW = new Vector3(obsGround.x, obsHeadY, obsGround.z); src = "鏡頭"; return true;
+            }
+            return false;
+        }
+
+        /// <summary>算出目標，並判斷能不能鎖定：鏡頭真的看到對手（偵測器不能用時退回「位置在畫面內」）</summary>
         void UpdateTarget()
         {
             targetOnScreen = false;
-            if (mode != Mode.Duo || !HasTarget || !Tracking.Ok) return;
-            var head = WorldFrame.FromWorld(TargetHeadW);
+            hasTarget = TryGetTarget(out tgtHeadW, out tgtFwdW, out tgtSrc);
+            if (mode != Mode.Duo || !hasTarget || !Tracking.Ok) return;
+
+            var head = WorldFrame.FromWorld(tgtHeadW);
             var pts = new[] { head + Vector3.up * 0.15f, head + Vector3.down * (BodyHeight * 0.5f), head + Vector3.down * BodyHeight };
             float xMin = float.MaxValue, xMax = float.MinValue, yMin = float.MaxValue, yMax = float.MinValue;
             int inView = 0;
@@ -431,11 +576,12 @@ namespace SpellDuel
                 xMin = Mathf.Min(xMin, sp.x); xMax = Mathf.Max(xMax, sp.x);
                 yMin = Mathf.Min(yMin, sp.y); yMax = Mathf.Max(yMax, sp.y);
             }
-            // 頭、胸、腳至少一處在畫面內就算看得到
-            targetOnScreen = inView > 0;
+            bool detectorWorks = poseDet.Supported && poseDet.Latest != null;
+            if (DummyActive || !detectorWorks) targetOnScreen = inView > 0;    // 假人是虛擬的；偵測器不能用時退回位置推算
+            else targetOnScreen = inView > 0 && tgtSrc != "回報";               // 鏡頭真的看到（且是對手本人）
             if (targetOnScreen)
             {
-                var c = WorldFrame.FromWorld(TargetHeadW) - cam.transform.position;
+                var c = head - cam.transform.position;
                 float halfW = BodyRadius / Mathf.Max(0.3f, Vector3.Dot(c, cam.transform.forward)) * Screen.height / (2f * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
                 float cx = (xMin + xMax) * 0.5f;
                 targetRect = Rect.MinMaxRect(cx - halfW, Screen.height - yMax, cx + halfW, Screen.height - yMin);
@@ -457,16 +603,17 @@ namespace SpellDuel
 
                 if (s.mine)
                 {
-                    // 我是攻擊方：全部用世界座標判定（對手回報的位置），和任何一方手機朝向哪裡無關。
-                    // 對手 AR 追蹤中斷時不再回報位置 → 用他最後的正確位置判定。
-                    if (DummyActive)
+                    // 我是攻擊方：全部用世界座標判定（鏡頭看到的位置＋對手回報的位置），和對手手機朝向哪裡無關。
+                    // 對手 AR 追蹤中斷時不再回報位置 → 鏡頭看得到就用鏡頭，否則用他最後的正確位置。
+                    if (!hasTarget) { }
+                    else if (!net.Connected)
                     {
-                        if (HitsBody(posW, dummyHeadW, Vector3.zero, s.rad)) { Explode(s, new Color(1f, 0.3f, 0.2f), "命中假人！"); continue; }
+                        // 練習：假人，或鏡頭看到的真人
+                        if (HitsBody(posW, tgtHeadW, tgtFwdW, s.rad)) { Explode(s, new Color(1f, 0.3f, 0.2f), DummyActive ? "命中假人！" : "命中！（鏡頭偵測的真人）"); continue; }
                     }
-                    else if (net.Connected && remoteSeen > 0f)
+                    else
                     {
-                        var remoteFwd = remoteRotW * Vector3.forward;
-                        if (HitsBody(posW, remoteHeadW, remoteFwd, s.rad))
+                        if (HitsBody(posW, tgtHeadW, tgtFwdW, s.rad))
                         {
                             net.Send(new Msg { t = "hit", id = s.id, dmg = s.dmg }.ToJson());
                             remoteHp = Mathf.Max(0, remoteHp - s.dmg);   // 先顯示，對手回報 hp 後再校正
@@ -543,6 +690,8 @@ namespace SpellDuel
             remoteHead = MakePrim(PrimitiveType.Sphere, new Color(0.3f, 0.9f, 1f, 0.6f));
             dummyBody = MakePrim(PrimitiveType.Capsule, new Color(1f, 0.75f, 0.3f, 0.45f));
             dummyHead = MakePrim(PrimitiveType.Sphere, new Color(1f, 0.75f, 0.3f, 0.7f));
+            obsMarker = MakePrim(PrimitiveType.Cylinder, new Color(0.2f, 1f, 0.3f, 0.6f));   // 鏡頭偵測到的站位
+            obsMarker.transform.localScale = new Vector3(BodyRadius * 2f, 0.005f, BodyRadius * 2f);
             markerGizmo = MakePrim(PrimitiveType.Cube, new Color(0.2f, 1f, 0.4f, 0.35f));
             markerGizmo.transform.localScale = new Vector3(MarkerWidthMeters, 0.005f, MarkerWidthMeters);
             var arrow = MakePrim(PrimitiveType.Cube, new Color(0.2f, 1f, 0.4f, 0.8f));   // 標記圖的「前方」（Z）
@@ -588,6 +737,9 @@ namespace SpellDuel
             var rc = stale ? new Color(0.5f, 0.5f, 0.5f, 0.3f) : new Color(0.3f, 0.9f, 1f, 0.35f);
             remoteBody.GetComponent<Renderer>().material.color = rc;
             PlaceBody(dummyHead, dummyBody, WorldFrame.FromWorld(dummyHeadW), cal && practiceDummy && !net.Connected);
+            bool showObs = cal && mode == Mode.Duo && showPoseDebug && ObsFresh && obsFoot;
+            obsMarker.SetActive(showObs);
+            if (showObs) obsMarker.transform.SetPositionAndRotation(WorldFrame.FromWorld(obsGround + Vector3.up * 0.01f), WorldFrame.RotFromWorld(Quaternion.identity));
         }
 
         // ================================================================ 介面（IMGUI，不需要場景資產）
@@ -697,6 +849,14 @@ namespace SpellDuel
                     dist = $"　距離對手 {Vector3.Distance(new Vector3(me.x, 0, me.z), new Vector3(remoteHeadW.x, 0, remoteHeadW.z)):F2}m";
                 }
                 Line($"HP 我 {hp}　對手 {remoteHp}{dist}");
+                string obsInfo = "";
+                if (ObsFresh)
+                {
+                    obsInfo = obsFoot ? $"站位 {Flat(obsGround - WorldFrame.ToWorld(cam.transform.position)).magnitude:F2}m" : "看不到腳（只用方向）";
+                    if (net.Connected && remoteSeen > 0f && obsFoot)
+                        obsInfo += $"　與回報差 {Vector3.Distance(Flat(obsGround), Flat(remoteHeadW)) * 100f:F0}cm";
+                }
+                Line($"鏡頭偵測：{poseDet.Status}　{obsInfo}" + (hasTarget ? $"　目標：{tgtSrc}" : ""));
 
                 y += pad * 0.5f;
                 if (!net.Connected)
@@ -718,7 +878,9 @@ namespace SpellDuel
                     Log("請再掃描一次標記圖");
                 }
                 if (GUI.Button(new Rect(pad * 2 + bw * 1.3f, y, bw * 1.3f, bh), "HP 重置", button)) { hp = MaxHp; }
+                if (net.Connected && GUI.Button(new Rect(pad * 3 + bw * 2.6f, y, bw * 1.3f, bh), showPoseDebug ? "骨架:顯示" : "骨架:隱藏", button)) showPoseDebug = !showPoseDebug;
                 if (!net.Connected && GUI.Button(new Rect(pad * 3 + bw * 2.6f, y, bw * 1.3f, bh), "換模式", button)) { mode = Mode.Choose; WorldFrame.Reset(); }
+                if (!net.Connected) { y += bh + pad * 0.5f; if (GUI.Button(new Rect(pad, y, bw * 1.3f, bh), showPoseDebug ? "骨架:顯示" : "骨架:隱藏", button)) showPoseDebug = !showPoseDebug; }
             }
 
             // AR 追蹤中斷提示
@@ -734,14 +896,36 @@ namespace SpellDuel
                 GUI.Label(new Rect(pad, H * 0.53f, W - pad * 2, lineH), "⚠ 對手 AR 追蹤中斷：以他最後的位置判定", label);
 
             // 鎖定框：對手在畫面中才能施法
-            if (mode == Mode.Duo && HasTarget && Tracking.Ok)
+            if (mode == Mode.Duo && hasTarget && Tracking.Ok)
             {
                 if (targetOnScreen)
                 {
                     DrawFrame(targetRect, new Color(0.3f, 1f, 0.4f, 0.9f), Mathf.Max(3f, W * 0.006f));
                     GUI.Label(new Rect(targetRect.x, targetRect.y - lineH, Mathf.Max(targetRect.width, W * 0.3f), lineH), "🎯 鎖定", label);
                 }
-                else GUI.Label(new Rect(0, H * 0.58f, W, lineH * 1.5f), "對手不在畫面中，轉向對手才能施法", new GUIStyle(label) { alignment = TextAnchor.MiddleCenter });
+                else GUI.Label(new Rect(0, H * 0.58f, W, lineH * 1.5f), "鏡頭沒看到對手，轉向對手才能施法", new GUIStyle(label) { alignment = TextAnchor.MiddleCenter });
+            }
+
+            // 骨架偵測結果（除錯）：關鍵點、送去偵測的畫面縮圖
+            if (mode == Mode.Duo && showPoseDebug && poseDet.Supported)
+            {
+                var pr = poseDet.Latest;
+                if (pr != null && pr.found && Time.time - pr.time < 0.5f)
+                {
+                    float dot = Mathf.Max(8f, W * 0.018f);
+                    for (int i = 0; i < PoseDetector.Count; i++)
+                    {
+                        if (pr.conf[i] < MinConf) continue;
+                        GUI.color = i >= PoseDetector.LAnkle ? new Color(0.2f, 1f, 0.3f) : new Color(1f, 0.9f, 0.2f);
+                        GUI.DrawTexture(new Rect(pr.pt[i].x * W - dot / 2, (1f - pr.pt[i].y) * H - dot / 2, dot, dot), Texture2D.whiteTexture);
+                    }
+                    GUI.color = Color.white;
+                }
+                if (poseDet.Preview != null)
+                {
+                    float pw = W * 0.22f, ph = pw * poseDet.Preview.height / Mathf.Max(1, poseDet.Preview.width);
+                    GUI.DrawTexture(new Rect(W - pw - pad, H * 0.34f, pw, ph), poseDet.Preview, ScaleMode.StretchToFill, false);
+                }
             }
 
             // 準星與訊息（手繪場地時準星就是畫筆）
