@@ -11,4 +11,3 @@ outputs/
 models/
 hf_cache/
 *.log
-homechat/data/

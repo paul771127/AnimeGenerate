@@ -1,9 +1,0 @@
-{
-  "name": "HomeChat",
-  "short_name": "HomeChat",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#06c755",
-  "theme_color": "#06c755",
-  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
-}
