@@ -35,7 +35,10 @@ namespace SpellDuel
         readonly List<Floater> floaters = new List<Floater>();
         string message = ""; float messageUntil;
         float incomingFlash, hitFlash;
-        bool paused;   // AR 追蹤中斷：整場戰鬥暫停（敵人、法術、判定都停住）
+        // AR 追蹤中斷：和雙人模式相同——戰鬥照常進行，我的身體停在最後的正確位置，暫時不能施法
+        bool frozen;
+        // 鎖定：敵人出現在我的畫面中才能發射攻擊法術（和雙人模式相同）
+        bool enemyOnScreen; Rect enemyRect; float enemyScreenSide;   // enemyScreenSide：敵人在左(<0)／右(>0)
         GUIStyle label, small, button, big, center;
 
         Fighter Me => battle?.player;
@@ -121,8 +124,9 @@ namespace SpellDuel
             SyncPlayer(Me);
             float dt = Mathf.Min(Time.deltaTime, 0.1f);
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
-            paused = phase == Phase.Fighting && !Tracking.Ok;
-            if (phase == Phase.Fighting && !paused)
+            frozen = phase == Phase.Fighting && !Tracking.Ok;
+            UpdateLock();
+            if (phase == Phase.Fighting)
             {
                 ai.Update(dt);
                 battle.Update(dt);
@@ -132,9 +136,10 @@ namespace SpellDuel
             UpdateVisuals();
         }
 
-        // 玩家的位置＝手機位置（換成場地座標）
+        // 玩家的位置＝手機位置（換成場地座標）；追蹤中斷時位置不可信 → 停在最後的正確位置
         void SyncPlayer(Fighter me)
         {
+            if (!Tracking.Ok) return;
             me.head = WorldFrame.ToWorld(cam.transform.position);
             me.forward = WorldFrame.DirToWorld(cam.transform.forward);
         }
@@ -145,9 +150,11 @@ namespace SpellDuel
         {
             if (!Input.GetMouseButtonDown(0) || GUIUtility.hotControl != 0) return;
             var sp = Input.mousePosition;
-            if (paused) return;
+            if (frozen) { Say("AR 追蹤中斷，暫時不能施法", 1.5f); return; }
             if (!InTapZone(new Vector2(sp.x, Screen.height - sp.y))) return;
             if (Me.charging == null) { Say("先點下方的技能開始詠唱", 1.5f); return; }
+            if (Me.charging.type == SkillType.Projectile && !enemyOnScreen && battle.ChargeProgress(Me) >= 1f)
+            { Say("🎯 敵人不在畫面中，轉向敵人才能鎖定", 1.5f); return; }
 
             // 點擊方向（場地座標）與地板交點（陷阱用）
             var ray = cam.ScreenPointToRay(sp);
@@ -155,6 +162,38 @@ namespace SpellDuel
             var d = WorldFrame.DirToWorld(ray.direction);
             var floor = d.y < -0.01f ? o + d * (-o.y / d.y) : Me.Feet + Fighter.Flat(Me.forward) * 1.5f;
             if (!battle.TryRelease(Me, d, floor, out var why)) Say(why, 1.5f);
+        }
+
+        /// <summary>敵人有沒有出現在我的畫面中（頭、胸、腳任一處），並算出鎖定框</summary>
+        void UpdateLock()
+        {
+            enemyOnScreen = false;
+            var en = En;
+            if (en == null || !en.Alive || !Tracking.Ok) return;
+            var pts = new[] { en.head + Vector3.up * 0.15f, en.Chest, en.Feet };
+            float xMin = float.MaxValue, xMax = float.MinValue, yMin = float.MaxValue, yMax = float.MinValue;
+            int inView = 0;
+            foreach (var pm in pts)
+            {
+                var p = WorldFrame.FromWorld(pm);
+                var v = cam.WorldToViewportPoint(p);
+                if (v.z < 0.2f) continue;
+                if (v.x >= 0f && v.x <= 1f && v.y >= 0f && v.y <= 1f) inView++;
+                var sp = cam.WorldToScreenPoint(p);
+                xMin = Mathf.Min(xMin, sp.x); xMax = Mathf.Max(xMax, sp.x);
+                yMin = Mathf.Min(yMin, sp.y); yMax = Mathf.Max(yMax, sp.y);
+            }
+            enemyOnScreen = inView > 0;
+            // 不在畫面中：敵人在我的左邊還是右邊
+            var toEn = WorldFrame.FromWorld(en.Chest) - cam.transform.position;
+            enemyScreenSide = Vector3.Dot(toEn, cam.transform.right);
+            if (enemyOnScreen)
+            {
+                float depth = Mathf.Max(0.3f, Vector3.Dot(toEn, cam.transform.forward));
+                float halfW = Fighter.BodyRadius / depth * Screen.height / (2f * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
+                float cx = (xMin + xMax) * 0.5f;
+                enemyRect = Rect.MinMaxRect(cx - halfW, Screen.height - yMax, cx + halfW, Screen.height - yMin);
+            }
         }
 
         void OnBattleEvent(string kind, Vector3 at, Color c, string text)
@@ -438,6 +477,30 @@ namespace SpellDuel
                 GUI.color = Color.white;
             }
             GUI.Label(new Rect(W / 2 - 50, H / 2 - 50, 100, 100), "＋", big);
+
+            // 鎖定框／敵人方向提示
+            if (phase == Phase.Fighting && en.Alive && !frozen)
+            {
+                if (enemyOnScreen)
+                {
+                    float t = Mathf.Max(3f, W * 0.006f);
+                    GUI.color = new Color(0.3f, 1f, 0.4f, 0.9f);
+                    var r = enemyRect;
+                    GUI.DrawTexture(new Rect(r.xMin, r.yMin, r.width, t), Texture2D.whiteTexture);
+                    GUI.DrawTexture(new Rect(r.xMin, r.yMax - t, r.width, t), Texture2D.whiteTexture);
+                    GUI.DrawTexture(new Rect(r.xMin, r.yMin, t, r.height), Texture2D.whiteTexture);
+                    GUI.DrawTexture(new Rect(r.xMax - t, r.yMin, t, r.height), Texture2D.whiteTexture);
+                    GUI.color = Color.white;
+                    GUI.Label(new Rect(r.x, r.yMax, Mathf.Max(r.width, W * 0.3f), lh), "🎯 鎖定", small);
+                }
+                else
+                {
+                    string arrow = enemyScreenSide < 0 ? "◀ 敵人在左邊" : "敵人在右邊 ▶";
+                    GUI.color = new Color(1f, 0.4f, 0.4f);
+                    GUI.Label(new Rect(0, H * 0.56f, W, lh * 1.5f), arrow + "（轉向敵人才能發射）", center);
+                    GUI.color = Color.white;
+                }
+            }
             if (Time.time < messageUntil) GUI.Label(new Rect(0, H * 0.6f, W, lh * 1.5f), message, center);
 
             // 下方：我的狀態與技能
@@ -456,18 +519,19 @@ namespace SpellDuel
                 float cd = me.cooldownUntil.TryGetValue(s.id, out var u) ? Mathf.Max(0, u - now) : 0;
                 bool charging = me.charging == s;
                 GUI.color = charging ? s.color : (me.mp < s.cost || cd > 0 ? new Color(0.6f, 0.6f, 0.6f) : Color.white);
-                if (GUI.Button(r, $"{s.name}\nMP {s.cost}{(cd > 0 ? $"　{cd:F1}s" : "")}", button) && phase == Phase.Fighting && !paused)
+                if (GUI.Button(r, $"{s.name}\nMP {s.cost}{(cd > 0 ? $"　{cd:F1}s" : "")}", button) && phase == Phase.Fighting)
                 {
+                    if (frozen) Say("AR 追蹤中斷，暫時不能施法", 1.5f); else
                     if (!battle.TryChant(me, s, out var why)) Say(why, 1.5f);
                 }
                 GUI.color = Color.white;
             }
 
-            if (paused)
+            if (frozen)
             {
                 Panel(new Rect(0, H * 0.32f, W, H * 0.2f), 0.8f);
-                GUI.Label(new Rect(0, H * 0.33f, W, H * 0.08f), "⏸ AR 追蹤中斷，戰鬥暫停", big);
-                GUI.Label(new Rect(pad, H * 0.42f, W - pad * 2, lh * 2), Tracking.Reason + "\n恢復追蹤後自動繼續", center);
+                GUI.Label(new Rect(0, H * 0.33f, W, H * 0.08f), "⚠ AR 追蹤中斷", big);
+                GUI.Label(new Rect(pad, H * 0.42f, W - pad * 2, lh * 2), Tracking.Reason + "\n暫時不能施法；敵人仍以你最後的位置攻擊", center);
             }
 
             if (phase == Phase.Over)
