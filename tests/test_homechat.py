@@ -33,6 +33,7 @@ def server(tmp_path):
     store = homechat.Store(tmp_path / "chat.db")
     store.set_password("secret123")
     app = homechat.App(store, owner_name="Paul")
+    app.login_fails_all = homechat.RateLimiter(10_000, 600)
     srv = homechat.make_server(app, "127.0.0.1", 0)
     t = threading.Thread(target=srv.serve_forever, daemon=True)
     t.start()
@@ -96,22 +97,45 @@ def test_rejects_non_json_post(server):
     assert status == 403
 
 
+def invite_path(contact):
+    """邀請網址 → token。"""
+    return contact["invite_url"].split("/c/")[1].split("?")[0]
+
+
+def join(base, contact):
+    g = Client(base)
+    status, _ = g.req("/api/join", {"token": invite_path(contact)})
+    assert status == 200
+    return g
+
+
 def test_owner_and_guest_chat(server):
     base, _ = server
     owner = login(base)
     status, data = owner.req("/api/contacts", {"name": "阿明", "line_id": "ming"})
     assert status == 200
     contact = data["contact"]
-    assert contact["invite_url"].startswith(base + "/c/")
+    assert contact["invite_url"].startswith(base + "/c/") and contact["invite_url"].endswith("?openExternalBrowser=1")
 
     owner.req("/api/messages", {"contact_id": contact["id"], "body": "嗨,這是我家的聊天室"})
 
     guest = Client(base)
-    status, page = guest.req(contact["invite_url"][len(base):])
-    assert status == 200 and "HomeChat" in page  # 轉址到首頁
+    token = invite_path(contact)
+    # 打開連結(或 LINE 抓預覽)只會拿到網頁,不會用掉邀請
+    status, page = guest.req(f"/c/{token}")
+    assert status == 200 and "HomeChat" in page
+    assert guest.req("/api/me")[1]["role"] is None
+    assert guest.req(f"/api/invite?token={token}")[1] == {"valid": True, "owner_name": "Paul", "name": "阿明"}
+    # 按下「開始聊天」才加入
+    assert guest.req("/api/join", {"token": token})[0] == 200
     me = guest.req("/api/me")[1]
-    assert me == {"role": "guest", "owner_name": "Paul",
-                  "contact": {"id": contact["id"], "name": "阿明", "owner_read_id": me["contact"]["owner_read_id"]}}
+    assert me["role"] == "guest" and me["contact"]["name"] == "阿明" and me["contact"]["status"] == "active"
+
+    # 連結只能用一次:別人再用就失效
+    stranger = Client(base)
+    assert stranger.req("/api/join", {"token": token})[0] == 410
+    assert stranger.req(f"/api/invite?token={token}")[1]["valid"] is False
+    assert owner.req("/api/contacts")[1]["contacts"][0]["invite_url"] == ""
 
     msgs = guest.req("/api/messages")[1]["messages"]
     assert [m["body"] for m in msgs] == ["嗨,這是我家的聊天室"]
@@ -120,20 +144,181 @@ def test_owner_and_guest_chat(server):
     owner.req("/api/messages", {"contact_id": other["contact"]["id"], "body": "秘密"})
     assert [m["body"] for m in guest.req(f"/api/messages?contact={other['contact']['id']}")[1]["messages"]] == ["嗨,這是我家的聊天室"]
     assert guest.req("/api/contacts")[0] == 403
+    assert guest.req("/api/devices")[0] == 403
 
     _, sent = guest.req("/api/messages", {"contact_id": other["contact"]["id"], "body": "你好!"})
     assert sent["message"]["sender"] == "them" and sent["message"]["contact_id"] == contact["id"]
 
     contacts = {c["name"]: c for c in owner.req("/api/contacts")[1]["contacts"]}
-    assert contacts["阿明"]["unread"] == 1
+    assert contacts["阿明"]["unread"] == 1 and contacts["阿明"]["devices"] == 1
     owner.req("/api/read", {"contact_id": contact["id"], "upto": sent["message"]["id"]})
     contacts = {c["name"]: c for c in owner.req("/api/contacts")[1]["contacts"]}
     assert contacts["阿明"]["unread"] == 0
 
-    # 換新連結後訪客失效
-    owner.req(f"/api/contacts/{contact['id']}/reset-invite", {})
+    # 登出對方所有裝置
+    owner.req(f"/api/contacts/{contact['id']}/logout-devices", {})
     assert guest.req("/api/me")[1]["role"] is None
-    assert guest.req(contact["invite_url"][len(base):])[0] == 404
+
+
+def test_owner_opening_invite_does_not_log_out(server):
+    base, _ = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "測試"})[1]["contact"]
+    assert owner.req("/api/join", {"token": invite_path(contact)})[1]["as_owner"] is True
+    assert owner.req("/api/me")[1]["role"] == "owner"
+    assert join(base, contact).req("/api/me")[1]["role"] == "guest"  # 朋友的連結沒有被用掉
+
+
+def test_invite_expires_and_can_be_cancelled(server):
+    base, app = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "過期"})[1]["contact"]
+    app.store.new_invite(contact["id"], days=-1)
+    token = app.store.get_contact(contact["id"])["invite_token"]
+    assert Client(base).req("/api/join", {"token": token})[0] == 410
+
+    c = owner.req(f"/api/contacts/{contact['id']}/invite", {})[1]["contact"]
+    owner.req(f"/api/contacts/{contact['id']}/cancel-invite", {})
+    assert Client(base).req("/api/join", {"token": invite_path(c)})[0] == 410
+    # 新連結會讓舊的未使用連結失效
+    c1 = owner.req(f"/api/contacts/{contact['id']}/invite", {})[1]["contact"]
+    c2 = owner.req(f"/api/contacts/{contact['id']}/invite", {})[1]["contact"]
+    assert Client(base).req("/api/join", {"token": invite_path(c1)})[0] == 410
+    assert Client(base).req("/api/join", {"token": invite_path(c2)})[0] == 200
+
+
+def test_friend_request_flow(server):
+    base, _ = server
+    owner = login(base)
+    link = owner.req("/api/friend-link")[1]
+    assert link == {"enabled": False, "url": ""}
+    link = owner.req("/api/friend-link", {"enabled": True})[1]
+    token = link["url"].split("/add/")[1].split("?")[0]
+
+    friend = Client(base)
+    assert friend.req(f"/api/add-info?token={token}")[1] == {"valid": True, "owner_name": "Paul"}
+    assert friend.req("/api/request", {"token": "wrong", "name": "x"})[0] == 410
+    assert friend.req("/api/request", {"token": token, "name": "  "})[0] == 400
+    assert friend.req("/api/request", {"token": token, "name": "小華", "message": "我是國中同學"})[0] == 200
+    me = friend.req("/api/me")[1]
+    assert me["role"] == "guest" and me["contact"]["status"] == "pending"
+    # 還沒被接受:不能傳訊息、不能看訊息
+    assert friend.req("/api/messages", {"body": "hi"})[0] == 403
+    assert friend.req("/api/messages")[0] == 403
+
+    pending = owner.req("/api/contacts")[1]["contacts"][0]
+    assert pending["status"] == "pending" and pending["request_msg"] == "我是國中同學"
+    assert owner.req("/api/messages", {"contact_id": pending["id"], "body": "x"})[0] == 403
+    owner.req(f"/api/contacts/{pending['id']}/approve", {})
+    assert friend.req("/api/messages", {"body": "hi"})[0] == 200
+
+    # 拒絕 = 刪除,對方被登出
+    other = Client(base)
+    other.req("/api/request", {"token": token, "name": "陌生人"})
+    cid = other.req("/api/me")[1]["contact"]["id"]
+    owner.req(f"/api/contacts/{cid}/delete", {})
+    assert other.req("/api/me")[1]["role"] is None
+
+    # 換新連結 / 關閉後舊連結失效
+    owner.req("/api/friend-link", {"reset": True})
+    assert Client(base).req("/api/request", {"token": token, "name": "y"})[0] == 410
+
+
+def test_friend_request_rate_limit(server):
+    base, _ = server
+    owner = login(base)
+    token = owner.req("/api/friend-link", {"enabled": True})[1]["url"].split("/add/")[1].split("?")[0]
+    codes = [Client(base).req("/api/request", {"token": token, "name": f"人{i}"})[0] for i in range(7)]
+    assert codes[:5] == [200] * 5 and codes[5:] == [429, 429]
+
+
+def test_first_run_setup_only_from_this_computer(tmp_path):
+    store = homechat.Store(tmp_path / "new.db")
+    app = homechat.App(store)
+    srv = homechat.make_server(app, "127.0.0.1", 0)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    try:
+        c = Client(base)
+        # 經過通道進來的請求不能設定
+        proxied = {"X-Forwarded-For": "8.8.8.8"}
+        assert c.req("/api/me", headers=proxied)[1] == {"role": None, "setup": False}
+        assert c.req("/api/setup", {"password": "abcdefgh"}, headers=proxied)[0] == 403
+        assert c.req("/api/me")[1] == {"role": None, "setup": True}
+        assert c.req("/api/setup", {"password": "short"})[0] == 400
+        assert c.req("/api/setup", {"password": "abcdefgh", "owner_name": "阿保"})[0] == 200
+        me = c.req("/api/me")[1]
+        assert me["role"] == "owner" and me["owner_name"] == "阿保"
+        assert Client(base).req("/api/setup", {"password": "hijacked1"})[0] == 403
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def test_sessions_stored_hashed_and_devices(server, tmp_path):
+    base, app = server
+    owner = login(base)
+    other = login(base)
+    rows = app.store.db.execute("SELECT id FROM sessions").fetchall()
+    jar = next(h.cookiejar for h in owner.opener.handlers if hasattr(h, "cookiejar"))
+    token = next(iter(jar)).value
+    assert token not in {r["id"] for r in rows}
+    assert homechat.token_hash(token) in {r["id"] for r in rows}
+
+    devices = owner.req("/api/devices")[1]["devices"]
+    assert len(devices) == 2 and sum(d["current"] for d in devices) == 1
+    owner.req("/api/devices/remove", {"all_others": True})
+    assert other.req("/api/me")[1]["role"] is None
+    assert owner.req("/api/me")[1]["role"] == "owner"
+
+
+def test_change_password(server):
+    base, _ = server
+    owner = login(base)
+    other = login(base)
+    assert owner.req("/api/password", {"old": "wrong", "new": "newpass123"})[0] == 400
+    assert owner.req("/api/password", {"old": "secret123", "new": "short"})[0] == 400
+    assert owner.req("/api/password", {"old": "secret123", "new": "newpass123"})[0] == 200
+    assert owner.req("/api/me")[1]["role"] == "owner"  # 自己保持登入
+    assert other.req("/api/me")[1]["role"] is None  # 其他裝置被登出
+    assert Client(base).req("/api/login", {"password": "newpass123"})[0] == 200
+
+
+def test_guest_message_rate_limit(server):
+    base, _ = server
+    owner = login(base)
+    guest = join(base, owner.req("/api/contacts", {"name": "話很快"})[1]["contact"])
+    codes = [guest.req("/api/messages", {"body": str(i)})[0] for i in range(31)]
+    assert codes[:30] == [200] * 30 and codes[30] == 429
+
+
+def test_security_headers(server):
+    base, _ = server
+    with urllib.request.urlopen(base + "/", timeout=5) as r:
+        assert r.headers["X-Frame-Options"] == "DENY"
+        assert "frame-ancestors 'none'" in r.headers["Content-Security-Policy"]
+        assert r.headers["Referrer-Policy"] == "no-referrer"
+        assert r.headers["Server"] == "HomeChat"
+
+
+def test_migrates_old_database(tmp_path):
+    import sqlite3
+    db = sqlite3.connect(tmp_path / "old.db")
+    db.executescript("""
+    CREATE TABLE contacts (id INTEGER PRIMARY KEY, name TEXT NOT NULL, line_id TEXT NOT NULL DEFAULT '',
+      note TEXT NOT NULL DEFAULT '', invite_token TEXT NOT NULL UNIQUE, created_at REAL NOT NULL,
+      owner_read_id INTEGER NOT NULL DEFAULT 0, guest_read_id INTEGER NOT NULL DEFAULT 0);
+    CREATE TABLE sessions (token TEXT PRIMARY KEY, role TEXT NOT NULL, contact_id INTEGER, created_at REAL NOT NULL);
+    INSERT INTO contacts (name, invite_token, created_at) VALUES ('舊朋友', 'oldtoken', 0);
+    INSERT INTO sessions VALUES ('plain', 'owner', NULL, 0);
+    """)
+    db.commit()
+    db.close()
+    store = homechat.Store(tmp_path / "old.db")
+    c = store.list_contacts()[0]
+    assert c["name"] == "舊朋友" and c["status"] == "active" and c["invite_expires"] == 0
+    assert store.get_session("plain") is None
+    assert store.invite_contact("oldtoken") is None  # 舊的永久連結作廢
 
 
 def test_events_stream_delivers_messages(server):

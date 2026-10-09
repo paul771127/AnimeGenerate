@@ -33,7 +33,7 @@ button { cursor: pointer; }
 .hidden { display: none !important; }
 
 /* ---------- login */
-#login { display: flex; align-items: center; justify-content: center; height: 100%; padding: 16px; }
+#gate { display: flex; align-items: center; justify-content: center; min-height: 100%; padding: 16px; }
 .card { background: var(--panel); border-radius: 16px; padding: 28px 24px; width: 100%; max-width: 360px; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
 .card h1 { margin: 0 0 4px; font-size: 22px; }
 .card p { margin: 0 0 18px; color: var(--muted); }
@@ -113,6 +113,22 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 .line-btn { background: #06c755; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
 #toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: rgba(0,0,0,.8); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 14px; z-index: 100; max-width: calc(100vw - 32px); text-align: center; }
 
+/* ---------- 加入 / 申請 */
+.card .big-avatar { margin: 0 auto 12px; width: 64px; height: 64px; font-size: 26px; }
+.card.center { text-align: center; }
+.card .field + .field { margin-top: 10px; }
+.pill { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 8px; background: var(--line); color: var(--muted); margin-left: 6px; vertical-align: 1px; }
+.pill.wait { background: #fef3c7; color: #92400e; }
+.req-actions { display: flex; gap: 6px; margin-top: 6px; }
+.req-actions .btn { padding: 5px 12px; font-size: 13px; }
+.device { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.device .meta { flex: 1; min-width: 0; }
+.device .sub { color: var(--muted); font-size: 12px; }
+.device .btn { padding: 5px 12px; font-size: 13px; }
+.switch { display: flex; align-items: center; gap: 8px; margin-top: 12px; cursor: pointer; }
+.switch input { width: 18px; height: 18px; accent-color: var(--green); }
+.section-title { font-weight: 600; margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--line); }
+
 /* ---------- 手機 */
 @media (max-width: 760px) {
   #sidebar { width: 100%; border-right: 0; }
@@ -125,8 +141,9 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 </head>
 <body>
 
-<div id="login" class="hidden">
-  <form class="card" id="login-form">
+<div id="gate" class="hidden">
+  <!-- 主人登入 -->
+  <form class="card hidden" id="login-form">
     <h1>HomeChat</h1>
     <p>家裡電腦上的聊天室</p>
     <input class="field" type="password" id="password" placeholder="主人密碼" autocomplete="current-password" required>
@@ -134,6 +151,44 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
     <div class="error" id="login-error"></div>
     <p class="hint" style="margin-top:10px;font-size:13px">朋友請用主人傳給你的邀請連結開啟。</p>
   </form>
+
+  <!-- 第一次使用:設定密碼(只能在家裡電腦上) -->
+  <form class="card hidden" id="setup-form">
+    <h1>歡迎使用 HomeChat</h1>
+    <p>先設定你的名字和主人密碼。之後在手機上登入也用這組密碼。</p>
+    <input class="field" name="owner_name" placeholder="你的名字(朋友會看到)" maxlength="50" required>
+    <input class="field" type="password" name="password" placeholder="主人密碼(至少 8 個字)" autocomplete="new-password" minlength="8" required>
+    <input class="field" type="password" name="password2" placeholder="再輸入一次密碼" autocomplete="new-password" required>
+    <button class="btn block" type="submit">開始使用</button>
+    <div class="error" id="setup-error"></div>
+  </form>
+
+  <!-- 朋友:用邀請連結加入 -->
+  <div class="card center hidden" id="join-card">
+    <div class="avatar big-avatar" id="join-avatar"></div>
+    <h1 id="join-title"></h1>
+    <p id="join-text"></p>
+    <button class="btn block" id="join-btn">開始聊天</button>
+    <div class="error" id="join-error"></div>
+  </div>
+
+  <!-- 朋友:用公開連結申請好友 -->
+  <form class="card center hidden" id="request-form">
+    <div class="avatar big-avatar" id="request-avatar"></div>
+    <h1 id="request-title"></h1>
+    <p>送出好友申請,對方確認後就能聊天。</p>
+    <input class="field" name="name" placeholder="你的名字" maxlength="40" required>
+    <input class="field" name="message" placeholder="想說的話(選填,例如:我是國中同學小華)" maxlength="200">
+    <button class="btn block" type="submit">送出好友申請</button>
+    <div class="error" id="request-error"></div>
+  </form>
+
+  <!-- 一般訊息(連結失效、等待確認、被登出...) -->
+  <div class="card center hidden" id="info-card">
+    <h1 id="info-title"></h1>
+    <p id="info-text"></p>
+    <button class="btn block hidden" id="info-btn"></button>
+  </div>
 </div>
 
 <div id="app" class="hidden">
@@ -163,48 +218,78 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
   </main>
 </div>
 
-<!-- 新增聯絡人 -->
+<!-- 加好友 -->
 <dialog id="dlg-add"><form class="dlg" method="dialog" id="form-add">
-  <h3>新增聯絡人</h3>
+  <h3>加好友</h3>
   <div class="tabs" id="add-tabs">
-    <button type="button" data-tab="one" class="on">一個</button>
-    <button type="button" data-tab="list">貼上名單</button>
-    <button type="button" data-tab="line">LINE 聊天紀錄</button>
+    <button type="button" data-tab="one" class="on">邀請朋友</button>
+    <button type="button" data-tab="open">加我連結</button>
+    <button type="button" data-tab="list">名單</button>
+    <button type="button" data-tab="line">LINE 紀錄</button>
   </div>
   <div data-pane="one">
-    <label>名字</label><input class="field" name="name" maxlength="100">
-    <label>LINE ID(選填,備查用)</label><input class="field" name="line_id" maxlength="100">
-    <label>備註(選填)</label><input class="field" name="note" maxlength="500">
+    <p class="hint">輸入朋友的名字,會產生一條<b>專屬邀請連結</b>,用 LINE 傳給他。他點開按「開始聊天」就加入了,不用裝 App。</p>
+    <label>朋友的名字</label><input class="field" name="name" maxlength="100">
+    <label>備註(選填,只有你看得到)</label><input class="field" name="note" maxlength="500">
+  </div>
+  <div data-pane="open" class="hidden">
+    <p class="hint">一條可以給很多人的連結(例如貼在 LINE 群組)。朋友點開輸入名字送出申請,<b>你按「接受」後</b>才能聊天。</p>
+    <label class="switch"><input type="checkbox" id="open-on"> 開啟「加我好友」連結</label>
+    <div id="open-box" class="hidden">
+      <div class="field invite-url" id="open-url" style="margin-top:10px"></div>
+      <div class="actions" style="justify-content:flex-start">
+        <button class="btn secondary" type="button" id="open-copy">複製</button>
+        <a class="btn line-btn" id="open-line" target="_blank" rel="noopener">用 LINE 傳送</a>
+        <button class="btn secondary" type="button" id="open-reset">換新連結</button>
+      </div>
+      <p class="hint">不需要時請關掉。換新連結後舊的立刻失效。</p>
+    </div>
   </div>
   <div data-pane="list" class="hidden">
     <label>一行一個人。可以只寫名字,或「名字,LINE ID,備註」(CSV)</label>
     <textarea class="field" name="list" placeholder="王小明&#10;陳美美,meimei0123,大學同學&#10;阿公"></textarea>
-    <p class="hint">LINE 沒有提供匯出好友名單的功能,請在 LINE 好友列表看著打,或從 Excel / Google 試算表複製貼上。</p>
+    <p class="hint">LINE 沒有提供匯出好友名單的功能,請看著 LINE 好友列表打,或從 Excel 複製貼上。匯入後再一個一個按「邀請連結」傳給他們。</p>
   </div>
   <div data-pane="line" class="hidden">
     <label>選擇 LINE 匯出的聊天紀錄 .txt(可一次選多個)</label>
     <input class="field" type="file" name="files" accept=".txt,text/plain" multiple>
-    <p class="hint">在 LINE 打開跟某人的聊天室 → 右上角 ≡ → 設定 → 傳送聊天記錄(iPhone 叫「傳送聊天紀錄」)→ 存成 .txt 傳到電腦。
+    <p class="hint">在 LINE 打開跟某人的聊天室 → 右上角 ≡ → 設定 → 傳送聊天記錄 → 存成 .txt 傳到電腦。
       會自動建立聯絡人並把舊對話搬過來,重複匯入同一份不會重複。</p>
   </div>
   <div class="error" id="add-error"></div>
   <div class="actions">
-    <button class="btn secondary" type="button" data-close>取消</button>
-    <button class="btn" type="submit" id="add-submit">新增</button>
+    <button class="btn secondary" type="button" data-close>關閉</button>
+    <button class="btn" type="submit" id="add-submit">產生邀請連結</button>
   </div>
 </form></dialog>
 
 <!-- 邀請連結 -->
 <dialog id="dlg-invite"><div class="dlg">
   <h3 id="invite-title">邀請連結</h3>
-  <p class="hint" style="margin-top:0">把這條連結傳給對方,對方用手機瀏覽器打開就能跟你聊天,不用裝 App。<b>拿到連結的人就能以對方的身分聊天</b>,請只私訊給本人。</p>
-  <div class="field invite-url" id="invite-url" style="margin-top:10px"></div>
+  <div id="invite-has">
+    <p class="hint" style="margin-top:0">用 LINE 私訊傳給<b id="invite-name"></b>本人。對方點開後按「開始聊天」就加入了,不用裝 App。</p>
+    <div class="field invite-url" id="invite-url" style="margin-top:10px"></div>
+    <p class="hint" id="invite-exp"></p>
+  </div>
+  <p class="hint hidden" id="invite-none" style="margin-top:0">目前沒有可用的邀請連結(已經用過、過期或取消了)。要讓對方在新手機上登入,請產生一條新的。</p>
   <div class="warn hidden" id="invite-warn">這個網址只有在同一個 Wi-Fi 才連得到。要讓朋友從外面連進來,請照 README 安裝 Tailscale,然後重新啟動 HomeChat。</div>
   <div class="warn hidden" id="invite-temp">這是 Cloudflare 臨時網址,HomeChat 重開後會變,到時要重傳連結。改用 Tailscale 就會是固定網址(見 README)。</div>
   <div class="actions">
-    <button class="btn secondary" type="button" id="invite-reset">換新連結</button>
-    <button class="btn secondary" type="button" id="invite-copy">複製</button>
-    <a class="btn line-btn" id="invite-line" target="_blank" rel="noopener">用 LINE 傳送</a>
+    <button class="btn secondary hidden" type="button" id="invite-cancel">取消這條連結</button>
+    <button class="btn secondary hidden" type="button" id="invite-copy">複製</button>
+    <a class="btn line-btn hidden" id="invite-line" target="_blank" rel="noopener">用 LINE 傳送</a>
+    <button class="btn hidden" type="button" id="invite-new">產生新連結</button>
+    <button class="btn secondary" type="button" data-close>關閉</button>
+  </div>
+</div></dialog>
+
+<!-- 登入的裝置 -->
+<dialog id="dlg-devices"><div class="dlg">
+  <h3 id="devices-title">登入的裝置</h3>
+  <p class="hint" id="devices-hint" style="margin-top:0"></p>
+  <div id="devices-list"></div>
+  <div class="actions">
+    <button class="btn danger" type="button" id="devices-all"></button>
     <button class="btn secondary" type="button" data-close>關閉</button>
   </div>
 </div></dialog>
@@ -235,16 +320,29 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 </form></dialog>
 
 <!-- 設定 -->
-<dialog id="dlg-settings"><form class="dlg" method="dialog" id="form-settings">
+<dialog id="dlg-settings"><div class="dlg">
   <h3>設定</h3>
-  <label>你的顯示名稱(朋友會看到)</label><input class="field" name="owner_name" maxlength="50" required>
-  <label>對外網址(邀請連結用,例如 https://chat.example.com)</label><input class="field" name="public_url" maxlength="300" placeholder="留空 = 用目前瀏覽器的網址">
-  <div class="error" id="settings-error"></div>
-  <div class="actions">
-    <button class="btn secondary" type="button" data-close>取消</button>
-    <button class="btn" type="submit">儲存</button>
+  <form id="form-settings">
+    <label>你的顯示名稱(朋友會看到)</label><input class="field" name="owner_name" maxlength="50" required>
+    <label>對外網址(通常會自動設定,不用填)</label><input class="field" name="public_url" maxlength="300" placeholder="留空 = 用目前瀏覽器的網址">
+    <div class="error" id="settings-error"></div>
+    <div class="actions"><button class="btn" type="submit">儲存</button></div>
+  </form>
+  <form id="form-password">
+    <div class="section-title">更改主人密碼</div>
+    <input class="field" type="password" name="old" placeholder="目前的密碼" autocomplete="current-password" required style="margin-top:10px">
+    <input class="field" type="password" name="new" placeholder="新密碼(至少 8 個字)" autocomplete="new-password" minlength="8" required style="margin-top:10px">
+    <p class="hint">改密碼後,其他登入的裝置都會被登出。</p>
+    <div class="error" id="password-error"></div>
+    <div class="actions"><button class="btn" type="submit">更改密碼</button></div>
+  </form>
+  <div class="section-title">我登入的裝置</div>
+  <p class="hint">手機遺失或在別人電腦登入過,可以在這裡登出。</p>
+  <div class="actions" style="justify-content:space-between">
+    <button class="btn secondary" type="button" id="my-devices">查看裝置</button>
+    <button class="btn secondary" type="button" data-close>關閉</button>
   </div>
-</form></dialog>
+</div></dialog>
 
 <div id="toast" class="hidden"></div>
 
@@ -314,14 +412,40 @@ function shortTime(ts) {
 }
 const isTouch = matchMedia("(pointer: coarse)").matches;
 
-// ---------- boot / login
+// ---------- 進入畫面
+function showGate(id) {
+  closeEvents();
+  $("#app").classList.add("hidden");
+  $("#gate").classList.remove("hidden");
+  $$("#gate > *").forEach(x => x.classList.toggle("hidden", x.id !== id));
+}
+function showInfo(title, text, btnLabel, onBtn) {
+  $("#info-title").textContent = title;
+  $("#info-text").textContent = text;
+  const b = $("#info-btn");
+  b.classList.toggle("hidden", !btnLabel);
+  b.textContent = btnLabel || "";
+  b.onclick = onBtn || null;
+  showGate("info-card");
+}
+function goHome() { history.replaceState(null, "", "/"); boot(); }
+
 async function boot() {
   closeEvents();
   const me = await api("/api/me").catch(() => ({ role: null }));
   state.role = me.role; state.ownerName = me.owner_name || ""; state.publicUrl = me.public_url || ""; state.tunnel = me.tunnel || "";
-  $("#login").classList.toggle("hidden", !!me.role);
-  $("#app").classList.toggle("hidden", !me.role);
-  if (!me.role) { $("#password").focus(); return; }
+  const m = location.pathname.match(/^\/(c|add)\/([\w-]+)$/);
+  if (me.setup) { showGate("setup-form"); $("#setup-form").owner_name.focus(); return; }
+  if (m && m[1] === "c") return showJoin(m[2], me);
+  if (m && m[1] === "add") return showRequest(m[2], me);
+  if (!me.role) { showGate("login-form"); $("#password").focus(); return; }
+  if (me.role === "guest" && me.contact.status !== "active") {
+    showInfo("已送出好友申請", `等 ${state.ownerName} 按「接受」後就能開始聊天。這個頁面會自動更新,也可以先關掉,之後再打開同一個網址。`);
+    openEvents();
+    return;
+  }
+  $("#gate").classList.add("hidden");
+  $("#app").classList.remove("hidden");
   const app = $("#app");
   app.className = me.role;
   if (me.role === "owner") {
@@ -331,7 +455,7 @@ async function boot() {
     await loadContacts();
     const saved = Number(sessionStorage.getItem("hc_open") || 0);
     const c = state.contacts.find(x => x.id === saved);
-    if (c && matchMedia("(min-width: 761px)").matches) openContact(c);
+    if (c && c.status === "active" && matchMedia("(min-width: 761px)").matches) openContact(c);
   } else {
     $("#sidebar").classList.add("hidden");
     $("#chat-menu-btn").classList.add("hidden");
@@ -343,6 +467,51 @@ async function boot() {
   openEvents();
 }
 
+async function showJoin(token, me) {
+  const info = await api("/api/invite?token=" + encodeURIComponent(token)).catch(() => ({ valid: false }));
+  if (!info.valid) {
+    if (me.role === "guest" && me.contact.status === "active")
+      return showInfo("這條連結已經用過了", "你已經加入了,直接進聊天室就好。", "進入聊天室", goHome);
+    return showInfo("連結已失效", "這條邀請連結已經用過或過期了(每條連結只能用一次、7 天內有效)。請向對方要一條新的連結。");
+  }
+  $("#join-avatar").replaceWith(Object.assign(avatar(info.owner_name), { id: "join-avatar" }));
+  $("#join-avatar").classList.add("big-avatar");
+  $("#join-title").textContent = `${info.owner_name} 邀請你聊天`;
+  $("#join-text").textContent = me.role === "owner"
+    ? `這是給「${info.name}」的邀請連結。你是主人,打開不會用掉它;朋友按下面的按鈕才會加入。`
+    : "按下面的按鈕就能開始聊天,不用安裝任何 App。這條連結只能用一次,之後請直接打開這個網站(建議加入主畫面)。";
+  $("#join-error").textContent = "";
+  const btn = $("#join-btn");
+  btn.textContent = me.role === "owner" ? "回到聊天室" : "開始聊天";
+  btn.onclick = async () => {
+    if (me.role === "owner") return goHome();
+    btn.disabled = true;
+    try { await api("/api/join", { token }); goHome(); }
+    catch (err) { $("#join-error").textContent = err.message; }
+    finally { btn.disabled = false; }
+  };
+  showGate("join-card");
+}
+
+async function showRequest(token, me) {
+  const info = await api("/api/add-info?token=" + encodeURIComponent(token)).catch(() => ({ valid: false }));
+  if (me.role === "owner") return showInfo("這是你的「加我好友」連結", "朋友打開後輸入名字送出申請,你在聊天列表按「接受」就能聊天。", "回到聊天室", goHome);
+  if (me.role === "guest") return goHome();
+  if (!info.valid) return showInfo("連結已失效", "這個加好友連結已經關閉或換新了,請向對方要新的連結。");
+  $("#request-avatar").replaceWith(Object.assign(avatar(info.owner_name), { id: "request-avatar" }));
+  $("#request-avatar").classList.add("big-avatar");
+  $("#request-title").textContent = `加 ${info.owner_name} 為好友`;
+  const f = $("#request-form");
+  f.onsubmit = async e => {
+    e.preventDefault();
+    $("#request-error").textContent = "";
+    try { await api("/api/request", { token, name: f.name.value, message: f.message.value }); goHome(); }
+    catch (err) { $("#request-error").textContent = err.message; }
+  };
+  showGate("request-form");
+  f.name.focus();
+}
+
 $("#login-form").addEventListener("submit", async e => {
   e.preventDefault();
   $("#login-error").textContent = "";
@@ -351,6 +520,18 @@ $("#login-form").addEventListener("submit", async e => {
     $("#password").value = "";
     boot();
   } catch (err) { $("#login-error").textContent = err.message; }
+});
+
+$("#setup-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target;
+  $("#setup-error").textContent = "";
+  if (f.password.value !== f.password2.value) { $("#setup-error").textContent = "兩次密碼不一樣"; return; }
+  try {
+    await api("/api/setup", { password: f.password.value, owner_name: f.owner_name.value });
+    f.reset();
+    boot();
+  } catch (err) { $("#setup-error").textContent = err.message; }
 });
 
 // ---------- 即時事件
@@ -365,12 +546,21 @@ function openEvents() {
     if (state.wasDown) { state.wasDown = false; resync(); }
   };
   es.onerror = () => { $("#conn").textContent = "連線中…"; state.wasDown = true; };
-  es.addEventListener("kicked", () => { closeEvents(); document.body.innerHTML = "<p style='padding:24px'>這條邀請連結已被重設,請向對方要新的連結。</p>"; });
+  es.addEventListener("kicked", () => {
+    closeEvents();
+    if (state.role === "owner") return boot();
+    showInfo("已登出", "你在這台裝置上的登入已被取消(或好友申請沒有被接受)。需要的話,請向對方要一條新的邀請連結。");
+  });
   es.onmessage = ev => {
     let data; try { data = JSON.parse(ev.data); } catch (_) { return; }
     if (data.type === "message") onIncoming(data.message);
     else if (data.type === "read") onRead(data);
-    else if (data.type === "contacts" && state.role === "owner") loadContacts();
+    else if (data.type === "approved" && state.role === "guest") boot();
+    else if (data.type === "request" && state.role === "owner") {
+      toast(`${data.name} 想加你為好友`); notifyText("好友申請", `${data.name} 想加你為好友`); loadContacts();
+    } else if (data.type === "joined" && state.role === "owner") {
+      toast(`${data.name} 已經加入,可以開始聊天了`); notifyText("HomeChat", `${data.name} 已經加入`); loadContacts();
+    } else if (data.type === "contacts" && state.role === "owner") loadContacts();
   };
 }
 async function resync() {
@@ -408,6 +598,10 @@ function notify(m) {
   const who = state.role === "owner" ? (state.contacts.find(c => c.id === m.contact_id)?.name || "新訊息") : state.ownerName;
   try { new Notification(who, { body: m.body.slice(0, 120), tag: "hc-" + m.contact_id, icon: "/icon.svg" }); } catch (_) {}
 }
+function notifyText(title, body) {
+  if (!document.hidden || !("Notification" in window) || Notification.permission !== "granted") return;
+  try { new Notification(title, { body, icon: "/icon.svg" }); } catch (_) {}
+}
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) { unseen = 0; document.title = "HomeChat"; markRead(); }
 });
@@ -432,26 +626,50 @@ function renderContacts() {
   list.replaceChildren();
   const items = state.contacts.filter(c => !q || c.name.toLowerCase().includes(q) || c.line_id.toLowerCase().includes(q) || c.note.toLowerCase().includes(q));
   if (!state.contacts.length) {
-    list.append(el("div", { class: "empty" }, "還沒有聯絡人", el("br"),
-      el("button", { class: "btn", onclick: () => openAdd("one") }, "新增 / 匯入聯絡人")));
+    list.append(el("div", { class: "empty" }, "還沒有好友", el("br"),
+      el("button", { class: "btn", onclick: () => openAdd("one") }, "＋ 加好友")));
     return;
   }
   if (!items.length) { list.append(el("div", { class: "empty" }, "找不到")); return; }
   for (const c of items) {
+    if (c.status === "pending") {
+      list.append(el("div", { class: "contact" },
+        avatar(c.name),
+        el("div", { class: "meta" },
+          el("div", { class: "row" }, el("span", { class: "name" }, c.name, el("span", { class: "pill wait" }, "好友申請"))),
+          c.request_msg ? el("div", { class: "row" }, el("span", { class: "preview" }, c.request_msg)) : null,
+          el("div", { class: "req-actions" },
+            el("button", { class: "btn", onclick: () => approve(c) }, "接受"),
+            el("button", { class: "btn secondary", onclick: () => reject(c) }, "拒絕")),
+        )));
+      continue;
+    }
+    const notJoined = !c.devices;
     list.append(el("div", {
       class: "contact" + (state.current && state.current.id === c.id ? " active" : ""),
       onclick: () => openContact(c),
     },
       avatar(c.name),
       el("div", { class: "meta" },
-        el("div", { class: "row" }, el("span", { class: "name" }, c.name), el("span", { class: "time" }, shortTime(c.last_at))),
         el("div", { class: "row" },
-          el("span", { class: "preview" }, c.last_body || (c.note ? c.note : "點一下開始聊天")),
+          el("span", { class: "name" }, c.name, notJoined ? el("span", { class: "pill" }, c.invite_url ? "已邀請" : "未加入") : null),
+          el("span", { class: "time" }, shortTime(c.last_at))),
+        el("div", { class: "row" },
+          el("span", { class: "preview" }, c.last_body || (notJoined ? "點開 → ⋯ → 邀請連結,傳給對方" : "點一下開始聊天")),
           c.unread ? el("span", { class: "badge" }, c.unread > 99 ? "99+" : String(c.unread)) : null),
       )));
   }
-  const total = state.contacts.reduce((n, c) => n + c.unread, 0);
+  const total = state.contacts.reduce((n, c) => n + c.unread, 0) + state.contacts.filter(c => c.status === "pending").length;
   if (!document.hidden) document.title = total ? `(${total}) HomeChat` : "HomeChat";
+}
+async function approve(c) {
+  await api(`/api/contacts/${c.id}/approve`, {});
+  await loadContacts(); toast(`已接受 ${c.name}`);
+  openContact(state.contacts.find(x => x.id === c.id));
+}
+async function reject(c) {
+  if (!confirm(`拒絕「${c.name}」的好友申請?`)) return;
+  await api(`/api/contacts/${c.id}/delete`, {}); loadContacts();
 }
 $("#search").addEventListener("input", renderContacts);
 
@@ -528,7 +746,9 @@ function renderMessages(scrollToEnd) {
   if (state.more) box.append(el("div", { class: "more" }, el("button", { onclick: loadOlder }, "載入更早的訊息")));
   if (!state.messages.length) {
     box.append(el("div", { class: "empty", style: "color:#fff" },
-      state.role === "owner" ? "還沒有訊息。可以用右上角 ⋯ →「邀請連結」把連結傳給對方。" : `跟 ${state.ownerName} 打聲招呼吧!`));
+      state.role === "owner"
+        ? (state.current?.devices ? "還沒有訊息,打聲招呼吧!" : "對方還沒加入。按右上角 ⋯ →「邀請連結」用 LINE 傳給他。")
+        : `跟 ${state.ownerName} 打聲招呼吧!`));
   }
   const otherName = state.role === "owner" ? state.current?.name || "" : state.ownerName;
   let lastDay = "", lastSender = null;
@@ -607,8 +827,9 @@ function showMenu(anchor, items) {
   setTimeout(() => document.addEventListener("click", () => menu.remove(), { once: true }));
 }
 $("#main-menu-btn").addEventListener("click", e => showMenu(e.currentTarget, [
-  ["新增聯絡人", () => openAdd("one")],
-  ["貼上聯絡人名單", () => openAdd("list")],
+  ["＋ 邀請朋友", () => openAdd("one")],
+  ["「加我好友」連結", () => openAdd("open")],
+  ["匯入聯絡人名單", () => openAdd("list")],
   ["匯入 LINE 聊天紀錄", () => openAdd("line")],
   ["設定", openSettings],
   ["登出", async () => { await api("/api/logout", {}); closeChat(); boot(); }],
@@ -618,10 +839,11 @@ $("#chat-menu-btn").addEventListener("click", e => {
   const c = state.current; if (!c) return;
   showMenu(e.currentTarget, [
     ["邀請連結(傳給對方)", () => openInvite(c)],
+    [`登入的裝置(${c.devices || 0})`, () => openDevices(c)],
     ["編輯聯絡人", () => openEdit(c)],
     ["匯出聊天紀錄 .txt", () => { location.href = `/api/export?contact=${c.id}`; }],
     ["刪除聯絡人和對話", async () => {
-      if (!confirm(`確定刪除「${c.name}」和所有對話紀錄?無法復原。`)) return;
+      if (!confirm(`確定刪除「${c.name}」和所有對話紀錄?對方會被登出。無法復原。`)) return;
       await api(`/api/contacts/${c.id}/delete`, {}); closeChat(); loadContacts();
     }, "danger"],
   ]);
@@ -629,18 +851,35 @@ $("#chat-menu-btn").addEventListener("click", e => {
 
 // ---------- dialogs
 $$("dialog [data-close]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
+async function copyText(text, fallbackEl) {
+  try { await navigator.clipboard.writeText(text); toast("已複製"); }
+  catch (_) {
+    const r = document.createRange(); r.selectNodeContents(fallbackEl);
+    getSelection().removeAllRanges(); getSelection().addRange(r); toast("請長按 / Ctrl+C 複製");
+  }
+}
+const lineShare = text => "https://line.me/R/share?text=" + encodeURIComponent(text);
+function isLocalUrl(u) {
+  try { const h = new URL(u).hostname; return /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1)/.test(h) || h.endsWith(".local"); }
+  catch (_) { return true; }
+}
 
+// 加好友
 let addTab = "one";
 function setAddTab(tab) {
   addTab = tab;
   $$("#add-tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
   $$("#form-add [data-pane]").forEach(p => p.classList.toggle("hidden", p.dataset.pane !== tab));
-  $("#add-submit").textContent = tab === "one" ? "新增" : "匯入";
+  const label = { one: "產生邀請連結", list: "匯入", line: "匯入" }[tab];
+  $("#add-submit").classList.toggle("hidden", !label);
+  $("#add-submit").textContent = label || "";
+  if (tab === "open") loadOpenLink();
 }
 $$("#add-tabs button").forEach(b => b.addEventListener("click", () => setAddTab(b.dataset.tab)));
 function openAdd(tab) {
   const f = $("#form-add"); f.reset(); $("#add-error").textContent = "";
   setAddTab(tab); $("#dlg-add").showModal();
+  if (tab === "one") f.name.focus();
 }
 $("#form-add").addEventListener("submit", async e => {
   e.preventDefault();
@@ -648,13 +887,16 @@ $("#form-add").addEventListener("submit", async e => {
   const btn = $("#add-submit"); btn.disabled = true;
   try {
     if (addTab === "one") {
-      const { contact } = await api("/api/contacts", { name: f.name.value, line_id: f.line_id.value, note: f.note.value });
-      $("#dlg-add").close(); await loadContacts(); openContact(state.contacts.find(c => c.id === contact.id) || contact);
+      if (!f.name.value.trim()) throw new Error("請輸入朋友的名字");
+      const { contact } = await api("/api/contacts", { name: f.name.value, note: f.note.value });
+      $("#dlg-add").close(); await loadContacts();
+      const c = state.contacts.find(x => x.id === contact.id) || contact;
+      openContact(c); openInvite(c);
     } else if (addTab === "list") {
       const r = await api("/api/contacts/import", { text: f.list.value });
       $("#dlg-add").close(); await loadContacts();
       toast(`新增 ${r.added.length} 人` + (r.skipped.length ? `,${r.skipped.length} 人已存在略過` : ""));
-    } else {
+    } else if (addTab === "line") {
       const files = [...f.files.files];
       if (!files.length) throw new Error("請選擇檔案");
       const results = [];
@@ -665,6 +907,22 @@ $("#form-add").addEventListener("submit", async e => {
     }
   } catch (ex) { err.textContent = ex.message; }
   finally { btn.disabled = false; }
+});
+
+// 「加我好友」公開連結
+let openLink = { enabled: false, url: "" };
+function renderOpenLink() {
+  $("#open-on").checked = openLink.enabled;
+  $("#open-box").classList.toggle("hidden", !openLink.enabled);
+  $("#open-url").textContent = openLink.url;
+  $("#open-line").href = lineShare(`加我 HomeChat 好友,點連結輸入名字送出申請:\n${openLink.url}`);
+}
+async function loadOpenLink() { openLink = await api("/api/friend-link"); renderOpenLink(); }
+$("#open-on").addEventListener("change", async e => { openLink = await api("/api/friend-link", { enabled: e.target.checked }); renderOpenLink(); });
+$("#open-copy").addEventListener("click", () => copyText(openLink.url, $("#open-url")));
+$("#open-reset").addEventListener("click", async () => {
+  if (!confirm("換新連結後,舊的「加我好友」連結會立刻失效。確定?")) return;
+  openLink = await api("/api/friend-link", { reset: true }); renderOpenLink(); toast("已換新連結");
 });
 
 async function importLineFile(file) {
@@ -692,32 +950,78 @@ function chooseSender(filename, senders) {
   });
 }
 
-function inviteText(c) { return `${c.name} 你好,這是我的聊天室連結,用手機瀏覽器打開就能跟我聊天:\n${c.invite_url}`; }
-function isLocalUrl(u) {
-  try { const h = new URL(u).hostname; return /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1)/.test(h) || h.endsWith(".local"); }
-  catch (_) { return true; }
+// 邀請連結
+function inviteText(c) {
+  return `${c.name} 你好,這是我的私人聊天室邀請連結(只能用一次,7 天內有效)。點開後按「開始聊天」就可以了,不用裝 App:\n${c.invite_url}`;
 }
 let inviteContact = null;
+function fmtDate(ts) { const d = new Date(ts * 1000); return `${d.getMonth() + 1}/${d.getDate()} ${hm(ts)}`; }
 function openInvite(c) {
   inviteContact = c;
-  $("#invite-title").textContent = `${c.name} 的邀請連結`;
-  $("#invite-url").textContent = c.invite_url;
-  $("#invite-line").href = "https://line.me/R/share?text=" + encodeURIComponent(inviteText(c));
-  $("#invite-warn").classList.toggle("hidden", !isLocalUrl(c.invite_url));
-  $("#invite-temp").classList.toggle("hidden", state.tunnel !== "cloudflare" || !c.invite_url.startsWith(state.publicUrl));
-  $("#dlg-invite").showModal();
-}
-$("#invite-copy").addEventListener("click", async () => {
-  try { await navigator.clipboard.writeText(inviteText(inviteContact)); toast("已複製"); }
-  catch (_) {
-    const r = document.createRange(); r.selectNodeContents($("#invite-url"));
-    getSelection().removeAllRanges(); getSelection().addRange(r); toast("請長按 / Ctrl+C 複製");
+  const has = !!c.invite_url;
+  $("#invite-title").textContent = `邀請 ${c.name}`;
+  $("#invite-name").textContent = c.name;
+  $("#invite-has").classList.toggle("hidden", !has);
+  $("#invite-none").classList.toggle("hidden", has);
+  ["#invite-cancel", "#invite-copy", "#invite-line"].forEach(id => $(id).classList.toggle("hidden", !has));
+  $("#invite-new").classList.toggle("hidden", has);
+  if (has) {
+    $("#invite-url").textContent = c.invite_url;
+    $("#invite-exp").textContent = `🔒 只能用一次,${fmtDate(c.invite_expires)} 前有效。對方加入後連結就自動失效,別人拿到也沒用。`;
+    $("#invite-line").href = lineShare(inviteText(c));
   }
+  $("#invite-warn").classList.toggle("hidden", !has || !isLocalUrl(c.invite_url));
+  $("#invite-temp").classList.toggle("hidden", !has || state.tunnel !== "cloudflare");
+  if (!$("#dlg-invite").open) $("#dlg-invite").showModal();
+}
+$("#invite-copy").addEventListener("click", () => copyText(inviteText(inviteContact), $("#invite-url")));
+$("#invite-new").addEventListener("click", async () => {
+  const { contact } = await api(`/api/contacts/${inviteContact.id}/invite`, {});
+  await loadContacts(); openInvite(contact);
 });
-$("#invite-reset").addEventListener("click", async () => {
-  if (!confirm("換新連結後,舊連結和已經用舊連結打開的手機都會失效。確定?")) return;
-  const { contact } = await api(`/api/contacts/${inviteContact.id}/reset-invite`, {});
-  await loadContacts(); openInvite(contact); toast("已換新連結");
+$("#invite-cancel").addEventListener("click", async () => {
+  const { contact } = await api(`/api/contacts/${inviteContact.id}/cancel-invite`, {});
+  await loadContacts(); openInvite(contact); toast("已取消,這條連結不能用了");
+});
+
+// 登入的裝置
+let devicesOf = null;  // null = 主人自己
+function timeAgo(ts) {
+  const s = Date.now() / 1000 - ts;
+  if (s < 120) return "剛剛";
+  if (s < 3600) return `${Math.floor(s / 60)} 分鐘前`;
+  if (s < 86400) return `${Math.floor(s / 3600)} 小時前`;
+  return `${Math.floor(s / 86400)} 天前`;
+}
+async function openDevices(c, refresh = false) {
+  devicesOf = c;
+  const q = c ? `?contact=${c.id}` : "";
+  const { devices } = await api("/api/devices" + q);
+  if (refresh && !$("#dlg-devices").open) return;  // 已經關掉就不要再跳出來
+  $("#devices-title").textContent = c ? `${c.name} 登入的裝置` : "我登入的裝置";
+  $("#devices-hint").textContent = c
+    ? "這些裝置可以用「" + c.name + "」的身分跟你聊天。不認得的裝置請移除。要讓他在新手機登入,請產生新的邀請連結。"
+    : "這些裝置登入了你的主人帳號。不認得的請移除,並更改密碼。";
+  const list = $("#devices-list");
+  list.replaceChildren(...devices.map(d => el("div", { class: "device" },
+    el("div", { class: "meta" },
+      el("div", {}, d.device || "裝置", d.current ? el("span", { class: "pill" }, "這台") : null),
+      el("div", { class: "sub" }, `登入於 ${fmtDate(d.created_at)} · 最後使用 ${timeAgo(d.last_seen)}`)),
+    d.current ? null : el("button", { class: "btn secondary", onclick: async () => {
+      await api("/api/devices/remove", { id: d.id }); openDevices(devicesOf, true); if (devicesOf) loadContacts();
+    } }, "移除"))));
+  if (!devices.length) list.append(el("p", { class: "hint" }, "沒有登入的裝置"));
+  const all = $("#devices-all");
+  all.textContent = c ? "全部登出" : "登出其他所有裝置";
+  all.classList.toggle("hidden", c ? !devices.length : devices.length < 2);
+  if (!$("#dlg-devices").open) $("#dlg-devices").showModal();
+}
+$("#devices-all").addEventListener("click", async () => {
+  const c = devicesOf;
+  if (!confirm(c ? `把 ${c.name} 的所有裝置登出?他要用新的邀請連結才能再登入。` : "登出除了這台以外的所有裝置?")) return;
+  if (c) { await api(`/api/contacts/${c.id}/logout-devices`, {}); loadContacts(); }
+  else await api("/api/devices/remove", { all_others: true });
+  openDevices(c, true);
 });
 
 function openEdit(c) {
@@ -733,18 +1037,29 @@ $("#form-edit").addEventListener("submit", async e => {
   } catch (ex) { $("#edit-error").textContent = ex.message; }
 });
 
+// 設定
 function openSettings() {
-  const f = $("#form-settings"); $("#settings-error").textContent = "";
+  const f = $("#form-settings"); $("#settings-error").textContent = ""; $("#password-error").textContent = "";
   f.owner_name.value = state.ownerName; f.public_url.value = state.publicUrl;
+  $("#form-password").reset();
   $("#dlg-settings").showModal();
 }
 $("#form-settings").addEventListener("submit", async e => {
   e.preventDefault(); const f = e.target;
   try {
     await api("/api/settings", { owner_name: f.owner_name.value, public_url: f.public_url.value });
-    $("#dlg-settings").close(); boot();
+    $("#dlg-settings").close(); boot(); toast("已儲存");
   } catch (ex) { $("#settings-error").textContent = ex.message; }
 });
+$("#form-password").addEventListener("submit", async e => {
+  e.preventDefault(); const f = e.target;
+  $("#password-error").textContent = "";
+  try {
+    await api("/api/password", { old: f.old.value, new: f.new.value });
+    f.reset(); $("#dlg-settings").close(); toast("密碼已更改,其他裝置已登出");
+  } catch (ex) { $("#password-error").textContent = ex.message; }
+});
+$("#my-devices").addEventListener("click", () => openDevices(null));
 
 boot();
 </script>

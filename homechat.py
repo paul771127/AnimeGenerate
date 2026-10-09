@@ -7,9 +7,8 @@
 - 啟動時自動用 Tailscale Funnel(或 Cloudflare 通道)開一個 https 網址,在外面用 4G / 別的 Wi-Fi 也能連
 
 用法:
-  python homechat.py                      # 第一次執行會要你設定主人密碼
-  python homechat.py --port 8800 --name 小明
-  python homechat.py --set-password       # 改密碼
+  python homechat.py --open               # 第一次執行會打開瀏覽器設定主人密碼
+  python homechat.py --set-password       # 忘記密碼時在這裡重設
   python homechat.py --tunnel off         # 只在家裡 Wi-Fi 用,不開外部連線
 """
 from __future__ import annotations
@@ -30,8 +29,9 @@ import subprocess
 import sys
 import threading
 import time
+import urllib.request
+import webbrowser
 from datetime import datetime
-from http import HTTPStatus
 from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -42,7 +42,10 @@ STATIC_DIR = HERE / "static"
 DEFAULT_DB = HERE / "data" / "homechat.db"
 
 COOKIE_NAME = "hc_session"
-SESSION_DAYS = 365
+SESSION_IDLE_DAYS = 90  # 90 天沒用自動登出
+INVITE_DAYS = 7  # 邀請連結 7 天內有效,只能用一次
+MIN_PASSWORD = 8
+MAX_PENDING = 20  # 最多同時 20 個待確認的好友申請
 MAX_BODY = 20 * 1024 * 1024  # LINE 聊天紀錄可能很大
 MAX_MESSAGE = 5000
 PAGE_SIZE = 200
@@ -55,7 +58,10 @@ CREATE TABLE IF NOT EXISTS contacts (
     name TEXT NOT NULL,
     line_id TEXT NOT NULL DEFAULT '',
     note TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'active',       -- active / pending(好友申請等待確認)
+    request_msg TEXT NOT NULL DEFAULT '',
     invite_token TEXT NOT NULL UNIQUE,
+    invite_expires REAL NOT NULL DEFAULT 0,      -- 0 = 沒有可用的邀請連結
     created_at REAL NOT NULL,
     owner_read_id INTEGER NOT NULL DEFAULT 0,
     guest_read_id INTEGER NOT NULL DEFAULT 0
@@ -70,10 +76,12 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 CREATE INDEX IF NOT EXISTS idx_messages_contact ON messages(contact_id, created_at, id);
 CREATE TABLE IF NOT EXISTS sessions (
-    token TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY,                         -- 登入 token 的 SHA-256,不存明碼
     role TEXT NOT NULL CHECK (role IN ('owner', 'guest')),
     contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,
-    created_at REAL NOT NULL
+    device TEXT NOT NULL DEFAULT '',
+    created_at REAL NOT NULL,
+    last_seen REAL NOT NULL
 );
 """
 
@@ -97,20 +105,69 @@ def verify_password(password: str, stored: str) -> bool:
 
 # ---------------------------------------------------------------- 資料庫
 
+def token_hash(token: str) -> str:
+    """登入憑證只存雜湊:就算資料庫檔案外流,也不能拿來冒充登入。"""
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def describe_device(user_agent: str) -> str:
+    ua = user_agent or ""
+    if "iPhone" in ua:
+        os_name = "iPhone"
+    elif "iPad" in ua:
+        os_name = "iPad"
+    elif "Android" in ua:
+        os_name = "Android"
+    elif "Windows" in ua:
+        os_name = "Windows"
+    elif "Macintosh" in ua or "Mac OS" in ua:
+        os_name = "Mac"
+    elif "Linux" in ua:
+        os_name = "Linux"
+    else:
+        os_name = "裝置"
+    for key, name in ((" Line/", "LINE"), ("Edg/", "Edge"), ("Firefox/", "Firefox"),
+                      ("CriOS/", "Chrome"), ("Chrome/", "Chrome"), ("Safari/", "Safari")):
+        if key in ua:
+            return f"{os_name} · {name}"
+    return os_name
+
+
 class Store:
     """所有資料庫操作。SQLite 連線共用,用一把鎖保護。"""
 
     def __init__(self, path: Path | str):
         if str(path) != ":memory:":
-            Path(path).parent.mkdir(parents=True, exist_ok=True)
+            path = Path(path)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            if os.name == "posix":  # 只有自己能讀
+                os.chmod(path.parent, 0o700)
         self.db = sqlite3.connect(str(path), check_same_thread=False)
         self.db.row_factory = sqlite3.Row
         self.lock = threading.Lock()
         with self.lock:
             self.db.execute("PRAGMA foreign_keys = ON")
             self.db.execute("PRAGMA journal_mode = WAL")
+            self._migrate()
             self.db.executescript(SCHEMA)
             self.db.commit()
+        if str(path) != ":memory:" and os.name == "posix":
+            for p in (path, Path(f"{path}-wal"), Path(f"{path}-shm")):
+                if p.exists():
+                    os.chmod(p, 0o600)
+
+    def _migrate(self) -> None:
+        """舊版資料庫升級。"""
+        cols = {r["name"] for r in self.db.execute("PRAGMA table_info(sessions)")}
+        if "token" in cols:  # 舊版存的是明碼 token:全部作廢,重新登入
+            self.db.execute("DROP TABLE sessions")
+        cols = {r["name"] for r in self.db.execute("PRAGMA table_info(contacts)")}
+        if cols:
+            for name, ddl in (("status", "TEXT NOT NULL DEFAULT 'active'"),
+                              ("request_msg", "TEXT NOT NULL DEFAULT ''"),
+                              ("invite_expires", "REAL NOT NULL DEFAULT 0")):
+                if name not in cols:
+                    self.db.execute(f"ALTER TABLE contacts ADD COLUMN {name} {ddl}")
 
     # --- settings
     def get_setting(self, key: str, default: str = "") -> str:
@@ -140,13 +197,15 @@ class Store:
         stored = self.get_setting("password_hash")
         return bool(stored) and verify_password(password, stored)
 
-    # --- sessions
-    def create_session(self, role: str, contact_id: int | None = None) -> str:
+    # --- sessions(每個登入的瀏覽器 = 一台裝置)
+    def create_session(self, role: str, contact_id: int | None = None, device: str = "") -> str:
         token = secrets.token_urlsafe(32)
+        now = time.time()
         with self.lock:
             self.db.execute(
-                "INSERT INTO sessions (token, role, contact_id, created_at) VALUES (?, ?, ?, ?)",
-                (token, role, contact_id, time.time()),
+                "INSERT INTO sessions (id, role, contact_id, device, created_at, last_seen) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (token_hash(token), role, contact_id, device[:60], now, now),
             )
             self.db.commit()
         return token
@@ -154,27 +213,55 @@ class Store:
     def get_session(self, token: str) -> dict | None:
         if not token:
             return None
+        sid = token_hash(token)
         with self.lock:
-            row = self.db.execute(
-                "SELECT role, contact_id, created_at FROM sessions WHERE token = ?", (token,)
-            ).fetchone()
-        if not row or time.time() - row["created_at"] > SESSION_DAYS * 86400:
-            return None
+            row = self.db.execute("SELECT * FROM sessions WHERE id = ?", (sid,)).fetchone()
+            if not row:
+                return None
+            now = time.time()
+            if now - row["last_seen"] > SESSION_IDLE_DAYS * 86400:  # 太久沒用自動登出
+                self.db.execute("DELETE FROM sessions WHERE id = ?", (sid,))
+                self.db.commit()
+                return None
+            if now - row["last_seen"] > 60:
+                self.db.execute("UPDATE sessions SET last_seen = ? WHERE id = ?", (now, sid))
+                self.db.commit()
         return dict(row)
 
-    def delete_session(self, token: str) -> None:
+    def delete_session(self, sid: str) -> None:
         with self.lock:
-            self.db.execute("DELETE FROM sessions WHERE token = ?", (token,))
+            self.db.execute("DELETE FROM sessions WHERE id = ?", (sid,))
             self.db.commit()
 
+    def delete_sessions(self, role: str, contact_id: int | None = None, keep: str = "") -> None:
+        with self.lock:
+            self.db.execute(
+                "DELETE FROM sessions WHERE role = ? AND contact_id IS ? AND id != ?",
+                (role, contact_id, keep),
+            )
+            self.db.commit()
+
+    def list_sessions(self, role: str, contact_id: int | None = None) -> list[dict]:
+        with self.lock:
+            rows = self.db.execute(
+                "SELECT id, device, created_at, last_seen FROM sessions "
+                "WHERE role = ? AND contact_id IS ? ORDER BY last_seen DESC",
+                (role, contact_id),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
     # --- contacts
-    def _contact_row(self, row: sqlite3.Row) -> dict:
+    @staticmethod
+    def _contact_row(row: sqlite3.Row) -> dict:
         return {
             "id": row["id"],
             "name": row["name"],
             "line_id": row["line_id"],
             "note": row["note"],
+            "status": row["status"],
+            "request_msg": row["request_msg"],
             "invite_token": row["invite_token"],
+            "invite_expires": row["invite_expires"],
             "owner_read_id": row["owner_read_id"],
             "guest_read_id": row["guest_read_id"],
         }
@@ -189,15 +276,18 @@ class Store:
                   (SELECT body FROM messages m WHERE m.contact_id = c.id
                      ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_body,
                   (SELECT created_at FROM messages m WHERE m.contact_id = c.id
-                     ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_at
+                     ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_at,
+                  (SELECT COUNT(*) FROM sessions s WHERE s.contact_id = c.id) AS devices,
+                  (SELECT MAX(last_seen) FROM sessions s WHERE s.contact_id = c.id) AS last_seen
                 FROM contacts c
-                ORDER BY COALESCE(last_at, c.created_at) DESC
+                ORDER BY c.status = 'pending' DESC, COALESCE(last_at, c.created_at) DESC
                 """
             ).fetchall()
         out = []
         for r in rows:
             item = self._contact_row(r)
-            item.update(unread=r["unread"], last_body=r["last_body"] or "", last_at=r["last_at"])
+            item.update(unread=r["unread"], last_body=r["last_body"] or "", last_at=r["last_at"],
+                        devices=r["devices"], last_seen=r["last_seen"])
             out.append(item)
         return out
 
@@ -209,21 +299,17 @@ class Store:
     def find_contact_by_name(self, name: str) -> dict | None:
         with self.lock:
             row = self.db.execute(
-                "SELECT * FROM contacts WHERE name = ? ORDER BY id LIMIT 1", (name,)
+                "SELECT * FROM contacts WHERE name = ? AND status = 'active' ORDER BY id LIMIT 1", (name,)
             ).fetchone()
         return self._contact_row(row) if row else None
 
-    def contact_by_invite(self, token: str) -> dict | None:
-        with self.lock:
-            row = self.db.execute("SELECT * FROM contacts WHERE invite_token = ?", (token,)).fetchone()
-        return self._contact_row(row) if row else None
-
-    def add_contact(self, name: str, line_id: str = "", note: str = "") -> dict:
+    def add_contact(self, name: str, line_id: str = "", note: str = "",
+                    status: str = "active", request_msg: str = "") -> dict:
         with self.lock:
             cur = self.db.execute(
-                "INSERT INTO contacts (name, line_id, note, invite_token, created_at) "
-                "VALUES (?, ?, ?, ?, ?)",
-                (name, line_id, note, secrets.token_urlsafe(16), time.time()),
+                "INSERT INTO contacts (name, line_id, note, status, request_msg, invite_token, "
+                "invite_expires, created_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?)",
+                (name, line_id, note, status, request_msg, secrets.token_urlsafe(24), time.time()),
             )
             self.db.commit()
             contact_id = cur.lastrowid
@@ -237,15 +323,60 @@ class Store:
             )
             self.db.commit()
 
-    def reset_invite(self, contact_id: int) -> None:
-        """換一條新的邀請連結,舊連結和已用舊連結登入的裝置全部失效。"""
+    def approve_contact(self, contact_id: int) -> None:
+        with self.lock:
+            self.db.execute("UPDATE contacts SET status = 'active' WHERE id = ?", (contact_id,))
+            self.db.commit()
+
+    def count_pending(self) -> int:
+        with self.lock:
+            return self.db.execute("SELECT COUNT(*) FROM contacts WHERE status = 'pending'").fetchone()[0]
+
+    def new_invite(self, contact_id: int, days: float = INVITE_DAYS) -> None:
+        """產生新的邀請連結:只能用一次、有期限。舊的未使用連結同時失效。"""
         with self.lock:
             self.db.execute(
-                "UPDATE contacts SET invite_token = ? WHERE id = ?",
-                (secrets.token_urlsafe(16), contact_id),
+                "UPDATE contacts SET invite_token = ?, invite_expires = ? WHERE id = ?",
+                (secrets.token_urlsafe(24), time.time() + days * 86400, contact_id),
             )
-            self.db.execute("DELETE FROM sessions WHERE contact_id = ?", (contact_id,))
             self.db.commit()
+
+    def cancel_invite(self, contact_id: int) -> None:
+        with self.lock:
+            self.db.execute(
+                "UPDATE contacts SET invite_token = ?, invite_expires = 0 WHERE id = ?",
+                (secrets.token_urlsafe(24), contact_id),
+            )
+            self.db.commit()
+
+    def invite_contact(self, token: str) -> dict | None:
+        """查邀請連結(不使用掉)。"""
+        if not token:
+            return None
+        with self.lock:
+            row = self.db.execute(
+                "SELECT * FROM contacts WHERE invite_token = ? AND invite_expires > ? AND status = 'active'",
+                (token, time.time()),
+            ).fetchone()
+        return self._contact_row(row) if row else None
+
+    def claim_invite(self, token: str, device: str) -> tuple[dict, str] | None:
+        """使用邀請連結:連結立刻作廢,回傳 (聯絡人, 登入 token)。"""
+        if not token:
+            return None
+        with self.lock:
+            row = self.db.execute(
+                "SELECT * FROM contacts WHERE invite_token = ? AND invite_expires > ? AND status = 'active'",
+                (token, time.time()),
+            ).fetchone()
+            if not row:
+                return None
+            self.db.execute(
+                "UPDATE contacts SET invite_token = ?, invite_expires = 0 WHERE id = ?",
+                (secrets.token_urlsafe(24), row["id"]),
+            )
+            self.db.commit()
+        return self._contact_row(row), self.create_session("guest", row["id"], device)
 
     def delete_contact(self, contact_id: int) -> None:
         with self.lock:
@@ -448,22 +579,22 @@ def parse_line_chat(text: str) -> dict:
 class Hub:
     def __init__(self) -> None:
         self.lock = threading.Lock()
-        self.subs: list[tuple[str, int | None, queue.Queue]] = []
+        self.subs: list[tuple[str, int | None, str, queue.Queue]] = []
 
-    def subscribe(self, role: str, contact_id: int | None) -> queue.Queue:
+    def subscribe(self, role: str, contact_id: int | None, sid: str = "") -> queue.Queue:
         q: queue.Queue = queue.Queue(maxsize=1000)
         with self.lock:
-            self.subs.append((role, contact_id, q))
+            self.subs.append((role, contact_id, sid, q))
         return q
 
     def unsubscribe(self, q: queue.Queue) -> None:
         with self.lock:
-            self.subs = [s for s in self.subs if s[2] is not q]
+            self.subs = [s for s in self.subs if s[3] is not q]
 
     def publish(self, event: dict, contact_id: int, to_guest: bool = True) -> None:
         with self.lock:
             targets = [
-                q for role, cid, q in self.subs
+                q for role, cid, _, q in self.subs
                 if role == "owner" or (to_guest and cid == contact_id)
             ]
         for q in targets:
@@ -474,7 +605,16 @@ class Hub:
 
     def kick_guests(self, contact_id: int) -> None:
         with self.lock:
-            targets = [q for role, cid, q in self.subs if role == "guest" and cid == contact_id]
+            targets = [q for role, cid, _, q in self.subs if role == "guest" and cid == contact_id]
+        self._kick(targets)
+
+    def kick(self, sid: str) -> None:
+        with self.lock:
+            targets = [q for _, _, s, q in self.subs if s == sid]
+        self._kick(targets)
+
+    @staticmethod
+    def _kick(targets: list[queue.Queue]) -> None:
         for q in targets:
             try:
                 q.put_nowait(None)
@@ -491,58 +631,101 @@ class ApiError(Exception):
         self.message = message
 
 
-class LoginLimiter:
-    """同一個來源 10 分鐘內最多錯 10 次。"""
+class RateLimiter:
+    """滑動視窗計數:同一個 key 在 window 秒內最多 limit 次。"""
 
-    def __init__(self, limit: int = 10, window: float = 600):
+    def __init__(self, limit: int, window: float):
         self.limit, self.window = limit, window
-        self.fails: dict[str, list[float]] = {}
+        self.hits: dict[str, list[float]] = {}
         self.lock = threading.Lock()
 
     def blocked(self, key: str) -> bool:
         now = time.time()
         with self.lock:
-            recent = [t for t in self.fails.get(key, []) if now - t < self.window]
-            self.fails[key] = recent
+            recent = [t for t in self.hits.get(key, []) if now - t < self.window]
+            if recent:
+                self.hits[key] = recent
+            else:
+                self.hits.pop(key, None)
             return len(recent) >= self.limit
 
-    def fail(self, key: str) -> None:
+    def add(self, key: str) -> None:
         with self.lock:
-            self.fails.setdefault(key, []).append(time.time())
+            self.hits.setdefault(key, []).append(time.time())
+
+    def take(self, key: str) -> bool:
+        """沒超過就記一次並回傳 True。"""
+        if self.blocked(key):
+            return False
+        self.add(key)
+        return True
 
 
 class App:
-    def __init__(self, store: Store, owner_name: str | None = None, public_url: str = ""):
+    def __init__(self, store: Store, owner_name: str | None = None):
         self.store = store
         self.hub = Hub()
-        self.limiter = LoginLimiter()
+        # 密碼:同一來源 10 分鐘錯 10 次鎖住;全部來源加起來錯 30 次也鎖(防止偽造來源繞過)
+        self.login_fails = RateLimiter(10, 600)
+        self.login_fails_all = RateLimiter(30, 600)
+        # 好友申請:同一來源每小時 5 次,全部每小時 30 次
+        self.requests = RateLimiter(5, 3600)
+        self.requests_all = RateLimiter(30, 3600)
+        self.messages = RateLimiter(30, 60)  # 每台裝置每分鐘 30 則
         if owner_name:
             store.set_setting("owner_name", owner_name)
-        if public_url:
-            store.set_setting("public_url", public_url.rstrip("/"))
 
     @property
     def owner_name(self) -> str:
         return self.store.get_setting("owner_name", "主人")
 
+    def friend_link_token(self) -> str:
+        token = self.store.get_setting("friend_token")
+        if not token:
+            token = secrets.token_urlsafe(18)
+            self.store.set_setting("friend_token", token)
+        return token
+
+
+HTML_CSP = ("default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "HomeChat/1.0"
     protocol_version = "HTTP/1.1"
     app: App  # 由 make_server 設定
 
     def log_message(self, fmt: str, *args) -> None:  # 不要把每個請求都印出來
         pass
 
+    def version_string(self) -> str:  # 不透露 Python 版本
+        return "HomeChat"
+
     # --- helpers
+    def _from_proxy(self) -> bool:
+        """經過 Tailscale / Cloudflare 通道進來的請求,在本機看起來是 127.0.0.1。"""
+        return any(self.headers.get(h) for h in ("X-Forwarded-For", "CF-Connecting-IP", "Tailscale-User-Login",
+                                                 "X-Forwarded-Host", "X-Forwarded-Proto"))
+
+    def _is_local(self) -> bool:
+        """真的是坐在這台電腦前面(不是經過通道)。"""
+        return self.client_address[0] in ("127.0.0.1", "::1") and not self._from_proxy()
+
     def _client_key(self) -> str:
         peer = self.client_address[0]
-        if peer in ("127.0.0.1", "::1"):  # 經過 cloudflared 等反向代理
-            return self.headers.get("CF-Connecting-IP") or self.headers.get("X-Forwarded-For", peer).split(",")[0].strip()
+        if peer in ("127.0.0.1", "::1"):
+            if self.app.store.get_setting("public_url_auto") == "cloudflare" and self.headers.get("CF-Connecting-IP"):
+                return self.headers["CF-Connecting-IP"]  # Cloudflare 會覆寫,不能偽造
+            fwd = self.headers.get("X-Forwarded-For", "")
+            if fwd:
+                return fwd.split(",")[-1].strip()  # 最後一個是通道自己加的
         return peer
 
     def _is_https(self) -> bool:
-        return self.headers.get("X-Forwarded-Proto", "").lower() == "https"
+        if self.headers.get("X-Forwarded-Proto", "").lower() == "https":
+            return True
+        public = self.app.store.get_setting("public_url")
+        return public.startswith("https://") and urlsplit(public).netloc == self.headers.get("Host", "")
 
     def _session_token(self) -> str:
         cookie = SimpleCookie()
@@ -555,8 +738,11 @@ class Handler(BaseHTTPRequestHandler):
 
     def _session(self) -> dict | None:
         sess = self.app.store.get_session(self._session_token())
-        if sess and sess["role"] == "guest" and not self.app.store.get_contact(sess["contact_id"]):
-            return None
+        if sess and sess["role"] == "guest":
+            contact = self.app.store.get_contact(sess["contact_id"])
+            if not contact:
+                return None
+            sess["status"] = contact["status"]
         return sess
 
     def _cookie_header(self, token: str, max_age: int) -> str:
@@ -565,13 +751,20 @@ class Handler(BaseHTTPRequestHandler):
             parts.append("Secure")
         return "; ".join(parts)
 
+    def _login_cookie(self, token: str) -> dict[str, str]:
+        return {"Set-Cookie": self._cookie_header(token, SESSION_IDLE_DAYS * 86400)}
+
     def _send(self, status: int, body: bytes, content_type: str,
               headers: dict[str, str] | None = None) -> None:
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "no-referrer")  # 邀請連結不會從 Referer 外流
+        self.send_header("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        if self._is_https():
+            self.send_header("Strict-Transport-Security", "max-age=31536000")
         for k, v in (headers or {}).items():
             self.send_header(k, v)
         self.end_headers()
@@ -616,12 +809,14 @@ class Handler(BaseHTTPRequestHandler):
         if urlsplit(origin).netloc not in allowed:
             raise ApiError(403, "來源不符")
 
-    def _require(self, role: str | None = None) -> dict:
+    def _require(self, role: str | None = None, active: bool = True) -> dict:
         sess = self._session()
         if not sess:
             raise ApiError(401, "請先登入")
         if role and sess["role"] != role:
             raise ApiError(403, "沒有權限")
+        if active and sess["role"] == "guest" and sess["status"] != "active":
+            raise ApiError(403, "等待對方確認好友")
         return sess
 
     def _base_url(self) -> str:
@@ -647,8 +842,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def _public_contact(self, c: dict) -> dict:
         out = {k: v for k, v in c.items() if k != "invite_token"}
-        out["invite_url"] = f"{self._base_url()}/c/{c['invite_token']}"
+        if c["invite_expires"] > time.time():
+            # openExternalBrowser=1:在 LINE 裡點開時改用手機的瀏覽器,登入狀態才不會不見
+            out["invite_url"] = f"{self._base_url()}/c/{c['invite_token']}?openExternalBrowser=1"
+        else:
+            out["invite_url"] = ""
+            out["invite_expires"] = 0
         return out
+
+    def _device(self) -> str:
+        return describe_device(self.headers.get("User-Agent", ""))
 
     # --- dispatch
     def do_HEAD(self) -> None:
@@ -658,23 +861,23 @@ class Handler(BaseHTTPRequestHandler):
         url = urlsplit(self.path)
         qs = {k: v[-1] for k, v in parse_qs(url.query).items()}
         try:
-            if url.path in ("/", "/index.html"):
+            if url.path in ("/", "/index.html") or re.fullmatch(r"/(c|add)/[A-Za-z0-9_-]{1,64}", url.path):
                 return self._static("index.html")
             if url.path in ("/manifest.webmanifest", "/icon.svg"):
                 return self._static(url.path.lstrip("/"))
-            if url.path.startswith("/c/"):
-                return self._join(url.path[3:])
-            if url.path == "/api/me":
-                return self._me()
-            if url.path == "/api/contacts":
-                self._require("owner")
-                return self._json({"contacts": [self._public_contact(c) for c in self.app.store.list_contacts()]})
-            if url.path == "/api/messages":
-                return self._get_messages(qs)
-            if url.path == "/api/events":
-                return self._events()
-            if url.path == "/api/export":
-                return self._export(qs)
+            routes = {
+                "/api/me": self._me,
+                "/api/invite": self._invite_info,
+                "/api/add-info": self._add_info,
+                "/api/contacts": self._list_contacts,
+                "/api/messages": self._get_messages,
+                "/api/events": self._events,
+                "/api/export": self._export,
+                "/api/friend-link": self._friend_link,
+                "/api/devices": self._devices,
+            }
+            if url.path in routes:
+                return routes[url.path](qs)
             raise ApiError(404, "找不到")
         except ApiError as e:
             self._json({"error": e.message}, e.status)
@@ -685,18 +888,25 @@ class Handler(BaseHTTPRequestHandler):
             self._check_origin()
             data = self._read_json()
             routes = {
+                "/api/setup": self._setup,
                 "/api/login": self._login,
                 "/api/logout": self._logout,
+                "/api/password": self._change_password,
+                "/api/join": self._join,
+                "/api/request": self._request_friend,
                 "/api/messages": self._post_message,
                 "/api/read": self._read,
                 "/api/contacts": self._add_contact,
                 "/api/contacts/import": self._import_contacts,
                 "/api/contacts/import-line": self._import_line,
+                "/api/friend-link": self._set_friend_link,
+                "/api/devices/remove": self._remove_device,
                 "/api/settings": self._settings,
             }
             if url.path in routes:
                 return routes[url.path](data)
-            m = re.fullmatch(r"/api/contacts/(\d+)/(update|reset-invite|delete)", url.path)
+            m = re.fullmatch(r"/api/contacts/(\d+)/(update|invite|cancel-invite|approve|logout-devices|delete)",
+                             url.path)
             if m:
                 return self._contact_action(int(m.group(1)), m.group(2), data)
             raise ApiError(404, "找不到")
@@ -709,28 +919,15 @@ class Handler(BaseHTTPRequestHandler):
         types = {".html": "text/html; charset=utf-8", ".svg": "image/svg+xml",
                  ".webmanifest": "application/manifest+json"}
         self._send(200, path.read_bytes(), types[path.suffix], {
-            "Cache-Control": "no-cache",
-            "Content-Security-Policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; "
-                                       "script-src 'self' 'unsafe-inline'; img-src 'self' data:",
+            "Cache-Control": "no-store" if name == "index.html" else "no-cache",
+            "Content-Security-Policy": HTML_CSP,
         })
 
-    def _join(self, token: str) -> None:
-        contact = self.app.store.contact_by_invite(token)
-        if not contact:
-            body = "<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width'>" \
-                   "<p style='font:16px sans-serif;padding:24px'>這條邀請連結已失效,請向對方要新的連結。</p>"
-            return self._send(404, body.encode(), "text/html; charset=utf-8")
-        current = self._session()
-        headers = {"Location": "/", "Cache-Control": "no-store"}
-        # 主人自己點開邀請連結時不要被登出
-        if not current or current["role"] != "owner":
-            if not (current and current["role"] == "guest" and current["contact_id"] == contact["id"]):
-                token = self.app.store.create_session("guest", contact["id"])
-                headers["Set-Cookie"] = self._cookie_header(token, SESSION_DAYS * 86400)
-        self._send(303, b"", "text/plain", headers)
-
-    # --- api
-    def _me(self) -> None:
+    # --- 主人帳號
+    def _me(self, qs: dict) -> None:
+        if not self.app.store.has_password():
+            # 第一次使用:只有坐在這台電腦前面的人可以設定密碼
+            return self._json({"role": None, "setup": self._is_local()})
         sess = self._session()
         if not sess:
             return self._json({"role": None, "owner_name": self.app.owner_name})
@@ -745,23 +942,150 @@ class Handler(BaseHTTPRequestHandler):
         return self._json({
             "role": "guest",
             "owner_name": self.app.owner_name,
-            "contact": {"id": contact["id"], "name": contact["name"], "owner_read_id": contact["owner_read_id"]},
+            "contact": {"id": contact["id"], "name": contact["name"], "status": contact["status"],
+                        "owner_read_id": contact["owner_read_id"]},
         })
+
+    @staticmethod
+    def _check_new_password(pw: str) -> None:
+        if len(pw) < MIN_PASSWORD:
+            raise ApiError(400, f"密碼至少要 {MIN_PASSWORD} 個字")
+        if len(pw) > 200:
+            raise ApiError(400, "密碼太長")
+
+    def _setup(self, data: dict) -> None:
+        if self.app.store.has_password():
+            raise ApiError(403, "已經設定過密碼")
+        if not self._is_local():
+            raise ApiError(403, "第一次設定只能在家裡這台電腦上操作")
+        pw = str(data.get("password", ""))
+        self._check_new_password(pw)
+        self.app.store.set_password(pw)
+        name = self._clean(data.get("owner_name"), 50)
+        if name:
+            self.app.store.set_setting("owner_name", name)
+        token = self.app.store.create_session("owner", device=self._device())
+        self._json({"ok": True}, headers=self._login_cookie(token))
 
     def _login(self, data: dict) -> None:
         key = self._client_key()
-        if self.app.limiter.blocked(key):
+        if self.app.login_fails.blocked(key) or self.app.login_fails_all.blocked("*"):
             raise ApiError(429, "密碼錯誤太多次,請 10 分鐘後再試")
         if not self.app.store.check_password(str(data.get("password", ""))):
-            self.app.limiter.fail(key)
+            self.app.login_fails.add(key)
+            self.app.login_fails_all.add("*")
             time.sleep(1)
             raise ApiError(401, "密碼錯誤")
-        token = self.app.store.create_session("owner")
-        self._json({"ok": True}, headers={"Set-Cookie": self._cookie_header(token, SESSION_DAYS * 86400)})
+        token = self.app.store.create_session("owner", device=self._device())
+        self._json({"ok": True}, headers=self._login_cookie(token))
 
     def _logout(self, data: dict) -> None:
-        self.app.store.delete_session(self._session_token())
+        self.app.store.delete_session(token_hash(self._session_token()))
         self._json({"ok": True}, headers={"Set-Cookie": self._cookie_header("", 0)})
+
+    def _change_password(self, data: dict) -> None:
+        self._require("owner")
+        if not self.app.store.check_password(str(data.get("old", ""))):
+            time.sleep(1)
+            raise ApiError(400, "目前的密碼不對")
+        new = str(data.get("new", ""))
+        self._check_new_password(new)
+        self.app.store.set_password(new)  # 會登出所有主人裝置
+        token = self.app.store.create_session("owner", device=self._device())
+        self._json({"ok": True}, headers=self._login_cookie(token))
+
+    def _devices(self, qs: dict) -> None:
+        sess = self._require("owner")
+        if "contact" in qs:
+            contact = self._contact_for(sess, qs["contact"])
+            items = self.app.store.list_sessions("guest", contact["id"])
+        else:
+            items = self.app.store.list_sessions("owner")
+        for item in items:
+            item["current"] = item["id"] == sess["id"]
+        self._json({"devices": items})
+
+    def _remove_device(self, data: dict) -> None:
+        sess = self._require("owner")
+        sid = str(data.get("id", ""))
+        if data.get("all_others"):
+            self.app.store.delete_sessions("owner", None, keep=sess["id"])
+            return self._json({"ok": True})
+        target = None
+        with self.app.store.lock:
+            row = self.app.store.db.execute("SELECT role, contact_id FROM sessions WHERE id = ?", (sid,)).fetchone()
+            target = dict(row) if row else None
+        if not target:
+            raise ApiError(404, "找不到這台裝置")
+        self.app.store.delete_session(sid)
+        if target["role"] == "guest":
+            self.app.hub.kick(sid)
+        self._json({"ok": True})
+
+    # --- 加好友
+    def _invite_info(self, qs: dict) -> None:
+        contact = self.app.store.invite_contact(qs.get("token", ""))
+        if not contact:
+            return self._json({"valid": False, "owner_name": self.app.owner_name})
+        self._json({"valid": True, "owner_name": self.app.owner_name, "name": contact["name"]})
+
+    def _join(self, data: dict) -> None:
+        """朋友按下「開始聊天」才用掉邀請連結(LINE 預覽連結時不會用掉)。"""
+        current = self._session()
+        if current and current["role"] == "owner":
+            # 主人自己點開測試:不要用掉朋友的連結,也不要把主人登出
+            if not self.app.store.invite_contact(str(data.get("token", ""))):
+                raise ApiError(410, "這條邀請連結已經用過或過期了。")
+            return self._json({"ok": True, "as_owner": True})
+        result = self.app.store.claim_invite(str(data.get("token", "")), self._device())
+        if not result:
+            raise ApiError(410, "這條邀請連結已經用過或過期了,請向對方要一條新的。")
+        contact, token = result
+        self.app.hub.publish({"type": "joined", "contact_id": contact["id"], "name": contact["name"]},
+                             contact["id"], to_guest=False)
+        self._json({"ok": True, "as_owner": False}, headers=self._login_cookie(token))
+
+    def _add_info(self, qs: dict) -> None:
+        enabled = self.app.store.get_setting("friend_link_on") == "1"
+        valid = enabled and hmac.compare_digest(qs.get("token", ""), self.app.friend_link_token())
+        self._json({"valid": valid, "owner_name": self.app.owner_name})
+
+    def _request_friend(self, data: dict) -> None:
+        enabled = self.app.store.get_setting("friend_link_on") == "1"
+        if not (enabled and hmac.compare_digest(str(data.get("token", "")), self.app.friend_link_token())):
+            raise ApiError(410, "這個加好友連結已經關閉或換新了。")
+        name = self._clean(data.get("name"), 40)
+        if not name:
+            raise ApiError(400, "請輸入你的名字")
+        key = self._client_key()
+        if (self.app.store.count_pending() >= MAX_PENDING
+                or not self.app.requests.take(key) or not self.app.requests_all.take("*")):
+            raise ApiError(429, "申請太多了,請晚點再試")
+        contact = self.app.store.add_contact(name, status="pending",
+                                             request_msg=self._clean(data.get("message"), 200))
+        token = self.app.store.create_session("guest", contact["id"], self._device())
+        self.app.hub.publish({"type": "request", "contact_id": contact["id"], "name": name},
+                             contact["id"], to_guest=False)
+        self._json({"ok": True}, headers=self._login_cookie(token))
+
+    def _friend_link(self, qs: dict) -> None:
+        self._require("owner")
+        on = self.app.store.get_setting("friend_link_on") == "1"
+        url = f"{self._base_url()}/add/{self.app.friend_link_token()}?openExternalBrowser=1"
+        self._json({"enabled": on, "url": url if on else ""})
+
+    def _set_friend_link(self, data: dict) -> None:
+        self._require("owner")
+        if data.get("reset"):
+            self.app.store.set_setting("friend_token", secrets.token_urlsafe(18))
+        if "enabled" in data:
+            self.app.store.set_setting("friend_link_on", "1" if data["enabled"] else "")
+        self._friend_link({})
+
+    # --- 聊天
+    def _list_contacts(self, qs: dict) -> None:
+        self._require("owner")
+        self._json({"contacts": [self._public_contact(c) for c in self.app.store.list_contacts()]})
 
     def _get_messages(self, qs: dict) -> None:
         sess = self._require()
@@ -783,11 +1107,15 @@ class Handler(BaseHTTPRequestHandler):
     def _post_message(self, data: dict) -> None:
         sess = self._require()
         contact = self._contact_for(sess, data.get("contact_id"))
+        if contact["status"] != "active":
+            raise ApiError(403, "請先接受好友申請")
         body = str(data.get("body", "")).strip()
         if not body:
             raise ApiError(400, "訊息是空的")
         if len(body) > MAX_MESSAGE:
             raise ApiError(400, f"訊息太長(上限 {MAX_MESSAGE} 字)")
+        if sess["role"] == "guest" and not self.app.messages.take(sess["id"]):
+            raise ApiError(429, "訊息傳太快了,休息一下")
         sender = "me" if sess["role"] == "owner" else "them"
         msg = self.app.store.add_message(contact["id"], sender, body)
         # 自己送出的就算已讀
@@ -810,9 +1138,9 @@ class Handler(BaseHTTPRequestHandler):
         }, contact["id"])
         self._json({"ok": True})
 
-    def _events(self) -> None:
-        sess = self._require()
-        q = self.app.hub.subscribe(sess["role"], sess.get("contact_id"))
+    def _events(self, qs: dict) -> None:
+        sess = self._require(active=False)  # 等待確認的朋友也要能收到「已接受」
+        q = self.app.hub.subscribe(sess["role"], sess.get("contact_id"), sess["id"])
         try:
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream; charset=utf-8")
@@ -827,10 +1155,13 @@ class Handler(BaseHTTPRequestHandler):
                 try:
                     event = q.get(timeout=20)
                 except queue.Empty:
-                    self.wfile.write(b": ping\n\n")
-                    self.wfile.flush()
-                    continue
-                if event is None:  # 連結被重設,把訪客踢掉
+                    if not self.app.store.get_session(self._session_token()):
+                        event = None  # 登入已失效
+                    else:
+                        self.wfile.write(b": ping\n\n")
+                        self.wfile.flush()
+                        continue
+                if event is None:  # 被登出 / 被移除
                     self.wfile.write(b"event: kicked\ndata: {}\n\n")
                     self.wfile.flush()
                     return
@@ -865,7 +1196,9 @@ class Handler(BaseHTTPRequestHandler):
 
     @staticmethod
     def _clean(value, limit: int) -> str:
-        return str(value or "").strip()[:limit]
+        # 去掉控制字元(換行以外)
+        text = re.sub(r"[\x00-\x08\x0b-\x1f\x7f‪-‮⁦-⁩]", "", str(value or ""))
+        return text.strip()[:limit]
 
     def _add_contact(self, data: dict) -> None:
         self._require("owner")
@@ -874,6 +1207,9 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(400, "請輸入名字")
         c = self.app.store.add_contact(name, self._clean(data.get("line_id"), 100),
                                        self._clean(data.get("note"), 500))
+        if data.get("invite", True):
+            self.app.store.new_invite(c["id"])
+            c = self.app.store.get_contact(c["id"])
         self.app.hub.publish({"type": "contacts"}, c["id"], to_guest=False)
         self._json({"contact": self._public_contact(c)})
 
@@ -906,7 +1242,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"need_choice": True, "senders": senders})
         contact = self.app.store.find_contact_by_name(contact_name)
         if not contact:
-            contact = self.app.store.add_contact(contact_name)
+            contact = self.app.store.add_contact(contact_name[:100])
         items = [
             (ts, "them" if sender == contact_name else "me", body)
             for ts, sender, body in parsed["messages"]
@@ -918,20 +1254,28 @@ class Handler(BaseHTTPRequestHandler):
     def _contact_action(self, contact_id: int, action: str, data: dict) -> None:
         sess = self._require("owner")
         contact = self._contact_for(sess, contact_id)
+        store, hub = self.app.store, self.app.hub
         if action == "update":
             name = self._clean(data.get("name"), 100) or contact["name"]
-            self.app.store.update_contact(contact_id, name, self._clean(data.get("line_id"), 100),
-                                          self._clean(data.get("note"), 500))
-        elif action == "reset-invite":
-            self.app.store.reset_invite(contact_id)
-            self.app.hub.kick_guests(contact_id)
-        elif action == "delete":
-            self.app.hub.kick_guests(contact_id)
-            self.app.store.delete_contact(contact_id)
-            self.app.hub.publish({"type": "contacts"}, contact_id, to_guest=False)
+            store.update_contact(contact_id, name, self._clean(data.get("line_id"), 100),
+                                 self._clean(data.get("note"), 500))
+        elif action == "invite":
+            store.new_invite(contact_id)
+        elif action == "cancel-invite":
+            store.cancel_invite(contact_id)
+        elif action == "approve":
+            store.approve_contact(contact_id)
+            hub.publish({"type": "approved"}, contact_id)
+        elif action == "logout-devices":
+            store.delete_sessions("guest", contact_id)
+            hub.kick_guests(contact_id)
+        elif action == "delete":  # 也用來拒絕好友申請
+            hub.kick_guests(contact_id)
+            store.delete_contact(contact_id)
+            hub.publish({"type": "contacts"}, contact_id, to_guest=False)
             return self._json({"ok": True})
-        self.app.hub.publish({"type": "contacts"}, contact_id, to_guest=False)
-        self._json({"contact": self._public_contact(self.app.store.get_contact(contact_id))})
+        hub.publish({"type": "contacts"}, contact_id, to_guest=False)
+        self._json({"contact": self._public_contact(store.get_contact(contact_id))})
 
     def _settings(self, data: dict) -> None:
         self._require("owner")
@@ -941,8 +1285,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.app.store.set_setting("owner_name", name)
         if "public_url" in data:
             url = self._clean(data["public_url"], 300).rstrip("/")
-            if url and not re.match(r"^https?://", url):
-                raise ApiError(400, "對外網址要以 http:// 或 https:// 開頭")
+            if url and not re.match(r"^https?://[^\s/]+$", url):
+                raise ApiError(400, "對外網址格式像 https://example.com(不要有路徑)")
             if url != self.app.store.get_setting("public_url"):
                 self.app.store.set_setting("public_url", url)
                 self.app.store.set_setting("public_url_auto", "")  # 手動設定的,啟動時不要蓋掉
@@ -1102,14 +1446,29 @@ def open_tunnel(kind: str, port: int) -> tuple[str | None, str | None, subproces
 
 def ask_password() -> str:
     while True:
-        pw = getpass.getpass("設定主人密碼(至少 6 個字): ")
-        if len(pw) < 6:
+        pw = getpass.getpass(f"設定主人密碼(至少 {MIN_PASSWORD} 個字): ")
+        if len(pw) < MIN_PASSWORD:
             print("太短了,再試一次。")
             continue
         if getpass.getpass("再輸入一次: ") != pw:
             print("兩次不一樣,再試一次。")
             continue
         return pw
+
+
+def already_running(port: int) -> bool:
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/me", timeout=3) as r:
+            return r.headers.get("Server", "").startswith("HomeChat")
+    except Exception:
+        return False
+
+
+def open_browser(url: str) -> None:
+    try:
+        webbrowser.open(url)
+    except Exception:
+        pass
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1121,7 +1480,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--tunnel", choices=["auto", "tailscale", "cloudflare", "off"], default="auto",
                    help="自動開外部連線,讓不同 Wi-Fi / 4G 也能連(預設 auto:有 Tailscale 用 Tailscale,否則 cloudflared)")
     p.add_argument("--public-url", default="", help="自己的固定對外網址(設定後不會自動開通道)")
-    p.add_argument("--set-password", action="store_true", help="設定 / 更改主人密碼後結束")
+    p.add_argument("--open", action="store_true", help="啟動後打開瀏覽器")
+    p.add_argument("--set-password", action="store_true", help="在這個視窗重設主人密碼(忘記密碼時用)")
     args = p.parse_args(argv)
     for stream in (sys.stdout, sys.stderr):  # Windows 輸出到檔案時遇到特殊字元不要當掉
         try:
@@ -1129,30 +1489,42 @@ def main(argv: list[str] | None = None) -> int:
         except (AttributeError, ValueError):
             pass
 
+    local_url = f"http://127.0.0.1:{args.port}"
     store = Store(args.db)
-    env_pw = os.environ.get("HOMECHAT_PASSWORD")
     if args.set_password:
-        store.set_password(env_pw or ask_password())
+        store.set_password(os.environ.get("HOMECHAT_PASSWORD") or ask_password())
         print("密碼已更新,所有主人裝置需要重新登入。")
         return 0
-    if not store.has_password():
-        if env_pw:
-            store.set_password(env_pw)
-        elif sys.stdin.isatty():
-            print("第一次使用,先設定主人密碼。")
-            store.set_password(ask_password())
-        else:
-            print("還沒設定密碼:請先執行 python homechat.py --set-password", file=sys.stderr)
-            return 1
+    if os.environ.get("HOMECHAT_PASSWORD") and not store.has_password():
+        store.set_password(os.environ["HOMECHAT_PASSWORD"])
 
     app = App(store, owner_name=args.name)
     try:
         server = make_server(app, args.host, args.port)
     except OSError as e:
-        print(f"無法使用 port {args.port}({e})。HomeChat 是不是已經開著了?", file=sys.stderr)
+        if already_running(args.port):
+            # 已經開著了(例如開機自動啟動),桌面捷徑只要打開瀏覽器就好
+            print(f"HomeChat 已經在執行中:{local_url}")
+            open_browser(local_url)
+            return 0
+        print(f"無法使用 port {args.port}({e})", file=sys.stderr)
         return 1
     threading.Thread(target=server.serve_forever, daemon=True).start()
     print(f"HomeChat 已啟動,資料存在 {Path(args.db).resolve()}")
+
+    if not store.has_password():
+        # 第一次使用:在瀏覽器設定密碼。設好之前不開外部連線,外面的人搶不到設定頁
+        print(f"第一次使用:請在瀏覽器打開 {local_url} 設定密碼…")
+        open_browser(local_url)
+        try:
+            while not store.has_password():
+                time.sleep(1)
+        except KeyboardInterrupt:
+            server.shutdown()
+            return 0
+        print("密碼設定完成")
+    elif args.open:
+        open_browser(local_url)
 
     tunnel_proc = None
     if args.public_url:
@@ -1184,11 +1556,11 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print("  ⚠ 目前只有同一個 Wi-Fi 連得到。要在外面也能連,請照 README")
         print("    安裝 Tailscale(推薦)或 cloudflared,然後重新啟動 HomeChat。")
-    print(f"  這台電腦:http://127.0.0.1:{args.port}")
+    print(f"  這台電腦:{local_url}")
     for ip in lan_addresses():
         print(f"  同 Wi-Fi:http://{ip}:{args.port}")
     print("=" * 60)
-    print("這個視窗不要關。按 Ctrl+C 結束")
+    print("這個視窗不要關(可以縮小)。按 Ctrl+C 結束")
     try:
         while True:
             time.sleep(3600)
@@ -1200,6 +1572,7 @@ def main(argv: list[str] | None = None) -> int:
         if tunnel_proc:
             tunnel_proc.terminate()
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
