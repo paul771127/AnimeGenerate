@@ -42,9 +42,11 @@ STATIC_DIR = HERE / "static"
 DEFAULT_DB = HERE / "data" / "homechat.db"
 
 COOKIE_NAME = "hc_session"
-SESSION_IDLE_DAYS = 90  # 90 天沒用自動登出
+SESSION_IDLE_DAYS = 365  # 像 LINE 一樣一直保持登入;一年沒用才自動登出(每次使用都會重新計算)
 INVITE_DAYS = 7  # 邀請連結 7 天內有效,只能用一次
-MIN_PASSWORD = 8
+MIN_PASSWORD = 8  # 主人
+MIN_GUEST_PASSWORD = 6  # 朋友
+USERNAME_RE = re.compile(r"^[A-Za-z0-9._-]{3,30}$")
 MAX_PENDING = 20  # 最多同時 20 個待確認的好友申請
 MAX_BODY = 20 * 1024 * 1024  # LINE 聊天紀錄可能很大
 MAX_MESSAGE = 5000
@@ -59,6 +61,8 @@ CREATE TABLE IF NOT EXISTS contacts (
     line_id TEXT NOT NULL DEFAULT '',
     note TEXT NOT NULL DEFAULT '',
     status TEXT NOT NULL DEFAULT 'active',       -- active / pending(好友申請等待確認)
+    username TEXT,                               -- 朋友自己設定的登入帳號(小寫)
+    password_hash TEXT NOT NULL DEFAULT '',
     request_msg TEXT NOT NULL DEFAULT '',
     invite_token TEXT NOT NULL UNIQUE,
     invite_expires REAL NOT NULL DEFAULT 0,      -- 0 = 沒有可用的邀請連結
@@ -72,9 +76,12 @@ CREATE TABLE IF NOT EXISTS messages (
     sender TEXT NOT NULL CHECK (sender IN ('me', 'them')),
     body TEXT NOT NULL,
     created_at REAL NOT NULL,
-    source TEXT NOT NULL DEFAULT 'chat'
+    source TEXT NOT NULL DEFAULT 'chat',
+    client_id TEXT                               -- 裝置產生的編號,離線排隊重送時不會重複
 );
 CREATE INDEX IF NOT EXISTS idx_messages_contact ON messages(contact_id, created_at, id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_client ON messages(contact_id, client_id) WHERE client_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_username ON contacts(username) WHERE username IS NOT NULL;
 CREATE TABLE IF NOT EXISTS sessions (
     id TEXT PRIMARY KEY,                         -- 登入 token 的 SHA-256,不存明碼
     role TEXT NOT NULL CHECK (role IN ('owner', 'guest')),
@@ -101,6 +108,9 @@ def verify_password(password: str, stored: str) -> bool:
         return hmac.compare_digest(got.hex(), digest)
     except (ValueError, TypeError):
         return False
+
+
+DUMMY_HASH = hash_password(secrets.token_hex(8))
 
 
 # ---------------------------------------------------------------- 資料庫
@@ -165,9 +175,14 @@ class Store:
         if cols:
             for name, ddl in (("status", "TEXT NOT NULL DEFAULT 'active'"),
                               ("request_msg", "TEXT NOT NULL DEFAULT ''"),
-                              ("invite_expires", "REAL NOT NULL DEFAULT 0")):
+                              ("invite_expires", "REAL NOT NULL DEFAULT 0"),
+                              ("username", "TEXT"),
+                              ("password_hash", "TEXT NOT NULL DEFAULT ''")):
                 if name not in cols:
                     self.db.execute(f"ALTER TABLE contacts ADD COLUMN {name} {ddl}")
+        cols = {r["name"] for r in self.db.execute("PRAGMA table_info(messages)")}
+        if cols and "client_id" not in cols:
+            self.db.execute("ALTER TABLE messages ADD COLUMN client_id TEXT")
 
     # --- settings
     def get_setting(self, key: str, default: str = "") -> str:
@@ -260,6 +275,8 @@ class Store:
             "note": row["note"],
             "status": row["status"],
             "request_msg": row["request_msg"],
+            "username": row["username"] or "",
+            "has_password": bool(row["password_hash"]),
             "invite_token": row["invite_token"],
             "invite_expires": row["invite_expires"],
             "owner_read_id": row["owner_read_id"],
@@ -360,8 +377,9 @@ class Store:
             ).fetchone()
         return self._contact_row(row) if row else None
 
-    def claim_invite(self, token: str, device: str) -> tuple[dict, str] | None:
-        """使用邀請連結:連結立刻作廢,回傳 (聯絡人, 登入 token)。"""
+    def claim_invite(self, token: str, device: str, username: str | None = None,
+                     password_hash: str = "") -> tuple[dict, str] | None:
+        """使用邀請連結:連結立刻作廢,同時設定帳號密碼。回傳 (聯絡人, 登入 token)。"""
         if not token:
             return None
         with self.lock:
@@ -372,11 +390,45 @@ class Store:
             if not row:
                 return None
             self.db.execute(
-                "UPDATE contacts SET invite_token = ?, invite_expires = 0 WHERE id = ?",
-                (secrets.token_urlsafe(24), row["id"]),
+                "UPDATE contacts SET invite_token = ?, invite_expires = 0, "
+                "username = COALESCE(?, username), password_hash = ? WHERE id = ?",
+                (secrets.token_urlsafe(24), username, password_hash or row["password_hash"], row["id"]),
             )
             self.db.commit()
         return self._contact_row(row), self.create_session("guest", row["id"], device)
+
+    # --- 帳號
+    def owner_username(self) -> str:
+        return self.get_setting("owner_username")
+
+    def username_taken(self, username: str, except_contact: int | None = None) -> bool:
+        username = username.lower()
+        if username == self.owner_username():
+            return True
+        with self.lock:
+            row = self.db.execute(
+                "SELECT id FROM contacts WHERE username = ? AND id IS NOT ?", (username, except_contact)
+            ).fetchone()
+        return row is not None
+
+    def set_guest_account(self, contact_id: int, username: str | None, password: str) -> None:
+        with self.lock:
+            if username is None:
+                self.db.execute("UPDATE contacts SET password_hash = ? WHERE id = ?",
+                                (hash_password(password), contact_id))
+            else:
+                self.db.execute("UPDATE contacts SET username = ?, password_hash = ? WHERE id = ?",
+                                (username.lower(), hash_password(password), contact_id))
+            self.db.commit()
+
+    def find_guest_login(self, username: str, password: str) -> dict | None:
+        with self.lock:
+            row = self.db.execute("SELECT * FROM contacts WHERE username = ?", (username.lower(),)).fetchone()
+        if row and row["password_hash"] and verify_password(password, row["password_hash"]):
+            return self._contact_row(row)
+        if not row:  # 不存在的帳號也花一樣的時間,不讓人用時間猜帳號
+            verify_password(password, DUMMY_HASH)
+        return None
 
     def delete_contact(self, contact_id: int) -> None:
         with self.lock:
@@ -393,17 +445,26 @@ class Store:
             "body": row["body"],
             "created_at": row["created_at"],
             "source": row["source"],
+            "client_id": row["client_id"],
         }
 
-    def add_message(self, contact_id: int, sender: str, body: str) -> dict:
+    def add_message(self, contact_id: int, sender: str, body: str,
+                    client_id: str | None = None) -> tuple[dict, bool]:
+        """回傳 (訊息, 是不是新的)。同一個 client_id 重送不會重複新增。"""
         with self.lock:
+            if client_id:
+                row = self.db.execute(
+                    "SELECT * FROM messages WHERE contact_id = ? AND client_id = ?", (contact_id, client_id)
+                ).fetchone()
+                if row:
+                    return self._message_row(row), False
             cur = self.db.execute(
-                "INSERT INTO messages (contact_id, sender, body, created_at) VALUES (?, ?, ?, ?)",
-                (contact_id, sender, body, time.time()),
+                "INSERT INTO messages (contact_id, sender, body, created_at, client_id) VALUES (?, ?, ?, ?, ?)",
+                (contact_id, sender, body, time.time(), client_id),
             )
             self.db.commit()
             row = self.db.execute("SELECT * FROM messages WHERE id = ?", (cur.lastrowid,)).fetchone()
-        return self._message_row(row)
+        return self._message_row(row), True
 
     def list_messages(self, contact_id: int, before: tuple[float, int] | None = None,
                       limit: int = PAGE_SIZE) -> tuple[list[dict], bool]:
@@ -606,6 +667,11 @@ class Hub:
     def kick_guests(self, contact_id: int) -> None:
         with self.lock:
             targets = [q for role, cid, _, q in self.subs if role == "guest" and cid == contact_id]
+        self._kick(targets)
+
+    def kick_guests_except(self, contact_id: int, keep: str) -> None:
+        with self.lock:
+            targets = [q for role, cid, s, q in self.subs if role == "guest" and cid == contact_id and s != keep]
         self._kick(targets)
 
     def kick(self, sid: str) -> None:
@@ -870,7 +936,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if url.path in ("/", "/index.html") or re.fullmatch(r"/(c|add)/[A-Za-z0-9_-]{1,64}", url.path):
                 return self._static("index.html")
-            if url.path in ("/manifest.webmanifest", "/icon.svg"):
+            if url.path in ("/manifest.webmanifest", "/icon.svg", "/sw.js"):
                 return self._static(url.path.lstrip("/"))
             routes = {
                 "/api/me": self._me,
@@ -924,9 +990,9 @@ class Handler(BaseHTTPRequestHandler):
     def _static(self, name: str) -> None:
         path = STATIC_DIR / name
         types = {".html": "text/html; charset=utf-8", ".svg": "image/svg+xml",
-                 ".webmanifest": "application/manifest+json"}
+                 ".webmanifest": "application/manifest+json", ".js": "text/javascript; charset=utf-8"}
         self._send(200, path.read_bytes(), types[path.suffix], {
-            "Cache-Control": "no-store" if name == "index.html" else "no-cache",
+            "Cache-Control": "no-cache",
             "Content-Security-Policy": HTML_CSP,
         })
 
@@ -938,28 +1004,40 @@ class Handler(BaseHTTPRequestHandler):
         sess = self._session()
         if not sess:
             return self._json({"role": None, "owner_name": self.app.owner_name})
+        # 每次打開都把登入延長一年,像 LINE 一樣不用一直重新登入
+        refresh = self._login_cookie(self._session_token())
         if sess["role"] == "owner":
             return self._json({
                 "role": "owner",
                 "owner_name": self.app.owner_name,
+                "username": self.app.store.owner_username(),
                 "public_url": self.app.store.get_setting("public_url"),
                 "tunnel": self.app.store.get_setting("public_url_auto"),
                 "tunnel_note": self.app.store.get_setting("tunnel_note"),
-            })
+            }, headers=refresh)
         contact = self.app.store.get_contact(sess["contact_id"])
         return self._json({
             "role": "guest",
             "owner_name": self.app.owner_name,
+            "username": contact["username"],
             "contact": {"id": contact["id"], "name": contact["name"], "status": contact["status"],
-                        "owner_read_id": contact["owner_read_id"]},
-        })
+                        "owner_read_id": contact["owner_read_id"], "has_password": contact["has_password"]},
+        }, headers=refresh)
 
     @staticmethod
-    def _check_new_password(pw: str) -> None:
-        if len(pw) < MIN_PASSWORD:
-            raise ApiError(400, f"密碼至少要 {MIN_PASSWORD} 個字")
+    def _check_new_password(pw: str, minimum: int = MIN_PASSWORD) -> None:
+        if len(pw) < minimum:
+            raise ApiError(400, f"密碼至少要 {minimum} 個字")
         if len(pw) > 200:
             raise ApiError(400, "密碼太長")
+
+    def _check_new_username(self, username: str, except_contact: int | None = None) -> str:
+        username = username.strip()
+        if not USERNAME_RE.match(username):
+            raise ApiError(400, "帳號要 3~30 個字,只能用英文字母、數字和 . _ -")
+        if self.app.store.username_taken(username, except_contact):
+            raise ApiError(409, "這個帳號已經有人用了,換一個吧")
+        return username.lower()
 
     def _setup(self, data: dict) -> None:
         if self.app.store.has_password():
@@ -967,8 +1045,10 @@ class Handler(BaseHTTPRequestHandler):
         if not self._is_local():
             raise ApiError(403, "第一次設定只能在家裡這台電腦上操作")
         pw = str(data.get("password", ""))
+        username = self._check_new_username(str(data.get("username", "")))
         self._check_new_password(pw)
         self.app.store.set_password(pw)
+        self.app.store.set_setting("owner_username", username)
         name = self._clean(data.get("owner_name"), 50)
         if name:
             self.app.store.set_setting("owner_name", name)
@@ -979,12 +1059,22 @@ class Handler(BaseHTTPRequestHandler):
         key = self._client_key()
         if self.app.login_fails.blocked(key) or self.app.login_fails_all.blocked("*"):
             raise ApiError(429, "密碼錯誤太多次,請 10 分鐘後再試")
-        if not self.app.store.check_password(str(data.get("password", ""))):
+        username = str(data.get("username", "")).strip().lower()
+        password = str(data.get("password", ""))
+        owner_user = self.app.store.owner_username()
+        token = None
+        # 舊版沒有設定主人帳號時,主人只看密碼
+        if (not owner_user or username == owner_user) and self.app.store.check_password(password):
+            token = self.app.store.create_session("owner", device=self._device())
+        elif username and username != owner_user:
+            contact = self.app.store.find_guest_login(username, password)
+            if contact:
+                token = self.app.store.create_session("guest", contact["id"], self._device())
+        if not token:
             self.app.login_fails.add(key)
             self.app.login_fails_all.add("*")
             time.sleep(1)
-            raise ApiError(401, "密碼錯誤")
-        token = self.app.store.create_session("owner", device=self._device())
+            raise ApiError(401, "帳號或密碼錯誤")
         self._json({"ok": True}, headers=self._login_cookie(token))
 
     def _logout(self, data: dict) -> None:
@@ -992,15 +1082,25 @@ class Handler(BaseHTTPRequestHandler):
         self._json({"ok": True}, headers={"Set-Cookie": self._cookie_header("", 0)})
 
     def _change_password(self, data: dict) -> None:
-        self._require("owner")
-        if not self.app.store.check_password(str(data.get("old", ""))):
+        sess = self._require(active=False)
+        old, new = str(data.get("old", "")), str(data.get("new", ""))
+        if sess["role"] == "owner":
+            if not self.app.store.check_password(old):
+                time.sleep(1)
+                raise ApiError(400, "目前的密碼不對")
+            self._check_new_password(new)
+            self.app.store.set_password(new)  # 會登出所有主人裝置
+            token = self.app.store.create_session("owner", device=self._device())
+            return self._json({"ok": True}, headers=self._login_cookie(token))
+        contact = self.app.store.get_contact(sess["contact_id"])
+        if not contact["username"] or not self.app.store.find_guest_login(contact["username"], old):
             time.sleep(1)
             raise ApiError(400, "目前的密碼不對")
-        new = str(data.get("new", ""))
-        self._check_new_password(new)
-        self.app.store.set_password(new)  # 會登出所有主人裝置
-        token = self.app.store.create_session("owner", device=self._device())
-        self._json({"ok": True}, headers=self._login_cookie(token))
+        self._check_new_password(new, MIN_GUEST_PASSWORD)
+        self.app.store.set_guest_account(contact["id"], None, new)
+        self.app.store.delete_sessions("guest", contact["id"], keep=sess["id"])  # 其他裝置登出
+        self.app.hub.kick_guests_except(contact["id"], sess["id"])
+        self._json({"ok": True})
 
     def _devices(self, qs: dict) -> None:
         sess = self._require("owner")
@@ -1035,7 +1135,8 @@ class Handler(BaseHTTPRequestHandler):
         contact = self.app.store.invite_contact(qs.get("token", ""))
         if not contact:
             return self._json({"valid": False, "owner_name": self.app.owner_name})
-        self._json({"valid": True, "owner_name": self.app.owner_name, "name": contact["name"]})
+        self._json({"valid": True, "owner_name": self.app.owner_name, "name": contact["name"],
+                    "username": contact["username"]})
 
     def _join(self, data: dict) -> None:
         """朋友按下「開始聊天」才用掉邀請連結(LINE 預覽連結時不會用掉)。"""
@@ -1045,7 +1146,17 @@ class Handler(BaseHTTPRequestHandler):
             if not self.app.store.invite_contact(str(data.get("token", ""))):
                 raise ApiError(410, "這條邀請連結已經用過或過期了。")
             return self._json({"ok": True, "as_owner": True})
-        result = self.app.store.claim_invite(str(data.get("token", "")), self._device())
+        token_in = str(data.get("token", ""))
+        target = self.app.store.invite_contact(token_in)
+        if not target:
+            raise ApiError(410, "這條邀請連結已經用過或過期了,請向對方要一條新的。")
+        # 先檢查帳號密碼,有問題就不要用掉邀請連結
+        password = str(data.get("password", ""))
+        username = None
+        if not target["username"]:
+            username = self._check_new_username(str(data.get("username", "")), target["id"])
+        self._check_new_password(password, MIN_GUEST_PASSWORD)
+        result = self.app.store.claim_invite(token_in, self._device(), username, hash_password(password))
         if not result:
             raise ApiError(410, "這條邀請連結已經用過或過期了,請向對方要一條新的。")
         contact, token = result
@@ -1065,12 +1176,16 @@ class Handler(BaseHTTPRequestHandler):
         name = self._clean(data.get("name"), 40)
         if not name:
             raise ApiError(400, "請輸入你的名字")
+        username = self._check_new_username(str(data.get("username", "")))
+        password = str(data.get("password", ""))
+        self._check_new_password(password, MIN_GUEST_PASSWORD)
         key = self._client_key()
         if (self.app.store.count_pending() >= MAX_PENDING
                 or not self.app.requests.take(key) or not self.app.requests_all.take("*")):
             raise ApiError(429, "申請太多了,請晚點再試")
         contact = self.app.store.add_contact(name, status="pending",
                                              request_msg=self._clean(data.get("message"), 200))
+        self.app.store.set_guest_account(contact["id"], username, password)
         token = self.app.store.create_session("guest", contact["id"], self._device())
         self.app.hub.publish({"type": "request", "contact_id": contact["id"], "name": name},
                              contact["id"], to_guest=False)
@@ -1125,10 +1240,12 @@ class Handler(BaseHTTPRequestHandler):
         if sess["role"] == "guest" and not self.app.messages.take(sess["id"]):
             raise ApiError(429, "訊息傳太快了,休息一下")
         sender = "me" if sess["role"] == "owner" else "them"
-        msg = self.app.store.add_message(contact["id"], sender, body)
-        # 自己送出的就算已讀
-        self.app.store.mark_read(contact["id"], sess["role"], msg["id"])
-        self.app.hub.publish({"type": "message", "message": msg}, contact["id"])
+        client_id = self._clean(data.get("client_id"), 64) or None
+        msg, new = self.app.store.add_message(contact["id"], sender, body, client_id)
+        if new:
+            # 自己送出的就算已讀
+            self.app.store.mark_read(contact["id"], sess["role"], msg["id"])
+            self.app.hub.publish({"type": "message", "message": msg}, contact["id"])
         self._json({"message": msg})
 
     def _read(self, data: dict) -> None:
@@ -1182,21 +1299,28 @@ class Handler(BaseHTTPRequestHandler):
             self.app.hub.unsubscribe(q)
 
     def _export(self, qs: dict) -> None:
-        sess = self._require("owner")
+        """下載聊天紀錄 .txt。主人和朋友都可以把對話存到自己的電腦。"""
+        sess = self._require()
         contact = self._contact_for(sess, qs.get("contact"))
-        lines = [f"[HomeChat] 與{contact['name']}的聊天記錄", ""]
+        if sess["role"] == "owner":
+            names = {"me": self.app.owner_name, "them": contact["name"]}
+            title = contact["name"]
+        else:
+            names = {"me": self.app.owner_name, "them": contact["name"]}
+            title = self.app.owner_name
+        lines = [f"[HomeChat] 與{title}的聊天記錄", f"下載時間:{datetime.now():%Y/%m/%d %H:%M}", ""]
         day = None
         for m in self.app.store.all_messages(contact["id"]):
             dt = datetime.fromtimestamp(m["created_at"])
             if dt.date() != day:
                 day = dt.date()
                 lines += ["", dt.strftime("%Y/%m/%d")]
-            who = self.app.owner_name if m["sender"] == "me" else contact["name"]
+            who = names[m["sender"]]
             body = m["body"]
             if "\n" in body:
                 body = f'"{body}"'
             lines.append(f"{dt:%H:%M}\t{who}\t{body}")
-        filename = quote(f"HomeChat_{contact['name']}.txt")
+        filename = quote(f"HomeChat_{title}_{datetime.now():%Y%m%d}.txt")
         self._send(200, "\n".join(lines).encode("utf-8"), "text/plain; charset=utf-8", {
             "Content-Disposition": f"attachment; filename*=UTF-8''{filename}",
             "Cache-Control": "no-store",
@@ -1287,6 +1411,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def _settings(self, data: dict) -> None:
         self._require("owner")
+        if "username" in data and str(data["username"]).strip().lower() != self.app.store.owner_username():
+            self.app.store.set_setting("owner_username", self._check_new_username(str(data["username"])))
         if "owner_name" in data:
             name = self._clean(data["owner_name"], 50)
             if name:

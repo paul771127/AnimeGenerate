@@ -111,6 +111,10 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 .tabs button.on { background: var(--panel); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
 .invite-url { word-break: break-all; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
 .line-btn { background: #06c755; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+#offline { position: fixed; top: max(8px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 90;
+  background: #fef3c7; color: #92400e; border-radius: 12px; padding: 8px 14px; font-size: 13px; width: min(560px, calc(100vw - 32px));
+  box-shadow: 0 4px 16px rgba(0,0,0,.15); text-align: center; }
+.msg.queued .stamp { color: #fef3c7; }
 #toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: rgba(0,0,0,.8); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 14px; z-index: 100; max-width: calc(100vw - 32px); text-align: center; }
 
 /* ---------- 加入 / 申請 */
@@ -142,21 +146,26 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 <body>
 
 <div id="gate" class="hidden">
-  <!-- 主人登入 -->
-  <form class="card hidden" id="login-form">
+  <!-- 登入(主人和朋友共用) -->
+  <form class="card hidden" id="login-form" action="/" method="post">
     <h1>HomeChat</h1>
     <p>家裡電腦上的聊天室</p>
-    <input class="field" type="password" id="password" placeholder="主人密碼" autocomplete="current-password" required>
+    <input class="field" name="username" id="login-user" placeholder="帳號" autocomplete="username"
+           autocapitalize="none" autocorrect="off" spellcheck="false" required>
+    <input class="field" type="password" name="password" id="password" placeholder="密碼" autocomplete="current-password" required>
     <button class="btn block" type="submit">登入</button>
     <div class="error" id="login-error"></div>
-    <p class="hint" style="margin-top:10px;font-size:13px">朋友請用主人傳給你的邀請連結開啟。</p>
+    <p class="hint" style="margin-top:10px;font-size:13px">登入後這台裝置會一直記住,不用每次輸入。<br>
+      朋友:用你加入時設定的帳號密碼登入。還沒加入請用對方傳給你的邀請連結。</p>
   </form>
 
   <!-- 第一次使用:設定密碼(只能在家裡電腦上) -->
   <form class="card hidden" id="setup-form">
     <h1>歡迎使用 HomeChat</h1>
-    <p>先設定你的名字和主人密碼。之後在手機上登入也用這組密碼。</p>
+    <p>先設定你的名字、帳號和密碼。之後在手機上登入也用這組帳號密碼,瀏覽器會幫你記住。</p>
     <input class="field" name="owner_name" placeholder="你的名字(朋友會看到)" maxlength="50" required>
+    <input class="field" name="username" placeholder="帳號(英文或數字,3~30 字)" autocomplete="username"
+           autocapitalize="none" autocorrect="off" spellcheck="false" pattern="[A-Za-z0-9._-]{3,30}" required>
     <input class="field" type="password" name="password" placeholder="主人密碼(至少 8 個字)" autocomplete="new-password" minlength="8" required>
     <input class="field" type="password" name="password2" placeholder="再輸入一次密碼" autocomplete="new-password" required>
     <button class="btn block" type="submit">開始使用</button>
@@ -164,13 +173,19 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
   </form>
 
   <!-- 朋友:用邀請連結加入 -->
-  <div class="card center hidden" id="join-card">
+  <form class="card center hidden" id="join-card" action="/" method="post">
     <div class="avatar big-avatar" id="join-avatar"></div>
     <h1 id="join-title"></h1>
     <p id="join-text"></p>
-    <button class="btn block" id="join-btn">開始聊天</button>
+    <div id="join-fields">
+      <input class="field" name="username" id="join-user" placeholder="設定你的帳號(英文或數字,3~30 字)" autocomplete="username"
+             autocapitalize="none" autocorrect="off" spellcheck="false">
+      <input class="field" type="password" name="password" placeholder="設定密碼(至少 6 個字)" autocomplete="new-password">
+      <p class="hint" id="join-hint" style="margin:8px 0 0">換手機或加入主畫面時,用這組帳號密碼登入。瀏覽器會幫你記住。</p>
+    </div>
+    <button class="btn block" type="submit" id="join-btn">開始聊天</button>
     <div class="error" id="join-error"></div>
-  </div>
+  </form>
 
   <!-- 朋友:用公開連結申請好友 -->
   <form class="card center hidden" id="request-form">
@@ -179,6 +194,9 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
     <p>送出好友申請,對方確認後就能聊天。</p>
     <input class="field" name="name" placeholder="你的名字" maxlength="40" required>
     <input class="field" name="message" placeholder="想說的話(選填,例如:我是國中同學小華)" maxlength="200">
+    <input class="field" name="username" placeholder="設定你的帳號(英文或數字,3~30 字)" autocomplete="username"
+           autocapitalize="none" autocorrect="off" spellcheck="false" pattern="[A-Za-z0-9._-]{3,30}" required>
+    <input class="field" type="password" name="password" placeholder="設定密碼(至少 6 個字)" autocomplete="new-password" minlength="6" required>
     <button class="btn block" type="submit">送出好友申請</button>
     <div class="error" id="request-error"></div>
   </form>
@@ -326,12 +344,15 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
   <form id="form-settings">
     <p class="hint" id="public-info" style="margin-top:0"></p>
     <label>你的顯示名稱(朋友會看到)</label><input class="field" name="owner_name" maxlength="50" required>
+    <label>登入帳號</label><input class="field" name="username" maxlength="30" autocomplete="username"
+      autocapitalize="none" autocorrect="off" spellcheck="false" pattern="[A-Za-z0-9._-]{3,30}" placeholder="英文或數字,3~30 字">
     <label>對外網址(通常會自動設定,不用填)</label><input class="field" name="public_url" maxlength="300" placeholder="留空 = 用目前瀏覽器的網址">
     <div class="error" id="settings-error"></div>
     <div class="actions"><button class="btn" type="submit">儲存</button></div>
   </form>
   <form id="form-password">
     <div class="section-title">更改主人密碼</div>
+    <input type="text" name="username" autocomplete="username" style="display:none" tabindex="-1" aria-hidden="true">
     <input class="field" type="password" name="old" placeholder="目前的密碼" autocomplete="current-password" required style="margin-top:10px">
     <input class="field" type="password" name="new" placeholder="新密碼(至少 8 個字)" autocomplete="new-password" minlength="8" required style="margin-top:10px">
     <p class="hint">改密碼後,其他登入的裝置都會被登出。</p>
@@ -346,6 +367,22 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
   </div>
 </div></dialog>
 
+<div id="offline" class="hidden">📴 連不上家裡的電腦(可能關機或沒有網路)。顯示的是這台裝置存的紀錄,打的訊息會在連上後自動送出。</div>
+
+<!-- 朋友改密碼 -->
+<dialog id="dlg-guest-pw"><form class="dlg" id="form-guest-pw">
+  <h3>更改密碼</h3>
+  <input class="field" name="username" autocomplete="username" readonly style="margin-top:4px">
+  <input class="field" type="password" name="old" placeholder="目前的密碼" autocomplete="current-password" required style="margin-top:10px">
+  <input class="field" type="password" name="new" placeholder="新密碼(至少 6 個字)" autocomplete="new-password" minlength="6" required style="margin-top:10px">
+  <p class="hint">改完後,你其他登入的裝置會被登出。</p>
+  <div class="error" id="guest-pw-error"></div>
+  <div class="actions">
+    <button class="btn secondary" type="button" data-close>取消</button>
+    <button class="btn" type="submit">更改</button>
+  </div>
+</form></dialog>
+
 <div id="toast" class="hidden"></div>
 
 <script>
@@ -354,26 +391,39 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 
 const state = {
-  role: null, ownerName: "", publicUrl: "",
+  role: null, ownerName: "", publicUrl: "", username: "",
   contacts: [], current: null,         // current: contact object (owner) / guest contact
-  messages: [], more: false, otherReadId: 0,
-  es: null, pendingSeq: 0,
+  messages: [], more: false, otherReadId: 0, showCount: 0,
+  es: null, offline: false,
 };
+const PAGE = 200;
 
 // ---------- utils
+class ApiError extends Error {
+  constructor(message, status, offline) { super(message); this.status = status; this.offline = offline; }
+}
 async function api(path, body) {
   const opt = body === undefined ? {} : {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
   };
-  const res = await fetch(path, { credentials: "same-origin", ...opt });
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15000);
+  let res;
+  try {
+    res = await fetch(path, { credentials: "same-origin", signal: ctrl.signal, ...opt });
+  } catch (_) {
+    throw new ApiError("連不上家裡的電腦", 0, true);  // 關機、沒網路、逾時
+  } finally { clearTimeout(timer); }
   let data = {};
   try { data = await res.json(); } catch (_) {}
+  if (res.status >= 502 && res.status <= 504) throw new ApiError("連不上家裡的電腦", res.status, true);  // 通道開著但電腦沒回應
   if (!res.ok) {
     if (res.status === 401 && path !== "/api/login") { boot(); }
-    throw new Error(data.error || `錯誤 ${res.status}`);
+    throw new ApiError(data.error || `錯誤 ${res.status}`, res.status, false);
   }
   return data;
 }
+const ignoreOffline = err => { if (!err.offline) throw err; };
 function el(tag, attrs = {}, ...kids) {
   const e = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
@@ -413,10 +463,110 @@ function shortTime(ts) {
   return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 }
 const isTouch = matchMedia("(pointer: coarse)").matches;
+function newId() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  const b = new Uint8Array(16); crypto.getRandomValues(b);
+  return [...b].map(x => x.toString(16).padStart(2, "0")).join("");
+}
+
+// ---------- 這台裝置存的一份(IndexedDB):家裡電腦關機時也能看,訊息排隊等連上再送
+const local = (() => {
+  let dbp = null;
+  function open() {
+    if (!dbp) dbp = new Promise(resolve => {
+      try {
+        const r = indexedDB.open("homechat", 1);
+        r.onupgradeneeded = () => {
+          const db = r.result;
+          db.createObjectStore("kv");
+          db.createObjectStore("messages", { keyPath: "id" }).createIndex("contact", "contact_id");
+          db.createObjectStore("outbox", { keyPath: "client_id" });
+        };
+        r.onsuccess = () => resolve(r.result);
+        r.onerror = r.onblocked = () => resolve(null);
+      } catch (_) { resolve(null); }  // 私密瀏覽等不能存:照常使用,只是沒有離線副本
+    });
+    return dbp;
+  }
+  async function run(name, mode, fn) {
+    const db = await open();
+    if (!db) return undefined;
+    return new Promise(resolve => {
+      let out;
+      try {
+        const t = db.transaction(name, mode);
+        const req = fn(t.objectStore(name));
+        if (req) req.onsuccess = () => { out = req.result; };
+        t.oncomplete = () => resolve(out);
+        t.onerror = t.onabort = () => resolve(undefined);
+      } catch (_) { resolve(undefined); }
+    });
+  }
+  const byTime = (a, b) => a.created_at - b.created_at || (a.id || 0) - (b.id || 0);
+  return {
+    get: key => run("kv", "readonly", s => s.get(key)),
+    set: (key, value) => run("kv", "readwrite", s => { s.put(value, key); }),
+    putMessages: list => list.length ? run("messages", "readwrite", s => { for (const m of list) s.put(m); }) : undefined,
+    async messagesFor(contactId) {
+      return ((await run("messages", "readonly", s => s.index("contact").getAll(contactId))) || []).sort(byTime);
+    },
+    async outbox(contactId) {
+      const all = ((await run("outbox", "readonly", s => s.getAll())) || []).sort(byTime);
+      return contactId === undefined ? all : all.filter(m => m.contact_id === contactId);
+    },
+    queue: m => run("outbox", "readwrite", s => { s.put(m); }),
+    dequeue: id => run("outbox", "readwrite", s => { s.delete(id); }),
+    async clear() { for (const n of ["kv", "messages", "outbox"]) await run(n, "readwrite", s => { s.clear(); }); },
+  };
+})();
+
+// ---------- 離線 / 重新連線
+let retryTimer = null;
+function setOffline(off) {
+  if (state.offline === off) return;
+  state.offline = off;
+  $("#offline").classList.toggle("hidden", !off);
+  clearInterval(retryTimer);
+  if (off) { closeEvents(); retryTimer = setInterval(reconnect, 10000); }
+}
+async function reconnect() {
+  try { await api("/api/me"); } catch (_) { return; }
+  setOffline(false);
+  boot();  // 重新同步、補送排隊的訊息
+}
+window.addEventListener("online", reconnect);
+
+// ---------- 帳號密碼自動記住 / 自動登入(像 LINE 一樣不用每次輸入)
+function rememberLogin(username, password, name) {
+  sessionStorage.removeItem("hc_no_auto");
+  if (!window.PasswordCredential || !username || !password) return;
+  try {
+    navigator.credentials.store(new PasswordCredential({ id: username, password, name: name || username })).catch(() => {});
+  } catch (_) {}
+}
+async function tryAutoLogin() {
+  // Chrome / Edge / Android:瀏覽器存過的帳號密碼直接登入。Safari / iPhone 會在登入框自動填入
+  if (!window.PasswordCredential || sessionStorage.getItem("hc_no_auto")) return false;
+  try {
+    const cred = await navigator.credentials.get({ password: true, mediation: "silent" });
+    if (!cred || !cred.password) return false;
+    await api("/api/login", { username: cred.id, password: cred.password });
+    return true;
+  } catch (_) { return false; }
+}
+async function logout() {
+  try { await api("/api/logout", {}); } catch (_) {}
+  sessionStorage.setItem("hc_no_auto", "1");  // 剛登出就不要馬上自動登入回去
+  try { navigator.credentials.preventSilentAccess().catch(() => {}); } catch (_) {}
+  await local.clear();  // 這台裝置上的副本一起刪掉
+  closeChat();
+  boot();
+}
 
 // ---------- 進入畫面
 function applyMe(me) {
-  state.role = me.role; state.ownerName = me.owner_name || ""; state.publicUrl = me.public_url || ""; state.tunnel = me.tunnel || "";
+  state.role = me.role; state.ownerName = me.owner_name || ""; state.publicUrl = me.public_url || "";
+  state.tunnel = me.tunnel || ""; state.username = me.username || "";
   const note = $("#tunnel-note");
   note.classList.toggle("hidden", !me.tunnel_note);
   note.replaceChildren();
@@ -427,7 +577,7 @@ function applyMe(me) {
   }
 }
 setInterval(async () => {  // 外部連線可能在啟動後才接通,定期更新狀態
-  if (state.role !== "owner" || document.hidden) return;
+  if (state.role !== "owner" || document.hidden || state.offline) return;
   try { applyMe(await api("/api/me")); } catch (_) {}
 }, 20000);
 
@@ -447,72 +597,130 @@ function showInfo(title, text, btnLabel, onBtn) {
   showGate("info-card");
 }
 function goHome() { history.replaceState(null, "", "/"); boot(); }
+const who = me => me && me.role ? `${me.role}:${me.username || ""}:${(me.contact && me.contact.id) || ""}` : "";
 
-async function boot() {
+let booting = null;
+function boot() {  // 同時被叫很多次時只跑一次
+  if (!booting) booting = doBoot().finally(() => { booting = null; });
+  return booting;
+}
+async function doBoot() {
   closeEvents();
-  const me = await api("/api/me").catch(() => ({ role: null }));
+  let me;
+  try {
+    me = await api("/api/me");
+    setOffline(false);
+  } catch (err) {
+    if (!err.offline) me = { role: null };
+    else {
+      me = await local.get("me");  // 家裡電腦連不上:用這台裝置存的資料
+      if (!me || !me.role) {
+        return showInfo("連不上家裡的電腦", "家裡的電腦可能關機、睡眠或沒有網路。請稍後再試。", "重試", () => boot());
+      }
+      setOffline(true);
+    }
+  }
+  if (me.role && !state.offline) {
+    const prev = await local.get("me");
+    if (prev && who(prev) !== who(me)) await local.clear();  // 換了帳號:清掉上一個人的資料
+    await local.set("me", me);
+  }
   applyMe(me);
   const m = location.pathname.match(/^\/(c|add)\/([\w-]+)$/);
   if (me.setup) { showGate("setup-form"); $("#setup-form").owner_name.focus(); return; }
   if (m && m[1] === "c") return showJoin(m[2], me);
   if (m && m[1] === "add") return showRequest(m[2], me);
-  if (!me.role) { showGate("login-form"); $("#password").focus(); return; }
+  if (!me.role) {
+    if (await tryAutoLogin()) return doBoot();
+    showGate("login-form");
+    (($("#login-user").value ? $("#password") : $("#login-user"))).focus();
+    return;
+  }
   if (me.role === "guest" && me.contact.status !== "active") {
-    showInfo("已送出好友申請", `等 ${state.ownerName} 按「接受」後就能開始聊天。這個頁面會自動更新,也可以先關掉,之後再打開同一個網址。`);
-    openEvents();
+    showInfo("已送出好友申請", `等 ${state.ownerName} 按「接受」後就能開始聊天。這個頁面會自動更新,也可以先關掉,之後用你的帳號密碼登入。`);
+    if (!state.offline) openEvents();
     return;
   }
   $("#gate").classList.add("hidden");
   $("#app").classList.remove("hidden");
   const app = $("#app");
-  app.className = me.role;
+  app.className = me.role + (app.classList.contains("in-chat") ? " in-chat" : "");
+  $("#chat-menu-btn").classList.remove("hidden");
   if (me.role === "owner") {
     $("#sidebar").classList.remove("hidden");
     $("#me-name").textContent = state.ownerName;
-    $("#chat-menu-btn").classList.remove("hidden");
     await loadContacts();
-    const saved = Number(sessionStorage.getItem("hc_open") || 0);
-    const c = state.contacts.find(x => x.id === saved);
-    if (c && c.status === "active" && matchMedia("(min-width: 761px)").matches) openContact(c);
+    if (!state.current) {
+      const saved = Number(sessionStorage.getItem("hc_open") || 0);
+      const c = state.contacts.find(x => x.id === saved);
+      if (c && c.status === "active" && matchMedia("(min-width: 761px)").matches) openContact(c);
+    } else await loadMessages();
   } else {
     $("#sidebar").classList.add("hidden");
-    $("#chat-menu-btn").classList.add("hidden");
     state.current = me.contact;
     $("#chat-title").textContent = state.ownerName;
     showChat();
     await loadMessages();
   }
-  openEvents();
+  if (!state.offline) { openEvents(); flushOutbox(); }
 }
 
 async function showJoin(token, me) {
-  const info = await api("/api/invite?token=" + encodeURIComponent(token)).catch(() => ({ valid: false }));
+  let info;
+  try { info = await api("/api/invite?token=" + encodeURIComponent(token)); }
+  catch (err) {
+    if (err.offline) return showInfo("連不上", "對方的電腦目前沒有開,請晚點再打開這個連結。", "重試", () => boot());
+    info = { valid: false };
+  }
   if (!info.valid) {
     if (me.role === "guest" && me.contact.status === "active")
       return showInfo("這條連結已經用過了", "你已經加入了,直接進聊天室就好。", "進入聊天室", goHome);
-    return showInfo("連結已失效", "這條邀請連結已經用過或過期了(每條連結只能用一次、7 天內有效)。請向對方要一條新的連結。");
+    return showInfo("連結已失效", "這條邀請連結已經用過或過期了(每條連結只能用一次、7 天內有效)。已經加入過的話,請用你的帳號密碼登入;不然請向對方要一條新的連結。", "用帳號密碼登入", goHome);
   }
+  const f = $("#join-card");
+  f.reset();
   $("#join-avatar").replaceWith(Object.assign(avatar(info.owner_name), { id: "join-avatar" }));
   $("#join-avatar").classList.add("big-avatar");
-  $("#join-title").textContent = `${info.owner_name} 邀請你聊天`;
-  $("#join-text").textContent = me.role === "owner"
-    ? `這是給「${info.name}」的邀請連結。你是主人,打開不會用掉它;朋友按下面的按鈕才會加入。`
-    : "按下面的按鈕就能開始聊天,不用安裝任何 App。這條連結只能用一次,之後請直接打開這個網站(建議加入主畫面)。";
   $("#join-error").textContent = "";
-  const btn = $("#join-btn");
-  btn.textContent = me.role === "owner" ? "回到聊天室" : "開始聊天";
-  btn.onclick = async () => {
-    if (me.role === "owner") return goHome();
-    btn.disabled = true;
-    try { await api("/api/join", { token }); goHome(); }
-    catch (err) { $("#join-error").textContent = err.message; }
+  const isOwner = me.role === "owner";
+  const hasAccount = !!info.username;
+  $("#join-title").textContent = hasAccount ? "重設密碼" : `${info.owner_name} 邀請你聊天`;
+  $("#join-text").textContent = isOwner
+    ? `這是給「${info.name}」的邀請連結。你是主人,打開不會用掉它;朋友設定帳號密碼後才會加入。`
+    : hasAccount
+      ? `你的帳號是「${info.username}」。設定一個新密碼就能登入。`
+      : "設定帳號和密碼就能開始聊天,不用安裝任何 App。";
+  $("#join-fields").classList.toggle("hidden", isOwner);
+  const user = $("#join-user");
+  user.value = info.username || "";
+  user.readOnly = hasAccount;
+  user.required = !isOwner && !hasAccount;
+  f.password.required = !isOwner;
+  f.password.minLength = 6;
+  $("#join-btn").textContent = isOwner ? "回到聊天室" : hasAccount ? "設定新密碼並登入" : "開始聊天";
+  f.onsubmit = async e => {
+    e.preventDefault();
+    if (isOwner) return goHome();
+    const btn = $("#join-btn"); btn.disabled = true;
+    $("#join-error").textContent = "";
+    try {
+      await api("/api/join", { token, username: user.value, password: f.password.value });
+      rememberLogin((info.username || user.value).toLowerCase(), f.password.value, info.owner_name);
+      goHome();
+    } catch (err) { $("#join-error").textContent = err.message; }
     finally { btn.disabled = false; }
   };
   showGate("join-card");
+  if (!isOwner) (hasAccount ? f.password : user).focus();
 }
 
 async function showRequest(token, me) {
-  const info = await api("/api/add-info?token=" + encodeURIComponent(token)).catch(() => ({ valid: false }));
+  let info;
+  try { info = await api("/api/add-info?token=" + encodeURIComponent(token)); }
+  catch (err) {
+    if (err.offline) return showInfo("連不上", "對方的電腦目前沒有開,請晚點再打開這個連結。", "重試", () => boot());
+    info = { valid: false };
+  }
   if (me.role === "owner") return showInfo("這是你的「加我好友」連結", "朋友打開後輸入名字送出申請,你在聊天列表按「接受」就能聊天。", "回到聊天室", goHome);
   if (me.role === "guest") return goHome();
   if (!info.valid) return showInfo("連結已失效", "這個加好友連結已經關閉或換新了,請向對方要新的連結。");
@@ -523,8 +731,12 @@ async function showRequest(token, me) {
   f.onsubmit = async e => {
     e.preventDefault();
     $("#request-error").textContent = "";
-    try { await api("/api/request", { token, name: f.name.value, message: f.message.value }); goHome(); }
-    catch (err) { $("#request-error").textContent = err.message; }
+    try {
+      await api("/api/request", { token, name: f.name.value, message: f.message.value,
+                                  username: f.username.value, password: f.password.value });
+      rememberLogin(f.username.value.toLowerCase(), f.password.value, info.owner_name);
+      goHome();
+    } catch (err) { $("#request-error").textContent = err.message; }
   };
   showGate("request-form");
   f.name.focus();
@@ -532,10 +744,12 @@ async function showRequest(token, me) {
 
 $("#login-form").addEventListener("submit", async e => {
   e.preventDefault();
+  const f = e.target;
   $("#login-error").textContent = "";
   try {
-    await api("/api/login", { password: $("#password").value });
-    $("#password").value = "";
+    await api("/api/login", { username: f.username.value, password: f.password.value });
+    rememberLogin(f.username.value.trim().toLowerCase(), f.password.value);
+    f.password.value = "";
     boot();
   } catch (err) { $("#login-error").textContent = err.message; }
 });
@@ -546,7 +760,8 @@ $("#setup-form").addEventListener("submit", async e => {
   $("#setup-error").textContent = "";
   if (f.password.value !== f.password2.value) { $("#setup-error").textContent = "兩次密碼不一樣"; return; }
   try {
-    await api("/api/setup", { password: f.password.value, owner_name: f.owner_name.value });
+    await api("/api/setup", { username: f.username.value, password: f.password.value, owner_name: f.owner_name.value });
+    rememberLogin(f.username.value.toLowerCase(), f.password.value, f.owner_name.value);
     f.reset();
     boot();
   } catch (err) { $("#setup-error").textContent = err.message; }
@@ -563,11 +778,16 @@ function openEvents() {
     // 斷線期間可能漏訊息,重連後補抓
     if (state.wasDown) { state.wasDown = false; resync(); }
   };
-  es.onerror = () => { $("#conn").textContent = "連線中…"; state.wasDown = true; };
-  es.addEventListener("kicked", () => {
+  es.onerror = () => {
+    $("#conn").textContent = "連線中…"; state.wasDown = true;
+    // 確認是不是家裡電腦整個連不上
+    setTimeout(() => api("/api/me").catch(err => { if (err.offline) setOffline(true); }), 3000);
+  };
+  es.addEventListener("kicked", async () => {
     closeEvents();
+    await local.clear();
     if (state.role === "owner") return boot();
-    showInfo("已登出", "你在這台裝置上的登入已被取消(或好友申請沒有被接受)。需要的話,請向對方要一條新的邀請連結。");
+    showInfo("已登出", "你在這台裝置上的登入已被取消(或好友申請沒有被接受)。", "重新登入", goHome);
   });
   es.onmessage = ev => {
     let data; try { data = JSON.parse(ev.data); } catch (_) { return; }
@@ -583,18 +803,20 @@ function openEvents() {
 }
 async function resync() {
   if (state.role === "owner") await loadContacts();
-  if (state.current) await loadMessages(true);
+  if (state.current) await loadMessages();
+  flushOutbox();
 }
 
 function onIncoming(m) {
+  local.putMessages([m]);
   const cur = state.current;
   const mine = (state.role === "owner") === (m.sender === "me");
   if (cur && m.contact_id === cur.id) {
     if (!state.messages.some(x => x.id === m.id)) {
-      // 自己送出的訊息由 send() 處理,這裡只處理別的分頁/裝置送出的
-      if (!(mine && state.messages.some(x => x.pending && x.body === m.body))) {
-        state.messages.push(m); renderMessages(true);
-      }
+      // 自己(這台或別台裝置)送出的:換掉排隊中的那一則
+      const i = m.client_id ? state.messages.findIndex(x => x.pending && x.client_id === m.client_id) : -1;
+      if (i >= 0) state.messages[i] = m; else insertSorted(m);
+      renderMessages(true);
     }
     if (!mine) markRead();
   }
@@ -604,7 +826,9 @@ function onIncoming(m) {
 function onRead(d) {
   if (!state.current || d.contact_id !== state.current.id) return;
   const other = state.role === "owner" ? d.guest_read_id : d.owner_read_id;
-  if (other !== state.otherReadId) { state.otherReadId = other; renderMessages(false); }
+  if (other !== state.otherReadId) {
+    state.otherReadId = other; local.set(`read:${d.contact_id}`, other); renderMessages(false);
+  }
 }
 
 // ---------- 通知
@@ -613,15 +837,15 @@ function notify(m) {
   unseen++;
   document.title = `(${unseen}) HomeChat`;
   if (!("Notification" in window) || Notification.permission !== "granted") return;
-  const who = state.role === "owner" ? (state.contacts.find(c => c.id === m.contact_id)?.name || "新訊息") : state.ownerName;
-  try { new Notification(who, { body: m.body.slice(0, 120), tag: "hc-" + m.contact_id, icon: "/icon.svg" }); } catch (_) {}
+  const name = state.role === "owner" ? (state.contacts.find(c => c.id === m.contact_id)?.name || "新訊息") : state.ownerName;
+  try { new Notification(name, { body: m.body.slice(0, 120), tag: "hc-" + m.contact_id, icon: "/icon.svg" }); } catch (_) {}
 }
 function notifyText(title, body) {
   if (!document.hidden || !("Notification" in window) || Notification.permission !== "granted") return;
   try { new Notification(title, { body, icon: "/icon.svg" }); } catch (_) {}
 }
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) { unseen = 0; document.title = "HomeChat"; markRead(); }
+  if (!document.hidden) { unseen = 0; document.title = "HomeChat"; markRead(); if (state.offline) reconnect(); }
 });
 document.addEventListener("click", () => {
   if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
@@ -629,8 +853,14 @@ document.addEventListener("click", () => {
 
 // ---------- 聯絡人列表
 async function loadContacts() {
-  const data = await api("/api/contacts");
-  state.contacts = data.contacts;
+  try {
+    const data = await api("/api/contacts");
+    state.contacts = data.contacts;
+    local.set("contacts", data.contacts);
+  } catch (err) {
+    ignoreOffline(err);
+    state.contacts = (await local.get("contacts")) || [];
+  }
   if (state.current) {
     const fresh = state.contacts.find(c => c.id === state.current.id);
     if (fresh) { state.current = fresh; $("#chat-title").textContent = fresh.name; }
@@ -642,7 +872,8 @@ function renderContacts() {
   const list = $("#contact-list");
   const q = $("#search").value.trim().toLowerCase();
   list.replaceChildren();
-  const items = state.contacts.filter(c => !q || c.name.toLowerCase().includes(q) || c.line_id.toLowerCase().includes(q) || c.note.toLowerCase().includes(q));
+  const items = state.contacts.filter(c => !q || c.name.toLowerCase().includes(q) || c.line_id.toLowerCase().includes(q)
+    || c.note.toLowerCase().includes(q) || (c.username || "").includes(q));
   if (!state.contacts.length) {
     list.append(el("div", { class: "empty" }, "還沒有好友", el("br"),
       el("button", { class: "btn", onclick: () => openAdd("one") }, "＋ 加好友")));
@@ -662,7 +893,7 @@ function renderContacts() {
         )));
       continue;
     }
-    const notJoined = !c.devices;
+    const notJoined = !c.devices && !c.username;
     list.append(el("div", {
       class: "contact" + (state.current && state.current.id === c.id ? " active" : ""),
       onclick: () => openContact(c),
@@ -720,28 +951,68 @@ async function openContact(c) {
 }
 $("#back-btn").addEventListener("click", closeChat);
 
-async function loadMessages(keepPending = false) {
+const byTime = (a, b) => a.created_at - b.created_at || (a.id || 1e15) - (b.id || 1e15);
+function insertSorted(m) { state.messages.push(m); state.messages.sort(byTime); }
+async function fromDevice(contactId) {
+  // 這台裝置存的 + 還在排隊的
+  const saved = await local.messagesFor(contactId);
+  const sent = new Set(saved.map(m => m.client_id).filter(Boolean));
+  const queued = (await local.outbox(contactId)).filter(m => !sent.has(m.client_id)).map(m => ({ ...m, pending: true }));
+  return saved.concat(queued).sort(byTime);
+}
+
+async function loadMessages() {
   const cur = state.current; if (!cur) return;
-  const q = state.role === "owner" ? `?contact=${cur.id}` : "";
-  const data = await api("/api/messages" + q);
+  // 1. 先顯示這台裝置存的(很快,而且沒網路也看得到)
+  state.messages = await fromDevice(cur.id);
+  state.otherReadId = (await local.get(`read:${cur.id}`)) || 0;
+  state.showCount = Math.max(state.showCount, PAGE);
   if (state.current !== cur) return;
-  const pending = keepPending ? state.messages.filter(m => m.pending || m.failed) : [];
-  state.messages = data.messages.concat(pending);
-  state.more = data.more;
-  state.otherReadId = state.role === "owner" ? data.guest_read_id : data.owner_read_id;
   renderMessages(true);
-  markRead();
+  // 2. 再跟家裡電腦同步:一頁一頁往前抓,直到接上已經存過的
+  try {
+    const have = new Set(state.messages.map(m => m.id).filter(Boolean));
+    const base = state.role === "owner" ? `contact=${cur.id}&` : "";
+    let before = "", data, more = false;
+    for (let i = 0; i < 20; i++) {
+      data = await api(`/api/messages?${base}${before}`);
+      if (state.current !== cur) return;
+      await local.putMessages(data.messages);
+      const overlap = data.messages.some(m => have.has(m.id));
+      more = data.more;
+      if (i === 0) {
+        state.otherReadId = state.role === "owner" ? data.guest_read_id : data.owner_read_id;
+        local.set(`read:${cur.id}`, state.otherReadId);
+      }
+      if (overlap || !data.more || !data.messages.length) break;
+      const first = data.messages[0];
+      before = `before_at=${first.created_at}&before_id=${first.id}`;
+    }
+    state.more = more;
+    state.messages = await fromDevice(cur.id);
+    if (state.current !== cur) return;
+    renderMessages(true);
+    markRead();
+  } catch (err) { ignoreOffline(err); setOffline(true); }
 }
 async function loadOlder() {
-  const cur = state.current, first = state.messages.find(m => !m.pending);
-  if (!cur || !first) return;
   const box = $("#messages"), prevH = box.scrollHeight;
-  const q = new URLSearchParams({ before_at: first.created_at, before_id: first.id });
-  if (state.role === "owner") q.set("contact", cur.id);
-  const data = await api("/api/messages?" + q);
-  if (state.current !== cur) return;
-  state.messages = data.messages.concat(state.messages);
-  state.more = data.more;
+  if (state.messages.length > state.showCount) {
+    state.showCount += PAGE;  // 這台裝置上還有更早的
+  } else {
+    const cur = state.current, first = state.messages.find(m => m.id);
+    if (!cur || !first) return;
+    const q = new URLSearchParams({ before_at: first.created_at, before_id: first.id });
+    if (state.role === "owner") q.set("contact", cur.id);
+    let data;
+    try { data = await api("/api/messages?" + q); }
+    catch (err) { ignoreOffline(err); return toast("連不上家裡的電腦,只能看這台裝置存的紀錄"); }
+    if (state.current !== cur) return;
+    await local.putMessages(data.messages);
+    state.more = data.more;
+    state.messages = await fromDevice(cur.id);
+    state.showCount += PAGE;
+  }
   renderMessages(false);
   box.scrollTop = box.scrollHeight - prevH;
 }
@@ -749,7 +1020,7 @@ async function loadOlder() {
 const lastReadSent = {};
 function markRead() {
   const cur = state.current;
-  if (!cur || document.hidden) return;
+  if (!cur || document.hidden || state.offline) return;
   const ids = state.messages.filter(m => !m.pending && m.id).map(m => m.id);
   const upto = ids.length ? Math.max(...ids) : 0;
   if (!upto || upto <= (lastReadSent[cur.id] || 0)) return;
@@ -761,36 +1032,38 @@ function renderMessages(scrollToEnd) {
   const box = $("#messages");
   const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
   box.replaceChildren();
-  if (state.more) box.append(el("div", { class: "more" }, el("button", { onclick: loadOlder }, "載入更早的訊息")));
+  const shown = state.messages.slice(-Math.max(state.showCount, PAGE));
+  if (state.more || shown.length < state.messages.length)
+    box.append(el("div", { class: "more" }, el("button", { onclick: loadOlder }, "載入更早的訊息")));
   if (!state.messages.length) {
     box.append(el("div", { class: "empty", style: "color:#fff" },
       state.role === "owner"
-        ? (state.current?.devices ? "還沒有訊息,打聲招呼吧!" : "對方還沒加入。按右上角 ⋯ →「邀請連結」用 LINE 傳給他。")
+        ? (state.current?.devices || state.current?.username ? "還沒有訊息,打聲招呼吧!" : "對方還沒加入。按右上角 ⋯ →「邀請連結」用 LINE 傳給他。")
         : `跟 ${state.ownerName} 打聲招呼吧!`));
   }
   const otherName = state.role === "owner" ? state.current?.name || "" : state.ownerName;
   let lastDay = "", lastSender = null;
   const iAm = state.role === "owner" ? "me" : "them";
-  for (const m of state.messages) {
+  for (const m of shown) {
     const d = dayLabel(m.created_at);
     if (d !== lastDay) { box.append(el("div", { class: "day" }, el("span", {}, d))); lastDay = d; lastSender = null; }
     const mine = m.sender === iAm;
     let stamp;
     if (m.failed) stamp = el("button", { class: "stamp", style: "border:0;background:none;padding:0", onclick: () => retry(m) }, "傳送失敗", el("br"), "點此重試");
-    else if (m.pending) stamp = el("div", { class: "stamp" }, "傳送中");
+    else if (m.pending) stamp = el("div", { class: "stamp" }, state.offline ? "等待連線" : "傳送中");
     else {
       const read = mine && m.source === "chat" && m.id <= state.otherReadId;
       stamp = el("div", { class: "stamp" }, read ? "已讀" : "", read ? el("br") : null, hm(m.created_at));
     }
     box.append(el("div", {
-      class: `msg ${mine ? "me" : "them"}${lastSender === m.sender ? " cont" : ""}${m.pending ? " pending" : ""}${m.failed ? " failed" : ""}`,
+      class: `msg ${mine ? "me" : "them"}${lastSender === m.sender ? " cont" : ""}${m.pending ? " pending" : ""}${m.pending && state.offline ? " queued" : ""}${m.failed ? " failed" : ""}`,
     }, mine ? null : avatar(otherName), el("div", { class: "bubble" }, m.body), stamp));
     lastSender = m.sender;
   }
   if (scrollToEnd || nearBottom) box.scrollTop = box.scrollHeight;
 }
 
-// ---------- 送訊息
+// ---------- 送訊息(先存在這台裝置的「待送」,連得上就送出;重送不會重複)
 const input = $("#input");
 function autosize() {
   input.style.height = "auto";
@@ -806,32 +1079,57 @@ input.addEventListener("keydown", e => {
 });
 $("#composer").addEventListener("submit", e => { e.preventDefault(); send(); input.focus(); });
 
-function send() {
+async function send() {
   const body = input.value.trim();
   if (!body || !state.current) return;
   input.value = ""; autosize();
   const m = {
-    pending: true, tmp: ++state.pendingSeq, body, created_at: Date.now() / 1000, source: "chat",
+    client_id: newId(), body, created_at: Date.now() / 1000, source: "chat",
     sender: state.role === "owner" ? "me" : "them", contact_id: state.current.id,
   };
-  state.messages.push(m);
+  await local.queue(m);
+  insertSorted({ ...m, pending: true });
   renderMessages(true);
-  deliver(m);
+  flushOutbox();
 }
-async function deliver(m) {
-  const cur = state.current;
+let flushing = false;
+async function flushOutbox() {
+  if (flushing || state.offline) return;
+  flushing = true;
   try {
-    const data = await api("/api/messages", { contact_id: m.contact_id, body: m.body });
-    if (state.current !== cur) return;
-    const i = state.messages.indexOf(m);
-    const dup = state.messages.some(x => x.id === data.message.id);
-    if (i >= 0) { if (dup) state.messages.splice(i, 1); else state.messages[i] = data.message; }
-    renderMessages(true);
-  } catch (err) {
-    m.pending = false; m.failed = true; renderMessages(false); toast(err.message);
-  }
+    for (const m of await local.outbox()) {
+      try {
+        const data = await api("/api/messages", { contact_id: m.contact_id, body: m.body, client_id: m.client_id });
+        await local.putMessages([data.message]);
+        await local.dequeue(m.client_id);
+        replacePending(m.client_id, data.message);
+      } catch (err) {
+        if (err.offline) { setOffline(true); renderMessages(false); break; }
+        if (err.status === 429) { setTimeout(flushOutbox, 5000); break; }  // 傳太快:等一下再送
+        await local.dequeue(m.client_id);  // 被拒絕(例如已被移除):不再重送
+        const v = state.messages.find(x => x.client_id === m.client_id);
+        if (v) { v.pending = false; v.failed = true; renderMessages(false); }
+        toast(err.message);
+      }
+    }
+  } finally { flushing = false; }
 }
-function retry(m) { m.failed = false; m.pending = true; renderMessages(false); deliver(m); }
+function replacePending(clientId, msg) {
+  if (!state.current || msg.contact_id !== state.current.id) return;
+  const i = state.messages.findIndex(x => x.client_id === clientId && !x.id);
+  if (state.messages.some(x => x.id === msg.id)) { if (i >= 0) state.messages.splice(i, 1); }
+  else if (i >= 0) state.messages[i] = msg;
+  else insertSorted(msg);
+  renderMessages(true);
+}
+async function retry(m) {
+  m.failed = false; m.pending = true;
+  const { pending, failed, ...item } = m;
+  await local.queue(item);
+  renderMessages(false);
+  flushOutbox();
+}
+setInterval(() => { if (!state.offline) flushOutbox(); }, 15000);
 
 // ---------- 選單
 function showMenu(anchor, items) {
@@ -850,16 +1148,24 @@ $("#main-menu-btn").addEventListener("click", e => showMenu(e.currentTarget, [
   ["匯入聯絡人名單", () => openAdd("list")],
   ["匯入 LINE 聊天紀錄", () => openAdd("line")],
   ["設定", openSettings],
-  ["登出", async () => { await api("/api/logout", {}); closeChat(); boot(); }],
+  ["登出", logout],
 ]));
 $("#add-btn").addEventListener("click", () => openAdd("one"));
+const downloadHistory = q => { location.href = "/api/export" + q; };
 $("#chat-menu-btn").addEventListener("click", e => {
   const c = state.current; if (!c) return;
+  if (state.role === "guest") {
+    return showMenu(e.currentTarget, [
+      ["下載聊天紀錄(存到這台裝置)", () => state.offline ? toast("連不上家裡的電腦,等連上再下載") : downloadHistory("")],
+      [`更改密碼(帳號:${state.username || "—"})`, openGuestPassword],
+      ["登出", logout],
+    ]);
+  }
   showMenu(e.currentTarget, [
     ["邀請連結(傳給對方)", () => openInvite(c)],
     [`登入的裝置(${c.devices || 0})`, () => openDevices(c)],
     ["編輯聯絡人", () => openEdit(c)],
-    ["匯出聊天紀錄 .txt", () => { location.href = `/api/export?contact=${c.id}`; }],
+    ["下載聊天紀錄 .txt", () => downloadHistory(`?contact=${c.id}`)],
     ["刪除聯絡人和對話", async () => {
       if (!confirm(`確定刪除「${c.name}」和所有對話紀錄?對方會被登出。無法復原。`)) return;
       await api(`/api/contacts/${c.id}/delete`, {}); closeChat(); loadContacts();
@@ -1058,17 +1364,18 @@ $("#form-edit").addEventListener("submit", async e => {
 // 設定
 function openSettings() {
   const f = $("#form-settings"); $("#settings-error").textContent = ""; $("#password-error").textContent = "";
-  f.owner_name.value = state.ownerName; f.public_url.value = state.publicUrl;
+  f.owner_name.value = state.ownerName; f.public_url.value = state.publicUrl; f.username.value = state.username;
   $("#public-info").textContent = state.publicUrl
     ? `📱 在外面用手機開:${state.publicUrl}(不管在家或在外面,手機都用這個網址,並加入主畫面)`
     : "目前只有同一個 Wi-Fi 連得到。";
   $("#form-password").reset();
+  $("#form-password").username.value = state.username;
   $("#dlg-settings").showModal();
 }
 $("#form-settings").addEventListener("submit", async e => {
   e.preventDefault(); const f = e.target;
   try {
-    await api("/api/settings", { owner_name: f.owner_name.value, public_url: f.public_url.value });
+    await api("/api/settings", { owner_name: f.owner_name.value, public_url: f.public_url.value, username: f.username.value });
     $("#dlg-settings").close(); boot(); toast("已儲存");
   } catch (ex) { $("#settings-error").textContent = ex.message; }
 });
@@ -1077,10 +1384,31 @@ $("#form-password").addEventListener("submit", async e => {
   $("#password-error").textContent = "";
   try {
     await api("/api/password", { old: f.old.value, new: f.new.value });
+    rememberLogin(state.username, f.new.value, state.ownerName);
     f.reset(); $("#dlg-settings").close(); toast("密碼已更改,其他裝置已登出");
   } catch (ex) { $("#password-error").textContent = ex.message; }
 });
 $("#my-devices").addEventListener("click", () => openDevices(null));
+
+// 朋友改密碼
+function openGuestPassword() {
+  const f = $("#form-guest-pw"); f.reset(); $("#guest-pw-error").textContent = "";
+  f.username.value = state.username;
+  $("#dlg-guest-pw").showModal();
+}
+$("#form-guest-pw").addEventListener("submit", async e => {
+  e.preventDefault(); const f = e.target;
+  try {
+    await api("/api/password", { old: f.old.value, new: f.new.value });
+    rememberLogin(state.username, f.new.value, state.ownerName);
+    $("#dlg-guest-pw").close(); toast("密碼已更改");
+  } catch (ex) { $("#guest-pw-error").textContent = ex.message; }
+});
+
+// 把網頁存在裝置上(家裡電腦關機時也能打開)。需要 https 或 localhost
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "127.0.0.1" || location.hostname === "localhost")) {
+  navigator.serviceWorker.register("/sw.js").catch(() => {});
+}
 
 boot();
 </script>

@@ -32,6 +32,7 @@ LINE_TXT = """﻿[LINE] 與王小明的聊天記錄
 def server(tmp_path):
     store = homechat.Store(tmp_path / "chat.db")
     store.set_password("secret123")
+    store.set_setting("owner_username", "paul")
     app = homechat.App(store, owner_name="Paul")
     app.login_fails_all = homechat.RateLimiter(10_000, 600)
     srv = homechat.make_server(app, "127.0.0.1", 0)
@@ -64,7 +65,7 @@ class Client:
 
 def login(base):
     c = Client(base)
-    assert c.req("/api/login", {"password": "secret123"})[0] == 200
+    assert c.req("/api/login", {"username": "paul", "password": "secret123"})[0] == 200
     return c
 
 
@@ -80,7 +81,8 @@ def test_login_required_and_wrong_password(server):
     c = Client(base)
     assert c.req("/api/me")[1]["role"] is None
     assert c.req("/api/contacts")[0] == 401
-    assert c.req("/api/login", {"password": "nope"})[0] == 401
+    assert c.req("/api/login", {"username": "paul", "password": "nope"})[0] == 401
+    assert c.req("/api/login", {"username": "", "password": "secret123"})[0] == 401
     c = login(base)
     assert c.req("/api/me")[1]["role"] == "owner"
 
@@ -102,10 +104,14 @@ def invite_path(contact):
     return contact["invite_url"].split("/c/")[1].split("?")[0]
 
 
-def join(base, contact):
+_users = iter(range(10_000))
+
+
+def join(base, contact, username=None, password="friend1"):
     g = Client(base)
-    status, _ = g.req("/api/join", {"token": invite_path(contact)})
-    assert status == 200
+    username = username or f"user{next(_users)}"
+    status, data = g.req("/api/join", {"token": invite_path(contact), "username": username, "password": password})
+    assert status == 200, data
     return g
 
 
@@ -125,15 +131,21 @@ def test_owner_and_guest_chat(server):
     status, page = guest.req(f"/c/{token}")
     assert status == 200 and "HomeChat" in page
     assert guest.req("/api/me")[1]["role"] is None
-    assert guest.req(f"/api/invite?token={token}")[1] == {"valid": True, "owner_name": "Paul", "name": "阿明"}
+    assert guest.req(f"/api/invite?token={token}")[1] == {"valid": True, "owner_name": "Paul", "name": "阿明",
+                                                          "username": ""}
+    # 帳號密碼不合格時不會用掉連結
+    assert guest.req("/api/join", {"token": token, "username": "a", "password": "friend1"})[0] == 400
+    assert guest.req("/api/join", {"token": token, "username": "Paul", "password": "friend1"})[0] == 409
+    assert guest.req("/api/join", {"token": token, "username": "ming", "password": "123"})[0] == 400
     # 按下「開始聊天」才加入
-    assert guest.req("/api/join", {"token": token})[0] == 200
+    assert guest.req("/api/join", {"token": token, "username": "Ming", "password": "friend1"})[0] == 200
     me = guest.req("/api/me")[1]
     assert me["role"] == "guest" and me["contact"]["name"] == "阿明" and me["contact"]["status"] == "active"
+    assert me["username"] == "ming"
 
     # 連結只能用一次:別人再用就失效
     stranger = Client(base)
-    assert stranger.req("/api/join", {"token": token})[0] == 410
+    assert stranger.req("/api/join", {"token": token, "username": "x123", "password": "friend1"})[0] == 410
     assert stranger.req(f"/api/invite?token={token}")[1]["valid"] is False
     assert owner.req("/api/contacts")[1]["contacts"][0]["invite_url"] == ""
 
@@ -175,16 +187,16 @@ def test_invite_expires_and_can_be_cancelled(server):
     contact = owner.req("/api/contacts", {"name": "過期"})[1]["contact"]
     app.store.new_invite(contact["id"], days=-1)
     token = app.store.get_contact(contact["id"])["invite_token"]
-    assert Client(base).req("/api/join", {"token": token})[0] == 410
+    assert Client(base).req("/api/join", {"token": token, "username": "abc1", "password": "friend1"})[0] == 410
 
     c = owner.req(f"/api/contacts/{contact['id']}/invite", {})[1]["contact"]
     owner.req(f"/api/contacts/{contact['id']}/cancel-invite", {})
-    assert Client(base).req("/api/join", {"token": invite_path(c)})[0] == 410
+    assert Client(base).req("/api/join", {"token": invite_path(c), "username": "abc2", "password": "friend1"})[0] == 410
     # 新連結會讓舊的未使用連結失效
     c1 = owner.req(f"/api/contacts/{contact['id']}/invite", {})[1]["contact"]
     c2 = owner.req(f"/api/contacts/{contact['id']}/invite", {})[1]["contact"]
-    assert Client(base).req("/api/join", {"token": invite_path(c1)})[0] == 410
-    assert Client(base).req("/api/join", {"token": invite_path(c2)})[0] == 200
+    assert Client(base).req("/api/join", {"token": invite_path(c1), "username": "abc3", "password": "friend1"})[0] == 410
+    assert Client(base).req("/api/join", {"token": invite_path(c2), "username": "abc4", "password": "friend1"})[0] == 200
 
 
 def test_friend_request_flow(server):
@@ -197,9 +209,11 @@ def test_friend_request_flow(server):
 
     friend = Client(base)
     assert friend.req(f"/api/add-info?token={token}")[1] == {"valid": True, "owner_name": "Paul"}
-    assert friend.req("/api/request", {"token": "wrong", "name": "x"})[0] == 410
-    assert friend.req("/api/request", {"token": token, "name": "  "})[0] == 400
-    assert friend.req("/api/request", {"token": token, "name": "小華", "message": "我是國中同學"})[0] == 200
+    acct = {"username": "hua", "password": "friend1"}
+    assert friend.req("/api/request", {"token": "wrong", "name": "x", **acct})[0] == 410
+    assert friend.req("/api/request", {"token": token, "name": "  ", **acct})[0] == 400
+    assert friend.req("/api/request", {"token": token, "name": "小華", "username": "hua"})[0] == 400
+    assert friend.req("/api/request", {"token": token, "name": "小華", "message": "我是國中同學", **acct})[0] == 200
     me = friend.req("/api/me")[1]
     assert me["role"] == "guest" and me["contact"]["status"] == "pending"
     # 還沒被接受:不能傳訊息、不能看訊息
@@ -214,21 +228,22 @@ def test_friend_request_flow(server):
 
     # 拒絕 = 刪除,對方被登出
     other = Client(base)
-    other.req("/api/request", {"token": token, "name": "陌生人"})
+    other.req("/api/request", {"token": token, "name": "陌生人", "username": "stranger", "password": "friend1"})
     cid = other.req("/api/me")[1]["contact"]["id"]
     owner.req(f"/api/contacts/{cid}/delete", {})
     assert other.req("/api/me")[1]["role"] is None
 
     # 換新連結 / 關閉後舊連結失效
     owner.req("/api/friend-link", {"reset": True})
-    assert Client(base).req("/api/request", {"token": token, "name": "y"})[0] == 410
+    assert Client(base).req("/api/request", {"token": token, "name": "y", "username": "yyy", "password": "friend1"})[0] == 410
 
 
 def test_friend_request_rate_limit(server):
     base, _ = server
     owner = login(base)
     token = owner.req("/api/friend-link", {"enabled": True})[1]["url"].split("/add/")[1].split("?")[0]
-    codes = [Client(base).req("/api/request", {"token": token, "name": f"人{i}"})[0] for i in range(7)]
+    codes = [Client(base).req("/api/request", {"token": token, "name": f"人{i}", "username": f"req{i}",
+                                               "password": "friend1"})[0] for i in range(7)]
     assert codes[:5] == [200] * 5 and codes[5:] == [429, 429]
 
 
@@ -249,11 +264,13 @@ def test_first_run_setup_only_from_this_computer(tmp_path):
         evil = {"Host": "evil.example", "Origin": "http://evil.example"}
         assert c.req("/api/setup", {"password": "abcdefgh"}, headers=evil)[0] == 403
         assert c.req("/api/me")[1] == {"role": None, "setup": True}
-        assert c.req("/api/setup", {"password": "short"})[0] == 400
-        assert c.req("/api/setup", {"password": "abcdefgh", "owner_name": "阿保"})[0] == 200
+        assert c.req("/api/setup", {"username": "abao", "password": "short"})[0] == 400
+        assert c.req("/api/setup", {"username": "a b", "password": "abcdefgh"})[0] == 400
+        assert c.req("/api/setup", {"username": "Abao", "password": "abcdefgh", "owner_name": "阿保"})[0] == 200
         me = c.req("/api/me")[1]
         assert me["role"] == "owner" and me["owner_name"] == "阿保"
-        assert Client(base).req("/api/setup", {"password": "hijacked1"})[0] == 403
+        assert Client(base).req("/api/setup", {"username": "evil", "password": "hijacked1"})[0] == 403
+        assert Client(base).req("/api/login", {"username": "abao", "password": "abcdefgh"})[0] == 200
     finally:
         srv.shutdown()
         srv.server_close()
@@ -285,7 +302,7 @@ def test_change_password(server):
     assert owner.req("/api/password", {"old": "secret123", "new": "newpass123"})[0] == 200
     assert owner.req("/api/me")[1]["role"] == "owner"  # 自己保持登入
     assert other.req("/api/me")[1]["role"] is None  # 其他裝置被登出
-    assert Client(base).req("/api/login", {"password": "newpass123"})[0] == 200
+    assert Client(base).req("/api/login", {"username": "paul", "password": "newpass123"})[0] == 200
 
 
 def test_guest_message_rate_limit(server):
@@ -482,8 +499,110 @@ def test_proxy_rewrites_host(server):
     app.store.set_setting("public_url", "https://home-pc.tail1234.ts.net")
     c = Client(base)
     origin = {"Origin": "https://home-pc.tail1234.ts.net"}
-    assert c.req("/api/login", {"password": "secret123"}, headers=origin)[0] == 200
+    assert c.req("/api/login", {"username": "paul", "password": "secret123"}, headers=origin)[0] == 200
     status, data = c.req("/api/contacts", {"name": "外面的朋友"}, headers=origin)
     assert status == 200
     assert data["contact"]["invite_url"].startswith("https://home-pc.tail1234.ts.net/c/")
     assert c.req("/api/contacts", {"name": "x"}, headers={"Origin": "https://evil.example"})[0] == 403
+
+
+# ---------------------------------------------------------------- 帳號 / 自動登入 / 每台裝置存一份
+
+def test_guest_logs_in_on_new_device_with_account(server):
+    """朋友換手機、加入主畫面(cookie 不見)時,用帳號密碼登入回到同一個對話。"""
+    base, _ = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "小美"})[1]["contact"]
+    phone1 = join(base, contact, "mei", "meipass")
+    phone1.req("/api/messages", {"body": "第一支手機"})
+
+    phone2 = Client(base)
+    assert phone2.req("/api/login", {"username": "mei", "password": "wrong"})[0] == 401
+    assert phone2.req("/api/login", {"username": "nobody", "password": "meipass"})[0] == 401
+    assert phone2.req("/api/login", {"username": "MEI", "password": "meipass"})[0] == 200
+    me = phone2.req("/api/me")[1]
+    assert me["role"] == "guest" and me["contact"]["id"] == contact["id"]
+    assert [m["body"] for m in phone2.req("/api/messages")[1]["messages"]] == ["第一支手機"]
+    # 朋友帳號不能拿來登入主人
+    assert phone2.req("/api/contacts")[0] == 403
+    contacts = owner.req("/api/contacts")[1]["contacts"]
+    assert contacts[0]["username"] == "mei" and contacts[0]["devices"] == 2
+
+
+def test_guest_forgot_password_new_invite_resets_it(server):
+    base, _ = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "健忘"})[1]["contact"]
+    join(base, contact, "forget", "oldpass")
+    c = owner.req(f"/api/contacts/{contact['id']}/invite", {})[1]["contact"]
+    g = Client(base)
+    info = g.req(f"/api/invite?token={invite_path(c)}")[1]
+    assert info["username"] == "forget"  # 已經有帳號:只要設新密碼
+    assert g.req("/api/join", {"token": invite_path(c), "password": "newpass"})[0] == 200
+    assert Client(base).req("/api/login", {"username": "forget", "password": "oldpass"})[0] == 401
+    assert Client(base).req("/api/login", {"username": "forget", "password": "newpass"})[0] == 200
+
+
+def test_guest_change_password_logs_out_other_devices(server):
+    base, _ = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "改密碼"})[1]["contact"]
+    a = join(base, contact, "change", "pass111")
+    b = Client(base)
+    b.req("/api/login", {"username": "change", "password": "pass111"})
+    assert a.req("/api/password", {"old": "wrong", "new": "pass222"})[0] == 400
+    assert a.req("/api/password", {"old": "pass111", "new": "pass222"})[0] == 200
+    assert a.req("/api/me")[1]["role"] == "guest"
+    assert b.req("/api/me")[1]["role"] is None
+
+
+def test_duplicate_username_rejected(server):
+    base, _ = server
+    owner = login(base)
+    c1 = owner.req("/api/contacts", {"name": "一號"})[1]["contact"]
+    c2 = owner.req("/api/contacts", {"name": "二號"})[1]["contact"]
+    join(base, c1, "same", "pass111")
+    status, data = Client(base).req("/api/join", {"token": invite_path(c2), "username": "SAME", "password": "pass111"})
+    assert status == 409 and "已經有人用" in data["error"]
+
+
+def test_login_cookie_slides_forward(server):
+    base, _ = server
+    owner = login(base)
+    r = owner.opener.open(base + "/api/me", timeout=5)
+    cookie = r.headers["Set-Cookie"]
+    assert "Max-Age=31536000" in cookie and "HttpOnly" in cookie
+
+
+def test_offline_resend_with_client_id_is_not_duplicated(server):
+    base, _ = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "離線"})[1]["contact"]
+    guest = join(base, contact)
+    first = guest.req("/api/messages", {"body": "排隊的訊息", "client_id": "abc-123"})[1]["message"]
+    again = guest.req("/api/messages", {"body": "排隊的訊息", "client_id": "abc-123"})[1]["message"]
+    assert first["id"] == again["id"] and first["client_id"] == "abc-123"
+    assert len(owner.req(f"/api/messages?contact={contact['id']}")[1]["messages"]) == 1
+
+
+def test_guest_can_download_own_history(server):
+    base, _ = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "小美"})[1]["contact"]
+    guest = join(base, contact)
+    owner.req("/api/messages", {"contact_id": contact["id"], "body": "嗨"})
+    guest.req("/api/messages", {"body": "你好"})
+    status, text = guest.req("/api/export")
+    assert status == 200
+    assert "與Paul的聊天記錄" in text and "Paul\t嗨" in text and "小美\t你好" in text
+    # 朋友不能下載別人的
+    other = owner.req("/api/contacts", {"name": "別人"})[1]["contact"]
+    owner.req("/api/messages", {"contact_id": other["id"], "body": "秘密"})
+    assert "秘密" not in guest.req(f"/api/export?contact={other['id']}")[1]
+
+
+def test_service_worker_served(server):
+    base, _ = server
+    with urllib.request.urlopen(base + "/sw.js", timeout=5) as r:
+        assert r.headers["Content-Type"].startswith("text/javascript")
+        assert b"/api/" in r.read()
