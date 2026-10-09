@@ -235,9 +235,10 @@ namespace SpellDuel.EditorTools
             public void OnPostGenerateGradleAndroidProject(string path)
             {
                 const string dep = "implementation 'com.google.mlkit:pose-detection:18.0.0-beta3'";
+                const string dep2 = "implementation 'com.google.mediapipe:tasks-vision:0.10.14'";
                 var gradle = Path.Combine(path, "build.gradle");
                 var text = File.ReadAllText(gradle);
-                if (!text.Contains(dep)) File.AppendAllText(gradle, "\n// SpellDuel：人體偵測\ndependencies {\n    " + dep + "\n}\n");
+                if (!text.Contains(dep)) File.AppendAllText(gradle, "\n// SpellDuel：人體偵測（ML Kit）＋手勢（MediaPipe）\ndependencies {\n    " + dep + "\n    " + dep2 + "\n}\n");
 
                 var props = Path.Combine(path, "..", "gradle.properties");
                 var p = File.Exists(props) ? File.ReadAllText(props) : "";

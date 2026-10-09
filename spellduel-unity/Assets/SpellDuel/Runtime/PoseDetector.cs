@@ -12,12 +12,17 @@ namespace SpellDuel
     ///   2. 交給手機內建的人體姿勢偵測：Android 用 Google ML Kit，iOS 用 Apple Vision（iOS 14 以上）。
     ///   3. 回傳的關鍵點是「畫面上的位置」；配合拍攝當下的鏡頭位置與朝向，就能拉出一條射線。
     ///   4. 腳踝的射線和地板（世界座標 y=0）的交點 = 對手站的位置。
-    /// 全部在手機上跑，不需要網路、不需要額外下載模型。
+    /// 同一張畫面也偵測「自己伸到鏡頭前的手」（21 個關鍵點）→ 手勢放招（HandGesture）。
+    ///   Android：手用 Google MediaPipe Hand Landmarker；iOS：Apple Vision。
+    /// 全部在手機上跑，不需要網路。
     /// </summary>
     public class PoseDetector
     {
         // 關鍵點順序（原生端回傳的也是這個順序）
         public const int Nose = 0, LShoulder = 1, RShoulder = 2, LHip = 3, RHip = 4, LAnkle = 5, RAnkle = 6, Count = 7;
+        public const int HandCount = 21;   // MediaPipe 手部關鍵點：0 手腕、1-4 拇指、5-8 食指、9-12 中指、13-16 無名指、17-20 小指
+        const int HandOffset = 2 + Count * 3;
+        const int ResultLength = HandOffset + 1 + HandCount * 3;
         const int CaptureWidth = 288;
         const float Interval = 0.08f;   // 最多每秒約 12 次
 
@@ -28,6 +33,9 @@ namespace SpellDuel
             public bool found;
             public readonly Vector2[] pt = new Vector2[Count];   // 視埠座標（0～1，左下為原點，和 Camera.ViewportToWorldPoint 相同）
             public readonly float[] conf = new float[Count];
+            public bool handFound;
+            public readonly Vector2[] hand = new Vector2[HandCount];   // 視埠座標
+            public readonly float[] handConf = new float[HandCount];
 
             /// <summary>從拍攝當下的鏡頭穿過某個關鍵點的射線（AR 座標）</summary>
             public Ray RayThrough(int i)
@@ -44,6 +52,7 @@ namespace SpellDuel
         public string Status { get; private set; } = "未啟動";
         public RenderTexture Preview => rt;          // 除錯用：送去偵測的畫面
         public bool Enabled = true;
+        public bool WantBody = true, WantHand = true;   // 要偵測人體／手
 
         Camera cam;
         ARCameraBackground background;
@@ -63,7 +72,7 @@ namespace SpellDuel
 #endif
 #if UNITY_IOS && !UNITY_EDITOR
         [DllImport("__Internal")] static extern int sd_pose_available();
-        [DllImport("__Internal")] static extern int sd_pose_submit(byte[] rgba, int width, int height);
+        [DllImport("__Internal")] static extern int sd_pose_submit(byte[] rgba, int width, int height, int flags);
         [DllImport("__Internal")] static extern int sd_pose_poll(float[] result, int n);
 #endif
 
@@ -91,7 +100,7 @@ namespace SpellDuel
         {
             if (!Supported) return;
             Poll();
-            if (!Enabled || readbackPending || nativeBusy || Time.time < nextCapture) return;
+            if (!Enabled || (!WantBody && !WantHand) || readbackPending || nativeBusy || Time.time < nextCapture) return;
             if (background == null || background.material == null) return;
             nextCapture = Time.time + Interval;
             Capture();
@@ -158,15 +167,16 @@ namespace SpellDuel
             {
 #if UNITY_ANDROID && !UNITY_EDITOR
                 Buffer.BlockCopy(frame, 0, frameS, 0, frame.Length);
-                nativeBusy = bridge.Call<bool>("submit", frameS, w, h);
+                nativeBusy = bridge.Call<bool>("submit", frameS, w, h, Flags);
 #elif UNITY_IOS && !UNITY_EDITOR
-                nativeBusy = sd_pose_submit(frame, w, h) != 0;
+                nativeBusy = sd_pose_submit(frame, w, h, Flags) != 0;
 #endif
             }
             catch (Exception e) { Status = "偵測失敗：" + e.Message; nativeBusy = false; }
         }
 
-        readonly float[] raw = new float[2 + Count * 3];
+        int Flags => (WantBody ? 1 : 0) | (WantHand ? 2 : 0);
+        readonly float[] raw = new float[ResultLength];
 
         void Poll()
         {
@@ -193,8 +203,14 @@ namespace SpellDuel
                 res.pt[i] = new Vector2(r[2 + i * 3], 1f - r[3 + i * 3]);
                 res.conf[i] = r[4 + i * 3];
             }
+            res.handFound = r[HandOffset] > 0.5f;
+            for (int i = 0; i < HandCount; i++)
+            {
+                res.hand[i] = new Vector2(r[HandOffset + 1 + i * 3], 1f - r[HandOffset + 2 + i * 3]);
+                res.handConf[i] = r[HandOffset + 3 + i * 3];
+            }
             Latest = res;
-            if (res.found) { misses = 0; Status = "偵測中：有找到人"; }
+            if (res.found || res.handFound) { misses = 0; Status = res.found ? "偵測中：有找到人" : "偵測中：有找到手"; }
             else if (++misses % 12 == 0) { flipY = !flipY; Status = "偵測中：畫面中沒有人"; }
         }
     }

@@ -118,6 +118,7 @@ namespace SpellDuel
         const float AnkleHeight = 0.08f;   // 腳踝離地高度
         const float MinConf = 0.3f;        // 關鍵點可信度門檻
         PoseDetector poseDet;
+        readonly HandGesture hand = new HandGesture();   // 自己的手勢（握拳→張開＝放招）
         ARCameraBackground cameraBackground;
         bool showPoseDebug = true;
         float lastObsTime = -1f;
@@ -193,6 +194,7 @@ namespace SpellDuel
 
             solo = gameObject.AddComponent<SoloBattle>();
             solo.Init(cam, playArea, mat);
+            solo.Hand = hand;
             solo.RequestRedraw = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); Log("請重新畫場地"); };
             solo.RequestChangeMode = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); mode = Mode.Choose; };
         }
@@ -285,6 +287,7 @@ namespace SpellDuel
                 }.ToJson());
             }
             UpdateObservation();
+            hand.Update(poseDet.Latest, Time.time, Screen.width, Screen.height);
             UpdateTarget();
             HandleFire();
             UpdateShots();
@@ -293,8 +296,11 @@ namespace SpellDuel
 
         void LateUpdate()
         {
-            // 人體偵測只在雙人模式需要（單人的敵人是虛擬的）
-            poseDet.Enabled = mode == Mode.Duo && WorldFrame.Calibrated && Tracking.Ok;
+            // 人體偵測只在雙人模式需要（單人的敵人是虛擬的）；手勢在雙人、單人戰鬥中都要
+            bool soloFight = mode == Mode.Solo && solo.phase == SoloBattle.Phase.Fighting;
+            poseDet.WantBody = mode == Mode.Duo;
+            poseDet.WantHand = mode == Mode.Duo || soloFight;
+            poseDet.Enabled = Tracking.Ok && (soloFight || (mode == Mode.Duo && WorldFrame.Calibrated));
             poseDet.Tick();
         }
 
@@ -567,9 +573,14 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 發射
         void HandleFire()
         {
-            if (!Input.GetMouseButtonDown(0) || GUIUtility.hotControl != 0) return;
-            var sp = Input.mousePosition;
-            if (!PointerInPlayZone) return;   // 上方是操作面板
+            Vector3 sp;
+            if (mode == Mode.Duo && hand.ConsumeRelease()) sp = hand.Aim;   // 手勢放招：往手指的準星方向
+            else
+            {
+                if (!Input.GetMouseButtonDown(0) || GUIUtility.hotControl != 0) return;
+                sp = Input.mousePosition;
+                if (!PointerInPlayZone) return;   // 上方是操作面板
+            }
             if (playArea.state == PlayArea.State.Drawing) return;   // 正在手繪場地
             if (mode != Mode.Duo) return;   // 單人模式的操作由 SoloBattle 處理
             if (mode == Mode.Solo && playArea.state != PlayArea.State.Done) return;   // 畫場地時按螢幕是在畫線
@@ -1112,6 +1123,8 @@ namespace SpellDuel
                 }
                 else GUI.Label(new Rect(0, H * 0.58f, W, lineH * 1.5f), "鏡頭沒看到對手，轉向對手才能施法", new GUIStyle(label) { alignment = TextAnchor.MiddleCenter });
             }
+
+            if (mode == Mode.Duo) hand.DrawGUI(label, new Color(1f, 0.6f, 0.1f));
 
             // 骨架偵測結果（除錯）：關鍵點、送去偵測的畫面縮圖
             if (mode == Mode.Duo && showPoseDebug && poseDet.Supported)

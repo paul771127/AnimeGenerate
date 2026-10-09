@@ -98,6 +98,17 @@
 
 > 單人模式只靠 AR 追蹤，不需要列印任何東西。雙人模式仍然用標記圖，因為兩支手機要對齊到同一個原點，各自畫框無法精準對上。
 
+## 語音詠唱與手勢放招
+
+**語音（單人戰鬥）**：選技能畫面按「錄「技能名」」，把你想用的咒語唸 2 次（任何語言、任何說法都可以）。三個技能都錄好後，戰鬥中唸出咒語就會開始詠唱。
+- 完全在手機上比對（MFCC＋DTW，比對的是你自己的聲音），不需要網路、不需要 Google／Apple 語音服務。
+- 不夠像、兩個咒語分不清、或聲音太小（可能是對手）都不會觸發，畫面上方會顯示原因。點技能按鈕詠唱仍然可以用。
+
+**手勢（單人、雙人）**：把手伸到後鏡頭前（只要拍到手腕和手指）。
+- ✊ 握拳＝蓄力姿勢；握拳後 1.5 秒內 🖐️ 張開＝放招。手往上快速一甩也會放招。
+- 準星跟著手：方向＝手腕 → 中指根部，畫面上會畫出手的關鍵點和準星。
+- 手部偵測：Android 用 Google MediaPipe Hand Landmarker（模型在 `Assets/StreamingAssets/hand_landmarker.task`），iOS 用 Apple Vision（iOS 14 以上）。點畫面發射仍然可以用。
+
 ## 雙人模式：畫場地（不需要標記圖）
 
 1. 兩支手機連同一個 Wi-Fi，都選「**雙人對戰（畫場地）**」，慢慢移動手機讓它找到地板。
@@ -163,6 +174,8 @@
 | `Assets/SpellDuel/Runtime/SoloBattle.cs` | 單人對戰的 3D 顯示與介面 |
 | `Assets/SpellDuel/Runtime/PlayArea.cs` | 單人場地：偵測地板、方形／手繪場地、邊界格子牆與出界警告 |
 | `Assets/SpellDuel/Runtime/DuoAlignment.cs` | 雙人畫場地模式：用「互相看到對方的位置」解兩支手機座標的旋轉＋平移（2D Kabsch、剔除離群點） |
+| `Assets/SpellDuel/Runtime/VoiceSpotter.cs` | 本機咒語辨識：麥克風、斷句、MFCC、DTW、樣本儲存與比對 |
+| `Assets/SpellDuel/Runtime/HandGesture.cs` | 手勢：握拳→張開／甩手放招、手指準星 |
 | `Assets/SpellDuel/Runtime/PoseDetector.cs` | 擷取 AR 畫面、呼叫手機內建的人體偵測、把關鍵點換成射線 |
 | `Assets/Plugins/Android/PoseBridge.java` | Android：ML Kit 人體偵測 |
 | `Assets/Plugins/iOS/PoseBridge.mm` | iOS：Apple Vision 人體偵測 |

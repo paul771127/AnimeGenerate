@@ -15,6 +15,14 @@ namespace SpellDuel
         public enum Phase { Hidden, Setup, Fighting, Over }
         public Phase phase { get; private set; } = Phase.Hidden;
         public Action RequestRedraw, RequestChangeMode;
+        public HandGesture Hand;          // 手勢（GameRoot 每幀更新）
+
+        // 語音詠唱：唸出咒語就開始詠唱（本機比對自己錄的樣本）
+        readonly MicInput mic = new MicInput();
+        VoiceTemplates voice;
+        bool voiceOn;
+        string recordingSkill;            // 正在錄哪個技能的咒語樣本
+        string heard = ""; float heardUntil;
 
         Camera cam;
         PlayArea area;
@@ -51,6 +59,8 @@ namespace SpellDuel
             myClass = PlayerPrefs.GetString("sd_my_class", "mage");
             if (!Skills.Classes.ContainsKey(myClass)) myClass = "mage";
             enemyClass = PlayerPrefs.GetString("sd_enemy_class", "random");
+            voiceOn = PlayerPrefs.GetInt("sd_voice_on", 1) == 1;
+            voice = VoiceTemplates.Load();
             LoadLoadout();
         }
 
@@ -120,6 +130,7 @@ namespace SpellDuel
         // ================================================================ 每幀
         void Update()
         {
+            UpdateMic();
             if (phase != Phase.Fighting && phase != Phase.Over) return;
             if (battle == null) return;
             SyncPlayer(Me);
@@ -149,11 +160,22 @@ namespace SpellDuel
 
         void HandleInput()
         {
+            // 手勢放招（握拳→張開、或往上甩手）：往手指的準星方向放
+            if (Hand != null && Hand.ConsumeRelease())
+            {
+                if (Me.charging != null && battle.ChargeProgress(Me) >= 1f && !frozen) ReleaseAt(Hand.Aim, true);
+                return;
+            }
             if (!Input.GetMouseButtonDown(0) || GUIUtility.hotControl != 0) return;
             var sp = Input.mousePosition;
             if (frozen) { Say("AR 追蹤中斷，暫時不能施法", 1.5f); return; }
             if (!InTapZone(new Vector2(sp.x, Screen.height - sp.y))) return;
-            if (Me.charging == null) { Say("先點下方的技能開始詠唱", 1.5f); return; }
+            ReleaseAt(sp, false);
+        }
+
+        void ReleaseAt(Vector2 sp, bool byGesture)
+        {
+            if (Me.charging == null) { Say(voiceOn ? "先唸咒語（或點下方技能）開始詠唱" : "先點下方的技能開始詠唱", 1.5f); return; }
             if (Me.charging.type == SkillType.Projectile && !enemyOnScreen && battle.ChargeProgress(Me) >= 1f)
             { Say("🎯 敵人不在畫面中，轉向敵人才能鎖定", 1.5f); return; }
 
@@ -163,6 +185,41 @@ namespace SpellDuel
             var d = WorldFrame.DirToWorld(ray.direction);
             var floor = d.y < -0.01f ? o + d * (-o.y / d.y) : Me.Feet + Fighter.Flat(Me.forward) * 1.5f;
             if (!battle.TryRelease(Me, d, floor, out var why)) Say(why, 1.5f);
+            else if (byGesture) Say("🖐️ 放招！", 0.8f);
+        }
+
+        // ================================================================ 語音
+        bool VoiceReady => myLoadout.TrueForAll(id => voice.Ready(id));
+
+        void UpdateMic()
+        {
+            // 錄樣本中、或戰鬥中（語音開啟且咒語都錄好了）才開麥克風
+            bool want = recordingSkill != null || (voiceOn && phase == Phase.Fighting && VoiceReady);
+            if (want && !mic.Running)
+            {
+                if (mic.Start()) mic.Spotter.OnUtterance += OnUtterance;
+                else { Say(mic.Error, 2f); recordingSkill = null; }
+            }
+            else if (!want && mic.Running) mic.Stop();
+            mic.Tick();
+        }
+
+        void OnUtterance(float[][] seq, float peak)
+        {
+            if (recordingSkill != null)
+            {
+                voice.AddSample(recordingSkill, seq, peak);
+                int n = voice.Count(recordingSkill);
+                Say($"🎤 {Skills.All[recordingSkill].name}：樣本 {n}/2" + (n >= 2 ? " ✔" : "，再唸一次"), 2f);
+                if (n >= 2) { voice.Save(); recordingSkill = null; }
+                return;
+            }
+            if (phase != Phase.Fighting || battle == null || frozen) return;
+            var r = voice.Classify(seq, peak, myLoadout);
+            if (r.id == null) { heard = $"🎤 {r.reason}"; heardUntil = Time.time + 1.5f; return; }
+            var skill = Skills.All[r.id];
+            heard = $"🎤 {skill.name}"; heardUntil = Time.time + 1.5f;
+            if (!battle.TryChant(Me, skill, out var why)) Say(why, 1.5f);
         }
 
         /// <summary>敵人有沒有出現在我的畫面中（頭、胸、腳任一處），並算出鎖定框</summary>
@@ -398,6 +455,33 @@ namespace SpellDuel
             }
             GUI.color = Color.white; y += bh + pad;
 
+            // 語音詠唱：每個技能錄 2 次咒語（任何語言、任何說法都可以，比對的是你自己的聲音）
+            if (GUI.Button(new Rect(pad, y, ew * 1.4f, bh), voiceOn ? "🎤 語音:開" : "🎤 語音:關", button))
+            { voiceOn = !voiceOn; PlayerPrefs.SetInt("sd_voice_on", voiceOn ? 1 : 0); }
+            float vw = (W - pad * 5 - ew * 1.4f) / 3f;
+            for (int i = 0; i < myLoadout.Count; i++)
+            {
+                var s = Skills.All[myLoadout[i]];
+                bool rec = recordingSkill == s.id;
+                GUI.color = rec ? Color.red : voice.Ready(s.id) ? s.color : Color.white;
+                GUI.enabled = voiceOn;
+                if (GUI.Button(new Rect(pad * 2 + ew * 1.4f + i * (vw + pad), y, vw, bh), rec ? "● 錄音中…" : $"錄「{s.name}」{voice.Count(s.id)}/2", button))
+                {
+                    if (rec) recordingSkill = null;
+                    else { recordingSkill = s.id; if (voice.Count(s.id) >= 2) { voice.ClearSkill(s.id); } Say($"🎤 唸出「{s.name}」的咒語（自己決定怎麼唸）", 3f); }
+                }
+            }
+            GUI.enabled = true; GUI.color = Color.white; y += bh + pad * 0.3f;
+            if (recordingSkill != null && mic.Running)
+            {
+                float lv = Mathf.Clamp01(mic.Spotter.Level / Mathf.Max(0.001f, mic.Spotter.StartThreshold * 3f));
+                Bar(new Rect(pad, y, W - pad * 2, lh * 0.35f), lv, mic.Spotter.InSpeech ? Color.green : Color.gray, "");
+                y += lh * 0.5f;
+            }
+            else if (voiceOn && !VoiceReady) { GUI.Label(new Rect(pad, y, W - pad * 2, lh), "錄好 3 個技能的咒語後，戰鬥中唸出來就會開始詠唱（點技能按鈕也可以）", small); y += lh; }
+            if (Time.time < messageUntil) { GUI.Label(new Rect(pad, y, W - pad * 2, lh), message, label); y += lh; }
+            y += pad * 0.5f;
+
             GUI.enabled = myLoadout.Count == 3;
             if (GUI.Button(new Rect(pad, y, W - pad * 2, bh * 1.3f), "⚔ 開始戰鬥", button)) StartBattle();
             GUI.enabled = true; y += bh * 1.3f + pad;
@@ -472,12 +556,15 @@ namespace SpellDuel
                 int rs = battle.RangeState(me, me.charging);
                 string st = prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%" :
                     (me.charging.releaseNear && rs > 0) ? "靠近才能出手" : rs < 0 ? "太近了" :
-                    me.charging.type == SkillType.Trap ? "點地板設置陷阱" : me.charging.type == SkillType.Self ? "點畫面發動" : "點畫面發射！";
+                    me.charging.type == SkillType.Trap ? "點地板設置陷阱" : me.charging.type == SkillType.Self ? "點畫面發動" : "張手／點畫面發射！";
                 GUI.color = prog < 1f ? Color.white : me.charging.color;
                 GUI.Label(new Rect(0, H / 2 - lh * 2.2f, W, lh), $"{me.charging.name}　{st}", center);
                 GUI.color = Color.white;
             }
             GUI.Label(new Rect(W / 2 - 50, H / 2 - 50, 100, 100), "＋", big);
+            Hand?.DrawGUI(small, me.charging != null ? me.charging.color : Color.white);
+            if (Time.time < heardUntil) GUI.Label(new Rect(0, H * 0.25f, W, lh), heard, center);
+            else if (voiceOn && VoiceReady && mic.Running && mic.Spotter.InSpeech) GUI.Label(new Rect(0, H * 0.25f, W, lh), "🎤 …", center);
 
             // 鎖定框／敵人方向提示
             if (phase == Phase.Fighting && en.Alive && !frozen)
