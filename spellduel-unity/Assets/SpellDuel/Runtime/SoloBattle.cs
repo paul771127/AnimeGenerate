@@ -36,7 +36,9 @@ namespace SpellDuel
         string enemyClassUsed;
 
         // 顯示物件
-        GameObject enemyBody, enemyHead, enemyNose, enemyShield;
+        GameObject enemyShield;
+        CharacterRig enemyRig;            // 敵人外觀（依職業造型，會走路、詠唱、被打中、倒地）
+        Vector3 lastEnemyFeet; float lastEnemyHp; bool enemyDeadShown;
         readonly Dictionary<Projectile, GameObject> projGo = new Dictionary<Projectile, GameObject>();
         readonly Dictionary<Trap, GameObject> trapGo = new Dictionary<Trap, GameObject>();
         class Floater { public Vector3 posMap; public string text; public Color color; public float born; public bool screen; }
@@ -108,9 +110,8 @@ namespace SpellDuel
             battle.OnEvent += OnBattleEvent;
             ai = new EnemyAI(battle, en, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
 
-            enemyBody = Prim(PrimitiveType.Capsule, WithAlpha(ec.color, 0.75f));
-            enemyHead = Prim(PrimitiveType.Sphere, WithAlpha(ec.color, 0.9f));
-            enemyNose = Prim(PrimitiveType.Cube, new Color(1f, 1f, 1f, 0.9f));
+            enemyRig = CharacterRig.Create(ec.id);
+            lastEnemyFeet = en.Feet; lastEnemyHp = en.hp; enemyDeadShown = false;
             enemyShield = Prim(PrimitiveType.Sphere, new Color(0.4f, 0.7f, 1f, 0.25f));
             phase = Phase.Fighting;
             Say($"⚔ 對手：{en.name}（{string.Join("・", enemySkills.ConvertAll(id => Skills.All[id].name))}）", 4f);
@@ -121,7 +122,8 @@ namespace SpellDuel
             foreach (var go in projGo.Values) if (go) Destroy(go);
             foreach (var go in trapGo.Values) if (go) Destroy(go);
             projGo.Clear(); trapGo.Clear(); floaters.Clear();
-            foreach (var go in new[] { enemyBody, enemyHead, enemyNose, enemyShield }) if (go) Destroy(go);
+            if (enemyShield) Destroy(enemyShield);
+            if (enemyRig) Destroy(enemyRig.gameObject);
             battle = null; ai = null;
         }
 
@@ -287,20 +289,19 @@ namespace SpellDuel
         void UpdateVisuals()
         {
             var en = En;
-            // 敵人：膠囊身體＋頭＋朝向的「鼻子」，位置換回 AR 空間
-            var headS = WorldFrame.FromWorld(en.head);
             var feetS = WorldFrame.FromWorld(en.Feet);
-            float h = en.head.y;
-            enemyBody.transform.position = (headS + feetS) / 2f + Vector3.down * 0.08f;
-            enemyBody.transform.rotation = Quaternion.identity;
-            enemyBody.transform.localScale = new Vector3(Fighter.BodyRadius * 2f, (h - 0.15f) / 2f, Fighter.BodyRadius * 2f);
-            enemyHead.transform.position = headS;
-            enemyHead.transform.localScale = Vector3.one * 0.26f;
+            // 敵人角色：腳的位置、面向、走路速度、詠唱、被打中、倒地
             var fwdS = WorldFrame.DirFromWorld(en.forward);
-            enemyNose.transform.position = headS + fwdS * 0.14f;
-            enemyNose.transform.rotation = Quaternion.LookRotation(fwdS == Vector3.zero ? Vector3.forward : fwdS, Vector3.up);
-            enemyNose.transform.localScale = new Vector3(0.1f, 0.05f, 0.08f);
+            float dt = Mathf.Max(1e-3f, Time.deltaTime);
+            enemyRig.SetPose(feetS, fwdS);
+            enemyRig.MoveSpeed = Mathf.Lerp(enemyRig.MoveSpeed, Fighter.Flat(en.Feet - lastEnemyFeet).magnitude / dt, 0.2f);
+            lastEnemyFeet = en.Feet;
+            enemyRig.Charge = en.charging != null ? Mathf.Max(0.01f, battle.ChargeProgress(en)) : 0f;
+            if (en.hp < lastEnemyHp - 0.01f) enemyRig.PlayHit();
+            lastEnemyHp = en.hp;
+            if (!en.Alive && !enemyDeadShown) { enemyRig.SetDead(true); enemyDeadShown = true; }
             bool guarded = en.blockUntil > battle.now || en.shieldUntil > battle.now || en.counterUntil > battle.now;
+            enemyRig.Guarding = guarded && en.Alive;
             enemyShield.SetActive(guarded && en.Alive);
             if (guarded)
             {
@@ -309,7 +310,7 @@ namespace SpellDuel
                 var col = en.counterUntil > battle.now ? new Color(0.96f, 0.45f, 0.71f, 0.3f) : en.shieldUntil > battle.now ? new Color(0.6f, 0.65f, 0.7f, 0.3f) : new Color(0.38f, 0.65f, 0.98f, 0.3f);
                 enemyShield.GetComponent<Renderer>().material.color = col;
             }
-            if (!en.Alive) { enemyBody.SetActive(false); enemyHead.SetActive(false); enemyNose.SetActive(false); }
+
 
             // 法術：球體＋拖尾
             var alive = new HashSet<Projectile>(battle.projectiles);
@@ -323,6 +324,7 @@ namespace SpellDuel
                     tr.time = 0.2f; tr.startWidth = Mathf.Max(0.04f, p.skill.radius * 1.5f); tr.endWidth = 0;
                     tr.material = mat; tr.startColor = WithAlpha(p.skill.color, 0.8f); tr.endColor = WithAlpha(p.skill.color, 0f);
                     projGo[p] = go;
+                    if (p.owner == En) enemyRig.PlayCast();   // 敵人出招動作
                 }
                 go.transform.position = WorldFrame.FromWorld(p.pos);
                 // 敵人的法術逼近時畫面邊框閃紅

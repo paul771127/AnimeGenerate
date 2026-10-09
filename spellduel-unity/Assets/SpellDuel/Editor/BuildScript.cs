@@ -123,9 +123,27 @@ namespace SpellDuel.EditorTools
             PlayerSettings.iOS.microphoneUsageDescription = "唸咒語需要使用麥克風";
             PlayerSettings.SetArchitecture(BuildTargetGroup.iOS, 1);   // ARM64
 
+            IncludeShader("Legacy Shaders/Diffuse");   // 角色造型用的受光材質（程式中 Shader.Find，沒被引用會被建置剔除）
+
             ConfigureXR(BuildTargetGroup.Android, "UnityEngine.XR.ARCore.ARCoreLoader");
             ConfigureXR(BuildTargetGroup.iOS, "UnityEngine.XR.ARKit.ARKitLoader");
             AssetDatabase.SaveAssets();
+        }
+
+        // 加入 Graphics Settings → Always Included Shaders
+        static void IncludeShader(string name)
+        {
+            var shader = Shader.Find(name);
+            if (shader == null) { Debug.LogWarning("[SpellDuel] 找不到 shader " + name); return; }
+            var gs = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset").FirstOrDefault();
+            if (gs == null) return;
+            var so = new SerializedObject(gs);
+            var arr = so.FindProperty("m_AlwaysIncludedShaders");
+            if (arr == null) return;
+            for (int i = 0; i < arr.arraySize; i++) if (arr.GetArrayElementAtIndex(i).objectReferenceValue == shader) return;
+            arr.InsertArrayElementAtIndex(arr.arraySize);
+            arr.GetArrayElementAtIndex(arr.arraySize - 1).objectReferenceValue = shader;
+            so.ApplyModifiedProperties();
         }
 
         // 同時啟用舊版 Input（Input.GetMouseButtonDown）與新版 Input System（AR Foundation 的相依套件）
