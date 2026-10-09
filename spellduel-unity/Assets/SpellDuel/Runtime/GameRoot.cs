@@ -832,13 +832,15 @@ namespace SpellDuel
                 y += pad * 0.5f;
                 bool canBuild = playArea.HasFloor && playArea.state != PlayArea.State.Drawing;
                 GUI.enabled = canBuild;
-                if (GUI.Button(new Rect(pad, y, bw, bh), "方形 2.5m", button)) { playArea.Clear(); if (playArea.AutoSquare(2.5f)) OnPlayAreaReady(); }
-                if (GUI.Button(new Rect(pad * 2 + bw, y, bw, bh), "方形 3.5m", button)) { playArea.Clear(); if (playArea.AutoSquare(3.5f)) OnPlayAreaReady(); }
-                if (GUI.Button(new Rect(pad * 3 + bw * 2, y, bw, bh), "手繪場地", button)) { WorldFrame.Reset(); playArea.StartDraw(); }
-                GUI.enabled = true;
-                if (GUI.Button(new Rect(pad * 4 + bw * 3, y, bw, bh), "換模式", button)) { mode = Mode.Choose; playArea.Clear(); WorldFrame.Reset(); }
+                // 方形場地：從腳下往前方展開（技能射程最遠 15m，建議 10m 以上的空地或戶外）
+                float[] sizes = { 3f, 6f, 10f, 15f };
+                for (int i = 0; i < sizes.Length; i++)
+                    if (GUI.Button(new Rect(pad + i * (bw + pad), y, bw, bh), $"方形 {sizes[i]:0}m", button)) { playArea.Clear(); if (playArea.AutoSquare(sizes[i])) OnPlayAreaReady(); }
                 y += bh + pad * 0.5f;
-                if (GUI.Button(new Rect(pad, y, bw * 1.3f, bh), "HP 重置", button)) { hp = MaxHp; }
+                if (GUI.Button(new Rect(pad, y, bw, bh), "手繪場地", button)) { WorldFrame.Reset(); playArea.StartDraw(); }
+                GUI.enabled = true;
+                if (GUI.Button(new Rect(pad * 2 + bw, y, bw, bh), "換模式", button)) { mode = Mode.Choose; playArea.Clear(); WorldFrame.Reset(); }
+                if (GUI.Button(new Rect(pad * 3 + bw * 2, y, bw, bh), "HP 重置", button)) { hp = MaxHp; }
             }
             else
             {

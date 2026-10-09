@@ -80,7 +80,7 @@ namespace SpellDuel
             if (state == State.Scanning)
                 Hint = "慢慢移動手機，讓鏡頭掃過地板…";
             else if (state == State.Ready)
-                Hint = "選「快速方形」或「手繪場地」";
+                Hint = "選方形場地大小（技能射程最遠 15m，建議 10m 以上的空地）或手繪場地";
             else if (state == State.Drawing)
             {
                 Hint = $"按住螢幕，把準星沿著場地邊緣畫一圈，放開完成（{drawPts.Count} 點）";
@@ -230,7 +230,7 @@ namespace SpellDuel
             dir = Flat(dir).normalized;
             var c = Flat(Origin.position);
             float d = 0f;
-            for (float s = 0.1f; s < 15f; s += 0.1f)
+            for (float s = 0.1f; s < 30f; s += 0.1f)
             {
                 var p = c + dir * s;
                 if (!Inside(p) || DistanceToEdge(p) < margin) break;

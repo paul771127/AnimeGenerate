@@ -92,7 +92,7 @@ namespace SpellDuel
             var en = new Fighter($"電腦{ec.name}", ec, enemySkills, false);
             // 敵人出生點：場地內、玩家面向的那一側
             float reach = area.ReachInside(area.Origin.forward, 0.6f);
-            en.head = new Vector3(0f, 1.6f, Mathf.Clamp(reach, 0f, 3f));
+            en.head = new Vector3(0f, 1.6f, Mathf.Clamp(reach, 0f, 6f));   // 大場地時離遠一點出場（最遠 6m）
             SyncPlayer(me);
             battle = new Battle(me, en);
             battle.OnEvent += OnBattleEvent;

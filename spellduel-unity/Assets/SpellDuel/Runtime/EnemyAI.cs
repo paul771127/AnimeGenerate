@@ -13,7 +13,7 @@ namespace SpellDuel
     /// </summary>
     public class EnemyAI
     {
-        public float walkSpeed = 0.7f;
+        public float walkSpeed = 1.0f;
         public float thinkMin = 2.5f, thinkMax = 4.5f;
         public float aimErrorDeg = 4f, blindAimErrorDeg = 18f;
         public float guardChance = 0.5f;
@@ -28,7 +28,7 @@ namespace SpellDuel
         int lastSeenProjectile;
 
         static readonly Dictionary<string, float> PreferredDistance = new Dictionary<string, float>
-        { { "assassin", 2.2f }, { "swordsman", 1.9f }, { "mage", 4f }, { "archer", 4.5f } };
+        { { "assassin", 2.2f }, { "swordsman", 1.9f }, { "mage", 6f }, { "archer", 8f } };   // 場地太小時 FindInside 會自動縮短
 
         public EnemyAI(Battle battle, Fighter enemy, Func<Vector3, bool> insideArea, Func<Vector3, float> distanceToEdge, int seed)
         {
