@@ -42,20 +42,9 @@
 
 > 帳號若開啟兩步驟驗證或用 Google/Apple 登入，雲端啟用可能失敗；建議用 email + 密碼登入的帳號。
 
-### 2b. 改用 Codemagic 編譯（設定檔：repo 根目錄的 `codemagic.yaml`）
-1. 到 [codemagic.io](https://codemagic.io) 用 GitHub 登入 → Add application → 選 `paul771127/AnimeGenerate` → 選 **codemagic.yaml** 設定方式。
-2. App settings → **Environment variables**，建立群組 `unity_credentials`（全部勾 Secret）：
-   | 名稱 | 內容 |
-   |---|---|
-   | `UNITY_EMAIL` | Unity 帳號 email |
-   | `UNITY_PASSWORD` | Unity 帳號密碼 |
-   | `UNITY_LICENSE` | 免費個人版：`Unity_lic.ulf` 的完整內容（同上一節） |
-   | `UNITY_SERIAL` | 只有 Unity Plus/Pro 才填（填了就用序號啟用） |
-3. **Start new build** → 分支選 `claude/mobile-camera-mic-battle-game-v5nhfr` → 流程選 **SpellDuel iOS（未簽署 IPA）** 或 **SpellDuel Android（APK）**。
-4. 完成後在建置頁面下載 `SpellDuel-unsigned.ipa`（Sideloadly 安裝）或 `.apk`。
-
-> ⚠ Codemagic 官方文件寫「雲端編譯 Unity 需要 Plus 或 Pro 授權」。用個人版 `.ulf` 是非官方做法，若卡在授權啟用（log 出現 license / No valid Unity Editor license），就改用下面的 GitHub Actions（同一份授權檔，個人版可用，公開 repo 的 macOS 機器也免費）。
-> Codemagic 免費額度每月 500 分鐘 M2 機器；第一次編譯（安裝 Unity＋匯入專案）約 40～60 分鐘。
+### 2b. 用 Codemagic 編 iOS（不需要 Unity 授權）
+在自己電腦用 Unity 匯出 Xcode 專案（`export_ios.ps1`），推到 `spellduel-ios-xcode` 分支，Codemagic 會自動用那個分支的 `codemagic.yaml` 編成未簽署 IPA。
+**每次程式更新後都要重新匯出一次**，否則 Codemagic 編到的是舊版；開始畫面標題下的「版本 時間 · commit」可確認裝到的是哪一版。
 
 ### 2. 雲端編譯（GitHub Actions）
 設定好 Secrets 後，推送 `spellduel-unity/` 的變更會自動編譯（也可以在 GitHub → Actions → **SpellDuel Unity build** → Run workflow 手動執行）。
