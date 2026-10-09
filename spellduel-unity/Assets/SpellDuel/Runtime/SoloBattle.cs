@@ -35,7 +35,8 @@ namespace SpellDuel
         readonly List<Floater> floaters = new List<Floater>();
         string message = ""; float messageUntil;
         float incomingFlash, hitFlash;
-        // AR 追蹤中斷：和雙人模式相同——戰鬥照常進行，我的身體停在最後的正確位置，暫時不能施法
+        // AR 追蹤中斷（對著白牆、遮住鏡頭…）：單人練習整場暫停（敵人、法術、判定都停住），恢復後繼續。
+        // 只是把鏡頭轉開、看不到敵人時不暫停，敵人照樣從畫面外攻擊。
         bool frozen;
         // 鎖定：敵人出現在我的畫面中才能發射攻擊法術（和雙人模式相同）
         bool enemyOnScreen; Rect enemyRect; float enemyScreenSide;   // enemyScreenSide：敵人在左(<0)／右(>0)
@@ -126,7 +127,7 @@ namespace SpellDuel
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
             frozen = phase == Phase.Fighting && !Tracking.Ok;
             UpdateLock();
-            if (phase == Phase.Fighting)
+            if (phase == Phase.Fighting && !frozen)
             {
                 ai.Update(dt);
                 battle.Update(dt);
@@ -530,8 +531,8 @@ namespace SpellDuel
             if (frozen)
             {
                 Panel(new Rect(0, H * 0.32f, W, H * 0.2f), 0.8f);
-                GUI.Label(new Rect(0, H * 0.33f, W, H * 0.08f), "⚠ AR 追蹤中斷", big);
-                GUI.Label(new Rect(pad, H * 0.42f, W - pad * 2, lh * 2), Tracking.Reason + "\n暫時不能施法；敵人仍以你最後的位置攻擊", center);
+                GUI.Label(new Rect(0, H * 0.33f, W, H * 0.08f), "⏸ AR 追蹤中斷，戰鬥暫停", big);
+                GUI.Label(new Rect(pad, H * 0.42f, W - pad * 2, lh * 2), Tracking.Reason + "\n恢復追蹤後自動繼續", center);
             }
 
             if (phase == Phase.Over)
