@@ -244,6 +244,10 @@ def test_first_run_setup_only_from_this_computer(tmp_path):
         proxied = {"X-Forwarded-For": "8.8.8.8"}
         assert c.req("/api/me", headers=proxied)[1] == {"role": None, "setup": False}
         assert c.req("/api/setup", {"password": "abcdefgh"}, headers=proxied)[0] == 403
+        assert c.req("/api/setup", {"password": "abcdefgh"}, headers={"Tailscale-Funnel-Request": "?1"})[0] == 403
+        # DNS rebinding:網域被指到 127.0.0.1,Host / Origin 都是攻擊者的網域
+        evil = {"Host": "evil.example", "Origin": "http://evil.example"}
+        assert c.req("/api/setup", {"password": "abcdefgh"}, headers=evil)[0] == 403
         assert c.req("/api/me")[1] == {"role": None, "setup": True}
         assert c.req("/api/setup", {"password": "short"})[0] == 400
         assert c.req("/api/setup", {"password": "abcdefgh", "owner_name": "阿保"})[0] == 200

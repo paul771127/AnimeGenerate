@@ -198,6 +198,7 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
       <button class="icon-btn" id="add-btn" title="新增 / 匯入聯絡人">＋</button>
       <button class="icon-btn" id="main-menu-btn" title="選單">⋯</button>
     </div>
+    <div class="warn hidden" id="tunnel-note" style="margin:8px 12px 0"></div>
     <div class="search"><input class="field" id="search" placeholder="搜尋聯絡人" autocomplete="off"></div>
     <div id="contact-list"></div>
   </aside>
@@ -323,6 +324,7 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 <dialog id="dlg-settings"><div class="dlg">
   <h3>設定</h3>
   <form id="form-settings">
+    <p class="hint" id="public-info" style="margin-top:0"></p>
     <label>你的顯示名稱(朋友會看到)</label><input class="field" name="owner_name" maxlength="50" required>
     <label>對外網址(通常會自動設定,不用填)</label><input class="field" name="public_url" maxlength="300" placeholder="留空 = 用目前瀏覽器的網址">
     <div class="error" id="settings-error"></div>
@@ -413,6 +415,22 @@ function shortTime(ts) {
 const isTouch = matchMedia("(pointer: coarse)").matches;
 
 // ---------- 進入畫面
+function applyMe(me) {
+  state.role = me.role; state.ownerName = me.owner_name || ""; state.publicUrl = me.public_url || ""; state.tunnel = me.tunnel || "";
+  const note = $("#tunnel-note");
+  note.classList.toggle("hidden", !me.tunnel_note);
+  note.replaceChildren();
+  if (me.tunnel_note) {
+    // 把網址變成可以點的連結
+    const parts = me.tunnel_note.split(/(https:\/\/\S+)/);
+    for (const part of parts) note.append(/^https:\/\//.test(part) ? el("a", { href: part, target: "_blank", rel: "noopener" }, part) : part);
+  }
+}
+setInterval(async () => {  // 外部連線可能在啟動後才接通,定期更新狀態
+  if (state.role !== "owner" || document.hidden) return;
+  try { applyMe(await api("/api/me")); } catch (_) {}
+}, 20000);
+
 function showGate(id) {
   closeEvents();
   $("#app").classList.add("hidden");
@@ -433,7 +451,7 @@ function goHome() { history.replaceState(null, "", "/"); boot(); }
 async function boot() {
   closeEvents();
   const me = await api("/api/me").catch(() => ({ role: null }));
-  state.role = me.role; state.ownerName = me.owner_name || ""; state.publicUrl = me.public_url || ""; state.tunnel = me.tunnel || "";
+  applyMe(me);
   const m = location.pathname.match(/^\/(c|add)\/([\w-]+)$/);
   if (me.setup) { showGate("setup-form"); $("#setup-form").owner_name.focus(); return; }
   if (m && m[1] === "c") return showJoin(m[2], me);
@@ -1041,6 +1059,9 @@ $("#form-edit").addEventListener("submit", async e => {
 function openSettings() {
   const f = $("#form-settings"); $("#settings-error").textContent = ""; $("#password-error").textContent = "";
   f.owner_name.value = state.ownerName; f.public_url.value = state.publicUrl;
+  $("#public-info").textContent = state.publicUrl
+    ? `📱 在外面用手機開:${state.publicUrl}(不管在家或在外面,手機都用這個網址,並加入主畫面)`
+    : "目前只有同一個 Wi-Fi 連得到。";
   $("#form-password").reset();
   $("#dlg-settings").showModal();
 }

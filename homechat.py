@@ -705,11 +705,18 @@ class Handler(BaseHTTPRequestHandler):
     def _from_proxy(self) -> bool:
         """經過 Tailscale / Cloudflare 通道進來的請求,在本機看起來是 127.0.0.1。"""
         return any(self.headers.get(h) for h in ("X-Forwarded-For", "CF-Connecting-IP", "Tailscale-User-Login",
-                                                 "X-Forwarded-Host", "X-Forwarded-Proto"))
+                                                 "Tailscale-Funnel-Request", "X-Forwarded-Host",
+                                                 "X-Forwarded-Proto", "Forwarded"))
 
     def _is_local(self) -> bool:
-        """真的是坐在這台電腦前面(不是經過通道)。"""
-        return self.client_address[0] in ("127.0.0.1", "::1") and not self._from_proxy()
+        """真的是坐在這台電腦前面(不是經過通道)。
+
+        Host 也必須是 localhost,防止 DNS rebinding:惡意網站把自己的網域指到 127.0.0.1,
+        讓這台電腦的瀏覽器替它呼叫 API。
+        """
+        host = urlsplit("//" + self.headers.get("Host", "")).hostname or ""
+        return (self.client_address[0] in ("127.0.0.1", "::1") and not self._from_proxy()
+                and host in ("127.0.0.1", "localhost", "::1"))
 
     def _client_key(self) -> str:
         peer = self.client_address[0]
@@ -937,6 +944,7 @@ class Handler(BaseHTTPRequestHandler):
                 "owner_name": self.app.owner_name,
                 "public_url": self.app.store.get_setting("public_url"),
                 "tunnel": self.app.store.get_setting("public_url_auto"),
+                "tunnel_note": self.app.store.get_setting("tunnel_note"),
             })
         contact = self.app.store.get_contact(sess["contact_id"])
         return self._json({
@@ -1313,6 +1321,9 @@ def lan_addresses() -> list[str]:
 
 # ---------------------------------------------------------------- 讓外面連進來
 
+# 背景執行(pythonw)時開子程式不要跳出黑色視窗
+NO_WINDOW = {"creationflags": subprocess.CREATE_NO_WINDOW} if os.name == "nt" else {}
+
 TS_URL_RE = re.compile(r"https://[a-z0-9-]+(?:\.[a-z0-9-]+)*\.ts\.net")
 CF_URL_RE = re.compile(r"https://[a-z0-9-]+\.trycloudflare\.com")
 
@@ -1343,26 +1354,29 @@ def find_cloudflared() -> str | None:
     ])
 
 
-def start_tailscale(exe: str, port: int, timeout: float = 300) -> str | None:
+def start_tailscale(exe: str, port: int, timeout: float = 300, on_note=None) -> str | None:
     """用 Tailscale Funnel 開一個固定的 https 網址。回傳網址或 None。"""
     try:
-        status = subprocess.run([exe, "status", "--json"], capture_output=True, text=True, timeout=20)
+        status = subprocess.run([exe, "status", "--json"], capture_output=True, text=True, timeout=20, **NO_WINDOW)
         info = json.loads(status.stdout or "{}")
     except (OSError, subprocess.SubprocessError, json.JSONDecodeError):
         info = {}
     if info.get("BackendState") not in (None, "Running"):
         print("  Tailscale 還沒登入:請打開 Tailscale App 登入後再重新啟動 HomeChat。")
+        if on_note:
+            on_note("Tailscale 還沒登入:請打開 Tailscale 登入,然後重新開機(或重新執行安裝程式)。")
         return None
     print("  正在開啟 Tailscale Funnel…(第一次使用時,如果下面出現網址,請用瀏覽器打開並按「啟用」)")
     try:
         proc = subprocess.Popen([exe, "funnel", "--bg", str(port)], stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
+                                stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace", **NO_WINDOW)
     except OSError as e:
         print(f"  無法執行 Tailscale:{e}")
         return None
     timer = threading.Timer(timeout, proc.kill)
     timer.start()
     url = None
+    opened = False
     try:
         for line in proc.stdout:
             line = line.rstrip()
@@ -1371,6 +1385,13 @@ def start_tailscale(exe: str, port: int, timeout: float = 300) -> str | None:
                 url = m.group(0)
             elif line.strip():
                 print("    " + line.strip())  # 例如「Funnel is not enabled…請到這個網址啟用」
+                enable = re.search(r"https://login\.tailscale\.com/\S+", line)
+                if enable and not opened:
+                    # 第一次要在 Tailscale 網站按「啟用」:直接幫忙打開(背景執行時也看得到)
+                    opened = True
+                    if on_note:
+                        on_note(f"第一次使用要啟用 Tailscale Funnel:請打開 {enable.group(0)} 按「Enable」")
+                    open_browser(enable.group(0))
         proc.wait()
     finally:
         timer.cancel()
@@ -1379,7 +1400,7 @@ def start_tailscale(exe: str, port: int, timeout: float = 300) -> str | None:
     if not url:  # 有些版本不印網址,改從 status 讀機器的網域
         try:
             info = json.loads(subprocess.run([exe, "status", "--json"], capture_output=True,
-                                             text=True, timeout=20).stdout)
+                                             text=True, timeout=20, **NO_WINDOW).stdout)
             dns = info["Self"]["DNSName"].rstrip(".")
             url = f"https://{dns}" if dns else None
         except (OSError, subprocess.SubprocessError, json.JSONDecodeError, KeyError, TypeError):
@@ -1392,7 +1413,7 @@ def start_cloudflared(exe: str, port: int, timeout: float = 60) -> tuple[str | N
     try:
         proc = subprocess.Popen([exe, "tunnel", "--no-autoupdate", "--url", f"http://127.0.0.1:{port}"],
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-                                encoding="utf-8", errors="replace")
+                                encoding="utf-8", errors="replace", **NO_WINDOW)
     except OSError as e:
         print(f"  無法執行 cloudflared:{e}")
         return None, None
@@ -1420,12 +1441,12 @@ def start_cloudflared(exe: str, port: int, timeout: float = 60) -> tuple[str | N
     return found["url"], proc
 
 
-def open_tunnel(kind: str, port: int) -> tuple[str | None, str | None, subprocess.Popen | None]:
+def open_tunnel(kind: str, port: int, on_note=None) -> tuple[str | None, str | None, subprocess.Popen | None]:
     """回傳 (對外網址, 用的是哪種, 要在結束時關掉的程式)。"""
     if kind in ("auto", "tailscale"):
         exe = find_tailscale()
         if exe:
-            url = start_tailscale(exe, port)
+            url = start_tailscale(exe, port, on_note=on_note)
             if url:
                 return url, "tailscale", None
             print("  Tailscale Funnel 沒有開成功。")
@@ -1483,6 +1504,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--open", action="store_true", help="啟動後打開瀏覽器")
     p.add_argument("--set-password", action="store_true", help="在這個視窗重設主人密碼(忘記密碼時用)")
     args = p.parse_args(argv)
+    if sys.stdout is None or sys.stderr is None:
+        # 沒有視窗的背景執行(Windows pythonw):訊息寫到 data/homechat.log
+        log_path = Path(args.db).parent / "homechat.log"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        log = open(log_path, "a", encoding="utf-8", buffering=1)
+        sys.stdout = sys.stderr = log
+        print(f"\n----- {datetime.now():%Y-%m-%d %H:%M:%S} 啟動 -----")
     for stream in (sys.stdout, sys.stderr):  # Windows 輸出到檔案時遇到特殊字元不要當掉
         try:
             stream.reconfigure(errors="replace")
@@ -1526,6 +1554,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.open:
         open_browser(local_url)
 
+    store.set_setting("tunnel_note", "")
     tunnel_proc = None
     if args.public_url:
         # 自己有固定網域(例如 Cloudflare 具名通道)
@@ -1533,10 +1562,12 @@ def main(argv: list[str] | None = None) -> int:
         store.set_setting("public_url_auto", "")
     elif args.tunnel != "off":
         print("設定外部連線…")
-        url, kind, tunnel_proc = open_tunnel(args.tunnel, args.port)
+        url, kind, tunnel_proc = open_tunnel(args.tunnel, args.port,
+                                             on_note=lambda text: store.set_setting("tunnel_note", text))
         if url:
             store.set_setting("public_url", url)
             store.set_setting("public_url_auto", kind)
+            store.set_setting("tunnel_note", "")
         elif store.get_setting("public_url_auto"):
             store.set_setting("public_url", "")  # 上次自動設的網址已經失效
             store.set_setting("public_url_auto", "")
@@ -1556,6 +1587,8 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print("  ⚠ 目前只有同一個 Wi-Fi 連得到。要在外面也能連,請照 README")
         print("    安裝 Tailscale(推薦)或 cloudflared,然後重新啟動 HomeChat。")
+        if args.tunnel != "off" and not store.get_setting("tunnel_note"):
+            store.set_setting("tunnel_note", "目前只有同一個 Wi-Fi 連得到。要在外面也能連,請安裝 Tailscale(重新執行安裝程式即可),然後重新開機。")
     print(f"  這台電腦:{local_url}")
     for ip in lan_addresses():
         print(f"  同 Wi-Fi:http://{ip}:{args.port}")

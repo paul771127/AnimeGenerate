@@ -2,120 +2,135 @@
 
 架在**自己家中電腦**的聊天室。對話紀錄全部存在你的電腦,不經過 LINE 或任何雲端。
 
-- 只要 Python 3.10+,**不用裝任何套件**
-- 你(主人)用密碼登入,電腦、手機瀏覽器都能開
-- 每個聯絡人一條專屬**邀請連結**,用 LINE 傳給對方,對方用手機瀏覽器打開就能跟你聊,不用裝 App
+- 朋友**不用裝 App**:用 LINE 傳一條邀請連結,對方點開按「開始聊天」就能聊
+- 在家、在外面(4G/5G、別的 Wi-Fi)都能用,手機和電腦都可以
 - 匯入聯絡人名單,也能匯入 **LINE 匯出的聊天紀錄**,把舊對話一起搬過來
-- 即時收訊息、已讀、未讀數、桌面通知、匯出 .txt
+- 即時收訊息、已讀、未讀數、通知、匯出 .txt
+- 只要 Python,不用裝任何套件
 
-## 安裝(只要做一次)
+## 安裝(點兩下就好)
 
-### 1. Python
+1. 登入 GitHub 後下載 zip 並解壓縮:
+   <https://github.com/paul771127/animegenerate/archive/refs/heads/claude/homechat-self-hosted-chat.zip>
+2. 點兩下安裝程式:
+   - **Windows**:`install-windows.bat`
+     (如果出現「Windows 已保護您的電腦」,按「其他資訊」→「仍要執行」)
+   - **Mac**:`install-mac.command`
+     (如果說「無法打開」,按右鍵 →「打開」→「打開」)
+3. 照畫面問題按 Enter 就好。安裝程式會自動:
+   - 沒有 Python 的話自動安裝
+   - 安裝並登入 **Tailscale**(讓你在外面、朋友在任何地方都能連;可用 Google 帳號登入)
+   - 把 HomeChat 裝到 `使用者資料夾/HomeChat`,建立桌面捷徑,設定**開機自動在背景執行**
+   - 詢問要不要讓電腦插電時不要睡眠(睡眠時大家都連不上)
+4. 瀏覽器會打開 HomeChat,**設定你的名字和密碼**(只有在這台電腦上才能設定)
+5. 第一次使用 Tailscale 時會再打開一個網頁,按 **Enable** 啟用 Funnel(只要一次)
 
-- **Windows**:到 <https://www.python.org/downloads/> 下載安裝,**第一個畫面一定要勾「Add python.exe to PATH」**
-- **Mac**:打開「終端機」輸入 `python3 --version`,跳出安裝開發者工具就按「安裝」
+完成後:
 
-### 2. Tailscale(讓你在外面、朋友在任何地方都能連)
+- **電腦**:點桌面的「HomeChat」
+- **手機**:在 HomeChat 的「設定」看「在外面用手機開」的網址(像 `https://你的電腦.xxxx.ts.net`),
+  用手機打開、登入,再按「加入主畫面」。**在家在外面都用這個網址**
+- 要更新 HomeChat:下載新版,再點一次安裝程式(聊天紀錄會保留)
 
-HomeChat 用 Tailscale 的 **Funnel** 功能,幫家裡電腦開一個**固定不變**的 https 網址,
-例如 `https://home-pc.tail1234.ts.net`。免費、不用買網域、不用設定路由器。
-**只有家裡這台電腦要裝**,你的手機和朋友都不用裝,直接用瀏覽器開網址就好。
+> HomeChat 在背景執行,沒有視窗。電腦要開著(不能關機或睡眠)朋友才連得到。
 
-1. 到 <https://tailscale.com/download> 下載安裝到**家裡電腦**
-2. 打開 Tailscale,用 Google / Microsoft / Apple 帳號登入
-3. 第一次啟動 HomeChat 時,畫面上會出現一個 `https://login.tailscale.com/...` 的網址,
-   用瀏覽器打開,按「啟用」(Enable HTTPS / Funnel)就完成了,之後不用再做
+## 加好友
 
-> Linux 要先執行一次 `sudo tailscale set --operator=$USER`,HomeChat 才有權限開 Funnel。
+**方法 1:邀請朋友(推薦)**
 
-### 3. 下載 HomeChat
+1. 按左上角「＋」→ 輸入朋友的名字 →「產生邀請連結」
+2. 按「用 LINE 傳送」,選那位朋友傳出去
+3. 朋友點開連結 → 按「開始聊天」,就加入了。你這邊會跳出「○○ 已經加入」
 
-登入 GitHub 後下載 zip 解壓縮:
-<https://github.com/paul771127/animegenerate/archive/refs/heads/claude/homechat-self-hosted-chat.zip>
+邀請連結**只能用一次、7 天內有效**。朋友加入後連結就失效,就算被轉傳、被別人看到也沒用。
+朋友換手機時,在聊天室右上角 ⋯ →「邀請連結」→「產生新連結」再傳一次。
 
-或用 git:`git clone -b claude/homechat-self-hosted-chat https://github.com/paul771127/animegenerate.git homechat`
+**方法 2:「加我好友」連結**
 
-## 啟動
+⋯ →「加我好友」連結 → 開啟。這條連結可以給很多人(例如貼在 LINE 群組),
+朋友點開輸入名字送出申請,你在聊天列表按「接受」才能聊天。不需要時請關掉。
 
-- **Windows**:打開有 `homechat.py` 的資料夾,在上方網址列輸入 `cmd` 按 Enter,然後輸入
-  `python homechat.py --name 你的名字`
-- **Mac**:終端機輸入 `cd `(後面有空格)再把資料夾拖進來按 Enter,然後輸入
-  `python3 homechat.py --name 你的名字`
+**匯入名單 / LINE 聊天紀錄**
 
-第一次執行會要你設定主人密碼(打字時畫面不會顯示,正常)。接著會自動開外部連線,看到這樣就成功了:
+LINE 沒有開放匯出好友名單,所以有兩種做法:
 
+- ⋯ →「匯入聯絡人名單」:一行一個人,可以只寫名字,或 `名字,LINE ID,備註`(從 Excel 複製貼上也可以)
+- ⋯ →「匯入 LINE 聊天紀錄」:在 LINE 打開跟某人的聊天室 → 右上角 ≡ → 設定 → **傳送聊天記錄** → 存成 .txt 傳到電腦再選它。
+  會自動建立聯絡人並把舊對話搬過來,重複匯入不會重複
+
+匯入的聯絡人還沒加入,要再按「邀請連結」傳給他們。
+
+## 加密與資安
+
+**傳輸過程**
+
+| 連線方式 | 加密 | 誰看得到內容 |
+|---|---|---|
+| Tailscale 網址 `https://….ts.net`(預設) | ✅ HTTPS,在**你家電腦上**才解密 | 只有你的電腦。Tailscale 的轉送伺服器只看到加密資料 |
+| Cloudflare 臨時網址(沒裝 Tailscale 時) | ✅ HTTPS | Cloudflare 會在它的伺服器解密再轉給你,技術上看得到 |
+| 同 Wi-Fi 的 `http://192.168…` | ❌ 沒加密 | 同一個 Wi-Fi 的人有機會攔截 |
+
+所以**手機一律用 https 的 Tailscale 網址**,不要用 192.168 那個。
+
+**存在電腦裡的資料**
+
+- 聊天紀錄存在 `HomeChat/data/homechat.db`,資料夾權限只有你自己能讀
+- 密碼用 PBKDF2(20 萬次)雜湊;登入憑證只存 SHA-256 雜湊,資料庫外流也不能拿來登入
+- 資料庫本身沒有另外加密。如果擔心電腦被偷,請開啟系統的磁碟加密:
+  Windows「裝置加密」或 BitLocker、Mac「FileVault」(設定 → 隱私權與安全性)
+
+**為什麼不是端對端加密(E2EE)?** 端對端加密是為了防「伺服器」偷看。HomeChat 的伺服器就是你自己的電腦,
+資料本來就只在你和朋友之間,再加一層只會讓匯入、搜尋、換手機變複雜,實際上沒有多保護到什麼。
+
+**防護機制**
+
+- 第一次設定密碼只能在家裡這台電腦上操作,而且**設好密碼之前不會開放外部連線**
+- 密碼至少 8 個字;同一來源 10 分鐘錯 10 次就鎖住(全部來源合計 30 次也鎖)
+- 邀請連結只能用一次、7 天過期;打開連結(包含 LINE 自動抓預覽)不會用掉,要按「開始聊天」
+- 朋友只能看到和你的對話,看不到你的聯絡人和別人的訊息
+- 「登入的裝置」:可以看到你和每位朋友在哪些裝置登入,不認得的直接移除;90 天沒用自動登出
+- 「設定」可以改密碼,改完其他裝置全部登出
+- 好友申請、訊息有頻率限制,防止洗版
+- 網頁有 CSP、禁止被嵌入其他網站(防點擊劫持)、HSTS 等安全標頭
+
+**你要注意的**
+
+- 主人密碼請設長一點,不要跟其他網站一樣。網址是公開的,任何人都看得到登入頁
+- 手機遺失:用電腦登入 → 設定 →「查看裝置」移除那支手機,然後改密碼
+- 朋友的邀請連結只私訊給本人,不要貼在群組(要給多人請用「加我好友」連結 + 你按接受)
+
+## 進階
+
+手動執行(不用安裝程式):
+
+```bash
+python homechat.py --open
 ```
-============================================================
-  在外面(4G/5G、別的 Wi-Fi、朋友):https://home-pc.tail1234.ts.net
-  這台電腦:http://127.0.0.1:8800
-  同 Wi-Fi:http://192.168.1.23:8800
-============================================================
-這個視窗不要關。按 Ctrl+C 結束
-```
-
-- **手機**:開「在外面」那個網址並登入,**不管在家還是在外面都用這個網址**。
-  在瀏覽器選「加入主畫面」就像 App 一樣
-- **電腦**:開 `http://127.0.0.1:8800`
-- Windows 第一次執行時防火牆會問要不要允許,請選「允許」
-- **視窗不能關、電腦不能關機或睡眠**,不然大家都連不上(見下面「開機自動執行」)
 
 | 參數 | 預設 | 說明 |
 |---|---|---|
-| `--name` | 主人 | 你的顯示名稱(也可以在網頁「設定」改) |
-| `--tunnel` | `auto` | 外部連線:`auto` 有 Tailscale 用 Tailscale,沒有就用 cloudflared;`tailscale`、`cloudflare`、`off`(只在家裡 Wi-Fi 用) |
-| `--public-url` | | 你自己有固定網域時填這個,就不會自動開通道 |
+| `--open` | | 啟動後打開瀏覽器 |
+| `--tunnel` | `auto` | 外部連線:`auto` 有 Tailscale 用 Tailscale,沒有就用 cloudflared;`tailscale`、`cloudflare`、`off` |
+| `--public-url` | | 自己有固定網域時填這個,就不會自動開通道 |
 | `--port` | 8800 | 埠號 |
 | `--db` | `data/homechat.db` | 資料庫位置 |
-| `--set-password` | | 改密碼(會登出所有裝置) |
+| `--set-password` | | 忘記密碼時,在終端機重設 |
 
-### 不想裝 Tailscale:Cloudflare 臨時網址
+**忘記密碼**:Windows 在 `使用者資料夾\HomeChat` 開 cmd 執行 `python homechat.py --set-password`;
+Mac 在終端機執行 `python3 ~/HomeChat/homechat.py --set-password`。
 
-裝 cloudflared(Windows:cmd 輸入 `winget install --id Cloudflare.cloudflared`;Mac:`brew install cloudflared`)
-後啟動 HomeChat,也會自動拿到一個 `https://xxxx.trycloudflare.com` 網址,不用註冊帳號。
-缺點是**每次重開 HomeChat 網址都會變**,朋友手上的舊邀請連結會失效、要重傳,所以比較適合先試試看。
+**不想裝 Tailscale**:裝 cloudflared(Windows:`winget install --id Cloudflare.cloudflared`;Mac:`brew install cloudflared`)
+也會自動拿到一個 `https://xxxx.trycloudflare.com` 網址。缺點是每次重開網址都會變,邀請連結要重傳。
 
-## 匯入聯絡人
+**移除**:刪掉 `HomeChat` 資料夾(聊天紀錄在裡面的 `data`,要留的話先備份)、桌面捷徑,以及
+Windows 的「啟動」資料夾(Win+R 輸入 `shell:startup`)裡的 HomeChat;Mac 執行
+`launchctl unload ~/Library/LaunchAgents/tw.homechat.plist && rm ~/Library/LaunchAgents/tw.homechat.plist`。
 
-LINE **沒有**提供匯出好友名單的功能,也不開放個人帳號的 API,所以有兩種做法:
+**記錄檔**:`HomeChat/data/homechat.log`,出問題時把內容貼給開發者。
 
-1. **貼上名單**:右上角 ⋯ →「貼上聯絡人名單」,一行一個人。可以只寫名字,或 `名字,LINE ID,備註`
-   (從 Excel / Google 試算表直接複製貼上也可以)
-2. **匯入 LINE 聊天紀錄**(推薦):會自動建立聯絡人,並把舊對話搬過來
-   - 手機 LINE 打開跟某人的聊天室 → 右上角 ≡ → 設定 → **傳送聊天記錄** → 存成 .txt
-   - 把 .txt 傳到電腦,在 HomeChat 選 ⋯ →「匯入 LINE 聊天紀錄」,可以一次選多個檔案
-   - 同一份重複匯入不會重複;群組或看不出誰是對方時,會請你選
+**備份**:複製整個 `HomeChat/data` 資料夾。單一對話也可以從 ⋯ →「匯出聊天紀錄 .txt」。
 
-## 測試
-
-```bash
-pip install pytest
-python -m pytest tests
-```
-
-## 跟朋友聊天
-
-1. 點開聯絡人 → 右上角 ⋯ →「邀請連結」→「用 LINE 傳送」(或複製後自己貼)
-2. 對方在 LINE 點連結就會打開聊天室(對方不用裝任何東西,在哪裡都能連),之後再開同一條連結就會回到同一個對話
-3. **拿到連結的人就能以對方的身分聊天**,請只私訊給本人。外流了就按「換新連結」,舊連結和已打開的手機會立刻失效
-
-## 開機自動執行
-
-- **Windows**:建一個 `homechat.bat`,內容 `cd /d C:\路徑\homechat && python homechat.py`,放進「啟動」資料夾(Win+R 輸入 `shell:startup`)
-- **macOS / Linux**:用 `launchd` / `systemd`,或 `crontab -e` 加一行 `@reboot cd /路徑/homechat && python3 homechat.py`
-
-電腦關機或睡眠時大家都連不上,訊息也收不到;要一直能聊,電腦要保持開著(可在電源設定關閉自動睡眠)。
-
-## 備份
-
-所有資料都在 `data/homechat.db` 一個檔案(旁邊的 `-wal`、`-shm` 也一起)。
-關掉 HomeChat 後複製整個 `data` 資料夾就是完整備份。單一對話也可以從 ⋯ →「匯出聊天紀錄 .txt」。
-
-## 安全
-
-- 主人密碼用 PBKDF2 雜湊儲存;同一來源 10 分鐘內錯 10 次會暫時鎖住
-- 訪客只能看到、發送自己那一個對話,看不到聯絡人列表或其他人的訊息
-- 外部連線一律走 HTTPS(Tailscale / Cloudflare 自動提供),不用在路由器開 port,家裡 IP 不會曝光
-- 網址是公開的,任何人都能看到登入頁,所以請設一個夠長的密碼
+**測試**:`pip install pytest && python -m pytest tests`
 
 ## 目前沒有
 
