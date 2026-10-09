@@ -11,3 +11,5 @@
 *.userprefs
 .vs/
 .idea/
+/Assets/Resources/buildinfo.txt
+/Assets/Resources/buildinfo.txt.meta

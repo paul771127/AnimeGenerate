@@ -63,6 +63,9 @@ namespace SpellDuel
         float nextPing, nextPose;
         string ipInput = "192.168.";
 
+        static string buildInfo;
+        static string BuildInfo => buildInfo ??= (Resources.Load<TextAsset>("buildinfo")?.text ?? "（未標記）");
+
         static double LocalTime => Time.realtimeSinceStartupAsDouble;
         double SharedTime => LocalTime + clockOffset;
 
@@ -786,6 +789,7 @@ namespace SpellDuel
                 GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture);
                 GUI.color = Color.white;
                 GUI.Label(new Rect(0, H * 0.18f, W, H * 0.1f), "SpellDuel", big);
+                GUI.Label(new Rect(0, H * 0.27f, W, lineH), "版本 " + BuildInfo, new GUIStyle(label) { alignment = TextAnchor.MiddleCenter });
                 float bw0 = W * 0.8f, bh0 = H * 0.09f;
                 if (GUI.Button(new Rect((W - bw0) / 2, H * 0.35f, bw0, bh0), "單人練習（畫場地）", button)) ChooseMode(Mode.Solo);
                 GUI.Label(new Rect((W - bw0) / 2, H * 0.35f + bh0, bw0, lineH * 2), "像 Meta Quest 一樣在地上畫出遊戲範圍，不需要標記圖", label);

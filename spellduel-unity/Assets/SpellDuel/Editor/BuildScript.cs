@@ -139,6 +139,43 @@ namespace SpellDuel.EditorTools
             EditorUtility.SetDirty(perTarget);
         }
 
+        // 每次建置（雲端、export 腳本、編輯器 Build And Run 都會經過這裡）：
+        // 寫入版本資訊（建置時間＋git commit），開始畫面會顯示，方便確認裝到的是不是最新版；
+        // 同時更新 build number，讓手機確實當成新版本安裝。
+        class StampBuild : UnityEditor.Build.IPreprocessBuildWithReport
+        {
+            public int callbackOrder => 0;
+            public void OnPreprocessBuild(BuildReport report)
+            {
+                var now = DateTime.Now;
+                string sha = Git("rev-parse --short HEAD"), branch = Git("rev-parse --abbrev-ref HEAD");
+                string info = $"{now:yyyy-MM-dd HH:mm}" + (string.IsNullOrEmpty(sha) ? "" : $" · {sha}") + (string.IsNullOrEmpty(branch) ? "" : $" ({branch})");
+                Directory.CreateDirectory("Assets/Resources");
+                File.WriteAllText("Assets/Resources/buildinfo.txt", info);
+                AssetDatabase.ImportAsset("Assets/Resources/buildinfo.txt", ImportAssetOptions.ForceUpdate);
+                int code = int.Parse(now.ToString("yyMMddHH"));
+                PlayerSettings.Android.bundleVersionCode = code;
+                PlayerSettings.iOS.buildNumber = code.ToString();
+                Debug.Log($"[SpellDuel] Build info: {info}, build number {code}");
+            }
+
+            static string Git(string args)
+            {
+                try
+                {
+                    var psi = new System.Diagnostics.ProcessStartInfo("git", args)
+                    {
+                        RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true,
+                    };
+                    using var p = System.Diagnostics.Process.Start(psi);
+                    string o = p.StandardOutput.ReadToEnd().Trim();
+                    p.WaitForExit(5000);
+                    return p.ExitCode == 0 ? o : "";
+                }
+                catch { return ""; }
+            }
+        }
+
 #if UNITY_IOS
         // iOS：區域網路連線需要在 Info.plist 說明用途，否則連線會被系統擋下
         [PostProcessBuild(100)]
