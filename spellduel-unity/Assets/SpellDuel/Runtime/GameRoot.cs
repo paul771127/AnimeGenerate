@@ -41,9 +41,28 @@ namespace SpellDuel
 
         // ---------------------------------------------------------------- 模式
         // 單人：畫場地（像 Meta Quest 的邊界），不需要標記圖
-        // 雙人：兩支手機掃同一張標記圖，共用座標
+        // 雙人（畫場地）：其中一人畫場地，另一人收到場地資料，兩支手機用鏡頭互相看對方來對齊座標
+        // 雙人（標記圖）：兩支手機掃同一張標記圖，共用座標
         enum Mode { Choose, Solo, Duo }
         Mode mode = Mode.Choose;
+        bool duoUseMarker;                 // 雙人：true＝標記圖對齊；false＝畫場地＋互相校正
+        bool AreaMode => mode == Mode.Duo && !duoUseMarker;
+
+        // ---------------------------------------------------------------- 雙人「畫場地」模式
+        bool areaOwner;                    // 場地是我畫的 → 我的座標就是世界座標
+        bool areaReceived;                 // 收到對手畫的場地 → 我是對齊方
+        readonly List<Vector3> areaWorld = new List<Vector3>();   // 場地邊界（世界座標）
+        readonly DuoAlignment align = new DuoAlignment();
+        bool aligned;                      // 對齊方：座標已對齊
+        float nextSolve, lastAreaRebuild, nextAlignMsg;
+        bool remoteAligned; float remoteAlignRms;
+        struct Sample { public double t; public Vector3 p; }
+        readonly List<Sample> myFeetHist = new List<Sample>();     // 對齊方自己的腳下位置（AR 座標）
+        readonly List<Sample> ownerFeetHist = new List<Sample>();  // 場地主回報的腳下位置（世界座標）
+        bool Aligner => AreaMode && areaReceived && !areaOwner;
+
+        /// <summary>這支手機的世界座標可以用了嗎（可以送位置、施法）</summary>
+        bool WorldReady => mode == Mode.Duo && (duoUseMarker || areaOwner ? WorldFrame.Calibrated : aligned);
 
         // ---------------------------------------------------------------- AR
         ARSession session;
@@ -124,7 +143,7 @@ namespace SpellDuel
             BuildVisuals();
             net = new NetLink();
             ipInput = PlayerPrefs.GetString("sd_last_ip", ipInput);
-            Log("請選擇：單人（畫場地）或雙人（標記圖）");
+            Log("請選擇：單人或雙人");
         }
 
         void OnDestroy() => net?.Dispose();
@@ -224,7 +243,7 @@ namespace SpellDuel
 
         void ConsiderMarker(ARTrackedImage img)
         {
-            if (mode != Mode.Duo || img.trackingState != TrackingState.Tracking) return;
+            if (mode != Mode.Duo || !duoUseMarker || img.trackingState != TrackingState.Tracking) return;
             // 第一次看到就對齊；之後只在靠近標記圖時才更新（距離越近估得越準）
             float dist = Vector3.Distance(cam.transform.position, img.transform.position);
             if (WorldFrame.Calibrated && dist > RecalibrateMaxDistance) return;
@@ -238,8 +257,9 @@ namespace SpellDuel
         {
             Tracking.Tick(Time.time);
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
-            if (mode == Mode.Solo) UpdateSolo();
+            if (mode == Mode.Solo || AreaMode) UpdatePlayArea();
             HandleNetwork();
+            if (AreaMode) UpdateDuoArea();
             // 追蹤狀態改變時告訴對手（對手畫面上我的判定框變灰，停在最後的正確位置）
             if (net.Connected && Tracking.Ok != lastSentTracking)
             {
@@ -252,7 +272,7 @@ namespace SpellDuel
                 nextPing = Time.time + 2f;
                 net.Send(new Msg { t = "ping", c = LocalTime }.ToJson());
             }
-            if (net.Connected && WorldFrame.Calibrated && Tracking.Ok && Time.time >= nextPose)
+            if (net.Connected && WorldReady && Tracking.Ok && Time.time >= nextPose)
             {
                 nextPose = Time.time + 0.05f;
                 net.Send(new Msg
@@ -261,6 +281,7 @@ namespace SpellDuel
                     p = WorldFrame.ToWorld(cam.transform.position),
                     r = WorldFrame.RotToWorld(cam.transform.rotation),
                     hp = hp,
+                    t0 = SharedTime,
                 }.ToJson());
             }
             UpdateObservation();
@@ -278,15 +299,26 @@ namespace SpellDuel
         }
 
         // ---------------------------------------------------------------- 模式切換與單人場地
-        void ChooseMode(Mode m)
+        void ChooseMode(Mode m, bool marker = false)
         {
             mode = m;
+            duoUseMarker = marker;
             if (m == Mode.Solo)
             {
                 WorldFrame.Reset();
                 playArea.Begin();
                 practiceDummy = false;
                 Log("單人模式：先掃地板，再畫遊戲場地");
+            }
+            else if (!marker)
+            {
+                WorldFrame.Reset();
+                playArea.Clear();
+                playArea.Begin();
+                areaOwner = areaReceived = aligned = remoteAligned = false;
+                areaWorld.Clear();
+                align.Clear();
+                Log("雙人（畫場地）：先連線，再由其中一人畫場地");
             }
             else
             {
@@ -295,9 +327,10 @@ namespace SpellDuel
             }
         }
 
-        bool PointerInPlayZone => Screen.height - Input.mousePosition.y >= Screen.height * 0.32f;
+        float panelBottom;   // 上方操作面板的下緣（GUI 座標），面板以下才是遊戲區
+        bool PointerInPlayZone => Screen.height - Input.mousePosition.y >= Mathf.Max(Screen.height * 0.32f, panelBottom);
 
-        void UpdateSolo()
+        void UpdatePlayArea()
         {
             // 手繪：按住螢幕下方區域時記錄準星軌跡，放開就完成
             if (playArea.state == PlayArea.State.Drawing)
@@ -320,10 +353,136 @@ namespace SpellDuel
 
         void OnPlayAreaReady()
         {
-            // 場地中心＝世界原點；假人站在場地內、玩家面向的那一側（離邊界留 0.6 公尺，最遠 3 公尺）
+            // 場地中心＝世界原點
+            if (AreaMode)
+            {
+                if (areaReceived) return;   // 對齊方不自己畫場地
+                // 第一次畫：場地中心＝世界原點。之後重畫只換邊界、世界座標不動（否則對手的對齊會失效）
+                if (!areaOwner) { areaOwner = true; WorldFrame.SetMarker(playArea.Origin); }
+                SendArea();
+                Log(net.Connected ? "✅ 場地完成，已傳給對手" : "✅ 場地完成，連線後會自動傳給對手");
+                return;
+            }
             WorldFrame.SetMarker(playArea.Origin);
             solo.ShowSetup();
             Log("✅ 場地完成！選職業開始戰鬥");
+        }
+
+        // ---------------------------------------------------------------- 雙人「畫場地」：傳送場地、互相校正
+        void SendArea()
+        {
+            if (!net.Connected || !areaOwner || playArea.Polygon.Count < 3) return;
+            var pts = new Vector3[playArea.Polygon.Count];
+            for (int i = 0; i < pts.Length; i++) { var w = WorldFrame.ToWorld(playArea.Polygon[i]); pts[i] = new Vector3(w.x, 0f, w.z); }
+            net.Send(new Msg { t = "area", pts = pts }.ToJson());
+        }
+
+        void OnAreaReceived(Vector3[] pts)
+        {
+            if (pts == null || pts.Length < 3) return;
+            if (areaOwner)
+            {
+                // 雙方都畫了：以房主的場地為準
+                if (net.IsHost) { SendArea(); Log("雙方都畫了場地：以房主的為準"); return; }
+                areaOwner = false;
+                WorldFrame.Reset();
+                align.Clear(); aligned = false;
+            }
+            bool first = !areaReceived;
+            areaReceived = true;
+            areaWorld.Clear(); areaWorld.AddRange(pts);
+            if (aligned) RebuildArea();
+            else playArea.Clear();
+            if (first) Log("📥 收到對手的場地：兩人面對面、相距 2～5m，讓鏡頭拍到對方全身（含腳）來對齊");
+        }
+
+        /// <summary>把世界座標的場地換到我的 AR 座標，重畫邊界與格子牆</summary>
+        void RebuildArea()
+        {
+            var poly = new List<Vector3>();
+            foreach (var w in areaWorld) poly.Add(WorldFrame.FromWorld(new Vector3(w.x, 0f, w.z)));
+            playArea.SetPolygon(poly, WorldFrame.Marker);
+            lastAreaRebuild = Time.time;
+        }
+
+        static Vector3 FeetFromHead(Vector3 head, Quaternion rot, float floorY)
+        {
+            // 手機拿在身體前方 → 往後退一點才是身體（腳）的位置
+            var back = Flat(rot * Vector3.forward);
+            back = back.sqrMagnitude > 1e-4f ? -back.normalized * 0.12f : Vector3.zero;
+            var f = head + back;
+            return new Vector3(f.x, floorY, f.z);
+        }
+
+        static void Push(List<Sample> hist, double t, Vector3 p)
+        {
+            hist.Add(new Sample { t = t, p = p });
+            while (hist.Count > 0 && t - hist[0].t > 10.0) hist.RemoveAt(0);
+        }
+
+        /// <summary>在時間 t 的位置（內插）；離最近的樣本超過 0.3 秒就不採用</summary>
+        static bool Interp(List<Sample> hist, double t, out Vector3 p)
+        {
+            p = Vector3.zero;
+            for (int i = hist.Count - 1; i >= 0; i--)
+            {
+                if (hist[i].t > t) continue;
+                if (i == hist.Count - 1) { if (t - hist[i].t > 0.3) return false; p = hist[i].p; return true; }
+                var a = hist[i]; var b = hist[i + 1];
+                if (b.t - a.t > 0.6) return false;
+                p = Vector3.Lerp(a.p, b.p, (float)((t - a.t) / System.Math.Max(1e-6, b.t - a.t)));
+                return true;
+            }
+            return false;
+        }
+
+        void UpdateDuoArea()
+        {
+            if (!Aligner) return;
+            // 對齊前：暫用「自己的 AR 座標、地板高度＝0」當世界座標，鏡頭偵測才算得出對手站的位置
+            if (!aligned && playArea.HasFloor)
+                WorldFrame.SetMarker(new Pose(new Vector3(0f, playArea.FloorY, 0f), Quaternion.identity));
+            if (Tracking.Ok && playArea.HasFloor)
+                Push(myFeetHist, SharedTime, FeetFromHead(cam.transform.position, cam.transform.rotation, playArea.FloorY));
+
+            if (Time.time < nextSolve || !playArea.HasFloor) return;
+            nextSolve = Time.time + 0.5f;
+            if (!align.Solve(Time.time)) return;
+            var target = align.MarkerPose(playArea.FloorY);
+            if (!aligned)
+            {
+                WorldFrame.SetMarker(target);
+                aligned = true;
+                RebuildArea();
+                Log($"✅ 座標已對齊（誤差 {align.Rms * 100f:F0}cm），開打後會持續互相校正");
+            }
+            else
+            {
+                // 開打後持續校正：慢慢靠過去，避免畫面跳動
+                var cur = WorldFrame.Marker;
+                float dPos = Vector3.Distance(cur.position, target.position), dAng = Quaternion.Angle(cur.rotation, target.rotation);
+                WorldFrame.SetMarker(new Pose(Vector3.Lerp(cur.position, target.position, 0.3f), Quaternion.Slerp(cur.rotation, target.rotation, 0.3f)));
+                if ((dPos > 0.02f || dAng > 0.5f) && Time.time - lastAreaRebuild > 1f) RebuildArea();
+            }
+            if (Time.time >= nextAlignMsg)
+            {
+                nextAlignMsg = Time.time + 2f;
+                net.Send(new Msg { t = "align", ok = true, s = align.Rms, id = align.Used }.ToJson());
+            }
+        }
+
+        /// <summary>鏡頭看到對手的腳（世界座標 ground、拍攝時間 captureTime）→ 送給對方或加入對齊樣本</summary>
+        void OnFootObservation(Vector3 ground, float captureTime)
+        {
+            if (!AreaMode || !net.Connected) return;
+            double tShared = SharedTime - (Time.time - captureTime);
+            if (areaOwner)
+                net.Send(new Msg { t = "seen", p = new Vector3(ground.x, 0f, ground.z), t0 = tShared }.ToJson());
+            else if (Aligner && Interp(ownerFeetHist, tShared, out var ownerW))
+            {
+                var local = WorldFrame.FromWorld(ground);   // 我的 AR 座標（xz 就是本地座標）
+                align.Add(ownerW, new Vector3(local.x, 0f, local.z), Time.time, DuoAlignment.KindISeeOwner);
+            }
         }
 
         // ---------------------------------------------------------------- 網路訊息
@@ -339,6 +498,7 @@ namespace SpellDuel
                         Log("✅ 已連線");
                         hp = remoteHp = MaxHp;
                         damaged.Clear();
+                        if (AreaMode) SendArea();
                         if (!net.IsHost) net.Send(new Msg { t = "ping", c = LocalTime }.ToJson());
                         break;
                     case "_close":
@@ -361,6 +521,18 @@ namespace SpellDuel
                     }
                     case "pose":
                         remoteHeadW = m.p; remoteRotW = m.r; remoteHp = m.hp; remoteSeen = Time.time;
+                        if (Aligner) Push(ownerFeetHist, m.t0, FeetFromHead(m.p, m.r, 0f));
+                        break;
+                    case "area":
+                        if (AreaMode) OnAreaReceived(m.pts);
+                        break;
+                    case "seen":
+                        // 場地主的鏡頭看到我：配上我自己在同一時間的位置 → 一組對齊樣本
+                        if (Aligner && Interp(myFeetHist, m.t0, out var mine))
+                            align.Add(m.p, new Vector3(mine.x, 0f, mine.z), Time.time, DuoAlignment.KindOwnerSeesMe);
+                        break;
+                    case "align":
+                        remoteAligned = m.ok; remoteAlignRms = m.s;
                         break;
                     case "shot":
                         SpawnShot(new Shot { id = m.id, mine = false, o = m.p, d = m.d, s = m.s, rad = m.rad, dmg = m.dmg, t0 = m.t0 });
@@ -398,9 +570,10 @@ namespace SpellDuel
             if (!Input.GetMouseButtonDown(0) || GUIUtility.hotControl != 0) return;
             var sp = Input.mousePosition;
             if (!PointerInPlayZone) return;   // 上方是操作面板
+            if (playArea.state == PlayArea.State.Drawing) return;   // 正在手繪場地
             if (mode != Mode.Duo) return;   // 單人模式的操作由 SoloBattle 處理
             if (mode == Mode.Solo && playArea.state != PlayArea.State.Done) return;   // 畫場地時按螢幕是在畫線
-            if (!WorldFrame.Calibrated) { Log(mode == Mode.Solo ? "請先畫好場地" : "請先掃描標記圖對齊座標"); return; }
+            if (!WorldReady) { Log(duoUseMarker ? "請先掃描標記圖對齊座標" : areaReceived ? "還沒對齊：兩人面對面，讓鏡頭拍到對方全身" : "請先畫場地"); return; }
             if (!Tracking.Ok) { Log("AR 追蹤中斷，暫時不能施法"); return; }
             if (!hasTarget) { Log("還沒有目標：請先連線、開練習假人，或讓鏡頭拍到一個人"); return; }
             if (!targetOnScreen) { Log("🎯 鏡頭沒看到對手，無法鎖定"); return; }
@@ -491,6 +664,7 @@ namespace SpellDuel
                 // 輕微平滑，減少偵測抖動
                 obsGround = fresh && Vector3.Distance(Flat(obsGround), Flat(gNew)) < 0.6f ? Vector3.Lerp(obsGround, gNew, 0.6f) : gNew;
                 obsGround.y = 0f;
+                OnFootObservation(new Vector3(gNew.x, 0f, gNew.z), r.time);   // 對齊用原始值（不平滑）
                 // 頭的高度：鼻子射線走到對手所在距離時的高度
                 obsHeadY = 1.55f;
                 if (Ok(PoseDetector.Nose))
@@ -564,7 +738,7 @@ namespace SpellDuel
         {
             targetOnScreen = false;
             hasTarget = TryGetTarget(out tgtHeadW, out tgtFwdW, out tgtSrc);
-            if (mode != Mode.Duo || !hasTarget || !Tracking.Ok) return;
+            if (mode != Mode.Duo || !hasTarget || !Tracking.Ok || !WorldReady) return;
 
             var head = WorldFrame.FromWorld(tgtHeadW);
             var pts = new[] { head + Vector3.up * 0.15f, head + Vector3.down * (BodyHeight * 0.5f), head + Vector3.down * BodyHeight };
@@ -729,12 +903,12 @@ namespace SpellDuel
         void UpdateVisuals()
         {
             bool cal = WorldFrame.Calibrated;
-            markerGizmo.SetActive(cal && mode == Mode.Duo);
+            markerGizmo.SetActive(cal && mode == Mode.Duo && duoUseMarker);
             if (cal)
             {
                 markerGizmo.transform.SetPositionAndRotation(WorldFrame.Marker.position, WorldFrame.Marker.rotation);
             }
-            bool remoteVisible = cal && net.Connected && remoteSeen > 0f;   // 對手追蹤中斷時停在最後位置（變灰）
+            bool remoteVisible = WorldReady && net.Connected && remoteSeen > 0f;   // 對手追蹤中斷時停在最後位置（變灰）
             PlaceBody(remoteHead, remoteBody, WorldFrame.FromWorld(remoteHeadW), remoteVisible);
             bool stale = !remoteTrackingOk || Time.time - remoteSeen > 1f;
             var rc = stale ? new Color(0.5f, 0.5f, 0.5f, 0.3f) : new Color(0.3f, 0.9f, 1f, 0.35f);
@@ -791,10 +965,12 @@ namespace SpellDuel
                 GUI.Label(new Rect(0, H * 0.18f, W, H * 0.1f), "SpellDuel", big);
                 GUI.Label(new Rect(0, H * 0.27f, W, lineH), "版本 " + BuildInfo, new GUIStyle(label) { alignment = TextAnchor.MiddleCenter });
                 float bw0 = W * 0.8f, bh0 = H * 0.09f;
-                if (GUI.Button(new Rect((W - bw0) / 2, H * 0.35f, bw0, bh0), "單人練習（畫場地）", button)) ChooseMode(Mode.Solo);
-                GUI.Label(new Rect((W - bw0) / 2, H * 0.35f + bh0, bw0, lineH * 2), "像 Meta Quest 一樣在地上畫出遊戲範圍，不需要標記圖", label);
-                if (GUI.Button(new Rect((W - bw0) / 2, H * 0.55f, bw0, bh0), "雙人對戰（標記圖）", button)) ChooseMode(Mode.Duo);
-                GUI.Label(new Rect((W - bw0) / 2, H * 0.55f + bh0, bw0, lineH * 2), "兩支手機掃描地上同一張標記圖，共用房間座標", label);
+                if (GUI.Button(new Rect((W - bw0) / 2, H * 0.33f, bw0, bh0), "單人練習（畫場地）", button)) ChooseMode(Mode.Solo);
+                GUI.Label(new Rect((W - bw0) / 2, H * 0.33f + bh0, bw0, lineH * 2), "像 Meta Quest 一樣在地上畫出遊戲範圍，不需要標記圖", label);
+                if (GUI.Button(new Rect((W - bw0) / 2, H * 0.51f, bw0, bh0), "雙人對戰（畫場地）", button)) ChooseMode(Mode.Duo, false);
+                GUI.Label(new Rect((W - bw0) / 2, H * 0.51f + bh0, bw0, lineH * 2), "一人畫場地、另一人自動收到；鏡頭互相看對方來對齊，不需要標記圖", label);
+                if (GUI.Button(new Rect((W - bw0) / 2, H * 0.69f, bw0, bh0), "雙人對戰（標記圖）", button)) ChooseMode(Mode.Duo, true);
+                GUI.Label(new Rect((W - bw0) / 2, H * 0.69f + bh0, bw0, lineH * 2), "兩支手機掃描地上同一張標記圖，共用房間座標", label);
                 return;
             }
 
@@ -808,7 +984,7 @@ namespace SpellDuel
             }
 
             GUI.color = new Color(0, 0, 0, 0.55f);
-            GUI.DrawTexture(new Rect(0, 0, W, H * 0.32f), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(0, 0, W, Mathf.Max(H * 0.32f, panelBottom)), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
             float y = top;
@@ -844,9 +1020,18 @@ namespace SpellDuel
             }
             else
             {
-                Line(WorldFrame.Calibrated
-                    ? $"座標：✅ 已對齊（{Time.time - WorldFrame.LastSeenTime:F0} 秒前看到標記圖）"
-                    : "座標：⚠ 請把鏡頭對準地上的標記圖");
+                if (duoUseMarker)
+                    Line(WorldFrame.Calibrated
+                        ? $"座標：✅ 已對齊（{Time.time - WorldFrame.LastSeenTime:F0} 秒前看到標記圖）"
+                        : "座標：⚠ 請把鏡頭對準地上的標記圖");
+                else if (areaOwner)
+                    Line("場地：✅ 你畫的場地（以你的座標為準）" + (!net.Connected ? "" : remoteAligned ? $"　對手已對齊（誤差 {remoteAlignRms * 100f:F0}cm）" : "　對手對齊中…"));
+                else if (areaReceived)
+                    Line(aligned
+                        ? $"對齊：✅ 誤差 {align.Rms * 100f:F0}cm（樣本 {align.Used}，持續互相校正）"
+                        : $"對齊中（{align.Problem}）：兩人面對面相距 2～5m，鏡頭拍到對方全身含腳");
+                else
+                    Line(!playArea.HasFloor ? "場地：🔍 先掃地板（慢慢移動手機）" : "場地：由其中一人畫場地，另一人會自動收到");
                 Line($"連線：{net.Status}" + (net.Connected && !net.IsHost ? $"　時鐘差 {clockOffset * 1000:F0}ms（來回 {bestRtt * 1000:F0}ms）" : ""));
                 string dist = "";
                 if (WorldFrame.Calibrated && net.Connected && remoteSeen > 0f)
@@ -865,6 +1050,19 @@ namespace SpellDuel
                 Line($"鏡頭偵測：{poseDet.Status}　{obsInfo}" + (hasTarget ? $"　目標：{tgtSrc}" : ""));
 
                 y += pad * 0.5f;
+                // 畫場地（還沒收到對手的場地時才能畫；重畫會再傳一次給對手）
+                if (AreaMode && !areaReceived)
+                {
+                    GUI.enabled = playArea.HasFloor && playArea.state != PlayArea.State.Drawing;
+                    float[] sizes = { 3f, 6f, 10f, 15f };
+                    for (int i = 0; i < sizes.Length; i++)
+                        if (GUI.Button(new Rect(pad + i * (bw + pad), y, bw, bh), $"方形 {sizes[i]:0}m", button)) { playArea.Clear(); if (playArea.AutoSquare(sizes[i])) OnPlayAreaReady(); }
+                    y += bh + pad * 0.5f;
+                    if (GUI.Button(new Rect(pad, y, bw, bh), "手繪場地", button)) { playArea.StartDraw(); }
+                    GUI.enabled = true;
+                    if (playArea.state == PlayArea.State.Drawing) GUI.Label(new Rect(pad * 2 + bw, y, W - bw - pad * 3, bh), playArea.Hint, label);
+                    y += bh + pad * 0.5f;
+                }
                 if (!net.Connected)
                 {
                     if (GUI.Button(new Rect(pad, y, bw, bh), "建立房間", button)) net.Host();
@@ -878,16 +1076,19 @@ namespace SpellDuel
                         practiceDummy = !practiceDummy;
                 }
                 y += bh + pad * 0.5f;
-                if (GUI.Button(new Rect(pad, y, bw * 1.3f, bh), "重新對齊", button))
+                if ((duoUseMarker || Aligner) && GUI.Button(new Rect(pad, y, bw * 1.3f, bh), "重新對齊", button))
                 {
-                    WorldFrame.Reset();
-                    Log("請再掃描一次標記圖");
+                    if (duoUseMarker) { WorldFrame.Reset(); Log("請再掃描一次標記圖"); }
+                    else { align.Clear(); aligned = false; Log("重新對齊：兩人面對面，讓鏡頭拍到對方全身"); }
                 }
                 if (GUI.Button(new Rect(pad * 2 + bw * 1.3f, y, bw * 1.3f, bh), "HP 重置", button)) { hp = MaxHp; }
                 if (net.Connected && GUI.Button(new Rect(pad * 3 + bw * 2.6f, y, bw * 1.3f, bh), showPoseDebug ? "骨架:顯示" : "骨架:隱藏", button)) showPoseDebug = !showPoseDebug;
-                if (!net.Connected && GUI.Button(new Rect(pad * 3 + bw * 2.6f, y, bw * 1.3f, bh), "換模式", button)) { mode = Mode.Choose; WorldFrame.Reset(); }
+                if (!net.Connected && GUI.Button(new Rect(pad * 3 + bw * 2.6f, y, bw * 1.3f, bh), "換模式", button)) { mode = Mode.Choose; WorldFrame.Reset(); playArea.Clear(); areaOwner = areaReceived = aligned = false; }
                 if (!net.Connected) { y += bh + pad * 0.5f; if (GUI.Button(new Rect(pad, y, bw * 1.3f, bh), showPoseDebug ? "骨架:顯示" : "骨架:隱藏", button)) showPoseDebug = !showPoseDebug; }
+                if (AreaMode && playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position))
+                    GUI.Label(new Rect(0, H * 0.62f, W, H * 0.08f), "⚠ 回到場地內", big);
             }
+            panelBottom = y + lineH * 1.6f;
 
             // AR 追蹤中斷提示
             if (!Tracking.Ok && ARSession.state != ARSessionState.Unsupported)

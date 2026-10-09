@@ -11,6 +11,9 @@ namespace SpellDuel
     ///   hit / miss   攻擊方判定的結果（hit 帶傷害，被打的一方扣血）
     ///   hp           被打的一方回報最新血量
     ///   track        AR 追蹤狀態改變（中斷／恢復）
+    ///   area         雙人畫場地模式：場地邊界（世界座標，pts）
+    ///   seen         場地主的鏡頭看到對手站的位置（世界座標 p、拍攝時間 t0）→ 對齊樣本
+    ///   align        對齊方回報對齊結果（ok、誤差 s、樣本數 id）
     /// 座標一律是世界座標（以標記圖為原點，單位公尺）。
     /// </summary>
     [Serializable]
@@ -29,6 +32,7 @@ namespace SpellDuel
         public double c;         // ping：送出時的本機時間
         public double h;         // pong：房主收到時的時間
         public bool ok;          // track：AR 追蹤是否正常
+        public Vector3[] pts;    // area：場地邊界
 
         public string ToJson() => JsonUtility.ToJson(this);
         public static Msg FromJson(string json) => JsonUtility.FromJson<Msg>(json);

@@ -189,6 +189,22 @@ namespace SpellDuel
         {
             // 原點＝場地中心（多邊形重心），+Z＝玩家完成時面向的方向
             Origin = new Pose(Centroid(Polygon), Quaternion.LookRotation(forward, Vector3.up));
+            ShowPolygon();
+        }
+
+        /// <summary>雙人模式的對齊方：直接使用對手傳來的場地（已換成我的 AR 座標）</summary>
+        public void SetPolygon(List<Vector3> sessionPts, Pose origin)
+        {
+            drawPts.Clear();
+            drawLine.positionCount = 0;
+            Polygon.Clear();
+            Polygon.AddRange(sessionPts);
+            Origin = origin;
+            ShowPolygon();
+        }
+
+        void ShowPolygon()
+        {
             var loop = new List<Vector3>(Polygon);
             for (int i = 0; i < loop.Count; i++) loop[i] += Vector3.up * 0.01f;
             SetLine(outline, loop);
