@@ -49,6 +49,7 @@ namespace SpellDuel
         ARTrackedImageManager images;
         ARPlaneManager planeManager;
         PlayArea playArea;
+        SoloBattle solo;
         bool imageTrackingStarted;
         float lastBoundaryBuzz;
         string arNote = "";
@@ -142,6 +143,11 @@ namespace SpellDuel
 
             playArea = new GameObject("Play Area").AddComponent<PlayArea>();
             playArea.Init(cam, planeManager, mat);
+
+            solo = gameObject.AddComponent<SoloBattle>();
+            solo.Init(cam, playArea, mat);
+            solo.RequestRedraw = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); Log("請重新畫場地"); };
+            solo.RequestChangeMode = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); mode = Mode.Choose; };
         }
 
         // 執行期建立「可變參考圖庫」，把內建的標記圖加進去（不需要在編輯器裡建圖庫資產）
@@ -233,7 +239,7 @@ namespace SpellDuel
             {
                 WorldFrame.Reset();
                 playArea.Begin();
-                practiceDummy = true;
+                practiceDummy = false;
                 Log("單人模式：先掃地板，再畫遊戲場地");
             }
             else
@@ -270,9 +276,8 @@ namespace SpellDuel
         {
             // 場地中心＝世界原點；假人站在場地內、玩家面向的那一側（離邊界留 0.6 公尺，最遠 3 公尺）
             WorldFrame.SetMarker(playArea.Origin);
-            float reach = playArea.ReachInside(playArea.Origin.forward, 0.6f);
-            dummyHeadW = new Vector3(0f, 1.6f, Mathf.Clamp(reach, 0f, 3f));
-            Log("✅ 場地完成！點螢幕攻擊假人");
+            solo.ShowSetup();
+            Log("✅ 場地完成！選職業開始戰鬥");
         }
 
         // ---------------------------------------------------------------- 網路訊息
@@ -333,7 +338,7 @@ namespace SpellDuel
             if (!Input.GetMouseButtonDown(0) || GUIUtility.hotControl != 0) return;
             var sp = Input.mousePosition;
             if (!PointerInPlayZone) return;   // 上方是操作面板
-            if (mode == Mode.Choose) return;
+            if (mode != Mode.Duo) return;   // 單人模式的操作由 SoloBattle 處理
             if (mode == Mode.Solo && playArea.state != PlayArea.State.Done) return;   // 畫場地時按螢幕是在畫線
             if (!WorldFrame.Calibrated) { Log(mode == Mode.Solo ? "請先畫好場地" : "請先掃描標記圖對齊座標"); return; }
             if (Time.time - lastShot < ShotCooldown) return;
@@ -548,6 +553,15 @@ namespace SpellDuel
                 GUI.Label(new Rect((W - bw0) / 2, H * 0.35f + bh0, bw0, lineH * 2), "像 Meta Quest 一樣在地上畫出遊戲範圍，不需要標記圖", label);
                 if (GUI.Button(new Rect((W - bw0) / 2, H * 0.55f, bw0, bh0), "雙人對戰（標記圖）", button)) ChooseMode(Mode.Duo);
                 GUI.Label(new Rect((W - bw0) / 2, H * 0.55f + bh0, bw0, lineH * 2), "兩支手機掃描地上同一張標記圖，共用房間座標", label);
+                return;
+            }
+
+            // 單人：場地完成後交給 SoloBattle 畫介面
+            if (mode == Mode.Solo && solo.phase != SoloBattle.Phase.Hidden)
+            {
+                solo.DrawGUI();
+                if (playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position))
+                    GUI.Label(new Rect(0, H * 0.62f, W, H * 0.08f), "⚠ 回到場地內", big);
                 return;
             }
 
