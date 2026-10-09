@@ -14,8 +14,9 @@ namespace SpellDuel
     ///   2. 掃描地上的標記圖 → 以它為世界原點（WorldFrame）。
     ///   3. 區域網路連線、對時（房主時鐘為共同時間）。
     ///   4. 每秒 20 次交換雙方手機在世界座標的位置 → 顯示對手的身體判定框。
-    ///   5. 點螢幕發射法術：送出「起點、方向、速度、半徑、發射時間」，兩邊用同一公式模擬，
-    ///      位置必定一致；由「被攻擊方」判定是否碰到自己的身體，再廣播結果。
+    ///   5. 對手出現在畫面中才能鎖定、施法。點螢幕發射法術：送出「起點、方向、速度、半徑、發射時間」，
+    ///      兩邊用同一公式模擬，位置必定一致；由「攻擊方」用對手回報的世界座標判定是否命中，
+    ///      再廣播結果——對手手機轉向哪裡、追蹤有沒有中斷，都不影響判定。
     /// 場景裡不需要任何物件：遊戲啟動後由這支程式建立一切。
     /// </summary>
     public class GameRoot : MonoBehaviour
@@ -67,7 +68,7 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 玩家
         int hp = MaxHp, remoteHp = MaxHp;
         Vector3 remoteHeadW;  Quaternion remoteRotW = Quaternion.identity;
-        float remoteSeen = -999f;
+        float remoteSeen = -999f;    // 最後一次收到對手位置的時間（對手追蹤中斷時停在最後的正確位置）
         bool remoteTrackingOk = true, lastSentTracking = true;
         float hitFlash;   // 被打中時全畫面閃紅
         bool practiceDummy;
@@ -84,6 +85,9 @@ namespace SpellDuel
         readonly Dictionary<int, Shot> shots = new Dictionary<int, Shot>();
         int shotCounter;
         float lastShot = -999f;
+        readonly HashSet<int> damaged = new HashSet<int>();   // 已扣過血的法術（避免重複扣）
+        bool targetOnScreen;      // 對手（或假人）有沒有出現在我的畫面中
+        Rect targetRect;          // 對手在螢幕上的範圍（GUI 座標），畫鎖定框用
 
         // ---------------------------------------------------------------- 顯示
         Material mat;
@@ -214,12 +218,12 @@ namespace SpellDuel
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
             if (mode == Mode.Solo) UpdateSolo();
             HandleNetwork();
-            // 追蹤狀態改變時告訴對手（對手畫面會顯示，且那段期間的攻擊不計）
+            // 追蹤狀態改變時告訴對手（對手畫面上我的判定框變灰，停在最後的正確位置）
             if (net.Connected && Tracking.Ok != lastSentTracking)
             {
                 lastSentTracking = Tracking.Ok;
                 net.Send(new Msg { t = "track", ok = Tracking.Ok }.ToJson());
-                Log(Tracking.Ok ? "AR 追蹤恢復" : "⚠ AR 追蹤中斷：這段期間的攻擊不計");
+                Log(Tracking.Ok ? "AR 追蹤恢復" : "⚠ AR 追蹤中斷：暫時不能施法，對手以你最後的位置判定");
             }
             if (net.Connected && !net.IsHost && Time.time >= nextPing)
             {
@@ -237,6 +241,7 @@ namespace SpellDuel
                     hp = hp,
                 }.ToJson());
             }
+            UpdateTarget();
             HandleFire();
             UpdateShots();
             UpdateVisuals();
@@ -303,6 +308,7 @@ namespace SpellDuel
                     case "_open":
                         Log("✅ 已連線");
                         hp = remoteHp = MaxHp;
+                        damaged.Clear();
                         if (!net.IsHost) net.Send(new Msg { t = "ping", c = LocalTime }.ToJson());
                         break;
                     case "_close":
@@ -330,21 +336,27 @@ namespace SpellDuel
                         SpawnShot(new Shot { id = m.id, mine = false, o = m.p, d = m.d, s = m.s, rad = m.rad, dmg = m.dmg, t0 = m.t0 });
                         break;
                     case "hit":
-                        if (shots.TryGetValue(m.id, out var hs))
+                        // 攻擊方判定我被打中 → 扣血、震動、閃紅，回報最新血量
+                        if (damaged.Add(m.id))
                         {
-                            remoteHp = m.hp;
-                            Explode(hs, new Color(1f, 0.3f, 0.2f), "命中！");
+                            hp = Mathf.Max(0, hp - m.dmg);
+                            net.Send(new Msg { t = "hp", hp = hp }.ToJson());
+                            if (shots.TryGetValue(m.id, out var hs)) Explode(hs, new Color(1f, 0.2f, 0.2f), $"被打中 -{m.dmg}");
+                            else Log($"被打中 -{m.dmg}");
+                            hitFlash = 1f;
+                            Handheld.Vibrate();
+                            if (hp <= 0) Log("💀 敗北");
                         }
                         break;
                     case "miss":
-                        if (shots.TryGetValue(m.id, out var ms)) Fizzle(ms, "沒打中");
+                        if (shots.TryGetValue(m.id, out var ms)) Fizzle(ms, "閃過了！");
                         break;
-                    case "void":
-                        if (shots.TryGetValue(m.id, out var vs)) Fizzle(vs, "對手 AR 追蹤中斷，這招不計");
+                    case "hp":
+                        remoteHp = m.hp;
                         break;
                     case "track":
                         remoteTrackingOk = m.ok;
-                        Log(m.ok ? "對手 AR 追蹤恢復" : "⚠ 對手 AR 追蹤中斷");
+                        Log(m.ok ? "對手 AR 追蹤恢復" : "⚠ 對手 AR 追蹤中斷（以最後位置判定）");
                         break;
                 }
             }
@@ -360,6 +372,8 @@ namespace SpellDuel
             if (mode == Mode.Solo && playArea.state != PlayArea.State.Done) return;   // 畫場地時按螢幕是在畫線
             if (!WorldFrame.Calibrated) { Log(mode == Mode.Solo ? "請先畫好場地" : "請先掃描標記圖對齊座標"); return; }
             if (!Tracking.Ok) { Log("AR 追蹤中斷，暫時不能施法"); return; }
+            if (!HasTarget) { Log("還沒有對手：請先連線（或開練習假人）"); return; }
+            if (!targetOnScreen) { Log("🎯 對手不在畫面中，無法鎖定"); return; }
             if (Time.time - lastShot < ShotCooldown) return;
             lastShot = Time.time;
 
@@ -394,6 +408,40 @@ namespace SpellDuel
             go.transform.position = WorldFrame.FromWorld(s.WorldAt(SharedTime));
         }
 
+        // ---------------------------------------------------------------- 鎖定目標
+        bool DummyActive => practiceDummy && !net.Connected;
+        bool HasTarget => WorldFrame.Calibrated && (DummyActive || (net.Connected && remoteSeen > 0f));
+        Vector3 TargetHeadW => DummyActive ? dummyHeadW : remoteHeadW;
+
+        /// <summary>對手（或假人）的身體有沒有出現在我的畫面中；同時算出畫鎖定框的範圍</summary>
+        void UpdateTarget()
+        {
+            targetOnScreen = false;
+            if (mode != Mode.Duo || !HasTarget || !Tracking.Ok) return;
+            var head = WorldFrame.FromWorld(TargetHeadW);
+            var pts = new[] { head + Vector3.up * 0.15f, head + Vector3.down * (BodyHeight * 0.5f), head + Vector3.down * BodyHeight };
+            float xMin = float.MaxValue, xMax = float.MinValue, yMin = float.MaxValue, yMax = float.MinValue;
+            int inView = 0;
+            foreach (var p in pts)
+            {
+                var v = cam.WorldToViewportPoint(p);
+                if (v.z < 0.2f) continue;   // 在背後或太近
+                if (v.x >= 0f && v.x <= 1f && v.y >= 0f && v.y <= 1f) inView++;
+                var sp = cam.WorldToScreenPoint(p);
+                xMin = Mathf.Min(xMin, sp.x); xMax = Mathf.Max(xMax, sp.x);
+                yMin = Mathf.Min(yMin, sp.y); yMax = Mathf.Max(yMax, sp.y);
+            }
+            // 頭、胸、腳至少一處在畫面內就算看得到
+            targetOnScreen = inView > 0;
+            if (targetOnScreen)
+            {
+                var c = WorldFrame.FromWorld(TargetHeadW) - cam.transform.position;
+                float halfW = BodyRadius / Mathf.Max(0.3f, Vector3.Dot(c, cam.transform.forward)) * Screen.height / (2f * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
+                float cx = (xMin + xMax) * 0.5f;
+                targetRect = Rect.MinMaxRect(cx - halfW, Screen.height - yMax, cx + halfW, Screen.height - yMin);
+            }
+        }
+
         // ---------------------------------------------------------------- 法術模擬與命中判定
         void UpdateShots()
         {
@@ -402,51 +450,47 @@ namespace SpellDuel
             foreach (var s in shots.Values)
             {
                 if (s.go == null) { remove.Add(s.id); continue; }
-                var posS = WorldFrame.FromWorld(s.WorldAt(now));
-                if (!s.resolved) s.go.transform.position = posS;
+                var posW = s.WorldAt(now);
+                if (!s.resolved) s.go.transform.position = WorldFrame.FromWorld(posW);
                 double age = now - s.t0, life = ShotRange / s.s;
+                if (s.resolved) continue;
 
-                if (!s.mine && !s.resolved)
+                if (s.mine)
                 {
-                    // 我的 AR 追蹤中斷：我的位置不可信 → 暫停判定，這招不計
-                    if (!Tracking.Ok)
+                    // 我是攻擊方：全部用世界座標判定（對手回報的位置），和任何一方手機朝向哪裡無關。
+                    // 對手 AR 追蹤中斷時不再回報位置 → 用他最後的正確位置判定。
+                    if (DummyActive)
                     {
-                        net.Send(new Msg { t = "void", id = s.id }.ToJson());
-                        Fizzle(s, "AR 追蹤中斷，這招不計");
-                        continue;
+                        if (HitsBody(posW, dummyHeadW, Vector3.zero, s.rad)) { Explode(s, new Color(1f, 0.3f, 0.2f), "命中假人！"); continue; }
                     }
-                    // 我是被攻擊方：檢查法術有沒有碰到我的身體（用我自己最準的位置）
-                    if (HitsBody(posS, cam.transform.position, cam.transform.forward, s.rad))
+                    else if (net.Connected && remoteSeen > 0f)
                     {
-                        hp = Mathf.Max(0, hp - s.dmg);
-                        net.Send(new Msg { t = "hit", id = s.id, hp = hp }.ToJson());
-                        Explode(s, new Color(1f, 0.2f, 0.2f), $"被打中 -{s.dmg}");
-                        hitFlash = 1f;   // 震動＋全畫面閃紅＋扣血
-                        Handheld.Vibrate();
-                        if (hp <= 0) Log("💀 敗北");
+                        var remoteFwd = remoteRotW * Vector3.forward;
+                        if (HitsBody(posW, remoteHeadW, remoteFwd, s.rad))
+                        {
+                            net.Send(new Msg { t = "hit", id = s.id, dmg = s.dmg }.ToJson());
+                            remoteHp = Mathf.Max(0, remoteHp - s.dmg);   // 先顯示，對手回報 hp 後再校正
+                            Explode(s, new Color(1f, 0.3f, 0.2f), "命中！");
+                            if (remoteHp <= 0) Log("🏆 勝利");
+                            continue;
+                        }
                     }
-                    else if (age > life)
+                    if (age > life)
                     {
-                        net.Send(new Msg { t = "miss", id = s.id }.ToJson());
-                        Fizzle(s, "閃過了！");
+                        if (net.Connected) net.Send(new Msg { t = "miss", id = s.id }.ToJson());
+                        Fizzle(s, "沒打中");
                     }
                 }
-                else if (s.mine && !s.resolved)
+                else if (age > life + 2.0)
                 {
-                    // 練習假人：沒連線時在本機判定
-                    if (practiceDummy && !net.Connected)
-                    {
-                        var head = WorldFrame.FromWorld(dummyHeadW);
-                        if (HitsBody(posS, head, Vector3.zero, s.rad)) { Explode(s, new Color(1f, 0.3f, 0.2f), "命中假人！"); continue; }
-                    }
-                    // 連線時等對方回報；太久沒回報就自行消失
-                    if (age > life + (net.Connected ? 2.0 : 0.0)) Fizzle(s, net.Connected ? "" : "沒打中");
+                    // 對手的法術：結果由對手判定；太久沒收到結果就自行消失
+                    Fizzle(s, "");
                 }
             }
             foreach (var id in remove) shots.Remove(id);
         }
 
-        /// <summary>球體是否碰到玩家身體（膠囊：從手機往下，沿重力方向；略往後退一點）</summary>
+        /// <summary>球體是否碰到玩家身體（膠囊：從手機往下，沿重力方向；略往後退一點）。世界座標或本機座標皆可，只要三個參數同一座標系</summary>
         static bool HitsBody(Vector3 p, Vector3 headPos, Vector3 headForward, float rad)
         {
             var back = Vector3.ProjectOnPlane(headForward, Vector3.up);
@@ -538,9 +582,10 @@ namespace SpellDuel
             {
                 markerGizmo.transform.SetPositionAndRotation(WorldFrame.Marker.position, WorldFrame.Marker.rotation);
             }
-            bool remoteVisible = cal && net.Connected && Time.time - remoteSeen < 1f;
+            bool remoteVisible = cal && net.Connected && remoteSeen > 0f;   // 對手追蹤中斷時停在最後位置（變灰）
             PlaceBody(remoteHead, remoteBody, WorldFrame.FromWorld(remoteHeadW), remoteVisible);
-            var rc = remoteTrackingOk ? new Color(0.3f, 0.9f, 1f, 0.35f) : new Color(0.5f, 0.5f, 0.5f, 0.3f);
+            bool stale = !remoteTrackingOk || Time.time - remoteSeen > 1f;
+            var rc = stale ? new Color(0.5f, 0.5f, 0.5f, 0.3f) : new Color(0.3f, 0.9f, 1f, 0.35f);
             remoteBody.GetComponent<Renderer>().material.color = rc;
             PlaceBody(dummyHead, dummyBody, WorldFrame.FromWorld(dummyHeadW), cal && practiceDummy && !net.Connected);
         }
@@ -561,6 +606,16 @@ namespace SpellDuel
             button = new GUIStyle(GUI.skin.button) { fontSize = fs };
             field = new GUIStyle(GUI.skin.textField) { fontSize = fs };
             big = new GUIStyle(label) { fontSize = fs * 2, alignment = TextAnchor.MiddleCenter };
+        }
+
+        static void DrawFrame(Rect r, Color c, float t)
+        {
+            GUI.color = c;
+            GUI.DrawTexture(new Rect(r.xMin, r.yMin, r.width, t), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(r.xMin, r.yMax - t, r.width, t), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(r.xMin, r.yMin, t, r.height), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(r.xMax - t, r.yMin, t, r.height), Texture2D.whiteTexture);
+            GUI.color = Color.white;
         }
 
         void OnGUI()
@@ -636,7 +691,7 @@ namespace SpellDuel
                     : "座標：⚠ 請把鏡頭對準地上的標記圖");
                 Line($"連線：{net.Status}" + (net.Connected && !net.IsHost ? $"　時鐘差 {clockOffset * 1000:F0}ms（來回 {bestRtt * 1000:F0}ms）" : ""));
                 string dist = "";
-                if (WorldFrame.Calibrated && net.Connected && Time.time - remoteSeen < 1f)
+                if (WorldFrame.Calibrated && net.Connected && remoteSeen > 0f)
                 {
                     var me = WorldFrame.ToWorld(cam.transform.position);
                     dist = $"　距離對手 {Vector3.Distance(new Vector3(me.x, 0, me.z), new Vector3(remoteHeadW.x, 0, remoteHeadW.z)):F2}m";
@@ -672,11 +727,22 @@ namespace SpellDuel
                 GUI.color = new Color(0, 0, 0, 0.7f);
                 GUI.DrawTexture(new Rect(0, H * 0.36f, W, H * 0.16f), Texture2D.whiteTexture);
                 GUI.color = Color.white;
-                GUI.Label(new Rect(pad, H * 0.37f, W - pad * 2, lineH * 1.4f), mode == Mode.Duo ? "⏸ AR 追蹤中斷：暫停命中判定、暫時不能施法" : "⏸ AR 追蹤中斷", label);
+                GUI.Label(new Rect(pad, H * 0.37f, W - pad * 2, lineH * 1.4f), mode == Mode.Duo ? "⏸ AR 追蹤中斷：暫時不能施法（對手仍以你最後的位置判定）" : "⏸ AR 追蹤中斷", label);
                 GUI.Label(new Rect(pad, H * 0.37f + lineH * 1.5f, W - pad * 2, lineH * 2), Tracking.Reason, label);
             }
             if (mode == Mode.Duo && net.Connected && !remoteTrackingOk)
-                GUI.Label(new Rect(pad, H * 0.53f, W - pad * 2, lineH), "⚠ 對手 AR 追蹤中斷，攻擊暫不計", label);
+                GUI.Label(new Rect(pad, H * 0.53f, W - pad * 2, lineH), "⚠ 對手 AR 追蹤中斷：以他最後的位置判定", label);
+
+            // 鎖定框：對手在畫面中才能施法
+            if (mode == Mode.Duo && HasTarget && Tracking.Ok)
+            {
+                if (targetOnScreen)
+                {
+                    DrawFrame(targetRect, new Color(0.3f, 1f, 0.4f, 0.9f), Mathf.Max(3f, W * 0.006f));
+                    GUI.Label(new Rect(targetRect.x, targetRect.y - lineH, Mathf.Max(targetRect.width, W * 0.3f), lineH), "🎯 鎖定", label);
+                }
+                else GUI.Label(new Rect(0, H * 0.58f, W, lineH * 1.5f), "對手不在畫面中，轉向對手才能施法", new GUIStyle(label) { alignment = TextAnchor.MiddleCenter });
+            }
 
             // 準星與訊息（手繪場地時準星就是畫筆）
             GUI.Label(new Rect(W / 2 - 50, H / 2 - 50, 100, 100), mode == Mode.Solo && playArea.state == PlayArea.State.Drawing ? (playArea.PenDown ? "●" : "○") : "＋", big);
