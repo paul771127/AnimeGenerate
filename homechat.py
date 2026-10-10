@@ -14,6 +14,8 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 import getpass
 import hashlib
 import hmac
@@ -34,6 +36,7 @@ import time
 import traceback
 import zipfile
 import urllib.error
+import urllib.parse
 import urllib.request
 import webbrowser
 from datetime import datetime
@@ -46,7 +49,7 @@ HERE = Path(__file__).resolve().parent
 STATIC_DIR = HERE / "static"
 DEFAULT_DB = HERE / "data" / "homechat.db"
 
-VERSION = "2026.10.13"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
+VERSION = "2026.10.14"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
 COOKIE_NAME = "hc_session"
 SESSION_IDLE_DAYS = 365  # 像 LINE 一樣一直保持登入;一年沒用才自動登出(每次使用都會重新計算)
 INVITE_DAYS = 7  # 邀請連結 7 天內有效,只能用一次
@@ -91,7 +94,13 @@ CREATE TABLE IF NOT EXISTS contacts (
     invite_expires REAL NOT NULL DEFAULT 0,      -- 0 = 沒有可用的邀請連結
     created_at REAL NOT NULL,
     owner_read_id INTEGER NOT NULL DEFAULT 0,
-    guest_read_id INTEGER NOT NULL DEFAULT 0
+    guest_read_id INTEGER NOT NULL DEFAULT 0,
+    peer_id TEXT,                                -- 互通:對方 HomeChat 的編號
+    peer_url TEXT,                               -- 互通:對方 HomeChat 的網址
+    peer_secret TEXT,                            -- 互通:兩台之間簽章用的共享密鑰
+    peer_name TEXT,                              -- 互通:對方 HomeChat 主人的名字
+    peer_ok_at REAL,                             -- 最後一次成功連到對方的時間
+    peer_error TEXT                              -- 最後一次連不上的原因
 );
 CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY,
@@ -102,7 +111,24 @@ CREATE TABLE IF NOT EXISTS messages (
     source TEXT NOT NULL DEFAULT 'chat',
     client_id TEXT,                              -- 裝置產生的編號,離線排隊重送時不會重複
     kind TEXT NOT NULL DEFAULT 'text',           -- text / image / file / audio
-    attachment_id TEXT
+    attachment_id TEXT,
+    uid TEXT,                                    -- 全域編號:互通時兩台用它認出同一則訊息
+    from_peer INTEGER NOT NULL DEFAULT 0,        -- 1 = 從對方 HomeChat 收到的(不再轉送回去)
+    fed_state TEXT                               -- 互通:queued 排隊中 / sent 已送到對方電腦
+);
+CREATE TABLE IF NOT EXISTS fed_outbox (         -- 互通:要送到對方 HomeChat 的東西,連不上就排隊重試
+    id INTEGER PRIMARY KEY,
+    contact_id INTEGER NOT NULL REFERENCES contacts(id) ON DELETE CASCADE,
+    payload TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    next_try REAL NOT NULL,
+    created_at REAL NOT NULL
+);
+CREATE TABLE IF NOT EXISTS pair_codes (         -- 互通碼:只能用一次、24 小時內有效
+    token TEXT PRIMARY KEY,
+    contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,  -- 連到既有聯絡人;NULL = 新增
+    name TEXT NOT NULL DEFAULT '',
+    expires REAL NOT NULL
 );
 CREATE TABLE IF NOT EXISTS stickers (           -- 自己的貼圖,檔案在 data/stickers/<id>
     id TEXT PRIMARY KEY,
@@ -143,6 +169,8 @@ CREATE TABLE IF NOT EXISTS attachments (        -- 圖片、檔案、語音,實�
 CREATE INDEX IF NOT EXISTS idx_messages_contact ON messages(contact_id, created_at, id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_client ON messages(contact_id, client_id) WHERE client_id IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_username ON contacts(username) WHERE username IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_uid ON messages(contact_id, uid) WHERE uid IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_peer ON contacts(peer_id) WHERE peer_id IS NOT NULL;
 CREATE TABLE IF NOT EXISTS sessions (
     id TEXT PRIMARY KEY,                         -- 登入 token 的 SHA-256,不存明碼
     role TEXT NOT NULL CHECK (role IN ('owner', 'guest')),
@@ -254,15 +282,20 @@ class Store:
                               ("request_msg", "TEXT NOT NULL DEFAULT ''"),
                               ("invite_expires", "REAL NOT NULL DEFAULT 0"),
                               ("username", "TEXT"),
-                              ("password_hash", "TEXT NOT NULL DEFAULT ''")):
+                              ("password_hash", "TEXT NOT NULL DEFAULT ''"),
+                              ("peer_id", "TEXT"), ("peer_url", "TEXT"), ("peer_secret", "TEXT"),
+                              ("peer_name", "TEXT"), ("peer_ok_at", "REAL"), ("peer_error", "TEXT")):
                 if name not in cols:
                     self.db.execute(f"ALTER TABLE contacts ADD COLUMN {name} {ddl}")
         cols = {r["name"] for r in self.db.execute("PRAGMA table_info(messages)")}
         if cols:
             for name, ddl in (("client_id", "TEXT"), ("kind", "TEXT NOT NULL DEFAULT 'text'"),
-                              ("attachment_id", "TEXT")):
+                              ("attachment_id", "TEXT"), ("uid", "TEXT"),
+                              ("from_peer", "INTEGER NOT NULL DEFAULT 0"), ("fed_state", "TEXT")):
                 if name not in cols:
                     self.db.execute(f"ALTER TABLE messages ADD COLUMN {name} {ddl}")
+            # 舊訊息補上全域編號
+            self.db.execute("UPDATE messages SET uid = lower(hex(randomblob(12))) WHERE uid IS NULL")
 
     # --- settings
     def get_setting(self, key: str, default: str = "") -> str:
@@ -361,6 +394,9 @@ class Store:
             "invite_expires": row["invite_expires"],
             "owner_read_id": row["owner_read_id"],
             "guest_read_id": row["guest_read_id"],
+            # 互通狀態(不含密鑰)
+            "peer": {"name": row["peer_name"], "url": row["peer_url"], "ok_at": row["peer_ok_at"],
+                     "error": row["peer_error"]} if row["peer_id"] else None,
         }
 
     def list_contacts(self) -> list[dict]:
@@ -378,7 +414,8 @@ class Store:
                   (SELECT created_at FROM messages m WHERE m.contact_id = c.id
                      ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_at,
                   (SELECT COUNT(*) FROM sessions s WHERE s.contact_id = c.id) AS devices,
-                  (SELECT MAX(last_seen) FROM sessions s WHERE s.contact_id = c.id) AS last_seen
+                  (SELECT MAX(last_seen) FROM sessions s WHERE s.contact_id = c.id) AS last_seen,
+                  (SELECT COUNT(*) FROM fed_outbox o WHERE o.contact_id = c.id) AS peer_queued
                 FROM contacts c
                 ORDER BY c.status = 'pending' DESC, COALESCE(last_at, c.created_at) DESC
                 """
@@ -388,6 +425,8 @@ class Store:
             item = self._contact_row(r)
             item.update(unread=r["unread"], last_body=r["last_body"] or "", last_at=r["last_at"],
                         devices=r["devices"], last_seen=r["last_seen"])
+            if item["peer"]:
+                item["peer"]["queued"] = r["peer_queued"]
             out.append(item)
         return out
 
@@ -693,6 +732,8 @@ class Store:
             "client_id": row["client_id"],
             "kind": row["kind"],
             "attachment": None,
+            "uid": row["uid"],
+            "fed_state": row["fed_state"],
         }
         if row["attachment_id"] and row["a_name"] is not None:
             msg["attachment"] = {"id": row["attachment_id"], "name": row["a_name"],
@@ -700,19 +741,23 @@ class Store:
         return msg
 
     def add_message(self, contact_id: int, sender: str, body: str, client_id: str | None = None,
-                    kind: str = "text", attachment_id: str | None = None) -> tuple[dict, bool]:
-        """回傳 (訊息, 是不是新的)。同一個 client_id 重送不會重複新增。"""
+                    kind: str = "text", attachment_id: str | None = None, *, uid: str | None = None,
+                    created_at: float | None = None, from_peer: bool = False, source: str = "chat",
+                    fed_state: str | None = None) -> tuple[dict, bool]:
+        """回傳 (訊息, 是不是新的)。同一個 client_id / uid 重送不會重複新增。"""
         with self.lock:
-            if client_id:
-                row = self.db.execute(
-                    self.MSG_SELECT + "WHERE m.contact_id = ? AND m.client_id = ?", (contact_id, client_id)
-                ).fetchone()
-                if row:
-                    return self._message_row(row), False
+            for col, value in (("client_id", client_id), ("uid", uid)):
+                if value:
+                    row = self.db.execute(
+                        self.MSG_SELECT + f"WHERE m.contact_id = ? AND m.{col} = ?", (contact_id, value)
+                    ).fetchone()
+                    if row:
+                        return self._message_row(row), False
             cur = self.db.execute(
-                "INSERT INTO messages (contact_id, sender, body, created_at, client_id, kind, attachment_id) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (contact_id, sender, body, time.time(), client_id, kind, attachment_id),
+                "INSERT INTO messages (contact_id, sender, body, created_at, client_id, kind, attachment_id, "
+                "uid, from_peer, source, fed_state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (contact_id, sender, body, created_at or time.time(), client_id, kind, attachment_id,
+                 uid or secrets.token_hex(12), int(from_peer), source, fed_state),
             )
             self.db.commit()
             row = self.db.execute(self.MSG_SELECT + "WHERE m.id = ?", (cur.lastrowid,)).fetchone()
@@ -767,13 +812,142 @@ class Store:
                     continue
                 existing.add(key)
                 self.db.execute(
-                    "INSERT INTO messages (contact_id, sender, body, created_at, source) "
-                    "VALUES (?, ?, ?, ?, 'line')",
-                    (contact_id, sender, body, created_at),
+                    "INSERT INTO messages (contact_id, sender, body, created_at, source, uid) "
+                    "VALUES (?, ?, ?, ?, 'line', ?)",
+                    (contact_id, sender, body, created_at, secrets.token_hex(12)),
                 )
                 added += 1
             self.db.commit()
         return added
+
+    # --- 互通(跟朋友的 HomeChat 連在一起,兩邊各存一份完整紀錄)
+    def server_id(self) -> str:
+        sid = self.get_setting("server_id")
+        if not sid:
+            sid = secrets.token_urlsafe(16)
+            self.set_setting("server_id", sid)
+        return sid
+
+    def peer_of(self, contact_id: int) -> dict | None:
+        """對方 HomeChat 的連線資料(含密鑰,只在伺服器內部用)。"""
+        with self.lock:
+            row = self.db.execute(
+                "SELECT id, peer_id, peer_url, peer_secret, peer_name FROM contacts WHERE id = ? AND peer_id IS NOT NULL",
+                (contact_id,)).fetchone()
+        return dict(row) if row else None
+
+    def contact_by_peer(self, peer_id: str) -> dict | None:
+        with self.lock:
+            row = self.db.execute(
+                "SELECT id, peer_id, peer_url, peer_secret, peer_name FROM contacts WHERE peer_id = ?", (peer_id,)
+            ).fetchone()
+        return dict(row) if row else None
+
+    def link_peer(self, contact_id: int, peer_id: str, url: str, secret: str, name: str) -> None:
+        with self.lock:
+            # 同一台 HomeChat 只能連到一個聯絡人:重新配對時把舊的連結拿掉
+            self.db.execute("UPDATE contacts SET peer_id = NULL, peer_url = NULL, peer_secret = NULL "
+                            "WHERE peer_id = ? AND id != ?", (peer_id, contact_id))
+            self.db.execute("UPDATE contacts SET peer_id = ?, peer_url = ?, peer_secret = ?, peer_name = ?, "
+                            "peer_ok_at = ?, peer_error = NULL WHERE id = ?",
+                            (peer_id, url, secret, name, time.time(), contact_id))
+            self.db.commit()
+
+    def unlink_peer(self, contact_id: int) -> None:
+        with self.lock:
+            self.db.execute("UPDATE contacts SET peer_id = NULL, peer_url = NULL, peer_secret = NULL, "
+                            "peer_error = NULL WHERE id = ?", (contact_id,))
+            self.db.execute("DELETE FROM fed_outbox WHERE contact_id = ?", (contact_id,))
+            self.db.execute("UPDATE messages SET fed_state = NULL WHERE contact_id = ? AND fed_state = 'queued'",
+                            (contact_id,))
+            self.db.commit()
+
+    def set_peer_status(self, contact_id: int, error: str | None) -> None:
+        with self.lock:
+            if error is None:
+                self.db.execute("UPDATE contacts SET peer_ok_at = ?, peer_error = NULL WHERE id = ?",
+                                (time.time(), contact_id))
+            else:
+                self.db.execute("UPDATE contacts SET peer_error = ? WHERE id = ?", (error[:200], contact_id))
+            self.db.commit()
+
+    def create_pair_code(self, contact_id: int | None, name: str, days: float = 1) -> str:
+        token = secrets.token_urlsafe(24)
+        with self.lock:
+            self.db.execute("DELETE FROM pair_codes WHERE expires < ?", (time.time(),))
+            self.db.execute("INSERT INTO pair_codes (token, contact_id, name, expires) VALUES (?, ?, ?, ?)",
+                            (token, contact_id, name, time.time() + days * 86400))
+            self.db.commit()
+        return token
+
+    def take_pair_code(self, token: str) -> dict | None:
+        """用掉互通碼(只能用一次)。"""
+        with self.lock:
+            row = self.db.execute("SELECT * FROM pair_codes WHERE token = ? AND expires > ?",
+                                  (token, time.time())).fetchone()
+            if not row:
+                return None
+            self.db.execute("DELETE FROM pair_codes WHERE token = ?", (token,))
+            self.db.commit()
+        return dict(row)
+
+    def enqueue(self, contact_id: int, payload: dict, delay: float = 0) -> None:
+        now = time.time()
+        with self.lock:
+            self.db.execute("INSERT INTO fed_outbox (contact_id, payload, next_try, created_at) VALUES (?, ?, ?, ?)",
+                            (contact_id, json.dumps(payload, ensure_ascii=False), now + delay, now))
+            self.db.commit()
+
+    def due_outbox(self, limit: int = 100) -> list[dict]:
+        with self.lock:
+            rows = self.db.execute("SELECT * FROM fed_outbox WHERE next_try <= ? ORDER BY id LIMIT ?",
+                                   (time.time(), limit)).fetchall()
+        return [dict(r) for r in rows]
+
+    def outbox_done(self, item_id: int) -> None:
+        with self.lock:
+            self.db.execute("DELETE FROM fed_outbox WHERE id = ?", (item_id,))
+            self.db.commit()
+
+    def outbox_retry(self, item_id: int, attempts: int, delay: float) -> None:
+        with self.lock:
+            self.db.execute("UPDATE fed_outbox SET attempts = ?, next_try = ? WHERE id = ?",
+                            (attempts, time.time() + delay, item_id))
+            self.db.commit()
+
+    def retry_now(self, contact_id: int) -> None:
+        with self.lock:
+            self.db.execute("UPDATE fed_outbox SET next_try = ? WHERE contact_id = ?", (time.time(), contact_id))
+            self.db.commit()
+
+    def set_fed_state(self, message_id: int, state: str | None) -> None:
+        with self.lock:
+            self.db.execute("UPDATE messages SET fed_state = ? WHERE id = ?", (state, message_id))
+            self.db.commit()
+
+    def message_by_uid(self, contact_id: int, uid: str) -> dict | None:
+        with self.lock:
+            row = self.db.execute(self.MSG_SELECT + "WHERE m.contact_id = ? AND m.uid = ?", (contact_id, uid)).fetchone()
+        return self._message_row(row) if row else None
+
+    def get_message(self, message_id: int) -> dict | None:
+        with self.lock:
+            row = self.db.execute(self.MSG_SELECT + "WHERE m.id = ?", (message_id,)).fetchone()
+        return self._message_row(row) if row else None
+
+    def last_message_upto(self, contact_id: int, upto: int) -> dict | None:
+        """已讀同步用:這個人讀到的最後一則訊息。"""
+        with self.lock:
+            row = self.db.execute(self.MSG_SELECT + "WHERE m.contact_id = ? AND m.id <= ? ORDER BY m.id DESC LIMIT 1",
+                                  (contact_id, upto)).fetchone()
+        return self._message_row(row) if row else None
+
+    def local_messages(self, contact_id: int) -> list[dict]:
+        """配對時把以前的對話複製給對方:只送本機產生的(對方給的不送回去)。"""
+        with self.lock:
+            rows = self.db.execute(self.MSG_SELECT + "WHERE m.contact_id = ? AND m.from_peer = 0 ORDER BY m.id",
+                                   (contact_id,)).fetchall()
+        return [self._message_row(r) for r in rows]
 
 
 # ---------------------------------------------------------------- 匯入
@@ -940,6 +1114,251 @@ class Hub:
                 pass
 
 
+# ---------------------------------------------------------------- 互通(server 對 server)
+#
+# 兩台 HomeChat 配對後各自保存完整的對話。新訊息先存自己這邊,再放進 fed_outbox 推給對方;
+# 對方關機就依序排隊重試。每個請求都用配對時交換的共享密鑰做 HMAC 簽章,
+# 簽的內容是「時間\n方法\n路徑\n內容的 SHA-256」,超過 10 分鐘的請求不收。
+
+FED_MAX_SKEW = 600
+FED_BACKOFF = (5, 15, 30, 60, 120, 300, 600)  # 連不上時第 1、2、3… 次重試前等幾秒
+PAIR_CODE_PREFIX = "HC1."
+LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
+
+
+def fed_sign(secret: str, ts: str, method: str, path: str, body_hash: str) -> str:
+    msg = f"{ts}\n{method}\n{path}\n{body_hash}".encode()
+    return hmac.new(secret.encode(), msg, hashlib.sha256).hexdigest()
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def valid_peer_url(url: str) -> bool:
+    """對方網址要是 https(本機測試可以用 http://127.0.0.1)。"""
+    parts = urlsplit(url)
+    if parts.scheme == "https" and parts.hostname:
+        return True
+    return parts.scheme == "http" and parts.hostname in LOCAL_HOSTS
+
+
+def encode_pair_code(url: str, token: str, name: str) -> str:
+    raw = json.dumps({"u": url, "t": token, "n": name}, ensure_ascii=False, separators=(",", ":")).encode()
+    return PAIR_CODE_PREFIX + base64.urlsafe_b64encode(raw).decode().rstrip("=")
+
+
+def decode_pair_code(code: str) -> dict | None:
+    code = re.sub(r"\s+", "", code or "")
+    if not code.startswith(PAIR_CODE_PREFIX):
+        return None
+    data = code[len(PAIR_CODE_PREFIX):]
+    try:
+        info = json.loads(base64.urlsafe_b64decode(data + "=" * (-len(data) % 4)))
+    except (ValueError, binascii.Error):
+        return None
+    if not isinstance(info, dict) or not all(isinstance(info.get(k), str) for k in ("u", "t", "n")):
+        return None
+    return info
+
+
+class PeerError(Exception):
+    """對方回了錯誤。permanent = 重送也沒用(例如格式錯誤),直接放棄這一筆。"""
+
+    def __init__(self, status: int, message: str):
+        super().__init__(message)
+        self.status = status
+        self.permanent = status in (400, 404, 413, 415, 422)
+
+
+def fed_request(url: str, path: str, *, secret: str | None = None, server_id: str = "",
+                payload: dict | None = None, file: Path | None = None, content_type: str = "",
+                timeout: float = 30) -> dict:
+    """送一個簽過章的請求到對方 HomeChat。連不上會丟 OSError / PeerError。"""
+    if file is not None:
+        body_hash = sha256_file(file)
+        size = file.stat().st_size
+        data = open(file, "rb")
+        ctype = content_type or "application/octet-stream"
+    else:
+        raw = json.dumps(payload or {}, ensure_ascii=False).encode()
+        body_hash = hashlib.sha256(raw).hexdigest()
+        size = len(raw)
+        data = raw
+        ctype = "application/json"
+    headers = {"Content-Type": ctype, "Content-Length": str(size), "User-Agent": f"HomeChat/{VERSION}"}
+    if secret:
+        ts = str(int(time.time()))
+        headers.update({"X-HC-Peer": server_id, "X-HC-Time": ts, "X-HC-Body": body_hash,
+                        "X-HC-Sig": fed_sign(secret, ts, "POST", path, body_hash)})
+    req = urllib.request.Request(url.rstrip("/") + path, data=data, headers=headers, method="POST")
+    # 本機測試不要經過系統 proxy
+    handlers = [urllib.request.ProxyHandler({})] if urlsplit(url).hostname in LOCAL_HOSTS else []
+    try:
+        with urllib.request.build_opener(*handlers).open(req, timeout=timeout) as r:
+            body = r.read()
+    except urllib.error.HTTPError as e:
+        try:
+            message = json.loads(e.read() or b"{}").get("error", "")
+        except ValueError:
+            message = ""
+        if e.code in (502, 503, 504):  # 通道開著但對方電腦沒回應
+            raise OSError(f"對方的電腦沒有回應({e.code})")
+        raise PeerError(e.code, message or f"對方回應錯誤 {e.code}")
+    finally:
+        if file is not None:
+            data.close()
+    try:
+        return json.loads(body or b"{}")
+    except ValueError:
+        raise OSError("對方回傳的內容看不懂(網址可能不是 HomeChat)")
+
+
+class Federation:
+    """把本機的新訊息、已讀推到互通的對方 HomeChat。背景執行,連不上就排隊重試。"""
+
+    def __init__(self, app: "App"):
+        self.app = app
+        self.store = app.store
+        self.wake = threading.Event()
+        self.lock = threading.Lock()
+        threading.Thread(target=self._loop, daemon=True, name="homechat-federation").start()
+
+    def _loop(self) -> None:
+        while True:
+            self.wake.wait(5)
+            self.wake.clear()
+            try:
+                self.process()
+            except Exception:
+                traceback.print_exc()
+
+    # --- 產生要送的東西
+    def on_new_message(self, msg: dict) -> None:
+        """本機新增的訊息(主人或用訪客身分登入的朋友傳的)→ 也送一份到對方 HomeChat。"""
+        if not self.store.peer_of(msg["contact_id"]):
+            return
+        self.store.set_fed_state(msg["id"], "queued")
+        msg["fed_state"] = "queued"
+        self.store.enqueue(msg["contact_id"], {"type": "message", "message_id": msg["id"]})
+        self.wake.set()
+
+    def on_read(self, contact_id: int, role: str, upto: int) -> None:
+        if not self.store.peer_of(contact_id):
+            return
+        last = self.store.last_message_upto(contact_id, upto)
+        if last:
+            self.store.enqueue(contact_id, {"type": "read", "uid": last["uid"], "reader": role})
+            self.wake.set()
+
+    def sync_history(self, contact_id: int, delay: float = 0) -> int:
+        """剛配對:把以前的對話也複製一份給對方(重複的對方會自動略過)。
+
+        delay:被配對的那一邊要等對方先存好連線資料,晚幾秒再送。
+        """
+        msgs = self.store.local_messages(contact_id)
+        for m in msgs:
+            self.store.enqueue(contact_id, {"type": "message", "message_id": m["id"], "history": True}, delay)
+        if not delay:
+            self.wake.set()
+        return len(msgs)
+
+    # --- 送出
+    def process(self) -> int:
+        """把到期的項目依序送出。同一個對方只要有一筆失敗,後面的先不送(保持順序)。"""
+        sent = 0
+        with self.lock:
+            blocked: set[int] = set()
+            for item in self.store.due_outbox():
+                cid = item["contact_id"]
+                if cid in blocked:
+                    continue
+                peer = self.store.peer_of(cid)
+                if not peer:
+                    self.store.outbox_done(item["id"])
+                    continue
+                try:
+                    self._deliver(peer, json.loads(item["payload"]))
+                except PeerError as e:
+                    if e.permanent:
+                        print(f"互通:對方拒收一筆資料({e.status} {e}),略過")
+                        self.store.outbox_done(item["id"])
+                        continue
+                    self._failed(item, cid, blocked, f"對方拒絕:{e}" if e.status in (401, 403) else str(e))
+                    continue
+                except (OSError, ValueError) as e:
+                    if item["attempts"] == 0:  # 技術細節寫進記錄檔,畫面上顯示看得懂的
+                        print(f"互通:連不上 {peer['peer_url']}:{e}")
+                    self._failed(item, cid, blocked, "連不上對方的電腦(可能關機、睡眠或沒有網路)")
+                    continue
+                self.store.outbox_done(item["id"])
+                if self.store.peer_of(cid):
+                    self.store.set_peer_status(cid, None)
+                sent += 1
+        return sent
+
+    def _failed(self, item: dict, cid: int, blocked: set, reason: str) -> None:
+        blocked.add(cid)
+        attempts = item["attempts"] + 1
+        self.store.outbox_retry(item["id"], attempts, FED_BACKOFF[min(attempts, len(FED_BACKOFF)) - 1])
+        first_failure = attempts == 1
+        self.store.set_peer_status(cid, reason)
+        if first_failure:
+            self.app.hub.publish({"type": "contacts"}, cid, to_guest=False)
+
+    def _deliver(self, peer: dict, payload: dict) -> None:
+        sid = self.store.server_id()
+        if payload["type"] == "message":
+            msg = self.store.get_message(payload["message_id"])
+            if not msg:
+                return
+            kind, body, att = msg["kind"], msg["body"], msg["attachment"]
+            if kind in ("album", "stickers"):
+                # 相簿 / 貼圖組卡片:第一階段先轉成一行文字
+                try:
+                    info = json.loads(body)
+                except ValueError:
+                    info = {}
+                body = (f"📷 新增了 {info.get('count', 0)} 張照片到相簿「{info.get('name', '')}」" if kind == "album"
+                        else f"⭐ 分享了 {info.get('count', 0)} 張貼圖")
+                kind, att = "text", None
+            if att:
+                path = self.store.file_path(att["id"])
+                if path.exists():
+                    q = urllib.parse.urlencode({"name": att["name"], "mime": att["mime"], "sender": msg["sender"]})
+                    fed_request(peer["peer_url"], f"/fed/files/{att['id']}?{q}", secret=peer["peer_secret"],
+                                server_id=sid, file=path, content_type=att["mime"], timeout=600)
+                else:
+                    kind, att, body = "text", None, f"{KIND_LABELS.get(kind, '[檔案]')}(檔案已不在)"
+            fed_request(peer["peer_url"], "/fed/inbox", secret=peer["peer_secret"], server_id=sid, payload={
+                "type": "message", "uid": msg["uid"], "sender": msg["sender"], "kind": kind, "body": body,
+                "created_at": msg["created_at"], "source": msg["source"], "history": bool(payload.get("history")),
+                "attachment": {k: att[k] for k in ("id", "name", "mime", "size")} if att else None,
+            })
+            if msg["fed_state"] == "queued":
+                self.store.set_fed_state(msg["id"], "sent")
+                self.app.hub.publish({"type": "delivered", "contact_id": msg["contact_id"], "id": msg["id"]},
+                                     msg["contact_id"])
+        else:
+            fed_request(peer["peer_url"], "/fed/inbox", secret=peer["peer_secret"], server_id=sid, payload=payload)
+
+    def unpair(self, contact_id: int) -> None:
+        """解除互通:先試著通知對方(連不上也沒關係),再把本機的連結拿掉。"""
+        peer = self.store.peer_of(contact_id)
+        if not peer:
+            return
+        try:
+            fed_request(peer["peer_url"], "/fed/inbox", secret=peer["peer_secret"], server_id=self.store.server_id(),
+                        payload={"type": "unpair"}, timeout=10)
+        except (OSError, PeerError, ValueError):
+            pass
+        self.store.unlink_peer(contact_id)
+
+
 # ---------------------------------------------------------------- HTTP
 
 class ApiError(Exception):
@@ -991,8 +1410,10 @@ class App:
         self.requests_all = RateLimiter(30, 3600)
         self.messages = RateLimiter(30, 60)  # 每台裝置每分鐘 30 則
         self.uploads = RateLimiter(60, 3600)  # 朋友每台裝置每小時 60 個檔案
+        self.pairs = RateLimiter(10, 3600)  # 互通配對:同一來源每小時最多試 10 次
         if owner_name:
             store.set_setting("owner_name", owner_name)
+        self.fed = Federation(self)
 
     @property
     def owner_name(self) -> str:
@@ -1246,6 +1667,14 @@ class Handler(BaseHTTPRequestHandler):
 
     def _route_post(self) -> None:
         url = urlsplit(self.path)
+        # 互通:其他 HomeChat 打過來的(用簽章驗證,不是瀏覽器)
+        if url.path == "/fed/pair":
+            return self._fed_pair()
+        if url.path == "/fed/inbox":
+            return self._fed_inbox()
+        m = re.fullmatch(r"/fed/files/([A-Za-z0-9_-]{16,64})", url.path)
+        if m:
+            return self._fed_file(m.group(1), {k: v[-1] for k, v in parse_qs(url.query).items()})
         self._check_origin()
         if url.path == "/api/upload":
             return self._upload({k: v[-1] for k, v in parse_qs(url.query).items()})
@@ -1271,13 +1700,15 @@ class Handler(BaseHTTPRequestHandler):
             "/api/stickers/save": self._save_sticker,
             "/api/stickers/share": self._share_stickers,
             "/api/albums": self._create_album,
+            "/api/fed/code": self._fed_code,
+            "/api/fed/connect": self._fed_connect,
         }
         if url.path in routes:
             return routes[url.path](data)
         m = re.fullmatch(r"/api/albums/(\d+)/(rename|delete|add|remove)", url.path)
         if m:
             return self._album_action(int(m.group(1)), m.group(2), data)
-        m = re.fullmatch(r"/api/contacts/(\d+)/(update|invite|cancel-invite|approve|logout-devices|delete)",
+        m = re.fullmatch(r"/api/contacts/(\d+)/(update|invite|cancel-invite|approve|logout-devices|delete|unlink|peer-retry)",
                          url.path)
         if m:
             return self._contact_action(int(m.group(1)), m.group(2), data)
@@ -1567,6 +1998,7 @@ class Handler(BaseHTTPRequestHandler):
         if new:
             # 自己送出的就算已讀
             self.app.store.mark_read(contact["id"], sess["role"], msg["id"])
+            self.app.fed.on_new_message(msg)  # 有互通的話也送一份到對方 HomeChat
             self.app.hub.publish({"type": "message", "message": msg}, contact["id"])
         self._json({"message": msg})
 
@@ -1690,6 +2122,7 @@ class Handler(BaseHTTPRequestHandler):
         msg, new = self.app.store.add_message(contact["id"], sender, body, client_id, kind, att_id)
         if new:
             self.app.store.mark_read(contact["id"], sess["role"], msg["id"])
+            self.app.fed.on_new_message(msg)
             self.app.hub.publish({"type": "message", "message": msg}, contact["id"])
         return msg
 
@@ -1920,8 +2353,12 @@ class Handler(BaseHTTPRequestHandler):
             upto = int(data.get("upto", 0))
         except (TypeError, ValueError):
             raise ApiError(400, "upto 錯誤")
+        before = self.app.store.get_contact(contact["id"])
         self.app.store.mark_read(contact["id"], sess["role"], upto)
         fresh = self.app.store.get_contact(contact["id"])
+        col = "owner_read_id" if sess["role"] == "owner" else "guest_read_id"
+        if fresh[col] > before[col]:
+            self.app.fed.on_read(contact["id"], sess["role"], fresh[col])  # 已讀也同步給對方 HomeChat
         self.app.hub.publish({
             "type": "read", "contact_id": contact["id"],
             "owner_read_id": fresh["owner_read_id"], "guest_read_id": fresh["guest_read_id"],
@@ -2057,6 +2494,214 @@ class Handler(BaseHTTPRequestHandler):
         self.app.hub.publish({"type": "contacts"}, contact["id"], to_guest=False)
         self._json({"contact": self._public_contact(contact), "imported": added, "total": len(items)})
 
+    # --- 互通:主人操作
+    def _own_public_url(self) -> str:
+        public = self.app.store.get_setting("public_url")
+        if not public or not valid_peer_url(public):
+            raise ApiError(400, "你的 HomeChat 還沒有 https 對外網址,請先設定 Tailscale(見 README)")
+        return public
+
+    def _fed_code(self, data: dict) -> None:
+        """產生互通碼給朋友:朋友貼到他的 HomeChat 就會連上。"""
+        sess = self._require("owner")
+        public = self._own_public_url()
+        cid = None
+        if data.get("contact_id"):
+            cid = self._contact_for(sess, data["contact_id"])["id"]
+        token = self.app.store.create_pair_code(cid, self._clean(data.get("name"), 100))
+        self._json({"code": encode_pair_code(public, token, self.app.owner_name), "expires_in": 86400})
+
+    def _fed_connect(self, data: dict) -> None:
+        """輸入朋友給的互通碼:連到他的 HomeChat。"""
+        sess = self._require("owner")
+        info = decode_pair_code(str(data.get("code", "")))
+        if not info or not valid_peer_url(info["u"]):
+            raise ApiError(400, "互通碼格式不對,請整段複製貼上(HC1. 開頭)")
+        public = self._own_public_url()
+        target = self._contact_for(sess, data["contact_id"]) if data.get("contact_id") else None
+        store = self.app.store
+        try:
+            resp = fed_request(info["u"], "/fed/pair", timeout=20, payload={
+                "token": info["t"], "url": public, "name": self.app.owner_name, "server_id": store.server_id()})
+        except PeerError as e:
+            raise ApiError(400, "互通碼已經用過或過期,請朋友重新產生一組" if e.status == 410 else f"對方拒絕:{e}")
+        except OSError as e:
+            raise ApiError(502, f"連不上對方的 HomeChat({e})。請確認對方電腦開著")
+        if not all(isinstance(resp.get(k), str) and resp.get(k) for k in ("secret", "server_id")):
+            raise ApiError(502, "對方的 HomeChat 版本太舊,請對方先更新")
+        if resp["server_id"] == store.server_id():
+            raise ApiError(400, "這是你自己的互通碼喔")
+        peer_name = self._clean(resp.get("name") or info["n"], 100) or "朋友"
+        # 跟同一台重新配對(例如對方重灌):沿用原本的聯絡人,不要多一個
+        again = store.contact_by_peer(resp["server_id"])
+        contact = target or (store.get_contact(again["id"]) if again else None) or store.add_contact(peer_name)
+        store.link_peer(contact["id"], resp["server_id"], info["u"].rstrip("/"), resp["secret"], peer_name)
+        self.app.fed.sync_history(contact["id"])
+        self.app.hub.publish({"type": "contacts"}, contact["id"], to_guest=False)
+        self._json({"contact": self._public_contact(store.get_contact(contact["id"]))})
+
+    # --- 互通:其他 HomeChat 打過來的
+    def _fed_pair(self) -> None:
+        """對方輸入了我們的互通碼,來配對。用互通碼驗證(只能用一次)。"""
+        key = self._client_key()
+        if not self.app.pairs.take(key):
+            raise ApiError(429, "嘗試太多次了,晚點再試")
+        data = self._read_json()
+        store = self.app.store
+        url = str(data.get("url", "")).rstrip("/")
+        server_id = self._clean(data.get("server_id"), 64)
+        if not valid_peer_url(url) or not server_id:
+            raise ApiError(400, "配對資料不完整")
+        if server_id == store.server_id():
+            raise ApiError(400, "不能跟自己配對")
+        code = store.take_pair_code(str(data.get("token", "")))
+        if not code:
+            raise ApiError(410, "互通碼已經用過或過期")
+        name = self._clean(data.get("name"), 100) or code["name"] or "朋友"
+        contact = store.get_contact(code["contact_id"]) if code["contact_id"] else None
+        again = store.contact_by_peer(server_id)
+        if not contact and again:
+            contact = store.get_contact(again["id"])  # 重新配對:沿用原本的聯絡人
+        if not contact:
+            contact = store.add_contact(code["name"] or name)
+        secret = secrets.token_urlsafe(32)
+        store.link_peer(contact["id"], server_id, url, secret, name)
+        self.app.fed.sync_history(contact["id"], delay=3)
+        self.app.hub.publish({"type": "peer_linked", "contact_id": contact["id"], "name": name},
+                             contact["id"], to_guest=False)
+        self._json({"server_id": store.server_id(), "secret": secret, "name": self.app.owner_name})
+
+    def _fed_peer(self) -> tuple[dict, str]:
+        """檢查對方 HomeChat 的簽章,回傳 (對方, 內容的 SHA-256)。"""
+        peer_id = self.headers.get("X-HC-Peer", "")
+        ts = self.headers.get("X-HC-Time", "")
+        body_hash = self.headers.get("X-HC-Body", "")
+        try:
+            skew = abs(time.time() - int(ts))
+        except ValueError:
+            raise ApiError(401, "缺少簽章")
+        if skew > FED_MAX_SKEW:
+            raise ApiError(401, "兩台電腦的時間差太多,請確認電腦時間正確")
+        peer = self.app.store.contact_by_peer(peer_id) if peer_id else None
+        if not peer:
+            raise ApiError(401, "不認得這台 HomeChat(可能已經解除互通)")
+        expected = fed_sign(peer["peer_secret"], ts, "POST", self.path, body_hash)
+        if not hmac.compare_digest(expected, self.headers.get("X-HC-Sig", "")):
+            raise ApiError(401, "簽章不符")
+        return peer, body_hash
+
+    def _fed_inbox(self) -> None:
+        peer, body_hash = self._fed_peer()
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            raise ApiError(400, "Content-Length 錯誤")
+        if length > 1024 * 1024:
+            raise ApiError(413, "內容太大")
+        raw = self.rfile.read(length)
+        if not hmac.compare_digest(hashlib.sha256(raw).hexdigest(), body_hash):
+            raise ApiError(401, "內容和簽章不符")
+        try:
+            data = json.loads(raw)
+        except ValueError:
+            raise ApiError(400, "JSON 格式錯誤")
+        store, hub, cid = self.app.store, self.app.hub, peer["id"]
+        kind_of = data.get("type")
+        if kind_of == "message":
+            uid = self._clean(data.get("uid"), 64)
+            if not uid:
+                raise ApiError(400, "缺少訊息編號")
+            # 對方的「me」是我們的「them」
+            sender = "them" if data.get("sender") == "me" else "me"
+            kind = data.get("kind") if data.get("kind") in MESSAGE_KINDS else "text"
+            body = str(data.get("body", ""))[:MAX_MESSAGE]
+            try:
+                created = float(data.get("created_at"))
+            except (TypeError, ValueError):
+                created = time.time()
+            if not 0 < created < time.time() + 86400:
+                created = time.time()
+            source = data.get("source") if data.get("source") in ("chat", "line") else "chat"
+            att_id = None
+            meta = data.get("attachment")
+            if kind != "text":
+                att = store.get_attachment(str((meta or {}).get("id", "")))
+                if not att or att["contact_id"] != cid:
+                    raise ApiError(409, "檔案還沒收到")  # 對方會重送(先傳檔案再傳訊息)
+                att_id = att["id"]
+            msg, new = store.add_message(cid, sender, body, None, kind, att_id, uid=uid, created_at=created,
+                                         from_peer=True, source=source)
+            if new:
+                if data.get("history") and sender == "them":
+                    store.mark_read(cid, "owner", msg["id"])  # 配對時複製過來的舊訊息不算未讀
+                hub.publish({"type": "message", "message": msg}, cid)
+            return self._json({"ok": True, "id": msg["id"]})
+        if kind_of == "read":
+            m = store.message_by_uid(cid, self._clean(data.get("uid"), 64))
+            if m:
+                # 對方主人讀了 = 我們這邊的「朋友」讀了
+                role = "guest" if data.get("reader") == "owner" else "owner"
+                store.mark_read(cid, role, m["id"])
+                fresh = store.get_contact(cid)
+                hub.publish({"type": "read", "contact_id": cid, "owner_read_id": fresh["owner_read_id"],
+                             "guest_read_id": fresh["guest_read_id"]}, cid)
+            return self._json({"ok": True})
+        if kind_of == "unpair":
+            store.unlink_peer(cid)  # 對話紀錄留著
+            hub.publish({"type": "contacts"}, cid, to_guest=False)
+            return self._json({"ok": True})
+        raise ApiError(400, "不支援的類型")
+
+    def _fed_file(self, att_id: str, qs: dict) -> None:
+        """收對方傳來的圖片 / 檔案(訊息之前先傳)。內容的 SHA-256 在簽章裡,收完會核對。"""
+        peer, body_hash = self._fed_peer()
+        store = self.app.store
+        try:
+            length = int(self.headers.get("Content-Length", ""))
+        except ValueError:
+            raise ApiError(411, "需要 Content-Length")
+        if not 0 < length <= MAX_UPLOAD:
+            raise ApiError(413, "檔案太大")
+        existing = store.get_attachment(att_id)
+        if existing:
+            if existing["contact_id"] != peer["id"]:
+                raise ApiError(409, "檔案編號衝突")
+            remaining = length  # 已經有了(重送):讀掉就好
+            while remaining > 0:
+                chunk = self.rfile.read(min(65536, remaining))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+            return self._json({"ok": True})
+        if shutil.disk_usage(store.files_dir).free < length + MIN_FREE_DISK:
+            raise ApiError(507, "硬碟快滿了")
+        dest = store.file_path(att_id)
+        tmp = dest.with_name(dest.name + ".part")
+        h = hashlib.sha256()
+        remaining = length
+        try:
+            with open(tmp, "wb") as f:
+                while remaining > 0:
+                    chunk = self.rfile.read(min(65536, remaining))
+                    if not chunk:
+                        raise ApiError(400, "傳到一半斷了")
+                    h.update(chunk)
+                    f.write(chunk)
+                    remaining -= len(chunk)
+            if not hmac.compare_digest(h.hexdigest(), body_hash):
+                raise ApiError(401, "檔案內容和簽章不符")
+            os.replace(tmp, dest)
+        finally:
+            if tmp.exists():
+                tmp.unlink()
+        mime = str(qs.get("mime", "")).lower()
+        if not re.fullmatch(r"[a-z0-9.+-]+/[a-z0-9.+-]+", mime):
+            mime = "application/octet-stream"
+        name = re.sub(r'[\\/:*?"<>|]', "_", self._clean(qs.get("name"), 200)) or "檔案"
+        uploader = "them" if qs.get("sender") == "me" else "me"
+        store.add_attachment(att_id, peer["id"], uploader, name, mime, length)
+        self._json({"ok": True})
+
     def _contact_action(self, contact_id: int, action: str, data: dict) -> None:
         sess = self._require("owner")
         contact = self._contact_for(sess, contact_id)
@@ -2075,8 +2720,14 @@ class Handler(BaseHTTPRequestHandler):
         elif action == "logout-devices":
             store.delete_sessions("guest", contact_id)
             hub.kick_guests(contact_id)
+        elif action == "unlink":
+            self.app.fed.unpair(contact_id)  # 解除互通:已有的對話紀錄兩邊都保留
+        elif action == "peer-retry":
+            store.retry_now(contact_id)
+            self.app.fed.wake.set()
         elif action == "delete":  # 也用來拒絕好友申請
             hub.kick_guests(contact_id)
+            self.app.fed.unpair(contact_id)
             store.delete_contact(contact_id)
             hub.publish({"type": "contacts"}, contact_id, to_guest=False)
             return self._json({"ok": True})

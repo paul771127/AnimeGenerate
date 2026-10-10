@@ -2,6 +2,7 @@
 import json
 import sys
 import threading
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -978,3 +979,212 @@ def test_share_sticker_pack_and_save_all(server):
     assert len(zipfile.ZipFile(io.BytesIO(body)).namelist()) == 3
     assert owner.raw(f"/api/stickers/zip?ids={saved[0]['id']}")[0] == 404
     assert "[分享貼圖] 3 張" in owner.req(f"/api/export?contact={contact['id']}")[1]
+
+
+# ---------------------------------------------------------------- 互通(兩台 HomeChat)
+
+class Home:
+    """一台完整的 HomeChat(自己的資料庫、自己的網址)。"""
+
+    def __init__(self, tmp_path, name, owner, port=0):
+        self.dir = tmp_path / name
+        self.store = homechat.Store(self.dir / "chat.db")
+        self.store.set_password("secret123")
+        self.store.set_setting("owner_username", owner.lower())
+        self.app = homechat.App(self.store, owner_name=owner)
+        self.app.login_fails_all = homechat.RateLimiter(10_000, 600)
+        self.owner_user = owner.lower()
+        self.start(port)
+
+    def start(self, port=0):
+        self.srv = homechat.make_server(self.app, "127.0.0.1", port)
+        threading.Thread(target=self.srv.serve_forever, daemon=True).start()
+        self.base = f"http://127.0.0.1:{self.srv.server_address[1]}"
+        self.store.set_setting("public_url", self.base)
+        self.owner = Client(self.base)
+        assert self.owner.req("/api/login", {"username": self.owner_user, "password": "secret123"})[0] == 200
+
+    def stop(self):
+        self.srv.shutdown()
+        self.srv.server_close()
+
+    def contacts(self):
+        return self.owner.req("/api/contacts")[1]["contacts"]
+
+    def messages(self, contact_id):
+        return self.owner.req(f"/api/messages?contact={contact_id}")[1]["messages"]
+
+
+def flush(*homes, rounds=20):
+    """把兩邊排隊的東西送完(背景也會自己送,這裡直接叫比較快)。"""
+    for _ in range(rounds):
+        moved = sum(h.app.fed.process() for h in homes)
+        if not moved and not any(h.store.due_outbox() for h in homes):
+            return
+
+
+@pytest.fixture
+def two_homes(tmp_path):
+    a, b = Home(tmp_path, "a", "Alice"), Home(tmp_path, "b", "Bob")
+    yield a, b
+    for h in (a, b):
+        try:
+            h.stop()
+        except Exception:
+            pass
+
+
+def link(a, b, contact_id=None):
+    """A 產生互通碼,B 輸入 → 回傳 (A 這邊的聯絡人, B 這邊的聯絡人)。"""
+    body = {"contact_id": contact_id} if contact_id else {}
+    code = a.owner.req("/api/fed/code", body)[1]["code"]
+    assert code.startswith("HC1.")
+    status, data = b.owner.req("/api/fed/connect", {"code": code})
+    assert status == 200, data
+    on_b = data["contact"]
+    on_a = next(c for c in a.contacts() if c["peer"])
+    return on_a, on_b
+
+
+def test_federation_pair_and_chat(two_homes):
+    a, b = two_homes
+    on_a, on_b = link(a, b)
+    assert on_b["name"] == "Alice" and on_b["peer"]["name"] == "Alice"
+    assert on_a["name"] == "Bob" and on_a["peer"]["url"] == b.base
+
+    # A → B
+    sent = a.owner.req("/api/messages", {"contact_id": on_a["id"], "body": "嗨 Bob"})[1]["message"]
+    assert sent["fed_state"] == "queued"
+    flush(a, b)
+    got = b.messages(on_b["id"])
+    assert [(m["sender"], m["body"]) for m in got] == [("them", "嗨 Bob")]
+    assert got[0]["uid"] == sent["uid"]
+    assert a.messages(on_a["id"])[0]["fed_state"] == "sent"
+    # 未讀 / 已讀同步:B 讀了 A 的訊息 → A 看到已讀
+    assert next(c for c in b.contacts() if c["id"] == on_b["id"])["unread"] == 1
+    b.owner.req("/api/read", {"contact_id": on_b["id"], "upto": got[0]["id"]})
+    flush(a, b)
+    assert a.store.get_contact(on_a["id"])["guest_read_id"] == sent["id"]
+    # B → A
+    b.owner.req("/api/messages", {"contact_id": on_b["id"], "body": "嗨 Alice!"})
+    flush(a, b)
+    assert [(m["sender"], m["body"]) for m in a.messages(on_a["id"])] == [("me", "嗨 Bob"), ("them", "嗨 Alice!")]
+
+    # 照片:先傳檔案再傳訊息,兩邊各有一份
+    photo = send_file(a.owner, on_a["id"], PNG, "image/png", "貓.png", "image", "看貓")
+    flush(a, b)
+    m = b.messages(on_b["id"])[-1]
+    assert m["kind"] == "image" and m["body"] == "看貓" and m["attachment"]["name"] == "貓.png"
+    assert b.owner.raw(f"/api/files/{m['attachment']['id']}")[2] == PNG
+    assert b.store.file_path(photo["attachment"]["id"]).exists()
+
+    # 重送不會重複
+    a.store.enqueue(on_a["id"], {"type": "message", "message_id": sent["id"]})
+    flush(a, b)
+    assert len(b.messages(on_b["id"])) == 3
+
+
+def test_federation_queues_while_peer_offline(two_homes):
+    a, b = two_homes
+    on_a, on_b = link(a, b)
+    flush(a, b)
+    port = b.srv.server_address[1]
+    b.stop()  # 對方電腦關機
+    for text in ("第一則", "第二則", "第三則"):
+        a.owner.req("/api/messages", {"contact_id": on_a["id"], "body": text})
+    flush(a)
+    contact = next(c for c in a.contacts() if c["id"] == on_a["id"])
+    assert contact["peer"]["queued"] == 3 and "連不上" in contact["peer"]["error"]
+    assert all(m["fed_state"] == "queued" for m in a.messages(on_a["id"]))
+    b.start(port)  # 開機
+    a.owner.req(f"/api/contacts/{on_a['id']}/peer-retry", {})
+    flush(a, b)
+    assert [m["body"] for m in b.messages(on_b["id"])] == ["第一則", "第二則", "第三則"]  # 順序不變
+    contact = next(c for c in a.contacts() if c["id"] == on_a["id"])
+    assert contact["peer"]["queued"] == 0 and contact["peer"]["error"] is None
+    assert all(m["fed_state"] == "sent" for m in a.messages(on_a["id"]))
+
+
+def test_federation_copies_existing_history(two_homes):
+    a, b = two_homes
+    # A 原本就有一個用邀請連結聊天的朋友
+    mei = a.owner.req("/api/contacts", {"name": "小美"})[1]["contact"]
+    guest = join(a.base, mei)
+    a.owner.req("/api/messages", {"contact_id": mei["id"], "body": "以前的訊息"})
+    guest.req("/api/messages", {"body": "以前的回覆"})
+    a.owner.req("/api/contacts/import-line", {"text": LINE_TXT, "contact_name": "王小明"})
+    # 小美後來自己也裝了 HomeChat(B),連到 A 的「小美」這個聯絡人
+    on_a, on_b = link(a, b, contact_id=mei["id"])
+    assert on_a["id"] == mei["id"]
+    time.sleep(3.2)  # 被配對的一邊等對方存好連線資料才送
+    flush(a, b)
+    got = b.messages(on_b["id"])
+    assert [(m["sender"], m["body"]) for m in got] == [("them", "以前的訊息"), ("me", "以前的回覆")]
+    assert next(c for c in b.contacts() if c["id"] == on_b["id"])["unread"] == 0  # 舊訊息不算未讀
+    # 小美之後用訪客身分在 A 傳的訊息,也會到 B
+    guest.req("/api/messages", {"body": "我用網頁版傳的"})
+    flush(a, b)
+    assert b.messages(on_b["id"])[-1]["sender"] == "me"
+
+
+def test_federation_security(two_homes):
+    a, b = two_homes
+    on_a, on_b = link(a, b)
+    peer = a.store.peer_of(on_a["id"])
+    # 互通碼只能用一次(重新配對會把連線移到新的聯絡人,密鑰也換新)
+    code = a.owner.req("/api/fed/code", {})[1]["code"]
+    assert b.owner.req("/api/fed/connect", {"code": code})[0] == 200
+    assert b.owner.req("/api/fed/connect", {"code": code})[0] == 400
+    # 不能用自己的互通碼
+    own = b.owner.req("/api/fed/code", {})[1]["code"]
+    assert b.owner.req("/api/fed/connect", {"code": own})[0] == 400
+    assert b.owner.req("/api/fed/connect", {"code": "HC1.亂打"})[0] == 400
+    # 對方網址一定要 https(本機測試例外)
+    assert not homechat.valid_peer_url("http://example.com") and homechat.valid_peer_url("https://x.ts.net")
+    # 偽造的請求;舊的密鑰在重新配對後也失效
+    payload = {"type": "message", "uid": "fake1", "sender": "me", "kind": "text", "body": "偽造"}
+    with pytest.raises(homechat.PeerError) as e:
+        homechat.fed_request(b.base, "/fed/inbox", secret=peer["peer_secret"], server_id=a.store.server_id(),
+                             payload=payload)
+    assert e.value.status == 401
+    peer = a.store.contact_by_peer(b.store.server_id())
+    # 重新配對沿用原本的聯絡人,兩邊都不會多出一個
+    assert peer["id"] == on_a["id"] and len(a.contacts()) == 1 and len(b.contacts()) == 1
+    with pytest.raises(homechat.PeerError) as e:
+        homechat.fed_request(b.base, "/fed/inbox", secret="wrong-secret", server_id=a.store.server_id(), payload=payload)
+    assert e.value.status == 401
+    with pytest.raises(homechat.PeerError):
+        homechat.fed_request(b.base, "/fed/inbox", secret=peer["peer_secret"], server_id="someone-else", payload=payload)
+    r = urllib.request.Request(b.base + "/fed/inbox", data=b"{}", method="POST",
+                               headers={"Content-Type": "application/json"})
+    with pytest.raises(urllib.error.HTTPError) as e2:
+        urllib.request.urlopen(r, timeout=5)
+    assert e2.value.code == 401
+    assert all(m["body"] != "偽造" for m in b.messages(on_b["id"]))
+    # 真的密鑰就收
+    homechat.fed_request(b.base, "/fed/inbox", secret=peer["peer_secret"], server_id=a.store.server_id(), payload=payload)
+    assert b.messages(on_b["id"])[-1]["body"] == "偽造"
+    # 網頁的登入不能拿來打互通 API,互通的密鑰也不能拿來用網頁 API
+    assert b.owner.req("/fed/inbox", {"type": "unpair"})[0] == 401
+
+
+def test_federation_unlink_keeps_history(two_homes):
+    a, b = two_homes
+    on_a, on_b = link(a, b)
+    a.owner.req("/api/messages", {"contact_id": on_a["id"], "body": "留著"})
+    flush(a, b)
+    assert a.owner.req(f"/api/contacts/{on_a['id']}/unlink", {})[0] == 200
+    assert next(c for c in a.contacts() if c["id"] == on_a["id"])["peer"] is None
+    assert next(c for c in b.contacts() if c["id"] == on_b["id"])["peer"] is None  # 對方也收到解除
+    assert [m["body"] for m in b.messages(on_b["id"])] == ["留著"]
+    # 解除後不再轉送
+    a.owner.req("/api/messages", {"contact_id": on_a["id"], "body": "只在 A"})
+    flush(a, b)
+    assert [m["body"] for m in b.messages(on_b["id"])] == ["留著"]
+
+
+def test_pair_code_roundtrip():
+    code = homechat.encode_pair_code("https://a.ts.net", "tok", "小明")
+    assert homechat.decode_pair_code(code) == {"u": "https://a.ts.net", "t": "tok", "n": "小明"}
+    assert homechat.decode_pair_code(" " + code[:10] + "\n" + code[10:]) is not None  # 換行 / 空白沒關係
+    assert homechat.decode_pair_code("abc") is None

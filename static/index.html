@@ -430,6 +430,56 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
   </div>
 </form></dialog>
 
+<!-- 互通:跟朋友的 HomeChat 連在一起 -->
+<dialog id="dlg-fed"><div class="dlg">
+  <h3>🔗 跟朋友的 HomeChat 互通</h3>
+  <p class="hint" style="margin-top:0">朋友也在自己電腦裝了 HomeChat 的話,兩台可以連在一起:你們各自用自己的 HomeChat 聊天,
+    <b>每則訊息、照片都會在兩邊的電腦各存一份</b>。一邊電腦關機時,訊息會先排隊,開機後自動補送。</p>
+  <div class="tabs" id="fed-tabs">
+    <button type="button" data-tab="give" class="on">給朋友互通碼</button>
+    <button type="button" data-tab="enter">輸入朋友的互通碼</button>
+  </div>
+  <div data-pane="give">
+    <label>要跟哪位朋友互通?</label>
+    <select class="field" id="fed-give-contact"></select>
+    <div id="fed-give-result" class="hidden">
+      <label>互通碼(24 小時內有效、只能用一次)</label>
+      <textarea class="field invite-url" id="fed-code" readonly rows="3" style="min-height:0"></textarea>
+      <p class="hint">請朋友在<b>他的</b> HomeChat:⋯ →「跟朋友的 HomeChat 互通」→「輸入朋友的互通碼」貼上。</p>
+    </div>
+    <div class="error" id="fed-give-error"></div>
+    <div class="actions">
+      <button class="btn secondary hidden" type="button" id="fed-copy">複製</button>
+      <a class="btn line-btn hidden" id="fed-line" target="_blank" rel="noopener">用 LINE 傳送</a>
+      <button class="btn" type="button" id="fed-make">產生互通碼</button>
+      <button class="btn secondary" type="button" data-close>關閉</button>
+    </div>
+  </div>
+  <div data-pane="enter" class="hidden">
+    <label>貼上朋友給你的互通碼(HC1. 開頭)</label>
+    <textarea class="field" id="fed-input" rows="3" placeholder="HC1.xxxxxxxx…" style="min-height:0"></textarea>
+    <label>連到哪個聯絡人?</label>
+    <select class="field" id="fed-enter-contact"></select>
+    <p class="hint">選既有的聯絡人的話,你們以前的對話也會複製一份到對方電腦。</p>
+    <div class="error" id="fed-enter-error"></div>
+    <div class="actions">
+      <button class="btn secondary" type="button" data-close>關閉</button>
+      <button class="btn" type="button" id="fed-connect">連線</button>
+    </div>
+  </div>
+</div></dialog>
+
+<!-- 互通狀態 -->
+<dialog id="dlg-peer"><div class="dlg">
+  <h3 id="peer-title">🔗 互通狀態</h3>
+  <div id="peer-info"></div>
+  <div class="actions">
+    <button class="btn danger" type="button" id="peer-unlink">解除互通</button>
+    <button class="btn secondary hidden" type="button" id="peer-retry">立即重試</button>
+    <button class="btn secondary" type="button" data-close>關閉</button>
+  </div>
+</div></dialog>
+
 <!-- 設定 -->
 <dialog id="dlg-settings"><div class="dlg">
   <h3>設定</h3>
@@ -915,6 +965,11 @@ function openEvents() {
       loadContacts().then(() => { if (state.current) renderMessages(false); });
     } else if (data.type === "contacts" && state.role === "owner") loadContacts();
     else if (data.type === "album" && $("#dlg-album").open && state.current && data.contact_id === state.current.id) refreshAlbum();
+    else if (data.type === "delivered") onDelivered(data);
+    else if (data.type === "peer_linked" && state.role === "owner") {
+      toast(`🔗 已經跟 ${data.name} 的 HomeChat 互通`); notifyText("HomeChat 互通", `已經跟 ${data.name} 的 HomeChat 互通`);
+      loadContacts();
+    }
   };
 }
 async function resync() {
@@ -946,6 +1001,16 @@ function onRead(d) {
     state.otherReadId = other; local.set(`read:${d.contact_id}`, other); renderMessages(false);
   }
 }
+// 互通:訊息已經送到對方的電腦
+function onDelivered(d) {
+  const m = state.current && d.contact_id === state.current.id && state.messages.find(x => x.id === d.id);
+  if (m) {
+    m.fed_state = "sent";
+    local.putMessages([m]);
+    renderMessages(false);
+  }
+  if (state.role === "owner") loadContacts();
+}
 
 // ---------- 通知
 let unseen = 0;
@@ -969,13 +1034,17 @@ document.addEventListener("click", () => {
 }, { once: true });
 
 // ---------- 聯絡人列表
+let contactsSeq = 0;
 async function loadContacts() {
+  const seq = ++contactsSeq;  // 同時好幾個請求時,只用最新那個的結果(晚回來的舊資料不要蓋掉新的)
   try {
     const data = await api("/api/contacts");
+    if (seq !== contactsSeq) return;
     state.contacts = data.contacts;
     local.set("contacts", data.contacts);
   } catch (err) {
     ignoreOffline(err);
+    if (seq !== contactsSeq) return;
     state.contacts = (await local.get("contacts")) || [];
   }
   if (state.current) {
@@ -1010,7 +1079,10 @@ function renderContacts() {
         )));
       continue;
     }
-    const notJoined = !c.devices && !c.username;
+    const notJoined = !c.devices && !c.username && !c.peer;
+    const peerPill = !c.peer ? null : c.peer.error && c.peer.queued
+      ? el("span", { class: "pill wait", title: c.peer.error }, `🔗 對方離線・${c.peer.queued} 則排隊`)
+      : el("span", { class: "pill", title: `已跟 ${c.peer.name} 的 HomeChat 互通` }, "🔗 互通");
     list.append(el("div", {
       class: "contact" + (state.current && state.current.id === c.id ? " active" : ""),
       onclick: () => openContact(c),
@@ -1018,7 +1090,7 @@ function renderContacts() {
       avatar(c.name),
       el("div", { class: "meta" },
         el("div", { class: "row" },
-          el("span", { class: "name" }, c.name, notJoined ? el("span", { class: "pill" }, c.invite_url ? "已邀請" : "未加入") : null),
+          el("span", { class: "name" }, c.name, notJoined ? el("span", { class: "pill" }, c.invite_url ? "已邀請" : "未加入") : null, peerPill),
           el("span", { class: "time" }, shortTime(c.last_at))),
         el("div", { class: "row" },
           el("span", { class: "preview" }, c.last_body || (notJoined ? "點開 → ⋯ → 邀請連結,傳給對方" : "點一下開始聊天")),
@@ -1270,12 +1342,14 @@ function renderMessages(scrollToEnd) {
     const read = mine && !m.pending && m.source === "chat" && m.id <= state.otherReadId;
     const cont = lastSender === m.sender;
     const key = m.client_id || `id${m.id}`;
-    const sig = [m.id, m.pending, m.failed, read, cont, m.progress, state.offline && m.pending, otherName].join("|");
+    const toPeer = mine && m.fed_state === "queued";  // 互通:已存到家裡電腦,還在送往對方電腦
+    const sig = [m.id, m.pending, m.failed, read, cont, m.progress, state.offline && m.pending, otherName, toPeer].join("|");
     let node = nodeCache.get(key);
     if (!node || node.sig !== sig || (m.attachment && node.local)) {
       let stamp;
       if (m.failed) stamp = el("button", { class: "stamp", style: "border:0;background:none;padding:0", onclick: () => retry(m) }, "傳送失敗", el("br"), "點此重試");
       else if (m.pending) stamp = el("div", { class: "stamp" }, state.offline ? "等待連線" : "傳送中");
+      else if (toPeer) stamp = el("div", { class: "stamp", title: "已經存在家裡電腦,等對方的電腦開機就會送過去" }, "送往對方", el("br"), "電腦中…", el("br"), hm(m.created_at));
       else stamp = el("div", { class: "stamp" }, read ? "已讀" : "", read ? el("br") : null, hm(m.created_at));
       const dom = el("div", {
         class: `msg ${mine ? "me" : "them"}${cont ? " cont" : ""}${m.pending ? " pending" : ""}${m.pending && state.offline ? " queued" : ""}${m.failed ? " failed" : ""}`,
@@ -1932,6 +2006,7 @@ $("#main-menu-btn").addEventListener("click", e => showMenu(e.currentTarget, [
   ["「加我好友」連結", () => openAdd("open")],
   ["匯入聯絡人名單", () => openAdd("list")],
   ["匯入 LINE 聊天紀錄", () => openAdd("line")],
+  ["🔗 跟朋友的 HomeChat 互通", () => openFed()],
   ["設定", openSettings],
   ["登出", logout],
 ]));
@@ -1949,6 +2024,7 @@ $("#chat-menu-btn").addEventListener("click", e => {
   }
   showMenu(e.currentTarget, [
     ["📷 相簿", () => openAlbums()],
+    c.peer ? ["🔗 互通狀態", () => openPeerStatus(c)] : ["🔗 跟對方的 HomeChat 互通", () => openFed(c)],
     ["邀請連結(傳給對方)", () => openInvite(c)],
     [`登入的裝置(${c.devices || 0})`, () => openDevices(c)],
     ["編輯聯絡人", () => openEdit(c)],
@@ -2146,6 +2222,86 @@ $("#form-edit").addEventListener("submit", async e => {
     await api(`/api/contacts/${f.dataset.id}/update`, { name: f.name.value, line_id: f.line_id.value, note: f.note.value });
     $("#dlg-edit").close(); loadContacts();
   } catch (ex) { $("#edit-error").textContent = ex.message; }
+});
+
+// 互通:跟朋友的 HomeChat 連在一起
+function setFedTab(tab) {
+  $$("#fed-tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+  $$("#dlg-fed [data-pane]").forEach(p => p.classList.toggle("hidden", p.dataset.pane !== tab));
+}
+$$("#fed-tabs button").forEach(b => b.addEventListener("click", () => setFedTab(b.dataset.tab)));
+function fedContactOptions(select, firstLabel, selected) {
+  const choices = state.contacts.filter(c => c.status === "active" && !c.peer);
+  select.replaceChildren(el("option", { value: "" }, firstLabel),
+    ...choices.map(c => el("option", { value: c.id }, `連到既有聯絡人:${c.name}`)));
+  select.value = selected ? String(selected.id) : "";
+}
+function openFed(contact) {
+  if (state.offline) return toast("連不上家裡的電腦,等連上再設定互通");
+  fedContactOptions($("#fed-give-contact"), "新朋友(第一次聊天)", contact);
+  fedContactOptions($("#fed-enter-contact"), "新增一個聯絡人", contact);
+  $("#fed-give-result").classList.add("hidden");
+  ["#fed-copy", "#fed-line"].forEach(id => $(id).classList.add("hidden"));
+  $("#fed-make").classList.remove("hidden");
+  $("#fed-give-error").textContent = ""; $("#fed-enter-error").textContent = "";
+  $("#fed-input").value = "";
+  setFedTab("give");
+  $("#dlg-fed").showModal();
+}
+$("#fed-make").addEventListener("click", async () => {
+  $("#fed-give-error").textContent = "";
+  const cid = $("#fed-give-contact").value;
+  try {
+    const { code } = await api("/api/fed/code", cid ? { contact_id: Number(cid) } : {});
+    $("#fed-code").value = code;
+    $("#fed-give-result").classList.remove("hidden");
+    ["#fed-copy", "#fed-line"].forEach(id => $(id).classList.remove("hidden"));
+    $("#fed-make").classList.add("hidden");
+    $("#fed-line").href = lineShare(`我們的 HomeChat 來互通吧!請在你的 HomeChat:⋯ →「跟朋友的 HomeChat 互通」→「輸入朋友的互通碼」貼上這段(24 小時內有效):\n${code}`);
+  } catch (err) { $("#fed-give-error").textContent = err.message; }
+});
+$("#fed-copy").addEventListener("click", () => copyText($("#fed-code").value, $("#fed-code")));
+$("#fed-connect").addEventListener("click", async () => {
+  $("#fed-enter-error").textContent = "";
+  const btn = $("#fed-connect"); btn.disabled = true; btn.textContent = "連線中…";
+  const cid = $("#fed-enter-contact").value;
+  try {
+    const { contact } = await api("/api/fed/connect", { code: $("#fed-input").value, ...(cid ? { contact_id: Number(cid) } : {}) });
+    $("#dlg-fed").close();
+    await loadContacts();
+    toast(`🔗 已經跟 ${contact.peer ? contact.peer.name : contact.name} 的 HomeChat 互通`);
+    openContact(state.contacts.find(c => c.id === contact.id) || contact);
+  } catch (err) { $("#fed-enter-error").textContent = err.message; }
+  finally { btn.disabled = false; btn.textContent = "連線"; }
+});
+let peerContact = null;
+function openPeerStatus(c) {
+  peerContact = c;
+  const p = c.peer;
+  const ok = !p.error;
+  $("#peer-title").textContent = `🔗 跟 ${p.name} 的 HomeChat 互通`;
+  $("#peer-info").replaceChildren(
+    el("p", { class: "hint", style: "margin-top:0" }, "你們的對話在兩邊的電腦各存一份。"),
+    el("div", { class: "field invite-url", style: "margin-bottom:10px" }, p.url),
+    el("p", {}, ok ? "✅ 連線正常" : "⚠️ 目前連不上對方的電腦",
+      p.ok_at ? el("span", { class: "hint" }, `(最後一次成功:${fmtDate(p.ok_at)})`) : null),
+    p.queued ? el("p", {}, `📮 有 ${p.queued} 筆在排隊,對方電腦開機後會自動送過去。`) : null,
+    p.error ? el("p", { class: "hint" }, `原因:${p.error}`) : null);
+  $("#peer-retry").classList.toggle("hidden", !p.queued);
+  $("#dlg-peer").showModal();
+}
+$("#peer-retry").addEventListener("click", async () => {
+  await api(`/api/contacts/${peerContact.id}/peer-retry`, {}).catch(err => toast(err.message));
+  $("#dlg-peer").close();
+  toast("已經重新送出,幾秒後再看看");
+  setTimeout(loadContacts, 3000);
+});
+$("#peer-unlink").addEventListener("click", async () => {
+  if (!confirm(`解除跟 ${peerContact.peer.name} 的互通?\n以前的對話兩邊都會保留,只是之後的訊息不會再同步。`)) return;
+  try { await api(`/api/contacts/${peerContact.id}/unlink`, {}); } catch (err) { return toast(err.message); }
+  $("#dlg-peer").close();
+  await loadContacts();
+  toast("已解除互通");
 });
 
 // 設定
