@@ -788,3 +788,87 @@ def test_unsent_uploads_are_cleaned_up(server):
     assert app.store.cleanup_attachments(older_than=-1) == 1
     assert not app.store.file_path(att["id"]).exists()
     assert app.store.file_path(sent["attachment"]["id"]).exists()
+
+
+# ---------------------------------------------------------------- 自己的貼圖
+
+GIF = (b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff!\xf9\x04\x01\x00\x00\x00\x00,"
+       b"\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;")
+
+
+def add_sticker(client, raw=GIF, mime="image/gif"):
+    return client.upload("/api/stickers/upload", raw, mime)
+
+
+def test_stickers_upload_send_and_privacy(server):
+    base, app = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "小美"})[1]["contact"]
+    guest = join(base, contact)
+    status, data = add_sticker(owner)
+    assert status == 200
+    sid = data["sticker"]["id"]
+    assert [s["id"] for s in owner.req("/api/stickers")[1]["stickers"]] == [sid]
+    assert guest.req("/api/stickers")[1]["stickers"] == []  # 各自的貼圖庫
+    assert owner.raw(f"/api/sticker-files/{sid}")[2] == GIF
+    assert guest.raw(f"/api/sticker-files/{sid}")[0] == 404  # 別人的貼圖庫拿不到
+
+    status, data = owner.req("/api/messages", {"contact_id": contact["id"], "kind": "sticker",
+                                               "sticker_id": sid, "client_id": "st-1"})
+    msg = data["message"]
+    assert status == 200 and msg["kind"] == "sticker" and msg["attachment"]["mime"] == "image/gif"
+    # 重送同一個 client_id 不會多一則
+    again = owner.req("/api/messages", {"contact_id": contact["id"], "kind": "sticker",
+                                        "sticker_id": sid, "client_id": "st-1"})[1]["message"]
+    assert again["id"] == msg["id"]
+    # 朋友收得到,並可以加到自己的貼圖
+    got = guest.req("/api/messages")[1]["messages"][-1]
+    assert got["kind"] == "sticker"
+    assert guest.raw(f"/api/files/{got['attachment']['id']}")[2] == GIF
+    saved = guest.req("/api/stickers/save", {"attachment_id": got["attachment"]["id"]})[1]["sticker"]
+    assert [s["id"] for s in guest.req("/api/stickers")[1]["stickers"]] == [saved["id"]]
+    assert owner.req("/api/contacts")[1]["contacts"][0]["last_body"] == "[貼圖]"
+    # 刪掉貼圖,聊天紀錄裡的還在
+    owner.req("/api/stickers/delete", {"id": sid})
+    assert owner.req("/api/stickers")[1]["stickers"] == []
+    assert owner.raw(f"/api/files/{msg['attachment']['id']}")[2] == GIF
+    # 不能用別人的貼圖傳送,也不能刪別人的
+    status, _ = owner.req("/api/messages", {"contact_id": contact["id"], "kind": "sticker", "sticker_id": saved["id"]})
+    assert status == 404
+    assert owner.req("/api/stickers/delete", {"id": saved["id"]})[0] == 404
+
+
+def test_sticker_upload_checks(server, monkeypatch):
+    base, _ = server
+    owner = login(base)
+    assert add_sticker(owner, b"<svg/>", "image/svg+xml")[0] == 415
+    assert add_sticker(owner, b"<html>", "text/html")[0] == 415
+    monkeypatch.setattr(homechat, "MAX_STICKER", 10)
+    assert add_sticker(owner)[0] == 413
+    monkeypatch.setattr(homechat, "MAX_STICKER", 2 * 1024 * 1024)
+    monkeypatch.setattr(homechat, "MAX_STICKERS", 2)
+    assert add_sticker(owner)[0] == 200 and add_sticker(owner)[0] == 200
+    assert add_sticker(owner)[0] == 409
+    r = urllib.request.Request(base + "/api/stickers/upload", data=GIF, headers={"Content-Type": "image/gif"}, method="POST")
+    with pytest.raises(urllib.error.HTTPError) as e:
+        owner.opener.open(r, timeout=5)
+    assert e.value.code == 403
+
+
+def test_cannot_save_non_image_as_sticker(server):
+    base, _ = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "x"})[1]["contact"]
+    msg = send_file(owner, contact["id"], b"%PDF", "application/pdf", "a.pdf", "file")
+    assert owner.req("/api/stickers/save", {"attachment_id": msg["attachment"]["id"]})[0] == 415
+
+
+def test_deleting_contact_deletes_guest_stickers(server):
+    base, app = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "x"})[1]["contact"]
+    guest = join(base, contact)
+    sid = add_sticker(guest)[1]["sticker"]["id"]
+    assert app.store.sticker_path(sid).exists()
+    owner.req(f"/api/contacts/{contact['id']}/delete", {})
+    assert not app.store.sticker_path(sid).exists()

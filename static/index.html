@@ -139,6 +139,14 @@ video.photo { display: block; max-width: min(280px, 64vw); max-height: 340px; bo
 .file-card .fsize { font-size: 12px; opacity: .7; }
 .bubble.big-emoji { background: none !important; box-shadow: none; font-size: 44px; line-height: 1.15; padding: 0 4px; }
 .uploading { font-size: 12px; opacity: .8; padding: 2px 8px 4px; }
+.bubble.sticker { background: none !important; box-shadow: none; padding: 0; }
+img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; cursor: pointer; }
+#emoji-grid.stickers { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+#emoji-grid.stickers button { height: 76px; padding: 4px; position: relative; }
+#emoji-grid.stickers img { width: 100%; height: 100%; object-fit: contain; }
+#emoji-grid .tile { font-size: 13px !important; border: 2px dashed var(--line) !important; color: var(--muted); line-height: 1.3; }
+#emoji-grid .del { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; border-radius: 50%; background: var(--danger);
+  color: #fff; font-size: 13px; line-height: 22px; text-align: center; }
 #lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 120; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; }
 #lightbox img { max-width: 100%; max-height: calc(100% - 70px); object-fit: contain; }
 .lightbox-bar { display: flex; gap: 10px; }
@@ -282,6 +290,7 @@ video.photo { display: block; max-width: min(280px, 64vw); max-height: 340px; bo
     </form>
     <input type="file" id="pick-image" accept="image/*,video/*" multiple hidden>
     <input type="file" id="pick-file" multiple hidden>
+    <input type="file" id="pick-sticker" accept="image/png,image/gif,image/webp,image/jpeg" multiple hidden>
   </main>
 </div>
 
@@ -435,6 +444,7 @@ video.photo { display: block; max-width: min(280px, 64vw); max-height: 340px; bo
   <img id="lightbox-img" alt="">
   <div class="lightbox-bar">
     <a class="btn" id="lightbox-download" download>下載</a>
+    <button class="btn secondary hidden" type="button" id="lightbox-sticker">加到我的貼圖</button>
     <button class="btn secondary" type="button" id="lightbox-close">關閉</button>
   </div>
 </div>
@@ -720,6 +730,7 @@ async function doBoot() {
     showChat();
     await loadMessages();
   }
+  loadStickers();
   if (!state.offline) { openEvents(); flushOutbox(); }
 }
 
@@ -897,7 +908,7 @@ function notify(m) {
   document.title = `(${unseen}) HomeChat`;
   if (!("Notification" in window) || Notification.permission !== "granted") return;
   const name = state.role === "owner" ? (state.contacts.find(c => c.id === m.contact_id)?.name || "新訊息") : state.ownerName;
-  const text = { image: "[圖片]", audio: "[語音訊息]", file: "[檔案]" }[m.kind] || m.body.slice(0, 120);
+  const text = { image: "[圖片]", audio: "[語音訊息]", file: "[檔案]", sticker: "[貼圖]" }[m.kind] || m.body.slice(0, 120);
   try { new Notification(name, { body: text, tag: "hc-" + m.contact_id, icon: "/icon.svg" }); } catch (_) {}
 }
 function notifyText(title, body) {
@@ -1132,6 +1143,13 @@ function bubbleFor(m) {
   const progress = m.pending && m.progress !== undefined && m.progress < 1
     ? el("div", { class: "uploading" }, `上傳中 ${Math.round(m.progress * 100)}%`) : null;
   const src = fileUrl(m);
+  if (kind === "sticker" && src) {
+    const mine = (m.sender === "me") === (state.role === "owner");
+    return el("div", { class: "bubble sticker" }, el("img", {
+      class: "sticker", src, alt: "貼圖", loading: "lazy",
+      onclick: e => mine || !m.attachment ? null : showMenu(e.currentTarget, [["⭐ 加到我的貼圖", () => saveAsSticker(m)]]),
+    }));
+  }
   if (kind === "text") {
     const big = isBigEmoji(m.body);
     return el("div", { class: "bubble" + (big ? " big-emoji" : "") }, ...linkify(m.body));
@@ -1248,7 +1266,8 @@ async function flushOutbox() {
           await local.queue(m);
         }
         const data = await api("/api/messages", { contact_id: m.contact_id, body: m.body, client_id: m.client_id,
-                                                  kind: m.kind || "text", attachment_id: m.attachment_id });
+                                                  kind: m.kind || "text", attachment_id: m.attachment_id,
+                                                  sticker_id: m.sticker_id });
         await local.putMessages([data.message]);
         await local.dequeue(m.client_id);
         replacePending(m.client_id, data.message);
@@ -1310,6 +1329,7 @@ $("#attach-btn").addEventListener("click", e => showMenu(e.currentTarget, [
   ["📷 照片 / 影片", () => $("#pick-image").click()],
   ["📎 檔案", () => $("#pick-file").click()],
   ["🎙 錄語音訊息", startRecording],
+  ["🎨 做動畫貼圖", openMaker],
 ]));
 $("#pick-image").addEventListener("change", e => { sendFiles([...e.target.files]); e.target.value = ""; });
 $("#pick-file").addEventListener("change", e => { sendFiles([...e.target.files], true); e.target.value = ""; });
@@ -1373,6 +1393,10 @@ function openLightbox(m) {
   const dl = $("#lightbox-download");
   dl.href = m.attachment ? `/api/files/${m.attachment.id}?download=1` : src;
   dl.download = (m.attachment || m).name || "圖片";
+  const canSave = m.attachment && STICKER_TYPES.has(m.attachment.mime) && m.attachment.size <= MAX_STICKER;
+  const save = $("#lightbox-sticker");
+  save.classList.toggle("hidden", !canSave);
+  save.onclick = () => { closeLightbox(); saveAsSticker(m); };
   $("#lightbox").classList.remove("hidden");
 }
 function closeLightbox() { $("#lightbox").classList.add("hidden"); $("#lightbox-img").removeAttribute("src"); }
@@ -1398,12 +1422,15 @@ function addRecentEmoji(e) {
 let emojiTab = "";  // 用分頁名稱記住,「最近」分頁出現時才不會跑掉
 function renderEmoji() {
   const recent = recentEmoji();
-  const tabs = [["🕘", "最近", recent.join(" ")], ...EMOJI].filter((t, i) => i > 0 || recent.length);
-  const cur = tabs.find(t => t[1] === emojiTab) || tabs[0];
+  const tabs = [["⭐", "我的貼圖", null], ["🕘", "最近", recent.join(" ")], ...EMOJI].filter(t => t[1] !== "最近" || recent.length);
+  const cur = tabs.find(t => t[1] === emojiTab) || tabs[1];  // 預設:最近用過的(沒有就是笑臉)
   emojiTab = cur[1];
   $("#emoji-tabs").replaceChildren(...tabs.map(t =>
     el("button", { type: "button", class: t === cur ? "on" : "", title: t[1], onclick: () => { emojiTab = t[1]; renderEmoji(); } }, t[0])));
-  $("#emoji-grid").replaceChildren(...cur[2].split(" ").filter(Boolean).map(e =>
+  const grid = $("#emoji-grid");
+  grid.classList.toggle("stickers", cur[2] === null);
+  if (cur[2] === null) return renderStickerGrid(grid);
+  grid.replaceChildren(...cur[2].split(" ").filter(Boolean).map(e =>
     el("button", { type: "button", onclick: () => insertEmoji(e) }, e)));
 }
 function insertEmoji(e) {
@@ -1420,6 +1447,115 @@ $("#emoji-btn").addEventListener("click", () => {
   if (open) renderEmoji();
 });
 function closeEmoji() { $("#emoji-panel").classList.add("hidden"); }
+
+// ---------- 自己的貼圖
+const STICKER_TYPES = new Set(["image/png", "image/gif", "image/webp", "image/jpeg"]);
+const MAX_STICKER = 2 * 1024 * 1024;
+let stickerEdit = false;
+async function loadStickers() {
+  try {
+    state.stickers = (await api("/api/stickers")).stickers;
+    local.set("stickers", state.stickers);
+  } catch (err) {
+    ignoreOffline(err);
+    state.stickers = (await local.get("stickers")) || [];
+  }
+  if (!$("#emoji-panel").classList.contains("hidden") && emojiTab === "我的貼圖") renderEmoji();
+}
+function renderStickerGrid(grid) {
+  const list = state.stickers || [];
+  const tiles = [
+    el("button", { type: "button", class: "tile", onclick: () => $("#pick-sticker").click() }, "＋", el("br"), "加圖片"),
+    el("button", { type: "button", class: "tile", onclick: openMaker }, "🎨", el("br"), "做動畫"),
+  ];
+  if (list.length) tiles.push(el("button", { type: "button", class: "tile", onclick: () => { stickerEdit = !stickerEdit; renderEmoji(); } },
+    stickerEdit ? "✔" : "✎", el("br"), stickerEdit ? "完成" : "管理"));
+  grid.replaceChildren(...tiles, ...list.map(st => el("button", {
+    type: "button", title: stickerEdit ? "刪除這張貼圖" : "傳送",
+    onclick: () => stickerEdit ? deleteSticker(st) : sendSticker(st),
+  }, el("img", { src: `/api/sticker-files/${st.id}`, alt: "貼圖", loading: "lazy" }), stickerEdit ? el("span", { class: "del" }, "✕") : null)));
+}
+async function sendSticker(st) {
+  if (!state.current) return;
+  const m = {
+    client_id: newId(), body: "", created_at: Date.now() / 1000, source: "chat", kind: "sticker", sticker_id: st.id,
+    sender: state.role === "owner" ? "me" : "them", contact_id: state.current.id,
+  };
+  await local.queue(m);
+  insertSorted({ ...m, pending: true, localUrl: `/api/sticker-files/${st.id}` });
+  renderMessages(true);
+  flushOutbox();
+}
+async function deleteSticker(st) {
+  if (!confirm("刪除這張貼圖?(已經傳出去的不受影響)")) return;
+  try { await api("/api/stickers/delete", { id: st.id }); } catch (err) { return toast(err.message); }
+  state.stickers = state.stickers.filter(x => x.id !== st.id);
+  local.set("stickers", state.stickers);
+  renderEmoji();
+}
+async function saveAsSticker(m) {
+  try {
+    const { sticker } = await api("/api/stickers/save", { attachment_id: m.attachment.id });
+    state.stickers = [sticker, ...(state.stickers || [])];
+    local.set("stickers", state.stickers);
+    toast("已加到我的貼圖 ⭐");
+  } catch (err) { toast(err.offline ? "連不上家裡的電腦,等一下再試" : err.message); }
+}
+async function uploadSticker(blob) {
+  const res = await fetch("/api/stickers/upload", {
+    method: "POST", body: blob, credentials: "same-origin",
+    headers: { "Content-Type": blob.type, "X-HomeChat-Upload": "1" },
+  }).catch(() => null);
+  if (!res) throw new ApiError("連不上家裡的電腦,等一下再試", 0, true);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new ApiError(data.error || `錯誤 ${res.status}`, res.status, false);
+  state.stickers = [data.sticker, ...(state.stickers || [])];
+  local.set("stickers", state.stickers);
+  if (!$("#emoji-panel").classList.contains("hidden")) { emojiTab = "我的貼圖"; renderEmoji(); }
+  return data.sticker;
+}
+// 從相簿加貼圖:GIF 原封不動(保留動畫),其他縮到 320 像素存成 PNG(保留透明背景)
+async function stickerFromFile(file) {
+  if (file.type === "image/gif" && file.size <= MAX_STICKER) return file;
+  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const scale = Math.min(1, 320 / Math.max(bmp.width, bmp.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bmp.width * scale); canvas.height = Math.round(bmp.height * scale);
+  canvas.getContext("2d").drawImage(bmp, 0, 0, canvas.width, canvas.height);
+  let blob = await new Promise(r => canvas.toBlob(r, "image/png"));
+  if (blob.size > MAX_STICKER) blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.9));
+  return blob;
+}
+$("#pick-sticker").addEventListener("change", async e => {
+  const files = [...e.target.files];
+  e.target.value = "";
+  for (const file of files) {
+    try { await uploadSticker(await stickerFromFile(file)); }
+    catch (err) { toast(err.message || "這張圖不能當貼圖"); break; }
+  }
+});
+// 動畫貼圖製作器(用到時才載入)
+function loadMaker() {
+  if (window.StickerMaker) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const sc = document.createElement("script");
+    sc.src = "/sticker-maker.js";
+    sc.onload = resolve;
+    sc.onerror = () => reject(new Error("載入製作器失敗"));
+    document.head.append(sc);
+  });
+}
+async function openMaker() {
+  if (state.offline) return toast("連不上家裡的電腦,等連上再做貼圖");
+  try { await loadMaker(); } catch (err) { return toast(err.message); }
+  window.StickerMaker.open(async (blob, action) => {
+    try {
+      const st = await uploadSticker(blob);
+      if (action === "send") sendSticker(st);
+      else toast("已存成貼圖 ⭐");
+    } catch (err) { toast(err.message); }
+  });
+}
 
 // ---------- 語音輸入(講話變成文字)
 const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;

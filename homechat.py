@@ -45,7 +45,7 @@ HERE = Path(__file__).resolve().parent
 STATIC_DIR = HERE / "static"
 DEFAULT_DB = HERE / "data" / "homechat.db"
 
-VERSION = "2026.10.11"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
+VERSION = "2026.10.12"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
 COOKIE_NAME = "hc_session"
 SESSION_IDLE_DAYS = 365  # 像 LINE 一樣一直保持登入;一年沒用才自動登出(每次使用都會重新計算)
 INVITE_DAYS = 7  # 邀請連結 7 天內有效,只能用一次
@@ -57,7 +57,10 @@ MAX_BODY = 20 * 1024 * 1024  # LINE 聊天紀錄可能很大
 MAX_MESSAGE = 5000
 MAX_UPLOAD = 100 * 1024 * 1024  # 圖片 / 檔案 / 語音,每個最大 100 MB
 MIN_FREE_DISK = 500 * 1024 * 1024  # 硬碟剩不到 500 MB 就不收檔案
-MESSAGE_KINDS = ("text", "image", "file", "audio")
+MESSAGE_KINDS = ("text", "image", "file", "audio", "sticker")
+STICKER_TYPES = {"image/png", "image/gif", "image/webp", "image/jpeg"}
+MAX_STICKER = 2 * 1024 * 1024  # 每張貼圖最大 2 MB
+MAX_STICKERS = 300  # 每個人最多 300 張
 # 可以直接在網頁上顯示 / 播放的格式;其他一律當成下載,避免 HTML、SVG 之類夾帶程式
 INLINE_TYPES = {
     "image/jpeg", "image/png", "image/gif", "image/webp", "image/avif",
@@ -94,6 +97,14 @@ CREATE TABLE IF NOT EXISTS messages (
     client_id TEXT,                              -- 裝置產生的編號,離線排隊重送時不會重複
     kind TEXT NOT NULL DEFAULT 'text',           -- text / image / file / audio
     attachment_id TEXT
+);
+CREATE TABLE IF NOT EXISTS stickers (           -- 自己的貼圖,檔案在 data/stickers/<id>
+    id TEXT PRIMARY KEY,
+    role TEXT NOT NULL CHECK (role IN ('owner', 'guest')),
+    contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,  -- 朋友的貼圖屬於他的聯絡人;主人的是 NULL
+    mime TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    created_at REAL NOT NULL
 );
 CREATE TABLE IF NOT EXISTS attachments (        -- 圖片、檔案、語音,實際檔案在 data/files/<id>
     id TEXT PRIMARY KEY,
@@ -178,9 +189,12 @@ class Store:
             if os.name == "posix":  # 只有自己能讀
                 os.chmod(path.parent, 0o700)
             self.files_dir = path.parent / "files"
+            self.stickers_dir = path.parent / "stickers"
         else:
-            self.files_dir = Path(tempfile.mkdtemp(prefix="homechat-files-"))
+            tmp = Path(tempfile.mkdtemp(prefix="homechat-"))
+            self.files_dir, self.stickers_dir = tmp / "files", tmp / "stickers"
         self.files_dir.mkdir(exist_ok=True)
+        self.stickers_dir.mkdir(exist_ok=True)
         self.db = sqlite3.connect(str(path), check_same_thread=False)
         self.db.row_factory = sqlite3.Row
         self.lock = threading.Lock()
@@ -323,7 +337,7 @@ class Store:
                   (SELECT COUNT(*) FROM messages m WHERE m.contact_id = c.id AND m.sender = 'them'
                      AND m.source = 'chat' AND m.id > c.owner_read_id) AS unread,
                   (SELECT CASE m.kind WHEN 'image' THEN '[圖片]' WHEN 'audio' THEN '[語音訊息]'
-                                      WHEN 'file' THEN '[檔案]' ELSE m.body END
+                                      WHEN 'file' THEN '[檔案]' WHEN 'sticker' THEN '[貼圖]' ELSE m.body END
                      FROM messages m WHERE m.contact_id = c.id
                      ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_body,
                   (SELECT created_at FROM messages m WHERE m.contact_id = c.id
@@ -467,10 +481,13 @@ class Store:
     def delete_contact(self, contact_id: int) -> None:
         with self.lock:
             ids = [r["id"] for r in self.db.execute("SELECT id FROM attachments WHERE contact_id = ?", (contact_id,))]
+            stickers = [r["id"] for r in self.db.execute("SELECT id FROM stickers WHERE contact_id = ?", (contact_id,))]
             self.db.execute("DELETE FROM contacts WHERE id = ?", (contact_id,))
             self.db.commit()
         for att_id in ids:  # 對話刪掉,圖片和檔案也一起刪
             self.file_path(att_id).unlink(missing_ok=True)
+        for sid in stickers:  # 朋友的貼圖也刪
+            self.sticker_path(sid).unlink(missing_ok=True)
 
     # --- 附件(圖片、檔案、語音)
     def file_path(self, att_id: str) -> Path:
@@ -491,6 +508,44 @@ class Store:
             row = self.db.execute("SELECT * FROM attachments WHERE id = ?", (att_id,)).fetchone()
         return dict(row) if row else None
 
+    # --- 貼圖
+    def sticker_path(self, sid: str) -> Path:
+        return self.stickers_dir / sid
+
+    def add_sticker(self, sid: str, role: str, contact_id: int | None, mime: str, size: int) -> dict:
+        with self.lock:
+            self.db.execute(
+                "INSERT INTO stickers (id, role, contact_id, mime, size, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                (sid, role, contact_id, mime, size, time.time()),
+            )
+            self.db.commit()
+        return self.get_sticker(sid)
+
+    def get_sticker(self, sid: str) -> dict | None:
+        with self.lock:
+            row = self.db.execute("SELECT * FROM stickers WHERE id = ?", (sid,)).fetchone()
+        return dict(row) if row else None
+
+    def list_stickers(self, role: str, contact_id: int | None) -> list[dict]:
+        with self.lock:
+            rows = self.db.execute(
+                "SELECT id, mime, size, created_at FROM stickers WHERE role = ? AND contact_id IS ? "
+                "ORDER BY created_at DESC", (role, contact_id),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def delete_sticker(self, sid: str) -> None:
+        with self.lock:
+            self.db.execute("DELETE FROM stickers WHERE id = ?", (sid,))
+            self.db.commit()
+        self.sticker_path(sid).unlink(missing_ok=True)
+
+    def find_message(self, contact_id: int, client_id: str) -> dict | None:
+        with self.lock:
+            row = self.db.execute(self.MSG_SELECT + "WHERE m.contact_id = ? AND m.client_id = ?",
+                                  (contact_id, client_id)).fetchone()
+        return self._message_row(row) if row else None
+
     def cleanup_attachments(self, older_than: float = 86400) -> int:
         """上傳了但沒有送出的檔案(例如上傳到一半關掉)過一天就刪掉;也清掉沒有紀錄的殘留檔案。"""
         cutoff = time.time() - older_than
@@ -506,7 +561,7 @@ class Store:
             self.file_path(att_id).unlink(missing_ok=True)
             removed += 1
         for f in self.files_dir.iterdir():
-            if f.name not in known and f.stat().st_mtime < cutoff:
+            if f.is_file() and f.name not in known and f.stat().st_mtime < cutoff:
                 f.unlink(missing_ok=True)
                 removed += 1
         return removed
@@ -1048,11 +1103,14 @@ class Handler(BaseHTTPRequestHandler):
         qs = {k: v[-1] for k, v in parse_qs(url.query).items()}
         if url.path in ("/", "/index.html") or re.fullmatch(r"/(c|add)/[A-Za-z0-9_-]{1,64}", url.path):
             return self._static("index.html")
-        if url.path in ("/manifest.webmanifest", "/icon.svg", "/sw.js"):
+        if url.path in ("/manifest.webmanifest", "/icon.svg", "/sw.js", "/sticker-maker.js"):
             return self._static(url.path.lstrip("/"))
         m = re.fullmatch(r"/api/files/([A-Za-z0-9_-]{16,64})", url.path)
         if m:
             return self._file(m.group(1), qs)
+        m = re.fullmatch(r"/api/sticker-files/([A-Za-z0-9_-]{16,64})", url.path)
+        if m:
+            return self._sticker_file(m.group(1))
         routes = {
             "/api/me": self._me,
             "/api/invite": self._invite_info,
@@ -1063,6 +1121,7 @@ class Handler(BaseHTTPRequestHandler):
             "/api/export": self._export,
             "/api/friend-link": self._friend_link,
             "/api/devices": self._devices,
+            "/api/stickers": self._stickers,
         }
         if url.path in routes:
             return routes[url.path](qs)
@@ -1073,6 +1132,8 @@ class Handler(BaseHTTPRequestHandler):
         self._check_origin()
         if url.path == "/api/upload":
             return self._upload({k: v[-1] for k, v in parse_qs(url.query).items()})
+        if url.path == "/api/stickers/upload":
+            return self._upload_sticker()
         data = self._read_json()
         routes = {
             "/api/setup": self._setup,
@@ -1089,6 +1150,8 @@ class Handler(BaseHTTPRequestHandler):
             "/api/friend-link": self._set_friend_link,
             "/api/devices/remove": self._remove_device,
             "/api/settings": self._settings,
+            "/api/stickers/delete": self._delete_sticker,
+            "/api/stickers/save": self._save_sticker,
         }
         if url.path in routes:
             return routes[url.path](data)
@@ -1350,7 +1413,21 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(400, "訊息類型錯誤")
         body = str(data.get("body", "")).strip()
         att_id = None
-        if kind == "text":
+        client_id = self._clean(data.get("client_id"), 64) or None
+        if sess["role"] == "guest" and not self.app.messages.take(sess["id"]):
+            raise ApiError(429, "訊息傳太快了,休息一下")
+        if kind == "sticker":
+            # 傳貼圖:複製一份成為這個對話的附件(之後刪掉貼圖,聊天紀錄裡的還在)
+            existing = self.app.store.find_message(contact["id"], client_id) if client_id else None
+            if existing:
+                return self._json({"message": existing})
+            st = self._my_sticker(sess, str(data.get("sticker_id", "")))
+            att_id = secrets.token_urlsafe(18)
+            shutil.copyfile(self.app.store.sticker_path(st["id"]), self.app.store.file_path(att_id))
+            ext = st["mime"].split("/")[1].replace("jpeg", "jpg")
+            self.app.store.add_attachment(att_id, contact["id"], sender, f"貼圖.{ext}", st["mime"], st["size"])
+            body = ""
+        elif kind == "text":
             if not body:
                 raise ApiError(400, "訊息是空的")
         else:
@@ -1364,15 +1441,102 @@ class Handler(BaseHTTPRequestHandler):
                 kind = "file"
         if len(body) > MAX_MESSAGE:
             raise ApiError(400, f"訊息太長(上限 {MAX_MESSAGE} 字)")
-        if sess["role"] == "guest" and not self.app.messages.take(sess["id"]):
-            raise ApiError(429, "訊息傳太快了,休息一下")
-        client_id = self._clean(data.get("client_id"), 64) or None
         msg, new = self.app.store.add_message(contact["id"], sender, body, client_id, kind, att_id)
         if new:
             # 自己送出的就算已讀
             self.app.store.mark_read(contact["id"], sess["role"], msg["id"])
             self.app.hub.publish({"type": "message", "message": msg}, contact["id"])
         self._json({"message": msg})
+
+    def _receive_body(self, dest: Path, length: int) -> None:
+        """把 request body 存成檔案(先寫暫存檔,完整收到才改名)。"""
+        tmp = dest.with_name(dest.name + ".part")
+        remaining = length
+        try:
+            with open(tmp, "wb") as f:
+                while remaining > 0:
+                    chunk = self.rfile.read(min(65536, remaining))
+                    if not chunk:
+                        raise ApiError(400, "上傳中斷了,請再試一次")
+                    f.write(chunk)
+                    remaining -= len(chunk)
+            os.replace(tmp, dest)
+        finally:
+            if tmp.exists():
+                tmp.unlink()
+
+    # --- 貼圖
+    def _sticker_owner(self, sess: dict) -> tuple[str, int | None]:
+        return ("owner", None) if sess["role"] == "owner" else ("guest", sess["contact_id"])
+
+    def _my_sticker(self, sess: dict, sid: str) -> dict:
+        st = self.app.store.get_sticker(sid)
+        if not st or (st["role"], st["contact_id"]) != self._sticker_owner(sess):
+            raise ApiError(404, "找不到這張貼圖")
+        return st
+
+    def _stickers(self, qs: dict) -> None:
+        sess = self._require()
+        self._json({"stickers": self.app.store.list_stickers(*self._sticker_owner(sess))})
+
+    def _sticker_file(self, sid: str) -> None:
+        """自己的貼圖只有自己拿得到(傳出去時會另外複製一份給對話)。"""
+        sess = self._require()
+        st = self._my_sticker(sess, sid)
+        path = self.app.store.sticker_path(sid)
+        if not path.exists():
+            raise ApiError(404, "找不到這張貼圖")
+        self._send(200, path.read_bytes(), st["mime"], {
+            "Content-Security-Policy": FILE_CSP,
+            "Cache-Control": "private, max-age=31536000, immutable",
+        })
+
+    def _check_sticker_room(self, sess: dict) -> None:
+        if len(self.app.store.list_stickers(*self._sticker_owner(sess))) >= MAX_STICKERS:
+            raise ApiError(409, f"貼圖已經有 {MAX_STICKERS} 張了,先刪掉一些吧")
+
+    def _upload_sticker(self) -> None:
+        if self.headers.get("X-HomeChat-Upload") != "1":
+            raise ApiError(403, "上傳格式錯誤")
+        sess = self._require()
+        mime = self.headers.get("Content-Type", "").split(";")[0].strip().lower()
+        if mime not in STICKER_TYPES:
+            raise ApiError(415, "貼圖要是 PNG、GIF、WebP 或 JPG 圖片")
+        try:
+            length = int(self.headers.get("Content-Length", ""))
+        except ValueError:
+            raise ApiError(411, "需要 Content-Length")
+        if length <= 0:
+            raise ApiError(400, "檔案是空的")
+        if length > MAX_STICKER:
+            raise ApiError(413, "貼圖太大了(上限 2 MB),做小一點或少幾格")
+        if sess["role"] == "guest" and not self.app.uploads.take(sess["id"]):
+            raise ApiError(429, "傳太多檔案了,晚點再試")
+        self._check_sticker_room(sess)
+        sid = secrets.token_urlsafe(18)
+        self._receive_body(self.app.store.sticker_path(sid), length)
+        st = self.app.store.add_sticker(sid, *self._sticker_owner(sess), mime, length)
+        self._json({"sticker": {k: st[k] for k in ("id", "mime", "size", "created_at")}})
+
+    def _delete_sticker(self, data: dict) -> None:
+        sess = self._require()
+        st = self._my_sticker(sess, str(data.get("id", "")))
+        self.app.store.delete_sticker(st["id"])
+        self._json({"ok": True})
+
+    def _save_sticker(self, data: dict) -> None:
+        """把對話裡收到的貼圖 / 圖片加到自己的貼圖。"""
+        sess = self._require()
+        att = self.app.store.get_attachment(str(data.get("attachment_id", "")))
+        if not att or (sess["role"] == "guest" and att["contact_id"] != sess["contact_id"]):
+            raise ApiError(404, "找不到這張圖")
+        if att["mime"] not in STICKER_TYPES or att["size"] > MAX_STICKER:
+            raise ApiError(415, "這個檔案不能當貼圖(要是 2 MB 以下的圖片)")
+        self._check_sticker_room(sess)
+        sid = secrets.token_urlsafe(18)
+        shutil.copyfile(self.app.store.file_path(att["id"]), self.app.store.sticker_path(sid))
+        st = self.app.store.add_sticker(sid, *self._sticker_owner(sess), att["mime"], att["size"])
+        self._json({"sticker": {k: st[k] for k in ("id", "mime", "size", "created_at")}})
 
     def _upload(self, qs: dict) -> None:
         """上傳圖片 / 檔案 / 語音。內容直接放在 request body(不是 JSON)。"""
@@ -1401,20 +1565,7 @@ class Handler(BaseHTTPRequestHandler):
             mime = "application/octet-stream"
         name = re.sub(r'[\\/:*?"<>|]', "_", self._clean(unquote(qs.get("name", "")), 200)) or "檔案"
         att_id = secrets.token_urlsafe(18)
-        tmp = store.files_dir / f"{att_id}.part"
-        remaining = length
-        try:
-            with open(tmp, "wb") as f:
-                while remaining > 0:
-                    chunk = self.rfile.read(min(65536, remaining))
-                    if not chunk:
-                        raise ApiError(400, "上傳中斷了,請再試一次")
-                    f.write(chunk)
-                    remaining -= len(chunk)
-            os.replace(tmp, store.file_path(att_id))
-        finally:
-            if tmp.exists():
-                tmp.unlink()
+        self._receive_body(store.file_path(att_id), length)
         uploader = "me" if sess["role"] == "owner" else "them"
         att = store.add_attachment(att_id, contact["id"], uploader, name, mime, length)
         self._json({"attachment": {k: att[k] for k in ("id", "name", "mime", "size")}})
@@ -1544,7 +1695,7 @@ class Handler(BaseHTTPRequestHandler):
             body = m["body"]
             att = m["attachment"]
             if m["kind"] != "text":
-                label = {"image": "[圖片]", "audio": "[語音訊息]", "file": "[檔案]"}[m["kind"]]
+                label = {"image": "[圖片]", "audio": "[語音訊息]", "file": "[檔案]", "sticker": "[貼圖]"}[m["kind"]]
                 body = " ".join(x for x in (label, att["name"] if att else "", body) if x)
             if "\n" in body:
                 body = f'"{body}"'

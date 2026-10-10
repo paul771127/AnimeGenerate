@@ -1,8 +1,8 @@
 // HomeChat service worker:把網頁本身存在裝置上,家裡電腦關機時也能打開看舊訊息。
 // 聊天文字由網頁存在 IndexedDB(見 index.html 的 local 區塊);這裡只快取網頁本身和看過的圖片 / 語音。
-const CACHE = "homechat-v3";
+const CACHE = "homechat-v4";
 const FILES = "homechat-files";  // 看過的圖片、語音:上傳後不會變,存在裝置上離線也能看
-const SHELL = ["/", "/icon.svg", "/manifest.webmanifest"];
+const SHELL = ["/", "/icon.svg", "/manifest.webmanifest", "/sticker-maker.js"];
 const TIMEOUT_MS = 5000;
 
 self.addEventListener("install", event => {
@@ -27,7 +27,8 @@ self.addEventListener("fetch", event => {
   const req = event.request;
   const url = new URL(req.url);
   if (req.method !== "GET" || url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith("/api/files/") && !url.searchParams.has("download") && !req.headers.has("range")) {
+  const isFile = url.pathname.startsWith("/api/files/") || url.pathname.startsWith("/api/sticker-files/");
+  if (isFile && !url.searchParams.has("download") && !req.headers.has("range")) {
     event.respondWith((async () => {
       const cache = await caches.open(FILES);
       const hit = await cache.match(req);
