@@ -82,7 +82,7 @@ namespace SpellDuel
             myClass = PlayerPrefs.GetString("sd_my_class", "mage");
             if (!Skills.Classes.ContainsKey(myClass)) myClass = "mage";
             enemyClass = PlayerPrefs.GetString("sd_enemy_class", "random");
-            voiceOn = PlayerPrefs.GetInt("sd_voice_on", 1) == 1;
+            voiceOn = true;   // 一定要唸技能名稱才能詠唱，語音固定開啟
             voice = VoiceTemplates.Load();
             speech = new SpeechInput();
             speech.OnSkill += OnSpeechSkill;
@@ -261,7 +261,7 @@ namespace SpellDuel
             lastEnemyFeet = en.Feet; lastEnemyHp = en.hp; enemyDeadShown = false;
             enemyShield = Prim(PrimitiveType.Sphere, new Color(0.4f, 0.7f, 1f, 0.25f));
             phase = Phase.Fighting;
-            Say(dummyMode ? "🪵 木頭人練習：比出技能手勢詠唱，握拳→張開放招" : $"⚔ 對手：{en.name}（{string.Join("・", enemySkills.ConvertAll(id => Skills.All[id].name))}）", 4f);
+            Say(dummyMode ? "🪵 木頭人練習：唸技能名稱詠唱，再做放招動作" : $"⚔ 對手：{en.name}（{string.Join("・", enemySkills.ConvertAll(id => Skills.All[id].name))}）", 4f);
         }
 
         /// <summary>木頭人：不會動、不會攻擊；血量很多，打不死</summary>
@@ -357,16 +357,8 @@ namespace SpellDuel
                 Me.chargeStart = battle.now - Me.charging.charge;
                 Say("🏹 拉滿弓！把準星對準目標，手回到畫面張開放箭", 1.5f);
             }
-            // 比出技能手勢（維持 0.35 秒）＝詠唱該技能（不再用點螢幕選招）；法師畫符文時手指會比出各種形狀，不換招
-            if (Hand.ConsumeSelect(out var shape) && !frozen && !drawingRune)
-            {
-                var skill = Me.loadout.Find(sk => Skills.GestureOf(sk.id) == shape);
-                if (skill != null && Me.charging != skill)
-                {
-                    if (!battle.TryChant(Me, skill, out var why)) Say(why, 1.5f);
-                    else Say($"{HandGesture.ShapeName(shape)} → {skill.name}", 1f);
-                }
-            }
+            // 選技能只能用唸的：每次放技能前都要先唸出技能名稱（手勢只負責放招）
+            Hand.ConsumeSelect(out _);
             // 放招動作依詠唱中的技能（陷阱往下壓、治癒收回、格擋舉盾…；其餘依職業）；沒在詠唱就不偵測
             Hand.ReleaseStyle = Me.charging != null ? HandGesture.ReleaseOf(Me.charging) : HandGesture.Style.None;
             Hand.RuneName = Me.charging != null ? RuneRecognizer.RuneOf(Me.charging.id) : null;
@@ -374,7 +366,7 @@ namespace SpellDuel
             if (Hand.ConsumeRelease())
             {
                 if (frozen) { Say("AR 追蹤中斷，暫時不能施法", 1.5f); return; }
-                if (Me.charging == null) Say("先唸技能名稱（或比技能手勢）開始詠唱", 1.5f);
+                if (Me.charging == null) Say("🎤 先唸出技能名稱才能放招", 1.5f);
                 else if (drawingRune) ReleaseAt(ScreenCenter, true);   // 符文畫好＋食指往前指
                 else if (battle.ChargeProgress(Me) < 1f) Say("蓄力還沒完成", 1f);
                 else ReleaseAt(ScreenCenter, true);   // 瞄準一律用畫面中央的準星（手只負責觸發）
@@ -385,7 +377,7 @@ namespace SpellDuel
 
         void ReleaseAt(Vector2 sp, bool byGesture)
         {
-            if (Me.charging == null) { Say("先比出技能手勢（或唸咒語）開始詠唱", 1.5f); return; }
+            if (Me.charging == null) { Say("🎤 先唸出技能名稱才能放招", 1.5f); return; }
 
             // 點擊方向（場地座標）與地板交點（陷阱用）
             var ray = cam.ScreenPointToRay(sp);
@@ -753,7 +745,7 @@ namespace SpellDuel
             y += u * 1.5f + gap;
 
             // 技能卡片（2 欄）：圖示＋名稱／手勢→放招／數值
-            UiKit.Text(new Rect(pad, y, W - pad * 2, u), $"選 3 個技能（{myLoadout.Count}/3）　比手勢＝選招 → 做動作＝放招", fsS, new Color(1f, 0.9f, 0.6f));
+            UiKit.Text(new Rect(pad, y, W - pad * 2, u), $"選 3 個技能（{myLoadout.Count}/3）　唸技能名稱＝詠唱 → 做動作＝放招", fsS, new Color(1f, 0.9f, 0.6f));
             y += u;
             float sw = (W - pad * 2 - gap) / 2f, sh = u * 2.4f;
             for (int i = 0; i < cls.skills.Length; i++)
@@ -770,7 +762,7 @@ namespace SpellDuel
                 float tx = ir.xMax + sh * 0.08f, tw = r.xMax - tx - sh * 0.06f;
                 string eff = sk.type == SkillType.Self ? (sk.self == SelfKind.Heal ? $"回復{sk.heal}" : "防禦") : sk.damage > 0 ? $"傷害{sk.damage}{(sk.multi > 1 ? $"×{sk.multi}" : "")}" : "效果";
                 UiKit.Text(new Rect(tx, r.y + sh * 0.05f, tw, sh * 0.32f), (on ? "✔ " : "") + sk.name, fs, on ? Color.white : new Color(0.8f, 0.8f, 0.8f), TextAnchor.MiddleLeft, true);
-                UiKit.Text(new Rect(tx, r.y + sh * 0.37f, tw, sh * 0.27f), $"{HandGesture.ShapeName(Skills.GestureOf(sk.id))} → {HandGesture.StyleName(HandGesture.ReleaseOf(sk))}", fsS, new Color(1f, 0.85f, 0.5f));
+                UiKit.Text(new Rect(tx, r.y + sh * 0.37f, tw, sh * 0.27f), $"🎤唸「{sk.name}」→ {HandGesture.StyleName(HandGesture.ReleaseOf(sk))}", fsS, new Color(1f, 0.85f, 0.5f));
                 UiKit.Text(new Rect(tx, r.y + sh * 0.64f, tw, sh * 0.32f), $"MP{sk.cost}・{(sk.charge > 0f ? $"蓄力{sk.charge:0.#}s" : "免蓄力")}・{eff}・{sk.RangeText}", fsS, new Color(0.8f, 0.85f, 0.95f));
                 if (GUI.Button(r, GUIContent.none, GUIStyle.none))
                 {
@@ -803,11 +795,8 @@ namespace SpellDuel
             }
 
             // 語音
-            float vbw = W * 0.3f;
-            if (UiKit.Button(new Rect(pad, y, vbw, u * 1.15f), voiceOn ? "🎤 語音：開" : "🎤 語音：關", fsS, voiceOn, new Color(0.4f, 0.9f, 0.6f)))
-            { voiceOn = !voiceOn; PlayerPrefs.SetInt("sd_voice_on", voiceOn ? 1 : 0); }
-            float vx = pad + vbw + gap, vw = W - pad - vx;
-            if (UseSpeech) UiKit.Text(new Rect(vx, y, vw, u * 1.15f), "戰鬥中直接唸技能名稱就能詠唱（不用錄音）", fsS, new Color(0.85f, 0.9f, 1f));
+            float vx = pad, vw = W - pad * 2;
+            if (UseSpeech) UiKit.Text(new Rect(vx, y, vw, u * 1.15f), "🎤 每次放技能前都要先唸出技能名稱（不用錄音）", fsS, new Color(0.85f, 0.9f, 1f));
             else
             {
                 float rw = (vw - gap * 2) / 3f;
@@ -838,8 +827,9 @@ namespace SpellDuel
             if (UiKit.Button(new Rect(NetMode ? pad : pad + hw + gap, by, NetMode ? W - pad * 2 : hw, u * 1.2f), NetMode ? "返回" : "換模式", fsS))
             { if (NetMode) Hide(); else RequestChangeMode?.Invoke(); }
             by -= u * 1.6f + gap;
-            string startText = NetMode ? (localReady ? "等待對手準備…" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : "⚔ 開始戰鬥");
-            if (UiKit.Button(new Rect(pad, by, W - pad * 2, u * 1.6f), startText, fsL, true, cls.color, myLoadout.Count == 3))
+            bool voiceOk = UseSpeech || VoiceReady;   // 沒有語音辨識時，要先把 3 個技能的咒語錄好
+            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對手準備…" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : "⚔ 開始戰鬥");
+            if (UiKit.Button(new Rect(pad, by, W - pad * 2, u * 1.6f), startText, fsL, true, cls.color, myLoadout.Count == 3 && voiceOk))
             { if (NetMode) SendReady(); else StartBattle(); }
         }
 
@@ -1001,7 +991,7 @@ namespace SpellDuel
             string voiceHint = !voiceOn || voiceActive ? "" : "（語音：咒語還沒錄完，到選技能畫面錄）";
             float micW = W * 0.24f;
             UiKit.Text(new Rect(pad, hintY, W - pad * 2 - micW - gap, lh * 1.4f),
-                (voiceActive ? (UseSpeech ? "唸技能名稱或比手勢＝詠唱" : "唸咒語或比手勢＝詠唱") : "比手勢＝詠唱") + "，蓄滿後做該技能的放招動作" + voiceHint, fsS, new Color(1f, 0.92f, 0.65f));
+                (UseSpeech ? "🎤 先唸技能名稱＝詠唱" : "🎤 先唸咒語＝詠唱") + "，蓄滿後做該技能的放招動作" + voiceHint, fsS, new Color(1f, 0.92f, 0.65f));
             if (hasHeard) UiKit.Text(new Rect(pad, hintY - lh * 0.8f, W - pad * 2, lh * 0.8f), $"聽到：{speech.LastHeard}", fsS, new Color(0.8f, 0.9f, 1f));
             float mx = W - pad - micW;
             if (UseSpeech && voiceOn)
@@ -1022,11 +1012,9 @@ namespace SpellDuel
                 var r = new Rect(pad + i * (sw + gap), sy, sw, tileH);
                 float cd = me.cooldownUntil.TryGetValue(s.id, out var u) ? Mathf.Max(0, u - now) : 0;
                 bool charging = me.charging == s;
-                var g = Skills.GestureOf(s.id);
-                bool showing = Hand != null && Hand.HandVisible && Hand.Current == g;
                 bool usable = me.mp >= s.cost && cd <= 0;
                 // 技能卡（只顯示，不能點）：上面圖示、下面名稱／手勢→放招／MP 或冷卻；手正比著這個手勢時亮起來
-                UiKit.Card(r, charging ? 0.8f : 0.5f, charging ? s.color : showing ? Color.white : (Color?)null, charging ? 1f : 0.6f);
+                UiKit.Card(r, charging ? 0.8f : 0.5f, charging ? s.color : (Color?)null, charging ? 1f : 0.6f);
                 var ir = new Rect(r.center.x - isz / 2, r.y + gap * 0.6f, isz, isz);
                 // 技能圖示（發光徽章）：詠唱中外圈脈動發光；冷卻中由上往下蓋暗；MP 不足變灰
                 if (charging)
@@ -1045,13 +1033,11 @@ namespace SpellDuel
                     GUI.DrawTexture(new Rect(ir.x, ir.y, ir.width, ir.height * frac), Texture2D.whiteTexture);
                 }
                 GUI.color = Color.white;
-                // 選招手勢小圖（圖示右下角）
-                HandGesture.DrawIcon(new Rect(ir.xMax - isz * 0.3f, ir.yMax - isz * 0.3f, isz * 0.38f, isz * 0.38f), g, usable ? Color.white : new Color(0.6f, 0.6f, 0.6f));
                 float tx = r.x + gap * 0.4f, tw = r.width - gap * 0.8f, ty = ir.yMax + gap * 0.2f;
                 var tc = usable ? Color.white : new Color(0.65f, 0.65f, 0.65f);
-                string vtag = !voiceOn ? "" : UseSpeech ? " 🎤" : voice.Ready(s.id) ? " 🎤" : " 🎤未錄";
+                string vtag = UseSpeech || voice.Ready(s.id) ? "" : " 🎤未錄";
                 UiKit.Text(new Rect(tx, ty, tw, rowH), s.name + vtag, fs, tc, TextAnchor.MiddleCenter, true);
-                UiKit.Text(new Rect(tx, ty + rowH, tw, rowH), $"{HandGesture.ShapeName(g)}→{HandGesture.StyleName(HandGesture.ReleaseOf(s))}", fsS, usable ? new Color(1f, 0.85f, 0.5f) : tc, TextAnchor.MiddleCenter);
+                UiKit.Text(new Rect(tx, ty + rowH, tw, rowH), $"🎤→{HandGesture.StyleName(HandGesture.ReleaseOf(s))}", fsS, usable ? new Color(1f, 0.85f, 0.5f) : tc, TextAnchor.MiddleCenter);
                 UiKit.Text(new Rect(tx, ty + rowH * 2, tw, rowH), cd > 0 ? $"冷卻 {cd:F1}s" : $"MP {s.cost}", fsS, cd > 0 ? new Color(0.7f, 0.7f, 0.7f) : new Color(0.6f, 0.8f, 1f), TextAnchor.MiddleCenter);
             }
 
