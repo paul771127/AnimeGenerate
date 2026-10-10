@@ -61,6 +61,7 @@ namespace SpellDuel
         float dummyDamage; int dummyHits;
         readonly Dictionary<Projectile, GameObject> projGo = new Dictionary<Projectile, GameObject>();
         readonly Dictionary<Trap, GameObject> trapGo = new Dictionary<Trap, GameObject>();
+        readonly Dictionary<BurnZone, GameObject> burnGo = new Dictionary<BurnZone, GameObject>();
         class Floater { public Vector3 posMap; public string text; public Color color; public float born; public bool screen; }
         readonly List<Floater> floaters = new List<Floater>();
         string message = ""; float messageUntil;
@@ -135,7 +136,8 @@ namespace SpellDuel
             SyncPlayer(me);
             battle = new Battle(me, en) { remoteEnemy = true };
             battle.OnEvent += OnBattleEvent;
-            battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.pos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected });
+            battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.basePos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected, rad = p.curveAmp, s = p.pathLen });
+            battle.OnRemoteBurn += (sk, dmg, at) => NetSend?.Invoke(new Msg { t = "burn2", k = sk.id, dmg = Mathf.RoundToInt(dmg), p = at });
             battle.OnRemoteHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });
             battle.OnTrapPlaced += t => NetSend?.Invoke(new Msg { t = "trap2", id = t.id, k = t.skill.id, p = t.pos, s = t.armAt - battle.now });
             battle.OnTrapGone += id => NetSend?.Invoke(new Msg { t = "trapgone", id = id });
@@ -165,7 +167,7 @@ namespace SpellDuel
                     if (Skills.All.TryGetValue(m.k, out var cs))
                     {
                         float elapsed = (float)((SharedClock?.Invoke() ?? m.t0) - m.t0);
-                        battle.AddRemoteProjectile(m.id, cs, m.p, m.d, Mathf.Clamp(elapsed, 0f, 1f), m.ok);
+                        battle.AddRemoteProjectile(m.id, cs, m.p, m.d, Mathf.Clamp(elapsed, 0f, 1f), m.ok, m.rad, m.s);
                     }
                     break;
                 case "hit2":
@@ -176,6 +178,11 @@ namespace SpellDuel
                         bool countered = battle.ApplyRemoteHit(hs, m.dmg, m.p, isTrap);
                         NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp), ok = countered });
                     }
+                    break;
+                case "burn2":
+                    // 對手的火海燒到我
+                    battle.ApplyRemoteBurn(m.dmg, m.p);
+                    NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp) });
                     break;
                 case "hp2":
                     En.hp = m.hp;
@@ -261,7 +268,8 @@ namespace SpellDuel
         {
             foreach (var go in projGo.Values) if (go) Destroy(go);
             foreach (var go in trapGo.Values) if (go) Destroy(go);
-            projGo.Clear(); trapGo.Clear(); floaters.Clear();
+            foreach (var go in burnGo.Values) if (go) Destroy(go);
+            projGo.Clear(); trapGo.Clear(); burnGo.Clear(); floaters.Clear();
             if (enemyShield) Destroy(enemyShield);
             if (enemyRig) Destroy(enemyRig.gameObject);
             if (remoteAnchor) Destroy(remoteAnchor.gameObject);
@@ -483,6 +491,16 @@ namespace SpellDuel
                     hitFlash = 1f;
                     Handheld.Vibrate();
                     break;
+                case "burnzone":
+                    SpellFx.Impact("mage", c, WorldFrame.FromWorld(at), 2.5f);   // 隕石落地爆炸
+                    break;
+                case "burn":
+                {
+                    bool meBurn = Battle.FlatDistance(at, Me.Feet) < 0.5f || at == Me.Chest;
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 1.2f, text = "灼燒 " + text, color = new Color(1f, 0.55f, 0.2f), born = Time.time, screen = meBurn });
+                    if (meBurn) { hitFlash = Mathf.Max(hitFlash, 0.45f); Handheld.Vibrate(); }
+                    break;
+                }
                 case "dot":
                     bool onMe = at == Me.Chest;
                     floaters.Add(new Floater { posMap = at, text = "毒 " + text, color = Color.green, born = Time.time, screen = onMe });
@@ -552,6 +570,29 @@ namespace SpellDuel
             }
             foreach (var kv in new List<KeyValuePair<Projectile, GameObject>>(projGo))
                 if (!alive.Contains(kv.Key)) { Destroy(kv.Value, 0.25f); projGo.Remove(kv.Key); }
+
+            // 火海：地上的燃燒圓盤（閃爍）＋不時冒出火焰
+            var liveBurns = new HashSet<BurnZone>(battle.burns);
+            foreach (var z in battle.burns)
+            {
+                if (!burnGo.TryGetValue(z, out var go))
+                {
+                    go = Prim(PrimitiveType.Cylinder, new Color(1f, 0.35f, 0.05f, 0.45f));
+                    go.transform.localScale = new Vector3(z.radius * 2f, 0.004f, z.radius * 2f);
+                    burnGo[z] = go;
+                }
+                go.transform.position = WorldFrame.FromWorld(z.pos + Vector3.up * 0.015f);
+                float left = Mathf.Clamp01((z.until - battle.now) / 2f);   // 最後 2 秒淡出
+                float flick = 0.35f + 0.15f * Mathf.Sin(Time.time * 13f + z.pos.x * 7f) + 0.1f * Mathf.Sin(Time.time * 29f);
+                go.GetComponent<Renderer>().material.color = new Color(1f, 0.3f + 0.15f * flick, 0.05f, flick * left);
+                if (UnityEngine.Random.value < Time.deltaTime * 2.2f)
+                {
+                    var r2 = UnityEngine.Random.insideUnitCircle * z.radius * 0.85f;
+                    SpellFx.Impact("mage", new Color(1f, 0.45f, 0.1f), WorldFrame.FromWorld(z.pos + new Vector3(r2.x, 0.05f, r2.y)), 0.6f);
+                }
+            }
+            foreach (var kv in new List<KeyValuePair<BurnZone, GameObject>>(burnGo))
+                if (!liveBurns.Contains(kv.Key)) { Destroy(kv.Value); burnGo.Remove(kv.Key); }
 
             // 陷阱：地板上的扁圓盤（生效前是灰色）
             var liveTraps = new HashSet<Trap>(battle.traps);

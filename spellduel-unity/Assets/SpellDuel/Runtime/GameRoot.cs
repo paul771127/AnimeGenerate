@@ -522,7 +522,7 @@ namespace SpellDuel
                         Log("❌ 對手已斷線");
                         if (mode == Mode.Duo && solo.phase != SoloBattle.Phase.Hidden) solo.Hide();
                         break;
-                    case "ready": case "cast2": case "hit2": case "hp2": case "trap2": case "trapgone": case "state":
+                    case "ready": case "cast2": case "hit2": case "hp2": case "trap2": case "trapgone": case "state": case "burn2":
                         solo.OnNet(m);   // 雙人職業對戰
                         break;
                     case "ping":

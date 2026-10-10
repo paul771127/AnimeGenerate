@@ -64,6 +64,21 @@ namespace SpellDuel
         public bool reflected, alive = true;
         public int id;
         public bool remote;          // 雙人：對手的法術（只顯示，命中由對手判定）
+        // 弧線飛行（風刃）：沿直線前進的「基準點」＋往側邊的偏移 sin(π×進度)
+        public Vector3 basePos, curveSide;   // curveSide：側向單位向量 × 振幅（公尺，可為負）
+        public float curveAmp, pathLen;
+        public bool Curved => pathLen > 0.01f && Mathf.Abs(curveAmp) > 0.01f;
+    }
+
+    /// <summary>隕石落地後的火海：範圍內的敵人每秒受到灼燒傷害</summary>
+    public class BurnZone
+    {
+        public Fighter owner;
+        public SkillDef skill;
+        public Vector3 pos;            // 地板上的圓心
+        public float radius, until, dps, acc;
+        public bool remote;            // 雙人：對手的火海（只顯示，傷害由對手判定）
+        public bool alive = true;
     }
 
     public class Trap
@@ -84,6 +99,9 @@ namespace SpellDuel
         public readonly Fighter player, enemy;
         public readonly List<Projectile> projectiles = new List<Projectile>();
         public readonly List<Trap> traps = new List<Trap>();
+        public readonly List<BurnZone> burns = new List<BurnZone>();
+        public const float MeteorDropHeight = 6f, BurnRadius = 1.5f, BurnDuration = 10f, BurnDps = 5f;
+        readonly System.Random rng = new System.Random();
         public float chargeTimeout = 7f;
         int nextId = 1;
 
@@ -102,20 +120,44 @@ namespace SpellDuel
         public event Action<Trap> OnTrapPlaced;                  // 我方新設的陷阱
         public event Action<SkillDef, int, Vector3, int> OnRemoteHit;   // 打到對手：技能、傷害、位置、法術或陷阱 id
         public event Action<int> OnTrapGone;                     // 我方陷阱消失（觸發或過期）
+        public event Action<SkillDef, float, Vector3> OnRemoteBurn;     // 我方火海燒到對手：技能、傷害、位置
 
         /// <summary>顯示對手的法術（從對手送來的起點、方向；elapsed＝已經飛了幾秒）</summary>
-        public Projectile AddRemoteProjectile(int id, SkillDef s, Vector3 from, Vector3 dir, float elapsed, bool reflected)
+        public Projectile AddRemoteProjectile(int id, SkillDef s, Vector3 from, Vector3 dir, float elapsed, bool reflected, float curveAmp = 0f, float pathLen = 0f)
         {
-            var p = new Projectile { owner = enemy, skill = s, pos = from, dir = dir.normalized, damage = s.damage, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur, reflected = reflected, id = id, remote = true };
-            float d = s.speed * Mathf.Max(0f, elapsed);
-            p.pos += p.dir * d; p.traveled = d;
+            var p = new Projectile { owner = enemy, skill = s, pos = from, basePos = from, dir = dir.normalized, damage = s.damage, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur, reflected = reflected, id = id, remote = true };
+            SetCurve(p, curveAmp, pathLen);
+            Advance(p, s.speed * Mathf.Max(0f, elapsed));
             projectiles.Add(p);
             return p;
         }
 
+        /// <summary>對手的火海燒到我（對手判定）</summary>
+        public void ApplyRemoteBurn(float dmg, Vector3 at) { Damage(player, dmg, "burn", at); }
+
+        static void SetCurve(Projectile p, float amp, float len)
+        {
+            p.curveAmp = amp; p.pathLen = len;
+            var side = Vector3.Cross(Vector3.up, p.dir); side.y = 0;
+            p.curveSide = side.sqrMagnitude > 1e-6f ? side.normalized * amp : Vector3.zero;
+        }
+
+        /// <summary>沿路徑前進 d 公尺（弧線：基準點走直線，再加側向偏移）</summary>
+        static void Advance(Projectile p, float d)
+        {
+            p.basePos += p.dir * d;
+            p.traveled += d;
+            p.pos = p.Curved ? p.basePos + p.curveSide * Mathf.Sin(Mathf.PI * Mathf.Clamp01(p.traveled / p.pathLen)) : p.basePos;
+        }
+
         public void RemoveRemoteProjectile(int id)
         {
-            foreach (var p in projectiles) if (p.remote && p.id == id) p.alive = false;
+            foreach (var p in projectiles)
+                if (p.remote && p.id == id && p.alive)
+                {
+                    p.alive = false;
+                    if (p.skill.id == "meteor" && !p.reflected) AddBurn(p, player.Feet);   // 對手的隕石砸中我：顯示火海
+                }
         }
 
         public void AddRemoteTrap(int id, SkillDef s, Vector3 at, float armIn)
@@ -200,9 +242,26 @@ namespace SpellDuel
             {
                 case SkillType.Self: CastSelf(f, s); break;
                 case SkillType.Trap: PlaceTrap(f, s, floorPoint); break;
+                case SkillType.Projectile when s.id == "meteor":
+                {
+                    // 隕石：從敵人（施放當下的位置）正上方砸下，敵人可以趁下落時移動閃開
+                    var target = Opponent(f).Feet;
+                    Spawn(f, s, target + Vector3.up * MeteorDropHeight, Vector3.down, s.damage, s.effect, s.effectDps, s.effectDur, false);
+                    Emit("cast", f.head, s.color, null);
+                    break;
+                }
                 default:
                     var hand = f.head + Fighter.Flat(f.forward) * 0.25f + Vector3.down * 0.25f;
                     aimDir = aimDir.sqrMagnitude > 1e-6f ? aimDir.normalized : Fighter.Flat(f.forward);
+                    if (s.id == "wind")
+                    {
+                        // 風刃：隨機從左或右側繞弧線飛向目標（終點仍是準星方向、敵人的距離）
+                        float dist = Mathf.Max(1f, FlatDistance(f.head, Opponent(f).head));
+                        float amp = Mathf.Max(0.5f, dist * 0.45f) * (rng.Next(2) == 0 ? -1f : 1f);
+                        var wp = Spawn(f, s, hand, aimDir, s.damage, s.effect, s.effectDps, s.effectDur, false, amp, dist);
+                        Emit("cast", hand, s.color, null);
+                        break;
+                    }
                     for (int i = 0; i < s.multi; i++)
                     {
                         float ang = s.multi > 1 ? (i - (s.multi - 1) / 2f) * s.spreadDeg : 0f;
@@ -239,9 +298,10 @@ namespace SpellDuel
             if (f == player) OnTrapPlaced?.Invoke(trap);
         }
 
-        Projectile Spawn(Fighter owner, SkillDef s, Vector3 from, Vector3 dir, int dmg, EffectKind eff, float dps, float dur, bool reflected)
+        Projectile Spawn(Fighter owner, SkillDef s, Vector3 from, Vector3 dir, int dmg, EffectKind eff, float dps, float dur, bool reflected, float curveAmp = 0f, float pathLen = 0f)
         {
-            var p = new Projectile { owner = owner, skill = s, pos = from, dir = dir.normalized, damage = dmg, effect = eff, effectDps = dps, effectDur = dur, reflected = reflected, id = nextId++ };
+            var p = new Projectile { owner = owner, skill = s, pos = from, basePos = from, dir = dir.normalized, damage = dmg, effect = eff, effectDps = dps, effectDur = dur, reflected = reflected, id = nextId++ };
+            SetCurve(p, curveAmp, pathLen);
             projectiles.Add(p);
             if (owner == player && remoteEnemy) OnSpawn?.Invoke(p);
             return p;
@@ -268,6 +328,7 @@ namespace SpellDuel
             }
             UpdateProjectiles(dt);
             UpdateTraps();
+            UpdateBurns(dt);
         }
 
         void UpdateProjectiles(float dt)
@@ -284,8 +345,14 @@ namespace SpellDuel
                 int sub = Mathf.Max(1, Mathf.CeilToInt(step / 0.08f));
                 for (int k = 0; k < sub && p.alive; k++)
                 {
-                    p.pos += p.dir * (step / sub);
-                    p.traveled += step / sub;
+                    Advance(p, step / sub);
+                    // 隕石落地：留下火海（我方的才判定傷害；對手的只顯示）
+                    if (p.skill.id == "meteor" && p.pos.y <= 0.05f)
+                    {
+                        p.alive = false;
+                        AddBurn(p, p.pos);
+                        break;
+                    }
                     target.BodySegment(out var a, out var b);
                     if (p.remote)
                     {
@@ -295,6 +362,7 @@ namespace SpellDuel
                     else if (DistancePointSegment(p.pos, a, b) < p.skill.radius + Fighter.BodyRadius)
                     {
                         p.alive = false;
+                        if (p.skill.id == "meteor" && !p.reflected) AddBurn(p, target.Feet);   // 直接砸中也留下火海
                         if (remoteEnemy && target == enemy) { Emit("hit", p.pos, p.skill.color, null); OnRemoteHit?.Invoke(p.skill, p.damage, p.pos, p.id); }
                         else Hit(target, p);
                     }
@@ -302,6 +370,33 @@ namespace SpellDuel
                 }
             }
             projectiles.RemoveAll(x => !x.alive);
+        }
+
+        void AddBurn(Projectile p, Vector3 at)
+        {
+            var c = new Vector3(at.x, 0f, at.z);
+            burns.Add(new BurnZone { owner = p.owner, skill = p.skill, pos = c, radius = BurnRadius, until = now + BurnDuration, dps = BurnDps, remote = p.remote });
+            Emit("burnzone", c, p.skill.color, null);
+        }
+
+        void UpdateBurns(float dt)
+        {
+            foreach (var z in burns)
+            {
+                if (!z.alive) continue;
+                if (now > z.until) { z.alive = false; continue; }
+                if (z.remote) continue;   // 對手的火海由對手判定
+                var victim = Opponent(z.owner);
+                if (!victim.Alive || FlatDistance(victim.Feet, z.pos) > z.radius) { z.acc = 0f; continue; }
+                z.acc += dt;
+                while (z.acc >= 1f)
+                {
+                    z.acc -= 1f;
+                    if (remoteEnemy && victim == enemy) { Emit("hit", victim.Chest, z.skill.color, null); OnRemoteBurn?.Invoke(z.skill, z.dps, victim.Feet); }
+                    else Damage(victim, z.dps, "burn");
+                }
+            }
+            burns.RemoveAll(x => !x.alive);
         }
 
         void UpdateTraps()
@@ -365,7 +460,7 @@ namespace SpellDuel
         {
             if (!f.Alive) return;
             f.hp = Mathf.Max(0, f.hp - dmg);
-            Emit(kind == "dot" ? "dot" : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");
+            Emit(kind == "dot" || kind == "burn" ? kind : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");
             if (!f.Alive) Emit(f.isPlayer ? "lose" : "win", f.Chest, Color.white, null);
         }
 
