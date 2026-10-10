@@ -339,7 +339,8 @@ namespace SpellDuel
                     else Say($"{HandGesture.ShapeName(shape)} → {skill.name}", 1f);
                 }
             }
-            Hand.ReleaseStyle = HandGesture.StyleOf(myClass);   // 放招動作依職業：法師聚氣、弓箭手拉弓、劍士手刀斬、刺客突刺
+            // 放招動作依詠唱中的技能（陷阱往下壓、治癒收回、格擋舉盾…；其餘依職業）；沒在詠唱就不偵測
+            Hand.ReleaseStyle = Me.charging != null ? HandGesture.ReleaseOf(Me.charging) : HandGesture.Style.None;
             // 手勢放招：往放招動作的瞄準點放
             if (Hand.ConsumeRelease())
             {
@@ -660,7 +661,7 @@ namespace SpellDuel
             }
             GUI.color = Color.white; y += bh + pad * 0.5f;
             var cls = Skills.Classes[myClass];
-            GUI.Label(new Rect(pad, y, W - pad * 2, lh * 1.4f), $"{cls.desc}　HP {cls.maxHp}・MP {cls.maxMp}\n放招動作：{HandGesture.StyleHint(HandGesture.StyleOf(myClass))}", small); y += lh * 1.9f;
+            GUI.Label(new Rect(pad, y, W - pad * 2, lh * 1.4f), $"{cls.desc}　HP {cls.maxHp}・MP {cls.maxMp}\n技能（選招手勢→放招動作）", small); y += lh * 1.9f;
 
             GUI.Label(new Rect(pad, y, W, lh), $"選 3 個技能（{myLoadout.Count}/3）", label); y += lh;
             float sw = (W - pad * 3) / 2f, sh = lh * 2.1f;
@@ -671,7 +672,7 @@ namespace SpellDuel
                 GUI.color = on ? s.color : new Color(0.75f, 0.75f, 0.75f);
                 var r = new Rect(pad + (i % 2) * (sw + pad), y + (i / 2) * (sh + pad * 0.5f), sw, sh);
                 string eff = s.type == SkillType.Self ? (s.self == SelfKind.Heal ? $"回復{s.heal}" : "防禦") : $"傷害{s.damage}{(s.multi > 1 ? $"×{s.multi}" : "")}";
-                if (GUI.Button(r, $"{(on ? "✔ " : "")}{s.name}（手勢：{HandGesture.ShapeName(Skills.GestureOf(s.id))}）\nMP{s.cost}・蓄力{s.charge:0.#}s・{eff}・{s.RangeText}", button))
+                if (GUI.Button(r, $"{(on ? "✔ " : "")}{s.name}（{HandGesture.ShapeName(Skills.GestureOf(s.id))}→{HandGesture.StyleName(HandGesture.ReleaseOf(s))}）\nMP{s.cost}・蓄力{s.charge:0.#}s・{eff}・{s.RangeText}", button))
                 {
                     if (on) myLoadout.Remove(s.id);
                     else { if (myLoadout.Count >= 3) myLoadout.RemoveAt(0); myLoadout.Add(s.id); }
@@ -810,7 +811,7 @@ namespace SpellDuel
                 int rs = battle.RangeState(me, me.charging);
                 string st = prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%" :
                     (me.charging.releaseNear && rs > 0) ? "靠近才能出手" : rs < 0 ? "太近了" :
-                    me.charging.type == SkillType.Trap ? "放招動作 → 設在準星指的地板" : me.charging.type == SkillType.Self ? "做放招動作發動" : "做放招動作發射！";
+                    HandGesture.StyleHint(HandGesture.ReleaseOf(me.charging));
                 GUI.color = prog < 1f ? Color.white : me.charging.color;
                 GUI.Label(new Rect(0, H / 2 - lh * 2.2f, W, lh), $"{me.charging.name}　{st}", center);
                 GUI.color = Color.white;
@@ -853,7 +854,7 @@ namespace SpellDuel
             bool voiceActive = voiceOn && (UseSpeech || VoiceReady);
             string voiceHint = !voiceOn || voiceActive ? "" : "　（語音：咒語還沒錄完，到選技能畫面錄）";
             GUI.Label(new Rect(pad, by - lh * 1.05f, W - pad * 2 - W * 0.22f, lh),
-                (voiceActive ? (UseSpeech ? "唸技能名稱或比手勢＝詠唱" : "唸咒語或比手勢＝詠唱") : "比手勢＝詠唱") + "　放招：" + HandGesture.StyleHint(HandGesture.StyleOf(myClass)) + voiceHint, small);
+                (voiceActive ? (UseSpeech ? "唸技能名稱或比手勢＝詠唱" : "唸咒語或比手勢＝詠唱") : "比手勢＝詠唱") + "　蓄滿後做該技能的放招動作" + voiceHint, small);
             if (UseSpeech && voiceOn)
             {
                 GUI.Label(new Rect(W - pad - W * 0.21f, by - lh * 1.05f, W * 0.21f, lh), speech.Running ? "🎤 聆聽中" : "🎤 " + speech.Status, small);
@@ -885,7 +886,7 @@ namespace SpellDuel
                 HandGesture.DrawIcon(new Rect(r.x + pad * 0.3f, r.y + pad * 0.3f, sh * 0.55f, sh * 0.55f), g, usable ? s.color : new Color(0.5f, 0.5f, 0.5f));
                 GUI.color = usable ? Color.white : new Color(0.65f, 0.65f, 0.65f);
                 GUI.Label(new Rect(r.x + sh * 0.6f, r.y, r.width - sh * 0.6f, r.height * 0.5f), s.name, label);
-                string vtag = !voiceOn ? "" : UseSpeech ? "・🎤唸名稱" : voice.Ready(s.id) ? "・🎤唸咒語" : "・🎤未錄";
+                string vtag = "→" + HandGesture.StyleName(HandGesture.ReleaseOf(s)) + (!voiceOn ? "" : UseSpeech ? "・🎤" : voice.Ready(s.id) ? "・🎤" : "・🎤未錄");
                 GUI.Label(new Rect(r.x + sh * 0.6f, r.y + r.height * 0.42f, r.width - sh * 0.6f, r.height * 0.3f), HandGesture.ShapeName(g) + vtag, small);
                 GUI.Label(new Rect(r.x + pad * 0.3f, r.y + r.height * 0.7f, r.width, r.height * 0.3f), $"MP {s.cost}{(cd > 0 ? $"　冷卻 {cd:F1}s" : "")}", small);
                 GUI.color = Color.white;

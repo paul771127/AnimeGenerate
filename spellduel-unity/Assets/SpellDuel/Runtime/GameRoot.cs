@@ -589,6 +589,7 @@ namespace SpellDuel
         void HandleFire()
         {
             if (solo.phase != SoloBattle.Phase.Hidden) return;   // 職業對戰中：由 SoloBattle 處理手勢與語音
+            hand.ReleaseStyle = HandGesture.Style.Burst;          // 測試用法術：握拳→張開
             Vector3 sp;
             if (mode == Mode.Duo && hand.ConsumeRelease()) sp = hand.ReleaseAim;   // 手勢放招：往放招動作的瞄準點
             else

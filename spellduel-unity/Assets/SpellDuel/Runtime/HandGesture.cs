@@ -16,7 +16,7 @@ namespace SpellDuel
     public class HandGesture
     {
         public enum Shape { None, Fist, Open, One, Two, Three, Rock, Call, Thumb, Other }
-        public enum Style { Burst, Bow, Chop, Thrust }
+        public enum Style { None, Burst, Bow, Chop, Thrust, Press, Pull, Hold }
 
         public Style ReleaseStyle = Style.Burst;     // 由職業決定（SoloBattle 設定）
         public Vector2 ReleaseAim { get; private set; }   // 放招事件時的瞄準點（螢幕像素）
@@ -29,12 +29,39 @@ namespace SpellDuel
             "archer" => Style.Bow, "swordsman" => Style.Chop, "assassin" => Style.Thrust, _ => Style.Burst,
         };
 
+        /// <summary>每個技能的放招動作：陷阱、治癒、防禦等有自己的動作，其餘用職業動作</summary>
+        public static Style ReleaseOf(SkillDef s)
+        {
+            if (s == null) return Style.None;
+            switch (s.id)
+            {
+                case "snaretrap": case "blasttrap": case "smoke": case "thunder": return Style.Press;   // 往下壓／往下砸／往下劈
+                case "heal": return Style.Pull;                                                       // 手掌收回自己
+                case "block": case "ironwall": return Style.Hold;                                     // 舉盾停住
+                case "counter": return Style.Burst;                                                   // 握拳→張開
+                case "knife": return Style.Chop;                                                      // 甩出飛刀
+                case "thrust": return Style.Thrust;                                                   // 劍士突刺
+            }
+            if (s.type == SkillType.Trap) return Style.Press;
+            return StyleOf(s.cls);
+        }
+
+        public static string StyleName(Style st) => st switch
+        {
+            Style.Bow => "拉弓", Style.Chop => "手刀揮砍", Style.Thrust => "突刺", Style.Press => "往下壓",
+            Style.Pull => "收回自己", Style.Hold => "舉掌停住", Style.Burst => "握拳→張開", _ => "",
+        };
+
         public static string StyleHint(Style st) => st switch
         {
             Style.Bow => "拉弓：在畫面中間握拳 → 往旁邊慢慢拉 → 張開手放箭",
-            Style.Chop => "手刀斬：手掌伸直，快速橫劈過畫面",
+            Style.Chop => "揮砍：手掌伸直，快速橫劈（甩）過畫面",
             Style.Thrust => "突刺：手刀快速往前刺出（手遠離手機）",
-            _ => "聚氣：握拳 → 張開手放出",
+            Style.Press => "往下壓：手掌快速往下按（劈）",
+            Style.Pull => "收回：手掌快速拉回自己（靠近手機）",
+            Style.Hold => "舉盾：張開手掌停在畫面前 0.6 秒",
+            Style.Burst => "聚氣：握拳 → 張開手放出",
+            _ => "",
         };
 
         // 最近約 1 秒的手掌軌跡（劈砍、突刺用）
@@ -99,7 +126,7 @@ namespace SpellDuel
         float lastRelease = -99f;   // 放招後 0.6 秒內不重複觸發
 
         void Queue(float t, Vector2 aim) { if (t - lastRelease < 0.6f) return; releaseQueued = true; lastRelease = t; ReleaseAim = aim; }
-        float bowStart;
+        float bowStart, openSince = -99f;
         bool hasAim;
 
         /// <summary>有新的偵測結果時呼叫（screenW/H：螢幕像素）</summary>
@@ -136,6 +163,7 @@ namespace SpellDuel
                 shapeSince = t; selectFired = false;
                 if (shape == Shape.Fist) lastFist = t;
                 if (ReleaseStyle == Style.Burst && shape == Shape.Open && prev != Shape.Open && t - lastFist < 1.5f) { Queue(t, Aim); lastFist = -99f; }
+                openSince = shape == Shape.Open ? t : -99f;
             }
             if (Current == Shape.Fist) lastFist = t;
             // 選技能手勢：同一個手勢維持 0.35 秒才算（避免換手勢途中誤觸）
@@ -173,6 +201,41 @@ namespace SpellDuel
                     if (o.shape == Shape.Fist || o.shape == Shape.None) break;
                     if (Vector2.Distance(o.palm, palm) > W * 0.25f) { Queue(t, (o.palm + palm) / 2f); break; }
                 }
+            }
+
+            // 往下壓／往下劈：伸著手指的手在 0.4 秒內往下移動超過畫面高 18%
+            if (ReleaseStyle == Style.Press && fingersOut && histN >= 3)
+            {
+                for (int k = 2; k < histN; k++)
+                {
+                    var o = HistAgo(k);
+                    if (t - o.t > 0.4f || o.shape == Shape.Fist || o.shape == Shape.None) break;
+                    if (o.palm.y - palm.y > H * 0.18f) { Queue(t, palm); break; }
+                }
+            }
+
+            // 收回自己：手靠近手機 → 畫面上手掌在 0.5 秒內放大 30% 以上
+            if (ReleaseStyle == Style.Pull && fingersOut && histN >= 3)
+            {
+                for (int k = 2; k < histN; k++)
+                {
+                    var o = HistAgo(k);
+                    if (t - o.t > 0.5f || o.shape == Shape.Fist || o.shape == Shape.None) break;
+                    if (palmSize > o.size * 1.3f) { Queue(t, new Vector2(W / 2f, H / 2f)); break; }
+                }
+            }
+
+            // 舉盾：張開的手停住 0.6 秒（移動小於畫面寬 5%）
+            if (ReleaseStyle == Style.Hold && Current == Shape.Open && openSince > 0f && t - openSince >= 0.6f)
+            {
+                bool still = true;
+                for (int k = 1; k < histN; k++)
+                {
+                    var o = HistAgo(k);
+                    if (t - o.t > 0.6f) break;
+                    if (Vector2.Distance(o.palm, palm) > W * 0.05f) { still = false; break; }
+                }
+                if (still) { Queue(t, palm); openSince = t + 99f; }
             }
 
             // 刺客：手刀往前刺 → 手遠離手機，畫面上手掌在 0.35 秒內縮小 25% 以上
