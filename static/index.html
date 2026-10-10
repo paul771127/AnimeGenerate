@@ -150,6 +150,9 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 .msg.me .bubble a { color: #0a4fae; }
 .bubble.media { padding: 4px; }
 .bubble.media .caption { padding: 4px 8px 2px; }
+.gifwrap { position: relative; display: inline-block; vertical-align: top; max-width: 100%; }
+.gifwrap > canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.gifwrap.playing > img { opacity: 0; }
 img.photo { display: block; max-width: min(260px, 62vw); max-height: 340px; border-radius: 14px; cursor: zoom-in; background: rgba(0,0,0,.08); }
 video.photo { display: block; max-width: min(280px, 64vw); max-height: 340px; border-radius: 14px; }
 .bubble audio { display: block; width: min(260px, 62vw); height: 40px; }
@@ -164,6 +167,7 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
 #emoji-grid.stickers { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
 #emoji-grid.stickers button { height: 76px; padding: 4px; position: relative; }
 #emoji-grid.stickers img { width: 100%; height: 100%; object-fit: contain; }
+#emoji-grid.stickers .gifwrap { display: block; width: 100%; height: 100%; }
 #emoji-grid .tile { font-size: 13px !important; border: 2px dashed var(--line) !important; color: var(--muted); line-height: 1.3; }
 #emoji-grid .del { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; border-radius: 50%; background: var(--danger);
   color: #fff; font-size: 13px; line-height: 22px; text-align: center; }
@@ -1916,6 +1920,179 @@ function isBigEmoji(text) {
     ? [...new Intl.Segmenter().segment(text.replace(/\s/g, ""))].length : [...text.replace(/\s/g, "")].length;
   return n <= 3;
 }
+// ---------- GIF 自己播放
+// 有些手機(省電模式、iPhone「自動播放動態影像」關掉、某些 Android)不會讓 <img> 的 GIF 動,
+// 所以自己把 GIF 解開,一格一格畫在 canvas 上,一直循環。看不到的時候自動暫停,省電。
+const Gif = (() => {
+  function parse(buf) {
+    const u8 = new Uint8Array(buf);
+    if (u8.length < 13 || u8[0] !== 0x47 || u8[1] !== 0x49 || u8[2] !== 0x46) return null;
+    const w = u8[6] | u8[7] << 8, h = u8[8] | u8[9] << 8, flags = u8[10];
+    let p = 13, gct = null;
+    if (flags & 0x80) { const n = 2 << (flags & 7); gct = u8.subarray(p, p + 3 * n); p += 3 * n; }
+    const frames = [];
+    let gce = { delay: 0, trans: -1, disposal: 0 };
+    while (p < u8.length) {
+      const b = u8[p++];
+      if (b === 0x3b) break;
+      if (b === 0x21) {
+        const label = u8[p++];
+        if (label === 0xf9 && u8[p] >= 4) {
+          const pf = u8[p + 1];
+          gce = { disposal: (pf >> 2) & 7, delay: (u8[p + 2] | u8[p + 3] << 8) * 10, trans: pf & 1 ? u8[p + 4] : -1 };
+        }
+        while (p < u8.length && u8[p]) p += u8[p] + 1;
+        p++;
+        continue;
+      }
+      if (b !== 0x2c) break;
+      const fx = u8[p] | u8[p + 1] << 8, fy = u8[p + 2] | u8[p + 3] << 8;
+      const fw = u8[p + 4] | u8[p + 5] << 8, fh = u8[p + 6] | u8[p + 7] << 8, pf = u8[p + 8];
+      p += 9;
+      let ct = gct;
+      if (pf & 0x80) { const n = 2 << (pf & 7); ct = u8.subarray(p, p + 3 * n); p += 3 * n; }
+      const minCode = u8[p++];
+      const chunks = []; let total = 0;
+      while (p < u8.length && u8[p]) { chunks.push(u8.subarray(p + 1, p + 1 + u8[p])); total += u8[p]; p += u8[p] + 1; }
+      p++;
+      if (ct) frames.push({ x: fx, y: fy, w: fw, h: fh, ct, interlaced: !!(pf & 0x40), minCode, chunks, total, ...gce });
+      gce = { delay: 0, trans: -1, disposal: 0 };
+    }
+    return { w, h, frames };
+  }
+  // GIF 的 LZW 解壓縮 → 每個像素的調色盤編號
+  function lzw(f) {
+    const data = new Uint8Array(f.total);
+    let o = 0; for (const c of f.chunks) { data.set(c, o); o += c.length; }
+    const npix = f.w * f.h, out = new Uint8Array(npix);
+    const minCode = Math.max(2, Math.min(f.minCode, 11));
+    const clear = 1 << minCode, eoi = clear + 1;
+    const prefix = new Int16Array(4096), suffix = new Uint8Array(4096), stack = new Uint8Array(4097);
+    for (let i = 0; i < clear; i++) { prefix[i] = -1; suffix[i] = i; }
+    let size = minCode + 1, mask = (1 << size) - 1, next = eoi + 1, old = -1, first = 0;
+    let cur = 0, bits = 0, pos = 0, op = 0;
+    while (op < npix) {
+      while (bits < size) { if (pos >= data.length) return out; cur |= data[pos++] << bits; bits += 8; }
+      let code = cur & mask; cur >>>= size; bits -= size;
+      if (code === clear) { size = minCode + 1; mask = (1 << size) - 1; next = eoi + 1; old = -1; continue; }
+      if (code === eoi) break;
+      if (old === -1) { if (code >= clear) break; out[op++] = suffix[code]; old = code; first = code; continue; }
+      const inCode = code; let sp = 0;
+      if (code >= next) { stack[sp++] = first; code = old; }
+      while (code >= clear && sp < 4096) { stack[sp++] = suffix[code]; code = prefix[code]; }
+      first = suffix[code]; stack[sp++] = first;
+      if (next < 4096) {
+        prefix[next] = old; suffix[next] = first; next++;
+        if ((next & mask) === 0 && next < 4096) { size++; mask = (1 << size) - 1; }
+      }
+      old = inCode;
+      while (sp > 0 && op < npix) out[op++] = stack[--sp];
+    }
+    return out;
+  }
+  function drawFrame(pl, f) {
+    const px = pl.img.data, W = pl.gif.w, idx = lzw(f), ct = f.ct;
+    // 交錯式 GIF 的行順序
+    let rows = null;
+    if (f.interlaced) {
+      rows = [];
+      for (const [start, step] of [[0, 8], [4, 8], [2, 4], [1, 2]]) for (let r = start; r < f.h; r += step) rows.push(r);
+    }
+    for (let r = 0; r < f.h; r++) {
+      const y = f.y + (rows ? rows[r] : r);
+      if (y >= pl.gif.h) continue;
+      for (let c = 0; c < f.w; c++) {
+        const x = f.x + c;
+        if (x >= W) continue;
+        const ci = idx[r * f.w + c];
+        if (ci === f.trans) continue;
+        const d = (y * W + x) * 4, s3 = ci * 3;
+        px[d] = ct[s3]; px[d + 1] = ct[s3 + 1]; px[d + 2] = ct[s3 + 2]; px[d + 3] = 255;
+      }
+    }
+  }
+  function clearRect(pl, f) {
+    const px = pl.img.data, W = pl.gif.w;
+    for (let y = f.y; y < Math.min(f.y + f.h, pl.gif.h); y++) px.fill(0, (y * W + f.x) * 4, (y * W + Math.min(f.x + f.w, W)) * 4);
+  }
+  function step(pl) {
+    if (!pl.running) return;
+    const frames = pl.gif.frames, f = frames[pl.i];
+    const prev = pl.prev;
+    if (prev) {  // 上一格的處理方式
+      if (prev.disposal === 2) clearRect(pl, prev);
+      else if (prev.disposal === 3 && pl.saved) pl.img.data.set(pl.saved);
+    }
+    if (pl.i === 0 && !prev) pl.img.data.fill(0);
+    if (f.disposal === 3) pl.saved = pl.img.data.slice();
+    try { drawFrame(pl, f); } catch (_) { return stop(pl.wrap); }
+    pl.ctx.putImageData(pl.img, 0, 0);
+    pl.prev = f;
+    pl.i = (pl.i + 1) % frames.length;
+    if (pl.i === 0) { pl.prev = null; pl.saved = null; }
+    pl.timer = setTimeout(() => step(pl), f.delay > 10 ? f.delay : 100);
+  }
+  const loaded = new Map();  // 網址 → 解開的 GIF(同一張貼圖出現很多次只解一次)
+  async function start(wrap) {
+    let pl = wrap._gif;
+    if (pl === null) return;  // 不是動畫
+    if (!pl) {
+      wrap._gif = null;
+      let gif = loaded.get(wrap._url);
+      if (gif === undefined) {
+        try {
+          const res = await fetch(wrap._url, { credentials: "same-origin" });
+          gif = res.ok ? parse(await res.arrayBuffer()) : null;
+        } catch (_) { gif = null; }
+        if (gif && (gif.frames.length < 2 || gif.w * gif.h > 1500000 || !gif.w || !gif.h)) gif = null;
+        loaded.set(wrap._url, gif);
+      }
+      if (!gif) return;
+      const canvas = document.createElement("canvas");
+      canvas.width = gif.w; canvas.height = gif.h;
+      const img = wrap.querySelector("img");
+      const cs = getComputedStyle(img);
+      canvas.style.objectFit = cs.objectFit; canvas.style.borderRadius = cs.borderRadius;
+      wrap.append(canvas);
+      const ctx = canvas.getContext("2d");
+      pl = wrap._gif = { wrap, gif, canvas, ctx, img: ctx.createImageData(gif.w, gif.h), i: 0, prev: null, saved: null, running: false };
+      wrap.classList.add("playing");
+    }
+    if (pl.running) return;
+    pl.running = true;
+    step(pl);
+  }
+  function stop(wrap) {
+    const pl = wrap._gif;
+    if (pl) { pl.running = false; clearTimeout(pl.timer); }
+  }
+  const io = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
+    for (const e of entries) (e.isIntersecting ? start : stop)(e.target);
+  }) : null;
+  // 把 <img> 包起來;看得到時開始播
+  function wrap(img, url) {
+    if (!io) return img;
+    const w = el("span", { class: "gifwrap" }, img);
+    if (getComputedStyle(img).display === "block" || img.classList.contains("sticker") || img.classList.contains("photo")) w.style.display = "block";
+    w._url = url;
+    io.observe(w);
+    return w;
+  }
+  // 測試用:把每一格合成好的畫面全部算出來
+  function render(buf) {
+    const gif = parse(buf); if (!gif) return null;
+    const pl = { gif, img: { data: new Uint8ClampedArray(gif.w * gif.h * 4) }, prev: null, saved: null };
+    return gif.frames.map(f => {
+      if (pl.prev && pl.prev.disposal === 2) clearRect(pl, pl.prev);
+      else if (pl.prev && pl.prev.disposal === 3 && pl.saved) pl.img.data.set(pl.saved);
+      if (f.disposal === 3) pl.saved = pl.img.data.slice();
+      drawFrame(pl, f); pl.prev = f;
+      return Array.from(pl.img.data);
+    });
+  }
+  return { wrap, render };
+})();
+
 function fileUrl(m) { return m.attachment ? `/api/files/${m.attachment.id}` : m.localUrl; }
 function bubbleFor(m) {
   const kind = m.kind || "text";
@@ -1947,13 +2124,15 @@ function bubbleFor(m) {
   }
   if (kind === "sticker" && src) {
     const mine = (m.sender === "me") === (state.role === "owner");
-    return el("div", { class: "bubble sticker" }, el("img", {
+    const img = el("img", {
       class: "sticker", src, alt: "貼圖", loading: "lazy",
       onclick: e => !m.attachment ? null : showMenu(e.currentTarget, [
         ...(mine ? [] : [["⭐ 加到我的貼圖", () => saveAsSticker(m)]]),
         ["⬇ 下載", () => { location.href = `/api/files/${m.attachment.id}?download=1`; }],
       ]),
-    }));
+    });
+    const gif = !att || !att.mime || att.mime === "image/gif";
+    return el("div", { class: "bubble sticker" }, gif && !src.startsWith("blob:") ? Gif.wrap(img, src) : img);
   }
   if (kind === "text") {
     const big = isBigEmoji(m.body);
@@ -1963,7 +2142,8 @@ function bubbleFor(m) {
     const media = att.mime.startsWith("video/")
       ? el("video", { class: "photo", src, controls: "", preload: "metadata", playsinline: "" })
       : el("img", { class: "photo", src, alt: att.name, loading: "lazy", onclick: () => openLightbox(m) });
-    return el("div", { class: "bubble media" }, media, progress, caption);
+    const anim = att.mime === "image/gif" && m.attachment ? Gif.wrap(media, src) : media;
+    return el("div", { class: "bubble media" }, anim, progress, caption);
   }
   if (kind === "audio" && att && src) {
     return el("div", { class: "bubble media" }, el("audio", { src, controls: "", preload: "metadata" }), progress, caption);
@@ -2302,7 +2482,9 @@ function renderStickerGrid(grid) {
       stickerSel.has(st.id) ? stickerSel.delete(st.id) : stickerSel.add(st.id);
       renderEmoji();
     },
-  }, el("img", { src: `/api/sticker-files/${st.id}`, alt: "貼圖", loading: "lazy" }))));
+  }, st.mime === "image/gif"
+    ? Gif.wrap(el("img", { src: `/api/sticker-files/${st.id}`, alt: "貼圖", loading: "lazy" }), `/api/sticker-files/${st.id}`)
+    : el("img", { src: `/api/sticker-files/${st.id}`, alt: "貼圖", loading: "lazy" }))));
   // 選取模式:分享 / 下載 / 刪除
   const bar = $("#sticker-bar");
   bar.classList.toggle("hidden", !stickerEdit);
