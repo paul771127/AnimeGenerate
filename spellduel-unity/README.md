@@ -131,6 +131,8 @@
 - 準星跟著手：方向＝手腕 → 中指根部，畫面上會畫出手的關鍵點和準星。
 - 手部偵測：Android 用 Google MediaPipe Hand Landmarker（模型在 `Assets/StreamingAssets/hand_landmarker.task`），iOS 用 Apple Vision（iOS 14 以上）。點畫面發射仍然可以用。
 
+**技能圖示與法術造型**：每個技能有自己的發光圖示（`docs/skill_icons.png`）；飛行中的法術依技能有不同造型（箭矢、火球、冰錐、雷光、風刃、隕石、匕首、飛刀、暗影球、毒液、煙霧、新月劍氣、劍氣波、槍尖）。
+
 **木頭人練習**：選技能畫面的敵人職業選「木頭人」。木頭人站在 3 公尺外不會動、不會攻擊、打不死，上方顯示命中次數與累計傷害，適合練手勢和瞄準。
 
 **敵我距離**：單人模式顯示在敵人頭上血條下方（詠唱中的技能打得到＝綠色「射程內」，太遠／太近＝紅色）；雙人模式顯示在鎖定框旁。
@@ -209,6 +211,7 @@
 | `Assets/SpellDuel/Runtime/PlayArea.cs` | 單人場地：偵測地板、方形／手繪場地、邊界格子牆與出界警告 |
 | `Assets/SpellDuel/Runtime/DuoAlignment.cs` | 雙人畫場地模式：用「互相看到對方的位置」解兩支手機座標的旋轉＋平移（2D Kabsch、剔除離群點） |
 | `Assets/SpellDuel/Runtime/CharacterRig.cs` | 角色造型：四職業的程式生成人物（法師尖帽長袍法杖、弓箭手兜帽弓箭、刺客面罩雙匕首、劍士頭盔盾劍）與走路／詠唱／出招／被打中／倒地動作 |
+| `Assets/SpellDuel/Runtime/SkillIcons.cs` | 技能圖示：程式即時繪製的發光徽章（22 個技能各有圖案，預覽見 `docs/skill_icons.png`） |
 | `Assets/SpellDuel/Runtime/SpellFx.cs` | 各職業施法光效：法師魔法陣、弓箭手風之旋渦、刺客暗影煙霧、劍士金色光柱／斬擊弧光；詠唱、放招、法術拖尾、命中 |
 | `Assets/SpellDuel/Runtime/SpeechInput.cs` | 手機內建語音辨識＋技能名稱比對（簡繁轉換、拼音近音、句中搜尋、去抖動） |
 | `Assets/Plugins/Android/SpeechBridge.java`、`Assets/Plugins/iOS/SpeechBridge.mm` | 語音辨識原生外掛 |

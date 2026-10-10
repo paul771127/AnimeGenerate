@@ -70,7 +70,7 @@ namespace SpellDuel
         bool frozen;
         // 鎖定：敵人出現在我的畫面中才能發射攻擊法術（和雙人模式相同）
         bool enemyOnScreen; Rect enemyRect; float enemyScreenSide;   // enemyScreenSide：敵人在左(<0)／右(>0)
-        GUIStyle label, small, button, big, center;
+        GUIStyle label, small, button, big, center, iconButton;
 
         Fighter Me => battle?.player;
         Fighter En => battle?.enemy;
@@ -524,21 +524,18 @@ namespace SpellDuel
             {
                 if (!projGo.TryGetValue(p, out var go))
                 {
-                    go = Prim(PrimitiveType.Sphere, WithAlpha(p.skill.color, 0.95f));
-                    go.transform.localScale = Vector3.one * Mathf.Max(0.06f, p.skill.radius * 2f);
-                    var tr = go.AddComponent<TrailRenderer>();
-                    tr.time = 0.2f; tr.startWidth = Mathf.Max(0.04f, p.skill.radius * 1.5f); tr.endWidth = 0;
-                    tr.material = mat; tr.startColor = WithAlpha(p.skill.color, 0.8f); tr.endColor = WithAlpha(p.skill.color, 0f);
-                    projGo[p] = go;
+                    // 依技能的法術造型（箭、火球、冰錐、雷光、劍氣、飛刀…），已含光暈與拖尾
                     string fxCls = p.owner == En ? enemyClassUsed : myClass;
-                    SpellFx.DecorateProjectile(go, fxCls, p.skill.color, Mathf.Max(0.03f, p.skill.radius));
+                    go = SpellFx.CreateProjectileVisual(p.skill, fxCls);
+                    projGo[p] = go;
                     if (p.owner == En)
                     {
                         if (enemyRig) enemyRig.PlayCast();   // 敵人出招動作＋光效
                         SpellFx.CastBurst(enemyClassUsed, p.skill.color, WorldFrame.FromWorld(p.pos), WorldFrame.DirFromWorld(p.dir), 1f);
                     }
                 }
-                go.transform.position = WorldFrame.FromWorld(p.pos);
+                var dirS = WorldFrame.DirFromWorld(p.dir);
+                go.transform.SetPositionAndRotation(WorldFrame.FromWorld(p.pos), dirS.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(dirS, Vector3.up) : Quaternion.identity);
                 // 敵人的法術逼近時畫面邊框閃紅
                 if (p.owner == En && Vector3.Distance(p.pos, Me.Chest) < 2.5f && Vector3.Dot(p.dir, Me.Chest - p.pos) > 0) incomingFlash = Mathf.Max(incomingFlash, 0.6f);
             }
@@ -672,11 +669,17 @@ namespace SpellDuel
                 GUI.color = on ? s.color : new Color(0.75f, 0.75f, 0.75f);
                 var r = new Rect(pad + (i % 2) * (sw + pad), y + (i / 2) * (sh + pad * 0.5f), sw, sh);
                 string eff = s.type == SkillType.Self ? (s.self == SelfKind.Heal ? $"回復{s.heal}" : "防禦") : $"傷害{s.damage}{(s.multi > 1 ? $"×{s.multi}" : "")}";
-                if (GUI.Button(r, $"{(on ? "✔ " : "")}{s.name}（{HandGesture.ShapeName(Skills.GestureOf(s.id))}→{HandGesture.StyleName(HandGesture.ReleaseOf(s))}）\nMP{s.cost}・蓄力{s.charge:0.#}s・{eff}・{s.RangeText}", button))
+                if (iconButton == null) iconButton = new GUIStyle(button) { alignment = TextAnchor.MiddleLeft };
+                iconButton.padding.left = Mathf.RoundToInt(sh * 0.95f);
+                if (GUI.Button(r, $"{(on ? "✔ " : "")}{s.name}（{HandGesture.ShapeName(Skills.GestureOf(s.id))}→{HandGesture.StyleName(HandGesture.ReleaseOf(s))}）\nMP{s.cost}・蓄力{s.charge:0.#}s・{eff}・{s.RangeText}", iconButton))
                 {
                     if (on) myLoadout.Remove(s.id);
                     else { if (myLoadout.Count >= 3) myLoadout.RemoveAt(0); myLoadout.Add(s.id); }
                 }
+                var keep = GUI.color;
+                GUI.color = on ? Color.white : new Color(0.6f, 0.6f, 0.6f);
+                GUI.DrawTexture(new Rect(r.x + sh * 0.06f, r.y + sh * 0.06f, sh * 0.88f, sh * 0.88f), SkillIcons.Get(s.id));
+                GUI.color = keep;
             }
             GUI.color = Color.white;
             y += ((cls.skills.Length + 1) / 2) * (sh + pad * 0.5f) + pad * 0.5f;
@@ -880,15 +883,35 @@ namespace SpellDuel
                 var g = Skills.GestureOf(s.id);
                 bool showing = Hand != null && Hand.HandVisible && Hand.Current == g;
                 // 技能格（只顯示，不能點）：手勢圖示＋名稱＋MP／冷卻；手正比著這個手勢時亮起來
-                GUI.color = charging ? WithAlpha(s.color, 0.55f) : showing ? new Color(1f, 1f, 1f, 0.35f) : new Color(0f, 0f, 0f, 0.35f);
+                GUI.color = charging ? WithAlpha(s.color, 0.35f) : showing ? new Color(1f, 1f, 1f, 0.25f) : new Color(0f, 0f, 0f, 0.35f);
                 GUI.DrawTexture(r, Texture2D.whiteTexture);
                 bool usable = me.mp >= s.cost && cd <= 0;
-                HandGesture.DrawIcon(new Rect(r.x + pad * 0.3f, r.y + pad * 0.3f, sh * 0.55f, sh * 0.55f), g, usable ? s.color : new Color(0.5f, 0.5f, 0.5f));
+                // 技能圖示（發光徽章）：詠唱中外圈脈動發光；冷卻中由上往下蓋暗；MP 不足變灰
+                float isz = r.height * 0.92f;
+                var ir = new Rect(r.x + r.height * 0.04f, r.y + r.height * 0.04f, isz, isz);
+                if (charging)
+                {
+                    float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 8f);
+                    GUI.color = WithAlpha(s.color, 0.35f + 0.4f * pulse);
+                    float gx = isz * 0.08f;
+                    GUI.DrawTexture(new Rect(ir.x - gx, ir.y - gx, ir.width + gx * 2, ir.height + gx * 2), SkillIcons.Get(s.id));
+                }
+                GUI.color = usable ? Color.white : new Color(0.45f, 0.45f, 0.45f);
+                GUI.DrawTexture(ir, SkillIcons.Get(s.id));
+                if (cd > 0)
+                {
+                    float frac = Mathf.Clamp01(cd / Mathf.Max(0.01f, s.cooldown));
+                    GUI.color = new Color(0f, 0f, 0f, 0.55f);
+                    GUI.DrawTexture(new Rect(ir.x, ir.y, ir.width, ir.height * frac), Texture2D.whiteTexture);
+                }
+                // 選招手勢小圖（圖示右下角）
+                HandGesture.DrawIcon(new Rect(ir.xMax - isz * 0.36f, ir.yMax - isz * 0.36f, isz * 0.34f, isz * 0.34f), g, usable ? Color.white : new Color(0.6f, 0.6f, 0.6f));
+                float tx = ir.xMax + r.height * 0.06f, tw = r.xMax - tx;
                 GUI.color = usable ? Color.white : new Color(0.65f, 0.65f, 0.65f);
-                GUI.Label(new Rect(r.x + sh * 0.6f, r.y, r.width - sh * 0.6f, r.height * 0.5f), s.name, label);
-                string vtag = "→" + HandGesture.StyleName(HandGesture.ReleaseOf(s)) + (!voiceOn ? "" : UseSpeech ? "・🎤" : voice.Ready(s.id) ? "・🎤" : "・🎤未錄");
-                GUI.Label(new Rect(r.x + sh * 0.6f, r.y + r.height * 0.42f, r.width - sh * 0.6f, r.height * 0.3f), HandGesture.ShapeName(g) + vtag, small);
-                GUI.Label(new Rect(r.x + pad * 0.3f, r.y + r.height * 0.7f, r.width, r.height * 0.3f), $"MP {s.cost}{(cd > 0 ? $"　冷卻 {cd:F1}s" : "")}", small);
+                GUI.Label(new Rect(tx, r.y, tw, r.height * 0.42f), s.name, label);
+                string vtag = (!voiceOn ? "" : UseSpeech ? "🎤" : voice.Ready(s.id) ? "🎤" : "🎤未錄");
+                GUI.Label(new Rect(tx, r.y + r.height * 0.36f, tw, r.height * 0.32f), $"{HandGesture.ShapeName(g)}→{HandGesture.StyleName(HandGesture.ReleaseOf(s))}{vtag}", small);
+                GUI.Label(new Rect(tx, r.y + r.height * 0.66f, tw, r.height * 0.32f), cd > 0 ? $"冷卻 {cd:F1}s" : $"MP {s.cost}", small);
                 GUI.color = Color.white;
             }
 

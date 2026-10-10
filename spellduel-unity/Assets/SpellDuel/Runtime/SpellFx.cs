@@ -319,6 +319,484 @@ namespace SpellDuel
             }
         }
 
+        // ================================================================ 飛行中的法術外觀
+        /// <summary>
+        /// 依技能建立飛行中法術的外觀（取代單純的彩色球）：回傳的物件由呼叫者每幀設定位置、朝向（+Z＝飛行方向），用完 Destroy。
+        ///   造型以「法術直徑」D = max(0.06, 2×radius) 為單位（箭、冰槍等細長物沿 +Z 較長，箭頭在判定球的前緣）。
+        ///   內部已呼叫 DecorateProjectile（光暈＋拖尾＋職業粒子），呼叫者不用再加。
+        ///   網格依技能快取共用；發光部分用疊加材質＋頂點色，實體部分（岩石、刀刃、箭桿）用 Legacy Diffuse（吃場景主光）。
+        /// </summary>
+        public static GameObject CreateProjectileVisual(SkillDef s, string classId)
+        {
+            string id = s != null ? s.id : "";
+            Color sc = s != null ? s.color : Color.white; sc.a = 1f;
+            float radius = s != null ? s.radius : 0.1f;
+            float D = Mathf.Max(0.06f, radius * 2f);
+            var root = new GameObject("Projectile " + id);
+            var body = NewChild(root.transform, "Body");
+            body.localScale = Vector3.one * D;
+            var anim = root.AddComponent<ProjectileAnim>();
+            var light = Color.Lerp(sc, Color.white, 0.55f);
+
+            switch (id)
+            {
+                case "quickshot":
+                case "triple":
+                case "snipe":
+                {
+                    bool snipe = id == "snipe";
+                    float len = snipe ? 3.2f : 2.6f;
+                    GlowPart(body, id + ".arrowGlow", m => ArrowGlow(m, sc, len, snipe));
+                    SolidPart(body, id + ".arrowSolid", m => ArrowSolid(m, len), new[] { Color.Lerp(sc, new Color(0.8f, 0.68f, 0.5f), 0.55f), new Color(0.9f, 0.92f, 0.98f) });
+                    CoreGlow(root.transform, light, D * (snipe ? 1.4f : 1.1f), new Vector3(0f, 0f, D * 0.35f));
+                    break;
+                }
+                case "fire":
+                {
+                    var spin = NewChild(body, "Spin");
+                    GlowPart(spin, "fire", m =>
+                    {
+                        m.Lathe(Prof(-1.6f, 0f, -1f, 0.17f, -0.5f, 0.34f, -0.05f, 0.5f, 0.25f, 0.47f, 0.45f, 0.3f, 0.56f, 0f), 9, (z, j) => new Color(1f, 0.16f, 0.04f, Mathf.Lerp(0.04f, 0.4f, Mathf.InverseLerp(-1.6f, 0.2f, z))), 1.2f, 1.2f, 0f, Jag9);
+                        m.Lathe(Prof(-1.3f, 0f, -0.8f, 0.15f, -0.4f, 0.3f, -0.05f, 0.42f, 0.2f, 0.4f, 0.4f, 0.26f, 0.5f, 0f), 9, (z, j) => new Color(1f, 0.5f, 0.08f, Mathf.Lerp(0.1f, 0.8f, Mathf.InverseLerp(-1.3f, 0.2f, z))), 1f, 1f, 20f, Jag9);
+                        m.Lathe(SphereProf(0.27f, 6), 8, (z, j) => new Color(1f, 0.93f, 0.62f, 1f));
+                    });
+                    anim.spin = spin; anim.spinAxis = Vector3.forward; anim.spinSpeed = 260f;
+                    anim.flick = spin; anim.flickAmt = 0.12f; anim.flickRate = 23f;
+                    CoreGlow(root.transform, new Color(1f, 0.75f, 0.3f), D * 1.5f, Vector3.zero);
+                    break;
+                }
+                case "ice":
+                {
+                    var spin = NewChild(body, "Spin");
+                    GlowPart(spin, "ice", m =>
+                    {
+                        var p = Prof(-1.4f, 0f, -0.95f, 0.15f, 0.45f, 0.22f, 1.05f, 0f);
+                        m.Lathe(p, 6, (z, j) => (j & 1) == 0 ? new Color(0.6f, 0.92f, 1f, 0.85f) : new Color(0.15f, 0.5f, 0.95f, 0.55f));
+                        m.Lathe(p, 6, (z, j) => new Color(0.9f, 1f, 1f, 0.75f), 0.4f, 0.4f, 30f);
+                        for (int k = 0; k < 3; k++)
+                        {
+                            float a = k * 120f + 30f;
+                            var dir = Quaternion.AngleAxis(a, Vector3.forward) * Vector3.right;
+                            var rot = Quaternion.AngleAxis(28f, Vector3.Cross(Vector3.forward, dir)) ;
+                            m.Lathe(Prof(-0.45f, 0f, -0.25f, 0.07f, 0.2f, 0.09f, 0.45f, 0f), 5, (z, j) => (j & 1) == 0 ? new Color(0.55f, 0.9f, 1f, 0.8f) : new Color(0.2f, 0.55f, 1f, 0.5f), 1f, 1f, 0f, null, dir * 0.16f + new Vector3(0f, 0f, -0.75f), rot);
+                        }
+                    });
+                    anim.spin = spin; anim.spinAxis = Vector3.forward; anim.spinSpeed = 120f;
+                    CoreGlow(root.transform, new Color(0.6f, 0.9f, 1f), D * 1.3f, new Vector3(0f, 0f, D * 0.3f));
+                    break;
+                }
+                case "thunder":
+                {
+                    var core = NewChild(body, "Core");
+                    GlowPart(core, "thunder.core", m => m.Lathe(Prof(-2f, 0f, -1.2f, 0.07f, 0.2f, 0.13f, 0.75f, 0f), 4, (z, j) => new Color(0.95f, 0.9f, 1f, Mathf.Lerp(0.3f, 1f, Mathf.InverseLerp(-2f, 0f, z)))));
+                    var bolt = NewChild(body, "Bolt");
+                    GlowPart(bolt, "thunder.bolt", m => BoltZigzag(m, Color.Lerp(sc, new Color(0.7f, 0.45f, 1f), 0.4f)));
+                    anim.flick = core; anim.flickAmt = 0.3f; anim.flickRate = 47f;
+                    anim.jitter = bolt; anim.jitterEvery = 0.045f;
+                    CoreGlow(root.transform, new Color(0.85f, 0.7f, 1f), D * 1.8f, Vector3.zero);
+                    break;
+                }
+                case "wind":
+                {
+                    var spin = NewChild(body, "Spin");
+                    GlowPart(spin, "wind", m =>
+                    {
+                        var g = Color.Lerp(sc, new Color(0.6f, 1f, 0.75f), 0.3f);
+                        for (int k = 0; k < 3; k++)
+                        {
+                            float a0 = k * 120f;
+                            Whirl(m, 0.42f, a0, 150f, 0.12f, WithA(g, 0.75f), 0f);
+                            Whirl(m, 0.42f, a0, 150f, 0.045f, new Color(0.92f, 1f, 0.95f, 0.9f), 0.01f);
+                            Whirl(m, 0.22f, a0 + 60f, 130f, 0.07f, WithA(g, 0.6f), -0.1f);
+                        }
+                    });
+                    anim.spin = spin; anim.spinAxis = Vector3.forward; anim.spinSpeed = -720f;
+                    CoreGlow(root.transform, sc, D * 1.2f, Vector3.zero);
+                    break;
+                }
+                case "meteor":
+                {
+                    GlowPart(body, "meteor.tail", m =>
+                    {
+                        m.Lathe(Prof(-2.6f, 0f, -1.5f, 0.3f, -0.4f, 0.55f, 0.2f, 0.56f, 0.55f, 0f), 9, (z, j) => new Color(1f, 0.2f, 0.06f, Mathf.Lerp(0.03f, 0.45f, Mathf.InverseLerp(-2.6f, 0.2f, z))), 1f, 1f, 0f, Jag9);
+                        m.Lathe(Prof(-1.9f, 0f, -1f, 0.24f, -0.2f, 0.45f, 0.3f, 0.45f, 0.52f, 0f), 9, (z, j) => new Color(1f, 0.55f, 0.1f, Mathf.Lerp(0.05f, 0.7f, Mathf.InverseLerp(-1.9f, 0.3f, z))), 1f, 1f, 20f, Jag9);
+                    });
+                    var rock = NewChild(body, "Rock");
+                    SolidPart(rock, "meteor.rock", m => m.Lathe(SphereProf(0.42f, 7), 9, null, 1f, 1f, 0f, null, Vector3.zero, Quaternion.identity, RockWarp), new[] { new Color(0.4f, 0.26f, 0.2f) });
+                    GlowPart(rock, "meteor.lava", m => m.Lathe(SphereProf(0.42f, 7), 9, (z, j) => new Color(1f, 0.4f, 0.08f, (j % 3) == 0 ? 0.5f : 0.18f), 1.07f, 1.07f, 0f, null, Vector3.zero, Quaternion.identity, RockWarp));
+                    anim.spin = rock; anim.spinAxis = new Vector3(1f, 0.7f, 0.3f).normalized; anim.spinSpeed = 160f;
+                    CoreGlow(root.transform, new Color(1f, 0.45f, 0.15f), D * 1.6f, Vector3.zero);
+                    break;
+                }
+                case "backstab":
+                case "knife":
+                {
+                    bool knife = id == "knife";
+                    var spin = NewChild(body, "Blade");
+                    if (knife) spin.localScale = Vector3.one * 1.6f;   // 飛刀的判定小，刀身相對放大才看得見
+                    var edge = knife ? Color.Lerp(sc, new Color(0.8f, 0.5f, 1f), 0.5f) : new Color(1f, 0.12f, 0.25f);
+                    GlowPart(spin, id + ".glow", m => DaggerGlow(m, edge, knife));
+                    SolidPart(spin, id + ".solid", m => DaggerSolid(m, knife), new[]
+                    {
+                        new Color(0.88f, 0.9f, 0.97f),
+                        knife ? new Color(0.5f, 0.5f, 0.56f) : new Color(0.8f, 0.6f, 0.25f),
+                        knife ? new Color(0.22f, 0.12f, 0.26f) : new Color(0.3f, 0.1f, 0.32f),
+                        sc,
+                    });
+                    if (knife) { anim.spin = spin; anim.spinAxis = Vector3.right; anim.spinSpeed = 1080f; }
+                    CoreGlow(root.transform, edge, D * 1.1f, Vector3.zero);
+                    break;
+                }
+                case "shadow":
+                {
+                    BlendPart(body, "shadow.core", m => m.Lathe(SphereProf(0.36f, 7), 10, (z, j) => new Color(0.05f, 0.015f, 0.09f, 0.93f)));
+                    var violet = Color.Lerp(sc, new Color(0.55f, 0.25f, 1f), 0.35f);
+                    GlowPart(body, "shadow.shell", m => m.Lathe(SphereProf(0.5f, 7), 10, (z, j) => WithA(violet, 0.22f)));
+                    var spin = NewChild(body, "Rings");
+                    GlowPart(spin, "shadow.rings", m =>
+                    {
+                        m.Annulus(0.5f, 0.6f, 28, WithA(violet, 0.9f), WithA(violet, 0f), Vector3.zero, Quaternion.Euler(70f, 0f, 0f));
+                        m.Annulus(0.44f, 0.52f, 28, WithA(Color.Lerp(violet, Color.white, 0.4f), 0.8f), WithA(violet, 0f), Vector3.zero, Quaternion.Euler(-20f, 60f, 0f));
+                    });
+                    anim.spin = spin; anim.spinAxis = new Vector3(0.3f, 1f, 0.2f).normalized; anim.spinSpeed = 420f;
+                    CoreGlow(root.transform, violet, D * 1.4f, Vector3.zero);
+                    break;
+                }
+                case "poison":
+                {
+                    var wob = NewChild(body, "Glob");
+                    BlendPart(wob, "poison.glob", m => m.Lathe(Prof(-0.95f, 0f, -0.55f, 0.2f, -0.12f, 0.36f, 0.2f, 0.38f, 0.42f, 0.22f, 0.5f, 0f), 10, (z, j) => new Color(0.22f, 0.78f, 0.32f, 0.85f)));
+                    GlowPart(wob, "poison.glow", m =>
+                    {
+                        m.Lathe(SphereProf(0.2f, 5), 8, (z, j) => new Color(0.65f, 1f, 0.45f, 0.75f), 1f, 1f, 0f, null, new Vector3(-0.06f, 0.08f, 0.1f), Quaternion.identity);
+                        var pur = new Color(0.72f, 0.35f, 1f, 0.9f);
+                        m.Lathe(SphereProf(0.09f, 4), 6, (z, j) => pur, 1f, 1f, 0f, null, new Vector3(0.36f, 0.12f, -0.2f), Quaternion.identity);
+                        m.Lathe(SphereProf(0.07f, 4), 6, (z, j) => pur, 1f, 1f, 0f, null, new Vector3(-0.3f, -0.2f, -0.45f), Quaternion.identity);
+                        m.Lathe(SphereProf(0.06f, 4), 6, (z, j) => new Color(0.6f, 1f, 0.5f, 0.9f), 1f, 1f, 0f, null, new Vector3(0.05f, 0.34f, -0.6f), Quaternion.identity);
+                    });
+                    anim.flick = wob; anim.flickAmt = 0.08f; anim.flickRate = 11f;
+                    anim.spin = wob; anim.spinAxis = Vector3.forward; anim.spinSpeed = 90f;
+                    CoreGlow(root.transform, sc, D * 1.2f, Vector3.zero);
+                    break;
+                }
+                case "smoke":
+                {
+                    var spin = NewChild(body, "Spin");
+                    BlendPart(spin, "smoke.core", m => m.Lathe(SphereProf(0.2f, 5), 8, (z, j) => new Color(0.16f, 0.13f, 0.22f, 0.95f)));
+                    var puffs = NewPS(root.transform, "Puffs", BlendMat(TexSoft), 8, false);
+                    var pm = puffs.main;
+                    pm.startLifetime = 1e5f;
+                    pm.startSize = new ParticleSystem.MinMaxCurve(D * 0.6f, D * 0.95f);
+                    pm.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+                    pm.startColor = new ParticleSystem.MinMaxGradient(new Color(0.55f, 0.53f, 0.62f, 0.85f), new Color(0.32f, 0.28f, 0.42f, 0.8f));
+                    Sphere(puffs, D * 0.28f);
+                    Spin(puffs, 1.5f);
+                    puffs.Play(); puffs.Emit(7);
+                    anim.spin = spin; anim.spinAxis = Vector3.up; anim.spinSpeed = 300f;
+                    CoreGlow(root.transform, new Color(0.6f, 0.45f, 0.85f), D * 0.9f, Vector3.zero);
+                    break;
+                }
+                case "slash":
+                case "wave":
+                {
+                    bool wave = id == "wave";
+                    var tilt = NewChild(body, "Tilt");
+                    tilt.localRotation = Quaternion.Euler(0f, 0f, wave ? 0f : -22f);
+                    var blue = wave ? Color.Lerp(sc, new Color(0.35f, 0.6f, 1f), 0.3f) : Color.Lerp(new Color(0.55f, 0.75f, 1f), sc, 0.3f);
+                    GlowPart(tilt, id, m =>
+                    {
+                        Crescent(m, 0.55f, wave ? 170f : 150f, 0.13f, 0.1f, WithA(blue, 0.8f), 0f);
+                        Crescent(m, 0.55f, wave ? 160f : 140f, 0.05f, 0.035f, new Color(1f, 1f, 1f, 0.95f), 0.02f);
+                        if (wave)
+                        {
+                            Crescent(m, 0.42f, 150f, 0.08f, 0.06f, WithA(blue, 0.45f), -0.28f);
+                            Crescent(m, 0.3f, 130f, 0.06f, 0.045f, WithA(blue, 0.25f), -0.5f);
+                        }
+                    });
+                    anim.flick = tilt; anim.flickAmt = 0.06f; anim.flickRate = 30f;
+                    CoreGlow(root.transform, blue, D * 1.0f, new Vector3(0f, 0f, D * 0.2f));
+                    break;
+                }
+                case "thrust":
+                {
+                    var gold = Color.Lerp(sc, new Color(1f, 0.85f, 0.4f), 0.3f);
+                    GlowPart(body, "thrust.glow", m =>
+                    {
+                        m.Lathe(Prof(-0.4f, 0f, -0.32f, 0.27f, 1.0f, 0f), 4, (z, j) => WithA(gold, 0.5f));
+                        m.Annulus(0.26f, 0.42f, 24, WithA(gold, 0.75f), WithA(gold, 0f), new Vector3(0f, 0f, 0.4f), Quaternion.identity);
+                        m.Annulus(0.4f, 0.52f, 24, WithA(Color.Lerp(gold, Color.white, 0.4f), 0.4f), WithA(gold, 0f), new Vector3(0f, 0f, 0.05f), Quaternion.identity);
+                    });
+                    SolidPart(body, "thrust.solid", m =>
+                    {
+                        m.sub = 0; m.Lathe(Prof(-0.32f, 0f, -0.26f, 0.18f, 0.88f, 0f), 4, null);
+                        m.sub = 1; m.Lathe(Prof(-1.6f, 0.04f, -0.3f, 0.04f), 6, null);
+                    }, new[] { new Color(0.95f, 0.88f, 0.62f), new Color(0.45f, 0.28f, 0.15f) });
+                    anim.flick = body; anim.flickAmt = 0.04f; anim.flickRate = 40f;
+                    CoreGlow(root.transform, gold, D * 1.2f, new Vector3(0f, 0f, D * 0.5f));
+                    break;
+                }
+                default:
+                {
+                    // 其他（含自身/陷阱技能，正常不會飛）：發光球
+                    GlowPart(body, "orb", m =>
+                    {
+                        m.Lathe(SphereProf(0.5f, 7), 10, (z, j) => new Color(1f, 1f, 1f, 0.35f));
+                        m.Lathe(SphereProf(0.3f, 6), 8, (z, j) => new Color(1f, 1f, 1f, 0.9f));
+                    }, sc);
+                    CoreGlow(root.transform, sc, D * 1.4f, Vector3.zero);
+                    break;
+                }
+            }
+            if (anim.flick != null) anim.flickBase = anim.flick.localScale;
+            if (anim.spin == null && anim.flick == null && anim.jitter == null) anim.enabled = false;
+            DecorateProjectile(root, string.IsNullOrEmpty(classId) ? (s != null ? s.cls : "mage") : classId, sc, Mathf.Max(0.03f, radius));
+            return root;
+        }
+
+        // ---------------------------------------------------------------- 法術造型的零件
+        static readonly float[] Jag9 = { 1f, 0.78f, 1.12f, 0.85f, 1.05f, 0.74f, 1.15f, 0.9f, 0.8f };
+
+        static float[] Prof(params float[] zr) => zr;
+
+        static Transform NewChild(Transform parent, string name)
+        {
+            var t = new GameObject(name).transform;
+            t.SetParent(parent, false);
+            return t;
+        }
+
+        /// <summary>球的旋轉剖面（z, r 對，由後往前）。</summary>
+        static float[] SphereProf(float r, int rings)
+        {
+            var p = new float[(rings + 1) * 2];
+            for (int i = 0; i <= rings; i++)
+            {
+                float a = Mathf.PI * i / rings;
+                p[i * 2] = -Mathf.Cos(a) * r;
+                p[i * 2 + 1] = Mathf.Sin(a) * r;
+            }
+            return p;
+        }
+
+        /// <summary>岩石：依方向固定的凹凸（同一位置永遠同樣位移，所以面與面之間不會裂開）。</summary>
+        static Vector3 RockWarp(Vector3 p)
+        {
+            float k = 1f + 0.16f * Mathf.Sin(p.x * 11f + 1f) * Mathf.Cos(p.y * 9f + 2f) * Mathf.Sin(p.z * 8f + 0.5f)
+                         + 0.08f * Mathf.Sin(p.x * 23f + p.y * 17f + p.z * 13f);
+            return p * k;
+        }
+
+        static void ArrowGlow(PMesh m, Color sc, float len, bool snipe)
+        {
+            var hot = Color.Lerp(sc, Color.white, 0.35f);
+            // 箭頭外的光殼
+            m.Lathe(Prof(-0.14f, 0f, -0.1f, 0.3f, 0.68f, 0f), 4, (z, j) => WithA(hot, snipe ? 0.65f : 0.5f), 1f, 0.55f);
+            // 沿箭桿的淡光
+            m.Lathe(Prof(-len, 0.0f, -len + 0.2f, 0.09f, -0.1f, 0.1f, 0f, 0f), 6, (z, j) => WithA(sc, Mathf.Lerp(0.05f, 0.35f, Mathf.InverseLerp(-len, 0f, z))));
+            // 箭羽（三片）
+            for (int k = 0; k < 3; k++)
+            {
+                var u = Quaternion.AngleAxis(k * 120f + 90f, Vector3.forward) * Vector3.right;
+                float z0 = -len;
+                var a = u * 0.04f + Vector3.forward * z0;
+                var b = u * 0.27f + Vector3.forward * (z0 - 0.06f);
+                var c = u * 0.27f + Vector3.forward * (z0 + 0.42f);
+                var d = u * 0.04f + Vector3.forward * (z0 + 0.62f);
+                m.Quad(a, b, c, d, WithA(sc, 0.9f));
+            }
+            if (snipe) m.Annulus(0.18f, 0.3f, 20, WithA(hot, 0.8f), WithA(hot, 0f), new Vector3(0f, 0f, -0.2f), Quaternion.identity);
+        }
+
+        static void ArrowSolid(PMesh m, float len)
+        {
+            m.sub = 0; m.Lathe(Prof(-len, 0.045f, 0f, 0.045f), 6, null);
+            m.sub = 1; m.Lathe(Prof(-0.06f, 0f, -0.05f, 0.18f, 0.52f, 0f), 4, null, 1f, 0.4f);
+        }
+
+        static void DaggerSolid(PMesh m, bool knife)
+        {
+            // 刀刃：扁菱形剖面；護手；握柄；柄頭（飛刀是苦無的圓環）
+            m.sub = 0; m.Lathe(knife ? Prof(-0.3f, 0.06f, -0.18f, 0.15f, 0.5f, 0f) : Prof(-0.34f, 0.1f, -0.2f, 0.17f, 0.35f, 0.1f, 0.82f, 0f), 4, null, 1f, 0.24f);
+            m.sub = 1;
+            if (knife) m.Lathe(Prof(-0.36f, 0f, -0.36f, 0.08f, -0.3f, 0.08f, -0.3f, 0f), 6, null);
+            else m.Lathe(Prof(-0.43f, 0f, -0.43f, 0.32f, -0.35f, 0.32f, -0.35f, 0f), 4, null, 1f, 0.28f, 45f);
+            m.sub = 2; m.Lathe(knife ? Prof(-0.72f, 0.035f, -0.34f, 0.035f) : Prof(-0.86f, 0.055f, -0.43f, 0.055f), 6, null);
+            m.sub = 3;
+            if (knife) m.Lathe(Prof(-0.95f, 0f, -0.9f, 0.1f, -0.78f, 0.1f, -0.72f, 0f), 8, null, 1f, 0.3f);
+            else m.Lathe(SphereProf(0.08f, 4), 6, null, 1f, 1f, 0f, null, new Vector3(0f, 0f, -0.92f), Quaternion.identity);
+        }
+
+        static void DaggerGlow(PMesh m, Color edge, bool knife)
+        {
+            var p = knife ? Prof(-0.36f, 0f, -0.2f, 0.22f, 0.62f, 0f) : Prof(-0.38f, 0f, -0.22f, 0.25f, 0.35f, 0.15f, 0.95f, 0f);
+            m.Lathe(p, 4, (z, j) => WithA(edge, Mathf.Lerp(0.25f, 0.7f, Mathf.InverseLerp(-0.4f, 0.9f, z))), 1f, 0.32f);
+        }
+
+        /// <summary>雷擊的鋸齒閃電：兩條互相垂直的帶子，沿 -Z 往後左右折返。</summary>
+        static void BoltZigzag(PMesh m, Color c)
+        {
+            const int N = 9;
+            var pts = new Vector3[N];
+            var cols = new Color[N];
+            float[] off = { 0f, 0.22f, -0.16f, 0.26f, -0.2f, 0.18f, -0.24f, 0.12f, 0f };
+            for (int pass = 0; pass < 2; pass++)
+            {
+                for (int i = 0; i < N; i++)
+                {
+                    float z = Mathf.Lerp(0.6f, -2.2f, i / (N - 1f));
+                    float o = off[i] * (pass == 0 ? 1f : -0.8f);
+                    pts[i] = pass == 0 ? new Vector3(o, 0f, z) : new Vector3(0f, o, z);
+                    cols[i] = WithA(c, Mathf.Lerp(0.95f, 0.15f, i / (N - 1f)));
+                }
+                m.Ribbon(pts, pass == 0 ? Vector3.up * 0.06f : Vector3.right * 0.06f, cols);
+                m.Ribbon(pts, pass == 0 ? Vector3.right * 0.05f : Vector3.up * 0.05f, cols);
+            }
+        }
+
+        /// <summary>迎著飛行方向的新月刃：弧在 XZ 平面往前凸（兩端往後、微微下垂），兩條交叉的帶子讓正面、側面都看得到。</summary>
+        static void Crescent(PMesh m, float R, float spanDeg, float h, float w, Color c, float zOff)
+        {
+            const int N = 17;
+            var pts = new Vector3[N];
+            var hv = new Vector3[N];
+            var wv = new Vector3[N];
+            var cols = new Color[N];
+            for (int i = 0; i < N; i++)
+            {
+                float t = i / (N - 1f);
+                float a = (t - 0.5f) * spanDeg * Mathf.Deg2Rad;
+                float taper = Mathf.Sin(t * Mathf.PI);
+                pts[i] = new Vector3(Mathf.Sin(a) * R, -0.3f * R * (1f - Mathf.Cos(a)), Mathf.Cos(a) * R - R * 0.6f + zOff);
+                hv[i] = Vector3.up * (h * taper);
+                wv[i] = new Vector3(Mathf.Sin(a), 0f, Mathf.Cos(a)) * (w * taper);
+                cols[i] = WithA(c, c.a * Mathf.Lerp(0.3f, 1f, taper));
+            }
+            m.Ribbon(pts, hv, cols);
+            m.Ribbon(pts, wv, cols);
+        }
+
+        /// <summary>風刃的旋渦：XY 平面（正對飛行方向）上的彎刀形弧，中間粗兩端尖，整體繞 Z 旋轉。</summary>
+        static void Whirl(PMesh m, float R, float a0Deg, float spanDeg, float w, Color c, float z)
+        {
+            const int N = 13;
+            var pts = new Vector3[N];
+            var wv = new Vector3[N];
+            var cols = new Color[N];
+            for (int i = 0; i < N; i++)
+            {
+                float t = i / (N - 1f);
+                float a = (a0Deg + t * spanDeg) * Mathf.Deg2Rad;
+                float r = R * (0.55f + 0.45f * t);   // 往外捲的螺旋
+                var dir = new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f);
+                pts[i] = dir * r + Vector3.forward * (z - 0.15f * t);
+                wv[i] = dir * (w * Mathf.Sin(Mathf.Pow(t, 0.7f) * Mathf.PI));
+                cols[i] = WithA(c, c.a * Mathf.Lerp(0.2f, 1f, t));
+            }
+            m.Ribbon(pts, wv, cols);
+        }
+
+        // ---------------------------------------------------------------- 零件快取與材質
+        static readonly Dictionary<string, Mesh> projMeshes = new Dictionary<string, Mesh>();
+        static readonly Dictionary<int, Material> solidMats = new Dictionary<int, Material>();
+        static Material meshAddMat, meshBlendMat;
+        static Shader solidShader;
+
+        static Mesh CachedMesh(string key, System.Action<PMesh> build, int subs, bool normals)
+        {
+            if (projMeshes.TryGetValue(key, out var mesh) && mesh != null) return mesh;
+            var pm = new PMesh(subs);
+            build(pm);
+            mesh = pm.Build(key, normals);
+            projMeshes[key] = mesh;
+            return mesh;
+        }
+
+        static MeshRenderer MeshChild(Transform parent, string name, Mesh mesh)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var r = go.AddComponent<MeshRenderer>();
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            r.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+            r.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+            return r;
+        }
+
+        /// <summary>發光（疊加）零件：顏色全在頂點色裡。tint 不是白色時整體再乘上 tint（用於共用網格、不同顏色的情況，會另外快取一份）。</summary>
+        static void GlowPart(Transform parent, string key, System.Action<PMesh> build, Color? tint = null)
+        {
+            if (tint.HasValue)
+            {
+                var t = tint.Value;
+                key += "#" + ColorKey(t);
+                var inner = build;
+                build = m => { inner(m); m.Tint(t); };
+            }
+            MeshChild(parent, "Glow", CachedMesh(key, build, 1, false)).sharedMaterial = MeshMat(true);
+        }
+
+        /// <summary>半透明（一般混色）零件：用於暗色物體（疊加無法變暗）。只適合單一顏色的凸形，因為不寫深度。</summary>
+        static void BlendPart(Transform parent, string key, System.Action<PMesh> build)
+        {
+            MeshChild(parent, "Blend", CachedMesh(key, build, 1, false)).sharedMaterial = MeshMat(false);
+        }
+
+        /// <summary>實體零件（Legacy Diffuse，吃場景主光，有深度）：每個 submesh 一個顏色。</summary>
+        static void SolidPart(Transform parent, string key, System.Action<PMesh> build, Color[] colors)
+        {
+            var mesh = CachedMesh(key, build, colors.Length, true);
+            var r = MeshChild(parent, "Solid", mesh);
+            var mats = new Material[colors.Length];
+            for (int i = 0; i < colors.Length; i++) mats[i] = SolidMat(colors[i]);
+            r.sharedMaterials = mats;
+        }
+
+        static int ColorKey(Color c)
+        {
+            Color32 k = c;
+            return (k.r << 24) | (k.g << 16) | (k.b << 8) | k.a;
+        }
+
+        static Material MeshMat(bool additive)
+        {
+            if (additive && meshAddMat != null) return meshAddMat;
+            if (!additive && meshBlendMat != null) return meshBlendMat;
+            var proto = additive ? AddMat(TexSoft) : BlendMat(TexSoft);   // 共用同一個（含備援）著色器
+            var m = new Material(proto.shader) { name = additive ? "SpellFxMeshAdd" : "SpellFxMeshBlend", mainTexture = Texture2D.whiteTexture };
+            if (additive) meshAddMat = m; else meshBlendMat = m;
+            return m;
+        }
+
+        static Material SolidMat(Color c)
+        {
+            int key = ColorKey(c);
+            if (solidMats.TryGetValue(key, out var m) && m != null) return m;
+            if (solidShader == null)
+            {
+                solidShader = Shader.Find("Legacy Shaders/Diffuse");
+                if (solidShader == null) solidShader = Shader.Find("Mobile/Diffuse");
+                if (solidShader == null) solidShader = Shader.Find("Sprites/Default");
+            }
+            m = new Material(solidShader) { name = "SpellFxSolid", color = c };
+            solidMats[key] = m;
+            return m;
+        }
+
+        /// <summary>柔光核心：一顆一直存在的本地粒子（永遠面向鏡頭的光暈 billboard）。</summary>
+        static void CoreGlow(Transform parent, Color c, float size, Vector3 localPos)
+        {
+            var ps = NewPS(parent, "CoreGlow", AddMat(TexSoft), 1, false);
+            ps.transform.localPosition = localPos;
+            var m = ps.main;
+            m.startLifetime = 1e5f;
+            m.startSize = size;
+            m.startColor = WithA(c, 0.8f);
+            ps.Play();
+            ps.Emit(1);
+        }
+
         // ================================================================ 共用資源（貼圖、材質、曲線，全部快取）
         internal const int TexSoft = 0, TexStar = 1, TexLeaf = 2, TexLine = 3;
         static readonly Texture2D[] texs = new Texture2D[4];
@@ -781,6 +1259,156 @@ namespace SpellDuel
                 it.lr.widthMultiplier = it.w * (1f - 0.5f * k);
             }
             if (time >= killAt) Destroy(gameObject);
+        }
+    }
+
+    /// <summary>飛行中法術的小動畫：零件自轉、閃爍縮放、雷電的隨機折角（每幀不配置記憶體）。</summary>
+    internal class ProjectileAnim : MonoBehaviour
+    {
+        public Transform spin; public Vector3 spinAxis = Vector3.forward; public float spinSpeed;
+        public Transform flick; public Vector3 flickBase = Vector3.one; public float flickAmt, flickRate = 20f;
+        public Transform jitter; public float jitterEvery = 0.05f;
+        float clock, jt;
+
+        void Update()
+        {
+            float dt = Time.deltaTime;
+            clock += dt;
+            if (clock > 1000f) clock -= 1000f;
+            if (spin != null && spinSpeed != 0f) spin.Rotate(spinAxis, spinSpeed * dt, Space.Self);
+            if (flick != null && flickAmt > 0f)
+            {
+                float k = 1f + flickAmt * (0.6f * Mathf.Sin(clock * flickRate) + 0.4f * Mathf.Sin(clock * flickRate * 2.37f + 1.7f));
+                flick.localScale = flickBase * k;
+            }
+            if (jitter != null)
+            {
+                jt -= dt;
+                if (jt <= 0f)
+                {
+                    jt = jitterEvery;
+                    jitter.localRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+                    jitter.localScale = new Vector3(Random.Range(0.7f, 1.35f), Random.Range(0.7f, 1.35f), Random.Range(0.85f, 1.15f));
+                }
+            }
+        }
+    }
+
+    /// <summary>程式網格小工具：旋轉體（Lathe）、帶子、圓環、四邊形。每個面都有自己的頂點（平面著色、面的顏色各自獨立）。</summary>
+    internal sealed class PMesh
+    {
+        readonly List<Vector3> v = new List<Vector3>();
+        readonly List<Color> c = new List<Color>();
+        readonly List<int>[] t;
+        public int sub;
+
+        public PMesh(int subs) { t = new List<int>[Mathf.Max(1, subs)]; for (int i = 0; i < t.Length; i++) t[i] = new List<int>(); }
+
+        public void Tri(Vector3 a, Vector3 b, Vector3 d, Color col)
+        {
+            int i = v.Count;
+            v.Add(a); v.Add(b); v.Add(d);
+            c.Add(col); c.Add(col); c.Add(col);
+            var list = t[Mathf.Clamp(sub, 0, t.Length - 1)];
+            list.Add(i); list.Add(i + 1); list.Add(i + 2);
+        }
+
+        public void Quad(Vector3 a, Vector3 b, Vector3 d, Vector3 e, Color col) { Tri(a, b, d, col); Tri(a, d, e, col); }
+
+        /// <summary>
+        /// 旋轉體：prof = (z, r) 對，由後（-Z）往前（+Z）；sides 邊數；col(z, 第幾邊) 給每個面的顏色（null＝白）。
+        /// sx/sy 壓扁剖面、phaseDeg 旋轉剖面、jag 每邊半徑倍率（火焰的參差）、off/rot 擺放、warp 頂點變形。
+        /// 面朝外（順時針），可用於有背面剔除的實體材質。
+        /// </summary>
+        public void Lathe(float[] prof, int sides, System.Func<float, int, Color> col, float sx = 1f, float sy = 1f, float phaseDeg = 0f,
+                          float[] jag = null, Vector3 off = default, Quaternion rot = default, System.Func<Vector3, Vector3> warp = null)
+        {
+            if (rot.x == 0f && rot.y == 0f && rot.z == 0f && rot.w == 0f) rot = Quaternion.identity;
+            int rings = prof.Length / 2;
+            for (int i = 0; i < rings - 1; i++)
+            {
+                float z0 = prof[i * 2], r0 = prof[i * 2 + 1], z1 = prof[i * 2 + 2], r1 = prof[i * 2 + 3];
+                for (int j = 0; j < sides; j++)
+                {
+                    int j1 = (j + 1) % sides;
+                    var p00 = P(z0, r0, j, sides, sx, sy, phaseDeg, jag, off, rot, warp);
+                    var p01 = P(z0, r0, j1, sides, sx, sy, phaseDeg, jag, off, rot, warp);
+                    var p10 = P(z1, r1, j, sides, sx, sy, phaseDeg, jag, off, rot, warp);
+                    var p11 = P(z1, r1, j1, sides, sx, sy, phaseDeg, jag, off, rot, warp);
+                    var col0 = col != null ? col((z0 + z1) * 0.5f, j) : Color.white;
+                    // 半徑為 0 的那一圈縮成一點，對應的三角形會退化，跳過
+                    if (r1 > 0f) Tri(p00, p11, p10, col0);
+                    if (r0 > 0f) Tri(p00, p01, p11, col0);
+                }
+            }
+        }
+
+        static Vector3 P(float z, float r, int j, int sides, float sx, float sy, float phaseDeg, float[] jag, Vector3 off, Quaternion rot, System.Func<Vector3, Vector3> warp)
+        {
+            float a = (phaseDeg + 360f * j / sides) * Mathf.Deg2Rad;
+            float k = jag != null ? jag[j % jag.Length] : 1f;
+            var p = new Vector3(Mathf.Cos(a) * r * sx * k, Mathf.Sin(a) * r * sy * k, z);
+            if (warp != null) p = warp(p);
+            return off + rot * p;
+        }
+
+        /// <summary>帶子：沿 pts，每點往 ±half 展開（無背面剔除的材質用）。</summary>
+        public void Ribbon(Vector3[] pts, Vector3 half, Color[] cols)
+        {
+            for (int i = 0; i < pts.Length - 1; i++) RibbonSeg(pts[i], pts[i + 1], half, half, cols[i], cols[i + 1]);
+        }
+
+        public void Ribbon(Vector3[] pts, Vector3[] half, Color[] cols)
+        {
+            for (int i = 0; i < pts.Length - 1; i++) RibbonSeg(pts[i], pts[i + 1], half[i], half[i + 1], cols[i], cols[i + 1]);
+        }
+
+        void RibbonSeg(Vector3 a, Vector3 b, Vector3 ha, Vector3 hb, Color ca, Color cb)
+        {
+            int i = v.Count;
+            v.Add(a - ha); v.Add(a + ha); v.Add(b + hb); v.Add(b - hb);
+            c.Add(ca); c.Add(ca); c.Add(cb); c.Add(cb);
+            var list = t[Mathf.Clamp(sub, 0, t.Length - 1)];
+            list.Add(i); list.Add(i + 1); list.Add(i + 2);
+            list.Add(i); list.Add(i + 2); list.Add(i + 3);
+        }
+
+        /// <summary>平面圓環（本地 XY 平面），內圈 cIn 到外圈 cOut 的漸層。</summary>
+        public void Annulus(float r0, float r1, int n, Color cIn, Color cOut, Vector3 off, Quaternion rot)
+        {
+            var list = t[Mathf.Clamp(sub, 0, t.Length - 1)];
+            int start = v.Count;
+            for (int i = 0; i < n; i++)
+            {
+                float a = 2f * Mathf.PI * i / n;
+                var d = new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f);
+                v.Add(off + rot * (d * r0)); c.Add(cIn);
+                v.Add(off + rot * (d * r1)); c.Add(cOut);
+            }
+            for (int i = 0; i < n; i++)
+            {
+                int a0 = start + i * 2, a1 = start + ((i + 1) % n) * 2;
+                list.Add(a0); list.Add(a0 + 1); list.Add(a1 + 1);
+                list.Add(a0); list.Add(a1 + 1); list.Add(a1);
+            }
+        }
+
+        public void Tint(Color k)
+        {
+            for (int i = 0; i < c.Count; i++) c[i] = c[i] * k;
+        }
+
+        public Mesh Build(string name, bool normals)
+        {
+            var m = new Mesh { name = "SpellFx " + name };
+            m.SetVertices(v);
+            m.SetColors(c);
+            m.subMeshCount = t.Length;
+            for (int i = 0; i < t.Length; i++) m.SetTriangles(t[i], i, true);
+            if (normals) m.RecalculateNormals();
+            m.RecalculateBounds();
+            m.UploadMeshData(true);
+            return m;
         }
     }
 
