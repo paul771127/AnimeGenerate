@@ -195,6 +195,9 @@ namespace SpellDuel
             solo = gameObject.AddComponent<SoloBattle>();
             solo.Init(cam, playArea, mat);
             solo.Hand = hand;
+            // 雙人職業對戰：SoloBattle 的連線模式（訊息經由這裡收送）
+            solo.NetSend = m => { if (net.Connected) net.Send(m.ToJson()); };
+            solo.SharedClock = () => SharedTime;
             solo.RequestRedraw = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); Log("請重新畫場地"); };
             solo.RequestChangeMode = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); mode = Mode.Choose; };
         }
@@ -289,6 +292,13 @@ namespace SpellDuel
             UpdateObservation();
             hand.Update(poseDet.Latest, Time.time, Screen.width, Screen.height);
             UpdateTarget();
+            if (mode == Mode.Duo)
+            {
+                // 提供對手位置與鎖定狀態給雙人職業對戰
+                solo.NetHasTarget = hasTarget && net.Connected && !DummyActive;
+                solo.NetEnemyHeadW = tgtHeadW; solo.NetEnemyFwdW = tgtFwdW;
+                solo.NetLock = targetOnScreen; solo.NetLockRect = targetRect;
+            }
             HandleFire();
             UpdateShots();
             UpdateVisuals();
@@ -309,6 +319,7 @@ namespace SpellDuel
         {
             mode = m;
             duoUseMarker = marker;
+            solo.NetMode = m == Mode.Duo;
             if (m == Mode.Solo)
             {
                 WorldFrame.Reset();
@@ -509,6 +520,10 @@ namespace SpellDuel
                         break;
                     case "_close":
                         Log("❌ 對手已斷線");
+                        if (mode == Mode.Duo && solo.phase != SoloBattle.Phase.Hidden) solo.Hide();
+                        break;
+                    case "ready": case "cast2": case "hit2": case "hp2": case "trap2": case "trapgone": case "state":
+                        solo.OnNet(m);   // 雙人職業對戰
                         break;
                     case "ping":
                         net.Send(new Msg { t = "pong", c = m.c, h = LocalTime }.ToJson());
@@ -573,6 +588,7 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 發射
         void HandleFire()
         {
+            if (solo.phase != SoloBattle.Phase.Hidden) return;   // 職業對戰中：由 SoloBattle 處理手勢與語音
             Vector3 sp;
             if (mode == Mode.Duo && hand.ConsumeRelease()) sp = hand.Aim;   // 手勢放招：往手指的準星方向
             else
@@ -985,6 +1001,15 @@ namespace SpellDuel
                 return;
             }
 
+            // 雙人職業對戰：交給 SoloBattle 畫介面
+            if (mode == Mode.Duo && solo.phase != SoloBattle.Phase.Hidden)
+            {
+                solo.DrawGUI();
+                if (AreaMode && playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position))
+                    GUI.Label(new Rect(0, H * 0.62f, W, H * 0.08f), "⚠ 回到場地內", big);
+                return;
+            }
+
             // 單人：場地完成後交給 SoloBattle 畫介面
             if (mode == Mode.Solo && solo.phase != SoloBattle.Phase.Hidden)
             {
@@ -1093,6 +1118,12 @@ namespace SpellDuel
                     else { align.Clear(); aligned = false; Log("重新對齊：兩人面對面，讓鏡頭拍到對方全身"); }
                 }
                 if (GUI.Button(new Rect(pad * 2 + bw * 1.3f, y, bw * 1.3f, bh), "HP 重置", button)) { hp = MaxHp; }
+                // 連線、對齊完成後：進入職業對戰（選職業、技能、錄咒語 → 雙方都準備好就開打）
+                if (net.Connected && WorldReady)
+                {
+                    float yb = y + bh + pad * 0.5f;
+                    if (GUI.Button(new Rect(pad, yb, W - pad * 2, bh * 1.2f), "⚔ 職業對戰（選職業與技能）", button)) solo.ShowSetup();
+                }
                 if (net.Connected && GUI.Button(new Rect(pad * 3 + bw * 2.6f, y, bw * 1.3f, bh), showPoseDebug ? "骨架:顯示" : "骨架:隱藏", button)) showPoseDebug = !showPoseDebug;
                 if (!net.Connected && GUI.Button(new Rect(pad * 3 + bw * 2.6f, y, bw * 1.3f, bh), "換模式", button)) { mode = Mode.Choose; WorldFrame.Reset(); playArea.Clear(); areaOwner = areaReceived = aligned = false; }
                 if (!net.Connected) { y += bh + pad * 0.5f; if (GUI.Button(new Rect(pad, y, bw * 1.3f, bh), showPoseDebug ? "骨架:顯示" : "骨架:隱藏", button)) showPoseDebug = !showPoseDebug; }

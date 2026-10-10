@@ -63,6 +63,7 @@ namespace SpellDuel
         public EffectKind effect; public float effectDps, effectDur;
         public bool reflected, alive = true;
         public int id;
+        public bool remote;          // 雙人：對手的法術（只顯示，命中由對手判定）
     }
 
     public class Trap
@@ -73,6 +74,7 @@ namespace SpellDuel
         public float armAt, until;
         public bool alive = true;
         public int id;
+        public bool remote;          // 雙人：對手的陷阱（只顯示，觸發由對手判定）
         public bool Armed(float now) => now >= armAt;
     }
 
@@ -90,6 +92,60 @@ namespace SpellDuel
         void Emit(string kind, Vector3 at, Color c, string text) => OnEvent?.Invoke(kind, at, c, text);
 
         public Battle(Fighter player, Fighter enemy) { this.player = player; this.enemy = enemy; }
+
+        // ------------------------------------------------------------ 雙人連線模式
+        // enemy 是「對手的代理」：位置、血量由網路更新；對手的法術與陷阱只顯示。
+        // 判定規則（攻擊方判定）：我的法術／陷阱打到對手 → OnRemoteHit 送給對手，由對手自己扣血與套用格擋、護盾、反擊；
+        // 對手判定打到我 → ApplyRemoteHit。
+        public bool remoteEnemy;
+        public event Action<Projectile> OnSpawn;                 // 我方新增的法術（要送給對手）
+        public event Action<Trap> OnTrapPlaced;                  // 我方新設的陷阱
+        public event Action<SkillDef, int, Vector3, int> OnRemoteHit;   // 打到對手：技能、傷害、位置、法術或陷阱 id
+        public event Action<int> OnTrapGone;                     // 我方陷阱消失（觸發或過期）
+
+        /// <summary>顯示對手的法術（從對手送來的起點、方向；elapsed＝已經飛了幾秒）</summary>
+        public Projectile AddRemoteProjectile(int id, SkillDef s, Vector3 from, Vector3 dir, float elapsed, bool reflected)
+        {
+            var p = new Projectile { owner = enemy, skill = s, pos = from, dir = dir.normalized, damage = s.damage, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur, reflected = reflected, id = id, remote = true };
+            float d = s.speed * Mathf.Max(0f, elapsed);
+            p.pos += p.dir * d; p.traveled = d;
+            projectiles.Add(p);
+            return p;
+        }
+
+        public void RemoveRemoteProjectile(int id)
+        {
+            foreach (var p in projectiles) if (p.remote && p.id == id) p.alive = false;
+        }
+
+        public void AddRemoteTrap(int id, SkillDef s, Vector3 at, float armIn)
+        {
+            at.y = 0;
+            traps.Add(new Trap { owner = enemy, skill = s, pos = at, armAt = now + armIn, until = now + s.trapLife, id = id, remote = true });
+        }
+
+        public void RemoveRemoteTrap(int id)
+        {
+            foreach (var t in traps) if (t.remote && t.id == id) t.alive = false;
+        }
+
+        /// <summary>對手判定打到我：反擊中就把攻擊打回去（回傳 true），否則套用格擋、護盾、傷害與效果</summary>
+        public bool ApplyRemoteHit(SkillDef s, int damage, Vector3 at, bool isTrap)
+        {
+            if (!isTrap && player.counterUntil > now)
+            {
+                player.counterUntil = 0;
+                var from = player.Chest + Fighter.Flat(player.forward) * 0.4f;
+                var dir = (enemy.Chest - from).normalized;
+                var p = Spawn(player, s, from, dir, damage, s.effect, s.effectDps, s.effectDur, true);
+                OnSpawn?.Invoke(p);
+                Emit("counter", at, new Color(0.96f, 0.45f, 0.71f), "反擊！打回去");
+                return true;
+            }
+            if (isTrap) Emit("trap", at, s.color, $"{s.name}！");
+            ApplyDamageAndEffect(player, damage, s.effect, s.effectDps, s.effectDur, at);
+            return false;
+        }
 
         public Fighter Opponent(Fighter f) => f == player ? enemy : player;
         public static float FlatDistance(Vector3 a, Vector3 b) { a.y = 0; b.y = 0; return Vector3.Distance(a, b); }
@@ -177,14 +233,17 @@ namespace SpellDuel
             int count = 0;
             for (int i = traps.Count - 1; i >= 0; i--)
                 if (traps[i].alive && traps[i].owner == f && traps[i].skill == s && ++count >= s.trapMax) traps[i].alive = false;
-            traps.Add(new Trap { owner = f, skill = s, pos = at, armAt = now + s.trapArm, until = now + s.trapLife, id = nextId++ });
+            var trap = new Trap { owner = f, skill = s, pos = at, armAt = now + s.trapArm, until = now + s.trapLife, id = nextId++ };
+            traps.Add(trap);
             Emit("trapSet", at, s.color, $"{s.name} 設置");
+            if (f == player) OnTrapPlaced?.Invoke(trap);
         }
 
         Projectile Spawn(Fighter owner, SkillDef s, Vector3 from, Vector3 dir, int dmg, EffectKind eff, float dps, float dur, bool reflected)
         {
             var p = new Projectile { owner = owner, skill = s, pos = from, dir = dir.normalized, damage = dmg, effect = eff, effectDps = dps, effectDur = dur, reflected = reflected, id = nextId++ };
             projectiles.Add(p);
+            if (owner == player && remoteEnemy) OnSpawn?.Invoke(p);
             return p;
         }
 
@@ -194,6 +253,7 @@ namespace SpellDuel
             now += dt;
             foreach (var f in new[] { player, enemy })
             {
+                if (remoteEnemy && f == enemy) continue;   // 對手的 MP、詠唱、持續傷害由對手自己算
                 f.mp = Mathf.Min(f.maxMp, f.mp + f.regen * dt);
                 if (f.charging != null && now - f.chargeStart > f.charging.charge + chargeTimeout + (f.charging.releaseNear ? 8f : 0f))
                 { f.charging = null; Emit("timeout", f.Chest, Color.gray, "詠唱逾時"); }
@@ -227,7 +287,17 @@ namespace SpellDuel
                     p.pos += p.dir * (step / sub);
                     p.traveled += step / sub;
                     target.BodySegment(out var a, out var b);
-                    if (DistancePointSegment(p.pos, a, b) < p.skill.radius + Fighter.BodyRadius) { p.alive = false; Hit(target, p); }
+                    if (p.remote)
+                    {
+                        // 對手的法術：命中由對手判定（收到結果時移除）；這裡只讓它飛，飛完消失
+                        if (p.pos.y < 0f || p.traveled > p.skill.MaxTravel) p.alive = false;
+                    }
+                    else if (DistancePointSegment(p.pos, a, b) < p.skill.radius + Fighter.BodyRadius)
+                    {
+                        p.alive = false;
+                        if (remoteEnemy && target == enemy) { Emit("hit", p.pos, p.skill.color, null); OnRemoteHit?.Invoke(p.skill, p.damage, p.pos, p.id); }
+                        else Hit(target, p);
+                    }
                     else if (p.pos.y < 0f || p.traveled > p.skill.MaxTravel) { p.alive = false; Emit("miss", p.pos, p.skill.color, null); }
                 }
             }
@@ -239,14 +309,15 @@ namespace SpellDuel
             foreach (var t in traps)
             {
                 if (!t.alive) continue;
-                if (now > t.until) { t.alive = false; continue; }
-                if (!t.Armed(now)) continue;
+                if (now > t.until) { t.alive = false; if (!t.remote && remoteEnemy) OnTrapGone?.Invoke(t.id); continue; }
+                if (t.remote || !t.Armed(now)) continue;   // 對手的陷阱由對手判定
                 var victim = Opponent(t.owner);
                 if (FlatDistance(victim.Feet, t.pos) < t.skill.radius + 0.15f)
                 {
                     t.alive = false;
                     Emit("trap", t.pos, t.skill.color, $"{t.skill.name}！");
-                    ApplyDamageAndEffect(victim, t.skill.damage, t.skill.effect, t.skill.effectDps, t.skill.effectDur, t.pos);
+                    if (remoteEnemy && victim == enemy) { OnRemoteHit?.Invoke(t.skill, t.skill.damage, t.pos, -t.id); OnTrapGone?.Invoke(t.id); }
+                    else ApplyDamageAndEffect(victim, t.skill.damage, t.skill.effect, t.skill.effectDps, t.skill.effectDur, t.pos);
                 }
             }
             traps.RemoveAll(x => !x.alive);

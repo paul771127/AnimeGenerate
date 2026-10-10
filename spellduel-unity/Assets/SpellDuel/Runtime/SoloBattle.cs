@@ -17,6 +17,20 @@ namespace SpellDuel
         public Action RequestRedraw, RequestChangeMode;
         public HandGesture Hand;          // 手勢（GameRoot 每幀更新）
 
+        // ---------------------------------------------------------------- 雙人連線模式（由 GameRoot 設定）
+        // 對手是真人：沒有 AI、沒有角色模型；對手的位置由 GameRoot 每幀提供（鏡頭偵測＋對手回報融合），
+        // 判定採「攻擊方判定」：我的法術打到對手 → 送 hit2，對手自己扣血、套用格擋／護盾／反擊。
+        public bool NetMode;
+        public Action<Msg> NetSend;
+        public Func<double> SharedClock;
+        public bool NetHasTarget, NetLock;
+        public Vector3 NetEnemyHeadW, NetEnemyFwdW;
+        public Rect NetLockRect;
+        bool localReady, remoteReady;
+        string remoteClass; string[] remoteLoadout;
+        float nextState;
+        Transform remoteAnchor;           // 對手位置的空物件（光效跟著它）
+
         // 語音詠唱：唸出咒語就開始詠唱（本機比對自己錄的樣本）
         readonly MicInput mic = new MicInput();
         VoiceTemplates voice;
@@ -86,7 +100,114 @@ namespace SpellDuel
             PlayerPrefs.SetString("sd_loadout_" + myClass, string.Join(",", myLoadout));
         }
 
-        public void ShowSetup() { EndBattle(); phase = Phase.Setup; }
+        public void ShowSetup() { EndBattle(); phase = Phase.Setup; localReady = false; }
+
+        // ================================================================ 雙人：準備 → 開戰
+        void SendReady()
+        {
+            SaveChoices();
+            localReady = true;
+            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray() });
+            Say("已準備，等待對手…", 3f);
+            TryStartNet();
+        }
+
+        void TryStartNet()
+        {
+            if (!NetMode || !localReady || !remoteReady || remoteClass == null) return;
+            localReady = remoteReady = false;
+            StartNetBattle();
+        }
+
+        void StartNetBattle()
+        {
+            EndBattle();
+            var ec = Skills.Classes.TryGetValue(remoteClass, out var found) ? found : Skills.Classes["mage"];
+            enemyClassUsed = ec.id;
+            dummyMode = false;
+            var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
+            var en = new Fighter($"對手{ec.name}", ec, remoteLoadout ?? new string[0], false);
+            en.head = NetEnemyHeadW;
+            SyncPlayer(me);
+            battle = new Battle(me, en) { remoteEnemy = true };
+            battle.OnEvent += OnBattleEvent;
+            battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.pos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected });
+            battle.OnRemoteHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });
+            battle.OnTrapPlaced += t => NetSend?.Invoke(new Msg { t = "trap2", id = t.id, k = t.skill.id, p = t.pos, s = t.armAt - battle.now });
+            battle.OnTrapGone += id => NetSend?.Invoke(new Msg { t = "trapgone", id = id });
+            ai = null;
+            remoteAnchor = new GameObject("Remote Anchor").transform;
+            lastEnemyFeet = en.Feet; lastEnemyHp = en.hp; enemyDeadShown = false;
+            enemyShield = Prim(PrimitiveType.Sphere, new Color(0.4f, 0.7f, 1f, 0.25f));
+            phase = Phase.Fighting;
+            Say($"⚔ 對手：{ec.name}（{string.Join("・", Array.ConvertAll(remoteLoadout ?? new string[0], id => Skills.All.TryGetValue(id, out var sd) ? sd.name : id))}）", 4f);
+        }
+
+        /// <summary>GameRoot 轉來的對戰訊息</summary>
+        public void OnNet(Msg m)
+        {
+            switch (m.t)
+            {
+                case "ready":
+                    remoteClass = m.k; remoteLoadout = m.ks; remoteReady = true;
+                    if (phase != Phase.Fighting) Say("對手已準備好", 2f);
+                    TryStartNet();
+                    return;
+            }
+            if (battle == null || !NetMode) return;
+            switch (m.t)
+            {
+                case "cast2":
+                    if (Skills.All.TryGetValue(m.k, out var cs))
+                    {
+                        float elapsed = (float)((SharedClock?.Invoke() ?? m.t0) - m.t0);
+                        battle.AddRemoteProjectile(m.id, cs, m.p, m.d, Mathf.Clamp(elapsed, 0f, 1f), m.ok);
+                    }
+                    break;
+                case "hit2":
+                    if (Skills.All.TryGetValue(m.k, out var hs))
+                    {
+                        bool isTrap = m.id < 0;
+                        if (isTrap) battle.RemoveRemoteTrap(-m.id); else battle.RemoveRemoteProjectile(m.id);
+                        bool countered = battle.ApplyRemoteHit(hs, m.dmg, m.p, isTrap);
+                        NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp), ok = countered });
+                    }
+                    break;
+                case "hp2":
+                    En.hp = m.hp;
+                    if (m.ok) Say("對手反擊！法術被打回來了", 2f);
+                    break;
+                case "trap2":
+                    if (Skills.All.TryGetValue(m.k, out var ts)) battle.AddRemoteTrap(m.id, ts, m.p, m.s);
+                    break;
+                case "trapgone":
+                    battle.RemoveRemoteTrap(m.id);
+                    break;
+                case "state":
+                    // 對手的詠唱、狀態（顯示用）
+                    En.hp = m.hp;
+                    if (!string.IsNullOrEmpty(m.k) && Skills.All.TryGetValue(m.k, out var chs))
+                    {
+                        if (En.charging != chs) En.charging = chs;
+                        En.chargeStart = battle.now - m.s * chs.charge;
+                    }
+                    else En.charging = null;
+                    float hold = battle.now + 0.4f;
+                    En.blockUntil = (m.e & 1) != 0 ? hold : 0f;
+                    En.shieldUntil = (m.e & 2) != 0 ? hold : 0f;
+                    En.counterUntil = (m.e & 4) != 0 ? hold : 0f;
+                    break;
+            }
+        }
+
+        void SendState()
+        {
+            if (!NetMode || battle == null || Time.time < nextState) return;
+            nextState = Time.time + 0.1f;
+            var me = Me; float now = battle.now;
+            int e = (me.blockUntil > now ? 1 : 0) | (me.shieldUntil > now ? 2 : 0) | (me.counterUntil > now ? 4 : 0);
+            NetSend?.Invoke(new Msg { t = "state", k = me.charging != null ? me.charging.id : "", s = battle.ChargeProgress(me), hp = Mathf.CeilToInt(me.hp), e = e });
+        }
         public void Hide() { EndBattle(); phase = Phase.Hidden; }
 
         // ================================================================ 開戰
@@ -139,6 +260,7 @@ namespace SpellDuel
             projGo.Clear(); trapGo.Clear(); floaters.Clear();
             if (enemyShield) Destroy(enemyShield);
             if (enemyRig) Destroy(enemyRig.gameObject);
+            if (remoteAnchor) Destroy(remoteAnchor.gameObject);
             if (myChargeFx) myChargeFx.Stop();
             if (enemyChargeFx) enemyChargeFx.Stop();
             myChargeFx = enemyChargeFx = null; myFxSkill = enemyFxSkill = null;
@@ -157,16 +279,29 @@ namespace SpellDuel
             float dt = Mathf.Min(Time.deltaTime, 0.1f);
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
             frozen = phase == Phase.Fighting && !Tracking.Ok;
+            if (NetMode) SyncRemote();
             UpdateLock();
-            if (phase == Phase.Fighting && !frozen)
+            if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
             {
                 if (ai != null) ai.Update(dt);
-                else en_FaceMe();
+                else if (!NetMode) en_FaceMe();
                 battle.Update(dt);
-                HandleInput();
+                if (!frozen) HandleInput();
+                SendState();
                 if (battle.Over) phase = Phase.Over;
             }
             UpdateVisuals();
+        }
+
+        // 雙人：對手位置（GameRoot 提供：鏡頭偵測＋對手回報）；手機拿在身體前方 → 往後退一點才是身體
+        void SyncRemote()
+        {
+            if (!NetHasTarget) return;
+            var fwd = Fighter.Flat(NetEnemyFwdW);
+            En.head = NetEnemyHeadW - fwd * 0.12f;
+            var toMe = Fighter.Flat(Me.head - En.head);
+            En.forward = fwd != Vector3.zero ? fwd : (toMe != Vector3.zero ? toMe : Vector3.forward);
+            if (remoteAnchor) remoteAnchor.SetPositionAndRotation(WorldFrame.FromWorld(En.Feet), WorldFrame.RotFromWorld(Quaternion.LookRotation(En.forward, Vector3.up)));
         }
 
         // 木頭人永遠面向玩家
@@ -271,6 +406,13 @@ namespace SpellDuel
             enemyOnScreen = false;
             var en = En;
             if (en == null || !en.Alive || !Tracking.Ok) return;
+            if (NetMode)
+            {
+                // 雙人：鏡頭真的看到對手才算鎖定（GameRoot 的人體偵測）
+                enemyOnScreen = NetLock; enemyRect = NetLockRect;
+                enemyScreenSide = Vector3.Dot(WorldFrame.FromWorld(en.Chest) - cam.transform.position, cam.transform.right);
+                return;
+            }
             var pts = new[] { en.head + Vector3.up * 0.15f, en.Chest, en.Feet };
             float xMin = float.MaxValue, xMax = float.MinValue, yMin = float.MaxValue, yMax = float.MinValue;
             int inView = 0;
@@ -335,15 +477,18 @@ namespace SpellDuel
             // 敵人角色：腳的位置、面向、走路速度、詠唱、被打中、倒地
             var fwdS = WorldFrame.DirFromWorld(en.forward);
             float dt = Mathf.Max(1e-3f, Time.deltaTime);
-            enemyRig.SetPose(feetS, fwdS);
-            enemyRig.MoveSpeed = Mathf.Lerp(enemyRig.MoveSpeed, Fighter.Flat(en.Feet - lastEnemyFeet).magnitude / dt, 0.2f);
+            if (enemyRig)
+            {
+                enemyRig.SetPose(feetS, fwdS);
+                enemyRig.MoveSpeed = Mathf.Lerp(enemyRig.MoveSpeed, Fighter.Flat(en.Feet - lastEnemyFeet).magnitude / dt, 0.2f);
+                enemyRig.Charge = en.charging != null ? Mathf.Max(0.01f, battle.ChargeProgress(en)) : 0f;
+            }
             lastEnemyFeet = en.Feet;
-            enemyRig.Charge = en.charging != null ? Mathf.Max(0.01f, battle.ChargeProgress(en)) : 0f;
-            if (en.hp < lastEnemyHp - 0.01f) { enemyRig.PlayHit(); if (dummyMode) { dummyDamage += lastEnemyHp - en.hp; dummyHits++; } }
+            if (en.hp < lastEnemyHp - 0.01f) { if (enemyRig) enemyRig.PlayHit(); if (dummyMode) { dummyDamage += lastEnemyHp - en.hp; dummyHits++; } }
             lastEnemyHp = en.hp;
-            if (!en.Alive && !enemyDeadShown) { enemyRig.SetDead(true); enemyDeadShown = true; }
+            if (!en.Alive && !enemyDeadShown) { if (enemyRig) enemyRig.SetDead(true); enemyDeadShown = true; }
             bool guarded = en.blockUntil > battle.now || en.shieldUntil > battle.now || en.counterUntil > battle.now;
-            enemyRig.Guarding = guarded && en.Alive;
+            if (enemyRig) enemyRig.Guarding = guarded && en.Alive;
             enemyShield.SetActive(guarded && en.Alive);
             if (guarded)
             {
@@ -370,7 +515,7 @@ namespace SpellDuel
                     SpellFx.DecorateProjectile(go, fxCls, p.skill.color, Mathf.Max(0.03f, p.skill.radius));
                     if (p.owner == En)
                     {
-                        enemyRig.PlayCast();   // 敵人出招動作＋光效
+                        if (enemyRig) enemyRig.PlayCast();   // 敵人出招動作＋光效
                         SpellFx.CastBurst(enemyClassUsed, p.skill.color, WorldFrame.FromWorld(p.pos), WorldFrame.DirFromWorld(p.dir), 1f);
                     }
                 }
@@ -416,7 +561,8 @@ namespace SpellDuel
             if (theirs != enemyFxSkill)
             {
                 if (enemyChargeFx) enemyChargeFx.Stop();
-                enemyChargeFx = theirs != null && enemyRig ? SpellFx.StartCharge(enemyClassUsed, theirs.color, enemyRig.transform, new Vector3(0f, 1.2f, 0.4f), 1f) : null;
+                var anchor = enemyRig ? enemyRig.transform : remoteAnchor;
+                enemyChargeFx = theirs != null && anchor ? SpellFx.StartCharge(enemyClassUsed, theirs.color, anchor, new Vector3(0f, 1.2f, 0.4f), 1f) : null;
                 enemyFxSkill = theirs;
             }
             if (enemyChargeFx) enemyChargeFx.Progress = battle.ChargeProgress(En);
@@ -516,9 +662,11 @@ namespace SpellDuel
             GUI.color = Color.white;
             y += ((cls.skills.Length + 1) / 2) * (sh + pad * 0.5f) + pad * 0.5f;
 
-            GUI.Label(new Rect(pad, y, W, lh), "敵人職業", label); y += lh;
             float ew = (W - pad * 7) / 6f;
-            for (int i = 0; i < 6; i++)
+            if (!NetMode) GUI.Label(new Rect(pad, y, W, lh), "敵人職業", label);
+            else GUI.Label(new Rect(pad, y, W, lh), remoteReady ? $"對手：{(Skills.Classes.TryGetValue(remoteClass ?? "", out var rc) ? rc.name : "?")}（已準備）" : "對手：還沒準備好", label);
+            y += lh;
+            for (int i = 0; i < 6 && !NetMode; i++)
             {
                 string id = i == 0 ? "random" : i == 5 ? "dummy" : Skills.ClassOrder[i - 1];
                 string nm = i == 0 ? "隨機" : i == 5 ? "木頭人" : Skills.Classes[id].name;
@@ -555,10 +703,12 @@ namespace SpellDuel
             y += pad * 0.5f;
 
             GUI.enabled = myLoadout.Count == 3;
-            if (GUI.Button(new Rect(pad, y, W - pad * 2, bh * 1.3f), "⚔ 開始戰鬥", button)) StartBattle();
+            if (GUI.Button(new Rect(pad, y, W - pad * 2, bh * 1.3f), NetMode ? (localReady ? "等待對手準備…" : "⚔ 準備好了") : "⚔ 開始戰鬥", button))
+            { if (NetMode) SendReady(); else StartBattle(); }
             GUI.enabled = true; y += bh * 1.3f + pad;
-            if (GUI.Button(new Rect(pad, y, (W - pad * 3) / 2f, bh), "重畫場地", button)) RequestRedraw?.Invoke();
-            if (GUI.Button(new Rect(pad * 2 + (W - pad * 3) / 2f, y, (W - pad * 3) / 2f, bh), "換模式", button)) RequestChangeMode?.Invoke();
+            if (!NetMode && GUI.Button(new Rect(pad, y, (W - pad * 3) / 2f, bh), "重畫場地", button)) RequestRedraw?.Invoke();
+            if (GUI.Button(new Rect(pad * 2 + (W - pad * 3) / 2f, y, (W - pad * 3) / 2f, bh), NetMode ? "返回" : "換模式", button))
+            { if (NetMode) Hide(); else RequestChangeMode?.Invoke(); }
         }
 
         void DrawHud()
@@ -719,8 +869,8 @@ namespace SpellDuel
             if (frozen)
             {
                 Panel(new Rect(0, H * 0.32f, W, H * 0.2f), 0.8f);
-                GUI.Label(new Rect(0, H * 0.33f, W, H * 0.08f), "⏸ AR 追蹤中斷，戰鬥暫停", big);
-                GUI.Label(new Rect(pad, H * 0.42f, W - pad * 2, lh * 2), Tracking.Reason + "\n恢復追蹤後自動繼續", center);
+                GUI.Label(new Rect(0, H * 0.33f, W, H * 0.08f), NetMode ? "⚠ AR 追蹤中斷，暫時不能施法" : "⏸ AR 追蹤中斷，戰鬥暫停", big);
+                GUI.Label(new Rect(pad, H * 0.42f, W - pad * 2, lh * 2), Tracking.Reason + (NetMode ? "\n對手仍以你最後的位置判定" : "\n恢復追蹤後自動繼續"), center);
             }
 
             if (phase == Phase.Over)
@@ -728,7 +878,8 @@ namespace SpellDuel
                 Panel(new Rect(0, H * 0.3f, W, H * 0.3f), 0.75f);
                 GUI.Label(new Rect(0, H * 0.32f, W, H * 0.1f), me.Alive ? "🏆 勝利！" : "💀 敗北…", big);
                 float bw = (W - pad * 3) / 2f;
-                if (GUI.Button(new Rect(pad, H * 0.47f, bw, lh * 2f), "再來一局", button)) StartBattle();
+                if (GUI.Button(new Rect(pad, H * 0.47f, bw, lh * 2f), NetMode ? (localReady ? "等待對手…" : "再來一局") : "再來一局", button))
+                { if (NetMode) SendReady(); else StartBattle(); }
                 if (GUI.Button(new Rect(pad * 2 + bw, H * 0.47f, bw, lh * 2f), "換職業", button)) ShowSetup();
             }
         }
