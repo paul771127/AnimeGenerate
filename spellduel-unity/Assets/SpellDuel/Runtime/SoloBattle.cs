@@ -608,7 +608,7 @@ namespace SpellDuel
             }
             GUI.Label(new Rect(W / 2 - 50, H / 2 - 50, 100, 100), "＋", big);
             Hand?.DrawGUI(small, me.charging != null ? me.charging.color : Color.white);
-            if (Time.time < heardUntil) GUI.Label(new Rect(0, H * 0.25f, W, lh), heard, center);
+            if (Time.time < heardUntil) GUI.Label(new Rect(0, H * 0.24f, W, lh * 1.6f), heard, big);
             else if (voiceOn && VoiceReady && mic.Running && mic.Spotter.InSpeech) GUI.Label(new Rect(0, H * 0.25f, W, lh), "🎤 …", center);
 
             // 鎖定框／敵人方向提示
@@ -641,7 +641,16 @@ namespace SpellDuel
             float by = H - (H - Screen.safeArea.yMax) - Screen.safeArea.y - bottomH;
             by = Mathf.Min(by, H * 0.76f);
             Panel(new Rect(0, by - pad * 0.5f - lh, W, H - by + pad + lh));
-            GUI.Label(new Rect(pad, by - lh * 1.05f, W - pad * 2, lh), "比手勢＝詠唱　握拳→張開（或往上甩手）＝放招" + (voiceOn && VoiceReady ? "　也可以唸咒語" : ""), small);
+            string voiceHint = !voiceOn ? "" : VoiceReady ? "" : "　（語音：咒語還沒錄完，到選技能畫面錄）";
+            GUI.Label(new Rect(pad, by - lh * 1.05f, W - pad * 2 - W * 0.22f, lh),
+                (voiceOn && VoiceReady ? "比手勢或唸咒語＝詠唱" : "比手勢＝詠唱") + "　握拳→張開＝放招" + voiceHint, small);
+            // 麥克風音量：說話中變綠色
+            if (mic.Running)
+            {
+                float lv = Mathf.Clamp01(mic.Spotter.Level / Mathf.Max(0.001f, mic.Spotter.StartThreshold * 3f));
+                GUI.Label(new Rect(W - pad - W * 0.21f, by - lh * 1.05f, W * 0.06f, lh), "🎤", small);
+                Bar(new Rect(W - pad - W * 0.15f, by - lh * 0.75f, W * 0.15f, lh * 0.3f), lv, mic.Spotter.InSpeech ? Color.green : Color.gray, "");
+            }
             Bar(new Rect(pad, by, W - pad * 2, lh * 0.5f), me.hp / me.maxHp, new Color(1f, 0.3f, 0.35f), $"HP {Mathf.CeilToInt(me.hp)}");
             Bar(new Rect(pad, by + lh * 0.6f, W - pad * 2, lh * 0.5f), me.mp / me.maxMp, new Color(0.3f, 0.6f, 1f), $"MP {Mathf.FloorToInt(me.mp)}");
             GUI.Label(new Rect(pad, by + lh * 1.15f, W - pad * 2, lh), StatusText(me, now), small);
@@ -661,7 +670,8 @@ namespace SpellDuel
                 HandGesture.DrawIcon(new Rect(r.x + pad * 0.3f, r.y + pad * 0.3f, sh * 0.55f, sh * 0.55f), g, usable ? s.color : new Color(0.5f, 0.5f, 0.5f));
                 GUI.color = usable ? Color.white : new Color(0.65f, 0.65f, 0.65f);
                 GUI.Label(new Rect(r.x + sh * 0.6f, r.y, r.width - sh * 0.6f, r.height * 0.5f), s.name, label);
-                GUI.Label(new Rect(r.x + sh * 0.6f, r.y + r.height * 0.42f, r.width - sh * 0.6f, r.height * 0.3f), HandGesture.ShapeName(g), small);
+                string vtag = !voiceOn ? "" : voice.Ready(s.id) ? "・🎤唸咒語" : "・🎤未錄";
+                GUI.Label(new Rect(r.x + sh * 0.6f, r.y + r.height * 0.42f, r.width - sh * 0.6f, r.height * 0.3f), HandGesture.ShapeName(g) + vtag, small);
                 GUI.Label(new Rect(r.x + pad * 0.3f, r.y + r.height * 0.7f, r.width, r.height * 0.3f), $"MP {s.cost}{(cd > 0 ? $"　冷卻 {cd:F1}s" : "")}", small);
                 GUI.color = Color.white;
             }
