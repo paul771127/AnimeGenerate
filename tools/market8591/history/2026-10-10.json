@@ -1,0 +1,3307 @@
+{
+"61110": {
+"name": "三角洲行動",
+"per_day": 84.67,
+"median": 120,
+"init": {
+"deals": 200,
+"per_day": 364.0,
+"median": 125,
+"p75": 218,
+"gmv_per_day": 73445,
+"active": 367,
+"sellers": 20,
+"top3_share": 0.42
+}
+},
+"53396": {
+"name": "鳴潮",
+"per_day": 68.33,
+"median": 915,
+"init": {
+"deals": 200,
+"per_day": 76.11,
+"median": 680,
+"p75": 1295,
+"gmv_per_day": 84084,
+"active": 533,
+"sellers": 27,
+"top3_share": 0.68
+}
+},
+"21738": {
+"name": "Garena 傳說對決",
+"per_day": 43.58,
+"median": 2674,
+"init": {
+"deals": 126,
+"per_day": 4.23,
+"median": 352,
+"p75": 2200,
+"gmv_per_day": 5279,
+"active": 63,
+"sellers": 26,
+"top3_share": 0.46
+}
+},
+"13190": {
+"name": "貓咪大戰爭",
+"per_day": 41.85,
+"median": 106,
+"init": {
+"deals": 200,
+"per_day": 16.05,
+"median": 110,
+"p75": 200,
+"gmv_per_day": 3722,
+"active": 159,
+"sellers": 20,
+"top3_share": 0.62
+}
+},
+"19384": {
+"name": "Pokemon GO",
+"per_day": 35.37,
+"median": 350,
+"init": {
+"deals": 200,
+"per_day": 30.54,
+"median": 300,
+"p75": 445,
+"gmv_per_day": 16061,
+"active": 316,
+"sellers": 41,
+"top3_share": 0.39
+}
+},
+"9781": {
+"name": "神魔之塔",
+"per_day": 19.7,
+"median": 600,
+"init": {
+"deals": 200,
+"per_day": 15.56,
+"median": 700,
+"p75": 1480,
+"gmv_per_day": 15746,
+"active": 436,
+"sellers": 30,
+"top3_share": 0.51
+}
+},
+"34169": {
+"name": "原神 Genshin Impact",
+"per_day": 17.6,
+"median": 1020,
+"init": {
+"deals": 200,
+"per_day": 13.55,
+"median": 960,
+"p75": 1450,
+"gmv_per_day": 17263,
+"active": 242,
+"sellers": 15,
+"top3_share": 0.64
+}
+},
+"54592": {
+"name": "MLB 9局職棒 勁旅對決",
+"per_day": 17.29,
+"median": 1200,
+"init": {
+"deals": 200,
+"per_day": 8.17,
+"median": 1000,
+"p75": 1200,
+"gmv_per_day": 9400,
+"active": 146,
+"sellers": 14,
+"top3_share": 0.93
+}
+},
+"60578": {
+"name": "Pokemon TCG Pocket",
+"per_day": 11.44,
+"median": 150,
+"init": {
+"deals": 200,
+"per_day": 7.47,
+"median": 150,
+"p75": 250,
+"gmv_per_day": 1631,
+"active": 318,
+"sellers": 16,
+"top3_share": 0.79
+}
+},
+"63688": {
+"name": "SD鋼彈 G世代 永恆",
+"per_day": 11.35,
+"median": 299,
+"init": {
+"deals": 200,
+"per_day": 10.91,
+"median": 299,
+"p75": 440,
+"gmv_per_day": 4674,
+"active": 390,
+"sellers": 19,
+"top3_share": 0.56
+}
+},
+"50556": {
+"name": "明日方舟：終末地",
+"per_day": 9.29,
+"median": 1090,
+"init": {
+"deals": 107,
+"per_day": 3.59,
+"median": 500,
+"p75": 980,
+"gmv_per_day": 3544,
+"active": 247,
+"sellers": 17,
+"top3_share": 0.75
+}
+},
+"41911": {
+"name": "LINE Rangers 銀河特攻隊",
+"per_day": 8.89,
+"median": 1082,
+"init": {
+"deals": 114,
+"per_day": 3.82,
+"median": 756,
+"p75": 1072,
+"gmv_per_day": 3245,
+"active": 61,
+"sellers": 9,
+"top3_share": 0.8
+}
+},
+"44693": {
+"name": "崩壞：星穹鐵道",
+"per_day": 8.14,
+"median": 1494,
+"init": {
+"deals": 93,
+"per_day": 3.14,
+"median": 900,
+"p75": 1625,
+"gmv_per_day": 4011,
+"active": 183,
+"sellers": 14,
+"top3_share": 0.69
+}
+},
+"14603": {
+"name": "七龍珠爆裂激戰",
+"per_day": 7.88,
+"median": 375,
+"init": {
+"deals": 146,
+"per_day": 4.89,
+"median": 410,
+"p75": 862,
+"gmv_per_day": 3933,
+"active": 139,
+"sellers": 11,
+"top3_share": 0.75
+}
+},
+"25108": {
+"name": "荒野亂鬥 Brawl Stars",
+"per_day": 6.67,
+"median": 1268,
+"init": {
+"deals": 36,
+"per_day": 1.27,
+"median": 1500,
+"p75": 2450,
+"gmv_per_day": 1947,
+"active": 103,
+"sellers": 12,
+"top3_share": 0.58
+}
+},
+"64248": {
+"name": "七騎士 RE:BIRTH",
+"per_day": 6.67,
+"median": 1700,
+"init": {
+"deals": 152,
+"per_day": 5.09,
+"median": 1000,
+"p75": 1800,
+"gmv_per_day": 6202,
+"active": 253,
+"sellers": 17,
+"top3_share": 0.68
+}
+},
+"28644": {
+"name": "第五人格",
+"per_day": 6.59,
+"median": 983,
+"init": {
+"deals": 25,
+"per_day": 0.88,
+"median": 800,
+"p75": 1488,
+"gmv_per_day": 1114,
+"active": 141,
+"sellers": 13,
+"top3_share": 0.52
+}
+},
+"27328": {
+"name": "ONE PIECE Bounty Rush",
+"per_day": 6.59,
+"median": 772,
+"init": {
+"deals": 200,
+"per_day": 7.26,
+"median": 530,
+"p75": 900,
+"gmv_per_day": 4856,
+"active": 353,
+"sellers": 25,
+"top3_share": 0.48
+}
+},
+"30033": {
+"name": "明日方舟",
+"per_day": 6.43,
+"median": 995,
+"init": {
+"deals": 141,
+"per_day": 4.73,
+"median": 776,
+"p75": 1500,
+"gmv_per_day": 5075,
+"active": 385,
+"sellers": 17,
+"top3_share": 0.7
+}
+},
+"68598": {
+"name": "MLB：9局職棒26",
+"per_day": 6.16,
+"median": 1032,
+"init": {
+"deals": 95,
+"per_day": 3.3,
+"median": 300,
+"p75": 851,
+"gmv_per_day": 2074,
+"active": 66,
+"sellers": 27,
+"top3_share": 0.43
+}
+},
+"36004": {
+"name": "灌籃高手 SLAM DUNK",
+"per_day": 6.05,
+"median": 2350,
+"init": {
+"deals": 38,
+"per_day": 1.3,
+"median": 2090,
+"p75": 3000,
+"gmv_per_day": 2800,
+"active": 124,
+"sellers": 11,
+"top3_share": 0.61
+}
+},
+"55285": {
+"name": "全明星街球派對",
+"per_day": 6.02,
+"median": 2050,
+"init": {
+"deals": 27,
+"per_day": 0.9,
+"median": 1250,
+"p75": 2000,
+"gmv_per_day": 1617,
+"active": 144,
+"sellers": 14,
+"top3_share": 0.59
+}
+},
+"24571": {
+"name": "天堂M",
+"per_day": 5.42,
+"median": 2394,
+"init": {
+"deals": 28,
+"per_day": 0.95,
+"median": 900,
+"p75": 2800,
+"gmv_per_day": 2318,
+"active": 52,
+"sellers": 11,
+"top3_share": 0.71
+}
+},
+"34240": {
+"name": "一拳超人：最強之男",
+"per_day": 5.23,
+"median": 1350,
+"init": {
+"deals": 62,
+"per_day": 2.18,
+"median": 825,
+"p75": 1525,
+"gmv_per_day": 2176,
+"active": 134,
+"sellers": 15,
+"top3_share": 0.55
+}
+},
+"49228": {
+"name": "Roblox",
+"per_day": 4.63,
+"median": 851,
+"init": {
+"deals": 59,
+"per_day": 2.05,
+"median": 400,
+"p75": 904,
+"gmv_per_day": 1334,
+"active": 36,
+"sellers": 13,
+"top3_share": 0.69
+}
+},
+"13252": {
+"name": "魔靈召喚",
+"per_day": 4.63,
+"median": 1050,
+"init": {
+"deals": 81,
+"per_day": 2.75,
+"median": 1000,
+"p75": 1063,
+"gmv_per_day": 2805,
+"active": 462,
+"sellers": 11,
+"top3_share": 0.62
+}
+},
+"34455": {
+"name": "Sky 光遇 Sky: Children of the Light",
+"per_day": 4.59,
+"median": 450,
+"init": {
+"deals": 30,
+"per_day": 1.01,
+"median": 925,
+"p75": 1450,
+"gmv_per_day": 905,
+"active": 106,
+"sellers": 6,
+"top3_share": 0.87
+}
+},
+"27085": {
+"name": "Free Fire - 我要活下去",
+"per_day": 4.07,
+"median": 2936,
+"init": {
+"deals": 8,
+"per_day": 0.27,
+"median": 2064,
+"p75": 3103,
+"gmv_per_day": 591,
+"active": 8,
+"sellers": 7,
+"top3_share": 0.5
+}
+},
+"66369": {
+"name": "NBA 巔峰對決",
+"per_day": 3.98,
+"median": 3080,
+"init": {
+"deals": 12,
+"per_day": 0.42,
+"median": 650,
+"p75": 1391,
+"gmv_per_day": 464,
+"active": 66,
+"sellers": 8,
+"top3_share": 0.58
+}
+},
+"51785": {
+"name": "Telegram",
+"per_day": 3.73,
+"median": 300,
+"init": {
+"deals": 108,
+"per_day": 3.66,
+"median": 300,
+"p75": 300,
+"gmv_per_day": 1170,
+"active": 54,
+"sellers": 12,
+"top3_share": 0.71
+}
+},
+"48572": {
+"name": "咒術迴戰 幻影夜行",
+"per_day": 3.52,
+"median": 435,
+"init": {
+"deals": 74,
+"per_day": 2.5,
+"median": 300,
+"p75": 612,
+"gmv_per_day": 1433,
+"active": 268,
+"sellers": 9,
+"top3_share": 0.77
+}
+},
+"39648": {
+"name": "世界計畫 繽紛舞台！feat. 初音未來",
+"per_day": 3.5,
+"median": 300,
+"init": {
+"deals": 68,
+"per_day": 2.39,
+"median": 255,
+"p75": 500,
+"gmv_per_day": 887,
+"active": 241,
+"sellers": 13,
+"top3_share": 0.66
+}
+},
+"51971": {
+"name": "我想成為影之強者！庭園大師",
+"per_day": 3.49,
+"median": 810,
+"init": {
+"deals": 54,
+"per_day": 1.87,
+"median": 800,
+"p75": 950,
+"gmv_per_day": 1395,
+"active": 217,
+"sellers": 10,
+"top3_share": 0.76
+}
+},
+"61355": {
+"name": "辟邪除妖Variants Daphne",
+"per_day": 3.43,
+"median": 440,
+"init": {
+"deals": 50,
+"per_day": 1.68,
+"median": 450,
+"p75": 450,
+"gmv_per_day": 914,
+"active": 267,
+"sellers": 14,
+"top3_share": 0.68
+}
+},
+"66531": {
+"name": "星塔旅人",
+"per_day": 3.39,
+"median": 350,
+"init": {
+"deals": 56,
+"per_day": 1.91,
+"median": 335,
+"p75": 400,
+"gmv_per_day": 859,
+"active": 243,
+"sellers": 9,
+"top3_share": 0.86
+}
+},
+"43656": {
+"name": "天堂W",
+"per_day": 3.18,
+"median": 10850,
+"init": {
+"deals": 44,
+"per_day": 1.5,
+"median": 5319,
+"p75": 10700,
+"gmv_per_day": 12796,
+"active": 93,
+"sellers": 27,
+"top3_share": 0.3
+}
+},
+"62063": {
+"name": "MLB PRO SPIRIT",
+"per_day": 3.18,
+"median": 880,
+"init": {
+"deals": 77,
+"per_day": 2.87,
+"median": 880,
+"p75": 880,
+"gmv_per_day": 2353,
+"active": 105,
+"sellers": 6,
+"top3_share": 0.86
+}
+},
+"52941": {
+"name": "Exitlag VPN",
+"per_day": 3.12,
+"median": 235,
+"init": {
+"deals": 74,
+"per_day": 2.5,
+"median": 235,
+"p75": 300,
+"gmv_per_day": 1437,
+"active": 4,
+"sellers": 3,
+"top3_share": 1.0
+}
+},
+"65927": {
+"name": "卡厄思夢境",
+"per_day": 3.07,
+"median": 1050,
+"init": {
+"deals": 50,
+"per_day": 1.69,
+"median": 650,
+"p75": 1220,
+"gmv_per_day": 1659,
+"active": 319,
+"sellers": 12,
+"top3_share": 0.6
+}
+},
+"64670": {
+"name": "RO 仙境傳說：世界之旅",
+"per_day": 3.05,
+"median": 4128,
+"init": {
+"deals": 4,
+"per_day": 0.17,
+"median": 850,
+"p75": 7825,
+"gmv_per_day": 503,
+"active": 15,
+"sellers": 2,
+"top3_share": 1.0
+}
+},
+"65969": {
+"name": "AION2",
+"per_day": 2.89,
+"median": 4900,
+"init": {
+"deals": 9,
+"per_day": 0.92,
+"median": 920,
+"p75": 1700,
+"gmv_per_day": 1193,
+"active": 42,
+"sellers": 2,
+"top3_share": 1.0
+}
+},
+"11716": {
+"name": "Instagram-社交",
+"per_day": 2.88,
+"median": 500,
+"init": {
+"deals": 92,
+"per_day": 3.1,
+"median": 500,
+"p75": 934,
+"gmv_per_day": 2181,
+"active": 48,
+"sellers": 11,
+"top3_share": 0.6
+}
+},
+"71791": {
+"name": "BanG Dream! 交織的樂章",
+"per_day": 2.87,
+"median": 365,
+"init": {
+"deals": 61,
+"per_day": 3.97,
+"median": 480,
+"p75": 675,
+"gmv_per_day": 2103,
+"active": 156,
+"sellers": 18,
+"top3_share": 0.64
+}
+},
+"70545": {
+"name": "伊莫",
+"per_day": 2.76,
+"median": 2275,
+"init": {
+"deals": 26,
+"per_day": 1.11,
+"median": 590,
+"p75": 3360,
+"gmv_per_day": 2529,
+"active": 47,
+"sellers": 4,
+"top3_share": 0.96
+}
+},
+"40437": {
+"name": "最後的克勞迪亞/最後的奇洛迪亞 LAST CLOUDIA",
+"per_day": 2.76,
+"median": 970,
+"init": {
+"deals": 84,
+"per_day": 2.81,
+"median": 775,
+"p75": 1875,
+"gmv_per_day": 2943,
+"active": 201,
+"sellers": 11,
+"top3_share": 0.68
+}
+},
+"70613": {
+"name": "hololive Dreams",
+"per_day": 2.74,
+"median": 270,
+"init": {
+"deals": 62,
+"per_day": 2.07,
+"median": 250,
+"p75": 500,
+"gmv_per_day": 824,
+"active": 269,
+"sellers": 14,
+"top3_share": 0.76
+}
+},
+"29013": {
+"name": "七龍珠 激戰傳說 Dragon Ball Legends﻿",
+"per_day": 2.74,
+"median": 350,
+"init": {
+"deals": 103,
+"per_day": 3.44,
+"median": 350,
+"p75": 550,
+"gmv_per_day": 1782,
+"active": 249,
+"sellers": 15,
+"top3_share": 0.59
+}
+},
+"34499": {
+"name": "Garena 決勝時刻 Mobile",
+"per_day": 2.6,
+"median": 4096,
+"init": {
+"deals": 8,
+"per_day": 0.31,
+"median": 1900,
+"p75": 3311,
+"gmv_per_day": 885,
+"active": 26,
+"sellers": 3,
+"top3_share": 1.0
+}
+},
+"66434": {
+"name": "三國群英傳：策定九州",
+"per_day": 2.57,
+"median": 600,
+"init": {
+"deals": 46,
+"per_day": 1.54,
+"median": 300,
+"p75": 562,
+"gmv_per_day": 1288,
+"active": 58,
+"sellers": 7,
+"top3_share": 0.91
+}
+},
+"39660": {
+"name": "LIVE A HERO",
+"per_day": 2.56,
+"median": 440,
+"init": {
+"deals": 22,
+"per_day": 2.56,
+"median": 440,
+"p75": 1150,
+"gmv_per_day": 1492,
+"active": 118,
+"sellers": 4,
+"top3_share": 0.91
+}
+},
+"54148": {
+"name": "重返未來：1999",
+"per_day": 2.54,
+"median": 1105,
+"init": {
+"deals": 55,
+"per_day": 1.86,
+"median": 670,
+"p75": 1200,
+"gmv_per_day": 1605,
+"active": 209,
+"sellers": 14,
+"top3_share": 0.62
+}
+},
+"55987": {
+"name": "黑子的籃球 Street Rivals",
+"per_day": 2.53,
+"median": 2500,
+"init": {
+"deals": 41,
+"per_day": 1.39,
+"median": 2500,
+"p75": 3400,
+"gmv_per_day": 4296,
+"active": 103,
+"sellers": 5,
+"top3_share": 0.93
+}
+},
+"71105": {
+"name": "三國觀滄海",
+"per_day": 2.51,
+"median": 350,
+"init": {
+"deals": 41,
+"per_day": 1.37,
+"median": 300,
+"p75": 600,
+"gmv_per_day": 597,
+"active": 19,
+"sellers": 4,
+"top3_share": 0.9
+}
+},
+"68711": {
+"name": "塔塔冒險隊",
+"per_day": 2.36,
+"median": 3346,
+"init": {
+"deals": 3,
+"per_day": 0.36,
+"median": 600,
+"p75": 3500,
+"gmv_per_day": 519,
+"active": 11,
+"sellers": 2,
+"top3_share": 1.0
+}
+},
+"63705": {
+"name": "魔法少女小圓 Magia Exedra",
+"per_day": 2.31,
+"median": 340,
+"init": {
+"deals": 95,
+"per_day": 3.21,
+"median": 300,
+"p75": 750,
+"gmv_per_day": 1907,
+"active": 279,
+"sellers": 9,
+"top3_share": 0.86
+}
+},
+"60164": {
+"name": "七大罪： 小小編年史",
+"per_day": 2.29,
+"median": 400,
+"init": {
+"deals": 1,
+"per_day": 2.29,
+"median": 400,
+"p75": 400,
+"gmv_per_day": 917,
+"active": 75,
+"sellers": 1,
+"top3_share": 1.0
+}
+},
+"36582": {
+"name": "穿越火線:槍戰王者(騰訊)",
+"per_day": 2.22,
+"median": 3400,
+"init": {
+"deals": 0,
+"per_day": 0.0,
+"median": null,
+"p75": null,
+"gmv_per_day": 0.0,
+"active": 3,
+"sellers": 0,
+"top3_share": null
+}
+},
+"33567": {
+"name": "PUBG MOBILE：絕地求生 M",
+"per_day": 2.21,
+"median": 5160,
+"init": {
+"deals": 9,
+"per_day": 0.33,
+"median": 213,
+"p75": 2872,
+"gmv_per_day": 557,
+"active": 19,
+"sellers": 6,
+"top3_share": 0.67
+}
+},
+"34005": {
+"name": "七大罪～光與暗之交戰～",
+"per_day": 2.21,
+"median": 825,
+"init": {
+"deals": 33,
+"per_day": 1.22,
+"median": 430,
+"p75": 975,
+"gmv_per_day": 1028,
+"active": 231,
+"sellers": 9,
+"top3_share": 0.67
+}
+},
+"26696": {
+"name": "元氣騎士 Soul Knight",
+"per_day": 2.19,
+"median": 300,
+"init": {
+"deals": 59,
+"per_day": 2.0,
+"median": 300,
+"p75": 400,
+"gmv_per_day": 717,
+"active": 85,
+"sellers": 5,
+"top3_share": 0.97
+}
+},
+"35163": {
+"name": "三國志・戰略版",
+"per_day": 2.18,
+"median": 19450,
+"init": {
+"deals": 0,
+"per_day": 0.0,
+"median": null,
+"p75": null,
+"gmv_per_day": 0.0,
+"active": 0,
+"sellers": 0,
+"top3_share": null
+}
+},
+"25547": {
+"name": "火影忍者（手遊）",
+"per_day": 2.01,
+"median": 2744,
+"init": {
+"deals": 3,
+"per_day": 0.12,
+"median": 1600,
+"p75": 1600,
+"gmv_per_day": 171,
+"active": 29,
+"sellers": 1,
+"top3_share": 1.0
+}
+},
+"24934": {
+"name": "碧藍航線",
+"per_day": 1.93,
+"median": 1300,
+"init": {
+"deals": 45,
+"per_day": 1.52,
+"median": 1000,
+"p75": 1425,
+"gmv_per_day": 1792,
+"active": 223,
+"sellers": 10,
+"top3_share": 0.71
+}
+},
+"61638": {
+"name": "Discord Nitro",
+"per_day": 1.93,
+"median": 242,
+"init": {
+"deals": 55,
+"per_day": 1.93,
+"median": 212,
+"p75": 350,
+"gmv_per_day": 602,
+"active": 8,
+"sellers": 5,
+"top3_share": 0.95
+}
+},
+"12383": {
+"name": "召喚圖板",
+"per_day": 1.93,
+"median": 840,
+"init": {
+"deals": 24,
+"per_day": 0.8,
+"median": 820,
+"p75": 990,
+"gmv_per_day": 759,
+"active": 214,
+"sellers": 7,
+"top3_share": 0.75
+}
+},
+"56983": {
+"name": "少女前線 2：追放",
+"per_day": 1.82,
+"median": 500,
+"init": {
+"deals": 45,
+"per_day": 1.53,
+"median": 500,
+"p75": 1080,
+"gmv_per_day": 1162,
+"active": 177,
+"sellers": 11,
+"top3_share": 0.64
+}
+},
+"30788": {
+"name": "第七史詩 Epic7",
+"per_day": 1.8,
+"median": 2215,
+"init": {
+"deals": 21,
+"per_day": 0.71,
+"median": 950,
+"p75": 1400,
+"gmv_per_day": 1281,
+"active": 229,
+"sellers": 5,
+"top3_share": 0.9
+}
+},
+"71988": {
+"name": "少女迷境",
+"per_day": 1.77,
+"median": 300,
+"init": {
+"deals": 0,
+"per_day": 0.0,
+"median": null,
+"p75": null,
+"gmv_per_day": 0.0,
+"active": 1,
+"sellers": 0,
+"top3_share": null
+}
+},
+"59545": {
+"name": "燕雲十六聲",
+"per_day": 1.71,
+"median": 2540,
+"init": {
+"deals": 19,
+"per_day": 0.66,
+"median": 2000,
+"p75": 4980,
+"gmv_per_day": 1812,
+"active": 55,
+"sellers": 3,
+"top3_share": 1.0
+}
+},
+"50020": {
+"name": "暗區突圍 Arena Breakout",
+"per_day": 1.67,
+"median": 250,
+"init": {
+"deals": 27,
+"per_day": 0.91,
+"median": 250,
+"p75": 360,
+"gmv_per_day": 248,
+"active": 14,
+"sellers": 3,
+"top3_share": 1.0
+}
+},
+"16468": {
+"name": "死神 BLEACH Brave Souls",
+"per_day": 1.64,
+"median": 1100,
+"init": {
+"deals": 77,
+"per_day": 2.6,
+"median": 900,
+"p75": 1600,
+"gmv_per_day": 3345,
+"active": 251,
+"sellers": 12,
+"top3_share": 0.73
+}
+},
+"17354": {
+"name": "部落衝突(Clash of Clans)",
+"per_day": 1.62,
+"median": 1436,
+"init": {
+"deals": 23,
+"per_day": 0.78,
+"median": 1500,
+"p75": 2750,
+"gmv_per_day": 1598,
+"active": 13,
+"sellers": 5,
+"top3_share": 0.91
+}
+},
+"27938": {
+"name": "超異域公主連結 Princess Connect！Re:Dive",
+"per_day": 1.62,
+"median": 300,
+"init": {
+"deals": 35,
+"per_day": 1.22,
+"median": 250,
+"p75": 450,
+"gmv_per_day": 536,
+"active": 247,
+"sellers": 7,
+"top3_share": 0.71
+}
+},
+"37333": {
+"name": "Netflix",
+"per_day": 1.61,
+"median": 150,
+"init": {
+"deals": 34,
+"per_day": 1.24,
+"median": 150,
+"p75": 458,
+"gmv_per_day": 376,
+"active": 21,
+"sellers": 4,
+"top3_share": 0.97
+}
+},
+"54483": {
+"name": "逆水寒手遊",
+"per_day": 1.53,
+"median": 10000,
+"init": {
+"deals": 8,
+"per_day": 0.34,
+"median": 420,
+"p75": 1712,
+"gmv_per_day": 414,
+"active": 24,
+"sellers": 5,
+"top3_share": 0.75
+}
+},
+"33208": {
+"name": "雀魂麻將",
+"per_day": 1.51,
+"median": 3000,
+"init": {
+"deals": 18,
+"per_day": 0.61,
+"median": 1040,
+"p75": 1582,
+"gmv_per_day": 989,
+"active": 62,
+"sellers": 11,
+"top3_share": 0.56
+}
+},
+"40756": {
+"name": "蔚藍檔案 Blue Archive",
+"per_day": 1.47,
+"median": 1200,
+"init": {
+"deals": 39,
+"per_day": 1.32,
+"median": 950,
+"p75": 1300,
+"gmv_per_day": 1181,
+"active": 284,
+"sellers": 8,
+"top3_share": 0.82
+}
+},
+"22959": {
+"name": "王者榮耀",
+"per_day": 1.47,
+"median": 2728,
+"init": {
+"deals": 6,
+"per_day": 0.2,
+"median": 1477,
+"p75": 5125,
+"gmv_per_day": 527,
+"active": 10,
+"sellers": 1,
+"top3_share": 1.0
+}
+},
+"38243": {
+"name": "英雄聯盟：激鬥峽谷",
+"per_day": 1.44,
+"median": 2127,
+"init": {
+"deals": 11,
+"per_day": 0.43,
+"median": 3200,
+"p75": 3480,
+"gmv_per_day": 2261,
+"active": 20,
+"sellers": 6,
+"top3_share": 0.73
+}
+},
+"33047": {
+"name": "突襲：暗影傳說 RAID : Shadow Legends",
+"per_day": 1.43,
+"median": 1090,
+"init": {
+"deals": 33,
+"per_day": 1.15,
+"median": 800,
+"p75": 1425,
+"gmv_per_day": 1197,
+"active": 191,
+"sellers": 12,
+"top3_share": 0.55
+}
+},
+"71119": {
+"name": "搞鬼M",
+"per_day": 1.39,
+"median": 1548,
+"init": {
+"deals": 13,
+"per_day": 0.43,
+"median": 638,
+"p75": 1300,
+"gmv_per_day": 351,
+"active": 5,
+"sellers": 1,
+"top3_share": 1.0
+}
+},
+"47035": {
+"name": "麻雀一番街",
+"per_day": 1.39,
+"median": 650,
+"init": {
+"deals": 31,
+"per_day": 1.05,
+"median": 450,
+"p75": 700,
+"gmv_per_day": 597,
+"active": 210,
+"sellers": 8,
+"top3_share": 0.68
+}
+},
+"34928": {
+"name": "企鵝島 Penguin's Isle",
+"per_day": 1.36,
+"median": 1600,
+"init": {
+"deals": 1,
+"per_day": 1.36,
+"median": 1600,
+"p75": 1600,
+"gmv_per_day": 2169,
+"active": 44,
+"sellers": 1,
+"top3_share": 1.0
+}
+},
+"34289": {
+"name": "跑跑卡丁車（騰訊）",
+"per_day": 1.33,
+"median": 600,
+"init": {
+"deals": 33,
+"per_day": 1.12,
+"median": 400,
+"p75": 650,
+"gmv_per_day": 629,
+"active": 8,
+"sellers": 3,
+"top3_share": 1.0
+}
+},
+"28621": {
+"name": "言靈戰士",
+"per_day": 1.33,
+"median": 2850,
+"init": {
+"deals": 2,
+"per_day": 1.33,
+"median": 2850,
+"p75": 6825,
+"gmv_per_day": 3782,
+"active": 138,
+"sellers": 2,
+"top3_share": 1.0
+}
+},
+"71458": {
+"name": "RAN - Royal Academy Nations",
+"per_day": 1.32,
+"median": 3989,
+"init": {
+"deals": 3,
+"per_day": 0.1,
+"median": 4255,
+"p75": 5000,
+"gmv_per_day": 402,
+"active": 6,
+"sellers": 3,
+"top3_share": 1.0
+}
+},
+"71089": {
+"name": "MAJO - 末日策略 RPG",
+"per_day": 1.31,
+"median": 1025,
+"init": {
+"deals": 32,
+"per_day": 1.07,
+"median": 600,
+"p75": 1312,
+"gmv_per_day": 1131,
+"active": 93,
+"sellers": 7,
+"top3_share": 0.72
+}
+},
+"71768": {
+"name": "伊莫 Aniimo",
+"per_day": 1.27,
+"median": 3300,
+"init": {
+"deals": 10,
+"per_day": 0.87,
+"median": 2315,
+"p75": 3350,
+"gmv_per_day": 2183,
+"active": 35,
+"sellers": 5,
+"top3_share": 0.8
+}
+},
+"58229": {
+"name": "境界守望者",
+"per_day": 1.27,
+"median": 1225,
+"init": {
+"deals": 28,
+"per_day": 0.95,
+"median": 290,
+"p75": 1350,
+"gmv_per_day": 831,
+"active": 164,
+"sellers": 6,
+"top3_share": 0.82
+}
+},
+"20542": {
+"name": "Minecraft Pocket Edition",
+"per_day": 1.22,
+"median": 1063,
+"init": {
+"deals": 34,
+"per_day": 1.15,
+"median": 1063,
+"p75": 1063,
+"gmv_per_day": 1331,
+"active": 1,
+"sellers": 1,
+"top3_share": 1.0
+}
+},
+"69030": {
+"name": "星之救援者 StarSavior",
+"per_day": 1.16,
+"median": 2100,
+"init": {
+"deals": 25,
+"per_day": 0.85,
+"median": 1850,
+"p75": 4250,
+"gmv_per_day": 3432,
+"active": 128,
+"sellers": 5,
+"top3_share": 0.92
+}
+},
+"60648": {
+"name": "Car Parking Multiplayer 2",
+"per_day": 1.09,
+"median": 239,
+"init": {
+"deals": 32,
+"per_day": 1.08,
+"median": 270,
+"p75": 392,
+"gmv_per_day": 380,
+"active": 34,
+"sellers": 2,
+"top3_share": 1.0
+}
+},
+"59542": {
+"name": "三國：謀定天下",
+"per_day": 1.04,
+"median": 5660,
+"init": {
+"deals": 1,
+"per_day": 0.05,
+"median": 8000,
+"p75": 8000,
+"gmv_per_day": 407,
+"active": 4,
+"sellers": 1,
+"top3_share": 1.0
+}
+},
+"69917": {
+"name": "超時空街球對決",
+"per_day": 1.04,
+"median": 550,
+"init": {
+"deals": 13,
+"per_day": 0.46,
+"median": 200,
+"p75": 250,
+"gmv_per_day": 112,
+"active": 154,
+"sellers": 4,
+"top3_share": 0.92
+}
+},
+"61371": {
+"name": "地平線行者",
+"per_day": 1.02,
+"median": 1250,
+"init": {
+"deals": 30,
+"per_day": 1.02,
+"median": 1200,
+"p75": 1482,
+"gmv_per_day": 1197,
+"active": 128,
+"sellers": 7,
+"top3_share": 0.87
+}
+},
+"23637": {
+"name": "BanG Dream！少女樂團派對",
+"per_day": 1.01,
+"median": 350,
+"init": {
+"deals": 29,
+"per_day": 0.98,
+"median": 350,
+"p75": 1000,
+"gmv_per_day": 936,
+"active": 415,
+"sellers": 10,
+"top3_share": 0.66
+}
+},
+"32264": {
+"name": "Garena 極速領域",
+"per_day": 0.98,
+"median": 5000
+},
+"71470": {
+"name": "嘎嘎特攻",
+"per_day": 0.93,
+"median": 2500
+},
+"15224": {
+"name": "全民槍戰",
+"per_day": 0.92,
+"median": 3000
+},
+"51704": {
+"name": "少女戰爭",
+"per_day": 0.91,
+"median": 466
+},
+"18841": {
+"name": "部落衝突:皇室戰爭",
+"per_day": 0.87,
+"median": 1968
+},
+"71016": {
+"name": "我的英雄學院：UNITED SURVIVAL",
+"per_day": 0.85,
+"median": 500
+},
+"61689": {
+"name": "同盟塔防戰",
+"per_day": 0.84,
+"median": 7739
+},
+"59506": {
+"name": "杖劍傳說：坎斯汀之約",
+"per_day": 0.84,
+"median": 4000
+},
+"57542": {
+"name": "MLB 制勝時刻",
+"per_day": 0.83,
+"median": 4500
+},
+"58749": {
+"name": "Threads",
+"per_day": 0.77,
+"median": 150
+},
+"27431": {
+"name": "你的目的就是殺死我 3",
+"per_day": 0.75,
+"median": 900
+},
+"22336": {
+"name": "神魔召喚 GS GRAND SUMMONERS",
+"per_day": 0.73,
+"median": 1450
+},
+"57552": {
+"name": "十二之天M Origin",
+"per_day": 0.73,
+"median": 3710
+},
+"67119": {
+"name": "BLEACH：刀鳴",
+"per_day": 0.73,
+"median": 1500
+},
+"71776": {
+"name": "半夜別修仙",
+"per_day": 0.73,
+"median": 1100
+},
+"39929": {
+"name": "歧路旅人：大陸的霸者",
+"per_day": 0.73,
+"median": 1600
+},
+"40519": {
+"name": "QQ華夏（騰訊）",
+"per_day": 0.72,
+"median": 880
+},
+"55115": {
+"name": "女神異聞錄：夜幕魅影",
+"per_day": 0.71,
+"median": 2700
+},
+"39367": {
+"name": "RO新世代：攜手同行",
+"per_day": 0.7,
+"median": 8000
+},
+"41808": {
+"name": "Phigros",
+"per_day": 0.69,
+"median": 500
+},
+"66431": {
+"name": "EA SPORTS FC Mobile 足球",
+"per_day": 0.69,
+"median": 1964
+},
+"55017": {
+"name": "魔物獵人NOW Monster Hunter Now",
+"per_day": 0.68,
+"median": 5000
+},
+"65662": {
+"name": "怪獸 8號 THE GAME",
+"per_day": 0.67,
+"median": 390
+},
+"43774": {
+"name": "巴哈姆特動畫瘋",
+"per_day": 0.65,
+"median": 120
+},
+"40082": {
+"name": "全民打棒球 Pro",
+"per_day": 0.65,
+"median": 1100
+},
+"48789": {
+"name": "Blox Fruits",
+"per_day": 0.64,
+"median": 550
+},
+"41675": {
+"name": "The Spike - Volleyball Story",
+"per_day": 0.64,
+"median": 1700
+},
+"62914": {
+"name": "Wizardry Variants Daphne",
+"per_day": 0.64,
+"median": 450
+},
+"27920": {
+"name": "Pokemon TCG Live",
+"per_day": 0.63,
+"median": 205
+},
+"14535": {
+"name": "七騎士",
+"per_day": 0.63,
+"median": 1000
+},
+"13359": {
+"name": "波可龍迷宮",
+"per_day": 0.62,
+"median": 540
+},
+"71625": {
+"name": "不良人：破局",
+"per_day": 0.61,
+"median": 798
+},
+"40474": {
+"name": "忍者必須死-全球版",
+"per_day": 0.58,
+"median": 3730
+},
+"32349": {
+"name": "另一個伊甸：穿越時空的貓 Another Eden",
+"per_day": 0.57,
+"median": 800
+},
+"59033": {
+"name": "心動小鎮 Heartopia",
+"per_day": 0.57,
+"median": 4803
+},
+"51992": {
+"name": "eFootball 2024",
+"per_day": 0.57,
+"median": 3750
+},
+"62176": {
+"name": "EA SPORTS FC™ Mobile",
+"per_day": 0.56,
+"median": 2659
+},
+"60739": {
+"name": "恐龍宇宙 (Dinosaur Universe)",
+"per_day": 0.55,
+"median": 500
+},
+"57186": {
+"name": "交錯戰線",
+"per_day": 0.54,
+"median": 850
+},
+"32235": {
+"name": "三國殺",
+"per_day": 0.53,
+"median": 2553
+},
+"52643": {
+"name": "排球少年！！TOUCH THE DREAM",
+"per_day": 0.53,
+"median": 380
+},
+"63966": {
+"name": "超自然行動組",
+"per_day": 0.53,
+"median": 2500
+},
+"69422": {
+"name": "JUMP 全明星亂鬥",
+"per_day": 0.53,
+"median": 800
+},
+"58957": {
+"name": "忍者喵喵：保衛村莊",
+"per_day": 0.52,
+"median": 800
+},
+"27234": {
+"name": "荒野行動 手機版Knives Out",
+"per_day": 0.52,
+"median": 600
+},
+"71030": {
+"name": "猛鬼三國",
+"per_day": 0.52,
+"median": 2490
+},
+"68153": {
+"name": "Google Gemini",
+"per_day": 0.51,
+"median": 225
+},
+"35142": {
+"name": "天堂2M  Lineage2M",
+"per_day": 0.51,
+"median": 3000
+},
+"56713": {
+"name": "忘卻前夜 Morimens",
+"per_day": 0.51,
+"median": 300
+},
+"16345": {
+"name": "Crash Fever",
+"per_day": 0.51,
+"median": 1600
+},
+"49914": {
+"name": "Memento Mori",
+"per_day": 0.51,
+"median": 680
+},
+"22425": {
+"name": "Mobile Legends 無盡對決",
+"per_day": 0.5,
+"median": 3500
+},
+"70192": {
+"name": "像素深淵",
+"per_day": 0.48,
+"median": 290
+},
+"16047": {
+"name": "三國群英傳 M",
+"per_day": 0.47,
+"median": 5319
+},
+"61796": {
+"name": "弓箭傳說2",
+"per_day": 0.47,
+"median": 10320
+},
+"41889": {
+"name": "WePlay - 線上桌遊吧",
+"per_day": 0.47,
+"median": 3723
+},
+"11669": {
+"name": "卡通農場Hay Day",
+"per_day": 0.45,
+"median": 160
+},
+"70509": {
+"name": "失控進化",
+"per_day": 0.44,
+"median": 2104
+},
+"37336": {
+"name": "催眠麥克風 -Alternative Rap Battle-",
+"per_day": 0.44,
+"median": 300
+},
+"53917": {
+"name": "九萬畝",
+"per_day": 0.44,
+"median": 7000
+},
+"31713": {
+"name": "探索者記：迷城奇案",
+"per_day": 0.43,
+"median": 560
+},
+"33778": {
+"name": "和平菁英/和平精英（騰訊）",
+"per_day": 0.43,
+"median": 832
+},
+"65018": {
+"name": "星痕共鳴",
+"per_day": 0.42,
+"median": 13900
+},
+"71076": {
+"name": "Oopz 語音",
+"per_day": 0.42,
+"median": 290
+},
+"38341": {
+"name": "Spotify",
+"per_day": 0.41,
+"median": 1200
+},
+"68817": {
+"name": "RO仙境傳說：愛如初見Classic",
+"per_day": 0.41,
+"median": 3728
+},
+"69759": {
+"name": "瑞利昂(RELLION)：NPC的生存記",
+"per_day": 0.41,
+"median": 2008
+},
+"22147": {
+"name": "神域召喚",
+"per_day": 0.4,
+"median": 465
+},
+"61801": {
+"name": "冰的啦！企鵝逗陣戰",
+"per_day": 0.4,
+"median": 5531
+},
+"31518": {
+"name": "暗黑破壞神 永生不朽",
+"per_day": 0.4,
+"median": 30000
+},
+"49001": {
+"name": "小紅書",
+"per_day": 0.4,
+"median": 500
+},
+"50372": {
+"name": "Echocalypse：緋紅的神約",
+"per_day": 0.4,
+"median": 570
+},
+"70797": {
+"name": "ARES: THE IRON VANGUARD",
+"per_day": 0.39,
+"median": 500
+},
+"25191": {
+"name": "MLB：9 局職棒總教練",
+"per_day": 0.39,
+"median": 2000
+},
+"68735": {
+"name": "VAMPIR：血之繼承者",
+"per_day": 0.39,
+"median": 4200
+},
+"28714": {
+"name": "偶像大師 閃耀色彩",
+"per_day": 0.38,
+"median": 300
+},
+"66361": {
+"name": "我的花園世界",
+"per_day": 0.37,
+"median": 5335
+},
+"69112": {
+"name": "新熱血江湖：世界",
+"per_day": 0.37,
+"median": 3600
+},
+"63612": {
+"name": "RF ONLINE NEXT",
+"per_day": 0.36,
+"median": 12500
+},
+"32995": {
+"name": "三重幻想",
+"per_day": 0.35,
+"median": 4000
+},
+"12078": {
+"name": "YouTube",
+"per_day": 0.35,
+"median": 800
+},
+"36456": {
+"name": "Xbox Game Pass",
+"per_day": 0.35,
+"median": 450
+},
+"41925": {
+"name": "易次元",
+"per_day": 0.34,
+"median": 300
+},
+"13436": {
+"name": "白貓 Project",
+"per_day": 0.34,
+"median": 805
+},
+"37427": {
+"name": "火影忍者 疾風傳（騰訊）",
+"per_day": 0.34,
+"median": 2690
+},
+"69364": {
+"name": "魔御：STAR DIVE",
+"per_day": 0.34,
+"median": 800
+},
+"17079": {
+"name": "拳皇98終極之戰",
+"per_day": 0.34,
+"median": 5000
+},
+"25395": {
+"name": "地球末日 Last Day on Earth: Survival",
+"per_day": 0.33,
+"median": 400
+},
+"52706": {
+"name": "寒霜啟示錄 Whiteout Survival",
+"per_day": 0.33,
+"median": 6382
+},
+"69728": {
+"name": "青丘世界：緣起",
+"per_day": 0.33,
+"median": 350
+},
+"15101": {
+"name": "8 Ball Pool",
+"per_day": 0.33,
+"median": 500
+},
+"31400": {
+"name": "RO仙境傳說：愛如初見",
+"per_day": 0.31,
+"median": 12000
+},
+"50426": {
+"name": "HIT 2",
+"per_day": 0.31,
+"median": 6400
+},
+"64184": {
+"name": "ChatGPT",
+"per_day": 0.31,
+"median": 550
+},
+"67505": {
+"name": "江湖有詭",
+"per_day": 0.31,
+"median": 1050
+},
+"64346": {
+"name": "口袋可可雙子物語",
+"per_day": 0.31,
+"median": 800
+},
+"63366": {
+"name": "RO仙境傳說：守護永恆的愛 Classic",
+"per_day": 0.3,
+"median": 10000
+},
+"14811": {
+"name": "碧藍幻想",
+"per_day": 0.3,
+"median": 1525
+},
+"56678": {
+"name": "TFT: 聯盟戰棋",
+"per_day": 0.3,
+"median": 800
+},
+"38405": {
+"name": "天地劫",
+"per_day": 0.3,
+"median": 300
+},
+"20883": {
+"name": "Jurassic World: The Game(侏儸紀世界)",
+"per_day": 0.3,
+"median": 675
+},
+"50511": {
+"name": "阿爾比恩 Albion Online",
+"per_day": 0.29,
+"median": 10680
+},
+"53964": {
+"name": "奇葩大亂鬥",
+"per_day": 0.29,
+"median": 599
+},
+"50141": {
+"name": "Surfshark VPN",
+"per_day": 0.28,
+"median": 159
+},
+"47967": {
+"name": "Pikmin Bloom 皮克敏",
+"per_day": 0.28,
+"median": 4490
+},
+"68958": {
+"name": "不正經魔王軍",
+"per_day": 0.28,
+"median": 5000
+},
+"68082": {
+"name": "指尖棋兵",
+"per_day": 0.28,
+"median": 10638
+},
+"15716": {
+"name": "Marvel Future Fight(未來之戰)",
+"per_day": 0.28,
+"median": 6000
+},
+"69292": {
+"name": "生存33天",
+"per_day": 0.27,
+"median": 300
+},
+"21981": {
+"name": "跑跑薑餅人：烤箱大逃亡",
+"per_day": 0.27,
+"median": 400
+},
+"68451": {
+"name": "Grok",
+"per_day": 0.27,
+"median": 550
+},
+"65821": {
+"name": "Draft Showdown",
+"per_day": 0.27,
+"median": 500
+},
+"65682": {
+"name": "阿瑞斯 : 命運的選擇者",
+"per_day": 0.27,
+"median": 200
+},
+"58139": {
+"name": "我獨自升級:Arise",
+"per_day": 0.27,
+"median": 1075
+},
+"20089": {
+"name": "拉斯維加斯娛樂城 (Lets Vegas Slots)",
+"per_day": 0.27,
+"median": 5000
+},
+"31791": {
+"name": "超級機器人大戰 DD",
+"per_day": 0.27,
+"median": 795
+},
+"31548": {
+"name": "明日之後",
+"per_day": 0.27,
+"median": 5973
+},
+"65985": {
+"name": "MUV-LUV 少女庭園",
+"per_day": 0.27,
+"median": 600
+},
+"70372": {
+"name": "星絆之旅",
+"per_day": 0.27,
+"median": 1000
+},
+"41458": {
+"name": "一念逍遙",
+"per_day": 0.26,
+"median": 20116
+},
+"24467": {
+"name": "棒球殿堂Live",
+"per_day": 0.26,
+"median": 2000
+},
+"51274": {
+"name": "Dolphin Wave 洶湧海豚",
+"per_day": 0.26,
+"median": 305
+},
+"12123": {
+"name": "微博",
+"per_day": 0.26,
+"median": 500
+},
+"64860": {
+"name": "溯回青空",
+"per_day": 0.25,
+"median": 200
+},
+"35258": {
+"name": "妖怪Rumble！",
+"per_day": 0.25,
+"median": 450
+},
+"71878": {
+"name": "天上碑K",
+"per_day": 0.25,
+"median": 2000
+},
+"41362": {
+"name": "球球英雄",
+"per_day": 0.25,
+"median": 3200
+},
+"15898": {
+"name": "One Piece Treasure Cruise",
+"per_day": 0.25,
+"median": 300
+},
+"25067": {
+"name": "足球小將翼：夢幻隊伍﻿",
+"per_day": 0.24,
+"median": 2000
+},
+"58232": {
+"name": "排球少年！！FLY HIGH",
+"per_day": 0.23,
+"median": 375
+},
+"49347": {
+"name": "月兔養成",
+"per_day": 0.23,
+"median": 2000
+},
+"49274": {
+"name": "蛋仔派對",
+"per_day": 0.23,
+"median": 3196
+},
+"32861": {
+"name": "MASS FOR THE DEAD",
+"per_day": 0.23,
+"median": 500
+},
+"59680": {
+"name": "Microsoft 365 (Office)",
+"per_day": 0.23,
+"median": 495
+},
+"64532": {
+"name": "夸克Quark",
+"per_day": 0.23,
+"median": 600
+},
+"65612": {
+"name": "二重螺旋",
+"per_day": 0.23,
+"median": 3191
+},
+"67782": {
+"name": "Poker Fate",
+"per_day": 0.22,
+"median": 425
+},
+"44415": {
+"name": "英雄聯盟手遊（騰訊）",
+"per_day": 0.22,
+"median": 500
+},
+"50582": {
+"name": "英雄戰紀 - 紅藍大作戰",
+"per_day": 0.22,
+"median": 500
+},
+"46362": {
+"name": "Random Dice: Wars 隨機骰子：大戰",
+"per_day": 0.22,
+"median": 2480
+},
+"49582": {
+"name": "比武大會",
+"per_day": 0.22,
+"median": 3400
+},
+"57639": {
+"name": "王國之歌 Top Heroes",
+"per_day": 0.22,
+"median": 30000
+},
+"33934": {
+"name": "香腸派對 Sausage Man",
+"per_day": 0.22,
+"median": 4000
+},
+"24713": {
+"name": "崩壞 3rd",
+"per_day": 0.21,
+"median": 750
+},
+"33322": {
+"name": "Last Origin",
+"per_day": 0.21,
+"median": 250
+},
+"50553": {
+"name": "七大罪：Origin",
+"per_day": 0.21,
+"median": 1350
+},
+"69335": {
+"name": "少女喚靈",
+"per_day": 0.2,
+"median": 466
+},
+"53200": {
+"name": "NBA 2K Mobile",
+"per_day": 0.2,
+"median": 266
+},
+"44488": {
+"name": "黎明再現 (Doomsday: Last Survivors)",
+"per_day": 0.2,
+"median": 2100
+},
+"69548": {
+"name": "Castle Busters",
+"per_day": 0.2,
+"median": 531
+},
+"46204": {
+"name": "橙光",
+"per_day": 0.2,
+"median": 700
+},
+"55552": {
+"name": "Maplestory Worlds 楓之谷世界",
+"per_day": 0.2,
+"median": 285
+},
+"62410": {
+"name": "KK對戰平台",
+"per_day": 0.2,
+"median": 150
+},
+"62496": {
+"name": "Eternal Hero",
+"per_day": 0.2,
+"median": 1063
+},
+"65026": {
+"name": "Soul Huntress: Dungeon Crawler",
+"per_day": 0.19,
+"median": 600
+},
+"61042": {
+"name": "ReverseBlue×Re-birthEnd",
+"per_day": 0.19,
+"median": 200
+},
+"70131": {
+"name": "果燃很派",
+"per_day": 0.19,
+"median": 536
+},
+"43633": {
+"name": "哈利波特：魔法覺醒",
+"per_day": 0.19,
+"median": 4900
+},
+"66659": {
+"name": "蔚藍星球: 國王很忙",
+"per_day": 0.19,
+"median": 3000
+},
+"70354": {
+"name": "Skull Hero : XP Farm RPG",
+"per_day": 0.18,
+"median": 400
+},
+"64278": {
+"name": "英雄刷刷刷",
+"per_day": 0.18,
+"median": 2000
+},
+"27825": {
+"name": "永恆冒險 for kakao(次元追跡者)",
+"per_day": 0.18,
+"median": 2200
+},
+"58599": {
+"name": "Google One",
+"per_day": 0.18,
+"median": 300
+},
+"62820": {
+"name": "天月麻雀－四式麻將新體驗",
+"per_day": 0.18,
+"median": 200
+},
+"69269": {
+"name": "好萊塢合成：星夢逆襲 Hollywood Merge",
+"per_day": 0.18,
+"median": 600
+},
+"50804": {
+"name": "HBO max",
+"per_day": 0.18,
+"median": 169
+},
+"25567": {
+"name": "狼人殺",
+"per_day": 0.18,
+"median": 1622
+},
+"20789": {
+"name": "CSR Racing 2",
+"per_day": 0.18,
+"median": 300
+},
+"68502": {
+"name": "美職籃巔峰對決",
+"per_day": 0.18,
+"median": 6671
+},
+"32964": {
+"name": "QQ飛車(騰訊手遊)",
+"per_day": 0.18,
+"median": 5000
+},
+"56960": {
+"name": "QQ閱讀",
+"per_day": 0.18,
+"median": 700
+},
+"68857": {
+"name": "巡夢少女：異世界的宮廷琦譚",
+"per_day": 0.18,
+"median": 500
+},
+"49027": {
+"name": "以閃亮之名 Glamorous Secrets",
+"per_day": 0.17,
+"median": 180
+},
+"65653": {
+"name": "Dungeon Slasher",
+"per_day": 0.17,
+"median": 1000
+},
+"34109": {
+"name": "斗羅大陸",
+"per_day": 0.17,
+"median": 2282
+},
+"61723": {
+"name": "天地劫：幽城再臨",
+"per_day": 0.17,
+"median": 620
+},
+"71027": {
+"name": "幻想水滸傳 STAR LEAP",
+"per_day": 0.17,
+"median": 400
+},
+"36176": {
+"name": "Action 對魔忍",
+"per_day": 0.17,
+"median": 350
+},
+"68112": {
+"name": "魔女與龍：光暗篇章",
+"per_day": 0.17,
+"median": 18101
+},
+"59521": {
+"name": "七日世界 Once Human",
+"per_day": 0.17,
+"median": 9750
+},
+"60251": {
+"name": "星落",
+"per_day": 0.17,
+"median": 360
+},
+"37078": {
+"name": "守望傳說 Guardian Tales",
+"per_day": 0.16,
+"median": 1182
+},
+"71131": {
+"name": "神話倖存者 (Mythic Survivors)",
+"per_day": 0.16,
+"median": 375
+},
+"67773": {
+"name": "Poker Fate - 免費休閒線上德州撲克",
+"per_day": 0.16,
+"median": 450
+},
+"34881": {
+"name": "勇者鬥惡龍 WALK",
+"per_day": 0.16,
+"median": 825
+},
+"39151": {
+"name": "光與夜之戀",
+"per_day": 0.16,
+"median": 3075
+},
+"28399": {
+"name": "刀劍神域 關鍵鬥士(必要因子)",
+"per_day": 0.16,
+"median": 1000
+},
+"29328": {
+"name": "Dead Ahead:Zombie Warfare",
+"per_day": 0.16,
+"median": 100
+},
+"41420": {
+"name": "幻塔",
+"per_day": 0.16,
+"median": 185
+},
+"51168": {
+"name": "魔靈召喚: 天空之役",
+"per_day": 0.16,
+"median": 2960
+},
+"42446": {
+"name": "偶像榮耀 IDOLY PRIDE",
+"per_day": 0.16,
+"median": 46
+},
+"65350": {
+"name": "英勇之地",
+"per_day": 0.15,
+"median": 1595
+},
+"43846": {
+"name": "Garena Free Fire Max",
+"per_day": 0.15,
+"median": 3700
+},
+"43028": {
+"name": "斗羅大陸 3D：魂師對決",
+"per_day": 0.15,
+"median": 5000
+},
+"59515": {
+"name": "主公快逃",
+"per_day": 0.15,
+"median": 4000
+},
+"71755": {
+"name": "2026 中職王牌GO!",
+"per_day": 0.15,
+"median": 1550
+},
+"21712": {
+"name": "少女前線",
+"per_day": 0.14,
+"median": 800
+},
+"39605": {
+"name": "三國志 霸道",
+"per_day": 0.14,
+"median": 375
+},
+"64766": {
+"name": "永遠的蔚藍星球",
+"per_day": 0.14,
+"median": 710
+},
+"51144": {
+"name": "Garena 傳說對決：六週年版本",
+"per_day": 0.14,
+"median": 2038
+},
+"41414": {
+"name": "天天玩樂園",
+"per_day": 0.14,
+"median": 4600
+},
+"49048": {
+"name": "Code Geass 反叛的魯路修　失落物語",
+"per_day": 0.14,
+"median": 480
+},
+"67876": {
+"name": "魔力寶貝：重返法蘭",
+"per_day": 0.14,
+"median": 23500
+},
+"71854": {
+"name": "魔卡紀元",
+"per_day": 0.14,
+"median": 400
+},
+"36201": {
+"name": "像素射擊 3D",
+"per_day": 0.14,
+"median": 400
+},
+"41777": {
+"name": "神王城堡",
+"per_day": 0.13,
+"median": 1800
+},
+"64409": {
+"name": "守住呀道友",
+"per_day": 0.13,
+"median": 8000
+},
+"41373": {
+"name": "Rhythm Hive",
+"per_day": 0.13,
+"median": 400
+},
+"37199": {
+"name": "迪士尼扭曲樂園 Disney Twisted-Wonderland",
+"per_day": 0.13,
+"median": 250
+},
+"40590": {
+"name": "天諭",
+"per_day": 0.13,
+"median": 2300
+},
+"54468": {
+"name": "天命傳說",
+"per_day": 0.13,
+"median": 1063
+},
+"23096": {
+"name": "火焰之紋章英雄",
+"per_day": 0.13,
+"median": 1200
+},
+"68508": {
+"name": "超限進化：界域崩解",
+"per_day": 0.13,
+"median": 600
+},
+"32116": {
+"name": "ZEPETO",
+"per_day": 0.13,
+"median": 800
+},
+"51341": {
+"name": "魔物娘TD 手機版",
+"per_day": 0.13,
+"median": 100
+},
+"35166": {
+"name": "募戀英雄 - Stand My Heroes-",
+"per_day": 0.13,
+"median": 250
+},
+"42789": {
+"name": "少女迴戰",
+"per_day": 0.12,
+"median": 500
+},
+"47648": {
+"name": "神域 Mythic Heroes",
+"per_day": 0.12,
+"median": 800
+},
+"32677": {
+"name": "三國大戰 Smash!",
+"per_day": 0.12,
+"median": 580
+},
+"70965": {
+"name": "神話幸存者 Mythic Survivors",
+"per_day": 0.12,
+"median": 250
+},
+"17365": {
+"name": "妖怪手錶 Puni Puni 噗尼噗尼",
+"per_day": 0.12,
+"median": 550
+},
+"37056": {
+"name": "Random Dice：PvP Defense",
+"per_day": 0.12,
+"median": 5320
+},
+"20838": {
+"name": "崩壞學園 2",
+"per_day": 0.12,
+"median": 400
+},
+"61552": {
+"name": "Dark War Survival",
+"per_day": 0.12,
+"median": 2500
+},
+"19314": {
+"name": "王國紀元 (Lords Mobile)",
+"per_day": 0.12,
+"median": 3024
+},
+"52052": {
+"name": "CarX Street APP版",
+"per_day": 0.12,
+"median": 800
+},
+"66270": {
+"name": "JoJo的奇妙冒險 歐拉歐拉波紋疾走",
+"per_day": 0.12,
+"median": 500
+},
+"63316": {
+"name": "Kingshot",
+"per_day": 0.12,
+"median": 20000
+},
+"66476": {
+"name": "信長之野望 真戰",
+"per_day": 0.12,
+"median": 2000
+},
+"59636": {
+"name": "新武俠大明星",
+"per_day": 0.12,
+"median": 475
+},
+"69740": {
+"name": "仙逆M",
+"per_day": 0.12,
+"median": 5000
+},
+"70007": {
+"name": "星海奇航：海盗來了",
+"per_day": 0.12,
+"median": 4255
+},
+"20726": {
+"name": "神來也麻將(手機版)",
+"per_day": 0.11,
+"median": 530
+},
+"59276": {
+"name": "18TRIP",
+"per_day": 0.11,
+"median": 300
+},
+"59293": {
+"name": "RAVEN2 : 渡鴉",
+"per_day": 0.11,
+"median": 22000
+},
+"60898": {
+"name": "RO仙境傳說：重生",
+"per_day": 0.11,
+"median": 5500
+},
+"62947": {
+"name": "Rogue with the Dead -亡途轉生",
+"per_day": 0.11,
+"median": 3000
+},
+"64883": {
+"name": "斗羅大陸：獵魂世界",
+"per_day": 0.11,
+"median": 3910
+},
+"67398": {
+"name": "Dcard",
+"per_day": 0.11,
+"median": 550
+},
+"70719": {
+"name": "褪色界域: 瑟匹亞",
+"per_day": 0.11,
+"median": 50
+},
+"35364": {
+"name": "ASH ARMS - 灰燼戰線 -",
+"per_day": 0.11,
+"median": 250
+},
+"40593": {
+"name": "植物大戰殭屍2",
+"per_day": 0.11,
+"median": 500
+},
+"21836": {
+"name": "FIFA Mobile 足球",
+"per_day": 0.11,
+"median": 3700
+},
+"35115": {
+"name": "三國殺名將傳",
+"per_day": 0.1,
+"median": 4691
+},
+"71677": {
+"name": "三國神將錄",
+"per_day": 0.1,
+"median": 2766
+},
+"66582": {
+"name": "Pokemon Sleep",
+"per_day": 0.1,
+"median": 4246
+},
+"60071": {
+"name": "永劫無間",
+"per_day": 0.1,
+"median": 732
+},
+"25870": {
+"name": "Injustice 2",
+"per_day": 0.1,
+"median": 531
+},
+"21915": {
+"name": "RO仙境傳說：守護永恆的愛",
+"per_day": 0.1,
+"median": 4787
+},
+"58570": {
+"name": "物華彌新",
+"per_day": 0.1,
+"median": 1400
+},
+"61222": {
+"name": "Underdark:Defense",
+"per_day": 0.1,
+"median": 1550
+},
+"37598": {
+"name": "我的世界(網易)",
+"per_day": 0.1,
+"median": 706
+},
+"31971": {
+"name": "NBA 2K 行動版 NBA 2K Mobile Basketball",
+"per_day": 0.1,
+"median": 1464
+},
+"67277": {
+"name": "洛克王國：世界",
+"per_day": 0.1,
+"median": 500
+},
+"14552": {
+"name": "列王的紛爭Clash of Kings 新月文明",
+"per_day": 0.1,
+"median": 2207
+},
+"43535": {
+"name": "金鏟鏟之戰",
+"per_day": 0.1,
+"median": 600
+},
+"30424": {
+"name": "Arcaea",
+"per_day": 0.09,
+"median": 5691
+},
+"68727": {
+"name": "勇者來開團",
+"per_day": 0.09,
+"median": 6430
+},
+"70722": {
+"name": "Rogue Legend：Roguelike RPG",
+"per_day": 0.09,
+"median": 2750
+},
+"69681": {
+"name": "鬼雄三國：主公有夠鬼",
+"per_day": 0.09,
+"median": 850
+},
+"63685": {
+"name": "鬼滅大作戰：黎明",
+"per_day": 0.09,
+"median": 1063
+},
+"54562": {
+"name": "Dungeon Slasher : Roguelike",
+"per_day": 0.09,
+"median": 1199
+},
+"63478": {
+"name": "太空防禦",
+"per_day": 0.09,
+"median": 2553
+},
+"56690": {
+"name": "Last War:Survival Game",
+"per_day": 0.09,
+"median": 1650
+},
+"19701": {
+"name": "率土之濱",
+"per_day": 0.09,
+"median": 500
+},
+"70871": {
+"name": "超感穿梭",
+"per_day": 0.09,
+"median": 60
+},
+"56061": {
+"name": "救世者之樹 M",
+"per_day": 0.09,
+"median": 8512
+},
+"63756": {
+"name": "迷你槍戰精英",
+"per_day": 0.09,
+"median": 1548
+},
+"71693": {
+"name": "小貓咪大史記",
+"per_day": 0.09,
+"median": 2012
+},
+"66924": {
+"name": "星布谷地",
+"per_day": 0.09,
+"median": 1000
+},
+"37763": {
+"name": "eFootball PES 2020(手遊)",
+"per_day": 0.09,
+"median": 1300
+},
+"57457": {
+"name": "世界之外",
+"per_day": 0.08,
+"median": 5723
+},
+"37714": {
+"name": "英雄聯盟：聯盟戰棋 Teamfight Tactics",
+"per_day": 0.08,
+"median": 1175
+},
+"38717": {
+"name": "勇者鬥惡龍 戰略指揮家/勇者鬥惡龍 TACT",
+"per_day": 0.08,
+"median": 850
+},
+"68908": {
+"name": "勇者也拿弓",
+"per_day": 0.08,
+"median": 1000
+},
+"70902": {
+"name": "刃與三國：烽火爭霸",
+"per_day": 0.08,
+"median": 540
+},
+"70341": {
+"name": "Ran Mobile : The Master Class",
+"per_day": 0.08,
+"median": 2298
+},
+"59258": {
+"name": "格蘭騎士團：極限傳說",
+"per_day": 0.08,
+"median": 250
+},
+"62888": {
+"name": "THE KING OF FIGHTERS AFK",
+"per_day": 0.08,
+"median": 1400
+},
+"70814": {
+"name": "天命：六道輪迴",
+"per_day": 0.08,
+"median": 20300
+},
+"67808": {
+"name": "幻獸寶貝PetGirl",
+"per_day": 0.08,
+"median": 1800
+},
+"59593": {
+"name": "Cup Heroes",
+"per_day": 0.08,
+"median": 956
+},
+"66592": {
+"name": "漫威 未來之戰",
+"per_day": 0.08,
+"median": 3550
+},
+"17679": {
+"name": "少女與戰車 戰車道大作戰",
+"per_day": 0.07,
+"median": 900
+},
+"64685": {
+"name": "英雄傳說：卡卡布三部曲",
+"per_day": 0.07,
+"median": 350
+},
+"58319": {
+"name": "Random Dice: Defense",
+"per_day": 0.07,
+"median": 2160
+},
+"68276": {
+"name": "爆走摸魚君",
+"per_day": 0.07,
+"median": 4528
+},
+"34043": {
+"name": "大福娛樂城",
+"per_day": 0.07,
+"median": 4255
+},
+"64209": {
+"name": "斗羅大陸3D：魂師對決",
+"per_day": 0.07,
+"median": 627
+},
+"52203": {
+"name": "吞食天地 多元宇宙",
+"per_day": 0.07,
+"median": 1500
+},
+"70931": {
+"name": "魂墜深境 - 肉鴿卡牌RPG",
+"per_day": 0.07,
+"median": 1400
+},
+"41584": {
+"name": "航海王熱血航線",
+"per_day": 0.07,
+"median": 719
+},
+"28104": {
+"name": "黑色沙漠 Mobile",
+"per_day": 0.07,
+"median": 2050
+},
+"64948": {
+"name": "Avalar: Raid of Shadow",
+"per_day": 0.07,
+"median": 1914
+},
+"34234": {
+"name": "艾諾迪亞 4：貝勒塞刺殺者 Inotia 4",
+"per_day": 0.07,
+"median": 1600
+},
+"59533": {
+"name": "完美世界W",
+"per_day": 0.07,
+"median": 12618
+},
+"65645": {
+"name": "我的勇者外傳",
+"per_day": 0.07,
+"median": 500
+},
+"70586": {
+"name": "我的法杖有點強：放置",
+"per_day": 0.07,
+"median": 990
+},
+"70920": {
+"name": "完蛋！我被美少女攻略了",
+"per_day": 0.07,
+"median": 3900
+},
+"68147": {
+"name": "逆戰·未來",
+"per_day": 0.07,
+"median": 4600
+},
+"50221": {
+"name": "精靈訓練師",
+"per_day": 0.07,
+"median": 3191
+},
+"70968": {
+"name": "Mythic Survivors",
+"per_day": 0.07,
+"median": 500
+},
+"60056": {
+"name": "Minecraft",
+"per_day": 0.07,
+"median": 300
+},
+"69557": {
+"name": "Might & Magic Fates Heroes TCG",
+"per_day": 0.07,
+"median": 601
+},
+"58960": {
+"name": "向殭屍開炮",
+"per_day": 0.07,
+"median": 1100
+},
+"21281": {
+"name": "偶像夢幻祭",
+"per_day": 0.07,
+"median": 691
+},
+"54356": {
+"name": "神之塔：New World",
+"per_day": 0.06,
+"median": 500
+},
+"64466": {
+"name": "食光旅行 Tasty Travels",
+"per_day": 0.06,
+"median": 1063
+},
+"68492": {
+"name": "生化危機 生存兵種",
+"per_day": 0.06,
+"median": 600
+},
+"64810": {
+"name": "神寶起源：新世代",
+"per_day": 0.06,
+"median": 18000
+},
+"28818": {
+"name": "神之領域-正版手遊",
+"per_day": 0.06,
+"median": 1100
+},
+"37327": {
+"name": "忍者必須死3",
+"per_day": 0.06,
+"median": 500
+},
+"52916": {
+"name": "不滅之燼",
+"per_day": 0.06,
+"median": 4800
+},
+"16353": {
+"name": "托蘭異世錄 Toram online",
+"per_day": 0.06,
+"median": 4500
+},
+"70580": {
+"name": "CookieRun Classic",
+"per_day": 0.06,
+"median": 1702
+},
+"51397": {
+"name": "橙光互動",
+"per_day": 0.06,
+"median": 1368
+},
+"66105": {
+"name": "Merge Maid Cafe - Isekai Story",
+"per_day": 0.06,
+"median": 650
+},
+"70521": {
+"name": "迷你傳說 Mini Tales",
+"per_day": 0.06,
+"median": 4300
+},
+"58567": {
+"name": "星之翼",
+"per_day": 0.06,
+"median": 800
+},
+"65074": {
+"name": "星美世界",
+"per_day": 0.06,
+"median": 2127
+},
+"48044": {
+"name": "深空之眼",
+"per_day": 0.05,
+"median": 400
+},
+"43819": {
+"name": "Skullgirls 骷髏少女",
+"per_day": 0.05,
+"median": 380
+},
+"68534": {
+"name": "Google AI Pro",
+"per_day": 0.05,
+"median": 690
+},
+"69261": {
+"name": "幻想少女公會",
+"per_day": 0.05,
+"median": 2000
+},
+"58178": {
+"name": "阿斯達年代記: 三強爭霸",
+"per_day": 0.05,
+"median": 3190
+},
+"42973": {
+"name": "王牌競速",
+"per_day": 0.05,
+"median": 1063
+},
+"36681": {
+"name": "王牌戰爭：文明重啟 Last Island of Survival",
+"per_day": 0.05,
+"median": 6500
+},
+"50359": {
+"name": "NordVPN",
+"per_day": 0.05,
+"median": 350
+},
+"19077": {
+"name": "激鬪 ‧ 猛將撞(彈射三國大戰)",
+"per_day": 0.05,
+"median": 580
+},
+"29022": {
+"name": "牧羊人之心",
+"per_day": 0.05,
+"median": 319
+},
+"69923": {
+"name": "靠裝勇者：背包合成RPG Overgeared Hero: Merge RPG",
+"per_day": 0.05,
+"median": 1200
+},
+"27284": {
+"name": "放置少女",
+"per_day": 0.05,
+"median": 600
+},
+"64212": {
+"name": "神州 M",
+"per_day": 0.04,
+"median": 550
+},
+"60555": {
+"name": "元素 : 2DMMORPG",
+"per_day": 0.04,
+"median": 799
+},
+"21355": {
+"name": "元素物語",
+"per_day": 0.04,
+"median": 250
+},
+"62723": {
+"name": "一念逍遙：涅槃重生",
+"per_day": 0.04,
+"median": 5500
+},
+"67811": {
+"name": "Garena Delta Force",
+"per_day": 0.04,
+"median": 479
+},
+"49693": {
+"name": "Garena Free Fire - 獵殺代號：集結",
+"per_day": 0.04,
+"median": 500
+},
+"52863": {
+"name": "暴走小蝦米",
+"per_day": 0.04,
+"median": 638
+},
+"31830": {
+"name": "BLEACH 境·界-魂之覺醒:死神",
+"per_day": 0.04,
+"median": 319
+},
+"61216": {
+"name": "斗羅大陸：逆轉時空",
+"per_day": 0.04,
+"median": 1063
+},
+"32978": {
+"name": "迪士尼夢幻王國",
+"per_day": 0.04,
+"median": 1063
+},
+"61766": {
+"name": "多鄰國",
+"per_day": 0.04,
+"median": 300
+},
+"66350": {
+"name": "突襲：暗影傳說",
+"per_day": 0.04,
+"median": 250
+},
+"24799": {
+"name": "跳躍吧！鯉魚王",
+"per_day": 0.04,
+"median": 500
+},
+"30640": {
+"name": "吞食天地 M",
+"per_day": 0.04,
+"median": 4500
+},
+"65012": {
+"name": "黑子籃球：街頭對決",
+"per_day": 0.04,
+"median": 500
+},
+"68665": {
+"name": "HUNTER×HUNTER NEN×SURVIVOR",
+"per_day": 0.04,
+"median": 2000
+},
+"41099": {
+"name": "忘川風華錄",
+"per_day": 0.04,
+"median": 120
+},
+"16367": {
+"name": "UNISON 聯盟(Unison League)",
+"per_day": 0.04,
+"median": 450
+},
+"71499": {
+"name": "我欲修仙",
+"per_day": 0.04,
+"median": 4000
+},
+"60972": {
+"name": "Nightfall: 王國邊境TD",
+"per_day": 0.04,
+"median": 1063
+},
+"57888": {
+"name": "雷索納斯",
+"per_day": 0.04,
+"median": 650
+},
+"56825": {
+"name": "出發吧麥芬",
+"per_day": 0.04,
+"median": 7091
+},
+"42883": {
+"name": "唱舞全明星Ⅱ",
+"per_day": 0.04,
+"median": 1800
+},
+"50096": {
+"name": "超爆三國志",
+"per_day": 0.04,
+"median": 5350
+},
+"63753": {
+"name": "CyberGhost VPN",
+"per_day": 0.04,
+"median": 1490
+},
+"25812": {
+"name": "城堡粉碎戰 Castle Crush",
+"per_day": 0.04,
+"median": 800
+},
+"55414": {
+"name": "Covet Girl: Desire Story Game",
+"per_day": 0.04,
+"median": 4240
+},
+"53138": {
+"name": "眾神派對",
+"per_day": 0.04,
+"median": 550
+},
+"25881": {
+"name": "棕色塵埃 Brown Dust",
+"per_day": 0.04,
+"median": 1500
+},
+"29485": {
+"name": "真三國大戰 2",
+"per_day": 0.04,
+"median": 2000
+},
+"13551": {
+"name": "MLB Perfect Inning",
+"per_day": 0.04,
+"median": 1500
+},
+"60270": {
+"name": "QQ音樂",
+"per_day": 0.04,
+"median": 700
+},
+"51692": {
+"name": "浮石物語 Levistone Story",
+"per_day": 0.04,
+"median": 418
+},
+"64098": {
+"name": "小棋兵大戰爭",
+"per_day": 0.04,
+"median": 800
+},
+"67881": {
+"name": "Voidpet Dungeon",
+"per_day": 0.04,
+"median": 4000
+},
+"12520": {
+"name": "三國名將",
+"per_day": 0.03,
+"median": 100
+},
+"20936": {
+"name": "白貓tennis",
+"per_day": 0.03,
+"median": 1580
+},
+"63442": {
+"name": "王者之劍 M",
+"per_day": 0.03,
+"median": 1800
+},
+"62726": {
+"name": "Last Z: Survival Shooter",
+"per_day": 0.03,
+"median": 1500
+},
+"41610": {
+"name": "末日喧囂",
+"per_day": 0.03,
+"median": 800
+},
+"36545": {
+"name": "全民Party",
+"per_day": 0.03,
+"median": 8000
+}
+}
