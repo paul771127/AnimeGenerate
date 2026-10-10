@@ -39,6 +39,8 @@ namespace SpellDuel
         GameObject enemyShield;
         CharacterRig enemyRig;            // 敵人外觀（依職業造型，會走路、詠唱、被打中、倒地）
         Vector3 lastEnemyFeet; float lastEnemyHp; bool enemyDeadShown;
+        ChargeFx myChargeFx, enemyChargeFx;   // 詠唱光效（依職業）
+        SkillDef myFxSkill, enemyFxSkill;
         bool dummyMode;                   // 木頭人練習：不會動、不會攻擊、打不死，統計傷害
         float dummyDamage; int dummyHits;
         readonly Dictionary<Projectile, GameObject> projGo = new Dictionary<Projectile, GameObject>();
@@ -137,6 +139,9 @@ namespace SpellDuel
             projGo.Clear(); trapGo.Clear(); floaters.Clear();
             if (enemyShield) Destroy(enemyShield);
             if (enemyRig) Destroy(enemyRig.gameObject);
+            if (myChargeFx) myChargeFx.Stop();
+            if (enemyChargeFx) enemyChargeFx.Stop();
+            myChargeFx = enemyChargeFx = null; myFxSkill = enemyFxSkill = null;
             battle = null; ai = null;
         }
 
@@ -217,7 +222,13 @@ namespace SpellDuel
             var d = WorldFrame.DirToWorld(ray.direction);
             var floor = d.y < -0.01f ? o + d * (-o.y / d.y) : Me.Feet + Fighter.Flat(Me.forward) * 1.5f;
             if (!battle.TryRelease(Me, d, floor, out var why)) Say(why, 1.5f);
-            else if (byGesture) Say("🖐️ 放招！", 0.8f);
+            else
+            {
+                if (byGesture) Say("🖐️ 放招！", 0.8f);
+                // 放招光效：在手機前方爆開，朝法術飛行方向
+                SpellFx.CastBurst(myClass, Me.charging != null ? Me.charging.color : Skills.Classes[myClass].color,
+                    cam.transform.position + cam.transform.forward * 0.5f - cam.transform.up * 0.08f, ray.direction, 0.35f);
+            }
         }
 
         // ================================================================ 語音
@@ -292,7 +303,7 @@ namespace SpellDuel
             {
                 case "hit": case "trap": case "mitigate": case "effect": case "counter": case "buff": case "heal": case "trapSet":
                     if (!string.IsNullOrEmpty(text)) floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time });
-                    if (kind == "hit" || kind == "trap") Burst(at, c);
+                    if (kind == "hit" || kind == "trap") { Burst(at, c); SpellFx.Impact(kind == "hit" ? myClass : "", c, WorldFrame.FromWorld(at), 1f); }
                     break;
                 case "hurt":
                     // 被打中：震動＋整個畫面閃紅＋扣血（血量已在 Battle 裡扣掉）
@@ -320,6 +331,7 @@ namespace SpellDuel
         {
             var en = En;
             var feetS = WorldFrame.FromWorld(en.Feet);
+            UpdateChargeFx();
             // 敵人角色：腳的位置、面向、走路速度、詠唱、被打中、倒地
             var fwdS = WorldFrame.DirFromWorld(en.forward);
             float dt = Mathf.Max(1e-3f, Time.deltaTime);
@@ -354,7 +366,13 @@ namespace SpellDuel
                     tr.time = 0.2f; tr.startWidth = Mathf.Max(0.04f, p.skill.radius * 1.5f); tr.endWidth = 0;
                     tr.material = mat; tr.startColor = WithAlpha(p.skill.color, 0.8f); tr.endColor = WithAlpha(p.skill.color, 0f);
                     projGo[p] = go;
-                    if (p.owner == En) enemyRig.PlayCast();   // 敵人出招動作
+                    string fxCls = p.owner == En ? enemyClassUsed : myClass;
+                    SpellFx.DecorateProjectile(go, fxCls, p.skill.color, Mathf.Max(0.03f, p.skill.radius));
+                    if (p.owner == En)
+                    {
+                        enemyRig.PlayCast();   // 敵人出招動作＋光效
+                        SpellFx.CastBurst(enemyClassUsed, p.skill.color, WorldFrame.FromWorld(p.pos), WorldFrame.DirFromWorld(p.dir), 1f);
+                    }
                 }
                 go.transform.position = WorldFrame.FromWorld(p.pos);
                 // 敵人的法術逼近時畫面邊框閃紅
@@ -380,6 +398,28 @@ namespace SpellDuel
                 if (!liveTraps.Contains(kv.Key)) { Burst(kv.Key.pos, kv.Key.skill.color); Destroy(kv.Value); trapGo.Remove(kv.Key); }
 
             incomingFlash = Mathf.Max(0f, incomingFlash - Time.deltaTime * 2f);
+        }
+
+        /// <summary>詠唱光效：我的在手機前方（小），敵人的在角色手邊；換招或結束就收掉</summary>
+        void UpdateChargeFx()
+        {
+            var mine = Me.charging;
+            if (mine != myFxSkill)
+            {
+                if (myChargeFx) myChargeFx.Stop();
+                myChargeFx = mine != null ? SpellFx.StartCharge(myClass, mine.color, cam.transform, new Vector3(0f, -0.15f, 0.45f), 0.35f) : null;
+                myFxSkill = mine;
+            }
+            if (myChargeFx) myChargeFx.Progress = battle.ChargeProgress(Me);
+
+            var theirs = En.Alive ? En.charging : null;
+            if (theirs != enemyFxSkill)
+            {
+                if (enemyChargeFx) enemyChargeFx.Stop();
+                enemyChargeFx = theirs != null && enemyRig ? SpellFx.StartCharge(enemyClassUsed, theirs.color, enemyRig.transform, new Vector3(0f, 1.2f, 0.4f), 1f) : null;
+                enemyFxSkill = theirs;
+            }
+            if (enemyChargeFx) enemyChargeFx.Progress = battle.ChargeProgress(En);
         }
 
         void Burst(Vector3 posMap, Color c)

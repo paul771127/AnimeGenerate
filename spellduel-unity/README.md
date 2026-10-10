@@ -181,6 +181,7 @@
 | `Assets/SpellDuel/Runtime/PlayArea.cs` | 單人場地：偵測地板、方形／手繪場地、邊界格子牆與出界警告 |
 | `Assets/SpellDuel/Runtime/DuoAlignment.cs` | 雙人畫場地模式：用「互相看到對方的位置」解兩支手機座標的旋轉＋平移（2D Kabsch、剔除離群點） |
 | `Assets/SpellDuel/Runtime/CharacterRig.cs` | 角色造型：四職業的程式生成人物（法師尖帽長袍法杖、弓箭手兜帽弓箭、刺客面罩雙匕首、劍士頭盔盾劍）與走路／詠唱／出招／被打中／倒地動作 |
+| `Assets/SpellDuel/Runtime/SpellFx.cs` | 各職業施法光效：法師魔法陣、弓箭手風之旋渦、刺客暗影煙霧、劍士金色光柱／斬擊弧光；詠唱、放招、法術拖尾、命中 |
 | `Assets/SpellDuel/Runtime/VoiceSpotter.cs` | 本機咒語辨識：麥克風、斷句、MFCC、DTW、樣本儲存與比對 |
 | `Assets/SpellDuel/Runtime/HandGesture.cs` | 手勢：握拳→張開／甩手放招、手指準星 |
 | `Assets/SpellDuel/Runtime/PoseDetector.cs` | 擷取 AR 畫面、呼叫手機內建的人體偵測、把關鍵點換成射線 |

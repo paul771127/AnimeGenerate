@@ -11,6 +11,7 @@ namespace SpellDuel
     ///   動作：走路（腿、手擺動＋上下起伏）、待機呼吸、詠唱（舉起武器＋腳下光圈）、
     ///   防禦（劍士舉盾，其他職業雙手交叉）、出手、受擊（閃色＋後仰）、倒地。
     ///   關節都有獨立的樞紐物件（肩、肘、手腕、髖、膝），旋轉樞紐即可讓肢體繞關節轉動。
+    ///   另有 classId = "dummy"：練習用木頭人（不會走、不會施法；受擊時左右搖晃、倒地時整個翻倒）。
     /// </summary>
     public class CharacterRig : MonoBehaviour
     {
@@ -130,7 +131,7 @@ namespace SpellDuel
         {
             InitShaders();
             EnsureLight();
-            if (string.IsNullOrEmpty(classId) || !Skills.Classes.ContainsKey(classId)) classId = "mage";
+            if (classId != DummyId && (string.IsNullOrEmpty(classId) || !Skills.Classes.ContainsKey(classId))) classId = "mage";
             var go = new GameObject($"Character {classId}");
             if (parent != null) go.transform.SetParent(parent, false);
             var rig = go.AddComponent<CharacterRig>();
@@ -141,6 +142,7 @@ namespace SpellDuel
         void Build(string id)
         {
             classId = id;
+            if (id == DummyId) { BuildDummy(); return; }
             clsColor = Skills.Classes[id].color; clsColor.a = 1f;
             bool slim = id == "assassin";
             float sw = slim ? 0.85f : 1f;
@@ -400,13 +402,18 @@ namespace SpellDuel
             if (forward.sqrMagnitude > 1e-6f) transform.rotation = Quaternion.LookRotation(forward.normalized, Vector3.up);
         }
 
-        public void PlayCast() { if (!dead) castT = 0f; }
+        public void PlayCast() { if (!dead && !isDummy) castT = 0f; }
 
         public void PlayHit()
         {
             if (dead) return;
             hitT = HitDur;
             SetFlash(true);
+            if (isDummy)
+            {
+                // 被打得往後晃，帶一點隨機的左右晃動
+                wobVel += new Vector2(-170f, Random.Range(-70f, 70f));
+            }
         }
 
         public void SetDead(bool d)
@@ -437,6 +444,7 @@ namespace SpellDuel
         void Animate(float dt)
         {
             if (body == null) return;
+            if (isDummy) { AnimateDummy(dt); return; }
             clock += dt;
 
             // 平滑的狀態量
@@ -543,6 +551,128 @@ namespace SpellDuel
                     auraMat.color = new Color(clsColor.r, clsColor.g, clsColor.b, 0.35f + 0.45f * ch + pulse * 0.1f);
                 }
             }
+        }
+
+        // ================================================================ 木頭人（練習靶）
+        public const string DummyId = "dummy";
+        static readonly Color DummyWood = new Color(0.55f, 0.36f, 0.2f);
+        static readonly Color DummyDark = new Color(0.36f, 0.23f, 0.13f);
+        static readonly Color Straw = new Color(0.9f, 0.76f, 0.4f);
+        static readonly Color Burlap = new Color(0.86f, 0.74f, 0.52f);
+        static readonly Color Rope = new Color(0.66f, 0.53f, 0.32f);
+        static readonly Color TargetRed = new Color(0.85f, 0.15f, 0.12f);
+        static readonly Color TargetWhite = new Color(0.97f, 0.94f, 0.86f);
+
+        bool isDummy;
+        Transform post;               // 搖晃的樞紐（底座上方）
+        Vector2 wob, wobVel;          // 搖晃角度（x = 前後、y = 左右，度）與角速度
+        static readonly Vector3 DummyFallPivot = new Vector3(0f, 0f, -0.22f);   // 往後倒時繞底座後緣翻
+
+        /// <summary>
+        /// 木頭人：十字底座＋木樁、稻草束成的軀幹（三道麻繩）、胸前紅白靶心、
+        /// 左右斜伸的木樁手與前方一支木樁、麻布頭（畫上眼睛與紅色縫線嘴）＋頭頂稻草髻。總高約 1.7 m。
+        /// </summary>
+        void BuildDummy()
+        {
+            isDummy = true;
+            clsColor = Straw;
+            body = Pivot("Body", transform, Vector3.zero);
+
+            // ---- 底座：十字木腳＋圓木墩（不跟著搖晃）
+            Part(PrimitiveType.Cube, body, new Vector3(0f, 0.03f, 0f), new Vector3(0.5f, 0.06f, 0.09f), Mat(DummyDark, 0.75f));
+            Part(PrimitiveType.Cube, body, new Vector3(0f, 0.03f, 0f), new Vector3(0.09f, 0.06f, 0.5f), Mat(DummyDark, 0.75f));
+            Part(PrimitiveType.Cylinder, body, new Vector3(0f, 0.07f, 0f), new Vector3(0.24f, 0.05f, 0.24f), Mat(DummyWood, 0.8f));
+
+            // ---- 搖晃的部分（樞紐在底座上方）
+            const float py = 0.1f;
+            post = Pivot("Post", body, new Vector3(0f, py, 0f));
+            Vector3 P(float x, float y, float z) => new Vector3(x, y - py, z);
+
+            // 木樁（從底座一直到脖子）
+            Part(PrimitiveType.Cylinder, post, P(0f, 0.75f, 0f), new Vector3(0.1f, 0.68f, 0.1f), Mat(DummyWood, 0.85f));
+            Part(PrimitiveType.Cylinder, post, P(0f, 0.16f, 0f), new Vector3(0.13f, 0.02f, 0.13f), Mat(Rope, 0.85f));
+
+            // 稻草軀幹＋三道麻繩
+            Part(PrimitiveType.Capsule, post, P(0f, 1.0f, 0f), new Vector3(0.34f, 0.33f, 0.3f), Mat(Straw));
+            MeshPart("StrawSkirt", post, Frustum(0.19f, 0.13f, 0.14f, 16), P(0f, 0.62f, 0f), Mat(Mul(Straw, 0.9f), 0.8f));
+            foreach (float y in new[] { 0.8f, 1.02f, 1.22f })
+            {
+                float rx = y > 1.15f ? 0.33f : 0.355f, rz = y > 1.15f ? 0.29f : 0.315f;
+                Part(PrimitiveType.Cylinder, post, P(0f, y, 0f), new Vector3(rx, 0.014f, rz), Mat(Rope, 0.85f));
+            }
+
+            // 胸前靶心（木板＋紅白同心圓）
+            var tgt = Pivot("Target", post, P(0f, 1.06f, 0.15f));
+            Part(PrimitiveType.Cylinder, tgt, Vector3.zero, new Vector3(0.24f, 0.012f, 0.24f), Mat(DummyWood), new Vector3(90f, 0f, 0f));
+            float[] rr = { 0.2f, 0.15f, 0.1f, 0.05f };
+            for (int i = 0; i < rr.Length; i++)
+                Part(PrimitiveType.Cylinder, tgt, new Vector3(0f, 0f, 0.008f + i * 0.003f), new Vector3(rr[i], 0.004f, rr[i]),
+                    Mat(i % 2 == 0 ? TargetWhite : TargetRed), new Vector3(90f, 0f, 0f));
+            Part(PrimitiveType.Cylinder, tgt, new Vector3(0f, 0f, 0.022f), new Vector3(0.025f, 0.004f, 0.025f), Mat(TargetRed), new Vector3(90f, 0f, 0f));
+
+            // 木樁手：左右上方各一支往前斜伸，正前方下方一支（詠春木人樁）
+            var pegMat = Mat(DummyWood, 0.9f);
+            var knobMat = Mat(DummyDark, 0.85f);
+            for (int sd = -1; sd <= 1; sd += 2)
+            {
+                Vector3 a = P(0.12f * sd, 1.22f, 0.04f), b = P(0.27f * sd, 1.27f, 0.17f);
+                Seg(post, a, b, 0.055f, pegMat);
+                Part(PrimitiveType.Sphere, post, b, new Vector3(0.065f, 0.065f, 0.065f), knobMat);
+            }
+            Seg(post, P(0f, 0.9f, 0.1f), P(0f, 0.86f, 0.27f), 0.055f, pegMat);
+            Part(PrimitiveType.Sphere, post, P(0f, 0.86f, 0.27f), new Vector3(0.065f, 0.065f, 0.065f), knobMat);
+
+            // 脖子（麻繩綁住）
+            Part(PrimitiveType.Cylinder, post, P(0f, 1.38f, 0f), new Vector3(0.09f, 0.05f, 0.09f), Mat(DummyWood, 0.8f));
+            Part(PrimitiveType.Cylinder, post, P(0f, 1.36f, 0f), new Vector3(0.11f, 0.012f, 0.11f), Mat(Rope, 0.8f));
+
+            // 頭：麻布球＋畫上的眼睛、紅色縫線嘴、頭頂稻草髻
+            var hd = Pivot("Head", post, P(0f, 1.53f, 0f));
+            head = hd;
+            Part(PrimitiveType.Sphere, hd, Vector3.zero, new Vector3(0.27f, 0.28f, 0.26f), Mat(Burlap));
+            for (int sd = -1; sd <= 1; sd += 2)
+                Part(PrimitiveType.Sphere, hd, new Vector3(0.05f * sd, 0.025f, 0.122f), new Vector3(0.035f, 0.04f, 0.012f), Mat(EyeCol));
+            Part(PrimitiveType.Cube, hd, new Vector3(0f, -0.05f, 0.122f), new Vector3(0.09f, 0.012f, 0.01f), Mat(TargetRed));
+            for (int i = -1; i <= 1; i++)
+                Part(PrimitiveType.Cube, hd, new Vector3(0.03f * i, -0.05f, 0.124f), new Vector3(0.008f, 0.035f, 0.01f), Mat(TargetRed));
+            Part(PrimitiveType.Cylinder, hd, new Vector3(0f, 0.125f, 0f), new Vector3(0.08f, 0.012f, 0.08f), Mat(Rope, 0.85f));
+            MeshPart("Topknot", hd, Frustum(0.045f, 0.012f, 0.06f, 10), new Vector3(0f, 0.13f, 0f), Mat(Straw, 0.95f));
+
+            // 受擊閃色用：記住每個部位原本的材質
+            flashMat = Glow(new Color(1f, 0.55f, 0.5f));
+            rends = body.GetComponentsInChildren<Renderer>(true);
+            origMats = new Material[rends.Length];
+            for (int i = 0; i < rends.Length; i++) origMats[i] = rends[i].sharedMaterial;
+
+            AnimateDummy(0f);
+        }
+
+        /// <summary>木頭人動作：受擊時彈簧搖晃（約 0.8 秒衰減）＋閃色；倒地時往後翻倒，SetDead(false) 再立起來。</summary>
+        void AnimateDummy(float dt)
+        {
+            clock += dt;
+            float h = Mathf.Min(dt, 0.05f);
+
+            // 彈簧搖晃：自然頻率約 2.5 Hz，阻尼讓振幅約 0.8 秒衰減到 5%
+            const float K = 247f, C = 7.5f;
+            var acc = -K * wob - C * wobVel;
+            wobVel += acc * h;
+            wob += wobVel * h;
+            wob.x = Mathf.Clamp(wob.x, -25f, 25f); wob.y = Mathf.Clamp(wob.y, -25f, 25f);
+            post.localRotation = Quaternion.Euler(wob.x, 0f, wob.y);
+
+            if (hitT > 0f)
+            {
+                hitT -= dt;
+                if (hitT <= 0f) SetFlash(false);
+            }
+
+            // 倒下：像重力一樣越倒越快；站起來：平順地立回去
+            deadAmt = Mathf.MoveTowards(deadAmt, dead ? 1f : 0f, dt / (dead ? DieDur : 0.5f));
+            float e = dead ? deadAmt * deadAmt : deadAmt * deadAmt * (3f - 2f * deadAmt);
+            var q = Quaternion.Euler(-88f * e, 0f, 0f);
+            body.localRotation = q;
+            body.localPosition = DummyFallPivot - q * DummyFallPivot;
         }
 
         static void ApplyArm(Transform sh, Transform el, Transform hand, Arm a, float side)
