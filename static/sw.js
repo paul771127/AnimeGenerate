@@ -1,6 +1,6 @@
 // HomeChat service worker:把網頁本身存在裝置上,家裡電腦關機時也能打開看舊訊息。
 // 聊天文字由網頁存在 IndexedDB(見 index.html 的 local 區塊);這裡只快取網頁本身和看過的圖片 / 語音。
-const CACHE = "homechat-v4";
+const CACHE = "homechat-v5";
 const FILES = "homechat-files";  // 看過的圖片、語音:上傳後不會變,存在裝置上離線也能看
 const SHELL = ["/", "/icon.svg", "/manifest.webmanifest", "/sticker-maker.js"];
 const TIMEOUT_MS = 5000;

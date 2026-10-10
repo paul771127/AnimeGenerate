@@ -215,8 +215,12 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
   #app.owner.in-chat #sidebar { display: none; }
   #app.owner:not(.in-chat) #chat { display: none; }
 }
-@media (min-width: 761px) { .back-btn { display: none !important; } }
-#app.guest .back-btn { display: none !important; }
+/* 返回主頁(聊天列表):有打開聊天時才顯示;朋友只有一個聊天室,不需要 */
+.back-btn { border: 0; background: var(--bg); color: var(--text); border-radius: 18px; height: 34px; padding: 0 12px 0 8px;
+  display: inline-flex; align-items: center; gap: 2px; font-size: 15px; font-weight: 600; flex-shrink: 0; cursor: pointer; }
+.back-btn:hover { background: var(--line); }
+.back-btn .arrow { font-size: 22px; line-height: 1; margin-top: -2px; }
+#app:not(.in-chat) .back-btn, #app.guest .back-btn { display: none !important; }
 </style>
 </head>
 <body>
@@ -299,7 +303,7 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
 
   <main id="chat">
     <div class="topbar">
-      <button class="icon-btn back-btn" id="back-btn" title="返回">‹</button>
+      <button class="back-btn" id="back-btn" title="回到聊天列表"><span class="arrow">‹</span>主頁</button>
       <h2 id="chat-title"></h2>
       <span id="conn"></span>
       <button class="icon-btn" id="chat-menu-btn" title="選單">⋯</button>
@@ -1132,6 +1136,11 @@ function closeChat() {
 async function openContact(c) {
   state.current = c;
   sessionStorage.setItem("hc_open", c.id);
+  // 記一筆瀏覽紀錄:手機按「返回」/ 往右滑會回到聊天列表,而不是離開 HomeChat
+  if (state.role === "owner") {
+    if (history.state && history.state.hcChat) history.replaceState({ hcChat: c.id }, "");
+    else history.pushState({ hcChat: c.id }, "");
+  }
   $("#app").classList.add("in-chat");
   $("#chat-title").textContent = c.name;
   showChat();
@@ -1140,7 +1149,15 @@ async function openContact(c) {
   await loadMessages();
   if (!isTouch) $("#input").focus();
 }
-$("#back-btn").addEventListener("click", closeChat);
+// 返回主頁:有記瀏覽紀錄就用上一頁(跟手機的返回鍵一樣),不然直接關掉聊天
+function backToHome() {
+  if (history.state && history.state.hcChat) history.back();
+  else closeChat();
+}
+$("#back-btn").addEventListener("click", backToHome);
+window.addEventListener("popstate", () => {
+  if (state.role === "owner" && state.current) closeChat();
+});
 
 const byTime = (a, b) => a.created_at - b.created_at || (a.id || 1e15) - (b.id || 1e15);
 function insertSorted(m) { state.messages.push(m); state.messages.sort(byTime); }
