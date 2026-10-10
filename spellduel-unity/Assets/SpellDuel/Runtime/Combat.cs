@@ -209,7 +209,7 @@ namespace SpellDuel
             return true;
         }
 
-        public float ChargeProgress(Fighter f) => f.charging == null ? 0f : Mathf.Clamp01((now - f.chargeStart) / Mathf.Max(0.01f, f.charging.charge));
+        public float ChargeProgress(Fighter f) => f.charging == null ? 0f : f.charging.charge <= 0f ? 1f : Mathf.Clamp01((now - f.chargeStart) / Mathf.Max(0.01f, f.charging.charge));
 
         /// <summary>射程狀態：0＝可以、1＝太遠、-1＝太近</summary>
         public int RangeState(Fighter f, SkillDef s)

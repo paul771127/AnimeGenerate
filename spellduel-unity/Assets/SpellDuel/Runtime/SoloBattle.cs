@@ -771,7 +771,7 @@ namespace SpellDuel
                 string eff = sk.type == SkillType.Self ? (sk.self == SelfKind.Heal ? $"回復{sk.heal}" : "防禦") : sk.damage > 0 ? $"傷害{sk.damage}{(sk.multi > 1 ? $"×{sk.multi}" : "")}" : "效果";
                 UiKit.Text(new Rect(tx, r.y + sh * 0.05f, tw, sh * 0.32f), (on ? "✔ " : "") + sk.name, fs, on ? Color.white : new Color(0.8f, 0.8f, 0.8f), TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(tx, r.y + sh * 0.37f, tw, sh * 0.27f), $"{HandGesture.ShapeName(Skills.GestureOf(sk.id))} → {HandGesture.StyleName(HandGesture.ReleaseOf(sk))}", fsS, new Color(1f, 0.85f, 0.5f));
-                UiKit.Text(new Rect(tx, r.y + sh * 0.64f, tw, sh * 0.32f), $"MP{sk.cost}・蓄力{sk.charge:0.#}s・{eff}・{sk.RangeText}", fsS, new Color(0.8f, 0.85f, 0.95f));
+                UiKit.Text(new Rect(tx, r.y + sh * 0.64f, tw, sh * 0.32f), $"MP{sk.cost}・{(sk.charge > 0f ? $"蓄力{sk.charge:0.#}s" : "免蓄力")}・{eff}・{sk.RangeText}", fsS, new Color(0.8f, 0.85f, 0.95f));
                 if (GUI.Button(r, GUIContent.none, GUIStyle.none))
                 {
                     if (on) myLoadout.Remove(sk.id);
