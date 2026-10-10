@@ -329,8 +329,15 @@ namespace SpellDuel
         void HandleInput()
         {
             if (Hand == null) return;
-            // 比出技能手勢（維持 0.35 秒）＝詠唱該技能（不再用點螢幕選招）
-            if (Hand.ConsumeSelect(out var shape) && !frozen)
+            bool drawingRune = Me.charging != null && HandGesture.ReleaseOf(Me.charging) == HandGesture.Style.Rune;
+            // 符文畫好＝詠唱完成（蓄力直接滿）
+            if (drawingRune && Hand.RuneReady && battle.ChargeProgress(Me) < 1f)
+            {
+                Me.chargeStart = battle.now - Me.charging.charge;
+                Say($"✨ {RuneRecognizer.RuneName(RuneRecognizer.RuneOf(Me.charging.id))}符文完成！用食指指向目標", 1.5f);
+            }
+            // 比出技能手勢（維持 0.35 秒）＝詠唱該技能（不再用點螢幕選招）；法師畫符文時手指會比出各種形狀，不換招
+            if (Hand.ConsumeSelect(out var shape) && !frozen && !drawingRune)
             {
                 var skill = Me.loadout.Find(sk => Skills.GestureOf(sk.id) == shape);
                 if (skill != null && Me.charging != skill)
@@ -341,11 +348,13 @@ namespace SpellDuel
             }
             // 放招動作依詠唱中的技能（陷阱往下壓、治癒收回、格擋舉盾…；其餘依職業）；沒在詠唱就不偵測
             Hand.ReleaseStyle = Me.charging != null ? HandGesture.ReleaseOf(Me.charging) : HandGesture.Style.None;
+            Hand.RuneName = Me.charging != null ? RuneRecognizer.RuneOf(Me.charging.id) : null;
             // 手勢放招：往放招動作的瞄準點放
             if (Hand.ConsumeRelease())
             {
                 if (frozen) { Say("AR 追蹤中斷，暫時不能施法", 1.5f); return; }
                 if (Me.charging == null) Say("先唸技能名稱（或比技能手勢）開始詠唱", 1.5f);
+                else if (drawingRune) ReleaseAt(Hand.ReleaseAim, true);   // 符文畫好＋食指指向停住
                 else if (battle.ChargeProgress(Me) < 1f) Say("蓄力還沒完成", 1f);
                 else ReleaseAt(Hand.ReleaseAim, true);
             }
@@ -820,6 +829,7 @@ namespace SpellDuel
                 GUI.color = Color.white;
             }
             GUI.Label(new Rect(W / 2 - 50, H / 2 - 50, 100, 100), "＋", big);
+            DrawRuneGuide(W, H);
             Hand?.DrawGUI(small, me.charging != null ? me.charging.color : Color.white);
             if (Time.time < heardUntil) GUI.Label(new Rect(0, H * 0.24f, W, lh * 1.6f), heard, big);
             else if (voiceOn && VoiceReady && mic.Running && mic.Spotter.InSpeech) GUI.Label(new Rect(0, H * 0.25f, W, lh), "🎤 …", center);
@@ -931,6 +941,28 @@ namespace SpellDuel
                 { if (NetMode) SendReady(); else StartBattle(); }
                 if (GUI.Button(new Rect(pad * 2 + bw, H * 0.47f, bw, lh * 2f), "換職業", button)) ShowSetup();
             }
+        }
+
+        /// <summary>法師詠唱中：畫面中央畫出要照著畫的符文軌跡（起點有圓點、箭頭表示方向）</summary>
+        void DrawRuneGuide(float W, float H)
+        {
+            var me = Me;
+            if (me?.charging == null) return;
+            var rune = RuneRecognizer.RuneOf(me.charging.id);
+            var g = RuneRecognizer.Guide(rune);
+            if (g == null || (Hand != null && Hand.RuneReady)) return;   // 畫好了就不再顯示軌跡
+            float R = Mathf.Min(W, H) * 0.22f, cx = W / 2f, cy = H * 0.45f;
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 4f);
+            var c = me.charging.color;
+            for (int i = 0; i < g.Length; i++)
+            {
+                var p = new Vector2(cx + g[i].x * R, cy - g[i].y * R);
+                float sz = i == 0 ? R * 0.12f : R * 0.045f;
+                GUI.color = new Color(c.r, c.g, c.b, i == 0 ? 0.9f : 0.35f + 0.25f * pulse);
+                GUI.DrawTexture(new Rect(p.x - sz / 2, p.y - sz / 2, sz, sz), Texture2D.whiteTexture);
+            }
+            GUI.color = Color.white;
+            GUI.Label(new Rect(0, cy + R * 1.1f, W, label.fontSize * 1.6f), $"用食指畫「{RuneRecognizer.RuneName(rune)}」符文（大圓點是起點）", center);
         }
 
         string StatusText(Fighter f, float now)

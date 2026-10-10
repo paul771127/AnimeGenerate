@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SpellDuel
@@ -16,7 +17,17 @@ namespace SpellDuel
     public class HandGesture
     {
         public enum Shape { None, Fist, Open, One, Two, Three, Rock, Call, Thumb, Other }
-        public enum Style { None, Burst, Bow, Chop, Thrust, Press, Pull, Hold }
+        public enum Style { None, Burst, Bow, Chop, Thrust, Press, Pull, Hold, Rune }
+
+        // 法師畫符文：食指尖的軌跡（螢幕像素）
+        public string RuneName;                                    // 要畫的符文（RuneRecognizer）
+        public readonly List<Vector2> Trail = new List<Vector2>();
+        readonly List<float> trailT = new List<float>();
+        public float RuneScore { get; private set; } = 99f;        // 目前軌跡和符文的距離（畫面提示用）
+        public bool RuneReady { get; private set; }                // 符文畫好了 → 用食指指向目標瞄準
+        public float DwellProgress { get; private set; }           // 食指停住的進度 0..1（停 0.5 秒發射）
+        public Vector2 PointAim { get; private set; }              // 食指指向的準星
+        string runeFor; float dwellStart = -1f; Vector2 dwellAt;
 
         public Style ReleaseStyle = Style.Burst;     // 由職業決定（SoloBattle 設定）
         public Vector2 ReleaseAim { get; private set; }   // 放招事件時的瞄準點（螢幕像素）
@@ -33,6 +44,7 @@ namespace SpellDuel
         public static Style ReleaseOf(SkillDef s)
         {
             if (s == null) return Style.None;
+            if (RuneRecognizer.RuneOf(s.id) != null) return Style.Rune;   // 法師：畫符文
             switch (s.id)
             {
                 case "snaretrap": case "blasttrap": case "smoke": case "thunder": return Style.Press;   // 往下壓／往下砸／往下劈
@@ -49,7 +61,7 @@ namespace SpellDuel
         public static string StyleName(Style st) => st switch
         {
             Style.Bow => "拉弓", Style.Chop => "手刀揮砍", Style.Thrust => "突刺", Style.Press => "往下壓",
-            Style.Pull => "收回自己", Style.Hold => "舉掌停住", Style.Burst => "握拳→張開", _ => "",
+            Style.Pull => "收回自己", Style.Hold => "舉掌停住", Style.Burst => "握拳→張開", Style.Rune => "畫符文", _ => "",
         };
 
         public static string StyleHint(Style st) => st switch
@@ -61,6 +73,7 @@ namespace SpellDuel
             Style.Pull => "收回：手掌快速拉回自己（靠近手機）",
             Style.Hold => "舉盾：張開手掌停在畫面前 0.6 秒",
             Style.Burst => "聚氣：握拳 → 張開手放出",
+            Style.Rune => "畫符文：伸出食指照著軌跡畫 → 再用食指指向目標停住 0.5 秒",
             _ => "",
         };
 
@@ -203,6 +216,45 @@ namespace SpellDuel
                 }
             }
 
+            // 法師畫符文：伸著食指時記錄指尖軌跡（握拳＝提筆、清除）；畫出符文就放招，瞄準畫的位置
+            if (RuneName != runeFor) { runeFor = RuneName; RuneReady = false; DwellProgress = 0f; Trail.Clear(); trailT.Clear(); }
+            if (ReleaseStyle == Style.Rune && RuneName != null && RuneReady)
+            {
+                // 第二步：食指指向目標（準星＝食指根部 → 指尖的延長線），停住 0.5 秒發射
+                bool indexOut = Vector2.Distance(Points[0], Points[8]) > Vector2.Distance(Points[0], Points[6]) * 1.15f;
+                var pd = Points[8] - Points[5];
+                float pl = pd.magnitude;
+                if (indexOut && pl > 1f)
+                {
+                    pd /= pl;
+                    var pAim = Points[8] + pd * (H * AimReach);
+                    pAim = new Vector2(Mathf.Clamp(pAim.x, 10f, W - 10f), Mathf.Clamp(pAim.y, 10f, H - 10f));
+                    PointAim = DwellProgress > 0f ? Vector2.Lerp(PointAim, pAim, 0.5f) : pAim;
+                    if (dwellStart < 0f || Vector2.Distance(PointAim, dwellAt) > W * 0.05f) { dwellStart = t; dwellAt = PointAim; }
+                    DwellProgress = Mathf.Clamp01((t - dwellStart) / 0.5f);
+                    if (DwellProgress >= 1f) { Queue(t, PointAim); RuneReady = false; DwellProgress = 0f; dwellStart = -1f; }
+                }
+                else { dwellStart = -1f; DwellProgress = 0f; }
+            }
+            else if (ReleaseStyle == Style.Rune && RuneName != null)
+            {
+                bool indexOut = Vector2.Distance(Points[0], Points[8]) > Vector2.Distance(Points[0], Points[6]) * 1.15f;
+                if (shape == Shape.Fist || !indexOut) { Trail.Clear(); trailT.Clear(); }
+                else
+                {
+                    Trail.Add(Points[8]); trailT.Add(t);
+                    while (trailT.Count > 0 && (t - trailT[0] > 3f || Trail.Count > 48)) { Trail.RemoveAt(0); trailT.RemoveAt(0); }
+                    if (RuneRecognizer.Recognize(Trail, RuneName, H * 0.07f, out var sc))
+                    {
+                        // 第一步完成：符文畫好 → 接著用食指指向目標
+                        RuneReady = true; dwellStart = -1f; DwellProgress = 0f;
+                        Trail.Clear(); trailT.Clear(); RuneScore = 99f;
+                    }
+                    else RuneScore = sc;
+                }
+            }
+            else if (Trail.Count > 0) { Trail.Clear(); trailT.Clear(); }
+
             // 往下壓／往下劈：伸著手指的手在 0.4 秒內往下移動超過畫面高 18%
             if (ReleaseStyle == Style.Press && fingersOut && histN >= 3)
             {
@@ -316,6 +368,43 @@ namespace SpellDuel
             GUI.color = aimColor;
             GUI.DrawTexture(new Rect(Aim.x - r, H - Aim.y - 1.5f, r * 2, 3f), Texture2D.whiteTexture);
             GUI.DrawTexture(new Rect(Aim.x - 1.5f, H - Aim.y - r, 3f, r * 2), Texture2D.whiteTexture);
+            // 法師：符文畫好後的食指瞄準準星＋停住進度
+            if (ReleaseStyle == Style.Rune && RuneReady)
+            {
+                float rr = d * 5f;
+                GUI.color = aimColor;
+                GUI.DrawTexture(new Rect(PointAim.x - rr, H - PointAim.y - 2f, rr * 2, 4f), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(PointAim.x - 2f, H - PointAim.y - rr, 4f, rr * 2), Texture2D.whiteTexture);
+                int n = 24, lit = Mathf.RoundToInt(n * DwellProgress);
+                for (int i = 0; i < n; i++)
+                {
+                    float a = i / (float)n * Mathf.PI * 2f;
+                    GUI.color = i < lit ? aimColor : new Color(1f, 1f, 1f, 0.3f);
+                    GUI.DrawTexture(new Rect(PointAim.x + Mathf.Sin(a) * rr - d / 2, H - PointAim.y - Mathf.Cos(a) * rr - d / 2, d, d), Texture2D.whiteTexture);
+                }
+                GUI.color = Color.white;
+                GUI.Label(new Rect(PointAim.x - 120, H - PointAim.y + rr + d, 240, d * 5), "指向目標，停住發射", style);
+            }
+            // 法師符文：指尖的發光軌跡
+            if (ReleaseStyle == Style.Rune && Trail.Count > 1)
+            {
+                for (int i = 0; i < Trail.Count; i++)
+                {
+                    float a = (i + 1f) / Trail.Count;
+                    GUI.color = new Color(aimColor.r, aimColor.g, aimColor.b, 0.25f + 0.75f * a);
+                    float sz = d * (0.8f + 1.4f * a);
+                    GUI.DrawTexture(new Rect(Trail[i].x - sz / 2, H - Trail[i].y - sz / 2, sz, sz), Texture2D.whiteTexture);
+                    if (i > 0)
+                    {
+                        // 兩點之間補幾個點，看起來是連續的線
+                        for (int k = 1; k < 4; k++)
+                        {
+                            var q = Vector2.Lerp(Trail[i - 1], Trail[i], k / 4f);
+                            GUI.DrawTexture(new Rect(q.x - sz / 3, H - q.y - sz / 3, sz / 1.5f, sz / 1.5f), Texture2D.whiteTexture);
+                        }
+                    }
+                }
+            }
             // 弓箭手拉弓：起點標記＋拉弓進度條（拉滿變綠）
             if (BowHolding)
             {

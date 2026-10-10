@@ -118,6 +118,16 @@
   | 弓箭手（拉弓） | 在畫面中間握拳（捏弦）→ 往旁邊慢慢拉（畫面寬 15% 以上、0.3 秒以上，手邊有拉弓進度條）→ 張開手放箭；沒拉滿就張開＝取消 | 開始拉弓的位置 |
   | 劍士（手刀斬） | 手掌伸直，0.4 秒內橫向／斜向劈過畫面寬 25% 以上 | 劈過的中點 |
   | 刺客（突刺） | 手刀快速往前刺（手遠離手機，畫面上 0.35 秒內縮小 25% 以上） | 刺出的位置 |
+- **法師畫符文**（火球、冰槍、雷擊、風刃、隕石）：詠唱時畫面中央出現符文軌跡（大圓點是起點），伸出食指在空中照著畫；
+  畫對＝詠唱完成，接著**用食指指向目標停住 0.5 秒**發射（準星＝食指根部→指尖的延長線，旁邊有進度圈）。
+  | 技能 | 符文 |
+  |---|---|
+  | 火球術 | 圓（任意起點、任一方向） |
+  | 冰槍 | 三角形 |
+  | 雷擊 | 由上往下的閃電折線 |
+  | 風刃 | 橫向波浪 |
+  | 隕石 | V 字 |
+  辨識：單筆畫比對（重新取樣、正規化、點距離＋筆畫方向），且必須是所有符文中最像的；大小、位置不拘。握拳＝提筆、清除軌跡。
 - **特定技能有自己的放招動作**（其餘用職業動作）：
   | 技能 | 放招動作 |
   |---|---|
@@ -216,6 +226,7 @@
 | `Assets/SpellDuel/Runtime/SpeechInput.cs` | 手機內建語音辨識＋技能名稱比對（簡繁轉換、拼音近音、句中搜尋、去抖動） |
 | `Assets/Plugins/Android/SpeechBridge.java`、`Assets/Plugins/iOS/SpeechBridge.mm` | 語音辨識原生外掛 |
 | `Assets/SpellDuel/Runtime/VoiceSpotter.cs` | 本機咒語辨識：麥克風、斷句、MFCC、DTW、樣本儲存與比對 |
+| `Assets/SpellDuel/Runtime/RuneRecognizer.cs` | 法師符文辨識（單筆畫比對） |
 | `Assets/SpellDuel/Runtime/HandGesture.cs` | 手勢：握拳→張開／甩手放招、手指準星 |
 | `Assets/SpellDuel/Runtime/PoseDetector.cs` | 擷取 AR 畫面、呼叫手機內建的人體偵測、把關鍵點換成射線 |
 | `Assets/Plugins/Android/PoseBridge.java` | Android：ML Kit 人體偵測 |
