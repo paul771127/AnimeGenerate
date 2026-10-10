@@ -351,6 +351,12 @@ namespace SpellDuel
                 Me.chargeStart = battle.now - Me.charging.charge;
                 Say($"✨ {RuneRecognizer.RuneName(RuneRecognizer.RuneOf(Me.charging.id))}符文完成！把準星對準目標，食指往前指發射", 1.5f);
             }
+            // 弓箭手：握拳的手拉出畫面外＝拉滿弓＝蓄力完成
+            if (Me.charging != null && HandGesture.ReleaseOf(Me.charging) == HandGesture.Style.Bow && Hand.BowDrawn && battle.ChargeProgress(Me) < 1f)
+            {
+                Me.chargeStart = battle.now - Me.charging.charge;
+                Say("🏹 拉滿弓！把準星對準目標，手回到畫面張開放箭", 1.5f);
+            }
             // 比出技能手勢（維持 0.35 秒）＝詠唱該技能（不再用點螢幕選招）；法師畫符文時手指會比出各種形狀，不換招
             if (Hand.ConsumeSelect(out var shape) && !frozen && !drawingRune)
             {
@@ -916,7 +922,9 @@ namespace SpellDuel
             if (me.charging != null)
             {
                 float prog = battle.ChargeProgress(me);
-                string st = prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%" :
+                bool bow = HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Bow && Hand != null;   // 弓箭手：拉滿弓就是蓄力完成
+                string st = bow ? (Hand.BowDrawn ? "🏹 拉滿！手回畫面張開放箭" : Hand.BowStage == 1 ? "✊ 握著拳拉出畫面外（拉弓）" : "畫面中握拳（捏弦）") :
+                    prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%" :
                     me.charging.releaseNear ? "手刀往前刺 → 5 秒內靠近敵人自動出手" :
                     HandGesture.StyleHint(HandGesture.ReleaseOf(me.charging));
                 UiKit.Pill(H / 2 - lh * 2.6f, $"{me.charging.name}　{st}", fs, prog < 1f ? Color.white : me.charging.color, pillW);
