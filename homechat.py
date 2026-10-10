@@ -49,7 +49,7 @@ HERE = Path(__file__).resolve().parent
 STATIC_DIR = HERE / "static"
 DEFAULT_DB = HERE / "data" / "homechat.db"
 
-VERSION = "2026.10.16"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
+VERSION = "2026.10.17"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
 COOKIE_NAME = "hc_session"
 SESSION_IDLE_DAYS = 365  # 像 LINE 一樣一直保持登入;一年沒用才自動登出(每次使用都會重新計算)
 INVITE_DAYS = 7  # 邀請連結 7 天內有效,只能用一次
@@ -1746,7 +1746,7 @@ class Calls:
         with self.lock:
             return next((c for c in self.calls.values() if c["contact_id"] == contact_id), None)
 
-    def start(self, contact_id: int, role: str, sid: str) -> dict:
+    def start(self, contact_id: int, role: str, sid: str, video: bool = False) -> dict:
         hub = self.app.hub
         busy = self.for_contact(contact_id)
         if busy:
@@ -1756,12 +1756,12 @@ class Calls:
                 raise ApiError(409, "對方正在通話中")
             self.end(busy["id"], "gone")
         call = {"id": secrets.token_urlsafe(12), "contact_id": contact_id, "caller": role, "caller_sid": sid,
-                "callee_sid": None, "state": "ringing", "started": time.time(), "answered_at": None}
+                "callee_sid": None, "state": "ringing", "started": time.time(), "answered_at": None, "video": video}
         with self.lock:
             self.calls[call["id"]] = call
         callee = self.other(role)
-        hub.publish_to({"type": "call", "action": "ring", "call_id": call["id"], "contact_id": contact_id},
-                       callee, contact_id)
+        hub.publish_to({"type": "call", "action": "ring", "call_id": call["id"], "contact_id": contact_id,
+                        "video": video}, callee, contact_id)
         if not hub.visible_for(callee, contact_id):
             self.app.pusher.push(callee, contact_id)
         timer = threading.Timer(CALL_RING_SECONDS, self._timeout, args=(call["id"],))
@@ -1805,11 +1805,12 @@ class Calls:
         event = {"type": "call", "action": "end", "call_id": call_id, "reason": reason}
         self.app.hub.publish_to(event, "owner")
         self.app.hub.publish_to(event, "guest", cid)
+        icon, kind = ("📹", "視訊通話") if call.get("video") else ("📞", "語音通話")
         if call["answered_at"]:
             secs = int(time.time() - call["answered_at"])
-            body = f"📞 語音通話 {secs // 60}:{secs % 60:02d}"
+            body = f"{icon} {kind} {secs // 60}:{secs % 60:02d}"
         else:
-            body = {"declined": "📞 對方拒接", "canceled": "📞 已取消"}.get(reason, "📞 未接來電")
+            body = icon + " " + {"declined": "對方拒接", "canceled": "已取消"}.get(reason, "未接來電")
         # 通話紀錄寫進對話(由打電話的那一方送出)
         sender = "me" if call["caller"] == "owner" else "them"
         store = self.app.store
@@ -1947,7 +1948,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Referrer-Policy", "no-referrer")  # 邀請連結不會從 Referer 外流
-        self.send_header("Permissions-Policy", "camera=(), microphone=(self), geolocation=()")  # 麥克風:語音輸入、錄音
+        self.send_header("Permissions-Policy", "camera=(self), microphone=(self), geolocation=()")  # 麥克風:語音輸入、錄音、通話;相機:視訊通話
         self.send_header("X-HomeChat-Version", VERSION)
         if self._is_https():
             self.send_header("Strict-Transport-Security", "max-age=31536000")
@@ -3353,7 +3354,8 @@ class Handler(BaseHTTPRequestHandler):
             if call["state"] == "ringing" and call["caller"] != role and (role == "owner" or call["contact_id"] == cid):
                 c = store.get_contact(call["contact_id"])
                 name = (c["name"] if c else "朋友") if role == "owner" else self.app.owner_name
-                return self._json({**base, "title": "📞 來電", "body": f"{name} 打電話給你", "tag": "hc-call",
+                title, verb = ("📹 視訊來電", "想跟你視訊") if call.get("video") else ("📞 來電", "打電話給你")
+                return self._json({**base, "title": title, "body": f"{name} {verb}", "tag": "hc-call",
                                    "contact_id": call["contact_id"], "call": call["id"]})
         test_at = store.get_setting(f"push_test:{sess['id']}")
         if test_at and time.time() - float(test_at) < 120:
@@ -3395,7 +3397,7 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(400, "還不是好友")
         if sess["role"] == "owner" and not contact["username"] and not self.app.store.list_sessions("guest", contact["id"]):
             raise ApiError(400, "對方還沒加入,不能打電話" if not contact["peer"] else "互通的朋友目前還不能直接通話")
-        call = self.app.calls.start(contact["id"], sess["role"], sess["id"])
+        call = self.app.calls.start(contact["id"], sess["role"], sess["id"], bool(data.get("video")))
         self._json({"call_id": call["id"], "ice_servers": self._ice_servers(), "ring_seconds": CALL_RING_SECONDS})
 
     def _call_answer(self, data: dict) -> None:
@@ -3434,7 +3436,8 @@ class Handler(BaseHTTPRequestHandler):
         for call in list(self.app.calls.calls.values()):
             if call["state"] == "ringing" and call["caller"] != sess["role"] and \
                     (sess["role"] == "owner" or call["contact_id"] == sess["contact_id"]):
-                return self._json({"call": {"call_id": call["id"], "contact_id": call["contact_id"]}})
+                return self._json({"call": {"call_id": call["id"], "contact_id": call["contact_id"],
+                                            "video": bool(call.get("video"))}})
         self._json({"call": None})
 
     def _settings(self, data: dict) -> None:

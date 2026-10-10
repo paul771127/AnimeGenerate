@@ -1416,3 +1416,24 @@ def test_turn_settings(server):
     join(base, contact)
     ice = owner.req("/api/call/start", {"contact_id": contact["id"]})[1]["ice_servers"]
     assert ice[-1] == {"urls": ["turn:turn.example.com:3478"], "username": "u", "credential": "p"}
+
+
+def test_video_call(server, monkeypatch):
+    base, app = server
+    monkeypatch.setattr(homechat.Pusher, "send", lambda self, ep: 201)
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "阿明"})[1]["contact"]
+    guest = join(base, contact)
+    g_resp, _, g_next = sse(guest)
+    call_id = owner.req("/api/call/start", {"contact_id": contact["id"], "video": True})[1]["call_id"]
+    ring = g_next("call")
+    assert ring["video"] is True
+    assert guest.req("/api/call")[1]["call"]["video"] is True
+    assert guest.req("/api/notify")[1]["title"] == "📹 視訊來電"
+    guest.req("/api/call/answer", {"call_id": call_id})
+    owner.req("/api/call/end", {"call_id": call_id})
+    msgs = owner.req(f"/api/messages?contact={contact['id']}")[1]["messages"]
+    assert msgs[-1]["body"].startswith("📹 視訊通話 0:0")
+    _, headers, _ = owner.raw("/")
+    assert "camera=(self)" in headers["Permissions-Policy"]
+    g_resp.close()

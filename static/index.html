@@ -238,6 +238,23 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
 .call-btn.red .ic span { display: inline-block; transform: rotate(135deg); }
 .call-btn.green .ic { background: #22c55e; }
 .call-btn.on .ic { background: #fff; color: #111; }
+#dlg-call .call-top, #dlg-call .call-actions { position: relative; z-index: 2; }
+#call-remote { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; z-index: 0; display: none; }
+#call-local { position: absolute; right: 14px; top: max(14px, env(safe-area-inset-top)); width: 28vw; max-width: 160px; aspect-ratio: 3 / 4;
+  object-fit: cover; border-radius: 12px; background: #222; z-index: 3; transform: scaleX(-1); display: none; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+#call-local.back { transform: none; }
+#dlg-call.video #call-local.on { display: block; }
+#dlg-call.video.has-remote #call-remote { display: block; }
+/* 對方畫面出來後,上面只留小小的名字和時間 */
+#dlg-call.video.has-remote .call-top { margin-top: max(16px, env(safe-area-inset-top)); align-self: flex-start; margin-left: 16px; text-align: left;
+  text-shadow: 0 1px 4px rgba(0,0,0,.7); }
+#dlg-call.video.has-remote .call-top .avatar { display: none; }
+#dlg-call.video.has-remote #call-name { font-size: 18px; }
+#dlg-call.video.has-remote.remote-off .call-top { margin-top: max(70px, calc(env(safe-area-inset-top) + 40px)); align-self: center; margin-left: 0; text-align: center; }
+#dlg-call.video.has-remote.remote-off .call-top .avatar { display: flex; }
+#dlg-call.video.has-remote.remote-off #call-remote { display: none; }
+.call-actions { flex-wrap: wrap; justify-content: center; gap: 22px; }
+@media (min-width: 761px) { #call-remote { object-fit: contain; } }
 #toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: rgba(0,0,0,.8); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 14px; z-index: 100; max-width: calc(100vw - 32px); text-align: center; }
 
 /* ---------- 加入 / 申請 */
@@ -358,6 +375,7 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
       </div>
       <span id="conn"></span>
       <button class="icon-btn hidden" id="call-btn" title="語音通話">📞</button>
+      <button class="icon-btn hidden" id="video-btn" title="視訊通話">📹</button>
       <button class="icon-btn" id="chat-menu-btn" title="選單">⋯</button>
     </div>
     <div id="chat-empty">選一個聯絡人開始聊天</div>
@@ -664,6 +682,8 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
 
 <!-- 語音通話 -->
 <dialog id="dlg-call">
+  <video id="call-remote" autoplay playsinline muted></video>
+  <video id="call-local" autoplay playsinline muted></video>
   <div class="call-top">
     <div id="call-avatar"></div>
     <div id="call-name"></div>
@@ -671,6 +691,8 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
   </div>
   <div class="call-actions">
     <button class="call-btn" type="button" id="call-mute"><span class="ic">🎙️</span>靜音</button>
+    <button class="call-btn" type="button" id="call-cam"><span class="ic">📷</span><b id="call-cam-label">關鏡頭</b></button>
+    <button class="call-btn" type="button" id="call-flip"><span class="ic">🔄</span>翻轉</button>
     <button class="call-btn red" type="button" id="call-hangup"><span class="ic"><span>📞</span></span><b id="call-hangup-label">掛斷</b></button>
     <button class="call-btn green" type="button" id="call-accept"><span class="ic">📞</span>接聽</button>
   </div>
@@ -1380,7 +1402,7 @@ function handleLaunchParams() {
   openFromNotification({ contact_id: q.get("open"), call: q.has("call") });
 }
 
-// ---------- 語音通話(聲音由兩台裝置直接傳,家裡電腦只負責接通)
+// ---------- 語音 / 視訊通話(聲音和畫面由兩台裝置直接傳,家裡電腦只負責接通)
 let call = null;
 function callPeer(contactId) {
   if (state.role !== "owner") return { name: state.ownerName, url: avatarUrl("owner", state.ownerAvatar) };
@@ -1398,6 +1420,10 @@ function showCall(mode, status) {
   $("#call-status").textContent = status;
   $("#call-accept").classList.toggle("hidden", mode !== "incoming");
   $("#call-mute").classList.toggle("hidden", mode === "incoming");
+  const cams = call.video && mode !== "incoming" && !!videoTrack();
+  $("#call-cam").classList.toggle("hidden", !cams);
+  $("#call-flip").classList.toggle("hidden", !cams || !call.canFlip);
+  $("#dlg-call").classList.toggle("video", !!call.video);
   $("#call-hangup-label").textContent = mode === "incoming" ? "拒接" : mode === "outgoing" ? "取消" : "掛斷";
   const d = $("#dlg-call");
   if (!d.open) d.showModal();
@@ -1421,43 +1447,67 @@ function stopTones() {
   if (call && call.toneTimer) { clearInterval(call.toneTimer); call.toneTimer = null; }
   if (navigator.vibrate) { try { navigator.vibrate(0); } catch (_) {} }
 }
+const AUDIO = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+const camera = facing => ({ facingMode: facing, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 24 } });
 async function getMic() {
-  return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+  if (!call.video) return navigator.mediaDevices.getUserMedia({ audio: AUDIO });
+  try { return await navigator.mediaDevices.getUserMedia({ audio: AUDIO, video: camera(call.facing) }); }
+  catch (ex) {
+    if (ex && ex.name === "NotAllowedError") throw ex;  // 連麥克風都不給
+    toast("找不到相機,改成只有聲音(還是看得到對方)");
+    return navigator.mediaDevices.getUserMedia({ audio: AUDIO });
+  }
+}
+const videoTrack = () => call && call.stream ? call.stream.getVideoTracks()[0] : null;
+function showLocal() {
+  const v = $("#call-local");
+  const track = videoTrack();
+  v.classList.toggle("on", !!track && track.enabled);
+  v.classList.toggle("back", call.facing === "environment");
+  if (track && v.srcObject !== call.stream) { v.srcObject = call.stream; v.play().catch(() => {}); }
+}
+async function detectFlip() {
+  try { call.canFlip = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput").length > 1; }
+  catch (_) { call.canFlip = false; }
 }
 function newCall(fields) {
   return { id: null, contactId: null, role: null, pc: null, stream: null, ice: null, answered: false, early: [], queue: [],
+    video: false, facing: "user", canFlip: false,
     chain: Promise.resolve(), toneTimer: null, clock: null, connectedAt: 0, ...fields };
 }
-async function startCall() {
+async function startCall(video) {
   const c = state.current;
   if (call) return toast("正在通話中");
   if (!canCall(c)) return toast("對方還沒加入,不能打電話");
   if (state.offline) return toast("連不上家裡的電腦,現在不能打電話");
   if (!navigator.mediaDevices || !window.RTCPeerConnection) return toast("這個瀏覽器不能通話,請改用 Chrome 或 Safari");
   audioCtx();
-  call = newCall({ role: "caller", contactId: c.id });
-  showCall("outgoing", "準備麥克風…");
+  call = newCall({ role: "caller", contactId: c.id, video: !!video });
+  showCall("outgoing", video ? "準備相機…" : "準備麥克風…");
   try { call.stream = await getMic(); }
-  catch (_) { endCallUI(); return toast("要允許使用麥克風才能打電話"); }
+  catch (_) { endCallUI(); return toast(video ? "要允許使用相機和麥克風才能視訊" : "要允許使用麥克風才能打電話"); }
   if (!call) return;  // 等麥克風時按了取消
-  setCallStatus("撥號中…");
+  await detectFlip();
+  showLocal();
+  showCall("outgoing", video ? "視訊撥號中…" : "撥號中…");
   startTones("ringback");
   try {
-    const r = await api("/api/call/start", { contact_id: c.id });
+    const r = await api("/api/call/start", { contact_id: c.id, video: !!video });
     if (!call) return api("/api/call/end", { call_id: r.call_id }).catch(() => {});
     call.id = r.call_id; call.ice = r.ice_servers;
     for (const d of call.early) onCallEvent(d);  // 在拿到編號前就收到的
     call.early = [];
   } catch (ex) { endCallUI(); toast(ex.message); }
 }
-$("#call-btn").addEventListener("click", startCall);
+$("#call-btn").addEventListener("click", () => startCall(false));
+$("#video-btn").addEventListener("click", () => startCall(true));
 function onCallEvent(d) {
   if (d.action === "ring") {
     if (call) return;  // 正在通話:對方會等到沒人接
-    call = newCall({ id: d.call_id, role: "callee", contactId: d.contact_id });
-    showCall("incoming", "語音來電…");
+    call = newCall({ id: d.call_id, role: "callee", contactId: d.contact_id, video: !!d.video });
+    showCall("incoming", d.video ? "📹 視訊來電…" : "語音來電…");
     startTones("ring");
-    alertUser(callPeer(d.contact_id).name, "📞 打電話給你", d.contact_id, "call");
+    alertUser(callPeer(d.contact_id).name, d.video ? "📹 想跟你視訊" : "📞 打電話給你", d.contact_id, "call");
     return;
   }
   if (!call) return;
@@ -1481,9 +1531,11 @@ async function acceptCall() {
   if (!call || call.role !== "callee" || call.answered) return;
   audioCtx(); stopTones();
   call.answered = true;
-  setCallStatus("準備麥克風…");
+  setCallStatus(call.video ? "準備相機…" : "準備麥克風…");
   try { call.stream = await getMic(); }
-  catch (_) { toast("要允許使用麥克風才能接電話"); return hangup(); }
+  catch (_) { toast(call.video ? "要允許使用相機和麥克風才能視訊" : "要允許使用麥克風才能接電話"); return hangup(); }
+  await detectFlip();
+  showLocal();
   showCall("active", "連線中…");
   try {
     const r = await api("/api/call/answer", { call_id: call.id });
@@ -1501,10 +1553,23 @@ function makePC() {
   const pc = new RTCPeerConnection({ iceServers: call.ice || [] });
   call.pc = pc;
   call.stream.getTracks().forEach(t => pc.addTrack(t, call.stream));
+  // 視訊通話但這台沒有相機:還是要能看到對方
+  if (call.video && !videoTrack() && call.role === "caller") pc.addTransceiver("video", { direction: "recvonly" });
   pc.onicecandidate = e => { if (e.candidate) sendSignal({ candidate: e.candidate.toJSON() }); };
   pc.ontrack = e => {
+    const stream = e.streams[0] || new MediaStream([e.track]);
+    if (e.track.kind === "video") {
+      const v = $("#call-remote");
+      v.srcObject = stream; v.play().catch(() => {});
+      const dlg = $("#dlg-call");
+      dlg.classList.add("has-remote");
+      // 對方關鏡頭 / 畫面斷了 → 改顯示大頭貼
+      e.track.onmute = () => dlg.classList.add("remote-off");
+      e.track.onunmute = () => { if (!call || !call.remoteCamOff) dlg.classList.remove("remote-off"); };
+      return;
+    }
     const a = $("#call-audio");
-    a.srcObject = e.streams[0] || new MediaStream([e.track]);
+    a.srcObject = stream;
     a.play().catch(() => {});
   };
   const watch = () => {
@@ -1536,6 +1601,9 @@ async function onSignal(data) {
     }
     for (const c of call.early) await pc.addIceCandidate(c).catch(() => {});
     call.early = [];
+  } else if ("cam" in data) {
+    call.remoteCamOff = !data.cam;
+    $("#dlg-call").classList.toggle("remote-off", !data.cam);
   } else if (data.candidate) {
     if (pc.remoteDescription) await pc.addIceCandidate(data.candidate).catch(() => {});
     else call.early.push(data.candidate);
@@ -1568,6 +1636,29 @@ $("#call-mute").addEventListener("click", () => {
   track.enabled = !track.enabled;
   $("#call-mute").classList.toggle("on", !track.enabled);
 });
+$("#call-cam").addEventListener("click", () => {
+  const track = videoTrack(); if (!track) return;
+  track.enabled = !track.enabled;
+  $("#call-cam").classList.toggle("on", !track.enabled);
+  $("#call-cam-label").textContent = track.enabled ? "關鏡頭" : "開鏡頭";
+  sendSignal({ cam: track.enabled });
+  showLocal();
+});
+$("#call-flip").addEventListener("click", async () => {
+  const old = videoTrack(); if (!old || !call) return;
+  const facing = call.facing === "user" ? "environment" : "user";
+  let fresh;
+  try { fresh = (await navigator.mediaDevices.getUserMedia({ video: camera(facing) })).getVideoTracks()[0]; }
+  catch (_) { return toast("沒辦法切換鏡頭"); }
+  if (!call) { fresh.stop(); return; }
+  fresh.enabled = old.enabled;
+  const sender = call.pc && call.pc.getSenders().find(s => s.track && s.track.kind === "video");
+  if (sender) await sender.replaceTrack(fresh);
+  call.stream.removeTrack(old); old.stop();
+  call.stream.addTrack(fresh);
+  call.facing = facing;
+  const v = $("#call-local"); v.srcObject = null; showLocal();
+});
 function endCallUI() {
   if (!call) return;
   stopTones();
@@ -1576,7 +1667,11 @@ function endCallUI() {
   if (call.pc) { try { call.pc.close(); } catch (_) {} }
   call = null;
   $("#call-audio").srcObject = null;
-  $("#call-mute").classList.remove("on");
+  $("#call-remote").srcObject = null; $("#call-local").srcObject = null;
+  $("#call-local").classList.remove("on");
+  $("#dlg-call").classList.remove("video", "has-remote", "remote-off");
+  $("#call-mute").classList.remove("on"); $("#call-cam").classList.remove("on");
+  $("#call-cam-label").textContent = "關鏡頭";
   if ($("#dlg-call").open) $("#dlg-call").close();
 }
 window.addEventListener("pagehide", e => { if (call && call.id && !e.persisted) hangup(); });
@@ -1584,7 +1679,7 @@ async function checkPendingCall() {
   if (call || state.offline) return;
   try {
     const r = await api("/api/call");
-    if (r.call && !call) onCallEvent({ type: "call", action: "ring", call_id: r.call.call_id, contact_id: r.call.contact_id });
+    if (r.call && !call) onCallEvent({ type: "call", action: "ring", call_id: r.call.call_id, contact_id: r.call.contact_id, video: r.call.video });
   } catch (_) {}
 }
 
@@ -2899,6 +2994,7 @@ function renderChatHead() {
   $("#chat-status").textContent = p ? p.status : "";
   $("#chat-avatar").replaceChildren(...(p ? [avatar(p.name, p.url)] : []));
   $("#call-btn").classList.toggle("hidden", !canCall(state.current));
+  $("#video-btn").classList.toggle("hidden", !canCall(state.current));
 }
 async function refreshProfile() {
   try {
