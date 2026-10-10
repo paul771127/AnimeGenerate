@@ -872,3 +872,109 @@ def test_deleting_contact_deletes_guest_stickers(server):
     assert app.store.sticker_path(sid).exists()
     owner.req(f"/api/contacts/{contact['id']}/delete", {})
     assert not app.store.sticker_path(sid).exists()
+
+
+# ---------------------------------------------------------------- 共同相簿
+
+def upload_photo(client, contact_id, name="a.png", raw=PNG):
+    q = f"?name={urllib.parse.quote(name)}" + (f"&contact={contact_id}" if contact_id else "")
+    return client.upload("/api/upload" + q, raw, "image/png")[1]["attachment"]
+
+
+def test_shared_album(server):
+    import io
+    import zipfile
+    base, app = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "小美"})[1]["contact"]
+    guest = join(base, contact)
+    album = guest.req("/api/albums", {"name": "旅行"})[1]["album"]
+    assert album["created_by"] == "them"
+    # 兩邊都看得到、都能加照片
+    assert [a["name"] for a in owner.req(f"/api/albums?contact={contact['id']}")[1]["albums"]] == ["旅行"]
+    a1 = upload_photo(guest, None, "海邊.png")
+    a2 = upload_photo(guest, None, "夕陽.png")
+    assert guest.req(f"/api/albums/{album['id']}/add", {"attachment_ids": [a1["id"], a2["id"]]})[1]["added"] == 2
+    # 聊天室出現相簿卡片
+    card = owner.req(f"/api/messages?contact={contact['id']}")[1]["messages"][-1]
+    assert card["kind"] == "album" and json.loads(card["body"]) == {"album_id": album["id"], "name": "旅行", "count": 2}
+    assert owner.req("/api/contacts")[1]["contacts"][0]["last_body"] == "[相簿]"
+    # 主人把聊天裡的照片加進相簿(不會重複)
+    chat_msg = send_file(owner, contact["id"], PNG, "image/png", "合照.png", "image")
+    r = owner.req(f"/api/albums/{album['id']}/add", {"attachment_ids": [chat_msg["attachment"]["id"], a1["id"]],
+                                                     "notify": False})[1]
+    assert r["added"] == 1
+    photos = owner.req(f"/api/albums/{album['id']}/photos")[1]["photos"]
+    assert [p["attachment"]["name"] for p in photos] == ["合照.png", "夕陽.png", "海邊.png"]
+    assert owner.req(f"/api/albums?contact={contact['id']}")[1]["albums"][0]["count"] == 3
+    # 下載整本 zip
+    status, headers, body = guest.raw(f"/api/albums/{album['id']}/zip")
+    assert status == 200 and headers["Content-Type"] == "application/zip"
+    assert sorted(zipfile.ZipFile(io.BytesIO(body)).namelist()) == ["合照.png", "夕陽.png", "海邊.png"]
+    # 朋友只能移除自己加的照片;不能刪主人的相簿
+    owner_photo = next(p for p in photos if p["added_by"] == "me")
+    assert guest.req(f"/api/albums/{album['id']}/remove", {"photo_id": owner_photo["id"]})[0] == 403
+    mine = next(p for p in photos if p["added_by"] == "them")
+    assert guest.req(f"/api/albums/{album['id']}/remove", {"photo_id": mine["id"]})[0] == 200
+    owner_album = owner.req("/api/albums", {"contact_id": contact["id"], "name": "家庭"})[1]["album"]
+    assert guest.req(f"/api/albums/{owner_album['id']}/delete", {})[0] == 403
+    assert guest.req(f"/api/albums/{album['id']}/rename", {"name": "2026 旅行"})[0] == 200
+    # 匯出
+    text = owner.req(f"/api/export?contact={contact['id']}")[1]
+    assert "[相簿] 新增 2 張照片到「旅行」" in text
+    # 從相簿移除的照片:聊天沒用到的檔案會被清掉,聊天裡的留著
+    assert guest.req(f"/api/albums/{album['id']}/delete", {})[0] == 200
+    app.store.cleanup_attachments(older_than=-1)
+    assert app.store.file_path(chat_msg["attachment"]["id"]).exists()
+    assert app.store.file_path(a1["id"]).exists()  # 相簿卡片用它當封面
+
+
+def test_album_privacy(server):
+    base, _ = server
+    owner = login(base)
+    a = owner.req("/api/contacts", {"name": "A"})[1]["contact"]
+    b = owner.req("/api/contacts", {"name": "B"})[1]["contact"]
+    guest_b = join(base, b)
+    album = owner.req("/api/albums", {"contact_id": a["id"], "name": "A 的相簿"})[1]["album"]
+    assert guest_b.req(f"/api/albums/{album['id']}/photos")[0] == 404
+    assert guest_b.raw(f"/api/albums/{album['id']}/zip")[0] == 404
+    assert guest_b.req(f"/api/albums/{album['id']}/add", {"attachment_ids": ["x"]})[0] == 404
+    assert guest_b.req(f"/api/albums?contact={a['id']}")[1]["albums"] == []  # 只看得到自己的對話
+    # 不能把別的對話的照片加進來
+    other = upload_photo(guest_b, None)
+    assert owner.req(f"/api/albums/{album['id']}/add", {"attachment_ids": [other["id"]]})[0] == 400
+
+
+# ---------------------------------------------------------------- 分享 / 儲存貼圖
+
+def test_share_sticker_pack_and_save_all(server):
+    import io
+    import zipfile
+    base, _ = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "小美"})[1]["contact"]
+    guest = join(base, contact)
+    ids = [add_sticker(owner)[1]["sticker"]["id"] for _ in range(3)]
+    msg = owner.req("/api/stickers/share", {"contact_id": contact["id"], "sticker_ids": ids, "client_id": "pk1"})[1]["message"]
+    info = json.loads(msg["body"])
+    assert msg["kind"] == "stickers" and info["count"] == 3
+    again = owner.req("/api/stickers/share", {"contact_id": contact["id"], "sticker_ids": ids, "client_id": "pk1"})[1]
+    assert again["message"]["id"] == msg["id"]
+    got = guest.req("/api/messages")[1]["messages"][-1]
+    att_ids = [i["id"] for i in json.loads(got["body"])["items"]]
+    saved = guest.req("/api/stickers/save", {"attachment_ids": att_ids})[1]["stickers"]
+    assert len(saved) == 3 and len(guest.req("/api/stickers")[1]["stickers"]) == 3
+    # 分享後刪掉自己的貼圖,對方收到的還在;檔案不會被清掉
+    for sid in ids:
+        owner.req("/api/stickers/delete", {"id": sid})
+    server[1].store.cleanup_attachments(older_than=-1)
+    assert all(guest.raw(f"/api/files/{a}")[0] == 200 for a in att_ids)
+    # 不能分享別人的貼圖
+    assert owner.req("/api/stickers/share", {"contact_id": contact["id"], "sticker_ids": [saved[0]["id"]]})[0] == 404
+    # 下載:一張 / 多張打包
+    status, headers, body = guest.raw(f"/api/sticker-files/{saved[0]['id']}?download=1")
+    assert body == GIF and headers["Content-Disposition"].startswith("attachment")
+    status, headers, body = guest.raw(f"/api/stickers/zip?ids={','.join(s['id'] for s in saved)}")
+    assert len(zipfile.ZipFile(io.BytesIO(body)).namelist()) == 3
+    assert owner.raw(f"/api/stickers/zip?ids={saved[0]['id']}")[0] == 404
+    assert "[分享貼圖] 3 張" in owner.req(f"/api/export?contact={contact['id']}")[1]

@@ -318,6 +318,7 @@
       const status = h("div", { class: "mk-busy", id: "mk-status" });
       const actions = h("div", { class: "actions", style: "margin-top:0" },
         h("button", { type: "button", class: "btn secondary", onclick: () => dlg.close() }, "取消"),
+        h("button", { type: "button", class: "btn secondary", onclick: () => finish("download") }, "下載 GIF"),
         h("button", { type: "button", class: "btn secondary", onclick: () => finish("send") }, "存起來並傳送"),
         h("button", { type: "button", class: "btn", onclick: () => finish("save") }, "存成貼圖"));
       dlg.replaceChildren(h("div", { class: "dlg" }, h("h3", { style: "margin:0" }, "做動畫貼圖"), tabs, ...body, speed, status, actions));
@@ -505,6 +506,15 @@
       const blob = new Blob([gif], { type: "image/gif" });
       if (blob.size > 2 * 1024 * 1024) return toast2("GIF 太大了(超過 2 MB),請減少格數");
       toast2("");
+      if (action === "download") {
+        // 存到自己的手機 / 電腦,不關掉製作器(還可以再存成貼圖)
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `sticker_${Date.now()}.gif`;
+        document.body.append(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+        return toast2("已下載 GIF");
+      }
       dlg.close();
       st.onDone(blob, action);
     }

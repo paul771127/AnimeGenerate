@@ -32,6 +32,7 @@ import threading
 import tempfile
 import time
 import traceback
+import zipfile
 import urllib.error
 import urllib.request
 import webbrowser
@@ -45,7 +46,7 @@ HERE = Path(__file__).resolve().parent
 STATIC_DIR = HERE / "static"
 DEFAULT_DB = HERE / "data" / "homechat.db"
 
-VERSION = "2026.10.12"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
+VERSION = "2026.10.13"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
 COOKIE_NAME = "hc_session"
 SESSION_IDLE_DAYS = 365  # 像 LINE 一樣一直保持登入;一年沒用才自動登出(每次使用都會重新計算)
 INVITE_DAYS = 7  # 邀請連結 7 天內有效,只能用一次
@@ -57,7 +58,12 @@ MAX_BODY = 20 * 1024 * 1024  # LINE 聊天紀錄可能很大
 MAX_MESSAGE = 5000
 MAX_UPLOAD = 100 * 1024 * 1024  # 圖片 / 檔案 / 語音,每個最大 100 MB
 MIN_FREE_DISK = 500 * 1024 * 1024  # 硬碟剩不到 500 MB 就不收檔案
-MESSAGE_KINDS = ("text", "image", "file", "audio", "sticker")
+MESSAGE_KINDS = ("text", "image", "file", "audio", "sticker")  # 使用者自己送的;album / stickers 由伺服器產生
+KIND_LABELS = {"image": "[圖片]", "audio": "[語音訊息]", "file": "[檔案]", "sticker": "[貼圖]",
+               "album": "[相簿]", "stickers": "[分享貼圖]"}
+MAX_ALBUMS = 100  # 每段對話最多 100 本相簿
+MAX_ALBUM_PHOTOS = 2000
+MAX_SHARE_STICKERS = 40  # 一次最多分享 40 張貼圖
 STICKER_TYPES = {"image/png", "image/gif", "image/webp", "image/jpeg"}
 MAX_STICKER = 2 * 1024 * 1024  # 每張貼圖最大 2 MB
 MAX_STICKERS = 300  # 每個人最多 300 張
@@ -106,6 +112,25 @@ CREATE TABLE IF NOT EXISTS stickers (           -- 自己的貼圖,檔案在 dat
     size INTEGER NOT NULL,
     created_at REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS albums (             -- 共同相簿:屬於一段對話,兩個人都能加照片
+    id INTEGER PRIMARY KEY,
+    contact_id INTEGER NOT NULL REFERENCES contacts(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    created_by TEXT NOT NULL,                    -- me / them
+    created_at REAL NOT NULL
+);
+CREATE TABLE IF NOT EXISTS album_photos (
+    id INTEGER PRIMARY KEY,
+    album_id INTEGER NOT NULL REFERENCES albums(id) ON DELETE CASCADE,
+    attachment_id TEXT NOT NULL,
+    added_by TEXT NOT NULL,
+    created_at REAL NOT NULL,
+    UNIQUE (album_id, attachment_id)
+);
+CREATE TABLE IF NOT EXISTS message_files (      -- 一則訊息用到好幾個檔案時(分享貼圖組)
+    message_id INTEGER NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+    attachment_id TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS attachments (        -- 圖片、檔案、語音,實際檔案在 data/files/<id>
     id TEXT PRIMARY KEY,
     contact_id INTEGER NOT NULL REFERENCES contacts(id) ON DELETE CASCADE,
@@ -150,6 +175,15 @@ DUMMY_HASH = hash_password(secrets.token_hex(8))
 
 
 # ---------------------------------------------------------------- 資料庫
+
+def content_disposition(kind: str, name: str) -> str:
+    """中文檔名用 filename*,另外附一個英文備用檔名給看不懂的舊瀏覽器 / App 內建瀏覽器。"""
+    stem, dot, ext = name.rpartition(".")
+    ascii_ext = re.sub(r"[^A-Za-z0-9]", "", ext) if dot else ""
+    ascii_stem = re.sub(r"[^A-Za-z0-9._-]+", "_", stem if dot else name).strip("_") or "homechat"
+    fallback = ascii_stem + (f".{ascii_ext}" if ascii_ext else "")
+    return f"{kind}; filename=\"{fallback}\"; filename*=UTF-8''{quote(name)}"
+
 
 def token_hash(token: str) -> str:
     """登入憑證只存雜湊:就算資料庫檔案外流,也不能拿來冒充登入。"""
@@ -337,7 +371,8 @@ class Store:
                   (SELECT COUNT(*) FROM messages m WHERE m.contact_id = c.id AND m.sender = 'them'
                      AND m.source = 'chat' AND m.id > c.owner_read_id) AS unread,
                   (SELECT CASE m.kind WHEN 'image' THEN '[圖片]' WHEN 'audio' THEN '[語音訊息]'
-                                      WHEN 'file' THEN '[檔案]' WHEN 'sticker' THEN '[貼圖]' ELSE m.body END
+                                      WHEN 'file' THEN '[檔案]' WHEN 'sticker' THEN '[貼圖]'
+                                      WHEN 'album' THEN '[相簿]' WHEN 'stickers' THEN '[分享貼圖]' ELSE m.body END
                      FROM messages m WHERE m.contact_id = c.id
                      ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_body,
                   (SELECT created_at FROM messages m WHERE m.contact_id = c.id
@@ -546,13 +581,89 @@ class Store:
                                   (contact_id, client_id)).fetchone()
         return self._message_row(row) if row else None
 
+    # --- 共同相簿
+    def list_albums(self, contact_id: int) -> list[dict]:
+        with self.lock:
+            rows = self.db.execute(
+                """
+                SELECT al.*,
+                  (SELECT COUNT(*) FROM album_photos p WHERE p.album_id = al.id) AS count,
+                  (SELECT p.attachment_id FROM album_photos p WHERE p.album_id = al.id
+                     ORDER BY p.created_at DESC, p.id DESC LIMIT 1) AS cover
+                FROM albums al WHERE al.contact_id = ? ORDER BY al.created_at DESC
+                """, (contact_id,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_album(self, album_id: int) -> dict | None:
+        with self.lock:
+            row = self.db.execute("SELECT * FROM albums WHERE id = ?", (album_id,)).fetchone()
+        return dict(row) if row else None
+
+    def add_album(self, contact_id: int, name: str, created_by: str) -> dict:
+        with self.lock:
+            cur = self.db.execute("INSERT INTO albums (contact_id, name, created_by, created_at) VALUES (?, ?, ?, ?)",
+                                  (contact_id, name, created_by, time.time()))
+            self.db.commit()
+        return self.get_album(cur.lastrowid)
+
+    def rename_album(self, album_id: int, name: str) -> None:
+        with self.lock:
+            self.db.execute("UPDATE albums SET name = ? WHERE id = ?", (name, album_id))
+            self.db.commit()
+
+    def delete_album(self, album_id: int) -> None:
+        """刪相簿只是拿掉相簿;照片檔案如果聊天裡也沒用到,之後會被自動清掉。"""
+        with self.lock:
+            self.db.execute("DELETE FROM albums WHERE id = ?", (album_id,))
+            self.db.commit()
+
+    def album_photos(self, album_id: int) -> list[dict]:
+        with self.lock:
+            rows = self.db.execute(
+                "SELECT p.id, p.added_by, p.created_at, a.id AS att_id, a.name, a.mime, a.size "
+                "FROM album_photos p JOIN attachments a ON a.id = p.attachment_id "
+                "WHERE p.album_id = ? ORDER BY p.created_at DESC, p.id DESC", (album_id,)).fetchall()
+        return [{"id": r["id"], "added_by": r["added_by"], "created_at": r["created_at"],
+                 "attachment": {"id": r["att_id"], "name": r["name"], "mime": r["mime"], "size": r["size"]}}
+                for r in rows]
+
+    def add_album_photos(self, album_id: int, attachment_ids: list[str], added_by: str) -> int:
+        added = 0
+        now = time.time()
+        with self.lock:
+            for i, att_id in enumerate(attachment_ids):
+                cur = self.db.execute(
+                    "INSERT OR IGNORE INTO album_photos (album_id, attachment_id, added_by, created_at) VALUES (?, ?, ?, ?)",
+                    (album_id, att_id, added_by, now + i * 0.001))
+                added += cur.rowcount
+            self.db.commit()
+        return added
+
+    def get_album_photo(self, photo_id: int) -> dict | None:
+        with self.lock:
+            row = self.db.execute("SELECT * FROM album_photos WHERE id = ?", (photo_id,)).fetchone()
+        return dict(row) if row else None
+
+    def remove_album_photo(self, photo_id: int) -> None:
+        with self.lock:
+            self.db.execute("DELETE FROM album_photos WHERE id = ?", (photo_id,))
+            self.db.commit()
+
+    def add_message_files(self, message_id: int, attachment_ids: list[str]) -> None:
+        with self.lock:
+            self.db.executemany("INSERT INTO message_files (message_id, attachment_id) VALUES (?, ?)",
+                                [(message_id, a) for a in attachment_ids])
+            self.db.commit()
+
     def cleanup_attachments(self, older_than: float = 86400) -> int:
         """上傳了但沒有送出的檔案(例如上傳到一半關掉)過一天就刪掉;也清掉沒有紀錄的殘留檔案。"""
         cutoff = time.time() - older_than
         with self.lock:
             ids = [r["id"] for r in self.db.execute(
-                "SELECT a.id FROM attachments a WHERE a.created_at < ? AND NOT EXISTS "
-                "(SELECT 1 FROM messages m WHERE m.attachment_id = a.id)", (cutoff,))]
+                "SELECT a.id FROM attachments a WHERE a.created_at < ? "
+                "AND NOT EXISTS (SELECT 1 FROM messages m WHERE m.attachment_id = a.id) "
+                "AND NOT EXISTS (SELECT 1 FROM album_photos p WHERE p.attachment_id = a.id) "
+                "AND NOT EXISTS (SELECT 1 FROM message_files f WHERE f.attachment_id = a.id)", (cutoff,))]
             self.db.executemany("DELETE FROM attachments WHERE id = ?", [(i,) for i in ids])
             self.db.commit()
             known = {r["id"] for r in self.db.execute("SELECT id FROM attachments")}
@@ -1110,7 +1221,11 @@ class Handler(BaseHTTPRequestHandler):
             return self._file(m.group(1), qs)
         m = re.fullmatch(r"/api/sticker-files/([A-Za-z0-9_-]{16,64})", url.path)
         if m:
-            return self._sticker_file(m.group(1))
+            return self._sticker_file(m.group(1), qs)
+        m = re.fullmatch(r"/api/albums/(\d+)/(photos|zip)", url.path)
+        if m:
+            album = self._album_for(self._require(), int(m.group(1)))
+            return self._album_photos(album) if m.group(2) == "photos" else self._album_zip(album)
         routes = {
             "/api/me": self._me,
             "/api/invite": self._invite_info,
@@ -1122,6 +1237,8 @@ class Handler(BaseHTTPRequestHandler):
             "/api/friend-link": self._friend_link,
             "/api/devices": self._devices,
             "/api/stickers": self._stickers,
+            "/api/stickers/zip": self._stickers_zip,
+            "/api/albums": self._albums,
         }
         if url.path in routes:
             return routes[url.path](qs)
@@ -1152,9 +1269,14 @@ class Handler(BaseHTTPRequestHandler):
             "/api/settings": self._settings,
             "/api/stickers/delete": self._delete_sticker,
             "/api/stickers/save": self._save_sticker,
+            "/api/stickers/share": self._share_stickers,
+            "/api/albums": self._create_album,
         }
         if url.path in routes:
             return routes[url.path](data)
+        m = re.fullmatch(r"/api/albums/(\d+)/(rename|delete|add|remove)", url.path)
+        if m:
+            return self._album_action(int(m.group(1)), m.group(2), data)
         m = re.fullmatch(r"/api/contacts/(\d+)/(update|invite|cancel-invite|approve|logout-devices|delete)",
                          url.path)
         if m:
@@ -1479,17 +1601,180 @@ class Handler(BaseHTTPRequestHandler):
         sess = self._require()
         self._json({"stickers": self.app.store.list_stickers(*self._sticker_owner(sess))})
 
-    def _sticker_file(self, sid: str) -> None:
+    def _sticker_file(self, sid: str, qs: dict | None = None) -> None:
         """自己的貼圖只有自己拿得到(傳出去時會另外複製一份給對話)。"""
         sess = self._require()
         st = self._my_sticker(sess, sid)
         path = self.app.store.sticker_path(sid)
         if not path.exists():
             raise ApiError(404, "找不到這張貼圖")
-        self._send(200, path.read_bytes(), st["mime"], {
-            "Content-Security-Policy": FILE_CSP,
-            "Cache-Control": "private, max-age=31536000, immutable",
-        })
+        headers = {"Content-Security-Policy": FILE_CSP, "Cache-Control": "private, max-age=31536000, immutable"}
+        if qs and "download" in qs:  # 存到自己的裝置
+            ext = st["mime"].split("/")[1].replace("jpeg", "jpg")
+            headers["Content-Disposition"] = content_disposition("attachment", f"sticker_{sid[:6]}.{ext}")
+        self._send(200, path.read_bytes(), st["mime"], headers)
+
+    def _send_zip(self, filename: str, entries: list[tuple[str, Path]]) -> None:
+        """把多個檔案打包成 zip 下載(照片本來就壓縮過,用 stored 比較快)。"""
+        used: set[str] = set()
+        with tempfile.TemporaryFile() as tmp:
+            with zipfile.ZipFile(tmp, "w", zipfile.ZIP_STORED) as zf:
+                for name, path in entries:
+                    if not path.exists():
+                        continue
+                    stem, dot, ext = name.rpartition(".")
+                    unique, n = name, 1
+                    while unique.lower() in used:
+                        n += 1
+                        unique = f"{stem}_{n}.{ext}" if dot else f"{name}_{n}"
+                    used.add(unique.lower())
+                    zf.write(path, unique)
+            size = tmp.tell()
+            tmp.seek(0)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/zip")
+            self.send_header("Content-Length", str(size))
+            self.send_header("Content-Disposition", content_disposition("attachment", filename))
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.end_headers()
+            shutil.copyfileobj(tmp, self.wfile, 65536)
+
+    def _stickers_zip(self, qs: dict) -> None:
+        sess = self._require()
+        ids = [i for i in qs.get("ids", "").split(",") if i][:MAX_STICKERS]
+        entries = []
+        for n, sid in enumerate(ids, 1):
+            st = self._my_sticker(sess, sid)
+            ext = st["mime"].split("/")[1].replace("jpeg", "jpg")
+            entries.append((f"貼圖_{n:03d}.{ext}", self.app.store.sticker_path(sid)))
+        if not entries:
+            raise ApiError(400, "沒有選貼圖")
+        self._send_zip(f"HomeChat貼圖_{datetime.now():%Y%m%d}.zip", entries)
+
+    def _share_stickers(self, data: dict) -> None:
+        """把自己的幾張貼圖打包成一則「貼圖組」訊息,對方可以一次全部收下。"""
+        sess = self._require()
+        contact = self._contact_for(sess, data.get("contact_id"))
+        if contact["status"] != "active":
+            raise ApiError(403, "請先接受好友申請")
+        ids = list(dict.fromkeys(str(i) for i in (data.get("sticker_ids") or [])))
+        if not ids:
+            raise ApiError(400, "沒有選貼圖")
+        if len(ids) > MAX_SHARE_STICKERS:
+            raise ApiError(400, f"一次最多分享 {MAX_SHARE_STICKERS} 張")
+        client_id = self._clean(data.get("client_id"), 64) or None
+        if client_id:
+            existing = self.app.store.find_message(contact["id"], client_id)
+            if existing:
+                return self._json({"message": existing})
+        if sess["role"] == "guest" and not self.app.messages.take(sess["id"]):
+            raise ApiError(429, "訊息傳太快了,休息一下")
+        stickers = [self._my_sticker(sess, sid) for sid in ids]
+        sender = "me" if sess["role"] == "owner" else "them"
+        items = []
+        for st in stickers:
+            att_id = secrets.token_urlsafe(18)
+            shutil.copyfile(self.app.store.sticker_path(st["id"]), self.app.store.file_path(att_id))
+            ext = st["mime"].split("/")[1].replace("jpeg", "jpg")
+            self.app.store.add_attachment(att_id, contact["id"], sender, f"貼圖.{ext}", st["mime"], st["size"])
+            items.append({"id": att_id, "mime": st["mime"]})
+        body = json.dumps({"count": len(items), "items": items}, ensure_ascii=False)
+        msg = self._publish_message(contact, sess, "stickers", body, items[0]["id"], client_id)
+        self.app.store.add_message_files(msg["id"], [i["id"] for i in items])
+        self._json({"message": msg})
+
+    def _publish_message(self, contact: dict, sess: dict, kind: str, body: str,
+                         att_id: str | None, client_id: str | None = None) -> dict:
+        sender = "me" if sess["role"] == "owner" else "them"
+        msg, new = self.app.store.add_message(contact["id"], sender, body, client_id, kind, att_id)
+        if new:
+            self.app.store.mark_read(contact["id"], sess["role"], msg["id"])
+            self.app.hub.publish({"type": "message", "message": msg}, contact["id"])
+        return msg
+
+    # --- 共同相簿
+    def _album_for(self, sess: dict, album_id: int) -> dict:
+        album = self.app.store.get_album(album_id)
+        if not album or (sess["role"] == "guest" and album["contact_id"] != sess["contact_id"]):
+            raise ApiError(404, "找不到這本相簿")
+        return album
+
+    def _albums(self, qs: dict) -> None:
+        sess = self._require()
+        contact = self._contact_for(sess, qs.get("contact"))
+        self._json({"albums": self.app.store.list_albums(contact["id"])})
+
+    def _create_album(self, data: dict) -> None:
+        sess = self._require()
+        contact = self._contact_for(sess, data.get("contact_id"))
+        if contact["status"] != "active":
+            raise ApiError(403, "請先接受好友申請")
+        name = self._clean(data.get("name"), 40)
+        if not name:
+            raise ApiError(400, "請輸入相簿名稱")
+        if len(self.app.store.list_albums(contact["id"])) >= MAX_ALBUMS:
+            raise ApiError(409, f"相簿已經有 {MAX_ALBUMS} 本了")
+        album = self.app.store.add_album(contact["id"], name, "me" if sess["role"] == "owner" else "them")
+        self.app.hub.publish({"type": "album", "contact_id": contact["id"]}, contact["id"])
+        self._json({"album": album})
+
+    def _album_photos(self, album: dict) -> None:
+        self._json({"album": album, "photos": self.app.store.album_photos(album["id"])})
+
+    def _album_zip(self, album: dict) -> None:
+        photos = self.app.store.album_photos(album["id"])
+        entries = [(p["attachment"]["name"], self.app.store.file_path(p["attachment"]["id"])) for p in reversed(photos)]
+        if not entries:
+            raise ApiError(400, "相簿裡還沒有照片")
+        self._send_zip(f"{album['name']}.zip", entries)
+
+    def _album_action(self, album_id: int, action: str, data: dict) -> None:
+        sess = self._require()
+        album = self._album_for(sess, album_id)
+        me = "me" if sess["role"] == "owner" else "them"
+        store = self.app.store
+        if action == "rename":
+            name = self._clean(data.get("name"), 40)
+            if not name:
+                raise ApiError(400, "請輸入相簿名稱")
+            store.rename_album(album_id, name)
+        elif action == "delete":
+            if sess["role"] != "owner" and album["created_by"] != me:
+                raise ApiError(403, "只有建立相簿的人可以刪除")
+            store.delete_album(album_id)
+        elif action == "remove":
+            try:
+                photo = store.get_album_photo(int(data.get("photo_id", 0)))
+            except (TypeError, ValueError):
+                photo = None
+            if not photo or photo["album_id"] != album_id:
+                raise ApiError(404, "找不到這張照片")
+            if sess["role"] != "owner" and photo["added_by"] != me:
+                raise ApiError(403, "只能移除自己加的照片")
+            store.remove_album_photo(photo["id"])
+        elif action == "add":
+            ids = [str(i) for i in (data.get("attachment_ids") or [])][:100]
+            valid = []
+            for att_id in ids:
+                att = store.get_attachment(att_id)
+                # 只能加這段對話裡的照片 / 影片
+                if att and att["contact_id"] == album["contact_id"] and att["mime"].startswith(("image/", "video/")):
+                    valid.append(att_id)
+            if not valid:
+                raise ApiError(400, "沒有可以加的照片")
+            if len(store.album_photos(album_id)) + len(valid) > MAX_ALBUM_PHOTOS:
+                raise ApiError(409, f"一本相簿最多 {MAX_ALBUM_PHOTOS} 張")
+            added = store.add_album_photos(album_id, valid, me)
+            if added and data.get("notify", True):
+                # 在聊天室留一張卡片:「新增了 N 張照片到相簿」
+                contact = store.get_contact(album["contact_id"])
+                body = json.dumps({"album_id": album_id, "name": album["name"], "count": added}, ensure_ascii=False)
+                self._publish_message(contact, sess, "album", body, valid[0])
+            self.app.hub.publish({"type": "album", "contact_id": album["contact_id"]}, album["contact_id"])
+            return self._json({"added": added})
+        self.app.hub.publish({"type": "album", "contact_id": album["contact_id"]}, album["contact_id"])
+        self._json({"ok": True})
 
     def _check_sticker_room(self, sess: dict) -> None:
         if len(self.app.store.list_stickers(*self._sticker_owner(sess))) >= MAX_STICKERS:
@@ -1525,18 +1810,24 @@ class Handler(BaseHTTPRequestHandler):
         self._json({"ok": True})
 
     def _save_sticker(self, data: dict) -> None:
-        """把對話裡收到的貼圖 / 圖片加到自己的貼圖。"""
+        """把對話裡收到的貼圖 / 圖片加到自己的貼圖。attachment_ids 可以一次收下整組。"""
         sess = self._require()
-        att = self.app.store.get_attachment(str(data.get("attachment_id", "")))
-        if not att or (sess["role"] == "guest" and att["contact_id"] != sess["contact_id"]):
-            raise ApiError(404, "找不到這張圖")
-        if att["mime"] not in STICKER_TYPES or att["size"] > MAX_STICKER:
-            raise ApiError(415, "這個檔案不能當貼圖(要是 2 MB 以下的圖片)")
-        self._check_sticker_room(sess)
-        sid = secrets.token_urlsafe(18)
-        shutil.copyfile(self.app.store.file_path(att["id"]), self.app.store.sticker_path(sid))
-        st = self.app.store.add_sticker(sid, *self._sticker_owner(sess), att["mime"], att["size"])
-        self._json({"sticker": {k: st[k] for k in ("id", "mime", "size", "created_at")}})
+        many = "attachment_ids" in data
+        ids = [str(i) for i in (data.get("attachment_ids") or [])][:MAX_SHARE_STICKERS] if many \
+            else [str(data.get("attachment_id", ""))]
+        saved = []
+        for att_id in ids:
+            att = self.app.store.get_attachment(att_id)
+            if not att or (sess["role"] == "guest" and att["contact_id"] != sess["contact_id"]):
+                raise ApiError(404, "找不到這張圖")
+            if att["mime"] not in STICKER_TYPES or att["size"] > MAX_STICKER:
+                raise ApiError(415, "這個檔案不能當貼圖(要是 2 MB 以下的圖片)")
+            self._check_sticker_room(sess)
+            sid = secrets.token_urlsafe(18)
+            shutil.copyfile(self.app.store.file_path(att["id"]), self.app.store.sticker_path(sid))
+            st = self.app.store.add_sticker(sid, *self._sticker_owner(sess), att["mime"], att["size"])
+            saved.append({k: st[k] for k in ("id", "mime", "size", "created_at")})
+        self._json({"stickers": saved} if many else {"sticker": saved[0]})
 
     def _upload(self, qs: dict) -> None:
         """上傳圖片 / 檔案 / 語音。內容直接放在 request body(不是 JSON)。"""
@@ -1598,15 +1889,13 @@ class Handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 return
             status = 206
-        filename = quote(att["name"])
         self.send_response(status)
         self.send_header("Content-Type", att["mime"] if inline else "application/octet-stream")
         self.send_header("Content-Length", str(end - start + 1))
         self.send_header("Accept-Ranges", "bytes")
         if status == 206:
             self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
-        self.send_header("Content-Disposition",
-                         f"{'inline' if inline else 'attachment'}; filename*=UTF-8''{filename}")
+        self.send_header("Content-Disposition", content_disposition("inline" if inline else "attachment", att["name"]))
         self.send_header("Content-Security-Policy", FILE_CSP)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Cache-Control", "private, max-age=31536000, immutable")  # 內容不會變,裝置可以一直留著
@@ -1694,15 +1983,20 @@ class Handler(BaseHTTPRequestHandler):
             who = names[m["sender"]]
             body = m["body"]
             att = m["attachment"]
-            if m["kind"] != "text":
-                label = {"image": "[圖片]", "audio": "[語音訊息]", "file": "[檔案]", "sticker": "[貼圖]"}[m["kind"]]
-                body = " ".join(x for x in (label, att["name"] if att else "", body) if x)
+            if m["kind"] in ("album", "stickers"):
+                try:
+                    info = json.loads(body)
+                except ValueError:
+                    info = {}
+                body = (f"[相簿] 新增 {info.get('count', 0)} 張照片到「{info.get('name', '')}」" if m["kind"] == "album"
+                        else f"[分享貼圖] {info.get('count', 0)} 張")
+            elif m["kind"] != "text":
+                body = " ".join(x for x in (KIND_LABELS[m["kind"]], att["name"] if att else "", body) if x)
             if "\n" in body:
                 body = f'"{body}"'
             lines.append(f"{dt:%H:%M}\t{who}\t{body}")
-        filename = quote(f"HomeChat_{title}_{datetime.now():%Y%m%d}.txt")
         self._send(200, "\n".join(lines).encode("utf-8"), "text/plain; charset=utf-8", {
-            "Content-Disposition": f"attachment; filename*=UTF-8''{filename}",
+            "Content-Disposition": content_disposition("attachment", f"HomeChat_{title}_{datetime.now():%Y%m%d}.txt"),
             "Cache-Control": "no-store",
         })
 

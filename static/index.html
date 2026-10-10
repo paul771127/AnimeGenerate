@@ -147,7 +147,41 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
 #emoji-grid .tile { font-size: 13px !important; border: 2px dashed var(--line) !important; color: var(--muted); line-height: 1.3; }
 #emoji-grid .del { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; border-radius: 50%; background: var(--danger);
   color: #fff; font-size: 13px; line-height: 22px; text-align: center; }
-#lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 120; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; }
+/* 相簿 / 分享卡片 */
+.bubble.card { padding: 0; overflow: hidden; width: min(260px, 66vw); }
+.card-cover { display: block; width: 100%; height: 150px; object-fit: cover; background: rgba(0,0,0,.08); }
+.card-body { padding: 10px 12px; }
+.card-title { font-weight: 600; }
+.card-sub { font-size: 13px; opacity: .75; margin-top: 2px; }
+.card-btn { display: block; width: 100%; border: 0; border-top: 1px solid rgba(0,0,0,.08); background: none; padding: 10px; color: #0b62d6; font-weight: 600; }
+.pack-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 8px 8px 0; }
+.pack-grid img { width: 100%; aspect-ratio: 1; object-fit: contain; }
+#dlg-album { width: min(760px, calc(100vw - 16px)); height: min(820px, calc(100dvh - 16px)); }
+#dlg-album .dlg { height: 100%; display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+.al-head { display: flex; align-items: center; gap: 8px; }
+.al-head h3 { flex: 1; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.al-body { flex: 1; overflow-y: auto; }
+.al-albums { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.al-album { border: 0; background: none; text-align: left; padding: 0; cursor: pointer; }
+.al-album .cover { width: 100%; aspect-ratio: 1; border-radius: 12px; object-fit: cover; background: var(--bg); display: flex;
+  align-items: center; justify-content: center; font-size: 40px; }
+.al-album .name { font-weight: 600; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.al-album .count { font-size: 13px; color: var(--muted); }
+.al-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 4px; }
+.al-photos .ph { position: relative; aspect-ratio: 1; border: 0; padding: 0; background: var(--bg); cursor: pointer; }
+.al-photos .ph img, .al-photos .ph video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.al-photos .ph.sel { outline: 4px solid var(--green); outline-offset: -4px; }
+.al-photos .ph .badge-v { position: absolute; bottom: 4px; right: 6px; color: #fff; text-shadow: 0 1px 3px #000; font-size: 13px; }
+.al-empty { color: var(--muted); text-align: center; padding: 40px 10px; }
+.mk-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: center; }
+#sticker-bar { display: flex; gap: 6px; padding: 6px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+#sticker-bar .btn { padding: 7px 12px; font-size: 14px; }
+#emoji-grid button.sel { outline: 3px solid var(--green); outline-offset: -3px; border-radius: 10px; }
+#lightbox { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; border: 0; border-radius: 0;
+  background: rgba(0,0,0,.92); padding: 16px; }
+#lightbox[open] { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+#lightbox::backdrop { background: rgba(0,0,0,.6); }
+.lightbox-bar { flex-wrap: wrap; justify-content: center; }
 #lightbox img { max-width: 100%; max-height: calc(100% - 70px); object-fit: contain; }
 .lightbox-bar { display: flex; gap: 10px; }
 #drop-hint { position: fixed; inset: 0; background: rgba(6,199,85,.18); border: 4px dashed var(--green); z-index: 110; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: var(--green-dark); pointer-events: none; }
@@ -275,6 +309,7 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
     <div id="emoji-panel" class="hidden">
       <div id="emoji-tabs"></div>
       <div id="emoji-grid"></div>
+      <div id="sticker-bar" class="hidden"></div>
     </div>
     <div id="recorder" class="hidden">
       <span class="rec-dot"></span><span id="rec-time">0:00</span><span class="rec-label">錄音中…</span>
@@ -390,8 +425,8 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
   <label>聊天紀錄裡出現的人</label>
   <select class="field" name="who"></select>
   <div class="actions">
-    <button class="btn secondary" type="button" data-close>略過這個檔案</button>
-    <button class="btn" type="submit">匯入</button>
+    <button class="btn secondary" type="button" data-close id="choose-cancel">略過這個檔案</button>
+    <button class="btn" type="submit">確定</button>
   </div>
 </form></dialog>
 
@@ -440,15 +475,19 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
   </div>
 </form></dialog>
 
-<div id="lightbox" class="hidden">
+<dialog id="lightbox">
   <img id="lightbox-img" alt="">
   <div class="lightbox-bar">
     <a class="btn" id="lightbox-download" download>下載</a>
     <button class="btn secondary hidden" type="button" id="lightbox-sticker">加到我的貼圖</button>
+    <button class="btn secondary hidden" type="button" id="lightbox-album">加到相簿</button>
+    <button class="btn danger hidden" type="button" id="lightbox-remove">從相簿移除</button>
     <button class="btn secondary" type="button" id="lightbox-close">關閉</button>
   </div>
-</div>
+</dialog>
 <div id="drop-hint" class="hidden">放開就傳送</div>
+<dialog id="dlg-album"><div class="dlg" id="album-root"></div></dialog>
+<input type="file" id="pick-album" accept="image/*,video/*" multiple hidden>
 
 <div id="toast" class="hidden"></div>
 
@@ -502,8 +541,14 @@ function el(tag, attrs = {}, ...kids) {
   return e;
 }
 let toastTimer;
+// 開著全螢幕視窗(相簿、看大圖…)時,選單和提示要放進最上層的視窗裡,不然會被蓋住
+function topLayer() {
+  const open = [...document.querySelectorAll("dialog[open]")];
+  return open.length ? open[open.length - 1] : document.body;
+}
 function toast(text) {
   const t = $("#toast"); t.textContent = text; t.classList.remove("hidden");
+  if (t.parentNode !== topLayer()) topLayer().append(t);
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add("hidden"), 2500);
 }
 const COLORS = ["#f87171", "#fb923c", "#f59e0b", "#84cc16", "#10b981", "#14b8a6", "#06b6d4", "#3b82f6", "#6366f1", "#a855f7", "#ec4899"];
@@ -869,6 +914,7 @@ function openEvents() {
       toast(`${data.name} 已經加入,可以開始聊天了`); notifyText("HomeChat", `${data.name} 已經加入`);
       loadContacts().then(() => { if (state.current) renderMessages(false); });
     } else if (data.type === "contacts" && state.role === "owner") loadContacts();
+    else if (data.type === "album" && $("#dlg-album").open && state.current && data.contact_id === state.current.id) refreshAlbum();
   };
 }
 async function resync() {
@@ -1143,11 +1189,35 @@ function bubbleFor(m) {
   const progress = m.pending && m.progress !== undefined && m.progress < 1
     ? el("div", { class: "uploading" }, `上傳中 ${Math.round(m.progress * 100)}%`) : null;
   const src = fileUrl(m);
+  if (kind === "album" || kind === "stickers") {
+    let info = {};
+    try { info = JSON.parse(m.body || "{}"); } catch (_) {}
+    if (kind === "album") {
+      return el("div", { class: "bubble card" },
+        m.attachment ? el("img", { class: "card-cover", src: `/api/files/${m.attachment.id}`, alt: "", loading: "lazy" }) : null,
+        el("div", { class: "card-body" },
+          el("div", { class: "card-title" }, `📷 相簿「${info.name || ""}」`),
+          el("div", { class: "card-sub" }, `新增了 ${info.count || 0} 張照片`)),
+        el("button", { class: "card-btn", onclick: () => openAlbums(info.album_id) }, "打開相簿"));
+    }
+    const items = info.items || [];
+    const mine = (m.sender === "me") === (state.role === "owner");
+    return el("div", { class: "bubble card" },
+      el("div", { class: "pack-grid" }, ...items.slice(0, 8).map(it =>
+        el("img", { src: `/api/files/${it.id}`, alt: "貼圖", loading: "lazy" }))),
+      el("div", { class: "card-body" },
+        el("div", { class: "card-title" }, `⭐ ${mine ? "你分享了" : "分享了"} ${info.count || items.length} 張貼圖`),
+        items.length > 8 ? el("div", { class: "card-sub" }, `還有 ${items.length - 8} 張`) : null),
+      mine ? null : el("button", { class: "card-btn", onclick: e => saveStickerPack(items, e.currentTarget) }, "全部加到我的貼圖"));
+  }
   if (kind === "sticker" && src) {
     const mine = (m.sender === "me") === (state.role === "owner");
     return el("div", { class: "bubble sticker" }, el("img", {
       class: "sticker", src, alt: "貼圖", loading: "lazy",
-      onclick: e => mine || !m.attachment ? null : showMenu(e.currentTarget, [["⭐ 加到我的貼圖", () => saveAsSticker(m)]]),
+      onclick: e => !m.attachment ? null : showMenu(e.currentTarget, [
+        ...(mine ? [] : [["⭐ 加到我的貼圖", () => saveAsSticker(m)]]),
+        ["⬇ 下載", () => { location.href = `/api/files/${m.attachment.id}?download=1`; }],
+      ]),
     }));
   }
   if (kind === "text") {
@@ -1397,9 +1467,15 @@ function openLightbox(m) {
   const save = $("#lightbox-sticker");
   save.classList.toggle("hidden", !canSave);
   save.onclick = () => { closeLightbox(); saveAsSticker(m); };
-  $("#lightbox").classList.remove("hidden");
+  const toAlbum = $("#lightbox-album");
+  toAlbum.classList.toggle("hidden", !m.attachment || !!m.albumPhoto || state.offline);
+  toAlbum.onclick = () => { closeLightbox(); chooseAlbumFor([m.attachment.id]); };
+  const remove = $("#lightbox-remove");
+  remove.classList.toggle("hidden", !m.albumPhoto || !m.canRemove);
+  remove.onclick = () => { closeLightbox(); removeAlbumPhoto(m.albumPhoto); };
+  if (!$("#lightbox").open) $("#lightbox").showModal();
 }
-function closeLightbox() { $("#lightbox").classList.add("hidden"); $("#lightbox-img").removeAttribute("src"); }
+function closeLightbox() { if ($("#lightbox").open) $("#lightbox").close(); $("#lightbox-img").removeAttribute("src"); }
 $("#lightbox-close").addEventListener("click", closeLightbox);
 $("#lightbox").addEventListener("click", e => { if (e.target.id === "lightbox") closeLightbox(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeLightbox(); });
@@ -1446,7 +1522,7 @@ $("#emoji-btn").addEventListener("click", () => {
   const open = panel.classList.toggle("hidden") === false;
   if (open) renderEmoji();
 });
-function closeEmoji() { $("#emoji-panel").classList.add("hidden"); }
+function closeEmoji() { $("#emoji-panel").classList.add("hidden"); stickerEdit = false; stickerSel.clear(); }
 
 // ---------- 自己的貼圖
 const STICKER_TYPES = new Set(["image/png", "image/gif", "image/webp", "image/jpeg"]);
@@ -1468,12 +1544,62 @@ function renderStickerGrid(grid) {
     el("button", { type: "button", class: "tile", onclick: () => $("#pick-sticker").click() }, "＋", el("br"), "加圖片"),
     el("button", { type: "button", class: "tile", onclick: openMaker }, "🎨", el("br"), "做動畫"),
   ];
-  if (list.length) tiles.push(el("button", { type: "button", class: "tile", onclick: () => { stickerEdit = !stickerEdit; renderEmoji(); } },
-    stickerEdit ? "✔" : "✎", el("br"), stickerEdit ? "完成" : "管理"));
+  if (list.length) tiles.push(el("button", { type: "button", class: "tile", onclick: () => { stickerEdit = !stickerEdit; stickerSel.clear(); renderEmoji(); } },
+    stickerEdit ? "✔" : "☑", el("br"), stickerEdit ? "完成" : "選取"));
   grid.replaceChildren(...tiles, ...list.map(st => el("button", {
-    type: "button", title: stickerEdit ? "刪除這張貼圖" : "傳送",
-    onclick: () => stickerEdit ? deleteSticker(st) : sendSticker(st),
-  }, el("img", { src: `/api/sticker-files/${st.id}`, alt: "貼圖", loading: "lazy" }), stickerEdit ? el("span", { class: "del" }, "✕") : null)));
+    type: "button", title: stickerEdit ? "選取" : "傳送", class: stickerSel.has(st.id) ? "sel" : "",
+    onclick: () => {
+      if (!stickerEdit) return sendSticker(st);
+      stickerSel.has(st.id) ? stickerSel.delete(st.id) : stickerSel.add(st.id);
+      renderEmoji();
+    },
+  }, el("img", { src: `/api/sticker-files/${st.id}`, alt: "貼圖", loading: "lazy" }))));
+  // 選取模式:分享 / 下載 / 刪除
+  const bar = $("#sticker-bar");
+  bar.classList.toggle("hidden", !stickerEdit);
+  const n = stickerSel.size;
+  bar.replaceChildren(
+    el("span", { class: "mk-label", style: "align-self:center;color:var(--muted);font-size:13px" }, n ? `已選 ${n} 張` : "點貼圖來選取"),
+    el("button", { type: "button", class: "btn", disabled: !n || !state.current || null, onclick: shareStickers }, "分享給對方"),
+    el("button", { type: "button", class: "btn secondary", disabled: !n || null, onclick: downloadStickers }, "下載"),
+    el("button", { type: "button", class: "btn danger", disabled: !n || null, onclick: deleteSelectedStickers }, "刪除"));
+}
+const stickerSel = new Set();
+async function shareStickers() {
+  if (!state.current || !stickerSel.size) return;
+  if (stickerSel.size > 40) return toast("一次最多分享 40 張");
+  try {
+    const { message } = await api("/api/stickers/share", { contact_id: state.current.id, sticker_ids: [...stickerSel], client_id: newId() });
+    onIncoming(message);
+    stickerEdit = false; stickerSel.clear(); renderEmoji();
+    toast("已分享貼圖");
+  } catch (err) { toast(err.offline ? "連不上家裡的電腦,等一下再試" : err.message); }
+}
+function downloadStickers() {
+  const ids = [...stickerSel];
+  if (ids.length === 1) location.href = `/api/sticker-files/${ids[0]}?download=1`;
+  else location.href = `/api/stickers/zip?ids=${ids.join(",")}`;
+}
+async function deleteSelectedStickers() {
+  if (!confirm(`刪除選取的 ${stickerSel.size} 張貼圖?(已經傳出去的不受影響)`)) return;
+  for (const id of [...stickerSel]) {
+    try { await api("/api/stickers/delete", { id }); } catch (err) { toast(err.message); break; }
+    stickerSel.delete(id);
+    state.stickers = state.stickers.filter(x => x.id !== id);
+  }
+  local.set("stickers", state.stickers);
+  if (!state.stickers.length) stickerEdit = false;
+  renderEmoji();
+}
+async function saveStickerPack(items, btn) {
+  btn.disabled = true;
+  try {
+    const { stickers } = await api("/api/stickers/save", { attachment_ids: items.map(i => i.id) });
+    state.stickers = [...stickers, ...(state.stickers || [])];
+    local.set("stickers", state.stickers);
+    btn.textContent = "✔ 已加到我的貼圖";
+    toast(`已加入 ${stickers.length} 張貼圖 ⭐`);
+  } catch (err) { btn.disabled = false; toast(err.offline ? "連不上家裡的電腦,等一下再試" : err.message); }
 }
 async function sendSticker(st) {
   if (!state.current) return;
@@ -1485,13 +1611,6 @@ async function sendSticker(st) {
   insertSorted({ ...m, pending: true, localUrl: `/api/sticker-files/${st.id}` });
   renderMessages(true);
   flushOutbox();
-}
-async function deleteSticker(st) {
-  if (!confirm("刪除這張貼圖?(已經傳出去的不受影響)")) return;
-  try { await api("/api/stickers/delete", { id: st.id }); } catch (err) { return toast(err.message); }
-  state.stickers = state.stickers.filter(x => x.id !== st.id);
-  local.set("stickers", state.stickers);
-  renderEmoji();
 }
 async function saveAsSticker(m) {
   try {
@@ -1555,6 +1674,170 @@ async function openMaker() {
       else toast("已存成貼圖 ⭐");
     } catch (err) { toast(err.message); }
   });
+}
+
+// ---------- 共同相簿(每段對話自己的相簿,兩個人都能加照片)
+const album = { view: "list", id: null, albums: [], photos: [], info: null, picking: false, picked: new Set() };
+const albumQ = () => (state.role === "owner" ? `contact=${state.current.id}` : "");
+async function openAlbums(albumId) {
+  if (!state.current) return;
+  if (state.offline) return toast("連不上家裡的電腦,等連上再看相簿");
+  album.view = albumId ? "photos" : "list";
+  album.id = albumId || null;
+  album.picking = false; album.picked.clear();
+  if (!$("#dlg-album").open) $("#dlg-album").showModal();
+  await refreshAlbum();
+}
+async function refreshAlbum() {
+  try {
+    if (album.view === "list") {
+      album.albums = (await api(`/api/albums?${albumQ()}`)).albums;
+    } else {
+      const data = await api(`/api/albums/${album.id}/photos`);
+      album.info = data.album; album.photos = data.photos;
+    }
+  } catch (err) {
+    if (err.status === 404) { album.view = "list"; return refreshAlbum(); }  // 相簿被刪了
+    return toast(err.message);
+  }
+  renderAlbum();
+}
+const iAmSender = () => (state.role === "owner" ? "me" : "them");
+function renderAlbum() {
+  const root = $("#album-root");
+  const close = el("button", { class: "btn secondary", type: "button", onclick: () => $("#dlg-album").close() }, "關閉");
+  if (album.view === "list") {
+    const items = album.albums.map(a => el("button", { class: "al-album", type: "button", onclick: () => openAlbums(a.id) },
+      a.cover ? el("img", { class: "cover", src: `/api/files/${a.cover}`, alt: "", loading: "lazy" }) : el("div", { class: "cover" }, "📷"),
+      el("div", { class: "name" }, a.name),
+      el("div", { class: "count" }, `${a.count} 張`)));
+    root.replaceChildren(
+      el("div", { class: "al-head" }, el("h3", {}, "📷 相簿"),
+        el("button", { class: "btn", type: "button", onclick: createAlbum }, "＋ 建立相簿"), close),
+      el("div", { class: "al-body" }, items.length ? el("div", { class: "al-albums" }, ...items)
+        : el("div", { class: "al-empty" }, "還沒有相簿。建立一本,你和對方都可以把照片放進來。")));
+    return;
+  }
+  const a = album.info;
+  const canDelete = state.role === "owner" || a.created_by === iAmSender();
+  const head = el("div", { class: "al-head" },
+    el("button", { class: "icon-btn", type: "button", title: "回到相簿列表", onclick: () => openAlbums() }, "‹"),
+    el("h3", {}, `${a.name}(${album.photos.length})`),
+    el("button", { class: "icon-btn", type: "button", title: "更多", onclick: e => showMenu(e.currentTarget, [
+      ["⬇ 下載整本(zip)", () => album.photos.length ? (location.href = `/api/albums/${a.id}/zip`) : toast("相簿裡還沒有照片")],
+      ["✎ 改名", renameAlbum],
+      ...(canDelete ? [["🗑 刪除相簿", deleteAlbum, "danger"]] : []),
+    ]) }, "⋯"), close);
+  if (album.picking) return renderChatPicker(root, head);
+  const actions = el("div", { class: "mk-row", style: "justify-content:flex-start" },
+    el("button", { class: "btn", type: "button", onclick: () => $("#pick-album").click() }, "＋ 從手機 / 電腦加照片"),
+    el("button", { class: "btn secondary", type: "button", onclick: () => { album.picking = true; album.picked.clear(); renderAlbum(); } }, "從聊天選照片"),
+    el("span", { id: "album-status", class: "hint", style: "margin:0" }));
+  const grid = album.photos.length ? el("div", { class: "al-photos" }, ...album.photos.map(p => {
+    const isVideo = p.attachment.mime.startsWith("video/");
+    return el("button", { class: "ph", type: "button", onclick: () => openAlbumPhoto(p) },
+      isVideo ? el("video", { src: `/api/files/${p.attachment.id}`, preload: "metadata", muted: "" }) :
+        el("img", { src: `/api/files/${p.attachment.id}`, alt: p.attachment.name, loading: "lazy" }),
+      isVideo ? el("span", { class: "badge-v" }, "▶") : null);
+  })) : el("div", { class: "al-empty" }, "相簿是空的。按上面的按鈕加照片。");
+  root.replaceChildren(head, actions, el("div", { class: "al-body" }, grid));
+}
+function openAlbumPhoto(p) {
+  if (p.attachment.mime.startsWith("video/")) { window.open(`/api/files/${p.attachment.id}`, "_blank", "noopener"); return; }
+  openLightbox({ attachment: p.attachment, albumPhoto: p, canRemove: state.role === "owner" || p.added_by === iAmSender() });
+}
+// 從聊天裡挑照片加進相簿
+function renderChatPicker(root, head) {
+  const photos = state.messages.filter(m => m.kind === "image" && m.attachment && INLINE.has(m.attachment.mime)).reverse();
+  const inAlbum = new Set(album.photos.map(p => p.attachment.id));
+  const grid = photos.length ? el("div", { class: "al-photos" }, ...photos.map(m => el("button", {
+    class: "ph" + (album.picked.has(m.attachment.id) ? " sel" : ""), type: "button", disabled: inAlbum.has(m.attachment.id) || null,
+    title: inAlbum.has(m.attachment.id) ? "已經在相簿裡" : "",
+    style: inAlbum.has(m.attachment.id) ? "opacity:.35" : "",
+    onclick: () => { const id = m.attachment.id; album.picked.has(id) ? album.picked.delete(id) : album.picked.add(id); renderAlbum(); },
+  }, m.attachment.mime.startsWith("video/") ? el("video", { src: `/api/files/${m.attachment.id}`, preload: "metadata", muted: "" })
+    : el("img", { src: `/api/files/${m.attachment.id}`, alt: "", loading: "lazy" }))))
+    : el("div", { class: "al-empty" }, "這段聊天裡還沒有照片(只會列出目前載入的訊息)。");
+  root.replaceChildren(head,
+    el("div", { class: "mk-row", style: "justify-content:flex-start" },
+      el("button", { class: "btn", type: "button", disabled: !album.picked.size || null,
+        onclick: () => addToAlbum(album.id, [...album.picked]).then(() => { album.picking = false; refreshAlbum(); }) },
+        `加入相簿(${album.picked.size})`),
+      el("button", { class: "btn secondary", type: "button", onclick: () => { album.picking = false; renderAlbum(); } }, "取消")),
+    el("div", { class: "al-body" }, grid));
+}
+async function addToAlbum(albumId, attachmentIds) {
+  try {
+    const { added } = await api(`/api/albums/${albumId}/add`, { attachment_ids: attachmentIds });
+    toast(added ? `已加入 ${added} 張照片` : "這些照片已經在相簿裡了");
+  } catch (err) { toast(err.message); }
+}
+$("#pick-album").addEventListener("change", async e => {
+  const files = [...e.target.files].filter(f => /^(image|video)\//.test(f.type));
+  e.target.value = "";
+  if (!files.length || !album.id || !state.current) return;
+  const status = () => $("#album-status");
+  const ids = [];
+  for (const [i, f] of files.entries()) {
+    if (status()) status().textContent = `上傳中 ${i + 1}/${files.length}…`;
+    const file = f.type.startsWith("image/") ? await shrinkImage(f) : f;
+    if (file.size > MAX_UPLOAD) { toast(`「${f.name}」太大了(上限 100 MB)`); continue; }
+    try {
+      const att = await uploadBlob({ blob: file, name: file.name, mime: file.type, contact_id: state.current.id }, () => {});
+      ids.push(att.id);
+    } catch (err) { toast(err.message); break; }
+  }
+  if (status()) status().textContent = "";
+  if (ids.length) { await addToAlbum(album.id, ids); refreshAlbum(); }
+});
+async function createAlbum() {
+  const name = prompt("相簿名稱", "");
+  if (!name || !name.trim()) return null;
+  try {
+    const { album: a } = await api("/api/albums", { contact_id: state.current.id, name });
+    return a;
+  } catch (err) { toast(err.message); return null; }
+  finally { if ($("#dlg-album").open && album.view === "list") refreshAlbum(); }
+}
+async function renameAlbum() {
+  const name = prompt("新的相簿名稱", album.info.name);
+  if (!name || !name.trim()) return;
+  try { await api(`/api/albums/${album.id}/rename`, { name }); refreshAlbum(); } catch (err) { toast(err.message); }
+}
+async function deleteAlbum() {
+  if (!confirm(`刪除相簿「${album.info.name}」?(聊天裡的照片不會被刪)`)) return;
+  try { await api(`/api/albums/${album.id}/delete`, {}); openAlbums(); } catch (err) { toast(err.message); }
+}
+async function removeAlbumPhoto(p) {
+  if (!confirm("從相簿移除這張照片?(聊天裡的不受影響)")) return;
+  try { await api(`/api/albums/${album.id}/remove`, { photo_id: p.id }); refreshAlbum(); } catch (err) { toast(err.message); }
+}
+// 聊天裡的照片 → 加到相簿:選一本(或新建)
+async function chooseAlbumFor(attachmentIds) {
+  let albums;
+  try { albums = (await api(`/api/albums?${albumQ()}`)).albums; } catch (err) { return toast(err.message); }
+  const pick = await new Promise(resolve => {
+    const dlg = $("#dlg-choose"), form = $("#form-choose");
+    dlg.querySelector("h3").textContent = "加到哪一本相簿?";
+    $("#choose-cancel").textContent = "取消";
+    $("#choose-file").textContent = "";
+    form.who.replaceChildren(...albums.map(a => el("option", { value: a.id }, `${a.name}(${a.count} 張)`)),
+      el("option", { value: "new" }, "＋ 建立新相簿…"));
+    let picked = null;
+    form.onsubmit = e => { e.preventDefault(); picked = form.who.value; dlg.close(); };
+    dlg.addEventListener("close", () => {
+      dlg.querySelector("h3").textContent = "哪一位是對方?"; $("#choose-cancel").textContent = "略過這個檔案"; resolve(picked);
+    }, { once: true });
+    dlg.showModal();
+  });
+  if (!pick) return;
+  let albumId = pick;
+  if (pick === "new") {
+    const a = await createAlbum();
+    if (!a) return;
+    albumId = a.id;
+  }
+  await addToAlbum(albumId, attachmentIds);
 }
 
 // ---------- 語音輸入(講話變成文字)
@@ -1636,7 +1919,7 @@ function showMenu(anchor, items) {
   $$(".menu").forEach(x => x.remove());
   const menu = el("div", { class: "menu" });
   for (const [label, fn, cls] of items) menu.append(el("button", { class: cls || "", onclick: () => { menu.remove(); fn(); } }, label));
-  document.body.append(menu);
+  topLayer().append(menu);
   const r = anchor.getBoundingClientRect();
   // 下面放不下(例如輸入框旁邊的按鈕)就往上開
   const below = r.bottom + 4 + menu.offsetHeight <= innerHeight - 8;
@@ -1658,12 +1941,14 @@ $("#chat-menu-btn").addEventListener("click", e => {
   const c = state.current; if (!c) return;
   if (state.role === "guest") {
     return showMenu(e.currentTarget, [
+      ["📷 相簿", () => openAlbums()],
       ["下載聊天紀錄(存到這台裝置)", () => state.offline ? toast("連不上家裡的電腦,等連上再下載") : downloadHistory("")],
       [`更改密碼(帳號:${state.username || "—"})`, openGuestPassword],
       ["登出", logout],
     ]);
   }
   showMenu(e.currentTarget, [
+    ["📷 相簿", () => openAlbums()],
     ["邀請連結(傳給對方)", () => openInvite(c)],
     [`登入的裝置(${c.devices || 0})`, () => openDevices(c)],
     ["編輯聯絡人", () => openEdit(c)],
