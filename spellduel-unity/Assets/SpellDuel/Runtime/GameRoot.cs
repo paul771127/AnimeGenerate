@@ -984,21 +984,30 @@ namespace SpellDuel
 
             if (hitFlash > 0.01f) { GUI.color = new Color(1f, 0f, 0.05f, hitFlash * 0.45f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
 
-            // 一開始：選模式
+            int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.8f);
+            // 一開始：選模式（三張卡片：按鈕＋說明）
             if (mode == Mode.Choose)
             {
-                GUI.color = new Color(0, 0, 0, 0.6f);
+                GUI.color = new Color(0.02f, 0.03f, 0.06f, 0.75f);
                 GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture);
                 GUI.color = Color.white;
-                GUI.Label(new Rect(0, H * 0.18f, W, H * 0.1f), "SpellDuel", big);
-                GUI.Label(new Rect(0, H * 0.27f, W, lineH), "版本 " + BuildInfo, new GUIStyle(label) { alignment = TextAnchor.MiddleCenter });
-                float bw0 = W * 0.8f, bh0 = H * 0.09f;
-                if (GUI.Button(new Rect((W - bw0) / 2, H * 0.33f, bw0, bh0), "單人練習（畫場地）", button)) ChooseMode(Mode.Solo);
-                GUI.Label(new Rect((W - bw0) / 2, H * 0.33f + bh0, bw0, lineH * 2), "像 Meta Quest 一樣在地上畫出遊戲範圍，不需要標記圖", label);
-                if (GUI.Button(new Rect((W - bw0) / 2, H * 0.51f, bw0, bh0), "雙人對戰（畫場地）", button)) ChooseMode(Mode.Duo, false);
-                GUI.Label(new Rect((W - bw0) / 2, H * 0.51f + bh0, bw0, lineH * 2), "一人畫場地、另一人自動收到；鏡頭互相看對方來對齊，不需要標記圖", label);
-                if (GUI.Button(new Rect((W - bw0) / 2, H * 0.69f, bw0, bh0), "雙人對戰（標記圖）", button)) ChooseMode(Mode.Duo, true);
-                GUI.Label(new Rect((W - bw0) / 2, H * 0.69f + bh0, bw0, lineH * 2), "兩支手機掃描地上同一張標記圖，共用房間座標", label);
+                UiKit.Text(new Rect(0, H * 0.13f, W, H * 0.09f), "SpellDuel", fs * 3, new Color(1f, 0.85f, 0.4f), TextAnchor.MiddleCenter, true);
+                UiKit.Text(new Rect(0, H * 0.22f, W, lineH), "版本 " + BuildInfo, fsS, new Color(0.7f, 0.75f, 0.85f), TextAnchor.MiddleCenter);
+                float cw = W - pad * 4, ch = H * 0.17f, cx = pad * 2;
+                string[] titles = { "🧍 單人練習（畫場地）", "⚔ 雙人對戰（畫場地）", "🗺 雙人對戰（標記圖）" };
+                string[] descs = { "在地上畫出遊戲範圍，對戰 AI 或木頭人，不需要標記圖",
+                                   "一人畫場地、另一人自動收到；鏡頭互相看對方來對齊",
+                                   "兩支手機掃描地上同一張標記圖，共用房間座標" };
+                Color[] acc = { new Color(0.4f, 0.85f, 1f), new Color(1f, 0.55f, 0.35f), new Color(0.6f, 0.9f, 0.45f) };
+                for (int i = 0; i < 3; i++)
+                {
+                    var r = new Rect(cx, H * 0.29f + i * (ch + pad), cw, ch);
+                    bool hit = UiKit.Button(r, "", fs, false, acc[i]);
+                    UiKit.Card(new Rect(r.x, r.y, pad * 0.5f, r.height), 0f, acc[i], 1f);
+                    UiKit.Text(new Rect(r.x + pad, r.y + ch * 0.1f, r.width - pad * 2, ch * 0.4f), titles[i], Mathf.RoundToInt(fs * 1.2f), Color.white, TextAnchor.MiddleLeft, true);
+                    UiKit.Text(new Rect(r.x + pad, r.y + ch * 0.5f, r.width - pad * 2, ch * 0.42f), descs[i], fsS, new Color(0.8f, 0.85f, 0.95f));
+                    if (hit) { if (i == 0) ChooseMode(Mode.Solo); else ChooseMode(Mode.Duo, i == 2); }
+                }
                 return;
             }
 
@@ -1007,7 +1016,7 @@ namespace SpellDuel
             {
                 solo.DrawGUI();
                 if (AreaMode && playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position))
-                    GUI.Label(new Rect(0, H * 0.62f, W, H * 0.08f), "⚠ 回到場地內", big);
+                    UiKit.Pill(H * 0.68f, "⚠ 回到場地內", fs * 2, new Color(1f, 0.4f, 0.4f), W - pad * 2);
                 return;
             }
 
@@ -1016,16 +1025,14 @@ namespace SpellDuel
             {
                 solo.DrawGUI();
                 if (playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position))
-                    GUI.Label(new Rect(0, H * 0.62f, W, H * 0.08f), "⚠ 回到場地內", big);
+                    UiKit.Pill(H * 0.68f, "⚠ 回到場地內", fs * 2, new Color(1f, 0.4f, 0.4f), W - pad * 2);
                 return;
             }
 
-            GUI.color = new Color(0, 0, 0, 0.55f);
-            GUI.DrawTexture(new Rect(0, 0, W, Mathf.Max(H * 0.32f, panelBottom)), Texture2D.whiteTexture);
-            GUI.color = Color.white;
+            UiKit.Card(new Rect(pad * 0.5f, -pad, W - pad, Mathf.Max(H * 0.3f, panelBottom) + pad), 0.6f);
 
             float y = top;
-            void Line(string s) { GUI.Label(new Rect(pad, y, W - pad * 2, lineH), s, label); y += lineH; }
+            void Line(string s) { UiKit.Text(new Rect(pad, y, W - pad * 2, lineH), s, fsS, Color.white); y += lineH; }
             float bw = (W - pad * 5) / 4f, bh = lineH * 1.5f;
 
             Line($"AR：{ARSession.state}　{arNote}");
@@ -1044,16 +1051,14 @@ namespace SpellDuel
                 Line($"HP 我 {hp}");
                 y += pad * 0.5f;
                 bool canBuild = playArea.HasFloor && playArea.state != PlayArea.State.Drawing;
-                GUI.enabled = canBuild;
                 // 方形場地：從腳下往前方展開（技能射程最遠 15m，建議 10m 以上的空地或戶外）
                 float[] sizes = { 3f, 6f, 10f, 15f };
                 for (int i = 0; i < sizes.Length; i++)
-                    if (GUI.Button(new Rect(pad + i * (bw + pad), y, bw, bh), $"方形 {sizes[i]:0}m", button)) { playArea.Clear(); if (playArea.AutoSquare(sizes[i])) OnPlayAreaReady(); }
+                    if (UiKit.Button(new Rect(pad + i * (bw + pad), y, bw, bh), $"方形 {sizes[i]:0}m", fs, sizes[i] >= 10f, new Color(0.4f, 0.85f, 1f), canBuild)) { playArea.Clear(); if (playArea.AutoSquare(sizes[i])) OnPlayAreaReady(); }
                 y += bh + pad * 0.5f;
-                if (GUI.Button(new Rect(pad, y, bw, bh), "手繪場地", button)) { WorldFrame.Reset(); playArea.StartDraw(); }
-                GUI.enabled = true;
-                if (GUI.Button(new Rect(pad * 2 + bw, y, bw, bh), "換模式", button)) { mode = Mode.Choose; playArea.Clear(); WorldFrame.Reset(); }
-                if (GUI.Button(new Rect(pad * 3 + bw * 2, y, bw, bh), "HP 重置", button)) { hp = MaxHp; }
+                if (UiKit.Button(new Rect(pad, y, bw, bh), "手繪場地", fs, false, null, canBuild)) { WorldFrame.Reset(); playArea.StartDraw(); }
+                if (UiKit.Button(new Rect(pad * 2 + bw, y, bw, bh), "換模式", fs)) { mode = Mode.Choose; playArea.Clear(); WorldFrame.Reset(); }
+                if (UiKit.Button(new Rect(pad * 3 + bw * 2, y, bw, bh), "HP 重置", fs)) { hp = MaxHp; }
             }
             else
             {
@@ -1090,60 +1095,58 @@ namespace SpellDuel
                 // 畫場地（還沒收到對手的場地時才能畫；重畫會再傳一次給對手）
                 if (AreaMode && !areaReceived)
                 {
-                    GUI.enabled = playArea.HasFloor && playArea.state != PlayArea.State.Drawing;
+                    bool canBuild = playArea.HasFloor && playArea.state != PlayArea.State.Drawing;
                     float[] sizes = { 3f, 6f, 10f, 15f };
                     for (int i = 0; i < sizes.Length; i++)
-                        if (GUI.Button(new Rect(pad + i * (bw + pad), y, bw, bh), $"方形 {sizes[i]:0}m", button)) { playArea.Clear(); if (playArea.AutoSquare(sizes[i])) OnPlayAreaReady(); }
+                        if (UiKit.Button(new Rect(pad + i * (bw + pad), y, bw, bh), $"方形 {sizes[i]:0}m", fs, sizes[i] >= 10f, new Color(0.4f, 0.85f, 1f), canBuild)) { playArea.Clear(); if (playArea.AutoSquare(sizes[i])) OnPlayAreaReady(); }
                     y += bh + pad * 0.5f;
-                    if (GUI.Button(new Rect(pad, y, bw, bh), "手繪場地", button)) { playArea.StartDraw(); }
-                    GUI.enabled = true;
-                    if (playArea.state == PlayArea.State.Drawing) GUI.Label(new Rect(pad * 2 + bw, y, W - bw - pad * 3, bh), playArea.Hint, label);
+                    if (UiKit.Button(new Rect(pad, y, bw, bh), "手繪場地", fs, false, null, canBuild)) { playArea.StartDraw(); }
+                    if (playArea.state == PlayArea.State.Drawing) UiKit.Text(new Rect(pad * 2 + bw, y, W - bw - pad * 3, bh), playArea.Hint, fsS, new Color(1f, 0.9f, 0.6f));
                     y += bh + pad * 0.5f;
                 }
                 if (!net.Connected)
                 {
-                    if (GUI.Button(new Rect(pad, y, bw, bh), "建立房間", button)) net.Host();
+                    if (UiKit.Button(new Rect(pad, y, bw, bh), "建立房間", fs, true, new Color(1f, 0.55f, 0.35f))) net.Host();
                     ipInput = GUI.TextField(new Rect(pad * 2 + bw, y, bw * 1.4f, bh), ipInput, field);
-                    if (GUI.Button(new Rect(pad * 3 + bw * 2.4f, y, bw * 0.8f, bh), "加入", button))
+                    if (UiKit.Button(new Rect(pad * 3 + bw * 2.4f, y, bw * 0.8f, bh), "加入", fs, true, new Color(0.4f, 0.85f, 1f)))
                     {
                         PlayerPrefs.SetString("sd_last_ip", ipInput);
                         net.Join(ipInput);
                     }
-                    if (GUI.Button(new Rect(pad * 4 + bw * 3.2f, y, bw * 0.8f, bh), practiceDummy ? "假人:開" : "假人:關", button))
+                    if (UiKit.Button(new Rect(pad * 4 + bw * 3.2f, y, bw * 0.8f, bh), practiceDummy ? "假人:開" : "假人:關", fsS, practiceDummy))
                         practiceDummy = !practiceDummy;
                 }
                 y += bh + pad * 0.5f;
-                if ((duoUseMarker || Aligner) && GUI.Button(new Rect(pad, y, bw * 1.3f, bh), "重新對齊", button))
+                if ((duoUseMarker || Aligner) && UiKit.Button(new Rect(pad, y, bw * 1.3f, bh), "重新對齊", fs))
                 {
                     if (duoUseMarker) { WorldFrame.Reset(); Log("請再掃描一次標記圖"); }
                     else { align.Clear(); aligned = false; Log("重新對齊：兩人面對面，讓鏡頭拍到對方全身"); }
                 }
-                if (GUI.Button(new Rect(pad * 2 + bw * 1.3f, y, bw * 1.3f, bh), "HP 重置", button)) { hp = MaxHp; }
+                if (UiKit.Button(new Rect(pad * 2 + bw * 1.3f, y, bw * 1.3f, bh), "HP 重置", fs)) { hp = MaxHp; }
                 // 連線、對齊完成後：進入職業對戰（選職業、技能、錄咒語 → 雙方都準備好就開打）
                 if (net.Connected && WorldReady)
                 {
                     float yb = y + bh + pad * 0.5f;
-                    if (GUI.Button(new Rect(pad, yb, W - pad * 2, bh * 1.2f), "⚔ 職業對戰（選職業與技能）", button)) solo.ShowSetup();
+                    if (UiKit.Button(new Rect(pad, yb, W - pad * 2, bh * 1.2f), "⚔ 職業對戰（選職業與技能）", Mathf.RoundToInt(fs * 1.2f), true, new Color(1f, 0.55f, 0.35f))) solo.ShowSetup();
                 }
-                if (net.Connected && GUI.Button(new Rect(pad * 3 + bw * 2.6f, y, bw * 1.3f, bh), showPoseDebug ? "骨架:顯示" : "骨架:隱藏", button)) showPoseDebug = !showPoseDebug;
-                if (!net.Connected && GUI.Button(new Rect(pad * 3 + bw * 2.6f, y, bw * 1.3f, bh), "換模式", button)) { mode = Mode.Choose; WorldFrame.Reset(); playArea.Clear(); areaOwner = areaReceived = aligned = false; }
-                if (!net.Connected) { y += bh + pad * 0.5f; if (GUI.Button(new Rect(pad, y, bw * 1.3f, bh), showPoseDebug ? "骨架:顯示" : "骨架:隱藏", button)) showPoseDebug = !showPoseDebug; }
+                if (net.Connected && UiKit.Button(new Rect(pad * 3 + bw * 2.6f, y, bw * 1.3f, bh), showPoseDebug ? "骨架:顯示" : "骨架:隱藏", fsS, showPoseDebug)) showPoseDebug = !showPoseDebug;
+                if (!net.Connected && UiKit.Button(new Rect(pad * 3 + bw * 2.6f, y, bw * 1.3f, bh), "換模式", fs)) { mode = Mode.Choose; WorldFrame.Reset(); playArea.Clear(); areaOwner = areaReceived = aligned = false; }
+                if (!net.Connected) { y += bh + pad * 0.5f; if (UiKit.Button(new Rect(pad, y, bw * 1.3f, bh), showPoseDebug ? "骨架:顯示" : "骨架:隱藏", fsS, showPoseDebug)) showPoseDebug = !showPoseDebug; }
                 if (AreaMode && playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position))
-                    GUI.Label(new Rect(0, H * 0.62f, W, H * 0.08f), "⚠ 回到場地內", big);
+                    UiKit.Pill(H * 0.68f, "⚠ 回到場地內", fs * 2, new Color(1f, 0.4f, 0.4f), W - pad * 2);
             }
-            panelBottom = y + lineH * 1.6f;
+            panelBottom = y + (mode == Mode.Duo && net.Connected && WorldReady ? lineH * 3.5f : lineH * 1.6f);
 
             // AR 追蹤中斷提示
             if (!Tracking.Ok && ARSession.state != ARSessionState.Unsupported)
             {
-                GUI.color = new Color(0, 0, 0, 0.7f);
-                GUI.DrawTexture(new Rect(0, H * 0.36f, W, H * 0.16f), Texture2D.whiteTexture);
-                GUI.color = Color.white;
-                GUI.Label(new Rect(pad, H * 0.37f, W - pad * 2, lineH * 1.4f), mode == Mode.Duo ? "⏸ AR 追蹤中斷：暫時不能施法（對手仍以你最後的位置判定）" : "⏸ AR 追蹤中斷", label);
-                GUI.Label(new Rect(pad, H * 0.37f + lineH * 1.5f, W - pad * 2, lineH * 2), Tracking.Reason, label);
+                var fr = new Rect(pad, H * 0.36f, W - pad * 2, H * 0.16f);
+                UiKit.Card(fr, 0.85f, new Color(1f, 0.75f, 0.3f), 0.8f);
+                UiKit.Text(new Rect(fr.x + pad, fr.y + pad * 0.5f, fr.width - pad * 2, fr.height * 0.45f), mode == Mode.Duo ? "⏸ AR 追蹤中斷：暫時不能施法（對手仍以你最後的位置判定）" : "⏸ AR 追蹤中斷", fs, Color.white, TextAnchor.MiddleCenter, true);
+                UiKit.Text(new Rect(fr.x + pad, fr.y + fr.height * 0.5f, fr.width - pad * 2, fr.height * 0.45f), Tracking.Reason, fsS, new Color(0.9f, 0.92f, 1f), TextAnchor.MiddleCenter);
             }
             if (mode == Mode.Duo && net.Connected && !remoteTrackingOk)
-                GUI.Label(new Rect(pad, H * 0.53f, W - pad * 2, lineH), "⚠ 對手 AR 追蹤中斷：以他最後的位置判定", label);
+                UiKit.Pill(H * 0.55f, "⚠ 對手 AR 追蹤中斷：以他最後的位置判定", fsS, new Color(1f, 0.75f, 0.4f), W - pad * 2);
 
             // 鎖定框：對手在畫面中才能施法
             if (mode == Mode.Duo && hasTarget && Tracking.Ok)
@@ -1153,9 +1156,9 @@ namespace SpellDuel
                     DrawFrame(targetRect, new Color(0.3f, 1f, 0.4f, 0.9f), Mathf.Max(3f, W * 0.006f));
                     var meW = WorldFrame.ToWorld(cam.transform.position);
                     float dTarget = Flat(tgtHeadW - meW).magnitude;
-                    GUI.Label(new Rect(targetRect.x, targetRect.y - lineH, Mathf.Max(targetRect.width, W * 0.4f), lineH), $"🎯 鎖定　{dTarget:F1} m", label);
+                    UiKit.Text(new Rect(targetRect.x, targetRect.y - lineH, Mathf.Max(targetRect.width, W * 0.4f), lineH), $"🎯 鎖定　{dTarget:F1} m", fs, new Color(0.4f, 1f, 0.5f), TextAnchor.LowerLeft, true);
                 }
-                else GUI.Label(new Rect(0, H * 0.58f, W, lineH * 1.5f), $"鏡頭沒看到對手，轉向對手才能施法（距離 {Flat(tgtHeadW - WorldFrame.ToWorld(cam.transform.position)).magnitude:F1} m）", new GUIStyle(label) { alignment = TextAnchor.MiddleCenter });
+                else UiKit.Pill(H * 0.58f, $"鏡頭沒看到對手，轉向對手才能施法（距離 {Flat(tgtHeadW - WorldFrame.ToWorld(cam.transform.position)).magnitude:F1} m）", fs, new Color(1f, 0.45f, 0.45f), W - pad * 2);
             }
 
             if (mode == Mode.Duo) hand.DrawGUI(label, new Color(1f, 0.6f, 0.1f));
@@ -1185,11 +1188,12 @@ namespace SpellDuel
             // 準星與訊息（手繪場地時準星就是畫筆）
             GUI.Label(new Rect(W / 2 - 50, H / 2 - 50, 100, 100), mode == Mode.Solo && playArea.state == PlayArea.State.Drawing ? (playArea.PenDown ? "●" : "○") : "＋", big);
             float ly = H - safe.y - lineH * (log.Count + 1) - pad;
-            foreach (var s in log) { GUI.Label(new Rect(pad, ly, W - pad * 2, lineH), s, label); ly += lineH; }
+            if (log.Count > 0) UiKit.Card(new Rect(pad * 0.5f, ly - pad * 0.3f, W - pad, lineH * log.Count + pad * 0.6f), 0.45f);
+            foreach (var s in log) { UiKit.Text(new Rect(pad, ly, W - pad * 2, lineH), s, fsS, new Color(0.9f, 0.93f, 1f)); ly += lineH; }
             if (hp <= 0) GUI.Label(new Rect(0, H * 0.4f, W, H * 0.1f), "💀 敗北", big);
             else if (net.Connected && remoteHp <= 0) GUI.Label(new Rect(0, H * 0.4f, W, H * 0.1f), "🏆 勝利", big);
             if (mode == Mode.Solo && playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position))
-                GUI.Label(new Rect(0, H * 0.55f, W, H * 0.08f), "⚠ 回到場地內", big);
+                UiKit.Pill(H * 0.6f, "⚠ 回到場地內", fs * 2, new Color(1f, 0.4f, 0.4f), W - pad * 2);
         }
     }
 }

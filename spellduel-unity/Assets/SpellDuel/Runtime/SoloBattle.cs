@@ -715,107 +715,142 @@ namespace SpellDuel
 
         void DrawSetup()
         {
-            float W = Screen.width, H = Screen.height, pad = W * 0.03f, lh = label.fontSize * 1.7f;
-            float top = H - Screen.safeArea.yMax + pad;
-            Panel(new Rect(0, 0, W, H), 0.55f);
-            float y = top;
-            GUI.Label(new Rect(pad, y, W, lh), "我的職業", label); y += lh;
-            float bw = (W - pad * 5) / 4f, bh = lh * 1.3f;
+            float W = Screen.width, H = Screen.height;
+            var safe = Screen.safeArea;
+            float topY = H - safe.yMax, botY = H - safe.y;
+            int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.8f), fsL = Mathf.RoundToInt(fs * 1.25f);
+            float pad = W * 0.035f, gap = pad * 0.5f;
+            // 背景：整片暗色
+            GUI.color = new Color(0.02f, 0.03f, 0.06f, 0.82f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
+
+            // 依可用高度決定單位行高（內容約 21 行），放得下就用基準行高
+            float avail = botY - topY - pad * 2;
+            float u = Mathf.Min(fs * 1.75f, avail / 21.5f);
+            float y = topY + pad;
+            var cls = Skills.Classes[myClass];
+
+            UiKit.Text(new Rect(pad, y, W - pad * 2, u * 1.2f), NetMode ? "職業對戰：選擇職業與技能" : "選擇職業與技能", fsL, Color.white, TextAnchor.MiddleLeft, true);
+            y += u * 1.3f;
+
+            // 職業（4 個）
+            float cw = (W - pad * 2 - gap * 3) / 4f;
             for (int i = 0; i < 4; i++)
             {
-                var id = Skills.ClassOrder[i];
-                GUI.color = id == myClass ? Skills.Classes[id].color : Color.white;
-                if (GUI.Button(new Rect(pad + i * (bw + pad), y, bw, bh), Skills.Classes[id].name, button) && id != myClass) { myClass = id; LoadLoadout(); }
+                var id = Skills.ClassOrder[i]; var c = Skills.Classes[id];
+                if (UiKit.Button(new Rect(pad + i * (cw + gap), y, cw, u * 1.3f), c.name, fs, id == myClass, c.color) && id != myClass) { myClass = id; LoadLoadout(); }
             }
-            GUI.color = Color.white; y += bh + pad * 0.5f;
-            var cls = Skills.Classes[myClass];
-            GUI.Label(new Rect(pad, y, W - pad * 2, lh * 1.4f), $"{cls.desc}　HP {cls.maxHp}・MP {cls.maxMp}\n技能（選招手勢→放招動作）", small); y += lh * 1.9f;
+            y += u * 1.3f + gap;
+            cls = Skills.Classes[myClass];
+            var descR = new Rect(pad, y, W - pad * 2, u * 1.5f);
+            UiKit.Card(descR, 0.5f, cls.color, 0.35f);
+            UiKit.Text(new Rect(descR.x + gap, descR.y + gap * 0.4f, descR.width - gap * 2, descR.height - gap * 0.8f), $"{cls.desc}\nHP {cls.maxHp}・MP {cls.maxMp}", fsS, new Color(0.9f, 0.92f, 1f));
+            y += u * 1.5f + gap;
 
-            GUI.Label(new Rect(pad, y, W, lh), $"選 3 個技能（{myLoadout.Count}/3）", label); y += lh;
-            float sw = (W - pad * 3) / 2f, sh = lh * 2.1f;
+            // 技能卡片（2 欄）：圖示＋名稱／手勢→放招／數值
+            UiKit.Text(new Rect(pad, y, W - pad * 2, u), $"選 3 個技能（{myLoadout.Count}/3）　比手勢＝選招 → 做動作＝放招", fsS, new Color(1f, 0.9f, 0.6f));
+            y += u;
+            float sw = (W - pad * 2 - gap) / 2f, sh = u * 2.4f;
             for (int i = 0; i < cls.skills.Length; i++)
             {
-                var s = Skills.All[cls.skills[i]];
-                bool on = myLoadout.Contains(s.id);
-                GUI.color = on ? s.color : new Color(0.75f, 0.75f, 0.75f);
-                var r = new Rect(pad + (i % 2) * (sw + pad), y + (i / 2) * (sh + pad * 0.5f), sw, sh);
-                string eff = s.type == SkillType.Self ? (s.self == SelfKind.Heal ? $"回復{s.heal}" : "防禦") : $"傷害{s.damage}{(s.multi > 1 ? $"×{s.multi}" : "")}";
-                if (iconButton == null) iconButton = new GUIStyle(button) { alignment = TextAnchor.MiddleLeft };
-                iconButton.padding.left = Mathf.RoundToInt(sh * 0.95f);
-                if (GUI.Button(r, $"{(on ? "✔ " : "")}{s.name}（{HandGesture.ShapeName(Skills.GestureOf(s.id))}→{HandGesture.StyleName(HandGesture.ReleaseOf(s))}）\nMP{s.cost}・蓄力{s.charge:0.#}s・{eff}・{s.RangeText}", iconButton))
+                var sk = Skills.All[cls.skills[i]];
+                bool on = myLoadout.Contains(sk.id);
+                var r = new Rect(pad + (i % 2) * (sw + gap), y + (i / 2) * (sh + gap), sw, sh);
+                UiKit.Card(r, on ? 0.75f : 0.55f, on ? sk.color : (Color?)null, 0.95f);
+                float isz = sh * 0.82f;
+                var ir = new Rect(r.x + sh * 0.09f, r.y + sh * 0.09f, isz, isz);
+                GUI.color = on ? Color.white : new Color(0.55f, 0.55f, 0.55f);
+                GUI.DrawTexture(ir, SkillIcons.Get(sk.id));
+                GUI.color = Color.white;
+                float tx = ir.xMax + sh * 0.08f, tw = r.xMax - tx - sh * 0.06f;
+                string eff = sk.type == SkillType.Self ? (sk.self == SelfKind.Heal ? $"回復{sk.heal}" : "防禦") : sk.damage > 0 ? $"傷害{sk.damage}{(sk.multi > 1 ? $"×{sk.multi}" : "")}" : "效果";
+                UiKit.Text(new Rect(tx, r.y + sh * 0.05f, tw, sh * 0.32f), (on ? "✔ " : "") + sk.name, fs, on ? Color.white : new Color(0.8f, 0.8f, 0.8f), TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(tx, r.y + sh * 0.37f, tw, sh * 0.27f), $"{HandGesture.ShapeName(Skills.GestureOf(sk.id))} → {HandGesture.StyleName(HandGesture.ReleaseOf(sk))}", fsS, new Color(1f, 0.85f, 0.5f));
+                UiKit.Text(new Rect(tx, r.y + sh * 0.64f, tw, sh * 0.32f), $"MP{sk.cost}・蓄力{sk.charge:0.#}s・{eff}・{sk.RangeText}", fsS, new Color(0.8f, 0.85f, 0.95f));
+                if (GUI.Button(r, GUIContent.none, GUIStyle.none))
                 {
-                    if (on) myLoadout.Remove(s.id);
-                    else { if (myLoadout.Count >= 3) myLoadout.RemoveAt(0); myLoadout.Add(s.id); }
+                    if (on) myLoadout.Remove(sk.id);
+                    else { if (myLoadout.Count >= 3) myLoadout.RemoveAt(0); myLoadout.Add(sk.id); }
                 }
-                var keep = GUI.color;
-                GUI.color = on ? Color.white : new Color(0.6f, 0.6f, 0.6f);
-                GUI.DrawTexture(new Rect(r.x + sh * 0.06f, r.y + sh * 0.06f, sh * 0.88f, sh * 0.88f), SkillIcons.Get(s.id));
-                GUI.color = keep;
             }
-            GUI.color = Color.white;
-            y += ((cls.skills.Length + 1) / 2) * (sh + pad * 0.5f) + pad * 0.5f;
+            y += ((cls.skills.Length + 1) / 2) * (sh + gap);
 
-            float ew = (W - pad * 7) / 6f;
-            if (!NetMode) GUI.Label(new Rect(pad, y, W, lh), "敵人職業", label);
-            else GUI.Label(new Rect(pad, y, W, lh), remoteReady ? $"對手：{(Skills.Classes.TryGetValue(remoteClass ?? "", out var rc) ? rc.name : "?")}（已準備）" : "對手：還沒準備好", label);
-            y += lh;
-            for (int i = 0; i < 6 && !NetMode; i++)
+            // 敵人（單人：3×2；雙人：顯示對手狀態）
+            if (!NetMode)
             {
-                string id = i == 0 ? "random" : i == 5 ? "dummy" : Skills.ClassOrder[i - 1];
-                string nm = i == 0 ? "隨機" : i == 5 ? "木頭人" : Skills.Classes[id].name;
-                GUI.color = id == enemyClass ? Color.yellow : Color.white;
-                if (GUI.Button(new Rect(pad + i * (ew + pad), y, ew, bh), nm, button)) enemyClass = id;
+                UiKit.Text(new Rect(pad, y, W - pad * 2, u), "敵人", fsS, new Color(1f, 0.9f, 0.6f));
+                y += u;
+                float ew = (W - pad * 2 - gap * 2) / 3f;
+                for (int i = 0; i < 6; i++)
+                {
+                    string id = i == 0 ? "random" : i == 5 ? "dummy" : Skills.ClassOrder[i - 1];
+                    string nm = i == 0 ? "隨機" : i == 5 ? "🪵 木頭人" : Skills.Classes[id].name;
+                    var c = i == 0 ? new Color(1f, 0.85f, 0.3f) : i == 5 ? new Color(0.75f, 0.55f, 0.3f) : Skills.Classes[id].color;
+                    if (UiKit.Button(new Rect(pad + (i % 3) * (ew + gap), y + (i / 3) * (u * 1.15f + gap), ew, u * 1.15f), nm, fsS, id == enemyClass, c)) enemyClass = id;
+                }
+                y += 2 * (u * 1.15f + gap);
             }
-            GUI.color = Color.white; y += bh + pad;
+            else
+            {
+                string rs = remoteReady ? $"對手：{(Skills.Classes.TryGetValue(remoteClass ?? "", out var rc) ? rc.name : "?")}（已準備）" : "對手：還沒準備好";
+                UiKit.Text(new Rect(pad, y, W - pad * 2, u * 1.2f), rs, fs, remoteReady ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.8f, 0.5f));
+                y += u * 1.3f;
+            }
 
-            // 語音詠唱：每個技能錄 2 次咒語（任何語言、任何說法都可以，比對的是你自己的聲音）
-            if (GUI.Button(new Rect(pad, y, ew * 1.4f, bh), voiceOn ? "🎤 語音:開" : "🎤 語音:關", button))
+            // 語音
+            float vbw = W * 0.3f;
+            if (UiKit.Button(new Rect(pad, y, vbw, u * 1.15f), voiceOn ? "🎤 語音：開" : "🎤 語音：關", fsS, voiceOn, new Color(0.4f, 0.9f, 0.6f)))
             { voiceOn = !voiceOn; PlayerPrefs.SetInt("sd_voice_on", voiceOn ? 1 : 0); }
-            float vw = (W - pad * 5 - ew * 1.4f) / 3f;
-            if (UseSpeech) GUI.Label(new Rect(pad * 2 + ew * 1.4f, y, W - pad * 3 - ew * 1.4f, bh), "戰鬥中直接唸技能名稱就能詠唱（手機內建語音辨識，不用錄音）", small);
-            for (int i = 0; i < myLoadout.Count && !UseSpeech; i++)
+            float vx = pad + vbw + gap, vw = W - pad - vx;
+            if (UseSpeech) UiKit.Text(new Rect(vx, y, vw, u * 1.15f), "戰鬥中直接唸技能名稱就能詠唱（不用錄音）", fsS, new Color(0.85f, 0.9f, 1f));
+            else
             {
-                var s = Skills.All[myLoadout[i]];
-                bool rec = recordingSkill == s.id;
-                GUI.color = rec ? Color.red : voice.Ready(s.id) ? s.color : Color.white;
-                GUI.enabled = voiceOn;
-                if (GUI.Button(new Rect(pad * 2 + ew * 1.4f + i * (vw + pad), y, vw, bh), rec ? "● 錄音中…" : $"錄「{s.name}」{voice.Count(s.id)}/2", button))
+                float rw = (vw - gap * 2) / 3f;
+                for (int i = 0; i < myLoadout.Count; i++)
                 {
-                    if (rec) recordingSkill = null;
-                    else { recordingSkill = s.id; if (voice.Count(s.id) >= 2) { voice.ClearSkill(s.id); } Say($"🎤 唸出「{s.name}」的咒語（自己決定怎麼唸）", 3f); }
+                    var sk = Skills.All[myLoadout[i]];
+                    bool rec = recordingSkill == sk.id;
+                    if (UiKit.Button(new Rect(vx + i * (rw + gap), y, rw, u * 1.15f), rec ? "● 錄音中" : $"錄{sk.name} {voice.Count(sk.id)}/2", fsS, rec || voice.Ready(sk.id), rec ? Color.red : sk.color, voiceOn))
+                    {
+                        if (rec) recordingSkill = null;
+                        else { recordingSkill = sk.id; if (voice.Count(sk.id) >= 2) voice.ClearSkill(sk.id); Say($"🎤 唸出「{sk.name}」的咒語（自己決定怎麼唸）", 3f); }
+                    }
                 }
             }
-            GUI.enabled = true; GUI.color = Color.white; y += bh + pad * 0.3f;
+            y += u * 1.15f + gap;
             if (recordingSkill != null && mic.Running)
             {
                 float lv = Mathf.Clamp01(mic.Spotter.Level / Mathf.Max(0.001f, mic.Spotter.StartThreshold * 3f));
-                Bar(new Rect(pad, y, W - pad * 2, lh * 0.35f), lv, mic.Spotter.InSpeech ? Color.green : Color.gray, "");
-                y += lh * 0.5f;
+                UiKit.Bar(new Rect(pad, y, W - pad * 2, u * 0.4f), lv, mic.Spotter.InSpeech ? new Color(0.3f, 1f, 0.4f) : Color.gray, "", fsS);
+                y += u * 0.5f;
             }
-            else if (voiceOn && !UseSpeech && !VoiceReady) { GUI.Label(new Rect(pad, y, W - pad * 2, lh), "錄好 3 個技能的咒語後，戰鬥中唸出來就會開始詠唱（點技能按鈕也可以）", small); y += lh; }
-            if (Time.time < messageUntil) { GUI.Label(new Rect(pad, y, W - pad * 2, lh), message, label); y += lh; }
-            y += pad * 0.5f;
+            if (Time.time < messageUntil) UiKit.Text(new Rect(pad, y, W - pad * 2, u), message, fsS, new Color(1f, 0.95f, 0.6f), TextAnchor.MiddleCenter);
 
-            GUI.enabled = myLoadout.Count == 3;
-            if (GUI.Button(new Rect(pad, y, W - pad * 2, bh * 1.3f), NetMode ? (localReady ? "等待對手準備…" : "⚔ 準備好了") : "⚔ 開始戰鬥", button))
-            { if (NetMode) SendReady(); else StartBattle(); }
-            GUI.enabled = true; y += bh * 1.3f + pad;
-            if (!NetMode && GUI.Button(new Rect(pad, y, (W - pad * 3) / 2f, bh), "重畫場地", button)) RequestRedraw?.Invoke();
-            if (GUI.Button(new Rect(pad * 2 + (W - pad * 3) / 2f, y, (W - pad * 3) / 2f, bh), NetMode ? "返回" : "換模式", button))
+            // 下方固定：開始／準備、其他按鈕
+            float by = botY - pad - u * 1.2f;
+            float hw = (W - pad * 2 - gap) / 2f;
+            if (!NetMode && UiKit.Button(new Rect(pad, by, hw, u * 1.2f), "重畫場地", fsS)) RequestRedraw?.Invoke();
+            if (UiKit.Button(new Rect(NetMode ? pad : pad + hw + gap, by, NetMode ? W - pad * 2 : hw, u * 1.2f), NetMode ? "返回" : "換模式", fsS))
             { if (NetMode) Hide(); else RequestChangeMode?.Invoke(); }
+            by -= u * 1.6f + gap;
+            string startText = NetMode ? (localReady ? "等待對手準備…" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : "⚔ 開始戰鬥");
+            if (UiKit.Button(new Rect(pad, by, W - pad * 2, u * 1.6f), startText, fsL, true, cls.color, myLoadout.Count == 3))
+            { if (NetMode) SendReady(); else StartBattle(); }
         }
 
         void DrawHud()
         {
-            float W = Screen.width, H = Screen.height, pad = W * 0.03f, lh = label.fontSize * 1.6f;
-            float top = H - Screen.safeArea.yMax + pad;
+            float W = Screen.width, H = Screen.height, pad = W * 0.03f, gap = pad * 0.5f;
+            int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.8f), fsL = Mathf.RoundToInt(fs * 1.25f);
+            float lh = fs * 1.6f;
+            float top = H - Screen.safeArea.yMax + pad * 0.5f, botY = H - Screen.safeArea.y;
             var me = Me; var en = En; float now = battle.now;
+            float pillW = W - pad * 2;
 
             // 被打中：整個畫面閃紅
             if (hitFlash > 0.01f) { GUI.color = new Color(1f, 0f, 0.05f, hitFlash * 0.45f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
 
             // 致盲：畫面蓋上煙霧
-            if (me.blindUntil > now) { GUI.color = new Color(0.55f, 0.55f, 0.6f, 0.92f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; GUI.Label(new Rect(0, H * 0.3f, W, lh * 2), $"煙霧中… {me.blindUntil - now:F1}s", big); }
+            if (me.blindUntil > now) { GUI.color = new Color(0.55f, 0.55f, 0.6f, 0.92f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; UiKit.Pill(H * 0.32f, $"煙霧中… {me.blindUntil - now:F1}s", fsL, Color.white, pillW); }
             // 敵人法術逼近：邊框閃紅
             if (incomingFlash > 0.01f)
             {
@@ -826,24 +861,27 @@ namespace SpellDuel
                 GUI.color = Color.white;
             }
 
-            // 上方：敵人資訊
-            Panel(new Rect(0, 0, W, top + lh * 3.2f));
-            float y = top;
-            GUI.Label(new Rect(pad, y, W * 0.6f, lh), $"{en.name}　距離 {battle.Distance:F1}m", label);
-            Bar(new Rect(W * 0.6f, y + lh * 0.25f, W * 0.37f, lh * 0.5f), en.hp / en.maxHp, new Color(1f, 0.25f, 0.35f), $"{Mathf.CeilToInt(en.hp)}");
+            // 上方：敵人資訊卡
+            var enColor = en.cls != null ? en.cls.color : new Color(1f, 0.4f, 0.4f);
+            var topR = new Rect(pad, top, W - pad * 2, lh * 2.9f);
+            UiKit.Card(topR, 0.6f, enColor, 0.5f);
+            float ix = topR.x + gap, iw = topR.width - gap * 2, y = topR.y + gap * 0.5f;
+            UiKit.Text(new Rect(ix, y, iw * 0.52f, lh), $"{en.name}　{battle.Distance:F1}m", fs, Color.white, TextAnchor.MiddleLeft, true);
+            UiKit.Bar(new Rect(ix + iw * 0.54f, y + lh * 0.15f, iw * 0.46f, lh * 0.7f), en.hp / en.maxHp, new Color(1f, 0.25f, 0.35f), $"{Mathf.CeilToInt(en.hp)}", fsS);
             y += lh;
             string enState = dummyMode ? $"命中 {dummyHits} 次・累計傷害 {Mathf.RoundToInt(dummyDamage)}"
                 : en.charging != null ? $"⚠ 詠唱 {en.charging.name}（{Mathf.FloorToInt(battle.ChargeProgress(en) * 100)}%）" : ai.Status;
             if (en.snaredUntil > now) enState = "被定身";
-            GUI.Label(new Rect(pad, y, W - pad * 2, lh), enState, label); y += lh;
-            GUI.Label(new Rect(pad, y, W - pad * 2, lh), StatusText(en, now), small);
+            UiKit.Text(new Rect(ix, y, iw, lh * 0.9f), enState, fsS, en.charging != null ? new Color(1f, 0.75f, 0.4f) : new Color(0.9f, 0.92f, 1f));
+            y += lh * 0.9f;
+            UiKit.Text(new Rect(ix, y, iw, lh * 0.8f), StatusText(en, now), fsS, new Color(0.75f, 0.85f, 1f));
 
             // 敵人頭上的血條
             var hs = cam.WorldToScreenPoint(WorldFrame.FromWorld(en.head + Vector3.up * 0.3f));
             if (hs.z > 0 && en.Alive)
             {
-                var r = new Rect(hs.x - W * 0.12f, H - hs.y, W * 0.24f, lh * 0.4f);
-                Bar(r, en.hp / en.maxHp, new Color(1f, 0.25f, 0.35f), "");
+                var r = new Rect(hs.x - W * 0.12f, H - hs.y, W * 0.24f, lh * 0.35f);
+                UiKit.Bar(r, en.hp / en.maxHp, new Color(1f, 0.25f, 0.35f), "", fsS);
                 // 敵我距離：蓄力中的技能打得到就綠色，太遠／太近就紅色
                 float dist = battle.Distance;
                 string rangeNote = ""; Color dc = Color.white;
@@ -853,10 +891,8 @@ namespace SpellDuel
                     dc = rs == 0 ? new Color(0.4f, 1f, 0.5f) : new Color(1f, 0.4f, 0.4f);
                     rangeNote = rs > 0 ? "　太遠" : rs < 0 ? "　太近" : "　射程內";
                 }
-                GUI.color = dc;
-                GUI.Label(new Rect(r.x - W * 0.1f, r.y + lh * 0.45f, r.width + W * 0.2f, lh), $"{dist:F1} m{rangeNote}", center);
-                GUI.color = Color.white;
-                if (en.charging != null) GUI.Label(new Rect(r.x - W * 0.1f, r.y - lh, r.width + W * 0.2f, lh), $"⚠ {en.charging.name}", center);
+                UiKit.Text(new Rect(r.x - W * 0.12f, r.yMax + 2, r.width + W * 0.24f, lh), $"{dist:F1} m{rangeNote}", fs, dc, TextAnchor.UpperCenter, true);
+                if (en.charging != null) UiKit.Text(new Rect(r.x - W * 0.12f, r.y - lh, r.width + W * 0.24f, lh * 0.95f), $"⚠ {en.charging.name}", fs, new Color(1f, 0.75f, 0.4f), TextAnchor.LowerCenter, true);
             }
 
             // 飄字
@@ -868,17 +904,15 @@ namespace SpellDuel
                 if (f.screen) p = new Vector2(W / 2, H * 0.45f - age * 60f);
                 else
                 {
-                    var s = cam.WorldToScreenPoint(WorldFrame.FromWorld(f.posMap));
-                    if (s.z <= 0) continue;
-                    p = new Vector2(s.x, H - s.y - age * 60f);
+                    var sp = cam.WorldToScreenPoint(WorldFrame.FromWorld(f.posMap));
+                    if (sp.z <= 0) continue;
+                    p = new Vector2(sp.x, H - sp.y - age * 60f);
                 }
-                GUI.color = new Color(f.color.r, f.color.g, f.color.b, 1f - age / 1.2f);
-                GUI.Label(new Rect(p.x - W * 0.3f, p.y - lh, W * 0.6f, lh * 1.5f), f.text, center);
+                UiKit.Text(new Rect(p.x - W * 0.3f, p.y - lh, W * 0.6f, lh * 1.5f), f.text, fsL, new Color(f.color.r, f.color.g, f.color.b, 1f - age / 1.2f), TextAnchor.MiddleCenter, true);
             }
-            GUI.color = Color.white;
             floaters.RemoveAll(f => Time.time - f.born > 1.2f);
 
-            // 準星與蓄力
+            // 蓄力狀態
             if (me.charging != null)
             {
                 float prog = battle.ChargeProgress(me);
@@ -886,48 +920,40 @@ namespace SpellDuel
                 string st = prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%" :
                     me.charging.releaseNear ? "手刀往前刺 → 5 秒內靠近敵人自動出手" : rs < 0 ? "太近了" :
                     HandGesture.StyleHint(HandGesture.ReleaseOf(me.charging));
-                GUI.color = prog < 1f ? Color.white : me.charging.color;
-                GUI.Label(new Rect(0, H / 2 - lh * 2.2f, W, lh), $"{me.charging.name}　{st}", center);
-                GUI.color = Color.white;
+                UiKit.Pill(H / 2 - lh * 2.6f, $"{me.charging.name}　{st}", fs, prog < 1f ? Color.white : me.charging.color, pillW);
             }
             // 伏擊狀態：我在伏擊 → 提示靠近；敵人在伏擊 → 警告保持距離
             if (me.armed != null)
             {
                 float leftT = Mathf.Max(0f, me.armedUntil - now), need = me.armed.rangeMax;
-                GUI.color = me.armed.color;
-                GUI.Label(new Rect(0, H * 0.3f, W, lh * 1.6f), $"🗡 {me.armed.name}伏擊中：靠近到 {need:0.#}m 內自動出手（{battle.Distance:F1}m・剩 {leftT:F1} 秒）", center);
-                GUI.color = Color.white;
+                UiKit.Pill(H * 0.31f, $"🗡 {me.armed.name}伏擊中：靠近到 {need:0.#}m 內自動出手（{battle.Distance:F1}m・剩 {leftT:F1} 秒）", fs, me.armed.color, pillW);
             }
             if (en.armed != null && en.Alive)
-            {
-                GUI.color = new Color(1f, 0.35f, 0.4f);
-                GUI.Label(new Rect(0, H * 0.34f, W, lh * 1.6f), $"⚠ 敵人伏擊中！保持距離（> {en.armed.rangeMax:0.#}m）", center);
-                GUI.color = Color.white;
-            }
+                UiKit.Pill(H * 0.37f, $"⚠ 敵人伏擊中！保持距離（> {en.armed.rangeMax:0.#}m）", fs, new Color(1f, 0.4f, 0.45f), pillW);
 
             // 準星（畫面中央）：所有技能都朝這裡放；蓄力完成（或符文畫好）時用技能顏色脈動
             {
                 bool ready = me.charging != null && battle.ChargeProgress(me) >= 1f;
                 var cc = me.charging != null ? me.charging.color : Color.white;
                 float pulse = ready ? 0.6f + 0.4f * Mathf.Sin(Time.time * 10f) : 0.75f;
-                float arm = W * (ready ? 0.05f : 0.04f), th = Mathf.Max(3f, W * 0.006f), gap = W * 0.012f;
+                float arm = W * (ready ? 0.05f : 0.04f), th = Mathf.Max(3f, W * 0.006f), cg = W * 0.012f;
                 GUI.color = new Color(0f, 0f, 0f, 0.45f);
-                GUI.DrawTexture(new Rect(W / 2 - arm - 1, H / 2 - th / 2 - 1, arm - gap + 2, th + 2), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(W / 2 + gap - 1, H / 2 - th / 2 - 1, arm - gap + 2, th + 2), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(W / 2 - th / 2 - 1, H / 2 - arm - 1, th + 2, arm - gap + 2), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(W / 2 - th / 2 - 1, H / 2 + gap - 1, th + 2, arm - gap + 2), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 - arm - 1, H / 2 - th / 2 - 1, arm - cg + 2, th + 2), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 + cg - 1, H / 2 - th / 2 - 1, arm - cg + 2, th + 2), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 - th / 2 - 1, H / 2 - arm - 1, th + 2, arm - cg + 2), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 - th / 2 - 1, H / 2 + cg - 1, th + 2, arm - cg + 2), Texture2D.whiteTexture);
                 GUI.color = new Color(cc.r, cc.g, cc.b, pulse);
-                GUI.DrawTexture(new Rect(W / 2 - arm, H / 2 - th / 2, arm - gap, th), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(W / 2 + gap, H / 2 - th / 2, arm - gap, th), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(W / 2 - th / 2, H / 2 - arm, th, arm - gap), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(W / 2 - th / 2, H / 2 + gap, th, arm - gap), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 - arm, H / 2 - th / 2, arm - cg, th), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 + cg, H / 2 - th / 2, arm - cg, th), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 - th / 2, H / 2 - arm, th, arm - cg), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 - th / 2, H / 2 + cg, th, arm - cg), Texture2D.whiteTexture);
                 GUI.DrawTexture(new Rect(W / 2 - th / 2, H / 2 - th / 2, th, th), Texture2D.whiteTexture);
                 GUI.color = Color.white;
             }
             DrawRuneGuide(W, H);
             Hand?.DrawGUI(small, me.charging != null ? me.charging.color : Color.white);
-            if (Time.time < heardUntil) GUI.Label(new Rect(0, H * 0.24f, W, lh * 1.6f), heard, big);
-            else if (voiceOn && VoiceReady && mic.Running && mic.Spotter.InSpeech) GUI.Label(new Rect(0, H * 0.25f, W, lh), "🎤 …", center);
+            if (Time.time < heardUntil) UiKit.Pill(H * 0.24f, heard, fsL, new Color(1f, 0.95f, 0.6f), pillW);
+            else if (voiceOn && VoiceReady && mic.Running && mic.Spotter.InSpeech) UiKit.Pill(H * 0.25f, "🎤 …", fs, Color.white, pillW);
 
             // 鎖定框／敵人方向提示
             if (phase == Phase.Fighting && en.Alive && !frozen)
@@ -937,68 +963,70 @@ namespace SpellDuel
                     float t = Mathf.Max(3f, W * 0.006f);
                     GUI.color = new Color(0.3f, 1f, 0.4f, 0.9f);
                     var r = enemyRect;
-                    GUI.DrawTexture(new Rect(r.xMin, r.yMin, r.width, t), Texture2D.whiteTexture);
-                    GUI.DrawTexture(new Rect(r.xMin, r.yMax - t, r.width, t), Texture2D.whiteTexture);
-                    GUI.DrawTexture(new Rect(r.xMin, r.yMin, t, r.height), Texture2D.whiteTexture);
-                    GUI.DrawTexture(new Rect(r.xMax - t, r.yMin, t, r.height), Texture2D.whiteTexture);
+                    // 只畫四個角，比較不擋畫面
+                    float cl = Mathf.Min(r.width, r.height) * 0.28f;
+                    GUI.DrawTexture(new Rect(r.xMin, r.yMin, cl, t), Texture2D.whiteTexture); GUI.DrawTexture(new Rect(r.xMin, r.yMin, t, cl), Texture2D.whiteTexture);
+                    GUI.DrawTexture(new Rect(r.xMax - cl, r.yMin, cl, t), Texture2D.whiteTexture); GUI.DrawTexture(new Rect(r.xMax - t, r.yMin, t, cl), Texture2D.whiteTexture);
+                    GUI.DrawTexture(new Rect(r.xMin, r.yMax - t, cl, t), Texture2D.whiteTexture); GUI.DrawTexture(new Rect(r.xMin, r.yMax - cl, t, cl), Texture2D.whiteTexture);
+                    GUI.DrawTexture(new Rect(r.xMax - cl, r.yMax - t, cl, t), Texture2D.whiteTexture); GUI.DrawTexture(new Rect(r.xMax - t, r.yMax - cl, t, cl), Texture2D.whiteTexture);
                     GUI.color = Color.white;
-                    GUI.Label(new Rect(r.x, r.yMax, Mathf.Max(r.width, W * 0.3f), lh), "🎯 鎖定", small);
+                    UiKit.Text(new Rect(r.x, r.yMax + 2, Mathf.Max(r.width, W * 0.3f), lh * 0.8f), "🎯 鎖定", fsS, new Color(0.4f, 1f, 0.5f), TextAnchor.UpperLeft, true);
                 }
                 else
-                {
-                    string arrow = enemyScreenSide < 0 ? "◀ 敵人在左邊" : "敵人在右邊 ▶";
-                    GUI.color = new Color(1f, 0.4f, 0.4f);
-                    GUI.Label(new Rect(0, H * 0.56f, W, lh * 1.5f), arrow + "（轉向敵人才能發射）", center);
-                    GUI.color = Color.white;
-                }
+                    UiKit.Pill(H * 0.58f, (enemyScreenSide < 0 ? "◀ 敵人在左邊" : "敵人在右邊 ▶") + "（轉向敵人才能發射）", fs, new Color(1f, 0.45f, 0.45f), pillW);
             }
-            if (Time.time < messageUntil) GUI.Label(new Rect(0, H * 0.6f, W, lh * 1.5f), message, center);
+            if (Time.time < messageUntil) UiKit.Pill(H * 0.64f, message, fs, Color.white, pillW);
 
-            // 下方：我的狀態與技能
-            float bottomH = lh * 2.4f + W * 0.2f;
-            float by = H - (H - Screen.safeArea.yMax) - Screen.safeArea.y - bottomH;
-            by = Mathf.Min(by, H * 0.76f);
-            Panel(new Rect(0, by - pad * 0.5f - lh, W, H - by + pad + lh));
+            // 下方：我的狀態與技能（由下往上排）
+            float sw = (W - pad * 2 - gap * 2) / 3f;
+            float isz = Mathf.Min(sw * 0.5f, lh * 2.2f);
+            float rowH = lh * 0.72f;
+            float tileH = gap * 0.6f + isz + rowH * 3 + gap * 0.4f;
+            float sy = botY - pad * 0.5f - tileH;
+            float statY = sy - gap * 0.5f - lh * 0.75f;
+            float mpY = statY - lh * 0.72f, hpY = mpY - lh * 0.8f;
+            float hintY = hpY - gap * 0.5f - lh * 1.4f;
+            bool hasHeard = UseSpeech && voiceOn && !string.IsNullOrEmpty(speech.LastHeard);
+            float panelY = hintY - (hasHeard ? lh * 0.8f : 0f) - gap;
+            UiKit.Card(new Rect(gap * 0.5f, panelY, W - gap, botY - panelY + H), 0.55f);
+
             bool voiceActive = voiceOn && (UseSpeech || VoiceReady);
-            string voiceHint = !voiceOn || voiceActive ? "" : "　（語音：咒語還沒錄完，到選技能畫面錄）";
-            GUI.Label(new Rect(pad, by - lh * 1.05f, W - pad * 2 - W * 0.22f, lh),
-                (voiceActive ? (UseSpeech ? "唸技能名稱或比手勢＝詠唱" : "唸咒語或比手勢＝詠唱") : "比手勢＝詠唱") + "　蓄滿後做該技能的放招動作" + voiceHint, small);
+            string voiceHint = !voiceOn || voiceActive ? "" : "（語音：咒語還沒錄完，到選技能畫面錄）";
+            float micW = W * 0.24f;
+            UiKit.Text(new Rect(pad, hintY, W - pad * 2 - micW - gap, lh * 1.4f),
+                (voiceActive ? (UseSpeech ? "唸技能名稱或比手勢＝詠唱" : "唸咒語或比手勢＝詠唱") : "比手勢＝詠唱") + "，蓄滿後做該技能的放招動作" + voiceHint, fsS, new Color(1f, 0.92f, 0.65f));
+            if (hasHeard) UiKit.Text(new Rect(pad, hintY - lh * 0.8f, W - pad * 2, lh * 0.8f), $"聽到：{speech.LastHeard}", fsS, new Color(0.8f, 0.9f, 1f));
+            float mx = W - pad - micW;
             if (UseSpeech && voiceOn)
-            {
-                GUI.Label(new Rect(W - pad - W * 0.21f, by - lh * 1.05f, W * 0.21f, lh), speech.Running ? "🎤 聆聽中" : "🎤 " + speech.Status, small);
-                if (!string.IsNullOrEmpty(speech.LastHeard)) GUI.Label(new Rect(pad, by - lh * 2f, W - pad * 2, lh), $"聽到：{speech.LastHeard}", small);
-            }
+                UiKit.Text(new Rect(mx, hintY, micW, lh * 0.75f), speech.Running ? "🎤 聆聽中" : "🎤 " + speech.Status, fsS, speech.Running ? new Color(0.5f, 1f, 0.6f) : new Color(0.8f, 0.8f, 0.8f), TextAnchor.MiddleRight);
             // 麥克風音量：說話中變綠色
             if (mic.Running)
             {
                 float lv = Mathf.Clamp01(mic.Spotter.Level / Mathf.Max(0.001f, mic.Spotter.StartThreshold * 3f));
-                GUI.Label(new Rect(W - pad - W * 0.21f, by - lh * 1.05f, W * 0.06f, lh), "🎤", small);
-                Bar(new Rect(W - pad - W * 0.15f, by - lh * 0.75f, W * 0.15f, lh * 0.3f), lv, mic.Spotter.InSpeech ? Color.green : Color.gray, "");
+                UiKit.Bar(new Rect(mx, hintY + lh * 0.85f, micW, lh * 0.3f), lv, mic.Spotter.InSpeech ? new Color(0.3f, 1f, 0.4f) : Color.gray, "", fsS);
             }
-            Bar(new Rect(pad, by, W - pad * 2, lh * 0.5f), me.hp / me.maxHp, new Color(1f, 0.3f, 0.35f), $"HP {Mathf.CeilToInt(me.hp)}");
-            Bar(new Rect(pad, by + lh * 0.6f, W - pad * 2, lh * 0.5f), me.mp / me.maxMp, new Color(0.3f, 0.6f, 1f), $"MP {Mathf.FloorToInt(me.mp)}");
-            GUI.Label(new Rect(pad, by + lh * 1.15f, W - pad * 2, lh), StatusText(me, now), small);
-            float sw = (W - pad * 4) / 3f, sy = by + lh * 2.1f, sh = W * 0.17f;
+            UiKit.Bar(new Rect(pad, hpY, W - pad * 2, lh * 0.68f), me.hp / me.maxHp, new Color(1f, 0.3f, 0.35f), $"HP {Mathf.CeilToInt(me.hp)} / {Mathf.CeilToInt(me.maxHp)}", fsS);
+            UiKit.Bar(new Rect(pad, mpY, W - pad * 2, lh * 0.6f), me.mp / me.maxMp, new Color(0.3f, 0.6f, 1f), $"MP {Mathf.FloorToInt(me.mp)} / {Mathf.FloorToInt(me.maxMp)}", fsS);
+            UiKit.Text(new Rect(pad, statY, W - pad * 2, lh * 0.75f), StatusText(me, now), fsS, new Color(0.75f, 0.9f, 1f));
+
             for (int i = 0; i < me.loadout.Count; i++)
             {
                 var s = me.loadout[i];
-                var r = new Rect(pad + i * (sw + pad), sy, sw, sh);
+                var r = new Rect(pad + i * (sw + gap), sy, sw, tileH);
                 float cd = me.cooldownUntil.TryGetValue(s.id, out var u) ? Mathf.Max(0, u - now) : 0;
                 bool charging = me.charging == s;
                 var g = Skills.GestureOf(s.id);
                 bool showing = Hand != null && Hand.HandVisible && Hand.Current == g;
-                // 技能格（只顯示，不能點）：手勢圖示＋名稱＋MP／冷卻；手正比著這個手勢時亮起來
-                GUI.color = charging ? WithAlpha(s.color, 0.35f) : showing ? new Color(1f, 1f, 1f, 0.25f) : new Color(0f, 0f, 0f, 0.35f);
-                GUI.DrawTexture(r, Texture2D.whiteTexture);
                 bool usable = me.mp >= s.cost && cd <= 0;
+                // 技能卡（只顯示，不能點）：上面圖示、下面名稱／手勢→放招／MP 或冷卻；手正比著這個手勢時亮起來
+                UiKit.Card(r, charging ? 0.8f : 0.5f, charging ? s.color : showing ? Color.white : (Color?)null, charging ? 1f : 0.6f);
+                var ir = new Rect(r.center.x - isz / 2, r.y + gap * 0.6f, isz, isz);
                 // 技能圖示（發光徽章）：詠唱中外圈脈動發光；冷卻中由上往下蓋暗；MP 不足變灰
-                float isz = r.height * 0.92f;
-                var ir = new Rect(r.x + r.height * 0.04f, r.y + r.height * 0.04f, isz, isz);
                 if (charging)
                 {
                     float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 8f);
                     GUI.color = WithAlpha(s.color, 0.35f + 0.4f * pulse);
-                    float gx = isz * 0.08f;
+                    float gx = isz * 0.1f;
                     GUI.DrawTexture(new Rect(ir.x - gx, ir.y - gx, ir.width + gx * 2, ir.height + gx * 2), SkillIcons.Get(s.id));
                 }
                 GUI.color = usable ? Color.white : new Color(0.45f, 0.45f, 0.45f);
@@ -1009,32 +1037,34 @@ namespace SpellDuel
                     GUI.color = new Color(0f, 0f, 0f, 0.55f);
                     GUI.DrawTexture(new Rect(ir.x, ir.y, ir.width, ir.height * frac), Texture2D.whiteTexture);
                 }
-                // 選招手勢小圖（圖示右下角）
-                HandGesture.DrawIcon(new Rect(ir.xMax - isz * 0.36f, ir.yMax - isz * 0.36f, isz * 0.34f, isz * 0.34f), g, usable ? Color.white : new Color(0.6f, 0.6f, 0.6f));
-                float tx = ir.xMax + r.height * 0.06f, tw = r.xMax - tx;
-                GUI.color = usable ? Color.white : new Color(0.65f, 0.65f, 0.65f);
-                GUI.Label(new Rect(tx, r.y, tw, r.height * 0.42f), s.name, label);
-                string vtag = (!voiceOn ? "" : UseSpeech ? "🎤" : voice.Ready(s.id) ? "🎤" : "🎤未錄");
-                GUI.Label(new Rect(tx, r.y + r.height * 0.36f, tw, r.height * 0.32f), $"{HandGesture.ShapeName(g)}→{HandGesture.StyleName(HandGesture.ReleaseOf(s))}{vtag}", small);
-                GUI.Label(new Rect(tx, r.y + r.height * 0.66f, tw, r.height * 0.32f), cd > 0 ? $"冷卻 {cd:F1}s" : $"MP {s.cost}", small);
                 GUI.color = Color.white;
+                // 選招手勢小圖（圖示右下角）
+                HandGesture.DrawIcon(new Rect(ir.xMax - isz * 0.3f, ir.yMax - isz * 0.3f, isz * 0.38f, isz * 0.38f), g, usable ? Color.white : new Color(0.6f, 0.6f, 0.6f));
+                float tx = r.x + gap * 0.4f, tw = r.width - gap * 0.8f, ty = ir.yMax + gap * 0.2f;
+                var tc = usable ? Color.white : new Color(0.65f, 0.65f, 0.65f);
+                string vtag = !voiceOn ? "" : UseSpeech ? " 🎤" : voice.Ready(s.id) ? " 🎤" : " 🎤未錄";
+                UiKit.Text(new Rect(tx, ty, tw, rowH), s.name + vtag, fs, tc, TextAnchor.MiddleCenter, true);
+                UiKit.Text(new Rect(tx, ty + rowH, tw, rowH), $"{HandGesture.ShapeName(g)}→{HandGesture.StyleName(HandGesture.ReleaseOf(s))}", fsS, usable ? new Color(1f, 0.85f, 0.5f) : tc, TextAnchor.MiddleCenter);
+                UiKit.Text(new Rect(tx, ty + rowH * 2, tw, rowH), cd > 0 ? $"冷卻 {cd:F1}s" : $"MP {s.cost}", fsS, cd > 0 ? new Color(0.7f, 0.7f, 0.7f) : new Color(0.6f, 0.8f, 1f), TextAnchor.MiddleCenter);
             }
 
             if (frozen)
             {
-                Panel(new Rect(0, H * 0.32f, W, H * 0.2f), 0.8f);
-                GUI.Label(new Rect(0, H * 0.33f, W, H * 0.08f), NetMode ? "⚠ AR 追蹤中斷，暫時不能施法" : "⏸ AR 追蹤中斷，戰鬥暫停", big);
-                GUI.Label(new Rect(pad, H * 0.42f, W - pad * 2, lh * 2), Tracking.Reason + (NetMode ? "\n對手仍以你最後的位置判定" : "\n恢復追蹤後自動繼續"), center);
+                var fr = new Rect(pad, H * 0.3f, W - pad * 2, H * 0.2f);
+                UiKit.Card(fr, 0.85f, new Color(1f, 0.75f, 0.3f), 0.8f);
+                UiKit.Text(new Rect(fr.x + gap, fr.y + gap, fr.width - gap * 2, fr.height * 0.45f), NetMode ? "⚠ AR 追蹤中斷，暫時不能施法" : "⏸ AR 追蹤中斷，戰鬥暫停", fsL, Color.white, TextAnchor.MiddleCenter, true);
+                UiKit.Text(new Rect(fr.x + gap, fr.y + fr.height * 0.5f, fr.width - gap * 2, fr.height * 0.45f), Tracking.Reason + (NetMode ? "\n對手仍以你最後的位置判定" : "\n恢復追蹤後自動繼續"), fs, new Color(0.9f, 0.92f, 1f), TextAnchor.MiddleCenter);
             }
 
             if (phase == Phase.Over)
             {
-                Panel(new Rect(0, H * 0.3f, W, H * 0.3f), 0.75f);
-                GUI.Label(new Rect(0, H * 0.32f, W, H * 0.1f), me.Alive ? "🏆 勝利！" : "💀 敗北…", big);
-                float bw = (W - pad * 3) / 2f;
-                if (GUI.Button(new Rect(pad, H * 0.47f, bw, lh * 2f), NetMode ? (localReady ? "等待對手…" : "再來一局") : "再來一局", button))
+                var orr = new Rect(pad, H * 0.28f, W - pad * 2, H * 0.32f);
+                UiKit.Card(orr, 0.85f, me.Alive ? new Color(1f, 0.85f, 0.3f) : new Color(0.7f, 0.7f, 0.8f), 0.9f);
+                UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, orr.height * 0.4f), me.Alive ? "🏆 勝利！" : "💀 敗北…", fs * 2, Color.white, TextAnchor.MiddleCenter, true);
+                float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
+                if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), NetMode ? (localReady ? "等待對手…" : "再來一局") : "再來一局", fs, true, new Color(0.4f, 0.8f, 1f), !(NetMode && localReady)))
                 { if (NetMode) SendReady(); else StartBattle(); }
-                if (GUI.Button(new Rect(pad * 2 + bw, H * 0.47f, bw, lh * 2f), "換職業", button)) ShowSetup();
+                if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "換職業", fs)) ShowSetup();
             }
         }
 
@@ -1057,7 +1087,7 @@ namespace SpellDuel
                 GUI.DrawTexture(new Rect(p.x - sz / 2, p.y - sz / 2, sz, sz), Texture2D.whiteTexture);
             }
             GUI.color = Color.white;
-            GUI.Label(new Rect(0, cy + R * 1.1f, W, label.fontSize * 1.6f), $"用食指畫「{RuneRecognizer.RuneName(rune)}」符文（大圓點是起點）", center);
+            UiKit.Pill(cy + R * 1.1f + UiKit.BaseFont, $"用食指畫「{RuneRecognizer.RuneName(rune)}」符文（大圓點是起點）", UiKit.BaseFont, new Color(c.r, c.g, c.b, 1f), W * 0.94f);
         }
 
         string StatusText(Fighter f, float now)
@@ -1072,14 +1102,6 @@ namespace SpellDuel
             int traps = 0; foreach (var t in battle.traps) if (t.owner == f) traps++;
             if (traps > 0) parts.Add($"陷阱×{traps}");
             return string.Join("　", parts);
-        }
-
-        void Bar(Rect r, float v, Color c, string text)
-        {
-            GUI.color = new Color(1, 1, 1, 0.2f); GUI.DrawTexture(r, Texture2D.whiteTexture);
-            GUI.color = c; GUI.DrawTexture(new Rect(r.x, r.y, r.width * Mathf.Clamp01(v), r.height), Texture2D.whiteTexture);
-            GUI.color = Color.white;
-            if (!string.IsNullOrEmpty(text)) GUI.Label(new Rect(r.x + 4, r.y - r.height * 0.6f, r.width, r.height * 2f), text, small);
         }
     }
 }
