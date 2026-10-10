@@ -79,6 +79,26 @@ button { cursor: pointer; }
 .msg.me .bubble { background: var(--bubble-me); }
 .stamp { font-size: 11px; color: rgba(255,255,255,.9); line-height: 1.25; flex-shrink: 0; }
 .msg.me .stamp { text-align: right; }
+.avatar { overflow: hidden; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar.has-img { background: var(--line) !important; }
+.avatar.has-img span { display: none; }
+#me-avatar { border: 0; padding: 0; background: none; cursor: pointer; border-radius: 50%; }
+#me-avatar .avatar, #chat-avatar .avatar { width: 36px; height: 36px; font-size: 15px; }
+#chat-head { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+#app:not(.in-chat) #chat-head { cursor: default; }
+#chat-head .titles { flex: 1; min-width: 0; }
+#chat-status { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#chat-status:empty { display: none; }
+.profile-card { text-align: center; }
+.profile-card .avatar { width: 112px; height: 112px; font-size: 44px; margin: 4px auto 10px; }
+.profile-card .avatar.has-img { cursor: zoom-in; }
+.profile-name { font-size: 18px; font-weight: 700; }
+.profile-status { color: var(--muted); margin-top: 6px; white-space: pre-wrap; word-break: break-word; }
+#crop-view { width: 240px; height: 240px; margin: 4px auto 10px; border-radius: 50%; overflow: hidden; position: relative;
+  touch-action: none; background: #111; cursor: grab; }
+#crop-img { position: absolute; left: 0; top: 0; transform-origin: 0 0; max-width: none; pointer-events: none; user-select: none; }
+#crop-zoom { width: 240px; display: block; margin: 0 auto; }
 .msg .avatar { width: 32px; height: 32px; font-size: 13px; align-self: flex-start; }
 .msg.cont .avatar { visibility: hidden; }
 .msg.pending .bubble { opacity: .55; }
@@ -292,6 +312,7 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
 <div id="app" class="hidden">
   <aside id="sidebar">
     <div class="topbar">
+      <button id="me-avatar" type="button" title="我的大頭貼和狀態"></button>
       <h2 id="me-name">聊天</h2>
       <button class="icon-btn" id="add-btn" title="新增 / 匯入聯絡人">＋</button>
       <button class="icon-btn" id="main-menu-btn" title="選單">⋯</button>
@@ -304,7 +325,10 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
   <main id="chat">
     <div class="topbar">
       <button class="back-btn" id="back-btn" title="回到聊天列表"><span class="arrow">‹</span>主頁</button>
-      <h2 id="chat-title"></h2>
+      <div id="chat-head" title="看大頭貼和狀態">
+        <span id="chat-avatar"></span>
+        <div class="titles"><h2 id="chat-title"></h2><div id="chat-status"></div></div>
+      </div>
       <span id="conn"></span>
       <button class="icon-btn" id="chat-menu-btn" title="選單">⋯</button>
     </div>
@@ -484,6 +508,44 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
   </div>
 </div></dialog>
 
+<!-- 我的大頭貼和狀態 -->
+<dialog id="dlg-profile"><div class="dlg profile-card">
+  <h3>我的大頭貼和狀態</h3>
+  <div id="profile-main">
+    <div id="profile-avatar"></div>
+    <div class="profile-name" id="profile-name"></div>
+    <div class="actions" style="justify-content:center">
+      <button class="btn secondary" type="button" id="profile-pick">📷 換照片</button>
+      <button class="btn secondary" type="button" id="profile-remove">移除照片</button>
+    </div>
+    <label style="text-align:left">狀態消息(朋友會看到)</label>
+    <input class="field" id="profile-status" maxlength="100" placeholder="例如:今天好累 😴" autocomplete="off">
+    <div class="error" id="profile-error"></div>
+    <div class="actions">
+      <button class="btn secondary" type="button" data-close>關閉</button>
+      <button class="btn" type="button" id="profile-save">儲存狀態</button>
+    </div>
+  </div>
+  <div id="crop" class="hidden">
+    <div id="crop-view"><img id="crop-img" alt=""></div>
+    <input type="range" id="crop-zoom" min="1" max="4" step="0.01" value="1" aria-label="放大縮小">
+    <p class="hint">拖曳照片調整位置,用滑桿放大縮小</p>
+    <div class="actions">
+      <button class="btn secondary" type="button" id="crop-cancel">取消</button>
+      <button class="btn" type="button" id="crop-ok">使用這張</button>
+    </div>
+  </div>
+  <input type="file" id="profile-file" accept="image/*" hidden>
+</div></dialog>
+
+<!-- 看對方的大頭貼和狀態 -->
+<dialog id="dlg-person"><div class="dlg profile-card">
+  <div id="person-avatar"></div>
+  <div class="profile-name" id="person-name"></div>
+  <div class="profile-status" id="person-status"></div>
+  <div class="actions" style="justify-content:center"><button class="btn secondary" type="button" data-close>關閉</button></div>
+</div></dialog>
+
 <!-- 設定 -->
 <dialog id="dlg-settings"><div class="dlg">
   <h3>設定</h3>
@@ -606,9 +668,30 @@ function toast(text) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add("hidden"), 2500);
 }
 const COLORS = ["#f87171", "#fb923c", "#f59e0b", "#84cc16", "#10b981", "#14b8a6", "#06b6d4", "#3b82f6", "#6366f1", "#a855f7", "#ec4899"];
-function avatar(name) {
+// 大頭貼:有照片就放照片,沒有(或載入失敗)就用名字第一個字
+function avatar(name, url) {
   let h = 0; for (const ch of name) h = (h * 31 + ch.codePointAt(0)) >>> 0;
-  return el("div", { class: "avatar", style: `background:${COLORS[h % COLORS.length]}` }, [...name.trim()][0] || "?");
+  const d = el("div", { class: "avatar", style: `background:${COLORS[h % COLORS.length]}` }, el("span", {}, [...name.trim()][0] || "?"));
+  if (url) {
+    const img = el("img", { src: url, alt: "" });
+    img.onerror = () => { img.remove(); d.classList.remove("has-img"); };
+    d.classList.add("has-img"); d.append(img);
+  }
+  return d;
+}
+const avatarUrl = (key, ver) => ver ? `/api/avatar/${key}?v=${encodeURIComponent(ver)}` : "";
+const contactAvatar = c => avatarUrl(c.id, c.avatar);
+function myProfile() {
+  if (state.role === "guest") {
+    const c = state.myContact || {};
+    return { name: c.name || "", url: avatarUrl(c.id, c.avatar), status: c.status_msg || "" };
+  }
+  return { name: state.ownerName, url: avatarUrl("owner", state.ownerAvatar), status: state.ownerStatus };
+}
+function otherProfile() {
+  if (state.role === "guest") return { name: state.ownerName, url: avatarUrl("owner", state.ownerAvatar), status: state.ownerStatus };
+  const c = state.current;
+  return c ? { name: c.name, url: contactAvatar(c), status: c.status_msg || "" } : null;
 }
 const pad = n => String(n).padStart(2, "0");
 function hm(ts) { const d = new Date(ts * 1000); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
@@ -734,6 +817,9 @@ async function logout() {
 function applyMe(me) {
   state.role = me.role; state.ownerName = me.owner_name || ""; state.publicUrl = me.public_url || "";
   state.tunnel = me.tunnel || ""; state.username = me.username || "";
+  state.ownerAvatar = me.owner_avatar || ""; state.ownerStatus = me.owner_status || "";
+  state.myContact = me.contact || null;
+  if ($("#me-avatar")) renderMeAvatar();
   const note = $("#tunnel-note");
   note.classList.toggle("hidden", !me.tunnel_note);
   note.replaceChildren();
@@ -825,7 +911,7 @@ async function doBoot() {
   } else {
     $("#sidebar").classList.add("hidden");
     state.current = me.contact;
-    $("#chat-title").textContent = state.ownerName;
+    renderChatHead();
     showChat();
     await loadMessages();
   }
@@ -970,6 +1056,7 @@ function openEvents() {
     } else if (data.type === "contacts" && state.role === "owner") loadContacts();
     else if (data.type === "album" && $("#dlg-album").open && state.current && data.contact_id === state.current.id) refreshAlbum();
     else if (data.type === "delivered") onDelivered(data);
+    else if (data.type === "profile") refreshProfile();
     else if (data.type === "peer_linked" && state.role === "owner") {
       toast(`🔗 已經跟 ${data.name} 的 HomeChat 互通`); notifyText("HomeChat 互通", `已經跟 ${data.name} 的 HomeChat 互通`);
       loadContacts();
@@ -1053,7 +1140,7 @@ async function loadContacts() {
   }
   if (state.current) {
     const fresh = state.contacts.find(c => c.id === state.current.id);
-    if (fresh) { state.current = fresh; $("#chat-title").textContent = fresh.name; }
+    if (fresh) { state.current = fresh; renderChatHead(); }
     else closeChat();
   }
   renderContacts();
@@ -1091,13 +1178,13 @@ function renderContacts() {
       class: "contact" + (state.current && state.current.id === c.id ? " active" : ""),
       onclick: () => openContact(c),
     },
-      avatar(c.name),
+      avatar(c.name, contactAvatar(c)),
       el("div", { class: "meta" },
         el("div", { class: "row" },
           el("span", { class: "name" }, c.name, notJoined ? el("span", { class: "pill" }, c.invite_url ? "已邀請" : "未加入") : null, peerPill),
           el("span", { class: "time" }, shortTime(c.last_at))),
         el("div", { class: "row" },
-          el("span", { class: "preview" }, c.last_body || (notJoined ? "點開 → ⋯ → 邀請連結,傳給對方" : "點一下開始聊天")),
+          el("span", { class: "preview" }, c.last_body || c.status_msg || (notJoined ? "點開 → ⋯ → 邀請連結,傳給對方" : "點一下開始聊天")),
           c.unread ? el("span", { class: "badge" }, c.unread > 99 ? "99+" : String(c.unread)) : null),
       )));
   }
@@ -1127,7 +1214,7 @@ function closeChat() {
   state.current = null; state.messages = [];
   sessionStorage.removeItem("hc_open");
   $("#app").classList.remove("in-chat");
-  $("#chat-title").textContent = "";
+  renderChatHead();
   $("#chat-empty").classList.remove("hidden");
   $("#messages").classList.add("hidden");
   $("#composer").classList.add("hidden");
@@ -1142,7 +1229,7 @@ async function openContact(c) {
     else history.pushState({ hcChat: c.id }, "");
   }
   $("#app").classList.add("in-chat");
-  $("#chat-title").textContent = c.name;
+  renderChatHead();
   showChat();
   renderContacts();
   state.messages = []; renderMessages(true);
@@ -1348,7 +1435,8 @@ function renderMessages(scrollToEnd) {
         ? (state.current?.devices || state.current?.username ? "還沒有訊息,打聲招呼吧!" : "對方還沒加入。按右上角 ⋯ →「邀請連結」用 LINE 傳給他。")
         : `跟 ${state.ownerName} 打聲招呼吧!`));
   }
-  const otherName = state.role === "owner" ? state.current?.name || "" : state.ownerName;
+  const other = otherProfile() || { name: "", url: "" };
+  const otherName = other.name, otherUrl = other.url;
   let lastDay = "", lastSender = null;
   const iAm = state.role === "owner" ? "me" : "them";
   const used = new Set();
@@ -1360,7 +1448,7 @@ function renderMessages(scrollToEnd) {
     const cont = lastSender === m.sender;
     const key = m.client_id || `id${m.id}`;
     const toPeer = mine && m.fed_state === "queued";  // 互通:已存到家裡電腦,還在送往對方電腦
-    const sig = [m.id, m.pending, m.failed, read, cont, m.progress, state.offline && m.pending, otherName, toPeer].join("|");
+    const sig = [m.id, m.pending, m.failed, read, cont, m.progress, state.offline && m.pending, otherName, otherUrl, toPeer].join("|");
     let node = nodeCache.get(key);
     if (!node || node.sig !== sig || (m.attachment && node.local)) {
       let stamp;
@@ -1370,7 +1458,7 @@ function renderMessages(scrollToEnd) {
       else stamp = el("div", { class: "stamp" }, read ? "已讀" : "", read ? el("br") : null, hm(m.created_at));
       const dom = el("div", {
         class: `msg ${mine ? "me" : "them"}${cont ? " cont" : ""}${m.pending ? " pending" : ""}${m.pending && state.offline ? " queued" : ""}${m.failed ? " failed" : ""}`,
-      }, mine ? null : avatar(otherName), bubbleFor(m), stamp);
+      }, mine ? null : avatar(otherName, otherUrl), bubbleFor(m), stamp);
       node = { sig, dom, local: !m.attachment && !!m.localUrl };
       nodeCache.set(key, node);
     }
@@ -2024,6 +2112,7 @@ $("#main-menu-btn").addEventListener("click", e => showMenu(e.currentTarget, [
   ["匯入聯絡人名單", () => openAdd("list")],
   ["匯入 LINE 聊天紀錄", () => openAdd("line")],
   ["🔗 跟朋友的 HomeChat 互通", () => openFed()],
+  ["👤 我的大頭貼和狀態", openProfile],
   ["設定", openSettings],
   ["登出", logout],
 ]));
@@ -2034,6 +2123,7 @@ $("#chat-menu-btn").addEventListener("click", e => {
   if (state.role === "guest") {
     return showMenu(e.currentTarget, [
       ["📷 相簿", () => openAlbums()],
+      ["👤 我的大頭貼和狀態", openProfile],
       ["下載聊天紀錄(存到這台裝置)", () => state.offline ? toast("連不上家裡的電腦,等連上再下載") : downloadHistory("")],
       [`更改密碼(帳號:${state.username || "—"})`, openGuestPassword],
       ["登出", logout],
@@ -2319,6 +2409,140 @@ $("#peer-unlink").addEventListener("click", async () => {
   $("#dlg-peer").close();
   await loadContacts();
   toast("已解除互通");
+});
+
+// ---------- 大頭貼和狀態消息
+function renderMeAvatar() {
+  const p = myProfile();
+  $("#me-avatar").replaceChildren(avatar(p.name || "我", p.url));
+}
+function renderChatHead() {
+  const p = state.current ? otherProfile() : null;
+  $("#chat-title").textContent = p ? p.name : "";
+  $("#chat-status").textContent = p ? p.status : "";
+  $("#chat-avatar").replaceChildren(...(p ? [avatar(p.name, p.url)] : []));
+}
+async function refreshProfile() {
+  try {
+    const me = await api("/api/me");
+    if (!me.role) return;
+    applyMe(me); local.set("me", me);
+  } catch (_) { return; }
+  if (state.role === "owner") await loadContacts();
+  renderChatHead();
+  if (state.current) renderMessages(false);
+}
+function showProfileMain() {
+  const p = myProfile();
+  $("#profile-avatar").replaceChildren(avatar(p.name || "我", p.url));
+  $("#profile-name").textContent = p.name;
+  $("#profile-remove").classList.toggle("hidden", !p.url);
+  $("#crop").classList.add("hidden"); $("#profile-main").classList.remove("hidden");
+}
+function openProfile() {
+  if (state.offline) return toast("連不上家裡的電腦,等連上再改");
+  $("#profile-error").textContent = "";
+  $("#profile-status").value = myProfile().status;
+  showProfileMain();
+  $("#dlg-profile").showModal();
+}
+$("#me-avatar").addEventListener("click", openProfile);
+$("#profile-save").addEventListener("click", async () => {
+  $("#profile-error").textContent = "";
+  try {
+    await api("/api/profile", { status_msg: $("#profile-status").value });
+    $("#dlg-profile").close(); toast("狀態已更新"); refreshProfile();
+  } catch (ex) { $("#profile-error").textContent = ex.message; }
+});
+$("#profile-remove").addEventListener("click", async () => {
+  if (!confirm("移除大頭貼照片?")) return;
+  try { await api("/api/profile", { remove_avatar: true }); await refreshProfile(); showProfileMain(); toast("已移除照片"); }
+  catch (ex) { $("#profile-error").textContent = ex.message; }
+});
+$("#profile-pick").addEventListener("click", () => { $("#profile-file").value = ""; $("#profile-file").click(); });
+
+// 裁切:圓形框固定 240px,照片可以拖曳、放大
+const crop = { img: null, url: "", w: 0, h: 0, base: 1, zoom: 1, x: 0, y: 0, drag: null };
+const VIEW = 240;
+function cropScale() { return crop.base * crop.zoom; }
+function cropClamp() {
+  const s = cropScale();
+  crop.x = Math.min(0, Math.max(VIEW - crop.w * s, crop.x));
+  crop.y = Math.min(0, Math.max(VIEW - crop.h * s, crop.y));
+  $("#crop-img").style.transform = `translate(${crop.x}px, ${crop.y}px) scale(${s})`;
+}
+$("#profile-file").addEventListener("change", async e => {
+  const file = e.target.files[0]; if (!file) return;
+  if (!file.type.startsWith("image/")) return toast("請選一張照片");
+  if (crop.url) URL.revokeObjectURL(crop.url);
+  crop.url = URL.createObjectURL(file);
+  const img = $("#crop-img");
+  try {
+    await new Promise((ok, bad) => { img.onload = ok; img.onerror = () => bad(new Error()); img.src = crop.url; });
+  } catch (_) { return toast("讀不到這張照片,換一張試試"); }
+  crop.w = img.naturalWidth; crop.h = img.naturalHeight;
+  crop.base = VIEW / Math.min(crop.w, crop.h); crop.zoom = 1;
+  img.style.width = crop.w + "px"; img.style.height = crop.h + "px";
+  crop.x = (VIEW - crop.w * crop.base) / 2; crop.y = (VIEW - crop.h * crop.base) / 2;
+  $("#crop-zoom").value = 1;
+  cropClamp();
+  $("#profile-main").classList.add("hidden"); $("#crop").classList.remove("hidden");
+});
+$("#crop-zoom").addEventListener("input", e => {
+  // 以框的中心為準放大縮小
+  const s = cropScale(), cx = (VIEW / 2 - crop.x) / s, cy = (VIEW / 2 - crop.y) / s;
+  crop.zoom = Number(e.target.value);
+  crop.x = VIEW / 2 - cx * cropScale(); crop.y = VIEW / 2 - cy * cropScale();
+  cropClamp();
+});
+const cropView = $("#crop-view");
+cropView.addEventListener("pointerdown", e => {
+  crop.drag = { id: e.pointerId, sx: e.clientX, sy: e.clientY, x: crop.x, y: crop.y };
+  cropView.setPointerCapture(e.pointerId);
+});
+cropView.addEventListener("pointermove", e => {
+  if (!crop.drag || crop.drag.id !== e.pointerId) return;
+  crop.x = crop.drag.x + e.clientX - crop.drag.sx; crop.y = crop.drag.y + e.clientY - crop.drag.sy;
+  cropClamp();
+});
+for (const t of ["pointerup", "pointercancel"]) cropView.addEventListener(t, () => { crop.drag = null; });
+cropView.addEventListener("wheel", e => {
+  e.preventDefault();
+  const z = $("#crop-zoom"); z.value = Math.min(4, Math.max(1, Number(z.value) * (e.deltaY < 0 ? 1.1 : 1 / 1.1)));
+  z.dispatchEvent(new Event("input"));
+}, { passive: false });
+$("#crop-cancel").addEventListener("click", showProfileMain);
+$("#crop-ok").addEventListener("click", async () => {
+  const s = cropScale(), side = VIEW / s, out = Math.max(1, Math.min(512, Math.round(side)));
+  const cv = document.createElement("canvas"); cv.width = cv.height = out;
+  const ctx = cv.getContext("2d");
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, out, out);  // 透明背景的圖變白底
+  ctx.drawImage($("#crop-img"), -crop.x / s, -crop.y / s, side, side, 0, 0, out, out);
+  const blob = await new Promise(ok => cv.toBlob(ok, "image/jpeg", 0.88));
+  const btn = $("#crop-ok"); btn.disabled = true;
+  try {
+    const r = await fetch("/api/profile/avatar", {
+      method: "POST", body: blob, credentials: "same-origin",
+      headers: { "Content-Type": "image/jpeg", "X-HomeChat-Upload": "1" },
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || "上傳失敗");
+    await refreshProfile();
+    showProfileMain(); toast("大頭貼已更新");
+  } catch (ex) {
+    toast(ex.message === "Failed to fetch" ? "連不上家裡的電腦" : ex.message);
+  } finally { btn.disabled = false; }
+});
+
+// 點聊天視窗上方的名字:看對方的大頭貼和狀態
+$("#chat-head").addEventListener("click", () => {
+  const p = state.current ? otherProfile() : null; if (!p) return;
+  const av = avatar(p.name, p.url);
+  if (p.url) av.addEventListener("click", () => window.open(p.url, "_blank", "noopener"));
+  $("#person-avatar").replaceChildren(av);
+  $("#person-name").textContent = p.name;
+  $("#person-status").textContent = p.status || "";
+  $("#dlg-person").showModal();
 });
 
 // 設定

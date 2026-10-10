@@ -49,7 +49,7 @@ HERE = Path(__file__).resolve().parent
 STATIC_DIR = HERE / "static"
 DEFAULT_DB = HERE / "data" / "homechat.db"
 
-VERSION = "2026.10.14"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
+VERSION = "2026.10.15"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
 COOKIE_NAME = "hc_session"
 SESSION_IDLE_DAYS = 365  # 像 LINE 一樣一直保持登入;一年沒用才自動登出(每次使用都會重新計算)
 INVITE_DAYS = 7  # 邀請連結 7 天內有效,只能用一次
@@ -70,6 +70,21 @@ MAX_SHARE_STICKERS = 40  # 一次最多分享 40 張貼圖
 STICKER_TYPES = {"image/png", "image/gif", "image/webp", "image/jpeg"}
 MAX_STICKER = 2 * 1024 * 1024  # 每張貼圖最大 2 MB
 MAX_STICKERS = 300  # 每個人最多 300 張
+MAX_AVATAR = 1024 * 1024  # 大頭貼最大 1 MB(網頁會先縮成 512×512)
+MAX_STATUS = 100  # 狀態消息最多 100 個字
+
+
+def image_type(head: bytes) -> str | None:
+    """看檔案開頭判斷是哪種圖片(不相信瀏覽器說的 Content-Type)。"""
+    if head.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if head.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if head[:4] == b"RIFF" and head[8:12] == b"WEBP":
+        return "image/webp"
+    if head[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    return None
 # 可以直接在網頁上顯示 / 播放的格式;其他一律當成下載,避免 HTML、SVG 之類夾帶程式
 INLINE_TYPES = {
     "image/jpeg", "image/png", "image/gif", "image/webp", "image/avif",
@@ -100,7 +115,9 @@ CREATE TABLE IF NOT EXISTS contacts (
     peer_secret TEXT,                            -- 互通:兩台之間簽章用的共享密鑰
     peer_name TEXT,                              -- 互通:對方 HomeChat 主人的名字
     peer_ok_at REAL,                             -- 最後一次成功連到對方的時間
-    peer_error TEXT                              -- 最後一次連不上的原因
+    peer_error TEXT,                             -- 最後一次連不上的原因
+    status_msg TEXT NOT NULL DEFAULT '',         -- 狀態消息(朋友自己設定的,或互通時對方主人的)
+    avatar TEXT NOT NULL DEFAULT ''              -- 大頭貼版本(空的 = 沒設),檔案在 data/avatars/c<id>
 );
 CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY,
@@ -252,11 +269,13 @@ class Store:
                 os.chmod(path.parent, 0o700)
             self.files_dir = path.parent / "files"
             self.stickers_dir = path.parent / "stickers"
+            self.avatars_dir = path.parent / "avatars"
         else:
             tmp = Path(tempfile.mkdtemp(prefix="homechat-"))
-            self.files_dir, self.stickers_dir = tmp / "files", tmp / "stickers"
+            self.files_dir, self.stickers_dir, self.avatars_dir = tmp / "files", tmp / "stickers", tmp / "avatars"
         self.files_dir.mkdir(exist_ok=True)
         self.stickers_dir.mkdir(exist_ok=True)
+        self.avatars_dir.mkdir(exist_ok=True)
         self.db = sqlite3.connect(str(path), check_same_thread=False)
         self.db.row_factory = sqlite3.Row
         self.lock = threading.Lock()
@@ -284,7 +303,8 @@ class Store:
                               ("username", "TEXT"),
                               ("password_hash", "TEXT NOT NULL DEFAULT ''"),
                               ("peer_id", "TEXT"), ("peer_url", "TEXT"), ("peer_secret", "TEXT"),
-                              ("peer_name", "TEXT"), ("peer_ok_at", "REAL"), ("peer_error", "TEXT")):
+                              ("peer_name", "TEXT"), ("peer_ok_at", "REAL"), ("peer_error", "TEXT"),
+                              ("status_msg", "TEXT NOT NULL DEFAULT ''"), ("avatar", "TEXT NOT NULL DEFAULT ''")):
                 if name not in cols:
                     self.db.execute(f"ALTER TABLE contacts ADD COLUMN {name} {ddl}")
         cols = {r["name"] for r in self.db.execute("PRAGMA table_info(messages)")}
@@ -397,6 +417,8 @@ class Store:
             # 互通狀態(不含密鑰)
             "peer": {"name": row["peer_name"], "url": row["peer_url"], "ok_at": row["peer_ok_at"],
                      "error": row["peer_error"]} if row["peer_id"] else None,
+            "status_msg": row["status_msg"],
+            "avatar": row["avatar"],
         }
 
     def list_contacts(self) -> list[dict]:
@@ -415,7 +437,7 @@ class Store:
                      ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_at,
                   (SELECT COUNT(*) FROM sessions s WHERE s.contact_id = c.id) AS devices,
                   (SELECT MAX(last_seen) FROM sessions s WHERE s.contact_id = c.id) AS last_seen,
-                  (SELECT COUNT(*) FROM fed_outbox o WHERE o.contact_id = c.id) AS peer_queued
+                  (SELECT COUNT(*) FROM fed_outbox o WHERE o.contact_id = c.id AND o.payload LIKE '%"message"%') AS peer_queued
                 FROM contacts c
                 ORDER BY c.status = 'pending' DESC, COALESCE(last_at, c.created_at) DESC
                 """
@@ -562,6 +584,23 @@ class Store:
             self.file_path(att_id).unlink(missing_ok=True)
         for sid in stickers:  # 朋友的貼圖也刪
             self.sticker_path(sid).unlink(missing_ok=True)
+        self.avatar_path(f"c{contact_id}").unlink(missing_ok=True)
+
+    # --- 大頭貼和狀態消息(主人的存在 settings,朋友 / 互通對象的存在 contacts)
+    def avatar_path(self, key: str) -> Path:
+        return self.avatars_dir / key  # key:owner 或 c<聯絡人編號>
+
+    def set_contact_profile(self, contact_id: int, *, status_msg: str | None = None, avatar: str | None = None) -> None:
+        with self.lock:
+            if status_msg is not None:
+                self.db.execute("UPDATE contacts SET status_msg = ? WHERE id = ?", (status_msg, contact_id))
+            if avatar is not None:
+                self.db.execute("UPDATE contacts SET avatar = ? WHERE id = ?", (avatar, contact_id))
+            self.db.commit()
+
+    def peer_contact_ids(self) -> list[int]:
+        with self.lock:
+            return [r["id"] for r in self.db.execute("SELECT id FROM contacts WHERE peer_id IS NOT NULL")]
 
     # --- 附件(圖片、檔案、語音)
     def file_path(self, att_id: str) -> Path:
@@ -1090,6 +1129,16 @@ class Hub:
             except queue.Full:
                 pass
 
+    def broadcast(self, event: dict) -> None:
+        """送給所有連著的人(主人改了大頭貼 / 狀態,每個朋友都要更新)。"""
+        with self.lock:
+            targets = [s[3] for s in self.subs]
+        for q in targets:
+            try:
+                q.put_nowait(event)
+            except queue.Full:
+                pass
+
     def kick_guests(self, contact_id: int) -> None:
         with self.lock:
             targets = [q for role, cid, _, q in self.subs if role == "guest" and cid == contact_id]
@@ -1255,6 +1304,12 @@ class Federation:
             self.store.enqueue(contact_id, {"type": "read", "uid": last["uid"], "reader": role})
             self.wake.set()
 
+    def on_profile(self) -> None:
+        """主人改了大頭貼 / 狀態 → 告訴每台互通的 HomeChat。"""
+        for cid in self.store.peer_contact_ids():
+            self.store.enqueue(cid, {"type": "profile"})
+        self.wake.set()
+
     def sync_history(self, contact_id: int, delay: float = 0) -> int:
         """剛配對:把以前的對話也複製一份給對方(重複的對方會自動略過)。
 
@@ -1263,6 +1318,7 @@ class Federation:
         msgs = self.store.local_messages(contact_id)
         for m in msgs:
             self.store.enqueue(contact_id, {"type": "message", "message_id": m["id"], "history": True}, delay)
+        self.store.enqueue(contact_id, {"type": "profile"}, delay)  # 也把我的大頭貼和狀態給對方
         if not delay:
             self.wake.set()
         return len(msgs)
@@ -1343,6 +1399,19 @@ class Federation:
                 self.store.set_fed_state(msg["id"], "sent")
                 self.app.hub.publish({"type": "delivered", "contact_id": msg["contact_id"], "id": msg["id"]},
                                      msg["contact_id"])
+        elif payload["type"] == "profile":
+            # 送的是「現在」的樣子(排隊時改了好幾次也只要最新的)
+            ver = self.store.get_setting("owner_avatar")
+            path = self.store.avatar_path("owner")
+            if ver and path.exists():
+                with open(path, "rb") as f:
+                    mime = image_type(f.read(16)) or "image/jpeg"
+                fed_request(peer["peer_url"], "/fed/avatar", secret=peer["peer_secret"], server_id=sid,
+                            file=path, content_type=mime, timeout=120)
+            else:
+                ver = ""
+            fed_request(peer["peer_url"], "/fed/inbox", secret=peer["peer_secret"], server_id=sid, payload={
+                "type": "profile", "status": self.store.get_setting("owner_status"), "avatar": ver})
         else:
             fed_request(peer["peer_url"], "/fed/inbox", secret=peer["peer_secret"], server_id=sid, payload=payload)
 
@@ -1643,6 +1712,9 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/sticker-files/([A-Za-z0-9_-]{16,64})", url.path)
         if m:
             return self._sticker_file(m.group(1), qs)
+        m = re.fullmatch(r"/api/avatar/(owner|\d+)", url.path)
+        if m:
+            return self._avatar(m.group(1))
         m = re.fullmatch(r"/api/albums/(\d+)/(photos|zip)", url.path)
         if m:
             album = self._album_for(self._require(), int(m.group(1)))
@@ -1672,10 +1744,14 @@ class Handler(BaseHTTPRequestHandler):
             return self._fed_pair()
         if url.path == "/fed/inbox":
             return self._fed_inbox()
+        if url.path == "/fed/avatar":
+            return self._fed_avatar()
         m = re.fullmatch(r"/fed/files/([A-Za-z0-9_-]{16,64})", url.path)
         if m:
             return self._fed_file(m.group(1), {k: v[-1] for k, v in parse_qs(url.query).items()})
         self._check_origin()
+        if url.path == "/api/profile/avatar":
+            return self._upload_avatar()
         if url.path == "/api/upload":
             return self._upload({k: v[-1] for k, v in parse_qs(url.query).items()})
         if url.path == "/api/stickers/upload":
@@ -1696,6 +1772,7 @@ class Handler(BaseHTTPRequestHandler):
             "/api/friend-link": self._set_friend_link,
             "/api/devices/remove": self._remove_device,
             "/api/settings": self._settings,
+            "/api/profile": self._profile,
             "/api/stickers/delete": self._delete_sticker,
             "/api/stickers/save": self._save_sticker,
             "/api/stickers/share": self._share_stickers,
@@ -1738,6 +1815,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({
                 "role": "owner",
                 "owner_name": self.app.owner_name,
+                **self._owner_profile(),
                 "username": self.app.store.owner_username(),
                 "public_url": self.app.store.get_setting("public_url"),
                 "tunnel": self.app.store.get_setting("public_url_auto"),
@@ -1747,9 +1825,11 @@ class Handler(BaseHTTPRequestHandler):
         return self._json({
             "role": "guest",
             "owner_name": self.app.owner_name,
+            **self._owner_profile(),
             "username": contact["username"],
             "contact": {"id": contact["id"], "name": contact["name"], "status": contact["status"],
-                        "owner_read_id": contact["owner_read_id"], "has_password": contact["has_password"]},
+                        "owner_read_id": contact["owner_read_id"], "has_password": contact["has_password"],
+                        "status_msg": contact["status_msg"], "avatar": contact["avatar"]},
         }, headers=refresh)
 
     @staticmethod
@@ -2646,11 +2726,38 @@ class Handler(BaseHTTPRequestHandler):
                 hub.publish({"type": "read", "contact_id": cid, "owner_read_id": fresh["owner_read_id"],
                              "guest_read_id": fresh["guest_read_id"]}, cid)
             return self._json({"ok": True})
+        if kind_of == "profile":
+            ver = str(data.get("avatar") or "")
+            ver = ver if re.fullmatch(r"[A-Za-z0-9_-]{1,32}", ver) else ""
+            if not ver:
+                store.avatar_path(f"c{cid}").unlink(missing_ok=True)
+            elif not store.avatar_path(f"c{cid}").exists():
+                ver = ""  # 圖還沒收到(照理說會先傳圖)
+            store.set_contact_profile(cid, status_msg=self._clean(data.get("status"), MAX_STATUS), avatar=ver)
+            hub.publish({"type": "contacts"}, cid, to_guest=False)
+            return self._json({"ok": True})
         if kind_of == "unpair":
             store.unlink_peer(cid)  # 對話紀錄留著
             hub.publish({"type": "contacts"}, cid, to_guest=False)
             return self._json({"ok": True})
         raise ApiError(400, "不支援的類型")
+
+    def _fed_avatar(self) -> None:
+        """收對方主人的大頭貼(接著會收到 profile,裡面有版本號)。"""
+        peer, body_hash = self._fed_peer()
+        try:
+            length = int(self.headers.get("Content-Length", ""))
+        except ValueError:
+            raise ApiError(411, "需要 Content-Length")
+        if not 0 < length <= MAX_AVATAR:
+            raise ApiError(413, "大頭貼太大")
+        raw = self.rfile.read(length)
+        if not hmac.compare_digest(hashlib.sha256(raw).hexdigest(), body_hash):
+            raise ApiError(401, "內容和簽章不符")
+        if not image_type(raw[:16]):
+            raise ApiError(415, "大頭貼要是圖片")
+        self._write_avatar(f"c{peer['id']}", raw)
+        self._json({"ok": True})
 
     def _fed_file(self, att_id: str, qs: dict) -> None:
         """收對方傳來的圖片 / 檔案(訊息之前先傳)。內容的 SHA-256 在簽章裡,收完會核對。"""
@@ -2733,6 +2840,88 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"ok": True})
         hub.publish({"type": "contacts"}, contact_id, to_guest=False)
         self._json({"contact": self._public_contact(store.get_contact(contact_id))})
+
+    # --- 大頭貼和狀態消息
+    def _owner_profile(self) -> dict:
+        store = self.app.store
+        return {"owner_status": store.get_setting("owner_status"), "owner_avatar": store.get_setting("owner_avatar")}
+
+    def _write_avatar(self, key: str, raw: bytes) -> None:
+        dest = self.app.store.avatar_path(key)
+        tmp = dest.with_name(dest.name + ".part")
+        tmp.write_bytes(raw)
+        os.replace(tmp, dest)
+
+    def _avatar(self, key: str) -> None:
+        """主人看得到所有人的;朋友只看得到主人和自己的。"""
+        sess = self._require()
+        if sess["role"] == "guest" and key not in ("owner", str(sess["contact_id"])):
+            raise ApiError(404, "找不到")
+        path = self.app.store.avatar_path("owner" if key == "owner" else f"c{key}")
+        if not path.exists():
+            raise ApiError(404, "找不到")
+        raw = path.read_bytes()
+        # 網址裡有版本號(?v=),換照片網址就變,所以可以放心快取
+        self._send(200, raw, image_type(raw[:16]) or "application/octet-stream",
+                   {"Content-Security-Policy": FILE_CSP, "Cache-Control": "private, max-age=31536000, immutable"})
+
+    def _profile_changed(self, sess: dict) -> None:
+        if sess["role"] == "owner":
+            self.app.hub.broadcast({"type": "profile"})
+            self.app.fed.on_profile()
+        else:
+            self.app.hub.publish({"type": "profile", "contact_id": sess["contact_id"]}, sess["contact_id"])
+
+    def _upload_avatar(self) -> None:
+        """換大頭貼:request body 就是圖片(網頁已經裁成正方形、縮小)。"""
+        if self.headers.get("X-HomeChat-Upload") != "1":
+            raise ApiError(403, "上傳格式錯誤")
+        sess = self._require()
+        try:
+            length = int(self.headers.get("Content-Length", ""))
+        except ValueError:
+            raise ApiError(411, "需要 Content-Length")
+        if length <= 0:
+            raise ApiError(400, "檔案是空的")
+        if length > MAX_AVATAR:
+            raise ApiError(413, "照片太大了(上限 1 MB)")
+        if sess["role"] == "guest" and not self.app.uploads.take(sess["id"]):
+            raise ApiError(429, "換太多次了,晚點再試")
+        raw = self.rfile.read(length)
+        if len(raw) != length:
+            raise ApiError(400, "上傳中斷了,請再試一次")
+        if not image_type(raw[:16]):
+            raise ApiError(415, "大頭貼要是 JPG、PNG、WebP 或 GIF 圖片")
+        ver = secrets.token_urlsafe(6)
+        store = self.app.store
+        if sess["role"] == "owner":
+            self._write_avatar("owner", raw)
+            store.set_setting("owner_avatar", ver)
+        else:
+            self._write_avatar(f"c{sess['contact_id']}", raw)
+            store.set_contact_profile(sess["contact_id"], avatar=ver)
+        self._profile_changed(sess)
+        self._json({"avatar": ver})
+
+    def _profile(self, data: dict) -> None:
+        """改狀態消息 / 移除大頭貼。"""
+        sess = self._require()
+        store = self.app.store
+        owner = sess["role"] == "owner"
+        if "status_msg" in data:
+            text = " ".join(str(data.get("status_msg") or "").split())[:MAX_STATUS]  # 一行就好
+            if owner:
+                store.set_setting("owner_status", text)
+            else:
+                store.set_contact_profile(sess["contact_id"], status_msg=text)
+        if data.get("remove_avatar"):
+            store.avatar_path("owner" if owner else f"c{sess['contact_id']}").unlink(missing_ok=True)
+            if owner:
+                store.set_setting("owner_avatar", "")
+            else:
+                store.set_contact_profile(sess["contact_id"], avatar="")
+        self._profile_changed(sess)
+        self._json({"ok": True})
 
     def _settings(self, data: dict) -> None:
         self._require("owner")

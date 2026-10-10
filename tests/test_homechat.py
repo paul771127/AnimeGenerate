@@ -1188,3 +1188,62 @@ def test_pair_code_roundtrip():
     assert homechat.decode_pair_code(code) == {"u": "https://a.ts.net", "t": "tok", "n": "小明"}
     assert homechat.decode_pair_code(" " + code[:10] + "\n" + code[10:]) is not None  # 換行 / 空白沒關係
     assert homechat.decode_pair_code("abc") is None
+
+
+# --- 大頭貼和狀態消息
+def test_profile_avatar_and_status(server, monkeypatch):
+    base, app = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "阿明"})[1]["contact"]
+    guest = join(base, contact)
+    # 主人換大頭貼、打狀態
+    assert owner.upload("/api/profile/avatar", PNG, "image/png")[0] == 200
+    assert owner.req("/api/profile", {"status_msg": "今天好累\n😴   zzz"})[0] == 200
+    me = guest.req("/api/me")[1]
+    assert me["owner_status"] == "今天好累 😴 zzz" and me["owner_avatar"]
+    status, headers, body = guest.raw(f"/api/avatar/owner?v={me['owner_avatar']}")
+    assert status == 200 and body == PNG and headers["Content-Type"] == "image/png"
+    # 朋友也能換自己的
+    assert guest.upload("/api/profile/avatar", GIF, "image/gif")[0] == 200
+    assert guest.req("/api/profile", {"status_msg": "x" * 300})[0] == 200
+    c = next(x for x in owner.req("/api/contacts")[1]["contacts"] if x["id"] == contact["id"])
+    assert c["avatar"] and c["status_msg"] == "x" * homechat.MAX_STATUS
+    assert owner.raw(f"/api/avatar/{contact['id']}")[2] == GIF
+    # 朋友看不到別的朋友的;沒登入看不到主人的
+    other = owner.req("/api/contacts", {"name": "小美"})[1]["contact"]
+    guest2 = join(base, other, username="mei")
+    assert guest2.raw(f"/api/avatar/{contact['id']}")[0] == 404
+    assert Client(base).raw("/api/avatar/owner")[0] == 401
+    # 不是圖片、沒有自訂標頭、太大都不收
+    assert owner.upload("/api/profile/avatar", b"<svg onload=alert(1)>", "image/png")[0] == 415
+    assert owner.upload("/api/profile/avatar", PNG, "image/png", {"X-HomeChat-Upload": "0"})[0] == 403
+    monkeypatch.setattr(homechat, "MAX_AVATAR", 40)
+    assert owner.upload("/api/profile/avatar", PNG + b"0" * 40, "image/png")[0] == 413
+    monkeypatch.undo()
+    # 移除照片
+    assert owner.req("/api/profile", {"remove_avatar": True})[0] == 200
+    assert guest.req("/api/me")[1]["owner_avatar"] == ""
+    assert owner.raw("/api/avatar/owner")[0] == 404
+    # 刪聯絡人時朋友的大頭貼也刪掉
+    owner.req(f"/api/contacts/{contact['id']}/delete", {})
+    assert not app.store.avatar_path(f"c{contact['id']}").exists()
+
+
+def test_federation_shares_profile(two_homes):
+    a, b = two_homes
+    a.owner.upload("/api/profile/avatar", PNG, "image/png")
+    a.owner.req("/api/profile", {"status_msg": "在家 🏠"})
+    on_a, on_b = link(a, b)
+    for h in (a, b):  # 配對後延遲送出的也馬上送
+        h.store.db.execute("UPDATE fed_outbox SET next_try = 0")
+    flush(a, b)
+    alice_on_b = next(c for c in b.contacts() if c["id"] == on_b["id"])
+    assert alice_on_b["status_msg"] == "在家 🏠" and alice_on_b["avatar"]
+    assert b.owner.raw(f"/api/avatar/{on_b['id']}")[2] == PNG
+    # 之後改了也會同步;移除照片也會
+    b.owner.req("/api/profile", {"status_msg": "上班中"})
+    a.owner.req("/api/profile", {"remove_avatar": True})
+    flush(a, b)
+    assert next(c for c in a.contacts() if c["id"] == on_a["id"])["status_msg"] == "上班中"
+    alice_on_b = next(c for c in b.contacts() if c["id"] == on_b["id"])
+    assert alice_on_b["avatar"] == "" and b.owner.raw(f"/api/avatar/{on_b['id']}")[0] == 404
