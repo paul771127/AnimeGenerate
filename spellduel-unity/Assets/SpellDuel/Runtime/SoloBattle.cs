@@ -33,6 +33,8 @@ namespace SpellDuel
 
         // 語音詠唱：唸出咒語就開始詠唱（本機比對自己錄的樣本）
         readonly MicInput mic = new MicInput();
+        SpeechInput speech;               // 手機內建語音辨識：直接唸技能名稱（不用錄音）；不支援時改用錄音比對
+        bool UseSpeech => speech != null && speech.Supported;
         VoiceTemplates voice;
         bool voiceOn;
         string recordingSkill;            // 正在錄哪個技能的咒語樣本
@@ -81,6 +83,8 @@ namespace SpellDuel
             enemyClass = PlayerPrefs.GetString("sd_enemy_class", "random");
             voiceOn = PlayerPrefs.GetInt("sd_voice_on", 1) == 1;
             voice = VoiceTemplates.Load();
+            speech = new SpeechInput();
+            speech.OnSkill += OnSpeechSkill;
             LoadLoadout();
         }
 
@@ -371,8 +375,14 @@ namespace SpellDuel
 
         void UpdateMic()
         {
-            // 錄樣本中、或戰鬥中（語音開啟且咒語都錄好了）才開麥克風
-            bool want = recordingSkill != null || (voiceOn && phase == Phase.Fighting && VoiceReady);
+            // 手機內建語音辨識：戰鬥中語音開啟就聽，唸技能名稱即詠唱（不能和下面的錄音比對同時用麥克風）
+            bool wantSpeech = UseSpeech && voiceOn && phase == Phase.Fighting && recordingSkill == null;
+            if (wantSpeech && !speech.Running) { speech.Candidates = myLoadout; speech.Start(); }
+            else if (!wantSpeech && speech != null && speech.Running) speech.Stop();
+            speech?.Tick();
+
+            // 錄樣本中、或（不支援內建辨識時）戰鬥中語音開啟且咒語都錄好了，才開麥克風做錄音比對
+            bool want = recordingSkill != null || (!UseSpeech && voiceOn && phase == Phase.Fighting && VoiceReady);
             if (want && !mic.Running)
             {
                 if (mic.Start()) mic.Spotter.OnUtterance += OnUtterance;
@@ -380,6 +390,13 @@ namespace SpellDuel
             }
             else if (!want && mic.Running) mic.Stop();
             mic.Tick();
+        }
+
+        void OnSpeechSkill(string id)
+        {
+            if (phase != Phase.Fighting || battle == null || frozen || !Skills.All.TryGetValue(id, out var skill)) return;
+            heard = $"🎤 {skill.name}"; heardUntil = Time.time + 1.5f;
+            if (Me.charging != skill && !battle.TryChant(Me, skill, out var why)) Say(why, 1.5f);
         }
 
         void OnUtterance(float[][] seq, float peak)
@@ -679,7 +696,8 @@ namespace SpellDuel
             if (GUI.Button(new Rect(pad, y, ew * 1.4f, bh), voiceOn ? "🎤 語音:開" : "🎤 語音:關", button))
             { voiceOn = !voiceOn; PlayerPrefs.SetInt("sd_voice_on", voiceOn ? 1 : 0); }
             float vw = (W - pad * 5 - ew * 1.4f) / 3f;
-            for (int i = 0; i < myLoadout.Count; i++)
+            if (UseSpeech) GUI.Label(new Rect(pad * 2 + ew * 1.4f, y, W - pad * 3 - ew * 1.4f, bh), "戰鬥中直接唸技能名稱就能詠唱（手機內建語音辨識，不用錄音）", small);
+            for (int i = 0; i < myLoadout.Count && !UseSpeech; i++)
             {
                 var s = Skills.All[myLoadout[i]];
                 bool rec = recordingSkill == s.id;
@@ -698,7 +716,7 @@ namespace SpellDuel
                 Bar(new Rect(pad, y, W - pad * 2, lh * 0.35f), lv, mic.Spotter.InSpeech ? Color.green : Color.gray, "");
                 y += lh * 0.5f;
             }
-            else if (voiceOn && !VoiceReady) { GUI.Label(new Rect(pad, y, W - pad * 2, lh), "錄好 3 個技能的咒語後，戰鬥中唸出來就會開始詠唱（點技能按鈕也可以）", small); y += lh; }
+            else if (voiceOn && !UseSpeech && !VoiceReady) { GUI.Label(new Rect(pad, y, W - pad * 2, lh), "錄好 3 個技能的咒語後，戰鬥中唸出來就會開始詠唱（點技能按鈕也可以）", small); y += lh; }
             if (Time.time < messageUntil) { GUI.Label(new Rect(pad, y, W - pad * 2, lh), message, label); y += lh; }
             y += pad * 0.5f;
 
@@ -831,9 +849,15 @@ namespace SpellDuel
             float by = H - (H - Screen.safeArea.yMax) - Screen.safeArea.y - bottomH;
             by = Mathf.Min(by, H * 0.76f);
             Panel(new Rect(0, by - pad * 0.5f - lh, W, H - by + pad + lh));
-            string voiceHint = !voiceOn ? "" : VoiceReady ? "" : "　（語音：咒語還沒錄完，到選技能畫面錄）";
+            bool voiceActive = voiceOn && (UseSpeech || VoiceReady);
+            string voiceHint = !voiceOn || voiceActive ? "" : "　（語音：咒語還沒錄完，到選技能畫面錄）";
             GUI.Label(new Rect(pad, by - lh * 1.05f, W - pad * 2 - W * 0.22f, lh),
-                (voiceOn && VoiceReady ? "比手勢或唸咒語＝詠唱" : "比手勢＝詠唱") + "　握拳→張開＝放招" + voiceHint, small);
+                (voiceActive ? (UseSpeech ? "比手勢或唸技能名稱＝詠唱" : "比手勢或唸咒語＝詠唱") : "比手勢＝詠唱") + "　握拳→張開＝放招" + voiceHint, small);
+            if (UseSpeech && voiceOn)
+            {
+                GUI.Label(new Rect(W - pad - W * 0.21f, by - lh * 1.05f, W * 0.21f, lh), speech.Running ? "🎤 聆聽中" : "🎤 " + speech.Status, small);
+                if (!string.IsNullOrEmpty(speech.LastHeard)) GUI.Label(new Rect(pad, by - lh * 2f, W - pad * 2, lh), $"聽到：{speech.LastHeard}", small);
+            }
             // 麥克風音量：說話中變綠色
             if (mic.Running)
             {
@@ -860,7 +884,7 @@ namespace SpellDuel
                 HandGesture.DrawIcon(new Rect(r.x + pad * 0.3f, r.y + pad * 0.3f, sh * 0.55f, sh * 0.55f), g, usable ? s.color : new Color(0.5f, 0.5f, 0.5f));
                 GUI.color = usable ? Color.white : new Color(0.65f, 0.65f, 0.65f);
                 GUI.Label(new Rect(r.x + sh * 0.6f, r.y, r.width - sh * 0.6f, r.height * 0.5f), s.name, label);
-                string vtag = !voiceOn ? "" : voice.Ready(s.id) ? "・🎤唸咒語" : "・🎤未錄";
+                string vtag = !voiceOn ? "" : UseSpeech ? "・🎤唸名稱" : voice.Ready(s.id) ? "・🎤唸咒語" : "・🎤未錄";
                 GUI.Label(new Rect(r.x + sh * 0.6f, r.y + r.height * 0.42f, r.width - sh * 0.6f, r.height * 0.3f), HandGesture.ShapeName(g) + vtag, small);
                 GUI.Label(new Rect(r.x + pad * 0.3f, r.y + r.height * 0.7f, r.width, r.height * 0.3f), $"MP {s.cost}{(cd > 0 ? $"　冷卻 {cd:F1}s" : "")}", small);
                 GUI.color = Color.white;

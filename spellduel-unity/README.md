@@ -100,7 +100,11 @@
 
 ## 語音詠唱與手勢放招
 
-**語音（單人戰鬥）**：選技能畫面按「錄「技能名」」，把你想用的咒語唸 2 次（任何語言、任何說法都可以）。三個技能都錄好後，戰鬥中唸出咒語就會開始詠唱。
+**語音（單人、雙人）**：戰鬥中**直接唸技能名稱**（例如「火球術」「冰槍」）就開始詠唱，不用錄音。
+- 用手機內建語音辨識：iOS＝Apple Speech（支援時在手機上辨識），Android＝系統語音辨識（裝有中文離線語音包時可離線，否則需要網路）。
+- 比對容錯：簡體字、同音／近音字（火球數→火球術、冰強→冰槍）、句子中間出現（「我要火球術」）都能辨識；兩個技能分不清時不觸發。
+- Android 每句話之間會有短暫的提示音，這是系統語音辨識的行為。
+- 手機不支援內建辨識時，改用下面的「錄咒語」方式：選技能畫面按「錄「技能名」」，把咒語唸 2 次（任何語言、任何說法都可以）。
 - 完全在手機上比對（MFCC＋DTW，比對的是你自己的聲音），不需要網路、不需要 Google／Apple 語音服務。
 - 不夠像、兩個咒語分不清、或聲音太小（可能是對手）都不會觸發，畫面上方會顯示原因。點技能按鈕詠唱仍然可以用。
 
@@ -190,6 +194,8 @@
 | `Assets/SpellDuel/Runtime/DuoAlignment.cs` | 雙人畫場地模式：用「互相看到對方的位置」解兩支手機座標的旋轉＋平移（2D Kabsch、剔除離群點） |
 | `Assets/SpellDuel/Runtime/CharacterRig.cs` | 角色造型：四職業的程式生成人物（法師尖帽長袍法杖、弓箭手兜帽弓箭、刺客面罩雙匕首、劍士頭盔盾劍）與走路／詠唱／出招／被打中／倒地動作 |
 | `Assets/SpellDuel/Runtime/SpellFx.cs` | 各職業施法光效：法師魔法陣、弓箭手風之旋渦、刺客暗影煙霧、劍士金色光柱／斬擊弧光；詠唱、放招、法術拖尾、命中 |
+| `Assets/SpellDuel/Runtime/SpeechInput.cs` | 手機內建語音辨識＋技能名稱比對（簡繁轉換、拼音近音、句中搜尋、去抖動） |
+| `Assets/Plugins/Android/SpeechBridge.java`、`Assets/Plugins/iOS/SpeechBridge.mm` | 語音辨識原生外掛 |
 | `Assets/SpellDuel/Runtime/VoiceSpotter.cs` | 本機咒語辨識：麥克風、斷句、MFCC、DTW、樣本儲存與比對 |
 | `Assets/SpellDuel/Runtime/HandGesture.cs` | 手勢：握拳→張開／甩手放招、手指準星 |
 | `Assets/SpellDuel/Runtime/PoseDetector.cs` | 擷取 AR 畫面、呼叫手機內建的人體偵測、把關鍵點換成射線 |

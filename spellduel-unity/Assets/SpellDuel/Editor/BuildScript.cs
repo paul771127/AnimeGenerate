@@ -235,6 +235,7 @@ namespace SpellDuel.EditorTools
             var plist = new UnityEditor.iOS.Xcode.PlistDocument();
             plist.ReadFromFile(plistPath);
             plist.root.SetString("NSLocalNetworkUsageDescription", "與同一個 Wi-Fi 的對手連線對戰");
+            plist.root.SetString("NSSpeechRecognitionUsageDescription", "唸出技能名稱施法需要使用語音辨識");
             plist.WriteToFile(plistPath);
 
             // 人體偵測（Assets/Plugins/iOS/PoseBridge.mm）用到 Apple Vision
@@ -242,6 +243,8 @@ namespace SpellDuel.EditorTools
             var proj = new UnityEditor.iOS.Xcode.PBXProject();
             proj.ReadFromFile(projPath);
             proj.AddFrameworkToProject(proj.GetUnityFrameworkTargetGuid(), "Vision.framework", false);
+            proj.AddFrameworkToProject(proj.GetUnityFrameworkTargetGuid(), "Speech.framework", false);      // 語音辨識（SpeechBridge.mm）
+            proj.AddFrameworkToProject(proj.GetUnityFrameworkTargetGuid(), "AVFoundation.framework", false);
             proj.WriteToFile(projPath);
         }
 #endif
@@ -259,6 +262,17 @@ namespace SpellDuel.EditorTools
                 var gradle = Path.Combine(path, "build.gradle");
                 var text = File.ReadAllText(gradle);
                 if (!text.Contains(dep)) File.AppendAllText(gradle, "\n// SpellDuel：人體偵測（ML Kit）＋手勢（MediaPipe）\ndependencies {\n    " + dep + "\n    " + dep2 + "\n}\n");
+
+                // 語音辨識（SpeechBridge.java）：Android 11+ 要宣告會用到系統的語音辨識服務，並需要麥克風權限
+                var manifest = Path.Combine(path, "src", "main", "AndroidManifest.xml");
+                if (File.Exists(manifest))
+                {
+                    var xml = File.ReadAllText(manifest);
+                    var add = "";
+                    if (!xml.Contains("android.permission.RECORD_AUDIO")) add += "  <uses-permission android:name=\"android.permission.RECORD_AUDIO\" />\n";
+                    if (!xml.Contains("android.speech.RecognitionService")) add += "  <queries>\n    <intent>\n      <action android:name=\"android.speech.RecognitionService\" />\n    </intent>\n  </queries>\n";
+                    if (add.Length > 0) File.WriteAllText(manifest, xml.Replace("</manifest>", add + "</manifest>"));
+                }
 
                 var props = Path.Combine(path, "..", "gradle.properties");
                 var p = File.Exists(props) ? File.ReadAllText(props) : "";
