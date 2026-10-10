@@ -1559,7 +1559,15 @@ def test_federated_call(two_homes, monkeypatch):
     assert a_next("call")["data"]["candidate"]["candidate"] == "c1"
     b.owner.req("/api/call/end", {"call_id": call_id})
     assert a_next("call")["action"] == "end"
-    flush(a, b)
+    for _ in range(50):  # 等 Alice 那邊寫好通話紀錄
+        if any("通話" in m["body"] for m in a.messages(on_a["id"])):
+            break
+        time.sleep(0.05)
+    for _ in range(50):  # 背景也在送:等 Bob 那邊收到
+        flush(a, b)
+        if any("通話" in m["body"] for m in b.messages(on_b["id"])):
+            break
+        time.sleep(0.05)
     logs_a = [m["body"] for m in a.messages(on_a["id"]) if "通話" in m["body"]]
     logs_b = [m["body"] for m in b.messages(on_b["id"]) if "通話" in m["body"]]
     assert len(logs_a) == 1 and logs_a == logs_b and logs_a[0].startswith("📹 視訊通話")
@@ -1568,10 +1576,68 @@ def test_federated_call(two_homes, monkeypatch):
     b_next("call")
     b.owner.req("/api/call/end", {"call_id": call_id})
     assert a_next("call")["reason"] == "declined"
-    flush(a, b)
+    for _ in range(50):
+        if a.messages(on_a["id"])[-1]["body"] == "📞 對方拒接":
+            break
+        time.sleep(0.05)
     assert a.messages(on_a["id"])[-1]["body"] == "📞 對方拒接"
     # Bob 的電腦關機 → 打不通
     b_resp.close()
     b.stop()
     assert a.owner.req("/api/call/start", {"contact_id": on_a["id"]})[0] == 502
     a_resp.close()
+
+
+def test_push_goes_to_phone_while_pc_tab_is_open(server, monkeypatch):
+    """家裡電腦的 HomeChat 分頁一直開著,口袋裡的手機還是要收到通知。"""
+    base, app = server
+    sent = []
+    monkeypatch.setattr(homechat.Pusher, "send", lambda self, ep: sent.append(ep) or 201)
+
+    def wait_sent(n):
+        for _ in range(60):
+            if len(sent) >= n:
+                return True
+            time.sleep(0.05)
+        return False
+    pc = login(base)
+    phone = login(base)
+    contact = pc.req("/api/contacts", {"name": "阿明"})[1]["contact"]
+    guest = join(base, contact)
+    phone.req("/api/push/subscribe", {"subscription": {"endpoint": "https://fcm.googleapis.com/fcm/send/phone"}})
+    pc_resp, _, _ = sse(pc, visible=True)  # 電腦的分頁開著
+    guest.req("/api/messages", {"contact_id": contact["id"], "body": "在嗎"})
+    assert wait_sent(1) and sent[-1].endswith("/phone")
+    # 來電也一樣
+    guest.req("/api/call/start", {"contact_id": contact["id"]})
+    assert wait_sent(2)
+    pc_resp.close()
+
+
+def test_stale_connection_does_not_block_push(server, monkeypatch):
+    """手機關掉網頁,但經過通道的連線沒斷:停止回報後還是要推播。"""
+    base, app = server
+    sent = []
+    monkeypatch.setattr(homechat.Pusher, "send", lambda self, ep: sent.append(ep) or 201)
+    monkeypatch.setattr(homechat, "VISIBLE_TTL", 0.3)
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "阿明"})[1]["contact"]
+    guest = join(base, contact)
+    guest.req("/api/push/subscribe", {"subscription": {"endpoint": "https://fcm.googleapis.com/fcm/send/g"}})
+    resp, sub, _ = sse(guest, visible=True)
+    owner.req("/api/messages", {"contact_id": contact["id"], "body": "一"})
+    time.sleep(0.2)
+    assert sent == []  # 正在看:網頁自己提醒
+    time.sleep(0.4)  # 網頁被關掉,不再回報
+    owner.req("/api/messages", {"contact_id": contact["id"], "body": "二"})
+    for _ in range(40):
+        if sent:
+            break
+        time.sleep(0.05)
+    assert sent
+    # 再回報「正在看」就又不推
+    guest.req("/api/presence", {"sub": sub, "visible": True})
+    owner.req("/api/messages", {"contact_id": contact["id"], "body": "三"})
+    time.sleep(0.2)
+    assert len(sent) == 1
+    resp.close()

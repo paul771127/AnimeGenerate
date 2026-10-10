@@ -51,7 +51,7 @@ HERE = Path(__file__).resolve().parent
 STATIC_DIR = HERE / "static"
 DEFAULT_DB = HERE / "data" / "homechat.db"
 
-VERSION = "2026.10.19"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
+VERSION = "2026.10.20"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
 COOKIE_NAME = "hc_session"
 SESSION_IDLE_DAYS = 365  # 像 LINE 一樣一直保持登入;一年沒用才自動登出(每次使用都會重新計算)
 INVITE_DAYS = 7  # 邀請連結 7 天內有效,只能用一次
@@ -1306,7 +1306,7 @@ class Hub:
     def subscribe(self, role: str, contact_id: int | None, sid: str = "", visible: bool = True) -> queue.Queue:
         q: queue.Queue = queue.Queue(maxsize=1000)
         q.token = secrets.token_urlsafe(9)  # type: ignore[attr-defined]  # 網頁回報「正在看 / 在背景」用
-        q.visible = visible  # type: ignore[attr-defined]
+        q.visible_until = time.time() + VISIBLE_TTL if visible else 0  # type: ignore[attr-defined]
         with self.lock:
             self.subs.append((role, contact_id, sid, q))
         return q
@@ -1319,13 +1319,17 @@ class Hub:
         with self.lock:
             for _, _, s_id, q in self.subs:
                 if s_id == sid and q.token == token:  # type: ignore[attr-defined]
-                    q.visible = visible  # type: ignore[attr-defined]
+                    q.visible_until = time.time() + VISIBLE_TTL if visible else 0  # type: ignore[attr-defined]
 
-    def visible_for(self, role: str, contact_id: int | None = None) -> bool:
-        """這個人有沒有正開著 HomeChat 在看(有的話網頁自己會提醒,不用推播)。"""
+    def visible_sessions(self) -> set[str]:
+        """現在正開著 HomeChat 在看的裝置(登入編號)。
+
+        網頁開著時每 10 秒回報一次;超過 VISIBLE_TTL 沒回報就當作關掉了。
+        (手機關掉網頁時,經過通道的連線常常不會馬上斷,不能只看連線還在不在。)
+        """
+        now = time.time()
         with self.lock:
-            return any(q.visible for r, cid, _, q in self.subs  # type: ignore[attr-defined]
-                       if r == role and (role == "owner" or cid == contact_id))
+            return {sid for _, _, sid, q in self.subs if q.visible_until > now}  # type: ignore[attr-defined]
 
     def online(self, sid: str) -> bool:
         with self.lock:
@@ -1883,8 +1887,9 @@ class Pusher:
         self.jwts: dict[str, tuple[str, float]] = {}
         self.sent = 0  # 測試用
 
-    def push(self, role: str, contact_id: int | None = None, session_id: str | None = None) -> None:
-        subs = self.store.push_subs_for(role, contact_id, session_id)
+    def push(self, role: str, contact_id: int | None = None, session_id: str | None = None,
+             skip: set[str] | None = None) -> None:
+        subs = [s for s in self.store.push_subs_for(role, contact_id, session_id) if s["session_id"] not in (skip or ())]
         if not subs:
             return
         for sub in subs:
@@ -1950,6 +1955,7 @@ class Pusher:
 
 
 CALL_RING_SECONDS = 45
+VISIBLE_TTL = 25  # 網頁每 10 秒說一次「我還開著」;25 秒沒說就當作關掉了
 
 
 class Calls:
@@ -2017,8 +2023,7 @@ class Calls:
         callee = self.other(call["caller"])
         hub.publish_to({"type": "call", "action": "ring", "call_id": call["id"], "contact_id": cid,
                         "video": call["video"]}, callee, cid)
-        if not hub.visible_for(callee, cid):
-            self.app.pusher.push(callee, cid)
+        self.app.pusher.push(callee, cid, skip=hub.visible_sessions())
         timer = threading.Timer(CALL_RING_SECONDS, self._timeout, args=(call["id"],))
         timer.daemon = True
         timer.start()
@@ -2223,9 +2228,8 @@ class App:
     def notify_message(self, msg: dict) -> None:
         """新訊息:收的那個人沒開著 HomeChat 的話,推播到他的手機。"""
         role = "owner" if msg["sender"] == "them" else "guest"
-        if self.hub.visible_for(role, msg["contact_id"]):
-            return
-        self.pusher.push(role, msg["contact_id"])
+        # 一台一台看:正開著的那台由網頁自己提醒,其他裝置(例如口袋裡的手機)照樣推播
+        self.pusher.push(role, msg["contact_id"], skip=self.hub.visible_sessions())
 
     @property
     def owner_name(self) -> str:

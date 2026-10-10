@@ -1325,6 +1325,13 @@ function reportPresence() {
       body: JSON.stringify({ sub: state.subId, visible: !document.hidden }) }).catch(() => {});
   } catch (_) {}
 }
+// 開著的時候每 10 秒說一次「我還在看」(關掉網頁時連線不一定會馬上斷,家裡電腦靠這個判斷要不要推播)
+setInterval(() => { if (!document.hidden) reportPresence(); }, 10000);
+window.addEventListener("pagehide", () => {
+  if (!state.subId) return;
+  const body = JSON.stringify({ sub: state.subId, visible: false });
+  try { fetch("/api/presence", { method: "POST", keepalive: true, credentials: "same-origin", headers: { "Content-Type": "application/json" }, body }).catch(() => {}); } catch (_) {}
+});
 document.addEventListener("visibilitychange", () => {
   reportPresence();
   if (!document.hidden) { unseen = 0; document.title = "HomeChat"; markRead(); if (state.offline) reconnect(); }

@@ -1,6 +1,6 @@
 // HomeChat service worker:把網頁本身存在裝置上,家裡電腦關機時也能打開看舊訊息。
 // 聊天文字由網頁存在 IndexedDB(見 index.html 的 local 區塊);這裡只快取網頁本身和看過的圖片 / 語音。
-const CACHE = "homechat-v10";
+const CACHE = "homechat-v11";
 const FILES = "homechat-files";  // 看過的圖片、語音:上傳後不會變,存在裝置上離線也能看
 const SHELL = ["/", "/icon.svg", "/manifest.webmanifest", "/sticker-maker.js"];
 const TIMEOUT_MS = 5000;
@@ -71,6 +71,10 @@ self.addEventListener("push", event => {
       if (res.ok) info = await res.json();
     } catch (_) {}
     const call = !!info.call;
+    // 正開著 HomeChat 在看:網頁自己會提醒,不要重複跳通知(iPhone 規定每次推播都要顯示,所以還是顯示)
+    const wins = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const ios = /iPhone|iPad|iPod/.test(self.navigator.userAgent);
+    if (!ios && !call && wins.some(w => w.focused && w.visibilityState === "visible")) return;
     await self.registration.showNotification(info.title, {
       body: info.body,
       tag: info.tag,
