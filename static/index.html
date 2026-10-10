@@ -114,6 +114,7 @@ button { cursor: pointer; }
 
 /* ---------- menu & dialogs */
 .menu { position: fixed; background: var(--panel); border-radius: 12px; box-shadow: 0 6px 30px rgba(0,0,0,.2); padding: 6px 0; z-index: 50; min-width: 190px; }
+.menu.up { max-height: 33vh; max-height: 33dvh; overflow-y: auto; overscroll-behavior: contain; }
 .menu button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 10px 16px; }
 .menu button:hover { background: var(--bg); }
 .menu button.danger { color: var(--danger); }
@@ -135,11 +136,13 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 #composer .icon-btn { width: 36px; height: 40px; font-size: 20px; color: var(--muted); }
 #composer .icon-btn.on { color: var(--danger); animation: pulse 1s infinite; }
 @keyframes pulse { 50% { opacity: .4; } }
-#emoji-panel { background: var(--panel); border-top: 1px solid var(--line); max-height: 260px; display: flex; flex-direction: column; }
+/* 下面的選單最多佔螢幕 1/3,不擋住聊天內容;放不下的捲動 */
+#emoji-panel { background: var(--panel); border-top: 1px solid var(--line); max-height: min(260px, 33vh); max-height: min(260px, 33dvh);
+  display: flex; flex-direction: column; }
 #emoji-tabs { display: flex; gap: 2px; padding: 4px 6px; border-bottom: 1px solid var(--line); overflow-x: auto; }
 #emoji-tabs button { border: 0; background: none; font-size: 20px; padding: 4px 8px; border-radius: 8px; }
 #emoji-tabs button.on { background: var(--bg); }
-#emoji-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); overflow-y: auto; padding: 6px; }
+#emoji-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); overflow-y: auto; padding: 6px; flex: 1; min-height: 0; }
 #emoji-grid button { border: 0; background: none; font-size: 26px; height: 42px; border-radius: 8px; }
 #emoji-grid button:hover { background: var(--bg); }
 #recorder { display: flex; align-items: center; gap: 10px; padding: 10px 12px; padding-bottom: max(10px, env(safe-area-inset-bottom)); background: var(--panel); border-top: 1px solid var(--line); }
@@ -2492,6 +2495,15 @@ $("#emoji-btn").addEventListener("click", () => {
   if (open) renderEmoji();
 });
 function closeEmoji() { $("#emoji-panel").classList.add("hidden"); stickerEdit = false; stickerSel.clear(); }
+// 點表情 / 貼圖面板外面任何地方就收起來(面板裡開出來的視窗、選單不算)
+document.addEventListener("click", e => {
+  const panel = $("#emoji-panel");
+  if (panel.classList.contains("hidden") || !e.isTrusted) return;  // 程式自己點的(例如打開選檔案)不算
+  const path = e.composedPath();
+  if (path.includes(panel) || path.includes($("#emoji-btn"))) return;
+  if (path.some(n => n instanceof Element && (n.tagName === "DIALOG" || n.classList.contains("menu")))) return;
+  closeEmoji();
+});
 
 // ---------- 自己的貼圖
 const STICKER_TYPES = new Set(["image/png", "image/gif", "image/webp", "image/jpeg"]);
@@ -2892,11 +2904,19 @@ function showMenu(anchor, items) {
   for (const [label, fn, cls] of items) menu.append(el("button", { class: cls || "", onclick: () => { menu.remove(); fn(); } }, label));
   topLayer().append(menu);
   const r = anchor.getBoundingClientRect();
-  // 下面放不下(例如輸入框旁邊的按鈕)就往上開
+  // 下面放不下(例如輸入框旁邊的按鈕)就往上開;往上開的最多佔螢幕 1/3,多的捲動
   const below = r.bottom + 4 + menu.offsetHeight <= innerHeight - 8;
+  if (!below) menu.classList.add("up");
   menu.style.top = (below ? r.bottom + 4 : Math.max(8, r.top - 4 - menu.offsetHeight)) + "px";
   menu.style.left = Math.max(8, Math.min(r.right - menu.offsetWidth, innerWidth - menu.offsetWidth - 8)) + "px";
-  setTimeout(() => document.addEventListener("click", () => menu.remove(), { once: true }));
+  // 點選單外面任何地方就關掉(在選單裡捲動不算)
+  const close = e => {
+    if (!e.isTrusted || (e.composedPath().includes(menu) && !e.target.closest("button"))) return;
+    menu.remove();
+    document.removeEventListener("click", close, true);
+  };
+  // 這次點擊的「捕捉階段」已經過了,馬上掛上去也不會被自己關掉
+  document.addEventListener("click", close, true);
 }
 $("#main-menu-btn").addEventListener("click", e => showMenu(e.currentTarget, [
   ["＋ 邀請朋友", () => openAdd("one")],
