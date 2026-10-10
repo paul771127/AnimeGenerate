@@ -211,6 +211,33 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
   background: #fef3c7; color: #92400e; border-radius: 12px; padding: 8px 14px; font-size: 13px; width: min(560px, calc(100vw - 32px));
   box-shadow: 0 4px 16px rgba(0,0,0,.15); text-align: center; }
 .msg.queued .stamp { color: #fef3c7; }
+#banner { position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 120;
+  width: min(420px, calc(100vw - 24px)); display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px;
+  background: var(--panel); color: var(--text); box-shadow: 0 6px 24px rgba(0,0,0,.25); cursor: pointer; }
+#banner .avatar { width: 38px; height: 38px; font-size: 15px; }
+#banner .b-text { min-width: 0; flex: 1; }
+#banner .b-title { font-weight: 700; font-size: 14px; }
+#banner .b-body { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#notify-tip { position: fixed; left: 50%; top: calc(max(10px, env(safe-area-inset-top)) + 60px); transform: translateX(-50%); z-index: 110; width: min(420px, calc(100vw - 24px));
+  background: var(--panel); color: var(--text); border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.25); padding: 12px 14px; }
+#notify-tip .actions { margin-top: 8px; }
+.switch-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line); cursor: pointer; margin: 0; }
+.switch-row input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--green); flex-shrink: 0; }
+.switch-row small { color: var(--muted); display: block; font-size: 12px; margin-top: 2px; }
+#dlg-call { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; border: 0; border-radius: 0; padding: 0;
+  background: linear-gradient(180deg, #1f2a44, #111827); color: #fff; }
+#dlg-call[open] { display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+#dlg-call .call-top { margin-top: max(70px, calc(env(safe-area-inset-top) + 40px)); text-align: center; }
+#dlg-call .avatar { width: 120px; height: 120px; font-size: 48px; margin: 0 auto 18px; }
+#call-name { font-size: 26px; font-weight: 700; }
+#call-status { margin-top: 8px; color: #cbd5e1; font-size: 16px; min-height: 22px; }
+.call-actions { display: flex; gap: 36px; margin-bottom: max(60px, calc(env(safe-area-inset-bottom) + 40px)); }
+.call-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; background: none; border: 0; color: #fff; font-size: 13px; cursor: pointer; }
+.call-btn .ic { width: 68px; height: 68px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; background: rgba(255,255,255,.18); }
+.call-btn.red .ic { background: #ef4444; }
+.call-btn.red .ic span { display: inline-block; transform: rotate(135deg); }
+.call-btn.green .ic { background: #22c55e; }
+.call-btn.on .ic { background: #fff; color: #111; }
 #toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: rgba(0,0,0,.8); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 14px; z-index: 100; max-width: calc(100vw - 32px); text-align: center; }
 
 /* ---------- 加入 / 申請 */
@@ -265,7 +292,7 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
     <p>先設定你的名字、帳號和密碼。之後在手機上登入也用這組帳號密碼,瀏覽器會幫你記住。</p>
     <input class="field" name="owner_name" placeholder="你的名字(朋友會看到)" maxlength="50" required>
     <input class="field" name="username" placeholder="帳號(英文或數字,3~30 字)" autocomplete="username"
-           autocapitalize="none" autocorrect="off" spellcheck="false" pattern="[A-Za-z0-9._-]{3,30}" required>
+           autocapitalize="none" autocorrect="off" spellcheck="false" pattern="[A-Za-z0-9._\-]{3,30}" required>
     <input class="field" type="password" name="password" placeholder="主人密碼(至少 8 個字)" autocomplete="new-password" minlength="8" required>
     <input class="field" type="password" name="password2" placeholder="再輸入一次密碼" autocomplete="new-password" required>
     <button class="btn block" type="submit">開始使用</button>
@@ -295,7 +322,7 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
     <input class="field" name="name" placeholder="你的名字" maxlength="40" required>
     <input class="field" name="message" placeholder="想說的話(選填,例如:我是國中同學小華)" maxlength="200">
     <input class="field" name="username" placeholder="設定你的帳號(英文或數字,3~30 字)" autocomplete="username"
-           autocapitalize="none" autocorrect="off" spellcheck="false" pattern="[A-Za-z0-9._-]{3,30}" required>
+           autocapitalize="none" autocorrect="off" spellcheck="false" pattern="[A-Za-z0-9._\-]{3,30}" required>
     <input class="field" type="password" name="password" placeholder="設定密碼(至少 6 個字)" autocomplete="new-password" minlength="6" required>
     <button class="btn block" type="submit">送出好友申請</button>
     <div class="error" id="request-error"></div>
@@ -330,6 +357,7 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
         <div class="titles"><h2 id="chat-title"></h2><div id="chat-status"></div></div>
       </div>
       <span id="conn"></span>
+      <button class="icon-btn hidden" id="call-btn" title="語音通話">📞</button>
       <button class="icon-btn" id="chat-menu-btn" title="選單">⋯</button>
     </div>
     <div id="chat-empty">選一個聯絡人開始聊天</div>
@@ -553,8 +581,14 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
     <p class="hint" id="public-info" style="margin-top:0"></p>
     <label>你的顯示名稱(朋友會看到)</label><input class="field" name="owner_name" maxlength="50" required>
     <label>登入帳號</label><input class="field" name="username" maxlength="30" autocomplete="username"
-      autocapitalize="none" autocorrect="off" spellcheck="false" pattern="[A-Za-z0-9._-]{3,30}" placeholder="英文或數字,3~30 字">
+      autocapitalize="none" autocorrect="off" spellcheck="false" pattern="[A-Za-z0-9._\-]{3,30}" placeholder="英文或數字,3~30 字">
     <label>對外網址(通常會自動設定,不用填)</label><input class="field" name="public_url" maxlength="300" placeholder="留空 = 用目前瀏覽器的網址">
+    <details style="margin-top:12px"><summary class="hint" style="cursor:pointer">📞 語音通話進階設定(通話常常接不通時才需要)</summary>
+      <p class="hint">兩邊都用 4G 時,有些電信的網路會擋住直接連線。可以填一個 TURN 中繼伺服器(例如 Cloudflare、Metered 免費方案給的),聲音會經過它轉送。</p>
+      <label>TURN 伺服器</label><input class="field" name="turn_url" maxlength="500" placeholder="turn:example.com:3478(多個用逗號分開)" autocapitalize="none" spellcheck="false">
+      <label>帳號</label><input class="field" name="turn_user" maxlength="500" autocomplete="off" autocapitalize="none" spellcheck="false">
+      <label>密碼</label><input class="field" name="turn_pass" type="password" maxlength="500" autocomplete="new-password" placeholder="不改就留空">
+    </details>
     <div class="error" id="settings-error"></div>
     <div class="actions"><button class="btn" type="submit">儲存</button></div>
   </form>
@@ -606,6 +640,42 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
 <input type="file" id="pick-album" accept="image/*,video/*" multiple hidden>
 
 <div id="toast" class="hidden"></div>
+<div id="banner" class="hidden"></div>
+<div id="notify-tip" class="hidden">
+  <b>🔔 要開啟訊息通知嗎?</b>
+  <div class="hint" style="margin:4px 0 0">HomeChat 沒開著時,朋友傳訊息或打電話也會跳出通知、震動。</div>
+  <div class="actions"><button class="btn secondary" type="button" id="notify-tip-no">先不要</button><button class="btn" type="button" id="notify-tip-yes">開啟</button></div>
+</div>
+
+<!-- 通知設定 -->
+<dialog id="dlg-notify"><div class="dlg">
+  <h3>🔔 通知設定</h3>
+  <p class="hint" style="margin-top:0">每台手機 / 電腦要各自設定一次。</p>
+  <label class="switch-row"><input type="checkbox" id="nt-popup"><span>彈出通知<small>HomeChat 沒開著、在背景或螢幕關著時,收到訊息或來電也會跳出通知</small></span></label>
+  <label class="switch-row"><input type="checkbox" id="nt-vibrate"><span>震動<small>收到訊息時手機震動</small></span></label>
+  <label class="switch-row"><input type="checkbox" id="nt-sound"><span>提示音<small>開著 HomeChat 時,收到訊息「叮」一聲</small></span></label>
+  <div class="warn hidden" id="nt-hint" style="margin-top:12px"></div>
+  <div class="error" id="nt-error"></div>
+  <div class="actions">
+    <button class="btn secondary" type="button" id="nt-test">傳一則測試通知</button>
+    <button class="btn" type="button" data-close>完成</button>
+  </div>
+</div></dialog>
+
+<!-- 語音通話 -->
+<dialog id="dlg-call">
+  <div class="call-top">
+    <div id="call-avatar"></div>
+    <div id="call-name"></div>
+    <div id="call-status"></div>
+  </div>
+  <div class="call-actions">
+    <button class="call-btn" type="button" id="call-mute"><span class="ic">🎙️</span>靜音</button>
+    <button class="call-btn red" type="button" id="call-hangup"><span class="ic"><span>📞</span></span><b id="call-hangup-label">掛斷</b></button>
+    <button class="call-btn green" type="button" id="call-accept"><span class="ic">📞</span>接聽</button>
+  </div>
+  <audio id="call-audio" autoplay playsinline></audio>
+</dialog>
 
 <script>
 "use strict";
@@ -804,6 +874,7 @@ async function tryAutoLogin() {
   } catch (_) { return false; }
 }
 async function logout() {
+  await unsubscribePush();
   try { await api("/api/logout", {}); } catch (_) {}
   sessionStorage.setItem("hc_no_auto", "1");  // 剛登出就不要馬上自動登入回去
   try { navigator.credentials.preventSilentAccess().catch(() => {}); } catch (_) {}
@@ -819,6 +890,7 @@ function applyMe(me) {
   state.tunnel = me.tunnel || ""; state.username = me.username || "";
   state.ownerAvatar = me.owner_avatar || ""; state.ownerStatus = me.owner_status || "";
   state.myContact = me.contact || null;
+  state.turnUrl = me.turn_url || ""; state.turnUser = me.turn_user || "";
   if ($("#me-avatar")) renderMeAvatar();
   const note = $("#tunnel-note");
   note.classList.toggle("hidden", !me.tunnel_note);
@@ -916,7 +988,9 @@ async function doBoot() {
     await loadMessages();
   }
   loadStickers();
-  if (!state.offline) { openEvents(); flushOutbox(); }
+  if (!state.offline) { openEvents(); flushOutbox(); ensurePush(); checkPendingCall(); }
+  handleLaunchParams();
+  setTimeout(maybeAskNotify, 1500);
 }
 
 async function showJoin(token, me) {
@@ -1025,7 +1099,7 @@ $("#setup-form").addEventListener("submit", async e => {
 function closeEvents() { if (state.es) { state.es.close(); state.es = null; } }
 function openEvents() {
   closeEvents();
-  const es = new EventSource("/api/events");
+  const es = new EventSource("/api/events?visible=" + (document.hidden ? 0 : 1));
   state.es = es;
   es.onopen = () => {
     $("#conn").textContent = "";
@@ -1045,7 +1119,9 @@ function openEvents() {
   });
   es.onmessage = ev => {
     let data; try { data = JSON.parse(ev.data); } catch (_) { return; }
-    if (data.type === "message") onIncoming(data.message);
+    if (data.type === "hello") { state.subId = data.sub; reportPresence(); }
+    else if (data.type === "call") onCallEvent(data);
+    else if (data.type === "message") onIncoming(data.message);
     else if (data.type === "read") onRead(data);
     else if (data.type === "approved" && state.role === "guest") boot();
     else if (data.type === "request" && state.role === "owner") {
@@ -1105,24 +1181,412 @@ function onDelivered(d) {
 
 // ---------- 通知
 let unseen = 0;
+const NOTIFY_KEY = "hc_notify";
+function prefs() {
+  let p = {};
+  try { p = JSON.parse(localStorage.getItem(NOTIFY_KEY) || "{}"); } catch (_) {}
+  return { popup: !!p.popup, vibrate: p.vibrate !== false, sound: p.sound !== false, asked: !!p.asked };
+}
+function savePrefs(p) { try { localStorage.setItem(NOTIFY_KEY, JSON.stringify(p)); } catch (_) {} }
+const previewText = m => ({ image: "[圖片]", audio: "[語音訊息]", file: "[檔案]", sticker: "[貼圖]", album: "[相簿]", stickers: "[分享貼圖]" }[m.kind]) || m.body.slice(0, 120);
+function senderName(contactId) {
+  return state.role === "owner" ? (state.contacts.find(c => c.id === contactId)?.name || "新訊息") : state.ownerName;
+}
+function senderAvatar(contactId) {
+  if (state.role !== "owner") return avatar(state.ownerName, avatarUrl("owner", state.ownerAvatar));
+  const c = state.contacts.find(x => x.id === contactId);
+  return avatar(c ? c.name : "?", c ? contactAvatar(c) : "");
+}
 function notify(m) {
   unseen++;
   document.title = `(${unseen}) HomeChat`;
-  if (!("Notification" in window) || Notification.permission !== "granted") return;
-  const name = state.role === "owner" ? (state.contacts.find(c => c.id === m.contact_id)?.name || "新訊息") : state.ownerName;
-  const text = { image: "[圖片]", audio: "[語音訊息]", file: "[檔案]", sticker: "[貼圖]" }[m.kind] || m.body.slice(0, 120);
-  try { new Notification(name, { body: text, tag: "hc-" + m.contact_id, icon: "/icon.svg" }); } catch (_) {}
+  alertUser(senderName(m.contact_id), previewText(m), m.contact_id);
+}
+// 收到訊息時提醒:正在看 → 震動、叮一聲、上方跳出一條;在背景 → 系統通知(有推播時交給推播,不重複)
+function alertUser(title, body, contactId, kind = "message") {
+  const p = prefs();
+  if (!document.hidden && kind !== "call") {  // 來電有自己的鈴聲和震動
+    if (p.vibrate && navigator.vibrate) { try { navigator.vibrate([150, 80, 150]); } catch (_) {} }
+    if (p.sound) ding();
+    showBanner(title, body, contactId);
+  }
+  const away = document.hidden || !document.hasFocus();
+  if (!away || !p.popup || !("Notification" in window) || Notification.permission !== "granted") return;
+  if (document.hidden && state.pushOn) return;  // 家裡電腦會推播
+  const opts = { body, tag: kind === "call" ? "hc-call" : "hc-" + contactId, icon: "/icon.svg", renotify: true,
+    silent: !p.vibrate, data: { contact_id: contactId, call: kind === "call" ? 1 : null } };
+  (navigator.serviceWorker ? navigator.serviceWorker.getRegistration() : Promise.resolve(null))
+    .then(reg => reg ? reg.showNotification(title, opts) : new Notification(title, opts))
+    .catch(() => { try { new Notification(title, opts); } catch (_) {} });
 }
 function notifyText(title, body) {
-  if (!document.hidden || !("Notification" in window) || Notification.permission !== "granted") return;
+  if (!document.hidden || !prefs().popup || !("Notification" in window) || Notification.permission !== "granted") return;
   try { new Notification(title, { body, icon: "/icon.svg" }); } catch (_) {}
 }
+let bannerTimer;
+function showBanner(title, body, contactId) {
+  const b = $("#banner");
+  b.replaceChildren(senderAvatar(contactId), el("div", { class: "b-text" }, el("div", { class: "b-title" }, title), el("div", { class: "b-body" }, body)));
+  b.onclick = () => { b.classList.add("hidden"); openFromNotification({ contact_id: contactId }); };
+  b.classList.remove("hidden");
+  clearTimeout(bannerTimer); bannerTimer = setTimeout(() => b.classList.add("hidden"), 4000);
+}
+// 提示音(用程式產生,不用另外放音檔)
+let actx = null;
+function audioCtx() {
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === "suspended") actx.resume();
+  } catch (_) {}
+  return actx;
+}
+document.addEventListener("pointerdown", audioCtx, { once: true });  // 手機要先碰一下畫面才能出聲音
+function beep(freqs, start, dur, vol = 0.15) {
+  const ctx = audioCtx(); if (!ctx) return;
+  const t0 = ctx.currentTime + start;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0, t0);
+  gain.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+  gain.connect(ctx.destination);
+  for (const f of freqs) {
+    const o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = f;
+    o.connect(gain); o.start(t0); o.stop(t0 + dur + 0.05);
+  }
+}
+function ding(kind) {
+  if (kind === "call") { beep([880], 0, 0.25); beep([660], 0.3, 0.25); return; }
+  beep([1046], 0, 0.18); beep([1318], 0.12, 0.3);
+}
+// 告訴家裡電腦:這台正在看(不用推播)/ 在背景(要推播)
+function reportPresence() {
+  if (!state.subId) return;
+  try {
+    fetch("/api/presence", { method: "POST", keepalive: true, credentials: "same-origin", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sub: state.subId, visible: !document.hidden }) }).catch(() => {});
+  } catch (_) {}
+}
 document.addEventListener("visibilitychange", () => {
+  reportPresence();
   if (!document.hidden) { unseen = 0; document.title = "HomeChat"; markRead(); if (state.offline) reconnect(); }
 });
-document.addEventListener("click", () => {
-  if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
-}, { once: true });
+
+// 推播訂閱(手機關掉 HomeChat 也收得到)
+const b64bytes = k => Uint8Array.from(atob(k.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+function pushProblem() {
+  if (!window.isSecureContext) return "要用 https 的網址(在外面用的那個)打開 HomeChat,才能開啟通知。";
+  if (isIOS && !standalone) return "iPhone / iPad:先在 Safari 按下方的「分享」→「加入主畫面」,再從主畫面的 HomeChat 圖示打開,才能開啟通知(需要 iOS 16.4 以上)。";
+  if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) return "這個瀏覽器不支援通知,請改用 Chrome、Edge、Firefox 或 Safari。";
+  return "";
+}
+async function subscribePush(ask) {
+  const problem = pushProblem();
+  if (problem) throw new Error(problem);
+  const perm = ask ? await Notification.requestPermission() : Notification.permission;
+  if (perm !== "granted") throw new Error("通知權限被關掉了。請到手機的「設定」(或瀏覽器網址列左邊的鎖頭)允許 HomeChat 顯示通知,再試一次。");
+  const reg = await navigator.serviceWorker.ready;
+  const { key } = await api("/api/push/key");
+  let sub = await reg.pushManager.getSubscription();
+  if (sub) {
+    const old = sub.options && sub.options.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null;
+    const want = b64bytes(key);
+    if (!old || old.length !== want.length || old.some((v, i) => v !== want[i])) { await sub.unsubscribe(); sub = null; }
+  }
+  if (!sub) {
+    try { sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64bytes(key) }); }
+    catch (ex) {
+      throw new Error("這個瀏覽器現在不能開啟通知(無痕視窗不支援;也可能是瀏覽器設定擋住了)。請用一般視窗,或換 Chrome / Safari 再試一次。");
+    }
+  }
+  await api("/api/push/subscribe", { subscription: sub.toJSON(), vibrate: prefs().vibrate });
+  state.pushOn = true;
+}
+async function unsubscribePush() {
+  state.pushOn = false;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = reg && await reg.pushManager.getSubscription();
+    if (sub) { await api("/api/push/unsubscribe", { endpoint: sub.endpoint }).catch(() => {}); await sub.unsubscribe(); }
+  } catch (_) {}
+}
+// 每次打開都確認一次(換了登入、瀏覽器換了推播網址時重新登記)
+function ensurePush() {
+  const p = prefs();
+  if (!p.popup || pushProblem() || Notification.permission !== "granted") return;
+  subscribePush(false).catch(() => {});
+}
+function openNotify() {
+  const p = prefs();
+  $("#nt-popup").checked = p.popup && (!("Notification" in window) || Notification.permission === "granted");
+  $("#nt-vibrate").checked = p.vibrate; $("#nt-sound").checked = p.sound;
+  const hints = [];
+  const problem = pushProblem();
+  if (problem) hints.push(problem);
+  if (!navigator.vibrate) hints.push("這台裝置的瀏覽器不能用程式震動(iPhone 都不行);跳出的通知會照手機設定震動 / 響鈴。");
+  $("#nt-hint").textContent = hints.join("\n");
+  $("#nt-hint").classList.toggle("hidden", !hints.length);
+  $("#nt-error").textContent = "";
+  $("#dlg-notify").showModal();
+}
+$("#nt-popup").addEventListener("change", async e => {
+  const p = prefs(); $("#nt-error").textContent = "";
+  if (e.target.checked) {
+    try { await subscribePush(true); savePrefs({ ...p, popup: true, asked: true }); toast("已開啟通知"); }
+    catch (ex) { e.target.checked = false; $("#nt-error").textContent = ex.message; }
+  } else { savePrefs({ ...p, popup: false, asked: true }); await unsubscribePush(); toast("已關閉通知"); }
+});
+$("#nt-vibrate").addEventListener("change", e => {
+  savePrefs({ ...prefs(), vibrate: e.target.checked });
+  if (e.target.checked && navigator.vibrate) { try { navigator.vibrate(200); } catch (_) {} }
+  ensurePush();  // 推播通知也跟著改
+});
+$("#nt-sound").addEventListener("change", e => { savePrefs({ ...prefs(), sound: e.target.checked }); if (e.target.checked) ding(); });
+$("#nt-test").addEventListener("click", async () => {
+  $("#nt-error").textContent = "";
+  if (!prefs().popup) {
+    // 沒開彈出通知:直接在畫面上試
+    alertUser("HomeChat", "🔔 這是測試提醒", state.current ? state.current.id : 0);
+    return;
+  }
+  try { await api("/api/push/test", {}); toast("已送出,幾秒內會跳出通知(把 HomeChat 切到背景看看)"); }
+  catch (ex) { $("#nt-error").textContent = ex.message; }
+});
+function maybeAskNotify() {
+  const p = prefs();
+  if (p.asked || p.popup || pushProblem() === "這個瀏覽器不支援通知,請改用 Chrome、Edge、Firefox 或 Safari。") return;
+  $("#notify-tip").classList.remove("hidden");
+}
+$("#notify-tip-no").addEventListener("click", () => { savePrefs({ ...prefs(), asked: true }); $("#notify-tip").classList.add("hidden"); });
+$("#notify-tip-yes").addEventListener("click", () => {
+  savePrefs({ ...prefs(), asked: true }); $("#notify-tip").classList.add("hidden"); openNotify();
+});
+// 點通知進來:打開那個聊天 / 接電話
+function openFromNotification(d) {
+  if (d.call) return checkPendingCall();
+  if (state.role === "owner" && d.contact_id) {
+    const c = state.contacts.find(x => x.id === Number(d.contact_id));
+    if (c && c.status === "active") openContact(c);
+  }
+}
+if (navigator.serviceWorker) navigator.serviceWorker.addEventListener("message", e => {
+  if (e.data && e.data.type === "hc-open") openFromNotification(e.data);
+});
+function handleLaunchParams() {
+  const q = new URLSearchParams(location.search);
+  if (!q.has("open") && !q.has("call")) return;
+  history.replaceState(history.state, "", location.pathname);
+  openFromNotification({ contact_id: q.get("open"), call: q.has("call") });
+}
+
+// ---------- 語音通話(聲音由兩台裝置直接傳,家裡電腦只負責接通)
+let call = null;
+function callPeer(contactId) {
+  if (state.role !== "owner") return { name: state.ownerName, url: avatarUrl("owner", state.ownerAvatar) };
+  const c = state.contacts.find(x => x.id === contactId);
+  return { name: c ? c.name : "朋友", url: c ? contactAvatar(c) : "" };
+}
+function canCall(c) {
+  if (!c || c.status !== "active") return false;
+  return state.role === "guest" || !!(c.username || c.devices);
+}
+function showCall(mode, status) {
+  const peer = callPeer(call.contactId);
+  $("#call-avatar").replaceChildren(avatar(peer.name, peer.url));
+  $("#call-name").textContent = peer.name;
+  $("#call-status").textContent = status;
+  $("#call-accept").classList.toggle("hidden", mode !== "incoming");
+  $("#call-mute").classList.toggle("hidden", mode === "incoming");
+  $("#call-hangup-label").textContent = mode === "incoming" ? "拒接" : mode === "outgoing" ? "取消" : "掛斷";
+  const d = $("#dlg-call");
+  if (!d.open) d.showModal();
+}
+const setCallStatus = t => { $("#call-status").textContent = t; };
+$("#dlg-call").addEventListener("cancel", e => e.preventDefault());  // 不要按 Esc 就關掉
+function startTones(kind) {
+  stopTones();
+  const p = prefs();
+  const once = () => {
+    if (kind === "ringback") beep([440, 480], 0, 1.2, 0.08);  // 嘟——
+    else {
+      if (p.sound) { beep([880], 0, 0.3); beep([660], 0.35, 0.3); beep([880], 0.9, 0.3); beep([660], 1.25, 0.3); }
+      if (p.vibrate && navigator.vibrate) { try { navigator.vibrate([700, 300, 700]); } catch (_) {} }
+    }
+  };
+  once();
+  call.toneTimer = setInterval(once, kind === "ringback" ? 3500 : 2600);
+}
+function stopTones() {
+  if (call && call.toneTimer) { clearInterval(call.toneTimer); call.toneTimer = null; }
+  if (navigator.vibrate) { try { navigator.vibrate(0); } catch (_) {} }
+}
+async function getMic() {
+  return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+}
+function newCall(fields) {
+  return { id: null, contactId: null, role: null, pc: null, stream: null, ice: null, answered: false, early: [], queue: [],
+    chain: Promise.resolve(), toneTimer: null, clock: null, connectedAt: 0, ...fields };
+}
+async function startCall() {
+  const c = state.current;
+  if (call) return toast("正在通話中");
+  if (!canCall(c)) return toast("對方還沒加入,不能打電話");
+  if (state.offline) return toast("連不上家裡的電腦,現在不能打電話");
+  if (!navigator.mediaDevices || !window.RTCPeerConnection) return toast("這個瀏覽器不能通話,請改用 Chrome 或 Safari");
+  audioCtx();
+  call = newCall({ role: "caller", contactId: c.id });
+  showCall("outgoing", "準備麥克風…");
+  try { call.stream = await getMic(); }
+  catch (_) { endCallUI(); return toast("要允許使用麥克風才能打電話"); }
+  if (!call) return;  // 等麥克風時按了取消
+  setCallStatus("撥號中…");
+  startTones("ringback");
+  try {
+    const r = await api("/api/call/start", { contact_id: c.id });
+    if (!call) return api("/api/call/end", { call_id: r.call_id }).catch(() => {});
+    call.id = r.call_id; call.ice = r.ice_servers;
+    for (const d of call.early) onCallEvent(d);  // 在拿到編號前就收到的
+    call.early = [];
+  } catch (ex) { endCallUI(); toast(ex.message); }
+}
+$("#call-btn").addEventListener("click", startCall);
+function onCallEvent(d) {
+  if (d.action === "ring") {
+    if (call) return;  // 正在通話:對方會等到沒人接
+    call = newCall({ id: d.call_id, role: "callee", contactId: d.contact_id });
+    showCall("incoming", "語音來電…");
+    startTones("ring");
+    alertUser(callPeer(d.contact_id).name, "📞 打電話給你", d.contact_id, "call");
+    return;
+  }
+  if (!call) return;
+  if (!call.id && call.role === "caller") { call.early.push(d); return; }
+  if (d.call_id !== call.id) return;
+  if (d.action === "answered" && call.role === "caller") {
+    stopTones(); setCallStatus("連線中…"); showCall("active", "連線中…");
+    call.chain = call.chain.then(makeOffer).catch(callFailed);
+  } else if (d.action === "taken" && call.role === "callee" && !call.answered) {
+    endCallUI(); toast("已在其他裝置接聽");
+  } else if (d.action === "signal") {
+    if (!call.pc) call.queue.push(d.data);
+    else call.chain = call.chain.then(() => onSignal(d.data)).catch(callFailed);
+  } else if (d.action === "end") {
+    const why = { declined: "對方拒接", missed: call.role === "caller" ? "對方沒有接聽" : "未接來電", canceled: "對方已取消",
+      ended: "通話結束", gone: "通話結束" }[d.reason] || "通話結束";
+    endCallUI(); toast(why);
+  }
+}
+async function acceptCall() {
+  if (!call || call.role !== "callee" || call.answered) return;
+  audioCtx(); stopTones();
+  call.answered = true;
+  setCallStatus("準備麥克風…");
+  try { call.stream = await getMic(); }
+  catch (_) { toast("要允許使用麥克風才能接電話"); return hangup(); }
+  showCall("active", "連線中…");
+  try {
+    const r = await api("/api/call/answer", { call_id: call.id });
+    call.ice = r.ice_servers;
+  } catch (ex) { endCallUI(); return toast(ex.message); }
+  makePC();
+  const queued = call.queue; call.queue = [];
+  for (const data of queued) call.chain = call.chain.then(() => onSignal(data)).catch(callFailed);
+}
+$("#call-accept").addEventListener("click", acceptCall);
+function sendSignal(data) {
+  if (call && call.id) api("/api/call/signal", { call_id: call.id, data }).catch(() => {});
+}
+function makePC() {
+  const pc = new RTCPeerConnection({ iceServers: call.ice || [] });
+  call.pc = pc;
+  call.stream.getTracks().forEach(t => pc.addTrack(t, call.stream));
+  pc.onicecandidate = e => { if (e.candidate) sendSignal({ candidate: e.candidate.toJSON() }); };
+  pc.ontrack = e => {
+    const a = $("#call-audio");
+    a.srcObject = e.streams[0] || new MediaStream([e.track]);
+    a.play().catch(() => {});
+  };
+  const watch = () => {
+    if (!call || call.pc !== pc) return;
+    const st = pc.connectionState || pc.iceConnectionState;
+    if (st === "connected" || st === "completed") onConnected();
+    else if (st === "disconnected") setCallStatus("訊號不穩,重新連線中…");
+    else if (st === "failed") callFailed(new Error("ice"));
+  };
+  pc.onconnectionstatechange = watch;
+  pc.oniceconnectionstatechange = watch;
+  return pc;
+}
+async function makeOffer() {
+  const pc = makePC();
+  await pc.setLocalDescription(await pc.createOffer());
+  sendSignal({ sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } });
+  const queued = call.queue; call.queue = [];
+  for (const data of queued) await onSignal(data);
+}
+async function onSignal(data) {
+  if (!call || !call.pc) return;
+  const pc = call.pc;
+  if (data.sdp) {
+    await pc.setRemoteDescription(data.sdp);
+    if (data.sdp.type === "offer") {
+      await pc.setLocalDescription(await pc.createAnswer());
+      sendSignal({ sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } });
+    }
+    for (const c of call.early) await pc.addIceCandidate(c).catch(() => {});
+    call.early = [];
+  } else if (data.candidate) {
+    if (pc.remoteDescription) await pc.addIceCandidate(data.candidate).catch(() => {});
+    else call.early.push(data.candidate);
+  }
+}
+function onConnected() {
+  if (!call || call.connectedAt) { if (call) setCallStatus(fmtClock()); return; }
+  call.connectedAt = Date.now();
+  setCallStatus("0:00");
+  call.clock = setInterval(() => setCallStatus(fmtClock()), 1000);
+}
+function fmtClock() {
+  const s = Math.floor((Date.now() - call.connectedAt) / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+function callFailed(err) {
+  if (!call) return;
+  console.warn("call failed", err);
+  toast("連不上對方(可能是網路擋住了直接連線,可以在「設定」加 TURN 伺服器)");
+  hangup();
+}
+function hangup() {
+  if (call && call.id) api("/api/call/end", { call_id: call.id }).catch(() => {});
+  endCallUI();
+}
+$("#call-hangup").addEventListener("click", hangup);
+$("#call-mute").addEventListener("click", () => {
+  if (!call || !call.stream) return;
+  const track = call.stream.getAudioTracks()[0]; if (!track) return;
+  track.enabled = !track.enabled;
+  $("#call-mute").classList.toggle("on", !track.enabled);
+});
+function endCallUI() {
+  if (!call) return;
+  stopTones();
+  clearInterval(call.clock);
+  if (call.stream) call.stream.getTracks().forEach(t => t.stop());
+  if (call.pc) { try { call.pc.close(); } catch (_) {} }
+  call = null;
+  $("#call-audio").srcObject = null;
+  $("#call-mute").classList.remove("on");
+  if ($("#dlg-call").open) $("#dlg-call").close();
+}
+window.addEventListener("pagehide", e => { if (call && call.id && !e.persisted) hangup(); });
+async function checkPendingCall() {
+  if (call || state.offline) return;
+  try {
+    const r = await api("/api/call");
+    if (r.call && !call) onCallEvent({ type: "call", action: "ring", call_id: r.call.call_id, contact_id: r.call.contact_id });
+  } catch (_) {}
+}
 
 // ---------- 聯絡人列表
 let contactsSeq = 0;
@@ -1422,13 +1886,16 @@ function bubbleFor(m) {
 
 // 已經畫好的訊息直接重用:新訊息進來時,正在播放的語音不會被打斷
 const nodeCache = new Map();
+let moreNode = null;
 function renderMessages(scrollToEnd) {
   const box = $("#messages");
   const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
   const nodes = [];
   const shown = state.messages.slice(-Math.max(state.showCount, PAGE));
-  if (state.more || shown.length < state.messages.length)
-    nodes.push(el("div", { class: "more" }, el("button", { onclick: loadOlder }, "載入更早的訊息")));
+  if (state.more || shown.length < state.messages.length) {
+    if (!moreNode) moreNode = el("div", { class: "more" }, el("button", { onclick: loadOlder }, "載入更早的訊息"));
+    nodes.push(moreNode);
+  }
   if (!state.messages.length) {
     nodes.push(el("div", { class: "empty", style: "color:#fff" },
       state.role === "owner"
@@ -1442,7 +1909,12 @@ function renderMessages(scrollToEnd) {
   const used = new Set();
   for (const m of shown) {
     const d = dayLabel(m.created_at);
-    if (d !== lastDay) { nodes.push(el("div", { class: "day" }, el("span", {}, d))); lastDay = d; lastSender = null; }
+    if (d !== lastDay) {
+      const dk = "day:" + d;
+      if (!nodeCache.has(dk)) nodeCache.set(dk, { dom: el("div", { class: "day" }, el("span", {}, d)) });
+      used.add(dk); nodes.push(nodeCache.get(dk).dom);
+      lastDay = d; lastSender = null;
+    }
     const mine = m.sender === iAm;
     const read = mine && !m.pending && m.source === "chat" && m.id <= state.otherReadId;
     const cont = lastSender === m.sender;
@@ -1467,7 +1939,10 @@ function renderMessages(scrollToEnd) {
     lastSender = m.sender;
   }
   for (const k of nodeCache.keys()) if (!used.has(k)) nodeCache.delete(k);
-  box.replaceChildren(...nodes);
+  // 只加入 / 移除有變的訊息,其他的留在原地:整批拿掉再放回去,手機上的 GIF 會停住、語音會中斷
+  const keep = new Set(nodes);
+  for (const child of [...box.children]) if (!keep.has(child)) child.remove();
+  nodes.forEach((n, i) => { if (box.children[i] !== n) box.insertBefore(n, box.children[i] || null); });
   if (scrollToEnd || nearBottom) box.scrollTop = box.scrollHeight;
 }
 
@@ -2113,6 +2588,7 @@ $("#main-menu-btn").addEventListener("click", e => showMenu(e.currentTarget, [
   ["匯入 LINE 聊天紀錄", () => openAdd("line")],
   ["🔗 跟朋友的 HomeChat 互通", () => openFed()],
   ["👤 我的大頭貼和狀態", openProfile],
+  ["🔔 通知設定", openNotify],
   ["設定", openSettings],
   ["登出", logout],
 ]));
@@ -2124,6 +2600,7 @@ $("#chat-menu-btn").addEventListener("click", e => {
     return showMenu(e.currentTarget, [
       ["📷 相簿", () => openAlbums()],
       ["👤 我的大頭貼和狀態", openProfile],
+      ["🔔 通知設定", openNotify],
       ["下載聊天紀錄(存到這台裝置)", () => state.offline ? toast("連不上家裡的電腦,等連上再下載") : downloadHistory("")],
       [`更改密碼(帳號:${state.username || "—"})`, openGuestPassword],
       ["登出", logout],
@@ -2421,6 +2898,7 @@ function renderChatHead() {
   $("#chat-title").textContent = p ? p.name : "";
   $("#chat-status").textContent = p ? p.status : "";
   $("#chat-avatar").replaceChildren(...(p ? [avatar(p.name, p.url)] : []));
+  $("#call-btn").classList.toggle("hidden", !canCall(state.current));
 }
 async function refreshProfile() {
   try {
@@ -2549,6 +3027,7 @@ $("#chat-head").addEventListener("click", () => {
 function openSettings() {
   const f = $("#form-settings"); $("#settings-error").textContent = ""; $("#password-error").textContent = "";
   f.owner_name.value = state.ownerName; f.public_url.value = state.publicUrl; f.username.value = state.username;
+  f.turn_url.value = state.turnUrl || ""; f.turn_user.value = state.turnUser || ""; f.turn_pass.value = "";
   $("#public-info").textContent = state.publicUrl
     ? `📱 在外面用手機開:${state.publicUrl}(不管在家或在外面,手機都用這個網址,並加入主畫面)`
     : "目前只有同一個 Wi-Fi 連得到。";
@@ -2559,7 +3038,10 @@ function openSettings() {
 $("#form-settings").addEventListener("submit", async e => {
   e.preventDefault(); const f = e.target;
   try {
-    await api("/api/settings", { owner_name: f.owner_name.value, public_url: f.public_url.value, username: f.username.value });
+    const body = { owner_name: f.owner_name.value, public_url: f.public_url.value, username: f.username.value,
+      turn_url: f.turn_url.value, turn_user: f.turn_user.value };
+    if (f.turn_pass.value || !f.turn_url.value) body.turn_pass = f.turn_pass.value;
+    await api("/api/settings", body);
     $("#dlg-settings").close(); boot(); toast("已儲存");
   } catch (ex) { $("#settings-error").textContent = ex.message; }
 });

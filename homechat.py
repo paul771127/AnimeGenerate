@@ -49,7 +49,7 @@ HERE = Path(__file__).resolve().parent
 STATIC_DIR = HERE / "static"
 DEFAULT_DB = HERE / "data" / "homechat.db"
 
-VERSION = "2026.10.15"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
+VERSION = "2026.10.16"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
 COOKIE_NAME = "hc_session"
 SESSION_IDLE_DAYS = 365  # 像 LINE 一樣一直保持登入;一年沒用才自動登出(每次使用都會重新計算)
 INVITE_DAYS = 7  # 邀請連結 7 天內有效,只能用一次
@@ -85,6 +85,93 @@ def image_type(head: bytes) -> str | None:
     if head[:6] in (b"GIF87a", b"GIF89a"):
         return "image/gif"
     return None
+
+
+# ---------------------------------------------------------------- 推播通知(Web Push)
+# 手機把 HomeChat 關掉時,要靠瀏覽器的推播服務(Google / Apple / Mozilla)叫醒它。
+# 推播內容是空的(推播服務看不到訊息),手機被叫醒後自己來家裡電腦問「有什麼新訊息」。
+# 推播服務要求用 VAPID(P-256 ECDSA 簽章)證明是同一台伺服器;Python 內建沒有,這裡自己算。
+_P256_P = 2 ** 256 - 2 ** 224 + 2 ** 192 + 2 ** 96 - 1
+_P256_N = 0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551
+_P256_B = 0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B
+_P256_G = (0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296,
+           0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5)
+
+
+def _ec_add(a, b):
+    if a is None:
+        return b
+    if b is None:
+        return a
+    p = _P256_P
+    if a[0] == b[0]:
+        if (a[1] + b[1]) % p == 0:
+            return None
+        lam = (3 * a[0] * a[0] - 3) * pow(2 * a[1], -1, p) % p
+    else:
+        lam = (b[1] - a[1]) * pow(b[0] - a[0], -1, p) % p
+    x = (lam * lam - a[0] - b[0]) % p
+    return x, (lam * (a[0] - x) - a[1]) % p
+
+
+def _ec_mul(k: int, point):
+    result = None
+    while k:
+        if k & 1:
+            result = _ec_add(result, point)
+        point = _ec_add(point, point)
+        k >>= 1
+    return result
+
+
+def b64url(raw: bytes) -> str:
+    return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+
+
+def vapid_keys() -> tuple[int, bytes]:
+    """產生一組 P-256 金鑰:(私鑰, 公鑰 65 bytes)。"""
+    d = secrets.randbelow(_P256_N - 1) + 1
+    x, y = _ec_mul(d, _P256_G)
+    return d, b"\x04" + x.to_bytes(32, "big") + y.to_bytes(32, "big")
+
+
+def ecdsa_sign(d: int, data: bytes) -> bytes:
+    """ES256 簽章(r||s,各 32 bytes)。"""
+    z = int.from_bytes(hashlib.sha256(data).digest(), "big")
+    while True:
+        k = secrets.randbelow(_P256_N - 1) + 1
+        r = _ec_mul(k, _P256_G)[0] % _P256_N
+        s = pow(k, -1, _P256_N) * (z + r * d) % _P256_N
+        if r and s:
+            return r.to_bytes(32, "big") + s.to_bytes(32, "big")
+
+
+def ecdsa_verify(public: bytes, data: bytes, sig: bytes) -> bool:
+    """驗證 ES256 簽章(測試用)。"""
+    q = (int.from_bytes(public[1:33], "big"), int.from_bytes(public[33:], "big"))
+    if (q[1] ** 2 - q[0] ** 3 + 3 * q[0] - _P256_B) % _P256_P:
+        return False
+    r, s = int.from_bytes(sig[:32], "big"), int.from_bytes(sig[32:], "big")
+    if not (0 < r < _P256_N and 0 < s < _P256_N):
+        return False
+    z = int.from_bytes(hashlib.sha256(data).digest(), "big")
+    w = pow(s, -1, _P256_N)
+    pt = _ec_add(_ec_mul(z * w % _P256_N, _P256_G), _ec_mul(r * w % _P256_N, q))
+    return pt is not None and pt[0] % _P256_N == r
+
+
+# 只送到真正的推播服務(朋友不能叫家裡電腦去連其他網址)
+PUSH_HOSTS = re.compile(r"(^|\.)(fcm\.googleapis\.com|android\.googleapis\.com|push\.services\.mozilla\.com|"
+                        r"push\.apple\.com|notify\.windows\.com)$")
+
+
+def valid_push_endpoint(url: str) -> bool:
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return False
+    return parts.scheme == "https" and bool(parts.hostname) and bool(PUSH_HOSTS.search(parts.hostname)) \
+        and len(url) <= 2000
 # 可以直接在網頁上顯示 / 播放的格式;其他一律當成下載,避免 HTML、SVG 之類夾帶程式
 INLINE_TYPES = {
     "image/jpeg", "image/png", "image/gif", "image/webp", "image/avif",
@@ -188,6 +275,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_client ON messages(contact_id, cl
 CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_username ON contacts(username) WHERE username IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_uid ON messages(contact_id, uid) WHERE uid IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_peer ON contacts(peer_id) WHERE peer_id IS NOT NULL;
+CREATE TABLE IF NOT EXISTS push_subs (           -- 推播通知:每台裝置的瀏覽器給的推播網址
+    endpoint TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    vibrate INTEGER NOT NULL DEFAULT 1,
+    created_at REAL NOT NULL
+);
 CREATE TABLE IF NOT EXISTS sessions (
     id TEXT PRIMARY KEY,                         -- 登入 token 的 SHA-256,不存明碼
     role TEXT NOT NULL CHECK (role IN ('owner', 'guest')),
@@ -601,6 +694,64 @@ class Store:
     def peer_contact_ids(self) -> list[int]:
         with self.lock:
             return [r["id"] for r in self.db.execute("SELECT id FROM contacts WHERE peer_id IS NOT NULL")]
+
+    # --- 推播通知
+    def vapid(self) -> tuple[int, str]:
+        """(私鑰, 公鑰 base64url)。第一次用到時產生,之後一直用同一組(換了手機就要重新訂閱)。"""
+        raw = self.get_setting("vapid_private")
+        if not raw:
+            d, public = vapid_keys()
+            self.set_setting("vapid_private", format(d, "x"))
+            self.set_setting("vapid_public", b64url(public))
+            raw = format(d, "x")
+        return int(raw, 16), self.get_setting("vapid_public")
+
+    def add_push_sub(self, endpoint: str, session_id: str, vibrate: bool) -> None:
+        with self.lock:
+            self.db.execute("INSERT INTO push_subs (endpoint, session_id, vibrate, created_at) VALUES (?, ?, ?, ?) "
+                            "ON CONFLICT(endpoint) DO UPDATE SET session_id = excluded.session_id, "
+                            "vibrate = excluded.vibrate", (endpoint, session_id, int(vibrate), time.time()))
+            # 每台裝置最多 5 個(換瀏覽器、重新訂閱留下的舊的清掉)
+            self.db.execute("DELETE FROM push_subs WHERE session_id = ? AND endpoint NOT IN "
+                            "(SELECT endpoint FROM push_subs WHERE session_id = ? ORDER BY created_at DESC LIMIT 5)",
+                            (session_id, session_id))
+            self.db.commit()
+
+    def remove_push_sub(self, endpoint: str, session_id: str | None = None) -> None:
+        with self.lock:
+            if session_id is None:
+                self.db.execute("DELETE FROM push_subs WHERE endpoint = ?", (endpoint,))
+            else:
+                self.db.execute("DELETE FROM push_subs WHERE endpoint = ? AND session_id = ?", (endpoint, session_id))
+            self.db.commit()
+
+    def push_subs_for(self, role: str, contact_id: int | None = None, session_id: str | None = None) -> list[dict]:
+        with self.lock:
+            if session_id:
+                rows = self.db.execute("SELECT p.* FROM push_subs p WHERE p.session_id = ?", (session_id,))
+            elif role == "owner":
+                rows = self.db.execute("SELECT p.* FROM push_subs p JOIN sessions s ON s.id = p.session_id "
+                                       "WHERE s.role = 'owner'")
+            else:
+                rows = self.db.execute("SELECT p.* FROM push_subs p JOIN sessions s ON s.id = p.session_id "
+                                       "WHERE s.role = 'guest' AND s.contact_id = ?", (contact_id,))
+            return [dict(r) for r in rows]
+
+    def latest_unread(self, role: str, contact_id: int | None = None) -> tuple[dict | None, int]:
+        """最新一則還沒讀的訊息和未讀總數(通知要顯示的)。"""
+        with self.lock:
+            if role == "owner":
+                where = "m.sender = 'them' AND m.id > c.owner_read_id AND c.status = 'active'"
+                args: tuple = ()
+            else:
+                where = "m.sender = 'me' AND m.id > c.guest_read_id AND c.id = ?"
+                args = (contact_id,)
+            row = self.db.execute(f"SELECT m.id, m.contact_id, m.kind, m.body, c.name FROM messages m "
+                                  f"JOIN contacts c ON c.id = m.contact_id WHERE {where} "
+                                  f"ORDER BY m.created_at DESC, m.id DESC LIMIT 1", args).fetchone()
+            count = self.db.execute(f"SELECT COUNT(*) FROM messages m JOIN contacts c ON c.id = m.contact_id "
+                                    f"WHERE {where}", args).fetchone()[0]
+        return (dict(row) if row else None), count
 
     # --- 附件(圖片、檔案、語音)
     def file_path(self, att_id: str) -> Path:
@@ -1107,8 +1258,10 @@ class Hub:
         self.lock = threading.Lock()
         self.subs: list[tuple[str, int | None, str, queue.Queue]] = []
 
-    def subscribe(self, role: str, contact_id: int | None, sid: str = "") -> queue.Queue:
+    def subscribe(self, role: str, contact_id: int | None, sid: str = "", visible: bool = True) -> queue.Queue:
         q: queue.Queue = queue.Queue(maxsize=1000)
+        q.token = secrets.token_urlsafe(9)  # type: ignore[attr-defined]  # 網頁回報「正在看 / 在背景」用
+        q.visible = visible  # type: ignore[attr-defined]
         with self.lock:
             self.subs.append((role, contact_id, sid, q))
         return q
@@ -1116,6 +1269,33 @@ class Hub:
     def unsubscribe(self, q: queue.Queue) -> None:
         with self.lock:
             self.subs = [s for s in self.subs if s[3] is not q]
+
+    def set_visible(self, sid: str, token: str, visible: bool) -> None:
+        with self.lock:
+            for _, _, s_id, q in self.subs:
+                if s_id == sid and q.token == token:  # type: ignore[attr-defined]
+                    q.visible = visible  # type: ignore[attr-defined]
+
+    def visible_for(self, role: str, contact_id: int | None = None) -> bool:
+        """這個人有沒有正開著 HomeChat 在看(有的話網頁自己會提醒,不用推播)。"""
+        with self.lock:
+            return any(q.visible for r, cid, _, q in self.subs  # type: ignore[attr-defined]
+                       if r == role and (role == "owner" or cid == contact_id))
+
+    def online(self, sid: str) -> bool:
+        with self.lock:
+            return any(s_id == sid for _, _, s_id, _ in self.subs)
+
+    def publish_to(self, event: dict, role: str, contact_id: int | None = None, sid: str | None = None) -> None:
+        """只送給某一邊(主人 / 某個朋友),或某一台裝置。"""
+        with self.lock:
+            targets = [q for r, cid, s_id, q in self.subs
+                       if (s_id == sid if sid else (r == role and (role == "owner" or cid == contact_id)))]
+        for q in targets:
+            try:
+                q.put_nowait(event)
+            except queue.Full:
+                pass
 
     def publish(self, event: dict, contact_id: int, to_guest: bool = True) -> None:
         with self.lock:
@@ -1467,6 +1647,182 @@ class RateLimiter:
         return True
 
 
+class Pusher:
+    """背景送推播(推播服務慢或連不上時不要卡住聊天)。"""
+
+    def __init__(self, store: Store):
+        self.store = store
+        self.q: queue.Queue = queue.Queue()
+        self.thread: threading.Thread | None = None
+        self.jwts: dict[str, tuple[str, float]] = {}
+        self.sent = 0  # 測試用
+
+    def push(self, role: str, contact_id: int | None = None, session_id: str | None = None) -> None:
+        subs = self.store.push_subs_for(role, contact_id, session_id)
+        if not subs:
+            return
+        for sub in subs:
+            self.q.put(sub["endpoint"])
+        if not self.thread or not self.thread.is_alive():
+            self.thread = threading.Thread(target=self._loop, name="push", daemon=True)
+            self.thread.start()
+
+    def _loop(self) -> None:
+        while True:
+            try:
+                endpoint = self.q.get(timeout=60)
+            except queue.Empty:
+                return
+            pending = {endpoint}
+            while True:  # 同時好幾則只要叫醒一次
+                try:
+                    pending.add(self.q.get_nowait())
+                except queue.Empty:
+                    break
+            for ep in pending:
+                try:
+                    self.send(ep)
+                except Exception as e:  # noqa: BLE001 - 推播失敗不影響聊天
+                    print(f"推播失敗:{e}")
+
+    def _jwt(self, audience: str) -> str:
+        cached = self.jwts.get(audience)
+        if cached and cached[1] > time.time() + 600:
+            return cached[0]
+        d, _ = self.store.vapid()
+        exp = int(time.time()) + 12 * 3600
+        public = self.store.get_setting("public_url")
+        sub = public if public.startswith("https://") else "mailto:homechat@example.com"
+        head = b64url(json.dumps({"typ": "JWT", "alg": "ES256"}).encode())
+        body = b64url(json.dumps({"aud": audience, "exp": exp, "sub": sub}).encode())
+        token = f"{head}.{body}"
+        token += "." + b64url(ecdsa_sign(d, token.encode()))
+        self.jwts[audience] = (token, exp)
+        return token
+
+    def send(self, endpoint: str) -> int:
+        if not valid_push_endpoint(endpoint):
+            self.store.remove_push_sub(endpoint)
+            return 0
+        parts = urlsplit(endpoint)
+        _, public = self.store.vapid()
+        req = urllib.request.Request(endpoint, data=b"", method="POST", headers={
+            "TTL": "86400", "Urgency": "high", "Content-Length": "0",
+            "Authorization": f"vapid t={self._jwt(f'{parts.scheme}://{parts.netloc}')}, k={public}",
+        })
+        try:
+            with urllib.request.urlopen(req, timeout=15) as r:
+                status = r.status
+        except urllib.error.HTTPError as e:
+            status = e.code
+        if status in (404, 410):  # 對方取消訂閱了(或換了手機)
+            self.store.remove_push_sub(endpoint)
+        elif status >= 400:
+            print(f"推播服務回應 {status}")
+        self.sent += 1
+        return status
+
+
+CALL_RING_SECONDS = 45
+
+
+class Calls:
+    """語音通話:家裡電腦只負責「打電話 / 接起來 / 掛掉」和轉送連線資訊,聲音是兩台裝置直接傳(WebRTC)。"""
+
+    def __init__(self, app: "App"):
+        self.app = app
+        self.lock = threading.Lock()
+        self.calls: dict[str, dict] = {}
+
+    @staticmethod
+    def other(role: str) -> str:
+        return "guest" if role == "owner" else "owner"
+
+    def find(self, call_id: str) -> dict | None:
+        with self.lock:
+            return self.calls.get(call_id)
+
+    def for_contact(self, contact_id: int) -> dict | None:
+        with self.lock:
+            return next((c for c in self.calls.values() if c["contact_id"] == contact_id), None)
+
+    def start(self, contact_id: int, role: str, sid: str) -> dict:
+        hub = self.app.hub
+        busy = self.for_contact(contact_id)
+        if busy:
+            # 兩邊網頁都關掉了還留著的:直接結束
+            gone = not hub.online(busy["caller_sid"]) and (not busy["callee_sid"] or not hub.online(busy["callee_sid"]))
+            if not gone:
+                raise ApiError(409, "對方正在通話中")
+            self.end(busy["id"], "gone")
+        call = {"id": secrets.token_urlsafe(12), "contact_id": contact_id, "caller": role, "caller_sid": sid,
+                "callee_sid": None, "state": "ringing", "started": time.time(), "answered_at": None}
+        with self.lock:
+            self.calls[call["id"]] = call
+        callee = self.other(role)
+        hub.publish_to({"type": "call", "action": "ring", "call_id": call["id"], "contact_id": contact_id},
+                       callee, contact_id)
+        if not hub.visible_for(callee, contact_id):
+            self.app.pusher.push(callee, contact_id)
+        timer = threading.Timer(CALL_RING_SECONDS, self._timeout, args=(call["id"],))
+        timer.daemon = True
+        timer.start()
+        return call
+
+    def _timeout(self, call_id: str) -> None:
+        call = self.find(call_id)
+        if call and call["state"] == "ringing":
+            self.end(call_id, "missed")
+
+    def answer(self, call: dict, sid: str) -> None:
+        with self.lock:
+            if call["state"] != "ringing":
+                raise ApiError(409, "這通電話已經結束了")
+            call["state"], call["callee_sid"], call["answered_at"] = "active", sid, time.time()
+        hub = self.app.hub
+        hub.publish_to({"type": "call", "action": "answered", "call_id": call["id"]}, "", sid=call["caller_sid"])
+        # 同一個人的其他裝置停止響鈴
+        hub.publish_to({"type": "call", "action": "taken", "call_id": call["id"]}, self.other(call["caller"]),
+                       call["contact_id"])
+
+    def signal(self, call: dict, sid: str, data: dict) -> None:
+        if sid == call["caller_sid"]:
+            target = call["callee_sid"]
+        elif sid == call["callee_sid"]:
+            target = call["caller_sid"]
+        else:
+            raise ApiError(403, "不是這通電話")
+        if target:
+            self.app.hub.publish_to({"type": "call", "action": "signal", "call_id": call["id"], "data": data},
+                                    "", sid=target)
+
+    def end(self, call_id: str, reason: str) -> None:
+        with self.lock:
+            call = self.calls.pop(call_id, None)
+        if not call:
+            return
+        cid = call["contact_id"]
+        event = {"type": "call", "action": "end", "call_id": call_id, "reason": reason}
+        self.app.hub.publish_to(event, "owner")
+        self.app.hub.publish_to(event, "guest", cid)
+        if call["answered_at"]:
+            secs = int(time.time() - call["answered_at"])
+            body = f"📞 語音通話 {secs // 60}:{secs % 60:02d}"
+        else:
+            body = {"declined": "📞 對方拒接", "canceled": "📞 已取消"}.get(reason, "📞 未接來電")
+        # 通話紀錄寫進對話(由打電話的那一方送出)
+        sender = "me" if call["caller"] == "owner" else "them"
+        store = self.app.store
+        if not store.get_contact(cid):
+            return
+        msg, _ = store.add_message(cid, sender, body, None, "text", None)
+        store.mark_read(cid, call["caller"], msg["id"])
+        self.app.fed.on_new_message(msg)
+        self.app.hub.publish({"type": "message", "message": msg}, cid)
+        if reason not in ("canceled",):
+            self.app.notify_message(msg)
+
+
 class App:
     def __init__(self, store: Store, owner_name: str | None = None):
         self.store = store
@@ -1483,6 +1839,16 @@ class App:
         if owner_name:
             store.set_setting("owner_name", owner_name)
         self.fed = Federation(self)
+        self.pusher = Pusher(store)
+        self.calls = Calls(self)
+        store.vapid()  # 推播金鑰先準備好
+
+    def notify_message(self, msg: dict) -> None:
+        """新訊息:收的那個人沒開著 HomeChat 的話,推播到他的手機。"""
+        role = "owner" if msg["sender"] == "them" else "guest"
+        if self.hub.visible_for(role, msg["contact_id"]):
+            return
+        self.pusher.push(role, msg["contact_id"])
 
     @property
     def owner_name(self) -> str:
@@ -1732,6 +2098,9 @@ class Handler(BaseHTTPRequestHandler):
             "/api/stickers": self._stickers,
             "/api/stickers/zip": self._stickers_zip,
             "/api/albums": self._albums,
+            "/api/push/key": self._push_key,
+            "/api/notify": self._notify_info,
+            "/api/call": self._call_state,
         }
         if url.path in routes:
             return routes[url.path](qs)
@@ -1773,6 +2142,14 @@ class Handler(BaseHTTPRequestHandler):
             "/api/devices/remove": self._remove_device,
             "/api/settings": self._settings,
             "/api/profile": self._profile,
+            "/api/presence": self._presence,
+            "/api/push/subscribe": self._push_subscribe,
+            "/api/push/unsubscribe": self._push_unsubscribe,
+            "/api/push/test": self._push_test,
+            "/api/call/start": self._call_start,
+            "/api/call/answer": self._call_answer,
+            "/api/call/signal": self._call_signal,
+            "/api/call/end": self._call_end,
             "/api/stickers/delete": self._delete_sticker,
             "/api/stickers/save": self._save_sticker,
             "/api/stickers/share": self._share_stickers,
@@ -1820,6 +2197,8 @@ class Handler(BaseHTTPRequestHandler):
                 "public_url": self.app.store.get_setting("public_url"),
                 "tunnel": self.app.store.get_setting("public_url_auto"),
                 "tunnel_note": self.app.store.get_setting("tunnel_note"),
+                "turn_url": self.app.store.get_setting("turn_url"),
+                "turn_user": self.app.store.get_setting("turn_user"),
             }, headers=refresh)
         contact = self.app.store.get_contact(sess["contact_id"])
         return self._json({
@@ -2080,6 +2459,7 @@ class Handler(BaseHTTPRequestHandler):
             self.app.store.mark_read(contact["id"], sess["role"], msg["id"])
             self.app.fed.on_new_message(msg)  # 有互通的話也送一份到對方 HomeChat
             self.app.hub.publish({"type": "message", "message": msg}, contact["id"])
+            self.app.notify_message(msg)
         self._json({"message": msg})
 
     def _receive_body(self, dest: Path, length: int) -> None:
@@ -2204,6 +2584,7 @@ class Handler(BaseHTTPRequestHandler):
             self.app.store.mark_read(contact["id"], sess["role"], msg["id"])
             self.app.fed.on_new_message(msg)
             self.app.hub.publish({"type": "message", "message": msg}, contact["id"])
+            self.app.notify_message(msg)
         return msg
 
     # --- 共同相簿
@@ -2447,7 +2828,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _events(self, qs: dict) -> None:
         sess = self._require(active=False)  # 等待確認的朋友也要能收到「已接受」
-        q = self.app.hub.subscribe(sess["role"], sess.get("contact_id"), sess["id"])
+        q = self.app.hub.subscribe(sess["role"], sess.get("contact_id"), sess["id"], qs.get("visible") != "0")
         try:
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream; charset=utf-8")
@@ -2456,7 +2837,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Connection", "close")
             self.end_headers()
             self.close_connection = True
-            self.wfile.write(b"retry: 3000\n: hello\n\n")
+            hello = json.dumps({"type": "hello", "sub": q.token})  # type: ignore[attr-defined]
+            self.wfile.write(f"retry: 3000\ndata: {hello}\n\n".encode())
             self.wfile.flush()
             while True:
                 try:
@@ -2715,6 +3097,8 @@ class Handler(BaseHTTPRequestHandler):
                 if data.get("history") and sender == "them":
                     store.mark_read(cid, "owner", msg["id"])  # 配對時複製過來的舊訊息不算未讀
                 hub.publish({"type": "message", "message": msg}, cid)
+                if sender == "them" and not data.get("history"):
+                    self.app.notify_message(msg)
             return self._json({"ok": True, "id": msg["id"]})
         if kind_of == "read":
             m = store.message_by_uid(cid, self._clean(data.get("uid"), 64))
@@ -2923,6 +3307,136 @@ class Handler(BaseHTTPRequestHandler):
         self._profile_changed(sess)
         self._json({"ok": True})
 
+    # --- 通知
+    def _presence(self, data: dict) -> None:
+        """網頁回報:正在看(就不推播,網頁自己提醒)/ 在背景(要推播)。"""
+        sess = self._require(active=False)
+        self.app.hub.set_visible(sess["id"], str(data.get("sub", "")), bool(data.get("visible")))
+        self._json({"ok": True})
+
+    def _push_key(self, qs: dict) -> None:
+        self._require(active=False)
+        self._json({"key": self.app.store.vapid()[1]})
+
+    def _push_subscribe(self, data: dict) -> None:
+        sess = self._require(active=False)
+        endpoint = str((data.get("subscription") or {}).get("endpoint", ""))
+        if not valid_push_endpoint(endpoint):
+            raise ApiError(400, "這個瀏覽器的推播服務不支援")
+        self.app.store.add_push_sub(endpoint, sess["id"], bool(data.get("vibrate", True)))
+        self._json({"ok": True})
+
+    def _push_unsubscribe(self, data: dict) -> None:
+        sess = self._require(active=False)
+        self.app.store.remove_push_sub(str(data.get("endpoint", "")), sess["id"])
+        self._json({"ok": True})
+
+    def _push_test(self, data: dict) -> None:
+        sess = self._require(active=False)
+        subs = self.app.store.push_subs_for(sess["role"], session_id=sess["id"])
+        if not subs:
+            raise ApiError(400, "這台裝置還沒開啟通知")
+        self.app.store.set_setting(f"push_test:{sess['id']}", str(time.time()))
+        self.app.pusher.push(sess["role"], session_id=sess["id"])
+        self._json({"ok": True})
+
+    def _notify_info(self, qs: dict) -> None:
+        """手機被推播叫醒後來問:要顯示什麼通知。"""
+        sess = self._require(active=False)
+        store, role = self.app.store, sess["role"]
+        cid = sess.get("contact_id")
+        subs = store.push_subs_for(role, session_id=sess["id"])
+        vibrate = any(s["vibrate"] for s in subs) if subs else True
+        base = {"vibrate": vibrate, "icon": "/icon.svg"}
+        # 來電
+        for call in list(self.app.calls.calls.values()):
+            if call["state"] == "ringing" and call["caller"] != role and (role == "owner" or call["contact_id"] == cid):
+                c = store.get_contact(call["contact_id"])
+                name = (c["name"] if c else "朋友") if role == "owner" else self.app.owner_name
+                return self._json({**base, "title": "📞 來電", "body": f"{name} 打電話給你", "tag": "hc-call",
+                                   "contact_id": call["contact_id"], "call": call["id"]})
+        test_at = store.get_setting(f"push_test:{sess['id']}")
+        if test_at and time.time() - float(test_at) < 120:
+            store.set_setting(f"push_test:{sess['id']}", "")
+            return self._json({**base, "title": "HomeChat", "body": "🔔 通知測試成功!有新訊息時會像這樣跳出來",
+                               "tag": "hc-test"})
+        msg, count = store.latest_unread(role, cid)
+        if not msg:
+            return self._json({**base, "title": "HomeChat", "body": "有新訊息", "tag": "hc-new"})
+        name = msg["name"] if role == "owner" else self.app.owner_name
+        text = msg["body"] if msg["kind"] == "text" else KIND_LABELS.get(msg["kind"], "[訊息]")
+        if msg["kind"] in ("image", "audio", "file") and msg["body"]:
+            text = f"{text} {msg['body']}"
+        if count > 1:
+            text = f"{text}(共 {count} 則未讀)"
+        self._json({**base, "title": name, "body": text[:200], "tag": f"hc-{msg['contact_id']}",
+                    "contact_id": msg["contact_id"]})
+
+    # --- 語音通話
+    def _ice_servers(self) -> list[dict]:
+        servers: list[dict] = [{"urls": ["stun:stun.l.google.com:19302", "stun:stun.cloudflare.com:3478"]}]
+        store = self.app.store
+        turn = store.get_setting("turn_url")
+        if turn:
+            servers.append({"urls": [u.strip() for u in turn.split(",") if u.strip()],
+                            "username": store.get_setting("turn_user"), "credential": store.get_setting("turn_pass")})
+        return servers
+
+    def _my_call(self, sess: dict, call_id) -> dict:
+        call = self.app.calls.find(str(call_id or ""))
+        if not call or (sess["role"] == "guest" and call["contact_id"] != sess["contact_id"]):
+            raise ApiError(404, "這通電話已經結束了")
+        return call
+
+    def _call_start(self, data: dict) -> None:
+        sess = self._require()
+        contact = self._contact_for(sess, data.get("contact_id"))
+        if contact["status"] != "active":
+            raise ApiError(400, "還不是好友")
+        if sess["role"] == "owner" and not contact["username"] and not self.app.store.list_sessions("guest", contact["id"]):
+            raise ApiError(400, "對方還沒加入,不能打電話" if not contact["peer"] else "互通的朋友目前還不能直接通話")
+        call = self.app.calls.start(contact["id"], sess["role"], sess["id"])
+        self._json({"call_id": call["id"], "ice_servers": self._ice_servers(), "ring_seconds": CALL_RING_SECONDS})
+
+    def _call_answer(self, data: dict) -> None:
+        sess = self._require()
+        call = self._my_call(sess, data.get("call_id"))
+        if call["caller"] == sess["role"]:
+            raise ApiError(400, "不能接自己打的電話")
+        self.app.calls.answer(call, sess["id"])
+        self._json({"ok": True, "ice_servers": self._ice_servers()})
+
+    def _call_signal(self, data: dict) -> None:
+        sess = self._require()
+        call = self._my_call(sess, data.get("call_id"))
+        payload = data.get("data")
+        if not isinstance(payload, dict) or len(json.dumps(payload)) > 20000:
+            raise ApiError(400, "連線資料格式錯誤")
+        self.app.calls.signal(call, sess["id"], payload)
+        self._json({"ok": True})
+
+    def _call_end(self, data: dict) -> None:
+        sess = self._require()
+        call = self._my_call(sess, data.get("call_id"))
+        mine = call["caller"] == sess["role"]
+        if call["state"] == "ringing":
+            reason = "canceled" if mine else "declined"
+        else:
+            if sess["id"] not in (call["caller_sid"], call["callee_sid"]):
+                raise ApiError(403, "不是這通電話")
+            reason = "ended"
+        self.app.calls.end(call["id"], reason)
+        self._json({"ok": True})
+
+    def _call_state(self, qs: dict) -> None:
+        """從通知點進來時:有沒有正在響的電話。"""
+        sess = self._require()
+        for call in list(self.app.calls.calls.values()):
+            if call["state"] == "ringing" and call["caller"] != sess["role"] and \
+                    (sess["role"] == "owner" or call["contact_id"] == sess["contact_id"]):
+                return self._json({"call": {"call_id": call["id"], "contact_id": call["contact_id"]}})
+        self._json({"call": None})
+
     def _settings(self, data: dict) -> None:
         self._require("owner")
         if "username" in data and str(data["username"]).strip().lower() != self.app.store.owner_username():
@@ -2931,6 +3445,13 @@ class Handler(BaseHTTPRequestHandler):
             name = self._clean(data["owner_name"], 50)
             if name:
                 self.app.store.set_setting("owner_name", name)
+        for key in ("turn_url", "turn_user", "turn_pass"):
+            if key in data:
+                value = self._clean(data[key], 500)
+                if key == "turn_url" and value and not all(re.match(r"^turns?:[^\s]+$", u.strip())
+                                                           for u in value.split(",")):
+                    raise ApiError(400, "TURN 伺服器格式像 turn:example.com:3478")
+                self.app.store.set_setting(key, value)
         if "public_url" in data:
             url = self._clean(data["public_url"], 300).rstrip("/")
             if url and not re.match(r"^https?://[^\s/]+$", url):

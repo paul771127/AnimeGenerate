@@ -78,6 +78,8 @@
         prefix = k;
       }
       emit(prefix);
+      // 解碼器讀到最後一碼時會再加一個字典項目;剛好滿到 2 的次方時,結束碼要多用一個 bit
+      if (nextCode === (1 << codeSize) && codeSize < 12) codeSize++;
       emit(eoiCode);
       if (curBits > 0) block.push(cur & 0xff);
       flushBlock();
@@ -152,7 +154,7 @@
     swing: ["鐘擺", t => ({ r: Math.sin(TAU * t) * 0.35, pivot: "top" })],
   };
   const TEXT_EFFECTS = {
-    wave: "波浪", bounce: "彈跳", blink: "閃爍", rainbow: "彩虹", typing: "打字機", zoom: "放大", shake: "發抖",
+    none: "不動", wave: "波浪", bounce: "彈跳", blink: "閃爍", rainbow: "彩虹", typing: "打字機", zoom: "放大", shake: "發抖",
   };
   const COLORS = ["#111111", "#ffffff", "#e5484d", "#f76b15", "#ffc53d", "#30a46c", "#0090ff", "#8e4ec6", "#e93d82", "#8d6e63"];
 
@@ -181,46 +183,76 @@
     return frames;
   }
 
-  function textFrames(text, effect, color, count = 16) {
-    const lines = text.split("\n").map(l => [...l]).filter(l => l.length).slice(0, 4);
+  // 字型:用裝置上有的字型(沒有的話會換成最接近的)
+  const FONTS = {
+    sans: ["黑體", '-apple-system, "PingFang TC", "Noto Sans TC", "Noto Sans CJK TC", "Microsoft JhengHei", sans-serif'],
+    serif: ["明體", '"Songti TC", "Noto Serif TC", "Noto Serif CJK TC", "PMingLiU", "MingLiU", serif'],
+    kai: ["楷書", '"Kaiti TC", "BiauKai", "DFKai-SB", "標楷體", "STKaiti", "KaiTi", serif'],
+    round: ["圓體", '"Yuanti TC", "jf-openhuninn-2.0", "Arial Rounded MT Bold", "PingFang TC", "Microsoft JhengHei", sans-serif'],
+    hand: ["手寫", '"HanziPen TC", "Xingkai TC", "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive'],
+    mono: ["打字機", '"Courier New", Menlo, Consolas, monospace'],
+  };
+  const fontFamily = key => (FONTS[key] || FONTS.sans)[1];
+  // 文字放的位置(動畫上加字時)
+  const TEXT_BOX = {
+    full: { cy: SIZE / 2, w: 212, h: 212 },
+    top: { cy: 38, w: 224, h: 66 },
+    mid: { cy: SIZE / 2, w: 224, h: 96 },
+    bottom: { cy: SIZE - 38, w: 224, h: 66 },
+  };
+
+  // t:{ text, effect, color, stroke(auto/#ffffff/#111111/none), font, bold, scale, pos }
+  function textFrames(t, count = 16) {
+    const box = TEXT_BOX[t.pos] || TEXT_BOX.full;
+    const lines = t.text.split("\n").map(l => [...l]).filter(l => l.length).slice(0, 4);
     if (!lines.length) return [newCanvas()];
     const probe = newCanvas().getContext("2d");
-    const font = s => `900 ${s}px -apple-system, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif`;
-    let size = 96;
+    const weight = t.bold === false ? 500 : 900;
+    const font = s => `${weight} ${s}px ${fontFamily(t.font)}`;
+    let size = Math.min(110, Math.floor(box.h / lines.length / 1.15));
     const widest = s => { probe.font = font(s); return Math.max(...lines.map(l => probe.measureText(l.join("")).width)); };
-    while (size > 14 && (widest(size) > 212 || size * 1.15 * lines.length > 212)) size -= 2;
+    while (size > 12 && (widest(size) > box.w || size * 1.15 * lines.length > box.h)) size -= 2;
+    size = Math.max(10, Math.round(size * (t.scale || 1)));
     const total = lines.reduce((n, l) => n + l.length, 0);
+    const effect = t.effect, color = t.color;
     const frames = [];
     for (let f = 0; f < count; f++) {
-      const t = f / count;
+      const tt = f / count;
       const c = newCanvas(), g = c.getContext("2d");
       g.font = font(size);
       g.textBaseline = "middle";
       g.lineJoin = "round";
-      let shown = effect === "typing" ? Math.ceil(t * 1.4 * total) : total;
+      const shown = effect === "typing" ? Math.ceil(tt * 1.4 * total) : total;
       let n = 0;
       lines.forEach((chars, li) => {
         const lineW = g.measureText(chars.join("")).width;
         let x = SIZE / 2 - lineW / 2;
-        const y0 = SIZE / 2 + (li - (lines.length - 1) / 2) * size * 1.15;
+        const y0 = box.cy + (li - (lines.length - 1) / 2) * size * 1.15;
         chars.forEach(ch => {
           const cw = g.measureText(ch).width;
           n++;
           if (n > shown) return;
           let dx = 0, dy = 0, scale = 1, fill = color, alpha = 1;
-          if (effect === "wave") dy = Math.sin(TAU * (t - n / total)) * size * 0.15;
-          if (effect === "bounce") dy = -Math.abs(Math.sin(Math.PI * ((t * 2 + n / total) % 1))) * size * 0.3;
+          if (effect === "wave") dy = Math.sin(TAU * (tt - n / total)) * size * 0.15;
+          if (effect === "bounce") dy = -Math.abs(Math.sin(Math.PI * ((tt * 2 + n / total) % 1))) * size * 0.3;
           if (effect === "blink") alpha = f % 4 < 2 ? 1 : 0.15;
-          if (effect === "rainbow") fill = `hsl(${(n * 40 + t * 360) % 360}, 90%, 55%)`;
-          if (effect === "zoom") scale = 0.75 + 0.35 * (0.5 - 0.5 * Math.cos(TAU * t));
+          if (effect === "rainbow") fill = `hsl(${(n * 40 + tt * 360) % 360}, 90%, 55%)`;
+          if (effect === "zoom") scale = 0.75 + 0.35 * (0.5 - 0.5 * Math.cos(TAU * tt));
           if (effect === "shake") { dx = Math.sin(f * 2.7 + n) * size * 0.06; dy = Math.cos(f * 3.1 + n * 2) * size * 0.06; }
           g.save();
           g.globalAlpha = alpha;
+          if (effect === "zoom") {  // 以文字區的中心放大
+            g.translate(SIZE / 2, box.cy); g.scale(scale, scale); g.translate(-SIZE / 2, -box.cy);
+          }
           g.translate(x + cw / 2 + dx, y0 + dy);
-          if (effect === "zoom") { g.translate(SIZE / 2 - (x + cw / 2), SIZE / 2 - y0); g.scale(scale, scale); g.translate(-(SIZE / 2 - (x + cw / 2)), -(SIZE / 2 - y0)); }
-          g.lineWidth = Math.max(4, size * 0.16);
-          g.strokeStyle = fill.toLowerCase() === "#ffffff" ? "#111111" : "#ffffff";  // 外框:在任何背景都看得清楚
-          g.strokeText(ch, -cw / 2, 0);
+          const stroke = !t.stroke || t.stroke === "auto"
+            ? (String(fill).toLowerCase() === "#ffffff" ? "#111111" : "#ffffff")  // 外框:在任何背景都看得清楚
+            : t.stroke;
+          if (stroke !== "none") {
+            g.lineWidth = Math.max(3, size * 0.16);
+            g.strokeStyle = stroke;
+            g.strokeText(ch, -cw / 2, 0);
+          }
           g.fillStyle = fill;
           g.fillText(ch, -cw / 2, 0);
           g.restore();
@@ -230,6 +262,21 @@
       frames.push(c);
     }
     return frames;
+  }
+
+  // 把文字疊到每一格上(不改動原本的影格)
+  // 文字有動畫時至少要 8 格才看得出來:影格太少就整組重複幾次
+  const textCount = (len, t) => t.effect && t.effect !== "none" ? len * Math.ceil(8 / len) : len;
+  function withText(frames, t) {
+    if (!t.text.trim()) return frames;
+    const n = textCount(frames.length, t);
+    const texts = textFrames(t, n);
+    return Array.from({ length: n }, (_, i) => {
+      const c = newCanvas(), g = c.getContext("2d");
+      g.drawImage(frames[i % frames.length], 0, 0);
+      g.drawImage(texts[i % texts.length], 0, 0);
+      return c;
+    });
   }
 
   // ---------------------------------------------------------------- 製作器畫面
@@ -267,6 +314,11 @@
   .mk-frames canvas.on { border-color: var(--green); }
   .mk-label { font-size: 13px; color: var(--muted); }
   #dlg-maker textarea { min-height: 60px; resize: vertical; text-align: center; font-size: 18px; }
+  .mk-font { font-size: 15px; }
+  .mk-more { border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; }
+  .mk-more summary { cursor: pointer; font-weight: 600; text-align: center; }
+  .mk-more[open] summary { margin-bottom: 8px; }
+  .mk-more > .mk-row, .mk-more > input { margin-top: 6px; }
   .mk-busy { text-align: center; color: var(--muted); font-size: 14px; }`;
       document.head.append(s);
     }
@@ -280,7 +332,10 @@
         // 照片
         img: null, effect: "bounce", round: false,
         // 文字
-        text: "", textEffect: "wave", textColor: "#e5484d",
+        txt: { text: "", effect: "wave", color: "#e5484d", stroke: "auto", font: "sans", bold: true, scale: 1, pos: "full" },
+        // 疊在畫畫 / 照片上的文字
+        ov: { text: "", effect: "none", color: "#ffffff", stroke: "#111111", font: "sans", bold: true, scale: 1, pos: "bottom" },
+        ovOpen: false,
       };
       if (dlg) dlg.remove();
       dlg = h("dialog", { id: "dlg-maker" });
@@ -337,7 +392,8 @@
       const stage = h("div", { class: "mk-stage" });
       const onion = h("canvas", { width: SIZE, height: SIZE, id: "mk-onion", style: "opacity:.25" });
       const view = h("canvas", { width: SIZE, height: SIZE, id: "mk-view" });
-      stage.append(onion, view);
+      const textLayer = h("canvas", { width: SIZE, height: SIZE, id: "mk-textlayer", style: "pointer-events:none" });
+      stage.append(onion, view, textLayer);
       let last = null;
       const pos = e => {
         const r = view.getBoundingClientRect();
@@ -399,7 +455,8 @@
         h("button", { type: "button", class: "mk-chip", id: "mk-play", onclick: () => (st.playing ? (stop(), paintStage()) : play()) },
           st.playing ? "■ 停止" : "▶ 播放"));
       setTimeout(renderStrip);
-      return [stage, colors, tools, h("div", { class: "mk-label" }, "影格(點一下切換,一格一格畫,上一格會淡淡地顯示當參考)"), strip, frameTools];
+      return [stage, colors, tools, h("div", { class: "mk-label" }, "影格(點一下切換,一格一格畫,上一格會淡淡地顯示當參考)"), strip, frameTools,
+        overlayUI()];
     }
     function addFrame(copy) {
       const c = newCanvas();
@@ -431,18 +488,33 @@
       if (!view) return;
       const g = view.getContext("2d");
       g.clearRect(0, 0, SIZE, SIZE);
-      g.drawImage(st.frames[frameIndex], 0, 0);
+      g.drawImage(st.frames[frameIndex % st.frames.length], 0, 0);
       const og = onion.getContext("2d");
       og.clearRect(0, 0, SIZE, SIZE);
       if (withOnion && st.onion && frameIndex > 0) og.drawImage(st.frames[frameIndex - 1], 0, 0);
+      const tl = dlg.querySelector("#mk-textlayer");
+      if (tl) {
+        const tg = tl.getContext("2d");
+        tg.clearRect(0, 0, SIZE, SIZE);
+        const texts = overlayFrames();
+        if (texts) tg.drawImage(texts[frameIndex % texts.length], 0, 0);
+      }
       const btn = dlg.querySelector("#mk-play");
       if (btn) btn.textContent = st.playing ? "■ 停止" : "▶ 播放";
+    }
+    // 畫畫模式:疊上去的文字先算好,畫的時候不用每次重算
+    function overlayFrames() {
+      if (!st.ov.text.trim()) return null;
+      const key = JSON.stringify(st.ov) + "|" + st.frames.length;
+      if (st.ovKey !== key) { st.ovKey = key; st.ovFrames = textFrames(st.ov, textCount(st.frames.length, st.ov)); }
+      return st.ovFrames;
     }
     function play(restart) {
       stop();
       st.playing = true;
       let i = 0;
-      const step = () => paintStage(i++ % st.frames.length, false);
+      const total = st.ov.text.trim() ? textCount(st.frames.length, st.ov) : st.frames.length;
+      const step = () => paintStage(i++ % total, false);
       step();
       st.timer = setInterval(step, 1000 / st.fps);
       if (!restart) paintStage(0, false);
@@ -468,35 +540,69 @@
           h("input", { type: "checkbox", checked: st.round, onchange: e => { st.round = e.target.checked; refresh(); } }), "裁成圓形"), pick);
       const effects = h("div", { class: "mk-row" }, ...Object.entries(PHOTO_EFFECTS).map(([k, [label]]) =>
         h("button", { type: "button", class: "mk-chip" + (st.effect === k ? " on" : ""), onclick: () => { st.effect = k; render(); } }, label)));
-      return [stage, choose, st.img ? effects : h("div", { class: "mk-label", style: "text-align:center" }, "選一張照片(最好是去背的人物或寵物),再選一個效果")];
+      return [stage, choose, st.img ? effects : h("div", { class: "mk-label", style: "text-align:center" }, "選一張照片(最好是去背的人物或寵物),再選一個效果"),
+        overlayUI()];
     }
 
     // ---------- 文字動畫
     function textUI() {
       const stage = h("div", { class: "mk-stage" }, h("canvas", { width: SIZE, height: SIZE, id: "mk-view" }));
-      const input = h("textarea", { class: "field", maxlength: 40, placeholder: "輸入文字,例如:謝謝！ / 晚安 / 讚啦", oninput: e => { st.text = e.target.value; refresh(); } });
-      input.value = st.text;
-      const colors = h("div", { class: "mk-row" }, ...COLORS.map(c => h("button", { type: "button",
-        class: "mk-sw" + (st.textColor === c ? " on" : ""), style: `background:${c}`, onclick: () => { st.textColor = c; render(); } })));
-      const effects = h("div", { class: "mk-row" }, ...Object.entries(TEXT_EFFECTS).map(([k, label]) =>
-        h("button", { type: "button", class: "mk-chip" + (st.textEffect === k ? " on" : ""), onclick: () => { st.textEffect = k; render(); } }, label)));
+      const input = h("textarea", { class: "field", maxlength: 40, placeholder: "輸入文字,例如:謝謝！ / 晚安 / 讚啦", oninput: e => { st.txt.text = e.target.value; refresh(); } });
+      input.value = st.txt.text;
       setTimeout(() => input.focus());
-      return [stage, input, colors, effects];
+      return [stage, input, ...styleUI(st.txt, false)];
+    }
+
+    // 文字樣式:字型、顏色、外框、大小、位置、動畫
+    function styleUI(t, overlay) {
+      const chips = (opts, key, cls = "mk-chip", styleOf = () => "") => h("div", { class: "mk-row" }, ...opts.map(([v, label]) =>
+        h("button", { type: "button", class: cls + (t[key] === v ? " on" : ""), style: styleOf(v),
+          onclick: () => { t[key] = v; render(); } }, label)));
+      const fonts = chips(Object.entries(FONTS).map(([k, [label]]) => [k, label]), "font", "mk-chip mk-font",
+        k => `font-family:${fontFamily(k).replace(/"/g, "'")};font-weight:${t.bold === false ? 500 : 900}`);
+      const colors = h("div", { class: "mk-row" },
+        ...COLORS.map(c => h("button", { type: "button", class: "mk-sw" + (t.color === c ? " on" : ""), style: `background:${c}`,
+          title: c, onclick: () => { t.color = c; render(); } })),
+        h("input", { type: "color", value: /^#[0-9a-f]{6}$/i.test(t.color) ? t.color : "#e5484d", title: "其他顏色",
+          style: "width:32px;height:28px;border:0;padding:0;background:none",
+          onchange: e => { t.color = e.target.value; render(); } }));
+      const stroke = h("div", { class: "mk-row" }, h("span", { class: "mk-label" }, "外框"),
+        ...[["auto", "自動"], ["#ffffff", "白"], ["#111111", "黑"], ["none", "無"]].map(([v, label]) =>
+          h("button", { type: "button", class: "mk-chip" + (t.stroke === v ? " on" : ""), onclick: () => { t.stroke = v; render(); } }, label)),
+        h("button", { type: "button", class: "mk-chip" + (t.bold !== false ? " on" : ""), onclick: () => { t.bold = t.bold === false; render(); } }, "粗體"));
+      const size = h("div", { class: "mk-row" }, h("span", { class: "mk-label" }, "大小"),
+        h("input", { type: "range", min: 0.35, max: 1, step: 0.05, value: t.scale || 1, oninput: e => { t.scale = +e.target.value; refresh(); } }));
+      const pos = overlay ? h("div", { class: "mk-row" }, h("span", { class: "mk-label" }, "位置"),
+        ...[["top", "上"], ["mid", "中"], ["bottom", "下"]].map(([v, label]) =>
+          h("button", { type: "button", class: "mk-chip" + (t.pos === v ? " on" : ""), onclick: () => { t.pos = v; render(); } }, label))) : null;
+      const effects = chips(Object.entries(TEXT_EFFECTS).filter(([k]) => overlay || k !== "none"), "effect");
+      return [h("div", { class: "mk-label", style: "text-align:center" }, "字型"), fonts, colors, stroke, size, pos,
+        h("div", { class: "mk-label", style: "text-align:center" }, "文字動畫"), effects].filter(Boolean);
+    }
+
+    // 畫畫 / 照片模式:在動畫上加一行字
+    function overlayUI() {
+      const input = h("input", { class: "field", maxlength: 30, placeholder: "輸入要放在動畫上的字", value: st.ov.text,
+        oninput: e => { st.ov.text = e.target.value; refresh(); } });
+      const box = h("details", { class: "mk-more", open: st.ovOpen || !!st.ov.text },
+        h("summary", {}, "🔤 加文字"), input, ...styleUI(st.ov, true));
+      box.addEventListener("toggle", () => { st.ovOpen = box.open; });
+      return box;
     }
 
     function buildFrames() {
-      if (st.mode === "draw") return st.frames;
-      if (st.mode === "photo") return st.img ? photoFrames(st.img, st.effect, st.round) : [newCanvas()];
-      return textFrames(st.text.trim() || "Hello", st.textEffect, st.textColor);
+      if (st.mode === "draw") return withText(st.frames, st.ov);
+      if (st.mode === "photo") return withText(st.img ? photoFrames(st.img, st.effect, st.round) : [newCanvas()], st.ov);
+      return textFrames({ ...st.txt, text: st.txt.text.trim() || "Hello" });
     }
 
     function toast2(text) { const s = dlg.querySelector("#mk-status"); if (s) s.textContent = text; }
 
     async function finish(action) {
       if (st.mode === "photo" && !st.img) return toast2("請先選一張照片");
-      if (st.mode === "text" && !st.text.trim()) return toast2("請先輸入文字");
+      if (st.mode === "text" && !st.txt.text.trim()) return toast2("請先輸入文字");
       const frames = buildFrames();
-      if (st.mode === "draw" && frames.every(f => !f.getContext("2d").getImageData(0, 0, SIZE, SIZE).data.some((v, i) => i % 4 === 3 && v))) {
+      if (st.mode === "draw" && !st.ov.text.trim() && frames.every(f => !f.getContext("2d").getImageData(0, 0, SIZE, SIZE).data.some((v, i) => i % 4 === 3 && v))) {
         return toast2("還沒有畫任何東西");
       }
       toast2("產生 GIF 中…");

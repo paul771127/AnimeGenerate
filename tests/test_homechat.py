@@ -1,4 +1,5 @@
 """HomeChat 測試:啟動真的伺服器,用 HTTP 走過主人 / 訪客的完整流程。"""
+import base64
 import json
 import sys
 import threading
@@ -1247,3 +1248,171 @@ def test_federation_shares_profile(two_homes):
     assert next(c for c in a.contacts() if c["id"] == on_a["id"])["status_msg"] == "上班中"
     alice_on_b = next(c for c in b.contacts() if c["id"] == on_b["id"])
     assert alice_on_b["avatar"] == "" and b.owner.raw(f"/api/avatar/{on_b['id']}")[0] == 404
+
+
+# --- 推播通知
+def sse(client, visible=True):
+    """打開即時事件,回傳 (連線, 讀下一個事件的函式)。"""
+    resp = client.opener.open(client.base + "/api/events?visible=" + ("1" if visible else "0"), timeout=5)
+    resp.readline()  # retry
+    hello = json.loads(resp.readline().decode()[len("data: "):])
+    resp.readline()
+
+    def next_event(kind=None):
+        while True:
+            line = resp.readline().decode()
+            if line.startswith("data: "):
+                ev = json.loads(line[len("data: "):])
+                if kind is None or ev.get("type") == kind:
+                    return ev
+    return resp, hello["sub"], next_event
+
+
+def test_vapid_signature_and_jwt():
+    d, public = homechat.vapid_keys()
+    assert len(public) == 65 and public[0] == 4
+    sig = homechat.ecdsa_sign(d, b"hello")
+    assert homechat.ecdsa_verify(public, b"hello", sig)
+    assert not homechat.ecdsa_verify(public, b"hellp", sig)
+    store = homechat.Store(":memory:")
+    pusher = homechat.Pusher(store)
+    token = pusher._jwt("https://fcm.googleapis.com")
+    head, body, sig = token.split(".")
+    pad = lambda x: x + "=" * (-len(x) % 4)
+    claims = json.loads(base64.urlsafe_b64decode(pad(body)))
+    assert claims["aud"] == "https://fcm.googleapis.com" and claims["exp"] > time.time()
+    key = base64.urlsafe_b64decode(pad(store.vapid()[1]))
+    assert homechat.ecdsa_verify(key, f"{head}.{body}".encode(), base64.urlsafe_b64decode(pad(sig)))
+
+
+def test_push_endpoint_must_be_a_push_service():
+    ok = homechat.valid_push_endpoint
+    assert ok("https://fcm.googleapis.com/fcm/send/abc")
+    assert ok("https://web.push.apple.com/QGx")
+    assert ok("https://updates.push.services.mozilla.com/wpush/v2/x")
+    assert ok("https://wns2-par02p.notify.windows.com/w/?token=x")
+    assert not ok("http://fcm.googleapis.com/x")
+    assert not ok("https://127.0.0.1/x")
+    assert not ok("https://fcm.googleapis.com.evil.com/x")
+    assert not ok("https://evilfcm.googleapis.com.example/x")
+
+
+def test_push_notification_when_app_closed(server, monkeypatch):
+    base, app = server
+    sent = []
+    monkeypatch.setattr(homechat.Pusher, "send", lambda self, ep: sent.append(ep) or 201)
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "阿明"})[1]["contact"]
+    guest = join(base, contact)
+    ep = "https://fcm.googleapis.com/fcm/send/guest1"
+    assert guest.req("/api/push/subscribe", {"subscription": {"endpoint": "https://10.0.0.1/x"}})[0] == 400
+    assert guest.req("/api/push/subscribe", {"subscription": {"endpoint": ep}, "vibrate": False})[0] == 200
+    assert guest.req("/api/push/key")[1]["key"] == app.store.vapid()[1]
+
+    def wait_sent(n):
+        for _ in range(50):
+            if len(sent) >= n:
+                return True
+            time.sleep(0.05)
+        return False
+
+    # 朋友沒開著 → 推播
+    owner.req("/api/messages", {"contact_id": contact["id"], "body": "在嗎?"})
+    assert wait_sent(1) and sent[-1] == ep
+    info = guest.req("/api/notify")[1]
+    assert info["title"] == "Paul" and info["body"] == "在嗎?" and info["vibrate"] is False
+    # 朋友正在看 → 不推播(網頁自己提醒)
+    resp, sub, _ = sse(guest, visible=True)
+    owner.req("/api/messages", {"contact_id": contact["id"], "body": "第二則"})
+    time.sleep(0.3)
+    assert len(sent) == 1
+    # 切到背景 → 推播
+    guest.req("/api/presence", {"sub": sub, "visible": False})
+    owner.req("/api/messages", {"contact_id": contact["id"], "body": "第三則"})
+    assert wait_sent(2)
+    assert "共 3 則未讀" in guest.req("/api/notify")[1]["body"]
+    resp.close()
+    # 測試通知
+    guest.req("/api/push/test", {})
+    assert wait_sent(3)
+    assert "測試" in guest.req("/api/notify")[1]["body"]
+    # 主人收到朋友的訊息(主人沒有訂閱 → 不送)
+    guest.req("/api/messages", {"contact_id": contact["id"], "body": "回覆"})
+    time.sleep(0.2)
+    assert len(sent) == 3
+    # 登出後訂閱跟著消失
+    guest.req("/api/logout", {})
+    assert app.store.push_subs_for("guest", contact["id"]) == []
+
+
+# --- 語音通話
+def test_voice_call_flow(server, monkeypatch):
+    base, app = server
+    monkeypatch.setattr(homechat.Pusher, "send", lambda self, ep: 201)
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "阿明"})[1]["contact"]
+    # 還沒加入不能打
+    assert owner.req("/api/call/start", {"contact_id": contact["id"]})[0] == 400
+    guest = join(base, contact)
+    o_resp, _, o_next = sse(owner)
+    g_resp, _, g_next = sse(guest)
+    status, data = owner.req("/api/call/start", {"contact_id": contact["id"]})
+    assert status == 200 and data["ice_servers"][0]["urls"]
+    call_id = data["call_id"]
+    ring = g_next("call")
+    assert ring["action"] == "ring" and ring["call_id"] == call_id
+    assert guest.req("/api/call")[1]["call"]["call_id"] == call_id
+    assert "打電話給你" in guest.req("/api/notify")[1]["body"]
+    # 通話中不能再打
+    assert guest.req("/api/call/start", {"contact_id": contact["id"]})[0] == 409
+    # 自己不能接自己打的
+    assert owner.req("/api/call/answer", {"call_id": call_id})[0] == 400
+    assert guest.req("/api/call/answer", {"call_id": call_id})[0] == 200
+    assert o_next("call")["action"] == "answered"
+    assert g_next("call")["action"] == "taken"
+    # 連線資訊互相轉送
+    owner.req("/api/call/signal", {"call_id": call_id, "data": {"sdp": {"type": "offer", "sdp": "v=0"}}})
+    sig = g_next("call")
+    assert sig["action"] == "signal" and sig["data"]["sdp"]["type"] == "offer"
+    guest.req("/api/call/signal", {"call_id": call_id, "data": {"candidate": {"candidate": "x"}}})
+    assert o_next("call")["data"]["candidate"]["candidate"] == "x"
+    # 別的朋友插不進來
+    other = owner.req("/api/contacts", {"name": "小美"})[1]["contact"]
+    intruder = join(base, other)
+    assert intruder.req("/api/call/signal", {"call_id": call_id, "data": {"sdp": {}}})[0] == 404
+    assert intruder.req("/api/call/end", {"call_id": call_id})[0] == 404
+    # 掛斷 → 兩邊收到、對話裡有通話紀錄
+    assert guest.req("/api/call/end", {"call_id": call_id})[0] == 200
+    assert o_next("call")["action"] == "end"
+    msgs = owner.req(f"/api/messages?contact={contact['id']}")[1]["messages"]
+    assert msgs[-1]["body"].startswith("📞 語音通話 0:0") and msgs[-1]["sender"] == "me"
+    o_resp.close(); g_resp.close()
+
+
+def test_missed_and_declined_calls(server, monkeypatch):
+    base, app = server
+    monkeypatch.setattr(homechat.Pusher, "send", lambda self, ep: 201)
+    monkeypatch.setattr(homechat, "CALL_RING_SECONDS", 0.3)
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "阿明"})[1]["contact"]
+    guest = join(base, contact)
+    resp, _, _ = sse(guest)
+    guest.req("/api/call/start", {"contact_id": contact["id"]})
+    time.sleep(0.8)
+    msgs = owner.req(f"/api/messages?contact={contact['id']}")[1]["messages"]
+    assert msgs[-1]["body"] == "📞 未接來電" and msgs[-1]["sender"] == "them"
+    call_id = guest.req("/api/call/start", {"contact_id": contact["id"]})[1]["call_id"]
+    owner.req("/api/call/end", {"call_id": call_id})  # 主人拒接
+    assert owner.req(f"/api/messages?contact={contact['id']}")[1]["messages"][-1]["body"] == "📞 對方拒接"
+    resp.close()
+
+
+def test_turn_settings(server):
+    base, _ = server
+    owner = login(base)
+    assert owner.req("/api/settings", {"turn_url": "http://x"})[0] == 400
+    assert owner.req("/api/settings", {"turn_url": "turn:turn.example.com:3478", "turn_user": "u", "turn_pass": "p"})[0] == 200
+    contact = owner.req("/api/contacts", {"name": "阿明"})[1]["contact"]
+    join(base, contact)
+    ice = owner.req("/api/call/start", {"contact_id": contact["id"]})[1]["ice_servers"]
+    assert ice[-1] == {"urls": ["turn:turn.example.com:3478"], "username": "u", "credential": "p"}
