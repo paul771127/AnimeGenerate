@@ -5,14 +5,43 @@ namespace SpellDuel
     /// <summary>
     /// 手勢（從網頁版移植）：鏡頭只拍得到自己伸到鏡頭前的手腕與手指。
     ///   每個技能有自己的手勢（食指、剪刀、三指、搖滾、六、讚）：比出來停 0.35 秒＝開始詠唱該技能。
-    ///   ✊ 握拳＝蓄力姿勢；握拳後 1.5 秒內 🖐️ 張開手＝放招（「握拳→張開」）。
-    ///   手往上快速一揮（甩手）也會放招。
+    ///   放招動作依職業不同（Style）：
+    ///     法師 Burst：✊ 握拳聚氣 → 1.5 秒內 🖐️ 張開。
+    ///     弓箭手 Bow：在畫面中間握拳（捏弦）→ 往旁邊慢慢拉開（拉滿）→ 張開手放箭；箭往開始拉弓的位置射。
+    ///     劍士 Chop：手掌伸直（手刀）快速橫向／斜向劈過畫面；往劈過的中點斬。
+    ///     刺客 Thrust：手刀快速往前刺（手遠離手機 → 畫面上變小）；往刺出的位置。
     ///   瞄準：方向＝手腕 → 中指根部，準星在指尖再往前延伸一段（螢幕座標）。
     /// 輸入是 PoseDetector 的手部關鍵點（視埠座標，左下為原點）。
     /// </summary>
     public class HandGesture
     {
         public enum Shape { None, Fist, Open, One, Two, Three, Rock, Call, Thumb, Other }
+        public enum Style { Burst, Bow, Chop, Thrust }
+
+        public Style ReleaseStyle = Style.Burst;     // 由職業決定（SoloBattle 設定）
+        public Vector2 ReleaseAim { get; private set; }   // 放招事件時的瞄準點（螢幕像素）
+        public float BowDraw { get; private set; }        // 弓箭手拉弓進度 0..1（畫面提示用）
+        public Vector2 BowAnchor { get; private set; }    // 開始拉弓的位置
+        public bool BowHolding { get; private set; }
+
+        public static Style StyleOf(string classId) => classId switch
+        {
+            "archer" => Style.Bow, "swordsman" => Style.Chop, "assassin" => Style.Thrust, _ => Style.Burst,
+        };
+
+        public static string StyleHint(Style st) => st switch
+        {
+            Style.Bow => "拉弓：在畫面中間握拳 → 往旁邊慢慢拉 → 張開手放箭",
+            Style.Chop => "手刀斬：手掌伸直，快速橫劈過畫面",
+            Style.Thrust => "突刺：手刀快速往前刺出（手遠離手機）",
+            _ => "聚氣：握拳 → 張開手放出",
+        };
+
+        // 最近約 1 秒的手掌軌跡（劈砍、突刺用）
+        struct Sample { public float t; public Vector2 palm; public float size; public Shape shape; }
+        readonly Sample[] hist = new Sample[16]; int histN, histHead;
+        void PushHist(Sample s) { hist[histHead] = s; histHead = (histHead + 1) % hist.Length; if (histN < hist.Length) histN++; }
+        Sample HistAgo(int k) => hist[(histHead - 1 - k + hist.Length * 2) % hist.Length];   // k=0 最新
 
         /// <summary>可以用來選技能的手勢（依職業技能順序分配，同職業不重複）</summary>
         public static readonly Shape[] SkillShapes = { Shape.One, Shape.Two, Shape.Three, Shape.Rock, Shape.Call, Shape.Thumb };
@@ -69,8 +98,8 @@ namespace SpellDuel
         Shape selectQueued = Shape.None; float shapeSince; bool selectFired;
         float lastRelease = -99f;   // 放招後 0.6 秒內不重複觸發
 
-        void Queue(float t) { if (t - lastRelease < 0.6f) return; releaseQueued = true; lastRelease = t; }
-        Vector2 prevPalm; float prevPalmTime = -99f;
+        void Queue(float t, Vector2 aim) { if (t - lastRelease < 0.6f) return; releaseQueued = true; lastRelease = t; ReleaseAim = aim; }
+        float bowStart;
         bool hasAim;
 
         /// <summary>有新的偵測結果時呼叫（screenW/H：螢幕像素）</summary>
@@ -106,19 +135,57 @@ namespace SpellDuel
                 Current = shape;
                 shapeSince = t; selectFired = false;
                 if (shape == Shape.Fist) lastFist = t;
-                if (shape == Shape.Open && prev != Shape.Open && t - lastFist < 1.5f) { Queue(t); lastFist = -99f; }
+                if (ReleaseStyle == Style.Burst && shape == Shape.Open && prev != Shape.Open && t - lastFist < 1.5f) { Queue(t, Aim); lastFist = -99f; }
             }
             if (Current == Shape.Fist) lastFist = t;
             // 選技能手勢：同一個手勢維持 0.35 秒才算（避免換手勢途中誤觸）
             if (!selectFired && System.Array.IndexOf(SkillShapes, Current) >= 0 && t - shapeSince >= 0.35f) { selectQueued = Current; selectFired = true; }
 
-            // 甩手：手掌往上快速移動（每秒超過 2.2 個螢幕高）
-            if (t - prevPalmTime < 0.25f && t > prevPalmTime)
+            PushHist(new Sample { t = t, palm = palm, size = palmSize, shape = shape });
+            bool fingersOut = shape != Shape.Fist && shape != Shape.None;
+
+            // 弓箭手：畫面中間握拳 → 往旁邊拉（橫向超過畫面寬 15%、至少 0.3 秒）→ 張開放箭；沒拉滿就張開＝取消
+            if (ReleaseStyle == Style.Bow)
             {
-                float vy = (palm.y - prevPalm.y) / (t - prevPalmTime);
-                if (vy > H * 2.2f) Queue(t);
+                if (Current == Shape.Fist)
+                {
+                    if (!BowHolding)
+                    {
+                        if (Mathf.Abs(palm.x - W / 2f) < W * 0.25f && Mathf.Abs(palm.y - H / 2f) < H * 0.3f) { BowHolding = true; BowAnchor = palm; bowStart = t; }
+                    }
+                    else BowDraw = Mathf.Clamp01(Mathf.Abs(palm.x - BowAnchor.x) / (W * 0.15f)) * (t - bowStart >= 0.3f ? 1f : 0.99f);
+                }
+                else if (BowHolding && Current != Shape.Fist && pendingCount >= 2)
+                {
+                    if (BowDraw >= 1f && fingersOut) Queue(t, BowAnchor);
+                    BowHolding = false; BowDraw = 0f;
+                }
             }
-            prevPalm = palm; prevPalmTime = t;
+            else { BowHolding = false; BowDraw = 0f; }
+
+            // 劍士：張開的手在 0.4 秒內移動超過畫面寬 25%（手刀劈過）
+            if (ReleaseStyle == Style.Chop && fingersOut && histN >= 3)
+            {
+                for (int k = 2; k < histN; k++)
+                {
+                    var o = HistAgo(k);
+                    if (t - o.t > 0.4f) break;
+                    if (o.shape == Shape.Fist || o.shape == Shape.None) break;
+                    if (Vector2.Distance(o.palm, palm) > W * 0.25f) { Queue(t, (o.palm + palm) / 2f); break; }
+                }
+            }
+
+            // 刺客：手刀往前刺 → 手遠離手機，畫面上手掌在 0.35 秒內縮小 25% 以上
+            if (ReleaseStyle == Style.Thrust && fingersOut && histN >= 3)
+            {
+                for (int k = 2; k < histN; k++)
+                {
+                    var o = HistAgo(k);
+                    if (t - o.t > 0.35f) break;
+                    if (o.shape == Shape.Fist || o.shape == Shape.None) break;
+                    if (palmSize < o.size * 0.75f) { Queue(t, palm); break; }
+                }
+            }
 
             // 瞄準：手腕 → 中指根部的方向，準星在指尖再往前
             var dir = Points[9] - wrist;
@@ -186,6 +253,19 @@ namespace SpellDuel
             GUI.color = aimColor;
             GUI.DrawTexture(new Rect(Aim.x - r, H - Aim.y - 1.5f, r * 2, 3f), Texture2D.whiteTexture);
             GUI.DrawTexture(new Rect(Aim.x - 1.5f, H - Aim.y - r, 3f, r * 2), Texture2D.whiteTexture);
+            // 弓箭手拉弓：起點標記＋拉弓進度條（拉滿變綠）
+            if (BowHolding)
+            {
+                GUI.color = new Color(1f, 1f, 1f, 0.8f);
+                GUI.DrawTexture(new Rect(BowAnchor.x - d, H - BowAnchor.y - d, d * 2, d * 2), Texture2D.whiteTexture);
+                float bw = Screen.width * 0.25f;
+                GUI.color = new Color(0f, 0f, 0f, 0.5f);
+                GUI.DrawTexture(new Rect(Palm.x - bw / 2, H - Palm.y - d * 6, bw, d), Texture2D.whiteTexture);
+                GUI.color = BowDraw >= 1f ? Color.green : Color.yellow;
+                GUI.DrawTexture(new Rect(Palm.x - bw / 2, H - Palm.y - d * 6, bw * BowDraw, d), Texture2D.whiteTexture);
+                GUI.color = Color.white;
+                GUI.Label(new Rect(Palm.x - 80, H - Palm.y - d * 10, 160, d * 4), BowDraw >= 1f ? "拉滿！張手放箭" : "拉弓中…", style);
+            }
             GUI.color = Color.white;
             GUI.Label(new Rect(Palm.x - 80, H - Palm.y + d * 2, 160, d * 5), Label, style);
         }

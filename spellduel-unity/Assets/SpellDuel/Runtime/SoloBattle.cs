@@ -339,13 +339,14 @@ namespace SpellDuel
                     else Say($"{HandGesture.ShapeName(shape)} → {skill.name}", 1f);
                 }
             }
-            // 手勢放招（握拳→張開、或往上甩手）：往手指的準星方向放
+            Hand.ReleaseStyle = HandGesture.StyleOf(myClass);   // 放招動作依職業：法師聚氣、弓箭手拉弓、劍士手刀斬、刺客突刺
+            // 手勢放招：往放招動作的瞄準點放
             if (Hand.ConsumeRelease())
             {
                 if (frozen) { Say("AR 追蹤中斷，暫時不能施法", 1.5f); return; }
-                if (Me.charging == null) Say("先比出技能手勢（或唸咒語）開始詠唱", 1.5f);
+                if (Me.charging == null) Say("先唸技能名稱（或比技能手勢）開始詠唱", 1.5f);
                 else if (battle.ChargeProgress(Me) < 1f) Say("蓄力還沒完成", 1f);
-                else ReleaseAt(Hand.Aim, true);
+                else ReleaseAt(Hand.ReleaseAim, true);
             }
         }
 
@@ -659,7 +660,7 @@ namespace SpellDuel
             }
             GUI.color = Color.white; y += bh + pad * 0.5f;
             var cls = Skills.Classes[myClass];
-            GUI.Label(new Rect(pad, y, W - pad * 2, lh * 1.4f), $"{cls.desc}　HP {cls.maxHp}・MP {cls.maxMp}", small); y += lh * 1.2f;
+            GUI.Label(new Rect(pad, y, W - pad * 2, lh * 1.4f), $"{cls.desc}　HP {cls.maxHp}・MP {cls.maxMp}\n放招動作：{HandGesture.StyleHint(HandGesture.StyleOf(myClass))}", small); y += lh * 1.9f;
 
             GUI.Label(new Rect(pad, y, W, lh), $"選 3 個技能（{myLoadout.Count}/3）", label); y += lh;
             float sw = (W - pad * 3) / 2f, sh = lh * 2.1f;
@@ -809,7 +810,7 @@ namespace SpellDuel
                 int rs = battle.RangeState(me, me.charging);
                 string st = prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%" :
                     (me.charging.releaseNear && rs > 0) ? "靠近才能出手" : rs < 0 ? "太近了" :
-                    me.charging.type == SkillType.Trap ? "點地板設置陷阱" : me.charging.type == SkillType.Self ? "點畫面發動" : "張手／點畫面發射！";
+                    me.charging.type == SkillType.Trap ? "放招動作 → 設在準星指的地板" : me.charging.type == SkillType.Self ? "做放招動作發動" : "做放招動作發射！";
                 GUI.color = prog < 1f ? Color.white : me.charging.color;
                 GUI.Label(new Rect(0, H / 2 - lh * 2.2f, W, lh), $"{me.charging.name}　{st}", center);
                 GUI.color = Color.white;
@@ -852,7 +853,7 @@ namespace SpellDuel
             bool voiceActive = voiceOn && (UseSpeech || VoiceReady);
             string voiceHint = !voiceOn || voiceActive ? "" : "　（語音：咒語還沒錄完，到選技能畫面錄）";
             GUI.Label(new Rect(pad, by - lh * 1.05f, W - pad * 2 - W * 0.22f, lh),
-                (voiceActive ? (UseSpeech ? "比手勢或唸技能名稱＝詠唱" : "比手勢或唸咒語＝詠唱") : "比手勢＝詠唱") + "　握拳→張開＝放招" + voiceHint, small);
+                (voiceActive ? (UseSpeech ? "唸技能名稱或比手勢＝詠唱" : "唸咒語或比手勢＝詠唱") : "比手勢＝詠唱") + "　放招：" + HandGesture.StyleHint(HandGesture.StyleOf(myClass)) + voiceHint, small);
             if (UseSpeech && voiceOn)
             {
                 GUI.Label(new Rect(W - pad - W * 0.21f, by - lh * 1.05f, W * 0.21f, lh), speech.Running ? "🎤 聆聽中" : "🎤 " + speech.Status, small);

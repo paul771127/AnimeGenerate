@@ -590,7 +590,7 @@ namespace SpellDuel
         {
             if (solo.phase != SoloBattle.Phase.Hidden) return;   // 職業對戰中：由 SoloBattle 處理手勢與語音
             Vector3 sp;
-            if (mode == Mode.Duo && hand.ConsumeRelease()) sp = hand.Aim;   // 手勢放招：往手指的準星方向
+            if (mode == Mode.Duo && hand.ConsumeRelease()) sp = hand.ReleaseAim;   // 手勢放招：往放招動作的瞄準點
             else
             {
                 if (!Input.GetMouseButtonDown(0) || GUIUtility.hotControl != 0) return;
