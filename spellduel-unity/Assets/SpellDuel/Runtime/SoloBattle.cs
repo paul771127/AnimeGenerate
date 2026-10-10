@@ -334,7 +334,7 @@ namespace SpellDuel
             if (drawingRune && Hand.RuneReady && battle.ChargeProgress(Me) < 1f)
             {
                 Me.chargeStart = battle.now - Me.charging.charge;
-                Say($"✨ {RuneRecognizer.RuneName(RuneRecognizer.RuneOf(Me.charging.id))}符文完成！用食指指向目標", 1.5f);
+                Say($"✨ {RuneRecognizer.RuneName(RuneRecognizer.RuneOf(Me.charging.id))}符文完成！把準星對準目標，食指往前指發射", 1.5f);
             }
             // 比出技能手勢（維持 0.35 秒）＝詠唱該技能（不再用點螢幕選招）；法師畫符文時手指會比出各種形狀，不換招
             if (Hand.ConsumeSelect(out var shape) && !frozen && !drawingRune)
@@ -354,11 +354,13 @@ namespace SpellDuel
             {
                 if (frozen) { Say("AR 追蹤中斷，暫時不能施法", 1.5f); return; }
                 if (Me.charging == null) Say("先唸技能名稱（或比技能手勢）開始詠唱", 1.5f);
-                else if (drawingRune) ReleaseAt(Hand.ReleaseAim, true);   // 符文畫好＋食指指向停住
+                else if (drawingRune) ReleaseAt(ScreenCenter, true);   // 符文畫好＋食指往前指
                 else if (battle.ChargeProgress(Me) < 1f) Say("蓄力還沒完成", 1f);
-                else ReleaseAt(Hand.ReleaseAim, true);
+                else ReleaseAt(ScreenCenter, true);   // 瞄準一律用畫面中央的準星（手只負責觸發）
             }
         }
+
+        static Vector2 ScreenCenter => new Vector2(Screen.width / 2f, Screen.height / 2f);
 
         void ReleaseAt(Vector2 sp, bool byGesture)
         {
@@ -828,7 +830,25 @@ namespace SpellDuel
                 GUI.Label(new Rect(0, H / 2 - lh * 2.2f, W, lh), $"{me.charging.name}　{st}", center);
                 GUI.color = Color.white;
             }
-            GUI.Label(new Rect(W / 2 - 50, H / 2 - 50, 100, 100), "＋", big);
+            // 準星（畫面中央）：所有技能都朝這裡放；蓄力完成（或符文畫好）時用技能顏色脈動
+            {
+                bool ready = me.charging != null && battle.ChargeProgress(me) >= 1f;
+                var cc = me.charging != null ? me.charging.color : Color.white;
+                float pulse = ready ? 0.6f + 0.4f * Mathf.Sin(Time.time * 10f) : 0.75f;
+                float arm = W * (ready ? 0.05f : 0.04f), th = Mathf.Max(3f, W * 0.006f), gap = W * 0.012f;
+                GUI.color = new Color(0f, 0f, 0f, 0.45f);
+                GUI.DrawTexture(new Rect(W / 2 - arm - 1, H / 2 - th / 2 - 1, arm - gap + 2, th + 2), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 + gap - 1, H / 2 - th / 2 - 1, arm - gap + 2, th + 2), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 - th / 2 - 1, H / 2 - arm - 1, th + 2, arm - gap + 2), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 - th / 2 - 1, H / 2 + gap - 1, th + 2, arm - gap + 2), Texture2D.whiteTexture);
+                GUI.color = new Color(cc.r, cc.g, cc.b, pulse);
+                GUI.DrawTexture(new Rect(W / 2 - arm, H / 2 - th / 2, arm - gap, th), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 + gap, H / 2 - th / 2, arm - gap, th), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 - th / 2, H / 2 - arm, th, arm - gap), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 - th / 2, H / 2 + gap, th, arm - gap), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(W / 2 - th / 2, H / 2 - th / 2, th, th), Texture2D.whiteTexture);
+                GUI.color = Color.white;
+            }
             DrawRuneGuide(W, H);
             Hand?.DrawGUI(small, me.charging != null ? me.charging.color : Color.white);
             if (Time.time < heardUntil) GUI.Label(new Rect(0, H * 0.24f, W, lh * 1.6f), heard, big);
