@@ -109,10 +109,15 @@ if (Test-Path $ts) {
 
 # ---------------------------------------------------------------- 3. 複製程式
 Step "安裝 HomeChat 到 $Dest"
-# 如果已經在執行(更新的情況),先關掉
+# 如果已經在執行(更新的情況),先關掉:包括之前自己在黑色視窗用 python homechat.py 開的
 Get-CimInstance Win32_Process -Filter "Name like 'python%'" -ErrorAction SilentlyContinue |
-    Where-Object { $_.CommandLine -like "*HomeChat\homechat.py*" } |
+    Where-Object { $_.CommandLine -like "*homechat.py*" } |
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
+    ForEach-Object {
+        $p = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue
+        if ($p -and $p.ProcessName -like "python*") { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
+    }
 Start-Sleep -Seconds 1
 New-Item -ItemType Directory -Force -Path $Dest | Out-Null
 if ((Resolve-Path $Src).Path -ne (Resolve-Path $Dest).Path) {

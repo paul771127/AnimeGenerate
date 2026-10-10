@@ -61,6 +61,8 @@ fi
 # ---------------------------------------------------------------- 3. 複製程式
 step "安裝 HomeChat 到 $DEST"
 launchctl unload "$PLIST" >/dev/null 2>&1   # 更新時先停掉舊的
+pkill -f "homechat.py" >/dev/null 2>&1        # 包括之前自己在終端機開的
+sleep 1
 mkdir -p "$DEST"
 if [ "$SRC" != "$DEST" ]; then
   cp -f "$SRC/homechat.py" "$DEST/"

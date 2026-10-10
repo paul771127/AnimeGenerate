@@ -23,12 +23,15 @@ import queue
 import re
 import secrets
 import shutil
+import signal
 import socket
 import sqlite3
 import subprocess
 import sys
 import threading
 import time
+import traceback
+import urllib.error
 import urllib.request
 import webbrowser
 from datetime import datetime
@@ -41,6 +44,7 @@ HERE = Path(__file__).resolve().parent
 STATIC_DIR = HERE / "static"
 DEFAULT_DB = HERE / "data" / "homechat.db"
 
+VERSION = "2026.10.10"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
 COOKIE_NAME = "hc_session"
 SESSION_IDLE_DAYS = 365  # 像 LINE 一樣一直保持登入;一年沒用才自動登出(每次使用都會重新計算)
 INVITE_DAYS = 7  # 邀請連結 7 天內有效,只能用一次
@@ -836,6 +840,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Referrer-Policy", "no-referrer")  # 邀請連結不會從 Referer 外流
         self.send_header("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        self.send_header("X-HomeChat-Version", VERSION)
         if self._is_https():
             self.send_header("Strict-Transport-Security", "max-age=31536000")
         for k, v in (headers or {}).items():
@@ -931,60 +936,76 @@ class Handler(BaseHTTPRequestHandler):
         self.do_GET()
 
     def do_GET(self) -> None:
-        url = urlsplit(self.path)
-        qs = {k: v[-1] for k, v in parse_qs(url.query).items()}
-        try:
-            if url.path in ("/", "/index.html") or re.fullmatch(r"/(c|add)/[A-Za-z0-9_-]{1,64}", url.path):
-                return self._static("index.html")
-            if url.path in ("/manifest.webmanifest", "/icon.svg", "/sw.js"):
-                return self._static(url.path.lstrip("/"))
-            routes = {
-                "/api/me": self._me,
-                "/api/invite": self._invite_info,
-                "/api/add-info": self._add_info,
-                "/api/contacts": self._list_contacts,
-                "/api/messages": self._get_messages,
-                "/api/events": self._events,
-                "/api/export": self._export,
-                "/api/friend-link": self._friend_link,
-                "/api/devices": self._devices,
-            }
-            if url.path in routes:
-                return routes[url.path](qs)
-            raise ApiError(404, "找不到")
-        except ApiError as e:
-            self._json({"error": e.message}, e.status)
+        self._safely(self._route_get)
 
     def do_POST(self) -> None:
-        url = urlsplit(self.path)
+        self._safely(self._route_post)
+
+    def _safely(self, route) -> None:
+        """任何沒料到的錯誤都回 500,而不是直接斷線(斷線會讓網頁以為家裡電腦關機)。"""
         try:
-            self._check_origin()
-            data = self._read_json()
-            routes = {
-                "/api/setup": self._setup,
-                "/api/login": self._login,
-                "/api/logout": self._logout,
-                "/api/password": self._change_password,
-                "/api/join": self._join,
-                "/api/request": self._request_friend,
-                "/api/messages": self._post_message,
-                "/api/read": self._read,
-                "/api/contacts": self._add_contact,
-                "/api/contacts/import": self._import_contacts,
-                "/api/contacts/import-line": self._import_line,
-                "/api/friend-link": self._set_friend_link,
-                "/api/devices/remove": self._remove_device,
-                "/api/settings": self._settings,
-            }
-            if url.path in routes:
-                return routes[url.path](data)
-            m = re.fullmatch(r"/api/contacts/(\d+)/(update|invite|cancel-invite|approve|logout-devices|delete)",
-                             url.path)
-            if m:
-                return self._contact_action(int(m.group(1)), m.group(2), data)
-            raise ApiError(404, "找不到")
+            route()
         except ApiError as e:
             self._json({"error": e.message}, e.status)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        except Exception:
+            print(f"----- {datetime.now():%Y-%m-%d %H:%M:%S} 處理 {self.command} {urlsplit(self.path).path} 時出錯 -----")
+            traceback.print_exc()
+            try:
+                self._json({"error": "家裡電腦的 HomeChat 發生錯誤,請看 data/homechat.log"}, 500)
+            except Exception:
+                pass
+
+    def _route_get(self) -> None:
+        url = urlsplit(self.path)
+        qs = {k: v[-1] for k, v in parse_qs(url.query).items()}
+        if url.path in ("/", "/index.html") or re.fullmatch(r"/(c|add)/[A-Za-z0-9_-]{1,64}", url.path):
+            return self._static("index.html")
+        if url.path in ("/manifest.webmanifest", "/icon.svg", "/sw.js"):
+            return self._static(url.path.lstrip("/"))
+        routes = {
+            "/api/me": self._me,
+            "/api/invite": self._invite_info,
+            "/api/add-info": self._add_info,
+            "/api/contacts": self._list_contacts,
+            "/api/messages": self._get_messages,
+            "/api/events": self._events,
+            "/api/export": self._export,
+            "/api/friend-link": self._friend_link,
+            "/api/devices": self._devices,
+        }
+        if url.path in routes:
+            return routes[url.path](qs)
+        raise ApiError(404, "找不到")
+
+    def _route_post(self) -> None:
+        url = urlsplit(self.path)
+        self._check_origin()
+        data = self._read_json()
+        routes = {
+            "/api/setup": self._setup,
+            "/api/login": self._login,
+            "/api/logout": self._logout,
+            "/api/password": self._change_password,
+            "/api/join": self._join,
+            "/api/request": self._request_friend,
+            "/api/messages": self._post_message,
+            "/api/read": self._read,
+            "/api/contacts": self._add_contact,
+            "/api/contacts/import": self._import_contacts,
+            "/api/contacts/import-line": self._import_line,
+            "/api/friend-link": self._set_friend_link,
+            "/api/devices/remove": self._remove_device,
+            "/api/settings": self._settings,
+        }
+        if url.path in routes:
+            return routes[url.path](data)
+        m = re.fullmatch(r"/api/contacts/(\d+)/(update|invite|cancel-invite|approve|logout-devices|delete)",
+                         url.path)
+        if m:
+            return self._contact_action(int(m.group(1)), m.group(2), data)
+        raise ApiError(404, "找不到")
 
     # --- pages
     def _static(self, name: str) -> None:
@@ -1603,12 +1624,55 @@ def ask_password() -> str:
         return pw
 
 
-def already_running(port: int) -> bool:
+def running_version(port: int) -> str | None:
+    """這個 port 上是不是 HomeChat?是的話回傳版本("old" = 沒有版本號的舊版),不是回傳 None。
+
+    用 /icon.svg 探測:不碰資料庫,舊版遇到新版資料庫也不會當掉。
+    """
     try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/me", timeout=3) as r:
-            return r.headers.get("Server", "").startswith("HomeChat")
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/icon.svg", timeout=3) as r:
+            if not r.headers.get("Server", "").startswith("HomeChat"):
+                return None
+            return r.headers.get("X-HomeChat-Version") or "old"
+    except urllib.error.HTTPError as e:
+        if e.headers.get("Server", "").startswith("HomeChat"):
+            return e.headers.get("X-HomeChat-Version") or "old"
+        return None
     except Exception:
-        return False
+        return None
+
+
+def pids_listening(port: int) -> set[int]:
+    """找出在這個 port 等連線的程式。"""
+    pids: set[int] = set()
+    try:
+        if os.name == "nt":
+            out = subprocess.run(["netstat", "-ano", "-p", "TCP"], capture_output=True, text=True,
+                                 timeout=15, **NO_WINDOW).stdout
+            for line in out.splitlines():
+                # TCP  0.0.0.0:8800  0.0.0.0:0  LISTENING  1234(狀態文字會隨語言改變,所以看遠端位址)
+                parts = line.split()
+                if (len(parts) >= 5 and parts[0].upper() == "TCP" and parts[1].endswith(f":{port}")
+                        and parts[2] in ("0.0.0.0:0", "[::]:0") and parts[-1].isdigit()):
+                    pids.add(int(parts[-1]))
+        else:
+            out = subprocess.run(["lsof", "-nP", f"-iTCP:{port}", "-sTCP:LISTEN", "-t"], capture_output=True,
+                                 text=True, timeout=15).stdout
+            pids.update(int(x) for x in out.split() if x.isdigit())
+    except (OSError, subprocess.SubprocessError, ValueError):
+        pass
+    pids.discard(os.getpid())
+    return pids
+
+
+def stop_process(pid: int) -> None:
+    try:
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/PID", str(pid), "/F"], capture_output=True, timeout=15, **NO_WINDOW)
+        else:
+            os.kill(pid, signal.SIGTERM)
+    except (OSError, subprocess.SubprocessError):
+        pass
 
 
 def open_browser(url: str) -> None:
@@ -1653,15 +1717,32 @@ def main(argv: list[str] | None = None) -> int:
         store.set_password(os.environ["HOMECHAT_PASSWORD"])
 
     app = App(store, owner_name=args.name)
-    try:
-        server = make_server(app, args.host, args.port)
-    except OSError as e:
-        if already_running(args.port):
-            # 已經開著了(例如開機自動啟動),桌面捷徑只要打開瀏覽器就好
-            print(f"HomeChat 已經在執行中:{local_url}")
-            open_browser(local_url)
-            return 0
-        print(f"無法使用 port {args.port}({e})", file=sys.stderr)
+    server = None
+    for attempt in range(2):
+        try:
+            server = make_server(app, args.host, args.port)
+            break
+        except OSError as e:
+            version = running_version(args.port)
+            if version == VERSION:
+                # 已經開著了(例如開機自動啟動),桌面捷徑只要打開瀏覽器就好
+                print(f"HomeChat 已經在執行中:{local_url}")
+                open_browser(local_url)
+                return 0
+            if version and attempt == 0:
+                # 更新後舊版還開著(例如之前自己在黑色視窗執行的):關掉它換新版
+                print(f"發現舊版 HomeChat({version})還在執行,先把它關掉…")
+                for pid in pids_listening(args.port):
+                    stop_process(pid)
+                for _ in range(20):
+                    time.sleep(0.5)
+                    if running_version(args.port) is None:
+                        break
+                continue
+            print(f"無法使用 port {args.port}({e})。是不是有其他程式佔用了?", file=sys.stderr)
+            return 1
+    if server is None:
+        print(f"無法啟動:port {args.port} 一直被佔用", file=sys.stderr)
         return 1
     threading.Thread(target=server.serve_forever, daemon=True).start()
     print(f"HomeChat 已啟動,資料存在 {Path(args.db).resolve()}")

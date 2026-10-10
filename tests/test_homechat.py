@@ -606,3 +606,42 @@ def test_service_worker_served(server):
     with urllib.request.urlopen(base + "/sw.js", timeout=5) as r:
         assert r.headers["Content-Type"].startswith("text/javascript")
         assert b"/api/" in r.read()
+
+
+# ---------------------------------------------------------------- 更新 / 錯誤處理
+
+def test_unexpected_error_returns_500_instead_of_dropping(server, monkeypatch):
+    """沒料到的錯誤要回 500;直接斷線會讓網頁以為家裡電腦關機。"""
+    base, app = server
+    owner = login(base)
+    monkeypatch.setattr(homechat.Store, "list_contacts", lambda self: 1 / 0)
+    status, data = owner.req("/api/contacts")
+    assert status == 500 and "錯誤" in data["error"]
+    assert owner.req("/api/me")[0] == 200  # 伺服器沒有掛掉
+
+
+def test_running_version_detects_homechat(server):
+    base, _ = server
+    port = int(base.rsplit(":", 1)[1])
+    assert homechat.running_version(port) == homechat.VERSION
+    assert homechat.running_version(1) is None  # 沒有程式
+
+
+def test_pids_listening_parses_windows_netstat(monkeypatch):
+    out = """
+Active Connections
+
+  Proto  Local Address          Foreign Address        State           PID
+  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING       1000
+  TCP    0.0.0.0:8800           0.0.0.0:0              LISTENING       4242
+  TCP    127.0.0.1:8800         127.0.0.1:51000        ESTABLISHED     4242
+  TCP    127.0.0.1:51000        127.0.0.1:8800         ESTABLISHED     777
+  TCP    [::]:8800              [::]:0                 接聽            4243
+  TCP    0.0.0.0:18800          0.0.0.0:0              LISTENING       5555
+"""
+    class R:
+        stdout = out
+    monkeypatch.setattr(homechat.os, "name", "nt")
+    monkeypatch.setattr(homechat, "NO_WINDOW", {})
+    monkeypatch.setattr(homechat.subprocess, "run", lambda *a, **k: R())
+    assert homechat.pids_listening(8800) == {4242, 4243}
