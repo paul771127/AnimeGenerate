@@ -1,5 +1,7 @@
 """HomeChat 測試:啟動真的伺服器,用 HTTP 走過主人 / 訪客的完整流程。"""
 import base64
+import io
+import zipfile
 import json
 import sys
 import threading
@@ -1437,3 +1439,139 @@ def test_video_call(server, monkeypatch):
     _, headers, _ = owner.raw("/")
     assert "camera=(self)" in headers["Permissions-Policy"]
     g_resp.close()
+
+
+# --- 幫朋友裝 HomeChat:連結 → 安裝程式 → 自動互通
+def test_setup_link_auto_pairs(two_homes):
+    a, b = two_homes
+    contact = a.owner.req("/api/contacts", {"name": "Bob"})[1]["contact"]
+    a.owner.req("/api/messages", {"contact_id": contact["id"], "body": "以前在 Alice 家聊的"})
+    link = a.owner.req("/api/fed/setup-link", {"contact_id": contact["id"]})[1]
+    token = link["url"].rsplit("/", 1)[1]
+    status, headers, page = a.owner.raw(f"/setup/{token}")
+    assert status == 200 and "Alice 邀請你用 HomeChat" in page.decode()
+    zdata = Client(a.base).raw(f"/setup/{token}/HomeChat.zip")[2]
+    code = zipfile.ZipFile(io.BytesIO(zdata)).read("pair.txt").decode().strip()
+    bat = Client(a.base).raw(f"/setup/{token}/HomeChat-Setup.bat")[2].decode("ascii")
+    assert f"/setup/{token}/HomeChat.zip" in bat and "install-windows.ps1" in bat
+    # Bob 的電腦:安裝程式把 pair.txt 放好 → 啟動時記下來 → 有網址後自動互通
+    b.store.set_setting("pending_pair", code)
+    assert b.owner.req("/api/me")[1]["pending_pair"] == "Alice"
+    b.app.try_auto_pair()
+    assert b.store.get_setting("pending_pair") == ""
+    on_b = next(c for c in b.contacts() if c["peer"])
+    on_a = next(c for c in a.contacts() if c["id"] == contact["id"])
+    assert on_b["name"] == "Alice" and on_a["peer"]
+    flush(a, b)
+    for h in (a, b):
+        h.store.db.execute("UPDATE fed_outbox SET next_try = 0")
+    flush(a, b)
+    assert [m["body"] for m in b.messages(on_b["id"])] == ["以前在 Alice 家聊的"]
+    # 連結用過就失效
+    assert "連結已失效" in a.owner.raw(f"/setup/{token}")[2].decode()
+    assert Client(a.base).raw(f"/setup/{token}/HomeChat.zip")[0] == 410
+
+
+def test_auto_pair_bad_code_reports_error(two_homes):
+    _, b = two_homes
+    b.store.set_setting("pending_pair", homechat.encode_pair_code(b.base.replace("127.0.0.1", "localhost"), "x" * 20, "X"))
+    b.app.try_auto_pair()
+    assert b.store.get_setting("pending_pair") == ""
+    assert b.owner.req("/api/me")[1]["pending_pair_error"]
+
+
+def test_peer_url_change_is_announced(two_homes):
+    a, b = two_homes
+    on_a, on_b = link(a, b)
+    flush(a, b)
+    a.app.fed.announce_url()
+    flush(a, b)
+    new = a.base.replace("127.0.0.1", "localhost")
+    a.store.set_setting("public_url", new)
+    a.app.fed.announce_url()
+    flush(a, b)
+    assert b.store.peer_of(on_b["id"])["peer_url"] == new
+
+
+def test_federation_syncs_albums_and_sticker_packs(two_homes):
+    a, b = two_homes
+    # 互通前就有的相簿也會複製過去
+    bob_on_a = a.owner.req("/api/contacts", {"name": "Bob"})[1]["contact"]
+    old = a.owner.req("/api/albums", {"contact_id": bob_on_a["id"], "name": "舊相簿"})[1]["album"]
+    att = upload_photo(a.owner, bob_on_a["id"], "old.png")
+    a.owner.req(f"/api/albums/{old['id']}/add", {"attachment_ids": [att["id"]]})
+    on_a, on_b = link(a, b, bob_on_a["id"])
+    for h in (a, b):
+        h.store.db.execute("UPDATE fed_outbox SET next_try = 0")
+    flush(a, b)
+    albums_b = b.owner.req(f"/api/albums?contact={on_b['id']}")[1]["albums"]
+    assert [(x["name"], x["count"], x["created_by"]) for x in albums_b] == [("舊相簿", 1, "them")]
+    # 聊天裡的相簿卡片在 Bob 那邊打得開(對到 Bob 自己的相簿編號)
+    card = next(m for m in b.messages(on_b["id"]) if m["kind"] == "album")
+    assert json.loads(card["body"])["album_id"] == albums_b[0]["id"]
+    # Bob 建新相簿、加 3 張照片 → Alice 那邊也有
+    new = b.owner.req("/api/albums", {"contact_id": on_b["id"], "name": "旅行"})[1]["album"]
+    ids = [upload_photo(b.owner, on_b["id"], f"t{i}.png", PNG + bytes([i]))["id"] for i in range(3)]
+    b.owner.req(f"/api/albums/{new['id']}/add", {"attachment_ids": ids})
+    flush(a, b)
+    trip_a = next(x for x in a.owner.req(f"/api/albums?contact={on_a['id']}")[1]["albums"] if x["name"] == "旅行")
+    photos_a = a.owner.req(f"/api/albums/{trip_a['id']}/photos")[1]["photos"]
+    assert len(photos_a) == 3 and all(p["added_by"] == "them" for p in photos_a)
+    assert a.owner.raw(f"/api/files/{photos_a[0]['attachment']['id']}")[0] == 200
+    # 改名、移除照片、刪除也同步
+    b.owner.req(f"/api/albums/{new['id']}/rename", {"name": "沖繩旅行"})
+    photo_b = b.owner.req(f"/api/albums/{new['id']}/photos")[1]["photos"][0]
+    b.owner.req(f"/api/albums/{new['id']}/remove", {"photo_id": photo_b["id"]})
+    flush(a, b)
+    trip_a = a.store.get_album(trip_a["id"])
+    assert trip_a["name"] == "沖繩旅行" and len(a.store.album_photos(trip_a["id"])) == 2
+    a.owner.req(f"/api/albums/{trip_a['id']}/delete", {})
+    flush(a, b)
+    assert [x["name"] for x in b.owner.req(f"/api/albums?contact={on_b['id']}")[1]["albums"]] == ["舊相簿"]
+    # 貼圖組:整組到對方,對方可以一次收下
+    sids = [add_sticker(a.owner)[1]["sticker"]["id"] for _ in range(3)]
+    a.owner.req("/api/stickers/share", {"contact_id": on_a["id"], "sticker_ids": sids})
+    flush(a, b)
+    pack = next(m for m in b.messages(on_b["id"]) if m["kind"] == "stickers")
+    items = [i["id"] for i in json.loads(pack["body"])["items"]]
+    assert len(items) == 3 and all(b.owner.raw(f"/api/files/{i}")[0] == 200 for i in items)
+    saved = b.owner.req("/api/stickers/save", {"attachment_ids": items})[1]["stickers"]
+    assert len(saved) == 3
+
+
+def test_federated_call(two_homes, monkeypatch):
+    a, b = two_homes
+    monkeypatch.setattr(homechat.Pusher, "send", lambda self, ep: 201)
+    on_a, on_b = link(a, b)
+    flush(a, b)
+    a_resp, _, a_next = sse(a.owner)
+    b_resp, _, b_next = sse(b.owner)
+    call_id = a.owner.req("/api/call/start", {"contact_id": on_a["id"], "video": True})[1]["call_id"]
+    ring = b_next("call")
+    assert ring["action"] == "ring" and ring["contact_id"] == on_b["id"] and ring["video"] is True
+    assert b.owner.req("/api/call")[1]["call"]["call_id"] == call_id
+    assert b.owner.req("/api/call/answer", {"call_id": call_id})[0] == 200
+    assert a_next("call")["action"] == "answered"
+    assert b_next("call")["action"] == "taken"
+    a.owner.req("/api/call/signal", {"call_id": call_id, "data": {"sdp": {"type": "offer", "sdp": "v=0"}}})
+    assert b_next("call")["data"]["sdp"]["type"] == "offer"
+    b.owner.req("/api/call/signal", {"call_id": call_id, "data": {"candidate": {"candidate": "c1"}}})
+    assert a_next("call")["data"]["candidate"]["candidate"] == "c1"
+    b.owner.req("/api/call/end", {"call_id": call_id})
+    assert a_next("call")["action"] == "end"
+    flush(a, b)
+    logs_a = [m["body"] for m in a.messages(on_a["id"]) if "通話" in m["body"]]
+    logs_b = [m["body"] for m in b.messages(on_b["id"]) if "通話" in m["body"]]
+    assert len(logs_a) == 1 and logs_a == logs_b and logs_a[0].startswith("📹 視訊通話")
+    # Bob 拒接 → Alice 這邊「對方拒接」
+    call_id = a.owner.req("/api/call/start", {"contact_id": on_a["id"]})[1]["call_id"]
+    b_next("call")
+    b.owner.req("/api/call/end", {"call_id": call_id})
+    assert a_next("call")["reason"] == "declined"
+    flush(a, b)
+    assert a.messages(on_a["id"])[-1]["body"] == "📞 對方拒接"
+    # Bob 的電腦關機 → 打不通
+    b_resp.close()
+    b.stop()
+    assert a.owner.req("/api/call/start", {"contact_id": on_a["id"]})[0] == 502
+    a_resp.close()

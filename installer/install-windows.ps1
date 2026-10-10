@@ -124,6 +124,16 @@ if ((Resolve-Path $Src).Path -ne (Resolve-Path $Dest).Path) {
     Copy-Item -Force (Join-Path $Src "homechat.py") $Dest
     Copy-Item -Force -Recurse (Join-Path $Src "static") $Dest
     Copy-Item -Force (Join-Path $Src "README.md") $Dest -ErrorAction SilentlyContinue
+    # 安裝程式也複製一份:之後可以幫朋友打包(朋友點連結就能裝)
+    Copy-Item -Force (Join-Path $Src "install-windows.bat") $Dest -ErrorAction SilentlyContinue
+    Copy-Item -Force (Join-Path $Src "install-mac.command") $Dest -ErrorAction SilentlyContinue
+    Copy-Item -Force -Recurse (Join-Path $Src "installer") $Dest -ErrorAction SilentlyContinue
+}
+# 朋友給的安裝程式:附有互通碼,裝好後自動跟朋友互通
+$pair = Join-Path $Src "pair.txt"
+if (Test-Path $pair) {
+    Copy-Item -Force $pair $Dest
+    Say "裝好後會自動跟送你這個安裝程式的朋友互通" Green
 }
 Say "聊天紀錄會存在 $Dest\data" Green
 

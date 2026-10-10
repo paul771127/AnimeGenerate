@@ -19,6 +19,8 @@ import binascii
 import getpass
 import hashlib
 import hmac
+import html as htmllib
+import io
 import json
 import os
 import queue
@@ -49,7 +51,7 @@ HERE = Path(__file__).resolve().parent
 STATIC_DIR = HERE / "static"
 DEFAULT_DB = HERE / "data" / "homechat.db"
 
-VERSION = "2026.10.18"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
+VERSION = "2026.10.19"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
 COOKIE_NAME = "hc_session"
 SESSION_IDLE_DAYS = 365  # 像 LINE 一樣一直保持登入;一年沒用才自動登出(每次使用都會重新計算)
 INVITE_DAYS = 7  # 邀請連結 7 天內有效,只能用一次
@@ -247,7 +249,8 @@ CREATE TABLE IF NOT EXISTS albums (             -- 共同相簿:屬於一段對�
     contact_id INTEGER NOT NULL REFERENCES contacts(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     created_by TEXT NOT NULL,                    -- me / them
-    created_at REAL NOT NULL
+    created_at REAL NOT NULL,
+    uid TEXT                                     -- 互通時兩邊用來認出同一本相簿
 );
 CREATE TABLE IF NOT EXISTS album_photos (
     id INTEGER PRIMARY KEY,
@@ -409,6 +412,9 @@ class Store:
                     self.db.execute(f"ALTER TABLE messages ADD COLUMN {name} {ddl}")
             # 舊訊息補上全域編號
             self.db.execute("UPDATE messages SET uid = lower(hex(randomblob(12))) WHERE uid IS NULL")
+        cols = {r["name"] for r in self.db.execute("PRAGMA table_info(albums)")}
+        if cols and "uid" not in cols:
+            self.db.execute("ALTER TABLE albums ADD COLUMN uid TEXT")
 
     # --- settings
     def get_setting(self, key: str, default: str = "") -> str:
@@ -828,12 +834,34 @@ class Store:
             row = self.db.execute("SELECT * FROM albums WHERE id = ?", (album_id,)).fetchone()
         return dict(row) if row else None
 
-    def add_album(self, contact_id: int, name: str, created_by: str) -> dict:
+    def add_album(self, contact_id: int, name: str, created_by: str, uid: str | None = None,
+                  created_at: float | None = None) -> dict:
         with self.lock:
-            cur = self.db.execute("INSERT INTO albums (contact_id, name, created_by, created_at) VALUES (?, ?, ?, ?)",
-                                  (contact_id, name, created_by, time.time()))
+            cur = self.db.execute(
+                "INSERT INTO albums (contact_id, name, created_by, created_at, uid) VALUES (?, ?, ?, ?, ?)",
+                (contact_id, name, created_by, created_at or time.time(), uid or secrets.token_hex(12)))
             self.db.commit()
         return self.get_album(cur.lastrowid)
+
+    def album_uid(self, album: dict) -> str:
+        """舊版建立的相簿沒有 uid:第一次用到時補上。"""
+        if album.get("uid"):
+            return album["uid"]
+        uid = secrets.token_hex(12)
+        with self.lock:
+            self.db.execute("UPDATE albums SET uid = ? WHERE id = ? AND uid IS NULL", (uid, album["id"]))
+            self.db.commit()
+        return self.get_album(album["id"])["uid"]
+
+    def album_by_uid(self, contact_id: int, uid: str) -> dict | None:
+        with self.lock:
+            row = self.db.execute("SELECT * FROM albums WHERE contact_id = ? AND uid = ?", (contact_id, uid)).fetchone()
+        return dict(row) if row else None
+
+    def remove_album_attachment(self, album_id: int, att_id: str) -> None:
+        with self.lock:
+            self.db.execute("DELETE FROM album_photos WHERE album_id = ? AND attachment_id = ?", (album_id, att_id))
+            self.db.commit()
 
     def rename_album(self, album_id: int, name: str) -> None:
         with self.lock:
@@ -1069,6 +1097,23 @@ class Store:
                             (token, contact_id, name, time.time() + days * 86400))
             self.db.commit()
         return token
+
+    def peek_pair_code(self, token: str) -> dict | None:
+        """看互通碼還能不能用(不用掉)。"""
+        with self.lock:
+            row = self.db.execute("SELECT * FROM pair_codes WHERE token = ? AND expires > ?",
+                                  (token, time.time())).fetchone()
+        return dict(row) if row else None
+
+    def contact_by_peer_url(self, url: str) -> dict | None:
+        with self.lock:
+            row = self.db.execute("SELECT id FROM contacts WHERE peer_url = ?", (url.rstrip("/"),)).fetchone()
+        return dict(row) if row else None
+
+    def set_peer_url(self, contact_id: int, url: str) -> None:
+        with self.lock:
+            self.db.execute("UPDATE contacts SET peer_url = ? WHERE id = ? AND peer_id IS NOT NULL", (url, contact_id))
+            self.db.commit()
 
     def take_pair_code(self, token: str) -> dict | None:
         """用掉互通碼(只能用一次)。"""
@@ -1395,6 +1440,122 @@ def decode_pair_code(code: str) -> dict | None:
     return info
 
 
+SETUP_LINK_DAYS = 7  # 「幫朋友裝 HomeChat」連結的有效天數
+FED_ALBUM_BATCH = 20  # 互通:相簿照片每批送幾張
+# 打包給朋友的檔案(都在 homechat.py 旁邊;安裝程式會一起複製過去)
+PACKAGE_FILES = ("homechat.py", "README.md", "install-windows.bat", "install-mac.command", "installer/install-windows.ps1")
+
+
+def build_package(pair_code: str) -> bytes | None:
+    """把這台 HomeChat 的程式打包成 zip 給朋友,裡面放 pair.txt:裝好後自動跟我互通。"""
+    files = [(name, HERE / name) for name in PACKAGE_FILES]
+    files += [(f"static/{p.name}", p) for p in sorted(STATIC_DIR.iterdir()) if p.is_file()]
+    if not all(path.exists() for _, path in files):
+        return None
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for name, path in files:
+            info = zipfile.ZipInfo(name, date_time=time.localtime(path.stat().st_mtime)[:6])
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = (0o755 if name.endswith((".command", ".bat")) else 0o644) << 16
+            zf.writestr(info, path.read_bytes())
+        zf.writestr("pair.txt", pair_code + "\n")
+    return buf.getvalue()
+
+
+def windows_setup_bat(zip_url: str) -> str:
+    """Windows 一鍵安裝:下載 zip、解壓縮、執行安裝程式(只用英文,cmd 才不會亂碼)。"""
+    if not re.fullmatch(r"https?://[A-Za-z0-9.:/_-]+", zip_url):
+        raise ApiError(500, "網址格式不對")
+    ps = ("$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; "
+          "[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; "
+          "$d=Join-Path $env:TEMP 'HomeChat-setup'; if(Test-Path $d){Remove-Item -Recurse -Force $d}; "
+          "New-Item -ItemType Directory $d | Out-Null; $z=Join-Path $d 'HomeChat.zip'; "
+          f"Write-Host 'Downloading HomeChat...'; Invoke-WebRequest -UseBasicParsing -Uri '{zip_url}' -OutFile $z; "
+          "Expand-Archive -Path $z -DestinationPath $d -Force; "
+          "& (Join-Path $d 'installer\\install-windows.ps1')")
+    return ("@echo off\r\n"
+            "rem HomeChat one-click setup: downloads HomeChat from your friend's computer and installs it\r\n"
+            "chcp 65001 >nul\r\n"
+            f'powershell -NoProfile -ExecutionPolicy Bypass -Command "{ps}"\r\n'
+            "echo.\r\npause\r\n")
+
+
+def mac_setup_sh(zip_url: str) -> str:
+    if not re.fullmatch(r"https?://[A-Za-z0-9.:/_-]+", zip_url):
+        raise ApiError(500, "網址格式不對")
+    return ("#!/bin/bash\n# HomeChat 一鍵安裝(Mac):從朋友的電腦下載 HomeChat 並安裝\nset -e\n"
+            'D="$(mktemp -d)"\n'
+            f'curl -fsSL "{zip_url}" -o "$D/HomeChat.zip"\n'
+            'cd "$D" && unzip -q HomeChat.zip\n'
+            'bash "$D/install-mac.command" < /dev/tty\n')
+
+
+def setup_page(owner: str, base: str, code: str | None) -> str:
+    """朋友打開「幫我裝 HomeChat」連結看到的頁面。"""
+    name = htmllib.escape(owner)
+    if not code:
+        body = f"""<h1>連結已失效</h1><p>這個連結已經用過或超過 {SETUP_LINK_DAYS} 天了。請 {name} 重新傳一個給你。</p>"""
+    else:
+        mac_cmd = htmllib.escape(f"curl -fsSL {base}/mac.sh | bash")
+        body = f"""
+<h1>{name} 邀請你用 HomeChat</h1>
+<p class="lead">在<b>你自己的電腦</b>裝 HomeChat,你們的對話、照片、貼圖會<b>存在你們兩個人各自的電腦</b>,不經過任何公司。
+裝好後會<b>自動跟 {name} 連上</b>,不用再輸入什麼。</p>
+<div id="phone" class="box hidden"><b>📱 請用電腦打開這個連結</b><p>HomeChat 要裝在一台常開著的電腦(Windows 或 Mac)。
+可以把這個連結用 LINE 傳到電腦上再點開。</p></div>
+<div id="win" class="box">
+  <h2>Windows</h2>
+  <a class="btn" href="{base}/HomeChat-Setup.bat" download>⬇ 下載安裝程式</a>
+  <ol>
+    <li>下載後點兩下 <b>HomeChat-Setup.bat</b><br><small>瀏覽器問要不要保留 → 選「保留」;出現「Windows 已保護您的電腦」→ 按「其他資訊」→「仍要執行」</small></li>
+    <li>黑色視窗的問題都按 <b>Enter</b> 就好(會自動安裝 Python 和 Tailscale,Tailscale 可以用 Google 帳號登入)</li>
+    <li>瀏覽器打開後,設定<b>你的名字、帳號、密碼</b></li>
+    <li>如果跳出 Tailscale 的網頁,按 <b>Enable</b></li>
+  </ol>
+  <p>完成!幾秒後就會看到「已經跟 {name} 互通」🎉</p>
+</div>
+<div id="mac" class="box">
+  <h2>Mac</h2>
+  <ol>
+    <li>打開「終端機」(在「應用程式 → 工具程式」裡)</li>
+    <li>貼上這一行,按 Return:<pre id="cmd">{mac_cmd}</pre><button class="btn small" id="copy">複製</button></li>
+    <li>照畫面問題按 Return,瀏覽器打開後設定名字和密碼</li>
+  </ol>
+  <p><small>或是 <a href="{base}/HomeChat.zip">下載 zip</a>,解壓縮後在 install-mac.command 上按右鍵 →「打開」。</small></p>
+</div>
+<p class="note">這個連結 {SETUP_LINK_DAYS} 天內有效,只能用來連上一台電腦。之後要更新 HomeChat:再點一次桌面上的安裝程式就好,聊天紀錄會保留。</p>"""
+    return f"""<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>安裝 HomeChat</title>
+<link rel="icon" href="/icon.svg">
+<style>
+body {{ margin: 0; font-family: -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif; background: #f3f4f6; color: #111827; }}
+main {{ max-width: 640px; margin: 0 auto; padding: 24px 16px 40px; }}
+h1 {{ font-size: 24px; }} h2 {{ margin-top: 0; font-size: 19px; }}
+.lead {{ font-size: 16px; line-height: 1.7; }}
+.box {{ background: #fff; border-radius: 16px; padding: 18px 20px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,.08); }}
+.btn {{ display: inline-block; background: #06c755; color: #fff; text-decoration: none; border: 0; border-radius: 12px; padding: 14px 22px;
+  font-size: 17px; font-weight: 700; cursor: pointer; }}
+.btn.small {{ padding: 6px 14px; font-size: 14px; }}
+ol {{ line-height: 1.8; padding-left: 22px; }} small {{ color: #6b7280; }}
+pre {{ background: #111827; color: #a7f3d0; padding: 10px 12px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; }}
+.note {{ color: #6b7280; font-size: 13px; }} .hidden {{ display: none; }}
+</style></head><body><main>{body}</main>
+<script>
+const ua = navigator.userAgent;
+const isMac = /Macintosh/.test(ua) && !(navigator.maxTouchPoints > 1);
+const isPhone = /Android|iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+const show = (id, on) => {{ const e = document.getElementById(id); if (e) e.classList.toggle("hidden", !on); }};
+if (document.getElementById("win")) {{
+  show("phone", isPhone);
+  if (isMac) document.getElementById("win").before(document.getElementById("mac"));
+}}
+const copy = document.getElementById("copy");
+if (copy) copy.onclick = () => navigator.clipboard.writeText(document.getElementById("cmd").textContent)
+  .then(() => {{ copy.textContent = "已複製"; }}, () => {{}});
+</script></body></html>"""
+
+
 class PeerError(Exception):
     """對方回了錯誤。permanent = 重送也沒用(例如格式錯誤),直接放棄這一筆。"""
 
@@ -1462,9 +1623,20 @@ class Federation:
             self.wake.wait(5)
             self.wake.clear()
             try:
+                self.announce_url()
+                self.app.try_auto_pair()
                 self.process()
             except Exception:
                 traceback.print_exc()
+
+    def announce_url(self) -> None:
+        """自己的對外網址換了(例如重灌、換了通道):告訴每台互通的 HomeChat。"""
+        public = self.store.get_setting("public_url")
+        if not public or not valid_peer_url(public) or public == self.store.get_setting("announced_url"):
+            return
+        for cid in self.store.peer_contact_ids():
+            self.store.enqueue(cid, {"type": "hello", "url": public})
+        self.store.set_setting("announced_url", public)
 
     # --- 產生要送的東西
     def on_new_message(self, msg: dict) -> None:
@@ -1490,11 +1662,36 @@ class Federation:
             self.store.enqueue(cid, {"type": "profile"})
         self.wake.set()
 
+    def on_album(self, contact_id: int, op: dict) -> None:
+        """相簿有變動(建立 / 改名 / 刪除 / 加照片 / 移除照片)→ 對方那邊也照做。"""
+        if not self.store.peer_of(contact_id):
+            return
+        if op["op"] == "add":  # 照片多時分批送,一批失敗不用全部重傳
+            atts = op["atts"]
+            for i in range(0, len(atts), FED_ALBUM_BATCH):
+                self.store.enqueue(contact_id, {**op, "type": "album", "atts": atts[i:i + FED_ALBUM_BATCH]})
+        else:
+            self.store.enqueue(contact_id, {**op, "type": "album"})
+        self.wake.set()
+
     def sync_history(self, contact_id: int, delay: float = 0) -> int:
         """剛配對:把以前的對話也複製一份給對方(重複的對方會自動略過)。
 
         delay:被配對的那一邊要等對方先存好連線資料,晚幾秒再送。
         """
+        # 相簿先送(聊天裡的相簿卡片要對得上)
+        for album in self.store.list_albums(contact_id):
+            uid = self.store.album_uid(album)
+            self.store.enqueue(contact_id, {"type": "album", "op": "create", "uid": uid, "name": album["name"],
+                                            "created_by": album["created_by"], "created_at": album["created_at"]}, delay)
+            photos = list(reversed(self.store.album_photos(album["id"])))
+            by_adder: dict[str, list[str]] = {}
+            for ph in photos:
+                by_adder.setdefault(ph["added_by"], []).append(ph["attachment"]["id"])
+            for adder, atts in by_adder.items():
+                for i in range(0, len(atts), FED_ALBUM_BATCH):
+                    self.store.enqueue(contact_id, {"type": "album", "op": "add", "uid": uid, "name": album["name"],
+                                                    "by": adder, "atts": atts[i:i + FED_ALBUM_BATCH]}, delay)
         msgs = self.store.local_messages(contact_id)
         for m in msgs:
             self.store.enqueue(contact_id, {"type": "message", "message_id": m["id"], "history": True}, delay)
@@ -1553,15 +1750,22 @@ class Federation:
             if not msg:
                 return
             kind, body, att = msg["kind"], msg["body"], msg["attachment"]
+            files: list[str] = []
             if kind in ("album", "stickers"):
-                # 相簿 / 貼圖組卡片:第一階段先轉成一行文字
                 try:
                     info = json.loads(body)
                 except ValueError:
                     info = {}
-                body = (f"📷 新增了 {info.get('count', 0)} 張照片到相簿「{info.get('name', '')}」" if kind == "album"
-                        else f"⭐ 分享了 {info.get('count', 0)} 張貼圖")
-                kind, att = "text", None
+                if kind == "album":
+                    # 相簿編號兩邊不一樣:改用 uid
+                    album = self.store.get_album(int(info.get("album_id") or 0))
+                    info["album_uid"] = self.store.album_uid(album) if album else ""
+                    info.pop("album_id", None)
+                else:
+                    files = [str(it.get("id")) for it in info.get("items", []) if it.get("id")]
+                    for fid in files[1:]:  # 第一張下面會當成訊息的檔案送
+                        self._send_file(peer, fid, msg["sender"])
+                body = json.dumps(info, ensure_ascii=False)
             if att:
                 path = self.store.file_path(att["id"])
                 if path.exists():
@@ -1571,7 +1775,7 @@ class Federation:
                 else:
                     kind, att, body = "text", None, f"{KIND_LABELS.get(kind, '[檔案]')}(檔案已不在)"
             fed_request(peer["peer_url"], "/fed/inbox", secret=peer["peer_secret"], server_id=sid, payload={
-                "type": "message", "uid": msg["uid"], "sender": msg["sender"], "kind": kind, "body": body,
+                "type": "message", "uid": msg["uid"], "sender": msg["sender"], "kind": kind, "body": body, "files": files,
                 "created_at": msg["created_at"], "source": msg["source"], "history": bool(payload.get("history")),
                 "attachment": {k: att[k] for k in ("id", "name", "mime", "size")} if att else None,
             })
@@ -1579,6 +1783,15 @@ class Federation:
                 self.store.set_fed_state(msg["id"], "sent")
                 self.app.hub.publish({"type": "delivered", "contact_id": msg["contact_id"], "id": msg["id"]},
                                      msg["contact_id"])
+        elif payload["type"] == "album":
+            if payload.get("op") == "add":
+                metas = []
+                for att_id in payload.get("atts", []):
+                    att = self._send_file(peer, att_id, payload.get("by", "me"))
+                    if att:
+                        metas.append({k: att[k] for k in ("id", "name", "mime", "size")})
+                payload = {**payload, "atts": metas}
+            fed_request(peer["peer_url"], "/fed/inbox", secret=peer["peer_secret"], server_id=sid, payload=payload)
         elif payload["type"] == "profile":
             # 送的是「現在」的樣子(排隊時改了好幾次也只要最新的)
             ver = self.store.get_setting("owner_avatar")
@@ -1594,6 +1807,19 @@ class Federation:
                 "type": "profile", "status": self.store.get_setting("owner_status"), "avatar": ver})
         else:
             fed_request(peer["peer_url"], "/fed/inbox", secret=peer["peer_secret"], server_id=sid, payload=payload)
+
+    def _send_file(self, peer: dict, att_id: str, sender: str) -> dict | None:
+        """把一個檔案送到對方(對方已經有的會略過)。檔案不在了回傳 None。"""
+        att = self.store.get_attachment(att_id)
+        if not att:
+            return None
+        path = self.store.file_path(att["id"])
+        if not path.exists():
+            return None
+        q = urllib.parse.urlencode({"name": att["name"], "mime": att["mime"], "sender": sender})
+        fed_request(peer["peer_url"], f"/fed/files/{att['id']}?{q}", secret=peer["peer_secret"],
+                    server_id=self.store.server_id(), file=path, content_type=att["mime"], timeout=600)
+        return att
 
     def unpair(self, contact_id: int) -> None:
         """解除互通:先試著通知對方(連不上也沒關係),再把本機的連結拿掉。"""
@@ -1727,7 +1953,11 @@ CALL_RING_SECONDS = 45
 
 
 class Calls:
-    """語音通話:家裡電腦只負責「打電話 / 接起來 / 掛掉」和轉送連線資訊,聲音是兩台裝置直接傳(WebRTC)。"""
+    """語音 / 視訊通話:家裡電腦只負責「打電話 / 接起來 / 掛掉」和轉送連線資訊,聲音和畫面是兩台裝置直接傳(WebRTC)。
+
+    互通的朋友:兩台 HomeChat 各有一筆同樣編號的通話紀錄,打電話、接起來、連線資訊、掛斷都轉送給對方的 HomeChat。
+    remote = 對方在另一台 HomeChat;caller_sid / callee_sid 是 None 的那一方就在對方那台。
+    """
 
     def __init__(self, app: "App"):
         self.app = app
@@ -1746,27 +1976,70 @@ class Calls:
         with self.lock:
             return next((c for c in self.calls.values() if c["contact_id"] == contact_id), None)
 
-    def start(self, contact_id: int, role: str, sid: str, video: bool = False) -> dict:
+    def _to_peer(self, call: dict, payload: dict, wait: bool = True) -> None:
+        """轉送給對方的 HomeChat。wait=False:背景送,失敗也沒關係(例如掛斷)。"""
+        peer = self.app.store.peer_of(call["contact_id"])
+        if not peer:
+            raise ApiError(400, "已經不是互通的朋友了")
+
+        def send() -> None:
+            fed_request(peer["peer_url"], "/fed/inbox", secret=peer["peer_secret"],
+                        server_id=self.app.store.server_id(), timeout=10,
+                        payload={"type": "call", "call_id": call["id"], **payload})
+        if not wait:
+            def quiet() -> None:
+                try:
+                    send()
+                except (OSError, PeerError, ValueError):
+                    pass
+            threading.Thread(target=quiet, daemon=True).start()
+            return
+        try:
+            send()
+        except PeerError as e:
+            raise ApiError(502, f"對方的 HomeChat 拒絕了({e},可能需要更新)")
+        except (OSError, ValueError):
+            raise ApiError(502, "連不上對方的電腦(可能關機或睡眠),現在打不通")
+
+    def _busy(self, contact_id: int) -> None:
         hub = self.app.hub
         busy = self.for_contact(contact_id)
-        if busy:
-            # 兩邊網頁都關掉了還留著的:直接結束
-            gone = not hub.online(busy["caller_sid"]) and (not busy["callee_sid"] or not hub.online(busy["callee_sid"]))
-            if not gone:
-                raise ApiError(409, "對方正在通話中")
-            self.end(busy["id"], "gone")
-        call = {"id": secrets.token_urlsafe(12), "contact_id": contact_id, "caller": role, "caller_sid": sid,
-                "callee_sid": None, "state": "ringing", "started": time.time(), "answered_at": None, "video": video}
-        with self.lock:
-            self.calls[call["id"]] = call
-        callee = self.other(role)
-        hub.publish_to({"type": "call", "action": "ring", "call_id": call["id"], "contact_id": contact_id,
-                        "video": video}, callee, contact_id)
-        if not hub.visible_for(callee, contact_id):
-            self.app.pusher.push(callee, contact_id)
+        if not busy:
+            return
+        ringing = busy["state"] == "ringing" and time.time() - busy["started"] < CALL_RING_SECONDS + 5
+        alive = any(sid and hub.online(sid) for sid in (busy["caller_sid"], busy["callee_sid"]))
+        if ringing or alive:
+            raise ApiError(409, "對方正在通話中")
+        self.end(busy["id"], "gone")  # 兩邊網頁都關掉了還留著的
+
+    def _ring_local(self, call: dict) -> None:
+        hub, cid = self.app.hub, call["contact_id"]
+        callee = self.other(call["caller"])
+        hub.publish_to({"type": "call", "action": "ring", "call_id": call["id"], "contact_id": cid,
+                        "video": call["video"]}, callee, cid)
+        if not hub.visible_for(callee, cid):
+            self.app.pusher.push(callee, cid)
         timer = threading.Timer(CALL_RING_SECONDS, self._timeout, args=(call["id"],))
         timer.daemon = True
         timer.start()
+
+    def start(self, contact_id: int, role: str, sid: str, video: bool = False) -> dict:
+        self._busy(contact_id)
+        remote = role == "owner" and bool(self.app.store.peer_of(contact_id))
+        call = {"id": secrets.token_urlsafe(12), "contact_id": contact_id, "caller": role, "caller_sid": sid,
+                "callee_sid": None, "state": "ringing", "started": time.time(), "answered_at": None,
+                "video": video, "remote": remote}
+        if remote:
+            self._to_peer(call, {"action": "ring", "video": video})
+            with self.lock:
+                self.calls[call["id"]] = call
+            timer = threading.Timer(CALL_RING_SECONDS, self._timeout, args=(call["id"],))
+            timer.daemon = True
+            timer.start()
+            return call
+        with self.lock:
+            self.calls[call["id"]] = call
+        self._ring_local(call)
         return call
 
     def _timeout(self, call_id: str) -> None:
@@ -1780,7 +2053,14 @@ class Calls:
                 raise ApiError(409, "這通電話已經結束了")
             call["state"], call["callee_sid"], call["answered_at"] = "active", sid, time.time()
         hub = self.app.hub
-        hub.publish_to({"type": "call", "action": "answered", "call_id": call["id"]}, "", sid=call["caller_sid"])
+        if call["remote"]:
+            try:
+                self._to_peer(call, {"action": "answered"})
+            except ApiError:
+                self.end(call["id"], "gone")
+                raise
+        else:
+            hub.publish_to({"type": "call", "action": "answered", "call_id": call["id"]}, "", sid=call["caller_sid"])
         # 同一個人的其他裝置停止響鈴
         hub.publish_to({"type": "call", "action": "taken", "call_id": call["id"]}, self.other(call["caller"]),
                        call["contact_id"])
@@ -1795,8 +2075,45 @@ class Calls:
         if target:
             self.app.hub.publish_to({"type": "call", "action": "signal", "call_id": call["id"], "data": data},
                                     "", sid=target)
+        elif call["remote"]:
+            self._to_peer(call, {"action": "signal", "data": data})
 
-    def end(self, call_id: str, reason: str) -> None:
+    # --- 對方 HomeChat 轉來的
+    def from_peer(self, cid: int, data: dict) -> None:
+        call_id = str(data.get("call_id", ""))[:64]
+        action = data.get("action")
+        if not call_id:
+            raise ApiError(400, "缺少通話編號")
+        call = self.find(call_id)
+        if action == "ring":
+            if call:
+                return
+            self._busy(cid)
+            call = {"id": call_id, "contact_id": cid, "caller": "guest", "caller_sid": None, "callee_sid": None,
+                    "state": "ringing", "started": time.time(), "answered_at": None,
+                    "video": bool(data.get("video")), "remote": True}
+            with self.lock:
+                self.calls[call_id] = call
+            self._ring_local(call)
+            return
+        if not call or call["contact_id"] != cid or not call["remote"]:
+            raise ApiError(404, "這通電話已經結束了")
+        if action == "answered" and call["caller_sid"] and call["state"] == "ringing":
+            with self.lock:
+                call["state"], call["answered_at"] = "active", time.time()
+            self.app.hub.publish_to({"type": "call", "action": "answered", "call_id": call_id}, "",
+                                    sid=call["caller_sid"])
+        elif action == "signal" and isinstance(data.get("data"), dict):
+            local = call["caller_sid"] or call["callee_sid"]
+            if local:
+                self.app.hub.publish_to({"type": "call", "action": "signal", "call_id": call_id,
+                                         "data": data["data"]}, "", sid=local)
+        elif action == "end":
+            reason = str(data.get("reason", "ended"))
+            self.end(call_id, reason if reason in ("declined", "canceled", "missed", "ended", "gone") else "ended",
+                     from_peer=True)
+
+    def end(self, call_id: str, reason: str, from_peer: bool = False) -> None:
         with self.lock:
             call = self.calls.pop(call_id, None)
         if not call:
@@ -1805,13 +2122,17 @@ class Calls:
         event = {"type": "call", "action": "end", "call_id": call_id, "reason": reason}
         self.app.hub.publish_to(event, "owner")
         self.app.hub.publish_to(event, "guest", cid)
+        if call["remote"] and not from_peer:
+            self._to_peer(call, {"action": "end", "reason": reason}, wait=False)
+        # 通話紀錄只由打電話那一方的 HomeChat 寫(互通會同步給對方,不會重複)
+        if call["remote"] and not call["caller_sid"]:
+            return
         icon, kind = ("📹", "視訊通話") if call.get("video") else ("📞", "語音通話")
         if call["answered_at"]:
             secs = int(time.time() - call["answered_at"])
             body = f"{icon} {kind} {secs // 60}:{secs % 60:02d}"
         else:
             body = icon + " " + {"declined": "對方拒接", "canceled": "已取消"}.get(reason, "未接來電")
-        # 通話紀錄寫進對話(由打電話的那一方送出)
         sender = "me" if call["caller"] == "owner" else "them"
         store = self.app.store
         if not store.get_contact(cid):
@@ -1837,12 +2158,67 @@ class App:
         self.messages = RateLimiter(30, 60)  # 每台裝置每分鐘 30 則
         self.uploads = RateLimiter(60, 3600)  # 朋友每台裝置每小時 60 個檔案
         self.pairs = RateLimiter(10, 3600)  # 互通配對:同一來源每小時最多試 10 次
+        self.setup_downloads = RateLimiter(30, 3600)  # 安裝程式下載
         if owner_name:
             store.set_setting("owner_name", owner_name)
         self.fed = Federation(self)
         self.pusher = Pusher(store)
         self.calls = Calls(self)
         store.vapid()  # 推播金鑰先準備好
+
+    def connect_with_code(self, code: str, contact_id: int | None = None) -> dict:
+        """用朋友給的互通碼連到他的 HomeChat,回傳這邊的聯絡人。失敗丟 ApiError。"""
+        info = decode_pair_code(code)
+        if not info or not valid_peer_url(info["u"]):
+            raise ApiError(400, "互通碼格式不對,請整段複製貼上(HC1. 開頭)")
+        store = self.store
+        public = store.get_setting("public_url")
+        if not public or not valid_peer_url(public):
+            raise ApiError(400, "你的 HomeChat 還沒有 https 對外網址,請先設定 Tailscale(見 README)")
+        try:
+            resp = fed_request(info["u"], "/fed/pair", timeout=20, payload={
+                "token": info["t"], "url": public, "name": self.owner_name, "server_id": store.server_id()})
+        except PeerError as e:
+            raise ApiError(400, "互通碼已經用過或過期,請朋友重新產生一組" if e.status == 410 else f"對方拒絕:{e}")
+        except OSError as e:
+            raise ApiError(502, f"連不上對方的 HomeChat({e})。請確認對方電腦開著")
+        if not all(isinstance(resp.get(k), str) and resp.get(k) for k in ("secret", "server_id")):
+            raise ApiError(502, "對方的 HomeChat 版本太舊,請對方先更新")
+        if resp["server_id"] == store.server_id():
+            raise ApiError(400, "這是你自己的互通碼喔")
+        peer_name = (" ".join(str(resp.get("name") or info["n"]).split()))[:100] or "朋友"
+        # 跟同一台重新配對(例如對方重灌):沿用原本的聯絡人,不要多一個
+        again = store.contact_by_peer(resp["server_id"])
+        contact = (store.get_contact(contact_id) if contact_id else None) \
+            or (store.get_contact(again["id"]) if again else None) or store.add_contact(peer_name)
+        store.link_peer(contact["id"], resp["server_id"], info["u"].rstrip("/"), resp["secret"], peer_name)
+        store.set_setting("announced_url", "")  # 讓對方也記住我們現在的網址
+        self.fed.sync_history(contact["id"])
+        return store.get_contact(contact["id"])
+
+    def try_auto_pair(self) -> None:
+        """用朋友給的安裝程式裝好的:設定完密碼、有了對外網址後,自動跟朋友互通。"""
+        code = self.store.get_setting("pending_pair")
+        if not code or time.time() < getattr(self, "_next_pair", 0):
+            return
+        public = self.store.get_setting("public_url")
+        if not self.store.has_password() or not public or not valid_peer_url(public):
+            return  # 還在設定中,等一下再試
+        self._next_pair = time.time() + 30
+        try:
+            contact = self.connect_with_code(code)
+        except ApiError as e:
+            if e.status == 502:  # 對方電腦沒開:之後再試
+                self.store.set_setting("pending_pair_error", e.message)
+                return
+            self.store.set_setting("pending_pair", "")
+            self.store.set_setting("pending_pair_error", e.message)
+            self.hub.publish_to({"type": "contacts"}, "owner")
+            return
+        self.store.set_setting("pending_pair", "")
+        self.store.set_setting("pending_pair_error", "")
+        print(f"已經跟 {contact['name']} 的 HomeChat 互通")
+        self.hub.publish_to({"type": "peer_linked", "contact_id": contact["id"], "name": contact["name"]}, "owner")
 
     def notify_message(self, msg: dict) -> None:
         """新訊息:收的那個人沒開著 HomeChat 的話,推播到他的手機。"""
@@ -2069,6 +2445,9 @@ class Handler(BaseHTTPRequestHandler):
     def _route_get(self) -> None:
         url = urlsplit(self.path)
         qs = {k: v[-1] for k, v in parse_qs(url.query).items()}
+        m = re.fullmatch(r"/setup/([A-Za-z0-9_-]{16,64})(?:/(HomeChat\.zip|HomeChat-Setup\.bat|mac\.sh))?", url.path)
+        if m:
+            return self._friend_setup(m.group(1), m.group(2) or "")
         if url.path in ("/", "/index.html") or re.fullmatch(r"/(c|add)/[A-Za-z0-9_-]{1,64}", url.path):
             return self._static("index.html")
         if url.path in ("/manifest.webmanifest", "/icon.svg", "/sw.js", "/sticker-maker.js"):
@@ -2157,6 +2536,7 @@ class Handler(BaseHTTPRequestHandler):
             "/api/albums": self._create_album,
             "/api/fed/code": self._fed_code,
             "/api/fed/connect": self._fed_connect,
+            "/api/fed/setup-link": self._fed_setup_link,
         }
         if url.path in routes:
             return routes[url.path](data)
@@ -2183,7 +2563,11 @@ class Handler(BaseHTTPRequestHandler):
     def _me(self, qs: dict) -> None:
         if not self.app.store.has_password():
             # 第一次使用:只有坐在這台電腦前面的人可以設定密碼
-            return self._json({"role": None, "setup": self._is_local()})
+            out = {"role": None, "setup": self._is_local()}
+            info = decode_pair_code(self.app.store.get_setting("pending_pair"))
+            if info and out["setup"]:
+                out["pair_with"] = info["n"]  # 「設定好後會自動跟 某某 互通」
+            return self._json(out)
         sess = self._session()
         if not sess:
             return self._json({"role": None, "owner_name": self.app.owner_name})
@@ -2199,6 +2583,8 @@ class Handler(BaseHTTPRequestHandler):
                 "tunnel": self.app.store.get_setting("public_url_auto"),
                 "tunnel_note": self.app.store.get_setting("tunnel_note"),
                 "turn_url": self.app.store.get_setting("turn_url"),
+                "pending_pair": (decode_pair_code(self.app.store.get_setting("pending_pair")) or {}).get("n", ""),
+                "pending_pair_error": self.app.store.get_setting("pending_pair_error"),
                 "turn_user": self.app.store.get_setting("turn_user"),
             }, headers=refresh)
         contact = self.app.store.get_contact(sess["contact_id"])
@@ -2611,6 +2997,8 @@ class Handler(BaseHTTPRequestHandler):
         if len(self.app.store.list_albums(contact["id"])) >= MAX_ALBUMS:
             raise ApiError(409, f"相簿已經有 {MAX_ALBUMS} 本了")
         album = self.app.store.add_album(contact["id"], name, "me" if sess["role"] == "owner" else "them")
+        self.app.fed.on_album(contact["id"], {"op": "create", "uid": album["uid"], "name": name,
+                                              "created_by": album["created_by"], "created_at": album["created_at"]})
         self.app.hub.publish({"type": "album", "contact_id": contact["id"]}, contact["id"])
         self._json({"album": album})
 
@@ -2634,9 +3022,11 @@ class Handler(BaseHTTPRequestHandler):
             if not name:
                 raise ApiError(400, "請輸入相簿名稱")
             store.rename_album(album_id, name)
+            self.app.fed.on_album(album["contact_id"], {"op": "rename", "uid": store.album_uid(album), "name": name})
         elif action == "delete":
             if sess["role"] != "owner" and album["created_by"] != me:
                 raise ApiError(403, "只有建立相簿的人可以刪除")
+            self.app.fed.on_album(album["contact_id"], {"op": "delete", "uid": store.album_uid(album)})
             store.delete_album(album_id)
         elif action == "remove":
             try:
@@ -2648,6 +3038,8 @@ class Handler(BaseHTTPRequestHandler):
             if sess["role"] != "owner" and photo["added_by"] != me:
                 raise ApiError(403, "只能移除自己加的照片")
             store.remove_album_photo(photo["id"])
+            self.app.fed.on_album(album["contact_id"], {"op": "remove", "uid": store.album_uid(album),
+                                                        "att": photo["attachment_id"]})
         elif action == "add":
             ids = [str(i) for i in (data.get("attachment_ids") or [])][:100]
             valid = []
@@ -2661,6 +3053,9 @@ class Handler(BaseHTTPRequestHandler):
             if len(store.album_photos(album_id)) + len(valid) > MAX_ALBUM_PHOTOS:
                 raise ApiError(409, f"一本相簿最多 {MAX_ALBUM_PHOTOS} 張")
             added = store.add_album_photos(album_id, valid, me)
+            if added:  # 先送照片,聊天裡的相簿卡片才對得上
+                self.app.fed.on_album(album["contact_id"], {"op": "add", "uid": store.album_uid(album),
+                                                            "name": album["name"], "by": me, "atts": valid})
             if added and data.get("notify", True):
                 # 在聊天室留一張卡片:「新增了 N 張照片到相簿」
                 contact = store.get_contact(album["contact_id"])
@@ -2977,31 +3372,51 @@ class Handler(BaseHTTPRequestHandler):
     def _fed_connect(self, data: dict) -> None:
         """輸入朋友給的互通碼:連到他的 HomeChat。"""
         sess = self._require("owner")
-        info = decode_pair_code(str(data.get("code", "")))
-        if not info or not valid_peer_url(info["u"]):
-            raise ApiError(400, "互通碼格式不對,請整段複製貼上(HC1. 開頭)")
-        public = self._own_public_url()
-        target = self._contact_for(sess, data["contact_id"]) if data.get("contact_id") else None
-        store = self.app.store
-        try:
-            resp = fed_request(info["u"], "/fed/pair", timeout=20, payload={
-                "token": info["t"], "url": public, "name": self.app.owner_name, "server_id": store.server_id()})
-        except PeerError as e:
-            raise ApiError(400, "互通碼已經用過或過期,請朋友重新產生一組" if e.status == 410 else f"對方拒絕:{e}")
-        except OSError as e:
-            raise ApiError(502, f"連不上對方的 HomeChat({e})。請確認對方電腦開著")
-        if not all(isinstance(resp.get(k), str) and resp.get(k) for k in ("secret", "server_id")):
-            raise ApiError(502, "對方的 HomeChat 版本太舊,請對方先更新")
-        if resp["server_id"] == store.server_id():
-            raise ApiError(400, "這是你自己的互通碼喔")
-        peer_name = self._clean(resp.get("name") or info["n"], 100) or "朋友"
-        # 跟同一台重新配對(例如對方重灌):沿用原本的聯絡人,不要多一個
-        again = store.contact_by_peer(resp["server_id"])
-        contact = target or (store.get_contact(again["id"]) if again else None) or store.add_contact(peer_name)
-        store.link_peer(contact["id"], resp["server_id"], info["u"].rstrip("/"), resp["secret"], peer_name)
-        self.app.fed.sync_history(contact["id"])
+        target = self._contact_for(sess, data["contact_id"])["id"] if data.get("contact_id") else None
+        contact = self.app.connect_with_code(str(data.get("code", "")), target)
         self.app.hub.publish({"type": "contacts"}, contact["id"], to_guest=False)
-        self._json({"contact": self._public_contact(store.get_contact(contact["id"]))})
+        self._json({"contact": self._public_contact(contact)})
+
+    def _fed_setup_link(self, data: dict) -> None:
+        """產生「幫朋友裝 HomeChat」的連結:朋友點開下載安裝程式,裝好就自動跟我互通。"""
+        sess = self._require("owner")
+        public = self._own_public_url()
+        cid = self._contact_for(sess, data["contact_id"])["id"] if data.get("contact_id") else None
+        token = self.app.store.create_pair_code(cid, self._clean(data.get("name"), 100), days=SETUP_LINK_DAYS)
+        self._json({"url": f"{public}/setup/{token}", "code": encode_pair_code(public, token, self.app.owner_name),
+                    "expires_in": SETUP_LINK_DAYS * 86400})
+
+    # --- 幫朋友裝 HomeChat(不用登入:憑連結裡的互通碼)
+    def _setup_code(self, token: str) -> str | None:
+        public = self.app.store.get_setting("public_url")
+        if not self.app.store.peek_pair_code(token) or not public:
+            return None
+        return encode_pair_code(public, token, self.app.owner_name)
+
+    def _friend_setup(self, token: str, what: str) -> None:
+        code = self._setup_code(token)
+        base = f"{self._base_url()}/setup/{token}"
+        if not what:
+            return self._send(200, setup_page(self.app.owner_name, base, code).encode(), "text/html; charset=utf-8",
+                              {"Content-Security-Policy": HTML_CSP, "Cache-Control": "no-store",
+                               "Referrer-Policy": "no-referrer"})
+        if not code:
+            raise ApiError(410, "這個連結已經用過或過期了,請朋友重新傳一個")
+        if not self.app.setup_downloads.take(self._client_key()):
+            raise ApiError(429, "下載太多次了,晚點再試")
+        attach = lambda name: {"Content-Disposition": content_disposition("attachment", name), "Cache-Control": "no-store"}
+        if what == "HomeChat.zip":
+            data = build_package(code)
+            if data is None:
+                raise ApiError(500, "這台 HomeChat 少了安裝程式檔案,請主人先下載新版重新安裝")
+            return self._send(200, data, "application/zip", attach("HomeChat.zip"))
+        if what == "HomeChat-Setup.bat":
+            return self._send(200, windows_setup_bat(f"{base}/HomeChat.zip").encode("ascii"),
+                              "application/octet-stream", attach("HomeChat-Setup.bat"))
+        if what == "mac.sh":
+            return self._send(200, mac_setup_sh(f"{base}/HomeChat.zip").encode(), "text/plain; charset=utf-8",
+                              {"Cache-Control": "no-store"})
+        raise ApiError(404, "找不到")
 
     # --- 互通:其他 HomeChat 打過來的
     def _fed_pair(self) -> None:
@@ -3076,8 +3491,26 @@ class Handler(BaseHTTPRequestHandler):
                 raise ApiError(400, "缺少訊息編號")
             # 對方的「me」是我們的「them」
             sender = "them" if data.get("sender") == "me" else "me"
-            kind = data.get("kind") if data.get("kind") in MESSAGE_KINDS else "text"
+            kind = data.get("kind") if data.get("kind") in MESSAGE_KINDS + ("album", "stickers") else "text"
             body = str(data.get("body", ""))[:MAX_MESSAGE]
+            files: list[str] = []
+            if kind in ("album", "stickers"):
+                try:
+                    info = json.loads(body)
+                except ValueError:
+                    info = {}
+                if not isinstance(info, dict):
+                    info = {}
+                if kind == "album":
+                    album = store.album_by_uid(cid, str(info.pop("album_uid", "")))
+                    info["album_id"] = album["id"] if album else 0
+                    body = json.dumps(info, ensure_ascii=False)
+                else:
+                    files = [str(f) for f in (data.get("files") or [])][:MAX_SHARE_STICKERS]
+                    for fid in files:
+                        f_att = store.get_attachment(fid)
+                        if not f_att or f_att["contact_id"] != cid:
+                            raise ApiError(409, "檔案還沒收到")
             try:
                 created = float(data.get("created_at"))
             except (TypeError, ValueError):
@@ -3094,6 +3527,8 @@ class Handler(BaseHTTPRequestHandler):
                 att_id = att["id"]
             msg, new = store.add_message(cid, sender, body, None, kind, att_id, uid=uid, created_at=created,
                                          from_peer=True, source=source)
+            if new and files:
+                store.add_message_files(msg["id"], files)
             if new:
                 if data.get("history") and sender == "them":
                     store.mark_read(cid, "owner", msg["id"])  # 配對時複製過來的舊訊息不算未讀
@@ -3111,6 +3546,18 @@ class Handler(BaseHTTPRequestHandler):
                 hub.publish({"type": "read", "contact_id": cid, "owner_read_id": fresh["owner_read_id"],
                              "guest_read_id": fresh["guest_read_id"]}, cid)
             return self._json({"ok": True})
+        if kind_of == "call":
+            self.app.calls.from_peer(cid, data)
+            return self._json({"ok": True})
+        if kind_of == "album":
+            self._fed_album(cid, data)
+            hub.publish({"type": "album", "contact_id": cid}, cid)
+            return self._json({"ok": True})
+        if kind_of == "hello":  # 對方換了網址
+            url = str(data.get("url", "")).rstrip("/")
+            if valid_peer_url(url):
+                store.set_peer_url(cid, url)
+            return self._json({"ok": True})
         if kind_of == "profile":
             ver = str(data.get("avatar") or "")
             ver = ver if re.fullmatch(r"[A-Za-z0-9_-]{1,32}", ver) else ""
@@ -3126,6 +3573,41 @@ class Handler(BaseHTTPRequestHandler):
             hub.publish({"type": "contacts"}, cid, to_guest=False)
             return self._json({"ok": True})
         raise ApiError(400, "不支援的類型")
+
+    def _fed_album(self, cid: int, data: dict) -> None:
+        """對方相簿的變動,這邊照做(對方的 me 是我們的 them)。"""
+        store = self.app.store
+        flip = lambda who: "them" if who == "me" else "me"
+        uid = self._clean(data.get("uid"), 64)
+        if not uid:
+            raise ApiError(400, "缺少相簿編號")
+        op = data.get("op")
+        album = store.album_by_uid(cid, uid)
+        name = self._clean(data.get("name"), 40) or (album["name"] if album else "相簿")
+        if not album and op in ("create", "add"):
+            try:
+                created = float(data.get("created_at") or time.time())
+            except (TypeError, ValueError):
+                created = time.time()
+            album = store.add_album(cid, name, flip(data.get("created_by") or data.get("by")), uid,
+                                    min(created, time.time()))
+        if not album:
+            return  # 已經刪掉的相簿:略過
+        if op == "rename":
+            store.rename_album(album["id"], name)
+        elif op == "delete":
+            store.delete_album(album["id"])
+        elif op == "remove":
+            store.remove_album_attachment(album["id"], str(data.get("att", "")))
+        elif op == "add":
+            ids = []
+            for meta in (data.get("atts") or [])[:FED_ALBUM_BATCH]:
+                att = store.get_attachment(str((meta or {}).get("id", "")))
+                if not att or att["contact_id"] != cid:
+                    raise ApiError(409, "檔案還沒收到")
+                ids.append(att["id"])
+            if ids:
+                store.add_album_photos(album["id"], ids, flip(data.get("by")))
 
     def _fed_avatar(self) -> None:
         """收對方主人的大頭貼(接著會收到 profile,裡面有版本號)。"""
@@ -3395,8 +3877,9 @@ class Handler(BaseHTTPRequestHandler):
         contact = self._contact_for(sess, data.get("contact_id"))
         if contact["status"] != "active":
             raise ApiError(400, "還不是好友")
-        if sess["role"] == "owner" and not contact["username"] and not self.app.store.list_sessions("guest", contact["id"]):
-            raise ApiError(400, "對方還沒加入,不能打電話" if not contact["peer"] else "互通的朋友目前還不能直接通話")
+        if sess["role"] == "owner" and not contact["peer"] and not contact["username"] \
+                and not self.app.store.list_sessions("guest", contact["id"]):
+            raise ApiError(400, "對方還沒加入,不能打電話")
         call = self.app.calls.start(contact["id"], sess["role"], sess["id"], bool(data.get("video")))
         self._json({"call_id": call["id"], "ice_servers": self._ice_servers(), "ring_seconds": CALL_RING_SECONDS})
 
@@ -3737,6 +4220,17 @@ def main(argv: list[str] | None = None) -> int:
         store.cleanup_attachments()
     except OSError:
         pass
+    # 朋友給的安裝程式裡附的互通碼:裝好、設定完密碼後自動跟朋友互通
+    pair_file = HERE / "pair.txt"
+    if pair_file.exists():
+        try:
+            code = pair_file.read_text(encoding="utf-8").strip()
+            if decode_pair_code(code) and not store.contact_by_peer_url(decode_pair_code(code)["u"]):
+                store.set_setting("pending_pair", code)
+                store.set_setting("pending_pair_error", "")
+            pair_file.unlink()
+        except OSError:
+            pass
     app = App(store, owner_name=args.name)
     server = None
     for attempt in range(2):

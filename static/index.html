@@ -215,6 +215,7 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
   background: #fef3c7; color: #92400e; border-radius: 12px; padding: 8px 14px; font-size: 13px; width: min(560px, calc(100vw - 32px));
   box-shadow: 0 4px 16px rgba(0,0,0,.15); text-align: center; }
 .msg.queued .stamp { color: #fef3c7; }
+#pair-note, #nt-hint { white-space: pre-wrap; }
 #banner { position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 120;
   width: min(420px, calc(100vw - 24px)); display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px;
   background: var(--panel); color: var(--text); box-shadow: 0 6px 24px rgba(0,0,0,.25); cursor: pointer; }
@@ -311,6 +312,7 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
   <form class="card hidden" id="setup-form">
     <h1>歡迎使用 HomeChat</h1>
     <p>先設定你的名字、帳號和密碼。之後在手機上登入也用這組帳號密碼,瀏覽器會幫你記住。</p>
+    <div class="warn hidden" id="setup-pair"></div>
     <input class="field" name="owner_name" placeholder="你的名字(朋友會看到)" maxlength="50" required>
     <input class="field" name="username" placeholder="帳號(英文或數字,3~30 字)" autocomplete="username"
            autocapitalize="none" autocorrect="off" spellcheck="false" pattern="[A-Za-z0-9._\-]{3,30}" required>
@@ -366,6 +368,7 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
       <button class="icon-btn" id="main-menu-btn" title="選單">⋯</button>
     </div>
     <div class="warn hidden" id="tunnel-note" style="margin:8px 12px 0"></div>
+    <div class="warn hidden" id="pair-note" style="margin:8px 12px 0"></div>
     <div class="search"><input class="field" id="search" placeholder="搜尋聯絡人" autocomplete="off"></div>
     <div id="contact-list"></div>
   </aside>
@@ -467,6 +470,7 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
     <button class="btn secondary hidden" type="button" id="invite-cancel">取消這條連結</button>
     <button class="btn secondary hidden" type="button" id="invite-copy">複製</button>
     <a class="btn line-btn hidden" id="invite-line" target="_blank" rel="noopener">用 LINE 傳送</a>
+    <button class="btn secondary" type="button" id="invite-setup" title="朋友有電腦的話,可以裝他自己的 HomeChat">🖥 讓他在自己電腦裝</button>
     <button class="btn hidden" type="button" id="invite-new">產生新連結</button>
     <button class="btn secondary" type="button" data-close>關閉</button>
   </div>
@@ -514,10 +518,29 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
   <p class="hint" style="margin-top:0">朋友也在自己電腦裝了 HomeChat 的話,兩台可以連在一起:你們各自用自己的 HomeChat 聊天,
     <b>每則訊息、照片都會在兩邊的電腦各存一份</b>。一邊電腦關機時,訊息會先排隊,開機後自動補送。</p>
   <div class="tabs" id="fed-tabs">
-    <button type="button" data-tab="give" class="on">給朋友互通碼</button>
-    <button type="button" data-tab="enter">輸入朋友的互通碼</button>
+    <button type="button" data-tab="setup" class="on">🖥 幫朋友裝</button>
+    <button type="button" data-tab="give">給互通碼</button>
+    <button type="button" data-tab="enter">輸入互通碼</button>
   </div>
-  <div data-pane="give">
+  <div data-pane="setup">
+    <p class="hint">朋友還沒裝 HomeChat:傳一個連結給他,他用<b>電腦</b>打開 → 下載 → 點兩下,就會裝好<b>他自己的</b> HomeChat,
+      而且<b>自動跟你互通</b>,不用輸入任何碼。</p>
+    <label>要跟哪位朋友互通?</label>
+    <select class="field" id="fed-setup-contact"></select>
+    <div id="fed-setup-result" class="hidden">
+      <label>安裝連結(7 天內有效、只能用一次)</label>
+      <div class="field invite-url" id="fed-setup-url"></div>
+    </div>
+    <div class="error" id="fed-setup-error"></div>
+    <div class="actions">
+      <button class="btn secondary hidden" type="button" id="fed-setup-copy">複製</button>
+      <a class="btn line-btn hidden" id="fed-setup-line" target="_blank" rel="noopener">用 LINE 傳送</a>
+      <button class="btn" type="button" id="fed-setup-make">產生安裝連結</button>
+      <button class="btn secondary" type="button" data-close>關閉</button>
+    </div>
+  </div>
+  <div data-pane="give" class="hidden">
+    <p class="hint">朋友已經裝好 HomeChat:給他一組互通碼貼上就好。</p>
     <label>要跟哪位朋友互通?</label>
     <select class="field" id="fed-give-contact"></select>
     <div id="fed-give-result" class="hidden">
@@ -917,6 +940,12 @@ function applyMe(me) {
   state.ownerAvatar = me.owner_avatar || ""; state.ownerStatus = me.owner_status || "";
   state.myContact = me.contact || null;
   state.turnUrl = me.turn_url || ""; state.turnUser = me.turn_user || "";
+  // 朋友給的安裝程式:自動互通的進度
+  const pn = $("#pair-note");
+  pn.textContent = me.pending_pair
+    ? `🔗 正在自動跟 ${me.pending_pair} 的 HomeChat 互通…(等外部連線設定好,通常一兩分鐘)` + (me.pending_pair_error ? `\n目前:${me.pending_pair_error}` : "")
+    : me.pending_pair_error ? `自動互通沒有成功:${me.pending_pair_error}。請朋友重新傳一個安裝連結,或用 ⋯ →「互通」→「輸入互通碼」。` : "";
+  pn.classList.toggle("hidden", !pn.textContent);
   if ($("#me-avatar")) renderMeAvatar();
   const note = $("#tunnel-note");
   note.classList.toggle("hidden", !me.tunnel_note);
@@ -978,7 +1007,11 @@ async function doBoot() {
   }
   applyMe(me);
   const m = location.pathname.match(/^\/(c|add)\/([\w-]+)$/);
-  if (me.setup) { showGate("setup-form"); $("#setup-form").owner_name.focus(); return; }
+  if (me.setup) {
+    $("#setup-pair").textContent = me.pair_with ? `設定好之後,會自動跟 ${me.pair_with} 的 HomeChat 互通 🔗` : "";
+    $("#setup-pair").classList.toggle("hidden", !me.pair_with);
+    showGate("setup-form"); $("#setup-form").owner_name.focus(); return;
+  }
   if (m && m[1] === "c") return showJoin(m[2], me);
   if (m && m[1] === "add") return showRequest(m[2], me);
   if (!me.role) {
@@ -1415,7 +1448,7 @@ function callPeer(contactId) {
 }
 function canCall(c) {
   if (!c || c.status !== "active") return false;
-  return state.role === "guest" || !!(c.username || c.devices);
+  return state.role === "guest" || !!(c.username || c.devices || c.peer);
 }
 function showCall(mode, status) {
   const peer = callPeer(call.contactId);
@@ -3027,6 +3060,11 @@ $("#invite-new").addEventListener("click", async () => {
   const { contact } = await api(`/api/contacts/${inviteContact.id}/invite`, {});
   await loadContacts(); openInvite(contact);
 });
+$("#invite-setup").addEventListener("click", async () => {
+  const c = inviteContact; $("#dlg-invite").close();
+  if (state.role === "owner" && !state.contacts.length) await loadContacts();
+  openFed(c && state.contacts.find(x => x.id === c.id));
+});
 $("#invite-cancel").addEventListener("click", async () => {
   const { contact } = await api(`/api/contacts/${inviteContact.id}/cancel-invite`, {});
   await loadContacts(); openInvite(contact); toast("已取消,這條連結不能用了");
@@ -3100,13 +3138,18 @@ function fedContactOptions(select, firstLabel, selected) {
 function openFed(contact) {
   if (state.offline) return toast("連不上家裡的電腦,等連上再設定互通");
   fedContactOptions($("#fed-give-contact"), "新朋友(第一次聊天)", contact);
+  fedContactOptions($("#fed-setup-contact"), "新朋友(第一次聊天)", contact);
+  $("#fed-setup-result").classList.add("hidden");
+  ["#fed-setup-copy", "#fed-setup-line"].forEach(id => $(id).classList.add("hidden"));
+  $("#fed-setup-make").classList.remove("hidden");
+  $("#fed-setup-error").textContent = "";
   fedContactOptions($("#fed-enter-contact"), "新增一個聯絡人", contact);
   $("#fed-give-result").classList.add("hidden");
   ["#fed-copy", "#fed-line"].forEach(id => $(id).classList.add("hidden"));
   $("#fed-make").classList.remove("hidden");
   $("#fed-give-error").textContent = ""; $("#fed-enter-error").textContent = "";
   $("#fed-input").value = "";
-  setFedTab("give");
+  setFedTab("setup");
   $("#dlg-fed").showModal();
 }
 $("#fed-make").addEventListener("click", async () => {
@@ -3122,6 +3165,19 @@ $("#fed-make").addEventListener("click", async () => {
   } catch (err) { $("#fed-give-error").textContent = err.message; }
 });
 $("#fed-copy").addEventListener("click", () => copyText($("#fed-code").value, $("#fed-code")));
+$("#fed-setup-make").addEventListener("click", async () => {
+  $("#fed-setup-error").textContent = "";
+  const cid = $("#fed-setup-contact").value;
+  try {
+    const { url } = await api("/api/fed/setup-link", cid ? { contact_id: Number(cid) } : {});
+    $("#fed-setup-url").textContent = url;
+    $("#fed-setup-result").classList.remove("hidden");
+    ["#fed-setup-copy", "#fed-setup-line"].forEach(id => $(id).classList.remove("hidden"));
+    $("#fed-setup-make").classList.add("hidden");
+    $("#fed-setup-line").href = lineShare(`我用 HomeChat 聊天(對話存在自己家的電腦,不經過任何公司)。用你的電腦打開這個連結,點兩下安裝,就會跟我連上:\n${url}`);
+  } catch (err) { $("#fed-setup-error").textContent = err.message; }
+});
+$("#fed-setup-copy").addEventListener("click", () => copyText($("#fed-setup-url").textContent, $("#fed-setup-url")));
 $("#fed-connect").addEventListener("click", async () => {
   $("#fed-enter-error").textContent = "";
   const btn = $("#fed-connect"); btn.disabled = true; btn.textContent = "連線中…";

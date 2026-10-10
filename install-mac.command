@@ -68,6 +68,14 @@ if [ "$SRC" != "$DEST" ]; then
   cp -f "$SRC/homechat.py" "$DEST/"
   rm -rf "$DEST/static" && cp -R "$SRC/static" "$DEST/"
   cp -f "$SRC/README.md" "$DEST/" 2>/dev/null
+  # 安裝程式也複製一份:之後可以幫朋友打包(朋友點連結就能裝)
+  cp -f "$SRC/install-mac.command" "$SRC/install-windows.bat" "$DEST/" 2>/dev/null
+  rm -rf "$DEST/installer" && cp -R "$SRC/installer" "$DEST/" 2>/dev/null
+fi
+# 朋友給的安裝程式:附有互通碼,裝好後自動跟朋友互通
+if [ -f "$SRC/pair.txt" ]; then
+  cp -f "$SRC/pair.txt" "$DEST/"
+  green "裝好後會自動跟送你這個安裝程式的朋友互通"
 fi
 mkdir -p "$DEST/data"
 green "聊天紀錄會存在 $DEST/data"
