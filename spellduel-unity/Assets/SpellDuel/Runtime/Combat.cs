@@ -223,8 +223,9 @@ namespace SpellDuel
 
         // ------------------------------------------------------------ 出手
         /// <param name="aimDir">投射物的方向（場地座標）</param>
-        /// <param name="floorPoint">陷阱的位置（地板上）</param>
-        public bool TryRelease(Fighter f, Vector3 aimDir, Vector3 floorPoint, out string why)
+        /// <param name="floorPoint">陷阱的位置（地板上）；沒鎖定時隕石也落在這裡</param>
+        /// <param name="locked">有沒有鎖定敵人。沒鎖定也能放：朝準星方向飛，不檢查「太近」，隕石落在準星指的地面</param>
+        public bool TryRelease(Fighter f, Vector3 aimDir, Vector3 floorPoint, out string why, bool locked = true)
         {
             why = null;
             var s = f.charging;
@@ -233,7 +234,7 @@ namespace SpellDuel
             if (now - f.chargeStart < s.charge) { why = $"蓄力中 {Mathf.FloorToInt(ChargeProgress(f) * 100)}%"; return false; }
             int rs = RangeState(f, s);
             // 近身技能（releaseNear）：不限距離，放招後進入伏擊狀態
-            if (s.type == SkillType.Projectile && rs < 0) { why = $"太近了！要拉開到 {s.rangeMin:0.#}m 以上"; return false; }
+            if (locked && s.type == SkillType.Projectile && rs < 0) { why = $"太近了！要拉開到 {s.rangeMin:0.#}m 以上"; return false; }
             if (s.type == SkillType.Trap && FlatDistance(f.Feet, floorPoint) > s.trapRange)
             { why = $"陷阱只能設在 {s.trapRange:0.#}m 內"; return false; }
 
@@ -254,8 +255,15 @@ namespace SpellDuel
                 case SkillType.Trap: PlaceTrap(f, s, floorPoint); break;
                 case SkillType.Projectile when s.id == "meteor":
                 {
-                    // 隕石：從敵人（施放當下的位置）正上方砸下，敵人可以趁下落時移動閃開
+                    // 隕石：從敵人（施放當下的位置）正上方砸下，敵人可以趁下落時移動閃開；
+                    // 沒鎖定時落在準星指的地面（最遠到射程）
                     var target = Opponent(f).Feet;
+                    if (!locked)
+                    {
+                        var off = floorPoint - f.Feet; off.y = 0f;
+                        if (off.magnitude > s.rangeMax) off = off.normalized * s.rangeMax;
+                        target = f.Feet + off; target.y = 0f;
+                    }
                     Spawn(f, s, target + Vector3.up * MeteorDropHeight, Vector3.down, s.damage, s.effect, s.effectDps, s.effectDur, false);
                     Emit("cast", f.head, s.color, null);
                     break;
@@ -266,7 +274,7 @@ namespace SpellDuel
                     if (s.id == "wind")
                     {
                         // 風刃：隨機從左或右側繞弧線飛向目標（終點仍是準星方向、敵人的距離）
-                        float dist = Mathf.Max(1f, FlatDistance(f.head, Opponent(f).head));
+                        float dist = Mathf.Max(1f, locked ? FlatDistance(f.head, Opponent(f).head) : s.rangeMax * 0.6f);
                         float amp = Mathf.Max(0.5f, dist * 0.45f) * (rng.Next(2) == 0 ? -1f : 1f);
                         var wp = Spawn(f, s, hand, aimDir, s.damage, s.effect, s.effectDps, s.effectDur, false, amp, dist);
                         Emit("cast", hand, s.color, null);

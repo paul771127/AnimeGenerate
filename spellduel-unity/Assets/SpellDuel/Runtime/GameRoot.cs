@@ -604,7 +604,6 @@ namespace SpellDuel
             if (!WorldReady) { Log(duoUseMarker ? "請先掃描標記圖對齊座標" : areaReceived ? "還沒對齊：兩人面對面，讓鏡頭拍到對方全身" : "請先畫場地"); return; }
             if (!Tracking.Ok) { Log("AR 追蹤中斷，暫時不能施法"); return; }
             if (!hasTarget) { Log("還沒有目標：請先連線、開練習假人，或讓鏡頭拍到一個人"); return; }
-            if (!targetOnScreen) { Log("🎯 鏡頭沒看到對手，無法鎖定"); return; }
             if (Time.time - lastShot < ShotCooldown) return;
             lastShot = Time.time;
 
@@ -1158,7 +1157,7 @@ namespace SpellDuel
                     float dTarget = Flat(tgtHeadW - meW).magnitude;
                     UiKit.Text(new Rect(targetRect.x, targetRect.y - lineH, Mathf.Max(targetRect.width, W * 0.4f), lineH), $"🎯 鎖定　{dTarget:F1} m", fs, new Color(0.4f, 1f, 0.5f), TextAnchor.LowerLeft, true);
                 }
-                else UiKit.Pill(H * 0.58f, $"鏡頭沒看到對手，轉向對手才能施法（距離 {Flat(tgtHeadW - WorldFrame.ToWorld(cam.transform.position)).magnitude:F1} m）", fs, new Color(1f, 0.45f, 0.45f), W - pad * 2);
+                else UiKit.Pill(H * 0.58f, $"鏡頭沒看到對手（沒鎖定也能放，朝準星飛；距離 {Flat(tgtHeadW - WorldFrame.ToWorld(cam.transform.position)).magnitude:F1} m）", fs, new Color(1f, 0.45f, 0.45f), W - pad * 2);
             }
 
             if (mode == Mode.Duo) hand.DrawGUI(label, new Color(1f, 0.6f, 0.1f));

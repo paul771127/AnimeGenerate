@@ -380,15 +380,15 @@ namespace SpellDuel
         void ReleaseAt(Vector2 sp, bool byGesture)
         {
             if (Me.charging == null) { Say("先比出技能手勢（或唸咒語）開始詠唱", 1.5f); return; }
-            if (Me.charging.type == SkillType.Projectile && !enemyOnScreen && battle.ChargeProgress(Me) >= 1f)
-            { Say("🎯 敵人不在畫面中，轉向敵人才能鎖定", 1.5f); return; }
 
             // 點擊方向（場地座標）與地板交點（陷阱用）
             var ray = cam.ScreenPointToRay(sp);
             var o = WorldFrame.ToWorld(ray.origin);
             var d = WorldFrame.DirToWorld(ray.direction);
-            var floor = d.y < -0.01f ? o + d * (-o.y / d.y) : Me.Feet + Fighter.Flat(Me.forward) * 1.5f;
-            if (!battle.TryRelease(Me, d, floor, out var why)) Say(why, 1.5f);
+            // 準星朝上（指不到地面）時，取準星方向的遠處（隕石用）
+            var floor = d.y < -0.01f ? o + d * (-o.y / d.y) : Me.Feet + Fighter.Flat(d) * 15f;
+            // 沒鎖定敵人也能放招：一律朝準星方向（打不打得到看瞄準）
+            if (!battle.TryRelease(Me, d, floor, out var why, enemyOnScreen)) Say(why, 1.5f);
             else
             {
                 if (byGesture) Say("🖐️ 放招！", 0.8f);
@@ -918,7 +918,7 @@ namespace SpellDuel
                 float prog = battle.ChargeProgress(me);
                 int rs = battle.RangeState(me, me.charging);
                 string st = prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%" :
-                    me.charging.releaseNear ? "手刀往前刺 → 5 秒內靠近敵人自動出手" : rs < 0 ? "太近了" :
+                    me.charging.releaseNear ? "手刀往前刺 → 5 秒內靠近敵人自動出手" : rs < 0 && enemyOnScreen ? "太近了" :
                     HandGesture.StyleHint(HandGesture.ReleaseOf(me.charging));
                 UiKit.Pill(H / 2 - lh * 2.6f, $"{me.charging.name}　{st}", fs, prog < 1f ? Color.white : me.charging.color, pillW);
             }
@@ -973,7 +973,7 @@ namespace SpellDuel
                     UiKit.Text(new Rect(r.x, r.yMax + 2, Mathf.Max(r.width, W * 0.3f), lh * 0.8f), "🎯 鎖定", fsS, new Color(0.4f, 1f, 0.5f), TextAnchor.UpperLeft, true);
                 }
                 else
-                    UiKit.Pill(H * 0.58f, (enemyScreenSide < 0 ? "◀ 敵人在左邊" : "敵人在右邊 ▶") + "（轉向敵人才能發射）", fs, new Color(1f, 0.45f, 0.45f), pillW);
+                    UiKit.Pill(H * 0.58f, (enemyScreenSide < 0 ? "◀ 敵人在左邊" : "敵人在右邊 ▶") + "（沒鎖定也能放，朝準星飛）", fs, new Color(1f, 0.45f, 0.45f), pillW);
             }
             if (Time.time < messageUntil) UiKit.Pill(H * 0.64f, message, fs, Color.white, pillW);
 
