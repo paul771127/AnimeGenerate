@@ -29,6 +29,7 @@ import sqlite3
 import subprocess
 import sys
 import threading
+import tempfile
 import time
 import traceback
 import urllib.error
@@ -38,13 +39,13 @@ from datetime import datetime
 from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, quote, urlsplit
+from urllib.parse import parse_qs, quote, unquote, urlsplit
 
 HERE = Path(__file__).resolve().parent
 STATIC_DIR = HERE / "static"
 DEFAULT_DB = HERE / "data" / "homechat.db"
 
-VERSION = "2026.10.10"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
+VERSION = "2026.10.11"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
 COOKIE_NAME = "hc_session"
 SESSION_IDLE_DAYS = 365  # 像 LINE 一樣一直保持登入;一年沒用才自動登出(每次使用都會重新計算)
 INVITE_DAYS = 7  # 邀請連結 7 天內有效,只能用一次
@@ -54,6 +55,15 @@ USERNAME_RE = re.compile(r"^[A-Za-z0-9._-]{3,30}$")
 MAX_PENDING = 20  # 最多同時 20 個待確認的好友申請
 MAX_BODY = 20 * 1024 * 1024  # LINE 聊天紀錄可能很大
 MAX_MESSAGE = 5000
+MAX_UPLOAD = 100 * 1024 * 1024  # 圖片 / 檔案 / 語音,每個最大 100 MB
+MIN_FREE_DISK = 500 * 1024 * 1024  # 硬碟剩不到 500 MB 就不收檔案
+MESSAGE_KINDS = ("text", "image", "file", "audio")
+# 可以直接在網頁上顯示 / 播放的格式;其他一律當成下載,避免 HTML、SVG 之類夾帶程式
+INLINE_TYPES = {
+    "image/jpeg", "image/png", "image/gif", "image/webp", "image/avif",
+    "audio/webm", "audio/ogg", "audio/mp4", "audio/mpeg", "audio/aac", "audio/x-m4a", "audio/wav",
+    "video/mp4", "video/webm", "video/quicktime",
+}
 PAGE_SIZE = 200
 PBKDF2_ROUNDS = 200_000
 
@@ -81,7 +91,18 @@ CREATE TABLE IF NOT EXISTS messages (
     body TEXT NOT NULL,
     created_at REAL NOT NULL,
     source TEXT NOT NULL DEFAULT 'chat',
-    client_id TEXT                               -- 裝置產生的編號,離線排隊重送時不會重複
+    client_id TEXT,                              -- 裝置產生的編號,離線排隊重送時不會重複
+    kind TEXT NOT NULL DEFAULT 'text',           -- text / image / file / audio
+    attachment_id TEXT
+);
+CREATE TABLE IF NOT EXISTS attachments (        -- 圖片、檔案、語音,實際檔案在 data/files/<id>
+    id TEXT PRIMARY KEY,
+    contact_id INTEGER NOT NULL REFERENCES contacts(id) ON DELETE CASCADE,
+    uploader TEXT NOT NULL,                      -- me / them
+    name TEXT NOT NULL,
+    mime TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    created_at REAL NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_messages_contact ON messages(contact_id, created_at, id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_client ON messages(contact_id, client_id) WHERE client_id IS NOT NULL;
@@ -156,6 +177,10 @@ class Store:
             path.parent.mkdir(parents=True, exist_ok=True)
             if os.name == "posix":  # 只有自己能讀
                 os.chmod(path.parent, 0o700)
+            self.files_dir = path.parent / "files"
+        else:
+            self.files_dir = Path(tempfile.mkdtemp(prefix="homechat-files-"))
+        self.files_dir.mkdir(exist_ok=True)
         self.db = sqlite3.connect(str(path), check_same_thread=False)
         self.db.row_factory = sqlite3.Row
         self.lock = threading.Lock()
@@ -185,8 +210,11 @@ class Store:
                 if name not in cols:
                     self.db.execute(f"ALTER TABLE contacts ADD COLUMN {name} {ddl}")
         cols = {r["name"] for r in self.db.execute("PRAGMA table_info(messages)")}
-        if cols and "client_id" not in cols:
-            self.db.execute("ALTER TABLE messages ADD COLUMN client_id TEXT")
+        if cols:
+            for name, ddl in (("client_id", "TEXT"), ("kind", "TEXT NOT NULL DEFAULT 'text'"),
+                              ("attachment_id", "TEXT")):
+                if name not in cols:
+                    self.db.execute(f"ALTER TABLE messages ADD COLUMN {name} {ddl}")
 
     # --- settings
     def get_setting(self, key: str, default: str = "") -> str:
@@ -294,7 +322,9 @@ class Store:
                 SELECT c.*,
                   (SELECT COUNT(*) FROM messages m WHERE m.contact_id = c.id AND m.sender = 'them'
                      AND m.source = 'chat' AND m.id > c.owner_read_id) AS unread,
-                  (SELECT body FROM messages m WHERE m.contact_id = c.id
+                  (SELECT CASE m.kind WHEN 'image' THEN '[圖片]' WHEN 'audio' THEN '[語音訊息]'
+                                      WHEN 'file' THEN '[檔案]' ELSE m.body END
+                     FROM messages m WHERE m.contact_id = c.id
                      ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_body,
                   (SELECT created_at FROM messages m WHERE m.contact_id = c.id
                      ORDER BY m.created_at DESC, m.id DESC LIMIT 1) AS last_at,
@@ -436,13 +466,58 @@ class Store:
 
     def delete_contact(self, contact_id: int) -> None:
         with self.lock:
+            ids = [r["id"] for r in self.db.execute("SELECT id FROM attachments WHERE contact_id = ?", (contact_id,))]
             self.db.execute("DELETE FROM contacts WHERE id = ?", (contact_id,))
             self.db.commit()
+        for att_id in ids:  # 對話刪掉,圖片和檔案也一起刪
+            self.file_path(att_id).unlink(missing_ok=True)
+
+    # --- 附件(圖片、檔案、語音)
+    def file_path(self, att_id: str) -> Path:
+        return self.files_dir / att_id
+
+    def add_attachment(self, att_id: str, contact_id: int, uploader: str, name: str, mime: str, size: int) -> dict:
+        with self.lock:
+            self.db.execute(
+                "INSERT INTO attachments (id, contact_id, uploader, name, mime, size, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (att_id, contact_id, uploader, name, mime, size, time.time()),
+            )
+            self.db.commit()
+        return self.get_attachment(att_id)
+
+    def get_attachment(self, att_id: str) -> dict | None:
+        with self.lock:
+            row = self.db.execute("SELECT * FROM attachments WHERE id = ?", (att_id,)).fetchone()
+        return dict(row) if row else None
+
+    def cleanup_attachments(self, older_than: float = 86400) -> int:
+        """上傳了但沒有送出的檔案(例如上傳到一半關掉)過一天就刪掉;也清掉沒有紀錄的殘留檔案。"""
+        cutoff = time.time() - older_than
+        with self.lock:
+            ids = [r["id"] for r in self.db.execute(
+                "SELECT a.id FROM attachments a WHERE a.created_at < ? AND NOT EXISTS "
+                "(SELECT 1 FROM messages m WHERE m.attachment_id = a.id)", (cutoff,))]
+            self.db.executemany("DELETE FROM attachments WHERE id = ?", [(i,) for i in ids])
+            self.db.commit()
+            known = {r["id"] for r in self.db.execute("SELECT id FROM attachments")}
+        removed = 0
+        for att_id in ids:
+            self.file_path(att_id).unlink(missing_ok=True)
+            removed += 1
+        for f in self.files_dir.iterdir():
+            if f.name not in known and f.stat().st_mtime < cutoff:
+                f.unlink(missing_ok=True)
+                removed += 1
+        return removed
 
     # --- messages
+    MSG_SELECT = ("SELECT m.*, a.name AS a_name, a.mime AS a_mime, a.size AS a_size "
+                  "FROM messages m LEFT JOIN attachments a ON a.id = m.attachment_id ")
+
     @staticmethod
     def _message_row(row: sqlite3.Row) -> dict:
-        return {
+        msg = {
             "id": row["id"],
             "contact_id": row["contact_id"],
             "sender": row["sender"],
@@ -450,35 +525,42 @@ class Store:
             "created_at": row["created_at"],
             "source": row["source"],
             "client_id": row["client_id"],
+            "kind": row["kind"],
+            "attachment": None,
         }
+        if row["attachment_id"] and row["a_name"] is not None:
+            msg["attachment"] = {"id": row["attachment_id"], "name": row["a_name"],
+                                 "mime": row["a_mime"], "size": row["a_size"]}
+        return msg
 
-    def add_message(self, contact_id: int, sender: str, body: str,
-                    client_id: str | None = None) -> tuple[dict, bool]:
+    def add_message(self, contact_id: int, sender: str, body: str, client_id: str | None = None,
+                    kind: str = "text", attachment_id: str | None = None) -> tuple[dict, bool]:
         """回傳 (訊息, 是不是新的)。同一個 client_id 重送不會重複新增。"""
         with self.lock:
             if client_id:
                 row = self.db.execute(
-                    "SELECT * FROM messages WHERE contact_id = ? AND client_id = ?", (contact_id, client_id)
+                    self.MSG_SELECT + "WHERE m.contact_id = ? AND m.client_id = ?", (contact_id, client_id)
                 ).fetchone()
                 if row:
                     return self._message_row(row), False
             cur = self.db.execute(
-                "INSERT INTO messages (contact_id, sender, body, created_at, client_id) VALUES (?, ?, ?, ?, ?)",
-                (contact_id, sender, body, time.time(), client_id),
+                "INSERT INTO messages (contact_id, sender, body, created_at, client_id, kind, attachment_id) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (contact_id, sender, body, time.time(), client_id, kind, attachment_id),
             )
             self.db.commit()
-            row = self.db.execute("SELECT * FROM messages WHERE id = ?", (cur.lastrowid,)).fetchone()
+            row = self.db.execute(self.MSG_SELECT + "WHERE m.id = ?", (cur.lastrowid,)).fetchone()
         return self._message_row(row), True
 
     def list_messages(self, contact_id: int, before: tuple[float, int] | None = None,
                       limit: int = PAGE_SIZE) -> tuple[list[dict], bool]:
         """回傳 (由舊到新的訊息, 是否還有更舊的)。before = (created_at, id) 游標。"""
-        sql = "SELECT * FROM messages WHERE contact_id = ?"
+        sql = self.MSG_SELECT + "WHERE m.contact_id = ?"
         args: list = [contact_id]
         if before:
-            sql += " AND (created_at < ? OR (created_at = ? AND id < ?))"
+            sql += " AND (m.created_at < ? OR (m.created_at = ? AND m.id < ?))"
             args += [before[0], before[0], before[1]]
-        sql += " ORDER BY created_at DESC, id DESC LIMIT ?"
+        sql += " ORDER BY m.created_at DESC, m.id DESC LIMIT ?"
         args.append(limit + 1)
         with self.lock:
             rows = self.db.execute(sql, args).fetchall()
@@ -490,7 +572,7 @@ class Store:
     def all_messages(self, contact_id: int) -> list[dict]:
         with self.lock:
             rows = self.db.execute(
-                "SELECT * FROM messages WHERE contact_id = ? ORDER BY created_at, id", (contact_id,)
+                self.MSG_SELECT + "WHERE m.contact_id = ? ORDER BY m.created_at, m.id", (contact_id,)
             ).fetchall()
         return [self._message_row(r) for r in rows]
 
@@ -742,6 +824,7 @@ class App:
         self.requests = RateLimiter(5, 3600)
         self.requests_all = RateLimiter(30, 3600)
         self.messages = RateLimiter(30, 60)  # 每台裝置每分鐘 30 則
+        self.uploads = RateLimiter(60, 3600)  # 朋友每台裝置每小時 60 個檔案
         if owner_name:
             store.set_setting("owner_name", owner_name)
 
@@ -758,7 +841,10 @@ class App:
 
 
 HTML_CSP = ("default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+            "img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; "
+            "base-uri 'none'; form-action 'self'")
+# 下載的檔案:就算是 HTML 也不能執行任何東西
+FILE_CSP = "default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'; sandbox"
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -839,7 +925,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Referrer-Policy", "no-referrer")  # 邀請連結不會從 Referer 外流
-        self.send_header("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        self.send_header("Permissions-Policy", "camera=(), microphone=(self), geolocation=()")  # 麥克風:語音輸入、錄音
         self.send_header("X-HomeChat-Version", VERSION)
         if self._is_https():
             self.send_header("Strict-Transport-Security", "max-age=31536000")
@@ -964,6 +1050,9 @@ class Handler(BaseHTTPRequestHandler):
             return self._static("index.html")
         if url.path in ("/manifest.webmanifest", "/icon.svg", "/sw.js"):
             return self._static(url.path.lstrip("/"))
+        m = re.fullmatch(r"/api/files/([A-Za-z0-9_-]{16,64})", url.path)
+        if m:
+            return self._file(m.group(1), qs)
         routes = {
             "/api/me": self._me,
             "/api/invite": self._invite_info,
@@ -982,6 +1071,8 @@ class Handler(BaseHTTPRequestHandler):
     def _route_post(self) -> None:
         url = urlsplit(self.path)
         self._check_origin()
+        if url.path == "/api/upload":
+            return self._upload({k: v[-1] for k, v in parse_qs(url.query).items()})
         data = self._read_json()
         routes = {
             "/api/setup": self._setup,
@@ -1253,21 +1344,134 @@ class Handler(BaseHTTPRequestHandler):
         contact = self._contact_for(sess, data.get("contact_id"))
         if contact["status"] != "active":
             raise ApiError(403, "請先接受好友申請")
+        sender = "me" if sess["role"] == "owner" else "them"
+        kind = str(data.get("kind") or "text")
+        if kind not in MESSAGE_KINDS:
+            raise ApiError(400, "訊息類型錯誤")
         body = str(data.get("body", "")).strip()
-        if not body:
-            raise ApiError(400, "訊息是空的")
+        att_id = None
+        if kind == "text":
+            if not body:
+                raise ApiError(400, "訊息是空的")
+        else:
+            att = self.app.store.get_attachment(str(data.get("attachment_id", "")))
+            # 只能用自己在這個對話上傳的檔案
+            if not att or att["contact_id"] != contact["id"] or att["uploader"] != sender:
+                raise ApiError(400, "找不到上傳的檔案,請重新傳送")
+            att_id = att["id"]
+            if (kind == "image" and not att["mime"].startswith("image/")) or \
+               (kind == "audio" and not att["mime"].startswith(("audio/", "video/"))):
+                kind = "file"
         if len(body) > MAX_MESSAGE:
             raise ApiError(400, f"訊息太長(上限 {MAX_MESSAGE} 字)")
         if sess["role"] == "guest" and not self.app.messages.take(sess["id"]):
             raise ApiError(429, "訊息傳太快了,休息一下")
-        sender = "me" if sess["role"] == "owner" else "them"
         client_id = self._clean(data.get("client_id"), 64) or None
-        msg, new = self.app.store.add_message(contact["id"], sender, body, client_id)
+        msg, new = self.app.store.add_message(contact["id"], sender, body, client_id, kind, att_id)
         if new:
             # 自己送出的就算已讀
             self.app.store.mark_read(contact["id"], sess["role"], msg["id"])
             self.app.hub.publish({"type": "message", "message": msg}, contact["id"])
         self._json({"message": msg})
+
+    def _upload(self, qs: dict) -> None:
+        """上傳圖片 / 檔案 / 語音。內容直接放在 request body(不是 JSON)。"""
+        if self.headers.get("X-HomeChat-Upload") != "1":
+            # 自訂標頭:其他網站的表單送不出來(防 CSRF)
+            raise ApiError(403, "上傳格式錯誤")
+        sess = self._require()
+        contact = self._contact_for(sess, qs.get("contact"))
+        if contact["status"] != "active":
+            raise ApiError(403, "請先接受好友申請")
+        try:
+            length = int(self.headers.get("Content-Length", ""))
+        except ValueError:
+            raise ApiError(411, "需要 Content-Length")
+        if length <= 0:
+            raise ApiError(400, "檔案是空的")
+        if length > MAX_UPLOAD:
+            raise ApiError(413, f"檔案太大了(上限 {MAX_UPLOAD // 1024 // 1024} MB)")
+        if sess["role"] == "guest" and not self.app.uploads.take(sess["id"]):
+            raise ApiError(429, "傳太多檔案了,晚點再試")
+        store = self.app.store
+        if shutil.disk_usage(store.files_dir).free < length + MIN_FREE_DISK:
+            raise ApiError(507, "家裡電腦的硬碟快滿了,沒辦法再收檔案")
+        mime = self.headers.get("Content-Type", "").split(";")[0].strip().lower()
+        if not re.fullmatch(r"[a-z0-9.+-]+/[a-z0-9.+-]+", mime):
+            mime = "application/octet-stream"
+        name = re.sub(r'[\\/:*?"<>|]', "_", self._clean(unquote(qs.get("name", "")), 200)) or "檔案"
+        att_id = secrets.token_urlsafe(18)
+        tmp = store.files_dir / f"{att_id}.part"
+        remaining = length
+        try:
+            with open(tmp, "wb") as f:
+                while remaining > 0:
+                    chunk = self.rfile.read(min(65536, remaining))
+                    if not chunk:
+                        raise ApiError(400, "上傳中斷了,請再試一次")
+                    f.write(chunk)
+                    remaining -= len(chunk)
+            os.replace(tmp, store.file_path(att_id))
+        finally:
+            if tmp.exists():
+                tmp.unlink()
+        uploader = "me" if sess["role"] == "owner" else "them"
+        att = store.add_attachment(att_id, contact["id"], uploader, name, mime, length)
+        self._json({"attachment": {k: att[k] for k in ("id", "name", "mime", "size")}})
+
+    def _file(self, att_id: str, qs: dict) -> None:
+        """下載 / 顯示附件。只有這個對話的兩個人拿得到;支援 Range(iPhone 播放語音需要)。"""
+        sess = self._require()
+        att = self.app.store.get_attachment(att_id)
+        if not att or (sess["role"] == "guest" and att["contact_id"] != sess["contact_id"]):
+            raise ApiError(404, "找不到檔案")
+        path = self.app.store.file_path(att_id)
+        if not path.exists():
+            raise ApiError(404, "檔案已經不在了")
+        size = path.stat().st_size
+        inline = att["mime"] in INLINE_TYPES and "download" not in qs
+        start, end = 0, size - 1
+        status = 200
+        rng = self.headers.get("Range", "")
+        m = re.fullmatch(r"bytes=(\d*)-(\d*)", rng.strip())
+        if m and (m.group(1) or m.group(2)):
+            if m.group(1):
+                start = int(m.group(1))
+                end = min(int(m.group(2)), size - 1) if m.group(2) else size - 1
+            else:  # 最後 N 個 byte
+                start = max(0, size - int(m.group(2)))
+            if start > end or start >= size:
+                self.send_response(416)
+                self.send_header("Content-Range", f"bytes */{size}")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
+            status = 206
+        filename = quote(att["name"])
+        self.send_response(status)
+        self.send_header("Content-Type", att["mime"] if inline else "application/octet-stream")
+        self.send_header("Content-Length", str(end - start + 1))
+        self.send_header("Accept-Ranges", "bytes")
+        if status == 206:
+            self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        self.send_header("Content-Disposition",
+                         f"{'inline' if inline else 'attachment'}; filename*=UTF-8''{filename}")
+        self.send_header("Content-Security-Policy", FILE_CSP)
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Cache-Control", "private, max-age=31536000, immutable")  # 內容不會變,裝置可以一直留著
+        self.send_header("X-HomeChat-Version", VERSION)
+        self.end_headers()
+        if self.command == "HEAD":
+            return
+        with open(path, "rb") as f:
+            f.seek(start)
+            remaining = end - start + 1
+            while remaining > 0:
+                chunk = f.read(min(65536, remaining))
+                if not chunk:
+                    break
+                self.wfile.write(chunk)
+                remaining -= len(chunk)
 
     def _read(self, data: dict) -> None:
         sess = self._require()
@@ -1338,6 +1542,10 @@ class Handler(BaseHTTPRequestHandler):
                 lines += ["", dt.strftime("%Y/%m/%d")]
             who = names[m["sender"]]
             body = m["body"]
+            att = m["attachment"]
+            if m["kind"] != "text":
+                label = {"image": "[圖片]", "audio": "[語音訊息]", "file": "[檔案]"}[m["kind"]]
+                body = " ".join(x for x in (label, att["name"] if att else "", body) if x)
             if "\n" in body:
                 body = f'"{body}"'
             lines.append(f"{dt:%H:%M}\t{who}\t{body}")
@@ -1350,7 +1558,7 @@ class Handler(BaseHTTPRequestHandler):
     @staticmethod
     def _clean(value, limit: int) -> str:
         # 去掉控制字元(換行以外)
-        text = re.sub(r"[\x00-\x08\x0b-\x1f\x7f‪-‮⁦-⁩]", "", str(value or ""))
+        text = re.sub(r"[\x00-\x08\x0b-\x1f\x7f\u202a-\u202e\u2066-\u2069]", "", str(value or ""))
         return text.strip()[:limit]
 
     def _add_contact(self, data: dict) -> None:
@@ -1716,6 +1924,10 @@ def main(argv: list[str] | None = None) -> int:
     if os.environ.get("HOMECHAT_PASSWORD") and not store.has_password():
         store.set_password(os.environ["HOMECHAT_PASSWORD"])
 
+    try:
+        store.cleanup_attachments()
+    except OSError:
+        pass
     app = App(store, owner_name=args.name)
     server = None
     for attempt in range(2):

@@ -3,6 +3,7 @@ import json
 import sys
 import threading
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime
 from http.cookiejar import CookieJar
@@ -47,6 +48,24 @@ class Client:
     def __init__(self, base):
         self.base = base
         self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(CookieJar()))
+
+    def upload(self, path, raw, mime, headers=None):
+        h = {"Content-Type": mime, "X-HomeChat-Upload": "1"}
+        h.update(headers or {})
+        r = urllib.request.Request(self.base + path, data=raw, headers=h, method="POST")
+        try:
+            with self.opener.open(r, timeout=5) as resp:
+                return resp.status, json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"{}")
+
+    def raw(self, path, headers=None):
+        r = urllib.request.Request(self.base + path, headers=headers or {})
+        try:
+            resp = self.opener.open(r, timeout=5)
+            return resp.status, resp.headers, resp.read()
+        except urllib.error.HTTPError as e:
+            return e.code, e.headers, e.read()
 
     def req(self, path, body=None, headers=None):
         data = None if body is None else json.dumps(body).encode()
@@ -645,3 +664,127 @@ Active Connections
     monkeypatch.setattr(homechat, "NO_WINDOW", {})
     monkeypatch.setattr(homechat.subprocess, "run", lambda *a, **k: R())
     assert homechat.pids_listening(8800) == {4242, 4243}
+
+
+# ---------------------------------------------------------------- 圖片 / 檔案 / 語音
+
+PNG = (b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15"
+       b"\xc4\x89\x00\x00\x00\rIDATx\x9cc\xf8\xcf\xc0\xf0\x1f\x00\x05\x00\x01\xff\x89\x99=\x1d\x00\x00\x00\x00IEND\xaeB`\x82")
+
+
+def send_file(client, contact_id, raw, mime, name, kind, caption=""):
+    q = f"?name={urllib.parse.quote(name)}" + (f"&contact={contact_id}" if contact_id else "")
+    status, data = client.upload("/api/upload" + q, raw, mime)
+    assert status == 200, data
+    status, data = client.req("/api/messages", {"contact_id": contact_id, "kind": kind, "body": caption,
+                                                "attachment_id": data["attachment"]["id"]})
+    assert status == 200, data
+    return data["message"]
+
+
+def test_send_image_and_file(server):
+    base, app = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "小美"})[1]["contact"]
+    guest = join(base, contact)
+
+    msg = send_file(owner, contact["id"], PNG, "image/png", "貓咪.png", "image", "看我的貓")
+    assert msg["kind"] == "image" and msg["body"] == "看我的貓"
+    assert msg["attachment"]["name"] == "貓咪.png" and msg["attachment"]["size"] == len(PNG)
+    # 朋友看得到、下載得到
+    got = guest.req("/api/messages")[1]["messages"][-1]
+    assert got["attachment"]["id"] == msg["attachment"]["id"]
+    status, headers, body = guest.raw(f"/api/files/{msg['attachment']['id']}")
+    assert status == 200 and body == PNG and headers["Content-Type"] == "image/png"
+    assert headers["Content-Disposition"].startswith("inline")
+    assert "sandbox" in headers["Content-Security-Policy"]
+    # 朋友傳檔案
+    pdf = b"%PDF-1.4 fake"
+    fmsg = send_file(guest, None, pdf, "application/pdf", "報告.pdf", "file")
+    assert fmsg["sender"] == "them" and fmsg["kind"] == "file"
+    status, headers, body = owner.raw(f"/api/files/{fmsg['attachment']['id']}")
+    assert body == pdf and headers["Content-Disposition"].startswith("attachment")
+    assert headers["Content-Type"] == "application/octet-stream"
+    # 列表顯示 [檔案]
+    assert owner.req("/api/contacts")[1]["contacts"][0]["last_body"] == "[檔案]"
+    # 匯出
+    text = owner.req(f"/api/export?contact={contact['id']}")[1]
+    assert "[圖片] 貓咪.png 看我的貓" in text and "[檔案] 報告.pdf" in text
+
+
+def test_dangerous_files_are_never_rendered(server):
+    base, _ = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "x"})[1]["contact"]
+    for mime, name in (("text/html", "a.html"), ("image/svg+xml", "a.svg")):
+        msg = send_file(owner, contact["id"], b"<script>alert(1)</script>", mime, name, "image")
+        assert msg["kind"] == "file" or mime == "image/svg+xml"
+        status, headers, _ = owner.raw(f"/api/files/{msg['attachment']['id']}")
+        assert headers["Content-Type"] == "application/octet-stream"
+        assert headers["Content-Disposition"].startswith("attachment")
+
+
+def test_file_access_is_private(server):
+    base, _ = server
+    owner = login(base)
+    a = owner.req("/api/contacts", {"name": "A"})[1]["contact"]
+    b = owner.req("/api/contacts", {"name": "B"})[1]["contact"]
+    guest_b = join(base, b)
+    msg = send_file(owner, a["id"], PNG, "image/png", "a.png", "image")
+    url = f"/api/files/{msg['attachment']['id']}"
+    assert guest_b.raw(url)[0] == 404  # 別人的對話
+    assert Client(base).raw(url)[0] == 401  # 沒登入
+    # 不能拿別人上傳的檔案來發訊息
+    status, _ = guest_b.req("/api/messages", {"kind": "image", "attachment_id": msg["attachment"]["id"]})
+    assert status == 400
+
+
+def test_upload_checks(server, monkeypatch):
+    base, _ = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "x"})[1]["contact"]
+    q = f"/api/upload?contact={contact['id']}&name=a.png"
+    # 沒有自訂標頭(例如其他網站的表單)
+    r = urllib.request.Request(base + q, data=PNG, headers={"Content-Type": "image/png"}, method="POST")
+    with pytest.raises(urllib.error.HTTPError) as e:
+        owner.opener.open(r, timeout=5)
+    assert e.value.code == 403
+    monkeypatch.setattr(homechat, "MAX_UPLOAD", 10)
+    assert owner.upload(q, PNG, "image/png")[0] == 413
+
+
+def test_range_request_for_audio(server):
+    base, _ = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "x"})[1]["contact"]
+    audio = bytes(range(256)) * 4
+    msg = send_file(owner, contact["id"], audio, "audio/mp4", "voice.m4a", "audio")
+    assert msg["kind"] == "audio"
+    url = f"/api/files/{msg['attachment']['id']}"
+    status, headers, body = owner.raw(url, {"Range": "bytes=0-1"})
+    assert status == 206 and body == audio[:2] and headers["Content-Range"] == f"bytes 0-1/{len(audio)}"
+    status, headers, body = owner.raw(url, {"Range": "bytes=1000-"})
+    assert status == 206 and body == audio[1000:]
+    assert owner.raw(url, {"Range": "bytes=5000-"})[0] == 416
+
+
+def test_deleting_contact_deletes_files(server):
+    base, app = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "x"})[1]["contact"]
+    msg = send_file(owner, contact["id"], PNG, "image/png", "a.png", "image")
+    path = app.store.file_path(msg["attachment"]["id"])
+    assert path.exists()
+    owner.req(f"/api/contacts/{contact['id']}/delete", {})
+    assert not path.exists()
+
+
+def test_unsent_uploads_are_cleaned_up(server):
+    base, app = server
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "x"})[1]["contact"]
+    att = owner.upload(f"/api/upload?contact={contact['id']}&name=a.png", PNG, "image/png")[1]["attachment"]
+    sent = send_file(owner, contact["id"], PNG, "image/png", "b.png", "image")
+    assert app.store.cleanup_attachments(older_than=-1) == 1
+    assert not app.store.file_path(att["id"]).exists()
+    assert app.store.file_path(sent["attachment"]["id"]).exists()

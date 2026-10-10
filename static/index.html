@@ -111,6 +111,40 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 .tabs button.on { background: var(--panel); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
 .invite-url { word-break: break-all; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
 .line-btn { background: #06c755; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+/* ---------- 表情 / 圖片 / 檔案 / 語音 */
+#composer .icon-btn { width: 36px; height: 40px; font-size: 20px; color: var(--muted); }
+#composer .icon-btn.on { color: var(--danger); animation: pulse 1s infinite; }
+@keyframes pulse { 50% { opacity: .4; } }
+#emoji-panel { background: var(--panel); border-top: 1px solid var(--line); max-height: 260px; display: flex; flex-direction: column; }
+#emoji-tabs { display: flex; gap: 2px; padding: 4px 6px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+#emoji-tabs button { border: 0; background: none; font-size: 20px; padding: 4px 8px; border-radius: 8px; }
+#emoji-tabs button.on { background: var(--bg); }
+#emoji-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); overflow-y: auto; padding: 6px; }
+#emoji-grid button { border: 0; background: none; font-size: 26px; height: 42px; border-radius: 8px; }
+#emoji-grid button:hover { background: var(--bg); }
+#recorder { display: flex; align-items: center; gap: 10px; padding: 10px 12px; padding-bottom: max(10px, env(safe-area-inset-bottom)); background: var(--panel); border-top: 1px solid var(--line); }
+#recorder .rec-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--danger); animation: pulse 1s infinite; }
+#recorder .rec-label { flex: 1; color: var(--muted); }
+#rec-time { font-variant-numeric: tabular-nums; font-weight: 600; }
+.bubble a { color: #0b62d6; word-break: break-all; }
+.msg.me .bubble a { color: #0a4fae; }
+.bubble.media { padding: 4px; }
+.bubble.media .caption { padding: 4px 8px 2px; }
+img.photo { display: block; max-width: min(260px, 62vw); max-height: 340px; border-radius: 14px; cursor: zoom-in; background: rgba(0,0,0,.08); }
+video.photo { display: block; max-width: min(280px, 64vw); max-height: 340px; border-radius: 14px; }
+.bubble audio { display: block; width: min(260px, 62vw); height: 40px; }
+.file-card { display: flex; align-items: center; gap: 10px; color: inherit !important; text-decoration: none; padding: 6px 8px; min-width: 180px; }
+.file-card .icon { font-size: 30px; }
+.file-card .fname { font-weight: 600; word-break: break-all; }
+.file-card .fsize { font-size: 12px; opacity: .7; }
+.bubble.big-emoji { background: none !important; box-shadow: none; font-size: 44px; line-height: 1.15; padding: 0 4px; }
+.uploading { font-size: 12px; opacity: .8; padding: 2px 8px 4px; }
+#lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 120; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; }
+#lightbox img { max-width: 100%; max-height: calc(100% - 70px); object-fit: contain; }
+.lightbox-bar { display: flex; gap: 10px; }
+#drop-hint { position: fixed; inset: 0; background: rgba(6,199,85,.18); border: 4px dashed var(--green); z-index: 110; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: var(--green-dark); pointer-events: none; }
+@media (prefers-color-scheme: dark) { .bubble a { color: #8ab4ff; } .msg.me .bubble a { color: #e3f2ff; } }
+
 #offline { position: fixed; top: max(8px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 90;
   background: #fef3c7; color: #92400e; border-radius: 12px; padding: 8px 14px; font-size: 13px; width: min(560px, calc(100vw - 32px));
   box-shadow: 0 4px 16px rgba(0,0,0,.15); text-align: center; }
@@ -230,10 +264,24 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
     </div>
     <div id="chat-empty">選一個聯絡人開始聊天</div>
     <div id="messages" class="hidden"></div>
+    <div id="emoji-panel" class="hidden">
+      <div id="emoji-tabs"></div>
+      <div id="emoji-grid"></div>
+    </div>
+    <div id="recorder" class="hidden">
+      <span class="rec-dot"></span><span id="rec-time">0:00</span><span class="rec-label">錄音中…</span>
+      <button type="button" class="btn secondary" id="rec-cancel">取消</button>
+      <button type="button" class="btn" id="rec-send">傳送</button>
+    </div>
     <form id="composer" class="hidden">
+      <button type="button" class="icon-btn" id="attach-btn" title="傳送照片、檔案、語音訊息">＋</button>
+      <button type="button" class="icon-btn" id="emoji-btn" title="表情符號">😊</button>
       <textarea id="input" rows="1" placeholder="輸入訊息" maxlength="5000"></textarea>
+      <button type="button" class="icon-btn hidden" id="mic-btn" title="語音輸入(講話自動變成文字)">🎤</button>
       <button id="send" type="submit" disabled title="送出">➤</button>
     </form>
+    <input type="file" id="pick-image" accept="image/*,video/*" multiple hidden>
+    <input type="file" id="pick-file" multiple hidden>
   </main>
 </div>
 
@@ -382,6 +430,15 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
     <button class="btn" type="submit">更改</button>
   </div>
 </form></dialog>
+
+<div id="lightbox" class="hidden">
+  <img id="lightbox-img" alt="">
+  <div class="lightbox-bar">
+    <a class="btn" id="lightbox-download" download>下載</a>
+    <button class="btn secondary" type="button" id="lightbox-close">關閉</button>
+  </div>
+</div>
+<div id="drop-hint" class="hidden">放開就傳送</div>
 
 <div id="toast" class="hidden"></div>
 
@@ -559,6 +616,7 @@ async function logout() {
   sessionStorage.setItem("hc_no_auto", "1");  // 剛登出就不要馬上自動登入回去
   try { navigator.credentials.preventSilentAccess().catch(() => {}); } catch (_) {}
   await local.clear();  // 這台裝置上的副本一起刪掉
+  try { await caches.delete("homechat-files"); } catch (_) {}
   closeChat();
   boot();
 }
@@ -797,7 +855,8 @@ function openEvents() {
     else if (data.type === "request" && state.role === "owner") {
       toast(`${data.name} 想加你為好友`); notifyText("好友申請", `${data.name} 想加你為好友`); loadContacts();
     } else if (data.type === "joined" && state.role === "owner") {
-      toast(`${data.name} 已經加入,可以開始聊天了`); notifyText("HomeChat", `${data.name} 已經加入`); loadContacts();
+      toast(`${data.name} 已經加入,可以開始聊天了`); notifyText("HomeChat", `${data.name} 已經加入`);
+      loadContacts().then(() => { if (state.current) renderMessages(false); });
     } else if (data.type === "contacts" && state.role === "owner") loadContacts();
   };
 }
@@ -838,7 +897,8 @@ function notify(m) {
   document.title = `(${unseen}) HomeChat`;
   if (!("Notification" in window) || Notification.permission !== "granted") return;
   const name = state.role === "owner" ? (state.contacts.find(c => c.id === m.contact_id)?.name || "新訊息") : state.ownerName;
-  try { new Notification(name, { body: m.body.slice(0, 120), tag: "hc-" + m.contact_id, icon: "/icon.svg" }); } catch (_) {}
+  const text = { image: "[圖片]", audio: "[語音訊息]", file: "[檔案]" }[m.kind] || m.body.slice(0, 120);
+  try { new Notification(name, { body: text, tag: "hc-" + m.contact_id, icon: "/icon.svg" }); } catch (_) {}
 }
 function notifyText(title, body) {
   if (!document.hidden || !("Notification" in window) || Notification.permission !== "granted") return;
@@ -929,6 +989,8 @@ function showChat() {
   $("#composer").classList.remove("hidden");
 }
 function closeChat() {
+  if (recorder) stopRecording(false);
+  closeEmoji();
   state.current = null; state.messages = [];
   sessionStorage.removeItem("hc_open");
   $("#app").classList.remove("in-chat");
@@ -957,7 +1019,8 @@ async function fromDevice(contactId) {
   // 這台裝置存的 + 還在排隊的
   const saved = await local.messagesFor(contactId);
   const sent = new Set(saved.map(m => m.client_id).filter(Boolean));
-  const queued = (await local.outbox(contactId)).filter(m => !sent.has(m.client_id)).map(m => ({ ...m, pending: true }));
+  const queued = (await local.outbox(contactId)).filter(m => !sent.has(m.client_id))
+    .map(m => ({ ...m, pending: true, localUrl: m.blob ? URL.createObjectURL(m.blob) : undefined }));
   return saved.concat(queued).sort(byTime);
 }
 
@@ -1028,15 +1091,82 @@ function markRead() {
   api("/api/read", { contact_id: cur.id, upto }).catch(() => { lastReadSent[cur.id] = 0; });
 }
 
+const INLINE = new Set(["image/jpeg", "image/png", "image/gif", "image/webp", "image/avif",
+  "audio/webm", "audio/ogg", "audio/mp4", "audio/mpeg", "audio/aac", "audio/x-m4a", "audio/wav",
+  "video/mp4", "video/webm", "video/quicktime"]);
+function fmtSize(n) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
+}
+// 網址自動變成可以點的連結(只接受 http / https)
+// 中文常常網址後面直接接文字或全形標點(「…?b=1。還有」),遇到中文字就斷開
+const URL_RE = /(?:https?:\/\/|www\.)[^\s<>"\u3000-\u303f\u3400-\u9fff\uff00-\uffef]+/gi;
+function linkify(text) {
+  const out = [];
+  let last = 0;
+  for (const m of text.matchAll(URL_RE)) {
+    let url = m[0];
+    const trail = url.match(/[.,!?;:)\]}」』。,!?;:、]+$/);  // 句尾標點不算網址
+    if (trail) url = url.slice(0, -trail[0].length);
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const href = /^www\./i.test(url) ? "https://" + url : url;
+    out.push(el("a", { href, target: "_blank", rel: "noopener noreferrer nofollow" }, url));
+    last = m.index + url.length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+const EMOJI_ONLY = /^(?:\p{Extended_Pictographic}|\p{Emoji_Component}|‍|️|\s)+$/u;
+function isBigEmoji(text) {
+  if (!text || !EMOJI_ONLY.test(text) || /^[\d#*\s]+$/.test(text)) return false;
+  const n = window.Intl && Intl.Segmenter
+    ? [...new Intl.Segmenter().segment(text.replace(/\s/g, ""))].length : [...text.replace(/\s/g, "")].length;
+  return n <= 3;
+}
+function fileUrl(m) { return m.attachment ? `/api/files/${m.attachment.id}` : m.localUrl; }
+function bubbleFor(m) {
+  const kind = m.kind || "text";
+  const att = m.attachment || (m.blob ? { name: m.name, mime: m.mime, size: m.blob.size } : null);
+  const caption = m.body ? el("div", { class: "caption" }, ...linkify(m.body)) : null;
+  const progress = m.pending && m.progress !== undefined && m.progress < 1
+    ? el("div", { class: "uploading" }, `上傳中 ${Math.round(m.progress * 100)}%`) : null;
+  const src = fileUrl(m);
+  if (kind === "text") {
+    const big = isBigEmoji(m.body);
+    return el("div", { class: "bubble" + (big ? " big-emoji" : "") }, ...linkify(m.body));
+  }
+  if (kind === "image" && att && (INLINE.has(att.mime) || m.blob) && src) {
+    const media = att.mime.startsWith("video/")
+      ? el("video", { class: "photo", src, controls: "", preload: "metadata", playsinline: "" })
+      : el("img", { class: "photo", src, alt: att.name, loading: "lazy", onclick: () => openLightbox(m) });
+    return el("div", { class: "bubble media" }, media, progress, caption);
+  }
+  if (kind === "audio" && att && src) {
+    return el("div", { class: "bubble media" }, el("audio", { src, controls: "", preload: "metadata" }), progress, caption);
+  }
+  const name = att ? att.name : "檔案";
+  const icon = /\.pdf$/i.test(name) ? "📕" : /\.(zip|rar|7z)$/i.test(name) ? "🗜️" : /\.(docx?|txt|pages)$/i.test(name) ? "📄"
+    : /\.(xlsx?|csv|numbers)$/i.test(name) ? "📊" : /\.(pptx?|key)$/i.test(name) ? "📽️" : "📎";
+  const card = el(m.attachment ? "a" : "div", m.attachment
+    ? { class: "file-card", href: `/api/files/${m.attachment.id}?download=1`, download: name }
+    : { class: "file-card" },
+    el("span", { class: "icon" }, icon),
+    el("span", {}, el("div", { class: "fname" }, name), el("div", { class: "fsize" }, att ? fmtSize(att.size) : "")));
+  return el("div", { class: "bubble media" }, card, progress, caption);
+}
+
+// 已經畫好的訊息直接重用:新訊息進來時,正在播放的語音不會被打斷
+const nodeCache = new Map();
 function renderMessages(scrollToEnd) {
   const box = $("#messages");
   const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
-  box.replaceChildren();
+  const nodes = [];
   const shown = state.messages.slice(-Math.max(state.showCount, PAGE));
   if (state.more || shown.length < state.messages.length)
-    box.append(el("div", { class: "more" }, el("button", { onclick: loadOlder }, "載入更早的訊息")));
+    nodes.push(el("div", { class: "more" }, el("button", { onclick: loadOlder }, "載入更早的訊息")));
   if (!state.messages.length) {
-    box.append(el("div", { class: "empty", style: "color:#fff" },
+    nodes.push(el("div", { class: "empty", style: "color:#fff" },
       state.role === "owner"
         ? (state.current?.devices || state.current?.username ? "還沒有訊息,打聲招呼吧!" : "對方還沒加入。按右上角 ⋯ →「邀請連結」用 LINE 傳給他。")
         : `跟 ${state.ownerName} 打聲招呼吧!`));
@@ -1044,22 +1174,33 @@ function renderMessages(scrollToEnd) {
   const otherName = state.role === "owner" ? state.current?.name || "" : state.ownerName;
   let lastDay = "", lastSender = null;
   const iAm = state.role === "owner" ? "me" : "them";
+  const used = new Set();
   for (const m of shown) {
     const d = dayLabel(m.created_at);
-    if (d !== lastDay) { box.append(el("div", { class: "day" }, el("span", {}, d))); lastDay = d; lastSender = null; }
+    if (d !== lastDay) { nodes.push(el("div", { class: "day" }, el("span", {}, d))); lastDay = d; lastSender = null; }
     const mine = m.sender === iAm;
-    let stamp;
-    if (m.failed) stamp = el("button", { class: "stamp", style: "border:0;background:none;padding:0", onclick: () => retry(m) }, "傳送失敗", el("br"), "點此重試");
-    else if (m.pending) stamp = el("div", { class: "stamp" }, state.offline ? "等待連線" : "傳送中");
-    else {
-      const read = mine && m.source === "chat" && m.id <= state.otherReadId;
-      stamp = el("div", { class: "stamp" }, read ? "已讀" : "", read ? el("br") : null, hm(m.created_at));
+    const read = mine && !m.pending && m.source === "chat" && m.id <= state.otherReadId;
+    const cont = lastSender === m.sender;
+    const key = m.client_id || `id${m.id}`;
+    const sig = [m.id, m.pending, m.failed, read, cont, m.progress, state.offline && m.pending, otherName].join("|");
+    let node = nodeCache.get(key);
+    if (!node || node.sig !== sig || (m.attachment && node.local)) {
+      let stamp;
+      if (m.failed) stamp = el("button", { class: "stamp", style: "border:0;background:none;padding:0", onclick: () => retry(m) }, "傳送失敗", el("br"), "點此重試");
+      else if (m.pending) stamp = el("div", { class: "stamp" }, state.offline ? "等待連線" : "傳送中");
+      else stamp = el("div", { class: "stamp" }, read ? "已讀" : "", read ? el("br") : null, hm(m.created_at));
+      const dom = el("div", {
+        class: `msg ${mine ? "me" : "them"}${cont ? " cont" : ""}${m.pending ? " pending" : ""}${m.pending && state.offline ? " queued" : ""}${m.failed ? " failed" : ""}`,
+      }, mine ? null : avatar(otherName), bubbleFor(m), stamp);
+      node = { sig, dom, local: !m.attachment && !!m.localUrl };
+      nodeCache.set(key, node);
     }
-    box.append(el("div", {
-      class: `msg ${mine ? "me" : "them"}${lastSender === m.sender ? " cont" : ""}${m.pending ? " pending" : ""}${m.pending && state.offline ? " queued" : ""}${m.failed ? " failed" : ""}`,
-    }, mine ? null : avatar(otherName), el("div", { class: "bubble" }, m.body), stamp));
+    used.add(key);
+    nodes.push(node.dom);
     lastSender = m.sender;
   }
+  for (const k of nodeCache.keys()) if (!used.has(k)) nodeCache.delete(k);
+  box.replaceChildren(...nodes);
   if (scrollToEnd || nearBottom) box.scrollTop = box.scrollHeight;
 }
 
@@ -1082,6 +1223,7 @@ $("#composer").addEventListener("submit", e => { e.preventDefault(); send(); inp
 async function send() {
   const body = input.value.trim();
   if (!body || !state.current) return;
+  if (speech) speech.stop();
   input.value = ""; autosize();
   const m = {
     client_id: newId(), body, created_at: Date.now() / 1000, source: "chat",
@@ -1099,7 +1241,14 @@ async function flushOutbox() {
   try {
     for (const m of await local.outbox()) {
       try {
-        const data = await api("/api/messages", { contact_id: m.contact_id, body: m.body, client_id: m.client_id });
+        if (m.blob && !m.attachment_id) {
+          // 先把圖片 / 檔案傳到家裡電腦,記住編號(斷線重送時不用重傳)
+          const att = await uploadBlob(m, p => setProgress(m.client_id, p));
+          m.attachment_id = att.id;
+          await local.queue(m);
+        }
+        const data = await api("/api/messages", { contact_id: m.contact_id, body: m.body, client_id: m.client_id,
+                                                  kind: m.kind || "text", attachment_id: m.attachment_id });
         await local.putMessages([data.message]);
         await local.dequeue(m.client_id);
         replacePending(m.client_id, data.message);
@@ -1114,6 +1263,30 @@ async function flushOutbox() {
     }
   } finally { flushing = false; }
 }
+function setProgress(clientId, p) {
+  const v = state.messages.find(x => x.client_id === clientId && x.pending);
+  if (v && Math.round((v.progress || 0) * 20) !== Math.round(p * 20)) { v.progress = p; renderMessages(false); }
+}
+function uploadBlob(m, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const q = new URLSearchParams({ name: m.name || "檔案" });
+    if (state.role === "owner") q.set("contact", m.contact_id);
+    xhr.open("POST", "/api/upload?" + q);
+    xhr.setRequestHeader("Content-Type", m.mime || "application/octet-stream");
+    xhr.setRequestHeader("X-HomeChat-Upload", "1");
+    xhr.upload.onprogress = e => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+    xhr.onload = () => {
+      let data = {};
+      try { data = JSON.parse(xhr.responseText); } catch (_) {}
+      if (xhr.status >= 502 && xhr.status <= 504) return reject(new ApiError("連不上家裡的電腦", xhr.status, true));
+      if (xhr.status !== 200) return reject(new ApiError(data.error || `上傳失敗(${xhr.status})`, xhr.status, false));
+      resolve(data.attachment);
+    };
+    xhr.onerror = xhr.ontimeout = () => reject(new ApiError("連不上家裡的電腦", 0, true));
+    xhr.send(m.blob);
+  });
+}
 function replacePending(clientId, msg) {
   if (!state.current || msg.contact_id !== state.current.id) return;
   const i = state.messages.findIndex(x => x.client_id === clientId && !x.id);
@@ -1124,12 +1297,203 @@ function replacePending(clientId, msg) {
 }
 async function retry(m) {
   m.failed = false; m.pending = true;
-  const { pending, failed, ...item } = m;
+  const { pending, failed, progress, localUrl, ...item } = m;
   await local.queue(item);
   renderMessages(false);
   flushOutbox();
 }
 setInterval(() => { if (!state.offline) flushOutbox(); }, 15000);
+
+// ---------- 傳照片 / 檔案
+const MAX_UPLOAD = 100 * 1024 * 1024;
+$("#attach-btn").addEventListener("click", e => showMenu(e.currentTarget, [
+  ["📷 照片 / 影片", () => $("#pick-image").click()],
+  ["📎 檔案", () => $("#pick-file").click()],
+  ["🎙 錄語音訊息", startRecording],
+]));
+$("#pick-image").addEventListener("change", e => { sendFiles([...e.target.files]); e.target.value = ""; });
+$("#pick-file").addEventListener("change", e => { sendFiles([...e.target.files], true); e.target.value = ""; });
+
+// 大照片先在手機上縮小(最長邊 2048),省流量也省家裡電腦的硬碟
+async function shrinkImage(file) {
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size < 1.5 * 1024 * 1024) return file;
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const scale = Math.min(1, 2048 / Math.max(bmp.width, bmp.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bmp.width * scale); canvas.height = Math.round(bmp.height * scale);
+    canvas.getContext("2d").drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.85));
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" });
+  } catch (_) { return file; }
+}
+async function sendFiles(files, asFile = false) {
+  if (!state.current || !files.length) return;
+  for (let file of files) {
+    let kind = "file";
+    if (!asFile && /^(image|video)\//.test(file.type)) kind = "image";
+    else if (/^audio\//.test(file.type)) kind = "audio";
+    if (kind === "image") file = await shrinkImage(file);
+    if (file.size > MAX_UPLOAD) { toast(`「${file.name}」太大了(上限 100 MB)`); continue; }
+    if (!file.size) { toast(`「${file.name}」是空的`); continue; }
+    const m = {
+      client_id: newId(), body: "", created_at: Date.now() / 1000, source: "chat", kind,
+      sender: state.role === "owner" ? "me" : "them", contact_id: state.current.id,
+      blob: file, name: file.name || "檔案", mime: file.type || "application/octet-stream",
+    };
+    await local.queue(m);
+    insertSorted({ ...m, pending: true, progress: 0, localUrl: URL.createObjectURL(file) });
+  }
+  renderMessages(true);
+  flushOutbox();
+}
+// 直接貼上圖片(Ctrl+V / 截圖)
+input.addEventListener("paste", e => {
+  const files = [...(e.clipboardData?.files || [])];
+  if (files.length) { e.preventDefault(); sendFiles(files); }
+});
+// 拖曳檔案到聊天室
+let dragDepth = 0;
+$("#chat").addEventListener("dragenter", e => {
+  if (!state.current || ![...(e.dataTransfer?.types || [])].includes("Files")) return;
+  e.preventDefault(); dragDepth++; $("#drop-hint").classList.remove("hidden");
+});
+$("#chat").addEventListener("dragover", e => { if (state.current) e.preventDefault(); });
+$("#chat").addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; $("#drop-hint").classList.add("hidden"); } });
+$("#chat").addEventListener("drop", e => {
+  e.preventDefault(); dragDepth = 0; $("#drop-hint").classList.add("hidden");
+  sendFiles([...(e.dataTransfer?.files || [])]);
+});
+
+// 看大圖
+function openLightbox(m) {
+  const src = fileUrl(m);
+  $("#lightbox-img").src = src;
+  const dl = $("#lightbox-download");
+  dl.href = m.attachment ? `/api/files/${m.attachment.id}?download=1` : src;
+  dl.download = (m.attachment || m).name || "圖片";
+  $("#lightbox").classList.remove("hidden");
+}
+function closeLightbox() { $("#lightbox").classList.add("hidden"); $("#lightbox-img").removeAttribute("src"); }
+$("#lightbox-close").addEventListener("click", closeLightbox);
+$("#lightbox").addEventListener("click", e => { if (e.target.id === "lightbox") closeLightbox(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeLightbox(); });
+
+// ---------- 表情符號
+const EMOJI = [
+  ["😀", "笑臉", "😀 😃 😄 😁 😆 😅 🤣 😂 🙂 😉 😊 😇 🥰 😍 🤩 😘 😗 😚 😋 😛 😜 🤪 😝 🤗 🤭 🤫 🤔 🤐 🤨 😐 😑 😶 😏 😒 🙄 😬 😌 😔 😪 🤤 😴 😷 🤒 🤕 🤢 🤮 🥵 🥶 🥴 😵 🤯 🤠 🥳 😎 🤓 🧐 😕 😟 🙁 😮 😯 😲 😳 🥺 😦 😧 😨 😰 😥 😢 😭 😱 😖 😣 😞 😓 😩 😫 🥱 😤 😡 😠 🤬 😈 💀 💩 🤡 👻 👽 🤖"],
+  ["👍", "手勢", "👍 👎 👌 🤌 ✌️ 🤞 🤟 🤘 🤙 👈 👉 👆 👇 ☝️ 👋 🤚 🖐️ ✋ 🖖 👏 🙌 👐 🤲 🙏 🤝 💪 ✍️ 💅 🤳 🙇 🙋 🙆 🙅 🤷 🤦 💁 🙎 🙍 🧏"],
+  ["❤️", "愛心", "❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝 💟 😻 💋 💌 🌹 💐 🥂 🎉 🎊 🎁 🎂 ✨ 🌟 ⭐ 🔥 💯 💢 💥 💦 💤"],
+  ["🐶", "動物", "🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🙈 🙉 🙊 🐔 🐧 🐦 🐤 🦆 🦉 🐺 🐴 🦄 🐝 🦋 🐌 🐞 🐢 🐍 🐙 🐠 🐬 🐳 🦈 🐘 🦒 🐿️ 🌸 🌻 🌈 ☀️ 🌙 ☁️ ⛄ 🌧️"],
+  ["🍔", "食物", "🍎 🍊 🍋 🍌 🍉 🍇 🍓 🍑 🍍 🥭 🥝 🍅 🥑 🌽 🥕 🍔 🍟 🍕 🌭 🥪 🌮 🍜 🍝 🍣 🍱 🍛 🍚 🍙 🥟 🍤 🍗 🥩 🍳 🧇 🥞 🍞 🧀 🍰 🧁 🍩 🍪 🍫 🍬 🍦 🧋 ☕ 🍵 🍺 🍻 🍷 🥤"],
+  ["⚽", "活動", "⚽ 🏀 🏈 ⚾ 🎾 🏐 🏓 🏸 ⛳ 🎣 🏊 🚴 🏃 🧘 🎮 🎲 🎯 🎳 🎤 🎧 🎸 🎹 🎬 🎨 📚 ✈️ 🚗 🚕 🚌 🚄 🚲 🏠 🏢 🏥 🏫 🏖️ ⛰️ 🗻 🎡"],
+  ["💡", "物品", "📱 💻 ⌚ 📷 📞 🔋 💡 🔑 🏠 🛏️ 🛁 🧸 🎈 📦 ✏️ 📝 📅 📌 📎 ✂️ 💰 💳 🛒 🎒 👓 👕 👗 👟 ⏰ ☂️ 💊 🩹 ✅ ❌ ⭕ ❗ ❓ ⚠️ 🆗 🆒 🆕 🔴 🟢 🔵"],
+];
+function recentEmoji() { try { return JSON.parse(localStorage.getItem("hc_emoji") || "[]"); } catch (_) { return []; } }
+function addRecentEmoji(e) {
+  const list = [e, ...recentEmoji().filter(x => x !== e)].slice(0, 32);
+  try { localStorage.setItem("hc_emoji", JSON.stringify(list)); } catch (_) {}
+}
+let emojiTab = "";  // 用分頁名稱記住,「最近」分頁出現時才不會跑掉
+function renderEmoji() {
+  const recent = recentEmoji();
+  const tabs = [["🕘", "最近", recent.join(" ")], ...EMOJI].filter((t, i) => i > 0 || recent.length);
+  const cur = tabs.find(t => t[1] === emojiTab) || tabs[0];
+  emojiTab = cur[1];
+  $("#emoji-tabs").replaceChildren(...tabs.map(t =>
+    el("button", { type: "button", class: t === cur ? "on" : "", title: t[1], onclick: () => { emojiTab = t[1]; renderEmoji(); } }, t[0])));
+  $("#emoji-grid").replaceChildren(...cur[2].split(" ").filter(Boolean).map(e =>
+    el("button", { type: "button", onclick: () => insertEmoji(e) }, e)));
+}
+function insertEmoji(e) {
+  const start = input.selectionStart ?? input.value.length, end = input.selectionEnd ?? input.value.length;
+  input.value = input.value.slice(0, start) + e + input.value.slice(end);
+  input.selectionStart = input.selectionEnd = start + e.length;
+  addRecentEmoji(e);
+  autosize();
+  if (!isTouch) input.focus();
+}
+$("#emoji-btn").addEventListener("click", () => {
+  const panel = $("#emoji-panel");
+  const open = panel.classList.toggle("hidden") === false;
+  if (open) renderEmoji();
+});
+function closeEmoji() { $("#emoji-panel").classList.add("hidden"); }
+
+// ---------- 語音輸入(講話變成文字)
+const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+let speech = null;
+if (Speech) $("#mic-btn").classList.remove("hidden");
+$("#mic-btn").addEventListener("click", () => {
+  if (speech) { speech.stop(); return; }
+  const rec = new Speech();
+  rec.lang = "zh-TW";
+  rec.interimResults = true;
+  rec.continuous = true;
+  const base = input.value ? input.value.replace(/\s*$/, " ") : "";
+  let finalText = "";
+  rec.onresult = e => {
+    let interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) finalText += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    input.value = base + finalText + interim;
+    autosize();
+  };
+  rec.onerror = e => {
+    if (e.error === "not-allowed" || e.error === "service-not-allowed") toast("請允許使用麥克風");
+    else if (e.error !== "aborted" && e.error !== "no-speech") toast("語音辨識失敗:" + e.error);
+  };
+  rec.onend = () => { speech = null; $("#mic-btn").classList.remove("on"); input.value = base + finalText; autosize(); };
+  try { rec.start(); speech = rec; $("#mic-btn").classList.add("on"); toast("請開始說話,說完再按一次 🎤"); }
+  catch (_) { toast("沒辦法開始語音輸入"); }
+});
+
+// ---------- 錄語音訊息
+let recorder = null, recStream = null, recChunks = [], recTimer = null, recStart = 0;
+async function startRecording() {
+  if (!state.current) return;
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return toast("這個瀏覽器不支援錄音(需要 https 網址)");
+  try { recStream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (_) { return toast("沒有麥克風權限,請在瀏覽器設定允許"); }
+  const type = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg"].find(t => MediaRecorder.isTypeSupported(t));
+  recorder = new MediaRecorder(recStream, type ? { mimeType: type } : undefined);
+  recChunks = [];
+  recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+  recorder.start(1000);
+  recStart = Date.now();
+  closeEmoji();
+  $("#composer").classList.add("hidden");
+  $("#recorder").classList.remove("hidden");
+  const tick = () => {
+    const sec = Math.floor((Date.now() - recStart) / 1000);
+    $("#rec-time").textContent = `${Math.floor(sec / 60)}:${pad(sec % 60)}`;
+    if (sec >= 300) stopRecording(true);  // 最長 5 分鐘
+  };
+  tick(); recTimer = setInterval(tick, 500);
+}
+function stopRecording(send) {
+  if (!recorder) return;
+  const rec = recorder;
+  recorder = null;
+  clearInterval(recTimer);
+  rec.onstop = () => {
+    recStream.getTracks().forEach(t => t.stop());
+    $("#recorder").classList.add("hidden");
+    $("#composer").classList.remove("hidden");
+    if (!send || !recChunks.length) return;
+    const mime = (rec.mimeType || "audio/webm").split(";")[0];
+    const ext = { "audio/mp4": "m4a", "audio/ogg": "ogg" }[mime] || "webm";
+    const d = new Date();
+    const name = `語音訊息_${d.getMonth() + 1}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.${ext}`;
+    sendFiles([new File(recChunks, name, { type: mime })]);
+  };
+  rec.stop();
+}
+$("#rec-cancel").addEventListener("click", () => stopRecording(false));
+$("#rec-send").addEventListener("click", () => stopRecording(true));
 
 // ---------- 選單
 function showMenu(anchor, items) {
@@ -1138,7 +1502,9 @@ function showMenu(anchor, items) {
   for (const [label, fn, cls] of items) menu.append(el("button", { class: cls || "", onclick: () => { menu.remove(); fn(); } }, label));
   document.body.append(menu);
   const r = anchor.getBoundingClientRect();
-  menu.style.top = r.bottom + 4 + "px";
+  // 下面放不下(例如輸入框旁邊的按鈕)就往上開
+  const below = r.bottom + 4 + menu.offsetHeight <= innerHeight - 8;
+  menu.style.top = (below ? r.bottom + 4 : Math.max(8, r.top - 4 - menu.offsetHeight)) + "px";
   menu.style.left = Math.max(8, Math.min(r.right - menu.offsetWidth, innerWidth - menu.offsetWidth - 8)) + "px";
   setTimeout(() => document.addEventListener("click", () => menu.remove(), { once: true }));
 }
