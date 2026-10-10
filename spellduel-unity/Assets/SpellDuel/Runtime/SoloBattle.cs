@@ -207,6 +207,13 @@ namespace SpellDuel
                     En.blockUntil = (m.e & 1) != 0 ? hold : 0f;
                     En.shieldUntil = (m.e & 2) != 0 ? hold : 0f;
                     En.counterUntil = (m.e & 4) != 0 ? hold : 0f;
+                    // 對手伏擊中（顯示警告用；出手由對手判定）
+                    if ((m.e & 8) != 0)
+                    {
+                        if (En.armed == null) En.armed = En.loadout.Find(x => x.releaseNear) ?? Skills.All["backstab"];
+                        En.armedUntil = hold;
+                    }
+                    else En.armed = null;
                     break;
             }
         }
@@ -216,7 +223,7 @@ namespace SpellDuel
             if (!NetMode || battle == null || Time.time < nextState) return;
             nextState = Time.time + 0.1f;
             var me = Me; float now = battle.now;
-            int e = (me.blockUntil > now ? 1 : 0) | (me.shieldUntil > now ? 2 : 0) | (me.counterUntil > now ? 4 : 0);
+            int e = (me.blockUntil > now ? 1 : 0) | (me.shieldUntil > now ? 2 : 0) | (me.counterUntil > now ? 4 : 0) | (me.armed != null ? 8 : 0);
             NetSend?.Invoke(new Msg { t = "state", k = me.charging != null ? me.charging.id : "", s = battle.ChargeProgress(me), hp = Mathf.CeilToInt(me.hp), e = e });
         }
         public void Hide() { EndBattle(); phase = Phase.Hidden; }
@@ -490,6 +497,18 @@ namespace SpellDuel
                     floaters.Add(new Floater { text = text, color = new Color(1f, 0.3f, 0.3f), born = Time.time, screen = true });
                     hitFlash = 1f;
                     Handheld.Vibrate();
+                    break;
+                case "armed":
+                    floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time, screen = at == Me.Chest });
+                    if (at == Me.Chest) SpellFx.CastBurst(myClass, c, cam.transform.position + cam.transform.forward * 0.5f - cam.transform.up * 0.08f, cam.transform.forward, 0.35f);
+                    break;
+                case "ambush":
+                    // 伏擊出手：在被刺的人身上爆開
+                    floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time });
+                    SpellFx.Impact("assassin", c, WorldFrame.FromWorld(at), 1.2f);
+                    break;
+                case "armedExpire":
+                    if (at == Me.Chest) Say(text + "（5 秒內沒靠近）", 1.5f);
                     break;
                 case "burnzone":
                     SpellFx.Impact("mage", c, WorldFrame.FromWorld(at), 2.5f);   // 隕石落地爆炸
@@ -865,12 +884,27 @@ namespace SpellDuel
                 float prog = battle.ChargeProgress(me);
                 int rs = battle.RangeState(me, me.charging);
                 string st = prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%" :
-                    (me.charging.releaseNear && rs > 0) ? "靠近才能出手" : rs < 0 ? "太近了" :
+                    me.charging.releaseNear ? "手刀往前刺 → 5 秒內靠近敵人自動出手" : rs < 0 ? "太近了" :
                     HandGesture.StyleHint(HandGesture.ReleaseOf(me.charging));
                 GUI.color = prog < 1f ? Color.white : me.charging.color;
                 GUI.Label(new Rect(0, H / 2 - lh * 2.2f, W, lh), $"{me.charging.name}　{st}", center);
                 GUI.color = Color.white;
             }
+            // 伏擊狀態：我在伏擊 → 提示靠近；敵人在伏擊 → 警告保持距離
+            if (me.armed != null)
+            {
+                float leftT = Mathf.Max(0f, me.armedUntil - now), need = me.armed.rangeMax;
+                GUI.color = me.armed.color;
+                GUI.Label(new Rect(0, H * 0.3f, W, lh * 1.6f), $"🗡 {me.armed.name}伏擊中：靠近到 {need:0.#}m 內自動出手（{battle.Distance:F1}m・剩 {leftT:F1} 秒）", center);
+                GUI.color = Color.white;
+            }
+            if (en.armed != null && en.Alive)
+            {
+                GUI.color = new Color(1f, 0.35f, 0.4f);
+                GUI.Label(new Rect(0, H * 0.34f, W, lh * 1.6f), $"⚠ 敵人伏擊中！保持距離（> {en.armed.rangeMax:0.#}m）", center);
+                GUI.color = Color.white;
+            }
+
             // 準星（畫面中央）：所有技能都朝這裡放；蓄力完成（或符文畫好）時用技能顏色脈動
             {
                 bool ready = me.charging != null && battle.ChargeProgress(me) >= 1f;

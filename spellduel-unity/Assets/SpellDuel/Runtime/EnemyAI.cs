@@ -90,7 +90,7 @@ namespace SpellDuel
             var s = me.charging;
             if (b.now - me.chargeStart < s.charge + me.chargeDelay) return;
             var player = b.player;
-            if (s.type == SkillType.Projectile && b.RangeState(me, s) != 0) { Status = $"{s.name}：調整距離中"; return; }   // 走位會處理
+            if (s.type == SkillType.Projectile && !s.releaseNear && b.RangeState(me, s) != 0) { Status = $"{s.name}：調整距離中"; return; }   // 走位會處理（近身技能不限距離，放了再衝過去）
 
             var floor = player.Feet + new Vector3(Rand(-0.15f, 0.15f), 0, Rand(-0.15f, 0.15f));
             if (s.type == SkillType.Trap && Battle.FlatDistance(me.Feet, floor) > s.trapRange) { Status = $"{s.name}：靠近中"; return; }
@@ -114,7 +114,9 @@ namespace SpellDuel
             // 想站的距離：蓄力中的技能決定（打不到就調整）；否則依職業習慣
             float want = PreferredDistance.TryGetValue(me.cls.id, out var pref) ? pref : 3f;
             var c = me.charging;
-            if (c != null && c.type == SkillType.Projectile)
+            if (me.armed != null) want = me.armed.rangeMax * 0.6f;   // 伏擊中：衝向玩家
+            else if (c != null && c.releaseNear) want = Mathf.Max(cur, 2.5f);   // 近身技能蓄力時保持距離
+            else if (c != null && c.type == SkillType.Projectile)
                 want = Mathf.Clamp(cur, Mathf.Max(0.8f, c.rangeMin * 1.15f), c.rangeMax * 0.85f);
             else if (c != null && c.type == SkillType.Trap)
                 want = Mathf.Min(cur, c.trapRange * 0.8f);

@@ -26,6 +26,8 @@ namespace SpellDuel
         public SkillDef charging; public float chargeStart, chargeDelay;
         public float blockUntil, blockReduce, shieldUntil, counterUntil, snaredUntil, blindUntil;
         public int shieldLeft;
+        // 刺客的近身技能：放招後進入「伏擊」，時限內靠近到射程內就自動出手
+        public SkillDef armed; public float armedUntil;
         public readonly List<Dot> dots = new List<Dot>();
 
         public class Dot { public float dps, until, acc; }
@@ -103,6 +105,7 @@ namespace SpellDuel
         public const float MeteorDropHeight = 6f, BurnRadius = 1.5f, BurnDuration = 10f, BurnDps = 5f;
         readonly System.Random rng = new System.Random();
         public float chargeTimeout = 7f;
+        public const float AmbushWindow = 5f;   // 伏擊狀態持續秒數
         int nextId = 1;
 
         /// <summary>事件（給畫面做特效與文字）：種類、位置、顏色、文字</summary>
@@ -229,7 +232,7 @@ namespace SpellDuel
             if (f.mp < s.cost) { f.charging = null; why = "MP 不足"; return false; }
             if (now - f.chargeStart < s.charge) { why = $"蓄力中 {Mathf.FloorToInt(ChargeProgress(f) * 100)}%"; return false; }
             int rs = RangeState(f, s);
-            if (s.releaseNear && rs > 0) { why = $"再靠近！{Distance:F1}m → ≤{s.rangeMax:0.#}m"; return false; }
+            // 近身技能（releaseNear）：不限距離，放招後進入伏擊狀態
             if (s.type == SkillType.Projectile && rs < 0) { why = $"太近了！要拉開到 {s.rangeMin:0.#}m 以上"; return false; }
             if (s.type == SkillType.Trap && FlatDistance(f.Feet, floorPoint) > s.trapRange)
             { why = $"陷阱只能設在 {s.trapRange:0.#}m 內"; return false; }
@@ -237,6 +240,13 @@ namespace SpellDuel
             f.mp -= s.cost;
             f.cooldownUntil[s.id] = now + s.cooldown;
             f.charging = null;
+
+            if (s.releaseNear)
+            {
+                f.armed = s; f.armedUntil = now + AmbushWindow;
+                Emit("armed", f.Chest, s.color, $"{s.name} 伏擊中");
+                return true;
+            }
 
             switch (s.type)
             {
@@ -314,6 +324,7 @@ namespace SpellDuel
             foreach (var f in new[] { player, enemy })
             {
                 if (remoteEnemy && f == enemy) continue;   // 對手的 MP、詠唱、持續傷害由對手自己算
+                UpdateAmbush(f);
                 f.mp = Mathf.Min(f.maxMp, f.mp + f.regen * dt);
                 if (f.charging != null && now - f.chargeStart > f.charging.charge + chargeTimeout + (f.charging.releaseNear ? 8f : 0f))
                 { f.charging = null; Emit("timeout", f.Chest, Color.gray, "詠唱逾時"); }
@@ -370,6 +381,20 @@ namespace SpellDuel
                 }
             }
             projectiles.RemoveAll(x => !x.alive);
+        }
+
+        /// <summary>伏擊：時限內和對手的水平距離 ≤ 技能射程 → 自動出手一次</summary>
+        void UpdateAmbush(Fighter f)
+        {
+            var s = f.armed;
+            if (s == null) return;
+            if (now > f.armedUntil || !f.Alive) { f.armed = null; Emit("armedExpire", f.Chest, Color.gray, $"{s.name} 落空"); return; }
+            var target = Opponent(f);
+            if (!target.Alive || FlatDistance(f.head, target.head) > s.rangeMax) return;
+            f.armed = null;
+            Emit("ambush", target.Chest, s.color, s.name + "！");
+            if (remoteEnemy && target == enemy) { Emit("hit", target.Chest, s.color, null); OnRemoteHit?.Invoke(s, s.damage, target.Chest, 0); }
+            else Hit(target, new Projectile { owner = f, skill = s, pos = target.Chest, dir = Fighter.Flat(target.head - f.head), damage = s.damage, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur });
         }
 
         void AddBurn(Projectile p, Vector3 at)
