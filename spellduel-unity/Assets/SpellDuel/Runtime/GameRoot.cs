@@ -1119,9 +1119,11 @@ namespace SpellDuel
                 if (targetOnScreen)
                 {
                     DrawFrame(targetRect, new Color(0.3f, 1f, 0.4f, 0.9f), Mathf.Max(3f, W * 0.006f));
-                    GUI.Label(new Rect(targetRect.x, targetRect.y - lineH, Mathf.Max(targetRect.width, W * 0.3f), lineH), "🎯 鎖定", label);
+                    var meW = WorldFrame.ToWorld(cam.transform.position);
+                    float dTarget = Flat(tgtHeadW - meW).magnitude;
+                    GUI.Label(new Rect(targetRect.x, targetRect.y - lineH, Mathf.Max(targetRect.width, W * 0.4f), lineH), $"🎯 鎖定　{dTarget:F1} m", label);
                 }
-                else GUI.Label(new Rect(0, H * 0.58f, W, lineH * 1.5f), "鏡頭沒看到對手，轉向對手才能施法", new GUIStyle(label) { alignment = TextAnchor.MiddleCenter });
+                else GUI.Label(new Rect(0, H * 0.58f, W, lineH * 1.5f), $"鏡頭沒看到對手，轉向對手才能施法（距離 {Flat(tgtHeadW - WorldFrame.ToWorld(cam.transform.position)).magnitude:F1} m）", new GUIStyle(label) { alignment = TextAnchor.MiddleCenter });
             }
 
             if (mode == Mode.Duo) hand.DrawGUI(label, new Color(1f, 0.6f, 0.1f));

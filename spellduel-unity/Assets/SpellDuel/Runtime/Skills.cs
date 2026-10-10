@@ -50,6 +50,14 @@ namespace SpellDuel
         public static readonly Dictionary<string, ClassDef> Classes = new Dictionary<string, ClassDef>();
         public static readonly string[] ClassOrder = { "archer", "mage", "assassin", "swordsman" };
 
+        /// <summary>每個技能的手勢：依職業技能順序分配（同職業不重複）</summary>
+        public static HandGesture.Shape GestureOf(string skillId)
+        {
+            if (!All.TryGetValue(skillId, out var s) || !Classes.TryGetValue(s.cls, out var c)) return HandGesture.Shape.None;
+            int i = System.Array.IndexOf(c.skills, skillId);
+            return i >= 0 && i < HandGesture.SkillShapes.Length ? HandGesture.SkillShapes[i] : HandGesture.Shape.None;
+        }
+
         // 自己解析 #rrggbb（不用 ColorUtility，讓純邏輯可在 Unity 外測試）
         static Color C(string hex)
         {

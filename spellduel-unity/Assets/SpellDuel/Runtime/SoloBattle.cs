@@ -39,6 +39,8 @@ namespace SpellDuel
         GameObject enemyShield;
         CharacterRig enemyRig;            // 敵人外觀（依職業造型，會走路、詠唱、被打中、倒地）
         Vector3 lastEnemyFeet; float lastEnemyHp; bool enemyDeadShown;
+        bool dummyMode;                   // 木頭人練習：不會動、不會攻擊、打不死，統計傷害
+        float dummyDamage; int dummyHits;
         readonly Dictionary<Projectile, GameObject> projGo = new Dictionary<Projectile, GameObject>();
         readonly Dictionary<Trap, GameObject> trapGo = new Dictionary<Trap, GameObject>();
         class Floater { public Vector3 posMap; public string text; public Color color; public float born; public bool screen; }
@@ -91,7 +93,7 @@ namespace SpellDuel
             SaveChoices();
             EndBattle();
             enemyClassUsed = enemyClass == "random" ? Skills.ClassOrder[UnityEngine.Random.Range(0, Skills.ClassOrder.Length)] : enemyClass;
-            var ec = Skills.Classes[enemyClassUsed];
+            var ec = Skills.Classes.TryGetValue(enemyClassUsed, out var found) ? found : DummyClass;
             // 敵人隨機帶 3 個技能（至少 2 個攻擊）
             var attacks = new List<string>(); var guards = new List<string>();
             foreach (var id in ec.skills) (Skills.All[id].type == SkillType.Self ? guards : attacks).Add(id);
@@ -101,21 +103,32 @@ namespace SpellDuel
             if (rest.Count > 0) enemySkills.Add(rest[0]);
 
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
-            var en = new Fighter($"電腦{ec.name}", ec, enemySkills, false);
+            dummyMode = enemyClass == "dummy";
+            dummyDamage = 0f; dummyHits = 0;
+            var en = dummyMode
+                ? new Fighter("木頭人", DummyClass, new List<string>(), false)
+                : new Fighter($"電腦{ec.name}", ec, enemySkills, false);
             // 敵人出生點：場地內、玩家面向的那一側
             float reach = area.ReachInside(area.Origin.forward, 0.6f);
-            en.head = new Vector3(0f, 1.6f, Mathf.Clamp(reach, 0f, 6f));   // 大場地時離遠一點出場（最遠 6m）
+            en.head = new Vector3(0f, 1.6f, Mathf.Clamp(reach, 0f, dummyMode ? 3f : 6f));   // 大場地時離遠一點出場（最遠 6m；木頭人 3m）
             SyncPlayer(me);
             battle = new Battle(me, en);
             battle.OnEvent += OnBattleEvent;
-            ai = new EnemyAI(battle, en, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
+            ai = dummyMode ? null : new EnemyAI(battle, en, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
 
             enemyRig = CharacterRig.Create(ec.id);
             lastEnemyFeet = en.Feet; lastEnemyHp = en.hp; enemyDeadShown = false;
             enemyShield = Prim(PrimitiveType.Sphere, new Color(0.4f, 0.7f, 1f, 0.25f));
             phase = Phase.Fighting;
-            Say($"⚔ 對手：{en.name}（{string.Join("・", enemySkills.ConvertAll(id => Skills.All[id].name))}）", 4f);
+            Say(dummyMode ? "🪵 木頭人練習：比出技能手勢詠唱，握拳→張開放招" : $"⚔ 對手：{en.name}（{string.Join("・", enemySkills.ConvertAll(id => Skills.All[id].name))}）", 4f);
         }
+
+        /// <summary>木頭人：不會動、不會攻擊；血量很多，打不死</summary>
+        static readonly ClassDef DummyClass = new ClassDef
+        {
+            id = "dummy", name = "木頭人", color = new Color(0.72f, 0.52f, 0.3f), maxHp = 99999, maxMp = 0, mpRegen = 0,
+            skills = new string[0], defaultLoadout = new string[0], desc = "練習用，不會攻擊",
+        };
 
         void EndBattle()
         {
@@ -142,12 +155,21 @@ namespace SpellDuel
             UpdateLock();
             if (phase == Phase.Fighting && !frozen)
             {
-                ai.Update(dt);
+                if (ai != null) ai.Update(dt);
+                else en_FaceMe();
                 battle.Update(dt);
                 HandleInput();
                 if (battle.Over) phase = Phase.Over;
             }
             UpdateVisuals();
+        }
+
+        // 木頭人永遠面向玩家
+        void en_FaceMe()
+        {
+            var d = Fighter.Flat(Me.head - En.head);
+            if (d.sqrMagnitude > 1e-4f) En.forward = d.normalized;
+            if (En.hp < En.maxHp * 0.5f) En.hp = En.maxHp;   // 打不死：血量過半就補滿
         }
 
         // 玩家的位置＝手機位置（換成場地座標）；追蹤中斷時位置不可信 → 停在最後的正確位置
@@ -162,22 +184,30 @@ namespace SpellDuel
 
         void HandleInput()
         {
-            // 手勢放招（握拳→張開、或往上甩手）：往手指的準星方向放
-            if (Hand != null && Hand.ConsumeRelease())
+            if (Hand == null) return;
+            // 比出技能手勢（維持 0.35 秒）＝詠唱該技能（不再用點螢幕選招）
+            if (Hand.ConsumeSelect(out var shape) && !frozen)
             {
-                if (Me.charging != null && battle.ChargeProgress(Me) >= 1f && !frozen) ReleaseAt(Hand.Aim, true);
-                return;
+                var skill = Me.loadout.Find(sk => Skills.GestureOf(sk.id) == shape);
+                if (skill != null && Me.charging != skill)
+                {
+                    if (!battle.TryChant(Me, skill, out var why)) Say(why, 1.5f);
+                    else Say($"{HandGesture.ShapeName(shape)} → {skill.name}", 1f);
+                }
             }
-            if (!Input.GetMouseButtonDown(0) || GUIUtility.hotControl != 0) return;
-            var sp = Input.mousePosition;
-            if (frozen) { Say("AR 追蹤中斷，暫時不能施法", 1.5f); return; }
-            if (!InTapZone(new Vector2(sp.x, Screen.height - sp.y))) return;
-            ReleaseAt(sp, false);
+            // 手勢放招（握拳→張開、或往上甩手）：往手指的準星方向放
+            if (Hand.ConsumeRelease())
+            {
+                if (frozen) { Say("AR 追蹤中斷，暫時不能施法", 1.5f); return; }
+                if (Me.charging == null) Say("先比出技能手勢（或唸咒語）開始詠唱", 1.5f);
+                else if (battle.ChargeProgress(Me) < 1f) Say("蓄力還沒完成", 1f);
+                else ReleaseAt(Hand.Aim, true);
+            }
         }
 
         void ReleaseAt(Vector2 sp, bool byGesture)
         {
-            if (Me.charging == null) { Say(voiceOn ? "先唸咒語（或點下方技能）開始詠唱" : "先點下方的技能開始詠唱", 1.5f); return; }
+            if (Me.charging == null) { Say("先比出技能手勢（或唸咒語）開始詠唱", 1.5f); return; }
             if (Me.charging.type == SkillType.Projectile && !enemyOnScreen && battle.ChargeProgress(Me) >= 1f)
             { Say("🎯 敵人不在畫面中，轉向敵人才能鎖定", 1.5f); return; }
 
@@ -297,7 +327,7 @@ namespace SpellDuel
             enemyRig.MoveSpeed = Mathf.Lerp(enemyRig.MoveSpeed, Fighter.Flat(en.Feet - lastEnemyFeet).magnitude / dt, 0.2f);
             lastEnemyFeet = en.Feet;
             enemyRig.Charge = en.charging != null ? Mathf.Max(0.01f, battle.ChargeProgress(en)) : 0f;
-            if (en.hp < lastEnemyHp - 0.01f) enemyRig.PlayHit();
+            if (en.hp < lastEnemyHp - 0.01f) { enemyRig.PlayHit(); if (dummyMode) { dummyDamage += lastEnemyHp - en.hp; dummyHits++; } }
             lastEnemyHp = en.hp;
             if (!en.Alive && !enemyDeadShown) { enemyRig.SetDead(true); enemyDeadShown = true; }
             bool guarded = en.blockUntil > battle.now || en.shieldUntil > battle.now || en.counterUntil > battle.now;
@@ -437,7 +467,7 @@ namespace SpellDuel
                 GUI.color = on ? s.color : new Color(0.75f, 0.75f, 0.75f);
                 var r = new Rect(pad + (i % 2) * (sw + pad), y + (i / 2) * (sh + pad * 0.5f), sw, sh);
                 string eff = s.type == SkillType.Self ? (s.self == SelfKind.Heal ? $"回復{s.heal}" : "防禦") : $"傷害{s.damage}{(s.multi > 1 ? $"×{s.multi}" : "")}";
-                if (GUI.Button(r, $"{(on ? "✔ " : "")}{s.name}\nMP{s.cost}・蓄力{s.charge:0.#}s・{eff}・{s.RangeText}", button))
+                if (GUI.Button(r, $"{(on ? "✔ " : "")}{s.name}（手勢：{HandGesture.ShapeName(Skills.GestureOf(s.id))}）\nMP{s.cost}・蓄力{s.charge:0.#}s・{eff}・{s.RangeText}", button))
                 {
                     if (on) myLoadout.Remove(s.id);
                     else { if (myLoadout.Count >= 3) myLoadout.RemoveAt(0); myLoadout.Add(s.id); }
@@ -447,11 +477,11 @@ namespace SpellDuel
             y += ((cls.skills.Length + 1) / 2) * (sh + pad * 0.5f) + pad * 0.5f;
 
             GUI.Label(new Rect(pad, y, W, lh), "敵人職業", label); y += lh;
-            float ew = (W - pad * 6) / 5f;
-            for (int i = 0; i < 5; i++)
+            float ew = (W - pad * 7) / 6f;
+            for (int i = 0; i < 6; i++)
             {
-                string id = i == 0 ? "random" : Skills.ClassOrder[i - 1];
-                string nm = i == 0 ? "隨機" : Skills.Classes[id].name;
+                string id = i == 0 ? "random" : i == 5 ? "dummy" : Skills.ClassOrder[i - 1];
+                string nm = i == 0 ? "隨機" : i == 5 ? "木頭人" : Skills.Classes[id].name;
                 GUI.color = id == enemyClass ? Color.yellow : Color.white;
                 if (GUI.Button(new Rect(pad + i * (ew + pad), y, ew, bh), nm, button)) enemyClass = id;
             }
@@ -518,7 +548,8 @@ namespace SpellDuel
             GUI.Label(new Rect(pad, y, W * 0.6f, lh), $"{en.name}　距離 {battle.Distance:F1}m", label);
             Bar(new Rect(W * 0.6f, y + lh * 0.25f, W * 0.37f, lh * 0.5f), en.hp / en.maxHp, new Color(1f, 0.25f, 0.35f), $"{Mathf.CeilToInt(en.hp)}");
             y += lh;
-            string enState = en.charging != null ? $"⚠ 詠唱 {en.charging.name}（{Mathf.FloorToInt(battle.ChargeProgress(en) * 100)}%）" : ai.Status;
+            string enState = dummyMode ? $"命中 {dummyHits} 次・累計傷害 {Mathf.RoundToInt(dummyDamage)}"
+                : en.charging != null ? $"⚠ 詠唱 {en.charging.name}（{Mathf.FloorToInt(battle.ChargeProgress(en) * 100)}%）" : ai.Status;
             if (en.snaredUntil > now) enState = "被定身";
             GUI.Label(new Rect(pad, y, W - pad * 2, lh), enState, label); y += lh;
             GUI.Label(new Rect(pad, y, W - pad * 2, lh), StatusText(en, now), small);
@@ -529,6 +560,18 @@ namespace SpellDuel
             {
                 var r = new Rect(hs.x - W * 0.12f, H - hs.y, W * 0.24f, lh * 0.4f);
                 Bar(r, en.hp / en.maxHp, new Color(1f, 0.25f, 0.35f), "");
+                // 敵我距離：蓄力中的技能打得到就綠色，太遠／太近就紅色
+                float dist = battle.Distance;
+                string rangeNote = ""; Color dc = Color.white;
+                if (me.charging != null && me.charging.type == SkillType.Projectile)
+                {
+                    int rs = battle.RangeState(me, me.charging);
+                    dc = rs == 0 ? new Color(0.4f, 1f, 0.5f) : new Color(1f, 0.4f, 0.4f);
+                    rangeNote = rs > 0 ? "　太遠" : rs < 0 ? "　太近" : "　射程內";
+                }
+                GUI.color = dc;
+                GUI.Label(new Rect(r.x - W * 0.1f, r.y + lh * 0.45f, r.width + W * 0.2f, lh), $"{dist:F1} m{rangeNote}", center);
+                GUI.color = Color.white;
                 if (en.charging != null) GUI.Label(new Rect(r.x - W * 0.1f, r.y - lh, r.width + W * 0.2f, lh), $"⚠ {en.charging.name}", center);
             }
 
@@ -597,7 +640,8 @@ namespace SpellDuel
             float bottomH = lh * 2.4f + W * 0.2f;
             float by = H - (H - Screen.safeArea.yMax) - Screen.safeArea.y - bottomH;
             by = Mathf.Min(by, H * 0.76f);
-            Panel(new Rect(0, by - pad * 0.5f, W, H - by + pad));
+            Panel(new Rect(0, by - pad * 0.5f - lh, W, H - by + pad + lh));
+            GUI.Label(new Rect(pad, by - lh * 1.05f, W - pad * 2, lh), "比手勢＝詠唱　握拳→張開（或往上甩手）＝放招" + (voiceOn && VoiceReady ? "　也可以唸咒語" : ""), small);
             Bar(new Rect(pad, by, W - pad * 2, lh * 0.5f), me.hp / me.maxHp, new Color(1f, 0.3f, 0.35f), $"HP {Mathf.CeilToInt(me.hp)}");
             Bar(new Rect(pad, by + lh * 0.6f, W - pad * 2, lh * 0.5f), me.mp / me.maxMp, new Color(0.3f, 0.6f, 1f), $"MP {Mathf.FloorToInt(me.mp)}");
             GUI.Label(new Rect(pad, by + lh * 1.15f, W - pad * 2, lh), StatusText(me, now), small);
@@ -608,12 +652,17 @@ namespace SpellDuel
                 var r = new Rect(pad + i * (sw + pad), sy, sw, sh);
                 float cd = me.cooldownUntil.TryGetValue(s.id, out var u) ? Mathf.Max(0, u - now) : 0;
                 bool charging = me.charging == s;
-                GUI.color = charging ? s.color : (me.mp < s.cost || cd > 0 ? new Color(0.6f, 0.6f, 0.6f) : Color.white);
-                if (GUI.Button(r, $"{s.name}\nMP {s.cost}{(cd > 0 ? $"　{cd:F1}s" : "")}", button) && phase == Phase.Fighting)
-                {
-                    if (frozen) Say("AR 追蹤中斷，暫時不能施法", 1.5f); else
-                    if (!battle.TryChant(me, s, out var why)) Say(why, 1.5f);
-                }
+                var g = Skills.GestureOf(s.id);
+                bool showing = Hand != null && Hand.HandVisible && Hand.Current == g;
+                // 技能格（只顯示，不能點）：手勢圖示＋名稱＋MP／冷卻；手正比著這個手勢時亮起來
+                GUI.color = charging ? WithAlpha(s.color, 0.55f) : showing ? new Color(1f, 1f, 1f, 0.35f) : new Color(0f, 0f, 0f, 0.35f);
+                GUI.DrawTexture(r, Texture2D.whiteTexture);
+                bool usable = me.mp >= s.cost && cd <= 0;
+                HandGesture.DrawIcon(new Rect(r.x + pad * 0.3f, r.y + pad * 0.3f, sh * 0.55f, sh * 0.55f), g, usable ? s.color : new Color(0.5f, 0.5f, 0.5f));
+                GUI.color = usable ? Color.white : new Color(0.65f, 0.65f, 0.65f);
+                GUI.Label(new Rect(r.x + sh * 0.6f, r.y, r.width - sh * 0.6f, r.height * 0.5f), s.name, label);
+                GUI.Label(new Rect(r.x + sh * 0.6f, r.y + r.height * 0.42f, r.width - sh * 0.6f, r.height * 0.3f), HandGesture.ShapeName(g), small);
+                GUI.Label(new Rect(r.x + pad * 0.3f, r.y + r.height * 0.7f, r.width, r.height * 0.3f), $"MP {s.cost}{(cd > 0 ? $"　冷卻 {cd:F1}s" : "")}", small);
                 GUI.color = Color.white;
             }
 
