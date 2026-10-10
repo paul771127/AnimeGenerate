@@ -31,7 +31,7 @@ namespace SpellDuel
         public string desc;
 
         public float MaxTravel => rangeMax + 1f;
-        public string RangeText => type == SkillType.Projectile ? (rangeMin > 0 ? $"{rangeMin:0.#}–{rangeMax:0.#}m" : $"≤{rangeMax:0.#}m") : type == SkillType.Trap ? $"設置≤{trapRange:0.#}m" : "自身";
+        public string RangeText => type == SkillType.Projectile ? $"≤{rangeMax:0.#}m" : type == SkillType.Trap ? $"設置≤{trapRange:0.#}m" : "自身";
     }
 
     public class ClassDef

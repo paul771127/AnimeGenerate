@@ -224,7 +224,7 @@ namespace SpellDuel
         // ------------------------------------------------------------ 出手
         /// <param name="aimDir">投射物的方向（場地座標）</param>
         /// <param name="floorPoint">陷阱的位置（地板上）；沒鎖定時隕石也落在這裡</param>
-        /// <param name="locked">有沒有鎖定敵人。沒鎖定也能放：朝準星方向飛，不檢查「太近」，隕石落在準星指的地面</param>
+        /// <param name="locked">有沒有鎖定敵人。沒鎖定也能放：朝準星方向飛，隕石落在準星指的地面</param>
         public bool TryRelease(Fighter f, Vector3 aimDir, Vector3 floorPoint, out string why, bool locked = true)
         {
             why = null;
@@ -232,11 +232,15 @@ namespace SpellDuel
             if (s == null || Over) { why = "沒有在詠唱"; return false; }
             if (f.mp < s.cost) { f.charging = null; why = "MP 不足"; return false; }
             if (now - f.chargeStart < s.charge) { why = $"蓄力中 {Mathf.FloorToInt(ChargeProgress(f) * 100)}%"; return false; }
-            int rs = RangeState(f, s);
-            // 近身技能（releaseNear）：不限距離，放招後進入伏擊狀態
-            if (locked && s.type == SkillType.Projectile && rs < 0) { why = $"太近了！要拉開到 {s.rangeMin:0.#}m 以上"; return false; }
-            if (s.type == SkillType.Trap && FlatDistance(f.Feet, floorPoint) > s.trapRange)
-            { why = $"陷阱只能設在 {s.trapRange:0.#}m 內"; return false; }
+            // 蓄力完成就一定放得出去（不管有沒有瞄到敵人、距離多遠），打不打得中看瞄準與距離。
+            // 陷阱：準星指得太遠時，放在同方向的最遠設置距離上
+            if (s.type == SkillType.Trap)
+            {
+                var off = floorPoint - f.Feet; off.y = 0f;
+                if (off.sqrMagnitude < 1e-6f) off = Fighter.Flat(f.forward) * 1.5f;
+                if (off.magnitude > s.trapRange) off = off.normalized * s.trapRange;
+                floorPoint = f.Feet + off; floorPoint.y = 0f;
+            }
 
             f.mp -= s.cost;
             f.cooldownUntil[s.id] = now + s.cooldown;

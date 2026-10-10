@@ -882,14 +882,14 @@ namespace SpellDuel
             {
                 var r = new Rect(hs.x - W * 0.12f, H - hs.y, W * 0.24f, lh * 0.35f);
                 UiKit.Bar(r, en.hp / en.maxHp, new Color(1f, 0.25f, 0.35f), "", fsS);
-                // 敵我距離：蓄力中的技能打得到就綠色，太遠／太近就紅色
+                // 敵我距離：蓄力中的技能射程到得了就綠色，太遠就紅色（太遠也能放，只是飛不到）
                 float dist = battle.Distance;
                 string rangeNote = ""; Color dc = Color.white;
                 if (me.charging != null && me.charging.type == SkillType.Projectile)
                 {
-                    int rs = battle.RangeState(me, me.charging);
-                    dc = rs == 0 ? new Color(0.4f, 1f, 0.5f) : new Color(1f, 0.4f, 0.4f);
-                    rangeNote = rs > 0 ? "　太遠" : rs < 0 ? "　太近" : "　射程內";
+                    bool far = battle.RangeState(me, me.charging) > 0;
+                    dc = far ? new Color(1f, 0.4f, 0.4f) : new Color(0.4f, 1f, 0.5f);
+                    rangeNote = far ? "　超出射程" : "　射程內";
                 }
                 UiKit.Text(new Rect(r.x - W * 0.12f, r.yMax + 2, r.width + W * 0.24f, lh), $"{dist:F1} m{rangeNote}", fs, dc, TextAnchor.UpperCenter, true);
                 if (en.charging != null) UiKit.Text(new Rect(r.x - W * 0.12f, r.y - lh, r.width + W * 0.24f, lh * 0.95f), $"⚠ {en.charging.name}", fs, new Color(1f, 0.75f, 0.4f), TextAnchor.LowerCenter, true);
@@ -916,9 +916,8 @@ namespace SpellDuel
             if (me.charging != null)
             {
                 float prog = battle.ChargeProgress(me);
-                int rs = battle.RangeState(me, me.charging);
                 string st = prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%" :
-                    me.charging.releaseNear ? "手刀往前刺 → 5 秒內靠近敵人自動出手" : rs < 0 && enemyOnScreen ? "太近了" :
+                    me.charging.releaseNear ? "手刀往前刺 → 5 秒內靠近敵人自動出手" :
                     HandGesture.StyleHint(HandGesture.ReleaseOf(me.charging));
                 UiKit.Pill(H / 2 - lh * 2.6f, $"{me.charging.name}　{st}", fs, prog < 1f ? Color.white : me.charging.color, pillW);
             }
