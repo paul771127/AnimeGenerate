@@ -73,7 +73,7 @@ namespace SpellDuel
             {
                 case EffectKind.Dot: E($"中毒：每秒 {s.effectDps:0.#} 傷害，持續 {s.effectDur:0.#} 秒"); break;
                 case EffectKind.Blind: E($"致盲：對手畫面被煙霧遮住 {s.effectDur:0.#} 秒"); break;
-                case EffectKind.Snare: E($"定身：對手 {s.effectDur:0.#} 秒內不能移動、不能施法（會打斷蓄力）"); break;
+                case EffectKind.Snare: E($"定身 {s.effectDur:0.#} 秒：打斷對手正在蓄力的招式，這段時間不能唸新的技能（牧師的淨化除外）；電腦、Boss、小怪會站著不動"); break;
             }
             if (s.id == "meteor") E($"落地留下直徑 {Battle.BurnRadius * 2f:0.#}m 的火海，持續 {Battle.BurnDuration:0} 秒，站在裡面每秒 {Battle.BurnDps:0.#} 傷害");
             if (s.id == "wind") E("隨機從左或右側繞弧線飛向目標");

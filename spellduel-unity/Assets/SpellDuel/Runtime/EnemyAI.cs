@@ -57,8 +57,8 @@ namespace SpellDuel
             var player = b.player;
             me.forward = Fighter.Flat(player.head - me.head);
             if (b.Over) return;
+            if (me.snaredUntil > b.now) { Status = "被定身"; return; }   // 定身：站著不動、不能施法
             Move(dt);
-            if (me.snaredUntil > b.now) { Status = "被定身"; return; }
 
             if (me.charging != null) { TryRelease(); return; }
 
