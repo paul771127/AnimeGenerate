@@ -58,7 +58,7 @@ namespace SpellDuel
         {
             // 法師：上揚的閃亮和弦＋一點雜訊
             Add("cast_mage", 0.45f, (t, d) => Env(t, 0.01f, d) * (0.5f * Sin(t, 520f + 900f * t) + 0.3f * Sin(t, 780f + 1350f * t) + 0.15f * Noise() * (1f - t / d)));
-            // 弓箭手：弓弦的「繃」（撥弦）＋箭飛出去的咻
+            // 獵人：弓弦的「繃」（撥弦）＋箭飛出去的咻
             Add("cast_archer", 0.4f, (t, d) => Pluck(t, 196f, 9f) * 0.8f + Env(t, 0.02f, 0.3f) * 0.35f * Noise() * Hp());
             // 劍士：揮劍的風切聲（雜訊、音高往下掃）
             Add("cast_swordsman", 0.32f, (t, d) => Env(t, 0.04f, d) * Swoosh(t, d, 2400f, 600f) * 0.9f);

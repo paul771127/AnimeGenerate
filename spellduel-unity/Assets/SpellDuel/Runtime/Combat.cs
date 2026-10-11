@@ -26,7 +26,7 @@ namespace SpellDuel
         public SkillDef charging; public float chargeStart, chargeDelay;
         public float blockUntil, blockReduce, shieldUntil, counterUntil, snaredUntil, blindUntil;
         public float sliceUntil;
-        public float focusUntil;        // 弓箭手精神集中：這段時間內新的冷卻減半
+        public float focusUntil;        // 獵人精神集中：這段時間內新的冷卻減半
         public float prepUntil, prepBonus;   // 刺殺準備：這段時間內傷害 +prepBonus（受到傷害就取消）
         public Vector3 chargeFrom;      // 開始詠唱時腳的位置（刺殺準備要站著不動）
         public float OutMul(float now) => prepUntil > now ? 1f + prepBonus : 1f;        // 劍士斬擊：這段時間內會斬開正面 1m 內飛來的法球

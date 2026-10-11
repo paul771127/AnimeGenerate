@@ -940,7 +940,7 @@ namespace SpellDuel
                 Me.chargeStart = battle.now - Me.charging.charge;
                 Say($"✨ {RuneRecognizer.RuneName(RuneRecognizer.RuneOf(Me.charging.id))}符文完成！把準星對準目標，食指往前指發射", 1.5f);
             }
-            // 弓箭手：握拳的手拉出畫面外＝拉滿弓＝蓄力完成
+            // 獵人：握拳的手拉出畫面外＝拉滿弓＝蓄力完成
             if (Me.charging != null && HandGesture.ReleaseOf(Me.charging) == HandGesture.Style.Bow && Hand.BowDrawn && battle.ChargeProgress(Me) < 1f)
             {
                 Me.chargeStart = battle.now - Me.charging.charge;
@@ -1863,7 +1863,7 @@ namespace SpellDuel
             if (me.charging != null)
             {
                 float prog = battle.ChargeProgress(me);
-                bool bow = HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Bow && Hand != null;   // 弓箭手：拉滿弓就是蓄力完成
+                bool bow = HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Bow && Hand != null;   // 獵人：拉滿弓就是蓄力完成
                 string st = bow ? (Hand.BowDrawn ? "🏹 拉滿！手回畫面張開放箭" : Hand.BowStage == 1 ? "✊ 握著拳拉出畫面外（拉弓）" : "畫面中握拳（捏弦）") :
                     prog < 1f && me.charging.stillRadius > 0f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　站著別動！（離原地 {Battle.FlatDistance(me.Feet, me.chargeFrom):0.0}／{me.charging.stillRadius:0.0}m）" :
                     prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%（蓄滿後{HandGesture.ReleaseLabel(me.charging)}）" :

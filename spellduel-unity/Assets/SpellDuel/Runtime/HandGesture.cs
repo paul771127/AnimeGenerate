@@ -8,7 +8,7 @@ namespace SpellDuel
     ///   每個技能有自己的手勢（食指、剪刀、三指、搖滾、六、讚）：比出來停 0.35 秒＝開始詠唱該技能。
     ///   放招動作依職業不同（Style）：
     ///     法師 Burst：✊ 握拳聚氣 → 1.5 秒內 🖐️ 張開。
-    ///     弓箭手 Bow：畫面中握拳（捏弦）→ 握著拳把手拉出畫面外（拉滿＝蓄力完成）→ 手回到畫面中張開（放箭）；箭往準星射。
+    ///     獵人 Bow：畫面中握拳（捏弦）→ 握著拳把手拉出畫面外（拉滿＝蓄力完成）→ 手回到畫面中張開（放箭）；箭往準星射。
     ///     劍士 Chop：手掌伸直（手刀）快速橫向／斜向劈過畫面；往劈過的中點斬。
     ///     刺客 Thrust：手刀快速往前刺（手遠離手機 → 畫面上變小）；往刺出的位置。
     ///   瞄準：方向＝手腕 → 中指根部，準星在指尖再往前延伸一段（螢幕座標）。
@@ -29,10 +29,10 @@ namespace SpellDuel
 
         public Style ReleaseStyle = Style.Burst;     // 由職業決定（SoloBattle 設定）
         public Vector2 ReleaseAim { get; private set; }   // 放招事件時的瞄準點（螢幕像素）
-        public float BowDraw => BowStage >= 2 ? 1f : 0f;  // 弓箭手拉弓進度（拉滿＝1）
+        public float BowDraw => BowStage >= 2 ? 1f : 0f;  // 獵人拉弓進度（拉滿＝1）
         public Vector2 BowAnchor { get; private set; }    // 開始拉弓（握拳）的位置
         public bool BowHolding => BowStage == 1;
-        /// <summary>弓箭手：0＝還沒握拳、1＝畫面中握拳（捏弦）、2＝握拳的手拉出畫面外（拉滿，等手回來張開）</summary>
+        /// <summary>獵人：0＝還沒握拳、1＝畫面中握拳（捏弦）、2＝握拳的手拉出畫面外（拉滿，等手回來張開）</summary>
         public int BowStage { get; private set; }
         public bool BowDrawn => BowStage >= 2;
         public const float BowOutTime = 0.25f;            // 握拳的手離開畫面這麼久＝拉滿（偵測偶爾漏一兩張不算）
@@ -81,7 +81,7 @@ namespace SpellDuel
         {
             if (s == null) return Style.None;
             if (s.cls == "mage") return Style.Number;                     // 法師：唸完名稱比固定數字就放招
-            if (s.cls == "archer") return Style.Burst;                    // 弓箭手：握拳→比五（張開）就放招
+            if (s.cls == "archer") return Style.Burst;                    // 獵人：握拳→比五（張開）就放招
             switch (s.id)
             {
                 case "snaretrap": case "blasttrap": case "smoke": case "thunder": return Style.Press;   // 往下壓／往下砸／往下劈
@@ -196,7 +196,7 @@ namespace SpellDuel
                 else if (now - lastHandTime > 0.4f) { HandVisible = false; Current = Shape.None; pendingCount = 0; }
             }
             if (now - lastHandTime > 0.6f) { HandVisible = false; Current = Shape.None; }
-            // 弓箭手：握拳的手離開畫面（一段時間沒偵測到手）＝拉滿弓
+            // 獵人：握拳的手離開畫面（一段時間沒偵測到手）＝拉滿弓
             if (ReleaseStyle != Style.Bow) BowStage = 0;
             else if (BowStage == 1 && now - lastHandTime >= BowOutTime) BowStage = 2;
         }
@@ -232,7 +232,7 @@ namespace SpellDuel
             PushHist(new Sample { t = t, palm = palm, size = palmSize, shape = shape });
             bool fingersOut = shape != Shape.Fist && shape != Shape.None;
 
-            // 弓箭手：畫面中握拳（捏弦）→ 握拳的手拉出畫面外（拉滿，在 Update 判斷）→ 手回到畫面張開＝放箭。
+            // 獵人：畫面中握拳（捏弦）→ 握拳的手拉出畫面外（拉滿，在 Update 判斷）→ 手回到畫面張開＝放箭。
             //   還在畫面中就張開手（維持 0.4 秒）＝取消拉弓；拉滿後手回來還握著拳就繼續等它張開。
             if (ReleaseStyle == Style.Bow)
             {
@@ -454,7 +454,7 @@ namespace SpellDuel
                     }
                 }
             }
-            // 弓箭手拉弓：捏弦中的手上方提示
+            // 獵人拉弓：捏弦中的手上方提示
             if (BowStage == 1)
                 UiKit.Text(new Rect(Palm.x - Screen.width * 0.3f, H - Palm.y - d * 10, Screen.width * 0.6f, d * 4), "✊ 捏弦！握著拳拉出畫面外", style.fontSize, new Color(1f, 0.9f, 0.4f), TextAnchor.MiddleCenter, true);
             else if (BowStage == 2)

@@ -6,7 +6,7 @@ namespace SpellDuel
 {
     /// <summary>
     /// 電腦敵人：在場地內走動、照玩家同樣的規則施法。全部用場地座標（公尺）。
-    ///   走位：依職業保持距離（刺客/劍士近、法師/弓箭手遠），並左右繞圈；
+    ///   走位：依職業保持距離（刺客/劍士近、法師/獵人遠），並左右繞圈；
     ///         蓄力中的技能打不到時，會主動走近或退開；永遠留在場地內。
     ///   出招：思考間隔隨機；血少時補血；看到玩家的攻擊飛來時有機率開防禦。
     ///   瞄準：朝玩家胸口，帶一點誤差（被致盲時誤差很大）。玩家真的走開就閃得掉。
@@ -86,7 +86,7 @@ namespace SpellDuel
                 pick = me.loadout.Find(s => s.self == SelfKind.Dispel && Ready(s));
             // 牧師：中毒、定身、致盲 → 淨化；兩個以上技能在冷卻 → 祈禱
             if (pick == null && (me.dots.Count > 0 || me.blindUntil > b.now)) pick = me.loadout.Find(s => s.self == SelfKind.Cleanse && Ready(s));
-            // 法師：MP 低 → 冥想；弓箭手：精神集中；刺客：離玩家遠時先刺殺準備
+            // 法師：MP 低 → 冥想；獵人：精神集中；刺客：離玩家遠時先刺殺準備
             if (pick == null && me.mp < me.maxMp * 0.35f) pick = me.loadout.Find(s => s.self == SelfKind.Mana && Ready(s));
             if (pick == null && rnd.NextDouble() < 0.3) pick = me.loadout.Find(s => s.self == SelfKind.Focus && Ready(s));
             if (pick == null && me.prepUntil <= b.now && Battle.FlatDistance(me.Feet, b.player.Feet) > 3f && rnd.NextDouble() < 0.4)
