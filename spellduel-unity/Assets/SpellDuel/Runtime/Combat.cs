@@ -40,7 +40,7 @@ namespace SpellDuel
         public Fighter target;
         public float damageTakenMul = 1f;   // 受到的傷害倍率（單人模式的電腦難度：簡單／普通時玩家受傷較少）
         // Boss 召喚的小怪：編號、攻擊狀態（預備到 windupUntil 出手，attackReadyAt 之後才能再攻擊）
-        public bool isMinion; public int minionId; public float windupUntil, attackReadyAt;
+        public bool isMinion; public int minionId; public float windupUntil, attackReadyAt, teleportAt;
         public int minionKind;                 // 0 近戰小鬼、1 火焰射手、2 岩石衝鋒獸、3 自爆小鬼、4 岩石投擲者、5 熔岩狙擊手
         public float recoverUntil;             // 小怪出手後原地不動到這個時間（1 秒）
         public float dmgMul = 1f, speedMul = 1f;   // 無盡模式：越後面的波次越強
@@ -162,22 +162,23 @@ namespace SpellDuel
         public readonly List<Fighter> minions = new List<Fighter>();
         public Func<Vector3, bool> minionInside;           // 場地內（場地座標）
         public float minionSpeed = 1.0f;
-        public const int MaxMinions = 5;
+        public const int MaxMinions = 10;
         public event Action<int, int, SkillDef> OnMinionHit;   // 隊友端：我的法術打到小怪（編號、傷害、技能）
 
-        public static readonly string[] MinionNames = { "熔岩小鬼", "火焰射手", "岩石衝鋒獸", "自爆小鬼", "岩石投擲者", "熔岩狙擊手" };
+        public static readonly string[] MinionNames = { "熔岩小鬼", "火焰射手", "岩石衝鋒獸", "自爆小鬼", "岩石投擲者", "熔岩狙擊手", "虛空術士" };
         // 各種小怪的基本數值：血量、移動速度、身體半徑、頭的高度
-        static readonly int[] MinionHp = { 20, 15, 60, 10, 23, 15 };   // 血量（已下修 50%）
+        static readonly int[] MinionHp = { 20, 15, 60, 10, 23, 15, 18 };   // 血量（已下修 50%）
         public const float EnemySpeedScale = 0.3f;   // 小怪與 Boss 的移動速度倍率（調慢到 30%）
         public const float MinionRecover = 1f;       // 小怪出手後原地不動的秒數
-        static readonly float[] MinionSpeed = { 1.0f, 0.9f, 0.6f, 1.7f, 0.7f, 0.8f }, MinionRadius = { 0.25f, 0.23f, 0.4f, 0.22f, 0.28f, 0.24f }, MinionHead = { 0.85f, 0.8f, 1.3f, 0.65f, 0.95f, 0.85f };
+        static readonly float[] MinionSpeed = { 1.0f, 0.9f, 0.6f, 1.7f, 0.7f, 0.8f, 0.6f }, MinionRadius = { 0.25f, 0.23f, 0.4f, 0.22f, 0.28f, 0.24f, 0.24f }, MinionHead = { 0.85f, 0.8f, 1.3f, 0.65f, 0.95f, 0.85f, 0.85f };
         // 遠程小怪想站的距離（最近、最遠）；0＝近戰（走到身邊）
-        static readonly float[] KeepMin = { 0f, 3.5f, 0f, 0f, 4.5f, 6f }, KeepMax = { 0f, 6f, 0f, 0f, 7.5f, 9f };
-        public static bool IsRanged(int kind) => kind == 1 || kind == 4 || kind == 5;
+        static readonly float[] KeepMin = { 0f, 3.5f, 0f, 0f, 4.5f, 6f, 6f }, KeepMax = { 0f, 6f, 0f, 0f, 7.5f, 9f, 12f };
+        public static bool IsRanged(int kind) => kind == 1 || kind == 4 || kind == 5 || kind == 6;
+        public const float VoidStay = 3f;   // 虛空術士出手後停留幾秒再瞬移
 
         public Fighter SpawnMinion(Vector3 feet, int id = 0, int kind = 0, float hpMul = 1f, float dmgMul = 1f, float speedMul = 1f)
         {
-            kind = Mathf.Clamp(kind, 0, 5);
+            kind = Mathf.Clamp(kind, 0, 6);
             var c = Skills.Classes["minion"];
             var m = new Fighter(MinionNames[kind], c, new string[0], false)
             {
@@ -225,8 +226,8 @@ namespace SpellDuel
             if (IsBossWave) { waveToSpawn = 0; waveTotal = 1; }
             else
             {
-                // 每波的小怪數：3＋波次/2（最多 14），合作 ×1.5
-                waveTotal = Mathf.Min(14, 3 + wave / 2);
+                // 每波的小怪數：6＋波次（最多 28），合作 ×1.5
+                waveTotal = Mathf.Min(28, 6 + wave);
                 if (ally != null) waveTotal = Mathf.CeilToInt(waveTotal * 1.5f);
                 waveToSpawn = waveTotal;
             }
@@ -236,7 +237,7 @@ namespace SpellDuel
 
         // 經驗值：小怪依種類與波次、Boss 依第幾隻；合作時兩人共用同一份經驗（各自選升級）
         public int xp;
-        static readonly int[] MinionXp = { 10, 12, 25, 12, 15, 18 };
+        static readonly int[] MinionXp = { 10, 12, 25, 12, 15, 18, 20 };
         /// <summary>升到下一級需要的累積經驗：55、140、255、400…</summary>
         public static int XpForLevel(int level) => 40 * (level - 1) + 15 * (level - 1) * (level - 1) + 0;
         public static int LevelOf(int xp) { int l = 1; while (xp >= XpForLevel(l + 1)) l++; return l; }
@@ -260,12 +261,15 @@ namespace SpellDuel
                 if (!enemy.Alive && !bossSpawnedThisWave) SpawnBoss();
                 return;
             }
-            // 小怪波：照間隔陸續出現；場上同時最多 3＋波次/3 隻（合作 +2）
-            int maxAlive = Mathf.Min(8, 3 + wave / 3) + (ally != null ? 2 : 0);
+            // 小怪波：照間隔陸續出現（每次兩隻）；場上同時最多 6＋波次/3×2 隻（合作 +4）
+            int maxAlive = Mathf.Min(16, 6 + wave / 3 * 2) + (ally != null ? 4 : 0);
             if (waveToSpawn > 0 && now >= nextMinionAt && minions.Count < maxAlive)
             {
-                SpawnMinion(edgePoint(), 0, PickMinionKind(), HpMul, DmgMul, SpeedMul);
-                waveToSpawn--;
+                for (int k = 0; k < 2 && waveToSpawn > 0 && minions.Count < maxAlive; k++)
+                {
+                    SpawnMinion(edgePoint(), 0, PickMinionKind(), HpMul, DmgMul, SpeedMul);
+                    waveToSpawn--;
+                }
                 nextMinionAt = now + Mathf.Max(2.5f, 5f - 0.1f * wave) * (ally != null ? 0.75f : 1f);
             }
             // 這一波全部打倒：回 10% 血，休息 4 秒進下一波
@@ -280,13 +284,13 @@ namespace SpellDuel
 
         // 小怪解鎖的波次：熔岩小鬼、火焰射手（遠程）第 1 波起；岩石投擲者（遠程）第 4 波；岩石衝鋒獸第 6 波；
         // 熔岩狙擊手（遠程）第 8 波；自爆小鬼第 11 波（打倒第一隻 Boss 後）
-        static readonly int[] UnlockWave = { 1, 1, 6, 11, 4, 8 };
+        static readonly int[] UnlockWave = { 1, 1, 6, 11, 4, 8, 5 };
         public const float RangedShare = 0.2f;   // 遠程小怪約佔兩成
         int PickMinionKind()
         {
             // 先決定近戰或遠程（遠程約兩成），再在已解鎖的種類裡依權重挑
             bool ranged = rng.NextDouble() < RangedShare;
-            float[] w = { 3f, 2f, 1.2f + 0.08f * wave, 1.2f + 0.08f * wave, 1.5f, 1.0f + 0.05f * wave };
+            float[] w = { 3f, 2f, 1.2f + 0.08f * wave, 1.2f + 0.08f * wave, 1.5f, 1.0f + 0.05f * wave, 1.2f };
             float sum = 0f;
             for (int k = 0; k < w.Length; k++) if (wave >= UnlockWave[k] && IsRanged(k) == ranged) sum += w[k];
             float r = (float)rng.NextDouble() * sum;
@@ -351,13 +355,24 @@ namespace SpellDuel
                     if (now < m.windupUntil) continue;   // 預備中站著不動
                     m.windupUntil = 0f;
                     MinionStrike(m, tgt, d);
-                    m.recoverUntil = now + MinionRecover;   // 出手後原地不動 1 秒（玩家反擊的空檔）
+                    m.recoverUntil = now + (kind == 6 ? VoidStay : MinionRecover);   // 出手後原地不動 1 秒（虛空術士 3 秒）
+                    if (kind == 6) m.teleportAt = now + VoidStay;                   // 停留完就瞬移
+                    continue;
+                }
+                // 虛空術士：停留結束 → 瞬移到場內隨機位置
+                if (m.teleportAt > 0f && now >= m.teleportAt)
+                {
+                    m.teleportAt = 0f;
+                    var to = RandomInsidePoint(m.Feet);
+                    Emit("teleport", m.Feet, new Color(0.6f, 0.3f, 1f), null);
+                    m.head = new Vector3(to.x, m.head.y, to.z);
+                    Emit("teleport", m.Feet, new Color(0.6f, 0.3f, 1f), null);
                     continue;
                 }
                 if (m.snaredUntil > now || now < m.recoverUntil) continue;
                 // 出手條件：近戰／衝鋒獸／自爆要貼近；射手在 9m 內
-                float reach = kind == 1 ? 9f : kind == 4 ? 11f : kind == 5 ? 14f : kind == 3 ? 1.3f : kind == 2 ? 1.2f : 0.95f;
-                float windup = kind == 1 ? 0.8f : kind == 4 ? 1.2f : kind == 5 ? 1.6f : kind == 2 ? 1.0f : kind == 3 ? 0.5f : claw.charge;
+                float reach = kind == 1 ? 9f : kind == 4 ? 11f : kind == 5 ? 14f : kind == 6 ? 13f : kind == 3 ? 1.3f : kind == 2 ? 1.2f : 0.95f;
+                float windup = kind == 1 ? 0.8f : kind == 4 ? 1.2f : kind == 5 ? 1.6f : kind == 6 ? 1.0f : kind == 2 ? 1.0f : kind == 3 ? 0.5f : claw.charge;
                 bool outside = minionInside != null && !minionInside(m.Feet);   // 還在場地外：先走進來（不在場外放招）
                 if (!outside && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt) { m.windupUntil = now + windup; Emit("minionwindup", m.Feet, claw.color, null); continue; }
                 // 走位：射手保持 3.5～6m，其他走向目標（停在 0.8m）；小怪之間互相推開
@@ -383,6 +398,23 @@ namespace SpellDuel
             }
         }
 
+        /// <summary>場內隨機一點（虛空術士瞬移用）：離玩家 3～10m、在場地內；找不到就留在原地</summary>
+        Vector3 RandomInsidePoint(Vector3 fallback)
+        {
+            var pls = new List<Fighter>(); foreach (var pl in Players()) if (pl.Alive) pls.Add(pl);
+            if (pls.Count == 0) return fallback;
+            for (int tries = 0; tries < 30; tries++)
+            {
+                var c = pls[rng.Next(pls.Count)].Feet;
+                float a = (float)rng.NextDouble() * Mathf.PI * 2f, r = 3f + (float)rng.NextDouble() * 7f;
+                var p = c + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r); p.y = 0f;
+                if (minionInside != null && !minionInside(p)) continue;
+                bool near = false; foreach (var pl in pls) if (FlatDistance(pl.Feet, p) < 3f) near = true;
+                if (!near) return p;
+            }
+            return fallback;
+        }
+
         /// <summary>小怪預備完成、出手：近戰爪擊、射手丟火球、衝鋒獸重擊、自爆</summary>
         void MinionStrike(Fighter m, Fighter tgt, float d)
         {
@@ -406,6 +438,16 @@ namespace SpellDuel
                     var at = tgt.Feet + new Vector3((float)rng.NextDouble() - 0.5f, 0f, (float)rng.NextDouble() - 0.5f) * 0.6f;
                     Spawn(m, rk, at + Vector3.up * rk.dropHeight, Vector3.down, Mathf.RoundToInt(rk.damage * m.dmgMul), EffectKind.None, 0f, 0f, false);
                     Emit("minionattack", m.Feet, rk.color, null);
+                    return;
+                }
+                case 6:
+                {
+                    // 虛空術士：超遠距離的虛空彈（射程 14m）；之後停留 3 秒再瞬移
+                    var vb = Skills.All["m_void"];
+                    m.attackReadyAt = now + vb.cooldown;
+                    var from = m.head + Fighter.Flat(m.forward) * 0.3f;
+                    Spawn(m, vb, from, (tgt.Chest - from).normalized, Mathf.RoundToInt(vb.damage * m.dmgMul), EffectKind.None, 0f, 0f, false);
+                    Emit("minionattack", m.Feet, vb.color, null);
                     return;
                 }
                 case 5:

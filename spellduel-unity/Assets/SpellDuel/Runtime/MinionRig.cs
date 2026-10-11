@@ -33,11 +33,11 @@ namespace SpellDuel
             return rig;
         }
 
-        /// <summary>切換種類（0 近戰、1 火焰射手、2 坦克、3 自爆、4 岩石投擲者、5 熔岩狙擊手），會重建外觀；請在 Create() 之後立刻呼叫。</summary>
+        /// <summary>切換種類（0 近戰、1 火焰射手、2 坦克、3 自爆、4 岩石投擲者、5 熔岩狙擊手、6 虛空術士），會重建外觀；請在 Create() 之後立刻呼叫。</summary>
         public void SetVariant(int kind)
         {
-            kind = Mathf.Clamp(kind, 0, 5);
-            if (kind == this.kind && body != null) return;
+            kind = Mathf.Clamp(kind, 0, 6);
+            if (kind == variantId && body != null) return;
             if (body != null)
             {
                 body.gameObject.SetActive(false);
@@ -133,6 +133,13 @@ namespace SpellDuel
                 lava = new Color(1f, 0.2f, 0.72f), lavaDim = new Color(0.45f, 0.04f, 0.3f), hot = new Color(1f, 0.82f, 0.96f), eye = new Color(1f, 0.6f, 0.95f),
                 emberA = new Color(1f, 0.25f, 0.75f), emberB = new Color(1f, 0.7f, 0.95f),
             },
+            new Variant   // 6 虛空術士（紫黑色虛空能量，手上漂著虛空球）
+            {
+                size = 0.95f, stride = 0.5f, legSwing = 30f, bob = 0.04f, step = 0.9f,
+                rockA = new Color(0.16f, 0.13f, 0.22f), rockB = new Color(0.09f, 0.07f, 0.13f),
+                lava = new Color(0.6f, 0.3f, 1f), lavaDim = new Color(0.2f, 0.06f, 0.4f), hot = new Color(0.92f, 0.8f, 1f), eye = new Color(0.8f, 0.6f, 1f),
+                emberA = new Color(0.55f, 0.25f, 1f), emberB = new Color(0.9f, 0.75f, 1f),
+            },
         };
 
         static readonly Color FlashC = new Color(1f, 0.55f, 0.4f);
@@ -202,7 +209,8 @@ namespace SpellDuel
         }
 
         // ================================================================ 骨架與狀態
-        int kind;
+        int kind;            // 外形（虛空術士借用火焰射手的外形）
+        int variantId = -1;  // 種類（顏色）
         Variant v;
         Transform body, spine, head, hipL, hipR, shL, shR, wrL, wrR, flame, ball, core, boulder, tip;
         Vector3 flameBase, coreBase;
@@ -351,7 +359,8 @@ namespace SpellDuel
         // ================================================================ 建立
         void Build(int k)
         {
-            kind = k;
+            variantId = k;
+            kind = k == 6 ? 1 : k;
             v = Variants[k];
             rockList.Clear(); rockCols.Clear(); lavaList.Clear(); hotList.Clear(); eyeList.Clear();
             flame = null; flameR = null; ball = null; core = null; boulder = null; tip = null; carryK = 0f; ballGone = 10f;

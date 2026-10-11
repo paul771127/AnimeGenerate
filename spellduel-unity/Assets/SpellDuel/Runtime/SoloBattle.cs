@@ -593,7 +593,9 @@ namespace SpellDuel
                 var newPos = WorldFrame.FromWorld(m.Feet);
                 var f = WorldFrame.DirFromWorld(m.forward); f.y = 0f;
                 rig.transform.SetPositionAndRotation(newPos, f.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(f.normalized, Vector3.up) : rig.transform.rotation);
-                rig.MoveSpeed = Mathf.Lerp(rig.MoveSpeed, (newPos - oldPos).magnitude / dt, 0.25f);
+                bool jumped = (newPos - oldPos).magnitude > 2f;   // 虛空術士瞬移（隊友端也看得到）：兩邊都冒出傳送光
+                if (jumped) { MinionRig.SpawnFx(oldPos); MinionRig.SpawnFx(newPos); Sfx.Play("dodge", 0.5f, 0.6f); }
+                rig.MoveSpeed = jumped ? 0f : Mathf.Lerp(rig.MoveSpeed, (newPos - oldPos).magnitude / dt, 0.25f);
                 bool winding = m.windupUntil > 0f;
                 if (winding && !minionWinding.Contains(m)) { minionWinding.Add(m); rig.Windup(Skills.All["m_claw"].charge); }
                 else if (!winding && minionWinding.Contains(m)) { minionWinding.Remove(m); rig.Attack(); }
