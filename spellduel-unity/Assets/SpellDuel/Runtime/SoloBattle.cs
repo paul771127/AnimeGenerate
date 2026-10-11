@@ -40,6 +40,12 @@ namespace SpellDuel
         public const int BossHpSolo = 500, BossHpCoop = 800;
         Fighter Ally => battle?.ally;
 
+        // 電腦難度：0 簡單、1 普通、2 困難（電腦出招慢／瞄得不準／少防禦，玩家受到的傷害也打折）
+        int difficulty = 1;
+        static readonly string[] DifficultyNames = { "簡單", "普通", "困難" };
+        static float DamageTakenFor(int d) => d == 0 ? 0.5f : d == 1 ? 0.75f : 1f;
+        static float BossHpFor(int d) => d == 0 ? 0.7f : d == 1 ? 0.85f : 1f;
+
         // 語音詠唱：唸出咒語就開始詠唱（本機比對自己錄的樣本）
         readonly MicInput mic = new MicInput();
         SpeechInput speech;               // 手機內建語音辨識：直接唸技能名稱（不用錄音）；不支援時改用錄音比對
@@ -102,6 +108,7 @@ namespace SpellDuel
             myClass = PlayerPrefs.GetString("sd_my_class", "mage");
             if (!Skills.Classes.ContainsKey(myClass)) myClass = "mage";
             enemyClass = PlayerPrefs.GetString("sd_enemy_class", "random");
+            difficulty = Mathf.Clamp(PlayerPrefs.GetInt("sd_difficulty", 1), 0, 2);
             voiceOn = true;   // 一定要唸技能名稱才能詠唱，語音固定開啟
             voice = VoiceTemplates.Load();
             speech = new SpeechInput();
@@ -123,6 +130,7 @@ namespace SpellDuel
         {
             PlayerPrefs.SetString("sd_my_class", myClass);
             PlayerPrefs.SetString("sd_enemy_class", enemyClass);
+            PlayerPrefs.SetInt("sd_difficulty", difficulty);
             PlayerPrefs.SetString("sd_loadout_" + myClass, string.Join(",", myLoadout));
         }
 
@@ -172,6 +180,18 @@ namespace SpellDuel
             Say($"⚔ 對手：{ec.name}（{string.Join("・", Array.ConvertAll(remoteLoadout ?? new string[0], id => Skills.All.TryGetValue(id, out var sd) ? sd.name : id))}）", 4f);
         }
 
+        /// <summary>選技能畫面：電腦難度（單人、合作打 Boss）</summary>
+        void DrawDifficultyRow(ref float y, float pad, float gap, float u, int fsS, float W)
+        {
+            float lw = W * 0.2f, bw = (W - pad * 2 - lw - gap * 3) / 3f;
+            UiKit.Text(new Rect(pad, y, lw, u * 1.1f), "難度", fsS, new Color(1f, 0.9f, 0.6f));
+            Color[] cols = { new Color(0.4f, 0.9f, 0.5f), new Color(1f, 0.8f, 0.3f), new Color(1f, 0.35f, 0.35f) };
+            for (int i = 0; i < 3; i++)
+                if (UiKit.Button(new Rect(pad + lw + gap + i * (bw + gap), y, bw, u * 1.1f), DifficultyNames[i], fsS, difficulty == i, cols[i]))
+                { difficulty = i; PlayerPrefs.SetInt("sd_difficulty", difficulty); }
+            y += u * 1.1f + gap;
+        }
+
         // ================================================================ Boss 模式
         /// <summary>開打 Boss：單人（coopMode=false）或雙人合作（主機跑 Boss，隊友端的 Boss 由主機的狀態驅動）</summary>
         void StartBossBattle(bool coopMode)
@@ -183,7 +203,8 @@ namespace SpellDuel
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
             var bc = Skills.Classes["boss"];
             var boss = new Fighter(bc.name, bc, bc.defaultLoadout, false) { bodyRadius = 0.75f };
-            boss.maxHp = coopMode ? BossHpCoop : BossHpSolo; boss.hp = boss.maxHp;
+            boss.maxHp = Mathf.RoundToInt((coopMode ? BossHpCoop : BossHpSolo) * BossHpFor(difficulty)); boss.hp = boss.maxHp;
+            me.damageTakenMul = DamageTakenFor(difficulty);
             SyncPlayer(me);
             battle = new Battle(me, boss);
             battle.OnEvent += OnBattleEvent;
@@ -211,6 +232,7 @@ namespace SpellDuel
             {
                 bossAi = new BossAI(battle, boss, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
                 bossAi.OnEnrage += OnBossEnrage;
+                bossAi.SetDifficulty(difficulty);
             }
             ai = null;
             bossRig = BossRig.Create();
@@ -492,6 +514,8 @@ namespace SpellDuel
             battle = new Battle(me, en);
             battle.OnEvent += OnBattleEvent;
             ai = dummyMode ? null : new EnemyAI(battle, en, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
+            ai?.SetDifficulty(difficulty);
+            me.damageTakenMul = DamageTakenFor(difficulty);
 
             enemyRig = CharacterRig.Create(ec.id);
             lastEnemyFeet = en.Feet; lastEnemyHp = en.hp; enemyDeadShown = false;
@@ -1181,7 +1205,7 @@ namespace SpellDuel
             // 依可用高度決定單位行高（內容約 21 行），放得下就用基準行高
             float avail = botY - topY - pad * 2;
             int skillRows = (Skills.Classes[myClass].skills.Length + 1) / 2;
-            float u = Mathf.Min(fs * 1.75f, avail / (13.7f + skillRows * 2.6f));   // 技能卡一列約 2.6 行高
+            float u = Mathf.Min(fs * 1.75f, avail / (15.0f + skillRows * 2.6f));   // 技能卡一列約 2.6 行高
             float y = topY + pad;
             var cls = Skills.Classes[myClass];
 
@@ -1246,6 +1270,7 @@ namespace SpellDuel
                     if (UiKit.Button(new Rect(pad + (i % 4) * (ew + gap), y + (i / 4) * (u * 1.15f + gap), ew, u * 1.15f), nm, fsS, id == enemyClass, c)) enemyClass = id;
                 }
                 y += 2 * (u * 1.15f + gap);
+                DrawDifficultyRow(ref y, pad, gap, u, fsS, W);
             }
             else
             {
@@ -1256,6 +1281,7 @@ namespace SpellDuel
                 if (UiKit.Button(new Rect(pad + mw + gap, y, mw, u * 1.15f), "🤝 合作打 Boss", fsS, coop, new Color(1f, 0.35f, 0.1f)) && !coop)
                 { coop = true; localReady = false; NetSend?.Invoke(new Msg { t = "mode", e = 1 }); }
                 y += u * 1.15f + gap;
+                if (coop) DrawDifficultyRow(ref y, pad, gap, u, fsS, W);
                 string who = coop ? "隊友" : "對手";
                 string rs = remoteReady ? $"{who}：{(Skills.Classes.TryGetValue(remoteClass ?? "", out var rc) ? rc.name : "?")}（已準備）" : $"{who}：還沒準備好";
                 UiKit.Text(new Rect(pad, y, W - pad * 2, u * 1.2f), rs, fs, remoteReady ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.8f, 0.5f));
@@ -1335,7 +1361,7 @@ namespace SpellDuel
             y += lh;
             string enState = dummyMode ? $"命中 {dummyHits} 次・累計傷害 {Mathf.RoundToInt(dummyDamage)}"
                 : en.charging != null ? $"⚠ 詠唱 {en.charging.name}（{Mathf.FloorToInt(battle.ChargeProgress(en) * 100)}%）" : (ai?.Status ?? bossAi?.Status ?? "");
-            if (bossMode && en.chargeScale < 1f) enState = "🔥 狂暴　" + enState;
+            if (bossMode && (bossAi != null ? bossAi.Enraged : bossEnragedShown)) enState = "🔥 狂暴　" + enState;
             if (en.snaredUntil > now) enState = "被定身";
             UiKit.Text(new Rect(ix, y, iw, lh * 0.9f), enState, fsS, en.charging != null ? new Color(1f, 0.75f, 0.4f) : new Color(0.9f, 0.92f, 1f));
             y += lh * 0.9f;

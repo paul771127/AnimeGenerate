@@ -14,6 +14,16 @@ namespace SpellDuel
     public class BossAI
     {
         public float walkSpeed = 0.55f;
+        float thinkScale = 1f, baseCharge = 1f;
+
+        /// <summary>難度：0 簡單、1 普通、2 困難（蓄力＝預警時間越長越好躲、出招間隔越長）</summary>
+        public void SetDifficulty(int d)
+        {
+            thinkScale = d == 0 ? 1.6f : d == 1 ? 1.25f : 1f;
+            baseCharge = d == 0 ? 1.35f : d == 1 ? 1.15f : 1f;
+            walkSpeed = d == 0 ? 0.4f : d == 1 ? 0.5f : 0.55f;
+            me.chargeScale = baseCharge;
+        }
         public string Status { get; private set; } = "";
         public bool Enraged { get; private set; }
         public event Action OnEnrage;
@@ -39,7 +49,7 @@ namespace SpellDuel
             if (b.Over || !me.Alive) return;
             if (!Enraged && me.hp < me.maxHp * 0.5f)
             {
-                Enraged = true; me.chargeScale = 0.7f; walkSpeed = 0.8f;
+                Enraged = true; me.chargeScale = baseCharge * 0.7f; walkSpeed *= 1.45f;
                 OnEnrage?.Invoke();
             }
             PickTarget();
@@ -50,7 +60,7 @@ namespace SpellDuel
 
             if (me.charging != null) { TryRelease(tgt); return; }
             if (b.now < nextThink) return;
-            nextThink = b.now + (Enraged ? Rand(1.8f, 3f) : Rand(2.8f, 4.2f));
+            nextThink = b.now + (Enraged ? Rand(1.8f, 3f) : Rand(2.8f, 4.2f)) * thinkScale;
 
             // 依距離挑招：近身多用地裂／橫掃，遠距離用熔岩彈／落石雨
             float d = Battle.FlatDistance(me.Feet, tgt.Feet);

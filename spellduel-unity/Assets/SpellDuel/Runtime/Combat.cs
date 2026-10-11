@@ -33,6 +33,7 @@ namespace SpellDuel
         // 體型（Boss 比較大）、蓄力倍率（Boss 狂暴時變快）、目前攻擊的目標（合作模式 Boss 會換目標）
         public float bodyRadius = BodyRadius, chargeScale = 1f;
         public Fighter target;
+        public float damageTakenMul = 1f;   // 受到的傷害倍率（單人模式的電腦難度：簡單／普通時玩家受傷較少）
         // 牧師的守護：時限內受到的直接傷害按比例減少
         public float armorUntil, armorReduce;
         public readonly List<Dot> dots = new List<Dot>();
@@ -605,6 +606,7 @@ namespace SpellDuel
         void Damage(Fighter f, float dmg, string kind, Vector3? at = null)
         {
             if (!f.Alive) return;
+            dmg = Mathf.Round(dmg * f.damageTakenMul);
             f.hp = Mathf.Max(0, f.hp - dmg);
             Emit(kind == "dot" || kind == "burn" ? kind : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");
             if (!f.Alive) Emit(f.isPlayer ? (ally != null && ally.Alive ? "down" : "lose") : "win", f.Chest, Color.white, null);

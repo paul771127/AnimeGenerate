@@ -17,6 +17,18 @@ namespace SpellDuel
         public float thinkMin = 2.5f, thinkMax = 4.5f;
         public float aimErrorDeg = 4f, blindAimErrorDeg = 18f;
         public float guardChance = 0.5f;
+        public float delayScale = 1f;      // 蓄滿後多等一下才放（難度越低越慢）
+
+        /// <summary>難度：0 簡單、1 普通、2 困難（原本的強度）</summary>
+        public void SetDifficulty(int d)
+        {
+            switch (d)
+            {
+                case 0: thinkMin = 4.5f; thinkMax = 7f; aimErrorDeg = 12f; guardChance = 0.15f; walkSpeed = 0.6f; delayScale = 2.2f; break;
+                case 1: thinkMin = 3.4f; thinkMax = 5.5f; aimErrorDeg = 7f; guardChance = 0.3f; walkSpeed = 0.8f; delayScale = 1.5f; break;
+                default: thinkMin = 2.5f; thinkMax = 4.5f; aimErrorDeg = 4f; guardChance = 0.5f; walkSpeed = 1.0f; delayScale = 1f; break;
+            }
+        }
         public string Status { get; private set; } = "";
 
         readonly Battle b;
@@ -88,7 +100,7 @@ namespace SpellDuel
             }
             if (pick != null && b.TryChant(me, pick, out _))
             {
-                me.chargeDelay = Rand(0.2f, 0.9f);
+                me.chargeDelay = Rand(0.2f, 0.9f) * delayScale;
                 Status = $"詠唱 {pick.name}";
             }
         }
