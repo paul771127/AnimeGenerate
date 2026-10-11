@@ -273,13 +273,21 @@ namespace SpellDuel
         // 小怪解鎖的波次：熔岩小鬼、火焰射手（遠程）第 1 波起；岩石投擲者（遠程）第 4 波；岩石衝鋒獸第 6 波；
         // 熔岩狙擊手（遠程）第 8 波；自爆小鬼第 11 波（打倒第一隻 Boss 後）
         static readonly int[] UnlockWave = { 1, 1, 6, 11, 4, 8 };
+        public const float RangedShare = 0.2f;   // 遠程小怪約佔兩成
         int PickMinionKind()
         {
-            float[] w = { 3f, 2f + 0.1f * wave, 1.2f + 0.08f * wave, 1.2f + 0.08f * wave, 1.5f + 0.08f * wave, 1.0f + 0.08f * wave };
-            float sum = 0f; for (int k = 0; k < w.Length; k++) if (wave >= UnlockWave[k]) sum += w[k];
+            // 先決定近戰或遠程（遠程約兩成），再在已解鎖的種類裡依權重挑
+            bool ranged = rng.NextDouble() < RangedShare;
+            float[] w = { 3f, 2f, 1.2f + 0.08f * wave, 1.2f + 0.08f * wave, 1.5f, 1.0f + 0.05f * wave };
+            float sum = 0f;
+            for (int k = 0; k < w.Length; k++) if (wave >= UnlockWave[k] && IsRanged(k) == ranged) sum += w[k];
             float r = (float)rng.NextDouble() * sum;
-            for (int k = 0; k < w.Length; k++) { if (wave < UnlockWave[k]) continue; r -= w[k]; if (r <= 0f) return k; }
-            return 0;
+            for (int k = 0; k < w.Length; k++)
+            {
+                if (wave < UnlockWave[k] || IsRanged(k) != ranged) continue;
+                r -= w[k]; if (r <= 0f) return k;
+            }
+            return ranged ? 1 : 0;
         }
 
         void SpawnBoss()
