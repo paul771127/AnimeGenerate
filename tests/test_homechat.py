@@ -1641,3 +1641,41 @@ def test_stale_connection_does_not_block_push(server, monkeypatch):
     time.sleep(0.2)
     assert len(sent) == 1
     resp.close()
+
+
+def test_owner_can_see_friend_notification_status(server, monkeypatch):
+    base, app = server
+    results = iter([201, 403])
+
+    def fake_send(self, ep):
+        status = next(results)
+        self.store.record_push(ep, status, "" if status < 400 else "invalid JWT")
+        return status
+    monkeypatch.setattr(homechat.Pusher, "send", fake_send)
+    owner = login(base)
+    contact = owner.req("/api/contacts", {"name": "小美"})[1]["contact"]
+    guest = join(base, contact)
+    # 還沒開通知:打電話時提醒「對方可能不會知道」
+    r = owner.req("/api/call/start", {"contact_id": contact["id"]})[1]
+    assert r["reachable"] is False
+    owner.req("/api/call/end", {"call_id": r["call_id"]})
+    dev = owner.req(f"/api/devices?contact={contact['id']}")[1]["devices"][0]
+    assert dev["push"] is None and dev["open"] is False
+    # 開了通知 → 看得到;推播成功 / 失敗也看得到
+    guest.req("/api/push/subscribe", {"subscription": {"endpoint": "https://fcm.googleapis.com/fcm/send/x"}})
+    r = owner.req("/api/call/start", {"contact_id": contact["id"]})[1]
+    assert r["reachable"] is True
+    owner.req("/api/call/end", {"call_id": r["call_id"]})
+    for _ in range(40):
+        dev = owner.req(f"/api/devices?contact={contact['id']}")[1]["devices"][0]
+        if dev["push"].get("status"):
+            break
+        time.sleep(0.05)
+    assert dev["push"]["status"] == 201
+    owner.req("/api/messages", {"contact_id": contact["id"], "body": "hi"})
+    for _ in range(40):
+        dev = owner.req(f"/api/devices?contact={contact['id']}")[1]["devices"][0]
+        if dev["push"]["status"] == 403:
+            break
+        time.sleep(0.05)
+    assert dev["push"]["status"] == 403 and "JWT" in dev["push"]["error"]

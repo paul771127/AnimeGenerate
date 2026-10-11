@@ -51,7 +51,7 @@ HERE = Path(__file__).resolve().parent
 STATIC_DIR = HERE / "static"
 DEFAULT_DB = HERE / "data" / "homechat.db"
 
-VERSION = "2026.10.21"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
+VERSION = "2026.10.22"  # 改了資料庫格式或 API 就更新,用來認出還在執行的舊版
 COOKIE_NAME = "hc_session"
 SESSION_IDLE_DAYS = 365  # 像 LINE 一樣一直保持登入;一年沒用才自動登出(每次使用都會重新計算)
 INVITE_DAYS = 7  # 邀請連結 7 天內有效,只能用一次
@@ -282,7 +282,10 @@ CREATE TABLE IF NOT EXISTS push_subs (           -- 推播通知:每台裝置的
     endpoint TEXT PRIMARY KEY,
     session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     vibrate INTEGER NOT NULL DEFAULT 1,
-    created_at REAL NOT NULL
+    created_at REAL NOT NULL,
+    last_status INTEGER,                         -- 上次推播的結果(201 = 推播服務收下了)
+    last_at REAL,
+    last_error TEXT
 );
 CREATE TABLE IF NOT EXISTS sessions (
     id TEXT PRIMARY KEY,                         -- 登入 token 的 SHA-256,不存明碼
@@ -412,6 +415,11 @@ class Store:
                     self.db.execute(f"ALTER TABLE messages ADD COLUMN {name} {ddl}")
             # 舊訊息補上全域編號
             self.db.execute("UPDATE messages SET uid = lower(hex(randomblob(12))) WHERE uid IS NULL")
+        cols = {r["name"] for r in self.db.execute("PRAGMA table_info(push_subs)")}
+        if cols:
+            for name, ddl in (("last_status", "INTEGER"), ("last_at", "REAL"), ("last_error", "TEXT")):
+                if name not in cols:
+                    self.db.execute(f"ALTER TABLE push_subs ADD COLUMN {name} {ddl}")
         cols = {r["name"] for r in self.db.execute("PRAGMA table_info(albums)")}
         if cols and "uid" not in cols:
             self.db.execute("ALTER TABLE albums ADD COLUMN uid TEXT")
@@ -742,6 +750,26 @@ class Store:
                 rows = self.db.execute("SELECT p.* FROM push_subs p JOIN sessions s ON s.id = p.session_id "
                                        "WHERE s.role = 'guest' AND s.contact_id = ?", (contact_id,))
             return [dict(r) for r in rows]
+
+    def record_push(self, endpoint: str, status: int, error: str = "") -> None:
+        with self.lock:
+            self.db.execute("UPDATE push_subs SET last_status = ?, last_at = ?, last_error = ? WHERE endpoint = ?",
+                            (status, time.time(), error[:200], endpoint))
+            self.db.commit()
+
+    def push_status(self, session_id: str) -> dict | None:
+        """這台裝置有沒有開通知、上次推播成功了沒(給主人查「為什麼對方沒收到通知」)。"""
+        with self.lock:
+            row = self.db.execute("SELECT COUNT(*) AS n, MAX(created_at) AS since FROM push_subs WHERE session_id = ?",
+                                  (session_id,)).fetchone()
+            last = self.db.execute("SELECT last_status, last_at, last_error FROM push_subs WHERE session_id = ? "
+                                   "AND last_at IS NOT NULL ORDER BY last_at DESC LIMIT 1", (session_id,)).fetchone()
+        if not row["n"]:
+            return None
+        out = {"since": row["since"]}
+        if last:
+            out.update(status=last["last_status"], at=last["last_at"], error=last["last_error"] or "")
+        return out
 
     def latest_unread(self, role: str, contact_id: int | None = None) -> tuple[dict | None, int]:
         """最新一則還沒讀的訊息和未讀總數(通知要顯示的)。"""
@@ -1915,6 +1943,7 @@ class Pusher:
                     self.send(ep)
                 except Exception as e:  # noqa: BLE001 - 推播失敗不影響聊天
                     print(f"推播失敗:{e}")
+                    self.store.record_push(ep, 0, f"連不上推播服務:{e}")
 
     def _jwt(self, audience: str) -> str:
         cached = self.jwts.get(audience)
@@ -1941,15 +1970,23 @@ class Pusher:
             "TTL": "86400", "Urgency": "high", "Content-Length": "0",
             "Authorization": f"vapid t={self._jwt(f'{parts.scheme}://{parts.netloc}')}, k={public}",
         })
+        detail = ""
         try:
             with urllib.request.urlopen(req, timeout=15) as r:
                 status = r.status
         except urllib.error.HTTPError as e:
             status = e.code
+            try:
+                detail = e.read(300).decode("utf-8", "replace").strip()
+            except OSError:
+                pass
         if status in (404, 410):  # 對方取消訂閱了(或換了手機)
             self.store.remove_push_sub(endpoint)
         elif status >= 400:
-            print(f"推播服務回應 {status}")
+            print(f"推播服務回應 {status}:{detail}")
+            self.store.record_push(endpoint, status, detail or f"推播服務回應 {status}")
+        else:
+            self.store.record_push(endpoint, status)
         self.sent += 1
         return status
 
@@ -2687,8 +2724,11 @@ class Handler(BaseHTTPRequestHandler):
             items = self.app.store.list_sessions("guest", contact["id"])
         else:
             items = self.app.store.list_sessions("owner")
+        visible = self.app.hub.visible_sessions()
         for item in items:
             item["current"] = item["id"] == sess["id"]
+            item["push"] = self.app.store.push_status(item["id"])
+            item["open"] = item["id"] in visible  # 現在正開著 HomeChat
         self._json({"devices": items})
 
     def _remove_device(self, data: dict) -> None:
@@ -3885,7 +3925,16 @@ class Handler(BaseHTTPRequestHandler):
                 and not self.app.store.list_sessions("guest", contact["id"]):
             raise ApiError(400, "對方還沒加入,不能打電話")
         call = self.app.calls.start(contact["id"], sess["role"], sess["id"], bool(data.get("video")))
-        self._json({"call_id": call["id"], "ice_servers": self._ice_servers(), "ring_seconds": CALL_RING_SECONDS})
+        # 對方會不會知道有人打來:有裝置正開著 HomeChat,或有開通知
+        reachable = None
+        if not call["remote"]:
+            callee = Calls.other(sess["role"])
+            store = self.app.store
+            sids = {d["id"] for d in (store.list_sessions("owner") if callee == "owner"
+                                      else store.list_sessions("guest", contact["id"]))}
+            reachable = bool(sids & self.app.hub.visible_sessions()) or bool(store.push_subs_for(callee, contact["id"]))
+        self._json({"call_id": call["id"], "ice_servers": self._ice_servers(), "ring_seconds": CALL_RING_SECONDS,
+                    "reachable": reachable})
 
     def _call_answer(self, data: dict) -> None:
         sess = self._require()

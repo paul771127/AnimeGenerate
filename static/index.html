@@ -114,6 +114,8 @@ button { cursor: pointer; }
 
 /* ---------- menu & dialogs */
 .menu { position: fixed; background: var(--panel); border-radius: 12px; box-shadow: 0 6px 30px rgba(0,0,0,.2); padding: 6px 0; z-index: 50; min-width: 190px; }
+.push-state.ok { color: var(--green); }
+.push-state.bad { color: var(--danger); }
 .menu.up { max-height: 33vh; max-height: 33dvh; overflow-y: auto; overscroll-behavior: contain; }
 .menu button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 10px 16px; }
 .menu button:hover { background: var(--bg); }
@@ -238,7 +240,7 @@ img.sticker { display: block; width: 150px; height: 150px; object-fit: contain; 
 #dlg-call .call-top { margin-top: max(70px, calc(env(safe-area-inset-top) + 40px)); text-align: center; }
 #dlg-call .avatar { width: 120px; height: 120px; font-size: 48px; margin: 0 auto 18px; }
 #call-name { font-size: 26px; font-weight: 700; }
-#call-status { margin-top: 8px; color: #cbd5e1; font-size: 16px; min-height: 22px; }
+#call-status { margin-top: 8px; color: #cbd5e1; font-size: 16px; min-height: 22px; white-space: pre-line; padding: 0 20px; }
 .call-actions { display: flex; gap: 36px; margin-bottom: max(60px, calc(env(safe-area-inset-bottom) + 40px)); }
 .call-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; background: none; border: 0; color: #fff; font-size: 13px; cursor: pointer; }
 .call-btn .ic { width: 68px; height: 68px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; background: rgba(255,255,255,.18); }
@@ -1542,6 +1544,9 @@ async function startCall(video) {
     const r = await api("/api/call/start", { contact_id: c.id, video: !!video });
     if (!call) return api("/api/call/end", { call_id: r.call_id }).catch(() => {});
     call.id = r.call_id; call.ice = r.ice_servers;
+    if (r.reachable === false) {
+      setCallStatus("撥號中…\n⚠️ 對方現在沒開 HomeChat,也沒開啟通知,可能不會知道你打來");
+    }
     for (const d of call.early) onCallEvent(d);  // 在拿到編號前就收到的
     call.early = [];
   } catch (ex) { endCallUI(); toast(ex.message); }
@@ -3106,6 +3111,14 @@ function timeAgo(ts) {
   if (s < 86400) return `${Math.floor(s / 3600)} 小時前`;
   return `${Math.floor(s / 86400)} 天前`;
 }
+// 這台裝置收不收得到通知(看「為什麼對方沒收到」)
+function pushState(d) {
+  const open = d.open ? "🟢 現在開著 HomeChat · " : "";
+  if (!d.push) return open + "🔕 沒有開啟通知:HomeChat 關著時收不到訊息和來電通知(要在那台裝置的 ⋯ →「🔔 通知設定」打開)";
+  if (d.push.status === undefined || d.push.status === null) return open + `🔔 已開啟通知(${timeAgo(d.push.since)}開啟,還沒推播過)`;
+  if (d.push.status === 0 || d.push.status >= 400) return open + `⚠️ 通知送不出去:${d.push.error || d.push.status}(${timeAgo(d.push.at)})`;
+  return open + `🔔 已開啟通知 · 上次推播 ${timeAgo(d.push.at)} 已送到${/iPhone|iPad/.test(d.device) ? " Apple" : ""}推播服務`;
+}
 async function openDevices(c, refresh = false) {
   devicesOf = c;
   const q = c ? `?contact=${c.id}` : "";
@@ -3119,7 +3132,8 @@ async function openDevices(c, refresh = false) {
   list.replaceChildren(...devices.map(d => el("div", { class: "device" },
     el("div", { class: "meta" },
       el("div", {}, d.device || "裝置", d.current ? el("span", { class: "pill" }, "這台") : null),
-      el("div", { class: "sub" }, `登入於 ${fmtDate(d.created_at)} · 最後使用 ${timeAgo(d.last_seen)}`)),
+      el("div", { class: "sub" }, `登入於 ${fmtDate(d.created_at)} · 最後使用 ${timeAgo(d.last_seen)}`),
+      el("div", { class: "sub push-state" + (d.push && !(d.push.status >= 400 || d.push.status === 0) ? " ok" : " bad") }, pushState(d))),
     d.current ? null : el("button", { class: "btn secondary", onclick: async () => {
       await api("/api/devices/remove", { id: d.id }); openDevices(devicesOf, true); if (devicesOf) loadContacts();
     } }, "移除"))));
