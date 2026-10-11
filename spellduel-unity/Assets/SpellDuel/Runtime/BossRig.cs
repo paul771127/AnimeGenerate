@@ -979,6 +979,8 @@ namespace SpellDuel
         ///   b_sweep：約 2.4 m 寬、0.5 m 高的水平新月衝擊波（火焰＋翻滾岩塊），一看就知道要蹲下。
         ///   b_rain：約 0.6 m 的燃燒巨石（煙＋火拖尾），+Z 朝下落下；外型對 Z 軸對稱，翻滾角度不影響外觀。
         ///   m_fireball：火焰射手小鬼的青白色小火球（約 0.18 m）＋短拖尾。
+        ///   m_rock：岩石投擲者丟出的約 0.35 m 燃燒岩塊（與 b_rain 同造型、縮小；+Z 朝下落下，翻滾角度不影響外觀）。
+        ///   m_snipe：熔岩狙擊手的細長洋紅光彈（約 0.5 m 沿 +Z）＋短拖尾。
         /// </summary>
         public static GameObject CreateProjectileVisual(string skillId)
         {
@@ -986,7 +988,9 @@ namespace SpellDuel
             {
                 case "b_bolt": return BuildBolt();
                 case "b_sweep": return BuildSweep();
-                case "b_rain": return BuildRain();
+                case "b_rain": return BuildRain("b_rain", 1f);
+                case "m_rock": return BuildRain("m_rock", 0.58f);
+                case "m_snipe": return BuildSnipe();
                 case "m_fireball": return BuildImpFireball();
                 default: return null;
             }
@@ -1177,10 +1181,10 @@ namespace SpellDuel
             m.Ribbon(pts, half, cols);
         }
 
-        static GameObject BuildRain()
+        static GameObject BuildRain(string id, float k)
         {
             InitProjMats();
-            var root = new GameObject("Boss Projectile b_rain");
+            var root = new GameObject("Boss Projectile " + id);
             var anim = root.AddComponent<BossFxSpin>();
             var rt = root.transform;
 
@@ -1188,16 +1192,17 @@ namespace SpellDuel
             var tumble = Pivot("Tumble", rt, Vector3.zero);
             var rock = new GameObject("Boulder");
             rock.transform.SetParent(tumble, false);
-            rock.transform.localScale = Vector3.one * 0.6f;
+            rock.transform.localScale = Vector3.one * (0.6f * k);
             rock.AddComponent<MeshFilter>().sharedMesh = RockMesh(1);
             var rr = rock.AddComponent<MeshRenderer>();
             rr.sharedMaterial = projRock;
             rr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             rr.receiveShadows = false;
-            ProjPart(PrimitiveType.Sphere, tumble, Vector3.zero, Vector3.one * 0.5f, projLava);
+            ProjPart(PrimitiveType.Sphere, tumble, Vector3.zero, Vector3.one * (0.5f * k), projLava);
 
             // 火焰罩：沿 -Z（下落時朝上）拖長，對 Z 軸對稱
             var flame = Pivot("Flame", rt, Vector3.zero);
+            flame.localScale = Vector3.one * k;
             GlowMesh(flame, "rain.flame", m =>
             {
                 m.Lathe(new[] { -1.6f, 0f, -0.9f, 0.18f, -0.35f, 0.32f, 0.05f, 0.4f, 0.28f, 0.32f, 0.42f, 0f }, 9,
@@ -1205,15 +1210,15 @@ namespace SpellDuel
                 m.Lathe(new[] { -1.1f, 0f, -0.6f, 0.14f, -0.2f, 0.26f, 0.1f, 0.34f, 0.3f, 0.25f, 0.38f, 0f }, 9,
                     (z, j) => new Color(1f, 0.55f, 0.12f, Mathf.Lerp(0.06f, 0.6f, Mathf.InverseLerp(-1.1f, 0.2f, z))), 1f, 1f, 20f, JagF);
             });
-            Halo(rt, new Color(1f, 0.45f, 0.12f, 0.7f), 1.4f);
+            Halo(rt, new Color(1f, 0.45f, 0.12f, 0.7f), 1.4f * k);
 
             var fire = SpellFx.NewPS(rt, "FireTrail", SpellFx.AddMat(SpellFx.TexSoft), 40, true);
             {
                 var m = fire.main;
                 m.startLifetime = new ParticleSystem.MinMaxCurve(0.3f, 0.5f);
-                m.startSize = new ParticleSystem.MinMaxCurve(0.3f, 0.5f);
+                m.startSize = new ParticleSystem.MinMaxCurve(0.3f * k, 0.5f * k);
                 m.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.6f, 0.15f, 0.8f), new Color(1f, 0.25f, 0.05f, 0.7f));
-                SpellFx.Sphere(fire, 0.2f);
+                SpellFx.Sphere(fire, 0.2f * k);
                 SpellFx.FadeOut(fire);
                 SpellFx.SizeCurve(fire, SpellFx.Shrink);
                 SpellFx.Rate(fire, 30f);
@@ -1224,10 +1229,10 @@ namespace SpellDuel
             {
                 var m = smoke.main;
                 m.startLifetime = new ParticleSystem.MinMaxCurve(0.8f, 1.2f);
-                m.startSize = new ParticleSystem.MinMaxCurve(0.3f, 0.45f);
+                m.startSize = new ParticleSystem.MinMaxCurve(0.3f * k, 0.45f * k);
                 m.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
                 m.startColor = new ParticleSystem.MinMaxGradient(new Color(0.22f, 0.18f, 0.16f, 0.6f), new Color(0.1f, 0.09f, 0.09f, 0.5f));
-                SpellFx.Sphere(smoke, 0.2f);
+                SpellFx.Sphere(smoke, 0.2f * k);
                 SpellFx.FadeOut(smoke);
                 SpellFx.SizeCurve(smoke, SpellFx.Grow);
                 SpellFx.Rate(smoke, 12f);
@@ -1235,6 +1240,40 @@ namespace SpellDuel
             }
 
             anim.Setup(new[] { tumble }, new[] { new Vector3(1f, 0.6f, 0.3f).normalized }, new[] { 200f }, flame, 0.1f, 19f);
+            return root;
+        }
+
+        /// <summary>熔岩狙擊手的光彈：細長的洋紅光束（白熱內芯）＋前端光暈＋短拖尾。</summary>
+        static GameObject BuildSnipe()
+        {
+            InitProjMats();
+            var root = new GameObject("Boss Projectile m_snipe");
+            var anim = root.AddComponent<BossFxSpin>();
+            var rt = root.transform;
+            var beam = Pivot("Beam", rt, Vector3.zero);
+            GlowMesh(beam, "imp.snipe", m =>
+            {
+                m.Lathe(new[] { -0.36f, 0f, -0.2f, 0.028f, 0.08f, 0.04f, 0.13f, 0.03f, 0.16f, 0f }, 8,
+                    (z, j) => new Color(1f, 0.15f, 0.7f, Mathf.Lerp(0.1f, 0.7f, Mathf.InverseLerp(-0.36f, 0.1f, z))));
+                m.Lathe(new[] { -0.3f, 0f, -0.15f, 0.012f, 0.1f, 0.016f, 0.15f, 0f }, 6,
+                    (z, j) => new Color(1f, 0.85f, 0.97f, Mathf.Lerp(0.3f, 1f, Mathf.InverseLerp(-0.3f, 0.1f, z))), 1f, 1f, 30f);
+            });
+            Halo(rt, new Color(1f, 0.3f, 0.8f, 0.8f), 0.3f);
+
+            var trail = SpellFx.NewPS(rt, "Trail", SpellFx.AddMat(SpellFx.TexSoft), 24, true);
+            {
+                var m = trail.main;
+                m.startLifetime = new ParticleSystem.MinMaxCurve(0.08f, 0.15f);
+                m.startSize = new ParticleSystem.MinMaxCurve(0.04f, 0.07f);
+                m.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.3f, 0.8f, 0.8f), new Color(1f, 0.75f, 0.95f, 0.8f));
+                SpellFx.Sphere(trail, 0.015f);
+                SpellFx.FadeOut(trail);
+                SpellFx.SizeCurve(trail, SpellFx.Shrink);
+                SpellFx.Rate(trail, 20f);
+                var em = trail.emission; em.rateOverDistance = 40f;
+                trail.Play();
+            }
+            anim.Setup(new Transform[0], new Vector3[0], new float[0], beam, 0.12f, 37f);
             return root;
         }
 

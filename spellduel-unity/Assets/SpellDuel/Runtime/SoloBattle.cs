@@ -112,6 +112,7 @@ namespace SpellDuel
         readonly Dictionary<Fighter, MinionRig> minionGo = new Dictionary<Fighter, MinionRig>();
         readonly Dictionary<Fighter, float> minionLastHp = new Dictionary<Fighter, float>();
         readonly HashSet<Fighter> minionWinding = new HashSet<Fighter>();
+        readonly Dictionary<Fighter, GameObject> aimLines = new Dictionary<Fighter, GameObject>();   // 狙擊手瞄準時的紅線
         string bossWindup, bossChargingId; float nextBossState, lastBossHp;
         public const int BossHpSolo = 400;   // 合作時再乘上人數倍率（每多一人 +30%）
         Fighter Ally => battle?.ally;
@@ -425,7 +426,7 @@ namespace SpellDuel
             // 小怪：位置與「編號,血量,最大血量,預備中」
             var ms = battle.minions;
             var pts = new Vector3[ms.Count]; var ks = new string[ms.Count];
-            for (int i = 0; i < ms.Count; i++) { pts[i] = ms[i].head; ks[i] = $"{ms[i].minionId},{Mathf.CeilToInt(ms[i].hp)},{ms[i].maxHp},{(ms[i].windupUntil > 0f ? 1 : 0)},{ms[i].minionKind}"; }
+            for (int i = 0; i < ms.Count; i++) { pts[i] = ms[i].head; ks[i] = $"{ms[i].minionId},{Mathf.CeilToInt(ms[i].hp)},{ms[i].maxHp},{(ms[i].windupUntil > 0f ? 1 : 0)},{ms[i].minionKind},{(ms[i].target == battle.ally ? 2 : 1)}"; }
             NetSend?.Invoke(new Msg { t = "mins", pts = pts, ks = ks });
         }
 
@@ -545,6 +546,7 @@ namespace SpellDuel
                             if (float.TryParse(parts[1], out var mhp)) mf.hp = mhp;
                             if (int.TryParse(parts[2], out var mmax)) mf.maxHp = mmax;
                             mf.windupUntil = parts[3] == "1" ? battle.now + 1f : 0f;
+                            if (parts.Length >= 6) mf.target = parts[5] == "2" ? Me : Ally;   // 主機的隊友＝我
                         }
                         foreach (var mf in battle.minions) if (!seen.Contains(mf.minionId)) mf.hp = 0f;
                     }
@@ -585,12 +587,29 @@ namespace SpellDuel
                 else if (!winding && minionWinding.Contains(m)) { minionWinding.Remove(m); rig.Attack(); }
                 if (minionLastHp.TryGetValue(m, out var lh) && m.hp < lh - 0.01f) rig.PlayHit();
                 minionLastHp[m] = m.hp;
+                // 熔岩狙擊手瞄準中：從牠到目標的紅色瞄準線（越接近開火越亮）
+                bool aiming = m.minionKind == 5 && winding && m.Alive;
+                aimLines.TryGetValue(m, out var line);
+                if (aiming)
+                {
+                    var tgt = m.target ?? Me;
+                    if (!line) { line = Prim(PrimitiveType.Cube, new Color(1f, 0.2f, 0.6f, 0.5f)); aimLines[m] = line; }
+                    var a = m.head; var b = tgt.Chest; var dv = b - a; float len = Mathf.Max(0.1f, dv.magnitude);
+                    line.SetActive(true);
+                    line.transform.position = WorldFrame.FromWorld((a + b) / 2f);
+                    line.transform.rotation = WorldFrame.RotFromWorld(Quaternion.LookRotation(dv / len, Vector3.up));
+                    line.transform.localScale = new Vector3(0.025f, 0.025f, len);
+                    float k = 0.5f + 0.5f * Mathf.Sin(Time.time * 18f);
+                    line.GetComponent<Renderer>().material.color = new Color(1f, 0.15f, 0.55f, 0.35f + 0.4f * k);
+                }
+                else if (line) line.SetActive(false);
             }
             foreach (var kv in new List<KeyValuePair<Fighter, MinionRig>>(minionGo))
                 if (!live.Contains(kv.Key))
                 {
                     if (kv.Value) { kv.Value.SetDead(true); Destroy(kv.Value.gameObject, 1.2f); }
                     minionGo.Remove(kv.Key); minionLastHp.Remove(kv.Key); minionWinding.Remove(kv.Key);
+                    if (aimLines.TryGetValue(kv.Key, out var dl)) { if (dl) Destroy(dl); aimLines.Remove(kv.Key); }
                 }
         }
 
@@ -778,6 +797,8 @@ namespace SpellDuel
             if (bossRig) Destroy(bossRig.gameObject);
             foreach (var mr in minionGo.Values) if (mr) Destroy(mr.gameObject);
             minionGo.Clear(); minionLastHp.Clear(); minionWinding.Clear();
+            foreach (var al in aimLines.Values) if (al) Destroy(al);
+            aimLines.Clear();
             bossRig = null; bossAi = null; bossMode = false; bossWindup = null; resultShown = false; bossSeen = false;
             standY = -1f; moveHist.Clear();
             projGo.Clear(); trapGo.Clear(); burnGo.Clear(); floaters.Clear();
@@ -1772,6 +1793,9 @@ namespace SpellDuel
                 UiKit.Pill(H * 0.43f, tip, fs, ecs.duckable ? new Color(1f, 0.7f, 0.3f) : new Color(1f, 0.45f, 0.45f), pillW);
             }
             if (me.crouching) UiKit.Pill(H * 0.7f, "↓ 蹲下中", fsS, new Color(0.6f, 0.9f, 1f), pillW);
+            foreach (var mn in battle.minions)
+                if (mn.Alive && mn.minionKind == 5 && mn.windupUntil > 0f && (mn.target == null || mn.target == me))
+                { UiKit.Pill(H * 0.49f, "⚠ 狙擊手瞄準你了！準備側跨", fs, new Color(1f, 0.35f, 0.75f), pillW); break; }
             if (en.charging != null && en.charging.self == SelfKind.Summon && en.Alive) UiKit.Pill(H * 0.43f, "⚠ Boss 準備召喚小怪！", fs, new Color(1f, 0.55f, 0.2f), pillW);
             int nMin = 0; foreach (var mn in battle.minions) if (mn.Alive) nMin++;
             if (nMin > 0) UiKit.Pill(top + lh * 3.6f + (coop ? lh : 0f) + (endless ? lh * (PendingUpgrades > 0 ? 2.0f : 0.8f) : 0f), $"👹 小怪 ×{nMin}", fsS, new Color(1f, 0.6f, 0.3f), W * 0.4f);

@@ -11,6 +11,8 @@ namespace SpellDuel
     ///     1 火焰射手（遠程）：約 0.8 m，較瘦，青白色高溫火焰，舉起的手上方漂著一顆火球；預備＝往後仰火球變大，出手＝投擲。
     ///     2 岩石衝鋒獸（坦克）：約 1.35 m，身上覆蓋厚岩甲，暗深紅熔岩，沉重緩慢的步伐；預備＝雙拳高舉，出手＝砸下。
     ///     3 自爆小鬼：約 0.7 m，圓滾滾的膨脹身體，肚子上黃白色核心脈動，預備時越脈動越快、身體鼓脹（之後由呼叫者引爆）。
+    ///     4 岩石投擲者（遠程）：約 1.0 m，瘦長的石頭小鬼，背上扛著發光熔岩巨石；預備＝雙手把巨石舉過頭（變亮），出手＝過頭投擲（巨石約 0.8 秒後在背上重新長出）。
+    ///     5 熔岩狙擊手（遠程）：約 0.9 m，瘦削駝背，頭上一根發光的長角（砲管），洋紅色熔岩；預備＝蹲低瞄準、角尖的蓄能光越來越大，出手＝後座力。
     ///   效能：每隻 ≤ 18 個 Renderer（含 1 個火星粒子）；材質、網格全部 static 共用，
     ///   各自的顏色／閃色／蓄力發亮／死亡變暗都用 MaterialPropertyBlock（不複製材質、每幀不配置記憶體）。
     /// </summary>
@@ -31,10 +33,10 @@ namespace SpellDuel
             return rig;
         }
 
-        /// <summary>切換種類（0 近戰、1 遠程、2 坦克、3 自爆），會重建外觀；請在 Create() 之後立刻呼叫。</summary>
+        /// <summary>切換種類（0 近戰、1 火焰射手、2 坦克、3 自爆、4 岩石投擲者、5 熔岩狙擊手），會重建外觀；請在 Create() 之後立刻呼叫。</summary>
         public void SetVariant(int kind)
         {
-            kind = Mathf.Clamp(kind, 0, 3);
+            kind = Mathf.Clamp(kind, 0, 5);
             if (kind == this.kind && body != null) return;
             if (body != null)
             {
@@ -61,7 +63,7 @@ namespace SpellDuel
             snap = cur;
             phase = PhaseStrike;
             atkT = 0f;
-            if (kind == 1) ballGone = 0f;   // 火球丟出去了，稍後手上重新長出一顆
+            if (kind == 1 || kind == 4) ballGone = 0f;   // 火球／巨石丟出去了，稍後重新長出
         }
 
         public void PlayHit()
@@ -116,6 +118,20 @@ namespace SpellDuel
                 rockA = new Color(0.3f, 0.25f, 0.22f), rockB = new Color(0.2f, 0.17f, 0.15f),
                 lava = new Color(1f, 0.62f, 0.15f), lavaDim = new Color(0.75f, 0.25f, 0.04f), hot = new Color(1f, 0.97f, 0.75f), eye = new Color(1f, 0.9f, 0.5f),
                 emberA = new Color(1f, 0.7f, 0.2f), emberB = new Color(1f, 0.95f, 0.6f),
+            },
+            new Variant   // 4 岩石投擲者（黯淡的橘色熔岩）
+            {
+                size = 1.1f, stride = 0.55f, legSwing = 32f, bob = 0.035f, step = 0.9f,
+                rockA = new Color(0.33f, 0.29f, 0.26f), rockB = new Color(0.22f, 0.2f, 0.18f),
+                lava = new Color(0.85f, 0.4f, 0.1f), lavaDim = new Color(0.4f, 0.12f, 0.03f), hot = new Color(1f, 0.72f, 0.35f), eye = new Color(1f, 0.6f, 0.2f),
+                emberA = new Color(0.9f, 0.4f, 0.1f), emberB = new Color(1f, 0.65f, 0.3f),
+            },
+            new Variant   // 5 熔岩狙擊手（洋紅熔岩）
+            {
+                size = 1f, stride = 0.5f, legSwing = 34f, bob = 0.03f, step = 1f,
+                rockA = new Color(0.26f, 0.23f, 0.25f), rockB = new Color(0.17f, 0.15f, 0.17f),
+                lava = new Color(1f, 0.2f, 0.72f), lavaDim = new Color(0.45f, 0.04f, 0.3f), hot = new Color(1f, 0.82f, 0.96f), eye = new Color(1f, 0.6f, 0.95f),
+                emberA = new Color(1f, 0.25f, 0.75f), emberB = new Color(1f, 0.7f, 0.95f),
             },
         };
 
@@ -188,8 +204,9 @@ namespace SpellDuel
         // ================================================================ 骨架與狀態
         int kind;
         Variant v;
-        Transform body, spine, head, hipL, hipR, shL, shR, wrL, wrR, flame, ball, core;
+        Transform body, spine, head, hipL, hipR, shL, shR, wrL, wrR, flame, ball, core, boulder, tip;
         Vector3 flameBase, coreBase;
+        float carryK;   // 岩石投擲者：巨石從背上（0）到頭上（1）
         readonly List<Renderer> rockList = new List<Renderer>();
         readonly List<Color> rockCols = new List<Color>();
         readonly List<Renderer> lavaList = new List<Renderer>();
@@ -240,6 +257,14 @@ namespace SpellDuel
                     p.spX = 10f; p.head = -8f;
                     p.shL = p.shR = new Vector3(-30f, 0f, 40f); p.wrL = p.wrR = -20f;
                     break;
+                case 4:   // 被背上的巨石壓得很駝，長手垂著
+                    p.spX = 34f; p.head = -28f;
+                    p.shL = p.shR = new Vector3(-18f, 0f, 14f); p.wrL = p.wrR = -15f;
+                    break;
+                case 5:   // 駝背、頭往前伸，長角指向前方
+                    p.spX = 36f; p.head = -30f;
+                    p.shL = p.shR = new Vector3(-40f, 0f, 22f); p.wrL = p.wrR = -35f;
+                    break;
             }
             return p;
         }
@@ -262,6 +287,14 @@ namespace SpellDuel
                 case 3:   // 雙手大張、身體後仰鼓脹
                     p.spX = -10f; p.head = -20f; p.crouch = 0.08f;
                     p.shL = p.shR = new Vector3(-60f, 0f, 75f); p.wrL = p.wrR = 0f;
+                    break;
+                case 4:   // 雙手把巨石舉過頭、身體後仰
+                    p.spX = -10f; p.head = -18f; p.crouch = 0.06f;
+                    p.shL = p.shR = new Vector3(-172f, 0f, 14f); p.wrL = p.wrR = -35f;
+                    break;
+                case 5:   // 蹲低、雙手撐著，頭壓平瞄準
+                    p.spX = 48f; p.head = -46f; p.crouch = 0.1f;
+                    p.shL = p.shR = new Vector3(-62f, 0f, 30f); p.wrL = p.wrR = -10f;
                     break;
                 default:  // 舉起右爪
                     p.spX = 8f; p.spY = 25f; p.head = -12f; p.crouch = 0.07f;
@@ -291,6 +324,14 @@ namespace SpellDuel
                     p.spX = 45f; p.head = -35f; p.crouch = 0.02f;
                     p.shL = p.shR = new Vector3(-85f, 0f, 30f); p.wrL = p.wrR = 0f;
                     break;
+                case 4:   // 過頭投擲：雙臂甩到前方
+                    p.spX = 42f; p.head = -30f; p.crouch = 0.08f;
+                    p.shL = p.shR = new Vector3(-70f, 0f, 12f); p.wrL = p.wrR = 15f;
+                    break;
+                case 5:   // 後座力：頭往上彈、身體往後坐
+                    p.spX = 12f; p.head = -62f; p.crouch = 0.05f;
+                    p.shL = p.shR = new Vector3(-20f, 0f, 35f); p.wrL = p.wrR = -20f;
+                    break;
                 default:  // 往前橫揮
                     p.spX = 40f; p.spY = -25f; p.head = -30f; p.crouch = 0.08f;
                     p.shR = new Vector3(-50f, -40f, 10f); p.wrR = 10f;
@@ -313,7 +354,7 @@ namespace SpellDuel
             kind = k;
             v = Variants[k];
             rockList.Clear(); rockCols.Clear(); lavaList.Clear(); hotList.Clear(); eyeList.Clear();
-            flame = null; flameR = null; ball = null; core = null;
+            flame = null; flameR = null; ball = null; core = null; boulder = null; tip = null; carryK = 0f; ballGone = 10f;
             clock = Random.Range(0f, 10f);   // 每隻的呼吸、脈動錯開
             phase = PhaseNone;
 
@@ -331,6 +372,10 @@ namespace SpellDuel
                         headS = new Vector3(0.3f, 0.22f, 0.28f); armS = new Vector3(0.15f, 0.3f, 0.15f); handS = new Vector3(0.2f, 0.16f, 0.2f); break;
                 case 3: legS = new Vector3(0.14f, 0.32f, 0.15f); torsoS = new Vector3(0.56f, 0.52f, 0.52f); torsoP = new Vector3(0f, 0.22f, 0f);
                         headS = new Vector3(0.26f, 0.2f, 0.24f); armS = new Vector3(0.09f, 0.22f, 0.09f); handS = new Vector3(0.11f, 0.1f, 0.11f); break;
+                case 4: legS = new Vector3(0.11f, 0.36f, 0.12f); torsoS = new Vector3(0.34f, 0.44f, 0.3f); torsoP = new Vector3(0f, 0.21f, 0f);
+                        headS = new Vector3(0.26f, 0.22f, 0.26f); armS = new Vector3(0.09f, 0.38f, 0.09f); handS = new Vector3(0.14f, 0.12f, 0.14f); break;
+                case 5: legS = new Vector3(0.11f, 0.34f, 0.12f); torsoS = new Vector3(0.32f, 0.4f, 0.3f); torsoP = new Vector3(0f, 0.2f, 0f);
+                        headS = new Vector3(0.26f, 0.2f, 0.3f); armS = new Vector3(0.08f, 0.3f, 0.08f); handS = new Vector3(0.11f, 0.1f, 0.12f); break;
                 default: legS = new Vector3(0.15f, 0.34f, 0.17f); torsoS = new Vector3(0.42f, 0.42f, 0.36f); torsoP = new Vector3(0f, 0.2f, 0f);
                         headS = new Vector3(0.3f, 0.24f, 0.28f); armS = new Vector3(0.11f, 0.3f, 0.11f); handS = new Vector3(0.14f, 0.12f, 0.15f); break;
             }
@@ -365,7 +410,7 @@ namespace SpellDuel
                 Glow(PrimitiveType.Cube, head, new Vector3(0.065f * s, 0.08f, eyeZ), new Vector3(0.07f, 0.03f, 0.03f), eyeList, new Vector3(0f, 0f, 16f * s));
 
             // ---- 頭頂火焰（坦克沒有；自爆小鬼的像引信）
-            if (k != 2)
+            if (k != 2 && k < 4)
             {
                 var fl = new GameObject("Flame");
                 fl.transform.SetParent(head, false);
@@ -399,6 +444,33 @@ namespace SpellDuel
                 Rock(shR, new Vector3(0.03f, 0.02f, 0f), new Vector3(0.26f, 0.14f, 0.28f), new Vector3(0f, 0f, 22f), rockMesh1, Armor);
                 Rock(spine, new Vector3(0f, 0.3f, -0.16f), new Vector3(0.56f, 0.34f, 0.2f), new Vector3(30f, 0f, 0f), rockMesh1, Armor);
                 Rock(head, new Vector3(0f, 0.14f, 0.07f), new Vector3(0.36f, 0.12f, 0.34f), new Vector3(-12f, 0f, 0f), rockMesh0, Armor);
+            }
+
+            else if (k == 4)
+            {
+                // 背上的熔岩巨石：岩殼的凹處透出裡面的熔岩
+                boulder = Pivot("Boulder", body, Vector3.zero);
+                var br = new GameObject("Rock");
+                br.transform.SetParent(boulder, false);
+                br.transform.localScale = Vector3.one * 0.34f;
+                br.transform.localRotation = Quaternion.Euler(20f, 40f, 10f);
+                br.AddComponent<MeshFilter>().sharedMesh = rockMesh1;
+                var rr = br.AddComponent<MeshRenderer>();
+                rr.sharedMaterial = rockMat;
+                NoShadow(rr);
+                rockList.Add(rr); rockCols.Add(v.rockB);
+                Glow(PrimitiveType.Sphere, boulder, Vector3.zero, Vector3.one * 0.3f, lavaList);
+            }
+            else if (k == 5)
+            {
+                // 頭上往前伸的長角（砲管）：岩石外殼＋發光內芯＋角尖的蓄能光
+                var horn = Pivot("Horn", head, new Vector3(0f, 0.15f, 0.08f));
+                horn.localRotation = Quaternion.Euler(-12f, 0f, 0f);
+                Rock(horn, new Vector3(0f, 0f, 0.14f), new Vector3(0.08f, 0.08f, 0.32f), Vector3.zero, rockMesh0, v.rockA);
+                Glow(PrimitiveType.Cube, horn, new Vector3(0f, 0.025f, 0.17f), new Vector3(0.035f, 0.035f, 0.36f), lavaList);
+                tip = Pivot("Tip", horn, new Vector3(0f, 0.01f, 0.36f));
+                Glow(PrimitiveType.Sphere, tip, Vector3.zero, Vector3.one, hotList);
+                tip.localScale = Vector3.one * 0.04f;
             }
 
             // ---- 少量火星
@@ -555,6 +627,29 @@ namespace SpellDuel
                 float s = regrow * (1f + 1.2f * windK + 0.08f * Mathf.Sin(clock * 19f)) * (1f - deadE);
                 ball.localScale = Vector3.one * s;
                 ball.position = wrR.position + Vector3.up * (0.14f * v.size * (0.6f + 0.4f * s)) + wrR.forward * 0.03f;
+            }
+
+            // ---- 岩石投擲者的巨石：平時在背上，預備時舉到頭上，丟出後在背上重新長出
+            if (boulder != null)
+            {
+                carryK = Mathf.MoveTowards(carryK, phase == PhaseWindup ? windK : 0f, dt * 4f);
+                if (phase == PhaseWindup) carryK = windK;
+                float c = carryK * carryK * (3f - 2f * carryK);
+                float regrow = Mathf.Clamp01((ballGone - 0.2f) / 0.8f);
+                if (phase == PhaseStrike && ballGone < 0.2f) carryK = 0f;
+                var back = spine.TransformPoint(new Vector3(0f, 0.48f, -0.2f));
+                var over = (wrL.position + wrR.position) * 0.5f + Vector3.up * (0.16f * v.size);
+                boulder.position = Vector3.Lerp(back, over, c);
+                boulder.rotation = spine.rotation;
+                boulder.localScale = Vector3.one * (regrow * (1f + 0.06f * windK * pulse) * (1f - deadE));
+            }
+
+            // ---- 狙擊手角尖的蓄能光（出手瞬間閃一下）
+            if (tip != null)
+            {
+                float fl = phase == PhaseStrike && atkT < 0.12f ? 1f - atkT / 0.12f : 0f;
+                float ts = 0.04f + 0.12f * windK * (0.85f + 0.15f * Mathf.Sin(clock * 30f)) + 0.1f * fl;
+                tip.localScale = Vector3.one * (ts * (1f - deadE));
             }
 
             UpdateColors(hitK, deadE, pulse, windK);

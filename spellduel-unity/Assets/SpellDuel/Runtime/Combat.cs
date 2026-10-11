@@ -159,14 +159,17 @@ namespace SpellDuel
         public const int MaxMinions = 5;
         public event Action<int, int, SkillDef> OnMinionHit;   // 隊友端：我的法術打到小怪（編號、傷害、技能）
 
-        public static readonly string[] MinionNames = { "熔岩小鬼", "火焰射手", "岩石衝鋒獸", "自爆小鬼" };
+        public static readonly string[] MinionNames = { "熔岩小鬼", "火焰射手", "岩石衝鋒獸", "自爆小鬼", "岩石投擲者", "熔岩狙擊手" };
         // 各種小怪的基本數值：血量、移動速度、身體半徑、頭的高度
-        static readonly int[] MinionHp = { 40, 30, 120, 20 };
-        static readonly float[] MinionSpeed = { 1.0f, 0.9f, 0.6f, 1.7f }, MinionRadius = { 0.25f, 0.23f, 0.4f, 0.22f }, MinionHead = { 0.85f, 0.8f, 1.3f, 0.65f };
+        static readonly int[] MinionHp = { 40, 30, 120, 20, 45, 30 };
+        static readonly float[] MinionSpeed = { 1.0f, 0.9f, 0.6f, 1.7f, 0.7f, 0.8f }, MinionRadius = { 0.25f, 0.23f, 0.4f, 0.22f, 0.28f, 0.24f }, MinionHead = { 0.85f, 0.8f, 1.3f, 0.65f, 0.95f, 0.85f };
+        // 遠程小怪想站的距離（最近、最遠）；0＝近戰（走到身邊）
+        static readonly float[] KeepMin = { 0f, 3.5f, 0f, 0f, 4.5f, 6f }, KeepMax = { 0f, 6f, 0f, 0f, 7.5f, 9f };
+        public static bool IsRanged(int kind) => kind == 1 || kind == 4 || kind == 5;
 
         public Fighter SpawnMinion(Vector3 feet, int id = 0, int kind = 0, float hpMul = 1f, float dmgMul = 1f, float speedMul = 1f)
         {
-            kind = Mathf.Clamp(kind, 0, 3);
+            kind = Mathf.Clamp(kind, 0, 5);
             var c = Skills.Classes["minion"];
             var m = new Fighter(MinionNames[kind], c, new string[0], false)
             {
@@ -225,7 +228,7 @@ namespace SpellDuel
 
         // 經驗值：小怪依種類與波次、Boss 依第幾隻；合作時兩人共用同一份經驗（各自選升級）
         public int xp;
-        static readonly int[] MinionXp = { 10, 12, 25, 12 };
+        static readonly int[] MinionXp = { 10, 12, 25, 12, 15, 18 };
         /// <summary>升到下一級需要的累積經驗：55、140、255、400…</summary>
         public static int XpForLevel(int level) => 40 * (level - 1) + 15 * (level - 1) * (level - 1) + 0;
         public static int LevelOf(int xp) { int l = 1; while (xp >= XpForLevel(l + 1)) l++; return l; }
@@ -267,14 +270,15 @@ namespace SpellDuel
         }
         bool bossSpawnedThisWave;
 
-        /// <summary>依波次解鎖小怪：火焰射手（第 3 波起）、岩石衝鋒獸（第 6 波起）、自爆小鬼（第 11 波起，打倒第一隻 Boss 後）</summary>
+        // 小怪解鎖的波次：熔岩小鬼、火焰射手（遠程）第 1 波起；岩石投擲者（遠程）第 4 波；岩石衝鋒獸第 6 波；
+        // 熔岩狙擊手（遠程）第 8 波；自爆小鬼第 11 波（打倒第一隻 Boss 後）
+        static readonly int[] UnlockWave = { 1, 1, 6, 11, 4, 8 };
         int PickMinionKind()
         {
-            int unlocked = wave >= 11 ? 3 : wave >= 6 ? 2 : wave >= 3 ? 1 : 0;
-            float[] w = { 3f, 2f + 0.1f * wave, 1.2f + 0.08f * wave, 1.2f + 0.08f * wave };
-            float sum = 0f; for (int k = 0; k <= unlocked; k++) sum += w[k];
+            float[] w = { 3f, 2f + 0.1f * wave, 1.2f + 0.08f * wave, 1.2f + 0.08f * wave, 1.5f + 0.08f * wave, 1.0f + 0.08f * wave };
+            float sum = 0f; for (int k = 0; k < w.Length; k++) if (wave >= UnlockWave[k]) sum += w[k];
             float r = (float)rng.NextDouble() * sum;
-            for (int k = 0; k <= unlocked; k++) { r -= w[k]; if (r <= 0f) return k; }
+            for (int k = 0; k < w.Length; k++) { if (wave < UnlockWave[k]) continue; r -= w[k]; if (r <= 0f) return k; }
             return 0;
         }
 
@@ -335,15 +339,17 @@ namespace SpellDuel
                 }
                 if (m.snaredUntil > now) continue;
                 // 出手條件：近戰／衝鋒獸／自爆要貼近；射手在 9m 內
-                float reach = kind == 1 ? 9f : kind == 3 ? 1.3f : kind == 2 ? 1.2f : 0.95f;
-                float windup = kind == 1 ? 0.8f : kind == 2 ? 1.0f : kind == 3 ? 0.5f : claw.charge;
-                if (d <= reach + tgt.bodyRadius && now >= m.attackReadyAt) { m.windupUntil = now + windup; Emit("minionwindup", m.Feet, claw.color, null); continue; }
+                float reach = kind == 1 ? 9f : kind == 4 ? 11f : kind == 5 ? 14f : kind == 3 ? 1.3f : kind == 2 ? 1.2f : 0.95f;
+                float windup = kind == 1 ? 0.8f : kind == 4 ? 1.2f : kind == 5 ? 1.6f : kind == 2 ? 1.0f : kind == 3 ? 0.5f : claw.charge;
+                bool outside = minionInside != null && !minionInside(m.Feet);   // 還在場地外：先走進來（不在場外放招）
+                if (!outside && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt) { m.windupUntil = now + windup; Emit("minionwindup", m.Feet, claw.color, null); continue; }
                 // 走位：射手保持 3.5～6m，其他走向目標（停在 0.8m）；小怪之間互相推開
                 float speed = minionSpeed * MinionSpeed[kind] * m.speedMul;
                 Vector3 step;
-                if (kind == 1)
+                if (IsRanged(kind) && !outside)
                 {
-                    float want = d > 6f ? d - 6f : d < 3.5f ? -(3.5f - d) : 0f;
+                    // 遠程：保持在 KeepMin～KeepMax 之間（太近就後退）
+                    float want = d > KeepMax[kind] ? d - KeepMax[kind] : d < KeepMin[kind] ? -(KeepMin[kind] - d) : 0f;
                     step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Clamp(want, -speed * dt, speed * dt);
                 }
                 else step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Min(speed * dt, Mathf.Max(0f, d - 0.8f));
@@ -373,6 +379,26 @@ namespace SpellDuel
                     var from = m.head + Fighter.Flat(m.forward) * 0.3f;
                     Spawn(m, fb, from, (tgt.Chest - from).normalized, Mathf.RoundToInt(fb.damage * m.dmgMul), EffectKind.None, 0f, 0f, false);
                     Emit("minionattack", m.Feet, fb.color, null);
+                    return;
+                }
+                case 4:
+                {
+                    // 岩石投擲者：石頭從目標正上方砸下（地上有紅圈，走開就閃得掉）
+                    var rk = Skills.All["m_rock"];
+                    m.attackReadyAt = now + rk.cooldown;
+                    var at = tgt.Feet + new Vector3((float)rng.NextDouble() - 0.5f, 0f, (float)rng.NextDouble() - 0.5f) * 0.6f;
+                    Spawn(m, rk, at + Vector3.up * rk.dropHeight, Vector3.down, Mathf.RoundToInt(rk.damage * m.dmgMul), EffectKind.None, 0f, 0f, false);
+                    Emit("minionattack", m.Feet, rk.color, null);
+                    return;
+                }
+                case 5:
+                {
+                    // 熔岩狙擊手：瞄準完成後高速射擊
+                    var sn = Skills.All["m_snipe"];
+                    m.attackReadyAt = now + sn.cooldown;
+                    var from = m.head + Fighter.Flat(m.forward) * 0.3f;
+                    Spawn(m, sn, from, (tgt.Chest - from).normalized, Mathf.RoundToInt(sn.damage * m.dmgMul), EffectKind.None, 0f, 0f, false);
+                    Emit("minionattack", m.Feet, sn.color, null);
                     return;
                 }
                 case 3:
