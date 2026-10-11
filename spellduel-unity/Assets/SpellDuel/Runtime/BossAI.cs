@@ -140,7 +140,7 @@ namespace SpellDuel
             var delta = dest - feet; delta.y = 0;
             float dist = delta.magnitude;
             if (dist < 0.05f) return;
-            var next = feet + delta / dist * Mathf.Min(dist, walkSpeed * dt);
+            var next = feet + delta / dist * Mathf.Min(dist, walkSpeed * Battle.EnemySpeedScale * dt);
             if (inside(next) && edgeDistance(next) >= 0.5f) me.head = new Vector3(next.x, me.head.y, next.z);
             else if (!inside(feet))
             {

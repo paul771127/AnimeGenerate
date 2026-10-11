@@ -114,7 +114,7 @@ namespace SpellDuel
         readonly HashSet<Fighter> minionWinding = new HashSet<Fighter>();
         readonly Dictionary<Fighter, GameObject> aimLines = new Dictionary<Fighter, GameObject>();   // 狙擊手瞄準時的紅線
         string bossWindup, bossChargingId; float nextBossState, lastBossHp;
-        public const int BossHpSolo = 400;   // 合作時再乘上人數倍率（每多一人 +30%）
+        public const int BossHpSolo = 200;   // 合作時再乘上人數倍率（每多一人 +30%）
         Fighter Ally => battle?.ally;
 
         // 電腦難度：0 簡單、1 普通、2 困難（電腦出招慢／瞄得不準／少防禦，玩家受到的傷害也打折）
@@ -318,7 +318,7 @@ namespace SpellDuel
                 bossAi.SetDifficulty(difficulty);
                 if (endlessMode)
                 {
-                    battle.bossBaseHp = 300f * BossHpFor(difficulty);
+                    battle.bossBaseHp = 150f * BossHpFor(difficulty);
                     battle.edgePoint = FarSpawnPoint;
                     battle.bossPoint = EdgeSpawnPoint;
                     battle.OnBossSpawn += w => bossAi.Respawn(Mathf.Max(0.7f, 1f - 0.06f * w));

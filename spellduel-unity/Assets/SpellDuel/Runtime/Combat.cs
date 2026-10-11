@@ -161,7 +161,8 @@ namespace SpellDuel
 
         public static readonly string[] MinionNames = { "熔岩小鬼", "火焰射手", "岩石衝鋒獸", "自爆小鬼", "岩石投擲者", "熔岩狙擊手" };
         // 各種小怪的基本數值：血量、移動速度、身體半徑、頭的高度
-        static readonly int[] MinionHp = { 40, 30, 120, 20, 45, 30 };
+        static readonly int[] MinionHp = { 20, 15, 60, 10, 23, 15 };   // 血量（已下修 50%）
+        public const float EnemySpeedScale = 0.3f;   // 小怪與 Boss 的移動速度倍率（調慢到 30%）
         static readonly float[] MinionSpeed = { 1.0f, 0.9f, 0.6f, 1.7f, 0.7f, 0.8f }, MinionRadius = { 0.25f, 0.23f, 0.4f, 0.22f, 0.28f, 0.24f }, MinionHead = { 0.85f, 0.8f, 1.3f, 0.65f, 0.95f, 0.85f };
         // 遠程小怪想站的距離（最近、最遠）；0＝近戰（走到身邊）
         static readonly float[] KeepMin = { 0f, 3.5f, 0f, 0f, 4.5f, 6f }, KeepMax = { 0f, 6f, 0f, 0f, 7.5f, 9f };
@@ -189,7 +190,7 @@ namespace SpellDuel
         // 每第 10、20、30… 波是 Boss 波（只有 Boss，沒有小怪）。波次越後面敵人越強，也會解鎖新的小怪種類。
         public bool endless;
         public int wave, kills, bossKills, waveToSpawn, waveTotal;
-        public float nextMinionAt, waveStartAt, bossBaseHp = 300f;
+        public float nextMinionAt, waveStartAt, bossBaseHp = 150f;
         public const int BossEvery = 10;
         public Func<Vector3> edgePoint;          // 小怪出生點：離所有玩家 15m 以上（可以在場地外，再走進來）
         public Func<Vector3> bossPoint;          // Boss 出生點：場地邊緣附近（沒設定就用 edgePoint）
@@ -352,7 +353,7 @@ namespace SpellDuel
                 bool outside = minionInside != null && !minionInside(m.Feet);   // 還在場地外：先走進來（不在場外放招）
                 if (!outside && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt) { m.windupUntil = now + windup; Emit("minionwindup", m.Feet, claw.color, null); continue; }
                 // 走位：射手保持 3.5～6m，其他走向目標（停在 0.8m）；小怪之間互相推開
-                float speed = minionSpeed * MinionSpeed[kind] * m.speedMul;
+                float speed = minionSpeed * MinionSpeed[kind] * m.speedMul * EnemySpeedScale;
                 Vector3 step;
                 if (IsRanged(kind) && !outside)
                 {
