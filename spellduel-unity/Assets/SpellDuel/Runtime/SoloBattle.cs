@@ -742,14 +742,15 @@ namespace SpellDuel
             Hand.ConsumeSelect(out _);
             // 放招動作依詠唱中的技能（陷阱往下壓、治癒收回、格擋舉盾…；其餘依職業）；沒在詠唱就不偵測
             Hand.ReleaseStyle = Me.charging != null ? HandGesture.ReleaseOf(Me.charging) : HandGesture.Style.None;
-            Hand.RuneName = Me.charging != null ? RuneRecognizer.RuneOf(Me.charging.id) : null;
+            Hand.RuneName = Me.charging != null && Hand.ReleaseStyle == HandGesture.Style.Rune ? RuneRecognizer.RuneOf(Me.charging.id) : null;
+            Hand.RequiredNumber = Me.charging != null ? HandGesture.NumberOf(Me.charging.id) : 0;
             // 手勢放招：往放招動作的瞄準點放
             if (Hand.ConsumeRelease())
             {
                 if (frozen) { Say("AR 追蹤中斷，暫時不能施法", 1.5f); return; }
                 if (Me.charging == null) Say("🎤 先唸出技能名稱才能放招", 1.5f);
                 else if (drawingRune) ReleaseAt(ScreenCenter, true);   // 符文畫好＋食指往前指
-                else if (battle.ChargeProgress(Me) < 1f) Say("蓄力還沒完成", 1f);
+                else if (battle.ChargeProgress(Me) < 1f) { if (Hand.ReleaseStyle != HandGesture.Style.Number) Say("蓄力還沒完成", 1f); }   // 法師比著數字等蓄滿就會自動放
                 else ReleaseAt(ScreenCenter, true);   // 瞄準一律用畫面中央的準星（手只負責觸發）
             }
         }
@@ -1335,7 +1336,7 @@ namespace SpellDuel
                 float tx = ir.xMax + sh * 0.08f, tw = r.xMax - tx - sh * 0.06f;
                 string eff = sk.type == SkillType.Self ? (sk.self == SelfKind.Heal ? $"回復{sk.heal}" : sk.self == SelfKind.Cleanse ? "解異常" : sk.self == SelfKind.Armor ? $"減傷{sk.buffReduce * 100f:0}%" : sk.self == SelfKind.Prayer ? $"冷卻-{sk.buffDur:0}s" : "防禦") : sk.damage > 0 ? $"傷害{sk.damage}{(sk.multi > 1 ? $"×{sk.multi}" : "")}" : "效果";
                 UiKit.Text(new Rect(tx, r.y + sh * 0.05f, tw, sh * 0.32f), (on ? "✔ " : "") + sk.name, fs, on ? Color.white : new Color(0.8f, 0.8f, 0.8f), TextAnchor.MiddleLeft, true);
-                UiKit.Text(new Rect(tx, r.y + sh * 0.37f, tw, sh * 0.27f), $"🎤唸「{sk.name}」→ {HandGesture.StyleName(HandGesture.ReleaseOf(sk))}", fsS, new Color(1f, 0.85f, 0.5f));
+                UiKit.Text(new Rect(tx, r.y + sh * 0.37f, tw, sh * 0.27f), $"🎤唸「{sk.name}」→ {HandGesture.ReleaseLabel(sk)}", fsS, new Color(1f, 0.85f, 0.5f));
                 UiKit.Text(new Rect(tx, r.y + sh * 0.64f, tw, sh * 0.32f), $"MP{sk.cost}・{(sk.charge > 0f ? $"蓄力{sk.charge:0.#}s" : "免蓄力")}・{eff}・{sk.RangeText}", fsS, new Color(0.8f, 0.85f, 0.95f));
                 if (GUI.Button(r, GUIContent.none, GUIStyle.none))
                 {
@@ -1517,9 +1518,9 @@ namespace SpellDuel
                 float prog = battle.ChargeProgress(me);
                 bool bow = HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Bow && Hand != null;   // 弓箭手：拉滿弓就是蓄力完成
                 string st = bow ? (Hand.BowDrawn ? "🏹 拉滿！手回畫面張開放箭" : Hand.BowStage == 1 ? "✊ 握著拳拉出畫面外（拉弓）" : "畫面中握拳（捏弦）") :
-                    prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%" :
+                    prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%（蓄滿後{HandGesture.ReleaseLabel(me.charging)}）" :
                     me.charging.releaseNear ? "手刀往前刺 → 5 秒內靠近敵人自動出手" :
-                    HandGesture.StyleHint(HandGesture.ReleaseOf(me.charging));
+                    HandGesture.ReleaseHint(me.charging) + (HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Number && Hand != null && Hand.HandVisible ? $"（目前：{(Hand.CurrentNumber > 0 ? Hand.CurrentNumber.ToString() : "—")}）" : "");
                 UiKit.Pill(H / 2 - lh * 2.6f, $"{me.charging.name}　{st}", fs, prog < 1f ? Color.white : me.charging.color, pillW);
             }
             // 伏擊狀態：我在伏擊 → 提示靠近；敵人在伏擊 → 警告保持距離
@@ -1652,7 +1653,7 @@ namespace SpellDuel
                 var tc = usable ? Color.white : new Color(0.65f, 0.65f, 0.65f);
                 string vtag = UseSpeech || voice.Ready(s.id) ? "" : " 🎤未錄";
                 UiKit.Text(new Rect(tx, ty, tw, rowH), s.name + vtag, fs, tc, TextAnchor.MiddleCenter, true);
-                UiKit.Text(new Rect(tx, ty + rowH, tw, rowH), $"🎤→{HandGesture.StyleName(HandGesture.ReleaseOf(s))}", fsS, usable ? new Color(1f, 0.85f, 0.5f) : tc, TextAnchor.MiddleCenter);
+                UiKit.Text(new Rect(tx, ty + rowH, tw, rowH), $"🎤→{HandGesture.ReleaseLabel(s)}", fsS, usable ? new Color(1f, 0.85f, 0.5f) : tc, TextAnchor.MiddleCenter);
                 UiKit.Text(new Rect(tx, ty + rowH * 2, tw, rowH), cd > 0 ? $"冷卻 {cd:F1}s" : $"MP {s.cost}", fsS, cd > 0 ? new Color(0.7f, 0.7f, 0.7f) : new Color(0.6f, 0.8f, 1f), TextAnchor.MiddleCenter);
             }
 
@@ -1681,6 +1682,7 @@ namespace SpellDuel
         {
             var me = Me;
             if (me?.charging == null) return;
+            if (HandGesture.ReleaseOf(me.charging) != HandGesture.Style.Rune) return;   // 法師現在用比數字，不畫符文
             var rune = RuneRecognizer.RuneOf(me.charging.id);
             var g = RuneRecognizer.Guide(rune);
             if (g == null || (Hand != null && Hand.RuneReady)) return;   // 畫好了就不再顯示軌跡

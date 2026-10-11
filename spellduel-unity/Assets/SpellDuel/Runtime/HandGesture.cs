@@ -17,7 +17,7 @@ namespace SpellDuel
     public class HandGesture
     {
         public enum Shape { None, Fist, Open, One, Two, Three, Rock, Call, Thumb, Other }
-        public enum Style { None, Burst, Bow, Chop, Thrust, Press, Pull, Hold, Rune, Raise }
+        public enum Style { None, Burst, Bow, Chop, Thrust, Press, Pull, Hold, Rune, Raise, Number }
 
         // 法師畫符文：食指尖的軌跡（螢幕像素）
         public string RuneName;                                    // 要畫的符文（RuneRecognizer）
@@ -39,15 +39,49 @@ namespace SpellDuel
 
         public static Style StyleOf(string classId) => classId switch
         {
-            "archer" => Style.Bow, "swordsman" => Style.Chop, "assassin" => Style.Thrust, _ => Style.Burst,
+            "archer" => Style.Burst, "swordsman" => Style.Chop, "assassin" => Style.Thrust, "mage" => Style.Number, _ => Style.Burst,
         };
+
+        /// <summary>法師：每招固定一個數字（比出這個數字的手指就放招）；不是法師的招式回傳 0</summary>
+        public static int NumberOf(string skillId) => skillId switch
+        {
+            "fire" => 2, "wind" => 2, "ice" => 3, "thunder" => 4, "dispel" => 4, "meteor" => 5, "heal" => 5, _ => 0,
+        };
+
+        /// <summary>放招動作的短名稱（選技能畫面、技能格用）：法師顯示要比的數字</summary>
+        public static string ReleaseLabel(SkillDef s)
+        {
+            var st = ReleaseOf(s);
+            return st == Style.Number ? $"比 {NumberOf(s.id)}" : s.cls == "archer" ? "握拳→比五" : StyleName(st);
+        }
+
+        /// <summary>放招提示（詠唱中畫面中央）：法師顯示要比的數字</summary>
+        public static string ReleaseHint(SkillDef s)
+        {
+            var st = ReleaseOf(s);
+            if (st == Style.Number) return $"比出數字 {NumberOf(s.id)}（{NumberFingers(NumberOf(s.id))}）放招";
+            if (s.cls == "archer") return "先握拳 → 再比五（五指張開）放箭";
+            return StyleHint(st);
+        }
+
+        static string NumberFingers(int n) => n switch
+        {
+            2 => "食指＋中指", 3 => "食指＋中指＋無名指", 4 => "四指伸直、拇指收起", 5 => "五指全部張開", _ => "",
+        };
+
+        /// <summary>法師目前要比的數字（SoloBattle 設定）</summary>
+        public int RequiredNumber;
+        public const float ChopDistance = 0.12f;   // 劍士揮砍：手掌移動距離（畫面短邊的比例）
+        /// <summary>目前手比出的數字（0＝不是 2～5）</summary>
+        public int CurrentNumber { get; private set; }
+        float numberSince = -99f; int numberSeen;
 
         /// <summary>每個技能的放招動作：陷阱、治癒、防禦等有自己的動作，其餘用職業動作</summary>
         public static Style ReleaseOf(SkillDef s)
         {
             if (s == null) return Style.None;
-            if (RuneRecognizer.RuneOf(s.id) != null) return Style.Rune;   // 法師：畫符文
-            if (s.id == "dispel") return Style.Burst;                     // 法師抗拒法環：握拳→張開（撐開法環）
+            if (s.cls == "mage") return Style.Number;                     // 法師：唸完名稱比固定數字就放招
+            if (s.cls == "archer") return Style.Burst;                    // 弓箭手：握拳→比五（張開）就放招
             switch (s.id)
             {
                 case "snaretrap": case "blasttrap": case "smoke": case "thunder": return Style.Press;   // 往下壓／往下砸／往下劈
@@ -68,13 +102,13 @@ namespace SpellDuel
         public static string StyleName(Style st) => st switch
         {
             Style.Bow => "拉弓", Style.Chop => "手刀揮砍", Style.Thrust => "突刺", Style.Press => "往下壓",
-            Style.Pull => "收回自己", Style.Hold => "舉掌停住", Style.Burst => "握拳→張開", Style.Rune => "畫符文", Style.Raise => "往上舉", _ => "",
+            Style.Pull => "收回自己", Style.Hold => "舉掌停住", Style.Burst => "握拳→張開", Style.Rune => "畫符文", Style.Raise => "往上舉", Style.Number => "比數字", _ => "",
         };
 
         public static string StyleHint(Style st) => st switch
         {
             Style.Bow => "拉弓：畫面中握拳 → 握著拳拉出畫面外（拉滿）→ 手回畫面張開放箭",
-            Style.Chop => "揮砍：手掌伸直，快速橫劈（甩）過畫面",
+            Style.Chop => "揮砍：手掌往任一方向揮一下（移動一小段就行）",
             Style.Thrust => "突刺：手刀快速往前刺出（手遠離手機）",
             Style.Press => "往下壓：手掌快速往下按（劈）",
             Style.Pull => "收回：手掌快速拉回自己（靠近手機）",
@@ -82,6 +116,7 @@ namespace SpellDuel
             Style.Burst => "聚氣：握拳 → 張開手放出",
             Style.Rune => "畫符文：伸出食指照著軌跡畫 → 食指往前指發射",
             Style.Raise => "往上舉：張開的手掌快速往上抬",
+            Style.Number => "比出指定的數字",
             _ => "",
         };
 
@@ -206,15 +241,16 @@ namespace SpellDuel
             }
             else BowStage = 0;
 
-            // 劍士：張開的手在 0.4 秒內移動超過畫面寬 25%（手刀劈過）
+            // 劍士：張開的手掌在 0.5 秒內往任何方向移動一小段（短邊的 12%）就出招（不用大幅橫劈）
             if (ReleaseStyle == Style.Chop && fingersOut && histN >= 3)
             {
+                float need = Mathf.Min(W, H) * ChopDistance;
                 for (int k = 2; k < histN; k++)
                 {
                     var o = HistAgo(k);
-                    if (t - o.t > 0.4f) break;
+                    if (t - o.t > 0.5f) break;
                     if (o.shape == Shape.Fist || o.shape == Shape.None) break;
-                    if (Vector2.Distance(o.palm, palm) > W * 0.25f) { Queue(t, (o.palm + palm) / 2f); break; }
+                    if (Vector2.Distance(o.palm, palm) > need) { Queue(t, (o.palm + palm) / 2f); break; }
                 }
             }
 
@@ -252,6 +288,12 @@ namespace SpellDuel
                 }
             }
             else if (Trail.Count > 0) { Trail.Clear(); trailT.Clear(); }
+
+            // 法師：比出指定數字（2～5）並維持 0.25 秒＝放招（蓄力沒滿時每 0.6 秒會再送一次，蓄滿就放出）
+            CurrentNumber = NumberShape(Points, palm, palmSize);
+            if (CurrentNumber != numberSeen) { numberSeen = CurrentNumber; numberSince = t; }
+            if (ReleaseStyle == Style.Number && RequiredNumber > 0 && CurrentNumber == RequiredNumber && t - numberSince >= 0.25f)
+                Queue(t, new Vector2(W / 2f, H / 2f));
 
             // 往下壓／往下劈：伸著手指的手在 0.4 秒內往下移動超過畫面高 18%
             if (ReleaseStyle == Style.Press && fingersOut && histN >= 3)
@@ -323,6 +365,20 @@ namespace SpellDuel
         }
 
         /// <summary>判斷手勢：每根手指是否伸直（指尖離手腕比第二關節遠很多）</summary>
+        /// <summary>手比的數字：2＝食中、3＝食中無名、4＝四指伸直拇指收、5＝五指張開；其他回傳 0</summary>
+        static int NumberShape(Vector2[] p, Vector2 palm, float palmSize)
+        {
+            var wrist = p[0];
+            var e = new bool[4];
+            for (int f = 0; f < 4; f++) e[f] = Vector2.Distance(wrist, p[8 + f * 4]) > Vector2.Distance(wrist, p[6 + f * 4]) * 1.15f;
+            bool thumb = Vector2.Distance(p[4], palm) > palmSize * 0.7f && Vector2.Distance(wrist, p[4]) > Vector2.Distance(wrist, p[3]) * 1.03f;
+            bool I = e[0], M = e[1], R = e[2], P = e[3];
+            if (I && M && R && P) return thumb ? 5 : 4;
+            if (I && M && R && !P) return 3;
+            if (I && M && !R && !P) return 2;
+            return 0;
+        }
+
         static Shape Classify(Vector2[] p, Vector2 palm, float palmSize)
         {
             var wrist = p[0];
