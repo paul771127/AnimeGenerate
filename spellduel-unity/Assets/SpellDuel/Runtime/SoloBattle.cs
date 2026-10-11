@@ -1738,6 +1738,9 @@ namespace SpellDuel
                 if (en.charging != null) UiKit.Text(new Rect(r.x - W * 0.12f, r.y - lh, r.width + W * 0.24f, lh * 0.95f), $"⚠ {en.charging.name}", fs, new Color(1f, 0.75f, 0.4f), TextAnchor.LowerCenter, true);
             }
 
+            // 最近的敵人（小怪或 Boss）：在畫面中 → 頭上標「▼ 最近 3.2m」；不在畫面中 → 畫面邊緣的箭頭指出方位與距離
+            if (bossMode && phase == Phase.Fighting) DrawNearestEnemy(W, H, lh, fsS);
+
             // 小怪頭上的小血條
             if (battle.minions.Count > 0)
                 foreach (var mn in battle.minions)
@@ -1845,7 +1848,7 @@ namespace SpellDuel
                     string guardTxt = en.counterUntil > now ? "　反擊中" : en.shieldUntil > now ? "　護盾" : en.blockUntil > now ? "　格擋中" : en.armorUntil > now ? "　守護" : "";
                     UiKit.Text(new Rect(r.x, r.yMax + 2, Mathf.Max(r.width, W * 0.45f), lh * 0.8f), "🎯 鎖定" + guardTxt, fsS, frameC, TextAnchor.UpperLeft, true);
                 }
-                else
+                else if (!bossMode)   // Boss／無盡模式改用「最近的敵人」方位標示
                     UiKit.Pill(H * 0.58f, (enemyScreenSide < 0 ? "◀ 敵人在左邊" : "敵人在右邊 ▶") + "（沒鎖定也能放，朝準星飛）", fs, new Color(1f, 0.45f, 0.45f), pillW);
             }
             if (Time.time < messageUntil) UiKit.Pill(H * 0.64f, message, fs, Color.white, pillW);
@@ -1951,6 +1954,47 @@ namespace SpellDuel
                 { if (NetMode) SendReady(); else StartBattle(); }
                 if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "換職業", fs)) ShowSetup();
             }
+        }
+
+        /// <summary>標示離我最近的敵人在哪個方位（Boss 模式、無盡模式）</summary>
+        void DrawNearestEnemy(float W, float H, float lh, int fsS)
+        {
+            Fighter near = null; float best = float.MaxValue;
+            foreach (var mn in battle.minions) { if (!mn.Alive) continue; float d = Battle.FlatDistance(mn.Feet, Me.Feet); if (d < best) { best = d; near = mn; } }
+            if (En.Alive)
+            { float d = Battle.FlatDistance(En.Feet, Me.Feet); if (d < best) { best = d; near = En; } }
+            if (near == null) return;
+            var col = near == En ? new Color(1f, 0.35f, 0.15f) : new Color(1f, 0.75f, 0.3f);
+            string nm = near == En ? "Boss" : near.name;
+            var wp = WorldFrame.FromWorld(near.Chest);
+            var sp = cam.WorldToScreenPoint(wp);
+            bool onScreen = sp.z > 0.2f && sp.x > 0 && sp.x < W && sp.y > 0 && sp.y < H;
+            if (onScreen)
+            {
+                // 在畫面中：頭上的小標籤
+                var hp = cam.WorldToScreenPoint(WorldFrame.FromWorld(near.head + Vector3.up * (near == En ? 0.6f : 0.45f)));
+                if (hp.z > 0f) UiKit.Text(new Rect(hp.x - W * 0.2f, H - hp.y - lh * 1.1f, W * 0.4f, lh * 0.9f), $"▼ 最近 {best:F1}m", fsS, col, TextAnchor.LowerCenter, true);
+                return;
+            }
+            // 不在畫面中：用鏡頭座標算方位（背後的也能指），貼在畫面邊緣
+            var local = cam.transform.InverseTransformPoint(wp);
+            var dir2 = new Vector2(local.x, local.y);
+            if (local.z < 0f && dir2.sqrMagnitude < 0.01f) dir2 = new Vector2(0f, -1f);   // 正後方：指下方
+            if (dir2.sqrMagnitude < 1e-6f) dir2 = Vector2.right;
+            dir2.Normalize();
+            float margin = W * 0.12f;
+            var c = new Vector2(W / 2f, H / 2f);
+            float kx = (W / 2f - margin) / Mathf.Max(1e-4f, Mathf.Abs(dir2.x)), ky = (H / 2f - margin * 1.6f) / Mathf.Max(1e-4f, Mathf.Abs(dir2.y));
+            var edge = c + new Vector2(dir2.x, -dir2.y) * Mathf.Min(kx, ky);   // GUI 的 y 向下
+            float ang = Mathf.Atan2(-dir2.y, dir2.x) * Mathf.Rad2Deg;
+            string arrow = ang > -22.5f && ang <= 22.5f ? "➡" : ang > 22.5f && ang <= 67.5f ? "↘" : ang > 67.5f && ang <= 112.5f ? "⬇" : ang > 112.5f && ang <= 157.5f ? "↙"
+                : ang > 157.5f || ang <= -157.5f ? "⬅" : ang > -157.5f && ang <= -112.5f ? "↖" : ang > -112.5f && ang <= -67.5f ? "⬆" : "↗";
+            string back = local.z < 0f ? "（身後）" : "";
+            var r = new Rect(edge.x - W * 0.17f, edge.y - lh * 0.75f, W * 0.34f, lh * 1.5f);
+            float pulse = 0.75f + 0.25f * Mathf.Sin(Time.time * 6f);
+            UiKit.Card(r, 0.6f * pulse, col, 0.9f);
+            UiKit.Text(new Rect(r.x + 4, r.y + 2, r.width - 8, r.height * 0.55f), $"{arrow} {nm}", fsS, col, TextAnchor.MiddleCenter, true);
+            UiKit.Text(new Rect(r.x + 4, r.y + r.height * 0.5f, r.width - 8, r.height * 0.45f), $"{best:F1}m{back}", fsS, Color.white, TextAnchor.MiddleCenter);
         }
 
         /// <summary>法師詠唱中：畫面中央畫出要照著畫的符文軌跡（起點有圓點、箭頭表示方向）</summary>
