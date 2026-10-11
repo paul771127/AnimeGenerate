@@ -1877,10 +1877,11 @@ namespace SpellDuel
                 float leftT = Mathf.Max(0f, me.armedUntil - now), need = me.armed.rangeMax;
                 UiKit.Pill(H * 0.31f, $"🗡 {me.armed.name}伏擊中：靠近到 {need:0.#}m 內自動出手（{battle.Distance:F1}m・剩 {leftT:F1} 秒）", fs, me.armed.color, pillW);
             }
-            if (en.armed != null && en.Alive)
+            bool pvp = NetMode && !coop;   // 真人對戰：不提示怎麼躲
+            if (en.armed != null && en.Alive && !pvp)
                 UiKit.Pill(H * 0.37f, $"⚠ 敵人伏擊中！保持距離（> {en.armed.rangeMax:0.#}m）", fs, new Color(1f, 0.4f, 0.45f), pillW);
             // 閃避提示：敵人攻擊蓄力過半時告訴你怎麼躲
-            if (en.charging != null && en.Alive && en.charging.type == SkillType.Projectile && battle.ChargeProgress(en) >= 0.5f)
+            if (!pvp && en.charging != null && en.Alive && en.charging.type == SkillType.Projectile && battle.ChargeProgress(en) >= 0.5f)
             {
                 var ecs = en.charging;
                 string tip = ecs.areaRadius > 0f ? $"⚠ {ecs.name}：走出 Boss 周圍的紅圈！" : ecs.fromAbove ? $"⚠ {ecs.name}：落下時離開紅圈！" : ecs.duckable ? $"⚠ {ecs.name}：↓ 蹲下躲！" : $"⚠ {ecs.name}：快速側跨閃開！";
