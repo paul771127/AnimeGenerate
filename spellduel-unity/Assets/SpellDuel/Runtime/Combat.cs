@@ -102,7 +102,7 @@ namespace SpellDuel
         public readonly List<Projectile> projectiles = new List<Projectile>();
         public readonly List<Trap> traps = new List<Trap>();
         public readonly List<BurnZone> burns = new List<BurnZone>();
-        public const float MeteorDropHeight = 6f, BurnRadius = 1.5f, BurnDuration = 10f, BurnDps = 5f;
+        public const float MeteorDropHeight = 6f, BurnRadius = 1.5f, BurnDuration = 10f, BurnDps = 6.5f;
         readonly System.Random rng = new System.Random();
         public float chargeTimeout = 7f;
         public const float AmbushWindow = 5f;   // 伏擊狀態持續秒數
