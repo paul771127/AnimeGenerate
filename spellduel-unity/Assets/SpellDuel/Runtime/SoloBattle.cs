@@ -249,6 +249,7 @@ namespace SpellDuel
             battle.OnTrapPlaced += t => NetSend?.Invoke(new Msg { t = "trap2", id = t.id, k = t.skill.id, p = t.pos, s = t.armAt - battle.now });
             battle.OnTrapGone += id => NetSend?.Invoke(new Msg { t = "trapgone", id = id });
             battle.OnDispel += (c, r) => NetSend?.Invoke(new Msg { t = "dispel", p = c, rad = r });
+            battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = id, ok = theirs });
             ai = null;
             remoteAnchor = new GameObject("Remote Anchor").transform;
             lastEnemyFeet = en.Feet; lastEnemyHp = en.hp; enemyDeadShown = false;
@@ -304,6 +305,7 @@ namespace SpellDuel
                 battle.OnTrapPlaced += t => NetSend?.Invoke(new Msg { t = "trap2", id = t.id, k = t.skill.id, p = t.pos, s = t.armAt - battle.now });
                 battle.OnTrapGone += id => NetSend?.Invoke(new Msg { t = "trapgone", id = id });
                 battle.OnDispel += (c, r) => NetSend?.Invoke(new Msg { t = "dispel", p = c, rad = r });
+                battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = id, ok = theirs });
                 battle.OnMinionHit += (id, dmg, sk) => NetSend?.Invoke(new Msg { t = "mhit", id = id, dmg = dmg, k = sk.id, e = battle.LastProcs });
             }
             // Boss 出生點：場地內、離玩家們夠遠的地方（隊友端先放在遠處，等主機的位置）
@@ -457,7 +459,8 @@ namespace SpellDuel
                         }
                         else
                         {
-                            // 主機判定 Boss 打到我
+                            // 主機判定 Boss 打到我（我已經斬開的那發不算）
+                            if (!isTrap && battle.WasSliced(m.id)) break;
                             battle.RemoveRemoteProjectile(m.id);
                             battle.ApplyRemoteHit(hs, m.dmg, m.p, isTrap);
                             NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp) });
@@ -660,6 +663,7 @@ namespace SpellDuel
                     return;
             }
             if (battle == null || !NetMode) return;
+            if (m.t == "slice") { battle.ApplyRemoteSlice(m.id, m.ok); return; }   // 劍士斬開了法術
             if (coop) { OnNetCoop(m); return; }
             switch (m.t)
             {
@@ -674,6 +678,7 @@ namespace SpellDuel
                     if (Skills.All.TryGetValue(m.k, out var hs))
                     {
                         bool isTrap = m.id < 0;
+                        if (!isTrap && battle.WasSliced(m.id)) break;   // 我已經斬開的那發不算
                         if (isTrap) battle.RemoveRemoteTrap(-m.id); else battle.RemoveRemoteProjectile(m.id);
                         bool countered = battle.ApplyRemoteHit(hs, m.dmg, m.p, isTrap);
                         NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp), ok = countered });
@@ -1065,7 +1070,7 @@ namespace SpellDuel
         {
             switch (kind)
             {
-                case "hit": case "trap": case "mitigate": case "effect": case "counter": case "buff": case "heal": case "trapSet":
+                case "hit": case "trap": case "mitigate": case "effect": case "counter": case "buff": case "heal": case "trapSet": case "slice":
                     if (!string.IsNullOrEmpty(text)) floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time });
                     if (kind == "hit" || kind == "trap") { Burst(at, c); SpellFx.Impact(kind == "hit" ? myClass : "", c, WorldFrame.FromWorld(at), 1f); }
                     // 音效＋震動：打中敵人（傷害越高越重）、格擋、回復、增益、陷阱
@@ -1080,6 +1085,7 @@ namespace SpellDuel
                             Kick(d >= 30f ? 10f : 4f, d >= 30f ? 0.09f : 0.03f);
                             break;
                         }
+                        case "slice": Burst(at, c); Sfx.Play("block", 1f, 1.3f); Sfx.Play("cast_swordsman", 0.6f); Haptics.Play(Haptics.Kind.Medium); Kick(4f, 0.04f); break;
                         case "mitigate": case "counter": Sfx.Play("block"); Haptics.Play(Haptics.Kind.Medium); Kick(5f, 0.05f); break;
                         case "heal": Sfx.Play("heal"); break;
                         case "buff": Sfx.Play("cast_priest", 0.6f); break;

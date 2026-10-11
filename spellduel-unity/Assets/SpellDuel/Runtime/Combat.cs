@@ -25,6 +25,7 @@ namespace SpellDuel
         public readonly Dictionary<string, float> cooldownUntil = new Dictionary<string, float>();
         public SkillDef charging; public float chargeStart, chargeDelay;
         public float blockUntil, blockReduce, shieldUntil, counterUntil, snaredUntil, blindUntil;
+        public float sliceUntil;        // 劍士斬擊：這段時間內會斬開正面 1m 內飛來的法球
         public int shieldLeft;
         // 刺客的近身技能：放招後進入「伏擊」，時限內靠近到射程內就自動出手
         public SkillDef armed; public float armedUntil;
@@ -599,6 +600,7 @@ namespace SpellDuel
             f.mp -= s.cost;
             f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul;
             f.charging = null;
+            if (s.id == "slash") { f.sliceUntil = now + SliceWindow; SliceNow(f); }
 
             if (s.releaseNear)
             {
@@ -799,6 +801,58 @@ namespace SpellDuel
             UpdateBurns(dt);
         }
 
+        // ------------------------------------------------------------ 劍士斬擊：斬開飛向自己正面的法球
+        public const float SliceRange = 1f, SliceWindow = 0.3f;
+        const float SliceCos = 0.34f;   // 正面 ±70°
+        public event Action<int, bool> OnSlice;   // 斬開了有連線的法球：id、是不是對方那支手機的法術（true＝請對方移除它自己的）
+        readonly HashSet<int> slicedRemote = new HashSet<int>();
+        /// <summary>這發對手的法術已經被我斬開（之後才到的命中結果要忽略）</summary>
+        public bool WasSliced(int id) => slicedRemote.Contains(id);
+
+        bool Hostile(Fighter a, Fighter b) => a != null && b != null && (a == enemy || a.isMinion) != (b == enemy || b.isMinion);
+
+        /// <summary>可以被斬開的：直線飛行的法術（從天而降、地裂、橫掃這類範圍攻擊不行）</summary>
+        public static bool Sliceable(SkillDef s) => s.type == SkillType.Projectile && !s.fromAbove && s.areaRadius <= 0f && s.originHeight <= 0f;
+
+        bool InSliceArc(Fighter f, Vector3 pos)
+        {
+            var d = pos - f.Chest;
+            if (Mathf.Abs(d.y) > SliceRange) return false;
+            d.y = 0f;
+            float m = d.magnitude;
+            if (m > SliceRange) return false;
+            return m < 0.15f || Vector3.Dot(d / m, Fighter.Flat(f.forward)) >= SliceCos;
+        }
+
+        bool TrySlice(Projectile p)
+        {
+            if (!p.alive || !Sliceable(p.skill)) return false;
+            foreach (var f in new[] { player, enemy })
+            {
+                if (f == null || !f.Alive || f.sliceUntil <= now || !Hostile(f, p.owner)) continue;
+                if (!InSliceArc(f, p.pos)) continue;
+                p.alive = false;
+                Emit("slice", p.pos, p.skill.color, $"斬開 {p.skill.name}！");
+                if (p.remote) { slicedRemote.Add(p.id); OnSlice?.Invoke(p.id, true); }
+                else if (remoteEnemy || ally != null) OnSlice?.Invoke(p.id, false);
+                return true;
+            }
+            return false;
+        }
+
+        void SliceNow(Fighter f) { foreach (var p in projectiles) TrySlice(p); }   // 放招當下已經在範圍內的
+
+        /// <summary>另一支手機斬開了法術：mine＝是我發出的那發</summary>
+        public void ApplyRemoteSlice(int id, bool mine)
+        {
+            foreach (var p in projectiles)
+                if (p.alive && p.id == id && p.remote != mine)
+                {
+                    p.alive = false;
+                    Emit("slice", p.pos, p.skill.color, "被斬開了！");
+                }
+        }
+
         void UpdateProjectiles(float dt)
         {
             // 用索引走訪：反擊會在迴圈中新增「打回去的法術」，不能用 foreach（會丟例外）；新增的下一幀才開始飛
@@ -814,6 +868,7 @@ namespace SpellDuel
                 for (int k = 0; k < sub && p.alive; k++)
                 {
                     Advance(p, step / sub);
+                    if (TrySlice(p)) break;
                     // 隕石落地：留下火海（我方的才判定傷害；對手的只顯示）
                     if (p.skill.id == "meteor" && p.pos.y <= 0.05f)
                     {
