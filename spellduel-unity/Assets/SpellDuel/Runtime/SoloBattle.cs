@@ -112,7 +112,7 @@ namespace SpellDuel
         readonly Dictionary<Fighter, float> minionLastHp = new Dictionary<Fighter, float>();
         readonly HashSet<Fighter> minionWinding = new HashSet<Fighter>();
         string bossWindup, bossChargingId; float nextBossState, lastBossHp;
-        public const int BossHpSolo = 500, BossHpCoop = 800;
+        public const int BossHpSolo = 400;   // 合作時再乘上人數倍率（每多一人 +30%）
         Fighter Ally => battle?.ally;
 
         // 電腦難度：0 簡單、1 普通、2 困難（電腦出招慢／瞄得不準／少防禦，玩家受到的傷害也打折）
@@ -282,8 +282,9 @@ namespace SpellDuel
             var bossSkills = new List<string>(bc.defaultLoadout);
             if (endlessMode) bossSkills.Remove("b_summon");
             var boss = new Fighter(bc.name, bc, bossSkills, false) { bodyRadius = 0.75f };
-            boss.maxHp = Mathf.RoundToInt((coopMode ? BossHpCoop : BossHpSolo) * BossHpFor(difficulty)); boss.hp = boss.maxHp;
-            me.damageTakenMul = DamageTakenFor(difficulty);
+            float party = coopMode ? 1.3f : 1f;   // 參與人數倍率：每多一人，敵人血量與攻擊力 +30%
+            boss.maxHp = Mathf.RoundToInt(BossHpSolo * party * BossHpFor(difficulty)); boss.hp = boss.maxHp;
+            me.damageTakenMul = DamageTakenFor(difficulty) * party;   // 敵人攻擊力 +30%＝自己受到的傷害 ×1.3
             SyncPlayer(me);
             battle = new Battle(me, boss);
             battle.OnEvent += OnBattleEvent;
@@ -315,7 +316,7 @@ namespace SpellDuel
                 bossAi.SetDifficulty(difficulty);
                 if (endlessMode)
                 {
-                    battle.bossBaseHp = 400f * BossHpFor(difficulty);
+                    battle.bossBaseHp = 300f * BossHpFor(difficulty);
                     battle.edgePoint = FarSpawnPoint;
                     battle.bossPoint = EdgeSpawnPoint;
                     battle.OnBossSpawn += w => bossAi.Respawn(Mathf.Max(0.7f, 1f - 0.06f * w));

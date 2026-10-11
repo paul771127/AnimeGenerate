@@ -186,7 +186,7 @@ namespace SpellDuel
         // 敵人更強（血量、傷害、速度），而且解鎖新的小怪種類（火焰射手 → 岩石衝鋒獸 → 自爆小鬼）。
         public bool endless;
         public int wave, kills, bossKills;
-        public float nextBossAt, nextMinionAt, bossBaseHp = 400f;
+        public float nextBossAt, nextMinionAt, bossBaseHp = 300f;
         public const float BossInterval = 60f;
         public Func<Vector3> edgePoint;          // 小怪出生點：離所有玩家 15m 以上（可以在場地外，再走進來）
         public Func<Vector3> bossPoint;          // Boss 出生點：場地邊緣附近（沒設定就用 edgePoint）
@@ -205,7 +205,9 @@ namespace SpellDuel
         /// <summary>升到下一級需要的累積經驗：40、110、210、340…</summary>
         public static int XpForLevel(int level) => 40 * (level - 1) + 15 * (level - 1) * (level - 1) + 0;
         public static int LevelOf(int xp) { int l = 1; while (xp >= XpForLevel(l + 1)) l++; return l; }
-        public float HpMul => 1f + 0.35f * wave;
+        /// <summary>參與人數倍率：每多一位玩家，敵人的血量與攻擊力 +30%</summary>
+        public float PartyMul => 1f + 0.3f * ((ally != null ? 2 : 1) - 1);
+        public float HpMul => (1f + 0.25f * wave) * PartyMul;
         public float DmgMul => 0.7f + 0.2f * wave;
         public const float EndlessRegen = 0.5f;   // 無盡模式：玩家每秒自然回血
         public float SpeedMul => Mathf.Min(1.5f, 1f + 0.05f * wave);
@@ -238,7 +240,7 @@ namespace SpellDuel
         void SpawnBoss()
         {
             var at = (bossPoint ?? edgePoint)();
-            enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.5f * wave) * (ally != null ? 1.6f : 1f));
+            enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.4f * wave) * PartyMul);
             enemy.hp = enemy.maxHp;
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
             enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f;
@@ -629,7 +631,7 @@ namespace SpellDuel
                             at = f.Feet + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
                             if (minionInside == null || minionInside(at)) break;
                         }
-                        SpawnMinion(at);
+                        SpawnMinion(at, 0, 0, PartyMul);
                     }
                     Emit("summon", f.Feet, s.color, n > 0 ? $"召喚了 {n} 隻小怪！" : null);
                     return;
