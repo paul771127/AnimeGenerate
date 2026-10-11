@@ -45,6 +45,9 @@ namespace SpellDuel
         readonly Func<Vector3, float> edgeDistance;
         readonly System.Random rnd;
         float nextThink = 3f, nextRetarget;
+        // 熔岩躍擊：蓄滿後在 LeapTime 秒內跳到落點，落地才判定傷害
+        public const float LeapTime = 0.6f;
+        float leapT = -1f; Vector3 leapFrom;
 
         public BossAI(Battle battle, Fighter boss, Func<Vector3, bool> insideArea, Func<Vector3, float> distanceToEdge, int seed)
         {
@@ -68,6 +71,22 @@ namespace SpellDuel
             var tgt = me.target ?? b.player;
             me.forward = Fighter.Flat(tgt.head - me.head);
             if (me.snaredUntil > b.now) { Status = "被定身"; return; }
+            if (leapT >= 0f)
+            {
+                // 跳躍中：沿直線飛到落點，落地＝重擊
+                leapT += dt;
+                float k = Mathf.Clamp01(leapT / LeapTime);
+                var p = Vector3.Lerp(leapFrom, me.aimPoint, k);
+                me.head = new Vector3(p.x, me.head.y, p.z);
+                if (k >= 1f)
+                {
+                    leapT = -1f;
+                    if (b.TryRelease(me, me.forward, me.Feet, out _)) Status = "";
+                    me.charging = null;
+                    nextThink = b.now + 0.8f * thinkScale;   // 落地後很快接近身攻擊
+                }
+                return;
+            }
             Move(dt, tgt);
 
             if (me.charging != null) { TryRelease(tgt); return; }
@@ -87,13 +106,18 @@ namespace SpellDuel
                     "b_bolt" => d > 2.5f ? 3f : 1f,
                     "b_rain" => 2f,
                     "b_summon" => b.minions.Count < 2 ? 5f : 0f,   // 小怪少於 2 隻就常召喚
+                    "b_leap" => d > 5.5f ? 4f : 0f,                 // 離得遠：跳過去
                     _ => 1f,
                 };
                 for (int i = 0; i < Mathf.RoundToInt(w * 2f); i++) options.Add(s);
             }
             if (options.Count == 0) return;
             var pick = options[rnd.Next(options.Count)];
-            if (b.TryChant(me, pick, out _)) Status = $"準備 {pick.name}";
+            if (b.TryChant(me, pick, out _))
+            {
+                Status = $"準備 {pick.name}";
+                if (pick.id == "b_leap") { var at = tgt.Feet; at.y = 0f; me.aimPoint = at; }   // 落點＝目標現在的位置
+            }
         }
 
         /// <summary>挑目標：只有一位玩家就打他；兩位時打近的，偶爾換人（被打很痛的也會被盯上）</summary>
@@ -117,6 +141,7 @@ namespace SpellDuel
         {
             var s = me.charging;
             if (b.now - me.chargeStart < s.charge * me.chargeScale) return;
+            if (s.id == "b_leap") { leapT = 0f; leapFrom = me.Feet; me.forward = Fighter.Flat(me.aimPoint - me.Feet); Status = $"{s.name}！"; return; }
             // 射程外：繼續蓄著、走過去（地裂除外：時間到就砸，玩家已經走出紅圈就打空）
             if (s.type == SkillType.Projectile && s.areaRadius <= 0f && Battle.FlatDistance(me.Feet, tgt.Feet) > s.rangeMax) { Status = $"{s.name}：逼近中"; return; }
             var hand = me.head + Fighter.Flat(me.forward) * 0.25f + Vector3.down * 0.25f;

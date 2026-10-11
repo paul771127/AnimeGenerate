@@ -424,7 +424,7 @@ namespace SpellDuel
             nextBossState = Time.time + 0.1f;
             var b = battle.enemy;
             int e = (bossAi != null && bossAi.Enraged ? 1 : 0) | (b.target == battle.ally ? 2 : 0);
-            NetSend?.Invoke(new Msg { t = "boss", p = b.head, d = b.forward, hp = Mathf.CeilToInt(b.hp), dmg = b.maxHp, k = b.charging != null ? b.charging.id : "", s = battle.ChargeProgress(b), e = e,
+            NetSend?.Invoke(new Msg { t = "boss", p = b.head, d = b.forward, hp = Mathf.CeilToInt(b.hp), dmg = b.maxHp, k = b.charging != null ? b.charging.id : "", s = battle.ChargeProgress(b), e = e, pts = b.charging != null && b.charging.id == "b_leap" ? new[] { b.aimPoint } : null,
                 ks = endless ? new[] { battle.wave.ToString(), battle.WaveRemaining.ToString(), battle.kills.ToString(), battle.bossKills.ToString(), battle.xp.ToString(), battle.waveTotal.ToString() } : null });
             // 小怪：位置與「編號,血量,最大血量,預備中」
             var ms = battle.minions;
@@ -507,6 +507,7 @@ namespace SpellDuel
                     {
                         var b = battle.enemy;
                         b.head = m.p; b.forward = m.d;
+                        if (m.pts != null && m.pts.Length > 0) b.aimPoint = m.pts[0];   // 熔岩躍擊的落點
                         b.hp = m.hp; if (m.dmg > 0) b.maxHp = m.dmg;
                         if (m.ks != null && m.ks.Length >= 4)
                         {
@@ -1303,7 +1304,8 @@ namespace SpellDuel
                     if (!slamGo) slamGo = Prim(PrimitiveType.Cylinder, new Color(1f, 0.1f, 0.05f, 0.3f), true);
                     float rr = en.charging.areaRadius + Fighter.BodyRadius;
                     slamGo.SetActive(true);
-                    slamGo.transform.position = WorldFrame.FromWorld(en.Feet + Vector3.up * 0.02f);
+                    var slamC = en.charging.id == "b_leap" ? en.aimPoint : en.Feet;   // 熔岩躍擊：紅圈在落點
+                    slamGo.transform.position = WorldFrame.FromWorld(new Vector3(slamC.x, 0.02f, slamC.z));
                     slamGo.transform.localScale = new Vector3(rr * 2f, 0.003f, rr * 2f);
                     float pr = battle.ChargeProgress(en), k = 0.5f + 0.5f * Mathf.Sin(Time.time * (6f + 12f * pr));
                     slamGo.GetComponent<Renderer>().material.color = new Color(1f, 0.12f, 0.05f, (0.15f + 0.3f * pr) * (0.6f + 0.4f * k));
@@ -1886,7 +1888,7 @@ namespace SpellDuel
             if (!pvp && en.charging != null && en.Alive && en.charging.type == SkillType.Projectile && battle.ChargeProgress(en) >= 0.5f)
             {
                 var ecs = en.charging;
-                string tip = ecs.areaRadius > 0f ? $"⚠ {ecs.name}：走出 Boss 周圍的紅圈！" : ecs.fromAbove ? $"⚠ {ecs.name}：落下時離開紅圈！" : ecs.duckable ? $"⚠ {ecs.name}：↓ 蹲下躲！" : $"⚠ {ecs.name}：快速側跨閃開！";
+                string tip = ecs.id == "b_leap" ? $"⚠ {ecs.name}：Boss 要跳過來了，離開落點紅圈！" : ecs.areaRadius > 0f ? $"⚠ {ecs.name}：走出 Boss 周圍的紅圈！" : ecs.fromAbove ? $"⚠ {ecs.name}：落下時離開紅圈！" : ecs.duckable ? $"⚠ {ecs.name}：↓ 蹲下躲！" : $"⚠ {ecs.name}：快速側跨閃開！";
                 if (coop && en.target != null && en.target != me) tip = $"⚠ Boss 準備對隊友使出 {ecs.name}";
                 UiKit.Pill(H * 0.43f, tip, fs, ecs.duckable ? new Color(1f, 0.7f, 0.3f) : new Color(1f, 0.45f, 0.45f), pillW);
             }
