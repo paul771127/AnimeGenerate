@@ -38,6 +38,8 @@ namespace SpellDuel
         public bool isMinion; public int minionId; public float windupUntil, attackReadyAt;
         public int minionKind;                 // 0 近戰小鬼、1 火焰射手、2 岩石衝鋒獸、3 自爆小鬼
         public float dmgMul = 1f, speedMul = 1f;   // 無盡模式：越後面的波次越強
+        // 無盡模式的玩家升級：攻擊力、冷卻、爆擊率、攻擊距離、命中時附加灼燒／中毒／冰凍的機率
+        public float atkMul = 1f, cdMul = 1f, critChance, rangeMul = 1f, burnChance, poisonChance, freezeChance;
         // 牧師的守護：時限內受到的直接傷害按比例減少
         public float armorUntil, armorReduce;
         public readonly List<Dot> dots = new List<Dot>();
@@ -78,6 +80,8 @@ namespace SpellDuel
         public int damage;
         public EffectKind effect; public float effectDps, effectDur;
         public bool reflected, alive = true;
+        public bool crit;               // 爆擊（傷害 ×2）
+        public float rangeMul = 1f;     // 飛行距離倍率（無盡模式升級）
         public int id;
         public bool remote;          // 雙人：對手的法術（只顯示，命中由對手判定）
         // 弧線飛行（風刃）：沿直線前進的「基準點」＋往側邊的偏移 sin(π×進度)
@@ -195,6 +199,12 @@ namespace SpellDuel
             enemy.hp = 0f;                        // 一開始沒有 Boss
             nextBossAt = now + BossInterval; nextMinionAt = now + 4f;
         }
+        // 經驗值：小怪依種類、Boss 依波次；合作時兩人共用同一份經驗（各自選升級）
+        public int xp;
+        static readonly int[] MinionXp = { 10, 12, 25, 12 };
+        /// <summary>升到下一級需要的累積經驗：40、110、210、340…</summary>
+        public static int XpForLevel(int level) => 40 * (level - 1) + 15 * (level - 1) * (level - 1) + 0;
+        public static int LevelOf(int xp) { int l = 1; while (xp >= XpForLevel(l + 1)) l++; return l; }
         public float HpMul => 1f + 0.35f * wave;
         public float DmgMul => 0.7f + 0.2f * wave;
         public const float EndlessRegen = 0.5f;   // 無盡模式：玩家每秒自然回血
@@ -239,6 +249,7 @@ namespace SpellDuel
         void OnBossDown()
         {
             bossKills++; wave++;
+            xp += 80 * wave;
             // 獎勵：打倒 Boss 回復 30% 血量（隊友端看到波次增加時自己回）
             if (player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + player.maxHp * 0.3f);
             nextBossAt = now + BossInterval; nextMinionAt = now + 5f;
@@ -362,8 +373,10 @@ namespace SpellDuel
                 m.BodySegment(out var a, out var b);
                 if (DistancePointSegment(p.pos, a, b) >= p.skill.radius + m.bodyRadius) continue;
                 p.alive = false;
+                if (p.crit) Emit("crit", p.pos, p.skill.color, "爆擊！");
+                LastProcs = RollProcs(p.owner);
                 if (remoteEnemy) { Emit("hit", p.pos, p.skill.color, null); OnMinionHit?.Invoke(m.minionId, p.damage, p.skill); }
-                else ApplyDamageAndEffect(m, p.damage, p.effect, p.effectDps, p.effectDur, p.pos);
+                else { ApplyDamageAndEffect(m, p.damage, p.effect, p.effectDps, p.effectDur, p.pos); ApplyProcs(m, LastProcs, p.pos); }
                 return true;
             }
             return false;
@@ -473,7 +486,7 @@ namespace SpellDuel
         {
             if (s.type != SkillType.Projectile) return 0;
             float d = FlatDistance(f.head, Opponent(f).head);
-            if (d > s.rangeMax) return 1;
+            if (d > s.rangeMax * f.rangeMul) return 1;
             if (d < s.rangeMin) return -1;
             return 0;
         }
@@ -500,7 +513,7 @@ namespace SpellDuel
             }
 
             f.mp -= s.cost;
-            f.cooldownUntil[s.id] = now + s.cooldown;
+            f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul;
             f.charging = null;
 
             if (s.releaseNear)
@@ -650,6 +663,12 @@ namespace SpellDuel
         Projectile Spawn(Fighter owner, SkillDef s, Vector3 from, Vector3 dir, int dmg, EffectKind eff, float dps, float dur, bool reflected, float curveAmp = 0f, float pathLen = 0f)
         {
             var p = new Projectile { owner = owner, skill = s, pos = from, basePos = from, dir = dir.normalized, damage = dmg, effect = eff, effectDps = dps, effectDur = dur, reflected = reflected, id = nextId++ };
+            if (owner.atkMul != 1f || owner.critChance > 0f || owner.rangeMul != 1f)
+            {
+                p.damage = Mathf.RoundToInt(dmg * owner.atkMul);
+                if (owner.critChance > 0f && rng.NextDouble() < owner.critChance) { p.crit = true; p.damage *= 2; }
+                p.rangeMul = owner.rangeMul;
+            }
             if ((owner == enemy || owner.isMinion) && owner.target != null) p.target = owner.target;
             SetCurve(p, curveAmp, pathLen);
             projectiles.Add(p);
@@ -679,6 +698,16 @@ namespace SpellDuel
                 }
             }
             UpdateProjectiles(dt);
+            // 小怪身上的持續傷害（灼燒、中毒）
+            if (!remoteEnemy)
+                foreach (var m in minions)
+                    for (int i = m.dots.Count - 1; i >= 0; i--)
+                    {
+                        var d = m.dots[i];
+                        d.acc += dt;
+                        while (d.acc >= 1f && m.Alive) { d.acc -= 1f; Damage(m, d.dps, "dot", m.Chest); }
+                        if (d.until <= now) m.dots.RemoveAt(i);
+                    }
             UpdateMinions(dt);
             Time_dt = dt;
             UpdateEndless();
@@ -713,7 +742,7 @@ namespace SpellDuel
                     if (!target.Alive)
                     {
                         // 目標不在了（無盡模式 Boss 還沒出現）：只飛，飛完消失
-                        if (p.pos.y < 0f || p.traveled > p.skill.MaxTravel) p.alive = false;
+                        if (p.pos.y < 0f || p.traveled > p.skill.MaxTravel * p.rangeMul) p.alive = false;
                     }
                     else if (p.remote)
                     {
@@ -730,11 +759,13 @@ namespace SpellDuel
                         }
                         p.alive = false;
                         if (p.skill.id == "meteor" && !p.reflected) AddBurn(p, target.Feet);   // 直接砸中也留下火海
+                        if (p.crit) Emit("crit", p.pos, p.skill.color, "爆擊！");
+                        LastProcs = RollProcs(p.owner);
                         if (remoteEnemy && target == enemy) { Emit("hit", p.pos, p.skill.color, null); OnRemoteHit?.Invoke(p.skill, p.damage, p.pos, p.id); }
                         else if (target == ally) { Emit("allyhit", p.pos, p.skill.color, null); OnAllyHit?.Invoke(p.skill, p.damage, p.pos, p.id); }   // 主機：Boss 打到隊友
                         else Hit(target, p);
                     }
-                    else if (p.pos.y < 0f || p.traveled > p.skill.MaxTravel) { p.alive = false; Emit("miss", p.pos, p.skill.color, null); }
+                    else if (p.pos.y < 0f || p.traveled > p.skill.MaxTravel * p.rangeMul) { p.alive = false; Emit("miss", p.pos, p.skill.color, null); }
                 }
             }
             projectiles.RemoveAll(x => !x.alive);
@@ -832,6 +863,28 @@ namespace SpellDuel
                 return;
             }
             ApplyDamageAndEffect(target, p.damage, p.effect, p.effectDps, p.effectDur, p.pos);
+            ApplyProcs(target, LastProcs, p.pos);
+        }
+
+        // ------------------------------------------------------------ 命中附加效果（無盡模式升級）
+        /// <summary>最近一次命中擲出的附加效果（1 灼燒、2 中毒、4 冰凍）；合作隊友端送給主機用</summary>
+        public int LastProcs;
+        int RollProcs(Fighter attacker)
+        {
+            if (attacker == null) return 0;
+            int r = 0;
+            if (attacker.burnChance > 0f && rng.NextDouble() < attacker.burnChance) r |= 1;
+            if (attacker.poisonChance > 0f && rng.NextDouble() < attacker.poisonChance) r |= 2;
+            if (attacker.freezeChance > 0f && rng.NextDouble() < attacker.freezeChance) r |= 4;
+            return r;
+        }
+        /// <summary>套用附加效果：灼燒（每秒 5、4 秒）、中毒（每秒 3、6 秒）、冰凍（定身 1.5 秒，打斷蓄力）</summary>
+        public void ApplyProcs(Fighter target, int procs, Vector3 at)
+        {
+            if (procs == 0 || target == null || !target.Alive) return;
+            if ((procs & 1) != 0) { target.dots.Add(new Fighter.Dot { dps = 5f, until = now + 4f }); Emit("effect", at, new Color(1f, 0.5f, 0.15f), "灼燒"); }
+            if ((procs & 2) != 0) { target.dots.Add(new Fighter.Dot { dps = 3f, until = now + 6f }); Emit("effect", at, Color.green, "中毒"); }
+            if ((procs & 4) != 0) { target.snaredUntil = now + 1.5f; target.charging = null; target.windupUntil = 0f; Emit("effect", at, new Color(0.6f, 0.9f, 1f), "冰凍"); }
         }
 
         void ApplyDamageAndEffect(Fighter target, int damage, EffectKind eff, float dps, float dur, Vector3 at)
@@ -865,7 +918,7 @@ namespace SpellDuel
             Emit(kind == "dot" || kind == "burn" ? kind : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");
             if (!f.Alive)
             {
-                if (f.isMinion) { kills++; Emit("miniondie", f.Chest, Color.white, null); }
+                if (f.isMinion) { kills++; if (endless) xp += Mathf.RoundToInt(MinionXp[f.minionKind] * (1f + 0.2f * wave)); Emit("miniondie", f.Chest, Color.white, null); }
                 else if (f.isPlayer) Emit(ally != null && ally.Alive ? "down" : "lose", f.Chest, Color.white, null);
                 else if (endless && f == enemy) OnBossDown();
                 else Emit("win", f.Chest, Color.white, null);

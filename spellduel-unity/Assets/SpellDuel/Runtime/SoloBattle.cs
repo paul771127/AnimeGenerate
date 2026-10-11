@@ -38,6 +38,74 @@ namespace SpellDuel
         // 無盡模式：endless＝目前這場；netEndless／remoteEndless＝雙人選擇畫面上兩邊選的
         bool endless, netEndless, remoteEndless;
         float bossHideAt = -1f; int lastWaveSeen; bool bossAliveShown;
+
+        // ---------------------------------------------------------------- 無盡模式：升級
+        // 經驗值升級，每升一級選一樣：攻擊力、蓄力速度、HP、冷卻、爆擊率、攻擊距離、灼燒／中毒／冰凍機率（每次 +5%）
+        static readonly string[] UpgradeNames = { "攻擊力", "蓄力速度", "最大 HP", "冷卻時間", "爆擊率", "攻擊距離", "灼燒機率", "中毒機率", "冰凍機率" };
+        static readonly string[] UpgradeIcons = { "⚔", "⚡", "❤", "⏱", "💥", "🎯", "🔥", "☠", "❄" };
+        static readonly Color[] UpgradeColors = {
+            new Color(1f, 0.45f, 0.35f), new Color(1f, 0.85f, 0.3f), new Color(0.4f, 0.95f, 0.5f), new Color(0.5f, 0.75f, 1f), new Color(1f, 0.6f, 0.2f),
+            new Color(0.6f, 0.9f, 1f), new Color(1f, 0.5f, 0.15f), new Color(0.45f, 0.9f, 0.35f), new Color(0.65f, 0.9f, 1f) };
+        readonly int[] upgrades = new int[9];
+        int upgradesTaken, lastAutoOpenLevel = 1;
+        bool upgradeOpen;
+        int PendingUpgrades => endless && battle != null ? Battle.LevelOf(battle.xp) - 1 - upgradesTaken : 0;
+
+        /// <summary>升級後的數值說明（現在 → 下一級）</summary>
+        string UpgradeText(int i, int lv) => i switch
+        {
+            0 => $"傷害 +{lv * 15}%",
+            1 => $"蓄力快 {Mathf.RoundToInt((1f - Mathf.Pow(0.88f, lv)) * 100)}%",
+            2 => $"HP +{lv * 20}",
+            3 => $"冷卻 -{Mathf.RoundToInt((1f - Mathf.Pow(0.9f, lv)) * 100)}%",
+            4 => $"爆擊 {lv * 8}%（×2 傷害）",
+            5 => $"距離 +{lv * 15}%",
+            6 => $"灼燒 {lv * 5}%",
+            7 => $"中毒 {lv * 5}%",
+            _ => $"冰凍 {lv * 5}%",
+        };
+
+        void ApplyUpgrade(int i)
+        {
+            if (PendingUpgrades <= 0 || battle == null) return;
+            upgrades[i]++; upgradesTaken++;
+            var me = Me;
+            switch (i)
+            {
+                case 0: me.atkMul = 1f + 0.15f * upgrades[0]; break;
+                case 1: me.chargeScale = Mathf.Pow(0.88f, upgrades[1]); break;
+                case 2: me.maxHp += 20; me.hp = Mathf.Min(me.maxHp, me.hp + 20); break;
+                case 3: me.cdMul = Mathf.Pow(0.9f, upgrades[3]); break;
+                case 4: me.critChance = Mathf.Min(0.8f, 0.08f * upgrades[4]); break;
+                case 5: me.rangeMul = 1f + 0.15f * upgrades[5]; break;
+                case 6: me.burnChance = 0.05f * upgrades[6]; break;
+                case 7: me.poisonChance = 0.05f * upgrades[7]; break;
+                case 8: me.freezeChance = 0.05f * upgrades[8]; break;
+            }
+            Sfx.Play("charged"); Haptics.Play(Haptics.Kind.Success);
+            floaters.Add(new Floater { text = $"⬆ {UpgradeNames[i]}：{UpgradeText(i, upgrades[i])}", color = UpgradeColors[i], born = Time.time, screen = true });
+            if (PendingUpgrades <= 0) upgradeOpen = false;
+        }
+
+        /// <summary>升級選單（單人時暫停戰鬥；合作時不暫停）</summary>
+        void DrawUpgradePanel(float W, float H, float pad, float gap, int fs, int fsS)
+        {
+            var me = Me;
+            int lv = Battle.LevelOf(battle.xp);
+            var r = new Rect(pad, H * 0.18f, W - pad * 2, H * 0.62f);
+            UiKit.Card(r, 0.9f, new Color(0.75f, 0.45f, 1f), 0.9f);
+            UiKit.Text(new Rect(r.x + gap, r.y + gap, r.width - gap * 2, fs * 1.6f), $"⬆ 升級！Lv {lv}（可選 {PendingUpgrades} 次）— 選一樣", Mathf.RoundToInt(fs * 1.15f), Color.white, TextAnchor.MiddleCenter, true);
+            float top = r.y + gap + fs * 1.8f, bw = (r.width - gap * 4) / 3f, bh = (r.yMax - gap * 2 - fs * 1.6f - top - gap * 2) / 3f;
+            for (int i = 0; i < 9; i++)
+            {
+                var br = new Rect(r.x + gap + (i % 3) * (bw + gap), top + (i / 3) * (bh + gap), bw, bh);
+                if (UiKit.Button(br, "", fsS, false, UpgradeColors[i])) ApplyUpgrade(i);
+                UiKit.Text(new Rect(br.x + 4, br.y + bh * 0.06f, br.width - 8, bh * 0.4f), $"{UpgradeIcons[i]} {UpgradeNames[i]}", fs, UpgradeColors[i], TextAnchor.MiddleCenter, true);
+                UiKit.Text(new Rect(br.x + 4, br.y + bh * 0.48f, br.width - 8, bh * 0.25f), upgrades[i] > 0 ? $"Lv{upgrades[i]}：{UpgradeText(i, upgrades[i])}" : "還沒升級", fsS, new Color(0.8f, 0.82f, 0.9f), TextAnchor.MiddleCenter);
+                UiKit.Text(new Rect(br.x + 4, br.y + bh * 0.72f, br.width - 8, bh * 0.25f), $"→ {UpgradeText(i, upgrades[i] + 1)}", fsS, new Color(1f, 0.95f, 0.6f), TextAnchor.MiddleCenter, true);
+            }
+            if (UiKit.Button(new Rect(r.x + r.width * 0.3f, r.yMax - gap - fs * 1.5f, r.width * 0.4f, fs * 1.5f), coop ? "稍後再選" : "稍後再選（繼續戰鬥）", fsS)) upgradeOpen = false;
+        }
         int NetModeCode => coop ? (netEndless ? 2 : 1) : 0;
         BossRig bossRig; BossAI bossAi; GameObject slamGo;
         readonly Dictionary<Fighter, MinionRig> minionGo = new Dictionary<Fighter, MinionRig>();
@@ -207,6 +275,7 @@ namespace SpellDuel
             EndBattle();
             bossMode = true; coop = coopMode; endless = endlessMode; dummyMode = false; enemyClassUsed = "boss";
             dummyDamage = 0f; dummyHits = 0; lastWaveSeen = 0; bossHideAt = -1f; bossAliveShown = false;
+            System.Array.Clear(upgrades, 0, upgrades.Length); upgradesTaken = 0; upgradeOpen = false; lastAutoOpenLevel = 1;
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
             var bc = Skills.Classes["boss"];
             // 無盡模式的 Boss 不召喚小怪（小怪由場地邊緣陸續冒出）
@@ -227,12 +296,12 @@ namespace SpellDuel
                 battle.remoteEnemy = !NetIsHost;   // 隊友端：Boss 是主機的代理
                 battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.basePos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected, rad = p.curveAmp, s = p.pathLen, e = p.owner == battle.enemy || p.owner.isMinion ? 1 : 0 });
                 battle.OnAllyHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });
-                battle.OnRemoteHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });
+                battle.OnRemoteHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at, e = battle.LastProcs });
                 battle.OnRemoteBurn += (sk, dmg, at) => NetSend?.Invoke(new Msg { t = "burn2", k = sk.id, dmg = Mathf.RoundToInt(dmg), p = at });
                 battle.OnTrapPlaced += t => NetSend?.Invoke(new Msg { t = "trap2", id = t.id, k = t.skill.id, p = t.pos, s = t.armAt - battle.now });
                 battle.OnTrapGone += id => NetSend?.Invoke(new Msg { t = "trapgone", id = id });
                 battle.OnDispel += (c, r) => NetSend?.Invoke(new Msg { t = "dispel", p = c, rad = r });
-                battle.OnMinionHit += (id, dmg, sk) => NetSend?.Invoke(new Msg { t = "mhit", id = id, dmg = dmg, k = sk.id });
+                battle.OnMinionHit += (id, dmg, sk) => NetSend?.Invoke(new Msg { t = "mhit", id = id, dmg = dmg, k = sk.id, e = battle.LastProcs });
             }
             // Boss 出生點：場地內、離玩家們夠遠的地方（隊友端先放在遠處，等主機的位置）
             boss.head = host ? BossSpawnPoint(me, battle.ally) : new Vector3(0f, BossRig.Height, 0f);
@@ -350,7 +419,7 @@ namespace SpellDuel
             var b = battle.enemy;
             int e = (bossAi != null && bossAi.Enraged ? 1 : 0) | (b.target == battle.ally ? 2 : 0);
             NetSend?.Invoke(new Msg { t = "boss", p = b.head, d = b.forward, hp = Mathf.CeilToInt(b.hp), dmg = b.maxHp, k = b.charging != null ? b.charging.id : "", s = battle.ChargeProgress(b), e = e,
-                ks = endless ? new[] { battle.wave.ToString(), Mathf.Max(0f, battle.nextBossAt - battle.now).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture), battle.kills.ToString(), battle.bossKills.ToString() } : null });
+                ks = endless ? new[] { battle.wave.ToString(), Mathf.Max(0f, battle.nextBossAt - battle.now).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture), battle.kills.ToString(), battle.bossKills.ToString(), battle.xp.ToString() } : null });
             // 小怪：位置與「編號,血量,最大血量,預備中」
             var ms = battle.minions;
             var pts = new Vector3[ms.Count]; var ks = new string[ms.Count];
@@ -381,6 +450,7 @@ namespace SpellDuel
                             // 隊友打到 Boss
                             if (isTrap) battle.RemoveRemoteTrap(-m.id); else battle.RemoveRemoteProjectile(m.id);
                             battle.ApplyHitOnEnemy(hs, m.dmg, m.p, isTrap);
+                            battle.ApplyProcs(battle.enemy, m.e, m.p);
                         }
                         else
                         {
@@ -431,6 +501,7 @@ namespace SpellDuel
                             battle.wave = wv;
                             if (float.TryParse(m.ks[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var nb)) battle.nextBossAt = battle.now + nb;
                             int.TryParse(m.ks[2], out battle.kills); int.TryParse(m.ks[3], out battle.bossKills);
+                            if (m.ks.Length >= 5) int.TryParse(m.ks[4], out battle.xp);   // 隊友共用經驗值
                         }
                         if (!string.IsNullOrEmpty(m.k) && Skills.All.TryGetValue(m.k, out var bs))
                         {
@@ -446,7 +517,11 @@ namespace SpellDuel
                     break;
                 case "mhit":
                     // 隊友打到小怪（主機扣血）
-                    if (NetIsHost) battle.ApplyHitOnMinion(m.id, m.dmg, Skills.All.TryGetValue(m.k ?? "", out var mk) ? mk : null);
+                    if (NetIsHost)
+                    {
+                        battle.ApplyHitOnMinion(m.id, m.dmg, Skills.All.TryGetValue(m.k ?? "", out var mk) ? mk : null);
+                        var mm = battle.MinionById(m.id); if (mm != null) battle.ApplyProcs(mm, m.e, mm.Chest);   // 隊友升級的附加效果
+                    }
                     break;
                 case "mins":
                     if (NetIsHost || m.ks == null || m.pts == null) break;
@@ -721,6 +796,13 @@ namespace SpellDuel
             SyncPlayer(Me);
             float dt = Mathf.Min(Time.deltaTime, 0.1f);
             if (Time.time < hitStopUntil) dt = 0f;   // 命中停頓
+            if (endless && !coop && PendingUpgrades > 0 && Battle.LevelOf(battle.xp) > lastAutoOpenLevel)
+            {
+                // 單人：升級時自動打開選單（每升一級只自動開一次）
+                lastAutoOpenLevel = Battle.LevelOf(battle.xp); upgradeOpen = true;
+                Sfx.Play("win", 0.6f); Haptics.Play(Haptics.Kind.Success);
+            }
+            if (endless && upgradeOpen && !coop) dt = 0f;   // 單人無盡：選升級時暫停
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
             shake = Mathf.Max(0f, shake - Time.deltaTime * Mathf.Max(40f, shake * 8f));
             // 蓄滿：叮一聲＋輕震動
@@ -1678,7 +1760,7 @@ namespace SpellDuel
             if (me.crouching) UiKit.Pill(H * 0.7f, "↓ 蹲下中", fsS, new Color(0.6f, 0.9f, 1f), pillW);
             if (en.charging != null && en.charging.self == SelfKind.Summon && en.Alive) UiKit.Pill(H * 0.43f, "⚠ Boss 準備召喚小怪！", fs, new Color(1f, 0.55f, 0.2f), pillW);
             int nMin = 0; foreach (var mn in battle.minions) if (mn.Alive) nMin++;
-            if (nMin > 0) UiKit.Pill(top + lh * 3.6f + (coop ? lh : 0f), $"👹 小怪 ×{nMin}", fsS, new Color(1f, 0.6f, 0.3f), W * 0.4f);
+            if (nMin > 0) UiKit.Pill(top + lh * 3.6f + (coop ? lh : 0f) + (endless ? lh * (PendingUpgrades > 0 ? 2.0f : 0.8f) : 0f), $"👹 小怪 ×{nMin}", fsS, new Color(1f, 0.6f, 0.3f), W * 0.4f);
 
             // 準星（畫面中央）：所有技能都朝這裡放；蓄力完成（或符文畫好）時用技能顏色脈動
             {
@@ -1795,6 +1877,22 @@ namespace SpellDuel
                 UiKit.Text(new Rect(tx, ty, tw, rowH), s.name + vtag, fs, tc, TextAnchor.MiddleCenter, true);
                 UiKit.Text(new Rect(tx, ty + rowH, tw, rowH), $"🎤→{HandGesture.ReleaseLabel(s)}", fsS, usable ? new Color(1f, 0.85f, 0.5f) : tc, TextAnchor.MiddleCenter);
                 UiKit.Text(new Rect(tx, ty + rowH * 2, tw, rowH), cd > 0 ? $"冷卻 {cd:F1}s" : $"MP {s.cost}", fsS, cd > 0 ? new Color(0.7f, 0.7f, 0.7f) : new Color(0.6f, 0.8f, 1f), TextAnchor.MiddleCenter);
+            }
+
+            // 無盡模式：等級與經驗條；可以升級時顯示按鈕（單人會自動打開選單）
+            if (endless && phase == Phase.Fighting)
+            {
+                int lv = Battle.LevelOf(battle.xp);
+                int cur = Battle.XpForLevel(lv), next = Battle.XpForLevel(lv + 1);
+                float xy = top + lh * 2.9f + gap + (coop && Ally != null ? lh * 0.9f + gap * 0.5f : 0f);
+                UiKit.Bar(new Rect(pad, xy, W - pad * 2, lh * 0.45f), (battle.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f), $"Lv {lv}　{battle.xp - cur}/{next - cur}", fsS);
+                if (PendingUpgrades > 0 && !upgradeOpen)
+                {
+                    float bw2 = W * 0.5f;
+                    if (UiKit.Button(new Rect((W - bw2) / 2f, xy + lh * 0.55f, bw2, lh * 1.1f), $"⬆ 可以升級 ×{PendingUpgrades}（點我）", fsS, true, new Color(0.75f, 0.45f, 1f)))
+                        upgradeOpen = true;
+                }
+                if (upgradeOpen) DrawUpgradePanel(W, H, pad, gap, fs, fsS);
             }
 
             if (frozen)
