@@ -36,6 +36,9 @@ namespace SpellDuel
         // 合作：主機跑 Boss AI 與 Boss 血量，定時送 "boss" 狀態；隊友的法術打到 Boss → hit2 給主機；Boss 打到隊友 → 主機送 hit2。
         bool bossMode, coop, remoteCoop, resultShown, bossSeen;
         BossRig bossRig; BossAI bossAi; GameObject slamGo;
+        readonly Dictionary<Fighter, MinionRig> minionGo = new Dictionary<Fighter, MinionRig>();
+        readonly Dictionary<Fighter, float> minionLastHp = new Dictionary<Fighter, float>();
+        readonly HashSet<Fighter> minionWinding = new HashSet<Fighter>();
         string bossWindup, bossChargingId; float nextBossState, lastBossHp;
         public const int BossHpSolo = 500, BossHpCoop = 800;
         Fighter Ally => battle?.ally;
@@ -222,6 +225,7 @@ namespace SpellDuel
                 battle.OnTrapPlaced += t => NetSend?.Invoke(new Msg { t = "trap2", id = t.id, k = t.skill.id, p = t.pos, s = t.armAt - battle.now });
                 battle.OnTrapGone += id => NetSend?.Invoke(new Msg { t = "trapgone", id = id });
                 battle.OnDispel += (c, r) => NetSend?.Invoke(new Msg { t = "dispel", p = c, rad = r });
+                battle.OnMinionHit += (id, dmg, sk) => NetSend?.Invoke(new Msg { t = "mhit", id = id, dmg = dmg, k = sk.id });
             }
             // Boss 出生點：場地內、離玩家們夠遠的地方（隊友端先放在遠處，等主機的位置）
             boss.head = host ? BossSpawnPoint(me, battle.ally) : new Vector3(0f, BossRig.Height, 0f);
@@ -233,6 +237,8 @@ namespace SpellDuel
                 bossAi = new BossAI(battle, boss, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
                 bossAi.OnEnrage += OnBossEnrage;
                 bossAi.SetDifficulty(difficulty);
+                battle.minionInside = p => area.Inside(WorldFrame.FromWorld(p)) && area.DistanceToEdge(WorldFrame.FromWorld(p)) >= 0.3f;
+                battle.minionSpeed = difficulty == 0 ? 0.75f : difficulty == 1 ? 0.95f : 1.15f;
             }
             ai = null;
             bossRig = BossRig.Create();
@@ -282,6 +288,11 @@ namespace SpellDuel
             var b = battle.enemy;
             int e = (bossAi != null && bossAi.Enraged ? 1 : 0) | (b.target == battle.ally ? 2 : 0);
             NetSend?.Invoke(new Msg { t = "boss", p = b.head, d = b.forward, hp = Mathf.CeilToInt(b.hp), k = b.charging != null ? b.charging.id : "", s = battle.ChargeProgress(b), e = e });
+            // 小怪：位置與「編號,血量,最大血量,預備中」
+            var ms = battle.minions;
+            var pts = new Vector3[ms.Count]; var ks = new string[ms.Count];
+            for (int i = 0; i < ms.Count; i++) { pts[i] = ms[i].head; ks[i] = $"{ms[i].minionId},{Mathf.CeilToInt(ms[i].hp)},{ms[i].maxHp},{(ms[i].windupUntil > 0f ? 1 : 0)}"; }
+            NetSend?.Invoke(new Msg { t = "mins", pts = pts, ks = ks });
         }
 
         /// <summary>合作模式的網路訊息</summary>
@@ -361,6 +372,30 @@ namespace SpellDuel
                         if (!bossSeen) { bossSeen = true; lastEnemyFeet = b.Feet; if (bossRig) bossRig.SetVisible(true); }
                     }
                     break;
+                case "mhit":
+                    // 隊友打到小怪（主機扣血）
+                    if (NetIsHost) battle.ApplyHitOnMinion(m.id, m.dmg, Skills.All.TryGetValue(m.k ?? "", out var mk) ? mk : null);
+                    break;
+                case "mins":
+                    if (NetIsHost || m.ks == null || m.pts == null) break;
+                    {
+                        // 隊友端：更新小怪代理（新的就生出來，沒有的就移除）
+                        var seen = new HashSet<int>();
+                        for (int i = 0; i < m.ks.Length && i < m.pts.Length; i++)
+                        {
+                            var parts = m.ks[i].Split(',');
+                            if (parts.Length < 4 || !int.TryParse(parts[0], out var mid)) continue;
+                            seen.Add(mid);
+                            var mf = battle.MinionById(mid) ?? battle.SpawnMinion(new Vector3(m.pts[i].x, 0f, m.pts[i].z), mid);
+                            mf.forward = Fighter.Flat(m.pts[i] - mf.head) != Vector3.zero ? Fighter.Flat(m.pts[i] - mf.head) : mf.forward;
+                            mf.head = m.pts[i];
+                            if (float.TryParse(parts[1], out var mhp)) mf.hp = mhp;
+                            if (int.TryParse(parts[2], out var mmax)) mf.maxHp = mmax;
+                            mf.windupUntil = parts[3] == "1" ? battle.now + 1f : 0f;
+                        }
+                        foreach (var mf in battle.minions) if (!seen.Contains(mf.minionId)) mf.hp = 0f;
+                    }
+                    break;
                 case "bfx":
                     // 主機的 Boss 出手：播動作與特效
                     if (bossRig) bossRig.Attack(m.k);
@@ -370,6 +405,40 @@ namespace SpellDuel
             }
         }
         bool bossEnragedShown;
+
+        /// <summary>小怪的外觀：新的就生出來、跟著位置走、預備動作／出手／被打／倒下</summary>
+        void UpdateMinionVisuals(float dt)
+        {
+            if (battle == null) return;
+            var live = new HashSet<Fighter>();
+            foreach (var m in battle.minions)
+            {
+                if (!m.Alive) continue;
+                live.Add(m);
+                if (!minionGo.TryGetValue(m, out var rig) || !rig)
+                {
+                    rig = MinionRig.Create();
+                    minionGo[m] = rig; minionLastHp[m] = m.hp;
+                    rig.transform.position = WorldFrame.FromWorld(m.Feet);
+                }
+                var oldPos = rig.transform.position;
+                var newPos = WorldFrame.FromWorld(m.Feet);
+                var f = WorldFrame.DirFromWorld(m.forward); f.y = 0f;
+                rig.transform.SetPositionAndRotation(newPos, f.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(f.normalized, Vector3.up) : rig.transform.rotation);
+                rig.MoveSpeed = Mathf.Lerp(rig.MoveSpeed, (newPos - oldPos).magnitude / dt, 0.25f);
+                bool winding = m.windupUntil > 0f;
+                if (winding && !minionWinding.Contains(m)) { minionWinding.Add(m); rig.Windup(Skills.All["m_claw"].charge); }
+                else if (!winding && minionWinding.Contains(m)) { minionWinding.Remove(m); rig.Attack(); }
+                if (minionLastHp.TryGetValue(m, out var lh) && m.hp < lh - 0.01f) rig.PlayHit();
+                minionLastHp[m] = m.hp;
+            }
+            foreach (var kv in new List<KeyValuePair<Fighter, MinionRig>>(minionGo))
+                if (!live.Contains(kv.Key))
+                {
+                    if (kv.Value) { kv.Value.SetDead(true); Destroy(kv.Value.gameObject, 1.2f); }
+                    minionGo.Remove(kv.Key); minionLastHp.Remove(kv.Key); minionWinding.Remove(kv.Key);
+                }
+        }
 
         /// <summary>地裂重擊的特效：地面衝擊波、爆炸聲、離得近就震動</summary>
         void BossSlamFx(Vector3 feetW)
@@ -541,6 +610,8 @@ namespace SpellDuel
             if (warnLine) Destroy(warnLine);
             if (slamGo) Destroy(slamGo);
             if (bossRig) Destroy(bossRig.gameObject);
+            foreach (var mr in minionGo.Values) if (mr) Destroy(mr.gameObject);
+            minionGo.Clear(); minionLastHp.Clear(); minionWinding.Clear();
             bossRig = null; bossAi = null; bossMode = false; bossWindup = null; resultShown = false; bossSeen = false;
             standY = -1f; moveHist.Clear();
             projGo.Clear(); trapGo.Clear(); burnGo.Clear(); floaters.Clear();
@@ -901,6 +972,24 @@ namespace SpellDuel
                 case "slam":
                     BossSlamFx(at);
                     break;
+                case "summon":
+                    Sfx.Play("roar", 0.8f, 1.2f);
+                    if (!string.IsNullOrEmpty(text)) Say("🔥 " + text + "（小怪會追著你抓，先清掉牠們！）", 3f);
+                    break;
+                case "minionspawn":
+                    MinionRig.SpawnFx(WorldFrame.FromWorld(at));
+                    Sfx.Play("boom", 0.4f, 1.6f);
+                    break;
+                case "miniondie":
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 0.9f, text = "擊倒小怪", color = new Color(1f, 0.7f, 0.3f), born = Time.time });
+                    Sfx.Play("trap", 0.7f, 0.8f);
+                    break;
+                case "minionwindup":
+                    if (Battle.FlatDistance(at, Me.Feet) < 2f) { Sfx.Play("warn", 0.4f, 1.3f); Haptics.Play(Haptics.Kind.Light); }
+                    break;
+                case "minionattack":
+                    Sfx.Play("cast_assassin", 0.5f, 0.8f);
+                    break;
                 case "dispel":
                     // 抗拒法環：地上的法陣＋衝擊波
                     SpellFx.DispelRing(WorldFrame.FromWorld(at), Skills.All["dispel"].areaRadius, c);
@@ -963,6 +1052,7 @@ namespace SpellDuel
                 }
                 else if (slamGo) slamGo.SetActive(false);
             }
+            UpdateMinionVisuals(dt);
             lastEnemyFeet = en.Feet;
             if (en.hp < lastEnemyHp - 0.01f) { if (enemyRig) enemyRig.PlayHit(); if (dummyMode) { dummyDamage += lastEnemyHp - en.hp; dummyHits++; } }
             lastEnemyHp = en.hp;
@@ -1394,6 +1484,16 @@ namespace SpellDuel
                 if (en.charging != null) UiKit.Text(new Rect(r.x - W * 0.12f, r.y - lh, r.width + W * 0.24f, lh * 0.95f), $"⚠ {en.charging.name}", fs, new Color(1f, 0.75f, 0.4f), TextAnchor.LowerCenter, true);
             }
 
+            // 小怪頭上的小血條
+            if (battle.minions.Count > 0)
+                foreach (var mn in battle.minions)
+                {
+                    if (!mn.Alive) continue;
+                    var ms = cam.WorldToScreenPoint(WorldFrame.FromWorld(mn.Feet + Vector3.up * (MinionRig.Height + 0.2f)));
+                    if (ms.z <= 0) continue;
+                    UiKit.Bar(new Rect(ms.x - W * 0.06f, H - ms.y, W * 0.12f, lh * 0.22f), mn.hp / mn.maxHp, mn.windupUntil > 0f ? new Color(1f, 0.2f, 0.1f) : new Color(1f, 0.55f, 0.2f), "", fsS);
+                }
+
             // 飄字
             foreach (var f in floaters)
             {
@@ -1439,6 +1539,9 @@ namespace SpellDuel
                 UiKit.Pill(H * 0.43f, tip, fs, ecs.duckable ? new Color(1f, 0.7f, 0.3f) : new Color(1f, 0.45f, 0.45f), pillW);
             }
             if (me.crouching) UiKit.Pill(H * 0.7f, "↓ 蹲下中", fsS, new Color(0.6f, 0.9f, 1f), pillW);
+            if (en.charging != null && en.charging.self == SelfKind.Summon && en.Alive) UiKit.Pill(H * 0.43f, "⚠ Boss 準備召喚小怪！", fs, new Color(1f, 0.55f, 0.2f), pillW);
+            int nMin = 0; foreach (var mn in battle.minions) if (mn.Alive) nMin++;
+            if (nMin > 0) UiKit.Pill(top + lh * 3.6f + (coop ? lh : 0f), $"👹 小怪 ×{nMin}", fsS, new Color(1f, 0.6f, 0.3f), W * 0.4f);
 
             // 準星（畫面中央）：所有技能都朝這裡放；蓄力完成（或符文畫好）時用技能顏色脈動
             {

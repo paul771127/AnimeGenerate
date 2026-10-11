@@ -74,6 +74,7 @@ namespace SpellDuel
                     "b_sweep" => d < 5.5f ? 3f : 0.3f,
                     "b_bolt" => d > 2.5f ? 3f : 1f,
                     "b_rain" => 2f,
+                    "b_summon" => b.minions.Count < 2 ? 5f : 0f,   // 小怪少於 2 隻就常召喚
                     _ => 1f,
                 };
                 for (int i = 0; i < Mathf.RoundToInt(w * 2f); i++) options.Add(s);
@@ -105,7 +106,7 @@ namespace SpellDuel
             var s = me.charging;
             if (b.now - me.chargeStart < s.charge * me.chargeScale) return;
             // 射程外：繼續蓄著、走過去（地裂除外：時間到就砸，玩家已經走出紅圈就打空）
-            if (s.areaRadius <= 0f && Battle.FlatDistance(me.Feet, tgt.Feet) > s.rangeMax) { Status = $"{s.name}：逼近中"; return; }
+            if (s.type == SkillType.Projectile && s.areaRadius <= 0f && Battle.FlatDistance(me.Feet, tgt.Feet) > s.rangeMax) { Status = $"{s.name}：逼近中"; return; }
             var hand = me.head + Fighter.Flat(me.forward) * 0.25f + Vector3.down * 0.25f;
             var dir = (tgt.Chest - hand).normalized;
             dir = Battle.RotateY(dir, Rand(-3f, 3f));
