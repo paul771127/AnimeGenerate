@@ -184,14 +184,16 @@ namespace SpellDuel
         public int wave, kills, bossKills;
         public float nextBossAt, nextMinionAt, bossBaseHp = 400f;
         public const float BossInterval = 60f;
-        public Func<Vector3> edgePoint;          // 場地邊緣、離玩家夠遠的隨機點（場地座標）
+        public Func<Vector3> edgePoint;          // 小怪出生點：離所有玩家 15m 以上（可以在場地外，再走進來）
+        public Func<Vector3> bossPoint;          // Boss 出生點：場地邊緣附近（沒設定就用 edgePoint）
+        public const float MinionSpawnDistance = 15f;
         public event Action<int> OnBossSpawn;    // 無盡模式 Boss 出現（波次）
 
         public void StartEndless()
         {
             endless = true; wave = 0; kills = 0; bossKills = 0;
             enemy.hp = 0f;                        // 一開始沒有 Boss
-            nextBossAt = now + BossInterval; nextMinionAt = now + 2f;
+            nextBossAt = now + BossInterval; nextMinionAt = now + 4f;
         }
         public float HpMul => 1f + 0.35f * wave;
         public float DmgMul => 0.7f + 0.2f * wave;
@@ -206,10 +208,11 @@ namespace SpellDuel
             if (!player.Alive && (ally == null || !ally.Alive)) return;
             if (!enemy.Alive && now >= nextBossAt) SpawnBoss();
             if (enemy.Alive) return;   // Boss 在場：小怪不再增加
-            int maxAlive = Mathf.Min(12, 3 + wave * 2) + (ally != null ? 2 : 0);
+            int maxAlive = Mathf.Min(10, 3 + wave * 2) + (ally != null ? 2 : 0);
             if (now < nextMinionAt || minions.Count >= maxAlive) return;
             SpawnMinion(edgePoint(), 0, PickMinionKind(), HpMul, DmgMul, SpeedMul);
-            nextMinionAt = now + Mathf.Max(1.5f, 4.5f - wave * 0.4f) * (ally != null ? 0.75f : 1f);
+            // 出怪間隔：第 1 波 8 秒一隻，之後每波快 0.7 秒，最快 4 秒（合作快 25%）
+            nextMinionAt = now + Mathf.Max(4f, 8f - wave * 0.7f) * (ally != null ? 0.75f : 1f);
         }
 
         int PickMinionKind()
@@ -224,7 +227,7 @@ namespace SpellDuel
 
         void SpawnBoss()
         {
-            var at = edgePoint();
+            var at = (bossPoint ?? edgePoint)();
             enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.5f * wave) * (ally != null ? 1.6f : 1f));
             enemy.hp = enemy.maxHp;
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
@@ -238,7 +241,7 @@ namespace SpellDuel
             bossKills++; wave++;
             // 獎勵：打倒 Boss 回復 30% 血量（隊友端看到波次增加時自己回）
             if (player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + player.maxHp * 0.3f);
-            nextBossAt = now + BossInterval; nextMinionAt = now + 3f;
+            nextBossAt = now + BossInterval; nextMinionAt = now + 5f;
             Emit("bossdown", enemy.Feet, enemy.cls.color, $"打倒 Boss！進入第 {wave + 1} 波（敵人變強了）");
         }
         public Fighter MinionById(int id) => minions.Find(m => m.minionId == id);
@@ -295,7 +298,8 @@ namespace SpellDuel
                     if (od < 0.6f) step += (od > 1e-3f ? away / od : new Vector3(0.1f, 0f, 0f)) * (0.6f - od) * 2f * dt;
                 }
                 var next = m.Feet + step;
-                if (minionInside == null || minionInside(next)) m.head = new Vector3(next.x, m.head.y, next.z);
+                // 場地外出生的小怪：還在場地外時也可以走（朝玩家走進場地）；進到場地後就不會再走出去
+                if (minionInside == null || minionInside(next) || !minionInside(m.Feet)) m.head = new Vector3(next.x, m.head.y, next.z);
             }
         }
 

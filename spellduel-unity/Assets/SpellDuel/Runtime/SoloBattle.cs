@@ -247,7 +247,8 @@ namespace SpellDuel
                 if (endlessMode)
                 {
                     battle.bossBaseHp = 400f * BossHpFor(difficulty);
-                    battle.edgePoint = EdgeSpawnPoint;
+                    battle.edgePoint = FarSpawnPoint;
+                    battle.bossPoint = EdgeSpawnPoint;
                     battle.OnBossSpawn += w => bossAi.Respawn(Mathf.Max(0.7f, 1f - 0.06f * w));
                     battle.StartEndless();
                 }
@@ -272,7 +273,24 @@ namespace SpellDuel
             else Say(coopMode ? $"🔥 合作討伐：熔岩巨像（HP {boss.maxHp}）— 和隊友一起打倒它！" : $"🔥 Boss：熔岩巨像（HP {boss.maxHp}）— 看紅圈、紅線閃避！", 4f);
         }
 
-        /// <summary>無盡模式：場地邊緣往內 0.6m 的隨機點，離玩家至少 3m（場地座標）</summary>
+        /// <summary>無盡模式的小怪出生點：離所有玩家至少 15m 的隨機方向（可以在場地外，小怪會走進來）</summary>
+        Vector3 FarSpawnPoint()
+        {
+            var center = Me.Feet;
+            if (Ally != null) center = (Me.Feet + Ally.Feet) / 2f;
+            for (int tries = 0; tries < 16; tries++)
+            {
+                float a = UnityEngine.Random.value * Mathf.PI * 2f;
+                float r = Battle.MinionSpawnDistance + 1f + UnityEngine.Random.value * 3f;
+                var p = center + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
+                float d = Battle.FlatDistance(p, Me.Feet);
+                if (Ally != null) d = Mathf.Min(d, Battle.FlatDistance(p, Ally.Feet));
+                if (d >= Battle.MinionSpawnDistance) return p;
+            }
+            return center + Fighter.Flat(Me.forward) * (Battle.MinionSpawnDistance + 3f);
+        }
+
+        /// <summary>無盡模式的 Boss 出生點：場地邊緣往內 0.6m 的隨機點，離玩家至少 3m（場地座標）</summary>
         Vector3 EdgeSpawnPoint()
         {
             var poly = area.Polygon;
