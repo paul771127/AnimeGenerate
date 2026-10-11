@@ -56,6 +56,38 @@ jobs:
           path: ${{ env.PROJECT_PATH }}/Library
           key: Library-Android-${{ hashFiles('spellduel-unity/Packages/manifest.json', 'spellduel-unity/ProjectSettings/ProjectVersion.txt') }}
           restore-keys: Library-Android-
+      # 固定的 Android 簽章金鑰：每次建置都用同一把，手機才能直接覆蓋更新。
+      # 有設定 secrets.ANDROID_KEYSTORE_BASE64（＋ANDROID_KEYSTORE_PASS）就用它；否則第一次自動產生一把，存在 Actions 快取裡重複使用。
+      - name: 簽章金鑰（快取）
+        uses: actions/cache@v4
+        with:
+          path: ci-keystore
+          key: spellduel-android-keystore-v1
+      - name: 準備簽章金鑰
+        id: keystore
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+        run: |
+          set -eo pipefail
+          mkdir -p ci-keystore
+          PASS="${KS_PASS:-spellduel-ci}"
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > ci-keystore/spellduel.keystore
+            echo "使用 secrets 裡的簽章金鑰"
+          elif [ ! -f ci-keystore/spellduel.keystore ]; then
+            keytool -genkeypair -keystore ci-keystore/spellduel.keystore -alias spellduel -keyalg RSA -keysize 2048 \
+              -validity 10000 -storepass "$PASS" -keypass "$PASS" -dname "CN=SpellDuel, O=SpellDuel"
+            echo "產生新的簽章金鑰（之後都用這一把）"
+          else
+            echo "沿用快取裡的簽章金鑰"
+          fi
+          keytool -list -v -keystore ci-keystore/spellduel.keystore -storepass "$PASS" | grep -m1 "SHA256:" || true
+          B64=$(base64 -w0 ci-keystore/spellduel.keystore)
+          echo "::add-mask::$B64"
+          echo "::add-mask::$PASS"
+          echo "b64=$B64" >> "$GITHUB_OUTPUT"
+          echo "pass=$PASS" >> "$GITHUB_OUTPUT"
       - uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -67,6 +99,16 @@ jobs:
           buildName: SpellDuel
           buildMethod: ${{ env.BUILD_METHOD }}
           allowDirtyBuild: true
+          androidKeystoreName: spellduel.keystore
+          androidKeystoreBase64: ${{ steps.keystore.outputs.b64 }}
+          androidKeystorePass: ${{ steps.keystore.outputs.pass }}
+          androidKeyaliasName: spellduel
+          androidKeyaliasPass: ${{ steps.keystore.outputs.pass }}
+      - name: 檢查 APK 簽章
+        run: |
+          APK=$(ls build/Android/*.apk | head -1)
+          SIGNER=$(ls /usr/local/lib/android/sdk/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
+          if [ -n "$SIGNER" ]; then "$SIGNER" verify --print-certs "$APK" | grep -m2 -E "SHA-256|DN" || true; fi
       - uses: actions/upload-artifact@v4
         with:
           name: SpellDuel-Android-APK

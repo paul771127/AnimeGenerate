@@ -32,6 +32,7 @@ namespace SpellDuel.EditorTools
             if (EnsureArKitDefine())
                 Debug.LogWarning("[SpellDuel] 剛加入 UNITY_XR_ARKIT_LOADER_ENABLED；ARKit 原生程式庫要在下一次開啟 Unity 才會生效。雲端請先執行 ConfigureCI。");
             string scene = CreateScene();
+            if (target == BuildTarget.Android) ApplyAndroidKeystore();
 
             string path = Arg("-customBuildPath");
             if (string.IsNullOrEmpty(path))
@@ -80,6 +81,33 @@ namespace SpellDuel.EditorTools
             PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.iOS, string.IsNullOrEmpty(defines) ? define : defines + ";" + define);
             AssetDatabase.SaveAssets();
             return true;
+        }
+
+        /// <summary>
+        /// Android 固定簽章：每次雲端建置都用同一把金鑰簽名，手機才能直接「更新」安裝
+        /// （沒設定的話 Unity 每台建置機器各用一把臨時的除錯金鑰，簽章不同 → 手機拒絕覆蓋安裝）。
+        /// 金鑰由 GameCI 依 androidKeystoreName / Pass / KeyaliasName / Pass 參數或環境變數提供。
+        /// </summary>
+        static void ApplyAndroidKeystore()
+        {
+            string Get(string arg, string env) { var v = Arg(arg); return string.IsNullOrEmpty(v) ? Environment.GetEnvironmentVariable(env) : v; }
+            string name = Get("-androidKeystoreName", "ANDROID_KEYSTORE_NAME");
+            string pass = Get("-androidKeystorePass", "ANDROID_KEYSTORE_PASS");
+            string alias = Get("-androidKeyaliasName", "ANDROID_KEYALIAS_NAME");
+            string apass = Get("-androidKeyaliasPass", "ANDROID_KEYALIAS_PASS");
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(alias))
+            {
+                Debug.LogWarning("[SpellDuel] 沒有提供簽章金鑰：使用除錯金鑰（每台機器不同，手機上要先解除安裝舊版）");
+                return;
+            }
+            string path = File.Exists(name) ? Path.GetFullPath(name) : name;
+            if (!File.Exists(path)) Debug.LogWarning($"[SpellDuel] 找不到簽章金鑰檔 {path}");
+            PlayerSettings.Android.useCustomKeystore = true;
+            PlayerSettings.Android.keystoreName = path;
+            PlayerSettings.Android.keystorePass = pass;
+            PlayerSettings.Android.keyaliasName = alias;
+            PlayerSettings.Android.keyaliasPass = string.IsNullOrEmpty(apass) ? pass : apass;
+            Debug.Log($"[SpellDuel] Android 使用固定簽章金鑰：{Path.GetFileName(path)}（alias {alias}）");
         }
 
         static string Arg(string name)
