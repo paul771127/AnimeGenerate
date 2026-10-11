@@ -596,7 +596,7 @@ namespace SpellDuel
                 if (aiming)
                 {
                     var tgt = m.target ?? Me;
-                    if (!line) { line = Prim(PrimitiveType.Cube, new Color(1f, 0.2f, 0.6f, 0.5f)); aimLines[m] = line; }
+                    if (!line) { line = Prim(PrimitiveType.Cube, new Color(1f, 0.2f, 0.6f, 0.5f), true); aimLines[m] = line; }
                     var a = m.head; var b = tgt.Chest; var dv = b - a; float len = Mathf.Max(0.1f, dv.magnitude);
                     line.SetActive(true);
                     line.transform.position = WorldFrame.FromWorld((a + b) / 2f);
@@ -1284,7 +1284,7 @@ namespace SpellDuel
                 bool slamming = en.charging != null && en.charging.areaRadius > 0f && en.Alive;
                 if (slamming)
                 {
-                    if (!slamGo) slamGo = Prim(PrimitiveType.Cylinder, new Color(1f, 0.1f, 0.05f, 0.3f));
+                    if (!slamGo) slamGo = Prim(PrimitiveType.Cylinder, new Color(1f, 0.1f, 0.05f, 0.3f), true);
                     float rr = en.charging.areaRadius + Fighter.BodyRadius;
                     slamGo.SetActive(true);
                     slamGo.transform.position = WorldFrame.FromWorld(en.Feet + Vector3.up * 0.02f);
@@ -1356,7 +1356,7 @@ namespace SpellDuel
             {
                 if (!burnGo.TryGetValue(z, out var go))
                 {
-                    go = Prim(PrimitiveType.Cylinder, new Color(1f, 0.35f, 0.05f, 0.45f));
+                    go = Prim(PrimitiveType.Cylinder, new Color(1f, 0.35f, 0.05f, 0.45f), true);
                     go.transform.localScale = new Vector3(z.radius * 2f, 0.004f, z.radius * 2f);
                     burnGo[z] = go;
                 }
@@ -1381,7 +1381,7 @@ namespace SpellDuel
                 var lineTo = En.target != null ? En.target : Me;
                 if (show)
                 {
-                    if (!warnLine) warnLine = Prim(PrimitiveType.Cube, new Color(1f, 0.15f, 0.15f, 0.4f));
+                    if (!warnLine) warnLine = Prim(PrimitiveType.Cube, new Color(1f, 0.15f, 0.15f, 0.4f), true);
                     var a = En.Feet; var b = lineTo.Feet; var d = b - a; d.y = 0f;
                     float len = Mathf.Max(0.1f, d.magnitude);
                     warnLine.SetActive(true);
@@ -1401,7 +1401,7 @@ namespace SpellDuel
                 liveLand.Add(p);
                 if (!landGo.TryGetValue(p, out var lg))
                 {
-                    lg = Prim(PrimitiveType.Cylinder, new Color(1f, 0.1f, 0.1f, 0.35f));
+                    lg = Prim(PrimitiveType.Cylinder, new Color(1f, 0.1f, 0.1f, 0.35f), true);
                     float lr = p.skill.id == "meteor" ? Battle.BurnRadius : p.skill.radius + Fighter.BodyRadius;
                     lg.transform.localScale = new Vector3(lr * 2f, 0.003f, lr * 2f);
                     landGo[p] = lg;
@@ -1419,7 +1419,7 @@ namespace SpellDuel
             {
                 if (!trapGo.TryGetValue(t, out var go))
                 {
-                    go = Prim(PrimitiveType.Cylinder, Color.gray);
+                    go = Prim(PrimitiveType.Cylinder, Color.gray, true);
                     go.transform.localScale = new Vector3(t.skill.radius * 2f, 0.005f, t.skill.radius * 2f);
                     trapGo[t] = go;
                 }
@@ -1474,12 +1474,28 @@ namespace SpellDuel
             if (go) Destroy(go);
         }
 
-        GameObject Prim(PrimitiveType type, Color c)
+        /// <summary>預警用（紅線、紅圈、陷阱、火海、瞄準線）：不做深度測試、最後才畫 → 敵人靠近時不會被敵人模型擋住</summary>
+        Material hintMat;
+        Material HintMat()
+        {
+            if (hintMat) return hintMat;
+            var sh = Shader.Find("UI/Default");
+            if (sh != null)
+            {
+                hintMat = new Material(sh);
+                hintMat.SetInt("unity_GUIZTestMode", (int)UnityEngine.Rendering.CompareFunction.Always);
+            }
+            else hintMat = new Material(mat);
+            hintMat.renderQueue = 3500;
+            return hintMat;
+        }
+
+        GameObject Prim(PrimitiveType type, Color c, bool onTop = false)
         {
             var go = GameObject.CreatePrimitive(type);
             Destroy(go.GetComponent<Collider>());
             var r = go.GetComponent<Renderer>();
-            r.material = mat;
+            r.material = onTop ? HintMat() : mat;
             r.material.color = c;
             return go;
         }
