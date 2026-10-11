@@ -60,7 +60,7 @@ namespace SpellDuel
         {
             var st = ReleaseOf(s);
             if (st == Style.Number) return $"比出數字 {NumberOf(s.id)}（{NumberFingers(NumberOf(s.id))}）放招";
-            if (s.cls == "archer") return "先握拳 → 再比五（五指張開）放箭";
+            if (s.cls == "archer") return $"先握拳 → 再比五（五指張開）{(s.type == SkillType.Projectile ? "放箭" : s.type == SkillType.Trap ? "設置陷阱" : "發動")}";
             return StyleHint(st);
         }
 

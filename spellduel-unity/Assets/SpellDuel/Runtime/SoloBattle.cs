@@ -1532,6 +1532,63 @@ namespace SpellDuel
         public void DrawGUI()
         {
             Styles();
+            // 技能說明視窗開著：底下的畫面照畫但不能按（GUI.enabled=false），說明視窗畫在最上面
+            bool infoOpen = infoSkill != null && Skills.All.ContainsKey(infoSkill);
+            if (infoOpen) GUI.enabled = false;
+            DrawScreens();
+            GUI.enabled = true;
+            if (infoOpen) DrawSkillInfo();
+        }
+
+        // ---------------------------------------------------------------- 技能詳細說明（點技能卡打開）
+        string infoSkill;          // 正在看說明的技能（null＝沒開）
+
+        void DrawSkillInfo()
+        {
+            var s = Skills.All[infoSkill];
+            float W = Screen.width, H = Screen.height;
+            var safe = Screen.safeArea;
+            float topY = H - safe.yMax, botY = H - safe.y;
+            int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.82f), fsL = Mathf.RoundToInt(fs * 1.3f);
+            float pad = W * 0.04f, gap = pad * 0.5f;
+            // 背景變暗；點視窗外面也會關掉
+            GUI.color = new Color(0f, 0f, 0f, 0.6f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
+            var r = new Rect(pad, topY + pad, W - pad * 2, botY - topY - pad * 2);
+            UiKit.Card(r, 0.94f, s.color, 0.9f);
+            float isz = fs * 4.2f;
+            var ir = new Rect(r.x + gap * 1.5f, r.y + gap * 1.5f, isz, isz);
+            GUI.DrawTexture(ir, SkillIcons.Get(s.id));
+            float tx = ir.xMax + gap * 1.5f, tw = r.xMax - tx - gap * 1.5f;
+            string clsName = Skills.Classes.TryGetValue(s.cls, out var cd) ? cd.name : "";
+            UiKit.Text(new Rect(tx, ir.y, tw, isz * 0.48f), s.name, fsL, Color.white, TextAnchor.MiddleLeft, true);
+            UiKit.Text(new Rect(tx, ir.y + isz * 0.48f, tw, isz * 0.26f), $"{clsName}・{SkillInfo.TypeName(s)}", fsS, s.color, TextAnchor.MiddleLeft, true);
+            UiKit.Text(new Rect(tx, ir.y + isz * 0.74f, tw, isz * 0.26f), SkillInfo.CostLine(s), fsS, new Color(0.75f, 0.85f, 1f));
+
+            bool inSetup = phase == Phase.Setup;
+            float bh = fs * 2.4f, by = r.yMax - gap * 1.5f - bh;
+            var body = new Rect(r.x + gap * 1.5f, ir.yMax + gap, r.width - gap * 3, by - gap - (ir.yMax + gap));
+            UiKit.Text(body, SkillInfo.Detail(s), fsS, new Color(0.92f, 0.94f, 1f), TextAnchor.UpperLeft, false, 0.5f);
+
+            if (inSetup && Skills.Classes[myClass].skills is var list && Array.IndexOf(list, s.id) >= 0)
+            {
+                bool on = myLoadout.Contains(s.id);
+                float bw = (r.width - gap * 4) / 2f;
+                if (UiKit.Button(new Rect(r.x + gap * 1.5f, by, bw, bh), on ? "移除這個技能" : myLoadout.Count >= 3 ? "換上這個技能" : "✔ 選這個技能", fs, !on, on ? new Color(1f, 0.5f, 0.45f) : s.color))
+                {
+                    if (on) myLoadout.Remove(s.id);
+                    else { if (myLoadout.Count >= 3) myLoadout.RemoveAt(0); myLoadout.Add(s.id); }
+                    infoSkill = null;
+                }
+                if (UiKit.Button(new Rect(r.x + gap * 2.5f + bw, by, bw, bh), "關閉", fs)) infoSkill = null;
+            }
+            else if (UiKit.Button(new Rect(r.x + gap * 1.5f, by, r.width - gap * 3, bh), "關閉", fs)) infoSkill = null;
+            // 點視窗外面：關閉
+            var e = Event.current;
+            if (e.type == EventType.MouseDown && !r.Contains(e.mousePosition)) { infoSkill = null; e.Use(); }
+        }
+
+        void DrawScreens()
+        {
             if (phase == Phase.Setup) DrawSetup();
             else if (phase == Phase.Fighting || phase == Phase.Over)
             {
@@ -1590,7 +1647,7 @@ namespace SpellDuel
             y += u * 1.5f + gap;
 
             // 技能卡片（2 欄）：圖示＋名稱／手勢→放招／數值
-            UiKit.Text(new Rect(pad, y, W - pad * 2, u), $"選 3 個技能（{myLoadout.Count}/3）　唸技能名稱＝詠唱 → 做動作＝放招", fsS, new Color(1f, 0.9f, 0.6f));
+            UiKit.Text(new Rect(pad, y, W - pad * 2, u), $"選 3 個技能（{myLoadout.Count}/3）　點技能看詳細說明", fsS, new Color(1f, 0.9f, 0.6f));
             y += u;
             float sw = (W - pad * 2 - gap) / 2f, sh = u * 2.4f;
             for (int i = 0; i < cls.skills.Length; i++)
@@ -1609,11 +1666,8 @@ namespace SpellDuel
                 UiKit.Text(new Rect(tx, r.y + sh * 0.05f, tw, sh * 0.32f), (on ? "✔ " : "") + sk.name, fs, on ? Color.white : new Color(0.8f, 0.8f, 0.8f), TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(tx, r.y + sh * 0.37f, tw, sh * 0.27f), $"🎤唸「{sk.name}」→ {HandGesture.ReleaseLabel(sk)}", fsS, new Color(1f, 0.85f, 0.5f));
                 UiKit.Text(new Rect(tx, r.y + sh * 0.64f, tw, sh * 0.32f), $"MP{sk.cost}・{(sk.charge > 0f ? $"蓄力{sk.charge:0.#}s" : "免蓄力")}・{eff}・{sk.RangeText}", fsS, new Color(0.8f, 0.85f, 0.95f));
-                if (GUI.Button(r, GUIContent.none, GUIStyle.none))
-                {
-                    if (on) myLoadout.Remove(sk.id);
-                    else { if (myLoadout.Count >= 3) myLoadout.RemoveAt(0); myLoadout.Add(sk.id); }
-                }
+                // 點技能卡：打開詳細說明（在說明裡選／移除）
+                if (GUI.Button(r, GUIContent.none, GUIStyle.none)) infoSkill = sk.id;
             }
             y += ((cls.skills.Length + 1) / 2) * (sh + gap);
 
@@ -1936,7 +1990,7 @@ namespace SpellDuel
                 float cd = me.cooldownUntil.TryGetValue(s.id, out var u) ? Mathf.Max(0, u - now) : 0;
                 bool charging = me.charging == s;
                 bool usable = me.mp >= s.cost && cd <= 0;
-                // 技能卡（只顯示，不能點）：上面圖示、下面名稱／手勢→放招／MP 或冷卻；手正比著這個手勢時亮起來
+                // 技能卡（點了看詳細說明）：上面圖示、下面名稱／手勢→放招／MP 或冷卻；手正比著這個手勢時亮起來
                 UiKit.Card(r, charging ? 0.8f : 0.5f, charging ? s.color : (Color?)null, charging ? 1f : 0.6f);
                 var ir = new Rect(r.center.x - isz / 2, r.y + gap * 0.6f, isz, isz);
                 // 技能圖示（發光徽章）：詠唱中外圈脈動發光；冷卻中由上往下蓋暗；MP 不足變灰
@@ -1962,6 +2016,7 @@ namespace SpellDuel
                 UiKit.Text(new Rect(tx, ty, tw, rowH), s.name + vtag, fs, tc, TextAnchor.MiddleCenter, true);
                 UiKit.Text(new Rect(tx, ty + rowH, tw, rowH), $"🎤→{HandGesture.ReleaseLabel(s)}", fsS, usable ? new Color(1f, 0.85f, 0.5f) : tc, TextAnchor.MiddleCenter);
                 UiKit.Text(new Rect(tx, ty + rowH * 2, tw, rowH), cd > 0 ? $"冷卻 {cd:F1}s" : $"MP {s.cost}", fsS, cd > 0 ? new Color(0.7f, 0.7f, 0.7f) : new Color(0.6f, 0.8f, 1f), TextAnchor.MiddleCenter);
+                if (GUI.Button(r, GUIContent.none, GUIStyle.none)) infoSkill = s.id;   // 點技能卡：看詳細說明（戰鬥不會暫停）
             }
 
             // 無盡模式：等級與經驗條；可以升級時顯示按鈕（單人會自動打開選單）
