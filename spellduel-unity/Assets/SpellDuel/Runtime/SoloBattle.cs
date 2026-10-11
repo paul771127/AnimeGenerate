@@ -37,7 +37,8 @@ namespace SpellDuel
         bool bossMode, coop, remoteCoop, resultShown, bossSeen;
         // 無盡模式：endless＝目前這場；netEndless／remoteEndless＝雙人選擇畫面上兩邊選的
         bool endless, netEndless, remoteEndless;
-        float bossHideAt = -1f; int lastWaveSeen; bool bossAliveShown;
+        float bossHideAt = -1f; int lastWaveSeen; bool bossAliveShown; int clientWaveRemaining;
+        int WaveRemainingShown => battle == null ? 0 : (NetMode && !NetIsHost ? clientWaveRemaining : battle.WaveRemaining);
 
         // ---------------------------------------------------------------- 無盡模式：升級
         // 經驗值升級，每升一級選一樣：攻擊力、蓄力速度、HP、冷卻、爆擊率、攻擊距離、灼燒／中毒／冰凍機率（每次 +5%）
@@ -420,7 +421,7 @@ namespace SpellDuel
             var b = battle.enemy;
             int e = (bossAi != null && bossAi.Enraged ? 1 : 0) | (b.target == battle.ally ? 2 : 0);
             NetSend?.Invoke(new Msg { t = "boss", p = b.head, d = b.forward, hp = Mathf.CeilToInt(b.hp), dmg = b.maxHp, k = b.charging != null ? b.charging.id : "", s = battle.ChargeProgress(b), e = e,
-                ks = endless ? new[] { battle.wave.ToString(), Mathf.Max(0f, battle.nextBossAt - battle.now).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture), battle.kills.ToString(), battle.bossKills.ToString(), battle.xp.ToString() } : null });
+                ks = endless ? new[] { battle.wave.ToString(), battle.WaveRemaining.ToString(), battle.kills.ToString(), battle.bossKills.ToString(), battle.xp.ToString(), battle.waveTotal.ToString() } : null });
             // 小怪：位置與「編號,血量,最大血量,預備中」
             var ms = battle.minions;
             var pts = new Vector3[ms.Count]; var ks = new string[ms.Count];
@@ -496,12 +497,15 @@ namespace SpellDuel
                         b.hp = m.hp; if (m.dmg > 0) b.maxHp = m.dmg;
                         if (m.ks != null && m.ks.Length >= 4)
                         {
-                            // 無盡模式：波次、Boss 倒數、擊倒數（打倒 Boss 時自己回 30% 血）
+                            // 無盡模式：波次、這波剩幾隻、擊倒數（清完一波自己回 10% 血；打倒 Boss 回 30%）
                             int.TryParse(m.ks[0], out var wv);
-                            if (wv > battle.wave && Me.Alive) Me.hp = Mathf.Min(Me.maxHp, Me.hp + Me.maxHp * 0.3f);
-                            battle.wave = wv;
-                            if (float.TryParse(m.ks[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var nb)) battle.nextBossAt = battle.now + nb;
-                            int.TryParse(m.ks[2], out battle.kills); int.TryParse(m.ks[3], out battle.bossKills);
+                            int.TryParse(m.ks[3], out var bk);
+                            if (Me.Alive && bk > battle.bossKills) Me.hp = Mathf.Min(Me.maxHp, Me.hp + Me.maxHp * 0.3f);
+                            else if (Me.Alive && wv > battle.wave && battle.wave > 0) Me.hp = Mathf.Min(Me.maxHp, Me.hp + Me.maxHp * 0.1f);
+                            battle.wave = wv; battle.bossKills = bk;
+                            int.TryParse(m.ks[1], out clientWaveRemaining);
+                            if (m.ks.Length >= 6) int.TryParse(m.ks[5], out battle.waveTotal);
+                            int.TryParse(m.ks[2], out battle.kills);
                             if (m.ks.Length >= 5) int.TryParse(m.ks[4], out battle.xp);   // 隊友共用經驗值
                         }
                         if (!string.IsNullOrEmpty(m.k) && Skills.All.TryGetValue(m.k, out var bs))
@@ -606,12 +610,12 @@ namespace SpellDuel
             if (endless)
             {
                 // 無盡模式：結算（波次、擊倒數、存活時間），記錄最佳
-                int score = battle.wave * 1000 + battle.bossKills * 300 + battle.kills * 10;
+                int score = battle.wave * 100 + battle.bossKills * 500 + battle.kills * 10;
                 int best = PlayerPrefs.GetInt("sd_endless_best", 0);
                 bool record = score > best;
                 if (record) PlayerPrefs.SetInt("sd_endless_best", score);
                 int sec = Mathf.FloorToInt(battle.now);
-                Say($"♾ 遊戲結束：撐到第 {battle.wave + 1} 波・擊倒小怪 {battle.kills}、Boss {battle.bossKills}・存活 {sec / 60}:{sec % 60:00}・分數 {score}" + (record ? "　🎉 新紀錄！" : $"（最佳 {best}）"), 99f);
+                Say($"♾ 遊戲結束：撐到第 {battle.wave} 波・擊倒小怪 {battle.kills}、Boss {battle.bossKills}・存活 {sec / 60}:{sec % 60:00}・分數 {score}" + (record ? "　🎉 新紀錄！" : $"（最佳 {best}）"), 99f);
                 Sfx.Play(record ? "win" : "lose"); Haptics.Play(Haptics.Kind.Warning);
                 return;
             }
@@ -1170,10 +1174,18 @@ namespace SpellDuel
                     break;
                 }
                 case "bossarrive":
-                    Say("🔥 " + text + "（小怪暫時不會再增加）", 3.5f);
+                    Say("🔥 " + text, 3.5f);
+                    break;
+                case "wavestart":
+                    Say("♾ " + text, 2.5f);
+                    Sfx.Play("select", 0.9f, 0.8f);
+                    break;
+                case "wavecleared":
+                    Say("✨ " + text + " 回復 10% 血量", 2.5f);
+                    Sfx.Play("heal", 0.8f); Haptics.Play(Haptics.Kind.Success);
                     break;
                 case "bossdown":
-                    Say("🏆 " + text + "，回復 30% 血量", 3.5f);
+                    Say("🏆 " + text + "（回復 30% 血量）", 3.5f);
                     Sfx.Play("win", 0.8f); Haptics.Play(Haptics.Kind.Success);
                     break;
                 case "dispel":
@@ -1658,13 +1670,14 @@ namespace SpellDuel
             if (endless && !en.Alive)
             {
                 // 無盡模式、Boss 還沒來：顯示倒數
-                float left = Mathf.Max(0f, battle.nextBossAt - battle.now);
-                UiKit.Text(new Rect(ix, y, iw * 0.6f, lh), $"♾ 第 {battle.wave + 1} 波", fs, Color.white, TextAnchor.MiddleLeft, true);
-                UiKit.Bar(new Rect(ix + iw * 0.54f, y + lh * 0.15f, iw * 0.46f, lh * 0.7f), 1f - left / Battle.BossInterval, new Color(1f, 0.5f, 0.15f), $"Boss {Mathf.FloorToInt(left) / 60}:{Mathf.FloorToInt(left) % 60:00}", fsS);
+                // 無盡模式：這一波的進度（剩幾隻）
+                int remain = WaveRemainingShown, total = Mathf.Max(1, battle.waveTotal);
+                UiKit.Text(new Rect(ix, y, iw * 0.6f, lh), $"♾ 第 {battle.wave} 波", fs, Color.white, TextAnchor.MiddleLeft, true);
+                UiKit.Bar(new Rect(ix + iw * 0.54f, y + lh * 0.15f, iw * 0.46f, lh * 0.7f), 1f - remain / (float)total, new Color(1f, 0.5f, 0.15f), $"剩 {remain} 隻", fsS);
             }
             else
             {
-                UiKit.Text(new Rect(ix, y, iw * 0.52f, lh), (endless ? $"第 {battle.wave + 1} 波 " : "") + $"{en.name}　{battle.Distance:F1}m", fs, Color.white, TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(ix, y, iw * 0.52f, lh), (endless ? $"第 {battle.wave} 波 " : "") + $"{en.name}　{battle.Distance:F1}m", fs, Color.white, TextAnchor.MiddleLeft, true);
                 UiKit.Bar(new Rect(ix + iw * 0.54f, y + lh * 0.15f, iw * 0.46f, lh * 0.7f), en.hp / en.maxHp, new Color(1f, 0.25f, 0.35f), $"{Mathf.CeilToInt(en.hp)}", fsS);
             }
             y += lh;
@@ -1672,7 +1685,7 @@ namespace SpellDuel
                 : en.charging != null ? $"⚠ 詠唱 {en.charging.name}（{Mathf.FloorToInt(battle.ChargeProgress(en) * 100)}%）" : (ai?.Status ?? bossAi?.Status ?? "");
             if (bossMode && (bossAi != null ? bossAi.Enraged : bossEnragedShown)) enState = "🔥 狂暴　" + enState;
             if (en.snaredUntil > now) enState = "被定身";
-            if (endless) enState = $"擊倒小怪 {battle.kills}・Boss {battle.bossKills}　" + (en.Alive ? enState : "小怪會從場地邊緣陸續出現");
+            if (endless) enState = $"擊倒小怪 {battle.kills}・Boss {battle.bossKills}　" + (en.Alive ? enState : $"Boss 在第 {battle.NextBossWave} 波（還有 {battle.NextBossWave - battle.wave} 波）");
             UiKit.Text(new Rect(ix, y, iw, lh * 0.9f), enState, fsS, en.charging != null ? new Color(1f, 0.75f, 0.4f) : new Color(0.9f, 0.92f, 1f));
             y += lh * 0.9f;
             UiKit.Text(new Rect(ix, y, iw, lh * 0.8f), StatusText(en, now), fsS, new Color(0.75f, 0.85f, 1f));
@@ -1908,7 +1921,7 @@ namespace SpellDuel
             {
                 var orr = new Rect(pad, H * 0.28f, W - pad * 2, H * 0.32f);
                 UiKit.Card(orr, 0.85f, !en.Alive && !endless ? new Color(1f, 0.85f, 0.3f) : new Color(0.7f, 0.7f, 0.8f), 0.9f);
-                UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, orr.height * 0.4f), endless ? $"♾ 第 {battle.wave + 1} 波結束" : !en.Alive ? (bossMode ? "🏆 討伐成功！" : "🏆 勝利！") : "💀 敗北…", fs * 2, Color.white, TextAnchor.MiddleCenter, true);
+                UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, orr.height * 0.4f), endless ? $"♾ 撐到第 {battle.wave} 波" : !en.Alive ? (bossMode ? "🏆 討伐成功！" : "🏆 勝利！") : "💀 敗北…", fs * 2, Color.white, TextAnchor.MiddleCenter, true);
                 float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
                 if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), NetMode ? (localReady ? "等待對手…" : "再來一局") : "再來一局", fs, true, new Color(0.4f, 0.8f, 1f), !(NetMode && localReady)))
                 { if (NetMode) SendReady(); else StartBattle(); }

@@ -182,35 +182,60 @@ namespace SpellDuel
         }
 
         // ------------------------------------------------------------ 無盡模式
-        // 場地邊緣陸續冒出小怪；每 60 秒出現一隻 Boss（Boss 在場時不再冒小怪）；每打倒一隻 Boss 進入下一波：
-        // 敵人更強（血量、傷害、速度），而且解鎖新的小怪種類（火焰射手 → 岩石衝鋒獸 → 自爆小鬼）。
+        // 一波＝一批小怪（從離玩家 15m 以上的地方陸續出現），全部打倒才進下一波；
+        // 每第 10、20、30… 波是 Boss 波（只有 Boss，沒有小怪）。波次越後面敵人越強，也會解鎖新的小怪種類。
         public bool endless;
-        public int wave, kills, bossKills;
-        public float nextBossAt, nextMinionAt, bossBaseHp = 300f;
-        public const float BossInterval = 60f;
+        public int wave, kills, bossKills, waveToSpawn, waveTotal;
+        public float nextMinionAt, waveStartAt, bossBaseHp = 300f;
+        public const int BossEvery = 10;
         public Func<Vector3> edgePoint;          // 小怪出生點：離所有玩家 15m 以上（可以在場地外，再走進來）
         public Func<Vector3> bossPoint;          // Boss 出生點：場地邊緣附近（沒設定就用 edgePoint）
         public const float MinionSpawnDistance = 15f;
-        public event Action<int> OnBossSpawn;    // 無盡模式 Boss 出現（波次）
+        public event Action<int> OnBossSpawn;    // 無盡模式 Boss 出現（第幾隻 Boss，0 起算）
+
+        public bool IsBossWave => wave > 0 && wave % BossEvery == 0;
+        /// <summary>下一個 Boss 波</summary>
+        public int NextBossWave => (wave / BossEvery + (IsBossWave ? 0 : 1)) * BossEvery;
+        /// <summary>這一波還剩幾隻（還沒出現的＋場上活著的）</summary>
+        public int WaveRemaining => IsBossWave ? (enemy.Alive ? 1 : 0) : waveToSpawn + minions.Count;
 
         public void StartEndless()
         {
             endless = true; wave = 0; kills = 0; bossKills = 0;
             enemy.hp = 0f;                        // 一開始沒有 Boss
-            nextBossAt = now + BossInterval; nextMinionAt = now + 4f;
+            NextWave(3f);
         }
-        // 經驗值：小怪依種類、Boss 依波次；合作時兩人共用同一份經驗（各自選升級）
+
+        /// <summary>進入下一波（delay 秒後開始出怪／Boss 出現）</summary>
+        void NextWave(float delay)
+        {
+            wave++;
+            waveStartAt = now + delay;
+            if (IsBossWave) { waveToSpawn = 0; waveTotal = 1; }
+            else
+            {
+                // 每波的小怪數：3＋波次/2（最多 14），合作 ×1.5
+                waveTotal = Mathf.Min(14, 3 + wave / 2);
+                if (ally != null) waveTotal = Mathf.CeilToInt(waveTotal * 1.5f);
+                waveToSpawn = waveTotal;
+            }
+            nextMinionAt = waveStartAt;
+            Emit("wavestart", player.Feet, Color.white, IsBossWave ? $"第 {wave} 波：Boss 來了！" : $"第 {wave} 波：{waveTotal} 隻小怪");
+        }
+
+        // 經驗值：小怪依種類與波次、Boss 依第幾隻；合作時兩人共用同一份經驗（各自選升級）
         public int xp;
         static readonly int[] MinionXp = { 10, 12, 25, 12 };
-        /// <summary>升到下一級需要的累積經驗：40、110、210、340…</summary>
+        /// <summary>升到下一級需要的累積經驗：55、140、255、400…</summary>
         public static int XpForLevel(int level) => 40 * (level - 1) + 15 * (level - 1) * (level - 1) + 0;
         public static int LevelOf(int xp) { int l = 1; while (xp >= XpForLevel(l + 1)) l++; return l; }
         /// <summary>參與人數倍率：每多一位玩家，敵人的血量與攻擊力 +30%</summary>
         public float PartyMul => 1f + 0.3f * ((ally != null ? 2 : 1) - 1);
-        public float HpMul => (1f + 0.25f * wave) * PartyMul;
-        public float DmgMul => 0.7f + 0.2f * wave;
+        int Tier => Mathf.Max(0, wave - 1);
+        public float HpMul => (1f + 0.08f * Tier) * PartyMul;
+        public float DmgMul => 0.75f + 0.05f * Tier;
         public const float EndlessRegen = 0.5f;   // 無盡模式：玩家每秒自然回血
-        public float SpeedMul => Mathf.Min(1.5f, 1f + 0.05f * wave);
+        public float SpeedMul => Mathf.Min(1.5f, 1f + 0.02f * Tier);
 
         float Time_dt;
         void UpdateEndless()
@@ -218,19 +243,35 @@ namespace SpellDuel
             if (endless && player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + EndlessRegen * Time_dt);
             if (!endless || remoteEnemy || edgePoint == null) return;
             if (!player.Alive && (ally == null || !ally.Alive)) return;
-            if (!enemy.Alive && now >= nextBossAt) SpawnBoss();
-            if (enemy.Alive) return;   // Boss 在場：小怪不再增加
-            int maxAlive = Mathf.Min(10, 3 + wave * 2) + (ally != null ? 2 : 0);
-            if (now < nextMinionAt || minions.Count >= maxAlive) return;
-            SpawnMinion(edgePoint(), 0, PickMinionKind(), HpMul, DmgMul, SpeedMul);
-            // 出怪間隔：第 1 波 8 秒一隻，之後每波快 0.7 秒，最快 4 秒（合作快 25%）
-            nextMinionAt = now + Mathf.Max(4f, 8f - wave * 0.7f) * (ally != null ? 0.75f : 1f);
+            if (now < waveStartAt) return;
+            if (IsBossWave)
+            {
+                if (!enemy.Alive && !bossSpawnedThisWave) SpawnBoss();
+                return;
+            }
+            // 小怪波：照間隔陸續出現；場上同時最多 3＋波次/3 隻（合作 +2）
+            int maxAlive = Mathf.Min(8, 3 + wave / 3) + (ally != null ? 2 : 0);
+            if (waveToSpawn > 0 && now >= nextMinionAt && minions.Count < maxAlive)
+            {
+                SpawnMinion(edgePoint(), 0, PickMinionKind(), HpMul, DmgMul, SpeedMul);
+                waveToSpawn--;
+                nextMinionAt = now + Mathf.Max(2.5f, 5f - 0.1f * wave) * (ally != null ? 0.75f : 1f);
+            }
+            // 這一波全部打倒：回 10% 血，休息 4 秒進下一波
+            if (waveToSpawn == 0 && minions.Count == 0)
+            {
+                if (player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + player.maxHp * 0.1f);
+                Emit("wavecleared", player.Feet, Color.white, $"第 {wave} 波清空！");
+                NextWave(4f);
+            }
         }
+        bool bossSpawnedThisWave;
 
+        /// <summary>依波次解鎖小怪：火焰射手（第 3 波起）、岩石衝鋒獸（第 6 波起）、自爆小鬼（第 11 波起，打倒第一隻 Boss 後）</summary>
         int PickMinionKind()
         {
-            int unlocked = Mathf.Min(3, wave);
-            float[] w = { 3f, 2f, 1.5f, 1.5f };
+            int unlocked = wave >= 11 ? 3 : wave >= 6 ? 2 : wave >= 3 ? 1 : 0;
+            float[] w = { 3f, 2f + 0.1f * wave, 1.2f + 0.08f * wave, 1.2f + 0.08f * wave };
             float sum = 0f; for (int k = 0; k <= unlocked; k++) sum += w[k];
             float r = (float)rng.NextDouble() * sum;
             for (int k = 0; k <= unlocked; k++) { r -= w[k]; if (r <= 0f) return k; }
@@ -239,23 +280,26 @@ namespace SpellDuel
 
         void SpawnBoss()
         {
+            bossSpawnedThisWave = true;
+            int bossIndex = wave / BossEvery - 1;
             var at = (bossPoint ?? edgePoint)();
-            enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.4f * wave) * PartyMul);
+            enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.5f * bossIndex) * PartyMul);
             enemy.hp = enemy.maxHp;
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
             enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f;
-            Emit("bossarrive", enemy.Feet, enemy.cls.color, $"第 {wave + 1} 波 Boss 出現！");
-            OnBossSpawn?.Invoke(wave);
+            Emit("bossarrive", enemy.Feet, enemy.cls.color, $"第 {wave} 波 Boss 出現！");
+            OnBossSpawn?.Invoke(bossIndex);
         }
 
         void OnBossDown()
         {
-            bossKills++; wave++;
-            xp += 80 * wave;
-            // 獎勵：打倒 Boss 回復 30% 血量（隊友端看到波次增加時自己回）
+            bossKills++;
+            xp += 150 * bossKills;
+            bossSpawnedThisWave = false;
+            // 獎勵：打倒 Boss 回復 30% 血量（隊友端看到 Boss 數增加時自己回）
             if (player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + player.maxHp * 0.3f);
-            nextBossAt = now + BossInterval; nextMinionAt = now + 5f;
-            Emit("bossdown", enemy.Feet, enemy.cls.color, $"打倒 Boss！進入第 {wave + 1} 波（敵人變強了）");
+            Emit("bossdown", enemy.Feet, enemy.cls.color, $"打倒第 {bossKills} 隻 Boss！之後的敵人更強、種類更多");
+            NextWave(5f);
         }
         public Fighter MinionById(int id) => minions.Find(m => m.minionId == id);
         /// <summary>主機：隊友打到小怪</summary>
@@ -920,7 +964,7 @@ namespace SpellDuel
             Emit(kind == "dot" || kind == "burn" ? kind : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");
             if (!f.Alive)
             {
-                if (f.isMinion) { kills++; if (endless) xp += Mathf.RoundToInt(MinionXp[f.minionKind] * (1f + 0.2f * wave)); Emit("miniondie", f.Chest, Color.white, null); }
+                if (f.isMinion) { kills++; if (endless) xp += Mathf.RoundToInt(MinionXp[f.minionKind] * (1f + 0.03f * wave)); Emit("miniondie", f.Chest, Color.white, null); }
                 else if (f.isPlayer) Emit(ally != null && ally.Alive ? "down" : "lose", f.Chest, Color.white, null);
                 else if (endless && f == enemy) OnBossDown();
                 else Emit("win", f.Chest, Color.white, null);
