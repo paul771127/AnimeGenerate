@@ -109,6 +109,7 @@ namespace SpellDuel
         }
         int NetModeCode => coop ? (netEndless ? 2 : 1) : 0;
         BossRig bossRig; BossAI bossAi; GameObject slamGo;
+        VolcanoScene volcano;   // 無盡模式第 1～10 波的熔岩火山場景
         readonly Dictionary<Fighter, MinionRig> minionGo = new Dictionary<Fighter, MinionRig>();
         readonly Dictionary<Fighter, float> minionLastHp = new Dictionary<Fighter, float>();
         readonly HashSet<Fighter> minionWinding = new HashSet<Fighter>();
@@ -574,6 +575,19 @@ namespace SpellDuel
         }
         bool bossEnragedShown;
 
+        /// <summary>場景：無盡模式第 1～10 波是熔岩火山（地板＋遠方背景＋火星）</summary>
+        void UpdateScene()
+        {
+            bool want = endless && battle.wave >= 1 && battle.wave <= 10;
+            if (want && volcano == null)
+            {
+                var poly = area.Polygon;
+                float fy = poly.Count > 0 ? poly[0].y : area.FloorY;
+                volcano = VolcanoScene.Create(poly, fy);
+            }
+            if (volcano) volcano.SetVisible(want);
+        }
+
         /// <summary>小怪的外觀：新的就生出來、跟著位置走、預備動作／出手／被打／倒下</summary>
         void UpdateMinionVisuals(float dt)
         {
@@ -811,6 +825,7 @@ namespace SpellDuel
             landGo.Clear();
             if (warnLine) Destroy(warnLine);
             if (slamGo) Destroy(slamGo);
+            if (volcano) Destroy(volcano.gameObject);
             if (bossRig) Destroy(bossRig.gameObject);
             foreach (var mr in minionGo.Values) if (mr) Destroy(mr.gameObject);
             minionGo.Clear(); minionLastHp.Clear(); minionWinding.Clear();
@@ -853,6 +868,7 @@ namespace SpellDuel
             if (full && !chargeWasFull && Me.charging.charge > 0f) { Sfx.Play("charged", 0.8f); Haptics.Play(Haptics.Kind.Light); }
             chargeWasFull = full;
             frozen = phase == Phase.Fighting && !Tracking.Ok;
+            UpdateScene();
             if (NetMode) SyncRemote();
             UpdateLock();
             if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
