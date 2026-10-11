@@ -1060,7 +1060,7 @@ namespace SpellDuel
             if (!en.Alive && !enemyDeadShown) { if (enemyRig) enemyRig.SetDead(true); enemyDeadShown = true; }
             bool guarded = en.blockUntil > battle.now || en.shieldUntil > battle.now || en.counterUntil > battle.now || en.armorUntil > battle.now;
             if (enemyRig) enemyRig.Guarding = guarded && en.Alive;
-            enemyShield.SetActive(guarded && en.Alive);
+            enemyShield.SetActive(guarded && en.Alive && !NetMode);   // 雙人：對手是真人，不蓋護盾球（改用方框顏色表示）
             if (guarded)
             {
                 enemyShield.transform.position = WorldFrame.FromWorld(en.Chest);
@@ -1574,7 +1574,10 @@ namespace SpellDuel
                 if (enemyOnScreen)
                 {
                     float t = Mathf.Max(3f, W * 0.006f);
-                    GUI.color = new Color(0.3f, 1f, 0.4f, 0.9f);
+                    // 方框顏色：一般綠色；對手開了格擋／護盾／反擊／守護時變藍色並標示
+                    bool enGuard = en.blockUntil > now || en.shieldUntil > now || en.counterUntil > now || en.armorUntil > now;
+                    var frameC = enGuard ? new Color(0.4f, 0.7f, 1f, 0.95f) : new Color(0.3f, 1f, 0.4f, 0.9f);
+                    GUI.color = frameC;
                     var r = enemyRect;
                     // 只畫四個角，比較不擋畫面
                     float cl = Mathf.Min(r.width, r.height) * 0.28f;
@@ -1583,7 +1586,8 @@ namespace SpellDuel
                     GUI.DrawTexture(new Rect(r.xMin, r.yMax - t, cl, t), Texture2D.whiteTexture); GUI.DrawTexture(new Rect(r.xMin, r.yMax - cl, t, cl), Texture2D.whiteTexture);
                     GUI.DrawTexture(new Rect(r.xMax - cl, r.yMax - t, cl, t), Texture2D.whiteTexture); GUI.DrawTexture(new Rect(r.xMax - t, r.yMax - cl, t, cl), Texture2D.whiteTexture);
                     GUI.color = Color.white;
-                    UiKit.Text(new Rect(r.x, r.yMax + 2, Mathf.Max(r.width, W * 0.3f), lh * 0.8f), "🎯 鎖定", fsS, new Color(0.4f, 1f, 0.5f), TextAnchor.UpperLeft, true);
+                    string guardTxt = en.counterUntil > now ? "　反擊中" : en.shieldUntil > now ? "　護盾" : en.blockUntil > now ? "　格擋中" : en.armorUntil > now ? "　守護" : "";
+                    UiKit.Text(new Rect(r.x, r.yMax + 2, Mathf.Max(r.width, W * 0.45f), lh * 0.8f), "🎯 鎖定" + guardTxt, fsS, frameC, TextAnchor.UpperLeft, true);
                 }
                 else
                     UiKit.Pill(H * 0.58f, (enemyScreenSide < 0 ? "◀ 敵人在左邊" : "敵人在右邊 ▶") + "（沒鎖定也能放，朝準星飛）", fs, new Color(1f, 0.45f, 0.45f), pillW);

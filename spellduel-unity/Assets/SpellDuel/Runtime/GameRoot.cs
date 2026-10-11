@@ -936,7 +936,8 @@ namespace SpellDuel
             {
                 markerGizmo.transform.SetPositionAndRotation(WorldFrame.Marker.position, WorldFrame.Marker.rotation);
             }
-            bool remoteVisible = WorldReady && net.Connected && remoteSeen > 0f;   // 對手追蹤中斷時停在最後位置（變灰）
+            // 對手是真人：不在他身上蓋任何模型（只在介面上用方框框起來）
+            bool remoteVisible = false;
             PlaceBody(remoteHead, remoteBody, WorldFrame.FromWorld(remoteHeadW), remoteVisible);
             bool stale = !remoteTrackingOk || Time.time - remoteSeen > 1f;
             var rc = stale ? new Color(0.5f, 0.5f, 0.5f, 0.3f) : new Color(0.3f, 0.9f, 1f, 0.35f);
