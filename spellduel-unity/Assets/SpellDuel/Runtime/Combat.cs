@@ -678,8 +678,17 @@ namespace SpellDuel
             return true;
         }
 
+        public event Action<SkillDef> OnTeamBuff;   // 合作：牧師的輔助技能也要作用在隊友（隊友那支手機自己套用）
+
         void CastSelf(Fighter f, SkillDef s)
         {
+            // 牧師的輔助技能：作用在所有己方單位（自己＋合作隊友）
+            if (s.cls == "priest")
+            {
+                ApplySupport(f, s, null);
+                if (f == player && ally != null && ally.Alive) OnTeamBuff?.Invoke(s);
+                return;
+            }
             switch (s.self)
             {
                 case SelfKind.Heal: f.hp = Mathf.Min(f.maxHp, f.hp + s.heal); Emit("heal", f.Chest, s.color, $"+{s.heal}"); return;
@@ -731,6 +740,38 @@ namespace SpellDuel
                 }
             }
             Emit("buff", f.Chest, s.color, s.name);
+        }
+
+        /// <summary>牧師的輔助效果套用在 t 身上（from＝施放的隊友名字，null＝自己放的）</summary>
+        void ApplySupport(Fighter t, SkillDef s, string from)
+        {
+            string by = from != null ? $"{from}的" : "";
+            switch (s.self)
+            {
+                case SelfKind.Heal: t.hp = Mathf.Min(t.maxHp, t.hp + s.heal); Emit("heal", t.Chest, s.color, $"{by}{s.name} +{s.heal}"); return;
+                case SelfKind.Armor: t.armorUntil = now + s.buffDur; t.armorReduce = s.buffReduce; Emit("buff", t.Chest, s.color, by + s.name); return;
+                case SelfKind.Cleanse:
+                    t.dots.Clear(); t.snaredUntil = 0f; t.blindUntil = 0f;
+                    if (s.heal > 0) t.hp = Mathf.Min(t.maxHp, t.hp + s.heal);
+                    Emit("heal", t.Chest, s.color, by + (s.heal > 0 ? $"淨化 +{s.heal}" : "淨化"));
+                    return;
+                case SelfKind.Prayer:
+                {
+                    var keys = new List<string>(t.cooldownUntil.Keys);
+                    foreach (var k in keys) if (k != s.id) t.cooldownUntil[k] = Mathf.Max(now, t.cooldownUntil[k] - s.buffDur);
+                    t.mp = Mathf.Min(t.maxMp, t.mp + s.buffAmount);
+                    Emit("buff", t.Chest, s.color, $"{by}祈禱：冷卻 -{s.buffDur:0}s・MP +{s.buffAmount}");
+                    return;
+                }
+                default: Emit("buff", t.Chest, s.color, by + s.name); return;
+            }
+        }
+
+        /// <summary>合作：隊友（牧師）的輔助技能作用在我身上</summary>
+        public void ApplyTeamBuff(SkillDef s, string from = "隊友")
+        {
+            if (!player.Alive || Over) return;
+            ApplySupport(player, s, from);
         }
 
         void PlaceTrap(Fighter f, SkillDef s, Vector3 at)

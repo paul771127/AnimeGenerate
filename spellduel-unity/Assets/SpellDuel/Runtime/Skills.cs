@@ -105,10 +105,10 @@ namespace SpellDuel
             // ---------------------------------------------------------- 牧師：回復、淨化、守護、減冷卻；也有聖光攻擊
             P(new SkillDef { id = "holy", cls = "priest", name = "聖光彈", type = SkillType.Projectile, color = C("#fff3b0"), cost = 15, damage = 18, charge = 1.0f, cooldown = 1.0f, speed = 9f, radius = 0.12f, rangeMax = 9f, desc = "聖光球，射程 9m" });
             P(new SkillDef { fromAbove = true, dropHeight = 4f, id = "judgement", cls = "priest", name = "審判", type = SkillType.Projectile, color = C("#fbbf24"), cost = 30, damage = 30, charge = 2.0f, cooldown = 3.5f, speed = 9f, radius = 0.45f, rangeMax = 10f, desc = "光柱從敵人正上方落下（可閃）" });
-            P(new SkillDef { id = "prayheal", cls = "priest", name = "治療術", type = SkillType.Self, self = SelfKind.Heal, color = C("#86efac"), cost = 30, heal = 35, charge = 1.5f, cooldown = 6f, desc = "回復 35 HP" });
-            P(new SkillDef { id = "cleanse", cls = "priest", name = "淨化", type = SkillType.Self, self = SelfKind.Cleanse, color = C("#a5f3fc"), cost = 15, heal = 8, charge = 0.6f, cooldown = 6f, desc = "解除中毒、定身、致盲，並回復 8 HP" });
-            P(new SkillDef { id = "guard", cls = "priest", name = "守護", type = SkillType.Self, self = SelfKind.Armor, color = C("#fcd34d"), cost = 25, charge = 1.0f, cooldown = 10f, buffDur = 6f, buffReduce = 0.4f, desc = "6 秒內受到的傷害 -40%" });
-            P(new SkillDef { id = "prayer", cls = "priest", name = "祈禱", type = SkillType.Self, self = SelfKind.Prayer, color = C("#c4b5fd"), cost = 0, charge = 1.5f, cooldown = 15f, buffAmount = 20, buffDur = 4f, desc = "其他技能冷卻 -4 秒，並回復 20 MP" });
+            P(new SkillDef { id = "prayheal", cls = "priest", name = "治療術", type = SkillType.Self, self = SelfKind.Heal, color = C("#86efac"), cost = 30, heal = 35, charge = 1.5f, cooldown = 6f, desc = "自己與隊友各回復 35 HP" });
+            P(new SkillDef { id = "cleanse", cls = "priest", name = "淨化", type = SkillType.Self, self = SelfKind.Cleanse, color = C("#a5f3fc"), cost = 15, heal = 8, charge = 0.6f, cooldown = 6f, desc = "自己與隊友：解除中毒、定身、致盲，並回復 8 HP" });
+            P(new SkillDef { id = "guard", cls = "priest", name = "守護", type = SkillType.Self, self = SelfKind.Armor, color = C("#fcd34d"), cost = 25, charge = 1.0f, cooldown = 10f, buffDur = 6f, buffReduce = 0.4f, desc = "自己與隊友 6 秒內受到的傷害 -40%" });
+            P(new SkillDef { id = "prayer", cls = "priest", name = "祈禱", type = SkillType.Self, self = SelfKind.Prayer, color = C("#c4b5fd"), cost = 0, charge = 1.5f, cooldown = 15f, buffAmount = 20, buffDur = 4f, desc = "自己與隊友：其他技能冷卻 -4 秒，並回復 20 MP" });
 
             P(new SkillDef { id = "counter", cls = "swordsman", name = "反擊", type = SkillType.Self, self = SelfKind.Counter, color = C("#f472b6"), cost = 18, charge = 0.2f, cooldown = 6f, buffDur = 1.5f, desc = "1.5 秒內被打中：無傷，並把攻擊打回去" });
 

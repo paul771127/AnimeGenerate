@@ -300,6 +300,7 @@ namespace SpellDuel
                 battle.remoteEnemy = !NetIsHost;   // 隊友端：Boss 是主機的代理
                 battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.basePos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected, rad = p.curveAmp, s = p.pathLen, e = p.owner == battle.enemy || p.owner.isMinion ? 1 : 0 });
                 battle.OnAllyHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });
+                battle.OnTeamBuff += sk => NetSend?.Invoke(new Msg { t = "tbuff", k = sk.id });
                 battle.OnRemoteHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at, e = battle.LastProcs });
                 battle.OnRemoteBurn += (sk, dmg, at) => NetSend?.Invoke(new Msg { t = "burn2", k = sk.id, dmg = Mathf.RoundToInt(dmg), p = at });
                 battle.OnTrapPlaced += t => NetSend?.Invoke(new Msg { t = "trap2", id = t.id, k = t.skill.id, p = t.pos, s = t.armAt - battle.now });
@@ -438,6 +439,14 @@ namespace SpellDuel
             var ally = Ally;
             switch (m.t)
             {
+                case "tbuff":
+                    // 隊友（牧師）的治療／淨化／守護／祈禱也作用在我身上
+                    if (Skills.All.TryGetValue(m.k, out var tb))
+                    {
+                        battle.ApplyTeamBuff(tb);
+                        NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp) });
+                    }
+                    break;
                 case "cast2":
                     // 隊友（或主機的 Boss）的法術：只顯示
                     if (Skills.All.TryGetValue(m.k, out var cs))
