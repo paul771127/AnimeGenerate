@@ -25,7 +25,11 @@ namespace SpellDuel
         public readonly Dictionary<string, float> cooldownUntil = new Dictionary<string, float>();
         public SkillDef charging; public float chargeStart, chargeDelay;
         public float blockUntil, blockReduce, shieldUntil, counterUntil, snaredUntil, blindUntil;
-        public float sliceUntil;        // 劍士斬擊：這段時間內會斬開正面 1m 內飛來的法球
+        public float sliceUntil;
+        public float focusUntil;        // 弓箭手精神集中：這段時間內新的冷卻減半
+        public float prepUntil, prepBonus;   // 刺殺準備：這段時間內傷害 +prepBonus（受到傷害就取消）
+        public Vector3 chargeFrom;      // 開始詠唱時腳的位置（刺殺準備要站著不動）
+        public float OutMul(float now) => prepUntil > now ? 1f + prepBonus : 1f;        // 劍士斬擊：這段時間內會斬開正面 1m 內飛來的法球
         public int shieldLeft;
         // 刺客的近身技能：放招後進入「伏擊」，時限內靠近到射程內就自動出手
         public SkillDef armed; public float armedUntil;
@@ -560,7 +564,7 @@ namespace SpellDuel
             if (f.cooldownUntil.TryGetValue(s.id, out var cd) && cd > now) { why = $"{s.name} 冷卻中"; return false; }
             if (f.mp < s.cost) { why = "MP 不足"; return false; }
             if (f.snaredUntil > now && s.self != SelfKind.Cleanse) { why = "被困住，暫時不能施法（牧師可以淨化）"; return false; }
-            f.charging = s; f.chargeStart = now;
+            f.charging = s; f.chargeStart = now; f.chargeFrom = f.Feet;
             return true;
         }
 
@@ -598,7 +602,7 @@ namespace SpellDuel
             }
 
             f.mp -= s.cost;
-            f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul;
+            f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul * (f.focusUntil > now ? 0.5f : 1f);
             f.charging = null;
             if (s.id == "slash") { f.sliceUntil = now + SliceWindow; SliceNow(f); }
 
@@ -696,6 +700,17 @@ namespace SpellDuel
                 case SelfKind.Shield: f.shieldUntil = now + s.buffDur; f.shieldLeft = s.buffAmount; break;
                 case SelfKind.Counter: f.counterUntil = now + s.buffDur; break;
                 case SelfKind.Armor: f.armorUntil = now + s.buffDur; f.armorReduce = s.buffReduce; break;
+                case SelfKind.Mana: f.mp = Mathf.Min(f.maxMp, f.mp + s.buffAmount); Emit("buff", f.Chest, s.color, $"{s.name}：MP +{s.buffAmount}"); return;
+                case SelfKind.Focus:
+                {
+                    // 精神集中：之後的冷卻減半，現在正在冷卻的也減半
+                    f.focusUntil = now + s.buffDur;
+                    var keys = new List<string>(f.cooldownUntil.Keys);
+                    foreach (var k in keys) if (k != s.id && f.cooldownUntil[k] > now) f.cooldownUntil[k] = now + (f.cooldownUntil[k] - now) * 0.5f;
+                    Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0} 秒內冷卻減半");
+                    return;
+                }
+                case SelfKind.Prep: f.prepUntil = now + s.buffDur; f.prepBonus = s.buffReduce; Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0} 秒內傷害 +{s.buffReduce * 100:0}%"); return;
                 case SelfKind.Cleanse:
                     // 淨化：解除中毒、定身、致盲，回一點血
                     f.dots.Clear(); f.snaredUntil = 0f; f.blindUntil = 0f;
@@ -729,15 +744,6 @@ namespace SpellDuel
                     Emit("summon", f.Feet, s.color, n > 0 ? $"召喚了 {n} 隻小怪！" : null);
                     return;
                 }
-                case SelfKind.Prayer:
-                {
-                    // 祈禱：其他技能的冷卻減少，回復 MP
-                    var keys = new List<string>(f.cooldownUntil.Keys);
-                    foreach (var k in keys) if (k != s.id) f.cooldownUntil[k] = Mathf.Max(now, f.cooldownUntil[k] - s.buffDur);
-                    f.mp = Mathf.Min(f.maxMp, f.mp + s.buffAmount);
-                    Emit("buff", f.Chest, s.color, $"祈禱：冷卻 -{s.buffDur:0}s・MP +{s.buffAmount}");
-                    return;
-                }
             }
             Emit("buff", f.Chest, s.color, s.name);
         }
@@ -757,10 +763,11 @@ namespace SpellDuel
                     return;
                 case SelfKind.Prayer:
                 {
+                    // 祈禱：所有技能目前的冷卻時間減半
                     var keys = new List<string>(t.cooldownUntil.Keys);
-                    foreach (var k in keys) if (k != s.id) t.cooldownUntil[k] = Mathf.Max(now, t.cooldownUntil[k] - s.buffDur);
+                    foreach (var k in keys) if (k != s.id && t.cooldownUntil[k] > now) t.cooldownUntil[k] = now + (t.cooldownUntil[k] - now) * 0.5f;
                     t.mp = Mathf.Min(t.maxMp, t.mp + s.buffAmount);
-                    Emit("buff", t.Chest, s.color, $"{by}祈禱：冷卻 -{s.buffDur:0}s・MP +{s.buffAmount}");
+                    Emit("buff", t.Chest, s.color, $"{by}祈禱：冷卻減半・MP +{s.buffAmount}");
                     return;
                 }
                 default: Emit("buff", t.Chest, s.color, by + s.name); return;
@@ -790,9 +797,10 @@ namespace SpellDuel
         Projectile Spawn(Fighter owner, SkillDef s, Vector3 from, Vector3 dir, int dmg, EffectKind eff, float dps, float dur, bool reflected, float curveAmp = 0f, float pathLen = 0f)
         {
             var p = new Projectile { owner = owner, skill = s, pos = from, basePos = from, dir = dir.normalized, damage = dmg, effect = eff, effectDps = dps, effectDur = dur, reflected = reflected, id = nextId++ };
-            if (owner.atkMul != 1f || owner.critChance > 0f || owner.rangeMul != 1f)
+            float outMul = reflected ? 1f : owner.OutMul(now);
+            if (owner.atkMul != 1f || owner.critChance > 0f || owner.rangeMul != 1f || outMul != 1f)
             {
-                p.damage = Mathf.RoundToInt(dmg * owner.atkMul);
+                p.damage = Mathf.RoundToInt(dmg * owner.atkMul * outMul);
                 if (owner.critChance > 0f && rng.NextDouble() < owner.critChance) { p.crit = true; p.damage *= 2; }
                 p.rangeMul = owner.rangeMul;
             }
@@ -815,6 +823,9 @@ namespace SpellDuel
                 f.mp = Mathf.Min(f.maxMp, f.mp + f.regen * dt);
                 if (f.charging != null && now - f.chargeStart > f.charging.charge + chargeTimeout + (f.charging.releaseNear ? 8f : 0f))
                 { f.charging = null; Emit("timeout", f.Chest, Color.gray, "詠唱逾時"); }
+                // 刺殺準備：蓄力完成前離開原地太遠 → 失敗
+                if (f.charging != null && f.charging.stillRadius > 0f && ChargeProgress(f) < 1f && FlatDistance(f.Feet, f.chargeFrom) > f.charging.stillRadius)
+                { var cs = f.charging; f.charging = null; Emit("fail", f.Chest, Color.gray, $"移動太遠，{cs.name}失敗"); }
                 // 持續傷害：每滿 1 秒扣一次
                 for (int i = f.dots.Count - 1; i >= 0; i--)
                 {
@@ -975,8 +986,9 @@ namespace SpellDuel
             if (!target.Alive || FlatDistance(f.head, target.head) > s.rangeMax) return;
             f.armed = null;
             Emit("ambush", target.Chest, s.color, s.name + "！");
-            if (remoteEnemy && target == enemy) { Emit("hit", target.Chest, s.color, null); OnRemoteHit?.Invoke(s, s.damage, target.Chest, 0); }
-            else Hit(target, new Projectile { owner = f, skill = s, pos = target.Chest, dir = Fighter.Flat(target.head - f.head), damage = s.damage, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur });
+            int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
+            if (remoteEnemy && target == enemy) { Emit("hit", target.Chest, s.color, null); OnRemoteHit?.Invoke(s, dmg, target.Chest, 0); }
+            else Hit(target, new Projectile { owner = f, skill = s, pos = target.Chest, dir = Fighter.Flat(target.head - f.head), damage = dmg, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur });
         }
 
         void AddBurn(Projectile p, Vector3 at)
@@ -1095,6 +1107,7 @@ namespace SpellDuel
             if (!f.Alive) return;
             dmg = Mathf.Round(dmg * f.damageTakenMul);
             f.hp = Mathf.Max(0, f.hp - dmg);
+            if (dmg > 0 && f.prepUntil > now) { f.prepUntil = 0f; Emit("fail", f.Chest, Color.gray, "刺殺準備被打斷！"); }
             Emit(kind == "dot" || kind == "burn" ? kind : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");
             if (!f.Alive)
             {

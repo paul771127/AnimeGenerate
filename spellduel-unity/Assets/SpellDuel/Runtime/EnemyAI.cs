@@ -86,6 +86,11 @@ namespace SpellDuel
                 pick = me.loadout.Find(s => s.self == SelfKind.Dispel && Ready(s));
             // 牧師：中毒、定身、致盲 → 淨化；兩個以上技能在冷卻 → 祈禱
             if (pick == null && (me.dots.Count > 0 || me.blindUntil > b.now)) pick = me.loadout.Find(s => s.self == SelfKind.Cleanse && Ready(s));
+            // 法師：MP 低 → 冥想；弓箭手：精神集中；刺客：離玩家遠時先刺殺準備
+            if (pick == null && me.mp < me.maxMp * 0.35f) pick = me.loadout.Find(s => s.self == SelfKind.Mana && Ready(s));
+            if (pick == null && rnd.NextDouble() < 0.3) pick = me.loadout.Find(s => s.self == SelfKind.Focus && Ready(s));
+            if (pick == null && me.prepUntil <= b.now && Battle.FlatDistance(me.Feet, b.player.Feet) > 3f && rnd.NextDouble() < 0.4)
+                pick = me.loadout.Find(s => s.self == SelfKind.Prep && Ready(s));
             if (pick == null)
             {
                 int cooling = 0; foreach (var kv in me.cooldownUntil) if (kv.Value > b.now + 2f) cooling++;
@@ -128,6 +133,7 @@ namespace SpellDuel
         // ------------------------------------------------------------ 走位
         void Move(float dt)
         {
+            if (me.charging != null && me.charging.stillRadius > 0f && b.ChargeProgress(me) < 1f) return;   // 刺殺準備蓄力中：站著不動
             var player = b.player;
             var toMe = Fighter.Flat(me.head - player.head);
             if (toMe == Vector3.zero) toMe = Vector3.forward;

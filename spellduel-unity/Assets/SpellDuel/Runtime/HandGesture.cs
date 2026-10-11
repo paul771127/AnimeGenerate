@@ -45,7 +45,7 @@ namespace SpellDuel
         /// <summary>法師：每招固定一個數字（比出這個數字的手指就放招）；不是法師的招式回傳 0</summary>
         public static int NumberOf(string skillId) => skillId switch
         {
-            "fire" => 2, "wind" => 2, "ice" => 3, "thunder" => 4, "dispel" => 4, "meteor" => 5, _ => 0,
+            "fire" => 2, "wind" => 2, "ice" => 3, "thunder" => 4, "dispel" => 4, "meteor" => 5, "meditate" => 3, _ => 0,
         };
 
         /// <summary>放招動作的短名稱（選技能畫面、技能格用）：法師顯示要比的數字</summary>
@@ -88,7 +88,8 @@ namespace SpellDuel
                 case "heal": return Style.Pull;                                                       // 手掌收回自己
                 case "block": case "ironwall": return Style.Hold;                                     // 舉盾停住
                 case "counter": return Style.Burst;                                                   // 握拳→張開
-                case "knife": return Style.Chop;                                                      // 甩出飛刀
+                case "knife": return Style.Chop;
+                case "prep": return Style.Burst;                                                     // 刺殺準備：握拳→張開                                                      // 甩出飛刀
                 case "thrust": return Style.Thrust;                                                   // 劍士突刺
                 case "judgement": return Style.Press;                                                 // 牧師：往下壓降下審判
                 case "prayheal": return Style.Pull;                                                   // 牧師：治療收回自己

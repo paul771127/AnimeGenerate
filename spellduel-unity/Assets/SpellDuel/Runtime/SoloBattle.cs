@@ -1170,6 +1170,11 @@ namespace SpellDuel
                 case "timeout":
                     if (at == Me.Chest) Say("詠唱逾時", 1.5f);
                     break;
+                case "fail":
+                    // 刺殺準備：移動太遠失敗／被打斷
+                    if (at == Me.Chest) { Say(text, 2f); Sfx.Play("block", 0.6f, 0.6f); Haptics.Play(Haptics.Kind.Warning); }
+                    else floaters.Add(new Floater { posMap = at + Vector3.up * 0.3f, text = text, color = new Color(0.8f, 0.8f, 0.85f), born = Time.time });
+                    break;
                 case "win": case "lose": ShowResult(); break;
                 case "down":
                     // 合作：我倒下了，隊友還活著
@@ -1806,6 +1811,7 @@ namespace SpellDuel
                 float prog = battle.ChargeProgress(me);
                 bool bow = HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Bow && Hand != null;   // 弓箭手：拉滿弓就是蓄力完成
                 string st = bow ? (Hand.BowDrawn ? "🏹 拉滿！手回畫面張開放箭" : Hand.BowStage == 1 ? "✊ 握著拳拉出畫面外（拉弓）" : "畫面中握拳（捏弦）") :
+                    prog < 1f && me.charging.stillRadius > 0f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　站著別動！（離原地 {Battle.FlatDistance(me.Feet, me.chargeFrom):0.0}／{me.charging.stillRadius:0.0}m）" :
                     prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%（蓄滿後{HandGesture.ReleaseLabel(me.charging)}）" :
                     me.charging.releaseNear ? "手刀往前刺 → 5 秒內靠近敵人自動出手" :
                     HandGesture.ReleaseHint(me.charging) + (HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Number && Hand != null && Hand.HandVisible ? $"（目前：{(Hand.CurrentNumber > 0 ? Hand.CurrentNumber.ToString() : "—")}）" : "");
@@ -1826,6 +1832,13 @@ namespace SpellDuel
                 string tip = ecs.areaRadius > 0f ? $"⚠ {ecs.name}：走出 Boss 周圍的紅圈！" : ecs.fromAbove ? $"⚠ {ecs.name}：落下時離開紅圈！" : ecs.duckable ? $"⚠ {ecs.name}：↓ 蹲下躲！" : $"⚠ {ecs.name}：快速側跨閃開！";
                 if (coop && en.target != null && en.target != me) tip = $"⚠ Boss 準備對隊友使出 {ecs.name}";
                 UiKit.Pill(H * 0.43f, tip, fs, ecs.duckable ? new Color(1f, 0.7f, 0.3f) : new Color(1f, 0.45f, 0.45f), pillW);
+            }
+            // 增益狀態：精神集中、刺殺準備
+            {
+                string buffs = "";
+                if (me.focusUntil > now) buffs += $"🎯 精神集中 冷卻減半 {me.focusUntil - now:0}s　";
+                if (me.prepUntil > now) buffs += $"🗡 刺殺準備 傷害 +{me.prepBonus * 100:0}% {me.prepUntil - now:0.0}s（被打到就取消）";
+                if (buffs.Length > 0) UiKit.Pill(H * 0.145f, buffs.Trim(), fsS, new Color(1f, 0.85f, 0.4f), pillW);
             }
             if (me.crouching) UiKit.Pill(H * 0.19f, "↓ 蹲下中", fsS, new Color(0.6f, 0.9f, 1f), pillW);
             foreach (var mn in battle.minions)

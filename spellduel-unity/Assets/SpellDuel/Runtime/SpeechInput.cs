@@ -240,6 +240,21 @@ namespace SpellDuel
             }
         }
 
+        /// <summary>names[hit] 是別的名稱的開頭，而且句尾剛好停在那個較長名稱的前半段（還可能接下去）</summary>
+        static bool MayContinue(string t0, IList<string> names, int hit)
+        {
+            string n = SpeechMatcher.Normalize(names[hit]);
+            for (int i = 0; i < names.Count; i++)
+            {
+                if (i == hit) continue;
+                string l = SpeechMatcher.Normalize(names[i]);
+                if (l.Length <= n.Length || !l.StartsWith(n, StringComparison.Ordinal)) continue;
+                for (int k = n.Length; k < l.Length; k++)
+                    if (t0.EndsWith(l.Substring(0, k), StringComparison.Ordinal)) return true;
+            }
+            return false;
+        }
+
         /// <summary>送進一個假設（final＝最後結果，alts 為候選文字）；觸發時回傳 names 的索引，否則 -1</summary>
         public int Feed(bool final, IList<string> alts, IList<string> names, float now)
         {
@@ -271,6 +286,8 @@ namespace SpellDuel
                     regions.Add(n.Substring(Math.Min(skip, n.Length)));
                 }
                 hit = SpeechMatcher.Best(regions, names, out _, out _, true);
+                // 名稱是另一個名稱的開頭（刺殺／刺殺準備）：話還沒講完、句尾可能正要接下去 → 先等
+                if (hit >= 0 && !final && MayContinue(t0, names, hit)) return -1;
                 if (hit >= 0) { locked = true; consumed = t0.Length; }
             }
             if (final) { locked = false; consumed = 0; last = ""; }
@@ -296,7 +313,7 @@ namespace SpellDuel
         // 簡體 → 繁體（技能名稱用到的字與常見異體字）
         const string SimpTrad =
             "击擊连連兽獸夹夾术術枪槍鎗槍风風陨隕愈癒瘉癒袭襲飞飛烟煙菸煙雾霧弹彈斩斬剑劍劒劍剣劍气氣挡擋铁鐵疗療猎獵" +
-            "圣聖审審护護祷禱净淨广廣";
+            "圣聖审審护護祷禱净淨广廣杀殺";
 
         // 拼音（不含聲調）→ 字：技能名稱的每個字，加上辨識器可能輸出的同音字（繁簡都有）
         const string PinyinTable =
@@ -331,7 +348,7 @@ namespace SpellDuel
             "huan 換换環环歡欢緩缓還还幻患喚唤|" +
             // 牧師：聖光彈、審判、治療術、淨化、守護、祈禱
             "sheng 聖圣生聲声升勝胜省盛剩繩绳牲|guang 光廣广逛|shen 審审神身深伸申甚慎腎肾紳绅|pan 判盼盤盘攀潘叛畔|" +
-            "hua 化花話话畫画華华滑劃划|kang 抗康扛炕慷亢|fa 法發发罰罚乏伐閥阀筏髮|hu 護护戶户湖虎呼胡壺壶糊互狐乎|yi 一1|er 二2|liu 六6|ba 八8|jiu 九9|ling 零0";
+            "hua 化花話话畫画華华滑劃划|kang 抗康扛炕慷亢|fa 法發发罰罚乏伐閥阀筏髮|hu 護护戶户湖虎呼胡壺壶糊互狐乎|sha 殺杀沙紗纱砂傻鯊鲨煞啥|ming 冥明名命鳴鸣銘铭|zhong 中重種种眾众鐘钟終终忠腫肿|zhun 準准|yi 一1|er 二2|liu 六6|ba 八8|jiu 九9|ling 零0";
 
         static readonly Dictionary<char, char> toTrad = new Dictionary<char, char>();
         static readonly Dictionary<char, List<string>> pinyin = new Dictionary<char, List<string>>();
@@ -485,7 +502,8 @@ namespace SpellDuel
             if (bestIdx < 0) return -1;
             float secondRel = float.MinValue;
             for (int k = 0; k < names.Count; k++)
-                if (k != bestIdx && normNames[k] != normNames[bestIdx] && rel[k] > secondRel) { secondRel = rel[k]; secondScore = raw[k]; }
+                // 被最佳名稱包含的較短名稱（刺殺準備裡的刺殺）不算競爭者
+                if (k != bestIdx && normNames[k] != normNames[bestIdx] && !normNames[bestIdx].Contains(normNames[k]) && rel[k] > secondRel) { secondRel = rel[k]; secondScore = raw[k]; }
             bestScore = raw[bestIdx];
             if (bestRel < 0f) return -1;
             if (secondRel > float.MinValue && bestRel - secondRel < MinMargin) return -1;
