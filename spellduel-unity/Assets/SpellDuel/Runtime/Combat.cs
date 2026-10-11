@@ -28,6 +28,8 @@ namespace SpellDuel
         public int shieldLeft;
         // 刺客的近身技能：放招後進入「伏擊」，時限內靠近到射程內就自動出手
         public SkillDef armed; public float armedUntil;
+        // 身體閃避：蹲下（躲橫向攻擊）、快速側跨（短暫無敵）
+        public bool crouching; public float dodgeUntil;
         public readonly List<Dot> dots = new List<Dot>();
 
         public class Dot { public float dps, until, acc; }
@@ -57,6 +59,7 @@ namespace SpellDuel
 
     public class Projectile
     {
+        public bool evaded;             // 已經被閃過（只提示一次，法術繼續飛）
         public Fighter owner;
         public SkillDef skill;
         public Vector3 pos, dir;
@@ -384,6 +387,12 @@ namespace SpellDuel
                     }
                     else if (DistancePointSegment(p.pos, a, b) < p.skill.radius + Fighter.BodyRadius)
                     {
+                        // 閃避：蹲下躲過橫向攻擊、側跨的無敵時間內 → 法術穿過去
+                        if (Evades(target, p))
+                        {
+                            if (!p.evaded) { p.evaded = true; Emit("evade", target.Chest, p.skill.color, target.dodgeUntil > now ? "閃避！" : "蹲下躲過！"); }
+                            continue;
+                        }
                         p.alive = false;
                         if (p.skill.id == "meteor" && !p.reflected) AddBurn(p, target.Feet);   // 直接砸中也留下火海
                         if (remoteEnemy && target == enemy) { Emit("hit", p.pos, p.skill.color, null); OnRemoteHit?.Invoke(p.skill, p.damage, p.pos, p.id); }
@@ -394,6 +403,9 @@ namespace SpellDuel
             }
             projectiles.RemoveAll(x => !x.alive);
         }
+
+        /// <summary>這一發會不會被閃過：側跨的無敵時間內全部閃過；蹲著時橫向攻擊（duckable）打不到</summary>
+        public bool Evades(Fighter target, Projectile p) => target.dodgeUntil > now || (target.crouching && p.skill.duckable && p.skill.id != "meteor");
 
         /// <summary>伏擊：時限內和對手的水平距離 ≤ 技能射程 → 自動出手一次</summary>
         void UpdateAmbush(Fighter f)

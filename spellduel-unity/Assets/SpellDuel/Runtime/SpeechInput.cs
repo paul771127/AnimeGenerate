@@ -244,12 +244,18 @@ namespace SpellDuel
         public int Feed(bool final, IList<string> alts, IList<string> names, float now)
         {
             if (alts == null || alts.Count == 0) return -1;
+            bool afterQuiet = now - lastChange > QuietReset;   // 上一句話已經講完
             Update(now);
             string t0 = SpeechMatcher.Normalize(alts[0]);
             if (!string.IsNullOrEmpty(alts[0])) LastHeard = alts[0].Trim();
-            if (!final && t0 == last) return -1;   // 沒有新內容
-
             string prev = last;
+            if (!final && afterQuiet && !locked && (t0 == prev || !t0.StartsWith(prev)))
+            {
+                // 安靜一陣子後，辨識器開了新的一句（原生端同一句裡不會重複送一樣的文字）：
+                // 就算文字和上一句一模一樣（再唸一次同一個技能），也當成新的一句從頭比對
+                prev = ""; consumed = 0;
+            }
+            else if (!final && t0 == last) return -1;   // 沒有新內容
             consumed = Math.Min(consumed, SpeechMatcher.CommonPrefix(t0, prev));
             last = t0;
             lastChange = now;

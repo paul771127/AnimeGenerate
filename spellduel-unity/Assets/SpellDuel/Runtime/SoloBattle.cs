@@ -62,10 +62,21 @@ namespace SpellDuel
         readonly Dictionary<Projectile, GameObject> projGo = new Dictionary<Projectile, GameObject>();
         readonly Dictionary<Trap, GameObject> trapGo = new Dictionary<Trap, GameObject>();
         readonly Dictionary<BurnZone, GameObject> burnGo = new Dictionary<BurnZone, GameObject>();
+        // 攻擊預警：敵人蓄力時地上的紅線、隕石落點的紅圈
+        GameObject warnLine; readonly Dictionary<Projectile, GameObject> landGo = new Dictionary<Projectile, GameObject>();
+        // 身體閃避：站立時手機高度（基準）、最近的位置（判斷快速側跨）
+        float standY = -1f, nextDodgeOk;
+        readonly Queue<KeyValuePair<float, Vector3>> moveHist = new Queue<KeyValuePair<float, Vector3>>();
+        public const float CrouchDrop = 0.32f, SidestepDist = 0.55f, SidestepWindow = 0.35f, DodgeTime = 0.35f, DodgeCooldown = 1.8f;
         class Floater { public Vector3 posMap; public string text; public Color color; public float born; public bool screen; }
         readonly List<Floater> floaters = new List<Floater>();
         string message = ""; float messageUntil;
         float incomingFlash, hitFlash;
+        // 打擊感：畫面震動（像素）、命中停頓（重擊時戰鬥時間停一下下）、蓄滿提示音只響一次
+        float shake, hitStopUntil, lastWarn = -9f;
+        bool chargeWasFull;
+        void Kick(float px, float stop) { shake = Mathf.Max(shake, px); if (!NetMode && stop > 0f) hitStopUntil = Mathf.Max(hitStopUntil, Time.time + stop); }
+        static float DmgOf(string text) => text != null && text.StartsWith("-") && float.TryParse(text.Substring(1), out var d) ? d : 0f;
         // AR 追蹤中斷（對著白牆、遮住鏡頭…）：單人練習整場暫停（敵人、法術、判定都停住），恢復後繼續。
         // 只是把鏡頭轉開、看不到敵人時不暫停，敵人照樣從畫面外攻擊。
         bool frozen;
@@ -87,6 +98,7 @@ namespace SpellDuel
             speech = new SpeechInput();
             speech.OnSkill += OnSpeechSkill;
             LoadLoadout();
+            Sfx.Ensure();
         }
 
         void LoadLoadout()
@@ -214,6 +226,9 @@ namespace SpellDuel
                         En.armedUntil = hold;
                     }
                     else En.armed = null;
+                    // 對手蹲下／側跨閃避（我判定命中時要算進去）
+                    En.crouching = (m.e & 16) != 0;
+                    if ((m.e & 32) != 0) En.dodgeUntil = battle.now + 0.15f;
                     break;
             }
         }
@@ -223,7 +238,8 @@ namespace SpellDuel
             if (!NetMode || battle == null || Time.time < nextState) return;
             nextState = Time.time + 0.1f;
             var me = Me; float now = battle.now;
-            int e = (me.blockUntil > now ? 1 : 0) | (me.shieldUntil > now ? 2 : 0) | (me.counterUntil > now ? 4 : 0) | (me.armed != null ? 8 : 0);
+            int e = (me.blockUntil > now ? 1 : 0) | (me.shieldUntil > now ? 2 : 0) | (me.counterUntil > now ? 4 : 0) | (me.armed != null ? 8 : 0)
+                | (me.crouching ? 16 : 0) | (me.dodgeUntil > now ? 32 : 0);
             NetSend?.Invoke(new Msg { t = "state", k = me.charging != null ? me.charging.id : "", s = battle.ChargeProgress(me), hp = Mathf.CeilToInt(me.hp), e = e });
         }
         public void Hide() { EndBattle(); phase = Phase.Hidden; }
@@ -276,6 +292,10 @@ namespace SpellDuel
             foreach (var go in projGo.Values) if (go) Destroy(go);
             foreach (var go in trapGo.Values) if (go) Destroy(go);
             foreach (var go in burnGo.Values) if (go) Destroy(go);
+            foreach (var go in landGo.Values) if (go) Destroy(go);
+            landGo.Clear();
+            if (warnLine) Destroy(warnLine);
+            standY = -1f; moveHist.Clear();
             projGo.Clear(); trapGo.Clear(); burnGo.Clear(); floaters.Clear();
             if (enemyShield) Destroy(enemyShield);
             if (enemyRig) Destroy(enemyRig.gameObject);
@@ -296,7 +316,13 @@ namespace SpellDuel
             if (battle == null) return;
             SyncPlayer(Me);
             float dt = Mathf.Min(Time.deltaTime, 0.1f);
+            if (Time.time < hitStopUntil) dt = 0f;   // 命中停頓
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
+            shake = Mathf.Max(0f, shake - Time.deltaTime * Mathf.Max(40f, shake * 8f));
+            // 蓄滿：叮一聲＋輕震動
+            bool full = Me.charging != null && battle.ChargeProgress(Me) >= 1f;
+            if (full && !chargeWasFull && Me.charging.charge > 0f) { Sfx.Play("charged", 0.8f); Haptics.Play(Haptics.Kind.Light); }
+            chargeWasFull = full;
             frozen = phase == Phase.Fighting && !Tracking.Ok;
             if (NetMode) SyncRemote();
             UpdateLock();
@@ -337,6 +363,34 @@ namespace SpellDuel
             if (!Tracking.Ok) return;
             me.head = WorldFrame.ToWorld(cam.transform.position);
             me.forward = WorldFrame.DirToWorld(cam.transform.forward);
+            UpdateBodyDodge(me);
+        }
+
+        /// <summary>
+        /// 身體閃避：手機比站立高度低 32cm 以上＝蹲下（躲得過橫向攻擊）；
+        /// 0.35 秒內水平移動 55cm 以上＝快速側跨（0.35 秒無敵，1.8 秒才能再用一次）。
+        /// </summary>
+        void UpdateBodyDodge(Fighter me)
+        {
+            if (battle == null) return;
+            float dt = Mathf.Max(1e-3f, Time.deltaTime), y = me.head.y;
+            if (standY < 0f) standY = y;
+            // 站起來時基準很快跟上；蹲著時基準慢慢往下飄（蹲太久就不算閃避了）
+            standY = y > standY ? Mathf.Lerp(standY, y, 1f - Mathf.Exp(-dt * 4f)) : Mathf.Lerp(standY, y, 1f - Mathf.Exp(-dt * 0.1f));
+            bool was = me.crouching;
+            me.crouching = standY - y > CrouchDrop;
+            if (me.crouching && !was) Haptics.Play(Haptics.Kind.Light);
+
+            float now = battle.now;
+            moveHist.Enqueue(new KeyValuePair<float, Vector3>(now, me.Feet));
+            while (moveHist.Count > 0 && now - moveHist.Peek().Key > SidestepWindow) moveHist.Dequeue();
+            if (moveHist.Count > 2 && now >= nextDodgeOk && Battle.FlatDistance(moveHist.Peek().Value, me.Feet) > SidestepDist)
+            {
+                me.dodgeUntil = now + DodgeTime; nextDodgeOk = now + DodgeCooldown;
+                floaters.Add(new Floater { text = "💨 閃避", color = new Color(0.6f, 0.9f, 1f), born = Time.time, screen = true });
+                Sfx.Play("dodge", 0.7f);
+                moveHist.Clear();
+            }
         }
 
         bool InTapZone(Vector2 guiPos) => guiPos.y > Screen.height * 0.2f && guiPos.y < Screen.height * 0.74f;
@@ -422,7 +476,9 @@ namespace SpellDuel
         {
             if (phase != Phase.Fighting || battle == null || frozen || !Skills.All.TryGetValue(id, out var skill)) return;
             heard = $"🎤 {skill.name}"; heardUntil = Time.time + 1.5f;
-            if (Me.charging != skill && !battle.TryChant(Me, skill, out var why)) Say(why, 1.5f);
+            if (Me.charging == skill) return;
+            if (!battle.TryChant(Me, skill, out var why)) Say(why, 1.5f);
+            else { Sfx.Play("select"); Haptics.Play(Haptics.Kind.Light); }
         }
 
         void OnUtterance(float[][] seq, float peak)
@@ -441,6 +497,7 @@ namespace SpellDuel
             var skill = Skills.All[r.id];
             heard = $"🎤 {skill.name}"; heardUntil = Time.time + 1.5f;
             if (!battle.TryChant(Me, skill, out var why)) Say(why, 1.5f);
+            else { Sfx.Play("select"); Haptics.Play(Haptics.Kind.Light); }
         }
 
         /// <summary>敵人有沒有出現在我的畫面中（頭、胸、腳任一處），並算出鎖定框</summary>
@@ -489,33 +546,66 @@ namespace SpellDuel
                 case "hit": case "trap": case "mitigate": case "effect": case "counter": case "buff": case "heal": case "trapSet":
                     if (!string.IsNullOrEmpty(text)) floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time });
                     if (kind == "hit" || kind == "trap") { Burst(at, c); SpellFx.Impact(kind == "hit" ? myClass : "", c, WorldFrame.FromWorld(at), 1f); }
+                    // 音效＋震動：打中敵人（傷害越高越重）、格擋、回復、增益、陷阱
+                    switch (kind)
+                    {
+                        case "hit": case "trap":
+                        {
+                            float d = DmgOf(text);
+                            Sfx.Play(kind == "trap" ? "trap" : "hit", Mathf.Clamp(0.55f + d / 60f, 0.55f, 1f), d >= 40f ? 0.8f : 1f);
+                            if (kind == "trap") Sfx.Play("hit", 0.7f);
+                            Haptics.Play(d >= 30f ? Haptics.Kind.Medium : Haptics.Kind.Light);
+                            Kick(d >= 30f ? 10f : 4f, d >= 30f ? 0.09f : 0.03f);
+                            break;
+                        }
+                        case "mitigate": case "counter": Sfx.Play("block"); Haptics.Play(Haptics.Kind.Medium); Kick(5f, 0.05f); break;
+                        case "heal": Sfx.Play("heal"); break;
+                        case "buff": Sfx.Play("cast_priest", 0.6f); break;
+                        case "trapSet": Sfx.Play("trap", 0.5f); break;
+                    }
                     break;
+                case "cast":
+                {
+                    // 放招：自己的放招聲比較大；對手的小一點（聽得出來敵人出手了）
+                    bool mine = Vector3.Distance(at, Me.head) < 0.8f;
+                    Sfx.Cast(mine ? myClass : enemyClassUsed, mine ? 1f : 0.55f);
+                    if (mine) Haptics.Play(Haptics.Kind.Medium);
+                    break;
+                }
                 case "hurt":
                     // 被打中：震動＋整個畫面閃紅＋扣血（血量已在 Battle 裡扣掉）
                     floaters.Add(new Floater { text = text, color = new Color(1f, 0.3f, 0.3f), born = Time.time, screen = true });
                     hitFlash = 1f;
-                    Handheld.Vibrate();
+                    {
+                        float d = DmgOf(text);
+                        Sfx.Play("hurt", Mathf.Clamp(0.6f + d / 50f, 0.6f, 1f));
+                        Haptics.Play(Haptics.Kind.Heavy);
+                        Kick(d >= 30f ? 22f : 12f, d >= 30f ? 0.12f : 0.05f);
+                    }
                     break;
                 case "armed":
                     floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time, screen = at == Me.Chest });
-                    if (at == Me.Chest) SpellFx.CastBurst(myClass, c, cam.transform.position + cam.transform.forward * 0.5f - cam.transform.up * 0.08f, cam.transform.forward, 0.35f);
+                    if (at == Me.Chest) { SpellFx.CastBurst(myClass, c, cam.transform.position + cam.transform.forward * 0.5f - cam.transform.up * 0.08f, cam.transform.forward, 0.35f); Sfx.Cast(myClass); Haptics.Play(Haptics.Kind.Medium); }
                     break;
                 case "ambush":
                     // 伏擊出手：在被刺的人身上爆開
                     floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time });
                     SpellFx.Impact("assassin", c, WorldFrame.FromWorld(at), 1.2f);
+                    Sfx.Play("hit", 1f, 1.2f); Kick(8f, 0.08f);
                     break;
                 case "armedExpire":
                     if (at == Me.Chest) Say(text + "（5 秒內沒靠近）", 1.5f);
                     break;
                 case "burnzone":
                     SpellFx.Impact("mage", c, WorldFrame.FromWorld(at), 2.5f);   // 隕石落地爆炸
+                    Sfx.Play("boom", Mathf.Clamp01(1.2f - Battle.FlatDistance(at, Me.Feet) / 15f));
+                    if (Battle.FlatDistance(at, Me.Feet) < 4f) { Haptics.Play(Haptics.Kind.Heavy); Kick(16f, 0f); }
                     break;
                 case "burn":
                 {
                     bool meBurn = Battle.FlatDistance(at, Me.Feet) < 0.5f || at == Me.Chest;
                     floaters.Add(new Floater { posMap = at + Vector3.up * 1.2f, text = "灼燒 " + text, color = new Color(1f, 0.55f, 0.2f), born = Time.time, screen = meBurn });
-                    if (meBurn) { hitFlash = Mathf.Max(hitFlash, 0.45f); Handheld.Vibrate(); }
+                    if (meBurn) { hitFlash = Mathf.Max(hitFlash, 0.45f); Haptics.Play(Haptics.Kind.Medium); Kick(4f, 0f); }
                     break;
                 }
                 case "dot":
@@ -525,11 +615,18 @@ namespace SpellDuel
                     break;
                 case "miss":
                     break;
+                case "evade":
+                {
+                    bool meEvade = Vector3.Distance(at, Me.Chest) < 0.6f;
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 0.4f, text = (meEvade ? "✨ " : "") + text, color = meEvade ? new Color(0.5f, 1f, 1f) : new Color(1f, 0.8f, 0.4f), born = Time.time, screen = meEvade });
+                    if (meEvade) { Sfx.Play("dodge"); Haptics.Play(Haptics.Kind.Success); }
+                    break;
+                }
                 case "timeout":
                     if (at == Me.Chest) Say("詠唱逾時", 1.5f);
                     break;
-                case "win": Say("🏆 勝利！", 99f); break;
-                case "lose": Say("💀 敗北…", 99f); break;
+                case "win": Say("🏆 勝利！", 99f); Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success); break;
+                case "lose": Say("💀 敗北…", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); break;
             }
         }
 
@@ -578,12 +675,18 @@ namespace SpellDuel
                     {
                         if (enemyRig) enemyRig.PlayCast();   // 敵人出招動作＋光效
                         SpellFx.CastBurst(enemyClassUsed, p.skill.color, WorldFrame.FromWorld(p.pos), WorldFrame.DirFromWorld(p.dir), 1f);
+                        if (NetMode) Sfx.Cast(enemyClassUsed, 0.55f);   // 雙人：對手的法術不會經過 Battle 的 cast 事件
                     }
                 }
                 var dirS = WorldFrame.DirFromWorld(p.dir);
                 go.transform.SetPositionAndRotation(WorldFrame.FromWorld(p.pos), dirS.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(dirS, Vector3.up) : Quaternion.identity);
                 // 敵人的法術逼近時畫面邊框閃紅
-                if (p.owner == En && Vector3.Distance(p.pos, Me.Chest) < 2.5f && Vector3.Dot(p.dir, Me.Chest - p.pos) > 0) incomingFlash = Mathf.Max(incomingFlash, 0.6f);
+                if (p.owner == En && Vector3.Distance(p.pos, Me.Chest) < 2.5f && Vector3.Dot(p.dir, Me.Chest - p.pos) > 0)
+                {
+                    // 法術逼近：警告音＋震動（同一波只響一次）
+                    if (incomingFlash < 0.05f && Time.time - lastWarn > 0.8f) { lastWarn = Time.time; Sfx.Play("warn", 0.7f); Haptics.Play(Haptics.Kind.Warning); }
+                    incomingFlash = Mathf.Max(incomingFlash, 0.6f);
+                }
             }
             foreach (var kv in new List<KeyValuePair<Projectile, GameObject>>(projGo))
                 if (!alive.Contains(kv.Key)) { Destroy(kv.Value, 0.25f); projGo.Remove(kv.Key); }
@@ -610,6 +713,43 @@ namespace SpellDuel
             }
             foreach (var kv in new List<KeyValuePair<BurnZone, GameObject>>(burnGo))
                 if (!liveBurns.Contains(kv.Key)) { Destroy(kv.Value); burnGo.Remove(kv.Key); }
+
+            // 攻擊預警①：敵人蓄力過半 → 地上一條從敵人到我的紅線（越接近放招越亮）
+            {
+                var ec = En.charging;
+                bool show = ec != null && ec.type == SkillType.Projectile && ec.id != "meteor" && En.Alive && battle.ChargeProgress(En) >= 0.5f;
+                if (show)
+                {
+                    if (!warnLine) warnLine = Prim(PrimitiveType.Cube, new Color(1f, 0.15f, 0.15f, 0.4f));
+                    var a = En.Feet; var b = Me.Feet; var d = b - a; d.y = 0f;
+                    float len = Mathf.Max(0.1f, d.magnitude);
+                    warnLine.SetActive(true);
+                    warnLine.transform.position = WorldFrame.FromWorld((a + b) / 2f + Vector3.up * 0.02f);
+                    warnLine.transform.rotation = WorldFrame.RotFromWorld(Quaternion.LookRotation(d / len, Vector3.up));
+                    warnLine.transform.localScale = new Vector3(ec.duckable ? 0.6f : 0.15f, 0.004f, len);
+                    float pr = battle.ChargeProgress(En), pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * (6f + pr * 10f));
+                    warnLine.GetComponent<Renderer>().material.color = new Color(1f, ec.duckable ? 0.5f : 0.15f, 0.1f, (0.15f + 0.35f * pr) * (0.6f + 0.4f * pulse));
+                }
+                else if (warnLine) warnLine.SetActive(false);
+            }
+            // 攻擊預警②：隕石下落中 → 落點的紅圈（走出紅圈就閃得掉）
+            var liveLand = new HashSet<Projectile>();
+            foreach (var p in battle.projectiles)
+            {
+                if (p.skill.id != "meteor" || p.dir.y > -0.5f) continue;
+                liveLand.Add(p);
+                if (!landGo.TryGetValue(p, out var lg))
+                {
+                    lg = Prim(PrimitiveType.Cylinder, new Color(1f, 0.1f, 0.1f, 0.35f));
+                    lg.transform.localScale = new Vector3(Battle.BurnRadius * 2f, 0.003f, Battle.BurnRadius * 2f);
+                    landGo[p] = lg;
+                }
+                lg.transform.position = WorldFrame.FromWorld(new Vector3(p.pos.x, 0.025f, p.pos.z));
+                float k = 0.5f + 0.5f * Mathf.Sin(Time.time * 14f);
+                lg.GetComponent<Renderer>().material.color = new Color(1f, 0.1f, 0.1f, 0.2f + 0.25f * k);
+            }
+            foreach (var kv in new List<KeyValuePair<Projectile, GameObject>>(landGo))
+                if (!liveLand.Contains(kv.Key)) { Destroy(kv.Value); landGo.Remove(kv.Key); }
 
             // 陷阱：地板上的扁圓盤（生效前是灰色）
             var liveTraps = new HashSet<Trap>(battle.traps);
@@ -701,7 +841,18 @@ namespace SpellDuel
         {
             Styles();
             if (phase == Phase.Setup) DrawSetup();
-            else if (phase == Phase.Fighting || phase == Phase.Over) DrawHud();
+            else if (phase == Phase.Fighting || phase == Phase.Over)
+            {
+                // 畫面震動：整個介面跟著抖
+                var keep = GUI.matrix;
+                if (shake > 0.5f)
+                {
+                    float sx = (Mathf.PerlinNoise(Time.time * 40f, 0f) - 0.5f) * 2f * shake, sy = (Mathf.PerlinNoise(0f, Time.time * 40f) - 0.5f) * 2f * shake;
+                    GUI.matrix = Matrix4x4.Translate(new Vector3(sx, sy, 0f)) * keep;
+                }
+                DrawHud();
+                GUI.matrix = keep;
+            }
         }
 
         void Panel(Rect r, float alpha = 0.6f)
@@ -927,6 +1078,14 @@ namespace SpellDuel
             }
             if (en.armed != null && en.Alive)
                 UiKit.Pill(H * 0.37f, $"⚠ 敵人伏擊中！保持距離（> {en.armed.rangeMax:0.#}m）", fs, new Color(1f, 0.4f, 0.45f), pillW);
+            // 閃避提示：敵人攻擊蓄力過半時告訴你怎麼躲
+            if (en.charging != null && en.Alive && en.charging.type == SkillType.Projectile && battle.ChargeProgress(en) >= 0.5f)
+            {
+                var ecs = en.charging;
+                string tip = ecs.id == "meteor" ? $"⚠ {ecs.name}：落下時離開紅圈！" : ecs.duckable ? $"⚠ {ecs.name}：↓ 蹲下躲！" : $"⚠ {ecs.name}：快速側跨閃開！";
+                UiKit.Pill(H * 0.43f, tip, fs, ecs.duckable ? new Color(1f, 0.7f, 0.3f) : new Color(1f, 0.45f, 0.45f), pillW);
+            }
+            if (me.crouching) UiKit.Pill(H * 0.7f, "↓ 蹲下中", fsS, new Color(0.6f, 0.9f, 1f), pillW);
 
             // 準星（畫面中央）：所有技能都朝這裡放；蓄力完成（或符文畫好）時用技能顏色脈動
             {
