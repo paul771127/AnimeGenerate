@@ -978,6 +978,7 @@ namespace SpellDuel
         ///   b_bolt：約 0.35 m 的熔岩球（暗色岩殼碎塊、發光核心、火焰拖尾、滴落的火星）。
         ///   b_sweep：約 2.4 m 寬、0.5 m 高的水平新月衝擊波（火焰＋翻滾岩塊），一看就知道要蹲下。
         ///   b_rain：約 0.6 m 的燃燒巨石（煙＋火拖尾），+Z 朝下落下；外型對 Z 軸對稱，翻滾角度不影響外觀。
+        ///   m_fireball：火焰射手小鬼的青白色小火球（約 0.18 m）＋短拖尾。
         /// </summary>
         public static GameObject CreateProjectileVisual(string skillId)
         {
@@ -986,6 +987,7 @@ namespace SpellDuel
                 case "b_bolt": return BuildBolt();
                 case "b_sweep": return BuildSweep();
                 case "b_rain": return BuildRain();
+                case "m_fireball": return BuildImpFireball();
                 default: return null;
             }
         }
@@ -1233,6 +1235,48 @@ namespace SpellDuel
             }
 
             anim.Setup(new[] { tumble }, new[] { new Vector3(1f, 0.6f, 0.3f).normalized }, new[] { 200f }, flame, 0.1f, 19f);
+            return root;
+        }
+
+        static Material projCyan, projWhite;
+
+        /// <summary>火焰射手的青白小火球：發光球＋白熱核心＋往 -Z 的短火舌＋光暈＋短拖尾粒子。</summary>
+        static GameObject BuildImpFireball()
+        {
+            InitProjMats();
+            if (projCyan == null) projCyan = new Material(glowShader) { color = new Color(0.45f, 0.88f, 1f), name = "BossProjCyan" };
+            if (projWhite == null) projWhite = new Material(glowShader) { color = new Color(0.9f, 1f, 1f), name = "BossProjWhite" };
+            var root = new GameObject("Boss Projectile m_fireball");
+            var anim = root.AddComponent<BossFxSpin>();
+            var rt = root.transform;
+
+            ProjPart(PrimitiveType.Sphere, rt, Vector3.zero, Vector3.one * 0.15f, projCyan);
+            ProjPart(PrimitiveType.Sphere, rt, new Vector3(0f, 0f, 0.035f), Vector3.one * 0.085f, projWhite);
+            var tail = Pivot("Tail", rt, Vector3.zero);
+            GlowMesh(tail, "imp.fireball.tail", m =>
+            {
+                m.Lathe(new[] { -0.42f, 0f, -0.24f, 0.05f, -0.08f, 0.085f, 0.04f, 0.1f, 0.1f, 0.07f, 0.13f, 0f }, 9,
+                    (z, j) => new Color(0.2f, 0.55f, 1f, Mathf.Lerp(0.05f, 0.5f, Mathf.InverseLerp(-0.42f, 0.05f, z))), 1f, 1f, 0f, JagF);
+                m.Lathe(new[] { -0.28f, 0f, -0.14f, 0.04f, -0.03f, 0.065f, 0.06f, 0.07f, 0.11f, 0f }, 9,
+                    (z, j) => new Color(0.75f, 0.97f, 1f, Mathf.Lerp(0.1f, 0.8f, Mathf.InverseLerp(-0.28f, 0.05f, z))), 1f, 1f, 20f, JagF);
+            });
+            Halo(rt, new Color(0.4f, 0.85f, 1f, 0.75f), 0.45f);
+
+            var trail = SpellFx.NewPS(rt, "Trail", SpellFx.AddMat(SpellFx.TexSoft), 20, true);
+            {
+                var m = trail.main;
+                m.startLifetime = new ParticleSystem.MinMaxCurve(0.15f, 0.28f);
+                m.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.14f);
+                m.startColor = new ParticleSystem.MinMaxGradient(new Color(0.5f, 0.9f, 1f, 0.8f), new Color(0.15f, 0.45f, 1f, 0.7f));
+                SpellFx.Sphere(trail, 0.04f);
+                SpellFx.FadeOut(trail);
+                SpellFx.SizeCurve(trail, SpellFx.Shrink);
+                SpellFx.Rate(trail, 20f);
+                var em = trail.emission; em.rateOverDistance = 25f;
+                trail.Play();
+            }
+
+            anim.Setup(new Transform[0], new Vector3[0], new float[0], tail, 0.15f, 25f);
             return root;
         }
 

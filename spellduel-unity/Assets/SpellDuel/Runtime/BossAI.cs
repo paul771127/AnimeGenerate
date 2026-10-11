@@ -26,6 +26,17 @@ namespace SpellDuel
         }
         public string Status { get; private set; } = "";
         public bool Enraged { get; private set; }
+        float walkBase = -1f;
+
+        /// <summary>無盡模式：Boss 重新出現（不再狂暴、清掉冷卻；越後面的 Boss 蓄力越快）</summary>
+        public void Respawn(float chargeMul)
+        {
+            if (walkBase < 0f) walkBase = walkSpeed;
+            Enraged = false; walkSpeed = walkBase;
+            me.chargeScale = baseCharge * chargeMul;
+            nextThink = b.now + 2.5f;
+            me.target = null;
+        }
         public event Action OnEnrage;
 
         readonly Battle b;
@@ -49,7 +60,8 @@ namespace SpellDuel
             if (b.Over || !me.Alive) return;
             if (!Enraged && me.hp < me.maxHp * 0.5f)
             {
-                Enraged = true; me.chargeScale = baseCharge * 0.7f; walkSpeed *= 1.45f;
+                if (walkBase < 0f) walkBase = walkSpeed;
+                Enraged = true; me.chargeScale *= 0.7f; walkSpeed = walkBase * 1.45f;
                 OnEnrage?.Invoke();
             }
             PickTarget();

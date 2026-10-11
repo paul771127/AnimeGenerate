@@ -36,6 +36,8 @@ namespace SpellDuel
         public float damageTakenMul = 1f;   // 受到的傷害倍率（單人模式的電腦難度：簡單／普通時玩家受傷較少）
         // Boss 召喚的小怪：編號、攻擊狀態（預備到 windupUntil 出手，attackReadyAt 之後才能再攻擊）
         public bool isMinion; public int minionId; public float windupUntil, attackReadyAt;
+        public int minionKind;                 // 0 近戰小鬼、1 火焰射手、2 岩石衝鋒獸、3 自爆小鬼
+        public float dmgMul = 1f, speedMul = 1f;   // 無盡模式：越後面的波次越強
         // 牧師的守護：時限內受到的直接傷害按比例減少
         public float armorUntil, armorReduce;
         public readonly List<Dot> dots = new List<Dot>();
@@ -153,15 +155,91 @@ namespace SpellDuel
         public const int MaxMinions = 5;
         public event Action<int, int, SkillDef> OnMinionHit;   // 隊友端：我的法術打到小怪（編號、傷害、技能）
 
-        public Fighter SpawnMinion(Vector3 feet, int id = 0)
+        public static readonly string[] MinionNames = { "熔岩小鬼", "火焰射手", "岩石衝鋒獸", "自爆小鬼" };
+        // 各種小怪的基本數值：血量、移動速度、身體半徑、頭的高度
+        static readonly int[] MinionHp = { 40, 30, 120, 20 };
+        static readonly float[] MinionSpeed = { 1.0f, 0.9f, 0.6f, 1.7f }, MinionRadius = { 0.25f, 0.23f, 0.4f, 0.22f }, MinionHead = { 0.85f, 0.8f, 1.3f, 0.65f };
+
+        public Fighter SpawnMinion(Vector3 feet, int id = 0, int kind = 0, float hpMul = 1f, float dmgMul = 1f, float speedMul = 1f)
         {
+            kind = Mathf.Clamp(kind, 0, 3);
             var c = Skills.Classes["minion"];
-            var m = new Fighter(c.name, c, new string[0], false) { isMinion = true, bodyRadius = 0.25f, minionId = id > 0 ? id : nextId++ };
-            m.head = new Vector3(feet.x, 0.85f, feet.z);
+            var m = new Fighter(MinionNames[kind], c, new string[0], false)
+            {
+                isMinion = true, minionKind = kind, bodyRadius = MinionRadius[kind], minionId = id > 0 ? id : nextId++,
+                dmgMul = dmgMul, speedMul = speedMul,
+            };
+            m.maxHp = Mathf.RoundToInt(MinionHp[kind] * hpMul); m.hp = m.maxHp;
+            m.head = new Vector3(feet.x, MinionHead[kind], feet.z);
             m.attackReadyAt = now + 1.2f;
             minions.Add(m);
             Emit("minionspawn", m.Feet, c.color, null);
             return m;
+        }
+
+        // ------------------------------------------------------------ 無盡模式
+        // 場地邊緣陸續冒出小怪；每 60 秒出現一隻 Boss（Boss 在場時不再冒小怪）；每打倒一隻 Boss 進入下一波：
+        // 敵人更強（血量、傷害、速度），而且解鎖新的小怪種類（火焰射手 → 岩石衝鋒獸 → 自爆小鬼）。
+        public bool endless;
+        public int wave, kills, bossKills;
+        public float nextBossAt, nextMinionAt, bossBaseHp = 400f;
+        public const float BossInterval = 60f;
+        public Func<Vector3> edgePoint;          // 場地邊緣、離玩家夠遠的隨機點（場地座標）
+        public event Action<int> OnBossSpawn;    // 無盡模式 Boss 出現（波次）
+
+        public void StartEndless()
+        {
+            endless = true; wave = 0; kills = 0; bossKills = 0;
+            enemy.hp = 0f;                        // 一開始沒有 Boss
+            nextBossAt = now + BossInterval; nextMinionAt = now + 2f;
+        }
+        public float HpMul => 1f + 0.35f * wave;
+        public float DmgMul => 0.7f + 0.2f * wave;
+        public const float EndlessRegen = 0.5f;   // 無盡模式：玩家每秒自然回血
+        public float SpeedMul => Mathf.Min(1.5f, 1f + 0.05f * wave);
+
+        float Time_dt;
+        void UpdateEndless()
+        {
+            if (endless && player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + EndlessRegen * Time_dt);
+            if (!endless || remoteEnemy || edgePoint == null) return;
+            if (!player.Alive && (ally == null || !ally.Alive)) return;
+            if (!enemy.Alive && now >= nextBossAt) SpawnBoss();
+            if (enemy.Alive) return;   // Boss 在場：小怪不再增加
+            int maxAlive = Mathf.Min(12, 3 + wave * 2) + (ally != null ? 2 : 0);
+            if (now < nextMinionAt || minions.Count >= maxAlive) return;
+            SpawnMinion(edgePoint(), 0, PickMinionKind(), HpMul, DmgMul, SpeedMul);
+            nextMinionAt = now + Mathf.Max(1.5f, 4.5f - wave * 0.4f) * (ally != null ? 0.75f : 1f);
+        }
+
+        int PickMinionKind()
+        {
+            int unlocked = Mathf.Min(3, wave);
+            float[] w = { 3f, 2f, 1.5f, 1.5f };
+            float sum = 0f; for (int k = 0; k <= unlocked; k++) sum += w[k];
+            float r = (float)rng.NextDouble() * sum;
+            for (int k = 0; k <= unlocked; k++) { r -= w[k]; if (r <= 0f) return k; }
+            return 0;
+        }
+
+        void SpawnBoss()
+        {
+            var at = edgePoint();
+            enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.5f * wave) * (ally != null ? 1.6f : 1f));
+            enemy.hp = enemy.maxHp;
+            enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
+            enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f;
+            Emit("bossarrive", enemy.Feet, enemy.cls.color, $"第 {wave + 1} 波 Boss 出現！");
+            OnBossSpawn?.Invoke(wave);
+        }
+
+        void OnBossDown()
+        {
+            bossKills++; wave++;
+            // 獎勵：打倒 Boss 回復 30% 血量（隊友端看到波次增加時自己回）
+            if (player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + player.maxHp * 0.3f);
+            nextBossAt = now + BossInterval; nextMinionAt = now + 3f;
+            Emit("bossdown", enemy.Feet, enemy.cls.color, $"打倒 Boss！進入第 {wave + 1} 波（敵人變強了）");
         }
         public Fighter MinionById(int id) => minions.Find(m => m.minionId == id);
         /// <summary>主機：隊友打到小怪</summary>
@@ -173,35 +251,42 @@ namespace SpellDuel
 
         void UpdateMinions(float dt)
         {
-            if (!enemy.Alive) { foreach (var m in minions) if (m.Alive) { m.hp = 0; Emit("miniondie", m.Feet, m.cls.color, null); } }
+            if (!enemy.Alive && !endless) { foreach (var m in minions) if (m.Alive) { m.hp = 0; Emit("miniondie", m.Feet, m.cls.color, null); } }
             minions.RemoveAll(m => !m.Alive);
             if (remoteEnemy) return;   // 隊友端：代理，不跑 AI
             var claw = Skills.All["m_claw"];
             foreach (var m in minions)
             {
+                if (!m.Alive) continue;
                 // 目標：最近的活著的玩家
                 Fighter tgt = null; float best = float.MaxValue;
                 foreach (var pl in Players()) { if (!pl.Alive) continue; float d0 = FlatDistance(m.Feet, pl.Feet); if (d0 < best) { best = d0; tgt = pl; } }
                 if (tgt == null) continue;
+                m.target = tgt;
                 m.forward = Fighter.Flat(tgt.head - m.head);
                 float d = best;
+                int kind = m.minionKind;
                 if (m.windupUntil > 0f)
                 {
                     if (now < m.windupUntil) continue;   // 預備中站著不動
-                    m.windupUntil = 0f; m.attackReadyAt = now + claw.cooldown;
-                    Emit("minionattack", m.Feet, claw.color, null);
-                    if (d <= claw.rangeMax + tgt.bodyRadius)
-                    {
-                        if (tgt.dodgeUntil > now) Emit("evade", tgt.Chest, claw.color, "閃避！");
-                        else if (tgt == ally) { Emit("allyhit", tgt.Chest, claw.color, null); OnAllyHit?.Invoke(claw, claw.damage, tgt.Chest, 0); }
-                        else ApplyDamageAndEffect(tgt, claw.damage, EffectKind.None, 0f, 0f, tgt.Chest);
-                    }
+                    m.windupUntil = 0f;
+                    MinionStrike(m, tgt, d);
                     continue;
                 }
                 if (m.snaredUntil > now) continue;
-                if (d <= 0.95f + tgt.bodyRadius && now >= m.attackReadyAt) { m.windupUntil = now + claw.charge; Emit("minionwindup", m.Feet, claw.color, null); continue; }
-                // 走向目標（停在 0.8m），小怪之間互相推開
-                var step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Min(minionSpeed * dt, Mathf.Max(0f, d - 0.8f));
+                // 出手條件：近戰／衝鋒獸／自爆要貼近；射手在 9m 內
+                float reach = kind == 1 ? 9f : kind == 3 ? 1.3f : kind == 2 ? 1.2f : 0.95f;
+                float windup = kind == 1 ? 0.8f : kind == 2 ? 1.0f : kind == 3 ? 0.5f : claw.charge;
+                if (d <= reach + tgt.bodyRadius && now >= m.attackReadyAt) { m.windupUntil = now + windup; Emit("minionwindup", m.Feet, claw.color, null); continue; }
+                // 走位：射手保持 3.5～6m，其他走向目標（停在 0.8m）；小怪之間互相推開
+                float speed = minionSpeed * MinionSpeed[kind] * m.speedMul;
+                Vector3 step;
+                if (kind == 1)
+                {
+                    float want = d > 6f ? d - 6f : d < 3.5f ? -(3.5f - d) : 0f;
+                    step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Clamp(want, -speed * dt, speed * dt);
+                }
+                else step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Min(speed * dt, Mathf.Max(0f, d - 0.8f));
                 foreach (var o in minions)
                 {
                     if (o == m) continue;
@@ -211,6 +296,55 @@ namespace SpellDuel
                 }
                 var next = m.Feet + step;
                 if (minionInside == null || minionInside(next)) m.head = new Vector3(next.x, m.head.y, next.z);
+            }
+        }
+
+        /// <summary>小怪預備完成、出手：近戰爪擊、射手丟火球、衝鋒獸重擊、自爆</summary>
+        void MinionStrike(Fighter m, Fighter tgt, float d)
+        {
+            var claw = Skills.All["m_claw"];
+            switch (m.minionKind)
+            {
+                case 1:
+                {
+                    var fb = Skills.All["m_fireball"];
+                    m.attackReadyAt = now + fb.cooldown;
+                    var from = m.head + Fighter.Flat(m.forward) * 0.3f;
+                    Spawn(m, fb, from, (tgt.Chest - from).normalized, Mathf.RoundToInt(fb.damage * m.dmgMul), EffectKind.None, 0f, 0f, false);
+                    Emit("minionattack", m.Feet, fb.color, null);
+                    return;
+                }
+                case 3:
+                {
+                    // 自爆：周圍 1.8m 內的玩家受傷（側跨閃得掉），自己消失
+                    var bomb = Skills.All["m_bomb"];
+                    Emit("minionexplode", m.Feet, bomb.color, null);
+                    foreach (var v in new List<Fighter>(Players()))
+                    {
+                        if (!v.Alive || FlatDistance(v.Feet, m.Feet) > bomb.areaRadius + v.bodyRadius) continue;
+                        int dmg = Mathf.RoundToInt(bomb.damage * m.dmgMul);
+                        if (v.dodgeUntil > now) Emit("evade", v.Chest, bomb.color, "閃避！");
+                        else if (v == ally) { Emit("allyhit", v.Chest, bomb.color, null); OnAllyHit?.Invoke(bomb, dmg, v.Chest, 0); }
+                        else ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest);
+                    }
+                    m.hp = 0f;
+                    return;
+                }
+                default:
+                {
+                    // 近戰小鬼 7、岩石衝鋒獸 16（再乘上波次倍率）
+                    int dmg = Mathf.RoundToInt((m.minionKind == 2 ? 16 : claw.damage) * m.dmgMul);
+                    m.attackReadyAt = now + (m.minionKind == 2 ? 2.2f : claw.cooldown);
+                    Emit("minionattack", m.Feet, claw.color, null);
+                    float reach = m.minionKind == 2 ? 1.6f : claw.rangeMax;
+                    if (d <= reach + tgt.bodyRadius)
+                    {
+                        if (tgt.dodgeUntil > now) Emit("evade", tgt.Chest, claw.color, "閃避！");
+                        else if (tgt == ally) { Emit("allyhit", tgt.Chest, claw.color, null); OnAllyHit?.Invoke(claw, dmg, tgt.Chest, 0); }
+                        else ApplyDamageAndEffect(tgt, dmg, EffectKind.None, 0f, 0f, tgt.Chest);
+                    }
+                    return;
+                }
             }
         }
 
@@ -310,10 +444,10 @@ namespace SpellDuel
         }
 
         /// <summary>對手：玩家（和隊友）打 enemy；enemy 打它目前的目標（沒有就打玩家）</summary>
-        public Fighter Opponent(Fighter f) => f == enemy ? (f.target != null && f.target.Alive ? f.target : player) : enemy;
+        public Fighter Opponent(Fighter f) => f == enemy || f.isMinion ? (f.target != null && f.target.Alive ? f.target : player) : enemy;
         public static float FlatDistance(Vector3 a, Vector3 b) { a.y = 0; b.y = 0; return Vector3.Distance(a, b); }
         public float Distance => FlatDistance(player.head, enemy.head);
-        public bool Over => !enemy.Alive || (!player.Alive && (ally == null || !ally.Alive));
+        public bool Over => (!endless && !enemy.Alive) || (!player.Alive && (ally == null || !ally.Alive));
 
         // ------------------------------------------------------------ 詠唱
         public bool TryChant(Fighter f, SkillDef s, out string why)
@@ -512,11 +646,11 @@ namespace SpellDuel
         Projectile Spawn(Fighter owner, SkillDef s, Vector3 from, Vector3 dir, int dmg, EffectKind eff, float dps, float dur, bool reflected, float curveAmp = 0f, float pathLen = 0f)
         {
             var p = new Projectile { owner = owner, skill = s, pos = from, basePos = from, dir = dir.normalized, damage = dmg, effect = eff, effectDps = dps, effectDur = dur, reflected = reflected, id = nextId++ };
-            if (owner == enemy && owner.target != null) p.target = owner.target;
+            if ((owner == enemy || owner.isMinion) && owner.target != null) p.target = owner.target;
             SetCurve(p, curveAmp, pathLen);
             projectiles.Add(p);
             // 要給另一支手機顯示的法術：雙人對戰的我方法術；合作模式的我方法術、主機上 Boss 的法術
-            if ((owner == player && (remoteEnemy || ally != null)) || (owner == enemy && coopHost)) OnSpawn?.Invoke(p);
+            if ((owner == player && (remoteEnemy || ally != null)) || ((owner == enemy || owner.isMinion) && coopHost)) OnSpawn?.Invoke(p);
             return p;
         }
 
@@ -542,6 +676,8 @@ namespace SpellDuel
             }
             UpdateProjectiles(dt);
             UpdateMinions(dt);
+            Time_dt = dt;
+            UpdateEndless();
             UpdateTraps();
             UpdateBurns(dt);
         }
@@ -570,7 +706,12 @@ namespace SpellDuel
                     }
                     target.BodySegment(out var a, out var b);
                     if (!p.remote && HitMinions(p)) break;   // 先擋在前面的小怪會吃到這一發
-                    if (p.remote)
+                    if (!target.Alive)
+                    {
+                        // 目標不在了（無盡模式 Boss 還沒出現）：只飛，飛完消失
+                        if (p.pos.y < 0f || p.traveled > p.skill.MaxTravel) p.alive = false;
+                    }
+                    else if (p.remote)
                     {
                         // 對手的法術：命中由對手判定（收到結果時移除）；這裡只讓它飛，飛完消失
                         if (p.pos.y < 0f || p.traveled > p.skill.MaxTravel) p.alive = false;
@@ -718,7 +859,13 @@ namespace SpellDuel
             dmg = Mathf.Round(dmg * f.damageTakenMul);
             f.hp = Mathf.Max(0, f.hp - dmg);
             Emit(kind == "dot" || kind == "burn" ? kind : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");
-            if (!f.Alive) Emit(f.isMinion ? "miniondie" : f.isPlayer ? (ally != null && ally.Alive ? "down" : "lose") : "win", f.Chest, Color.white, null);
+            if (!f.Alive)
+            {
+                if (f.isMinion) { kills++; Emit("miniondie", f.Chest, Color.white, null); }
+                else if (f.isPlayer) Emit(ally != null && ally.Alive ? "down" : "lose", f.Chest, Color.white, null);
+                else if (endless && f == enemy) OnBossDown();
+                else Emit("win", f.Chest, Color.white, null);
+            }
         }
 
         // ------------------------------------------------------------ 小工具
