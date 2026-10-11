@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SpellDuel
 {
     public enum SkillType { Projectile, Self, Trap }
-    public enum SelfKind { None, Heal, Block, Shield, Counter }
+    public enum SelfKind { None, Heal, Block, Shield, Counter, Armor, Cleanse, Prayer, Dispel }
     public enum EffectKind { None, Dot, Blind, Snare }
 
     /// <summary>
@@ -24,6 +24,9 @@ namespace SpellDuel
         public float speed = 8f, radius = 0.1f, rangeMin, rangeMax = 8f;
         public bool releaseNear;        // 距離不在射程內時不能出手（保留蓄力，靠近再放）
         public bool duckable;           // 橫向的攻擊（斬擊、劍氣、風刃、三連矢）：蹲下就躲得過
+        public bool fromAbove; public float dropHeight = 6f;   // 從目標正上方落下（隕石、審判）
+        public float areaRadius;        // 範圍攻擊：放招當下目標在施放者周圍這個半徑內就命中（Boss 的地裂重擊）
+        public float originHeight;      // 法術從離地這個高度水平射出（Boss 的橫掃）；0＝從手的位置
         public int multi = 1;           // 一次射出幾發（扇形散開）
         public float spreadDeg;
         public EffectKind effect; public float effectDps, effectDur;
@@ -49,7 +52,7 @@ namespace SpellDuel
     {
         public static readonly Dictionary<string, SkillDef> All = new Dictionary<string, SkillDef>();
         public static readonly Dictionary<string, ClassDef> Classes = new Dictionary<string, ClassDef>();
-        public static readonly string[] ClassOrder = { "archer", "mage", "assassin", "swordsman" };
+        public static readonly string[] ClassOrder = { "archer", "mage", "assassin", "swordsman", "priest" };
 
         /// <summary>每個技能的手勢：依職業技能順序分配（同職業不重複）</summary>
         public static HandGesture.Shape GestureOf(string skillId)
@@ -82,7 +85,8 @@ namespace SpellDuel
             P(new SkillDef { id = "ice", cls = "mage", name = "冰槍", type = SkillType.Projectile, color = C("#5fd7ff"), cost = 25, damage = 36, charge = 1.4f, cooldown = 1.5f, speed = 6f, radius = 0.09f, rangeMin = 2f, rangeMax = 7f, desc = "快速穿刺，判定較窄；2m 內打不到" });
             P(new SkillDef { id = "thunder", cls = "mage", name = "雷擊", type = SkillType.Projectile, color = C("#c08bff"), cost = 35, damage = 48, charge = 2.2f, cooldown = 2.5f, speed = 14f, radius = 0.07f, rangeMin = 3f, rangeMax = 10f, desc = "幾乎瞬發，判定極窄；3m 內打不到" });
             P(new SkillDef { duckable = true, id = "wind", cls = "mage", name = "風刃", type = SkillType.Projectile, color = C("#7dffb0"), cost = 12, damage = 22, charge = 1.0f, cooldown = 0.8f, speed = 5f, radius = 0.25f, rangeMax = 2.5f, desc = "近距離；隨機從左或右側繞弧線飛向目標" });
-            P(new SkillDef { id = "meteor", cls = "mage", name = "隕石", type = SkillType.Projectile, color = C("#ff3b3b"), cost = 50, damage = 72, charge = 3.0f, cooldown = 4f, speed = 7f, radius = 0.3f, rangeMin = 3f, rangeMax = 8f, desc = "從敵人正上方砸下（可閃），落地留下直徑 3m 燃燒 10 秒的火海；3m 內打不到" });
+            P(new SkillDef { fromAbove = true, id = "meteor", cls = "mage", name = "隕石", type = SkillType.Projectile, color = C("#ff3b3b"), cost = 50, damage = 72, charge = 3.0f, cooldown = 4f, speed = 7f, radius = 0.3f, rangeMin = 3f, rangeMax = 8f, desc = "從敵人正上方砸下（可閃），落地留下直徑 3m 燃燒 10 秒的火海；3m 內打不到" });
+            P(new SkillDef { id = "dispel", cls = "mage", name = "抗拒法環", type = SkillType.Self, self = SelfKind.Dispel, color = C("#f0abfc"), cost = 25, charge = 0.8f, cooldown = 12f, areaRadius = 1.5f, desc = "以自己為中心直徑 3m：打斷範圍內所有敵人的蓄力，被打斷的技能重新冷卻" });
             P(new SkillDef { id = "heal", cls = "mage", name = "治癒", type = SkillType.Self, self = SelfKind.Heal, color = C("#3dff7a"), cost = 30, heal = 25, charge = 1.5f, cooldown = 5f, desc = "回復 25 HP" });
 
             // ---------------------------------------------------------- 刺客：遠處蓄力、靠近才能出手、判定小
@@ -98,11 +102,27 @@ namespace SpellDuel
             P(new SkillDef { duckable = true, id = "wave", cls = "swordsman", name = "劍氣", type = SkillType.Projectile, color = C("#93c5fd"), cost = 20, damage = 16, charge = 0f, cooldown = 1.5f, speed = 6f, radius = 0.2f, rangeMax = 7f, desc = "遠程劍氣；不用蓄力，手刀劈過就出招" });
             P(new SkillDef { id = "block", cls = "swordsman", name = "格擋", type = SkillType.Self, self = SelfKind.Block, color = C("#60a5fa"), cost = 12, charge = 0.2f, cooldown = 4f, buffDur = 3f, buffReduce = 0.7f, desc = "3 秒內下一次傷害 -70%" });
             P(new SkillDef { id = "ironwall", cls = "swordsman", name = "鐵壁", type = SkillType.Self, self = SelfKind.Shield, color = C("#94a3b8"), cost = 30, charge = 0.6f, cooldown = 12f, buffDur = 8f, buffAmount = 35, desc = "8 秒護盾，吸收 35 傷害" });
+            // ---------------------------------------------------------- 牧師：回復、淨化、守護、減冷卻；也有聖光攻擊
+            P(new SkillDef { id = "holy", cls = "priest", name = "聖光彈", type = SkillType.Projectile, color = C("#fff3b0"), cost = 15, damage = 18, charge = 1.0f, cooldown = 1.0f, speed = 9f, radius = 0.12f, rangeMax = 9f, desc = "聖光球，射程 9m" });
+            P(new SkillDef { fromAbove = true, dropHeight = 4f, id = "judgement", cls = "priest", name = "審判", type = SkillType.Projectile, color = C("#fbbf24"), cost = 30, damage = 30, charge = 2.0f, cooldown = 3.5f, speed = 9f, radius = 0.45f, rangeMax = 10f, desc = "光柱從敵人正上方落下（可閃）" });
+            P(new SkillDef { id = "prayheal", cls = "priest", name = "治療術", type = SkillType.Self, self = SelfKind.Heal, color = C("#86efac"), cost = 30, heal = 35, charge = 1.5f, cooldown = 6f, desc = "回復 35 HP" });
+            P(new SkillDef { id = "cleanse", cls = "priest", name = "淨化", type = SkillType.Self, self = SelfKind.Cleanse, color = C("#a5f3fc"), cost = 15, heal = 8, charge = 0.6f, cooldown = 6f, desc = "解除中毒、定身、致盲，並回復 8 HP" });
+            P(new SkillDef { id = "guard", cls = "priest", name = "守護", type = SkillType.Self, self = SelfKind.Armor, color = C("#fcd34d"), cost = 25, charge = 1.0f, cooldown = 10f, buffDur = 6f, buffReduce = 0.4f, desc = "6 秒內受到的傷害 -40%" });
+            P(new SkillDef { id = "prayer", cls = "priest", name = "祈禱", type = SkillType.Self, self = SelfKind.Prayer, color = C("#c4b5fd"), cost = 0, charge = 1.5f, cooldown = 15f, buffAmount = 20, buffDur = 4f, desc = "其他技能冷卻 -4 秒，並回復 20 MP" });
+
             P(new SkillDef { id = "counter", cls = "swordsman", name = "反擊", type = SkillType.Self, self = SelfKind.Counter, color = C("#f472b6"), cost = 18, charge = 0.2f, cooldown = 6f, buffDur = 1.5f, desc = "1.5 秒內被打中：無傷，並把攻擊打回去" });
 
             Classes["archer"] = new ClassDef { id = "archer", name = "弓箭手", color = C("#a3e635"), maxHp = 100, maxMp = 100, mpRegen = 7, skills = new[] { "quickshot", "snipe", "triple", "snaretrap", "blasttrap" }, defaultLoadout = new[] { "quickshot", "snipe", "snaretrap" }, desc = "箭速快、射程遠；近距離只有速射；可設陷阱" };
-            Classes["mage"] = new ClassDef { id = "mage", name = "法師", color = C("#c084fc"), maxHp = 90, maxMp = 120, mpRegen = 7, skills = new[] { "fire", "ice", "thunder", "wind", "meteor", "heal" }, defaultLoadout = new[] { "fire", "wind", "meteor" }, desc = "攻擊力最強、蓄力最長；近距離只有風刃" };
+            Classes["mage"] = new ClassDef { id = "mage", name = "法師", color = C("#c084fc"), maxHp = 90, maxMp = 120, mpRegen = 7, skills = new[] { "fire", "ice", "thunder", "wind", "meteor", "heal", "dispel" }, defaultLoadout = new[] { "fire", "wind", "meteor" }, desc = "攻擊力最強、蓄力最長；近距離只有風刃" };
             Classes["assassin"] = new ClassDef { id = "assassin", name = "刺客", color = C("#e879f9"), maxHp = 70, maxMp = 100, mpRegen = 8, skills = new[] { "backstab", "shadow", "poison", "knife", "smoke" }, defaultLoadout = new[] { "backstab", "poison", "smoke" }, desc = "遠處蓄力、靠近才能出手" };
+            // ---------------------------------------------------------- Boss：熔岩巨像（不在職業選單裡）
+            P(new SkillDef { id = "b_bolt", cls = "boss", name = "熔岩彈", type = SkillType.Projectile, color = C("#ff6a00"), cost = 0, damage = 9, charge = 1.4f, cooldown = 4f, speed = 6f, radius = 0.18f, rangeMax = 12f, multi = 3, spreadDeg = 12f, desc = "三顆熔岩彈扇形射出（側跨閃開）" });
+            P(new SkillDef { duckable = true, originHeight = 1.15f, id = "b_sweep", cls = "boss", name = "橫掃", type = SkillType.Projectile, color = C("#ff9f43"), cost = 0, damage = 18, charge = 1.6f, cooldown = 6f, speed = 7f, radius = 0.6f, rangeMax = 6f, desc = "胸口高度的橫向衝擊波（蹲下躲）" });
+            P(new SkillDef { areaRadius = 3.2f, id = "b_slam", cls = "boss", name = "地裂重擊", type = SkillType.Projectile, color = C("#ef4444"), cost = 0, damage = 24, charge = 2.0f, cooldown = 8f, speed = 1f, radius = 0f, rangeMax = 3.2f, desc = "雙拳砸地，周圍 3.2m 都會受傷（走出紅圈）" });
+            P(new SkillDef { fromAbove = true, dropHeight = 7f, id = "b_rain", cls = "boss", name = "落石雨", type = SkillType.Projectile, color = C("#f97316"), cost = 0, damage = 15, charge = 2.2f, cooldown = 10f, speed = 8f, radius = 0.5f, rangeMax = 14f, multi = 4, desc = "四顆巨石從天而降（看紅圈閃開）" });
+            Classes["boss"] = new ClassDef { id = "boss", name = "熔岩巨像", color = C("#ff5a1f"), maxHp = 500, maxMp = 999, mpRegen = 100, skills = new[] { "b_bolt", "b_sweep", "b_slam", "b_rain" }, defaultLoadout = new[] { "b_bolt", "b_sweep", "b_slam", "b_rain" }, desc = "Boss" };
+
+            Classes["priest"] = new ClassDef { id = "priest", name = "牧師", color = C("#fde68a"), maxHp = 105, maxMp = 130, mpRegen = 8, skills = new[] { "holy", "judgement", "prayheal", "cleanse", "guard", "prayer" }, defaultLoadout = new[] { "holy", "prayheal", "guard" }, desc = "回復、淨化、守護、減冷卻；聖光攻擊較弱" };
             Classes["swordsman"] = new ClassDef { id = "swordsman", name = "劍士", color = C("#60a5fa"), maxHp = 130, maxMp = 90, mpRegen = 6, skills = new[] { "slash", "thrust", "wave", "block", "ironwall", "counter" }, defaultLoadout = new[] { "slash", "wave", "block" }, desc = "近遠攻擊都有，多種防禦" };
         }
     }

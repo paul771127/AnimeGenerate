@@ -30,6 +30,15 @@ namespace SpellDuel
         string remoteClass; string[] remoteLoadout;
         float nextState;
         Transform remoteAnchor;           // 對手位置的空物件（光效跟著它）
+        public bool NetIsHost;            // 這支手機是主機（合作模式由主機跑 Boss）
+
+        // ---------------------------------------------------------------- Boss 模式（單人，或雙人合作）
+        // 合作：主機跑 Boss AI 與 Boss 血量，定時送 "boss" 狀態；隊友的法術打到 Boss → hit2 給主機；Boss 打到隊友 → 主機送 hit2。
+        bool bossMode, coop, remoteCoop, resultShown, bossSeen;
+        BossRig bossRig; BossAI bossAi; GameObject slamGo;
+        string bossWindup, bossChargingId; float nextBossState, lastBossHp;
+        public const int BossHpSolo = 500, BossHpCoop = 800;
+        Fighter Ally => battle?.ally;
 
         // 語音詠唱：唸出咒語就開始詠唱（本機比對自己錄的樣本）
         readonly MicInput mic = new MicInput();
@@ -124,7 +133,7 @@ namespace SpellDuel
         {
             SaveChoices();
             localReady = true;
-            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray() });
+            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = coop ? 1 : 0 });
             Say("已準備，等待對手…", 3f);
             TryStartNet();
         }
@@ -133,7 +142,8 @@ namespace SpellDuel
         {
             if (!NetMode || !localReady || !remoteReady || remoteClass == null) return;
             localReady = remoteReady = false;
-            StartNetBattle();
+            if (coop != remoteCoop) { Say("兩人選的模式不同（對戰／合作打 Boss），請選一樣的再按準備", 4f); return; }
+            if (coop) StartBossBattle(true); else StartNetBattle();
         }
 
         void StartNetBattle()
@@ -153,6 +163,7 @@ namespace SpellDuel
             battle.OnRemoteHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });
             battle.OnTrapPlaced += t => NetSend?.Invoke(new Msg { t = "trap2", id = t.id, k = t.skill.id, p = t.pos, s = t.armAt - battle.now });
             battle.OnTrapGone += id => NetSend?.Invoke(new Msg { t = "trapgone", id = id });
+            battle.OnDispel += (c, r) => NetSend?.Invoke(new Msg { t = "dispel", p = c, rad = r });
             ai = null;
             remoteAnchor = new GameObject("Remote Anchor").transform;
             lastEnemyFeet = en.Feet; lastEnemyHp = en.hp; enemyDeadShown = false;
@@ -161,18 +172,219 @@ namespace SpellDuel
             Say($"⚔ 對手：{ec.name}（{string.Join("・", Array.ConvertAll(remoteLoadout ?? new string[0], id => Skills.All.TryGetValue(id, out var sd) ? sd.name : id))}）", 4f);
         }
 
+        // ================================================================ Boss 模式
+        /// <summary>開打 Boss：單人（coopMode=false）或雙人合作（主機跑 Boss，隊友端的 Boss 由主機的狀態驅動）</summary>
+        void StartBossBattle(bool coopMode)
+        {
+            SaveChoices();
+            EndBattle();
+            bossMode = true; coop = coopMode; dummyMode = false; enemyClassUsed = "boss";
+            dummyDamage = 0f; dummyHits = 0;
+            var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
+            var bc = Skills.Classes["boss"];
+            var boss = new Fighter(bc.name, bc, bc.defaultLoadout, false) { bodyRadius = 0.75f };
+            boss.maxHp = coopMode ? BossHpCoop : BossHpSolo; boss.hp = boss.maxHp;
+            SyncPlayer(me);
+            battle = new Battle(me, boss);
+            battle.OnEvent += OnBattleEvent;
+            bool host = !coopMode || NetIsHost;
+            if (coopMode)
+            {
+                var rc = Skills.Classes.TryGetValue(remoteClass ?? "", out var found) ? found : Skills.Classes["mage"];
+                battle.ally = new Fighter($"隊友{rc.name}", rc, remoteLoadout ?? new string[0], false) { head = NetEnemyHeadW };
+                battle.coopHost = NetIsHost;
+                battle.remoteEnemy = !NetIsHost;   // 隊友端：Boss 是主機的代理
+                battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.basePos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected, rad = p.curveAmp, s = p.pathLen, e = p.owner == battle.enemy ? 1 : 0 });
+                battle.OnAllyHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });
+                battle.OnRemoteHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });
+                battle.OnRemoteBurn += (sk, dmg, at) => NetSend?.Invoke(new Msg { t = "burn2", k = sk.id, dmg = Mathf.RoundToInt(dmg), p = at });
+                battle.OnTrapPlaced += t => NetSend?.Invoke(new Msg { t = "trap2", id = t.id, k = t.skill.id, p = t.pos, s = t.armAt - battle.now });
+                battle.OnTrapGone += id => NetSend?.Invoke(new Msg { t = "trapgone", id = id });
+                battle.OnDispel += (c, r) => NetSend?.Invoke(new Msg { t = "dispel", p = c, rad = r });
+            }
+            // Boss 出生點：場地內、離玩家們夠遠的地方（隊友端先放在遠處，等主機的位置）
+            boss.head = host ? BossSpawnPoint(me, battle.ally) : new Vector3(0f, BossRig.Height, 0f);
+            boss.head.y = BossRig.Height;
+            boss.forward = Fighter.Flat(me.head - boss.head);
+            bossSeen = host;
+            if (host)
+            {
+                bossAi = new BossAI(battle, boss, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
+                bossAi.OnEnrage += OnBossEnrage;
+            }
+            ai = null;
+            bossRig = BossRig.Create();
+            bossRig.SetVisible(bossSeen);
+            lastEnemyFeet = boss.Feet; lastEnemyHp = boss.hp; lastBossHp = boss.hp; enemyDeadShown = false;
+            enemyShield = Prim(PrimitiveType.Sphere, new Color(0.4f, 0.7f, 1f, 0.25f));
+            enemyShield.SetActive(false);
+            phase = Phase.Fighting;
+            Sfx.Play("roar");
+            Haptics.Play(Haptics.Kind.Heavy);
+            Say(coopMode ? $"🔥 合作討伐：熔岩巨像（HP {boss.maxHp}）— 和隊友一起打倒它！" : $"🔥 Boss：熔岩巨像（HP {boss.maxHp}）— 看紅圈、紅線閃避！", 4f);
+        }
+
+        /// <summary>Boss 出生點：玩家們中點周圍 4m 的圓上，挑場地內、離玩家最遠的點</summary>
+        Vector3 BossSpawnPoint(Fighter me, Fighter ally)
+        {
+            var mid = ally != null ? (me.Feet + ally.Feet) / 2f : me.Feet + Fighter.Flat(me.forward) * 3f;
+            Vector3 best = mid + Fighter.Flat(me.forward) * 3f; float bestScore = -1f;
+            for (int ring = 0; ring < 3; ring++)
+                for (int i = 0; i < 16; i++)
+                {
+                    float r = 4.5f - ring * 1.2f, a = i / 16f * Mathf.PI * 2f;
+                    var c = mid + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
+                    var cs = WorldFrame.FromWorld(c);
+                    if (!area.Inside(cs) || area.DistanceToEdge(cs) < 0.9f) continue;
+                    float d = Battle.FlatDistance(c, me.Feet);
+                    if (ally != null) d = Mathf.Min(d, Battle.FlatDistance(c, ally.Feet));
+                    // 在我面前的稍微加分（一開打就看得到）
+                    d += 0.5f * Vector3.Dot(Fighter.Flat(c - me.Feet), Fighter.Flat(me.forward));
+                    if (d > bestScore) { bestScore = d; best = c; }
+                }
+            return new Vector3(best.x, BossRig.Height, best.z);
+        }
+
+        void OnBossEnrage()
+        {
+            if (bossRig) bossRig.SetEnraged(true);
+            Sfx.Play("roar"); Haptics.Play(Haptics.Kind.Heavy); Kick(18f, 0f);
+            Say("🔥 熔岩巨像狂暴了！出招變快！", 3f);
+        }
+
+        /// <summary>主機：每 0.1 秒送 Boss 的位置、血量、蓄力、狂暴、目標給隊友</summary>
+        void SendBossState()
+        {
+            if (!coop || !NetIsHost || battle == null || Time.time < nextBossState) return;
+            nextBossState = Time.time + 0.1f;
+            var b = battle.enemy;
+            int e = (bossAi != null && bossAi.Enraged ? 1 : 0) | (b.target == battle.ally ? 2 : 0);
+            NetSend?.Invoke(new Msg { t = "boss", p = b.head, d = b.forward, hp = Mathf.CeilToInt(b.hp), k = b.charging != null ? b.charging.id : "", s = battle.ChargeProgress(b), e = e });
+        }
+
+        /// <summary>合作模式的網路訊息</summary>
+        void OnNetCoop(Msg m)
+        {
+            var ally = Ally;
+            switch (m.t)
+            {
+                case "cast2":
+                    // 隊友（或主機的 Boss）的法術：只顯示
+                    if (Skills.All.TryGetValue(m.k, out var cs))
+                    {
+                        float elapsed = (float)((SharedClock?.Invoke() ?? m.t0) - m.t0);
+                        battle.AddRemoteProjectile(m.id, cs, m.p, m.d, Mathf.Clamp(elapsed, 0f, 1f), m.ok, m.rad, m.s, m.e == 1 ? battle.enemy : ally);
+                    }
+                    break;
+                case "hit2":
+                    if (!Skills.All.TryGetValue(m.k, out var hs)) break;
+                    {
+                        bool isTrap = m.id < 0;
+                        if (NetIsHost)
+                        {
+                            // 隊友打到 Boss
+                            if (isTrap) battle.RemoveRemoteTrap(-m.id); else battle.RemoveRemoteProjectile(m.id);
+                            battle.ApplyHitOnEnemy(hs, m.dmg, m.p, isTrap);
+                        }
+                        else
+                        {
+                            // 主機判定 Boss 打到我
+                            battle.RemoveRemoteProjectile(m.id);
+                            battle.ApplyRemoteHit(hs, m.dmg, m.p, isTrap);
+                            NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp) });
+                        }
+                    }
+                    break;
+                case "burn2":
+                    if (NetIsHost) battle.ApplyBurnOnEnemy(m.dmg, m.p);
+                    break;
+                case "hp2":
+                    if (ally != null) ally.hp = m.hp;
+                    break;
+                case "trap2":
+                    if (Skills.All.TryGetValue(m.k, out var ts)) battle.AddRemoteTrap(m.id, ts, m.p, m.s);
+                    break;
+                case "trapgone":
+                    battle.RemoveRemoteTrap(m.id);
+                    break;
+                case "dispel":
+                    // 隊友的抗拒法環：主機打斷 Boss 的蓄力（Boss 在圈內時）
+                    SpellFx.DispelRing(WorldFrame.FromWorld(m.p), m.rad, Skills.All["dispel"].color);
+                    Sfx.Play("block", 0.8f, 0.7f);
+                    if (NetIsHost) battle.DispelAt(battle.enemy, m.p, m.rad);
+                    break;
+                case "state":
+                    // 隊友的狀態：血量、蹲下／閃避（主機判定 Boss 打不打得到他）
+                    if (ally == null) break;
+                    ally.hp = m.hp;
+                    ally.crouching = (m.e & 16) != 0;
+                    if ((m.e & 32) != 0) ally.dodgeUntil = battle.now + 0.15f;
+                    ally.armorUntil = (m.e & 64) != 0 ? battle.now + 0.4f : 0f;
+                    break;
+                case "boss":
+                    if (NetIsHost) break;
+                    {
+                        var b = battle.enemy;
+                        b.head = m.p; b.forward = m.d;
+                        b.hp = m.hp;
+                        if (!string.IsNullOrEmpty(m.k) && Skills.All.TryGetValue(m.k, out var bs))
+                        {
+                            if (b.charging != bs) b.charging = bs;
+                            b.chargeScale = (m.e & 1) != 0 ? 0.7f : 1f;
+                            b.chargeStart = battle.now - m.s * bs.charge * b.chargeScale;
+                        }
+                        else b.charging = null;
+                        b.target = (m.e & 2) != 0 ? Me : ally;   // 主機的隊友＝我
+                        if ((m.e & 1) != 0 && bossRig && !bossEnragedShown) { bossEnragedShown = true; OnBossEnrage(); }
+                        if (!bossSeen) { bossSeen = true; lastEnemyFeet = b.Feet; if (bossRig) bossRig.SetVisible(true); }
+                    }
+                    break;
+                case "bfx":
+                    // 主機的 Boss 出手：播動作與特效
+                    if (bossRig) bossRig.Attack(m.k);
+                    if (m.k == "b_slam") BossSlamFx(m.p);
+                    Sfx.Play(m.k == "b_slam" ? "boom" : "cast_mage", m.k == "b_slam" ? 1f : 0.6f, 0.6f);
+                    break;
+            }
+        }
+        bool bossEnragedShown;
+
+        /// <summary>地裂重擊的特效：地面衝擊波、爆炸聲、離得近就震動</summary>
+        void BossSlamFx(Vector3 feetW)
+        {
+            BossRig.SlamShockwave(WorldFrame.FromWorld(feetW), Skills.All["b_slam"].areaRadius, new Color(1f, 0.35f, 0.1f));
+            float d = Battle.FlatDistance(feetW, Me.Feet);
+            if (d < 6f) { Haptics.Play(Haptics.Kind.Heavy); Kick(Mathf.Lerp(24f, 8f, d / 6f), 0f); }
+        }
+
+        /// <summary>戰鬥結束時顯示一次結果（合作模式：Boss 倒下＝勝利；兩人都倒下＝失敗）</summary>
+        void ShowResult()
+        {
+            if (resultShown) return;
+            resultShown = true;
+            bool win = !En.Alive;
+            Say(win ? (bossMode ? "🏆 討伐成功！熔岩巨像倒下了" : "🏆 勝利！") : (coop ? "💀 全滅…" : "💀 敗北…"), 99f);
+            Sfx.Play(win ? "win" : "lose");
+            Haptics.Play(win ? Haptics.Kind.Success : Haptics.Kind.Warning);
+        }
+
         /// <summary>GameRoot 轉來的對戰訊息</summary>
         public void OnNet(Msg m)
         {
             switch (m.t)
             {
+                case "mode":
+                    coop = remoteCoop = m.e == 1;
+                    Say(coop ? "對手選了：🤝 合作打 Boss" : "對手選了：⚔ 對戰", 2.5f);
+                    return;
                 case "ready":
-                    remoteClass = m.k; remoteLoadout = m.ks; remoteReady = true;
+                    remoteClass = m.k; remoteLoadout = m.ks; remoteReady = true; remoteCoop = m.e == 1;
                     if (phase != Phase.Fighting) Say("對手已準備好", 2f);
                     TryStartNet();
                     return;
             }
             if (battle == null || !NetMode) return;
+            if (coop) { OnNetCoop(m); return; }
             switch (m.t)
             {
                 case "cast2":
@@ -206,6 +418,12 @@ namespace SpellDuel
                 case "trapgone":
                     battle.RemoveRemoteTrap(m.id);
                     break;
+                case "dispel":
+                    // 對手的抗拒法環：我站在圈內就被打斷
+                    SpellFx.DispelRing(WorldFrame.FromWorld(m.p), m.rad, Skills.All["dispel"].color);
+                    Sfx.Play("block", 0.8f, 0.7f);
+                    battle.DispelAt(Me, m.p, m.rad);
+                    break;
                 case "state":
                     // 對手的詠唱、狀態（顯示用）
                     En.hp = m.hp;
@@ -228,6 +446,7 @@ namespace SpellDuel
                     else En.armed = null;
                     // 對手蹲下／側跨閃避（我判定命中時要算進去）
                     En.crouching = (m.e & 16) != 0;
+                    En.armorUntil = (m.e & 64) != 0 ? hold : 0f;
                     if ((m.e & 32) != 0) En.dodgeUntil = battle.now + 0.15f;
                     break;
             }
@@ -239,7 +458,7 @@ namespace SpellDuel
             nextState = Time.time + 0.1f;
             var me = Me; float now = battle.now;
             int e = (me.blockUntil > now ? 1 : 0) | (me.shieldUntil > now ? 2 : 0) | (me.counterUntil > now ? 4 : 0) | (me.armed != null ? 8 : 0)
-                | (me.crouching ? 16 : 0) | (me.dodgeUntil > now ? 32 : 0);
+                | (me.crouching ? 16 : 0) | (me.dodgeUntil > now ? 32 : 0) | (me.armorUntil > now ? 64 : 0);
             NetSend?.Invoke(new Msg { t = "state", k = me.charging != null ? me.charging.id : "", s = battle.ChargeProgress(me), hp = Mathf.CeilToInt(me.hp), e = e });
         }
         public void Hide() { EndBattle(); phase = Phase.Hidden; }
@@ -247,6 +466,7 @@ namespace SpellDuel
         // ================================================================ 開戰
         void StartBattle()
         {
+            if (enemyClass == "boss") { StartBossBattle(false); return; }
             SaveChoices();
             EndBattle();
             enemyClassUsed = enemyClass == "random" ? Skills.ClassOrder[UnityEngine.Random.Range(0, Skills.ClassOrder.Length)] : enemyClass;
@@ -295,6 +515,9 @@ namespace SpellDuel
             foreach (var go in landGo.Values) if (go) Destroy(go);
             landGo.Clear();
             if (warnLine) Destroy(warnLine);
+            if (slamGo) Destroy(slamGo);
+            if (bossRig) Destroy(bossRig.gameObject);
+            bossRig = null; bossAi = null; bossMode = false; bossWindup = null; resultShown = false; bossSeen = false;
             standY = -1f; moveHist.Clear();
             projGo.Clear(); trapGo.Clear(); burnGo.Clear(); floaters.Clear();
             if (enemyShield) Destroy(enemyShield);
@@ -329,11 +552,13 @@ namespace SpellDuel
             if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
             {
                 if (ai != null) ai.Update(dt);
+                else if (bossAi != null) bossAi.Update(dt);
                 else if (!NetMode) en_FaceMe();
                 battle.Update(dt);
                 if (!frozen) HandleInput();
                 SendState();
-                if (battle.Over) phase = Phase.Over;
+                SendBossState();
+                if (battle.Over) { phase = Phase.Over; ShowResult(); }
             }
             UpdateVisuals();
         }
@@ -342,6 +567,13 @@ namespace SpellDuel
         void SyncRemote()
         {
             if (!NetHasTarget) return;
+            if (coop && Ally != null)
+            {
+                // 合作：另一位玩家是隊友（Boss 的位置由主機送來）
+                Ally.head = NetEnemyHeadW;
+                Ally.forward = Fighter.Flat(NetEnemyFwdW);
+                return;
+            }
             var fwd = Fighter.Flat(NetEnemyFwdW);
             En.head = NetEnemyHeadW - fwd * 0.12f;
             var toMe = Fighter.Flat(Me.head - En.head);
@@ -506,7 +738,7 @@ namespace SpellDuel
             enemyOnScreen = false;
             var en = En;
             if (en == null || !en.Alive || !Tracking.Ok) return;
-            if (NetMode)
+            if (NetMode && !coop)
             {
                 // 雙人：鏡頭真的看到對手才算鎖定（GameRoot 的人體偵測）
                 enemyOnScreen = NetLock; enemyRect = NetLockRect;
@@ -533,7 +765,7 @@ namespace SpellDuel
             if (enemyOnScreen)
             {
                 float depth = Mathf.Max(0.3f, Vector3.Dot(toEn, cam.transform.forward));
-                float halfW = Fighter.BodyRadius / depth * Screen.height / (2f * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
+                float halfW = en.bodyRadius / depth * Screen.height / (2f * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
                 float cx = (xMin + xMax) * 0.5f;
                 enemyRect = Rect.MinMaxRect(cx - halfW, Screen.height - yMax, cx + halfW, Screen.height - yMin);
             }
@@ -566,6 +798,14 @@ namespace SpellDuel
                     break;
                 case "cast":
                 {
+                    if (bossMode && Vector3.Distance(at, Me.head) >= 0.8f)
+                    {
+                        // Boss 出手：出招動作；合作主機告訴隊友播動作／特效
+                        if (bossRig && bossWindup != null) bossRig.Attack(bossWindup);
+                        if (coop && NetIsHost) NetSend?.Invoke(new Msg { t = "bfx", k = bossWindup ?? "", p = En.Feet });
+                        if (bossWindup != "b_slam") Sfx.Play("cast_mage", 0.6f, 0.6f);
+                        break;
+                    }
                     // 放招：自己的放招聲比較大；對手的小一點（聽得出來敵人出手了）
                     bool mine = Vector3.Distance(at, Me.head) < 0.8f;
                     Sfx.Cast(mine ? myClass : enemyClassUsed, mine ? 1f : 0.55f);
@@ -625,8 +865,31 @@ namespace SpellDuel
                 case "timeout":
                     if (at == Me.Chest) Say("詠唱逾時", 1.5f);
                     break;
-                case "win": Say("🏆 勝利！", 99f); Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success); break;
-                case "lose": Say("💀 敗北…", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); break;
+                case "win": case "lose": ShowResult(); break;
+                case "down":
+                    // 合作：我倒下了，隊友還活著
+                    Say("💀 你倒下了！等隊友打倒 Boss…", 99f); Sfx.Play("lose", 0.6f); Haptics.Play(Haptics.Kind.Warning);
+                    break;
+                case "allyhit":
+                    if (Ally != null) floaters.Add(new Floater { posMap = Ally.Chest + Vector3.up * 0.3f, text = "隊友受傷", color = new Color(1f, 0.5f, 0.4f), born = Time.time });
+                    Sfx.Play("hit", 0.4f, 0.7f);
+                    break;
+                case "slam":
+                    BossSlamFx(at);
+                    break;
+                case "dispel":
+                    // 抗拒法環：地上的法陣＋衝擊波
+                    SpellFx.DispelRing(WorldFrame.FromWorld(at), Skills.All["dispel"].areaRadius, c);
+                    Sfx.Play("cast_mage", 0.9f, 0.7f); Sfx.Play("block", 0.6f, 0.8f);
+                    Haptics.Play(Haptics.Kind.Medium); Kick(6f, 0f);
+                    break;
+                case "dispelled":
+                {
+                    bool meHit = Vector3.Distance(at, Me.Chest) < 0.6f;
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 0.4f, text = meHit ? "蓄力被打斷！" : "打斷！", color = c, born = Time.time, screen = meHit });
+                    if (meHit) { Haptics.Play(Haptics.Kind.Warning); Sfx.Play("warn", 0.6f); }
+                    break;
+                }
             }
         }
 
@@ -645,18 +908,49 @@ namespace SpellDuel
                 enemyRig.MoveSpeed = Mathf.Lerp(enemyRig.MoveSpeed, Fighter.Flat(en.Feet - lastEnemyFeet).magnitude / dt, 0.2f);
                 enemyRig.Charge = en.charging != null ? Mathf.Max(0.01f, battle.ChargeProgress(en)) : 0f;
             }
+            if (bossRig)
+            {
+                // Boss：位置、面向、走路；開始蓄力＝預備動作（時間＝蓄力時間）
+                var rot = fwdS.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(new Vector3(fwdS.x, 0f, fwdS.z).normalized, Vector3.up) : bossRig.transform.rotation;
+                bossRig.transform.SetPositionAndRotation(feetS, rot);
+                bossRig.MoveSpeed = Mathf.Lerp(bossRig.MoveSpeed, Fighter.Flat(en.Feet - lastEnemyFeet).magnitude / dt, 0.2f);
+                string cid = en.charging != null ? en.charging.id : null;
+                if (cid != null && cid != bossChargingId)
+                {
+                    bossWindup = cid;
+                    bossRig.Windup(cid, Mathf.Max(0.3f, en.charging.charge * en.chargeScale * (1f - battle.ChargeProgress(en))));
+                    if (cid == "b_rain") Sfx.Play("roar", 0.7f);
+                }
+                bossChargingId = cid;
+                if (en.hp < lastBossHp - 0.01f) bossRig.PlayHit();
+                lastBossHp = en.hp;
+                if (!en.Alive && !enemyDeadShown) bossRig.SetDead(true);
+                // 地裂重擊蓄力中：Boss 周圍的紅圈（站在圈裡會被打）
+                bool slamming = en.charging != null && en.charging.areaRadius > 0f && en.Alive;
+                if (slamming)
+                {
+                    if (!slamGo) slamGo = Prim(PrimitiveType.Cylinder, new Color(1f, 0.1f, 0.05f, 0.3f));
+                    float rr = en.charging.areaRadius + Fighter.BodyRadius;
+                    slamGo.SetActive(true);
+                    slamGo.transform.position = WorldFrame.FromWorld(en.Feet + Vector3.up * 0.02f);
+                    slamGo.transform.localScale = new Vector3(rr * 2f, 0.003f, rr * 2f);
+                    float pr = battle.ChargeProgress(en), k = 0.5f + 0.5f * Mathf.Sin(Time.time * (6f + 12f * pr));
+                    slamGo.GetComponent<Renderer>().material.color = new Color(1f, 0.12f, 0.05f, (0.15f + 0.3f * pr) * (0.6f + 0.4f * k));
+                }
+                else if (slamGo) slamGo.SetActive(false);
+            }
             lastEnemyFeet = en.Feet;
             if (en.hp < lastEnemyHp - 0.01f) { if (enemyRig) enemyRig.PlayHit(); if (dummyMode) { dummyDamage += lastEnemyHp - en.hp; dummyHits++; } }
             lastEnemyHp = en.hp;
             if (!en.Alive && !enemyDeadShown) { if (enemyRig) enemyRig.SetDead(true); enemyDeadShown = true; }
-            bool guarded = en.blockUntil > battle.now || en.shieldUntil > battle.now || en.counterUntil > battle.now;
+            bool guarded = en.blockUntil > battle.now || en.shieldUntil > battle.now || en.counterUntil > battle.now || en.armorUntil > battle.now;
             if (enemyRig) enemyRig.Guarding = guarded && en.Alive;
             enemyShield.SetActive(guarded && en.Alive);
             if (guarded)
             {
                 enemyShield.transform.position = WorldFrame.FromWorld(en.Chest);
                 enemyShield.transform.localScale = new Vector3(0.9f, 1.9f, 0.9f);
-                var col = en.counterUntil > battle.now ? new Color(0.96f, 0.45f, 0.71f, 0.3f) : en.shieldUntil > battle.now ? new Color(0.6f, 0.65f, 0.7f, 0.3f) : new Color(0.38f, 0.65f, 0.98f, 0.3f);
+                var col = en.armorUntil > battle.now ? new Color(0.99f, 0.83f, 0.3f, 0.28f) : en.counterUntil > battle.now ? new Color(0.96f, 0.45f, 0.71f, 0.3f) : en.shieldUntil > battle.now ? new Color(0.6f, 0.65f, 0.7f, 0.3f) : new Color(0.38f, 0.65f, 0.98f, 0.3f);
                 enemyShield.GetComponent<Renderer>().material.color = col;
             }
 
@@ -668,10 +962,10 @@ namespace SpellDuel
                 if (!projGo.TryGetValue(p, out var go))
                 {
                     // 依技能的法術造型（箭、火球、冰錐、雷光、劍氣、飛刀…），已含光暈與拖尾
-                    string fxCls = p.owner == En ? enemyClassUsed : myClass;
-                    go = SpellFx.CreateProjectileVisual(p.skill, fxCls);
+                    string fxCls = p.owner == En ? enemyClassUsed : (Ally != null && p.owner == Ally ? (remoteClass ?? myClass) : myClass);
+                    go = (bossMode && p.owner == En ? BossRig.CreateProjectileVisual(p.skill.id) : null) ?? SpellFx.CreateProjectileVisual(p.skill, fxCls);
                     projGo[p] = go;
-                    if (p.owner == En)
+                    if (p.owner == En && !bossMode)
                     {
                         if (enemyRig) enemyRig.PlayCast();   // 敵人出招動作＋光效
                         SpellFx.CastBurst(enemyClassUsed, p.skill.color, WorldFrame.FromWorld(p.pos), WorldFrame.DirFromWorld(p.dir), 1f);
@@ -689,7 +983,16 @@ namespace SpellDuel
                 }
             }
             foreach (var kv in new List<KeyValuePair<Projectile, GameObject>>(projGo))
-                if (!alive.Contains(kv.Key)) { Destroy(kv.Value, 0.25f); projGo.Remove(kv.Key); }
+                if (!alive.Contains(kv.Key))
+                {
+                    // Boss 的落石落地：小型衝擊波＋悶響
+                    if (kv.Key.skill.id == "b_rain" && kv.Key.pos.y < 0.6f)
+                    {
+                        BossRig.SlamShockwave(WorldFrame.FromWorld(new Vector3(kv.Key.pos.x, 0f, kv.Key.pos.z)), 0.9f, kv.Key.skill.color);
+                        Sfx.Play("boom", Mathf.Clamp01(0.9f - Battle.FlatDistance(kv.Key.pos, Me.Feet) / 12f), 1.3f);
+                    }
+                    Destroy(kv.Value, 0.25f); projGo.Remove(kv.Key);
+                }
 
             // 火海：地上的燃燒圓盤（閃爍）＋不時冒出火焰
             var liveBurns = new HashSet<BurnZone>(battle.burns);
@@ -717,11 +1020,13 @@ namespace SpellDuel
             // 攻擊預警①：敵人蓄力過半 → 地上一條從敵人到我的紅線（越接近放招越亮）
             {
                 var ec = En.charging;
-                bool show = ec != null && ec.type == SkillType.Projectile && ec.id != "meteor" && En.Alive && battle.ChargeProgress(En) >= 0.5f;
+                bool show = ec != null && ec.type == SkillType.Projectile && !ec.fromAbove && ec.areaRadius <= 0f && En.Alive && battle.ChargeProgress(En) >= 0.5f
+                    && (En.target == null || En.target == Me);   // 合作：Boss 瞄準隊友時不畫我這條
+                var lineTo = En.target != null ? En.target : Me;
                 if (show)
                 {
                     if (!warnLine) warnLine = Prim(PrimitiveType.Cube, new Color(1f, 0.15f, 0.15f, 0.4f));
-                    var a = En.Feet; var b = Me.Feet; var d = b - a; d.y = 0f;
+                    var a = En.Feet; var b = lineTo.Feet; var d = b - a; d.y = 0f;
                     float len = Mathf.Max(0.1f, d.magnitude);
                     warnLine.SetActive(true);
                     warnLine.transform.position = WorldFrame.FromWorld((a + b) / 2f + Vector3.up * 0.02f);
@@ -736,12 +1041,13 @@ namespace SpellDuel
             var liveLand = new HashSet<Projectile>();
             foreach (var p in battle.projectiles)
             {
-                if (p.skill.id != "meteor" || p.dir.y > -0.5f) continue;
+                if (!p.skill.fromAbove || p.dir.y > -0.5f) continue;
                 liveLand.Add(p);
                 if (!landGo.TryGetValue(p, out var lg))
                 {
                     lg = Prim(PrimitiveType.Cylinder, new Color(1f, 0.1f, 0.1f, 0.35f));
-                    lg.transform.localScale = new Vector3(Battle.BurnRadius * 2f, 0.003f, Battle.BurnRadius * 2f);
+                    float lr = p.skill.id == "meteor" ? Battle.BurnRadius : p.skill.radius + Fighter.BodyRadius;
+                    lg.transform.localScale = new Vector3(lr * 2f, 0.003f, lr * 2f);
                     landGo[p] = lg;
                 }
                 lg.transform.position = WorldFrame.FromWorld(new Vector3(p.pos.x, 0.025f, p.pos.z));
@@ -874,16 +1180,18 @@ namespace SpellDuel
 
             // 依可用高度決定單位行高（內容約 21 行），放得下就用基準行高
             float avail = botY - topY - pad * 2;
-            float u = Mathf.Min(fs * 1.75f, avail / 21.5f);
+            int skillRows = (Skills.Classes[myClass].skills.Length + 1) / 2;
+            float u = Mathf.Min(fs * 1.75f, avail / (13.7f + skillRows * 2.6f));   // 技能卡一列約 2.6 行高
             float y = topY + pad;
             var cls = Skills.Classes[myClass];
 
             UiKit.Text(new Rect(pad, y, W - pad * 2, u * 1.2f), NetMode ? "職業對戰：選擇職業與技能" : "選擇職業與技能", fsL, Color.white, TextAnchor.MiddleLeft, true);
             y += u * 1.3f;
 
-            // 職業（4 個）
-            float cw = (W - pad * 2 - gap * 3) / 4f;
-            for (int i = 0; i < 4; i++)
+            // 職業（5 個）
+            int nc = Skills.ClassOrder.Length;
+            float cw = (W - pad * 2 - gap * (nc - 1)) / nc;
+            for (int i = 0; i < nc; i++)
             {
                 var id = Skills.ClassOrder[i]; var c = Skills.Classes[id];
                 if (UiKit.Button(new Rect(pad + i * (cw + gap), y, cw, u * 1.3f), c.name, fs, id == myClass, c.color) && id != myClass) { myClass = id; LoadLoadout(); }
@@ -911,7 +1219,7 @@ namespace SpellDuel
                 GUI.DrawTexture(ir, SkillIcons.Get(sk.id));
                 GUI.color = Color.white;
                 float tx = ir.xMax + sh * 0.08f, tw = r.xMax - tx - sh * 0.06f;
-                string eff = sk.type == SkillType.Self ? (sk.self == SelfKind.Heal ? $"回復{sk.heal}" : "防禦") : sk.damage > 0 ? $"傷害{sk.damage}{(sk.multi > 1 ? $"×{sk.multi}" : "")}" : "效果";
+                string eff = sk.type == SkillType.Self ? (sk.self == SelfKind.Heal ? $"回復{sk.heal}" : sk.self == SelfKind.Cleanse ? "解異常" : sk.self == SelfKind.Armor ? $"減傷{sk.buffReduce * 100f:0}%" : sk.self == SelfKind.Prayer ? $"冷卻-{sk.buffDur:0}s" : "防禦") : sk.damage > 0 ? $"傷害{sk.damage}{(sk.multi > 1 ? $"×{sk.multi}" : "")}" : "效果";
                 UiKit.Text(new Rect(tx, r.y + sh * 0.05f, tw, sh * 0.32f), (on ? "✔ " : "") + sk.name, fs, on ? Color.white : new Color(0.8f, 0.8f, 0.8f), TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(tx, r.y + sh * 0.37f, tw, sh * 0.27f), $"🎤唸「{sk.name}」→ {HandGesture.StyleName(HandGesture.ReleaseOf(sk))}", fsS, new Color(1f, 0.85f, 0.5f));
                 UiKit.Text(new Rect(tx, r.y + sh * 0.64f, tw, sh * 0.32f), $"MP{sk.cost}・{(sk.charge > 0f ? $"蓄力{sk.charge:0.#}s" : "免蓄力")}・{eff}・{sk.RangeText}", fsS, new Color(0.8f, 0.85f, 0.95f));
@@ -923,24 +1231,33 @@ namespace SpellDuel
             }
             y += ((cls.skills.Length + 1) / 2) * (sh + gap);
 
-            // 敵人（單人：3×2；雙人：顯示對手狀態）
+            // 敵人（單人：4×2＝隨機、5 職業、木頭人、Boss；雙人：顯示對手狀態）
             if (!NetMode)
             {
                 UiKit.Text(new Rect(pad, y, W - pad * 2, u), "敵人", fsS, new Color(1f, 0.9f, 0.6f));
                 y += u;
-                float ew = (W - pad * 2 - gap * 2) / 3f;
-                for (int i = 0; i < 6; i++)
+                float ew = (W - pad * 2 - gap * 3) / 4f;
+                int nOpt = nc + 3;
+                for (int i = 0; i < nOpt; i++)
                 {
-                    string id = i == 0 ? "random" : i == 5 ? "dummy" : Skills.ClassOrder[i - 1];
-                    string nm = i == 0 ? "隨機" : i == 5 ? "🪵 木頭人" : Skills.Classes[id].name;
-                    var c = i == 0 ? new Color(1f, 0.85f, 0.3f) : i == 5 ? new Color(0.75f, 0.55f, 0.3f) : Skills.Classes[id].color;
-                    if (UiKit.Button(new Rect(pad + (i % 3) * (ew + gap), y + (i / 3) * (u * 1.15f + gap), ew, u * 1.15f), nm, fsS, id == enemyClass, c)) enemyClass = id;
+                    string id = i == 0 ? "random" : i == nc + 1 ? "dummy" : i == nc + 2 ? "boss" : Skills.ClassOrder[i - 1];
+                    string nm = id == "random" ? "隨機" : id == "dummy" ? "🪵 木頭人" : id == "boss" ? "🔥 Boss" : Skills.Classes[id].name;
+                    var c = id == "random" ? new Color(1f, 0.85f, 0.3f) : id == "dummy" ? new Color(0.75f, 0.55f, 0.3f) : id == "boss" ? new Color(1f, 0.35f, 0.1f) : Skills.Classes[id].color;
+                    if (UiKit.Button(new Rect(pad + (i % 4) * (ew + gap), y + (i / 4) * (u * 1.15f + gap), ew, u * 1.15f), nm, fsS, id == enemyClass, c)) enemyClass = id;
                 }
                 y += 2 * (u * 1.15f + gap);
             }
             else
             {
-                string rs = remoteReady ? $"對手：{(Skills.Classes.TryGetValue(remoteClass ?? "", out var rc) ? rc.name : "?")}（已準備）" : "對手：還沒準備好";
+                // 雙人模式：對戰或合作打 Boss（切換時告訴對方，兩邊一起切）
+                float mw = (W - pad * 2 - gap) / 2f;
+                if (UiKit.Button(new Rect(pad, y, mw, u * 1.15f), "⚔ 對戰", fsS, !coop, new Color(1f, 0.55f, 0.35f)) && coop)
+                { coop = false; localReady = false; NetSend?.Invoke(new Msg { t = "mode", e = 0 }); }
+                if (UiKit.Button(new Rect(pad + mw + gap, y, mw, u * 1.15f), "🤝 合作打 Boss", fsS, coop, new Color(1f, 0.35f, 0.1f)) && !coop)
+                { coop = true; localReady = false; NetSend?.Invoke(new Msg { t = "mode", e = 1 }); }
+                y += u * 1.15f + gap;
+                string who = coop ? "隊友" : "對手";
+                string rs = remoteReady ? $"{who}：{(Skills.Classes.TryGetValue(remoteClass ?? "", out var rc) ? rc.name : "?")}（已準備）" : $"{who}：還沒準備好";
                 UiKit.Text(new Rect(pad, y, W - pad * 2, u * 1.2f), rs, fs, remoteReady ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.8f, 0.5f));
                 y += u * 1.3f;
             }
@@ -979,7 +1296,7 @@ namespace SpellDuel
             { if (NetMode) Hide(); else RequestChangeMode?.Invoke(); }
             by -= u * 1.6f + gap;
             bool voiceOk = UseSpeech || VoiceReady;   // 沒有語音辨識時，要先把 3 個技能的咒語錄好
-            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對手準備…" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : "⚔ 開始戰鬥");
+            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : "⚔ 開始戰鬥");
             if (UiKit.Button(new Rect(pad, by, W - pad * 2, u * 1.6f), startText, fsL, true, cls.color, myLoadout.Count == 3 && voiceOk))
             { if (NetMode) SendReady(); else StartBattle(); }
         }
@@ -1017,11 +1334,20 @@ namespace SpellDuel
             UiKit.Bar(new Rect(ix + iw * 0.54f, y + lh * 0.15f, iw * 0.46f, lh * 0.7f), en.hp / en.maxHp, new Color(1f, 0.25f, 0.35f), $"{Mathf.CeilToInt(en.hp)}", fsS);
             y += lh;
             string enState = dummyMode ? $"命中 {dummyHits} 次・累計傷害 {Mathf.RoundToInt(dummyDamage)}"
-                : en.charging != null ? $"⚠ 詠唱 {en.charging.name}（{Mathf.FloorToInt(battle.ChargeProgress(en) * 100)}%）" : ai.Status;
+                : en.charging != null ? $"⚠ 詠唱 {en.charging.name}（{Mathf.FloorToInt(battle.ChargeProgress(en) * 100)}%）" : (ai?.Status ?? bossAi?.Status ?? "");
+            if (bossMode && en.chargeScale < 1f) enState = "🔥 狂暴　" + enState;
             if (en.snaredUntil > now) enState = "被定身";
             UiKit.Text(new Rect(ix, y, iw, lh * 0.9f), enState, fsS, en.charging != null ? new Color(1f, 0.75f, 0.4f) : new Color(0.9f, 0.92f, 1f));
             y += lh * 0.9f;
             UiKit.Text(new Rect(ix, y, iw, lh * 0.8f), StatusText(en, now), fsS, new Color(0.75f, 0.85f, 1f));
+            // 合作：隊友的血量（在敵人卡片下方）
+            if (coop && Ally != null)
+            {
+                var ar = new Rect(topR.x, topR.yMax + gap * 0.5f, topR.width, lh * 0.9f);
+                UiKit.Card(ar, 0.5f, Ally.cls.color, 0.5f);
+                UiKit.Text(new Rect(ar.x + gap, ar.y, iw * 0.42f, ar.height), Ally.Alive ? $"🤝 {Ally.name}" : $"💀 {Ally.name}（倒下）", fsS, Color.white, TextAnchor.MiddleLeft, true);
+                UiKit.Bar(new Rect(ar.x + gap + iw * 0.44f, ar.y + ar.height * 0.2f, iw * 0.56f, ar.height * 0.6f), Ally.hp / Ally.maxHp, new Color(0.3f, 0.85f, 0.45f), $"{Mathf.CeilToInt(Ally.hp)}", fsS);
+            }
 
             // 敵人頭上的血條
             var hs = cam.WorldToScreenPoint(WorldFrame.FromWorld(en.head + Vector3.up * 0.3f));
@@ -1082,7 +1408,8 @@ namespace SpellDuel
             if (en.charging != null && en.Alive && en.charging.type == SkillType.Projectile && battle.ChargeProgress(en) >= 0.5f)
             {
                 var ecs = en.charging;
-                string tip = ecs.id == "meteor" ? $"⚠ {ecs.name}：落下時離開紅圈！" : ecs.duckable ? $"⚠ {ecs.name}：↓ 蹲下躲！" : $"⚠ {ecs.name}：快速側跨閃開！";
+                string tip = ecs.areaRadius > 0f ? $"⚠ {ecs.name}：走出 Boss 周圍的紅圈！" : ecs.fromAbove ? $"⚠ {ecs.name}：落下時離開紅圈！" : ecs.duckable ? $"⚠ {ecs.name}：↓ 蹲下躲！" : $"⚠ {ecs.name}：快速側跨閃開！";
+                if (coop && en.target != null && en.target != me) tip = $"⚠ Boss 準備對隊友使出 {ecs.name}";
                 UiKit.Pill(H * 0.43f, tip, fs, ecs.duckable ? new Color(1f, 0.7f, 0.3f) : new Color(1f, 0.45f, 0.45f), pillW);
             }
             if (me.crouching) UiKit.Pill(H * 0.7f, "↓ 蹲下中", fsS, new Color(0.6f, 0.9f, 1f), pillW);
@@ -1211,8 +1538,8 @@ namespace SpellDuel
             if (phase == Phase.Over)
             {
                 var orr = new Rect(pad, H * 0.28f, W - pad * 2, H * 0.32f);
-                UiKit.Card(orr, 0.85f, me.Alive ? new Color(1f, 0.85f, 0.3f) : new Color(0.7f, 0.7f, 0.8f), 0.9f);
-                UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, orr.height * 0.4f), me.Alive ? "🏆 勝利！" : "💀 敗北…", fs * 2, Color.white, TextAnchor.MiddleCenter, true);
+                UiKit.Card(orr, 0.85f, !en.Alive ? new Color(1f, 0.85f, 0.3f) : new Color(0.7f, 0.7f, 0.8f), 0.9f);
+                UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, orr.height * 0.4f), !en.Alive ? (bossMode ? "🏆 討伐成功！" : "🏆 勝利！") : "💀 敗北…", fs * 2, Color.white, TextAnchor.MiddleCenter, true);
                 float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
                 if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), NetMode ? (localReady ? "等待對手…" : "再來一局") : "再來一局", fs, true, new Color(0.4f, 0.8f, 1f), !(NetMode && localReady)))
                 { if (NetMode) SendReady(); else StartBattle(); }
@@ -1248,6 +1575,7 @@ namespace SpellDuel
             if (f.blockUntil > now) parts.Add($"格擋 {f.blockUntil - now:F1}s");
             if (f.shieldUntil > now) parts.Add($"護盾 {f.shieldLeft}");
             if (f.counterUntil > now) parts.Add($"反擊 {f.counterUntil - now:F1}s");
+            if (f.armorUntil > now) parts.Add($"守護 {f.armorUntil - now:F1}s");
             if (f.dots.Count > 0) parts.Add("中毒");
             if (f.snaredUntil > now) parts.Add($"定身 {f.snaredUntil - now:F1}s");
             if (f.blindUntil > now) parts.Add("致盲");

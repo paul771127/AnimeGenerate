@@ -28,7 +28,7 @@ namespace SpellDuel
         int lastSeenProjectile;
 
         static readonly Dictionary<string, float> PreferredDistance = new Dictionary<string, float>
-        { { "assassin", 2.2f }, { "swordsman", 1.9f }, { "mage", 6f }, { "archer", 8f } };   // 場地太小時 FindInside 會自動縮短
+        { { "assassin", 2.2f }, { "swordsman", 1.9f }, { "mage", 6f }, { "archer", 8f }, { "priest", 6.5f } };   // 場地太小時 FindInside 會自動縮短
 
         public EnemyAI(Battle battle, Fighter enemy, Func<Vector3, bool> insideArea, Func<Vector3, float> distanceToEdge, int seed)
         {
@@ -55,7 +55,7 @@ namespace SpellDuel
             {
                 if (p.owner != player || p.id <= lastSeenProjectile) continue;
                 lastSeenProjectile = p.id;
-                var guard = me.loadout.Find(s => s.type == SkillType.Self && s.self != SelfKind.Heal && Ready(s));
+                var guard = me.loadout.Find(s => s.type == SkillType.Self && (s.self == SelfKind.Block || s.self == SelfKind.Shield || s.self == SelfKind.Counter || s.self == SelfKind.Armor) && Ready(s));
                 if (guard != null && rnd.NextDouble() < guardChance && b.TryChant(me, guard, out _))
                 {
                     me.chargeDelay = Rand(0f, 0.12f);
@@ -69,6 +69,16 @@ namespace SpellDuel
 
             SkillDef pick = null;
             if (me.hp < me.maxHp * 0.4f) pick = me.loadout.Find(s => s.self == SelfKind.Heal && Ready(s));
+            // 法師：玩家在 1.5m 內蓄力或伏擊 → 抗拒法環打斷
+            if (pick == null && (b.player.charging != null || b.player.armed != null) && Battle.FlatDistance(me.Feet, b.player.Feet) < 1.6f)
+                pick = me.loadout.Find(s => s.self == SelfKind.Dispel && Ready(s));
+            // 牧師：中毒、定身、致盲 → 淨化；兩個以上技能在冷卻 → 祈禱
+            if (pick == null && (me.dots.Count > 0 || me.blindUntil > b.now)) pick = me.loadout.Find(s => s.self == SelfKind.Cleanse && Ready(s));
+            if (pick == null)
+            {
+                int cooling = 0; foreach (var kv in me.cooldownUntil) if (kv.Value > b.now + 2f) cooling++;
+                if (cooling >= 2) pick = me.loadout.Find(s => s.self == SelfKind.Prayer && Ready(s));
+            }
             if (pick == null)
             {
                 var attacks = me.loadout.FindAll(s => s.type != SkillType.Self && Ready(s));

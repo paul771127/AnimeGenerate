@@ -30,6 +30,11 @@ namespace SpellDuel
         public SkillDef armed; public float armedUntil;
         // 身體閃避：蹲下（躲橫向攻擊）、快速側跨（短暫無敵）
         public bool crouching; public float dodgeUntil;
+        // 體型（Boss 比較大）、蓄力倍率（Boss 狂暴時變快）、目前攻擊的目標（合作模式 Boss 會換目標）
+        public float bodyRadius = BodyRadius, chargeScale = 1f;
+        public Fighter target;
+        // 牧師的守護：時限內受到的直接傷害按比例減少
+        public float armorUntil, armorReduce;
         public readonly List<Dot> dots = new List<Dot>();
 
         public class Dot { public float dps, until, acc; }
@@ -44,7 +49,7 @@ namespace SpellDuel
 
         public bool Alive => hp > 0;
         public Vector3 Feet => new Vector3(head.x, 0f, head.z);
-        public Vector3 Chest => new Vector3(head.x, Mathf.Max(0.3f, head.y - 0.45f), head.z);
+        public Vector3 Chest => new Vector3(head.x, Mathf.Max(0.3f, bodyRadius > 0.5f ? head.y * 0.6f : head.y - 0.45f), head.z);   // Boss 的胸口在身高 60% 處
 
         /// <summary>身體判定：從頭到地板的膠囊；玩家的身體在手機後方一點</summary>
         public void BodySegment(out Vector3 top, out Vector3 bottom)
@@ -60,6 +65,7 @@ namespace SpellDuel
     public class Projectile
     {
         public bool evaded;             // 已經被閃過（只提示一次，法術繼續飛）
+        public Fighter target;          // 這一發要打誰（合作模式 Boss 會打隊友）；null＝對手
         public Fighter owner;
         public SkillDef skill;
         public Vector3 pos, dir;
@@ -117,6 +123,24 @@ namespace SpellDuel
 
         public Battle(Fighter player, Fighter enemy) { this.player = player; this.enemy = enemy; }
 
+        // ------------------------------------------------------------ 合作模式（兩人打 Boss）
+        // ally＝另一位玩家的代理（位置、血量、蹲下／閃避由網路更新）。
+        // 主機（coopHost）跑 Boss：Boss 打到隊友 → OnAllyHit 送給隊友，由隊友自己扣血；隊友打 Boss → ApplyHitOnEnemy。
+        // 隊友端：Boss 是 remoteEnemy（位置、血量由主機送來），Boss 與主機的法術都只顯示。
+        public Fighter ally;
+        public bool coopHost;
+        public event Action<SkillDef, int, Vector3, int> OnAllyHit;      // Boss 打到隊友：技能、傷害、位置、法術 id
+        public event Action<Vector3, float> OnDispel;                    // 我放了抗拒法環（中心、半徑）：要告訴另一支手機
+        IEnumerable<Fighter> Players() { yield return player; if (ally != null) yield return ally; }
+
+        /// <summary>隊友（或主機）判定打到 Boss：套用到 Boss 身上（主機端）</summary>
+        public void ApplyHitOnEnemy(SkillDef s, int damage, Vector3 at, bool isTrap)
+        {
+            if (isTrap) Emit("trap", at, s.color, $"{s.name}！");
+            ApplyDamageAndEffect(enemy, damage, s.effect, s.effectDps, s.effectDur, at);
+        }
+        public void ApplyBurnOnEnemy(float dmg, Vector3 at) => Damage(enemy, dmg, "burn", at);
+
         // ------------------------------------------------------------ 雙人連線模式
         // enemy 是「對手的代理」：位置、血量由網路更新；對手的法術與陷阱只顯示。
         // 判定規則（攻擊方判定）：我的法術／陷阱打到對手 → OnRemoteHit 送給對手，由對手自己扣血與套用格擋、護盾、反擊；
@@ -129,9 +153,9 @@ namespace SpellDuel
         public event Action<SkillDef, float, Vector3> OnRemoteBurn;     // 我方火海燒到對手：技能、傷害、位置
 
         /// <summary>顯示對手的法術（從對手送來的起點、方向；elapsed＝已經飛了幾秒）</summary>
-        public Projectile AddRemoteProjectile(int id, SkillDef s, Vector3 from, Vector3 dir, float elapsed, bool reflected, float curveAmp = 0f, float pathLen = 0f)
+        public Projectile AddRemoteProjectile(int id, SkillDef s, Vector3 from, Vector3 dir, float elapsed, bool reflected, float curveAmp = 0f, float pathLen = 0f, Fighter owner = null)
         {
-            var p = new Projectile { owner = enemy, skill = s, pos = from, basePos = from, dir = dir.normalized, damage = s.damage, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur, reflected = reflected, id = id, remote = true };
+            var p = new Projectile { owner = owner ?? enemy, skill = s, pos = from, basePos = from, dir = dir.normalized, damage = s.damage, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur, reflected = reflected, id = id, remote = true };
             SetCurve(p, curveAmp, pathLen);
             Advance(p, s.speed * Mathf.Max(0f, elapsed));
             projectiles.Add(p);
@@ -162,7 +186,7 @@ namespace SpellDuel
                 if (p.remote && p.id == id && p.alive)
                 {
                     p.alive = false;
-                    if (p.skill.id == "meteor" && !p.reflected) AddBurn(p, player.Feet);   // 對手的隕石砸中我：顯示火海
+                    if (p.skill.id == "meteor" && !p.reflected && p.owner == enemy) AddBurn(p, player.Feet);   // 對手的隕石砸中我：顯示火海
                 }
         }
 
@@ -195,24 +219,26 @@ namespace SpellDuel
             return false;
         }
 
-        public Fighter Opponent(Fighter f) => f == player ? enemy : player;
+        /// <summary>對手：玩家（和隊友）打 enemy；enemy 打它目前的目標（沒有就打玩家）</summary>
+        public Fighter Opponent(Fighter f) => f == enemy ? (f.target != null && f.target.Alive ? f.target : player) : enemy;
         public static float FlatDistance(Vector3 a, Vector3 b) { a.y = 0; b.y = 0; return Vector3.Distance(a, b); }
         public float Distance => FlatDistance(player.head, enemy.head);
-        public bool Over => !player.Alive || !enemy.Alive;
+        public bool Over => !enemy.Alive || (!player.Alive && (ally == null || !ally.Alive));
 
         // ------------------------------------------------------------ 詠唱
         public bool TryChant(Fighter f, SkillDef s, out string why)
         {
             why = null;
             if (Over) { why = "戰鬥結束"; return false; }
+            if (!f.Alive) { why = "你已倒下，等隊友"; return false; }
             if (f.cooldownUntil.TryGetValue(s.id, out var cd) && cd > now) { why = $"{s.name} 冷卻中"; return false; }
             if (f.mp < s.cost) { why = "MP 不足"; return false; }
-            if (f.snaredUntil > now) { why = "被困住，暫時不能施法"; return false; }
+            if (f.snaredUntil > now && s.self != SelfKind.Cleanse) { why = "被困住，暫時不能施法（牧師可以淨化）"; return false; }
             f.charging = s; f.chargeStart = now;
             return true;
         }
 
-        public float ChargeProgress(Fighter f) => f.charging == null ? 0f : f.charging.charge <= 0f ? 1f : Mathf.Clamp01((now - f.chargeStart) / Mathf.Max(0.01f, f.charging.charge));
+        public float ChargeProgress(Fighter f) => f.charging == null ? 0f : f.charging.charge <= 0f ? 1f : Mathf.Clamp01((now - f.chargeStart) / Mathf.Max(0.01f, f.charging.charge * f.chargeScale));
 
         /// <summary>射程狀態：0＝可以、1＝太遠、-1＝太近</summary>
         public int RangeState(Fighter f, SkillDef s)
@@ -234,7 +260,7 @@ namespace SpellDuel
             var s = f.charging;
             if (s == null || Over) { why = "沒有在詠唱"; return false; }
             if (f.mp < s.cost) { f.charging = null; why = "MP 不足"; return false; }
-            if (now - f.chargeStart < s.charge) { why = $"蓄力中 {Mathf.FloorToInt(ChargeProgress(f) * 100)}%"; return false; }
+            if (now - f.chargeStart < s.charge * f.chargeScale) { why = $"蓄力中 {Mathf.FloorToInt(ChargeProgress(f) * 100)}%"; return false; }
             // 蓄力完成就一定放得出去（不管有沒有瞄到敵人、距離多遠），打不打得中看瞄準與距離。
             // 陷阱：準星指得太遠時，放在同方向的最遠設置距離上
             if (s.type == SkillType.Trap)
@@ -260,9 +286,23 @@ namespace SpellDuel
             {
                 case SkillType.Self: CastSelf(f, s); break;
                 case SkillType.Trap: PlaceTrap(f, s, floorPoint); break;
-                case SkillType.Projectile when s.id == "meteor":
+                case SkillType.Projectile when s.areaRadius > 0f:
                 {
-                    // 隕石：從敵人（施放當下的位置）正上方砸下，敵人可以趁下落時移動閃開；
+                    // 範圍重擊（Boss 地裂）：放招當下站在半徑內的玩家都受傷；側跨的無敵時間內閃得掉
+                    Emit("slam", f.Feet, s.color, null);
+                    Emit("cast", f.head, s.color, null);
+                    foreach (var v in new List<Fighter>(Players()))
+                    {
+                        if (v == f || !v.Alive || FlatDistance(f.Feet, v.Feet) > s.areaRadius + v.bodyRadius) continue;
+                        if (v.dodgeUntil > now) { Emit("evade", v.Chest, s.color, "閃避！"); continue; }
+                        if (v == ally) { Emit("allyhit", v.Chest, s.color, null); OnAllyHit?.Invoke(s, s.damage, v.Chest, 0); }
+                        else ApplyDamageAndEffect(v, s.damage, s.effect, s.effectDps, s.effectDur, v.Chest);
+                    }
+                    break;
+                }
+                case SkillType.Projectile when s.fromAbove:
+                {
+                    // 隕石、審判：從敵人（施放當下的位置）正上方砸下，敵人可以趁下落時移動閃開；
                     // 沒鎖定時落在準星指的地面（最遠到射程）
                     var target = Opponent(f).Feet;
                     if (!locked)
@@ -271,13 +311,26 @@ namespace SpellDuel
                         if (off.magnitude > s.rangeMax) off = off.normalized * s.rangeMax;
                         target = f.Feet + off; target.y = 0f;
                     }
-                    Spawn(f, s, target + Vector3.up * MeteorDropHeight, Vector3.down, s.damage, s.effect, s.effectDps, s.effectDur, false);
+                    Spawn(f, s, target + Vector3.up * s.dropHeight, Vector3.down, s.damage, s.effect, s.effectDps, s.effectDur, false);
+                    // 一次落下好幾顆（Boss 落石雨）：其餘落在目標周圍 2.5m 內，錯開一點高度（陸續落下）
+                    for (int i = 1; i < s.multi; i++)
+                    {
+                        float a = (float)rng.NextDouble() * Mathf.PI * 2f, r = 0.8f + (float)rng.NextDouble() * 1.7f;
+                        var at = target + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
+                        Spawn(f, s, at + Vector3.up * (s.dropHeight + i * 1.2f), Vector3.down, s.damage, s.effect, s.effectDps, s.effectDur, false);
+                    }
                     Emit("cast", f.head, s.color, null);
                     break;
                 }
                 default:
                     var hand = f.head + Fighter.Flat(f.forward) * 0.25f + Vector3.down * 0.25f;
                     aimDir = aimDir.sqrMagnitude > 1e-6f ? aimDir.normalized : Fighter.Flat(f.forward);
+                    if (s.originHeight > 0f)
+                    {
+                        // 水平射出（Boss 橫掃）：從身體前方、固定高度出發
+                        hand = new Vector3(f.head.x, s.originHeight, f.head.z) + Fighter.Flat(f.forward) * (f.bodyRadius + 0.3f);
+                        aimDir = Fighter.Flat(aimDir); if (aimDir == Vector3.zero) aimDir = Fighter.Flat(f.forward);
+                    }
                     if (s.id == "wind")
                     {
                         // 風刃：隨機從左或右側繞弧線飛向目標（終點仍是準星方向、敵人的距離）
@@ -306,6 +359,31 @@ namespace SpellDuel
                 case SelfKind.Block: f.blockUntil = now + s.buffDur; f.blockReduce = s.buffReduce; break;
                 case SelfKind.Shield: f.shieldUntil = now + s.buffDur; f.shieldLeft = s.buffAmount; break;
                 case SelfKind.Counter: f.counterUntil = now + s.buffDur; break;
+                case SelfKind.Armor: f.armorUntil = now + s.buffDur; f.armorReduce = s.buffReduce; break;
+                case SelfKind.Cleanse:
+                    // 淨化：解除中毒、定身、致盲，回一點血
+                    f.dots.Clear(); f.snaredUntil = 0f; f.blindUntil = 0f;
+                    if (s.heal > 0) f.hp = Mathf.Min(f.maxHp, f.hp + s.heal);
+                    Emit("heal", f.Chest, s.color, s.heal > 0 ? $"淨化 +{s.heal}" : "淨化");
+                    return;
+                case SelfKind.Dispel:
+                {
+                    // 抗拒法環：以自己為中心，打斷範圍內所有敵人的蓄力（含刺客的伏擊），被打斷的技能重新冷卻
+                    Emit("dispel", f.Feet, s.color, s.name);
+                    foreach (var v in new[] { Opponent(f) })
+                        if (!(remoteEnemy && v == enemy)) DispelAt(v, f.Feet, s.areaRadius);
+                    if (f == player) OnDispel?.Invoke(f.Feet, s.areaRadius);
+                    return;
+                }
+                case SelfKind.Prayer:
+                {
+                    // 祈禱：其他技能的冷卻減少，回復 MP
+                    var keys = new List<string>(f.cooldownUntil.Keys);
+                    foreach (var k in keys) if (k != s.id) f.cooldownUntil[k] = Mathf.Max(now, f.cooldownUntil[k] - s.buffDur);
+                    f.mp = Mathf.Min(f.maxMp, f.mp + s.buffAmount);
+                    Emit("buff", f.Chest, s.color, $"祈禱：冷卻 -{s.buffDur:0}s・MP +{s.buffAmount}");
+                    return;
+                }
             }
             Emit("buff", f.Chest, s.color, s.name);
         }
@@ -326,9 +404,11 @@ namespace SpellDuel
         Projectile Spawn(Fighter owner, SkillDef s, Vector3 from, Vector3 dir, int dmg, EffectKind eff, float dps, float dur, bool reflected, float curveAmp = 0f, float pathLen = 0f)
         {
             var p = new Projectile { owner = owner, skill = s, pos = from, basePos = from, dir = dir.normalized, damage = dmg, effect = eff, effectDps = dps, effectDur = dur, reflected = reflected, id = nextId++ };
+            if (owner == enemy && owner.target != null) p.target = owner.target;
             SetCurve(p, curveAmp, pathLen);
             projectiles.Add(p);
-            if (owner == player && remoteEnemy) OnSpawn?.Invoke(p);
+            // 要給另一支手機顯示的法術：雙人對戰的我方法術；合作模式的我方法術、主機上 Boss 的法術
+            if ((owner == player && (remoteEnemy || ally != null)) || (owner == enemy && coopHost)) OnSpawn?.Invoke(p);
             return p;
         }
 
@@ -365,7 +445,7 @@ namespace SpellDuel
             {
                 var p = projectiles[i];
                 if (!p.alive) continue;
-                var target = Opponent(p.owner);
+                var target = p.target != null && p.target.Alive ? p.target : Opponent(p.owner);
                 float step = p.skill.speed * dt;
                 // 分小段前進，快的箭也不會穿過身體
                 int sub = Mathf.Max(1, Mathf.CeilToInt(step / 0.08f));
@@ -385,7 +465,7 @@ namespace SpellDuel
                         // 對手的法術：命中由對手判定（收到結果時移除）；這裡只讓它飛，飛完消失
                         if (p.pos.y < 0f || p.traveled > p.skill.MaxTravel) p.alive = false;
                     }
-                    else if (DistancePointSegment(p.pos, a, b) < p.skill.radius + Fighter.BodyRadius)
+                    else if (DistancePointSegment(p.pos, a, b) < p.skill.radius + target.bodyRadius)
                     {
                         // 閃避：蹲下躲過橫向攻擊、側跨的無敵時間內 → 法術穿過去
                         if (Evades(target, p))
@@ -396,6 +476,7 @@ namespace SpellDuel
                         p.alive = false;
                         if (p.skill.id == "meteor" && !p.reflected) AddBurn(p, target.Feet);   // 直接砸中也留下火海
                         if (remoteEnemy && target == enemy) { Emit("hit", p.pos, p.skill.color, null); OnRemoteHit?.Invoke(p.skill, p.damage, p.pos, p.id); }
+                        else if (target == ally) { Emit("allyhit", p.pos, p.skill.color, null); OnAllyHit?.Invoke(p.skill, p.damage, p.pos, p.id); }   // 主機：Boss 打到隊友
                         else Hit(target, p);
                     }
                     else if (p.pos.y < 0f || p.traveled > p.skill.MaxTravel) { p.alive = false; Emit("miss", p.pos, p.skill.color, null); }
@@ -404,8 +485,19 @@ namespace SpellDuel
             projectiles.RemoveAll(x => !x.alive);
         }
 
+        /// <summary>抗拒法環打到 v（v 的腳在 center 半徑 r 內）：取消蓄力／伏擊，那個技能重新冷卻。回傳有沒有打斷</summary>
+        public bool DispelAt(Fighter v, Vector3 center, float r)
+        {
+            if (v == null || !v.Alive || FlatDistance(v.Feet, center) > r + v.bodyRadius) return false;
+            bool any = false;
+            if (v.charging != null) { v.cooldownUntil[v.charging.id] = now + v.charging.cooldown; v.charging = null; any = true; }
+            if (v.armed != null) { v.cooldownUntil[v.armed.id] = now + v.armed.cooldown; v.armed = null; any = true; }
+            if (any) Emit("dispelled", v.Chest, new Color(0.94f, 0.67f, 0.99f), "被打斷！");
+            return any;
+        }
+
         /// <summary>這一發會不會被閃過：側跨的無敵時間內全部閃過；蹲著時橫向攻擊（duckable）打不到</summary>
-        public bool Evades(Fighter target, Projectile p) => target.dodgeUntil > now || (target.crouching && p.skill.duckable && p.skill.id != "meteor");
+        public bool Evades(Fighter target, Projectile p) => target.dodgeUntil > now || (target.crouching && p.skill.duckable);
 
         /// <summary>伏擊：時限內和對手的水平距離 ≤ 技能射程 → 自動出手一次</summary>
         void UpdateAmbush(Fighter f)
@@ -453,7 +545,7 @@ namespace SpellDuel
             foreach (var t in traps)
             {
                 if (!t.alive) continue;
-                if (now > t.until) { t.alive = false; if (!t.remote && remoteEnemy) OnTrapGone?.Invoke(t.id); continue; }
+                if (now > t.until) { t.alive = false; if (!t.remote && (remoteEnemy || ally != null)) OnTrapGone?.Invoke(t.id); continue; }
                 if (t.remote || !t.Armed(now)) continue;   // 對手的陷阱由對手判定
                 var victim = Opponent(t.owner);
                 if (FlatDistance(victim.Feet, t.pos) < t.skill.radius + 0.15f)
@@ -461,7 +553,11 @@ namespace SpellDuel
                     t.alive = false;
                     Emit("trap", t.pos, t.skill.color, $"{t.skill.name}！");
                     if (remoteEnemy && victim == enemy) { OnRemoteHit?.Invoke(t.skill, t.skill.damage, t.pos, -t.id); OnTrapGone?.Invoke(t.id); }
-                    else ApplyDamageAndEffect(victim, t.skill.damage, t.skill.effect, t.skill.effectDps, t.skill.effectDur, t.pos);
+                    else
+                    {
+                        ApplyDamageAndEffect(victim, t.skill.damage, t.skill.effect, t.skill.effectDps, t.skill.effectDur, t.pos);
+                        if (ally != null) OnTrapGone?.Invoke(t.id);   // 合作模式：告訴隊友陷阱沒了
+                    }
                 }
             }
             traps.RemoveAll(x => !x.alive);
@@ -488,6 +584,7 @@ namespace SpellDuel
             float dmg = damage;
             string note = null;
             if (target.blockUntil > now && dmg > 0) { dmg = Mathf.Round(dmg * (1f - target.blockReduce)); target.blockUntil = 0; note = "格擋"; }
+            if (target.armorUntil > now && dmg > 0) { dmg = Mathf.Round(dmg * (1f - target.armorReduce)); note = note == null ? "守護" : note + "＋守護"; }
             if (target.shieldUntil > now && target.shieldLeft > 0 && dmg > 0)
             {
                 int absorb = Mathf.Min(target.shieldLeft, Mathf.RoundToInt(dmg));
@@ -510,7 +607,7 @@ namespace SpellDuel
             if (!f.Alive) return;
             f.hp = Mathf.Max(0, f.hp - dmg);
             Emit(kind == "dot" || kind == "burn" ? kind : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");
-            if (!f.Alive) Emit(f.isPlayer ? "lose" : "win", f.Chest, Color.white, null);
+            if (!f.Alive) Emit(f.isPlayer ? (ally != null && ally.Alive ? "down" : "lose") : "win", f.Chest, Color.white, null);
         }
 
         // ------------------------------------------------------------ 小工具

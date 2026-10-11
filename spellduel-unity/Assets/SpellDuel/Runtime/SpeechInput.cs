@@ -295,7 +295,8 @@ namespace SpellDuel
 
         // 簡體 → 繁體（技能名稱用到的字與常見異體字）
         const string SimpTrad =
-            "击擊连連兽獸夹夾术術枪槍鎗槍风風陨隕愈癒瘉癒袭襲飞飛烟煙菸煙雾霧弹彈斩斬剑劍劒劍剣劍气氣挡擋铁鐵疗療猎獵";
+            "击擊连連兽獸夹夾术術枪槍鎗槍风風陨隕愈癒瘉癒袭襲飞飛烟煙菸煙雾霧弹彈斩斬剑劍劒劍剣劍气氣挡擋铁鐵疗療猎獵" +
+            "圣聖审審护護祷禱净淨广廣";
 
         // 拼音（不含聲調）→ 字：技能名稱的每個字，加上辨識器可能輸出的同音字（繁簡都有）
         const string PinyinTable =
@@ -327,7 +328,10 @@ namespace SpellDuel
             "jin 金今進进近緊紧斤盡尽禁筋錦锦|qian 前錢钱千簽签淺浅牽牵遷迁欠|nei 內内|fen 分份粉紛纷奮奋憤愤墳坟芬|" +
             "hong 紅红洪轟轰宏虹哄|reng 仍扔|zi 自字子資资姿紫滋仔|chi 吃持遲迟池尺齒齿赤翅斥|yin 因音引銀银印飲饮隱隐陰阴|" +
             "hui 會会回灰揮挥輝辉毀毁|yang 樣样陽阳洋羊養养揚扬仰氧|jiang 將将講讲江獎奖降姜醬酱疆|fang 方放房防訪访芳仿紡纺|" +
-            "huan 換换環环歡欢緩缓還还幻患喚唤|yi 一1|er 二2|liu 六6|ba 八8|jiu 九9|ling 零0";
+            "huan 換换環环歡欢緩缓還还幻患喚唤|" +
+            // 牧師：聖光彈、審判、治療術、淨化、守護、祈禱
+            "sheng 聖圣生聲声升勝胜省盛剩繩绳牲|guang 光廣广逛|shen 審审神身深伸申甚慎腎肾紳绅|pan 判盼盤盘攀潘叛畔|" +
+            "hua 化花話话畫画華华滑劃划|kang 抗康扛炕慷亢|fa 法發发罰罚乏伐閥阀筏髮|hu 護护戶户湖虎呼胡壺壶糊互狐乎|yi 一1|er 二2|liu 六6|ba 八8|jiu 九9|ling 零0";
 
         static readonly Dictionary<char, char> toTrad = new Dictionary<char, char>();
         static readonly Dictionary<char, List<string>> pinyin = new Dictionary<char, List<string>>();

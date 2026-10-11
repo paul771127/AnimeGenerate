@@ -10,6 +10,7 @@ namespace SpellDuel
     ///   弓箭手：綠色風系，風痕往手（弓）的方向旋轉收束、葉片／羽毛環繞；放箭時銳利的爆環＋速度線。
     ///   刺客：暗紫色煙霧＋閃爍的紫色火花；出手時暗影爆散。
     ///   劍士：金色／鋼色光柱（手前則是劍芒十字）＋閃光星芒；出手時明亮的新月斬擊弧。
+    ///   牧師：金色聖光，旋轉的光環（太陽光芒鋸齒＋十字）＋往上飄的光點；出手時金色閃光＋放射光芒；命中是柔和的金色光爆。
     ///   所有效果都會自己清除（播完 Destroy）。粒子數量壓在每個效果約 150 顆以內，適合手機。
     /// </summary>
     public static class SpellFx
@@ -106,6 +107,47 @@ namespace SpellDuel
                     sp.Play(); sp.Emit(20);
                     break;
                 }
+                case "priest":
+                {
+                    var gold = Color.Lerp(skillColor, new Color(1f, 0.88f, 0.5f), 0.45f);
+                    var bright = Color.Lerp(gold, Color.white, 0.55f);
+                    // 金色閃光（比共用的閃光更大更柔）
+                    var halo = NewPS(root, "HolyFlash", AddMat(TexSoft), 3, false);
+                    Flash(halo, gold, 0.8f * s, 0.3f);
+                    halo.Emit(1);
+                    // 太陽光芒（鋸齒環）＋外圈光環，一邊放大一邊淡出
+                    anim.AddRing(root, Zigzag(32, 0.55f, 1f), true, 0.012f * s, bright, 0f, 0.32f, 0.08f * s, 0.5f * s, true, 25f);
+                    anim.AddRing(root, Circle(48, 1f), true, 0.02f * s, gold, 0f, 0.36f, 0.06f * s, 0.6f * s);
+                    anim.AddRing(root, Circle(48, 1f), true, 0.01f * s, bright, 0.08f, 0.3f, 0.04f * s, 0.42f * s);
+                    // 十字光芒（細長星芒）
+                    Stars(root, bright, s, 3, 0.35f, 0.25f, 0.4f);
+                    // 放射光芒：往四面八方射出的細長光線
+                    var rays = NewPS(root, "Rays", AddMat(TexSoft), 30, true);
+                    var m = rays.main;
+                    m.startLifetime = new ParticleSystem.MinMaxCurve(0.18f, 0.32f);
+                    m.startSpeed = new ParticleSystem.MinMaxCurve(2.5f * s, 5f * s);
+                    m.startSize = 0.016f * s;
+                    m.startColor = new ParticleSystem.MinMaxGradient(gold, Color.white);
+                    Sphere(rays, 0.05f * s);
+                    FadeOut(rays);
+                    Stretch(rays, 0.05f, 2.5f);
+                    Drag(rays, 3f);
+                    rays.Play(); rays.Emit(26);
+                    // 往上飄的金色光點
+                    var mo = NewPS(root, "Motes", AddMat(TexSoft), 24, true);
+                    var mm = mo.main;
+                    mm.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 0.9f);
+                    mm.startSpeed = new ParticleSystem.MinMaxCurve(0.2f * s, 0.8f * s);
+                    mm.startSize = new ParticleSystem.MinMaxCurve(0.02f * s, 0.045f * s);
+                    mm.startColor = new ParticleSystem.MinMaxGradient(gold, bright);
+                    Sphere(mo, 0.12f * s);
+                    FadeOut(mo);
+                    SizeCurve(mo, Shrink);
+                    Rise(mo, 0.6f * s);
+                    Drag(mo, 2f);
+                    mo.Play(); mo.Emit(20);
+                    break;
+                }
                 default: // mage（未知職業也用這個）
                 {
                     anim.AddRing(root, Circle(48, 1f), true, 0.02f * s, Color.Lerp(skillColor, Color.white, 0.2f), 0f, 0.35f, 0.08f * s, 0.55f * s);
@@ -128,6 +170,60 @@ namespace SpellDuel
                     break;
                 }
             }
+        }
+
+        /// <summary>
+        /// 抗拒法環（法師 dispel）：以施法者腳底為中心，在 radius 處的地面閃現一圈旋轉的符文法陣（外圈、符文鋸齒帶、內圈六芒星），
+        /// 同時一道衝擊波光環從中心往外擴散到略超過 radius，並從法陣上往上飄起星光。約 1.2 秒後自己 Destroy。
+        /// </summary>
+        public static void DispelRing(Vector3 worldFeetPos, float radius, Color color)
+        {
+            float R = Mathf.Max(0.1f, radius);
+            color.a = 1f;
+            var light = Color.Lerp(color, Color.white, 0.5f);
+            var violet = Color.Lerp(color, new Color(0.65f, 0.3f, 1f), 0.35f);
+            // 本地 XY 平面平躺在地上（本地 Z 朝下）
+            var anim = NewAnim("SpellFx Dispel", worldFeetPos + Vector3.up * 0.02f, Quaternion.Euler(90f, 0f, 0f), 1.25f);
+            var root = anim.transform;
+
+            // 中心柔光閃一下
+            var core = NewPS(root, "Flash", AddMat(TexSoft), 3, false);
+            Flash(core, light, 0.9f, 0.25f);
+            core.Emit(1);
+
+            // 符文法陣：在 radius 處閃現（微微長大），慢慢旋轉後淡出
+            anim.AddRing(root, Circle(64, 1f), true, 0.035f, light, 0f, 1.0f, R * 0.96f, R * 1.02f);
+            anim.AddRing(root, Zigzag(48, 0.86f, 0.95f), true, 0.014f, color, 0.02f, 0.95f, R * 0.97f, R * 1.0f, true, 50f);
+            anim.AddRing(root, Circle(48, 0.78f), true, 0.012f, violet, 0.04f, 0.9f, R * 0.98f, R * 1.0f, true, -40f);
+            var star = new GameObject("Hexagram").transform;
+            star.SetParent(root, false);
+            anim.AddRing(star, Polygon(3, 0.74f, 90f), true, 0.012f, light, 0.05f, 0.85f, R * 0.95f, R, true, -60f);
+            anim.AddRing(star, Polygon(3, 0.74f, 270f), true, 0.012f, light, 0.05f, 0.85f, R * 0.95f, R, true, -60f);
+            // 衝擊波：從中心快速往外擴散
+            anim.AddRing(root, Circle(64, 1f), true, 0.06f, Color.Lerp(color, Color.white, 0.25f), 0f, 0.45f, R * 0.15f, R * 1.35f);
+            anim.AddRing(root, Circle(64, 1f), true, 0.025f, Color.white, 0.06f, 0.4f, R * 0.1f, R * 1.2f);
+
+            // 從法陣上往上飄的星光（沿圓周）
+            var sp = NewPS(root, "Sparkles", AddMat(TexSoft), 70, true);
+            var m = sp.main;
+            m.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 1f);
+            m.startSize = new ParticleSystem.MinMaxCurve(0.03f, 0.06f);
+            m.startColor = new ParticleSystem.MinMaxGradient(color, light);
+            Disc(sp, R, 0.15f);
+            FadeOut(sp);
+            SizeCurve(sp, Shrink);
+            Rise(sp, 1.1f);
+            Drag(sp, 1f);
+            sp.Play(); sp.Emit(60);
+            // 法陣上閃爍的星芒
+            var gl = NewPS(root, "Glints", AddMat(TexStar), 12, true);
+            var g = gl.main;
+            g.startLifetime = new ParticleSystem.MinMaxCurve(0.3f, 0.5f);
+            g.startSize = new ParticleSystem.MinMaxCurve(0.1f, 0.2f);
+            g.startColor = new ParticleSystem.MinMaxGradient(light, Color.white);
+            Disc(gl, R, 0.1f);
+            SizeCurve(gl, PopCurve);
+            gl.Play(); gl.Emit(10);
         }
 
         /// <summary>給飛行中的法術物件加上職業風格的光暈/拖尾粒子（go 是已存在的球體物件，會被呼叫者移動與銷毀）</summary>
@@ -170,6 +266,7 @@ namespace SpellDuel
                 case "archer": trail.time = 0.14f; trail.widthMultiplier = r * 1.4f; tc = Color.Lerp(skillColor, new Color(0.8f, 1f, 0.7f), 0.4f); break;
                 case "assassin": trail.time = 0.3f; trail.widthMultiplier = r * 2.2f; tc = new Color(0.25f, 0.08f, 0.38f, 0.8f); break;
                 case "swordsman": trail.time = 0.2f; trail.widthMultiplier = r * 2.4f; tc = Color.Lerp(skillColor, new Color(1f, 0.9f, 0.6f), 0.4f); break;
+                case "priest": trail.time = 0.28f; trail.widthMultiplier = r * 2.2f; tc = Color.Lerp(skillColor, new Color(1f, 0.95f, 0.75f), 0.45f); break;
                 default: trail.time = 0.3f; trail.widthMultiplier = r * 2f; tc = skillColor; break;
             }
             var g = new Gradient();
@@ -234,6 +331,32 @@ namespace SpellDuel
                     SizeCurve(st, PopCurve);
                     RateDist(st, 4f);
                     st.Play();
+                    break;
+                }
+                case "priest":
+                {
+                    // 沿路留下的十字星芒＋緩緩上飄的金色光點
+                    var st = NewPS(holder, "Glints", AddMat(TexStar), 12, true);
+                    var m = st.main;
+                    m.startLifetime = new ParticleSystem.MinMaxCurve(0.25f, 0.45f);
+                    m.startSize = new ParticleSystem.MinMaxCurve(r * 1.2f + 0.02f, r * 2f + 0.03f);
+                    m.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.92f, 0.6f), Color.white);
+                    Sphere(st, r * 1.1f);
+                    SizeCurve(st, PopCurve);
+                    RateDist(st, 6f);
+                    st.Play();
+                    var mo = NewPS(holder, "Motes", AddMat(TexSoft), 30, true);
+                    var k = mo.main;
+                    k.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 0.75f);
+                    k.startSpeed = new ParticleSystem.MinMaxCurve(0.03f, 0.15f);
+                    k.startSize = new ParticleSystem.MinMaxCurve(r * 0.2f + 0.01f, r * 0.35f + 0.015f);
+                    k.startColor = new ParticleSystem.MinMaxGradient(Color.Lerp(skillColor, new Color(1f, 0.85f, 0.4f), 0.4f), light);
+                    Sphere(mo, r);
+                    FadeInOut(mo);
+                    SizeCurve(mo, Shrink);
+                    Rise(mo, 0.35f);
+                    RateDist(mo, 18f);
+                    mo.Play();
                     break;
                 }
                 default:
@@ -301,6 +424,29 @@ namespace SpellDuel
                 case "swordsman":
                     Stars(root, new Color(1f, 0.9f, 0.6f), s, 6, 0.28f, 0.1f, 0.2f);
                     break;
+                case "priest":
+                {
+                    // 柔和的金色光爆：大片柔光＋太陽光芒環＋十字星芒＋往上飄散的光點
+                    var gold = Color.Lerp(color, new Color(1f, 0.88f, 0.5f), 0.4f);
+                    var soft = NewPS(root, "SoftBloom", AddMat(TexSoft), 2, false);
+                    Flash(soft, gold, 0.9f * s, 0.4f);
+                    soft.Emit(1);
+                    anim.AddRing(root, Zigzag(28, 0.6f, 1f), true, 0.012f * s, Color.Lerp(gold, Color.white, 0.5f), 0.02f, 0.35f, 0.08f * s, 0.5f * s, true, -30f);
+                    Stars(root, Color.Lerp(gold, Color.white, 0.4f), s, 5, 0.4f, 0.12f, 0.24f);
+                    var sp = NewPS(root, "Motes", AddMat(TexSoft), 28, true);
+                    var m = sp.main;
+                    m.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 1.1f);
+                    m.startSpeed = new ParticleSystem.MinMaxCurve(0.2f * s, 0.8f * s);
+                    m.startSize = new ParticleSystem.MinMaxCurve(0.02f * s, 0.05f * s);
+                    m.startColor = new ParticleSystem.MinMaxGradient(gold, Color.Lerp(gold, Color.white, 0.6f));
+                    Sphere(sp, 0.12f * s);
+                    FadeOut(sp);
+                    SizeCurve(sp, Shrink);
+                    Rise(sp, 0.6f * s);
+                    Drag(sp, 1.5f);
+                    sp.Play(); sp.Emit(24);
+                    break;
+                }
                 case "mage":
                 {
                     var sp = NewPS(root, "Sparkles", AddMat(TexSoft), 24, true);
@@ -535,6 +681,60 @@ namespace SpellDuel
                     CoreGlow(root.transform, gold, D * 1.2f, new Vector3(0f, 0f, D * 0.5f));
                     break;
                 }
+                case "holy":
+                {
+                    // 聖光彈：白金色的多層光球＋正對飛行方向的十字星芒（繞 Z 轉）＋細光環；另有永遠面向鏡頭的星芒，側面看也閃亮
+                    var gold = Color.Lerp(sc, new Color(1f, 0.85f, 0.4f), 0.35f);
+                    var spin = NewChild(body, "Spin");
+                    GlowPart(spin, "holy", m =>
+                    {
+                        m.Lathe(SphereProf(0.56f, 7), 10, (z, j) => WithA(gold, 0.22f));
+                        m.Lathe(SphereProf(0.4f, 6), 10, (z, j) => WithA(Color.Lerp(gold, Color.white, 0.5f), 0.55f));
+                        m.Lathe(SphereProf(0.24f, 5), 8, (z, j) => new Color(1f, 1f, 0.96f, 1f));
+                        m.Annulus(0.6f, 0.68f, 32, WithA(Color.Lerp(gold, Color.white, 0.4f), 0.85f), WithA(gold, 0f), Vector3.zero, Quaternion.identity);
+                        GlintCross(m, 1.15f, 0.12f, new Color(1f, 0.98f, 0.88f, 0.95f), 0f, 0.02f);
+                        GlintCross(m, 0.62f, 0.07f, WithA(gold, 0.8f), 45f, 0.01f);
+                    });
+                    anim.spin = spin; anim.spinAxis = Vector3.forward; anim.spinSpeed = 150f;
+                    anim.flick = spin; anim.flickAmt = 0.08f; anim.flickRate = 17f;
+                    CoreGlow(root.transform, gold, D * 1.7f, Vector3.zero);
+                    StarGlint(root.transform, new Color(1f, 0.97f, 0.85f), D * 2.2f, Vector3.zero);
+                    break;
+                }
+                case "judgement":
+                {
+                    // 審判：從天而降的光之劍（劍尖沿 +Z＝往下），後方拖著一道往上漸淡的光柱。
+                    //   全部是繞 Z 軸的旋轉體（護手是兩支互相垂直的橫桿、光環在 XY 平面），
+                    //   所以呼叫者 LookRotation(down, up) 的滾轉角怎麼定都一樣好看。
+                    var gold = Color.Lerp(sc, new Color(1f, 0.82f, 0.35f), 0.3f);
+                    var pale = Color.Lerp(gold, Color.white, 0.6f);
+                    var sword = NewChild(body, "Sword");
+                    GlowPart(sword, "judgement", m =>
+                    {
+                        // 光柱（往後＝往上，越遠越淡）
+                        m.Lathe(Prof(-5f, 0.06f, -3f, 0.3f, -1.2f, 0.42f, -0.5f, 0.4f, -0.2f, 0f), 12, (z, j) => WithA(gold, Mathf.Lerp(0f, 0.22f, Mathf.InverseLerp(-5f, -0.6f, z))));
+                        // 劍身外的光殼與劍身（四稜）、中央白熱芯線
+                        m.Lathe(Prof(-0.46f, 0.24f, 0.75f, 0.2f, 1.38f, 0f), 8, (z, j) => WithA(gold, 0.28f));
+                        m.Lathe(Prof(-0.4f, 0.14f, 0.8f, 0.11f, 1.25f, 0f), 4, (z, j) => (j & 1) == 0 ? WithA(pale, Mathf.Lerp(0.7f, 1f, Mathf.InverseLerp(-0.4f, 1.2f, z))) : WithA(gold, 0.8f), 1f, 1f, 45f);
+                        m.Lathe(Prof(-0.4f, 0.045f, 1.05f, 0f), 4, (z, j) => new Color(1f, 1f, 0.95f, 1f), 1f, 1f, 45f);
+                        // 十字護手：兩支互相垂直的橫桿
+                        var guardP = Prof(-0.5f, 0f, -0.44f, 0.075f, 0.44f, 0.075f, 0.5f, 0f);
+                        var g = WithA(Color.Lerp(gold, Color.white, 0.25f), 0.95f);
+                        m.Lathe(guardP, 6, (z, j) => g, 1f, 1f, 0f, null, new Vector3(0f, 0f, -0.44f), Quaternion.Euler(0f, 90f, 0f));
+                        m.Lathe(guardP, 6, (z, j) => g, 1f, 1f, 0f, null, new Vector3(0f, 0f, -0.44f), Quaternion.Euler(90f, 0f, 0f));
+                        // 握柄＋柄頭寶珠
+                        m.Lathe(Prof(-0.85f, 0.05f, -0.48f, 0.05f), 6, (z, j) => WithA(gold, 0.85f));
+                        m.Lathe(SphereProf(0.1f, 4), 8, (z, j) => new Color(1f, 0.98f, 0.9f, 1f), 1f, 1f, 0f, null, new Vector3(0f, 0f, -0.92f), Quaternion.identity);
+                        // 護手處的光環
+                        m.Annulus(0.4f, 0.5f, 32, WithA(pale, 0.9f), WithA(gold, 0f), new Vector3(0f, 0f, -0.44f), Quaternion.identity);
+                        m.Annulus(0.26f, 0.31f, 28, WithA(gold, 0.6f), WithA(gold, 0f), new Vector3(0f, 0f, -0.2f), Quaternion.identity);
+                    });
+                    anim.spin = sword; anim.spinAxis = Vector3.forward; anim.spinSpeed = 70f;
+                    anim.flick = sword; anim.flickAmt = 0.04f; anim.flickRate = 26f;
+                    CoreGlow(root.transform, gold, D * 1.5f, new Vector3(0f, 0f, -D * 0.44f));
+                    StarGlint(root.transform, Color.white, D * 1.4f, new Vector3(0f, 0f, D * 1.25f));
+                    break;
+                }
                 default:
                 {
                     // 其他（含自身/陷阱技能，正常不會飛）：發光球
@@ -605,6 +805,30 @@ namespace SpellDuel
                 m.Quad(a, b, c, d, WithA(sc, 0.9f));
             }
             if (snipe) m.Annulus(0.18f, 0.3f, 20, WithA(hot, 0.8f), WithA(hot, 0f), new Vector3(0f, 0f, -0.2f), Quaternion.identity);
+        }
+
+        /// <summary>十字星芒：XY 平面上兩條（沿 X、沿 Y）中間粗兩端尖的帶子，rotDeg 繞 Z 旋轉，z 是前後位置。</summary>
+        static void GlintCross(PMesh m, float len, float w, Color c, float rotDeg, float z)
+        {
+            const int N = 9;
+            var q = Quaternion.AngleAxis(rotDeg, Vector3.forward);
+            for (int pass = 0; pass < 2; pass++)
+            {
+                var along = q * (pass == 0 ? Vector3.right : Vector3.up);
+                var side = q * (pass == 0 ? Vector3.up : Vector3.right);
+                var pts = new Vector3[N];
+                var hv = new Vector3[N];
+                var cols = new Color[N];
+                for (int i = 0; i < N; i++)
+                {
+                    float t = i / (N - 1f) * 2f - 1f;
+                    float taper = 1f - Mathf.Abs(t);
+                    pts[i] = along * (t * len) + Vector3.forward * (z + pass * 0.005f);
+                    hv[i] = side * (w * taper * taper);
+                    cols[i] = WithA(c, c.a * Mathf.Lerp(0.15f, 1f, taper));
+                }
+                m.Ribbon(pts, hv, cols);
+            }
         }
 
         static void ArrowSolid(PMesh m, float len)
@@ -793,6 +1017,19 @@ namespace SpellDuel
             m.startLifetime = 1e5f;
             m.startSize = size;
             m.startColor = WithA(c, 0.8f);
+            ps.Play();
+            ps.Emit(1);
+        }
+
+        /// <summary>星芒閃光：一顆一直存在的本地十字星粒子（永遠面向鏡頭，從任何角度看都在閃）。</summary>
+        static void StarGlint(Transform parent, Color c, float size, Vector3 localPos)
+        {
+            var ps = NewPS(parent, "StarGlint", AddMat(TexStar), 1, false);
+            ps.transform.localPosition = localPos;
+            var m = ps.main;
+            m.startLifetime = 1e5f;
+            m.startSize = size;
+            m.startColor = WithA(c, 0.9f);
             ps.Play();
             ps.Emit(1);
         }
@@ -1481,6 +1718,7 @@ namespace SpellDuel
                 case "archer": BuildArcher(disc, col, s); break;
                 case "assassin": BuildAssassin(disc, col, s); break;
                 case "swordsman": BuildSwordsman(disc, col, s); break;
+                case "priest": BuildPriest(disc, col, s); break;
                 default: BuildMage(disc, col, s); break;
             }
 
@@ -1749,6 +1987,86 @@ namespace SpellDuel
             AddPS(mo, 35f);
 
             SetReady(disc, ground ? 0.5f * s : H * 0.5f, 0.012f * s, bright);
+        }
+
+        /// <summary>
+        /// 牧師：金色聖光的光環（外圈＋往外的太陽光芒鋸齒帶慢慢轉、內圈菱形反向轉），中央一個不轉的十字，
+        /// 柔光核心、往上飄的光點與閃爍的十字星芒。地面模式時平躺在腳下，另有一道淡淡往上的光柱。
+        /// </summary>
+        void BuildPriest(Transform disc, Color col, float s)
+        {
+            var gold = Color.Lerp(col, new Color(1f, 0.86f, 0.45f), 0.4f);
+            var light = Color.Lerp(gold, Color.white, 0.5f);
+            float R = (ground ? 0.5f : 0.22f) * s;
+            float w = ground ? 1f : 0.6f;   // 手前的線條細一點
+            var grow = Child(disc, "Grow");
+            AddGrow(grow, Vector3.one * 0.35f, Vector3.one);
+
+            // 外圈＋太陽光芒（慢慢轉）
+            var outer = Child(grow, "SpinOuter");
+            AddSpin(outer, Vector3.forward, 28f);
+            AddLine(SpellFx.Line(outer, "Outer", SpellFx.Circle(56, R), true, 0.016f * s * w, light, true, true), SpellFx.WithA(light, 0.95f));
+            AddLine(SpellFx.Line(outer, "Rays", SpellFx.Zigzag(32, R * 1.06f, R * 1.26f), true, 0.008f * s * w, gold, true, true), SpellFx.WithA(gold, 0.75f));
+            AddLine(SpellFx.Line(outer, "Ring2", SpellFx.Circle(48, R * 0.86f), true, 0.006f * s * w, gold, true, true), SpellFx.WithA(gold, 0.6f));
+
+            // 內圈＋菱形（反向轉）
+            var inner = Child(grow, "SpinInner");
+            AddSpin(inner, Vector3.forward, -45f);
+            AddLine(SpellFx.Line(inner, "Inner", SpellFx.Circle(40, R * 0.6f), true, 0.009f * s * w, gold, true, true), SpellFx.WithA(gold, 0.85f));
+            AddLine(SpellFx.Line(inner, "Diamond", SpellFx.Polygon(4, R * 0.6f, 0f), true, 0.007f * s * w, light, true, true), SpellFx.WithA(light, 0.7f));
+            AddLine(SpellFx.Line(inner, "Diamond2", SpellFx.Polygon(4, R * 0.6f, 45f), true, 0.007f * s * w, light, true, true), SpellFx.WithA(light, 0.7f));
+
+            // 中央的十字（不轉，兩端尖細）
+            var cross = Child(grow, "Cross");
+            var v = SpellFx.Line(cross, "CrossV", new[] { new Vector3(0f, -R * 0.5f, 0f), new Vector3(0f, R * 0.45f, 0f) }, false, 0.03f * s * w, light, true, true);
+            v.widthCurve = SpellFx.ArcTaper;
+            AddLine(v, SpellFx.WithA(light, 0.95f));
+            var h = SpellFx.Line(cross, "CrossH", new[] { new Vector3(-R * 0.32f, R * 0.15f, 0f), new Vector3(R * 0.32f, R * 0.15f, 0f) }, false, 0.026f * s * w, light, true, true);
+            h.widthCurve = SpellFx.ArcTaper;
+            AddLine(h, SpellFx.WithA(light, 0.95f));
+
+            // 柔光核心
+            var glow = SpellFx.NewPS(disc, "Glow", SpellFx.AddMat(SpellFx.TexSoft), 6, false);
+            var gm = glow.main;
+            gm.startLifetime = 0.5f;
+            gm.startSize = R * (ground ? 1.2f : 1.6f);
+            gm.startColor = SpellFx.WithA(gold, 0.35f * alphaMul);
+            SpellFx.FadeInOut(glow);
+            AddPS(glow, 8f);
+
+            // 往上飄的光點
+            var mo = SpellFx.NewPS(disc, "Motes", SpellFx.AddMat(SpellFx.TexSoft), 60, false);
+            var m = mo.main;
+            m.startLifetime = new ParticleSystem.MinMaxCurve(0.7f, 1.2f);
+            m.startSize = new ParticleSystem.MinMaxCurve((ground ? 0.025f : 0.012f) * s, (ground ? 0.05f : 0.024f) * s);
+            m.startColor = new ParticleSystem.MinMaxGradient(SpellFx.WithA(gold, alphaMul), SpellFx.WithA(light, alphaMul));
+            SpellFx.Disc(mo, R);
+            SpellFx.FadeInOut(mo);
+            SpellFx.SizeCurve(mo, SpellFx.Shrink);
+            SpellFx.Rise(mo, (ground ? 0.7f : 0.25f) * s);
+            AddPS(mo, 40f);
+
+            // 閃爍的十字星芒
+            var gl = SpellFx.NewPS(disc, "Glints", SpellFx.AddMat(SpellFx.TexStar), 10, false);
+            var g = gl.main;
+            g.startLifetime = new ParticleSystem.MinMaxCurve(0.3f, 0.5f);
+            g.startSize = new ParticleSystem.MinMaxCurve((ground ? 0.08f : 0.035f) * s, (ground ? 0.15f : 0.07f) * s);
+            g.startColor = new ParticleSystem.MinMaxGradient(SpellFx.WithA(light, alphaMul), SpellFx.WithA(Color.white, alphaMul));
+            SpellFx.Disc(gl, R * 1.1f);
+            SpellFx.SizeCurve(gl, SpellFx.PopCurve);
+            AddPS(gl, ground ? 7f : 5f);
+
+            if (ground)
+            {
+                // 淡淡往上的光柱（沿世界上方，隨蓄力往上長）
+                var pillar = Child(transform, "Pillar");
+                AddGrow(pillar, new Vector3(1f, 0.1f, 1f), Vector3.one);
+                var pl = SpellFx.Line(pillar, "Pillar", new[] { Vector3.zero, new Vector3(0f, 1.9f * s, 0f) }, false, R * 1.4f, gold, true, false);
+                pl.widthCurve = SpellFx.Taper;
+                AddLine(pl, SpellFx.WithA(gold, 0.22f));
+            }
+
+            SetReady(disc, R * 1.1f, 0.012f * s, light);
         }
 
         // ---------------------------------------------------------------- 建構小工具

@@ -60,6 +60,7 @@ namespace SpellDuel
                 case "wind": Wind(cv, sc); break;
                 case "meteor": Meteor(cv); break;
                 case "heal": Heal(cv, sc); break;
+                case "dispel": Dispel(cv, sc); break;
                 case "backstab": Backstab(cv, sc); break;
                 case "shadow": Shadow(cv, sc); break;
                 case "poison": Poison(cv, sc); break;
@@ -71,6 +72,12 @@ namespace SpellDuel
                 case "block": Block(cv, sc); break;
                 case "ironwall": IronWall(cv, sc); break;
                 case "counter": Counter(cv, sc); break;
+                case "holy": Holy(cv, sc); break;
+                case "judgement": Judgement(cv, sc); break;
+                case "prayheal": PrayHeal(cv, sc); break;
+                case "cleanse": Cleanse(cv, sc); break;
+                case "guard": Guard(cv, sc); break;
+                case "prayer": Prayer(cv, sc); break;
                 default: Orb(cv, sc); break;
             }
             Rim(cv, cc, sc);
@@ -540,6 +547,57 @@ namespace SpellDuel
             Sparkle(cv, 0.55f, 0.1f, 0.05f, sc);
         }
 
+        static void Dispel(Cv cv, V sc)
+        {
+            var violet = V.Lerp(sc, new V(0.68f, 0.35f, 1f), 0.35f);
+            var light = V.Lerp(sc, V.White, 0.7f);
+            // 法環：外圈、內圈＋兩圈之間的符文（短刻線與小圓圈交錯）
+            Sdf ring = (x, y) =>
+            {
+                float l = Len(x, y);
+                float d = Math.Min(Math.Abs(l - 0.55f) - 0.024f, Math.Abs(l - 0.39f) - 0.012f);
+                for (int i = 0; i < 12; i++)
+                {
+                    float a = (i * 30f + 15f) * Deg, c0 = (float)Math.Cos(a), s0 = (float)Math.Sin(a);
+                    if ((i & 1) == 0) d = Math.Min(d, Seg(x, y, c0 * 0.43f, s0 * 0.43f, c0 * 0.505f, s0 * 0.505f) - 0.011f);
+                    else d = Math.Min(d, Math.Abs(Circle(x, y, c0 * 0.468f, s0 * 0.468f, 0.026f)) - 0.008f);
+                }
+                return d;
+            };
+            cv.Glow(ring, violet, 0.08f, 1f);
+            cv.Solid((x, y) => ring(x, y) - 0.018f, new V(0.08f, 0f, 0.1f), 0.85f);
+            cv.Fill(ring, (x, y, d) => V.Lerp(sc, light, SStep(0f, 0.025f, -d)));
+            // 往外推開的四支箭頭（斜角）
+            Sdf arrows = (x, y) =>
+            {
+                float d = 9f;
+                for (int k = 0; k < 4; k++)
+                {
+                    float a = (45f + 90f * k) * Deg, c0 = (float)Math.Cos(a), s0 = (float)Math.Sin(a);
+                    d = Math.Min(d, SegTaper(x, y, c0 * 0.59f, s0 * 0.59f, c0 * 0.67f, s0 * 0.67f, 0.016f, 0.034f));
+                    d = Math.Min(d, Tri(x, y, c0 * 0.8f, s0 * 0.8f, c0 * 0.64f - s0 * 0.1f, s0 * 0.64f + c0 * 0.1f, c0 * 0.64f + s0 * 0.1f, s0 * 0.64f - c0 * 0.1f));
+                }
+                return d;
+            };
+            cv.Glow(arrows, sc, 0.05f, 0.9f);
+            cv.Solid((x, y) => arrows(x, y) - 0.016f, new V(0.08f, 0f, 0.1f), 0.85f);
+            cv.Fill(arrows, Hot(sc, V.White, 0.025f));
+            // 中央被斬斷的法術火花：六芒星沿對角線裂成兩半往兩邊錯開，中間一道斬斷的光
+            Sdf halfA = (x, y) => Math.Max(Star(x, y, -0.045f, 0.045f, 0.24f, 0.09f, 6, 90f * Deg), (x - y + 0.09f) * 0.7071f + 0.012f);
+            Sdf halfB = (x, y) => Math.Max(Star(x, y, 0.045f, -0.045f, 0.24f, 0.09f, 6, 90f * Deg), -(x - y - 0.09f) * 0.7071f + 0.012f);
+            Sdf spark = (x, y) => Math.Min(halfA(x, y), halfB(x, y));
+            cv.Glow(spark, violet, 0.08f, 0.9f);
+            cv.Solid((x, y) => spark(x, y) - 0.018f, new V(0.08f, 0f, 0.1f), 0.9f);
+            cv.Fill(spark, (x, y, d) => V.Lerp(violet * 0.8f, light, SStep(0f, 0.07f, -d)));
+            Sdf slash = (x, y) => SegTaper(x, y, -0.32f, -0.32f, 0.32f, 0.32f, 0.004f, 0.004f) - 0.022f * Clamp01(1f - Math.Abs(x + y) / 0.64f);
+            cv.Glow(slash, sc, 0.05f, 1.2f);
+            cv.Solid((x, y) => slash(x, y) - 0.012f, new V(0.08f, 0f, 0.1f), 0.6f);
+            cv.Fill(slash, Hot(light, V.White, 0.006f));
+            Sparkle(cv, 0f, 0f, 0.16f, V.White);
+            Sparkle(cv, 0.3f, 0.3f, 0.08f, light);
+            Sparkle(cv, -0.3f, -0.3f, 0.08f, light);
+        }
+
         // ================================================================ 刺客
         static void Backstab(Cv cv, V sc)
         {
@@ -988,6 +1046,317 @@ namespace SpellDuel
             Sparkle(cv, 0f, 0f, 0.26f, V.White);
             Sparkle(cv, 0.52f, 0.45f, 0.07f, light);
             Sparkle(cv, -0.52f, -0.45f, 0.07f, light);
+        }
+
+        // ================================================================ 牧師
+        static void Holy(Cv cv, V sc)
+        {
+            var gold = new V(1f, 0.8f, 0.32f);
+            var white = new V(1f, 0.99f, 0.94f);
+            // 背後的放射光芒
+            Sdf rays = (x, y) => Star(x, y, 0f, 0f, 0.74f, 0.045f, 12, 15f * Deg);
+            cv.Glow(rays, gold, 0.035f, 0.22f);
+            cv.Fill(rays, (x, y, d) => V.Lerp(gold * 0.8f, white, Clamp01(1f - Len(x, y) / 0.74f)), 0.18f);
+            // 環繞光球的斜光環：後半圈先畫、前半圈壓在光球上面
+            float ra = -22f * Deg, rc = (float)Math.Cos(ra), rs = (float)Math.Sin(ra);
+            Sdf ring = (x, y) => Math.Abs(Ellipse(x, y, 0f, 0f, 0.6f, 0.17f, ra)) - 0.016f;
+            Sdf ringFront = (x, y) => Math.Max(ring(x, y), -x * rs + y * rc);
+            cv.Glow(ring, gold, 0.04f, 0.7f);
+            cv.Fill(ring, Hot(gold, white, 0.012f), 0.85f);
+            // 光球：白熱核心往外漸層成金色
+            Sdf orb = (x, y) => Circle(x, y, 0f, 0f, 0.3f);
+            var amber = new V(1f, 0.62f, 0.12f);
+            cv.Glow(orb, gold, 0.14f, 0.75f);
+            cv.Solid((x, y) => orb(x, y) - 0.022f, new V(0.14f, 0.07f, 0f), 0.85f);
+            cv.Fill(orb, (x, y, d) =>
+            {
+                var c = V.Lerp(V.Lerp(amber, gold, SStep(0f, 0.06f, -d)), white, SStep(0.05f, 0.3f, -d));
+                float hx = x + 0.1f, hy = y - 0.11f;
+                return c + V.White * (0.5f * (float)Math.Exp(-(hx * hx + hy * hy) * 60f));
+            });
+            cv.Fill(ringFront, Hot(gold, white, 0.012f));
+            // 十字星芒（直的長、橫的短，像十字）
+            Sdf cross = (x, y) => Math.Min(Diamond(x, y, 0f, -0.04f, 0.72f, 0.07f, 90f * Deg), Diamond(x, y, 0f, 0.1f, 0.46f, 0.06f, 0f));
+            cv.Glow(cross, gold, 0.04f, 0.55f);
+            cv.Solid((x, y) => cross(x, y) - 0.014f, new V(0.14f, 0.07f, 0f), 0.6f);
+            cv.Fill(cross, Hot(V.Lerp(gold, white, 0.3f), V.White, 0.025f));
+            Sparkle(cv, 0f, 0.1f, 0.18f, V.White);
+            Sparkle(cv, -0.5f, 0.42f, 0.09f, gold);
+            Sparkle(cv, 0.52f, -0.42f, 0.07f, gold);
+            Sparkle(cv, 0.48f, 0.5f, 0.05f, white);
+        }
+
+        static void Judgement(Cv cv, V sc)
+        {
+            var gold = V.Lerp(sc, new V(1f, 0.78f, 0.25f), 0.3f);
+            var pale = new V(1f, 0.97f, 0.82f);
+            var white = new V(1f, 1f, 0.97f);
+            // 從天而降的光柱（中央亮、兩側淡）
+            Sdf beam = (x, y) => Box(x, y, 0f, 0.2f, 0.2f, 0.66f, 0f, 0.08f);
+            cv.Glow(beam, gold, 0.14f, 0.45f);
+            cv.Fill(beam, (x, y, d) => V.Lerp(gold * 0.55f, pale, SStep(0f, 0.17f, -d)), 0.4f);
+            // 兩側往下的速度線
+            Sdf speed = (x, y) => Math.Min(Math.Min(SegTaper(x, y, -0.36f, 0.62f, -0.36f, 0.02f, 0.004f, 0.016f), SegTaper(x, y, 0.36f, 0.5f, 0.36f, -0.1f, 0.004f, 0.016f)),
+                                           Math.Min(SegTaper(x, y, -0.5f, 0.32f, -0.5f, -0.12f, 0.003f, 0.012f), SegTaper(x, y, 0.5f, 0.42f, 0.5f, 0.0f, 0.003f, 0.012f)));
+            cv.Glow(speed, gold, 0.03f, 0.6f);
+            cv.Fill(speed, (x, y, d) => pale, 0.85f);
+            // 地面的衝擊光環＋往上濺起的光線
+            Sdf ground = (x, y) => Math.Abs(Ellipse(x, y, 0f, -0.56f, 0.5f, 0.11f)) - 0.018f;
+            cv.Glow(ground, gold, 0.07f, 1f);
+            cv.Fill(ground, Hot(gold, white, 0.015f));
+            Sdf splash = (x, y) =>
+            {
+                float d = 9f;
+                for (int i = 0; i < 6; i++)
+                {
+                    float a = (35f + i * 22f) * Deg;
+                    float c0 = (float)Math.Cos(a), s0 = (float)Math.Sin(a);
+                    d = Math.Min(d, SegTaper(x, y, c0 * 0.2f, -0.5f + s0 * 0.07f, c0 * 0.36f, -0.5f + s0 * 0.17f, 0.016f, 0.003f));
+                }
+                return d;
+            };
+            cv.Glow(splash, gold, 0.03f, 0.8f);
+            cv.Fill(splash, Hot(gold, white, 0.01f));
+            // 光之劍（劍尖朝下）
+            var blade = new[] { 0f, -0.52f, 0.09f, -0.3f, 0.09f, 0.2f, -0.09f, 0.2f, -0.09f, -0.3f };
+            Sdf B = (x, y) => Poly(x, y, blade);
+            Sdf guard = (x, y) => Math.Min(Box(x, y, 0f, 0.255f, 0.24f, 0.042f, 0f, 0.03f), Math.Min(Circle(x, y, 0.26f, 0.255f, 0.052f), Circle(x, y, -0.26f, 0.255f, 0.052f)));
+            Sdf grip = (x, y) => Box(x, y, 0f, 0.42f, 0.045f, 0.13f, 0f, 0.015f);
+            Sdf pommel = (x, y) => Circle(x, y, 0f, 0.62f, 0.07f);
+            Sdf all = (x, y) => Math.Min(Math.Min(B(x, y), guard(x, y)), Math.Min(grip(x, y), pommel(x, y)));
+            cv.Glow(all, gold, 0.1f, 1f);
+            cv.Solid((x, y) => all(x, y) - 0.022f, new V(0.12f, 0.06f, 0f), 0.9f);
+            cv.Fill(B, (x, y, d) =>
+            {
+                var c = x < 0 ? V.Lerp(pale, white, 0.6f) : V.Lerp(gold, pale, 0.55f);
+                c = c + V.White * (0.6f * Gauss(x, 0.008f) * SStep(0.2f, -0.35f, y));
+                return V.Lerp(V.Lerp(gold, white, 0.3f), c, SStep(0f, 0.025f, -d));
+            });
+            cv.Fill(grip, (x, y, d) => V.Lerp(new V(0.5f, 0.3f, 0.08f), new V(0.95f, 0.75f, 0.35f), 0.5f + 0.5f * (float)Math.Sin((y + x * 0.5f) * 70f)));
+            cv.Fill(guard, Metal(gold * 0.45f, V.Lerp(gold, V.White, 0.65f), 100f));
+            cv.Fill(pommel, Hot(gold, white, 0.05f));
+            // 護手中央的寶石
+            cv.Glow((x, y) => Circle(x, y, 0f, 0.255f, 0.03f), V.White, 0.04f, 0.8f);
+            cv.Fill((x, y) => Circle(x, y, 0f, 0.255f, 0.035f), Hot(sc, V.White, 0.03f));
+            Sparkle(cv, 0f, -0.52f, 0.22f, V.White);
+            Sparkle(cv, 0f, 0.62f, 0.1f, pale);
+            Sparkle(cv, -0.55f, -0.3f, 0.06f, gold);
+            Sparkle(cv, 0.58f, -0.25f, 0.05f, gold);
+        }
+
+        /// <summary>愛心（底部尖端在 (cx, by)、高約 1.1×s、寬約 1.2×s）。</summary>
+        static float Heart(float x, float y, float cx, float by, float s)
+        {
+            float px = Math.Abs(x - cx) / s, py = (y - by) / s;
+            float d;
+            if (py + px > 1f) d = Len(px - 0.25f, py - 0.75f) - 0.35355f;
+            else
+            {
+                float m = 0.5f * Math.Max(px + py, 0f);
+                d = (float)Math.Sqrt(Math.Min((px * px + (py - 1f) * (py - 1f)), (px - m) * (px - m) + (py - m) * (py - m))) * Math.Sign(px - py);
+            }
+            return d * s;
+        }
+
+        static void PrayHeal(Cv cv, V sc)
+        {
+            var deep = new V(0.08f, 0.5f, 0.22f);
+            var light = new V(0.88f, 1f, 0.9f);
+            var gold = new V(1f, 0.88f, 0.5f);
+            // 頭上的小光環
+            Sdf halo = (x, y) => Math.Abs(Ellipse(x, y, 0f, 0.5f, 0.24f, 0.065f)) - 0.016f;
+            cv.Glow(halo, gold, 0.05f, 0.8f);
+            cv.Fill(halo, Hot(gold, V.White, 0.012f));
+            // 愛心
+            Sdf heart = (x, y) => Heart(x, y, 0f, -0.46f, 0.64f);
+            cv.Glow(heart, sc, 0.15f, 1.1f);
+            cv.Solid((x, y) => heart(x, y) - 0.024f, new V(0f, 0.07f, 0.03f), 0.92f);
+            cv.Fill(heart, (x, y, d) =>
+            {
+                var c = V.Lerp(deep, sc, Clamp01(0.5f + y * 0.7f - x * 0.35f));
+                c = V.Lerp(c, V.Lerp(sc, light, 0.6f), 1f - SStep(0f, 0.04f, -d));
+                return c;
+            });
+            // 愛心上的高光
+            cv.Fill((x, y) => Ellipse(x, y, -0.2f, 0.12f, 0.08f, 0.045f, 35f * Deg), (x, y, d) => V.White, 0.6f);
+            // 白色十字（中央）
+            Sdf cross = (x, y) => Math.Min(Box(x, y, 0f, -0.04f, 0.062f, 0.2f, 0f, 0.02f), Box(x, y, 0f, 0.0f, 0.2f, 0.062f, 0f, 0.02f));
+            cv.Glow(cross, V.White, 0.05f, 0.6f);
+            cv.Solid((x, y) => cross(x, y) - 0.016f, deep * 0.5f, 0.6f);
+            cv.Fill(cross, Hot(light, V.White, 0.04f));
+            // 往上飄的小十字
+            foreach (var p in new[] { new[] { -0.56f, 0.12f, 0.06f }, new[] { 0.56f, 0.24f, 0.05f }, new[] { 0.5f, -0.38f, 0.04f }, new[] { -0.44f, -0.42f, 0.035f } })
+            {
+                float px = p[0], py = p[1], r = p[2];
+                Sdf c = (x, y) => Math.Min(Box(x, y, px, py, r * 0.33f, r, 0f, r * 0.15f), Box(x, y, px, py, r, r * 0.33f, 0f, r * 0.15f));
+                cv.Glow(c, sc, 0.035f, 0.8f);
+                cv.Fill(c, Hot(sc, V.White, r * 0.3f));
+            }
+            Sparkle(cv, 0f, 0f, 0.2f, V.White);
+            Sparkle(cv, 0.24f, 0.5f, 0.07f, gold);
+        }
+
+        static void Cleanse(Cv cv, V sc)
+        {
+            var deep = new V(0.05f, 0.35f, 0.6f);
+            var light = new V(0.9f, 1f, 1f);
+            var aqua = V.Lerp(sc, new V(0.3f, 0.8f, 1f), 0.3f);
+            // 繞著水滴旋轉沖刷的水流
+            Sdf wash = (x, y) => Math.Min(ArcT(x, y, 0f, -0.02f, 0.6f, 215f * Deg, -250f * Deg, 0.006f, 0.06f, true),
+                                          ArcT(x, y, 0f, -0.02f, 0.5f, 40f * Deg, -200f * Deg, 0.004f, 0.035f, true));
+            cv.Glow(wash, aqua, 0.07f, 0.8f);
+            cv.Solid((x, y) => wash(x, y) - 0.018f, new V(0f, 0.04f, 0.08f), 0.8f);
+            cv.Fill(wash, (x, y, d) => V.Lerp(aqua, light, SStep(0f, 0.04f, -d)));
+            // 被洗掉的雜質（暗紫色碎片往外飛散、變淡）
+            foreach (var p in new[] { new[] { 0.66f, 0.3f, 0.035f }, new[] { -0.68f, -0.22f, 0.03f }, new[] { 0.6f, -0.44f, 0.025f } })
+            {
+                float px = p[0], py = p[1], r = p[2];
+                cv.Fill((x, y) => Diamond(x, y, px, py, r * 1.4f, r, (float)Math.Atan2(py, px)), (x, y, d) => new V(0.45f, 0.25f, 0.6f), 0.55f);
+            }
+            // 水滴
+            Sdf drop = (x, y) => RoundCone(x, y, 0f, -0.2f, 0.32f, 0f, 0.5f, 0.012f);
+            cv.Glow(drop, sc, 0.14f, 1f);
+            cv.Solid((x, y) => drop(x, y) - 0.024f, new V(0f, 0.04f, 0.1f), 0.92f);
+            cv.Fill(drop, (x, y, d) =>
+            {
+                var c = V.Lerp(deep, sc, Clamp01(0.45f + (y + 0.2f) * 0.6f - x * 0.6f));
+                // 底部的水波紋
+                float wave = Gauss(y + 0.28f + 0.03f * (float)Math.Sin(x * 22f), 0.012f) + 0.6f * Gauss(y + 0.38f + 0.025f * (float)Math.Sin(x * 22f + 2f), 0.01f);
+                c = V.Lerp(c, light, wave * 0.7f);
+                float rim = 1f - SStep(0f, 0.04f, -d);
+                return V.Lerp(c, V.Lerp(sc, V.White, 0.6f), rim * 0.65f);
+            });
+            // 高光
+            cv.Fill((x, y) => Ellipse(x, y, -0.13f, -0.06f, 0.05f, 0.12f, -0.35f), (x, y, d) => V.White, 0.7f);
+            // 水滴裡的淨化星光
+            Sparkle(cv, 0.05f, -0.1f, 0.2f, V.White);
+            Bubble(cv, -0.42f, 0.42f, 0.055f, sc);
+            Bubble(cv, 0.4f, 0.48f, 0.04f, sc);
+            Sparkle(cv, 0.3f, 0.14f, 0.1f, V.White);
+            Sparkle(cv, -0.36f, -0.5f, 0.07f, light);
+        }
+
+        static void Guard(Cv cv, V sc)
+        {
+            var gold = V.Lerp(sc, new V(1f, 0.78f, 0.25f), 0.3f);
+            var white = new V(1f, 0.99f, 0.95f);
+            var featherD = new V(0.75f, 0.68f, 0.5f);
+            // 兩側的翅膀：每邊五片羽毛，由下往上一片片疊上去
+            const int NF = 5;
+            float[] fa = { 52f, 30f, 8f, -14f, -36f }, fl = { 0.5f, 0.47f, 0.42f, 0.35f, 0.28f };
+            Sdf feather(int k, float s) => (x, y) =>
+            {
+                float a = fa[k] * Deg, ca = (float)Math.Cos(a), sa = (float)Math.Sin(a);
+                float rx = 0.2f + ca * (fl[k] * 0.5f + 0.02f), ry = 0.14f + sa * (fl[k] * 0.5f + 0.02f);
+                return Ellipse(s * x, y, rx, ry, fl[k] * 0.5f, 0.06f, a);
+            };
+            Sdf wings = (x, y) =>
+            {
+                float d = 9f;
+                for (int k = 0; k < NF; k++) d = Math.Min(d, Math.Min(feather(k, 1f)(x, y), feather(k, -1f)(x, y)));
+                return d;
+            };
+            cv.Glow(wings, gold, 0.1f, 0.8f);
+            for (int k = NF - 1; k >= 0; k--)
+            {
+                int kk = k;
+                foreach (float s in new[] { 1f, -1f })
+                {
+                    var f = feather(kk, s);
+                    cv.Solid((x, y) => f(x, y) - 0.016f, new V(0.1f, 0.06f, 0f), 0.9f);
+                    cv.Fill(f, (x, y, d) =>
+                    {
+                        float t = Clamp01((s * x - 0.2f) / 0.5f);
+                        var c = V.Lerp(white, V.Lerp(gold, white, 0.35f), t);
+                        c = c * (0.82f + 0.18f * SStep(0f, 0.04f, -d));
+                        return V.Lerp(featherD, c, 0.4f + 0.6f * Clamp01(0.4f + y * 0.6f + 0.3f));
+                    });
+                }
+            }
+            // 盾：金色外框＋白色盾面＋金色十字
+            const float K = 0.7f, oy = -0.05f;
+            Sdf shield = (x, y) =>
+            {
+                float u = x / K, v = (y - oy) / K;
+                return (Math.Max(Math.Max(Circle(u, v, 0.5f, 0.18f, 0.92f), Circle(u, v, -0.5f, 0.18f, 0.92f)), v - 0.5f) - 0.02f) * K;
+            };
+            Sdf face = (x, y) => shield(x, y) + 0.055f;
+            cv.Glow(shield, gold, 0.1f, 1f);
+            cv.Solid((x, y) => shield(x, y) - 0.024f, Ink, 0.95f);
+            cv.Fill(shield, Metal(gold * 0.45f, V.Lerp(gold, V.White, 0.6f), 110f));
+            cv.Fill(face, (x, y, d) =>
+            {
+                var c = V.Lerp(new V(0.78f, 0.74f, 0.66f), white, Clamp01(0.55f + y * 0.8f - x * 0.4f));
+                return c * (1f - 0.3f * (1f - SStep(0f, 0.03f, -d)));
+            });
+            Sdf cross = (x, y) => Math.Min(Box(x, y, 0f, -0.06f, 0.05f, 0.23f, 0f, 0.01f), Box(x, y, 0f, 0.05f, 0.17f, 0.05f, 0f, 0.01f));
+            cv.Solid((x, y) => cross(x, y) - 0.014f, new V(0.3f, 0.18f, 0f), 0.7f);
+            cv.Fill(cross, Metal(gold * 0.55f, V.Lerp(gold, V.White, 0.5f), 120f));
+            // 盾面反光
+            cv.Fill((x, y) => Math.Max(face(x, y), Math.Abs(x + y * 0.7f + 0.12f) - 0.035f), (x, y, d) => V.White, 0.25f);
+            Sparkle(cv, -0.16f, 0.22f, 0.13f, V.White);
+            Sparkle(cv, 0.6f, 0.52f, 0.07f, gold);
+            Sparkle(cv, -0.58f, -0.3f, 0.06f, gold);
+        }
+
+        static void Prayer(Cv cv, V sc)
+        {
+            var light = new V(0.96f, 0.94f, 1f);
+            var deep = new V(0.35f, 0.25f, 0.65f);
+            var gold = new V(1f, 0.86f, 0.45f);
+            // 倒轉的時鐘箭頭（逆時針＝冷卻縮短）＋刻度
+            const float R = 0.62f;
+            float a0 = 75f * Deg, span = 285f * Deg;
+            float ae = a0 + span;
+            float px = R * (float)Math.Cos(ae), py = R * (float)Math.Sin(ae);
+            float tx = -(float)Math.Sin(ae), ty = (float)Math.Cos(ae);   // 逆時針切線
+            float nx = (float)Math.Cos(ae), ny = (float)Math.Sin(ae);
+            Sdf arrow = (x, y) => Math.Min(ArcT(x, y, 0f, 0f, R, a0, span, 0.012f, 0.045f, false),
+                Tri(x, y, px + tx * 0.2f, py + ty * 0.2f, px + nx * 0.13f - tx * 0.02f, py + ny * 0.13f - ty * 0.02f, px - nx * 0.13f - tx * 0.02f, py - ny * 0.13f - ty * 0.02f));
+            cv.Glow(arrow, sc, 0.08f, 1f);
+            cv.Solid((x, y) => arrow(x, y) - 0.02f, new V(0.05f, 0.02f, 0.12f), 0.85f);
+            cv.Fill(arrow, (x, y, d) => V.Lerp(sc, light, SStep(0f, 0.04f, -d)));
+            Sdf ticks = (x, y) =>
+            {
+                float d = 9f;
+                for (int i = 0; i < 12; i++)
+                {
+                    float a = i * 30f * Deg, c0 = (float)Math.Cos(a), s0 = (float)Math.Sin(a);
+                    float r0 = i % 3 == 0 ? 0.47f : 0.5f;
+                    d = Math.Min(d, Seg(x, y, c0 * r0, s0 * r0, c0 * 0.54f, s0 * 0.54f) - (i % 3 == 0 ? 0.013f : 0.008f));
+                }
+                return d;
+            };
+            cv.Fill(ticks, (x, y, d) => V.Lerp(sc, light, 0.5f), 0.75f);
+            // 合十的雙手：兩片往上收尖的手掌在中線相合＋拇指＋袖口
+            Sdf hand(float s) => (x, y) => Math.Max(RoundCone(x, y, s * 0.14f, -0.2f, 0.14f, s * 0.025f, 0.3f, 0.05f), -s * x);
+            Sdf hands = (x, y) => Math.Min(hand(1f)(x, y), hand(-1f)(x, y));
+            Sdf sleeves = (x, y) => Math.Min(Box(x, y, 0.13f, -0.38f, 0.12f, 0.1f, 12f * Deg, 0.04f), Box(x, y, -0.13f, -0.38f, 0.12f, 0.1f, -12f * Deg, 0.04f));
+            Sdf all = (x, y) => Math.Min(hands(x, y), sleeves(x, y));
+            cv.Glow(all, sc, 0.12f, 1f);
+            cv.Solid((x, y) => all(x, y) - 0.022f, new V(0.04f, 0.02f, 0.1f), 0.92f);
+            cv.Fill(sleeves, (x, y, d) =>
+            {
+                var c = V.Lerp(deep, V.Lerp(sc, light, 0.3f), Clamp01(0.5f + (y + 0.38f) * 3f - x * 0.8f));
+                // 金色袖口
+                return V.Lerp(c, gold, SStep(0.03f, 0.0f, Math.Abs(y + 0.3f + Math.Abs(x) * 0.2f) - 0.02f));
+            });
+            cv.Fill(hands, (x, y, d) =>
+            {
+                var c = V.Lerp(V.Lerp(sc, light, 0.45f), light, Clamp01(0.4f + y * 0.9f));
+                if (x > 0) c = c * 0.86f;
+                return V.Lerp(V.Lerp(sc, V.White, 0.3f), c, SStep(0f, 0.03f, -d));
+            });
+            // 中線與拇指
+            cv.Fill((x, y) => Math.Max(Math.Abs(x) - 0.006f, Math.Max(hands(x, y) + 0.01f, y - 0.26f)), (x, y, d) => deep, 0.8f);
+            cv.Fill((x, y) => Math.Min(Seg(x, y, 0.12f, -0.13f, 0.06f, 0.03f), Seg(x, y, -0.12f, -0.13f, -0.06f, 0.03f)) - 0.007f, (x, y, d) => deep, 0.6f);
+            // 指尖上方的祈禱星光
+            Sdf star = (x, y) => Star(x, y, 0f, 0.47f, 0.1f, 0.035f, 4, 0f);
+            cv.Glow(star, gold, 0.05f, 0.9f);
+            cv.Fill(star, Hot(gold, V.White, 0.02f));
+            Sparkle(cv, 0f, 0.47f, 0.16f, V.White);
+            Sparkle(cv, px + tx * 0.2f, py + ty * 0.2f, 0.08f, light);
+            Sparkle(cv, -0.36f, 0.22f, 0.05f, sc);
         }
 
         static void Orb(Cv cv, V sc)

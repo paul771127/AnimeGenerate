@@ -298,6 +298,7 @@ namespace SpellDuel
                 solo.NetHasTarget = hasTarget && net.Connected && !DummyActive;
                 solo.NetEnemyHeadW = tgtHeadW; solo.NetEnemyFwdW = tgtFwdW;
                 solo.NetLock = targetOnScreen; solo.NetLockRect = targetRect;
+                solo.NetIsHost = net.IsHost;
             }
             HandleFire();
             UpdateShots();

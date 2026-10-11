@@ -17,7 +17,7 @@ namespace SpellDuel
     public class HandGesture
     {
         public enum Shape { None, Fist, Open, One, Two, Three, Rock, Call, Thumb, Other }
-        public enum Style { None, Burst, Bow, Chop, Thrust, Press, Pull, Hold, Rune }
+        public enum Style { None, Burst, Bow, Chop, Thrust, Press, Pull, Hold, Rune, Raise }
 
         // 法師畫符文：食指尖的軌跡（螢幕像素）
         public string RuneName;                                    // 要畫的符文（RuneRecognizer）
@@ -47,6 +47,7 @@ namespace SpellDuel
         {
             if (s == null) return Style.None;
             if (RuneRecognizer.RuneOf(s.id) != null) return Style.Rune;   // 法師：畫符文
+            if (s.id == "dispel") return Style.Burst;                     // 法師抗拒法環：握拳→張開（撐開法環）
             switch (s.id)
             {
                 case "snaretrap": case "blasttrap": case "smoke": case "thunder": return Style.Press;   // 往下壓／往下砸／往下劈
@@ -55,6 +56,10 @@ namespace SpellDuel
                 case "counter": return Style.Burst;                                                   // 握拳→張開
                 case "knife": return Style.Chop;                                                      // 甩出飛刀
                 case "thrust": return Style.Thrust;                                                   // 劍士突刺
+                case "judgement": return Style.Press;                                                 // 牧師：往下壓降下審判
+                case "prayheal": return Style.Pull;                                                   // 牧師：治療收回自己
+                case "guard": return Style.Hold;                                                      // 牧師：守護舉掌
+                case "cleanse": case "prayer": return Style.Raise;                                    // 牧師：手往上舉（淨化、祈禱）
             }
             if (s.type == SkillType.Trap) return Style.Press;
             return StyleOf(s.cls);
@@ -63,7 +68,7 @@ namespace SpellDuel
         public static string StyleName(Style st) => st switch
         {
             Style.Bow => "拉弓", Style.Chop => "手刀揮砍", Style.Thrust => "突刺", Style.Press => "往下壓",
-            Style.Pull => "收回自己", Style.Hold => "舉掌停住", Style.Burst => "握拳→張開", Style.Rune => "畫符文", _ => "",
+            Style.Pull => "收回自己", Style.Hold => "舉掌停住", Style.Burst => "握拳→張開", Style.Rune => "畫符文", Style.Raise => "往上舉", _ => "",
         };
 
         public static string StyleHint(Style st) => st switch
@@ -76,6 +81,7 @@ namespace SpellDuel
             Style.Hold => "舉盾：張開手掌停在畫面前 0.6 秒",
             Style.Burst => "聚氣：握拳 → 張開手放出",
             Style.Rune => "畫符文：伸出食指照著軌跡畫 → 食指往前指發射",
+            Style.Raise => "往上舉：張開的手掌快速往上抬",
             _ => "",
         };
 
@@ -255,6 +261,17 @@ namespace SpellDuel
                     var o = HistAgo(k);
                     if (t - o.t > 0.4f || o.shape == Shape.Fist || o.shape == Shape.None) break;
                     if (o.palm.y - palm.y > H * 0.18f) { Queue(t, palm); break; }
+                }
+            }
+
+            // 往上舉（牧師）：伸著手指的手在 0.4 秒內往上移動超過畫面高 18%
+            if (ReleaseStyle == Style.Raise && fingersOut && histN >= 3)
+            {
+                for (int k = 2; k < histN; k++)
+                {
+                    var o = HistAgo(k);
+                    if (t - o.t > 0.4f || o.shape == Shape.Fist || o.shape == Shape.None) break;
+                    if (palm.y - o.palm.y > H * 0.18f) { Queue(t, palm); break; }
                 }
             }
 

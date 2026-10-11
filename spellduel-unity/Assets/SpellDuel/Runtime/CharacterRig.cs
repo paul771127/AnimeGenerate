@@ -11,6 +11,7 @@ namespace SpellDuel
     ///   動作：走路（腿、手擺動＋上下起伏）、待機呼吸、詠唱（舉起武器＋腳下光圈）、
     ///   防禦（劍士舉盾，其他職業雙手交叉）、出手、受擊（閃色＋後仰）、倒地。
     ///   關節都有獨立的樞紐物件（肩、肘、手腕、髖、膝），旋轉樞紐即可讓肢體繞關節轉動。
+    ///   牧師：白袍金邊、高主教冠、頂端是發光太陽十字的法杖，頭頂漂浮一圈淡淡的光環。
     ///   另有 classId = "dummy"：練習用木頭人（不會走、不會施法；受擊時左右搖晃、倒地時整個翻倒）。
     /// </summary>
     public class CharacterRig : MonoBehaviour
@@ -40,6 +41,7 @@ namespace SpellDuel
         static readonly Color Leather = new Color(0.4f, 0.26f, 0.15f);
         static readonly Color Gold = new Color(0.96f, 0.78f, 0.3f);
         static readonly Color EyeCol = new Color(0.1f, 0.1f, 0.16f);
+        static readonly Color RobeWhite = new Color(0.96f, 0.95f, 0.91f);
 
         static void InitShaders()
         {
@@ -99,9 +101,9 @@ namespace SpellDuel
         Transform body, spine, neck, head;
         Transform shL, shR, elL, elR, handL, handR;
         Transform hipL, hipR, knL, knR;
-        Transform cape, scarfTail, shield, orb;
+        Transform cape, scarfTail, shield, orb, halo;
         Vector3 shieldIdlePos; Quaternion shieldIdleRot;
-        Vector3 orbBaseScale;
+        Vector3 orbBaseScale, haloBasePos;
         GameObject aura; Material auraMat;
 
         Renderer[] rends; Material[] origMats;
@@ -154,6 +156,7 @@ namespace SpellDuel
                 case "mage": torsoC = clsColor; armC = clsColor; pantsC = Cloth; bootC = Leather; break;
                 case "archer": torsoC = Mul(clsColor, 0.8f); armC = Mul(clsColor, 0.8f); pantsC = Leather; bootC = Mul(Leather, 0.7f); break;
                 case "assassin": torsoC = DarkCloth; armC = DarkCloth; pantsC = DarkCloth; bootC = Mul(DarkCloth, 0.8f); break;
+                case "priest": torsoC = RobeWhite; armC = RobeWhite; pantsC = Mul(RobeWhite, 0.9f); bootC = Mul(Gold, 0.75f); break;
                 default: torsoC = Metal; armC = Cloth; pantsC = Cloth; bootC = Metal; break;
             }
 
@@ -167,7 +170,7 @@ namespace SpellDuel
             spine = Pivot("Spine", body, new Vector3(0f, 0.85f, 0f));
             Part(PrimitiveType.Sphere, spine, new Vector3(0f, 0.03f, 0f), new Vector3(0.3f * sw, 0.18f, 0.2f), Mat(pantsC, 0.85f));
             Part(PrimitiveType.Capsule, spine, new Vector3(0f, 0.3f, 0f), new Vector3(0.34f * sw, 0.27f, 0.22f), Mat(torsoC));
-            Part(PrimitiveType.Cylinder, spine, new Vector3(0f, 0.08f, 0f), new Vector3(0.35f * sw, 0.03f, 0.24f), Mat(id == "mage" ? Gold : Leather, 0.9f));
+            Part(PrimitiveType.Cylinder, spine, new Vector3(0f, 0.08f, 0f), new Vector3(0.35f * sw, 0.03f, 0.24f), Mat(id == "mage" || id == "priest" ? Gold : Leather, 0.9f));
             Part(PrimitiveType.Cylinder, spine, new Vector3(0f, 0.56f, 0f), new Vector3(0.08f, 0.04f, 0.08f), Mat(Skin, 0.85f));
 
             // ---- 頭（脖子樞紐 → 頭中心）
@@ -196,6 +199,7 @@ namespace SpellDuel
                 case "mage": BuildMage(); break;
                 case "archer": BuildArcher(); break;
                 case "assassin": BuildAssassin(); break;
+                case "priest": BuildPriest(); break;
                 default: BuildSwordsman(); break;
             }
 
@@ -394,6 +398,95 @@ namespace SpellDuel
             castR = new Arm(-45f, -10f, 0f, 45f);
         }
 
+        // ---------------------------------------------------------------- 牧師：白袍金邊、主教冠、聖帶、太陽十字法杖、頭頂光環
+        void BuildPriest()
+        {
+            var trim = Color.Lerp(Gold, clsColor, 0.35f);
+            // 頭髮（淡金色，後腦＋兩側垂到耳下）
+            var hairC = new Color(0.93f, 0.82f, 0.55f);
+            Part(PrimitiveType.Sphere, head, new Vector3(0f, -0.01f, -0.045f), new Vector3(0.295f, 0.27f, 0.25f), Mat(hairC, 0.9f));
+            for (int sd = -1; sd <= 1; sd += 2)
+                Part(PrimitiveType.Capsule, head, new Vector3(0.12f * sd, -0.07f, -0.02f), new Vector3(0.06f, 0.09f, 0.08f), Mat(hairC, 0.85f));
+            // 主教冠：前後壓扁的高圓台（往上收窄）＋金色底箍、正面直條與十字＋背後垂下的兩條飄帶
+            var mitre = Pivot("Mitre", head, new Vector3(0f, 0.065f, -0.01f));
+            mitre.localRotation = Quaternion.Euler(-6f, 0f, 0f);
+            var crown = MeshPart("MitreBody", mitre, Frustum(0.15f, 0.07f, 0.24f, 20), Vector3.zero, Mat(RobeWhite));
+            crown.transform.localScale = new Vector3(1f, 1f, 0.72f);
+            var band = MeshPart("MitreBand", mitre, Frustum(0.155f, 0.148f, 0.045f, 20), new Vector3(0f, -0.005f, 0f), Mat(trim, 0.9f));
+            band.transform.localScale = new Vector3(1f, 1f, 0.74f);
+            Part(PrimitiveType.Cube, mitre, new Vector3(0f, 0.12f, 0.086f), new Vector3(0.035f, 0.2f, 0.012f), Mat(trim), new Vector3(-13.6f, 0f, 0f));
+            Part(PrimitiveType.Cube, mitre, new Vector3(0f, 0.15f, 0.082f), new Vector3(0.09f, 0.03f, 0.014f), Mat(Gold), new Vector3(-13.6f, 0f, 0f));
+            Part(PrimitiveType.Sphere, mitre, new Vector3(0f, 0.25f, 0f), new Vector3(0.045f, 0.045f, 0.045f), Mat(Gold));
+            for (int sd = -1; sd <= 1; sd += 2)
+                Part(PrimitiveType.Cube, head, new Vector3(0.06f * sd, -0.1f, -0.16f), new Vector3(0.045f, 0.2f, 0.012f), Mat(trim, 0.8f), new Vector3(12f, 0f, 0f));
+            // 長袍：從腰到腳踝的喇叭狀白袍＋金邊袍擺
+            MeshPart("Robe", spine, Frustum(0.26f, 0.16f, 0.95f, 24), new Vector3(0f, -0.8f, 0f), Mat(RobeWhite, 0.85f));
+            MeshPart("RobeHem", spine, Frustum(0.265f, 0.255f, 0.06f, 24), new Vector3(0f, -0.81f, 0f), Mat(trim, 0.75f));
+            // 披肩（短斗篷）：圍住肩膀的圓台＋金色下緣
+            MeshPart("Mantle", spine, Frustum(0.235f, 0.12f, 0.17f, 24), new Vector3(0f, 0.38f, 0f), Mat(RobeWhite));
+            MeshPart("MantleHem", spine, Frustum(0.24f, 0.232f, 0.025f, 24), new Vector3(0f, 0.375f, 0f), Mat(trim, 0.85f));
+            // 聖帶（stole）：從胸前沿著長袍正面垂到袍擺的兩條金帶，下端有小十字
+            for (int sd = -1; sd <= 1; sd += 2)
+            {
+                Part(PrimitiveType.Cube, spine, new Vector3(0.055f * sd, 0.3f, 0.112f), new Vector3(0.045f, 0.36f, 0.012f), Mat(trim, 0.9f));
+                Part(PrimitiveType.Cube, spine, new Vector3(0.055f * sd, -0.36f, 0.215f), new Vector3(0.045f, 0.86f, 0.012f), Mat(trim, 0.8f), new Vector3(-6f, 0f, 0f));
+                Part(PrimitiveType.Cube, spine, new Vector3(0.055f * sd, -0.66f, 0.25f), new Vector3(0.012f, 0.07f, 0.014f), Mat(RobeWhite), new Vector3(-6f, 0f, 0f));
+                Part(PrimitiveType.Cube, spine, new Vector3(0.055f * sd, -0.65f, 0.249f), new Vector3(0.04f, 0.012f, 0.014f), Mat(RobeWhite), new Vector3(-6f, 0f, 0f));
+            }
+            // 寬袖口（白＋金邊）
+            MeshPart("CuffL", elL, Frustum(0.08f, 0.05f, 0.1f, 12), new Vector3(0f, -0.25f, 0f), Mat(RobeWhite, 0.9f));
+            MeshPart("CuffR", elR, Frustum(0.08f, 0.05f, 0.1f, 12), new Vector3(0f, -0.25f, 0f), Mat(RobeWhite, 0.9f));
+            MeshPart("CuffTrimL", elL, Frustum(0.082f, 0.079f, 0.02f, 12), new Vector3(0f, -0.255f, 0f), Mat(trim, 0.85f));
+            MeshPart("CuffTrimR", elR, Frustum(0.082f, 0.079f, 0.02f, 12), new Vector3(0f, -0.255f, 0f), Mat(trim, 0.85f));
+
+            // 法杖（沿手的 +Z，前臂水平時直立）：象牙白杖身＋金色環節，頂端是太陽環＋十字，中心發光寶珠
+            var staff = Pivot("Staff", handR, new Vector3(0f, -0.04f, 0f));
+            Part(PrimitiveType.Cylinder, staff, new Vector3(0f, 0f, 0.2f), new Vector3(0.032f, 0.66f, 0.032f), Mat(new Color(0.93f, 0.9f, 0.82f), 0.85f), new Vector3(90f, 0f, 0f));
+            foreach (float z in new[] { -0.3f, 0.02f, 0.78f })
+                Part(PrimitiveType.Cylinder, staff, new Vector3(0f, 0f, z), new Vector3(0.042f, 0.015f, 0.042f), Mat(Gold, 0.9f), new Vector3(90f, 0f, 0f));
+            MeshPart("StaffNeck", staff, Frustum(0.022f, 0.045f, 0.06f, 12), new Vector3(0f, 0f, 0.8f), Mat(Gold), new Vector3(90f, 0f, 0f));
+            // 太陽環：在杖軸與身體左右方向構成的平面上（正面看得到整個圓）
+            var sunC = new Vector3(0f, 0f, 1.0f);
+            const float sunR = 0.11f;
+            const int SN = 14;
+            var goldMat = Mat(Gold);
+            for (int i = 0; i < SN; i++)
+            {
+                float a0 = 2f * Mathf.PI * i / SN, a1 = 2f * Mathf.PI * (i + 1) / SN;
+                Seg(staff, sunC + new Vector3(Mathf.Cos(a0), 0f, Mathf.Sin(a0)) * sunR, sunC + new Vector3(Mathf.Cos(a1), 0f, Mathf.Sin(a1)) * sunR, 0.022f, goldMat);
+            }
+            // 光芒：環外八道短尖刺
+            for (int i = 0; i < 8; i++)
+            {
+                float a = 2f * Mathf.PI * (i + 0.5f) / 8f;
+                var d = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                var spike = Pivot("Ray", staff, sunC + d * (sunR + 0.008f));
+                spike.localRotation = Quaternion.FromToRotation(Vector3.up, d);
+                MeshPart("RayCone", spike, Frustum(0.014f, 0f, 0.055f, 6), Vector3.zero, Mat(Gold, 0.95f));
+            }
+            // 環內的十字
+            Seg(staff, sunC + new Vector3(0f, 0f, -sunR), sunC + new Vector3(0f, 0f, sunR + 0.06f), 0.026f, goldMat);
+            Seg(staff, sunC + new Vector3(-sunR, 0f, 0.015f), sunC + new Vector3(sunR, 0f, 0.015f), 0.026f, goldMat);
+            orb = Part(PrimitiveType.Sphere, staff, sunC + new Vector3(0f, 0f, 0.015f), new Vector3(0.075f, 0.075f, 0.075f),
+                Glow(Color.Lerp(clsColor, Color.white, 0.55f))).transform;
+            orbBaseScale = orb.localScale;
+
+            // 頭頂漂浮的光環（淡淡的發光圓環，動作裡慢慢上下浮動、旋轉）
+            halo = Pivot("Halo", head, new Vector3(0f, 0.37f, -0.03f));
+            halo.localRotation = Quaternion.Euler(-10f, 0f, 0f);
+            haloBasePos = halo.localPosition;
+            MeshPart("HaloRing", halo, RingMesh(0.12f, 0.145f, 36), Vector3.zero, Glow(new Color(1f, 0.93f, 0.6f, 0.75f)));
+            MeshPart("HaloSoft", halo, RingMesh(0.105f, 0.165f, 36), new Vector3(0f, -0.002f, 0f), Glow(new Color(clsColor.r, clsColor.g, clsColor.b, 0.22f)));
+
+            // 姿勢：右手持杖；詠唱時高舉法杖、左手收在胸前祈禱
+            baseR = new Arm(-10f, 6f, -80f, 0f); swingR = 0.35f;
+            baseL = new Arm(-5f, 8f, -25f, 0f); swingL = 0.6f;
+            chargeR = new Arm(-80f, 4f, -12f, 0f);
+            chargeL = new Arm(-35f, -25f, -110f, 0f);
+            castR = new Arm(-105f, 0f, -5f, 55f);
+            legAmpScale = 0.55f;
+        }
+
         // ================================================================ 對外操作
         public void SetPose(Vector3 feetPosition, Vector3 forward)
         {
@@ -535,6 +628,14 @@ namespace SpellDuel
             {
                 float s = 1f + chargeAmt * (0.4f + 0.6f * ch) + Mathf.Sin(clock * (4f + 10f * ch)) * (0.05f + 0.12f * chargeAmt) + castK * 0.5f;
                 orb.localScale = orbBaseScale * s;
+            }
+
+            // ---- 牧師頭頂光環：緩緩上下浮動、旋轉；詠唱時變大
+            if (halo != null)
+            {
+                halo.localPosition = haloBasePos + new Vector3(0f, Mathf.Sin(clock * 1.8f) * 0.012f + chargeAmt * 0.03f, 0f);
+                halo.localRotation = Quaternion.Euler(-10f * (1f - chargeAmt), clock * 25f, 0f);
+                halo.localScale = Vector3.one * (1f + chargeAmt * (0.15f + 0.15f * ch) + castK * 0.25f);
             }
 
             // ---- 腳下光圈
