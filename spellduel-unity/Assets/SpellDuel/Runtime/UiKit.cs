@@ -132,7 +132,7 @@ namespace SpellDuel
         }
 
         /// <summary>置中的訊息膠囊：依文字寬度加深色圓角底（太長自動換行，最多兩行）</summary>
-        public static void Pill(float centerY, string text, int size, Color color, float maxWidth)
+        public static void Pill(float centerY, string text, int size, Color color, float maxWidth, float alpha = 0.55f)
         {
             if (string.IsNullOrEmpty(text)) return;
             Init();
@@ -143,7 +143,7 @@ namespace SpellDuel
             float h = textStyle.CalcHeight(content, w - size * 1.4f) + size * 0.7f;
             h = Mathf.Min(h, size * 3.4f);
             var r = new Rect((Screen.width - w) / 2f, centerY - h / 2f, w, h);
-            Card(r, 0.55f, color, 0.55f);
+            Card(r, alpha, color, Mathf.Max(0.55f, alpha));
             Text(new Rect(r.x + size * 0.7f, r.y + size * 0.25f, r.width - size * 1.4f, r.height - size * 0.5f), text, size, color, TextAnchor.MiddleCenter, true);
         }
     }

@@ -1689,6 +1689,7 @@ namespace SpellDuel
             float top = H - Screen.safeArea.yMax + pad * 0.5f, botY = H - Screen.safeArea.y;
             var me = Me; var en = En; float now = battle.now;
             float pillW = W - pad * 2;
+            string chargeTip = null; Color chargeTipColor = Color.white;
 
             // 被打中：整個畫面閃紅
             if (hitFlash > 0.01f) { GUI.color = new Color(1f, 0f, 0.05f, hitFlash * 0.45f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
@@ -1799,7 +1800,7 @@ namespace SpellDuel
                     prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%（蓄滿後{HandGesture.ReleaseLabel(me.charging)}）" :
                     me.charging.releaseNear ? "手刀往前刺 → 5 秒內靠近敵人自動出手" :
                     HandGesture.ReleaseHint(me.charging) + (HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Number && Hand != null && Hand.HandVisible ? $"（目前：{(Hand.CurrentNumber > 0 ? Hand.CurrentNumber.ToString() : "—")}）" : "");
-                UiKit.Pill(H / 2 - lh * 2.6f, $"{me.charging.name}　{st}", fs, prog < 1f ? Color.white : me.charging.color, pillW);
+                chargeTip = $"{me.charging.name}　{st}"; chargeTipColor = prog < 1f ? Color.white : me.charging.color;   // 最後才畫（不被準星、鎖定框蓋住）
             }
             // 伏擊狀態：我在伏擊 → 提示靠近；敵人在伏擊 → 警告保持距離
             if (me.armed != null)
@@ -1817,7 +1818,7 @@ namespace SpellDuel
                 if (coop && en.target != null && en.target != me) tip = $"⚠ Boss 準備對隊友使出 {ecs.name}";
                 UiKit.Pill(H * 0.43f, tip, fs, ecs.duckable ? new Color(1f, 0.7f, 0.3f) : new Color(1f, 0.45f, 0.45f), pillW);
             }
-            if (me.crouching) UiKit.Pill(H * 0.7f, "↓ 蹲下中", fsS, new Color(0.6f, 0.9f, 1f), pillW);
+            if (me.crouching) UiKit.Pill(H * 0.19f, "↓ 蹲下中", fsS, new Color(0.6f, 0.9f, 1f), pillW);
             foreach (var mn in battle.minions)
                 if (mn.Alive && mn.minionKind == 5 && mn.windupUntil > 0f && (mn.target == null || mn.target == me))
                 { UiKit.Pill(H * 0.49f, "⚠ 狙擊手瞄準你了！準備側跨", fs, new Color(1f, 0.35f, 0.75f), pillW); break; }
@@ -1873,7 +1874,6 @@ namespace SpellDuel
                 else if (!bossMode)   // Boss／無盡模式改用「最近的敵人」方位標示
                     UiKit.Pill(H * 0.58f, (enemyScreenSide < 0 ? "◀ 敵人在左邊" : "敵人在右邊 ▶") + "（沒鎖定也能放，朝準星飛）", fs, new Color(1f, 0.45f, 0.45f), pillW);
             }
-            if (Time.time < messageUntil) UiKit.Pill(H * 0.64f, message, fs, Color.white, pillW);
 
             // 下方：我的狀態與技能（由下往上排）
             float sw = (W - pad * 2 - gap * 2) / 3f;
@@ -1956,6 +1956,13 @@ namespace SpellDuel
                         upgradeOpen = true;
                 }
                 if (upgradeOpen) DrawUpgradePanel(W, H, pad, gap, fs, fsS);
+            }
+
+            // 蓄力／怎麼施法的提示：放在下方面板正上方（不在畫面中央，敵人靠近也不會被敵人和鎖定框擋住），底色較不透明、最後才畫
+            {
+                float chargeY = panelY - gap - fs * 1.9f;
+                if (chargeTip != null) UiKit.Pill(chargeY, chargeTip, fs, chargeTipColor, pillW, 0.88f);
+                if (Time.time < messageUntil) UiKit.Pill(chargeTip != null ? chargeY - fs * 3.6f : H * 0.64f, message, fs, Color.white, pillW);
             }
 
             if (frozen)
