@@ -36,7 +36,8 @@ namespace SpellDuel
         public float damageTakenMul = 1f;   // 受到的傷害倍率（單人模式的電腦難度：簡單／普通時玩家受傷較少）
         // Boss 召喚的小怪：編號、攻擊狀態（預備到 windupUntil 出手，attackReadyAt 之後才能再攻擊）
         public bool isMinion; public int minionId; public float windupUntil, attackReadyAt;
-        public int minionKind;                 // 0 近戰小鬼、1 火焰射手、2 岩石衝鋒獸、3 自爆小鬼
+        public int minionKind;                 // 0 近戰小鬼、1 火焰射手、2 岩石衝鋒獸、3 自爆小鬼、4 岩石投擲者、5 熔岩狙擊手
+        public float recoverUntil;             // 小怪出手後原地不動到這個時間（1 秒）
         public float dmgMul = 1f, speedMul = 1f;   // 無盡模式：越後面的波次越強
         // 無盡模式的玩家升級：攻擊力、冷卻、爆擊率、攻擊距離、命中時附加灼燒／中毒／冰凍的機率
         public float atkMul = 1f, cdMul = 1f, critChance, rangeMul = 1f, burnChance, poisonChance, freezeChance;
@@ -163,6 +164,7 @@ namespace SpellDuel
         // 各種小怪的基本數值：血量、移動速度、身體半徑、頭的高度
         static readonly int[] MinionHp = { 20, 15, 60, 10, 23, 15 };   // 血量（已下修 50%）
         public const float EnemySpeedScale = 0.3f;   // 小怪與 Boss 的移動速度倍率（調慢到 30%）
+        public const float MinionRecover = 1f;       // 小怪出手後原地不動的秒數
         static readonly float[] MinionSpeed = { 1.0f, 0.9f, 0.6f, 1.7f, 0.7f, 0.8f }, MinionRadius = { 0.25f, 0.23f, 0.4f, 0.22f, 0.28f, 0.24f }, MinionHead = { 0.85f, 0.8f, 1.3f, 0.65f, 0.95f, 0.85f };
         // 遠程小怪想站的距離（最近、最遠）；0＝近戰（走到身邊）
         static readonly float[] KeepMin = { 0f, 3.5f, 0f, 0f, 4.5f, 6f }, KeepMax = { 0f, 6f, 0f, 0f, 7.5f, 9f };
@@ -344,9 +346,10 @@ namespace SpellDuel
                     if (now < m.windupUntil) continue;   // 預備中站著不動
                     m.windupUntil = 0f;
                     MinionStrike(m, tgt, d);
+                    m.recoverUntil = now + MinionRecover;   // 出手後原地不動 1 秒（玩家反擊的空檔）
                     continue;
                 }
-                if (m.snaredUntil > now) continue;
+                if (m.snaredUntil > now || now < m.recoverUntil) continue;
                 // 出手條件：近戰／衝鋒獸／自爆要貼近；射手在 9m 內
                 float reach = kind == 1 ? 9f : kind == 4 ? 11f : kind == 5 ? 14f : kind == 3 ? 1.3f : kind == 2 ? 1.2f : 0.95f;
                 float windup = kind == 1 ? 0.8f : kind == 4 ? 1.2f : kind == 5 ? 1.6f : kind == 2 ? 1.0f : kind == 3 ? 0.5f : claw.charge;
