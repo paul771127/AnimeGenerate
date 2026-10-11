@@ -45,7 +45,7 @@ namespace SpellDuel
         /// <summary>法師：每招固定一個數字（比出這個數字的手指就放招）；不是法師的招式回傳 0</summary>
         public static int NumberOf(string skillId) => skillId switch
         {
-            "fire" => 2, "wind" => 2, "ice" => 3, "thunder" => 4, "dispel" => 4, "meteor" => 5, "heal" => 5, _ => 0,
+            "fire" => 2, "wind" => 2, "ice" => 3, "thunder" => 4, "dispel" => 4, "meteor" => 5, _ => 0,
         };
 
         /// <summary>放招動作的短名稱（選技能畫面、技能格用）：法師顯示要比的數字</summary>
