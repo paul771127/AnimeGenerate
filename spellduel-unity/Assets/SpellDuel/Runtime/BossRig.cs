@@ -162,9 +162,9 @@ namespace SpellDuel
         }
 
         // 顏色
-        static readonly Color RockAC = new Color(0.3f, 0.26f, 0.24f);     // 主體玄武岩
-        static readonly Color RockBC = new Color(0.4f, 0.35f, 0.31f);     // 上方受光的大岩塊（肩、駝背、頭、拳）
-        static readonly Color RockCC = new Color(0.2f, 0.18f, 0.17f);     // 最暗的岩塊（四肢、下巴）
+        static readonly Color RockAC = new Color(0.58f, 0.34f, 0.24f);     // 暖赭色玄武岩，與橘色熔岩分開
+        static readonly Color RockBC = new Color(0.78f, 0.49f, 0.29f);     // 上方受光的大岩塊（肩、駝背、頭、拳）
+        static readonly Color RockCC = new Color(0.37f, 0.24f, 0.34f);     // 最暗的岩塊（四肢、下巴）
         static readonly Color FlashC = new Color(1f, 0.45f, 0.3f);
         static readonly Color LavaN = new Color(1f, 0.36f, 0.05f);        // 平常的熔岩（橘紅）
         static readonly Color LavaE = new Color(1f, 0.8f, 0.35f);         // 狂暴的熔岩（白黃）
@@ -176,9 +176,9 @@ namespace SpellDuel
         static readonly Color DeadEmber = new Color(0.16f, 0.05f, 0.03f); // 熄滅後的餘燼
 
         // 腐化樹王的顏色
-        static readonly Color BarkAC = new Color(0.27f, 0.21f, 0.18f);    // 主體樹皮（帶一點灰紫的病態）
-        static readonly Color BarkBC = new Color(0.37f, 0.3f, 0.23f);     // 受光的樹瘤、肩、胸口樹皮門
-        static readonly Color BarkCC = new Color(0.17f, 0.13f, 0.11f);    // 最暗的枝指、樹根、眉骨
+        static readonly Color BarkAC = new Color(0.59f, 0.31f, 0.17f);    // 赭褐樹皮，暗部帶紫色
+        static readonly Color BarkBC = new Color(0.8f, 0.48f, 0.22f);     // 受光的樹瘤、肩、胸口樹皮門
+        static readonly Color BarkCC = new Color(0.39f, 0.22f, 0.28f);    // 最暗的枝指、樹根、眉骨
         static readonly Color VeinN = new Color(0.62f, 0.2f, 0.95f);      // 腐化脈絡（紫）
         static readonly Color VeinE = new Color(0.95f, 0.32f, 1f);        // 狂暴（更亮的洋紫）
         static readonly Color VeinDim = new Color(0.2f, 0.05f, 0.3f);
@@ -187,12 +187,12 @@ namespace SpellDuel
         static readonly Color TEyeN = new Color(0.72f, 1f, 0.3f);
         static readonly Color TEyeE = new Color(1f, 0.6f, 1f);
         static readonly Color TDead = new Color(0.08f, 0.07f, 0.06f);
-        static readonly Color LeafN = new Color(0.15f, 0.22f, 0.11f);     // 暗色樹葉
-        static readonly Color LeafE = new Color(0.45f, 0.11f, 0.07f);     // 狂暴：轉紅
-        static readonly Color LeafDead = new Color(0.3f, 0.25f, 0.15f);   // 枯黃
-        static readonly Color MossC = new Color(0.24f, 0.35f, 0.13f);
-        static readonly Color HollowC = new Color(0.05f, 0.02f, 0.07f);   // 眼窩、嘴、胸口裂縫的深洞
-        static readonly Color WitherC = new Color(0.25f, 0.23f, 0.21f);   // 死後樹皮褪成灰
+        static readonly Color LeafN = new Color(0.27f, 0.64f, 0.17f);     // 飽和綠葉
+        static readonly Color LeafE = new Color(0.86f, 0.24f, 0.12f);     // 狂暴：轉紅
+        static readonly Color LeafDead = new Color(0.67f, 0.45f, 0.18f);   // 枯黃
+        static readonly Color MossC = new Color(0.43f, 0.72f, 0.16f);
+        static readonly Color HollowC = new Color(0.24f, 0.13f, 0.33f);   // 眼窩、嘴、胸口裂縫的深洞
+        static readonly Color WitherC = new Color(0.42f, 0.36f, 0.32f);   // 死後樹皮褪成灰
 
         /// <summary>每個主題的一組顏色（UpdateGlow 用）。</summary>
         sealed class Palette
@@ -1232,9 +1232,9 @@ namespace SpellDuel
 
         // ================================================================ 深淵海妖（主題 2）
         // 顏色
-        static readonly Color HideAC = new Color(0.12f, 0.27f, 0.29f);    // 深青色鱗皮
-        static readonly Color HideBC = new Color(0.27f, 0.45f, 0.43f);    // 較淺的腹面、肩甲、貝殼
-        static readonly Color HideCC = new Color(0.06f, 0.12f, 0.15f);    // 最暗：爪、鰭棘、眉骨
+        static readonly Color HideAC = new Color(0.12f, 0.58f, 0.62f);    // 飽和青色鱗皮
+        static readonly Color HideBC = new Color(0.38f, 0.82f, 0.72f);    // 較淺的腹面、肩甲、貝殼
+        static readonly Color HideCC = new Color(0.18f, 0.29f, 0.52f);    // 最暗：爪、鰭棘、眉骨
         static readonly Color RuneN = new Color(0.15f, 1f, 0.88f);        // 水藍色符文與螢光斑點
         static readonly Color RuneE = new Color(1f, 0.16f, 0.58f);        // 狂暴：洋紅
         static readonly Color RuneDim = new Color(0.02f, 0.2f, 0.24f);
@@ -1243,13 +1243,13 @@ namespace SpellDuel
         static readonly Color KEyeN = new Color(0.45f, 1f, 1f);
         static readonly Color KEyeE = new Color(1f, 0.3f, 0.42f);
         static readonly Color KDead = new Color(0.03f, 0.06f, 0.07f);
-        static readonly Color KelpC = new Color(0.2f, 0.3f, 0.11f);       // 海帶
-        static readonly Color BarnC = new Color(0.6f, 0.58f, 0.5f);       // 藤壺、吸盤
-        static readonly Color CoralN = new Color(0.86f, 0.36f, 0.32f);    // 珊瑚
-        static readonly Color CoralE = new Color(0.72f, 0.12f, 0.2f);     // 狂暴：深紅
+        static readonly Color KelpC = new Color(0.34f, 0.58f, 0.16f);       // 海帶
+        static readonly Color BarnC = new Color(0.97f, 0.85f, 0.6f);       // 藤壺、吸盤
+        static readonly Color CoralN = new Color(1f, 0.36f, 0.29f);    // 珊瑚
+        static readonly Color CoralE = new Color(0.91f, 0.18f, 0.34f);     // 狂暴：深紅
         static readonly Color CoralBleach = new Color(0.82f, 0.8f, 0.74f); // 死後珊瑚白化
-        static readonly Color MawC = new Color(0.02f, 0.04f, 0.06f);      // 嘴、眼窩的深洞
-        static readonly Color KWitherC = new Color(0.32f, 0.36f, 0.36f);  // 死後鱗皮褪成灰
+        static readonly Color MawC = new Color(0.18f, 0.16f, 0.34f);      // 嘴、眼窩的深洞
+        static readonly Color KWitherC = new Color(0.4f, 0.48f, 0.52f);  // 死後鱗皮褪成灰
         static readonly Color SeaAqua = new Color(0.25f, 0.85f, 0.95f);   // 水花、衝擊波
 
         static readonly Palette KrakenPal = new Palette
@@ -2761,6 +2761,11 @@ namespace SpellDuel
         GameObject Part(PrimitiveType type, Transform parent, Vector3 localPos, Vector3 localScale, Material mat, Vector3 euler = default)
         {
             var go = GameObject.CreatePrimitive(type);
+            if (type == PrimitiveType.Cube && !unlit && mat.shader == litShader)
+            {
+                var filter = go.GetComponent<MeshFilter>();
+                filter.sharedMesh = CharacterRig.SmoothCube(filter.sharedMesh);
+            }
             var col = go.GetComponent<Collider>();
             if (col) Destroy(col);
             go.transform.SetParent(parent, false);

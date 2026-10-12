@@ -120,49 +120,49 @@ namespace SpellDuel
             new Variant   // 0 熔岩小鬼
             {
                 size = 1f, stride = 0.5f, legSwing = 38f, bob = 0.035f, step = 1f,
-                rockA = new Color(0.3f, 0.26f, 0.24f), rockB = new Color(0.2f, 0.18f, 0.17f),
+                rockA = new Color(0.56f, 0.32f, 0.22f), rockB = new Color(0.36f, 0.2f, 0.28f),
                 lava = new Color(1f, 0.38f, 0.06f), lavaDim = new Color(0.6f, 0.1f, 0.02f), hot = new Color(1f, 0.9f, 0.55f), eye = new Color(1f, 0.8f, 0.3f),
                 emberA = new Color(1f, 0.45f, 0.08f), emberB = new Color(1f, 0.8f, 0.35f),
             },
             new Variant   // 1 火焰射手（青白火焰）
             {
                 size = 0.9f, stride = 0.5f, legSwing = 34f, bob = 0.03f, step = 1f,
-                rockA = new Color(0.27f, 0.26f, 0.29f), rockB = new Color(0.17f, 0.17f, 0.2f),
+                rockA = new Color(0.34f, 0.48f, 0.68f), rockB = new Color(0.25f, 0.3f, 0.5f),
                 lava = new Color(0.35f, 0.85f, 1f), lavaDim = new Color(0.08f, 0.3f, 0.6f), hot = new Color(0.88f, 1f, 1f), eye = new Color(0.75f, 0.97f, 1f),
                 emberA = new Color(0.3f, 0.8f, 1f), emberB = new Color(0.85f, 1f, 1f),
             },
             new Variant   // 2 岩石衝鋒獸（暗紅熔岩、沉重）
             {
                 size = 1.5f, stride = 0.6f, legSwing = 26f, bob = 0.05f, step = 0.8f,
-                rockA = new Color(0.34f, 0.3f, 0.28f), rockB = new Color(0.22f, 0.19f, 0.18f),
+                rockA = new Color(0.66f, 0.28f, 0.2f), rockB = new Color(0.42f, 0.2f, 0.28f),
                 lava = new Color(0.7f, 0.12f, 0.04f), lavaDim = new Color(0.32f, 0.04f, 0.02f), hot = new Color(1f, 0.42f, 0.14f), eye = new Color(1f, 0.3f, 0.1f),
                 emberA = new Color(0.8f, 0.15f, 0.04f), emberB = new Color(1f, 0.4f, 0.12f),
             },
             new Variant   // 3 自爆小鬼（黃白核心）
             {
                 size = 0.75f, stride = 0.45f, legSwing = 40f, bob = 0.045f, step = 1.15f,
-                rockA = new Color(0.3f, 0.25f, 0.22f), rockB = new Color(0.2f, 0.17f, 0.15f),
+                rockA = new Color(0.72f, 0.45f, 0.18f), rockB = new Color(0.47f, 0.27f, 0.18f),
                 lava = new Color(1f, 0.62f, 0.15f), lavaDim = new Color(0.75f, 0.25f, 0.04f), hot = new Color(1f, 0.97f, 0.75f), eye = new Color(1f, 0.9f, 0.5f),
                 emberA = new Color(1f, 0.7f, 0.2f), emberB = new Color(1f, 0.95f, 0.6f),
             },
             new Variant   // 4 岩石投擲者（黯淡的橘色熔岩）
             {
                 size = 1.1f, stride = 0.55f, legSwing = 32f, bob = 0.035f, step = 0.9f,
-                rockA = new Color(0.33f, 0.29f, 0.26f), rockB = new Color(0.22f, 0.2f, 0.18f),
+                rockA = new Color(0.62f, 0.4f, 0.24f), rockB = new Color(0.38f, 0.25f, 0.34f),
                 lava = new Color(0.85f, 0.4f, 0.1f), lavaDim = new Color(0.4f, 0.12f, 0.03f), hot = new Color(1f, 0.72f, 0.35f), eye = new Color(1f, 0.6f, 0.2f),
                 emberA = new Color(0.9f, 0.4f, 0.1f), emberB = new Color(1f, 0.65f, 0.3f),
             },
             new Variant   // 5 熔岩狙擊手（洋紅熔岩）
             {
                 size = 1f, stride = 0.5f, legSwing = 34f, bob = 0.03f, step = 1f,
-                rockA = new Color(0.26f, 0.23f, 0.25f), rockB = new Color(0.17f, 0.15f, 0.17f),
+                rockA = new Color(0.6f, 0.3f, 0.49f), rockB = new Color(0.37f, 0.21f, 0.42f),
                 lava = new Color(1f, 0.2f, 0.72f), lavaDim = new Color(0.45f, 0.04f, 0.3f), hot = new Color(1f, 0.82f, 0.96f), eye = new Color(1f, 0.6f, 0.95f),
                 emberA = new Color(1f, 0.25f, 0.75f), emberB = new Color(1f, 0.7f, 0.95f),
             },
             new Variant   // 6 虛空術士（紫黑色虛空能量，手上漂著虛空球）
             {
                 size = 0.95f, stride = 0.5f, legSwing = 30f, bob = 0.04f, step = 0.9f,
-                rockA = new Color(0.16f, 0.13f, 0.22f), rockB = new Color(0.09f, 0.07f, 0.13f),
+                rockA = new Color(0.46f, 0.29f, 0.72f), rockB = new Color(0.29f, 0.19f, 0.49f),
                 lava = new Color(0.6f, 0.3f, 1f), lavaDim = new Color(0.2f, 0.06f, 0.4f), hot = new Color(0.92f, 0.8f, 1f), eye = new Color(0.8f, 0.6f, 1f),
                 emberA = new Color(0.55f, 0.25f, 1f), emberB = new Color(0.9f, 0.75f, 1f),
             },
@@ -170,83 +170,83 @@ namespace SpellDuel
             new Variant   // 7 毒液噴花：accent＝毒囊、accent2＝紫色花瓣、accent3＝葉
             {
                 size = 1f, stride = 0.45f, legSwing = 0f, bob = 0.07f, step = 1f,
-                rockA = new Color(0.24f, 0.46f, 0.16f), rockB = new Color(0.33f, 0.23f, 0.13f),
+                rockA = new Color(0.32f, 0.72f, 0.18f), rockB = new Color(0.59f, 0.32f, 0.14f),
                 lava = new Color(0.55f, 1f, 0.2f), lavaDim = new Color(0.2f, 0.45f, 0.05f), hot = new Color(0.88f, 1f, 0.6f), eye = new Color(0.7f, 1f, 0.3f),
                 emberA = new Color(0.5f, 0.95f, 0.25f), emberB = new Color(0.8f, 0.5f, 1f),
-                accent = new Color(0.36f, 0.62f, 0.18f), accent2 = new Color(0.58f, 0.22f, 0.72f), accent3 = new Color(0.3f, 0.56f, 0.18f),
+                accent = new Color(0.53f, 0.86f, 0.14f), accent2 = new Color(0.78f, 0.24f, 0.9f), accent3 = new Color(0.22f, 0.6f, 0.23f),
             },
             new Variant   // 8 荊棘衝鋒獸：accent＝切面木頭、accent2＝獠牙／荊棘、accent3＝苔蘚
             {
                 size = 1f, stride = 0.6f, legSwing = 30f, bob = 0.04f, step = 0.85f,
-                rockA = new Color(0.38f, 0.27f, 0.17f), rockB = new Color(0.25f, 0.17f, 0.1f),
+                rockA = new Color(0.66f, 0.36f, 0.16f), rockB = new Color(0.44f, 0.23f, 0.15f),
                 lava = new Color(1f, 0.6f, 0.15f), lavaDim = new Color(0.5f, 0.2f, 0.04f), hot = new Color(1f, 0.9f, 0.5f), eye = new Color(1f, 0.72f, 0.2f),
                 emberA = new Color(0.55f, 0.8f, 0.3f), emberB = new Color(0.9f, 0.85f, 0.4f),
-                accent = new Color(0.78f, 0.62f, 0.4f), accent2 = new Color(0.82f, 0.77f, 0.56f), accent3 = new Color(0.3f, 0.5f, 0.15f),
+                accent = new Color(0.96f, 0.68f, 0.3f), accent2 = new Color(0.98f, 0.87f, 0.55f), accent3 = new Color(0.32f, 0.67f, 0.18f),
             },
             new Variant   // 9 藤蔓術士：accent＝兜帽葉、accent2＝深色臉、accent3＝披風葉
             {
                 size = 1f, stride = 0.5f, legSwing = 30f, bob = 0.03f, step = 0.95f,
-                rockA = new Color(0.2f, 0.4f, 0.15f), rockB = new Color(0.14f, 0.28f, 0.1f),
+                rockA = new Color(0.24f, 0.65f, 0.32f), rockB = new Color(0.18f, 0.43f, 0.35f),
                 lava = new Color(0.4f, 1f, 0.35f), lavaDim = new Color(0.1f, 0.45f, 0.1f), hot = new Color(0.85f, 1f, 0.75f), eye = new Color(0.55f, 1f, 0.4f),
                 emberA = new Color(0.35f, 1f, 0.35f), emberB = new Color(0.8f, 1f, 0.6f),
-                accent = new Color(0.28f, 0.55f, 0.18f), accent2 = new Color(0.07f, 0.09f, 0.05f), accent3 = new Color(0.22f, 0.46f, 0.14f),
+                accent = new Color(0.42f, 0.78f, 0.2f), accent2 = new Color(0.2f, 0.29f, 0.38f), accent3 = new Color(0.16f, 0.56f, 0.32f),
             },
             new Variant   // 10 食人花：accent＝顎外側、accent2＝紅色口腔、accent3＝葉
             {
                 size = 1f, stride = 0.45f, legSwing = 0f, bob = 0.06f, step = 1.05f,
-                rockA = new Color(0.25f, 0.47f, 0.15f), rockB = new Color(0.33f, 0.23f, 0.13f),
+                rockA = new Color(0.34f, 0.76f, 0.18f), rockB = new Color(0.59f, 0.32f, 0.14f),
                 lava = new Color(1f, 0.3f, 0.35f), lavaDim = new Color(0.45f, 0.06f, 0.1f), hot = new Color(1f, 0.8f, 0.7f), eye = new Color(1f, 0.92f, 0.3f),
                 emberA = new Color(0.6f, 0.95f, 0.3f), emberB = new Color(1f, 0.6f, 0.6f),
-                accent = new Color(0.42f, 0.6f, 0.17f), accent2 = new Color(0.72f, 0.12f, 0.15f), accent3 = new Color(0.3f, 0.56f, 0.18f),
+                accent = new Color(0.64f, 0.86f, 0.18f), accent2 = new Color(0.9f, 0.16f, 0.26f), accent3 = new Color(0.24f, 0.63f, 0.23f),
             },
             new Variant   // 11 孢子菇：rockA＝菇柄、rockB＝菌褶、accent＝菇傘、lava＝發光斑點
             {
                 size = 1f, stride = 0.4f, legSwing = 34f, bob = 0.04f, step = 1.1f,
-                rockA = new Color(0.86f, 0.8f, 0.66f), rockB = new Color(0.6f, 0.48f, 0.38f),
+                rockA = new Color(0.98f, 0.86f, 0.62f), rockB = new Color(0.72f, 0.45f, 0.32f),
                 lava = new Color(0.75f, 1f, 0.35f), lavaDim = new Color(0.35f, 0.55f, 0.1f), hot = new Color(0.95f, 1f, 0.75f), eye = new Color(0.9f, 1f, 0.5f),
                 emberA = new Color(0.75f, 1f, 0.35f), emberB = new Color(0.8f, 0.5f, 1f),
-                accent = new Color(0.52f, 0.17f, 0.48f), accent2 = new Color(0.86f, 0.8f, 0.66f), accent3 = new Color(0.3f, 0.56f, 0.18f),
+                accent = new Color(0.76f, 0.23f, 0.66f), accent2 = new Color(0.98f, 0.86f, 0.62f), accent3 = new Color(0.28f, 0.67f, 0.22f),
             },
             new Variant   // 12 種子槍手：accent＝種莢膛、accent2＝莢管／種子、accent3＝葉
             {
                 size = 1f, stride = 0.45f, legSwing = 0f, bob = 0.06f, step = 1f,
-                rockA = new Color(0.27f, 0.48f, 0.17f), rockB = new Color(0.33f, 0.23f, 0.13f),
+                rockA = new Color(0.4f, 0.72f, 0.18f), rockB = new Color(0.59f, 0.32f, 0.14f),
                 lava = new Color(1f, 0.82f, 0.3f), lavaDim = new Color(0.5f, 0.32f, 0.05f), hot = new Color(1f, 0.97f, 0.7f), eye = new Color(1f, 0.92f, 0.4f),
                 emberA = new Color(0.6f, 0.95f, 0.3f), emberB = new Color(1f, 0.9f, 0.45f),
-                accent = new Color(0.62f, 0.6f, 0.22f), accent2 = new Color(0.4f, 0.32f, 0.15f), accent3 = new Color(0.32f, 0.58f, 0.2f),
+                accent = new Color(0.82f, 0.76f, 0.2f), accent2 = new Color(0.62f, 0.4f, 0.14f), accent3 = new Color(0.26f, 0.64f, 0.22f),
             },
             // ---- 海洋（step＝游動／拍翅的基本頻率（弧度/秒）；emberA/B＝泡泡、羽毛或電花；其餘見各自註解）
             new Variant   // 13 跳躍魚：rockA＝藍銀色身體、rockB＝深色背、accent＝鰭、accent2＝尖牙、eye＝紅眼
             {
                 size = 1f, stride = 0.5f, legSwing = 0f, bob = 0f, step = 9f,
-                rockA = new Color(0.66f, 0.76f, 0.86f), rockB = new Color(0.1f, 0.17f, 0.3f),
+                rockA = new Color(0.52f, 0.81f, 0.96f), rockB = new Color(0.18f, 0.35f, 0.65f),
                 lava = new Color(0.45f, 0.85f, 1f), lavaDim = new Color(0.15f, 0.35f, 0.6f), hot = new Color(0.85f, 0.97f, 1f), eye = new Color(1f, 0.12f, 0.08f),
                 emberA = new Color(0.6f, 0.85f, 1f), emberB = new Color(0.95f, 1f, 1f),
-                accent = new Color(0.25f, 0.42f, 0.62f), accent2 = new Color(0.96f, 0.94f, 0.86f), accent3 = new Color(0.55f, 0.1f, 0.12f),
+                accent = new Color(0.18f, 0.62f, 0.88f), accent2 = new Color(0.99f, 0.94f, 0.79f), accent3 = new Color(0.76f, 0.15f, 0.23f),
             },
             new Variant   // 14 俯衝海鳥：rockA＝白灰身體、rockB＝深灰褐翅膀／眉、accent＝黃色鉤喙、accent2＝黑色翼尖、accent3＝腳
             {
                 size = 1f, stride = 0.5f, legSwing = 0f, bob = 0f, step = 10f,
-                rockA = new Color(0.86f, 0.86f, 0.84f), rockB = new Color(0.33f, 0.3f, 0.3f),
+                rockA = new Color(0.94f, 0.97f, 1f), rockB = new Color(0.37f, 0.46f, 0.65f),
                 lava = new Color(1f, 0.6f, 0.3f), lavaDim = new Color(0.5f, 0.2f, 0.05f), hot = new Color(1f, 0.9f, 0.7f), eye = new Color(1f, 0.25f, 0.08f),
                 emberA = new Color(0.9f, 0.9f, 0.88f, 0.8f), emberB = new Color(0.55f, 0.52f, 0.5f, 0.8f),
-                accent = new Color(0.96f, 0.74f, 0.2f), accent2 = new Color(0.09f, 0.09f, 0.1f), accent3 = new Color(0.85f, 0.55f, 0.25f),
+                accent = new Color(1f, 0.75f, 0.12f), accent2 = new Color(0.23f, 0.29f, 0.48f), accent3 = new Color(0.96f, 0.48f, 0.14f),
             },
             new Variant   // 15 騎魚泡泡怪：rockA＝橘紅色坐騎、rockB＝米白肚子、accent＝魚人的青綠皮膚、accent2＝粉色海螺、accent3＝鰭
             {
                 size = 1f, stride = 0.5f, legSwing = 0f, bob = 0f, step = 5f,
-                rockA = new Color(0.92f, 0.42f, 0.16f), rockB = new Color(0.98f, 0.88f, 0.7f),
+                rockA = new Color(1f, 0.4f, 0.14f), rockB = new Color(1f, 0.91f, 0.72f),
                 lava = new Color(0.45f, 0.9f, 1f), lavaDim = new Color(0.15f, 0.4f, 0.65f), hot = new Color(0.85f, 1f, 1f), eye = new Color(1f, 0.92f, 0.3f),
                 emberA = new Color(0.55f, 0.85f, 1f), emberB = new Color(0.95f, 1f, 1f),
-                accent = new Color(0.22f, 0.58f, 0.52f), accent2 = new Color(0.98f, 0.74f, 0.64f), accent3 = new Color(1f, 0.66f, 0.24f),
+                accent = new Color(0.16f, 0.76f, 0.62f), accent2 = new Color(1f, 0.61f, 0.65f), accent3 = new Color(1f, 0.7f, 0.14f),
             },
             new Variant   // 16 寄居蟹：rockA＝紅色蟹身、rockB＝米褐色螺殼、accent2＝螯尖、lava＝大螯蓄力色
             {
                 size = 1f, stride = 0.42f, legSwing = 0f, bob = 0.025f, step = 1.1f,
-                rockA = new Color(0.82f, 0.28f, 0.16f), rockB = new Color(0.86f, 0.72f, 0.56f),
+                rockA = new Color(0.98f, 0.27f, 0.14f), rockB = new Color(0.97f, 0.77f, 0.49f),
                 lava = new Color(1f, 0.55f, 0.2f), lavaDim = new Color(0.5f, 0.15f, 0.05f), hot = new Color(1f, 0.9f, 0.6f), eye = new Color(1f, 0.9f, 0.3f),
                 emberA = new Color(0.6f, 0.85f, 1f), emberB = new Color(0.95f, 1f, 1f),
-                accent = new Color(0.7f, 0.5f, 0.42f), accent2 = new Color(0.3f, 0.1f, 0.07f), accent3 = new Color(0.86f, 0.72f, 0.56f),
+                accent = new Color(0.82f, 0.48f, 0.32f), accent2 = new Color(0.57f, 0.2f, 0.17f), accent3 = new Color(0.97f, 0.77f, 0.49f),
             },
             new Variant   // 17 雷電水母：lava＝傘緣光點／內芯、hot＝放電白光、eye 不用；傘與觸手是頂點色（青→紫）的半透明網格
             {
@@ -259,17 +259,17 @@ namespace SpellDuel
             new Variant   // 18 河豚：rockA＝黃褐色身體、rockB＝白肚子、accent＝鰭、accent2＝刺、accent3＝嘴唇
             {
                 size = 1f, stride = 0.5f, legSwing = 0f, bob = 0f, step = 8f,
-                rockA = new Color(0.86f, 0.74f, 0.38f), rockB = new Color(0.97f, 0.95f, 0.87f),
+                rockA = new Color(1f, 0.77f, 0.22f), rockB = new Color(1f, 0.97f, 0.83f),
                 lava = new Color(1f, 0.6f, 0.25f), lavaDim = new Color(0.5f, 0.25f, 0.05f), hot = new Color(1f, 0.92f, 0.6f), eye = new Color(1f, 0.9f, 0.4f),
                 emberA = new Color(0.6f, 0.85f, 1f), emberB = new Color(0.95f, 1f, 1f),
-                accent = new Color(0.95f, 0.78f, 0.36f), accent2 = new Color(0.5f, 0.4f, 0.22f), accent3 = new Color(0.78f, 0.5f, 0.36f),
+                accent = new Color(1f, 0.65f, 0.16f), accent2 = new Color(0.68f, 0.4f, 0.15f), accent3 = new Color(0.93f, 0.38f, 0.23f),
             },
         };
 
         static readonly Color FlashC = new Color(1f, 0.55f, 0.4f);
         static readonly Color Dark = new Color(0.12f, 0.06f, 0.04f);
-        static readonly Color RockDead = new Color(0.08f, 0.07f, 0.07f);
-        static readonly Color Armor = new Color(0.45f, 0.4f, 0.37f);
+        static readonly Color RockDead = new Color(0.27f, 0.24f, 0.32f);
+        static readonly Color Armor = new Color(0.76f, 0.57f, 0.32f);
 
         // ================================================================ 共用材質與網格（所有小鬼共用）
         static Shader litShader, glowShader;

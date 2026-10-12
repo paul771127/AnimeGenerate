@@ -33,13 +33,13 @@ namespace SpellDuel
         static readonly Dictionary<Color32, Material> glowCache = new Dictionary<Color32, Material>();
         static readonly Dictionary<string, Mesh> meshCache = new Dictionary<string, Mesh>();
 
-        static readonly Color Skin = new Color(1f, 0.85f, 0.72f);
-        static readonly Color Cloth = new Color(0.2f, 0.2f, 0.25f);
-        static readonly Color DarkCloth = new Color(0.12f, 0.11f, 0.16f);
-        static readonly Color Metal = new Color(0.68f, 0.71f, 0.76f);
-        static readonly Color Wood = new Color(0.47f, 0.31f, 0.17f);
-        static readonly Color Leather = new Color(0.4f, 0.26f, 0.15f);
-        static readonly Color Gold = new Color(0.96f, 0.78f, 0.3f);
+        static readonly Color Skin = new Color(1f, 0.8f, 0.62f);
+        static readonly Color Cloth = new Color(0.27f, 0.38f, 0.62f);
+        static readonly Color DarkCloth = new Color(0.36f, 0.22f, 0.58f);
+        static readonly Color Metal = new Color(0.7f, 0.84f, 0.96f);
+        static readonly Color Wood = new Color(0.7f, 0.38f, 0.16f);
+        static readonly Color Leather = new Color(0.63f, 0.29f, 0.12f);
+        static readonly Color Gold = new Color(1f, 0.72f, 0.12f);
         static readonly Color EyeCol = new Color(0.1f, 0.1f, 0.16f);
         static readonly Color RobeWhite = new Color(0.96f, 0.95f, 0.91f);
 
@@ -248,7 +248,7 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 法師：尖帽、長袍、法杖
         void BuildMage()
         {
-            var hatC = Mul(clsColor, 0.7f);
+            var hatC = Mul(clsColor, 0.85f);
             // 帽子：帽沿＋圓錐（帽尖稍微往後彎）
             Part(PrimitiveType.Cylinder, head, new Vector3(0f, 0.07f, -0.01f), new Vector3(0.46f, 0.008f, 0.46f), Mat(hatC, 0.85f));
             var cone = Pivot("HatCone", head, new Vector3(0f, 0.075f, -0.01f));
@@ -281,7 +281,7 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 獵人：兜帽披風、弓、箭袋
         void BuildArcher()
         {
-            var hoodC = Mul(clsColor, 0.55f);
+            var hoodC = Mul(clsColor, 0.78f);
             // 頭髮瀏海＋兜帽（往後偏，臉露出來）＋帽尖
             Part(PrimitiveType.Sphere, head, new Vector3(0f, 0.075f, 0.02f), new Vector3(0.27f, 0.17f, 0.25f), Mat(new Color(0.55f, 0.35f, 0.2f)));
             Part(PrimitiveType.Sphere, head, new Vector3(0f, 0.025f, -0.05f), new Vector3(0.33f, 0.34f, 0.33f), Mat(hoodC));
@@ -330,13 +330,13 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 刺客：深色兜帽、面罩、雙匕首、圍巾
         void BuildAssassin()
         {
-            var hoodC = Mul(DarkCloth, 1.3f);
+            var hoodC = Color.Lerp(DarkCloth, clsColor, 0.22f);
             Part(PrimitiveType.Sphere, head, new Vector3(0f, 0.025f, -0.05f), new Vector3(0.33f, 0.34f, 0.33f), Mat(hoodC));
             var tip = Pivot("HoodTip", head, new Vector3(0f, 0.08f, -0.12f));
             tip.localRotation = Quaternion.Euler(-60f, 0f, 0f);
             MeshPart("HoodTipCone", tip, Frustum(0.09f, 0f, 0.13f, 12), Vector3.zero, Mat(hoodC, 0.9f));
             // 面罩：蓋住鼻子以下
-            Part(PrimitiveType.Sphere, head, new Vector3(0f, -0.065f, 0.012f), new Vector3(0.29f, 0.17f, 0.28f), Mat(Mul(DarkCloth, 0.8f)));
+            Part(PrimitiveType.Sphere, head, new Vector3(0f, -0.065f, 0.012f), new Vector3(0.29f, 0.17f, 0.28f), Mat(Mul(DarkCloth, 0.9f)));
             // 圍巾：脖子一圈＋往後飄的尾巴（職業色）
             Part(PrimitiveType.Cylinder, spine, new Vector3(0f, 0.55f, 0f), new Vector3(0.2f, 0.045f, 0.2f), Mat(clsColor));
             scarfTail = Pivot("ScarfTail", spine, new Vector3(0.05f, 0.55f, -0.09f));
@@ -656,12 +656,12 @@ namespace SpellDuel
 
         // ================================================================ 木頭人（練習靶）
         public const string DummyId = "dummy";
-        static readonly Color DummyWood = new Color(0.55f, 0.36f, 0.2f);
-        static readonly Color DummyDark = new Color(0.36f, 0.23f, 0.13f);
-        static readonly Color Straw = new Color(0.9f, 0.76f, 0.4f);
+        static readonly Color DummyWood = new Color(0.76f, 0.43f, 0.18f);
+        static readonly Color DummyDark = new Color(0.53f, 0.28f, 0.12f);
+        static readonly Color Straw = new Color(1f, 0.8f, 0.3f);
         static readonly Color Burlap = new Color(0.86f, 0.74f, 0.52f);
-        static readonly Color Rope = new Color(0.66f, 0.53f, 0.32f);
-        static readonly Color TargetRed = new Color(0.85f, 0.15f, 0.12f);
+        static readonly Color Rope = new Color(0.76f, 0.52f, 0.22f);
+        static readonly Color TargetRed = new Color(0.96f, 0.16f, 0.13f);
         static readonly Color TargetWhite = new Color(0.97f, 0.94f, 0.86f);
 
         bool isDummy;
@@ -797,9 +797,33 @@ namespace SpellDuel
             return t;
         }
 
+        static Mesh smoothCube;
+
+        // Keep the box silhouette and dimensions, but give coincident corners the same
+        // normal so the inverted hull stays continuous. Never modify Unity's shared mesh.
+        internal static Mesh SmoothCube(Mesh source)
+        {
+            if (smoothCube != null) return smoothCube;
+            var vertices = source.vertices;
+            var normals = new Vector3[vertices.Length];
+            for (int i = 0; i < vertices.Length; i++) normals[i] = vertices[i].normalized;
+            smoothCube = new Mesh
+            {
+                name = "Rig Smooth Cube", vertices = vertices,
+                normals = normals, uv = source.uv, triangles = source.triangles
+            };
+            smoothCube.RecalculateBounds();
+            return smoothCube;
+        }
+
         static GameObject Part(PrimitiveType type, Transform parent, Vector3 localPos, Vector3 localScale, Material mat, Vector3 euler = default)
         {
             var go = GameObject.CreatePrimitive(type);
+            if (type == PrimitiveType.Cube && !unlit && mat.shader == litShader)
+            {
+                var filter = go.GetComponent<MeshFilter>();
+                filter.sharedMesh = SmoothCube(filter.sharedMesh);
+            }
             var col = go.GetComponent<Collider>();
             if (col) Destroy(col);
             go.transform.SetParent(parent, false);

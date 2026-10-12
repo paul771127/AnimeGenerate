@@ -8,14 +8,14 @@ namespace SpellDuel
     /// </summary>
     public static class ToonStyle
     {
-        public static Color OutlineColor = new Color(0.04f, 0.03f, 0.05f, 1f);   // 黑邊顏色
-        public static float OutlineWidth = 2.6f;      // 黑邊粗細（1000 像素高畫面的像素數；實際依螢幕高度放大）
-        public static float OutlineFar = 3.5f;        // 超過幾公尺開始變細（遠處的小怪不會變成一團黑）
-        public static Color ShadeColor = new Color(0.62f, 0.58f, 0.78f, 1f);    // 暗部＝原色 × 這個顏色（偏藍紫）
-        public static float ShadeThreshold = 0.05f;   // 亮暗分界（越大暗部越多）
-        public static float ShadeSoftness = 0.03f;    // 分界柔邊（0＝完全硬邊）
-        public static Color RimColor = new Color(1f, 1f, 1f, 0.22f);          // 邊緣亮光（a＝強度）
-        public static float Ambient = 0.35f;          // 環境光量
+        public static Color OutlineColor = new Color(0.015f, 0.012f, 0.025f, 1f);   // 黑邊顏色
+        public static float OutlineWidth = 2.8f;      // 黑邊粗細（1000 像素高畫面的像素數；實際依螢幕高度放大）
+        public static float OutlineFar = 3.2f;        // 超過幾公尺開始變細（遠處的小怪不會變成一團黑）
+        public static Color ShadeColor = new Color(0.52f, 0.48f, 0.68f, 1f);    // 暗部＝原色 × 這個顏色（偏藍紫）
+        public static float ShadeThreshold = 0.12f;   // 亮暗分界（越大暗部越多）
+        public static float ShadeSoftness = 0.018f;    // 分界柔邊（0＝完全硬邊）
+        public static Color RimColor = new Color(1f, 0.96f, 0.88f, 0.12f);          // 邊緣亮光（a＝強度）
+        public static float Ambient = 0.22f;          // 環境光量
 
         static Shader toon; static bool tried;
 
