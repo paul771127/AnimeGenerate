@@ -154,6 +154,7 @@ namespace SpellDuel.EditorTools
             IncludeShader("Legacy Shaders/Diffuse");   // 角色造型用的受光材質（程式中 Shader.Find，沒被引用會被建置剔除）
             IncludeShader("Legacy Shaders/Particles/Additive");        // 施法光效
             IncludeShader("Legacy Shaders/Particles/Alpha Blended");   // 刺客的暗影煙霧
+            IncludeShader("SpellDuel/Toon");   // 角色、小怪、Boss 的賽璐珞著色（程式中 Shader.Find）
 
             ConfigureXR(BuildTargetGroup.Android, "UnityEngine.XR.ARCore.ARCoreLoader");
             ConfigureXR(BuildTargetGroup.iOS, "UnityEngine.XR.ARKit.ARKitLoader");

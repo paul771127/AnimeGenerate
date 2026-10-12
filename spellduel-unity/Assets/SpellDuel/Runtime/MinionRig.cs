@@ -283,7 +283,7 @@ namespace SpellDuel
         {
             if (rockMat != null) return;
             glowShader = Shader.Find("Sprites/Default");
-            litShader = Shader.Find("Legacy Shaders/Diffuse");
+            litShader = ToonStyle.LitShader();   // 賽璐珞風格（黑邊＋兩階明暗）；不支援時退回 Legacy Diffuse
             if (litShader == null) litShader = Shader.Find("Mobile/Diffuse");
             if (litShader == null) litShader = Shader.Find("Diffuse");
             if (litShader == null) litShader = glowShader;
