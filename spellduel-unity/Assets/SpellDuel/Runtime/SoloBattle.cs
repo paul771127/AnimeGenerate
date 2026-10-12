@@ -203,7 +203,15 @@ namespace SpellDuel
                     y += sh + gap * 0.4f;
                 }
             }
-            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.2f, r.width * 0.5f, fs * 2.2f), "返回", fs)) storyMapOpen = false;
+            // 下方：角色養成（能力值／技能樹／裝備；故事模式和無盡模式共用）＋返回
+            {
+                var pf2 = Progress.Char(myClass);
+                int pts = pf2.statPoints + pf2.skillPoints;
+                float bw = (r.width - gap * 3) / 2f, by = r.yMax - gap - fs * 2.2f;
+                if (UiKit.Button(new Rect(r.x + gap, by, bw, fs * 2.2f), pts > 0 ? $"📜 角色（可加點 ×{pts}）" : "📜 角色／裝備", fs, pts > 0, new Color(0.75f, 0.45f, 1f)))
+                    charOpen = true;
+                if (UiKit.Button(new Rect(r.x + gap * 2 + bw, by, bw, fs * 2.2f), "返回", fs)) storyMapOpen = false;
+            }
         }
 
         /// <summary>對話框：畫面下方，點一下下一句；右上「跳過」</summary>
@@ -1926,7 +1934,7 @@ namespace SpellDuel
             UiKit.Text(new Rect(pad, y, W - pad * 2, u), $"選 3 個技能（{myLoadout.Count}/3）　點技能看詳細說明", fsS, new Color(1f, 0.9f, 0.6f));
             if (EndlessSetup)
             {
-                // 無盡模式：角色養成（能力值、技能樹、裝備）
+                // 無盡／故事模式：角色養成（能力值、技能樹、裝備）
                 var pf = Progress.Char(myClass);
                 float cbw = W * 0.4f;
                 if (UiKit.Button(new Rect(W - pad - cbw, y - u * 0.15f, cbw, u * 1.1f), $"📜 角色 Lv{pf.level}" + (pf.statPoints + pf.skillPoints > 0 ? "（可加點）" : ""), fsS, pf.statPoints + pf.skillPoints > 0, new Color(0.8f, 0.55f, 1f)))
