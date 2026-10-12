@@ -48,7 +48,7 @@ namespace SpellDuel
         readonly System.Random dropRng = new System.Random();
         int PendingUpgrades => endless && prof != null ? prof.statPoints + prof.skillPoints : 0;
         /// <summary>選技能畫面：這次是不是無盡模式（只有無盡模式用角色養成）</summary>
-        bool EndlessSetup => NetMode ? netEndless : enemyClass == "endless";
+        bool EndlessSetup => NetMode ? netEndless : enemyClass == "endless" || enemyClass == "story";   // 故事模式也用角色養成
         /// <summary>選技能畫面可以選的技能：無盡模式＝角色會的技能；其他模式＝職業全部技能</summary>
         string[] SetupSkills => EndlessSetup ? Progress.Char(myClass).KnownSkills().ToArray() : Skills.Classes[myClass].skills;
 
@@ -117,6 +117,120 @@ namespace SpellDuel
             }
             if (UiKit.Button(new Rect(W * 0.25f, botY - pad - bh, W * 0.5f, bh), phase == Phase.Setup ? "完成" : (coop ? "回到戰鬥" : "回到戰鬥（暫停中）"), fs, true, new Color(0.5f, 0.8f, 1f)))
             { charOpen = false; Progress.SaveChar(p); if (phase == Phase.Setup) FixLoadout(); }
+        }
+
+        // ---------------------------------------------------------------- 故事模式（劇本：Resources/story.txt，格式見 STORY_FORMAT.md）
+        StoryStage storyStage, pendingStage;      // 正在玩的關卡
+        bool storyMapOpen; int storyChapter;
+        List<StoryLine> dlg; int dlgIdx; Action dlgDone;   // 對話中
+
+        void ShowDialogue(List<StoryLine> lines, Action done)
+        {
+            if (lines == null || lines.Count == 0) { done?.Invoke(); return; }
+            dlg = lines; dlgIdx = 0; dlgDone = done;
+        }
+
+        void EndDialogue() { var d = dlgDone; dlg = null; dlgDone = null; d?.Invoke(); }
+
+        /// <summary>點地圖上的關卡：開場對話 → 開打</summary>
+        void StartStory(StoryStage st)
+        {
+            storyMapOpen = false; storyStage = st;
+            ShowDialogue(st.before, StartStageBattle);
+        }
+
+        void StartStageBattle()
+        {
+            if (storyStage == null) return;
+            pendingStage = storyStage;
+            StartBossBattle(false, true);
+            pendingStage = null;
+            Say($"📖 {storyStage.title}", 3f);
+        }
+
+        StoryStage NextStage(StoryStage st)
+        {
+            bool found = false;
+            foreach (var s in Story.AllStages()) { if (found) return s; if (s == st) found = true; }
+            return null;
+        }
+
+        /// <summary>故事地圖：章節分頁、每關的狀態（通關／可玩／鎖住）</summary>
+        void DrawStoryMap()
+        {
+            Story.Load();
+            float W = Screen.width, H = Screen.height;
+            var safe = Screen.safeArea;
+            float topY = H - safe.yMax, botY = H - safe.y, pad = W * 0.03f, gap = pad * 0.5f;
+            int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.82f), fsL = Mathf.RoundToInt(fs * 1.3f);
+            GUI.color = new Color(0f, 0f, 0f, 0.7f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
+            var r = new Rect(pad, topY + pad, W - pad * 2, botY - topY - pad * 2);
+            UiKit.Card(r, 0.95f, new Color(1f, 0.8f, 0.4f), 0.9f);
+            float x = r.x + gap, w = r.width - gap * 2, y = r.y + gap;
+            UiKit.Text(new Rect(x, y, w, fs * 1.8f), "📖 故事模式", fsL, Color.white, TextAnchor.MiddleLeft, true);
+            var pf = Progress.Char(myClass);
+            UiKit.Text(new Rect(x, y, w, fs * 1.8f), $"{Skills.Classes[myClass].name} Lv{pf.level}", fsS, Skills.Classes[myClass].color, TextAnchor.MiddleRight, true);
+            y += fs * 1.9f;
+            if (Story.chapters.Count == 0)
+            {
+                UiKit.Text(new Rect(x, y, w, fs * 6f), "找不到劇本（Resources/story.txt）。" + (Story.errors.Count > 0 ? "\n" + string.Join("\n", Story.errors) : ""), fs, new Color(1f, 0.6f, 0.5f), TextAnchor.UpperLeft);
+            }
+            else
+            {
+                storyChapter = Mathf.Clamp(storyChapter, 0, Story.chapters.Count - 1);
+                // 章節分頁
+                int nch = Story.chapters.Count;
+                float cw = (w - gap * (nch - 1)) / nch;
+                for (int i = 0; i < nch; i++)
+                    if (UiKit.Button(new Rect(x + i * (cw + gap), y, cw, fs * 1.8f), $"第 {Story.chapters[i].id} 章", fsS, storyChapter == i, new Color(1f, 0.8f, 0.4f))) storyChapter = i;
+                y += fs * 1.8f + gap;
+                var ch = Story.chapters[storyChapter];
+                UiKit.Text(new Rect(x, y, w, fs * 1.4f), ch.title, fs, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleLeft, true);
+                y += fs * 1.4f;
+                if (ch.desc.Length > 0) { UiKit.Text(new Rect(x, y, w, fs * 2.4f), ch.desc, fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft); y += fs * 2.4f; }
+                float bottom = r.yMax - gap - fs * 2.4f;
+                float sh = Mathf.Min(fs * 3.4f, (bottom - y) / Mathf.Max(1, ch.stages.Count) - gap * 0.4f);
+                foreach (var st in ch.stages)
+                {
+                    bool clear = Story.IsCleared(st.id), open = Story.IsUnlocked(st);
+                    var col = clear ? new Color(1f, 0.85f, 0.3f) : open ? new Color(0.5f, 0.85f, 1f) : new Color(0.45f, 0.45f, 0.5f);
+                    var sr = new Rect(x, y, w, sh);
+                    if (UiKit.Button(sr, "", fsS, clear, col, open)) StartStory(st);
+                    string themeName = st.theme == 1 ? "🌲 森林" : st.theme == 2 ? "🌊 海上" : "🌋 熔岩";
+                    string waves = st.HasBoss && st.fromWave >= 10 ? "Boss 戰" : $"{st.toWave - st.fromWave + 1} 波" + (st.HasBoss ? "＋Boss" : "");
+                    UiKit.Text(new Rect(sr.x + gap, sr.y + 2, sr.width * 0.72f, sh * 0.55f), $"{(clear ? "✔" : open ? "▶" : "🔒")} {st.id}　{st.title}", fs, open ? Color.white : Color.gray, TextAnchor.MiddleLeft, true);
+                    UiKit.Text(new Rect(sr.x + gap, sr.y + sh * 0.5f, sr.width - gap * 2, sh * 0.48f), (st.desc.Length > 0 ? st.desc.Split('\n')[0] + "　" : "") + $"{themeName}・{waves}・獎勵經驗 {st.xp}", fsS, new Color(0.8f, 0.84f, 0.95f), TextAnchor.MiddleLeft);
+                    y += sh + gap * 0.4f;
+                }
+            }
+            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.2f, r.width * 0.5f, fs * 2.2f), "返回", fs)) storyMapOpen = false;
+        }
+
+        /// <summary>對話框：畫面下方，點一下下一句；右上「跳過」</summary>
+        void DrawDialogue()
+        {
+            float W = Screen.width, H = Screen.height;
+            var safe = Screen.safeArea;
+            float topY = H - safe.yMax, botY = H - safe.y, pad = W * 0.04f, gap = pad * 0.5f;
+            int fs = UiKit.BaseFont, fsL = Mathf.RoundToInt(fs * 1.15f);
+            GUI.color = new Color(0f, 0f, 0f, 0.45f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
+            if (dlgIdx >= dlg.Count) { EndDialogue(); return; }
+            var line = dlg[dlgIdx];
+            var col = Story.TagColor(line.tag);
+            var r = new Rect(pad, botY - pad - H * 0.3f, W - pad * 2, H * 0.3f);
+            UiKit.Card(r, 0.93f, string.IsNullOrEmpty(line.speaker) ? (Color?)null : col, 0.9f);
+            float y = r.y + gap;
+            if (!string.IsNullOrEmpty(line.speaker))
+            {
+                UiKit.Text(new Rect(r.x + gap * 1.5f, y, r.width - gap * 3, fs * 1.7f), line.speaker, fsL, col, TextAnchor.MiddleLeft, true);
+                y += fs * 1.8f;
+            }
+            UiKit.Text(new Rect(r.x + gap * 1.5f, y, r.width - gap * 3, r.yMax - y - fs * 1.6f), Story.Fill(line.text, myClass), fsL,
+                string.IsNullOrEmpty(line.speaker) ? new Color(0.85f, 0.88f, 1f) : Color.white, TextAnchor.UpperLeft, false, 0.6f);
+            UiKit.Text(new Rect(r.x, r.yMax - fs * 1.6f, r.width - gap * 1.5f, fs * 1.4f), $"{dlgIdx + 1}/{dlg.Count}　▶ 點一下繼續", Mathf.RoundToInt(fs * 0.75f), new Color(0.8f, 0.8f, 0.85f), TextAnchor.MiddleRight);
+            if (UiKit.Button(new Rect(W - pad - W * 0.22f, topY + pad, W * 0.22f, fs * 1.8f), "跳過 ⏭", Mathf.RoundToInt(fs * 0.8f))) { EndDialogue(); return; }
+            var e = Event.current;
+            if (e.type == EventType.MouseUp) { dlgIdx++; Sfx.Play("select", 0.5f); e.Use(); if (dlgIdx >= dlg.Count) EndDialogue(); }
         }
 
         int NetModeCode => coop ? (netEndless ? 2 : 1) : 0;
@@ -209,6 +323,7 @@ namespace SpellDuel
             speech.OnSkill += OnSpeechSkill;
             Progress.Get = k => PlayerPrefs.GetString(k, "");
             Progress.Set = (k, v) => { PlayerPrefs.SetString(k, v); PlayerPrefs.Save(); };
+            Story.Get = Progress.Get; Story.Set = Progress.Set;
             LoadLoadout();
             Sfx.Ensure();
         }
@@ -355,7 +470,8 @@ namespace SpellDuel
                     battle.edgePoint = FarSpawnPoint;
                     battle.bossPoint = EdgeSpawnPoint;
                     battle.OnBossSpawn += w => bossAi.Respawn(Mathf.Max(0.7f, 1f - 0.06f * w));
-                    battle.StartEndless();
+                    if (pendingStage != null) battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
+                    else battle.StartEndless();
                 }
                 battle.minionInside = p => area.Inside(WorldFrame.FromWorld(p)) && area.DistanceToEdge(WorldFrame.FromWorld(p)) >= 0.3f;
                 battle.minionSpeed = difficulty == 0 ? 0.75f : difficulty == 1 ? 0.95f : 1.15f;
@@ -702,6 +818,26 @@ namespace SpellDuel
         {
             if (resultShown) return;
             resultShown = true;
+            if (endless && storyStage != null)
+            {
+                // 故事關卡：通關 → 記錄、給經驗、結束對話；失敗 → 可以再挑戰
+                var st = storyStage;
+                if (battle.stageCleared)
+                {
+                    bool first = !Story.IsCleared(st.id);
+                    Story.MarkCleared(st.id);
+                    if (prof != null)
+                    {
+                        int ups = prof.AddXp(st.xp);
+                        Progress.SaveChar(prof);
+                        Say($"🏆 {st.title} 完成！獲得經驗 {st.xp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "" : "（再次通關）"), 99f);
+                    }
+                    Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
+                    ShowDialogue(st.after, null);
+                }
+                else { Say($"💀 {st.title} 失敗…再挑戰一次吧", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
+                return;
+            }
             if (endless)
             {
                 // 無盡模式：結算（波次、擊倒數、存活時間），記錄最佳
@@ -820,6 +956,14 @@ namespace SpellDuel
         // ================================================================ 開戰
         void StartBattle()
         {
+            if (enemyClass == "story")
+            {
+                // 故事模式：在結算畫面按「再挑戰」＝重打這一關；否則打開故事地圖
+                if (phase == Phase.Over && storyStage != null) StartStageBattle();
+                else { SaveChoices(); storyMapOpen = true; }
+                return;
+            }
+            storyStage = null;
             if (enemyClass == "boss" || enemyClass == "endless") { StartBossBattle(false, enemyClass == "endless"); return; }
             SaveChoices();
             EndBattle();
@@ -1660,10 +1804,13 @@ namespace SpellDuel
             Styles();
             // 技能說明視窗開著：底下的畫面照畫但不能按（GUI.enabled=false），說明視窗畫在最上面
             bool infoOpen = infoSkill != null && Skills.All.ContainsKey(infoSkill);
-            if (infoOpen || charOpen) GUI.enabled = false;
+            bool talking = dlg != null;
+            if (infoOpen || charOpen || storyMapOpen || talking) GUI.enabled = false;
             DrawScreens();
             GUI.enabled = true;
-            if (charOpen) DrawCharacter();
+            if (talking) DrawDialogue();
+            else if (charOpen) DrawCharacter();
+            else if (storyMapOpen) DrawStoryMap();
             else if (infoOpen) DrawSkillInfo();
         }
 
@@ -1814,12 +1961,12 @@ namespace SpellDuel
                 UiKit.Text(new Rect(pad, y, W - pad * 2, u), "敵人", fsS, new Color(1f, 0.9f, 0.6f));
                 y += u;
                 float ew = (W - pad * 2 - gap * 3) / 4f;
-                int nOpt = nc + 4;
+                int nOpt = nc + 5;
                 for (int i = 0; i < nOpt; i++)
                 {
-                    string id = i == 0 ? "random" : i == nc + 1 ? "dummy" : i == nc + 2 ? "boss" : i == nc + 3 ? "endless" : Skills.ClassOrder[i - 1];
-                    string nm = id == "random" ? "隨機" : id == "dummy" ? "🪵 木頭人" : id == "boss" ? "🔥 Boss" : id == "endless" ? "♾ 無盡" : Skills.Classes[id].name;
-                    var c = id == "random" ? new Color(1f, 0.85f, 0.3f) : id == "dummy" ? new Color(0.75f, 0.55f, 0.3f) : id == "boss" ? new Color(1f, 0.35f, 0.1f) : id == "endless" ? new Color(0.75f, 0.45f, 1f) : Skills.Classes[id].color;
+                    string id = i == 0 ? "random" : i == nc + 1 ? "dummy" : i == nc + 2 ? "boss" : i == nc + 3 ? "endless" : i == nc + 4 ? "story" : Skills.ClassOrder[i - 1];
+                    string nm = id == "random" ? "隨機" : id == "dummy" ? "🪵 木頭人" : id == "boss" ? "🔥 Boss" : id == "endless" ? "♾ 無盡" : id == "story" ? "📖 故事" : Skills.Classes[id].name;
+                    var c = id == "random" ? new Color(1f, 0.85f, 0.3f) : id == "dummy" ? new Color(0.75f, 0.55f, 0.3f) : id == "boss" ? new Color(1f, 0.35f, 0.1f) : id == "endless" ? new Color(0.75f, 0.45f, 1f) : id == "story" ? new Color(1f, 0.8f, 0.4f) : Skills.Classes[id].color;
                     if (UiKit.Button(new Rect(pad + (i % 4) * (ew + gap), y + (i / 4) * (u * 1.15f + gap), ew, u * 1.15f), nm, fsS, id == enemyClass, c)) enemyClass = id;
                 }
                 y += ((nOpt + 3) / 4) * (u * 1.15f + gap);
@@ -1881,7 +2028,7 @@ namespace SpellDuel
             { if (NetMode) Hide(); else RequestChangeMode?.Invoke(); }
             by -= u * 1.6f + gap;
             bool voiceOk = UseSpeech || VoiceReady;   // 沒有語音辨識時，要先把 3 個技能的咒語錄好
-            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : "⚔ 開始戰鬥");
+            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? "📖 打開故事地圖" : "⚔ 開始戰鬥");
             if (UiKit.Button(new Rect(pad, by, W - pad * 2, u * 1.6f), startText, fsL, true, cls.color, myLoadout.Count == 3 && voiceOk))
             { if (NetMode) SendReady(); else StartBattle(); }
         }
@@ -2185,7 +2332,19 @@ namespace SpellDuel
                 UiKit.Text(new Rect(fr.x + gap, fr.y + fr.height * 0.5f, fr.width - gap * 2, fr.height * 0.45f), Tracking.Reason + (NetMode ? "\n對手仍以你最後的位置判定" : "\n恢復追蹤後自動繼續"), fs, new Color(0.9f, 0.92f, 1f), TextAnchor.MiddleCenter);
             }
 
-            if (phase == Phase.Over)
+            if (phase == Phase.Over && storyStage != null)
+            {
+                var st = storyStage; bool won = battle.stageCleared;
+                var orr = new Rect(pad, H * 0.28f, W - pad * 2, H * 0.32f);
+                UiKit.Card(orr, 0.85f, won ? new Color(1f, 0.85f, 0.3f) : new Color(0.7f, 0.7f, 0.8f), 0.9f);
+                UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, orr.height * 0.4f), won ? $"🏆 {st.title}" : "💀 失敗…", fs * 2, Color.white, TextAnchor.MiddleCenter, true);
+                var next = won ? NextStage(st) : null;
+                float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
+                if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), won ? (next != null && Story.IsUnlocked(next) ? "▶ 下一關" : "再打一次") : "再挑戰", fs, true, new Color(0.4f, 0.8f, 1f)))
+                { if (won && next != null && Story.IsUnlocked(next)) { var n2 = next; ShowSetup(); StartStory(n2); } else StartStageBattle(); }
+                if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "故事地圖", fs)) { ShowSetup(); storyMapOpen = true; }
+            }
+            else if (phase == Phase.Over)
             {
                 var orr = new Rect(pad, H * 0.28f, W - pad * 2, H * 0.32f);
                 UiKit.Card(orr, 0.85f, !en.Alive && !endless ? new Color(1f, 0.85f, 0.3f) : new Color(0.7f, 0.7f, 0.8f), 0.9f);

@@ -232,6 +232,25 @@ namespace SpellDuel
         /// <summary>這一波還剩幾隻（還沒出現的＋場上活著的）</summary>
         public int WaveRemaining => IsBossWave ? (enemy.Alive ? 1 : 0) : waveToSpawn + minions.Count;
 
+        // 故事模式的關卡：打第 firstWave～lastWave 波（同一套無盡模式的波次、主題、Boss），打完就通關
+        public int stageEnd = -1, stageStart = 1;
+        string WaveLabel => stageEnd > 0 ? $"第 {wave - stageStart + 1}/{stageEnd - stageStart + 1} 波" : $"第 {wave} 波";
+        public bool stageCleared;
+        public void StartStage(int firstWave, int lastWave)
+        {
+            endless = true; kills = 0; bossKills = 0; stageCleared = false;
+            wave = Mathf.Max(0, firstWave - 1); stageStart = firstWave; stageEnd = Mathf.Max(firstWave, lastWave);
+            enemy.hp = 0f;
+            NextWave(3f);
+        }
+        bool StageDone()
+        {
+            if (stageEnd <= 0 || wave < stageEnd) return false;
+            stageCleared = true;
+            Emit("stageclear", player.Feet, Color.white, "關卡完成！");
+            return true;
+        }
+
         public void StartEndless()
         {
             endless = true; wave = 0; kills = 0; bossKills = 0;
@@ -253,7 +272,7 @@ namespace SpellDuel
                 waveToSpawn = waveTotal;
             }
             nextMinionAt = waveStartAt;
-            Emit("wavestart", player.Feet, Color.white, IsBossWave ? $"第 {wave} 波：Boss 來了！" : $"第 {wave} 波：{waveTotal} 隻小怪");
+            Emit("wavestart", player.Feet, Color.white, IsBossWave ? $"{WaveLabel}：Boss 來了！" : $"{WaveLabel}：{waveTotal} 隻小怪");
         }
 
         // 經驗值：小怪依種類與波次、Boss 依第幾隻；合作時兩人共用同一份經驗（各自選升級）
@@ -275,6 +294,7 @@ namespace SpellDuel
         {
             if (endless && player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + EndlessRegen * Time_dt);
             if (!endless || remoteEnemy || edgePoint == null) return;
+            if (stageCleared) return;   // 故事關卡已經通關
             if (!player.Alive && (ally == null || !ally.Alive)) return;
             if (now < waveStartAt) return;
             if (IsBossWave)
@@ -297,8 +317,8 @@ namespace SpellDuel
             if (waveToSpawn == 0 && minions.Count == 0)
             {
                 if (player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + player.maxHp * 0.1f);
-                Emit("wavecleared", player.Feet, Color.white, $"第 {wave} 波清空！");
-                NextWave(4f);
+                Emit("wavecleared", player.Feet, Color.white, $"{WaveLabel}清空！");
+                if (!StageDone()) NextWave(4f);
             }
         }
         bool bossSpawnedThisWave;
@@ -365,7 +385,7 @@ namespace SpellDuel
             // 獎勵：打倒 Boss 回復 30% 血量（隊友端看到 Boss 數增加時自己回）
             if (player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + player.maxHp * 0.3f);
             Emit("bossdown", enemy.Feet, enemy.cls.color, $"打倒第 {bossKills} 隻 Boss！之後的敵人更強、種類更多");
-            NextWave(5f);
+            if (!StageDone()) NextWave(5f);
         }
         public Fighter MinionById(int id) => minions.Find(m => m.minionId == id);
         /// <summary>主機：隊友打到小怪</summary>
@@ -800,7 +820,7 @@ namespace SpellDuel
         public Fighter Opponent(Fighter f) => f == enemy || f.isMinion ? (f.target != null && f.target.Alive ? f.target : player) : enemy;
         public static float FlatDistance(Vector3 a, Vector3 b) { a.y = 0; b.y = 0; return Vector3.Distance(a, b); }
         public float Distance => FlatDistance(player.head, enemy.head);
-        public bool Over => (!endless && !enemy.Alive) || (!player.Alive && (ally == null || !ally.Alive));
+        public bool Over => (!endless && !enemy.Alive) || stageCleared || (!player.Alive && (ally == null || !ally.Alive));
 
         // ------------------------------------------------------------ 詠唱
         public bool TryChant(Fighter f, SkillDef s, out string why)
