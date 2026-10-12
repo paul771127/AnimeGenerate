@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #define SD_COUNT 7
 #define SD_HAND 21
@@ -33,7 +34,7 @@ static void sd_detect(unsigned char* rgba, int w, int h, int flags, float* r)
         VNImageRequestHandler* handler = [[VNImageRequestHandler alloc] initWithCGImage:img options:@{}];
         VNDetectHumanBodyPoseRequest* req = [[VNDetectHumanBodyPoseRequest alloc] init];
         VNDetectHumanHandPoseRequest* handReq = [[VNDetectHumanHandPoseRequest alloc] init];
-        handReq.maximumHandCount = 1;
+        handReq.maximumHandCount = 3;   // 畫面裡可能有別人的手：最多找 3 隻，取最大的（自己伸在鏡頭前的手）
         NSMutableArray* reqs = [NSMutableArray array];
         if (flags & 1) [reqs addObject:req];
         if (flags & 2) [reqs addObject:handReq];
@@ -64,7 +65,17 @@ static void sd_detect(unsigned char* rgba, int w, int h, int flags, float* r)
         }
         if (ok && (flags & 2) && handReq.results.count > 0)
         {
-            VNHumanHandPoseObservation* hand = handReq.results.firstObject;
+            // 取畫面上最大的手（手腕→中指根部最長）：自己伸到鏡頭前的手，不是遠處對手的手
+            VNHumanHandPoseObservation* hand = nil; float bestLen = -1.f;
+            for (VNHumanHandPoseObservation* o in handReq.results)
+            {
+                NSError* ea = nil; NSError* eb = nil;
+                VNRecognizedPoint* pw = [o recognizedPointForJointName:VNHumanHandPoseObservationJointNameWrist error:&ea];
+                VNRecognizedPoint* pm = [o recognizedPointForJointName:VNHumanHandPoseObservationJointNameMiddleMCP error:&eb];
+                float len = 0.f;
+                if (pw != nil && pm != nil) { float dx = (float)(pw.location.x - pm.location.x) * w, dy = (float)(pw.location.y - pm.location.y) * h; len = sqrtf(dx * dx + dy * dy); }
+                if (len > bestLen) { bestLen = len; hand = o; }
+            }
             // 與 MediaPipe 相同的 21 點順序：手腕、拇指 4 點、食指 4 點、中指、無名指、小指（由根部到指尖）
             NSArray<VNHumanHandPoseObservationJointName>* hn = @[
                 VNHumanHandPoseObservationJointNameWrist,

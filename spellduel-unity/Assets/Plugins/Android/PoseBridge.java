@@ -81,7 +81,7 @@ public class PoseBridge {
             HandLandmarker.HandLandmarkerOptions opts = HandLandmarker.HandLandmarkerOptions.builder()
                     .setBaseOptions(BaseOptions.builder().setModelAssetBuffer(buf).build())
                     .setRunningMode(RunningMode.IMAGE)
-                    .setNumHands(1)
+                    .setNumHands(3)   // 畫面裡可能有別人的手：最多找 3 隻，取最大的
                     .setMinHandDetectionConfidence(0.5f)
                     .build();
             hands = HandLandmarker.createFromOptions(ctx, opts);
@@ -111,7 +111,7 @@ public class PoseBridge {
                             if (hands != null) {
                                 try {
                                     MPImage img = new BitmapImageBuilder(bmp).build();
-                                    fillHand(r, hands.detect(img));
+                                    fillHand(r, hands.detect(img), w, h);
                                 } catch (Throwable ignored) { }
                             }
                         }
@@ -141,11 +141,19 @@ public class PoseBridge {
         }
     }
 
-    private static void fillHand(float[] r, HandLandmarkerResult res) {
+    private static void fillHand(float[] r, HandLandmarkerResult res, int w, int h) {
         if (res == null) return;
         List<List<NormalizedLandmark>> all = res.landmarks();
         if (all == null || all.isEmpty()) return;
-        List<NormalizedLandmark> lm = all.get(0);
+        // 取畫面上最大的手（手腕→中指根部最長）：自己伸到鏡頭前的手，不是遠處對手的手
+        List<NormalizedLandmark> lm = null; float bestLen = -1f;
+        for (List<NormalizedLandmark> c : all) {
+            if (c == null || c.size() < 10) continue;
+            float dx = (c.get(0).x() - c.get(9).x()) * w, dy = (c.get(0).y() - c.get(9).y()) * h;
+            float len = (float) Math.sqrt(dx * dx + dy * dy);
+            if (len > bestLen) { bestLen = len; lm = c; }
+        }
+        if (lm == null) return;
         int o = 2 + BODY * 3;
         r[o] = 1f;
         for (int i = 0; i < HAND && i < lm.size(); i++) {

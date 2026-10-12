@@ -198,13 +198,26 @@ namespace SpellDuel
             if (r != null && r.time != lastResultTime)
             {
                 lastResultTime = r.time;
-                if (r.handFound) Consume(r, screenW, screenH);
+                if (r.handFound && IsOwnHand(r, screenW, screenH)) Consume(r, screenW, screenH);
                 else if (now - lastHandTime > 0.4f) { HandVisible = false; Current = Shape.None; pendingCount = 0; }
             }
             if (now - lastHandTime > 0.6f) { HandVisible = false; Current = Shape.None; }
             // 獵人：握拳的手離開畫面（一段時間沒偵測到手）＝拉滿弓
             if (ReleaseStyle != Style.Bow) BowStage = 0;
             else if (BowStage == 1 && now - lastHandTime >= BowOutTime) BowStage = 2;
+        }
+
+        /// <summary>
+        /// 自己的手伸在鏡頭前，在畫面上很大；遠處別人的手（雙人對戰的對手、旁邊的人）很小。
+        /// 手掌長（手腕→中指根部）小於畫面短邊的這個比例就當成別人的手，不拿來判斷手勢。
+        /// </summary>
+        public static float MinOwnPalm = 0.07f;
+
+        static bool IsOwnHand(PoseDetector.Result r, float W, float H)
+        {
+            var w = new Vector2(r.hand[0].x * W, r.hand[0].y * H);
+            var m = new Vector2(r.hand[9].x * W, r.hand[9].y * H);
+            return Vector2.Distance(w, m) >= Mathf.Min(W, H) * MinOwnPalm;
         }
 
         void Consume(PoseDetector.Result r, float W, float H)
