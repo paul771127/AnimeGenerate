@@ -1217,6 +1217,8 @@ namespace SpellDuel
             if (wantSpeech && !speech.Running) { speech.Candidates = myLoadout; speech.Start(); }
             else if (!wantSpeech && speech != null && speech.Running) speech.Stop();
             speech?.Tick();
+            HandGesture.MageChant = UseSpeech;   // 法師：有語音辨識就唸咒語放招，沒有就比數字
+            UpdateChant();
 
             // 錄樣本中、或（不支援內建辨識時）戰鬥中語音開啟且咒語都錄好了，才開麥克風做錄音比對
             bool want = recordingSkill != null || (!UseSpeech && voiceOn && phase == Phase.Fighting && VoiceReady);
@@ -1229,8 +1231,36 @@ namespace SpellDuel
             mic.Tick();
         }
 
+        // 法師唸咒語：唸完咒語但還沒蓄滿 → 蓄滿時自動發射
+        SkillDef chantPending;
+
+        void UpdateChant()
+        {
+            if (chantPending == null) return;
+            if (phase != Phase.Fighting || battle == null || Me == null || Me.charging == null || Me.charging.id != chantPending.id) { chantPending = null; return; }
+            if (frozen || battle.ChargeProgress(Me) < 1f) return;
+            chantPending = null;
+            ReleaseAt(ScreenCenter, false);
+        }
+
+        void OnChant(string skillId)
+        {
+            if (phase != Phase.Fighting || battle == null || !Skills.All.TryGetValue(skillId, out var skill)) return;
+            heard = $"🎤 {skill.chant}"; heardUntil = Time.time + 1.5f;
+            if (Me.charging == null || Me.charging.id != skillId)
+            {
+                Say(Me.charging == null ? $"🎤 先唸技能名稱「{skill.name}」，再唸咒語" : $"現在詠唱的是「{Me.charging.name}」，咒語是「{Me.charging.chant}」", 1.5f);
+                return;
+            }
+            if (frozen) { Say("AR 追蹤中斷，暫時不能施法", 1.5f); return; }
+            Haptics.Play(Haptics.Kind.Light);
+            if (battle.ChargeProgress(Me) >= 1f) { chantPending = null; ReleaseAt(ScreenCenter, false); if (Me.charging == null) Say($"✨ {skill.chant}！", 0.8f); }
+            else { chantPending = Me.charging; Say($"✨ {skill.chant}！蓄滿就發射", 1.2f); }
+        }
+
         void OnSpeechSkill(string id)
         {
+            if (id.StartsWith(SpeechInput.ChantPrefix)) { OnChant(id.Substring(SpeechInput.ChantPrefix.Length)); return; }
             if (phase != Phase.Fighting || battle == null || frozen || !Skills.All.TryGetValue(id, out var skill)) return;
             heard = $"🎤 {skill.name}"; heardUntil = Time.time + 1.5f;
             if (Me.charging == skill) return;
@@ -2158,6 +2188,8 @@ namespace SpellDuel
                 bool bow = HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Bow && Hand != null;   // 獵人：拉滿弓就是蓄力完成
                 string st = bow ? (Hand.BowDrawn ? "🏹 拉滿！手回畫面張開放箭" : Hand.BowStage == 1 ? "✊ 握著拳拉出畫面外（拉弓）" : "畫面中握拳（捏弦）") :
                     prog < 1f && me.charging.stillRadius > 0f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　站著別動！（離原地 {Battle.FlatDistance(me.Feet, me.chargeFrom):0.0}／{me.charging.stillRadius:0.0}m）" :
+                    prog < 1f && chantPending != null && chantPending.id == me.charging.id ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　✨ 咒語完成，蓄滿自動發射" :
+                    prog < 1f && HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Chant ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　接著{HandGesture.ReleaseLabel(me.charging)}" :
                     prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%（蓄滿後{HandGesture.ReleaseLabel(me.charging)}）" :
                     me.charging.releaseNear ? "手刀往前刺 → 5 秒內靠近敵人自動出手" :
                     HandGesture.ReleaseHint(me.charging) + (HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Number && Hand != null && Hand.HandVisible ? $"（目前：{(Hand.CurrentNumber > 0 ? Hand.CurrentNumber.ToString() : "—")}）" : "");

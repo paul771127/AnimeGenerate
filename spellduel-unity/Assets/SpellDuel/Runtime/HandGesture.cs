@@ -7,7 +7,7 @@ namespace SpellDuel
     /// 手勢（從網頁版移植）：鏡頭只拍得到自己伸到鏡頭前的手腕與手指。
     ///   每個技能有自己的手勢（食指、剪刀、三指、搖滾、六、讚）：比出來停 0.35 秒＝開始詠唱該技能。
     ///   放招動作依職業不同（Style）：
-    ///     法師 Burst：✊ 握拳聚氣 → 1.5 秒內 🖐️ 張開。
+    ///     法師：唸完技能名稱再唸咒語（例如「奔騰吧火焰」）放招；沒有語音辨識時改比數字。牧師：比數字（2～5）放招。
     ///     獵人 Bow：畫面中握拳（捏弦）→ 握著拳把手拉出畫面外（拉滿＝蓄力完成）→ 手回到畫面中張開（放箭）；箭往準星射。
     ///     劍士 Chop：手掌伸直（手刀）快速橫向／斜向劈過畫面；往劈過的中點斬。
     ///     刺客 Thrust：手刀快速往前刺（手遠離手機 → 畫面上變小）；往刺出的位置。
@@ -17,7 +17,7 @@ namespace SpellDuel
     public class HandGesture
     {
         public enum Shape { None, Fist, Open, One, Two, Three, Rock, Call, Thumb, Other }
-        public enum Style { None, Burst, Bow, Chop, Thrust, Press, Pull, Hold, Rune, Raise, Number }
+        public enum Style { None, Burst, Bow, Chop, Thrust, Press, Pull, Hold, Rune, Raise, Number, Chant }
 
         // 法師畫符文：食指尖的軌跡（螢幕像素）
         public string RuneName;                                    // 要畫的符文（RuneRecognizer）
@@ -45,13 +45,20 @@ namespace SpellDuel
         /// <summary>法師：每招固定一個數字（比出這個數字的手指就放招）；不是法師的招式回傳 0</summary>
         public static int NumberOf(string skillId) => skillId switch
         {
-            "fire" => 2, "wind" => 2, "ice" => 3, "dispel" => 4, "meteor" => 5, "meditate" => 3, _ => 0,
+            "fire" => 2, "wind" => 2, "ice" => 3, "dispel" => 4, "meteor" => 5, "meditate" => 3, "thunder" => 4, "heal" => 3,
+            // 牧師
+            "holy" => 2, "prayheal" => 3, "cleanse" => 3, "guard" => 4, "prayer" => 4, "judgement" => 5,
+            _ => 0,
         };
+
+        /// <summary>法師用唸咒語放招（有手機語音辨識時；不支援時退回比數字）。SoloBattle 每幀設定</summary>
+        public static bool MageChant = true;
 
         /// <summary>放招動作的短名稱（選技能畫面、技能格用）：法師顯示要比的數字</summary>
         public static string ReleaseLabel(SkillDef s)
         {
             var st = ReleaseOf(s);
+            if (st == Style.Chant) return $"唸「{s.chant}」";
             return st == Style.Number ? $"比 {NumberOf(s.id)}" : s.cls == "archer" ? "握拳→比五" : StyleName(st);
         }
 
@@ -59,6 +66,7 @@ namespace SpellDuel
         public static string ReleaseHint(SkillDef s)
         {
             var st = ReleaseOf(s);
+            if (st == Style.Chant) return $"唸出咒語「{s.chant}」放招（可以先唸，蓄滿自動發射）";
             if (st == Style.Number) return $"比出數字 {NumberOf(s.id)}（{NumberFingers(NumberOf(s.id))}）放招";
             if (s.cls == "archer") return $"先握拳 → 再比五（五指張開）{(s.type == SkillType.Projectile ? "放箭" : s.type == SkillType.Trap ? "設置陷阱" : "發動")}";
             return StyleHint(st);
@@ -80,7 +88,8 @@ namespace SpellDuel
         public static Style ReleaseOf(SkillDef s)
         {
             if (s == null) return Style.None;
-            if (s.cls == "mage") return Style.Number;                     // 法師：唸完名稱比固定數字就放招
+            if (s.cls == "mage") return MageChant && !string.IsNullOrEmpty(s.chant) ? Style.Chant : Style.Number;   // 法師：唸完名稱再唸咒語就放招
+            if (s.cls == "priest") return Style.Number;                   // 牧師：唸完名稱比固定數字就放招
             if (s.cls == "archer") return Style.Burst;                    // 獵人：握拳→比五（張開）就放招
             switch (s.id)
             {
@@ -91,10 +100,6 @@ namespace SpellDuel
                 case "knife": return Style.Chop;
                 case "prep": return Style.Burst;                                                     // 刺殺準備：握拳→張開                                                      // 甩出飛刀
                 case "thrust": return Style.Thrust;                                                   // 劍士突刺
-                case "judgement": return Style.Press;                                                 // 牧師：往下壓降下審判
-                case "prayheal": return Style.Pull;                                                   // 牧師：治療收回自己
-                case "guard": return Style.Hold;                                                      // 牧師：守護舉掌
-                case "cleanse": case "prayer": return Style.Raise;                                    // 牧師：手往上舉（淨化、祈禱）
             }
             if (s.type == SkillType.Trap) return Style.Press;
             return StyleOf(s.cls);
@@ -103,7 +108,7 @@ namespace SpellDuel
         public static string StyleName(Style st) => st switch
         {
             Style.Bow => "拉弓", Style.Chop => "手刀揮砍", Style.Thrust => "突刺", Style.Press => "往下壓",
-            Style.Pull => "收回自己", Style.Hold => "舉掌停住", Style.Burst => "握拳→張開", Style.Rune => "畫符文", Style.Raise => "往上舉", Style.Number => "比數字", _ => "",
+            Style.Pull => "收回自己", Style.Hold => "舉掌停住", Style.Burst => "握拳→張開", Style.Rune => "畫符文", Style.Raise => "往上舉", Style.Number => "比數字", Style.Chant => "唸咒語", _ => "",
         };
 
         public static string StyleHint(Style st) => st switch
@@ -118,6 +123,7 @@ namespace SpellDuel
             Style.Rune => "畫符文：伸出食指照著軌跡畫 → 食指往前指發射",
             Style.Raise => "往上舉：張開的手掌快速往上抬",
             Style.Number => "比出指定的數字",
+            Style.Chant => "唸出咒語",
             _ => "",
         };
 

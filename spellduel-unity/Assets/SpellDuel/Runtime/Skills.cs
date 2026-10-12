@@ -39,6 +39,7 @@ namespace SpellDuel
         public SelfKind self; public int heal; public float buffDur, buffReduce; public int buffAmount;
         public float trapLife = 30f, trapArm = 1.2f, trapRange = 3f; public int trapMax = 2;
         public string desc;
+        public string chant;            // 法師：唸完技能名稱後接著唸的咒語（唸完＝放招）
 
         public float MaxTravel => rangeMax + 1f;
         public string RangeText => type == SkillType.Projectile ? $"≤{rangeMax:0.#}m" : type == SkillType.Trap ? $"設置≤{trapRange:0.#}m" : "自身";
@@ -96,6 +97,10 @@ namespace SpellDuel
             P(new SkillDef { id = "dispel", cls = "mage", name = "抗拒法環", type = SkillType.Self, self = SelfKind.Dispel, color = C("#f0abfc"), cost = 50, charge = 0.8f, cooldown = 12f, areaRadius = 1.5f, desc = "以自己為中心直徑 3m：打斷範圍內所有敵人的蓄力，被打斷的技能重新冷卻" });
             P(new SkillDef { id = "meditate", cls = "mage", name = "冥想", type = SkillType.Self, self = SelfKind.Mana, color = C("#93c5fd"), cost = 1, buffAmount = 30, charge = 2.0f, cooldown = 10f, desc = "回復 30 MP（只消耗 1 MP）" });
             P(new SkillDef { id = "heal", cls = "mage", name = "治癒", type = SkillType.Self, self = SelfKind.Heal, color = C("#3dff7a"), cost = 60, heal = 25, charge = 1.5f, cooldown = 5f, desc = "回復 25 HP" });
+            // 法師的咒語：唸技能名稱開始詠唱 → 唸咒語放招
+            All["fire"].chant = "奔騰吧火焰"; All["ice"].chant = "凍結吧寒冰"; All["wind"].chant = "撕裂吧狂風";
+            All["meteor"].chant = "墜落吧星辰"; All["dispel"].chant = "退散吧邪惡"; All["meditate"].chant = "沉靜吧心靈";
+            All["thunder"].chant = "劈落吧雷霆"; All["heal"].chant = "治癒吧生命";
 
             // ---------------------------------------------------------- 刺客：遠處蓄力、靠近才能出手、判定小
             P(new SkillDef { id = "backstab", cls = "assassin", name = "刺殺", type = SkillType.Projectile, color = C("#e879f9"), cost = 25, damage = 45, charge = 2.0f, cooldown = 5f, speed = 10f, radius = 0.08f, rangeMax = 1.5f, releaseNear = true, desc = "1.5m 內才能出手" });

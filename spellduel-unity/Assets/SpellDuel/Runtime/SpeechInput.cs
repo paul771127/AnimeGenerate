@@ -167,7 +167,7 @@ namespace SpellDuel
                 {
                     FlushFinal(now);
                     alts.Add(l.Substring(2));
-                    Fire(tracker.Feed(false, alts, names, now));
+                    Fire(tracker.Feed(false, alts, names, now, chantFrom));
                     alts.Clear();
                 }
                 else if (l[0] == 'F') alts.Add(l.Substring(2));
@@ -178,15 +178,25 @@ namespace SpellDuel
         void FlushFinal(float now)
         {
             if (alts.Count == 0) return;
-            Fire(tracker.Feed(true, alts, names, now));
+            Fire(tracker.Feed(true, alts, names, now, chantFrom));
             alts.Clear();
         }
 
         void Fire(int index)
         {
+            FireOne(index);
+            FireOne(tracker.TakeQueued());
+        }
+
+        void FireOne(int index)
+        {
             if (index < 0 || index >= ids.Count) return;
             OnSkill?.Invoke(ids[index]);
         }
+
+        /// <summary>咒語在 OnSkill 回傳的 id 前綴（"chant:fire"）</summary>
+        public const string ChantPrefix = "chant:";
+        int chantFrom = int.MaxValue;   // names 中從這個索引開始是咒語
 
         void RefreshNames()
         {
@@ -195,6 +205,12 @@ namespace SpellDuel
                 foreach (var id in candidates)
                     if (id != null && !ids.Contains(id) && Skills.All.TryGetValue(id, out var s) && !string.IsNullOrEmpty(s.name))
                     { ids.Add(id); names.Add(s.name); }
+            // 法師的咒語：唸完技能名稱後（同一句話裡也可以）接著唸
+            chantFrom = names.Count;
+            if (candidates != null)
+                foreach (var id in candidates)
+                    if (id != null && Skills.All.TryGetValue(id, out var s) && !string.IsNullOrEmpty(s.chant) && !ids.Contains(ChantPrefix + id))
+                    { ids.Add(ChantPrefix + id); names.Add(s.chant); }
             if (Running) { try { PushHints(); } catch (Exception) { } }
         }
 
@@ -223,12 +239,17 @@ namespace SpellDuel
         public string LastHeard { get; private set; } = "";
 
         bool locked;
-        int consumed;            // 正規化後的文字中，前面這麼多字已經處理過
+        int consumed;
+        int chantPos;            // 咒語從這個位置之後找（技能名稱結尾）
+        int queued = -1;         // 同一段文字裡技能名稱後面就接著咒語：下一次取出
+
+        /// <summary>取出排隊中的觸發（同一段文字裡技能名稱＋咒語）</summary>
+        public int TakeQueued() { int q = queued; queued = -1; return q; }            // 正規化後的文字中，前面這麼多字已經處理過
         string last = "";        // 上一個（正規化後的）假設
         float lastChange;
         readonly List<string> regions = new List<string>();
 
-        public void Reset() { locked = false; consumed = 0; last = ""; LastHeard = ""; }
+        public void Reset() { locked = false; consumed = 0; chantPos = 0; queued = -1; last = ""; LastHeard = ""; }
 
         /// <summary>沒有新文字超過 QuietReset 秒：這句話結束</summary>
         public void Update(float now)
@@ -255,8 +276,28 @@ namespace SpellDuel
             return false;
         }
 
+        /// <summary>咒語（names[lockedFrom..]）只比對 chantPos 之後的文字</summary>
+        int MatchChant(IList<string> alts, IList<string> names, int lockedFrom, string t0)
+        {
+            if (lockedFrom >= names.Count || chantPos >= t0.Length) return -1;
+            regions.Clear();
+            foreach (var a in alts)
+            {
+                string n = SpeechMatcher.Normalize(a);
+                int skip = Math.Min(chantPos, SpeechMatcher.CommonPrefix(n, t0));
+                regions.Add(n.Substring(Math.Min(skip, n.Length)));
+            }
+            var sub = new List<string>();
+            for (int i = lockedFrom; i < names.Count; i++) sub.Add(names[i]);
+            int h = SpeechMatcher.Best(regions, sub, out _, out _, true);
+            if (h < 0) return -1;
+            chantPos = t0.Length;
+            return lockedFrom + h;
+        }
+
         /// <summary>送進一個假設（final＝最後結果，alts 為候選文字）；觸發時回傳 names 的索引，否則 -1</summary>
-        public int Feed(bool final, IList<string> alts, IList<string> names, float now)
+        /// <param name="lockedFrom">names 中從這個索引開始的名稱（咒語）在鎖住時仍可比對「新增加的部分」：唸完技能名稱馬上接咒語</param>
+        public int Feed(bool final, IList<string> alts, IList<string> names, float now, int lockedFrom = int.MaxValue)
         {
             if (alts == null || alts.Count == 0) return -1;
             bool afterQuiet = now - lastChange > QuietReset;   // 上一句話已經講完
@@ -285,12 +326,30 @@ namespace SpellDuel
                     int skip = Math.Min(consumed, SpeechMatcher.CommonPrefix(n, prev));
                     regions.Add(n.Substring(Math.Min(skip, n.Length)));
                 }
-                hit = SpeechMatcher.Best(regions, names, out _, out _, true);
+                if (lockedFrom >= names.Count) hit = SpeechMatcher.Best(regions, names, out _, out _, true);
+                else
+                {
+                    // 技能名稱和咒語分開比（同一段文字可能兩個都有，不算互相競爭）：先找技能名稱，沒有再找咒語
+                    var skillNames = new List<string>(); var chants = new List<string>();
+                    for (int i = 0; i < names.Count; i++) (i < lockedFrom ? skillNames : chants).Add(names[i]);
+                    hit = SpeechMatcher.Best(regions, skillNames, out _, out _, true);
+                    if (hit < 0) { hit = SpeechMatcher.Best(regions, chants, out _, out _, true); if (hit >= 0) hit += lockedFrom; }
+                }
                 // 名稱是另一個名稱的開頭（刺殺／刺殺準備）：話還沒講完、句尾可能正要接下去 → 先等
                 if (hit >= 0 && !final && MayContinue(t0, names, hit)) return -1;
-                if (hit >= 0) { locked = true; consumed = t0.Length; }
+                if (hit >= 0)
+                {
+                    locked = true;
+                    // 技能名稱在這段文字的哪裡結束：後面的字留給咒語
+                    int skip0 = Math.Min(consumed, SpeechMatcher.CommonPrefix(t0, prev));
+                    chantPos = skip0 + SpeechMatcher.MatchEnd(t0.Substring(Math.Min(skip0, t0.Length)), SpeechMatcher.Normalize(names[hit]));
+                    consumed = t0.Length;
+                    if (hit < lockedFrom) queued = MatchChant(alts, names, lockedFrom, t0);
+                }
             }
-            if (final) { locked = false; consumed = 0; last = ""; }
+            else if (locked && names != null && lockedFrom < names.Count)
+                hit = MatchChant(alts, names, lockedFrom, t0);   // 已經觸發過技能名稱：同一句話後面接的咒語
+            if (final) { locked = false; consumed = 0; chantPos = 0; last = ""; }
             return hit;
         }
     }
@@ -313,7 +372,7 @@ namespace SpellDuel
         // 簡體 → 繁體（技能名稱用到的字與常見異體字）
         const string SimpTrad =
             "击擊连連兽獸夹夾术術枪槍鎗槍风風陨隕愈癒瘉癒袭襲飞飛烟煙菸煙雾霧弹彈斩斬剑劍劒劍剣劍气氣挡擋铁鐵疗療猎獵" +
-            "圣聖审審护護祷禱净淨广廣杀殺";
+            "圣聖审審护護祷禱净淨广廣杀殺腾騰冻凍结結坠墜静靜灵靈恶惡";
 
         // 拼音（不含聲調）→ 字：技能名稱的每個字，加上辨識器可能輸出的同音字（繁簡都有）
         const string PinyinTable =
@@ -348,7 +407,12 @@ namespace SpellDuel
             "huan 換换環环歡欢緩缓還还幻患喚唤|" +
             // 牧師：聖光彈、審判、治療術、淨化、守護、祈禱
             "sheng 聖圣生聲声升勝胜省盛剩繩绳牲|guang 光廣广逛|shen 審审神身深伸申甚慎腎肾紳绅|pan 判盼盤盘攀潘叛畔|" +
-            "hua 化花話话畫画華华滑劃划|kang 抗康扛炕慷亢|fa 法發发罰罚乏伐閥阀筏髮|hu 護护戶户湖虎呼胡壺壶糊互狐乎|sha 殺杀沙紗纱砂傻鯊鲨煞啥|ming 冥明名命鳴鸣銘铭|zhong 中重種种眾众鐘钟終终忠腫肿|zhun 準准|yi 一1|er 二2|liu 六6|ba 八8|jiu 九9|ling 零0";
+            "hua 化花話话畫画華华滑劃划|kang 抗康扛炕慷亢|fa 法發发罰罚乏伐閥阀筏髮|hu 護护戶户湖虎呼胡壺壶糊互狐乎|sha 殺杀沙紗纱砂傻鯊鲨煞啥|ming 冥明名命鳴鸣銘铭|zhong 中重種种眾众鐘钟終终忠腫肿|zhun 準准|" +
+            // 法師咒語：奔騰吧火焰、凍結吧寒冰、撕裂吧狂風、墜落吧星辰、退散吧邪惡、沉靜吧心靈、劈落吧雷霆、治癒吧生命
+            "ben 奔本笨苯|teng 騰腾疼藤|ba 吧把爸巴拔霸罷罢八8|dong 凍冻動动東东懂洞冬|jie 結结節节解接街姐界借介屆届潔洁|han 寒漢汉喊含韓韩旱汗|" +
+            "kuang 狂況况礦矿框筐曠旷|zhui 墜坠追綴缀|luo 落羅罗洛絡络駱骆螺|xing 星行形型醒性興兴姓幸刑|chen 辰沉陳陈晨塵尘臣稱称趁|" +
+            "tui 退推腿頹颓|xie 邪些寫写謝谢鞋協协斜血|e 惡恶餓饿額额鵝鹅|xin 心新信辛欣鋅锌|ling 靈灵領领零令鈴铃齡龄0|pi 劈皮批披匹疲脾|ting 霆聽听停庭挺廷亭|" +
+            "si 撕|ming 命|sheng 生|yi 一1|er 二2|liu 六6|jiu 九9";
 
         static readonly Dictionary<char, char> toTrad = new Dictionary<char, char>();
         static readonly Dictionary<char, List<string>> pinyin = new Dictionary<char, List<string>>();
@@ -467,6 +531,28 @@ namespace SpellDuel
             float best = float.MaxValue;
             for (int j = 0; j <= n; j++) best = Math.Min(best, prev[j]);
             return Math.Max(0f, 1f - best / m);
+        }
+
+        /// <summary>名稱在文字中最像的位置的結尾（字數）；找不到回傳 0</summary>
+        public static int MatchEnd(string text, string name)
+        {
+            int m = name.Length, n = text.Length;
+            if (m == 0 || n == 0) return 0;
+            var prev = new float[n + 1];
+            var cur = new float[n + 1];
+            for (int i = 1; i <= m; i++)
+            {
+                cur[0] = i * DelCost;
+                for (int j = 1; j <= n; j++)
+                {
+                    float sub = prev[j - 1] + (1f - CharSim(name[i - 1], text[j - 1]));
+                    cur[j] = Math.Min(sub, Math.Min(prev[j] + DelCost, cur[j - 1] + InsCost));
+                }
+                var tmp = prev; prev = cur; cur = tmp;
+            }
+            int bj = 0; float best = float.MaxValue;
+            for (int j = 0; j <= n; j++) if (prev[j] < best) { best = prev[j]; bj = j; }
+            return bj;
         }
 
         public static float Threshold(string normalizedName) => normalizedName.Length <= 2 ? MinScoreShort : MinScore;
