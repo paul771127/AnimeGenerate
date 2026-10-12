@@ -110,10 +110,13 @@ namespace SpellDuel
         int NetModeCode => coop ? (netEndless ? 2 : 1) : 0;
         BossRig bossRig; BossAI bossAi; GameObject slamGo;
         VolcanoScene volcano;   // 無盡模式第 1～10 波的熔岩火山場景
+        ForestScene forest;     // 第 11～20 波的森林場景
         readonly Dictionary<Fighter, MinionRig> minionGo = new Dictionary<Fighter, MinionRig>();
         readonly Dictionary<Fighter, float> minionLastHp = new Dictionary<Fighter, float>();
         readonly HashSet<Fighter> minionWinding = new HashSet<Fighter>();
-        readonly Dictionary<Fighter, GameObject> aimLines = new Dictionary<Fighter, GameObject>();   // 狙擊手瞄準時的紅線
+        readonly Dictionary<Fighter, GameObject> aimLines = new Dictionary<Fighter, GameObject>();   // （已不用：狙擊手改成射出後才畫紅線）
+        readonly Dictionary<Projectile, GameObject> projLine = new Dictionary<Projectile, GameObject>();   // 敵人已放出的攻擊：飛行路線紅線
+        readonly Dictionary<Battle.Lane, GameObject> laneGo = new Dictionary<Battle.Lane, GameObject>();   // 藤蔓／衝刺路線
         string bossWindup, bossChargingId; float nextBossState, lastBossHp;
         public const int BossHpSolo = 200;   // 合作時再乘上人數倍率（每多一人 +30%）
         Fighter Ally => battle?.ally;
@@ -309,7 +312,11 @@ namespace SpellDuel
                 battle.OnDispel += (c, r) => NetSend?.Invoke(new Msg { t = "dispel", p = c, rad = r });
                 battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = id, ok = theirs });
                 battle.OnMinionHit += (id, dmg, sk) => NetSend?.Invoke(new Msg { t = "mhit", id = id, dmg = dmg, k = sk.id, e = battle.LastProcs });
+                // 主機：藤蔓／衝刺路線送給隊友顯示（傷害由主機判定）
+                battle.OnLane += ln => { if (!ln.remote && NetIsHost) NetSend?.Invoke(new Msg { t = "lane", k = ln.kind, pts = new[] { ln.a, ln.b }, rad = ln.grow, s = ln.until - battle.now }); };
             }
+            battle.OnLane += ShowLane;
+            battle.OnPool += pl => PlantFx.PoisonPool(WorldFrame.FromWorld(pl.pos), pl.radius, Mathf.Max(0.1f, pl.until - battle.now));
             // Boss 出生點：場地內、離玩家們夠遠的地方（隊友端先放在遠處，等主機的位置）
             boss.head = host ? BossSpawnPoint(me, battle.ally) : new Vector3(0f, BossRig.Height, 0f);
             boss.head.y = BossRig.Height;
@@ -415,7 +422,7 @@ namespace SpellDuel
         {
             if (bossRig) bossRig.SetEnraged(true);
             Sfx.Play("roar"); Haptics.Play(Haptics.Kind.Heavy); Kick(18f, 0f);
-            Say("🔥 熔岩巨像狂暴了！出招變快！", 3f);
+            Say($"🔥 {En.name}狂暴了！出招變快！", 3f);
         }
 
         /// <summary>主機：每 0.1 秒送 Boss 的位置、血量、蓄力、狂暴、目標給隊友</summary>
@@ -425,7 +432,7 @@ namespace SpellDuel
             nextBossState = Time.time + 0.1f;
             var b = battle.enemy;
             int e = (bossAi != null && bossAi.Enraged ? 1 : 0) | (b.target == battle.ally ? 2 : 0);
-            NetSend?.Invoke(new Msg { t = "boss", p = b.head, d = b.forward, hp = Mathf.CeilToInt(b.hp), dmg = b.maxHp, k = b.charging != null ? b.charging.id : "", s = battle.ChargeProgress(b), e = e, pts = b.charging != null && b.charging.id == "b_leap" ? new[] { b.aimPoint } : null,
+            NetSend?.Invoke(new Msg { t = "boss", p = b.head, d = b.forward, hp = Mathf.CeilToInt(b.hp), dmg = b.maxHp, k = b.charging != null ? b.charging.id : "", s = battle.ChargeProgress(b), e = e, pts = b.charging != null && (b.charging.id == "b_leap" || b.charging.atTarget) ? new[] { b.aimPoint } : null,
                 ks = endless ? new[] { battle.wave.ToString(), battle.WaveRemaining.ToString(), battle.kills.ToString(), battle.bossKills.ToString(), battle.xp.ToString(), battle.waveTotal.ToString() } : null });
             // 小怪：位置與「編號,血量,最大血量,預備中」
             var ms = battle.minions;
@@ -440,6 +447,10 @@ namespace SpellDuel
             var ally = Ally;
             switch (m.t)
             {
+                case "lane":
+                    // 主機的藤蔓／衝刺路線（只顯示）
+                    if (!NetIsHost && m.pts != null && m.pts.Length >= 2) battle.AddRemoteLane(m.k, m.pts[0], m.pts[1], m.rad, m.s);
+                    break;
                 case "tbuff":
                     // 隊友（牧師）的治療／淨化／守護／祈禱也作用在我身上
                     if (Skills.All.TryGetValue(m.k, out var tb))
@@ -523,6 +534,12 @@ namespace SpellDuel
                             int.TryParse(m.ks[2], out battle.kills);
                             if (m.ks.Length >= 5) int.TryParse(m.ks[4], out battle.xp);   // 隊友共用經驗值
                         }
+                        if (battle.endless)
+                        {
+                            // 隊友端：依波次主題換 Boss 名稱（熔岩巨像／腐化樹王）
+                            var bcls = Skills.Classes[battle.Theme == 1 ? "boss_forest" : "boss"];
+                            if (b.cls != bcls) { b.cls = bcls; b.name = bcls.name; }
+                        }
                         if (!string.IsNullOrEmpty(m.k) && Skills.All.TryGetValue(m.k, out var bs))
                         {
                             if (b.charging != bs) b.charging = bs;
@@ -575,17 +592,36 @@ namespace SpellDuel
         }
         bool bossEnragedShown;
 
+        /// <summary>藤蔓：長出藤蔓模型；衝刺路線：地上一條紅線（衝刺開始才畫，畫到衝刺結束）</summary>
+        void ShowLane(Battle.Lane ln)
+        {
+            float life = Mathf.Max(0.1f, ln.until - battle.now);
+            if (ln.kind == "vine")
+            {
+                PlantFx.Vine(WorldFrame.FromWorld(ln.a), WorldFrame.FromWorld(ln.b), ln.grow, life);
+                Sfx.Play("trap", 0.6f, 0.7f);
+                return;
+            }
+            var go = Prim(PrimitiveType.Cube, new Color(1f, 0.15f, 0.15f, 0.45f), true);
+            var a = ln.a; a.y = 0.02f; var b = ln.b; b.y = 0.02f; var d = b - a; float len = Mathf.Max(0.1f, d.magnitude);
+            go.transform.position = WorldFrame.FromWorld((a + b) / 2f);
+            go.transform.rotation = WorldFrame.RotFromWorld(Quaternion.LookRotation(d / len, Vector3.up));
+            go.transform.localScale = new Vector3(Mathf.Max(0.3f, ln.width * 2f), 0.004f, len);
+            laneGo[ln] = go;
+            if (Battle.FlatDistance(ln.a, Me.Feet) < 7f) Sfx.Play("warn", 0.5f, 0.9f);
+        }
+
         /// <summary>場景：無盡模式第 1～10 波是熔岩火山（地板＋遠方背景＋火星）</summary>
         void UpdateScene()
         {
-            bool want = endless && battle.wave >= 1 && battle.wave <= 10;
-            if (want && volcano == null)
-            {
-                var poly = area.Polygon;
-                float fy = poly.Count > 0 ? poly[0].y : area.FloorY;
-                volcano = VolcanoScene.Create(poly, fy);
-            }
-            if (volcano) volcano.SetVisible(want);
+            // 主題：第 1～10 波熔岩火山、11～20 波森林，之後輪流
+            int theme = endless && battle.wave >= 1 ? Battle.ThemeOf(battle.wave) : -1;
+            var poly = area.Polygon;
+            float fy = poly.Count > 0 ? poly[0].y : area.FloorY;
+            if (theme == 0 && volcano == null) volcano = VolcanoScene.Create(poly, fy);
+            if (theme == 1 && forest == null) forest = ForestScene.Create(poly, fy);
+            if (volcano) volcano.SetVisible(theme == 0);
+            if (forest) forest.SetVisible(theme == 1);
         }
 
         /// <summary>小怪的外觀：新的就生出來、跟著位置走、預備動作／出手／被打／倒下</summary>
@@ -616,22 +652,6 @@ namespace SpellDuel
                 else if (!winding && minionWinding.Contains(m)) { minionWinding.Remove(m); rig.Attack(); }
                 if (minionLastHp.TryGetValue(m, out var lh) && m.hp < lh - 0.01f) rig.PlayHit();
                 minionLastHp[m] = m.hp;
-                // 熔岩狙擊手瞄準中：從牠到目標的紅色瞄準線（越接近開火越亮）
-                bool aiming = m.minionKind == 5 && winding && m.Alive;
-                aimLines.TryGetValue(m, out var line);
-                if (aiming)
-                {
-                    var tgt = m.target ?? Me;
-                    if (!line) { line = Prim(PrimitiveType.Cube, new Color(1f, 0.2f, 0.6f, 0.5f), true); aimLines[m] = line; }
-                    var a = m.head; var b = tgt.Chest; var dv = b - a; float len = Mathf.Max(0.1f, dv.magnitude);
-                    line.SetActive(true);
-                    line.transform.position = WorldFrame.FromWorld((a + b) / 2f);
-                    line.transform.rotation = WorldFrame.RotFromWorld(Quaternion.LookRotation(dv / len, Vector3.up));
-                    line.transform.localScale = new Vector3(0.025f, 0.025f, len);
-                    float k = 0.5f + 0.5f * Mathf.Sin(Time.time * 18f);
-                    line.GetComponent<Renderer>().material.color = new Color(1f, 0.15f, 0.55f, 0.35f + 0.4f * k);
-                }
-                else if (line) line.SetActive(false);
             }
             foreach (var kv in new List<KeyValuePair<Fighter, MinionRig>>(minionGo))
                 if (!live.Contains(kv.Key))
@@ -645,7 +665,8 @@ namespace SpellDuel
         /// <summary>地裂重擊的特效：地面衝擊波、爆炸聲、離得近就震動</summary>
         void BossSlamFx(Vector3 feetW)
         {
-            BossRig.SlamShockwave(WorldFrame.FromWorld(feetW), Skills.All["b_slam"].areaRadius, new Color(1f, 0.35f, 0.1f));
+            bool forestBoss = battle.Theme == 1;
+            BossRig.SlamShockwave(WorldFrame.FromWorld(feetW), Skills.All[forestBoss ? "p_stomp" : "b_slam"].areaRadius, forestBoss ? new Color(0.45f, 0.75f, 0.2f) : new Color(1f, 0.35f, 0.1f));
             float d = Battle.FlatDistance(feetW, Me.Feet);
             if (d < 6f) { Haptics.Play(Haptics.Kind.Heavy); Kick(Mathf.Lerp(24f, 8f, d / 6f), 0f); }
         }
@@ -826,6 +847,11 @@ namespace SpellDuel
             if (warnLine) Destroy(warnLine);
             if (slamGo) Destroy(slamGo);
             if (volcano) Destroy(volcano.gameObject);
+            if (forest) Destroy(forest.gameObject);
+            foreach (var go in projLine.Values) if (go) Destroy(go);
+            projLine.Clear();
+            foreach (var go in laneGo.Values) if (go) Destroy(go);
+            laneGo.Clear();
             if (bossRig) Destroy(bossRig.gameObject);
             foreach (var mr in minionGo.Values) if (mr) Destroy(mr.gameObject);
             minionGo.Clear(); minionLastHp.Clear(); minionWinding.Clear();
@@ -1206,12 +1232,32 @@ namespace SpellDuel
                 case "slam":
                     BossSlamFx(at);
                     break;
+                case "roots":
+                {
+                    // 腐化樹王：樹根從地底爆出
+                    BossRig.RootEruption(WorldFrame.FromWorld(at), Skills.All["p_roots"].areaRadius);
+                    float dd = Battle.FlatDistance(at, Me.Feet);
+                    Sfx.Play("boom", Mathf.Clamp01(1f - dd / 12f), 0.8f);
+                    if (dd < 4f) { Haptics.Play(Haptics.Kind.Heavy); Kick(10f, 0f); }
+                    break;
+                }
+                case "poisonsplash":
+                    PlantFx.PoisonSplash(WorldFrame.FromWorld(at), Battle.PoolRadius);
+                    Sfx.Play("hit", 0.4f, 1.5f);
+                    break;
+                case "sporeburst":
+                    PlantFx.SporeBurst(WorldFrame.FromWorld(at), Skills.All["m_spore"].areaRadius);
+                    Sfx.Play("boom", 0.35f, 1.8f);
+                    break;
+                case "poolstep": case "vinehit":
+                    if (!string.IsNullOrEmpty(text)) floaters.Add(new Floater { posMap = at + Vector3.up * 0.5f, text = text, color = c, born = Time.time });
+                    break;
                 case "summon":
                     Sfx.Play("roar", 0.8f, 1.2f);
                     if (!string.IsNullOrEmpty(text)) Say("🔥 " + text + "（小怪會追著你抓，先清掉牠們！）", 3f);
                     break;
                 case "minionspawn":
-                    MinionRig.SpawnFx(WorldFrame.FromWorld(at));
+                    if (battle.Theme == 1) MinionRig.SpawnFxPlant(WorldFrame.FromWorld(at)); else MinionRig.SpawnFx(WorldFrame.FromWorld(at));
                     Sfx.Play("boom", 0.4f, 1.6f);
                     break;
                 case "miniondie":
@@ -1299,12 +1345,19 @@ namespace SpellDuel
                 if (endless)
                 {
                     // 無盡模式：Boss 出現（從地底冒出）／倒下（崩塌，3 秒後隱藏）
+                    if (en.Alive && !bossAliveShown && bossRig.Theme != battle.Theme)
+                    {
+                        // 換主題的 Boss（熔岩巨像 ↔ 腐化樹王）：重建外觀
+                        Destroy(bossRig.gameObject);
+                        bossRig = BossRig.Create(battle.Theme);
+                        bossRig.transform.SetPositionAndRotation(feetS, rot);
+                    }
                     if (en.Alive && !bossAliveShown)
                     {
                         bossAliveShown = true; bossHideAt = -1f; bossEnragedShown = false;
                         bossRig.SetDead(false); bossRig.SetEnraged(false); bossRig.SetVisible(true);
                         bossRig.transform.position = feetS;
-                        BossRig.SlamShockwave(feetS, 2.5f, new Color(1f, 0.35f, 0.1f));
+                        if (battle.Theme == 1) BossRig.RootEruption(feetS, 2.5f); else BossRig.SlamShockwave(feetS, 2.5f, new Color(1f, 0.35f, 0.1f));
                         Sfx.Play("roar"); Haptics.Play(Haptics.Kind.Heavy); Kick(14f, 0f);
                     }
                     else if (!en.Alive && bossAliveShown)
@@ -1320,7 +1373,7 @@ namespace SpellDuel
                     if (!slamGo) slamGo = Prim(PrimitiveType.Cylinder, new Color(1f, 0.1f, 0.05f, 0.3f), true);
                     float rr = en.charging.areaRadius + Fighter.BodyRadius;
                     slamGo.SetActive(true);
-                    var slamC = en.charging.id == "b_leap" ? en.aimPoint : en.Feet;   // 熔岩躍擊：紅圈在落點
+                    var slamC = en.charging.id == "b_leap" || en.charging.atTarget ? en.aimPoint : en.Feet;   // 熔岩躍擊／樹根爆發：紅圈在落點
                     slamGo.transform.position = WorldFrame.FromWorld(new Vector3(slamC.x, 0.02f, slamC.z));
                     slamGo.transform.localScale = new Vector3(rr * 2f, 0.003f, rr * 2f);
                     float pr = battle.ChargeProgress(en), k = 0.5f + 0.5f * Mathf.Sin(Time.time * (6f + 12f * pr));
@@ -1407,40 +1460,49 @@ namespace SpellDuel
             foreach (var kv in new List<KeyValuePair<BurnZone, GameObject>>(burnGo))
                 if (!liveBurns.Contains(kv.Key)) { Destroy(kv.Value); burnGo.Remove(kv.Key); }
 
-            // 攻擊預警①：敵人蓄力過半 → 地上一條從敵人到我的紅線（越接近放招越亮）
+            // 攻擊預警①：敵人的攻擊已經放出來（方向不會再變）→ 地上畫出它的飛行路線（紅線）
             {
-                var ec = En.charging;
-                bool show = ec != null && ec.type == SkillType.Projectile && !ec.fromAbove && ec.areaRadius <= 0f && En.Alive && battle.ChargeProgress(En) >= 0.5f
-                    && (En.target == null || En.target == Me);   // 合作：Boss 瞄準隊友時不畫我這條
-                var lineTo = En.target != null ? En.target : Me;
-                if (show)
+                var liveLines = new HashSet<Projectile>();
+                foreach (var p in battle.projectiles)
                 {
-                    if (!warnLine) warnLine = Prim(PrimitiveType.Cube, new Color(1f, 0.15f, 0.15f, 0.4f), true);
-                    var a = En.Feet; var b = lineTo.Feet; var d = b - a; d.y = 0f;
-                    float len = Mathf.Max(0.1f, d.magnitude);
-                    warnLine.SetActive(true);
-                    warnLine.transform.position = WorldFrame.FromWorld((a + b) / 2f + Vector3.up * 0.02f);
-                    warnLine.transform.rotation = WorldFrame.RotFromWorld(Quaternion.LookRotation(d / len, Vector3.up));
-                    warnLine.transform.localScale = new Vector3(ec.duckable ? 0.6f : 0.15f, 0.004f, len);
-                    float pr = battle.ChargeProgress(En), pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * (6f + pr * 10f));
-                    warnLine.GetComponent<Renderer>().material.color = new Color(1f, ec.duckable ? 0.5f : 0.15f, 0.1f, (0.15f + 0.35f * pr) * (0.6f + 0.4f * pulse));
+                    bool hostile = p.owner == En || p.owner.isMinion || (p.remote && p.owner != Ally);
+                    if (!p.alive || !hostile || p.lob || p.skill.fromAbove || p.Curved || p.skill.areaRadius > 0f) continue;
+                    if (p.target != null && p.target != Me) continue;   // 合作：打隊友的不畫
+                    liveLines.Add(p);
+                    if (!projLine.TryGetValue(p, out var ln) || !ln) { ln = Prim(PrimitiveType.Cube, new Color(1f, 0.15f, 0.15f, 0.4f), true); projLine[p] = ln; }
+                    var a = p.pos; a.y = 0.02f;
+                    float left = Mathf.Max(0.1f, p.skill.MaxTravel * p.rangeMul - p.traveled);
+                    var d = Fighter.Flat(p.dir); if (d == Vector3.zero) d = Vector3.forward;
+                    float len = left * Mathf.Max(0.2f, new Vector2(p.dir.x, p.dir.z).magnitude);
+                    var b = a + d * len;
+                    ln.transform.position = WorldFrame.FromWorld((a + b) / 2f);
+                    ln.transform.rotation = WorldFrame.RotFromWorld(Quaternion.LookRotation(d, Vector3.up));
+                    ln.transform.localScale = new Vector3(p.skill.duckable ? 0.6f : Mathf.Max(0.12f, p.skill.radius * 2f), 0.004f, len);
+                    float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 14f);
+                    ln.GetComponent<Renderer>().material.color = new Color(1f, p.skill.duckable ? 0.5f : 0.15f, 0.1f, 0.3f + 0.25f * pulse);
                 }
-                else if (warnLine) warnLine.SetActive(false);
+                foreach (var kv in new List<KeyValuePair<Projectile, GameObject>>(projLine))
+                    if (!liveLines.Contains(kv.Key)) { if (kv.Value) Destroy(kv.Value); projLine.Remove(kv.Key); }
+                // 衝刺路線（荊棘衝鋒獸開始衝的那一刻才畫）
+                foreach (var kv in new List<KeyValuePair<Battle.Lane, GameObject>>(laneGo))
+                    if (!kv.Key.alive || battle.now > kv.Key.until) { if (kv.Value) Destroy(kv.Value); laneGo.Remove(kv.Key); }
             }
             // 攻擊預警②：隕石下落中 → 落點的紅圈（走出紅圈就閃得掉）
             var liveLand = new HashSet<Projectile>();
             foreach (var p in battle.projectiles)
             {
-                if (!p.skill.fromAbove || p.dir.y > -0.5f) continue;
+                // 從天而降（往下飛）或拋物線毒液彈（已經放出，落點固定）→ 落點紅圈
+                if (!(p.lob || (p.skill.fromAbove && p.dir.y <= -0.5f))) continue;
                 liveLand.Add(p);
                 if (!landGo.TryGetValue(p, out var lg))
                 {
-                    lg = Prim(PrimitiveType.Cylinder, new Color(1f, 0.1f, 0.1f, 0.35f), true);
+                    lg = Prim(PrimitiveType.Cylinder, p.lob ? new Color(0.6f, 1f, 0.2f, 0.35f) : new Color(1f, 0.1f, 0.1f, 0.35f), true);
                     float lr = p.skill.id == "meteor" ? Battle.BurnRadius : p.skill.radius + Fighter.BodyRadius;
                     lg.transform.localScale = new Vector3(lr * 2f, 0.003f, lr * 2f);
                     landGo[p] = lg;
                 }
-                lg.transform.position = WorldFrame.FromWorld(new Vector3(p.pos.x, 0.025f, p.pos.z));
+                var lp = p.lob ? p.landAt : p.pos;
+                lg.transform.position = WorldFrame.FromWorld(new Vector3(lp.x, 0.025f, lp.z));
                 float k = 0.5f + 0.5f * Mathf.Sin(Time.time * 14f);
                 lg.GetComponent<Renderer>().material.color = new Color(1f, 0.1f, 0.1f, 0.2f + 0.25f * k);
             }
@@ -1904,7 +1966,7 @@ namespace SpellDuel
             if (!pvp && en.charging != null && en.Alive && en.charging.type == SkillType.Projectile && battle.ChargeProgress(en) >= 0.5f)
             {
                 var ecs = en.charging;
-                string tip = ecs.id == "b_leap" ? $"⚠ {ecs.name}：Boss 要跳過來了，離開落點紅圈！" : ecs.areaRadius > 0f ? $"⚠ {ecs.name}：走出 Boss 周圍的紅圈！" : ecs.fromAbove ? $"⚠ {ecs.name}：落下時離開紅圈！" : ecs.duckable ? $"⚠ {ecs.name}：↓ 蹲下躲！" : $"⚠ {ecs.name}：快速側跨閃開！";
+                string tip = ecs.id == "b_leap" ? $"⚠ {ecs.name}：Boss 要跳過來了，離開落點紅圈！" : ecs.atTarget ? $"⚠ {ecs.name}：離開腳下的紅圈！" : ecs.lob ? $"⚠ {ecs.name}：看落點紅圈閃開！" : ecs.areaRadius > 0f ? $"⚠ {ecs.name}：走出 Boss 周圍的紅圈！" : ecs.fromAbove ? $"⚠ {ecs.name}：落下時離開紅圈！" : ecs.duckable ? $"⚠ {ecs.name}：↓ 蹲下躲！" : $"⚠ {ecs.name}：快速側跨閃開！";
                 if (coop && en.target != null && en.target != me) tip = $"⚠ Boss 準備對隊友使出 {ecs.name}";
                 UiKit.Pill(H * 0.43f, tip, fs, ecs.duckable ? new Color(1f, 0.7f, 0.3f) : new Color(1f, 0.45f, 0.45f), pillW);
             }

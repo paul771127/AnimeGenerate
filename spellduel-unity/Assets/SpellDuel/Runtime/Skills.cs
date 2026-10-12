@@ -22,6 +22,8 @@ namespace SpellDuel
         public float charge;            // 蓄力秒數：詠唱後至少要等這麼久才能發射
         public float cooldown;
         public float speed = 8f, radius = 0.1f, rangeMin, rangeMax = 8f;
+        public bool lob;                // 拋物線投擲（毒液彈）：落地才判定，落點周圍 radius 公尺
+        public bool atTarget;           // 範圍攻擊打在目標位置（樹根爆發），不是施放者周圍
         public float stillRadius;       // 蓄力時要站著不動：離開詠唱位置超過這個半徑（公尺）就失敗（刺殺準備）
         public bool releaseNear;        // 距離不在射程內時不能出手（保留蓄力，靠近再放）
         public bool duckable;           // 橫向的攻擊（斬擊、劍氣、風刃、三連矢）：蹲下就躲得過
@@ -132,7 +134,23 @@ namespace SpellDuel
             P(new SkillDef { id = "m_void", cls = "minion", name = "虛空彈", type = SkillType.Projectile, color = C("#a855f7"), cost = 0, damage = 10, charge = 1.0f, cooldown = 4f, speed = 7f, radius = 0.13f, rangeMax = 14f, desc = "虛空術士：超遠距離（超過 10m）的虛空彈；出手後停留 3 秒，再瞬移到場內隨機位置" });
             P(new SkillDef { id = "m_snipe", cls = "minion", name = "熔岩狙擊", type = SkillType.Projectile, color = C("#ff4fd8"), cost = 0, damage = 15, charge = 1.6f, cooldown = 5f, speed = 16f, radius = 0.08f, rangeMax = 14f, desc = "熔岩狙擊手：瞄準 1.6 秒（有紅線）後高速射擊（側跨閃）" });
             P(new SkillDef { id = "m_bomb", cls = "minion", name = "自爆", type = SkillType.Projectile, color = C("#fde047"), cost = 0, damage = 18, charge = 0.5f, cooldown = 1f, areaRadius = 1.8f, radius = 0f, rangeMax = 1.3f, desc = "自爆小鬼的爆炸" });
+            // ---------------------------------------------------------- 森林（無盡模式第 11～20 波）：植物小怪
+            P(new SkillDef { lob = true, id = "m_venom", cls = "minion", name = "毒液彈", type = SkillType.Projectile, color = C("#a3e635"), cost = 0, damage = 8, charge = 1.0f, cooldown = 5f, speed = 6f, radius = 0.5f, rangeMax = 8f, effect = EffectKind.Dot, effectDps = 3f, effectDur = 4f, desc = "毒液噴花：往上拋物線射出毒液彈，落地傷害＋中毒，並留下直徑 1m 的毒液區 5 秒" });
+            P(new SkillDef { id = "m_pool", cls = "minion", name = "毒液區", type = SkillType.Projectile, color = C("#84cc16"), cost = 0, damage = 3, charge = 0f, cooldown = 0f, radius = 0.5f, effect = EffectKind.Dot, effectDps = 2f, effectDur = 3f, desc = "踩到毒液區：受傷並中毒（每秒最多一次）" });
+            P(new SkillDef { id = "m_dash", cls = "minion", name = "荊棘衝撞", type = SkillType.Projectile, color = C("#a16207"), cost = 0, damage = 14, charge = 0.8f, cooldown = 4f, speed = 5f, radius = 0.35f, rangeMax = 5f, desc = "荊棘衝鋒獸：往玩家方向直線衝刺撞擊（看地上的紅線閃開）" });
+            P(new SkillDef { id = "m_vine", cls = "minion", name = "纏繞藤蔓", type = SkillType.Projectile, color = C("#15803d"), cost = 0, damage = 8, charge = 1.0f, cooldown = 6f, radius = 0.18f, rangeMax = 6f, desc = "藤蔓術士：從自己長到玩家當下位置的藤蔓，持續 3 秒，碰到就受傷；施放期間術士不能移動" });
+            P(new SkillDef { id = "m_bite", cls = "minion", name = "食人花咬", type = SkillType.Projectile, color = C("#dc2626"), cost = 0, damage = 9, charge = 0.7f, cooldown = 1.8f, radius = 0f, rangeMax = 1.1f, desc = "食人花的近身啃咬" });
+            P(new SkillDef { id = "m_spore", cls = "minion", name = "孢子爆發", type = SkillType.Projectile, color = C("#c084fc"), cost = 0, damage = 5, charge = 0.8f, cooldown = 4f, areaRadius = 1.5f, radius = 0f, rangeMax = 1.3f, effect = EffectKind.Dot, effectDps = 3f, effectDur = 3f, desc = "孢子菇：周圍 1.5m 的孢子雲，受傷並中毒" });
+            P(new SkillDef { id = "m_seed", cls = "minion", name = "種子連射", type = SkillType.Projectile, color = C("#ca8a04"), cost = 0, damage = 5, charge = 0.9f, cooldown = 3.5f, speed = 11f, radius = 0.06f, rangeMax = 9f, multi = 3, spreadDeg = 8f, desc = "種子槍手：三顆種子扇形射出" });
+            // 森林 Boss：腐化樹王
+            P(new SkillDef { areaRadius = 3.0f, id = "p_stomp", cls = "boss", name = "樹根踐踏", type = SkillType.Projectile, color = C("#65a30d"), cost = 0, damage = 22, charge = 2.0f, cooldown = 8f, speed = 1f, radius = 0f, rangeMax = 3f, desc = "腳下樹根一起砸地，周圍 3m 都會受傷（走出紅圈）" });
+            P(new SkillDef { duckable = true, originHeight = 1.05f, id = "p_whip", cls = "boss", name = "藤鞭橫掃", type = SkillType.Projectile, color = C("#16a34a"), cost = 0, damage = 17, charge = 1.5f, cooldown = 6f, speed = 7f, radius = 0.55f, rangeMax = 6f, desc = "胸口高度的藤鞭橫掃（蹲下躲）" });
+            P(new SkillDef { id = "p_thorn", cls = "boss", name = "荊棘飛刺", type = SkillType.Projectile, color = C("#84cc16"), cost = 0, damage = 7, charge = 1.4f, cooldown = 4f, speed = 8f, radius = 0.1f, rangeMax = 12f, multi = 5, spreadDeg = 10f, desc = "五根荊棘扇形射出（側跨閃開）" });
+            P(new SkillDef { lob = true, id = "p_spore", cls = "boss", name = "毒孢彈", type = SkillType.Projectile, color = C("#a855f7"), cost = 0, damage = 10, charge = 2.0f, cooldown = 9f, speed = 6f, radius = 0.5f, rangeMax = 12f, multi = 3, effect = EffectKind.Dot, effectDps = 3f, effectDur = 4f, desc = "三顆毒孢彈拋向你周圍，落地留下毒液區（看落點紅圈閃開）" });
+            P(new SkillDef { atTarget = true, areaRadius = 1.5f, id = "p_roots", cls = "boss", name = "樹根爆發", type = SkillType.Projectile, color = C("#78350f"), cost = 0, damage = 18, charge = 1.6f, cooldown = 8f, speed = 1f, radius = 0f, rangeMax = 14f, effect = EffectKind.Snare, effectDur = 1.2f, desc = "你腳下出現紅圈，樹根從地底爆出（受傷並定身 1.2 秒）→ 離開紅圈" });
+            P(new SkillDef { id = "p_summon", cls = "boss", name = "召喚植物", type = SkillType.Self, self = SelfKind.Summon, color = C("#4ade80"), cost = 0, charge = 1.8f, cooldown = 16f, multi = 4, desc = "召喚食人花與毒液噴花" });
             P(new SkillDef { id = "m_claw", cls = "minion", name = "小鬼爪擊", type = SkillType.Projectile, color = C("#ff8c42"), cost = 0, damage = 7, charge = 0.7f, cooldown = 1.6f, radius = 0f, rangeMax = 1.3f, desc = "小怪的近身爪擊" });
+            Classes["boss_forest"] = new ClassDef { id = "boss_forest", name = "腐化樹王", color = C("#4ade80"), maxHp = 500, maxMp = 999, mpRegen = 100, skills = new[] { "p_thorn", "p_whip", "p_stomp", "p_spore", "p_roots", "p_summon" }, defaultLoadout = new[] { "p_thorn", "p_whip", "p_stomp", "p_spore", "p_roots", "p_summon" }, desc = "森林 Boss" };
             Classes["boss"] = new ClassDef { id = "boss", name = "熔岩巨像", color = C("#ff5a1f"), maxHp = 500, maxMp = 999, mpRegen = 100, skills = new[] { "b_bolt", "b_sweep", "b_slam", "b_rain", "b_leap", "b_summon" }, defaultLoadout = new[] { "b_bolt", "b_sweep", "b_slam", "b_rain", "b_leap", "b_summon" }, desc = "Boss" };
             Classes["minion"] = new ClassDef { id = "minion", name = "熔岩小鬼", color = C("#ff8c42"), maxHp = 40, maxMp = 0, mpRegen = 0, skills = new string[0], defaultLoadout = new string[0], desc = "Boss 召喚的小怪" };
 

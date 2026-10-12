@@ -13,7 +13,15 @@ namespace SpellDuel
     ///     3 自爆小鬼：約 0.7 m，圓滾滾的膨脹身體，肚子上黃白色核心脈動，預備時越脈動越快、身體鼓脹（之後由呼叫者引爆）。
     ///     4 岩石投擲者（遠程）：約 1.0 m，瘦長的石頭小鬼，背上扛著發光熔岩巨石；預備＝雙手把巨石舉過頭（變亮），出手＝過頭投擲（巨石約 0.8 秒後在背上重新長出）。
     ///     5 熔岩狙擊手（遠程）：約 0.9 m，瘦削駝背，頭上一根發光的長角（砲管），洋紅色熔岩；預備＝蹲低瞄準、角尖的蓄能光越來越大，出手＝後座力。
-    ///   效能：每隻 ≤ 18 個 Renderer（含 1 個火星粒子）；材質、網格全部 static 共用，
+    ///     6 虛空術士（遠程）：火焰射手外形的紫色版本。
+    ///   森林植物小怪（另一套外形／動作，見「森林植物小怪」區段）：
+    ///     7 毒液噴花（遠程）：約 1.1 m，根鬚底座＋彎曲花莖，頂端綠色毒囊＋紫色花瓣大嘴；預備＝花往後仰、毒囊鼓脹，出手＝往前上方噴吐（拋物線）。
+    ///     8 荊棘衝鋒獸：約 0.8 m 高、1.3 m 長，四腳樹樁野豬，背上長滿荊棘與苔蘚、獠牙；預備＝低頭、前蹄刨地，出手＝往前猛衝的姿勢。
+    ///     9 藤蔓術士（遠程）：約 1.1 m，扭曲藤蔓編成的瘦長人形，葉子兜帽＋綠色發光眼睛；預備＝雙手高舉引導，出手＝雙手往前推。
+    ///    10 食人花（近戰）：約 1.05 m，粗花莖＋根鬚腳，頂端帶尖牙的上下顎（外綠內紅）；預備＝大嘴張開，出手＝猛然咬合。
+    ///    11 孢子菇：約 0.8 m，矮胖的菇柄＋短腿，紫色菇傘上有發光斑點；預備＝菇傘脈動鼓起，出手＝菇傘壓扁噴出孢子。
+    ///    12 種子槍手（遠程）：約 0.95 m，根鬚底座的球莖上架著種莢砲塔與長長的莢管；預備＝瞄準、種莢鼓脹、管口發光，出手＝後座力。
+    ///   效能：每隻 ≤ 18 個 Renderer（含 1 個火星／花粉粒子）；材質、網格全部 static 共用，
     ///   各自的顏色／閃色／蓄力發亮／死亡變暗都用 MaterialPropertyBlock（不複製材質、每幀不配置記憶體）。
     /// </summary>
     public class MinionRig : MonoBehaviour
@@ -33,10 +41,13 @@ namespace SpellDuel
             return rig;
         }
 
-        /// <summary>切換種類（0 近戰、1 火焰射手、2 坦克、3 自爆、4 岩石投擲者、5 熔岩狙擊手、6 虛空術士），會重建外觀；請在 Create() 之後立刻呼叫。</summary>
+        /// <summary>
+        /// 切換種類（0 近戰、1 火焰射手、2 坦克、3 自爆、4 岩石投擲者、5 熔岩狙擊手、6 虛空術士；
+        /// 森林：7 毒液噴花、8 荊棘衝鋒獸、9 藤蔓術士、10 食人花、11 孢子菇、12 種子槍手），會重建外觀；請在 Create() 之後立刻呼叫。
+        /// </summary>
         public void SetVariant(int kind)
         {
-            kind = Mathf.Clamp(kind, 0, 6);
+            kind = Mathf.Clamp(kind, 0, 12);
             if (kind == variantId && body != null) return;
             if (body != null)
             {
@@ -61,9 +72,11 @@ namespace SpellDuel
         {
             if (dead || body == null) return;
             snap = cur;
+            snapW = plantW;
             phase = PhaseStrike;
             atkT = 0f;
-            if (kind == 1 || kind == 4) ballGone = 0f;   // 火球／巨石丟出去了，稍後重新長出
+            if (kind == 1 || kind == 4 || kind == 7) ballGone = 0f;   // 火球／巨石／毒液丟出去了，稍後重新長出
+            if (kind == 11) PuffSpores();
         }
 
         public void PlayHit()
@@ -87,6 +100,7 @@ namespace SpellDuel
         {
             public float size, stride, legSwing, bob, step;   // 整體縮放、一個步伐循環前進距離（未縮放）、腿擺角、上下起伏、步頻倍率
             public Color rockA, rockB, lava, lavaDim, hot, eye, emberA, emberB;
+            public Color accent, accent2, accent3;            // 植物用：主要特徵色、次要特徵色、葉子綠
         }
 
         static readonly Variant[] Variants =
@@ -139,6 +153,55 @@ namespace SpellDuel
                 rockA = new Color(0.16f, 0.13f, 0.22f), rockB = new Color(0.09f, 0.07f, 0.13f),
                 lava = new Color(0.6f, 0.3f, 1f), lavaDim = new Color(0.2f, 0.06f, 0.4f), hot = new Color(0.92f, 0.8f, 1f), eye = new Color(0.8f, 0.6f, 1f),
                 emberA = new Color(0.55f, 0.25f, 1f), emberB = new Color(0.9f, 0.75f, 1f),
+            },
+            // ---- 森林植物（rockA＝莖／主體、rockB＝根／樹皮、lava＝發光、accent/2/3 見各自註解）
+            new Variant   // 7 毒液噴花：accent＝毒囊、accent2＝紫色花瓣、accent3＝葉
+            {
+                size = 1f, stride = 0.45f, legSwing = 0f, bob = 0.07f, step = 1f,
+                rockA = new Color(0.24f, 0.46f, 0.16f), rockB = new Color(0.33f, 0.23f, 0.13f),
+                lava = new Color(0.55f, 1f, 0.2f), lavaDim = new Color(0.2f, 0.45f, 0.05f), hot = new Color(0.88f, 1f, 0.6f), eye = new Color(0.7f, 1f, 0.3f),
+                emberA = new Color(0.5f, 0.95f, 0.25f), emberB = new Color(0.8f, 0.5f, 1f),
+                accent = new Color(0.36f, 0.62f, 0.18f), accent2 = new Color(0.58f, 0.22f, 0.72f), accent3 = new Color(0.3f, 0.56f, 0.18f),
+            },
+            new Variant   // 8 荊棘衝鋒獸：accent＝切面木頭、accent2＝獠牙／荊棘、accent3＝苔蘚
+            {
+                size = 1f, stride = 0.6f, legSwing = 30f, bob = 0.04f, step = 0.85f,
+                rockA = new Color(0.38f, 0.27f, 0.17f), rockB = new Color(0.25f, 0.17f, 0.1f),
+                lava = new Color(1f, 0.6f, 0.15f), lavaDim = new Color(0.5f, 0.2f, 0.04f), hot = new Color(1f, 0.9f, 0.5f), eye = new Color(1f, 0.72f, 0.2f),
+                emberA = new Color(0.55f, 0.8f, 0.3f), emberB = new Color(0.9f, 0.85f, 0.4f),
+                accent = new Color(0.78f, 0.62f, 0.4f), accent2 = new Color(0.82f, 0.77f, 0.56f), accent3 = new Color(0.3f, 0.5f, 0.15f),
+            },
+            new Variant   // 9 藤蔓術士：accent＝兜帽葉、accent2＝深色臉、accent3＝披風葉
+            {
+                size = 1f, stride = 0.5f, legSwing = 30f, bob = 0.03f, step = 0.95f,
+                rockA = new Color(0.2f, 0.4f, 0.15f), rockB = new Color(0.14f, 0.28f, 0.1f),
+                lava = new Color(0.4f, 1f, 0.35f), lavaDim = new Color(0.1f, 0.45f, 0.1f), hot = new Color(0.85f, 1f, 0.75f), eye = new Color(0.55f, 1f, 0.4f),
+                emberA = new Color(0.35f, 1f, 0.35f), emberB = new Color(0.8f, 1f, 0.6f),
+                accent = new Color(0.28f, 0.55f, 0.18f), accent2 = new Color(0.07f, 0.09f, 0.05f), accent3 = new Color(0.22f, 0.46f, 0.14f),
+            },
+            new Variant   // 10 食人花：accent＝顎外側、accent2＝紅色口腔、accent3＝葉
+            {
+                size = 1f, stride = 0.45f, legSwing = 0f, bob = 0.06f, step = 1.05f,
+                rockA = new Color(0.25f, 0.47f, 0.15f), rockB = new Color(0.33f, 0.23f, 0.13f),
+                lava = new Color(1f, 0.3f, 0.35f), lavaDim = new Color(0.45f, 0.06f, 0.1f), hot = new Color(1f, 0.8f, 0.7f), eye = new Color(1f, 0.92f, 0.3f),
+                emberA = new Color(0.6f, 0.95f, 0.3f), emberB = new Color(1f, 0.6f, 0.6f),
+                accent = new Color(0.42f, 0.6f, 0.17f), accent2 = new Color(0.72f, 0.12f, 0.15f), accent3 = new Color(0.3f, 0.56f, 0.18f),
+            },
+            new Variant   // 11 孢子菇：rockA＝菇柄、rockB＝菌褶、accent＝菇傘、lava＝發光斑點
+            {
+                size = 1f, stride = 0.4f, legSwing = 34f, bob = 0.04f, step = 1.1f,
+                rockA = new Color(0.86f, 0.8f, 0.66f), rockB = new Color(0.6f, 0.48f, 0.38f),
+                lava = new Color(0.75f, 1f, 0.35f), lavaDim = new Color(0.35f, 0.55f, 0.1f), hot = new Color(0.95f, 1f, 0.75f), eye = new Color(0.9f, 1f, 0.5f),
+                emberA = new Color(0.75f, 1f, 0.35f), emberB = new Color(0.8f, 0.5f, 1f),
+                accent = new Color(0.52f, 0.17f, 0.48f), accent2 = new Color(0.86f, 0.8f, 0.66f), accent3 = new Color(0.3f, 0.56f, 0.18f),
+            },
+            new Variant   // 12 種子槍手：accent＝種莢膛、accent2＝莢管／種子、accent3＝葉
+            {
+                size = 1f, stride = 0.45f, legSwing = 0f, bob = 0.06f, step = 1f,
+                rockA = new Color(0.27f, 0.48f, 0.17f), rockB = new Color(0.33f, 0.23f, 0.13f),
+                lava = new Color(1f, 0.82f, 0.3f), lavaDim = new Color(0.5f, 0.32f, 0.05f), hot = new Color(1f, 0.97f, 0.7f), eye = new Color(1f, 0.92f, 0.4f),
+                emberA = new Color(0.6f, 0.95f, 0.3f), emberB = new Color(1f, 0.9f, 0.45f),
+                accent = new Color(0.62f, 0.6f, 0.22f), accent2 = new Color(0.4f, 0.32f, 0.15f), accent3 = new Color(0.32f, 0.58f, 0.2f),
             },
         };
 
@@ -359,6 +422,8 @@ namespace SpellDuel
         // ================================================================ 建立
         void Build(int k)
         {
+            plant = k >= 7;
+            if (plant) { BuildPlant(k); return; }
             variantId = k;
             kind = k == 6 ? 1 : k;
             v = Variants[k];
@@ -522,6 +587,7 @@ namespace SpellDuel
         void Animate(float dt)
         {
             if (body == null) return;
+            if (plant) { AnimatePlant(dt); return; }
             clock += dt;
             if (clock > 3600f) clock -= 3600f;
             float hitK = 0f;
@@ -756,6 +822,822 @@ namespace SpellDuel
                 SpellFx.SizeCurve(smoke, SpellFx.Grow);
                 SpellFx.Drag(smoke, 1.5f);
                 smoke.Play(); smoke.Emit(8);
+            }
+        }
+
+        /// <summary>
+        /// 森林版召喚／傳送特效：地面冒出一圈翠綠光環與泥土，八株嫩芽從地裡竄出再縮回去，
+        /// 葉片與花粉往上噴散，約 1.6 秒後自己清除。
+        /// </summary>
+        public static void SpawnFxPlant(Vector3 worldFeetPos)
+        {
+            InitPlant();
+            var leaf = new Color(0.35f, 0.85f, 0.25f);
+            var pale = new Color(0.75f, 1f, 0.55f);
+            var go = new GameObject("Minion Spawn Fx Plant");
+            // 本地 XY 平面 = 地面（本地 +Z 朝下）
+            go.transform.SetPositionAndRotation(worldFeetPos + Vector3.up * 0.02f, Quaternion.Euler(90f, 0f, 0f));
+            var anim = go.AddComponent<FxAnim>();
+            anim.killAt = 1.6f;
+            var root = go.transform;
+
+            // 翻起的泥土（暗色）＋旋轉的葉形鋸齒光環＋往外擴的光環
+            anim.AddRing(root, SpellFx.Circle(32, 1f), true, 0.25f, new Color(0.16f, 0.11f, 0.06f, 0.7f), 0f, 1.0f, 0.3f, 0.45f, false);
+            anim.AddRing(root, SpellFx.Zigzag(20, 0.7f, 1f), true, 0.04f, leaf, 0f, 0.9f, 0.45f, 0.38f, true, -160f);
+            anim.AddRing(root, SpellFx.Circle(40, 1f), true, 0.06f, pale, 0.12f, 0.55f, 0.15f, 0.9f);
+            anim.AddRing(root, SpellFx.Circle(40, 1f), true, 0.1f, leaf, 0.22f, 0.6f, 0.2f, 1.1f);
+
+            var flash = SpellFx.NewPS(root, "Flash", SpellFx.AddMat(SpellFx.TexSoft), 2, false);
+            {
+                var m = flash.main;
+                m.startLifetime = 0.6f;
+                m.startSize = 1f;
+                m.startColor = new Color(0.4f, 1f, 0.3f, 0.6f);
+                SpellFx.FadeOut(flash);
+                SpellFx.SizeCurve(flash, SpellFx.PopCurve);
+                flash.Play(); flash.Emit(1);
+            }
+            var upT = new GameObject("Up").transform;
+            upT.SetParent(root, false);
+            upT.localRotation = Quaternion.Euler(180f, 0f, 0f);   // +Z 朝上
+            var leaves = SpellFx.NewPS(upT, "Leaves", SpellFx.BlendMat(SpellFx.TexLeaf), 22, true);
+            {
+                var m = leaves.main;
+                m.startLifetime = new ParticleSystem.MinMaxCurve(0.7f, 1.2f);
+                m.startSpeed = new ParticleSystem.MinMaxCurve(1.2f, 2.6f);
+                m.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.09f);
+                m.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+                m.startColor = new ParticleSystem.MinMaxGradient(new Color(0.2f, 0.55f, 0.12f), new Color(0.55f, 0.85f, 0.25f));
+                m.gravityModifier = 0.5f;
+                SpellFx.Cone(leaves, 35f, 0.2f);
+                SpellFx.FadeOut(leaves);
+                SpellFx.Spin(leaves, 6f);
+                SpellFx.Drag(leaves, 1.5f);
+                SpellFx.Noise(leaves, 0.5f, 1.5f);
+                leaves.Play(); leaves.Emit(18);
+            }
+            var motes = SpellFx.NewPS(upT, "Pollen", SpellFx.AddMat(SpellFx.TexSoft), 24, true);
+            {
+                var m = motes.main;
+                m.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 1.2f);
+                m.startSpeed = new ParticleSystem.MinMaxCurve(0.5f, 1.6f);
+                m.startSize = new ParticleSystem.MinMaxCurve(0.025f, 0.05f);
+                m.startColor = new ParticleSystem.MinMaxGradient(leaf, pale);
+                SpellFx.Cone(motes, 30f, 0.25f);
+                SpellFx.FadeInOut(motes);
+                SpellFx.Drag(motes, 2f);
+                SpellFx.Noise(motes, 0.3f, 2f);
+                motes.Play(); motes.Emit(20);
+            }
+            var dirt = SpellFx.NewPS(upT, "Dirt", SpellFx.BlendMat(SpellFx.TexSoft), 10, true);
+            {
+                var m = dirt.main;
+                m.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 1f);
+                m.startSpeed = new ParticleSystem.MinMaxCurve(0.3f, 0.8f);
+                m.startSize = new ParticleSystem.MinMaxCurve(0.2f, 0.35f);
+                m.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+                m.startColor = new ParticleSystem.MinMaxGradient(new Color(0.3f, 0.22f, 0.12f, 0.5f), new Color(0.18f, 0.14f, 0.08f, 0.45f));
+                SpellFx.Cone(dirt, 40f, 0.25f);
+                SpellFx.FadeOut(dirt);
+                SpellFx.SizeCurve(dirt, SpellFx.Grow);
+                SpellFx.Drag(dirt, 2f);
+                dirt.Play(); dirt.Emit(8);
+            }
+
+            // 從地裡竄出的嫩芽（一根細莖＋一片捲起的葉），長出 → 停一下 → 縮回地裡
+            var sprouts = new GameObject("Sprouts").transform;
+            sprouts.SetParent(root, false);
+            sprouts.localRotation = Quaternion.Euler(-90f, 0f, 0f);   // 回到世界朝向（+Y 朝上）
+            var grow = go.AddComponent<PlantGrowAnim>();
+            grow.killAt = 0f;   // 由 FxAnim 負責清除
+            for (int i = 0; i < 8; i++)
+            {
+                float ang = i * 45f + Random.Range(-15f, 15f), a = ang * Mathf.Deg2Rad, r = Random.Range(0.2f, 0.4f);
+                var piv = Pivot("Sprout", sprouts, new Vector3(Mathf.Sin(a) * r, -0.02f, Mathf.Cos(a) * r));
+                piv.localRotation = Quaternion.Euler(0f, ang, 0f) * Quaternion.Euler(Random.Range(10f, 30f), 0f, 0f);   // 往外倒
+                float h = Random.Range(0.18f, 0.32f);
+                var green = Color.Lerp(new Color(0.2f, 0.5f, 0.12f), new Color(0.45f, 0.8f, 0.25f), Random.value);
+                FxPart(piv, pCone, Vector3.zero, new Vector3(0.03f, h, 0.03f), Vector3.zero, green * 0.8f);
+                FxPart(piv, pLeaf, new Vector3(0f, h * 0.7f, 0f), new Vector3(0.09f, 0.08f, 0.17f), new Vector3(-40f, (i & 1) == 0 ? 0f : 180f, 0f), green);
+                piv.localScale = Vector3.zero;
+                grow.Add(piv, i * 0.03f, 0.25f, 0.55f, 0.45f);
+            }
+        }
+
+        /// <summary>特效用的一次性實體零件（顏色一次設定好，不進小怪的顏色清單）。</summary>
+        static void FxPart(Transform parent, Mesh mesh, Vector3 pos, Vector3 scale, Vector3 euler, Color c)
+        {
+            var go = new GameObject("Part");
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = pos;
+            go.transform.localRotation = Quaternion.Euler(euler);
+            go.transform.localScale = scale;
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var r = go.AddComponent<MeshRenderer>();
+            r.sharedMaterial = rockMat;
+            NoShadow(r);
+            c.a = 1f;
+            mpb.Clear();
+            mpb.SetColor(ColorId, c);
+            r.SetPropertyBlock(mpb);
+        }
+
+        // ================================================================ 森林植物小怪（種類 7–12）
+        // 跟熔岩小鬼共用材質（rockMat＝有光照的實體、glowMat＝發光），但網格、骨架與動作是另一套：
+        //   預備／出手不用 Pose 內插，而是「基本姿勢 ＋ wW×預備偏移 ＋ sW×出手偏移」的疊加（wW、sW 皆 0..1），
+        //   每一種在 AnimPlant 裡直接寫出各關節的角度。根鬚類（7、10、12）沒有腿，靠小跳步移動。
+
+        // 植物專用的共用網格（全部 static、一次建立）
+        static Mesh pBlob, pStem, pCone, pLeaf, pCap, pSpots, pThorns, pTeeth, pRoots, pVine;
+
+        // 植物骨架
+        bool plant;
+        Transform neck, jaw, jawU, barrel, hipBL, hipBR, rootT, handL, handR;
+        Transform[] petals;
+        Vector3 barrelBase;
+        float snapW, plantW;   // 出手瞬間的預備程度（讓預備姿勢在出手時快速收掉）、目前的預備程度
+        readonly List<float> rockGlows = new List<float>();
+        float[] rockG;
+        readonly List<Transform> swayT = new List<Transform>();
+        readonly List<Quaternion> swayQ = new List<Quaternion>();
+        static readonly Color Withered = new Color(0.3f, 0.23f, 0.13f);
+        static readonly Color WitherDark = new Color(0.12f, 0.1f, 0.06f);
+        static readonly Color PlantFlash = new Color(1f, 0.85f, 0.6f);
+
+        static float Smooth01(float x) { x = Mathf.Clamp01(x); return x * x * (3f - 2f * x); }
+
+        static void InitPlant()
+        {
+            InitMats();
+            if (pBlob != null) return;
+            var up = Quaternion.Euler(-90f, 0f, 0f);   // Lathe 的 +Z → +Y
+
+            // 圓潤團塊（直徑 1），輕微起伏
+            {
+                var m = new PMesh(1);
+                const int rings = 6;
+                var prof = new float[(rings + 1) * 2];
+                for (int i = 0; i <= rings; i++)
+                {
+                    float a = Mathf.PI * i / rings;
+                    prof[i * 2] = -Mathf.Cos(a) * 0.5f;
+                    prof[i * 2 + 1] = Mathf.Sin(a) * 0.5f;
+                }
+                m.Lathe(prof, 9, null, 1f, 1f, 0f, null, Vector3.zero, Quaternion.identity,
+                    p => p * (1f + 0.05f * Mathf.Sin(p.x * 11f + 1.3f) * Mathf.Sin(p.y * 9f + 0.4f) * Mathf.Sin(p.z * 10f + 2.1f)));
+                pBlob = m.Build("PlantBlob", true);
+            }
+            // 莖：沿 +Y 0..1，底部半徑 0.5 往上收到 0.38，輕微彎曲，兩端封口
+            {
+                var m = new PMesh(1);
+                m.Lathe(new[] { 0f, 0f, 0f, 0.5f, 0.3f, 0.46f, 0.65f, 0.42f, 1f, 0.38f, 1f, 0f }, 7, null, 1f, 1f, 0f, null, Vector3.zero, up,
+                    p => { p.x += 0.04f * Mathf.Sin(p.z * 6f); return p; });
+                pStem = m.Build("PlantStem", true);
+            }
+            // 尖刺／獠牙：沿 +Y，底半徑 0.5、長 1
+            {
+                var m = new PMesh(1);
+                m.Lathe(new[] { 0f, 0f, 0f, 0.5f, 1f, 0f }, 5, null, 1f, 1f, 0f, null, Vector3.zero, up);
+                pCone = m.Build("PlantCone", true);
+            }
+            // 葉子：沿 +Z 長 1、寬 1（X），中肋凹摺、邊緣往 +Y 翹、尖端往 -Y 垂；正反兩面
+            {
+                var m = new PMesh(1);
+                const int n = 7;
+                for (int i = 0; i < n; i++)
+                    for (int s = -1; s <= 1; s += 2)
+                    {
+                        var a = LeafPt(i, 0, n); var b = LeafPt(i + 1, 0, n);
+                        var c = LeafPt(i + 1, s, n); var d = LeafPt(i, s, n);
+                        m.Quad(a, b, c, d, Color.white);
+                        m.Quad(a, d, c, b, Color.white);
+                    }
+                pLeaf = m.Build("PlantLeaf", true);
+            }
+            // 菇傘：沿 +Y，底面平、直徑約 1.06、高 0.45
+            {
+                var m = new PMesh(1);
+                m.Lathe(CapProf, 11, null, 1f, 1f, 0f, null, Vector3.zero, up);
+                pCap = m.Build("PlantCap", true);
+            }
+            // 菇傘上的斑點（發光材質，雙面不剔除）：貼在 CapProf 的表面上
+            {
+                var m = new PMesh(1);
+                float[] us = { 0.97f, 0.62f, 0.62f, 0.62f, 0.62f, 0.62f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f };
+                float[] ph = { 0f, 10f, 82f, 154f, 226f, 298f, 45f, 97f, 148f, 200f, 251f, 303f, 355f };
+                float[] sz = { 0.09f, 0.08f, 0.065f, 0.085f, 0.07f, 0.08f, 0.06f, 0.07f, 0.055f, 0.065f, 0.06f, 0.07f, 0.055f };
+                for (int i = 0; i < us.Length; i++) CapSpot(m, us[i], ph[i], sz[i]);
+                pSpots = m.Build("PlantSpots", false);
+            }
+            // 荊棘叢：單位球（半徑 0.5）上半部與後方，往外並往後掃的尖刺
+            {
+                var m = new PMesh(1);
+                const int N = 48;
+                for (int i = 0; i < N; i++)
+                {
+                    float y = 1f - 2f * (i + 0.5f) / N, r = Mathf.Sqrt(1f - y * y), a = i * 2.39996f;
+                    var d = new Vector3(Mathf.Cos(a) * r, y, Mathf.Sin(a) * r);
+                    if (d.y < -0.15f || d.z > 0.65f) continue;
+                    float len = 0.3f + 0.12f * Mathf.Abs(Mathf.Sin(i * 7.31f));
+                    var b0 = d * 0.42f;
+                    Tube(m, new[] { b0, b0 + d * len + new Vector3(0f, 0.03f, -0.1f) }, new[] { 0.055f, 0f }, 4, i * 37f);
+                }
+                pThorns = m.Build("PlantThorns", true);
+            }
+            // 一排牙齒：沿著半徑 0.45 的 U 形（前方 ±100°），往 +Y 長、略往內彎
+            {
+                var m = new PMesh(1);
+                const int N = 9;
+                for (int i = 0; i < N; i++)
+                {
+                    float a = (-100f + 200f * i / (N - 1)) * Mathf.Deg2Rad;
+                    var dir = new Vector3(Mathf.Sin(a), 0f, Mathf.Cos(a));
+                    var b0 = dir * 0.45f;
+                    float len = i == N / 2 ? 0.8f : (i & 1) == 0 ? 1f : 0.75f;
+                    Tube(m, new[] { b0 - Vector3.up * 0.1f, b0 + Vector3.up * len - dir * 0.15f }, new[] { 0.08f, 0f }, 4, 45f);
+                }
+                pTeeth = m.Build("PlantTeeth", true);
+            }
+            // 根鬚底座：中央的根團＋五條往外彎到地面的根（半徑 1、高 0.4）
+            {
+                var m = new PMesh(1);
+                m.Lathe(new[] { 0f, 0f, 0f, 0.24f, 0.28f, 0.16f, 0.4f, 0f }, 6, null, 1f, 1f, 0f, null, Vector3.zero, up);
+                for (int k = 0; k < 5; k++)
+                {
+                    float a = (72f * k + 18f) * Mathf.Deg2Rad, w = 0.12f * Mathf.Sin(k * 2.3f + 0.5f);
+                    var d = new Vector3(Mathf.Sin(a), 0f, Mathf.Cos(a));
+                    var sd = new Vector3(d.z, 0f, -d.x) * w;
+                    Tube(m, new[]
+                    {
+                        new Vector3(0f, 0.4f, 0f), d * 0.04f + new Vector3(0f, 0.33f, 0f), d * 0.24f + new Vector3(0f, 0.27f, 0f) + sd * 0.3f,
+                        d * 0.52f + new Vector3(0f, 0.15f, 0f) + sd, d * 0.8f + new Vector3(0f, 0.05f, 0f) + sd * 0.6f, d * 1f + new Vector3(0f, 0.015f, 0f),
+                    }, new[] { 0f, 0.15f, 0.13f, 0.09f, 0.05f, 0f }, 5, k * 20f);
+                }
+                pRoots = m.Build("PlantRoots", true);
+            }
+            // 扭曲的藤蔓（四肢、軀幹）：三股螺旋交纏，沿 +Y 0..1，總半徑約 0.35
+            {
+                var m = new PMesh(1);
+                const int n = 10;
+                for (int k = 0; k < 3; k++)
+                {
+                    var pts = new Vector3[n + 3];
+                    var rad = new float[n + 3];
+                    for (int i = 0; i <= n; i++)
+                    {
+                        float s = (float)i / n, th = 2f * Mathf.PI * (s * 0.85f + k / 3f);
+                        pts[i + 1] = new Vector3(Mathf.Cos(th) * 0.18f, s, Mathf.Sin(th) * 0.18f);
+                        rad[i + 1] = 0.17f * (1f - 0.2f * s);
+                    }
+                    pts[0] = pts[1] - Vector3.up * 0.04f; rad[0] = 0f;
+                    pts[n + 2] = pts[n + 1] + Vector3.up * 0.04f; rad[n + 2] = 0f;
+                    Tube(m, pts, rad, 5, k * 40f);
+                }
+                pVine = m.Build("PlantVine", true);
+            }
+        }
+
+        static readonly float[] CapProf = { 0f, 0f, 0f, 0.5f, 0.05f, 0.53f, 0.14f, 0.5f, 0.25f, 0.42f, 0.35f, 0.3f, 0.42f, 0.16f, 0.45f, 0f };
+
+        static Vector3 LeafPt(int i, int side, int n)
+        {
+            float z = (float)i / n;
+            float w = 0.5f * Mathf.Sin(Mathf.PI * Mathf.Pow(z, 0.75f));
+            float yMid = -0.22f * z * z;
+            return side == 0 ? new Vector3(0f, yMid, z) : new Vector3(side * w, yMid + 0.3f * w, z);
+        }
+
+        /// <summary>在菇傘表面放一個六角形斑點：u＝沿剖面從傘緣（0）到頂點（1），ph＝繞 Y 的角度。</summary>
+        static void CapSpot(PMesh m, float u, float phDeg, float size)
+        {
+            // CapProf 第 2 點（傘緣最外）到最後一點（頂點）的折線
+            const int first = 2, last = 7;
+            float f = Mathf.Clamp(u, 0f, 0.999f) * (last - first);
+            int seg = first + Mathf.FloorToInt(f);
+            float t = f - Mathf.Floor(f);
+            float h0 = CapProf[seg * 2], r0 = CapProf[seg * 2 + 1], h1 = CapProf[seg * 2 + 2], r1 = CapProf[seg * 2 + 3];
+            float h = Mathf.Lerp(h0, h1, t), r = Mathf.Lerp(r0, r1, t);
+            var n2 = new Vector2(h1 - h0, -(r1 - r0)).normalized;   // 剖面平面上的外法線（r, h）
+            float a = phDeg * Mathf.Deg2Rad;
+            var radial = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+            var nrm = (radial * n2.x + Vector3.up * n2.y).normalized;
+            var c = radial * r + Vector3.up * h + nrm * 0.012f;
+            var e1 = Vector3.Cross(nrm, Mathf.Abs(nrm.y) > 0.95f ? Vector3.right : Vector3.up).normalized;
+            var e2 = Vector3.Cross(nrm, e1);
+            for (int j = 0; j < 6; j++)
+            {
+                float b0 = j * Mathf.PI / 3f, b1 = (j + 1) * Mathf.PI / 3f;
+                m.Tri(c, c + (e1 * Mathf.Cos(b0) + e2 * Mathf.Sin(b0)) * size, c + (e1 * Mathf.Cos(b1) + e2 * Mathf.Sin(b1)) * size, Color.white);
+            }
+        }
+
+        /// <summary>沿折線的管子（半徑 0 的端點會封成尖頭）；面朝外，可用於有背面剔除的材質。</summary>
+        static void Tube(PMesh m, Vector3[] pts, float[] rad, int sides, float phaseDeg = 0f)
+        {
+            int n = pts.Length;
+            var ring = new Vector3[n * sides];
+            for (int i = 0; i < n; i++)
+            {
+                var t = (pts[Mathf.Min(i + 1, n - 1)] - pts[Mathf.Max(i - 1, 0)]).normalized;
+                var n1 = Vector3.Cross(t, Mathf.Abs(t.y) < 0.95f ? Vector3.up : Vector3.right).normalized;
+                var n2 = Vector3.Cross(t, n1);   // Cross(n1, n2) = t → 跟 Lathe 同樣的繞向（面朝外）
+                for (int j = 0; j < sides; j++)
+                {
+                    float a = (phaseDeg + 360f * j / sides) * Mathf.Deg2Rad;
+                    ring[i * sides + j] = pts[i] + (n1 * Mathf.Cos(a) + n2 * Mathf.Sin(a)) * rad[i];
+                }
+            }
+            for (int i = 0; i < n - 1; i++)
+                for (int j = 0; j < sides; j++)
+                {
+                    int j1 = (j + 1) % sides;
+                    var p00 = ring[i * sides + j]; var p01 = ring[i * sides + j1];
+                    var p10 = ring[(i + 1) * sides + j]; var p11 = ring[(i + 1) * sides + j1];
+                    if (rad[i + 1] > 0f) m.Tri(p00, p11, p10, Color.white);
+                    if (rad[i] > 0f) m.Tri(p00, p01, p11, Color.white);
+                }
+        }
+
+        // ---------------------------------------------------------------- 植物：建立
+        Transform Part(Transform parent, Mesh mesh, Vector3 pos, Vector3 scale, Vector3 euler, Color c, float charge = 0f, bool sway = false)
+        {
+            var go = new GameObject("Part");
+            var t = go.transform;
+            t.SetParent(parent, false);
+            t.localPosition = pos;
+            t.localRotation = Quaternion.Euler(euler);
+            t.localScale = scale;
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var r = go.AddComponent<MeshRenderer>();
+            r.sharedMaterial = rockMat;
+            NoShadow(r);
+            rockList.Add(r); rockCols.Add(c); rockGlows.Add(charge);
+            if (sway) { swayT.Add(t); swayQ.Add(t.localRotation); }
+            return t;
+        }
+
+        void BuildPlant(int k)
+        {
+            InitPlant();
+            variantId = k;
+            kind = k;
+            v = Variants[k];
+            rockList.Clear(); rockCols.Clear(); rockGlows.Clear(); lavaList.Clear(); hotList.Clear(); eyeList.Clear();
+            swayT.Clear(); swayQ.Clear();
+            flame = null; flameR = null; ball = null; core = null; boulder = null; tip = null; carryK = 0f; ballGone = 10f;
+            neck = jaw = jawU = barrel = hipBL = hipBR = rootT = handL = handR = null; petals = null;
+            hipL = hipR = shL = shR = wrL = wrR = null;
+            clock = Random.Range(0f, 10f);
+            phase = PhaseNone;
+            snapW = plantW = 0f;
+
+            body = Pivot("Body", transform, Vector3.zero);
+            switch (k)
+            {
+                case 7: BuildSpitter(); break;
+                case 8: BuildCharger(); break;
+                case 9: BuildCaster(); break;
+                case 10: BuildChomper(); break;
+                case 11: BuildShroom(); break;
+                default: BuildGunner(); break;
+            }
+
+            // ---- 少量花粉／孢子（孢子菇出手時會多噴一團）
+            embers = SpellFx.NewPS(spine, "Pollen", SpellFx.AddMat(SpellFx.TexSoft), k == 11 ? 30 : 8, true);
+            embers.transform.localPosition = new Vector3(0f, k == 11 ? 0.4f : 0.3f, 0f);
+            {
+                var m = embers.main;
+                m.startLifetime = new ParticleSystem.MinMaxCurve(1f, 1.8f);
+                m.startSpeed = new ParticleSystem.MinMaxCurve(0.02f, 0.08f);
+                m.startSize = new ParticleSystem.MinMaxCurve(0.015f, 0.03f);
+                m.startColor = new ParticleSystem.MinMaxGradient(v.emberA, v.emberB);
+                SpellFx.Sphere(embers, 0.3f);
+                SpellFx.FadeInOut(embers);
+                SpellFx.Rise(embers, 0.12f);
+                SpellFx.Noise(embers, 0.15f, 1.5f);
+                SpellFx.Rate(embers, dead ? 0f : 3f);
+                embers.Play();
+            }
+
+            rockR = rockList.ToArray(); rockC = rockCols.ToArray(); rockG = rockGlows.ToArray();
+            lavaR = lavaList.ToArray(); hotR = hotList.ToArray(); eyeR = eyeList.ToArray();
+            AnimatePlant(0f);
+        }
+
+        /// <summary>7 毒液噴花：根鬚＋葉叢底座、兩節彎曲花莖、頂端綠色毒囊＋五片紫色花瓣圍成的大嘴（嘴裡發綠光、蓄著一滴毒液）。</summary>
+        void BuildSpitter()
+        {
+            rootT = Part(body, pRoots, Vector3.zero, new Vector3(0.32f, 0.36f, 0.32f), Vector3.zero, v.rockB);
+            Part(body, pBlob, new Vector3(0f, 0.1f, 0f), new Vector3(0.3f, 0.2f, 0.3f), Vector3.zero, v.rockA);
+            for (int i = 0; i < 3; i++)
+                Part(body, pLeaf, new Vector3(0f, 0.14f, 0f), new Vector3(0.16f, 0.12f, 0.34f), new Vector3(16f, 60f + 120f * i, 0f), v.accent3, 0f, true);
+            spine = Pivot("Stem", body, new Vector3(0f, 0.16f, 0f));
+            Part(spine, pStem, Vector3.zero, new Vector3(0.1f, 0.37f, 0.1f), Vector3.zero, v.rockA);
+            neck = Pivot("Neck", spine, new Vector3(0f, 0.36f, 0f));
+            Part(neck, pStem, Vector3.zero, new Vector3(0.082f, 0.33f, 0.082f), Vector3.zero, v.rockA);
+            head = Pivot("Head", neck, new Vector3(0f, 0.32f, 0f));
+            core = Part(head, pBlob, new Vector3(0f, 0.09f, -0.02f), new Vector3(0.22f, 0.24f, 0.22f), Vector3.zero, v.accent, 0.7f);   // 毒囊（蓄力時鼓脹發光）
+            coreBase = core.localScale;
+            jaw = Pivot("Mouth", head, new Vector3(0f, 0.13f, 0.08f));
+            jaw.localRotation = Quaternion.Euler(-25f, 0f, 0f);   // 嘴朝前上方
+            petals = new Transform[5];
+            for (int i = 0; i < 5; i++)
+            {
+                var rz = Quaternion.AngleAxis(72f * i + 36f, Vector3.forward);
+                petals[i] = Pivot("Petal", jaw, rz * new Vector3(0f, 0.035f, 0f));
+                Part(petals[i], pLeaf, Vector3.zero, new Vector3(0.2f, 0.17f, 0.24f), new Vector3(0f, 0f, 180f), v.accent2);
+            }
+            Glow(PrimitiveType.Sphere, jaw, new Vector3(0f, 0f, 0.012f), new Vector3(0.12f, 0.12f, 0.05f), lavaList);   // 發光的喉嚨
+            tip = Pivot("Venom", jaw, new Vector3(0f, 0f, 0.035f));
+            Glow(PrimitiveType.Sphere, tip, Vector3.zero, Vector3.one, hotList);
+        }
+
+        /// <summary>8 荊棘衝鋒獸：四腳樹樁野豬。樹皮身體＋背上荊棘叢與苔蘚、切面木頭鼻子、兩根獠牙、兩根樹枝角、尾巴一片葉子。</summary>
+        void BuildCharger()
+        {
+            spine = Pivot("Torso", body, new Vector3(0f, 0.38f, 0f));
+            var torsoP = new Vector3(0f, 0.02f, -0.04f); var torsoS = new Vector3(0.56f, 0.46f, 0.84f);
+            Part(spine, pBlob, torsoP, torsoS, Vector3.zero, v.rockA);
+            Part(spine, pThorns, torsoP, torsoS, Vector3.zero, v.accent2);
+            Part(spine, pBlob, new Vector3(0f, 0.2f, -0.08f), new Vector3(0.42f, 0.14f, 0.6f), new Vector3(-4f, 0f, 0f), v.accent3);   // 背上的苔蘚
+            Part(spine, pLeaf, new Vector3(0f, 0.12f, -0.42f), new Vector3(0.12f, 0.1f, 0.22f), new Vector3(-35f, 180f, 0f), v.accent3, 0f, true);   // 尾巴
+            head = Pivot("Head", spine, new Vector3(0f, 0f, 0.36f));
+            Part(head, pBlob, new Vector3(0f, -0.02f, 0.1f), new Vector3(0.38f, 0.32f, 0.34f), Vector3.zero, v.rockA);
+            Part(head, pStem, new Vector3(0f, -0.06f, 0.22f), new Vector3(0.22f, 0.08f, 0.18f), new Vector3(90f, 0f, 0f), v.accent);   // 樹樁切面的鼻子
+            for (int s = -1; s <= 1; s += 2)
+            {
+                Part(head, pCone, new Vector3(0.1f * s, -0.1f, 0.22f), new Vector3(0.045f, 0.17f, 0.045f), new Vector3(60f, 0f, -20f * s), v.accent2);   // 獠牙
+                Part(head, pCone, new Vector3(0.08f * s, 0.1f, 0.06f), new Vector3(0.045f, 0.2f, 0.045f), new Vector3(-22f, 0f, -28f * s), v.rockB);    // 樹枝角
+                Glow(PrimitiveType.Cube, head, new Vector3(0.09f * s, 0.05f, 0.235f), new Vector3(0.065f, 0.024f, 0.03f), eyeList, new Vector3(0f, 0f, 16f * s));
+            }
+            // 四條短粗的樹根腿（腳底寬）
+            const float lx = 0.15f;
+            hipL = Pivot("LegFL", body, new Vector3(-lx, 0.28f, 0.18f));
+            hipR = Pivot("LegFR", body, new Vector3(lx, 0.28f, 0.18f));
+            hipBL = Pivot("LegBL", body, new Vector3(-lx, 0.28f, -0.24f));
+            hipBR = Pivot("LegBR", body, new Vector3(lx, 0.28f, -0.24f));
+            foreach (var h in new[] { hipL, hipR, hipBL, hipBR })
+                Part(h, pStem, new Vector3(0f, -0.29f, 0f), new Vector3(0.17f, 0.31f, 0.17f), Vector3.zero, v.rockB);
+        }
+
+        /// <summary>9 藤蔓術士：三股扭曲藤蔓編成的瘦長人形，背後一片葉披風、葉子兜帽、綠色發光眼睛、手上的藤爪與引導光球。</summary>
+        void BuildCaster()
+        {
+            hipL = Pivot("HipL", body, new Vector3(-0.075f, 0.47f, 0f));
+            hipR = Pivot("HipR", body, new Vector3(0.075f, 0.47f, 0f));
+            Part(hipL, pVine, new Vector3(0f, -0.47f, 0f), new Vector3(0.11f, 0.48f, 0.11f), Vector3.zero, v.rockB);
+            Part(hipR, pVine, new Vector3(0f, -0.47f, 0f), new Vector3(0.11f, 0.48f, 0.11f), new Vector3(0f, 120f, 0f), v.rockB);
+            spine = Pivot("Spine", body, new Vector3(0f, 0.45f, 0f));
+            Part(spine, pVine, new Vector3(0f, -0.03f, 0f), new Vector3(0.26f, 0.44f, 0.2f), new Vector3(0f, 40f, 0f), v.rockA);
+            Part(spine, pLeaf, new Vector3(0f, 0.38f, -0.08f), new Vector3(0.3f, 0.12f, 0.46f), new Vector3(100f, 0f, 0f), v.accent3, 0f, true);   // 葉披風
+            head = Pivot("Head", spine, new Vector3(0f, 0.41f, 0.02f));
+            Part(head, pBlob, new Vector3(0f, 0.08f, 0f), new Vector3(0.15f, 0.17f, 0.15f), Vector3.zero, v.accent2);
+            for (int s = -1; s <= 1; s += 2)
+                Glow(PrimitiveType.Sphere, head, new Vector3(0.035f * s, 0.09f, 0.068f), new Vector3(0.042f, 0.024f, 0.02f), eyeList, new Vector3(0f, 0f, 14f * s));
+            // 兜帽：頭頂往前蓋的大葉＋兩側包住臉的葉
+            Part(head, pLeaf, new Vector3(0f, 0.13f, -0.11f), new Vector3(0.26f, 0.14f, 0.3f), new Vector3(-22f, 0f, 180f), v.accent);
+            for (int s = -1; s <= 1; s += 2)
+                Part(head, pLeaf, new Vector3(0.085f * s, 0.02f, -0.07f), new Vector3(0.14f, 0.1f, 0.26f), new Vector3(-62f, 14f * s, 90f * s), v.accent);
+            // 手臂：藤蔓＋往下的藤爪＋引導光球
+            shL = Pivot("ShoulderL", spine, new Vector3(-0.1f, 0.35f, 0f));
+            shR = Pivot("ShoulderR", spine, new Vector3(0.1f, 0.35f, 0f));
+            foreach (var sh in new[] { shL, shR })
+            {
+                Part(sh, pVine, new Vector3(0f, -0.38f, 0f), new Vector3(0.075f, 0.38f, 0.075f), Vector3.zero, v.rockA);
+                var wr = Pivot("Wrist", sh, new Vector3(0f, -0.38f, 0f));
+                Part(wr, pCone, new Vector3(0f, 0.02f, 0f), new Vector3(0.06f, 0.12f, 0.06f), new Vector3(180f, 0f, 0f), v.rockB);
+                var hg = Pivot("HandGlow", wr, new Vector3(0f, -0.05f, 0.02f));
+                Glow(PrimitiveType.Sphere, hg, Vector3.zero, Vector3.one, lavaList);
+                if (sh == shL) { wrL = wr; handL = hg; } else { wrR = wr; handR = hg; }
+            }
+        }
+
+        /// <summary>10 食人花：根鬚腳、兩片大葉、粗的兩節花莖，頂端上下兩片顎（外綠內紅、尖牙一圈）、顎上一對黃眼、頸後兩片葉領。</summary>
+        void BuildChomper()
+        {
+            rootT = Part(body, pRoots, Vector3.zero, new Vector3(0.36f, 0.4f, 0.36f), Vector3.zero, v.rockB);
+            for (int s = -1; s <= 1; s += 2)
+                Part(body, pLeaf, new Vector3(0.06f * s, 0.12f, 0f), new Vector3(0.17f, 0.12f, 0.38f), new Vector3(22f, 90f * s, 0f), v.accent3, 0f, true);
+            spine = Pivot("Stem", body, new Vector3(0f, 0.1f, 0f));
+            Part(spine, pStem, Vector3.zero, new Vector3(0.13f, 0.43f, 0.13f), Vector3.zero, v.rockA);
+            neck = Pivot("Neck", spine, new Vector3(0f, 0.42f, 0f));
+            Part(neck, pStem, Vector3.zero, new Vector3(0.11f, 0.31f, 0.11f), Vector3.zero, v.rockA);
+            head = Pivot("Head", neck, new Vector3(0f, 0.3f, 0f));
+            for (int s = -1; s <= 1; s += 2)
+                Part(head, pLeaf, new Vector3(0.07f * s, 0f, -0.03f), new Vector3(0.15f, 0.1f, 0.22f), new Vector3(-10f, 140f * s, 0f), v.accent3, 0f, true);   // 葉領
+            Glow(PrimitiveType.Sphere, head, new Vector3(0f, 0f, 0.13f), new Vector3(0.2f, 0.05f, 0.24f), lavaList);   // 喉嚨的光
+            jawU = Pivot("JawUpper", head, new Vector3(0f, 0.02f, -0.02f));
+            Part(jawU, pBlob, new Vector3(0f, 0.07f, 0.17f), new Vector3(0.36f, 0.2f, 0.4f), Vector3.zero, v.accent);
+            Part(jawU, pBlob, new Vector3(0f, 0.025f, 0.17f), new Vector3(0.32f, 0.07f, 0.36f), Vector3.zero, v.accent2, 0.4f);
+            Part(jawU, pTeeth, new Vector3(0f, 0.03f, 0.17f), new Vector3(0.32f, 0.07f, 0.38f), new Vector3(0f, 0f, 180f), new Color(0.93f, 0.9f, 0.74f));
+            for (int s = -1; s <= 1; s += 2)
+                Glow(PrimitiveType.Sphere, jawU, new Vector3(0.075f * s, 0.16f, 0.1f), new Vector3(0.065f, 0.04f, 0.05f), eyeList, new Vector3(0f, 0f, 18f * s));
+            jaw = Pivot("JawLower", head, new Vector3(0f, -0.02f, -0.02f));
+            Part(jaw, pBlob, new Vector3(0f, -0.06f, 0.16f), new Vector3(0.32f, 0.16f, 0.38f), Vector3.zero, v.accent);
+            Part(jaw, pBlob, new Vector3(0f, -0.02f, 0.16f), new Vector3(0.29f, 0.06f, 0.33f), Vector3.zero, v.accent2, 0.4f);
+            Part(jaw, pTeeth, new Vector3(0f, -0.025f, 0.16f), new Vector3(0.3f, 0.065f, 0.36f), Vector3.zero, new Color(0.93f, 0.9f, 0.74f));
+        }
+
+        /// <summary>11 孢子菇：兩條短胖腿、粗菇柄（臉上一對發光眼）、短短的小手、菌環、紫色菇傘＋發光斑點、傘下菌褶。</summary>
+        void BuildShroom()
+        {
+            hipL = Pivot("HipL", body, new Vector3(-0.09f, 0.15f, 0f));
+            hipR = Pivot("HipR", body, new Vector3(0.09f, 0.15f, 0f));
+            Part(hipL, pBlob, new Vector3(0f, -0.07f, 0.02f), new Vector3(0.13f, 0.17f, 0.16f), Vector3.zero, v.rockA);
+            Part(hipR, pBlob, new Vector3(0f, -0.07f, 0.02f), new Vector3(0.13f, 0.17f, 0.16f), Vector3.zero, v.rockA);
+            spine = Pivot("Stalk", body, new Vector3(0f, 0.12f, 0f));
+            Part(spine, pStem, Vector3.zero, new Vector3(0.3f, 0.37f, 0.3f), Vector3.zero, v.rockA);
+            for (int s = -1; s <= 1; s += 2)
+                Glow(PrimitiveType.Sphere, spine, new Vector3(0.05f * s, 0.21f, 0.125f), new Vector3(0.05f, 0.07f, 0.025f), eyeList, new Vector3(0f, 0f, -10f * s));
+            Part(spine, pBlob, new Vector3(0f, 0.28f, 0f), new Vector3(0.33f, 0.04f, 0.33f), Vector3.zero, v.rockB);   // 菌環
+            shL = Pivot("ArmL", spine, new Vector3(-0.13f, 0.2f, 0f));
+            shR = Pivot("ArmR", spine, new Vector3(0.13f, 0.2f, 0f));
+            Part(shL, pBlob, new Vector3(0f, -0.05f, 0f), new Vector3(0.08f, 0.13f, 0.08f), Vector3.zero, v.rockA);
+            Part(shR, pBlob, new Vector3(0f, -0.05f, 0f), new Vector3(0.08f, 0.13f, 0.08f), Vector3.zero, v.rockA);
+            head = Pivot("Cap", spine, new Vector3(0f, 0.34f, 0f));
+            Part(head, pCone, new Vector3(0f, 0.02f, 0f), new Vector3(0.68f, 0.1f, 0.68f), new Vector3(180f, 0f, 0f), v.rockB);   // 菌褶
+            Part(head, pCap, new Vector3(0f, 0.02f, 0f), new Vector3(0.76f, 0.7f, 0.76f), Vector3.zero, v.accent, 0.25f);
+            var sp = new GameObject("Spots");
+            sp.transform.SetParent(head, false);
+            sp.transform.localPosition = new Vector3(0f, 0.02f, 0f);
+            sp.transform.localScale = new Vector3(0.76f, 0.7f, 0.76f);
+            sp.AddComponent<MeshFilter>().sharedMesh = pSpots;
+            var spr = sp.AddComponent<MeshRenderer>();
+            spr.sharedMaterial = glowMat;
+            NoShadow(spr);
+            lavaList.Add(spr);
+        }
+
+        /// <summary>12 種子槍手：根鬚＋圓球莖身、三片尖葉，上面架著種莢膛（兩顆種子、頂上一片瞄準葉）、往前伸的長莢管＋喇叭口＋管口光、一對眼睛。</summary>
+        void BuildGunner()
+        {
+            rootT = Part(body, pRoots, Vector3.zero, new Vector3(0.34f, 0.4f, 0.34f), Vector3.zero, v.rockB);
+            spine = Pivot("Bulb", body, new Vector3(0f, 0.1f, 0f));
+            Part(spine, pBlob, new Vector3(0f, 0.2f, 0f), new Vector3(0.4f, 0.42f, 0.4f), Vector3.zero, v.rockA);
+            for (int i = 0; i < 3; i++)
+            {
+                float yaw = 60f + 120f * i, a = yaw * Mathf.Deg2Rad;
+                Part(spine, pLeaf, new Vector3(Mathf.Sin(a) * 0.1f, 0.08f, Mathf.Cos(a) * 0.1f), new Vector3(0.13f, 0.1f, 0.34f), new Vector3(-48f, yaw, 0f), v.accent3, 0f, true);
+            }
+            head = Pivot("Turret", spine, new Vector3(0f, 0.44f, 0f));
+            core = Part(head, pBlob, new Vector3(0f, 0.1f, -0.02f), new Vector3(0.32f, 0.3f, 0.36f), Vector3.zero, v.accent, 0.5f);   // 種莢膛
+            coreBase = core.localScale;
+            for (int s = -1; s <= 1; s += 2)
+            {
+                Part(head, pBlob, new Vector3(0.07f * s, 0.23f, -0.07f), new Vector3(0.09f, 0.07f, 0.11f), Vector3.zero, v.accent2);   // 種子
+                Glow(PrimitiveType.Sphere, head, new Vector3(0.085f * s, 0.17f, 0.115f), new Vector3(0.06f, 0.035f, 0.03f), eyeList, new Vector3(0f, 0f, 14f * s));
+            }
+            Part(head, pLeaf, new Vector3(0f, 0.24f, -0.02f), new Vector3(0.08f, 0.06f, 0.18f), new Vector3(-70f, 0f, 0f), v.accent3, 0f, true);   // 頂上的瞄準葉
+            barrelBase = new Vector3(0f, 0.11f, 0.1f);
+            barrel = Pivot("Barrel", head, barrelBase);
+            Part(barrel, pStem, Vector3.zero, new Vector3(0.12f, 0.38f, 0.12f), new Vector3(90f, 0f, 0f), v.accent2);
+            Part(barrel, pCone, new Vector3(0f, 0f, 0.43f), new Vector3(0.17f, 0.09f, 0.17f), new Vector3(-90f, 0f, 0f), v.accent3, 0.6f);   // 喇叭口（像花萼）
+            tip = Pivot("Muzzle", barrel, new Vector3(0f, 0f, 0.43f));
+            Glow(PrimitiveType.Sphere, tip, Vector3.zero, Vector3.one, hotList);
+        }
+
+        // ---------------------------------------------------------------- 植物：動作
+        void PuffSpores()
+        {
+            if (embers == null || head == null) return;
+            var ep = new ParticleSystem.EmitParams();
+            var c = head.position;
+            for (int i = 0; i < 16; i++)
+            {
+                var d = Random.onUnitSphere;
+                d.y = Mathf.Abs(d.y) * 0.5f + 0.15f;
+                ep.position = c + new Vector3(d.x, 0f, d.z) * 0.22f + Vector3.up * 0.08f;
+                ep.velocity = d.normalized * Random.Range(0.4f, 1.1f);
+                ep.startSize = Random.Range(0.03f, 0.065f);
+                ep.startLifetime = Random.Range(0.6f, 1.2f);
+                ep.startColor = Color.Lerp(v.emberA, v.emberB, Random.value);
+                embers.Emit(ep, 1);
+            }
+        }
+
+        void AnimatePlant(float dt)
+        {
+            clock += dt;
+            if (clock > 3600f) clock -= 3600f;
+            float hitK = 0f;
+            if (hitT > 0f) { hitT -= dt; hitK = Mathf.Clamp01(hitT / HitDur); }
+            if (dead) deadT += dt;
+            ballGone += dt;
+
+            // ---- 步伐（根鬚類：每半個循環跳一下）
+            float speed = dead ? 0f : Mathf.Clamp(MoveSpeed, 0f, 4f);
+            bool acting = phase != PhaseNone;
+            walkAmt = Mathf.MoveTowards(walkAmt, acting ? 0f : Mathf.Clamp01(speed / 0.3f), dt * 6f);
+            if (speed > 0.01f && !acting) walkPhase += dt * Mathf.PI * 2f * Mathf.Max(speed, 0.3f) / v.stride * v.step;
+            else walkPhase = Mathf.MoveTowards(walkPhase, Mathf.Round(walkPhase / Mathf.PI) * Mathf.PI, dt * 6f);
+            if (walkPhase > 1000f) walkPhase -= Mathf.PI * 300f;
+            float sinP = Mathf.Sin(walkPhase), cosP = Mathf.Cos(walkPhase);
+
+            twitchT -= dt;
+            if (twitchT <= 0f) { twitchT = Random.Range(0.6f, 1.8f) * (kind == 8 ? 1.6f : 1f); lookTarget = Random.Range(-30f, 30f); }
+            lookY = Mathf.MoveTowards(lookY, lookTarget * (1f - walkAmt), dt * (kind == 12 ? 160f : 70f));
+            float breath = Mathf.Sin(clock * 2.4f);
+
+            // ---- 預備／出手的權重
+            float wW = 0f, sW = 0f;
+            if (phase == PhaseWindup)
+            {
+                atkT += dt;
+                wW = Smooth01(atkT / atkDur);
+            }
+            else if (phase == PhaseStrike)
+            {
+                atkT += dt;
+                if (atkT < StrikeIn) { float k = atkT / StrikeIn; sW = 1f - (1f - k) * (1f - k); }
+                else if (atkT < StrikeIn + StrikeHold) sW = 1f;
+                else if (atkT < StrikeIn + StrikeHold + StrikeOut) sW = 1f - Smooth01((atkT - StrikeIn - StrikeHold) / StrikeOut);
+                else phase = PhaseNone;
+                wW = snapW * (1f - Mathf.Clamp01(atkT / StrikeIn));
+            }
+            plantW = wW;
+            float deadE = dead ? Smooth01(deadT / DieDur) : 0f;
+
+            pulsePh += dt * (kind == 11 ? Mathf.Lerp(4f, 24f, wW * wW) : 4f + 10f * wW);
+            if (pulsePh > 1000f) pulsePh -= Mathf.PI * 300f;
+            float pulse = 0.5f + 0.5f * Mathf.Sin(pulsePh);
+            float glow = Mathf.Max(wW, sW * 0.8f);
+            float hop = Mathf.Abs(sinP) * walkAmt;          // 根鬚類的小跳
+            float sway = sinP * walkAmt;
+            float shrink = 1f - 0.45f * deadE;
+            float sink = 0.25f * deadE * deadE;
+
+            switch (kind)
+            {
+                case 7:   // 毒液噴花
+                {
+                    float sq = walkAmt * 0.08f * (1f - Mathf.Abs(sinP));
+                    body.localPosition = new Vector3(0f, hop * v.bob - sink, 0f);
+                    body.localRotation = Quaternion.Euler(walkAmt * 5f, 0f, sway * 4f);
+                    body.localScale = new Vector3(1f + sq * 0.5f, 1f - sq, 1f + sq * 0.5f) * shrink;
+                    rootT.localRotation = Quaternion.Euler(0f, sinP * 10f * walkAmt, 0f);
+                    spine.localRotation = Quaternion.Euler(6f + breath * 2f - 18f * wW + 18f * sW - 15f * hitK + 45f * deadE, lookY * 0.3f, sway * 6f);
+                    neck.localRotation = Quaternion.Euler(14f + breath * 3f - 25f * wW + 20f * sW - 12f * hitK + 40f * deadE, lookY * 0.5f, -sway * 8f + 15f * deadE);
+                    float trem = Mathf.Sin(clock * 38f) * 2.5f * wW;
+                    head.localRotation = Quaternion.Euler(-20f - 25f * wW - 60f * sW + 25f * hitK + 35f * deadE + trem, lookY * 0.3f, trem);
+                    // 毒囊：預備時鼓脹（一抽一抽），噴出時一縮
+                    float swell = 1f + 0.35f * wW * (0.85f + 0.15f * Mathf.Sin(clock * 14f)) - 0.22f * sW + 0.03f * breath;
+                    core.localScale = coreBase * (swell * (1f - 0.3f * deadE));
+                    // 花瓣：平常半開，預備時稍微收攏，噴出時大開，死亡時垂下
+                    float open = 55f + 4f * breath - 18f * wW + 30f * sW + 10f * hitK + 45f * deadE;
+                    for (int i = 0; i < petals.Length; i++)
+                    {
+                        float fl = open + 5f * Mathf.Sin(clock * 3f + i * 1.9f);
+                        petals[i].localRotation = Quaternion.AngleAxis(72f * i + 36f, Vector3.forward) * Quaternion.Euler(-fl, 0f, 0f);
+                    }
+                    float regrow = Mathf.Clamp01((ballGone - 0.3f) / 0.5f);
+                    tip.localScale = Vector3.one * (0.045f * regrow * (0.5f + 1.1f * wW + 0.1f * Mathf.Sin(clock * 17f)) * (1f - deadE));
+                    break;
+                }
+                case 8:   // 荊棘衝鋒獸
+                {
+                    float bob = walkAmt * v.bob * Mathf.Abs(cosP) - walkAmt * 0.02f * Mathf.Pow(1f - Mathf.Abs(cosP), 4f);
+                    body.localPosition = new Vector3(0f, bob - 0.05f * wW - 0.02f * sW - 0.12f * deadE * deadE, -0.06f * wW + 0.28f * sW);
+                    body.localRotation = Quaternion.Euler(0f, 0f, -cosP * 3f * walkAmt + 80f * deadE);
+                    body.localScale = Vector3.one * (1f - 0.3f * deadE);
+                    spine.localRotation = Quaternion.Euler(breath * 1.5f + 7f * wW + 10f * sW - 10f * hitK + 8f * deadE, sinP * 4f * walkAmt + lookY * 0.15f, 0f);
+                    head.localRotation = Quaternion.Euler(5f + 28f * wW + 6f * sW - 18f * hitK + 25f * deadE + breath * 2f, lookY * 0.6f * (1f - wW), 0f);
+                    float sw = v.legSwing * walkAmt;
+                    float paw = wW * (22f * Mathf.Sin(clock * 13f) - 8f);   // 右前腳刨地
+                    float splay = 5f * wW + 25f * deadE;
+                    hipL.localRotation = Quaternion.Euler(sinP * sw - 40f * sW - 10f * wW, 0f, -splay);
+                    hipR.localRotation = Quaternion.Euler(-sinP * sw - 40f * sW + paw, 0f, splay);
+                    hipBL.localRotation = Quaternion.Euler(-sinP * sw + 40f * sW + 8f * wW, 0f, -splay);
+                    hipBR.localRotation = Quaternion.Euler(sinP * sw + 40f * sW + 8f * wW, 0f, splay);
+                    break;
+                }
+                case 9:   // 藤蔓術士
+                {
+                    float crouch = 0.03f * wW + 0.04f * sW + 0.03f * hitK;
+                    float bob = walkAmt * v.bob * Mathf.Abs(cosP);
+                    body.localPosition = new Vector3(0f, -crouch + bob - 0.3f * deadE * deadE, 0f);
+                    body.localRotation = Quaternion.Euler(0f, 0f, -cosP * 5f * walkAmt);
+                    body.localScale = Vector3.one * (1f - 0.4f * deadE);
+                    float legSwing = v.legSwing * walkAmt;
+                    hipL.localRotation = Quaternion.Euler(sinP * legSwing - crouch * 75f, 0f, -3f);
+                    hipR.localRotation = Quaternion.Euler(-sinP * legSwing - crouch * 75f, 0f, 3f);
+                    spine.localRotation = Quaternion.Euler(6f + breath * 2f + walkAmt * 6f - 16f * wW + 22f * sW - 20f * hitK + 70f * deadE, sinP * 6f * walkAmt + lookY * 0.2f, 0f);
+                    head.localRotation = Quaternion.Euler(-4f - 12f * wW - 8f * sW - 12f * hitK + 25f * deadE, lookY * 0.6f, 0f);
+                    // 手臂：平常垂著擺動；預備＝高舉過頭（V 字）引導、微微顫抖；出手＝雙手往前推
+                    float swingA = sinP * 25f * walkAmt;
+                    float trem = Mathf.Sin(clock * 33f) * 3f * wW;
+                    var baseA = new Vector3(-12f + breath * 2f, 0f, 10f + breath * 3f);
+                    var wind = new Vector3(-153f + trem, 0f, 18f);
+                    var thrust = new Vector3(-78f, 6f, -6f);
+                    var deadA = new Vector3(-50f, 0f, 30f);
+                    var aL = baseA + wind * wW + thrust * sW; aL.x += swingA;
+                    var aR = baseA + wind * wW + thrust * sW; aR.x -= swingA;
+                    aL = Vector3.Lerp(aL, deadA, deadE); aR = Vector3.Lerp(aR, deadA, deadE);
+                    shL.localRotation = Quaternion.Euler(aL.x, -aL.y, -aL.z);
+                    shR.localRotation = Quaternion.Euler(aR.x, aR.y, aR.z);
+                    float wr = -15f + 5f * wW + 35f * sW;
+                    wrL.localRotation = Quaternion.Euler(wr, 0f, 0f);
+                    wrR.localRotation = Quaternion.Euler(wr, 0f, 0f);
+                    float hs = 0.06f * (1f + 1.4f * wW * (0.85f + 0.15f * Mathf.Sin(clock * 21f)) + 0.6f * sW + 0.1f * Mathf.Sin(clock * 5f)) * (1f - deadE);
+                    handL.localScale = handR.localScale = Vector3.one * hs;
+                    break;
+                }
+                case 10:  // 食人花
+                {
+                    float sq = walkAmt * 0.07f * (1f - Mathf.Abs(sinP));
+                    body.localPosition = new Vector3(0f, hop * v.bob - sink, 0.12f * sW);
+                    body.localRotation = Quaternion.Euler(walkAmt * 4f, 0f, sway * 4f);
+                    body.localScale = new Vector3(1f + sq * 0.5f, 1f - sq, 1f + sq * 0.5f) * shrink;
+                    rootT.localRotation = Quaternion.Euler(0f, sinP * 10f * walkAmt, 0f);
+                    spine.localRotation = Quaternion.Euler(-10f + breath * 2f - 8f * wW + 10f * sW - 12f * hitK + 45f * deadE, lookY * 0.3f, sway * 5f);
+                    neck.localRotation = Quaternion.Euler(35f + breath * 2f - 12f * wW + 20f * sW - 10f * hitK + 30f * deadE, lookY * 0.5f, -sway * 6f);
+                    float trem = Mathf.Sin(clock * 30f) * 2f * wW;
+                    head.localRotation = Quaternion.Euler(-25f - 8f * wW - 10f * sW + 10f * deadE + trem, lookY * 0.3f, 0f);
+                    // 下顎：平常微張（偶爾嚼一下），預備＝張到最大，出手＝猛然咬合
+                    float chew = Mathf.Max(0f, Mathf.Sin(clock * 1.7f));
+                    float open = 0.12f + 0.15f * chew * chew * chew * chew;
+                    open = Mathf.Lerp(open, 1f + 0.05f * Mathf.Sin(clock * 30f), wW);
+                    open *= 1f - sW;
+                    open = Mathf.Max(open, 0.35f * hitK);
+                    open = Mathf.Lerp(open, 0.45f, deadE);
+                    jawU.localRotation = Quaternion.Euler(-40f * open + 3f * sW, 0f, 0f);
+                    jaw.localRotation = Quaternion.Euler(32f * open, 0f, 0f);
+                    break;
+                }
+                case 11:  // 孢子菇
+                {
+                    float crouch = 0.04f * wW + 0.05f * sW + 0.03f * hitK;
+                    float bob = walkAmt * v.bob * Mathf.Abs(cosP);
+                    body.localPosition = new Vector3(0f, -crouch + bob - 0.2f * deadE * deadE, 0f);
+                    body.localRotation = Quaternion.Euler(0f, 0f, -cosP * 10f * walkAmt);
+                    body.localScale = Vector3.one * (1f - 0.4f * deadE);
+                    float legSwing = v.legSwing * walkAmt;
+                    hipL.localRotation = Quaternion.Euler(sinP * legSwing, 0f, -4f);
+                    hipR.localRotation = Quaternion.Euler(-sinP * legSwing, 0f, 4f);
+                    spine.localRotation = Quaternion.Euler(breath * 2f + walkAmt * 4f - 6f * wW + 8f * sW - 15f * hitK + 60f * deadE, lookY * 0.25f, cosP * 4f * walkAmt);
+                    spine.localScale = new Vector3(1f + 0.1f * sW, 1f - 0.05f * wW - 0.15f * sW, 1f + 0.1f * sW);
+                    float flap = Mathf.Sin(clock * 20f) * 12f * wW;
+                    shL.localRotation = Quaternion.Euler(-sinP * 30f * walkAmt, 0f, -(20f + 30f * wW + flap + 30f * sW));
+                    shR.localRotation = Quaternion.Euler(sinP * 30f * walkAmt, 0f, 20f + 30f * wW + flap + 30f * sW);
+                    // 菇傘：預備時一鼓一鼓地膨脹，出手時壓扁
+                    float puff = 1f + 0.24f * wW * (0.75f + 0.25f * pulse) + 0.025f * breath;
+                    head.localScale = new Vector3(puff * (1f + 0.22f * sW), puff * (1f - 0.35f * sW), puff * (1f + 0.22f * sW)) * (1f - 0.2f * deadE);
+                    head.localRotation = Quaternion.Euler(-8f * wW + 6f * hitK, lookY * 0.4f, -cosP * 4f * walkAmt + 20f * deadE);
+                    break;
+                }
+                default:  // 12 種子槍手
+                {
+                    float sq = walkAmt * 0.07f * (1f - Mathf.Abs(sinP));
+                    body.localPosition = new Vector3(0f, hop * v.bob - sink, 0f);
+                    body.localRotation = Quaternion.Euler(walkAmt * 5f, 0f, sway * 4f);
+                    body.localScale = new Vector3(1f + sq * 0.5f, 1f - sq, 1f + sq * 0.5f) * shrink;
+                    rootT.localRotation = Quaternion.Euler(0f, sinP * 10f * walkAmt, 0f);
+                    spine.localRotation = Quaternion.Euler(breath * 1.5f + walkAmt * 4f - 7f * sW - 10f * hitK + 50f * deadE, 0f, sway * 5f);
+                    float aim = 1f - Mathf.Max(wW, sW);
+                    head.localRotation = Quaternion.Euler(-3f + breath - 10f * wW - 18f * sW + 10f * hitK + 35f * deadE, lookY * aim, 0f);
+                    core.localScale = coreBase * ((1f + 0.24f * wW * (0.8f + 0.2f * pulse) - 0.12f * sW + 0.02f * breath) * (1f - 0.3f * deadE));
+                    barrel.localPosition = barrelBase + new Vector3(0f, 0f, 0.02f * wW - 0.09f * sW);
+                    barrel.localScale = new Vector3(1f + 0.1f * wW, 1f + 0.1f * wW, 1f - 0.12f * sW);
+                    float fl = phase == PhaseStrike && atkT < 0.12f ? 1f - atkT / 0.12f : 0f;
+                    tip.localScale = Vector3.one * ((0.03f + 0.09f * wW * (0.85f + 0.15f * Mathf.Sin(clock * 30f)) + 0.1f * fl) * (1f - deadE));
+                    break;
+                }
+            }
+
+            // ---- 葉子隨風輕擺（走路、被打時擺得更大；死亡時垂下）
+            for (int i = 0; i < swayT.Count; i++)
+            {
+                float a = Mathf.Sin(clock * 2.1f + i * 1.7f) * (3f + 8f * walkAmt) + 15f * hitK + 35f * deadE;
+                swayT[i].localRotation = swayQ[i] * Quaternion.Euler(a, 0f, Mathf.Sin(clock * 1.3f + i) * 3f);
+            }
+
+            UpdatePlantColors(hitK, deadE, pulse, glow);
+        }
+
+        void UpdatePlantColors(float hitK, float deadE, float pulse, float g)
+        {
+            var lava = Color.Lerp(v.lavaDim, v.lava, 0.55f + 0.45f * pulse);
+            lava = Color.Lerp(lava, v.hot, Mathf.Clamp01(g * 0.8f + hitK * 0.5f));
+            lava = Color.Lerp(lava, WitherDark, deadE);
+            var hot = Color.Lerp(v.hot, Color.white, Mathf.Clamp01(0.3f * pulse + 0.5f * g));
+            hot = Color.Lerp(hot, WitherDark, deadE);
+            var eye = Color.Lerp(Color.Lerp(v.eye, Color.white, g * 0.5f), WitherDark, Mathf.Clamp01(deadE * 1.5f));
+
+            mpb.Clear();
+            mpb.SetColor(ColorId, lava);
+            for (int i = 0; i < lavaR.Length; i++) lavaR[i].SetPropertyBlock(mpb);
+            mpb.SetColor(ColorId, hot);
+            for (int i = 0; i < hotR.Length; i++) hotR[i].SetPropertyBlock(mpb);
+            mpb.SetColor(ColorId, eye);
+            for (int i = 0; i < eyeR.Length; i++) eyeR[i].SetPropertyBlock(mpb);
+            float charge = Mathf.Clamp01(g * (0.55f + 0.45f * pulse));
+            for (int i = 0; i < rockR.Length; i++)
+            {
+                var c = rockC[i];
+                if (rockG[i] > 0f) c = Color.Lerp(c, v.lava, rockG[i] * charge);
+                c = Color.Lerp(c, PlantFlash, hitK * 0.6f);
+                c = Color.Lerp(c, Withered, deadE * 0.85f);
+                mpb.SetColor(ColorId, c);
+                rockR[i].SetPropertyBlock(mpb);
             }
         }
 

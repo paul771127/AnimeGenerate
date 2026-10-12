@@ -41,7 +41,8 @@ namespace SpellDuel
         public float damageTakenMul = 1f;   // 受到的傷害倍率（單人模式的電腦難度：簡單／普通時玩家受傷較少）
         // Boss 召喚的小怪：編號、攻擊狀態（預備到 windupUntil 出手，attackReadyAt 之後才能再攻擊）
         public bool isMinion; public int minionId; public float windupUntil, attackReadyAt, teleportAt;
-        public Vector3 aimPoint;        // Boss 熔岩躍擊的落點（蓄力時畫紅圈）
+        public Vector3 aimPoint;        // Boss 熔岩躍擊／樹根爆發的落點（蓄力時畫紅圈）
+        public float dashUntil; public Vector3 dashDir; public bool dashHit;   // 荊棘衝鋒獸：衝刺中
         public int minionKind;                 // 0 近戰小鬼、1 火焰射手、2 岩石衝鋒獸、3 自爆小鬼、4 岩石投擲者、5 熔岩狙擊手
         public float recoverUntil;             // 小怪出手後原地不動到這個時間（1 秒）
         public float dmgMul = 1f, speedMul = 1f;   // 無盡模式：越後面的波次越強
@@ -88,6 +89,7 @@ namespace SpellDuel
         public EffectKind effect; public float effectDps, effectDur;
         public bool reflected, alive = true;
         public bool crit;               // 爆擊（傷害 ×2）
+        public bool lob; public Vector3 vel, landAt;   // 拋物線投擲（毒液彈）：速度向量、預定落點
         public float rangeMul = 1f;     // 飛行距離倍率（無盡模式升級）
         public int id;
         public bool remote;          // 雙人：對手的法術（只顯示，命中由對手判定）
@@ -166,20 +168,26 @@ namespace SpellDuel
         public const int MaxMinions = 10;
         public event Action<int, int, SkillDef> OnMinionHit;   // 隊友端：我的法術打到小怪（編號、傷害、技能）
 
-        public static readonly string[] MinionNames = { "熔岩小鬼", "火焰射手", "岩石衝鋒獸", "自爆小鬼", "岩石投擲者", "熔岩狙擊手", "虛空術士" };
+        public static readonly string[] MinionNames = { "熔岩小鬼", "火焰射手", "岩石衝鋒獸", "自爆小鬼", "岩石投擲者", "熔岩狙擊手", "虛空術士", "毒液噴花", "荊棘衝鋒獸", "藤蔓術士", "食人花", "孢子菇", "種子槍手" };
         // 各種小怪的基本數值：血量、移動速度、身體半徑、頭的高度
-        static readonly int[] MinionHp = { 20, 15, 60, 10, 23, 15, 18 };   // 血量（已下修 50%）
+        static readonly int[] MinionHp = { 20, 15, 60, 10, 23, 15, 18, 16, 30, 18, 22, 26, 14 };   // 血量（已下修 50%）
         public const float EnemySpeedScale = 0.3f;   // 小怪與 Boss 的移動速度倍率（調慢到 30%）
         public const float MinionRecover = 1f;       // 小怪出手後原地不動的秒數
-        static readonly float[] MinionSpeed = { 1.0f, 0.9f, 0.6f, 1.7f, 0.7f, 0.8f, 0.6f }, MinionRadius = { 0.25f, 0.23f, 0.4f, 0.22f, 0.28f, 0.24f, 0.24f }, MinionHead = { 0.85f, 0.8f, 1.3f, 0.65f, 0.95f, 0.85f, 0.85f };
+        static readonly float[] MinionSpeed = { 1.0f, 0.9f, 0.6f, 1.7f, 0.7f, 0.8f, 0.6f, 0.7f, 0.9f, 0.6f, 1.0f, 0.8f, 0.8f }, MinionRadius = { 0.25f, 0.23f, 0.4f, 0.22f, 0.28f, 0.24f, 0.24f, 0.25f, 0.35f, 0.25f, 0.3f, 0.28f, 0.24f }, MinionHead = { 0.85f, 0.8f, 1.3f, 0.65f, 0.95f, 0.85f, 0.85f, 0.9f, 1.0f, 1.1f, 1.0f, 0.8f, 0.9f };
         // 遠程小怪想站的距離（最近、最遠）；0＝近戰（走到身邊）
-        static readonly float[] KeepMin = { 0f, 3.5f, 0f, 0f, 4.5f, 6f, 6f }, KeepMax = { 0f, 6f, 0f, 0f, 7.5f, 9f, 12f };
-        public static bool IsRanged(int kind) => kind == 1 || kind == 4 || kind == 5 || kind == 6;
+        static readonly float[] KeepMin = { 0f, 3.5f, 0f, 0f, 4.5f, 6f, 6f, 4f, 0f, 3.5f, 0f, 0f, 4f }, KeepMax = { 0f, 6f, 0f, 0f, 7.5f, 9f, 12f, 7.5f, 0f, 5.5f, 0f, 0f, 8f };
+        // 出手距離、預備時間（-1＝用 m_claw 的蓄力）
+        static readonly float[] MinionReach = { 0.95f, 9f, 1.2f, 1.3f, 11f, 14f, 13f, 8f, 5f, 6f, 1.0f, 1.3f, 9f };
+        static readonly float[] MinionWindup = { -1f, 0.8f, 1.0f, 0.5f, 1.2f, 1.6f, 1.0f, 1.0f, 0.8f, 1.0f, 0.7f, 0.8f, 0.9f };
+        public const int MinionKinds = 13;
+        public const float VineStay = 3f;   // 藤蔓術士放出藤蔓後不能移動的秒數（＝藤蔓持續時間）
+        public static bool IsPlant(int kind) => kind >= 7;
+        public static bool IsRanged(int kind) => kind == 1 || kind == 4 || kind == 5 || kind == 6 || kind == 7 || kind == 9 || kind == 12;
         public const float VoidStay = 3f;   // 虛空術士出手後停留幾秒再瞬移
 
         public Fighter SpawnMinion(Vector3 feet, int id = 0, int kind = 0, float hpMul = 1f, float dmgMul = 1f, float speedMul = 1f)
         {
-            kind = Mathf.Clamp(kind, 0, 6);
+            kind = Mathf.Clamp(kind, 0, MinionKinds - 1);
             var c = Skills.Classes["minion"];
             var m = new Fighter(MinionNames[kind], c, new string[0], false)
             {
@@ -238,7 +246,7 @@ namespace SpellDuel
 
         // 經驗值：小怪依種類與波次、Boss 依第幾隻；合作時兩人共用同一份經驗（各自選升級）
         public int xp;
-        static readonly int[] MinionXp = { 10, 12, 25, 12, 15, 18, 20 };
+        static readonly int[] MinionXp = { 10, 12, 25, 12, 15, 18, 20, 18, 20, 20, 12, 16, 16 };
         /// <summary>升到下一級需要的累積經驗：55、140、255、400…</summary>
         public static int XpForLevel(int level) => 40 * (level - 1) + 15 * (level - 1) * (level - 1) + 0;
         public static int LevelOf(int xp) { int l = 1; while (xp >= XpForLevel(l + 1)) l++; return l; }
@@ -287,20 +295,32 @@ namespace SpellDuel
         // 熔岩狙擊手（遠程）第 8 波；自爆小鬼第 11 波（打倒第一隻 Boss 後）
         static readonly int[] UnlockWave = { 1, 1, 6, 11, 4, 8, 5 };
         public const float RangedShare = 0.2f;   // 遠程小怪約佔兩成
+        /// <summary>場景主題：第 1～10 波熔岩火山（0）、11～20 波森林（1），之後輪流</summary>
+        public static int ThemeOf(int wave) => ((Mathf.Max(1, wave) - 1) / 10) % 2;
+        public int Theme => endless ? ThemeOf(wave) : 0;
+        // 森林小怪（7～12）在第 11～20 波的解鎖：這個主題的第幾波起（第二輪起全部解鎖）
+        static readonly int[] PlantUnlock = { 0, 0, 0, 0, 0, 0, 0, 1, 1, 3, 1, 5, 7 };
+
         int PickMinionKind()
         {
-            // 先決定近戰或遠程（遠程約兩成），再在已解鎖的種類裡依權重挑
+            // 先決定近戰或遠程（遠程約兩成），再在這個主題已解鎖的種類裡依權重挑
             bool ranged = rng.NextDouble() < RangedShare;
-            float[] w = { 3f, 2f, 1.2f + 0.08f * wave, 1.2f + 0.08f * wave, 1.5f, 1.0f + 0.05f * wave, 1.2f };
+            bool forest = Theme == 1;
+            int local = wave - (wave - 1) / 10 * 10;       // 這個主題的第幾波（1～10）
+            bool firstCycle = wave <= 20;
+            float[] w = { 3f, 2f, 1.2f + 0.08f * wave, 1.2f + 0.08f * wave, 1.5f, 1.0f + 0.05f * wave, 1.2f, 1.5f, 1.3f, 1.2f, 3f, 1.5f, 1.2f };
+            bool Ok(int k) => IsRanged(k) == ranged && (forest
+                ? k >= 7 && (!firstCycle || local >= PlantUnlock[k])
+                : k < 7 && wave >= UnlockWave[k]);
             float sum = 0f;
-            for (int k = 0; k < w.Length; k++) if (wave >= UnlockWave[k] && IsRanged(k) == ranged) sum += w[k];
+            for (int k = 0; k < w.Length; k++) if (Ok(k)) sum += w[k];
             float r = (float)rng.NextDouble() * sum;
             for (int k = 0; k < w.Length; k++)
             {
-                if (wave < UnlockWave[k] || IsRanged(k) != ranged) continue;
+                if (!Ok(k)) continue;
                 r -= w[k]; if (r <= 0f) return k;
             }
-            return ranged ? 1 : 0;
+            return forest ? (ranged ? 7 : 10) : (ranged ? 1 : 0);
         }
 
         void SpawnBoss()
@@ -312,6 +332,14 @@ namespace SpellDuel
             enemy.hp = enemy.maxHp;
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
             enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f;
+            // 依主題換 Boss：熔岩巨像／腐化樹王（招式不同）
+            var bc = Skills.Classes[Theme == 1 ? "boss_forest" : "boss"];
+            if (enemy.cls != bc)
+            {
+                enemy.cls = bc; enemy.name = bc.name;
+                enemy.loadout.Clear();
+                foreach (var id in bc.defaultLoadout) enemy.loadout.Add(Skills.All[id]);
+            }
             Emit("bossarrive", enemy.Feet, enemy.cls.color, $"第 {wave} 波 Boss 出現！");
             OnBossSpawn?.Invoke(bossIndex);
         }
@@ -351,12 +379,20 @@ namespace SpellDuel
                 m.forward = Fighter.Flat(tgt.head - m.head);
                 float d = best;
                 int kind = m.minionKind;
+                // 荊棘衝鋒獸衝刺中：直線往前衝，撞到玩家就停
+                if (m.dashUntil > 0f)
+                {
+                    if (now >= m.dashUntil) { m.dashUntil = 0f; m.recoverUntil = now + MinionRecover; }
+                    else DashStep(m, dt);
+                    continue;
+                }
                 if (m.windupUntil > 0f)
                 {
                     if (now < m.windupUntil) continue;   // 預備中站著不動
                     m.windupUntil = 0f;
                     MinionStrike(m, tgt, d);
-                    m.recoverUntil = now + (kind == 6 ? VoidStay : MinionRecover);   // 出手後原地不動 1 秒（虛空術士 3 秒）
+                    // 出手後原地不動：一般 1 秒、虛空術士 3 秒、藤蔓術士在藤蔓消失前（3 秒）；衝鋒獸改由衝刺決定
+                    m.recoverUntil = kind == 8 ? 0f : now + (kind == 6 ? VoidStay : kind == 9 ? VineStay : MinionRecover);
                     if (kind == 6) m.teleportAt = now + VoidStay;                   // 停留完就瞬移
                     continue;
                 }
@@ -372,8 +408,8 @@ namespace SpellDuel
                 }
                 if (m.snaredUntil > now || now < m.recoverUntil) continue;
                 // 出手條件：近戰／衝鋒獸／自爆要貼近；射手在 9m 內
-                float reach = kind == 1 ? 9f : kind == 4 ? 11f : kind == 5 ? 14f : kind == 6 ? 13f : kind == 3 ? 1.3f : kind == 2 ? 1.2f : 0.95f;
-                float windup = kind == 1 ? 0.8f : kind == 4 ? 1.2f : kind == 5 ? 1.6f : kind == 6 ? 1.0f : kind == 2 ? 1.0f : kind == 3 ? 0.5f : claw.charge;
+                float reach = MinionReach[kind];
+                float windup = MinionWindup[kind] < 0f ? claw.charge : MinionWindup[kind];
                 bool outside = minionInside != null && !minionInside(m.Feet);   // 還在場地外：先走進來（不在場外放招）
                 if (!outside && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt) { m.windupUntil = now + windup; Emit("minionwindup", m.Feet, claw.color, null); continue; }
                 // 走位：射手保持 3.5～6m，其他走向目標（停在 0.8m）；小怪之間互相推開
@@ -441,6 +477,64 @@ namespace SpellDuel
                     Emit("minionattack", m.Feet, rk.color, null);
                     return;
                 }
+                case 7:
+                {
+                    // 毒液噴花：往上拋物線把毒液彈射向玩家（落點＝玩家現在的位置）
+                    var vs = Skills.All["m_venom"];
+                    m.attackReadyAt = now + vs.cooldown;
+                    SpawnLob(m, vs, m.head + Vector3.up * 0.2f, tgt.Feet, Mathf.RoundToInt(vs.damage * m.dmgMul), 1.1f);
+                    Emit("minionattack", m.Feet, vs.color, null);
+                    return;
+                }
+                case 8:
+                {
+                    // 荊棘衝鋒獸：朝玩家現在的位置直線衝刺（衝過頭一點），地上畫出衝刺路線
+                    var ds = Skills.All["m_dash"];
+                    m.attackReadyAt = now + ds.cooldown;
+                    var dir = Fighter.Flat(tgt.Feet - m.Feet); if (dir == Vector3.zero) dir = Fighter.Flat(m.forward);
+                    float len = Mathf.Min(6f, d + 1.5f);
+                    m.dashDir = dir; m.dashHit = false; m.dashUntil = now + len / ds.speed;
+                    AddLane("dash", m.Feet, m.Feet + dir * len, 0f, len / ds.speed + 0.15f, m.bodyRadius, ds, 0, false);
+                    Emit("minionattack", m.Feet, ds.color, null);
+                    return;
+                }
+                case 9:
+                {
+                    // 藤蔓術士：從自己長到玩家當下位置的藤蔓（0.6 秒長滿，趁這時候閃開），持續 3 秒，碰到就受傷
+                    var vn = Skills.All["m_vine"];
+                    m.attackReadyAt = now + vn.cooldown;
+                    AddLane("vine", m.Feet, tgt.Feet, 0.6f, VineStay, vn.radius, vn, Mathf.RoundToInt(vn.damage * m.dmgMul), false);
+                    Emit("minionattack", m.Feet, vn.color, null);
+                    return;
+                }
+                case 11:
+                {
+                    // 孢子菇：周圍一團孢子雲（受傷＋中毒），自己不會死
+                    var sp = Skills.All["m_spore"];
+                    m.attackReadyAt = now + sp.cooldown;
+                    Emit("sporeburst", m.Feet, sp.color, null);
+                    foreach (var v in new List<Fighter>(Players()))
+                    {
+                        if (!v.Alive || FlatDistance(v.Feet, m.Feet) > sp.areaRadius + v.bodyRadius) continue;
+                        int dmg = Mathf.RoundToInt(sp.damage * m.dmgMul);
+                        if (v.dodgeUntil > now) Emit("evade", v.Chest, sp.color, "閃避！");
+                        else if (v == ally) { Emit("allyhit", v.Chest, sp.color, null); OnAllyHit?.Invoke(sp, dmg, v.Chest, 0); }
+                        else ApplyDamageAndEffect(v, dmg, sp.effect, sp.effectDps, sp.effectDur, v.Chest);
+                    }
+                    return;
+                }
+                case 12:
+                {
+                    // 種子槍手：三顆種子扇形射出
+                    var sd = Skills.All["m_seed"];
+                    m.attackReadyAt = now + sd.cooldown;
+                    var from = m.head + Fighter.Flat(m.forward) * 0.3f;
+                    var aim = (tgt.Chest - from).normalized;
+                    for (int i = 0; i < sd.multi; i++)
+                        Spawn(m, sd, from, RotateY(aim, (i - (sd.multi - 1) / 2f) * sd.spreadDeg), Mathf.RoundToInt(sd.damage * m.dmgMul), EffectKind.None, 0f, 0f, false);
+                    Emit("minionattack", m.Feet, sd.color, null);
+                    return;
+                }
                 case 6:
                 {
                     // 虛空術士：超遠距離的虛空彈（射程 14m）；之後停留 3 秒再瞬移
@@ -479,11 +573,13 @@ namespace SpellDuel
                 }
                 default:
                 {
-                    // 近戰小鬼 7、岩石衝鋒獸 16（再乘上波次倍率）
-                    int dmg = Mathf.RoundToInt((m.minionKind == 2 ? 16 : claw.damage) * m.dmgMul);
-                    m.attackReadyAt = now + (m.minionKind == 2 ? 2.2f : claw.cooldown);
-                    Emit("minionattack", m.Feet, claw.color, null);
-                    float reach = m.minionKind == 2 ? 1.6f : claw.rangeMax;
+                    // 近戰小鬼 7、岩石衝鋒獸 16、食人花 9（再乘上波次倍率）
+                    var bite = Skills.All["m_bite"];
+                    bool chomp = m.minionKind == 10;
+                    int dmg = Mathf.RoundToInt((m.minionKind == 2 ? 16 : chomp ? bite.damage : claw.damage) * m.dmgMul);
+                    m.attackReadyAt = now + (m.minionKind == 2 ? 2.2f : chomp ? bite.cooldown : claw.cooldown);
+                    Emit("minionattack", m.Feet, chomp ? bite.color : claw.color, null);
+                    float reach = m.minionKind == 2 ? 1.6f : chomp ? bite.rangeMax + 0.2f : claw.rangeMax;
                     if (d <= reach + tgt.bodyRadius)
                     {
                         if (tgt.dodgeUntil > now) Emit("evade", tgt.Chest, claw.color, "閃避！");
@@ -529,6 +625,14 @@ namespace SpellDuel
         public Projectile AddRemoteProjectile(int id, SkillDef s, Vector3 from, Vector3 dir, float elapsed, bool reflected, float curveAmp = 0f, float pathLen = 0f, Fighter owner = null)
         {
             var p = new Projectile { owner = owner ?? enemy, skill = s, pos = from, basePos = from, dir = dir.normalized, damage = s.damage, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur, reflected = reflected, id = id, remote = true };
+            if (s.lob)
+            {
+                // 拋物線：pathLen 帶的是初速大小
+                p.lob = true; p.vel = p.dir * pathLen; p.landAt = LobLanding(from, p.vel);
+                for (float t = 0f; t < elapsed; t += 0.05f) { p.vel += Vector3.down * LobGravity * 0.05f; p.pos += p.vel * 0.05f; }
+                projectiles.Add(p);
+                return p;
+            }
             SetCurve(p, curveAmp, pathLen);
             Advance(p, s.speed * Mathf.Max(0f, elapsed));
             projectiles.Add(p);
@@ -662,16 +766,30 @@ namespace SpellDuel
                 case SkillType.Trap: PlaceTrap(f, s, floorPoint); break;
                 case SkillType.Projectile when s.areaRadius > 0f:
                 {
-                    // 範圍重擊（Boss 地裂）：放招當下站在半徑內的玩家都受傷；側跨的無敵時間內閃得掉
-                    Emit("slam", f.Feet, s.color, null);
+                    // 範圍重擊（Boss 地裂／踐踏；樹根爆發打在目標位置）：放招當下站在半徑內的玩家都受傷；側跨的無敵時間內閃得掉
+                    var ac = s.atTarget ? new Vector3(f.aimPoint.x, 0f, f.aimPoint.z) : f.Feet;
+                    Emit(s.atTarget ? "roots" : "slam", ac, s.color, null);
                     Emit("cast", f.head, s.color, null);
                     foreach (var v in new List<Fighter>(Players()))
                     {
-                        if (v == f || !v.Alive || FlatDistance(f.Feet, v.Feet) > s.areaRadius + v.bodyRadius) continue;
+                        if (v == f || !v.Alive || FlatDistance(ac, v.Feet) > s.areaRadius + v.bodyRadius) continue;
                         if (v.dodgeUntil > now) { Emit("evade", v.Chest, s.color, "閃避！"); continue; }
                         if (v == ally) { Emit("allyhit", v.Chest, s.color, null); OnAllyHit?.Invoke(s, s.damage, v.Chest, 0); }
                         else ApplyDamageAndEffect(v, s.damage, s.effect, s.effectDps, s.effectDur, v.Chest);
                     }
+                    break;
+                }
+                case SkillType.Projectile when s.lob:
+                {
+                    // 拋物線投擲（毒孢彈）：第一顆落在目標腳下，其餘落在周圍 0.8～1.5m
+                    var tgtFeet = locked ? Opponent(f).Feet : floorPoint;
+                    for (int i = 0; i < Mathf.Max(1, s.multi); i++)
+                    {
+                        var at = tgtFeet;
+                        if (i > 0) { float a = (float)rng.NextDouble() * Mathf.PI * 2f, r = 0.8f + (float)rng.NextDouble() * 0.7f; at += new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r); }
+                        SpawnLob(f, s, f.head + Vector3.up * 0.3f, at, Mathf.RoundToInt(s.damage * f.dmgMul), 1.1f + 0.15f * i);
+                    }
+                    Emit("cast", f.head, s.color, null);
                     break;
                 }
                 case SkillType.Projectile when s.fromAbove:
@@ -782,7 +900,8 @@ namespace SpellDuel
                             at = f.Feet + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
                             if (minionInside == null || minionInside(at)) break;
                         }
-                        SpawnMinion(at, 0, 0, PartyMul);
+                        int sk = Theme == 1 ? (rng.Next(3) == 0 ? 7 : 10) : 0;   // 森林：食人花為主，偶爾毒液噴花
+                        SpawnMinion(at, 0, sk, PartyMul);
                     }
                     Emit("summon", f.Feet, s.color, n > 0 ? $"召喚了 {n} 隻小怪！" : null);
                     return;
@@ -894,6 +1013,157 @@ namespace SpellDuel
             UpdateEndless();
             UpdateTraps();
             UpdateBurns(dt);
+            UpdatePools();
+            UpdateLanes();
+        }
+
+        // ------------------------------------------------------------ 森林：拋物線毒液彈、毒液區、藤蔓／衝刺路線
+        public const float LobGravity = 7f, PoolLife = 5f, PoolRadius = 0.5f;
+
+        /// <summary>拋物線投擲：T 秒後落在 to（地面）</summary>
+        void SpawnLob(Fighter owner, SkillDef s, Vector3 from, Vector3 to, int dmg, float T)
+        {
+            to.y = 0f;
+            var flat = Fighter.Flat(to - from);
+            var v = new Vector3((to.x - from.x) / T, (to.y - from.y + 0.5f * LobGravity * T * T) / T, (to.z - from.z) / T);
+            var p = new Projectile { owner = owner, skill = s, pos = from, basePos = from, dir = v.normalized, damage = dmg, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur, id = nextId++, lob = true, vel = v, landAt = to, pathLen = v.magnitude };
+            if ((owner == enemy || owner.isMinion) && owner.target != null) p.target = owner.target;
+            projectiles.Add(p);
+            if ((owner == player && (remoteEnemy || ally != null)) || ((owner == enemy || owner.isMinion) && coopHost)) OnSpawn?.Invoke(p);
+        }
+
+        /// <summary>從 from 以速度 v 拋出，落地（y=0）的位置</summary>
+        public static Vector3 LobLanding(Vector3 from, Vector3 v)
+        {
+            float g = LobGravity, t = (v.y + Mathf.Sqrt(Mathf.Max(0f, v.y * v.y + 2f * g * from.y))) / g;
+            return new Vector3(from.x + v.x * t, 0f, from.z + v.z * t);
+        }
+
+        void StepLob(Projectile p, float dt)
+        {
+            p.vel += Vector3.down * LobGravity * dt;
+            p.pos += p.vel * dt;
+            p.traveled += p.vel.magnitude * dt;
+            if (p.pos.y > 0.05f || p.vel.y > 0f) { if (p.traveled > 60f) p.alive = false; return; }
+            // 落地：落點周圍受傷＋中毒，留下一攤毒液區
+            p.alive = false;
+            var at = new Vector3(p.pos.x, 0f, p.pos.z);
+            Emit("poisonsplash", at, p.skill.color, null);
+            if (!p.remote)
+                foreach (var v in new List<Fighter>(Players()))
+                {
+                    if (!v.Alive || FlatDistance(at, v.Feet) > p.skill.radius + v.bodyRadius) continue;
+                    if (v.dodgeUntil > now) { Emit("evade", v.Chest, p.skill.color, "閃避！"); continue; }
+                    if (v == ally) { Emit("allyhit", v.Chest, p.skill.color, null); OnAllyHit?.Invoke(p.skill, p.damage, v.Chest, 0); }
+                    else ApplyDamageAndEffect(v, p.damage, p.effect, p.effectDps, p.effectDur, v.Chest);
+                }
+            AddPool(at, p.remote);
+        }
+
+        public class PoisonPool
+        {
+            public Vector3 pos; public float radius, until; public bool remote, alive = true;
+            public readonly Dictionary<Fighter, float> next = new Dictionary<Fighter, float>();
+        }
+        public readonly List<PoisonPool> pools = new List<PoisonPool>();
+        public event Action<PoisonPool> OnPool;   // 新的毒液區（畫面用）
+
+        void AddPool(Vector3 at, bool remote)
+        {
+            var pl = new PoisonPool { pos = at, radius = PoolRadius, until = now + PoolLife, remote = remote };
+            pools.Add(pl);
+            OnPool?.Invoke(pl);
+        }
+
+        /// <summary>毒液區：站在裡面的玩家每秒受傷一次並中毒（隊友端的毒液區只顯示，由主機判定）</summary>
+        void UpdatePools()
+        {
+            if (pools.Count == 0) return;
+            var ps = Skills.All["m_pool"];
+            foreach (var pl in pools)
+            {
+                if (now > pl.until) { pl.alive = false; continue; }
+                if (pl.remote) continue;
+                foreach (var v in new List<Fighter>(Players()))
+                {
+                    if (!v.Alive || FlatDistance(v.Feet, pl.pos) > pl.radius + 0.1f) continue;
+                    if (pl.next.TryGetValue(v, out var t) && now < t) continue;
+                    pl.next[v] = now + 1f;
+                    if (v == ally) { Emit("allyhit", v.Chest, ps.color, null); OnAllyHit?.Invoke(ps, ps.damage, v.Chest, 0); }
+                    else { ApplyDamageAndEffect(v, ps.damage, ps.effect, ps.effectDps, ps.effectDur, v.Chest); Emit("poolstep", v.Feet, ps.color, "踩到毒液！"); }
+                }
+            }
+            pools.RemoveAll(x => !x.alive);
+        }
+
+        /// <summary>地上的長條：藤蔓（碰到就受傷）、衝刺路線（只是提示）</summary>
+        public class Lane
+        {
+            public string kind; public Vector3 a, b; public float start, grow, until, width; public int damage;
+            public SkillDef skill; public bool remote, alive = true;
+            public readonly Dictionary<Fighter, float> next = new Dictionary<Fighter, float>();
+            public Vector3 Tip(float now) => grow <= 0f ? b : Vector3.Lerp(a, b, Mathf.Clamp01((now - start) / grow));
+        }
+        public readonly List<Lane> lanes = new List<Lane>();
+        public event Action<Lane> OnLane;   // 新的長條（畫面用；主機也拿來送給隊友）
+
+        Lane AddLane(string kind, Vector3 a, Vector3 b, float grow, float life, float width, SkillDef s, int dmg, bool remote)
+        {
+            a.y = 0f; b.y = 0f;
+            var ln = new Lane { kind = kind, a = a, b = b, start = now, grow = grow, until = now + life, width = width, skill = s, damage = dmg, remote = remote };
+            lanes.Add(ln);
+            OnLane?.Invoke(ln);
+            return ln;
+        }
+
+        /// <summary>隊友端：主機送來的藤蔓／衝刺路線（只顯示）</summary>
+        public void AddRemoteLane(string kind, Vector3 a, Vector3 b, float grow, float life)
+        {
+            Skills.All.TryGetValue(kind == "vine" ? "m_vine" : "m_dash", out var s);
+            AddLane(kind, a, b, grow, life, s != null ? s.radius : 0.2f, s, 0, true);
+        }
+
+        void UpdateLanes()
+        {
+            if (lanes.Count == 0) return;
+            foreach (var ln in lanes)
+            {
+                if (now > ln.until) { ln.alive = false; continue; }
+                if (ln.remote || ln.kind != "vine") continue;
+                var tip = ln.Tip(now);
+                foreach (var v in new List<Fighter>(Players()))
+                {
+                    if (!v.Alive || DistancePointSegment(v.Feet, ln.a, tip) > ln.width + v.bodyRadius) continue;
+                    if (ln.next.TryGetValue(v, out var t) && now < t) continue;
+                    ln.next[v] = now + 1f;
+                    if (v.dodgeUntil > now) { Emit("evade", v.Chest, ln.skill.color, "閃避！"); continue; }
+                    if (v == ally) { Emit("allyhit", v.Chest, ln.skill.color, null); OnAllyHit?.Invoke(ln.skill, ln.damage, v.Chest, 0); }
+                    else { ApplyDamageAndEffect(v, ln.damage, EffectKind.None, 0f, 0f, v.Chest); Emit("vinehit", v.Chest, ln.skill.color, "被藤蔓刺到！"); }
+                }
+            }
+            lanes.RemoveAll(x => !x.alive);
+        }
+
+        /// <summary>荊棘衝鋒獸衝刺一步：撞到玩家就受傷並停下；衝出場地也停</summary>
+        void DashStep(Fighter m, float dt)
+        {
+            var ds = Skills.All["m_dash"];
+            var next = m.Feet + m.dashDir * ds.speed * dt;
+            if (minionInside != null && !minionInside(next)) { m.dashUntil = 0f; m.recoverUntil = now + MinionRecover; return; }
+            m.head = new Vector3(next.x, m.head.y, next.z);
+            m.forward = m.dashDir;
+            if (m.dashHit) return;
+            foreach (var v in new List<Fighter>(Players()))
+            {
+                if (!v.Alive || FlatDistance(m.Feet, v.Feet) > m.bodyRadius + v.bodyRadius + 0.1f) continue;
+                m.dashHit = true;
+                int dmg = Mathf.RoundToInt(ds.damage * m.dmgMul);
+                if (v.dodgeUntil > now) Emit("evade", v.Chest, ds.color, "閃避！");
+                else if (v == ally) { Emit("allyhit", v.Chest, ds.color, null); OnAllyHit?.Invoke(ds, dmg, v.Chest, 0); }
+                else ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest);
+                m.dashUntil = 0f; m.recoverUntil = now + MinionRecover;
+                return;
+            }
         }
 
         // ------------------------------------------------------------ 劍士斬擊：斬開飛向自己正面的法球
@@ -907,7 +1177,7 @@ namespace SpellDuel
         bool Hostile(Fighter a, Fighter b) => a != null && b != null && (a == enemy || a.isMinion) != (b == enemy || b.isMinion);
 
         /// <summary>可以被斬開的：直線飛行的法術（從天而降、地裂、橫掃這類範圍攻擊不行）</summary>
-        public static bool Sliceable(SkillDef s) => s.type == SkillType.Projectile && !s.fromAbove && s.areaRadius <= 0f && s.originHeight <= 0f;
+        public static bool Sliceable(SkillDef s) => s.type == SkillType.Projectile && !s.fromAbove && !s.lob && s.areaRadius <= 0f && s.originHeight <= 0f;
 
         bool InSliceArc(Fighter f, Vector3 pos)
         {
@@ -956,6 +1226,7 @@ namespace SpellDuel
             {
                 var p = projectiles[i];
                 if (!p.alive) continue;
+                if (p.lob) { StepLob(p, dt); continue; }
                 var target = p.target != null && p.target.Alive ? p.target : Opponent(p.owner);
                 float step = p.skill.speed * dt;
                 // 分小段前進，快的箭也不會穿過身體

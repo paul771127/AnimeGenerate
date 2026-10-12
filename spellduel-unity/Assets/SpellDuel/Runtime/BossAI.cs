@@ -107,6 +107,13 @@ namespace SpellDuel
                     "b_rain" => 2f,
                     "b_summon" => b.minions.Count < 2 ? 5f : 0f,   // 小怪少於 2 隻就常召喚
                     "b_leap" => d > 5.5f ? 4f : 0f,                 // 離得遠：跳過去
+                    // 腐化樹王：近（踐踏、藤鞭）／遠（荊棘、毒孢彈、樹根爆發）
+                    "p_stomp" => d < 3.4f ? 4f : 0f,
+                    "p_whip" => d < 5.5f ? 3f : 0.3f,
+                    "p_thorn" => d > 2.5f ? 3f : 1f,
+                    "p_spore" => d > 3f ? 2.5f : 0.5f,
+                    "p_roots" => d > 4f ? 3f : 1f,
+                    "p_summon" => b.minions.Count < 2 ? 5f : 0f,
                     _ => 1f,
                 };
                 for (int i = 0; i < Mathf.RoundToInt(w * 2f); i++) options.Add(s);
@@ -116,7 +123,7 @@ namespace SpellDuel
             if (b.TryChant(me, pick, out _))
             {
                 Status = $"準備 {pick.name}";
-                if (pick.id == "b_leap") { var at = tgt.Feet; at.y = 0f; me.aimPoint = at; }   // 落點＝目標現在的位置
+                if (pick.id == "b_leap" || pick.atTarget) { var at = tgt.Feet; at.y = 0f; me.aimPoint = at; }   // 落點／樹根爆發位置＝目標現在的位置
             }
         }
 
