@@ -40,73 +40,85 @@ namespace SpellDuel
         float bossHideAt = -1f; int lastWaveSeen; bool bossAliveShown; int clientWaveRemaining;
         int WaveRemainingShown => battle == null ? 0 : (NetMode && !NetIsHost ? clientWaveRemaining : battle.WaveRemaining);
 
-        // ---------------------------------------------------------------- 無盡模式：升級
-        // 經驗值升級，每升一級選一樣：攻擊力、蓄力速度、HP、冷卻、爆擊率、攻擊距離、灼燒／中毒／冰凍機率（每次 +5%）
-        static readonly string[] UpgradeNames = { "攻擊力", "蓄力速度", "最大 HP", "冷卻時間", "爆擊率", "攻擊距離", "灼燒機率", "中毒機率", "冰凍機率" };
-        static readonly string[] UpgradeIcons = { "⚔", "⚡", "❤", "⏱", "💥", "🎯", "🔥", "☠", "❄" };
-        static readonly Color[] UpgradeColors = {
-            new Color(1f, 0.45f, 0.35f), new Color(1f, 0.85f, 0.3f), new Color(0.4f, 0.95f, 0.5f), new Color(0.5f, 0.75f, 1f), new Color(1f, 0.6f, 0.2f),
-            new Color(0.6f, 0.9f, 1f), new Color(1f, 0.5f, 0.15f), new Color(0.45f, 0.9f, 0.35f), new Color(0.65f, 0.9f, 1f) };
-        readonly int[] upgrades = new int[9];
-        int upgradesTaken, lastAutoOpenLevel = 1;
-        bool upgradeOpen;
-        int PendingUpgrades => endless && battle != null ? Battle.LevelOf(battle.xp) - 1 - upgradesTaken : 0;
+        // ---------------------------------------------------------------- 無盡模式：角色養成（能力值、技能樹、裝備；存檔保留）
+        CharacterProfile prof;                    // 這一場用的角色（無盡模式）
+        readonly CharacterPanel charPanel = new CharacterPanel();
+        bool charOpen;                            // 角色畫面開著（單人無盡：戰鬥暫停）
+        int lastXpSeen, lastKillsSeen, lastBossKillsSeen;
+        readonly System.Random dropRng = new System.Random();
+        int PendingUpgrades => endless && prof != null ? prof.statPoints + prof.skillPoints : 0;
+        /// <summary>選技能畫面：這次是不是無盡模式（只有無盡模式用角色養成）</summary>
+        bool EndlessSetup => NetMode ? netEndless : enemyClass == "endless";
+        /// <summary>選技能畫面可以選的技能：無盡模式＝角色會的技能；其他模式＝職業全部技能</summary>
+        string[] SetupSkills => EndlessSetup ? Progress.Char(myClass).KnownSkills().ToArray() : Skills.Classes[myClass].skills;
 
-        /// <summary>升級後的數值說明（現在 → 下一級）</summary>
-        string UpgradeText(int i, int lv) => i switch
+        /// <summary>技能配置只保留能選的，不足 3 個就從頭補</summary>
+        void FixLoadout()
         {
-            0 => $"傷害 +{lv * 15}%",
-            1 => $"蓄力快 {Mathf.RoundToInt((1f - Mathf.Pow(0.88f, lv)) * 100)}%",
-            2 => $"HP +{lv * 20}",
-            3 => $"冷卻 -{Mathf.RoundToInt((1f - Mathf.Pow(0.9f, lv)) * 100)}%",
-            4 => $"爆擊 {lv * 8}%（×2 傷害）",
-            5 => $"距離 +{lv * 15}%",
-            6 => $"灼燒 {lv * 5}%",
-            7 => $"中毒 {lv * 5}%",
-            _ => $"冰凍 {lv * 5}%",
-        };
-
-        void ApplyUpgrade(int i)
-        {
-            if (PendingUpgrades <= 0 || battle == null) return;
-            upgrades[i]++; upgradesTaken++;
-            var me = Me;
-            switch (i)
-            {
-                case 0: me.atkMul = 1f + 0.15f * upgrades[0]; break;
-                case 1: me.chargeScale = Mathf.Pow(0.88f, upgrades[1]); break;
-                case 2: me.maxHp += 20; me.hp = Mathf.Min(me.maxHp, me.hp + 20); break;
-                case 3: me.cdMul = Mathf.Pow(0.9f, upgrades[3]); break;
-                case 4: me.critChance = Mathf.Min(0.8f, 0.08f * upgrades[4]); break;
-                case 5: me.rangeMul = 1f + 0.15f * upgrades[5]; break;
-                case 6: me.burnChance = 0.05f * upgrades[6]; break;
-                case 7: me.poisonChance = 0.05f * upgrades[7]; break;
-                case 8: me.freezeChance = 0.05f * upgrades[8]; break;
-            }
-            Sfx.Play("charged"); Haptics.Play(Haptics.Kind.Success);
-            floaters.Add(new Floater { text = $"⬆ {UpgradeNames[i]}：{UpgradeText(i, upgrades[i])}", color = UpgradeColors[i], born = Time.time, screen = true });
-            if (PendingUpgrades <= 0) upgradeOpen = false;
+            var list = SetupSkills;
+            myLoadout.RemoveAll(id => Array.IndexOf(list, id) < 0);
+            foreach (var id in list) { if (myLoadout.Count >= 3) break; if (!myLoadout.Contains(id)) myLoadout.Add(id); }
         }
 
-        /// <summary>升級選單（單人時暫停戰鬥；合作時不暫停）</summary>
-        void DrawUpgradePanel(float W, float H, float pad, float gap, int fs, int fsS)
+        /// <summary>無盡模式：經驗值存進角色、升級提示、打倒敵人掉裝備</summary>
+        void TrackProgress()
         {
-            var me = Me;
-            int lv = Battle.LevelOf(battle.xp);
-            var r = new Rect(pad, H * 0.18f, W - pad * 2, H * 0.62f);
-            UiKit.Card(r, 0.9f, new Color(0.75f, 0.45f, 1f), 0.9f);
-            UiKit.Text(new Rect(r.x + gap, r.y + gap, r.width - gap * 2, fs * 1.6f), $"⬆ 升級！Lv {lv}（可選 {PendingUpgrades} 次）— 選一樣", Mathf.RoundToInt(fs * 1.15f), Color.white, TextAnchor.MiddleCenter, true);
-            float top = r.y + gap + fs * 1.8f, bw = (r.width - gap * 4) / 3f, bh = (r.yMax - gap * 2 - fs * 1.6f - top - gap * 2) / 3f;
-            for (int i = 0; i < 9; i++)
+            if (prof == null || battle == null) return;
+            int dx = battle.xp - lastXpSeen;
+            if (dx > 0)
             {
-                var br = new Rect(r.x + gap + (i % 3) * (bw + gap), top + (i / 3) * (bh + gap), bw, bh);
-                if (UiKit.Button(br, "", fsS, false, UpgradeColors[i])) ApplyUpgrade(i);
-                UiKit.Text(new Rect(br.x + 4, br.y + bh * 0.06f, br.width - 8, bh * 0.4f), $"{UpgradeIcons[i]} {UpgradeNames[i]}", fs, UpgradeColors[i], TextAnchor.MiddleCenter, true);
-                UiKit.Text(new Rect(br.x + 4, br.y + bh * 0.48f, br.width - 8, bh * 0.25f), upgrades[i] > 0 ? $"Lv{upgrades[i]}：{UpgradeText(i, upgrades[i])}" : "還沒升級", fsS, new Color(0.8f, 0.82f, 0.9f), TextAnchor.MiddleCenter);
-                UiKit.Text(new Rect(br.x + 4, br.y + bh * 0.72f, br.width - 8, bh * 0.25f), $"→ {UpgradeText(i, upgrades[i] + 1)}", fsS, new Color(1f, 0.95f, 0.6f), TextAnchor.MiddleCenter, true);
+                lastXpSeen = battle.xp;
+                int ups = prof.AddXp(dx);
+                if (ups > 0)
+                {
+                    Progress.SaveChar(prof);
+                    Say($"⬆ 等級 {prof.level}！獲得 {ups * CharacterProfile.StatPerLevel} 能力點、{ups * CharacterProfile.SkillPerLevel} 技能點（點「角色」分配）", 3f);
+                    floaters.Add(new Floater { text = $"⬆ Lv {prof.level}", color = new Color(0.8f, 0.55f, 1f), born = Time.time, screen = true });
+                    Sfx.Play("win", 0.6f); Haptics.Play(Haptics.Kind.Success);
+                }
             }
-            if (UiKit.Button(new Rect(r.x + r.width * 0.3f, r.yMax - gap - fs * 1.5f, r.width * 0.4f, fs * 1.5f), coop ? "稍後再選" : "稍後再選（繼續戰鬥）", fsS)) upgradeOpen = false;
+            int dk = battle.kills - lastKillsSeen; lastKillsSeen = battle.kills;
+            for (int i = 0; i < dk; i++) TryDrop(false);
+            int db = battle.bossKills - lastBossKillsSeen; lastBossKillsSeen = battle.bossKills;
+            for (int i = 0; i < db; i++) { TryDrop(true); TryDrop(true); }
         }
+
+        /// <summary>掉裝備：小怪約 6%（幸運越高越多），Boss 一定掉兩件稀有以上</summary>
+        void TryDrop(bool boss)
+        {
+            int luk = prof.Total(Stat.Luk);
+            if (!boss && dropRng.NextDouble() > 0.06 + 0.002 * luk) return;
+            int rar = ItemGen.RollRarity(dropRng, luk * 0.3f, boss ? 2 : 0);
+            int ilvl = Mathf.Max(1, prof.level + dropRng.Next(-1, 3) + battle.wave / 10);   // 物品等級跟著角色等級（越後面的波次略高）
+            var it = ItemGen.Make(dropRng, ilvl, rar, myClass);
+            if (Progress.AddToBag(it))
+            {
+                floaters.Add(new Floater { text = $"🎁 [{Item.RarityNames[rar]}] {it.name}", color = Item.RarityColors[rar], born = Time.time, screen = true });
+                Sfx.Play(rar >= 3 ? "win" : "select", rar >= 3 ? 0.7f : 0.8f, 1.2f);
+            }
+            else Say("🎒 背包滿了（40 件），到角色畫面丟掉一些", 2.5f);
+        }
+
+        /// <summary>角色畫面（全螢幕）：能力值、技能樹、裝備；有改動就重新套用到戰鬥中的自己</summary>
+        void DrawCharacter()
+        {
+            float W = Screen.width, H = Screen.height;
+            var safe = Screen.safeArea;
+            float topY = H - safe.yMax, botY = H - safe.y, pad = W * 0.03f;
+            GUI.color = new Color(0f, 0f, 0f, 0.6f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
+            int fs = UiKit.BaseFont;
+            float bh = fs * 2.2f;
+            var p = Progress.Char(myClass);
+            var r = new Rect(pad, topY + pad, W - pad * 2, botY - topY - pad * 3 - bh);
+            if (charPanel.Draw(r, p) && battle != null && endless && phase != Phase.Setup)
+            {
+                var ids = new List<string>(); foreach (var s in Me.loadout) ids.Add(s.id);
+                p.ApplyTo(Me, Skills.Classes[myClass], ids);
+            }
+            if (UiKit.Button(new Rect(W * 0.25f, botY - pad - bh, W * 0.5f, bh), phase == Phase.Setup ? "完成" : (coop ? "回到戰鬥" : "回到戰鬥（暫停中）"), fs, true, new Color(0.5f, 0.8f, 1f)))
+            { charOpen = false; Progress.SaveChar(p); if (phase == Phase.Setup) FixLoadout(); }
+        }
+
         int NetModeCode => coop ? (netEndless ? 2 : 1) : 0;
         BossRig bossRig; BossAI bossAi; GameObject slamGo;
         VolcanoScene volcano;   // 無盡模式第 1～10 波的熔岩火山場景
@@ -195,6 +207,8 @@ namespace SpellDuel
             voice = VoiceTemplates.Load();
             speech = new SpeechInput();
             speech.OnSkill += OnSpeechSkill;
+            Progress.Get = k => PlayerPrefs.GetString(k, "");
+            Progress.Set = (k, v) => { PlayerPrefs.SetString(k, v); PlayerPrefs.Save(); };
             LoadLoadout();
             Sfx.Ensure();
         }
@@ -283,8 +297,15 @@ namespace SpellDuel
             EndBattle();
             bossMode = true; coop = coopMode; endless = endlessMode; dummyMode = false; enemyClassUsed = "boss";
             dummyDamage = 0f; dummyHits = 0; lastWaveSeen = 0; bossHideAt = -1f; bossAliveShown = false;
-            System.Array.Clear(upgrades, 0, upgrades.Length); upgradesTaken = 0; upgradeOpen = false; lastAutoOpenLevel = 1;
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
+            prof = null; charOpen = false;
+            if (endlessMode)
+            {
+                // 無盡模式：用角色養成的能力值、技能樹、裝備
+                prof = Progress.Char(myClass);
+                prof.ApplyTo(me, Skills.Classes[myClass], myLoadout);
+                lastXpSeen = 0; lastKillsSeen = 0; lastBossKillsSeen = 0;
+            }
             var bc = Skills.Classes["boss"];
             // 無盡模式的 Boss 不召喚小怪（小怪由場地邊緣陸續冒出）
             var bossSkills = new List<string>(bc.defaultLoadout);
@@ -844,6 +865,8 @@ namespace SpellDuel
 
         void EndBattle()
         {
+            if (prof != null) Progress.SaveChar(prof);
+            charOpen = false;
             foreach (var go in projGo.Values) if (go) Destroy(go);
             foreach (var go in trapGo.Values) if (go) Destroy(go);
             foreach (var go in burnGo.Values) if (go) Destroy(go);
@@ -886,13 +909,8 @@ namespace SpellDuel
             SyncPlayer(Me);
             float dt = Mathf.Min(Time.deltaTime, 0.1f);
             if (Time.time < hitStopUntil) dt = 0f;   // 命中停頓
-            if (endless && !coop && PendingUpgrades > 0 && Battle.LevelOf(battle.xp) > lastAutoOpenLevel)
-            {
-                // 單人：升級時自動打開選單（每升一級只自動開一次）
-                lastAutoOpenLevel = Battle.LevelOf(battle.xp); upgradeOpen = true;
-                Sfx.Play("win", 0.6f); Haptics.Play(Haptics.Kind.Success);
-            }
-            if (endless && upgradeOpen && !coop) dt = 0f;   // 單人無盡：選升級時暫停
+            if (endless) TrackProgress();
+            if (endless && charOpen && !coop) dt = 0f;   // 單人無盡：角色畫面開著時暫停
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
             shake = Mathf.Max(0f, shake - Time.deltaTime * Mathf.Max(40f, shake * 8f));
             // 蓄滿：叮一聲＋輕震動
@@ -972,7 +990,7 @@ namespace SpellDuel
             while (moveHist.Count > 0 && now - moveHist.Peek().Key > SidestepWindow) moveHist.Dequeue();
             if (moveHist.Count > 2 && now >= nextDodgeOk && Battle.FlatDistance(moveHist.Peek().Value, me.Feet) > SidestepDist)
             {
-                me.dodgeUntil = now + DodgeTime; nextDodgeOk = now + DodgeCooldown;
+                me.dodgeUntil = now + DodgeTime + me.dodgeBonus; nextDodgeOk = now + DodgeCooldown;   // 敏捷、特殊能力：無敵時間更長
                 floaters.Add(new Floater { text = "💨 閃避", color = new Color(0.6f, 0.9f, 1f), born = Time.time, screen = true });
                 Sfx.Play("dodge", 0.7f);
                 moveHist.Clear();
@@ -1642,10 +1660,11 @@ namespace SpellDuel
             Styles();
             // 技能說明視窗開著：底下的畫面照畫但不能按（GUI.enabled=false），說明視窗畫在最上面
             bool infoOpen = infoSkill != null && Skills.All.ContainsKey(infoSkill);
-            if (infoOpen) GUI.enabled = false;
+            if (infoOpen || charOpen) GUI.enabled = false;
             DrawScreens();
             GUI.enabled = true;
-            if (infoOpen) DrawSkillInfo();
+            if (charOpen) DrawCharacter();
+            else if (infoOpen) DrawSkillInfo();
         }
 
         // ---------------------------------------------------------------- 技能詳細說明（點技能卡打開）
@@ -1653,7 +1672,7 @@ namespace SpellDuel
 
         void DrawSkillInfo()
         {
-            var s = Skills.All[infoSkill];
+            var s = endless && phase != Phase.Setup || phase == Phase.Setup && EndlessSetup ? (Progress.Char(myClass).ModdedSkill(infoSkill) ?? Skills.All[infoSkill]) : Skills.All[infoSkill];   // 無盡模式：顯示技能樹強化後的數值
             float W = Screen.width, H = Screen.height;
             var safe = Screen.safeArea;
             float topY = H - safe.yMax, botY = H - safe.y;
@@ -1677,7 +1696,7 @@ namespace SpellDuel
             var body = new Rect(r.x + gap * 1.5f, ir.yMax + gap, r.width - gap * 3, by - gap - (ir.yMax + gap));
             UiKit.Text(body, SkillInfo.Detail(s), fsS, new Color(0.92f, 0.94f, 1f), TextAnchor.UpperLeft, false, 0.5f);
 
-            if (inSetup && Skills.Classes[myClass].skills is var list && Array.IndexOf(list, s.id) >= 0)
+            if (inSetup && SetupSkills is var list && Array.IndexOf(list, s.id) >= 0)
             {
                 bool on = myLoadout.Contains(s.id);
                 float bw = (r.width - gap * 4) / 2f;
@@ -1731,7 +1750,9 @@ namespace SpellDuel
 
             // 依可用高度決定單位行高（內容約 21 行），放得下就用基準行高
             float avail = botY - topY - pad * 2;
-            int skillRows = (Skills.Classes[myClass].skills.Length + 1) / 2;
+            FixLoadout();
+            var setupSkills = SetupSkills;
+            int skillRows = (setupSkills.Length + 1) / 2;
             float u = Mathf.Min(fs * 1.75f, avail / (16.3f + skillRows * 2.6f));   // 技能卡一列約 2.6 行高
             float y = topY + pad;
             var cls = Skills.Classes[myClass];
@@ -1756,11 +1777,19 @@ namespace SpellDuel
 
             // 技能卡片（2 欄）：圖示＋名稱／手勢→放招／數值
             UiKit.Text(new Rect(pad, y, W - pad * 2, u), $"選 3 個技能（{myLoadout.Count}/3）　點技能看詳細說明", fsS, new Color(1f, 0.9f, 0.6f));
+            if (EndlessSetup)
+            {
+                // 無盡模式：角色養成（能力值、技能樹、裝備）
+                var pf = Progress.Char(myClass);
+                float cbw = W * 0.4f;
+                if (UiKit.Button(new Rect(W - pad - cbw, y - u * 0.15f, cbw, u * 1.1f), $"📜 角色 Lv{pf.level}" + (pf.statPoints + pf.skillPoints > 0 ? "（可加點）" : ""), fsS, pf.statPoints + pf.skillPoints > 0, new Color(0.8f, 0.55f, 1f)))
+                    charOpen = true;
+            }
             y += u;
             float sw = (W - pad * 2 - gap) / 2f, sh = u * 2.4f;
-            for (int i = 0; i < cls.skills.Length; i++)
+            for (int i = 0; i < setupSkills.Length; i++)
             {
-                var sk = Skills.All[cls.skills[i]];
+                var sk = Skills.All[setupSkills[i]];
                 bool on = myLoadout.Contains(sk.id);
                 var r = new Rect(pad + (i % 2) * (sw + gap), y + (i / 2) * (sh + gap), sw, sh);
                 UiKit.Card(r, on ? 0.75f : 0.55f, on ? sk.color : (Color?)null, 0.95f);
@@ -1777,7 +1806,7 @@ namespace SpellDuel
                 // 點技能卡：打開詳細說明（在說明裡選／移除）
                 if (GUI.Button(r, GUIContent.none, GUIStyle.none)) infoSkill = sk.id;
             }
-            y += ((cls.skills.Length + 1) / 2) * (sh + gap);
+            y += ((setupSkills.Length + 1) / 2) * (sh + gap);
 
             // 敵人（單人：4×2＝隨機、5 職業、木頭人、Boss；雙人：顯示對手狀態）
             if (!NetMode)
@@ -2009,7 +2038,7 @@ namespace SpellDuel
                 { UiKit.Pill(H * 0.49f, "⚠ 狙擊手瞄準你了！準備側跨", fs, new Color(1f, 0.35f, 0.75f), pillW); break; }
             if (en.charging != null && en.charging.self == SelfKind.Summon && en.Alive) UiKit.Pill(H * 0.43f, "⚠ Boss 準備召喚小怪！", fs, new Color(1f, 0.55f, 0.2f), pillW);
             int nMin = 0; foreach (var mn in battle.minions) if (mn.Alive) nMin++;
-            if (nMin > 0) UiKit.Pill(top + lh * 3.6f + (coop ? lh : 0f) + (endless ? lh * (PendingUpgrades > 0 ? 2.0f : 0.8f) : 0f), $"👹 小怪 ×{nMin}", fsS, new Color(1f, 0.6f, 0.3f), W * 0.4f);
+            if (nMin > 0) UiKit.Pill(top + lh * 3.6f + (coop ? lh : 0f) + (endless ? lh * 2.0f : 0f), $"👹 小怪 ×{nMin}", fsS, new Color(1f, 0.6f, 0.3f), W * 0.4f);
 
             // 準星（畫面中央）：所有技能都朝這裡放；蓄力完成（或符文畫好）時用技能顏色脈動
             {
@@ -2131,17 +2160,14 @@ namespace SpellDuel
             // 無盡模式：等級與經驗條；可以升級時顯示按鈕（單人會自動打開選單）
             if (endless && phase == Phase.Fighting)
             {
-                int lv = Battle.LevelOf(battle.xp);
-                int cur = Battle.XpForLevel(lv), next = Battle.XpForLevel(lv + 1);
+                var pf = prof ?? Progress.Char(myClass);
+                int lv = pf.level;
+                int cur = CharacterProfile.XpForLevel(lv), next = CharacterProfile.XpForLevel(lv + 1);
                 float xy = top + lh * 2.9f + gap + (coop && Ally != null ? lh * 0.9f + gap * 0.5f : 0f);
-                UiKit.Bar(new Rect(pad, xy, W - pad * 2, lh * 0.45f), (battle.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f), $"Lv {lv}　{battle.xp - cur}/{next - cur}", fsS);
-                if (PendingUpgrades > 0 && !upgradeOpen)
-                {
-                    float bw2 = W * 0.5f;
-                    if (UiKit.Button(new Rect((W - bw2) / 2f, xy + lh * 0.55f, bw2, lh * 1.1f), $"⬆ 可以升級 ×{PendingUpgrades}（點我）", fsS, true, new Color(0.75f, 0.45f, 1f)))
-                        upgradeOpen = true;
-                }
-                if (upgradeOpen) DrawUpgradePanel(W, H, pad, gap, fs, fsS);
+                UiKit.Bar(new Rect(pad, xy, W - pad * 2, lh * 0.45f), (pf.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f), $"Lv {lv}　{pf.xp - cur}/{next - cur}", fsS);
+                float bw2 = W * 0.5f;
+                if (UiKit.Button(new Rect((W - bw2) / 2f, xy + lh * 0.55f, bw2, lh * 1.1f), PendingUpgrades > 0 ? $"📜 角色（可加點 ×{PendingUpgrades}）" : "📜 角色／裝備", fsS, PendingUpgrades > 0, new Color(0.75f, 0.45f, 1f)))
+                    charOpen = true;
             }
 
             // 蓄力／怎麼施法的提示：放在下方面板正上方（不在畫面中央，敵人靠近也不會被敵人和鎖定框擋住），底色較不透明、最後才畫

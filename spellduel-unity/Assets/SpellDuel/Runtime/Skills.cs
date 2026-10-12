@@ -15,6 +15,8 @@ namespace SpellDuel
     /// </summary>
     public class SkillDef
     {
+        /// <summary>複製一份（角色養成：技能樹強化後的數值）</summary>
+        public SkillDef Clone() => (SkillDef)MemberwiseClone();
         public string id, cls, name;
         public SkillType type;
         public Color color;

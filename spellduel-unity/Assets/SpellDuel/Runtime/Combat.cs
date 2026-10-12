@@ -52,6 +52,8 @@ namespace SpellDuel
         public float atkMul = 1f, cdMul = 1f, critChance, rangeMul = 1f, burnChance, poisonChance, freezeChance;
         // 牧師的守護：時限內受到的直接傷害按比例減少
         public float armorUntil, armorReduce;
+        // 角色養成（無盡模式）：裝備減傷、側跨無敵時間加長、吸血、命中回 MP、每秒回血、低血量減傷
+        public float gearReduce, dodgeBonus, lifesteal, mpOnHit, hpRegen, lastStand;
         public readonly List<Dot> dots = new List<Dot>();
 
         public class Dot { public float dps, until, acc; }
@@ -702,6 +704,7 @@ namespace SpellDuel
                 LastProcs = RollProcs(p.owner);
                 if (remoteEnemy) { Emit("hit", p.pos, p.skill.color, null); OnMinionHit?.Invoke(m.minionId, p.damage, p.skill); }
                 else { ApplyDamageAndEffect(m, p.damage, p.effect, p.effectDps, p.effectDur, p.pos); ApplyProcs(m, LastProcs, p.pos); }
+                OnDealt(p.owner, p.damage);
                 return true;
             }
             return false;
@@ -1080,6 +1083,7 @@ namespace SpellDuel
                 if (remoteEnemy && f == enemy) continue;   // 對手的 MP、詠唱、持續傷害由對手自己算
                 UpdateAmbush(f);
                 f.mp = Mathf.Min(f.maxMp, f.mp + f.regen * dt);
+                if (f.hpRegen > 0f && f.Alive) f.hp = Mathf.Min(f.maxHp, f.hp + f.hpRegen * dt);
                 if (f.charging != null && now - f.chargeStart > f.charging.charge + chargeTimeout + (f.charging.releaseNear ? 8f : 0f))
                 { f.charging = null; Emit("timeout", f.Chest, Color.gray, "詠唱逾時"); }
                 // 刺殺準備：蓄力完成前離開原地太遠 → 失敗
@@ -1394,7 +1398,7 @@ namespace SpellDuel
                         if (p.skill.id == "meteor" && !p.reflected) AddBurn(p, target.Feet);   // 直接砸中也留下火海
                         if (p.crit) Emit("crit", p.pos, p.skill.color, "爆擊！");
                         LastProcs = RollProcs(p.owner);
-                        if (remoteEnemy && target == enemy) { Emit("hit", p.pos, p.skill.color, null); OnRemoteHit?.Invoke(p.skill, p.damage, p.pos, p.id); }
+                        if (remoteEnemy && target == enemy) { Emit("hit", p.pos, p.skill.color, null); OnRemoteHit?.Invoke(p.skill, p.damage, p.pos, p.id); OnDealt(p.owner, p.damage); }
                         else if (target == ally) { Emit("allyhit", p.pos, p.skill.color, null); OnAllyHit?.Invoke(p.skill, p.damage, p.pos, p.id); }   // 主機：Boss 打到隊友
                         else Hit(target, p);
                     }
@@ -1429,7 +1433,7 @@ namespace SpellDuel
             f.armed = null;
             Emit("ambush", target.Chest, s.color, s.name + "！");
             int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
-            if (remoteEnemy && target == enemy) { Emit("hit", target.Chest, s.color, null); OnRemoteHit?.Invoke(s, dmg, target.Chest, 0); }
+            if (remoteEnemy && target == enemy) { Emit("hit", target.Chest, s.color, null); OnRemoteHit?.Invoke(s, dmg, target.Chest, 0); OnDealt(f, dmg); }
             else Hit(target, new Projectile { owner = f, skill = s, pos = target.Chest, dir = Fighter.Flat(target.head - f.head), damage = dmg, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur });
         }
 
@@ -1498,6 +1502,15 @@ namespace SpellDuel
             }
             ApplyDamageAndEffect(target, p.damage, p.effect, p.effectDps, p.effectDur, p.pos);
             ApplyProcs(target, LastProcs, p.pos);
+            OnDealt(p.owner, p.damage);
+        }
+
+        /// <summary>打中別人之後：吸血、命中回 MP（角色養成的特殊能力）</summary>
+        void OnDealt(Fighter a, float dmg)
+        {
+            if (a == null || !a.Alive || dmg <= 0f) return;
+            if (a.lifesteal > 0f) a.hp = Mathf.Min(a.maxHp, a.hp + dmg * a.lifesteal);
+            if (a.mpOnHit > 0f) a.mp = Mathf.Min(a.maxMp, a.mp + a.mpOnHit);
         }
 
         // ------------------------------------------------------------ 命中附加效果（無盡模式升級）
@@ -1547,7 +1560,9 @@ namespace SpellDuel
         void Damage(Fighter f, float dmg, string kind, Vector3? at = null)
         {
             if (!f.Alive) return;
-            dmg = Mathf.Round(dmg * f.damageTakenMul);
+            dmg *= f.damageTakenMul * (1f - f.gearReduce);
+            if (f.lastStand > 0f && f.hp < f.maxHp * 0.3f) dmg *= 1f - f.lastStand;   // 不屈：低血量減傷
+            dmg = Mathf.Round(dmg);
             f.hp = Mathf.Max(0, f.hp - dmg);
             if (dmg > 0 && f.prepUntil > now) { f.prepUntil = 0f; Emit("fail", f.Chest, Color.gray, "刺殺準備被打斷！"); }
             Emit(kind == "dot" || kind == "burn" ? kind : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");
