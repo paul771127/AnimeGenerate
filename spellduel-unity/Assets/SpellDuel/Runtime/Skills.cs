@@ -102,7 +102,7 @@ namespace SpellDuel
             All["meditate"].chant = "沉靜吧心靈";                 // 5 字
             All["fire"].chant = "奔騰吧火焰";                     // 5 字
             All["ice"].chant = "凍結吧永恆寒冰";                  // 7 字
-            All["dispel"].chant = "法環守護退散吧邪惡";           // 9 字
+            All["dispel"].chant = "退散吧邪惡";                   // 5 字
             All["meteor"].chant = "天上的星辰啊化作烈焰墜落吧";   // 13 字
             All["thunder"].chant = "雷霆之怒化作閃電劈落吧"; All["heal"].chant = "治癒吧生命之光";
 
