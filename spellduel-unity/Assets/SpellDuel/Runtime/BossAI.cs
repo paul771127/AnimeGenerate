@@ -114,6 +114,13 @@ namespace SpellDuel
                     "p_spore" => d > 3f ? 2.5f : 0.5f,
                     "p_roots" => d > 4f ? 3f : 1f,
                     "p_summon" => b.minions.Count < 2 ? 5f : 0f,
+                    // 深淵海妖：觸手（任何距離）、巨浪／泡泡（遠）、漩渦、墨汁
+                    "s_tentacle" => d < 6f ? 3.5f : 2f,
+                    "s_wave" => d > 3f ? 2.5f : 1f,
+                    "s_bubbles" => d > 4f ? 3f : 1f,
+                    "s_whirl" => d > 3f ? 2.5f : 0.8f,
+                    "s_ink" => 1.5f,
+                    "s_summon" => b.minions.Count < 2 ? 5f : 0f,
                     _ => 1f,
                 };
                 for (int i = 0; i < Mathf.RoundToInt(w * 2f); i++) options.Add(s);

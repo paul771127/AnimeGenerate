@@ -111,6 +111,7 @@ namespace SpellDuel
         BossRig bossRig; BossAI bossAi; GameObject slamGo;
         VolcanoScene volcano;   // 無盡模式第 1～10 波的熔岩火山場景
         ForestScene forest;     // 第 11～20 波的森林場景
+        SeaScene sea;           // 第 21～30 波的海上礁石場景
         readonly Dictionary<Fighter, MinionRig> minionGo = new Dictionary<Fighter, MinionRig>();
         readonly Dictionary<Fighter, float> minionLastHp = new Dictionary<Fighter, float>();
         readonly HashSet<Fighter> minionWinding = new HashSet<Fighter>();
@@ -437,7 +438,7 @@ namespace SpellDuel
             // 小怪：位置與「編號,血量,最大血量,預備中」
             var ms = battle.minions;
             var pts = new Vector3[ms.Count]; var ks = new string[ms.Count];
-            for (int i = 0; i < ms.Count; i++) { pts[i] = ms[i].head; ks[i] = $"{ms[i].minionId},{Mathf.CeilToInt(ms[i].hp)},{ms[i].maxHp},{(ms[i].windupUntil > 0f ? 1 : 0)},{ms[i].minionKind},{(ms[i].target == battle.ally ? 2 : 1)}"; }
+            for (int i = 0; i < ms.Count; i++) { pts[i] = ms[i].head; ks[i] = $"{ms[i].minionId},{Mathf.CeilToInt(ms[i].hp)},{ms[i].maxHp},{(ms[i].windupUntil > 0f ? 1 : 0)},{ms[i].minionKind},{(ms[i].target == battle.ally ? 2 : 1)},{ms[i].alt.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}"; }
             NetSend?.Invoke(new Msg { t = "mins", pts = pts, ks = ks });
         }
 
@@ -537,7 +538,7 @@ namespace SpellDuel
                         if (battle.endless)
                         {
                             // 隊友端：依波次主題換 Boss 名稱（熔岩巨像／腐化樹王）
-                            var bcls = Skills.Classes[battle.Theme == 1 ? "boss_forest" : "boss"];
+                            var bcls = Skills.Classes[Battle.BossClassOf(battle.Theme)];
                             if (b.cls != bcls) { b.cls = bcls; b.name = bcls.name; }
                         }
                         if (!string.IsNullOrEmpty(m.k) && Skills.All.TryGetValue(m.k, out var bs))
@@ -578,6 +579,7 @@ namespace SpellDuel
                             if (int.TryParse(parts[2], out var mmax)) mf.maxHp = mmax;
                             mf.windupUntil = parts[3] == "1" ? battle.now + 1f : 0f;
                             if (parts.Length >= 6) mf.target = parts[5] == "2" ? Me : Ally;   // 主機的隊友＝我
+                            if (parts.Length >= 7 && float.TryParse(parts[6], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var malt)) mf.alt = malt;   // 飛行／浮空高度
                         }
                         foreach (var mf in battle.minions) if (!seen.Contains(mf.minionId)) mf.hp = 0f;
                     }
@@ -614,14 +616,17 @@ namespace SpellDuel
         /// <summary>場景：無盡模式第 1～10 波是熔岩火山（地板＋遠方背景＋火星）</summary>
         void UpdateScene()
         {
-            // 主題：第 1～10 波熔岩火山、11～20 波森林，之後輪流
+            // 主題：第 1～10 波熔岩火山、11～20 波森林、21～30 波海上礁石，之後輪流
             int theme = endless && battle.wave >= 1 ? Battle.ThemeOf(battle.wave) : -1;
             var poly = area.Polygon;
             float fy = poly.Count > 0 ? poly[0].y : area.FloorY;
-            if (theme == 0 && volcano == null) volcano = VolcanoScene.Create(poly, fy);
-            if (theme == 1 && forest == null) forest = ForestScene.Create(poly, fy);
+            // 三個場景在無盡模式一開始（第 1 波倒數時）就全部建好：貼圖產生要花一點時間，避免換主題時卡頓
+            if (theme >= 0 && volcano == null) volcano = VolcanoScene.Create(poly, fy);
+            if (theme >= 0 && forest == null) forest = ForestScene.Create(poly, fy);
+            if (theme >= 0 && sea == null) sea = SeaScene.Create(poly, fy);
             if (volcano) volcano.SetVisible(theme == 0);
             if (forest) forest.SetVisible(theme == 1);
+            if (sea) sea.SetVisible(theme == 2);
         }
 
         /// <summary>小怪的外觀：新的就生出來、跟著位置走、預備動作／出手／被打／倒下</summary>
@@ -638,10 +643,10 @@ namespace SpellDuel
                     rig = MinionRig.Create();
                     rig.SetVariant(m.minionKind);
                     minionGo[m] = rig; minionLastHp[m] = m.hp;
-                    rig.transform.position = WorldFrame.FromWorld(m.Feet);
+                    rig.transform.position = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);
                 }
                 var oldPos = rig.transform.position;
-                var newPos = WorldFrame.FromWorld(m.Feet);
+                var newPos = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);   // 飛在空中／浮著／跳起來的高度
                 var f = WorldFrame.DirFromWorld(m.forward); f.y = 0f;
                 rig.transform.SetPositionAndRotation(newPos, f.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(f.normalized, Vector3.up) : rig.transform.rotation);
                 bool jumped = (newPos - oldPos).magnitude > 2f;   // 虛空術士瞬移（隊友端也看得到）：兩邊都冒出傳送光
@@ -848,6 +853,7 @@ namespace SpellDuel
             if (slamGo) Destroy(slamGo);
             if (volcano) Destroy(volcano.gameObject);
             if (forest) Destroy(forest.gameObject);
+            if (sea) Destroy(sea.gameObject);
             foreach (var go in projLine.Values) if (go) Destroy(go);
             projLine.Clear();
             foreach (var go in laneGo.Values) if (go) Destroy(go);
@@ -1234,8 +1240,11 @@ namespace SpellDuel
                     break;
                 case "roots":
                 {
-                    // 腐化樹王：樹根從地底爆出
-                    BossRig.RootEruption(WorldFrame.FromWorld(at), Skills.All["p_roots"].areaRadius);
+                    // 打在目標位置的範圍攻擊：樹根爆發／觸手重擊／漩渦
+                    var rs = Skills.All.TryGetValue(text ?? "", out var rsk) ? rsk : Skills.All["p_roots"];
+                    if (rs.id == "s_tentacle") BossRig.TentacleSlam(WorldFrame.FromWorld(at), rs.areaRadius);
+                    else if (rs.id == "s_whirl") BossRig.Whirlpool(WorldFrame.FromWorld(at), rs.areaRadius, 1.5f);
+                    else BossRig.RootEruption(WorldFrame.FromWorld(at), rs.areaRadius);
                     float dd = Battle.FlatDistance(at, Me.Feet);
                     Sfx.Play("boom", Mathf.Clamp01(1f - dd / 12f), 0.8f);
                     if (dd < 4f) { Haptics.Play(Haptics.Kind.Heavy); Kick(10f, 0f); }
@@ -1244,6 +1253,19 @@ namespace SpellDuel
                 case "poisonsplash":
                     PlantFx.PoisonSplash(WorldFrame.FromWorld(at), Battle.PoolRadius);
                     Sfx.Play("hit", 0.4f, 1.5f);
+                    break;
+                case "inksplat":
+                    SeaFx.InkSplat(WorldFrame.FromWorld(at), Skills.All["s_ink"].radius);
+                    Sfx.Play("hit", 0.5f, 0.7f);
+                    break;
+                case "shock":
+                    SeaFx.Shock(WorldFrame.FromWorld(at), Skills.All["m_shock"].areaRadius);
+                    Sfx.Play("cast_mage", 0.5f, 1.6f);
+                    if (Battle.FlatDistance(at, Me.Feet) < 2.5f) Haptics.Play(Haptics.Kind.Medium);
+                    break;
+                case "splash":
+                    SeaFx.Splash(WorldFrame.FromWorld(at), 1f);
+                    Sfx.Play("dodge", 0.5f, 0.5f);
                     break;
                 case "sporeburst":
                     PlantFx.SporeBurst(WorldFrame.FromWorld(at), Skills.All["m_spore"].areaRadius);
@@ -1257,7 +1279,9 @@ namespace SpellDuel
                     if (!string.IsNullOrEmpty(text)) Say("🔥 " + text + "（小怪會追著你抓，先清掉牠們！）", 3f);
                     break;
                 case "minionspawn":
-                    if (battle.Theme == 1) MinionRig.SpawnFxPlant(WorldFrame.FromWorld(at)); else MinionRig.SpawnFx(WorldFrame.FromWorld(at));
+                    if (battle.Theme == 1) MinionRig.SpawnFxPlant(WorldFrame.FromWorld(at));
+                    else if (battle.Theme == 2) MinionRig.SpawnFxSea(WorldFrame.FromWorld(at));
+                    else MinionRig.SpawnFx(WorldFrame.FromWorld(at));
                     Sfx.Play("boom", 0.4f, 1.6f);
                     break;
                 case "miniondie":
@@ -1357,7 +1381,9 @@ namespace SpellDuel
                         bossAliveShown = true; bossHideAt = -1f; bossEnragedShown = false;
                         bossRig.SetDead(false); bossRig.SetEnraged(false); bossRig.SetVisible(true);
                         bossRig.transform.position = feetS;
-                        if (battle.Theme == 1) BossRig.RootEruption(feetS, 2.5f); else BossRig.SlamShockwave(feetS, 2.5f, new Color(1f, 0.35f, 0.1f));
+                        if (battle.Theme == 1) BossRig.RootEruption(feetS, 2.5f);
+                        else if (battle.Theme == 2) SeaFx.Splash(feetS, 3f);
+                        else BossRig.SlamShockwave(feetS, 2.5f, new Color(1f, 0.35f, 0.1f));
                         Sfx.Play("roar"); Haptics.Play(Haptics.Kind.Heavy); Kick(14f, 0f);
                     }
                     else if (!en.Alive && bossAliveShown)
