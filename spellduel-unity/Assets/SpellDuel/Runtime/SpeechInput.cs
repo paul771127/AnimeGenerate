@@ -289,8 +289,8 @@ namespace SpellDuel
             }
             var sub = new List<string>();
             for (int i = lockedFrom; i < names.Count; i++) sub.Add(names[i]);
-            int h = SpeechMatcher.Best(regions, sub, out _, out _, true);
-            if (h < 0) return -1;
+            int h = SpeechMatcher.Best(regions, sub, out var score, out _, true);
+            if (h < 0 || score < SpeechMatcher.ChantMinScore) return -1;
             chantPos = t0.Length;
             return lockedFrom + h;
         }
@@ -333,7 +333,7 @@ namespace SpellDuel
                     var skillNames = new List<string>(); var chants = new List<string>();
                     for (int i = 0; i < names.Count; i++) (i < lockedFrom ? skillNames : chants).Add(names[i]);
                     hit = SpeechMatcher.Best(regions, skillNames, out _, out _, true);
-                    if (hit < 0) { hit = SpeechMatcher.Best(regions, chants, out _, out _, true); if (hit >= 0) hit += lockedFrom; }
+                    if (hit < 0) { hit = SpeechMatcher.Best(regions, chants, out var cs, out _, true); if (hit >= 0 && cs < SpeechMatcher.ChantMinScore) hit = -1; if (hit >= 0) hit += lockedFrom; }
                 }
                 // 名稱是另一個名稱的開頭（刺殺／刺殺準備）：話還沒講完、句尾可能正要接下去 → 先等
                 if (hit >= 0 && !final && MayContinue(t0, names, hit)) return -1;
@@ -366,13 +366,14 @@ namespace SpellDuel
         public const float MinScoreShort = 0.8f;   // 兩個字的名稱：門檻比較高（容易誤判）
         public const float MinScore = 0.72f;
         public const float MinMargin = 0.08f;
+        public const float ChantMinScore = 0.86f;   // 咒語要幾乎唸完整（長咒語不能只唸一半就放；同音字仍可）
         const float InsCost = 0.6f;    // 名稱中間多出一個字
         const float DelCost = 0.75f;   // 名稱少了一個字
 
         // 簡體 → 繁體（技能名稱用到的字與常見異體字）
         const string SimpTrad =
             "击擊连連兽獸夹夾术術枪槍鎗槍风風陨隕愈癒瘉癒袭襲飞飛烟煙菸煙雾霧弹彈斩斬剑劍劒劍剣劍气氣挡擋铁鐵疗療猎獵" +
-            "圣聖审審护護祷禱净淨广廣杀殺腾騰冻凍结結坠墜静靜灵靈恶惡";
+            "圣聖审審护護祷禱净淨广廣杀殺腾騰冻凍结結坠墜静靜灵靈恶惡恒恆环環电電闪閃极極";
 
         // 拼音（不含聲調）→ 字：技能名稱的每個字，加上辨識器可能輸出的同音字（繁簡都有）
         const string PinyinTable =
@@ -408,10 +409,12 @@ namespace SpellDuel
             // 牧師：聖光彈、審判、治療術、淨化、守護、祈禱
             "sheng 聖圣生聲声升勝胜省盛剩繩绳牲|guang 光廣广逛|shen 審审神身深伸申甚慎腎肾紳绅|pan 判盼盤盘攀潘叛畔|" +
             "hua 化花話话畫画華华滑劃划|kang 抗康扛炕慷亢|fa 法發发罰罚乏伐閥阀筏髮|hu 護护戶户湖虎呼胡壺壶糊互狐乎|sha 殺杀沙紗纱砂傻鯊鲨煞啥|ming 冥明名命鳴鸣銘铭|zhong 中重種种眾众鐘钟終终忠腫肿|zhun 準准|" +
-            // 法師咒語：奔騰吧火焰、凍結吧寒冰、撕裂吧狂風、墜落吧星辰、退散吧邪惡、沉靜吧心靈、劈落吧雷霆、治癒吧生命
+            // 法師咒語（Skills.cs 的 chant）用到的字
             "ben 奔本笨苯|teng 騰腾疼藤|ba 吧把爸巴拔霸罷罢八8|dong 凍冻動动東东懂洞冬|jie 結结節节解接街姐界借介屆届潔洁|han 寒漢汉喊含韓韩旱汗|" +
             "kuang 狂況况礦矿框筐曠旷|zhui 墜坠追綴缀|luo 落羅罗洛絡络駱骆螺|xing 星行形型醒性興兴姓幸刑|chen 辰沉陳陈晨塵尘臣稱称趁|" +
             "tui 退推腿頹颓|xie 邪些寫写謝谢鞋協协斜血|e 惡恶餓饿額额鵝鹅|xin 心新信辛欣鋅锌|ling 靈灵領领零令鈴铃齡龄0|pi 劈皮批披匹疲脾|ting 霆聽听停庭挺廷亭|" +
+            "yong 永用勇泳擁拥湧涌|heng 恆恒橫横衡哼|tian 天田甜填添|shang 上傷伤商賞赏尚|de 的得德地|a 啊阿|zuo 作做坐座左昨|" +
+            "di 地第低底弟帝敵敌滴|dian 電电點点店典顛颠|nu 怒努奴|" +
             "si 撕|ming 命|sheng 生|yi 一1|er 二2|liu 六6|jiu 九9";
 
         static readonly Dictionary<char, char> toTrad = new Dictionary<char, char>();
