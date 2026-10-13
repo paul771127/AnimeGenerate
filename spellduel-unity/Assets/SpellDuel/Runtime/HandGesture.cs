@@ -7,7 +7,7 @@ namespace SpellDuel
     /// 手勢（從網頁版移植）：鏡頭只拍得到自己伸到鏡頭前的手腕與手指。
     ///   每個技能有自己的手勢（食指、剪刀、三指、搖滾、六、讚）：比出來停 0.35 秒＝開始詠唱該技能。
     ///   放招動作依職業不同（Style）：
-    ///     法師：唸完技能名稱再唸咒語（例如「奔騰吧火焰」）放招；沒有語音辨識時改比數字。牧師：比數字（2～5）放招。
+    ///     法師：唸完技能名稱再唸咒語（例如「奔騰吧火焰」），再比 5 放招；沒有語音辨識時改比數字。牧師：比數字（2～5）放招。
     ///     獵人 Bow：畫面中握拳（捏弦）→ 握著拳把手拉出畫面外（拉滿＝蓄力完成）→ 手回到畫面中張開（放箭）；箭往準星射。
     ///     劍士 Chop：手掌伸直（手刀）快速橫向／斜向劈過畫面；往劈過的中點斬。
     ///     刺客 Thrust：手刀快速往前刺（手遠離手機 → 畫面上變小）；往刺出的位置。
@@ -58,7 +58,7 @@ namespace SpellDuel
         public static string ReleaseLabel(SkillDef s)
         {
             var st = ReleaseOf(s);
-            if (st == Style.Chant) return $"唸「{s.chant}」";
+            if (st == Style.Chant) return $"唸「{s.chant}」→比 5";
             return st == Style.Number ? $"比 {NumberOf(s.id)}" : s.cls == "archer" ? "握拳→比五" : StyleName(st);
         }
 
@@ -66,7 +66,7 @@ namespace SpellDuel
         public static string ReleaseHint(SkillDef s)
         {
             var st = ReleaseOf(s);
-            if (st == Style.Chant) return $"唸出咒語「{s.chant}」放招（可以先唸，蓄滿自動發射）";
+            if (st == Style.Chant) return $"唸出咒語「{s.chant}」，再把手伸到鏡頭前比 5（五指張開）放招";
             if (st == Style.Number) return $"比出數字 {NumberOf(s.id)}（{NumberFingers(NumberOf(s.id))}）放招";
             if (s.cls == "archer") return $"先握拳 → 再比五（五指張開）{(s.type == SkillType.Projectile ? "放箭" : s.type == SkillType.Trap ? "設置陷阱" : "發動")}";
             return StyleHint(st);
@@ -88,7 +88,7 @@ namespace SpellDuel
         public static Style ReleaseOf(SkillDef s)
         {
             if (s == null) return Style.None;
-            if (s.cls == "mage") return MageChant && !string.IsNullOrEmpty(s.chant) ? Style.Chant : Style.Number;   // 法師：唸完名稱再唸咒語就放招
+            if (s.cls == "mage") return MageChant && !string.IsNullOrEmpty(s.chant) ? Style.Chant : Style.Number;   // 法師：唸完名稱 → 唸咒語 → 比 5 放招
             if (s.cls == "priest") return Style.Number;                   // 牧師：唸完名稱比固定數字就放招
             if (s.cls == "archer") return Style.Burst;                    // 獵人：握拳→比五（張開）就放招
             switch (s.id)
