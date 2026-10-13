@@ -184,7 +184,7 @@ namespace SpellDuel
             else if (!inside(feet))
             {
                 var home = -feet; home.y = 0;
-                me.head += (home.sqrMagnitude > 1e-4f ? home.normalized : Vector3.zero) * walkSpeed * dt;
+                me.head += (home.sqrMagnitude > 1e-4f ? home.normalized : Vector3.zero) * walkSpeed * (b.endless ? 2f : 1f) * dt;   // 無盡／故事：場地外 2 倍速走進來
             }
         }
     }

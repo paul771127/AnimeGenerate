@@ -465,6 +465,7 @@ namespace SpellDuel
                 // 走位：射手保持 3.5～6m，其他走向目標（停在 0.8m）；小怪之間互相推開
                 float speed = minionSpeed * MinionSpeed[kind] * m.speedMul * EnemySpeedScale;
                 if (kind == 13 && minionInside != null && !minionInside(m.Feet)) speed *= 3f;   // 跳躍魚在海裡游得很快
+                if (outside && endless) speed *= 2f;   // 無盡／故事：還在場地外的小怪移動速度 2 倍（快點進場）
                 Vector3 step;
                 if (IsRanged(kind) && !outside)
                 {
