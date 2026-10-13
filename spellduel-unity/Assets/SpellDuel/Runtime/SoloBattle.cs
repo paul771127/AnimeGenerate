@@ -2283,6 +2283,44 @@ namespace SpellDuel
                     UiKit.Pill(H * 0.58f, (enemyScreenSide < 0 ? "◀ 敵人在左邊" : "敵人在右邊 ▶") + "（沒鎖定也能放，朝準星飛）", fs, new Color(1f, 0.45f, 0.45f), pillW);
             }
 
+            // 無盡／故事：遠距離小怪正在瞄準我 → 頭上閃 ⚠（畫面外就在畫面邊緣畫箭頭）＋上方提示
+            if (endless && battle != null && cam != null)
+            {
+                Fighter aimer = null; float aimerLeft = 99f; int aimers = 0;
+                foreach (var m in battle.minions)
+                {
+                    if (!m.Alive || m.windupUntil <= 0f || !Battle.IsRangedMinion(m.minionKind)) continue;
+                    if (m.target != null && m.target != me) continue;   // 合作：瞄準隊友的不提示
+                    aimers++;
+                    float left = Mathf.Max(0f, m.windupUntil - now);
+                    if (left < aimerLeft) { aimerLeft = left; aimer = m; }
+                    var wp = WorldFrame.FromWorld(m.head + Vector3.up * 0.3f);
+                    var v = cam.WorldToViewportPoint(wp);
+                    float blink = 0.55f + 0.45f * Mathf.Abs(Mathf.Sin(Time.time * 10f));
+                    var warnC = new Color(1f, 0.25f, 0.2f, blink);
+                    float sz = fs * 2.2f;
+                    if (v.z > 0.1f && v.x > 0.03f && v.x < 0.97f && v.y > 0.03f && v.y < 0.97f)
+                        UiKit.Text(new Rect(v.x * W - sz, (1f - v.y) * H - sz * 1.1f, sz * 2f, sz), "⚠", Mathf.RoundToInt(fs * 1.8f), warnC, TextAnchor.MiddleCenter, true);
+                    else
+                    {
+                        // 畫面外：沿著敵人方向貼在畫面邊緣
+                        var rel = cam.transform.InverseTransformPoint(wp);
+                        var d2 = new Vector2(rel.x, rel.y); if (d2.sqrMagnitude < 1e-6f) d2 = Vector2.right;
+                        d2.Normalize();
+                        float k = Mathf.Min((W * 0.5f - sz) / Mathf.Max(1e-3f, Mathf.Abs(d2.x)), (H * 0.5f - sz * 2f) / Mathf.Max(1e-3f, Mathf.Abs(d2.y)));
+                        var c2 = new Vector2(W * 0.5f + d2.x * k, H * 0.5f - d2.y * k);
+                        string arrow = Mathf.Abs(d2.x) > Mathf.Abs(d2.y) ? (d2.x < 0 ? "◀⚠" : "⚠▶") : (d2.y > 0 ? "▲⚠" : "▼⚠");
+                        UiKit.Text(new Rect(c2.x - sz, c2.y - sz * 0.5f, sz * 2f, sz), arrow, Mathf.RoundToInt(fs * 1.5f), warnC, TextAnchor.MiddleCenter, true);
+                    }
+                }
+                if (aimer != null)
+                {
+                    float side = Vector3.Dot(WorldFrame.FromWorld(aimer.Feet) - cam.transform.position, cam.transform.right);
+                    string nm = Battle.MinionNames[Mathf.Clamp(aimer.minionKind, 0, Battle.MinionNames.Length - 1)];
+                    UiKit.Pill(H * 0.25f, $"⚠ {nm}正在瞄準你（{(side < 0 ? "左邊" : "右邊")}・{Battle.FlatDistance(aimer.Feet, me.Feet):0}m）" + (aimers > 1 ? $"　共 {aimers} 隻" : "") + "　準備閃避！", fs, new Color(1f, 0.3f, 0.25f), pillW, 0.7f);
+                }
+            }
+
             // 下方：我的狀態與技能（由下往上排）
             float sw = (W - pad * 2 - gap * 2) / 3f;
             float isz = Mathf.Min(sw * 0.5f, lh * 2.2f);

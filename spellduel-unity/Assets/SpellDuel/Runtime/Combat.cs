@@ -182,6 +182,8 @@ namespace SpellDuel
         // 遠程小怪想站的距離（最近、最遠）；0＝近戰（走到身邊）
         static readonly float[] KeepMin = { 0f, 3.5f, 0f, 0f, 4.5f, 6f, 6f, 4f, 0f, 3.5f, 0f, 0f, 4f, 0f, 0f, 6f, 0f, 0f, 3f }, KeepMax = { 0f, 6f, 0f, 0f, 7.5f, 9f, 12f, 7.5f, 0f, 5.5f, 0f, 0f, 8f, 0f, 0f, 9f, 0f, 0f, 4.5f };
         // 出手距離、預備時間（-1＝用 m_claw 的蓄力）
+        /// <summary>遠距離小怪（攻擊距離 5m 以上：射手、狙擊手、藤蔓、毒液…）</summary>
+        public static bool IsRangedMinion(int kind) => kind >= 0 && kind < MinionReach.Length && MinionReach[kind] >= 5f;
         static readonly float[] MinionReach = { 0.95f, 9f, 1.2f, 1.3f, 11f, 14f, 13f, 8f, 5f, 6f, 1.0f, 1.3f, 9f, 7f, 9f, 11f, 1.3f, 1.4f, 5f };
         static readonly float[] MinionWindup = { -1f, 0.8f, 1.0f, 0.5f, 1.2f, 1.6f, 1.0f, 1.0f, 0.8f, 1.0f, 0.7f, 0.8f, 0.9f, 0.6f, 0.6f, 1.2f, 0.8f, 0.6f, 1.0f };
         public const int MinionKinds = 19;
