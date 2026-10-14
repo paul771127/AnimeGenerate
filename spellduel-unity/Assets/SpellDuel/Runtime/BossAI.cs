@@ -36,6 +36,7 @@ namespace SpellDuel
             me.chargeScale = baseCharge * chargeMul;
             nextThink = b.now + 2.5f;
             me.target = null;
+            b.ClearThreat();   // 新的 Boss：仇恨重新算
         }
         public event Action OnEnrage;
 
@@ -134,23 +135,26 @@ namespace SpellDuel
             }
         }
 
-        /// <summary>挑目標：只有一位玩家就打他；兩位時打近的，偶爾換人（被打很痛的也會被盯上）</summary>
+        /// <summary>
+        /// 挑目標（仇恨值）：只有一位玩家就打他；多人時打「仇恨分數」最高的人。
+        ///   分數＝仇恨值（對 Boss 的傷害＋治療量）＋ 基礎 15 ＋ 距離加成（越近越高，最多 +25）。
+        ///   換目標要明顯超過現在的目標（×1.2）才換，蓄力中不換（避免來回跳）。
+        /// </summary>
         void PickTarget()
         {
             var cands = new List<Fighter>();
             if (b.player.Alive) cands.Add(b.player);
             foreach (var a in b.allies) if (a.Alive) cands.Add(a);
             if (cands.Count == 0) { me.target = null; return; }
-            bool keep = me.target != null && me.target.Alive && cands.Contains(me.target) && b.now < nextRetarget;
-            if (keep || me.charging != null) return;
-            nextRetarget = b.now + Rand(6f, 10f);
             if (cands.Count == 1) { me.target = cands[0]; return; }
-            // 近的機率高一點（權重＝距離的倒數）
-            float sum = 0f; var w = new float[cands.Count];
-            for (int i = 0; i < cands.Count; i++) { w[i] = 1f / Mathf.Max(0.3f, Battle.FlatDistance(me.Feet, cands[i].Feet)); sum += w[i]; }
-            double r = rnd.NextDouble() * sum;
-            for (int i = 0; i < cands.Count; i++) { r -= w[i]; if (r <= 0 || i == cands.Count - 1) { me.target = cands[i]; return; } }
+            Fighter best = null; float bestS = float.MinValue;
+            foreach (var c in cands) { float s = ThreatScore(c); if (s > bestS) { bestS = s; best = c; } }
+            if (me.target == null || !me.target.Alive || !cands.Contains(me.target)) { me.target = best; return; }
+            if (me.charging != null || best == me.target) return;
+            if (bestS > ThreatScore(me.target) * 1.2f) { me.target = best; Status = $"轉向 {best.name}（仇恨最高）"; }
         }
+
+        float ThreatScore(Fighter f) => b.Threat(f) + 15f + 25f / (1f + Battle.FlatDistance(me.Feet, f.Feet));
 
         void TryRelease(Fighter tgt)
         {

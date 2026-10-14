@@ -165,13 +165,26 @@ namespace SpellDuel
         IEnumerable<Fighter> Players() { yield return player; foreach (var a in allies) yield return a; }
         public IEnumerable<Fighter> AllPlayers => Players();
 
-        /// <summary>隊友（或主機）判定打到 Boss：套用到 Boss 身上（主機端）</summary>
-        public void ApplyHitOnEnemy(SkillDef s, int damage, Vector3 at, bool isTrap)
+        /// <summary>隊友（或主機）判定打到 Boss：套用到 Boss 身上（主機端）；by＝打的人（算仇恨）</summary>
+        public void ApplyHitOnEnemy(SkillDef s, int damage, Vector3 at, bool isTrap, Fighter by = null)
         {
             if (isTrap) Emit("trap", at, s.color, $"{s.name}！");
+            AddThreat(by, damage);
             ApplyDamageAndEffect(enemy, damage, s.effect, s.effectDps, s.effectDur, at);
         }
-        public void ApplyBurnOnEnemy(float dmg, Vector3 at) => Damage(enemy, dmg, "burn", at);
+        public void ApplyBurnOnEnemy(float dmg, Vector3 at, Fighter by = null) { AddThreat(by, dmg); Damage(enemy, dmg, "burn", at); }
+
+        // ------------------------------------------------------------ 仇恨值（多人合作：Boss 傾向打仇恨最高的人）
+        // 對 Boss 造成的傷害 1:1、治療量（自己＋隊友，每補 1 HP）1:1 累積；每秒衰減 3%，換一隻 Boss 時清空。
+        public readonly Dictionary<Fighter, float> threat = new Dictionary<Fighter, float>();
+        public const float ThreatDecay = 0.03f;
+        public void AddThreat(Fighter f, float amount)
+        {
+            if (f == null || amount <= 0f || f == enemy || f.isMinion) return;
+            threat[f] = Threat(f) + amount;
+        }
+        public float Threat(Fighter f) => f != null && threat.TryGetValue(f, out var v) ? v : 0f;
+        public void ClearThreat() => threat.Clear();
 
         // ------------------------------------------------------------ Boss 的小怪（熔岩小鬼）
         // 單人／合作主機：小怪由這裡的 UpdateMinions 驅動（走向最近的玩家、預備 0.7 秒後爪擊）。
@@ -1011,13 +1024,15 @@ namespace SpellDuel
             // 牧師的輔助技能：作用在所有己方單位（自己＋合作隊友）
             if (s.cls == "priest")
             {
+                // 治療的仇恨：補到的人數（自己＋活著的隊友）× 治療量
+                if (s.heal > 0) { int n = 1; foreach (var a in allies) if (a.Alive) n++; AddThreat(f, s.heal * n); }
                 ApplySupport(f, s, null);
                 if (f == player && AnyAllyAlive) OnTeamBuff?.Invoke(s);
                 return;
             }
             switch (s.self)
             {
-                case SelfKind.Heal: f.hp = Mathf.Min(f.maxHp, f.hp + s.heal); Emit("heal", f.Chest, s.color, $"+{s.heal}"); return;
+                case SelfKind.Heal: AddThreat(f, s.heal); f.hp = Mathf.Min(f.maxHp, f.hp + s.heal); Emit("heal", f.Chest, s.color, $"+{s.heal}"); return;
                 case SelfKind.Block: f.blockUntil = now + s.buffDur; f.blockReduce = s.buffReduce; break;
                 case SelfKind.Shield: f.shieldUntil = now + s.buffDur; f.shieldLeft = s.buffAmount; break;
                 case SelfKind.Counter: f.counterUntil = now + s.buffDur; break;
@@ -1139,6 +1154,7 @@ namespace SpellDuel
         public void Update(float dt)
         {
             now += dt;
+            if (threat.Count > 0) { var ks = new List<Fighter>(threat.Keys); foreach (var k in ks) threat[k] *= 1f - ThreatDecay * dt; }
             foreach (var f in new[] { player, enemy })
             {
                 if (remoteEnemy && f == enemy) continue;   // 對手的 MP、詠唱、持續傷害由對手自己算
@@ -1505,6 +1521,7 @@ namespace SpellDuel
             f.armed = null;
             Emit("ambush", target.Chest, s.color, s.name + "！");
             int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
+            if (target == enemy) AddThreat(f, dmg);
             if (remoteEnemy && target.isMinion) { Emit("hit", target.Chest, s.color, null); OnMinionHit?.Invoke(target.minionId, dmg, s); OnDealt(f, dmg); }
             else if (remoteEnemy && target == enemy) { Emit("hit", target.Chest, s.color, null); OnRemoteHit?.Invoke(s, dmg, target.Chest, 0); OnDealt(f, dmg); }
             else Hit(target, new Projectile { owner = f, skill = s, pos = target.Chest, dir = Fighter.Flat(target.head - f.head), damage = dmg, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur });
@@ -1531,7 +1548,7 @@ namespace SpellDuel
                 {
                     z.acc -= 1f;
                     if (remoteEnemy && victim == enemy) { Emit("hit", victim.Chest, z.skill.color, null); OnRemoteBurn?.Invoke(z.skill, z.dps, victim.Feet); }
-                    else Damage(victim, z.dps, "burn");
+                    else { if (victim == enemy) AddThreat(z.owner, z.dps); Damage(victim, z.dps, "burn"); }
                 }
             }
             burns.RemoveAll(x => !x.alive);
@@ -1552,6 +1569,7 @@ namespace SpellDuel
                     if (remoteEnemy && victim == enemy) { OnRemoteHit?.Invoke(t.skill, t.skill.damage, t.pos, -t.id); OnTrapGone?.Invoke(t.id); }
                     else
                     {
+                        if (victim == enemy) AddThreat(t.owner, t.skill.damage);
                         ApplyDamageAndEffect(victim, t.skill.damage, t.skill.effect, t.skill.effectDps, t.skill.effectDur, t.pos);
                         if (allies.Count > 0) OnTrapGone?.Invoke(t.id);   // 合作模式：告訴隊友陷阱沒了
                     }
@@ -1573,6 +1591,7 @@ namespace SpellDuel
                 Emit("counter", p.pos, new Color(0.96f, 0.45f, 0.71f), "反擊！打回去");
                 return;
             }
+            if (target == enemy) AddThreat(p.owner, p.damage);
             ApplyDamageAndEffect(target, p.damage, p.effect, p.effectDps, p.effectDur, p.pos);
             ApplyProcs(target, LastProcs, p.pos);
             OnDealt(p.owner, p.damage);

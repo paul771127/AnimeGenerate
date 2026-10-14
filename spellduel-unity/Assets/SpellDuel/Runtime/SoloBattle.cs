@@ -644,6 +644,8 @@ namespace SpellDuel
                     if (Skills.All.TryGetValue(m.k, out var tb))
                     {
                         battle.ApplyTeamBuff(tb);
+                        // 主機：隊友（牧師）的治療算仇恨（補到的人數 × 治療量）
+                        if (NetIsHost && ally != null && tb.heal > 0) { int n = 1; foreach (var a in battle.AllPlayers) if (a.Alive && a != ally) n++; battle.AddThreat(ally, tb.heal * n); }
                         NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp) });
                     }
                     break;
@@ -666,7 +668,7 @@ namespace SpellDuel
                             if (isTrap) battle.RemoveRemoteTrap(rid); else battle.RemoveRemoteProjectile(rid);
                             if (NetIsHost)
                             {
-                                battle.ApplyHitOnEnemy(hs, m.dmg, m.p, isTrap);
+                                battle.ApplyHitOnEnemy(hs, m.dmg, m.p, isTrap, ally);
                                 battle.ApplyProcs(battle.enemy, m.e, m.p);
                             }
                         }
@@ -681,7 +683,7 @@ namespace SpellDuel
                     }
                     break;
                 case "burn2":
-                    if (NetIsHost) battle.ApplyBurnOnEnemy(m.dmg, m.p);
+                    if (NetIsHost) battle.ApplyBurnOnEnemy(m.dmg, m.p, ally);
                     break;
                 case "hp2":
                     if (ally != null) ally.hp = m.hp;
@@ -2201,6 +2203,7 @@ namespace SpellDuel
             if (bossMode && (bossAi != null ? bossAi.Enraged : bossEnragedShown)) enState = "🔥 狂暴　" + enState;
             if (en.snaredUntil > now) enState = "被定身";
             if (endless) enState = $"擊倒小怪 {battle.kills}・Boss {battle.bossKills}　" + (en.Alive ? enState : $"Boss 在第 {battle.NextBossWave} 波（還有 {battle.NextBossWave - battle.wave} 波）");
+            if (coop && en.Alive && en.target != null && battle.allies.Count > 0) enState = (en.target == me ? "🎯 盯上你！　" : $"🎯 盯著 {en.target.name}　") + enState;   // 仇恨：Boss 現在的目標
             UiKit.Text(new Rect(ix, y, iw, lh * 0.9f), enState, fsS, en.charging != null ? new Color(1f, 0.75f, 0.4f) : new Color(0.9f, 0.92f, 1f));
             y += lh * 0.9f;
             UiKit.Text(new Rect(ix, y, iw, lh * 0.8f), StatusText(en, now), fsS, new Color(0.75f, 0.85f, 1f));
@@ -2213,7 +2216,7 @@ namespace SpellDuel
                 {
                     var ar = new Rect(topR.x, ay, topR.width, ah);
                     UiKit.Card(ar, 0.5f, al.cls.color, 0.5f);
-                    UiKit.Text(new Rect(ar.x + gap, ar.y, iw * 0.42f, ar.height), al.Alive ? $"🤝 {al.name}" : $"💀 {al.name}（倒下）", fsS, Color.white, TextAnchor.MiddleLeft, true);
+                    UiKit.Text(new Rect(ar.x + gap, ar.y, iw * 0.42f, ar.height), al.Alive ? $"{(en.target == al ? "🎯" : "🤝")} {al.name}" : $"💀 {al.name}（倒下）", fsS, Color.white, TextAnchor.MiddleLeft, true);
                     UiKit.Bar(new Rect(ar.x + gap + iw * 0.44f, ar.y + ar.height * 0.2f, iw * 0.56f, ar.height * 0.6f), al.hp / al.maxHp, new Color(0.3f, 0.85f, 0.45f), $"{Mathf.CeilToInt(al.hp)}", fsS);
                     ay += ah + gap * 0.3f;
                 }
