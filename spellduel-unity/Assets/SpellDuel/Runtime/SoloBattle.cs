@@ -2208,7 +2208,7 @@ namespace SpellDuel
             // 伏擊狀態：我在伏擊 → 提示靠近；敵人在伏擊 → 警告保持距離
             if (me.armed != null)
             {
-                float leftT = Mathf.Max(0f, me.armedUntil - now), need = Battle.AmbushClear;
+                float leftT = Mathf.Max(0f, me.armedUntil - now), need = Battle.AmbushReach;
                 var nf = battle.NearestFoe(me, out var nfDist);
                 UiKit.Pill(H * 0.31f, $"🗡 {me.armed.name}伏擊中：靠近敵人 {need:0.#}m 內自動出手（" + (nf != null ? $"最近 {nfDist:F1}m・" : "") + $"剩 {leftT:F1} 秒・被打到會取消）", fs, me.armed.color, pillW);
             }

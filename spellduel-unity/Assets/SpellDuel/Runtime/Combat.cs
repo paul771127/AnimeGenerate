@@ -841,7 +841,8 @@ namespace SpellDuel
         }
 
         /// <summary>刺客伏擊技能（刺殺、影襲、毒刃）：身邊這個半徑內不能有敵人才能蓄力；蓄力完成後靠近到這個距離就自動出手</summary>
-        public const float AmbushClear = 1.5f;
+        public const float AmbushClear = 3f;     // 半徑 3m（直徑 6m）內有敵人：不能開始／蓄力暫停
+        public const float AmbushReach = 1.5f;   // 伏擊中靠近到半徑 1.5m（直徑 3m）內：自動出手
 
         /// <summary>f 最近的敵人（玩家方：Boss／對手＋小怪；敵方：玩家）</summary>
         public Fighter NearestFoe(Fighter f, out float dist)
@@ -1128,7 +1129,7 @@ namespace SpellDuel
                 if (f.hpRegen > 0f && f.Alive) f.hp = Mathf.Min(f.maxHp, f.hp + f.hpRegen * dt);
                 if (f.charging != null && now - f.chargeStart > f.charging.charge + chargeTimeout + (f.charging.releaseNear ? 8f : 0f))
                 { f.charging = null; Emit("timeout", f.Chest, Color.gray, "詠唱逾時"); }
-                // 刺客伏擊技能：手掌不在鏡頭前、或身邊 1.5m 內有敵人 → 蓄力暫停；蓄滿自動進入伏擊（不用放招動作）
+                // 刺客伏擊技能：手掌不在鏡頭前、或身邊 3m 內有敵人 → 蓄力暫停；蓄滿自動進入伏擊（不用放招動作）
                 if (f.charging != null && f.charging.releaseNear)
                 {
                     if (ChargeProgress(f) < 1f)
@@ -1480,7 +1481,7 @@ namespace SpellDuel
             if (s == null) return;
             if (now > f.armedUntil || !f.Alive) { f.armed = null; Emit("armedExpire", f.Chest, Color.gray, $"{s.name} 落空"); return; }
             var target = NearestFoe(f, out var td);
-            if (target == null || !target.Alive || td > AmbushClear + target.bodyRadius) return;
+            if (target == null || !target.Alive || td > AmbushReach + target.bodyRadius) return;
             f.armed = null;
             Emit("ambush", target.Chest, s.color, s.name + "！");
             int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
