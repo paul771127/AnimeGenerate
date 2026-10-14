@@ -60,7 +60,7 @@ namespace SpellDuel
     // ---------------------------------------------------------------- 技能樹
     public enum NodeKind { Learn, Mod, Stat, Passive }
     public enum ModField { Damage, Cooldown, Charge, Multi, EffectDur, EffectDps, Heal, BuffAmount, BuffReduce, BuffDur, Cost }
-    public enum PassiveKind { Lifesteal, Crit, Dodge, MpOnHit, Regen, Burn, Poison, LastStand, Freeze }
+    public enum PassiveKind { Lifesteal, Crit, Dodge, MpOnHit, Regen, Burn, Poison, LastStand, Freeze, Evade }
 
     public class TreeNode
     {
@@ -173,6 +173,8 @@ namespace SpellDuel
                     StatN("as_agi", "身手", Stat.Agi, 2, 1),
                     Pas("as_crit", "致命一擊", PassiveKind.Crit, 0.04f, 3, 2, 2, "as_agi", 6),
                     Pas("as_dodge", "暗影步", PassiveKind.Dodge, 0.1f, 2, 2, 3, "as_crit", 10),
+                    Pas("as_evade", "殘影", PassiveKind.Evade, 0.04f, 3, 0, 3, "as_smoke", 4),
+                    Pas("as_evade2", "幻影身法", PassiveKind.Evade, 0.05f, 2, 2, 4, "as_dodge", 14),
                 };
                 case "priest": return new List<TreeNode>
                 {
@@ -228,6 +230,7 @@ namespace SpellDuel
                         PassiveKind.Burn => $"命中時 {v * 100:0}% 機率灼燒",
                         PassiveKind.Poison => $"命中時 {v * 100:0}% 機率中毒",
                         PassiveKind.Freeze => $"命中時 {v * 100:0}% 機率冰凍",
+                        PassiveKind.Evade => $"閃避率 +{v * 100:0}%（被攻擊時有機率完全閃開）",
                         _ => $"HP 低於 30% 時受到的傷害 -{v * 100:0}%",
                     };
             }
@@ -595,6 +598,7 @@ namespace SpellDuel
             f.burnChance = Passive(PassiveKind.Burn) + GearSum(Affix.Burn);
             f.poisonChance = Passive(PassiveKind.Poison) + GearSum(Affix.Poison);
             f.freezeChance = Passive(PassiveKind.Freeze) + GearSum(Affix.Freeze);
+            f.evadeChance = Mathf.Clamp(Passive(PassiveKind.Evade), 0f, 0.5f);
             f.rangeMul = 1f;
             // 技能：只帶會的技能，數值換成技能樹強化後的版本
             f.loadout.Clear();

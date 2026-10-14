@@ -80,8 +80,8 @@ namespace SpellDuel
             if (s.id == "slash") E($"揮出後 {Battle.SliceWindow:0.#} 秒內，斬開正面 {Battle.SliceRange:0.#}m 內飛來的法球（從天而降、地裂、橫掃等範圍攻擊無效）");
             if (s.releaseNear)
             {
-                E($"蓄力條件：手掌伸到鏡頭前、而且身邊 {Battle.AmbushClear:0.#}m 內沒有敵人（不符合時蓄力暫停）");
-                E($"蓄滿自動進入伏擊 {Battle.AmbushWindow:0} 秒（不用放招動作）：靠近到 {Battle.AmbushReach:0.#}m 內自動出手；時間到沒靠近就落空");
+                E($"蓄力條件：手掌伸到鏡頭前、而且身邊直徑 {Battle.AmbushClear * 2f:0.#}m 內沒有敵人（不符合時蓄力暫停）");
+                E($"蓄滿自動進入伏擊 {Battle.AmbushWindow:0} 秒（不用放招動作）：靠近敵人到直徑 {Battle.AmbushReach * 2f:0.#}m 內自動出手；時間到沒靠近就落空");
                 E("伏擊中被打到會取消，要重新蓄力");
             }
             switch (s.self)

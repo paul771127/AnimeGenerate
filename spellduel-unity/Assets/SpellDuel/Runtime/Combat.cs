@@ -50,7 +50,7 @@ namespace SpellDuel
         public float recoverUntil;             // 小怪出手後原地不動到這個時間（1 秒）
         public float dmgMul = 1f, speedMul = 1f;   // 無盡模式：越後面的波次越強
         // 無盡模式的玩家升級：攻擊力、冷卻、爆擊率、攻擊距離、命中時附加灼燒／中毒／冰凍的機率
-        public float atkMul = 1f, cdMul = 1f, critChance, rangeMul = 1f, burnChance, poisonChance, freezeChance;
+        public float atkMul = 1f, cdMul = 1f, critChance, rangeMul = 1f, burnChance, poisonChance, freezeChance, evadeChance;
         // 牧師的守護：時限內受到的直接傷害按比例減少
         public float armorUntil, armorReduce;
         // 角色養成（無盡模式）：裝備減傷、側跨無敵時間加長、吸血、命中回 MP、每秒回血、低血量減傷
@@ -835,13 +835,13 @@ namespace SpellDuel
             if (f.cooldownUntil.TryGetValue(s.id, out var cd) && cd > now) { why = $"{s.name} 冷卻中"; return false; }
             if (f.mp < s.cost) { why = "MP 不足"; return false; }
             if (f.snaredUntil > now && s.self != SelfKind.Cleanse) { why = "被困住，暫時不能施法（牧師可以淨化）"; return false; }
-            if (s.releaseNear && NearestFoe(f, out var nd) != null && nd < AmbushClear) { why = $"身邊 {AmbushClear:0.#}m 內有敵人，先退開才能蓄力{s.name}"; return false; }
+            if (s.releaseNear && NearestFoe(f, out var nd) != null && nd < AmbushClear) { why = $"身邊直徑 {AmbushClear * 2f:0.#}m 內有敵人，先退開才能蓄力{s.name}"; return false; }
             f.charging = s; f.chargeStart = now; f.chargeFrom = f.Feet;
             return true;
         }
 
         /// <summary>刺客伏擊技能（刺殺、影襲、毒刃）：身邊這個半徑內不能有敵人才能蓄力；蓄力完成後靠近到這個距離就自動出手</summary>
-        public const float AmbushClear = 3f;     // 半徑 3m（直徑 6m）內有敵人：不能開始／蓄力暫停
+        public const float AmbushClear = 2f;     // 半徑 2m（直徑 4m）內有敵人：不能開始／蓄力暫停
         public const float AmbushReach = 1.5f;   // 伏擊中靠近到半徑 1.5m（直徑 3m）內：自動出手
 
         /// <summary>f 最近的敵人（玩家方：Boss／對手＋小怪；敵方：玩家）</summary>
@@ -1129,7 +1129,7 @@ namespace SpellDuel
                 if (f.hpRegen > 0f && f.Alive) f.hp = Mathf.Min(f.maxHp, f.hp + f.hpRegen * dt);
                 if (f.charging != null && now - f.chargeStart > f.charging.charge + chargeTimeout + (f.charging.releaseNear ? 8f : 0f))
                 { f.charging = null; Emit("timeout", f.Chest, Color.gray, "詠唱逾時"); }
-                // 刺客伏擊技能：手掌不在鏡頭前、或身邊 3m 內有敵人 → 蓄力暫停；蓄滿自動進入伏擊（不用放招動作）
+                // 刺客伏擊技能：手掌不在鏡頭前、或身邊 2m 內有敵人 → 蓄力暫停；蓄滿自動進入伏擊（不用放招動作）
                 if (f.charging != null && f.charging.releaseNear)
                 {
                     if (ChargeProgress(f) < 1f)
@@ -1589,6 +1589,8 @@ namespace SpellDuel
 
         void ApplyDamageAndEffect(Fighter target, int damage, EffectKind eff, float dps, float dur, Vector3 at)
         {
+            // 閃避率（刺客技能樹）：整次攻擊（傷害＋效果）完全閃開
+            if (target.evadeChance > 0f && damage > 0 && rng.NextDouble() < target.evadeChance) { Emit("evade", target.Chest, new Color(0.7f, 0.6f, 1f), "閃避！"); return; }
             float dmg = damage;
             string note = null;
             if (target.blockUntil > now && dmg > 0) { dmg = Mathf.Round(dmg * (1f - target.blockReduce)); target.blockUntil = 0; note = "格擋"; }
