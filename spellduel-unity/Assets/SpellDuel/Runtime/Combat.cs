@@ -43,6 +43,7 @@ namespace SpellDuel
         public Fighter target;
         public float damageTakenMul = 1f;   // 受到的傷害倍率（單人模式的電腦難度：簡單／普通時玩家受傷較少）
         // Boss 召喚的小怪：編號、攻擊狀態（預備到 windupUntil 出手，attackReadyAt 之後才能再攻擊）
+        public bool isAlly; public int pid = -1;   // 合作：其他玩家的代理、那支手機的編號（主機 0、加入的人 1～3）
         public bool isMinion; public int minionId; public float windupUntil, attackReadyAt, teleportAt;
         public Vector3 aimPoint;        // Boss 熔岩躍擊／樹根爆發的落點（蓄力時畫紅圈）
         public float dashUntil; public Vector3 dashDir; public bool dashHit;   // 荊棘衝鋒獸／跳躍魚／俯衝海鳥：衝刺中
@@ -150,14 +151,19 @@ namespace SpellDuel
         public Battle(Fighter player, Fighter enemy) { this.player = player; this.enemy = enemy; }
 
         // ------------------------------------------------------------ 合作模式（兩人打 Boss）
-        // ally＝另一位玩家的代理（位置、血量、蹲下／閃避由網路更新）。
+        // allies＝其他玩家的代理（2～4 人合作；位置、血量、蹲下／閃避由網路更新；pid＝那支手機的編號）。
         // 主機（coopHost）跑 Boss：Boss 打到隊友 → OnAllyHit 送給隊友，由隊友自己扣血；隊友打 Boss → ApplyHitOnEnemy。
         // 隊友端：Boss 是 remoteEnemy（位置、血量由主機送來），Boss 與主機的法術都只顯示。
-        public Fighter ally;
+        public readonly List<Fighter> allies = new List<Fighter>();
+        /// <summary>第一位隊友（舊程式相容用；多人時請用 allies）</summary>
+        public Fighter ally => allies.Count > 0 ? allies[0] : null;
+        public bool AnyAllyAlive { get { foreach (var a in allies) if (a.Alive) return true; return false; } }
+        public Fighter AllyByPid(int pid) => allies.Find(a => a.pid == pid);
         public bool coopHost;
-        public event Action<SkillDef, int, Vector3, int> OnAllyHit;      // Boss 打到隊友：技能、傷害、位置、法術 id
+        public event Action<Fighter, SkillDef, int, Vector3, int> OnAllyHit;      // Boss 打到隊友：哪位隊友、技能、傷害、位置、法術 id
         public event Action<Vector3, float> OnDispel;                    // 我放了抗拒法環（中心、半徑）：要告訴另一支手機
-        IEnumerable<Fighter> Players() { yield return player; if (ally != null) yield return ally; }
+        IEnumerable<Fighter> Players() { yield return player; foreach (var a in allies) yield return a; }
+        public IEnumerable<Fighter> AllPlayers => Players();
 
         /// <summary>隊友（或主機）判定打到 Boss：套用到 Boss 身上（主機端）</summary>
         public void ApplyHitOnEnemy(SkillDef s, int damage, Vector3 at, bool isTrap)
@@ -273,7 +279,7 @@ namespace SpellDuel
             {
                 // 每波的小怪數：6＋波次（最多 28），合作 ×1.5
                 waveTotal = Mathf.Min(28, 6 + wave);
-                if (ally != null) waveTotal = Mathf.CeilToInt(waveTotal * 1.5f);
+                if (allies.Count > 0) waveTotal = Mathf.CeilToInt(waveTotal * (1f + 0.5f * allies.Count));
                 waveToSpawn = waveTotal;
             }
             nextMinionAt = waveStartAt;
@@ -287,7 +293,7 @@ namespace SpellDuel
         public static int XpForLevel(int level) => 40 * (level - 1) + 15 * (level - 1) * (level - 1) + 0;
         public static int LevelOf(int xp) { int l = 1; while (xp >= XpForLevel(l + 1)) l++; return l; }
         /// <summary>參與人數倍率：每多一位玩家，敵人的血量與攻擊力 +30%</summary>
-        public float PartyMul => 1f + 0.3f * ((ally != null ? 2 : 1) - 1);
+        public float PartyMul => 1f + 0.3f * allies.Count;
         int Tier => Mathf.Max(0, wave - 1);
         public float HpMul => (1f + 0.08f * Tier) * PartyMul;
         public float DmgMul => 0.75f + 0.05f * Tier;
@@ -300,7 +306,7 @@ namespace SpellDuel
             if (endless && player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + EndlessRegen * Time_dt);
             if (!endless || remoteEnemy || edgePoint == null) return;
             if (stageCleared) return;   // 故事關卡已經通關
-            if (!player.Alive && (ally == null || !ally.Alive)) return;
+            if (!player.Alive && !AnyAllyAlive) return;
             if (now < waveStartAt) return;
             if (IsBossWave)
             {
@@ -308,7 +314,7 @@ namespace SpellDuel
                 return;
             }
             // 小怪波：照間隔陸續出現（每次兩隻）；場上同時最多 6＋波次/3×2 隻（合作 +4）
-            int maxAlive = Mathf.Min(16, 6 + wave / 3 * 2) + (ally != null ? 4 : 0);
+            int maxAlive = Mathf.Min(16, 6 + wave / 3 * 2) + 4 * allies.Count;
             if (waveToSpawn > 0 && now >= nextMinionAt && minions.Count < maxAlive)
             {
                 for (int k = 0; k < 2 && waveToSpawn > 0 && minions.Count < maxAlive; k++)
@@ -316,7 +322,7 @@ namespace SpellDuel
                     SpawnMinion(edgePoint(), 0, PickMinionKind(), HpMul, DmgMul, SpeedMul);
                     waveToSpawn--;
                 }
-                nextMinionAt = now + Mathf.Max(2.5f, 5f - 0.1f * wave) * (ally != null ? 0.75f : 1f);
+                nextMinionAt = now + Mathf.Max(2.5f, 5f - 0.1f * wave) * (allies.Count > 0 ? Mathf.Max(0.5f, 1f - 0.25f * allies.Count) : 1f);
             }
             // 這一波全部打倒：回 10% 血，休息 4 秒進下一波
             if (waveToSpawn == 0 && minions.Count == 0)
@@ -599,7 +605,7 @@ namespace SpellDuel
                     {
                         int dmg = Mathf.RoundToInt(pc.damage * m.dmgMul);
                         if (tgt.dodgeUntil > now) Emit("evade", tgt.Chest, pc.color, "閃避！");
-                        else if (tgt == ally) { Emit("allyhit", tgt.Chest, pc.color, null); OnAllyHit?.Invoke(pc, dmg, tgt.Chest, 0); }
+                        else if (tgt.isAlly) { Emit("allyhit", tgt.Chest, pc.color, null); OnAllyHit?.Invoke(tgt, pc, dmg, tgt.Chest, 0); }
                         else ApplyDamageAndEffect(tgt, dmg, EffectKind.None, 0f, 0f, tgt.Chest);
                     }
                     return;
@@ -615,7 +621,7 @@ namespace SpellDuel
                         if (!v.Alive || FlatDistance(v.Feet, m.Feet) > sh.areaRadius + v.bodyRadius) continue;
                         int dmg = Mathf.RoundToInt(sh.damage * m.dmgMul);
                         if (v.dodgeUntil > now) Emit("evade", v.Chest, sh.color, "閃避！");
-                        else if (v == ally) { Emit("allyhit", v.Chest, sh.color, null); OnAllyHit?.Invoke(sh, dmg, v.Chest, 0); }
+                        else if (v.isAlly) { Emit("allyhit", v.Chest, sh.color, null); OnAllyHit?.Invoke(v, sh, dmg, v.Chest, 0); }
                         else ApplyDamageAndEffect(v, dmg, sh.effect, sh.effectDps, sh.effectDur, v.Chest);
                     }
                     return;
@@ -643,7 +649,7 @@ namespace SpellDuel
                         if (!v.Alive || FlatDistance(v.Feet, m.Feet) > sp.areaRadius + v.bodyRadius) continue;
                         int dmg = Mathf.RoundToInt(sp.damage * m.dmgMul);
                         if (v.dodgeUntil > now) Emit("evade", v.Chest, sp.color, "閃避！");
-                        else if (v == ally) { Emit("allyhit", v.Chest, sp.color, null); OnAllyHit?.Invoke(sp, dmg, v.Chest, 0); }
+                        else if (v.isAlly) { Emit("allyhit", v.Chest, sp.color, null); OnAllyHit?.Invoke(v, sp, dmg, v.Chest, 0); }
                         else ApplyDamageAndEffect(v, dmg, sp.effect, sp.effectDps, sp.effectDur, v.Chest);
                     }
                     return;
@@ -690,7 +696,7 @@ namespace SpellDuel
                         if (!v.Alive || FlatDistance(v.Feet, m.Feet) > bomb.areaRadius + v.bodyRadius) continue;
                         int dmg = Mathf.RoundToInt(bomb.damage * m.dmgMul);
                         if (v.dodgeUntil > now) Emit("evade", v.Chest, bomb.color, "閃避！");
-                        else if (v == ally) { Emit("allyhit", v.Chest, bomb.color, null); OnAllyHit?.Invoke(bomb, dmg, v.Chest, 0); }
+                        else if (v.isAlly) { Emit("allyhit", v.Chest, bomb.color, null); OnAllyHit?.Invoke(v, bomb, dmg, v.Chest, 0); }
                         else ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest);
                     }
                     m.hp = 0f;
@@ -708,7 +714,7 @@ namespace SpellDuel
                     if (d <= reach + tgt.bodyRadius)
                     {
                         if (tgt.dodgeUntil > now) Emit("evade", tgt.Chest, claw.color, "閃避！");
-                        else if (tgt == ally) { Emit("allyhit", tgt.Chest, claw.color, null); OnAllyHit?.Invoke(claw, dmg, tgt.Chest, 0); }
+                        else if (tgt.isAlly) { Emit("allyhit", tgt.Chest, claw.color, null); OnAllyHit?.Invoke(tgt, claw, dmg, tgt.Chest, 0); }
                         else ApplyDamageAndEffect(tgt, dmg, EffectKind.None, 0f, 0f, tgt.Chest);
                     }
                     return;
@@ -826,7 +832,7 @@ namespace SpellDuel
         public Fighter Opponent(Fighter f) => f == enemy || f.isMinion ? (f.target != null && f.target.Alive ? f.target : player) : enemy;
         public static float FlatDistance(Vector3 a, Vector3 b) { a.y = 0; b.y = 0; return Vector3.Distance(a, b); }
         public float Distance => FlatDistance(player.head, enemy.head);
-        public bool Over => (!endless && !enemy.Alive) || stageCleared || (!player.Alive && (ally == null || !ally.Alive));
+        public bool Over => (!endless && !enemy.Alive) || stageCleared || (!player.Alive && !AnyAllyAlive);
 
         // ------------------------------------------------------------ 詠唱
         public bool TryChant(Fighter f, SkillDef s, out string why)
@@ -929,7 +935,7 @@ namespace SpellDuel
                     {
                         if (v == f || !v.Alive || FlatDistance(ac, v.Feet) > s.areaRadius + v.bodyRadius) continue;
                         if (v.dodgeUntil > now) { Emit("evade", v.Chest, s.color, "閃避！"); continue; }
-                        if (v == ally) { Emit("allyhit", v.Chest, s.color, null); OnAllyHit?.Invoke(s, s.damage, v.Chest, 0); }
+                        if (v.isAlly) { Emit("allyhit", v.Chest, s.color, null); OnAllyHit?.Invoke(v, s, s.damage, v.Chest, 0); }
                         else ApplyDamageAndEffect(v, s.damage, s.effect, s.effectDps, s.effectDur, v.Chest);
                     }
                     break;
@@ -1006,7 +1012,7 @@ namespace SpellDuel
             if (s.cls == "priest")
             {
                 ApplySupport(f, s, null);
-                if (f == player && ally != null && ally.Alive) OnTeamBuff?.Invoke(s);
+                if (f == player && AnyAllyAlive) OnTeamBuff?.Invoke(s);
                 return;
             }
             switch (s.self)
@@ -1045,7 +1051,7 @@ namespace SpellDuel
                 case SelfKind.Summon:
                 {
                     // Boss 召喚小怪：在身邊 1.6～2.4m 冒出來（合作時多一隻），最多同時 MaxMinions 隻
-                    int n = Mathf.Min(s.multi + (ally != null ? 1 : 0), MaxMinions - minions.Count);
+                    int n = Mathf.Min(s.multi + allies.Count, MaxMinions - minions.Count);
                     for (int i = 0; i < n; i++)
                     {
                         Vector3 at = f.Feet;
@@ -1125,7 +1131,7 @@ namespace SpellDuel
             SetCurve(p, curveAmp, pathLen);
             projectiles.Add(p);
             // 要給另一支手機顯示的法術：雙人對戰的我方法術；合作模式的我方法術、主機上 Boss 的法術
-            if ((owner == player && (remoteEnemy || ally != null)) || ((owner == enemy || owner.isMinion) && coopHost)) OnSpawn?.Invoke(p);
+            if ((owner == player && (remoteEnemy || allies.Count > 0)) || ((owner == enemy || owner.isMinion) && coopHost)) OnSpawn?.Invoke(p);
             return p;
         }
 
@@ -1196,7 +1202,7 @@ namespace SpellDuel
             var p = new Projectile { owner = owner, skill = s, pos = from, basePos = from, dir = v.normalized, damage = dmg, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur, id = nextId++, lob = true, vel = v, landAt = to, pathLen = v.magnitude };
             if ((owner == enemy || owner.isMinion) && owner.target != null) p.target = owner.target;
             projectiles.Add(p);
-            if ((owner == player && (remoteEnemy || ally != null)) || ((owner == enemy || owner.isMinion) && coopHost)) OnSpawn?.Invoke(p);
+            if ((owner == player && (remoteEnemy || allies.Count > 0)) || ((owner == enemy || owner.isMinion) && coopHost)) OnSpawn?.Invoke(p);
         }
 
         /// <summary>從 from 以速度 v 拋出，落地（y=0）的位置</summary>
@@ -1221,7 +1227,7 @@ namespace SpellDuel
                 {
                     if (!v.Alive || FlatDistance(at, v.Feet) > p.skill.radius + v.bodyRadius) continue;
                     if (v.dodgeUntil > now) { Emit("evade", v.Chest, p.skill.color, "閃避！"); continue; }
-                    if (v == ally) { Emit("allyhit", v.Chest, p.skill.color, null); OnAllyHit?.Invoke(p.skill, p.damage, v.Chest, 0); }
+                    if (v.isAlly) { Emit("allyhit", v.Chest, p.skill.color, null); OnAllyHit?.Invoke(v, p.skill, p.damage, v.Chest, 0); }
                     else ApplyDamageAndEffect(v, p.damage, p.effect, p.effectDps, p.effectDur, v.Chest);
                 }
             if (p.skill.lobPool) AddPool(at, p.remote);
@@ -1256,7 +1262,7 @@ namespace SpellDuel
                     if (!v.Alive || FlatDistance(v.Feet, pl.pos) > pl.radius + 0.1f) continue;
                     if (pl.next.TryGetValue(v, out var t) && now < t) continue;
                     pl.next[v] = now + 1f;
-                    if (v == ally) { Emit("allyhit", v.Chest, ps.color, null); OnAllyHit?.Invoke(ps, ps.damage, v.Chest, 0); }
+                    if (v.isAlly) { Emit("allyhit", v.Chest, ps.color, null); OnAllyHit?.Invoke(v, ps, ps.damage, v.Chest, 0); }
                     else { ApplyDamageAndEffect(v, ps.damage, ps.effect, ps.effectDps, ps.effectDur, v.Chest); Emit("poolstep", v.Feet, ps.color, "踩到毒液！"); }
                 }
             }
@@ -1304,7 +1310,7 @@ namespace SpellDuel
                     if (ln.next.TryGetValue(v, out var t) && now < t) continue;
                     ln.next[v] = now + 1f;
                     if (v.dodgeUntil > now) { Emit("evade", v.Chest, ln.skill.color, "閃避！"); continue; }
-                    if (v == ally) { Emit("allyhit", v.Chest, ln.skill.color, null); OnAllyHit?.Invoke(ln.skill, ln.damage, v.Chest, 0); }
+                    if (v.isAlly) { Emit("allyhit", v.Chest, ln.skill.color, null); OnAllyHit?.Invoke(v, ln.skill, ln.damage, v.Chest, 0); }
                     else { ApplyDamageAndEffect(v, ln.damage, EffectKind.None, 0f, 0f, v.Chest); Emit("vinehit", v.Chest, ln.skill.color, "被藤蔓刺到！"); }
                 }
             }
@@ -1357,7 +1363,7 @@ namespace SpellDuel
                 m.dashHit = true;
                 int dmg = Mathf.RoundToInt(ds.damage * m.dmgMul);
                 if (v.dodgeUntil > now) Emit("evade", v.Chest, ds.color, "閃避！");
-                else if (v == ally) { Emit("allyhit", v.Chest, ds.color, null); OnAllyHit?.Invoke(ds, dmg, v.Chest, 0); }
+                else if (v.isAlly) { Emit("allyhit", v.Chest, ds.color, null); OnAllyHit?.Invoke(v, ds, dmg, v.Chest, 0); }
                 else ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest);
                 if (kind == 8) { m.dashUntil = 0f; m.recoverUntil = now + MinionRecover; }   // 衝鋒獸撞到就停；魚和鳥衝完全程
                 return;
@@ -1397,7 +1403,7 @@ namespace SpellDuel
                 p.alive = false;
                 Emit("slice", p.pos, p.skill.color, $"斬開 {p.skill.name}！");
                 if (p.remote) { slicedRemote.Add(p.id); OnSlice?.Invoke(p.id, true); }
-                else if (remoteEnemy || ally != null) OnSlice?.Invoke(p.id, false);
+                else if (remoteEnemy || allies.Count > 0) OnSlice?.Invoke(p.id, false);
                 return true;
             }
             return false;
@@ -1465,7 +1471,7 @@ namespace SpellDuel
                         if (p.crit) Emit("crit", p.pos, p.skill.color, "爆擊！");
                         LastProcs = RollProcs(p.owner);
                         if (remoteEnemy && target == enemy) { Emit("hit", p.pos, p.skill.color, null); OnRemoteHit?.Invoke(p.skill, p.damage, p.pos, p.id); OnDealt(p.owner, p.damage); }
-                        else if (target == ally) { Emit("allyhit", p.pos, p.skill.color, null); OnAllyHit?.Invoke(p.skill, p.damage, p.pos, p.id); }   // 主機：Boss 打到隊友
+                        else if (target.isAlly) { Emit("allyhit", p.pos, p.skill.color, null); OnAllyHit?.Invoke(target, p.skill, p.damage, p.pos, p.id); }   // 主機：Boss 打到隊友
                         else Hit(target, p);
                     }
                     else if (p.pos.y < 0f || p.traveled > p.skill.MaxTravel * p.rangeMul) { p.alive = false; Emit("miss", p.pos, p.skill.color, null); }
@@ -1536,7 +1542,7 @@ namespace SpellDuel
             foreach (var t in traps)
             {
                 if (!t.alive) continue;
-                if (now > t.until) { t.alive = false; if (!t.remote && (remoteEnemy || ally != null)) OnTrapGone?.Invoke(t.id); continue; }
+                if (now > t.until) { t.alive = false; if (!t.remote && (remoteEnemy || allies.Count > 0)) OnTrapGone?.Invoke(t.id); continue; }
                 if (t.remote || !t.Armed(now)) continue;   // 對手的陷阱由對手判定
                 var victim = Opponent(t.owner);
                 if (FlatDistance(victim.Feet, t.pos) < t.skill.radius + 0.15f)
@@ -1547,7 +1553,7 @@ namespace SpellDuel
                     else
                     {
                         ApplyDamageAndEffect(victim, t.skill.damage, t.skill.effect, t.skill.effectDps, t.skill.effectDur, t.pos);
-                        if (ally != null) OnTrapGone?.Invoke(t.id);   // 合作模式：告訴隊友陷阱沒了
+                        if (allies.Count > 0) OnTrapGone?.Invoke(t.id);   // 合作模式：告訴隊友陷阱沒了
                     }
                 }
             }
@@ -1639,7 +1645,7 @@ namespace SpellDuel
             if (!f.Alive)
             {
                 if (f.isMinion) { kills++; if (endless) xp += Mathf.RoundToInt(MinionXp[f.minionKind] * (1f + 0.03f * wave)); Emit("miniondie", f.Chest, Color.white, null); }
-                else if (f.isPlayer) Emit(ally != null && ally.Alive ? "down" : "lose", f.Chest, Color.white, null);
+                else if (f.isPlayer) Emit(AnyAllyAlive ? "down" : "lose", f.Chest, Color.white, null);
                 else if (endless && f == enemy) OnBossDown();
                 else Emit("win", f.Chest, Color.white, null);
             }

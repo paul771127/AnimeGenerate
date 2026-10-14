@@ -139,16 +139,17 @@ namespace SpellDuel
         {
             var cands = new List<Fighter>();
             if (b.player.Alive) cands.Add(b.player);
-            if (b.ally != null && b.ally.Alive) cands.Add(b.ally);
+            foreach (var a in b.allies) if (a.Alive) cands.Add(a);
             if (cands.Count == 0) { me.target = null; return; }
             bool keep = me.target != null && me.target.Alive && cands.Contains(me.target) && b.now < nextRetarget;
             if (keep || me.charging != null) return;
             nextRetarget = b.now + Rand(6f, 10f);
             if (cands.Count == 1) { me.target = cands[0]; return; }
-            float d0 = Battle.FlatDistance(me.Feet, cands[0].Feet), d1 = Battle.FlatDistance(me.Feet, cands[1].Feet);
-            // 近的機率高一點
-            float p0 = d1 / Mathf.Max(0.1f, d0 + d1);
-            me.target = rnd.NextDouble() < p0 ? cands[0] : cands[1];
+            // 近的機率高一點（權重＝距離的倒數）
+            float sum = 0f; var w = new float[cands.Count];
+            for (int i = 0; i < cands.Count; i++) { w[i] = 1f / Mathf.Max(0.3f, Battle.FlatDistance(me.Feet, cands[i].Feet)); sum += w[i]; }
+            double r = rnd.NextDouble() * sum;
+            for (int i = 0; i < cands.Count; i++) { r -= w[i]; if (r <= 0 || i == cands.Count - 1) { me.target = cands[i]; return; } }
         }
 
         void TryRelease(Fighter tgt)

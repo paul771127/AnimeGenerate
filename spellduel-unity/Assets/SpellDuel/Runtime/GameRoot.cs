@@ -92,6 +92,31 @@ namespace SpellDuel
         int hp = MaxHp, remoteHp = MaxHp;
         Vector3 remoteHeadW;  Quaternion remoteRotW = Quaternion.identity;
         float remoteSeen = -999f;    // 最後一次收到對手位置的時間（對手追蹤中斷時停在最後的正確位置）
+        // 多人（2～4 人）：房間裡的人、誰畫的場地、每個人的對齊狀態與最後位置
+        readonly List<int> roomPids = new List<int>();          // 主機：連著的加入者 pid
+        int areaOwnerPid = -1;                                    // 收到的場地是誰畫的（只用他的位置來對齊）
+        readonly Dictionary<int, bool> peerAligned = new Dictionary<int, bool>();
+        readonly Dictionary<int, Vector3> peerFeetW = new Dictionary<int, Vector3>();
+        readonly Dictionary<int, float> peerSeen = new Dictionary<int, float>();
+
+        /// <summary>送訊息（帶上我的編號）</summary>
+        void Send(Msg m) { if (!net.Connected) return; m.pid = net.MyPid; net.Send(m.ToJson()); }
+
+        /// <summary>主機：告訴大家房間裡有誰（含主機 0）</summary>
+        void BroadcastPeers()
+        {
+            var ks = new List<string> { "0" };
+            foreach (var p in roomPids) ks.Add(p.ToString());
+            Send(new Msg { t = "peers", ks = ks.ToArray() });
+            SetSoloPeers(ks.ToArray());
+        }
+
+        void SetSoloPeers(string[] ks)
+        {
+            solo.PeerIds.Clear();
+            if (ks != null) foreach (var k in ks) if (int.TryParse(k, out var pid) && pid != net.MyPid && !solo.PeerIds.Contains(pid)) solo.PeerIds.Add(pid);
+            solo.PeerIds.Sort();
+        }
         bool remoteTrackingOk = true, lastSentTracking = true;
         float hitFlash;   // 被打中時全畫面閃紅
         bool practiceDummy;
@@ -196,7 +221,7 @@ namespace SpellDuel
             solo.Init(cam, playArea, mat);
             solo.Hand = hand;
             // 雙人職業對戰：SoloBattle 的連線模式（訊息經由這裡收送）
-            solo.NetSend = m => { if (net.Connected) net.Send(m.ToJson()); };
+            solo.NetSend = m => { if (net.Connected) Send(m); };
             solo.SharedClock = () => SharedTime;
             solo.RequestRedraw = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); Log("請重新畫場地"); };
             solo.RequestChangeMode = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); mode = Mode.Choose; };
@@ -269,25 +294,25 @@ namespace SpellDuel
             if (net.Connected && Tracking.Ok != lastSentTracking)
             {
                 lastSentTracking = Tracking.Ok;
-                net.Send(new Msg { t = "track", ok = Tracking.Ok }.ToJson());
+                Send(new Msg { t = "track", ok = Tracking.Ok });
                 Log(Tracking.Ok ? "AR 追蹤恢復" : "⚠ AR 追蹤中斷：暫時不能施法，對手以你最後的位置判定");
             }
             if (net.Connected && !net.IsHost && Time.time >= nextPing)
             {
                 nextPing = Time.time + 2f;
-                net.Send(new Msg { t = "ping", c = LocalTime }.ToJson());
+                Send(new Msg { t = "ping", c = LocalTime });
             }
             if (net.Connected && WorldReady && Tracking.Ok && Time.time >= nextPose)
             {
                 nextPose = Time.time + 0.05f;
-                net.Send(new Msg
+                Send(new Msg
                 {
                     t = "pose",
                     p = WorldFrame.ToWorld(cam.transform.position),
                     r = WorldFrame.RotToWorld(cam.transform.rotation),
                     hp = hp,
                     t0 = SharedTime,
-                }.ToJson());
+                });
             }
             UpdateObservation();
             hand.Update(poseDet.Latest, Time.time, Screen.width, Screen.height);
@@ -299,6 +324,7 @@ namespace SpellDuel
                 solo.NetEnemyHeadW = tgtHeadW; solo.NetEnemyFwdW = tgtFwdW;
                 solo.NetLock = targetOnScreen; solo.NetLockRect = targetRect;
                 solo.NetIsHost = net.IsHost;
+                solo.MyPid = Mathf.Max(0, net.MyPid);
             }
             HandleFire();
             UpdateShots();
@@ -392,7 +418,7 @@ namespace SpellDuel
             if (!net.Connected || !areaOwner || playArea.Polygon.Count < 3) return;
             var pts = new Vector3[playArea.Polygon.Count];
             for (int i = 0; i < pts.Length; i++) { var w = WorldFrame.ToWorld(playArea.Polygon[i]); pts[i] = new Vector3(w.x, 0f, w.z); }
-            net.Send(new Msg { t = "area", pts = pts }.ToJson());
+            Send(new Msg { t = "area", pts = pts });
         }
 
         void OnAreaReceived(Vector3[] pts)
@@ -485,7 +511,7 @@ namespace SpellDuel
             if (Time.time >= nextAlignMsg)
             {
                 nextAlignMsg = Time.time + 2f;
-                net.Send(new Msg { t = "align", ok = true, s = align.Rms, id = align.Used }.ToJson());
+                Send(new Msg { t = "align", ok = true, s = align.Rms, id = align.Used });
             }
         }
 
@@ -495,12 +521,34 @@ namespace SpellDuel
             if (!AreaMode || !net.Connected) return;
             double tShared = SharedTime - (Time.time - captureTime);
             if (areaOwner)
-                net.Send(new Msg { t = "seen", p = new Vector3(ground.x, 0f, ground.z), t0 = tShared }.ToJson());
+            {
+                // 多人：只送給「看到的應該是他」的那位（只有一位還沒對齊 → 給他；否則給位置最接近、已對齊的人）
+                int to = SeenTarget(ground);
+                if (solo.PeerIds.Count <= 1) Send(new Msg { t = "seen", p = new Vector3(ground.x, 0f, ground.z), t0 = tShared });
+                else if (to >= 0) Send(new Msg { t = "seen", p = new Vector3(ground.x, 0f, ground.z), t0 = tShared, to = to + 1 });
+            }
             else if (Aligner && Interp(ownerFeetHist, tShared, out var ownerW))
             {
                 var local = WorldFrame.FromWorld(ground);   // 我的 AR 座標（xz 就是本地座標）
                 align.Add(ownerW, new Vector3(local.x, 0f, local.z), Time.time, DuoAlignment.KindISeeOwner);
             }
+        }
+
+        /// <summary>場地主看到某人的腳：判斷是誰（−1＝分不出來）</summary>
+        int SeenTarget(Vector3 ground)
+        {
+            int unaligned = -1, nUn = 0;
+            foreach (var pid in solo.PeerIds) if (!peerAligned.TryGetValue(pid, out var ok) || !ok) { unaligned = pid; nUn++; }
+            if (nUn == 1) return unaligned;
+            int best = -1; float bd = 0.8f;
+            foreach (var pid in solo.PeerIds)
+            {
+                if (!peerAligned.TryGetValue(pid, out var ok) || !ok) continue;
+                if (!peerFeetW.TryGetValue(pid, out var f) || Time.time - peerSeen[pid] > 0.5f) continue;
+                float d = Vector2.Distance(new Vector2(f.x, f.z), new Vector2(ground.x, ground.z));
+                if (d < bd) { bd = d; best = pid; }
+            }
+            return best;
         }
 
         // ---------------------------------------------------------------- 網路訊息
@@ -510,24 +558,49 @@ namespace SpellDuel
             {
                 Msg m;
                 try { m = Msg.FromJson(line); } catch { continue; }
+                if (m.to != 0 && m.to != net.MyPid + 1) continue;   // 指定給別人的（主機收到要轉送的那份）
                 switch (m.t)
                 {
+                    case "_hello":
+                        Log($"✅ 加入房間（我是 {net.MyPid} 號）");
+                        break;
+                    case "peers":
+                        SetSoloPeers(m.ks);
+                        Log($"👥 房間 {solo.PeerIds.Count + 1} 人");
+                        break;
                     case "_open":
-                        Log("✅ 已連線");
+                        if (net.IsHost)
+                        {
+                            if (!roomPids.Contains(m.id)) roomPids.Add(m.id);
+                            roomPids.Sort();
+                            BroadcastPeers();
+                            Log($"✅ 隊友{m.id} 加入（房間 {roomPids.Count + 1} 人）");
+                        }
+                        else Log("✅ 已連線");
                         hp = remoteHp = MaxHp;
                         damaged.Clear();
                         if (AreaMode) SendArea();
-                        if (!net.IsHost) net.Send(new Msg { t = "ping", c = LocalTime }.ToJson());
+                        if (!net.IsHost) Send(new Msg { t = "ping", c = LocalTime });
                         break;
                     case "_close":
-                        Log("❌ 對手已斷線");
-                        if (mode == Mode.Duo && solo.phase != SoloBattle.Phase.Hidden) solo.Hide();
-                        break;
-                    case "ready": case "cast2": case "hit2": case "hp2": case "trap2": case "trapgone": case "state": case "burn2":
-                        solo.OnNet(m);   // 雙人職業對戰
+                        if (net.IsHost)
+                        {
+                            roomPids.Remove(m.id); peerAligned.Remove(m.id); peerFeetW.Remove(m.id); peerSeen.Remove(m.id);
+                            BroadcastPeers();
+                            solo.OnPeerLeft(m.id);
+                            Log($"❌ 隊友{m.id} 斷線（房間剩 {roomPids.Count + 1} 人）");
+                            if (roomPids.Count == 0 && mode == Mode.Duo && solo.phase != SoloBattle.Phase.Hidden) solo.Hide();
+                        }
+                        else
+                        {
+                            Log("❌ 主機已斷線");
+                            solo.PeerIds.Clear();
+                            if (mode == Mode.Duo && solo.phase != SoloBattle.Phase.Hidden) solo.Hide();
+                        }
                         break;
                     case "ping":
-                        net.Send(new Msg { t = "pong", c = m.c, h = LocalTime }.ToJson());
+                        // 只回給問的那個人
+                        net.SendTo(m.pid, new Msg { t = "pong", c = m.c, h = LocalTime, pid = net.MyPid }.ToJson());
                         break;
                     case "pong":
                     {
@@ -542,11 +615,19 @@ namespace SpellDuel
                         break;
                     }
                     case "pose":
-                        remoteHeadW = m.p; remoteRotW = m.r; remoteHp = m.hp; remoteSeen = Time.time;
-                        if (Aligner) Push(ownerFeetHist, m.t0, FeetFromHead(m.p, m.r, 0f));
+                    {
+                        if (solo.PeerIds.Count <= 1) { remoteHeadW = m.p; remoteRotW = m.r; remoteHp = m.hp; remoteSeen = Time.time; }
+                        if (Aligner && (areaOwnerPid < 0 || m.pid == areaOwnerPid)) Push(ownerFeetHist, m.t0, FeetFromHead(m.p, m.r, 0f));
+                        // 合作的隊友位置：手機拿在身體前方 → 往後退一點才是身體中心
+                        var bk = Flat(m.r * Vector3.forward);
+                        var body = m.p + (bk.sqrMagnitude > 1e-4f ? -bk.normalized * 0.12f : Vector3.zero);
+                        if (!solo.NetPeers.TryGetValue(m.pid, out var pp)) solo.NetPeers[m.pid] = pp = new SoloBattle.PeerPose();
+                        pp.head = body; pp.fwd = m.r * Vector3.forward;
+                        peerFeetW[m.pid] = new Vector3(body.x, 0f, body.z); peerSeen[m.pid] = Time.time;
                         break;
+                    }
                     case "area":
-                        if (AreaMode) OnAreaReceived(m.pts);
+                        if (AreaMode) { areaOwnerPid = m.pid; OnAreaReceived(m.pts); }
                         break;
                     case "seen":
                         // 場地主的鏡頭看到我：配上我自己在同一時間的位置 → 一組對齊樣本
@@ -554,7 +635,7 @@ namespace SpellDuel
                             align.Add(m.p, new Vector3(mine.x, 0f, mine.z), Time.time, DuoAlignment.KindOwnerSeesMe);
                         break;
                     case "align":
-                        remoteAligned = m.ok; remoteAlignRms = m.s;
+                        remoteAligned = m.ok; remoteAlignRms = m.s; peerAligned[m.pid] = m.ok;
                         break;
                     case "shot":
                         SpawnShot(new Shot { id = m.id, mine = false, o = m.p, d = m.d, s = m.s, rad = m.rad, dmg = m.dmg, t0 = m.t0 });
@@ -564,7 +645,7 @@ namespace SpellDuel
                         if (damaged.Add(m.id))
                         {
                             hp = Mathf.Max(0, hp - m.dmg);
-                            net.Send(new Msg { t = "hp", hp = hp }.ToJson());
+                            Send(new Msg { t = "hp", hp = hp });
                             if (shots.TryGetValue(m.id, out var hs)) Explode(hs, new Color(1f, 0.2f, 0.2f), $"被打中 -{m.dmg}");
                             else Log($"被打中 -{m.dmg}");
                             hitFlash = 1f;
@@ -581,6 +662,9 @@ namespace SpellDuel
                     case "track":
                         remoteTrackingOk = m.ok;
                         Log(m.ok ? "對手 AR 追蹤恢復" : "⚠ 對手 AR 追蹤中斷（以最後位置判定）");
+                        break;
+                    default:
+                        solo.OnNet(m);   // 對戰／合作的戰鬥訊息（ready、mode、cast2、hit2、boss、mins…）
                         break;
                 }
             }
@@ -620,7 +704,7 @@ namespace SpellDuel
                 t0 = SharedTime,
             };
             SpawnShot(shot);
-            net.Send(new Msg { t = "shot", id = shot.id, p = shot.o, d = shot.d, s = shot.s, rad = shot.rad, dmg = shot.dmg, t0 = shot.t0 }.ToJson());
+            Send(new Msg { t = "shot", id = shot.id, p = shot.o, d = shot.d, s = shot.s, rad = shot.rad, dmg = shot.dmg, t0 = shot.t0 });
         }
 
         void SpawnShot(Shot s)
@@ -820,7 +904,7 @@ namespace SpellDuel
                     {
                         if (HitsBody(posW, tgtHeadW, tgtFwdW, s.rad))
                         {
-                            net.Send(new Msg { t = "hit", id = s.id, dmg = s.dmg }.ToJson());
+                            Send(new Msg { t = "hit", id = s.id, dmg = s.dmg });
                             remoteHp = Mathf.Max(0, remoteHp - s.dmg);   // 先顯示，對手回報 hp 後再校正
                             Explode(s, new Color(1f, 0.3f, 0.2f), "命中！");
                             if (remoteHp <= 0) Log("🏆 勝利");
@@ -829,7 +913,7 @@ namespace SpellDuel
                     }
                     if (age > life)
                     {
-                        if (net.Connected) net.Send(new Msg { t = "miss", id = s.id }.ToJson());
+                        if (net.Connected) Send(new Msg { t = "miss", id = s.id });
                         Fizzle(s, "沒打中");
                     }
                 }
@@ -1076,6 +1160,7 @@ namespace SpellDuel
                 else
                     Line(!playArea.HasFloor ? "場地：🔍 先掃地板（慢慢移動手機）" : "場地：由其中一人畫場地，另一人會自動收到");
                 Line($"連線：{net.Status}" + (net.Connected && !net.IsHost ? $"　時鐘差 {clockOffset * 1000:F0}ms（來回 {bestRtt * 1000:F0}ms）" : ""));
+                if (net.Connected) Line($"👥 房間 {solo.PeerIds.Count + 1} 人（最多 {NetLink.MaxClients + 1} 人；我是{(net.IsHost ? "房主" : $" {net.MyPid} 號")}）" + (solo.PeerIds.Count > 1 ? "　多人只能玩合作；每位加入的人都要先面對房主對齊" : ""));
                 string dist = "";
                 if (WorldFrame.Calibrated && net.Connected && remoteSeen > 0f)
                 {

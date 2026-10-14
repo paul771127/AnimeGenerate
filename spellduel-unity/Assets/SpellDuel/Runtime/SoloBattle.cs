@@ -28,6 +28,26 @@ namespace SpellDuel
         public Rect NetLockRect;
         bool localReady, remoteReady;
         string remoteClass; string[] remoteLoadout;
+        // 多人（2～4 人合作）：我的編號、房間裡其他人的編號與位置（GameRoot 設定）、每個人的準備狀態
+        public int MyPid;
+        public readonly List<int> PeerIds = new List<int>();
+        public class PeerPose { public Vector3 head, fwd; }
+        public readonly Dictionary<int, PeerPose> NetPeers = new Dictionary<int, PeerPose>();
+        class PeerInfo { public string cls; public string[] loadout; public bool ready; public int mode; }
+        readonly Dictionary<int, PeerInfo> peerInfo = new Dictionary<int, PeerInfo>();
+        const int IdSpace = 1000000;                         // 遠端法術／陷阱的編號：發送者 pid × IdSpace ＋ 對方的編號（多人時不會撞號）
+        static int RId(int pid, int id) => pid * IdSpace + id;
+        void SendTo(int pid, Msg m) { m.to = pid + 1; NetSend?.Invoke(m); }
+        /// <summary>這位玩家在訊息裡的代碼：0＝沒有、否則 pid＋1（主機用來告訴大家 Boss／小怪在打誰）</summary>
+        int TargetCode(Fighter f) => f == null ? 0 : f == Me ? MyPid + 1 : f.isAlly ? f.pid + 1 : 0;
+        Fighter FromTargetCode(int code) => code <= 0 ? null : code - 1 == MyPid ? Me : battle?.AllyByPid(code - 1);
+        /// <summary>GameRoot：有人離開房間</summary>
+        public void OnPeerLeft(int pid)
+        {
+            peerInfo.Remove(pid); NetPeers.Remove(pid);
+            var a = battle?.AllyByPid(pid);
+            if (a != null && a.Alive) { a.hp = 0f; Say($"⚠ {a.name} 斷線了", 3f); }
+        }
         float nextState;
         Transform remoteAnchor;           // 對手位置的空物件（光效跟著它）
         public bool NetIsHost;            // 這支手機是主機（合作模式由主機跑 Boss）
@@ -367,9 +387,12 @@ namespace SpellDuel
 
         void TryStartNet()
         {
-            if (!NetMode || !localReady || !remoteReady || remoteClass == null) return;
+            if (!NetMode || !localReady || PeerIds.Count == 0) return;
+            foreach (var pid in PeerIds) if (!peerInfo.TryGetValue(pid, out var pi) || !pi.ready) return;
             localReady = remoteReady = false;
-            if (coop != remoteCoop || (coop && netEndless != remoteEndless)) { Say("兩人選的模式不同（對戰／合作打 Boss／無盡），請選一樣的再按準備", 4f); return; }
+            foreach (var pi in peerInfo.Values) pi.ready = false;
+            foreach (var pid in PeerIds) if (peerInfo[pid].mode != NetModeCode) { Say("大家選的模式不同（對戰／合作打 Boss／無盡），請選一樣的再按準備", 4f); return; }
+            if (!coop && PeerIds.Count > 1) { Say($"⚔ 對戰只能兩個人（現在房間有 {PeerIds.Count + 1} 人），請選合作模式", 4f); return; }
             if (coop) StartBossBattle(true, netEndless); else StartNetBattle();
         }
 
@@ -434,7 +457,8 @@ namespace SpellDuel
             var bossSkills = new List<string>(bc.defaultLoadout);
             if (endlessMode) bossSkills.Remove("b_summon");
             var boss = new Fighter(bc.name, bc, bossSkills, false) { bodyRadius = 0.75f };
-            float party = coopMode ? 1.3f : 1f;   // 參與人數倍率：每多一人，敵人血量與攻擊力 +30%
+            int partyN = coopMode ? 1 + PeerIds.Count : 1;
+            float party = 1f + 0.3f * (partyN - 1);   // 參與人數倍率：每多一人，敵人血量與攻擊力 +30%
             boss.maxHp = Mathf.RoundToInt(BossHpSolo * party * BossHpFor(difficulty)); boss.hp = boss.maxHp;
             me.damageTakenMul = DamageTakenFor(difficulty) * party;   // 敵人攻擊力 +30%＝自己受到的傷害 ×1.3
             SyncPlayer(me);
@@ -443,27 +467,33 @@ namespace SpellDuel
             bool host = !coopMode || NetIsHost;
             if (coopMode)
             {
-                var rc = Skills.Classes.TryGetValue(remoteClass ?? "", out var found) ? found : Skills.Classes["mage"];
-                battle.ally = new Fighter($"隊友{rc.name}", rc, remoteLoadout ?? new string[0], false) { head = NetEnemyHeadW };
+                foreach (var pid in PeerIds)
+                {
+                    peerInfo.TryGetValue(pid, out var pi);
+                    var rc = Skills.Classes.TryGetValue(pi?.cls ?? "", out var found) ? found : Skills.Classes["mage"];
+                    var head = NetPeers.TryGetValue(pid, out var pp) ? pp.head : NetEnemyHeadW;
+                    battle.allies.Add(new Fighter(PeerIds.Count > 1 ? $"{(pid == 0 ? "房主" : $"隊友{pid}")}・{rc.name}" : $"隊友{rc.name}", rc, pi?.loadout ?? new string[0], false) { head = head, isAlly = true, pid = pid });
+                }
                 battle.coopHost = NetIsHost;
                 battle.remoteEnemy = !NetIsHost;   // 隊友端：Boss 是主機的代理
                 battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.basePos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected, rad = p.curveAmp, s = p.pathLen, e = p.owner == battle.enemy || p.owner.isMinion ? 1 : 0 });
-                battle.OnAllyHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });
+                battle.OnAllyHit += (who, sk, dmg, at, id) => SendTo(who.pid, new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });   // 主機：只送給被打到的那位
                 battle.OnTeamBuff += sk => NetSend?.Invoke(new Msg { t = "tbuff", k = sk.id });
                 battle.OnRemoteHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at, e = battle.LastProcs });
-                battle.OnRemoteBurn += (sk, dmg, at) => NetSend?.Invoke(new Msg { t = "burn2", k = sk.id, dmg = Mathf.RoundToInt(dmg), p = at });
+                battle.OnRemoteBurn += (sk, dmg, at) => SendTo(0, new Msg { t = "burn2", k = sk.id, dmg = Mathf.RoundToInt(dmg), p = at });
                 battle.OnTrapPlaced += t => NetSend?.Invoke(new Msg { t = "trap2", id = t.id, k = t.skill.id, p = t.pos, s = t.armAt - battle.now });
                 battle.OnTrapGone += id => NetSend?.Invoke(new Msg { t = "trapgone", id = id });
                 battle.OnDispel += (c, r) => NetSend?.Invoke(new Msg { t = "dispel", p = c, rad = r });
-                battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = id, ok = theirs });
-                battle.OnMinionHit += (id, dmg, sk) => NetSend?.Invoke(new Msg { t = "mhit", id = id, dmg = dmg, k = sk.id, e = battle.LastProcs });
+                // 斬開法球：送「發射者 pid 空間」的編號（自己的法術換成 RId(我, id)；遠端的本來就是）
+                battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = theirs ? id : RId(MyPid, id) });
+                battle.OnMinionHit += (id, dmg, sk) => SendTo(0, new Msg { t = "mhit", id = id, dmg = dmg, k = sk.id, e = battle.LastProcs });
                 // 主機：藤蔓／衝刺路線送給隊友顯示（傷害由主機判定）
                 battle.OnLane += ln => { if (!ln.remote && NetIsHost) NetSend?.Invoke(new Msg { t = "lane", k = ln.kind, pts = new[] { ln.a, ln.b }, rad = ln.grow, s = ln.until - battle.now }); };
             }
             battle.OnLane += ShowLane;
             battle.OnPool += pl => PlantFx.PoisonPool(WorldFrame.FromWorld(pl.pos), pl.radius, Mathf.Max(0.1f, pl.until - battle.now));
             // Boss 出生點：場地內、離玩家們夠遠的地方（隊友端先放在遠處，等主機的位置）
-            boss.head = host ? BossSpawnPoint(me, battle.ally) : new Vector3(0f, BossRig.Height, 0f);
+            boss.head = host ? BossSpawnPoint(me) : new Vector3(0f, BossRig.Height, 0f);
             boss.head.y = BossRig.Height;
             boss.forward = Fighter.Flat(me.head - boss.head);
             bossSeen = host;
@@ -505,16 +535,13 @@ namespace SpellDuel
         /// <summary>無盡模式的小怪出生點：離所有玩家至少 15m 的隨機方向（可以在場地外，小怪會走進來）</summary>
         Vector3 FarSpawnPoint()
         {
-            var center = Me.Feet;
-            if (Ally != null) center = (Me.Feet + Ally.Feet) / 2f;
+            var center = PartyCenter();
             for (int tries = 0; tries < 16; tries++)
             {
                 float a = UnityEngine.Random.value * Mathf.PI * 2f;
                 float r = Battle.MinionSpawnDistance + 1f + UnityEngine.Random.value * 3f;
                 var p = center + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
-                float d = Battle.FlatDistance(p, Me.Feet);
-                if (Ally != null) d = Mathf.Min(d, Battle.FlatDistance(p, Ally.Feet));
-                if (d >= Battle.MinionSpawnDistance) return p;
+                if (MinPartyDist(p) >= Battle.MinionSpawnDistance) return p;
             }
             return center + Fighter.Flat(Me.forward) * (Battle.MinionSpawnDistance + 3f);
         }
@@ -535,8 +562,7 @@ namespace SpellDuel
                 if (inward.sqrMagnitude > 1e-4f) ps += inward.normalized * 0.6f;
                 if (!area.Inside(ps)) continue;
                 var pw = WorldFrame.ToWorld(ps); pw.y = 0f;
-                float d = Battle.FlatDistance(pw, Me.Feet);
-                if (Ally != null) d = Mathf.Min(d, Battle.FlatDistance(pw, Ally.Feet));
+                float d = MinPartyDist(pw);
                 if (d >= 3f) return pw;
                 if (d > bestD) { bestD = d; best = pw; }
             }
@@ -544,9 +570,26 @@ namespace SpellDuel
         }
 
         /// <summary>Boss 出生點：玩家們中點周圍 4m 的圓上，挑場地內、離玩家最遠的點</summary>
-        Vector3 BossSpawnPoint(Fighter me, Fighter ally)
+        /// <summary>所有玩家（我＋隊友）的中心</summary>
+        Vector3 PartyCenter()
         {
-            var mid = ally != null ? (me.Feet + ally.Feet) / 2f : me.Feet + Fighter.Flat(me.forward) * 3f;
+            var c = Me.Feet; int n = 1;
+            if (battle != null) foreach (var a in battle.allies) { c += a.Feet; n++; }
+            return c / n;
+        }
+
+        /// <summary>點 p 離最近的玩家多遠</summary>
+        float MinPartyDist(Vector3 p)
+        {
+            float d = Battle.FlatDistance(p, Me.Feet);
+            if (battle != null) foreach (var a in battle.allies) d = Mathf.Min(d, Battle.FlatDistance(p, a.Feet));
+            return d;
+        }
+
+        Vector3 BossSpawnPoint(Fighter me)
+        {
+            bool party = battle != null && battle.allies.Count > 0;
+            var mid = party ? PartyCenter() : me.Feet + Fighter.Flat(me.forward) * 3f;
             Vector3 best = mid + Fighter.Flat(me.forward) * 3f; float bestScore = -1f;
             for (int ring = 0; ring < 3; ring++)
                 for (int i = 0; i < 16; i++)
@@ -555,8 +598,7 @@ namespace SpellDuel
                     var c = mid + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
                     var cs = WorldFrame.FromWorld(c);
                     if (!area.Inside(cs) || area.DistanceToEdge(cs) < 0.9f) continue;
-                    float d = Battle.FlatDistance(c, me.Feet);
-                    if (ally != null) d = Mathf.Min(d, Battle.FlatDistance(c, ally.Feet));
+                    float d = MinPartyDist(c);
                     // 在我面前的稍微加分（一開打就看得到）
                     d += 0.5f * Vector3.Dot(Fighter.Flat(c - me.Feet), Fighter.Flat(me.forward));
                     if (d > bestScore) { bestScore = d; best = c; }
@@ -577,20 +619,20 @@ namespace SpellDuel
             if (!coop || !NetIsHost || battle == null || Time.time < nextBossState) return;
             nextBossState = Time.time + 0.1f;
             var b = battle.enemy;
-            int e = (bossAi != null && bossAi.Enraged ? 1 : 0) | (b.target == battle.ally ? 2 : 0);
-            NetSend?.Invoke(new Msg { t = "boss", p = b.head, d = b.forward, hp = Mathf.CeilToInt(b.hp), dmg = b.maxHp, k = b.charging != null ? b.charging.id : "", s = battle.ChargeProgress(b), e = e, pts = b.charging != null && (b.charging.id == "b_leap" || b.charging.atTarget) ? new[] { b.aimPoint } : null,
+            int e = bossAi != null && bossAi.Enraged ? 1 : 0;
+            NetSend?.Invoke(new Msg { t = "boss", id = TargetCode(b.target), p = b.head, d = b.forward, hp = Mathf.CeilToInt(b.hp), dmg = b.maxHp, k = b.charging != null ? b.charging.id : "", s = battle.ChargeProgress(b), e = e, pts = b.charging != null && (b.charging.id == "b_leap" || b.charging.atTarget) ? new[] { b.aimPoint } : null,
                 ks = endless ? new[] { battle.wave.ToString(), battle.WaveRemaining.ToString(), battle.kills.ToString(), battle.bossKills.ToString(), battle.xp.ToString(), battle.waveTotal.ToString() } : null });
             // 小怪：位置與「編號,血量,最大血量,預備中」
             var ms = battle.minions;
             var pts = new Vector3[ms.Count]; var ks = new string[ms.Count];
-            for (int i = 0; i < ms.Count; i++) { pts[i] = ms[i].head; ks[i] = $"{ms[i].minionId},{Mathf.CeilToInt(ms[i].hp)},{ms[i].maxHp},{(ms[i].windupUntil > 0f ? 1 : 0)},{ms[i].minionKind},{(ms[i].target == battle.ally ? 2 : 1)},{ms[i].alt.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}"; }
+            for (int i = 0; i < ms.Count; i++) { pts[i] = ms[i].head; ks[i] = $"{ms[i].minionId},{Mathf.CeilToInt(ms[i].hp)},{ms[i].maxHp},{(ms[i].windupUntil > 0f ? 1 : 0)},{ms[i].minionKind},{TargetCode(ms[i].target)},{ms[i].alt.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}"; }
             NetSend?.Invoke(new Msg { t = "mins", pts = pts, ks = ks });
         }
 
         /// <summary>合作模式的網路訊息</summary>
         void OnNetCoop(Msg m)
         {
-            var ally = Ally;
+            var ally = battle.AllyByPid(m.pid);   // 送這則訊息的隊友
             switch (m.t)
             {
                 case "lane":
@@ -610,25 +652,29 @@ namespace SpellDuel
                     if (Skills.All.TryGetValue(m.k, out var cs))
                     {
                         float elapsed = (float)((SharedClock?.Invoke() ?? m.t0) - m.t0);
-                        battle.AddRemoteProjectile(m.id, cs, m.p, m.d, Mathf.Clamp(elapsed, 0f, 1f), m.ok, m.rad, m.s, m.e == 1 ? battle.enemy : ally);
+                        battle.AddRemoteProjectile(RId(m.pid, m.id), cs, m.p, m.d, Mathf.Clamp(elapsed, 0f, 1f), m.ok, m.rad, m.s, m.e == 1 ? battle.enemy : ally);
                     }
                     break;
                 case "hit2":
                     if (!Skills.All.TryGetValue(m.k, out var hs)) break;
                     {
                         bool isTrap = m.id < 0;
-                        if (NetIsHost)
+                        int rid = RId(m.pid, isTrap ? -m.id : m.id);
+                        if (m.pid != 0)
                         {
-                            // 隊友打到 Boss
-                            if (isTrap) battle.RemoveRemoteTrap(-m.id); else battle.RemoveRemoteProjectile(m.id);
-                            battle.ApplyHitOnEnemy(hs, m.dmg, m.p, isTrap);
-                            battle.ApplyProcs(battle.enemy, m.e, m.p);
+                            // 隊友打到 Boss：主機扣血；其他隊友只把那發的畫面移除
+                            if (isTrap) battle.RemoveRemoteTrap(rid); else battle.RemoveRemoteProjectile(rid);
+                            if (NetIsHost)
+                            {
+                                battle.ApplyHitOnEnemy(hs, m.dmg, m.p, isTrap);
+                                battle.ApplyProcs(battle.enemy, m.e, m.p);
+                            }
                         }
-                        else
+                        else if (!NetIsHost)
                         {
                             // 主機判定 Boss 打到我（我已經斬開的那發不算）
-                            if (!isTrap && battle.WasSliced(m.id)) break;
-                            battle.RemoveRemoteProjectile(m.id);
+                            if (!isTrap && battle.WasSliced(rid)) break;
+                            battle.RemoveRemoteProjectile(rid);
                             battle.ApplyRemoteHit(hs, m.dmg, m.p, isTrap);
                             NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp) });
                         }
@@ -641,10 +687,10 @@ namespace SpellDuel
                     if (ally != null) ally.hp = m.hp;
                     break;
                 case "trap2":
-                    if (Skills.All.TryGetValue(m.k, out var ts)) battle.AddRemoteTrap(m.id, ts, m.p, m.s);
+                    if (Skills.All.TryGetValue(m.k, out var ts)) battle.AddRemoteTrap(RId(m.pid, m.id), ts, m.p, m.s);
                     break;
                 case "trapgone":
-                    battle.RemoveRemoteTrap(m.id);
+                    battle.RemoveRemoteTrap(RId(m.pid, m.id));
                     break;
                 case "dispel":
                     // 隊友的抗拒法環：主機打斷 Boss 的蓄力（Boss 在圈內時）
@@ -693,7 +739,7 @@ namespace SpellDuel
                             b.chargeStart = battle.now - m.s * bs.charge * b.chargeScale;
                         }
                         else b.charging = null;
-                        b.target = (m.e & 2) != 0 ? Me : ally;   // 主機的隊友＝我
+                        b.target = FromTargetCode(m.id);
                         if ((m.e & 1) != 0 && bossRig && !bossEnragedShown) { bossEnragedShown = true; OnBossEnrage(); }
                         if (!bossSeen) { bossSeen = true; lastEnemyFeet = b.Feet; if (bossRig && !endless) bossRig.SetVisible(true); }
                     }
@@ -723,7 +769,7 @@ namespace SpellDuel
                             if (float.TryParse(parts[1], out var mhp)) mf.hp = mhp;
                             if (int.TryParse(parts[2], out var mmax)) mf.maxHp = mmax;
                             mf.windupUntil = parts[3] == "1" ? battle.now + 1f : 0f;
-                            if (parts.Length >= 6) mf.target = parts[5] == "2" ? Me : Ally;   // 主機的隊友＝我
+                            if (parts.Length >= 6 && int.TryParse(parts[5], out var tcode)) mf.target = FromTargetCode(tcode);
                             if (parts.Length >= 7 && float.TryParse(parts[6], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var malt)) mf.alt = malt;   // 飛行／浮空高度
                         }
                         foreach (var mf in battle.minions) if (!seen.Contains(mf.minionId)) mf.hp = 0f;
@@ -870,17 +916,25 @@ namespace SpellDuel
             switch (m.t)
             {
                 case "mode":
-                    coop = remoteCoop = m.e >= 1; netEndless = remoteEndless = m.e == 2;
+                    coop = remoteCoop = m.e >= 1; netEndless = remoteEndless = m.e == 2; localReady = false;
                     Say(m.e == 2 ? "對方選了：♾ 無盡（合作）" : coop ? "對方選了：🤝 合作打 Boss" : "對方選了：⚔ 對戰", 2.5f);
                     return;
                 case "ready":
                     remoteClass = m.k; remoteLoadout = m.ks; remoteReady = true; remoteCoop = m.e >= 1; remoteEndless = m.e == 2;
-                    if (phase != Phase.Fighting) Say("對手已準備好", 2f);
+                    if (!peerInfo.TryGetValue(m.pid, out var rpi)) peerInfo[m.pid] = rpi = new PeerInfo();
+                    rpi.cls = m.k; rpi.loadout = m.ks; rpi.ready = true; rpi.mode = m.e;
+                    if (phase != Phase.Fighting) Say(PeerIds.Count > 1 ? $"{PeerName(m.pid)}已準備好（{ReadyCount()}/{PeerIds.Count}）" : "對手已準備好", 2f);
                     TryStartNet();
                     return;
             }
             if (battle == null || !NetMode) return;
-            if (m.t == "slice") { battle.ApplyRemoteSlice(m.id, m.ok); return; }   // 劍士斬開了法術
+            if (m.t == "slice")
+            {
+                // 劍士斬開了法術。合作：id＝發射者 pid 空間的編號；是我的就移除我自己的那發，否則移除遠端的那發
+                if (coop) { if (m.id / IdSpace == MyPid) battle.ApplyRemoteSlice(m.id % IdSpace, true); else battle.ApplyRemoteSlice(m.id, false); }
+                else battle.ApplyRemoteSlice(m.id, m.ok);
+                return;
+            }
             if (coop) { OnNetCoop(m); return; }
             switch (m.t)
             {
@@ -949,6 +1003,9 @@ namespace SpellDuel
                     break;
             }
         }
+
+        string PeerName(int pid) => pid == 0 ? "房主" : $"隊友{pid}";
+        int ReadyCount() { int n = 0; foreach (var pid in PeerIds) if (peerInfo.TryGetValue(pid, out var pi) && pi.ready) n++; return n; }
 
         void SendState()
         {
@@ -1090,14 +1147,14 @@ namespace SpellDuel
         // 雙人：對手位置（GameRoot 提供：鏡頭偵測＋對手回報）；手機拿在身體前方 → 往後退一點才是身體
         void SyncRemote()
         {
-            if (!NetHasTarget) return;
-            if (coop && Ally != null)
+            if (coop && battle.allies.Count > 0)
             {
-                // 合作：另一位玩家是隊友（Boss 的位置由主機送來）
-                Ally.head = NetEnemyHeadW;
-                Ally.forward = Fighter.Flat(NetEnemyFwdW);
+                // 合作：其他玩家是隊友（位置由各自的手機回報；Boss 的位置由主機送來）
+                foreach (var a in battle.allies)
+                    if (NetPeers.TryGetValue(a.pid, out var pp)) { a.head = pp.head; var f = Fighter.Flat(pp.fwd); if (f != Vector3.zero) a.forward = f; }
                 return;
             }
+            if (!NetHasTarget) return;
             var fwd = Fighter.Flat(NetEnemyFwdW);
             En.head = NetEnemyHeadW - fwd * 0.12f;
             var toMe = Fighter.Flat(Me.head - En.head);
@@ -1438,7 +1495,7 @@ namespace SpellDuel
                     Say("💀 你倒下了！等隊友打倒 Boss…", 99f); Sfx.Play("lose", 0.6f); Haptics.Play(Haptics.Kind.Warning);
                     break;
                 case "allyhit":
-                    if (Ally != null) floaters.Add(new Floater { posMap = Ally.Chest + Vector3.up * 0.3f, text = "隊友受傷", color = new Color(1f, 0.5f, 0.4f), born = Time.time });
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 0.3f, text = "隊友受傷", color = new Color(1f, 0.5f, 0.4f), born = Time.time });
                     Sfx.Play("hit", 0.4f, 0.7f);
                     break;
                 case "slam":
@@ -1637,7 +1694,7 @@ namespace SpellDuel
                 if (!projGo.TryGetValue(p, out var go))
                 {
                     // 依技能的法術造型（箭、火球、冰錐、雷光、劍氣、飛刀…），已含光暈與拖尾
-                    string fxCls = p.owner == En ? enemyClassUsed : (Ally != null && p.owner == Ally ? (remoteClass ?? myClass) : myClass);
+                    string fxCls = p.owner == En ? enemyClassUsed : (p.owner.isAlly ? p.owner.cls.id : myClass);
                     go = (bossMode && (p.owner == En || p.owner.isMinion || p.skill.cls == "minion" || p.skill.cls == "boss") ? BossRig.CreateProjectileVisual(p.skill.id) : null) ?? SpellFx.CreateProjectileVisual(p.skill, fxCls);
                     projGo[p] = go;
                     if (p.owner == En && !bossMode)
@@ -1697,7 +1754,7 @@ namespace SpellDuel
                 var liveLines = new HashSet<Projectile>();
                 foreach (var p in battle.projectiles)
                 {
-                    bool hostile = p.owner == En || p.owner.isMinion || (p.remote && p.owner != Ally);
+                    bool hostile = p.owner == En || p.owner.isMinion || (p.remote && !p.owner.isAlly);
                     if (!p.alive || !hostile || p.lob || p.skill.fromAbove || p.Curved || p.skill.areaRadius > 0f) continue;
                     if (p.target != null && p.target != Me) continue;   // 合作：打隊友的不畫
                     liveLines.Add(p);
@@ -2033,9 +2090,27 @@ namespace SpellDuel
                 y += u * 1.15f + gap;
                 if (coop) DrawDifficultyRow(ref y, pad, gap, u, fsS, W);
                 string who = coop ? "隊友" : "對手";
-                string rs = remoteReady ? $"{who}：{(Skills.Classes.TryGetValue(remoteClass ?? "", out var rc) ? rc.name : "?")}（已準備）" : $"{who}：還沒準備好";
-                UiKit.Text(new Rect(pad, y, W - pad * 2, u * 1.2f), rs, fs, remoteReady ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.8f, 0.5f));
-                y += u * 1.3f;
+                if (PeerIds.Count <= 1)
+                {
+                    bool rr = PeerIds.Count == 1 && peerInfo.TryGetValue(PeerIds[0], out var p0) && p0.ready;
+                    string rs = rr ? $"{who}：{(Skills.Classes.TryGetValue(peerInfo[PeerIds[0]].cls ?? "", out var rc) ? rc.name : "?")}（已準備）" : PeerIds.Count == 0 ? "等待其他人加入…" : $"{who}：還沒準備好";
+                    UiKit.Text(new Rect(pad, y, W - pad * 2, u * 1.2f), rs, fs, rr ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.8f, 0.5f));
+                    y += u * 1.3f;
+                }
+                else
+                {
+                    // 多人：房間裡每個人的準備狀態
+                    UiKit.Text(new Rect(pad, y, W - pad * 2, u), $"👥 房間 {PeerIds.Count + 1} 人" + (coop ? "（敵人血量依人數增加）" : "（⚠ 對戰只能兩人，請選合作）"), fsS, coop ? new Color(0.85f, 0.9f, 1f) : new Color(1f, 0.6f, 0.4f));
+                    y += u;
+                    foreach (var pid in PeerIds)
+                    {
+                        bool rr = peerInfo.TryGetValue(pid, out var pi) && pi.ready;
+                        string cn = pi != null && Skills.Classes.TryGetValue(pi.cls ?? "", out var rc2) ? rc2.name : "";
+                        UiKit.Text(new Rect(pad, y, W - pad * 2, u * 0.95f), $"{PeerName(pid)}：" + (rr ? $"{cn}（已準備）" : "還沒準備好"), fsS, rr ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.8f, 0.5f));
+                        y += u * 0.95f;
+                    }
+                    y += u * 0.2f;
+                }
             }
 
             // 語音
@@ -2130,12 +2205,18 @@ namespace SpellDuel
             y += lh * 0.9f;
             UiKit.Text(new Rect(ix, y, iw, lh * 0.8f), StatusText(en, now), fsS, new Color(0.75f, 0.85f, 1f));
             // 合作：隊友的血量（在敵人卡片下方）
-            if (coop && Ally != null)
+            if (coop)
             {
-                var ar = new Rect(topR.x, topR.yMax + gap * 0.5f, topR.width, lh * 0.9f);
-                UiKit.Card(ar, 0.5f, Ally.cls.color, 0.5f);
-                UiKit.Text(new Rect(ar.x + gap, ar.y, iw * 0.42f, ar.height), Ally.Alive ? $"🤝 {Ally.name}" : $"💀 {Ally.name}（倒下）", fsS, Color.white, TextAnchor.MiddleLeft, true);
-                UiKit.Bar(new Rect(ar.x + gap + iw * 0.44f, ar.y + ar.height * 0.2f, iw * 0.56f, ar.height * 0.6f), Ally.hp / Ally.maxHp, new Color(0.3f, 0.85f, 0.45f), $"{Mathf.CeilToInt(Ally.hp)}", fsS);
+                // 每位隊友一行（最多 3 位）
+                float ay = topR.yMax + gap * 0.5f, ah = battle.allies.Count > 1 ? lh * 0.7f : lh * 0.9f;
+                foreach (var al in battle.allies)
+                {
+                    var ar = new Rect(topR.x, ay, topR.width, ah);
+                    UiKit.Card(ar, 0.5f, al.cls.color, 0.5f);
+                    UiKit.Text(new Rect(ar.x + gap, ar.y, iw * 0.42f, ar.height), al.Alive ? $"🤝 {al.name}" : $"💀 {al.name}（倒下）", fsS, Color.white, TextAnchor.MiddleLeft, true);
+                    UiKit.Bar(new Rect(ar.x + gap + iw * 0.44f, ar.y + ar.height * 0.2f, iw * 0.56f, ar.height * 0.6f), al.hp / al.maxHp, new Color(0.3f, 0.85f, 0.45f), $"{Mathf.CeilToInt(al.hp)}", fsS);
+                    ay += ah + gap * 0.3f;
+                }
             }
 
             // 敵人頭上的血條
@@ -2407,7 +2488,7 @@ namespace SpellDuel
                 var pf = prof ?? Progress.Char(myClass);
                 int lv = pf.level;
                 int cur = CharacterProfile.XpForLevel(lv), next = CharacterProfile.XpForLevel(lv + 1);
-                float xy = top + lh * 2.9f + gap + (coop && Ally != null ? lh * 0.9f + gap * 0.5f : 0f);
+                float xy = top + lh * 2.9f + gap + (coop && battle.allies.Count > 0 ? battle.allies.Count * ((battle.allies.Count > 1 ? lh * 0.7f : lh * 0.9f) + gap * 0.3f) + gap * 0.2f : 0f);
                 UiKit.Bar(new Rect(pad, xy, W - pad * 2, lh * 0.45f), (pf.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f), $"Lv {lv}　{pf.xp - cur}/{next - cur}", fsS);
                 float bw2 = W * 0.5f;
                 if (UiKit.Button(new Rect((W - bw2) / 2f, xy + lh * 0.55f, bw2, lh * 1.1f), PendingUpgrades > 0 ? $"📜 角色（可加點 ×{PendingUpgrades}）" : "📜 角色／裝備", fsS, PendingUpgrades > 0, new Color(0.75f, 0.45f, 1f)))

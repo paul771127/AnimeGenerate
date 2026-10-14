@@ -5,6 +5,7 @@ namespace SpellDuel
 {
     /// <summary>
     /// 所有網路訊息共用一個結構（JsonUtility 序列化），用 t 區分種類：
+    ///   多人（2～4 人）：每則訊息帶發送者 pid，to 指定收件人（見 NetLink）；peers＝主機公告目前在房間的 pid（ks）
     ///   ping / pong  對時（以房主的時鐘為共同時間）
     ///   pose         我的手機在世界座標的位置與朝向（每秒 20 次）
     ///   shot         發射法術：起點、方向、速度、半徑、發射時間（共同時間）
@@ -43,6 +44,8 @@ namespace SpellDuel
         public string k;         // 雙人對戰：技能 id／職業 id
         public string[] ks;      // 雙人對戰：裝備的技能
         public int e;            // 雙人對戰：狀態旗標（1 格擋、2 護盾、4 反擊）
+        public int pid;          // 發送者編號（主機 0、加入的人 1～3）
+        public int to;           // 0＝給所有人；n＝只給 pid n−1（主機轉送時看這個）
 
         public string ToJson() => JsonUtility.ToJson(this);
         public static Msg FromJson(string json) => JsonUtility.FromJson<Msg>(json);
