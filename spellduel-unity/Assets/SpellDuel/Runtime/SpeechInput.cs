@@ -439,6 +439,12 @@ namespace SpellDuel
             }
         }
 
+        /// <summary>辨識器常見的誤聽 → 技能名稱（正規化後直接替換）。例：「刺殺」常被聽成「自殺」</summary>
+        static readonly string[,] Misheard =
+        {
+            { "自殺", "刺殺" }, { "次殺", "刺殺" }, { "此殺", "刺殺" }, { "四殺", "刺殺" }, { "賜殺", "刺殺" }, { "刺沙", "刺殺" }, { "自沙", "刺殺" },
+        };
+
         /// <summary>去掉空白與標點、全形轉半形、簡體轉繁體、英文轉小寫</summary>
         public static string Normalize(string s)
         {
@@ -452,7 +458,9 @@ namespace SpellDuel
                 if (toTrad.TryGetValue(c, out var t)) c = t;
                 sb.Append(char.ToLowerInvariant(c));
             }
-            return sb.ToString();
+            var r = sb.ToString();
+            for (int i = 0; i < Misheard.GetLength(0); i++) if (r.Contains(Misheard[i, 0])) r = r.Replace(Misheard[i, 0], Misheard[i, 1]);
+            return r;
         }
 
         public static int CommonPrefix(string a, string b)
@@ -476,6 +484,8 @@ namespace SpellDuel
             if (a == b) return 1f;
             if (Pair(a, b, "z", "zh") || Pair(a, b, "c", "ch") || Pair(a, b, "s", "sh") || Pair(a, b, "n", "l") ||
                 Pair(a, b, "f", "h") || Pair(a, b, "l", "r")) return 0.8f;
+            // 送氣／不送氣（z／c、zh／ch、j／q、d／t、b／p、g／k）：手機辨識常搞混，給一點分
+            if (Pair(a, b, "z", "c") || Pair(a, b, "zh", "ch") || Pair(a, b, "j", "q") || Pair(a, b, "d", "t") || Pair(a, b, "b", "p") || Pair(a, b, "g", "k") || Pair(a, b, "z", "ch") || Pair(a, b, "zh", "c")) return 0.6f;
             return 0f;
         }
 
