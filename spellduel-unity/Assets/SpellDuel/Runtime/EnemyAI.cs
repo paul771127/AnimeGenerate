@@ -67,7 +67,7 @@ namespace SpellDuel
             {
                 if (p.owner != player || p.id <= lastSeenProjectile) continue;
                 lastSeenProjectile = p.id;
-                var guard = me.loadout.Find(s => s.type == SkillType.Self && (s.self == SelfKind.Block || s.self == SelfKind.Shield || s.self == SelfKind.Counter || s.self == SelfKind.Armor) && Ready(s));
+                var guard = me.loadout.Find(s => s.type == SkillType.Self && (s.self == SelfKind.Block || s.self == SelfKind.Shield || s.self == SelfKind.Counter || s.self == SelfKind.Armor || s.self == SelfKind.Taunt) && Ready(s));
                 if (guard != null && rnd.NextDouble() < guardChance && b.TryChant(me, guard, out _))
                 {
                     me.chargeDelay = Rand(0f, 0.12f);

@@ -99,7 +99,8 @@ namespace SpellDuel
                 case "snaretrap": case "blasttrap": case "smoke": case "thunder": return Style.Press;   // 往下壓／往下砸／往下劈
                 case "heal": return Style.Pull;                                                       // 手掌收回自己
                 case "block": case "ironwall": return Style.Hold;                                     // 舉盾停住
-                case "counter": return Style.Burst;                                                   // 握拳→張開
+                case "counter": return Style.Burst;
+                case "taunt": return Style.Burst;                                                     // 嘲諷：握拳→張開                                                   // 握拳→張開
                 case "knife": return Style.Chop;
                 case "prep": return Style.Burst;                                                     // 刺殺準備：握拳→張開                                                      // 甩出飛刀
                 case "thrust": return Style.Thrust;                                                   // 劍士突刺

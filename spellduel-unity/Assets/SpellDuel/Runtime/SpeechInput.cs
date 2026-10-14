@@ -373,7 +373,7 @@ namespace SpellDuel
         // 簡體 → 繁體（技能名稱用到的字與常見異體字）
         const string SimpTrad =
             "击擊连連兽獸夹夾术術枪槍鎗槍风風陨隕愈癒瘉癒袭襲飞飛烟煙菸煙雾霧弹彈斩斬剑劍劒劍剣劍气氣挡擋铁鐵疗療猎獵" +
-            "圣聖审審护護祷禱净淨广廣杀殺腾騰冻凍结結坠墜静靜灵靈恶惡恒恆环環电電闪閃极極";
+            "圣聖审審护護祷禱净淨广廣杀殺腾騰冻凍结結坠墜静靜灵靈恶惡恒恆环環电電闪閃极極讽諷";
 
         // 拼音（不含聲調）→ 字：技能名稱的每個字，加上辨識器可能輸出的同音字（繁簡都有）
         const string PinyinTable =
@@ -415,7 +415,7 @@ namespace SpellDuel
             "tui 退推腿頹颓|xie 邪些寫写謝谢鞋協协斜血|e 惡恶餓饿額额鵝鹅|xin 心新信辛欣鋅锌|ling 靈灵領领零令鈴铃齡龄0|pi 劈皮批披匹疲脾|ting 霆聽听停庭挺廷亭|" +
             "yong 永用勇泳擁拥湧涌|heng 恆恒橫横衡哼|tian 天田甜填添|shang 上傷伤商賞赏尚|de 的得德地|a 啊阿|zuo 作做坐座左昨|" +
             "di 地第低底弟帝敵敌滴|dian 電电點点店典顛颠|nu 怒努奴|" +
-            "si 撕|ming 命|sheng 生|yi 一1|er 二2|liu 六6|jiu 九9";
+            "chao 嘲朝超潮炒吵巢抄|si 撕|ming 命|sheng 生|yi 一1|er 二2|liu 六6|jiu 九9";
 
         static readonly Dictionary<char, char> toTrad = new Dictionary<char, char>();
         static readonly Dictionary<char, List<string>> pinyin = new Dictionary<char, List<string>>();

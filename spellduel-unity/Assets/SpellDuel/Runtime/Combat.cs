@@ -185,6 +185,15 @@ namespace SpellDuel
         }
         public float Threat(Fighter f) => f != null && threat.TryGetValue(f, out var v) ? v : 0f;
         public void ClearThreat() => threat.Clear();
+        /// <summary>嘲諷：仇恨變成「目前最高的人＋amount」，Boss 沒在蓄力就立刻轉向他</summary>
+        public void Taunt(Fighter f, float amount)
+        {
+            if (f == null) return;
+            float top = 0f; foreach (var kv in threat) if (kv.Key != f) top = Mathf.Max(top, kv.Value);
+            threat[f] = Mathf.Max(Threat(f), top) + amount;
+            if (enemy.Alive && enemy.charging == null) enemy.target = f;
+            Emit("taunt", enemy.Chest, new Color(0.98f, 0.45f, 0.09f), $"Boss 被{f.name}嘲諷了！");
+        }
 
         // ------------------------------------------------------------ Boss 的小怪（熔岩小鬼）
         // 單人／合作主機：小怪由這裡的 UpdateMinions 驅動（走向最近的玩家、預備 0.7 秒後爪擊）。
@@ -1017,7 +1026,8 @@ namespace SpellDuel
             return true;
         }
 
-        public event Action<SkillDef> OnTeamBuff;   // 合作：牧師的輔助技能也要作用在隊友（隊友那支手機自己套用）
+        public event Action<SkillDef> OnTeamBuff;
+        public event Action<SkillDef> OnTaunt;      // 合作的隊友端：我嘲諷了 → 告訴主機（主機的 Boss 才有仇恨）   // 合作：牧師的輔助技能也要作用在隊友（隊友那支手機自己套用）
 
         void CastSelf(Fighter f, SkillDef s)
         {
@@ -1037,6 +1047,12 @@ namespace SpellDuel
                 case SelfKind.Shield: f.shieldUntil = now + s.buffDur; f.shieldLeft = s.buffAmount; break;
                 case SelfKind.Counter: f.counterUntil = now + s.buffDur; break;
                 case SelfKind.Armor: f.armorUntil = now + s.buffDur; f.armorReduce = s.buffReduce; break;
+                case SelfKind.Taunt:
+                    // 嘲諷：防禦提升＋把 Boss 的仇恨拉過來
+                    f.armorUntil = now + s.buffDur; f.armorReduce = s.buffReduce;
+                    if (remoteEnemy) OnTaunt?.Invoke(s); else Taunt(f, s.buffAmount);
+                    Emit("buff", f.Chest, s.color, $"{s.name}！防禦 +{s.buffReduce * 100f:0}%");
+                    return;
                 case SelfKind.Mana: f.mp = Mathf.Min(f.maxMp, f.mp + s.buffAmount); Emit("buff", f.Chest, s.color, $"{s.name}：MP +{s.buffAmount}"); return;
                 case SelfKind.Focus:
                 {

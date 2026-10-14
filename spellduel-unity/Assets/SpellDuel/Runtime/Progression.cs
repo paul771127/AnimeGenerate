@@ -140,6 +140,7 @@ namespace SpellDuel
                     Pas("sw_steal", "吸血劍", PassiveKind.Lifesteal, 0.03f, 3, 2, 2, "sw_str", 8),
                     Pas("sw_last", "不屈", PassiveKind.LastStand, 0.2f, 1, 2, 3, "sw_vit", 12),
                     Pas("sw_regen", "自然回復", PassiveKind.NaturalRegen, 0.01f, 5, 0, 3),
+                    Learn("sw_taunt", "taunt", 2, 4, "sw_last", 1),
                 };
                 case "archer": return new List<TreeNode>
                 {

@@ -479,6 +479,7 @@ namespace SpellDuel
                 battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.basePos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected, rad = p.curveAmp, s = p.pathLen, e = p.owner == battle.enemy || p.owner.isMinion ? 1 : 0 });
                 battle.OnAllyHit += (who, sk, dmg, at, id) => SendTo(who.pid, new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });   // 主機：只送給被打到的那位
                 battle.OnTeamBuff += sk => NetSend?.Invoke(new Msg { t = "tbuff", k = sk.id });
+                battle.OnTaunt += sk => SendTo(0, new Msg { t = "taunt", k = sk.id });   // 隊友端：嘲諷交給主機算仇恨
                 battle.OnRemoteHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at, e = battle.LastProcs });
                 battle.OnRemoteBurn += (sk, dmg, at) => SendTo(0, new Msg { t = "burn2", k = sk.id, dmg = Mathf.RoundToInt(dmg), p = at });
                 battle.OnTrapPlaced += t => NetSend?.Invoke(new Msg { t = "trap2", id = t.id, k = t.skill.id, p = t.pos, s = t.armAt - battle.now });
@@ -638,6 +639,10 @@ namespace SpellDuel
                 case "lane":
                     // 主機的藤蔓／衝刺路線（只顯示）
                     if (!NetIsHost && m.pts != null && m.pts.Length >= 2) battle.AddRemoteLane(m.k, m.pts[0], m.pts[1], m.rad, m.s);
+                    break;
+                case "taunt":
+                    // 隊友嘲諷：主機把 Boss 的仇恨拉到他身上
+                    if (NetIsHost && ally != null && Skills.All.TryGetValue(m.k ?? "", out var tsk)) battle.Taunt(ally, tsk.buffAmount);
                     break;
                 case "tbuff":
                     // 隊友（牧師）的治療／淨化／守護／祈禱也作用在我身上
@@ -1588,6 +1593,10 @@ namespace SpellDuel
                     SpellFx.DispelRing(WorldFrame.FromWorld(at), Skills.All["dispel"].areaRadius, c);
                     Sfx.Play("cast_mage", 0.9f, 0.7f); Sfx.Play("block", 0.6f, 0.8f);
                     Haptics.Play(Haptics.Kind.Medium); Kick(6f, 0f);
+                    break;
+                case "taunt":
+                    Say("😤 " + text, 1.8f);
+                    Sfx.Play("roar", 0.5f, 1.2f);
                     break;
                 case "dispelled":
                 {

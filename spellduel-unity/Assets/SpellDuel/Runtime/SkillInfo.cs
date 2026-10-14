@@ -14,7 +14,7 @@ namespace SpellDuel
             SkillType.Self => s.self switch
             {
                 SelfKind.Heal or SelfKind.Cleanse or SelfKind.Mana => "回復",
-                SelfKind.Block or SelfKind.Shield or SelfKind.Counter or SelfKind.Armor => "防禦",
+                SelfKind.Block or SelfKind.Shield or SelfKind.Counter or SelfKind.Armor or SelfKind.Taunt => "防禦",
                 SelfKind.Dispel => "控制",
                 _ => "增益",
             },
@@ -92,6 +92,10 @@ namespace SpellDuel
                 case SelfKind.Shield: E($"護盾 {s.buffDur:0.#} 秒，最多吸收 {s.buffAmount} 傷害"); break;
                 case SelfKind.Counter: E($"{s.buffDur:0.#} 秒內被攻擊打中：不受傷，並把那一發原樣打回去（陷阱無效）"); break;
                 case SelfKind.Armor: E($"{s.buffDur:0.#} 秒內受到的所有傷害 -{s.buffReduce * 100f:0}%"); break;
+                case SelfKind.Taunt:
+                    E($"{s.buffDur:0.#} 秒內受到的所有傷害 -{s.buffReduce * 100f:0}%");
+                    E($"合作時：Boss 的仇恨變成「目前最高的人＋{s.buffAmount}」，Boss 沒在蓄力就立刻轉向你（保護隊友）");
+                    break;
                 case SelfKind.Prayer: E($"所有技能目前剩下的冷卻時間減半（祈禱自己除外），並回復 {s.buffAmount} MP"); break;
                 case SelfKind.Dispel: E($"以自己為中心直徑 {s.areaRadius * 2f:0.#}m：範圍內敵人的蓄力、蓄滿待放、伏擊全部取消，那一招重新冷卻"); break;
                 case SelfKind.Mana: E($"回復 {s.buffAmount} MP"); break;

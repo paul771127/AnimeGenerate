@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SpellDuel
 {
     public enum SkillType { Projectile, Self, Trap }
-    public enum SelfKind { None, Heal, Block, Shield, Counter, Armor, Cleanse, Prayer, Dispel, Summon, Mana, Focus, Prep }
+    public enum SelfKind { None, Heal, Block, Shield, Counter, Armor, Cleanse, Prayer, Dispel, Summon, Mana, Focus, Prep, Taunt }
     public enum EffectKind { None, Dot, Blind, Snare }
 
     /// <summary>
@@ -133,6 +133,7 @@ namespace SpellDuel
             P(new SkillDef { id = "prayer", cls = "priest", name = "祈禱", type = SkillType.Self, self = SelfKind.Prayer, color = C("#c4b5fd"), cost = 0, charge = 1.5f, cooldown = 15f, buffAmount = 20, buffDur = 4f, desc = "自己與隊友：所有技能目前的冷卻時間減半，並回復 20 MP" });
 
             P(new SkillDef { id = "counter", cls = "swordsman", name = "反擊", type = SkillType.Self, self = SelfKind.Counter, color = C("#f472b6"), cost = 18, charge = 0.2f, cooldown = 6f, buffDur = 1.5f, desc = "1.5 秒內被打中：無傷，並把攻擊打回去" });
+            P(new SkillDef { id = "taunt", cls = "swordsman", name = "嘲諷", type = SkillType.Self, self = SelfKind.Taunt, color = C("#f97316"), cost = 20, charge = 0.8f, cooldown = 12f, buffDur = 6f, buffReduce = 0.35f, buffAmount = 150, desc = "6 秒內受到的傷害 -35%；合作時把 Boss 的仇恨拉到自己身上（比最高的人再多 150）" });
 
             Classes["archer"] = new ClassDef { id = "archer", name = "獵人", color = C("#a3e635"), maxHp = 100, maxMp = 100, mpRegen = 3.5f, skills = new[] { "quickshot", "snipe", "triple", "snaretrap", "blasttrap", "focus" }, defaultLoadout = new[] { "quickshot", "snipe", "snaretrap" }, desc = "箭速快、射程遠；近距離只有速射；可設陷阱" };
             Classes["mage"] = new ClassDef { id = "mage", name = "法師", color = C("#c084fc"), maxHp = 90, maxMp = 120, mpRegen = 4.9f, skills = new[] { "fire", "ice", "wind", "meteor", "dispel", "meditate" }, defaultLoadout = new[] { "fire", "wind", "meteor" }, desc = "攻擊力最強、蓄力最長；近距離只有風刃" };
@@ -185,7 +186,7 @@ namespace SpellDuel
             Classes["minion"] = new ClassDef { id = "minion", name = "熔岩小鬼", color = C("#ff8c42"), maxHp = 40, maxMp = 0, mpRegen = 0, skills = new string[0], defaultLoadout = new string[0], desc = "Boss 召喚的小怪" };
 
             Classes["priest"] = new ClassDef { id = "priest", name = "牧師", color = C("#fde68a"), maxHp = 105, maxMp = 130, mpRegen = 4, skills = new[] { "holy", "judgement", "prayheal", "cleanse", "guard", "prayer" }, defaultLoadout = new[] { "holy", "prayheal", "guard" }, desc = "回復、淨化、守護、減冷卻；聖光攻擊較弱" };
-            Classes["swordsman"] = new ClassDef { id = "swordsman", name = "劍士", color = C("#60a5fa"), maxHp = 130, maxMp = 90, mpRegen = 3, skills = new[] { "slash", "thrust", "wave", "block", "ironwall", "counter" }, defaultLoadout = new[] { "slash", "wave", "block" }, desc = "近遠攻擊都有，多種防禦" };
+            Classes["swordsman"] = new ClassDef { id = "swordsman", name = "劍士", color = C("#60a5fa"), maxHp = 130, maxMp = 90, mpRegen = 3, skills = new[] { "slash", "thrust", "wave", "block", "ironwall", "counter", "taunt" }, defaultLoadout = new[] { "slash", "wave", "block" }, desc = "近遠攻擊都有，多種防禦" };
 
             // 所有遠距技能（投射物、射程 3m 以上）飛行速度 70%；衝刺／跳躍／俯衝（小怪移動用）不算
             foreach (var sk in All.Values)
