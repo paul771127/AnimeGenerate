@@ -101,7 +101,7 @@ namespace SpellDuel
                 var col = rank >= n.max ? new Color(1f, 0.85f, 0.3f) : rank > 0 ? new Color(0.5f, 1f, 0.6f) : locked ? new Color(0.5f, 0.5f, 0.55f) : cd.color;
                 if (UiKit.Button(nr, "", fsS, selNode == n.id || rank > 0, col)) selNode = n.id;
                 UiKit.Text(new Rect(nr.x + 4, nr.y + 2, nr.width - 8, nr.height * 0.58f), n.name, fsS, locked ? new Color(0.6f, 0.6f, 0.65f) : Color.white, TextAnchor.MiddleCenter, true);
-                UiKit.Text(new Rect(nr.x + 4, nr.y + nr.height * 0.55f, nr.width - 8, nr.height * 0.4f), n.max > 1 ? $"{rank}/{n.max}" : rank > 0 ? "已學會" : locked ? $"Lv{n.level}" : "未學", fsS, col, TextAnchor.MiddleCenter);
+                UiKit.Text(new Rect(nr.x + 4, nr.y + nr.height * 0.55f, nr.width - 8, nr.height * 0.4f), n.max > 1 ? $"{rank}/{n.max}" : rank > 0 ? "已學會" : locked ? "🔒" : "未學", fsS, col, TextAnchor.MiddleCenter);
             }
             // 選中的節點：說明＋學習按鈕
             float dy = b.y + b.height * 0.64f;
@@ -111,12 +111,13 @@ namespace SpellDuel
             if (sel == null)
             {
                 UiKit.Text(new Rect(dr.x + gap, dr.y + gap, dr.width - gap * 2, dr.height - gap * 2),
-                    $"點一個節點看說明。每升 1 級得到 1 技能點。\n一開始只會 3 個基本技能：{string.Join("、", NamesOf(SkillTrees.Starters(p.cls)))}；中間那一欄可以習得新技能。",
+                    $"點一個節點看說明。每升 1 級得到 1 技能點；同一欄要由上往下點，前面的點滿才能點下面的。\n一開始只會 3 個基本技能：{string.Join("、", NamesOf(SkillTrees.Starters(p.cls)))}；中間那一欄可以習得新技能。",
                     fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
                 return changed;
             }
             int rk = p.Rank(sel.id);
-            string req = (sel.req != null ? $"前置：{SkillTrees.Find(p.cls, sel.req)?.name}　" : "") + $"需要等級 {sel.level}";
+            var pre = SkillTrees.Prereqs(p.cls, sel);
+            string req = pre.Count == 0 ? "前置：無（可以直接點）" : "前置（要先點滿）：" + string.Join("、", pre.ConvertAll(r => $"{r.name} {p.Rank(r.id)}/{r.max}"));
             string now = rk > 0 ? SkillTrees.Describe(sel, rk) : "（還沒學）";
             string nxt = rk < sel.max ? SkillTrees.Describe(sel, rk + 1) : "（已滿級）";
             string extra = sel.kind == NodeKind.Learn && Skills.All.TryGetValue(sel.skill, out var sk) ? $"\n{sk.desc}" : "";

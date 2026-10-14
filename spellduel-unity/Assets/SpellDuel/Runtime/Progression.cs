@@ -100,6 +100,17 @@ namespace SpellDuel
 
         public static TreeNode Find(string cls, string id) => Of(cls).Find(n => n.id == id);
 
+        /// <summary>前置節點（要先點滿）：同一欄的上一格＋另外指定的前置；不再看等級</summary>
+        public static List<TreeNode> Prereqs(string cls, TreeNode n)
+        {
+            var list = new List<TreeNode>();
+            TreeNode above = null;
+            foreach (var o in Of(cls)) if (o.col == n.col && o.row < n.row && (above == null || o.row > above.row)) above = o;
+            if (above != null) list.Add(above);
+            if (n.req != null) { var r = Find(cls, n.req); if (r != null && r != above) list.Add(r); }
+            return list;
+        }
+
         static TreeNode Mod(string id, string name, string skill, ModField f, float per, int max, int col, int row, string req = null, int lv = 1) =>
             new TreeNode { id = id, name = name, kind = NodeKind.Mod, skill = skill, field = f, per = per, max = max, col = col, row = row, req = req, level = lv };
         static TreeNode Learn(string id, string skill, int col, int row, string req, int lv) =>
@@ -500,8 +511,8 @@ namespace SpellDuel
         public string NodeBlock(TreeNode n)
         {
             if (Rank(n.id) >= n.max) return "已滿級";
-            if (level < n.level) return $"需要等級 {n.level}";
-            if (n.req != null && Rank(n.req) <= 0) { var r = SkillTrees.Find(cls, n.req); return $"需要先學「{r?.name}」"; }
+            foreach (var r in SkillTrees.Prereqs(cls, n))
+                if (Rank(r.id) < r.max) return $"需要先點滿「{r.name}」";
             if (skillPoints <= 0) return "技能點不足";
             return null;
         }
