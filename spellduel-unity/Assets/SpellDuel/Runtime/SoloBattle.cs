@@ -80,10 +80,10 @@ namespace SpellDuel
             int dk = battle.kills - lastKillsSeen; lastKillsSeen = battle.kills;
             for (int i = 0; i < dk; i++) TryDrop(false);
             int db = battle.bossKills - lastBossKillsSeen; lastBossKillsSeen = battle.bossKills;
-            for (int i = 0; i < db; i++) { TryDrop(true); TryDrop(true); }
+            for (int i = 0; i < db; i++) TryDrop(true);   // 每個敵人最多掉一件
         }
 
-        /// <summary>掉裝備：小怪約 6%（幸運越高越多），Boss 一定掉兩件稀有以上</summary>
+        /// <summary>掉裝備（每個敵人最多一件）：小怪約 6%（幸運越高越多），Boss 一定掉一件稀有以上</summary>
         void TryDrop(bool boss)
         {
             int luk = prof.Total(Stat.Luk);
