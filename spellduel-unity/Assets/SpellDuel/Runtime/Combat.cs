@@ -29,7 +29,9 @@ namespace SpellDuel
         public float focusUntil;        // 獵人精神集中：這段時間內新的冷卻減半
         public float prepUntil, prepBonus;   // 刺殺準備：這段時間內傷害 +prepBonus（受到傷害就取消）
         public Vector3 chargeFrom;      // 開始詠唱時腳的位置（刺殺準備要站著不動）
-        public float OutMul(float now) => prepUntil > now ? 1f + prepBonus : 1f;        // 劍士斬擊：這段時間內會斬開正面 1m 內飛來的法球
+        public float OutMul(float now) => (prepUntil > now ? 1f + prepBonus : 1f) * (1f + chargeBonus);
+        public bool overcharge;         // 獵人「蓄力強化」：蓄滿後可以繼續蓄到 200%
+        public float chargeBonus;       // 這一發的蓄力加成（200% 時 +150%）；放招當下設定        // 劍士斬擊：這段時間內會斬開正面 1m 內飛來的法球
         public int shieldLeft;
         // 刺客的近身技能：放招後進入「伏擊」，時限內靠近到射程內就自動出手
         public SkillDef armed; public float armedUntil;
@@ -858,6 +860,15 @@ namespace SpellDuel
             return best;
         }
 
+        /// <summary>獵人蓄力強化：超過 100% 的部分（0～1，1＝蓄到 200%）</summary>
+        public float OverchargeFrac(Fighter f)
+        {
+            if (f == null || !f.overcharge || f.charging == null || f.charging.charge <= 0f) return 0f;
+            float t = f.charging.charge * f.chargeScale;
+            return Mathf.Clamp01((now - f.chargeStart - t) / Mathf.Max(0.01f, t));
+        }
+        public const float OverchargeDamage = 1.5f;   // 蓄到 200% 時傷害 +150%
+
         public float ChargeProgress(Fighter f) => f.charging == null ? 0f : f.charging.charge <= 0f ? 1f : Mathf.Clamp01((now - f.chargeStart) / Mathf.Max(0.01f, f.charging.charge * f.chargeScale));
 
         /// <summary>射程狀態：0＝可以、1＝太遠、-1＝太近</summary>
@@ -891,6 +902,7 @@ namespace SpellDuel
                 floorPoint = f.Feet + off; floorPoint.y = 0f;
             }
 
+            f.chargeBonus = OverchargeDamage * OverchargeFrac(f);   // 獵人蓄力強化（下一幀清掉）
             f.mp -= s.cost;
             f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul * (f.focusUntil > now ? 0.5f : 1f);
             f.charging = null;
@@ -1124,6 +1136,7 @@ namespace SpellDuel
             foreach (var f in new[] { player, enemy })
             {
                 if (remoteEnemy && f == enemy) continue;   // 對手的 MP、詠唱、持續傷害由對手自己算
+                f.chargeBonus = 0f;
                 UpdateAmbush(f);
                 f.mp = Mathf.Min(f.maxMp, f.mp + f.regen * dt);
                 if (f.hpRegen > 0f && f.Alive) f.hp = Mathf.Min(f.maxHp, f.hp + f.hpRegen * dt);
@@ -1139,7 +1152,8 @@ namespace SpellDuel
                     else TryRelease(f, Fighter.Flat(f.forward), f.Feet, out _);
                 }
                 // 刺殺準備：蓄力完成前離開原地太遠 → 失敗
-                if (f.charging != null && f.charging.stillRadius > 0f && ChargeProgress(f) < 1f && FlatDistance(f.Feet, f.chargeFrom) > f.charging.stillRadius)
+                // 獵人：整個蓄力期間（包含蓄滿後拉著弓）都不能離開原地直徑 1m
+                if (f.charging != null && f.charging.stillRadius > 0f && (ChargeProgress(f) < 1f || f.charging.cls == "archer") && FlatDistance(f.Feet, f.chargeFrom) > f.charging.stillRadius)
                 { var cs = f.charging; f.charging = null; Emit("fail", f.Chest, Color.gray, $"移動太遠，{cs.name}失敗"); }
                 // 持續傷害：每滿 1 秒扣一次
                 for (int i = f.dots.Count - 1; i >= 0; i--)

@@ -2203,6 +2203,14 @@ namespace SpellDuel
                     prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%（蓄滿後{HandGesture.ReleaseLabel(me.charging)}）" :
                     me.charging.releaseNear ? "進入伏擊…" :
                     HandGesture.ReleaseHint(me.charging) + (HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Number && Hand != null && Hand.HandVisible ? $"（目前：{(Hand.CurrentNumber > 0 ? Hand.CurrentNumber.ToString() : "—")}）" : "");
+                if (bow && me.charging.stillRadius > 0f)
+                {
+                    float mv = Battle.FlatDistance(me.Feet, me.chargeFrom);
+                    if (mv > me.charging.stillRadius * 0.4f) st += $"　⚠ 站著別動！（{mv:0.0}／{me.charging.stillRadius:0.0}m）";
+                }
+                float ocf = battle.OverchargeFrac(me);
+                if (ocf > 0f) st += $"　⚡蓄力 {100f + 100f * ocf:0}%（傷害 +{Battle.OverchargeDamage * 100f * ocf:0}%）";
+                else if (me.overcharge && prog >= 1f) st += "　（繼續拉著可以蓄到 200%）";
                 chargeTip = $"{me.charging.name}　{st}"; chargeTipColor = prog < 1f ? Color.white : me.charging.color;   // 最後才畫（不被準星、鎖定框蓋住）
             }
             // 伏擊狀態：我在伏擊 → 提示靠近；敵人在伏擊 → 警告保持距離

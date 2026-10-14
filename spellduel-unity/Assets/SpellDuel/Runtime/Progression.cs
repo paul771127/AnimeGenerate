@@ -60,7 +60,7 @@ namespace SpellDuel
     // ---------------------------------------------------------------- 技能樹
     public enum NodeKind { Learn, Mod, Stat, Passive }
     public enum ModField { Damage, Cooldown, Charge, Multi, EffectDur, EffectDps, Heal, BuffAmount, BuffReduce, BuffDur, Cost }
-    public enum PassiveKind { Lifesteal, Crit, Dodge, MpOnHit, Regen, Burn, Poison, LastStand, Freeze, Evade }
+    public enum PassiveKind { Lifesteal, Crit, Dodge, MpOnHit, Regen, Burn, Poison, LastStand, Freeze, Evade, FastCast, Overcharge, NaturalRegen, QuickCd }
 
     public class TreeNode
     {
@@ -139,6 +139,7 @@ namespace SpellDuel
                     StatN("sw_vit", "體魄訓練", Stat.Vit, 2, 1),
                     Pas("sw_steal", "吸血劍", PassiveKind.Lifesteal, 0.03f, 3, 2, 2, "sw_str", 8),
                     Pas("sw_last", "不屈", PassiveKind.LastStand, 0.2f, 1, 2, 3, "sw_vit", 12),
+                    Pas("sw_regen", "自然回復", PassiveKind.NaturalRegen, 0.01f, 5, 0, 3),
                 };
                 case "archer": return new List<TreeNode>
                 {
@@ -154,6 +155,7 @@ namespace SpellDuel
                     StatN("ar_str", "臂力", Stat.Str, 2, 1),
                     Pas("ar_crit", "銳利箭頭", PassiveKind.Crit, 0.03f, 3, 2, 2, "ar_agi", 6),
                     Pas("ar_dodge", "獵人直覺", PassiveKind.Dodge, 0.1f, 2, 2, 3, "ar_crit", 10),
+                    Pas("ar_over", "蓄力強化", PassiveKind.Overcharge, 1f, 1, 0, 3),
                 };
                 case "mage": return new List<TreeNode>
                 {
@@ -169,6 +171,7 @@ namespace SpellDuel
                     StatN("mg_spi", "冥思", Stat.Spi, 2, 1),
                     Pas("mg_burn", "元素灼燒", PassiveKind.Burn, 0.05f, 3, 2, 2, "mg_int", 6),
                     Pas("mg_siphon", "法力虹吸", PassiveKind.MpOnHit, 2f, 3, 2, 3, "mg_spi", 10),
+                    Pas("mg_fast", "快速詠唱", PassiveKind.FastCast, 0.08f, 3, 0, 3),
                 };
                 case "assassin": return new List<TreeNode>
                 {
@@ -201,6 +204,7 @@ namespace SpellDuel
                     StatN("pr_vit", "堅毅", Stat.Vit, 2, 1),
                     Pas("pr_regen", "神聖庇護", PassiveKind.Regen, 0.5f, 3, 2, 2, "pr_vit", 6),
                     Pas("pr_faith", "信仰", PassiveKind.MpOnHit, 2f, 3, 2, 3, "pr_int", 10),
+                    Pas("pr_quick", "快速施法", PassiveKind.QuickCd, 0.08f, 3, 0, 3),
                 };
             }
             return new List<TreeNode>();
@@ -241,6 +245,10 @@ namespace SpellDuel
                         PassiveKind.Burn => $"命中時 {v * 100:0}% 機率灼燒",
                         PassiveKind.Poison => $"命中時 {v * 100:0}% 機率中毒",
                         PassiveKind.Freeze => $"命中時 {v * 100:0}% 機率冰凍",
+                        PassiveKind.FastCast => $"所有技能蓄力時間 -{v * 100:0}%",
+                        PassiveKind.Overcharge => "蓄滿後繼續拉弓可以蓄到 200%：蓄力越多傷害越高，200% 時傷害 +150%",
+                        PassiveKind.NaturalRegen => $"每 10 秒回復最大 HP 的 {v * 100:0}%",
+                        PassiveKind.QuickCd => $"所有技能冷卻時間 -{v * 100:0}%",
                         PassiveKind.Evade => $"閃避率 +{v * 100:0}%（被攻擊時有機率完全閃開）",
                         _ => $"HP 低於 30% 時受到的傷害 -{v * 100:0}%",
                     };
@@ -610,6 +618,10 @@ namespace SpellDuel
             f.poisonChance = Passive(PassiveKind.Poison) + GearSum(Affix.Poison);
             f.freezeChance = Passive(PassiveKind.Freeze) + GearSum(Affix.Freeze);
             f.evadeChance = Mathf.Clamp(Passive(PassiveKind.Evade), 0f, 0.5f);
+            f.chargeScale = Mathf.Max(0.4f, f.chargeScale * (1f - Passive(PassiveKind.FastCast)));   // 法師：快速詠唱
+            f.overcharge = Passive(PassiveKind.Overcharge) > 0f;                                   // 獵人：蓄力強化
+            f.hpRegen += f.maxHp * Passive(PassiveKind.NaturalRegen) / 10f;                         // 劍士：自然回復（每 10 秒 x%）
+            f.cdMul = Mathf.Max(0.4f, f.cdMul * (1f - Passive(PassiveKind.QuickCd)));               // 牧師：快速施法
             f.rangeMul = 1f;
             // 技能：只帶會的技能，數值換成技能樹強化後的版本
             f.loadout.Clear();
