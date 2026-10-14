@@ -59,6 +59,7 @@ namespace SpellDuel
         {
             var st = ReleaseOf(s);
             if (st == Style.Chant) return $"唸「{s.chant}」→比 5";
+            if (s.releaseNear) return "伸手掌蓄力→靠近";
             return st == Style.Number ? $"比 {NumberOf(s.id)}" : s.cls == "archer" ? "握拳→比五" : StyleName(st);
         }
 
@@ -67,6 +68,7 @@ namespace SpellDuel
         {
             var st = ReleaseOf(s);
             if (st == Style.Chant) return $"唸出咒語「{s.chant}」，再把手伸到鏡頭前比 5（五指張開）放招";
+            if (s.releaseNear) return "手掌伸到鏡頭前蓄力（身邊 1.5m 內不能有敵人）→ 蓄滿後 5 秒內靠近敵人 1.5m 自動出手";
             if (st == Style.Number) return $"比出數字 {NumberOf(s.id)}（{NumberFingers(NumberOf(s.id))}）放招";
             if (s.cls == "archer") return $"先握拳 → 再比五（五指張開）{(s.type == SkillType.Projectile ? "放箭" : s.type == SkillType.Trap ? "設置陷阱" : "發動")}";
             return StyleHint(st);
@@ -89,7 +91,8 @@ namespace SpellDuel
         {
             if (s == null) return Style.None;
             if (s.cls == "mage") return MageChant && !string.IsNullOrEmpty(s.chant) ? Style.Chant : Style.Number;   // 法師：唸完名稱 → 唸咒語 → 比 5 放招
-            if (s.cls == "priest") return Style.Number;                   // 牧師：唸完名稱比固定數字就放招
+            if (s.cls == "priest") return Style.Number;
+            if (s.releaseNear) return Style.None;                         // 刺客伏擊技能：手掌在鏡頭前就蓄力，蓄滿自動伏擊（不用放招動作）                   // 牧師：唸完名稱比固定數字就放招
             if (s.cls == "archer") return Style.Burst;                    // 獵人：握拳→比五（張開）就放招
             switch (s.id)
             {

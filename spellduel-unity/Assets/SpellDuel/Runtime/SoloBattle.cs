@@ -1153,6 +1153,7 @@ namespace SpellDuel
 
         void HandleInput()
         {
+            if (Me != null) Me.palmVisible = Hand == null || Hand.HandVisible;   // 刺客伏擊技能：手掌在鏡頭前才蓄力
             if (Hand == null) return;
             bool drawingRune = Me.charging != null && HandGesture.ReleaseOf(Me.charging) == HandGesture.Style.Rune;
             // 符文畫好＝詠唱完成（蓄力直接滿）
@@ -2192,21 +2193,24 @@ namespace SpellDuel
                 float prog = battle.ChargeProgress(me);
                 bool bow = HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Bow && Hand != null;   // 獵人：拉滿弓就是蓄力完成
                 string st = bow ? (Hand.BowDrawn ? "🏹 拉滿！手回畫面張開放箭" : Hand.BowStage == 1 ? "✊ 握著拳拉出畫面外（拉弓）" : "畫面中握拳（捏弦）") :
+                    me.charging.releaseNear && prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　" +
+                        (!me.palmVisible ? "✋ 手掌伸到鏡頭前才會蓄力" : battle.NearestFoe(me, out var nfd) != null && nfd < Battle.AmbushClear ? $"⚠ 身邊 {Battle.AmbushClear:0.#}m 內有敵人，退開才會蓄力" : "蓄滿自動伏擊") :
                     prog < 1f && me.charging.stillRadius > 0f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　站著別動！（離原地 {Battle.FlatDistance(me.Feet, me.chargeFrom):0.0}／{me.charging.stillRadius:0.0}m）" :
                     HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Chant ?
                         (prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　" : "") +
                         (ChantDone ? "✨ 咒語完成！手在畫面比 5（五指張開）放招" + (Hand != null && Hand.HandVisible ? $"（目前：{(Hand.CurrentNumber > 0 ? Hand.CurrentNumber.ToString() : "—")}）" : "")
                                    : $"唸咒語「{me.charging.chant}」") :
                     prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%（蓄滿後{HandGesture.ReleaseLabel(me.charging)}）" :
-                    me.charging.releaseNear ? "手刀往前刺 → 5 秒內靠近敵人自動出手" :
+                    me.charging.releaseNear ? "進入伏擊…" :
                     HandGesture.ReleaseHint(me.charging) + (HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Number && Hand != null && Hand.HandVisible ? $"（目前：{(Hand.CurrentNumber > 0 ? Hand.CurrentNumber.ToString() : "—")}）" : "");
                 chargeTip = $"{me.charging.name}　{st}"; chargeTipColor = prog < 1f ? Color.white : me.charging.color;   // 最後才畫（不被準星、鎖定框蓋住）
             }
             // 伏擊狀態：我在伏擊 → 提示靠近；敵人在伏擊 → 警告保持距離
             if (me.armed != null)
             {
-                float leftT = Mathf.Max(0f, me.armedUntil - now), need = me.armed.rangeMax;
-                UiKit.Pill(H * 0.31f, $"🗡 {me.armed.name}伏擊中：靠近到 {need:0.#}m 內自動出手（{battle.Distance:F1}m・剩 {leftT:F1} 秒）", fs, me.armed.color, pillW);
+                float leftT = Mathf.Max(0f, me.armedUntil - now), need = Battle.AmbushClear;
+                var nf = battle.NearestFoe(me, out var nfDist);
+                UiKit.Pill(H * 0.31f, $"🗡 {me.armed.name}伏擊中：靠近敵人 {need:0.#}m 內自動出手（" + (nf != null ? $"最近 {nfDist:F1}m・" : "") + $"剩 {leftT:F1} 秒・被打到會取消）", fs, me.armed.color, pillW);
             }
             bool pvp = NetMode && !coop;   // 真人對戰：不提示怎麼躲
             if (en.armed != null && en.Alive && !pvp)

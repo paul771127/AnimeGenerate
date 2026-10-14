@@ -33,6 +33,7 @@ namespace SpellDuel
         public int shieldLeft;
         // 刺客的近身技能：放招後進入「伏擊」，時限內靠近到射程內就自動出手
         public SkillDef armed; public float armedUntil;
+        public bool palmVisible = true;        // 玩家：手掌有沒有出現在鏡頭前（刺客伏擊技能要看到手掌才會蓄力；電腦／對手一律 true）
         // 身體閃避：蹲下（躲橫向攻擊）、快速側跨（短暫無敵）
         public bool crouching; public float dodgeUntil;
         // 體型（Boss 比較大）、蓄力倍率（Boss 狂暴時變快）、目前攻擊的目標（合作模式 Boss 會換目標）
@@ -834,8 +835,26 @@ namespace SpellDuel
             if (f.cooldownUntil.TryGetValue(s.id, out var cd) && cd > now) { why = $"{s.name} 冷卻中"; return false; }
             if (f.mp < s.cost) { why = "MP 不足"; return false; }
             if (f.snaredUntil > now && s.self != SelfKind.Cleanse) { why = "被困住，暫時不能施法（牧師可以淨化）"; return false; }
+            if (s.releaseNear && NearestFoe(f, out var nd) != null && nd < AmbushClear) { why = $"身邊 {AmbushClear:0.#}m 內有敵人，先退開才能蓄力{s.name}"; return false; }
             f.charging = s; f.chargeStart = now; f.chargeFrom = f.Feet;
             return true;
+        }
+
+        /// <summary>刺客伏擊技能（刺殺、影襲、毒刃）：身邊這個半徑內不能有敵人才能蓄力；蓄力完成後靠近到這個距離就自動出手</summary>
+        public const float AmbushClear = 1.5f;
+
+        /// <summary>f 最近的敵人（玩家方：Boss／對手＋小怪；敵方：玩家）</summary>
+        public Fighter NearestFoe(Fighter f, out float dist)
+        {
+            dist = float.MaxValue; Fighter best = null;
+            if (f == enemy || f.isMinion)
+            {
+                foreach (var pl in Players()) if (pl.Alive) { float d = FlatDistance(f.head, pl.head); if (d < dist) { dist = d; best = pl; } }
+                return best;
+            }
+            if (enemy != null && enemy.Alive) { dist = FlatDistance(f.head, enemy.head); best = enemy; }
+            foreach (var m in minions) if (m.Alive) { float d = FlatDistance(f.head, m.head); if (d < dist) { dist = d; best = m; } }
+            return best;
         }
 
         public float ChargeProgress(Fighter f) => f.charging == null ? 0f : f.charging.charge <= 0f ? 1f : Mathf.Clamp01((now - f.chargeStart) / Mathf.Max(0.01f, f.charging.charge * f.chargeScale));
@@ -1109,6 +1128,15 @@ namespace SpellDuel
                 if (f.hpRegen > 0f && f.Alive) f.hp = Mathf.Min(f.maxHp, f.hp + f.hpRegen * dt);
                 if (f.charging != null && now - f.chargeStart > f.charging.charge + chargeTimeout + (f.charging.releaseNear ? 8f : 0f))
                 { f.charging = null; Emit("timeout", f.Chest, Color.gray, "詠唱逾時"); }
+                // 刺客伏擊技能：手掌不在鏡頭前、或身邊 1.5m 內有敵人 → 蓄力暫停；蓄滿自動進入伏擊（不用放招動作）
+                if (f.charging != null && f.charging.releaseNear)
+                {
+                    if (ChargeProgress(f) < 1f)
+                    {
+                        if (!f.palmVisible || (NearestFoe(f, out var nd2) != null && nd2 < AmbushClear)) f.chargeStart += dt;
+                    }
+                    else TryRelease(f, Fighter.Flat(f.forward), f.Feet, out _);
+                }
                 // 刺殺準備：蓄力完成前離開原地太遠 → 失敗
                 if (f.charging != null && f.charging.stillRadius > 0f && ChargeProgress(f) < 1f && FlatDistance(f.Feet, f.chargeFrom) > f.charging.stillRadius)
                 { var cs = f.charging; f.charging = null; Emit("fail", f.Chest, Color.gray, $"移動太遠，{cs.name}失敗"); }
@@ -1451,12 +1479,13 @@ namespace SpellDuel
             var s = f.armed;
             if (s == null) return;
             if (now > f.armedUntil || !f.Alive) { f.armed = null; Emit("armedExpire", f.Chest, Color.gray, $"{s.name} 落空"); return; }
-            var target = Opponent(f);
-            if (!target.Alive || FlatDistance(f.head, target.head) > s.rangeMax) return;
+            var target = NearestFoe(f, out var td);
+            if (target == null || !target.Alive || td > AmbushClear + target.bodyRadius) return;
             f.armed = null;
             Emit("ambush", target.Chest, s.color, s.name + "！");
             int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
-            if (remoteEnemy && target == enemy) { Emit("hit", target.Chest, s.color, null); OnRemoteHit?.Invoke(s, dmg, target.Chest, 0); OnDealt(f, dmg); }
+            if (remoteEnemy && target.isMinion) { Emit("hit", target.Chest, s.color, null); OnMinionHit?.Invoke(target.minionId, dmg, s); OnDealt(f, dmg); }
+            else if (remoteEnemy && target == enemy) { Emit("hit", target.Chest, s.color, null); OnRemoteHit?.Invoke(s, dmg, target.Chest, 0); OnDealt(f, dmg); }
             else Hit(target, new Projectile { owner = f, skill = s, pos = target.Chest, dir = Fighter.Flat(target.head - f.head), damage = dmg, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur });
         }
 
@@ -1588,6 +1617,7 @@ namespace SpellDuel
             dmg = Mathf.Round(dmg);
             f.hp = Mathf.Max(0, f.hp - dmg);
             if (dmg > 0 && f.prepUntil > now) { f.prepUntil = 0f; Emit("fail", f.Chest, Color.gray, "刺殺準備被打斷！"); }
+            if (dmg > 0 && kind != "dot" && kind != "burn" && f.armed != null && f.armed.releaseNear) { f.cooldownUntil[f.armed.id] = now; Emit("fail", f.Chest, Color.gray, $"{f.armed.name}被打斷！要重新蓄力"); f.armed = null; }
             Emit(kind == "dot" || kind == "burn" ? kind : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");
             if (!f.Alive)
             {

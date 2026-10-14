@@ -78,6 +78,9 @@ namespace SpellDuel
 
         static void P(SkillDef s) => All[s.id] = s;
 
+        /// <summary>遠距技能的飛行速度倍率</summary>
+        public const float ProjectileSpeedScale = 0.7f;
+
         static Skills()
         {
             // ---------------------------------------------------------- 獵人：蓄力長、箭速快、遠距離、判定小；近距離只有速射
@@ -107,9 +110,9 @@ namespace SpellDuel
             All["thunder"].chant = "雷霆之怒化作閃電劈落吧"; All["heal"].chant = "治癒吧生命之光";
 
             // ---------------------------------------------------------- 刺客：遠處蓄力、靠近才能出手、判定小
-            P(new SkillDef { id = "backstab", cls = "assassin", name = "刺殺", type = SkillType.Projectile, color = C("#e879f9"), cost = 25, damage = 45, charge = 2.0f, cooldown = 5f, speed = 10f, radius = 0.08f, rangeMax = 1.5f, releaseNear = true, desc = "1.5m 內才能出手" });
-            P(new SkillDef { id = "shadow", cls = "assassin", name = "影襲", type = SkillType.Projectile, color = C("#a78bfa"), cost = 20, damage = 38, charge = 1.0f, cooldown = 3f, speed = 9f, radius = 0.08f, rangeMax = 2.5f, releaseNear = true, desc = "2.5m 內才能出手" });
-            P(new SkillDef { id = "poison", cls = "assassin", name = "毒刃", type = SkillType.Projectile, color = C("#4ade80"), cost = 22, damage = 16, charge = 1.1f, cooldown = 5.5f, speed = 9f, radius = 0.08f, rangeMax = 2f, releaseNear = true, effect = EffectKind.Dot, effectDps = 5f, effectDur = 5f, desc = "2m 內出手，中毒 5 秒（每秒 5）" });
+            P(new SkillDef { id = "backstab", cls = "assassin", name = "刺殺", type = SkillType.Projectile, color = C("#e879f9"), cost = 25, damage = 45, charge = 2.0f, cooldown = 5f, speed = 10f, radius = 0.08f, rangeMax = 1.5f, releaseNear = true, desc = "身邊 1.5m 內沒敵人時才能蓄力；蓄滿後 5 秒內靠近敵人 1.5m 自動出手" });
+            P(new SkillDef { id = "shadow", cls = "assassin", name = "影襲", type = SkillType.Projectile, color = C("#a78bfa"), cost = 20, damage = 38, charge = 1.0f, cooldown = 3f, speed = 9f, radius = 0.08f, rangeMax = 1.5f, releaseNear = true, desc = "身邊 1.5m 內沒敵人時才能蓄力；蓄滿後 5 秒內靠近敵人 1.5m 自動出手" });
+            P(new SkillDef { id = "poison", cls = "assassin", name = "毒刃", type = SkillType.Projectile, color = C("#4ade80"), cost = 22, damage = 16, charge = 1.1f, cooldown = 5.5f, speed = 9f, radius = 0.08f, rangeMax = 1.5f, releaseNear = true, effect = EffectKind.Dot, effectDps = 5f, effectDur = 5f, desc = "中毒 5 秒（每秒 5）；身邊 1.5m 內沒敵人時才能蓄力，蓄滿後 5 秒內靠近 1.5m 自動出手" });
             P(new SkillDef { id = "knife", cls = "assassin", name = "飛刀", type = SkillType.Projectile, color = C("#cbd5e1"), cost = 10, damage = 14, charge = 0.7f, cooldown = 1.6f, speed = 10f, radius = 0.05f, rangeMax = 5f, desc = "遠程牽制" });
             P(new SkillDef { id = "prep", cls = "assassin", name = "刺殺準備", type = SkillType.Self, self = SelfKind.Prep, color = C("#f43f5e"), cost = 20, charge = 5f, cooldown = 15f, buffDur = 8f, buffReduce = 0.8f, stillRadius = 0.5f,
                 desc = "蓄力 5 秒（期間離開原地超過直徑 1m 就失敗）→ 8 秒內傷害 +80%；這段時間受到傷害就被打斷、加成取消" });
@@ -183,6 +186,11 @@ namespace SpellDuel
 
             Classes["priest"] = new ClassDef { id = "priest", name = "牧師", color = C("#fde68a"), maxHp = 105, maxMp = 130, mpRegen = 4, skills = new[] { "holy", "judgement", "prayheal", "cleanse", "guard", "prayer" }, defaultLoadout = new[] { "holy", "prayheal", "guard" }, desc = "回復、淨化、守護、減冷卻；聖光攻擊較弱" };
             Classes["swordsman"] = new ClassDef { id = "swordsman", name = "劍士", color = C("#60a5fa"), maxHp = 130, maxMp = 90, mpRegen = 3, skills = new[] { "slash", "thrust", "wave", "block", "ironwall", "counter" }, defaultLoadout = new[] { "slash", "wave", "block" }, desc = "近遠攻擊都有，多種防禦" };
+
+            // 所有遠距技能（投射物、射程 3m 以上）飛行速度 70%；衝刺／跳躍／俯衝（小怪移動用）不算
+            foreach (var sk in All.Values)
+                if (sk.type == SkillType.Projectile && !sk.releaseNear && sk.rangeMax >= 3f && sk.id != "m_dash" && sk.id != "m_leap" && sk.id != "m_dive")
+                    sk.speed *= ProjectileSpeedScale;
         }
     }
 }

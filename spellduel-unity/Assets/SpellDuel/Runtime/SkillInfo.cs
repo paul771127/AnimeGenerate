@@ -78,7 +78,12 @@ namespace SpellDuel
             if (s.id == "meteor") E($"落地留下直徑 {Battle.BurnRadius * 2f:0.#}m 的火海，持續 {Battle.BurnDuration:0} 秒，站在裡面每秒 {Battle.BurnDps:0.#} 傷害");
             if (s.id == "wind") E("隨機從左或右側繞弧線飛向目標");
             if (s.id == "slash") E($"揮出後 {Battle.SliceWindow:0.#} 秒內，斬開正面 {Battle.SliceRange:0.#}m 內飛來的法球（從天而降、地裂、橫掃等範圍攻擊無效）");
-            if (s.releaseNear) E($"蓄滿後進入伏擊狀態 {Battle.AmbushWindow:0} 秒：靠近到 {s.rangeMax:0.#}m 內自動出手；時間到沒靠近就落空");
+            if (s.releaseNear)
+            {
+                E($"蓄力條件：手掌伸到鏡頭前、而且身邊 {Battle.AmbushClear:0.#}m 內沒有敵人（不符合時蓄力暫停）");
+                E($"蓄滿自動進入伏擊 {Battle.AmbushWindow:0} 秒（不用放招動作）：靠近到 {Battle.AmbushClear:0.#}m 內自動出手；時間到沒靠近就落空");
+                E("伏擊中被打到會取消，要重新蓄力");
+            }
             switch (s.self)
             {
                 case SelfKind.Heal: E($"回復 {s.heal} HP"); break;
@@ -105,7 +110,7 @@ namespace SpellDuel
                 else if (s.fromAbove) Line("落下時離開地上的紅圈");
                 else if (s.releaseNear)
                 {
-                    Line($"伏擊一靠近就命中、閃不掉：保持距離 {s.rangeMax:0.#}m 以上，撐過 {Battle.AmbushWindow:0} 秒就落空");
+                    Line($"伏擊一靠近就命中、閃不掉：保持距離 {s.rangeMax:0.#}m 以上，撐過 {Battle.AmbushWindow:0} 秒就落空；或趁伏擊中打它一下就能取消");
                     Line("法師的抗拒法環可以取消伏擊");
                 }
                 else
