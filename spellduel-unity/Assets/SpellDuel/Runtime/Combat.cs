@@ -850,7 +850,6 @@ namespace SpellDuel
                 return true;
             }
             if (isTrap) Emit("trap", at, s.color, $"{s.name}！");
-            damage = CapClassHit(player, s, damage);
             ApplyDamageAndEffect(player, damage, s.effect, s.effectDps, s.effectDur, at);
             return false;
         }
@@ -874,14 +873,6 @@ namespace SpellDuel
             f.charging = s; f.chargeStart = now; f.chargeFrom = f.Feet;
             return true;
         }
-
-        // ------------------------------------------------------------ 防一擊必殺
-        /// <summary>職業對職業（真人對戰、單挑電腦）：一次攻擊最多扣對方最大 HP 的這個比例（Boss、小怪不受限）</summary>
-        public const float MaxHitFrac = 0.4f;
-        public static bool IsClassFighter(Fighter f) => f != null && !f.isMinion && f.cls != null && System.Array.IndexOf(Skills.ClassOrder, f.cls.id) >= 0;
-        static bool IsClassSkill(SkillDef s) => s != null && (s.cls == "basic" || System.Array.IndexOf(Skills.ClassOrder, s.cls) >= 0);
-        public static int CapClassHit(Fighter target, SkillDef s, int dmg) =>
-            IsClassFighter(target) && IsClassSkill(s) ? Mathf.Min(dmg, Mathf.CeilToInt(target.maxHp * MaxHitFrac)) : dmg;
 
         // ------------------------------------------------------------ 普通攻擊
         /// <summary>
@@ -1651,7 +1642,6 @@ namespace SpellDuel
                 return;
             }
             if (target == enemy) AddThreat(p.owner, p.damage);
-            p.damage = CapClassHit(target, p.skill, p.damage);
             ApplyDamageAndEffect(target, p.damage, p.effect, p.effectDps, p.effectDur, p.pos);
             ApplyProcs(target, LastProcs, p.pos);
             OnDealt(p.owner, p.damage);
