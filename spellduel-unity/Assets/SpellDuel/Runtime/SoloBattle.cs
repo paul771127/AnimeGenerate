@@ -2028,6 +2028,9 @@ namespace SpellDuel
                     float sx = (Mathf.PerlinNoise(Time.time * 40f, 0f) - 0.5f) * 2f * shake, sy = (Mathf.PerlinNoise(0f, Time.time * 40f) - 0.5f) * 2f * shake;
                     GUI.matrix = Matrix4x4.Translate(new Vector3(sx, sy, 0f)) * keep;
                 }
+                // 自己的手：骨架畫在最底層（場景背景會蓋住相機畫面裡真正的手）
+                if (phase == Phase.Fighting && Hand != null && Hand.HandVisible)
+                    Hand.DrawSkeleton(Skills.Classes[myClass].color, Hand.CurrentNumber > 0 ? $"✋ {Hand.CurrentNumber}" : null);
                 DrawHud();
                 GUI.matrix = keep;
             }

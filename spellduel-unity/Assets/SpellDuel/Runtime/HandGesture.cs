@@ -446,6 +446,45 @@ namespace SpellDuel
         public void ClearRelease() => releaseQueued = false;
 
         /// <summary>畫出手的關鍵點、準星與手勢（OnGUI 中呼叫）</summary>
+        // 手部骨架的連線（MediaPipe 21 點）
+        static readonly int[] Bones = { 0,1, 1,2, 2,3, 3,4, 0,5, 5,6, 6,7, 7,8, 5,9, 9,10, 10,11, 11,12, 9,13, 13,14, 14,15, 15,16, 13,17, 0,17, 17,18, 18,19, 19,20 };
+
+        /// <summary>
+        /// 畫出自己的手（骨架線＋關節）：場景背景（火山、森林、海）會蓋住相機畫面，看不到真正的手時靠這個知道手在哪。
+        /// color＝骨架顏色（職業色）；目前手勢的名稱顯示在手掌上方。
+        /// </summary>
+        public void DrawSkeleton(Color color, string label = null)
+        {
+            if (!HandVisible) return;
+            float H = Screen.height, w = Mathf.Max(4f, Screen.width * 0.011f), d = w * 2.2f;
+            for (int pass = 0; pass < 2; pass++)
+            {
+                // 先畫深色外框，再畫亮色，在任何背景上都看得清楚
+                var c = pass == 0 ? new Color(0f, 0f, 0f, 0.55f) : new Color(color.r, color.g, color.b, 0.9f);
+                float lw = pass == 0 ? w * 1.8f : w;
+                for (int i = 0; i + 1 < Bones.Length; i += 2)
+                {
+                    var a = Points[Bones[i]]; var b = Points[Bones[i + 1]];
+                    Line(new Vector2(a.x, H - a.y), new Vector2(b.x, H - b.y), c, lw);
+                }
+                GUI.color = c;
+                float dd = pass == 0 ? d * 1.4f : d;
+                foreach (var p in Points) GUI.DrawTexture(new Rect(p.x - dd / 2, H - p.y - dd / 2, dd, dd), Texture2D.whiteTexture);
+            }
+            GUI.color = Color.white;
+            if (!string.IsNullOrEmpty(label))
+                UiKit.Text(new Rect(Palm.x - Screen.width * 0.2f, H - Palm.y - d * 9f, Screen.width * 0.4f, d * 3f), label, Mathf.RoundToInt(UiKit.BaseFont * 0.9f), Color.white, TextAnchor.MiddleCenter, true);
+        }
+
+        static void Line(Vector2 a, Vector2 b, Color c, float w)
+        {
+            var m = GUI.matrix;
+            float ang = Mathf.Atan2(b.y - a.y, b.x - a.x) * Mathf.Rad2Deg, len = (b - a).magnitude;
+            GUIUtility.RotateAroundPivot(ang, a);
+            GUI.color = c; GUI.DrawTexture(new Rect(a.x, a.y - w / 2f, len, w), Texture2D.whiteTexture);
+            GUI.matrix = m;
+        }
+
         public void DrawGUI(GUIStyle style, Color aimColor)
         {
             if (!HandVisible) return;
