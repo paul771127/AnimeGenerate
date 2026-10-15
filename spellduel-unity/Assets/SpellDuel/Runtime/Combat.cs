@@ -269,6 +269,9 @@ namespace SpellDuel
         public int stageEnd = -1, stageStart = 1;
         string WaveLabel => stageEnd > 0 ? $"第 {wave - stageStart + 1}/{stageEnd - stageStart + 1} 波" : $"第 {wave} 波";
         public bool stageCleared;
+        /// <summary>故事關卡的敵人數量倍率（初級地區＝熔岩地帶 0.5；其他 1）</summary>
+        public float stageEnemyMul = 1f;
+
         public void StartStage(int firstWave, int lastWave)
         {
             endless = true; kills = 0; bossKills = 0; stageCleared = false;
@@ -302,6 +305,7 @@ namespace SpellDuel
                 // 每波的小怪數：6＋波次（最多 28），合作 ×1.5
                 waveTotal = Mathf.Min(28, 6 + wave);
                 if (allies.Count > 0) waveTotal = Mathf.CeilToInt(waveTotal * (1f + 0.5f * allies.Count));
+                waveTotal = Mathf.Max(1, Mathf.CeilToInt(waveTotal * stageEnemyMul));
                 waveToSpawn = waveTotal;
             }
             nextMinionAt = waveStartAt;
@@ -336,7 +340,7 @@ namespace SpellDuel
                 return;
             }
             // 小怪波：照間隔陸續出現（每次兩隻）；場上同時最多 6＋波次/3×2 隻（合作 +4）
-            int maxAlive = Mathf.Min(16, 6 + wave / 3 * 2) + 4 * allies.Count;
+            int maxAlive = Mathf.Max(2, Mathf.CeilToInt((Mathf.Min(16, 6 + wave / 3 * 2) + 4 * allies.Count) * stageEnemyMul));
             if (waveToSpawn > 0 && now >= nextMinionAt && minions.Count < maxAlive)
             {
                 for (int k = 0; k < 2 && waveToSpawn > 0 && minions.Count < maxAlive; k++)

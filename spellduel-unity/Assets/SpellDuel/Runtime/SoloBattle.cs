@@ -544,7 +544,11 @@ namespace SpellDuel
                     battle.edgePoint = FarSpawnPoint;
                     battle.bossPoint = EdgeSpawnPoint;
                     battle.OnBossSpawn += w => bossAi.Respawn(Mathf.Max(0.7f, 1f - 0.06f * w));
-                    if (pendingStage != null) battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
+                    if (pendingStage != null)
+                    {
+                        battle.stageEnemyMul = pendingStage.theme == 0 ? 0.5f : 1f;   // 初級地圖（熔岩地帶）：敵人數量減半
+                        battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
+                    }
                     else battle.StartEndless();
                 }
                 battle.minionInside = p => area.Inside(WorldFrame.FromWorld(p)) && area.DistanceToEdge(WorldFrame.FromWorld(p)) >= 0.3f;
