@@ -265,6 +265,19 @@ namespace SpellDuel
             }
             else BowStage = 0;
 
+            // 普通攻擊（劍士）：沒在詠唱時，張開的手掌劃一下＝砍一刀
+            if (BasicSwipe && ReleaseStyle == Style.None && fingersOut && histN >= 3 && t - lastSwipe > 0.35f)
+            {
+                float need = Mathf.Min(W, H) * ChopDistance;
+                for (int k = 2; k < histN; k++)
+                {
+                    var o = HistAgo(k);
+                    if (t - o.t > 0.5f) break;
+                    if (o.shape == Shape.Fist || o.shape == Shape.None) break;
+                    if (Vector2.Distance(o.palm, palm) > need) { swipeQueued = true; lastSwipe = t; break; }
+                }
+            }
+
             // 劍士：張開的手掌在 0.5 秒內往任何方向移動一小段（短邊的 12%）就出招（不用大幅橫劈）
             if (ReleaseStyle == Style.Chop && fingersOut && histN >= 3)
             {
@@ -436,6 +449,11 @@ namespace SpellDuel
         }
 
         /// <summary>取走「放招」事件（一次性）</summary>
+        /// <summary>普通攻擊（劍士）：偵測「手掌劃一下」（SoloBattle 設定）</summary>
+        public bool BasicSwipe;
+        bool swipeQueued; float lastSwipe = -99f;
+        public bool ConsumeSwipe() { bool q = swipeQueued; swipeQueued = false; return q; }
+
         public bool ConsumeRelease()
         {
             if (!releaseQueued) return false;

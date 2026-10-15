@@ -874,6 +874,36 @@ namespace SpellDuel
             return true;
         }
 
+        // ------------------------------------------------------------ 普通攻擊
+        /// <summary>
+        /// 普通攻擊：近身（劍士、刺客）＝砍身邊 rangeMax 公尺內的所有敵人；遠程＝朝 aimDir 射出一發（走一般的投射物流程，連線也會同步）。
+        /// 正在詠唱技能時不能普攻（呼叫者負責）。回傳有沒有出手。
+        /// </summary>
+        public bool BasicAttack(Fighter f, SkillDef s, Vector3 aimDir, Vector3 floor, bool locked)
+        {
+            if (s == null || f == null || !f.Alive || Over || f.charging != null) return false;
+            if (f.cooldownUntil.TryGetValue(s.id, out var cd) && cd > now) return false;
+            if (!Skills.IsMeleeBasic(s))
+            {
+                f.charging = s; f.chargeStart = now - 1f;
+                return TryRelease(f, aimDir, floor, out _, locked);
+            }
+            f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul;
+            Emit("basicmelee", f.Feet + Fighter.Flat(f.forward) * 0.5f, s.color, s.id);
+            int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
+            var foes = new List<Fighter>();
+            if (f == enemy || f.isMinion) { foreach (var pl in Players()) foes.Add(pl); }
+            else { if (enemy != null) foes.Add(enemy); foes.AddRange(minions); }
+            foreach (var v in foes)
+            {
+                if (v == null || !v.Alive || FlatDistance(f.Feet, v.Feet) > s.rangeMax + v.bodyRadius) continue;
+                if (remoteEnemy && v == enemy) { Emit("hit", v.Chest, s.color, null); OnRemoteHit?.Invoke(s, dmg, v.Chest, 0); OnDealt(f, dmg); continue; }
+                if (remoteEnemy && v.isMinion) { Emit("hit", v.Chest, s.color, null); OnMinionHit?.Invoke(v.minionId, dmg, s); OnDealt(f, dmg); continue; }
+                Hit(v, new Projectile { owner = f, skill = s, pos = v.Chest, dir = Fighter.Flat(v.head - f.head), damage = dmg });
+            }
+            return true;
+        }
+
         /// <summary>刺客伏擊技能（刺殺、影襲、毒刃）：身邊這個半徑內不能有敵人才能蓄力；蓄力完成後靠近到這個距離就自動出手</summary>
         public const float AmbushClear = 2f;     // 半徑 2m（直徑 4m）內有敵人：不能開始／蓄力暫停
         public const float AmbushReach = 1.5f;   // 伏擊中靠近到半徑 1.5m（直徑 3m）內：自動出手

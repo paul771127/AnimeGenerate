@@ -1287,6 +1287,22 @@ namespace SpellDuel
                 Hand.ReleaseStyle = ChantDone ? HandGesture.Style.Number : HandGesture.Style.None;
                 Hand.RequiredNumber = ChantDone ? 5 : 0;
             }
+            // 普通攻擊：沒在詠唱時，手勢舉著就自動攻擊（法師比 1、獵人比 5、牧師比 2、刺客舉掌、劍士手掌劃一下）
+            var basic = Skills.BasicOf(myClass);
+            Hand.BasicSwipe = basic != null && basic.id == "na_sword" && Me.charging == null;
+            bool swiped = Hand.ConsumeSwipe();
+            if (basic != null && Me.charging == null && !frozen && phase == Phase.Fighting && Hand.HandVisible)
+            {
+                bool pose = basic.id switch
+                {
+                    "na_mage" => Hand.Current == HandGesture.Shape.One,
+                    "na_arrow" => Hand.Current == HandGesture.Shape.Open,
+                    "na_holy" => Hand.Current == HandGesture.Shape.Two,
+                    "na_dagger" => Hand.Current == HandGesture.Shape.Open,
+                    _ => false,
+                };
+                if (pose || (basic.id == "na_sword" && swiped)) DoBasic(basic);
+            }
             // 手勢放招：往放招動作的瞄準點放
             if (Hand.ConsumeRelease())
             {
@@ -1299,6 +1315,18 @@ namespace SpellDuel
         }
 
         static Vector2 ScreenCenter => new Vector2(Screen.width / 2f, Screen.height / 2f);
+
+        /// <summary>普通攻擊：朝畫面中央的準星（近身＝砍身邊的敵人）</summary>
+        void DoBasic(SkillDef s)
+        {
+            var ray = cam.ScreenPointToRay(ScreenCenter);
+            var o = WorldFrame.ToWorld(ray.origin);
+            var d = WorldFrame.DirToWorld(ray.direction);
+            var floor = d.y < -0.01f ? o + d * (-o.y / d.y) : Me.Feet + Fighter.Flat(d) * 15f;
+            if (!battle.BasicAttack(Me, s, d, floor, enemyOnScreen)) return;
+            if (!Skills.IsMeleeBasic(s))
+                SpellFx.CastBurst(myClass, s.color, cam.transform.position + cam.transform.forward * 0.5f - cam.transform.up * 0.08f, ray.direction, 0.2f);
+        }
 
         void ReleaseAt(Vector2 sp, bool byGesture)
         {
@@ -1636,6 +1664,11 @@ namespace SpellDuel
                     SpellFx.DispelRing(WorldFrame.FromWorld(at), Skills.All["dispel"].areaRadius, c);
                     Sfx.Play("cast_mage", 0.9f, 0.7f); Sfx.Play("block", 0.6f, 0.8f);
                     Haptics.Play(Haptics.Kind.Medium); Kick(6f, 0f);
+                    break;
+                case "basicmelee":
+                    // 近身普攻：揮砍特效
+                    Burst(at + Vector3.up * 1f, c);
+                    Sfx.Play("cast_swordsman", 0.45f, text == "na_dagger" ? 1.4f : 1.1f);
                     break;
                 case "taunt":
                     Say("😤 " + text, 1.8f);
@@ -2077,7 +2110,7 @@ namespace SpellDuel
             cls = Skills.Classes[myClass];
             var descR = new Rect(pad, y, W - pad * 2, u * 1.5f);
             UiKit.Card(descR, 0.5f, cls.color, 0.35f);
-            UiKit.Text(new Rect(descR.x + gap, descR.y + gap * 0.4f, descR.width - gap * 2, descR.height - gap * 0.8f), $"{cls.desc}\nHP {cls.maxHp}・MP {cls.maxMp}", fsS, new Color(0.9f, 0.92f, 1f));
+            UiKit.Text(new Rect(descR.x + gap, descR.y + gap * 0.4f, descR.width - gap * 2, descR.height - gap * 0.8f), $"{cls.desc}\nHP {cls.maxHp}・MP {cls.maxMp}　🗡 普攻：{Skills.BasicOf(myClass)?.desc ?? "無"}", fsS, new Color(0.9f, 0.92f, 1f));
             y += u * 1.5f + gap;
 
             // 技能卡片（2 欄）：圖示＋名稱／手勢→放招／數值

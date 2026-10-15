@@ -78,6 +78,15 @@ namespace SpellDuel
 
         static void P(SkillDef s) => All[s.id] = s;
 
+        /// <summary>各職業的普通攻擊</summary>
+        public static SkillDef BasicOf(string cls) => cls switch
+        {
+            "mage" => All["na_mage"], "swordsman" => All["na_sword"], "archer" => All["na_arrow"],
+            "priest" => All["na_holy"], "assassin" => All["na_dagger"], _ => null,
+        };
+        /// <summary>近身普攻（劍士、刺客）：直接砍身邊的敵人，不射出投射物</summary>
+        public static bool IsMeleeBasic(SkillDef s) => s != null && (s.id == "na_sword" || s.id == "na_dagger");
+
         /// <summary>遠距技能的飛行速度倍率</summary>
         public const float ProjectileSpeedScale = 0.7f;
 
@@ -187,6 +196,22 @@ namespace SpellDuel
 
             Classes["priest"] = new ClassDef { id = "priest", name = "牧師", color = C("#fde68a"), maxHp = 105, maxMp = 130, mpRegen = 4, skills = new[] { "holy", "judgement", "prayheal", "cleanse", "guard", "prayer" }, defaultLoadout = new[] { "holy", "prayheal", "guard" }, desc = "回復、淨化、守護、減冷卻；聖光攻擊較弱" };
             Classes["swordsman"] = new ClassDef { id = "swordsman", name = "劍士", color = C("#60a5fa"), maxHp = 130, maxMp = 90, mpRegen = 3, skills = new[] { "slash", "thrust", "wave", "block", "ironwall", "counter", "taunt" }, defaultLoadout = new[] { "slash", "wave", "block" }, desc = "近遠攻擊都有，多種防禦" };
+
+            // ---------------------------------------------------------- 普通攻擊（不耗 MP、不用唸；手勢舉著就自動攻擊，見 BasicOf）
+            P(new SkillDef { id = "na_mage", cls = "basic", name = "奧術飛彈", type = SkillType.Projectile, color = C("#a78bfa"), cost = 0, damage = 12, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.15f, rangeMax = 12f, desc = "法師普攻：比 1，每 2 秒一發（飛得慢）" });
+            P(new SkillDef { id = "na_sword", cls = "basic", name = "斬擊（普攻）", type = SkillType.Projectile, color = C("#93c5fd"), cost = 0, damage = 14, charge = 0f, cooldown = 1f, radius = 1f, rangeMax = 1f, desc = "劍士普攻：手掌劃一下，砍身邊直徑 2m 內的敵人（每 1 秒）" });
+            P(new SkillDef { id = "na_arrow", cls = "basic", name = "普通箭", type = SkillType.Projectile, color = C("#d9f99d"), cost = 0, damage = 11, charge = 0f, cooldown = 2f, speed = 16f, radius = 0.06f, rangeMax = 14f, desc = "獵人普攻：比 5，每 2 秒一箭" });
+            P(new SkillDef { id = "na_holy", cls = "basic", name = "神聖飛彈", type = SkillType.Projectile, color = C("#fff3b0"), cost = 0, damage = 10, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.14f, rangeMax = 12f, desc = "牧師普攻：比 2，每 2 秒一發（飛得慢）" });
+            P(new SkillDef { id = "na_dagger", cls = "basic", name = "連刺（普攻）", type = SkillType.Projectile, color = C("#e879f9"), cost = 0, damage = 12, charge = 0f, cooldown = 1.6f, radius = 0.5f, rangeMax = 1f, desc = "刺客普攻：舉掌，每 1.6 秒砍身邊 1m 內的敵人" });
+
+            // 技能強化：手勢放招比較容易失敗，放成功的回報要大 → 職業技能傷害、治療 ×1.4（蓄力 2 秒以上的大招 ×1.6）
+            foreach (var sk in All.Values)
+                if (System.Array.IndexOf(ClassOrder, sk.cls) >= 0)
+                {
+                    float mul = sk.charge >= 2f ? 1.6f : 1.4f;
+                    sk.damage = Mathf.RoundToInt(sk.damage * mul);
+                    sk.heal = Mathf.RoundToInt(sk.heal * mul);
+                }
 
             // 所有遠距技能（投射物、射程 3m 以上）飛行速度 70%；衝刺／跳躍／俯衝（小怪移動用）不算
             foreach (var sk in All.Values)
