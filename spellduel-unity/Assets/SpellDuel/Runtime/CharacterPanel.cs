@@ -145,7 +145,7 @@ namespace SpellDuel
                 var sr = new Rect(b.x, b.y + i * (sh + gap * 0.3f), b.width, sh);
                 if (UiKit.Button(sr, "", fsS, selItem != null && selItem == it, it != null ? Item.RarityColors[it.rarity] : (Color?)null)) selItem = it;
                 UiKit.Text(new Rect(sr.x + gap, sr.y, sr.width * 0.2f, sr.height), Item.SlotNames[i], fsS, new Color(0.8f, 0.82f, 0.9f), TextAnchor.MiddleLeft, true);
-                UiKit.Text(new Rect(sr.x + sr.width * 0.2f, sr.y, sr.width * 0.78f, sr.height), it != null ? $"[{Item.RarityNames[it.rarity]}] {it.name}" : "（空）", fsS, it != null ? Item.RarityColors[it.rarity] : Color.gray, TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(sr.x + sr.width * 0.2f, sr.y, sr.width * 0.78f, sr.height), it != null ? $"[{Item.RarityNames[it.rarity]}] {it.FullName}" : "（空）", fsS, it != null ? Item.RarityColors[it.rarity] : Color.gray, TextAnchor.MiddleLeft, true);
             }
             // 背包（分頁，3×4）
             float by = b.y + 5 * (sh + gap * 0.3f) + gap * 0.5f;
@@ -168,7 +168,7 @@ namespace SpellDuel
                 var cr = new Rect(b.x + (k % 3) * (cw + gap), by + (k / 3) * (ch + gap * 0.3f), cw, ch);
                 bool ok = p.CanEquip(it, out _);
                 if (UiKit.Button(cr, "", fsS, selItem == it, Item.RarityColors[it.rarity])) selItem = it;
-                UiKit.Text(new Rect(cr.x + 3, cr.y + 1, cr.width - 6, cr.height * 0.55f), it.name, fsS, ok ? Item.RarityColors[it.rarity] : Item.RarityColors[it.rarity] * 0.6f, TextAnchor.MiddleCenter, true);
+                UiKit.Text(new Rect(cr.x + 3, cr.y + 1, cr.width - 6, cr.height * 0.55f), it.FullName, fsS, ok ? Item.RarityColors[it.rarity] : Item.RarityColors[it.rarity] * 0.6f, TextAnchor.MiddleCenter, true);
                 UiKit.Text(new Rect(cr.x + 3, cr.y + cr.height * 0.5f, cr.width - 6, cr.height * 0.45f), $"{Item.SlotNames[(int)it.slot]}{(ok ? "" : "・不能用")}", fsS, ok ? new Color(0.8f, 0.85f, 0.95f) : new Color(1f, 0.5f, 0.45f), TextAnchor.MiddleCenter);
             }
             // 選中物品的說明
@@ -188,10 +188,12 @@ namespace SpellDuel
                 $"{Item.SlotNames[(int)s2.slot]}・物品等級 {s2.ilvl}　限定：{s2.ClassText()}",
                 $"需求：等級 {s2.reqLevel}" + (s2.reqValue > 0 ? $"、{StatInfo.Names[(int)s2.reqStat]} {s2.reqValue}" : "") + (worn || can ? "" : $"　❌ {why}"),
             };
-            foreach (var kv in s2.mods) lines.Add("・" + Item.AffixText(kv.Key, kv.Value));
+            foreach (var kv in s2.mods) lines.Add("・" + Item.AffixText(kv.Key, kv.Value * s2.PlusMul));
+            var sd = Economy.SetOf(s2.setId);
+            if (sd != null) lines.Add(Economy.SetText(sd, p.equipped));
             var on = p.equipped[(int)s2.slot];
             if (!worn && on != null) lines.Add($"（目前穿著：{on.name}）");
-            UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.4f, dr.width - gap * 2, fs * 1.3f), $"[{Item.RarityNames[s2.rarity]}] {s2.name}", fs, Item.RarityColors[s2.rarity], TextAnchor.MiddleLeft, true);
+            UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.4f, dr.width - gap * 2, fs * 1.3f), $"[{Item.RarityNames[s2.rarity]}] {s2.FullName}", fs, Item.RarityColors[s2.rarity], TextAnchor.MiddleLeft, true);
             UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.4f + fs * 1.3f, dr.width - gap * 2, dr.height - fs * 4f), string.Join("\n", lines), fsS, new Color(0.88f, 0.9f, 1f), TextAnchor.UpperLeft, false, 0.5f);
             float bw = (dr.width - gap * 3) / 2f, bh = fs * 1.9f, byy = dr.yMax - bh - gap * 0.4f;
             if (worn)

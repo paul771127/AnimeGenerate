@@ -1,0 +1,370 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace SpellDuel
+{
+    /// <summary>
+    /// 故事模式的大地圖與城鎮（全螢幕 IMGUI，由 SoloBattle 呼叫 Draw）：
+    ///   大地圖：三個地區（熔岩地帶、森林、海上礁石），每區一座城鎮＋這個地區的關卡；打過的關卡可以重打（刷裝備）。
+    ///   城鎮：居民（點一下聊天）、鐵匠鋪（強化裝備）、道具店（買藥水／回城捲軸、賣裝備）、職業工會（轉職預覽；職業任務尚未開放）。
+    /// </summary>
+    public class WorldUI
+    {
+        public enum Screen { Map, Town, Smith, Shop, Guild }
+        public Screen screen = Screen.Map;
+        public int town;                         // 目前所在城鎮（＝地區主題 0～2）
+        public Action<StoryStage> OnStartStage;  // 出發打關卡
+        public Action OnBack;                    // 離開大地圖（回選擇畫面）
+        public Action OnCharacter;               // 打開角色畫面
+
+        StoryStage sel;
+        int shopTab, page, npcTalk = -1, npcLine;
+        Item selItem;
+        string toast; float toastUntil;
+        readonly System.Random rng = new System.Random();
+
+        void Toast(string s) { toast = s; toastUntil = Time.time + 2.5f; }
+
+        // ---------------------------------------------------------------- 地區與城鎮資料
+        public class Town
+        {
+            public string name, desc; public Color color;
+            public (string name, string role, string[] lines)[] npcs;
+        }
+
+        public static readonly string[] RegionNames = { "🌋 熔岩地帶", "🌲 迷霧森林", "🌊 海上礁石" };
+        public static readonly Color[] RegionColors = { new Color(1f, 0.45f, 0.2f), new Color(0.35f, 0.8f, 0.4f), new Color(0.3f, 0.65f, 1f) };
+
+        public static readonly Town[] Towns =
+        {
+            new Town
+            {
+                name = "炎之里", desc = "火山腳下的起始之村，冒險從這裡開始", color = new Color(1f, 0.55f, 0.3f),
+                npcs = new[]
+                {
+                    ("村長・老焰", "村長", new[] { "最近火山不太平靜，熔岩小鬼越來越多了…", "年輕人，打不過就回村裡補給，別逞強。", "聽說火山深處沉睡著熔岩巨像。" }),
+                    ("見習鐵匠・小鐵", "鐵匠學徒", new[] { "師父說強化到 +5 之前都不會失敗喔！", "套裝湊滿 4 件會有特別的力量。", "熔岩地帶常掉「炎龍」套裝。" }),
+                    ("旅行商人・米菈", "商人", new[] { "回城捲軸可以帶著戰利品提早回來，很划算吧？", "藥水在戰鬥中點畫面上的按鈕就能用。", "沒過關的話，戰利品可是帶不走的唷。" }),
+                },
+            },
+            new Town
+            {
+                name = "森之里", desc = "古樹環繞的精靈聚落", color = new Color(0.45f, 0.85f, 0.45f),
+                npcs = new[]
+                {
+                    ("長老・翠", "精靈長老", new[] { "森林被腐化了，樹王的心已經聽不見了。", "小心毒液噴花，牠的毒會在地上留很久。", "「森羅」套裝是森林給勇者的祝福。" }),
+                    ("獵人・楓", "獵人", new[] { "藤蔓術士放藤蔓時不能動，那是機會。", "荊棘衝鋒獸衝之前，地上會先出現紅線。", "我也想去職業工會轉職成神射手呢。" }),
+                    ("小孩・小葉", "村民", new[] { "哥哥姊姊，可以幫我們把森林變回來嗎？", "我最喜歡食人花了…啊不是，是討厭！", "樹王以前會說故事給我們聽。" }),
+                },
+            },
+            new Town
+            {
+                name = "潮騷港", desc = "海風吹拂的港口城鎮", color = new Color(0.4f, 0.7f, 1f),
+                npcs = new[]
+                {
+                    ("船長・海斗", "船長", new[] { "海上的礁石區有巨大的觸手出沒！", "飛魚會從海裡突然跳出來，注意腳邊。", "打倒海妖，我就載你出海。" }),
+                    ("酒館老闆娘・凪", "老闆娘", new[] { "累了就在這歇歇吧。", "聽說「海神」套裝能讓攻擊帶上寒氣。", "騎魚的泡泡怪，泡泡又慢又大，好閃。" }),
+                    ("漁夫・阿潮", "漁夫", new[] { "海鳥會俯衝下來啄人，抬頭看看天空。", "雷電水母放電時離遠一點。", "河豚的刺會往四面八方射喔。" }),
+                },
+            },
+        };
+
+        /// <summary>城鎮開放：起始之村一定開；其他地區有任何一關可以打就開</summary>
+        public static bool TownOpen(int t)
+        {
+            if (t == 0) return true;
+            foreach (var s in Story.AllStages()) if (s.theme == t && Story.IsUnlocked(s)) return true;
+            return false;
+        }
+
+        public void OpenTown(int t) { town = Mathf.Clamp(t, 0, Towns.Length - 1); screen = Screen.Town; npcTalk = -1; selItem = null; }
+
+        // ---------------------------------------------------------------- 畫面
+        public void Draw(CharacterProfile prof)
+        {
+            Story.Load();
+            float W = UnityEngine.Screen.width, H = UnityEngine.Screen.height;
+            var safe = UnityEngine.Screen.safeArea;
+            float topY = H - safe.yMax, botY = H - safe.y, pad = W * 0.03f;
+            GUI.color = new Color(0f, 0f, 0f, 0.72f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
+            var r = new Rect(pad, topY + pad, W - pad * 2, botY - topY - pad * 2);
+            int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.82f), fsL = Mathf.RoundToInt(fs * 1.3f);
+            float gap = fs * 0.5f;
+            switch (screen)
+            {
+                case Screen.Map: DrawMap(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Town: DrawTown(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Smith: DrawSmith(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Shop: DrawShop(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Guild: DrawGuild(r, prof, fs, fsS, fsL, gap); break;
+            }
+            if (toast != null && Time.time < toastUntil) UiKit.Pill(r.y + r.height * 0.5f, toast, fs, new Color(1f, 0.9f, 0.5f), r.width * 0.9f, 0.85f);
+        }
+
+        void Header(Rect r, string title, Color c, CharacterProfile prof, int fs, int fsS, int fsL, float gap, ref float y)
+        {
+            UiKit.Card(r, 0.95f, c, 0.9f);
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.8f), title, fsL, Color.white, TextAnchor.MiddleLeft, true);
+            string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.8f), $"{cn} Lv{prof.level}　💰 {Economy.Gold}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
+            y += fs * 1.9f;
+        }
+
+        // ---------------------------------------------------------------- 大地圖
+        void DrawMap(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
+        {
+            float y = r.y + gap;
+            Header(r, "🗺 大地圖", new Color(1f, 0.85f, 0.45f), prof, fs, fsS, fsL, gap, ref y);
+            float detailH = sel != null ? fs * 7.2f : fs * 2.4f;
+            float bottom = r.yMax - gap - fs * 2.3f - detailH;
+            float regH = (bottom - y) / 3f;
+            for (int t = 0; t < 3; t++)
+            {
+                var rr = new Rect(r.x + gap, y + t * regH, r.width - gap * 2, regH - gap * 0.5f);
+                bool open = TownOpen(t);
+                // 地區底色＋名稱
+                GUI.color = new Color(RegionColors[t].r, RegionColors[t].g, RegionColors[t].b, open ? 0.22f : 0.08f);
+                GUI.DrawTexture(rr, Texture2D.whiteTexture); GUI.color = Color.white;
+                UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y, rr.width * 0.5f, fs * 1.3f), RegionNames[t], fsS, open ? Color.white : Color.gray, TextAnchor.MiddleLeft, true);
+                // 城鎮
+                float tw = rr.width * 0.26f, th = Mathf.Min(rr.height - fs * 1.4f, fs * 3.2f);
+                var trr = new Rect(rr.x + gap * 0.5f, rr.y + fs * 1.35f, tw, th);
+                if (UiKit.Button(trr, "", fsS, false, Towns[t].color, open)) { OpenTown(t); return; }
+                UiKit.Text(new Rect(trr.x, trr.y, trr.width, trr.height), open ? $"🏘\n{Towns[t].name}" : "🔒\n未開放", fsS, open ? Color.white : Color.gray, TextAnchor.MiddleCenter, true);
+                // 這個地區的關卡：沿著路線排開
+                var stages = new List<StoryStage>();
+                foreach (var s in Story.AllStages()) if (s.theme == t) stages.Add(s);
+                float sx0 = trr.xMax + gap, sw = rr.xMax - sx0 - gap * 0.5f;
+                int n = Mathf.Max(1, stages.Count);
+                float nd = Mathf.Min(fs * 2.6f, sw / Mathf.Max(1, n) - gap * 0.3f, rr.height - fs * 1.5f);
+                for (int i = 0; i < stages.Count; i++)
+                {
+                    var st = stages[i];
+                    bool clear = Story.IsCleared(st.id), ok = Story.IsUnlocked(st);
+                    float cx = sx0 + (i + 0.5f) * sw / n, cy = rr.y + fs * 1.35f + (rr.height - fs * 1.5f) * (i % 2 == 0 ? 0.35f : 0.65f);
+                    // 路線
+                    if (i > 0)
+                    {
+                        float px = sx0 + (i - 0.5f) * sw / n, py = rr.y + fs * 1.35f + (rr.height - fs * 1.5f) * ((i - 1) % 2 == 0 ? 0.35f : 0.65f);
+                        DrawLine(new Vector2(px, py), new Vector2(cx, cy), ok ? new Color(1f, 0.95f, 0.8f, 0.6f) : new Color(1f, 1f, 1f, 0.15f), 3f);
+                    }
+                    var nr = new Rect(cx - nd / 2f, cy - nd / 2f, nd, nd);
+                    var col = clear ? new Color(1f, 0.85f, 0.3f) : ok ? RegionColors[t] : new Color(0.4f, 0.4f, 0.45f);
+                    if (UiKit.Button(nr, "", fsS, sel == st, col, ok)) sel = st;
+                    UiKit.Text(nr, (clear ? "✔" : ok ? "▶" : "🔒") + "\n" + st.id, fsS, ok ? Color.white : Color.gray, TextAnchor.MiddleCenter, true);
+                }
+            }
+            // 選中的關卡
+            var dr = new Rect(r.x + gap, bottom + gap * 0.3f, r.width - gap * 2, detailH - gap * 0.3f);
+            UiKit.Card(dr, 0.6f);
+            if (sel == null)
+                UiKit.Text(new Rect(dr.x + gap, dr.y, dr.width - gap * 2, dr.height), "點城鎮進去補給；點關卡看說明。打過的關卡可以重打刷裝備（戰利品要過關才拿得到）。", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleLeft);
+            else
+            {
+                bool clear = Story.IsCleared(sel.id), ok = Story.IsUnlocked(sel);
+                string waves = sel.HasBoss && sel.fromWave >= 10 ? "Boss 戰" : $"{sel.toWave - sel.fromWave + 1} 波" + (sel.HasBoss ? "＋Boss" : "");
+                UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.3f, dr.width - gap * 2, fs * 1.4f), $"{sel.id}　{sel.title}" + (clear ? "　✔ 已通關" : ""), fs, Color.white, TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(dr.x + gap, dr.y + fs * 1.7f, dr.width - gap * 2, fs * 2.6f),
+                    (sel.desc.Length > 0 ? sel.desc.Split('\n')[0] + "\n" : "") + $"{RegionNames[sel.theme]}・{waves}・經驗 {sel.xp}・💰 {Economy.StageGold(sel)}", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
+                float bw = (dr.width - gap * 3) / 2f, bh = fs * 2f, by = dr.yMax - bh - gap * 0.4f;
+                if (UiKit.Button(new Rect(dr.x + gap, by, bw, bh), clear ? "⚔ 再次挑戰（刷裝備）" : "⚔ 出發", fsS, true, new Color(0.4f, 0.8f, 1f), ok))
+                { var s = sel; sel = null; OnStartStage?.Invoke(s); return; }
+                if (UiKit.Button(new Rect(dr.x + gap * 2 + bw, by, bw, bh), "關閉", fsS)) sel = null;
+            }
+            // 下方：角色、返回
+            float bw2 = (r.width - gap * 3) / 2f, by2 = r.yMax - gap - fs * 2.1f;
+            int pts = prof.statPoints + prof.skillPoints;
+            if (UiKit.Button(new Rect(r.x + gap, by2, bw2, fs * 2.1f), pts > 0 ? $"📜 角色（可加點 ×{pts}）" : "📜 角色／裝備", fs, pts > 0, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
+            if (UiKit.Button(new Rect(r.x + gap * 2 + bw2, by2, bw2, fs * 2.1f), "返回", fs)) OnBack?.Invoke();
+        }
+
+        static void DrawLine(Vector2 a, Vector2 b, Color c, float w)
+        {
+            var m = GUI.matrix;
+            float ang = Mathf.Atan2(b.y - a.y, b.x - a.x) * Mathf.Rad2Deg, len = (b - a).magnitude;
+            GUIUtility.RotateAroundPivot(ang, a);
+            GUI.color = c; GUI.DrawTexture(new Rect(a.x, a.y - w / 2f, len, w), Texture2D.whiteTexture); GUI.color = Color.white;
+            GUI.matrix = m;
+        }
+
+        // ---------------------------------------------------------------- 城鎮
+        void DrawTown(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
+        {
+            var t = Towns[town];
+            float y = r.y + gap;
+            Header(r, $"🏘 {t.name}", t.color, prof, fs, fsS, fsL, gap, ref y);
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.2f), t.desc, fsS, new Color(0.85f, 0.88f, 1f));
+            y += fs * 1.4f;
+            // 居民
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.2f), "👥 居民（點一下聊天）", fsS, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleLeft, true);
+            y += fs * 1.3f;
+            float nw = (r.width - gap * 4) / 3f, nh = fs * 2.6f;
+            for (int i = 0; i < t.npcs.Length; i++)
+            {
+                var nr = new Rect(r.x + gap + i * (nw + gap), y, nw, nh);
+                if (UiKit.Button(nr, "", fsS, npcTalk == i, t.color))
+                {
+                    if (npcTalk == i) npcLine = (npcLine + 1) % t.npcs[i].lines.Length; else { npcTalk = i; npcLine = 0; }
+                    Sfx.Play("select", 0.5f);
+                }
+                UiKit.Text(nr, $"🧑 {t.npcs[i].name}\n{t.npcs[i].role}", fsS, Color.white, TextAnchor.MiddleCenter, true);
+            }
+            y += nh + gap * 0.5f;
+            var talkR = new Rect(r.x + gap, y, r.width - gap * 2, fs * 3.2f);
+            UiKit.Card(talkR, 0.55f, npcTalk >= 0 ? t.color : (Color?)null, 0.7f);
+            UiKit.Text(new Rect(talkR.x + gap, talkR.y, talkR.width - gap * 2, talkR.height), npcTalk >= 0 ? $"{t.npcs[npcTalk].name}：「{t.npcs[npcTalk].lines[npcLine]}」" : "（點居民和他聊天，再點一次換下一句）", fsS, Color.white, TextAnchor.MiddleLeft);
+            y += talkR.height + gap;
+            // 設施
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.2f), "🏠 設施", fsS, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleLeft, true);
+            y += fs * 1.3f;
+            float bw = (r.width - gap * 3) / 2f, bh = fs * 3f;
+            if (UiKit.Button(new Rect(r.x + gap, y, bw, bh), "⚒ 鐵匠鋪\n強化裝備", fs, false, new Color(1f, 0.6f, 0.3f))) { screen = Screen.Smith; selItem = null; page = 0; }
+            if (UiKit.Button(new Rect(r.x + gap * 2 + bw, y, bw, bh), "🧪 道具店\n買藥水・賣裝備", fs, false, new Color(0.5f, 0.85f, 1f))) { screen = Screen.Shop; selItem = null; page = 0; }
+            y += bh + gap;
+            if (UiKit.Button(new Rect(r.x + gap, y, bw, bh), "🏛 職業工會\n轉職・職業任務", fs, false, new Color(0.85f, 0.6f, 1f))) screen = Screen.Guild;
+            if (UiKit.Button(new Rect(r.x + gap * 2 + bw, y, bw, bh), "📜 角色／裝備", fs, false, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
+            // 回大地圖
+            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), "🗺 回大地圖", fs)) screen = Screen.Map;
+        }
+
+        // ---------------------------------------------------------------- 物品清單（身上＋背包，分頁）
+        List<Item> AllItems(CharacterProfile prof)
+        {
+            var list = new List<Item>();
+            foreach (var it in prof.equipped) if (it != null) list.Add(it);
+            list.AddRange(Progress.Bag);
+            return list;
+        }
+
+        /// <summary>畫物品格子（每頁 8 件）；回傳下一個 y</summary>
+        float DrawItemGrid(Rect r, List<Item> items, CharacterProfile prof, int fs, int fsS, float gap, float y, Func<Item, string> sub)
+        {
+            const int per = 8;
+            int pages = Mathf.Max(1, (items.Count + per - 1) / per);
+            page = Mathf.Clamp(page, 0, pages - 1);
+            float cw = (r.width - gap * 3) / 2f, ch = fs * 2.2f;
+            for (int i = 0; i < per; i++)
+            {
+                int k = page * per + i;
+                if (k >= items.Count) break;
+                var it = items[k];
+                var cr = new Rect(r.x + gap + (i % 2) * (cw + gap), y + (i / 2) * (ch + gap * 0.4f), cw, ch);
+                bool worn = Array.IndexOf(prof.equipped, it) >= 0;
+                if (UiKit.Button(cr, "", fsS, selItem == it, Item.RarityColors[it.rarity])) selItem = it;
+                UiKit.Text(new Rect(cr.x + 3, cr.y, cr.width - 6, cr.height * 0.55f), (worn ? "👕 " : "") + it.FullName, fsS, Item.RarityColors[it.rarity], TextAnchor.MiddleCenter, true);
+                UiKit.Text(new Rect(cr.x + 3, cr.y + cr.height * 0.5f, cr.width - 6, cr.height * 0.48f), sub(it), Mathf.RoundToInt(fsS * 0.85f), new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleCenter);
+            }
+            y += 4 * (ch + gap * 0.4f);
+            if (pages > 1)
+            {
+                float pw = r.width * 0.2f;
+                if (UiKit.Button(new Rect(r.x + gap, y, pw, fs * 1.6f), "◀", fsS, false, null, page > 0)) page--;
+                UiKit.Text(new Rect(r.x, y, r.width, fs * 1.6f), $"{page + 1}/{pages}", fsS, Color.white, TextAnchor.MiddleCenter);
+                if (UiKit.Button(new Rect(r.xMax - gap - pw, y, pw, fs * 1.6f), "▶", fsS, false, null, page < pages - 1)) page++;
+                y += fs * 1.8f;
+            }
+            return y;
+        }
+
+        // ---------------------------------------------------------------- 鐵匠鋪
+        void DrawSmith(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
+        {
+            float y = r.y + gap;
+            Header(r, $"⚒ 鐵匠鋪（{Towns[town].name}）", new Color(1f, 0.6f, 0.3f), prof, fs, fsS, fsL, gap, ref y);
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), $"每強化 1 級：所有屬性 +{Economy.EnhancePerLevel * 100:0}%（最多 +{Economy.MaxPlus}）。+5 之前一定成功，之後失敗只扣金幣。", fsS, new Color(0.85f, 0.88f, 1f));
+            y += fs * 1.5f;
+            var items = AllItems(prof);
+            if (items.Count == 0) UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2f), "沒有裝備可以強化（過關才拿得到裝備）", fs, Color.gray);
+            y = DrawItemGrid(r, items, prof, fs, fsS, gap, y, it => it.plus >= Economy.MaxPlus ? "已滿級" : $"→+{it.plus + 1}　💰{Economy.EnhanceCost(it)}・{Economy.EnhanceRate(it) * 100:0}%");
+            if (selItem != null && items.Contains(selItem))
+            {
+                var dr = new Rect(r.x + gap, y, r.width - gap * 2, fs * 4.2f);
+                UiKit.Card(dr, 0.6f, Item.RarityColors[selItem.rarity], 0.8f);
+                var mods = new List<string>();
+                foreach (var kv in selItem.mods) mods.Add(Item.AffixText(kv.Key, kv.Value * selItem.PlusMul));
+                UiKit.Text(new Rect(dr.x + gap, dr.y, dr.width - gap * 2, dr.height * 0.55f), $"{selItem.FullName}\n{string.Join("、", mods)}", fsS, Color.white, TextAnchor.MiddleLeft, false, 0.5f);
+                bool can = selItem.plus < Economy.MaxPlus;
+                if (UiKit.Button(new Rect(dr.x + dr.width * 0.2f, dr.yMax - fs * 1.9f, dr.width * 0.6f, fs * 1.7f), can ? $"⚒ 強化（💰 {Economy.EnhanceCost(selItem)}・成功率 {Economy.EnhanceRate(selItem) * 100:0}%）" : "已經是 +10", fsS, true, new Color(1f, 0.6f, 0.3f), can))
+                {
+                    bool ok = Economy.Enhance(selItem, rng, out var msg);
+                    Toast(msg); Sfx.Play(ok ? "charged" : "block", 0.8f);
+                    Progress.SaveBag(); Progress.SaveChar(prof);
+                }
+            }
+            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), "🏘 回城鎮", fs)) screen = Screen.Town;
+        }
+
+        // ---------------------------------------------------------------- 道具店
+        void DrawShop(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
+        {
+            float y = r.y + gap;
+            Header(r, $"🧪 道具店（{Towns[town].name}）", new Color(0.5f, 0.85f, 1f), prof, fs, fsS, fsL, gap, ref y);
+            float tw = (r.width - gap * 3) / 2f;
+            if (UiKit.Button(new Rect(r.x + gap, y, tw, fs * 1.8f), "買道具", fs, shopTab == 0)) { shopTab = 0; selItem = null; }
+            if (UiKit.Button(new Rect(r.x + gap * 2 + tw, y, tw, fs * 1.8f), "賣裝備", fs, shopTab == 1)) { shopTab = 1; selItem = null; page = 0; }
+            y += fs * 2.1f;
+            if (shopTab == 0)
+            {
+                foreach (var c in Economy.Consumables)
+                {
+                    var cr = new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.6f);
+                    UiKit.Card(cr, 0.5f);
+                    UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.62f, cr.height), $"{c.icon} {c.name}（持有 {Economy.Count(c.id)}）\n{c.desc}", fsS, Color.white, TextAnchor.MiddleLeft, true);
+                    if (UiKit.Button(new Rect(cr.xMax - cr.width * 0.33f, cr.y + gap * 0.3f, cr.width * 0.32f - gap * 0.3f, cr.height - gap * 0.6f), $"💰 {c.price}", fsS, false, new Color(1f, 0.85f, 0.3f), Economy.Gold >= c.price))
+                    {
+                        if (Economy.Buy(c, out var why)) { Toast($"買了 {c.name}"); Sfx.Play("select", 0.7f, 1.3f); } else Toast(why);
+                    }
+                    y += cr.height + gap * 0.4f;
+                }
+                UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.2f), "藥水在戰鬥中點畫面上的按鈕使用（冷卻 8 秒）；回城捲軸只能在故事關卡用。", fsS, new Color(0.8f, 0.84f, 0.95f), TextAnchor.UpperLeft);
+            }
+            else
+            {
+                var bag = new List<Item>(Progress.Bag);
+                if (bag.Count == 0) UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2f), "背包是空的（身上穿的要先卸下才能賣）", fs, Color.gray);
+                y = DrawItemGrid(r, bag, prof, fs, fsS, gap, y, it => $"賣 💰 {Economy.SellPrice(it)}");
+                if (selItem != null && bag.Contains(selItem))
+                {
+                    if (UiKit.Button(new Rect(r.x + r.width * 0.2f, y, r.width * 0.6f, fs * 2f), $"賣掉 {selItem.FullName}（💰 {Economy.SellPrice(selItem)}）", fsS, true, new Color(1f, 0.85f, 0.3f)))
+                    {
+                        Economy.Gold += Economy.SellPrice(selItem);
+                        Progress.Bag.Remove(selItem); Progress.SaveBag();
+                        Toast($"賣掉了 {selItem.FullName}"); Sfx.Play("select", 0.7f, 1.3f);
+                        selItem = null;
+                    }
+                }
+            }
+            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), "🏘 回城鎮", fs)) screen = Screen.Town;
+        }
+
+        // ---------------------------------------------------------------- 職業工會（轉職預覽）
+        void DrawGuild(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
+        {
+            float y = r.y + gap;
+            Header(r, "🏛 職業工會", new Color(0.85f, 0.6f, 1f), prof, fs, fsS, fsL, gap, ref y);
+            string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
+            bool lvOk = prof.level >= Economy.AdvanceLevel;
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.4f), $"公會長：「{cn}啊，等你到了 Lv{Economy.AdvanceLevel}，完成職業任務就能轉職成更強的職業。」\n目前 Lv{prof.level}" + (lvOk ? "（已達轉職等級）" : $"（還差 {Economy.AdvanceLevel - prof.level} 級）"), fsS, Color.white, TextAnchor.UpperLeft);
+            y += fs * 2.8f;
+            foreach (var ac in Economy.AdvancedOf(prof.cls))
+            {
+                var cr = new Rect(r.x + gap, y, r.width - gap * 2, fs * 3.4f);
+                UiKit.Card(cr, 0.5f, cd?.color, 0.7f);
+                UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.6f, cr.height), $"✨ {ac.name}\n{ac.desc}", fsS, Color.white, TextAnchor.MiddleLeft, true);
+                if (UiKit.Button(new Rect(cr.xMax - cr.width * 0.36f, cr.y + gap * 0.4f, cr.width * 0.35f - gap * 0.3f, cr.height - gap * 0.8f), lvOk ? "接職業任務\n（尚未開放）" : $"需要 Lv{Economy.AdvanceLevel}", fsS, false, null, false)) { }
+                y += cr.height + gap * 0.5f;
+            }
+            y += gap * 0.5f;
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), "📋 職業任務", fsS, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleLeft, true);
+            y += fs * 1.4f;
+            string[] quests = { "試煉之一：證明你的實力（尚未開放）", "試煉之二：工會長的委託（尚未開放）", "最終試煉：轉職儀式（尚未開放）" };
+            foreach (var q in quests)
+            {
+                UiKit.Text(new Rect(r.x + gap * 2, y, r.width - gap * 3, fs * 1.3f), "🔒 " + q, fsS, Color.gray);
+                y += fs * 1.35f;
+            }
+            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), "🏘 回城鎮", fs)) screen = Screen.Town;
+        }
+    }
+}

@@ -268,6 +268,10 @@ namespace SpellDuel
         public int reqLevel; public Stat reqStat; public int reqValue;
         public readonly List<KeyValuePair<Affix, float>> mods = new List<KeyValuePair<Affix, float>>();
         public long uid;
+        public int plus;                // 鐵匠鋪強化等級（+1～+10；每級所有屬性 +8%）
+        public string setId = "";       // 套裝（Economy.Sets）；空＝不是套裝
+        /// <summary>顯示用名稱：+強化等級</summary>
+        public string FullName => (plus > 0 ? $"+{plus} " : "") + name;
 
         public static readonly string[] SlotNames = { "武器", "頭部", "身體", "鞋子", "飾品" };
         public static readonly string[] RarityNames = { "普通", "優良", "稀有", "史詩", "傳說" };
@@ -299,7 +303,8 @@ namespace SpellDuel
             Affix.Atk => $"攻擊傷害 +{v * 100:0}%", _ => $"受到的傷害 -{v * 100:0.#}%",
         };
 
-        public float Sum(Affix a) { float s = 0f; foreach (var kv in mods) if (kv.Key == a) s += kv.Value; return s; }
+        public float Sum(Affix a) { float s = 0f; foreach (var kv in mods) if (kv.Key == a) s += kv.Value; return s * PlusMul; }
+        public float PlusMul => 1f + Economy.EnhancePerLevel * plus;
 
         // ---- 存檔：一行文字
         public string Serialize()
@@ -312,6 +317,7 @@ namespace SpellDuel
                 if (i > 0) sb.Append(';');
                 sb.Append((int)mods[i].Key).Append(':').Append(mods[i].Value.ToString("0.####", CultureInfo.InvariantCulture));
             }
+            sb.Append('|').Append(plus).Append('|').Append(setId ?? "");
             return sb.ToString();
         }
 
@@ -332,6 +338,7 @@ namespace SpellDuel
                         var kv = m.Split(':');
                         if (kv.Length == 2) it.mods.Add(new KeyValuePair<Affix, float>((Affix)int.Parse(kv[0]), float.Parse(kv[1], CultureInfo.InvariantCulture)));
                     }
+                if (p.Length >= 12) { int.TryParse(p[10], out it.plus); it.setId = p[11]; }   // 新版：強化等級、套裝
                 return it;
             }
             catch (Exception) { return null; }
@@ -375,6 +382,9 @@ namespace SpellDuel
             int rar = r < th[0] ? 0 : r < th[1] ? 1 : r < th[2] ? 2 : r < th[3] ? 3 : 4;
             return Mathf.Max(rar, minRarity);
         }
+
+        /// <summary>目前地圖的主題（0 熔岩、1 森林、2 海上；−1＝不限），決定掉哪一套套裝</summary>
+        public static int SetTheme = -1;
 
         /// <summary>產生一件裝備（ilvl＝物品等級；prefer＝優先掉落這個職業能用的）</summary>
         public static Item Make(System.Random rng, int ilvl, int rarity, string prefer)
@@ -423,6 +433,12 @@ namespace SpellDuel
             it.reqValue = rarity == 0 ? 0 : baseV + Mathf.RoundToInt(ilvl * (0.4f + 0.25f * rarity));
             var pre = Prefix[rarity];
             it.name = pre[rng.Next(pre.Length)] + baseName;
+            // 稀有以上有機會是套裝（主題地圖掉對應的套裝）
+            if (rarity >= 2 && rng.NextDouble() < Economy.SetChance)
+            {
+                var set = Economy.RollSet(rng, SetTheme);
+                it.setId = set.id; it.name = set.name + "・" + baseName;
+            }
             return it;
         }
 
@@ -546,7 +562,7 @@ namespace SpellDuel
             foreach (var n in SkillTrees.Of(cls)) if (n.kind == NodeKind.Passive && n.passive == p) v += n.per * Rank(n.id);
             return v;
         }
-        public float GearSum(Affix a) { float v = 0f; foreach (var it in equipped) if (it != null) v += it.Sum(a); return v; }
+        public float GearSum(Affix a) { float v = 0f; foreach (var it in equipped) if (it != null) v += it.Sum(a); return v + Economy.SetBonus(equipped, a); }
 
         /// <summary>技能樹強化後的技能（複製一份改數值；id 不變）</summary>
         public SkillDef ModdedSkill(string id)

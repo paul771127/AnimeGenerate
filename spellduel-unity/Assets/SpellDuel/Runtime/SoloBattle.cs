@@ -98,9 +98,90 @@ namespace SpellDuel
                 }
             }
             int dk = battle.kills - lastKillsSeen; lastKillsSeen = battle.kills;
-            for (int i = 0; i < dk; i++) TryDrop(false);
+            for (int i = 0; i < dk; i++) { TryDrop(false); pendingGold += Economy.MinionGold(battle.wave); }
             int db = battle.bossKills - lastBossKillsSeen; lastBossKillsSeen = battle.bossKills;
-            for (int i = 0; i < db; i++) TryDrop(true);   // 每個敵人最多掉一件
+            for (int i = 0; i < db; i++) { TryDrop(true); pendingGold += Economy.BossGold(battle.wave); }   // 每個敵人最多掉一件
+            // 無盡模式（不是故事關卡）：清完一波＝過關，這一波的戰利品入袋
+            if (storyStage == null && battle.wave > lootWave)
+            {
+                if (lootWave > 0) GrantLoot($"第 {lootWave} 波過關");
+                lootWave = battle.wave;
+            }
+        }
+
+        // ---------------------------------------------------------------- 戰利品：過關才拿得到（故事＝通關、無盡＝清完一波；倒下就沒了）
+        readonly List<Item> pendingItems = new List<Item>();
+        int pendingGold, lootWave;
+
+        void ResetLoot() { pendingItems.Clear(); pendingGold = 0; lootWave = 0; }
+
+        // ---------------------------------------------------------------- 消耗道具（戰鬥中點按鈕使用）
+        float potionReadyAt;
+
+        void UseConsumable(Economy.Consumable c)
+        {
+            if (battle == null || Me == null || !Me.Alive || Economy.Count(c.id) <= 0) return;
+            if (c.scroll)
+            {
+                // 回城捲軸：帶著這關已經拿到的戰利品回城鎮（關卡不算通關）
+                if (storyStage == null || NetMode) { Say("回城捲軸只能在故事關卡使用", 2f); return; }
+                scrollRequested = true;   // 畫面繪製中不能結束戰鬥：下一幀在 Update 處理
+                return;
+            }
+            UsePotion(c);
+        }
+
+        bool scrollRequested;
+        void DoReturnScroll()
+        {
+            scrollRequested = false;
+            if (battle == null || storyStage == null || Economy.Count("scroll") <= 0) return;
+            {
+                Economy.AddItem("scroll", -1);
+                int theme = storyStage.theme;
+                string loot = GrantLoot("使用回城捲軸", false);
+                EndBattle(); ShowSetup();
+                storyMapOpen = true; world.OpenTown(theme);
+                Say("📜 回到城鎮" + (loot.Length > 0 ? "：" + loot : ""), 4f);
+                Sfx.Play("heal", 0.8f);
+            }
+        }
+
+        void UsePotion(Economy.Consumable c)
+        {
+            if (Time.time < potionReadyAt) { Say($"藥水冷卻中（{potionReadyAt - Time.time:0.0} 秒）", 1f); return; }
+            Economy.AddItem(c.id, -1);
+            potionReadyAt = Time.time + Economy.PotionCooldown;
+            if (c.hpFrac > 0f) Me.hp = Mathf.Min(Me.maxHp, Me.hp + Me.maxHp * c.hpFrac);
+            if (c.mpFlat > 0f) Me.mp = Mathf.Min(Me.maxMp, Me.mp + c.mpFlat);
+            floaters.Add(new Floater { text = $"{c.icon} {c.name}", color = new Color(0.5f, 1f, 0.6f), born = Time.time, screen = true });
+            Sfx.Play("heal", 0.8f);
+            if (NetMode && coop) NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp) });
+        }
+
+        /// <summary>把暫存的戰利品放進背包、金幣入帳（背包滿了就自動換成金幣）</summary>
+        string GrantLoot(string why, bool say = true)
+        {
+            if (pendingItems.Count == 0 && pendingGold == 0) return "";
+            int got = 0, sold = 0, gold = pendingGold;
+            foreach (var it in pendingItems)
+            {
+                if (Progress.AddToBag(it)) got++;
+                else { gold += Economy.SellPrice(it); sold++; }
+            }
+            Economy.Gold += gold;
+            string msg = $"🎁 獲得裝備 {got} 件" + (sold > 0 ? $"（背包滿了，{sold} 件換成金幣）" : "") + $"、💰 {gold}";
+            if (say) { Say($"{why}！{msg}", 3f); Sfx.Play("charged", 0.7f, 1.2f); }
+            pendingItems.Clear(); pendingGold = 0;
+            return msg;
+        }
+
+        /// <summary>失敗：暫存的戰利品沒了</summary>
+        void LoseLoot()
+        {
+            if (pendingItems.Count == 0 && pendingGold == 0) return;
+            Say($"💨 沒有過關，這次的戰利品（裝備 {pendingItems.Count} 件、💰 {pendingGold}）沒拿到", 4f);
+            pendingItems.Clear(); pendingGold = 0;
         }
 
         /// <summary>掉裝備（每個敵人最多一件）：小怪約 6%（幸運越高越多），Boss 一定掉一件稀有以上</summary>
@@ -110,13 +191,11 @@ namespace SpellDuel
             if (!boss && dropRng.NextDouble() > 0.06 + 0.002 * luk) return;
             int rar = ItemGen.RollRarity(dropRng, luk * 0.3f, boss ? 2 : 0);
             int ilvl = Mathf.Max(1, prof.level + dropRng.Next(-1, 3) + battle.wave / 10);   // 物品等級跟著角色等級（越後面的波次略高）
+            ItemGen.SetTheme = battle.Theme;   // 主題地圖掉對應的套裝
             var it = ItemGen.Make(dropRng, ilvl, rar, myClass);
-            if (Progress.AddToBag(it))
-            {
-                floaters.Add(new Floater { text = $"🎁 [{Item.RarityNames[rar]}] {it.name}", color = Item.RarityColors[rar], born = Time.time, screen = true });
-                Sfx.Play(rar >= 3 ? "win" : "select", rar >= 3 ? 0.7f : 0.8f, 1.2f);
-            }
-            else Say("🎒 背包滿了（40 件），到角色畫面丟掉一些", 2.5f);
+            pendingItems.Add(it);   // 先暫存：過關才拿得到
+            floaters.Add(new Floater { text = $"🎁 [{Item.RarityNames[rar]}] {it.name}（過關後獲得）", color = Item.RarityColors[rar], born = Time.time, screen = true });
+            Sfx.Play(rar >= 3 ? "win" : "select", rar >= 3 ? 0.7f : 0.8f, 1.2f);
         }
 
         /// <summary>角色畫面（全螢幕）：能力值、技能樹、裝備；有改動就重新套用到戰鬥中的自己</summary>
@@ -175,63 +254,18 @@ namespace SpellDuel
             return null;
         }
 
-        /// <summary>故事地圖：章節分頁、每關的狀態（通關／可玩／鎖住）</summary>
+        /// <summary>故事模式：大地圖與城鎮（WorldUI）</summary>
+        readonly WorldUI world = new WorldUI();
+
         void DrawStoryMap()
         {
-            Story.Load();
-            float W = Screen.width, H = Screen.height;
-            var safe = Screen.safeArea;
-            float topY = H - safe.yMax, botY = H - safe.y, pad = W * 0.03f, gap = pad * 0.5f;
-            int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.82f), fsL = Mathf.RoundToInt(fs * 1.3f);
-            GUI.color = new Color(0f, 0f, 0f, 0.7f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
-            var r = new Rect(pad, topY + pad, W - pad * 2, botY - topY - pad * 2);
-            UiKit.Card(r, 0.95f, new Color(1f, 0.8f, 0.4f), 0.9f);
-            float x = r.x + gap, w = r.width - gap * 2, y = r.y + gap;
-            UiKit.Text(new Rect(x, y, w, fs * 1.8f), "📖 故事模式", fsL, Color.white, TextAnchor.MiddleLeft, true);
-            var pf = Progress.Char(myClass);
-            UiKit.Text(new Rect(x, y, w, fs * 1.8f), $"{Skills.Classes[myClass].name} Lv{pf.level}", fsS, Skills.Classes[myClass].color, TextAnchor.MiddleRight, true);
-            y += fs * 1.9f;
-            if (Story.chapters.Count == 0)
+            if (world.OnStartStage == null)
             {
-                UiKit.Text(new Rect(x, y, w, fs * 6f), "找不到劇本（Resources/story.txt）。" + (Story.errors.Count > 0 ? "\n" + string.Join("\n", Story.errors) : ""), fs, new Color(1f, 0.6f, 0.5f), TextAnchor.UpperLeft);
+                world.OnStartStage = st => { storyMapOpen = false; StartStory(st); };
+                world.OnBack = () => storyMapOpen = false;
+                world.OnCharacter = () => charOpen = true;
             }
-            else
-            {
-                storyChapter = Mathf.Clamp(storyChapter, 0, Story.chapters.Count - 1);
-                // 章節分頁
-                int nch = Story.chapters.Count;
-                float cw = (w - gap * (nch - 1)) / nch;
-                for (int i = 0; i < nch; i++)
-                    if (UiKit.Button(new Rect(x + i * (cw + gap), y, cw, fs * 1.8f), $"第 {Story.chapters[i].id} 章", fsS, storyChapter == i, new Color(1f, 0.8f, 0.4f))) storyChapter = i;
-                y += fs * 1.8f + gap;
-                var ch = Story.chapters[storyChapter];
-                UiKit.Text(new Rect(x, y, w, fs * 1.4f), ch.title, fs, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleLeft, true);
-                y += fs * 1.4f;
-                if (ch.desc.Length > 0) { UiKit.Text(new Rect(x, y, w, fs * 2.4f), ch.desc, fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft); y += fs * 2.4f; }
-                float bottom = r.yMax - gap - fs * 2.4f;
-                float sh = Mathf.Min(fs * 3.4f, (bottom - y) / Mathf.Max(1, ch.stages.Count) - gap * 0.4f);
-                foreach (var st in ch.stages)
-                {
-                    bool clear = Story.IsCleared(st.id), open = Story.IsUnlocked(st);
-                    var col = clear ? new Color(1f, 0.85f, 0.3f) : open ? new Color(0.5f, 0.85f, 1f) : new Color(0.45f, 0.45f, 0.5f);
-                    var sr = new Rect(x, y, w, sh);
-                    if (UiKit.Button(sr, "", fsS, clear, col, open)) StartStory(st);
-                    string themeName = st.theme == 1 ? "🌲 森林" : st.theme == 2 ? "🌊 海上" : "🌋 熔岩";
-                    string waves = st.HasBoss && st.fromWave >= 10 ? "Boss 戰" : $"{st.toWave - st.fromWave + 1} 波" + (st.HasBoss ? "＋Boss" : "");
-                    UiKit.Text(new Rect(sr.x + gap, sr.y + 2, sr.width * 0.72f, sh * 0.55f), $"{(clear ? "✔" : open ? "▶" : "🔒")} {st.id}　{st.title}", fs, open ? Color.white : Color.gray, TextAnchor.MiddleLeft, true);
-                    UiKit.Text(new Rect(sr.x + gap, sr.y + sh * 0.5f, sr.width - gap * 2, sh * 0.48f), (st.desc.Length > 0 ? st.desc.Split('\n')[0] + "　" : "") + $"{themeName}・{waves}・獎勵經驗 {st.xp}", fsS, new Color(0.8f, 0.84f, 0.95f), TextAnchor.MiddleLeft);
-                    y += sh + gap * 0.4f;
-                }
-            }
-            // 下方：角色養成（能力值／技能樹／裝備；故事模式和無盡模式共用）＋返回
-            {
-                var pf2 = Progress.Char(myClass);
-                int pts = pf2.statPoints + pf2.skillPoints;
-                float bw = (r.width - gap * 3) / 2f, by = r.yMax - gap - fs * 2.2f;
-                if (UiKit.Button(new Rect(r.x + gap, by, bw, fs * 2.2f), pts > 0 ? $"📜 角色（可加點 ×{pts}）" : "📜 角色／裝備", fs, pts > 0, new Color(0.75f, 0.45f, 1f)))
-                    charOpen = true;
-                if (UiKit.Button(new Rect(r.x + gap * 2 + bw, by, bw, fs * 2.2f), "返回", fs)) storyMapOpen = false;
-            }
+            world.Draw(Progress.Char(myClass));
         }
 
         /// <summary>對話框：畫面下方，點一下下一句；右上「跳過」</summary>
@@ -443,6 +477,7 @@ namespace SpellDuel
             EndBattle();
             bossMode = true; coop = coopMode; endless = endlessMode; dummyMode = false; enemyClassUsed = "boss";
             dummyDamage = 0f; dummyHits = 0; lastWaveSeen = 0; bossHideAt = -1f; bossAliveShown = false;
+            ResetLoot(); potionReadyAt = 0f;
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
             prof = null; charOpen = false;
             if (endlessMode)
@@ -887,21 +922,24 @@ namespace SpellDuel
                 {
                     bool first = !Story.IsCleared(st.id);
                     Story.MarkCleared(st.id);
+                    pendingGold += Economy.StageGold(st);
+                    string loot = GrantLoot($"{st.title} 通關", false);
                     if (prof != null)
                     {
                         int ups = prof.AddXp(st.xp);
                         Progress.SaveChar(prof);
-                        Say($"🏆 {st.title} 完成！獲得經驗 {st.xp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "" : "（再次通關）"), 99f);
+                        Say($"🏆 {st.title} 完成！獲得經驗 {st.xp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "" : "（再次通關）") + (loot.Length > 0 ? "\n" + loot : ""), 99f);
                     }
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
                     ShowDialogue(st.after, null);
                 }
-                else { Say($"💀 {st.title} 失敗…再挑戰一次吧", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
+                else { LoseLoot(); Say($"💀 {st.title} 失敗…再挑戰一次吧（戰利品沒拿到）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
             }
             if (endless)
             {
-                // 無盡模式：結算（波次、擊倒數、存活時間），記錄最佳
+                // 無盡模式：結算（波次、擊倒數、存活時間），記錄最佳；倒下時這一波還沒過關的戰利品沒了
+                if (pendingItems.Count > 0 || pendingGold > 0) { pendingItems.Clear(); pendingGold = 0; }
                 int score = battle.wave * 100 + battle.bossKills * 500 + battle.kills * 10;
                 int best = PlayerPrefs.GetInt("sd_endless_best", 0);
                 bool record = score > best;
@@ -1032,7 +1070,7 @@ namespace SpellDuel
             {
                 // 故事模式：在結算畫面按「再挑戰」＝重打這一關；否則打開故事地圖
                 if (phase == Phase.Over && storyStage != null) StartStageBattle();
-                else { SaveChoices(); storyMapOpen = true; }
+                else { SaveChoices(); storyMapOpen = true; world.screen = WorldUI.Screen.Map; }
                 return;
             }
             storyStage = null;
@@ -1126,6 +1164,7 @@ namespace SpellDuel
             float dt = Mathf.Min(Time.deltaTime, 0.1f);
             if (Time.time < hitStopUntil) dt = 0f;   // 命中停頓
             if (endless) TrackProgress();
+            if (scrollRequested) { DoReturnScroll(); return; }
             if (endless && charOpen && !coop) dt = 0f;   // 單人無盡：角色畫面開著時暫停
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
             shake = Mathf.Max(0f, shake - Time.deltaTime * Mathf.Max(40f, shake * 8f));
@@ -2505,6 +2544,20 @@ namespace SpellDuel
                 float bw2 = W * 0.5f;
                 if (UiKit.Button(new Rect((W - bw2) / 2f, xy + lh * 0.55f, bw2, lh * 1.1f), PendingUpgrades > 0 ? $"📜 角色（可加點 ×{PendingUpgrades}）" : "📜 角色／裝備", fsS, PendingUpgrades > 0, new Color(0.75f, 0.45f, 1f)))
                     charOpen = true;
+                // 消耗道具：藥水（冷卻 8 秒）、回城捲軸（故事關卡）；暫存戰利品
+                float iy = xy + lh * 1.75f, ibw = (W - pad * 2 - gap * 3) / 4f;
+                int ci = 0;
+                foreach (var c in Economy.Consumables)
+                {
+                    if (c.scroll && storyStage == null) continue;
+                    int n = Economy.Count(c.id);
+                    bool cdOk = c.scroll || Time.time >= potionReadyAt;
+                    if (UiKit.Button(new Rect(pad + ci * (ibw + gap), iy, ibw, lh * 1f), $"{c.icon}×{n}" + (!cdOk && n > 0 ? $" {potionReadyAt - Time.time:0}s" : ""), fsS, false, new Color(0.5f, 0.85f, 1f), n > 0 && cdOk))
+                        UseConsumable(c);
+                    ci++;
+                }
+                if (pendingItems.Count > 0 || pendingGold > 0)
+                    UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.7f), $"🎁 待領取：裝備 {pendingItems.Count} 件・💰 {pendingGold}（{(storyStage != null ? "通關" : "清完這一波")}後才拿得到）", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleCenter);
             }
 
             // 蓄力／怎麼施法的提示：放在下方面板正上方（不在畫面中央，敵人靠近也不會被敵人和鎖定框擋住），底色較不透明、最後才畫
@@ -2532,7 +2585,7 @@ namespace SpellDuel
                 float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
                 if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), won ? (next != null && Story.IsUnlocked(next) ? "▶ 下一關" : "再打一次") : "再挑戰", fs, true, new Color(0.4f, 0.8f, 1f)))
                 { if (won && next != null && Story.IsUnlocked(next)) { var n2 = next; ShowSetup(); StartStory(n2); } else StartStageBattle(); }
-                if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "故事地圖", fs)) { ShowSetup(); storyMapOpen = true; }
+                if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "🗺 大地圖", fs)) { ShowSetup(); storyMapOpen = true; world.screen = WorldUI.Screen.Map; }
             }
             else if (phase == Phase.Over)
             {
