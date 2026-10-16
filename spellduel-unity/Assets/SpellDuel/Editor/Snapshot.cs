@@ -74,17 +74,39 @@ namespace SpellDuel.EditorTools
                 if (mf.sharedMesh != null) triangles += mf.sharedMesh.triangles.Length / 3;
             Debug.Log($"[SpellDuel] {id}: {triangles} triangles");
             if (triangles > 10000) throw new System.InvalidOperationException(id + " exceeds the 10000 triangle budget");
-            Shot(cam, rig.gameObject, id + "_front", new Vector3(0f, 1.2f, 4.9f), new Vector3(0f, 1.08f, 0f));
-            Shot(cam, rig.gameObject, id + "_side", new Vector3(3.3f, 1.3f, 3.6f), new Vector3(0f, 1.08f, 0f));
+            FullShot(cam, rig, id + "_front", new Vector3(0f, 0.025f, 1f));
+            FullShot(cam, rig, id + "_side", new Vector3(0.68f, 0.04f, 0.73f));
             Shot(cam, rig.gameObject, id + "_face", new Vector3(0.24f, 1.58f, 0.80f), new Vector3(0f, 1.56f, 0f), 640, 640);
             // Edit mode has no Update; invoke only the rig's existing visual animation step.
             var animate = typeof(CharacterRig).GetMethod("Animate", BindingFlags.Instance | BindingFlags.NonPublic);
             rig.Charge = 0.9f;
             for (int i = 0; i < 15; i++) animate.Invoke(rig, new object[] { 1f / 30f });
             rig.PlayCast(); animate.Invoke(rig, new object[] { 0.10f });
-            Shot(cam, rig.gameObject, id + "_cast", new Vector3(2.6f, 1.35f, 4.15f), new Vector3(0f, 1.08f, 0f));
+            FullShot(cam, rig, id + "_cast", new Vector3(0.53f, 0.055f, 0.85f));
             rig.Charge = 0f; rig.PlayHit(); animate.Invoke(rig, new object[] { 0.015f });
             Shot(cam, rig.gameObject, id + "_hurt", new Vector3(0.23f, 1.58f, 0.80f), new Vector3(0f, 1.56f, 0f), 640, 640);
+        }
+
+        static void FullShot(Camera cam, CharacterRig rig, string name, Vector3 direction)
+        {
+            var bounds = new Bounds(rig.transform.position + Vector3.up, Vector3.one * 0.02f);
+            foreach (var r in rig.GetComponentsInChildren<Renderer>()) bounds.Encapsulate(r.bounds);
+            // Project all eight bounds corners onto the requested camera axes. Account for
+            // depth as well as aspect ratio, so tall staves and raised casting weapons fit.
+            var forward = -direction.normalized;
+            var right = Vector3.Cross(Vector3.up, forward).normalized;
+            var up = Vector3.Cross(forward, right).normalized;
+            float tan = Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad), distance = 0f;
+            for (int i = 0; i < 8; i++)
+            {
+                var corner = new Vector3((i & 1) == 0 ? -bounds.extents.x : bounds.extents.x,
+                    (i & 2) == 0 ? -bounds.extents.y : bounds.extents.y,
+                    (i & 4) == 0 ? -bounds.extents.z : bounds.extents.z);
+                float depth = Vector3.Dot(corner, forward);
+                distance = Mathf.Max(distance, (Mathf.Abs(Vector3.Dot(corner, up)) + 0.08f) / tan - depth);
+                distance = Mathf.Max(distance, (Mathf.Abs(Vector3.Dot(corner, right)) + 0.08f) / (tan * W / H) - depth);
+            }
+            Shot(cam, rig.gameObject, name, bounds.center + direction.normalized * distance, bounds.center);
         }
 
         static void ContactSheet(List<string> images, string name, int columns)

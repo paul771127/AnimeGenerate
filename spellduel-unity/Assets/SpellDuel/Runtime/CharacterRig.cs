@@ -475,6 +475,8 @@ namespace SpellDuel
         void BuildAxe()
         {
             var axe=Pivot("WarAxe",handR,new Vector3(0f,-0.04f,0f));
+            // Cant the long haft out from the shoulder, leaving the face visible in idle/cast poses.
+            axe.localRotation=Quaternion.Euler(0f,30f,0f);
             Part(PrimitiveType.Cylinder,axe,new Vector3(0f,0f,0.28f),new Vector3(0.045f,0.50f,0.045f),Mat(Wood),new Vector3(90f,0f,0f));
             for(int s=-1;s<=1;s+=2)
                 Part(PrimitiveType.Cube,axe,new Vector3(s*0.17f,0f,0.66f),new Vector3(0.29f,0.065f,0.26f),Mat(Metal),new Vector3(0f,s*18f,0f));
