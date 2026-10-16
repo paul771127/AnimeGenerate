@@ -99,6 +99,7 @@ namespace SpellDuel
         readonly CharacterPanel charPanel = new CharacterPanel();
         bool charOpen;                            // 角色畫面開著（單人無盡：戰鬥暫停）
         int lastXpSeen, lastKillsSeen, lastBossKillsSeen;
+        bool levelLockSaid;   // 這一場已經提示過「要轉職才能升級」
         readonly System.Random dropRng = new System.Random();
         int PendingUpgrades => endless && prof != null ? prof.statPoints + prof.UsableSkillPoints : 0;
         /// <summary>選技能畫面：這次是不是無盡模式（只有無盡模式用角色養成）</summary>
@@ -153,6 +154,7 @@ namespace SpellDuel
             {
                 lastXpSeen = battle.xp;
                 int ups = prof.AddXp(dx);
+                if (prof.LevelLocked && !levelLockSaid) { levelLockSaid = true; Say($"已達 {Advanced.Level} 級：到職業工會完成轉職試煉並轉職，才能繼續升級", 3.5f); }
                 if (ups > 0)
                 {
                     Progress.SaveChar(prof);
@@ -571,7 +573,7 @@ namespace SpellDuel
                 // 無盡模式：用角色養成的能力值、技能樹、裝備
                 prof = Progress.Char(myClass);
                 prof.ApplyTo(me, Skills.Classes[myClass], myLoadout);
-                lastXpSeen = 0; lastKillsSeen = 0; lastBossKillsSeen = 0;
+                lastXpSeen = 0; lastKillsSeen = 0; lastBossKillsSeen = 0; levelLockSaid = false;
             }
             else Advanced.ApplyStats(me, Progress.Char(myClass).Adv);
             var bc = Skills.Classes["boss"];
@@ -2825,7 +2827,7 @@ namespace SpellDuel
                 int lv = pf.level;
                 int cur = CharacterProfile.XpForLevel(lv), next = CharacterProfile.XpForLevel(lv + 1);
                 float xy = top + lh * 2.9f + gap + (coop && battle.allies.Count > 0 ? battle.allies.Count * ((battle.allies.Count > 1 ? lh * 0.7f : lh * 0.9f) + gap * 0.3f) + gap * 0.2f : 0f);
-                UiKit.Bar(new Rect(pad, xy, W - pad * 2, lh * 0.45f), (pf.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f), $"Lv {lv}　{pf.xp - cur}/{next - cur}", fsS);
+                UiKit.Bar(new Rect(pad, xy, W - pad * 2, lh * 0.45f), (pf.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f), pf.LevelLocked ? $"Lv {lv}　要轉職才能繼續升級" : $"Lv {lv}　{pf.xp - cur}/{next - cur}", fsS);
                 float bw2 = W * 0.5f;
                 if (UiKit.Button(new Rect((W - bw2) / 2f, xy + lh * 0.55f, bw2, lh * 1.1f), PendingUpgrades > 0 ? $"📜 角色（可加點 ×{PendingUpgrades}）" : "📜 角色／裝備", fsS, PendingUpgrades > 0, new Color(0.75f, 0.45f, 1f)))
                     charOpen = true;

@@ -619,6 +619,8 @@ namespace SpellDuel
         /// <summary>節點屬於哪一棵樹（基本職業 id 或進階職業 id）</summary>
         public string TreeOf(TreeNode n) => adv != null && SkillTrees.Of(adv).Contains(n) ? adv : cls;
         public bool CanAdvance => adv == null && level >= Advanced.Level && trialPassed;
+        /// <summary>20 級還沒轉職：不能再升級（經驗停在滿格），要先完成轉職試煉並轉職</summary>
+        public bool LevelLocked => adv == null && level >= Advanced.Level;
 
         /// <summary>轉職（選了不能換）：第一個進階技能直接學會</summary>
         public bool Advance(string advId)
@@ -666,7 +668,8 @@ namespace SpellDuel
             if (amount <= 0 || level >= MaxLevel) return 0;
             xp += amount;
             int ups = 0;
-            while (level < MaxLevel && xp >= XpForLevel(level + 1)) { level++; statPoints += StatPerLevel; skillPoints += SkillPerLevel; ups++; }
+            while (level < MaxLevel && !LevelLocked && xp >= XpForLevel(level + 1)) { level++; statPoints += StatPerLevel; skillPoints += SkillPerLevel; ups++; }
+            if (LevelLocked) xp = Mathf.Min(xp, XpForLevel(level + 1));   // 經驗條停在滿格；轉職後下一次拿到經驗就升級
             return ups;
         }
 

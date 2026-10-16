@@ -33,7 +33,7 @@ namespace SpellDuel
             UiKit.Text(new Rect(x, y, w, lh), $"能力點 {p.statPoints}　技能點 {p.skillPoints}　職業樹 {p.BaseSpent}/{p.BaseCapNow}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
             y += lh;
             UiKit.Bar(new Rect(x, y, w, lh * 0.5f), p.level >= CharacterProfile.MaxLevel ? 1f : (p.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f),
-                p.level >= CharacterProfile.MaxLevel ? "最高等級" : $"經驗 {p.xp - cur} / {next - cur}", fsS);
+                p.level >= CharacterProfile.MaxLevel ? "最高等級" : p.LevelLocked ? $"經驗已滿：到職業工會轉職才能升到 {p.level + 1} 級" : $"經驗 {p.xp - cur} / {next - cur}", fsS);
             y += lh * 0.5f + gap;
             // ---- 分頁
             string[] tabs = adv != null ? new[] { "📊 能力值", "🌳 技能樹", "🛡 裝備", "✨ 進階" } : new[] { "📊 能力值", "🌳 技能樹", "🛡 裝備" };
