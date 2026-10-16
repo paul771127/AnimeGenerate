@@ -115,7 +115,7 @@ namespace SpellDuel
             // 獵人：所有箭 3 m/s
             ["na_arrow"] = 3f, ["quickshot"] = 3f, ["snipe"] = 3f, ["triple"] = 3f, ["pierce"] = 3f, ["rollarrow"] = 3f, ["arrowrain"] = 3f, ["pet_falcon"] = 3f,
             // 法師：奧術飛彈、火球 1.4；風刃 2.2；冰槍 1.8；雷擊 2.2；隕石落下 2.0
-            ["na_mage"] = 1.4f, ["fire"] = 1.4f, ["wind"] = 2.2f, ["ice"] = 1.8f, ["thunder"] = 2.2f, ["meteor"] = 2.0f,
+            ["na_mage"] = 1.4f, ["fire"] = 1.4f, ["echo_fire"] = 2f, ["echo_ice"] = 2f, ["wind"] = 2.2f, ["ice"] = 1.8f, ["thunder"] = 2.2f, ["meteor"] = 2.0f,
             ["tjudge"] = 2.2f, ["frostfield"] = 1.4f, ["pet_fire"] = 1.4f,
             // 牧師：約 1.4
             ["na_holy"] = 1.4f, ["holy"] = 1.4f, ["judgement"] = 1.4f, ["chastise"] = 1.4f, ["heavenpunish"] = 1.4f, ["holylance"] = 1.6f,
@@ -285,6 +285,10 @@ namespace SpellDuel
             P(new SkillDef { id = "pet_golem", cls = "pet", name = "石像重拳", type = SkillType.Projectile, color = C("#a8a29e"), damage = 9, speed = 8f, radius = 0.2f, rangeMax = 2f, desc = "石像的重拳" });
             P(new SkillDef { id = "pet_blast", cls = "pet", name = "召喚物爆炸", type = SkillType.Projectile, color = C("#f97316"), damage = 30, speed = 8f, radius = 0.3f, rangeMax = 2f, desc = "召喚物爆炸" });
             P(new SkillDef { id = "fogtick", cls = "pet", name = "毒霧侵蝕", type = SkillType.Projectile, color = C("#86efac"), damage = 6, speed = 1f, radius = 0f, rangeMax = 2f, desc = "毒霧" });
+            // 技能樹流派的附加攻擊（不在技能欄；只用來判定命中與同步畫面）
+            P(new SkillDef { id = "echo_fire", cls = "mage", name = "回響火球", type = SkillType.Projectile, color = C("#fb923c"), damage = 12, speed = 2f, radius = 0.1f, rangeMax = 10f, desc = "奧術回響：普攻追加的小火球" });
+            P(new SkillDef { id = "echo_ice", cls = "mage", name = "回響冰錐", type = SkillType.Projectile, color = C("#7dd3fc"), damage = 9, speed = 2f, radius = 0.08f, rangeMax = 10f, effect = EffectKind.Snare, effectDur = 0.8f, desc = "奧術回響：普攻追加的小冰錐（冰凍 0.8 秒）" });
+            P(new SkillDef { id = "venom_burst", cls = "assassin", name = "毒爆", type = SkillType.Projectile, color = C("#4ade80"), damage = 20, speed = 1f, radius = 0f, rangeMax = 1f, desc = "劇毒連刺：毒疊滿爆開" });
             // 增幅咒（大魔導士）：不是技能，只用來讓語音辨識聽咒語
             P(new SkillDef { id = "amp", cls = "none", name = "", type = SkillType.Self, chant = Advanced.AmpChant, desc = "大魔導士的增幅咒" });
 

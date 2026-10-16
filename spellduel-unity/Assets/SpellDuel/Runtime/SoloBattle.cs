@@ -1432,7 +1432,7 @@ namespace SpellDuel
             if (Me.charging != sealFor) { sealFor = Me.charging; sealStep = 0; }
             if (seal != null) { Hand.ReleaseStyle = HandGesture.Style.Number; Hand.RequiredNumber = seal[Mathf.Min(sealStep, seal.Length - 1)]; }
             // 普通攻擊：沒在詠唱時，手勢舉著就自動攻擊（法師比 1、獵人比 5、牧師比 2、刺客舉掌、劍士手掌劃一下）
-            var basic = Skills.BasicOf(myClass);
+            var basic = Me.basic ?? Skills.BasicOf(myClass);   // 技能樹強化後的普攻
             Hand.BasicSwipe = basic != null && basic.id == "na_sword" && Me.charging == null;
             bool swiped = Hand.ConsumeSwipe();
             if (basic != null && Me.charging == null && !frozen && phase == Phase.Fighting && Hand.HandVisible)
@@ -2801,7 +2801,7 @@ namespace SpellDuel
             UiKit.Bar(new Rect(pad, hpY, W - pad * 2, lh * 0.68f), me.hp / me.maxHp, new Color(1f, 0.3f, 0.35f), $"HP {Mathf.CeilToInt(me.hp)} / {Mathf.CeilToInt(me.maxHp)}", fsS);
             UiKit.Bar(new Rect(pad, mpY, W - pad * 2, lh * 0.6f), me.mp / me.maxMp, new Color(0.3f, 0.6f, 1f), $"MP {Mathf.FloorToInt(me.mp)} / {Mathf.FloorToInt(me.maxMp)}", fsS);
             // 普攻小卡（右邊）：手勢＋冷卻；點了看說明。狀態文字在左邊
-            var nb = Skills.BasicOf(myClass);
+            var nb = me.basic ?? Skills.BasicOf(myClass);
             float nbw = nb != null ? (W - pad * 2) * 0.36f : 0f;
             UiKit.Text(new Rect(pad, statY, W - pad * 2 - nbw - (nb != null ? gap : 0f), lh * 0.75f), StatusText(me, now), fsS, new Color(0.75f, 0.9f, 1f));
             if (nb != null)
