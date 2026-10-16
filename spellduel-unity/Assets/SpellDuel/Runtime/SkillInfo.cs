@@ -8,7 +8,7 @@ namespace SpellDuel
     /// </summary>
     public static class SkillInfo
     {
-        public static string TypeName(SkillDef s) => s.type switch
+        public static string TypeName(SkillDef s) => s.cls == "basic" ? (Skills.IsMeleeBasic(s) ? "普通攻擊・近身" : "普通攻擊・遠程") : s.type switch
         {
             SkillType.Trap => "陷阱",
             SkillType.Self => s.self switch
@@ -22,8 +22,37 @@ namespace SpellDuel
         };
 
         /// <summary>一行摘要：MP・蓄力・冷卻</summary>
-        public static string CostLine(SkillDef s) =>
+        public static string CostLine(SkillDef s) => s.cls == "basic" ? $"不花 MP　不用唸　每 {s.cooldown:0.#} 秒一次" :
             $"MP {s.cost}　{(s.charge > 0f ? $"蓄力 {s.charge:0.#} 秒" : "免蓄力")}　冷卻 {s.cooldown:0.#} 秒";
+
+        /// <summary>普通攻擊的手勢</summary>
+        public static string BasicGesture(SkillDef s) => s?.id switch
+        {
+            "na_mage" => "比 1（只伸食指）", "na_arrow" => "比 5（張開手掌）", "na_holy" => "比 2（食指＋中指）",
+            "na_dagger" => "舉起張開的手掌", "na_sword" => "手掌在鏡頭前橫劃一下", _ => "",
+        };
+
+        static void BasicDetail(SkillDef s, StringBuilder sb)
+        {
+            void Line(string t) => sb.Append("・").Append(t).Append('\n');
+            bool melee = Skills.IsMeleeBasic(s);
+            sb.Append("【怎麼用】\n");
+            Line("普通攻擊：不用唸技能名稱、不花 MP，也不佔技能欄");
+            Line(s.id == "na_sword" ? $"{BasicGesture(s)}就出手（每 {s.cooldown:0.#} 秒最多一次）" : $"{(s.id == "na_dagger" ? "" : "手")}{BasicGesture(s)}並維持，每 {s.cooldown:0.#} 秒自動攻擊一次（放下手勢就停）");
+            Line("正在詠唱技能時不會普攻（唸完、放完招才會繼續）");
+            if (!melee) Line("朝畫面中央的準星方向飛出");
+            sb.Append("\n【數值】\n");
+            Line($"傷害 {s.damage}（會吃攻擊力加成{(melee ? "" : "，也會爆擊")}）");
+            Line($"冷卻 {s.cooldown:0.#} 秒");
+            if (melee) Line($"範圍：面向的前方半球，半徑 {s.rangeMax:0.#}m（背後打不到）");
+            else
+            {
+                Line($"射程 {s.rangeMax:0.#}m；飛行速度 {s.speed:0.#} m/s");
+                Line("飛超過射程會淡出消失");
+            }
+            sb.Append("\n【對手怎麼躲】\n");
+            Line(melee ? "退到 1m 外，或繞到它背後" : "看準飛來的方向移開身體（側跨沒有無敵時間）");
+        }
 
         /// <summary>完整說明（多行）</summary>
         public static string Detail(SkillDef s)
@@ -32,6 +61,7 @@ namespace SpellDuel
             void Line(string t) => sb.Append("・").Append(t).Append('\n');
 
             sb.Append(s.desc).Append("\n\n");
+            if (s.cls == "basic") { BasicDetail(s, sb); return sb.ToString().TrimEnd('\n'); }
             var adv = Advanced.Get(s.adv);
             if (adv != null) sb.Append($"✨ {adv.name}的進階技能（技能欄的第 4 格）\n\n");
 
