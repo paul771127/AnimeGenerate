@@ -99,7 +99,8 @@ namespace SpellDuel
         readonly CharacterPanel charPanel = new CharacterPanel();
         bool charOpen;                            // 角色畫面開著（單人無盡：戰鬥暫停）
         int lastXpSeen, lastKillsSeen, lastBossKillsSeen;
-        bool levelLockSaid;   // 這一場已經提示過「要轉職才能升級」
+        bool levelLockSaid;
+        string lastHitCls;   // 這次命中是哪個職業的特效／音效   // 這一場已經提示過「要轉職才能升級」
         readonly System.Random dropRng = new System.Random();
         int PendingUpgrades => endless && prof != null ? prof.statPoints + prof.UsableSkillPoints : 0;
         /// <summary>選技能畫面：這次是不是無盡模式（只有無盡模式用角色養成）</summary>
@@ -160,11 +161,12 @@ namespace SpellDuel
                     Progress.SaveChar(prof);
                     Say($"⬆ 等級 {prof.level}！獲得 {ups * CharacterProfile.StatPerLevel} 能力點、{ups * CharacterProfile.SkillPerLevel} 技能點（點「角色」分配）", 3f);
                     floaters.Add(new Floater { text = $"⬆ Lv {prof.level}", color = new Color(0.8f, 0.55f, 1f), born = Time.time, screen = true });
-                    Sfx.Play("win", 0.6f); Haptics.Play(Haptics.Kind.Success);
+                    Sfx.Play("levelup", 0.8f); Haptics.Play(Haptics.Kind.Success);
                 }
             }
             int dk = battle.kills - lastKillsSeen; lastKillsSeen = battle.kills;
             for (int i = 0; i < dk; i++) { TryDrop(false); pendingGold += Economy.MinionGold(battle.wave); }
+            if (dk > 0) { Sfx.Play("poof", 0.6f); Sfx.Play("coin", 0.35f, 1.1f); }   // 小怪倒下＋掉金幣
             int db = battle.bossKills - lastBossKillsSeen; lastBossKillsSeen = battle.bossKills;
             for (int i = 0; i < db; i++) { TryDrop(true); pendingGold += Economy.BossGold(battle.wave); }   // 每個敵人最多掉一件
             // 無盡模式（不是故事關卡）：清完一波＝過關，這一波的戰利品入袋
@@ -222,7 +224,7 @@ namespace SpellDuel
             if (c.hpFrac > 0f) Me.hp = Mathf.Min(Me.maxHp, Me.hp + Me.maxHp * c.hpFrac);
             if (c.mpFlat > 0f) Me.mp = Mathf.Min(Me.maxMp, Me.mp + c.mpFlat);
             floaters.Add(new Floater { text = $"{c.icon} {c.name}", color = new Color(0.5f, 1f, 0.6f), born = Time.time, screen = true });
-            Sfx.Play("heal", 0.8f);
+            Sfx.Play("potion", 0.8f); Sfx.Play("heal", 0.5f);
             if (NetMode && coop) NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp) });
         }
 
@@ -238,7 +240,7 @@ namespace SpellDuel
             }
             Economy.Gold += gold;
             string msg = $"🎁 獲得裝備 {got} 件" + (sold > 0 ? $"（背包滿了，{sold} 件換成金幣）" : "") + $"、💰 {gold}";
-            if (say) { Say($"{why}！{msg}", 3f); Sfx.Play("charged", 0.7f, 1.2f); }
+            if (say) { Say($"{why}！{msg}", 3f); Sfx.Play("coin", 0.8f); Sfx.Play("charged", 0.5f, 1.2f); }
             pendingItems.Clear(); pendingGold = 0;
             return msg;
         }
@@ -377,7 +379,7 @@ namespace SpellDuel
             UiKit.Text(new Rect(r.x, r.yMax - fs * 1.6f, r.width - gap * 1.5f, fs * 1.4f), $"{dlgIdx + 1}/{dlg.Count}　▶ 點一下繼續", Mathf.RoundToInt(fs * 0.75f), new Color(0.8f, 0.8f, 0.85f), TextAnchor.MiddleRight);
             if (UiKit.Button(new Rect(W - pad - W * 0.22f, topY + pad, W * 0.22f, fs * 1.8f), "跳過 ⏭", Mathf.RoundToInt(fs * 0.8f))) { EndDialogue(); return; }
             var e = Event.current;
-            if (e.type == EventType.MouseUp) { dlgIdx++; Sfx.Play("select", 0.5f); e.Use(); if (dlgIdx >= dlg.Count) EndDialogue(); }
+            if (e.type == EventType.MouseUp) { dlgIdx++; Sfx.Play("talk", 0.6f); e.Use(); if (dlgIdx >= dlg.Count) EndDialogue(); }
         }
 
         int NetModeCode => coop ? (netEndless ? 2 : 1) : 0;
@@ -1648,6 +1650,7 @@ namespace SpellDuel
                         // 命中特效：依打中的技能挑職業（普攻、召喚物也算；不認得就用自己的職業），傷害越高越大
                         var hs = battle.HitSkill;
                         string fxCls = SpellFx.HitClassOf(hs) ?? (kind == "trap" ? "archer" : myClass);
+                        lastHitCls = fxCls;
                         float hd = DmgOf(text); if (hd <= 0f && hs != null) hd = hs.damage;
                         SpellFx.Hit(fxCls, hs != null ? hs.color : c, WorldFrame.FromWorld(at), 0.8f + hd / 60f, battle.HitCrit);
                     }
@@ -1657,7 +1660,9 @@ namespace SpellDuel
                         case "hit": case "trap":
                         {
                             float d = DmgOf(text);
-                            Sfx.Play(kind == "trap" ? "trap" : "hit", Mathf.Clamp(0.55f + d / 60f, 0.55f, 1f), d >= 40f ? 0.8f : 1f);
+                            float hv = Mathf.Clamp(0.55f + d / 60f, 0.55f, 1f);
+                            Sfx.Play(kind == "trap" ? "trap" : "hit", hv * 0.6f, d >= 40f ? 0.8f : 1f);
+                            if (kind == "hit") Sfx.Play("hit_" + (lastHitCls ?? myClass), hv);   // 各職業的命中聲
                             if (kind == "trap") Sfx.Play("hit", 0.7f);
                             Haptics.Play(d >= 30f ? Haptics.Kind.Medium : Haptics.Kind.Light);
                             bool heavy = d >= 30f || battle.HitCrit;   // 重擊、爆擊：畫面晃更大、停頓更久
@@ -1729,6 +1734,11 @@ namespace SpellDuel
                     if (onMe) hitFlash = Mathf.Max(hitFlash, 0.4f);   // 中毒扣血：淡一點的紅
                     break;
                 case "miss":
+                    if (Vector3.Distance(at, Me.Chest) < 6f) Sfx.Play("fizz", 0.35f);   // 法術飛超過射程淡出
+                    break;
+                case "crit":
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 0.3f, text = "💥 " + text, color = new Color(1f, 0.85f, 0.3f), born = Time.time });
+                    Sfx.Play("crit", 0.9f);
                     break;
                 case "evade":
                 {
@@ -1827,7 +1837,7 @@ namespace SpellDuel
                     break;
                 case "wavestart":
                     Say("♾ " + text, 2.5f);
-                    Sfx.Play("select", 0.9f, 0.8f);
+                    Sfx.Play("horn", 0.8f, text != null && text.Contains("Boss") ? 0.75f : 1f);
                     break;
                 case "wavecleared":
                     Say("✨ " + text + " 回復 10% 血量", 2.5f);
@@ -1858,7 +1868,7 @@ namespace SpellDuel
                     break;
                 case "petspawn":
                     AdvancedFx.Summon(text, WorldFrame.FromWorld(at), c);
-                    Sfx.Play("cast_mage", 0.6f, text == "golem" ? 0.6f : 1.3f);
+                    Sfx.Play("summon", 0.7f, text == "golem" ? 0.6f : 1.3f);
                     break;
                 case "petgone":
                     AdvancedFx.Dismiss(text, WorldFrame.FromWorld(at));

@@ -208,7 +208,7 @@ namespace SpellDuel
                 if (UiKit.Button(nr, "", fsS, npcTalk == i, t.color))
                 {
                     if (npcTalk == i) npcLine = (npcLine + 1) % t.npcs[i].lines.Length; else { npcTalk = i; npcLine = 0; }
-                    Sfx.Play("select", 0.5f);
+                    Sfx.Play("talk", 0.6f);
                 }
                 float ips = nh - gap;
                 GUI.DrawTexture(new Rect(nr.x + gap * 0.4f, nr.y + gap * 0.5f, ips, ips), Portraits.Get(t.npcs[i].name, "npc"), ScaleMode.ScaleToFit, true);
@@ -301,7 +301,7 @@ namespace SpellDuel
                 if (UiKit.Button(new Rect(dr.x + dr.width * 0.2f, dr.yMax - fs * 1.9f, dr.width * 0.6f, fs * 1.7f), can ? $"⚒ 強化（💰 {Economy.EnhanceCost(selItem)}・成功率 {Economy.EnhanceRate(selItem) * 100:0}%）" : "已經是 +10", fsS, true, new Color(1f, 0.6f, 0.3f), can))
                 {
                     bool ok = Economy.Enhance(selItem, rng, out var msg);
-                    Toast(msg); Sfx.Play(ok ? "charged" : "block", 0.8f);
+                    Toast(msg); Sfx.Play("anvil", 0.8f); if (ok) Sfx.Play("charged", 0.6f, 1.2f); else Sfx.Play("fail", 0.7f);
                     Progress.SaveBag(); Progress.SaveChar(prof);
                 }
             }
@@ -326,7 +326,7 @@ namespace SpellDuel
                     UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.62f, cr.height), $"{c.icon} {c.name}（持有 {Economy.Count(c.id)}）\n{c.desc}", fsS, Color.white, TextAnchor.MiddleLeft, true);
                     if (UiKit.Button(new Rect(cr.xMax - cr.width * 0.33f, cr.y + gap * 0.3f, cr.width * 0.32f - gap * 0.3f, cr.height - gap * 0.6f), $"💰 {c.price}", fsS, false, new Color(1f, 0.85f, 0.3f), Economy.Gold >= c.price))
                     {
-                        if (Economy.Buy(c, out var why)) { Toast($"買了 {c.name}"); Sfx.Play("select", 0.7f, 1.3f); } else Toast(why);
+                        if (Economy.Buy(c, out var why)) { Toast($"買了 {c.name}"); Sfx.Play("coin", 0.8f); } else Toast(why);
                     }
                     y += cr.height + gap * 0.4f;
                 }
@@ -343,7 +343,7 @@ namespace SpellDuel
                     {
                         Economy.Gold += Economy.SellPrice(selItem);
                         Progress.Bag.Remove(selItem); Progress.SaveBag();
-                        Toast($"賣掉了 {selItem.FullName}"); Sfx.Play("select", 0.7f, 1.3f);
+                        Toast($"賣掉了 {selItem.FullName}"); Sfx.Play("coin", 0.8f, 0.9f);
                         selItem = null;
                     }
                 }

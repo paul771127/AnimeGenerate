@@ -90,6 +90,39 @@ namespace SpellDuel
             Add("roar", 1.2f, (t, d) => Env(t, 0.15f, d) * Mathf.Clamp(0.8f * Saw(t, 55f + 10f * Mathf.Sin(t * 30f)) * (0.6f + 0.4f * LowNoise(0.3f)), -0.8f, 0.8f));
             // 勝利／失敗
             Add("win", 1.1f, (t, d) => { float[] n = { 523f, 659f, 784f, 1047f }; int k = Mathf.Min(3, (int)(t / 0.16f)); return Env(t - k * 0.16f, 0.01f, k == 3 ? 0.6f : 0.2f) * 0.4f * (Sin(t, n[k]) + 0.3f * Sin(t, n[k] * 2f)); });
+            // ---- 各職業的命中聲（和命中特效一樣，依打中的技能決定）
+            // 劍士：金屬鏗鏘＋沉重的打擊
+            Add("hit_swordsman", 0.35f, (t, d) => Mathf.Exp(-t * 14f) * (0.35f * Sin(t, 1180f) + 0.25f * Sin(t, 1730f) + 0.15f * Sin(t, 2650f)) + Env(t, 0.002f, 0.2f) * (0.8f * Sin(t, 120f - 200f * t) + 0.5f * Noise() * Mathf.Exp(-t * 40f)));
+            // 獵人：箭扎進去的「咚」（短促的木頭聲＋喀）
+            Add("hit_archer", 0.18f, (t, d) => Env(t, 0.001f, d) * (0.9f * Sin(t, 260f - 500f * t) + 0.4f * Sin(t, 520f) * Mathf.Exp(-t * 60f)) + (t < 0.012f ? 0.7f * Noise() * (1f - t / 0.012f) : 0f));
+            // 法師：魔力爆開（往下掃的閃光音＋劈啪）
+            Add("hit_mage", 0.4f, (t, d) => Env(t, 0.003f, d) * (0.45f * Sin(t, 1800f - 3000f * t) + 0.3f * Sin(t, 900f - 1200f * t)) + Mathf.Exp(-t * 12f) * 0.35f * Noise() * (((int)(t * 90f)) % 3 == 0 ? 1f : 0.2f));
+            // 刺客：銳利的切開聲
+            Add("hit_assassin", 0.16f, (t, d) => Env(t, 0.003f, d) * Swoosh(t, d, 6000f, 2500f) * 0.9f + (t < 0.02f ? 0.5f * Sin(t, 4200f) * (1f - t / 0.02f) : 0f));
+            // 牧師：聖光的鐘響＋柔和的撞擊
+            Add("hit_priest", 0.6f, (t, d) => Bell(t, 880f) * 0.35f + Bell(t, 1320f) * 0.2f + Env(t, 0.002f, 0.15f) * 0.5f * Sin(t, 200f - 300f * t));
+            // 爆擊：明亮的「鏘——」
+            Add("crit", 0.5f, (t, d) => Mathf.Exp(-t * 6f) * (0.35f * Sin(t, 2093f) + 0.25f * Sin(t, 3136f) + 0.15f * Sin(t, 4186f)) + (t < 0.015f ? 0.6f * Noise() : 0f));
+            // 升級：上揚的五音號角＋閃亮
+            Add("levelup", 1.3f, (t, d) => { float[] n = { 523f, 659f, 784f, 1047f, 1319f }; int k = Mathf.Min(4, (int)(t / 0.11f)); float e = Env(t - k * 0.11f, 0.005f, k == 4 ? 0.85f : 0.2f); return e * 0.35f * (Saw(t, n[k]) * 0.3f + Sin(t, n[k]) + 0.4f * Sin(t, n[k] * 2f)) + (k == 4 ? 0.08f * Mathf.Exp(-(t - 0.44f) * 3f) * Sin(t, 2637f + 300f * Mathf.Sin(t * 40f)) : 0f); });
+            // 金幣：兩聲「叮鈴」
+            Add("coin", 0.35f, (t, d) => { float t2 = t - 0.07f; return Mathf.Exp(-t * 18f) * 0.4f * (Sin(t, 1976f) + 0.5f * Sin(t, 2960f)) + (t2 > 0f ? Mathf.Exp(-t2 * 12f) * 0.45f * (Sin(t2, 2637f) + 0.5f * Sin(t2, 3951f)) : 0f); });
+            // 鐵匠強化：鐵鎚敲鐵砧
+            Add("anvil", 0.7f, (t, d) => Mathf.Exp(-t * 7f) * (0.35f * Sin(t, 1560f) + 0.3f * Sin(t, 2440f) + 0.2f * Sin(t, 3710f)) + (t < 0.008f ? 0.8f * Noise() : 0f) + Env(t, 0.001f, 0.08f) * 0.5f * Sin(t, 180f));
+            // 強化失敗：悶悶的喀啦
+            Add("fail", 0.4f, (t, d) => Env(t, 0.002f, d) * (0.6f * Square(t, 110f - 60f * t) * 0.5f + 0.4f * LowNoise(0.2f)));
+            // 喝藥水：咕嚕咕嚕（氣泡）
+            Add("potion", 0.5f, (t, d) => Env(t, 0.02f, d) * 0.5f * Sin(t, 300f + 250f * Mathf.Abs(Mathf.Sin(t * 45f)) + 400f * t));
+            // 對話翻頁：輕輕的「嘟」
+            Add("talk", 0.07f, (t, d) => Env(t, 0.003f, d) * 0.3f * (Sin(t, 660f) + 0.4f * Sin(t, 990f)));
+            // 新的一波：低沉的號角
+            Add("horn", 0.9f, (t, d) => Env(t, 0.12f, d) * 0.4f * (Saw(t, 147f) * 0.5f + Sin(t, 147f) + 0.5f * Sin(t, 220f) + 0.3f * Sin(t, 294f)));
+            // 法術飛超過射程淡出：輕輕的「嘶」
+            Add("fizz", 0.3f, (t, d) => Env(t, 0.02f, d) * 0.25f * Hp());
+            // 小怪倒下：「噗」的一聲
+            Add("poof", 0.25f, (t, d) => Env(t, 0.005f, d) * (0.6f * Sin(t, 300f - 700f * t) + 0.4f * LowNoise(0.25f)));
+            // 召喚：魔法陣升起的嗡鳴
+            Add("summon", 0.8f, (t, d) => Env(t, 0.15f, d) * 0.35f * (Sin(t, 220f + 330f * t) + 0.6f * Sin(t, 330f + 495f * t) + 0.3f * Sin(t, 440f + 660f * t)));
             Add("lose", 1.1f, (t, d) => { float[] n = { 392f, 370f, 349f, 262f }; int k = Mathf.Min(3, (int)(t / 0.22f)); return Env(t - k * 0.22f, 0.01f, k == 3 ? 0.6f : 0.25f) * 0.35f * Square(t, n[k]) * 0.6f; });
         }
 
