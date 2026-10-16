@@ -55,38 +55,38 @@ namespace SpellDuel
         {
             // ---------------------------------------------------------------- 劍士
             Add(new AdvDef { id = "paladin", baseCls = "swordsman", name = "聖騎士", color = C("#fde047"), hpAdd = 35, atkMul = 0.9f, armor = 0.15f, stats = S(vit: 6),
-                desc = "守護隊友的坦克", core = "守護光環：自己與 3m 內的隊友受到的傷害 −15%", weak = "攻擊 −10%",
+                desc = "以聖盾接住風暴，替同伴守住歸途", core = "守護光環：自己與 3m 內的隊友受到的傷害 −15%", weak = "攻擊 −10%",
                 skills = new[] { "shieldbash", "oath", "sanction" } });
             Add(new AdvDef { id = "berserker", baseCls = "swordsman", name = "狂戰士", color = C("#ef4444"), hpAdd = 10, atkMul = 1.2f, armor = -0.15f, stats = S(str: 6),
-                desc = "以血換傷的狂暴戰士", core = "怒氣：HP 越低傷害越高（HP 30% 以下傷害 +60%）", weak = "受到的傷害 +15%；格擋、鐵壁效果減半",
+                desc = "以傷口點燃怒火，在血色旋風中迎戰", core = "怒氣：HP 越低傷害越高（HP 30% 以下傷害 +60%）", weak = "受到的傷害 +15%；格擋、鐵壁效果減半",
                 skills = new[] { "whirlwind", "bloodrage", "undying" } });
             // ---------------------------------------------------------------- 獵人
             Add(new AdvDef { id = "marksman", baseCls = "archer", name = "神射手", color = C("#facc15"), hpAdd = -5, crit = 0.1f, stats = S(luk: 6),
-                desc = "站樁狙擊的神射手", core = "鷹眼：站著不動每 2 秒疊 1 層（最多 3 層），每層爆擊率 +10%、射程 +20%；一移動就清空", weak = "HP −5；移動就失去鷹眼",
+                desc = "屏息守望遠方，以一箭貫穿戰局", core = "鷹眼：站著不動每 2 秒疊 1 層（最多 3 層），每層爆擊率 +10%、射程 +20%；一移動就清空", weak = "HP −5；移動就失去鷹眼",
                 skills = new[] { "pierce", "deadmark", "arrowrain" } });
             Add(new AdvDef { id = "ranger", baseCls = "archer", name = "遊俠", color = C("#34d399"), hpAdd = 15, atkMul = 0.9f, stats = S(agi: 5, vit: 2),
-                desc = "機動與陷阱專家", core = "游擊：蓄力時可以自由移動（不受直徑 1m 限制）；陷阱上限加倍", weak = "攻擊 −10%",
+                desc = "與獵鷹追風而行，用箭與陷阱掌握獵場", core = "游擊：蓄力時可以自由移動（不受直徑 1m 限制）；陷阱上限加倍", weak = "攻擊 −10%",
                 skills = new[] { "falcon", "rollshot", "trapchain" } });
             // ---------------------------------------------------------------- 法師
             Add(new AdvDef { id = "archmage", baseCls = "mage", name = "大魔導士", color = C("#a855f7"), hpAdd = -5, mpAdd = 50, atkMul = 1.1f, stats = S(intl: 8),
-                desc = "超長咒語、超高傷害", core = "咒文延長：唸完咒語後再唸增幅咒「" + AmpChant + "」→ 這一招傷害 +50%", weak = "HP −5；念錯咒語就放不出來",
+                desc = "延長古老咒文，喚來雷霆與冰封之境", core = "咒文延長：唸完咒語後再唸增幅咒「" + AmpChant + "」→ 這一招傷害 +50%", weak = "HP −5；念錯咒語就放不出來",
                 skills = new[] { "tjudge", "frostfield", "manashield" } });
             Add(new AdvDef { id = "summoner", baseCls = "mage", name = "召喚師", color = C("#fb923c"), hpAdd = 15, mpAdd = 20, atkMul = 0.7f, stats = S(spi: 6),
-                desc = "靠召喚物作戰", core = "契約：最多同時 2 隻召喚物，召喚物自動攻擊；有召喚物在場時自己受到的傷害 −15%", weak = "本人的直接傷害 −30%",
+                desc = "與火靈和石像締約，讓元素並肩作戰", core = "契約：最多同時 2 隻召喚物，召喚物自動攻擊；有召喚物在場時自己受到的傷害 −15%", weak = "本人的直接傷害 −30%",
                 skills = new[] { "firespirit", "golem", "detonate" } });
             // ---------------------------------------------------------------- 刺客
             Add(new AdvDef { id = "ninja", baseCls = "assassin", name = "忍者", color = C("#64748b"), evade = 0.15f, stats = S(agi: 6),
-                desc = "手印與替身", core = "忍術手印：忍術要依序比出手印（數字序列）才能放出；閃避率 +15%", weak = "手印操作難，傷害普通",
+                desc = "結印換影，以替身與忍火穿過險境", core = "忍術手印：忍術要依序比出手印（數字序列）才能放出；閃避率 +15%", weak = "手印操作難，傷害普通",
                 skills = new[] { "substitute", "clone", "fireseal" } });
             Add(new AdvDef { id = "shadowdancer", baseCls = "assassin", name = "影舞者", color = C("#c026d3"), hpAdd = -5, crit = 0.15f, stats = S(str: 6),
-                desc = "連擊與爆發", core = "連殺：伏擊命中後 3 秒內，伏擊技能冷卻歸零、蓄力時間 −70%", weak = "HP −5，防禦很脆",
+                desc = "以連擊追逐破綻，在毒霧間舞出致命一瞬", core = "連殺：伏擊命中後 3 秒內，伏擊技能冷卻歸零、蓄力時間 −70%", weak = "HP −5，防禦很脆",
                 skills = new[] { "execute", "shadowdance", "poisonfog" } });
             // ---------------------------------------------------------------- 牧師
             Add(new AdvDef { id = "bishop", baseCls = "priest", name = "主教", color = C("#fef9c3"), hpAdd = 5, mpAdd = 40, atkMul = 0.7f, healMul = 1.2f, stats = S(spi: 8),
-                desc = "全隊治療與復活", core = "祈禱領域：站著不動時，自己與 3m 內的隊友每秒回復最大 HP 的 1.5%", weak = "攻擊 −30%",
+                desc = "為同伴留下燈火，以祈禱喚回將熄的生命", core = "祈禱領域：站著不動時，自己與 3m 內的隊友每秒回復最大 HP 的 1.5%", weak = "攻擊 −30%",
                 skills = new[] { "revive", "massheal", "sanctuary" } });
             Add(new AdvDef { id = "inquisitor", baseCls = "priest", name = "審判者", color = C("#f59e0b"), hpAdd = 20, atkMul = 1.25f, healMul = 0.6f, stats = S(str: 3, intl: 4),
-                desc = "聖光攻擊特化的戰鬥牧師", core = "信仰：每次命中累積 1 點信仰（最多 5 點），滿了下一招攻擊傷害 ×2", weak = "治療量 −40%",
+                desc = "將信仰凝成聖槍，迎向吞沒光明的敵人", core = "信仰：每次命中累積 1 點信仰（最多 5 點），滿了下一招攻擊傷害 ×2", weak = "治療量 −40%",
                 skills = new[] { "holylance", "chastise", "heavenpunish" } });
         }
 

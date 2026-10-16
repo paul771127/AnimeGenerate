@@ -353,10 +353,10 @@ namespace SpellDuel
             bool lvOk = prof.level >= Advanced.Level;
             var cur = prof.Adv;
             string status;
-            if (cur != null) status = $"公會長：「你已經是獨當一面的{cur.name}了。進階技能樹在「角色」畫面的「進階」分頁。」";
-            else if (!lvOk) status = $"公會長：「{cn}啊，到了 Lv{Advanced.Level} 再來找我，通過轉職試煉就能選擇進階職業。」\n目前 Lv{prof.level}（還差 {Advanced.Level - prof.level} 級）";
-            else if (!prof.trialPassed) status = $"公會長：「你的實力夠了。先通過轉職試煉證明自己吧——不能用藥水，倒下就重來。」";
-            else status = "公會長：「恭喜通過試煉！從下面兩條路選一條。記住：選了就不能換。」";
+            if (cur != null) status = $"公會長：「{cur.name}，願你的力量替人留燈。到「角色」的「進階」分頁修習新技能吧。」";
+            else if (!lvOk) status = $"公會長：「{cn}，先聽清自己的聲音。到了 Lv{Advanced.Level}，再來接受轉職試煉。」\n目前 Lv{prof.level}（還差 {Advanced.Level - prof.level} 級）";
+            else if (!prof.trialPassed) status = $"公會長：「三鐘各有聲音，你也該選自己的路了。先過試煉；不能用藥水，倒下須重來。」";
+            else status = "公會長：「你已通過試煉。兩條路都能守護重要的人；請想清楚，選定便不能更換。」";
             UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.6f), status, fsS, Color.white, TextAnchor.UpperLeft);
             y += fs * 2.8f;
 

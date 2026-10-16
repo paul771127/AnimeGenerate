@@ -276,9 +276,9 @@ namespace SpellDuel
         void StartTrial()
         {
             var st = new StoryStage { id = "trial", title = "⚔ 轉職試煉", theme = 1, fromWave = Advanced.TrialFirstWave - 10, toWave = Advanced.TrialLastWave - 10, xp = 400, desc = WorldUI.TrialText };
-            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "這是轉職試煉。迷霧森林深處的魔物比平常更兇，而且你不能用任何藥水。" });
-            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "撐過四波，打倒最後的樹王，就證明你有資格選擇自己的道路。去吧！" });
-            st.after.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "了不起！回工會來吧，從兩條進階之路選一條——選了就不能回頭。" });
+            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "三口鐘各有聲音，人也各有道路。這場試煉在迷霧森林進行，敵人更強，不能用藥水。" });
+            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "撐過四波、打倒最後的樹王。想清楚你的力量要為誰而用，再帶著答案回來。" });
+            st.after.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "你守住了自己的聲音。回工會選一條進階之路吧；選定便不能更換，這次由你作答。" });
             storyMapOpen = false; storyStage = st;
             ShowDialogue(st.before, StartStageBattle);
         }
@@ -1229,7 +1229,7 @@ namespace SpellDuel
             foreach (var go in projGo.Values) if (go) Destroy(go);
             foreach (var go in trapGo.Values) if (go) Destroy(go);
             foreach (var go in burnGo.Values) if (go) Destroy(go);
-            foreach (var go in petGo.Values) if (go) Destroy(go);
+            foreach (var rig in petGo.Values) if (rig) Destroy(rig.gameObject);
             petGo.Clear();
             foreach (var go in landGo.Values) if (go) Destroy(go);
             landGo.Clear();
@@ -1802,23 +1802,23 @@ namespace SpellDuel
                     break;
                 case "aoe":
                 {
-                    // 玩家方的範圍攻擊（神聖制裁、旋風斬、冰封領域、元素爆裂）：地上的法陣＋衝擊波
+                    // Presentation only: skill-specific shapes use the existing event center and radius.
                     float rad = Skills.All.TryGetValue(text ?? "", out var asd) ? asd.areaRadius : 1.5f;
-                    SpellFx.DispelRing(WorldFrame.FromWorld(at), rad, c);
-                    SpellFx.Impact(myClass, c, WorldFrame.FromWorld(at + Vector3.up * 0.5f), 1.6f);
+                    AdvancedFx.Area(text, WorldFrame.FromWorld(at), rad, c);
                     Sfx.Play(text == "frostfield" ? "cast_mage" : text == "detonate" ? "boom" : "cast_swordsman", 0.8f, 0.8f);
                     Haptics.Play(Haptics.Kind.Medium); Kick(6f, 0.04f);
                     break;
                 }
                 case "fogzone":
+                    AdvancedFx.FogCast(WorldFrame.FromWorld(at));
                     Sfx.Play("cast_assassin", 0.7f, 0.7f);
                     break;
                 case "petspawn":
-                    SpellFx.Impact("mage", c, WorldFrame.FromWorld(at), 1.2f);
+                    AdvancedFx.Summon(text, WorldFrame.FromWorld(at), c);
                     Sfx.Play("cast_mage", 0.6f, text == "golem" ? 0.6f : 1.3f);
                     break;
                 case "petgone":
-                    SpellFx.Impact("", new Color(0.8f, 0.8f, 0.8f), WorldFrame.FromWorld(at), 0.8f);
+                    AdvancedFx.Dismiss(text, WorldFrame.FromWorld(at));
                     break;
                 case "basicmelee":
                     // 近身普攻：揮砍特效
@@ -1841,7 +1841,7 @@ namespace SpellDuel
 
         // ================================================================ 3D 顯示
         // 召喚物的外觀（獵鷹、火靈、石像、分身）
-        readonly Dictionary<Pet, GameObject> petGo = new Dictionary<Pet, GameObject>();
+        readonly Dictionary<Pet, PetRig> petGo = new Dictionary<Pet, PetRig>();
 
         void UpdatePetViews()
         {
@@ -1849,32 +1849,24 @@ namespace SpellDuel
             foreach (var p in battle.pets)
             {
                 if (!p.alive) continue;
-                if (!petGo.TryGetValue(p, out var go))
+                if (!petGo.TryGetValue(p, out var rig) || rig == null)
                 {
                     var ownerCol = p.owner != null && p.owner.cls != null ? p.owner.cls.color : Color.white;
-                    switch (p.kind)
-                    {
-                        case "falcon": go = Prim(PrimitiveType.Sphere, new Color(0.55f, 0.35f, 0.15f)); go.transform.localScale = new Vector3(0.35f, 0.18f, 0.5f); break;
-                        case "fire": go = Prim(PrimitiveType.Sphere, new Color(1f, 0.55f, 0.15f, 0.85f), true); go.transform.localScale = Vector3.one * 0.28f; break;
-                        case "golem": go = Prim(PrimitiveType.Cube, new Color(0.6f, 0.58f, 0.55f)); go.transform.localScale = new Vector3(0.6f, 1.2f, 0.5f); break;
-                        default: go = Prim(PrimitiveType.Capsule, WithAlpha(ownerCol, 0.35f), true); go.transform.localScale = new Vector3(0.45f, 0.85f, 0.45f); break;
-                    }
-                    petGo[p] = go;
+                    rig = PetRig.Create(p.kind, ownerCol);
+                    petGo[p] = rig;
                 }
-                go.transform.position = WorldFrame.FromWorld(p.pos);
-                var fwd = WorldFrame.DirFromWorld(p.owner != null ? p.owner.forward : Vector3.forward); fwd.y = 0f;
-                if (fwd.sqrMagnitude > 1e-4f) go.transform.rotation = Quaternion.LookRotation(fwd.normalized, Vector3.up);
-                if (p.kind == "fire")
-                {
-                    float fl = 0.26f + 0.04f * Mathf.Sin(Time.time * 17f + p.id);
-                    go.transform.localScale = Vector3.one * fl;
-                    if (UnityEngine.Random.value < Time.deltaTime * 6f) SpellFx.Impact("", new Color(1f, 0.5f, 0.1f), go.transform.position, 0.25f);
-                }
-                else if (p.kind == "falcon") go.transform.localScale = new Vector3(0.35f + 0.25f * Mathf.Abs(Mathf.Sin(Time.time * 9f)), 0.18f, 0.5f);
-                else if (p.kind == "golem" && p.maxHp > 0f) go.GetComponent<Renderer>().material.color = Color.Lerp(new Color(0.85f, 0.35f, 0.3f), new Color(0.6f, 0.58f, 0.55f), p.hp / p.maxHp);
+                var forward = p.owner != null ? p.owner.forward : Vector3.forward;
+                forward.y = 0f;
+                var rotation = forward.sqrMagnitude > 1e-4f ? Quaternion.LookRotation(forward.normalized, Vector3.up) : Quaternion.identity;
+                rig.SetPose(WorldFrame.FromWorld(p.pos), WorldFrame.RotFromWorld(rotation),
+                    Time.time + p.id * 0.37f, p.maxHp > 0f ? p.hp / p.maxHp : 1f);
             }
-            foreach (var kv in new List<KeyValuePair<Pet, GameObject>>(petGo))
-                if (!live.Contains(kv.Key) || !kv.Key.alive) { Destroy(kv.Value); petGo.Remove(kv.Key); }
+            foreach (var kv in new List<KeyValuePair<Pet, PetRig>>(petGo))
+                if (!live.Contains(kv.Key) || !kv.Key.alive)
+                {
+                    if (kv.Value != null) Destroy(kv.Value.gameObject);
+                    petGo.Remove(kv.Key);
+                }
         }
 
         void UpdateVisuals()
@@ -2012,8 +2004,13 @@ namespace SpellDuel
             {
                 if (!burnGo.TryGetValue(z, out var go))
                 {
-                    go = Prim(PrimitiveType.Cylinder, new Color(1f, 0.35f, 0.05f, 0.45f), true);
-                    go.transform.localScale = new Vector3(z.radius * 2f, 0.004f, z.radius * 2f);
+                    if (z.skill != null && z.skill.self == SelfKind.Fog)
+                        go = PoisonFogView.Create(z.radius);
+                    else
+                    {
+                        go = Prim(PrimitiveType.Cylinder, new Color(1f, 0.35f, 0.05f, 0.45f), true);
+                        go.transform.localScale = new Vector3(z.radius * 2f, 0.004f, z.radius * 2f);
+                    }
                     burnGo[z] = go;
                 }
                 go.transform.position = WorldFrame.FromWorld(z.pos + Vector3.up * 0.015f);
@@ -2022,8 +2019,8 @@ namespace SpellDuel
                 if (z.skill != null && z.skill.self == SelfKind.Fog)
                 {
                     // 影舞者的毒霧：綠色、慢慢翻騰
-                    go.GetComponent<Renderer>().material.color = new Color(0.45f, 0.95f, 0.5f, (0.25f + 0.1f * Mathf.Sin(Time.time * 3f)) * left);
-                    if (UnityEngine.Random.value < Time.deltaTime * 3f) { var r3 = UnityEngine.Random.insideUnitCircle * z.radius * 0.8f; SpellFx.Impact("", new Color(0.5f, 1f, 0.55f), WorldFrame.FromWorld(z.pos + new Vector3(r3.x, 0.3f, r3.y)), 0.5f); }
+                    go.transform.rotation = WorldFrame.RotFromWorld(Quaternion.identity);
+                    go.GetComponent<PoisonFogView>().SetFade(left);
                     continue;
                 }
                 go.GetComponent<Renderer>().material.color = new Color(1f, 0.3f + 0.15f * flick, 0.05f, flick * left);

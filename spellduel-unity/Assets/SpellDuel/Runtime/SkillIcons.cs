@@ -47,7 +47,7 @@ namespace SpellDuel
             }
             var cv = new Cv(size);
             Background(cv, cc, sc, skillId);
-            switch (IconShape(skillId))
+            switch (skillId)
             {
                 case "quickshot": QuickShot(cv, sc); break;
                 case "snipe": Snipe(cv, sc); break;
@@ -78,27 +78,286 @@ namespace SpellDuel
                 case "cleanse": Cleanse(cv, sc); break;
                 case "guard": Guard(cv, sc); break;
                 case "prayer": Prayer(cv, sc); break;
+                case "shieldbash": ShieldBash(cv, sc); break;
+                case "oath": Oath(cv, sc); break;
+                case "sanction": Sanction(cv, sc); break;
+                case "whirlwind": Whirlwind(cv, sc); break;
+                case "bloodrage": BloodRage(cv, sc); break;
+                case "undying": Undying(cv, sc); break;
+                case "pierce": Pierce(cv, sc); break;
+                case "deadmark": DeadMark(cv, sc); break;
+                case "arrowrain": ArrowRain(cv, sc); break;
+                case "falcon": Falcon(cv, sc); break;
+                case "rollshot": RollShot(cv, sc); break;
+                case "trapchain": TrapChain(cv, sc); break;
+                case "tjudge": ThunderJudge(cv, sc); break;
+                case "frostfield": FrostField(cv, sc); break;
+                case "manashield": ManaShield(cv, sc); break;
+                case "firespirit": FireSpirit(cv, sc); break;
+                case "golem": Golem(cv, sc); break;
+                case "detonate": Detonate(cv, sc); break;
+                case "substitute": Substitute(cv, sc); break;
+                case "clone": Clone(cv, sc); break;
+                case "fireseal": FireSeal(cv, sc); break;
+                case "execute": Execute(cv, sc); break;
+                case "shadowdance": ShadowDance(cv, sc); break;
+                case "poisonfog": PoisonFog(cv, sc); break;
+                case "revive": Revive(cv, sc); break;
+                case "massheal": MassHeal(cv, sc); break;
+                case "sanctuary": Sanctuary(cv, sc); break;
+                case "holylance": HolyLance(cv, sc); break;
+                case "chastise": Chastise(cv, sc); break;
+                case "heavenpunish": HeavenPunish(cv, sc); break;
                 default: Orb(cv, sc); break;
             }
             Rim(cv, cc, sc);
             return cv.Output();
         }
 
-        /// <summary>進階技能暫時借用相近技能的圖形（顏色、底紋仍是自己的；之後美術可以換成專屬圖示）</summary>
-        static string IconShape(string id) => id switch
+        // Advanced glyphs: bold ink silhouettes and two cel-tone fills, readable at 48px.
+        static void Glyph(Cv cv, Sdf shape, V c, float opacity = 1f)
         {
-            "shieldbash" => "block", "oath" => "guard", "sanction" => "judgement",
-            "whirlwind" => "slash", "bloodrage" => "counter", "undying" => "ironwall",
-            "pierce" => "snipe", "deadmark" => "snipe", "arrowrain" => "triple",
-            "rollshot" => "quickshot", "trapchain" => "snaretrap",
-            "tjudge" => "thunder", "frostfield" => "ice", "manashield" => "dispel",
-            "firespirit" => "fire", "golem" => "ironwall", "detonate" => "meteor",
-            "substitute" => "smoke", "clone" => "shadow", "fireseal" => "fire",
-            "execute" => "backstab", "shadowdance" => "shadow", "poisonfog" => "poison",
-            "revive" => "heal", "massheal" => "prayheal", "sanctuary" => "guard",
-            "holylance" => "holy", "chastise" => "judgement", "heavenpunish" => "judgement",
-            _ => id,
-        };
+            cv.Glow(shape, c, 0.045f, 0.28f * opacity);
+            cv.Solid((x, y) => shape(x, y) - 0.023f, Ink, opacity);
+            cv.Fill(shape, (x, y, d) => y + x * 0.22f > 0.08f ? V.Lerp(c, V.White, 0.5f) : c * 0.78f, opacity);
+        }
+        static void Stroke(Cv cv, float ax, float ay, float bx, float by, float w, V c) =>
+            Glyph(cv, (x, y) => Seg(x, y, ax, ay, bx, by) - w, c);
+        static void Halo(Cv cv, float cx, float cy, float rx, float ry, V c) =>
+            Glyph(cv, (x, y) => Math.Abs(Ellipse(x, y, cx, cy, rx, ry)) - 0.018f, c);
+        static Sdf Crest(float cx, float cy, float s) => (x, y) => Math.Min(
+            Box(x, y, cx, cy + s * 0.20f, s * 0.38f, s * 0.30f, 0f, s * 0.06f),
+            Tri(x, y, cx - s * 0.38f, cy, cx + s * 0.38f, cy, cx, cy - s * 0.54f));
+        static void CrossMark(Cv cv, float cx, float cy, float s, V c) => Glyph(cv,
+            (x, y) => Math.Min(Box(x, y, cx, cy, s * 0.20f, s), Box(x, y, cx, cy + s * 0.22f, s * 0.68f, s * 0.20f)), c);
+        static Sdf Person(float cx, float cy, float s) => (x, y) => Math.Min(
+            Circle(x, y, cx, cy + s * 0.56f, s * 0.16f), Math.Min(
+            Tri(x, y, cx, cy + s * 0.35f, cx - s * 0.30f, cy - s * 0.15f, cx + s * 0.30f, cy - s * 0.15f),
+            Math.Min(Seg(x, y, cx - s * 0.10f, cy, cx - s * 0.27f, cy - s * 0.55f),
+                     Seg(x, y, cx + s * 0.10f, cy, cx + s * 0.27f, cy - s * 0.55f)) - s * 0.065f));
+
+        static void ShieldBash(Cv cv, V sc)
+        {
+            for (int i = 0; i < 3; i++) Stroke(cv, -0.70f, 0.30f - i * 0.25f, -0.28f, 0.30f - i * 0.25f, 0.025f, sc);
+            Glyph(cv, (x, y) => Circle(x, y, 0.23f, 0.03f, 0.38f), sc);
+            Halo(cv, 0.23f, 0.03f, 0.28f, 0.28f, V.White);
+            Glyph(cv, (x, y) => Diamond(x, y, 0.23f, 0.03f, 0.11f, 0.16f, 0f), V.White);
+        }
+        static void Oath(Cv cv, V sc)
+        {
+            Halo(cv, -0.29f, -0.19f, 0.30f, 0.16f, sc);
+            Halo(cv, 0.29f, -0.19f, 0.30f, 0.16f, sc);
+            Glyph(cv, Crest(0f, 0.13f, 0.91f), sc);
+            CrossMark(cv, 0f, 0.15f, 0.21f, V.White);
+        }
+        static void Sanction(Cv cv, V sc)
+        {
+            Halo(cv, 0f, -0.49f, 0.61f, 0.15f, sc);
+            Stroke(cv, 0.23f, 0.62f, 0.05f, -0.24f, 0.06f, sc);
+            Glyph(cv, (x, y) => Box(x, y, 0.03f, -0.16f, 0.35f, 0.16f, -0.20f, 0.04f), sc);
+            CrossMark(cv, 0.03f, -0.13f, 0.10f, V.White);
+            for (int i = -1; i <= 1; i += 2) Stroke(cv, i * 0.44f, 0.55f, i * 0.36f, 0.05f, 0.018f, sc);
+        }
+        static void Whirlwind(Cv cv, V sc)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                float r = 0.37f + i * 0.13f, a = -0.8f + i * 1.9f;
+                Glyph(cv, (x, y) => ArcT(x, y, 0f, 0f, r, a, 4.4f, 0.015f, 0.055f, true), sc);
+            }
+            Stroke(cv, -0.24f, -0.45f, 0.21f, 0.46f, 0.045f, V.White);
+            Glyph(cv, (x, y) => Math.Min(Tri(x,y,0.03f,0.28f,0.50f,0.57f,0.48f,0.13f),
+                Tri(x,y,0.07f,0.30f,-0.32f,0.59f,-0.30f,0.21f)), sc);
+        }
+        static void BloodRage(Cv cv, V sc)
+        {
+            Glyph(cv, (x, y) => Math.Min(Box(x,y,0f,0.14f,0.36f,0.32f,0f,0.08f),
+                Tri(x,y,-0.33f,-0.03f,0.33f,-0.03f,0f,-0.43f)), sc);
+            Glyph(cv, (x,y) => Math.Min(Tri(x,y,-0.29f,0.22f,-0.04f,0.12f,-0.23f,0.04f),
+                Tri(x,y,0.29f,0.22f,0.04f,0.12f,0.23f,0.04f)), Ink);
+            Glyph(cv, (x,y) => Box(x,y,0f,-0.14f,0.08f,0.11f,0f,0.03f), Ink);
+            Glyph(cv, (x,y) => Math.Min(Circle(x,y,0.25f,-0.54f,0.07f),Tri(x,y,0.18f,-0.52f,0.32f,-0.52f,0.25f,-0.35f)), sc);
+        }
+        static void Undying(Cv cv, V sc)
+        {
+            Glyph(cv, Crest(0f,0.05f,1.16f), sc);
+            Skull(cv,0f,0.12f,0.62f,V.White);
+            Stroke(cv,0.28f,0.58f,0.12f,0.32f,0.028f,Ink);
+            Stroke(cv,0.12f,0.32f,0.30f,0.11f,0.028f,Ink);
+            Stroke(cv,0.30f,0.11f,0.16f,-0.38f,0.028f,Ink);
+        }
+        static void Pierce(Cv cv, V sc)
+        {
+            for(int i=0;i<3;i++) Halo(cv,-0.35f+i*0.35f,-0.15f+i*0.15f,0.12f,0.28f,sc);
+            DrawArrow(cv,new Arrow(-0.66f,-0.36f,0.65f,0.36f,0.9f),V.White,sc);
+        }
+        static void DeadMark(Cv cv, V sc)
+        {
+            Halo(cv,0f,0f,0.53f,0.53f,sc);
+            for(int i=-1;i<=1;i+=2) { Stroke(cv,i*0.38f,0f,i*0.68f,0f,0.022f,sc); Stroke(cv,0f,i*0.38f,0f,i*0.68f,0.022f,sc); }
+            Skull(cv,0f,0.06f,0.72f,V.White);
+        }
+        static void ArrowRain(Cv cv, V sc)
+        {
+            for(int i=0;i<5;i++) { float x=-0.50f+i*0.25f, y=(i%2)*0.17f; DrawArrow(cv,new Arrow(x-0.10f,0.62f-y,x+0.06f,-0.47f-y,0.48f),sc,sc); }
+        }
+        static void Falcon(Cv cv, V sc)
+        {
+            Sdf wings=(x,y)=> Math.Min(Tri(x,y,-0.07f,0.05f,-0.70f,0.48f,-0.41f,-0.24f),Tri(x,y,0.07f,0.05f,0.70f,0.48f,0.41f,-0.24f));
+            Glyph(cv,wings,sc);
+            Glyph(cv,(x,y)=>Math.Min(Ellipse(x,y,0f,-0.06f,0.13f,0.31f),Tri(x,y,-0.17f,-0.50f,0.17f,-0.50f,0f,-0.20f)),V.White);
+            Glyph(cv,(x,y)=>Tri(x,y,0.02f,0.24f,0.29f,0.12f,0.02f,0.05f),sc);
+            cv.Solid((x,y)=>Circle(x,y,0.03f,0.20f,0.027f),Ink);
+            for(int i=-1;i<=1;i+=2) Stroke(cv,i*0.40f,0.40f,i*0.22f,0.08f,0.018f,Ink);
+        }
+        static void RollShot(Cv cv, V sc)
+        {
+            Glyph(cv,(x,y)=>ArcT(x,y,-0.12f,0f,0.48f,0.9f,4.9f,0.02f,0.06f,true),sc);
+            Glyph(cv,Person(-0.16f,-0.06f,0.62f),sc);
+            DrawArrow(cv,new Arrow(-0.04f,0.03f,0.69f,0.32f,0.65f),V.White,sc);
+        }
+        static void TrapChain(Cv cv, V sc)
+        {
+            for(int i=0;i<2;i++) Halo(cv,-0.23f+i*0.46f,-0.14f,0.16f,0.08f,sc);
+            for(int i=0;i<3;i++)
+            {
+                float cx=-0.46f+i*0.46f, cy=(i==1?0.20f:-0.28f);
+                Glyph(cv,(x,y)=>Math.Max(Math.Abs(Ellipse(x,y,cx,cy,0.20f,0.18f))-0.035f,-(y-cy)),sc);
+                for(int k=-1;k<=1;k++) { float tx=cx+k*0.12f; Glyph(cv,(x,y)=>Tri(x,y,tx-0.045f,cy+0.13f,tx+0.045f,cy+0.13f,tx,cy-0.035f),V.White); }
+            }
+        }
+        static void ThunderJudge(Cv cv, V sc)
+        {
+            Glyph(cv,(x,y)=>Math.Min(Circle(x,y,-0.30f,0.38f,0.22f),Math.Min(Circle(x,y,0f,0.46f,0.27f),Circle(x,y,0.32f,0.37f,0.22f))),sc);
+            for(int i=-1;i<=1;i++) { float cx=i*0.38f; Glyph(cv,(x,y)=>Math.Min(Tri(x,y,cx-0.02f,0.23f,cx-0.16f,-0.17f,cx+0.09f,-0.12f),Tri(x,y,cx-0.09f,-0.10f,cx+0.14f,-0.08f,cx-0.12f,-0.60f)),V.White); }
+        }
+        static void FrostField(Cv cv, V sc)
+        {
+            Halo(cv,0f,-0.32f,0.65f,0.25f,sc);
+            for(int i=0;i<3;i++) { float a=i*(float)Math.PI/3f; Stroke(cv,-0.39f*(float)Math.Cos(a),-0.32f-0.16f*(float)Math.Sin(a),0.39f*(float)Math.Cos(a),-0.32f+0.16f*(float)Math.Sin(a),0.018f,V.White); }
+            for(int i=-1;i<=1;i++) { float cx=i*0.36f, h=i==0?0.64f:0.29f; Glyph(cv,(x,y)=>Diamond(x,y,cx,h*0.5f-0.10f,0.12f,h*0.5f+0.18f,0f),sc); }
+        }
+        static void ManaShield(Cv cv, V sc)
+        {
+            Sdf hex=(x,y)=>Math.Max(Math.Abs(y)-0.49f,Math.Abs(x)*0.8660254f+Math.Abs(y)*0.5f-0.49f);
+            Glyph(cv,hex,sc);
+            cv.Solid((x,y)=>hex(x*1.24f,y*1.24f),Ink);
+            Glyph(cv,(x,y)=>Diamond(x,y,0f,0f,0.18f,0.30f,0f),sc);
+            Sparkle(cv,0.50f,0.43f,0.10f,V.White);
+        }
+        static void FireSpirit(Cv cv, V sc)
+        {
+            Glyph(cv,(x,y)=>Math.Min(Ellipse(x,y,0f,-0.13f,0.34f,0.39f),Math.Min(Tri(x,y,-0.32f,0f,0.22f,0.02f,0.16f,0.67f),Tri(x,y,-0.32f,-0.13f,-0.62f,0.23f,-0.41f,-0.33f))),sc);
+            Glyph(cv,(x,y)=>Ellipse(x,y,0f,-0.24f,0.19f,0.22f),V.Hex("#ffe98c"));
+            for(int i=-1;i<=1;i+=2) cv.Solid((x,y)=>Ellipse(x,y,i*0.12f,-0.08f,0.035f,0.065f),Ink);
+            Stroke(cv,-0.05f,-0.24f,0.05f,-0.24f,0.018f,Ink);
+        }
+        static void Golem(Cv cv, V sc)
+        {
+            Glyph(cv,(x,y)=>Box(x,y,0f,0.04f,0.40f,0.46f,0f,0.08f),sc);
+            for(int i=-1;i<=1;i+=2) Glyph(cv,(x,y)=>Box(x,y,i*0.48f,-0.07f,0.09f,0.23f,0f,0.02f),sc);
+            Stroke(cv,-0.27f,0.16f,-0.06f,0.10f,0.045f,V.White); Stroke(cv,0.27f,0.16f,0.06f,0.10f,0.045f,V.White);
+            Stroke(cv,-0.22f,-0.24f,0.22f,-0.24f,0.028f,Ink);
+            Stroke(cv,0.04f,0.49f,-0.07f,0.29f,0.019f,Ink); Stroke(cv,-0.07f,0.29f,0.07f,0.20f,0.019f,Ink);
+        }
+        static void Detonate(Cv cv, V sc)
+        {
+            Sdf blast=(x,y)=> { float a=(float)Math.Atan2(y,x), r=0.43f+0.19f*(float)Math.Cos(a*8f); return Len(x,y)-r; };
+            Glyph(cv,blast,sc);
+            Glyph(cv,(x,y)=>Ellipse(x,y,0f,0f,0.22f,0.29f),V.Hex("#fff1a8"));
+            for(int i=-1;i<=1;i+=2) cv.Solid((x,y)=>Circle(x,y,i*0.085f,0.04f,0.027f),Ink);
+            Halo(cv,0f,-0.36f,0.63f,0.16f,sc);
+        }
+        static void Substitute(Cv cv, V sc)
+        {
+            for(int i=0;i<3;i++) { float cx=-0.46f+i*0.45f,cy=-0.28f+(i%2)*0.24f; Glyph(cv,(x,y)=>Circle(x,y,cx,cy,0.22f),sc,0.48f); }
+            Glyph(cv,(x,y)=>Box(x,y,0f,0.06f,0.22f,0.39f,-0.35f,0.06f),V.Hex("#d9a269"));
+            Halo(cv,0.12f,0.42f,0.20f,0.10f,V.White);
+            for(int i=-1;i<=1;i++) Stroke(cv,-0.13f+i*0.10f,-0.22f,-0.30f+i*0.10f,0.23f,0.013f,Ink);
+        }
+        static void Clone(Cv cv, V sc)
+        {
+            Glyph(cv,Person(-0.25f,0.13f,0.80f),V.Hex("#a8f4ff"),0.48f);
+            Glyph(cv,Person(0.24f,-0.09f,0.95f),sc,0.90f);
+            Stroke(cv,0.12f,0.47f,0.36f,0.47f,0.022f,V.White);
+        }
+        static void FireSeal(Cv cv, V sc)
+        {
+            var orange=V.Hex("#ff8538");
+            Glyph(cv,(x,y)=>Math.Min(Tri(x,y,-0.02f,-0.22f,0.73f,0.28f,0.43f,-0.38f),Tri(x,y,0.13f,0.03f,0.60f,0.54f,0.40f,-0.12f)),orange);
+            Glyph(cv,(x,y)=>Box(x,y,-0.28f,-0.16f,0.19f,0.23f,-0.24f,0.05f),sc);
+            Stroke(cv,-0.38f,-0.04f,-0.42f,0.48f,0.055f,V.White);
+            Stroke(cv,-0.18f,-0.02f,-0.13f,0.47f,0.055f,V.White);
+            Stroke(cv,-0.44f,-0.23f,-0.09f,0.02f,0.065f,sc);
+        }
+        static void Execute(Cv cv, V sc)
+        {
+            for(int i=-1;i<=1;i+=2) {
+                Stroke(cv,-i*0.38f,-0.51f,i*0.41f,0.52f,0.055f,V.White);
+                Stroke(cv,-i*0.47f,-0.20f,-i*0.17f,-0.43f,0.035f,sc);
+            }
+            Stroke(cv,-0.66f,0.05f,0.66f,0.05f,0.025f,sc);
+            Sparkle(cv,0f,0.05f,0.15f,V.White);
+        }
+        static void ShadowDance(Cv cv, V sc)
+        {
+            Glyph(cv,(x,y)=>ArcT(x,y,0f,0f,0.59f,-0.3f,4.9f,0.015f,0.065f,true),sc);
+            Glyph(cv,Person(-0.21f,0.12f,0.77f),sc,0.32f);
+            Glyph(cv,Person(0.07f,-0.07f,0.89f),V.Lerp(sc,V.White,0.3f));
+            Stroke(cv,-0.40f,0.16f,0.45f,-0.05f,0.045f,sc);
+            Stroke(cv,0.40f,-0.09f,0.63f,0.10f,0.028f,V.White);
+        }
+        static void PoisonFog(Cv cv, V sc)
+        {
+            var green=V.Hex("#74ed57");
+            for(int i=0;i<5;i++) { float cx=-0.45f+i*0.22f,cy=-0.25f+(i%2)*0.22f; Glyph(cv,(x,y)=>Circle(x,y,cx,cy,0.23f),green,0.62f); }
+            Skull(cv,0f,0.23f,0.72f,V.Lerp(green,V.White,0.45f));
+            Halo(cv,0f,-0.48f,0.58f,0.14f,sc);
+        }
+        static void Revive(Cv cv, V sc)
+        {
+            for(int i=-1;i<=1;i+=2) Glyph(cv,(x,y)=>Math.Min(Tri(x,y,i*0.10f,-0.10f,i*0.68f,0.38f,i*0.43f,-0.30f),Tri(x,y,i*0.16f,-0.15f,i*0.58f,0.03f,i*0.34f,-0.42f)),sc);
+            DrawArrow(cv,new Arrow(0f,-0.50f,0f,0.60f,0.85f),V.White,sc);
+            Halo(cv,0f,0.61f,0.22f,0.07f,sc);
+        }
+        static void MassHeal(Cv cv, V sc)
+        {
+            for(int i=-1;i<=1;i++) { float cx=i*0.39f,cy=i==0?0.15f:-0.08f; Glyph(cv,(x,y)=>Heart(x,y,cx,cy-0.25f,0.36f),sc); CrossMark(cv,cx,cy+0.04f,0.10f,V.White); }
+            Halo(cv,0f,-0.48f,0.59f,0.12f,sc);
+        }
+        static void Sanctuary(Cv cv, V sc)
+        {
+            Glyph(cv,(x,y)=>Math.Max(Math.Abs(Ellipse(x,y,0f,-0.30f,0.59f,0.83f))-0.035f,-(y+0.30f)),sc);
+            Halo(cv,0f,-0.30f,0.59f,0.18f,sc);
+            Glyph(cv,Person(0f,-0.10f,0.49f),V.White);
+            CrossMark(cv,0f,0.54f,0.13f,sc);
+        }
+        static void HolyLance(Cv cv, V sc)
+        {
+            Stroke(cv,-0.46f,-0.62f,0.27f,0.34f,0.035f,sc);
+            Glyph(cv,(x,y)=>Tri(x,y,0.10f,0.25f,0.49f,0.67f,0.39f,0.12f),V.White);
+            Stroke(cv,0.04f,0.27f,0.35f,0.04f,0.036f,sc);
+            Halo(cv,-0.04f,0.03f,0.26f,0.26f,sc);
+            Sparkle(cv,0.49f,0.60f,0.10f,V.White);
+        }
+        static void Chastise(Cv cv, V sc)
+        {
+            for(int i=0;i<4;i++) { float cx=-0.47f+i*0.29f; Halo(cv,cx,0.24f+(i%2)*0.15f,0.17f,0.10f,sc); }
+            Glyph(cv,(x,y)=>Diamond(x,y,0f,-0.19f,0.31f,0.37f,0f),sc);
+            CrossMark(cv,0f,-0.12f,0.17f,Ink);
+            Sparkle(cv,0.48f,-0.25f,0.08f,V.White);
+        }
+        static void HeavenPunish(Cv cv, V sc)
+        {
+            for(int i=-1;i<=1;i++) {
+                float cx=i*0.40f, top=i==0?0.66f:0.51f;
+                Glyph(cv,(x,y)=>Box(x,y,cx,(top-0.43f)*0.5f,0.057f,(top+0.43f)*0.5f),sc);
+                Glyph(cv,(x,y)=>Tri(x,y,cx-0.14f,-0.32f,cx+0.14f,-0.32f,cx,-0.59f),V.White);
+                Sparkle(cv,cx,top,0.11f,V.White);
+            }
+            Halo(cv,0f,-0.55f,0.60f,0.12f,sc);
+        }
+
 
         // ================================================================ 底座：徽章背景與邊框
         const float BadgeR = 0.95f;
