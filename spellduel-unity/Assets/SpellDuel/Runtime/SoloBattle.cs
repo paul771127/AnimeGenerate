@@ -35,7 +35,7 @@ namespace SpellDuel
             {
                 if (!allyRigs.TryGetValue(a.pid, out var rig) || !rig)
                 {
-                    rig = CharacterRig.Create(a.cls != null ? a.cls.id : "mage");
+                    rig = CharacterRig.Create(a.cls != null ? a.cls.id : "mage", a.adv);   // 進階職業有自己的外觀
                     allyRigs[a.pid] = rig; allyLastFeet[a.pid] = a.Feet;
                 }
                 rig.SetPose(WorldFrame.FromWorld(a.Feet), WorldFrame.DirFromWorld(a.forward));
@@ -543,7 +543,7 @@ namespace SpellDuel
             battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = id, ok = theirs });
             WireAdvNet();
             ai = null;
-            if (RemotePlay) enemyRig = CharacterRig.Create(ec.id);   // 遠端對戰：對手是虛擬角色
+            if (RemotePlay) enemyRig = CharacterRig.Create(ec.id, en.adv);   // 遠端對戰：對手是虛擬角色（進階職業有自己的外觀）
             remoteAnchor = new GameObject("Remote Anchor").transform;
             lastEnemyFeet = en.Feet; lastEnemyHp = en.hp; enemyDeadShown = false;
             enemyShield = Prim(PrimitiveType.Sphere, new Color(0.4f, 0.7f, 1f, 0.25f));
