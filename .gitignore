@@ -11,3 +11,6 @@ outputs/
 models/
 hf_cache/
 *.log
+
+# personabot 是獨立專案,有自己的 git repo,不歸這裡管
+personabot/
