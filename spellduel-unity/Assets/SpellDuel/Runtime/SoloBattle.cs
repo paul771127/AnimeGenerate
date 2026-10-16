@@ -100,7 +100,7 @@ namespace SpellDuel
         bool charOpen;                            // 角色畫面開著（單人無盡：戰鬥暫停）
         int lastXpSeen, lastKillsSeen, lastBossKillsSeen;
         readonly System.Random dropRng = new System.Random();
-        int PendingUpgrades => endless && prof != null ? prof.statPoints + prof.skillPoints : 0;
+        int PendingUpgrades => endless && prof != null ? prof.statPoints + prof.UsableSkillPoints : 0;
         /// <summary>選技能畫面：這次是不是無盡模式（只有無盡模式用角色養成）</summary>
         bool EndlessSetup => NetMode ? netEndless : enemyClass == "endless" || enemyClass == "story";   // 故事模式也用角色養成
         /// <summary>選技能畫面可以選的技能：無盡模式＝角色會的技能；其他模式＝職業全部技能</summary>
@@ -2364,7 +2364,7 @@ namespace SpellDuel
                 // 無盡／故事模式：角色養成（能力值、技能樹、裝備）
                 var pf = Progress.Char(myClass);
                 float cbw = W * 0.4f;
-                if (UiKit.Button(new Rect(W - pad - cbw, y - u * 0.15f, cbw, u * 1.1f), $"📜 角色 Lv{pf.level}" + (pf.statPoints + pf.skillPoints > 0 ? "（可加點）" : ""), fsS, pf.statPoints + pf.skillPoints > 0, new Color(0.8f, 0.55f, 1f)))
+                if (UiKit.Button(new Rect(W - pad - cbw, y - u * 0.15f, cbw, u * 1.1f), $"📜 角色 Lv{pf.level}" + (pf.statPoints + pf.UsableSkillPoints > 0 ? "（可加點）" : ""), fsS, pf.statPoints + pf.UsableSkillPoints > 0, new Color(0.8f, 0.55f, 1f)))
                     charOpen = true;
             }
             y += u;

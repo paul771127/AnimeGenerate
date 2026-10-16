@@ -176,7 +176,7 @@ namespace SpellDuel
             }
             // 下方：角色、返回
             float bw2 = (r.width - gap * 3) / 2f, by2 = r.yMax - gap - fs * 2.1f;
-            int pts = prof.statPoints + prof.skillPoints;
+            int pts = prof.statPoints + prof.UsableSkillPoints;
             if (UiKit.Button(new Rect(r.x + gap, by2, bw2, fs * 2.1f), pts > 0 ? $"📜 角色（可加點 ×{pts}）" : "📜 角色／裝備", fs, pts > 0, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
             if (UiKit.Button(new Rect(r.x + gap * 2 + bw2, by2, bw2, fs * 2.1f), "返回", fs)) OnBack?.Invoke();
         }

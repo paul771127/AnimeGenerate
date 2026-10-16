@@ -137,8 +137,8 @@ namespace SpellDuel
                 case "swordsman": return new List<TreeNode>
                 {
                     Mod("sw_slash", "斬擊強化", "slash", ModField.Damage, 0.12f, 3, 0, 0),
-                    Mod("sw_thrust", "突刺強化", "thrust", ModField.Damage, 0.12f, 3, 0, 1, "sw_slash"),
-                    Mod("sw_block", "格擋精通", "block", ModField.BuffReduce, 0.05f, 3, 0, 2),
+                    Mod("sw_thrust", "突刺強化", "thrust", ModField.Damage, 0.12f, 4, 0, 1, "sw_slash"),
+                    Mod("sw_block", "格擋精通", "block", ModField.BuffReduce, 0.05f, 4, 0, 2),
                     Learn("sw_wave", "wave", 1, 0, "sw_slash", 3),
                     Mod("sw_wave2", "劍氣分裂", "wave", ModField.Multi, 1f, 2, 1, 1, "sw_wave", 6),
                     Learn("sw_iron", "ironwall", 1, 2, "sw_block", 5),
@@ -146,25 +146,25 @@ namespace SpellDuel
                     Learn("sw_counter", "counter", 1, 4, "sw_iron", 10),
                     StatN("sw_str", "力量訓練", Stat.Str, 2, 0),
                     StatN("sw_vit", "體魄訓練", Stat.Vit, 2, 1),
-                    Pas("sw_steal", "吸血劍", PassiveKind.Lifesteal, 0.03f, 3, 2, 2, "sw_str", 8),
+                    Pas("sw_steal", "吸血劍", PassiveKind.Lifesteal, 0.03f, 4, 2, 2, "sw_str", 8),
                     Pas("sw_last", "不屈", PassiveKind.LastStand, 0.2f, 1, 2, 3, "sw_vit", 12),
                     Pas("sw_regen", "自然回復", PassiveKind.NaturalRegen, 0.01f, 5, 0, 3),
                     Learn("sw_taunt", "taunt", 2, 4, "sw_last", 1),
                 };
                 case "archer": return new List<TreeNode>
                 {
-                    Mod("ar_quick", "速射強化", "quickshot", ModField.Damage, 0.12f, 3, 0, 0),
+                    Mod("ar_quick", "速射強化", "quickshot", ModField.Damage, 0.12f, 4, 0, 0),
                     Mod("ar_triple", "多重箭", "triple", ModField.Multi, 1f, 2, 0, 1, "ar_quick", 4),
-                    Mod("ar_snare", "捕獸夾強化", "snaretrap", ModField.EffectDur, 0.5f, 3, 0, 2),
+                    Mod("ar_snare", "捕獸夾強化", "snaretrap", ModField.EffectDur, 0.5f, 4, 0, 2),
                     Learn("ar_snipe", "snipe", 1, 0, "ar_quick", 3),
-                    Mod("ar_snipe2", "狙擊強化", "snipe", ModField.Damage, 0.15f, 3, 1, 1, "ar_snipe", 6),
+                    Mod("ar_snipe2", "狙擊強化", "snipe", ModField.Damage, 0.15f, 4, 1, 1, "ar_snipe", 6),
                     Learn("ar_blast", "blasttrap", 1, 2, "ar_snare", 5),
-                    Mod("ar_blast2", "陷阱大師", "blasttrap", ModField.Damage, 0.15f, 3, 1, 3, "ar_blast", 8),
+                    Mod("ar_blast2", "陷阱大師", "blasttrap", ModField.Damage, 0.15f, 4, 1, 3, "ar_blast", 8),
                     Learn("ar_focus", "focus", 1, 4, "ar_snipe2", 10),
                     StatN("ar_agi", "鷹眼", Stat.Agi, 2, 0),
                     StatN("ar_str", "臂力", Stat.Str, 2, 1),
-                    Pas("ar_crit", "銳利箭頭", PassiveKind.Crit, 0.03f, 3, 2, 2, "ar_agi", 6),
-                    Pas("ar_dodge", "獵人直覺", PassiveKind.Dodge, 0.1f, 2, 2, 3, "ar_crit", 10),
+                    Pas("ar_crit", "銳利箭頭", PassiveKind.Crit, 0.03f, 4, 2, 2, "ar_agi", 6),
+                    Pas("ar_dodge", "獵人直覺", PassiveKind.Dodge, 0.1f, 4, 2, 3, "ar_crit", 10),
                     Pas("ar_over", "蓄力強化", PassiveKind.Overcharge, 1f, 1, 0, 3),
                 };
                 case "mage": return new List<TreeNode>
@@ -179,40 +179,40 @@ namespace SpellDuel
                     Learn("mg_dispel", "dispel", 1, 4, "mg_wind", 10),
                     StatN("mg_int", "智慧", Stat.Int, 2, 0),
                     StatN("mg_spi", "冥思", Stat.Spi, 2, 1),
-                    Pas("mg_burn", "元素灼燒", PassiveKind.Burn, 0.05f, 3, 2, 2, "mg_int", 6),
-                    Pas("mg_siphon", "法力虹吸", PassiveKind.MpOnHit, 2f, 3, 2, 3, "mg_spi", 10),
-                    Pas("mg_fast", "快速詠唱", PassiveKind.FastCast, 0.08f, 3, 0, 3),
+                    Pas("mg_burn", "元素灼燒", PassiveKind.Burn, 0.05f, 4, 2, 2, "mg_int", 6),
+                    Pas("mg_siphon", "法力虹吸", PassiveKind.MpOnHit, 2f, 4, 2, 3, "mg_spi", 10),
+                    Pas("mg_fast", "快速詠唱", PassiveKind.FastCast, 0.08f, 4, 0, 3),
                 };
                 case "assassin": return new List<TreeNode>
                 {
                     Mod("as_knife", "飛刀連發", "knife", ModField.Multi, 1f, 2, 0, 0),
-                    Mod("as_shadow", "影襲強化", "shadow", ModField.Damage, 0.12f, 3, 0, 1, "as_knife"),
+                    Mod("as_shadow", "影襲強化", "shadow", ModField.Damage, 0.12f, 4, 0, 1, "as_knife"),
                     Mod("as_smoke", "濃煙", "smoke", ModField.EffectDur, 1f, 2, 0, 2),
                     Learn("as_poison", "poison", 1, 0, null, 3),
-                    Mod("as_poison2", "劇毒", "poison", ModField.EffectDps, 2f, 3, 1, 1, "as_poison", 5),
+                    Mod("as_poison2", "劇毒", "poison", ModField.EffectDps, 2f, 4, 1, 1, "as_poison", 5),
                     Learn("as_backstab", "backstab", 1, 2, "as_shadow", 6),
-                    Mod("as_backstab2", "刺殺強化", "backstab", ModField.Damage, 0.15f, 3, 1, 3, "as_backstab", 9),
+                    Mod("as_backstab2", "刺殺強化", "backstab", ModField.Damage, 0.15f, 4, 1, 3, "as_backstab", 9),
                     Learn("as_prep", "prep", 1, 4, "as_backstab", 12),
                     StatN("as_str", "力量", Stat.Str, 2, 0),
                     StatN("as_agi", "身手", Stat.Agi, 2, 1),
-                    Pas("as_crit", "致命一擊", PassiveKind.Crit, 0.04f, 3, 2, 2, "as_agi", 6),
+                    Pas("as_crit", "致命一擊", PassiveKind.Crit, 0.04f, 4, 2, 2, "as_agi", 6),
                     Pas("as_dodge", "暗影步", PassiveKind.Dodge, 0.1f, 2, 2, 3, "as_crit", 10),
                     Pas("as_evade", "殘影", PassiveKind.Evade, 0.04f, 3, 0, 3, "as_smoke", 4),
                     Pas("as_evade2", "幻影身法", PassiveKind.Evade, 0.05f, 2, 2, 4, "as_dodge", 14),
                 };
                 case "priest": return new List<TreeNode>
                 {
-                    Mod("pr_holy", "聖光強化", "holy", ModField.Damage, 0.12f, 3, 0, 0),
-                    Mod("pr_heal", "治療強化", "prayheal", ModField.Heal, 0.15f, 3, 0, 1),
+                    Mod("pr_holy", "聖光強化", "holy", ModField.Damage, 0.12f, 4, 0, 0),
+                    Mod("pr_heal", "治療強化", "prayheal", ModField.Heal, 0.15f, 4, 0, 1),
                     Mod("pr_cleanse", "淨化強化", "cleanse", ModField.Cooldown, 0.15f, 2, 0, 2),
                     Learn("pr_judge", "judgement", 1, 0, "pr_holy", 3),
-                    Mod("pr_judge2", "審判強化", "judgement", ModField.Damage, 0.15f, 3, 1, 1, "pr_judge", 6),
+                    Mod("pr_judge2", "審判強化", "judgement", ModField.Damage, 0.15f, 4, 1, 1, "pr_judge", 6),
                     Learn("pr_guard", "guard", 1, 2, "pr_heal", 5),
                     Mod("pr_guard2", "守護強化", "guard", ModField.BuffReduce, 0.05f, 3, 1, 3, "pr_guard", 8),
                     Learn("pr_prayer", "prayer", 1, 4, "pr_guard", 10),
                     StatN("pr_int", "虔誠", Stat.Int, 2, 0),
                     StatN("pr_vit", "堅毅", Stat.Vit, 2, 1),
-                    Pas("pr_regen", "神聖庇護", PassiveKind.Regen, 0.5f, 3, 2, 2, "pr_vit", 6),
+                    Pas("pr_regen", "神聖庇護", PassiveKind.Regen, 0.5f, 4, 2, 2, "pr_vit", 6),
                     Pas("pr_faith", "信仰", PassiveKind.MpOnHit, 2f, 3, 2, 3, "pr_int", 10),
                     Pas("pr_quick", "快速施法", PassiveKind.QuickCd, 0.08f, 3, 0, 3),
                 };
@@ -607,7 +607,7 @@ namespace SpellDuel
     public class CharacterProfile
     {
         public string cls;
-        public int level = 1, xp, statPoints, skillPoints;
+        public int level = 1, xp, statPoints, skillPoints = SkillPerLevel;   // 技能點：1 級就有 1 點，之後每升一級 +1（20 級共 20 點）
         public readonly int[] alloc = new int[StatInfo.Count];        // 自己加的能力點（不含初始值、技能樹、裝備）
         public readonly Dictionary<string, int> ranks = new Dictionary<string, int>();
         public readonly Item[] equipped = new Item[5];
@@ -630,6 +630,28 @@ namespace SpellDuel
         }
 
         public const int MaxLevel = 60, StatPerLevel = 8, SkillPerLevel = 1;
+        /// <summary>
+        /// 職業（基本）技能樹最多能點幾點：樹上總共 40 點，但只能點其中 20 點（＝20 級拿到的點數），要取捨。
+        /// 20 級以後拿到的點數只能點進階職業的技能樹。
+        /// </summary>
+        public const int BaseTreeCap = 20;
+        public const int BaseTreeTotal = 40;
+
+        /// <summary>基本職業技能樹已經點了幾點</summary>
+        public int BaseSpent { get { int v = 0; foreach (var n in SkillTrees.Of(cls)) v += Rank(n.id); return v; } }
+        /// <summary>全部技能樹已經點了幾點</summary>
+        public int SpentSkill { get { int v = 0; foreach (var n in Nodes) v += Rank(n.id); return v; } }
+        /// <summary>到目前等級總共拿到的技能點</summary>
+        public int EarnedSkill => level * SkillPerLevel;
+        /// <summary>現在點得出去的技能點（基本樹點滿 20 點、又還沒轉職時，剩下的點要等轉職才能用）</summary>
+        public int UsableSkillPoints => adv == null && BaseSpent >= BaseTreeCap ? 0 : skillPoints;
+
+        /// <summary>讀檔後校正：基本技能樹超過上限（舊規則點的）就整棵退點；剩餘點數＝拿到的－已點的</summary>
+        public void NormalizeSkillPoints()
+        {
+            if (BaseSpent > BaseTreeCap) foreach (var n in SkillTrees.Of(cls)) ranks.Remove(n.id);
+            skillPoints = Mathf.Max(0, EarnedSkill - SpentSkill);
+        }
 
         /// <summary>升到 level+1 需要的累積經驗：75、200、375、600…</summary>
         public static int XpForLevel(int level) => 50 * (level - 1) + 25 * (level - 1) * (level - 1);
@@ -680,7 +702,7 @@ namespace SpellDuel
             for (int i = 0; i < StatInfo.Count; i++) alloc[i] = 0;
             ranks.Clear();
             statPoints = (level - 1) * StatPerLevel;
-            skillPoints = (level - 1) * SkillPerLevel;
+            skillPoints = EarnedSkill;
             for (int i = 0; i < equipped.Length; i++) if (equipped[i] != null && !CanEquip(equipped[i], out _)) equipped[i] = null;
         }
 
@@ -691,6 +713,7 @@ namespace SpellDuel
             foreach (var r in SkillTrees.Prereqs(TreeOf(n), n))
                 if (Rank(r.id) < r.max) return $"需要先點滿「{r.name}」";
             if (skillPoints <= 0) return "技能點不足";
+            if (TreeOf(n) == cls && BaseSpent >= BaseTreeCap) return $"職業技能樹最多只能點 {BaseTreeCap} 點（共 {BaseTreeTotal} 點，要取捨；重新分配可以退點）";
             return null;
         }
         public bool Learn(TreeNode n)
@@ -850,6 +873,7 @@ namespace SpellDuel
                 }
                 catch (Exception) { }
             }
+            p.NormalizeSkillPoints();
             return p;
         }
     }
