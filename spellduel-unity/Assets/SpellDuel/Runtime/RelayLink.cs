@@ -4,6 +4,7 @@ using System.Text;
 using Unity.Collections;
 using Unity.Networking.Transport;
 using Unity.Networking.Transport.Relay;
+using Unity.Networking.Transport.Utilities;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Relay;
