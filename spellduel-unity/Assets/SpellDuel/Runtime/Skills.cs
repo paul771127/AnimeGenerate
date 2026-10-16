@@ -98,6 +98,8 @@ namespace SpellDuel
 
         /// <summary>遠距技能的飛行速度倍率</summary>
         public const float ProjectileSpeedScale = 0.7f;
+        /// <summary>普通攻擊的飛行速度倍率（在 ProjectileSpeedScale 之後再乘）</summary>
+        public const float BasicSpeedScale = 0.5f;
 
         static Skills()
         {
@@ -268,6 +270,9 @@ namespace SpellDuel
             foreach (var sk in All.Values)
                 if (sk.type == SkillType.Projectile && !sk.releaseNear && sk.rangeMax >= 3f && sk.id != "m_dash" && sk.id != "m_leap" && sk.id != "m_dive")
                     sk.speed *= ProjectileSpeedScale;
+            // 普通攻擊的飛行速度再減半（法師、牧師的飛彈與獵人的箭）
+            foreach (var sk in All.Values)
+                if (sk.cls == "basic" && sk.type == SkillType.Projectile) sk.speed *= BasicSpeedScale;
         }
     }
 }
