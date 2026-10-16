@@ -373,7 +373,8 @@ namespace SpellDuel
         // 簡體 → 繁體（技能名稱用到的字與常見異體字）
         const string SimpTrad =
             "击擊连連兽獸夹夾术術枪槍鎗槍风風陨隕愈癒瘉癒袭襲飞飛烟煙菸煙雾霧弹彈斩斬剑劍劒劍剣劍气氣挡擋铁鐵疗療猎獵" +
-            "圣聖审審护護祷禱净淨广廣杀殺腾騰冻凍结結坠墜静靜灵靈恶惡恒恆环環电電闪閃极極讽諷点點";
+            "圣聖审審护護祷禱净淨广廣杀殺腾騰冻凍结結坠墜静靜灵靈恶惡恒恆环環电電闪閃极極讽諷点點" +
+            "鹰鷹领領将將应應现現罚罰记記听聽躯軀冲衝贯貫标標滚滾从從号號凛凜为為约約卫衛弃棄处處决決复復体體惩懲";
 
         // 拼音（不含聲調）→ 字：技能名稱的每個字，加上辨識器可能輸出的同音字（繁簡都有）
         const string PinyinTable =
@@ -415,7 +416,15 @@ namespace SpellDuel
             "tui 退推腿頹颓|xie 邪些寫写謝谢鞋協协斜血|e 惡恶餓饿額额鵝鹅|xin 心新信辛欣鋅锌|ling 靈灵領领零令鈴铃齡龄0|pi 劈皮批披匹疲脾|ting 霆聽听停庭挺廷亭|" +
             "yong 永用勇泳擁拥湧涌|heng 恆恒橫横衡哼|tian 天田甜填添|shang 上傷伤商賞赏尚|de 的得德地|a 啊阿|zuo 作做坐座左昨|" +
             "di 地第低底弟帝敵敌滴|dian 電电點点店典顛颠|nu 怒努奴|" +
-            "chao 嘲朝超潮炒吵巢抄|si 撕|ming 命|sheng 生|yi 一1|er 二2|liu 六6|jiu 九9";
+            "chao 嘲朝超潮炒吵巢抄|si 撕|ming 命|sheng 生|yi 一1|er 二2|liu 六6|jiu 九9|" +
+            // 進階職業的技能名稱與咒語（Skills.cs 的 adv 技能）
+            "dun 盾遁頓顿噸吨蹲敦燉炖鈍钝|chong 衝冲充崇蟲虫寵宠|cai 裁才材財财採采彩菜猜踩|xuan 旋選选宣玄懸悬炫|" +
+            "qu 軀躯去取區区曲趣驅驱渠屈|guan 貫贯關关觀观管官館馆冠罐慣惯|chuan 穿川傳传船串喘|biao 標标表錶飆飙彪|gun 滾滚棍|" +
+            "cong 從从聰聪匆蔥葱叢丛|wu 吾|hao 號号好豪毫浩耗|xia 下夏嚇吓瞎峽峡狹狭霞|lin 凜凛林臨临鄰邻淋琳磷|da 大打達达答搭|" +
+            "wei 為为衛卫位未味圍围偉伟維维微威尾胃|mo 魔模莫末摸磨默墨膜陌|li 力立利理里離离例歷历麗丽禮礼李|yue 約约月越樂乐閱阅躍跃岳|" +
+            "yi 以意已易衣醫医億亿義义異异議议依移憶忆藝艺益翼|yuan 元原園园員员遠远願愿源圓圆院援緣缘|po 破坡婆迫潑泼|qi 棄弃|" +
+            "ti 替體体提題题梯踢|chu 處处出初除楚觸触儲储廚厨|jue 決决覺觉絕绝角爵掘|fu 復复福服父付府富負负婦妇浮扶副傅附覆幅腹|" +
+            "qun 群裙|bi 庇|cheng 懲惩成城程承誠诚乘稱称橙|jie 戒|zeng 增曾贈赠憎";
 
         static readonly Dictionary<char, char> toTrad = new Dictionary<char, char>();
         static readonly Dictionary<char, List<string>> pinyin = new Dictionary<char, List<string>>();

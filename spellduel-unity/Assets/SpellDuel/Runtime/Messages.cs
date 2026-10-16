@@ -16,7 +16,9 @@ namespace SpellDuel
     ///   seen         場地主的鏡頭看到對手站的位置（世界座標 p、拍攝時間 t0）→ 對齊樣本
     ///   align        對齊方回報對齊結果（ok、誤差 s、樣本數 id）
     ///   雙人職業對戰（SoloBattle 的連線模式）：
-    ///   ready        準備好了：職業 k、技能 ks
+    ///   ready        準備好了：職業 k、技能 ks、進階職業 a
+    ///   pet / petgone   召喚物出現（id、種類 k、位置 p、存在秒數 s）／消失
+    ///   oath         守護誓言：我受到的傷害轉給聖騎士（to＝聖騎士，dmg）
     ///   cast2        放出法術：id、技能 k、起點 p、方向 d、時間 t0、ok＝反擊打回去的
     ///   hit2         我的法術／陷阱打到你：id（陷阱為負）、技能 k、傷害 dmg、位置 p
     ///   hp2          被打的一方回報血量 hp、ok＝反擊成功
@@ -46,6 +48,7 @@ namespace SpellDuel
         public int e;            // 雙人對戰：狀態旗標（1 格擋、2 護盾、4 反擊）
         public int pid;          // 發送者編號（主機 0、加入的人 1～3）
         public int to;           // 0＝給所有人；n＝只給 pid n−1（主機轉送時看這個）
+        public string a;         // ready：進階職業 id（沒轉職＝空）
 
         public string ToJson() => JsonUtility.ToJson(this);
         public static Msg FromJson(string json) => JsonUtility.FromJson<Msg>(json);

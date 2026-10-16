@@ -48,6 +48,9 @@ namespace SpellDuel
             "fire" => 2, "wind" => 2, "ice" => 3, "dispel" => 4, "meteor" => 5, "meditate" => 3, "thunder" => 4, "heal" => 3,
             // 牧師
             "holy" => 2, "prayheal" => 3, "cleanse" => 3, "guard" => 4, "prayer" => 4, "judgement" => 5,
+            // 進階職業：大魔導士、召喚師（沒有語音辨識時比數字）、主教、審判者
+            "tjudge" => 5, "frostfield" => 4, "manashield" => 3, "firespirit" => 2, "golem" => 4, "detonate" => 5,
+            "revive" => 5, "massheal" => 4, "sanctuary" => 3, "holylance" => 2, "chastise" => 3, "heavenpunish" => 5,
             _ => 0,
         };
 
@@ -60,6 +63,7 @@ namespace SpellDuel
             var st = ReleaseOf(s);
             if (st == Style.Chant) return $"唸「{s.chant}」→比 5";
             if (s.releaseNear) return "伸手掌蓄力→靠近";
+            var seal = Advanced.SealOf(s.id); if (seal != null) return $"手印 {Advanced.SealText(seal)}";
             return st == Style.Number ? $"比 {NumberOf(s.id)}" : s.cls == "archer" ? "握拳→比五" : StyleName(st);
         }
 
@@ -68,6 +72,8 @@ namespace SpellDuel
         {
             var st = ReleaseOf(s);
             if (st == Style.Chant) return $"唸出咒語「{s.chant}」，再把手伸到鏡頭前比 5（五指張開）放招";
+            var seal = Advanced.SealOf(s.id);
+            if (seal != null) return $"忍術手印：依序比出 {Advanced.SealText(seal)}（每個數字停一下）放出";
             if (s.releaseNear) return "手掌伸到鏡頭前蓄力（身邊直徑 4m 內不能有敵人）→ 蓄滿後 5 秒內靠近敵人 1.5m 自動出手";
             if (st == Style.Number) return $"比出數字 {NumberOf(s.id)}（{NumberFingers(NumberOf(s.id))}）放招";
             if (s.cls == "archer") return $"先握拳 → 再比五（五指張開）{(s.type == SkillType.Projectile ? "放箭" : s.type == SkillType.Trap ? "設置陷阱" : "發動")}";
@@ -92,6 +98,7 @@ namespace SpellDuel
             if (s == null) return Style.None;
             if (s.cls == "mage") return MageChant && !string.IsNullOrEmpty(s.chant) ? Style.Chant : Style.Number;   // 法師：唸完名稱 → 唸咒語 → 比 5 放招
             if (s.cls == "priest") return Style.Number;
+            if (Advanced.SealOf(s.id) != null) return Style.Number;              // 忍者：手印（數字序列）
             if (s.releaseNear) return Style.None;                         // 刺客伏擊技能：手掌在鏡頭前就蓄力，蓄滿自動伏擊（不用放招動作）                   // 牧師：唸完名稱比固定數字就放招
             if (s.cls == "archer") return Style.Burst;                    // 獵人：握拳→比五（張開）就放招
             switch (s.id)
@@ -104,6 +111,9 @@ namespace SpellDuel
                 case "knife": return Style.Chop;
                 case "prep": return Style.Burst;                                                     // 刺殺準備：握拳→張開                                                      // 甩出飛刀
                 case "thrust": return Style.Thrust;                                                   // 劍士突刺
+                case "shieldbash": return Style.Thrust;                                               // 聖騎士：舉掌往前推
+                case "oath": case "bloodrage": case "undying": case "shadowdance": return Style.Burst; // 握拳→張開
+                case "sanction": case "poisonfog": return Style.Press;                               // 往下壓
             }
             if (s.type == SkillType.Trap) return Style.Press;
             return StyleOf(s.cls);

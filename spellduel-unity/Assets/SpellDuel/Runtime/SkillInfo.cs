@@ -32,6 +32,8 @@ namespace SpellDuel
             void Line(string t) => sb.Append("・").Append(t).Append('\n');
 
             sb.Append(s.desc).Append("\n\n");
+            var adv = Advanced.Get(s.adv);
+            if (adv != null) sb.Append($"✨ {adv.name}的進階技能（技能欄的第 4 格）\n\n");
 
             // ---- 怎麼放
             sb.Append("【怎麼放】\n");
@@ -48,7 +50,8 @@ namespace SpellDuel
             switch (s.type)
             {
                 case SkillType.Projectile when s.areaRadius > 0f:
-                    Line($"以自己為中心半徑 {s.areaRadius:0.#}m 的範圍");
+                    Line(s.atTarget ? $"打在準星指的位置（最遠 {s.rangeMax:0.#}m；鎖定時打在敵人腳下），半徑 {s.areaRadius:0.#}m" : $"以自己為中心半徑 {s.areaRadius:0.#}m 的範圍");
+                    if (s.hits > 1) Line($"連續 {s.hits} 段，每段間隔 {s.hitGap:0.##} 秒");
                     break;
                 case SkillType.Projectile when s.fromAbove:
                     Line($"從目標正上方落下（射程 {s.rangeMax:0.#}m）；沒鎖定時落在準星指的地面");
@@ -74,7 +77,12 @@ namespace SpellDuel
                 case EffectKind.Dot: E($"中毒：每秒 {s.effectDps:0.#} 傷害，持續 {s.effectDur:0.#} 秒"); break;
                 case EffectKind.Blind: E($"致盲：對手畫面被煙霧遮住 {s.effectDur:0.#} 秒"); break;
                 case EffectKind.Snare: E($"定身 {s.effectDur:0.#} 秒：打斷對手正在蓄力的招式，這段時間不能唸新的技能（牧師的淨化除外）；電腦、Boss、小怪會站著不動"); break;
+                case EffectKind.Mark: E($"懲戒 {s.effectDur:0.#} 秒：目標受到的所有傷害 +20%"); break;
+                case EffectKind.Burn: E($"灼燒：每秒 {s.effectDps:0.#} 傷害，持續 {s.effectDur:0.#} 秒"); break;
             }
+            if (s.pierce) E("穿透：一路穿過所有小怪（每隻打一次），最後打到 Boss／對手");
+            if (s.execute) E("處決：目標 HP 低於 25% 時傷害 ×3");
+            if (s.self == SelfKind.Pet) E($"召喚物存在 {s.petLife:0} 秒；每 {s.petInterval:0.#} 秒攻擊 {s.petRange:0.#}m 內最近的敵人（傷害 {s.damage}）" + (s.petHp > 0 ? $"；HP {s.petHp}" : "") + $"；同時最多 {Battle.MaxPets} 隻");
             if (s.id == "meteor") E($"落地留下直徑 {Battle.BurnRadius * 2f:0.#}m 的火海，持續 {Battle.BurnDuration:0} 秒，站在裡面每秒 {Battle.BurnDps:0.#} 傷害");
             if (s.id == "wind") E("隨機從左或右側繞弧線飛向目標");
             if (s.id == "slash") E($"揮出後 {Battle.SliceWindow:0.#} 秒內，斬開正面 {Battle.SliceRange:0.#}m 內飛來的法球（從天而降、地裂、橫掃等範圍攻擊無效）");
@@ -101,6 +109,20 @@ namespace SpellDuel
                 case SelfKind.Mana: E($"回復 {s.buffAmount} MP"); break;
                 case SelfKind.Focus: E($"{s.buffDur:0} 秒內所有技能的冷卻時間減半；放出當下正在冷卻的也立刻減半"); break;
                 case SelfKind.Prep: E($"蓄滿放出後 {s.buffDur:0} 秒內，所有攻擊傷害 +{s.buffReduce * 100f:0}%；這段時間受到任何傷害就被打斷、加成取消"); break;
+                case SelfKind.Oath: E($"{s.buffDur:0} 秒內：自己受到的傷害 -20%；合作時，在你 {Battle.AuraRange:0}m 內的隊友受到的傷害有 {s.buffReduce * 100f:0}% 轉到你身上"); break;
+                case SelfKind.Frenzy: E($"扣除目前 HP 的 {s.buffReduce * 100f:0}%；{s.buffDur:0} 秒內技能與普攻的冷卻變快（攻速 ×1.5）"); break;
+                case SelfKind.Undying: E($"{s.buffDur:0} 秒內受到致命傷害：保留 1 HP，並無敵 3 秒（只觸發一次）"); break;
+                case SelfKind.DeadMark: E($"{s.buffDur:0} 秒內射出的下一箭必定爆擊（傷害 ×2）"); break;
+                case SelfKind.RollShot: E($"{s.buffDur:0} 秒內：每次側跨閃避自動朝最近的敵人射一箭（傷害 {Skills.All["rollarrow"].damage}）"); break;
+                case SelfKind.ManaShield: E($"{s.buffDur:0} 秒內受到的傷害先扣 MP（1 MP 擋 1 點），MP 用完才扣 HP"); break;
+                case SelfKind.Detonate: E($"每隻召喚物在周圍 {s.areaRadius:0.#}m 爆炸（傷害 {Skills.All["pet_blast"].damage}），召喚物消失"); break;
+                case SelfKind.Substitute: E($"{s.buffDur:0.#} 秒內下一次被打中：完全不受傷害（陷阱、範圍攻擊也算）"); break;
+                case SelfKind.Clone: E($"分身持續 {s.buffDur:0} 秒：受到的攻擊有 50% 機率打到分身（完全無效）"); break;
+                case SelfKind.Dance: E($"{s.buffDur:0} 秒內：身邊有敵人也能蓄力伏擊技能；伏擊出手距離加倍"); break;
+                case SelfKind.Fog: E($"腳下直徑 {s.areaRadius * 2f:0.#}m 的毒霧，持續 {s.buffDur:0} 秒；範圍內每個敵人每秒 {s.effectDps:0.#} 傷害"); break;
+                case SelfKind.Revive: E($"倒下的隊友以 {s.buffAmount}% HP 復活；活著的人（含自己）獲得 {s.buffDur:0} 秒復活祝福：倒下時自動以 30% HP 站起來"); break;
+                case SelfKind.HealPct: E($"回復最大 HP 的 {s.buffAmount}%"); break;
+                case SelfKind.TeamShield: E($"護盾 {s.buffDur:0} 秒，吸收 {s.buffAmount} 傷害"); break;
             }
             if (s.cls == "priest" && s.type == SkillType.Self) E("作用在所有己方單位：自己＋合作模式的隊友（不限距離）");
             if (eff.Length > 0) sb.Append("\n【效果】\n").Append(eff);

@@ -7,7 +7,7 @@ namespace SpellDuel
     /// <summary>
     /// 故事模式的大地圖與城鎮（全螢幕 IMGUI，由 SoloBattle 呼叫 Draw）：
     ///   大地圖：三個地區（熔岩地帶、森林、海上礁石），每區一座城鎮＋這個地區的關卡；打過的關卡可以重打（刷裝備）。
-    ///   城鎮：居民（點一下聊天）、鐵匠鋪（強化裝備）、道具店（買藥水／回城捲軸、賣裝備）、職業工會（轉職預覽；職業任務尚未開放）。
+    ///   城鎮：居民（點一下聊天）、鐵匠鋪（強化裝備）、道具店（買藥水／回城捲軸、賣裝備）、職業工會（Lv20 挑戰轉職試煉，通過後選進階職業）。
     /// </summary>
     public class WorldUI
     {
@@ -17,6 +17,7 @@ namespace SpellDuel
         public Action<StoryStage> OnStartStage;  // 出發打關卡
         public Action OnBack;                    // 離開大地圖（回選擇畫面）
         public Action OnCharacter;               // 打開角色畫面
+        public Action OnStartTrial;              // 出發挑戰轉職試煉
 
         StoryStage sel;
         int shopTab, page, npcTalk = -1, npcLine;
@@ -79,6 +80,7 @@ namespace SpellDuel
         }
 
         public void OpenTown(int t) { town = Mathf.Clamp(t, 0, Towns.Length - 1); screen = Screen.Town; npcTalk = -1; selItem = null; }
+        public void OpenGuild() { screen = Screen.Guild; npcTalk = -1; selItem = null; }
 
         // ---------------------------------------------------------------- 畫面
         public void Draw(CharacterProfile prof)
@@ -338,33 +340,102 @@ namespace SpellDuel
             if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), "🏘 回城鎮", fs)) screen = Screen.Town;
         }
 
-        // ---------------------------------------------------------------- 職業工會（轉職預覽）
+        // ---------------------------------------------------------------- 職業工會（轉職：Lv20 → 轉職試煉 → 二選一，選了不能換）
+        string advPick;                // 正在確認的進階職業
+        float advPickAt;
+        int guildScroll;
+
         void DrawGuild(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
             float y = r.y + gap;
             Header(r, "🏛 職業工會", new Color(0.85f, 0.6f, 1f), prof, fs, fsS, fsL, gap, ref y);
             string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
-            bool lvOk = prof.level >= Economy.AdvanceLevel;
-            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.4f), $"公會長：「{cn}啊，等你到了 Lv{Economy.AdvanceLevel}，完成職業任務就能轉職成更強的職業。」\n目前 Lv{prof.level}" + (lvOk ? "（已達轉職等級）" : $"（還差 {Economy.AdvanceLevel - prof.level} 級）"), fsS, Color.white, TextAnchor.UpperLeft);
+            bool lvOk = prof.level >= Advanced.Level;
+            var cur = prof.Adv;
+            string status;
+            if (cur != null) status = $"公會長：「你已經是獨當一面的{cur.name}了。進階技能樹在「角色」畫面的「進階」分頁。」";
+            else if (!lvOk) status = $"公會長：「{cn}啊，到了 Lv{Advanced.Level} 再來找我，通過轉職試煉就能選擇進階職業。」\n目前 Lv{prof.level}（還差 {Advanced.Level - prof.level} 級）";
+            else if (!prof.trialPassed) status = $"公會長：「你的實力夠了。先通過轉職試煉證明自己吧——不能用藥水，倒下就重來。」";
+            else status = "公會長：「恭喜通過試煉！從下面兩條路選一條。記住：選了就不能換。」";
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.6f), status, fsS, Color.white, TextAnchor.UpperLeft);
             y += fs * 2.8f;
-            foreach (var ac in Economy.AdvancedOf(prof.cls))
+
+            // 轉職試煉
+            if (cur == null)
             {
-                var cr = new Rect(r.x + gap, y, r.width - gap * 2, fs * 3.4f);
-                UiKit.Card(cr, 0.5f, cd?.color, 0.7f);
-                UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.6f, cr.height), $"✨ {ac.name}\n{ac.desc}", fsS, Color.white, TextAnchor.MiddleLeft, true);
-                if (UiKit.Button(new Rect(cr.xMax - cr.width * 0.36f, cr.y + gap * 0.4f, cr.width * 0.35f - gap * 0.3f, cr.height - gap * 0.8f), lvOk ? "接職業任務\n（尚未開放）" : $"需要 Lv{Economy.AdvanceLevel}", fsS, false, null, false)) { }
-                y += cr.height + gap * 0.5f;
+                var tr = new Rect(r.x + gap, y, r.width - gap * 2, fs * 3.6f);
+                UiKit.Card(tr, 0.55f, new Color(1f, 0.55f, 0.3f), 0.8f);
+                UiKit.Text(new Rect(tr.x + gap, tr.y, tr.width * 0.62f, tr.height), $"⚔ 轉職試煉{(prof.trialPassed ? "（已通過 ✔）" : "")}\n{TrialText}", fsS, Color.white, TextAnchor.MiddleLeft);
+                bool can = lvOk && !prof.trialPassed;
+                string bt = prof.trialPassed ? "已通過" : !lvOk ? $"需要 Lv{Advanced.Level}" : $"挑戰\n💰 {Advanced.TrialGold}";
+                if (UiKit.Button(new Rect(tr.xMax - tr.width * 0.34f, tr.y + gap * 0.4f, tr.width * 0.33f - gap * 0.3f, tr.height - gap * 0.8f), bt, fsS, can, new Color(1f, 0.55f, 0.3f), can))
+                {
+                    if (Economy.Gold < Advanced.TrialGold) Toast($"金幣不夠（需要 {Advanced.TrialGold}）");
+                    else { Economy.Gold -= Advanced.TrialGold; OnStartTrial?.Invoke(); }
+                }
+                y += tr.height + gap * 0.6f;
             }
-            y += gap * 0.5f;
-            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), "📋 職業任務", fsS, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleLeft, true);
-            y += fs * 1.4f;
-            string[] quests = { "試煉之一：證明你的實力（尚未開放）", "試煉之二：工會長的委託（尚未開放）", "最終試煉：轉職儀式（尚未開放）" };
-            foreach (var q in quests)
+
+            // 兩個進階職業
+            var advs = Advanced.Of(prof.cls);
+            float listTop = y, listBot = r.yMax - gap * 2 - fs * 2.1f;
+            float cardH = fs * 7.6f;
+            int maxScroll = Mathf.Max(0, Mathf.CeilToInt((advs.Length * (cardH + gap * 0.5f) - (listBot - listTop)) / (cardH * 0.5f)));
+            guildScroll = Mathf.Clamp(guildScroll, 0, maxScroll);
+            y -= guildScroll * cardH * 0.5f;
+            foreach (var a in advs)
             {
-                UiKit.Text(new Rect(r.x + gap * 2, y, r.width - gap * 3, fs * 1.3f), "🔒 " + q, fsS, Color.gray);
-                y += fs * 1.35f;
+                var cr = new Rect(r.x + gap, y, r.width - gap * 2, cardH);
+                y += cardH + gap * 0.5f;
+                if (cr.yMax < listTop || cr.y > listBot) continue;
+                bool mine = cur != null && cur.id == a.id;
+                UiKit.Card(cr, mine ? 0.8f : 0.5f, a.color, mine ? 1f : 0.7f);
+                var names = System.Array.ConvertAll(a.skills, id => Skills.All.TryGetValue(id, out var sd) ? sd.name : id);
+                string body = $"✨ {a.name}　{a.desc}{(mine ? "（目前職業）" : "")}\n" +
+                              $"{StatLine(a)}\n" +
+                              $"🔷 {a.core}\n" +
+                              $"⚠ {a.weak}\n" +
+                              $"📜 新技能：{string.Join("、", names)}";
+                UiKit.Text(new Rect(cr.x + gap, cr.y + gap * 0.3f, cr.width * 0.7f - gap, cr.height - gap * 0.6f), body, fsS, Color.white, TextAnchor.UpperLeft, false, 0.5f);
+                if (cur == null && prof.CanAdvance)
+                {
+                    bool confirming = advPick == a.id && Time.time - advPickAt < 6f;
+                    if (UiKit.Button(new Rect(cr.xMax - cr.width * 0.28f, cr.y + gap * 0.5f, cr.width * 0.27f - gap * 0.3f, cr.height - gap), confirming ? $"確定轉職\n成為{a.name}？\n（不能換）" : $"選擇\n{a.name}", fsS, confirming, a.color))
+                    {
+                        if (!confirming) { advPick = a.id; advPickAt = Time.time; Toast($"再按一次確定成為{a.name}（選了就不能換）"); }
+                        else if (prof.Advance(a.id))
+                        {
+                            Progress.SaveChar(prof); advPick = null;
+                            Toast($"🎉 轉職成功！你成為了{a.name}，學會「{names[0]}」");
+                            Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
+                        }
+                    }
+                }
+            }
+            if (maxScroll > 0)
+            {
+                float bw = fs * 2.2f;
+                if (UiKit.Button(new Rect(r.xMax - gap - bw, listTop, bw, bw), "▲", fs, false, null, guildScroll > 0)) guildScroll--;
+                if (UiKit.Button(new Rect(r.xMax - gap - bw, listBot - bw, bw, bw), "▼", fs, false, null, guildScroll < maxScroll)) guildScroll++;
             }
             if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), "🏘 回城鎮", fs)) screen = Screen.Town;
+        }
+
+        public static string TrialText =>
+            $"迷霧森林第 {Advanced.TrialFirstWave}～{Advanced.TrialLastWave} 波（最後一波是 Boss）；敵人 HP ×{Advanced.TrialHpMul:0.#}、攻擊 ×{Advanced.TrialDmgMul:0.#}；不能用藥水與回城捲軸";
+
+        static string StatLine(AdvDef a)
+        {
+            var parts = new List<string>();
+            if (a.hpAdd != 0) parts.Add($"HP {(a.hpAdd > 0 ? "+" : "")}{a.hpAdd}");
+            if (a.mpAdd != 0) parts.Add($"MP +{a.mpAdd}");
+            if (a.atkMul != 1f) parts.Add($"攻擊 {(a.atkMul > 1f ? "+" : "")}{(a.atkMul - 1f) * 100f:0}%");
+            if (a.armor != 0f) parts.Add(a.armor > 0f ? $"受傷 -{a.armor * 100f:0}%" : $"受傷 +{-a.armor * 100f:0}%");
+            if (a.crit > 0f) parts.Add($"爆擊 +{a.crit * 100f:0}%");
+            if (a.evade > 0f) parts.Add($"閃避 +{a.evade * 100f:0}%");
+            if (a.healMul != 1f) parts.Add($"治療 {(a.healMul > 1f ? "+" : "")}{(a.healMul - 1f) * 100f:0}%");
+            for (int i = 0; i < StatInfo.Count; i++) if (a.stats[i] != 0) parts.Add($"{StatInfo.Names[i]} +{a.stats[i]}");
+            return "📊 " + string.Join("・", parts);
         }
     }
 }

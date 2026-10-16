@@ -29,7 +29,25 @@ namespace SpellDuel
         public float focusUntil;        // 獵人精神集中：這段時間內新的冷卻減半
         public float prepUntil, prepBonus;   // 刺殺準備：這段時間內傷害 +prepBonus（受到傷害就取消）
         public Vector3 chargeFrom;      // 開始詠唱時腳的位置（刺殺準備要站著不動）
-        public float OutMul(float now) => (prepUntil > now ? 1f + prepBonus : 1f) * (1f + chargeBonus);
+        public float OutMul(float now) => (prepUntil > now ? 1f + prepBonus : 1f) * (1f + chargeBonus) * RageMul;
+        // ---- 進階職業
+        public string adv;              // 進階職業 id（Advanced.All）；null＝沒轉職
+        public float healMul = 1f;      // 治療量倍率（主教 ×1.2、審判者 ×0.6）
+        /// <summary>狂戰士怒氣：HP 越低傷害越高（HP 30% 以下 +60%）</summary>
+        public float RageMul => adv == "berserker" && maxHp > 0 ? 1f + 0.6f * Mathf.Clamp01((1f - hp / maxHp) / 0.7f) : 1f;
+        public float oathUntil, oathShare; public Fighter oathBy;   // 聖騎士的守護誓言：我受到的傷害有 oathShare 轉給 oathBy
+        public float selfOathUntil;     // 聖騎士自己：誓言期間受到的傷害 -20%
+        public float frenzyUntil, undyingUntil, invulnUntil;        // 狂戰士：血之狂暴、不死之軀、無敵
+        public float markNextUntil;     // 神射手：致命標記（下一箭必定爆擊）
+        public float rollUntil, lastDodgeSeen;                      // 遊俠：翻滾射擊
+        public bool ampNext;            // 大魔導士：唸了增幅咒（下一招傷害 +50%）
+        public float manaShieldUntil;   // 大魔導士：魔力護盾
+        public float subUntil, cloneUntil;                          // 忍者：替身術、分身術
+        public float comboUntil, danceUntil;                        // 影舞者：連殺、影舞
+        public float blessUntil;        // 主教：復活祝福（倒下時自動站起來）
+        public float markedUntil;       // 被懲戒：受到的傷害 +20%
+        public int faith;               // 審判者：信仰（0～5）
+        public Vector3 stillAnchor; public float stillSince;        // 站著不動從什麼時候開始（神射手鷹眼、主教祈禱領域）
         public bool overcharge;         // 獵人「蓄力強化」：蓄滿後可以繼續蓄到 200%
         public float chargeBonus;       // 這一發的蓄力加成（200% 時 +150%）；放招當下設定        // 劍士斬擊：這段時間內會斬開正面 1m 內飛來的法球
         public int shieldLeft;
@@ -102,6 +120,7 @@ namespace SpellDuel
         public float rangeMul = 1f;     // 飛行距離倍率（無盡模式升級）
         public int id;
         public bool remote;          // 雙人：對手的法術（只顯示，命中由對手判定）
+        public HashSet<Fighter> pierced;   // 穿透箭已經打過的小怪
         // 弧線飛行（風刃）：沿直線前進的「基準點」＋往側邊的偏移 sin(π×進度)
         public Vector3 basePos, curveSide;   // curveSide：側向單位向量 × 振幅（公尺，可為負）
         public float curveAmp, pathLen;
@@ -117,6 +136,22 @@ namespace SpellDuel
         public float radius, until, dps, acc;
         public bool remote;            // 雙人：對手的火海（只顯示，傷害由對手判定）
         public bool alive = true;
+        public readonly Dictionary<Fighter, float> accs = new Dictionary<Fighter, float>();   // 每個受害者各自累積（玩家的毒霧可以同時燒好幾隻小怪）
+    }
+
+    /// <summary>召喚物（遊俠的獵鷹、召喚師的火靈／石像、忍者的分身）：跟著主人或待在原地，自動攻擊附近的敵人</summary>
+    public class Pet
+    {
+        public int id;
+        public Fighter owner;
+        public string kind;            // falcon / fire / golem / clone
+        public Vector3 pos;            // 場地座標（身體中心）
+        public float until, next, hp, maxHp, range, interval;
+        public int dmg, blast;         // 每次攻擊的傷害、被引爆時的爆炸傷害
+        public bool remote;            // 別人的召喚物（只顯示）
+        public bool alive = true;
+        public Vector3 home;           // 石像：站的位置；分身：相對主人的偏移
+        public SkillDef Attack => Skills.All.TryGetValue("pet_" + kind, out var s) ? s : null;
     }
 
     public class Trap
@@ -149,6 +184,163 @@ namespace SpellDuel
         void Emit(string kind, Vector3 at, Color c, string text) => OnEvent?.Invoke(kind, at, c, text);
 
         public Battle(Fighter player, Fighter enemy) { this.player = player; this.enemy = enemy; }
+
+        // ------------------------------------------------------------ 進階職業
+        public readonly List<Pet> pets = new List<Pet>();
+        public event Action<Pet> OnPetSpawn, OnPetGone;         // 我的召喚物出現／消失（要告訴其他手機顯示）
+        public event Action<Fighter, float> OnOathShare;         // 守護誓言：我受到的傷害轉一部分給聖騎士（哪位、多少）
+        readonly List<KeyValuePair<float, Action>> timers = new List<KeyValuePair<float, Action>>();
+        void After(float sec, Action a) => timers.Add(new KeyValuePair<float, Action>(now + sec, a));
+        public const int MaxPets = 2, FaithMax = 5;
+        public const float StillMove = 0.35f, PrayerField = 3f, PrayerRegen = 0.015f, AuraRange = 3f, AuraReduce = 0.15f;
+        /// <summary>敵方（Boss／對手代理／小怪）</summary>
+        bool FoeSide(Fighter f) => f == enemy || f.isMinion;
+        /// <summary>站著不動超過 1 秒</summary>
+        public bool Still(Fighter f) => now - f.stillSince >= 1f;
+        /// <summary>神射手鷹眼層數（站著不動每 2 秒 1 層，最多 3 層）</summary>
+        public int EagleStacks(Fighter f) => f.adv == "marksman" ? Mathf.Clamp(Mathf.FloorToInt((now - f.stillSince) / 2f), 0, 3) : 0;
+        /// <summary>冷卻倍率（狂戰士血之狂暴：攻速 ×1.5）</summary>
+        float CdFactor(Fighter f) => f.frenzyUntil > now ? 1f / 1.5f : 1f;
+        /// <summary>這招要蓄力多久（影舞者連殺：伏擊技能 −70%）</summary>
+        public float ChargeTime(Fighter f, SkillDef s) => s.charge * f.chargeScale * (f.comboUntil > now && s.releaseNear ? 0.3f : 1f);
+        public bool HasPet(Fighter f) { foreach (var p in pets) if (p.alive && p.owner == f && p.kind != "clone") return true; return false; }
+        /// <summary>聖騎士的守護光環：自己是聖騎士，或 3m 內有活著的聖騎士隊友</summary>
+        bool InAura(Fighter f)
+        {
+            if (f.adv == "paladin") return true;
+            foreach (var a in allies) if (a != f && a.Alive && a.adv == "paladin" && FlatDistance(a.Feet, f.Feet) <= AuraRange) return true;
+            return false;
+        }
+
+        /// <summary>直接打到某個敵人（範圍攻擊、召喚物、毒霧）：連線時交給對方判定</summary>
+        void HitFoe(Fighter f, Fighter v, SkillDef s, int dmg, EffectKind eff = EffectKind.None, float dps = 0f, float dur = 0f)
+        {
+            if (v == null || !v.Alive || dmg <= 0 && eff == EffectKind.None) return;
+            LastProcs = RollProcs(f);
+            if (remoteEnemy && v == enemy) { Emit("hit", v.Chest, s.color, null); OnRemoteHit?.Invoke(s, dmg, v.Chest, 0); OnDealt(f, dmg); return; }
+            if (remoteEnemy && v.isMinion) { Emit("hit", v.Chest, s.color, null); OnMinionHit?.Invoke(v.minionId, dmg, s); OnDealt(f, dmg); return; }
+            Hit(v, new Projectile { owner = f, skill = s, pos = v.Chest, dir = Fighter.Flat(v.head - f.head), damage = dmg, effect = eff, effectDps = dps, effectDur = dur });
+        }
+
+        /// <summary>f 的敵人（活著的）</summary>
+        List<Fighter> FoesOf(Fighter f)
+        {
+            var list = new List<Fighter>();
+            if (FoeSide(f)) { foreach (var pl in Players()) if (pl.Alive) list.Add(pl); }
+            else { if (enemy != null && enemy.Alive) list.Add(enemy); foreach (var m in minions) if (m.Alive) list.Add(m); }
+            return list;
+        }
+
+        /// <summary>玩家方的範圍攻擊：center 半徑 r 內的敵人全部受傷（hits 段）</summary>
+        void AreaFoes(Fighter f, SkillDef s, Vector3 center, float r, int dmg)
+        {
+            for (int k = 0; k < Mathf.Max(1, s.hits); k++)
+            {
+                Action strike = () =>
+                {
+                    if (!f.Alive) return;
+                    var c = s.atTarget ? center : f.Feet;   // 旋風斬跟著自己轉
+                    foreach (var v in FoesOf(f))
+                        if (FlatDistance(c, v.Feet) <= r + v.bodyRadius) HitFoe(f, v, s, dmg, s.effect, s.effectDps, s.effectDur);
+                };
+                if (k == 0) strike(); else After(k * s.hitGap, strike);
+            }
+        }
+
+        // ---- 召喚物
+        Pet SpawnPet(Fighter f, SkillDef s, string kind, float life)
+        {
+            if (kind != "clone")
+            {
+                // 最多同時 MaxPets 隻：超過就讓最舊的消失
+                var mine = pets.FindAll(x => x.alive && !x.remote && x.owner == f && x.kind != "clone");
+                for (int i = 0; i <= mine.Count - MaxPets; i++) KillPet(mine[i]);
+            }
+            float power = f.atkMul / Mathf.Max(0.1f, Advanced.Get(f.adv)?.atkMul ?? 1f);   // 召喚物不吃「本人傷害 −30%」
+            var side = Vector3.Cross(Vector3.up, Fighter.Flat(f.forward)).normalized;
+            var p = new Pet
+            {
+                id = nextId++, owner = f, kind = kind, until = now + life, next = now + 0.8f,
+                dmg = Mathf.RoundToInt(s.damage * power), blast = Mathf.RoundToInt(Skills.All["pet_blast"].damage * power),
+                range = s.petRange, interval = s.petInterval, hp = s.petHp, maxHp = s.petHp,
+            };
+            switch (kind)
+            {
+                case "golem": p.home = f.Feet + Fighter.Flat(f.forward) * 1f; p.pos = p.home + Vector3.up * 0.6f; break;
+                case "clone": p.home = -side * 1.1f; p.pos = f.Feet + p.home + Vector3.up * 0.9f; break;
+                case "falcon": p.pos = f.head + Vector3.up * 1f; break;
+                default: p.pos = f.head + side * 0.5f; break;
+            }
+            pets.Add(p);
+            Emit("petspawn", p.pos, s.color, kind);
+            if (f == player) OnPetSpawn?.Invoke(p);
+            return p;
+        }
+
+        void KillPet(Pet p)
+        {
+            if (!p.alive) return;
+            p.alive = false;
+            Emit("petgone", p.pos, Color.white, p.kind);
+            if (!p.remote && p.owner == player) OnPetGone?.Invoke(p);
+        }
+
+        /// <summary>別人的召喚物（只顯示；跟著它的主人動）</summary>
+        public void AddRemotePet(int id, string kind, Fighter owner, Vector3 pos, float life)
+        {
+            if (owner == null) return;
+            pets.Add(new Pet { id = id, owner = owner, kind = kind, pos = pos, home = kind == "golem" ? new Vector3(pos.x, 0f, pos.z) : pos - owner.Feet - Vector3.up * 0.9f, until = now + life, remote = true });
+            Emit("petspawn", pos, Color.white, kind);
+        }
+        public void RemoveRemotePet(int id) { foreach (var p in pets) if (p.remote && p.id == id && p.alive) { p.alive = false; Emit("petgone", p.pos, Color.white, p.kind); } }
+
+        void UpdatePets(float dt)
+        {
+            foreach (var p in pets)
+            {
+                if (!p.alive) continue;
+                var o = p.owner;
+                if (now > p.until || o == null || (!o.Alive && p.kind != "golem") || (p.kind == "clone" && !p.remote && o.cloneUntil <= now)) { KillPet(p); continue; }
+                var side = Vector3.Cross(Vector3.up, Fighter.Flat(o.forward)).normalized;
+                // 位置：火靈浮在主人肩膀旁、獵鷹在頭上盤旋、石像站著不動、分身站在主人旁邊
+                Vector3 want = p.kind switch
+                {
+                    "fire" => o.head + side * 0.55f + Vector3.up * 0.1f,
+                    "falcon" => o.head + Vector3.up * 1.2f + new Vector3(Mathf.Cos(now * 1.7f), 0f, Mathf.Sin(now * 1.7f)) * 1.2f,
+                    "golem" => p.home + Vector3.up * 0.6f,
+                    _ => o.Feet + (p.remote ? p.home : -side * 1.1f) + Vector3.up * 0.9f,
+                };
+                p.pos = Vector3.Lerp(p.pos, want, 1f - Mathf.Exp(-dt * 6f));
+                if (p.remote || p.kind == "clone" || now < p.next) continue;
+                // 攻擊：範圍內最近的敵人
+                Fighter tgt = null; float best = p.range;
+                foreach (var v in FoesOf(o)) { float d = FlatDistance(p.pos, v.Feet); if (d <= best + v.bodyRadius) { best = d; tgt = v; } }
+                if (tgt == null) continue;
+                p.next = now + p.interval;
+                var atk = p.Attack;
+                if (p.kind == "golem")
+                {
+                    Emit("basicmelee", tgt.Feet, atk.color, "pet_golem");
+                    HitFoe(o, tgt, atk, p.dmg);
+                }
+                else
+                {
+                    var dir = (tgt.Chest - p.pos).normalized;
+                    var pr = Spawn(o, atk, p.pos, dir, p.dmg, EffectKind.None, 0f, 0f, false);
+                    pr.damage = p.dmg; pr.crit = false;
+                    Emit("cast", p.pos, atk.color, null);
+                }
+            }
+            pets.RemoveAll(x => !x.alive);
+        }
+
+        /// <summary>聖騎士的守護誓言：隊友的傷害轉到我身上（隊友那支手機送來）</summary>
+        public void TakeShared(float dmg, Vector3 at)
+        {
+            if (!player.Alive || dmg <= 0f) return;
+            Emit("mitigate", player.Chest, new Color(1f, 0.9f, 0.4f), "守護誓言");
+            Damage(player, dmg, "oath", at);
+        }
 
         // ------------------------------------------------------------ 合作模式（兩人打 Boss）
         // allies＝其他玩家的代理（2～4 人合作；位置、血量、蹲下／閃避由網路更新；pid＝那支手機的編號）。
@@ -321,7 +513,8 @@ namespace SpellDuel
         /// <summary>參與人數倍率：每多一位玩家，敵人的血量與攻擊力 +30%</summary>
         public float PartyMul => 1f + 0.3f * allies.Count;
         int Tier => Mathf.Max(0, wave - 1);
-        public float HpMul => (1f + 0.08f * Tier) * PartyMul;
+        public float HpMul => (1f + 0.08f * Tier) * PartyMul * hpBoost;
+        public float hpBoost = 1f;   // 轉職試煉：敵人更硬
         public float DmgMul => 0.75f + 0.05f * Tier;
         public const float EndlessRegen = 0.5f;   // 無盡模式：玩家每秒自然回血
         public float SpeedMul => Mathf.Min(1.5f, 1f + 0.02f * Tier);
@@ -398,7 +591,7 @@ namespace SpellDuel
             bossSpawnedThisWave = true;
             int bossIndex = wave / BossEvery - 1;
             var at = (bossPoint ?? edgePoint)();
-            enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.5f * bossIndex) * PartyMul);
+            enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.5f * bossIndex) * PartyMul * hpBoost);
             enemy.hp = enemy.maxHp;
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
             enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f;
@@ -757,12 +950,19 @@ namespace SpellDuel
                 if (!m.Alive) continue;
                 m.BodySegment(out var a, out var b);
                 if (DistancePointSegment(p.pos, a, b) >= p.skill.radius + m.bodyRadius) continue;
-                p.alive = false;
+                if (p.skill.pierce)
+                {
+                    // 貫穿：同一隻只打一次，箭繼續飛
+                    if (p.pierced == null) p.pierced = new HashSet<Fighter>();
+                    if (!p.pierced.Add(m)) continue;
+                }
+                else p.alive = false;
                 if (p.crit) Emit("crit", p.pos, p.skill.color, "爆擊！");
                 LastProcs = RollProcs(p.owner);
                 if (remoteEnemy) { Emit("hit", p.pos, p.skill.color, null); OnMinionHit?.Invoke(m.minionId, p.damage, p.skill); }
                 else { ApplyDamageAndEffect(m, p.damage, p.effect, p.effectDps, p.effectDur, p.pos); ApplyProcs(m, LastProcs, p.pos); }
                 OnDealt(p.owner, p.damage);
+                if (p.skill.pierce) continue;
                 return true;
             }
             return false;
@@ -869,7 +1069,7 @@ namespace SpellDuel
             if (f.cooldownUntil.TryGetValue(s.id, out var cd) && cd > now) { why = $"{s.name} 冷卻中"; return false; }
             if (f.mp < s.cost) { why = "MP 不足"; return false; }
             if (f.snaredUntil > now && s.self != SelfKind.Cleanse) { why = "被困住，暫時不能施法（牧師可以淨化）"; return false; }
-            if (s.releaseNear && NearestFoe(f, out var nd) != null && nd < AmbushClear) { why = $"身邊直徑 {AmbushClear * 2f:0.#}m 內有敵人，先退開才能蓄力{s.name}"; return false; }
+            if (s.releaseNear && f.danceUntil <= now && NearestFoe(f, out var nd) != null && nd < AmbushClear) { why = $"身邊直徑 {AmbushClear * 2f:0.#}m 內有敵人，先退開才能蓄力{s.name}"; return false; }
             f.charging = s; f.chargeStart = now; f.chargeFrom = f.Feet;
             return true;
         }
@@ -888,7 +1088,7 @@ namespace SpellDuel
                 f.charging = s; f.chargeStart = now - 1f;
                 return TryRelease(f, aimDir, floor, out _, locked);
             }
-            f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul;
+            f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul * CdFactor(f);
             Emit("basicmelee", f.Feet + Fighter.Flat(f.forward) * 0.5f, s.color, s.id);
             int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
             var foes = new List<Fighter>();
@@ -926,12 +1126,12 @@ namespace SpellDuel
         public float OverchargeFrac(Fighter f)
         {
             if (f == null || !f.overcharge || f.charging == null || f.charging.charge <= 0f) return 0f;
-            float t = f.charging.charge * f.chargeScale;
+            float t = ChargeTime(f, f.charging);
             return Mathf.Clamp01((now - f.chargeStart - t) / Mathf.Max(0.01f, t));
         }
         public const float OverchargeDamage = 1.5f;   // 蓄到 200% 時傷害 +150%
 
-        public float ChargeProgress(Fighter f) => f.charging == null ? 0f : f.charging.charge <= 0f ? 1f : Mathf.Clamp01((now - f.chargeStart) / Mathf.Max(0.01f, f.charging.charge * f.chargeScale));
+        public float ChargeProgress(Fighter f) => f.charging == null ? 0f : f.charging.charge <= 0f ? 1f : Mathf.Clamp01((now - f.chargeStart) / Mathf.Max(0.01f, ChargeTime(f, f.charging)));
 
         /// <summary>射程狀態：0＝可以、1＝太遠、-1＝太近</summary>
         public int RangeState(Fighter f, SkillDef s)
@@ -953,7 +1153,7 @@ namespace SpellDuel
             var s = f.charging;
             if (s == null || Over) { why = "沒有在詠唱"; return false; }
             if (f.mp < s.cost) { f.charging = null; why = "MP 不足"; return false; }
-            if (now - f.chargeStart < s.charge * f.chargeScale) { why = $"蓄力中 {Mathf.FloorToInt(ChargeProgress(f) * 100)}%"; return false; }
+            if (now - f.chargeStart < ChargeTime(f, s)) { why = $"蓄力中 {Mathf.FloorToInt(ChargeProgress(f) * 100)}%"; return false; }
             // 蓄力完成就一定放得出去（不管有沒有瞄到敵人、距離多遠），打不打得中看瞄準與距離。
             // 陷阱：準星指得太遠時，放在同方向的最遠設置距離上
             if (s.type == SkillType.Trap)
@@ -965,8 +1165,10 @@ namespace SpellDuel
             }
 
             f.chargeBonus = OverchargeDamage * OverchargeFrac(f);   // 獵人蓄力強化（下一幀清掉）
+            if (f.ampNext && s.cls == "mage") { f.chargeBonus += AmpBonus; Emit("buff", f.Chest, new Color(0.75f, 0.55f, 1f), "增幅！傷害 +50%"); }   // 大魔導士的增幅咒
+            f.ampNext = false;
             f.mp -= s.cost;
-            f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul * (f.focusUntil > now ? 0.5f : 1f);
+            f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul * (f.focusUntil > now ? 0.5f : 1f) * CdFactor(f);
             f.charging = null;
             if (s.id == "slash") { f.sliceUntil = now + SliceWindow; SliceNow(f); }
 
@@ -980,7 +1182,31 @@ namespace SpellDuel
             switch (s.type)
             {
                 case SkillType.Self: CastSelf(f, s); break;
-                case SkillType.Trap: PlaceTrap(f, s, floorPoint); break;
+                case SkillType.Trap:
+                {
+                    // 連環陷阱：一次設好幾個，左右排開
+                    var side = Vector3.Cross(Vector3.up, Fighter.Flat(floorPoint - f.Feet) == Vector3.zero ? Fighter.Flat(f.forward) : Fighter.Flat(floorPoint - f.Feet)).normalized;
+                    int n = Mathf.Max(1, s.multi);
+                    for (int i = 0; i < n; i++) PlaceTrap(f, s, floorPoint + side * ((i - (n - 1) / 2f) * 0.8f));
+                    break;
+                }
+                case SkillType.Projectile when s.areaFoes:
+                {
+                    // 玩家方的範圍攻擊（神聖制裁、旋風斬、冰封領域）
+                    var c = f.Feet;
+                    if (s.atTarget)
+                    {
+                        c = locked ? Opponent(f).Feet : floorPoint;
+                        var off = c - f.Feet; off.y = 0f;
+                        if (off.magnitude > s.rangeMax) off = off.normalized * s.rangeMax;
+                        c = f.Feet + off; c.y = 0f;
+                    }
+                    int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
+                    Emit("aoe", c, s.color, s.id);
+                    AreaFoes(f, s, c, s.areaRadius, dmg);
+                    if (s.id == "sanction") { if (remoteEnemy) OnTaunt?.Invoke(s); else Taunt(f, s.buffAmount); }
+                    break;
+                }
                 case SkillType.Projectile when s.areaRadius > 0f:
                 {
                     // 範圍重擊（Boss 地裂／踐踏；樹根爆發打在目標位置）：放招當下站在半徑內的玩家都受傷；側跨的無敵時間內閃得掉
@@ -1061,6 +1287,7 @@ namespace SpellDuel
         }
 
         public event Action<SkillDef> OnTeamBuff;
+        public const float AmpBonus = 0.5f;   // 大魔導士增幅咒：傷害 +50%
         public event Action<SkillDef> OnTaunt;      // 合作的隊友端：我嘲諷了 → 告訴主機（主機的 Boss 才有仇恨）   // 合作：牧師的輔助技能也要作用在隊友（隊友那支手機自己套用）
 
         void CastSelf(Fighter f, SkillDef s)
@@ -1068,6 +1295,12 @@ namespace SpellDuel
             // 牧師的輔助技能：作用在所有己方單位（自己＋合作隊友）
             if (s.cls == "priest")
             {
+                if (f.healMul != 1f && (s.heal > 0 || s.self == SelfKind.HealPct))
+                {
+                    s = s.Clone();
+                    s.heal = Mathf.RoundToInt(s.heal * f.healMul);
+                    if (s.self == SelfKind.HealPct) s.buffAmount = Mathf.RoundToInt(s.buffAmount * f.healMul);
+                }
                 // 治療的仇恨：補到的人數（自己＋活著的隊友）× 治療量
                 if (s.heal > 0) { int n = 1; foreach (var a in allies) if (a.Alive) n++; AddThreat(f, s.heal * n); }
                 ApplySupport(f, s, null);
@@ -1098,6 +1331,47 @@ namespace SpellDuel
                     return;
                 }
                 case SelfKind.Prep: f.prepUntil = now + s.buffDur; f.prepBonus = s.buffReduce; Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0} 秒內傷害 +{s.buffReduce * 100:0}%"); return;
+                // ---- 進階職業
+                case SelfKind.Oath:
+                    f.selfOathUntil = now + s.buffDur;
+                    if (f == player && AnyAllyAlive) OnTeamBuff?.Invoke(s);   // 隊友那邊：受到的傷害轉一部分給我
+                    Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0} 秒內守護 3m 內的隊友");
+                    return;
+                case SelfKind.Frenzy:
+                    f.hp = Mathf.Max(1f, Mathf.Round(f.hp * (1f - s.buffReduce)));
+                    f.frenzyUntil = now + s.buffDur;
+                    Emit("buff", f.Chest, s.color, $"{s.name}！{s.buffDur:0} 秒內攻速 ×1.5");
+                    return;
+                case SelfKind.Undying: f.undyingUntil = now + s.buffDur; Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0} 秒內不會倒下"); return;
+                case SelfKind.DeadMark: f.markNextUntil = now + s.buffDur; Emit("buff", f.Chest, s.color, $"{s.name}：下一箭必定爆擊"); return;
+                case SelfKind.RollShot: f.rollUntil = now + s.buffDur; f.lastDodgeSeen = f.dodgeUntil; Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0} 秒內側跨會自動射箭"); return;
+                case SelfKind.ManaShield: f.manaShieldUntil = now + s.buffDur; Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0} 秒內用 MP 擋傷害"); return;
+                case SelfKind.Pet: SpawnPet(f, s, s.petKind, s.petLife); Emit("buff", f.Chest, s.color, $"召喚{s.name}！"); return;
+                case SelfKind.Detonate:
+                {
+                    int n = 0;
+                    foreach (var p in new List<Pet>(pets))
+                    {
+                        if (!p.alive || p.remote || p.owner != f || p.kind == "clone") continue;
+                        n++;
+                        var c = new Vector3(p.pos.x, 0f, p.pos.z);
+                        Emit("aoe", c, s.color, s.id);
+                        foreach (var v in FoesOf(f)) if (FlatDistance(c, v.Feet) <= s.areaRadius + v.bodyRadius) HitFoe(f, v, Skills.All["pet_blast"], p.blast);
+                        KillPet(p);
+                    }
+                    Emit("buff", f.Chest, s.color, n > 0 ? $"{s.name}！引爆 {n} 隻召喚物" : "沒有召喚物可以引爆");
+                    return;
+                }
+                case SelfKind.Substitute: f.subUntil = now + s.buffDur; Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0.#} 秒內被打中會換成替身"); return;
+                case SelfKind.Clone: f.cloneUntil = now + s.buffDur; SpawnPet(f, s, "clone", s.buffDur); Emit("buff", f.Chest, s.color, $"{s.name}！"); return;
+                case SelfKind.Dance: f.danceUntil = now + s.buffDur; Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0} 秒內伏擊不受限制、距離加倍"); return;
+                case SelfKind.Fog:
+                {
+                    var c = f.Feet;
+                    burns.Add(new BurnZone { owner = f, skill = s, pos = c, radius = s.areaRadius, until = now + s.buffDur, dps = s.effectDps });
+                    Emit("fogzone", c, s.color, s.id);
+                    return;
+                }
                 case SelfKind.Cleanse:
                     // 淨化：解除中毒、定身、致盲，回一點血
                     f.dots.Clear(); f.snaredUntil = 0f; f.blindUntil = 0f;
@@ -1158,14 +1432,33 @@ namespace SpellDuel
                     Emit("buff", t.Chest, s.color, $"{by}祈禱：冷卻減半・MP +{s.buffAmount}");
                     return;
                 }
+                case SelfKind.Revive:
+                    if (!t.Alive) { t.hp = Mathf.Round(t.maxHp * s.buffAmount / 100f); Emit("heal", t.Chest, s.color, $"{by}{s.name}：復活！"); }
+                    else { t.blessUntil = now + s.buffDur; Emit("buff", t.Chest, s.color, $"{by}復活祝福（{s.buffDur:0} 秒）"); }
+                    return;
+                case SelfKind.HealPct:
+                {
+                    float amt = Mathf.Round(t.maxHp * s.buffAmount / 100f);
+                    t.hp = Mathf.Min(t.maxHp, t.hp + amt);
+                    Emit("heal", t.Chest, s.color, $"{by}{s.name} +{amt:0}");
+                    return;
+                }
+                case SelfKind.TeamShield: t.shieldUntil = now + s.buffDur; t.shieldLeft = s.buffAmount; Emit("buff", t.Chest, s.color, $"{by}{s.name}（護盾 {s.buffAmount}）"); return;
                 default: Emit("buff", t.Chest, s.color, by + s.name); return;
             }
         }
 
         /// <summary>合作：隊友（牧師）的輔助技能作用在我身上</summary>
-        public void ApplyTeamBuff(SkillDef s, string from = "隊友")
+        public void ApplyTeamBuff(SkillDef s, string from = "隊友", Fighter by = null)
         {
-            if (!player.Alive || Over) return;
+            if (Over || (!player.Alive && s.self != SelfKind.Revive)) return;
+            if (s.self == SelfKind.Oath)
+            {
+                // 聖騎士的守護誓言：之後 8 秒，我在他 3m 內受到的傷害有 40% 轉給他
+                player.oathUntil = now + s.buffDur; player.oathShare = s.buffReduce; player.oathBy = by;
+                Emit("buff", player.Chest, s.color, $"{from}的{s.name}守護著你");
+                return;
+            }
             ApplySupport(player, s, from);
         }
 
@@ -1175,7 +1468,7 @@ namespace SpellDuel
             // 同一種陷阱最多 trapMax 個，超過就移除最舊的
             int count = 0;
             for (int i = traps.Count - 1; i >= 0; i--)
-                if (traps[i].alive && traps[i].owner == f && traps[i].skill == s && ++count >= s.trapMax) traps[i].alive = false;
+                if (traps[i].alive && traps[i].owner == f && traps[i].skill == s && ++count >= s.trapMax * (f.adv == "ranger" ? 2 : 1)) traps[i].alive = false;   // 遊俠：陷阱上限加倍
             var trap = new Trap { owner = f, skill = s, pos = at, armAt = now + s.trapArm, until = now + s.trapLife, id = nextId++ };
             traps.Add(trap);
             Emit("trapSet", at, s.color, $"{s.name} 設置");
@@ -1186,11 +1479,18 @@ namespace SpellDuel
         {
             var p = new Projectile { owner = owner, skill = s, pos = from, basePos = from, dir = dir.normalized, damage = dmg, effect = eff, effectDps = dps, effectDur = dur, reflected = reflected, id = nextId++ };
             float outMul = reflected ? 1f : owner.OutMul(now);
-            if (owner.atkMul != 1f || owner.critChance > 0f || owner.rangeMul != 1f || outMul != 1f)
+            int eagle = EagleStacks(owner);
+            if (owner.atkMul != 1f || owner.critChance > 0f || owner.rangeMul != 1f || outMul != 1f || eagle > 0 || owner.markNextUntil > now || owner.faith >= FaithMax)
             {
                 p.damage = Mathf.RoundToInt(dmg * owner.atkMul * outMul);
-                if (owner.critChance > 0f && rng.NextDouble() < owner.critChance) { p.crit = true; p.damage *= 2; }
-                p.rangeMul = owner.rangeMul;
+                float crit = owner.critChance + 0.1f * eagle;   // 神射手鷹眼：每層爆擊率 +10%
+                bool forced = !reflected && owner.markNextUntil > now && s.cls == "archer" && s.type == SkillType.Projectile;   // 致命標記
+                if (forced || (crit > 0f && rng.NextDouble() < crit)) { p.crit = true; p.damage *= 2; }
+                if (forced) owner.markNextUntil = 0f;
+                // 審判者：信仰滿了，這一招傷害 ×2
+                if (!reflected && owner.adv == "inquisitor" && owner.faith >= FaithMax && p.damage > 0 && s.cls == "priest")
+                { p.damage *= 2; owner.faith = 0; Emit("buff", owner.Chest, new Color(1f, 0.8f, 0.3f), "信仰爆發！傷害 ×2"); }
+                p.rangeMul = owner.rangeMul * (1f + 0.2f * eagle);   // 鷹眼：每層射程 +20%
             }
             if ((owner == enemy || owner.isMinion) && owner.target != null) p.target = owner.target;
             SetCurve(p, curveAmp, pathLen);
@@ -1204,12 +1504,37 @@ namespace SpellDuel
         public void Update(float dt)
         {
             now += dt;
+            // 計時的效果（旋風斬的後兩段…）
+            for (int i = 0; i < timers.Count; i++) if (timers[i].Key <= now) { var a = timers[i].Value; timers.RemoveAt(i--); a(); }
+            // 站著不動的時間（神射手鷹眼、主教祈禱領域）
+            foreach (var pl in Players())
+                if (FlatDistance(pl.Feet, pl.stillAnchor) > StillMove) { pl.stillAnchor = pl.Feet; pl.stillSince = now; }
+            // 主教的祈禱領域：自己是站著不動的主教，或 3m 內有站著不動的主教隊友 → 每秒回復最大 HP 的 1.5%
+            if (player.Alive && player.hp < player.maxHp)
+            {
+                bool field = player.adv == "bishop" && Still(player);
+                foreach (var a in allies) if (!field && a.Alive && a.adv == "bishop" && Still(a) && FlatDistance(a.Feet, player.Feet) <= PrayerField) field = true;
+                if (field) player.hp = Mathf.Min(player.maxHp, player.hp + player.maxHp * PrayerRegen * dt);
+            }
             if (threat.Count > 0) { var ks = new List<Fighter>(threat.Keys); foreach (var k in ks) threat[k] *= 1f - ThreatDecay * dt; }
             foreach (var f in new[] { player, enemy })
             {
                 if (remoteEnemy && f == enemy) continue;   // 對手的 MP、詠唱、持續傷害由對手自己算
                 f.chargeBonus = 0f;
                 UpdateAmbush(f);
+                // 遊俠的翻滾射擊：側跨閃避的瞬間自動朝最近的敵人射一箭
+                if (f.rollUntil > now && f.dodgeUntil > now && f.dodgeUntil > f.lastDodgeSeen + 0.01f && f.Alive)
+                {
+                    f.lastDodgeSeen = f.dodgeUntil;
+                    var tgt = NearestFoe(f, out _);
+                    if (tgt != null)
+                    {
+                        var ra = Skills.All["rollarrow"];
+                        var from = f.Chest + Fighter.Flat(f.forward) * 0.3f;
+                        Spawn(f, ra, from, (tgt.Chest - from).normalized, ra.damage, EffectKind.None, 0f, 0f, false);
+                        Emit("cast", from, ra.color, null);
+                    }
+                }
                 f.mp = Mathf.Min(f.maxMp, f.mp + f.regen * dt);
                 if (f.hpRegen > 0f && f.Alive) f.hp = Mathf.Min(f.maxHp, f.hp + f.hpRegen * dt);
                 if (f.charging != null && now - f.chargeStart > f.charging.charge + chargeTimeout + (f.charging.releaseNear ? 8f : 0f))
@@ -1219,13 +1544,13 @@ namespace SpellDuel
                 {
                     if (ChargeProgress(f) < 1f)
                     {
-                        if (!f.palmVisible || (NearestFoe(f, out var nd2) != null && nd2 < AmbushClear)) f.chargeStart += dt;
+                        if (!f.palmVisible || (f.danceUntil <= now && NearestFoe(f, out var nd2) != null && nd2 < AmbushClear)) f.chargeStart += dt;
                     }
                     else TryRelease(f, Fighter.Flat(f.forward), f.Feet, out _);
                 }
                 // 刺殺準備：蓄力完成前離開原地太遠 → 失敗
                 // 獵人：整個蓄力期間（包含蓄滿後拉著弓）都不能離開原地直徑 1m
-                if (f.charging != null && f.charging.stillRadius > 0f && (ChargeProgress(f) < 1f || f.charging.cls == "archer") && FlatDistance(f.Feet, f.chargeFrom) > f.charging.stillRadius)
+                if (f.charging != null && f.charging.stillRadius > 0f && !(f.adv == "ranger" && f.charging.cls == "archer") && (ChargeProgress(f) < 1f || f.charging.cls == "archer") && FlatDistance(f.Feet, f.chargeFrom) > f.charging.stillRadius)
                 { var cs = f.charging; f.charging = null; Emit("fail", f.Chest, Color.gray, $"移動太遠，{cs.name}失敗"); }
                 // 持續傷害：每滿 1 秒扣一次
                 for (int i = f.dots.Count - 1; i >= 0; i--)
@@ -1254,6 +1579,7 @@ namespace SpellDuel
             UpdateBurns(dt);
             UpdatePools();
             UpdateLanes();
+            UpdatePets(dt);
         }
 
         // ------------------------------------------------------------ 森林：拋物線毒液彈、毒液區、藤蔓／衝刺路線
@@ -1567,10 +1893,18 @@ namespace SpellDuel
             if (s == null) return;
             if (now > f.armedUntil || !f.Alive) { f.armed = null; Emit("armedExpire", f.Chest, Color.gray, $"{s.name} 落空"); return; }
             var target = NearestFoe(f, out var td);
-            if (target == null || !target.Alive || td > AmbushReach + target.bodyRadius) return;
+            if (target == null || !target.Alive || td > AmbushReach * (f.danceUntil > now ? 2f : 1f) + target.bodyRadius) return;   // 影舞：出手距離加倍
             f.armed = null;
             Emit("ambush", target.Chest, s.color, s.name + "！");
             int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
+            if (s.execute && target.maxHp > 0 && target.hp < target.maxHp * 0.25f) { dmg *= 3; Emit("crit", target.Chest, s.color, "處決！"); }
+            if (f.adv == "shadowdancer")
+            {
+                // 連殺：3 秒內伏擊技能冷卻歸零、蓄力 −70%
+                f.comboUntil = now + 3f;
+                foreach (var sk in f.loadout) if (sk.releaseNear) f.cooldownUntil[sk.id] = now;
+                Emit("buff", f.Chest, new Color(0.9f, 0.4f, 1f), "連殺！馬上再伏擊");
+            }
             if (target == enemy) AddThreat(f, dmg);
             if (remoteEnemy && target.isMinion) { Emit("hit", target.Chest, s.color, null); OnMinionHit?.Invoke(target.minionId, dmg, s); OnDealt(f, dmg); }
             else if (remoteEnemy && target == enemy) { Emit("hit", target.Chest, s.color, null); OnRemoteHit?.Invoke(s, dmg, target.Chest, 0); OnDealt(f, dmg); }
@@ -1586,19 +1920,28 @@ namespace SpellDuel
 
         void UpdateBurns(float dt)
         {
+            var victims = new List<Fighter>();
             foreach (var z in burns)
             {
                 if (!z.alive) continue;
                 if (now > z.until) { z.alive = false; continue; }
                 if (z.remote) continue;   // 對手的火海由對手判定
-                var victim = Opponent(z.owner);
-                if (!victim.Alive || FlatDistance(victim.Feet, z.pos) > z.radius) { z.acc = 0f; continue; }
-                z.acc += dt;
-                while (z.acc >= 1f)
+                // 敵方的火海燒玩家；玩家的火海／毒霧燒 Boss、對手和所有小怪
+                victims.Clear();
+                if (FoeSide(z.owner)) victims.Add(Opponent(z.owner)); else victims.AddRange(FoesOf(z.owner));
+                foreach (var victim in victims)
                 {
-                    z.acc -= 1f;
-                    if (remoteEnemy && victim == enemy) { Emit("hit", victim.Chest, z.skill.color, null); OnRemoteBurn?.Invoke(z.skill, z.dps, victim.Feet); }
-                    else { if (victim == enemy) AddThreat(z.owner, z.dps); Damage(victim, z.dps, "burn"); }
+                    if (!victim.Alive || FlatDistance(victim.Feet, z.pos) > z.radius + (victim.isMinion ? victim.bodyRadius : 0f)) { z.accs[victim] = 0f; continue; }
+                    z.accs.TryGetValue(victim, out var acc);
+                    acc += dt;
+                    while (acc >= 1f)
+                    {
+                        acc -= 1f;
+                        if (remoteEnemy && victim == enemy) { Emit("hit", victim.Chest, z.skill.color, null); OnRemoteBurn?.Invoke(z.skill, z.dps, victim.Feet); }
+                        else if (remoteEnemy && victim.isMinion) { Emit("hit", victim.Chest, z.skill.color, null); OnMinionHit?.Invoke(victim.minionId, Mathf.RoundToInt(z.dps), z.skill); }
+                        else { if (victim == enemy) AddThreat(z.owner, z.dps); Damage(victim, z.dps, "burn", victim.isMinion ? victim.Chest : (Vector3?)null); }
+                    }
+                    z.accs[victim] = acc;
                 }
             }
             burns.RemoveAll(x => !x.alive);
@@ -1653,6 +1996,7 @@ namespace SpellDuel
             if (a == null || !a.Alive || dmg <= 0f) return;
             if (a.lifesteal > 0f) a.hp = Mathf.Min(a.maxHp, a.hp + dmg * a.lifesteal);
             if (a.mpOnHit > 0f) a.mp = Mathf.Min(a.maxMp, a.mp + a.mpOnHit);
+            if (a.adv == "inquisitor" && a.faith < FaithMax && ++a.faith == FaithMax) Emit("buff", a.Chest, new Color(1f, 0.8f, 0.3f), "信仰已滿！下一招傷害 ×2");
         }
 
         // ------------------------------------------------------------ 命中附加效果（無盡模式升級）
@@ -1680,6 +2024,10 @@ namespace SpellDuel
         {
             // 閃避率（刺客技能樹）：整次攻擊（傷害＋效果）完全閃開
             if (target.evadeChance > 0f && damage > 0 && rng.NextDouble() < target.evadeChance) { Emit("evade", target.Chest, new Color(0.7f, 0.6f, 1f), "閃避！"); return; }
+            if (damage > 0 && target.invulnUntil > now) { Emit("evade", target.Chest, new Color(1f, 0.4f, 0.4f), "無敵！"); return; }
+            // 忍者：替身術（下一次攻擊完全無效）、分身術（一半的攻擊打到分身）
+            if (damage > 0 && target.subUntil > now) { target.subUntil = 0f; Emit("evade", target.Chest, new Color(0.6f, 0.65f, 0.7f), "替身術！"); return; }
+            if (damage > 0 && target.cloneUntil > now && rng.NextDouble() < 0.5) { Emit("evade", target.Chest, new Color(0.8f, 0.85f, 0.9f), "打中了分身！"); return; }
             float dmg = damage;
             string note = null;
             if (target.blockUntil > now && dmg > 0) { dmg = Mathf.Round(dmg * (1f - target.blockReduce)); target.blockUntil = 0; note = "格擋"; }
@@ -1697,6 +2045,8 @@ namespace SpellDuel
                 case EffectKind.Dot: target.dots.Add(new Fighter.Dot { dps = dps, until = now + dur }); Emit("effect", at, Color.green, "中毒"); break;
                 case EffectKind.Blind: target.blindUntil = now + dur; Emit("effect", at, Color.gray, "致盲"); break;
                 case EffectKind.Snare: target.snaredUntil = now + dur; target.charging = null; Emit("effect", at, new Color(1f, 0.6f, 0.2f), "定身"); break;
+                case EffectKind.Mark: target.markedUntil = now + dur; Emit("effect", at, new Color(1f, 0.6f, 0.2f), "懲戒：受到傷害 +20%"); break;
+                case EffectKind.Burn: target.dots.Add(new Fighter.Dot { dps = dps, until = now + dur }); Emit("effect", at, new Color(1f, 0.5f, 0.15f), "灼燒"); break;
             }
             if (dmg > 0 || note == null) Damage(target, dmg, "hit", at);
         }
@@ -1704,10 +2054,40 @@ namespace SpellDuel
         void Damage(Fighter f, float dmg, string kind, Vector3? at = null)
         {
             if (!f.Alive) return;
+            if (f.invulnUntil > now && dmg > 0f) return;   // 狂戰士不死之軀的無敵
             dmg *= f.damageTakenMul * (1f - f.gearReduce);
             if (f.lastStand > 0f && f.hp < f.maxHp * 0.3f) dmg *= 1f - f.lastStand;   // 不屈：低血量減傷
-            dmg = Mathf.Round(dmg);
+            if (f.markedUntil > now) dmg *= 1.2f;                                       // 被懲戒
+            if (f == player && dmg > 0f)
+            {
+                if (InAura(f)) dmg *= 1f - AuraReduce;                                  // 聖騎士守護光環
+                if (f.selfOathUntil > now) dmg *= 0.8f;                                 // 聖騎士自己的守護誓言
+                if (f.adv == "summoner" && HasPet(f)) dmg *= 0.85f;                     // 召喚師：契約
+                // 守護誓言：在聖騎士 3m 內，一部分傷害轉給他
+                if (kind != "oath" && f.oathUntil > now && f.oathBy != null && f.oathBy.Alive && FlatDistance(f.oathBy.Feet, f.Feet) <= AuraRange)
+                { float share = dmg * f.oathShare; dmg -= share; OnOathShare?.Invoke(f.oathBy, share); }
+                // 石像守衛：替主人承受一半的傷害
+                var golem = pets.Find(x => x.alive && !x.remote && x.owner == f && x.kind == "golem" && x.hp > 0f);
+                if (golem != null)
+                {
+                    float share = Mathf.Min(golem.hp, dmg * 0.5f);
+                    golem.hp -= share; dmg -= share;
+                    if (golem.hp <= 0f) KillPet(golem);
+                }
+                // 魔力護盾：先扣 MP
+                if (f.manaShieldUntil > now && f.mp > 0f)
+                {
+                    float absorb = Mathf.Min(f.mp, dmg);
+                    f.mp -= absorb; dmg -= absorb;
+                    if (absorb > 0f) Emit("mitigate", at ?? f.Chest, new Color(0.5f, 0.55f, 1f), $"魔力護盾 -{absorb:0} MP");
+                }
+            }
+            dmg = Mathf.Round(Mathf.Max(0f, dmg));
+            // 不死之軀：致命傷害留 1 HP，無敵 3 秒
+            if (f.undyingUntil > now && f.hp - dmg < 1f) { dmg = Mathf.Max(0f, f.hp - 1f); f.undyingUntil = 0f; f.invulnUntil = now + 3f; Emit("buff", f.Chest, new Color(0.8f, 0.1f, 0.1f), "不死之軀！無敵 3 秒"); }
             f.hp = Mathf.Max(0, f.hp - dmg);
+            // 主教的復活祝福：倒下時以 30% HP 站起來
+            if (!f.Alive && f.blessUntil > now) { f.blessUntil = 0f; f.hp = Mathf.Round(f.maxHp * 0.3f); Emit("heal", f.Chest, new Color(1f, 0.95f, 0.6f), "復活祝福！"); }
             if (dmg > 0 && f.prepUntil > now) { f.prepUntil = 0f; Emit("fail", f.Chest, Color.gray, "刺殺準備被打斷！"); }
             if (dmg > 0 && kind != "dot" && kind != "burn" && f.armed != null && f.armed.releaseNear) { f.cooldownUntil[f.armed.id] = now; Emit("fail", f.Chest, Color.gray, $"{f.armed.name}被打斷！要重新蓄力"); f.armed = null; }
             Emit(kind == "dot" || kind == "burn" ? kind : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");

@@ -33,11 +33,19 @@ namespace SpellDuel
         public readonly List<int> PeerIds = new List<int>();
         public class PeerPose { public Vector3 head, fwd; }
         public readonly Dictionary<int, PeerPose> NetPeers = new Dictionary<int, PeerPose>();
-        class PeerInfo { public string cls; public string[] loadout; public bool ready; public int mode; }
+        class PeerInfo { public string cls, adv; public string[] loadout; public bool ready; public int mode; }
         readonly Dictionary<int, PeerInfo> peerInfo = new Dictionary<int, PeerInfo>();
         const int IdSpace = 1000000;                         // 遠端法術／陷阱的編號：發送者 pid × IdSpace ＋ 對方的編號（多人時不會撞號）
         static int RId(int pid, int id) => pid * IdSpace + id;
         void SendTo(int pid, Msg m) { m.to = pid + 1; NetSend?.Invoke(m); }
+
+        /// <summary>進階職業的連線同步：召喚物（給別人顯示）、守護誓言（把傷害轉給聖騎士）</summary>
+        void WireAdvNet()
+        {
+            battle.OnPetSpawn += p => NetSend?.Invoke(new Msg { t = "pet", id = p.id, k = p.kind, p = p.pos, s = p.until - battle.now });
+            battle.OnPetGone += p => NetSend?.Invoke(new Msg { t = "petgone", id = p.id });
+            battle.OnOathShare += (by, amt) => { if (by.isAlly) SendTo(by.pid, new Msg { t = "oath", dmg = Mathf.RoundToInt(amt) }); };
+        }
         /// <summary>這位玩家在訊息裡的代碼：0＝沒有、否則 pid＋1（主機用來告訴大家 Boss／小怪在打誰）</summary>
         int TargetCode(Fighter f) => f == null ? 0 : f == Me ? MyPid + 1 : f.isAlly ? f.pid + 1 : 0;
         Fighter FromTargetCode(int code) => code <= 0 ? null : code - 1 == MyPid ? Me : battle?.AllyByPid(code - 1);
@@ -70,14 +78,44 @@ namespace SpellDuel
         /// <summary>選技能畫面：這次是不是無盡模式（只有無盡模式用角色養成）</summary>
         bool EndlessSetup => NetMode ? netEndless : enemyClass == "endless" || enemyClass == "story";   // 故事模式也用角色養成
         /// <summary>選技能畫面可以選的技能：無盡模式＝角色會的技能；其他模式＝職業全部技能</summary>
-        string[] SetupSkills => EndlessSetup ? Progress.Char(myClass).KnownSkills().ToArray() : Skills.Classes[myClass].skills;
+        string[] SetupSkills => EndlessSetup ? Progress.Char(myClass).KnownSkills().ToArray() : AllowedSkills;
+        /// <summary>其他模式可以選的技能：職業全部技能＋（轉職後）進階職業的全部技能</summary>
+        string[] AllowedSkills
+        {
+            get
+            {
+                var list = new List<string>(Skills.Classes[myClass].skills);
+                var a = Progress.Char(myClass).Adv;
+                if (a != null) list.AddRange(a.skills);
+                return list.ToArray();
+            }
+        }
+        /// <summary>技能欄：基本 3 格＋（轉職後）進階技能 1 格</summary>
+        bool AdvSlot => Array.Exists(SetupSkills, Advanced.IsAdvSkill);
+        int SlotCount => AdvSlot ? 4 : 3;
+        int BaseCount => myLoadout.FindAll(id => !Advanced.IsAdvSkill(id)).Count;
+        int AdvCount => myLoadout.FindAll(Advanced.IsAdvSkill).Count;
+        bool LoadoutReady => BaseCount == 3 && AdvCount == (AdvSlot ? 1 : 0);
 
-        /// <summary>技能配置只保留能選的，不足 3 個就從頭補</summary>
+        /// <summary>選一個技能：進階技能只有一格（換掉原本的）；基本技能最多 3 個（換掉最早選的）</summary>
+        void PickSkill(string id)
+        {
+            if (myLoadout.Contains(id)) return;
+            bool adv = Advanced.IsAdvSkill(id);
+            if (adv) myLoadout.RemoveAll(Advanced.IsAdvSkill);
+            else if (BaseCount >= 3) myLoadout.Remove(myLoadout.Find(x => !Advanced.IsAdvSkill(x)));
+            myLoadout.Add(id);
+        }
+
+        /// <summary>技能配置只保留能選的，不足就從頭補（基本 3 個＋進階 1 個）</summary>
         void FixLoadout()
         {
             var list = SetupSkills;
             myLoadout.RemoveAll(id => Array.IndexOf(list, id) < 0);
-            foreach (var id in list) { if (myLoadout.Count >= 3) break; if (!myLoadout.Contains(id)) myLoadout.Add(id); }
+            while (BaseCount > 3) myLoadout.Remove(myLoadout.Find(x => !Advanced.IsAdvSkill(x)));
+            while (AdvCount > 1) myLoadout.Remove(myLoadout.Find(Advanced.IsAdvSkill));
+            foreach (var id in list) { if (BaseCount >= 3) break; if (!Advanced.IsAdvSkill(id) && !myLoadout.Contains(id)) myLoadout.Add(id); }
+            if (AdvSlot && AdvCount == 0) { var first = Array.Find(list, Advanced.IsAdvSkill); if (first != null) myLoadout.Add(first); }
         }
 
         /// <summary>無盡模式：經驗值存進角色、升級提示、打倒敵人掉裝備</summary>
@@ -121,6 +159,7 @@ namespace SpellDuel
         void UseConsumable(Economy.Consumable c)
         {
             if (battle == null || Me == null || !Me.Alive || Economy.Count(c.id) <= 0) return;
+            if (IsTrial) { Say("⚔ 轉職試煉中不能使用道具", 2f); return; }
             if (c.scroll)
             {
                 // 回城捲軸：帶著這關已經拿到的戰利品回城鎮（關卡不算通關）
@@ -231,6 +270,19 @@ namespace SpellDuel
 
         void EndDialogue() { var d = dlgDone; dlg = null; dlgDone = null; d?.Invoke(); }
 
+        // ---------------------------------------------------------------- 轉職試煉（職業工會）：迷霧森林第 17～20 波，敵人更硬更痛、不能用道具
+        bool IsTrial => storyStage != null && storyStage.id == "trial";
+
+        void StartTrial()
+        {
+            var st = new StoryStage { id = "trial", title = "⚔ 轉職試煉", theme = 1, fromWave = Advanced.TrialFirstWave - 10, toWave = Advanced.TrialLastWave - 10, xp = 400, desc = WorldUI.TrialText };
+            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "這是轉職試煉。迷霧森林深處的魔物比平常更兇，而且你不能用任何藥水。" });
+            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "撐過四波，打倒最後的樹王，就證明你有資格選擇自己的道路。去吧！" });
+            st.after.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "了不起！回工會來吧，從兩條進階之路選一條——選了就不能回頭。" });
+            storyMapOpen = false; storyStage = st;
+            ShowDialogue(st.before, StartStageBattle);
+        }
+
         /// <summary>點地圖上的關卡：開場對話 → 開打</summary>
         void StartStory(StoryStage st)
         {
@@ -264,6 +316,7 @@ namespace SpellDuel
                 world.OnStartStage = st => { storyMapOpen = false; StartStory(st); };
                 world.OnBack = () => storyMapOpen = false;
                 world.OnCharacter = () => charOpen = true;
+                world.OnStartTrial = StartTrial;
             }
             world.Draw(Progress.Char(myClass));
         }
@@ -395,8 +448,10 @@ namespace SpellDuel
             myLoadout.Clear();
             var saved = PlayerPrefs.GetString("sd_loadout_" + myClass, "");
             var cls = Skills.Classes[myClass];
-            foreach (var id in saved.Split(',')) if (Array.IndexOf(cls.skills, id) >= 0 && myLoadout.Count < 3) myLoadout.Add(id);
-            if (myLoadout.Count != 3) { myLoadout.Clear(); myLoadout.AddRange(cls.defaultLoadout); }
+            var allowed = AllowedSkills;
+            foreach (var id in saved.Split(',')) if (Array.IndexOf(allowed, id) >= 0 && !myLoadout.Contains(id)) myLoadout.Add(id);
+            if (BaseCount < 3) { myLoadout.RemoveAll(x => !Advanced.IsAdvSkill(x)); myLoadout.AddRange(cls.defaultLoadout); }
+            FixLoadout();
         }
 
         void SaveChoices()
@@ -414,7 +469,7 @@ namespace SpellDuel
         {
             SaveChoices();
             localReady = true;
-            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode });
+            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "" });
             Say("已準備，等待對手…", 3f);
             TryStartNet();
         }
@@ -437,7 +492,10 @@ namespace SpellDuel
             enemyClassUsed = ec.id;
             dummyMode = false;
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
-            var en = new Fighter($"對手{ec.name}", ec, remoteLoadout ?? new string[0], false);
+            Advanced.ApplyStats(me, Progress.Char(myClass).Adv);   // 轉職後的能力（對戰不另外平衡）
+            var radv = peerInfo.TryGetValue(PeerIds.Count > 0 ? PeerIds[0] : 0, out var rpi0) ? Advanced.Get(rpi0.adv) : null;
+            var en = new Fighter($"對手{(radv != null ? radv.name : ec.name)}", ec, remoteLoadout ?? new string[0], false);
+            Advanced.ApplyStats(en, radv);
             en.head = NetEnemyHeadW;
             SyncPlayer(me);
             battle = new Battle(me, en) { remoteEnemy = true };
@@ -449,6 +507,7 @@ namespace SpellDuel
             battle.OnTrapGone += id => NetSend?.Invoke(new Msg { t = "trapgone", id = id });
             battle.OnDispel += (c, r) => NetSend?.Invoke(new Msg { t = "dispel", p = c, rad = r });
             battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = id, ok = theirs });
+            WireAdvNet();
             ai = null;
             remoteAnchor = new GameObject("Remote Anchor").transform;
             lastEnemyFeet = en.Feet; lastEnemyHp = en.hp; enemyDeadShown = false;
@@ -487,6 +546,7 @@ namespace SpellDuel
                 prof.ApplyTo(me, Skills.Classes[myClass], myLoadout);
                 lastXpSeen = 0; lastKillsSeen = 0; lastBossKillsSeen = 0;
             }
+            else Advanced.ApplyStats(me, Progress.Char(myClass).Adv);
             var bc = Skills.Classes["boss"];
             // 無盡模式的 Boss 不召喚小怪（小怪由場地邊緣陸續冒出）
             var bossSkills = new List<string>(bc.defaultLoadout);
@@ -507,7 +567,11 @@ namespace SpellDuel
                     peerInfo.TryGetValue(pid, out var pi);
                     var rc = Skills.Classes.TryGetValue(pi?.cls ?? "", out var found) ? found : Skills.Classes["mage"];
                     var head = NetPeers.TryGetValue(pid, out var pp) ? pp.head : NetEnemyHeadW;
-                    battle.allies.Add(new Fighter(PeerIds.Count > 1 ? $"{(pid == 0 ? "房主" : $"隊友{pid}")}・{rc.name}" : $"隊友{rc.name}", rc, pi?.loadout ?? new string[0], false) { head = head, isAlly = true, pid = pid });
+                    var aadv = Advanced.Get(pi?.adv);
+                    string an = aadv != null ? aadv.name : rc.name;
+                    var af = new Fighter(PeerIds.Count > 1 ? $"{(pid == 0 ? "房主" : $"隊友{pid}")}・{an}" : $"隊友{an}", rc, pi?.loadout ?? new string[0], false) { head = head, isAlly = true, pid = pid };
+                    Advanced.ApplyStats(af, aadv);
+                    battle.allies.Add(af);
                 }
                 battle.coopHost = NetIsHost;
                 battle.remoteEnemy = !NetIsHost;   // 隊友端：Boss 是主機的代理
@@ -522,6 +586,7 @@ namespace SpellDuel
                 battle.OnDispel += (c, r) => NetSend?.Invoke(new Msg { t = "dispel", p = c, rad = r });
                 // 斬開法球：送「發射者 pid 空間」的編號（自己的法術換成 RId(我, id)；遠端的本來就是）
                 battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = theirs ? id : RId(MyPid, id) });
+                WireAdvNet();
                 battle.OnMinionHit += (id, dmg, sk) => SendTo(0, new Msg { t = "mhit", id = id, dmg = dmg, k = sk.id, e = battle.LastProcs });
                 // 主機：藤蔓／衝刺路線送給隊友顯示（傷害由主機判定）
                 battle.OnLane += ln => { if (!ln.remote && NetIsHost) NetSend?.Invoke(new Msg { t = "lane", k = ln.kind, pts = new[] { ln.a, ln.b }, rad = ln.grow, s = ln.until - battle.now }); };
@@ -547,6 +612,7 @@ namespace SpellDuel
                     if (pendingStage != null)
                     {
                         battle.stageEnemyMul = pendingStage.theme == 0 ? 0.5f : 1f;   // 初級地圖（熔岩地帶）：敵人數量減半
+                        if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
                     }
                     else battle.StartEndless();
@@ -683,11 +749,24 @@ namespace SpellDuel
                     // 隊友嘲諷：主機把 Boss 的仇恨拉到他身上
                     if (NetIsHost && ally != null && Skills.All.TryGetValue(m.k ?? "", out var tsk)) battle.Taunt(ally, tsk.buffAmount);
                     break;
+                case "pet":
+                    battle.AddRemotePet(RId(m.pid, m.id), m.k, ally, m.p, m.s);
+                    break;
+                case "petgone":
+                    battle.RemoveRemotePet(RId(m.pid, m.id));
+                    break;
+                case "oath":
+                    // 我是聖騎士：隊友受到的傷害有一部分轉到我身上
+                    battle.TakeShared(m.dmg, Me.Chest);
+                    NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp) });
+                    break;
                 case "tbuff":
                     // 隊友（牧師）的治療／淨化／守護／祈禱也作用在我身上
                     if (Skills.All.TryGetValue(m.k, out var tb))
                     {
-                        battle.ApplyTeamBuff(tb);
+                        bool wasDown = !Me.Alive;
+                        battle.ApplyTeamBuff(tb, ally != null ? ally.name : "隊友", ally);
+                        if (wasDown && Me.Alive) { Say($"✨ {(ally != null ? ally.name : "隊友")}的復活術！你站起來了", 3f); Sfx.Play("heal"); Haptics.Play(Haptics.Kind.Success); }
                         // 主機：隊友（牧師）的治療算仇恨（補到的人數 × 治療量）
                         if (NetIsHost && ally != null && tb.heal > 0) { int n = 1; foreach (var a in battle.AllPlayers) if (a.Alive && a != ally) n++; battle.AddThreat(ally, tb.heal * n); }
                         NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp) });
@@ -918,6 +997,21 @@ namespace SpellDuel
         {
             if (resultShown) return;
             resultShown = true;
+            if (endless && IsTrial)
+            {
+                // 轉職試煉：通過 → 可以在職業工會選進階職業
+                var st = storyStage;
+                if (battle.stageCleared)
+                {
+                    string loot = GrantLoot("轉職試煉通過", false);
+                    if (prof != null) { prof.trialPassed = true; prof.AddXp(st.xp); Progress.SaveChar(prof); }
+                    Say($"🏆 通過轉職試煉！回職業工會選擇進階職業" + (loot.Length > 0 ? "\n" + loot : ""), 99f);
+                    Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
+                    ShowDialogue(st.after, null);
+                }
+                else { LoseLoot(); Say("💀 試煉失敗…準備好再來挑戰（可以直接再挑戰，不用再付報名費）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
+                return;
+            }
             if (endless && storyStage != null)
             {
                 // 故事關卡：通關 → 記錄、給經驗、結束對話；失敗 → 可以再挑戰
@@ -971,7 +1065,7 @@ namespace SpellDuel
                 case "ready":
                     remoteClass = m.k; remoteLoadout = m.ks; remoteReady = true; remoteCoop = m.e >= 1; remoteEndless = m.e == 2;
                     if (!peerInfo.TryGetValue(m.pid, out var rpi)) peerInfo[m.pid] = rpi = new PeerInfo();
-                    rpi.cls = m.k; rpi.loadout = m.ks; rpi.ready = true; rpi.mode = m.e;
+                    rpi.cls = m.k; rpi.loadout = m.ks; rpi.ready = true; rpi.mode = m.e; rpi.adv = string.IsNullOrEmpty(m.a) ? null : m.a;
                     if (phase != Phase.Fighting) Say(PeerIds.Count > 1 ? $"{PeerName(m.pid)}已準備好（{ReadyCount()}/{PeerIds.Count}）" : "對手已準備好", 2f);
                     TryStartNet();
                     return;
@@ -1003,6 +1097,12 @@ namespace SpellDuel
                         bool countered = battle.ApplyRemoteHit(hs, m.dmg, m.p, isTrap);
                         NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp), ok = countered });
                     }
+                    break;
+                case "pet":
+                    battle.AddRemotePet(m.id, m.k, En, m.p, m.s);
+                    break;
+                case "petgone":
+                    battle.RemoveRemotePet(m.id);
                     break;
                 case "burn2":
                     // 對手的火海燒到我
@@ -1092,6 +1192,7 @@ namespace SpellDuel
             if (rest.Count > 0) enemySkills.Add(rest[0]);
 
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
+            Advanced.ApplyStats(me, Progress.Char(myClass).Adv);
             dummyMode = enemyClass == "dummy";
             dummyDamage = 0f; dummyHits = 0;
             var en = dummyMode
@@ -1128,6 +1229,8 @@ namespace SpellDuel
             foreach (var go in projGo.Values) if (go) Destroy(go);
             foreach (var go in trapGo.Values) if (go) Destroy(go);
             foreach (var go in burnGo.Values) if (go) Destroy(go);
+            foreach (var go in petGo.Values) if (go) Destroy(go);
+            petGo.Clear();
             foreach (var go in landGo.Values) if (go) Destroy(go);
             landGo.Clear();
             if (warnLine) Destroy(warnLine);
@@ -1287,6 +1390,10 @@ namespace SpellDuel
                 Hand.ReleaseStyle = ChantDone ? HandGesture.Style.Number : HandGesture.Style.None;
                 Hand.RequiredNumber = ChantDone ? 5 : 0;
             }
+            // 忍者：手印（依序比出數字）
+            var seal = Me.charging != null ? Advanced.SealOf(Me.charging.id) : null;
+            if (Me.charging != sealFor) { sealFor = Me.charging; sealStep = 0; }
+            if (seal != null) { Hand.ReleaseStyle = HandGesture.Style.Number; Hand.RequiredNumber = seal[Mathf.Min(sealStep, seal.Length - 1)]; }
             // 普通攻擊：沒在詠唱時，手勢舉著就自動攻擊（法師比 1、獵人比 5、牧師比 2、刺客舉掌、劍士手掌劃一下）
             var basic = Skills.BasicOf(myClass);
             Hand.BasicSwipe = basic != null && basic.id == "na_sword" && Me.charging == null;
@@ -1307,6 +1414,13 @@ namespace SpellDuel
             if (Hand.ConsumeRelease())
             {
                 if (frozen) { Say("AR 追蹤中斷，暫時不能施法", 1.5f); return; }
+                if (seal != null && sealStep < seal.Length - 1)
+                {
+                    sealStep++;
+                    Say($"🥷 手印 {sealStep}/{seal.Length}：接著比 {seal[sealStep]}", 1.2f);
+                    Haptics.Play(Haptics.Kind.Light); Sfx.Play("select", 0.5f, 1.2f + 0.15f * sealStep);
+                    return;
+                }
                 if (Me.charging == null) Say("🎤 先唸出技能名稱才能放招", 1.5f);
                 else if (drawingRune) ReleaseAt(ScreenCenter, true);   // 符文畫好＋食指往前指
                 else if (battle.ChargeProgress(Me) < 1f) { if (Hand.ReleaseStyle != HandGesture.Style.Number) Say("蓄力還沒完成", 1f); }   // 法師比著數字等蓄滿就會自動放
@@ -1315,6 +1429,7 @@ namespace SpellDuel
         }
 
         static Vector2 ScreenCenter => new Vector2(Screen.width / 2f, Screen.height / 2f);
+        SkillDef sealFor; int sealStep;   // 忍者的手印：正在比第幾個
 
         /// <summary>普通攻擊：朝畫面中央的準星（近身＝砍身邊的敵人）</summary>
         void DoBasic(SkillDef s)
@@ -1356,7 +1471,7 @@ namespace SpellDuel
         {
             // 手機內建語音辨識：戰鬥中語音開啟就聽，唸技能名稱即詠唱（不能和下面的錄音比對同時用麥克風）
             bool wantSpeech = UseSpeech && voiceOn && phase == Phase.Fighting && recordingSkill == null;
-            if (wantSpeech && !speech.Running) { speech.Candidates = myLoadout; speech.Start(); }
+            if (wantSpeech && !speech.Running) { speech.Candidates = SpeechCandidates; speech.Start(); }
             else if (!wantSpeech && speech != null && speech.Running) speech.Stop();
             speech?.Tick();
             HandGesture.MageChant = UseSpeech;   // 法師：有語音辨識就唸咒語放招，沒有就比數字
@@ -1373,6 +1488,17 @@ namespace SpellDuel
             mic.Tick();
         }
 
+        /// <summary>語音辨識要聽的：技能名稱（＋咒語）；大魔導士多聽增幅咒</summary>
+        List<string> SpeechCandidates
+        {
+            get
+            {
+                var l = new List<string>(myLoadout);
+                if (Me != null && Me.adv == "archmage") l.Add("amp");
+                return l;
+            }
+        }
+
         // 法師：唸技能名稱 → 唸咒語（chantPending＝咒語已唸完的技能）→ 手在畫面比 5 放招
         SkillDef chantPending;
         bool ChantDone => chantPending != null && Me != null && Me.charging != null && Me.charging.id == chantPending.id;
@@ -1380,13 +1506,22 @@ namespace SpellDuel
         void UpdateChant()
         {
             if (chantPending == null) return;
-            if (phase != Phase.Fighting || battle == null || Me == null || Me.charging == null || Me.charging.id != chantPending.id) chantPending = null;
+            if (phase != Phase.Fighting || battle == null || Me == null || Me.charging == null || Me.charging.id != chantPending.id) { chantPending = null; if (Me != null) Me.ampNext = false; }
         }
 
         void OnChant(string skillId)
         {
             if (phase != Phase.Fighting || battle == null || !Skills.All.TryGetValue(skillId, out var skill)) return;
             heard = $"🎤 {skill.chant}"; heardUntil = Time.time + 1.5f;
+            if (skillId == "amp")
+            {
+                // 大魔導士的增幅咒：唸完技能咒語之後再唸 → 這一招傷害 +50%
+                if (!ChantDone) { Say("✨ 增幅咒要在唸完技能咒語之後唸", 1.5f); return; }
+                Me.ampNext = true;
+                Sfx.Play("charged", 0.8f, 1.3f); Haptics.Play(Haptics.Kind.Medium);
+                Say("🔮 增幅！這一招傷害 +50%，手在畫面比 5 放招", 1.5f);
+                return;
+            }
             if (Me.charging == null || Me.charging.id != skillId)
             {
                 Say(Me.charging == null ? $"🎤 先唸技能名稱「{skill.name}」，再唸咒語" : $"現在詠唱的是「{Me.charging.name}」，咒語是「{Me.charging.chant}」", 1.5f);
@@ -1665,6 +1800,26 @@ namespace SpellDuel
                     Sfx.Play("cast_mage", 0.9f, 0.7f); Sfx.Play("block", 0.6f, 0.8f);
                     Haptics.Play(Haptics.Kind.Medium); Kick(6f, 0f);
                     break;
+                case "aoe":
+                {
+                    // 玩家方的範圍攻擊（神聖制裁、旋風斬、冰封領域、元素爆裂）：地上的法陣＋衝擊波
+                    float rad = Skills.All.TryGetValue(text ?? "", out var asd) ? asd.areaRadius : 1.5f;
+                    SpellFx.DispelRing(WorldFrame.FromWorld(at), rad, c);
+                    SpellFx.Impact(myClass, c, WorldFrame.FromWorld(at + Vector3.up * 0.5f), 1.6f);
+                    Sfx.Play(text == "frostfield" ? "cast_mage" : text == "detonate" ? "boom" : "cast_swordsman", 0.8f, 0.8f);
+                    Haptics.Play(Haptics.Kind.Medium); Kick(6f, 0.04f);
+                    break;
+                }
+                case "fogzone":
+                    Sfx.Play("cast_assassin", 0.7f, 0.7f);
+                    break;
+                case "petspawn":
+                    SpellFx.Impact("mage", c, WorldFrame.FromWorld(at), 1.2f);
+                    Sfx.Play("cast_mage", 0.6f, text == "golem" ? 0.6f : 1.3f);
+                    break;
+                case "petgone":
+                    SpellFx.Impact("", new Color(0.8f, 0.8f, 0.8f), WorldFrame.FromWorld(at), 0.8f);
+                    break;
                 case "basicmelee":
                     // 近身普攻：揮砍特效
                     Burst(at + Vector3.up * 1f, c);
@@ -1685,8 +1840,46 @@ namespace SpellDuel
         }
 
         // ================================================================ 3D 顯示
+        // 召喚物的外觀（獵鷹、火靈、石像、分身）
+        readonly Dictionary<Pet, GameObject> petGo = new Dictionary<Pet, GameObject>();
+
+        void UpdatePetViews()
+        {
+            var live = new HashSet<Pet>(battle.pets);
+            foreach (var p in battle.pets)
+            {
+                if (!p.alive) continue;
+                if (!petGo.TryGetValue(p, out var go))
+                {
+                    var ownerCol = p.owner != null && p.owner.cls != null ? p.owner.cls.color : Color.white;
+                    switch (p.kind)
+                    {
+                        case "falcon": go = Prim(PrimitiveType.Sphere, new Color(0.55f, 0.35f, 0.15f)); go.transform.localScale = new Vector3(0.35f, 0.18f, 0.5f); break;
+                        case "fire": go = Prim(PrimitiveType.Sphere, new Color(1f, 0.55f, 0.15f, 0.85f), true); go.transform.localScale = Vector3.one * 0.28f; break;
+                        case "golem": go = Prim(PrimitiveType.Cube, new Color(0.6f, 0.58f, 0.55f)); go.transform.localScale = new Vector3(0.6f, 1.2f, 0.5f); break;
+                        default: go = Prim(PrimitiveType.Capsule, WithAlpha(ownerCol, 0.35f), true); go.transform.localScale = new Vector3(0.45f, 0.85f, 0.45f); break;
+                    }
+                    petGo[p] = go;
+                }
+                go.transform.position = WorldFrame.FromWorld(p.pos);
+                var fwd = WorldFrame.DirFromWorld(p.owner != null ? p.owner.forward : Vector3.forward); fwd.y = 0f;
+                if (fwd.sqrMagnitude > 1e-4f) go.transform.rotation = Quaternion.LookRotation(fwd.normalized, Vector3.up);
+                if (p.kind == "fire")
+                {
+                    float fl = 0.26f + 0.04f * Mathf.Sin(Time.time * 17f + p.id);
+                    go.transform.localScale = Vector3.one * fl;
+                    if (UnityEngine.Random.value < Time.deltaTime * 6f) SpellFx.Impact("", new Color(1f, 0.5f, 0.1f), go.transform.position, 0.25f);
+                }
+                else if (p.kind == "falcon") go.transform.localScale = new Vector3(0.35f + 0.25f * Mathf.Abs(Mathf.Sin(Time.time * 9f)), 0.18f, 0.5f);
+                else if (p.kind == "golem" && p.maxHp > 0f) go.GetComponent<Renderer>().material.color = Color.Lerp(new Color(0.85f, 0.35f, 0.3f), new Color(0.6f, 0.58f, 0.55f), p.hp / p.maxHp);
+            }
+            foreach (var kv in new List<KeyValuePair<Pet, GameObject>>(petGo))
+                if (!live.Contains(kv.Key) || !kv.Key.alive) { Destroy(kv.Value); petGo.Remove(kv.Key); }
+        }
+
         void UpdateVisuals()
         {
+            UpdatePetViews();
             var en = En;
             var feetS = WorldFrame.FromWorld(en.Feet);
             UpdateChargeFx();
@@ -1826,6 +2019,13 @@ namespace SpellDuel
                 go.transform.position = WorldFrame.FromWorld(z.pos + Vector3.up * 0.015f);
                 float left = Mathf.Clamp01((z.until - battle.now) / 2f);   // 最後 2 秒淡出
                 float flick = 0.35f + 0.15f * Mathf.Sin(Time.time * 13f + z.pos.x * 7f) + 0.1f * Mathf.Sin(Time.time * 29f);
+                if (z.skill != null && z.skill.self == SelfKind.Fog)
+                {
+                    // 影舞者的毒霧：綠色、慢慢翻騰
+                    go.GetComponent<Renderer>().material.color = new Color(0.45f, 0.95f, 0.5f, (0.25f + 0.1f * Mathf.Sin(Time.time * 3f)) * left);
+                    if (UnityEngine.Random.value < Time.deltaTime * 3f) { var r3 = UnityEngine.Random.insideUnitCircle * z.radius * 0.8f; SpellFx.Impact("", new Color(0.5f, 1f, 0.55f), WorldFrame.FromWorld(z.pos + new Vector3(r3.x, 0.3f, r3.y)), 0.5f); }
+                    continue;
+                }
                 go.GetComponent<Renderer>().material.color = new Color(1f, 0.3f + 0.15f * flick, 0.05f, flick * left);
                 if (UnityEngine.Random.value < Time.deltaTime * 2.2f)
                 {
@@ -2021,7 +2221,7 @@ namespace SpellDuel
             var ir = new Rect(r.x + gap * 1.5f, r.y + gap * 1.5f, isz, isz);
             GUI.DrawTexture(ir, SkillIcons.Get(s.id));
             float tx = ir.xMax + gap * 1.5f, tw = r.xMax - tx - gap * 1.5f;
-            string clsName = Skills.Classes.TryGetValue(s.cls, out var cd) ? cd.name : "";
+            string clsName = Advanced.Get(s.adv)?.name ?? (Skills.Classes.TryGetValue(s.cls, out var cd) ? cd.name : "");
             UiKit.Text(new Rect(tx, ir.y, tw, isz * 0.48f), s.name, fsL, Color.white, TextAnchor.MiddleLeft, true);
             UiKit.Text(new Rect(tx, ir.y + isz * 0.48f, tw, isz * 0.26f), $"{clsName}・{SkillInfo.TypeName(s)}", fsS, s.color, TextAnchor.MiddleLeft, true);
             UiKit.Text(new Rect(tx, ir.y + isz * 0.74f, tw, isz * 0.26f), SkillInfo.CostLine(s), fsS, new Color(0.75f, 0.85f, 1f));
@@ -2035,10 +2235,12 @@ namespace SpellDuel
             {
                 bool on = myLoadout.Contains(s.id);
                 float bw = (r.width - gap * 4) / 2f;
-                if (UiKit.Button(new Rect(r.x + gap * 1.5f, by, bw, bh), on ? "移除這個技能" : myLoadout.Count >= 3 ? "換上這個技能" : "✔ 選這個技能", fs, !on, on ? new Color(1f, 0.5f, 0.45f) : s.color))
+                bool advSk = Advanced.IsAdvSkill(s.id);
+                bool full = advSk ? AdvCount >= 1 : BaseCount >= 3;
+                if (UiKit.Button(new Rect(r.x + gap * 1.5f, by, bw, bh), on ? "移除這個技能" : full ? (advSk ? "換到進階技能格" : "換上這個技能") : "✔ 選這個技能", fs, !on, on ? new Color(1f, 0.5f, 0.45f) : s.color))
                 {
                     if (on) myLoadout.Remove(s.id);
-                    else { if (myLoadout.Count >= 3) myLoadout.RemoveAt(0); myLoadout.Add(s.id); }
+                    else PickSkill(s.id);
                     infoSkill = null;
                 }
                 if (UiKit.Button(new Rect(r.x + gap * 2.5f + bw, by, bw, bh), "關閉", fs)) infoSkill = null;
@@ -2110,11 +2312,12 @@ namespace SpellDuel
             cls = Skills.Classes[myClass];
             var descR = new Rect(pad, y, W - pad * 2, u * 1.5f);
             UiKit.Card(descR, 0.5f, cls.color, 0.35f);
-            UiKit.Text(new Rect(descR.x + gap, descR.y + gap * 0.4f, descR.width - gap * 2, descR.height - gap * 0.8f), $"{cls.desc}\nHP {cls.maxHp}・MP {cls.maxMp}　🗡 普攻：{Skills.BasicOf(myClass)?.desc ?? "無"}", fsS, new Color(0.9f, 0.92f, 1f));
+            var myAdv = Progress.Char(myClass).Adv;
+            UiKit.Text(new Rect(descR.x + gap, descR.y + gap * 0.4f, descR.width - gap * 2, descR.height - gap * 0.8f), (myAdv != null ? $"✨ 進階：{myAdv.name}（{myAdv.core}）" : cls.desc) + $"\nHP {cls.maxHp + (myAdv?.hpAdd ?? 0)}・MP {cls.maxMp + (myAdv?.mpAdd ?? 0)}　🗡 普攻：{Skills.BasicOf(myClass)?.desc ?? "無"}", fsS, new Color(0.9f, 0.92f, 1f));
             y += u * 1.5f + gap;
 
             // 技能卡片（2 欄）：圖示＋名稱／手勢→放招／數值
-            UiKit.Text(new Rect(pad, y, W - pad * 2, u), $"選 3 個技能（{myLoadout.Count}/3）　點技能看詳細說明", fsS, new Color(1f, 0.9f, 0.6f));
+            UiKit.Text(new Rect(pad, y, W - pad * 2, u), AdvSlot ? $"選 3 個技能＋1 個進階技能（{BaseCount}/3・{AdvCount}/1）" : $"選 3 個技能（{myLoadout.Count}/3）　點技能看詳細說明", fsS, new Color(1f, 0.9f, 0.6f));
             if (EndlessSetup)
             {
                 // 無盡／故事模式：角色養成（能力值、技能樹、裝備）
@@ -2138,7 +2341,7 @@ namespace SpellDuel
                 GUI.color = Color.white;
                 float tx = ir.xMax + sh * 0.08f, tw = r.xMax - tx - sh * 0.06f;
                 string eff = sk.type == SkillType.Self ? (sk.self == SelfKind.Heal ? $"回復{sk.heal}" : sk.self == SelfKind.Cleanse ? "解異常" : sk.self == SelfKind.Armor ? $"減傷{sk.buffReduce * 100f:0}%" : sk.self == SelfKind.Prayer ? $"冷卻-{sk.buffDur:0}s" : "防禦") : sk.damage > 0 ? $"傷害{sk.damage}{(sk.multi > 1 ? $"×{sk.multi}" : "")}" : "效果";
-                UiKit.Text(new Rect(tx, r.y + sh * 0.05f, tw, sh * 0.32f), (on ? "✔ " : "") + sk.name, fs, on ? Color.white : new Color(0.8f, 0.8f, 0.8f), TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(tx, r.y + sh * 0.05f, tw, sh * 0.32f), (on ? "✔ " : "") + (Advanced.IsAdvSkill(sk.id) ? "✨" : "") + sk.name, fs, on ? Color.white : new Color(0.8f, 0.8f, 0.8f), TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(tx, r.y + sh * 0.37f, tw, sh * 0.27f), $"🎤唸「{sk.name}」→ {HandGesture.ReleaseLabel(sk)}", fsS, new Color(1f, 0.85f, 0.5f));
                 UiKit.Text(new Rect(tx, r.y + sh * 0.64f, tw, sh * 0.32f), $"MP{sk.cost}・{(sk.charge > 0f ? $"蓄力{sk.charge:0.#}s" : "免蓄力")}・{eff}・{sk.RangeText}", fsS, new Color(0.8f, 0.85f, 0.95f));
                 // 點技能卡：打開詳細說明（在說明裡選／移除）
@@ -2208,7 +2411,7 @@ namespace SpellDuel
             if (UseSpeech) UiKit.Text(new Rect(vx, y, vw, u * 1.15f), "🎤 每次放技能前都要先唸出技能名稱（不用錄音）", fsS, new Color(0.85f, 0.9f, 1f));
             else
             {
-                float rw = (vw - gap * 2) / 3f;
+                float rw = (vw - gap * (myLoadout.Count - 1)) / Mathf.Max(1, myLoadout.Count);
                 for (int i = 0; i < myLoadout.Count; i++)
                 {
                     var sk = Skills.All[myLoadout[i]];
@@ -2238,7 +2441,7 @@ namespace SpellDuel
             by -= u * 1.6f + gap;
             bool voiceOk = UseSpeech || VoiceReady;   // 沒有語音辨識時，要先把 3 個技能的咒語錄好
             string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? "📖 打開故事地圖" : "⚔ 開始戰鬥");
-            if (UiKit.Button(new Rect(pad, by, W - pad * 2, u * 1.6f), startText, fsL, true, cls.color, myLoadout.Count == 3 && voiceOk))
+            if (UiKit.Button(new Rect(pad, by, W - pad * 2, u * 1.6f), startText, fsL, true, cls.color, LoadoutReady && voiceOk))
             { if (NetMode) SendReady(); else StartBattle(); }
         }
 
@@ -2506,7 +2709,8 @@ namespace SpellDuel
             }
 
             // 下方：我的狀態與技能（由下往上排）
-            float sw = (W - pad * 2 - gap * 2) / 3f;
+            int ncol = Mathf.Max(3, me.loadout.Count);
+            float sw = (W - pad * 2 - gap * (ncol - 1)) / ncol;
             float isz = Mathf.Min(sw * 0.5f, lh * 2.2f);
             float rowH = lh * 0.72f;
             float tileH = gap * 0.6f + isz + rowH * 3 + gap * 0.4f;
@@ -2621,9 +2825,14 @@ namespace SpellDuel
                 var orr = new Rect(pad, H * 0.28f, W - pad * 2, H * 0.32f);
                 UiKit.Card(orr, 0.85f, won ? new Color(1f, 0.85f, 0.3f) : new Color(0.7f, 0.7f, 0.8f), 0.9f);
                 UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, orr.height * 0.4f), won ? $"🏆 {st.title}" : "💀 失敗…", fs * 2, Color.white, TextAnchor.MiddleCenter, true);
-                var next = won ? NextStage(st) : null;
+                var next = won && !IsTrial ? NextStage(st) : null;
                 float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
-                if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), won ? (next != null && Story.IsUnlocked(next) ? "▶ 下一關" : "再打一次") : "再挑戰", fs, true, new Color(0.4f, 0.8f, 1f)))
+                if (IsTrial && won)
+                {
+                    if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "🏛 回職業工會", fs, true, new Color(0.85f, 0.6f, 1f)))
+                    { ShowSetup(); storyMapOpen = true; world.OpenTown(0); world.OpenGuild(); }
+                }
+                else if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), won ? (next != null && Story.IsUnlocked(next) ? "▶ 下一關" : "再打一次") : "再挑戰", fs, true, new Color(0.4f, 0.8f, 1f)))
                 { if (won && next != null && Story.IsUnlocked(next)) { var n2 = next; ShowSetup(); StartStory(n2); } else StartStageBattle(); }
                 if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "🗺 大地圖", fs)) { ShowSetup(); storyMapOpen = true; world.screen = WorldUI.Screen.Map; }
             }
@@ -2715,6 +2924,28 @@ namespace SpellDuel
             if (f.blindUntil > now) parts.Add("致盲");
             int traps = 0; foreach (var t in battle.traps) if (t.owner == f) traps++;
             if (traps > 0) parts.Add($"陷阱×{traps}");
+            // 進階職業
+            if (f.adv == "berserker" && f.RageMul > 1.01f) parts.Add($"怒氣 +{(f.RageMul - 1f) * 100f:0}%");
+            if (f.adv == "marksman") { int st = battle.EagleStacks(f); parts.Add(st > 0 ? $"鷹眼 {st}/3" : "鷹眼（站著不動）"); }
+            if (f.adv == "inquisitor") parts.Add($"信仰 {f.faith}/{Battle.FaithMax}");
+            if (f.adv == "bishop" && battle.Still(f)) parts.Add("祈禱領域");
+            if (f.adv == "archmage" && f.ampNext) parts.Add("增幅中");
+            if (f.comboUntil > now) parts.Add($"連殺 {f.comboUntil - now:F1}s");
+            if (f.frenzyUntil > now) parts.Add($"狂暴 {f.frenzyUntil - now:F1}s");
+            if (f.undyingUntil > now) parts.Add("不死之軀");
+            if (f.invulnUntil > now) parts.Add($"無敵 {f.invulnUntil - now:F1}s");
+            if (f.manaShieldUntil > now) parts.Add($"魔力護盾 {f.manaShieldUntil - now:F1}s");
+            if (f.selfOathUntil > now) parts.Add("守護誓言");
+            if (f.oathUntil > now) parts.Add("受誓言守護");
+            if (f.subUntil > now) parts.Add("替身");
+            if (f.cloneUntil > now) parts.Add($"分身 {f.cloneUntil - now:F1}s");
+            if (f.danceUntil > now) parts.Add($"影舞 {f.danceUntil - now:F1}s");
+            if (f.rollUntil > now) parts.Add($"翻滾射擊 {f.rollUntil - now:F1}s");
+            if (f.markNextUntil > now) parts.Add("致命標記");
+            if (f.blessUntil > now) parts.Add("復活祝福");
+            if (f.markedUntil > now) parts.Add("被懲戒");
+            int pets = 0; foreach (var pt in battle.pets) if (pt.owner == f && pt.kind != "clone" && !pt.remote) pets++;
+            if (pets > 0) parts.Add($"召喚物×{pets}");
             return string.Join("　", parts);
         }
     }

@@ -4,8 +4,10 @@ using UnityEngine;
 namespace SpellDuel
 {
     public enum SkillType { Projectile, Self, Trap }
-    public enum SelfKind { None, Heal, Block, Shield, Counter, Armor, Cleanse, Prayer, Dispel, Summon, Mana, Focus, Prep, Taunt }
-    public enum EffectKind { None, Dot, Blind, Snare }
+    public enum SelfKind { None, Heal, Block, Shield, Counter, Armor, Cleanse, Prayer, Dispel, Summon, Mana, Focus, Prep, Taunt,
+        // 進階職業
+        Oath, Frenzy, Undying, DeadMark, RollShot, ManaShield, Pet, Detonate, Substitute, Clone, Dance, Fog, Revive, HealPct, TeamShield }
+    public enum EffectKind { None, Dot, Blind, Snare, Mark, Burn }
 
     /// <summary>
     /// 技能資料（從網頁版 spellbattle/js/skills.js 移植）。
@@ -40,6 +42,13 @@ namespace SpellDuel
         public float trapLife = 30f, trapArm = 1.2f, trapRange = 3f; public int trapMax = 2;
         public string desc;
         public string chant;            // 法師：唸完技能名稱後接著唸的咒語（唸完＝放招）
+        // 進階職業
+        public string adv;              // 屬於哪個進階職業（Advanced.All）；null＝基本職業的技能
+        public bool areaFoes;           // 玩家方的範圍攻擊：打 areaRadius 內的所有敵人（atTarget＝打在準星／目標位置）
+        public int hits = 1; public float hitGap = 0.25f;   // 範圍攻擊連續打幾段（旋風斬）
+        public bool pierce;             // 穿透：打中小怪不會消失（貫穿狙擊）
+        public bool execute;            // 處決：目標 HP 低於 25% 時傷害 ×3
+        public string petKind; public float petLife, petInterval = 1.5f, petRange = 6f; public int petHp;   // 召喚物
 
         public float MaxTravel => rangeMax + 1f;
         public string RangeText => type == SkillType.Projectile ? $"≤{rangeMax:0.#}m" : type == SkillType.Trap ? $"設置≤{trapRange:0.#}m" : "自身";
@@ -203,6 +212,57 @@ namespace SpellDuel
             P(new SkillDef { id = "na_arrow", cls = "basic", name = "普通箭", type = SkillType.Projectile, color = C("#d9f99d"), cost = 0, damage = 7, charge = 0f, cooldown = 2f, speed = 16f, radius = 0.06f, rangeMax = 14f, desc = "獵人普攻：比 5，每 2 秒一箭" });
             P(new SkillDef { id = "na_holy", cls = "basic", name = "神聖飛彈", type = SkillType.Projectile, color = C("#fff3b0"), cost = 0, damage = 6, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.14f, rangeMax = 12f, desc = "牧師普攻：比 2，每 2 秒一發（飛得慢）" });
             P(new SkillDef { id = "na_dagger", cls = "basic", name = "連刺（普攻）", type = SkillType.Projectile, color = C("#e879f9"), cost = 0, damage = 8, charge = 0f, cooldown = 1.6f, radius = 0.5f, rangeMax = 1f, desc = "刺客普攻：舉掌，每 1.6 秒砍身邊 1m 內的敵人" });
+
+            // ---------------------------------------------------------- 進階職業（cls＝基本職業，沿用職業的放招方式；adv＝進階職業）
+            // 劍士・聖騎士
+            P(new SkillDef { adv = "paladin", id = "shieldbash", cls = "swordsman", name = "聖盾衝鋒", type = SkillType.Projectile, color = C("#fde047"), cost = 20, damage = 20, charge = 0.5f, cooldown = 6f, speed = 8f, radius = 0.3f, rangeMax = 2.5f, effect = EffectKind.Snare, effectDur = 1f, desc = "舉掌往前推：近身衝撞，命中暈眩 1 秒（打斷蓄力）" });
+            P(new SkillDef { adv = "paladin", id = "oath", cls = "swordsman", name = "守護誓言", type = SkillType.Self, self = SelfKind.Oath, color = C("#fef08a"), cost = 25, charge = 0.6f, cooldown = 18f, buffDur = 8f, buffReduce = 0.4f, desc = "8 秒內：3m 內隊友受到的傷害有 40% 轉到自己身上；自己受到的傷害 -20%" });
+            P(new SkillDef { adv = "paladin", id = "sanction", cls = "swordsman", name = "神聖制裁", type = SkillType.Projectile, areaFoes = true, areaRadius = 2.5f, color = C("#facc15"), cost = 30, damage = 25, charge = 1.0f, cooldown = 10f, radius = 0f, rangeMax = 2.5f, buffAmount = 200, desc = "往下壓：周圍 2.5m 的敵人受傷，並把 Boss 的仇恨拉到自己身上" });
+            // 劍士・狂戰士
+            P(new SkillDef { adv = "berserker", id = "whirlwind", cls = "swordsman", name = "旋風斬", type = SkillType.Projectile, areaFoes = true, areaRadius = 2f, hits = 3, hitGap = 0.25f, color = C("#f87171"), cost = 20, damage = 12, charge = 0f, cooldown = 5f, radius = 0f, rangeMax = 2f, desc = "不用蓄力，手刀揮過：360° 旋轉斬，周圍 2m 的敵人連續受到 3 段傷害" });
+            P(new SkillDef { adv = "berserker", id = "bloodrage", cls = "swordsman", name = "血之狂暴", type = SkillType.Self, self = SelfKind.Frenzy, color = C("#dc2626"), cost = 10, charge = 0.3f, cooldown = 20f, buffDur = 8f, buffReduce = 0.2f, desc = "扣除目前 HP 的 20%，換 8 秒攻速 ×1.5（技能與普攻冷卻變快）" });
+            P(new SkillDef { adv = "berserker", id = "undying", cls = "swordsman", name = "不死之軀", type = SkillType.Self, self = SelfKind.Undying, color = C("#991b1b"), cost = 20, charge = 0.5f, cooldown = 60f, buffDur = 10f, desc = "10 秒內受到致命傷害時：保留 1 HP，並無敵 3 秒" });
+            // 獵人・神射手
+            P(new SkillDef { adv = "marksman", id = "pierce", cls = "archer", stillRadius = 0.5f, pierce = true, name = "貫穿狙擊", type = SkillType.Projectile, color = C("#fef08a"), cost = 35, damage = 40, charge = 1.6f, cooldown = 2.5f, speed = 18f, radius = 0.06f, rangeMin = 2f, rangeMax = 16f, desc = "一直線穿透所有小怪的重箭；2m 內打不到" });
+            P(new SkillDef { adv = "marksman", id = "deadmark", cls = "archer", stillRadius = 0.5f, name = "致命標記", type = SkillType.Self, self = SelfKind.DeadMark, color = C("#f43f5e"), cost = 20, charge = 0.6f, cooldown = 12f, buffDur = 10f, desc = "10 秒內射出的下一箭必定爆擊" });
+            P(new SkillDef { adv = "marksman", id = "arrowrain", cls = "archer", stillRadius = 0.5f, fromAbove = true, dropHeight = 6f, multi = 6, name = "箭雨", type = SkillType.Projectile, color = C("#fbbf24"), cost = 40, damage = 12, charge = 1.8f, cooldown = 8f, speed = 9f, radius = 0.45f, rangeMax = 12f, desc = "六支箭從目標上方落下，散在周圍 2.5m" });
+            // 獵人・遊俠
+            P(new SkillDef { adv = "ranger", id = "falcon", cls = "archer", name = "獵鷹", type = SkillType.Self, self = SelfKind.Pet, petKind = "falcon", petLife = 12f, petInterval = 1.5f, petRange = 8f, color = C("#a16207"), cost = 30, damage = 7, charge = 0.8f, cooldown = 18f, desc = "召喚獵鷹 12 秒：每 1.5 秒自動攻擊 8m 內最近的敵人" });
+            P(new SkillDef { adv = "ranger", id = "rollshot", cls = "archer", name = "翻滾射擊", type = SkillType.Self, self = SelfKind.RollShot, color = C("#6ee7b7"), cost = 20, charge = 0.5f, cooldown = 16f, buffDur = 12f, desc = "12 秒內：每次側跨閃避都自動朝敵人射出一箭" });
+            P(new SkillDef { adv = "ranger", id = "trapchain", cls = "archer", name = "連環陷阱", type = SkillType.Trap, multi = 3, trapMax = 6, color = C("#fdba74"), cost = 30, damage = 8, charge = 0.8f, cooldown = 8f, radius = 0.35f, trapArm = 1.2f, effect = EffectKind.Snare, effectDur = 2f, desc = "一次在地上設 3 個捕獸夾（間隔 0.8m），踩到受傷並定身 2 秒" });
+            P(new SkillDef { id = "rollarrow", cls = "archer", name = "翻滾箭", type = SkillType.Projectile, color = C("#6ee7b7"), cost = 0, damage = 14, charge = 0f, cooldown = 0f, speed = 14f, radius = 0.06f, rangeMax = 12f, desc = "翻滾射擊自動射出的箭" });
+            // 法師・大魔導士
+            P(new SkillDef { adv = "archmage", fromAbove = true, dropHeight = 7f, multi = 3, id = "tjudge", cls = "mage", name = "雷霆審判", type = SkillType.Projectile, color = C("#c4b5fd"), cost = 110, damage = 40, charge = 3.5f, cooldown = 6f, speed = 9f, radius = 0.6f, rangeMin = 3f, rangeMax = 10f, chant = "九天之上的雷霆啊聽從吾之號令降下審判吧", desc = "三道巨雷從目標上方劈下（可閃）；遊戲裡咒語最長的魔法" });
+            P(new SkillDef { adv = "archmage", areaFoes = true, atTarget = true, areaRadius = 2f, id = "frostfield", cls = "mage", name = "冰封領域", type = SkillType.Projectile, color = C("#7dd3fc"), cost = 60, damage = 20, charge = 2.2f, cooldown = 10f, radius = 0f, rangeMax = 8f, effect = EffectKind.Snare, effectDur = 3f, chant = "凜冽的寒風啊將大地化為冰封之境", desc = "準星指的位置直徑 4m 結冰：範圍內的敵人受傷並凍住 3 秒" });
+            P(new SkillDef { adv = "archmage", id = "manashield", cls = "mage", name = "魔力護盾", type = SkillType.Self, self = SelfKind.ManaShield, color = C("#818cf8"), cost = 10, charge = 1.0f, cooldown = 20f, buffDur = 10f, chant = "魔力啊化作守護之盾", desc = "10 秒內受到的傷害先扣 MP（1 MP 擋 1 點傷害）" });
+            // 法師・召喚師
+            P(new SkillDef { adv = "summoner", id = "firespirit", cls = "mage", name = "火靈", type = SkillType.Self, self = SelfKind.Pet, petKind = "fire", petLife = 15f, petInterval = 2f, petRange = 7f, color = C("#fb923c"), cost = 45, damage = 12, charge = 1.5f, cooldown = 12f, chant = "火之精靈啊回應契約現身吧", desc = "召喚火靈 15 秒：浮在身邊，每 2 秒朝 7m 內最近的敵人丟火球" });
+            P(new SkillDef { adv = "summoner", id = "golem", cls = "mage", name = "石像守衛", type = SkillType.Self, self = SelfKind.Pet, petKind = "golem", petLife = 15f, petInterval = 1.5f, petRange = 1.8f, petHp = 80, color = C("#a8a29e"), cost = 50, damage = 9, charge = 1.8f, cooldown = 18f, chant = "大地的守衛啊以岩石之軀守護吾身", desc = "召喚石像 15 秒（HP 80）：替你承受一半的傷害，並攻擊靠近它的敵人" });
+            P(new SkillDef { adv = "summoner", id = "detonate", cls = "mage", name = "元素爆裂", type = SkillType.Self, self = SelfKind.Detonate, areaRadius = 2f, color = C("#f97316"), cost = 20, damage = 30, charge = 0.8f, cooldown = 8f, chant = "契約破棄化為爆炎吧", desc = "引爆自己所有的召喚物：每隻在周圍 2m 造成爆炸傷害" });
+            // 刺客・忍者（忍術：依序比出手印，見 Advanced.SealOf）
+            P(new SkillDef { adv = "ninja", id = "substitute", cls = "assassin", name = "替身術", type = SkillType.Self, self = SelfKind.Substitute, color = C("#94a3b8"), cost = 15, charge = 0f, cooldown = 8f, buffDur = 1.5f, desc = "手印 3→2：1.5 秒內被打中時完全不受傷害（換成木頭替身）" });
+            P(new SkillDef { adv = "ninja", id = "clone", cls = "assassin", name = "分身術", type = SkillType.Self, self = SelfKind.Clone, color = C("#cbd5e1"), cost = 25, charge = 0.5f, cooldown = 16f, buffDur = 6f, desc = "手印 2→3→4：放出分身 6 秒，期間受到的攻擊有一半會打到分身" });
+            P(new SkillDef { adv = "ninja", id = "fireseal", cls = "assassin", name = "火遁", type = SkillType.Projectile, multi = 5, spreadDeg = 10f, color = C("#fb7185"), cost = 30, damage = 10, charge = 0.8f, cooldown = 6f, speed = 6f, radius = 0.15f, rangeMax = 4f, effect = EffectKind.Burn, effectDps = 4f, effectDur = 3f, desc = "手印 2→4→5：往前噴出五道火焰，命中灼燒 3 秒" });
+            // 刺客・影舞者
+            P(new SkillDef { adv = "shadowdancer", id = "execute", cls = "assassin", execute = true, name = "處決", type = SkillType.Projectile, color = C("#a21caf"), cost = 25, damage = 30, charge = 1.5f, cooldown = 6f, speed = 10f, radius = 0.08f, rangeMax = 1.5f, releaseNear = true, desc = "伏擊技能：對 HP 低於 25% 的敵人傷害 ×3" });
+            P(new SkillDef { adv = "shadowdancer", id = "shadowdance", cls = "assassin", name = "影舞", type = SkillType.Self, self = SelfKind.Dance, color = C("#e879f9"), cost = 20, charge = 0.5f, cooldown = 20f, buffDur = 8f, desc = "8 秒內：身邊有敵人也能蓄力伏擊技能，伏擊出手距離加倍" });
+            P(new SkillDef { adv = "shadowdancer", id = "poisonfog", cls = "assassin", name = "毒霧", type = SkillType.Self, self = SelfKind.Fog, areaRadius = 2f, buffDur = 6f, effectDps = 6f, color = C("#86efac"), cost = 25, charge = 0.8f, cooldown = 14f, desc = "在腳下放出直徑 4m 的毒霧 6 秒，範圍內的敵人每秒受到 6 傷害" });
+            // 牧師・主教
+            P(new SkillDef { adv = "bishop", id = "revive", cls = "priest", name = "復活術", type = SkillType.Self, self = SelfKind.Revive, color = C("#fef9c3"), cost = 60, charge = 2.5f, cooldown = 60f, buffDur = 20f, buffAmount = 40, desc = "倒下的隊友以 40% HP 復活；活著的人獲得 20 秒「復活祝福」（倒下時自動以 30% HP 站起來）" });
+            P(new SkillDef { adv = "bishop", id = "massheal", cls = "priest", name = "群體治療", type = SkillType.Self, self = SelfKind.HealPct, color = C("#bbf7d0"), cost = 50, charge = 2.0f, cooldown = 15f, buffAmount = 40, desc = "自己與所有隊友回復最大 HP 的 40%" });
+            P(new SkillDef { adv = "bishop", id = "sanctuary", cls = "priest", name = "神聖庇護", type = SkillType.Self, self = SelfKind.TeamShield, color = C("#fde68a"), cost = 40, charge = 1.5f, cooldown = 18f, buffDur = 8f, buffAmount = 40, desc = "自己與所有隊友獲得 8 秒護盾，吸收 40 傷害" });
+            // 牧師・審判者
+            P(new SkillDef { adv = "inquisitor", id = "holylance", cls = "priest", name = "聖光之槍", type = SkillType.Projectile, color = C("#fcd34d"), cost = 25, damage = 28, charge = 1.0f, cooldown = 1.5f, speed = 14f, radius = 0.07f, rangeMax = 11f, desc = "飛得很快的聖光長槍" });
+            P(new SkillDef { adv = "inquisitor", id = "chastise", cls = "priest", name = "懲戒", type = SkillType.Projectile, color = C("#fb923c"), cost = 20, damage = 15, charge = 0.8f, cooldown = 10f, speed = 9f, radius = 0.12f, rangeMax = 9f, effect = EffectKind.Mark, effectDur = 8f, desc = "命中後 8 秒內，目標受到的所有傷害 +20%" });
+            P(new SkillDef { adv = "inquisitor", fromAbove = true, dropHeight = 6f, multi = 3, id = "heavenpunish", cls = "priest", name = "天罰", type = SkillType.Projectile, color = C("#f59e0b"), cost = 55, damage = 30, charge = 2.4f, cooldown = 7f, speed = 9f, radius = 0.6f, rangeMax = 10f, desc = "三道光柱從目標上方落下（可閃）" });
+            // 召喚物的攻擊（不在技能表裡；只用來判定命中與同步畫面）
+            P(new SkillDef { id = "pet_falcon", cls = "pet", name = "獵鷹啄擊", type = SkillType.Projectile, color = C("#a16207"), damage = 7, speed = 12f, radius = 0.1f, rangeMax = 8f, desc = "獵鷹的攻擊" });
+            P(new SkillDef { id = "pet_fire", cls = "pet", name = "火靈火球", type = SkillType.Projectile, color = C("#fb923c"), damage = 12, speed = 8f, radius = 0.12f, rangeMax = 7f, desc = "火靈的火球" });
+            P(new SkillDef { id = "pet_golem", cls = "pet", name = "石像重拳", type = SkillType.Projectile, color = C("#a8a29e"), damage = 9, speed = 8f, radius = 0.2f, rangeMax = 2f, desc = "石像的重拳" });
+            P(new SkillDef { id = "pet_blast", cls = "pet", name = "召喚物爆炸", type = SkillType.Projectile, color = C("#f97316"), damage = 30, speed = 8f, radius = 0.3f, rangeMax = 2f, desc = "召喚物爆炸" });
+            P(new SkillDef { id = "fogtick", cls = "pet", name = "毒霧侵蝕", type = SkillType.Projectile, color = C("#86efac"), damage = 6, speed = 1f, radius = 0f, rangeMax = 2f, desc = "毒霧" });
+            // 增幅咒（大魔導士）：不是技能，只用來讓語音辨識聽咒語
+            P(new SkillDef { id = "amp", cls = "none", name = "", type = SkillType.Self, chant = Advanced.AmpChant, desc = "大魔導士的增幅咒" });
 
             // 所有遠距技能（投射物、射程 3m 以上）飛行速度 70%；衝刺／跳躍／俯衝（小怪移動用）不算
             foreach (var sk in All.Values)

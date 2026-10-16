@@ -60,7 +60,7 @@ namespace SpellDuel
     // ---------------------------------------------------------------- 技能樹
     public enum NodeKind { Learn, Mod, Stat, Passive }
     public enum ModField { Damage, Cooldown, Charge, Multi, EffectDur, EffectDps, Heal, BuffAmount, BuffReduce, BuffDur, Cost }
-    public enum PassiveKind { Lifesteal, Crit, Dodge, MpOnHit, Regen, Burn, Poison, LastStand, Freeze, Evade, FastCast, Overcharge, NaturalRegen, QuickCd }
+    public enum PassiveKind { Lifesteal, Crit, Dodge, MpOnHit, Regen, Burn, Poison, LastStand, Freeze, Evade, FastCast, Overcharge, NaturalRegen, QuickCd, Atk, Armor, Hp }
 
     public class TreeNode
     {
@@ -99,6 +99,13 @@ namespace SpellDuel
         }
 
         public static TreeNode Find(string cls, string id) => Of(cls).Find(n => n.id == id);
+
+        /// <summary>角色所有的技能樹節點：基本職業＋進階職業（轉職後）</summary>
+        public static IEnumerable<TreeNode> AllOf(string cls, string adv)
+        {
+            foreach (var n in Of(cls)) yield return n;
+            if (!string.IsNullOrEmpty(adv)) foreach (var n in Of(adv)) yield return n;
+        }
 
         /// <summary>前置節點（要先點滿）：同一欄的上一格＋另外指定的前置；不再看等級</summary>
         public static List<TreeNode> Prereqs(string cls, TreeNode n)
@@ -207,6 +214,128 @@ namespace SpellDuel
                     Pas("pr_faith", "信仰", PassiveKind.MpOnHit, 2f, 3, 2, 3, "pr_int", 10),
                     Pas("pr_quick", "快速施法", PassiveKind.QuickCd, 0.08f, 3, 0, 3),
                 };
+                // ======================================================== 進階職業的技能樹（轉職時已學會第一個技能）
+                case "paladin": return new List<TreeNode>
+                {
+                    Mod("pa_bash", "聖盾強化", "shieldbash", ModField.Damage, 0.15f, 3, 0, 0),
+                    Mod("pa_bash2", "震懾", "shieldbash", ModField.EffectDur, 0.3f, 2, 0, 1),
+                    Mod("pa_bash3", "衝鋒熟練", "shieldbash", ModField.Cooldown, 0.12f, 2, 0, 2),
+                    Learn("pa_oath", "oath", 1, 0, null, 1),
+                    Mod("pa_oath2", "誓言延長", "oath", ModField.BuffDur, 2f, 2, 1, 1),
+                    Learn("pa_sanc", "sanction", 1, 2, null, 1),
+                    Mod("pa_sanc2", "制裁強化", "sanction", ModField.Damage, 0.15f, 3, 1, 3),
+                    StatN("pa_vit", "聖騎士之軀", Stat.Vit, 2, 0),
+                    Pas("pa_armor", "神聖護甲", PassiveKind.Armor, 0.03f, 3, 2, 1),
+                    Pas("pa_hp", "堅守", PassiveKind.Hp, 15f, 3, 2, 2),
+                };
+                case "berserker": return new List<TreeNode>
+                {
+                    Mod("be_whirl", "旋風強化", "whirlwind", ModField.Damage, 0.15f, 3, 0, 0),
+                    Mod("be_whirl2", "狂風", "whirlwind", ModField.Cooldown, 0.12f, 2, 0, 1),
+                    Learn("be_rage", "bloodrage", 1, 0, null, 1),
+                    Mod("be_rage2", "狂暴延長", "bloodrage", ModField.BuffDur, 2f, 2, 1, 1),
+                    Learn("be_undy", "undying", 1, 2, null, 1),
+                    Mod("be_undy2", "不死強化", "undying", ModField.Cooldown, 0.15f, 2, 1, 3),
+                    StatN("be_str", "蠻力", Stat.Str, 2, 0),
+                    Pas("be_atk", "嗜血", PassiveKind.Atk, 0.04f, 3, 2, 1),
+                    Pas("be_steal", "血祭", PassiveKind.Lifesteal, 0.03f, 3, 2, 2),
+                };
+                case "marksman": return new List<TreeNode>
+                {
+                    Mod("mk_pierce", "貫穿強化", "pierce", ModField.Damage, 0.15f, 3, 0, 0),
+                    Mod("mk_pierce2", "快速上弦", "pierce", ModField.Charge, 0.1f, 2, 0, 1),
+                    Learn("mk_mark", "deadmark", 1, 0, null, 1),
+                    Mod("mk_mark2", "標記熟練", "deadmark", ModField.Cooldown, 0.15f, 2, 1, 1),
+                    Learn("mk_rain", "arrowrain", 1, 2, null, 1),
+                    Mod("mk_rain2", "密集箭雨", "arrowrain", ModField.Multi, 1f, 3, 1, 3),
+                    StatN("mk_luk", "神射", Stat.Luk, 2, 0),
+                    Pas("mk_crit", "要害瞄準", PassiveKind.Crit, 0.04f, 3, 2, 1),
+                    Pas("mk_atk", "強弓", PassiveKind.Atk, 0.04f, 3, 2, 2),
+                };
+                case "ranger": return new List<TreeNode>
+                {
+                    Mod("rg_falcon", "獵鷹強化", "falcon", ModField.Damage, 0.2f, 3, 0, 0),
+                    Mod("rg_falcon2", "獵鷹長駐", "falcon", ModField.BuffDur, 4f, 2, 0, 1),
+                    Learn("rg_roll", "rollshot", 1, 0, null, 1),
+                    Mod("rg_roll2", "翻滾熟練", "rollshot", ModField.Cooldown, 0.15f, 2, 1, 1),
+                    Learn("rg_chain", "trapchain", 1, 2, null, 1),
+                    Mod("rg_chain2", "陷阱專家", "trapchain", ModField.Damage, 0.2f, 3, 1, 3),
+                    StatN("rg_agi", "疾行", Stat.Agi, 2, 0),
+                    Pas("rg_dodge", "身輕如燕", PassiveKind.Dodge, 0.1f, 2, 2, 1),
+                    Pas("rg_evade", "游擊步法", PassiveKind.Evade, 0.04f, 3, 2, 2),
+                };
+                case "archmage": return new List<TreeNode>
+                {
+                    Mod("am_tj", "雷霆強化", "tjudge", ModField.Damage, 0.15f, 3, 0, 0),
+                    Mod("am_tj2", "雷霆連擊", "tjudge", ModField.Multi, 1f, 2, 0, 1),
+                    Learn("am_frost", "frostfield", 1, 0, null, 1),
+                    Mod("am_frost2", "永凍", "frostfield", ModField.EffectDur, 0.5f, 2, 1, 1),
+                    Learn("am_shield", "manashield", 1, 2, null, 1),
+                    Mod("am_shield2", "護盾延長", "manashield", ModField.BuffDur, 3f, 2, 1, 3),
+                    StatN("am_int", "大智慧", Stat.Int, 2, 0),
+                    Pas("am_atk", "魔力增幅", PassiveKind.Atk, 0.04f, 3, 2, 1),
+                    Pas("am_fast", "高速詠唱", PassiveKind.FastCast, 0.05f, 3, 2, 2),
+                };
+                case "summoner": return new List<TreeNode>
+                {
+                    Mod("su_fire", "火靈強化", "firespirit", ModField.Damage, 0.2f, 3, 0, 0),
+                    Mod("su_fire2", "火靈長駐", "firespirit", ModField.BuffDur, 5f, 2, 0, 1),
+                    Learn("su_golem", "golem", 1, 0, null, 1),
+                    Mod("su_golem2", "堅固石像", "golem", ModField.BuffAmount, 30f, 3, 1, 1),
+                    Learn("su_det", "detonate", 1, 2, null, 1),
+                    Mod("su_det2", "爆裂熟練", "detonate", ModField.Cooldown, 0.15f, 2, 1, 3),
+                    StatN("su_spi", "契約之力", Stat.Spi, 2, 0),
+                    Pas("su_hp", "共生", PassiveKind.Hp, 12f, 3, 2, 1),
+                    Pas("su_mp", "魔力循環", PassiveKind.MpOnHit, 2f, 3, 2, 2),
+                };
+                case "ninja": return new List<TreeNode>
+                {
+                    Mod("nj_fire", "火遁強化", "fireseal", ModField.Damage, 0.15f, 3, 0, 0),
+                    Mod("nj_fire2", "火遁擴散", "fireseal", ModField.Multi, 1f, 2, 0, 1),
+                    Learn("nj_clone", "clone", 1, 0, null, 1),
+                    Mod("nj_clone2", "分身延長", "clone", ModField.BuffDur, 2f, 2, 1, 1),
+                    Learn("nj_sub", "substitute", 1, 2, null, 1),
+                    Mod("nj_sub2", "替身熟練", "substitute", ModField.Cooldown, 0.15f, 2, 1, 3),
+                    StatN("nj_agi", "忍者身手", Stat.Agi, 2, 0),
+                    Pas("nj_evade", "隱遁", PassiveKind.Evade, 0.03f, 3, 2, 1),
+                    Pas("nj_dodge", "瞬身", PassiveKind.Dodge, 0.1f, 2, 2, 2),
+                };
+                case "shadowdancer": return new List<TreeNode>
+                {
+                    Mod("sd_exe", "處決強化", "execute", ModField.Damage, 0.15f, 3, 0, 0),
+                    Mod("sd_exe2", "快速處決", "execute", ModField.Charge, 0.1f, 2, 0, 1),
+                    Learn("sd_dance", "shadowdance", 1, 0, null, 1),
+                    Mod("sd_dance2", "影舞延長", "shadowdance", ModField.BuffDur, 2f, 2, 1, 1),
+                    Learn("sd_fog", "poisonfog", 1, 2, null, 1),
+                    Mod("sd_fog2", "劇毒之霧", "poisonfog", ModField.EffectDps, 2f, 3, 1, 3),
+                    StatN("sd_str", "暗殺之力", Stat.Str, 2, 0),
+                    Pas("sd_crit", "致命舞步", PassiveKind.Crit, 0.04f, 3, 2, 1),
+                    Pas("sd_atk", "影之刃", PassiveKind.Atk, 0.04f, 3, 2, 2),
+                };
+                case "bishop": return new List<TreeNode>
+                {
+                    Mod("bi_heal", "群體治療強化", "massheal", ModField.BuffAmount, 5f, 3, 0, 0),
+                    Mod("bi_heal2", "治療熟練", "massheal", ModField.Cooldown, 0.12f, 2, 0, 1),
+                    Learn("bi_sanc", "sanctuary", 1, 0, null, 1),
+                    Mod("bi_sanc2", "庇護強化", "sanctuary", ModField.BuffAmount, 15f, 3, 1, 1),
+                    Learn("bi_rev", "revive", 1, 2, null, 1),
+                    Mod("bi_rev2", "復活熟練", "revive", ModField.Cooldown, 0.15f, 2, 1, 3),
+                    StatN("bi_spi", "虔誠之心", Stat.Spi, 2, 0),
+                    Pas("bi_regen", "聖靈", PassiveKind.Regen, 0.5f, 3, 2, 1),
+                    Pas("bi_quick", "神速禱告", PassiveKind.QuickCd, 0.05f, 3, 2, 2),
+                };
+                case "inquisitor": return new List<TreeNode>
+                {
+                    Mod("iq_lance", "聖槍強化", "holylance", ModField.Damage, 0.15f, 3, 0, 0),
+                    Mod("iq_lance2", "聖槍連射", "holylance", ModField.Multi, 1f, 2, 0, 1),
+                    Learn("iq_chast", "chastise", 1, 0, null, 1),
+                    Mod("iq_chast2", "懲戒延長", "chastise", ModField.EffectDur, 2f, 2, 1, 1),
+                    Learn("iq_heaven", "heavenpunish", 1, 2, null, 1),
+                    Mod("iq_heaven2", "天罰強化", "heavenpunish", ModField.Damage, 0.15f, 3, 1, 3),
+                    StatN("iq_int", "審判之力", Stat.Int, 2, 0),
+                    Pas("iq_atk", "聖戰", PassiveKind.Atk, 0.04f, 3, 2, 1),
+                    Pas("iq_crit", "裁決", PassiveKind.Crit, 0.03f, 3, 2, 2),
+                };
             }
             return new List<TreeNode>();
         }
@@ -251,6 +380,9 @@ namespace SpellDuel
                         PassiveKind.NaturalRegen => $"每 10 秒回復最大 HP 的 {v * 100:0}%",
                         PassiveKind.QuickCd => $"所有技能冷卻時間 -{v * 100:0}%",
                         PassiveKind.Evade => $"閃避率 +{v * 100:0}%（被攻擊時有機率完全閃開）",
+                        PassiveKind.Atk => $"攻擊傷害 +{v * 100:0}%",
+                        PassiveKind.Armor => $"受到的傷害 -{v * 100:0}%",
+                        PassiveKind.Hp => $"HP 上限 +{v:0}",
                         _ => $"HP 低於 30% 時受到的傷害 -{v * 100:0}%",
                     };
             }
@@ -477,6 +609,23 @@ namespace SpellDuel
         public readonly int[] alloc = new int[StatInfo.Count];        // 自己加的能力點（不含初始值、技能樹、裝備）
         public readonly Dictionary<string, int> ranks = new Dictionary<string, int>();
         public readonly Item[] equipped = new Item[5];
+        public string adv;              // 進階職業（Advanced.All）；null＝還沒轉職
+        public bool trialPassed;        // 轉職試煉通過了（可以選進階職業）
+        public AdvDef Adv => Advanced.Get(adv);
+        /// <summary>這個角色所有的技能樹節點（基本＋進階）</summary>
+        public IEnumerable<TreeNode> Nodes => SkillTrees.AllOf(cls, adv);
+        /// <summary>節點屬於哪一棵樹（基本職業 id 或進階職業 id）</summary>
+        public string TreeOf(TreeNode n) => adv != null && SkillTrees.Of(adv).Contains(n) ? adv : cls;
+        public bool CanAdvance => adv == null && level >= Advanced.Level && trialPassed;
+
+        /// <summary>轉職（選了不能換）：第一個進階技能直接學會</summary>
+        public bool Advance(string advId)
+        {
+            var a = Advanced.Get(advId);
+            if (!CanAdvance || a == null || a.baseCls != cls) return false;
+            adv = a.id;
+            return true;
+        }
 
         public const int MaxLevel = 60, StatPerLevel = 8, SkillPerLevel = 1;
 
@@ -500,7 +649,8 @@ namespace SpellDuel
         public int TreeStat(Stat s)
         {
             int v = 0;
-            foreach (var n in SkillTrees.Of(cls)) if (n.kind == NodeKind.Stat && n.stat == s) v += Mathf.RoundToInt(n.per * Rank(n.id));
+            foreach (var n in Nodes) if (n.kind == NodeKind.Stat && n.stat == s) v += Mathf.RoundToInt(n.per * Rank(n.id));
+            var a = Adv; if (a != null) v += a.stats[(int)s];   // 轉職的能力值加成
             return v;
         }
         public int GearStat(Stat s)
@@ -536,7 +686,7 @@ namespace SpellDuel
         public string NodeBlock(TreeNode n)
         {
             if (Rank(n.id) >= n.max) return "已滿級";
-            foreach (var r in SkillTrees.Prereqs(cls, n))
+            foreach (var r in SkillTrees.Prereqs(TreeOf(n), n))
                 if (Rank(r.id) < r.max) return $"需要先點滿「{r.name}」";
             if (skillPoints <= 0) return "技能點不足";
             return null;
@@ -552,14 +702,15 @@ namespace SpellDuel
         public List<string> KnownSkills()
         {
             var list = new List<string>(SkillTrees.Starters(cls));
-            foreach (var n in SkillTrees.Of(cls)) if (n.kind == NodeKind.Learn && Rank(n.id) > 0 && !list.Contains(n.skill)) list.Add(n.skill);
+            var a = Adv; if (a != null) list.Add(a.skills[0]);   // 轉職時學會第一個進階技能
+            foreach (var n in Nodes) if (n.kind == NodeKind.Learn && Rank(n.id) > 0 && !list.Contains(n.skill)) list.Add(n.skill);
             return list;
         }
 
         public float Passive(PassiveKind p)
         {
             float v = 0f;
-            foreach (var n in SkillTrees.Of(cls)) if (n.kind == NodeKind.Passive && n.passive == p) v += n.per * Rank(n.id);
+            foreach (var n in Nodes) if (n.kind == NodeKind.Passive && n.passive == p) v += n.per * Rank(n.id);
             return v;
         }
         public float GearSum(Affix a) { float v = 0f; foreach (var it in equipped) if (it != null) v += it.Sum(a); return v + Economy.SetBonus(equipped, a); }
@@ -570,7 +721,7 @@ namespace SpellDuel
             if (!Skills.All.TryGetValue(id, out var b)) return null;
             var s = b.Clone();
             float heal = 1f + 0.02f * (Total(Stat.Int) - BaseStat(Stat.Int));
-            foreach (var n in SkillTrees.Of(cls))
+            foreach (var n in Nodes)
             {
                 if (n.kind != NodeKind.Mod || n.skill != id) continue;
                 int r = Rank(n.id); if (r <= 0) continue;
@@ -585,9 +736,9 @@ namespace SpellDuel
                     case ModField.Multi: s.multi = Mathf.Max(1, s.multi) + Mathf.RoundToInt(v); if (s.spreadDeg <= 0f) s.spreadDeg = 8f; break;
                     case ModField.EffectDur: s.effectDur += v; break;
                     case ModField.EffectDps: s.effectDps += v; break;
-                    case ModField.BuffAmount: s.buffAmount += Mathf.RoundToInt(v); break;
+                    case ModField.BuffAmount: if (s.self == SelfKind.Pet) s.petHp += Mathf.RoundToInt(v); else s.buffAmount += Mathf.RoundToInt(v); break;
                     case ModField.BuffReduce: s.buffReduce = Mathf.Min(0.9f, s.buffReduce + v); break;
-                    case ModField.BuffDur: s.buffDur += v; break;
+                    case ModField.BuffDur: if (s.self == SelfKind.Pet) s.petLife += v; else s.buffDur += v; break;
                 }
             }
             if (s.heal > 0) s.heal = Mathf.RoundToInt(s.heal * heal);   // 智力：治療量
@@ -640,12 +791,17 @@ namespace SpellDuel
             f.hpRegen += f.maxHp * Passive(PassiveKind.NaturalRegen) / 10f;                         // 劍士：自然回復（每 10 秒 x%）
             f.cdMul = Mathf.Max(0.4f, f.cdMul * (1f - Passive(PassiveKind.QuickCd)));               // 牧師：快速施法
             f.rangeMul = 1f;
+            // 進階技能樹的特殊能力：攻擊、減傷、HP
+            f.atkMul *= 1f + Passive(PassiveKind.Atk);
+            f.gearReduce = Mathf.Min(0.6f, f.gearReduce + Passive(PassiveKind.Armor));
+            f.maxHp += Mathf.RoundToInt(Passive(PassiveKind.Hp));
             // 技能：只帶會的技能，數值換成技能樹強化後的版本
             f.loadout.Clear();
             var known = KnownSkills();
             foreach (var id in loadoutIds) if (known.Contains(id)) { var s = ModdedSkill(id); if (s != null) f.loadout.Add(s); }
             if (f.loadout.Count == 0) foreach (var id in known) { if (f.loadout.Count >= 3) break; f.loadout.Add(ModdedSkill(id)); }
             f.hp = Mathf.Max(1f, f.maxHp * hpRatio); f.mp = f.maxMp * mpRatio;
+            Advanced.ApplyStats(f, Adv);   // 進階職業：HP、MP、攻擊、減傷、爆擊、閃避、治療量
         }
 
         // ---- 存檔（一行一個欄位）
@@ -657,6 +813,8 @@ namespace SpellDuel
             sb.Append("sp=").Append(statPoints).Append('\n');
             sb.Append("kp=").Append(skillPoints).Append('\n');
             sb.Append("alloc=").Append(string.Join(",", alloc)).Append('\n');
+            if (!string.IsNullOrEmpty(adv)) sb.Append("adv=").Append(adv).Append('\n');
+            if (trialPassed) sb.Append("trial=1\n");
             foreach (var kv in ranks) sb.Append("rank=").Append(kv.Key).Append(':').Append(kv.Value).Append('\n');
             for (int i = 0; i < equipped.Length; i++) if (equipped[i] != null) sb.Append("eq").Append(i).Append('=').Append(equipped[i].Serialize()).Append('\n');
             return sb.ToString();
@@ -681,6 +839,8 @@ namespace SpellDuel
                         case "kp": p.skillPoints = int.Parse(v); break;
                         case "alloc": { var a = v.Split(','); for (int i = 0; i < a.Length && i < p.alloc.Length; i++) p.alloc[i] = int.Parse(a[i]); break; }
                         case "rank": { var a = v.Split(':'); if (a.Length == 2) p.ranks[a[0]] = int.Parse(a[1]); break; }
+                        case "adv": if (Advanced.Get(v) != null && Advanced.Get(v).baseCls == cls) p.adv = v; break;
+                        case "trial": p.trialPassed = v == "1"; break;
                         default:
                             if (k.StartsWith("eq") && int.TryParse(k.Substring(2), out var slot) && slot >= 0 && slot < p.equipped.Length) p.equipped[slot] = Item.Parse(v);
                             break;

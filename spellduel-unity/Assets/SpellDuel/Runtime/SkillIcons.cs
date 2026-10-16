@@ -47,7 +47,7 @@ namespace SpellDuel
             }
             var cv = new Cv(size);
             Background(cv, cc, sc, skillId);
-            switch (skillId)
+            switch (IconShape(skillId))
             {
                 case "quickshot": QuickShot(cv, sc); break;
                 case "snipe": Snipe(cv, sc); break;
@@ -83,6 +83,22 @@ namespace SpellDuel
             Rim(cv, cc, sc);
             return cv.Output();
         }
+
+        /// <summary>進階技能暫時借用相近技能的圖形（顏色、底紋仍是自己的；之後美術可以換成專屬圖示）</summary>
+        static string IconShape(string id) => id switch
+        {
+            "shieldbash" => "block", "oath" => "guard", "sanction" => "judgement",
+            "whirlwind" => "slash", "bloodrage" => "counter", "undying" => "ironwall",
+            "pierce" => "snipe", "deadmark" => "snipe", "arrowrain" => "triple",
+            "rollshot" => "quickshot", "trapchain" => "snaretrap",
+            "tjudge" => "thunder", "frostfield" => "ice", "manashield" => "dispel",
+            "firespirit" => "fire", "golem" => "ironwall", "detonate" => "meteor",
+            "substitute" => "smoke", "clone" => "shadow", "fireseal" => "fire",
+            "execute" => "backstab", "shadowdance" => "shadow", "poisonfog" => "poison",
+            "revive" => "heal", "massheal" => "prayheal", "sanctuary" => "guard",
+            "holylance" => "holy", "chastise" => "judgement", "heavenpunish" => "judgement",
+            _ => id,
+        };
 
         // ================================================================ 底座：徽章背景與邊框
         const float BadgeR = 0.95f;

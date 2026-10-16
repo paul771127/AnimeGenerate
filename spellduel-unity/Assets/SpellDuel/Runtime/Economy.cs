@@ -7,7 +7,7 @@ using UnityEngine;
 namespace SpellDuel
 {
     /// <summary>
-    /// 經濟系統（故事／無盡模式）：金幣、消耗道具、鐵匠鋪強化、套裝、職業工會資料。
+    /// 經濟系統（故事／無盡模式）：金幣、消耗道具、鐵匠鋪強化、套裝。（進階職業見 Advanced.cs）
     /// 存檔沿用 Progress.Get／Set（PlayerPrefs）：sd_gold、sd_items。
     /// </summary>
     public static class Economy
@@ -175,18 +175,5 @@ namespace SpellDuel
             int n = equipped != null ? SetCount(equipped, s.id) : 0;
             return $"【{s.name}套裝】{n}/4　2 件：{BonusText(s.two)}{(n >= 2 ? " ✔" : "")}　4 件：{BonusText(s.four)}{(n >= 4 ? " ✔" : "")}";
         }
-
-        // ---------------------------------------------------------------- 職業工會（轉職；職業任務尚未實裝）
-        public class AdvClass { public string name, desc; }
-        public const int AdvanceLevel = 30;
-        public static AdvClass[] AdvancedOf(string cls) => cls switch
-        {
-            "swordsman" => new[] { new AdvClass { name = "聖騎士", desc = "防禦與嘲諷強化，守護隊友的坦克" }, new AdvClass { name = "狂戰士", desc = "犧牲防禦換取爆發傷害" } },
-            "archer" => new[] { new AdvClass { name = "神射手", desc = "超遠距離狙擊、蓄力上限更高" }, new AdvClass { name = "遊俠", desc = "陷阱與移動射擊專家" } },
-            "mage" => new[] { new AdvClass { name = "大魔導士", desc = "咒語更長、威力更強的範圍魔法" }, new AdvClass { name = "元素使", desc = "火冰風元素連鎖反應" } },
-            "assassin" => new[] { new AdvClass { name = "忍者", desc = "分身與瞬步，閃避率大幅提高" }, new AdvClass { name = "影舞者", desc = "連續伏擊、暴擊特化" } },
-            "priest" => new[] { new AdvClass { name = "主教", desc = "全隊治療與復活" }, new AdvClass { name = "審判者", desc = "聖光攻擊特化的戰鬥牧師" } },
-            _ => new AdvClass[0],
-        };
     }
 }

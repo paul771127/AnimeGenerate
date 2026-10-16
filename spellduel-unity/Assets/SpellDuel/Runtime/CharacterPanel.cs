@@ -9,7 +9,7 @@ namespace SpellDuel
     /// </summary>
     public class CharacterPanel
     {
-        public int tab;                 // 0 能力值、1 技能樹、2 裝備
+        public int tab;                 // 0 能力值、1 技能樹、2 裝備、3 進階技能樹（轉職後）
         string selNode;                 // 技能樹：選中的節點
         Item selItem;                   // 裝備：選中的物品（背包或身上）
         int page;
@@ -28,20 +28,22 @@ namespace SpellDuel
 
             // ---- 標題：職業、等級、經驗、點數
             int cur = CharacterProfile.XpForLevel(p.level), next = CharacterProfile.XpForLevel(p.level + 1);
-            UiKit.Text(new Rect(x, y, w, lh), $"{cd.name}　Lv {p.level}", fsL, Color.white, TextAnchor.MiddleLeft, true);
+            var adv = p.Adv;
+            UiKit.Text(new Rect(x, y, w, lh), $"{(adv != null ? $"{adv.name}（{cd.name}）" : cd.name)}　Lv {p.level}", fsL, Color.white, TextAnchor.MiddleLeft, true);
             UiKit.Text(new Rect(x, y, w, lh), $"能力點 {p.statPoints}　技能點 {p.skillPoints}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
             y += lh;
             UiKit.Bar(new Rect(x, y, w, lh * 0.5f), p.level >= CharacterProfile.MaxLevel ? 1f : (p.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f),
                 p.level >= CharacterProfile.MaxLevel ? "最高等級" : $"經驗 {p.xp - cur} / {next - cur}", fsS);
             y += lh * 0.5f + gap;
             // ---- 分頁
-            string[] tabs = { "📊 能力值", "🌳 技能樹", "🛡 裝備" };
-            float tw = (w - gap * 2) / 3f;
-            for (int i = 0; i < 3; i++)
-                if (UiKit.Button(new Rect(x + i * (tw + gap), y, tw, lh * 1.1f), tabs[i], fsS, tab == i, cd.color)) { tab = i; selNode = null; selItem = null; }
+            string[] tabs = adv != null ? new[] { "📊 能力值", "🌳 技能樹", "🛡 裝備", "✨ 進階" } : new[] { "📊 能力值", "🌳 技能樹", "🛡 裝備" };
+            if (tab >= tabs.Length) tab = 0;
+            float tw = (w - gap * (tabs.Length - 1)) / tabs.Length;
+            for (int i = 0; i < tabs.Length; i++)
+                if (UiKit.Button(new Rect(x + i * (tw + gap), y, tw, lh * 1.1f), tabs[i], fsS, tab == i, i == 3 ? adv.color : cd.color)) { tab = i; selNode = null; selItem = null; }
             y += lh * 1.1f + gap;
             var body = new Rect(x, y, w, r.yMax - gap - y);
-            bool changed = tab == 0 ? DrawStats(body, p, fs, fsS, gap) : tab == 1 ? DrawTree(body, p, fs, fsS, gap) : DrawGear(body, p, fs, fsS, gap);
+            bool changed = tab == 0 ? DrawStats(body, p, fs, fsS, gap) : tab == 1 ? DrawTree(body, p, fs, fsS, gap, p.cls) : tab == 3 ? DrawTree(body, p, fs, fsS, gap, adv.id) : DrawGear(body, p, fs, fsS, gap);
             if (Time.time < toastUntil) UiKit.Pill(r.y + r.height * 0.5f, toast, fs, new Color(1f, 0.85f, 0.5f), r.width * 0.9f, 0.9f);
             if (changed) Progress.SaveChar(p);
             return changed;
@@ -68,12 +70,15 @@ namespace SpellDuel
             }
             // 換算後的戰鬥數值
             float y = b.y + StatInfo.Count * rowH + gap * 0.5f;
+            var adv = p.Adv;
             var f = new Fighter("preview", Skills.Classes[p.cls], new string[0], true);
             p.ApplyTo(f, Skills.Classes[p.cls], p.KnownSkills());
             string sum = $"HP {f.maxHp}　MP {f.maxMp}（每秒 +{f.regen:0.#}）　攻擊 ×{f.atkMul:0.00}\n" +
                          $"蓄力 ×{f.chargeScale:0.00}　冷卻 ×{f.cdMul:0.00}　爆擊 {f.critChance * 100:0.#}%　減傷 {f.gearReduce * 100:0.#}%" +
                          (f.lifesteal > 0 ? $"　吸血 {f.lifesteal * 100:0.#}%" : "") + (f.hpRegen > 0 ? $"　回血 {f.hpRegen:0.#}/s" : "") +
-                         (f.mpOnHit > 0 ? $"　命中回 MP {f.mpOnHit:0}" : "") + (f.dodgeBonus > 0 ? $"　側跨無敵 +{f.dodgeBonus:0.00}s" : "");
+                         (f.mpOnHit > 0 ? $"　命中回 MP {f.mpOnHit:0}" : "") + (f.dodgeBonus > 0 ? $"　側跨無敵 +{f.dodgeBonus:0.00}s" : "") +
+                         (f.evadeChance > 0 ? $"　閃避 {f.evadeChance * 100:0.#}%" : "") + (f.healMul != 1f ? $"　治療 ×{f.healMul:0.0#}" : "") +
+                         (adv != null ? $"\n✨ {adv.name}：{adv.core}" : "");
             UiKit.Text(new Rect(b.x, y, b.width, b.yMax - y - fs * 2.2f), sum, fsS, new Color(1f, 0.95f, 0.75f), TextAnchor.UpperLeft, false, 0.55f);
             if (UiKit.Button(new Rect(b.x + b.width * 0.55f, b.yMax - fs * 2f, b.width * 0.45f, fs * 1.9f), "↺ 重新分配所有點數", fsS, false, new Color(1f, 0.5f, 0.45f)))
             { p.ResetPoints(); changed = true; Toast("能力點與技能點都退回了"); }
@@ -82,23 +87,25 @@ namespace SpellDuel
         }
 
         // ================================================================ 技能樹
-        bool DrawTree(Rect b, CharacterProfile p, int fs, int fsS, float gap)
+        bool DrawTree(Rect b, CharacterProfile p, int fs, int fsS, float gap, string treeId)
         {
             bool changed = false;
-            var nodes = SkillTrees.Of(p.cls);
+            var nodes = SkillTrees.Of(treeId);
+            var advT = Advanced.Get(treeId);
             int rows = 0; foreach (var n in nodes) rows = Mathf.Max(rows, n.row + 1);
             string[] heads = { "⚔ 強化技能", "✨ 新技能", "💠 能力／特殊" };
             float colW = (b.width - gap * 2) / 3f, headH = fs * 1.4f;
             float areaH = b.height * 0.62f - headH, nodeH = Mathf.Min(fs * 3.2f, areaH / Mathf.Max(1, rows) - gap * 0.5f);
             for (int c = 0; c < 3; c++) UiKit.Text(new Rect(b.x + c * (colW + gap), b.y, colW, headH), heads[c], fsS, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleCenter, true);
             var cd = Skills.Classes[p.cls];
+            var tcol = advT != null ? advT.color : cd.color;
             foreach (var n in nodes)
             {
                 var nr = new Rect(b.x + n.col * (colW + gap), b.y + headH + n.row * (nodeH + gap * 0.5f), colW, nodeH);
                 int rank = p.Rank(n.id);
                 string block = p.NodeBlock(n);
                 bool locked = rank == 0 && block != null && block != "技能點不足";
-                var col = rank >= n.max ? new Color(1f, 0.85f, 0.3f) : rank > 0 ? new Color(0.5f, 1f, 0.6f) : locked ? new Color(0.5f, 0.5f, 0.55f) : cd.color;
+                var col = rank >= n.max ? new Color(1f, 0.85f, 0.3f) : rank > 0 ? new Color(0.5f, 1f, 0.6f) : locked ? new Color(0.5f, 0.5f, 0.55f) : tcol;
                 if (UiKit.Button(nr, "", fsS, selNode == n.id || rank > 0, col)) selNode = n.id;
                 UiKit.Text(new Rect(nr.x + 4, nr.y + 2, nr.width - 8, nr.height * 0.58f), n.name, fsS, locked ? new Color(0.6f, 0.6f, 0.65f) : Color.white, TextAnchor.MiddleCenter, true);
                 UiKit.Text(new Rect(nr.x + 4, nr.y + nr.height * 0.55f, nr.width - 8, nr.height * 0.4f), n.max > 1 ? $"{rank}/{n.max}" : rank > 0 ? "已學會" : locked ? "🔒" : "未學", fsS, col, TextAnchor.MiddleCenter);
@@ -107,16 +114,17 @@ namespace SpellDuel
             float dy = b.y + b.height * 0.64f;
             var dr = new Rect(b.x, dy, b.width, b.yMax - dy);
             UiKit.Card(dr, 0.6f);
-            var sel = selNode != null ? SkillTrees.Find(p.cls, selNode) : null;
+            var sel = selNode != null ? SkillTrees.Find(treeId, selNode) : null;
             if (sel == null)
             {
-                UiKit.Text(new Rect(dr.x + gap, dr.y + gap, dr.width - gap * 2, dr.height - gap * 2),
-                    $"點一個節點看說明。每升 1 級得到 1 技能點；同一欄要由上往下點，前面的點滿才能點下面的。\n一開始只會 3 個基本技能：{string.Join("、", NamesOf(SkillTrees.Starters(p.cls)))}；中間那一欄可以習得新技能。",
-                    fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
+                string help = advT != null
+                    ? $"✨ {advT.name}的進階技能樹（和基本技能樹共用技能點）。轉職時已學會「{(Skills.All.TryGetValue(advT.skills[0], out var s0) ? s0.name : advT.skills[0])}」；中間那一欄可以習得另外兩個進階技能。\n選技能時多一格「進階技能」。核心機制：{advT.core}"
+                    : $"點一個節點看說明。每升 1 級得到 1 技能點；同一欄要由上往下點，前面的點滿才能點下面的。\n一開始只會 3 個基本技能：{string.Join("、", NamesOf(SkillTrees.Starters(p.cls)))}；中間那一欄可以習得新技能。";
+                UiKit.Text(new Rect(dr.x + gap, dr.y + gap, dr.width - gap * 2, dr.height - gap * 2), help, fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
                 return changed;
             }
             int rk = p.Rank(sel.id);
-            var pre = SkillTrees.Prereqs(p.cls, sel);
+            var pre = SkillTrees.Prereqs(treeId, sel);
             string req = pre.Count == 0 ? "前置：無（可以直接點）" : "前置（要先點滿）：" + string.Join("、", pre.ConvertAll(r => $"{r.name} {p.Rank(r.id)}/{r.max}"));
             string now = rk > 0 ? SkillTrees.Describe(sel, rk) : "（還沒學）";
             string nxt = rk < sel.max ? SkillTrees.Describe(sel, rk + 1) : "（已滿級）";
