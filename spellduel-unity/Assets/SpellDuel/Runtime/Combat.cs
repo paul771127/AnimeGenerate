@@ -250,7 +250,7 @@ namespace SpellDuel
                     if (!f.Alive) return;
                     var c = s.atTarget ? center : f.Feet;   // 旋風斬跟著自己轉
                     foreach (var v in FoesOf(f))
-                        if (FlatDistance(c, v.Feet) <= r + v.bodyRadius) HitFoe(f, v, s, dmg, s.effect, s.effectDps, s.effectDur);
+                        if (InAreaShape(s, v, c, r)) HitFoe(f, v, s, dmg, s.effect, s.effectDps, s.effectDur);
                 };
                 if (k == 0) strike(); else After(k * s.hitGap, strike);
             }
@@ -1066,6 +1066,47 @@ namespace SpellDuel
         /// <summary>對手：玩家（和隊友）打 enemy；enemy 打它目前的目標（沒有就打玩家）</summary>
         public Fighter Opponent(Fighter f) => f == enemy || f.isMinion ? (f.target != null && f.target.Alive ? f.target : player) : enemy;
         public static float FlatDistance(Vector3 a, Vector3 b) { a.y = 0; b.y = 0; return Vector3.Distance(a, b); }
+
+        // ------------------------------------------------------------ 3D 範圍判定（身體＝直立膠囊：BodySegment＋bodyRadius）
+        /// <summary>站在地上（或貼著地面）：地面型效果（陷阱、火海、毒液區、抗拒法環、冰封領域的冰晶以下）只對這種有效；飛在空中／漂浮的怪物不受影響</summary>
+        public static bool OnGround(Fighter v) => v.alt < 0.6f;
+        /// <summary>圓柱範圍（地面圓心 c、半徑 r、高度 h）：水平距離 ≤ r＋身體半徑，且身體最低點 ≤ h</summary>
+        public static bool InCylinder(Fighter v, Vector3 c, float r, float h)
+        {
+            if (FlatDistance(c, v.Feet) > r + v.bodyRadius) return false;
+            v.BodySegment(out var top, out var bottom);
+            return Mathf.Min(top.y, bottom.y) <= c.y + h;
+        }
+        /// <summary>球形範圍：球心到身體線段的 3D 距離 ≤ r＋身體半徑</summary>
+        public static bool InSphere(Fighter v, Vector3 c, float r)
+        {
+            v.BodySegment(out var a, out var b);
+            return DistancePointSegment(c, a, b) <= r + v.bodyRadius;
+        }
+        /// <summary>近身攻擊：以攻擊者胸口為中心、朝前方的半球（半徑 r）。打得到身體任何一處就算</summary>
+        public static bool InFrontHemisphere(Fighter f, Fighter v, float r)
+        {
+            var c = f.Chest;
+            v.BodySegment(out var a, out var b);
+            var ab = b - a;
+            var q = a + ab * Mathf.Clamp01(Vector3.Dot(c - a, ab) / Mathf.Max(1e-6f, ab.sqrMagnitude));
+            var d = q - c;
+            if (d.magnitude > r + v.bodyRadius) return false;
+            var fw = Fighter.Flat(f.forward);
+            if (fw == Vector3.zero) return true;
+            return Vector3.Dot(new Vector3(d.x, 0f, d.z), fw) >= -v.bodyRadius;   // 身體有碰到前半邊就算
+        }
+        /// <summary>範圍技能的 3D 形狀（配合特效）：神聖制裁＝光錘砸下的光柱、旋風斬＝身邊的刀刃旋風、冰封領域＝地面冰晶、其他＝圓柱</summary>
+        static bool InAreaShape(SkillDef s, Fighter v, Vector3 c, float r)
+        {
+            switch (s.id)
+            {
+                case "sanction": return InCylinder(v, c, r, 2.2f);     // 光錘從約 2.2m 高砸下
+                case "whirlwind": return InCylinder(v, c, r, 1.0f);    // 刀刃旋風在腰部以下
+                case "frostfield": return InCylinder(v, c, r, 0.9f);   // 地面冰晶最高約 0.8m
+                default: return InCylinder(v, c, r, 2f);
+            }
+        }
         public float Distance => FlatDistance(player.head, enemy.head);
         public bool Over => (!endless && !enemy.Alive) || stageCleared || (!player.Alive && !AnyAllyAlive);
 
@@ -1105,7 +1146,7 @@ namespace SpellDuel
             else { if (enemy != null) foes.Add(enemy); foes.AddRange(minions); }
             foreach (var v in foes)
             {
-                if (v == null || !v.Alive || FlatDistance(f.Feet, v.Feet) > s.rangeMax + v.bodyRadius) continue;
+                if (v == null || !v.Alive || !InFrontHemisphere(f, v, s.rangeMax)) continue;   // 前方半球
                 if (remoteEnemy && v == enemy) { EmitHit(s, v.Chest); OnRemoteHit?.Invoke(s, dmg, v.Chest, 0); OnDealt(f, dmg); continue; }
                 if (remoteEnemy && v.isMinion) { EmitHit(s, v.Chest); OnMinionHit?.Invoke(v.minionId, dmg, s); OnDealt(f, dmg); continue; }
                 Hit(v, new Projectile { owner = f, skill = s, pos = v.Chest, dir = Fighter.Flat(v.head - f.head), damage = dmg });
@@ -1365,7 +1406,7 @@ namespace SpellDuel
                         n++;
                         var c = new Vector3(p.pos.x, 0f, p.pos.z);
                         Emit("aoe", c, s.color, s.id);
-                        foreach (var v in FoesOf(f)) if (FlatDistance(c, v.Feet) <= s.areaRadius + v.bodyRadius) HitFoe(f, v, Skills.All["pet_blast"], p.blast);
+                        foreach (var v in FoesOf(f)) if (InSphere(v, c + Vector3.up * 0.3f, s.areaRadius)) HitFoe(f, v, Skills.All["pet_blast"], p.blast);   // 爆炸是球形
                         KillPet(p);
                     }
                     Emit("buff", f.Chest, s.color, n > 0 ? $"{s.name}！引爆 {n} 隻召喚物" : "沒有召喚物可以引爆");
@@ -1660,7 +1701,7 @@ namespace SpellDuel
                 if (pl.remote) continue;
                 foreach (var v in new List<Fighter>(Players()))
                 {
-                    if (!v.Alive || FlatDistance(v.Feet, pl.pos) > pl.radius + 0.1f) continue;
+                    if (!v.Alive || !OnGround(v) || FlatDistance(v.Feet, pl.pos) > pl.radius + 0.1f) continue;
                     if (pl.next.TryGetValue(v, out var t) && now < t) continue;
                     pl.next[v] = now + 1f;
                     if (v.isAlly) { Emit("allyhit", v.Chest, ps.color, null); OnAllyHit?.Invoke(v, ps, ps.damage, v.Chest, 0); }
@@ -1884,7 +1925,7 @@ namespace SpellDuel
         /// <summary>抗拒法環打到 v（v 的腳在 center 半徑 r 內）：取消蓄力／伏擊，那個技能重新冷卻。回傳有沒有打斷</summary>
         public bool DispelAt(Fighter v, Vector3 center, float r)
         {
-            if (v == null || !v.Alive || FlatDistance(v.Feet, center) > r + v.bodyRadius) return false;
+            if (v == null || !v.Alive || !OnGround(v) || FlatDistance(v.Feet, center) > r + v.bodyRadius) return false;   // 地面法環：飛在空中的不受影響
             bool any = false;
             if (v.charging != null) { v.cooldownUntil[v.charging.id] = now + v.charging.cooldown; v.charging = null; any = true; }
             if (v.armed != null) { v.cooldownUntil[v.armed.id] = now + v.armed.cooldown; v.armed = null; any = true; }
@@ -1901,8 +1942,16 @@ namespace SpellDuel
             var s = f.armed;
             if (s == null) return;
             if (now > f.armedUntil || !f.Alive) { f.armed = null; Emit("armedExpire", f.Chest, Color.gray, $"{s.name} 落空"); return; }
-            var target = NearestFoe(f, out var td);
-            if (target == null || !target.Alive || td > AmbushReach * (f.danceUntil > now ? 2f : 1f) + target.bodyRadius) return;   // 影舞：出手距離加倍
+            // 前方半球內最近的敵人（影舞：出手距離加倍）
+            float reach = AmbushReach * (f.danceUntil > now ? 2f : 1f), best = float.MaxValue;
+            Fighter target = null;
+            foreach (var v in FoesOf(f))
+            {
+                if (!InFrontHemisphere(f, v, reach)) continue;
+                float d = FlatDistance(f.Feet, v.Feet);
+                if (d < best) { best = d; target = v; }
+            }
+            if (target == null) return;
             f.armed = null;
             Emit("ambush", target.Chest, s.color, s.name + "！");
             int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
@@ -1940,7 +1989,9 @@ namespace SpellDuel
                 if (FoeSide(z.owner)) victims.Add(Opponent(z.owner)); else victims.AddRange(FoesOf(z.owner));
                 foreach (var victim in victims)
                 {
-                    if (!victim.Alive || FlatDistance(victim.Feet, z.pos) > z.radius + (victim.isMinion ? victim.bodyRadius : 0f)) { z.accs[victim] = 0f; continue; }
+                    // 火海是地面型（飛在空中的燒不到）；毒霧是約 1.5m 高的霧團
+                    bool inside = z.skill.id == "poisonfog" ? InCylinder(victim, z.pos, z.radius, 1.5f) : OnGround(victim) && FlatDistance(victim.Feet, z.pos) <= z.radius + (victim.isMinion ? victim.bodyRadius : 0f);
+                    if (!victim.Alive || !inside) { z.accs[victim] = 0f; continue; }
                     z.accs.TryGetValue(victim, out var acc);
                     acc += dt;
                     while (acc >= 1f)
@@ -1964,7 +2015,7 @@ namespace SpellDuel
                 if (now > t.until) { t.alive = false; if (!t.remote && (remoteEnemy || allies.Count > 0)) OnTrapGone?.Invoke(t.id); continue; }
                 if (t.remote || !t.Armed(now)) continue;   // 對手的陷阱由對手判定
                 var victim = Opponent(t.owner);
-                if (FlatDistance(victim.Feet, t.pos) < t.skill.radius + 0.15f)
+                if (OnGround(victim) && FlatDistance(victim.Feet, t.pos) < t.skill.radius + 0.15f)   // 陷阱在地上：飛行怪踩不到
                 {
                     t.alive = false;
                     Emit("trap", t.pos, t.skill.color, $"{t.skill.name}！");
