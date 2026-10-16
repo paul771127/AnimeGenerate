@@ -110,6 +110,27 @@ namespace SpellDuel.EditorTools
             Debug.Log($"[SpellDuel] Android 使用固定簽章金鑰：{Path.GetFileName(path)}（alias {alias}）");
         }
 
+        /// <summary>
+        /// 遠端連線（Unity Relay）需要 Unity Cloud 專案 ID：從 CI 參數 -sdCloudProjectId（GitHub Secret UNITY_CLOUD_PROJECT_ID）
+        /// 或環境變數 UNITY_CLOUD_PROJECT_ID 寫進 Player Settings（執行時 Application.cloudProjectId 會讀到）。沒提供就跳過（只是不能遠端連線）。
+        /// </summary>
+        static void ApplyCloudProject()
+        {
+            string id = Arg("-sdCloudProjectId");
+            if (string.IsNullOrEmpty(id) || id.StartsWith("-")) id = Environment.GetEnvironmentVariable("UNITY_CLOUD_PROJECT_ID");
+            if (string.IsNullOrEmpty(id)) { Debug.LogWarning("[SpellDuel] 沒有 Unity Cloud 專案 ID：遠端連線（房間代碼）不能用，區域網路連線不受影響"); return; }
+            var ps = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset").FirstOrDefault();
+            if (ps == null) return;
+            var so = new SerializedObject(ps);
+            var prop = so.FindProperty("cloudProjectId");
+            if (prop == null) { Debug.LogWarning("[SpellDuel] Player Settings 沒有 cloudProjectId 欄位"); return; }
+            prop.stringValue = id.Trim();
+            var name = so.FindProperty("projectName"); if (name != null && string.IsNullOrEmpty(name.stringValue)) name.stringValue = "SpellDuel";
+            so.ApplyModifiedProperties();
+            AssetDatabase.SaveAssets();
+            Debug.Log("[SpellDuel] Unity Cloud 專案 ID 已設定（遠端連線可用）");
+        }
+
         static string Arg(string name)
         {
             var args = Environment.GetCommandLineArgs();
@@ -129,6 +150,7 @@ namespace SpellDuel.EditorTools
 
         static void Configure(BuildTarget target)
         {
+            ApplyCloudProject();
             PlayerSettings.companyName = "SpellDuel";
             PlayerSettings.productName = "SpellDuel";
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, AppId);

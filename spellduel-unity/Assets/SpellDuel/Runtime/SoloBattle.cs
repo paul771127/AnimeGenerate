@@ -21,6 +21,32 @@ namespace SpellDuel
         // 對手是真人：沒有 AI、沒有角色模型；對手的位置由 GameRoot 每幀提供（鏡頭偵測＋對手回報融合），
         // 判定採「攻擊方判定」：我的法術打到對手 → 送 hit2，對手自己扣血、套用格擋／護盾／反擊。
         public bool NetMode;
+        /// <summary>遠端連線（不同地方）：對手／隊友不在鏡頭裡 → 用職業角色顯示他們的位置</summary>
+        public bool RemotePlay;
+        readonly Dictionary<int, CharacterRig> allyRigs = new Dictionary<int, CharacterRig>();
+        readonly Dictionary<int, Vector3> allyLastFeet = new Dictionary<int, Vector3>();
+
+        /// <summary>遠端合作：每位隊友的虛擬角色跟著他回報的位置走</summary>
+        void UpdateAllyRigs()
+        {
+            if (!RemotePlay || battle == null) return;
+            float dt = Mathf.Max(1e-3f, Time.deltaTime);
+            foreach (var a in battle.allies)
+            {
+                if (!allyRigs.TryGetValue(a.pid, out var rig) || !rig)
+                {
+                    rig = CharacterRig.Create(a.cls != null ? a.cls.id : "mage");
+                    allyRigs[a.pid] = rig; allyLastFeet[a.pid] = a.Feet;
+                }
+                rig.SetPose(WorldFrame.FromWorld(a.Feet), WorldFrame.DirFromWorld(a.forward));
+                allyLastFeet.TryGetValue(a.pid, out var lf);
+                rig.MoveSpeed = Mathf.Lerp(rig.MoveSpeed, Fighter.Flat(a.Feet - lf).magnitude / dt, 0.2f);
+                allyLastFeet[a.pid] = a.Feet;
+                rig.SetDead(!a.Alive);
+            }
+            foreach (var kv in new List<KeyValuePair<int, CharacterRig>>(allyRigs))
+                if (battle.AllyByPid(kv.Key) == null) { if (kv.Value) Destroy(kv.Value.gameObject); allyRigs.Remove(kv.Key); }
+        }
         public Action<Msg> NetSend;
         public Func<double> SharedClock;
         public bool NetHasTarget, NetLock;
@@ -509,6 +535,7 @@ namespace SpellDuel
             battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = id, ok = theirs });
             WireAdvNet();
             ai = null;
+            if (RemotePlay) enemyRig = CharacterRig.Create(ec.id);   // 遠端對戰：對手是虛擬角色
             remoteAnchor = new GameObject("Remote Anchor").transform;
             lastEnemyFeet = en.Feet; lastEnemyHp = en.hp; enemyDeadShown = false;
             enemyShield = Prim(PrimitiveType.Sphere, new Color(0.4f, 0.7f, 1f, 0.25f));
@@ -1230,6 +1257,8 @@ namespace SpellDuel
             foreach (var go in trapGo.Values) if (go) Destroy(go);
             foreach (var go in burnGo.Values) if (go) Destroy(go);
             foreach (var rig in petGo.Values) if (rig) Destroy(rig.gameObject);
+            foreach (var ar in allyRigs.Values) if (ar) Destroy(ar.gameObject);
+            allyRigs.Clear(); allyLastFeet.Clear();
             petGo.Clear();
             foreach (var go in landGo.Values) if (go) Destroy(go);
             landGo.Clear();
@@ -1872,6 +1901,7 @@ namespace SpellDuel
         void UpdateVisuals()
         {
             UpdatePetViews();
+            UpdateAllyRigs();
             var en = En;
             var feetS = WorldFrame.FromWorld(en.Feet);
             UpdateChargeFx();

@@ -46,7 +46,28 @@ namespace SpellDuel
         enum Mode { Choose, Solo, Duo }
         Mode mode = Mode.Choose;
         bool duoUseMarker;                 // 雙人：true＝標記圖對齊；false＝畫場地＋互相校正
-        bool AreaMode => mode == Mode.Duo && !duoUseMarker;
+        bool remoteMode;                   // 遠端連線：不同地方的人（Unity Relay），每人畫自己的場地，對方是虛擬角色
+        bool AreaMode => mode == Mode.Duo && !duoUseMarker && !remoteMode;
+
+        // ---------------------------------------------------------------- 遠端連線：座位
+        // 每個人的場地中心都對到世界原點；第 i 個人（依 pid 排序，共 n 人）的場地轉 360°×i/n。
+        // 每人從自己場地的「後方邊緣」開始，大家在虛擬場地裡就是圍成一圈、面向中心（兩人＝面對面）。
+        string seatKey = "";
+        void UpdateSeat()
+        {
+            if (!remoteMode || playArea.state != PlayArea.State.Done || solo.phase == SoloBattle.Phase.Fighting) return;
+            var all = new List<int>(solo.PeerIds); int me = Mathf.Max(0, net.MyPid);
+            if (!all.Contains(me)) all.Add(me);
+            all.Sort();
+            int i = all.IndexOf(me), n = all.Count;
+            string key = $"{i}/{n}";
+            if (key == seatKey && WorldFrame.Calibrated) return;
+            seatKey = key;
+            float angle = 360f * i / Mathf.Max(1, n);
+            var o = playArea.Origin;
+            WorldFrame.SetMarker(new Pose(o.position, o.rotation * Quaternion.Euler(0f, angle, 0f)));
+            if (n > 1) Log($"🪑 座位 {i + 1}/{n}：站在自己場地的後方邊緣、面向前方開始");
+        }
 
         // ---------------------------------------------------------------- 雙人「畫場地」模式
         bool areaOwner;                    // 場地是我畫的 → 我的座標就是世界座標
@@ -62,7 +83,7 @@ namespace SpellDuel
         bool Aligner => AreaMode && areaReceived && !areaOwner;
 
         /// <summary>這支手機的世界座標可以用了嗎（可以送位置、施法）</summary>
-        bool WorldReady => mode == Mode.Duo && (duoUseMarker || areaOwner ? WorldFrame.Calibrated : aligned);
+        bool WorldReady => mode == Mode.Duo && (duoUseMarker || areaOwner || remoteMode ? WorldFrame.Calibrated : aligned);
 
         // ---------------------------------------------------------------- AR
         ARSession session;
@@ -76,7 +97,8 @@ namespace SpellDuel
         string arNote = "";
 
         // ---------------------------------------------------------------- 連線與時間
-        NetLink net;
+        ILink net;
+        string codeInput = "";
         double clockOffset;          // 共同時間 = 本機時間 + clockOffset（房主為 0）
         double bestRtt = double.MaxValue;
         float nextPing, nextPose;
@@ -169,6 +191,7 @@ namespace SpellDuel
             BuildVisuals();
             net = new NetLink();
             ipInput = PlayerPrefs.GetString("sd_last_ip", ipInput);
+            codeInput = PlayerPrefs.GetString("sd_last_code", "");
             Log("請選擇：單人或雙人");
         }
 
@@ -287,8 +310,9 @@ namespace SpellDuel
         {
             Tracking.Tick(Time.time);
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
-            if (mode == Mode.Solo || AreaMode) UpdatePlayArea();
+            if (mode == Mode.Solo || AreaMode || remoteMode) UpdatePlayArea();
             HandleNetwork();
+            UpdateSeat();
             if (AreaMode) UpdateDuoArea();
             // 追蹤狀態改變時告訴對手（對手畫面上我的判定框變灰，停在最後的正確位置）
             if (net.Connected && Tracking.Ok != lastSentTracking)
@@ -335,18 +359,35 @@ namespace SpellDuel
         {
             // 人體偵測只在雙人模式需要（單人的敵人是虛擬的）；手勢在雙人、單人戰鬥中都要
             bool soloFight = mode == Mode.Solo && solo.phase == SoloBattle.Phase.Fighting;
-            poseDet.WantBody = mode == Mode.Duo;
+            poseDet.WantBody = mode == Mode.Duo && !remoteMode;   // 遠端：對方不在鏡頭裡，不用偵測人體
             poseDet.WantHand = mode == Mode.Duo || soloFight;
             poseDet.Enabled = Tracking.Ok && (soloFight || (mode == Mode.Duo && WorldFrame.Calibrated));
             poseDet.Tick();
         }
 
         // ---------------------------------------------------------------- 模式切換與單人場地
-        void ChooseMode(Mode m, bool marker = false)
+        void ChooseMode(Mode m, bool marker = false, bool remote = false)
         {
             mode = m;
             duoUseMarker = marker;
             solo.NetMode = m == Mode.Duo;
+            // 連線方式：遠端＝Unity Relay（房間代碼）；其他＝區域網路（IP）
+            if ((remote && !(net is RelayLink)) || (!remote && !(net is NetLink)))
+            {
+                net?.Dispose();
+                net = remote ? (ILink)new RelayLink() : new NetLink();
+            }
+            remoteMode = m == Mode.Duo && remote;
+            solo.RemotePlay = remoteMode;
+            seatKey = "";
+            if (remoteMode)
+            {
+                WorldFrame.Reset();
+                playArea.Clear();
+                playArea.Begin();
+                Log("遠端連線：先畫自己的場地，再建立房間或輸入房間代碼加入");
+                return;
+            }
             if (m == Mode.Solo)
             {
                 WorldFrame.Reset();
@@ -397,6 +438,7 @@ namespace SpellDuel
 
         void OnPlayAreaReady()
         {
+            if (remoteMode) { seatKey = ""; UpdateSeat(); Log(net.Connected ? "✅ 場地完成" : "✅ 場地完成，接著建立房間或輸入代碼加入"); return; }
             // 場地中心＝世界原點
             if (AreaMode)
             {
@@ -866,7 +908,7 @@ namespace SpellDuel
                 yMin = Mathf.Min(yMin, sp.y); yMax = Mathf.Max(yMax, sp.y);
             }
             bool detectorWorks = poseDet.Supported && poseDet.Latest != null;
-            if (DummyActive || !detectorWorks) targetOnScreen = inView > 0;    // 假人是虛擬的；偵測器不能用時退回位置推算
+            if (DummyActive || !detectorWorks || remoteMode) targetOnScreen = inView > 0;   // 遠端：對方是虛擬角色    // 假人是虛擬的；偵測器不能用時退回位置推算
             else targetOnScreen = inView > 0 && tgtSrc != "回報";               // 鏡頭真的看到（且是對手本人）
             if (targetOnScreen)
             {
@@ -1078,20 +1120,21 @@ namespace SpellDuel
                 GUI.color = Color.white;
                 UiKit.Text(new Rect(0, H * 0.13f, W, H * 0.09f), "SpellDuel", fs * 3, new Color(1f, 0.85f, 0.4f), TextAnchor.MiddleCenter, true);
                 UiKit.Text(new Rect(0, H * 0.22f, W, lineH), "版本 " + BuildInfo, fsS, new Color(0.7f, 0.75f, 0.85f), TextAnchor.MiddleCenter);
-                float cw = W - pad * 4, ch = H * 0.17f, cx = pad * 2;
-                string[] titles = { "🧍 單人練習（畫場地）", "⚔ 雙人對戰（畫場地）", "🗺 雙人對戰（標記圖）" };
+                float cw = W - pad * 4, ch = H * 0.14f, cx = pad * 2;
+                string[] titles = { "🧍 單人練習（畫場地）", "⚔ 多人（同一個地方・畫場地）", "🗺 多人（同一個地方・標記圖）", "🌐 遠端連線（不同地方）" };
                 string[] descs = { "在地上畫出遊戲範圍，對戰 AI 或木頭人，不需要標記圖",
-                                   "一人畫場地、另一人自動收到；鏡頭互相看對方來對齊",
-                                   "兩支手機掃描地上同一張標記圖，共用房間座標" };
-                Color[] acc = { new Color(0.4f, 0.85f, 1f), new Color(1f, 0.55f, 0.35f), new Color(0.6f, 0.9f, 0.45f) };
-                for (int i = 0; i < 3; i++)
+                                   "同一個 Wi-Fi、2～6 人：一人畫場地、其他人自動收到；鏡頭互相看對方來對齊",
+                                   "同一個 Wi-Fi：手機掃描地上同一張標記圖，共用房間座標",
+                                   "2～6 人、不用同一個 Wi-Fi：每人畫自己的場地，用房間代碼加入；其他人以虛擬角色出現" };
+                Color[] acc = { new Color(0.4f, 0.85f, 1f), new Color(1f, 0.55f, 0.35f), new Color(0.6f, 0.9f, 0.45f), new Color(0.75f, 0.55f, 1f) };
+                for (int i = 0; i < 4; i++)
                 {
-                    var r = new Rect(cx, H * 0.29f + i * (ch + pad), cw, ch);
+                    var r = new Rect(cx, H * 0.27f + i * (ch + pad * 0.7f), cw, ch);
                     bool hit = UiKit.Button(r, "", fs, false, acc[i]);
                     UiKit.Card(new Rect(r.x, r.y, pad * 0.5f, r.height), 0f, acc[i], 1f);
                     UiKit.Text(new Rect(r.x + pad, r.y + ch * 0.1f, r.width - pad * 2, ch * 0.4f), titles[i], Mathf.RoundToInt(fs * 1.2f), Color.white, TextAnchor.MiddleLeft, true);
                     UiKit.Text(new Rect(r.x + pad, r.y + ch * 0.5f, r.width - pad * 2, ch * 0.42f), descs[i], fsS, new Color(0.8f, 0.85f, 0.95f));
-                    if (hit) { if (i == 0) ChooseMode(Mode.Solo); else ChooseMode(Mode.Duo, i == 2); }
+                    if (hit) { if (i == 0) ChooseMode(Mode.Solo); else ChooseMode(Mode.Duo, i == 2, i == 3); }
                 }
                 return;
             }
@@ -1147,7 +1190,9 @@ namespace SpellDuel
             }
             else
             {
-                if (duoUseMarker)
+                if (remoteMode)
+                    Line(playArea.state == PlayArea.State.Done ? $"場地：✅ 完成（離邊界 {playArea.DistanceToEdge(cam.transform.position):F1}m）　站在場地後方邊緣開始" : !playArea.HasFloor ? "場地：🔍 先掃地板（慢慢移動手機）" : "場地：畫出自己的遊戲範圍（建議 6m 以上）");
+                else if (duoUseMarker)
                     Line(WorldFrame.Calibrated
                         ? $"座標：✅ 已對齊（{Time.time - WorldFrame.LastSeenTime:F0} 秒前看到標記圖）"
                         : "座標：⚠ 請把鏡頭對準地上的標記圖");
@@ -1160,7 +1205,7 @@ namespace SpellDuel
                 else
                     Line(!playArea.HasFloor ? "場地：🔍 先掃地板（慢慢移動手機）" : "場地：由其中一人畫場地，另一人會自動收到");
                 Line($"連線：{net.Status}" + (net.Connected && !net.IsHost ? $"　時鐘差 {clockOffset * 1000:F0}ms（來回 {bestRtt * 1000:F0}ms）" : ""));
-                if (net.Connected) Line($"👥 房間 {solo.PeerIds.Count + 1} 人（最多 {NetLink.MaxClients + 1} 人；我是{(net.IsHost ? "房主" : $" {net.MyPid} 號")}）" + (solo.PeerIds.Count > 1 ? "　多人只能玩合作；每位加入的人都要先面對房主對齊" : ""));
+                if (net.Connected) Line($"👥 房間 {solo.PeerIds.Count + 1} 人（最多 {NetLink.MaxClients + 1} 人；我是{(net.IsHost ? "房主" : $" {net.MyPid} 號")}）" + (solo.PeerIds.Count > 1 ? (remoteMode ? "　多人只能玩合作" : "　多人只能玩合作；每位加入的人都要先面對房主對齊") : ""));
                 string dist = "";
                 if (WorldFrame.Calibrated && net.Connected && remoteSeen > 0f)
                 {
@@ -1178,8 +1223,8 @@ namespace SpellDuel
                 Line($"鏡頭偵測：{poseDet.Status}　{obsInfo}" + (hasTarget ? $"　目標：{tgtSrc}" : ""));
 
                 y += pad * 0.5f;
-                // 畫場地（還沒收到對手的場地時才能畫；重畫會再傳一次給對手）
-                if (AreaMode && !areaReceived)
+                // 畫場地（還沒收到對手的場地時才能畫；重畫會再傳一次給對手）；遠端：每人畫自己的
+                if ((AreaMode && !areaReceived) || (remoteMode && solo.phase == SoloBattle.Phase.Hidden))
                 {
                     bool canBuild = playArea.HasFloor && playArea.state != PlayArea.State.Drawing;
                     float[] sizes = { 3f, 6f, 10f, 15f };
@@ -1190,18 +1235,44 @@ namespace SpellDuel
                     if (playArea.state == PlayArea.State.Drawing) UiKit.Text(new Rect(pad * 2 + bw, y, W - bw - pad * 3, bh), playArea.Hint, fsS, new Color(1f, 0.9f, 0.6f));
                     y += bh + pad * 0.5f;
                 }
-                if (!net.Connected)
+                if (remoteMode)
                 {
-                    if (UiKit.Button(new Rect(pad, y, bw, bh), "建立房間", fs, true, new Color(1f, 0.55f, 0.35f))) net.Host();
+                    var rl = net as RelayLink;
+                    if (rl != null && rl.IsHost && !string.IsNullOrEmpty(rl.JoinCode))
+                    {
+                        UiKit.Text(new Rect(pad, y, W - pad * 2, bh), $"房間代碼  {rl.JoinCode}", Mathf.RoundToInt(fs * 1.6f), new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleCenter, true);
+                        y += bh + pad * 0.3f;
+                        Line("把代碼告訴其他人（最多 6 人）；大家都進來後按下面的「職業對戰／合作」");
+                    }
+                    else if (!net.Connected && rl != null && !rl.Busy)
+                    {
+                        if (UiKit.Button(new Rect(pad, y, bw, bh), "建立房間", fs, true, new Color(0.75f, 0.55f, 1f))) rl.Host();
+                        codeInput = GUI.TextField(new Rect(pad * 2 + bw, y, bw * 1.4f, bh), codeInput, 8, field).ToUpperInvariant();
+                        if (UiKit.Button(new Rect(pad * 3 + bw * 2.4f, y, bw * 0.8f, bh), "加入", fs, true, new Color(0.4f, 0.85f, 1f), codeInput.Trim().Length >= 4))
+                        {
+                            PlayerPrefs.SetString("sd_last_code", codeInput.Trim());
+                            rl.Join(codeInput);
+                        }
+                    }
+                    y += bh + pad * 0.5f;
+                    if (net.Connected && WorldReady && UiKit.Button(new Rect(pad, y, W - pad * 2, bh * 1.2f), "⚔ 職業對戰／🤝 合作（選職業與技能）", Mathf.RoundToInt(fs * 1.1f), true, new Color(0.75f, 0.55f, 1f))) solo.ShowSetup();
+                    else if (net.Connected && !WorldReady) Line("⚠ 先畫好自己的場地");
+                    y += bh * 1.2f + pad * 0.5f;
+                    if (UiKit.Button(new Rect(pad, y, bw * 1.3f, bh), "換模式", fs)) { net.Dispose(); net = new NetLink(); remoteMode = false; solo.RemotePlay = false; mode = Mode.Choose; WorldFrame.Reset(); playArea.Clear(); }
+                }
+                else if (!net.Connected)
+                {
+                    if (UiKit.Button(new Rect(pad, y, bw, bh), "建立房間", fs, true, new Color(1f, 0.55f, 0.35f))) ((NetLink)net).Host();
                     ipInput = GUI.TextField(new Rect(pad * 2 + bw, y, bw * 1.4f, bh), ipInput, field);
                     if (UiKit.Button(new Rect(pad * 3 + bw * 2.4f, y, bw * 0.8f, bh), "加入", fs, true, new Color(0.4f, 0.85f, 1f)))
                     {
                         PlayerPrefs.SetString("sd_last_ip", ipInput);
-                        net.Join(ipInput);
+                        ((NetLink)net).Join(ipInput);
                     }
                     if (UiKit.Button(new Rect(pad * 4 + bw * 3.2f, y, bw * 0.8f, bh), practiceDummy ? "假人:開" : "假人:關", fsS, practiceDummy))
                         practiceDummy = !practiceDummy;
                 }
+                if (!remoteMode) {
                 y += bh + pad * 0.5f;
                 if ((duoUseMarker || Aligner) && UiKit.Button(new Rect(pad, y, bw * 1.3f, bh), "重新對齊", fs))
                 {
@@ -1218,7 +1289,8 @@ namespace SpellDuel
                 if (net.Connected && UiKit.Button(new Rect(pad * 3 + bw * 2.6f, y, bw * 1.3f, bh), showPoseDebug ? "骨架:顯示" : "骨架:隱藏", fsS, showPoseDebug)) showPoseDebug = !showPoseDebug;
                 if (!net.Connected && UiKit.Button(new Rect(pad * 3 + bw * 2.6f, y, bw * 1.3f, bh), "換模式", fs)) { mode = Mode.Choose; WorldFrame.Reset(); playArea.Clear(); areaOwner = areaReceived = aligned = false; }
                 if (!net.Connected) { y += bh + pad * 0.5f; if (UiKit.Button(new Rect(pad, y, bw * 1.3f, bh), showPoseDebug ? "骨架:顯示" : "骨架:隱藏", fsS, showPoseDebug)) showPoseDebug = !showPoseDebug; }
-                if (AreaMode && playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position))
+                }
+                if ((AreaMode || remoteMode) && playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position))
                     UiKit.Pill(H * 0.68f, "⚠ 回到場地內", fs * 2, new Color(1f, 0.4f, 0.4f), W - pad * 2);
             }
             panelBottom = y + (mode == Mode.Duo && net.Connected && WorldReady ? lineH * 3.5f : lineH * 1.6f);

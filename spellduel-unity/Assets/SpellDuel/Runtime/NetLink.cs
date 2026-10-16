@@ -10,28 +10,43 @@ using System.Threading;
 
 namespace SpellDuel
 {
+    /// <summary>連線（區域網路 NetLink 或網路中繼 RelayLink）共用的介面：一則訊息＝一行 JSON</summary>
+    public interface ILink : IDisposable
+    {
+        bool IsHost { get; }
+        int MyPid { get; }
+        bool Connected { get; }
+        int LinkCount { get; }
+        string Status { get; }
+        void Send(string json);
+        void SendTo(int pid, string json);
+        bool TryReceive(out string line);
+    }
+
+
     /// <summary>
-    /// 區域網路連線（2～4 人）：TCP，一行一個 JSON 訊息。
-    /// 一方「建立房間」當主機（顯示自己的 IP），其他人輸入 IP「加入」（最多 3 人加入）。所有手機需在同一個 Wi-Fi。
+    /// 區域網路連線（2～6 人）：TCP，一行一個 JSON 訊息。
+    /// 一方「建立房間」當主機（顯示自己的 IP），其他人輸入 IP「加入」（最多 5 人加入）。所有手機需在同一個 Wi-Fi。
     /// 星狀連線：加入的人只連主機；主機把某個人送來的訊息轉給其他人（每則訊息帶發送者編號 pid）。
-    ///   pid：主機＝0，加入的人依序 1～3（主機在連上時用 _hello 告訴對方）。
+    ///   pid：主機＝0，加入的人依序 1～5（主機在連上時用 _hello 告訴對方）。
     ///   to：0＝給所有人；n＝只給 pid n−1（主機看到 to＝1 就不轉送，to＝k＋1 只轉給 k）。
     /// 讀取在背景執行緒，收到的訊息放進佇列，由主執行緒在 Update 裡處理。
     /// 合成訊息：_open（連上，id＝對方 pid）、_close（斷線，id＝對方 pid）、_hello（主機告訴我的 pid）。
     /// </summary>
-    public class NetLink : IDisposable
+    public class NetLink : ILink
     {
         public const int Port = 7777;
-        public const int MaxClients = 3;      // 加主機最多 4 人
+        public const int MaxClients = 5;      // 加主機最多 6 人
 
         public bool IsHost { get; private set; }
-        /// <summary>我的編號：主機 0，加入的人 1～3（還沒收到 _hello 時是 −1）</summary>
+        /// <summary>我的編號：主機 0，加入的人 1～5（還沒收到 _hello 時是 −1）</summary>
         public int MyPid { get; private set; } = -1;
         /// <summary>主機：至少有一個人連著；加入的人：連著主機</summary>
         public bool Connected { get { lock (conns) { foreach (var c in conns) if (!c.closed) return true; } return false; } }
         /// <summary>連著的其他人數（主機＝加入的人數；加入的人＝1，只知道主機）</summary>
         public int LinkCount { get { int n = 0; lock (conns) { foreach (var c in conns) if (!c.closed) n++; } return n; } }
-        public volatile string Status = "未連線";
+        volatile string status = "未連線";
+        public string Status { get => status; set => status = value; }
 
         class Conn
         {

@@ -99,6 +99,7 @@ jobs:
           buildName: SpellDuel
           buildMethod: ${{ env.BUILD_METHOD }}
           allowDirtyBuild: true
+          customParameters: -sdCloudProjectId ${{ secrets.UNITY_CLOUD_PROJECT_ID }}
           androidKeystoreName: spellduel.keystore
           androidKeystoreBase64: ${{ steps.keystore.outputs.b64 }}
           androidKeystorePass: ${{ steps.keystore.outputs.pass }}
@@ -148,6 +149,7 @@ jobs:
           buildName: SpellDuel
           buildMethod: SpellDuel.EditorTools.BuildScript.ConfigureCI
           allowDirtyBuild: true
+          customParameters: -sdCloudProjectId ${{ secrets.UNITY_CLOUD_PROJECT_ID }}
       - name: Unity 匯出 Xcode 專案（第二階段）
         uses: game-ci/unity-builder@v4
         env:
@@ -160,6 +162,7 @@ jobs:
           buildName: SpellDuel
           buildMethod: ${{ env.BUILD_METHOD }}
           allowDirtyBuild: true
+          customParameters: -sdCloudProjectId ${{ secrets.UNITY_CLOUD_PROJECT_ID }}
       - uses: actions/upload-artifact@v4
         with:
           name: SpellDuel-iOS-XcodeProject

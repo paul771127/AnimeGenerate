@@ -377,8 +377,21 @@
 角色、小怪、Boss 用 `SpellDuel/Toon` 著色器：兩階明暗＋外框黑邊（發光／半透明特效不描邊）。
 風格參數集中在 `Runtime/ToonStyle.cs`，調整說明見 [`ART_STYLE.md`](ART_STYLE.md)（給 Codex 做美術）。
 
-## 多人合作（2～4 人）
-- 一支手機「建立房間」當房主，其他人輸入房主的 IP「加入」，**最多 3 人加入（共 4 人）**，都要在同一個 Wi-Fi。房間滿了會顯示「房間已滿」。
+## 遠端連線（不同地方的人，2～6 人）
+- 選模式畫面選「🌐 遠端連線（不同地方）」。每個人在自己的地方**畫自己的場地**（建議 6m 以上），一人按「建立房間」拿到 **6 碼房間代碼**，其他人輸入代碼按「加入」。不用同一個 Wi-Fi、不用輸入 IP。
+- 其他人以**職業角色**出現在你的場地裡，跟著他本人的走動、閃避移動；可以職業對戰（2 人）或合作打 Boss／無盡（2～6 人）。
+- **座位**：每個人的場地中心疊在一起，第 i 個人的場地轉 360°×i/人數。請大家從**自己場地的後方邊緣、面向前方**開始：兩人時就是面對面，多人時圍成一圈、Boss 在中間。
+- 連線走 Unity Relay（Unity 官方中繼）：高頻的位置／狀態走不可靠通道，其他（放招、命中、血量）走可靠通道。程式：`Runtime/RelayLink.cs`（和區域網路的 `NetLink` 共用 `ILink` 介面）。
+
+### 一次性設定（遠端連線用）
+1. 到 <https://cloud.unity.com> 用你的 Unity 帳號登入 → 建立一個專案（名稱隨意，例如 SpellDuel）。
+2. 在專案裡打開 **Multiplayer → Relay**，按啟用（免費額度足夠自己和朋友玩）。
+3. 在專案設定頁複製 **Project ID**（一串 xxxxxxxx-xxxx-… 的 ID）。
+4. GitHub repo → Settings → Secrets and variables → Actions → New repository secret：名稱 `UNITY_CLOUD_PROJECT_ID`，值貼上 Project ID。
+5. 重新建置（推送或在 Actions 手動執行）。沒設定時遊戲照常可以玩，只有遠端連線會顯示「沒有設定 Unity Cloud 專案」。
+
+## 多人合作（2～6 人）
+- 一支手機「建立房間」當房主，其他人輸入房主的 IP「加入」，**最多 5 人加入（共 6 人）**，都要在同一個 Wi-Fi（不同地方請用「🌐 遠端連線」）。房間滿了會顯示「房間已滿」。
 - 連線方式：星狀，加入的人只連房主，房主轉送訊息（每則訊息帶發送者編號 pid、收件人 to）。
 - 多人時只能玩**合作**（🤝 合作 Boss、♾ 無盡合作；故事模式之後再接）；⚔ 對戰仍然只能兩個人。
 - 選好模式、職業、技能後每個人按「準備好了」，**全部人都準備好**才開打；選擇畫面會列出每個人的準備狀態。
@@ -463,7 +476,8 @@
 | `Assets/Plugins/iOS/PoseBridge.mm` | iOS：Apple Vision 人體偵測 |
 | `Assets/SpellDuel/Runtime/Tracking.cs` | AR 追蹤狀態與中斷原因（單人中斷時暫停戰鬥；雙人中斷時不能施法、停止回報位置） |
 | `Assets/SpellDuel/Runtime/WorldFrame.cs` | 共用世界座標（以標記圖為原點）與 AR 座標的換算 |
-| `Assets/SpellDuel/Runtime/NetLink.cs` | 區域網路 TCP 連線（一行一個 JSON） |
+| `Assets/SpellDuel/Runtime/NetLink.cs` | 區域網路 TCP 連線（一行一個 JSON；2～6 人） |
+| `Assets/SpellDuel/Runtime/RelayLink.cs` | 遠端連線：Unity Relay＋Unity Transport（房間代碼；2～6 人） |
 | `Assets/SpellDuel/Runtime/Messages.cs` | 網路訊息格式 |
 | `Assets/SpellDuel/Editor/BuildScript.cs` | 雲端編譯入口：用程式建立場景、玩家設定、ARCore/ARKit 設定、iOS 權限說明 |
 | `Assets/Resources/marker.bytes` | 內建標記圖（PNG），與列印版是同一張圖 |
