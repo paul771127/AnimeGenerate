@@ -1363,7 +1363,7 @@ namespace SpellDuel
 
         /// <summary>
         /// 身體閃避：手機比站立高度低 32cm 以上＝蹲下（躲得過橫向攻擊）；
-        /// 0.35 秒內水平移動 55cm 以上＝快速側跨（0.35 秒無敵，1.8 秒才能再用一次）。
+        /// 0.35 秒內水平移動 55cm 以上＝快速側跨（沒有無敵時間，只用來觸發遊俠的翻滾射擊；1.8 秒才能再算一次）。
         /// </summary>
         void UpdateBodyDodge(Fighter me)
         {
@@ -1381,7 +1381,7 @@ namespace SpellDuel
             while (moveHist.Count > 0 && now - moveHist.Peek().Key > SidestepWindow) moveHist.Dequeue();
             if (moveHist.Count > 2 && now >= nextDodgeOk && Battle.FlatDistance(moveHist.Peek().Value, me.Feet) > SidestepDist)
             {
-                me.dodgeUntil = now + DodgeTime + me.dodgeBonus; nextDodgeOk = now + DodgeCooldown;   // 敏捷、特殊能力：無敵時間更長
+                me.dodgeUntil = now + DodgeTime; nextDodgeOk = now + DodgeCooldown;
                 floaters.Add(new Floater { text = "💨 閃避", color = new Color(0.6f, 0.9f, 1f), born = Time.time, screen = true });
                 Sfx.Play("dodge", 0.7f);
                 moveHist.Clear();
@@ -1858,8 +1858,13 @@ namespace SpellDuel
                     AdvancedFx.Dismiss(text, WorldFrame.FromWorld(at));
                     break;
                 case "basicmelee":
-                    // 近身普攻：揮砍特效
-                    Burst(at + Vector3.up * 1f, c);
+                    // 近身揮砍（普攻、斬擊）：往前的新月斬擊弧
+                    {
+                        bool mineSwing = Battle.FlatDistance(at, Me.Feet) < 0.7f;
+                        var swingDir = mineSwing ? cam.transform.forward : WorldFrame.DirFromWorld(Fighter.Flat(Me.Chest - at));
+                        string swingCls = text == "na_dagger" ? "assassin" : "swordsman";
+                        SpellFx.CastBurst(swingCls, c, WorldFrame.FromWorld(at + Vector3.up * 1f), swingDir, text == "slash" ? 1.4f : 0.9f);
+                    }
                     Sfx.Play("cast_swordsman", 0.45f, text == "na_dagger" ? 1.4f : 1.1f);
                     break;
                 case "taunt":
@@ -2014,8 +2019,9 @@ namespace SpellDuel
                         if (NetMode) Sfx.Cast(enemyClassUsed, 0.55f);   // 雙人：對手的法術不會經過 Battle 的 cast 事件
                     }
                 }
-                var dirS = WorldFrame.DirFromWorld(p.dir);
+                var dirS = WorldFrame.DirFromWorld(p.Heading);   // 弧線（風刃）朝著路徑的切線
                 go.transform.SetPositionAndRotation(WorldFrame.FromWorld(p.pos), dirS.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(dirS, Vector3.up) : Quaternion.identity);
+                go.transform.localScale = Vector3.one * p.FadeK;   // 飛超過射程：縮小淡出
                 // 敵人的法術逼近時畫面邊框閃紅
                 if ((p.owner == En || p.owner.isMinion) && Vector3.Distance(p.pos, Me.Chest) < 2.5f && Vector3.Dot(p.dir, Me.Chest - p.pos) > 0)
                 {
@@ -2077,12 +2083,12 @@ namespace SpellDuel
                 foreach (var p in battle.projectiles)
                 {
                     bool hostile = p.owner == En || p.owner.isMinion || (p.remote && !p.owner.isAlly);
-                    if (!p.alive || !hostile || p.lob || p.skill.fromAbove || p.Curved || p.skill.areaRadius > 0f) continue;
+                    if (!p.alive || p.Fading || !hostile || p.lob || p.skill.fromAbove || p.Curved || p.skill.areaRadius > 0f) continue;
                     if (p.target != null && p.target != Me) continue;   // 合作：打隊友的不畫
                     liveLines.Add(p);
                     if (!projLine.TryGetValue(p, out var ln) || !ln) { ln = Prim(PrimitiveType.Cube, new Color(1f, 0.15f, 0.15f, 0.4f), true); projLine[p] = ln; }
                     var a = p.pos; a.y = 0.02f;
-                    float left = Mathf.Max(0.1f, p.skill.MaxTravel * p.rangeMul - p.traveled);
+                    float left = Mathf.Max(0.1f, p.skill.rangeMax * p.rangeMul - p.traveled);
                     var d = Fighter.Flat(p.dir); if (d == Vector3.zero) d = Vector3.forward;
                     float len = left * Mathf.Max(0.2f, new Vector2(p.dir.x, p.dir.z).magnitude);
                     var b = a + d * len;

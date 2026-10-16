@@ -139,10 +139,13 @@ namespace SpellDuel
                     Line($"伏擊一靠近就命中、閃不掉：保持距離 {s.rangeMax:0.#}m 以上，撐過 {Battle.AmbushWindow:0} 秒就落空；或趁伏擊中打它一下就能取消");
                     Line("法師的抗拒法環可以取消伏擊");
                 }
+                else if (s.id == "slash" || Skills.IsMeleeBasic(s)) Line($"只砍前方半球（半徑 {s.rangeMax:0.#}m）：退到範圍外或繞到它背後");
                 else
                 {
-                    Line(s.speed <= 6f ? "飛得慢，側跨或走開就閃得掉" : s.speed >= 12f ? "飛得很快，要在出手前就側跨" : "側跨 55 公分可以閃過");
-                    if (s.duckable) Line("橫向攻擊：蹲下也能躲過");
+                    Line("側跨沒有無敵時間：要真的移開，讓法術碰不到身體才算閃過");
+                    if (s.crescent) Line("新月形：只有碰到新月本身才會受傷，看準弧線的位置閃開");
+                    if (s.duckable) Line("胸口高度的橫掃：蹲下也能躲過");
+                    Line($"飛超過射程 {s.rangeMax:0.#}m 就會淡出消失");
                     if (Battle.Sliceable(s)) Line("劍士的斬擊可以把它斬開");
                 }
             }

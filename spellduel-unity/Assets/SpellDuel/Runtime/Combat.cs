@@ -125,6 +125,21 @@ namespace SpellDuel
         public Vector3 basePos, curveSide;   // curveSide：側向單位向量 × 振幅（公尺，可為負）
         public float curveAmp, pathLen;
         public bool Curved => pathLen > 0.01f && Mathf.Abs(curveAmp) > 0.01f;
+        /// <summary>目前的飛行方向（弧線＝路徑的切線）：新月形法球的朝向</summary>
+        public Vector3 Heading
+        {
+            get
+            {
+                if (!Curved || traveled >= pathLen) return dir;
+                var h = dir + curveSide * (Mathf.PI / pathLen * Mathf.Cos(Mathf.PI * traveled / pathLen));
+                return h.sqrMagnitude > 1e-6f ? h.normalized : dir;
+            }
+        }
+        /// <summary>飛超過技能射程：開始淡出（不再打到人），fadeEnd＝飛到這個距離就消失；-1＝還沒</summary>
+        public float fadeEnd = -1f;
+        public bool Fading => fadeEnd >= 0f;
+        /// <summary>畫面用的大小倍率：1＝正常，淡出時縮到 0</summary>
+        public float FadeK => Fading ? Mathf.Clamp01((fadeEnd - traveled) / Battle.FadeDistance) : 1f;
     }
 
     /// <summary>隕石落地後的火海：範圍內的敵人每秒受到灼燒傷害</summary>
@@ -832,7 +847,7 @@ namespace SpellDuel
                     if (d <= pc.rangeMax + tgt.bodyRadius)
                     {
                         int dmg = Mathf.RoundToInt(pc.damage * m.dmgMul);
-                        if (tgt.dodgeUntil > now) Emit("evade", tgt.Chest, pc.color, "閃避！");
+                        if (tgt.dodgeUntil > now && SidestepInvuln) Emit("evade", tgt.Chest, pc.color, "閃避！");
                         else if (tgt.isAlly) { Emit("allyhit", tgt.Chest, pc.color, null); OnAllyHit?.Invoke(tgt, pc, dmg, tgt.Chest, 0); }
                         else ApplyDamageAndEffect(tgt, dmg, EffectKind.None, 0f, 0f, tgt.Chest);
                     }
@@ -848,7 +863,7 @@ namespace SpellDuel
                     {
                         if (!v.Alive || FlatDistance(v.Feet, m.Feet) > sh.areaRadius + v.bodyRadius) continue;
                         int dmg = Mathf.RoundToInt(sh.damage * m.dmgMul);
-                        if (v.dodgeUntil > now) Emit("evade", v.Chest, sh.color, "閃避！");
+                        if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, sh.color, "閃避！");
                         else if (v.isAlly) { Emit("allyhit", v.Chest, sh.color, null); OnAllyHit?.Invoke(v, sh, dmg, v.Chest, 0); }
                         else ApplyDamageAndEffect(v, dmg, sh.effect, sh.effectDps, sh.effectDur, v.Chest);
                     }
@@ -876,7 +891,7 @@ namespace SpellDuel
                     {
                         if (!v.Alive || FlatDistance(v.Feet, m.Feet) > sp.areaRadius + v.bodyRadius) continue;
                         int dmg = Mathf.RoundToInt(sp.damage * m.dmgMul);
-                        if (v.dodgeUntil > now) Emit("evade", v.Chest, sp.color, "閃避！");
+                        if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, sp.color, "閃避！");
                         else if (v.isAlly) { Emit("allyhit", v.Chest, sp.color, null); OnAllyHit?.Invoke(v, sp, dmg, v.Chest, 0); }
                         else ApplyDamageAndEffect(v, dmg, sp.effect, sp.effectDps, sp.effectDur, v.Chest);
                     }
@@ -923,7 +938,7 @@ namespace SpellDuel
                     {
                         if (!v.Alive || FlatDistance(v.Feet, m.Feet) > bomb.areaRadius + v.bodyRadius) continue;
                         int dmg = Mathf.RoundToInt(bomb.damage * m.dmgMul);
-                        if (v.dodgeUntil > now) Emit("evade", v.Chest, bomb.color, "閃避！");
+                        if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, bomb.color, "閃避！");
                         else if (v.isAlly) { Emit("allyhit", v.Chest, bomb.color, null); OnAllyHit?.Invoke(v, bomb, dmg, v.Chest, 0); }
                         else ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest);
                     }
@@ -941,7 +956,7 @@ namespace SpellDuel
                     float reach = m.minionKind == 2 ? 1.6f : chomp ? bite.rangeMax + 0.2f : claw.rangeMax;
                     if (d <= reach + tgt.bodyRadius)
                     {
-                        if (tgt.dodgeUntil > now) Emit("evade", tgt.Chest, claw.color, "閃避！");
+                        if (tgt.dodgeUntil > now && SidestepInvuln) Emit("evade", tgt.Chest, claw.color, "閃避！");
                         else if (tgt.isAlly) { Emit("allyhit", tgt.Chest, claw.color, null); OnAllyHit?.Invoke(tgt, claw, dmg, tgt.Chest, 0); }
                         else ApplyDamageAndEffect(tgt, dmg, EffectKind.None, 0f, 0f, tgt.Chest);
                     }
@@ -957,8 +972,7 @@ namespace SpellDuel
             foreach (var m in minions)
             {
                 if (!m.Alive) continue;
-                m.BodySegment(out var a, out var b);
-                if (DistancePointSegment(p.pos, a, b) >= p.skill.radius + m.bodyRadius) continue;
+                if (!Touches(p, m)) continue;
                 if (p.skill.pierce)
                 {
                     // 貫穿：同一隻只打一次，箭繼續飛
@@ -1096,6 +1110,34 @@ namespace SpellDuel
             if (fw == Vector3.zero) return true;
             return Vector3.Dot(new Vector3(d.x, 0f, d.z), fw) >= -v.bodyRadius;   // 身體有碰到前半邊就算
         }
+        /// <summary>
+        /// 法術有沒有碰到身體：一般法球＝球；新月形（劍氣、風刃）＝沿著新月弧取樣的一串小球（和畫面上的新月同樣大小、朝飛行方向）。
+        /// </summary>
+        public static bool Touches(Projectile p, Fighter v)
+        {
+            v.BodySegment(out var a, out var b);
+            if (!p.skill.crescent) return DistancePointSegment(p.pos, a, b) < p.skill.radius + v.bodyRadius;
+            var fw = Fighter.Flat(p.Heading); if (fw == Vector3.zero) fw = Fighter.Flat(p.dir); if (fw == Vector3.zero) fw = Vector3.forward;
+            var right = Vector3.Cross(Vector3.up, fw);
+            float D = Mathf.Max(0.06f, p.skill.radius * 2f), tube = Mathf.Max(0.05f, CrescentTube * D);
+            for (int i = 0; i < CrescentSamples; i++)
+            {
+                var l = CrescentPoint(i / (CrescentSamples - 1f)) * D;
+                var w = p.pos + right * l.x + Vector3.up * l.y + fw * l.z;
+                if (DistancePointSegment(w, a, b) < tube + v.bodyRadius) return true;
+            }
+            return false;
+        }
+        const int CrescentSamples = 9;
+        const float CrescentTube = 0.13f;
+        /// <summary>新月弧上的點（t＝0..1，單位＝法術直徑；和 SpellFx.Crescent 的 R＝0.55、170° 一樣）</summary>
+        public static Vector3 CrescentPoint(float t)
+        {
+            const float R = 0.55f;
+            float a = (t - 0.5f) * 170f * Mathf.Deg2Rad;
+            return new Vector3(Mathf.Sin(a) * R, -0.3f * R * (1f - Mathf.Cos(a)), Mathf.Cos(a) * R - R * 0.6f);
+        }
+
         /// <summary>範圍技能的 3D 形狀（配合特效）：神聖制裁＝光錘砸下的光柱、旋風斬＝身邊的刀刃旋風、冰封領域＝地面冰晶、其他＝圓柱</summary>
         static bool InAreaShape(SkillDef s, Fighter v, Vector3 c, float r)
         {
@@ -1139,8 +1181,14 @@ namespace SpellDuel
                 return TryRelease(f, aimDir, floor, out _, locked);
             }
             f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul * CdFactor(f);
+            MeleeSweep(f, s, Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now)));
+            return true;
+        }
+
+        /// <summary>近身揮砍（普攻、斬擊）：打到前方半球（半徑＝技能射程）內的所有敵人</summary>
+        void MeleeSweep(Fighter f, SkillDef s, int dmg)
+        {
             Emit("basicmelee", f.Feet + Fighter.Flat(f.forward) * 0.5f, s.color, s.id);
-            int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
             var foes = new List<Fighter>();
             if (f == enemy || f.isMinion) { foreach (var pl in Players()) foes.Add(pl); }
             else { if (enemy != null) foes.Add(enemy); foes.AddRange(minions); }
@@ -1151,12 +1199,13 @@ namespace SpellDuel
                 if (remoteEnemy && v.isMinion) { EmitHit(s, v.Chest); OnMinionHit?.Invoke(v.minionId, dmg, s); OnDealt(f, dmg); continue; }
                 Hit(v, new Projectile { owner = f, skill = s, pos = v.Chest, dir = Fighter.Flat(v.head - f.head), damage = dmg });
             }
-            return true;
         }
 
         /// <summary>刺客伏擊技能（刺殺、影襲、毒刃）：身邊這個半徑內不能有敵人才能蓄力；蓄力完成後靠近到這個距離就自動出手</summary>
         public const float AmbushClear = 2f;     // 半徑 2m（直徑 4m）內有敵人：不能開始／蓄力暫停
-        public const float AmbushReach = 1.5f;   // 伏擊中靠近到半徑 1.5m（直徑 3m）內：自動出手
+        public const float AmbushReach = 1.5f;
+        /// <summary>法術飛超過技能射程後，再往前飄這麼遠（公尺）一邊淡出一邊消失</summary>
+        public const float FadeDistance = 0.8f;   // 伏擊中靠近到半徑 1.5m（直徑 3m）內：自動出手
 
         /// <summary>f 最近的敵人（玩家方：Boss／對手＋小怪；敵方：玩家）</summary>
         public Fighter NearestFoe(Fighter f, out float dist)
@@ -1220,7 +1269,14 @@ namespace SpellDuel
             f.mp -= s.cost;
             f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul * (f.focusUntil > now ? 0.5f : 1f) * CdFactor(f);
             f.charging = null;
-            if (s.id == "slash") { f.sliceUntil = now + SliceWindow; SliceNow(f); }
+            if (s.id == "slash")
+            {
+                // 斬擊：砍前方半球（半徑＝射程 2m），同時斬開正面飛來的法球；不會飛出去
+                f.sliceUntil = now + SliceWindow; SliceNow(f);
+                MeleeSweep(f, s, Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now) * (1f + f.chargeBonus)));
+                Emit("cast", f.head, s.color, null);
+                return true;
+            }
 
             if (s.releaseNear)
             {
@@ -1266,7 +1322,7 @@ namespace SpellDuel
                     foreach (var v in new List<Fighter>(Players()))
                     {
                         if (v == f || !v.Alive || FlatDistance(ac, v.Feet) > s.areaRadius + v.bodyRadius) continue;
-                        if (v.dodgeUntil > now) { Emit("evade", v.Chest, s.color, "閃避！"); continue; }
+                        if (v.dodgeUntil > now && SidestepInvuln) { Emit("evade", v.Chest, s.color, "閃避！"); continue; }
                         if (v.isAlly) { Emit("allyhit", v.Chest, s.color, null); OnAllyHit?.Invoke(v, s, s.damage, v.Chest, 0); }
                         else ApplyDamageAndEffect(v, s.damage, s.effect, s.effectDps, s.effectDur, v.Chest);
                     }
@@ -1668,7 +1724,7 @@ namespace SpellDuel
                 foreach (var v in new List<Fighter>(Players()))
                 {
                     if (!v.Alive || FlatDistance(at, v.Feet) > p.skill.radius + v.bodyRadius) continue;
-                    if (v.dodgeUntil > now) { Emit("evade", v.Chest, p.skill.color, "閃避！"); continue; }
+                    if (v.dodgeUntil > now && SidestepInvuln) { Emit("evade", v.Chest, p.skill.color, "閃避！"); continue; }
                     if (v.isAlly) { Emit("allyhit", v.Chest, p.skill.color, null); OnAllyHit?.Invoke(v, p.skill, p.damage, v.Chest, 0); }
                     else ApplyDamageAndEffect(v, p.damage, p.effect, p.effectDps, p.effectDur, v.Chest);
                 }
@@ -1751,7 +1807,7 @@ namespace SpellDuel
                     if (!v.Alive || DistancePointSegment(v.Feet, ln.a, tip) > ln.width + v.bodyRadius) continue;
                     if (ln.next.TryGetValue(v, out var t) && now < t) continue;
                     ln.next[v] = now + 1f;
-                    if (v.dodgeUntil > now) { Emit("evade", v.Chest, ln.skill.color, "閃避！"); continue; }
+                    if (v.dodgeUntil > now && SidestepInvuln) { Emit("evade", v.Chest, ln.skill.color, "閃避！"); continue; }
                     if (v.isAlly) { Emit("allyhit", v.Chest, ln.skill.color, null); OnAllyHit?.Invoke(v, ln.skill, ln.damage, v.Chest, 0); }
                     else { ApplyDamageAndEffect(v, ln.damage, EffectKind.None, 0f, 0f, v.Chest); Emit("vinehit", v.Chest, ln.skill.color, "被藤蔓刺到！"); }
                 }
@@ -1804,7 +1860,7 @@ namespace SpellDuel
                 if (!v.Alive || FlatDistance(m.Feet, v.Feet) > m.bodyRadius + v.bodyRadius + 0.1f) continue;
                 m.dashHit = true;
                 int dmg = Mathf.RoundToInt(ds.damage * m.dmgMul);
-                if (v.dodgeUntil > now) Emit("evade", v.Chest, ds.color, "閃避！");
+                if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, ds.color, "閃避！");
                 else if (v.isAlly) { Emit("allyhit", v.Chest, ds.color, null); OnAllyHit?.Invoke(v, ds, dmg, v.Chest, 0); }
                 else ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest);
                 if (kind == 8) { m.dashUntil = 0f; m.recoverUntil = now + MinionRecover; }   // 衝鋒獸撞到就停；魚和鳥衝完全程
@@ -1880,6 +1936,7 @@ namespace SpellDuel
                 for (int k = 0; k < sub && p.alive; k++)
                 {
                     Advance(p, step / sub);
+                    if (p.Fading) { if (p.traveled >= p.fadeEnd || p.pos.y < 0f) p.alive = false; continue; }   // 淡出中：不再打到人
                     if (TrySlice(p)) break;
                     // 隕石落地：留下火海（我方的才判定傷害；對手的只顯示）
                     if (p.skill.id == "meteor" && p.pos.y <= 0.05f)
@@ -1893,19 +1950,19 @@ namespace SpellDuel
                     if (!target.Alive)
                     {
                         // 目標不在了（無盡模式 Boss 還沒出現）：只飛，飛完消失
-                        if (p.pos.y < 0f || p.traveled > p.skill.MaxTravel * p.rangeMul) p.alive = false;
+                        OutOfRange(p, p.skill.rangeMax * p.rangeMul);
                     }
                     else if (p.remote)
                     {
                         // 對手的法術：命中由對手判定（收到結果時移除）；這裡只讓它飛，飛完消失
-                        if (p.pos.y < 0f || p.traveled > p.skill.MaxTravel) p.alive = false;
+                        OutOfRange(p, p.skill.rangeMax);
                     }
-                    else if (DistancePointSegment(p.pos, a, b) < p.skill.radius + target.bodyRadius)
+                    else if (Touches(p, target))
                     {
                         // 閃避：蹲下躲過橫向攻擊、側跨的無敵時間內 → 法術穿過去
                         if (Evades(target, p))
                         {
-                            if (!p.evaded) { p.evaded = true; Emit("evade", target.Chest, p.skill.color, target.dodgeUntil > now ? "閃避！" : "蹲下躲過！"); }
+                            if (!p.evaded) { p.evaded = true; Emit("evade", target.Chest, p.skill.color, "蹲下躲過！"); }
                             continue;
                         }
                         p.alive = false;
@@ -1916,7 +1973,7 @@ namespace SpellDuel
                         else if (target.isAlly) { Emit("allyhit", p.pos, p.skill.color, null); OnAllyHit?.Invoke(target, p.skill, p.damage, p.pos, p.id); }   // 主機：Boss 打到隊友
                         else Hit(target, p);
                     }
-                    else if (p.pos.y < 0f || p.traveled > p.skill.MaxTravel * p.rangeMul) { p.alive = false; Emit("miss", p.pos, p.skill.color, null); }
+                    else if (OutOfRange(p, p.skill.rangeMax * p.rangeMul)) Emit("miss", p.pos, p.skill.color, null);
                 }
             }
             projectiles.RemoveAll(x => !x.alive);
@@ -1933,8 +1990,18 @@ namespace SpellDuel
             return any;
         }
 
-        /// <summary>這一發會不會被閃過：側跨的無敵時間內全部閃過；蹲著時橫向攻擊（duckable）打不到</summary>
-        public bool Evades(Fighter target, Projectile p) => target.dodgeUntil > now || (target.crouching && p.skill.duckable);
+        /// <summary>打到地面就消失；飛超過射程 range 就開始淡出（再飄 FadeDistance 才消失）。回傳是不是結束了</summary>
+        static bool OutOfRange(Projectile p, float range)
+        {
+            if (p.pos.y < 0f) { p.alive = false; return true; }
+            if (p.traveled > range) { p.fadeEnd = p.traveled + FadeDistance; return true; }
+            return false;
+        }
+
+        /// <summary>這一發會不會被閃過：蹲著時橫向攻擊（duckable，Boss 的橫掃）打不到</summary>
+        public bool Evades(Fighter target, Projectile p) => (SidestepInvuln && target.dodgeUntil > now) || (target.crouching && p.skill.duckable);
+        /// <summary>側跨沒有無敵時間：要真的移開、讓法術碰不到身體才算閃過（側跨的偵測仍保留給遊俠的翻滾射擊）</summary>
+        public const bool SidestepInvuln = false;
 
         /// <summary>伏擊：時限內和對手的水平距離 ≤ 技能射程 → 自動出手一次</summary>
         void UpdateAmbush(Fighter f)

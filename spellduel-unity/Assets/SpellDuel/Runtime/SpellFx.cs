@@ -544,20 +544,16 @@ namespace SpellDuel
                 }
                 case "wind":
                 {
-                    var spin = NewChild(body, "Spin");
-                    GlowPart(spin, "wind", m =>
+                    // 風刃：綠色新月（和判定的新月同樣大小、朝飛行方向；弧線飛行時跟著切線轉）
+                    var g = Color.Lerp(sc, new Color(0.6f, 1f, 0.75f), 0.3f);
+                    GlowPart(body, "wind.crescent", m =>
                     {
-                        var g = Color.Lerp(sc, new Color(0.6f, 1f, 0.75f), 0.3f);
-                        for (int k = 0; k < 3; k++)
-                        {
-                            float a0 = k * 120f;
-                            Whirl(m, 0.42f, a0, 150f, 0.12f, WithA(g, 0.75f), 0f);
-                            Whirl(m, 0.42f, a0, 150f, 0.045f, new Color(0.92f, 1f, 0.95f, 0.9f), 0.01f);
-                            Whirl(m, 0.22f, a0 + 60f, 130f, 0.07f, WithA(g, 0.6f), -0.1f);
-                        }
+                        Crescent(m, 0.55f, 170f, 0.13f, 0.1f, WithA(g, 0.8f), 0f);
+                        Crescent(m, 0.55f, 160f, 0.05f, 0.035f, new Color(0.92f, 1f, 0.95f, 0.95f), 0.02f);
+                        Crescent(m, 0.42f, 150f, 0.08f, 0.06f, WithA(g, 0.45f), -0.28f);
                     });
-                    anim.spin = spin; anim.spinAxis = Vector3.forward; anim.spinSpeed = -720f;
-                    CoreGlow(root.transform, sc, D * 1.2f, Vector3.zero);
+                    anim.flick = body; anim.flickAmt = 0.05f; anim.flickRate = 26f;
+                    CoreGlow(root.transform, sc, D * 0.8f, new Vector3(0f, 0f, D * 0.2f));
                     break;
                 }
                 case "meteor":

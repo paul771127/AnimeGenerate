@@ -76,7 +76,7 @@ namespace SpellDuel
             string sum = $"HP {f.maxHp}　MP {f.maxMp}（每秒 +{f.regen:0.#}）　攻擊 ×{f.atkMul:0.00}\n" +
                          $"蓄力 ×{f.chargeScale:0.00}　冷卻 ×{f.cdMul:0.00}　爆擊 {f.critChance * 100:0.#}%　減傷 {f.gearReduce * 100:0.#}%" +
                          (f.lifesteal > 0 ? $"　吸血 {f.lifesteal * 100:0.#}%" : "") + (f.hpRegen > 0 ? $"　回血 {f.hpRegen:0.#}/s" : "") +
-                         (f.mpOnHit > 0 ? $"　命中回 MP {f.mpOnHit:0}" : "") + (f.dodgeBonus > 0 ? $"　側跨無敵 +{f.dodgeBonus:0.00}s" : "") +
+                         (f.mpOnHit > 0 ? $"　命中回 MP {f.mpOnHit:0}" : "") +
                          (f.evadeChance > 0 ? $"　閃避 {f.evadeChance * 100:0.#}%" : "") + (f.healMul != 1f ? $"　治療 ×{f.healMul:0.0#}" : "") +
                          (adv != null ? $"\n✨ {adv.name}：{adv.core}" : "");
             UiKit.Text(new Rect(b.x, y, b.width, b.yMax - y - fs * 2.2f), sum, fsS, new Color(1f, 0.95f, 0.75f), TextAnchor.UpperLeft, false, 0.55f);

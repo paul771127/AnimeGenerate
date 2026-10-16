@@ -51,7 +51,7 @@ namespace SpellDuel
             Stat.Str => atk ? "攻擊傷害 +2%／點" : "（不是這個職業的攻擊能力值）HP +1／點",
             Stat.Int => atk ? "攻擊傷害 +2%／點、治療量 +2%／點、MP 上限 +2／點" : "MP 上限 +2／點、治療量 +2%／點",
             Stat.Vit => "HP 上限 +5／點、受到的傷害 -0.4%／點（最多 -30%）",
-            Stat.Agi => "蓄力時間 -1%／點（最多 -40%）、側跨無敵時間 +1%／點",
+            Stat.Agi => "蓄力時間 -1%／點（最多 -40%）、閃避率 +0.1%／點",
             Stat.Spi => "MP 回復 +3%／點、冷卻時間 -0.8%／點（最多 -35%）",
             _ => "爆擊率 +0.6%／點（爆擊＝傷害 ×2）、掉寶機率與稀有度提升",
         };
@@ -77,6 +77,8 @@ namespace SpellDuel
 
     public static class SkillTrees
     {
+        /// <summary>「側跨」類特殊能力（舊的側跨無敵秒數）換算成閃避率：每 0.1 → +3%</summary>
+        public const float DodgeToEvade = 0.3f;
         /// <summary>每個職業一開始會的 3 個基本技能</summary>
         public static string[] Starters(string cls) => cls switch
         {
@@ -369,7 +371,7 @@ namespace SpellDuel
                     {
                         PassiveKind.Lifesteal => $"造成傷害的 {v * 100:0}% 回復成 HP",
                         PassiveKind.Crit => $"爆擊率 +{v * 100:0}%",
-                        PassiveKind.Dodge => $"側跨無敵時間 +{v:0.0#} 秒",
+                        PassiveKind.Dodge => $"閃避率 +{v * DodgeToEvade * 100f:0.#}%",
                         PassiveKind.MpOnHit => $"每次命中回復 {v:0} MP",
                         PassiveKind.Regen => $"每秒回復 {v:0.#} HP",
                         PassiveKind.Burn => $"命中時 {v * 100:0}% 機率灼燒",
@@ -773,9 +775,9 @@ namespace SpellDuel
             f.regen = cd.mpRegen * Mathf.Max(0.3f, 1f + 0.03f * d(Stat.Spi));
             // 冷卻：精神每點 -0.8%（最多 -35%）、裝備
             f.cdMul = Mathf.Clamp(1f - 0.008f * d(Stat.Spi) - GearSum(Affix.Cdr), 0.5f, 1.5f);
-            // 蓄力：敏捷每點 -1%（最多 -40%）；側跨無敵時間：敏捷每點 +1%＋特殊能力
+            // 蓄力：敏捷每點 -1%（最多 -40%）；側跨沒有無敵時間了 → 敏捷與「側跨」類特殊能力改成閃避率（下面 evadeChance）
             f.chargeScale = Mathf.Clamp(1f - 0.01f * d(Stat.Agi), 0.6f, 1.5f);
-            f.dodgeBonus = 0.35f * Mathf.Max(0f, 0.01f * d(Stat.Agi)) + Passive(PassiveKind.Dodge);
+            f.dodgeBonus = 0f;
             // 幸運：爆擊率；技能樹與裝備的特殊能力
             f.critChance = Mathf.Clamp(0.006f * Total(Stat.Luk) + Passive(PassiveKind.Crit) + GearSum(Affix.Crit), 0f, 0.75f);
             f.lifesteal = Passive(PassiveKind.Lifesteal) + GearSum(Affix.Lifesteal);
@@ -785,7 +787,7 @@ namespace SpellDuel
             f.burnChance = Passive(PassiveKind.Burn) + GearSum(Affix.Burn);
             f.poisonChance = Passive(PassiveKind.Poison) + GearSum(Affix.Poison);
             f.freezeChance = Passive(PassiveKind.Freeze) + GearSum(Affix.Freeze);
-            f.evadeChance = Mathf.Clamp(Passive(PassiveKind.Evade), 0f, 0.5f);
+            f.evadeChance = Mathf.Clamp(Passive(PassiveKind.Evade) + SkillTrees.DodgeToEvade * Passive(PassiveKind.Dodge) + 0.001f * Mathf.Max(0, d(Stat.Agi)), 0f, 0.5f);
             f.chargeScale = Mathf.Max(0.4f, f.chargeScale * (1f - Passive(PassiveKind.FastCast)));   // 法師：快速詠唱
             f.overcharge = Passive(PassiveKind.Overcharge) > 0f;                                   // 獵人：蓄力強化
             f.hpRegen += f.maxHp * Passive(PassiveKind.NaturalRegen) / 10f;                         // 劍士：自然回復（每 10 秒 x%）
