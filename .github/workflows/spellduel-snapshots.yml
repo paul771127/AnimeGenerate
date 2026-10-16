@@ -38,6 +38,7 @@ jobs:
           buildMethod: SpellDuel.EditorTools.Snapshot.Render
           allowDirtyBuild: true
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: SpellDuel-snapshots
           path: spellduel-unity/snapshots/*.png

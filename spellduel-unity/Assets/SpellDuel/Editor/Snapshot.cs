@@ -40,10 +40,15 @@ namespace SpellDuel.EditorTools
             string[] pets = { "falcon", "fire", "golem", "clone" };
             foreach (var k in pets)
             {
-                var pr = PetRig.Create(k, new Color(0.9f, 0.5f, 1f));
-                pr.SetPose(new Vector3(0f, k == "golem" ? 0.6f : 0.9f, 0f), Quaternion.Euler(0f, 180f, 0f), 0.3f, 1f);
-                Shot(cam, pr.gameObject, "pet_" + k, new Vector3(0f, 1.2f, 2.6f), new Vector3(0f, 0.8f, 0f));
-                Object.DestroyImmediate(pr.gameObject);
+                try
+                {
+                    var pr = PetRig.Create(k, new Color(0.9f, 0.5f, 1f));
+                    // 編輯模式不會呼叫 Awake／Update：直接擺位置就好
+                    pr.transform.SetPositionAndRotation(new Vector3(0f, k == "golem" ? 0.6f : 0.9f, 0f), Quaternion.Euler(0f, 180f, 0f));
+                    Shot(cam, pr.gameObject, "pet_" + k, new Vector3(0f, 1.2f, 2.6f), new Vector3(0f, 0.8f, 0f));
+                    Object.DestroyImmediate(pr.gameObject);
+                }
+                catch (System.Exception e) { Debug.LogWarning($"[SpellDuel] pet {k} snapshot failed: {e.Message}"); }
             }
             // 全職業合照
             var row = new GameObject("Row");
