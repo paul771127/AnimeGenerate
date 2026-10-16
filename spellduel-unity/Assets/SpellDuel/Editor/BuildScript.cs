@@ -114,10 +114,14 @@ namespace SpellDuel.EditorTools
         /// 遠端連線（Unity Relay）需要 Unity Cloud 專案 ID：從 CI 參數 -sdCloudProjectId（GitHub Secret UNITY_CLOUD_PROJECT_ID）
         /// 或環境變數 UNITY_CLOUD_PROJECT_ID 寫進 Player Settings（執行時 Application.cloudProjectId 會讀到）。沒提供就跳過（只是不能遠端連線）。
         /// </summary>
+        // 專案 ID 不是機密（會寫進 App 裡），直接當預設值；要換專案時設定 GitHub Secret UNITY_CLOUD_PROJECT_ID 覆蓋
+        const string DefaultCloudProjectId = "356570e0-cce3-4803-8c8b-95687098b005";
+
         static void ApplyCloudProject()
         {
             string id = Arg("-sdCloudProjectId");
             if (string.IsNullOrEmpty(id) || id.StartsWith("-")) id = Environment.GetEnvironmentVariable("UNITY_CLOUD_PROJECT_ID");
+            if (string.IsNullOrEmpty(id)) id = DefaultCloudProjectId;
             if (string.IsNullOrEmpty(id)) { Debug.LogWarning("[SpellDuel] 沒有 Unity Cloud 專案 ID：遠端連線（房間代碼）不能用，區域網路連線不受影響"); return; }
             var ps = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset").FirstOrDefault();
             if (ps == null) return;

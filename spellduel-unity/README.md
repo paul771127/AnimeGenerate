@@ -388,7 +388,7 @@
 2. 在專案裡打開 **Multiplayer → Relay**，按啟用（免費額度足夠自己和朋友玩）。
 3. 在專案設定頁複製 **Project ID**（一串 xxxxxxxx-xxxx-… 的 ID）。
 4. GitHub repo → Settings → Secrets and variables → Actions → New repository secret：名稱 `UNITY_CLOUD_PROJECT_ID`，值貼上 Project ID。
-5. 重新建置（推送或在 Actions 手動執行）。沒設定時遊戲照常可以玩，只有遠端連線會顯示「沒有設定 Unity Cloud 專案」。
+5. 重新建置（推送或在 Actions 手動執行）。（目前的專案 ID 已經寫在 `BuildScript.cs` 的 `DefaultCloudProjectId`，不設定 Secret 也能用；設定 Secret 會覆蓋它。）沒設定時遊戲照常可以玩，只有遠端連線會顯示「沒有設定 Unity Cloud 專案」。
 
 ## 多人合作（2～6 人）
 - 一支手機「建立房間」當房主，其他人輸入房主的 IP「加入」，**最多 5 人加入（共 6 人）**，都要在同一個 Wi-Fi（不同地方請用「🌐 遠端連線」）。房間滿了會顯示「房間已滿」。
