@@ -371,7 +371,7 @@
 獵人所有技能蓄力時（包含蓄滿後拉著弓）都不能離開唸技能的位置直徑 1m，否則蓄力失敗。
 
 ## 投射物速度
-所有遠距技能（射程 3m 以上的投射物，玩家與敵人都一樣）飛行速度是原本的 70%（`Skills.ProjectileSpeedScale`）；普通攻擊再減半（`Skills.BasicSpeedScale` = 50%）；獵人的普通箭再減半（`Skills.ArrowSpeedScale` = 50%）。
+所有遠距技能（射程 3m 以上的投射物，玩家與敵人都一樣）飛行速度是原本的 70%（`Skills.ProjectileSpeedScale`）；普通攻擊再減半（`Skills.BasicSpeedScale` = 50%）；獵人的普通箭再減半（`Skills.ArrowSpeedScale` = 50%）。算完之後所有飛行中的法術／技能（玩家、敵人、Boss、召喚物）一律不超過 3 m/s（`Skills.MaxProjectileSpeed`）；近身揮砍、伏擊與小怪的衝刺移動不受影響。
 
 ## 美術風格：賽璐珞
 角色、小怪、Boss 用 `SpellDuel/Toon` 著色器：兩階明暗＋外框黑邊（發光／半透明特效不描邊）。

@@ -86,6 +86,8 @@ namespace SpellDuel
         }
 
         static void P(SkillDef s) => All[s.id] = s;
+        /// <summary>會飛出去的遠距投射物（射程 3m 以上；伏擊、近身揮砍、小怪衝刺／跳躍／俯衝不算）</summary>
+        static bool Flies(SkillDef sk) => sk.type == SkillType.Projectile && !sk.releaseNear && sk.rangeMax >= 3f && sk.id != "m_dash" && sk.id != "m_leap" && sk.id != "m_dive";
 
         /// <summary>各職業的普通攻擊</summary>
         public static SkillDef BasicOf(string cls) => cls switch
@@ -102,6 +104,8 @@ namespace SpellDuel
         public const float BasicSpeedScale = 0.5f;
         /// <summary>獵人普通箭的飛行速度倍率（在 BasicSpeedScale 之後再乘）</summary>
         public const float ArrowSpeedScale = 0.5f;
+        /// <summary>所有飛行法術／技能的最高飛行速度（m/s）：上面的倍率算完後超過的一律壓到這個值</summary>
+        public const float MaxProjectileSpeed = 3f;
 
         static Skills()
         {
@@ -270,13 +274,15 @@ namespace SpellDuel
 
             // 所有遠距技能（投射物、射程 3m 以上）飛行速度 70%；衝刺／跳躍／俯衝（小怪移動用）不算
             foreach (var sk in All.Values)
-                if (sk.type == SkillType.Projectile && !sk.releaseNear && sk.rangeMax >= 3f && sk.id != "m_dash" && sk.id != "m_leap" && sk.id != "m_dive")
-                    sk.speed *= ProjectileSpeedScale;
+                if (Flies(sk)) sk.speed *= ProjectileSpeedScale;
             // 普通攻擊的飛行速度再減半（法師、牧師的飛彈與獵人的箭）
             foreach (var sk in All.Values)
                 if (sk.cls == "basic" && sk.type == SkillType.Projectile) sk.speed *= BasicSpeedScale;
             // 獵人的普通箭再減半
             All["na_arrow"].speed *= ArrowSpeedScale;
+            // 所有飛行中的法術／技能（玩家、敵人、Boss、召喚物）最快 3 m/s；近身揮砍與小怪的衝刺移動不算
+            foreach (var sk in All.Values)
+                if (Flies(sk) || sk.id == "wind") sk.speed = Mathf.Min(sk.speed, MaxProjectileSpeed);   // 風刃射程短但也是飛出去的
         }
     }
 }
