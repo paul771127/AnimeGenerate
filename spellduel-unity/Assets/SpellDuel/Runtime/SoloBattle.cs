@@ -1637,7 +1637,14 @@ namespace SpellDuel
             {
                 case "hit": case "trap": case "mitigate": case "effect": case "counter": case "buff": case "heal": case "trapSet": case "slice":
                     if (!string.IsNullOrEmpty(text)) floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time });
-                    if (kind == "hit" || kind == "trap") { Burst(at, c); SpellFx.Impact(kind == "hit" ? myClass : "", c, WorldFrame.FromWorld(at), 1f); }
+                    if (kind == "hit" || kind == "trap")
+                    {
+                        // 命中特效：依打中的技能挑職業（普攻、召喚物也算；不認得就用自己的職業），傷害越高越大
+                        var hs = battle.HitSkill;
+                        string fxCls = SpellFx.HitClassOf(hs) ?? (kind == "trap" ? "archer" : myClass);
+                        float hd = DmgOf(text); if (hd <= 0f && hs != null) hd = hs.damage;
+                        SpellFx.Hit(fxCls, hs != null ? hs.color : c, WorldFrame.FromWorld(at), 0.8f + hd / 60f, battle.HitCrit);
+                    }
                     // 音效＋震動：打中敵人（傷害越高越重）、格擋、回復、增益、陷阱
                     switch (kind)
                     {
@@ -1647,7 +1654,8 @@ namespace SpellDuel
                             Sfx.Play(kind == "trap" ? "trap" : "hit", Mathf.Clamp(0.55f + d / 60f, 0.55f, 1f), d >= 40f ? 0.8f : 1f);
                             if (kind == "trap") Sfx.Play("hit", 0.7f);
                             Haptics.Play(d >= 30f ? Haptics.Kind.Medium : Haptics.Kind.Light);
-                            Kick(d >= 30f ? 10f : 4f, d >= 30f ? 0.09f : 0.03f);
+                            bool heavy = d >= 30f || battle.HitCrit;   // 重擊、爆擊：畫面晃更大、停頓更久
+                            Kick(heavy ? 11f : 6f, heavy ? 0.1f : 0.05f);
                             break;
                         }
                         case "slice": Burst(at, c); Sfx.Play("block", 1f, 1.3f); Sfx.Play("cast_swordsman", 0.6f); Haptics.Play(Haptics.Kind.Medium); Kick(4f, 0.04f); break;

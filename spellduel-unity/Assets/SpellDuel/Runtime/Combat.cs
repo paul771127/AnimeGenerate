@@ -182,6 +182,15 @@ namespace SpellDuel
         /// <summary>事件（給畫面做特效與文字）：種類、位置、顏色、文字</summary>
         public event Action<string, Vector3, Color, string> OnEvent;
         void Emit(string kind, Vector3 at, Color c, string text) => OnEvent?.Invoke(kind, at, c, text);
+        /// <summary>正在發生的命中是哪個技能打的、是否爆擊（"hit" 事件期間有效，給畫面挑命中特效用）</summary>
+        public SkillDef HitSkill { get; private set; }
+        public bool HitCrit { get; private set; }
+        void EmitHit(SkillDef s, Vector3 at, bool crit = false)
+        {
+            HitSkill = s; HitCrit = crit;
+            Emit("hit", at, s.color, null);
+            HitSkill = null; HitCrit = false;
+        }
 
         public Battle(Fighter player, Fighter enemy) { this.player = player; this.enemy = enemy; }
 
@@ -217,8 +226,8 @@ namespace SpellDuel
         {
             if (v == null || !v.Alive || dmg <= 0 && eff == EffectKind.None) return;
             LastProcs = RollProcs(f);
-            if (remoteEnemy && v == enemy) { Emit("hit", v.Chest, s.color, null); OnRemoteHit?.Invoke(s, dmg, v.Chest, 0); OnDealt(f, dmg); return; }
-            if (remoteEnemy && v.isMinion) { Emit("hit", v.Chest, s.color, null); OnMinionHit?.Invoke(v.minionId, dmg, s); OnDealt(f, dmg); return; }
+            if (remoteEnemy && v == enemy) { EmitHit(s, v.Chest); OnRemoteHit?.Invoke(s, dmg, v.Chest, 0); OnDealt(f, dmg); return; }
+            if (remoteEnemy && v.isMinion) { EmitHit(s, v.Chest); OnMinionHit?.Invoke(v.minionId, dmg, s); OnDealt(f, dmg); return; }
             Hit(v, new Projectile { owner = f, skill = s, pos = v.Chest, dir = Fighter.Flat(v.head - f.head), damage = dmg, effect = eff, effectDps = dps, effectDur = dur });
         }
 
@@ -959,7 +968,7 @@ namespace SpellDuel
                 else p.alive = false;
                 if (p.crit) Emit("crit", p.pos, p.skill.color, "爆擊！");
                 LastProcs = RollProcs(p.owner);
-                if (remoteEnemy) { Emit("hit", p.pos, p.skill.color, null); OnMinionHit?.Invoke(m.minionId, p.damage, p.skill); }
+                if (remoteEnemy) { EmitHit(p.skill, p.pos); OnMinionHit?.Invoke(m.minionId, p.damage, p.skill); }
                 else { ApplyDamageAndEffect(m, p.damage, p.effect, p.effectDps, p.effectDur, p.pos); ApplyProcs(m, LastProcs, p.pos); }
                 OnDealt(p.owner, p.damage);
                 if (p.skill.pierce) continue;
@@ -1097,8 +1106,8 @@ namespace SpellDuel
             foreach (var v in foes)
             {
                 if (v == null || !v.Alive || FlatDistance(f.Feet, v.Feet) > s.rangeMax + v.bodyRadius) continue;
-                if (remoteEnemy && v == enemy) { Emit("hit", v.Chest, s.color, null); OnRemoteHit?.Invoke(s, dmg, v.Chest, 0); OnDealt(f, dmg); continue; }
-                if (remoteEnemy && v.isMinion) { Emit("hit", v.Chest, s.color, null); OnMinionHit?.Invoke(v.minionId, dmg, s); OnDealt(f, dmg); continue; }
+                if (remoteEnemy && v == enemy) { EmitHit(s, v.Chest); OnRemoteHit?.Invoke(s, dmg, v.Chest, 0); OnDealt(f, dmg); continue; }
+                if (remoteEnemy && v.isMinion) { EmitHit(s, v.Chest); OnMinionHit?.Invoke(v.minionId, dmg, s); OnDealt(f, dmg); continue; }
                 Hit(v, new Projectile { owner = f, skill = s, pos = v.Chest, dir = Fighter.Flat(v.head - f.head), damage = dmg });
             }
             return true;
@@ -1862,7 +1871,7 @@ namespace SpellDuel
                         if (p.skill.id == "meteor" && !p.reflected) AddBurn(p, target.Feet);   // 直接砸中也留下火海
                         if (p.crit) Emit("crit", p.pos, p.skill.color, "爆擊！");
                         LastProcs = RollProcs(p.owner);
-                        if (remoteEnemy && target == enemy) { Emit("hit", p.pos, p.skill.color, null); OnRemoteHit?.Invoke(p.skill, p.damage, p.pos, p.id); OnDealt(p.owner, p.damage); }
+                        if (remoteEnemy && target == enemy) { EmitHit(p.skill, p.pos, p.crit); OnRemoteHit?.Invoke(p.skill, p.damage, p.pos, p.id); OnDealt(p.owner, p.damage); }
                         else if (target.isAlly) { Emit("allyhit", p.pos, p.skill.color, null); OnAllyHit?.Invoke(target, p.skill, p.damage, p.pos, p.id); }   // 主機：Boss 打到隊友
                         else Hit(target, p);
                     }
@@ -1906,8 +1915,8 @@ namespace SpellDuel
                 Emit("buff", f.Chest, new Color(0.9f, 0.4f, 1f), "連殺！馬上再伏擊");
             }
             if (target == enemy) AddThreat(f, dmg);
-            if (remoteEnemy && target.isMinion) { Emit("hit", target.Chest, s.color, null); OnMinionHit?.Invoke(target.minionId, dmg, s); OnDealt(f, dmg); }
-            else if (remoteEnemy && target == enemy) { Emit("hit", target.Chest, s.color, null); OnRemoteHit?.Invoke(s, dmg, target.Chest, 0); OnDealt(f, dmg); }
+            if (remoteEnemy && target.isMinion) { EmitHit(s, target.Chest); OnMinionHit?.Invoke(target.minionId, dmg, s); OnDealt(f, dmg); }
+            else if (remoteEnemy && target == enemy) { EmitHit(s, target.Chest); OnRemoteHit?.Invoke(s, dmg, target.Chest, 0); OnDealt(f, dmg); }
             else Hit(target, new Projectile { owner = f, skill = s, pos = target.Chest, dir = Fighter.Flat(target.head - f.head), damage = dmg, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur });
         }
 
@@ -1937,8 +1946,8 @@ namespace SpellDuel
                     while (acc >= 1f)
                     {
                         acc -= 1f;
-                        if (remoteEnemy && victim == enemy) { Emit("hit", victim.Chest, z.skill.color, null); OnRemoteBurn?.Invoke(z.skill, z.dps, victim.Feet); }
-                        else if (remoteEnemy && victim.isMinion) { Emit("hit", victim.Chest, z.skill.color, null); OnMinionHit?.Invoke(victim.minionId, Mathf.RoundToInt(z.dps), z.skill); }
+                        if (remoteEnemy && victim == enemy) { EmitHit(z.skill, victim.Chest); OnRemoteBurn?.Invoke(z.skill, z.dps, victim.Feet); }
+                        else if (remoteEnemy && victim.isMinion) { EmitHit(z.skill, victim.Chest); OnMinionHit?.Invoke(victim.minionId, Mathf.RoundToInt(z.dps), z.skill); }
                         else { if (victim == enemy) AddThreat(z.owner, z.dps); Damage(victim, z.dps, "burn", victim.isMinion ? victim.Chest : (Vector3?)null); }
                     }
                     z.accs[victim] = acc;
@@ -1963,7 +1972,9 @@ namespace SpellDuel
                     else
                     {
                         if (victim == enemy) AddThreat(t.owner, t.skill.damage);
+                        HitSkill = t.skill;
                         ApplyDamageAndEffect(victim, t.skill.damage, t.skill.effect, t.skill.effectDps, t.skill.effectDur, t.pos);
+                        HitSkill = null;
                         if (allies.Count > 0) OnTrapGone?.Invoke(t.id);   // 合作模式：告訴隊友陷阱沒了
                     }
                 }
@@ -1985,7 +1996,9 @@ namespace SpellDuel
                 return;
             }
             if (target == enemy) AddThreat(p.owner, p.damage);
+            HitSkill = p.skill; HitCrit = p.crit;
             ApplyDamageAndEffect(target, p.damage, p.effect, p.effectDps, p.effectDur, p.pos);
+            HitSkill = null; HitCrit = false;
             ApplyProcs(target, LastProcs, p.pos);
             OnDealt(p.owner, p.damage);
         }

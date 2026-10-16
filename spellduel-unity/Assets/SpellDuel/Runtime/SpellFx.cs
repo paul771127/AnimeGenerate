@@ -13,7 +13,7 @@ namespace SpellDuel
     ///   牧師：金色聖光，旋轉的光環（太陽光芒鋸齒＋十字）＋往上飄的光點；出手時金色閃光＋放射光芒；命中是柔和的金色光爆。
     ///   所有效果都會自己清除（播完 Destroy）。粒子數量壓在每個效果約 150 顆以內，適合手機。
     /// </summary>
-    public static class SpellFx
+    public static partial class SpellFx
     {
         // ================================================================ 對外介面
         /// <summary>詠唱中的光效：跟著 anchor 走，progress 0..1（蓄力進度），完成時（progress>=1）要明顯更亮/脈動。回傳物件由呼叫者每幀更新、結束時 Stop。</summary>
@@ -1463,6 +1463,19 @@ namespace SpellDuel
             var lr = SpellFx.Line(holder, "Line", unitPts, loop, width, c, additive, true);
             lr.enabled = false;
             items.Add(new Item { lr = lr, t = holder, baseRot = holder.localRotation, c = c, w = width, delay = delay, life = life, s0 = s0, s1 = s1, spin = spinDeg });
+        }
+
+        /// <summary>平貼在本地 XY 平面的帶狀線（兩端尖），轉 rotZ 度，一邊放大 s0 → s1 一邊淡出：命中的斬痕、光柱、星芒。</summary>
+        public void AddSlash(Transform parent, Vector3[] pts, float width, Color c, float delay, float life, float s0, float s1, float rotZ)
+        {
+            var holder = new GameObject("Slash").transform;
+            holder.SetParent(parent, false);
+            holder.localRotation = Quaternion.Euler(0f, 0f, rotZ);
+            var lr = SpellFx.Line(holder, "Line", pts, false, width, c, true, true);
+            lr.widthCurve = SpellFx.ArcTaper;
+            lr.numCapVertices = 0;
+            lr.enabled = false;
+            items.Add(new Item { lr = lr, t = holder, baseRot = holder.localRotation, c = c, w = width, delay = delay, life = life, s0 = s0, s1 = s1 });
         }
 
         /// <summary>斬擊弧（面向鏡頭的帶狀線，兩端尖），一邊放大一邊繞本地 Y 掃過 sweepDeg。</summary>
