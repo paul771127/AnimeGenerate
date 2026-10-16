@@ -362,13 +362,17 @@ namespace SpellDuel
             var col = Story.TagColor(line.tag);
             var r = new Rect(pad, botY - pad - H * 0.3f, W - pad * 2, H * 0.3f);
             UiKit.Card(r, 0.93f, string.IsNullOrEmpty(line.speaker) ? (Color?)null : col, 0.9f);
-            float y = r.y + gap;
+            float y = r.y + gap, tx = r.x + gap * 1.5f;
             if (!string.IsNullOrEmpty(line.speaker))
             {
-                UiKit.Text(new Rect(r.x + gap * 1.5f, y, r.width - gap * 3, fs * 1.7f), line.speaker, fsL, col, TextAnchor.MiddleLeft, true);
-                y += fs * 1.8f;
+                // 說話者的頭像（左邊）＋名字（頭像下方）；台詞在右邊
+                float ps = Mathf.Min(r.height - fs * 2.6f - gap * 2f, r.width * 0.28f);
+                var pr = new Rect(r.x + gap * 1.5f, r.y + gap * 1.2f, ps, ps);
+                GUI.DrawTexture(pr, Portraits.Get(line.speaker, line.tag), ScaleMode.ScaleToFit, true);
+                UiKit.Text(new Rect(pr.x - gap, pr.yMax + gap * 0.3f, ps + gap * 2f, fs * 1.6f), line.speaker, Mathf.RoundToInt(fs * 0.95f), col, TextAnchor.MiddleCenter, true);
+                tx = pr.xMax + gap * 1.5f;
             }
-            UiKit.Text(new Rect(r.x + gap * 1.5f, y, r.width - gap * 3, r.yMax - y - fs * 1.6f), Story.Fill(line.text, myClass), fsL,
+            UiKit.Text(new Rect(tx, y, r.xMax - tx - gap * 1.5f, r.yMax - y - fs * 1.6f), Story.Fill(line.text, myClass), fsL,
                 string.IsNullOrEmpty(line.speaker) ? new Color(0.85f, 0.88f, 1f) : Color.white, TextAnchor.UpperLeft, false, 0.6f);
             UiKit.Text(new Rect(r.x, r.yMax - fs * 1.6f, r.width - gap * 1.5f, fs * 1.4f), $"{dlgIdx + 1}/{dlg.Count}　▶ 點一下繼續", Mathf.RoundToInt(fs * 0.75f), new Color(0.8f, 0.8f, 0.85f), TextAnchor.MiddleRight);
             if (UiKit.Button(new Rect(W - pad - W * 0.22f, topY + pad, W * 0.22f, fs * 1.8f), "跳過 ⏭", Mathf.RoundToInt(fs * 0.8f))) { EndDialogue(); return; }

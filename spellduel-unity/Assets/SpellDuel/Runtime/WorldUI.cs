@@ -210,12 +210,23 @@ namespace SpellDuel
                     if (npcTalk == i) npcLine = (npcLine + 1) % t.npcs[i].lines.Length; else { npcTalk = i; npcLine = 0; }
                     Sfx.Play("select", 0.5f);
                 }
-                UiKit.Text(nr, $"🧑 {t.npcs[i].name}\n{t.npcs[i].role}", fsS, Color.white, TextAnchor.MiddleCenter, true);
+                float ips = nh - gap;
+                GUI.DrawTexture(new Rect(nr.x + gap * 0.4f, nr.y + gap * 0.5f, ips, ips), Portraits.Get(t.npcs[i].name, "npc"), ScaleMode.ScaleToFit, true);
+                UiKit.Text(new Rect(nr.x + ips + gap * 0.5f, nr.y, nr.width - ips - gap * 0.7f, nr.height), $"{t.npcs[i].name}\n{t.npcs[i].role}", fsS, Color.white, TextAnchor.MiddleCenter, true);
             }
             y += nh + gap * 0.5f;
-            var talkR = new Rect(r.x + gap, y, r.width - gap * 2, fs * 3.2f);
+            var talkR = new Rect(r.x + gap, y, r.width - gap * 2, fs * 4.6f);
             UiKit.Card(talkR, 0.55f, npcTalk >= 0 ? t.color : (Color?)null, 0.7f);
-            UiKit.Text(new Rect(talkR.x + gap, talkR.y, talkR.width - gap * 2, talkR.height), npcTalk >= 0 ? $"{t.npcs[npcTalk].name}：「{t.npcs[npcTalk].lines[npcLine]}」" : "（點居民和他聊天，再點一次換下一句）", fsS, Color.white, TextAnchor.MiddleLeft);
+            if (npcTalk >= 0)
+            {
+                // 說話者的頭像＋名字（左邊），台詞（右邊）
+                float ps = talkR.height - fs * 1.5f - gap;
+                var pr = new Rect(talkR.x + gap, talkR.y + gap * 0.5f, ps, ps);
+                GUI.DrawTexture(pr, Portraits.Get(t.npcs[npcTalk].name, "npc"), ScaleMode.ScaleToFit, true);
+                UiKit.Text(new Rect(pr.x - gap * 0.5f, pr.yMax, ps + gap, fs * 1.4f), t.npcs[npcTalk].name, fsS, t.color, TextAnchor.MiddleCenter, true);
+                UiKit.Text(new Rect(pr.xMax + gap, talkR.y, talkR.xMax - pr.xMax - gap * 2, talkR.height), $"「{t.npcs[npcTalk].lines[npcLine]}」", fsS, Color.white, TextAnchor.MiddleLeft);
+            }
+            else UiKit.Text(new Rect(talkR.x + gap, talkR.y, talkR.width - gap * 2, talkR.height), "（點居民和他聊天，再點一次換下一句）", fsS, Color.white, TextAnchor.MiddleLeft);
             y += talkR.height + gap;
             // 設施
             UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.2f), "🏠 設施", fsS, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleLeft, true);
