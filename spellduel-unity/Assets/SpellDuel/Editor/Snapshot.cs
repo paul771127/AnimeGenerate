@@ -1,4 +1,6 @@
 using System.IO;
+using System.Collections.Generic;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -7,7 +9,7 @@ namespace SpellDuel.EditorTools
 {
     /// <summary>
     /// 雲端截圖（GameCI buildMethod：SpellDuel.EditorTools.Snapshot.Render）：
-    /// 把五個職業的角色（遠端連線時隊友／對手的虛擬角色）和召喚物各拍一張，存到 snapshots/ 給 CI 上傳。
+    /// Render five base classes, ten advanced classes, face/expression studies and pets.
     /// </summary>
     public static class Snapshot
     {
@@ -26,16 +28,28 @@ namespace SpellDuel.EditorTools
             var floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
             floor.transform.localScale = Vector3.one * 2f;
             floor.GetComponent<Renderer>().sharedMaterial = new Material(Shader.Find("Standard")) { color = new Color(0.55f, 0.6f, 0.5f) };
+            RenderSettings.ambientLight = new Color(0.55f, 0.58f, 0.66f);
+            var fronts = new List<string>();
 
             foreach (var cls in Skills.ClassOrder)
             {
                 var rig = CharacterRig.Create(cls);
                 rig.transform.position = Vector3.zero;
-                // 正面、斜側面
-                Shot(cam, rig.gameObject, cls + "_front", new Vector3(0f, 1.1f, 3.6f), new Vector3(0f, 0.95f, 0f));
-                Shot(cam, rig.gameObject, cls + "_side", new Vector3(2.6f, 1.3f, 2.5f), new Vector3(0f, 0.95f, 0f));
+                CharacterShots(cam, rig, cls);
+                fronts.Add(cls + "_front");
                 Object.DestroyImmediate(rig.gameObject);
             }
+            ContactSheet(fronts, "all_classes", 5);
+            fronts.Clear();
+            foreach (var cls in Skills.ClassOrder)
+                foreach (var adv in Advanced.Of(cls))
+                {
+                    var rig = CharacterRig.Create(cls, adv.id);
+                    CharacterShots(cam, rig, adv.id);
+                    fronts.Add(adv.id + "_front");
+                    Object.DestroyImmediate(rig.gameObject);
+                }
+            ContactSheet(fronts, "all_advanced", 5);
             // 召喚物
             string[] pets = { "falcon", "fire", "golem", "clone" };
             foreach (var k in pets)
@@ -50,15 +64,46 @@ namespace SpellDuel.EditorTools
                 }
                 catch (System.Exception e) { Debug.LogWarning($"[SpellDuel] pet {k} snapshot failed: {e.Message}"); }
             }
-            // 全職業合照
-            var row = new GameObject("Row");
-            for (int i = 0; i < Skills.ClassOrder.Length; i++)
-            {
-                var rig = CharacterRig.Create(Skills.ClassOrder[i], row.transform);
-                rig.transform.localPosition = new Vector3((i - 2) * 0.95f, 0f, 0f);
-            }
-            Shot(cam, row, "all_classes", new Vector3(0f, 1.4f, 7.5f), new Vector3(0f, 0.95f, 0f), 1600, 800);
             Debug.Log("[SpellDuel] snapshots saved to " + Path.GetFullPath("snapshots"));
+        }
+
+        static void CharacterShots(Camera cam, CharacterRig rig, string id)
+        {
+            int triangles = 0;
+            foreach (var mf in rig.GetComponentsInChildren<MeshFilter>(true))
+                if (mf.sharedMesh != null) triangles += mf.sharedMesh.triangles.Length / 3;
+            Debug.Log($"[SpellDuel] {id}: {triangles} triangles");
+            if (triangles > 10000) throw new System.InvalidOperationException(id + " exceeds the 10000 triangle budget");
+            Shot(cam, rig.gameObject, id + "_front", new Vector3(0f, 1.2f, 4.9f), new Vector3(0f, 1.08f, 0f));
+            Shot(cam, rig.gameObject, id + "_side", new Vector3(3.3f, 1.3f, 3.6f), new Vector3(0f, 1.08f, 0f));
+            Shot(cam, rig.gameObject, id + "_face", new Vector3(0.24f, 1.58f, 0.80f), new Vector3(0f, 1.56f, 0f), 640, 640);
+            // Edit mode has no Update; invoke only the rig's existing visual animation step.
+            var animate = typeof(CharacterRig).GetMethod("Animate", BindingFlags.Instance | BindingFlags.NonPublic);
+            rig.Charge = 0.9f;
+            for (int i = 0; i < 15; i++) animate.Invoke(rig, new object[] { 1f / 30f });
+            rig.PlayCast(); animate.Invoke(rig, new object[] { 0.10f });
+            Shot(cam, rig.gameObject, id + "_cast", new Vector3(2.6f, 1.35f, 4.15f), new Vector3(0f, 1.08f, 0f));
+            rig.Charge = 0f; rig.PlayHit(); animate.Invoke(rig, new object[] { 0.015f });
+            Shot(cam, rig.gameObject, id + "_hurt", new Vector3(0.23f, 1.58f, 0.80f), new Vector3(0f, 1.56f, 0f), 640, 640);
+        }
+
+        static void ContactSheet(List<string> images, string name, int columns)
+        {
+            const int tileW = 320, tileH = 450;
+            int rows = (images.Count + columns - 1) / columns;
+            var sheet = new Texture2D(columns * tileW, rows * tileH, TextureFormat.RGB24, false);
+            for (int i = 0; i < images.Count; i++)
+            {
+                var src = new Texture2D(2, 2);
+                src.LoadImage(File.ReadAllBytes(Path.Combine("snapshots", images[i] + ".png")));
+                var pixels = new Color32[tileW * tileH];
+                for (int y = 0; y < tileH; y++)
+                    for (int x = 0; x < tileW; x++) pixels[y * tileW + x] = src.GetPixelBilinear((x + 0.5f) / tileW, (y + 0.5f) / tileH);
+                sheet.SetPixels32((i % columns) * tileW, (rows - 1 - i / columns) * tileH, tileW, tileH, pixels);
+                Object.DestroyImmediate(src);
+            }
+            sheet.Apply(); File.WriteAllBytes(Path.Combine("snapshots", name + ".png"), sheet.EncodeToPNG());
+            Object.DestroyImmediate(sheet);
         }
 
         static void Shot(Camera cam, GameObject subject, string name, Vector3 camPos, Vector3 look, int w = W, int h = H)
