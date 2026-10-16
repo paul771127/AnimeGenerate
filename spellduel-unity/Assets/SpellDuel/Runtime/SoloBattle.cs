@@ -306,9 +306,9 @@ namespace SpellDuel
         void StartTrial()
         {
             var st = new StoryStage { id = "trial", title = "⚔ 轉職試煉", theme = 1, fromWave = Advanced.TrialFirstWave - 10, toWave = Advanced.TrialLastWave - 10, xp = 400, desc = WorldUI.TrialText };
-            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "三口鐘各有聲音，人也各有道路。這場試煉在迷霧森林進行，敵人更強，不能用藥水。" });
-            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "撐過四波、打倒最後的樹王。想清楚你的力量要為誰而用，再帶著答案回來。" });
-            st.after.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "你守住了自己的聲音。回工會選一條進階之路吧；選定便不能更換，這次由你作答。" });
+            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "新的道路先從這場試煉開始。地點在迷霧森林，敵人更強，不能使用藥水。" });
+            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "撐過四波，打倒最後的樹王。考的不是逞強，是危急時，你願意替誰留一條退路。" });
+            st.after.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "我看見你的答案了。回工會選擇進階職業吧；選定便不能更換，往後要守護誰，由你決定。" });
             storyMapOpen = false; storyStage = st;
             ShowDialogue(st.before, StartStageBattle);
         }
