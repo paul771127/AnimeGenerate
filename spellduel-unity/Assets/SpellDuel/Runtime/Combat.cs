@@ -1372,6 +1372,15 @@ namespace SpellDuel
                         hand = new Vector3(f.head.x, s.originHeight, f.head.z) + Fighter.Flat(f.forward) * (f.bodyRadius + 0.3f);
                         aimDir = Fighter.Flat(aimDir); if (aimDir == Vector3.zero) aimDir = Fighter.Flat(f.forward);
                     }
+                    if (s.id == "ice")
+                    {
+                        // 冰槍：隨機從左或右、隨機大小的弧線飛向目標
+                        float dist = Mathf.Max(1f, locked ? FlatDistance(f.head, Opponent(f).head) : s.rangeMax * 0.6f);
+                        float amp = dist * (0.12f + 0.2f * (float)rng.NextDouble()) * (rng.Next(2) == 0 ? -1f : 1f);
+                        Spawn(f, s, hand, aimDir, s.damage, s.effect, s.effectDps, s.effectDur, false, amp, dist);
+                        Emit("cast", hand, s.color, null);
+                        break;
+                    }
                     if (s.id == "wind")
                     {
                         // 風刃：隨機從左或右側繞弧線飛向目標（終點仍是準星方向、敵人的距離）

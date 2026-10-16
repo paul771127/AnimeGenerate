@@ -107,6 +107,19 @@ namespace SpellDuel
         public const float ArrowSpeedScale = 0.5f;
         /// <summary>所有飛行法術／技能的最高飛行速度（m/s）：上面的倍率算完後超過的一律壓到這個值</summary>
         public const float MaxProjectileSpeed = 3f;
+        /// <summary>玩家職業飛行技能的最終速度（m/s）：獵人的箭全部 3（最快），其他職業的法術較慢</summary>
+        public static readonly Dictionary<string, float> ClassSpeeds = new Dictionary<string, float>
+        {
+            // 獵人：所有箭 3 m/s
+            ["na_arrow"] = 3f, ["quickshot"] = 3f, ["snipe"] = 3f, ["triple"] = 3f, ["pierce"] = 3f, ["rollarrow"] = 3f, ["arrowrain"] = 3f, ["pet_falcon"] = 3f,
+            // 法師：奧術飛彈、火球 1.4；風刃 2.2；冰槍 1.8；雷擊 2.2；隕石落下 2.0
+            ["na_mage"] = 1.4f, ["fire"] = 1.4f, ["wind"] = 2.2f, ["ice"] = 1.8f, ["thunder"] = 2.2f, ["meteor"] = 2.0f,
+            ["tjudge"] = 2.2f, ["frostfield"] = 1.4f, ["pet_fire"] = 1.4f,
+            // 牧師：約 1.4
+            ["na_holy"] = 1.4f, ["holy"] = 1.4f, ["judgement"] = 1.4f, ["chastise"] = 1.4f, ["heavenpunish"] = 1.4f, ["holylance"] = 1.6f,
+            // 劍士、刺客的飛行技能
+            ["wave"] = 2.0f, ["thrust"] = 2.5f, ["knife"] = 2.5f, ["smoke"] = 2.0f, ["fireseal"] = 2.0f,
+        };
 
         static Skills()
         {
@@ -120,7 +133,7 @@ namespace SpellDuel
 
             // ---------------------------------------------------------- 法師：攻擊力最強、蓄力最長；近距離只有風刃
             P(new SkillDef { id = "fire", cls = "mage", name = "火球術", type = SkillType.Projectile, color = C("#ff7a1a"), cost = 40, damage = 32, charge = 1.5f, cooldown = 1.2f, speed = 4f, radius = 0.15f, rangeMin = 2f, rangeMax = 6f, desc = "中速火球；2m 內打不到" });
-            P(new SkillDef { id = "ice", cls = "mage", name = "冰槍", type = SkillType.Projectile, color = C("#5fd7ff"), cost = 50, damage = 36, charge = 1.4f, cooldown = 1.5f, speed = 6f, radius = 0.09f, rangeMin = 2f, rangeMax = 7f, desc = "快速穿刺，判定較窄；2m 內打不到" });
+            P(new SkillDef { id = "ice", cls = "mage", name = "冰槍", type = SkillType.Projectile, color = C("#5fd7ff"), cost = 50, damage = 36, charge = 1.4f, cooldown = 1.5f, speed = 6f, radius = 0.09f, rangeMin = 2f, rangeMax = 7f, desc = "穿刺，判定較窄；隨機從左或右繞一道弧線飛向目標；2m 內打不到" });
             P(new SkillDef { id = "thunder", cls = "mage", name = "雷擊", type = SkillType.Projectile, color = C("#c08bff"), cost = 70, damage = 48, charge = 2.2f, cooldown = 2.5f, speed = 14f, radius = 0.07f, rangeMin = 3f, rangeMax = 10f, desc = "幾乎瞬發，判定極窄；3m 內打不到" });
             P(new SkillDef { crescent = true, id = "wind", cls = "mage", name = "風刃", type = SkillType.Projectile, color = C("#7dffb0"), cost = 24, damage = 22, charge = 1.0f, cooldown = 0.8f, speed = 5f, radius = 0.25f, rangeMax = 2.5f, desc = "近距離；新月形風刃隨機從左或右外側大迴旋橫掃過來，碰到風刃本身才會受傷" });
             P(new SkillDef { fromAbove = true, id = "meteor", cls = "mage", name = "隕石", type = SkillType.Projectile, color = C("#ff3b3b"), cost = 100, damage = 72, charge = 3.0f, cooldown = 4f, speed = 7f, radius = 0.3f, rangeMin = 3f, rangeMax = 8f, desc = "從敵人正上方砸下（可閃），落地留下直徑 3m 燃燒 10 秒的火海；3m 內打不到" });
@@ -213,7 +226,7 @@ namespace SpellDuel
             Classes["minion"] = new ClassDef { id = "minion", name = "熔岩小鬼", color = C("#ff8c42"), maxHp = 40, maxMp = 0, mpRegen = 0, skills = new string[0], defaultLoadout = new string[0], desc = "Boss 召喚的小怪" };
 
             Classes["priest"] = new ClassDef { id = "priest", name = "牧師", color = C("#fde68a"), maxHp = 105, maxMp = 130, mpRegen = 4, skills = new[] { "holy", "judgement", "prayheal", "cleanse", "guard", "prayer" }, defaultLoadout = new[] { "holy", "prayheal", "guard" }, desc = "回復、淨化、守護、減冷卻；聖光攻擊較弱" };
-            Classes["swordsman"] = new ClassDef { id = "swordsman", name = "劍士", color = C("#60a5fa"), maxHp = 130, maxMp = 90, mpRegen = 3, skills = new[] { "slash", "thrust", "wave", "block", "ironwall", "counter", "taunt" }, defaultLoadout = new[] { "slash", "wave", "block" }, desc = "近遠攻擊都有，多種防禦" };
+            Classes["swordsman"] = new ClassDef { id = "swordsman", name = "劍士", color = C("#60a5fa"), maxHp = 160, maxMp = 90, mpRegen = 3, skills = new[] { "slash", "thrust", "wave", "block", "ironwall", "counter", "taunt" }, defaultLoadout = new[] { "slash", "wave", "block" }, desc = "近遠攻擊都有，多種防禦" };
 
             // ---------------------------------------------------------- 普通攻擊（不耗 MP、不用唸；手勢舉著就自動攻擊，見 BasicOf）
             P(new SkillDef { id = "na_mage", cls = "basic", name = "奧術飛彈", type = SkillType.Projectile, color = C("#a78bfa"), cost = 0, damage = 8, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.15f, rangeMax = 12f, desc = "法師普攻：比 1，每 2 秒一發（飛得慢）" });
@@ -284,6 +297,8 @@ namespace SpellDuel
             // 所有飛行中的法術／技能（玩家、敵人、Boss、召喚物）最快 3 m/s；近身揮砍與小怪的衝刺移動不算
             foreach (var sk in All.Values)
                 if (Flies(sk) || sk.id == "wind") sk.speed = Mathf.Min(sk.speed, MaxProjectileSpeed);   // 風刃射程短但也是飛出去的
+            // 職業特色：箭最快（3 m/s，獵人的優勢＝射程遠、飛得快）；其他職業的法術慢很多（約 1.4～2.5 m/s）
+            foreach (var kv in ClassSpeeds) if (All.TryGetValue(kv.Key, out var cs)) cs.speed = kv.Value;
         }
     }
 }
