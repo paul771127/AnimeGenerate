@@ -30,7 +30,7 @@ namespace SpellDuel
             int cur = CharacterProfile.XpForLevel(p.level), next = CharacterProfile.XpForLevel(p.level + 1);
             var adv = p.Adv;
             UiKit.Text(new Rect(x, y, w, lh), $"{(adv != null ? $"{adv.name}（{cd.name}）" : cd.name)}　Lv {p.level}", fsL, Color.white, TextAnchor.MiddleLeft, true);
-            UiKit.Text(new Rect(x, y, w, lh), $"能力點 {p.statPoints}　技能點 {p.skillPoints}　職業樹 {p.BaseSpent}/{p.BaseCapNow}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
+            UiKit.Text(new Rect(x, y, w, lh), $"能力點 {p.statPoints}　技能點 {p.skillPoints}　職業樹 {p.BaseSpent}{(p.adv == null ? "/" + CharacterProfile.BaseTreeCap : "")}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
             y += lh;
             UiKit.Bar(new Rect(x, y, w, lh * 0.5f), p.level >= CharacterProfile.MaxLevel ? 1f : (p.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f),
                 p.level >= CharacterProfile.MaxLevel ? "最高等級" : p.LevelLocked ? $"經驗已滿：到職業工會轉職才能升到 {p.level + 1} 級" : $"經驗 {p.xp - cur} / {next - cur}", fsS);
@@ -143,9 +143,10 @@ namespace SpellDuel
             var nodes = SkillTrees.Of(treeId);
             if (nodes.Count > 0 && nodes[0].free)
             {
-                var tc = Skills.Classes.TryGetValue(treeId, out var tcd) ? tcd.color : Color.white;
+                var advG = Advanced.Get(treeId);
+                var tc = advG != null ? advG.color : Skills.Classes.TryGetValue(treeId, out var tcd) ? tcd.color : Color.white;
                 DrawGraph(new Rect(b.x, b.y, b.width, b.height * 0.62f), p, fs, fsS, gap, treeId, nodes, tc);
-                return DrawNodeDetail(b, p, fs, fsS, gap, treeId, null);
+                return DrawNodeDetail(b, p, fs, fsS, gap, treeId, advG);
             }
             var advT = Advanced.Get(treeId);
             int rows = 0; foreach (var n in nodes) rows = Mathf.Max(rows, n.row + 1);
@@ -180,7 +181,7 @@ namespace SpellDuel
             if (sel == null)
             {
                 string help = advT != null
-                    ? $"✨ {advT.name}的進階技能樹（和基本技能樹共用技能點）。轉職時已學會「{(Skills.All.TryGetValue(advT.skills[0], out var s0) ? s0.name : advT.skills[0])}」；中間那一欄可以習得另外兩個進階技能。\n選技能時多一格「進階技能」。核心機制：{advT.core}"
+                    ? $"✨ {advT.name}的進階技能樹（和基本技能樹共用技能點）。轉職時已學會「{(Skills.All.TryGetValue(advT.skills[0], out var s0) ? s0.name : advT.skills[0])}」；📘 可以習得另外兩個進階技能。\n三個流派：{string.Join("、", SkillTrees.Schools(advT.id) ?? new string[0])}，有些節點會強化基本職業的流派（例如反擊之刃、連斬、過載、聖印）。核心機制：{advT.core}"
                     : $"點一個節點看說明。樹從最上面往下長：父節點點過 1 級，下面接著的節點才能點。每棵樹 40 點，轉職前最多點 20 點，要選好流派。\n三個流派：{string.Join("、", SkillTrees.Schools(p.cls) ?? new string[0])}。一開始只會 3 個基本技能：{string.Join("、", NamesOf(SkillTrees.Starters(p.cls)))}；📘＝習得新技能。";
                 UiKit.Text(new Rect(dr.x + gap, dr.y + gap, dr.width - gap * 2, dr.height - gap * 2), help, fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
                 return changed;

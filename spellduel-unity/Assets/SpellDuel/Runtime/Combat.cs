@@ -39,6 +39,7 @@ namespace SpellDuel
         public float comboStrike, basicLeech, waveFlow, riposte;                  // 劍士：連斬、飲血、劍意、反擊之刃
         public float venom, assassinate, vanish, knifeCdr;                        // 刺客：劇毒連刺、刺殺、遁影、飛刀節奏
         public float holySeal, martyr, zeal;                                      // 牧師：聖印、殉道、狂信
+        public float bashGuard, sanctionCombo, critDmg, falconMark, petMp;        // 進階職業：盾擊格擋、制裁連斬、爆擊傷害、鷹眼標記、契約魔力
         public int basicHits, venomStacks, seals;                                 // 連斬計數、身上的毒層、聖印層數
         public float waveFreeUntil, riposteUntil, vanishUntil, venomUntil;
         // ---- 進階職業
@@ -1626,14 +1627,14 @@ namespace SpellDuel
                 p.damage = Mathf.RoundToInt(dmg * owner.atkMul * outMul);
                 float crit = owner.critChance + 0.1f * eagle;   // 神射手鷹眼：每層爆擊率 +10%
                 bool forced = steady || (!reflected && owner.markNextUntil > now && s.cls == "archer" && s.type == SkillType.Projectile);   // 致命標記、獵殺時刻、穩定瞄準
-                if (forced || (crit > 0f && rng.NextDouble() < crit)) { p.crit = true; p.damage *= 2; }
+                if (forced || (crit > 0f && rng.NextDouble() < crit)) { p.crit = true; p.damage = Mathf.RoundToInt(p.damage * (2f + owner.critDmg)); }
                 if (forced && !steady) owner.markNextUntil = 0f;
                 // 審判者：信仰滿了，這一招傷害 ×2
                 if (!reflected && owner.adv == "inquisitor" && owner.faith >= FaithMax && p.damage > 0 && s.cls == "priest")
                 { p.damage *= 2; owner.faith = 0; Emit("buff", owner.Chest, new Color(1f, 0.8f, 0.3f), "信仰爆發！傷害 ×2"); }
                 p.rangeMul = owner.rangeMul * (1f + 0.2f * eagle);   // 鷹眼：每層射程 +20%
             }
-            if (!reflected && p.damage > 0)
+            if (!reflected && p.damage > 0 && s.cls != "pet")
             {
                 p.damage = Riposte(owner, p.damage);
                 // 牧師「聖印」：普攻累積的聖印滿了，下一個攻擊技能傷害 ×2
@@ -2123,7 +2124,12 @@ namespace SpellDuel
                         acc -= 1f;
                         if (remoteEnemy && victim == enemy) { EmitHit(z.skill, victim.Chest); OnRemoteBurn?.Invoke(z.skill, z.dps, victim.Feet); }
                         else if (remoteEnemy && victim.isMinion) { EmitHit(z.skill, victim.Chest); OnMinionHit?.Invoke(victim.minionId, Mathf.RoundToInt(z.dps), z.skill); }
-                        else { if (victim == enemy) AddThreat(z.owner, z.dps); Damage(victim, z.dps, "burn", victim.isMinion ? victim.Chest : (Vector3?)null); }
+                        else
+                        {
+                            if (victim == enemy) AddThreat(z.owner, z.dps);
+                            Damage(victim, z.dps, "burn", victim.isMinion ? victim.Chest : (Vector3?)null);
+                            if (z.skill.id == "poisonfog" && z.owner != null && z.owner.venom > 0f) PostHit(z.owner, victim, Skills.All["fogtick"], z.dps);   // 影舞者「毒霧疊毒」
+                        }
                     }
                     z.accs[victim] = acc;
                 }
@@ -2248,7 +2254,7 @@ namespace SpellDuel
             // 法師「寒冰」：冰槍命中有機率冰凍
             if (s.id == "ice" && o.iceFreeze > 0f && t != null && !(remoteEnemy && t == enemy) && rng.NextDouble() < o.iceFreeze) ApplyProcs(t, 4, t.Chest);
             // 刺客「劇毒連刺」：普攻疊毒，滿 5 層毒爆
-            if (t != null && o.venom > 0f && (s.id == "na_dagger" || s.id == "poison"))
+            if (t != null && o.venom > 0f && (s.id == "na_dagger" || s.id == "poison" || s.id == "fogtick"))
             {
                 if (t.venomUntil < now) t.venomStacks = 0;
                 t.venomStacks += s.id == "poison" ? 2 : 1; t.venomUntil = now + 6f;
@@ -2261,6 +2267,14 @@ namespace SpellDuel
                 }
                 else Emit("effect", t.Chest, new Color(0.4f, 1f, 0.4f), $"毒 {t.venomStacks}/{VenomMax}");
             }
+            // 聖騎士「盾擊格擋」：聖盾衝鋒命中後自動格擋一下
+            if (s.id == "shieldbash" && o.bashGuard > 0f) { o.blockUntil = Mathf.Max(o.blockUntil, now + o.bashGuard); o.blockReduce = Mathf.Max(o.blockReduce, 0.4f); }
+            // 聖騎士「制裁連斬」：神聖制裁命中後，下一下普攻是重擊
+            if (s.id == "sanction" && o.sanctionCombo > 0f && o.basicHits % 3 != 2) { o.basicHits = 2; Emit("buff", o.Chest, s.color, "制裁連斬：下一下普攻是重擊"); }
+            // 遊俠「鷹眼標記」：獵鷹攻擊時機率標記，下一個弓箭技能必定爆擊
+            if (s.id == "pet_falcon" && o.falconMark > 0f && o.markNextUntil <= now && rng.NextDouble() < o.falconMark) { o.markNextUntil = now + 4f; Emit("buff", o.Chest, s.color, "鷹眼標記：下一箭必定爆擊"); }
+            // 召喚師「契約魔力」：召喚物命中回 MP
+            if (s.cls == "pet" && s.id != "fogtick" && o.petMp > 0f) o.mp = Mathf.Min(o.maxMp, o.mp + o.petMp);
             // 牧師「聖印」：普攻累積聖印
             if (s.id == "na_holy" && o.holySeal > 0f && o.seals < SealNeed(o) && ++o.seals == SealNeed(o)) Emit("buff", o.Chest, new Color(1f, 0.9f, 0.5f), "聖印已滿！下一個攻擊技能傷害 ×2");
             // 刺客「飛刀節奏」：飛刀命中，其他技能冷卻縮短

@@ -69,6 +69,8 @@ namespace SpellDuel
         ComboStrike, BasicLeech, WaveFlow, Riposte,                    // 劍士
         Venom, Assassinate, Vanish, KnifeCdr,                          // 刺客
         HolySeal, Homing, Martyr, Zeal,                                // 牧師
+        // 進階職業（技能樹 v3）
+        BashGuard, SanctionCombo, CritDmg, FalconMark, PetMp,
     }
 
     public class TreeNode
@@ -97,6 +99,16 @@ namespace SpellDuel
             "swordsman" => new[] { "⚔ 連斬（普攻）", "🌙 劍氣", "🛡 鐵壁反擊" },
             "assassin" => new[] { "🧪 劇毒連刺（普攻）", "🗡 刺殺", "🔪 飛刀" },
             "priest" => new[] { "✨ 聖印（普攻）", "💚 治療守護", "🩸 殉道" },
+            "paladin" => new[] { "🛡 聖盾", "🤝 守護", "⚖ 制裁" },
+            "berserker" => new[] { "🌪 旋風", "🩸 狂暴", "💀 不死" },
+            "marksman" => new[] { "🎯 貫穿", "☠ 標記", "🌧 箭雨" },
+            "ranger" => new[] { "🦅 獵鷹", "🤸 翻滾", "🪤 連環陷阱" },
+            "archmage" => new[] { "⚡ 雷霆", "❄ 冰封", "🔷 魔力護盾" },
+            "summoner" => new[] { "🔥 火靈", "🗿 石像", "💥 爆裂" },
+            "ninja" => new[] { "🍃 替身", "👥 分身", "🔥 火遁" },
+            "shadowdancer" => new[] { "🗡 處決", "💃 影舞", "☁ 毒霧" },
+            "bishop" => new[] { "🕊 復活", "💚 群療", "⛪ 庇護" },
+            "inquisitor" => new[] { "🔱 聖槍", "⛓ 懲戒", "☀ 天罰" },
             _ => null,
         };
 
@@ -166,251 +178,296 @@ namespace SpellDuel
             // 三欄：左＝攻擊、中＝新技能、右＝能力／特殊能力；越下面越後期
             switch (cls)
             {
-                // ======================================================== 基本職業：樹狀技能樹（v2，每棵 40 點，三個流派）
-                // 格子：x 0～6（左＝普攻流派、中、右），y 由上往下；p＝父節點（點過 1 級才能點）
+                // ======================================================== 樹狀技能樹（v3）：可升級的節點最高 5 級
+                // 格子：x 0～6（左／中／右三個流派），y 由上往下；最後一個參數＝父節點（點過 1 級才能點）
                 case "mage": return new List<TreeNode>
                 {
-                    FStat("mg_root", "魔力親和", Stat.Int, 3, 3, 0, null),
+                    FStat("mg_root", "魔力親和", Stat.Int, 5, 3, 0, null),
                     // 奧術連射（普攻）
-                    FMod("mg_bspd", "奧術速射", "na_mage", ModField.Cooldown, 0.1f, 3, 1, 1, "mg_root"),
-                    FMod("mg_bdmg", "奧術強化", "na_mage", ModField.Damage, 0.3f, 2, 0, 2, "mg_bspd"),
-                    FPas("mg_echo", "奧術回響", PassiveKind.SpellEcho, 0.15f, 3, 2, 2, "mg_bspd"),
-                    FPas("mg_flow", "奧術迴路", PassiveKind.BasicMp, 2f, 3, 2, 3, "mg_echo"),
-                    FPas("mg_fast", "快速詠唱", PassiveKind.FastCast, 0.1f, 1, 2, 4, "mg_flow"),
+                    FMod("mg_bspd", "奧術速射", "na_mage", ModField.Cooldown, 0.08f, 5, 1, 1, "mg_root"),
+                    FMod("mg_bdmg", "奧術強化", "na_mage", ModField.Damage, 0.15f, 5, 0, 2, "mg_bspd"),
+                    FPas("mg_echo", "奧術回響", PassiveKind.SpellEcho, 0.1f, 5, 2, 2, "mg_bspd"),
+                    FPas("mg_flow", "奧術迴路", PassiveKind.BasicMp, 1.5f, 5, 2, 3, "mg_echo"),
+                    FPas("mg_fast", "快速詠唱", PassiveKind.FastCast, 0.06f, 5, 2, 4, "mg_flow"),
                     // 過載爆發
-                    FMod("mg_fire", "火球強化", "fire", ModField.Damage, 0.12f, 3, 3, 1, "mg_root"),
-                    FPas("mg_over", "過載", PassiveKind.Overload, 1f, 3, 3, 2, "mg_fire"),
-                    FPas("mg_low", "孤注一擲", PassiveKind.LowMp, 0.2f, 2, 3, 3, "mg_over"),
+                    FMod("mg_fire", "火球強化", "fire", ModField.Damage, 0.1f, 5, 3, 1, "mg_root"),
+                    FPas("mg_over", "過載", PassiveKind.Overload, 0.8f, 5, 3, 2, "mg_fire"),
+                    FPas("mg_low", "孤注一擲", PassiveKind.LowMp, 0.1f, 5, 3, 3, "mg_over"),
                     FLearn("mg_med", "meditate", 3, 4, "mg_low"),
                     FLearn("mg_meteor", "meteor", 4, 3, "mg_over"),
-                    FMod("mg_meteor2", "隕石強化", "meteor", ModField.Damage, 0.15f, 3, 4, 4, "mg_meteor"),
+                    FMod("mg_meteor2", "隕石強化", "meteor", ModField.Damage, 0.12f, 5, 4, 4, "mg_meteor"),
                     // 元素反應
-                    FMod("mg_ice", "冰槍強化", "ice", ModField.Damage, 0.2f, 2, 5, 1, "mg_root"),
-                    FPas("mg_frost", "寒冰", PassiveKind.IceFreeze, 0.25f, 3, 5, 2, "mg_ice"),
-                    FPas("mg_melt", "融化", PassiveKind.Melt, 0.75f, 2, 5, 3, "mg_frost"),
-                    FPas("mg_burn", "元素灼燒", PassiveKind.Burn, 0.06f, 2, 5, 4, "mg_melt"),
-                    FMod("mg_wind", "風刃強化", "wind", ModField.Damage, 0.12f, 2, 6, 2, "mg_ice"),
+                    FMod("mg_ice", "冰槍強化", "ice", ModField.Damage, 0.14f, 5, 5, 1, "mg_root"),
+                    FPas("mg_frost", "寒冰", PassiveKind.IceFreeze, 0.15f, 5, 5, 2, "mg_ice"),
+                    FPas("mg_melt", "融化", PassiveKind.Melt, 0.4f, 5, 5, 3, "mg_frost"),
+                    FPas("mg_burn", "元素灼燒", PassiveKind.Burn, 0.05f, 5, 5, 4, "mg_melt"),
+                    FMod("mg_wind", "風刃強化", "wind", ModField.Damage, 0.1f, 5, 6, 2, "mg_ice"),
                     FLearn("mg_dispel", "dispel", 6, 3, "mg_wind"),
                 };
                 case "archer": return new List<TreeNode>
                 {
-                    FStat("ar_root", "鷹眼", Stat.Agi, 3, 3, 0, null),
+                    FStat("ar_root", "鷹眼", Stat.Agi, 5, 3, 0, null),
                     // 速射（普攻）
-                    FMod("ar_bspd", "連弓", "na_arrow", ModField.Cooldown, 0.12f, 3, 1, 1, "ar_root"),
-                    FMod("ar_bmulti", "分裂箭", "na_arrow", ModField.Multi, 1f, 1, 0, 2, "ar_bspd"),
-                    FMod("ar_bdmg", "精製箭頭", "na_arrow", ModField.Damage, 0.15f, 3, 0, 3, "ar_bmulti"),
+                    FMod("ar_bspd", "連弓", "na_arrow", ModField.Cooldown, 0.08f, 5, 1, 1, "ar_root"),
+                    FMod("ar_bmulti", "分裂箭", "na_arrow", ModField.Multi, 1f, 2, 0, 2, "ar_bspd"),
+                    FMod("ar_bdmg", "精製箭頭", "na_arrow", ModField.Damage, 0.12f, 5, 0, 3, "ar_bmulti"),
                     FMod("ar_bpierce", "穿透箭", "na_arrow", ModField.Pierce, 1f, 1, 1, 2, "ar_bspd"),
-                    FMod("ar_quick", "速射強化", "quickshot", ModField.Damage, 0.12f, 3, 2, 2, "ar_bspd"),
+                    FMod("ar_quick", "速射強化", "quickshot", ModField.Damage, 0.1f, 5, 2, 2, "ar_bspd"),
                     FMod("ar_triple", "多重箭", "triple", ModField.Multi, 1f, 2, 2, 3, "ar_quick"),
                     // 狙擊
                     FLearn("ar_snipe", "snipe", 3, 1, "ar_root"),
-                    FMod("ar_snipe2", "狙擊強化", "snipe", ModField.Damage, 0.15f, 3, 3, 2, "ar_snipe"),
-                    FPas("ar_steady", "穩定瞄準", PassiveKind.SteadyAim, 0.5f, 3, 3, 3, "ar_snipe2"),
-                    FPas("ar_long", "遠射", PassiveKind.LongShot, 0.12f, 3, 4, 3, "ar_snipe2"),
+                    FMod("ar_snipe2", "狙擊強化", "snipe", ModField.Damage, 0.12f, 5, 3, 2, "ar_snipe"),
+                    FPas("ar_steady", "穩定瞄準", PassiveKind.SteadyAim, 0.4f, 5, 3, 3, "ar_snipe2"),
+                    FPas("ar_long", "遠射", PassiveKind.LongShot, 0.1f, 5, 4, 3, "ar_snipe2"),
                     FPas("ar_over", "蓄力強化", PassiveKind.Overcharge, 1f, 1, 4, 4, "ar_long"),
-                    FPas("ar_crit", "銳利箭頭", PassiveKind.Crit, 0.03f, 3, 4, 5, "ar_over"),
+                    FPas("ar_crit", "銳利箭頭", PassiveKind.Crit, 0.03f, 5, 4, 5, "ar_over"),
                     // 陷阱
-                    FMod("ar_snare", "捕獸夾強化", "snaretrap", ModField.EffectDur, 0.5f, 2, 5, 1, "ar_root"),
+                    FMod("ar_snare", "捕獸夾強化", "snaretrap", ModField.EffectDur, 0.4f, 5, 5, 1, "ar_root"),
                     FLearn("ar_blast", "blasttrap", 5, 2, "ar_snare"),
-                    FMod("ar_blast2", "陷阱大師", "blasttrap", ModField.Damage, 0.15f, 2, 5, 3, "ar_blast"),
-                    FPas("ar_hunt", "獵殺時刻", PassiveKind.TrapCrit, 2f, 2, 6, 2, "ar_snare"),
+                    FMod("ar_blast2", "陷阱大師", "blasttrap", ModField.Damage, 0.12f, 5, 5, 3, "ar_blast"),
+                    FPas("ar_hunt", "獵殺時刻", PassiveKind.TrapCrit, 1f, 5, 6, 2, "ar_snare"),
                     FLearn("ar_focus", "focus", 6, 3, "ar_hunt"),
-                    FPas("ar_dodge", "獵人直覺", PassiveKind.Dodge, 0.1f, 2, 6, 4, "ar_focus"),
+                    FPas("ar_dodge", "獵人直覺", PassiveKind.Dodge, 0.1f, 5, 6, 4, "ar_focus"),
                 };
                 case "swordsman": return new List<TreeNode>
                 {
-                    FStat("sw_root", "力量訓練", Stat.Str, 2, 3, 0, null),
+                    FStat("sw_root", "力量訓練", Stat.Str, 5, 3, 0, null),
                     // 連斬（普攻）
-                    FMod("sw_bspd", "疾風劍", "na_sword", ModField.Cooldown, 0.1f, 2, 1, 1, "sw_root"),
-                    FPas("sw_combo", "連斬", PassiveKind.ComboStrike, 0.4f, 3, 0, 2, "sw_bspd"),
-                    FMod("sw_bdmg", "劍術精通", "na_sword", ModField.Damage, 0.15f, 3, 0, 3, "sw_combo"),
-                    FPas("sw_leech", "飲血", PassiveKind.BasicLeech, 0.1f, 3, 1, 2, "sw_bspd"),
-                    FPas("sw_regen", "自然回復", PassiveKind.NaturalRegen, 0.01f, 2, 1, 3, "sw_leech"),
+                    FMod("sw_bspd", "疾風劍", "na_sword", ModField.Cooldown, 0.08f, 5, 1, 1, "sw_root"),
+                    FPas("sw_combo", "連斬", PassiveKind.ComboStrike, 0.25f, 5, 0, 2, "sw_bspd"),
+                    FMod("sw_bdmg", "劍術精通", "na_sword", ModField.Damage, 0.1f, 5, 0, 3, "sw_combo"),
+                    FPas("sw_leech", "飲血", PassiveKind.BasicLeech, 0.06f, 5, 1, 2, "sw_bspd"),
+                    FPas("sw_regen", "自然回復", PassiveKind.NaturalRegen, 0.008f, 5, 1, 3, "sw_leech"),
                     // 劍氣
-                    FMod("sw_slash", "斬擊強化", "slash", ModField.Damage, 0.12f, 2, 3, 1, "sw_root"),
+                    FMod("sw_slash", "斬擊強化", "slash", ModField.Damage, 0.1f, 5, 3, 1, "sw_root"),
                     FLearn("sw_wave", "wave", 3, 2, "sw_slash"),
                     FMod("sw_wave2", "劍氣分裂", "wave", ModField.Multi, 1f, 2, 2, 3, "sw_wave"),
                     FMod("sw_wavep", "劍氣穿透", "wave", ModField.Pierce, 1f, 1, 3, 3, "sw_wave"),
-                    FPas("sw_flow", "劍意", PassiveKind.WaveFlow, 1f, 2, 4, 3, "sw_wave"),
-                    FMod("sw_thrust", "突刺強化", "thrust", ModField.Damage, 0.12f, 2, 4, 4, "sw_flow"),
+                    FPas("sw_flow", "劍意", PassiveKind.WaveFlow, 0.6f, 5, 4, 3, "sw_wave"),
+                    FMod("sw_thrust", "突刺強化", "thrust", ModField.Damage, 0.1f, 5, 4, 4, "sw_flow"),
                     // 鐵壁反擊
-                    FMod("sw_block", "格擋精通", "block", ModField.BuffReduce, 0.05f, 3, 5, 1, "sw_root"),
-                    FPas("sw_rip", "反擊之刃", PassiveKind.Riposte, 0.4f, 3, 5, 2, "sw_block"),
+                    FMod("sw_block", "格擋精通", "block", ModField.BuffReduce, 0.04f, 5, 5, 1, "sw_root"),
+                    FPas("sw_rip", "反擊之刃", PassiveKind.Riposte, 0.3f, 5, 5, 2, "sw_block"),
                     FLearn("sw_counter", "counter", 5, 3, "sw_rip"),
                     FLearn("sw_iron", "ironwall", 6, 2, "sw_block"),
-                    FMod("sw_iron2", "鐵壁強化", "ironwall", ModField.BuffAmount, 15f, 2, 6, 3, "sw_iron"),
-                    FStat("sw_vit", "體魄訓練", Stat.Vit, 3, 6, 4, "sw_iron2"),
-                    FPas("sw_last", "不屈", PassiveKind.LastStand, 0.2f, 1, 6, 5, "sw_vit"),
+                    FMod("sw_iron2", "鐵壁強化", "ironwall", ModField.BuffAmount, 10f, 5, 6, 3, "sw_iron"),
+                    FStat("sw_vit", "體魄訓練", Stat.Vit, 5, 6, 4, "sw_iron2"),
+                    FPas("sw_last", "不屈", PassiveKind.LastStand, 0.06f, 5, 6, 5, "sw_vit"),
                     FLearn("sw_taunt", "taunt", 6, 6, "sw_last"),
                 };
                 case "assassin": return new List<TreeNode>
                 {
-                    FStat("as_root", "身手", Stat.Agi, 3, 3, 0, null),
+                    FStat("as_root", "身手", Stat.Agi, 5, 3, 0, null),
                     // 劇毒連刺（普攻）
-                    FMod("as_bspd", "疾刺", "na_dagger", ModField.Cooldown, 0.1f, 3, 1, 1, "as_root"),
-                    FMod("as_bdmg", "淬毒匕首", "na_dagger", ModField.Damage, 0.15f, 3, 0, 2, "as_bspd"),
-                    FPas("as_venom", "劇毒連刺", PassiveKind.Venom, 10f, 3, 1, 2, "as_bspd"),
+                    FMod("as_bspd", "疾刺", "na_dagger", ModField.Cooldown, 0.08f, 5, 1, 1, "as_root"),
+                    FMod("as_bdmg", "淬毒匕首", "na_dagger", ModField.Damage, 0.12f, 5, 0, 2, "as_bspd"),
+                    FPas("as_venom", "劇毒連刺", PassiveKind.Venom, 8f, 5, 1, 2, "as_bspd"),
                     FLearn("as_poison", "poison", 1, 3, "as_venom"),
-                    FMod("as_poison2", "劇毒", "poison", ModField.EffectDps, 2f, 2, 1, 4, "as_poison"),
+                    FMod("as_poison2", "劇毒", "poison", ModField.EffectDps, 1.5f, 5, 1, 4, "as_poison"),
                     // 刺殺
-                    FMod("as_shadow", "影襲強化", "shadow", ModField.Damage, 0.12f, 2, 3, 1, "as_root"),
+                    FMod("as_shadow", "影襲強化", "shadow", ModField.Damage, 0.1f, 5, 3, 1, "as_root"),
                     FLearn("as_backstab", "backstab", 3, 2, "as_shadow"),
-                    FPas("as_assn", "暗殺術", PassiveKind.Assassinate, 0.2f, 3, 3, 3, "as_backstab"),
-                    FMod("as_backstab2", "刺殺強化", "backstab", ModField.Damage, 0.15f, 3, 2, 4, "as_assn"),
-                    FPas("as_vanish", "遁影", PassiveKind.Vanish, 0.25f, 2, 3, 4, "as_assn"),
+                    FPas("as_assn", "暗殺術", PassiveKind.Assassinate, 0.15f, 5, 3, 3, "as_backstab"),
+                    FMod("as_backstab2", "刺殺強化", "backstab", ModField.Damage, 0.12f, 5, 2, 4, "as_assn"),
+                    FPas("as_vanish", "遁影", PassiveKind.Vanish, 0.15f, 5, 3, 4, "as_assn"),
                     FLearn("as_prep", "prep", 4, 3, "as_backstab"),
                     // 飛刀
                     FMod("as_knife", "飛刀連發", "knife", ModField.Multi, 1f, 1, 5, 1, "as_root"),
-                    FPas("as_rhythm", "飛刀節奏", PassiveKind.KnifeCdr, 0.4f, 4, 5, 2, "as_knife"),
-                    FPas("as_crit", "致命一擊", PassiveKind.Crit, 0.04f, 3, 5, 3, "as_rhythm"),
-                    FMod("as_smoke", "濃煙", "smoke", ModField.EffectDur, 1f, 2, 6, 2, "as_knife"),
-                    FPas("as_evade", "殘影", PassiveKind.Evade, 0.04f, 3, 6, 3, "as_smoke"),
+                    FPas("as_rhythm", "飛刀節奏", PassiveKind.KnifeCdr, 0.3f, 5, 5, 2, "as_knife"),
+                    FPas("as_crit", "致命一擊", PassiveKind.Crit, 0.03f, 5, 5, 3, "as_rhythm"),
+                    FMod("as_smoke", "濃煙", "smoke", ModField.EffectDur, 0.6f, 5, 6, 2, "as_knife"),
+                    FPas("as_evade", "殘影", PassiveKind.Evade, 0.03f, 5, 6, 3, "as_smoke"),
                 };
                 case "priest": return new List<TreeNode>
                 {
-                    FStat("pr_root", "虔誠", Stat.Int, 3, 3, 0, null),
+                    FStat("pr_root", "虔誠", Stat.Int, 5, 3, 0, null),
                     // 聖印（普攻）
-                    FMod("pr_bspd", "聖光連射", "na_holy", ModField.Cooldown, 0.1f, 2, 1, 1, "pr_root"),
-                    FPas("pr_home", "聖光導引", PassiveKind.Homing, 30f, 2, 0, 2, "pr_bspd"),
-                    FPas("pr_seal", "聖印", PassiveKind.HolySeal, 1f, 3, 1, 2, "pr_bspd"),
+                    FMod("pr_bspd", "聖光連射", "na_holy", ModField.Cooldown, 0.08f, 5, 1, 1, "pr_root"),
+                    FPas("pr_home", "聖光導引", PassiveKind.Homing, 18f, 5, 0, 2, "pr_bspd"),
+                    FPas("pr_seal", "聖印", PassiveKind.HolySeal, 0.8f, 5, 1, 2, "pr_bspd"),
                     FLearn("pr_judge", "judgement", 1, 3, "pr_seal"),
-                    FMod("pr_judge2", "審判強化", "judgement", ModField.Damage, 0.15f, 3, 1, 4, "pr_judge"),
+                    FMod("pr_judge2", "審判強化", "judgement", ModField.Damage, 0.12f, 5, 1, 4, "pr_judge"),
                     // 治療守護
-                    FMod("pr_heal", "治療強化", "prayheal", ModField.Heal, 0.15f, 3, 3, 1, "pr_root"),
+                    FMod("pr_heal", "治療強化", "prayheal", ModField.Heal, 0.12f, 5, 3, 1, "pr_root"),
                     FLearn("pr_guard", "guard", 2, 2, "pr_heal"),
-                    FMod("pr_guard2", "守護強化", "guard", ModField.BuffReduce, 0.05f, 2, 2, 3, "pr_guard"),
+                    FMod("pr_guard2", "守護強化", "guard", ModField.BuffReduce, 0.04f, 5, 2, 3, "pr_guard"),
                     FLearn("pr_prayer", "prayer", 2, 4, "pr_guard2"),
-                    FPas("pr_regen", "神聖庇護", PassiveKind.Regen, 0.5f, 3, 3, 2, "pr_heal"),
-                    FStat("pr_vit", "堅毅", Stat.Vit, 3, 3, 3, "pr_regen"),
-                    FMod("pr_cleanse", "淨化強化", "cleanse", ModField.Cooldown, 0.15f, 2, 4, 3, "pr_regen"),
+                    FPas("pr_regen", "神聖庇護", PassiveKind.Regen, 0.4f, 5, 3, 2, "pr_heal"),
+                    FStat("pr_vit", "堅毅", Stat.Vit, 5, 3, 3, "pr_regen"),
+                    FMod("pr_cleanse", "淨化強化", "cleanse", ModField.Cooldown, 0.1f, 5, 4, 3, "pr_regen"),
                     // 殉道
-                    FMod("pr_holy", "聖光強化", "holy", ModField.Damage, 0.12f, 3, 5, 1, "pr_root"),
+                    FMod("pr_holy", "聖光強化", "holy", ModField.Damage, 0.1f, 5, 5, 1, "pr_root"),
                     FPas("pr_martyr", "殉道", PassiveKind.Martyr, 1f, 1, 5, 2, "pr_holy"),
-                    FPas("pr_zeal", "狂信", PassiveKind.Zeal, 0.3f, 3, 5, 3, "pr_martyr"),
-                    FPas("pr_leech", "聖血", PassiveKind.Lifesteal, 0.04f, 2, 6, 3, "pr_martyr"),
-                    FPas("pr_quick", "快速施法", PassiveKind.QuickCd, 0.08f, 2, 6, 2, "pr_holy"),
+                    FPas("pr_zeal", "狂信", PassiveKind.Zeal, 0.2f, 5, 5, 3, "pr_martyr"),
+                    FPas("pr_leech", "聖血", PassiveKind.Lifesteal, 0.03f, 5, 6, 3, "pr_martyr"),
+                    FPas("pr_quick", "快速施法", PassiveKind.QuickCd, 0.06f, 5, 6, 2, "pr_holy"),
                 };
-                // ======================================================== 進階職業的技能樹（轉職時已學會第一個技能）
+                // ======================================================== 進階職業（轉職時已學會第一個進階技能）：三個流派，可以和基本職業的流派搭配
                 case "paladin": return new List<TreeNode>
                 {
-                    Mod("pa_bash", "聖盾強化", "shieldbash", ModField.Damage, 0.15f, 3, 0, 0),
-                    Mod("pa_bash2", "震懾", "shieldbash", ModField.EffectDur, 0.3f, 2, 0, 1),
-                    Mod("pa_bash3", "衝鋒熟練", "shieldbash", ModField.Cooldown, 0.12f, 2, 0, 2),
-                    Learn("pa_oath", "oath", 1, 0, null, 1),
-                    Mod("pa_oath2", "誓言延長", "oath", ModField.BuffDur, 2f, 2, 1, 1),
-                    Learn("pa_sanc", "sanction", 1, 2, null, 1),
-                    Mod("pa_sanc2", "制裁強化", "sanction", ModField.Damage, 0.15f, 3, 1, 3),
-                    StatN("pa_vit", "聖騎士之軀", Stat.Vit, 2, 0),
-                    Pas("pa_armor", "神聖護甲", PassiveKind.Armor, 0.03f, 3, 2, 1),
-                    Pas("pa_hp", "堅守", PassiveKind.Hp, 15f, 3, 2, 2),
+                    FStat("pa_root", "聖騎士之軀", Stat.Vit, 5, 3, 0, null),
+                    FMod("pa_bash", "聖盾強化", "shieldbash", ModField.Damage, 0.12f, 5, 1, 1, "pa_root"),
+                    FMod("pa_bash2", "震懾", "shieldbash", ModField.EffectDur, 0.2f, 5, 0, 2, "pa_bash"),
+                    FMod("pa_bash3", "衝鋒熟練", "shieldbash", ModField.Cooldown, 0.08f, 5, 0, 3, "pa_bash2"),
+                    FPas("pa_guard", "盾擊格擋", PassiveKind.BashGuard, 0.4f, 5, 2, 2, "pa_bash"),
+                    FPas("pa_rip", "聖光反擊", PassiveKind.Riposte, 0.2f, 5, 2, 3, "pa_guard"),
+                    FLearn("pa_oath", "oath", 3, 1, "pa_root"),
+                    FMod("pa_oath2", "誓言延長", "oath", ModField.BuffDur, 1f, 5, 3, 2, "pa_oath"),
+                    FPas("pa_last", "堅守", PassiveKind.LastStand, 0.05f, 5, 3, 3, "pa_oath2"),
+                    FPas("pa_armor", "神聖護甲", PassiveKind.Armor, 0.02f, 5, 4, 2, "pa_oath"),
+                    FPas("pa_hp", "聖騎士之心", PassiveKind.Hp, 10f, 5, 4, 3, "pa_armor"),
+                    FLearn("pa_sanc", "sanction", 5, 1, "pa_root"),
+                    FMod("pa_sanc2", "制裁強化", "sanction", ModField.Damage, 0.12f, 5, 5, 2, "pa_sanc"),
+                    FMod("pa_sanc3", "制裁熟練", "sanction", ModField.Cooldown, 0.08f, 5, 5, 3, "pa_sanc2"),
+                    FPas("pa_scombo", "制裁連斬", PassiveKind.SanctionCombo, 1f, 1, 6, 2, "pa_sanc"),
+                    FPas("pa_atk", "聖戰之力", PassiveKind.Atk, 0.03f, 5, 6, 3, "pa_scombo"),
                 };
                 case "berserker": return new List<TreeNode>
                 {
-                    Mod("be_whirl", "旋風強化", "whirlwind", ModField.Damage, 0.15f, 3, 0, 0),
-                    Mod("be_whirl2", "狂風", "whirlwind", ModField.Cooldown, 0.12f, 2, 0, 1),
-                    Learn("be_rage", "bloodrage", 1, 0, null, 1),
-                    Mod("be_rage2", "狂暴延長", "bloodrage", ModField.BuffDur, 2f, 2, 1, 1),
-                    Learn("be_undy", "undying", 1, 2, null, 1),
-                    Mod("be_undy2", "不死強化", "undying", ModField.Cooldown, 0.15f, 2, 1, 3),
-                    StatN("be_str", "蠻力", Stat.Str, 2, 0),
-                    Pas("be_atk", "嗜血", PassiveKind.Atk, 0.04f, 3, 2, 1),
-                    Pas("be_steal", "血祭", PassiveKind.Lifesteal, 0.03f, 3, 2, 2),
+                    FStat("be_root", "蠻力", Stat.Str, 5, 3, 0, null),
+                    FMod("be_whirl", "旋風強化", "whirlwind", ModField.Damage, 0.12f, 5, 1, 1, "be_root"),
+                    FMod("be_whirl2", "狂風", "whirlwind", ModField.Cooldown, 0.08f, 5, 0, 2, "be_whirl"),
+                    FPas("be_steal", "血祭", PassiveKind.Lifesteal, 0.03f, 5, 1, 2, "be_whirl"),
+                    FPas("be_bleech", "血之連斬", PassiveKind.BasicLeech, 0.04f, 5, 2, 2, "be_whirl"),
+                    FPas("be_combo", "狂斬", PassiveKind.ComboStrike, 0.2f, 5, 2, 3, "be_bleech"),
+                    FLearn("be_rage", "bloodrage", 3, 1, "be_root"),
+                    FMod("be_rage2", "狂暴延長", "bloodrage", ModField.BuffDur, 1f, 5, 3, 2, "be_rage"),
+                    FPas("be_atk", "嗜血", PassiveKind.Atk, 0.03f, 5, 3, 3, "be_rage2"),
+                    FPas("be_zeal", "狂怒", PassiveKind.Zeal, 0.15f, 5, 4, 2, "be_rage"),
+                    FLearn("be_undy", "undying", 5, 1, "be_root"),
+                    FMod("be_undy2", "不死強化", "undying", ModField.Cooldown, 0.08f, 5, 5, 2, "be_undy"),
+                    FPas("be_regen", "野性恢復", PassiveKind.NaturalRegen, 0.008f, 5, 5, 3, "be_undy2"),
+                    FPas("be_hp", "鋼鐵之軀", PassiveKind.Hp, 10f, 5, 6, 2, "be_undy"),
+                    FPas("be_last", "垂死反撲", PassiveKind.LastStand, 0.05f, 5, 6, 3, "be_hp"),
                 };
                 case "marksman": return new List<TreeNode>
                 {
-                    Mod("mk_pierce", "貫穿強化", "pierce", ModField.Damage, 0.15f, 3, 0, 0),
-                    Mod("mk_pierce2", "快速上弦", "pierce", ModField.Charge, 0.1f, 2, 0, 1),
-                    Learn("mk_mark", "deadmark", 1, 0, null, 1),
-                    Mod("mk_mark2", "標記熟練", "deadmark", ModField.Cooldown, 0.15f, 2, 1, 1),
-                    Learn("mk_rain", "arrowrain", 1, 2, null, 1),
-                    Mod("mk_rain2", "密集箭雨", "arrowrain", ModField.Multi, 1f, 3, 1, 3),
-                    StatN("mk_luk", "神射", Stat.Luk, 2, 0),
-                    Pas("mk_crit", "要害瞄準", PassiveKind.Crit, 0.04f, 3, 2, 1),
-                    Pas("mk_atk", "強弓", PassiveKind.Atk, 0.04f, 3, 2, 2),
+                    FStat("mk_root", "神射", Stat.Luk, 5, 3, 0, null),
+                    FMod("mk_pierce", "貫穿強化", "pierce", ModField.Damage, 0.12f, 5, 1, 1, "mk_root"),
+                    FMod("mk_pierce2", "快速上弦", "pierce", ModField.Charge, 0.08f, 5, 0, 2, "mk_pierce"),
+                    FPas("mk_long", "超遠射", PassiveKind.LongShot, 0.08f, 5, 1, 2, "mk_pierce"),
+                    FPas("mk_critd", "要害一擊", PassiveKind.CritDmg, 0.2f, 5, 2, 2, "mk_pierce"),
+                    FPas("mk_crit", "要害瞄準", PassiveKind.Crit, 0.03f, 5, 2, 3, "mk_critd"),
+                    FLearn("mk_mark", "deadmark", 3, 1, "mk_root"),
+                    FMod("mk_mark2", "標記熟練", "deadmark", ModField.Cooldown, 0.08f, 5, 3, 2, "mk_mark"),
+                    FPas("mk_atk", "強弓", PassiveKind.Atk, 0.03f, 5, 3, 3, "mk_mark2"),
+                    FPas("mk_steady", "鷹之靜", PassiveKind.SteadyAim, 0.3f, 5, 4, 2, "mk_mark"),
+                    FLearn("mk_rain", "arrowrain", 5, 1, "mk_root"),
+                    FMod("mk_rain2", "密集箭雨", "arrowrain", ModField.Multi, 1f, 3, 5, 2, "mk_rain"),
+                    FMod("mk_rain3", "箭雨強化", "arrowrain", ModField.Damage, 0.12f, 5, 6, 2, "mk_rain"),
+                    FMod("mk_bspd", "連珠箭", "na_arrow", ModField.Cooldown, 0.06f, 5, 6, 3, "mk_rain3"),
                 };
                 case "ranger": return new List<TreeNode>
                 {
-                    Mod("rg_falcon", "獵鷹強化", "falcon", ModField.Damage, 0.2f, 3, 0, 0),
-                    Mod("rg_falcon2", "獵鷹長駐", "falcon", ModField.BuffDur, 4f, 2, 0, 1),
-                    Learn("rg_roll", "rollshot", 1, 0, null, 1),
-                    Mod("rg_roll2", "翻滾熟練", "rollshot", ModField.Cooldown, 0.15f, 2, 1, 1),
-                    Learn("rg_chain", "trapchain", 1, 2, null, 1),
-                    Mod("rg_chain2", "陷阱專家", "trapchain", ModField.Damage, 0.2f, 3, 1, 3),
-                    StatN("rg_agi", "疾行", Stat.Agi, 2, 0),
-                    Pas("rg_dodge", "身輕如燕", PassiveKind.Dodge, 0.1f, 2, 2, 1),
-                    Pas("rg_evade", "游擊步法", PassiveKind.Evade, 0.04f, 3, 2, 2),
+                    FStat("rg_root", "疾行", Stat.Agi, 5, 3, 0, null),
+                    FMod("rg_falcon", "獵鷹強化", "falcon", ModField.Damage, 0.15f, 5, 1, 1, "rg_root"),
+                    FMod("rg_falcon2", "獵鷹長駐", "falcon", ModField.BuffDur, 3f, 5, 0, 2, "rg_falcon"),
+                    FPas("rg_fmark", "鷹眼標記", PassiveKind.FalconMark, 0.06f, 5, 1, 2, "rg_falcon"),
+                    FMod("rg_fhp", "強健獵鷹", "falcon", ModField.BuffAmount, 10f, 5, 2, 2, "rg_falcon"),
+                    FLearn("rg_roll", "rollshot", 3, 1, "rg_root"),
+                    FMod("rg_roll2", "翻滾熟練", "rollshot", ModField.Cooldown, 0.08f, 5, 3, 2, "rg_roll"),
+                    FMod("rg_bspd", "游擊連射", "na_arrow", ModField.Cooldown, 0.06f, 5, 3, 3, "rg_roll2"),
+                    FPas("rg_evade", "游擊步法", PassiveKind.Evade, 0.03f, 5, 4, 2, "rg_roll"),
+                    FLearn("rg_chain", "trapchain", 5, 1, "rg_root"),
+                    FMod("rg_chain2", "陷阱專家", "trapchain", ModField.Damage, 0.15f, 5, 5, 2, "rg_chain"),
+                    FPas("rg_hunt", "圍獵", PassiveKind.TrapCrit, 0.6f, 5, 6, 2, "rg_chain"),
+                    FMod("rg_snare", "捕獸夾改良", "snaretrap", ModField.EffectDur, 0.3f, 5, 6, 3, "rg_hunt"),
                 };
                 case "archmage": return new List<TreeNode>
                 {
-                    Mod("am_tj", "雷霆強化", "tjudge", ModField.Damage, 0.15f, 3, 0, 0),
-                    Mod("am_tj2", "雷霆連擊", "tjudge", ModField.Multi, 1f, 2, 0, 1),
-                    Learn("am_frost", "frostfield", 1, 0, null, 1),
-                    Mod("am_frost2", "永凍", "frostfield", ModField.EffectDur, 0.5f, 2, 1, 1),
-                    Learn("am_shield", "manashield", 1, 2, null, 1),
-                    Mod("am_shield2", "護盾延長", "manashield", ModField.BuffDur, 3f, 2, 1, 3),
-                    StatN("am_int", "大智慧", Stat.Int, 2, 0),
-                    Pas("am_atk", "魔力增幅", PassiveKind.Atk, 0.04f, 3, 2, 1),
-                    Pas("am_fast", "高速詠唱", PassiveKind.FastCast, 0.05f, 3, 2, 2),
+                    FStat("am_root", "大智慧", Stat.Int, 5, 3, 0, null),
+                    FMod("am_tj", "雷霆強化", "tjudge", ModField.Damage, 0.12f, 5, 1, 1, "am_root"),
+                    FMod("am_tj2", "雷霆連擊", "tjudge", ModField.Multi, 1f, 2, 0, 2, "am_tj"),
+                    FPas("am_over", "雷霆過載", PassiveKind.Overload, 0.5f, 5, 1, 2, "am_tj"),
+                    FPas("am_fast", "高速詠唱", PassiveKind.FastCast, 0.04f, 5, 2, 2, "am_tj"),
+                    FLearn("am_frost", "frostfield", 3, 1, "am_root"),
+                    FMod("am_frost2", "永凍", "frostfield", ModField.EffectDur, 0.3f, 5, 3, 2, "am_frost"),
+                    FPas("am_freeze", "極寒", PassiveKind.IceFreeze, 0.08f, 5, 3, 3, "am_frost2"),
+                    FPas("am_melt", "冰火交融", PassiveKind.Melt, 0.25f, 5, 4, 2, "am_frost"),
+                    FLearn("am_shield", "manashield", 5, 1, "am_root"),
+                    FMod("am_shield2", "護盾延長", "manashield", ModField.BuffDur, 1.5f, 5, 5, 2, "am_shield"),
+                    FPas("am_low", "背水之陣", PassiveKind.LowMp, 0.08f, 5, 6, 2, "am_shield"),
+                    FPas("am_mp", "魔力虹吸", PassiveKind.MpOnHit, 1f, 5, 6, 3, "am_low"),
                 };
                 case "summoner": return new List<TreeNode>
                 {
-                    Mod("su_fire", "火靈強化", "firespirit", ModField.Damage, 0.2f, 3, 0, 0),
-                    Mod("su_fire2", "火靈長駐", "firespirit", ModField.BuffDur, 5f, 2, 0, 1),
-                    Learn("su_golem", "golem", 1, 0, null, 1),
-                    Mod("su_golem2", "堅固石像", "golem", ModField.BuffAmount, 30f, 3, 1, 1),
-                    Learn("su_det", "detonate", 1, 2, null, 1),
-                    Mod("su_det2", "爆裂熟練", "detonate", ModField.Cooldown, 0.15f, 2, 1, 3),
-                    StatN("su_spi", "契約之力", Stat.Spi, 2, 0),
-                    Pas("su_hp", "共生", PassiveKind.Hp, 12f, 3, 2, 1),
-                    Pas("su_mp", "魔力循環", PassiveKind.MpOnHit, 2f, 3, 2, 2),
+                    FStat("su_root", "契約之力", Stat.Spi, 5, 3, 0, null),
+                    FMod("su_fire", "火靈強化", "firespirit", ModField.Damage, 0.15f, 5, 1, 1, "su_root"),
+                    FMod("su_fire2", "火靈長駐", "firespirit", ModField.BuffDur, 3f, 5, 0, 2, "su_fire"),
+                    FPas("su_petmp", "契約魔力", PassiveKind.PetMp, 1f, 5, 1, 2, "su_fire"),
+                    FPas("su_burn", "火靈灼燒", PassiveKind.Burn, 0.04f, 5, 2, 2, "su_fire"),
+                    FLearn("su_golem", "golem", 3, 1, "su_root"),
+                    FMod("su_golem2", "堅固石像", "golem", ModField.BuffAmount, 20f, 5, 3, 2, "su_golem"),
+                    FPas("su_hp", "共生", PassiveKind.Hp, 10f, 5, 3, 3, "su_golem2"),
+                    FPas("su_armor", "石之守護", PassiveKind.Armor, 0.02f, 5, 4, 2, "su_golem"),
+                    FLearn("su_det", "detonate", 5, 1, "su_root"),
+                    FMod("su_det2", "爆裂熟練", "detonate", ModField.Cooldown, 0.08f, 5, 5, 2, "su_det"),
+                    FPas("su_atk", "元素之力", PassiveKind.Atk, 0.03f, 5, 6, 2, "su_det"),
+                    FPas("su_echo", "元素共鳴", PassiveKind.SpellEcho, 0.06f, 5, 6, 3, "su_atk"),
                 };
                 case "ninja": return new List<TreeNode>
                 {
-                    Mod("nj_fire", "火遁強化", "fireseal", ModField.Damage, 0.15f, 3, 0, 0),
-                    Mod("nj_fire2", "火遁擴散", "fireseal", ModField.Multi, 1f, 2, 0, 1),
-                    Learn("nj_clone", "clone", 1, 0, null, 1),
-                    Mod("nj_clone2", "分身延長", "clone", ModField.BuffDur, 2f, 2, 1, 1),
-                    Learn("nj_sub", "substitute", 1, 2, null, 1),
-                    Mod("nj_sub2", "替身熟練", "substitute", ModField.Cooldown, 0.15f, 2, 1, 3),
-                    StatN("nj_agi", "忍者身手", Stat.Agi, 2, 0),
-                    Pas("nj_evade", "隱遁", PassiveKind.Evade, 0.03f, 3, 2, 1),
-                    Pas("nj_dodge", "瞬身", PassiveKind.Dodge, 0.1f, 2, 2, 2),
+                    FStat("nj_root", "忍者身手", Stat.Agi, 5, 3, 0, null),
+                    FMod("nj_sub", "替身熟練", "substitute", ModField.Cooldown, 0.08f, 5, 1, 1, "nj_root"),
+                    FPas("nj_vanish", "隱遁", PassiveKind.Vanish, 0.1f, 5, 0, 2, "nj_sub"),
+                    FPas("nj_evade", "殘像", PassiveKind.Evade, 0.03f, 5, 1, 2, "nj_sub"),
+                    FPas("nj_dodge", "瞬身", PassiveKind.Dodge, 0.1f, 5, 2, 2, "nj_sub"),
+                    FLearn("nj_clone", "clone", 3, 1, "nj_root"),
+                    FMod("nj_clone2", "分身延長", "clone", ModField.BuffDur, 1f, 5, 3, 2, "nj_clone"),
+                    FPas("nj_crit", "影分身・要害", PassiveKind.Crit, 0.03f, 5, 3, 3, "nj_clone2"),
+                    FPas("nj_knife", "苦無連發", PassiveKind.KnifeCdr, 0.2f, 5, 4, 2, "nj_clone"),
+                    FLearn("nj_fire", "fireseal", 5, 1, "nj_root"),
+                    FMod("nj_fire2", "火遁強化", "fireseal", ModField.Damage, 0.12f, 5, 5, 2, "nj_fire"),
+                    FMod("nj_fire3", "火遁擴散", "fireseal", ModField.Multi, 1f, 2, 6, 2, "nj_fire"),
+                    FPas("nj_burn", "業火", PassiveKind.Burn, 0.05f, 5, 6, 3, "nj_fire3"),
                 };
                 case "shadowdancer": return new List<TreeNode>
                 {
-                    Mod("sd_exe", "處決強化", "execute", ModField.Damage, 0.15f, 3, 0, 0),
-                    Mod("sd_exe2", "快速處決", "execute", ModField.Charge, 0.1f, 2, 0, 1),
-                    Learn("sd_dance", "shadowdance", 1, 0, null, 1),
-                    Mod("sd_dance2", "影舞延長", "shadowdance", ModField.BuffDur, 2f, 2, 1, 1),
-                    Learn("sd_fog", "poisonfog", 1, 2, null, 1),
-                    Mod("sd_fog2", "劇毒之霧", "poisonfog", ModField.EffectDps, 2f, 3, 1, 3),
-                    StatN("sd_str", "暗殺之力", Stat.Str, 2, 0),
-                    Pas("sd_crit", "致命舞步", PassiveKind.Crit, 0.04f, 3, 2, 1),
-                    Pas("sd_atk", "影之刃", PassiveKind.Atk, 0.04f, 3, 2, 2),
+                    FStat("sd_root", "暗殺之力", Stat.Str, 5, 3, 0, null),
+                    FMod("sd_exe", "處決強化", "execute", ModField.Damage, 0.12f, 5, 1, 1, "sd_root"),
+                    FMod("sd_exe2", "快速處決", "execute", ModField.Charge, 0.08f, 5, 0, 2, "sd_exe"),
+                    FPas("sd_assn", "影之暗殺", PassiveKind.Assassinate, 0.08f, 5, 1, 2, "sd_exe"),
+                    FPas("sd_crit", "致命舞步", PassiveKind.Crit, 0.03f, 5, 2, 2, "sd_exe"),
+                    FLearn("sd_dance", "shadowdance", 3, 1, "sd_root"),
+                    FMod("sd_dance2", "影舞延長", "shadowdance", ModField.BuffDur, 1f, 5, 3, 2, "sd_dance"),
+                    FPas("sd_atk", "影之刃", PassiveKind.Atk, 0.03f, 5, 3, 3, "sd_dance2"),
+                    FPas("sd_vanish", "舞影", PassiveKind.Vanish, 0.1f, 5, 4, 2, "sd_dance"),
+                    FLearn("sd_fog", "poisonfog", 5, 1, "sd_root"),
+                    FMod("sd_fog2", "劇毒之霧", "poisonfog", ModField.EffectDps, 1.5f, 5, 5, 2, "sd_fog"),
+                    FPas("sd_venom", "毒霧疊毒", PassiveKind.Venom, 6f, 5, 6, 2, "sd_fog"),
+                    FMod("sd_bspd", "毒舞連刺", "na_dagger", ModField.Cooldown, 0.06f, 5, 6, 3, "sd_venom"),
                 };
                 case "bishop": return new List<TreeNode>
                 {
-                    Mod("bi_heal", "群體治療強化", "massheal", ModField.BuffAmount, 5f, 3, 0, 0),
-                    Mod("bi_heal2", "治療熟練", "massheal", ModField.Cooldown, 0.12f, 2, 0, 1),
-                    Learn("bi_sanc", "sanctuary", 1, 0, null, 1),
-                    Mod("bi_sanc2", "庇護強化", "sanctuary", ModField.BuffAmount, 15f, 3, 1, 1),
-                    Learn("bi_rev", "revive", 1, 2, null, 1),
-                    Mod("bi_rev2", "復活熟練", "revive", ModField.Cooldown, 0.15f, 2, 1, 3),
-                    StatN("bi_spi", "虔誠之心", Stat.Spi, 2, 0),
-                    Pas("bi_regen", "聖靈", PassiveKind.Regen, 0.5f, 3, 2, 1),
-                    Pas("bi_quick", "神速禱告", PassiveKind.QuickCd, 0.05f, 3, 2, 2),
+                    FStat("bi_root", "虔誠之心", Stat.Spi, 5, 3, 0, null),
+                    FMod("bi_rev", "復活熟練", "revive", ModField.Cooldown, 0.08f, 5, 1, 1, "bi_root"),
+                    FPas("bi_hp", "生命之光", PassiveKind.Hp, 10f, 5, 0, 2, "bi_rev"),
+                    FPas("bi_regen", "聖靈", PassiveKind.Regen, 0.3f, 5, 1, 2, "bi_rev"),
+                    FPas("bi_nat", "恩典", PassiveKind.NaturalRegen, 0.008f, 5, 2, 2, "bi_rev"),
+                    FLearn("bi_heal", "massheal", 3, 1, "bi_root"),
+                    FMod("bi_heal2", "群體治療強化", "massheal", ModField.BuffAmount, 4f, 5, 3, 2, "bi_heal"),
+                    FMod("bi_heal3", "治療熟練", "massheal", ModField.Cooldown, 0.08f, 5, 3, 3, "bi_heal2"),
+                    FPas("bi_quick", "神速禱告", PassiveKind.QuickCd, 0.05f, 5, 4, 2, "bi_heal"),
+                    FLearn("bi_sanc", "sanctuary", 5, 1, "bi_root"),
+                    FMod("bi_sanc2", "庇護強化", "sanctuary", ModField.BuffAmount, 10f, 5, 5, 2, "bi_sanc"),
+                    FPas("bi_seal", "聖域之印", PassiveKind.HolySeal, 0.6f, 5, 6, 2, "bi_sanc"),
+                    FPas("bi_armor", "神聖帷幕", PassiveKind.Armor, 0.02f, 5, 6, 3, "bi_seal"),
                 };
                 case "inquisitor": return new List<TreeNode>
                 {
-                    Mod("iq_lance", "聖槍強化", "holylance", ModField.Damage, 0.15f, 3, 0, 0),
-                    Mod("iq_lance2", "聖槍連射", "holylance", ModField.Multi, 1f, 2, 0, 1),
-                    Learn("iq_chast", "chastise", 1, 0, null, 1),
-                    Mod("iq_chast2", "懲戒延長", "chastise", ModField.EffectDur, 2f, 2, 1, 1),
-                    Learn("iq_heaven", "heavenpunish", 1, 2, null, 1),
-                    Mod("iq_heaven2", "天罰強化", "heavenpunish", ModField.Damage, 0.15f, 3, 1, 3),
-                    StatN("iq_int", "審判之力", Stat.Int, 2, 0),
-                    Pas("iq_atk", "聖戰", PassiveKind.Atk, 0.04f, 3, 2, 1),
-                    Pas("iq_crit", "裁決", PassiveKind.Crit, 0.03f, 3, 2, 2),
+                    FStat("iq_root", "審判之力", Stat.Int, 5, 3, 0, null),
+                    FMod("iq_lance", "聖槍強化", "holylance", ModField.Damage, 0.12f, 5, 1, 1, "iq_root"),
+                    FMod("iq_lance2", "聖槍連射", "holylance", ModField.Multi, 1f, 2, 0, 2, "iq_lance"),
+                    FPas("iq_critd", "裁決之刃", PassiveKind.CritDmg, 0.15f, 5, 1, 2, "iq_lance"),
+                    FPas("iq_crit", "裁決", PassiveKind.Crit, 0.03f, 5, 2, 2, "iq_lance"),
+                    FLearn("iq_chast", "chastise", 3, 1, "iq_root"),
+                    FMod("iq_chast2", "懲戒延長", "chastise", ModField.EffectDur, 1f, 5, 3, 2, "iq_chast"),
+                    FPas("iq_atk", "聖戰", PassiveKind.Atk, 0.03f, 5, 3, 3, "iq_chast2"),
+                    FPas("iq_seal", "審判之印", PassiveKind.HolySeal, 0.6f, 5, 4, 2, "iq_chast"),
+                    FLearn("iq_heaven", "heavenpunish", 5, 1, "iq_root"),
+                    FMod("iq_heaven2", "天罰強化", "heavenpunish", ModField.Damage, 0.12f, 5, 5, 2, "iq_heaven"),
+                    FPas("iq_zeal", "殉教之怒", PassiveKind.Zeal, 0.15f, 5, 6, 2, "iq_heaven"),
+                    FPas("iq_leech", "聖血契約", PassiveKind.Lifesteal, 0.02f, 5, 6, 3, "iq_zeal"),
                 };
             }
             return new List<TreeNode>();
@@ -481,6 +538,11 @@ namespace SpellDuel
                         PassiveKind.Homing => $"神聖飛彈會追蹤最近的敵人（每秒轉 {v:0} 度）",
                         PassiveKind.Martyr => "攻擊技能改用 HP 施放（MP 的一半），不花 MP",
                         PassiveKind.Zeal => $"HP 越低傷害越高：HP 接近 0 時傷害 +{v * 100:0}%",
+                        PassiveKind.BashGuard => $"聖盾衝鋒命中後 {v:0.#} 秒內自動格擋（可觸發反擊之刃）",
+                        PassiveKind.SanctionCombo => "神聖制裁命中後，下一下普攻直接是重擊（搭配連斬）",
+                        PassiveKind.CritDmg => $"爆擊傷害 +{v * 100:0}%（原本 ×2）",
+                        PassiveKind.FalconMark => $"獵鷹攻擊時 {v * 100:0}% 機率標記：4 秒內下一個弓箭技能必定爆擊",
+                        PassiveKind.PetMp => $"召喚物命中時回復 {v:0.#} MP",
                         _ => $"HP 低於 30% 時受到的傷害 -{v * 100:0}%",
                     };
             }
@@ -734,9 +796,8 @@ namespace SpellDuel
         /// </summary>
         public const int BaseTreeCap = 20;
         /// <summary>技能樹版本：2＝樹狀圖＋流派（舊存檔讀進來時退回職業樹點數）</summary>
-        public const int TreeVersion = 2;
+        public const int TreeVersion = 3;
         public int treeVersion = TreeVersion;   // 新角色直接是最新版；讀檔時沒有 tv＝舊版
-        public const int BaseTreeTotal = 40;
 
         /// <summary>基本職業技能樹已經點了幾點</summary>
         public int BaseSpent { get { int v = 0; foreach (var n in SkillTrees.Of(cls)) v += Rank(n.id); return v; } }
@@ -747,19 +808,13 @@ namespace SpellDuel
         /// <summary>現在點得出去的技能點（基本樹點滿 20 點、又還沒轉職時，剩下的點要等轉職才能用）</summary>
         public int UsableSkillPoints => adv == null && BaseSpent >= BaseTreeCap ? 0 : skillPoints;
         /// <summary>職業樹現在最多能點幾點：轉職前 20、轉職後 40（全部）</summary>
-        public int BaseCapNow => adv == null ? BaseTreeCap : BaseTreeTotal;
+        public int BaseCapNow => adv == null ? BaseTreeCap : int.MaxValue;
 
         /// <summary>讀檔後校正：基本技能樹超過上限（舊規則點的）就整棵退點；剩餘點數＝拿到的－已點的</summary>
         public void NormalizeSkillPoints()
         {
-            // 技能樹改版（v2 樹狀圖）：舊的職業樹點數全部退回（進階職業的樹保留）
-            if (treeVersion < TreeVersion)
-            {
-                var keep = new HashSet<string>();
-                if (adv != null) foreach (var n in SkillTrees.Of(adv)) keep.Add(n.id);
-                foreach (var k in new List<string>(ranks.Keys)) if (!keep.Contains(k)) ranks.Remove(k);
-                treeVersion = TreeVersion;
-            }
+            // 技能樹改版（v3：樹狀圖、最高 5 級、進階職業也改成三流派）：舊的點數全部退回
+            if (treeVersion < TreeVersion) { ranks.Clear(); treeVersion = TreeVersion; }
             // 不存在的節點、超過上限的等級
             var all = new Dictionary<string, TreeNode>();
             foreach (var n in Nodes) all[n.id] = n;
@@ -834,7 +889,7 @@ namespace SpellDuel
                 else if (Rank(r.id) < r.max) return $"需要先點滿「{r.name}」";
             }
             if (skillPoints <= 0) return "技能點不足";
-            if (TreeOf(n) == cls && BaseSpent >= BaseCapNow) return $"轉職前職業技能樹最多只能點 {BaseTreeCap} 點（共 {BaseTreeTotal} 點）；轉職後可以回來繼續點";
+            if (TreeOf(n) == cls && BaseSpent >= BaseCapNow) return $"轉職前職業技能樹最多只能點 {BaseTreeCap} 點；轉職後可以回來繼續點";
             return null;
         }
         public bool Learn(TreeNode n)
@@ -952,6 +1007,8 @@ namespace SpellDuel
             f.comboStrike = Passive(PassiveKind.ComboStrike); f.basicLeech = Passive(PassiveKind.BasicLeech); f.waveFlow = Passive(PassiveKind.WaveFlow); f.riposte = Passive(PassiveKind.Riposte);
             f.venom = Passive(PassiveKind.Venom); f.assassinate = Passive(PassiveKind.Assassinate); f.vanish = Passive(PassiveKind.Vanish); f.knifeCdr = Passive(PassiveKind.KnifeCdr);
             f.holySeal = Passive(PassiveKind.HolySeal); f.basicHoming = Passive(PassiveKind.Homing); f.martyr = Passive(PassiveKind.Martyr); f.zeal = Passive(PassiveKind.Zeal);
+            f.bashGuard = Passive(PassiveKind.BashGuard); f.sanctionCombo = Passive(PassiveKind.SanctionCombo); f.critDmg = Passive(PassiveKind.CritDmg);
+            f.falconMark = Passive(PassiveKind.FalconMark); f.petMp = Passive(PassiveKind.PetMp);
             var bs = Skills.BasicOf(cls); f.basic = bs != null ? ModdedSkill(bs.id) : null;   // 普攻也吃技能樹
             // 技能：只帶會的技能，數值換成技能樹強化後的版本
             f.loadout.Clear();
