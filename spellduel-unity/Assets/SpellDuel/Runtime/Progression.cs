@@ -631,8 +631,8 @@ namespace SpellDuel
 
         public const int MaxLevel = 60, StatPerLevel = 8, SkillPerLevel = 1;
         /// <summary>
-        /// 職業（基本）技能樹最多能點幾點：樹上總共 40 點，但只能點其中 20 點（＝20 級拿到的點數），要取捨。
-        /// 20 級以後拿到的點數只能點進階職業的技能樹。
+        /// 職業（基本）技能樹：樹上總共 40 點；轉職前最多只能點其中 20 點（＝20 級拿到的點數），要取捨。
+        /// 轉職後可以回來繼續點職業樹（最多到 40 點），也可以點進階職業的技能樹。
         /// </summary>
         public const int BaseTreeCap = 20;
         public const int BaseTreeTotal = 40;
@@ -645,11 +645,13 @@ namespace SpellDuel
         public int EarnedSkill => level * SkillPerLevel;
         /// <summary>現在點得出去的技能點（基本樹點滿 20 點、又還沒轉職時，剩下的點要等轉職才能用）</summary>
         public int UsableSkillPoints => adv == null && BaseSpent >= BaseTreeCap ? 0 : skillPoints;
+        /// <summary>職業樹現在最多能點幾點：轉職前 20、轉職後 40（全部）</summary>
+        public int BaseCapNow => adv == null ? BaseTreeCap : BaseTreeTotal;
 
         /// <summary>讀檔後校正：基本技能樹超過上限（舊規則點的）就整棵退點；剩餘點數＝拿到的－已點的</summary>
         public void NormalizeSkillPoints()
         {
-            if (BaseSpent > BaseTreeCap) foreach (var n in SkillTrees.Of(cls)) ranks.Remove(n.id);
+            if (BaseSpent > BaseCapNow) foreach (var n in SkillTrees.Of(cls)) ranks.Remove(n.id);
             skillPoints = Mathf.Max(0, EarnedSkill - SpentSkill);
         }
 
@@ -713,7 +715,7 @@ namespace SpellDuel
             foreach (var r in SkillTrees.Prereqs(TreeOf(n), n))
                 if (Rank(r.id) < r.max) return $"需要先點滿「{r.name}」";
             if (skillPoints <= 0) return "技能點不足";
-            if (TreeOf(n) == cls && BaseSpent >= BaseTreeCap) return $"職業技能樹最多只能點 {BaseTreeCap} 點（共 {BaseTreeTotal} 點，要取捨；重新分配可以退點）";
+            if (TreeOf(n) == cls && BaseSpent >= BaseCapNow) return $"轉職前職業技能樹最多只能點 {BaseTreeCap} 點（共 {BaseTreeTotal} 點）；轉職後可以回來繼續點";
             return null;
         }
         public bool Learn(TreeNode n)
