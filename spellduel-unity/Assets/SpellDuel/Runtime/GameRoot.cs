@@ -404,8 +404,10 @@ namespace SpellDuel
 
         void UpdateRemoteQuickStart()
         {
-            if (!remoteMode) return;
-            if (!autoArea && playArea.HasFloor && playArea.state != PlayArea.State.Done && playArea.state != PlayArea.State.Drawing && Tracking.Ok)
+            if (!remoteMode && !AreaMode) return;
+            // 同一個地方：房主自動建場地（收到別人的場地就不建）；並排對齊過才自動進選職業（不然會蓋住對齊按鈕）
+            bool canAutoArea = remoteMode || (net.IsHost && !areaReceived && !areaOwner);
+            if (canAutoArea && !autoArea && playArea.HasFloor && playArea.state != PlayArea.State.Done && playArea.state != PlayArea.State.Drawing && Tracking.Ok)
             {
                 autoArea = true;
                 playArea.Clear();
@@ -413,7 +415,8 @@ namespace SpellDuel
             }
             if (!net.Connected) { autoSetup = false; return; }
             bool someone = net.IsHost ? solo.PeerIds.Count > 0 : net.MyPid > 0;
-            if (!autoSetup && someone && WorldReady && solo.phase == SoloBattle.Phase.Hidden) { autoSetup = true; solo.ShowSetup(); }
+            bool ready = remoteMode ? WorldReady : WorldReady && quickAligned && (areaOwner || areaReceived);
+            if (!autoSetup && someone && ready && solo.phase == SoloBattle.Phase.Hidden) { autoSetup = true; solo.ShowSetup(); }
         }
 
         /// <summary>從剪貼簿的文字裡找房間代碼（6～8 個英數字，例如朋友用 LINE 傳來的「SpellDuel 房間代碼：ABC123」）</summary>
@@ -437,11 +440,12 @@ namespace SpellDuel
             mode = m;
             duoUseMarker = marker;
             solo.NetMode = m == Mode.Duo;
-            // 連線方式：遠端＝Unity Relay（房間代碼）；其他＝區域網路（IP）
-            if ((remote && !(net is RelayLink)) || (!remote && !(net is NetLink)))
+            // 連線方式：遠端、同一個地方（畫場地）＝Unity Relay（房間代碼，不用同一個 Wi-Fi、不用打 IP）；標記圖模式＝區域網路（IP）
+            bool relay = remote || (m == Mode.Duo && !marker);
+            if ((relay && !(net is RelayLink)) || (!relay && !(net is NetLink)))
             {
                 net?.Dispose();
-                net = remote ? (ILink)new RelayLink() : new NetLink();
+                net = relay ? (ILink)new RelayLink() : new NetLink();
             }
             remoteMode = m == Mode.Duo && remote;
             solo.RemotePlay = remoteMode;
@@ -471,7 +475,8 @@ namespace SpellDuel
                 areaOwner = areaReceived = aligned = remoteAligned = false;
                 areaWorld.Clear();
                 align.Clear();
-                Log("雙人（畫場地）：先連線，再由其中一人畫場地");
+                autoArea = autoSetup = false;
+                Log("同一個地方：一人建立房間，另一人輸入畫面上的代碼加入；兩支手機並排各按一次「📱 並排對齊」");
             }
             else
             {
@@ -1306,7 +1311,7 @@ namespace SpellDuel
                         : aligned ? $"對齊：✅ 誤差 {align.Rms * 100f:F0}cm（樣本 {align.Used}，持續互相校正）"
                         : "還沒對齊：按下面的「📱 並排對齊」最快（或兩人面對面，鏡頭拍到對方全身含腳）");
                 else
-                    Line(!playArea.HasFloor ? "場地：🔍 先掃地板（慢慢移動手機）" : "場地：由其中一人畫場地，另一人會自動收到");
+                    Line(!playArea.HasFloor ? "場地：🔍 先掃地板（慢慢移動手機）" : "場地：房主掃到地板會自動建好（也可以用下面的按鈕重畫），另一人會自動收到");
                 Line($"連線：{net.Status}" + (net.Connected && !net.IsHost ? $"　時鐘差 {clockOffset * 1000:F0}ms（來回 {bestRtt * 1000:F0}ms）" : ""));
                 if (net.Connected) Line($"👥 房間 {solo.PeerIds.Count + 1} 人（最多 {NetLink.MaxClients + 1} 人；我是{(net.IsHost ? "房主" : $" {net.MyPid} 號")}）" + (solo.PeerIds.Count > 1 ? (remoteMode ? "　多人只能玩合作" : "　多人只能玩合作；每位加入的人都要先面對房主對齊") : ""));
                 string dist = "";
@@ -1338,7 +1343,7 @@ namespace SpellDuel
                     if (playArea.state == PlayArea.State.Drawing) UiKit.Text(new Rect(pad * 2 + bw, y, W - bw - pad * 3, bh), playArea.Hint, fsS, new Color(1f, 0.9f, 0.6f));
                     y += bh + pad * 0.5f;
                 }
-                if (remoteMode)
+                if (net is RelayLink)
                 {
                     var rl = net as RelayLink;
                     if (rl != null && rl.IsHost && !string.IsNullOrEmpty(rl.JoinCode))
@@ -1347,10 +1352,11 @@ namespace SpellDuel
                         if (UiKit.Button(new Rect(W * 0.6f, y, W * 0.4f - pad, bh), "📋 複製代碼", fs, true, new Color(1f, 0.85f, 0.4f)))
                         {
                             GUIUtility.systemCopyBuffer = $"來玩 SpellDuel！房間代碼：{rl.JoinCode}";
-                            Log("📋 已複製，貼到 LINE 傳給朋友；朋友在遠端連線按「📋 貼上並加入」");
+                            Log("📋 已複製，貼到 LINE 傳給朋友；朋友按「📋 貼上朋友的代碼並加入」");
                         }
                         y += bh + pad * 0.3f;
-                        Line(solo.PeerIds.Count == 0 ? "等朋友加入…（有人加入就自動進入選職業畫面，最多 6 人）" : "大家都進來後，在選職業畫面按準備");
+                        Line(!remoteMode ? (solo.PeerIds.Count == 0 ? "請朋友在他的手機輸入上面的代碼按「加入」" : "接著兩支手機並排、各按一次「📱 並排對齊」")
+                            : solo.PeerIds.Count == 0 ? "等朋友加入…（有人加入就自動進入選職業畫面，最多 6 人）" : "大家都進來後，在選職業畫面按準備");
                     }
                     else if (!net.Connected && rl != null && !rl.Busy)
                     {
@@ -1370,11 +1376,14 @@ namespace SpellDuel
                             else { codeInput = code; PlayerPrefs.SetString("sd_last_code", code); rl.Join(code); }
                         }
                     }
-                    y += bh + pad * 0.5f;
-                    if (net.Connected && WorldReady && UiKit.Button(new Rect(pad, y, W - pad * 2, bh * 1.2f), "⚔ 職業對戰／🤝 合作（選職業與技能）", Mathf.RoundToInt(fs * 1.1f), true, new Color(0.75f, 0.55f, 1f))) solo.ShowSetup();
-                    else if (net.Connected && !WorldReady) Line("⚠ 先畫好自己的場地");
-                    y += bh * 1.2f + pad * 0.5f;
-                    if (UiKit.Button(new Rect(pad, y, bw * 1.3f, bh), "換模式", fs)) { net.Dispose(); net = new NetLink(); remoteMode = false; solo.RemotePlay = false; mode = Mode.Choose; WorldFrame.Reset(); playArea.Clear(); }
+                    if (remoteMode)
+                    {
+                        y += bh + pad * 0.5f;
+                        if (net.Connected && WorldReady && UiKit.Button(new Rect(pad, y, W - pad * 2, bh * 1.2f), "⚔ 職業對戰／🤝 合作（選職業與技能）", Mathf.RoundToInt(fs * 1.1f), true, new Color(0.75f, 0.55f, 1f))) solo.ShowSetup();
+                        else if (net.Connected && !WorldReady) Line("⚠ 先畫好自己的場地");
+                        y += bh * 1.2f + pad * 0.5f;
+                        if (UiKit.Button(new Rect(pad, y, bw * 1.3f, bh), "換模式", fs)) { net.Dispose(); net = new NetLink(); remoteMode = false; solo.RemotePlay = false; mode = Mode.Choose; WorldFrame.Reset(); playArea.Clear(); }
+                    }
                 }
                 else if (!net.Connected)
                 {
