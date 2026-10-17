@@ -682,7 +682,7 @@ namespace SpellDuel
             battle.OnLane += ShowLane;
             battle.OnPool += pl => PlantFx.PoisonPool(WorldFrame.FromWorld(pl.pos), pl.radius, Mathf.Max(0.1f, pl.until - battle.now));
             // Boss 出生點：場地內、離玩家們夠遠的地方（隊友端先放在遠處，等主機的位置）
-            boss.head = host ? BossSpawnPoint(me) : new Vector3(0f, BossRig.Height, 0f);
+            boss.head = host && !RemotePlay ? BossSpawnPoint(me) : new Vector3(0f, BossRig.Height, 0f);   // 遠端：Boss 在大家圍成的圓中間（開戰時才定座位）
             boss.head.y = BossRig.Height;
             boss.forward = Fighter.Flat(me.head - boss.head);
             bossSeen = host;

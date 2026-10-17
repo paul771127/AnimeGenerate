@@ -50,23 +50,53 @@ namespace SpellDuel
         bool AreaMode => mode == Mode.Duo && !duoUseMarker && !remoteMode;
 
         // ---------------------------------------------------------------- 遠端連線：座位
-        // 每個人的場地中心都對到世界原點；第 i 個人（依 pid 排序，共 n 人）的場地轉 360°×i/n。
-        // 每人從自己場地的「後方邊緣」開始，大家在虛擬場地裡就是圍成一圈、面向中心（兩人＝面對面）。
+        // 開戰前：每個人的場地中心都對到世界原點；第 i 個人（依 pid 排序，共 n 人）的場地轉 360°×i/n。
+        // 開戰那一刻重新定座位：不管站在自己房間的哪裡，「開戰時面向的方向」就是朝向對手（多人＝朝向圓心），
+        // 第 i 個人站在離圓心 SeatRadius 公尺、角度 360°×i/n 的位置（兩人＝相距 2×SeatRadius 面對面）。
+        // （以前用「畫完場地時手機面向的方向」當前方，玩家常常搞反 → 對手出現在背後）
+        public const float SeatRadius = 1.5f;
         string seatKey = "";
-        void UpdateSeat()
+        SoloBattle.Phase lastSeatPhase = SoloBattle.Phase.Hidden;
+
+        void SeatOf(out int i, out int n)
         {
-            if (!remoteMode || playArea.state != PlayArea.State.Done || solo.phase == SoloBattle.Phase.Fighting) return;
             var all = new List<int>(solo.PeerIds); int me = Mathf.Max(0, net.MyPid);
             if (!all.Contains(me)) all.Add(me);
             all.Sort();
-            int i = all.IndexOf(me), n = all.Count;
+            i = all.IndexOf(me); n = all.Count;
+        }
+
+        void UpdateSeat()
+        {
+            var ph = solo.phase; bool started = ph == SoloBattle.Phase.Fighting && lastSeatPhase != SoloBattle.Phase.Fighting;
+            lastSeatPhase = ph;
+            if (remoteMode && started && Tracking.Ok && playArea.state == PlayArea.State.Done) { AnchorSeat(); return; }
+            if (!remoteMode || playArea.state != PlayArea.State.Done || ph == SoloBattle.Phase.Fighting || ph == SoloBattle.Phase.Over) return;   // 結算畫面維持開戰時的座位
+            SeatOf(out int i, out int n);
             string key = $"{i}/{n}";
             if (key == seatKey && WorldFrame.Calibrated) return;
             seatKey = key;
             float angle = 360f * i / Mathf.Max(1, n);
             var o = playArea.Origin;
             WorldFrame.SetMarker(new Pose(o.position, o.rotation * Quaternion.Euler(0f, angle, 0f)));
-            if (n > 1) Log($"🪑 座位 {i + 1}/{n}：站在自己場地的後方邊緣、面向前方開始");
+            if (n > 1) Log($"🪑 座位 {i + 1}/{n}：開戰時面向的方向就是對手的方向");
+        }
+
+        /// <summary>開戰：以我現在的位置與面向，把我放到座位上（世界座標）</summary>
+        void AnchorSeat()
+        {
+            SeatOf(out int i, out int n);
+            float angle = 360f * i / Mathf.Max(1, n);
+            var rotA = Quaternion.Euler(0f, angle, 0f);
+            var seatW = rotA * new Vector3(0f, 0f, -SeatRadius);          // 我在世界裡的起點（地上）
+            var f = Flat(cam.transform.forward);
+            if (f.sqrMagnitude < 1e-4f) f = Vector3.forward;
+            // 世界的「朝圓心」方向 rotA×(+Z) 要對到我現在面向的方向
+            var q = Quaternion.LookRotation(f.normalized, Vector3.up) * Quaternion.Inverse(rotA);
+            var feet = new Vector3(cam.transform.position.x, playArea.FloorY, cam.transform.position.z);
+            WorldFrame.SetMarker(new Pose(feet - q * seatW, q));
+            seatKey = "";   // 打完回到準備畫面時重新套用場地座位
+            if (n > 1) Log(n == 2 ? "🪑 開戰！對手在你面前約 3 公尺" : $"🪑 開戰！你在第 {i + 1}/{n} 個座位，大家圍著中間");
         }
 
         // ---------------------------------------------------------------- 雙人「畫場地」模式
@@ -1193,7 +1223,7 @@ namespace SpellDuel
             else
             {
                 if (remoteMode)
-                    Line(playArea.state == PlayArea.State.Done ? $"場地：✅ 完成（離邊界 {playArea.DistanceToEdge(cam.transform.position):F1}m）　站在場地後方邊緣開始" : !playArea.HasFloor ? "場地：🔍 先掃地板（慢慢移動手機）" : "場地：畫出自己的遊戲範圍（建議 6m 以上）");
+                    Line(playArea.state == PlayArea.State.Done ? $"場地：✅ 完成（離邊界 {playArea.DistanceToEdge(cam.transform.position):F1}m）　開戰時面向的方向＝對手的方向" : !playArea.HasFloor ? "場地：🔍 先掃地板（慢慢移動手機）" : "場地：畫出自己的遊戲範圍（建議 6m 以上）");
                 else if (duoUseMarker)
                     Line(WorldFrame.Calibrated
                         ? $"座標：✅ 已對齊（{Time.time - WorldFrame.LastSeenTime:F0} 秒前看到標記圖）"
