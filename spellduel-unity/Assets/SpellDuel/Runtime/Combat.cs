@@ -39,7 +39,8 @@ namespace SpellDuel
         public float comboStrike, basicLeech, waveFlow, riposte;                  // 劍士：連斬、飲血、劍意、反擊之刃
         public float venom, assassinate, vanish, knifeCdr;                        // 刺客：劇毒連刺、刺殺、遁影、飛刀節奏
         public float holySeal, martyr, zeal;                                      // 牧師：聖印、殉道、狂信
-        public float bashGuard, sanctionCombo, critDmg, falconMark, petMp;        // 進階職業：盾擊格擋、制裁連斬、爆擊傷害、鷹眼標記、契約魔力
+        public float bashGuard, sanctionCombo, critDmg, falconMark, petMp;
+        public float closeInstinct;     // 刺客「近身本能」等級（0＝沒點）        // 進階職業：盾擊格擋、制裁連斬、爆擊傷害、鷹眼標記、契約魔力
         public int basicHits, venomStacks, seals;
         // 刺殺流派：有沒有被敵人看見（SoloBattle 每幀設定：對戰＝對手的鏡頭有沒有拍到我；電腦／Boss／小怪＝我在不在它的視野內）、這次蓄力累計躲開視線幾秒
         public bool seenByFoe = true; public float hiddenTime;                                 // 連斬計數、身上的毒層、聖印層數
@@ -1227,9 +1228,9 @@ namespace SpellDuel
         }
 
         /// <summary>刺客伏擊技能（刺殺、影襲、毒刃）：身邊這個半徑內不能有敵人才能蓄力；蓄力完成後靠近到這個距離就自動出手</summary>
-        /// <summary>刺客「近身本能」：2m 內有敵人時，受到的傷害 −20%、閃避率 +15%（貼臉打刺客要付出代價）</summary>
-        public const float CloseRange = 2f, CloseReduce = 0.2f, CloseEvade = 0.15f;
-        public bool CloseInstinct(Fighter f) => f != null && f.cls != null && f.cls.id == "assassin" && NearestFoe(f, out var d) != null && d < CloseRange;
+        /// <summary>刺客技能樹「近身本能」：2m 內有敵人時，受到的傷害 −4%／級、閃避率 +3%／級（貼臉打刺客要付出代價）</summary>
+        public const float CloseRange = 2f, CloseReducePer = 0.04f, CloseEvadePer = 0.03f;
+        public bool CloseInstinct(Fighter f) => f != null && f.closeInstinct > 0f && NearestFoe(f, out var d) != null && d < CloseRange;
         public const float AmbushReach = 1.5f;
         /// <summary>法術飛超過技能射程後，再往前飄這麼遠（公尺）一邊淡出一邊消失</summary>
         public const float FadeDistance = 0.8f;   // 伏擊中靠近到半徑 1.5m（直徑 3m）內：自動出手
@@ -2327,7 +2328,7 @@ namespace SpellDuel
         void ApplyDamageAndEffect(Fighter target, int damage, EffectKind eff, float dps, float dur, Vector3 at)
         {
             // 閃避率（刺客技能樹）：整次攻擊（傷害＋效果）完全閃開
-            float evade = target.evadeChance + (target.vanishUntil > now ? target.vanish : 0f) + (CloseInstinct(target) ? CloseEvade : 0f);
+            float evade = target.evadeChance + (target.vanishUntil > now ? target.vanish : 0f) + (CloseInstinct(target) ? CloseEvadePer * target.closeInstinct : 0f);
             if (evade > 0f && damage > 0 && rng.NextDouble() < evade) { Emit("evade", target.Chest, new Color(0.7f, 0.6f, 1f), "閃避！"); return; }
             if (damage > 0 && target.invulnUntil > now) { Emit("evade", target.Chest, new Color(1f, 0.4f, 0.4f), "無敵！"); return; }
             // 忍者：替身術（下一次攻擊完全無效）、分身術（一半的攻擊打到分身）
@@ -2367,7 +2368,7 @@ namespace SpellDuel
             dmg *= f.damageTakenMul * (1f - f.gearReduce);
             if (f.lastStand > 0f && f.hp < f.maxHp * 0.3f) dmg *= 1f - f.lastStand;   // 不屈：低血量減傷
             if (f.markedUntil > now) dmg *= 1.2f;                                       // 被懲戒
-            if (dmg > 0f && kind != "dot" && kind != "burn" && CloseInstinct(f)) dmg *= 1f - CloseReduce;   // 刺客近身本能
+            if (dmg > 0f && kind != "dot" && kind != "burn" && CloseInstinct(f)) dmg *= 1f - CloseReducePer * f.closeInstinct;   // 刺客近身本能
             if (f == player && dmg > 0f)
             {
                 if (InAura(f)) dmg *= 1f - AuraReduce;                                  // 聖騎士守護光環

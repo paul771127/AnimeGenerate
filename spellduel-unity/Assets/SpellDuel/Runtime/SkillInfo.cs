@@ -168,7 +168,7 @@ namespace SpellDuel
                 else if (s.releaseNear)
                 {
                     Line($"伏擊一靠近就命中、閃不掉：保持距離 {s.rangeMax:0.#}m 以上，撐過 {Battle.AmbushWindow:0} 秒（刺殺流派 {Battle.StealthAmbushWindow:0} 秒）就落空；或趁它還沒靠近時打它一下就能取消");
-                    Line("刺客近身本能：2m 內打它，傷害 −20%、它的閃避 +15%");
+                    Line("刺客點了「近身本能」時，2m 內打它傷害會降低、它的閃避也會提高");
                     Line("法師的抗拒法環可以取消伏擊");
                 }
                 else if (s.id == "slash" || Skills.IsMeleeBasic(s)) Line($"只砍前方半球（半徑 {s.rangeMax:0.#}m）：退到範圍外或繞到它背後");

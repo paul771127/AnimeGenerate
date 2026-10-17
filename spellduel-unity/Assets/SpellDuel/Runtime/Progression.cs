@@ -71,6 +71,7 @@ namespace SpellDuel
         HolySeal, Homing, Martyr, Zeal,                                // 牧師
         // 進階職業（技能樹 v3）
         BashGuard, SanctionCombo, CritDmg, FalconMark, PetMp,
+        CloseInstinct,
     }
 
     public class TreeNode
@@ -267,6 +268,7 @@ namespace SpellDuel
                     // 刺殺
                     FMod("as_shadow", "影襲強化", "shadow", ModField.Damage, 0.1f, 5, 3, 1, "as_root"),
                     FLearn("as_backstab", "backstab", 3, 2, "as_shadow"),
+                    FPas("as_close", "近身本能", PassiveKind.CloseInstinct, 1f, 5, 2, 2, "as_shadow"),
                     FPas("as_assn", "暗殺術", PassiveKind.Assassinate, 0.15f, 5, 3, 3, "as_backstab"),
                     FMod("as_backstab2", "刺殺強化", "backstab", ModField.Damage, 0.12f, 5, 2, 4, "as_assn"),
                     FPas("as_vanish", "遁影", PassiveKind.Vanish, 0.15f, 5, 3, 4, "as_assn"),
@@ -543,6 +545,7 @@ namespace SpellDuel
                         PassiveKind.CritDmg => $"爆擊傷害 +{v * 100:0}%（原本 ×2）",
                         PassiveKind.FalconMark => $"獵鷹攻擊時 {v * 100:0}% 機率標記：4 秒內下一個弓箭技能必定爆擊",
                         PassiveKind.PetMp => $"召喚物命中時回復 {v:0.#} MP",
+                        PassiveKind.CloseInstinct => $"2m 內有敵人時：受到的傷害 −{v * Battle.CloseReducePer * 100:0}%、閃避率 +{v * Battle.CloseEvadePer * 100:0}%（持續傷害不減）",
                         _ => $"HP 低於 30% 時受到的傷害 -{v * 100:0}%",
                     };
             }
@@ -1008,7 +1011,7 @@ namespace SpellDuel
             f.venom = Passive(PassiveKind.Venom); f.assassinate = Passive(PassiveKind.Assassinate); f.vanish = Passive(PassiveKind.Vanish); f.knifeCdr = Passive(PassiveKind.KnifeCdr);
             f.holySeal = Passive(PassiveKind.HolySeal); f.basicHoming = Passive(PassiveKind.Homing); f.martyr = Passive(PassiveKind.Martyr); f.zeal = Passive(PassiveKind.Zeal);
             f.bashGuard = Passive(PassiveKind.BashGuard); f.sanctionCombo = Passive(PassiveKind.SanctionCombo); f.critDmg = Passive(PassiveKind.CritDmg);
-            f.falconMark = Passive(PassiveKind.FalconMark); f.petMp = Passive(PassiveKind.PetMp);
+            f.falconMark = Passive(PassiveKind.FalconMark); f.petMp = Passive(PassiveKind.PetMp); f.closeInstinct = Passive(PassiveKind.CloseInstinct);
             var bs = Skills.BasicOf(cls); f.basic = bs != null ? ModdedSkill(bs.id) : null;   // 普攻也吃技能樹
             // 技能：只帶會的技能，數值換成技能樹強化後的版本
             f.loadout.Clear();
