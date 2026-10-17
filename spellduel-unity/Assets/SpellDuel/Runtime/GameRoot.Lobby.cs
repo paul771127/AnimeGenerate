@@ -12,6 +12,8 @@ namespace SpellDuel
     /// </summary>
     public partial class GameRoot
     {
+        float lobbyMeasuredBottom, lobbyRouteY;
+        GUIStyle lobbyInput;
         bool lobbyDetails;   // 「ℹ 詳細」展開
 
         enum StepState { Todo, Now, Done }
@@ -21,11 +23,10 @@ namespace SpellDuel
         {
             var safe = Screen.safeArea;
             float bottom = H - safe.y - pad, h = bottom - top;
-            UiKit.Backdrop(new Rect(0, 0, W, H), UiKit.Gold);
-            float logo = Mathf.Min(W * 0.22f, h * 0.11f);
-            UiKit.Emblem(new Rect((W - logo) * 0.5f, top + h * 0.02f, logo, logo), 0, UiKit.Gold);
-            UiKit.Text(new Rect(pad, top + h * 0.14f, W - pad * 2, h * 0.08f), "SpellDuel", fs * 3, new Color(1f, 0.85f, 0.4f), TextAnchor.MiddleCenter, true);
-            UiKit.Text(new Rect(pad, top + h * 0.22f, W - pad * 2, lineH), "唸出咒語，在真實世界施法對決", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleCenter);
+            UiKit.Backdrop(new Rect(0,0,W,H),UiKit.Gold,.48f);
+            LobbyDust(new Rect(0,top,W,h),UiKit.Gold);
+            LobbyLogo(new Rect(pad,top+h*.015f,W-pad*2,h*.235f),fs);
+            UiKit.Text(new Rect(pad,top+h*.25f,W-pad*2,lineH),LobbyCaption("唸出咒語，在真實世界施法對決"),fsS,UiKit.Paper,TextAnchor.MiddleCenter);
 
             string[] titles = { "🧍 單人冒險", "👥 和身邊的朋友對戰", "🌐 和遠方的朋友連線" };
             string[] descs =
@@ -35,16 +36,20 @@ namespace SpellDuel
                 "把代碼傳給朋友；對方以虛擬角色出現在你的房間",
             };
             Color[] acc = { new Color(0.4f, 0.85f, 1f), new Color(1f, 0.55f, 0.35f), new Color(0.75f, 0.55f, 1f) };
-            int[] emblem = { 0, 1, 3 };
-            float cw = W - pad * 4, ch = h * 0.15f, cx = pad * 2, cy = top + h * 0.3f;
+            float cw=W-pad*3,ch=h*.155f,cx=pad*1.5f,cy=top+h*.325f;
             for (int i = 0; i < 3; i++)
             {
                 var r = new Rect(cx, cy + i * (ch + pad), cw, ch);
-                bool hit = UiKit.Button(r, "", fs, false, acc[i]);
-                UiKit.Emblem(new Rect(r.x + pad * 0.6f, r.y + ch * 0.2f, ch * 0.6f, ch * 0.6f), emblem[i], acc[i]);
-                float tx = r.x + ch * 0.6f + pad * 1.2f;
-                UiKit.Text(new Rect(tx, r.y + ch * 0.1f, r.xMax - tx - pad, ch * 0.42f), titles[i], Mathf.RoundToInt(fs * 1.25f), Color.white, TextAnchor.MiddleLeft, true);
-                UiKit.Text(new Rect(tx, r.y + ch * 0.5f, r.xMax - tx - pad, ch * 0.42f), descs[i], fsS, new Color(0.82f, 0.86f, 0.96f));
+                bool hit = UiKit.Button(r, LobbyCaption(""), fs, false, acc[i]);
+                float art=ch*.63f;
+                float press=r.Contains(Event.current.mousePosition)&&Input.GetMouseButton(0)?2f:0f;
+                if(press>0)UiKit.Halo(r,acc[i],1);
+                LobbyModeArt(new Rect(r.x+pad*.45f,r.y+ch*.18f+press,art,art),i,acc[i]);
+                UiKit.Divider(new Rect(r.x+pad*.3f,r.y+ch*.18f,2,ch*.64f),acc[i]);
+                UiKit.Gem(new Rect(r.xMax-pad*.8f,r.center.y-4,8,8),acc[i]);
+                float tx=r.x+ch*.63f+pad*.8f;
+                UiKit.Text(new Rect(tx, r.y + ch * 0.1f+press, r.xMax - tx - pad*1.2f, ch * 0.38f), LobbyCaption(titles[i]), Mathf.RoundToInt(fs * 1.15f), Color.white, TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(tx, r.y + ch * 0.49f+press, r.xMax - tx - pad*1.2f, ch * 0.43f), LobbyCaption(descs[i]), fsS, new Color(0.82f, 0.86f, 0.96f));
                 if (hit)
                 {
                     if (i == 0) ChooseMode(Mode.Solo);
@@ -53,22 +58,23 @@ namespace SpellDuel
                 }
             }
             // 進階：標記圖模式（同一個 Wi-Fi、掃描地上的標記圖）
-            var mr = new Rect(W * 0.2f, cy + 3 * (ch + pad) + pad * 0.5f, W * 0.6f, lineH * 1.4f);
-            if (UiKit.Button(mr, "🗺 進階：標記圖模式（同一個 Wi-Fi）", fsS)) ChooseMode(Mode.Duo, true, false);
-            UiKit.Text(new Rect(pad, bottom - lineH, W - pad * 2, lineH), "版本 " + BuildInfo, Mathf.RoundToInt(fsS * 0.85f), new Color(0.6f, 0.65f, 0.75f), TextAnchor.MiddleCenter);
+            var mr = new Rect(W*.17f,cy+3*(ch+pad)+pad*.2f,W*.66f,lineH*1.05f);
+            if (UiKit.Button(mr, LobbyCaption("🗺 進階：標記圖模式（同一個 Wi-Fi）"), fsS)) ChooseMode(Mode.Duo, true, false);
+            UiKit.Text(new Rect(pad, bottom - lineH, W - pad * 2, lineH), LobbyCaption("版本 " + BuildInfo), Mathf.RoundToInt(fsS * 0.85f), new Color(0.6f, 0.65f, 0.75f), TextAnchor.MiddleCenter);
         }
 
         // ================================================================ 連線／場地畫面
         void DrawLobby(float W, float H, float pad, float top, float lineH, int fs, int fsS)
         {
             float y = top;
-            float bh = lineH * 1.6f, full = W - pad * 2, half = (full - pad) / 2f;
-            var card = new Rect(pad * 0.5f, -pad, W - pad, Mathf.Max(H * 0.3f, panelBottom) + pad);
-            UiKit.Card(card, 0.82f, ModeColor, 0.9f);
+            float bh = fs*2.25f, full = W - pad * 2, half = (full - pad) / 2f;
+            float cardTop=top-pad*.45f;
+            var card=new Rect(pad*.5f,cardTop,W-pad,Mathf.Max(lineH*3,lobbyMeasuredBottom-cardTop));
+            UiKit.Card(card,.86f,ModeColor,.95f);
 
             // ---- 標題
-            UiKit.Title(new Rect(pad, y, full, lineH * 1.5f), ModeTitle, ModeColor, Mathf.RoundToInt(fs * 1.15f));
-            y += lineH * 1.7f;
+            UiKit.Title(new Rect(pad, y, full, lineH * 1.12f), LobbyCaption(ModeTitle), ModeColor, Mathf.RoundToInt(fs * 1.15f));
+            y += lineH*1.32f;
 
             // ---- 步驟清單＋現在這一步的按鈕
             if (mode == Mode.Solo) LobbySolo(ref y, pad, full, half, bh, lineH, fs, fsS);
@@ -79,14 +85,15 @@ namespace SpellDuel
             // ---- 下方：返回、詳細
             y += pad * 0.3f;
             bool canLeave = mode == Mode.Solo || !net.Connected || remoteMode;
-            if (canLeave && UiKit.Button(new Rect(pad, y, half, bh * 0.85f), "← 換模式", fsS)) LeaveLobby();
-            if (UiKit.Button(new Rect(canLeave ? pad * 2 + half : pad, y, canLeave ? half : full, bh * 0.85f), lobbyDetails ? "ℹ 收起詳細" : "ℹ 詳細", fsS, lobbyDetails)) lobbyDetails = !lobbyDetails;
+            if (canLeave && UiKit.Button(new Rect(pad, y, half, bh * 0.85f), LobbyCaption("← 換模式"), fsS)) LeaveLobby();
+            if (UiKit.Button(new Rect(canLeave ? pad * 2 + half : pad, y, canLeave ? half : full, bh * 0.85f), LobbyCaption(lobbyDetails ? "ℹ 收起詳細" : "ℹ 詳細"), fsS, lobbyDetails)) lobbyDetails = !lobbyDetails;
             y += bh * 0.85f + pad * 0.4f;
             if (lobbyDetails) LobbyDetails(ref y, pad, full, half, bh, lineH, fs, fsS);
 
             if (mode == Mode.Duo && (AreaMode || remoteMode) && playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position))
                 UiKit.Pill(H * 0.68f, "⚠ 回到場地內", fs * 2, new Color(1f, 0.4f, 0.4f), W - pad * 2);
-            panelBottom = y + pad * 0.5f;
+            lobbyMeasuredBottom=y+pad*.5f;
+            panelBottom=card.yMax;
         }
 
         string ModeTitle => mode == Mode.Solo ? "🧍 單人冒險" : remoteMode ? "🌐 和遠方的朋友連線" : duoUseMarker ? "🗺 標記圖模式" : "👥 和身邊的朋友對戰";
@@ -103,15 +110,36 @@ namespace SpellDuel
         /// <summary>一行步驟：編號／狀態圖示、標題、（現在這一步）提示</summary>
         void Step(ref float y, float pad, float full, float lineH, int fs, int fsS, int n, string title, StepState st, string hint = null)
         {
-            var c = st == StepState.Done ? new Color(0.45f, 1f, 0.6f) : st == StepState.Now ? new Color(1f, 0.9f, 0.5f) : new Color(0.6f, 0.65f, 0.75f);
-            string mark = st == StepState.Done ? "✅" : st == StepState.Now ? "▶" : "○";
-            UiKit.Text(new Rect(pad, y, full, lineH * 1.1f), $"{mark} {n}. {title}", st == StepState.Now ? fs : fsS, c, TextAnchor.MiddleLeft, st == StepState.Now);
-            y += lineH * 1.15f;
-            if (st == StepState.Now && !string.IsNullOrEmpty(hint))
+            float rowH=lineH*.96f,diameter=fs*1.28f;
+            float cx=pad+diameter*.55f,cy=y+rowH*.5f;
+            var c=st==StepState.Done?new Color(.5f,.92f,.72f):st==StepState.Now?ModeColor:UiKit.Muted;
+            if(n>1)LobbyStroke(new Vector2(cx,lobbyRouteY),new Vector2(cx,cy-diameter*.5f),Mathf.Max(2,fs*.055f),st==StepState.Todo?new Color(.35f,.42f,.55f,.5f):c);
+            lobbyRouteY=cy+diameter*.5f;
+            var medal=new Rect(cx-diameter*.5f,cy-diameter*.5f,diameter,diameter);
+            if(st==StepState.Now)
             {
-                UiKit.Text(new Rect(pad * 2.2f, y, full - pad * 1.2f, lineH * 1.6f), hint, fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
-                y += lineH * 1.7f;
+                float pulse=.65f+.25f*Mathf.Sin(Time.time*2.7f);
+                UiKit.Card(new Rect(pad+diameter+fs*.2f,y,full-diameter-fs*.2f,rowH),.7f,c,pulse);
+                UiKit.Halo(new Rect(medal.x-4,medal.y-4,medal.width+8,medal.height+8),c,pulse);
             }
+            UiKit.Badge(medal,null,c,1);
+            if(st==StepState.Done)
+            {
+                LobbyStroke(new Vector2(cx-diameter*.20f,cy),new Vector2(cx-diameter*.04f,cy+diameter*.15f),Mathf.Max(2,fs*.07f),UiKit.Paper);
+                LobbyStroke(new Vector2(cx-diameter*.04f,cy+diameter*.15f),new Vector2(cx+diameter*.23f,cy-diameter*.16f),Mathf.Max(2,fs*.07f),UiKit.Paper);
+            }
+            else UiKit.Text(medal,LobbyCaption(n.ToString()),fsS,c,TextAnchor.MiddleCenter,true);
+            float tx=pad+diameter+fs*.38f;
+            UiKit.Text(new Rect(tx,y,pad+full-tx-fs*.22f,rowH),LobbyCaption(title),st==StepState.Now?fs:fsS,st==StepState.Todo?UiKit.Muted:UiKit.Paper,TextAnchor.MiddleLeft,st==StepState.Now);
+            y+=rowH;
+            if(st==StepState.Now&&!string.IsNullOrEmpty(hint))
+            {
+                float hintH=Mathf.Max(lineH,UiKit.TextHeight(hint,pad+full-tx,fsS)+fs*.18f);
+                UiKit.Text(new Rect(tx,y,pad+full-tx,hintH),LobbyCaption(hint),fsS,UiKit.Muted,TextAnchor.UpperLeft);
+                LobbyStroke(new Vector2(cx,y),new Vector2(cx,y+hintH),Mathf.Max(2,fs*.055f),new Color(c.r,c.g,c.b,.5f));
+                y+=hintH;
+            }
+            y+=lineH*.13f;
         }
 
         static StepState S(bool done, bool now) => done ? StepState.Done : now ? StepState.Now : StepState.Todo;
@@ -124,7 +152,7 @@ namespace SpellDuel
             bool floor = playArea.HasFloor, area = playArea.state == PlayArea.State.Done;
             Step(ref y, pad, full, lineH, fs, fsS, 1, "找到地板", S(floor, !floor), "面向空曠的地方，慢慢左右移動手機、鏡頭對著地板");
             Step(ref y, pad, full, lineH, fs, fsS, 2, $"建立 {AutoAreaSize:0}m 場地（自動）", S(area, floor && !area), "場地會建在你前方");
-            if (floor && UiKit.Button(new Rect(pad, y, full, bh), $"↺ 在我前方重新放置 {AutoAreaSize:0}m 場地", fs, false, new Color(0.4f, 0.85f, 1f), playArea.state != PlayArea.State.Drawing))
+            if (floor && UiKit.Button(new Rect(pad, y, full, bh), LobbyCaption($"↺ 在我前方重新放置 {AutoAreaSize:0}m 場地"), fs, false, new Color(0.4f, 0.85f, 1f), playArea.state != PlayArea.State.Drawing))
             { WorldFrame.Reset(); playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); }
             if (floor) y += bh + pad * 0.4f;
         }
@@ -136,28 +164,32 @@ namespace SpellDuel
             if (rl == null) return;
             if (rl.IsHost && !string.IsNullOrEmpty(rl.JoinCode))
             {
-                UiKit.Text(new Rect(pad, y, full * 0.6f, bh), $"房間代碼  {rl.JoinCode}", Mathf.RoundToInt(fs * 1.5f), new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleCenter, true);
-                if (UiKit.Button(new Rect(pad + full * 0.62f, y, full * 0.38f, bh), "📋 複製代碼", fsS, true, new Color(1f, 0.85f, 0.4f)))
+                float codeH=bh*1.35f;
+                UiKit.Card(new Rect(pad,y,full,codeH),.95f,UiKit.Gold,.85f);
+                UiKit.Text(new Rect(pad+fs*.4f,y+fs*.12f,full*.6f-fs*.6f,fs*.75f),LobbyCaption("房間代碼"),Mathf.RoundToInt(fsS*.82f),UiKit.Muted,TextAnchor.MiddleLeft,true);
+                UiKit.Text(new Rect(pad+fs*.3f,y+fs*.8f,full*.6f-fs*.5f,codeH-fs*.85f),LobbyCaption(rl.JoinCode),Mathf.RoundToInt(fs*1.85f),UiKit.Gold,TextAnchor.MiddleCenter,true,.8f);
+                if (UiKit.Button(new Rect(pad+full*.64f,y+fs*.2f,full*.34f,codeH-fs*.4f), LobbyCaption("📋 複製代碼"), fsS, true, new Color(1f, 0.85f, 0.4f)))
                 {
                     GUIUtility.systemCopyBuffer = $"來玩 SpellDuel！房間代碼：{rl.JoinCode}";
                     Log("📋 已複製，貼到 LINE 傳給朋友；朋友按「📋 貼上朋友的代碼並加入」");
                 }
-                y += bh + pad * 0.4f;
+                y+=codeH+pad*.4f;
             }
             else if (!net.Connected && !rl.Busy)
             {
-                if (UiKit.Button(new Rect(pad, y, full, bh), "🏠 建立房間", fs, true, ModeColor)) rl.Host();
+                if (UiKit.Button(new Rect(pad, y, full, bh), LobbyCaption("🏠 建立房間"), fs, true, ModeColor)) rl.Host();
                 y += bh + pad * 0.4f;
-                UiKit.Text(new Rect(pad, y, full, lineH), "或加入朋友的房間：", fsS, new Color(0.85f, 0.88f, 1f));
+                UiKit.Text(new Rect(pad, y, full, lineH), LobbyCaption("或加入朋友的房間："), fsS, new Color(0.85f, 0.88f, 1f));
                 y += lineH;
-                codeInput = GUI.TextField(new Rect(pad, y, half, bh), codeInput, 8, field).ToUpperInvariant();
-                if (UiKit.Button(new Rect(pad * 2 + half, y, half, bh), "加入", fs, true, new Color(0.4f, 0.85f, 1f), codeInput.Trim().Length >= 4))
+                UiKit.Card(new Rect(pad,y,half,bh),.95f,ModeColor,.8f);
+                codeInput = GUI.TextField(new Rect(pad+4,y+3,half-8,bh-6), codeInput, 8, LobbyInput(fs)).ToUpperInvariant();
+                if (UiKit.Button(new Rect(pad * 2 + half, y, half, bh), LobbyCaption("加入"), fs, true, new Color(0.4f, 0.85f, 1f), codeInput.Trim().Length >= 4))
                 {
                     PlayerPrefs.SetString("sd_last_code", codeInput.Trim());
                     rl.Join(codeInput);
                 }
                 y += bh + pad * 0.4f;
-                if (remote && UiKit.Button(new Rect(pad, y, full, bh), "📋 貼上朋友的代碼並加入", fsS, false, new Color(0.4f, 0.85f, 1f)))
+                if (remote && UiKit.Button(new Rect(pad, y, full, bh), LobbyCaption("📋 貼上朋友的代碼並加入"), fsS, false, new Color(0.4f, 0.85f, 1f)))
                 {
                     var code = FindJoinCode(GUIUtility.systemCopyBuffer);
                     if (code == null) Log("剪貼簿裡沒有房間代碼：請先複製朋友傳來的代碼");
@@ -167,7 +199,7 @@ namespace SpellDuel
             }
             else
             {
-                UiKit.Text(new Rect(pad, y, full, lineH), $"⏳ {net.Status}", fsS, new Color(1f, 0.9f, 0.6f));
+                UiKit.Text(new Rect(pad, y, full, lineH), LobbyCaption($"⏳ {net.Status}"), fsS, new Color(1f, 0.9f, 0.6f));
                 y += lineH * 1.2f;
             }
         }
@@ -177,14 +209,14 @@ namespace SpellDuel
         {
             bool area = playArea.state == PlayArea.State.Done;
             Step(ref y, pad, full, lineH, fs, fsS, 1, $"找到地板、建立 {AutoAreaSize:0}m 場地（自動）", S(area, !area), "面向房間裡最空的方向，慢慢移動手機、鏡頭對著地板");
-            if (area && solo.phase == SoloBattle.Phase.Hidden && UiKit.Button(new Rect(pad, y, full, bh * 0.85f), $"↺ 在我前方重新放置 {AutoAreaSize:0}m 場地", fsS))
+            if (area && solo.phase == SoloBattle.Phase.Hidden && UiKit.Button(new Rect(pad, y, full, bh * 0.85f), LobbyCaption($"↺ 在我前方重新放置 {AutoAreaSize:0}m 場地"), fsS))
             { playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); }
             if (area && solo.phase == SoloBattle.Phase.Hidden) y += bh * 0.85f + pad * 0.4f;
             Step(ref y, pad, full, lineH, fs, fsS, 2, HasPeer ? $"已連線（房間 {solo.PeerIds.Count + 1} 人）" : "連線：建立房間，或貼上朋友的代碼", S(HasPeer, !HasPeer),
                 net.Connected ? "等朋友加入…把代碼複製給他" : "一人建立房間、把代碼傳給朋友；朋友複製訊息後按「貼上並加入」");
             if (!HasPeer) RoomCodeUI(ref y, pad, full, half, bh, lineH, fs, fsS, true);
             Step(ref y, pad, full, lineH, fs, fsS, 3, "選職業開打（連上會自動打開）", S(false, HasPeer && WorldReady), "開戰那一刻你面向的方向就是對手的方向");
-            if (net.Connected && WorldReady && UiKit.Button(new Rect(pad, y, full, bh * 1.1f), "⚔ 選職業與技能", fs, true, ModeColor)) solo.ShowSetup();
+            if (net.Connected && WorldReady && UiKit.Button(new Rect(pad, y, full, bh * 1.1f), LobbyCaption("⚔ 選職業與技能"), fs, true, ModeColor)) solo.ShowSetup();
             if (net.Connected && WorldReady) y += bh * 1.1f + pad * 0.4f;
         }
 
@@ -200,16 +232,16 @@ namespace SpellDuel
             Step(ref y, pad, full, lineH, fs, fsS, 3, "📱 並排對齊（兩人各按一次）", S(quickAligned, conn && !quickAligned), "兩人站在一起，手機側邊貼緊並排、鏡頭朝同一個方向，各按一次");
             if (conn || quickAligned)
             {
-                if (UiKit.Button(new Rect(pad, y, full, bh * 1.1f), quickAligned ? "📱 已對齊（站回一起可以再按一次）" : "📱 並排對齊", fs, !quickAligned, new Color(0.45f, 1f, 0.6f), Tracking.Ok)) QuickAlign();
+                if (UiKit.Button(new Rect(pad, y, full, bh * 1.1f), LobbyCaption(quickAligned ? "📱 已對齊（站回一起可以再按一次）" : "📱 並排對齊"), fs, !quickAligned, new Color(0.45f, 1f, 0.6f), Tracking.Ok)) QuickAlign();
                 y += bh * 1.1f + pad * 0.4f;
             }
             Step(ref y, pad, full, lineH, fs, fsS, 4, net.IsHost ? $"{AutoAreaSize:0}m 場地（自動建在你前方）" : $"收到房主的 {AutoAreaSize:0}m 場地", S(area, quickAligned && !area),
                 net.IsHost ? "面向空地；要換位置就按下面的「重新放置」" : "等房主的場地傳過來");
-            if (net.IsHost && floor && !areaReceived && UiKit.Button(new Rect(pad, y, full, bh * 0.85f), $"↺ 在我前方重新放置 {AutoAreaSize:0}m 場地", fsS, false, null, playArea.state != PlayArea.State.Drawing))
+            if (net.IsHost && floor && !areaReceived && UiKit.Button(new Rect(pad, y, full, bh * 0.85f), LobbyCaption($"↺ 在我前方重新放置 {AutoAreaSize:0}m 場地"), fsS, false, null, playArea.state != PlayArea.State.Drawing))
             { playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); }
             if (net.IsHost && floor && !areaReceived) y += bh * 0.85f + pad * 0.4f;
             Step(ref y, pad, full, lineH, fs, fsS, 5, "選職業開打（對齊好會自動打開）", S(false, conn && WorldReady && area), "分開站好，相距 2～5 公尺");
-            if (net.Connected && WorldReady && UiKit.Button(new Rect(pad, y, full, bh * 1.1f), "⚔ 選職業與技能", fs, true, ModeColor)) solo.ShowSetup();
+            if (net.Connected && WorldReady && UiKit.Button(new Rect(pad, y, full, bh * 1.1f), LobbyCaption("⚔ 選職業與技能"), fs, true, ModeColor)) solo.ShowSetup();
             if (net.Connected && WorldReady) y += bh * 1.1f + pad * 0.4f;
         }
 
@@ -220,32 +252,35 @@ namespace SpellDuel
             Step(ref y, pad, full, lineH, fs, fsS, 1, conn ? "已連線" : "連線（同一個 Wi-Fi）", S(conn, !conn), "一人建立房間（畫面會顯示 IP），另一人輸入那個 IP 按「加入」");
             if (!conn)
             {
-                if (UiKit.Button(new Rect(pad, y, full, bh), "🏠 建立房間", fs, true, ModeColor)) ((NetLink)net).Host();
+                if (UiKit.Button(new Rect(pad, y, full, bh), LobbyCaption("🏠 建立房間"), fs, true, ModeColor)) ((NetLink)net).Host();
                 y += bh + pad * 0.4f;
-                ipInput = GUI.TextField(new Rect(pad, y, half, bh), ipInput, field);
-                if (UiKit.Button(new Rect(pad * 2 + half, y, half, bh), "加入", fs, true, new Color(0.4f, 0.85f, 1f)))
+                UiKit.Card(new Rect(pad,y,half,bh),.95f,ModeColor,.8f);
+                ipInput = GUI.TextField(new Rect(pad+4,y+3,half-8,bh-6), ipInput, LobbyInput(fsS));
+                if (UiKit.Button(new Rect(pad * 2 + half, y, half, bh), LobbyCaption("加入"), fs, true, new Color(0.4f, 0.85f, 1f)))
                 {
                     PlayerPrefs.SetString("sd_last_ip", ipInput);
                     ((NetLink)net).Join(ipInput);
                 }
                 y += bh + pad * 0.4f;
-                UiKit.Text(new Rect(pad, y, full, lineH), net.Status, fsS, new Color(1f, 0.9f, 0.6f));
+                UiKit.Text(new Rect(pad, y, full, lineH), LobbyCaption(net.Status), fsS, new Color(1f, 0.9f, 0.6f));
                 y += lineH * 1.2f;
             }
             bool cal = WorldFrame.Calibrated;
             Step(ref y, pad, full, lineH, fs, fsS, 2, cal ? "已對齊標記圖" : "掃描地上的標記圖", S(cal, conn && !cal), "兩支手機都把鏡頭對準地上同一張標記圖");
-            if (cal && UiKit.Button(new Rect(pad, y, full, bh * 0.85f), "重新掃描標記圖", fsS)) { WorldFrame.Reset(); Log("請再掃描一次標記圖"); }
+            if (cal && UiKit.Button(new Rect(pad, y, full, bh * 0.85f), LobbyCaption("重新掃描標記圖"), fsS)) { WorldFrame.Reset(); Log("請再掃描一次標記圖"); }
             if (cal) y += bh * 0.85f + pad * 0.4f;
             Step(ref y, pad, full, lineH, fs, fsS, 3, "選職業開打", S(false, conn && WorldReady));
-            if (conn && WorldReady && UiKit.Button(new Rect(pad, y, full, bh * 1.1f), "⚔ 選職業與技能", fs, true, ModeColor)) solo.ShowSetup();
+            if (conn && WorldReady && UiKit.Button(new Rect(pad, y, full, bh * 1.1f), LobbyCaption("⚔ 選職業與技能"), fs, true, ModeColor)) solo.ShowSetup();
             if (conn && WorldReady) y += bh * 1.1f + pad * 0.4f;
         }
 
         // ---- 詳細（除錯資訊與進階按鈕）
         void LobbyDetails(ref float y, float pad, float full, float half, float bh, float lineH, int fs, int fsS)
         {
-            float yy = y;
-            void Line(string s) { UiKit.Text(new Rect(pad, yy, full, lineH), s, fsS, new Color(0.85f, 0.88f, 1f)); yy += lineH; }
+            float yy=y,debugLine=lineH*.8f;
+            UiKit.Divider(new Rect(pad,yy,full,1),new Color(.5f,.57f,.68f,.45f));
+            yy+=fs*.25f;
+            void Line(string s) { UiKit.Text(new Rect(pad+fs*.25f,yy,full-fs*.5f,debugLine),LobbyCaption(s),Mathf.RoundToInt(fsS*.84f),new Color(.6f,.67f,.77f),TextAnchor.MiddleLeft); yy+=debugLine; }
             Line($"AR：{ARSession.state}　{arNote}");
             if (playArea.HasFloor && playArea.state == PlayArea.State.Done) Line($"場地：離邊界 {playArea.DistanceToEdge(cam.transform.position):F1}m");
             if (mode == Mode.Duo)
@@ -273,13 +308,117 @@ namespace SpellDuel
             else Line($"HP 我 {hp}");
             yy += pad * 0.3f;
             float bw = (full - pad * 2) / 3f;
-            if (UiKit.Button(new Rect(pad, yy, bw, bh * 0.8f), "HP 重置", fsS)) hp = MaxHp;
-            if (mode == Mode.Duo && UiKit.Button(new Rect(pad * 2 + bw, yy, bw, bh * 0.8f), showPoseDebug ? "骨架:顯示" : "骨架:隱藏", fsS, showPoseDebug)) showPoseDebug = !showPoseDebug;
-            if (mode == Mode.Duo && duoUseMarker && !net.Connected && UiKit.Button(new Rect(pad * 3 + bw * 2, yy, bw, bh * 0.8f), practiceDummy ? "假人:開" : "假人:關", fsS, practiceDummy)) practiceDummy = !practiceDummy;
-            if (Aligner && UiKit.Button(new Rect(pad * 3 + bw * 2, yy, bw, bh * 0.8f), "鏡頭重新對齊", fsS))
+            if (UiKit.Button(new Rect(pad, yy, bw, bh * 0.8f), LobbyCaption("HP 重置"), fsS)) hp = MaxHp;
+            if (mode == Mode.Duo && UiKit.Button(new Rect(pad * 2 + bw, yy, bw, bh * 0.8f), LobbyCaption(showPoseDebug ? "骨架:顯示" : "骨架:隱藏"), fsS, showPoseDebug)) showPoseDebug = !showPoseDebug;
+            if (mode == Mode.Duo && duoUseMarker && !net.Connected && UiKit.Button(new Rect(pad * 3 + bw * 2, yy, bw, bh * 0.8f), LobbyCaption(practiceDummy ? "假人:開" : "假人:關"), fsS, practiceDummy)) practiceDummy = !practiceDummy;
+            if (Aligner && UiKit.Button(new Rect(pad * 3 + bw * 2, yy, bw, bh * 0.8f), LobbyCaption("鏡頭重新對齊"), fsS))
             { align.Clear(); aligned = false; quickAligned = false; Log("重新對齊：按「📱 並排對齊」，或兩人面對面讓鏡頭拍到對方全身"); }
             yy += bh * 0.8f + pad * 0.4f;
             y = yy;
+        }
+        // -------------------------- Cached input chrome and procedural lobby illustrations
+        static string LobbyCaption(string text)
+        {
+            if(string.IsNullOrEmpty(text))return text;
+            int end=text.IndexOf(' ');
+            bool pictogram=char.IsSurrogate(text[0])||text[0]=='ℹ'||text[0]=='↺'||text[0]=='⚔';
+            return pictogram&&end>0&&end<=4?text.Substring(end+1):text;
+        }
+        GUIStyle LobbyInput(int fs)
+        {
+            if(lobbyInput==null)
+            {
+                lobbyInput=new GUIStyle(field){alignment=TextAnchor.MiddleCenter,fontStyle=FontStyle.Bold,padding=new RectOffset(8,8,2,2)};
+                lobbyInput.normal.background=null;lobbyInput.focused.background=null;lobbyInput.hover.background=null;lobbyInput.active.background=null;
+                lobbyInput.normal.textColor=UiKit.Paper;lobbyInput.focused.textColor=UiKit.Paper;lobbyInput.hover.textColor=UiKit.Paper;lobbyInput.active.textColor=UiKit.Paper;
+            }
+            lobbyInput.fontSize=Mathf.RoundToInt(fs*1.15f);return lobbyInput;
+        }
+        static void LobbyStroke(Vector2 a,Vector2 b,float width,Color c)
+        {
+            if(Event.current.type!=EventType.Repaint)return;
+            var d=b-a;if(d.magnitude<.1f)return;
+            var old=GUI.matrix;
+            GUIUtility.RotateAroundPivot(Mathf.Atan2(d.y,d.x)*Mathf.Rad2Deg,a);
+            UiKit.Divider(new Rect(a.x,a.y-width*.5f,d.magnitude,width),c);
+            GUI.matrix=old;
+        }
+        static void LobbyRing(Vector2 center,float radius,Color c,float width,int count=32,float turn=0)
+        {
+            for(int k=0;k<count;k++)
+            {
+                float a=k*Mathf.PI*2/count+turn,b=(k+1)*Mathf.PI*2/count+turn;
+                LobbyStroke(center+new Vector2(Mathf.Cos(a)*radius,Mathf.Sin(a)*radius),center+new Vector2(Mathf.Cos(b)*radius,Mathf.Sin(b)*radius),width,c);
+            }
+        }
+        static void LobbyDust(Rect r,Color c)
+        {
+            for(int i=0;i<14;i++)
+            {
+                float x=r.x+r.width*(i%2==0?.055f:.945f)+Mathf.Sin(i*2.3f)*r.width*.025f;
+                float y=r.y+r.height*((i*.173f+Time.time*.007f)%1f);
+                float size=3+i%3*2;
+                UiKit.Gem(new Rect(x-size*.5f,y,size,size),new Color(c.r,c.g,c.b,.18f+.10f*Mathf.Sin(Time.time+i)));
+            }
+        }
+        static void LobbyLogo(Rect r,int fs)
+        {
+            float radius=Mathf.Min(r.width*.14f,r.height*.25f);
+            var center=new Vector2(r.center.x,r.y+radius*1.25f);
+            LobbyRing(center,radius,new Color(.94f,.76f,.43f,.50f),Mathf.Max(1,fs*.025f),40);
+            LobbyRing(center,radius*.80f,new Color(.55f,.73f,1,.24f),Mathf.Max(1,fs*.025f),32);
+            for(int i=0;i<8;i++)
+            {
+                float a=i*Mathf.PI*.25f+Time.time*.035f;
+                UiKit.Gem(new Rect(center.x+Mathf.Cos(a)*radius-3,center.y+Mathf.Sin(a)*radius-3,6,6),UiKit.Gold);
+            }
+            float blade=radius*.62f;
+            LobbyStroke(center+new Vector2(-blade*.45f,blade*.5f),center+new Vector2(blade*.45f,-blade*.6f),fs*.09f,UiKit.Paper);
+            LobbyStroke(center+new Vector2(blade*.45f,blade*.5f),center+new Vector2(-blade*.45f,-blade*.6f),fs*.09f,UiKit.Gold);
+            UiKit.Star(new Rect(center.x-radius*.25f,center.y-radius*.25f,radius*.5f,radius*.5f),UiKit.Gold);
+            var title=new Rect(r.x,r.y+r.height*.57f,r.width,r.height*.36f);
+            UiKit.Text(new Rect(title.x,title.y+3,title.width,title.height),LobbyCaption("SpellDuel"),Mathf.RoundToInt(fs*2.75f),new Color(.40f,.29f,.19f),TextAnchor.MiddleCenter,true);
+            UiKit.Text(title,LobbyCaption("SpellDuel"),Mathf.RoundToInt(fs*2.75f),UiKit.Paper,TextAnchor.MiddleCenter,true);
+            float lineW=r.width*.55f;
+            UiKit.Divider(new Rect(r.center.x-lineW*.5f,title.yMax+3,lineW,1),new Color(.94f,.76f,.43f,.6f));
+            UiKit.Gem(new Rect(r.center.x-5,title.yMax-1,10,10),UiKit.Gold);
+        }
+        static void LobbyPhone(Rect r,Color c)
+        {
+            UiKit.Card(r,.94f,c,.95f);
+            UiKit.Divider(new Rect(r.x+r.width*.18f,r.y+r.height*.20f,r.width*.64f,r.height*.54f),new Color(c.r*.4f,c.g*.4f,c.b*.4f,.85f));
+            UiKit.Gem(new Rect(r.center.x-r.width*.08f,r.y+r.height*.83f,r.width*.16f,r.width*.16f),UiKit.Gold);
+        }
+        static void LobbyModeArt(Rect r,int kind,Color c)
+        {
+            float u=r.width;var center=r.center;
+            LobbyRing(center,u*.45f,new Color(c.r,c.g,c.b,.35f),Mathf.Max(1,u*.012f),24);
+            if(kind==0)
+            {
+                // A little robed traveller, an open grimoire and a crystal-tipped staff.
+                UiKit.Badge(new Rect(r.x+u*.29f,r.y+u*.18f,u*.25f,u*.25f),null,UiKit.Paper);
+                UiKit.Gem(new Rect(r.x+u*.22f,r.y+u*.41f,u*.40f,u*.43f),c);
+                LobbyStroke(new Vector2(r.x+u*.72f,r.y+u*.27f),new Vector2(r.x+u*.64f,r.y+u*.84f),u*.035f,UiKit.Gold);
+                UiKit.Star(new Rect(r.x+u*.59f,r.y+u*.13f,u*.23f,u*.23f),c);
+                UiKit.Divider(new Rect(r.x+u*.18f,r.y+u*.63f,u*.35f,u*.17f),UiKit.Paper);
+                LobbyStroke(new Vector2(r.x+u*.355f,r.y+u*.63f),new Vector2(r.x+u*.355f,r.y+u*.80f),u*.013f,c);
+            }
+            else if(kind==1)
+            {
+                LobbyPhone(new Rect(r.x+u*.15f,r.y+u*.22f,u*.29f,u*.56f),c);
+                LobbyPhone(new Rect(r.x+u*.56f,r.y+u*.22f,u*.29f,u*.56f),c);
+                LobbyStroke(new Vector2(r.x+u*.44f,center.y),new Vector2(r.x+u*.56f,center.y),u*.025f,UiKit.Gold);
+                UiKit.Star(new Rect(center.x-u*.11f,r.y+u*.06f,u*.22f,u*.22f),UiKit.Gold);
+            }
+            else
+            {
+                // Two portals and a dotted constellation between distant rooms.
+                var a=new Vector2(r.x+u*.29f,r.y+u*.61f);var b=new Vector2(r.x+u*.70f,r.y+u*.35f);
+                LobbyRing(a,u*.19f,c,u*.035f,24);LobbyRing(b,u*.19f,c,u*.035f,24);
+                for(int i=0;i<5;i++){float t=(i+1)/6f;var q=a+(b-a)*t;UiKit.Gem(new Rect(q.x-u*.018f,q.y-u*.018f,u*.036f,u*.036f),UiKit.Gold);}
+                UiKit.Star(new Rect(b.x-u*.08f,b.y-u*.08f,u*.16f,u*.16f),UiKit.Paper);
+                UiKit.Gem(new Rect(a.x-u*.08f,a.y-u*.12f,u*.16f,u*.24f),UiKit.Paper);
+            }
         }
     }
 }
