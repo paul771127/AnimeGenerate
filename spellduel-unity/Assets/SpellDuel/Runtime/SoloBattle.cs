@@ -2652,7 +2652,7 @@ namespace SpellDuel
                 float prog = battle.ChargeProgress(me);
                 bool bow = HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Bow && Hand != null;   // 獵人：拉滿弓就是蓄力完成
                 string st = bow ? (Hand.BowDrawn ? "🏹 拉滿！手回畫面張開放箭" : Hand.BowStage == 1 ? "✊ 握著拳拉出畫面外（拉弓）" : "畫面中握拳（捏弦）") :
-                    me.charging.releaseNear && prog < 1f && Battle.StealthAmbush(me) ? (me.seenByFoe ? "👁 被敵人看見了：離開它的視線 1 秒就能刺殺（或手掌蓄力）" : $"🫥 躲開視線 {Mathf.Min(me.hiddenTime, Battle.StealthTime):0.0}／{Battle.StealthTime:0} 秒") :
+                    me.charging.releaseNear && prog < 1f && Battle.StealthAmbush(me) ? $"{(me.seenByFoe ? "👁 被看見（暫停）" : "🫥 躲開視線中")}　累計 {Mathf.Min(me.hiddenTime, Battle.StealthTime):0.0}／{Battle.StealthTime:0} 秒" :
                     me.charging.releaseNear && prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　" +
                         (!me.palmVisible ? "✋ 手掌伸到鏡頭前才會蓄力" : "蓄滿自動伏擊（敵人在身邊就直接出手）") :
                     prog < 1f && me.charging.stillRadius > 0f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　站著別動！（離原地 {Battle.FlatDistance(me.Feet, me.chargeFrom):0.0}／{me.charging.stillRadius:0.0}m）" :

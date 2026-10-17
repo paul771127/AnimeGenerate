@@ -41,7 +41,7 @@ namespace SpellDuel
         public float holySeal, martyr, zeal;                                      // 牧師：聖印、殉道、狂信
         public float bashGuard, sanctionCombo, critDmg, falconMark, petMp;        // 進階職業：盾擊格擋、制裁連斬、爆擊傷害、鷹眼標記、契約魔力
         public int basicHits, venomStacks, seals;
-        // 刺殺流派：有沒有被敵人看見（SoloBattle 每幀設定：對戰＝對手的鏡頭有沒有拍到我；電腦／Boss／小怪＝我在不在它的視野內）、連續躲開視線幾秒
+        // 刺殺流派：有沒有被敵人看見（SoloBattle 每幀設定：對戰＝對手的鏡頭有沒有拍到我；電腦／Boss／小怪＝我在不在它的視野內）、這次蓄力累計躲開視線幾秒
         public bool seenByFoe = true; public float hiddenTime;                                 // 連斬計數、身上的毒層、聖印層數
         public float waveFreeUntil, riposteUntil, vanishUntil, venomUntil;
         // ---- 進階職業
@@ -1183,6 +1183,7 @@ namespace SpellDuel
             if (HpCostOf(f, s) > 0 && f.hp <= HpCostOf(f, s)) { why = "HP 不足（殉道：技能改用 HP 施放）"; return false; }
             if (f.snaredUntil > now && s.self != SelfKind.Cleanse) { why = "被困住，暫時不能施法（牧師可以淨化）"; return false; }
             f.charging = s; f.chargeStart = now; f.chargeFrom = f.Feet;
+            if (s.releaseNear) f.hiddenTime = 0f;   // 每次開始蓄力伏擊技能，重新累計離開視線的秒數
             return true;
         }
 
@@ -1696,7 +1697,7 @@ namespace SpellDuel
                 if (f.charging != null && now - f.chargeStart > f.charging.charge + chargeTimeout + (f.charging.releaseNear ? 8f : 0f))
                 { f.charging = null; Emit("timeout", f.Chest, Color.gray, "詠唱逾時"); }
                 // 刺客伏擊技能：手掌不在鏡頭前、或身邊 2m 內有敵人 → 蓄力暫停；蓄滿自動進入伏擊（不用放招動作）
-                f.hiddenTime = f.seenByFoe ? 0f : f.hiddenTime + dt;
+                if (!f.seenByFoe && f.charging != null && f.charging.releaseNear) f.hiddenTime += dt;   // 刺殺流派：離開視線的秒數會累計（被看見只是暫停，不會歸零）
                 if (f.charging != null && f.charging.releaseNear)
                 {
                     // 刺殺流派：離開敵人視線 1 秒＝判定完成（不用等蓄力、不用手掌）

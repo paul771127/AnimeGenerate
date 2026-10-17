@@ -531,7 +531,7 @@ namespace SpellDuel
                         PassiveKind.WaveFlow => $"斬擊後 {v:0} 秒內，劍氣不花 MP",
                         PassiveKind.Riposte => $"格擋成功後 4 秒內，下一擊傷害 +{v * 100:0}%",
                         PassiveKind.Venom => $"普攻在敵人身上疊毒（毒刃一次 2 層），疊滿 {Battle.VenomMax} 層爆開造成 {v:0} 傷害",
-                        PassiveKind.Assassinate => $"刺殺流派：離開敵人視線 1 秒就完成伏擊蓄力（身邊有敵人也能開始），伏擊維持 {Battle.StealthAmbushWindow:0} 秒、靠近就出手；伏擊技能傷害 +{v * 100:0}%，目標 HP 低於 40% 時再 +{v * 100:0}%",
+                        PassiveKind.Assassinate => $"刺殺流派：離開敵人視線累計 1 秒（可以分好幾次）就完成伏擊蓄力（身邊有敵人也能開始），伏擊維持 {Battle.StealthAmbushWindow:0} 秒、靠近就出手；伏擊技能傷害 +{v * 100:0}%，目標 HP 低於 40% 時再 +{v * 100:0}%",
                         PassiveKind.Vanish => $"伏擊出手後 2 秒內閃避率 +{v * 100:0}%",
                         PassiveKind.KnifeCdr => $"飛刀命中時，其他技能冷卻 -{v:0.#} 秒",
                         PassiveKind.HolySeal => $"神聖飛彈命中累積聖印，{Mathf.Max(2f, 6f - v):0} 層時下一個攻擊技能傷害 ×2",
