@@ -42,7 +42,7 @@
 | 劇情對話框 | `SoloBattle.cs` 的 `DrawDialogue` | 視覺小說風：頭像框、名牌緞帶、台詞框 |
 | 結算畫面（勝利／失敗） | `SoloBattle.cs` 的 `DrawHud` 最後 `phase == Phase.Over` 那段 | 勝利有光芒、失敗偏暗 |
 | 角色畫面（能力值、裝備） | `CharacterPanel.cs` 的 `Draw`、`DrawStats`、`DrawGear` | 分頁籤、能力值列、裝備格子（稀有度色邊框）、背包格子 |
-| 技能樹 | `CharacterPanel.Tree.cs` | 另見 [`SKILLTREE_UI_BRIEF.md`](SKILLTREE_UI_BRIEF.md) |
+| 技能樹 | `CharacterPanel.Tree.cs` | 另見 [`SKILLTREE_UI_BRIEF.md`](SKILLTREE_UI_BRIEF.md)；**不要標示流派**（不寫流派名、不分區塊），讓玩家自己摸索搭配 |
 | 大地圖 | `WorldUI.cs` 的 `DrawMap` | 像一張手繪地圖：三個地區的地形、路線、關卡節點 |
 | 城鎮（走動中的 HUD、清單模式） | `WorldUI.cs` 的 `DrawTownWalk`、`DrawTown` | 走動時介面要少、不擋畫面；名牌像木牌或對話泡泡 |
 | 鐵匠鋪／道具店／職業工會 | `WorldUI.cs` 的 `DrawSmith`、`DrawShop`、`DrawGuild` | 各有店鋪風格（鐵砧火光、藥水架、公會徽章） |

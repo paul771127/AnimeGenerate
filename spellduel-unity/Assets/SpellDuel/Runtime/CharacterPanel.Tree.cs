@@ -14,13 +14,8 @@ namespace SpellDuel
         /// <summary>樹狀圖（v2）：7 欄格子，節點之間畫連線；點過的路線亮起來</summary>
         void DrawGraph(Rect area, CharacterProfile p, int fs, int fsS, float gap, string treeId, List<TreeNode> nodes, Color tcol)
         {
-            var schools = SkillTrees.Schools(treeId);
-            float headH = schools != null ? fs * 1.3f : 0f;
-            if (schools != null)
-            {
-                float sw = area.width / 3f;
-                for (int i = 0; i < 3; i++) UiKit.Text(new Rect(area.x + i * sw, area.y, sw, headH), schools[i], fsS, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleCenter, true);
-            }
+            // 不標示流派：怎麼搭配由玩家自己摸索
+            float headH = 0f;
             int rows = 0; foreach (var n in nodes) rows = Mathf.Max(rows, n.row + 1);
             float colW = area.width / 7f, rowH = (area.height - headH) / Mathf.Max(1, rows);
             float nw = colW * 0.94f, nh = Mathf.Min(fs * 2.3f, rowH * 0.74f);
@@ -105,8 +100,8 @@ namespace SpellDuel
             if (sel == null)
             {
                 string help = advT != null
-                    ? $"✨ {advT.name}的進階技能樹（和基本技能樹共用技能點）。轉職時已學會「{(Skills.All.TryGetValue(advT.skills[0], out var s0) ? s0.name : advT.skills[0])}」；📘 可以習得另外兩個進階技能。\n三個流派：{string.Join("、", SkillTrees.Schools(advT.id) ?? new string[0])}，有些節點會強化基本職業的流派（例如反擊之刃、連斬、過載、聖印）。核心機制：{advT.core}"
-                    : $"點一個節點看說明。樹從最上面往下長：父節點點過 1 級，下面接著的節點才能點。整棵樹的點數比轉職前能拿到的多，轉職前最多點 {CharacterProfile.BaseTreeCap} 點，要選好流派。\n三個流派：{string.Join("、", SkillTrees.Schools(p.cls) ?? new string[0])}。一開始只會 3 個基本技能：{string.Join("、", NamesOf(SkillTrees.Starters(p.cls)))}；📘＝習得新技能。";
+                    ? $"✨ {advT.name}的進階技能樹（和基本技能樹共用技能點）。轉職時已學會「{(Skills.All.TryGetValue(advT.skills[0], out var s0) ? s0.name : advT.skills[0])}」；📘 可以習得另外兩個進階技能。有些節點也會強化基本職業的技能，自由搭配。\n核心機制：{advT.core}"
+                    : $"點一個節點看說明。樹從最上面往下長：父節點點過 1 級，下面接著的節點才能點。整棵樹的點數比轉職前能拿到的多，轉職前最多點 {CharacterProfile.BaseTreeCap} 點，怎麼點由你決定。\n一開始只會 3 個基本技能：{string.Join("、", NamesOf(SkillTrees.Starters(p.cls)))}；📘＝習得新技能。";
                 UiKit.Text(new Rect(dr.x + gap, dr.y + gap, dr.width - gap * 2, dr.height - gap * 2), help, fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
                 return changed;
             }
