@@ -276,7 +276,7 @@ namespace SpellDuel
             // 雙人職業對戰：SoloBattle 的連線模式（訊息經由這裡收送）
             solo.NetSend = m => { if (net.Connected) Send(m); };
             solo.SharedClock = () => SharedTime;
-            solo.RequestRedraw = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); Log("請重新畫場地"); };
+            solo.RequestRedraw = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); autoArea = false; Log($"面向空地，掃到地板會在你前方重新建 {AutoAreaSize:0}m 場地"); };
             solo.RequestChangeMode = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); mode = Mode.Choose; };
         }
 
@@ -404,15 +404,16 @@ namespace SpellDuel
 
         void UpdateRemoteQuickStart()
         {
-            if (!remoteMode && !AreaMode) return;
+            if (!remoteMode && !AreaMode && mode != Mode.Solo) return;
             // 同一個地方：房主自動建場地（收到別人的場地就不建）；並排對齊過才自動進選職業（不然會蓋住對齊按鈕）
-            bool canAutoArea = remoteMode || (net.IsHost && !areaReceived && !areaOwner);
+            bool canAutoArea = remoteMode || mode == Mode.Solo || (net.IsHost && !areaReceived && !areaOwner);
             if (canAutoArea && !autoArea && playArea.HasFloor && playArea.state != PlayArea.State.Done && playArea.state != PlayArea.State.Drawing && Tracking.Ok)
             {
                 autoArea = true;
                 playArea.Clear();
-                if (playArea.AutoSquare(AutoAreaSize)) { OnPlayAreaReady(); Log($"✅ 已自動建好 {AutoAreaSize:0}m 場地（想換大小可以按下面的按鈕重畫）"); }
+                if (playArea.AutoSquare(AutoAreaSize)) { OnPlayAreaReady(); Log($"✅ 已自動建好 {AutoAreaSize:0}m 場地（在你前方；要換位置就面向空地按「↺ 重新放置」）"); }
             }
+            if (mode == Mode.Solo) return;
             if (!net.Connected) { autoSetup = false; return; }
             bool someone = net.IsHost ? solo.PeerIds.Count > 0 : net.MyPid > 0;
             bool ready = remoteMode ? WorldReady : WorldReady && quickAligned && (areaOwner || areaReceived);
@@ -465,7 +466,8 @@ namespace SpellDuel
                 WorldFrame.Reset();
                 playArea.Begin();
                 practiceDummy = false;
-                Log("單人模式：先掃地板，再畫遊戲場地");
+                autoArea = false;
+                Log($"單人模式：面向空地慢慢移動手機掃地板，掃到就自動建好 {AutoAreaSize:0}m 場地");
             }
             else if (!marker)
             {
@@ -1277,7 +1279,7 @@ namespace SpellDuel
                 string st = playArea.state switch
                 {
                     PlayArea.State.Scanning => "場地：🔍 尋找地板中",
-                    PlayArea.State.Ready => "場地：地板已找到，請建立場地",
+                    PlayArea.State.Ready => $"場地：地板已找到，自動建立 {AutoAreaSize:0}m 場地中…",
                     PlayArea.State.Drawing => "場地：✏️ 手繪中",
                     PlayArea.State.Done => $"場地：✅ 完成　離邊界 {playArea.DistanceToEdge(cam.transform.position):F1}m",
                     _ => "",
@@ -1287,19 +1289,16 @@ namespace SpellDuel
                 Line($"HP 我 {hp}");
                 y += pad * 0.5f;
                 bool canBuild = playArea.HasFloor && playArea.state != PlayArea.State.Drawing;
-                // 方形場地：從腳下往前方展開（技能射程最遠 15m，建議 10m 以上的空地或戶外）
-                float[] sizes = { 3f, 6f, 10f, 15f };
-                for (int i = 0; i < sizes.Length; i++)
-                    if (UiKit.Button(new Rect(pad + i * (bw + pad), y, bw, bh), $"方形 {sizes[i]:0}m", fs, sizes[i] >= 10f, new Color(0.4f, 0.85f, 1f), canBuild)) { playArea.Clear(); if (playArea.AutoSquare(sizes[i])) OnPlayAreaReady(); }
+                // 對戰場地固定 10m 方形：掃到地板自動建在前方；要換位置就面向空的地方按「重新放置」
+                if (UiKit.Button(new Rect(pad, y, W - pad * 2, bh), $"↺ 在我前方重新放置 {AutoAreaSize:0}m 場地", fs, false, new Color(0.4f, 0.85f, 1f), canBuild)) { WorldFrame.Reset(); playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); }
                 y += bh + pad * 0.5f;
-                if (UiKit.Button(new Rect(pad, y, bw, bh), "手繪場地", fs, false, null, canBuild)) { WorldFrame.Reset(); playArea.StartDraw(); }
                 if (UiKit.Button(new Rect(pad * 2 + bw, y, bw, bh), "換模式", fs)) { mode = Mode.Choose; playArea.Clear(); WorldFrame.Reset(); }
                 if (UiKit.Button(new Rect(pad * 3 + bw * 2, y, bw, bh), "HP 重置", fs)) { hp = MaxHp; }
             }
             else
             {
                 if (remoteMode)
-                    Line(playArea.state == PlayArea.State.Done ? $"場地：✅ 完成（離邊界 {playArea.DistanceToEdge(cam.transform.position):F1}m）　開戰時面向的方向＝對手的方向" : !playArea.HasFloor ? "場地：🔍 先掃地板（慢慢移動手機）" : "場地：畫出自己的遊戲範圍（建議 6m 以上）");
+                    Line(playArea.state == PlayArea.State.Done ? $"場地：✅ 完成（離邊界 {playArea.DistanceToEdge(cam.transform.position):F1}m）　開戰時面向的方向＝對手的方向" : !playArea.HasFloor ? "場地：🔍 先掃地板（慢慢移動手機）" : $"場地：掃到地板就自動建 {AutoAreaSize:0}m 場地");
                 else if (duoUseMarker)
                     Line(WorldFrame.Calibrated
                         ? $"座標：✅ 已對齊（{Time.time - WorldFrame.LastSeenTime:F0} 秒前看到標記圖）"
@@ -1311,7 +1310,7 @@ namespace SpellDuel
                         : aligned ? $"對齊：✅ 誤差 {align.Rms * 100f:F0}cm（樣本 {align.Used}，持續互相校正）"
                         : "還沒對齊：按下面的「📱 並排對齊」最快（或兩人面對面，鏡頭拍到對方全身含腳）");
                 else
-                    Line(!playArea.HasFloor ? "場地：🔍 先掃地板（慢慢移動手機）" : "場地：房主掃到地板會自動建好（也可以用下面的按鈕重畫），另一人會自動收到");
+                    Line(!playArea.HasFloor ? "場地：🔍 先掃地板（慢慢移動手機）" : $"場地：房主掃到地板會自動建好 {AutoAreaSize:0}m 場地，另一人會自動收到");
                 Line($"連線：{net.Status}" + (net.Connected && !net.IsHost ? $"　時鐘差 {clockOffset * 1000:F0}ms（來回 {bestRtt * 1000:F0}ms）" : ""));
                 if (net.Connected) Line($"👥 房間 {solo.PeerIds.Count + 1} 人（最多 {NetLink.MaxClients + 1} 人；我是{(net.IsHost ? "房主" : $" {net.MyPid} 號")}）" + (solo.PeerIds.Count > 1 ? (remoteMode ? "　多人只能玩合作" : "　多人只能玩合作；每位加入的人都要先面對房主對齊") : ""));
                 string dist = "";
@@ -1335,12 +1334,8 @@ namespace SpellDuel
                 if ((AreaMode && !areaReceived) || (remoteMode && solo.phase == SoloBattle.Phase.Hidden))
                 {
                     bool canBuild = playArea.HasFloor && playArea.state != PlayArea.State.Drawing;
-                    float[] sizes = { 3f, 6f, 10f, 15f };
-                    for (int i = 0; i < sizes.Length; i++)
-                        if (UiKit.Button(new Rect(pad + i * (bw + pad), y, bw, bh), $"方形 {sizes[i]:0}m", fs, sizes[i] >= 10f, new Color(0.4f, 0.85f, 1f), canBuild)) { playArea.Clear(); if (playArea.AutoSquare(sizes[i])) OnPlayAreaReady(); }
-                    y += bh + pad * 0.5f;
-                    if (UiKit.Button(new Rect(pad, y, bw, bh), "手繪場地", fs, false, null, canBuild)) { playArea.StartDraw(); }
-                    if (playArea.state == PlayArea.State.Drawing) UiKit.Text(new Rect(pad * 2 + bw, y, W - bw - pad * 3, bh), playArea.Hint, fsS, new Color(1f, 0.9f, 0.6f));
+                    // 對戰場地固定 10m 方形
+                    if (UiKit.Button(new Rect(pad, y, W - pad * 2, bh), $"↺ 在我前方重新放置 {AutoAreaSize:0}m 場地", fs, false, new Color(0.4f, 0.85f, 1f), canBuild)) { playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); }
                     y += bh + pad * 0.5f;
                 }
                 if (net is RelayLink)

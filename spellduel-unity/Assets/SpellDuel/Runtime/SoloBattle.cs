@@ -2598,7 +2598,7 @@ namespace SpellDuel
             // 下方固定：開始／準備、其他按鈕
             float by = botY - pad - u * 1.2f;
             float hw = (W - pad * 2 - gap) / 2f;
-            if (!NetMode && UiKit.Button(new Rect(pad, by, hw, u * 1.2f), "重畫場地", fsS)) RequestRedraw?.Invoke();
+            if (!NetMode && UiKit.Button(new Rect(pad, by, hw, u * 1.2f), "重新放置場地", fsS)) RequestRedraw?.Invoke();
             if (UiKit.Button(new Rect(NetMode ? pad : pad + hw + gap, by, NetMode ? W - pad * 2 : hw, u * 1.2f), NetMode ? "返回" : "換模式", fsS))
             { if (NetMode) Hide(); else RequestChangeMode?.Invoke(); }
             by -= u * 1.6f + gap;
