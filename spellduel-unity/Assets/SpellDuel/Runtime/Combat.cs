@@ -17,6 +17,8 @@ namespace SpellDuel
         public ClassDef cls;
         public List<SkillDef> loadout = new List<SkillDef>();
         public float hp, mp, regen;
+        /// <summary>MP 自然回復：職業基礎速度的 30%；精神每多 1 點再 +2%（加到 35 點回到原本的 100%）</summary>
+        public const float MpRegenBase = 0.3f, MpRegenPerSpi = 0.02f;
         public int maxHp, maxMp;
         public Vector3 head;                  // 頭（玩家＝手機）的位置
         public Vector3 forward = Vector3.forward;   // 面向（水平）
@@ -99,7 +101,7 @@ namespace SpellDuel
         public Fighter(string name, ClassDef cls, IEnumerable<string> skillIds, bool isPlayer)
         {
             this.name = name; this.cls = cls; this.isPlayer = isPlayer;
-            maxHp = cls.maxHp; maxMp = cls.maxMp; regen = cls.mpRegen;
+            maxHp = cls.maxHp; maxMp = cls.maxMp; regen = cls.mpRegen * MpRegenBase;   // MP 自然回復只有職業原本的 30%（精神再往上加）
             hp = maxHp; mp = maxMp;
             foreach (var id in skillIds) if (Skills.All.TryGetValue(id, out var s)) loadout.Add(s);
         }
