@@ -76,6 +76,15 @@ namespace SpellDuel
                 }
             }
 
+            // 普攻：沒在詠唱時，射程內就打（不耗 MP、有自己的冷卻）；MP 不夠放技能時主要靠普攻
+            var basic = me.basic ?? Skills.BasicOf(me.cls.id);
+            if (basic != null && b.now >= nextBasic && player.Alive && b.RangeState(me, basic) == 0)
+            {
+                var bh = me.head + Fighter.Flat(me.forward) * 0.25f + Vector3.down * 0.25f;
+                var bd = Battle.RotateY((player.Chest - bh).normalized, Rand(-aimErrorDeg, aimErrorDeg));
+                if (b.BasicAttack(me, basic, bd, player.Feet, true)) nextBasic = b.now + Rand(0.5f, 1.2f) * delayScale;
+            }
+
             if (b.now < nextThink) return;
             nextThink = b.now + Rand(thinkMin, thinkMax);
 
@@ -110,6 +119,7 @@ namespace SpellDuel
             }
         }
 
+        float nextBasic = 1.5f;
         bool Ready(SkillDef s) => (!me.cooldownUntil.TryGetValue(s.id, out var cd) || cd <= b.now) && me.mp >= s.cost;
 
         void TryRelease()
@@ -144,6 +154,9 @@ namespace SpellDuel
             // 想站的距離：蓄力中的技能決定（打不到就調整）；否則依職業習慣
             float want = PreferredDistance.TryGetValue(me.cls.id, out var pref) ? pref : 3f;
             var c = me.charging;
+            // 近戰普攻（劍士、刺客）：沒在詠唱時貼近到普攻射程內
+            var nb = me.basic ?? Skills.BasicOf(me.cls.id);
+            if (c == null && nb != null && Skills.IsMeleeBasic(nb)) want = Mathf.Min(want, nb.rangeMax * 0.8f);
             if (me.armed != null) want = me.armed.rangeMax * 0.6f;   // 伏擊中：衝向玩家
             else if (c != null && c.releaseNear) want = Mathf.Max(cur, 2.5f);   // 近身技能蓄力時保持距離
             else if (c != null && c.type == SkillType.Projectile)
