@@ -526,6 +526,9 @@ namespace SpellDuel
         // 兩支手機並排、鏡頭朝同一個方向，各按一次：以手機現在的位置（地上）與面向當世界原點 → 兩支手機的座標就一致了。
         // 不用鏡頭辨識對手（光線、衣服、只拍到手腳都不影響）；誤差約幾公分、幾度。之後不再用鏡頭自動校正。
         bool quickAligned;
+        int quickRefined;   // 鏡頭微調過幾次（顯示用）
+        public const float QuickRefineMaxRms = 0.25f, QuickRefineStep = 0.03f, QuickRefineDeg = 1f;
+        public const int QuickRefineMinUsed = 8;
 
         void QuickAlign()
         {
@@ -533,7 +536,7 @@ namespace SpellDuel
             if (f.sqrMagnitude < 1e-4f) f = Vector3.forward;
             float floor = playArea.HasFloor ? playArea.FloorY : cam.transform.position.y - 1.4f;
             WorldFrame.SetMarker(new Pose(new Vector3(cam.transform.position.x, floor, cam.transform.position.z), Quaternion.LookRotation(f.normalized, Vector3.up)));
-            quickAligned = true; aligned = true; align.Clear();
+            quickAligned = true; aligned = true; align.Clear(); quickRefined = 0;
             if (areaOwner) SendArea();
             else if (areaReceived) RebuildArea();
             Haptics.Play(Haptics.Kind.Success);
@@ -610,7 +613,7 @@ namespace SpellDuel
 
         void UpdateDuoArea()
         {
-            if (!Aligner || quickAligned) return;   // 並排對齊過：不用鏡頭校正
+            if (!Aligner) return;   // 並排對齊過也照樣收集樣本：鏡頭看清楚對手時慢慢微調（修正對齊誤差與 AR 漂移）
             // 對齊前：暫用「自己的 AR 座標、地板高度＝0」當世界座標，鏡頭偵測才算得出對手站的位置
             if (!aligned && playArea.HasFloor)
                 WorldFrame.SetMarker(new Pose(new Vector3(0f, playArea.FloorY, 0f), Quaternion.identity));
@@ -627,6 +630,18 @@ namespace SpellDuel
                 aligned = true;
                 RebuildArea();
                 Log($"✅ 座標已對齊（誤差 {align.Rms * 100f:F0}cm），開打後會持續互相校正");
+            }
+            else if (quickAligned)
+            {
+                // 並排對齊打底：只接受品質好的解，而且每次最多挪 3cm、轉 1°（鏡頭偶爾認錯人也不會亂跳）
+                var cur = WorldFrame.Marker;
+                float dPos = Vector3.Distance(cur.position, target.position), dAng = Quaternion.Angle(cur.rotation, target.rotation);
+                if (align.Rms > QuickRefineMaxRms || align.Used < QuickRefineMinUsed || dPos > 1.0f || dAng > 20f) return;
+                var pos = Vector3.MoveTowards(cur.position, target.position, QuickRefineStep);
+                var rot = Quaternion.RotateTowards(cur.rotation, target.rotation, QuickRefineDeg);
+                WorldFrame.SetMarker(new Pose(pos, rot));
+                quickRefined += 1;
+                if ((dPos > 0.02f || dAng > 0.5f) && Time.time - lastAreaRebuild > 1f) RebuildArea();
             }
             else
             {
@@ -1287,7 +1302,7 @@ namespace SpellDuel
                 else if (areaOwner)
                     Line("場地：✅ 你畫的場地（以你的座標為準）" + (!net.Connected ? "" : remoteAligned ? $"　對手已對齊（誤差 {remoteAlignRms * 100f:F0}cm）" : "　對手對齊中…"));
                 else if (areaReceived)
-                    Line(quickAligned ? "對齊：✅ 並排對齊"
+                    Line(quickAligned ? (quickRefined > 0 ? $"對齊：✅ 並排對齊＋鏡頭微調中（誤差約 {align.Rms * 100f:F0}cm）" : "對齊：✅ 並排對齊（鏡頭看清楚對手時會自動微調）")
                         : aligned ? $"對齊：✅ 誤差 {align.Rms * 100f:F0}cm（樣本 {align.Used}，持續互相校正）"
                         : "還沒對齊：按下面的「📱 並排對齊」最快（或兩人面對面，鏡頭拍到對方全身含腳）");
                 else
