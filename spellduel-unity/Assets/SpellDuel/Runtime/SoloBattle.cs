@@ -682,7 +682,8 @@ namespace SpellDuel
             battle.OnLane += ShowLane;
             battle.OnPool += pl => PlantFx.PoisonPool(WorldFrame.FromWorld(pl.pos), pl.radius, Mathf.Max(0.1f, pl.until - battle.now));
             // Boss 出生點：場地內、離玩家們夠遠的地方（隊友端先放在遠處，等主機的位置）
-            boss.head = host && !RemotePlay ? BossSpawnPoint(me) : new Vector3(0f, BossRig.Height, 0f);   // 遠端：Boss 在大家圍成的圓中間（開戰時才定座位）
+            battle_MeForSpawn = me;
+            boss.head = host && !RemotePlay ? BossStartPoint(me) : new Vector3(0f, BossRig.Height, 0f);   // 遠端：Boss 在大家圍成的圓中間（開戰時才定座位）
             boss.head.y = BossRig.Height;
             boss.forward = Fighter.Flat(me.head - boss.head);
             bossSeen = host;
@@ -694,8 +695,8 @@ namespace SpellDuel
                 if (endlessMode)
                 {
                     battle.bossBaseHp = 150f * BossHpFor(difficulty);
-                    battle.edgePoint = FarSpawnPoint;
-                    battle.bossPoint = EdgeSpawnPoint;
+                    battle.edgePoint = () => OutsideEdgePoint();          // 小怪：場地邊緣外 1～2m 出現（淡入），再走進來
+                    battle.bossPoint = () => OutsideEdgePoint(true);      // Boss 也一樣（優先在我面前）
                     battle.OnBossSpawn += w => bossAi.Respawn(Mathf.Max(0.7f, 1f - 0.06f * w));
                     if (pendingStage != null)
                     {
@@ -711,6 +712,7 @@ namespace SpellDuel
             ai = null;
             bossRig = BossRig.Create();
             bossRig.SetVisible(bossSeen);
+            if (bossSeen && !endlessMode) SpawnFade.Play(bossRig.gameObject);   // 淡入出現
             lastEnemyFeet = boss.Feet; lastEnemyHp = boss.hp; lastBossHp = boss.hp; enemyDeadShown = false;
             enemyShield = Prim(PrimitiveType.Sphere, new Color(0.4f, 0.7f, 1f, 0.25f));
             enemyShield.SetActive(false);
@@ -726,44 +728,36 @@ namespace SpellDuel
             else Say(coopMode ? $"🔥 合作討伐：熔岩巨像（HP {boss.maxHp}）— 和隊友一起打倒它！" : $"🔥 Boss：熔岩巨像（HP {boss.maxHp}）— 看紅圈、紅線閃避！", 4f);
         }
 
-        /// <summary>無盡模式的小怪出生點：離所有玩家至少 15m 的隨機方向（可以在場地外，小怪會走進來）</summary>
-        Vector3 FarSpawnPoint()
-        {
-            var center = PartyCenter();
-            for (int tries = 0; tries < 16; tries++)
-            {
-                float a = UnityEngine.Random.value * Mathf.PI * 2f;
-                float r = Battle.MinionSpawnDistance + 1f + UnityEngine.Random.value * 3f;
-                var p = center + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
-                if (MinPartyDist(p) >= Battle.MinionSpawnDistance) return p;
-            }
-            return center + Fighter.Flat(Me.forward) * (Battle.MinionSpawnDistance + 3f);
-        }
-
-        /// <summary>無盡模式的 Boss 出生點：場地邊緣往內 0.6m 的隨機點，離玩家至少 3m（場地座標）</summary>
-        Vector3 EdgeSpawnPoint()
+        /// <summary>
+        /// 敵人出生點：場地邊緣外 1～2m 的隨機點（世界座標，地上），離玩家至少 3m；出生後自己走進場地。
+        /// preferFront：開場的對手／Boss 優先出現在我面前那一側（一開打就看得到）。
+        /// </summary>
+        Vector3 OutsideEdgePoint(bool preferFront = false)
         {
             var poly = area.Polygon;
-            Vector3 best = Me.Feet + Fighter.Flat(Me.forward) * 4f; float bestD = -1f;
-            if (poly == null || poly.Count < 3) return best;
+            var pm = Me ?? battle_MeForSpawn;
+            var fwd = pm != null ? Fighter.Flat(pm.forward) : Vector3.forward;
+            var fallback = (pm != null ? pm.Feet : Vector3.zero) + fwd * 6f;
+            if (poly == null || poly.Count < 3) return fallback;
             var c = Vector3.zero; foreach (var q in poly) c += q; c /= poly.Count;
-            for (int tries = 0; tries < 12; tries++)
+            Vector3 best = fallback; float bestScore = float.MinValue;
+            for (int tries = 0; tries < 24; tries++)
             {
                 int i = UnityEngine.Random.Range(0, poly.Count);
-                var a = poly[i]; var b = poly[(i + 1) % poly.Count];
-                var ps = Vector3.Lerp(a, b, UnityEngine.Random.value);
-                var inward = c - ps; inward.y = 0f;
-                if (inward.sqrMagnitude > 1e-4f) ps += inward.normalized * 0.6f;
-                if (!area.Inside(ps)) continue;
+                var ps = Vector3.Lerp(poly[i], poly[(i + 1) % poly.Count], UnityEngine.Random.value);
+                var outward = ps - c; outward.y = 0f;
+                if (outward.sqrMagnitude < 1e-4f) continue;
+                ps += outward.normalized * (SpawnOutsideMin + UnityEngine.Random.value * (SpawnOutsideMax - SpawnOutsideMin));
                 var pw = WorldFrame.ToWorld(ps); pw.y = 0f;
                 float d = MinPartyDist(pw);
-                if (d >= 3f) return pw;
-                if (d > bestD) { bestD = d; best = pw; }
+                float score = Mathf.Min(d, 6f) + (preferFront && pm != null ? 2f * Vector3.Dot(Fighter.Flat(pw - pm.Feet).normalized, fwd) : 0f) + UnityEngine.Random.value * 0.5f;
+                if (d < 3f) score -= 10f;
+                if (score > bestScore) { bestScore = score; best = pw; }
             }
             return best;
         }
+        public const float SpawnOutsideMin = 1f, SpawnOutsideMax = 2f;
 
-        /// <summary>Boss 出生點：玩家們中點周圍 4m 的圓上，挑場地內、離玩家最遠的點</summary>
         /// <summary>所有玩家（我＋隊友）的中心</summary>
         Vector3 PartyCenter()
         {
@@ -775,29 +769,19 @@ namespace SpellDuel
         /// <summary>點 p 離最近的玩家多遠</summary>
         float MinPartyDist(Vector3 p)
         {
-            float d = Battle.FlatDistance(p, Me.Feet);
+            var pm = Me ?? battle_MeForSpawn;
+            if (pm == null) return 99f;
+            float d = Battle.FlatDistance(p, pm.Feet);
             if (battle != null) foreach (var a in battle.allies) d = Mathf.Min(d, Battle.FlatDistance(p, a.Feet));
             return d;
         }
 
-        Vector3 BossSpawnPoint(Fighter me)
+        Fighter battle_MeForSpawn;   // 開打前 battle 還沒建好：出生點用的「我」
+        /// <summary>Boss 開場位置：場地邊緣外 1～2m、我面前那一側（淡入後走進來）</summary>
+        Vector3 BossStartPoint(Fighter me)
         {
-            bool party = battle != null && battle.allies.Count > 0;
-            var mid = party ? PartyCenter() : me.Feet + Fighter.Flat(me.forward) * 3f;
-            Vector3 best = mid + Fighter.Flat(me.forward) * 3f; float bestScore = -1f;
-            for (int ring = 0; ring < 3; ring++)
-                for (int i = 0; i < 16; i++)
-                {
-                    float r = 4.5f - ring * 1.2f, a = i / 16f * Mathf.PI * 2f;
-                    var c = mid + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
-                    var cs = WorldFrame.FromWorld(c);
-                    if (!area.Inside(cs) || area.DistanceToEdge(cs) < 0.9f) continue;
-                    float d = MinPartyDist(c);
-                    // 在我面前的稍微加分（一開打就看得到）
-                    d += 0.5f * Vector3.Dot(Fighter.Flat(c - me.Feet), Fighter.Flat(me.forward));
-                    if (d > bestScore) { bestScore = d; best = c; }
-                }
-            return new Vector3(best.x, BossRig.Height, best.z);
+            var p = OutsideEdgePoint(true);
+            return new Vector3(p.x, BossRig.Height, p.z);
         }
 
         void OnBossEnrage()
@@ -954,7 +938,7 @@ namespace SpellDuel
                         else b.charging = null;
                         b.target = FromTargetCode(m.id);
                         if ((m.e & 1) != 0 && bossRig && !bossEnragedShown) { bossEnragedShown = true; OnBossEnrage(); }
-                        if (!bossSeen) { bossSeen = true; lastEnemyFeet = b.Feet; if (bossRig && !endless) bossRig.SetVisible(true); }
+                        if (!bossSeen) { bossSeen = true; lastEnemyFeet = b.Feet; if (bossRig && !endless) { bossRig.SetVisible(true); SpawnFade.Play(bossRig.gameObject); } }
                     }
                     break;
                 case "mhit":
@@ -1048,6 +1032,7 @@ namespace SpellDuel
                     rig.SetVariant(m.minionKind);
                     minionGo[m] = rig; minionLastHp[m] = m.hp;
                     rig.transform.position = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);
+                    SpawnFade.Play(rig.gameObject);   // 淡入出現
                 }
                 var oldPos = rig.transform.position;
                 var newPos = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);   // 飛在空中／浮著／跳起來的高度
@@ -1288,10 +1273,12 @@ namespace SpellDuel
             var en = dummyMode
                 ? new Fighter("木頭人", DummyClass, new List<string>(), false)
                 : new Fighter($"電腦{ec.name}", ec, enemySkills, false);
-            // 敵人出生點：場地內、玩家面向的那一側
+            // 敵人出生點：電腦對手從場地邊緣外 1～2m（我面前那一側）淡入出現再走進來；木頭人在場地內 3m
             float reach = area.ReachInside(area.Origin.forward, 0.6f);
-            en.head = new Vector3(0f, 1.6f, Mathf.Clamp(reach, 0f, dummyMode ? 3f : 6f));   // 大場地時離遠一點出場（最遠 6m；木頭人 3m）
+            en.head = new Vector3(0f, 1.6f, Mathf.Clamp(reach, 0f, 3f));
             SyncPlayer(me);
+            battle_MeForSpawn = me;
+            if (!dummyMode) { var sp = OutsideEdgePoint(true); en.head = new Vector3(sp.x, 1.6f, sp.z); }
             battle = new Battle(me, en);
             battle.OnEvent += OnBattleEvent;
             ai = dummyMode ? null : new EnemyAI(battle, en, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
@@ -1299,6 +1286,7 @@ namespace SpellDuel
             me.damageTakenMul = DamageTakenFor(difficulty);
 
             enemyRig = CharacterRig.Create(ec.id);
+            if (!dummyMode) SpawnFade.Play(enemyRig.gameObject);   // 電腦對手從場地外淡入出現
             lastEnemyFeet = en.Feet; lastEnemyHp = en.hp; enemyDeadShown = false;
             enemyShield = Prim(PrimitiveType.Sphere, new Color(0.4f, 0.7f, 1f, 0.25f));
             phase = Phase.Fighting;
@@ -2060,6 +2048,7 @@ namespace SpellDuel
                         bossAliveShown = true; bossHideAt = -1f; bossEnragedShown = false;
                         bossRig.SetDead(false); bossRig.SetEnraged(false); bossRig.SetVisible(true);
                         bossRig.transform.position = feetS;
+                        SpawnFade.Play(bossRig.gameObject);   // 淡入出現
                         if (battle.Theme == 1) BossRig.RootEruption(feetS, 2.5f);
                         else if (battle.Theme == 2) SeaFx.Splash(feetS, 3f);
                         else BossRig.SlamShockwave(feetS, 2.5f, new Color(1f, 0.35f, 0.1f));

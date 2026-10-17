@@ -490,8 +490,8 @@ namespace SpellDuel
         public int wave, kills, bossKills, waveToSpawn, waveTotal;
         public float nextMinionAt, waveStartAt, bossBaseHp = 150f;
         public const int BossEvery = 10;
-        public Func<Vector3> edgePoint;          // 小怪出生點：離所有玩家 15m 以上（可以在場地外，再走進來）
-        public Func<Vector3> bossPoint;          // Boss 出生點：場地邊緣附近（沒設定就用 edgePoint）
+        public Func<Vector3> edgePoint;          // 小怪出生點：場地邊緣外 1～2m（淡入出現，再走進來）
+        public Func<Vector3> bossPoint;          // Boss 出生點：場地邊緣外 1～2m（沒設定就用 edgePoint）
         public const float MinionSpawnDistance = 15f;
         public event Action<int> OnBossSpawn;    // 無盡模式 Boss 出現（第幾隻 Boss，0 起算）
 

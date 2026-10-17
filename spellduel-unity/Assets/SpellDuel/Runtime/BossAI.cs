@@ -177,6 +177,8 @@ namespace SpellDuel
 
         void Move(float dt, Fighter tgt)
         {
+            // 從場地外淡入出現：先走進場地（往場地中心）
+            if (!inside(me.Feet)) { var home = -me.Feet; home.y = 0; me.head += (home.sqrMagnitude > 1e-4f ? home.normalized : Vector3.zero) * walkSpeed * 1.5f * dt; return; }
             var c = me.charging;
             float want = c != null ? (c.areaRadius > 0f ? 0f : c.rangeMax * 0.7f) : 3.2f;
             if (c != null && c.areaRadius > 0f) return;   // 地裂蓄力時站著不動（紅圈固定）

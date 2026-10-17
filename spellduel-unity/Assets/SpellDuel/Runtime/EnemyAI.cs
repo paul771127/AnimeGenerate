@@ -133,6 +133,8 @@ namespace SpellDuel
         // ------------------------------------------------------------ 走位
         void Move(float dt)
         {
+            // 從場地外淡入出現：先走進場地（往場地中心）
+            if (!inside(me.Feet)) { var home = -me.Feet; home.y = 0; me.head += (home.sqrMagnitude > 1e-4f ? home.normalized : Vector3.zero) * walkSpeed * 1.5f * dt; return; }
             if (me.charging != null && me.charging.stillRadius > 0f && b.ChargeProgress(me) < 1f) return;   // 刺殺準備蓄力中：站著不動
             var player = b.player;
             var toMe = Fighter.Flat(me.head - player.head);
