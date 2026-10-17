@@ -397,10 +397,10 @@ namespace SpellDuel
         }
 
         // ---------------------------------------------------------------- 遠端連線：簡化流程
-        // 1. 掃到地板就自動建一個 4m 方形場地（不用自己畫；要畫還是可以重畫）
+        // 1. 掃到地板就自動建一個 10m 方形場地（不用自己畫；要畫還是可以重畫）
         // 2. 連上、場地好了 → 自動打開選職業畫面（不用再按「職業對戰／合作」）
         bool autoArea, autoSetup;
-        public const float AutoAreaSize = 4f;
+        public const float AutoAreaSize = 10f;
 
         void UpdateRemoteQuickStart()
         {
