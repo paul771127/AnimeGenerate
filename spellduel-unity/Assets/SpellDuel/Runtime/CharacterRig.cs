@@ -104,29 +104,39 @@ namespace SpellDuel
         string advancedId;
         public string AdvancedId => advancedId;
 
+        Portraits.Persona facePersona;
+
         void BuildFace()
         {
-            MeshPart("SculptedHead", head, SculptedHead(), Vector3.zero, Mat(Skin));
+            var p=facePersona;
+            head.localRotation=Quaternion.Euler(p.Pitch,p.Yaw,p.Roll);
+            MeshPart("SculptedHead", head, SculptedHead(p,advancedId??classId), Vector3.zero, Mat(Skin));
             var iris = Color.Lerp(clsColor, new Color(0.15f, 0.48f, 0.58f), 0.25f);
             for (int side = -1; side <= 1; side += 2)
             {
-                float x = side * 0.053f;
+                float x = side * 0.053f*p.Width;
+                float openness=p.Eye*(advancedId=="marksman"&&side<0?.45f:1f);
+                float gaze=p.Gaze*.018f;
+                float lidLift=.0235f*(openness-1);
                 var eye = Pivot("EyePaint", head, new Vector3(x, 0.013f, 0.118f));
-                eye.localRotation = Quaternion.Euler(0f, side * 12f, 0f);
+                eye.localRotation = Quaternion.Euler(0f, side * 12f, side*p.Tilt);
                 eyePaint.Add(eye);
-                Part(PrimitiveType.Sphere, eye, Vector3.zero, new Vector3(0.073f, 0.047f, 0.015f), Mat(RobeWhite));
-                Part(PrimitiveType.Sphere, eye, new Vector3(-side * 0.003f, -0.001f, 0.009f), new Vector3(0.036f, 0.040f, 0.006f), Glow(Mul(iris, 0.48f)));
-                Part(PrimitiveType.Sphere, eye, new Vector3(-side * 0.003f, -0.008f, 0.012f), new Vector3(0.030f, 0.021f, 0.004f), Glow(Color.Lerp(iris, Color.white, 0.35f)));
-                Part(PrimitiveType.Sphere, eye, new Vector3(-side * 0.003f, 0.001f, 0.014f), new Vector3(0.013f, 0.028f, 0.003f), Glow(EyeCol));
-                Part(PrimitiveType.Sphere, eye, new Vector3(-0.010f, 0.010f, 0.017f), new Vector3(0.012f, 0.013f, 0.002f), Glow(Color.white));
-                Part(PrimitiveType.Sphere, eye, new Vector3(0.008f, -0.009f, 0.017f), new Vector3(0.005f, 0.005f, 0.002f), Glow(Color.white));
+                Part(PrimitiveType.Sphere, eye, Vector3.zero, new Vector3(0.073f, 0.047f*openness, 0.015f), Mat(RobeWhite));
+                Part(PrimitiveType.Sphere, eye, new Vector3(-side * 0.003f+gaze, -0.001f, 0.009f), new Vector3(0.036f, 0.040f*openness, 0.006f), Glow(Mul(iris, 0.48f)));
+                Part(PrimitiveType.Sphere, eye, new Vector3(-side * 0.003f+gaze, -0.008f, 0.012f), new Vector3(0.030f, 0.021f*openness, 0.004f), Glow(Color.Lerp(iris, Color.white, 0.35f)));
+                Part(PrimitiveType.Sphere, eye, new Vector3(-side * 0.003f+gaze, 0.001f, 0.014f), new Vector3(0.013f, 0.028f*openness, 0.003f), Glow(EyeCol));
+                Part(PrimitiveType.Sphere, eye, new Vector3(-0.010f+gaze, 0.010f*openness, 0.017f), new Vector3(0.012f, 0.013f, 0.002f), Glow(Color.white));
+                Part(PrimitiveType.Sphere, eye, new Vector3(0.008f+gaze, -0.009f*openness, 0.017f), new Vector3(0.005f, 0.005f, 0.002f), Glow(Color.white));
                 var lid = Pivot("UpperLid", head, new Vector3(x, 0.037f, 0.122f));
                 upperLids.Add(lid);
-                Seg(lid, new Vector3(-0.034f, -0.003f, -side * 0.006f), new Vector3(0f, 0.003f, 0.007f), 0.006f, Glow(EyeCol));
-                Seg(lid, new Vector3(0f, 0.003f, 0.007f), new Vector3(0.034f, -0.003f, side * 0.006f), 0.006f, Glow(EyeCol));
-                Seg(lid, new Vector3(side * 0.029f, -0.003f, 0f), new Vector3(side * 0.043f, 0.006f, -0.001f), 0.004f, Glow(EyeCol));
+                lid.localRotation=Quaternion.Euler(0,0,side*p.Tilt);
+                Seg(lid, new Vector3(-0.034f, -0.003f+lidLift, -side * 0.006f), new Vector3(0f, 0.003f+lidLift, 0.007f), 0.006f, Glow(EyeCol));
+                Seg(lid, new Vector3(0f, 0.003f+lidLift, 0.007f), new Vector3(0.034f, -0.003f+lidLift, side * 0.006f), 0.006f, Glow(EyeCol));
+                Seg(lid, new Vector3(side * 0.029f, -0.003f+lidLift, 0f), new Vector3(side * 0.043f, 0.006f+lidLift, -0.001f), 0.004f, Glow(EyeCol));
                 Seg(head, new Vector3(x - 0.027f, -0.011f, 0.125f), new Vector3(x + 0.026f, -0.012f, 0.125f), 0.0025f, Glow(Mul(Skin, 0.55f)));
-                Seg(head, new Vector3(x - side * 0.028f, 0.057f, 0.120f), new Vector3(x + side * 0.029f, 0.065f, 0.112f), 0.006f, Glow(Mul(Wood, 0.45f)));
+                float browY=.057f+(side>0?p.Asym*.0005f:0);
+                Seg(head,new Vector3(x-side*.028f,browY,.120f),new Vector3(x,browY+.004f+p.Brow*.0003f,.123f),classId=="swordsman"?.008f:.005f,Glow(Mul(Wood,.45f)));
+                Seg(head,new Vector3(x,browY+.004f+p.Brow*.0003f,.123f),new Vector3(x+side*.029f,browY+p.Brow*.0007f,.112f),.005f,Glow(Mul(Wood,.45f)));
                 var ear = Part(PrimitiveType.Sphere, head, new Vector3(side * 0.137f, -0.012f, -0.005f), new Vector3(0.042f, 0.070f, 0.040f), Mat(Skin));
                 if (classId == "archer")
                 {
@@ -139,20 +149,20 @@ namespace SpellDuel
             // A small tapered bridge and tip, with a modeled underside rather than a dot.
             var nose = MeshPart("NoseBridge", head, NoseMesh(), new Vector3(0f, -0.006f, 0.126f), Mat(Skin));
             nose.name = "NoseBridge";
-            Seg(head, new Vector3(-0.021f, -0.063f, 0.116f), new Vector3(0.022f, -0.063f, 0.116f), 0.0035f, Glow(new Color(0.54f, 0.22f, 0.23f)));
-            Seg(head, new Vector3(-0.013f, -0.070f, 0.112f), new Vector3(0.014f, -0.070f, 0.112f), 0.002f, Glow(new Color(0.83f, 0.44f, 0.35f)));
-            mouthOpen = Part(PrimitiveType.Sphere, head, new Vector3(0f, -0.064f, 0.119f), new Vector3(0.027f, 0.001f, 0.003f), Glow(new Color(0.43f, 0.16f, 0.20f))).transform;
+            Seg(head, new Vector3(-.024f,-.066f+p.Smile*.012f,.127f),new Vector3(0,-.066f,.131f), 0.0035f, Glow(new Color(0.54f, 0.22f, 0.23f)));
+            Seg(head, new Vector3(0,-.066f,.131f),new Vector3(.024f,-.066f+p.Smile*.012f+p.Asym*.0004f,.127f), 0.002f, Glow(new Color(0.83f, 0.44f, 0.35f)));
+            mouthOpen = Part(PrimitiveType.Sphere, head, new Vector3(0f, -0.069f, 0.131f), new Vector3(0.027f, 0.001f, 0.003f), Glow(new Color(0.43f, 0.16f, 0.20f))).transform;
         }
 
-        static Mesh SculptedHead()
+        static Mesh SculptedHead(Portraits.Persona persona,string identity)
         {
-            const string key = "SculptedHead";
+            string key = "SculptedHead "+identity;
             if (meshCache.TryGetValue(key, out var m) && m != null) return m;
             m = LatheSphere(28, 18, p =>
             {
                 float yn = p.y * 2f, xn = p.x * 2f, zn = p.z * 2f;
-                float taper = Mathf.Lerp(0.62f, 1f, Mathf.SmoothStep(0f, 1f, (yn + 1f) / 0.85f));
-                var q = new Vector3(xn * 0.142f * taper, yn * 0.157f, zn * (zn > 0f ? 0.132f : 0.149f));
+                float taper = Mathf.Lerp(.50f+.22f*persona.Jaw, 1f, Mathf.SmoothStep(0f, 1f, (yn + 1f) / 0.85f));
+                var q = new Vector3(xn * 0.142f * taper*persona.Width, yn * 0.157f*persona.Length, zn * (zn > 0f ? 0.132f : 0.149f));
                 if (zn > 0f)
                 {
                     float front = Mathf.Clamp01(zn * 3f);
@@ -491,12 +501,40 @@ namespace SpellDuel
             Part(PrimitiveType.Cube,t,new Vector3(0f,0.072f,0.073f),new Vector3(0.025f,0.020f,0.045f),Mat(Gold));
         }
 
+        void BuildPersonaClothing()
+        {
+            // Small additions to the existing costumes; animation pivots and material caches are reused.
+            if(classId=="swordsman")
+                foreach(var shoulder in new[]{shL,shR})Part(PrimitiveType.Sphere,shoulder,new Vector3(0,.04f,.02f),new Vector3(.23f,.10f,.25f),Mat(Metal));
+            if(classId=="mage")
+                for(int side=-1;side<=1;side+=2)Seg(spine,new Vector3(side*.05f,.47f,.14f),new Vector3(side*.14f,.56f,.10f),.025f,Mat(Gold));
+            if(classId=="archer")
+                Seg(spine,new Vector3(-.13f,.43f,.13f),new Vector3(.14f,.09f,.15f),.020f,Mat(Leather));
+            if(classId=="assassin")
+                Part(PrimitiveType.Sphere,spine,new Vector3(0,.52f,.06f),new Vector3(.24f,.13f,.22f),Mat(DarkCloth));
+            if(classId=="priest")
+                for(int side=-1;side<=1;side+=2)Seg(spine,new Vector3(side*.065f,.39f,.15f),new Vector3(side*.065f,.12f,.14f),.012f,Mat(Gold));
+            if(facePersona.Open>0)Part(PrimitiveType.Sphere,head,new Vector3(0,-.062f,.136f),new Vector3(.047f,.007f,.003f),Glow(RobeWhite));
+            if(advancedId=="berserker")
+            {
+                Seg(head,new Vector3(.072f,.013f,.126f),new Vector3(.084f,-.037f,.116f),.004f,Glow(new Color(.63f,.22f,.20f)));
+                Seg(shR,new Vector3(-.06f,.05f,.09f),new Vector3(.07f,-.03f,.10f),.007f,Mat(Leather));
+            }
+            if(advancedId=="ranger")
+                for(int side=-1;side<=1;side+=2)Part(PrimitiveType.Sphere,head,new Vector3(side*.105f,.115f,.07f),new Vector3(.04f,.10f,.055f),Mat(Wood));
+            if(advancedId=="ninja")Part(PrimitiveType.Sphere,head,new Vector3(0,-.085f,.108f),new Vector3(.23f,.115f,.07f),Mat(DarkCloth));
+            if(advancedId=="shadowdancer")
+                for(int side=-1;side<=1;side+=2)Seg(head,new Vector3(side*.077f,.032f,.128f),new Vector3(side*.105f,.045f,.113f),.004f,Glow(EyeCol));
+            if(advancedId=="bishop")
+                for(int side=-1;side<=1;side+=2)Seg(head,new Vector3(side*.080f,-.005f,.126f),new Vector3(side*.102f,-.016f,.114f),.003f,Glow(Mul(Skin,.60f)));
+        }
+
         void AnimateDetails(float cast, float hurt)
         {
             float squint=1f-0.82f*hurt;
             foreach(var eye in eyePaint) eye.localScale=new Vector3(1f,squint,1f);
             foreach(var lid in upperLids) lid.localPosition=new Vector3(lid.localPosition.x,0.037f-0.018f*hurt,0.122f);
-            if(mouthOpen!=null) mouthOpen.localScale=new Vector3(0.027f,0.001f+0.017f*Mathf.Max(cast,chargeAmt*0.45f),0.003f);
+            if(mouthOpen!=null) mouthOpen.localScale=new Vector3(.027f+.035f*facePersona.Open,.001f+.024f*facePersona.Open+.017f*Mathf.Max(cast,chargeAmt*.45f),.003f);
             if(floatingBook!=null) { floatingBook.localPosition=new Vector3(-0.41f,0.31f+0.025f*Mathf.Sin(clock*2f),0.05f); floatingBook.localRotation=Quaternion.Euler(0f,clock*14f,8f); }
             for(int i=0;i<motes.Count;i++)
             {
@@ -561,6 +599,7 @@ namespace SpellDuel
         void Build(string id)
         {
             classId = id;
+            facePersona=Portraits.PersonaFor(advancedId??id);
             if (id == DummyId) { BuildDummy(); return; }
             clsColor = Advanced.Get(advancedId)?.color ?? Skills.Classes[id].color; clsColor.a = 1f;
             bool slim = id == "assassin";
@@ -593,7 +632,9 @@ namespace SpellDuel
             hipR = Leg("R", 1f, sw, pantsC, bootC, out knR);
 
             // ---- 軀幹（以髖部高度為樞紐，前傾 / 後仰都繞這裡轉）
-            spine = Pivot("Spine", body, new Vector3(0f, 0.85f, 0f));
+            var posture=Pivot("PersonaStance",body,new Vector3(0,.85f,0));
+            posture.localRotation=Quaternion.Euler(facePersona.Lean,0,facePersona.Roll*.12f);
+            spine = Pivot("Spine", posture, Vector3.zero);
             Part(PrimitiveType.Sphere, spine, new Vector3(0f, 0.03f, 0f), new Vector3(0.3f * sw, 0.18f, 0.2f), Mat(pantsC, 0.85f));
             Part(PrimitiveType.Capsule, spine, new Vector3(0f, 0.3f, 0f), new Vector3(0.34f * sw, 0.27f, 0.22f), Mat(torsoC));
             Part(PrimitiveType.Cylinder, spine, new Vector3(0f, 0.08f, 0f), new Vector3(0.35f * sw, 0.03f, 0.24f), Mat(id == "mage" || id == "priest" ? Gold : Leather, 0.9f));
@@ -628,6 +669,7 @@ namespace SpellDuel
 
             BuildAccessories();
             BuildAdvanced();
+            BuildPersonaClothing();
 
             // ---- 詠唱光圈（不跟身體倒下，固定在腳底）
             auraMat = new Material(glowShader) { color = new Color(clsColor.r, clsColor.g, clsColor.b, 0f), name = "RigAura" };
@@ -762,7 +804,7 @@ namespace SpellDuel
             tip.localRotation = Quaternion.Euler(-60f, 0f, 0f);
             MeshPart("HoodTipCone", tip, Frustum(0.09f, 0f, 0.13f, 12), Vector3.zero, Mat(hoodC, 0.9f));
             // 面罩：蓋住鼻子以下
-            Part(PrimitiveType.Sphere, head, new Vector3(0f, -0.092f, 0.010f), new Vector3(0.25f, 0.11f, 0.25f), Mat(Mul(DarkCloth, 0.9f)));
+            if(advancedId!="shadowdancer") Part(PrimitiveType.Sphere, head, new Vector3(0f, -0.092f, 0.010f), new Vector3(0.25f, 0.11f, 0.25f), Mat(Mul(DarkCloth, 0.9f)));
             // 圍巾：脖子一圈＋往後飄的尾巴（職業色）
             Part(PrimitiveType.Cylinder, spine, new Vector3(0f, 0.55f, 0f), new Vector3(0.2f, 0.045f, 0.2f), Mat(clsColor));
             scarfTail = Pivot("ScarfTail", spine, new Vector3(0.05f, 0.55f, -0.09f));

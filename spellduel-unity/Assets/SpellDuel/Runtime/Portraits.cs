@@ -42,7 +42,7 @@ namespace SpellDuel
         {
             size = Math.Max(8, Math.Min(512, size));
             speaker = Key(speaker);
-            var canvas = new Canvas(size, r, g, b);
+            var canvas = new Canvas(size, r, g, b) { persona=PersonaFor(speaker), posing=true };
             switch (speaker)
             {
                 case "艾琳": Erin(canvas); break;
@@ -57,6 +57,8 @@ namespace SpellDuel
                 case "阿潮": Tide(canvas); break;
                 case "澪": Mio(canvas); break;
                 case "公會長": Guildmaster(canvas); break;
+                case "鐵匠": Smith(canvas); break;
+                case "店員": Clerk(canvas); break;
                 case "熔岩巨像": LavaGolem(canvas); break;
                 case "腐化樹王": Treant(canvas); break;
                 case "深海巨妖": SeaDemon(canvas); break;
@@ -69,6 +71,51 @@ namespace SpellDuel
             return canvas.Output();
         }
 
+        // One art specification is shared by dialogue portraits, villagers and combat rigs.
+        // Width/Jaw/Length/Eye are proportions; Tilt/Brow/Asym shape the features.
+        // Gaze is lateral; Pitch/Yaw/Roll/Lean are pose offsets in degrees.
+        internal struct Persona
+        {
+            internal float Width,Jaw,Length,Eye,Tilt,Gaze,Brow,Asym,Smile,Open,Pitch,Yaw,Roll,Lean;
+            internal Persona(float width,float jaw,float length,float eye,float tilt,float gaze,float brow,float asym,float smile,float open,float pitch,float yaw,float roll,float lean)
+            {Width=width;Jaw=jaw;Length=length;Eye=eye;Tilt=tilt;Gaze=gaze;Brow=brow;Asym=asym;Smile=smile;Open=open;Pitch=pitch;Yaw=yaw;Roll=roll;Lean=lean;}
+        }
+        internal static Persona PersonaFor(string key)
+        {
+            switch(Key(key))
+            {
+                case "艾琳": return new Persona(0.96f,0.72f,1f,1.13f,4f,0f,4f,0f,0.65f,0f,-2f,3f,-2f,0f);
+                case "澪": return new Persona(0.93f,0.72f,1.08f,0.55f,-9f,-0.3f,-5f,0f,0f,0f,7f,-12f,2f,0f);
+                case "老焰": return new Persona(1.04f,1f,1.02f,0.64f,-7f,-0.08f,-13f,0f,0.22f,0f,6f,-5f,0f,3f);
+                case "小鐵": return new Persona(1.07f,1.28f,0.97f,0.86f,9f,0.2f,14f,4f,0.42f,0f,-1f,9f,-3f,5f);
+                case "米菈": return new Persona(0.94f,0.68f,1.04f,0.66f,12f,-0.28f,8f,12f,1.1f,0f,-3f,-13f,7f,1f);
+                case "翠": return new Persona(0.89f,0.75f,1.12f,0.5f,2f,0.04f,0f,0f,0f,0f,-7f,8f,0f,-2f);
+                case "楓": return new Persona(0.94f,0.88f,1f,0.72f,8f,0.12f,5f,0f,0.36f,0f,0f,-8f,1f,7f);
+                case "小葉": return new Persona(1.1f,1.2f,0.94f,1.45f,-6f,-0.12f,-12f,2f,0.15f,0.62f,4f,-7f,-9f,2f);
+                case "海斗": return new Persona(1.08f,1.35f,1f,1.0f,5f,0f,10f,0f,0.9f,0.65f,-7f,5f,0f,-3f);
+                case "凪": return new Persona(1.05f,1.1f,0.98f,0.86f,-10f,0.06f,-4f,0f,0.8f,0f,1f,-6f,3f,0f);
+                case "阿潮": return new Persona(1.07f,1.05f,1.06f,0.4f,-6f,0.13f,-10f,2f,-0.25f,0f,6f,10f,1f,5f);
+                case "鐵匠": return new Persona(1.12f,1.45f,0.98f,0.72f,1f,0f,0f,0f,1f,0.8f,-5f,-4f,-2f,3f);
+                case "店員": return new Persona(1.08f,1.15f,0.96f,1.25f,-7f,-0.12f,-10f,4f,0.55f,0.25f,3f,5f,-5f,2f);
+                case "公會長": return new Persona(0.94f,1.12f,1.13f,0.56f,7f,0f,0f,0f,0f,0f,-6f,0f,0f,-2f);
+                case "swordsman": return new Persona(1.07f,1.35f,1f,0.8f,2f,0f,0f,0f,0f,0f,-2f,0f,0f,-1f);
+                case "archer": return new Persona(0.94f,0.8f,1.03f,0.67f,7f,0f,1f,0f,0.08f,0f,0f,-4f,0f,4f);
+                case "mage": return new Persona(0.91f,0.62f,1.04f,0.78f,10f,0.1f,9f,3f,0.8f,0f,-5f,5f,-2f,-2f);
+                case "assassin": return new Persona(0.9f,0.62f,1.1f,0.52f,12f,-0.28f,3f,14f,0.8f,0f,2f,-9f,3f,6f);
+                case "priest": return new Persona(1.05f,1.08f,0.97f,1.05f,-10f,0f,-4f,0f,0.7f,0f,2f,0f,1f,0f);
+                case "paladin": return new Persona(1.05f,1.3f,1.06f,0.83f,-2f,0f,0f,0f,0.12f,0f,-6f,0f,0f,-3f);
+                case "berserker": return new Persona(1.1f,1.4f,1f,0.72f,14f,0f,20f,-2f,-0.5f,0.65f,5f,-4f,-2f,12f);
+                case "marksman": return new Persona(0.9f,0.8f,1.08f,0.48f,4f,0f,1f,0f,0f,0f,-6f,0f,0f,1f);
+                case "ranger": return new Persona(0.98f,0.9f,0.98f,1.08f,6f,0.06f,12f,3f,0.9f,0.5f,-1f,-5f,8f,3f);
+                case "archmage": return new Persona(0.88f,0.6f,1.12f,0.48f,9f,0f,8f,0f,0.4f,0f,-11f,6f,0f,-3f);
+                case "summoner": return new Persona(0.99f,0.82f,0.98f,1.3f,3f,0.22f,4f,15f,0.85f,0.55f,-1f,-8f,-7f,3f);
+                case "ninja": return new Persona(0.91f,0.8f,1.06f,0.55f,4f,0f,0f,0f,0f,0f,1f,0f,0f,5f);
+                case "shadowdancer": return new Persona(0.9f,0.58f,1.05f,0.68f,15f,-0.22f,10f,10f,1.15f,0f,-4f,10f,6f,1f);
+                case "bishop": return new Persona(1.05f,1.05f,1.08f,0.68f,-9f,0f,-5f,0f,0.6f,0f,3f,-4f,0f,0f);
+                case "inquisitor": return new Persona(0.92f,1.05f,1.1f,0.54f,12f,0f,19f,0f,-0.1f,0f,-5f,0f,0f,-2f);
+                default:return new Persona(1,1,1,1,0,0,0,0,0,0,0,0,0,0);
+            }
+        }
         // SDF portrait canvas: cel-tone paint, ink contours and a one-pixel AA fringe.
         struct Paint
         {
@@ -87,6 +134,8 @@ namespace SpellDuel
         sealed class Canvas
         {
             public readonly int n;
+            public Persona persona=PersonaFor("");
+            public bool posing;
             readonly float[] red, green, blue;
             readonly Paint border;
             public Canvas(int n, float r, float g, float b)
@@ -107,7 +156,14 @@ namespace SpellDuel
                 for(int y=0;y<n;y++) for(int x=0;x<n;x++)
                 {
                     float u=(x+0.5f)*px-1f,v=(y+0.5f)*px-1f;
-                    float a=Math.Max(0f,Math.Min(1f,0.5f-shape(u,v)/px))*opacity;
+                    float sx=u,sy=v;
+                    if(posing)
+                    {
+                        float a0=persona.Roll*0.0174533f,ca=(float)Math.Cos(a0),sa=(float)Math.Sin(a0);
+                        float dx=u-persona.Yaw*.0018f*(1+v),dy=v+.15f;
+                        sx=(dx*ca+dy*sa)/(1-Math.Abs(persona.Yaw)*.003f);sy=-dx*sa+dy*ca-.15f+persona.Pitch*.0015f;
+                    }
+                    float a=Math.Max(0f,Math.Min(1f,0.5f-shape(sx,sy)/px))*opacity;
                     if(a<=0f)continue;
                     var tint=cel && u+v*0.50f>0.11f?Paint.Mix(c,White,0.15f):cel?c*0.76f:c;
                     int k=y*n+x;
@@ -132,6 +188,7 @@ namespace SpellDuel
             }
             public Color32[] Output()
             {
+                posing=false;
                 Fill((x,y)=>Math.Abs(RoundD(x,y,0.925f,0.925f,0.13f))-0.026f,border);
                 Fill((x,y)=>Math.Abs(RoundD(x,y,0.88f,0.88f,0.11f))-0.003f,Paint.Mix(border,White,0.35f));
                 for(int i=0;i<3;i++) Fill((x,y)=>OvalD(x,y,-0.08f+i*0.08f,0.925f,0.016f,0.016f),White);
@@ -185,34 +242,36 @@ namespace SpellDuel
                 if(elf)cv.Poly(skin,s*0.32f,0.22f,s*0.57f,0.36f,s*0.42f,-0.07f);
                 else cv.Oval(s*0.365f,0.10f,0.055f,0.105f,skin);
             }
-            if(child)cv.Poly(skin,-0.32f,0.44f,-0.39f,0.15f,-0.34f,-0.15f,-0.18f,-0.29f,0f,-0.34f,0.18f,-0.29f,0.34f,-0.15f,0.39f,0.15f,0.32f,0.44f,0f,0.55f);
-            else cv.Poly(skin,-0.31f,0.47f,-0.37f,0.18f,-0.31f,-0.14f,-0.15f,-0.33f,0f,-0.39f,0.15f,-0.33f,0.31f,-0.14f,0.37f,0.18f,0.31f,0.47f,0f,0.57f);
-            for(int s=-1;s<=1;s+=2) Eye(cv,s*0.16f,0.14f,child?0.117f:0.103f,elder?0.038f:child?0.079f:0.064f,iris,s);
-            cv.Poly(Paint.Mix(skin,White,0.38f),0.006f,0.07f,0.037f,-0.035f,-0.014f,-0.045f);
-            cv.Line(-0.057f,-0.19f,0.063f,-0.18f,0.008f,Paint.Hex("#925154"));
-            cv.Line(-0.032f,-0.218f,0.037f,-0.214f,0.004f,Paint.Mix(skin,White,0.22f));
-            for(int s=-1;s<=1;s+=2)
+            var p=cv.persona;
+            float fw=.37f*p.Width,jaw=.15f*p.Jaw,chin=-.39f*p.Length;
+            cv.Poly(skin,-fw*.84f,.47f,-fw,.18f,-fw*.84f,-.14f,-jaw,chin+.065f,0,chin,jaw,chin+.065f,fw*.84f,-.14f,fw,.18f,fw*.84f,.47f,0,.57f);
+            for(int side=-1;side<=1;side+=2)Eye(cv,side*.16f*p.Width,.14f,.103f,.064f*p.Eye,iris,side);
+            cv.Poly(Paint.Mix(skin,White,.38f),.006f,.07f,.037f,-.035f,-.014f,-.045f);
+            float mouthY=-.19f,mw=.065f*(p.Open>0?1+Math.Max(0,p.Smile)*.8f:1);
+            if(p.Open>0){cv.Oval(0,mouthY,mw,.055f*p.Open,Ink,.006f);cv.Box(0,mouthY+.020f*p.Open,mw*.8f,.012f,White);}
+            else {cv.Line(-mw,mouthY-.005f+p.Smile*.030f,0,mouthY-.005f,.008f,Paint.Hex("#925154"));cv.Line(0,mouthY-.005f,mw,mouthY-.005f+p.Smile*.030f+p.Asym*.001f,.008f,Paint.Hex("#925154"));}
+            for(int side=-1;side<=1;side+=2)
             {
-                cv.Line(s*0.075f,0.29f,s*0.245f,elder?0.27f:0.31f,elder?0.019f:0.011f,hair);
-                if(elder)
-                {
-                    cv.Line(s*0.27f,0.12f,s*0.315f,0.15f,0.005f,skin*0.55f);
-                    cv.Line(s*0.26f,0.07f,s*0.30f,0.05f,0.005f,skin*0.55f);
-                }
+                float by=.29f+(side>0?p.Asym*.0015f:0);
+                cv.Line(side*.075f,by,side*.16f,by+p.Brow*.0012f+.008f,elder?.020f:.011f,hair);
+                cv.Line(side*.16f,by+p.Brow*.0012f+.008f,side*.245f,by+p.Brow*.002f,elder?.018f:.009f,hair);
+                if(elder){cv.Line(side*.27f,.12f,side*.315f,.15f,.005f,skin*.55f);cv.Line(side*.26f,.07f,side*.30f,.05f,.005f,skin*.55f);}
             }
             cv.Gem(0f,-0.72f,0.055f,iris);
         }
         static void Eye(Canvas cv,float x,float y,float rx,float ry,Paint iris,int side)
         {
-            cv.Oval(x,y,rx,ry,White,0.008f);
-            cv.Fill((u,v)=>OvalD(u,v,x,y,rx*0.48f,ry*0.94f),iris*0.55f);
-            cv.Fill((u,v)=>Math.Max(OvalD(u,v,x,y,rx*0.48f,ry*0.94f),v-y+0.005f),Paint.Mix(iris,White,0.25f));
-            cv.Fill((u,v)=>OvalD(u,v,x,y,rx*0.18f,ry*0.77f),Ink);
-            cv.Fill((u,v)=>OvalD(u,v,x-0.018f,y+ry*0.38f,0.018f,0.018f),White);
-            cv.Fill((u,v)=>OvalD(u,v,x+0.017f,y-ry*0.43f,0.007f,0.007f),White);
-            cv.Line(x-rx,y+ry*0.45f,x,y+ry,0.010f,Ink);
-            cv.Line(x,y+ry,x+rx,y+ry*0.43f,0.010f,Ink);
-            cv.Line(x+side*rx*0.8f,y+ry*0.50f,x+side*(rx+0.03f),y+ry*0.87f,0.008f,Ink);
+            var p=cv.persona;float lift=p.Tilt*.0018f;
+            cv.Poly(White,x-rx,y,x-rx*.45f,y+ry*.85f-side*lift*.5f,x+rx*.45f,y+ry*.85f+side*lift*.5f,x+rx,y+side*lift,x+rx*.45f,y-ry*.8f,x-rx*.45f,y-ry*.8f);
+            float ix=x+p.Gaze*rx,iy=y-p.Pitch*.0008f;
+            cv.Fill((u,v)=>Math.Max(OvalD(u,v,ix,iy,rx*.43f,ry*.9f),OvalD(u,v,x,y,rx*.9f,ry*.84f)),iris*.55f);
+            cv.Fill((u,v)=>Math.Max(Math.Max(OvalD(u,v,ix,iy,rx*.43f,ry*.9f),OvalD(u,v,x,y,rx*.9f,ry*.84f)),v-y),Paint.Mix(iris,White,.25f));
+            cv.Fill((u,v)=>Math.Max(OvalD(u,v,ix,iy,rx*.16f,ry*.70f),OvalD(u,v,x,y,rx*.9f,ry*.84f)),Ink);
+            float glint=p.Eye>1.2f?.023f:.014f;
+            cv.Oval(ix-.013f,iy+ry*.3f,glint,glint,White,0);
+            cv.Line(x-rx,y-side*lift,x,y+ry, .010f,Ink);
+            cv.Line(x,y+ry,x+rx,y+side*lift,.010f,Ink);
+            cv.Line(x+side*rx*.8f,y+side*lift, x+side*(rx+.03f),y+side*lift+.018f,.008f,Ink);
         }
         static void Fringe(Canvas cv,Paint hair,float skew=0f)
         {
@@ -343,7 +402,7 @@ namespace SpellDuel
             cv.Poly(White,-0.30f,-0.61f,0.30f,-0.61f,0.37f,-1f,-0.37f,-1f);
             cv.Line(-0.27f,-0.53f,-0.25f,-0.81f,0.020f,White);cv.Line(0.27f,-0.53f,0.25f,-0.81f,0.020f,White);
             cv.Ring(-0.39f,-0.09f,0.031f,0.045f,0.010f,Gold);
-            cv.Line(-0.05f,-0.185f,0.065f,-0.17f,0.008f,Paint.Hex("#9b5260"));
+
         }
         static void Tide(Canvas cv)
         {
@@ -386,6 +445,20 @@ namespace SpellDuel
             for(int i=-1;i<=1;i++)BellBrooch(cv,i*0.10f,-0.73f,0.055f);
         }
 
+        static void Smith(Canvas cv)
+        {
+            var h=Paint.Hex("#795341");Bust(cv,Paint.Hex("#ce986e"),h,Paint.Hex("#b96c49"),Gold,true);
+            Fringe(cv,h);cv.Poly(h,-.30f,-.09f,-.18f,-.29f,0,-.38f,.18f,-.29f,.30f,-.09f,.25f,-.46f,0,-.60f,-.25f,-.46f);
+            cv.Oval(0,-.22f,.11f,.065f,Ink);cv.Box(0,-.20f,.085f,.017f,White);
+            cv.Box(0,-.90f,.30f,.25f,h);cv.Line(-.27f,-.54f,-.21f,-.95f,.025f,Gold);cv.Line(.27f,-.54f,.21f,-.95f,.025f,Gold);
+            cv.Box(.48f,-.72f,.025f,.24f,Paint.Hex("#865334"));cv.Box(.48f,-.47f,.12f,.07f,Paint.Hex("#86a2ad"));
+        }
+        static void Clerk(Canvas cv)
+        {
+            var h=Paint.Hex("#78533e");cv.Oval(.27f,.55f,.18f,.20f,h);Bust(cv,Paint.Hex("#f1c5a1"),h,Paint.Hex("#589b9b"),Paint.Hex("#73915c"));Fringe(cv,h);
+            cv.Poly(White,-.27f,-.59f,.27f,-.59f,.34f,-1,-.34f,-1);Leaf(cv,.23f,.57f,.15f,Paint.Hex("#a9c66b"),-.04f);
+            cv.Oval(-.45f,-.77f,.075f,.11f,Paint.Hex("#e67985"));cv.Box(-.45f,-.63f,.035f,.04f,Gold);
+        }
         static void LavaGolem(Canvas cv)
         {
             Paint rock=Paint.Hex("#985b47"),light=Paint.Hex("#bc8557"),lava=Paint.Hex("#ffb348");
@@ -395,7 +468,7 @@ namespace SpellDuel
             cv.Poly(light,0.51f,0.43f,0.20f,0.51f,0.01f,0.32f,0.14f,0.20f,0.50f,0.29f);
             cv.Poly(lava,-0.38f,0.21f,-0.07f,0.12f,-0.31f,0.05f);cv.Poly(lava,0.38f,0.21f,0.07f,0.12f,0.31f,0.05f);
             cv.Box(0f,-0.22f,0.25f,0.055f,Ink);
-            cv.Line(-0.16f,-0.22f,0.16f,-0.22f,0.014f,lava);
+            cv.Poly(lava,-.19f,-.22f,-.10f,-.18f,.03f,-.22f,.18f,-.17f,.15f,-.30f,-.13f,-.30f);
             cv.Line(0.06f,0.65f,-0.04f,0.49f,0.017f,lava);cv.Line(-0.04f,0.49f,0.05f,0.30f,0.017f,lava);
             cv.Line(-0.16f,-0.56f,-0.03f,-0.73f,0.025f,lava);cv.Line(-0.03f,-0.73f,0.12f,-0.55f,0.025f,lava);
             cv.Gem(0f,-0.77f,0.10f,Paint.Hex("#ffe2a4"));
@@ -412,6 +485,7 @@ namespace SpellDuel
             cv.Poly(wood,-0.34f,0.51f,0f,0.67f,0.35f,0.49f,0.39f,-0.21f,0.21f,-0.53f,0f,-0.72f,-0.21f,-0.53f,-0.40f,-0.19f);
             cv.Poly(Paint.Hex("#5a393b"),-0.29f,0.21f,-0.02f,0.10f,-0.25f,0.02f);cv.Poly(Paint.Hex("#5a393b"),0.29f,0.21f,0.02f,0.10f,0.25f,0.02f);
             for(int s=-1;s<=1;s+=2)cv.Oval(s*0.18f,0.11f,0.044f,0.023f,Paint.Hex("#c6ed75"),0f);
+            cv.Line(-.30f,.28f,-.08f,.35f,.025f,wood);cv.Line(.30f,.28f,.08f,.35f,.025f,wood);
             cv.Poly(Ink,-0.14f,-0.23f,-0.02f,-0.19f,0.16f,-0.27f,0.07f,-0.46f,-0.08f,-0.42f);
             cv.Line(-0.02f,0.51f,0.06f,0.28f,0.015f,vein);cv.Line(0.06f,0.28f,-0.04f,-0.03f,0.015f,vein);
             cv.Line(-0.26f,-0.12f,-0.20f,-0.45f,0.011f,Gold);cv.Line(0.24f,-0.16f,0.17f,-0.51f,0.011f,Gold);
@@ -430,7 +504,7 @@ namespace SpellDuel
             cv.Poly(coral,-0.39f,0.54f,-0.48f,0.81f,-0.18f,0.68f,0f,0.86f,0.18f,0.68f,0.48f,0.81f,0.39f,0.54f,0f,0.64f);
             cv.Poly(Ink,-0.35f,0.18f,-0.08f,0.07f,-0.28f,-0.02f);cv.Poly(Ink,0.35f,0.18f,0.08f,0.07f,0.28f,-0.02f);
             for(int s=-1;s<=1;s+=2)cv.Oval(s*0.23f,0.08f,0.058f,0.034f,glow,0f);
-            cv.Oval(0f,-0.24f,0.15f,0.19f,Ink);
+            cv.Poly(Ink,-.23f,-.15f,.23f,-.05f,.14f,-.36f,-.07f,-.33f);
             for(int s=-1;s<=1;s+=2)cv.Poly(White,s*0.12f,-0.16f,s*0.05f,-0.17f,s*0.06f,-0.27f);
             for(int i=0;i<3;i++)cv.Gem((i-1)*0.12f,0.40f-(i%2)*0.07f,0.025f,glow);
             cv.Ring(0f,-0.71f,0.21f,0.19f,0.025f,Paint.Hex("#5c697e"));
