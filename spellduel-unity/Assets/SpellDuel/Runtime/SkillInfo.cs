@@ -118,7 +118,7 @@ namespace SpellDuel
             if (s.id == "slash") E($"揮出後 {Battle.SliceWindow:0.#} 秒內，斬開正面 {Battle.SliceRange:0.#}m 內飛來的法球（從天而降、地裂、橫掃等範圍攻擊無效）");
             if (s.releaseNear)
             {
-                E($"蓄力條件：手掌伸到鏡頭前、而且身邊直徑 {Battle.AmbushClear * 2f:0.#}m 內沒有敵人（不符合時蓄力暫停）");
+                E("蓄力條件：手掌伸到鏡頭前（敵人貼身也能蓄力；蓄滿時敵人已經在身邊就直接出手）");
                 E($"蓄滿自動進入伏擊 {Battle.AmbushWindow:0} 秒（不用放招動作）：靠近敵人到直徑 {Battle.AmbushReach * 2f:0.#}m 內自動出手；時間到沒靠近就落空");
                 E($"刺殺流派（點了「暗殺術」）：離開敵人視線 {Battle.StealthTime:0} 秒就完成蓄力（對戰時＝離開對手手機的畫面），伏擊維持 {Battle.StealthAmbushWindow:0} 秒，靠近就出手");
                 E("伏擊中被打到會取消，要重新蓄力");
@@ -149,7 +149,7 @@ namespace SpellDuel
                 case SelfKind.Detonate: E($"每隻召喚物在周圍 {s.areaRadius:0.#}m 爆炸（傷害 {Skills.All["pet_blast"].damage}），召喚物消失"); break;
                 case SelfKind.Substitute: E($"{s.buffDur:0.#} 秒內下一次被打中：完全不受傷害（陷阱、範圍攻擊也算）"); break;
                 case SelfKind.Clone: E($"分身持續 {s.buffDur:0} 秒：受到的攻擊有 50% 機率打到分身（完全無效）"); break;
-                case SelfKind.Dance: E($"{s.buffDur:0} 秒內：身邊有敵人也能蓄力伏擊技能；伏擊出手距離加倍"); break;
+                case SelfKind.Dance: E($"{s.buffDur:0} 秒內：伏擊技能蓄力時間減半；伏擊出手距離加倍"); break;
                 case SelfKind.Fog: E($"腳下直徑 {s.areaRadius * 2f:0.#}m 的毒霧，持續 {s.buffDur:0} 秒；範圍內每個敵人每秒 {s.effectDps:0.#} 傷害"); break;
                 case SelfKind.Revive: E($"倒下的隊友以 {s.buffAmount}% HP 復活；活著的人（含自己）獲得 {s.buffDur:0} 秒復活祝福：倒下時自動以 30% HP 站起來"); break;
                 case SelfKind.HealPct: E($"回復最大 HP 的 {s.buffAmount}%"); break;

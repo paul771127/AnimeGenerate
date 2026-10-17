@@ -2654,7 +2654,7 @@ namespace SpellDuel
                 string st = bow ? (Hand.BowDrawn ? "🏹 拉滿！手回畫面張開放箭" : Hand.BowStage == 1 ? "✊ 握著拳拉出畫面外（拉弓）" : "畫面中握拳（捏弦）") :
                     me.charging.releaseNear && prog < 1f && Battle.StealthAmbush(me) ? (me.seenByFoe ? "👁 被敵人看見了：離開它的視線 1 秒就能刺殺（或手掌蓄力）" : $"🫥 躲開視線 {Mathf.Min(me.hiddenTime, Battle.StealthTime):0.0}／{Battle.StealthTime:0} 秒") :
                     me.charging.releaseNear && prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　" +
-                        (!me.palmVisible ? "✋ 手掌伸到鏡頭前才會蓄力" : battle.NearestFoe(me, out var nfd) != null && nfd < Battle.AmbushClear ? $"⚠ 身邊直徑 {Battle.AmbushClear * 2f:0.#}m 內有敵人，退開才會蓄力" : "蓄滿自動伏擊") :
+                        (!me.palmVisible ? "✋ 手掌伸到鏡頭前才會蓄力" : "蓄滿自動伏擊（敵人在身邊就直接出手）") :
                     prog < 1f && me.charging.stillRadius > 0f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　站著別動！（離原地 {Battle.FlatDistance(me.Feet, me.chargeFrom):0.0}／{me.charging.stillRadius:0.0}m）" :
                     HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Chant ?
                         (prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　" : "") +

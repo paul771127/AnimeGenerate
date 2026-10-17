@@ -244,7 +244,7 @@ namespace SpellDuel
         /// <summary>冷卻倍率（狂戰士血之狂暴：攻速 ×1.5）</summary>
         float CdFactor(Fighter f) => f.frenzyUntil > now ? 1f / 1.5f : 1f;
         /// <summary>這招要蓄力多久（影舞者連殺：伏擊技能 −70%）</summary>
-        public float ChargeTime(Fighter f, SkillDef s) => s.charge * f.chargeScale * (f.comboUntil > now && s.releaseNear ? 0.3f : 1f);
+        public float ChargeTime(Fighter f, SkillDef s) => s.charge * f.chargeScale * (f.comboUntil > now && s.releaseNear ? 0.3f : 1f) * (f.danceUntil > now && s.releaseNear ? 0.5f : 1f);   // 連殺 −70%、影舞 −50%
         public bool HasPet(Fighter f) { foreach (var p in pets) if (p.alive && p.owner == f && p.kind != "clone") return true; return false; }
         /// <summary>聖騎士的守護光環：自己是聖騎士，或 3m 內有活著的聖騎士隊友</summary>
         bool InAura(Fighter f)
@@ -1182,7 +1182,6 @@ namespace SpellDuel
             if (f.mp < CostOf(f, s)) { why = "MP 不足"; return false; }
             if (HpCostOf(f, s) > 0 && f.hp <= HpCostOf(f, s)) { why = "HP 不足（殉道：技能改用 HP 施放）"; return false; }
             if (f.snaredUntil > now && s.self != SelfKind.Cleanse) { why = "被困住，暫時不能施法（牧師可以淨化）"; return false; }
-            if (s.releaseNear && !StealthAmbush(f) && f.danceUntil <= now && NearestFoe(f, out var nd) != null && nd < AmbushClear) { why = $"身邊直徑 {AmbushClear * 2f:0.#}m 內有敵人，先退開才能蓄力{s.name}"; return false; }
             f.charging = s; f.chargeStart = now; f.chargeFrom = f.Feet;
             return true;
         }
@@ -1227,7 +1226,9 @@ namespace SpellDuel
         }
 
         /// <summary>刺客伏擊技能（刺殺、影襲、毒刃）：身邊這個半徑內不能有敵人才能蓄力；蓄力完成後靠近到這個距離就自動出手</summary>
-        public const float AmbushClear = 2f;     // 半徑 2m（直徑 4m）內有敵人：不能開始／蓄力暫停
+        /// <summary>刺客「近身本能」：2m 內有敵人時，受到的傷害 −20%、閃避率 +15%（貼臉打刺客要付出代價）</summary>
+        public const float CloseRange = 2f, CloseReduce = 0.2f, CloseEvade = 0.15f;
+        public bool CloseInstinct(Fighter f) => f != null && f.cls != null && f.cls.id == "assassin" && NearestFoe(f, out var d) != null && d < CloseRange;
         public const float AmbushReach = 1.5f;
         /// <summary>法術飛超過技能射程後，再往前飄這麼遠（公尺）一邊淡出一邊消失</summary>
         public const float FadeDistance = 0.8f;   // 伏擊中靠近到半徑 1.5m（直徑 3m）內：自動出手
@@ -1703,7 +1704,7 @@ namespace SpellDuel
                     { f.chargeStart = now - ChargeTime(f, f.charging) - 0.01f; Emit("buff", f.Chest, f.charging.color, "躲開視線！刺殺準備完成，靠近就出手"); }
                     if (ChargeProgress(f) < 1f)
                     {
-                        if (!f.palmVisible || (!StealthAmbush(f) && f.danceUntil <= now && NearestFoe(f, out var nd2) != null && nd2 < AmbushClear)) f.chargeStart += dt;
+                        if (!f.palmVisible) f.chargeStart += dt;   // 手掌不在鏡頭前：蓄力暫停（敵人貼身也照樣蓄力，蓄滿時已經在身邊就直接出手）
                     }
                     else TryRelease(f, Fighter.Flat(f.forward), f.Feet, out _);
                 }
@@ -2325,7 +2326,7 @@ namespace SpellDuel
         void ApplyDamageAndEffect(Fighter target, int damage, EffectKind eff, float dps, float dur, Vector3 at)
         {
             // 閃避率（刺客技能樹）：整次攻擊（傷害＋效果）完全閃開
-            float evade = target.evadeChance + (target.vanishUntil > now ? target.vanish : 0f);
+            float evade = target.evadeChance + (target.vanishUntil > now ? target.vanish : 0f) + (CloseInstinct(target) ? CloseEvade : 0f);
             if (evade > 0f && damage > 0 && rng.NextDouble() < evade) { Emit("evade", target.Chest, new Color(0.7f, 0.6f, 1f), "閃避！"); return; }
             if (damage > 0 && target.invulnUntil > now) { Emit("evade", target.Chest, new Color(1f, 0.4f, 0.4f), "無敵！"); return; }
             // 忍者：替身術（下一次攻擊完全無效）、分身術（一半的攻擊打到分身）
@@ -2365,6 +2366,7 @@ namespace SpellDuel
             dmg *= f.damageTakenMul * (1f - f.gearReduce);
             if (f.lastStand > 0f && f.hp < f.maxHp * 0.3f) dmg *= 1f - f.lastStand;   // 不屈：低血量減傷
             if (f.markedUntil > now) dmg *= 1.2f;                                       // 被懲戒
+            if (dmg > 0f && kind != "dot" && kind != "burn" && CloseInstinct(f)) dmg *= 1f - CloseReduce;   // 刺客近身本能
             if (f == player && dmg > 0f)
             {
                 if (InAura(f)) dmg *= 1f - AuraReduce;                                  // 聖騎士守護光環
@@ -2396,7 +2398,7 @@ namespace SpellDuel
             // 主教的復活祝福：倒下時以 30% HP 站起來
             if (!f.Alive && f.blessUntil > now) { f.blessUntil = 0f; f.hp = Mathf.Round(f.maxHp * 0.3f); Emit("heal", f.Chest, new Color(1f, 0.95f, 0.6f), "復活祝福！"); }
             if (dmg > 0 && f.prepUntil > now) { f.prepUntil = 0f; Emit("fail", f.Chest, Color.gray, "刺殺準備被打斷！"); }
-            if (dmg > 0 && kind != "dot" && kind != "burn" && f.armed != null && f.armed.releaseNear) { f.cooldownUntil[f.armed.id] = now; Emit("fail", f.Chest, Color.gray, $"{f.armed.name}被打斷！要重新蓄力"); f.armed = null; }
+            if (dmg > 0 && kind != "dot" && kind != "burn" && f.armed != null && f.armed.releaseNear && !(NearestFoe(f, out var ad) != null && ad <= AmbushReach + 0.5f)) { f.cooldownUntil[f.armed.id] = now; Emit("fail", f.Chest, Color.gray, $"{f.armed.name}被打斷！要重新蓄力"); f.armed = null; }
             Emit(kind == "dot" || kind == "burn" ? kind : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");
             if (!f.Alive)
             {
