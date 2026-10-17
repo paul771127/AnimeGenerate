@@ -10,6 +10,9 @@ namespace SpellDuel
     ///   BuildScenery(town, root)        地面、遠景、道路、裝飾（不能擋路的東西）
     ///   BuildBuilding(town, kind, parent) 一棟建築（kind：smith／shop／guild／house／landmark），門朝 -z
     ///   CreateNpc(name, parent)          一個居民（腳底在 parent 原點、面向 +z）；回傳根物件
+    ///   BuildFence(town, root, center, radius, gaps, half)  城鎮外圍的柵欄／城牆（gaps＝出口方向，缺口寬 2×half）
+    ///   BuildGate(town, theme, parent)   出口的大門（+z 朝城外；theme＝通往第幾章）
+    ///   BuildWarpPad(town, parent)       傳送陣（地上的魔法陣，直徑約 1.6m）
     /// </summary>
     public static class TownArt
     {
@@ -25,6 +28,9 @@ namespace SpellDuel
             Box(root, "Road N", new Vector3(0f, 0.005f, 9f), new Vector3(1.6f, 0.01f, 6f), new Color(0.7f, 0.66f, 0.58f));
             Box(root, "Road W", new Vector3(-4f, 0.005f, 6f), new Vector3(4f, 0.01f, 1.4f), new Color(0.7f, 0.66f, 0.58f));
             Box(root, "Road E", new Vector3(4f, 0.005f, 6f), new Vector3(4f, 0.01f, 1.4f), new Color(0.7f, 0.66f, 0.58f));
+            // 通往出口（東西）的路，延伸到城外
+            Box(root, "Exit Road W", new Vector3(-10.5f, 0.004f, 5f), new Vector3(12f, 0.01f, 2.4f), new Color(0.66f, 0.6f, 0.5f));
+            Box(root, "Exit Road E", new Vector3(10.5f, 0.004f, 5f), new Vector3(12f, 0.01f, 2.4f), new Color(0.66f, 0.6f, 0.5f));
             // 圍繞城鎮的樹／岩石（外圈，裝飾用）
             var rng = new System.Random(31 + town);
             for (int i = 0; i < 22; i++)
@@ -32,6 +38,7 @@ namespace SpellDuel
                 float a = i / 22f * Mathf.PI * 2f, r = 14.5f + (float)rng.NextDouble() * 2f;
                 var p = new Vector3(Mathf.Cos(a) * r, 0f, 5f + Mathf.Sin(a) * r);
                 if (town == 2 && p.z < 0f) continue;   // 港口：南邊是海
+                if (Mathf.Abs(Mathf.Sin(a)) < 0.25f) continue;   // 東西兩邊是出口的路
                 Tree(root, p, town, (float)rng.NextDouble());
             }
             if (town == 2)
@@ -131,6 +138,60 @@ namespace SpellDuel
                 Glow(p, "Light", new Vector3(0f, 5.3f, 0f), 0.6f, new Color(1f, 0.95f, 0.6f));
             }
         }
+
+        // ---------------------------------------------------------------- 柵欄、出口、傳送陣
+        public static void BuildFence(int town, Transform root, Vector3 center, float radius, List<Vector2> gaps, float half)
+        {
+            Color post = town == 0 ? new Color(0.3f, 0.24f, 0.22f) : town == 1 ? new Color(0.45f, 0.32f, 0.2f) : new Color(0.85f, 0.85f, 0.82f);
+            Color rail = town == 2 ? new Color(0.35f, 0.55f, 0.8f) : Mix(post, Color.white, 0.15f);
+            int n = Mathf.CeilToInt(2f * Mathf.PI * radius / 1.5f);
+            Vector3 Pt(int i) { float a = i * 2f * Mathf.PI / n; return center + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * radius; }
+            bool InGap(Vector3 p)
+            {
+                var v = new Vector2(p.x - center.x, p.z - center.z);
+                foreach (var g in gaps) if (Vector2.Dot(v, g) > 0f && Mathf.Abs(g.x * v.y - g.y * v.x) < half + 0.2f) return true;
+                return false;
+            }
+            for (int i = 0; i < n; i++)
+            {
+                Vector3 a = Pt(i), b = Pt(i + 1);
+                if (InGap(a)) continue;
+                Box(root, "Fence Post", a + Vector3.up * 0.6f, new Vector3(0.18f, 1.2f, 0.18f), post);
+                if (InGap(b)) continue;
+                var mid = (a + b) / 2f; var d = b - a;
+                for (int k = 0; k < 2; k++)
+                {
+                    var r = Box(root, "Fence Rail", mid + Vector3.up * (0.45f + k * 0.45f), new Vector3(0.08f, 0.1f, d.magnitude), rail);
+                    r.transform.localRotation = Quaternion.LookRotation(d.normalized, Vector3.up);
+                }
+            }
+        }
+
+        public static void BuildGate(int town, int theme, Transform parent)
+        {
+            var c = WorldUI.RegionColors[Mathf.Clamp(theme, 0, WorldUI.RegionColors.Length - 1)];
+            Color wood = new Color(0.4f, 0.28f, 0.18f);
+            for (int s = -1; s <= 1; s += 2)
+                Box(parent, "Gate Pillar", new Vector3(s * 1.5f, 1.3f, 0f), new Vector3(0.35f, 2.6f, 0.35f), wood);
+            Box(parent, "Gate Beam", new Vector3(0f, 2.7f, 0f), new Vector3(3.6f, 0.3f, 0.4f), wood);
+            Box(parent, "Gate Sign", new Vector3(0f, 2.3f, -0.22f), new Vector3(1.8f, 0.45f, 0.06f), c);
+            Glow(parent, "Gate Light", new Vector3(0f, 1.2f, 2f), 0.4f, c);
+        }
+
+        public static void BuildWarpPad(int town, Transform parent)
+        {
+            Cyl(parent, "Warp Base", new Vector3(0f, 0.02f, 0f), new Vector3(1.7f, 0.02f, 1.7f), new Color(0.3f, 0.28f, 0.4f));
+            Prim(PrimitiveType.Cylinder, parent, "Warp Glow", new Vector3(0f, 0.045f, 0f), new Vector3(1.4f, 0.01f, 1.4f), Mat(new Color(0.6f, 0.5f, 1f), true));
+            for (int i = 0; i < 4; i++)
+            {
+                float a = i * Mathf.PI / 2f + Mathf.PI / 4f;
+                Glow(parent, "Warp Crystal", new Vector3(Mathf.Cos(a) * 0.95f, 0.5f, Mathf.Sin(a) * 0.95f), 0.18f, new Color(0.7f, 0.6f, 1f));
+            }
+            parent.gameObject.AddComponent<Spin>();
+        }
+
+        /// <summary>傳送陣慢慢轉</summary>
+        class Spin : MonoBehaviour { void Update() { transform.Rotate(0f, 30f * Time.deltaTime, 0f, Space.Self); } }
 
         // ---------------------------------------------------------------- 居民
         /// <summary>居民的外觀：目前借用職業角色模型（依角色個性挑職業），小孩縮小</summary>

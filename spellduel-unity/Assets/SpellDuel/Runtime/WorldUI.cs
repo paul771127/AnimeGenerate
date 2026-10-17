@@ -11,7 +11,7 @@ namespace SpellDuel
     /// </summary>
     public class WorldUI
     {
-        public enum Screen { Map, Town, Smith, Shop, Guild }
+        public enum Screen { Map, Town, Smith, Shop, Guild, Gate, Warp }
         public Screen screen = Screen.Map;
         public int town;                         // 目前所在城鎮（＝地區主題 0～2）
         public Action<StoryStage> OnStartStage;  // 出發打關卡
@@ -80,13 +80,20 @@ namespace SpellDuel
             },
         };
 
-        /// <summary>城鎮開放：起始之村一定開；其他地區有任何一關可以打就開</summary>
-        public static bool TownOpen(int t)
+        /// <summary>城鎮抵達過（可以傳送）：起始之村一定有；之後要把前一章（前一個地區的關卡）全部打通才抵達</summary>
+        public static bool TownOpen(int t) => t == 0 || t > 0 && t < Towns.Length && ChapterCleared(t - 1);
+
+        /// <summary>這個地區（主題）的關卡全部通關</summary>
+        public static bool ChapterCleared(int theme)
         {
-            if (t == 0) return true;
-            foreach (var s in Story.AllStages()) if (s.theme == t && Story.IsUnlocked(s)) return true;
-            return false;
+            bool any = false;
+            foreach (var s in Story.AllStages()) if (s.theme == theme) { any = true; if (!Story.IsCleared(s.id)) return false; }
+            return any;
         }
+
+        int gateTheme;
+        public void OpenGate(int theme) { gateTheme = theme; screen = Screen.Gate; sel = null; }
+        public void OpenWarp() { screen = Screen.Warp; }
 
         public void OpenTown(int t) { town = Mathf.Clamp(t, 0, Towns.Length - 1); screen = Screen.Town; npcTalk = -1; selItem = null; }
         public void OpenGuild() { screen = Screen.Guild; npcTalk = -1; selItem = null; }
@@ -112,6 +119,8 @@ namespace SpellDuel
                 case Screen.Smith: DrawSmith(r, prof, fs, fsS, fsL, gap); break;
                 case Screen.Shop: DrawShop(r, prof, fs, fsS, fsL, gap); break;
                 case Screen.Guild: DrawGuild(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Gate: DrawGate(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Warp: DrawWarp(r, prof, fs, fsS, fsL, gap); break;
             }
             if (toast != null && Time.time < toastUntil) UiKit.Pill(r.y + r.height * 0.5f, toast, fs, new Color(1f, 0.9f, 0.5f), r.width * 0.9f, 0.85f);
         }
@@ -274,6 +283,25 @@ namespace SpellDuel
                     string icon = n.opens == "smith" ? "⚒ " : n.opens == "shop" ? "🧪 " : n.opens == "guild" ? "🏛 " : "";
                     UiKit.Text(lr, $"{icon}{n.name}\n{n.role}" + (isNear ? "\n💬 說「你好」" : ""), lf, isNear ? new Color(1f, 0.95f, 0.6f) : Color.white, TextAnchor.MiddleCenter, true);
                 }
+            // 出口與傳送陣的標示
+            if (Cam != null)
+            {
+                foreach (var e in Walk.exits)
+                    if (Walk.ScreenPos(Cam, e.pos + Vector3.up * 2.6f, out var g, out float d) && d < 30f)
+                    {
+                        float lw = fsS * 10f, lh = fsS * 2.6f;
+                        var lr = new Rect(g.x - lw / 2f, g.y - lh, lw, lh);
+                        UiKit.Card(lr, 0.65f, RegionColors[e.theme], 0.9f);
+                        UiKit.Text(lr, $"🚪 第 {e.theme + 1} 章 {RegionNames[e.theme]}\n{Story.BandText(e.theme)}・走出去選關卡", fsS, Color.white, TextAnchor.MiddleCenter, true);
+                    }
+                if (Walk.ScreenPos(Cam, Walk.WarpPos + Vector3.up * 0.6f, out var wg, out float wd) && wd < 20f)
+                {
+                    float lw = fsS * 8f, lh = fsS * 2.4f;
+                    var lr = new Rect(wg.x - lw / 2f, wg.y - lh, lw, lh);
+                    UiKit.Card(lr, 0.55f, new Color(0.6f, 0.5f, 1f), 0.8f);
+                    UiKit.Text(lr, "🌀 傳送陣\n站上去傳送到其他城鎮", fsS, Color.white, TextAnchor.MiddleCenter, true);
+                }
+            }
             // 準心
             float cs = fs * 0.9f;
             GUI.color = new Color(1f, 1f, 1f, 0.8f);
@@ -306,6 +334,57 @@ namespace SpellDuel
             if (UiKit.Button(new Rect(r.x + gap, by2, bw3, bh * 0.85f), pts > 0 ? $"📜 角色 ×{pts}" : "📜 角色", fsS, pts > 0, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
             if (UiKit.Button(new Rect(r.x + gap * 2 + bw3, by2, bw3, bh * 0.85f), "📋 清單模式", fsS)) walkMode = false;
             if (UiKit.Button(new Rect(r.x + gap * 3 + bw3 * 2, by2, bw3, bh * 0.85f), "🗺 回大地圖", fsS)) screen = Screen.Map;
+        }
+
+        // ---------------------------------------------------------------- 城鎮出口：選這一章的關卡
+        void DrawGate(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
+        {
+            int th = Mathf.Clamp(gateTheme, 0, RegionNames.Length - 1);
+            float y = r.y + gap;
+            Header(r, $"🚪 第 {th + 1} 章 {RegionNames[th]}", RegionColors[th], prof, fs, fsS, fsL, gap, ref y);
+            var band = Story.LevelBand(th);
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), $"{Story.BandText(th)}　掉落裝備 Lv{band.lo}–{band.hi}　打過的關卡可以重打刷裝備", fsS, new Color(0.85f, 0.88f, 1f));
+            y += fs * 1.6f;
+            var stages = new List<StoryStage>();
+            foreach (var s in Story.AllStages()) if (s.theme == th) stages.Add(s);
+            float bottom = r.yMax - gap * 2 - fs * 2.1f;
+            float ch = Mathf.Min(fs * 3.4f, (bottom - y) / Mathf.Max(1, stages.Count) - gap * 0.4f);
+            foreach (var st in stages)
+            {
+                bool clear = Story.IsCleared(st.id), ok = Story.IsUnlocked(st);
+                var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
+                UiKit.Card(cr, ok ? 0.6f : 0.35f, clear ? new Color(1f, 0.85f, 0.3f) : ok ? RegionColors[th] : new Color(0.4f, 0.4f, 0.45f), 0.8f);
+                string waves = st.HasBoss && st.fromWave >= 10 ? "Boss 戰" : $"{st.toWave - st.fromWave + 1} 波" + (st.HasBoss ? "＋Boss" : "");
+                UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.68f, cr.height), $"{(clear ? "✔" : ok ? "▶" : "🔒")} {st.id}　{st.title}\n{waves}・推薦 Lv{Mathf.Max(1, st.FirstWave - 1)}+・經驗 {st.xp}・💰 {Economy.StageGold(st)}",
+                    fsS, ok ? Color.white : Color.gray, TextAnchor.MiddleLeft, true);
+                var br = new Rect(cr.xMax - cr.width * 0.3f, cr.y + gap * 0.4f, cr.width * 0.3f - gap * 0.4f, cr.height - gap * 0.8f);
+                if (UiKit.Button(br, ok ? (clear ? "⚔ 再打" : "⚔ 出發") : "🔒 先過前一關", fsS, ok && !clear, RegionColors[th], ok))
+                { OnStartStage?.Invoke(st); return; }
+                y += ch + gap * 0.4f;
+            }
+            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), $"🏘 回{Towns[town].name}", fs)) screen = Screen.Town;
+        }
+
+        // ---------------------------------------------------------------- 傳送陣：傳送到抵達過的城鎮
+        void DrawWarp(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
+        {
+            float y = r.y + gap;
+            Header(r, "🌀 傳送陣", new Color(0.6f, 0.5f, 1f), prof, fs, fsS, fsL, gap, ref y);
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), "抵達過的城鎮可以直接傳送過去；打通一章後就能走到下一個城鎮。", fsS, new Color(0.85f, 0.88f, 1f));
+            y += fs * 1.6f;
+            float ch = fs * 3.6f;
+            for (int t = 0; t < Towns.Length; t++)
+            {
+                bool open = TownOpen(t), here = t == town;
+                var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
+                UiKit.Card(cr, open ? 0.6f : 0.35f, open ? Towns[t].color : new Color(0.4f, 0.4f, 0.45f), 0.8f);
+                UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.66f, cr.height), $"🏘 {Towns[t].name}　{RegionNames[t]}\n" + (open ? Towns[t].desc : $"🔒 打通第 {t} 章後抵達"), fsS, open ? Color.white : Color.gray, TextAnchor.MiddleLeft, true);
+                var br = new Rect(cr.xMax - cr.width * 0.3f, cr.y + gap * 0.4f, cr.width * 0.3f - gap * 0.4f, cr.height - gap * 0.8f);
+                if (UiKit.Button(br, here ? "📍 目前位置" : open ? "🌀 傳送" : "🔒", fsS, open && !here, Towns[t].color, open && !here))
+                { OpenTown(t); Sfx.Play("poof", 0.8f); Haptics.Play(Haptics.Kind.Success); return; }
+                y += ch + gap * 0.5f;
+            }
+            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), $"🏘 留在{Towns[town].name}", fs)) screen = Screen.Town;
         }
 
         /// <summary>打完招呼後打開設施</summary>

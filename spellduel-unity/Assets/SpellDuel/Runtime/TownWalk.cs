@@ -23,6 +23,11 @@ namespace SpellDuel
             public int lineAt;            // 下次聊天從第幾句開始
         }
 
+        /// <summary>城鎮出口（柵欄的缺口）：走出去打開這一章的關卡選單</summary>
+        public class Exit { public Vector2 dir; public int theme; public Vector3 pos; }
+        public readonly List<Exit> exits = new List<Exit>();
+        public Vector3 WarpPos { get; private set; }
+
         public bool Active => root != null;
         public int Town { get; private set; } = -1;
         public readonly List<Npc> npcs = new List<Npc>();
@@ -32,18 +37,24 @@ namespace SpellDuel
 
         /// <summary>打招呼成功（SoloBattle 打開對話框）</summary>
         public Action<Npc> OnGreet;
+        /// <summary>走出出口（參數＝那一章的主題 0～2）</summary>
+        public Action<int> OnExit;
+        /// <summary>踏上傳送陣</summary>
+        public Action OnWarp;
+        bool onWarp;
 
         GameObject root;
         readonly List<(Vector2 c, float r)> walls = new List<(Vector2, float)>();
         readonly StepDetector steps = new StepDetector();
         float speed, walkUntil, holdUntil, greetLock;
+        public const float GateHalf = 1.4f, ExitDepth = 1.2f;
         public const float TownRadius = 13f, StepSpeed = 1.4f, StepHold = 0.5f, TalkRange = 2.6f, TalkAngle = 50f;
         static readonly Vector2 PlazaC = new Vector2(0f, 5f);
 
         // ---------------------------------------------------------------- 進城／離開
         public void Enter(int town, Camera cam, float floorY)
         {
-            Exit();
+            Leave();
             Town = town;
             root = new GameObject($"Town {WorldUI.Towns[town].name}");
             var f = cam.transform.forward; f.y = 0f;
@@ -58,7 +69,31 @@ namespace SpellDuel
             Building("guild", new Vector2(0f, 13.5f), 2.9f);
             Building("house", new Vector2(-9.5f, 1.5f), 2.1f);
             Building("house", new Vector2(9.5f, 1.5f), 2.1f);
-            Building("landmark", town == 2 ? new Vector2(9f, 13f) : new Vector2(-9f, 13f), 1.4f);
+            Building("landmark", town == 2 ? new Vector2(8f, 12f) : new Vector2(-8f, 12f), 1.4f);
+            // 柵欄＋出口：東邊往這一章（主題＝城鎮），西邊回上一章
+            exits.Clear();
+            if (town > 0) exits.Add(new Exit { dir = Vector2.left, theme = town - 1 });
+            if (HasStages(town)) exits.Add(new Exit { dir = Vector2.right, theme = town });
+            var gaps = new List<Vector2>();
+            foreach (var e in exits)
+            {
+                gaps.Add(e.dir);
+                var gp = PlazaC + e.dir * TownRadius;
+                e.pos = new Vector3(gp.x, 0f, gp.y);
+                var g = new GameObject("Gate " + e.theme);
+                g.transform.SetParent(root.transform, false);
+                g.transform.localPosition = e.pos;
+                g.transform.localRotation = Quaternion.Euler(0f, Yaw(e.dir), 0f);   // +z 朝外
+                TownArt.BuildGate(town, e.theme, g.transform);
+            }
+            TownArt.BuildFence(town, root.transform, new Vector3(PlazaC.x, 0f, PlazaC.y), TownRadius, gaps, GateHalf);
+            // 傳送陣（廣場東南角）
+            WarpPos = new Vector3(5f, 0f, 0.5f);
+            var w = new GameObject("Warp Circle");
+            w.transform.SetParent(root.transform, false);
+            w.transform.localPosition = WarpPos;
+            TownArt.BuildWarpPad(town, w.transform);
+            onWarp = false;
             npcs.Clear();
             Keeper("鐵匠", "鐵匠鋪老闆", "smith", new Vector2(-7f, 8f), new[] { "要強化裝備嗎？把東西放上鐵砧吧。" });
             Keeper("店員", "道具店店員", "shop", new Vector2(7f, 8f), new[] { "歡迎光臨！藥水、回城捲軸都有，也收裝備喔。" });
@@ -74,11 +109,13 @@ namespace SpellDuel
             steps.Reset();
         }
 
-        public void Exit()
+        public void Leave()
         {
             if (root != null) UnityEngine.Object.Destroy(root);
-            root = null; Town = -1; npcs.Clear(); walls.Clear(); Near = null;
+            root = null; Town = -1; npcs.Clear(); walls.Clear(); exits.Clear(); Near = null;
         }
+
+        static bool HasStages(int theme) { foreach (var st in Story.AllStages()) if (st.theme == theme) return true; return false; }
 
         public void SetVisible(bool v) { if (root != null && root.activeSelf != v) root.SetActive(v); }
 
@@ -143,6 +180,19 @@ namespace SpellDuel
                     meXZ = to;
                 }
             }
+            // 走出柵欄的出口 → 選關；選完回來時站在出口內側
+            foreach (var e in exits)
+                if (Vector2.Dot(meXZ - PlazaC, e.dir) > TownRadius + ExitDepth)
+                {
+                    MovePlayer(tr, ref meXZ, PlazaC + e.dir * (TownRadius - 1.5f));
+                    speed = 0f; walkUntil = holdUntil = 0f;
+                    OnExit?.Invoke(e.theme);
+                    break;
+                }
+            // 傳送陣
+            float wd = Vector2.Distance(meXZ, new Vector2(WarpPos.x, WarpPos.z));
+            if (!onWarp && wd < 0.8f) { onWarp = true; OnWarp?.Invoke(); }
+            else if (onWarp && wd > 1.3f) onWarp = false;
             // 居民：玩家靠近時轉頭看玩家；找可以打招呼的人
             Near = null; float best = float.MaxValue;
             var camF = tr.InverseTransformDirection(cam.transform.forward); var camF2 = new Vector2(camF.x, camF.z);
@@ -160,7 +210,15 @@ namespace SpellDuel
             }
         }
 
-        /// <summary>移動後的位置：不能穿過建築／居民，不能走出城鎮</summary>
+        /// <summary>把玩家（在城鎮座標）移到 to：移動整個城鎮</summary>
+        static void MovePlayer(Transform tr, ref Vector2 me, Vector2 to)
+        {
+            var delta = to - me;
+            tr.position -= tr.TransformVector(new Vector3(delta.x, 0f, delta.y));
+            me = to;
+        }
+
+        /// <summary>移動後的位置：不能穿過建築／居民，不能走出柵欄（出口的缺口可以）</summary>
         Vector2 Resolve(Vector2 p)
         {
             for (int k = 0; k < 2; k++)
@@ -169,9 +227,7 @@ namespace SpellDuel
                     var v = p - c; float rr = r + 0.3f;
                     if (v.sqrMagnitude < rr * rr) p = c + (v.sqrMagnitude > 1e-6f ? v.normalized : Vector2.down) * rr;
                 }
-            var fromC = p - PlazaC;
-            if (fromC.magnitude > TownRadius) p = PlazaC + fromC.normalized * TownRadius;
-            return p;
+            return Fence(p, PlazaC, TownRadius, exits.ConvertAll(e => e.dir), GateHalf, ExitDepth + 0.5f);
         }
 
         /// <summary>聽到一段話：有招呼語而且面前有人就開始聊天。回傳是否觸發。</summary>
@@ -190,6 +246,35 @@ namespace SpellDuel
             if (Near == null) return false;
             greetLock = Time.time + 1.5f;
             OnGreet?.Invoke(Near);
+            return true;
+        }
+
+        /// <summary>柵欄（純數學，可在 Unity 外測試）：圈外只有出口缺口的通道可以走（通道寬 2×half、深 depth）</summary>
+        public static Vector2 Fence(Vector2 p, Vector2 c, float r, List<Vector2> gaps, float half, float depth)
+        {
+            var v = p - c;
+            float inner = r - 0.3f;
+            if (v.magnitude <= inner) return p;
+            foreach (var g in gaps)
+            {
+                float along = Vector2.Dot(v, g), side = g.x * v.y - g.y * v.x;
+                // 在缺口的通道裡；已經走到柵欄外的通道時，撞到通道兩側只會被擋在通道內
+                if (along > 0f && (Mathf.Abs(side) <= half - 0.3f || along > r && Mathf.Abs(side) < half + 1f))
+                    return c + g * Mathf.Min(along, r + depth) + new Vector2(-g.y, g.x) * Mathf.Clamp(side, -(half - 0.3f), half - 0.3f);
+            }
+            return c + v.normalized * inner;
+        }
+
+        /// <summary>城鎮座標的一點在畫面上的位置（GUI 座標）</summary>
+        public bool ScreenPos(Camera cam, Vector3 local, out Vector2 gui, out float dist)
+        {
+            gui = default; dist = 0f;
+            if (root == null || cam == null) return false;
+            var wp = root.transform.TransformPoint(local);
+            var sp = cam.WorldToScreenPoint(wp);
+            dist = Vector3.Distance(cam.transform.position, wp);
+            if (sp.z <= 0.1f) return false;
+            gui = new Vector2(sp.x, Screen.height - sp.y);
             return true;
         }
 

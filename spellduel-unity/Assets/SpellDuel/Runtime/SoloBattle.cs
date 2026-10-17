@@ -371,11 +371,13 @@ namespace SpellDuel
             {
                 world.Walk = townWalk;
                 townWalk.OnGreet = GreetNpc;
+                townWalk.OnExit = th => { world.OpenGate(th); Sfx.Play("select", 0.7f); };
+                townWalk.OnWarp = () => { world.OpenWarp(); Sfx.Play("summon", 0.6f); };
             }
             world.Cam = cam;
             bool want = storyMapOpen && phase == Phase.Setup && world.walkMode && world.screen != WorldUI.Screen.Map && cam != null;
             if (want && (!townWalk.Active || townWalk.Town != world.town)) townWalk.Enter(world.town, cam, cam.transform.position.y - 1.4f);
-            else if (!want && townWalk.Active) townWalk.Exit();
+            else if (!want && townWalk.Active) townWalk.Leave();
             if (!townWalk.Active) return;
             if (TownWalking) townWalk.Update(cam, Mathf.Min(Time.deltaTime, 0.1f), Time.time - world.holdAt < 0.15f);
             world.SpeechNote = !UseSpeech ? "這支手機沒有語音辨識：走近居民後按「👋 打招呼」" : speech.Running ? null : $"語音：{speech.Status}";
@@ -2988,9 +2990,18 @@ namespace SpellDuel
                     if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "🏛 回職業工會", fs, true, new Color(0.85f, 0.6f, 1f)))
                     { ShowSetup(); storyMapOpen = true; world.OpenTown(0); world.OpenGuild(); }
                 }
+                // 這一章全部打通：下一關在下一個城鎮之後 → 先抵達下一個城鎮
+                else if (won && next != null && next.theme != st.theme && Story.IsUnlocked(next))
+                {
+                    int nt = Mathf.Clamp(next.theme, 0, WorldUI.Towns.Length - 1);
+                    if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), $"🏘 前往{WorldUI.Towns[nt].name}", fs, true, WorldUI.Towns[nt].color))
+                    { ShowSetup(); storyMapOpen = true; world.OpenTown(nt); }
+                }
                 else if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), won ? (next != null && Story.IsUnlocked(next) ? "▶ 下一關" : "再打一次") : "再挑戰", fs, true, new Color(0.4f, 0.8f, 1f)))
                 { if (won && next != null && Story.IsUnlocked(next)) { var n2 = next; ShowSetup(); StartStory(n2); } else StartStageBattle(); }
-                if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "🗺 大地圖", fs)) { ShowSetup(); storyMapOpen = true; world.screen = WorldUI.Screen.Map; }
+                if (!IsTrial && UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), $"🏘 回{WorldUI.Towns[Mathf.Clamp(st.theme, 0, WorldUI.Towns.Length - 1)].name}", fs))
+                { ShowSetup(); storyMapOpen = true; world.OpenTown(Mathf.Clamp(st.theme, 0, WorldUI.Towns.Length - 1)); }
+                else if (IsTrial && UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "🗺 大地圖", fs)) { ShowSetup(); storyMapOpen = true; world.screen = WorldUI.Screen.Map; }
             }
             else if (phase == Phase.Over)
             {
