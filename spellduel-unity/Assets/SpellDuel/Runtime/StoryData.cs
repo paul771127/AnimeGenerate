@@ -167,6 +167,11 @@ namespace SpellDuel
         }
 
         /// <summary>名牌顏色：標記是職業 id 或職業名稱就用職業色</summary>
+        /// <summary>每個地區（章）的等級帶：熔岩 1～10（簡易）、森林 11～20（普通）、海上 21～30（困難）；掉落裝備也在這個範圍</summary>
+        public static (int lo, int hi) LevelBand(int theme) { int t = Mathf.Clamp(theme, 0, 2); return (t * 10 + 1, t * 10 + 10); }
+        public static readonly string[] BandNames = { "簡易", "普通", "困難" };
+        public static string BandText(int theme) { var (lo, hi) = LevelBand(theme); return $"{BandNames[Mathf.Clamp(theme, 0, 2)]}・推薦 Lv{lo}–{hi}"; }
+
         public static Color TagColor(string tag)
         {
             if (string.IsNullOrEmpty(tag)) return new Color(1f, 0.9f, 0.6f);

@@ -259,7 +259,13 @@ namespace SpellDuel
             int luk = prof.Total(Stat.Luk);
             if (!boss && dropRng.NextDouble() > 0.06 + 0.002 * luk) return;
             int rar = ItemGen.RollRarity(dropRng, luk * 0.3f, boss ? 2 : 0);
-            int ilvl = Mathf.Max(1, prof.level + dropRng.Next(-1, 3) + battle.wave / 10);   // 物品等級跟著角色等級（越後面的波次略高）
+            int ilvl = Mathf.Max(1, prof.level + dropRng.Next(-1, 3) + battle.wave / 10);   // 無盡：物品等級跟著角色等級（越後面的波次略高）
+            if (storyStage != null)
+            {
+                // 故事：照地區的等級帶掉（熔岩 1～10、森林 11～20、海上 21～30），越後面的關卡越高
+                var (lo, hi) = Story.LevelBand(storyStage.theme);
+                ilvl = Mathf.Clamp(battle.wave + dropRng.Next(-2, 2), lo, hi);
+            }
             ItemGen.SetTheme = battle.Theme;   // 主題地圖掉對應的套裝
             var it = ItemGen.Make(dropRng, ilvl, rar, myClass);
             pendingItems.Add(it);   // 先暫存：過關才拿得到

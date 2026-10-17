@@ -128,7 +128,7 @@ namespace SpellDuel
                 // 地區底色＋名稱
                 GUI.color = new Color(RegionColors[t].r, RegionColors[t].g, RegionColors[t].b, open ? 0.22f : 0.08f);
                 GUI.DrawTexture(rr, Texture2D.whiteTexture); GUI.color = Color.white;
-                UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y, rr.width * 0.5f, fs * 1.3f), RegionNames[t], fsS, open ? Color.white : Color.gray, TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y, rr.width * 0.9f, fs * 1.3f), $"{RegionNames[t]}（{Story.BandText(t)}）", fsS, open ? Color.white : Color.gray, TextAnchor.MiddleLeft, true);
                 // 城鎮
                 float tw = rr.width * 0.26f, th = Mathf.Min(rr.height - fs * 1.4f, fs * 3.2f);
                 var trr = new Rect(rr.x + gap * 0.5f, rr.y + fs * 1.35f, tw, th);
@@ -168,7 +168,7 @@ namespace SpellDuel
                 string waves = sel.HasBoss && sel.fromWave >= 10 ? "Boss 戰" : $"{sel.toWave - sel.fromWave + 1} 波" + (sel.HasBoss ? "＋Boss" : "");
                 UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.3f, dr.width - gap * 2, fs * 1.4f), $"{sel.id}　{sel.title}" + (clear ? "　✔ 已通關" : ""), fs, Color.white, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(dr.x + gap, dr.y + fs * 1.7f, dr.width - gap * 2, fs * 2.6f),
-                    (sel.desc.Length > 0 ? sel.desc.Split('\n')[0] + "\n" : "") + $"{RegionNames[sel.theme]}・{waves}・經驗 {sel.xp}・💰 {Economy.StageGold(sel)}", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
+                    (sel.desc.Length > 0 ? sel.desc.Split('\n')[0] + "\n" : "") + $"{RegionNames[sel.theme]}・{waves}・推薦 Lv{Mathf.Max(1, sel.FirstWave - 1)}+・掉落裝備 Lv{Story.LevelBand(sel.theme).lo}–{Story.LevelBand(sel.theme).hi}\n經驗 {sel.xp}・💰 {Economy.StageGold(sel)}", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
                 float bw = (dr.width - gap * 3) / 2f, bh = fs * 2f, by = dr.yMax - bh - gap * 0.4f;
                 if (UiKit.Button(new Rect(dr.x + gap, by, bw, bh), clear ? "⚔ 再次挑戰（刷裝備）" : "⚔ 出發", fsS, true, new Color(0.4f, 0.8f, 1f), ok))
                 { var s = sel; sel = null; OnStartStage?.Invoke(s); return; }
