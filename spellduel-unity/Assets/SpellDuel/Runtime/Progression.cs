@@ -52,7 +52,7 @@ namespace SpellDuel
             Stat.Int => atk ? "攻擊傷害 +2%／點、治療量 +2%／點、MP 上限 +2／點" : "MP 上限 +2／點、治療量 +2%／點",
             Stat.Vit => "HP 上限 +5／點、受到的傷害 -0.4%／點（最多 -30%）",
             Stat.Agi => "蓄力時間 -1%／點（最多 -40%）、閃避率 +0.1%／點",
-            Stat.Spi => "MP 回復（基礎只有 30%）每點 +2%、冷卻時間 -0.8%／點（最多 -35%）",
+            Stat.Spi => "MP 回復（基礎只有 30%，精神 99 點回到 100%）、冷卻時間 -0.8%／點（最多 -35%）",
             _ => "爆擊率 +0.6%／點（爆擊＝傷害 ×2）、掉寶機率與稀有度提升",
         };
     }
@@ -976,9 +976,10 @@ namespace SpellDuel
             f.maxHp = Mathf.Max(10, cd.maxHp + 5 * d(Stat.Vit) + (atkStat != Stat.Str ? d(Stat.Str) : 0) + Mathf.RoundToInt(GearSum(Affix.Hp)));
             // 受到的傷害：體質每點 -0.4%（最多 -30%）、裝備護甲
             f.gearReduce = Mathf.Min(0.5f, Mathf.Clamp(0.004f * d(Stat.Vit), 0f, 0.3f) + GearSum(Affix.Armor));
-            // MP：智力每點 +2、裝備；MP 回復：基礎 30%，精神每點 +2%（職業原本速度的 2%）
+            // MP：智力每點 +2、裝備；MP 回復：基礎 30%，精神加到 99 點才回到 100%（線性；裝備把精神加超過 99 會再更快）
             f.maxMp = Mathf.Max(10, cd.maxMp + 2 * d(Stat.Int) + Mathf.RoundToInt(GearSum(Affix.Mp)));
-            f.regen = cd.mpRegen * Mathf.Max(0.1f, Fighter.MpRegenBase + Fighter.MpRegenPerSpi * d(Stat.Spi));
+            float spiFrac = Mathf.Max(0f, d(Stat.Spi) / (float)Mathf.Max(1, Fighter.MpRegenFullSpi - BaseStat(Stat.Spi)));
+            f.regen = cd.mpRegen * (Fighter.MpRegenBase + (1f - Fighter.MpRegenBase) * spiFrac);
             // 冷卻：精神每點 -0.8%（最多 -35%）、裝備
             f.cdMul = Mathf.Clamp(1f - 0.008f * d(Stat.Spi) - GearSum(Affix.Cdr), 0.5f, 1.5f);
             // 蓄力：敏捷每點 -1%（最多 -40%）；側跨沒有無敵時間了 → 敏捷與「側跨」類特殊能力改成閃避率（下面 evadeChance）

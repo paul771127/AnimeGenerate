@@ -17,8 +17,9 @@ namespace SpellDuel
         public ClassDef cls;
         public List<SkillDef> loadout = new List<SkillDef>();
         public float hp, mp, regen;
-        /// <summary>MP 自然回復：職業基礎速度的 30%；精神每多 1 點再 +2%（加到 35 點回到原本的 100%）</summary>
-        public const float MpRegenBase = 0.3f, MpRegenPerSpi = 0.02f;
+        /// <summary>MP 自然回復：職業基礎速度的 30%；精神加到 99 點才回到原本的 100%（中間依點數線性增加）</summary>
+        public const float MpRegenBase = 0.3f;
+        public const int MpRegenFullSpi = 99;
         public int maxHp, maxMp;
         public Vector3 head;                  // 頭（玩家＝手機）的位置
         public Vector3 forward = Vector3.forward;   // 面向（水平）
