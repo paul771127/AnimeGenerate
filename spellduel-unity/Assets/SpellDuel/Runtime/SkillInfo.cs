@@ -121,7 +121,7 @@ namespace SpellDuel
                 E("蓄力條件：手掌伸到鏡頭前（敵人貼身也能蓄力；蓄滿時敵人已經在身邊就直接出手）");
                 E($"蓄滿自動進入伏擊 {Battle.AmbushWindow:0} 秒（不用放招動作）：靠近敵人到直徑 {Battle.AmbushReach * 2f:0.#}m 內自動出手；時間到沒靠近就落空");
                 E($"刺殺流派（點了「暗殺術」）：離開敵人視線累計 {Battle.StealthTime:0} 秒（可以分好幾次，被看見只是暫停）就完成蓄力（對戰時＝離開對手手機的畫面），伏擊維持 {Battle.StealthAmbushWindow:0} 秒，靠近就出手");
-                E("伏擊中被打到會取消，要重新蓄力");
+                E("伏擊中被打到會取消、要重新蓄力；但敵人已經在出手距離內時不會取消（直接出手）");
             }
             switch (s.self)
             {
@@ -167,7 +167,8 @@ namespace SpellDuel
                 else if (s.fromAbove) Line("落下時離開地上的紅圈");
                 else if (s.releaseNear)
                 {
-                    Line($"伏擊一靠近就命中、閃不掉：保持距離 {s.rangeMax:0.#}m 以上，撐過 {Battle.AmbushWindow:0} 秒就落空；或趁伏擊中打它一下就能取消");
+                    Line($"伏擊一靠近就命中、閃不掉：保持距離 {s.rangeMax:0.#}m 以上，撐過 {Battle.AmbushWindow:0} 秒（刺殺流派 {Battle.StealthAmbushWindow:0} 秒）就落空；或趁它還沒靠近時打它一下就能取消");
+                    Line("刺客近身本能：2m 內打它，傷害 −20%、它的閃避 +15%");
                     Line("法師的抗拒法環可以取消伏擊");
                 }
                 else if (s.id == "slash" || Skills.IsMeleeBasic(s)) Line($"只砍前方半球（半徑 {s.rangeMax:0.#}m）：退到範圍外或繞到它背後");
