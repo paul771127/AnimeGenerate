@@ -1182,6 +1182,7 @@ namespace SpellDuel
                     else En.armed = null;
                     // 對手蹲下／側跨閃避（我判定命中時要算進去）
                     En.crouching = (m.e & 16) != 0;
+                    remoteSeesMe = (m.e & 128) != 0; remoteSeenAt = Time.time;
                     En.armorUntil = (m.e & 64) != 0 ? hold : 0f;
                     if ((m.e & 32) != 0) En.dodgeUntil = battle.now + 0.15f;
                     break;
@@ -1197,7 +1198,8 @@ namespace SpellDuel
             nextState = Time.time + 0.1f;
             var me = Me; float now = battle.now;
             int e = (me.blockUntil > now ? 1 : 0) | (me.shieldUntil > now ? 2 : 0) | (me.counterUntil > now ? 4 : 0) | (me.armed != null ? 8 : 0)
-                | (me.crouching ? 16 : 0) | (me.dodgeUntil > now ? 32 : 0) | (me.armorUntil > now ? 64 : 0);
+                | (me.crouching ? 16 : 0) | (me.dodgeUntil > now ? 32 : 0) | (me.armorUntil > now ? 64 : 0)
+                | (enemyOnScreen ? 128 : 0);   // 我的鏡頭拍到對手（對手的刺殺流派用：被看見就不算躲開）
             NetSend?.Invoke(new Msg { t = "state", k = me.charging != null ? me.charging.id : "", s = battle.ChargeProgress(me), hp = Mathf.CeilToInt(me.hp), e = e });
         }
         public void Hide() { EndBattle(); phase = Phase.Hidden; }
@@ -1401,6 +1403,7 @@ namespace SpellDuel
         void HandleInput()
         {
             if (Me != null) Me.palmVisible = Hand == null || Hand.HandVisible;   // 刺客伏擊技能：手掌在鏡頭前才蓄力
+            if (Me != null && battle != null) Me.seenByFoe = SeenByFoe();       // 刺殺流派：有沒有被敵人看見
             if (Hand == null) return;
             bool drawingRune = Me.charging != null && HandGesture.ReleaseOf(Me.charging) == HandGesture.Style.Rune;
             // 符文畫好＝詠唱完成（蓄力直接滿）
@@ -1463,6 +1466,26 @@ namespace SpellDuel
                 else if (battle.ChargeProgress(Me) < 1f) { if (Hand.ReleaseStyle != HandGesture.Style.Number) Say("蓄力還沒完成", 1f); }   // 法師比著數字等蓄滿就會自動放
                 else ReleaseAt(ScreenCenter, true);   // 瞄準一律用畫面中央的準星（手只負責觸發）
             }
+        }
+
+        // ---- 刺殺流派：我有沒有被敵人看見
+        bool remoteSeesMe = true; float remoteSeenAt = -99f;
+        public const float FoeFovDeg = 55f, FoeSightRange = 12f;   // 電腦／Boss／小怪的視野：正前方左右 55°、12m 內
+        bool SeenByFoe()
+        {
+            // 雙人對戰：對手的手機鏡頭有沒有拍到我（每 0.1 秒同步；斷線太久就當作看得到）
+            if (NetMode && !coop) return Time.time - remoteSeenAt > 1.5f || remoteSeesMe;
+            bool Sees(Fighter f)
+            {
+                if (f == null || !f.Alive) return false;
+                var to = Me.head - f.head; to.y = 0f;
+                if (to.magnitude > FoeSightRange) return false;
+                var fw = Fighter.Flat(f.forward);
+                return fw == Vector3.zero || Vector3.Angle(fw, to) <= FoeFovDeg;
+            }
+            if (!battle.remoteEnemy && Sees(battle.enemy)) return true;
+            foreach (var m in battle.minions) if (Sees(m)) return true;
+            return false;
         }
 
         static Vector2 ScreenCenter => new Vector2(Screen.width / 2f, Screen.height / 2f);
@@ -2629,6 +2652,7 @@ namespace SpellDuel
                 float prog = battle.ChargeProgress(me);
                 bool bow = HandGesture.ReleaseOf(me.charging) == HandGesture.Style.Bow && Hand != null;   // 獵人：拉滿弓就是蓄力完成
                 string st = bow ? (Hand.BowDrawn ? "🏹 拉滿！手回畫面張開放箭" : Hand.BowStage == 1 ? "✊ 握著拳拉出畫面外（拉弓）" : "畫面中握拳（捏弦）") :
+                    me.charging.releaseNear && prog < 1f && Battle.StealthAmbush(me) ? (me.seenByFoe ? "👁 被敵人看見了：離開它的視線 1 秒就能刺殺（或手掌蓄力）" : $"🫥 躲開視線 {Mathf.Min(me.hiddenTime, Battle.StealthTime):0.0}／{Battle.StealthTime:0} 秒") :
                     me.charging.releaseNear && prog < 1f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　" +
                         (!me.palmVisible ? "✋ 手掌伸到鏡頭前才會蓄力" : battle.NearestFoe(me, out var nfd) != null && nfd < Battle.AmbushClear ? $"⚠ 身邊直徑 {Battle.AmbushClear * 2f:0.#}m 內有敵人，退開才會蓄力" : "蓄滿自動伏擊") :
                     prog < 1f && me.charging.stillRadius > 0f ? $"蓄力 {Mathf.FloorToInt(prog * 100)}%　站著別動！（離原地 {Battle.FlatDistance(me.Feet, me.chargeFrom):0.0}／{me.charging.stillRadius:0.0}m）" :

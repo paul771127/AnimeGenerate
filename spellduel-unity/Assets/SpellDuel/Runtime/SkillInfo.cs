@@ -120,6 +120,7 @@ namespace SpellDuel
             {
                 E($"蓄力條件：手掌伸到鏡頭前、而且身邊直徑 {Battle.AmbushClear * 2f:0.#}m 內沒有敵人（不符合時蓄力暫停）");
                 E($"蓄滿自動進入伏擊 {Battle.AmbushWindow:0} 秒（不用放招動作）：靠近敵人到直徑 {Battle.AmbushReach * 2f:0.#}m 內自動出手；時間到沒靠近就落空");
+                E($"刺殺流派（點了「暗殺術」）：離開敵人視線 {Battle.StealthTime:0} 秒就完成蓄力（對戰時＝離開對手手機的畫面），伏擊維持 {Battle.StealthAmbushWindow:0} 秒，靠近就出手");
                 E("伏擊中被打到會取消，要重新蓄力");
             }
             switch (s.self)

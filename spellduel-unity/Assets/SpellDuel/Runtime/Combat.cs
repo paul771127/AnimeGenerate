@@ -40,7 +40,9 @@ namespace SpellDuel
         public float venom, assassinate, vanish, knifeCdr;                        // 刺客：劇毒連刺、刺殺、遁影、飛刀節奏
         public float holySeal, martyr, zeal;                                      // 牧師：聖印、殉道、狂信
         public float bashGuard, sanctionCombo, critDmg, falconMark, petMp;        // 進階職業：盾擊格擋、制裁連斬、爆擊傷害、鷹眼標記、契約魔力
-        public int basicHits, venomStacks, seals;                                 // 連斬計數、身上的毒層、聖印層數
+        public int basicHits, venomStacks, seals;
+        // 刺殺流派：有沒有被敵人看見（SoloBattle 每幀設定：對戰＝對手的鏡頭有沒有拍到我；電腦／Boss／小怪＝我在不在它的視野內）、連續躲開視線幾秒
+        public bool seenByFoe = true; public float hiddenTime;                                 // 連斬計數、身上的毒層、聖印層數
         public float waveFreeUntil, riposteUntil, vanishUntil, venomUntil;
         // ---- 進階職業
         public string adv;              // 進階職業 id（Advanced.All）；null＝沒轉職
@@ -205,6 +207,9 @@ namespace SpellDuel
         readonly System.Random rng = new System.Random();
         public float chargeTimeout = 7f;
         public const float AmbushWindow = 5f;   // 伏擊狀態持續秒數
+        /// <summary>刺殺流派（點了「暗殺術」）：離開敵人視線這麼久就完成蓄力；伏擊狀態維持更久</summary>
+        public const float StealthTime = 1f, StealthAmbushWindow = 10f;
+        public static bool StealthAmbush(Fighter f) => f != null && f.assassinate > 0f;
         int nextId = 1;
 
         /// <summary>事件（給畫面做特效與文字）：種類、位置、顏色、文字</summary>
@@ -1177,7 +1182,7 @@ namespace SpellDuel
             if (f.mp < CostOf(f, s)) { why = "MP 不足"; return false; }
             if (HpCostOf(f, s) > 0 && f.hp <= HpCostOf(f, s)) { why = "HP 不足（殉道：技能改用 HP 施放）"; return false; }
             if (f.snaredUntil > now && s.self != SelfKind.Cleanse) { why = "被困住，暫時不能施法（牧師可以淨化）"; return false; }
-            if (s.releaseNear && f.danceUntil <= now && NearestFoe(f, out var nd) != null && nd < AmbushClear) { why = $"身邊直徑 {AmbushClear * 2f:0.#}m 內有敵人，先退開才能蓄力{s.name}"; return false; }
+            if (s.releaseNear && !StealthAmbush(f) && f.danceUntil <= now && NearestFoe(f, out var nd) != null && nd < AmbushClear) { why = $"身邊直徑 {AmbushClear * 2f:0.#}m 內有敵人，先退開才能蓄力{s.name}"; return false; }
             f.charging = s; f.chargeStart = now; f.chargeFrom = f.Feet;
             return true;
         }
@@ -1305,7 +1310,7 @@ namespace SpellDuel
 
             if (s.releaseNear)
             {
-                f.armed = s; f.armedUntil = now + AmbushWindow;
+                f.armed = s; f.armedUntil = now + (StealthAmbush(f) ? StealthAmbushWindow : AmbushWindow);
                 Emit("armed", f.Chest, s.color, $"{s.name} 伏擊中");
                 return true;
             }
@@ -1690,11 +1695,15 @@ namespace SpellDuel
                 if (f.charging != null && now - f.chargeStart > f.charging.charge + chargeTimeout + (f.charging.releaseNear ? 8f : 0f))
                 { f.charging = null; Emit("timeout", f.Chest, Color.gray, "詠唱逾時"); }
                 // 刺客伏擊技能：手掌不在鏡頭前、或身邊 2m 內有敵人 → 蓄力暫停；蓄滿自動進入伏擊（不用放招動作）
+                f.hiddenTime = f.seenByFoe ? 0f : f.hiddenTime + dt;
                 if (f.charging != null && f.charging.releaseNear)
                 {
+                    // 刺殺流派：離開敵人視線 1 秒＝判定完成（不用等蓄力、不用手掌）
+                    if (StealthAmbush(f) && ChargeProgress(f) < 1f && f.hiddenTime >= StealthTime)
+                    { f.chargeStart = now - ChargeTime(f, f.charging) - 0.01f; Emit("buff", f.Chest, f.charging.color, "躲開視線！刺殺準備完成，靠近就出手"); }
                     if (ChargeProgress(f) < 1f)
                     {
-                        if (!f.palmVisible || (f.danceUntil <= now && NearestFoe(f, out var nd2) != null && nd2 < AmbushClear)) f.chargeStart += dt;
+                        if (!f.palmVisible || (!StealthAmbush(f) && f.danceUntil <= now && NearestFoe(f, out var nd2) != null && nd2 < AmbushClear)) f.chargeStart += dt;
                     }
                     else TryRelease(f, Fighter.Flat(f.forward), f.Feet, out _);
                 }
