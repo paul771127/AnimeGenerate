@@ -665,8 +665,8 @@ namespace SpellDuel
                 foreach (var id in bc.defaultLoadout) enemy.loadout.Add(Skills.All[id]);
             }
             // 故事關卡的 Boss 多一招震地波（跳起來躲）
-            var quake = Skills.All["x_quake"];
-            if (bossAfterMinions && !enemy.loadout.Contains(quake)) enemy.loadout.Add(quake);
+            enemy.loadout.RemoveAll(IsQuake);
+            if (bossAfterMinions) enemy.loadout.Add(Skills.All[QuakeOf(Theme)]);
             Emit("bossarrive", enemy.Feet, enemy.cls.color, bossAfterMinions ? $"{enemy.name}現身！" : $"第 {wave} 波 Boss 出現！");
             OnBossSpawn?.Invoke(bossIndex);
         }
@@ -1684,12 +1684,15 @@ namespace SpellDuel
         /// <summary>從 Boss 腳下往外擴散的地面衝擊環：環經過時人在空中（跳起來）就沒事，否則受傷並短暫定身</summary>
         public class Shockwave { public Fighter owner; public SkillDef skill; public Vector3 center; public float born, speed, maxR, lastR; public int dmg; public readonly HashSet<Fighter> done = new HashSet<Fighter>(); }
         public readonly List<Shockwave> shockwaves = new List<Shockwave>();
-        public const float QuakeSpeed = 3.2f, QuakeRange = 12f, QuakeBand = 0.25f;
+        public const float QuakeBand = 0.25f;
+        /// <summary>各主題 Boss 的「跳躍招」：熔岩震波、樹根波、潮汐環</summary>
+        public static string QuakeOf(int theme) => theme == 1 ? "x_rootwave" : theme == 2 ? "x_ripple" : "x_quake";
+        public static bool IsQuake(SkillDef s) => s != null && (s.id == "x_quake" || s.id == "x_rootwave" || s.id == "x_ripple");
 
         public void SpawnShockwave(Fighter owner, SkillDef s)
         {
             var c = owner.Feet; c.y = 0f;
-            shockwaves.Add(new Shockwave { owner = owner, skill = s, center = c, born = now, speed = QuakeSpeed, maxR = QuakeRange, dmg = Mathf.RoundToInt(s.damage * owner.atkMul * owner.OutMul(now)) });
+            shockwaves.Add(new Shockwave { owner = owner, skill = s, center = c, born = now, speed = s.speed, maxR = s.rangeMax, dmg = Mathf.RoundToInt(s.damage * owner.atkMul * owner.OutMul(now)) });
             owner.cooldownUntil[s.id] = now + s.cooldown * owner.cdMul;
             owner.charging = null;
             Emit("quake", c, s.color, s.name + "！");

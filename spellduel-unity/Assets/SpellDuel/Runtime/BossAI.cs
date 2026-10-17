@@ -33,6 +33,27 @@ namespace SpellDuel
         /// 讓玩家一直動起來。由 SoloBattle 設定（並把「震地波」加進 Boss 的招式）。
         /// </summary>
         public bool storyIntense;
+        string Last = "";   // 上一招（樹王：藤鞭之後常接樹根波 → 蹲完馬上要跳）
+
+        /// <summary>故事 Boss 的動作風格：哪一類招式出得多（蹲／跳／跑／召喚）</summary>
+        public struct MoveProfile { public float duck, jump, run, summon; }
+        /// <summary>這招屬於哪一類動作（蹲／跳／跑／召喚），在這隻 Boss 的偏好倍率</summary>
+        float CategoryMul(SkillDef s)
+        {
+            var p = Profile;
+            if (s.id.EndsWith("_summon")) return p.summon;
+            if (s.duckable) return p.duck;
+            if (Battle.IsQuake(s)) return p.jump;
+            if (s.areaRadius > 0f || s.multi > 1 || s.fromAbove || s.atTarget) return p.run;
+            return 1f;
+        }
+
+        public MoveProfile Profile => me.cls.id switch
+        {
+            "boss_forest" => new MoveProfile { duck = 3f, jump = 1.5f, run = 1f, summon = 0.5f },   // 腐化樹王：蹲、跳交替
+            "boss_sea" => new MoveProfile { duck = 1f, jump = 0.8f, run = 3f, summon = 0.4f },      // 深海巨妖：一直換位置
+            _ => new MoveProfile { duck = 1f, jump = 3f, run = 2f, summon = 0.3f },                 // 熔岩巨像：跳＋跑
+        };
         public const float StoryThinkMul = 0.55f, StoryCdMul = 0.7f;
         float walkBase = -1f;
 
@@ -111,6 +132,12 @@ namespace SpellDuel
             var options = new List<SkillDef>();
             foreach (var s in me.loadout)
             {
+                // 故事 Boss 偏好的動作：冷卻也跟著縮短（偏好 ×3 → 冷卻剩 1/3）
+                if (storyIntense && me.cooldownUntil.TryGetValue(s.id, out var cdu) && cdu > b.now)
+                {
+                    float m = CategoryMul(s);
+                    if (m > 1f && cdu - b.now <= s.cooldown * me.cdMul * (1f - 1f / m)) me.cooldownUntil[s.id] = b.now;
+                }
                 if (!Ready(s)) continue;
                 float w = s.id switch
                 {
@@ -134,21 +161,21 @@ namespace SpellDuel
                     "s_whirl" => d > 2f ? 4f : 1.2f,
                     "s_ink" => 1.5f,
                     "s_summon" => b.minions.Count < 2 ? 5f : 0f,
-                    "x_quake" => 6f,   // 震地波：任何距離都會用
+                    // 跳躍招：任何距離都會用；熔岩巨像最常用、樹根波接在藤鞭之後、潮汐環偶爾
+                    "x_quake" => 6f,
+                    "x_rootwave" => Last == "p_whip" ? 9f : 2.5f,
+                    "x_ripple" => 2f,
                     _ => 1f,
                 };
                 // 故事 Boss：大範圍、逼人動的招式更常出（橫掃→蹲、地裂／落石／觸手→跑、震地波→跳）；召喚少一點
-                if (storyIntense && w > 0f)
-                {
-                    if (s.duckable || s.areaRadius > 0f || s.multi > 1 || s.fromAbove) w *= 2f;
-                    if (s.id.EndsWith("_summon")) w *= 0.4f;
-                }
+                if (storyIntense && w > 0f) w *= CategoryMul(s);
                 for (int i = 0; i < Mathf.RoundToInt(w * 2f); i++) options.Add(s);
             }
             if (options.Count == 0) return;
             var pick = options[rnd.Next(options.Count)];
             if (b.TryChant(me, pick, out _))
             {
+                Last = pick.id;
                 Status = $"準備 {pick.name}";
                 if (pick.id == "b_leap" || pick.atTarget) { var at = tgt.Feet; at.y = 0f; me.aimPoint = at; }   // 落點／樹根爆發位置＝目標現在的位置
             }
@@ -179,7 +206,7 @@ namespace SpellDuel
         {
             var s = me.charging;
             if (b.now - me.chargeStart < s.charge * me.chargeScale) return;
-            if (s.id == "x_quake") { b.SpawnShockwave(me, s); Status = $"{s.name}！"; return; }
+            if (Battle.IsQuake(s)) { b.SpawnShockwave(me, s); Status = $"{s.name}！"; return; }
             if (s.id == "b_leap") { leapT = 0f; leapFrom = me.Feet; me.forward = Fighter.Flat(me.aimPoint - me.Feet); Status = $"{s.name}！"; return; }
             // 射程外：繼續蓄著、走過去（地裂除外：時間到就砸，玩家已經走出紅圈就打空）
             if (s.type == SkillType.Projectile && s.areaRadius <= 0f && Battle.FlatDistance(me.Feet, tgt.Feet) > s.rangeMax) { Status = $"{s.name}：逼近中"; return; }
@@ -191,8 +218,8 @@ namespace SpellDuel
 
         void Move(float dt, Fighter tgt)
         {
-            // 從場地外淡入出現：先走進場地（往場地中心）
-            if (!inside(me.Feet)) { var home = -me.Feet; home.y = 0; me.head += (home.sqrMagnitude > 1e-4f ? home.normalized : Vector3.zero) * walkSpeed * 1.5f * dt; return; }
+            // 從場地外淡入出現：先走進場地（往場地中心，走到離邊界夠遠才開始正常走位）
+            if (!inside(me.Feet) || edgeDistance(me.Feet) < 0.6f) { var home = -me.Feet; home.y = 0; me.head += (home.sqrMagnitude > 1e-4f ? home.normalized : Vector3.zero) * walkSpeed * 1.5f * dt; return; }
             var c = me.charging;
             float want = c != null ? (c.areaRadius > 0f ? 0f : c.rangeMax * 0.7f) : 3.2f;
             if (c != null && c.areaRadius > 0f) return;   // 地裂蓄力時站著不動（紅圈固定）

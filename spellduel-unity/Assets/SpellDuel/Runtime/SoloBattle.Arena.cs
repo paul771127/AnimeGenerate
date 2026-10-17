@@ -77,7 +77,9 @@ namespace SpellDuel
         class Pickup { public Vector3 pos; public int kind; public float born, until; public GameObject go; }
         readonly List<Pickup> pickups = new List<Pickup>();
         float nextPickupAt;
-        public const float PickupEvery = 5f, PickupLife = 14f, PickupReach = 0.8f;
+        public const float PickupLife = 14f, PickupReach = 0.8f;
+        /// <summary>結晶出現的間隔：深海巨妖最多（逼你到處撿），熔岩巨像最少</summary>
+        static float PickupEveryFor(string bossCls) => bossCls == "boss_sea" ? 3.5f : bossCls == "boss_forest" ? 5f : 6.5f;
         public const int PickupMax = 3;
         static readonly string[] PickupNames = { "💚 生命結晶", "💙 魔力結晶", "💛 時之結晶" };
         static readonly Color[] PickupColors = { new Color(0.4f, 1f, 0.5f), new Color(0.4f, 0.7f, 1f), new Color(1f, 0.85f, 0.3f) };
@@ -89,7 +91,7 @@ namespace SpellDuel
             if (battle == null) return;
             if (StoryBossFight && pickups.Count < PickupMax && battle.now >= nextPickupAt)
             {
-                nextPickupAt = battle.now + PickupEvery;
+                nextPickupAt = battle.now + PickupEveryFor(En.cls.id);
                 if (FindPickupSpot(out var p))
                 {
                     int kind = Me.hp < Me.maxHp * 0.5f ? 0 : Random.Range(0, 3);
@@ -165,7 +167,7 @@ namespace SpellDuel
             if (battle == null || Me == null) return;
             var ec = En != null ? En.charging : null;
             if (QuakeComing(out _)) UiKit.Pill(H * 0.40f, "⬆ 跳！", fs * 2, new Color(1f, 0.85f, 0.3f), pillW);
-            else if (ec != null && ec.id == "x_quake") UiKit.Pill(H * 0.40f, "⚠ 震地波：環到腳邊時跳起來", fs, new Color(1f, 0.8f, 0.35f), pillW);
+            else if (Battle.IsQuake(ec)) UiKit.Pill(H * 0.40f, $"⚠ {ec.name}：環到腳邊時跳起來", fs, ec.color, pillW);
             if (Me.airborneUntil > battle.now) UiKit.Pill(H * 0.235f, "⬆ 跳躍", fsS, new Color(0.6f, 1f, 0.8f), pillW);
             if (pickups.Count > 0) UiKit.Pill(H * 0.53f, "✨ 地上有結晶：走過去蹲下撿起", fsS, new Color(0.7f, 1f, 0.8f), pillW);
         }
