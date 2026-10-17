@@ -342,6 +342,7 @@ namespace SpellDuel
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
             if (mode == Mode.Solo || AreaMode || remoteMode) UpdatePlayArea();
             HandleNetwork();
+            UpdateRemoteQuickStart();
             UpdateSeat();
             if (AreaMode) UpdateDuoArea();
             // 追蹤狀態改變時告訴對手（對手畫面上我的判定框變灰，停在最後的正確位置）
@@ -395,6 +396,41 @@ namespace SpellDuel
             poseDet.Tick();
         }
 
+        // ---------------------------------------------------------------- 遠端連線：簡化流程
+        // 1. 掃到地板就自動建一個 4m 方形場地（不用自己畫；要畫還是可以重畫）
+        // 2. 連上、場地好了 → 自動打開選職業畫面（不用再按「職業對戰／合作」）
+        bool autoArea, autoSetup;
+        public const float AutoAreaSize = 4f;
+
+        void UpdateRemoteQuickStart()
+        {
+            if (!remoteMode) return;
+            if (!autoArea && playArea.HasFloor && playArea.state != PlayArea.State.Done && playArea.state != PlayArea.State.Drawing && Tracking.Ok)
+            {
+                autoArea = true;
+                playArea.Clear();
+                if (playArea.AutoSquare(AutoAreaSize)) { OnPlayAreaReady(); Log($"✅ 已自動建好 {AutoAreaSize:0}m 場地（想換大小可以按下面的按鈕重畫）"); }
+            }
+            if (!net.Connected) { autoSetup = false; return; }
+            bool someone = net.IsHost ? solo.PeerIds.Count > 0 : net.MyPid > 0;
+            if (!autoSetup && someone && WorldReady && solo.phase == SoloBattle.Phase.Hidden) { autoSetup = true; solo.ShowSetup(); }
+        }
+
+        /// <summary>從剪貼簿的文字裡找房間代碼（6～8 個英數字，例如朋友用 LINE 傳來的「SpellDuel 房間代碼：ABC123」）</summary>
+        public static string FindJoinCode(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return null;
+            // 代碼都是大寫英數字：優先挑「全大寫且含數字」，其次「全大寫」，最後才是其他 6～8 字的英數字（「SpellDuel」9 個字母不會被當成代碼）
+            string found = null; int best = -1;
+            foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(text, "(?<![A-Za-z0-9])[A-Za-z0-9]{6,8}(?![A-Za-z0-9])"))
+            {
+                string v = m.Value; bool upper = v == v.ToUpperInvariant(), digit = System.Linq.Enumerable.Any(v, char.IsDigit);
+                int score = upper ? (digit ? 2 : 1) : 0;
+                if (score >= best) { best = score; found = v.ToUpperInvariant(); }
+            }
+            return found;
+        }
+
         // ---------------------------------------------------------------- 模式切換與單人場地
         void ChooseMode(Mode m, bool marker = false, bool remote = false)
         {
@@ -415,7 +451,8 @@ namespace SpellDuel
                 WorldFrame.Reset();
                 playArea.Clear();
                 playArea.Begin();
-                Log("遠端連線：先畫自己的場地，再建立房間或輸入房間代碼加入");
+                autoArea = autoSetup = false;
+                Log("遠端連線：掃到地板會自動建好場地；建立房間把代碼傳給朋友，或貼上朋友的代碼加入");
                 return;
             }
             if (m == Mode.Solo)
@@ -1272,9 +1309,14 @@ namespace SpellDuel
                     var rl = net as RelayLink;
                     if (rl != null && rl.IsHost && !string.IsNullOrEmpty(rl.JoinCode))
                     {
-                        UiKit.Text(new Rect(pad, y, W - pad * 2, bh), $"房間代碼  {rl.JoinCode}", Mathf.RoundToInt(fs * 1.6f), new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleCenter, true);
+                        UiKit.Text(new Rect(pad, y, W * 0.6f - pad, bh), $"房間代碼  {rl.JoinCode}", Mathf.RoundToInt(fs * 1.5f), new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleCenter, true);
+                        if (UiKit.Button(new Rect(W * 0.6f, y, W * 0.4f - pad, bh), "📋 複製代碼", fs, true, new Color(1f, 0.85f, 0.4f)))
+                        {
+                            GUIUtility.systemCopyBuffer = $"來玩 SpellDuel！房間代碼：{rl.JoinCode}";
+                            Log("📋 已複製，貼到 LINE 傳給朋友；朋友在遠端連線按「📋 貼上並加入」");
+                        }
                         y += bh + pad * 0.3f;
-                        Line("把代碼告訴其他人（最多 6 人）；大家都進來後按下面的「職業對戰／合作」");
+                        Line(solo.PeerIds.Count == 0 ? "等朋友加入…（有人加入就自動進入選職業畫面，最多 6 人）" : "大家都進來後，在選職業畫面按準備");
                     }
                     else if (!net.Connected && rl != null && !rl.Busy)
                     {
@@ -1284,6 +1326,14 @@ namespace SpellDuel
                         {
                             PlayerPrefs.SetString("sd_last_code", codeInput.Trim());
                             rl.Join(codeInput);
+                        }
+                        y += bh + pad * 0.4f;
+                        // 一鍵：貼上朋友傳來的代碼並加入
+                        if (UiKit.Button(new Rect(pad, y, W - pad * 2, bh), "📋 貼上朋友的代碼並加入", fs, true, new Color(0.4f, 0.85f, 1f)))
+                        {
+                            var code = FindJoinCode(GUIUtility.systemCopyBuffer);
+                            if (code == null) Log("剪貼簿裡沒有房間代碼：請先複製朋友傳來的代碼");
+                            else { codeInput = code; PlayerPrefs.SetString("sd_last_code", code); rl.Join(code); }
                         }
                     }
                     y += bh + pad * 0.5f;
