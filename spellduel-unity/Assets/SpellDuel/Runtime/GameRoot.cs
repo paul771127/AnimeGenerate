@@ -1115,12 +1115,14 @@ namespace SpellDuel
             // 一開始：選模式（三張卡片：按鈕＋說明）
             if (mode == Mode.Choose)
             {
-                GUI.color = new Color(0.02f, 0.03f, 0.06f, 0.75f);
-                GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture);
-                GUI.color = Color.white;
-                UiKit.Text(new Rect(0, H * 0.13f, W, H * 0.09f), "SpellDuel", fs * 3, new Color(1f, 0.85f, 0.4f), TextAnchor.MiddleCenter, true);
-                UiKit.Text(new Rect(0, H * 0.22f, W, lineH), "版本 " + BuildInfo, fsS, new Color(0.7f, 0.75f, 0.85f), TextAnchor.MiddleCenter);
-                float cw = W - pad * 4, ch = H * 0.14f, cx = pad * 2;
+                UiKit.Backdrop(new Rect(0,0,W,H), UiKit.Gold);
+                float menuBottom = H-safe.y;
+                float menuHeight = menuBottom-top;
+                float logoSize=Mathf.Min(W*.20f,menuHeight*.105f);
+                UiKit.Emblem(new Rect((W-logoSize)*.5f,top+menuHeight*.025f,logoSize,logoSize),0,UiKit.Gold);
+                UiKit.Text(new Rect(pad, top+menuHeight*.14f, W-pad*2, menuHeight*.075f), "SpellDuel", fs * 3, new Color(1f, 0.85f, 0.4f), TextAnchor.MiddleCenter, true);
+                UiKit.Text(new Rect(pad, top+menuHeight*.215f, W-pad*2, lineH), "版本 " + BuildInfo, fsS, new Color(0.7f, 0.75f, 0.85f), TextAnchor.MiddleCenter);
+                float cw = W - pad * 4, ch = menuHeight * 0.145f, cx = pad * 2;
                 string[] titles = { "🧍 單人練習（畫場地）", "⚔ 多人（同一個地方・畫場地）", "🗺 多人（同一個地方・標記圖）", "🌐 遠端連線（不同地方）" };
                 string[] descs = { "在地上畫出遊戲範圍，對戰 AI 或木頭人，不需要標記圖",
                                    "同一個 Wi-Fi、2～6 人：一人畫場地、其他人自動收到；鏡頭互相看對方來對齊",
@@ -1129,11 +1131,11 @@ namespace SpellDuel
                 Color[] acc = { new Color(0.4f, 0.85f, 1f), new Color(1f, 0.55f, 0.35f), new Color(0.6f, 0.9f, 0.45f), new Color(0.75f, 0.55f, 1f) };
                 for (int i = 0; i < 4; i++)
                 {
-                    var r = new Rect(cx, H * 0.27f + i * (ch + pad * 0.7f), cw, ch);
+                    var r = new Rect(cx, top + menuHeight * 0.28f + i * (ch + pad * 0.7f), cw, ch);
                     bool hit = UiKit.Button(r, "", fs, false, acc[i]);
-                    UiKit.Card(new Rect(r.x, r.y, pad * 0.5f, r.height), 0f, acc[i], 1f);
-                    UiKit.Text(new Rect(r.x + pad, r.y + ch * 0.1f, r.width - pad * 2, ch * 0.4f), titles[i], Mathf.RoundToInt(fs * 1.2f), Color.white, TextAnchor.MiddleLeft, true);
-                    UiKit.Text(new Rect(r.x + pad, r.y + ch * 0.5f, r.width - pad * 2, ch * 0.42f), descs[i], fsS, new Color(0.8f, 0.85f, 0.95f));
+                    UiKit.Emblem(new Rect(r.x+pad*.6f,r.y+ch*.23f,ch*.48f,ch*.48f),i,acc[i]);
+                    UiKit.Text(new Rect(r.x + ch*.61f, r.y + ch * 0.09f, r.width - ch*.61f-pad, ch * 0.35f), titles[i], Mathf.RoundToInt(fs * 1.2f), Color.white, TextAnchor.MiddleLeft, true);
+                    UiKit.Text(new Rect(r.x + ch*.61f, r.y + ch * 0.46f, r.width - ch*.61f-pad, ch * 0.45f), descs[i], fsS, new Color(0.8f, 0.85f, 0.95f));
                     if (hit) { if (i == 0) ChooseMode(Mode.Solo); else ChooseMode(Mode.Duo, i == 2, i == 3); }
                 }
                 return;

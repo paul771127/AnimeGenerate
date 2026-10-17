@@ -414,16 +414,16 @@ namespace SpellDuel
             if (dlgIdx >= dlg.Count) { EndDialogue(); return; }
             var line = dlg[dlgIdx];
             var col = Story.TagColor(line.tag);
-            var r = new Rect(pad, botY - pad - H * 0.3f, W - pad * 2, H * 0.3f);
+            var r = new Rect(pad, botY - pad - Mathf.Min(H*.32f,(botY-topY)*.42f), W - pad * 2, Mathf.Min(H*.32f,(botY-topY)*.42f));
             UiKit.Card(r, 0.93f, string.IsNullOrEmpty(line.speaker) ? (Color?)null : col, 0.9f);
-            float y = r.y + gap, tx = r.x + gap * 1.5f;
+            float y = r.y + gap*1.5f, tx = r.x + gap * 1.5f;
             if (!string.IsNullOrEmpty(line.speaker))
             {
                 // 說話者的頭像（左邊）＋名字（頭像下方）；台詞在右邊
                 float ps = Mathf.Min(r.height - fs * 2.6f - gap * 2f, r.width * 0.28f);
                 var pr = new Rect(r.x + gap * 1.5f, r.y + gap * 1.2f, ps, ps);
                 GUI.DrawTexture(pr, Portraits.Get(line.speaker, line.tag), ScaleMode.ScaleToFit, true);
-                UiKit.Text(new Rect(pr.x - gap, pr.yMax + gap * 0.3f, ps + gap * 2f, fs * 1.6f), line.speaker, Mathf.RoundToInt(fs * 0.95f), col, TextAnchor.MiddleCenter, true);
+                UiKit.Title(new Rect(pr.x-gap*.3f,pr.yMax+gap*.4f,ps+gap*.6f,fs*1.6f),line.speaker,col,Mathf.RoundToInt(fs*.85f));
                 tx = pr.xMax + gap * 1.5f;
             }
             UiKit.Text(new Rect(tx, y, r.xMax - tx - gap * 1.5f, r.yMax - y - fs * 1.6f), Story.Fill(line.text, myClass), fsL,
@@ -2359,9 +2359,9 @@ namespace SpellDuel
             GUI.color = new Color(0f, 0f, 0f, 0.6f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
             var r = new Rect(pad, topY + pad, W - pad * 2, botY - topY - pad * 2);
             UiKit.Card(r, 0.94f, s.color, 0.9f);
-            float isz = fs * 4.2f;
+            float isz = Mathf.Min(fs*4.5f,r.width*.27f);
             var ir = new Rect(r.x + gap * 1.5f, r.y + gap * 1.5f, isz, isz);
-            GUI.DrawTexture(ir, SkillIcons.Get(s.id));
+            UiKit.Badge(ir,SkillIcons.Get(s.id),s.color,2);
             float tx = ir.xMax + gap * 1.5f, tw = r.xMax - tx - gap * 1.5f;
             string clsName = Advanced.Get(s.adv)?.name ?? (Skills.Classes.TryGetValue(Skills.BasicClassOf(s) ?? s.cls, out var cd) ? cd.name : "");
             UiKit.Text(new Rect(tx, ir.y, tw, isz * 0.48f), s.name, fsL, Color.white, TextAnchor.MiddleLeft, true);
@@ -2371,6 +2371,8 @@ namespace SpellDuel
             bool inSetup = phase == Phase.Setup;
             float bh = fs * 2.4f, by = r.yMax - gap * 1.5f - bh;
             var body = new Rect(r.x + gap * 1.5f, ir.yMax + gap, r.width - gap * 3, by - gap - (ir.yMax + gap));
+            UiKit.Card(body,.72f,s.color,.4f);
+            body = new Rect(body.x+gap,body.y+gap,body.width-gap*2,body.height-gap*2);
             UiKit.Text(body, SkillInfo.Detail(s), fsS, new Color(0.92f, 0.94f, 1f), TextAnchor.UpperLeft, false, 0.5f);
 
             if (inSetup && SetupSkills is var list && Array.IndexOf(list, s.id) >= 0)
@@ -2420,6 +2422,8 @@ namespace SpellDuel
             GUI.color = Color.white;
         }
 
+        Vector2 setupScroll;
+        float setupContentHeight;
         void DrawSetup()
         {
             float W = Screen.width, H = Screen.height;
@@ -2428,18 +2432,22 @@ namespace SpellDuel
             int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.8f), fsL = Mathf.RoundToInt(fs * 1.25f);
             float pad = W * 0.035f, gap = pad * 0.5f;
             // 背景：整片暗色
-            GUI.color = new Color(0.02f, 0.03f, 0.06f, 0.82f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
+            UiKit.Backdrop(new Rect(0,0,W,H),Skills.Classes[myClass].color);
 
             // 依可用高度決定單位行高（內容約 21 行），放得下就用基準行高
             float avail = botY - topY - pad * 2;
             FixLoadout();
             var setupSkills = SetupSkills;
             int skillRows = (setupSkills.Length + 1) / 2;
-            float u = Mathf.Min(fs * 1.75f, avail / (16.3f + skillRows * 2.6f));   // 技能卡一列約 2.6 行高
-            float y = topY + pad;
+            float u = fs * 1.65f; // Keep readable cards; the preparation sheet scrolls above the fixed actions.
+            float y = 0f;
+            float viewH=Mathf.Max(fs*4,avail-u*2.8f-gap*2);
+            float contentWidth=W-Mathf.Max(18f,fs*.45f);
+            setupScroll=GUI.BeginScrollView(new Rect(0,topY+pad,W,viewH),setupScroll,new Rect(0,0,contentWidth,Mathf.Max(viewH,setupContentHeight)),false,true);
+            W=contentWidth;
             var cls = Skills.Classes[myClass];
 
-            UiKit.Text(new Rect(pad, y, W - pad * 2, u * 1.2f), NetMode ? "職業對戰：選擇職業與技能" : "選擇職業與技能", fsL, Color.white, TextAnchor.MiddleLeft, true);
+            UiKit.Title(new Rect(pad,y,W-pad*2,u*1.2f),NetMode ? "職業對戰：選擇職業與技能" : "選擇職業與技能",cls.color,fsL);
             y += u * 1.3f;
 
             // 職業（5 個）
@@ -2448,8 +2456,14 @@ namespace SpellDuel
             for (int i = 0; i < nc; i++)
             {
                 var id = Skills.ClassOrder[i]; var c = Skills.Classes[id];
-                if (UiKit.Button(new Rect(pad + i * (cw + gap), y, cw, u * 1.3f), c.name, fs, id == myClass, c.color) && id != myClass) { myClass = id; LoadLoadout(); }
+                var classR=new Rect(pad+i*(cw+gap),y,cw,u*1.3f);
+                if (UiKit.Button(classR, "", fs, id == myClass, c.color) && id != myClass) { myClass = id; LoadLoadout(); }
+                float badgeSize=classR.height*.66f;
+                var classBasic=Skills.BasicOf(id);
+                UiKit.Badge(new Rect(classR.x+gap*.3f,classR.y+classR.height*.17f,badgeSize,badgeSize),classBasic!=null?SkillIcons.Get(classBasic.id):null,c.color);
+                UiKit.Text(new Rect(classR.x+badgeSize+gap*.4f,classR.y,classR.width-badgeSize-gap*.6f,classR.height),c.name,fs,c.color,TextAnchor.MiddleCenter,true);
             }
+            for(int i=0;i<nc;i++) UiKit.Tab(new Rect(pad+i*(cw+gap),y,cw,u*1.3f),Skills.ClassOrder[i]==myClass,Skills.Classes[Skills.ClassOrder[i]].color);
             y += u * 1.3f + gap;
             cls = Skills.Classes[myClass];
             var descR = new Rect(pad, y, W - pad * 2, u * 1.5f);
@@ -2463,7 +2477,7 @@ namespace SpellDuel
             y += u * 1.5f + gap;
 
             // 技能卡片（2 欄）：圖示＋名稱／手勢→放招／數值
-            UiKit.Text(new Rect(pad, y, W - pad * 2, u), AdvSlot ? $"選 3 個技能＋1 個進階技能（{BaseCount}/3・{AdvCount}/1）" : $"選 3 個技能（{myLoadout.Count}/3）　點技能看詳細說明", fsS, new Color(1f, 0.9f, 0.6f));
+            UiKit.Text(new Rect(pad, y, EndlessSetup?W*.51f-pad:W-pad*2, u), AdvSlot ? $"選 3 個技能＋1 個進階技能（{BaseCount}/3・{AdvCount}/1）" : $"選 3 個技能（{myLoadout.Count}/3）　點技能看詳細說明", fsS, new Color(1f, 0.9f, 0.6f));
             if (EndlessSetup)
             {
                 // 無盡／故事模式：角色養成（能力值、技能樹、裝備）
@@ -2479,7 +2493,7 @@ namespace SpellDuel
                 var sk = Skills.All[setupSkills[i]];
                 bool on = myLoadout.Contains(sk.id);
                 var r = new Rect(pad + (i % 2) * (sw + gap), y + (i / 2) * (sh + gap), sw, sh);
-                UiKit.Card(r, on ? 0.75f : 0.55f, on ? sk.color : (Color?)null, 0.95f);
+                UiKit.Card(r,on?.92f:.72f,sk.color,on?1f:.45f);
                 float isz = sh * 0.82f;
                 var ir = new Rect(r.x + sh * 0.09f, r.y + sh * 0.09f, isz, isz);
                 GUI.color = on ? Color.white : new Color(0.55f, 0.55f, 0.55f);
@@ -2578,6 +2592,9 @@ namespace SpellDuel
             }
             if (Time.time < messageUntil) UiKit.Text(new Rect(pad, y, W - pad * 2, u), message, fsS, new Color(1f, 0.95f, 0.6f), TextAnchor.MiddleCenter);
 
+            setupContentHeight=Mathf.Max(viewH,y+u+gap);
+            GUI.EndScrollView();
+            W=Screen.width;
             // 下方固定：開始／準備、其他按鈕
             float by = botY - pad - u * 1.2f;
             float hw = (W - pad * 2 - gap) / 2f;
@@ -2981,8 +2998,8 @@ namespace SpellDuel
             if (phase == Phase.Over && storyStage != null)
             {
                 var st = storyStage; bool won = battle.stageCleared;
-                var orr = new Rect(pad, H * 0.28f, W - pad * 2, H * 0.32f);
-                UiKit.Card(orr, 0.85f, won ? new Color(1f, 0.85f, 0.3f) : new Color(0.7f, 0.7f, 0.8f), 0.9f);
+                var orr = new Rect(pad, top+(botY-top)*.24f, W-pad*2, (botY-top)*.36f);
+                UiKit.Result(orr,won);
                 UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, orr.height * 0.4f), won ? $"🏆 {st.title}" : "💀 失敗…", fs * 2, Color.white, TextAnchor.MiddleCenter, true);
                 var next = won && !IsTrial ? NextStage(st) : null;
                 float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
@@ -3006,8 +3023,8 @@ namespace SpellDuel
             }
             else if (phase == Phase.Over)
             {
-                var orr = new Rect(pad, H * 0.28f, W - pad * 2, H * 0.32f);
-                UiKit.Card(orr, 0.85f, !en.Alive && !endless ? new Color(1f, 0.85f, 0.3f) : new Color(0.7f, 0.7f, 0.8f), 0.9f);
+                var orr = new Rect(pad, top+(botY-top)*.24f, W-pad*2, (botY-top)*.36f);
+                UiKit.Result(orr,!en.Alive&&!endless);
                 UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, orr.height * 0.4f), endless ? $"♾ 撐到第 {battle.wave} 波" : !en.Alive ? (bossMode ? "🏆 討伐成功！" : "🏆 勝利！") : "💀 敗北…", fs * 2, Color.white, TextAnchor.MiddleCenter, true);
                 float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
                 if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), NetMode ? (localReady ? "等待對手…" : "再來一局") : "再來一局", fs, true, new Color(0.4f, 0.8f, 1f), !(NetMode && localReady)))

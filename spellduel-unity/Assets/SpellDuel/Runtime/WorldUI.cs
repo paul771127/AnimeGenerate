@@ -108,7 +108,7 @@ namespace SpellDuel
             var r0 = new Rect(pad, topY + pad, W - pad * 2, botY - topY - pad * 2);
             int fs0 = UiKit.BaseFont;
             if (Walking) { DrawTownWalk(r0, prof, fs0, Mathf.RoundToInt(fs0 * 0.82f), Mathf.RoundToInt(fs0 * 1.3f), fs0 * 0.5f); return; }
-            GUI.color = new Color(0f, 0f, 0f, 0.72f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
+            UiKit.Backdrop(new Rect(0,0,W,H), Towns[town].color);
             var r = new Rect(pad, topY + pad, W - pad * 2, botY - topY - pad * 2);
             int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.82f), fsL = Mathf.RoundToInt(fs * 1.3f);
             float gap = fs * 0.5f;
@@ -128,10 +128,12 @@ namespace SpellDuel
         void Header(Rect r, string title, Color c, CharacterProfile prof, int fs, int fsS, int fsL, float gap, ref float y)
         {
             UiKit.Card(r, 0.95f, c, 0.9f);
-            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.8f), title, fsL, Color.white, TextAnchor.MiddleLeft, true);
+            bool facility=screen==Screen.Smith||screen==Screen.Shop||screen==Screen.Guild;
+            UiKit.Title(new Rect(r.x+gap,y,r.width-gap*2-(facility?fs*1.9f:0),fs*1.8f),title,c,fsL);
+            if(facility)UiKit.ShopArt(new Rect(r.xMax-gap-fs*1.65f,y,fs*1.65f,fs*1.65f),screen==Screen.Smith?0:screen==Screen.Shop?1:2,c);
             string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
-            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.8f), $"{cn} Lv{prof.level}　💰 {Economy.Gold}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
-            y += fs * 1.9f;
+            UiKit.Text(new Rect(r.x + gap, y+fs*1.9f, r.width - gap * 2, fs * 1.0f), $"{cn} Lv{prof.level}　💰 {Economy.Gold}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
+            y += fs * 3.1f;
         }
 
         // ---------------------------------------------------------------- 大地圖
@@ -147,8 +149,7 @@ namespace SpellDuel
                 var rr = new Rect(r.x + gap, y + t * regH, r.width - gap * 2, regH - gap * 0.5f);
                 bool open = TownOpen(t);
                 // 地區底色＋名稱
-                GUI.color = new Color(RegionColors[t].r, RegionColors[t].g, RegionColors[t].b, open ? 0.22f : 0.08f);
-                GUI.DrawTexture(rr, Texture2D.whiteTexture); GUI.color = Color.white;
+                UiKit.MapArt(rr,t,open?RegionColors[t]:Color.gray);
                 UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y, rr.width * 0.9f, fs * 1.3f), $"{RegionNames[t]}（{Story.BandText(t)}）", fsS, open ? Color.white : Color.gray, TextAnchor.MiddleLeft, true);
                 // 城鎮
                 float tw = rr.width * 0.26f, th = Mathf.Min(rr.height - fs * 1.4f, fs * 3.2f);
@@ -222,7 +223,7 @@ namespace SpellDuel
             // 居民
             UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.2f), "👥 居民（點一下聊天）", fsS, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleLeft, true);
             y += fs * 1.3f;
-            float nw = (r.width - gap * 4) / 3f, nh = fs * 2.6f;
+            float nw = (r.width - gap * 4) / 3f, nh = fs * 4.5f;
             for (int i = 0; i < t.npcs.Length; i++)
             {
                 var nr = new Rect(r.x + gap + i * (nw + gap), y, nw, nh);
@@ -231,9 +232,9 @@ namespace SpellDuel
                     if (npcTalk == i) npcLine = (npcLine + 1) % t.npcs[i].lines.Length; else { npcTalk = i; npcLine = 0; }
                     Sfx.Play("talk", 0.6f);
                 }
-                float ips = nh - gap;
-                GUI.DrawTexture(new Rect(nr.x + gap * 0.4f, nr.y + gap * 0.5f, ips, ips), Portraits.Get(t.npcs[i].name, "npc"), ScaleMode.ScaleToFit, true);
-                UiKit.Text(new Rect(nr.x + ips + gap * 0.5f, nr.y, nr.width - ips - gap * 0.7f, nr.height), $"{t.npcs[i].name}\n{t.npcs[i].role}", fsS, Color.white, TextAnchor.MiddleCenter, true);
+                float ips = Mathf.Min(nw-gap,fs*2.4f);
+                GUI.DrawTexture(new Rect(nr.center.x-ips*.5f, nr.y+gap*.4f, ips, ips), Portraits.Get(t.npcs[i].name, "npc"), ScaleMode.ScaleToFit, true);
+                UiKit.Text(new Rect(nr.x+gap*.3f, nr.y+ips+gap*.5f, nr.width-gap*.6f, nr.height-ips-gap*.7f), $"{t.npcs[i].name}\n{t.npcs[i].role}", fsS, Color.white, TextAnchor.MiddleCenter, true);
             }
             y += nh + gap * 0.5f;
             var talkR = new Rect(r.x + gap, y, r.width - gap * 2, fs * 4.6f);
@@ -311,9 +312,9 @@ namespace SpellDuel
             // 上方：城鎮名稱＋說明
             var top = new Rect(r.x, r.y, r.width, fs * 3.6f);
             UiKit.Card(top, 0.7f, t.color, 0.9f);
-            UiKit.Text(new Rect(top.x + gap, top.y, top.width - gap * 2, fs * 1.8f), $"🏘 {t.name}", fsL, Color.white, TextAnchor.MiddleLeft, true);
+            UiKit.Text(new Rect(top.x + gap, top.y, top.width*.46f-gap, fs * 1.8f), $"🏘 {t.name}", fsL, Color.white, TextAnchor.MiddleLeft, true);
             string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
-            UiKit.Text(new Rect(top.x + gap, top.y, top.width - gap * 2, fs * 1.8f), $"{cn} Lv{prof.level}　💰 {Economy.Gold}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
+            UiKit.Text(new Rect(top.x + top.width*.46f, top.y, top.width*.54f-gap, fs * 1.8f), $"{cn} Lv{prof.level}　💰 {Economy.Gold}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
             UiKit.Text(new Rect(top.x + gap, top.y + fs * 1.7f, top.width - gap * 2, fs * 1.8f), "📱 上下晃動手機＝往準心方向走　💬 走到居民面前說「你好」聊天", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleLeft);
             float y = top.yMax + gap * 0.5f;
             if (!string.IsNullOrEmpty(SpeechNote)) { UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), SpeechNote, fsS, new Color(1f, 0.8f, 0.5f), TextAnchor.MiddleLeft); y += fs * 1.4f; }
@@ -348,7 +349,7 @@ namespace SpellDuel
             var stages = new List<StoryStage>();
             foreach (var s in Story.AllStages()) if (s.theme == th) stages.Add(s);
             float bottom = r.yMax - gap * 2 - fs * 2.1f;
-            float ch = Mathf.Min(fs * 3.4f, (bottom - y) / Mathf.Max(1, stages.Count) - gap * 0.4f);
+            float ch = Mathf.Min(fs * 4.2f, (bottom - y) / Mathf.Max(1, stages.Count) - gap * 0.4f);
             foreach (var st in stages)
             {
                 bool clear = Story.IsCleared(st.id), ok = Story.IsUnlocked(st);
@@ -372,7 +373,7 @@ namespace SpellDuel
             Header(r, "🌀 傳送陣", new Color(0.6f, 0.5f, 1f), prof, fs, fsS, fsL, gap, ref y);
             UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), "抵達過的城鎮可以直接傳送過去；打通一章後就能走到下一個城鎮。", fsS, new Color(0.85f, 0.88f, 1f));
             y += fs * 1.6f;
-            float ch = fs * 3.6f;
+            float ch = fs * 4.2f;
             for (int t = 0; t < Towns.Length; t++)
             {
                 bool open = TownOpen(t), here = t == town;
@@ -469,13 +470,15 @@ namespace SpellDuel
             float tw = (r.width - gap * 3) / 2f;
             if (UiKit.Button(new Rect(r.x + gap, y, tw, fs * 1.8f), "買道具", fs, shopTab == 0)) { shopTab = 0; selItem = null; }
             if (UiKit.Button(new Rect(r.x + gap * 2 + tw, y, tw, fs * 1.8f), "賣裝備", fs, shopTab == 1)) { shopTab = 1; selItem = null; page = 0; }
+            UiKit.Tab(new Rect(r.x+gap,y,tw,fs*1.8f),shopTab==0,new Color(.5f,.85f,1));
+            UiKit.Tab(new Rect(r.x+gap*2+tw,y,tw,fs*1.8f),shopTab==1,UiKit.Gold);
             y += fs * 2.1f;
             if (shopTab == 0)
             {
                 foreach (var c in Economy.Consumables)
                 {
                     var cr = new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.6f);
-                    UiKit.Card(cr, 0.5f);
+                    UiKit.Card(cr, 0.8f, new Color(.5f,.85f,1));
                     UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.62f, cr.height), $"{c.icon} {c.name}（持有 {Economy.Count(c.id)}）\n{c.desc}", fsS, Color.white, TextAnchor.MiddleLeft, true);
                     if (UiKit.Button(new Rect(cr.xMax - cr.width * 0.33f, cr.y + gap * 0.3f, cr.width * 0.32f - gap * 0.3f, cr.height - gap * 0.6f), $"💰 {c.price}", fsS, false, new Color(1f, 0.85f, 0.3f), Economy.Gold >= c.price))
                     {
@@ -521,7 +524,8 @@ namespace SpellDuel
             else if (!lvOk) status = $"公會長：「{cn}，先聽清自己的聲音。到了 Lv{Advanced.Level}，再來接受轉職試煉。」\n目前 Lv{prof.level}（還差 {Advanced.Level - prof.level} 級）";
             else if (!prof.trialPassed) status = $"公會長：「三鐘各有聲音，你也該選自己的路了。先過試煉；不能用藥水，倒下須重來。」";
             else status = "公會長：「你已通過試煉。兩條路都能守護重要的人；請想清楚，選定便不能更換。」";
-            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.6f), status, fsS, Color.white, TextAnchor.UpperLeft);
+            GUI.DrawTexture(new Rect(r.x+gap,y,fs*2.6f,fs*2.6f),Portraits.Get("公會長","guild"),ScaleMode.ScaleToFit,true);
+            UiKit.Text(new Rect(r.x + gap*2+fs*2.6f, y, r.width - gap * 3-fs*2.6f, fs * 2.6f), status, fsS, Color.white, TextAnchor.UpperLeft);
             y += fs * 2.8f;
 
             // 轉職試煉

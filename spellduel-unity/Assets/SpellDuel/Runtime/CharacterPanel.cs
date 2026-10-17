@@ -14,6 +14,7 @@ namespace SpellDuel
         string selNode;                 // 技能樹：選中的節點
         Item selItem;                   // 裝備：選中的物品（背包或身上）
         int page;
+        Vector2 statsScroll, gearScroll;
         string toast; float toastUntil;
 
         void Toast(string s) { toast = s; toastUntil = Time.time + 2f; }
@@ -30,9 +31,9 @@ namespace SpellDuel
             // ---- 標題：職業、等級、經驗、點數
             int cur = CharacterProfile.XpForLevel(p.level), next = CharacterProfile.XpForLevel(p.level + 1);
             var adv = p.Adv;
-            UiKit.Text(new Rect(x, y, w, lh), $"{(adv != null ? $"{adv.name}（{cd.name}）" : cd.name)}　Lv {p.level}", fsL, Color.white, TextAnchor.MiddleLeft, true);
-            UiKit.Text(new Rect(x, y, w, lh), $"能力點 {p.statPoints}　技能點 {p.skillPoints}　職業樹 {p.BaseSpent}{(p.adv == null ? "/" + CharacterProfile.BaseTreeCap : "")}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
-            y += lh;
+            UiKit.Title(new Rect(x, y, w, lh), $"{(adv != null ? $"{adv.name}（{cd.name}）" : cd.name)}　Lv {p.level}", adv != null ? adv.color : cd.color, fsL);
+            UiKit.Text(new Rect(x, y+lh, w, fs*1.2f), $"能力點 {p.statPoints}　技能點 {p.skillPoints}　職業樹 {p.BaseSpent}{(p.adv == null ? "/" + CharacterProfile.BaseTreeCap : "")}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
+            y += lh + fs*1.3f;
             UiKit.Bar(new Rect(x, y, w, lh * 0.5f), p.level >= CharacterProfile.MaxLevel ? 1f : (p.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f),
                 p.level >= CharacterProfile.MaxLevel ? "最高等級" : p.LevelLocked ? $"經驗已滿：到職業工會轉職才能升到 {p.level + 1} 級" : $"經驗 {p.xp - cur} / {next - cur}", fsS);
             y += lh * 0.5f + gap;
@@ -42,12 +43,24 @@ namespace SpellDuel
             float tw = (w - gap * (tabs.Length - 1)) / tabs.Length;
             for (int i = 0; i < tabs.Length; i++)
                 if (UiKit.Button(new Rect(x + i * (tw + gap), y, tw, lh * 1.1f), tabs[i], fsS, tab == i, i == 3 ? adv.color : cd.color)) { tab = i; selNode = null; selItem = null; }
+            for(int i=0;i<tabs.Length;i++) UiKit.Tab(new Rect(x+i*(tw+gap),y,tw,lh*1.1f),tab==i,i==3?adv.color:cd.color);
             y += lh * 1.1f + gap;
             var body = new Rect(x, y, w, r.yMax - gap - y);
-            bool changed = tab == 0 ? DrawStats(body, p, fs, fsS, gap) : tab == 1 ? DrawTree(body, p, fs, fsS, gap, p.cls) : tab == 3 ? DrawTree(body, p, fs, fsS, gap, adv.id) : DrawGear(body, p, fs, fsS, gap);
+            bool changed = tab == 0 ? DrawBodyPage(body, p, fs, fsS, gap, false) : tab == 1 ? DrawTree(body, p, fs, fsS, gap, p.cls) : tab == 3 ? DrawTree(body, p, fs, fsS, gap, adv.id) : DrawBodyPage(body, p, fs, fsS, gap, true);
             if (Time.time < toastUntil) UiKit.Pill(r.y + r.height * 0.5f, toast, fs, new Color(1f, 0.85f, 0.5f), r.width * 0.9f, 0.9f);
             if (changed) Progress.SaveChar(p);
             return changed;
+        }
+
+        // Keep row targets readable on shorter phones; scrolling is presentation state only.
+        bool DrawBodyPage(Rect viewport,CharacterProfile p,int fs,int fsS,float gap,bool equipment)
+        {
+            var content=new Rect(0,0,viewport.width-fs*.85f,Mathf.Max(viewport.height,fs*30));
+            var offset=equipment?gearScroll:statsScroll;
+            offset=GUI.BeginScrollView(viewport,offset,content,false,true);
+            if(equipment)gearScroll=offset;else statsScroll=offset;
+            try{return equipment?DrawGear(content,p,fs,fsS,gap):DrawStats(content,p,fs,fsS,gap);}
+            finally{GUI.EndScrollView();}
         }
 
         // ================================================================ 能力值
@@ -60,7 +73,8 @@ namespace SpellDuel
             {
                 var s = (Stat)i;
                 var rr = new Rect(b.x, b.y + i * rowH, b.width, rowH - gap * 0.4f);
-                UiKit.Card(rr, 0.5f, StatInfo.Colors[i], 0.4f);
+                UiKit.Card(rr, 0.78f, StatInfo.Colors[i], 0.65f);
+                UiKit.Divider(new Rect(rr.x+4,rr.y+8,3,rr.height-16),StatInfo.Colors[i]);
                 int own = p.OwnStat(s), tree = p.TreeStat(s), gear = p.GearStat(s), cost = StatInfo.Cost(own);
                 string extra = (tree > 0 ? $" +{tree}樹" : "") + (gear > 0 ? $" +{gear}裝" : "");
                 UiKit.Text(new Rect(rr.x + gap, rr.y, rr.width * 0.42f, rr.height * 0.55f), $"{StatInfo.Icons[i]} {StatInfo.Names[i]}　{p.Total(s)}", fs, StatInfo.Colors[i], TextAnchor.MiddleLeft, true);
@@ -92,12 +106,13 @@ namespace SpellDuel
         {
             bool changed = false;
             // 身上的 5 個欄位
-            float sh = fs * 1.9f;
+            float sh = fs * 2.0f;
             for (int i = 0; i < 5; i++)
             {
                 var it = p.equipped[i];
                 var sr = new Rect(b.x, b.y + i * (sh + gap * 0.3f), b.width, sh);
                 if (UiKit.Button(sr, "", fsS, selItem != null && selItem == it, it != null ? Item.RarityColors[it.rarity] : (Color?)null)) selItem = it;
+                UiKit.Tab(sr, selItem != null && selItem == it, it != null ? Item.RarityColors[it.rarity] : UiKit.Muted);
                 UiKit.Text(new Rect(sr.x + gap, sr.y, sr.width * 0.2f, sr.height), Item.SlotNames[i], fsS, new Color(0.8f, 0.82f, 0.9f), TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(sr.x + sr.width * 0.2f, sr.y, sr.width * 0.78f, sr.height), it != null ? $"[{Item.RarityNames[it.rarity]}] {it.FullName}" : "（空）", fsS, it != null ? Item.RarityColors[it.rarity] : Color.gray, TextAnchor.MiddleLeft, true);
             }
@@ -128,7 +143,7 @@ namespace SpellDuel
             // 選中物品的說明
             float dy = by + 4 * (ch + gap * 0.3f) + gap * 0.3f;
             var dr = new Rect(b.x, dy, b.width, b.yMax - dy);
-            UiKit.Card(dr, 0.6f, selItem != null ? Item.RarityColors[selItem.rarity] : (Color?)null, 0.5f);
+            UiKit.Card(dr, 0.9f, selItem != null ? Item.RarityColors[selItem.rarity] : (Color?)null, 0.5f);
             if (selItem == null)
             {
                 UiKit.Text(new Rect(dr.x + gap, dr.y + gap, dr.width - gap * 2, dr.height - gap * 2), "點裝備看說明。無盡模式打倒小怪有機會掉裝備，Boss 一定掉稀有以上。稀有度：普通→優良→稀有→史詩→傳說，越高越強、限制越嚴。", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
