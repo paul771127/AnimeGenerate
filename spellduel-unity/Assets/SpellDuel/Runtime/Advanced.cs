@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SpellDuel
 {
     /// <summary>
-    /// 進階職業（20 級在職業工會完成轉職試煉後選一個，選了不能換）。
+    /// 進階職業（30 級在職業工會完成轉職試煉後選一個，選了不能換）。
     /// 每個基本職業有兩個方向差很多的進階職業：
     ///   能力變化（HP、MP、攻擊、減傷、爆擊、閃避、治療量）＋一個專屬的核心機制＋一欄全新的進階技能樹（3 個新技能）。
     /// 進階技能的 cls 仍是基本職業（沿用職業的放招方式：法師唸咒語、牧師比數字、獵人握拳→比五…），adv 欄位標示屬於哪個進階職業。
@@ -22,8 +22,8 @@ namespace SpellDuel
 
     public static class Advanced
     {
-        public const int Level = 20;                 // 轉職等級
-        public const int TrialFirstWave = 17, TrialLastWave = 20;   // 轉職試煉：熔岩地帶第 17～20 波（最後是 Boss 波）
+        public const int Level = 30;                 // 轉職等級
+        public const int TrialFirstWave = 27, TrialLastWave = 30;   // 轉職試煉：海上礁石第 27～30 波（最後是 Boss 波）
         public const float TrialHpMul = 1.6f, TrialDmgMul = 1.4f;   // 試煉的敵人更硬、更痛
         public const int TrialGold = 500;            // 參加試煉的費用
 

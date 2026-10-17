@@ -768,7 +768,7 @@ namespace SpellDuel
     public class CharacterProfile
     {
         public string cls;
-        public int level = 1, xp, statPoints, skillPoints = SkillPerLevel;   // 技能點：1 級就有 1 點，之後每升一級 +1（20 級共 20 點）
+        public int level = 1, xp, statPoints, skillPoints = SkillPerLevel;   // 技能點：1 級就有 1 點，之後每升一級 +1（30 級共 30 點）
         public readonly int[] alloc = new int[StatInfo.Count];        // 自己加的能力點（不含初始值、技能樹、裝備）
         public readonly Dictionary<string, int> ranks = new Dictionary<string, int>();
         public readonly Item[] equipped = new Item[5];
@@ -780,7 +780,7 @@ namespace SpellDuel
         /// <summary>節點屬於哪一棵樹（基本職業 id 或進階職業 id）</summary>
         public string TreeOf(TreeNode n) => adv != null && SkillTrees.Of(adv).Contains(n) ? adv : cls;
         public bool CanAdvance => adv == null && level >= Advanced.Level && trialPassed;
-        /// <summary>20 級還沒轉職：不能再升級（經驗停在滿格），要先完成轉職試煉並轉職</summary>
+        /// <summary>轉職等級（30 級）還沒轉職：不能再升級（經驗停在滿格），要先完成轉職試煉並轉職</summary>
         public bool LevelLocked => adv == null && level >= Advanced.Level;
 
         /// <summary>轉職（選了不能換）：第一個進階技能直接學會</summary>
@@ -794,10 +794,10 @@ namespace SpellDuel
 
         public const int MaxLevel = 60, StatPerLevel = 8, SkillPerLevel = 1;
         /// <summary>
-        /// 職業（基本）技能樹：樹上總共 40 點；轉職前最多只能點其中 20 點（＝20 級拿到的點數），要取捨。
+        /// 職業（基本）技能樹：樹上總共 40 點；轉職前最多只能點其中 30 點（＝30 級拿到的點數），要取捨。
         /// 轉職後可以回來繼續點職業樹（最多到 40 點），也可以點進階職業的技能樹。
         /// </summary>
-        public const int BaseTreeCap = 20;
+        public const int BaseTreeCap = Advanced.Level;
         /// <summary>技能樹版本：2＝樹狀圖＋流派（舊存檔讀進來時退回職業樹點數）</summary>
         public const int TreeVersion = 3;
         public int treeVersion = TreeVersion;   // 新角色直接是最新版；讀檔時沒有 tv＝舊版
@@ -808,9 +808,9 @@ namespace SpellDuel
         public int SpentSkill { get { int v = 0; foreach (var n in Nodes) v += Rank(n.id); return v; } }
         /// <summary>到目前等級總共拿到的技能點</summary>
         public int EarnedSkill => level * SkillPerLevel;
-        /// <summary>現在點得出去的技能點（基本樹點滿 20 點、又還沒轉職時，剩下的點要等轉職才能用）</summary>
+        /// <summary>現在點得出去的技能點（基本樹點滿 30 點、又還沒轉職時，剩下的點要等轉職才能用）</summary>
         public int UsableSkillPoints => adv == null && BaseSpent >= BaseTreeCap ? 0 : skillPoints;
-        /// <summary>職業樹現在最多能點幾點：轉職前 20、轉職後 40（全部）</summary>
+        /// <summary>職業樹現在最多能點幾點：轉職前 30、轉職後全部</summary>
         public int BaseCapNow => adv == null ? BaseTreeCap : int.MaxValue;
 
         /// <summary>讀檔後校正：基本技能樹超過上限（舊規則點的）就整棵退點；剩餘點數＝拿到的－已點的</summary>

@@ -7,7 +7,7 @@ namespace SpellDuel
     /// <summary>
     /// 故事模式的大地圖與城鎮（全螢幕 IMGUI，由 SoloBattle 呼叫 Draw）：
     ///   大地圖：三個地區（熔岩地帶、森林、海上礁石），每區一座城鎮＋這個地區的關卡；打過的關卡可以重打（刷裝備）。
-    ///   城鎮：居民（點一下聊天）、鐵匠鋪（強化裝備）、道具店（買藥水／回城捲軸、賣裝備）、職業工會（Lv20 挑戰轉職試煉，通過後選進階職業）。
+    ///   城鎮：居民（點一下聊天）、鐵匠鋪（強化裝備）、道具店（買藥水／回城捲軸、賣裝備）、職業工會（Lv30 挑戰轉職試煉，通過後選進階職業）。
     /// </summary>
     public class WorldUI
     {
@@ -504,7 +504,7 @@ namespace SpellDuel
             if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), "🏘 回城鎮", fs)) screen = Screen.Town;
         }
 
-        // ---------------------------------------------------------------- 職業工會（轉職：Lv20 → 轉職試煉 → 二選一，選了不能換）
+        // ---------------------------------------------------------------- 職業工會（轉職：Lv30 → 轉職試煉 → 二選一，選了不能換）
         string advPick;                // 正在確認的進階職業
         float advPickAt;
         int guildScroll;
@@ -586,7 +586,7 @@ namespace SpellDuel
         }
 
         public static string TrialText =>
-            $"迷霧森林第 {Advanced.TrialFirstWave}～{Advanced.TrialLastWave} 波（最後一波是 Boss）；敵人 HP ×{Advanced.TrialHpMul:0.#}、攻擊 ×{Advanced.TrialDmgMul:0.#}；不能用藥水與回城捲軸";
+            $"{RegionNames[Battle.ThemeOf(Advanced.TrialLastWave)].Split(' ')[1]}第 {Advanced.TrialFirstWave}～{Advanced.TrialLastWave} 波（最後一波是 Boss）；敵人 HP ×{Advanced.TrialHpMul:0.#}、攻擊 ×{Advanced.TrialDmgMul:0.#}；不能用藥水與回城捲軸";
 
         static string StatLine(AdvDef a)
         {

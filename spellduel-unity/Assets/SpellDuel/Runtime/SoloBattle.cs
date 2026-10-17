@@ -306,14 +306,15 @@ namespace SpellDuel
 
         void EndDialogue() { var d = dlgDone; dlg = null; dlgDone = null; d?.Invoke(); }
 
-        // ---------------------------------------------------------------- 轉職試煉（職業工會）：迷霧森林第 17～20 波，敵人更硬更痛、不能用道具
+        // ---------------------------------------------------------------- 轉職試煉（職業工會）：海上礁石第 27～30 波，敵人更硬更痛、不能用道具
         bool IsTrial => storyStage != null && storyStage.id == "trial";
 
         void StartTrial()
         {
-            var st = new StoryStage { id = "trial", title = "⚔ 轉職試煉", theme = 1, fromWave = Advanced.TrialFirstWave - 10, toWave = Advanced.TrialLastWave - 10, xp = 400, desc = WorldUI.TrialText };
-            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "新的道路先從這場試煉開始。地點在迷霧森林，敵人更強，不能使用藥水。" });
-            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "撐過四波，打倒最後的樹王。考的不是逞強，是危急時，你願意替誰留一條退路。" });
+            int tth = Battle.ThemeOf(Advanced.TrialLastWave);
+            var st = new StoryStage { id = "trial", title = "⚔ 轉職試煉", theme = tth, fromWave = Advanced.TrialFirstWave - 10 * tth, toWave = Advanced.TrialLastWave - 10 * tth, xp = 400, desc = WorldUI.TrialText };
+            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "新的道路先從這場試煉開始。地點在海上礁石，敵人更強，不能使用藥水。" });
+            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "撐過四波，打倒最後的深海巨妖。考的不是逞強，是危急時，你願意替誰留一條退路。" });
             st.after.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "我看見你的答案了。回工會選擇進階職業吧；選定便不能更換，往後要守護誰，由你決定。" });
             storyMapOpen = false; storyStage = st;
             ShowDialogue(st.before, StartStageBattle);
@@ -2988,7 +2989,7 @@ namespace SpellDuel
                 if (IsTrial && won)
                 {
                     if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "🏛 回職業工會", fs, true, new Color(0.85f, 0.6f, 1f)))
-                    { ShowSetup(); storyMapOpen = true; world.OpenTown(0); world.OpenGuild(); }
+                    { ShowSetup(); storyMapOpen = true; world.OpenTown(Battle.ThemeOf(Advanced.TrialLastWave)); world.OpenGuild(); }
                 }
                 // 這一章全部打通：下一關在下一個城鎮之後 → 先抵達下一個城鎮
                 else if (won && next != null && next.theme != st.theme && Story.IsUnlocked(next))
