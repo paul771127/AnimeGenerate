@@ -10,7 +10,7 @@ namespace SpellDuel
     ///   戰鬥中：點技能按鈕開始詠唱 → 蓄力完成後點畫面朝該方向發射（陷阱設在點到的地板）。
     ///   敵人、法術、陷阱都放在場地座標裡，用 AR 相機看到的是它們在房間裡的真實位置。
     /// </summary>
-    public class SoloBattle : MonoBehaviour
+    public partial class SoloBattle : MonoBehaviour
     {
         public enum Phase { Hidden, Setup, Fighting, Over }
         public Phase phase { get; private set; } = Phase.Hidden;
@@ -692,6 +692,7 @@ namespace SpellDuel
                 bossAi = new BossAI(battle, boss, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
                 bossAi.OnEnrage += OnBossEnrage;
                 bossAi.SetDifficulty(difficulty);
+                bossAi.storyIntense = endlessMode && pendingStage != null;   // 故事 Boss：出招更頻繁、更多大範圍招式
                 if (endlessMode)
                 {
                     battle.bossBaseHp = 150f * BossHpFor(difficulty);
@@ -1304,6 +1305,7 @@ namespace SpellDuel
         {
             if (prof != null) Progress.SaveChar(prof);
             charOpen = false;
+            ClearArena();
             foreach (var go in projGo.Values) if (go) Destroy(go);
             foreach (var go in trapGo.Values) if (go) Destroy(go);
             foreach (var go in burnGo.Values) if (go) Destroy(go);
@@ -1429,6 +1431,7 @@ namespace SpellDuel
             if (me.crouching && !was) Haptics.Play(Haptics.Kind.Light);
 
             float now = battle.now;
+            UpdateJump(me, y, dt);
             moveHist.Enqueue(new KeyValuePair<float, Vector3>(now, me.Feet));
             while (moveHist.Count > 0 && now - moveHist.Peek().Key > SidestepWindow) moveHist.Dequeue();
             if (moveHist.Count > 2 && now >= nextDodgeOk && Battle.FlatDistance(moveHist.Peek().Value, me.Feet) > SidestepDist)
@@ -1908,6 +1911,13 @@ namespace SpellDuel
                 case "bossarrive":
                     Say("🔥 " + text, 3.5f);
                     break;
+                case "bossincoming":
+                    Say("⚠ " + text, 2.5f);
+                    Sfx.Play("roar", 0.7f); Haptics.Play(Haptics.Kind.Heavy); Kick(14f, 0f);
+                    break;
+                case "quake":
+                    Sfx.Play("boom", 0.9f); Haptics.Play(Haptics.Kind.Medium); Kick(8f, 0f);
+                    break;
                 case "wavestart":
                     Say("♾ " + text, 2.5f);
                     Sfx.Play("horn", 0.8f, text != null && text.Contains("Boss") ? 0.75f : 1f);
@@ -2003,6 +2013,8 @@ namespace SpellDuel
         void UpdateVisuals()
         {
             UpdatePetViews();
+            UpdateQuakeVisuals();
+            UpdatePickups();
             UpdateAllyRigs();
             var en = En;
             var feetS = WorldFrame.FromWorld(en.Feet);
@@ -2767,6 +2779,7 @@ namespace SpellDuel
                 if (buffs.Length > 0) UiKit.Pill(H * 0.145f, buffs.Trim(), fsS, new Color(1f, 0.85f, 0.4f), pillW);
             }
             if (me.crouching) UiKit.Pill(H * 0.19f, "↓ 蹲下中", fsS, new Color(0.6f, 0.9f, 1f), pillW);
+            DrawArenaHints(H, fs, fsS, pillW);
             foreach (var mn in battle.minions)
                 if (mn.Alive && mn.minionKind == 5 && mn.windupUntil > 0f && (mn.target == null || mn.target == me))
                 { UiKit.Pill(H * 0.49f, "⚠ 狙擊手瞄準你了！準備側跨", fs, new Color(1f, 0.35f, 0.75f), pillW); break; }

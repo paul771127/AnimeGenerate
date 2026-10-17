@@ -28,6 +28,12 @@ namespace SpellDuel
         /// <summary>Boss 招式冷卻倍率（所有 Boss 共通 0.75）、每多一位玩家的施法頻率／攻擊力加成</summary>
         public const float BaseCdMul = 0.75f, PartyCast = 0.25f, PartyAtk = 0.2f;
         public bool Enraged { get; private set; }
+        /// <summary>
+        /// 故事關卡的 Boss：出招更頻繁、更常用大範圍招式（橫掃要蹲、震地波要跳、地裂與落石要跑開），
+        /// 讓玩家一直動起來。由 SoloBattle 設定（並把「震地波」加進 Boss 的招式）。
+        /// </summary>
+        public bool storyIntense;
+        public const float StoryThinkMul = 0.55f, StoryCdMul = 0.7f;
         float walkBase = -1f;
 
         /// <summary>無盡模式：Boss 重新出現（不再狂暴、清掉冷卻；越後面的 Boss 蓄力越快）</summary>
@@ -72,7 +78,7 @@ namespace SpellDuel
             }
             // 人數越多：施法越頻繁（冷卻、思考間隔 ÷(1＋0.25×多的人數)）、攻擊力越高（＋20%／人）
             int extra = b.allies.Count;
-            me.cdMul = BaseCdMul / (1f + PartyCast * extra);
+            me.cdMul = BaseCdMul / (1f + PartyCast * extra) * (storyIntense ? StoryCdMul : 1f);
             me.atkMul = 1f + PartyAtk * extra;
             PickTarget();
             var tgt = me.target ?? b.player;
@@ -98,7 +104,7 @@ namespace SpellDuel
 
             if (me.charging != null) { TryRelease(tgt); return; }
             if (b.now < nextThink) return;
-            nextThink = b.now + (Enraged ? Rand(1.2f, 2f) : Rand(2f, 3f)) * thinkScale / (1f + PartyCast * extra);
+            nextThink = b.now + (Enraged ? Rand(1.2f, 2f) : Rand(2f, 3f)) * thinkScale / (1f + PartyCast * extra) * (storyIntense ? StoryThinkMul : 1f);
 
             // 依距離挑招：近身多用地裂／橫掃，遠距離用熔岩彈／落石雨
             float d = Battle.FlatDistance(me.Feet, tgt.Feet);
@@ -128,8 +134,15 @@ namespace SpellDuel
                     "s_whirl" => d > 2f ? 4f : 1.2f,
                     "s_ink" => 1.5f,
                     "s_summon" => b.minions.Count < 2 ? 5f : 0f,
+                    "x_quake" => 6f,   // 震地波：任何距離都會用
                     _ => 1f,
                 };
+                // 故事 Boss：大範圍、逼人動的招式更常出（橫掃→蹲、地裂／落石／觸手→跑、震地波→跳）；召喚少一點
+                if (storyIntense && w > 0f)
+                {
+                    if (s.duckable || s.areaRadius > 0f || s.multi > 1 || s.fromAbove) w *= 2f;
+                    if (s.id.EndsWith("_summon")) w *= 0.4f;
+                }
                 for (int i = 0; i < Mathf.RoundToInt(w * 2f); i++) options.Add(s);
             }
             if (options.Count == 0) return;
@@ -166,6 +179,7 @@ namespace SpellDuel
         {
             var s = me.charging;
             if (b.now - me.chargeStart < s.charge * me.chargeScale) return;
+            if (s.id == "x_quake") { b.SpawnShockwave(me, s); Status = $"{s.name}！"; return; }
             if (s.id == "b_leap") { leapT = 0f; leapFrom = me.Feet; me.forward = Fighter.Flat(me.aimPoint - me.Feet); Status = $"{s.name}！"; return; }
             // 射程外：繼續蓄著、走過去（地裂除外：時間到就砸，玩家已經走出紅圈就打空）
             if (s.type == SkillType.Projectile && s.areaRadius <= 0f && Battle.FlatDistance(me.Feet, tgt.Feet) > s.rangeMax) { Status = $"{s.name}：逼近中"; return; }

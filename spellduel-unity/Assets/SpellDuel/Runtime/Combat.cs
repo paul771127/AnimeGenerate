@@ -71,6 +71,7 @@ namespace SpellDuel
         public bool palmVisible = true;        // 玩家：手掌有沒有出現在鏡頭前（刺客伏擊技能要看到手掌才會蓄力；電腦／對手一律 true）
         // 身體閃避：蹲下（躲橫向攻擊）、快速側跨（短暫無敵）
         public bool crouching; public float dodgeUntil;
+        public float airborneUntil;   // 跳起來（手機快速往上）：震地波打不到
         // 體型（Boss 比較大）、蓄力倍率（Boss 狂暴時變快）、目前攻擊的目標（合作模式 Boss 會換目標）
         public float bodyRadius = BodyRadius, chargeScale = 1f;
         public Fighter target;
@@ -499,7 +500,7 @@ namespace SpellDuel
         /// <summary>下一個 Boss 波</summary>
         public int NextBossWave => (wave / BossEvery + (IsBossWave ? 0 : 1)) * BossEvery;
         /// <summary>這一波還剩幾隻（還沒出現的＋場上活著的）</summary>
-        public int WaveRemaining => IsBossWave ? (enemy.Alive ? 1 : 0) : waveToSpawn + minions.Count;
+        public int WaveRemaining => IsBossWave && !bossPending ? (enemy.Alive ? 1 : 0) : waveToSpawn + minions.Count;
 
         // 故事模式的關卡：打第 firstWave～lastWave 波（同一套無盡模式的波次、主題、Boss），打完就通關
         public int stageEnd = -1, stageStart = 1;
@@ -511,6 +512,7 @@ namespace SpellDuel
         public void StartStage(int firstWave, int lastWave)
         {
             endless = true; kills = 0; bossKills = 0; stageCleared = false;
+            bossAfterMinions = true;   // 故事關卡：Boss 波先來一整波小怪，全部打倒後 Boss 才現身
             wave = Mathf.Max(0, firstWave - 1); stageStart = firstWave; stageEnd = Mathf.Max(firstWave, lastWave);
             enemy.hp = 0f;
             NextWave(3f);
@@ -535,9 +537,11 @@ namespace SpellDuel
         {
             wave++;
             waveStartAt = now + delay;
-            if (IsBossWave) { waveToSpawn = 0; waveTotal = 1; }
+            bossPending = false;
+            if (IsBossWave && !bossAfterMinions) { waveToSpawn = 0; waveTotal = 1; }
             else
             {
+                bossPending = IsBossWave;   // 故事關卡的 Boss 波：先清小怪
                 // 每波的小怪數：6＋波次（最多 28），合作 ×1.5
                 waveTotal = Mathf.Min(28, 6 + wave);
                 if (allies.Count > 0) waveTotal = Mathf.CeilToInt(waveTotal * (1f + 0.5f * allies.Count));
@@ -545,7 +549,7 @@ namespace SpellDuel
                 waveToSpawn = waveTotal;
             }
             nextMinionAt = waveStartAt;
-            Emit("wavestart", player.Feet, Color.white, IsBossWave ? $"{WaveLabel}：Boss 來了！" : $"{WaveLabel}：{waveTotal} 隻小怪");
+            Emit("wavestart", player.Feet, Color.white, IsBossWave ? (bossPending ? $"{WaveLabel}：{waveTotal} 隻小怪…（最深處有什麼在等著）" : $"{WaveLabel}：Boss 來了！") : $"{WaveLabel}：{waveTotal} 隻小怪");
         }
 
         // 經驗值：小怪依種類與波次、Boss 依第幾隻；合作時兩人共用同一份經驗（各自選升級）
@@ -573,9 +577,9 @@ namespace SpellDuel
             if (stageCleared) return;   // 故事關卡已經通關
             if (!player.Alive && !AnyAllyAlive) return;
             if (now < waveStartAt) return;
-            if (IsBossWave)
+            if (IsBossWave && !bossPending)
             {
-                if (!enemy.Alive && !bossSpawnedThisWave) SpawnBoss();
+                if (!enemy.Alive && !bossSpawnedThisWave && now >= bossAt) SpawnBoss();
                 return;
             }
             // 小怪波：照間隔陸續出現（每次兩隻）；場上同時最多 6＋波次/3×2 隻（合作 +4）
@@ -589,6 +593,14 @@ namespace SpellDuel
                 }
                 nextMinionAt = now + Mathf.Max(2.5f, 5f - 0.1f * wave) * (allies.Count > 0 ? Mathf.Max(0.5f, 1f - 0.25f * allies.Count) : 1f);
             }
+            // 故事關卡的 Boss 波：小怪全部打倒 → 地面震動，Boss 現身
+            if (bossPending && waveToSpawn == 0 && minions.Count == 0)
+            {
+                bossPending = false; bossAt = now + BossEntranceDelay;
+                if (player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + player.maxHp * 0.1f);
+                Emit("bossincoming", player.Feet, new Color(1f, 0.5f, 0.3f), "大地在震動……");
+                return;
+            }
             // 這一波全部打倒：回 10% 血，休息 4 秒進下一波
             if (waveToSpawn == 0 && minions.Count == 0)
             {
@@ -598,6 +610,9 @@ namespace SpellDuel
             }
         }
         bool bossSpawnedThisWave;
+        public bool bossAfterMinions;   // 故事關卡：Boss 波先清小怪
+        bool bossPending; float bossAt;
+        public const float BossEntranceDelay = 2.5f;
 
         // 小怪解鎖的波次：熔岩小鬼、火焰射手（遠程）第 1 波起；岩石投擲者（遠程）第 4 波；岩石衝鋒獸第 6 波；
         // 熔岩狙擊手（遠程）第 8 波；自爆小鬼第 11 波（打倒第一隻 Boss 後）
@@ -649,7 +664,10 @@ namespace SpellDuel
                 enemy.loadout.Clear();
                 foreach (var id in bc.defaultLoadout) enemy.loadout.Add(Skills.All[id]);
             }
-            Emit("bossarrive", enemy.Feet, enemy.cls.color, $"第 {wave} 波 Boss 出現！");
+            // 故事關卡的 Boss 多一招震地波（跳起來躲）
+            var quake = Skills.All["x_quake"];
+            if (bossAfterMinions && !enemy.loadout.Contains(quake)) enemy.loadout.Add(quake);
+            Emit("bossarrive", enemy.Feet, enemy.cls.color, bossAfterMinions ? $"{enemy.name}現身！" : $"第 {wave} 波 Boss 出現！");
             OnBossSpawn?.Invoke(bossIndex);
         }
 
@@ -1662,9 +1680,45 @@ namespace SpellDuel
         }
 
         // ------------------------------------------------------------ 每幀
+        // ------------------------------------------------------------ 震地波（故事 Boss）
+        /// <summary>從 Boss 腳下往外擴散的地面衝擊環：環經過時人在空中（跳起來）就沒事，否則受傷並短暫定身</summary>
+        public class Shockwave { public Fighter owner; public SkillDef skill; public Vector3 center; public float born, speed, maxR, lastR; public int dmg; public readonly HashSet<Fighter> done = new HashSet<Fighter>(); }
+        public readonly List<Shockwave> shockwaves = new List<Shockwave>();
+        public const float QuakeSpeed = 3.2f, QuakeRange = 12f, QuakeBand = 0.25f;
+
+        public void SpawnShockwave(Fighter owner, SkillDef s)
+        {
+            var c = owner.Feet; c.y = 0f;
+            shockwaves.Add(new Shockwave { owner = owner, skill = s, center = c, born = now, speed = QuakeSpeed, maxR = QuakeRange, dmg = Mathf.RoundToInt(s.damage * owner.atkMul * owner.OutMul(now)) });
+            owner.cooldownUntil[s.id] = now + s.cooldown * owner.cdMul;
+            owner.charging = null;
+            Emit("quake", c, s.color, s.name + "！");
+        }
+
+        void UpdateShockwaves()
+        {
+            for (int i = shockwaves.Count - 1; i >= 0; i--)
+            {
+                var w = shockwaves[i];
+                float r = (now - w.born) * w.speed;
+                if (!w.owner.Alive || r > w.maxR + 1f) { shockwaves.RemoveAt(i); continue; }
+                foreach (var v in FoesOf(w.owner))
+                {
+                    if (w.done.Contains(v)) continue;
+                    float d = FlatDistance(w.center, v.Feet);
+                    if (d < w.lastR - QuakeBand || d > r + QuakeBand) continue;   // 環還沒到／已經過去
+                    w.done.Add(v);
+                    if (v.airborneUntil > now) { Emit("evade", v.Chest, new Color(0.6f, 1f, 0.8f), "跳過了！"); continue; }
+                    HitFoe(w.owner, v, w.skill, w.dmg);
+                }
+                w.lastR = r;
+            }
+        }
+
         public void Update(float dt)
         {
             now += dt;
+            if (shockwaves.Count > 0) UpdateShockwaves();
             // 計時的效果（旋風斬的後兩段…）
             for (int i = 0; i < timers.Count; i++) if (timers[i].Key <= now) { var a = timers[i].Value; timers.RemoveAt(i--); a(); }
             // 站著不動的時間（神射手鷹眼、主教祈禱領域）
