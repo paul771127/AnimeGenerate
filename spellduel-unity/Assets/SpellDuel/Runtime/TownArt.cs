@@ -3,251 +3,133 @@ using UnityEngine;
 
 namespace SpellDuel
 {
-    /// <summary>
-    /// 可走動城鎮的外觀（美術負責：見 TOWN_ART_BRIEF.md）。
-    /// TownWalk 只呼叫這裡的三個函式；座標都是「城鎮座標」（父物件的 local，y=0 是地面，單位公尺，
-    /// 玩家一進城站在 (0,0) 面向 +z）。目前是程式產生的佔位外觀：方塊房子、圓柱樹、膠囊路燈。
-    ///   BuildScenery(town, root)        地面、遠景、道路、裝飾（不能擋路的東西）
-    ///   BuildBuilding(town, kind, parent) 一棟建築（kind：smith／shop／guild／house／landmark），門朝 -z
-    ///   CreateNpc(name, parent)          一個居民（腳底在 parent 原點、面向 +z）；回傳根物件
-    ///   BuildFence(town, root, center, radius, gaps, half)  城鎮外圍的柵欄／城牆（gaps＝出口方向，缺口寬 2×half）
-    ///   BuildGate(town, theme, parent)   出口的大門（+z 朝城外；theme＝通往第幾章）
-    ///   BuildWarpPad(town, parent)       傳送陣（地上的魔法陣，直徑約 1.6m）
-    /// </summary>
-    public static class TownArt
+    /// <summary>Procedural cel-painted town sets. Positions remain in the caller's local space.
+    /// Static pieces are combined per material at each public entry point; no colliders or art assets.</summary>
+    public static partial class TownArt
     {
-        // ---------------------------------------------------------------- 佈景
-        public static void BuildScenery(int town, Transform root)
+        static readonly Color Wood = C("865334"), Gold = C("e7b756"), Cream = C("f1dfb4"), Ink = C("344354");
+        static readonly Dictionary<string, Material> mats = new Dictionary<string, Material>();
+        static readonly Dictionary<string, Mesh> shapes = new Dictionary<string, Mesh>();
+        static Color C(string hex) { ColorUtility.TryParseHtmlString("#" + hex, out var c); return c; }
+        static Color Mix(Color a, Color b, float t) => Color.Lerp(a, b, t);
+        static Transform Group(Transform p, string name, Vector3 pos)
         {
-            var c = WorldUI.Towns[town].color;
-            // 地面：城鎮顏色的大圓盤＋中央廣場
-            var ground = Box(root, "Ground", new Vector3(0f, -0.02f, 5f), new Vector3(32f, 0.04f, 32f), Mix(GroundColor(town), c, 0.12f));
-            ground.transform.localRotation = Quaternion.identity;
-            Cyl(root, "Plaza", new Vector3(0f, 0f, 5f), new Vector3(7f, 0.01f, 7f), new Color(0.78f, 0.74f, 0.66f));
-            // 道路：廣場通往三個設施
-            Box(root, "Road N", new Vector3(0f, 0.005f, 9f), new Vector3(1.6f, 0.01f, 6f), new Color(0.7f, 0.66f, 0.58f));
-            Box(root, "Road W", new Vector3(-4f, 0.005f, 6f), new Vector3(4f, 0.01f, 1.4f), new Color(0.7f, 0.66f, 0.58f));
-            Box(root, "Road E", new Vector3(4f, 0.005f, 6f), new Vector3(4f, 0.01f, 1.4f), new Color(0.7f, 0.66f, 0.58f));
-            // 通往出口（東西）的路，延伸到城外
-            Box(root, "Exit Road W", new Vector3(-10.5f, 0.004f, 5f), new Vector3(12f, 0.01f, 2.4f), new Color(0.66f, 0.6f, 0.5f));
-            Box(root, "Exit Road E", new Vector3(10.5f, 0.004f, 5f), new Vector3(12f, 0.01f, 2.4f), new Color(0.66f, 0.6f, 0.5f));
-            // 圍繞城鎮的樹／岩石（外圈，裝飾用）
-            var rng = new System.Random(31 + town);
-            for (int i = 0; i < 22; i++)
-            {
-                float a = i / 22f * Mathf.PI * 2f, r = 14.5f + (float)rng.NextDouble() * 2f;
-                var p = new Vector3(Mathf.Cos(a) * r, 0f, 5f + Mathf.Sin(a) * r);
-                if (town == 2 && p.z < 0f) continue;   // 港口：南邊是海
-                if (Mathf.Abs(Mathf.Sin(a)) < 0.25f) continue;   // 東西兩邊是出口的路
-                Tree(root, p, town, (float)rng.NextDouble());
-            }
-            if (town == 2)
-            {
-                // 港口：南邊一片海＋棧橋
-                Box(root, "Sea", new Vector3(0f, -0.05f, -9f), new Vector3(40f, 0.02f, 12f), new Color(0.2f, 0.45f, 0.75f));
-                Box(root, "Pier", new Vector3(5f, 0.08f, -5f), new Vector3(1.4f, 0.12f, 6f), new Color(0.5f, 0.36f, 0.22f));
-            }
-            // 路燈
-            foreach (var p in new[] { new Vector3(-2.5f, 0f, 2.5f), new Vector3(2.5f, 0f, 2.5f), new Vector3(-2.5f, 0f, 8.5f), new Vector3(2.5f, 0f, 8.5f) })
-            {
-                Cyl(root, "Lamp Post", p + Vector3.up * 0.9f, new Vector3(0.08f, 0.9f, 0.08f), new Color(0.2f, 0.18f, 0.16f));
-                Glow(root, "Lamp", p + Vector3.up * 1.85f, 0.22f, new Color(1f, 0.85f, 0.5f));
-            }
+            var t = new GameObject(name).transform; t.SetParent(p, false); t.localPosition = pos; return t;
         }
-
-        static Color GroundColor(int town) =>
-            town == 0 ? new Color(0.42f, 0.33f, 0.28f) : town == 1 ? new Color(0.3f, 0.48f, 0.26f) : new Color(0.76f, 0.7f, 0.55f);
-
-        static void Tree(Transform root, Vector3 p, int town, float k)
+        static Material Mat(Color c, bool glowing = false)
         {
-            float h = 1.6f + k * 1.4f;
-            if (town == 0)
-            {
-                // 熔岩地帶：黑岩
-                var rock = Box(root, "Rock", p + Vector3.up * h * 0.35f, new Vector3(1.2f, h * 0.7f, 1.1f), new Color(0.22f, 0.17f, 0.15f));
-                rock.transform.localRotation = Quaternion.Euler(0f, k * 90f, 8f);
-                return;
-            }
-            Cyl(root, "Trunk", p + Vector3.up * h * 0.5f, new Vector3(0.25f, h * 0.5f, 0.25f), new Color(0.4f, 0.27f, 0.16f));
-            var leaf = town == 1 ? new Color(0.2f, 0.55f, 0.25f) : new Color(0.3f, 0.65f, 0.35f);
-            Ball(root, "Leaves", p + Vector3.up * (h + 0.4f), new Vector3(1.6f, 1.4f, 1.6f), leaf);
+            // Explicit shader key: opaque/glow colors cannot collide after Color32 quantization.
+            string key = ColorUtility.ToHtmlStringRGBA(c) + (glowing ? " glow" : " toon");
+            if (mats.TryGetValue(key, out var m) && m != null) return m;
+            var shader = glowing ? Shader.Find("Sprites/Default") : ToonStyle.LitShader();
+            m = new Material(shader ?? Shader.Find("Mobile/Diffuse") ?? Shader.Find("Sprites/Default")) { color = c, name = "Town " + key };
+            mats[key] = m; return m;
         }
-
-        // ---------------------------------------------------------------- 建築
-        public static void BuildBuilding(int town, string kind, Transform parent)
+        static GameObject Part(Transform p, string name, Mesh mesh, Vector3 pos, Vector3 scale, Color color, bool glow = false)
         {
-            var tc = WorldUI.Towns[town].color;
-            Color wall = town == 0 ? new Color(0.55f, 0.42f, 0.36f) : town == 1 ? new Color(0.55f, 0.42f, 0.28f) : new Color(0.85f, 0.85f, 0.8f);
-            Color roof = kind == "smith" ? new Color(0.45f, 0.25f, 0.15f) : kind == "shop" ? new Color(0.25f, 0.5f, 0.75f) : kind == "guild" ? new Color(0.5f, 0.3f, 0.7f) : Mix(tc, Color.black, 0.3f);
-            float w = kind == "guild" ? 5f : kind == "landmark" ? 2f : 3.6f, d = kind == "guild" ? 4f : 3f, h = kind == "guild" ? 3.4f : 2.6f;
-            if (kind == "landmark") { Landmark(town, parent); return; }
-            Box(parent, "Wall", new Vector3(0f, h / 2f, 0f), new Vector3(w, h, d), wall);
-            // 屋頂：兩片斜板
-            for (int s = -1; s <= 1; s += 2)
-            {
-                var r = Box(parent, "Roof", new Vector3(s * w * 0.25f, h + 0.45f, 0f), new Vector3(w * 0.6f, 0.12f, d + 0.4f), roof);
-                r.transform.localRotation = Quaternion.Euler(0f, 0f, -s * 28f);
-            }
-            Box(parent, "Door", new Vector3(0f, 0.75f, -d / 2f - 0.01f), new Vector3(0.9f, 1.5f, 0.05f), new Color(0.3f, 0.2f, 0.12f));
-            // 招牌（設施的顏色）
-            if (kind != "house")
-                Box(parent, "Sign", new Vector3(0f, h - 0.3f, -d / 2f - 0.05f), new Vector3(1.6f, 0.5f, 0.06f), roof * 1.3f);
-            if (kind == "smith")
-            {
-                Cyl(parent, "Chimney", new Vector3(w * 0.3f, h + 1.2f, 0.3f), new Vector3(0.45f, 0.8f, 0.45f), new Color(0.3f, 0.28f, 0.27f));
-                Glow(parent, "Forge Glow", new Vector3(-w * 0.35f, 0.6f, -d / 2f - 0.3f), 0.35f, new Color(1f, 0.5f, 0.15f));
-                Box(parent, "Anvil", new Vector3(w * 0.32f, 0.35f, -d / 2f - 0.6f), new Vector3(0.6f, 0.35f, 0.3f), new Color(0.25f, 0.25f, 0.28f));
-            }
-            else if (kind == "shop")
-            {
-                Box(parent, "Awning", new Vector3(0f, 1.9f, -d / 2f - 0.5f), new Vector3(w * 0.9f, 0.06f, 1f), new Color(0.9f, 0.9f, 0.95f));
-                Ball(parent, "Potion", new Vector3(-w * 0.3f, 0.9f, -d / 2f - 0.5f), new Vector3(0.25f, 0.3f, 0.25f), new Color(1f, 0.3f, 0.35f));
-                Ball(parent, "Potion", new Vector3(-w * 0.3f + 0.3f, 0.9f, -d / 2f - 0.5f), new Vector3(0.25f, 0.3f, 0.25f), new Color(0.3f, 0.5f, 1f));
-            }
-            else if (kind == "guild")
-            {
-                for (int s = -1; s <= 1; s += 2)
-                    Cyl(parent, "Pillar", new Vector3(s * 1.4f, 1.3f, -d / 2f - 0.4f), new Vector3(0.3f, 1.3f, 0.3f), new Color(0.9f, 0.88f, 0.82f));
-                Box(parent, "Banner", new Vector3(0f, h + 1f, -d / 2f + 0.2f), new Vector3(0.7f, 1.2f, 0.04f), new Color(0.7f, 0.45f, 1f));
-            }
+            var go = new GameObject(name); go.transform.SetParent(p, false);
+            go.transform.localPosition = pos; go.transform.localScale = scale;
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            go.AddComponent<MeshRenderer>().sharedMaterial = Mat(color, glow); return go;
         }
-
-        static void Landmark(int town, Transform p)
+        static Mesh Shape(string name)
         {
-            if (town == 0)
+            if (shapes.TryGetValue(name, out var m)) return m;
+            if (name == "box")
             {
-                // 炎之里：晨鐘塔
-                Box(p, "Tower", new Vector3(0f, 2f, 0f), new Vector3(1.6f, 4f, 1.6f), new Color(0.45f, 0.35f, 0.3f));
-                Ball(p, "Bell", new Vector3(0f, 3.7f, -0.6f), new Vector3(0.6f, 0.7f, 0.6f), new Color(0.85f, 0.65f, 0.25f));
-                Box(p, "Tower Roof", new Vector3(0f, 4.3f, 0f), new Vector3(2f, 0.3f, 2f), new Color(0.35f, 0.18f, 0.12f));
+                // Separate face vertices retain crisp cel planes; averaged corner normals close outline gaps.
+                var v = new List<Vector3>(); var n = new List<Vector3>(); var tris = new List<int>();
+                Vector3[] corners = { new Vector3(-.5f,-.5f,-.5f),new Vector3(.5f,-.5f,-.5f),new Vector3(.5f,.5f,-.5f),new Vector3(-.5f,.5f,-.5f),new Vector3(-.5f,-.5f,.5f),new Vector3(.5f,-.5f,.5f),new Vector3(.5f,.5f,.5f),new Vector3(-.5f,.5f,.5f) };
+                int[] faces = {0,3,2,1,4,5,6,7,0,4,7,3,1,2,6,5,3,7,6,2,0,1,5,4};
+                foreach (int k in faces) { v.Add(corners[k]); n.Add(corners[k].normalized); }
+                for(int f=0;f<6;f++){int k=f*4;tris.AddRange(new[]{k,k+1,k+2,k,k+2,k+3});}
+                m = new Mesh {name="Town smooth-normal box"};m.SetVertices(v);m.SetNormals(n);m.SetTriangles(tris,0);m.RecalculateBounds();
             }
-            else if (town == 1)
+            else if (name == "roof")
             {
-                // 森之里：古樹＋木牌
-                Cyl(p, "Old Tree", new Vector3(0f, 2.5f, 0f), new Vector3(1.2f, 2.5f, 1.2f), new Color(0.38f, 0.26f, 0.15f));
-                Ball(p, "Crown", new Vector3(0f, 5.5f, 0f), new Vector3(5f, 3f, 5f), new Color(0.22f, 0.5f, 0.25f));
-                for (int i = 0; i < 5; i++)
-                    Box(p, "Name Board", new Vector3(-1.2f + i * 0.6f, 0.4f, -1.1f), new Vector3(0.35f, 0.5f, 0.05f), new Color(0.65f, 0.5f, 0.3f));
-                Glow(p, "Leaf Lantern", new Vector3(0.9f, 2f, -0.9f), 0.25f, new Color(0.6f, 1f, 0.5f));
+                m = new Mesh {name="Town gable"};m.vertices=new[]{new Vector3(-.5f,0,-.5f),new Vector3(.5f,0,-.5f),new Vector3(0,1,-.5f),new Vector3(-.5f,0,.5f),new Vector3(.5f,0,.5f),new Vector3(0,1,.5f)};
+                m.triangles=new[]{0,2,1,3,4,5,0,3,5,0,5,2,1,2,5,1,5,4,0,1,4,0,4,3};m.RecalculateNormals();m.RecalculateBounds();
             }
             else
             {
-                // 潮騷港：舊燈塔
-                Cyl(p, "Lighthouse", new Vector3(0f, 2.5f, 0f), new Vector3(1.4f, 2.5f, 1.4f), new Color(0.92f, 0.92f, 0.9f));
-                Cyl(p, "Stripe", new Vector3(0f, 3f, 0f), new Vector3(1.45f, 0.3f, 1.45f), new Color(0.85f, 0.25f, 0.25f));
-                Glow(p, "Light", new Vector3(0f, 5.3f, 0f), 0.6f, new Color(1f, 0.95f, 0.6f));
+                // Lathed silhouettes, including inexpensive spheres and peaked straw hats.
+                int sides = name == "sphere" ? 12 : 16;
+                Vector2[] profile = name == "sphere" ? new[]{new Vector2(0,-.5f),new Vector2(.25f,-.433f),new Vector2(.433f,-.25f),new Vector2(.5f,0),new Vector2(.433f,.25f),new Vector2(.25f,.433f),new Vector2(0,.5f)} :
+                    name == "cone" ? new[]{new Vector2(0,0),new Vector2(.5f,0),new Vector2(0,1)} :
+                    name == "bell" ? new[]{new Vector2(0,-.5f),new Vector2(.5f,-.5f),new Vector2(.43f,-.33f),new Vector2(.3f,.25f),new Vector2(.16f,.5f),new Vector2(0,.5f)} :
+                    new[]{new Vector2(0,-1),new Vector2(.5f,-1),new Vector2(.5f,1),new Vector2(0,1)};
+                var v=new List<Vector3>();var t=new List<int>();
+                for(int j=0;j<profile.Length;j++)for(int i=0;i<=sides;i++){float a=i*2*Mathf.PI/sides;v.Add(new Vector3(Mathf.Cos(a)*profile[j].x,profile[j].y,Mathf.Sin(a)*profile[j].x));}
+                for(int j=0;j<profile.Length-1;j++)for(int i=0;i<sides;i++){int k=j*(sides+1)+i;t.AddRange(new[]{k,k+sides+1,k+1,k+1,k+sides+1,k+sides+2});}
+                m=new Mesh{name="Town "+name};m.SetVertices(v);m.SetTriangles(t,0);m.RecalculateNormals();
+                // Weld duplicated seam normals without changing topology.
+                var norms=m.normals;for(int j=0;j<profile.Length;j++){int k=j*(sides+1);var avg=(norms[k]+norms[k+sides]).normalized;norms[k]=norms[k+sides]=avg;}m.normals=norms;m.RecalculateBounds();
             }
+            shapes[name]=m;return m;
         }
-
-        // ---------------------------------------------------------------- 柵欄、出口、傳送陣
-        public static void BuildFence(int town, Transform root, Vector3 center, float radius, List<Vector2> gaps, float half)
+        public static GameObject Box(Transform p,string n,Vector3 pos,Vector3 s,Color c) => Part(p,n,Shape("box"),pos,s,c);
+        public static GameObject Cyl(Transform p,string n,Vector3 pos,Vector3 s,Color c) => Part(p,n,Shape("cylinder"),pos,s,c);
+        public static GameObject Ball(Transform p,string n,Vector3 pos,Vector3 s,Color c) => Part(p,n,Shape("sphere"),pos,s,c);
+        public static GameObject Glow(Transform p,string n,Vector3 pos,float size,Color c) => Part(p,n,Shape("sphere"),pos,Vector3.one*size,c,true);
+        static GameObject Cone(Transform p,string n,Vector3 pos,Vector3 s,Color c) => Part(p,n,Shape("cone"),pos,s,c);
+        static void Beam(Transform p,string n,Vector3 a,Vector3 b,float width,Color c)
         {
-            Color post = town == 0 ? new Color(0.3f, 0.24f, 0.22f) : town == 1 ? new Color(0.45f, 0.32f, 0.2f) : new Color(0.85f, 0.85f, 0.82f);
-            Color rail = town == 2 ? new Color(0.35f, 0.55f, 0.8f) : Mix(post, Color.white, 0.15f);
-            int n = Mathf.CeilToInt(2f * Mathf.PI * radius / 1.5f);
-            Vector3 Pt(int i) { float a = i * 2f * Mathf.PI / n; return center + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * radius; }
-            bool InGap(Vector3 p)
+            var go=Box(p,n,(a+b)*.5f,new Vector3(width,width,(b-a).magnitude),c);
+            go.transform.localRotation=Quaternion.LookRotation((b-a).normalized,Vector3.up);
+        }
+        static void Ring(Transform p,string name,float radius,float width,float y,Color c,bool glow=false,int count=32)
+        {
+            for(int i=0;i<count;i++)
             {
-                var v = new Vector2(p.x - center.x, p.z - center.z);
-                foreach (var g in gaps) if (Vector2.Dot(v, g) > 0f && Mathf.Abs(g.x * v.y - g.y * v.x) < half + 0.2f) return true;
-                return false;
+                float a=i*2*Mathf.PI/count,b=(i+1)*2*Mathf.PI/count;
+                var start=new Vector3(Mathf.Cos(a)*radius,y,Mathf.Sin(a)*radius);var end=new Vector3(Mathf.Cos(b)*radius,y,Mathf.Sin(b)*radius);
+                var go=Part(p,name,Shape("box"),(start+end)*.5f,new Vector3(width,.012f,(end-start).magnitude+width*.3f),c,glow);
+                go.transform.localRotation=Quaternion.LookRotation(end-start,Vector3.up);
             }
-            for (int i = 0; i < n; i++)
+        }
+        // Combine only this call's group. Animated children are created/batched independently.
+        static void Batch(Transform root)
+        {
+            var groups=new Dictionary<Material,List<CombineInstance>>();var source=new List<GameObject>();
+            foreach(var f in root.GetComponentsInChildren<MeshFilter>())
             {
-                Vector3 a = Pt(i), b = Pt(i + 1);
-                if (InGap(a)) continue;
-                Box(root, "Fence Post", a + Vector3.up * 0.6f, new Vector3(0.18f, 1.2f, 0.18f), post);
-                if (InGap(b)) continue;
-                var mid = (a + b) / 2f; var d = b - a;
-                for (int k = 0; k < 2; k++)
-                {
-                    var r = Box(root, "Fence Rail", mid + Vector3.up * (0.45f + k * 0.45f), new Vector3(0.08f, 0.1f, d.magnitude), rail);
-                    r.transform.localRotation = Quaternion.LookRotation(d.normalized, Vector3.up);
-                }
+                var r=f.GetComponent<MeshRenderer>();if(r==null||f.sharedMesh==null)continue;
+                if(!groups.TryGetValue(r.sharedMaterial,out var list)){list=new List<CombineInstance>();groups[r.sharedMaterial]=list;}
+                list.Add(new CombineInstance{mesh=f.sharedMesh,transform=root.worldToLocalMatrix*f.transform.localToWorldMatrix});source.Add(f.gameObject);
             }
-        }
-
-        public static void BuildGate(int town, int theme, Transform parent)
-        {
-            var c = WorldUI.RegionColors[Mathf.Clamp(theme, 0, WorldUI.RegionColors.Length - 1)];
-            Color wood = new Color(0.4f, 0.28f, 0.18f);
-            for (int s = -1; s <= 1; s += 2)
-                Box(parent, "Gate Pillar", new Vector3(s * 1.5f, 1.3f, 0f), new Vector3(0.35f, 2.6f, 0.35f), wood);
-            Box(parent, "Gate Beam", new Vector3(0f, 2.7f, 0f), new Vector3(3.6f, 0.3f, 0.4f), wood);
-            Box(parent, "Gate Sign", new Vector3(0f, 2.3f, -0.22f), new Vector3(1.8f, 0.45f, 0.06f), c);
-            Glow(parent, "Gate Light", new Vector3(0f, 1.2f, 2f), 0.4f, c);
-        }
-
-        public static void BuildWarpPad(int town, Transform parent)
-        {
-            Cyl(parent, "Warp Base", new Vector3(0f, 0.02f, 0f), new Vector3(1.7f, 0.02f, 1.7f), new Color(0.3f, 0.28f, 0.4f));
-            Prim(PrimitiveType.Cylinder, parent, "Warp Glow", new Vector3(0f, 0.045f, 0f), new Vector3(1.4f, 0.01f, 1.4f), Mat(new Color(0.6f, 0.5f, 1f), true));
-            for (int i = 0; i < 4; i++)
+            var owner=root.gameObject.AddComponent<TownArtMeshOwner>();
+            foreach(var pair in groups)
             {
-                float a = i * Mathf.PI / 2f + Mathf.PI / 4f;
-                Glow(parent, "Warp Crystal", new Vector3(Mathf.Cos(a) * 0.95f, 0.5f, Mathf.Sin(a) * 0.95f), 0.18f, new Color(0.7f, 0.6f, 1f));
+                var m=new Mesh{name=root.name+" combined"};m.indexFormat=UnityEngine.Rendering.IndexFormat.UInt32;
+                m.CombineMeshes(pair.Value.ToArray(),true,true);m.RecalculateBounds();owner.meshes.Add(m);
+                Part(root,"Paint "+pair.Key.name,m,Vector3.zero,Vector3.one,pair.Key.color).GetComponent<MeshRenderer>().sharedMaterial=pair.Key;
             }
-            parent.gameObject.AddComponent<Spin>();
+            foreach(var go in source){go.SetActive(false);Object.Destroy(go);}
         }
-
-        /// <summary>傳送陣慢慢轉</summary>
-        class Spin : MonoBehaviour { void Update() { transform.Rotate(0f, 30f * Time.deltaTime, 0f, Space.Self); } }
-
-        // ---------------------------------------------------------------- 居民
-        /// <summary>居民的外觀：目前借用職業角色模型（依角色個性挑職業），小孩縮小</summary>
-        public static GameObject CreateNpc(string name, Transform parent)
+        static void Lamp(Transform p,Vector3 at,int town)
         {
-            string key = Portraits.Key(name);
-            string cls = NpcClass.TryGetValue(key, out var c) ? c : "priest";
-            var rig = CharacterRig.Create(cls, parent);
-            if (key == "小葉") rig.transform.localScale = Vector3.one * 0.72f;
-            if (key == "小鐵") rig.transform.localScale = Vector3.one * 0.9f;
-            return rig.gameObject;
+            var g=Group(p,"Lantern",at);
+            Cyl(g,"Stem",new Vector3(0,.9f,0),new Vector3(.09f,.9f,.09f),Wood);
+            Box(g,"Lantern frame",new Vector3(0,1.85f,0),new Vector3(.3f,.42f,.3f),town==1?C("689c5b"):Gold);
+            Box(g,"Paper light",new Vector3(0,1.85f,-.16f),new Vector3(.20f,.27f,.025f),Cream);
+            Cone(g,"Lantern cap",new Vector3(0,2.08f,0),new Vector3(.48f,.2f,.48f),town==2?C("397dba"):C("a75a3d"));
+            if(town==1)Leaf(g,new Vector3(.1f,2.14f,0),.35f,C("91ba61"),25);
         }
-
-        static readonly Dictionary<string, string> NpcClass = new Dictionary<string, string>
+        static void Leaf(Transform p,Vector3 at,float size,Color c,float angle=0)
         {
-            { "老焰", "priest" }, { "小鐵", "swordsman" }, { "米菈", "archer" },
-            { "翠", "mage" }, { "楓", "archer" }, { "小葉", "assassin" },
-            { "海斗", "swordsman" }, { "凪", "priest" }, { "阿潮", "archer" },
-            { "鐵匠", "swordsman" }, { "店員", "mage" }, { "公會長", "priest" },
-        };
-
-        // ---------------------------------------------------------------- 小工具
-        static Shader lit, glow;
-        static readonly Dictionary<Color32, Material> mats = new Dictionary<Color32, Material>();
-
-        static Material Mat(Color c, bool glowing = false)
-        {
-            if (lit == null)
-            {
-                lit = ToonStyle.LitShader() ?? Shader.Find("Mobile/Diffuse") ?? Shader.Find("Diffuse") ?? Shader.Find("Sprites/Default");
-                glow = Shader.Find("Sprites/Default") ?? lit;
-            }
-            c.a = glowing ? 0.999f : 1f;
-            Color32 key = c;
-            if (mats.TryGetValue(key, out var m) && m != null) return m;
-            m = new Material(glowing ? glow : lit) { color = c, name = "Town " + ColorUtility.ToHtmlStringRGB(c) };
-            mats[key] = m;
-            return m;
+            var g=Cone(p,"Pointed leaf",at,new Vector3(size*.6f,size,size*.16f),c);g.transform.localRotation=Quaternion.Euler(0,0,angle);
         }
-
-        static Color Mix(Color a, Color b, float t) => Color.Lerp(a, b, t);
-
-        static GameObject Prim(PrimitiveType t, Transform parent, string name, Vector3 pos, Vector3 scale, Material m)
-        {
-            var go = GameObject.CreatePrimitive(t);
-            go.name = name;
-            var col = go.GetComponent<Collider>(); if (col) Object.Destroy(col);
-            go.transform.SetParent(parent, false);
-            go.transform.localPosition = pos; go.transform.localScale = scale;
-            go.GetComponent<Renderer>().sharedMaterial = m;
-            return go;
-        }
-
-        public static GameObject Box(Transform p, string n, Vector3 pos, Vector3 s, Color c) => Prim(PrimitiveType.Cube, p, n, pos, s, Mat(c));
-        public static GameObject Cyl(Transform p, string n, Vector3 pos, Vector3 s, Color c) => Prim(PrimitiveType.Cylinder, p, n, pos, s, Mat(c));
-        public static GameObject Ball(Transform p, string n, Vector3 pos, Vector3 s, Color c) => Prim(PrimitiveType.Sphere, p, n, pos, s, Mat(c));
-        public static GameObject Glow(Transform p, string n, Vector3 pos, float size, Color c) => Prim(PrimitiveType.Sphere, p, n, pos, Vector3.one * size, Mat(c, true));
+    }
+    // Meshes belong to a town instance, unlike cached unit meshes/materials.
+    public sealed class TownArtMeshOwner : MonoBehaviour
+    {
+        public readonly List<Mesh> meshes=new List<Mesh>();
+        void OnDestroy(){foreach(var mesh in meshes)if(mesh!=null)Object.Destroy(mesh);}
+    }
+    public sealed class TownArtMotion : MonoBehaviour
+    {
+        public float turn, bob, breathe; Vector3 origin,scale; float phase;
+        void Start(){origin=transform.localPosition;scale=transform.localScale;phase=origin.x*1.7f+origin.z;}
+        void Update(){float wave=Mathf.Sin(Time.time*1.4f+phase);transform.localPosition=origin+Vector3.up*(wave*bob);transform.localScale=new Vector3(scale.x,scale.y*(1+wave*breathe),scale.z);if(turn!=0)transform.Rotate(0,turn*Time.deltaTime,0,Space.Self);}
     }
 }
