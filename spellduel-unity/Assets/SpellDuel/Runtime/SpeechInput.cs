@@ -30,6 +30,17 @@ namespace SpellDuel
         /// <summary>聽到某個技能的名稱（參數為技能 id）；每句話最多一次</summary>
         public event Action<string> OnSkill;
 
+        /// <summary>每段辨識文字（中途結果與最後結果都會送；城鎮裡用來聽招呼語）</summary>
+        public event Action<string> OnText;
+
+        /// <summary>額外告訴辨識器的詞（例如城鎮的招呼語），提高辨識正確率</summary>
+        public IList<string> ExtraHints
+        {
+            get => extraHints;
+            set { extraHints = value; if (Running) { try { PushHints(); } catch (Exception) { } } }
+        }
+        IList<string> extraHints;
+
         IList<string> candidates;
         readonly List<string> ids = new List<string>(), names = new List<string>();
         readonly SpeechTracker tracker = new SpeechTracker();
@@ -167,6 +178,7 @@ namespace SpellDuel
                 {
                     FlushFinal(now);
                     alts.Add(l.Substring(2));
+                    OnText?.Invoke(alts[0]);
                     Fire(tracker.Feed(false, alts, names, now, chantFrom));
                     alts.Clear();
                 }
@@ -178,6 +190,7 @@ namespace SpellDuel
         void FlushFinal(float now)
         {
             if (alts.Count == 0) return;
+            OnText?.Invoke(alts[0]);
             Fire(tracker.Feed(true, alts, names, now, chantFrom));
             alts.Clear();
         }
@@ -217,7 +230,9 @@ namespace SpellDuel
         // 把技能名稱告訴辨識器（iOS contextualStrings／Android 13+ biasing），提高辨識正確率
         void PushHints()
         {
-            string joined = string.Join("\n", names);
+            var all = new List<string>(names);
+            if (extraHints != null) all.AddRange(extraHints);
+            string joined = string.Join("\n", all);
 #if UNITY_ANDROID && !UNITY_EDITOR
             bridge.Call("setHints", joined);
 #elif UNITY_IOS && !UNITY_EDITOR

@@ -357,6 +357,49 @@ namespace SpellDuel
             world.Draw(Progress.Char(myClass));
         }
 
+        // ---------------------------------------------------------------- 可走動的 3D 城鎮
+        readonly TownWalk townWalk = new TownWalk();
+        static readonly List<string> NoSkills = new List<string>();
+        bool speechTown;   // 語音辨識目前是用在城鎮（聽招呼語）還是戰鬥（聽技能名稱）
+
+        /// <summary>正在城鎮裡走動（可以打招呼）</summary>
+        bool TownWalking => world.Walking && dlg == null && !charOpen && storyMapOpen;
+
+        void UpdateTownWalk()
+        {
+            if (world.Walk == null)
+            {
+                world.Walk = townWalk;
+                townWalk.OnGreet = GreetNpc;
+            }
+            world.Cam = cam;
+            bool want = storyMapOpen && phase == Phase.Setup && world.walkMode && world.screen != WorldUI.Screen.Map && cam != null;
+            if (want && (!townWalk.Active || townWalk.Town != world.town)) townWalk.Enter(world.town, cam, cam.transform.position.y - 1.4f);
+            else if (!want && townWalk.Active) townWalk.Exit();
+            if (!townWalk.Active) return;
+            if (TownWalking) townWalk.Update(cam, Mathf.Min(Time.deltaTime, 0.1f), Time.time - world.holdAt < 0.15f);
+            world.SpeechNote = !UseSpeech ? "這支手機沒有語音辨識：走近居民後按「👋 打招呼」" : speech.Running ? null : $"語音：{speech.Status}";
+        }
+
+        void OnSpeechText(string text)
+        {
+            if (!TownWalking) return;
+            if (Greeting.Find(text) != null) { world.Heard = text; world.HeardAt = Time.time; }
+            townWalk.Heard(text);
+        }
+
+        /// <summary>打招呼：居民說完自己的話；店員說完打開設施</summary>
+        void GreetNpc(TownWalk.Npc n)
+        {
+            var lines = new List<StoryLine>();
+            int k = n.lines.Length;
+            for (int i = 0; i < k; i++) lines.Add(new StoryLine { speaker = n.name, tag = "npc", text = n.lines[(n.lineAt + i) % k] });
+            n.lineAt = (n.lineAt + 1) % Mathf.Max(1, k);
+            Sfx.Play("talk", 0.7f); Haptics.Play(Haptics.Kind.Light);
+            string opens = n.opens;
+            ShowDialogue(lines, () => { if (opens != null) world.OpenFacility(opens); });
+        }
+
         /// <summary>對話框：畫面下方，點一下下一句；右上「跳過」</summary>
         void DrawDialogue()
         {
@@ -476,6 +519,7 @@ namespace SpellDuel
             voice = VoiceTemplates.Load();
             speech = new SpeechInput();
             speech.OnSkill += OnSpeechSkill;
+            speech.OnText += OnSpeechText;
             Progress.Get = k => PlayerPrefs.GetString(k, "");
             Progress.Set = (k, v) => { PlayerPrefs.SetString(k, v); PlayerPrefs.Save(); };
             Story.Get = Progress.Get; Story.Set = Progress.Set;
@@ -1310,6 +1354,7 @@ namespace SpellDuel
         void Update()
         {
             UpdateMic();
+            UpdateTownWalk();
             if (phase != Phase.Fighting && phase != Phase.Over) return;
             if (battle == null) return;
             SyncPlayer(Me);
@@ -1536,8 +1581,16 @@ namespace SpellDuel
         void UpdateMic()
         {
             // 手機內建語音辨識：戰鬥中語音開啟就聽，唸技能名稱即詠唱（不能和下面的錄音比對同時用麥克風）
-            bool wantSpeech = UseSpeech && voiceOn && phase == Phase.Fighting && recordingSkill == null;
-            if (wantSpeech && !speech.Running) { speech.Candidates = SpeechCandidates; speech.Start(); }
+            // 城鎮裡走動時也開著：聽「你好」之類的招呼語
+            bool town = TownWalking && UseSpeech;
+            bool wantSpeech = UseSpeech && (voiceOn && phase == Phase.Fighting || town) && recordingSkill == null;
+            if (wantSpeech && (!speech.Running || town != speechTown))
+            {
+                speech.Candidates = town ? NoSkills : SpeechCandidates;
+                speech.ExtraHints = town ? Greeting.Words : null;
+                speechTown = town;
+                if (!speech.Running) speech.Start();
+            }
             else if (!wantSpeech && speech != null && speech.Running) speech.Stop();
             speech?.Tick();
             HandGesture.MageChant = UseSpeech;   // 法師：有語音辨識就唸咒語放招，沒有就比數字
@@ -2280,7 +2333,7 @@ namespace SpellDuel
             bool infoOpen = infoSkill != null && Skills.All.ContainsKey(infoSkill);
             bool talking = dlg != null;
             if (infoOpen || charOpen || storyMapOpen || talking) GUI.enabled = false;
-            DrawScreens();
+            if (!(storyMapOpen && townWalk.Active)) DrawScreens();   // 3D 城鎮：不畫底下的選擇畫面（才看得到城鎮）
             GUI.enabled = true;
             if (talking) DrawDialogue();
             else if (charOpen) DrawCharacter();

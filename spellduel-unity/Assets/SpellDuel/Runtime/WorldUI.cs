@@ -19,6 +19,15 @@ namespace SpellDuel
         public Action OnCharacter;               // 打開角色畫面
         public Action OnStartTrial;              // 出發挑戰轉職試煉
 
+        // 可走動的 3D 城鎮（TownWalk）：預設用走的；也可以切回清單模式
+        public bool walkMode = true;
+        public TownWalk Walk;                    // SoloBattle 提供
+        public Camera Cam;
+        public string SpeechNote;                // 語音狀態（不支援語音時提示用按鈕打招呼）
+        public string Heard; public float HeardAt = -9f;
+        public float holdAt = -9f;               // 「前進」鈕最後按住的時間
+        public bool Walking => walkMode && screen == Screen.Town && Walk != null && Walk.Active;
+
         StoryStage sel;
         int shopTab, page, npcTalk = -1, npcLine;
         Item selItem;
@@ -89,6 +98,9 @@ namespace SpellDuel
             float W = UnityEngine.Screen.width, H = UnityEngine.Screen.height;
             var safe = UnityEngine.Screen.safeArea;
             float topY = H - safe.yMax, botY = H - safe.y, pad = W * 0.03f;
+            var r0 = new Rect(pad, topY + pad, W - pad * 2, botY - topY - pad * 2);
+            int fs0 = UiKit.BaseFont;
+            if (Walking) { DrawTownWalk(r0, prof, fs0, Mathf.RoundToInt(fs0 * 0.82f), Mathf.RoundToInt(fs0 * 1.3f), fs0 * 0.5f); return; }
             GUI.color = new Color(0f, 0f, 0f, 0.72f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
             var r = new Rect(pad, topY + pad, W - pad * 2, botY - topY - pad * 2);
             int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.82f), fsL = Mathf.RoundToInt(fs * 1.3f);
@@ -237,8 +249,70 @@ namespace SpellDuel
             y += bh + gap;
             if (UiKit.Button(new Rect(r.x + gap, y, bw, bh), "🏛 職業工會\n轉職・職業任務", fs, false, new Color(0.85f, 0.6f, 1f))) screen = Screen.Guild;
             if (UiKit.Button(new Rect(r.x + gap * 2 + bw, y, bw, bh), "📜 角色／裝備", fs, false, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
-            // 回大地圖
-            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), "🗺 回大地圖", fs)) screen = Screen.Map;
+            // 回大地圖／走進城鎮
+            float hb = (r.width - gap * 3) / 2f;
+            if (UiKit.Button(new Rect(r.x + gap, r.yMax - gap - fs * 2.1f, hb, fs * 2.1f), "🚶 走進城鎮", fs, false, t.color)) walkMode = true;
+            if (UiKit.Button(new Rect(r.x + gap * 2 + hb, r.yMax - gap - fs * 2.1f, hb, fs * 2.1f), "🗺 回大地圖", fs)) screen = Screen.Map;
+        }
+
+        // ---------------------------------------------------------------- 城鎮（3D 走動）：上方名稱、中間準心＋居民名牌、下方按鈕
+        void DrawTownWalk(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
+        {
+            var t = Towns[town];
+            float W = UnityEngine.Screen.width, H = UnityEngine.Screen.height;
+            // 居民名牌（3D 位置投影到畫面）
+            if (Cam != null)
+                foreach (var n in Walk.npcs)
+                {
+                    if (!Walk.LabelPos(Cam, n, out var g, out float dist) || dist > 16f) continue;
+                    bool isNear = Walk.Near == n;
+                    float k = Mathf.Clamp(1.4f - dist / 12f, 0.55f, 1.2f);
+                    int lf = Mathf.RoundToInt(fsS * k);
+                    float lw = lf * 9f, lh = lf * (isNear ? 3.6f : 2.4f);
+                    var lr = new Rect(g.x - lw / 2f, g.y - lh, lw, lh);
+                    UiKit.Card(lr, isNear ? 0.8f : 0.45f, n.opens != null ? new Color(1f, 0.85f, 0.4f) : t.color, isNear ? 1f : 0.5f);
+                    string icon = n.opens == "smith" ? "⚒ " : n.opens == "shop" ? "🧪 " : n.opens == "guild" ? "🏛 " : "";
+                    UiKit.Text(lr, $"{icon}{n.name}\n{n.role}" + (isNear ? "\n💬 說「你好」" : ""), lf, isNear ? new Color(1f, 0.95f, 0.6f) : Color.white, TextAnchor.MiddleCenter, true);
+                }
+            // 準心
+            float cs = fs * 0.9f;
+            GUI.color = new Color(1f, 1f, 1f, 0.8f);
+            GUI.DrawTexture(new Rect(W / 2f - cs / 2f, H / 2f - 1.5f, cs, 3f), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(W / 2f - 1.5f, H / 2f - cs / 2f, 3f, cs), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            // 上方：城鎮名稱＋說明
+            var top = new Rect(r.x, r.y, r.width, fs * 3.6f);
+            UiKit.Card(top, 0.7f, t.color, 0.9f);
+            UiKit.Text(new Rect(top.x + gap, top.y, top.width - gap * 2, fs * 1.8f), $"🏘 {t.name}", fsL, Color.white, TextAnchor.MiddleLeft, true);
+            string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
+            UiKit.Text(new Rect(top.x + gap, top.y, top.width - gap * 2, fs * 1.8f), $"{cn} Lv{prof.level}　💰 {Economy.Gold}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
+            UiKit.Text(new Rect(top.x + gap, top.y + fs * 1.7f, top.width - gap * 2, fs * 1.8f), "📱 上下晃動手機＝往準心方向走　💬 走到居民面前說「你好」聊天", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleLeft);
+            float y = top.yMax + gap * 0.5f;
+            if (!string.IsNullOrEmpty(SpeechNote)) { UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), SpeechNote, fsS, new Color(1f, 0.8f, 0.5f), TextAnchor.MiddleLeft); y += fs * 1.4f; }
+            if (Heard != null && Time.time - HeardAt < 2f) UiKit.Pill(y + fs, $"🎤 {Heard}", fsS, Color.white, r.width * 0.7f, 0.6f);
+            if (Walk.Walking) UiKit.Pill(H / 2f + fs * 2.5f, "🚶 前進中", fsS, new Color(0.7f, 1f, 0.7f), r.width * 0.4f, 0.4f);
+
+            // 下方：前進（按住）／打招呼；角色／清單／大地圖
+            float bh = fs * 2.3f, bw = (r.width - gap * 3) / 2f, by = r.yMax - bh * 2 - gap;
+            var hold = new Rect(r.x + gap, by, bw, bh);
+            UiKit.Card(hold, 0.75f, new Color(0.6f, 1f, 0.6f), 0.8f);
+            UiKit.Text(hold, "⬆ 按住前進", fs, Color.white, TextAnchor.MiddleCenter, true);
+            if (GUI.RepeatButton(hold, "", GUIStyle.none)) holdAt = Time.time;
+            var near = Walk.Near;
+            if (UiKit.Button(new Rect(r.x + gap * 2 + bw, by, bw, bh), near != null ? $"👋 和{Portraits.Key(near.name)}打招呼" : "👋 打招呼（走近居民）", fsS, near != null, t.color, near != null))
+                Walk.Greet();
+            float bw3 = (r.width - gap * 4) / 3f, by2 = by + bh + gap * 0.5f;
+            int pts = prof.statPoints + prof.UsableSkillPoints;
+            if (UiKit.Button(new Rect(r.x + gap, by2, bw3, bh * 0.85f), pts > 0 ? $"📜 角色 ×{pts}" : "📜 角色", fsS, pts > 0, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
+            if (UiKit.Button(new Rect(r.x + gap * 2 + bw3, by2, bw3, bh * 0.85f), "📋 清單模式", fsS)) walkMode = false;
+            if (UiKit.Button(new Rect(r.x + gap * 3 + bw3 * 2, by2, bw3, bh * 0.85f), "🗺 回大地圖", fsS)) screen = Screen.Map;
+        }
+
+        /// <summary>打完招呼後打開設施</summary>
+        public void OpenFacility(string kind)
+        {
+            selItem = null; page = 0;
+            screen = kind == "smith" ? Screen.Smith : kind == "shop" ? Screen.Shop : kind == "guild" ? Screen.Guild : Screen.Town;
         }
 
         // ---------------------------------------------------------------- 物品清單（身上＋背包，分頁）
