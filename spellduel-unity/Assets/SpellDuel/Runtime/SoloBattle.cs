@@ -588,9 +588,9 @@ namespace SpellDuel
             if (endlessMode) bossSkills.Remove("b_summon");
             var boss = new Fighter(bc.name, bc, bossSkills, false) { bodyRadius = 0.75f };
             int partyN = coopMode ? 1 + PeerIds.Count : 1;
-            float party = 1f + 0.3f * (partyN - 1);   // 參與人數倍率：每多一人，敵人血量與攻擊力 +30%
+            float party = 1f + 0.5f * (partyN - 1);   // 參與人數倍率：每多一人，Boss 血量 +50%（攻擊力 +20%、施法頻率 +25% 在 BossAI）
             boss.maxHp = Mathf.RoundToInt(BossHpSolo * party * BossHpFor(difficulty)); boss.hp = boss.maxHp;
-            me.damageTakenMul = DamageTakenFor(difficulty) * party;   // 敵人攻擊力 +30%＝自己受到的傷害 ×1.3
+            me.damageTakenMul = DamageTakenFor(difficulty);
             SyncPlayer(me);
             battle = new Battle(me, boss);
             battle.OnEvent += OnBattleEvent;

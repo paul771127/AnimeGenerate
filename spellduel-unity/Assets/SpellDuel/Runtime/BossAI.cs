@@ -25,6 +25,8 @@ namespace SpellDuel
             me.chargeScale = baseCharge;
         }
         public string Status { get; private set; } = "";
+        /// <summary>Boss 招式冷卻倍率（所有 Boss 共通 0.75）、每多一位玩家的施法頻率／攻擊力加成</summary>
+        public const float BaseCdMul = 0.75f, PartyCast = 0.25f, PartyAtk = 0.2f;
         public bool Enraged { get; private set; }
         float walkBase = -1f;
 
@@ -68,6 +70,10 @@ namespace SpellDuel
                 Enraged = true; me.chargeScale *= 0.7f; walkSpeed = walkBase * 1.45f;
                 OnEnrage?.Invoke();
             }
+            // 人數越多：施法越頻繁（冷卻、思考間隔 ÷(1＋0.25×多的人數)）、攻擊力越高（＋20%／人）
+            int extra = b.allies.Count;
+            me.cdMul = BaseCdMul / (1f + PartyCast * extra);
+            me.atkMul = 1f + PartyAtk * extra;
             PickTarget();
             var tgt = me.target ?? b.player;
             me.forward = Fighter.Flat(tgt.head - me.head);
@@ -92,7 +98,7 @@ namespace SpellDuel
 
             if (me.charging != null) { TryRelease(tgt); return; }
             if (b.now < nextThink) return;
-            nextThink = b.now + (Enraged ? Rand(1.8f, 3f) : Rand(2.8f, 4.2f)) * thinkScale;
+            nextThink = b.now + (Enraged ? Rand(1.2f, 2f) : Rand(2f, 3f)) * thinkScale / (1f + PartyCast * extra);
 
             // 依距離挑招：近身多用地裂／橫掃，遠距離用熔岩彈／落石雨
             float d = Battle.FlatDistance(me.Feet, tgt.Feet);
@@ -102,24 +108,24 @@ namespace SpellDuel
                 if (!Ready(s)) continue;
                 float w = s.id switch
                 {
-                    "b_slam" => d < 3.6f ? 4f : 0f,
-                    "b_sweep" => d < 5.5f ? 3f : 0.3f,
-                    "b_bolt" => d > 2.5f ? 3f : 1f,
-                    "b_rain" => 2f,
+                    "b_slam" => d < 3.6f ? 6f : 0f,
+                    "b_sweep" => d < 5.5f ? 3.5f : 0.3f,
+                    "b_bolt" => d > 2.5f ? 2.5f : 1f,
+                    "b_rain" => 3.5f,
                     "b_summon" => b.minions.Count < 2 ? 5f : 0f,   // 小怪少於 2 隻就常召喚
-                    "b_leap" => d > 5.5f ? 4f : 0f,                 // 離得遠：跳過去
+                    "b_leap" => d > 4f ? 5f : 0f,                   // 離得遠：跳過去
                     // 腐化樹王：近（踐踏、藤鞭）／遠（荊棘、毒孢彈、樹根爆發）
-                    "p_stomp" => d < 3.4f ? 4f : 0f,
+                    "p_stomp" => d < 3.4f ? 6f : 0f,
                     "p_whip" => d < 5.5f ? 3f : 0.3f,
                     "p_thorn" => d > 2.5f ? 3f : 1f,
                     "p_spore" => d > 3f ? 2.5f : 0.5f,
-                    "p_roots" => d > 4f ? 3f : 1f,
+                    "p_roots" => d > 3f ? 4.5f : 1.5f,
                     "p_summon" => b.minions.Count < 2 ? 5f : 0f,
                     // 深淵海妖：觸手（任何距離）、巨浪／泡泡（遠）、漩渦、墨汁
-                    "s_tentacle" => d < 6f ? 3.5f : 2f,
-                    "s_wave" => d > 3f ? 2.5f : 1f,
+                    "s_tentacle" => d < 6f ? 5f : 3f,
+                    "s_wave" => d > 3f ? 3.5f : 1.5f,
                     "s_bubbles" => d > 4f ? 3f : 1f,
-                    "s_whirl" => d > 3f ? 2.5f : 0.8f,
+                    "s_whirl" => d > 2f ? 4f : 1.2f,
                     "s_ink" => 1.5f,
                     "s_summon" => b.minions.Count < 2 ? 5f : 0f,
                     _ => 1f,

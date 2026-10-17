@@ -556,6 +556,8 @@ namespace SpellDuel
         public static int LevelOf(int xp) { int l = 1; while (xp >= XpForLevel(l + 1)) l++; return l; }
         /// <summary>參與人數倍率：每多一位玩家，敵人的血量與攻擊力 +30%</summary>
         public float PartyMul => 1f + 0.3f * allies.Count;
+        /// <summary>Boss 血量的人數倍率：每多一位玩家 +50%</summary>
+        public float BossPartyMul => 1f + 0.5f * allies.Count;
         int Tier => Mathf.Max(0, wave - 1);
         public float HpMul => (1f + 0.08f * Tier) * PartyMul * hpBoost;
         public float hpBoost = 1f;   // 轉職試煉：敵人更硬
@@ -635,7 +637,7 @@ namespace SpellDuel
             bossSpawnedThisWave = true;
             int bossIndex = wave / BossEvery - 1;
             var at = (bossPoint ?? edgePoint)();
-            enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.5f * bossIndex) * PartyMul * hpBoost);
+            enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.5f * bossIndex) * BossPartyMul * hpBoost);
             enemy.hp = enemy.maxHp;
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
             enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f;
@@ -1356,8 +1358,9 @@ namespace SpellDuel
                     {
                         if (v == f || !v.Alive || FlatDistance(ac, v.Feet) > s.areaRadius + v.bodyRadius) continue;
                         if (v.dodgeUntil > now && SidestepInvuln) { Emit("evade", v.Chest, s.color, "閃避！"); continue; }
-                        if (v.isAlly) { Emit("allyhit", v.Chest, s.color, null); OnAllyHit?.Invoke(v, s, s.damage, v.Chest, 0); }
-                        else ApplyDamageAndEffect(v, s.damage, s.effect, s.effectDps, s.effectDur, v.Chest);
+                        int ad = Mathf.RoundToInt(s.damage * f.atkMul);   // Boss 攻擊力（人多時更痛）
+                        if (v.isAlly) { Emit("allyhit", v.Chest, s.color, null); OnAllyHit?.Invoke(v, s, ad, v.Chest, 0); }
+                        else ApplyDamageAndEffect(v, ad, s.effect, s.effectDps, s.effectDur, v.Chest);
                     }
                     break;
                 }
@@ -1369,7 +1372,7 @@ namespace SpellDuel
                     {
                         var at = tgtFeet;
                         if (i > 0) { float a = (float)rng.NextDouble() * Mathf.PI * 2f, r = 0.8f + (float)rng.NextDouble() * 0.7f; at += new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r); }
-                        SpawnLob(f, s, f.head + Vector3.up * 0.3f, at, Mathf.RoundToInt(s.damage * f.dmgMul), 1.1f + 0.15f * i);
+                        SpawnLob(f, s, f.head + Vector3.up * 0.3f, at, Mathf.RoundToInt(s.damage * f.dmgMul * f.atkMul), 1.1f + 0.15f * i);
                     }
                     Emit("cast", f.head, s.color, null);
                     break;
