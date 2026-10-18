@@ -157,14 +157,16 @@ namespace SpellDuel
         }
         static void Skirt(Builder b,Design d)
         {
-            // A continuous, smooth elliptical shell; a shallow front rise is the only opening.
+            // Follow the hips below the belt. Short hems taper; long coats have only slight ease.
             const int sides=16,rows=5;int start=b.V.Count;
             for(int layer=0;layer<2;layer++)for(int j=0;j<=rows;j++)for(int i=0;i<sides;i++)
             {
                 float a=i*2*Mathf.PI/sides,t=j/(float)rows;
-                float rx=Mathf.Lerp(.175f,d.Cut==2||d.Cut==9||d.Cut==13?.26f:.218f,t)-layer*.005f;
-                float rz=Mathf.Lerp(.119f,.155f,t)-layer*.005f;
-                float rise=.045f*Mathf.Pow(Mathf.Max(0,Mathf.Cos(a)),4)*t*t;
+                float ease=Mathf.Clamp01((d.Hem-.15f)/.50f),fall=t*t*(3-2*t);
+                float rx=Mathf.Lerp(.174f,.170f+.020f*ease,fall)-layer*.005f;
+                float rz=Mathf.Lerp(.119f,.123f+.008f*ease,fall)-layer*.005f;
+                // Scale the front rise to garment length so a short hem cannot turn upward.
+                float rise=Mathf.Min(.025f,d.Hem*.18f)*Mathf.Pow(Mathf.Max(0,Mathf.Cos(a)),4)*t*t;
                 b.V.Add(new Vector3(Mathf.Sin(a)*rx,.025f-d.Hem*t+rise,Mathf.Cos(a)*rz-.012f));b.C.Add(d.Main);
                 if(j==rows)continue;int k=start+layer*(rows+1)*sides+j*sides+i,n=start+layer*(rows+1)*sides+j*sides+(i+1)%sides;
                 b.T.AddRange(layer==0?new[]{k,k+sides,n,n,k+sides,n+sides}:new[]{k,n,k+sides,n,n+sides,k+sides});

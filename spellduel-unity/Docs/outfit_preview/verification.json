@@ -6,9 +6,10 @@
   "validation": "C# runtime code executed with Unity API test doubles; software rasterization, not Unity/device captures",
   "actors": 27,
   "portraits": 29,
-  "pngCount": 91,
+  "pngCount": 92,
   "handTriangles": 188,
   "preserved": "face and eye geometry, hair and fitted hats, hand geometry, arm muscle vertices, bone/grip/sole positions and public CharacterRig API",
   "nonHumanShader": "SD_HUMAN-disabled shader code unchanged; unused human shade property default excluded",
-  "unityEditorBuild": "not run: Unity Editor unavailable"
+  "unityEditorBuild": "not run: Unity Editor unavailable",
+  "hemFit": "Short hems taper from radius 0.174 to 0.170; long hems reach at most 0.190. Front rise <= min(0.025, garmentLength*0.18). Counts and bone/grip/sole checks unchanged."
 }
