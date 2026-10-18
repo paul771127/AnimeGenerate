@@ -175,6 +175,18 @@ namespace SpellDuel
                 Fill((x,y)=>shape(x,y)-ink,Ink);
                 Fill(shape,c,1f,true);
             }
+            // 人臉獨立的乾淨色塊與暖暗部，不影響怪物及其他配件的畫法。
+            public void Face(Paint skin,params float[] outline)
+            {
+                Shape face=(x,y)=>PolygonD(x,y,outline);
+                Fill((x,y)=>face(x,y)-.006f,new Paint(skin.r*.40f,skin.g*.28f,skin.b*.29f));
+                Fill(face,skin);
+                var warm=new Paint(skin.r*.82f,skin.g*.60f,skin.b*.57f);
+                Fill((x,y)=>Math.Max(face(x,y),.18f+Math.Abs(y+.02f)*.17f-x),warm);
+                Fill((x,y)=>Math.Max(face(x,y),Math.Max(.32f-y,y-.45f)),Paint.Mix(skin,warm,.55f));
+                Line(-.27f,-.15f,-.11f,-.31f,.004f,Paint.Mix(skin,warm,.5f));
+                Line(.27f,-.15f,.11f,-.31f,.004f,warm);
+            }
             public void Oval(float x,float y,float rx,float ry,Paint c,float ink=0.015f) => Solid((u,v)=>OvalD(u,v,x,y,rx,ry),c,ink);
             public void Box(float x,float y,float hx,float hy,Paint c,float rot=0f) => Solid((u,v)=>BoxD(u,v,x,y,hx,hy,rot),c);
             public void Poly(Paint c,params float[] p) => Solid((x,y)=>PolygonD(x,y,p),c);
@@ -244,9 +256,10 @@ namespace SpellDuel
             }
             var p=cv.persona;
             float fw=.37f*p.Width,jaw=.15f*p.Jaw,chin=-.39f*p.Length;
-            cv.Poly(skin,-fw*.84f,.47f,-fw,.18f,-fw*.84f,-.14f,-jaw,chin+.065f,0,chin,jaw,chin+.065f,fw*.84f,-.14f,fw,.18f,fw*.84f,.47f,0,.57f);
+            cv.Face(skin,-fw*.84f,.47f,-fw,.20f,-fw*.92f,-.07f,-fw*.72f,-.19f,-jaw,chin+.065f,0,chin,jaw,chin+.065f,fw*.72f,-.19f,fw*.92f,-.07f,fw,.20f,fw*.84f,.47f,0,.57f);
             for(int side=-1;side<=1;side+=2)Eye(cv,side*.16f*p.Width,.14f,.103f,.064f*p.Eye,iris,side);
-            cv.Poly(Paint.Mix(skin,White,.38f),.006f,.07f,.037f,-.035f,-.014f,-.045f);
+            cv.Poly(Paint.Mix(skin,White,.30f),.009f,.035f,.026f,-.030f,.006f,-.035f);
+            cv.Line(-.008f,-.047f,.018f,-.051f,.004f,new Paint(skin.r*.72f,skin.g*.49f,skin.b*.46f));
             float mouthY=-.19f,mw=.065f*(p.Open>0?1+Math.Max(0,p.Smile)*.8f:1);
             if(p.Open>0){cv.Oval(0,mouthY,mw,.055f*p.Open,Ink,.006f);cv.Box(0,mouthY+.020f*p.Open,mw*.8f,.012f,White);}
             else {cv.Line(-mw,mouthY-.005f+p.Smile*.030f,0,mouthY-.005f,.008f,Paint.Hex("#925154"));cv.Line(0,mouthY-.005f,mw,mouthY-.005f+p.Smile*.030f+p.Asym*.001f,.008f,Paint.Hex("#925154"));}
@@ -276,6 +289,10 @@ namespace SpellDuel
         static void Fringe(Canvas cv,Paint hair,float skew=0f)
         {
             cv.Poly(hair,-0.39f,0.43f,-0.29f,0.66f,0.11f,0.70f,0.38f,0.43f,0.29f,0.31f,0.09f+skew,0.48f,-0.09f+skew,0.33f,-0.23f,0.47f);
+            // 斷續天使環沿髮束走，保留每人的髮色與瀏海分線。
+            cv.Line(-.28f,.53f,-.12f,.57f,.012f,Paint.Mix(hair,White,.38f));
+            cv.Line(-.075f,.58f,.08f,.59f,.010f,Paint.Mix(hair,White,.42f));
+            cv.Line(.12f,.57f,.25f,.53f,.008f,Paint.Mix(hair,White,.32f));
         }
         static void BellBrooch(Canvas cv,float x,float y,float s)
         {

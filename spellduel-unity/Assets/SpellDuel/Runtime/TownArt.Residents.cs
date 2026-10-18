@@ -42,37 +42,15 @@ namespace SpellDuel
             Cyl(p,"Neck",new Vector3(0,1.27f,0),new Vector3(.14f,.10f,.14f),skin);
             // Back hair first; sculpted jaw and cheeks keep the face clear of the hair cap.
             Ball(p,"Back hair",new Vector3(0,1.53f,-.045f),new Vector3(.40f,.43f,.34f),hair);
-            Ball(p,"Sculpted face",new Vector3(0,1.48f,.055f),new Vector3((child?.36f:.32f)*persona.Width,.38f*persona.Length,.30f),skin);
-            Ball(p,"Chin",new Vector3(0,1.35f,.065f),new Vector3(.23f*persona.Jaw,.14f,.23f),skin);
+            // 同一套截面頭模與曲面眼片，沿用居民的髮色、眼色與表情。
+            var face=Group(p,"立體臉",new Vector3(0,1.48f,.055f));face.localScale=Vector3.one*1.15f;
+            AnimeFace.Build(face,key,persona,skin,hair,iris,false,elder);
+            AnimeFace.Hair(face,key,persona,hair);
             Ball(p,"Hair crown",new Vector3(0,1.68f,-.015f),new Vector3(.38f*persona.Width,.16f,.33f),hair);
-            for(int s=-1;s<=1;s+=2)
+            for(int side=-1;side<=1;side+=2)
             {
-                Ball(p,"Ear",new Vector3(s*.17f,1.49f,.02f),new Vector3(.075f,.12f,.08f),skin);
-                if(elf){var ear=Cone(p,"Elven ear",new Vector3(s*.17f,1.48f,0),new Vector3(.10f,.20f,.07f),skin);ear.transform.localRotation=Quaternion.Euler(0,0,-s*58);}
-                float ex=s*.077f*persona.Width,ey=1.51f,eh=.05f*persona.Eye;
-                if(key=="阿潮")eh*=.85f;
-                var eye=Group(p,"Personality eye",new Vector3(ex,ey,.194f));eye.localRotation=Quaternion.Euler(0,0,s*persona.Tilt);
-                Ball(eye,"Eye contour",Vector3.zero,new Vector3(.105f,eh,.018f),Ink);
-                Ball(eye,"Eye white",new Vector3(0,-.003f,.012f),new Vector3(.088f,eh*.72f,.009f),Cream);
-                float gx=persona.Gaze*.04f,gy=-persona.Pitch*.00045f;
-                Ball(eye,"Iris",new Vector3(gx,gy,.022f),new Vector3(.037f,eh*.68f,.014f),iris);
-                Ball(eye,"Pupil",new Vector3(gx,gy,.031f),new Vector3(.016f,eh*.55f,.008f),Ink);
-                Ball(eye,"Eye catchlight",new Vector3(gx-.009f,gy+eh*.2f,.036f),Vector3.one*(child?.017f:.011f),Cream);
-                float by=1.56f+(s>0?persona.Asym*.0007f:0);
-                Beam(p,"Inner brow",new Vector3(s*.04f,by,.198f),new Vector3(s*.08f,by+.006f+persona.Brow*.0004f,.195f),elder?.019f:.014f,hair);
-                Beam(p,"Outer brow",new Vector3(s*.08f,by+.006f+persona.Brow*.0004f,.195f),new Vector3(s*.14f,by+persona.Brow*.001f,.18f),elder?.018f:.012f,hair);
-                var fringe=Cone(p,"Fringe lock",new Vector3(s*.10f,1.58f,.14f),new Vector3(.16f,.17f,.08f),hair);fringe.transform.localRotation=Quaternion.Euler(0,0,180+s*16);
-            }
-            Ball(p,"Nose bridge",new Vector3(0,1.454f,.204f),new Vector3(.045f,.074f,.052f),skin);
-            if(persona.Open>0)
-            {
-                Ball(p,"Open expression",new Vector3(0,1.385f,.224f),new Vector3(.080f*(1+Mathf.Max(0,persona.Smile)*.8f),.055f*persona.Open,.014f),Ink);
-                Box(p,"Smile teeth",new Vector3(0,1.392f,.234f),new Vector3(.062f*(1+Mathf.Max(0,persona.Smile)*.8f),.013f,.008f),Cream);
-            }
-            else
-            {
-                Beam(p,"Smile left",new Vector3(-.038f,1.381f+persona.Smile*.016f,.217f),new Vector3(0,1.381f,.225f),.009f,C("ac6c56"));
-                Beam(p,"Smile right",new Vector3(0,1.381f,.225f),new Vector3(.038f,1.381f+persona.Smile*.016f+persona.Asym*.0005f,.217f),.009f,C("ac6c56"));
+                Ball(p,"Ear",new Vector3(side*.17f,1.49f,.02f),new Vector3(.075f,.12f,.08f),skin);
+                if(elf){var ear=Cone(p,"Elven ear",new Vector3(side*.17f,1.48f,0),new Vector3(.10f,.20f,.07f),skin);ear.transform.localRotation=Quaternion.Euler(0,0,-side*58);}
             }
             if(elder)for(int s=-1;s<=1;s+=2)Beam(p,"Eye crease",new Vector3(s*.12f,1.47f,.185f),new Vector3(s*.145f,1.46f,.172f),.008f,C("ac6c56"));
             // Contrasting folded collar and a small clasp, visible from walking distance.
@@ -152,7 +130,15 @@ namespace SpellDuel
             neck.SetParent(chest,false);neck.localPosition=new Vector3(0,.45f,0);
             neck.localRotation=Quaternion.Euler(persona.Pitch,persona.Yaw,persona.Roll);
             chest.localRotation=Quaternion.Euler(persona.Lean,0,persona.Roll*.12f);
-            Batch(p);p.gameObject.AddComponent<TownArtMotion>().breathe=.008f;return root.gameObject;
+            // 頭部獨立合批，保留解析陰影所需的頭部座標，不讓轉頭後的光向偏移。
+            foreach(var renderer in p.GetComponentsInChildren<MeshRenderer>())
+            {
+                var material=renderer.sharedMaterial;
+                if(material.name!=null&&material.name.StartsWith("Town "))
+                    renderer.sharedMaterial=AnimeFace.Material(material.color,ColorUtility.ToHtmlStringRGB(material.color)==ColorUtility.ToHtmlStringRGB(skin)?2:0);
+            }
+            neck.SetParent(null,false);Batch(p);Batch(neck);neck.SetParent(chest,false);
+            p.gameObject.AddComponent<TownArtMotion>().breathe=.008f;return root.gameObject;
         }
         static void LongHair(Transform p,Color hair,float bottom)
         {
@@ -160,8 +146,9 @@ namespace SpellDuel
         }
         static void Beard(Transform p,Color hair)
         {
-            var beard=Cone(p,"Pointed beard",new Vector3(0,1.41f,.13f),new Vector3(.28f,.27f,.18f),hair);beard.transform.localRotation=Quaternion.Euler(0,0,180);
-            for(int s=-1;s<=1;s+=2)Ball(p,"Moustache",new Vector3(s*.045f,1.415f,.215f),new Vector3(.10f,.045f,.035f),hair);
+            // 鬍鬚避開新的後收嘴周，保留老人的柔笑與鐵匠張嘴大笑。
+            var beard=Cone(p,"Pointed beard",new Vector3(0,1.365f,.13f),new Vector3(.28f,.24f,.18f),hair);beard.transform.localRotation=Quaternion.Euler(0,0,180);
+            for(int s=-1;s<=1;s+=2)Ball(p,"Moustache",new Vector3(s*.065f,1.435f,.205f),new Vector3(.10f,.045f,.035f),hair);
         }
         static void Apron(Transform p,Color color)
         {

@@ -108,84 +108,18 @@ namespace SpellDuel
 
         void BuildFace()
         {
-            var p=facePersona;
-            head.localRotation=Quaternion.Euler(p.Pitch,p.Yaw,p.Roll);
-            MeshPart("SculptedHead", head, SculptedHead(p,advancedId??classId), Vector3.zero, Mat(Skin));
-            var iris = Color.Lerp(clsColor, new Color(0.15f, 0.48f, 0.58f), 0.25f);
-            for (int side = -1; side <= 1; side += 2)
+            var p=facePersona;head.localRotation=Quaternion.Euler(p.Pitch,p.Yaw,p.Roll);
+            var features=AnimeFace.Build(head,advancedId??classId,p,Skin,Mul(Wood,.45f),
+                Color.Lerp(clsColor,new Color(.15f,.48f,.58f),.25f),advancedId=="marksman",advancedId=="bishop");
+            eyePaint.AddRange(features.Eyes);upperLids.AddRange(features.Lids);mouthOpen=features.Mouth;
+            // 耳朵與職業耳飾保留，臉面及鼻尖已整合在截面頭模內。
+            for(int side=-1;side<=1;side+=2)
             {
-                float x = side * 0.053f*p.Width;
-                float openness=p.Eye*(advancedId=="marksman"&&side<0?.45f:1f);
-                float gaze=p.Gaze*.018f;
-                float lidLift=.0235f*(openness-1);
-                var eye = Pivot("EyePaint", head, new Vector3(x, 0.013f, 0.118f));
-                eye.localRotation = Quaternion.Euler(0f, side * 12f, side*p.Tilt);
-                eyePaint.Add(eye);
-                Part(PrimitiveType.Sphere, eye, Vector3.zero, new Vector3(0.073f, 0.047f*openness, 0.015f), Mat(RobeWhite));
-                Part(PrimitiveType.Sphere, eye, new Vector3(-side * 0.003f+gaze, -0.001f, 0.009f), new Vector3(0.036f, 0.040f*openness, 0.006f), Glow(Mul(iris, 0.48f)));
-                Part(PrimitiveType.Sphere, eye, new Vector3(-side * 0.003f+gaze, -0.008f, 0.012f), new Vector3(0.030f, 0.021f*openness, 0.004f), Glow(Color.Lerp(iris, Color.white, 0.35f)));
-                Part(PrimitiveType.Sphere, eye, new Vector3(-side * 0.003f+gaze, 0.001f, 0.014f), new Vector3(0.013f, 0.028f*openness, 0.003f), Glow(EyeCol));
-                Part(PrimitiveType.Sphere, eye, new Vector3(-0.010f+gaze, 0.010f*openness, 0.017f), new Vector3(0.012f, 0.013f, 0.002f), Glow(Color.white));
-                Part(PrimitiveType.Sphere, eye, new Vector3(0.008f+gaze, -0.009f*openness, 0.017f), new Vector3(0.005f, 0.005f, 0.002f), Glow(Color.white));
-                var lid = Pivot("UpperLid", head, new Vector3(x, 0.037f, 0.122f));
-                upperLids.Add(lid);
-                lid.localRotation=Quaternion.Euler(0,0,side*p.Tilt);
-                Seg(lid, new Vector3(-0.034f, -0.003f+lidLift, -side * 0.006f), new Vector3(0f, 0.003f+lidLift, 0.007f), 0.006f, Glow(EyeCol));
-                Seg(lid, new Vector3(0f, 0.003f+lidLift, 0.007f), new Vector3(0.034f, -0.003f+lidLift, side * 0.006f), 0.006f, Glow(EyeCol));
-                Seg(lid, new Vector3(side * 0.029f, -0.003f+lidLift, 0f), new Vector3(side * 0.043f, 0.006f+lidLift, -0.001f), 0.004f, Glow(EyeCol));
-                Seg(head, new Vector3(x - 0.027f, -0.011f, 0.125f), new Vector3(x + 0.026f, -0.012f, 0.125f), 0.0025f, Glow(Mul(Skin, 0.55f)));
-                float browY=.057f+(side>0?p.Asym*.0005f:0);
-                Seg(head,new Vector3(x-side*.028f,browY,.120f),new Vector3(x,browY+.004f+p.Brow*.0003f,.123f),classId=="swordsman"?.008f:.005f,Glow(Mul(Wood,.45f)));
-                Seg(head,new Vector3(x,browY+.004f+p.Brow*.0003f,.123f),new Vector3(x+side*.029f,browY+p.Brow*.0007f,.112f),.005f,Glow(Mul(Wood,.45f)));
-                var ear = Part(PrimitiveType.Sphere, head, new Vector3(side * 0.137f, -0.012f, -0.005f), new Vector3(0.042f, 0.070f, 0.040f), Mat(Skin));
-                if (classId == "archer")
-                {
-                    ear.transform.localScale = new Vector3(0.042f, 0.105f, 0.04f);
-                    ear.transform.localRotation = Quaternion.Euler(0f, 0f, -side * 35f);
-                }
-                Part(PrimitiveType.Sphere, head, new Vector3(side * 0.149f, -0.012f, 0.013f), new Vector3(0.012f, 0.037f, 0.010f), Glow(new Color(0.83f, 0.45f, 0.33f)));
-                if (side < 0) Gem(head, new Vector3(side * 0.15f, -0.054f, 0.009f), 0.017f, clsColor);
+                var ear=Part(PrimitiveType.Sphere,head,new Vector3(side*.137f,-.012f,-.005f),new Vector3(.042f,.070f,.040f),Mat(Skin));
+                if(classId=="archer"){ear.transform.localScale=new Vector3(.042f,.105f,.040f);ear.transform.localRotation=Quaternion.Euler(0,0,-side*35);}
+                Part(PrimitiveType.Sphere,head,new Vector3(side*.149f,-.012f,.013f),new Vector3(.012f,.037f,.010f),Glow(new Color(.83f,.45f,.33f)));
+                if(side<0)Gem(head,new Vector3(side*.15f,-.054f,.009f),.017f,clsColor);
             }
-            // A small tapered bridge and tip, with a modeled underside rather than a dot.
-            var nose = MeshPart("NoseBridge", head, NoseMesh(), new Vector3(0f, -0.006f, 0.126f), Mat(Skin));
-            nose.name = "NoseBridge";
-            Seg(head, new Vector3(-.024f,-.066f+p.Smile*.012f,.127f),new Vector3(0,-.066f,.131f), 0.0035f, Glow(new Color(0.54f, 0.22f, 0.23f)));
-            Seg(head, new Vector3(0,-.066f,.131f),new Vector3(.024f,-.066f+p.Smile*.012f+p.Asym*.0004f,.127f), 0.002f, Glow(new Color(0.83f, 0.44f, 0.35f)));
-            mouthOpen = Part(PrimitiveType.Sphere, head, new Vector3(0f, -0.069f, 0.131f), new Vector3(0.027f, 0.001f, 0.003f), Glow(new Color(0.43f, 0.16f, 0.20f))).transform;
-        }
-
-        static Mesh SculptedHead(Portraits.Persona persona,string identity)
-        {
-            string key = "SculptedHead "+identity;
-            if (meshCache.TryGetValue(key, out var m) && m != null) return m;
-            m = LatheSphere(28, 18, p =>
-            {
-                float yn = p.y * 2f, xn = p.x * 2f, zn = p.z * 2f;
-                float taper = Mathf.Lerp(.50f+.22f*persona.Jaw, 1f, Mathf.SmoothStep(0f, 1f, (yn + 1f) / 0.85f));
-                var q = new Vector3(xn * 0.142f * taper*persona.Width, yn * 0.157f*persona.Length, zn * (zn > 0f ? 0.132f : 0.149f));
-                if (zn > 0f)
-                {
-                    float front = Mathf.Clamp01(zn * 3f);
-                    float cheek = Bell(Mathf.Abs(q.x) - 0.078f, 0.030f) * Bell(q.y + 0.029f, 0.028f);
-                    float socket = Bell(Mathf.Abs(q.x) - 0.053f, 0.029f) * Bell(q.y - 0.013f, 0.025f);
-                    float brow = Bell(q.y - 0.055f, 0.016f) * Bell(Mathf.Abs(q.x) - 0.050f, 0.050f);
-                    float forehead = Bell(q.x, 0.080f) * Bell(q.y - 0.085f, 0.040f);
-                    q.z += front * (0.011f * cheek - 0.012f * socket + 0.007f * brow + 0.009f * forehead);
-                }
-                return q;
-            });
-            m.name = key; meshCache[key] = m; return m;
-        }
-        static float Bell(float x, float width) => Mathf.Exp(-x * x / (width * width));
-
-        static Mesh NoseMesh()
-        {
-            if (meshCache.TryGetValue("Nose", out var m) && m != null) return m;
-            m = new Mesh { name = "Nose", vertices = new[] {
-                new Vector3(0f,0.034f,0f),new Vector3(-0.010f,-0.023f,0.002f),
-                new Vector3(0.010f,-0.023f,0.002f),new Vector3(0f,-0.015f,0.025f) },
-                triangles = new[] {0,1,3,0,3,2,1,2,3,0,2,1} };
-            m.RecalculateNormals(); m.RecalculateBounds(); meshCache["Nose"] = m; return m;
         }
 
         // Unit sphere/capsule surfaces, shared by every accessory. Pole triangles are not duplicated.
@@ -514,7 +448,8 @@ namespace SpellDuel
                 Part(PrimitiveType.Sphere,spine,new Vector3(0,.52f,.06f),new Vector3(.24f,.13f,.22f),Mat(DarkCloth));
             if(classId=="priest")
                 for(int side=-1;side<=1;side+=2)Seg(spine,new Vector3(side*.065f,.39f,.15f),new Vector3(side*.065f,.12f,.14f),.012f,Mat(Gold));
-            if(facePersona.Open>0)Part(PrimitiveType.Sphere,head,new Vector3(0,-.062f,.136f),new Vector3(.047f,.007f,.003f),Glow(RobeWhite));
+            Color hair=classId=="mage"?new Color(.92f,.92f,.95f):classId=="priest"?new Color(.93f,.82f,.55f):classId=="assassin"?DarkCloth:new Color(.55f,.35f,.20f);
+            AnimeFace.Hair(head,advancedId??classId,facePersona,hair);
             if(advancedId=="berserker")
             {
                 Seg(head,new Vector3(.072f,.013f,.126f),new Vector3(.084f,-.037f,.116f),.004f,Glow(new Color(.63f,.22f,.20f)));
@@ -685,6 +620,13 @@ namespace SpellDuel
             // 受擊閃色用：記住每個部位原本的材質
             flashMat = Glow(new Color(1f, 0.55f, 0.5f));
             var all = body.GetComponentsInChildren<Renderer>(true);
+            // 僅人形換材質；木頭人提前返回，Boss／小怪完全不使用此路徑。
+            foreach(var renderer in all)
+            {
+                var material=renderer.sharedMaterial;
+                if(material.name!=null&&material.name.StartsWith("Rig "))
+                    renderer.sharedMaterial=AnimeFace.Material(material.color,ColorUtility.ToHtmlStringRGB(material.color)==ColorUtility.ToHtmlStringRGB(Skin)?2:0);
+            }
             rends = all;
             origMats = new Material[all.Length];
             for (int i = 0; i < all.Length; i++) origMats[i] = all[i].sharedMaterial;
