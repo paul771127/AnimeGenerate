@@ -39,20 +39,15 @@ namespace SpellDuel
             Ball(p,"Tunic shoulders",new Vector3(0,1.04f,0),new Vector3(shoulder,.50f,.29f),cloth);
             Cone(p,"Tunic skirt",new Vector3(0,.56f,0),new Vector3(.51f,.42f,.35f),cloth);
             Box(p,"Waist sash",new Vector3(0,.77f,.01f),new Vector3(.42f,.09f,.33f),Gold);
-            Cyl(p,"Neck",new Vector3(0,1.27f,0),new Vector3(.14f,.10f,.14f),skin);
+            Cyl(p,"Neck",new Vector3(0,1.27f,-.035f),new Vector3(.145f*persona.Width,.10f,.12f),skin);
             // Back hair first; sculpted jaw and cheeks keep the face clear of the hair cap.
             Ball(p,"Back hair",new Vector3(0,1.53f,-.045f),new Vector3(.40f,.43f,.34f),hair);
             // 同一套截面頭模與曲面眼片，沿用居民的髮色、眼色與表情。
             var face=Group(p,"立體臉",new Vector3(0,1.48f,.055f));face.localScale=Vector3.one*1.15f;
-            AnimeFace.Build(face,key,persona,skin,hair,iris,false,elder);
+            AnimeFace.Build(face,key,persona,skin,hair,iris,false,elder,elf);
             AnimeFace.Hair(face,key,persona,hair);
             Ball(p,"Hair crown",new Vector3(0,1.68f,-.015f),new Vector3(.38f*persona.Width,.16f,.33f),hair);
-            for(int side=-1;side<=1;side+=2)
-            {
-                Ball(p,"Ear",new Vector3(side*.17f,1.49f,.02f),new Vector3(.075f,.12f,.08f),skin);
-                if(elf){var ear=Cone(p,"Elven ear",new Vector3(side*.17f,1.48f,0),new Vector3(.10f,.20f,.07f),skin);ear.transform.localRotation=Quaternion.Euler(0,0,-side*58);}
-            }
-            if(elder)for(int s=-1;s<=1;s+=2)Beam(p,"Eye crease",new Vector3(s*.12f,1.47f,.185f),new Vector3(s*.145f,1.46f,.172f),.008f,C("ac6c56"));
+            if(elder)for(int s=-1;s<=1;s+=2)AnimeFace.Detail(face,key,persona,new Vector2(s*.093f,-.006f),new Vector2(s*.110f,-.017f),.002f,C("ac6c56"));
             // Contrasting folded collar and a small clasp, visible from walking distance.
             for(int s=-1;s<=1;s+=2)Beam(p,"Collar",new Vector3(s*.15f,1.22f,.125f),new Vector3(0,1.10f,.16f),.04f,Cream);
             Ball(p,"Clasp",new Vector3(0,1.10f,.18f),Vector3.one*.06f,Gold);
@@ -82,7 +77,7 @@ namespace SpellDuel
                     for(int s=-1;s<=1;s+=2)Beam(p,"Hood opening",new Vector3(0,1.8f,.05f),new Vector3(s*.22f,1.43f,.05f),.085f,cloth);
                     Coat(p,cloth,.67f);Box(p,"Leaf lamp frame",new Vector3(-.3f,.76f,.13f),new Vector3(.14f,.20f,.12f),Gold);
                     Box(p,"Leaf lamp paper",new Vector3(-.3f,.76f,.20f),new Vector3(.10f,.14f,.02f),C("d9ee87"));Leaf(p,new Vector3(-.3f,.9f,.14f),.1f,C("7ebf78"),15);
-                    Beam(p,"Cheek scar",new Vector3(.12f,1.46f,.185f),new Vector3(.14f,1.42f,.17f),.008f,C("ac6c56"));break;
+                    AnimeFace.Detail(face,key,persona,new Vector2(.100f,-.025f),new Vector2(.110f,-.055f),.002f,C("ac6c56"));break;
                 case "小葉":
                     for(int s=-1;s<=1;s+=2){Ball(p,"Sage pigtail",new Vector3(s*.23f,1.55f,-.04f),new Vector3(.15f,.19f,.17f),hair);Ball(p,"Rosy cheek",new Vector3(s*.12f,1.445f,.184f),new Vector3(.045f,.024f,.01f),C("e99786"));}
                     Leaf(p,new Vector3(.12f,1.71f,.14f),.16f,C("b3d96e"),-25);
@@ -112,7 +107,7 @@ namespace SpellDuel
                     Coat(p,cloth,.55f);Box(p,"Silver dark streak",new Vector3(.11f,1.69f,.12f),new Vector3(.065f,.11f,.1f),C("514452"));
                     for(int s=-1;s<=1;s+=2){Ball(p,"Golden epaulette",new Vector3(s*.23f,1.21f,-.015f),new Vector3(.23f,.08f,.32f),Gold);}
                     for(int i=-1;i<=1;i++)BellPin(p,new Vector3(i*.08f,1.13f,.20f),.065f);
-                    Beam(p,"Guildmaster scar",new Vector3(.11f,1.46f,.19f),new Vector3(.14f,1.41f,.17f),.009f,C("a96861"));break;
+                    AnimeFace.Detail(face,key,persona,new Vector2(.100f,-.025f),new Vector2(.110f,-.061f),.002f,C("a96861"));break;
             }
             // Bake a posed neck and rib cage into the merged meshes; feet remain planted.
             var neck=Group(p,"Persona neck",new Vector3(0,1.3f,0));
@@ -147,8 +142,8 @@ namespace SpellDuel
         static void Beard(Transform p,Color hair)
         {
             // 鬍鬚避開新的後收嘴周，保留老人的柔笑與鐵匠張嘴大笑。
-            var beard=Cone(p,"Pointed beard",new Vector3(0,1.365f,.13f),new Vector3(.28f,.24f,.18f),hair);beard.transform.localRotation=Quaternion.Euler(0,0,180);
-            for(int s=-1;s<=1;s+=2)Ball(p,"Moustache",new Vector3(s*.065f,1.435f,.205f),new Vector3(.10f,.045f,.035f),hair);
+            var beard=Cone(p,"Pointed beard",new Vector3(0,1.335f,.115f),new Vector3(.26f,.22f,.17f),hair);beard.transform.localRotation=Quaternion.Euler(0,0,180);
+            for(int s=-1;s<=1;s+=2)Ball(p,"Moustache",new Vector3(s*.060f,1.385f,.193f),new Vector3(.10f,.045f,.035f),hair);
         }
         static void Apron(Transform p,Color color)
         {

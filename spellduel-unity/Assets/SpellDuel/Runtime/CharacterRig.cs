@@ -110,16 +110,11 @@ namespace SpellDuel
         {
             var p=facePersona;head.localRotation=Quaternion.Euler(p.Pitch,p.Yaw,p.Roll);
             var features=AnimeFace.Build(head,advancedId??classId,p,Skin,Mul(Wood,.45f),
-                Color.Lerp(clsColor,new Color(.15f,.48f,.58f),.25f),advancedId=="marksman",advancedId=="bishop");
+                Color.Lerp(clsColor,new Color(.15f,.48f,.58f),.25f),advancedId=="marksman",advancedId=="bishop",classId=="archer");
             eyePaint.AddRange(features.Eyes);upperLids.AddRange(features.Lids);mouthOpen=features.Mouth;
-            // 耳朵與職業耳飾保留，臉面及鼻尖已整合在截面頭模內。
-            for(int side=-1;side<=1;side+=2)
-            {
-                var ear=Part(PrimitiveType.Sphere,head,new Vector3(side*.137f,-.012f,-.005f),new Vector3(.042f,.070f,.040f),Mat(Skin));
-                if(classId=="archer"){ear.transform.localScale=new Vector3(.042f,.105f,.040f);ear.transform.localRotation=Quaternion.Euler(0,0,-side*35);}
-                Part(PrimitiveType.Sphere,head,new Vector3(side*.149f,-.012f,.013f),new Vector3(.012f,.037f,.010f),Glow(new Color(.83f,.45f,.33f)));
-                if(side<0)Gem(head,new Vector3(side*.15f,-.054f,.009f),.017f,clsColor);
-            }
+            // 耳廓由共用比例建立，職業耳飾跟隨新的耳垂高度。
+            var plan=new Portraits.FacePlan(p);
+            Gem(head,new Vector3(-(.14f*p.Width+.016f),plan.EarBottom-.010f,-.01f),.017f,clsColor);
         }
 
         // Unit sphere/capsule surfaces, shared by every accessory. Pole triangles are not duplicated.
@@ -347,8 +342,9 @@ namespace SpellDuel
                 case "marksman":
                     MakeCape(new Color(0.30f,0.40f,0.57f),1.05f);
                     var bow=handL.Find("Bow"); if(bow!=null) bow.localScale=new Vector3(1f,1.2f,1.3f);
-                    Part(PrimitiveType.Cylinder,head,new Vector3(-0.054f,0.018f,0.158f),new Vector3(0.065f,0.012f,0.065f),Mat(Gold),new Vector3(90f,0f,0f));
-                    Part(PrimitiveType.Sphere,head,new Vector3(-0.054f,0.018f,0.175f),new Vector3(0.046f,0.045f,0.007f),Glow(new Color(0.25f,0.91f,1f,0.65f)));
+                    var eyex=-new Portraits.FacePlan(facePersona).EyeX;float lensZ=AnimeFace.Surface(eyex,.013f,facePersona)+.009f;
+                    Part(PrimitiveType.Cylinder,head,new Vector3(eyex,.013f,lensZ),new Vector3(0.065f,0.012f,0.065f),Mat(Gold),new Vector3(90f,0f,0f));
+                    Part(PrimitiveType.Sphere,head,new Vector3(eyex,.013f,lensZ+.004f),new Vector3(0.046f,0.045f,0.007f),Glow(new Color(0.25f,0.91f,1f,0.65f)));
                     break;
                 case "ranger":
                     MakeCape(new Color(0.21f,0.55f,0.33f),0.68f); ShoulderFalcon();
@@ -452,16 +448,16 @@ namespace SpellDuel
             AnimeFace.Hair(head,advancedId??classId,facePersona,hair);
             if(advancedId=="berserker")
             {
-                Seg(head,new Vector3(.072f,.013f,.126f),new Vector3(.084f,-.037f,.116f),.004f,Glow(new Color(.63f,.22f,.20f)));
+                AnimeFace.Detail(head,advancedId,facePersona,new Vector2(.100f,-.025f),new Vector2(.109f,-.058f),.003f,new Color(.63f,.22f,.20f));
                 Seg(shR,new Vector3(-.06f,.05f,.09f),new Vector3(.07f,-.03f,.10f),.007f,Mat(Leather));
             }
             if(advancedId=="ranger")
                 for(int side=-1;side<=1;side+=2)Part(PrimitiveType.Sphere,head,new Vector3(side*.105f,.115f,.07f),new Vector3(.04f,.10f,.055f),Mat(Wood));
             if(advancedId=="ninja")Part(PrimitiveType.Sphere,head,new Vector3(0,-.085f,.108f),new Vector3(.23f,.115f,.07f),Mat(DarkCloth));
             if(advancedId=="shadowdancer")
-                for(int side=-1;side<=1;side+=2)Seg(head,new Vector3(side*.077f,.032f,.128f),new Vector3(side*.105f,.045f,.113f),.004f,Glow(EyeCol));
+                for(int side=-1;side<=1;side+=2)AnimeFace.Detail(head,advancedId,facePersona,new Vector2(side*.082f,.019f),new Vector2(side*.095f,.026f),.003f,EyeCol);
             if(advancedId=="bishop")
-                for(int side=-1;side<=1;side+=2)Seg(head,new Vector3(side*.080f,-.005f,.126f),new Vector3(side*.102f,-.016f,.114f),.003f,Glow(Mul(Skin,.60f)));
+                for(int side=-1;side<=1;side+=2)AnimeFace.Detail(head,advancedId,facePersona,new Vector2(side*.093f,-.006f),new Vector2(side*.106f,-.018f),.002f,Mul(Skin,.70f));
         }
 
         void AnimateDetails(float cast, float hurt)
@@ -469,7 +465,7 @@ namespace SpellDuel
             float squint=1f-0.82f*hurt;
             foreach(var eye in eyePaint) eye.localScale=new Vector3(1f,squint,1f);
             foreach(var lid in upperLids) lid.localPosition=new Vector3(lid.localPosition.x,0.037f-0.018f*hurt,0.122f);
-            if(mouthOpen!=null) mouthOpen.localScale=new Vector3(.027f+.035f*facePersona.Open,.001f+.024f*facePersona.Open+.017f*Mathf.Max(cast,chargeAmt*.45f),.003f);
+            if(mouthOpen!=null) mouthOpen.localScale=new Vector3(new Portraits.FacePlan(facePersona).MouthWidth,.001f+.016f*facePersona.Open+.017f*Mathf.Max(cast,chargeAmt*.45f),.003f);
             if(floatingBook!=null) { floatingBook.localPosition=new Vector3(-0.41f,0.31f+0.025f*Mathf.Sin(clock*2f),0.05f); floatingBook.localRotation=Quaternion.Euler(0f,clock*14f,8f); }
             for(int i=0;i<motes.Count;i++)
             {
@@ -573,7 +569,7 @@ namespace SpellDuel
             Part(PrimitiveType.Sphere, spine, new Vector3(0f, 0.03f, 0f), new Vector3(0.3f * sw, 0.18f, 0.2f), Mat(pantsC, 0.85f));
             Part(PrimitiveType.Capsule, spine, new Vector3(0f, 0.3f, 0f), new Vector3(0.34f * sw, 0.27f, 0.22f), Mat(torsoC));
             Part(PrimitiveType.Cylinder, spine, new Vector3(0f, 0.08f, 0f), new Vector3(0.35f * sw, 0.03f, 0.24f), Mat(id == "mage" || id == "priest" ? Gold : Leather, 0.9f));
-            Part(PrimitiveType.Cylinder, spine, new Vector3(0f, 0.56f, 0f), new Vector3(0.08f, 0.04f, 0.08f), Mat(Skin, 0.85f));
+            Part(PrimitiveType.Cylinder, spine, new Vector3(0f, 0.56f, -.035f), new Vector3(.126f*facePersona.Width, 0.04f, .10f), Mat(Skin, 0.85f));
 
             // ---- 頭（脖子樞紐 → 頭中心）
             neck = Pivot("Neck", spine, new Vector3(0f, 0.57f, 0f));

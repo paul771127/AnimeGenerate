@@ -76,44 +76,64 @@ namespace SpellDuel
         // Gaze is lateral; Pitch/Yaw/Roll/Lean are pose offsets in degrees.
         internal struct Persona
         {
-            internal float Width,Jaw,Length,Eye,Tilt,Gaze,Brow,Asym,Smile,Open,Pitch,Yaw,Roll,Lean;
-            internal Persona(float width,float jaw,float length,float eye,float tilt,float gaze,float brow,float asym,float smile,float open,float pitch,float yaw,float roll,float lean)
-            {Width=width;Jaw=jaw;Length=length;Eye=eye;Tilt=tilt;Gaze=gaze;Brow=brow;Asym=asym;Smile=smile;Open=open;Pitch=pitch;Yaw=yaw;Roll=roll;Lean=lean;}
+            internal float Width,Jaw,Length,Eye,Tilt,Gaze,Brow,Asym,Smile,Open,Pitch,Yaw,Roll,Lean,Lid,Pupil;
+            internal Persona(float width,float jaw,float length,float eye,float tilt,float gaze,float brow,float asym,float smile,float open,float pitch,float yaw,float roll,float lean,float lid=0,float pupil=1)
+            {
+                // 在正常人類比例內保留個性，不再用極端縮眼或歪頭區分角色。
+                Width=Clamp(width,.94f,1.06f);Jaw=Clamp(jaw,.94f,1.06f);Length=Clamp(length,.97f,1.03f);
+                Eye=Clamp(eye,.85f,1.15f);Tilt=Clamp(tilt,-6,6);Gaze=Clamp(gaze,-.22f,.22f);
+                Brow=Clamp(brow,-6,6);Asym=Clamp(asym,-3,3);Smile=Clamp(smile,-.6f,1);Open=Clamp(open,0,.8f);
+                Pitch=Clamp(pitch,-6,6);Yaw=Clamp(yaw,-6,6);Roll=Clamp(roll,-6,6);Lean=lean;
+                Lid=Clamp(lid,0,.12f);Pupil=Clamp(pupil,.85f,1.1f);
+            }
+            static float Clamp(float n,float lo,float hi)=>Math.Max(lo,Math.Min(hi,n));
+        }
+        // 共用解剖基準；3D 與頭像皆由此換算，單位與戰鬥頭模相同。
+        internal struct FacePlan
+        {
+            internal float Top,Chin,EyeY,EyeX,EyeWidth,EyeHeight,NoseY,MouthY,MouthWidth,BrowY,EarTop,EarBottom;
+            internal FacePlan(Persona p)
+            {
+                Top=.157f*p.Length;Chin=-Top;EyeY=.013f;float d=EyeY-Chin;
+                EyeX=.056f*p.Width;EyeWidth=.057f*p.Width;EyeHeight=EyeWidth*(.66f+(p.Eye-1)*.10f);
+                NoseY=EyeY-.50f*d;MouthY=EyeY-.70f*d;MouthWidth=EyeX*2*.55f;
+                BrowY=EyeY+EyeHeight*1.1f;EarTop=BrowY;EarBottom=NoseY;
+            }
         }
         internal static Persona PersonaFor(string key)
         {
             switch(Key(key))
             {
-                case "艾琳": return new Persona(0.96f,0.72f,1f,1.13f,4f,0f,4f,0f,0.65f,0f,-2f,3f,-2f,0f);
-                case "澪": return new Persona(0.93f,0.72f,1.08f,0.55f,-9f,-0.3f,-5f,0f,0f,0f,7f,-12f,2f,0f);
-                case "老焰": return new Persona(1.04f,1f,1.02f,0.64f,-7f,-0.08f,-13f,0f,0.22f,0f,6f,-5f,0f,3f);
-                case "小鐵": return new Persona(1.07f,1.28f,0.97f,0.86f,9f,0.2f,14f,4f,0.42f,0f,-1f,9f,-3f,5f);
-                case "米菈": return new Persona(0.94f,0.68f,1.04f,0.66f,12f,-0.28f,8f,12f,1.1f,0f,-3f,-13f,7f,1f);
-                case "翠": return new Persona(0.89f,0.75f,1.12f,0.5f,2f,0.04f,0f,0f,0f,0f,-7f,8f,0f,-2f);
-                case "楓": return new Persona(0.94f,0.88f,1f,0.72f,8f,0.12f,5f,0f,0.36f,0f,0f,-8f,1f,7f);
-                case "小葉": return new Persona(1.1f,1.2f,0.94f,1.45f,-6f,-0.12f,-12f,2f,0.15f,0.62f,4f,-7f,-9f,2f);
-                case "海斗": return new Persona(1.08f,1.35f,1f,1.0f,5f,0f,10f,0f,0.9f,0.65f,-7f,5f,0f,-3f);
-                case "凪": return new Persona(1.05f,1.1f,0.98f,0.86f,-10f,0.06f,-4f,0f,0.8f,0f,1f,-6f,3f,0f);
-                case "阿潮": return new Persona(1.07f,1.05f,1.06f,0.4f,-6f,0.13f,-10f,2f,-0.25f,0f,6f,10f,1f,5f);
-                case "鐵匠": return new Persona(1.12f,1.45f,0.98f,0.72f,1f,0f,0f,0f,1f,0.8f,-5f,-4f,-2f,3f);
-                case "店員": return new Persona(1.08f,1.15f,0.96f,1.25f,-7f,-0.12f,-10f,4f,0.55f,0.25f,3f,5f,-5f,2f);
-                case "公會長": return new Persona(0.94f,1.12f,1.13f,0.56f,7f,0f,0f,0f,0f,0f,-6f,0f,0f,-2f);
-                case "swordsman": return new Persona(1.07f,1.35f,1f,0.8f,2f,0f,0f,0f,0f,0f,-2f,0f,0f,-1f);
-                case "archer": return new Persona(0.94f,0.8f,1.03f,0.67f,7f,0f,1f,0f,0.08f,0f,0f,-4f,0f,4f);
-                case "mage": return new Persona(0.91f,0.62f,1.04f,0.78f,10f,0.1f,9f,3f,0.8f,0f,-5f,5f,-2f,-2f);
-                case "assassin": return new Persona(0.9f,0.62f,1.1f,0.52f,12f,-0.28f,3f,14f,0.8f,0f,2f,-9f,3f,6f);
-                case "priest": return new Persona(1.05f,1.08f,0.97f,1.05f,-10f,0f,-4f,0f,0.7f,0f,2f,0f,1f,0f);
-                case "paladin": return new Persona(1.05f,1.3f,1.06f,0.83f,-2f,0f,0f,0f,0.12f,0f,-6f,0f,0f,-3f);
-                case "berserker": return new Persona(1.1f,1.4f,1f,0.72f,14f,0f,20f,-2f,-0.5f,0.65f,5f,-4f,-2f,12f);
-                case "marksman": return new Persona(0.9f,0.8f,1.08f,0.48f,4f,0f,1f,0f,0f,0f,-6f,0f,0f,1f);
-                case "ranger": return new Persona(0.98f,0.9f,0.98f,1.08f,6f,0.06f,12f,3f,0.9f,0.5f,-1f,-5f,8f,3f);
-                case "archmage": return new Persona(0.88f,0.6f,1.12f,0.48f,9f,0f,8f,0f,0.4f,0f,-11f,6f,0f,-3f);
-                case "summoner": return new Persona(0.99f,0.82f,0.98f,1.3f,3f,0.22f,4f,15f,0.85f,0.55f,-1f,-8f,-7f,3f);
-                case "ninja": return new Persona(0.91f,0.8f,1.06f,0.55f,4f,0f,0f,0f,0f,0f,1f,0f,0f,5f);
-                case "shadowdancer": return new Persona(0.9f,0.58f,1.05f,0.68f,15f,-0.22f,10f,10f,1.15f,0f,-4f,10f,6f,1f);
-                case "bishop": return new Persona(1.05f,1.05f,1.08f,0.68f,-9f,0f,-5f,0f,0.6f,0f,3f,-4f,0f,0f);
-                case "inquisitor": return new Persona(0.92f,1.05f,1.1f,0.54f,12f,0f,19f,0f,-0.1f,0f,-5f,0f,0f,-2f);
-                default:return new Persona(1,1,1,1,0,0,0,0,0,0,0,0,0,0);
+                case "艾琳": return new Persona(0.984f,0.944f,1f,1.0338f,1.6f,0f,1.4f,0f,0.65f,0f,-0.8f,1.2f,-0.8f,0f,0f,1f);
+                case "澪": return new Persona(0.972f,0.944f,1.016f,0.883f,-3.6f,-0.22f,-1.75f,0f,0f,0f,2.8f,-4.8f,0.8f,0f,0.09f,1f);
+                case "老焰": return new Persona(1.016f,1f,1.004f,0.9064f,-2.8f,-0.08f,-4.55f,0f,0.22f,0f,2.4f,-2f,0f,3f,0.072f,1f);
+                case "小鐵": return new Persona(1.028f,1.056f,0.994f,0.9636f,3.6f,0.2f,4.9f,1f,0.42f,0f,-0.4f,3.6f,-1.2f,5f,0.028f,0.85f);
+                case "米菈": return new Persona(0.976f,0.94f,1.008f,0.9116f,4.8f,-0.22f,2.8f,3f,1f,0f,-1.2f,-5.2f,2.8f,1f,0.068f,1f);
+                case "翠": return new Persona(0.956f,0.95f,1.024f,0.87f,0.8f,0.04f,0f,0f,0f,0f,-2.8f,3.2f,0f,-2f,0.1f,1f);
+                case "楓": return new Persona(0.976f,0.976f,1f,0.9272f,3.2f,0.12f,1.75f,0f,0.36f,0f,0f,-3.2f,0.4f,7f,0.056f,1f);
+                case "小葉": return new Persona(1.04f,1.04f,0.988f,1.117f,-2.4f,-0.12f,-4.2f,0.5f,0.15f,0.62f,1.6f,-2.8f,-3.6f,2f,0f,1.1f);
+                case "海斗": return new Persona(1.032f,1.06f,1f,1f,2f,0f,3.5f,0f,0.9f,0.65f,-2.8f,2f,0f,-3f,0f,1f);
+                case "凪": return new Persona(1.02f,1.02f,0.996f,0.9636f,-4f,0.06f,-1.4f,0f,0.8f,0f,0.4f,-2.4f,1.2f,0f,0.028f,1f);
+                case "阿潮": return new Persona(1.028f,1.01f,1.012f,0.85f,-2.4f,0.13f,-3.5f,0.5f,-0.25f,0f,2.4f,4f,0.4f,5f,0.12f,1f);
+                case "鐵匠": return new Persona(1.048f,1.06f,0.996f,0.9272f,0.4f,0f,0f,0f,1f,0.8f,-2f,-1.6f,-0.8f,3f,0.056f,1f);
+                case "店員": return new Persona(1.032f,1.03f,0.992f,1.065f,-2.8f,-0.12f,-3.5f,1f,0.55f,0.25f,1.2f,2f,-2f,2f,0f,1.1f);
+                case "公會長": return new Persona(0.976f,1.024f,1.026f,0.8856f,2.8f,0f,0f,0f,0f,0f,-2.4f,0f,0f,-2f,0.088f,1f);
+                case "swordsman": return new Persona(1.028f,1.06f,1f,0.948f,0.8f,0f,0f,0f,0f,0f,-0.8f,0f,0f,-1f,0.04f,1f);
+                case "archer": return new Persona(0.976f,0.96f,1.006f,0.9142f,2.8f,0f,0.35f,0f,0.08f,0f,0f,-1.6f,0f,4f,0.066f,1f);
+                case "mage": return new Persona(0.964f,0.94f,1.008f,0.9428f,4f,0.1f,3.15f,0.75f,0.8f,0f,-2f,2f,-0.8f,-2f,0.044f,1f);
+                case "assassin": return new Persona(0.96f,0.94f,1.02f,0.8752f,4.8f,-0.22f,1.05f,3f,0.8f,0f,0.8f,-3.6f,1.2f,6f,0.096f,1f);
+                case "priest": return new Persona(1.02f,1.016f,0.994f,1.013f,-4f,0f,-1.4f,0f,0.7f,0f,0.8f,0f,0.4f,0f,0f,1f);
+                case "paladin": return new Persona(1.02f,1.06f,1.012f,0.9558f,-0.8f,0f,0f,0f,0.12f,0f,-2.4f,0f,0f,-3f,0.034f,1f);
+                case "berserker": return new Persona(1.04f,1.06f,1f,0.9272f,5.6f,0f,6f,-0.5f,-0.5f,0.65f,2f,-1.6f,-0.8f,12f,0.056f,0.85f);
+                case "marksman": return new Persona(0.96f,0.96f,1.016f,0.8648f,1.6f,0f,0.35f,0f,0f,0f,-2.4f,0f,0f,1f,0.104f,1f);
+                case "ranger": return new Persona(0.992f,0.98f,0.996f,1.0208f,2.4f,0.06f,4.2f,0.75f,0.9f,0.5f,-0.4f,-2f,3.2f,3f,0f,1f);
+                case "archmage": return new Persona(0.952f,0.94f,1.024f,0.8648f,3.6f,0f,2.8f,0f,0.4f,0f,-4.4f,2.4f,0f,-3f,0.104f,1f);
+                case "summoner": return new Persona(0.996f,0.964f,0.996f,1.078f,1.2f,0.22f,1.4f,3f,0.85f,0.55f,-0.4f,-3.2f,-2.8f,3f,0f,1.1f);
+                case "ninja": return new Persona(0.964f,0.96f,1.012f,0.883f,1.6f,0f,0f,0f,0f,0f,0.4f,0f,0f,5f,0.09f,1f);
+                case "shadowdancer": return new Persona(0.96f,0.94f,1.01f,0.9168f,6f,-0.22f,3.5f,2.5f,1f,0f,-1.6f,4f,2.4f,1f,0.064f,1f);
+                case "bishop": return new Persona(1.02f,1.01f,1.016f,0.9168f,-3.6f,0f,-1.75f,0f,0.6f,0f,1.2f,-1.6f,0f,0f,0.064f,1f);
+                case "inquisitor": return new Persona(0.968f,1.01f,1.02f,0.8804f,4.8f,0f,6f,0f,-0.1f,0f,-2f,0f,0f,-2f,0.092f,0.85f);
+                default:return new Persona(1f,1f,1f,1f,0f,0f,0f,0f,0f,0f,0f,0f,0f,0f,0f,1f);
             }
         }
         // SDF portrait canvas: cel-tone paint, ink contours and a one-pixel AA fringe.
@@ -246,45 +266,48 @@ namespace SpellDuel
         {
             cv.Oval(0f,0.18f,0.45f,0.57f,hair);
             cv.Oval(0f,-0.97f,0.69f,0.48f,cloth);
-            cv.Box(0f,-0.44f,0.105f,0.17f,skin);
+            cv.Box(0f,-0.44f,.189f*cv.persona.Width,0.17f,skin);
             cv.Poly(Paint.Mix(cloth,White,0.20f),-0.40f,-0.57f,-0.12f,-0.48f,0f,-0.75f,-0.29f,-0.84f);
             cv.Poly(Paint.Mix(cloth,White,0.20f),0.40f,-0.57f,0.12f,-0.48f,0f,-0.75f,0.29f,-0.84f);
-            for(int s=-1;s<=1;s+=2)
-            {
-                if(elf)cv.Poly(skin,s*0.32f,0.22f,s*0.57f,0.36f,s*0.42f,-0.07f);
-                else cv.Oval(s*0.365f,0.10f,0.055f,0.105f,skin);
-            }
-            var p=cv.persona;
-            float fw=.37f*p.Width,jaw=.15f*p.Jaw,chin=-.39f*p.Length;
-            cv.Face(skin,-fw*.84f,.47f,-fw,.20f,-fw*.92f,-.07f,-fw*.72f,-.19f,-jaw,chin+.065f,0,chin,jaw,chin+.065f,fw*.72f,-.19f,fw*.92f,-.07f,fw,.20f,fw*.84f,.47f,0,.57f);
-            for(int side=-1;side<=1;side+=2)Eye(cv,side*.16f*p.Width,.14f,.103f,.064f*p.Eye,iris,side);
-            cv.Poly(Paint.Mix(skin,White,.30f),.009f,.035f,.026f,-.030f,.006f,-.035f);
-            cv.Line(-.008f,-.047f,.018f,-.051f,.004f,new Paint(skin.r*.72f,skin.g*.49f,skin.b*.46f));
-            float mouthY=-.19f,mw=.065f*(p.Open>0?1+Math.Max(0,p.Smile)*.8f:1);
-            if(p.Open>0){cv.Oval(0,mouthY,mw,.055f*p.Open,Ink,.006f);cv.Box(0,mouthY+.020f*p.Open,mw*.8f,.012f,White);}
-            else {cv.Line(-mw,mouthY-.005f+p.Smile*.030f,0,mouthY-.005f,.008f,Paint.Hex("#925154"));cv.Line(0,mouthY-.005f,mw,mouthY-.005f+p.Smile*.030f+p.Asym*.001f,.008f,Paint.Hex("#925154"));}
+            var p=cv.persona;var plan=new FacePlan(p);
+            float fw=.140f*p.Width*3,jaw=.094f*p.Width*(.70f+.30f*p.Jaw)*3,chin=plan.Chin*3+.09f;
+            float et=plan.EarTop*3+.09f,eb=plan.EarBottom*3+.09f;
             for(int side=-1;side<=1;side+=2)
             {
-                float by=.29f+(side>0?p.Asym*.0015f:0);
-                cv.Line(side*.075f,by,side*.16f,by+p.Brow*.0012f+.008f,elder?.020f:.011f,hair);
-                cv.Line(side*.16f,by+p.Brow*.0012f+.008f,side*.245f,by+p.Brow*.002f,elder?.018f:.009f,hair);
-                if(elder){cv.Line(side*.27f,.12f,side*.315f,.15f,.005f,skin*.55f);cv.Line(side*.26f,.07f,side*.30f,.05f,.005f,skin*.55f);}
+                float ex=side*(.14f*p.Width+.007f)*3;
+                if(elf)cv.Poly(skin,ex-side*.04f,et,ex+side*.09f,(et+eb)*.5f+.04f,ex,eb);
+                else cv.Oval(ex,(et+eb)*.5f,.055f,(et-eb)*.5f,skin);
+            }
+            cv.Face(skin,-.32f*p.Width,.46f,-fw*.95f,.23f,-fw,.06f,-jaw,plan.MouthY*3+.09f,-.15f,chin+.055f,-plan.MouthWidth*1.5f,chin,plan.MouthWidth*1.5f,chin,.15f,chin+.055f,jaw,plan.MouthY*3+.09f,fw,.06f,fw*.95f,.23f,.32f*p.Width,.46f,0,plan.Top*3+.09f);
+            for(int side=-1;side<=1;side+=2)Eye(cv,side*plan.EyeX*3,plan.EyeY*3+.09f,plan.EyeWidth*1.5f,plan.EyeHeight*1.5f,iris,side);
+            float noseY=plan.NoseY*3+.09f,mouthY=plan.MouthY*3+.09f,mw=plan.MouthWidth*1.5f;
+            cv.Poly(Paint.Mix(skin,White,.30f),.007f,noseY+.040f,.022f,noseY+.005f,.005f,noseY);
+            cv.Line(-.012f,noseY,.015f,noseY-.003f,.004f,new Paint(skin.r*.72f,skin.g*.49f,skin.b*.46f));
+            if(p.Open>0){cv.Oval(0,mouthY,mw,.024f*p.Open,Ink,.005f);cv.Box(0,mouthY+.008f,mw*.72f,.006f,White);}
+            else {cv.Line(-mw,mouthY+p.Smile*.012f,0,mouthY,.006f,Paint.Hex("#925154"));cv.Line(0,mouthY,mw,mouthY+p.Smile*.012f+p.Asym*.0012f,.006f,Paint.Hex("#925154"));}
+            for(int side=-1;side<=1;side+=2)
+            {
+                float inner=side*(plan.EyeX-plan.EyeWidth*.5f)*3,outer=inner+side*plan.EyeWidth*3.3f;
+                float by=plan.BrowY*3+.09f+(side>0?p.Asym*.0018f:0),bend=p.Brow*.0174533f*plan.EyeWidth*3;
+                cv.Line(inner,by,side*plan.EyeX*3,by+.0045f+bend*.5f,elder?.014f:.010f,hair);
+                cv.Line(side*plan.EyeX*3,by+.0045f+bend*.5f,outer,by+bend,elder?.012f:.008f,hair);
+                if(elder){cv.Line(side*.29f,.11f,side*.33f,.09f,.004f,skin*.65f);cv.Line(side*.28f,.07f,side*.31f,.05f,.004f,skin*.65f);}
             }
             cv.Gem(0f,-0.72f,0.055f,iris);
         }
         static void Eye(Canvas cv,float x,float y,float rx,float ry,Paint iris,int side)
         {
-            var p=cv.persona;float lift=p.Tilt*.0018f;
-            cv.Poly(White,x-rx,y,x-rx*.45f,y+ry*.85f-side*lift*.5f,x+rx*.45f,y+ry*.85f+side*lift*.5f,x+rx,y+side*lift,x+rx*.45f,y-ry*.8f,x-rx*.45f,y-ry*.8f);
-            float ix=x+p.Gaze*rx,iy=y-p.Pitch*.0008f;
-            cv.Fill((u,v)=>Math.Max(OvalD(u,v,ix,iy,rx*.43f,ry*.9f),OvalD(u,v,x,y,rx*.9f,ry*.84f)),iris*.55f);
-            cv.Fill((u,v)=>Math.Max(Math.Max(OvalD(u,v,ix,iy,rx*.43f,ry*.9f),OvalD(u,v,x,y,rx*.9f,ry*.84f)),v-y),Paint.Mix(iris,White,.25f));
-            cv.Fill((u,v)=>Math.Max(OvalD(u,v,ix,iy,rx*.16f,ry*.70f),OvalD(u,v,x,y,rx*.9f,ry*.84f)),Ink);
-            float glint=p.Eye>1.2f?.023f:.014f;
-            cv.Oval(ix-.013f,iy+ry*.3f,glint,glint,White,0);
-            cv.Line(x-rx,y-side*lift,x,y+ry, .010f,Ink);
-            cv.Line(x,y+ry,x+rx,y+side*lift,.010f,Ink);
-            cv.Line(x+side*rx*.8f,y+side*lift, x+side*(rx+.03f),y+side*lift+.018f,.008f,Ink);
+            var p=cv.persona;float tilt=side*(float)Math.Sin(p.Tilt*.0174533f)*rx;
+            float[] shape={x-rx,y-tilt,x-rx*.45f,y+ry*(1-p.Lid)-tilt*.4f,x+rx*.45f,y+ry*(1-p.Lid)+tilt*.4f,x+rx,y+tilt,x+rx*.45f,y-ry*.8f+tilt*.4f,x-rx*.45f,y-ry*.8f-tilt*.4f};
+            cv.Poly(White,shape);
+            float ix=x+p.Gaze*.054f,iy=y-p.Pitch*.00045f;
+            cv.Fill((u,v)=>Math.Max(OvalD(u,v,ix,iy,rx*.47f,ry*.88f),PolygonD(u,v,shape)),iris*.55f);
+            cv.Fill((u,v)=>Math.Max(Math.Max(OvalD(u,v,ix,iy,rx*.47f,ry*.88f),PolygonD(u,v,shape)),v-y),Paint.Mix(iris,White,.25f));
+            cv.Fill((u,v)=>Math.Max(OvalD(u,v,ix,iy,rx*.18f*p.Pupil,ry*.61f),PolygonD(u,v,shape)),Ink);
+            cv.Oval(ix-.012f,iy+ry*.34f,.0105f,.0105f,White,0);
+            cv.Line(x-rx,y-tilt,x,y+ry*(1-p.Lid),.010f,Ink);
+            cv.Line(x,y+ry*(1-p.Lid),x+rx,y+tilt,.009f,Ink);
+            cv.Line(x+side*rx*.8f,y+side*tilt,x+side*(rx+.014f),y+side*tilt+.010f,.006f,Ink);
         }
         static void Fringe(Canvas cv,Paint hair,float skew=0f)
         {

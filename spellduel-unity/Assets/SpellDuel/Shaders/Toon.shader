@@ -95,7 +95,7 @@ Shader "SpellDuel/Toon"
                         float faceLit = 1.0 - smoothstep(threshold - 0.025, threshold + 0.025, cheek);
                         // 鼻下小陰影與瀏海帶皆在臉部 UV 中計算，不需要陰影貼圖。
                         float nose = (1.0 - smoothstep(0.02, 0.065, abs(i.uv.x - 0.5)))
-                            * smoothstep(0.36, 0.41, i.uv.y) * (1.0 - smoothstep(0.43, 0.47, i.uv.y));
+                            * smoothstep(0.25, 0.265, i.uv.y) * (1.0 - smoothstep(0.285, 0.30, i.uv.y));
                         float fringe = smoothstep(0.72, 0.75, i.uv.y) * (1.0 - smoothstep(0.84, 0.88, i.uv.y));
                         faceLit *= 1.0 - max(nose * 0.42, fringe * 0.50);
                         lit = lerp(lit, faceLit, i.data.g);
