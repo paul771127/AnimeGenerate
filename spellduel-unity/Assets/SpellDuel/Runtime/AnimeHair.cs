@@ -10,90 +10,121 @@ namespace SpellDuel
         static readonly Dictionary<string,Color32[]> images=new Dictionary<string,Color32[]>();
         internal const int W=128,H=160;
         static Vector3 Curve(Vector3 a,Vector3 b,Vector3 c,float t)=>a*((1-t)*(1-t))+b*(2*t*(1-t))+c*(t*t);
-        static void Lock(List<Vector3> v,List<int> tri,List<Color> colors,Vector3 a,Vector3 b,Vector3 c,float width,float depth)
+        // Seven cross sections along a quadratic curve; five-sided flattened lens, closed ends.
+        static void Lock(List<Vector3> v,List<int> tri,List<Color> colors,Vector3 a,Vector3 b,Vector3 c,float width,float depth,float layer=1,float twist=0)
         {
-            int start=v.Count;const int rows=6,sides=6;
+            int start=v.Count;const int rows=7,sides=5;
             for(int j=0;j<=rows;j++)
             {
-                float t=j/(float)rows;var at=Curve(a,b,c,t);var direction=((b-a)*(2*(1-t))+(c-b)*(2*t)).normalized;
-                var right=Vector3.Cross(direction,new Vector3(0,0,1)).normalized;if(right.sqrMagnitude<.1f)right=new Vector3(1,0,0);
-                var normal=Vector3.Cross(right,direction).normalized;float taper=(.8f+.2f*Mathf.Sin(t*Mathf.PI))*(1-.96f*t*t*t*t);
+                float t=j/(float)rows;var at=Curve(a,b,c,t);var dir=((b-a)*(2*(1-t))+(c-b)*(2*t)).normalized;
+                var right=Vector3.Cross(dir,new Vector3(0,0,1)).normalized;if(right.sqrMagnitude<.1f)right=new Vector3(1,0,0);
+                var normal=Vector3.Cross(right,dir).normalized;
+                float taper=(.88f+.12f*Mathf.Sin(t*Mathf.PI))*Mathf.Pow(1-t,.62f)+.012f;
                 for(int i=0;i<sides;i++)
                 {
-                    float q=i*2*Mathf.PI/sides;v.Add(at+right*(Mathf.Cos(q)*width*taper)+normal*(Mathf.Sin(q)*depth*taper));
-                    float shade=.72f+.32f*t;if(t>.23f&&t<.47f)shade+=.15f;colors.Add(new Color(shade,shade,shade));
-                    if(j==rows)continue;int k=start+j*sides+i,n=start+j*sides+(i+1)%sides;
-                    tri.AddRange(new[]{k,k+sides,n,n,k+sides,n+sides});
+                    float q=i*2*Mathf.PI/sides+twist*t;
+                    v.Add(at+right*(Mathf.Cos(q)*width*taper)+normal*(Mathf.Sin(q)*depth*taper));
+                    // Deliberate cel blocks, a darker underside and a broken highlight following the lock.
+                    float tone=(j<=1?.48f:j==3||j==4?1.20f:.83f)*layer*(Mathf.Sin(q)<-.2f?.68f:1);
+                    colors.Add(new Color(tone*(1+.09f*t),tone,tone*(1-.12f*t)));
+                    if(j<rows){int k=start+j*sides+i,n=start+j*sides+(i+1)%sides;tri.AddRange(new[]{k,k+sides,n,n,k+sides,n+sides});}
                 }
             }
-            // 封住髮根與髮尖，避免描邊漏縫。
             for(int cap=0;cap<2;cap++){int k=start+(cap==0?0:rows*sides);for(int i=1;i<sides-1;i++)tri.AddRange(cap==0?new[]{k,k+i,k+i+1}:new[]{k,k+i+1,k+i});}
         }
         static Vector3 Shell(float t,float phi,Portraits.Persona p,CharacterLook.Look look)
         {
-            float front=Mathf.Cos(phi),limit=front>.3f?1.12f+(1-front)*.5f:1.75f+(1-front)*.15f;
-            if(look.Hair==CharacterLook.HairKind.Crew&&front>0)limit-=look.Seed==16?.20f:.04f;
-            if(look.Hair==CharacterLook.HairKind.Crop&&front<.3f)limit+=look.Length*2;
-            float theta=t*limit,groove=1+.025f*Mathf.Cos(phi*7+look.Part*3)*Mathf.Sin(theta);
-            float x=.151f*p.Width*Mathf.Sin(theta)*Mathf.Sin(phi)*groove;
-            float z=(front>0?.145f:.164f)*Mathf.Sin(theta)*front-.008f;
-            float y=.170f*p.Length*Mathf.Cos(theta)+.004f*Mathf.Cos(phi*3+look.Seed)*Mathf.Sin(theta);
-            return new Vector3(x,y,z);
+            float front=Mathf.Cos(phi),limit=front>.3f?1.05f+(1-front)*.5f:1.75f+(1-front)*.15f;
+            if(look.Hair==CharacterLook.HairKind.Crew)limit-=front>0?.20f:0;
+            float theta=t*limit;
+            float part=1-.055f*Mathf.Exp(-Mathf.Pow((Mathf.Sin(phi)-look.Part)/.19f,2))*Mathf.Sin(theta);
+            return new Vector3(.158f*p.Width*Mathf.Sin(theta)*Mathf.Sin(phi)*part,.177f*p.Length*Mathf.Cos(theta),(.153f+.008f*(front<0?1:0))*Mathf.Sin(theta)*front-.009f);
         }
         internal static Mesh MeshFor(string id,Portraits.Persona p)
         {
-            if(meshes.TryGetValue(id,out var mesh))return mesh;var look=CharacterLook.Get(id);
-            var v=new List<Vector3>{new Vector3(0,.170f*p.Length,-.008f)};var tri=new List<int>();var colors=new List<Color>{new Color(.72f,.72f,.72f)};
-            const int sides=24,rows=8;
+            if(meshes.TryGetValue(id,out var mesh))return mesh;var look=CharacterLook.Get(id);var kind=look.Hair;
+            var v=new List<Vector3>{new Vector3(0,.177f*p.Length,-.009f)};var tri=new List<int>();var colors=new List<Color>{new Color(.46f,.46f,.46f)};
+            const int sides=20,rows=6;
             for(int j=1;j<=rows;j++)for(int i=0;i<sides;i++)
             {
-                float phi=i*2*Mathf.PI/sides;v.Add(Shell(j/(float)rows,phi,p,look));float tone=.74f+.22f*j/rows;
-                if(j==3&&i%6!=0)tone=1.20f;colors.Add(new Color(tone,tone,tone));
-                int n=(i+1)%sides;
-                if(j==1)tri.AddRange(new[]{0,1+i,1+n});
-                else {int a=1+(j-2)*sides+i,b=1+(j-2)*sides+n;tri.AddRange(new[]{a,a+sides,b,b,a+sides,b+sides});}
+                float phi=i*2*Mathf.PI/sides;v.Add(Shell(j/(float)rows,phi,p,look));colors.Add(new Color(.44f,.44f,.47f));int n=(i+1)%sides;
+                if(j==1)tri.AddRange(new[]{0,1+i,1+n});else {int a=1+(j-2)*sides+i,b=1+(j-2)*sides+n;tri.AddRange(new[]{a,a+sides,b,b,a+sides,b+sides});}
             }
-            var kind=look.Hair;
             bool crew=kind==CharacterLook.HairKind.Crew,slick=kind==CharacterLook.HairKind.Slick;
-            int bangCount=crew?0:slick?3:5+(look.Seed%2);
-            for(int i=0;i<bangCount;i++)
+            // Twelve interleaved crown sweeps, not a smooth cap. The part has a visible shallow valley.
+            for(int i=0;i<12;i++)
             {
-                float u=bangCount==1?0:i/(float)(bangCount-1),x=(u-.5f)*.24f;
-                float root=look.Part*.09f,tipY=.067f+.018f*Mathf.Sin(i*2.4f+look.Seed);
-                if(kind==CharacterLook.HairKind.SidePart||kind==CharacterLook.HairKind.Bob||kind==CharacterLook.HairKind.LongSide)tipY-=.022f*(1-u);
-                if(slick)tipY=.12f;
-                Lock(v,tri,colors,new Vector3(root+(x-root)*.25f,.148f,.066f),new Vector3(x*.65f+root*.3f,.118f,.151f),new Vector3(x,tipY,AnimeFace.Surface(x,tipY,p)+.006f),.025f+(i%2)*.004f,.008f);
+                float a=i*Mathf.PI/6+look.Part*.35f,side=Mathf.Sin(a),front=Mathf.Cos(a);
+                float rootX=look.Part*.045f+side*.035f,top=crew?.172f:.180f+(look.Seed%3)*.005f;
+                float endY=front>.3f?.085f:-.015f-(look.Seed%4)*.008f;
+                float endX=side*(crew?.149f:.166f),endZ=front*.151f-.010f;
+                if(slick){top+=.018f;endY=.045f;endZ-=.022f;}
+                Lock(v,tri,colors,new Vector3(rootX,.162f,-.012f+front*.025f),new Vector3(side*.115f,top,front*.112f-.01f),new Vector3(endX,endY,endZ),crew?.019f:.030f,.012f,i%3==0?.77f:1,look.Part*.4f);
             }
-            // 側髮長短與後髮分開控制；不靠換色冒充不同髮型。
-            if(!crew)for(int side=-1;side<=1;side+=2)
+            int bangs=crew?8:6;
+            for(int i=0;i<bangs;i++)
             {
-                float length=kind==CharacterLook.HairKind.Bob?look.Length:kind==CharacterLook.HairKind.Straight||kind==CharacterLook.HairKind.LongSide?look.Length:.075f+(look.Seed%3)*.015f;
-                Lock(v,tri,colors,new Vector3(side*.129f,.10f,.02f),new Vector3(side*.165f,-.005f,.04f),new Vector3(side*(.14f+(look.Seed%2)*.018f),-length,.025f),.025f,.012f);
+                float u=i/(float)(bangs-1),x=(u-.5f)*.25f,root=look.Part*.08f;
+                float y=.060f+.022f*Mathf.Sin(i*2.3f+look.Seed);
+                if(kind==CharacterLook.HairKind.SidePart||kind==CharacterLook.HairKind.LongSide)y-=.026f*(look.Part<0?u:1-u);
+                if(kind==CharacterLook.HairKind.Straight)y=.065f+(i%2)*.009f;
+                if(crew)y=.132f+(i%2)*.012f;if(slick)y=.115f;
+                Lock(v,tri,colors,new Vector3(root+(x-root)*.2f,.153f,.052f),new Vector3(x*.70f+root*.3f,.123f,.158f),new Vector3(x,y,AnimeFace.Surface(x,y,p)+.009f),crew?.015f:.025f+(i%2)*.004f,.010f,i%3==0?.80f:1,.25f*(i%2==0?1:-1));
             }
-            bool longBack=kind==CharacterLook.HairKind.Straight||kind==CharacterLook.HairKind.Bob||kind==CharacterLook.HairKind.LongSide||kind==CharacterLook.HairKind.Wolf;
-            if(longBack)for(int i=0;i<7;i++)
+            if(!crew)for(int side=-1;side<=1;side+=2)for(int tier=0;tier<2;tier++)
             {
-                float a=(i/6f-.5f)*2.3f,x=Mathf.Sin(a)*.135f,z=-Mathf.Cos(a)*.14f;
-                Lock(v,tri,colors,new Vector3(x,.04f,z),new Vector3(x*1.10f,-look.Length*.5f,z-.018f),new Vector3(x*1.10f,-look.Length+Mathf.Sin(i*2+look.Seed)*.025f,z*.82f),.033f,.014f);
+                float length=kind==CharacterLook.HairKind.Straight||kind==CharacterLook.HairKind.LongSide||kind==CharacterLook.HairKind.Bob?look.Length:.055f+(look.Seed%3)*.019f;
+                if(kind==CharacterLook.HairKind.SidePart&&side<0)length*=.4f;
+                float flare=kind==CharacterLook.HairKind.Wolf?.035f:0;
+                Lock(v,tri,colors,new Vector3(side*.126f,.125f,-tier*.035f),new Vector3(side*(.171f+tier*.008f),.02f,.045f-tier*.055f),new Vector3(side*(.150f+flare+tier*.008f),-length+tier*.035f,.025f-tier*.045f),.029f,.014f,tier==0?1:.66f,side*.3f);
             }
-            if(kind==CharacterLook.HairKind.HighPony||kind==CharacterLook.HairKind.LowPony||kind==CharacterLook.HairKind.Braid||kind==CharacterLook.HairKind.Twins)
+            bool longBack=kind==CharacterLook.HairKind.Straight||kind==CharacterLook.HairKind.LongSide||kind==CharacterLook.HairKind.Bob||kind==CharacterLook.HairKind.Wolf;
+            if(longBack)for(int i=0;i<8;i++)
             {
-                int count=kind==CharacterLook.HairKind.Twins?2:1;
-                for(int k=0;k<count;k++)
+                float a=(i/7f-.5f)*2.5f,x=Mathf.Sin(a)*.132f,z=-Mathf.Cos(a)*.147f;
+                float flip=kind==CharacterLook.HairKind.Wolf?1.32f:1.08f;
+                Lock(v,tri,colors,new Vector3(x,.07f,z),new Vector3(x*1.18f,-look.Length*.45f,z-.020f),new Vector3(x*flip,-look.Length+Mathf.Sin(i*2+look.Seed)*.028f,z*.84f),.037f,.017f,i%2==0?.72f:1,i*.06f);
+            }
+            if(kind==CharacterLook.HairKind.HighPony||kind==CharacterLook.HairKind.LowPony||kind==CharacterLook.HairKind.Twins||kind==CharacterLook.HairKind.Braid)
+            {
+                int tails=kind==CharacterLook.HairKind.Twins?2:1;
+                for(int k=0;k<tails;k++)for(int strand=0;strand<4;strand++)
                 {
-                    float side=count==1?look.Part:(k==0?-1:1),x=count==1?side*.06f:side*.16f;
-                    float y=kind==CharacterLook.HairKind.LowPony?-.055f:.135f;
-                    for(int strand=0;strand<3;strand++)Lock(v,tri,colors,new Vector3(x,y,-.11f),new Vector3(x+side*.07f,y+.10f,-.21f-strand*.01f),new Vector3(x+side*.08f,-look.Length,-.20f+strand*.018f),.024f,.017f);
+                    float side=tails==1?look.Part:(k==0?-1:1),x=tails==1?side*.08f:side*.16f,y=kind==CharacterLook.HairKind.LowPony?-.025f:look.Seed==21?.075f:.135f;
+                    Lock(v,tri,colors,new Vector3(x,y,-.11f),new Vector3(x+side*.11f,y+.14f,-.22f-strand*.011f),new Vector3(x+side*(.12f+(strand%2)*.02f),-look.Length+strand*.012f,-.20f+strand*.025f),.028f,.019f,strand==0?.65f:1,strand*.13f);
                 }
             }
-            if(kind==CharacterLook.HairKind.Bun)for(int i=0;i<5;i++)
+            if(kind==CharacterLook.HairKind.Bun)for(int i=0;i<6;i++)
             {
-                float a=i*Mathf.PI*.4f;Lock(v,tri,colors,new Vector3(look.Part*.12f,.13f,-.12f),new Vector3(look.Part*.12f+Mathf.Cos(a)*.07f,.21f+look.Length*.2f+Mathf.Sin(a)*.04f,-.17f),new Vector3(look.Part*.12f,.13f,-.16f),.028f,.021f);
+                float a=i*Mathf.PI/3,shift=look.Part*.16f,bunY=look.Seed==23?.175f:.245f,bunZ=look.Seed==23?-.23f:-.17f;
+                Lock(v,tri,colors,new Vector3(shift,.13f,-.12f),new Vector3(shift+Mathf.Cos(a)*.08f,bunY+Mathf.Sin(a)*.035f,bunZ),new Vector3(shift,.13f,-.16f),.030f,.023f,i%2==0?.72f:1,.5f);
             }
             if(kind==CharacterLook.HairKind.Spikes)for(int i=0;i<8;i++)
             {
-                float a=i*2*Mathf.PI/8;Lock(v,tri,colors,new Vector3(Mathf.Sin(a)*.095f,.11f,Mathf.Cos(a)*.07f),new Vector3(Mathf.Sin(a)*.14f,.19f,Mathf.Cos(a)*.10f),new Vector3(Mathf.Sin(a)*.16f,.17f+look.Length*.5f+(i%2)*.025f,Mathf.Cos(a)*.12f),.023f,.018f);
+                float a=i*Mathf.PI/4;Lock(v,tri,colors,new Vector3(Mathf.Sin(a)*.085f,.135f,Mathf.Cos(a)*.065f),new Vector3(Mathf.Sin(a)*.15f,.19f,Mathf.Cos(a)*.10f),new Vector3(Mathf.Sin(a)*.19f,.18f+look.Length*.42f+(i%2)*.02f,Mathf.Cos(a)*.14f),.030f,.016f,i%2==0?.75f:1,.3f);
             }
+            // Bespoke short-hair signatures; the silhouettes remain different without headgear.
+            if(look.Seed==1||look.Seed==3||look.Seed==6||look.Seed==14||look.Seed==15||look.Seed==16||look.Seed==22||look.Seed==24||look.Seed==25||look.Seed==27)
+            {
+                int mode=look.Seed;
+                for(int i=0;i<3;i++)
+                {
+                    float x=(i-1)*.025f;Vector3 a=new Vector3(x,.155f,.02f),b,c;
+                    if(mode==1){b=new Vector3(-.08f+x,.243f,.02f);c=new Vector3(-.11f+x,.216f,.06f);}
+                    else if(mode==3){b=new Vector3(.13f+x,.320f,.10f);c=new Vector3(-.08f+x,.146f,.145f);}
+                    else if(mode==6){b=new Vector3(x,.242f,.065f);c=new Vector3(x+.025f,.17f,-.19f-i*.018f);}
+                    else if(mode==22){b=new Vector3(x+.02f,.265f,.08f);c=new Vector3(x+.10f,.205f,.15f);}
+                    else if(mode==14){b=new Vector3(-.08f+x,.200f,.08f);c=new Vector3(.075f+x,.137f,.135f);}
+                    else if(mode==15){b=new Vector3(-.12f+x,.145f,.158f);c=new Vector3(-.069f+x,.024f+i*.007f,.14f);}
+                    else if(mode==16){a=new Vector3((i%2==0?-1:1)*.13f,.075f,-.09f);b=a+new Vector3((i%2==0?-1:1)*.09f,.06f,-.025f);c=b+new Vector3(-.01f,-.025f,-.02f);}
+                    else if(mode==24){b=new Vector3(.07f+x,.24f,.02f);c=new Vector3(.13f+x,.19f,-.01f);}
+                    else if(mode==25){b=new Vector3(-.14f+x,.18f,.02f);c=new Vector3(-.20f+x,.13f,.04f);}
+                    else {b=new Vector3(-.12f+x,.20f,.14f);c=new Vector3(.08f+x,.058f,.14f);}
+                    Lock(v,tri,colors,a,b,c,.022f,.010f,i==0?.73f:1,.3f);
+                }
+            }
+            if(look.Seed==27)for(int i=0;i<2;i++)Lock(v,tri,colors,new Vector3(-.13f,.025f,-.04f),new Vector3(-.225f,-.065f,-.065f),new Vector3(-.19f+i*.014f,-.19f,-.06f),.017f,.010f,i==0?.7f:1,.7f);
+            if(look.Seed==15)Lock(v,tri,colors,new Vector3(-.13f,.09f,.02f),new Vector3(-.21f,-.015f,.04f),new Vector3(-.185f,-.12f,.04f),.025f,.011f,.85f,.2f);
             mesh=new Mesh{name="髮型 "+id};mesh.SetVertices(v);mesh.SetTriangles(tri,0);mesh.colors=colors.ToArray();mesh.RecalculateNormals();mesh.RecalculateBounds();meshes[id]=mesh;return mesh;
         }
         internal static void Build(Transform head,string id,Portraits.Persona p)=>AnimeFace.Part(head,"整體髮型",MeshFor(id,p),Vector3.zero,AnimeFace.Material(CharacterLook.Get(id).HairColor,4));
@@ -116,8 +147,12 @@ namespace SpellDuel
                     if(u<0||v0<0||w<0)continue;float z=u*a.z+v0*b.z+w*c.z;int k=y*W+x;
                     if(z<=depth[k])continue;
                     if(frontOnly&&Mathf.Abs(px)<.14f*p.Width&&py>-.157f*p.Length&&py<.157f*p.Length&&z<AnimeFace.Surface(px,py,p)+.001f)continue;
-                    depth[k]=z;float tone=u*colors[tri[i]].r+v0*colors[tri[i+1]].r+w*colors[tri[i+2]].r;
-                    image[k]=new Color32((byte)(Mathf.Clamp01(hair.r*tone)*255),(byte)(Mathf.Clamp01(hair.g*tone)*255),(byte)(Mathf.Clamp01(hair.b*tone)*255),255);
+                    // Back hair belongs behind the neck/shoulders; don't paint it over the portrait collar.
+                    if(frontOnly&&py<-.157f&&Mathf.Abs(px)<.105f&&z<.08f)continue;
+                    if(frontOnly&&py<-.22f&&Mathf.Abs(px)<.22f&&z<.10f)continue;
+                    depth[k]=z;var ca=colors[tri[i]];var cb=colors[tri[i+1]];var cc=colors[tri[i+2]];
+                    float red=u*ca.r+v0*cb.r+w*cc.r,green=u*ca.g+v0*cb.g+w*cc.g,blue=u*ca.b+v0*cb.b+w*cc.b;
+                    image[k]=new Color32((byte)(Mathf.Clamp01(hair.r*red)*255),(byte)(Mathf.Clamp01(hair.g*green)*255),(byte)(Mathf.Clamp01(hair.b*blue)*255),255);
                 }
             }
             images[key]=image;return image;

@@ -49,3 +49,5 @@
 - [Ellen 官方展示](https://www.youtube.com/watch?v=iOW8XhUce38)
 
 參考用圖片未作為專案素材。遊戲只使用程序網格及程式生成像素，不讀取本資料夾。
+
+第四輪更新：本資料夾的 [頭髮剪影總覽](hair_silhouettes.png) 已換成第四輪版本；81 張比例三視圖仍保留第三輪供比較。目前髮型與服飾的全身正面、3/4、背面請看 [第四輪全身索引](../outfit_preview/README.md)。眼睛特寫總覽未修改。

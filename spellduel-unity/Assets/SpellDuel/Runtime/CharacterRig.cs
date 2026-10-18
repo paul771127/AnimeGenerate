@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SpellDuel
 {
     /// <summary>
-    /// 角色外觀：用 Unity 基本形狀＋少量程式產生的網格拼出各職業的 Q 版人形，並用程式做簡單動作。
+    /// 角色外觀：程序掃掠髮束與分層戰鬥服，沿用固定骨架及武器握把，並用程式做簡單動作。
     ///   不需要任何模型、動畫或資源檔；所有部位都在 Create() 裡即時建立。
     ///   座標：腳底在本地 y = 0，面向本地 +Z，總高約 1.75 m（法師帽尖、法杖略高），
     ///   身體寬度大致在戰鬥判定半徑（Fighter.BodyRadius ≈ 0.28 m）內。
@@ -14,7 +14,7 @@ namespace SpellDuel
     ///   牧師：白袍金邊、高主教冠、頂端是發光太陽十字的法杖，頭頂漂浮一圈淡淡的光環。
     ///   另有 classId = "dummy"：練習用木頭人（不會走、不會施法；受擊時左右搖晃、倒地時整個翻倒）。
     /// </summary>
-    public class CharacterRig : MonoBehaviour
+    public partial class CharacterRig : MonoBehaviour
     {
         // ================================================================ 對外介面
         /// <summary>移動速度（公尺/秒），驅動走路動作；0 = 待機呼吸。</summary>
@@ -197,9 +197,7 @@ namespace SpellDuel
         {
             if (cape != null) RemoveVisual(cape.gameObject);
             cape = Pivot("Cape", spine, new Vector3(0f, 0.51f, -0.14f));
-            Part(PrimitiveType.Cube,cape,new Vector3(0f,-length*0.5f,0f),new Vector3(0.39f,length,0.018f),Mat(color));
-            for(int s=-1;s<=1;s+=2)
-                Part(PrimitiveType.Cube,cape,new Vector3(s*0.18f,-length*0.5f,-0.012f),new Vector3(0.013f,length,0.008f),Mat(Gold));
+
         }
         static void RemoveVisual(GameObject go)
         {
@@ -214,81 +212,15 @@ namespace SpellDuel
 
         void BuildAccessories()
         {
-            var trim = Mat(Gold); var strap = Mat(Leather);
-            // Belt buckle, wrist plates, knee caps, boot cuffs, and satchel are joint-mounted.
-            Part(PrimitiveType.Cube,spine,new Vector3(0f,0.09f,0.132f),new Vector3(0.073f,0.050f,0.021f),trim);
-            Gem(spine,new Vector3(0f,0.09f,0.148f),0.027f,clsColor);
-            Book(spine,new Vector3(-0.20f,-0.07f,0.02f),Leather,0.70f);
-            foreach(var t in new[]{elL,elR})
+            // Equipment details stay at the original grips; garments are built by OutfitArt.
+            if(classId=="mage"){var staff=handR.Find("Staff");if(staff!=null)StaffCage(staff,.95f,.095f);}
+            if(classId=="archer")
             {
-                Part(PrimitiveType.Cylinder,t,new Vector3(0f,-0.18f,0f),new Vector3(0.092f,0.020f,0.092f),trim);
-                Part(PrimitiveType.Cube,t,new Vector3(0f,-0.12f,0.046f),new Vector3(0.063f,0.10f,0.020f),Mat(Metal));
+                var bow=handL.Find("Bow");if(bow!=null)for(int i=-2;i<=2;i++)Part(PrimitiveType.Cylinder,bow,new Vector3(0,0,i*.024f),new Vector3(.044f,.003f,.044f),Mat(Gold),new Vector3(90,0,0));
             }
-            foreach(var t in new[]{knL,knR})
+            if(classId=="swordsman")
             {
-                Part(PrimitiveType.Sphere,t,new Vector3(0f,0f,0.047f),new Vector3(0.090f,0.085f,0.030f),Mat(Metal));
-                Part(PrimitiveType.Cylinder,t,new Vector3(0f,-0.10f,0f),new Vector3(0.112f,0.018f,0.112f),trim);
-                Part(PrimitiveType.Cube,t,new Vector3(0f,-0.31f,0.057f),new Vector3(0.045f,0.030f,0.016f),trim);
-            }
-            Seg(spine,new Vector3(-0.11f,0.49f,0.112f),new Vector3(0f,0.38f,0.135f),0.007f,trim);
-            Seg(spine,new Vector3(0.11f,0.49f,0.112f),new Vector3(0f,0.38f,0.135f),0.007f,trim);
-            Gem(spine,new Vector3(0f,0.36f,0.14f),0.032f,clsColor);
-            if(classId=="mage")
-            {
-                Book(spine,new Vector3(0.21f,-0.09f,0.04f),Mul(clsColor,0.75f));
-                for(int s=-1;s<=1;s+=2)
-                {
-                    Part(PrimitiveType.Cylinder,spine,new Vector3(s*0.095f,-0.05f,0.20f),new Vector3(0.018f,0.20f,0.018f),Mat(Gold),new Vector3(-6f,0f,0f));
-                    for(int i=0;i<3;i++) Gem(spine,new Vector3(s*0.10f,-0.18f-i*0.18f,0.225f+i*0.015f),0.021f,Gold);
-                }
-                var hat=head.Find("HatCone"); if(hat!=null) StarBadge(hat,new Vector3(0f,0.09f,0.12f),0.048f);
-                var staff=handR.Find("Staff"); if(staff!=null) StaffCage(staff,0.95f,0.095f);
-                Part(PrimitiveType.Cylinder,spine,new Vector3(0.22f,-0.12f,-0.02f),new Vector3(0.055f,0.11f,0.055f),Mat(RobeWhite));
-            }
-            else if(classId=="archer")
-            {
-                Seg(spine,new Vector3(-0.12f,0.50f,0.12f),new Vector3(0.12f,0.10f,0.13f),0.022f,strap);
-                Gem(spine,new Vector3(0.03f,0.27f,0.145f),0.032f,Gold);
-                for(int i=0;i<3;i++) Gem(cape,new Vector3((i-1)*0.095f,-0.25f,-0.018f),0.040f,clsColor);
-                var bow=handL.Find("Bow"); if(bow!=null)
-                    for(int i=-2;i<=2;i++) Part(PrimitiveType.Cylinder,bow,new Vector3(0f,0f,i*0.024f),new Vector3(0.044f,0.003f,0.044f),trim,new Vector3(90f,0f,0f));
-                Dagger(Pivot("HuntingKnife",spine,new Vector3(0.18f,-0.13f,0.04f)));
-            }
-            else if(classId=="assassin")
-            {
-                for(int s=-1;s<=1;s+=2)
-                {
-                    Seg(spine,new Vector3(s*0.12f,0.49f,0.13f),new Vector3(-s*0.12f,0.11f,0.13f),0.017f,strap);
-                    Part(PrimitiveType.Cube,hipL,new Vector3(0.06f,-0.26f,0.06f),new Vector3(0.06f,0.14f,0.026f),strap);
-                    Part(PrimitiveType.Sphere,spine,new Vector3(s*0.13f,-0.02f,-0.12f),new Vector3(0.067f,0.080f,0.067f),Mat(Mul(clsColor,0.7f)));
-                    Gem(handR,new Vector3(s*0.04f,-0.04f,0.055f),0.020f,Gold);
-                }
-            }
-            else if(classId=="swordsman")
-            {
-                Cross(spine,new Vector3(0f,0.34f,0.17f),0.11f,trim);
-                for(int s=-1;s<=1;s+=2)
-                {
-                    var shoulder=s<0?shL:shR;
-                    for(int i=0;i<2;i++) Part(PrimitiveType.Sphere,shoulder,new Vector3(s*0.035f,-0.045f-i*0.040f,0f),new Vector3(0.18f-i*0.02f,0.075f,0.17f),Mat(i==0?Metal:clsColor));
-                }
-                ShieldDetails(false);
-                var sword=handR.Find("Sword"); if(sword!=null)
-                {
-                    Gem(sword,new Vector3(0f,0.022f,0.07f),0.032f,clsColor);
-                    Seg(sword,new Vector3(0f,0f,-0.09f),new Vector3(0.08f,0f,-0.21f),0.012f,Mat(clsColor));
-                }
-            }
-            else
-            {
-                Book(spine,new Vector3(0.21f,-0.08f,0.05f),new Color(0.67f,0.17f,0.23f));
-                for(int i=0;i<7;i++)
-                {
-                    float a=i*Mathf.PI/6f;
-                    Part(PrimitiveType.Sphere,spine,new Vector3(0.14f+Mathf.Cos(a)*0.060f,-0.09f-Mathf.Sin(a)*0.11f,0.12f),Vector3.one*0.018f,trim);
-                }
-                Cross(spine,new Vector3(0f,0.47f,0.15f),0.07f,trim);
-                if(halo!=null) { halo.localScale=Vector3.one*1.1f; }
+                ShieldDetails(false);var sword=handR.Find("Sword");if(sword!=null){Gem(sword,new Vector3(0,.022f,.07f),.032f,clsColor);Seg(sword,new Vector3(0,0,-.09f),new Vector3(.08f,0,-.21f),.012f,Mat(clsColor));}
             }
         }
         void StarBadge(Transform parent,Vector3 pos,float size)
@@ -335,18 +267,10 @@ namespace SpellDuel
                 case "berserker":
                     RemoveNamed(handR,"Sword"); if(shield!=null) { RemoveVisual(shield.gameObject); shield=null; }
                     MakeCape(new Color(0.39f,0.18f,0.25f),0.47f);
-                    for(int s=-1;s<=1;s+=2)
-                    {
-                        var t=s<0?shL:shR;
-                        for(int i=0;i<3;i++) Part(PrimitiveType.Sphere,t,new Vector3(s*0.035f,-i*0.035f,-0.02f),new Vector3(0.19f,0.10f,0.20f),Mat(new Color(0.69f,0.49f,0.28f)));
-                    }
                     BuildAxe(); break;
                 case "marksman":
                     MakeCape(new Color(0.30f,0.40f,0.57f),1.05f);
                     var bow=handL.Find("Bow"); if(bow!=null) bow.localScale=new Vector3(1f,1.2f,1.3f);
-                    var eyex=-new Portraits.FacePlan(facePersona).EyeX;float lensZ=AnimeFace.Surface(eyex,.013f,facePersona)+.009f;
-                    Part(PrimitiveType.Cylinder,head,new Vector3(eyex,.013f,lensZ),new Vector3(0.065f,0.012f,0.065f),Mat(Gold),new Vector3(90f,0f,0f));
-                    Part(PrimitiveType.Sphere,head,new Vector3(eyex,.013f,lensZ+.004f),new Vector3(0.046f,0.045f,0.007f),Glow(new Color(0.25f,0.91f,1f,0.65f)));
                     break;
                 case "ranger":
                     MakeCape(new Color(0.21f,0.55f,0.33f),0.68f); ShoulderFalcon();
@@ -375,7 +299,6 @@ namespace SpellDuel
                     for(int s=-1;s<=1;s+=2)
                     {
                         var ribbon=Pivot("DanceRibbon",spine,new Vector3(s*0.12f,0.20f,-0.11f));
-                        Part(PrimitiveType.Cube,ribbon,new Vector3(s*0.09f,-0.30f,0f),new Vector3(0.055f,0.62f,0.012f),Mat(clsColor),new Vector3(0f,0f,s*18f));
                         var hand=s<0?handL:handR; RemoveNamed(hand,"Dagger");
                         var blade=Pivot("CrescentBlade",hand,new Vector3(0f,-0.04f,0f));
                         for(int i=0;i<6;i++)
@@ -388,12 +311,10 @@ namespace SpellDuel
                 case "bishop":
                     var crown=head.Find("Mitre"); if(crown!=null) crown.localScale=new Vector3(1.12f,1.32f,1.05f);
                     MakeCape(new Color(0.93f,0.83f,0.44f),0.88f);
-                    foreach(var shoulder in new[]{shL,shR}) Part(PrimitiveType.Sphere,shoulder,Vector3.zero,new Vector3(0.22f,0.13f,0.24f),Mat(RobeWhite));
                     var staff=handR.Find("Staff"); if(staff!=null) { staff.localScale=Vector3.one*1.13f; Cross(staff,new Vector3(0f,-0.015f,1f),0.24f,Mat(Gold)); }
                     break;
                 case "inquisitor":
                     RemoveNamed(handR,"Staff"); orb=null; RemoveNamed(head,"Mitre");
-                    foreach(var shoulder in new[]{shL,shR}) Part(PrimitiveType.Sphere,shoulder,Vector3.zero,new Vector3(0.23f,0.17f,0.24f),Mat(Gold));
                     var lance=Pivot("HolyLance",handR,new Vector3(0f,-0.04f,0f));
                     Part(PrimitiveType.Cylinder,lance,new Vector3(0f,0f,0.30f),new Vector3(0.025f,0.83f,0.025f),Mat(Gold),new Vector3(90f,0f,0f));
                     MeshPart("LancePoint",lance,Frustum(0.065f,0f,0.31f,4),new Vector3(0f,0f,1.12f),Mat(RobeWhite),new Vector3(90f,0f,0f));
@@ -435,31 +356,10 @@ namespace SpellDuel
 
         void BuildPersonaClothing()
         {
-            // Small additions to the existing costumes; animation pivots and material caches are reused.
-            if(classId=="swordsman")
-                foreach(var shoulder in new[]{shL,shR})Part(PrimitiveType.Sphere,shoulder,new Vector3(0,.04f,.02f),new Vector3(.23f,.10f,.25f),Mat(Metal));
-            if(classId=="mage")
-                for(int side=-1;side<=1;side+=2)Seg(spine,new Vector3(side*.05f,.47f,.14f),new Vector3(side*.14f,.56f,.10f),.025f,Mat(Gold));
-            if(classId=="archer")
-                Seg(spine,new Vector3(-.13f,.43f,.13f),new Vector3(.14f,.09f,.15f),.020f,Mat(Leather));
-            if(classId=="assassin")
-                Part(PrimitiveType.Sphere,spine,new Vector3(0,.52f,.06f),new Vector3(.24f,.13f,.22f),Mat(DarkCloth));
-            if(classId=="priest")
-                for(int side=-1;side<=1;side+=2)Seg(spine,new Vector3(side*.065f,.39f,.15f),new Vector3(side*.065f,.12f,.14f),.012f,Mat(Gold));
-            Color hair=classId=="mage"?new Color(.92f,.92f,.95f):classId=="priest"?new Color(.93f,.82f,.55f):classId=="assassin"?DarkCloth:new Color(.55f,.35f,.20f);
-            AnimeFace.Hair(head,advancedId??classId,facePersona,hair);
-            if(advancedId=="berserker")
-            {
-                AnimeFace.Detail(head,advancedId,facePersona,new Vector2(.100f,-.025f),new Vector2(.109f,-.058f),.003f,new Color(.63f,.22f,.20f));
-                Seg(shR,new Vector3(-.06f,.05f,.09f),new Vector3(.07f,-.03f,.10f),.007f,Mat(Leather));
-            }
-            if(advancedId=="ranger")
-                for(int side=-1;side<=1;side+=2)Part(PrimitiveType.Sphere,head,new Vector3(side*.105f,.115f,.07f),new Vector3(.04f,.10f,.055f),Mat(Wood));
-            if(advancedId=="ninja")Part(PrimitiveType.Sphere,head,new Vector3(0,-.085f,.108f),new Vector3(.23f,.115f,.07f),Mat(DarkCloth));
-            if(advancedId=="shadowdancer")
-                for(int side=-1;side<=1;side+=2)AnimeFace.Detail(head,advancedId,facePersona,new Vector2(side*.082f,.019f),new Vector2(side*.095f,.026f),.003f,EyeCol);
-            if(advancedId=="bishop")
-                for(int side=-1;side<=1;side+=2)AnimeFace.Detail(head,advancedId,facePersona,new Vector2(side*.093f,-.006f),new Vector2(side*.106f,-.018f),.002f,Mul(Skin,.70f));
+            AnimeFace.Hair(head,advancedId??classId,facePersona,CharacterLook.Get(advancedId??classId).HairColor);
+            if(advancedId=="berserker")AnimeFace.Detail(head,advancedId,facePersona,new Vector2(.100f,-.025f),new Vector2(.109f,-.058f),.003f,new Color(.63f,.22f,.20f));
+            if(advancedId=="shadowdancer")for(int side=-1;side<=1;side+=2)AnimeFace.Detail(head,advancedId,facePersona,new Vector2(side*.082f,.019f),new Vector2(side*.095f,.026f),.003f,EyeCol);
+            if(advancedId=="bishop")for(int side=-1;side<=1;side+=2)AnimeFace.Detail(head,advancedId,facePersona,new Vector2(side*.093f,-.006f),new Vector2(side*.106f,-.018f),.002f,Mul(Skin,.70f));
         }
 
         void AnimateDetails(float cast, float hurt)
@@ -541,39 +441,16 @@ namespace SpellDuel
             bool slim = id == "assassin";
             float sw = slim ? 0.85f : 1f;
 
-            // 各職業的配色
-            Color torsoC, armC, pantsC, bootC;
-            switch (id)
-            {
-                case "mage": torsoC = clsColor; armC = clsColor; pantsC = Cloth; bootC = Leather; break;
-                case "archer": torsoC = Mul(clsColor, 0.8f); armC = Mul(clsColor, 0.8f); pantsC = Leather; bootC = Mul(Leather, 0.7f); break;
-                case "assassin": torsoC = DarkCloth; armC = DarkCloth; pantsC = DarkCloth; bootC = Mul(DarkCloth, 0.8f); break;
-                case "priest": torsoC = RobeWhite; armC = RobeWhite; pantsC = Mul(RobeWhite, 0.9f); bootC = Mul(Gold, 0.75f); break;
-                default: torsoC = Metal; armC = Cloth; pantsC = Cloth; bootC = Metal; break;
-            }
-
-            switch (advancedId)
-            {
-                case "paladin": torsoC = armC = RobeWhite; bootC = Gold; break;
-                case "berserker": torsoC = clsColor; armC = Leather; pantsC = new Color(0.31f, 0.19f, 0.27f); break;
-                case "ninja": torsoC = armC = pantsC = new Color(0.29f, 0.40f, 0.57f); bootC = Metal; break;
-                case "shadowdancer": torsoC = armC = Mul(clsColor, 0.75f); pantsC = DarkCloth; break;
-                case "inquisitor": torsoC = armC = clsColor; bootC = Gold; break;
-            }
-
             body = Pivot("Body", transform, Vector3.zero);
 
             // ---- 腿（髖 → 膝）
-            hipL = Leg("L", -1f, sw, pantsC, bootC, out knL);
-            hipR = Leg("R", 1f, sw, pantsC, bootC, out knR);
+            hipL = Leg("L", -1f, sw, out knL);
+            hipR = Leg("R", 1f, sw, out knR);
 
             // ---- 軀幹（以髖部高度為樞紐，前傾 / 後仰都繞這裡轉）
             var posture=Pivot("PersonaStance",body,new Vector3(0,.85f,0));
             posture.localRotation=Quaternion.Euler(facePersona.Lean,0,facePersona.Roll*.12f);
             spine = Pivot("Spine", posture, Vector3.zero);
-            Part(PrimitiveType.Sphere, spine, new Vector3(0f, 0.03f, 0f), new Vector3(0.3f * sw, 0.18f, 0.2f), Mat(pantsC, 0.85f));
-            Part(PrimitiveType.Capsule, spine, new Vector3(0f, 0.3f, 0f), new Vector3(0.34f * sw, 0.27f, 0.22f), Mat(torsoC));
-            Part(PrimitiveType.Cylinder, spine, new Vector3(0f, 0.08f, 0f), new Vector3(0.35f * sw, 0.03f, 0.24f), Mat(id == "mage" || id == "priest" ? Gold : Leather, 0.9f));
             Part(PrimitiveType.Cylinder, spine, new Vector3(0f, 0.56f, -.035f), new Vector3(.126f*facePersona.Width, 0.04f, .10f), Mat(Skin, 0.85f));
 
             // ---- 頭（脖子樞紐 → 頭中心）
@@ -582,8 +459,8 @@ namespace SpellDuel
             BuildFace();
 
             // ---- 手臂（肩 → 肘 → 手腕）
-            shL = ArmChain("L", -1f, sw, armC, out elL, out handL);
-            shR = ArmChain("R", 1f, sw, armC, out elR, out handR);
+            shL = ArmChain("L", -1f, sw, out elL, out handL);
+            shR = ArmChain("R", 1f, sw, out elR, out handR);
 
             // 預設姿勢：手自然下垂
             var hang = new Arm(0f, 8f, -15f, 0f);
@@ -606,6 +483,7 @@ namespace SpellDuel
             BuildAccessories();
             BuildAdvanced();
             BuildPersonaClothing();
+            BuildLayeredOutfit();
 
             // ---- 詠唱光圈（不跟身體倒下，固定在腳底）
             auraMat = new Material(glowShader) { color = new Color(clsColor.r, clsColor.g, clsColor.b, 0f), name = "RigAura" };
@@ -619,7 +497,7 @@ namespace SpellDuel
             aura.SetActive(false);
 
             // 受擊閃色用：記住每個部位原本的材質
-            flashMat = Glow(new Color(1f, 0.55f, 0.5f));
+            flashMat = OutfitArt.FlashMaterial();
             var all = body.GetComponentsInChildren<Renderer>(true);
             // 僅人形換材質；木頭人提前返回，Boss／小怪完全不使用此路徑。
             foreach(var renderer in all)
@@ -635,46 +513,24 @@ namespace SpellDuel
             Animate(0f);
         }
 
-        Transform Leg(string side, float s, float sw, Color pantsC, Color bootC, out Transform knee)
+        Transform Leg(string side, float s, float sw, out Transform knee)
         {
             var hip = Pivot("Hip" + side, body, new Vector3(0.085f * sw * s, 0.85f, 0f));
-            Part(PrimitiveType.Capsule, hip, new Vector3(0f, -0.2f, 0f), new Vector3(0.12f * sw, 0.22f, 0.12f * sw), Mat(pantsC, 0.8f));
             knee = Pivot("Knee" + side, hip, new Vector3(0f, -0.42f, 0f));
-            Part(PrimitiveType.Capsule, knee, new Vector3(0f, -0.2f, 0f), new Vector3(0.1f * sw, 0.21f, 0.1f * sw), Mat(bootC, 0.72f));
-            Part(PrimitiveType.Cube, knee, new Vector3(0f, -0.4f, 0.04f), new Vector3(0.1f * sw, 0.06f, 0.2f), Mat(bootC, 0.62f));
             return hip;
         }
 
-        Transform ArmChain(string side, float s, float sw, Color armC, out Transform elbow, out Transform hand)
+        Transform ArmChain(string side, float s, float sw, out Transform elbow, out Transform hand)
         {
             var sh = Pivot("Shoulder" + side, spine, new Vector3(0.2f * sw * s, 0.5f, 0f));
-            Part(PrimitiveType.Capsule, sh, new Vector3(0f, -0.14f, 0f), new Vector3(0.085f * sw, 0.15f, 0.085f * sw), Mat(armC, 0.9f));
             elbow = Pivot("Elbow" + side, sh, new Vector3(0f, -0.28f, 0f));
-            Part(PrimitiveType.Capsule, elbow, new Vector3(0f, -0.12f, 0f), new Vector3(0.075f * sw, 0.13f, 0.075f * sw), Mat(armC, 0.85f));
             hand = Pivot("Hand" + side, elbow, new Vector3(0f, -0.25f, 0f));
-            Part(PrimitiveType.Sphere, hand, new Vector3(0f, -0.03f, 0f), new Vector3(0.085f, 0.085f, 0.085f), Mat(Skin, 0.9f));
             return sh;
         }
 
         // ---------------------------------------------------------------- 法師：尖帽、長袍、法杖
         void BuildMage()
         {
-            var hatC = Mul(clsColor, 0.85f);
-            // 帽子：帽沿＋圓錐（帽尖稍微往後彎）
-            Part(PrimitiveType.Cylinder, head, new Vector3(0f, 0.07f, -0.01f), new Vector3(0.46f, 0.008f, 0.46f), Mat(hatC, 0.85f));
-            var cone = Pivot("HatCone", head, new Vector3(0f, 0.075f, -0.01f));
-            cone.localRotation = Quaternion.Euler(-12f, 0f, 0f);
-            MeshPart("Hat", cone, Frustum(0.165f, 0f, 0.27f, 20), Vector3.zero, Mat(hatC));
-            MeshPart("HatBand", cone, Frustum(0.168f, 0.15f, 0.04f, 20), new Vector3(0f, 0.005f, 0f), Mat(Gold, 0.9f));
-            // 頭髮（後腦）
-
-            // 長袍：從腰到腳踝的喇叭狀圓台，袍擺鑲金邊
-            MeshPart("Robe", spine, Frustum(0.25f, 0.16f, 0.95f, 24), new Vector3(0f, -0.8f, 0f), Mat(clsColor, 0.8f));
-            MeshPart("RobeHem", spine, Frustum(0.255f, 0.245f, 0.05f, 24), new Vector3(0f, -0.81f, 0f), Mat(Gold, 0.75f));
-            // 袖口
-            MeshPart("CuffL", elL, Frustum(0.07f, 0.05f, 0.08f, 12), new Vector3(0f, -0.25f, 0f), Mat(Gold, 0.85f));
-            MeshPart("CuffR", elR, Frustum(0.07f, 0.05f, 0.08f, 12), new Vector3(0f, -0.25f, 0f), Mat(Gold, 0.85f));
-            // 法杖（沿手的 +Z，前臂水平時法杖直立）＋頂端發光寶珠
             var staff = Pivot("Staff", handR, new Vector3(0f, -0.04f, 0f));
             Part(PrimitiveType.Cylinder, staff, new Vector3(0f, 0f, 0.2f), new Vector3(0.035f, 0.65f, 0.035f), Mat(Wood, 0.85f), new Vector3(90f, 0f, 0f));
             MeshPart("StaffHead", staff, Frustum(0.025f, 0.07f, 0.08f, 12), new Vector3(0f, 0f, 0.82f), Mat(Gold), new Vector3(90f, 0f, 0f));
@@ -692,18 +548,7 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 獵人：兜帽披風、弓、箭袋
         void BuildArcher()
         {
-            var hoodC = Mul(clsColor, 0.78f);
-            // 頭髮瀏海＋兜帽（往後偏，臉露出來）＋帽尖
-
-            Part(PrimitiveType.Sphere, head, new Vector3(0f, 0.025f, -0.05f), new Vector3(0.33f, 0.34f, 0.33f), Mat(hoodC));
-            var tip = Pivot("HoodTip", head, new Vector3(0f, 0.04f, -0.17f));
-            tip.localRotation = Quaternion.Euler(-120f, 0f, 0f);
-            MeshPart("HoodTipCone", tip, Frustum(0.08f, 0f, 0.14f, 12), Vector3.zero, Mat(hoodC, 0.85f));
-            // 披風（掛在肩膀後方，走路時往後飄）
-            cape = Pivot("Cape", spine, new Vector3(0f, 0.52f, -0.12f));
-            Part(PrimitiveType.Cube, cape, new Vector3(0f, -0.36f, 0f), new Vector3(0.36f, 0.72f, 0.02f), Mat(hoodC, 0.8f));
-            // 短裙擺
-            MeshPart("Skirt", spine, Frustum(0.2f, 0.175f, 0.22f, 20), new Vector3(0f, -0.15f, 0f), Mat(clsColor, 0.8f));
+            cape=Pivot("Cape",spine,new Vector3(0,.52f,-.12f));
             // 箭袋（背上斜背）＋三支箭
             var q = Pivot("Quiver", spine, new Vector3(0.08f, 0.33f, -0.17f));
             q.localRotation = Quaternion.Euler(-10f, 0f, -22f);
@@ -741,19 +586,7 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 刺客：深色兜帽、面罩、雙匕首、圍巾
         void BuildAssassin()
         {
-            var hoodC = Color.Lerp(DarkCloth, clsColor, 0.22f);
-            Part(PrimitiveType.Sphere, head, new Vector3(0f, 0.025f, -0.05f), new Vector3(0.33f, 0.34f, 0.33f), Mat(hoodC));
-            var tip = Pivot("HoodTip", head, new Vector3(0f, 0.08f, -0.12f));
-            tip.localRotation = Quaternion.Euler(-60f, 0f, 0f);
-            MeshPart("HoodTipCone", tip, Frustum(0.09f, 0f, 0.13f, 12), Vector3.zero, Mat(hoodC, 0.9f));
-            // 面罩：蓋住鼻子以下
-            if(advancedId!="shadowdancer") Part(PrimitiveType.Sphere, head, new Vector3(0f, -0.092f, 0.010f), new Vector3(0.25f, 0.11f, 0.25f), Mat(Mul(DarkCloth, 0.9f)));
-            // 圍巾：脖子一圈＋往後飄的尾巴（職業色）
-            Part(PrimitiveType.Cylinder, spine, new Vector3(0f, 0.55f, 0f), new Vector3(0.2f, 0.045f, 0.2f), Mat(clsColor));
-            scarfTail = Pivot("ScarfTail", spine, new Vector3(0.05f, 0.55f, -0.09f));
-            Part(PrimitiveType.Cube, scarfTail, new Vector3(0f, -0.2f, 0f), new Vector3(0.08f, 0.4f, 0.015f), Mat(clsColor, 0.85f));
-            // 腰帶（職業色）
-            Part(PrimitiveType.Cylinder, spine, new Vector3(0f, 0.1f, 0f), new Vector3(0.3f, 0.025f, 0.21f), Mat(clsColor, 0.8f));
+            scarfTail=Pivot("ScarfTail",spine,new Vector3(.05f,.55f,-.09f));
             // 雙匕首
             Dagger(handL); Dagger(handR);
 
@@ -776,17 +609,6 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 劍士：頭盔羽飾、護肩、胸甲、劍、圓盾
         void BuildSwordsman()
         {
-            // 頭盔（往後偏，露出臉）＋護鼻＋職業色羽飾
-            Part(PrimitiveType.Sphere, head, new Vector3(0f, 0.045f, -0.025f), new Vector3(0.31f, 0.25f, 0.31f), Mat(Metal));
-            Part(PrimitiveType.Cylinder, head, new Vector3(0f, 0.06f, -0.025f), new Vector3(0.32f, 0.012f, 0.32f), Mat(Metal, 0.8f));
-            Part(PrimitiveType.Cube, head, new Vector3(0f, 0.02f, 0.14f), new Vector3(0.022f, 0.08f, 0.02f), Mat(Metal, 0.9f));
-            Part(PrimitiveType.Cube, head, new Vector3(0f, 0.17f, -0.03f), new Vector3(0.035f, 0.09f, 0.28f), Mat(clsColor));
-            // 胸甲（金屬）＋職業色罩袍＋護肩
-            Part(PrimitiveType.Sphere, spine, new Vector3(0f, 0.38f, 0.03f), new Vector3(0.36f, 0.3f, 0.24f), Mat(Color.Lerp(Metal, Color.white, 0.25f)));
-            Part(PrimitiveType.Cube, spine, new Vector3(0f, 0.1f, 0.095f), new Vector3(0.2f, 0.3f, 0.03f), Mat(clsColor, 0.85f));
-            Part(PrimitiveType.Cube, spine, new Vector3(0f, 0.1f, -0.095f), new Vector3(0.2f, 0.3f, 0.03f), Mat(clsColor, 0.75f));
-            Part(PrimitiveType.Sphere, shL, new Vector3(-0.015f, -0.01f, 0f), new Vector3(0.15f, 0.1f, 0.15f), Mat(clsColor));
-            Part(PrimitiveType.Sphere, shR, new Vector3(0.015f, -0.01f, 0f), new Vector3(0.15f, 0.1f, 0.15f), Mat(clsColor));
             // 劍（右手）：刀身沿手的 +Z
             var sword = Pivot("Sword", handR, new Vector3(0f, -0.04f, 0f));
             Part(PrimitiveType.Cylinder, sword, new Vector3(0f, 0f, -0.01f), new Vector3(0.035f, 0.07f, 0.035f), Mat(Leather), new Vector3(90f, 0f, 0f));
@@ -812,42 +634,6 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 牧師：白袍金邊、主教冠、聖帶、太陽十字法杖、頭頂光環
         void BuildPriest()
         {
-            var trim = Color.Lerp(Gold, clsColor, 0.35f);
-            // 頭髮（淡金色，後腦＋兩側垂到耳下）
-
-            // 主教冠：前後壓扁的高圓台（往上收窄）＋金色底箍、正面直條與十字＋背後垂下的兩條飄帶
-            var mitre = Pivot("Mitre", head, new Vector3(0f, 0.065f, -0.01f));
-            mitre.localRotation = Quaternion.Euler(-6f, 0f, 0f);
-            var crown = MeshPart("MitreBody", mitre, Frustum(0.15f, 0.07f, 0.24f, 20), Vector3.zero, Mat(RobeWhite));
-            crown.transform.localScale = new Vector3(1f, 1f, 0.72f);
-            var band = MeshPart("MitreBand", mitre, Frustum(0.155f, 0.148f, 0.045f, 20), new Vector3(0f, -0.005f, 0f), Mat(trim, 0.9f));
-            band.transform.localScale = new Vector3(1f, 1f, 0.74f);
-            Part(PrimitiveType.Cube, mitre, new Vector3(0f, 0.12f, 0.086f), new Vector3(0.035f, 0.2f, 0.012f), Mat(trim), new Vector3(-13.6f, 0f, 0f));
-            Part(PrimitiveType.Cube, mitre, new Vector3(0f, 0.15f, 0.082f), new Vector3(0.09f, 0.03f, 0.014f), Mat(Gold), new Vector3(-13.6f, 0f, 0f));
-            Part(PrimitiveType.Sphere, mitre, new Vector3(0f, 0.25f, 0f), new Vector3(0.045f, 0.045f, 0.045f), Mat(Gold));
-            for (int sd = -1; sd <= 1; sd += 2)
-                Part(PrimitiveType.Cube, head, new Vector3(0.06f * sd, -0.1f, -0.16f), new Vector3(0.045f, 0.2f, 0.012f), Mat(trim, 0.8f), new Vector3(12f, 0f, 0f));
-            // 長袍：從腰到腳踝的喇叭狀白袍＋金邊袍擺
-            MeshPart("Robe", spine, Frustum(0.26f, 0.16f, 0.95f, 24), new Vector3(0f, -0.8f, 0f), Mat(RobeWhite, 0.85f));
-            MeshPart("RobeHem", spine, Frustum(0.265f, 0.255f, 0.06f, 24), new Vector3(0f, -0.81f, 0f), Mat(trim, 0.75f));
-            // 披肩（短斗篷）：圍住肩膀的圓台＋金色下緣
-            MeshPart("Mantle", spine, Frustum(0.235f, 0.12f, 0.17f, 24), new Vector3(0f, 0.38f, 0f), Mat(RobeWhite));
-            MeshPart("MantleHem", spine, Frustum(0.24f, 0.232f, 0.025f, 24), new Vector3(0f, 0.375f, 0f), Mat(trim, 0.85f));
-            // 聖帶（stole）：從胸前沿著長袍正面垂到袍擺的兩條金帶，下端有小十字
-            for (int sd = -1; sd <= 1; sd += 2)
-            {
-                Part(PrimitiveType.Cube, spine, new Vector3(0.055f * sd, 0.3f, 0.112f), new Vector3(0.045f, 0.36f, 0.012f), Mat(trim, 0.9f));
-                Part(PrimitiveType.Cube, spine, new Vector3(0.055f * sd, -0.36f, 0.215f), new Vector3(0.045f, 0.86f, 0.012f), Mat(trim, 0.8f), new Vector3(-6f, 0f, 0f));
-                Part(PrimitiveType.Cube, spine, new Vector3(0.055f * sd, -0.66f, 0.25f), new Vector3(0.012f, 0.07f, 0.014f), Mat(RobeWhite), new Vector3(-6f, 0f, 0f));
-                Part(PrimitiveType.Cube, spine, new Vector3(0.055f * sd, -0.65f, 0.249f), new Vector3(0.04f, 0.012f, 0.014f), Mat(RobeWhite), new Vector3(-6f, 0f, 0f));
-            }
-            // 寬袖口（白＋金邊）
-            MeshPart("CuffL", elL, Frustum(0.08f, 0.05f, 0.1f, 12), new Vector3(0f, -0.25f, 0f), Mat(RobeWhite, 0.9f));
-            MeshPart("CuffR", elR, Frustum(0.08f, 0.05f, 0.1f, 12), new Vector3(0f, -0.25f, 0f), Mat(RobeWhite, 0.9f));
-            MeshPart("CuffTrimL", elL, Frustum(0.082f, 0.079f, 0.02f, 12), new Vector3(0f, -0.255f, 0f), Mat(trim, 0.85f));
-            MeshPart("CuffTrimR", elR, Frustum(0.082f, 0.079f, 0.02f, 12), new Vector3(0f, -0.255f, 0f), Mat(trim, 0.85f));
-
-            // 法杖（沿手的 +Z，前臂水平時直立）：象牙白杖身＋金色環節，頂端是太陽環＋十字，中心發光寶珠
             var staff = Pivot("Staff", handR, new Vector3(0f, -0.04f, 0f));
             Part(PrimitiveType.Cylinder, staff, new Vector3(0f, 0f, 0.2f), new Vector3(0.032f, 0.66f, 0.032f), Mat(new Color(0.93f, 0.9f, 0.82f), 0.85f), new Vector3(90f, 0f, 0f));
             foreach (float z in new[] { -0.3f, 0.02f, 0.78f })

@@ -282,10 +282,17 @@ namespace SpellDuel
         static void Bust(Canvas cv,Paint skin,Paint hair,Paint cloth,Paint iris,bool elder=false,bool child=false,bool elf=false)
         {
             cv.Hair(false);
+            var outfit=OutfitArt.Get(cv.identity);
+            cloth=new Paint(outfit.Main.r,outfit.Main.g,outfit.Main.b);
+            var lining=new Paint(outfit.Sub.r,outfit.Sub.g,outfit.Sub.b);var trim=new Paint(outfit.Accent.r,outfit.Accent.g,outfit.Accent.b);
             cv.Oval(0f,-0.97f,0.69f,0.48f,cloth);
             cv.Box(0f,-0.44f,.189f*cv.persona.Width,0.17f,skin);
-            cv.Poly(Paint.Mix(cloth,White,0.20f),-0.40f,-0.57f,-0.12f,-0.48f,0f,-0.75f,-0.29f,-0.84f);
-            cv.Poly(Paint.Mix(cloth,White,0.20f),0.40f,-0.57f,0.12f,-0.48f,0f,-0.75f,0.29f,-0.84f);
+            cv.Poly(lining,-.23f,-.51f,.23f,-.51f,.29f,-1f,-.29f,-1f);
+            cv.Poly(cloth,-.44f,-.57f,-.20f,-.43f,-.08f,-.70f,-.24f,-.94f);
+            cv.Poly(Paint.Mix(cloth,White,.16f),.44f,-.59f,.22f,-.47f,.04f,-.72f,.28f,-.88f);
+            cv.Line(-.18f,-.53f,-.05f,-.74f,.012f,trim);cv.Line(-.05f,-.74f,-.05f,-.97f,.008f,trim);
+            for(int i=0;i<4;i++)cv.Line(-.075f,-.76f-i*.055f,-.03f,-.76f-i*.055f,.006f,trim);
+            cv.Poly(lining,.22f,-.75f,.43f,-.73f,.43f,-.87f,.23f,-.88f);cv.Line(.24f,-.76f,.42f,-.75f,.010f,trim);
             var p=cv.persona;var plan=new FacePlan(p);
             float fw=.140f*p.Width*3,jaw=.094f*p.Width*(.70f+.30f*p.Jaw)*3,chin=plan.Chin*3+.09f;
             float et=plan.EarTop*3+.09f,eb=plan.EarBottom*3+.09f;
@@ -315,14 +322,10 @@ namespace SpellDuel
         }
         static void ClassPortrait(Canvas cv,string id)
         {
-            string family=id=="paladin"||id=="berserker"?"swordsman":id=="marksman"||id=="ranger"?"archer":id=="archmage"||id=="summoner"?"mage":id=="ninja"||id=="shadowdancer"?"assassin":id=="bishop"||id=="inquisitor"?"priest":id;
             var look=CharacterLook.Get(id);var hair=new Paint(look.HairColor.r,look.HairColor.g,look.HairColor.b);
-            var cloth=Paint.Hex(family=="swordsman"?"#60a5fa":family=="archer"?"#a3e635":family=="mage"?"#c084fc":family=="assassin"?"#e879f9":"#fde68a");
+            var main=OutfitArt.Get(id).Main;var cloth=new Paint(main.r,main.g,main.b);
             Bust(cv,Paint.Hex("#f3c89f"),hair,cloth,new Paint(look.Iris.r,look.Iris.g,look.Iris.b));
-            if(family=="mage") {cv.Poly(cloth*.85f,-.42f,.35f,-.14f,.95f,.30f,.35f);cv.Box(0,.35f,.65f,.022f,cloth*.72f);cv.Gem(-.08f,.65f,.065f,Gold);}
-            else if(family=="priest"){cv.Poly(White,-.26f,.36f,-.17f,.86f,.17f,.86f,.26f,.36f);cv.Box(0,.40f,.28f,.025f,Gold);cv.Box(0,.64f,.018f,.15f,Gold);cv.Box(0,.67f,.08f,.018f,Gold);}
-            else if(family=="swordsman"){cv.Line(-.37f,.38f,0,.33f,.024f,cloth*.75f);cv.Line(0,.33f,.37f,.38f,.024f,cloth*.75f);cv.Gem(0,.35f,.045f,Gold);}
-            else if(family=="assassin"&&id!="shadowdancer"){cv.Poly(Paint.Hex("#453653"),-.34f,-.13f,0,-.20f,.34f,-.13f,.23f,-.36f,-.23f,-.36f);}
+
         }
         static void BellBrooch(Canvas cv,float x,float y,float s)
         {
@@ -402,7 +405,7 @@ namespace SpellDuel
             cv.Poly(hood,-0.54f,-0.45f,-0.50f,0.48f,-0.20f,0.83f,0.22f,0.81f,0.52f,0.48f,0.53f,-0.45f);
             Bust(cv,Paint.Hex("#e8b48c"),hair,hood,Paint.Hex("#dbb254"),false,false,true);
 
-            cv.Poly(hood,-0.50f,0.36f,-0.32f,0.69f,0f,0.82f,0.37f,0.58f,0.49f,0.35f,0.34f,0.39f,0.15f,0.62f,-0.15f,0.57f,-0.35f,0.31f);
+
             cv.Line(0.24f,0.02f,0.29f,-0.09f,0.007f,Paint.Hex("#ac6c56"));
             cv.Box(-0.47f,-0.69f,0.10f,0.16f,Gold);
             cv.Box(-0.47f,-0.67f,0.065f,0.10f,Paint.Hex("#d9ee87"));
@@ -441,8 +444,8 @@ namespace SpellDuel
 
             Bust(cv,Paint.Hex("#efbba1"),hair,Paint.Hex("#9c4c64"),Paint.Hex("#a17385"));
 
-            cv.Line(0.20f,0.52f,0.48f,0.70f,0.012f,Gold);
-            cv.Gem(0.45f,0.68f,0.032f,Paint.Hex("#e9c083"));
+            cv.Line(-0.38f,0.29f,-0.20f,0.48f,0.012f,Gold);
+            cv.Gem(-0.22f,0.46f,0.032f,Paint.Hex("#e9c083"));
             cv.Poly(White,-0.30f,-0.61f,0.30f,-0.61f,0.37f,-1f,-0.37f,-1f);
             cv.Line(-0.27f,-0.53f,-0.25f,-0.81f,0.020f,White);cv.Line(0.27f,-0.53f,0.25f,-0.81f,0.020f,White);
             cv.Ring(-0.39f,-0.09f,0.031f,0.045f,0.010f,Gold);

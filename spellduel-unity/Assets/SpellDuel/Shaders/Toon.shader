@@ -89,7 +89,7 @@ Shader "SpellDuel/Toon"
                 fixed3 shade = baseC.rgb * _SD_ShadeColor.rgb;
                 #ifdef SD_HUMAN
                 // 只處理人類材質；原始變體仍使用原本 N·L 與暗部。
-                if (_HumanHair > 0.5) shade = baseC.rgb * fixed3(0.52,0.48,0.55);
+                if (_HumanHair > 0.5) shade = baseC.rgb * (i.data.a < 0.25 ? _HumanSkinShade.rgb : fixed3(0.52,0.48,0.55));
                 if (_HumanFace > 0.5)
                 {
                     shade = baseC.rgb * _HumanSkinShade.rgb;
@@ -119,6 +119,10 @@ Shader "SpellDuel/Toon"
                 // 邊緣亮光：只在亮部、硬邊
                 float rim = 1.0 - saturate(dot(n, normalize(i.v)));
                 c += _SD_RimColor.rgb * _SD_RimColor.a * step(0.72, rim) * lit;
+                #ifdef SD_HUMAN
+                // Vertex alpha: 0 skin, 0.5 luminous garment rune, 1 cloth/hair. No extra pass.
+                if (_HumanHair > 0.5 && i.data.a > 0.4 && i.data.a < 0.6) c = baseC.rgb;
+                #endif
                 return fixed4(c, baseC.a);
             }
             ENDCG
@@ -146,7 +150,7 @@ Shader "SpellDuel/Toon"
             #ifdef SD_HUMAN
             fixed4 _Color;
             float _HumanOutline;
-            half _HumanFace;
+            half _HumanFace, _HumanHair;
             #endif
             struct v2f { float4 pos : SV_POSITION; };
 
@@ -161,6 +165,7 @@ Shader "SpellDuel/Toon"
                 float px = _SD_OutlineWidth * (_ScreenParams.y / 1000.0);
                 #ifdef SD_HUMAN
                 px *= _HumanOutline * (_HumanFace > 0.5 && _HumanFace < 1.5 ? v.color.r : 1.0);
+                if (_HumanHair > 0.5 && v.color.a > 0.4 && v.color.a < 0.6) px *= 0.25;
                 #endif
                 float fade = saturate(_SD_OutlineFar / max(0.01, p.w));
                 p.xy += dir * (px * 2.0 / _ScreenParams.xy) * p.w * fade;
@@ -171,7 +176,8 @@ Shader "SpellDuel/Toon"
             fixed4 frag(v2f i) : SV_Target
             {
                 #ifdef SD_HUMAN
-                return fixed4(_Color.rgb * fixed3(0.25,0.20,0.25), 1);
+                fixed3 ink = _HumanHair > 0.5 ? fixed3(0.065,0.050,0.080) : _Color.rgb * fixed3(0.25,0.20,0.25);
+                return fixed4(ink, 1);
                 #else
                 return _SD_OutlineColor;
                 #endif
