@@ -305,10 +305,10 @@ namespace SpellDuel
             cv.Face(skin,-.32f*p.Width,.46f,-fw*.95f,.23f,-fw,.06f,-jaw,plan.MouthY*3+.09f,-.15f,chin+.055f,-plan.MouthWidth*1.5f,chin,plan.MouthWidth*1.5f,chin,.15f,chin+.055f,jaw,plan.MouthY*3+.09f,fw,.06f,fw*.95f,.23f,.32f*p.Width,.46f,0,plan.Top*3+.09f);
             for(int side=-1;side<=1;side+=2)cv.DrawEye(side,plan);
             float noseY=plan.NoseY*3+.09f,mouthY=plan.MouthY*3+.09f,mw=plan.MouthWidth*1.5f;
-            cv.Poly(Paint.Mix(skin,White,.30f),.007f,noseY+.040f,.022f,noseY+.005f,.005f,noseY);
-            cv.Line(-.012f,noseY,.015f,noseY-.003f,.004f,new Paint(skin.r*.72f,skin.g*.49f,skin.b*.46f));
-            if(p.Open>0){cv.Oval(0,mouthY,mw,.024f*p.Open,Ink,.005f);cv.Box(0,mouthY+.008f,mw*.72f,.006f,White);}
-            else {cv.Line(-mw,mouthY+p.Smile*.012f,0,mouthY,.006f,Paint.Hex("#925154"));cv.Line(0,mouthY,mw,mouthY+p.Smile*.012f+p.Asym*.0012f,.006f,Paint.Hex("#925154"));}
+            cv.Oval(.006f,noseY+.023f,.009f,.012f,Paint.Mix(skin,White,.20f),0);
+            cv.Line(-.012f,noseY,.003f,noseY-.003f,.003f,Paint.Mix(skin,Paint.Hex("#A45E50"),.38f));
+            if(p.Open>0){cv.Oval(0,mouthY,mw,.024f*p.Open,Paint.Hex("#74363F"),.003f);cv.Oval(0,mouthY+.004f,mw*.60f,.003f,Paint.Mix(skin,White,.85f),0);}
+            else {cv.Line(-mw,mouthY+p.Smile*.012f,0,mouthY,.004f,Paint.Hex("#A36663"));cv.Line(0,mouthY,mw,mouthY+p.Smile*.012f+p.Asym*.0012f,.004f,Paint.Hex("#A36663"));}
             for(int side=-1;side<=1;side+=2)
             {
                 float inner=side*(plan.EyeX-plan.EyeWidth*.5f)*3,outer=inner+side*plan.EyeWidth*3.3f;

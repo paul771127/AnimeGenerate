@@ -687,3 +687,21 @@
 - 預覽是 C# 網格／像素資料的軟體正交投影，近似材質與描邊，並非 Unity Editor 或手機截圖。本次未執行 Unity Metal／GLES3／Vulkan 編譯與六人同場真機幀率測試，需由 Unity 建置驗收。
 
 參考：[官方角色頁](https://zenless.hoyoverse.com/en-us/character)、[Belle／Wise 官方介紹](https://zzz.mihoyo.com/news/102335)、[Anby 官方展示](https://www.youtube.com/watch?v=Y2HTc9JZvwc)、[Nicole 官方展示](https://www.youtube.com/watch?v=BA5eUSejUiQ)。參考圖只留開發暫存，未匯入遊戲素材。
+
+## 鼻嘴追加修正：Codex 分析
+
+另比對 Nicole《Price of Hope》、Ellen《Oh Ellen, Please!》、Anby《Thunderbolt Silhouette》封面，以及 Belle／Wise 官方角色宣傳圖。這些圖片有不同表情與透視，不能當作同倍率正側面工程圖；本次不宣稱測得官方模型比例。共同可採用的造型觀察是：正面鼻底標記很短、鼻尖高光細小、閉嘴輪廓柔和，嘴周與下巴靠面體轉折而非粗黑線分開。
+
+現況：2D 鼻子是亮色三角形加橫線，嘴部張口還固定疊白色齒條；3D 鼻子使用寬廣高斯隆起，鼻底到人中沒有獨立截面，嘴周整體內凹，側面難以讀成鼻尖／鼻底／唇／頦的連續輪廓。先保留第二輪鼻底與嘴線高度，修正形狀與前後深度，避免在造型尚未正確前反覆移動五官。眼睛、Persona、耳位、下巴長度與動畫契約保持不變。
+
+實作方向：增加下半臉截面，在同一頭模上收窄鼻梁、形成鼻尖與鼻下回折、少量唇部體積；正面只留短暖色鼻底。2D 取消尖三角與粗橫線，改小鼻尖亮部、短鼻底及較柔和的唇線，張嘴採暖暗色與窄齒部。戰鬥角色與居民都透過 AnimeFace 共用；2D 使用同一 FacePlan。
+
+來源：[Nicole](https://www.youtube.com/watch?v=AHya9H4w5IA)、[Ellen 官方預告轉載](https://www.youtube.com/watch?v=Mfxj_EQvM6I)、[Anby 官方展示](https://www.youtube.com/watch?v=Y2HTc9JZvwc)、[Belle／Wise 官方介紹](https://zzz.mihoyo.com/news/102335)。參考圖片僅放開發暫存，不加入遊戲資源。
+
+### 鼻嘴追加修正結果
+
+- 下半臉增加 8 道截面，頭模每人增加 384 個三角形；鼻尖前出、鼻底回折、人中與下唇轉折整合於原頭模，沒有另黏鼻錐。鼻底及嘴線高度仍沿用第二輪，這次先修正形狀而非用位移掩蓋問題。
+- 人類 shader 原本的矩形鼻影改為小面積橢圓柔影，降低鼻影強度；屬性名稱、眼睛與 Boss／小怪的非 SD_HUMAN 路徑不變。2D 去掉三角鼻亮面，鼻尖高光不描黑框，唇線與齒部減薄。
+- [27 人鼻嘴三視圖](Docs/face_preview/nose_mouth/README.md)、[更新的 29 人頭像](Docs/outfit_preview/portraits.png)。原第四輪全身圖是該輪存檔，鼻嘴以此次近景為準。
+- C# 測試環境通過 15 個職業及 12 位居民的網格、有限座標、比例標記、原版 2× 三角形上限與快取檢查；15 職業六種動畫姿勢、原握把和腳底檢查通過；Boss 頭像逐像素不變。眼片／眼睛材質、2D 眼睛、Persona、CharacterRig 與居民程式保持不變。
+- 未執行 Unity Editor、Metal／GLES3／Vulkan 編譯或真機檢視；軟體投影可檢查輪廓與資料一致性，不能取代引擎光照驗收。

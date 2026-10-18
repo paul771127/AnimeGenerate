@@ -9,10 +9,10 @@ namespace SpellDuel
         static readonly Dictionary<string, Mesh> meshes = new Dictionary<string, Mesh>();
         static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
         // 下巴到頭頂的半寬、前臉深度、後腦深度；前臉不使用球體經緯變形。
-        static readonly float[] ys = {-.157f,-.140f,-.122f,-.106f,-.085f,-.072f,-.055f,-.030f,-.010f,.013f,.048f,.087f,.123f,.147f,.157f};
-        static readonly float[] widths = {.0308f,.050f,.074f,.094f,.116f,.126f,.133f,.139f,.140f,.137f,.133f,.126f,.107f,.067f,.003f};
-        static readonly float[] fronts = {.107f,.110f,.112f,.114f,.116f,.119f,.122f,.122f,.120f,.116f,.124f,.118f,.104f,.061f,.004f};
-        static readonly float[] backs = {.030f,.050f,.075f,.096f,.118f,.130f,.140f,.148f,.152f,.153f,.151f,.145f,.125f,.087f,.005f};
+        static readonly float[] ys = {-0.15700f,-0.14000f,-0.12200f,-0.11500f,-0.11000f,-0.10600f,-0.10100f,-0.09600f,-0.08500f,-0.08100f,-0.07200f,-0.06500f,-0.05500f,-0.04800f,-0.04000f,-0.03000f,-0.01000f,0.01300f,0.04800f,0.08700f,0.12300f,0.14700f,0.15700f};
+        static readonly float[] widths = {0.03080f,0.05000f,0.07400f,0.08275f,0.08900f,0.09400f,0.09924f,0.10448f,0.11600f,0.11908f,0.12600f,0.12888f,0.13300f,0.13468f,0.13660f,0.13900f,0.14000f,0.13700f,0.13300f,0.12600f,0.10700f,0.06700f,0.00300f};
+        static readonly float[] fronts = {0.10700f,0.11000f,0.11200f,0.11288f,0.11350f,0.11400f,0.11448f,0.11495f,0.11600f,0.11692f,0.11900f,0.12024f,0.12200f,0.12200f,0.12200f,0.12200f,0.12000f,0.11600f,0.12400f,0.11800f,0.10400f,0.06100f,0.00400f};
+        static readonly float[] backs = {0.03000f,0.05000f,0.07500f,0.08419f,0.09075f,0.09600f,0.10124f,0.10648f,0.11800f,0.12169f,0.13000f,0.13412f,0.14000f,0.14224f,0.14480f,0.14800f,0.15200f,0.15300f,0.15100f,0.14500f,0.12500f,0.08700f,0.00500f};
         static readonly float[] frontAngles={0,7,16,30,48,68,90};
         static float FrontAngle(int column)=>frontAngles[column<0?-column:column]*(column<0?-1:1)*Mathf.Deg2Rad;
         static float Bell(float x,float w) => Mathf.Exp(-x*x/(w*w));
@@ -31,8 +31,17 @@ namespace SpellDuel
             float side=Mathf.Clamp01(Mathf.Abs(x)/Mathf.Max(.001f,width));
             // 平臉面、顴骨轉折、整合鼻梁與鼻尖，嘴周稍往後收。
             var plan=new Portraits.FacePlan(p);
-            return front*(1-Mathf.Pow(side,4))+.020f*Bell(x,.016f)*Bell(y-(plan.NoseY+.014f),.017f)
+            // Keep the accepted eye surface exactly; sculpt only below the lower eyelid.
+            float lower=Mathf.Clamp01((-.030f-y)/.012f);
+            float tip=plan.NoseY+.009f;
+            float nose=.025f*Bell(x,.014f)*Bell(y-tip,.011f)
+                +.004f*Bell(x,.011f)*Bell(y-(tip+.025f),.024f)
+                -.003f*Bell(x,.016f)*Bell(y-(plan.NoseY-.005f),.005f);
+            float lips=.0015f*Bell(x,.028f)*Bell(y-(plan.MouthY-.003f),.006f)
+                -.0015f*Bell(x,.030f)*Bell(y-(plan.MouthY-.015f),.006f);
+            float legacy=.020f*Bell(x,.016f)*Bell(y-(plan.NoseY+.014f),.017f)
                 +.007f*Bell(x,.013f)*Bell(y+.015f,.047f)-.003f*Bell(x,.038f)*Bell(y-plan.MouthY,.014f);
+            return front*(1-Mathf.Pow(side,4))+Mathf.Lerp(legacy,nose+lips,lower);
         }
         static bool OnTriangle(float x,float y,Vector3 a,Vector3 b,Vector3 c,out float z)
         {
@@ -175,10 +184,10 @@ namespace SpellDuel
                 Stroke(head,identity,p,Vector3.zero,new Vector2(x,by+.0015f+bend*.5f),new Vector2(outer,by+bend),.003f,brow);
             }
             // 鼻子融入頭模，只留一筆暖色鼻底，不再另外黏三角錐。
-            Stroke(head,identity,p,Vector3.zero,new Vector2(-.007f,plan.NoseY),new Vector2(.008f,plan.NoseY-.001f),.0018f,Color.Lerp(skin,new Color(.65f,.29f,.26f),.45f));
+            Stroke(head,identity,p,Vector3.zero,new Vector2(-.007f,plan.NoseY),new Vector2(.002f,plan.NoseY-.001f),.0012f,Color.Lerp(skin,new Color(.65f,.29f,.26f),.28f));
             float corner=plan.MouthY+p.Smile*.004f,mw=plan.MouthWidth*.5f;
-            Stroke(head,identity,p,Vector3.zero,new Vector2(-mw,corner),new Vector2(0,plan.MouthY),.0025f,new Color(.53f,.24f,.25f));
-            Stroke(head,identity,p,Vector3.zero,new Vector2(0,plan.MouthY),new Vector2(mw,corner+p.Asym*.0004f),.0020f,new Color(.65f,.32f,.31f));
+            Stroke(head,identity,p,Vector3.zero,new Vector2(-mw,corner),new Vector2(0,plan.MouthY),.0016f,new Color(.60f,.32f,.32f));
+            Stroke(head,identity,p,Vector3.zero,new Vector2(0,plan.MouthY),new Vector2(mw,corner+p.Asym*.0004f),.0012f,new Color(.71f,.40f,.38f));
             // 單位薄片保留原有 mouthOpen 縮放契約，施法時仍可張嘴。
             if(!meshes.TryGetValue("張嘴單位片",out var mouth))
             {

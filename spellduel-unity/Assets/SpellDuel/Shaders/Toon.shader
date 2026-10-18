@@ -103,12 +103,12 @@ Shader "SpellDuel/Toon"
                         float threshold = lerp(-0.65, 1.05, saturate(front * 0.5 + 0.5));
                         float faceLit = 1.0 - smoothstep(threshold - 0.025, threshold + 0.025, cheek);
                         // 鼻下小陰影與瀏海帶皆在臉部 UV 中計算，不需要陰影貼圖。
-                        float nose = (1.0 - smoothstep(0.02, 0.065, abs(i.uv.x - 0.5)))
-                            * smoothstep(0.25, 0.265, i.uv.y) * (1.0 - smoothstep(0.285, 0.30, i.uv.y));
+                        float2 noseUV = (i.uv - float2(0.498, 0.267)) / float2(0.028, 0.012);
+                        float nose = 1.0 - smoothstep(0.35, 1.0, dot(noseUV, noseUV));
                         float edge = _HumanFringe + 0.028 * sin(i.uv.x * 31.0 + _HumanWave)
                             + 0.020 * sin(i.uv.x * 15.0 + _HumanPart * 4.0);
                         float fringe = smoothstep(edge, edge + 0.015, i.uv.y) * (1.0 - smoothstep(0.87, 0.91, i.uv.y));
-                        faceLit *= 1.0 - max(nose * 0.42, fringe * 0.50);
+                        faceLit *= 1.0 - max(nose * 0.24, fringe * 0.50);
                         lit = lerp(lit, faceLit, i.data.g);
                     }
                 }
