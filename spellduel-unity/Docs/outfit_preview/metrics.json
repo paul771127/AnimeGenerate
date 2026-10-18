@@ -1,299 +1,233 @@
 [
   {
     "id": "swordsman",
-    "key": "swordsman",
     "label": "劍士",
-    "originalTriangles": 6772,
-    "triangles": 7392,
-    "renderers": 37,
-    "visibleRenderers": 33,
-    "hairTriangles": 2120,
-    "hairLocks": 25
+    "original": 6772,
+    "triangles": 8108,
+    "renderers": 36,
+    "active": 32,
+    "ratio": 1.197
   },
   {
     "id": "archer",
-    "key": "archer",
     "label": "獵人",
-    "originalTriangles": 6272,
-    "triangles": 7400,
-    "renderers": 39,
-    "visibleRenderers": 35,
-    "hairTriangles": 2196,
-    "hairLocks": 26
+    "original": 6272,
+    "triangles": 7904,
+    "renderers": 38,
+    "active": 34,
+    "ratio": 1.26
   },
   {
     "id": "mage",
-    "key": "mage",
     "label": "法師",
-    "originalTriangles": 6292,
-    "triangles": 6652,
+    "original": 6292,
+    "triangles": 7480,
     "renderers": 33,
-    "visibleRenderers": 29,
-    "hairTriangles": 2120,
-    "hairLocks": 25
+    "active": 29,
+    "ratio": 1.189
   },
   {
     "id": "assassin",
-    "key": "assassin",
     "label": "刺客",
-    "originalTriangles": 5660,
-    "triangles": 6232,
-    "renderers": 37,
-    "visibleRenderers": 33,
-    "hairTriangles": 2500,
-    "hairLocks": 30
+    "original": 5660,
+    "triangles": 6968,
+    "renderers": 36,
+    "active": 32,
+    "ratio": 1.231
   },
   {
     "id": "priest",
-    "key": "priest",
     "label": "牧師",
-    "originalTriangles": 8116,
-    "triangles": 7936,
+    "original": 8116,
+    "triangles": 8812,
     "renderers": 35,
-    "visibleRenderers": 31,
-    "hairTriangles": 2500,
-    "hairLocks": 30
+    "active": 31,
+    "ratio": 1.086
   },
   {
     "id": "paladin",
-    "key": "paladin",
     "label": "聖騎士",
-    "originalTriangles": 7496,
-    "triangles": 8116,
-    "renderers": 38,
-    "visibleRenderers": 34,
-    "hairTriangles": 2120,
-    "hairLocks": 25
+    "original": 7496,
+    "triangles": 8864,
+    "renderers": 37,
+    "active": 33,
+    "ratio": 1.182
   },
   {
     "id": "berserker",
-    "key": "berserker",
     "label": "狂戰士",
-    "originalTriangles": 6528,
-    "triangles": 6980,
-    "renderers": 36,
-    "visibleRenderers": 32,
-    "hairTriangles": 2500,
-    "hairLocks": 30
+    "original": 6528,
+    "triangles": 7564,
+    "renderers": 35,
+    "active": 31,
+    "ratio": 1.159
   },
   {
     "id": "marksman",
-    "key": "marksman",
     "label": "神射手",
-    "originalTriangles": 6380,
-    "triangles": 7324,
-    "renderers": 39,
-    "visibleRenderers": 35,
-    "hairTriangles": 2196,
-    "hairLocks": 26
+    "original": 6380,
+    "triangles": 8136,
+    "renderers": 38,
+    "active": 34,
+    "ratio": 1.275
   },
   {
     "id": "ranger",
-    "key": "ranger",
     "label": "遊俠",
-    "originalTriangles": 6856,
-    "triangles": 8060,
-    "renderers": 45,
-    "visibleRenderers": 41,
-    "hairTriangles": 2500,
-    "hairLocks": 30
+    "original": 6856,
+    "triangles": 8704,
+    "renderers": 44,
+    "active": 40,
+    "ratio": 1.27
   },
   {
     "id": "archmage",
-    "key": "archmage",
     "label": "大魔導士",
-    "originalTriangles": 6512,
-    "triangles": 7252,
+    "original": 6512,
+    "triangles": 8080,
     "renderers": 36,
-    "visibleRenderers": 32,
-    "hairTriangles": 2500,
-    "hairLocks": 30
+    "active": 32,
+    "ratio": 1.241
   },
   {
     "id": "summoner",
-    "key": "summoner",
     "label": "召喚師",
-    "originalTriangles": 6672,
-    "triangles": 7348,
+    "original": 6672,
+    "triangles": 8168,
     "renderers": 37,
-    "visibleRenderers": 33,
-    "hairTriangles": 2500,
-    "hairLocks": 30
+    "active": 33,
+    "ratio": 1.224
   },
   {
     "id": "ninja",
-    "key": "ninja",
     "label": "忍者",
-    "originalTriangles": 5964,
-    "triangles": 6356,
-    "renderers": 39,
-    "visibleRenderers": 35,
-    "hairTriangles": 2348,
-    "hairLocks": 28
+    "original": 5964,
+    "triangles": 7344,
+    "renderers": 38,
+    "active": 34,
+    "ratio": 1.231
   },
   {
     "id": "shadowdancer",
-    "key": "shadowdancer",
     "label": "影舞者",
-    "originalTriangles": 6036,
-    "triangles": 7056,
-    "renderers": 37,
-    "visibleRenderers": 33,
-    "hairTriangles": 2500,
-    "hairLocks": 30
+    "original": 6036,
+    "triangles": 7768,
+    "renderers": 36,
+    "active": 32,
+    "ratio": 1.287
   },
   {
     "id": "bishop",
-    "key": "bishop",
     "label": "主教",
-    "originalTriangles": 8416,
-    "triangles": 7548,
+    "original": 8416,
+    "triangles": 8424,
     "renderers": 38,
-    "visibleRenderers": 34,
-    "hairTriangles": 1968,
-    "hairLocks": 23
+    "active": 34,
+    "ratio": 1.001
   },
   {
     "id": "inquisitor",
-    "key": "inquisitor",
     "label": "審判者",
-    "originalTriangles": 7228,
-    "triangles": 6620,
-    "renderers": 34,
-    "visibleRenderers": 30,
-    "hairTriangles": 2196,
-    "hairLocks": 26
+    "original": 7228,
+    "triangles": 7136,
+    "renderers": 33,
+    "active": 29,
+    "ratio": 0.987
   },
   {
     "id": "npc0",
-    "key": "老焰",
     "label": "老焰",
-    "originalTriangles": 4904,
-    "triangles": 6560,
+    "original": 4904,
+    "triangles": 7192,
     "renderers": 11,
-    "visibleRenderers": 11,
-    "hairTriangles": 1968,
-    "hairLocks": 23
+    "ratio": 1.467
   },
   {
     "id": "npc1",
-    "key": "小鐵",
     "label": "小鐵",
-    "originalTriangles": 4976,
-    "triangles": 7340,
-    "renderers": 11,
-    "visibleRenderers": 11,
-    "hairTriangles": 2500,
-    "hairLocks": 30
+    "original": 4976,
+    "triangles": 7852,
+    "renderers": 9,
+    "ratio": 1.578
   },
   {
     "id": "npc2",
-    "key": "米菈",
     "label": "米菈",
-    "originalTriangles": 5028,
-    "triangles": 7152,
-    "renderers": 14,
-    "visibleRenderers": 14,
-    "hairTriangles": 2500,
-    "hairLocks": 30
+    "original": 5028,
+    "triangles": 7716,
+    "renderers": 12,
+    "ratio": 1.535
   },
   {
     "id": "npc3",
-    "key": "翠",
     "label": "翠",
-    "originalTriangles": 5196,
-    "triangles": 6968,
-    "renderers": 11,
-    "visibleRenderers": 11,
-    "hairTriangles": 2500,
-    "hairLocks": 30
+    "original": 5196,
+    "triangles": 7436,
+    "renderers": 10,
+    "ratio": 1.431
   },
   {
     "id": "npc4",
-    "key": "楓",
     "label": "楓",
-    "originalTriangles": 4752,
-    "triangles": 6844,
+    "original": 4752,
+    "triangles": 7488,
     "renderers": 9,
-    "visibleRenderers": 9,
-    "hairTriangles": 2500,
-    "hairLocks": 30
+    "ratio": 1.576
   },
   {
     "id": "npc5",
-    "key": "小葉",
     "label": "小葉",
-    "originalTriangles": 5112,
-    "triangles": 7060,
+    "original": 5112,
+    "triangles": 7676,
     "renderers": 11,
-    "visibleRenderers": 11,
-    "hairTriangles": 2500,
-    "hairLocks": 30
+    "ratio": 1.502
   },
   {
     "id": "npc6",
-    "key": "海斗",
     "label": "海斗",
-    "originalTriangles": 5016,
-    "triangles": 6824,
-    "renderers": 12,
-    "visibleRenderers": 12,
-    "hairTriangles": 2120,
-    "hairLocks": 25
+    "original": 5016,
+    "triangles": 7328,
+    "renderers": 10,
+    "ratio": 1.461
   },
   {
     "id": "npc7",
-    "key": "凪",
     "label": "凪",
-    "originalTriangles": 4548,
-    "triangles": 6616,
-    "renderers": 9,
-    "visibleRenderers": 9,
-    "hairTriangles": 2348,
-    "hairLocks": 28
+    "original": 4548,
+    "triangles": 7316,
+    "renderers": 10,
+    "ratio": 1.609
   },
   {
     "id": "npc8",
-    "key": "阿潮",
     "label": "阿潮",
-    "originalTriangles": 4748,
-    "triangles": 6724,
-    "renderers": 13,
-    "visibleRenderers": 13,
-    "hairTriangles": 2120,
-    "hairLocks": 25
+    "original": 4748,
+    "triangles": 7392,
+    "renderers": 12,
+    "ratio": 1.557
   },
   {
     "id": "npc9",
-    "key": "鐵匠",
     "label": "鐵匠",
-    "originalTriangles": 4756,
-    "triangles": 6696,
+    "original": 4756,
+    "triangles": 7300,
     "renderers": 10,
-    "visibleRenderers": 10,
-    "hairTriangles": 2120,
-    "hairLocks": 25
+    "ratio": 1.535
   },
   {
     "id": "npc10",
-    "key": "店員",
     "label": "店員",
-    "originalTriangles": 5128,
-    "triangles": 6712,
+    "original": 5128,
+    "triangles": 7456,
     "renderers": 11,
-    "visibleRenderers": 11,
-    "hairTriangles": 2196,
-    "hairLocks": 26
+    "ratio": 1.454
   },
   {
     "id": "npc11",
-    "key": "公會長",
     "label": "公會長",
-    "originalTriangles": 5172,
-    "triangles": 7276,
-    "renderers": 10,
-    "visibleRenderers": 10,
-    "hairTriangles": 2272,
-    "hairLocks": 27
+    "original": 5172,
+    "triangles": 7844,
+    "renderers": 9,
+    "ratio": 1.517
   }
 ]

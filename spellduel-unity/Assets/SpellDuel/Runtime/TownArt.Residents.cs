@@ -35,7 +35,7 @@ namespace SpellDuel
             var features=AnimeFace.Build(face,key,persona,skin,hair,iris,false,elder,elf);
             // 居民不播放臉部動畫；停用閉眼線的物件，避免靜態合批把隱藏線烘焙成可見。
             foreach(var lid in features.Lids){lid.gameObject.SetActive(false);Object.Destroy(lid.gameObject);}
-            AnimeFace.Hair(face,key,persona,hair);
+            AnimeFace.Hair(face,key,persona,hair);HeadwearArt.Build(face,key,persona);
             if(elder)for(int s=-1;s<=1;s+=2)AnimeFace.Detail(face,key,persona,new Vector2(s*.093f,-.006f),new Vector2(s*.110f,-.017f),.002f,C("ac6c56"));
             switch(key)
             {
@@ -43,39 +43,28 @@ namespace SpellDuel
                     Beard(p,hair);BellPin(p,new Vector3(.12f,1.13f,.2f),.09f);
                     Beam(p,"Walking staff",new Vector3(-.33f,.04f,.11f),new Vector3(-.33f,1.16f,.11f),.045f,Wood);break;
                 case "小鐵":
-                    ResidentBox(p,"Red headband",new Vector3(0,1.66f,.11f),new Vector3(.38f,.045f,.18f),C("c34e3b"));
-                    for(int s=-1;s<=1;s+=2){Ball(p,"Brass goggles",new Vector3(s*.087f,1.68f,.2f),new Vector3(.15f,.11f,.07f),Gold);Ball(p,"Goggle glass",new Vector3(s*.087f,1.68f,.24f),new Vector3(.102f,.069f,.02f),C("75baca"));}
                     ResidentBox(p,"Soot cheek",new Vector3(-.12f,1.43f,.18f),new Vector3(.04f,.014f,.01f),C("6c6056"));break;
                 case "米菈":
-                    Cyl(p,"Ochre hat crown",new Vector3(0,1.78f,0),new Vector3(.37f,.13f,.36f),C("e6b961"));
-                    Cyl(p,"Wide hat brim",new Vector3(0,1.69f,0),new Vector3(.68f,.025f,.62f),C("bd8b43"));
-                    Cyl(p,"Teal hat band",new Vector3(0,1.72f,0),new Vector3(.38f,.025f,.37f),cloth);
                     ResidentBox(p,"Merchant backpack",new Vector3(0,1.03f,-.26f),new Vector3(.44f,.57f,.27f),C("8d7251"));
                     var roll=Cyl(p,"Rolled blanket",new Vector3(0,1.36f,-.26f),new Vector3(.18f,.28f,.18f),Cream);roll.transform.localRotation=Quaternion.Euler(0,0,90);
                     Beam(p,"Crossbody strap",new Vector3(-.18f,1.22f,.15f),new Vector3(.17f,.78f,.20f),.035f,Gold);Earring(p,Gold);break;
                 case "翠":
 
-                    for(int s=-1;s<=1;s+=2){Leaf(p,new Vector3(s*.09f,1.71f,.16f),.14f,C("63a96b"),-s*30);Leaf(p,new Vector3(s*.16f,1.18f,.14f),.17f,C("68a25c"),-s*40);}
-                    Ball(p,"Forehead gem",new Vector3(0,1.69f,.19f),Vector3.one*.064f,C("80ce82"));break;
+                    for(int side=-1;side<=1;side+=2)Leaf(p,new Vector3(side*.16f,1.18f,.14f),.17f,C("68a25c"),-side*40);break;
                 case "楓":
                     ResidentBox(p,"Leaf lamp frame",new Vector3(-.3f,.76f,.13f),new Vector3(.14f,.20f,.12f),Gold);
                     ResidentBox(p,"Leaf lamp paper",new Vector3(-.3f,.76f,.20f),new Vector3(.10f,.14f,.02f),C("d9ee87"));Leaf(p,new Vector3(-.3f,.9f,.14f),.1f,C("7ebf78"),15);
                     AnimeFace.Detail(face,key,persona,new Vector2(.100f,-.025f),new Vector2(.110f,-.055f),.002f,C("ac6c56"));break;
                 case "小葉":
                     for(int s=-1;s<=1;s+=2){Ball(p,"Rosy cheek",new Vector3(s*.12f,1.445f,.184f),new Vector3(.045f,.024f,.01f),C("e99786"));}
-                    Leaf(p,new Vector3(.12f,1.71f,.14f),.16f,C("b3d96e"),-25);
                     ResidentBox(p,"Story tablet",new Vector3(.22f,.82f,.17f),new Vector3(.16f,.24f,.045f),C("ac7950"));Beam(p,"Tablet name",new Vector3(.22f,.76f,.20f),new Vector3(.22f,.88f,.20f),.014f,Cream);break;
                 case "海斗":
-                    Cyl(p,"Captain cap",new Vector3(0,1.78f,0),new Vector3(.43f,.09f,.38f),C("e4e9dd"));
-                    Cyl(p,"Navy cap band",new Vector3(0,1.71f,0),new Vector3(.44f,.025f,.39f),hair);
-                    Ball(p,"Captain visor",new Vector3(0,1.69f,.14f),new Vector3(.43f,.06f,.26f),hair);Ball(p,"Cap badge",new Vector3(0,1.78f,.20f),Vector3.one*.07f,Gold);
                     Beam(p,"Anchor shank",new Vector3(0,1.13f,.20f),new Vector3(0,1.01f,.20f),.02f,Gold);ResidentBox(p,"Anchor flukes",new Vector3(0,1.01f,.20f),new Vector3(.10f,.02f,.02f),Gold);break;
                 case "凪":
 
-                    Beam(p,"Golden hairpin",new Vector3(-.16f,1.64f,-.14f),new Vector3(-.04f,1.74f,-.14f),.02f,Gold);Earring(p,Gold);break;
+                    Earring(p,Gold);break;
                 case "阿潮":
-                    Beard(p,hair);Cone(p,"Woven straw hat",new Vector3(0,1.69f,0),new Vector3(.76f,.26f,.72f),C("c9a864"));
-                    for(int i=0;i<8;i++){float a=i*Mathf.PI/4;Beam(p,"Straw ribs",new Vector3(0,1.96f,0),new Vector3(Mathf.Cos(a)*.37f,1.70f,Mathf.Sin(a)*.35f),.012f,C("8c6b39"));}
+                    Beard(p,hair);
                     Beam(p,"Fishing rod",new Vector3(-.31f,.1f,.04f),new Vector3(-.38f,1.9f,.04f),.023f,Wood);Beam(p,"Fishing line",new Vector3(-.38f,1.9f,.04f),new Vector3(-.39f,.92f,.04f),.005f,Cream);break;
                 case "鐵匠":
                     Beard(p,hair);
@@ -84,9 +73,8 @@ namespace SpellDuel
                 case "店員":
 
                     ResidentBox(p,"Medicine satchel",new Vector3(-.23f,.78f,.04f),new Vector3(.17f,.23f,.17f),Gold);Bottle(p,new Vector3(-.29f,.82f,.15f),C("e67985"),.17f);
-                    Leaf(p,new Vector3(.13f,1.69f,.12f),.13f,C("a9c66b"),-30);break;
+                    break;
                 case "公會長":
-                    ResidentBox(p,"Silver dark streak",new Vector3(.11f,1.69f,.12f),new Vector3(.065f,.11f,.1f),C("514452"));
                     for(int s=-1;s<=1;s+=2){Ball(p,"Golden epaulette",new Vector3(s*.23f,1.21f,-.015f),new Vector3(.23f,.08f,.32f),Gold);}
                     for(int i=-1;i<=1;i++)BellPin(p,new Vector3(i*.08f,1.13f,.20f),.065f);
                     AnimeFace.Detail(face,key,persona,new Vector2(.100f,-.025f),new Vector2(.110f,-.061f),.002f,C("a96861"));break;
@@ -126,7 +114,7 @@ namespace SpellDuel
                 OutfitArt.Add(hip,id,"thigh"+suffix,skin);var knee=Group(hip,"Outfit knee",new Vector3(0,-.42f,0));OutfitArt.Add(knee,id,"calf"+suffix,skin);
                 var arm=Group(p,"Outfit shoulder",new Vector3(side*(id=="鐵匠"?.29f:.23f),1.205f,.045f));arm.localScale=Vector3.one*.74f;arm.localRotation=Quaternion.Euler(0,0,side*9);
                 OutfitArt.Add(arm,id,"upper"+suffix,skin);var elbow=Group(arm,"Outfit elbow",new Vector3(0,-.28f,0));if(id=="小葉"&&side>0)elbow.localRotation=Quaternion.Euler(-25,0,0);OutfitArt.Add(elbow,id,"fore"+suffix,skin);
-                var hand=Group(elbow,"Outfit hand",new Vector3(0,-.25f,0));OutfitArt.Add(hand,id,"hand"+suffix,skin);
+                var hand=Group(elbow,"Outfit hand",new Vector3(0,-.25f,0));OutfitArt.Add(hand,id,"hand"+((id=="老焰"||id=="阿潮")&&side<0||id=="鐵匠"&&side>0||id=="小葉"&&side>0?"Grip":"Relax")+suffix,skin);
             }
         }
         static readonly System.Collections.Generic.Dictionary<string,Mesh> residentPropCache=new System.Collections.Generic.Dictionary<string,Mesh>();

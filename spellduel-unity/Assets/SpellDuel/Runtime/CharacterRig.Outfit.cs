@@ -4,6 +4,22 @@ namespace SpellDuel
 {
     public partial class CharacterRig
     {
+        MeshFilter outfitHandL,outfitHandR;
+        Mesh[] handShapesL,handShapesR;bool heldHandL,heldHandR;
+        void UpdateHandShapes(float cast,float hurt)
+        {
+            if(outfitHandL==null)return;
+            int open=cast>.05f||chargeAmt>.10f?2:0;
+            outfitHandL.sharedMesh=handShapesL[heldHandL?1:open];outfitHandR.sharedMesh=handShapesR[heldHandR?1:open];
+        }
+        void BuildHands(string identity)
+        {
+            heldHandL=handL.GetComponentsInChildren<MeshFilter>().Length>0;heldHandR=handR.GetComponentsInChildren<MeshFilter>().Length>0;
+            handShapesL=new Mesh[3];handShapesR=new Mesh[3];string[] poses={"Relax","Grip","Open"};
+            for(int i=0;i<3;i++){handShapesL[i]=OutfitArt.MeshFor(identity,"hand"+poses[i]+"L",Skin);handShapesR[i]=OutfitArt.MeshFor(identity,"hand"+poses[i]+"R",Skin);}
+            outfitHandL=AnimeFace.Part(handL,"Outfit handL",handShapesL[heldHandL?1:0],Vector3.zero,AnimeFace.Material(Color.white,4)).GetComponent<MeshFilter>();
+            outfitHandR=AnimeFace.Part(handR,"Outfit handR",handShapesR[heldHandR?1:0],Vector3.zero,AnimeFace.Material(Color.white,4)).GetComponent<MeshFilter>();
+        }
         static readonly Dictionary<string,Mesh> outfitPropMeshes=new Dictionary<string,Mesh>();
         void BatchOutfitProp(Transform root,string identity)
         {
@@ -52,7 +68,7 @@ namespace SpellDuel
             OutfitArt.Add(knL,identity,"calfL",Skin);OutfitArt.Add(knR,identity,"calfR",Skin);
             OutfitArt.Add(shL,identity,"upperL",Skin);OutfitArt.Add(shR,identity,"upperR",Skin);
             OutfitArt.Add(elL,identity,"foreL",Skin);OutfitArt.Add(elR,identity,"foreR",Skin);
-            OutfitArt.Add(handL,identity,"handL",Skin);OutfitArt.Add(handR,identity,"handR",Skin);
+            BuildHands(identity);HeadwearArt.Build(head,identity,facePersona);
             if(cape!=null)OutfitArt.Add(cape,identity,"cape",Skin);
             if(scarfTail!=null)OutfitArt.Add(scarfTail,identity,"scarf",Skin);
             foreach(var part in spine.GetComponentsInChildren<Transform>())if(part.gameObject.name=="DanceRibbon")OutfitArt.Add(part,identity,part.localPosition.x<0?"ribbonL":"ribbonR",Skin);

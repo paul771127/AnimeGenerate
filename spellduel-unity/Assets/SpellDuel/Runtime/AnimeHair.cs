@@ -8,7 +8,7 @@ namespace SpellDuel
     {
         static readonly Dictionary<string,Mesh> meshes=new Dictionary<string,Mesh>();
         static readonly Dictionary<string,Color32[]> images=new Dictionary<string,Color32[]>();
-        internal const int W=128,H=160;
+        internal const int W=256,H=320;
         static Vector3 Curve(Vector3 a,Vector3 b,Vector3 c,float t)=>a*((1-t)*(1-t))+b*(2*t*(1-t))+c*(t*t);
         // Seven cross sections along a quadratic curve; five-sided flattened lens, closed ends.
         static void Lock(List<Vector3> v,List<int> tri,List<Color> colors,Vector3 a,Vector3 b,Vector3 c,float width,float depth,float layer=1,float twist=0)
@@ -127,11 +127,11 @@ namespace SpellDuel
             if(look.Seed==15)Lock(v,tri,colors,new Vector3(-.13f,.09f,.02f),new Vector3(-.21f,-.015f,.04f),new Vector3(-.185f,-.12f,.04f),.025f,.011f,.85f,.2f);
             mesh=new Mesh{name="髮型 "+id};mesh.SetVertices(v);mesh.SetTriangles(tri,0);mesh.colors=colors.ToArray();mesh.RecalculateNormals();mesh.RecalculateBounds();meshes[id]=mesh;return mesh;
         }
-        internal static void Build(Transform head,string id,Portraits.Persona p)=>AnimeFace.Part(head,"整體髮型",MeshFor(id,p),Vector3.zero,AnimeFace.Material(CharacterLook.Get(id).HairColor,4));
+        internal static void Build(Transform head,string id,Portraits.Persona p)=>AnimeFace.Part(head,"整體髮型",HeadwearArt.HairFor(id,p),Vector3.zero,AnimeFace.Material(CharacterLook.Get(id).HairColor,4));
         internal static Color32[] Portrait(string id,Portraits.Persona p,bool frontOnly)
         {
             string key=id+frontOnly;if(images.TryGetValue(key,out var image))return image;
-            var mesh=MeshFor(id,p);var vertices=mesh.vertices;var tri=mesh.triangles;var colors=mesh.colors;var hair=CharacterLook.Get(id).HairColor;
+            var mesh=HeadwearArt.HairFor(id,p);var vertices=mesh.vertices;var tri=mesh.triangles;var colors=mesh.colors;var hair=CharacterLook.Get(id).HairColor;
             var depth=new float[W*H];for(int i=0;i<depth.Length;i++)depth[i]=-100;image=new Color32[W*H];
             for(int i=0;i<tri.Length;i+=3)
             {
@@ -155,7 +155,7 @@ namespace SpellDuel
                     image[k]=new Color32((byte)(Mathf.Clamp01(hair.r*red)*255),(byte)(Mathf.Clamp01(hair.g*green)*255),(byte)(Mathf.Clamp01(hair.b*blue)*255),255);
                 }
             }
-            images[key]=image;return image;
+            if(images.Count>=16)images.Clear();images[key]=image;return image;
         }
     }
 }

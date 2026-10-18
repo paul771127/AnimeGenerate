@@ -14,42 +14,42 @@ namespace SpellDuel
         }
         static readonly Dictionary<string,Design> designs=new Dictionary<string,Design>
         {
-            {"swordsman",new Design("swordsman","斜襟機能短夾克","5489c7","303e58","ffbc63",.055f,.073f,0)},
-            {"archer",new Design("archer","輕量戰術背心","8daa47","354d46","f5b857",.035f,.058f,1)},
-            {"mage",new Design("mage","符文連帽派克大衣","9673c9","303859","7ce5dc",.48f,.104f,2)},
-            {"assassin",new Design("assassin","交叉綁帶高領戰鬥服","5b466f","303b50","e887cb",0f,.053f,3)},
-            {"priest",new Design("priest","金邊分襟醫療長外套","eee6d2","53677b","e9b955",.59f,.082f,4)},
-            {"paladin",new Design("paladin","半披風白色軍裝","eee6d2","425369","e8b94d",.42f,.075f,5)},
-            {"berserker",new Design("berserker","無袖騎士皮夾克","bc5149","5a3641","e9b66c",.02f,.062f,6)},
-            {"marksman",new Design("marksman","單肩狙擊長夾克","6d8193","39414f","ebcb66",.44f,.063f,7)},
-            {"ranger",new Design("ranger","斜肩山地短斗篷","43947b","3c5148","efb36a",.24f,.077f,8)},
-            {"archmage",new Design("archmage","符文寬袖長風衣","8461b8","39364f","9ce7e4",.63f,.109f,9)},
-            {"summoner",new Design("summoner","多口袋短帽衫","d6884b","4a485c","b9e877",.16f,.090f,10)},
-            {"ninja",new Design("ninja","半袖交領忍者機能服","596e86","303c50","d6b764",.11f,.065f,11)},
-            {"shadowdancer",new Design("shadowdancer","露肩短裝與舞帶","ad5b9c","473a61","8de0e1",.02f,.057f,12)},
-            {"bishop",new Design("bishop","寬領儀式長外套","e9e1c9","686e85","dbb25c",.66f,.095f,13)},
-            {"inquisitor",new Design("inquisitor","斜裁無袖審判長背心","c7973e","434957","efe1b1",.51f,.059f,14)},
-            {"老焰",new Design("老焰","不對稱老村長外套","a64232","4e4958","e9bd72",.35f,.071f,15)},
-            {"小鐵",new Design("小鐵","捲袖鐵工工作服","9d5d32","4f3e3c","e9b85d",.08f,.088f,16)},
-            {"米菈",new Design("米菈","多袋旅行長背心","268e9c","4b4759","dfb75f",.43f,.064f,17)},
-            {"翠",new Design("翠","葉領研究長外套","5b8e74","355249","cbbf79",.51f,.086f,18)},
-            {"楓",new Design("楓","斜肩森林巡守衣","4d7e68","314c48","dfac61",.28f,.073f,19)},
-            {"小葉",new Design("小葉","寬袖短上衣與百褶下擺","d9aa51","5f755c","e5d8ac",.17f,.094f,20)},
-            {"海斗",new Design("海斗","單肩海軍長夾克","456b8c","303d55","d8c798",.49f,.077f,21)},
-            {"凪",new Design("凪","偏襟圍裙與泡袖","9c4c64","ede1c5","d3af62",.28f,.095f,22)},
-            {"阿潮",new Design("阿潮","短袖海釣工作外套","43787f","4e4d5e","dec28c",.12f,.080f,23)},
-            {"鐵匠",new Design("鐵匠","厚肩無袖皮工作服","b96c49","5d4541","e5b975",.10f,.073f,24)},
-            {"店員",new Design("店員","藥師翻領短外套","589b9b","e3dbc6","e5bd64",.31f,.080f,25)},
-            {"艾琳",new Design("艾琳","公會導引短夾克","7250aa","3d405c","d9b85b",.2f,.075f,27)},
-            {"澪",new Design("澪","潮汐觀測短外套","4b8998","334c69","d4cf8f",.3f,.07f,28)},
-            {"公會長",new Design("公會長","斜披肩公會長風衣","743948","40475a","d7af5e",.60f,.084f,26)}
+            {"swordsman",new Design("swordsman","斜襟機能短夾克","307cf1","253d8a","ffc52e",.055f,.073f,0)},
+            {"archer",new Design("archer","輕量戰術背心","8bcf27","245c42","f5b857",.035f,.058f,1)},
+            {"mage",new Design("mage","符文連帽派克大衣","a353ef","3b3484","65fff0",.48f,.104f,2)},
+            {"assassin",new Design("assassin","交叉綁帶高領戰鬥服","7443ab","343b7c","ff76dc",0f,.053f,3)},
+            {"priest",new Design("priest","金邊分襟醫療長外套","fff0d4","3d68a2","e9b955",.59f,.082f,4)},
+            {"paladin",new Design("paladin","半披風白色軍裝","fff0d4","31569a","e8b94d",.42f,.075f,5)},
+            {"berserker",new Design("berserker","無袖騎士皮夾克","e34d39","792d4c","e9b66c",.02f,.062f,6)},
+            {"marksman",new Design("marksman","單肩狙擊長夾克","327db5","293e73","ebcb66",.44f,.063f,7)},
+            {"ranger",new Design("ranger","斜肩山地短斗篷","1bb88d","245a4b","efb36a",.24f,.077f,8)},
+            {"archmage",new Design("archmage","符文寬袖長風衣","8d42dd","403080","75fff1",.63f,.109f,9)},
+            {"summoner",new Design("summoner","多口袋短帽衫","f58b2b","503e84","ceff53",.16f,.090f,10)},
+            {"ninja",new Design("ninja","半袖交領忍者機能服","456db0","2c3874","d6b764",.11f,.065f,11)},
+            {"shadowdancer",new Design("shadowdancer","露肩短裝與舞帶","d544b4","513181","62f5ef",.02f,.057f,12)},
+            {"bishop",new Design("bishop","寬領儀式長外套","fff0d1","6056a3","dbb25c",.66f,.095f,13)},
+            {"inquisitor",new Design("inquisitor","斜裁無袖審判長背心","efad25","39477d","efe1b1",.51f,.059f,14)},
+            {"老焰",new Design("老焰","不對稱老村長外套","d34829","563b70","e9bd72",.35f,.071f,15)},
+            {"小鐵",new Design("小鐵","捲袖鐵工工作服","c9752e","683f41","e9b85d",.08f,.088f,16)},
+            {"米菈",new Design("米菈","多袋旅行長背心","13b4bd","55407a","dfb75f",.43f,.064f,17)},
+            {"翠",new Design("翠","葉領研究長外套","50b982","24664b","cbbf79",.51f,.086f,18)},
+            {"楓",new Design("楓","斜肩森林巡守衣","2c9a65","235e50","dfac61",.28f,.073f,19)},
+            {"小葉",new Design("小葉","寬袖短上衣與百褶下擺","f2b935","477853","e5d8ac",.17f,.094f,20)},
+            {"海斗",new Design("海斗","單肩海軍長夾克","286fc0","293b80","d8c798",.49f,.077f,21)},
+            {"凪",new Design("凪","偏襟圍裙與泡袖","cd4270","fff0d8","d3af62",.28f,.095f,22)},
+            {"阿潮",new Design("阿潮","短袖海釣工作外套","189ca3","4b467c","dec28c",.12f,.080f,23)},
+            {"鐵匠",new Design("鐵匠","厚肩無袖皮工作服","db7037","733d42","e5b975",.10f,.073f,24)},
+            {"店員",new Design("店員","藥師翻領短外套","2cbcb3","fff0d2","e5bd64",.31f,.080f,25)},
+            {"艾琳",new Design("艾琳","公會導引短夾克","8b43d4","404780","d9b85b",.2f,.075f,27)},
+            {"澪",new Design("澪","潮汐觀測短外套","269eb8","2b548d","d4cf8f",.3f,.07f,28)},
+            {"公會長",new Design("公會長","斜披肩公會長風衣","a32d56","3c467e","d7af5e",.60f,.084f,26)}
         };
         internal static Design Get(string id)=>designs.TryGetValue(Portraits.Key(id),out var d)?d:designs["swordsman"];
         internal static IEnumerable<KeyValuePair<string,Design>> All=>designs;
         static readonly Dictionary<string,Mesh> meshes=new Dictionary<string,Mesh>();
         internal sealed class Builder
         {
-            internal Color Skin;
+            internal Color Skin;internal bool LegProfile;
             internal readonly List<Vector3> V=new List<Vector3>();internal readonly List<int> T=new List<int>();internal readonly List<Color> C=new List<Color>();
             void Vertex(Vector3 v,Color c){V.Add(v);C.Add(c);}
             internal void Tube(Vector3[] centers,float[] widths,float[] depths,Color color,int sides=10)
@@ -57,8 +57,8 @@ namespace SpellDuel
                 int start=V.Count;
                 for(int j=0;j<centers.Length;j++)for(int i=0;i<sides;i++)
                 {
-                    float a=i*2*Mathf.PI/sides,fold=i%3==0&&j>0&&j<centers.Length-1?1.045f:1;
-                    float shade=i>=sides/2?.72f:1;if(j%3==1)shade*=.91f;
+                    float a=i*2*Mathf.PI/sides,fold=LegProfile&&i%3==0&&j>0&&j<centers.Length-1?1.045f:1;
+                    float shade=1;
                     var paint=color*shade;paint.a=Mathf.Abs(color.r-Skin.r)+Mathf.Abs(color.g-Skin.g)+Mathf.Abs(color.b-Skin.b)<.001f?0:1;
                     Vertex(centers[j]+new Vector3(Mathf.Sin(a)*widths[j]*fold,0,Mathf.Cos(a)*depths[j]*fold),paint);
                     if(j==centers.Length-1)continue;int k=start+j*sides+i,n=start+j*sides+(i+1)%sides;T.AddRange(new[]{k,k+sides,n,n,k+sides,n+sides});
@@ -75,7 +75,7 @@ namespace SpellDuel
                 {
                     float t=j/(float)rows,u=i/(float)cols;var left=a*(1-t)+c*t;var right=b*(1-t)+d*t;
                     var at=left*(1-u)+right*u;at.z+=Mathf.Sin(u*Mathf.PI)*Mathf.Sin(t*Mathf.PI)*bulge+(face==0?.004f:-.004f);
-                    Color shade=color*(i==0?.68f:i==cols?.88f:1);shade.a=1;Vertex(at,shade);
+                    Color shade=color;shade.a=1;Vertex(at,shade);
                     if(j==rows||i==cols)continue;int k=start+face*(rows+1)*(cols+1)+j*(cols+1)+i;
                     if(face==0)T.AddRange(new[]{k,k+cols+1,k+1,k+1,k+cols+1,k+cols+2});else T.AddRange(new[]{k,k+1,k+cols+1,k+1,k+cols+2,k+cols+1});
                 }
@@ -85,7 +85,7 @@ namespace SpellDuel
             }
             internal void Seam(Vector3 a,Vector3 b,float width,Color color)
             {
-                var delta=b-a;var right=Vector3.Cross(delta.normalized,new Vector3(0,0,1)).normalized*width*.5f;
+                var delta=b-a;var right=Vector3.Cross(new Vector3(0,0,1),delta.normalized).normalized*width*.5f;
                 if(right.sqrMagnitude<.00000001f)right=new Vector3(width*.5f,0,0);
                 Panel(a-right,a+right,b-right,b+right,color,0,1,1);
             }
@@ -101,95 +101,30 @@ namespace SpellDuel
         {
             string key=id+"/"+part+ColorUtility.ToHtmlStringRGB(skin);if(meshes.TryGetValue(key,out var m))return m;
             var d=Get(id);var b=new Builder{Skin=skin};var main=d.Main;var sub=d.Sub;var accent=d.Accent;bool left=part.EndsWith("L");float side=left?-1:1;
-            if(part=="torso")
-            {
-                bool fitted=d.Cut==3||d.Cut==11||d.Cut==12;
-                bool oversize=d.Cut==2||d.Cut==9||d.Cut==13;
-                b.Loft(new[]{.49f,.40f,.24f,.11f,.015f},new[]{.172f,.181f,.148f,.137f,.163f},new[]{.091f,.126f,.105f,.101f,.112f},fitted?main:sub);
-                // Open jacket front, a shaped back and one deliberately lower lapel.
-                if(!fitted)
-                {
-                b.Panel(new Vector3(-.184f,.47f,.085f),new Vector3(-.042f,.48f,.125f),new Vector3(-.177f,-.035f,.133f),new Vector3(-.018f,.025f,.148f),main);
-                b.Panel(new Vector3(.040f,.47f,.131f),new Vector3(.184f,.47f,.083f),new Vector3(.045f,.02f,.152f),new Vector3(.190f,-.055f,.125f),main);
-                b.Panel(new Vector3(.18f,.48f,-.10f),new Vector3(-.18f,.48f,-.10f),new Vector3(.17f,-.02f,-.12f),new Vector3(-.17f,-.02f,-.12f),main,-.02f);
-                }
-                b.Loft(new[]{.55f,.49f,.475f},new[]{.079f,.108f,.110f},new[]{.069f,.086f,.088f},main);
-                if(!fitted)
-                {
-                b.Panel(new Vector3(-.11f,.50f,.12f),new Vector3(-.02f,.43f,.167f),new Vector3(-.13f,.29f,.151f),new Vector3(-.045f,.36f,.177f),sub);
-                b.Panel(new Vector3(.025f,.44f,.172f),new Vector3(.12f,.49f,.118f),new Vector3(.04f,.31f,.171f),new Vector3(.14f,.34f,.147f),main*.8f);
-                }
-                b.Seam(new Vector3(-.022f,.435f,.179f),new Vector3(-.02f,.03f,.162f),.008f,accent);
-                for(int i=0;i<7;i++)b.Badge(-.019f,.38f-i*.048f,.181f,.019f,.007f,accent);
-                b.Badge(.105f,.285f,.161f,.085f,.070f,sub);b.Seam(new Vector3(.067f,.31f,.175f),new Vector3(.144f,.31f,.17f),.006f,accent);
-                // Curved split tails and lining have different lengths; no closed cone traps the legs.
-                float hem=d.Hem;
-                if(hem>.01f)for(int s=-1;s<=1;s+=2)
-                {
-                    float end=-hem*(s<0?1:.76f),outX=(d.Cut==2||d.Cut==9||d.Cut==13?.29f:.225f)*s;
-                    b.Panel(new Vector3(s*.045f,.02f,.136f),new Vector3(s*.17f,.02f,.12f),new Vector3(s*.09f,end+.04f,.155f),new Vector3(outX,end,.07f),s<0?main:sub,.023f);
-                    b.Seam(new Vector3(s*.17f,.015f,.133f),new Vector3(outX,end+.009f,.084f),.009f,accent);
-                }
-                if(hem>.01f)b.Panel(new Vector3(.17f,.02f,-.12f),new Vector3(-.17f,.02f,-.12f),new Vector3(.21f,-hem*.85f,-.18f),new Vector3(-.24f,-hem,-.16f),main,-.034f);
-                // Back yoke and faction chevrons remain visible in the rear view.
-                b.Seam(new Vector3(-.15f,.35f,-.144f),new Vector3(0,.29f,-.159f),.013f,accent);
-                b.Seam(new Vector3(0,.29f,-.159f),new Vector3(.15f,.35f,-.144f),.013f,accent);
-                b.Loft(new[]{.075f,.03f},new[]{.174f,.174f},new[]{.123f,.123f},sub);b.Badge(.04f,.052f,.14f,.055f,.035f,accent);
-                b.Seam(new Vector3(-.12f,.44f,.162f),new Vector3(.13f,.10f,.159f),d.Cut==1||d.Cut==7||d.Cut==11?.035f:.014f,sub);
-                if(d.Cut==2||d.Cut==9||d.Cut==10)b.Loft(new[]{.57f,.48f,.41f},new[]{.12f,.145f,.095f},new[]{.13f,.16f,.12f},main,0,-.095f);
-                if(d.Cut==4||d.Cut==5||d.Cut==13||d.Cut==14){b.Seam(new Vector3(.085f,.37f,.184f),new Vector3(.085f,.22f,.184f),.013f,accent);b.Seam(new Vector3(.04f,.32f,.184f),new Vector3(.13f,.32f,.184f),.013f,accent);}
-                if(d.Cut==6||d.Cut==16||d.Cut==24)b.Panel(new Vector3(-.14f,.20f,.15f),new Vector3(.13f,.23f,.15f),new Vector3(-.18f,-.26f,.14f),new Vector3(.18f,-.20f,.16f),sub);
-                if(d.Cut==8||d.Cut==19||d.Cut==21||d.Cut==26)b.Panel(new Vector3(-.26f,.46f,.10f),new Vector3(-.06f,.51f,.13f),new Vector3(-.31f,.16f,.12f),new Vector3(-.04f,.20f,.18f),main,.03f);
-                if(d.Cut==0||d.Cut==1||d.Cut==10)b.Panel(new Vector3(.14f,.03f,.13f),new Vector3(.21f,.02f,.12f),new Vector3(.22f,-.25f,.15f),new Vector3(.27f,-.24f,.13f),sub);
-                if(fitted){b.Seam(new Vector3(-.14f,.44f,.151f),new Vector3(.12f,.11f,.147f),.022f,sub);b.Seam(new Vector3(.14f,.44f,.151f),new Vector3(-.12f,.14f,.148f),.020f,accent);}
-                if(d.Cut==2||d.Cut==9){b.GlowSeam(new Vector3(.075f,.44f,.182f),new Vector3(.13f,.37f,.182f),.010f,accent);b.GlowSeam(new Vector3(.13f,.37f,.182f),new Vector3(.08f,.29f,.182f),.010f,accent);}
-                if(d.Cut==20)for(int i=0;i<5;i++)b.Badge(-.16f+i*.08f,-.12f,.17f,.05f,.15f,i%2==0?main:sub);
-                if(d.Cut==22||d.Cut==25)b.Panel(new Vector3(-.11f,.3f,.17f),new Vector3(.13f,.3f,.17f),new Vector3(-.20f,-.38f,.18f),new Vector3(.20f,-.32f,.18f),sub);
-                for(int i=0;i<b.V.Count;i++)
-                {
-                    var at=b.V[i];if(oversize)at.x*=1.15f;if(fitted){at.x*=.90f;if(at.z>.13f)at.z=.13f+(at.z-.13f)*.4f;}b.V[i]=at;
-                }
-            }
-            else if(part.StartsWith("upper"))
-            {
-                float wide=d.Sleeve*(left?1.12f:.88f);Color c=d.Cut==1||d.Cut==23||((d.Cut==6||d.Cut==14||d.Cut==24||d.Cut==12)&&!left)?skin:main;
-                b.Loft(new[]{.015f,-.045f,-.12f,-.22f,-.27f},new[]{wide*.82f,wide*1.12f,wide,wide*.74f,wide*.70f},new[]{wide*.85f,wide,wide*.91f,wide*.73f,wide*.68f},c);
-                if(left&&(d.Cut==0||d.Cut==5||d.Cut==6||d.Cut==14))b.Panel(new Vector3(-.09f,.02f,.045f),new Vector3(.07f,.025f,.045f),new Vector3(-.11f,-.14f,.085f),new Vector3(.06f,-.10f,.09f),sub,.025f);
-                b.Loft(new[]{-.20f,-.24f},new[]{wide*.83f,wide*.8f},new[]{wide*.80f,wide*.77f},sub);
-                b.Badge(side*.015f,-.085f,wide+.007f,.058f,.042f,accent);
-            }
-            else if(part.StartsWith("fore"))
-            {
-                float wide=d.Sleeve*((d.Cut==2||d.Cut==9||d.Cut==13)&&left?1.12f:.75f);
-                b.Loft(new[]{.035f,0f,-.035f},new[]{.035f,wide*.88f,.035f},new[]{.034f,wide*.84f,.034f},left?main:sub);
-                b.Loft(new[]{-.005f,-.06f,-.14f,-.20f,-.25f},new[]{wide*.80f,wide,wide*.86f,wide*.69f,wide*.66f},new[]{wide*.76f,wide*.90f,wide*.77f,wide*.66f,wide*.63f},left?main:sub);
-                b.Loft(new[]{-.18f,-.22f},new[]{wide*.95f,wide*.95f},new[]{wide*.88f,wide*.88f},accent);
-                if(!left)b.Badge(0,-.105f,wide*.9f,.045f,.08f,main);
-            }
+            if(part=="torso"||part=="body")BuildTorso(b,d,skin,part=="body");
+            else if(part.StartsWith("upper")||part.StartsWith("fore"))BuildArm(b,d,skin,part.StartsWith("upper"),left);
+            else if(part.StartsWith("anatomy"))BuildArm(b,d,skin,part.StartsWith("anatomyUpper"),left,true);
             else if(part.StartsWith("thigh"))
             {
+                b.LegProfile=true;
                 float wide=d.Cut==10||d.Cut==20?.087f:d.Cut==3||d.Cut==12?.062f:.076f;
                 b.Loft(new[]{.01f,-.06f,-.17f,-.29f,-.415f},new[]{wide*.90f,wide,wide*.94f,wide*.78f,wide*.67f},new[]{wide*.90f,wide*.94f,wide*.88f,wide*.76f,wide*.69f},d.Cut==12&&left?skin:sub);
-                if(left){b.Loft(new[]{-.24f,-.275f},new[]{wide*.89f,wide*.86f},new[]{wide*.90f,wide*.87f},main);b.Badge(-.037f,-.18f,.065f,.07f,.10f,main);}
-                else b.Seam(new Vector3(.035f,-.05f,.078f),new Vector3(.035f,-.35f,.06f),.009f,accent);
+                if(left&&(d.Cut==0||d.Cut==1||d.Cut==7||d.Cut==10||d.Cut==11||d.Cut==16))Pocket(b,-.012f,-.18f,.073f,.063f,.086f,sub,accent);
             }
             else if(part.StartsWith("calf"))
             {
+                b.LegProfile=true;
                 b.Loft(new[]{.025f,0f,-.025f},new[]{.035f,.055f,.035f},new[]{.034f,.053f,.034f},sub);
                 bool sneaker=d.Cut==0||d.Cut==10,tabi=d.Cut==11,high=d.Cut==4||d.Cut==5||d.Cut==13||d.Cut==12&&left;
                 Color boot=high?main:sub;float soleWidth=tabi?.064f:sneaker?.088f:.079f,toe=tabi?.112f:sneaker?.142f:.136f;
-                b.Loft(new[]{.005f,-.07f,-.15f,-.25f,-.34f},new[]{.051f,.069f,.067f,.049f,.045f},new[]{.051f,.065f,.06f,.046f,.045f},high?main:left?sub:main);
-                b.Badge(0,-.035f,.064f,.065f,.085f,left?main:sub);
+                b.Loft(new[]{.005f,-.07f,-.15f,-.25f,-.34f},new[]{.051f,.069f,.067f,.049f,.045f},new[]{.051f,.065f,.06f,.046f,.045f},high?main:sub);
+                if(d.Cut==0||d.Cut==5||d.Cut==7||d.Cut==11)KneeGuard(b,sub,accent);
                 b.Loft(new[]{sneaker?-.33f:high?-.19f:-.285f,-.35f,-.385f,-.414f},new[]{high?.064f:.049f,.063f,soleWidth*.97f,soleWidth*.95f},new[]{.055f,.10f,toe*.985f,toe*.96f},boot,0,.038f);
                 b.Loft(new[]{-.414f,-.430f},new[]{soleWidth,soleWidth},new[]{toe,toe},accent,0,.038f);
                 if(high)b.Seam(new Vector3(-.03f,-.03f,.078f),new Vector3(-.03f,-.29f,.09f),.007f,accent);
                 for(int i=0;i<3;i++)b.Seam(new Vector3(-.041f,-.34f-i*.018f,.13f+i*.009f),new Vector3(.041f,-.34f-i*.018f,.13f+i*.009f),.006f,accent);
             }
-            else if(part.StartsWith("hand"))
-            {
-                b.Loft(new[]{0f,-.027f},new[]{.040f,.047f},new[]{.036f,.039f},sub);
-                b.Loft(new[]{-.027f,-.066f},new[]{.047f,.035f},new[]{.039f,.027f},d.Cut==12&&left?sub:skin);
-            }
+            else if(part.StartsWith("hand"))BuildHand(b,d,skin,left,part.Contains("Open")?2:part.Contains("Grip")?1:0);
             else if(part=="cape"||part=="scarf"||part.StartsWith("ribbon"))
             {
                 float w=part=="cape"?.20f:part=="scarf"?.06f:.035f,h=part=="cape"?d.Hem+.12f:part=="scarf"?.48f:.55f;
@@ -198,6 +133,124 @@ namespace SpellDuel
             }
             m=b.Finish("Outfit "+key);meshes[key]=m;return m;
         }
+        internal static float Strength(Design d)=>d.Cut==0||d.Cut==5||d.Cut==6||d.Cut==16||d.Cut==24?1.15f:d.Cut==3||d.Cut==12||d.Cut==18||d.Cut==20||d.Cut==22?.86f:1;
+        internal static string Components(Design d)
+        {
+            bool fitted=d.Cut==3||d.Cut==11||d.Cut==12;
+            string list=(fitted?"貼身立領上衣":"圓弧肩線外套、內搭門襟、雙翻領與立領")+"、拉鍊與拉片、腰帶與扣環、單一胸袋（袋蓋＋開口）、袖口／護腕、手套、靴筒／鞋面、鞋底與鞋帶";
+            if(d.Hem>.01f)list+="、分襟下擺與內裡／滾邊";
+            if(d.Cut==0||d.Cut==1||d.Cut==7||d.Cut==10||d.Cut==11||d.Cut==16)list+="、左腿工裝袋（袋蓋＋開口）";
+            if(d.Cut==0||d.Cut==5||d.Cut==7||d.Cut==11)list+="、有厚度的弧形護膝";
+            if(d.Cut==0||d.Cut==5||d.Cut==6||d.Cut==14)list+="、左側弧形肩甲";
+            if(d.Cut==2||d.Cut==9||d.Cut==10)list+="、後垂兜帽";
+            if(d.Cut==6)list+="、扣帶皮革護胸／護腹裙與收納袋";
+            if(d.Cut==16||d.Cut==24||d.Cut==22||d.Cut==25)list+="、有肩帶與袋蓋的工作圍裙";
+            if(d.Cut==8||d.Cut==19||d.Cut==21||d.Cut==26)list+="、左肩披片與扣環";
+            if(d.Cut==4||d.Cut==5||d.Cut==13||d.Cut==14)list+="、領襟十字徽章";
+            return list;
+        }
+        static void Pocket(Builder b,float x,float y,float z,float w,float h,Color cloth,Color trim)
+        {
+            b.Badge(x,y,z,w,h,cloth);
+            b.Panel(new Vector3(x-w*.5f,y+h*.54f,z+.010f),new Vector3(x+w*.5f,y+h*.54f,z+.010f),new Vector3(x-w*.47f,y+h*.27f,z+.014f),new Vector3(x+w*.47f,y+h*.27f,z+.014f),cloth,0,1,2);
+            b.Seam(new Vector3(x-w*.40f,y+h*.25f,z+.018f),new Vector3(x+w*.40f,y+h*.25f,z+.018f),.003f,trim);
+        }
+        static void KneeGuard(Builder b,Color cloth,Color trim)
+        {
+            // Curved, thick strap-backed pad rather than a flat contrasting sticker.
+            b.Loft(new[]{-.015f,-.045f,-.08f},new[]{.047f,.052f,.043f},new[]{.032f,.038f,.027f},cloth,0,.040f);
+            b.Seam(new Vector3(-.025f,-.055f,.076f),new Vector3(.025f,-.055f,.076f),.004f,trim);
+        }
+        static void BuildTorso(Builder b,Design d,Color skin,bool bare)
+        {
+            float bulk=Strength(d),fit=d.Cut==3||d.Cut==11||d.Cut==12?.94f:1;
+            // Neck -> trapezius -> round shoulder; ribs, waist, pelvis and rear gluteal curve.
+            var ys=new[]{.565f,.535f,.515f,.49f,.43f,.34f,.24f,.14f,.055f,-.01f};
+            var rx=new[]{.067f,.090f,.158f,.194f,.185f,.170f,.143f,.139f,.153f,.166f};
+            var rz=new[]{.061f,.069f,.085f,.094f,.113f,.108f,.096f,.091f,.103f,.108f};
+            var path=new Vector3[ys.Length];
+            for(int i=0;i<ys.Length;i++){rx[i]*=(.94f+.06f*bulk)*fit;path[i]=new Vector3(0,ys[i],i>=7?-.012f:i==4?.012f:0);if(!bare){rx[i]+=.008f;rz[i]+=.007f;}}
+            b.Tube(path,rx,rz,bare?skin:d.Main,12);if(bare)return;
+            bool fitted=d.Cut==3||d.Cut==11||d.Cut==12;
+            // Inner shirt seen through a real jacket opening; restrained single lapel on either side.
+            if(!fitted)
+            {
+                b.Panel(new Vector3(-.050f,.475f,.116f),new Vector3(.050f,.475f,.116f),new Vector3(-.043f,.075f,.118f),new Vector3(.043f,.075f,.118f),d.Sub,.014f,5,3);
+                b.Panel(new Vector3(-.085f,.51f,.088f),new Vector3(-.022f,.43f,.132f),new Vector3(-.085f,.34f,.126f),new Vector3(-.043f,.37f,.143f),d.Main,0,3,2);
+                b.Panel(new Vector3(.022f,.43f,.132f),new Vector3(.085f,.51f,.088f),new Vector3(.043f,.37f,.143f),new Vector3(.085f,.34f,.126f),d.Main,0,3,2);
+            }
+            b.Loft(new[]{.575f,.535f},new[]{.073f,.084f},new[]{.066f,.074f},d.Sub);
+            b.Seam(new Vector3(0,.43f,.145f),new Vector3(0,.09f,.125f),.0045f,d.Accent);
+            b.Badge(.007f,.39f,.148f,.012f,.026f,d.Accent); // zipper pull
+            Pocket(b,.105f,.31f,.124f,.060f,.065f,d.Main,d.Accent);
+            b.Loft(new[]{.070f,.041f},new[]{.165f,.165f},new[]{.116f,.116f},d.Sub);
+            b.Badge(.015f,.055f,.121f,.042f,.025f,d.Accent);
+            if(d.Hem>.01f)
+            {
+                for(int side=-1;side<=1;side+=2)
+                {
+                    float end=-d.Hem*(side<0?1:.80f),outer=side*(d.Cut==2||d.Cut==9||d.Cut==13?.26f:.215f);
+                    b.Panel(new Vector3(side*.05f,.02f,.117f),new Vector3(side*.16f,.02f,.10f),new Vector3(side*.075f,end+.035f,.132f),new Vector3(outer,end,.07f),d.Main,.018f,5,3);
+                    b.Seam(new Vector3(side*.16f,.02f,.112f),new Vector3(outer,end+.008f,.079f),.006f,d.Accent);
+                }
+                b.Panel(new Vector3(.16f,.02f,-.12f),new Vector3(-.16f,.02f,-.12f),new Vector3(.205f,-d.Hem*.8f,-.16f),new Vector3(-.22f,-d.Hem,-.17f),d.Main,-.025f,5,4);
+            }
+            if(d.Cut==2||d.Cut==9||d.Cut==10)b.Loft(new[]{.54f,.48f,.40f},new[]{.115f,.14f,.09f},new[]{.11f,.14f,.10f},d.Main,0,-.105f);
+            if(d.Cut==4||d.Cut==5||d.Cut==13||d.Cut==14){b.Seam(new Vector3(.09f,.40f,.134f),new Vector3(.09f,.33f,.137f),.009f,d.Accent);b.Seam(new Vector3(.065f,.375f,.138f),new Vector3(.115f,.375f,.138f),.009f,d.Accent);}
+            if(d.Cut==6||d.Cut==16||d.Cut==24||d.Cut==22||d.Cut==25)
+            {
+                b.Panel(new Vector3(-.10f,.29f,.134f),new Vector3(.10f,.29f,.134f),new Vector3(-.15f,-.29f,.145f),new Vector3(.15f,-.27f,.145f),d.Sub,.010f,4,3);
+                b.Seam(new Vector3(-.085f,.29f,.14f),new Vector3(-.12f,.45f,.125f),.012f,d.Sub);b.Seam(new Vector3(.085f,.29f,.14f),new Vector3(.12f,.45f,.125f),.012f,d.Sub);
+                Pocket(b,0,-.13f,.160f,.12f,.075f,d.Sub,d.Accent);
+            }
+            if(d.Cut==8||d.Cut==19||d.Cut==21||d.Cut==26)
+            {
+                b.Panel(new Vector3(-.225f,.47f,.075f),new Vector3(-.09f,.53f,.086f),new Vector3(-.27f,.19f,.10f),new Vector3(-.05f,.24f,.145f),d.Main,.018f,4,3);
+                b.Badge(-.12f,.45f,.124f,.028f,.030f,d.Accent);
+            }
+        }
+        static void BuildArm(Builder b,Design d,Color skin,bool upper,bool left,bool anatomical=false)
+        {
+            float power=Strength(d),sleeve=d.Cut==2||d.Cut==9||d.Cut==13?1.18f:1;
+            bool bare=anatomical||d.Cut==1||d.Cut==6||d.Cut==14||d.Cut==24||d.Cut==12;
+            Color cloth=bare?skin:d.Main;
+            if(upper)
+            {
+                var y=new[]{.026f,.005f,-.025f,-.075f,-.13f,-.19f,-.25f,-.28f};
+                var rx=new[]{.020f,.045f,.068f,.065f,.060f,.051f,.039f,.034f};
+                var rz=new[]{.019f,.043f,.064f,.060f,.065f,.056f,.037f,.033f};
+                var path=new Vector3[y.Length];for(int i=0;i<y.Length;i++){rx[i]*=power*(bare?1:sleeve);rz[i]*=power*(bare?1:sleeve);float outset=d.Cut==3||d.Cut==11||d.Cut==12||d.Cut>=15?.025f:0;path[i]=new Vector3((left?-1:1)*outset*(i==2?1:i==3?.65f:i==4?.20f:0),y[i],i==4?.008f:i==3?-.004f:0);}
+                b.Tube(path,rx,rz,cloth,12);
+                if(!anatomical&&left&&(d.Cut==0||d.Cut==5||d.Cut==6||d.Cut==14))
+                    b.Loft(new[]{-.015f,-.055f,-.10f},new[]{.058f*power,.077f*power,.066f*power},new[]{.056f*power,.073f*power,.064f*power},d.Sub);
+                if(!anatomical&&!bare)b.Loft(new[]{-.245f,-.273f},new[]{.043f*power,.039f*power},new[]{.041f*power,.037f*power},d.Sub);
+            }
+            else
+            {
+                var y=new[]{.022f,0f,-.05f,-.09f,-.15f,-.21f,-.25f};
+                var rx=new[]{.030f,.038f,.054f,.052f,.044f,.032f,.030f};
+                var rz=new[]{.029f,.036f,.050f,.046f,.036f,.023f,.021f};
+                var path=new Vector3[y.Length];for(int i=0;i<y.Length;i++){rx[i]*=power*(bare?1:sleeve);rz[i]*=power*(bare?1:sleeve);path[i]=new Vector3(0,y[i],i==2?.004f:0);}
+                b.Tube(path,rx,rz,cloth,12);
+                // A single fitted cuff follows the tapered wrist; no full-length colour strip.
+                if(!anatomical)b.Loft(new[]{-.205f,-.235f},new[]{.035f*power,.033f*power},new[]{.027f*power,.025f*power},d.Sub);
+                if(!bare)b.Seam(new Vector3(-.022f,-.025f,.041f),new Vector3(.018f,-.030f,.041f),.003f,d.Main*.85f);
+            }
+        }
+        static void BuildHand(Builder b,Design d,Color skin,bool left,int pose)
+        {
+            float side=left?-1:1;bool covered=d.Cut==3||d.Cut==11||d.Cut==5||d.Cut==13;
+            b.Loft(new[]{.012f,-.005f,-.037f},new[]{.029f,.035f,.034f},new[]{.021f,.020f,.017f},d.Sub); // palm and cuff
+            for(int pair=-1;pair<=1;pair+=2)
+            {
+                float x=pair*.018f,end=pose==2?-.101f:pose==1?-.055f:-.080f;
+                var path=new[]{new Vector3(x,-.032f,.001f),new Vector3(x*(pose==2?1.22f:1),-.053f,pose==1?.020f:.005f),new Vector3(x*(pose==2?1.45f:.90f),end,pose==1?.037f:pose==0?.020f:.002f)};
+                b.Tube(path,new[]{.016f,.015f,.011f},new[]{.016f,.014f,.010f},covered?d.Sub:skin,8);
+            }
+            var thumb=new[]{new Vector3(side*.029f,-.012f,.001f),new Vector3(side*.047f,-.029f,.012f),new Vector3(side*(pose==2?.062f:.031f),pose==2?-.045f:-.050f,pose==1?.038f:.021f)};
+            b.Tube(thumb,new[]{.013f,.013f,.010f},new[]{.013f,.012f,.009f},covered?d.Sub:skin,8);
+        }
+
         static Material flashMaterial;
         internal static Material FlashMaterial()
         {

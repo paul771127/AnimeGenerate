@@ -364,6 +364,7 @@ namespace SpellDuel
 
         void AnimateDetails(float cast, float hurt)
         {
+            UpdateHandShapes(cast,hurt);
             float phase=(clock+CharacterLook.Get(advancedId??classId).Seed*.17f)%4.3f;
             float blink=Mathf.Clamp01(1f-Mathf.Abs(phase-.10f)/.09f);
             float close=Mathf.Max(hurt,blink);float squint=1f-.97f*close;

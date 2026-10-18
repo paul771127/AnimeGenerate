@@ -1,0 +1,93 @@
+[
+  {
+    "id": "mage",
+    "seat": 0.09277631,
+    "radius": 0.14514288,
+    "height": 0.15,
+    "headHeight": 0.31651202
+  },
+  {
+    "id": "priest",
+    "seat": 0.091487765,
+    "radius": 0.14514288,
+    "height": 0.15,
+    "headHeight": 0.31211603
+  },
+  {
+    "id": "archmage",
+    "seat": 0.09424896,
+    "radius": 0.14514288,
+    "height": 0.15,
+    "headHeight": 0.32153603
+  },
+  {
+    "id": "summoner",
+    "seat": 0.09167184,
+    "radius": 0.14514288,
+    "height": 0.15,
+    "headHeight": 0.31274402
+  },
+  {
+    "id": "bishop",
+    "seat": 0.09351264,
+    "radius": 0.1453652,
+    "height": 0.15,
+    "headHeight": 0.31902403
+  },
+  {
+    "id": "小鐵",
+    "seat": 0.091487765,
+    "radius": 0.14514288,
+    "height": 0.047000006,
+    "headHeight": 0.31211603
+  },
+  {
+    "id": "米菈",
+    "seat": 0.09277631,
+    "radius": 0.14514288,
+    "height": 0.114999995,
+    "headHeight": 0.31651202
+  },
+  {
+    "id": "翠",
+    "seat": 0.09424896,
+    "radius": 0.14514288,
+    "height": 0.018,
+    "headHeight": 0.32153603
+  },
+  {
+    "id": "小葉",
+    "seat": 0.09093551,
+    "radius": 0.14604853,
+    "height": 0.018000007,
+    "headHeight": 0.310232
+  },
+  {
+    "id": "海斗",
+    "seat": 0.092039995,
+    "radius": 0.14514288,
+    "height": 0.105,
+    "headHeight": 0.314
+  },
+  {
+    "id": "凪",
+    "seat": 0.09167184,
+    "radius": 0.14514288,
+    "height": 0.117186874,
+    "headHeight": 0.31274402
+  },
+  {
+    "id": "阿潮",
+    "seat": 0.09314448,
+    "radius": 0.14514288,
+    "height": 0.145,
+    "headHeight": 0.317768
+  },
+  {
+    "id": "店員",
+    "seat": 0.09130368,
+    "radius": 0.14514288,
+    "height": 0.018000007,
+    "headHeight": 0.311488
+  }
+]
