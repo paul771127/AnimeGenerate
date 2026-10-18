@@ -58,6 +58,26 @@ namespace SpellDuel
                 if (!live.Contains(kv.Key)) { if (kv.Value) Destroy(kv.Value.gameObject); quakeGo.Remove(kv.Key); }
         }
 
+        // ---------------------------------------------------------------- 劍士的刀線
+        /// <summary>劍士揮砍的刀線：出手＝亮白一閃；電腦出手前的預警＝紅線（蹲下或退開）</summary>
+        void ShowSlashLine(Fighter f, Vector3 a, Vector3 b, Vector3 o, bool warn)
+        {
+            const int N = 16;
+            var go = new GameObject(warn ? "Slash Warning" : "Slash Line");
+            var lr = go.AddComponent<LineRenderer>();
+            lr.material = new Material(Shader.Find("Sprites/Default"));
+            lr.positionCount = N + 1; lr.useWorldSpace = true;
+            lr.widthMultiplier = warn ? 0.035f : 0.06f;
+            float reach = (a - o).magnitude;
+            Vector3 da = (a - o).normalized, db = (b - o).normalized;
+            for (int i = 0; i <= N; i++) lr.SetPosition(i, WorldFrame.FromWorld(o + Vector3.Lerp(da, db, i / (float)N).normalized * reach));
+            var c = warn ? new Color(1f, 0.25f, 0.2f, 0.85f) : Color.Lerp(f.cls.color, Color.white, 0.6f);
+            lr.startColor = lr.endColor = c;
+            go.AddComponent<SlashLineFade>().Begin(lr, warn ? Battle.SlashWindup : 0.25f, c);
+            if (warn) Sfx.Play("cast_swordsman", 0.3f, 0.7f);
+            else Sfx.Play("cast_swordsman", 0.45f, 1.1f);
+        }
+
         /// <summary>震地波的環快到我腳邊（1.2 秒內）</summary>
         bool QuakeComing(out float eta)
         {
@@ -170,6 +190,20 @@ namespace SpellDuel
             else if (Battle.IsQuake(ec)) UiKit.Pill(H * 0.40f, $"⚠ {ec.name}：環到腳邊時跳起來", fs, ec.color, pillW);
             if (Me.airborneUntil > battle.now) UiKit.Pill(H * 0.235f, "⬆ 跳躍", fsS, new Color(0.6f, 1f, 0.8f), pillW);
             if (pickups.Count > 0) UiKit.Pill(H * 0.53f, "✨ 地上有結晶：走過去蹲下撿起", fsS, new Color(0.7f, 1f, 0.8f), pillW);
+        }
+    }
+
+    /// <summary>刀線淡出後刪掉</summary>
+    public class SlashLineFade : MonoBehaviour
+    {
+        LineRenderer lr; float life, t; Color c;
+        public void Begin(LineRenderer l, float d, Color col) { lr = l; life = Mathf.Max(0.05f, d); c = col; }
+        void Update()
+        {
+            t += Time.deltaTime;
+            float k = Mathf.Clamp01(t / life);
+            if (lr) { var x = c; x.a = c.a * (1f - k * k); lr.startColor = lr.endColor = x; }
+            if (k >= 1f) { if (lr) Destroy(lr.material); Destroy(gameObject); }
         }
     }
 }

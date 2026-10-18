@@ -216,6 +216,7 @@ namespace SpellDuel
                 else if (now - lastHandTime > 0.4f) { HandVisible = false; Current = Shape.None; pendingCount = 0; }
             }
             if (now - lastHandTime > 0.6f) { HandVisible = false; Current = Shape.None; }
+            FlushSwipe(now);
             // 獵人：握拳的手離開畫面（一段時間沒偵測到手）＝拉滿弓
             if (ReleaseStyle != Style.Bow) BowStage = 0;
             else if (BowStage == 1 && now - lastHandTime >= BowOutTime) BowStage = 2;
@@ -276,17 +277,23 @@ namespace SpellDuel
             else BowStage = 0;
 
             // 普通攻擊（劍士）：沒在詠唱時，張開的手掌劃一下＝砍一刀
-            if (BasicSwipe && ReleaseStyle == Style.None && fingersOut && histN >= 3 && t - lastSwipe > 0.35f)
+            //   記下手劃過的起點、終點（刀線只砍這條線）；偵測到之後再等 SwipeFollow 秒，讓整個揮動都算進去
+            if (!BasicSwipe) swipeUntil = -1f;
+            if (swipeUntil >= 0f && fingersOut && Vector2.Distance(SwipeFrom, palm) > Vector2.Distance(SwipeFrom, SwipeTo)) SwipeTo = palm;
+            if (BasicSwipe && swipeUntil < 0f && ReleaseStyle == Style.None && fingersOut && histN >= 3 && t - lastSwipe > 0.35f)
             {
-                float need = Mathf.Min(W, H) * ChopDistance;
+                float need = Mathf.Min(W, H) * ChopDistance, far = 0f; Vector2 from = palm;
                 for (int k = 2; k < histN; k++)
                 {
                     var o = HistAgo(k);
                     if (t - o.t > 0.5f) break;
                     if (o.shape == Shape.Fist || o.shape == Shape.None) break;
-                    if (Vector2.Distance(o.palm, palm) > need) { swipeQueued = true; lastSwipe = t; break; }
+                    float d = Vector2.Distance(o.palm, palm);
+                    if (d > far) { far = d; from = o.palm; }
                 }
+                if (far > need) { SwipeFrom = from; SwipeTo = palm; swipeUntil = t + SwipeFollow; lastSwipe = t; }
             }
+            FlushSwipe(t);
 
             // 劍士：張開的手掌在 0.5 秒內往任何方向移動一小段（短邊的 12%）就出招（不用大幅橫劈）
             if (ReleaseStyle == Style.Chop && fingersOut && histN >= 3)
@@ -461,7 +468,13 @@ namespace SpellDuel
         /// <summary>取走「放招」事件（一次性）</summary>
         /// <summary>普通攻擊（劍士）：偵測「手掌劃一下」（SoloBattle 設定）</summary>
         public bool BasicSwipe;
-        bool swipeQueued; float lastSwipe = -99f;
+        bool swipeQueued; float lastSwipe = -99f, swipeUntil = -1f;
+        /// <summary>這一刀手掌劃過的起點、終點（螢幕像素，左下為原點）</summary>
+        public Vector2 SwipeFrom { get; private set; }
+        public Vector2 SwipeTo { get; private set; }
+        /// <summary>偵測到劃動後再跟著手多久（秒），把整段揮動算進刀線</summary>
+        public const float SwipeFollow = 0.15f;
+        void FlushSwipe(float t) { if (swipeUntil >= 0f && t >= swipeUntil) { swipeQueued = true; swipeUntil = -1f; } }
         public bool ConsumeSwipe() { bool q = swipeQueued; swipeQueued = false; return q; }
 
         public bool ConsumeRelease()

@@ -41,6 +41,7 @@ namespace SpellDuel
             Line(s.id == "na_sword" ? $"{BasicGesture(s)}就出手（每 {s.cooldown:0.#} 秒最多一次）" : $"{(s.id == "na_dagger" ? "" : "手")}{BasicGesture(s)}並維持，每 {s.cooldown:0.#} 秒自動攻擊一次（放下手勢就停）");
             Line("正在詠唱技能時不會普攻（唸完、放完招才會繼續）");
             if (!melee) Line("朝畫面中央的準星方向飛出");
+            if (s.id == "na_sword") Line("只砍到手掌劃過的那一條線：手要劃過畫面上的敵人才打得到（一刀可以劃過好幾隻）");
             sb.Append("\n【數值】\n");
             Line($"傷害 {s.damage}（會吃攻擊力加成{(melee ? "" : "，也會爆擊")}）");
             Line($"冷卻 {s.cooldown:0.#} 秒");
@@ -171,6 +172,7 @@ namespace SpellDuel
                     Line("刺客點了「近身本能」時，2m 內打它傷害會降低、它的閃避也會提高");
                     Line("法師的抗拒法環可以取消伏擊");
                 }
+                else if (s.id == "na_sword") Line($"揮砍前會先出現紅色刀線（約 {Battle.SlashWindup:0.##} 秒）：蹲下躲過、或退到 {s.rangeMax + Battle.SlashReach:0.#}m 外");
                 else if (s.id == "slash" || Skills.IsMeleeBasic(s)) Line($"只砍前方半球（半徑 {s.rangeMax:0.#}m）：退到範圍外或繞到它背後");
                 else
                 {

@@ -237,7 +237,7 @@ namespace SpellDuel
 
             // ---------------------------------------------------------- 普通攻擊（不耗 MP、不用唸；手勢舉著就自動攻擊，見 BasicOf）
             P(new SkillDef { id = "na_mage", cls = "basic", name = "奧術飛彈", type = SkillType.Projectile, color = C("#a78bfa"), cost = 0, damage = 8, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.15f, rangeMax = 12f, desc = "法師普攻：比 1（食指），每 2 秒自動射出一發奧術飛彈" });
-            P(new SkillDef { id = "na_sword", cls = "basic", name = "斬擊（普攻）", type = SkillType.Projectile, color = C("#93c5fd"), cost = 0, damage = 9, charge = 0f, cooldown = 1f, radius = 1f, rangeMax = 1f, desc = "劍士普攻：手掌劃一下，砍前方半球（半徑 1m）內的所有敵人（每 1 秒）" });
+            P(new SkillDef { id = "na_sword", cls = "basic", name = "斬擊（普攻）", type = SkillType.Projectile, color = C("#93c5fd"), cost = 0, damage = 9, charge = 0f, cooldown = 1f, radius = 1f, rangeMax = 1f, desc = "劍士普攻：手掌劃一下，只砍手劃過的那條線（1m 內，每 1 秒）" });
             P(new SkillDef { id = "na_arrow", cls = "basic", name = "普通箭", type = SkillType.Projectile, color = C("#d9f99d"), cost = 0, damage = 7, charge = 0f, cooldown = 2f, speed = 16f, radius = 0.06f, rangeMax = 14f, desc = "獵人普攻：比 5（張開手掌），每 2 秒自動射出一箭" });
             P(new SkillDef { id = "na_holy", cls = "basic", name = "神聖飛彈", type = SkillType.Projectile, color = C("#fff3b0"), cost = 0, damage = 6, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.14f, rangeMax = 12f, desc = "牧師普攻：比 2，每 2 秒自動射出一發神聖飛彈" });
             P(new SkillDef { id = "na_dagger", cls = "basic", name = "連刺（普攻）", type = SkillType.Projectile, color = C("#e879f9"), cost = 0, damage = 8, charge = 0f, cooldown = 1.6f, radius = 0.5f, rangeMax = 1f, desc = "刺客普攻：舉掌（張開手掌），每 1.6 秒砍前方半球（半徑 1m）內的所有敵人" });

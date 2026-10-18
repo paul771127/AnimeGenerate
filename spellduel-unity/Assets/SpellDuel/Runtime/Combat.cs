@@ -1216,7 +1216,7 @@ namespace SpellDuel
         /// 普通攻擊：近身（劍士、刺客）＝砍身邊 rangeMax 公尺內的所有敵人；遠程＝朝 aimDir 射出一發（走一般的投射物流程，連線也會同步）。
         /// 正在詠唱技能時不能普攻（呼叫者負責）。回傳有沒有出手。
         /// </summary>
-        public bool BasicAttack(Fighter f, SkillDef s, Vector3 aimDir, Vector3 floor, bool locked)
+        public bool BasicAttack(Fighter f, SkillDef s, Vector3 aimDir, Vector3 floor, bool locked, Vector3 slashFrom = default, Vector3 slashTo = default)
         {
             if (s == null || f == null || !f.Alive || Over || f.charging != null) return false;
             if (f.cooldownUntil.TryGetValue(s.id, out var cd) && cd > now) return false;
@@ -1226,8 +1226,116 @@ namespace SpellDuel
                 return TryRelease(f, aimDir, floor, out _, locked);
             }
             f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul * CdFactor(f);
+            if (s.id == "na_sword" && SwordSlash(f, s, slashFrom, slashTo)) return true;
             MeleeSweep(f, s, Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now)));
             return true;
+        }
+
+        // ------------------------------------------------------------ 劍士普攻：只砍「手劃過的那條線」
+        /// <summary>刀線從眼睛往外伸多長：普攻射程＋這段（手臂＋刀身）</summary>
+        public const float SlashReach = 0.6f;
+        /// <summary>刀線的半寬（公尺）</summary>
+        public const float SlashHalfWidth = 0.08f;
+        /// <summary>電腦劍士揮砍前的預警時間（秒）：看到紅線就蹲下或退開</summary>
+        public const float SlashWindup = 0.45f;
+        /// <summary>電腦橫砍的左右張角（0.9 ≈ 左右各 42°）</summary>
+        const float SlashSpread = 0.9f;
+        /// <summary>劍士揮砍的刀線（誰、刀線兩端（場地座標）、揮砍的起點、true＝電腦出手前的預警）</summary>
+        public event Action<Fighter, Vector3, Vector3, Vector3, bool> OnSlashLine;
+
+        /// <summary>
+        /// 劍士普攻。玩家：from／to＝手掌劃過的起點、終點（從眼睛出發的方向），只砍到這條線掃過的扇面。
+        /// 電腦（沒給方向）：朝目標胸口高度橫砍，先畫預警紅線，SlashWindup 秒後才出手（蹲下或退開就閃得掉）。
+        /// 回傳 false＝沒有目標（或玩家沒給刀線），交給一般的半球揮砍。
+        /// </summary>
+        bool SwordSlash(Fighter f, SkillDef s, Vector3 from, Vector3 to)
+        {
+            var o = f.head;
+            float reach = s.rangeMax * f.rangeMul + SlashReach;
+            if (from != Vector3.zero && to != Vector3.zero)
+            {
+                SlashStrike(f, s, o, from.normalized, to.normalized, reach, false);
+                return true;
+            }
+            if (f.isPlayer || f.isAlly) return false;   // 玩家沒給刀線（不該發生）：照舊砍前方半球
+            var tgt = f.target != null && f.target.Alive ? f.target : NearestFoe(f, out _);
+            if (tgt == null) return false;
+            var c = (tgt.head + Vector3.down * 0.3f - o).normalized;
+            var side = Vector3.Cross(Vector3.up, Fighter.Flat(c));
+            if (side == Vector3.zero) side = Vector3.right;
+            var a = (c - side * SlashSpread).normalized; var b = (c + side * SlashSpread).normalized;
+            OnSlashLine?.Invoke(f, o + a * reach, o + b * reach, o, true);
+            After(SlashWindup, () => { if (f.Alive && !Over) SlashStrike(f, s, o, a, b, reach, true); });
+            return true;
+        }
+
+        void SlashStrike(Fighter f, SkillDef s, Vector3 o, Vector3 a, Vector3 b, float reach, bool duckable)
+        {
+            int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
+            OnSlashLine?.Invoke(f, o + a * reach, o + b * reach, o, false);
+            if (f.comboStrike > 0f && ++f.basicHits % 3 == 0) { dmg = Mathf.RoundToInt(dmg * (1f + f.comboStrike)); Emit("buff", f.Chest, s.color, "連斬・重擊！"); }
+            dmg = Riposte(f, dmg);
+            foreach (var v in MeleeFoes(f))
+            {
+                if (v == null || !v.Alive || !InSlash(o, a, b, reach, v)) continue;
+                if (duckable && v.crouching) { Emit("evade", v.Chest, s.color, "蹲下閃過！"); continue; }
+                if (duckable && SidestepInvuln && v.dodgeUntil > now) { Emit("evade", v.Chest, s.color, "閃避！"); continue; }
+                MeleeHit(f, s, v, dmg);
+            }
+        }
+
+        /// <summary>刀線（從 o 出發、方向 a 掃到 b、長 reach）有沒有碰到 v 的身體</summary>
+        public static bool InSlash(Vector3 o, Vector3 a, Vector3 b, float reach, Fighter v)
+        {
+            v.BodySegment(out var top, out var bottom);
+            float tol = v.bodyRadius + SlashHalfWidth;
+            const int N = 12;
+            for (int i = 0; i <= N; i++)
+            {
+                var d = Vector3.Lerp(a, b, i / (float)N).normalized;   // 刀線不會超過 180°
+                if (SegmentDistance(o, o + d * reach, top, bottom) <= tol) return true;
+            }
+            return false;
+        }
+
+        /// <summary>兩條線段之間的最短距離</summary>
+        public static float SegmentDistance(Vector3 p1, Vector3 q1, Vector3 p2, Vector3 q2)
+        {
+            Vector3 d1 = q1 - p1, d2 = q2 - p2, r = p1 - p2;
+            float a = Vector3.Dot(d1, d1), e = Vector3.Dot(d2, d2), f = Vector3.Dot(d2, r);
+            float s, t;
+            if (a <= 1e-8f && e <= 1e-8f) return r.magnitude;
+            if (a <= 1e-8f) { s = 0f; t = Mathf.Clamp01(f / e); }
+            else
+            {
+                float c = Vector3.Dot(d1, r);
+                if (e <= 1e-8f) { t = 0f; s = Mathf.Clamp01(-c / a); }
+                else
+                {
+                    float bb = Vector3.Dot(d1, d2), den = a * e - bb * bb;
+                    s = den > 1e-8f ? Mathf.Clamp01((bb * f - c * e) / den) : 0f;
+                    t = (bb * s + f) / e;
+                    if (t < 0f) { t = 0f; s = Mathf.Clamp01(-c / a); }
+                    else if (t > 1f) { t = 1f; s = Mathf.Clamp01((bb - c) / a); }
+                }
+            }
+            return ((p1 + d1 * s) - (p2 + d2 * t)).magnitude;
+        }
+
+        List<Fighter> MeleeFoes(Fighter f)
+        {
+            var foes = new List<Fighter>();
+            if (f == enemy || f.isMinion) { foreach (var pl in Players()) foes.Add(pl); }
+            else { if (enemy != null) foes.Add(enemy); foes.AddRange(minions); }
+            return foes;
+        }
+
+        void MeleeHit(Fighter f, SkillDef s, Fighter v, int dmg)
+        {
+            int dv = PreHit(f, v, s, dmg, null);
+            if (remoteEnemy && v == enemy) { EmitHit(s, v.Chest); OnRemoteHit?.Invoke(s, dv, v.Chest, 0); OnDealt(f, dv, v, s); return; }
+            if (remoteEnemy && v.isMinion) { EmitHit(s, v.Chest); OnMinionHit?.Invoke(v.minionId, dv, s); OnDealt(f, dv, v, s); return; }
+            Hit(v, new Projectile { owner = f, skill = s, pos = v.Chest, dir = Fighter.Flat(v.head - f.head), damage = dv });
         }
 
         /// <summary>近身揮砍（普攻、斬擊）：打到前方半球（半徑＝技能射程）內的所有敵人</summary>
@@ -1237,17 +1345,8 @@ namespace SpellDuel
             // 劍士「連斬」：普攻每第 3 下是重擊
             if (s.id == "na_sword" && f.comboStrike > 0f && ++f.basicHits % 3 == 0) { dmg = Mathf.RoundToInt(dmg * (1f + f.comboStrike)); Emit("buff", f.Chest, s.color, "連斬・重擊！"); }
             dmg = Riposte(f, dmg);
-            var foes = new List<Fighter>();
-            if (f == enemy || f.isMinion) { foreach (var pl in Players()) foes.Add(pl); }
-            else { if (enemy != null) foes.Add(enemy); foes.AddRange(minions); }
-            foreach (var v in foes)
-            {
-                if (v == null || !v.Alive || !InFrontHemisphere(f, v, s.rangeMax)) continue;   // 前方半球
-                int dv = PreHit(f, v, s, dmg, null);
-                if (remoteEnemy && v == enemy) { EmitHit(s, v.Chest); OnRemoteHit?.Invoke(s, dv, v.Chest, 0); OnDealt(f, dv, v, s); continue; }
-                if (remoteEnemy && v.isMinion) { EmitHit(s, v.Chest); OnMinionHit?.Invoke(v.minionId, dv, s); OnDealt(f, dv, v, s); continue; }
-                Hit(v, new Projectile { owner = f, skill = s, pos = v.Chest, dir = Fighter.Flat(v.head - f.head), damage = dv });
-            }
+            foreach (var v in MeleeFoes(f))
+                if (v != null && v.Alive && InFrontHemisphere(f, v, s.rangeMax)) MeleeHit(f, s, v, dmg);   // 前方半球
         }
 
         /// <summary>刺客伏擊技能（刺殺、影襲、毒刃）：身邊這個半徑內不能有敵人才能蓄力；蓄力完成後靠近到這個距離就自動出手</summary>

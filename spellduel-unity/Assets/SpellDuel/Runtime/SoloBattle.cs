@@ -586,7 +586,7 @@ namespace SpellDuel
             en.head = NetEnemyHeadW;
             SyncPlayer(me);
             battle = new Battle(me, en) { remoteEnemy = true };
-            battle.OnEvent += OnBattleEvent;
+            battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine;
             battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.basePos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected, rad = p.curveAmp, s = p.pathLen });
             battle.OnRemoteBurn += (sk, dmg, at) => NetSend?.Invoke(new Msg { t = "burn2", k = sk.id, dmg = Mathf.RoundToInt(dmg), p = at });
             battle.OnRemoteHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });
@@ -646,7 +646,7 @@ namespace SpellDuel
             me.damageTakenMul = DamageTakenFor(difficulty);
             SyncPlayer(me);
             battle = new Battle(me, boss);
-            battle.OnEvent += OnBattleEvent;
+            battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine;
             bool host = !coopMode || NetIsHost;
             if (coopMode)
             {
@@ -1281,7 +1281,7 @@ namespace SpellDuel
             battle_MeForSpawn = me;
             if (!dummyMode) { var sp = OutsideEdgePoint(true); en.head = new Vector3(sp.x, 1.6f, sp.z); }
             battle = new Battle(me, en);
-            battle.OnEvent += OnBattleEvent;
+            battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine;
             ai = dummyMode ? null : new EnemyAI(battle, en, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
             ai?.SetDifficulty(difficulty);
             me.damageTakenMul = DamageTakenFor(difficulty);
@@ -1543,7 +1543,14 @@ namespace SpellDuel
             var o = WorldFrame.ToWorld(ray.origin);
             var d = WorldFrame.DirToWorld(ray.direction);
             var floor = d.y < -0.01f ? o + d * (-o.y / d.y) : Me.Feet + Fighter.Flat(d) * 15f;
-            if (!battle.BasicAttack(Me, s, d, floor, enemyOnScreen)) return;
+            // 劍士：刀線＝手掌在畫面上劃過的起點→終點
+            Vector3 from = default, to = default;
+            if (s.id == "na_sword")
+            {
+                from = WorldFrame.DirToWorld(cam.ScreenPointToRay(Hand.SwipeFrom).direction);
+                to = WorldFrame.DirToWorld(cam.ScreenPointToRay(Hand.SwipeTo).direction);
+            }
+            if (!battle.BasicAttack(Me, s, d, floor, enemyOnScreen, from, to)) return;
             if (!Skills.IsMeleeBasic(s))
                 SpellFx.CastBurst(myClass, s.color, cam.transform.position + cam.transform.forward * 0.5f - cam.transform.up * 0.08f, ray.direction, 0.2f);
         }
