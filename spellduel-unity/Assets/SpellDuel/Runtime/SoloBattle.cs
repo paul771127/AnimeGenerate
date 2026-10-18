@@ -586,7 +586,7 @@ namespace SpellDuel
             en.head = NetEnemyHeadW;
             SyncPlayer(me);
             battle = new Battle(me, en) { remoteEnemy = true };
-            battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine;
+            battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine; battle.OnShotWarn += ShowShotLine;
             battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.basePos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected, rad = p.curveAmp, s = p.pathLen });
             battle.OnRemoteBurn += (sk, dmg, at) => NetSend?.Invoke(new Msg { t = "burn2", k = sk.id, dmg = Mathf.RoundToInt(dmg), p = at });
             battle.OnRemoteHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });
@@ -646,7 +646,7 @@ namespace SpellDuel
             me.damageTakenMul = DamageTakenFor(difficulty);
             SyncPlayer(me);
             battle = new Battle(me, boss);
-            battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine;
+            battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine; battle.OnShotWarn += ShowShotLine;
             bool host = !coopMode || NetIsHost;
             if (coopMode)
             {
@@ -1193,6 +1193,10 @@ namespace SpellDuel
                 case "trapgone":
                     battle.RemoveRemoteTrap(m.id);
                     break;
+                case "shotwarn":
+                    // 對手遠程普攻的瞄準預警線
+                    if (m.pts != null && m.pts.Length >= 2 && En != null) ShowShotLine(En, m.pts[0], m.pts[1]);
+                    break;
                 case "slash":
                     // 對手（劍士、刺客）的刀線：預警＝紅線，出手＝白光（傷害由對手那邊判定）
                     if (m.pts != null && m.pts.Length >= 3 && En != null)
@@ -1289,7 +1293,7 @@ namespace SpellDuel
             battle_MeForSpawn = me;
             if (!dummyMode) { var sp = OutsideEdgePoint(true); en.head = new Vector3(sp.x, 1.6f, sp.z); }
             battle = new Battle(me, en);
-            battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine;
+            battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine; battle.OnShotWarn += ShowShotLine;
             ai = dummyMode ? null : new EnemyAI(battle, en, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
             ai?.SetDifficulty(difficulty);
             me.damageTakenMul = DamageTakenFor(difficulty);

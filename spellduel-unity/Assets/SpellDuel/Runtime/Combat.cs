@@ -1222,8 +1222,19 @@ namespace SpellDuel
             if (f.cooldownUntil.TryGetValue(s.id, out var cd) && cd > now) return false;
             if (!Skills.IsMeleeBasic(s))
             {
-                f.charging = s; f.chargeStart = now - 1f;
-                return TryRelease(f, aimDir, floor, out _, locked);
+                if (f.isAlly) { f.charging = s; f.chargeStart = now - 1f; return TryRelease(f, aimDir, floor, out _, locked); }
+                // 遠程普攻（法師、獵人、牧師；玩家、電腦都一樣）：先畫瞄準預警線，ShotWindup 秒後才朝同一個方向射出
+                f.cooldownUntil[s.id] = now + ShotWindup + 0.05f;   // 預警中不重複觸發；射出時換成真正的冷卻
+                var start = f.Chest; var dir = aimDir.sqrMagnitude > 1e-6f ? aimDir.normalized : Fighter.Flat(f.forward);
+                OnShotWarn?.Invoke(f, start, start + dir * s.rangeMax * f.rangeMul);
+                if (!f.isPlayer) f.windupUntil = now + ShotWindup;   // 電腦預警中站定：射出的方向就是預警線
+                After(ShotWindup, () =>
+                {
+                    if (!f.Alive || Over || f.charging != null) return;   // 這段時間開始詠唱技能：這一發取消
+                    f.charging = s; f.chargeStart = now - 1f;
+                    TryRelease(f, dir, floor, out _, locked);
+                });
+                return true;
             }
             f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul * CdFactor(f);
             if (s.id == "na_sword" && SwordSlash(f, s, slashFrom, slashTo)) return true;
@@ -1274,6 +1285,11 @@ namespace SpellDuel
             After(SlashWindup, () => { if (f.Alive && !Over) SlashStrike(f, s, o, a, b, reach, true); });
             return true;
         }
+
+        /// <summary>遠程普攻的預警時間（秒）：瞄準線出現後才射出</summary>
+        public const float ShotWindup = 0.35f;
+        /// <summary>遠程普攻的瞄準預警線（誰、起點、終點（場地座標））</summary>
+        public event Action<Fighter, Vector3, Vector3> OnShotWarn;
 
         /// <summary>電腦刺客連刺的預警時間（秒）：紅色扇形出現後才刺，退出 1m 或閃到它側面就打不到</summary>
         public const float StabWindup = 0.4f;

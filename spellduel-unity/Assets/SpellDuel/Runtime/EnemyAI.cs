@@ -82,9 +82,14 @@ namespace SpellDuel
             {
                 var bh = me.head + Fighter.Flat(me.forward) * 0.25f + Vector3.down * 0.25f;
                 var bd = Battle.RotateY((player.Chest - bh).normalized, Rand(-aimErrorDeg, aimErrorDeg));
-                if (b.BasicAttack(me, basic, bd, player.Feet, true)) nextBasic = b.now + Rand(0.5f, 1.2f) * delayScale;
+                if (b.BasicAttack(me, basic, bd, player.Feet, true))
+                {
+                    nextBasic = b.now + Rand(0.5f, 1.2f) * delayScale;
+                    if (!Skills.IsMeleeBasic(basic)) shotPendingUntil = b.now + Battle.ShotWindup + 0.05f;
+                }
             }
 
+            if (b.now < shotPendingUntil) return;   // 遠程普攻預警中：等射出去再唸技能（不然這一發會被取消）
             if (b.now < nextThink) return;
             nextThink = b.now + Rand(thinkMin, thinkMax);
 
@@ -120,7 +125,7 @@ namespace SpellDuel
             }
         }
 
-        float nextBasic = 1.5f;
+        float nextBasic = 1.5f, shotPendingUntil;
         bool Ready(SkillDef s) => (!me.cooldownUntil.TryGetValue(s.id, out var cd) || cd <= b.now) && me.mp >= s.cost;
 
         /// <summary>和 Battle 的規則一樣：刺殺準備蓄滿前、獵人整個拉弓期間（遊俠除外）離開原地就失敗</summary>

@@ -105,6 +105,20 @@ namespace SpellDuel
             if (f == Me && battle.remoteEnemy && !coop) NetSend?.Invoke(new Msg { t = "slash", pts = new[] { a, b, o }, ok = warn, s = Mathf.Max(0f, f.windupUntil - battle.now) });
         }
 
+        /// <summary>遠程普攻的瞄準預警線：敵人＝紅色細線，自己＝職業色半透明</summary>
+        void ShowShotLine(Fighter f, Vector3 from, Vector3 to)
+        {
+            var go = new GameObject("Shot Warning");
+            var lr = go.AddComponent<LineRenderer>();
+            lr.material = new Material(Shader.Find("Sprites/Default"));
+            lr.positionCount = 2; lr.useWorldSpace = true; lr.widthMultiplier = 0.025f;
+            lr.SetPosition(0, WorldFrame.FromWorld(from)); lr.SetPosition(1, WorldFrame.FromWorld(to));
+            var c = f == Me ? new Color(f.cls.color.r, f.cls.color.g, f.cls.color.b, 0.45f) : new Color(1f, 0.25f, 0.2f, 0.8f);
+            lr.startColor = lr.endColor = c;
+            go.AddComponent<SlashLineFade>().Begin(lr, Battle.ShotWindup + 0.1f, c);
+            if (f == Me && battle.remoteEnemy && !coop) NetSend?.Invoke(new Msg { t = "shotwarn", pts = new[] { from, to } });
+        }
+
         /// <summary>震地波的環快到我腳邊（1.2 秒內）</summary>
         bool QuakeComing(out float eta)
         {
