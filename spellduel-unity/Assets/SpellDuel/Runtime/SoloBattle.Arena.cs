@@ -105,17 +105,49 @@ namespace SpellDuel
             if (f == Me && battle.remoteEnemy && !coop) NetSend?.Invoke(new Msg { t = "slash", pts = new[] { a, b, o }, ok = warn, s = Mathf.Max(0f, f.windupUntil - battle.now) });
         }
 
-        /// <summary>遠程普攻的瞄準預警線：敵人＝紅色細線，自己＝職業色半透明</summary>
+        /// <summary>
+        /// 遠程普攻的瞄準預警：整條半透明射線（射手細、遠端粗），加上射線到地面的半透明「垂簾」和地上的投影線。
+        /// 射線正對著你時也看得出高低：垂簾會變成從射線垂到地板的一條直帶，地上的線看得出左右方向。
+        /// 敵人＝紅色，自己＝職業色。
+        /// </summary>
         void ShowShotLine(Fighter f, Vector3 from, Vector3 to)
         {
             var go = new GameObject("Shot Warning");
-            var lr = go.AddComponent<LineRenderer>();
-            lr.material = new Material(Shader.Find("Sprites/Default"));
-            lr.positionCount = 2; lr.useWorldSpace = true; lr.widthMultiplier = 0.025f;
-            lr.SetPosition(0, WorldFrame.FromWorld(from)); lr.SetPosition(1, WorldFrame.FromWorld(to));
-            var c = f == Me ? new Color(f.cls.color.r, f.cls.color.g, f.cls.color.b, 0.45f) : new Color(1f, 0.25f, 0.2f, 0.8f);
-            lr.startColor = lr.endColor = c;
-            go.AddComponent<SlashLineFade>().Begin(lr, Battle.ShotWindup + 0.1f, c);
+            var col = f == Me ? f.cls.color : new Color(1f, 0.25f, 0.2f);
+            var sh = Shader.Find("Sprites/Default");
+            var fx = go.AddComponent<ShotWarnFx>();
+
+            // 射線：起點細、遠端粗，往遠處淡出
+            var beam = go.AddComponent<LineRenderer>();
+            beam.material = new Material(sh); beam.useWorldSpace = true; beam.positionCount = 2;
+            beam.SetPosition(0, WorldFrame.FromWorld(from)); beam.SetPosition(1, WorldFrame.FromWorld(to));
+            beam.widthCurve = new AnimationCurve(new Keyframe(0f, 0.02f), new Keyframe(1f, 0.07f));
+            fx.Add(beam, new Color(col.r, col.g, col.b, 0.65f), new Color(col.r, col.g, col.b, 0.25f));
+
+            // 地上的投影線
+            var gl = new GameObject("Shot Ground").AddComponent<LineRenderer>();
+            gl.transform.SetParent(go.transform, false);
+            gl.material = new Material(sh); gl.useWorldSpace = true; gl.positionCount = 2; gl.widthMultiplier = 0.04f;
+            gl.SetPosition(0, WorldFrame.FromWorld(new Vector3(from.x, 0.02f, from.z))); gl.SetPosition(1, WorldFrame.FromWorld(new Vector3(to.x, 0.02f, to.z)));
+            fx.Add(gl, new Color(col.r, col.g, col.b, 0.45f), new Color(col.r, col.g, col.b, 0.15f));
+
+            // 垂簾：射線到地面的半透明面（雙面），越遠越淡
+            const int N = 12;
+            var v = new Vector3[(N + 1) * 2]; var c = new Color[(N + 1) * 2]; var tri = new int[N * 6];
+            for (int i = 0; i <= N; i++)
+            {
+                float k = i / (float)N; var p = Vector3.Lerp(from, to, k);
+                v[i * 2] = WorldFrame.FromWorld(p); v[i * 2 + 1] = WorldFrame.FromWorld(new Vector3(p.x, 0.02f, p.z));
+                c[i * 2] = new Color(col.r, col.g, col.b, Mathf.Lerp(0.22f, 0.06f, k)); c[i * 2 + 1] = new Color(col.r, col.g, col.b, Mathf.Lerp(0.08f, 0.02f, k));
+                if (i < N) { int t = i * 6, b = i * 2; tri[t] = b; tri[t + 1] = b + 2; tri[t + 2] = b + 1; tri[t + 3] = b + 1; tri[t + 4] = b + 2; tri[t + 5] = b + 3; }
+            }
+            var mesh = new Mesh { name = "Shot Curtain" }; mesh.vertices = v; mesh.colors = c; mesh.triangles = tri; mesh.RecalculateBounds();
+            var cg = new GameObject("Shot Curtain"); cg.transform.SetParent(go.transform, false);
+            cg.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var mr = cg.AddComponent<MeshRenderer>(); mr.material = new Material(sh);   // Sprites/Default 不剔除背面：兩面都看得到
+            fx.Add(mr, mesh);
+
+            fx.Begin(Battle.ShotWindup + 0.15f);
             if (f == Me && battle.remoteEnemy && !coop) NetSend?.Invoke(new Msg { t = "shotwarn", pts = new[] { from, to } });
         }
 
@@ -246,6 +278,36 @@ namespace SpellDuel
             float k = Mathf.Clamp01(t / life);
             if (lr) { var x = c; x.a = c.a * (1f - k * k); lr.startColor = lr.endColor = x; }
             if (k >= 1f) { if (lr) Destroy(lr.material); Destroy(gameObject); }
+        }
+    }
+
+    /// <summary>瞄準預警的淡出：射線、地上的線、垂簾一起淡出後刪掉</summary>
+    public class ShotWarnFx : MonoBehaviour
+    {
+        readonly System.Collections.Generic.List<(LineRenderer lr, Color a, Color b)> lines = new System.Collections.Generic.List<(LineRenderer, Color, Color)>();
+        MeshRenderer curtain; Mesh mesh; Color[] baseCols;
+        float life = 0.5f, t;
+        public void Add(LineRenderer lr, Color a, Color b) { lines.Add((lr, a, b)); lr.startColor = a; lr.endColor = b; }
+        public void Add(MeshRenderer mr, Mesh m) { curtain = mr; mesh = m; baseCols = m.colors; }
+        public void Begin(float d) { life = Mathf.Max(0.05f, d); }
+        void Update()
+        {
+            t += Time.deltaTime;
+            float k = Mathf.Clamp01(t / life), a = 1f - k * k;
+            foreach (var (lr, ca, cb) in lines) if (lr) { lr.startColor = new Color(ca.r, ca.g, ca.b, ca.a * a); lr.endColor = new Color(cb.r, cb.g, cb.b, cb.a * a); }
+            if (mesh != null && baseCols != null)
+            {
+                var cs = new Color[baseCols.Length];
+                for (int i = 0; i < cs.Length; i++) { var c = baseCols[i]; cs[i] = new Color(c.r, c.g, c.b, c.a * a); }
+                mesh.colors = cs;
+            }
+            if (k >= 1f) Destroy(gameObject);
+        }
+        void OnDestroy()
+        {
+            foreach (var (lr, _, _) in lines) if (lr) Destroy(lr.material);
+            if (curtain) Destroy(curtain.material);
+            if (mesh != null) Destroy(mesh);
         }
     }
 }
