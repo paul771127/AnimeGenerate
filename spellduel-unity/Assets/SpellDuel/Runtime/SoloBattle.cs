@@ -589,7 +589,7 @@ namespace SpellDuel
             battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine; battle.OnShotWarn += ShowShotLine;
             battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.basePos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected, rad = p.curveAmp, s = p.pathLen });
             battle.OnRemoteBurn += (sk, dmg, at) => NetSend?.Invoke(new Msg { t = "burn2", k = sk.id, dmg = Mathf.RoundToInt(dmg), p = at });
-            battle.OnRemoteHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });
+            battle.OnRemoteHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at, e = battle.LastProcs });
             battle.OnTrapPlaced += t => NetSend?.Invoke(new Msg { t = "trap2", id = t.id, k = t.skill.id, p = t.pos, s = t.armAt - battle.now });
             battle.OnTrapGone += id => NetSend?.Invoke(new Msg { t = "trapgone", id = id });
             battle.OnDispel += (c, r) => NetSend?.Invoke(new Msg { t = "dispel", p = c, rad = r });
@@ -1169,6 +1169,7 @@ namespace SpellDuel
                         if (!isTrap && battle.WasSliced(m.id)) break;   // 我已經斬開的那發不算
                         if (isTrap) battle.RemoveRemoteTrap(-m.id); else battle.RemoveRemoteProjectile(m.id);
                         bool countered = battle.ApplyRemoteHit(hs, m.dmg, m.p, isTrap);
+                        if (!countered) battle.ApplyProcs(Me, m.e, m.p);   // 對手的箭附加的出血／中毒／沉默
                         NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp), ok = countered });
                     }
                     break;

@@ -65,7 +65,7 @@ namespace SpellDuel
         Lifesteal, Crit, Dodge, MpOnHit, Regen, Burn, Poison, LastStand, Freeze, Evade, FastCast, Overcharge, NaturalRegen, QuickCd, Atk, Armor, Hp,
         // 流派（技能樹 v2）
         SpellEcho, BasicMp, Overload, LowMp, Melt, IceFreeze,          // 法師
-        LongShot, SteadyAim, TrapCrit,                                 // 獵人
+        LongShot, SteadyAim, TrapCrit, ArrowBleed, ArrowPoison, ArrowSilence,   // 獵人
         ComboStrike, BasicLeech, WaveFlow, Riposte,                    // 劍士
         Venom, Assassinate, Vanish, KnifeCdr,                          // 刺客
         HolySeal, Homing, Martyr, Zeal,                                // 牧師
@@ -213,6 +213,10 @@ namespace SpellDuel
                     FMod("ar_bmulti", "分裂箭", "na_arrow", ModField.Multi, 1f, 2, 0, 2, "ar_bspd"),
                     FMod("ar_bdmg", "精製箭頭", "na_arrow", ModField.Damage, 0.12f, 5, 0, 3, "ar_bmulti"),
                     FMod("ar_bpierce", "穿透箭", "na_arrow", ModField.Pierce, 1f, 1, 1, 2, "ar_bspd"),
+                    // 箭的附加效果（機率）
+                    FPas("ar_bleed", "撕裂箭", PassiveKind.ArrowBleed, 0.06f, 5, 1, 3, "ar_bpierce"),
+                    FPas("ar_venom", "毒箭", PassiveKind.ArrowPoison, 0.06f, 5, 1, 4, "ar_bleed"),
+                    FPas("ar_silence", "封喉箭", PassiveKind.ArrowSilence, 0.04f, 5, 2, 4, "ar_bleed"),
                     FMod("ar_quick", "速射強化", "quickshot", ModField.Damage, 0.1f, 5, 2, 2, "ar_bspd"),
                     FMod("ar_triple", "多重箭", "triple", ModField.Multi, 1f, 2, 2, 3, "ar_quick"),
                     // 狙擊
@@ -528,6 +532,9 @@ namespace SpellDuel
                         PassiveKind.LongShot => $"箭飛超過 {Battle.LongShotDist:0}m 才命中：傷害 +{v * 100:0}%",
                         PassiveKind.SteadyAim => $"站著不動 {Mathf.Max(1f, 3f - v):0.#} 秒以上，射出的箭必定爆擊",
                         PassiveKind.TrapCrit => $"陷阱觸發後 {v:0} 秒內，下一個弓箭技能必定爆擊",
+                        PassiveKind.ArrowBleed => $"箭命中時 {v * 100:0}% 機率出血：每秒 {Battle.BleedDps:0} 傷害、{Battle.BleedDur:0} 秒（可疊加）",
+                        PassiveKind.ArrowPoison => $"箭命中時 {v * 100:0}% 機率中毒：每秒 3 傷害、6 秒（可疊加）",
+                        PassiveKind.ArrowSilence => $"箭命中時 {v * 100:0}% 機率沉默 {Battle.SilenceDur:0} 秒：不能唸技能、正在唸的被打斷（Boss 減半）",
                         PassiveKind.ComboStrike => $"普攻每第 3 下是重擊：傷害 +{v * 100:0}%",
                         PassiveKind.BasicLeech => $"普攻造成傷害的 {v * 100:0}% 回復成 HP",
                         PassiveKind.WaveFlow => $"斬擊後 {v:0} 秒內，劍氣不花 MP",
@@ -1008,6 +1015,7 @@ namespace SpellDuel
             f.spellEcho = Passive(PassiveKind.SpellEcho); f.basicMp = Passive(PassiveKind.BasicMp); f.lowMpBonus = Passive(PassiveKind.LowMp);
             f.melt = Passive(PassiveKind.Melt); f.iceFreeze = Passive(PassiveKind.IceFreeze);
             f.longShot = Passive(PassiveKind.LongShot); f.steadyAim = Passive(PassiveKind.SteadyAim); f.trapCrit = Passive(PassiveKind.TrapCrit);
+            f.arrowBleed = Passive(PassiveKind.ArrowBleed); f.arrowPoison = Passive(PassiveKind.ArrowPoison); f.arrowSilence = Passive(PassiveKind.ArrowSilence);
             f.comboStrike = Passive(PassiveKind.ComboStrike); f.basicLeech = Passive(PassiveKind.BasicLeech); f.waveFlow = Passive(PassiveKind.WaveFlow); f.riposte = Passive(PassiveKind.Riposte);
             f.venom = Passive(PassiveKind.Venom); f.assassinate = Passive(PassiveKind.Assassinate); f.vanish = Passive(PassiveKind.Vanish); f.knifeCdr = Passive(PassiveKind.KnifeCdr);
             f.holySeal = Passive(PassiveKind.HolySeal); f.basicHoming = Passive(PassiveKind.Homing); f.martyr = Passive(PassiveKind.Martyr); f.zeal = Passive(PassiveKind.Zeal);

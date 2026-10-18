@@ -39,6 +39,8 @@ namespace SpellDuel
         public SkillDef basic;          // 普攻（技能樹強化後的版本；null＝用 Skills.BasicOf）
         public float spellEcho, basicMp, lowMpBonus, melt, iceFreeze;            // 法師：奧術回響、奧術迴路、孤注一擲、融化、寒冰
         public float longShot, steadyAim, trapCrit, basicHoming;                  // 獵人：遠射、穩定瞄準、獵殺時刻；牧師：普攻追蹤
+        public float arrowBleed, arrowPoison, arrowSilence;                       // 獵人：箭命中時出血／中毒／沉默的機率（技能樹）
+        public float silencedUntil;                                               // 被沉默：這段時間不能唸技能（普攻照常）
         public float comboStrike, basicLeech, waveFlow, riposte;                  // 劍士：連斬、飲血、劍意、反擊之刃
         public float venom, assassinate, vanish, knifeCdr;                        // 刺客：劇毒連刺、刺殺、遁影、飛刀節奏
         public float holySeal, martyr, zeal;                                      // 牧師：聖印、殉道、狂信
@@ -263,7 +265,7 @@ namespace SpellDuel
         void HitFoe(Fighter f, Fighter v, SkillDef s, int dmg, EffectKind eff = EffectKind.None, float dps = 0f, float dur = 0f)
         {
             if (v == null || !v.Alive || dmg <= 0 && eff == EffectKind.None) return;
-            LastProcs = RollProcs(f);
+            LastProcs = RollProcs(f, s);
             dmg = PreHit(f, v, s, dmg, null);
             if (remoteEnemy && v == enemy) { EmitHit(s, v.Chest); OnRemoteHit?.Invoke(s, dmg, v.Chest, 0); OnDealt(f, dmg, v, s); return; }
             if (remoteEnemy && v.isMinion) { EmitHit(s, v.Chest); OnMinionHit?.Invoke(v.minionId, dmg, s); OnDealt(f, dmg, v, s); return; }
@@ -658,7 +660,7 @@ namespace SpellDuel
             enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.5f * bossIndex) * BossPartyMul * hpBoost);
             enemy.hp = enemy.maxHp;
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
-            enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f;
+            enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f; enemy.silencedUntil = 0f;
             // 依主題換 Boss：熔岩巨像／腐化樹王（招式不同）
             var bc = Skills.Classes[BossClassOf(Theme)];
             if (enemy.cls != bc)
@@ -1024,7 +1026,7 @@ namespace SpellDuel
                 }
                 else p.alive = false;
                 if (p.crit) Emit("crit", p.pos, p.skill.color, "爆擊！");
-                LastProcs = RollProcs(p.owner);
+                LastProcs = RollProcs(p.owner, p.skill);
                 int pd = PreHit(p.owner, m, p.skill, p.damage, p);
                 if (remoteEnemy) { EmitHit(p.skill, p.pos); OnMinionHit?.Invoke(m.minionId, pd, p.skill); }
                 else { HitSkill = p.skill; HitCrit = p.crit; ApplyDamageAndEffect(m, pd, p.effect, p.effectDps, p.effectDur, p.pos); HitSkill = null; HitCrit = false; ApplyProcs(m, LastProcs, p.pos); }
@@ -1206,6 +1208,7 @@ namespace SpellDuel
             if (f.mp < CostOf(f, s)) { why = "MP 不足"; return false; }
             if (HpCostOf(f, s) > 0 && f.hp <= HpCostOf(f, s)) { why = "HP 不足（殉道：技能改用 HP 施放）"; return false; }
             if (f.snaredUntil > now && s.self != SelfKind.Cleanse) { why = "被困住，暫時不能施法（牧師可以淨化）"; return false; }
+            if (f.silencedUntil > now && s.self != SelfKind.Cleanse) { why = $"被沉默，{Mathf.CeilToInt(f.silencedUntil - now)} 秒內不能唸技能（普攻可以）"; return false; }
             f.charging = s; f.chargeStart = now; f.chargeFrom = f.Feet;
             if (s.releaseNear) f.hiddenTime = 0f;   // 每次開始蓄力伏擊技能，重新累計離開視線的秒數
             return true;
@@ -1687,7 +1690,7 @@ namespace SpellDuel
                 }
                 case SelfKind.Cleanse:
                     // 淨化：解除中毒、定身、致盲，回一點血
-                    f.dots.Clear(); f.snaredUntil = 0f; f.blindUntil = 0f;
+                    f.dots.Clear(); f.snaredUntil = 0f; f.blindUntil = 0f; f.silencedUntil = 0f;
                     if (s.heal > 0) f.hp = Mathf.Min(f.maxHp, f.hp + s.heal);
                     Emit("heal", f.Chest, s.color, s.heal > 0 ? $"淨化 +{s.heal}" : "淨化");
                     return;
@@ -1732,7 +1735,7 @@ namespace SpellDuel
                 case SelfKind.Heal: t.hp = Mathf.Min(t.maxHp, t.hp + s.heal); Emit("heal", t.Chest, s.color, $"{by}{s.name} +{s.heal}"); return;
                 case SelfKind.Armor: t.armorUntil = now + s.buffDur; t.armorReduce = s.buffReduce; Emit("buff", t.Chest, s.color, by + s.name); return;
                 case SelfKind.Cleanse:
-                    t.dots.Clear(); t.snaredUntil = 0f; t.blindUntil = 0f;
+                    t.dots.Clear(); t.snaredUntil = 0f; t.blindUntil = 0f; t.silencedUntil = 0f;
                     if (s.heal > 0) t.hp = Mathf.Min(t.maxHp, t.hp + s.heal);
                     Emit("heal", t.Chest, s.color, by + (s.heal > 0 ? $"淨化 +{s.heal}" : "淨化"));
                     return;
@@ -2239,7 +2242,7 @@ namespace SpellDuel
                         p.alive = false;
                         if (p.skill.id == "meteor" && !p.reflected) AddBurn(p, target.Feet);   // 直接砸中也留下火海
                         if (p.crit) Emit("crit", p.pos, p.skill.color, "爆擊！");
-                        LastProcs = RollProcs(p.owner);
+                        LastProcs = RollProcs(p.owner, p.skill);
                         p.damage = PreHit(p.owner, target, p.skill, p.damage, p);
                         if (remoteEnemy && target == enemy) { EmitHit(p.skill, p.pos, p.crit); OnRemoteHit?.Invoke(p.skill, p.damage, p.pos, p.id); OnDealt(p.owner, p.damage, target, p.skill, p); }
                         else if (target.isAlly) { Emit("allyhit", p.pos, p.skill.color, null); OnAllyHit?.Invoke(target, p.skill, p.damage, p.pos, p.id); }   // 主機：Boss 打到隊友
@@ -2509,24 +2512,41 @@ namespace SpellDuel
         }
 
         // ------------------------------------------------------------ 命中附加效果（無盡模式升級）
-        /// <summary>最近一次命中擲出的附加效果（1 灼燒、2 中毒、4 冰凍）；合作隊友端送給主機用</summary>
+        /// <summary>最近一次命中擲出的附加效果（1 灼燒、2 中毒、4 冰凍、8 出血、16 沉默）；連線時送給對方套用</summary>
         public int LastProcs;
-        int RollProcs(Fighter attacker)
+        /// <summary>出血：每秒 BleedDps、BleedDur 秒（可疊）；沉默：SilenceDur 秒（Boss 減半）</summary>
+        public const float BleedDps = 4f, BleedDur = 5f, SilenceDur = 2f;
+        public static bool IsArrow(SkillDef s) => s != null && (s.id == "na_arrow" || (s.cls == "archer" && s.type == SkillType.Projectile));
+        int RollProcs(Fighter attacker, SkillDef s = null)
         {
             if (attacker == null) return 0;
             int r = 0;
             if (attacker.burnChance > 0f && rng.NextDouble() < attacker.burnChance) r |= 1;
             if (attacker.poisonChance > 0f && rng.NextDouble() < attacker.poisonChance) r |= 2;
             if (attacker.freezeChance > 0f && rng.NextDouble() < attacker.freezeChance) r |= 4;
+            // 獵人技能樹：箭命中時有機率出血、中毒、沉默
+            if (IsArrow(s))
+            {
+                if (attacker.arrowBleed > 0f && rng.NextDouble() < attacker.arrowBleed) r |= 8;
+                if (attacker.arrowPoison > 0f && rng.NextDouble() < attacker.arrowPoison) r |= 2;
+                if (attacker.arrowSilence > 0f && rng.NextDouble() < attacker.arrowSilence) r |= 16;
+            }
             return r;
         }
-        /// <summary>套用附加效果：灼燒（每秒 5、4 秒）、中毒（每秒 3、6 秒）、冰凍（定身 1.5 秒，打斷蓄力）</summary>
+        /// <summary>套用附加效果：灼燒（每秒 5、4 秒）、中毒（每秒 3、6 秒）、冰凍（定身 1.5 秒，打斷蓄力）、出血（每秒 4、5 秒）、沉默（2 秒不能唸技能）</summary>
         public void ApplyProcs(Fighter target, int procs, Vector3 at)
         {
             if (procs == 0 || target == null || !target.Alive) return;
             if ((procs & 1) != 0) { target.dots.Add(new Fighter.Dot { dps = 5f, until = now + 4f }); Emit("effect", at, new Color(1f, 0.5f, 0.15f), "灼燒"); }
             if ((procs & 2) != 0) { target.dots.Add(new Fighter.Dot { dps = 3f, until = now + 6f }); Emit("effect", at, Color.green, "中毒"); }
             if ((procs & 4) != 0) { target.snaredUntil = now + 1.5f; target.charging = null; target.windupUntil = 0f; Emit("effect", at, new Color(0.6f, 0.9f, 1f), "冰凍"); }
+            if ((procs & 8) != 0) { target.dots.Add(new Fighter.Dot { dps = BleedDps, until = now + BleedDur }); Emit("effect", at, new Color(0.9f, 0.15f, 0.2f), "出血"); }
+            if ((procs & 16) != 0)
+            {
+                target.silencedUntil = now + (target.bodyRadius > 0.5f ? SilenceDur * 0.5f : SilenceDur);
+                if (target.charging != null && target.charging.cls != "basic") target.charging = null;   // 正在唸的技能被打斷
+                Emit("effect", at, new Color(0.75f, 0.6f, 1f), "沉默");
+            }
         }
 
         void ApplyDamageAndEffect(Fighter target, int damage, EffectKind eff, float dps, float dur, Vector3 at)
