@@ -108,8 +108,9 @@ namespace SpellDuel
             if (pick == null)
             {
                 var attacks = me.loadout.FindAll(s => s.type != SkillType.Self && Ready(s));
-                var inRange = attacks.FindAll(s => s.type == SkillType.Trap || b.RangeState(me, s) == 0);
+                var inRange = attacks.FindAll(s => s.type == SkillType.Trap ? Battle.FlatDistance(me.Feet, b.player.Feet) <= s.trapRange * 0.9f : b.RangeState(me, s) == 0);
                 var list = inRange.Count > 0 && rnd.NextDouble() < 0.85 ? inRange : attacks;   // 偶爾選射程外的，會走過去再放
+                list = list.FindAll(s => s.stillRadius <= 0f || inRange.Contains(s));            // 要站著蓄力的（獵人）：蓄力中不能走，只選現在就打得到的
                 if (list.Count > 0) pick = list[rnd.Next(list.Count)];
             }
             if (pick != null && b.TryChant(me, pick, out _))
@@ -122,10 +123,16 @@ namespace SpellDuel
         float nextBasic = 1.5f;
         bool Ready(SkillDef s) => (!me.cooldownUntil.TryGetValue(s.id, out var cd) || cd <= b.now) && me.mp >= s.cost;
 
+        /// <summary>和 Battle 的規則一樣：刺殺準備蓄滿前、獵人整個拉弓期間（遊俠除外）離開原地就失敗</summary>
+        bool MustStandStill => me.charging != null && me.charging.stillRadius > 0f && !(me.adv == "ranger" && me.charging.cls == "archer")
+            && (b.ChargeProgress(me) < 1f || me.charging.cls == "archer");
+
         void TryRelease()
         {
             var s = me.charging;
             if (b.now - me.chargeStart < s.charge + me.chargeDelay) return;
+            // 蓄滿後站著不能動又一直打不到（玩家跑出射程）：放棄這一招，重新選
+            if (MustStandStill && b.now - me.chargeStart > s.charge + me.chargeDelay + 2.5f) { me.charging = null; Status = ""; return; }
             var player = b.player;
             if (s.type == SkillType.Projectile && !s.releaseNear && b.RangeState(me, s) != 0) { Status = $"{s.name}：調整距離中"; return; }   // 走位會處理（近身技能不限距離，放了再衝過去）
 
@@ -145,7 +152,7 @@ namespace SpellDuel
         {
             // 從場地外淡入出現：先走進場地（往場地中心，走到離邊界夠遠才開始正常走位）
             if (!inside(me.Feet) || edgeDistance(me.Feet) < 0.4f) { var home = -me.Feet; home.y = 0; me.head += (home.sqrMagnitude > 1e-4f ? home.normalized : Vector3.zero) * walkSpeed * 1.5f * dt; return; }
-            if (me.charging != null && me.charging.stillRadius > 0f && b.ChargeProgress(me) < 1f) return;   // 刺殺準備蓄力中：站著不動
+            if (MustStandStill) return;   // 刺殺準備蓄力中、獵人拉弓中：站著不動
             var player = b.player;
             var toMe = Fighter.Flat(me.head - player.head);
             if (toMe == Vector3.zero) toMe = Vector3.forward;
