@@ -308,7 +308,17 @@ namespace SpellDuel
             cv.Oval(.006f,noseY+.023f,.009f,.012f,Paint.Mix(skin,White,.20f),0);
             cv.Line(-.012f,noseY,.003f,noseY-.003f,.003f,Paint.Mix(skin,Paint.Hex("#A45E50"),.38f));
             if(p.Open>0){cv.Oval(0,mouthY,mw,.024f*p.Open,Paint.Hex("#74363F"),.003f);cv.Oval(0,mouthY+.004f,mw*.60f,.003f,Paint.Mix(skin,White,.85f),0);}
-            else {cv.Line(-mw,mouthY+p.Smile*.012f,0,mouthY,.004f,Paint.Hex("#A36663"));cv.Line(0,mouthY,mw,mouthY+p.Smile*.012f+p.Asym*.0012f,.004f,Paint.Hex("#A36663"));}
+            else
+            {
+                for(int i=0;i<16;i++)
+                {
+                    float a=i/8f-1,b=(i+1)/8f-1;
+                    float ay=mouthY+p.Smile*.012f*a*a+p.Asym*.0006f*a+.0018f*(float)Math.Cos(a*Math.PI*2)*(1-a*a);
+                    float by=mouthY+p.Smile*.012f*b*b+p.Asym*.0006f*b+.0018f*(float)Math.Cos(b*Math.PI*2)*(1-b*b);
+                    cv.Line(a*mw,ay,b*mw,by,.0025f*(1-.65f*a*a),Paint.Hex("#A36663"));
+                }
+            }
+            cv.Oval(0,mouthY-.016f,mw*.45f,.004f,Paint.Mix(skin,White,.12f),0);
             for(int side=-1;side<=1;side+=2)
             {
                 float inner=side*(plan.EyeX-plan.EyeWidth*.5f)*3,outer=inner+side*plan.EyeWidth*3.3f;

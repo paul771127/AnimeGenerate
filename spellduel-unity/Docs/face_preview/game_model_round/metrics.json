@@ -1,0 +1,206 @@
+[
+  {
+    "id": "swordsman",
+    "label": "劍士",
+    "original": 6772,
+    "triangles": 7776,
+    "renderers": 36,
+    "active": 32
+  },
+  {
+    "id": "archer",
+    "label": "獵人",
+    "original": 6272,
+    "triangles": 7784,
+    "renderers": 38,
+    "active": 34
+  },
+  {
+    "id": "mage",
+    "label": "法師",
+    "original": 6292,
+    "triangles": 7036,
+    "renderers": 32,
+    "active": 28
+  },
+  {
+    "id": "assassin",
+    "label": "刺客",
+    "original": 5660,
+    "triangles": 6616,
+    "renderers": 36,
+    "active": 32
+  },
+  {
+    "id": "priest",
+    "label": "牧師",
+    "original": 8116,
+    "triangles": 8320,
+    "renderers": 34,
+    "active": 30
+  },
+  {
+    "id": "paladin",
+    "label": "聖騎士",
+    "original": 7496,
+    "triangles": 8500,
+    "renderers": 37,
+    "active": 33
+  },
+  {
+    "id": "berserker",
+    "label": "狂戰士",
+    "original": 6528,
+    "triangles": 7364,
+    "renderers": 35,
+    "active": 31
+  },
+  {
+    "id": "marksman",
+    "label": "神射手",
+    "original": 6380,
+    "triangles": 7708,
+    "renderers": 38,
+    "active": 34
+  },
+  {
+    "id": "ranger",
+    "label": "遊俠",
+    "original": 6856,
+    "triangles": 8444,
+    "renderers": 44,
+    "active": 40
+  },
+  {
+    "id": "archmage",
+    "label": "大魔導士",
+    "original": 6512,
+    "triangles": 7636,
+    "renderers": 35,
+    "active": 31
+  },
+  {
+    "id": "summoner",
+    "label": "召喚師",
+    "original": 6672,
+    "triangles": 7732,
+    "renderers": 36,
+    "active": 32
+  },
+  {
+    "id": "ninja",
+    "label": "忍者",
+    "original": 5964,
+    "triangles": 6740,
+    "renderers": 38,
+    "active": 34
+  },
+  {
+    "id": "shadowdancer",
+    "label": "影舞者",
+    "original": 6036,
+    "triangles": 7440,
+    "renderers": 36,
+    "active": 32
+  },
+  {
+    "id": "bishop",
+    "label": "主教",
+    "original": 8416,
+    "triangles": 7932,
+    "renderers": 37,
+    "active": 33
+  },
+  {
+    "id": "inquisitor",
+    "label": "審判者",
+    "original": 7228,
+    "triangles": 7004,
+    "renderers": 33,
+    "active": 29
+  },
+  {
+    "id": "npc0",
+    "label": "老焰",
+    "original": 4904,
+    "triangles": 6944,
+    "renderers": 11
+  },
+  {
+    "id": "npc1",
+    "label": "小鐵",
+    "original": 4976,
+    "triangles": 7724,
+    "renderers": 11
+  },
+  {
+    "id": "npc2",
+    "label": "米菈",
+    "original": 5028,
+    "triangles": 7536,
+    "renderers": 14
+  },
+  {
+    "id": "npc3",
+    "label": "翠",
+    "original": 5196,
+    "triangles": 7352,
+    "renderers": 11
+  },
+  {
+    "id": "npc4",
+    "label": "楓",
+    "original": 4752,
+    "triangles": 7228,
+    "renderers": 9
+  },
+  {
+    "id": "npc5",
+    "label": "小葉",
+    "original": 5112,
+    "triangles": 7444,
+    "renderers": 11
+  },
+  {
+    "id": "npc6",
+    "label": "海斗",
+    "original": 5016,
+    "triangles": 7208,
+    "renderers": 12
+  },
+  {
+    "id": "npc7",
+    "label": "凪",
+    "original": 4548,
+    "triangles": 7000,
+    "renderers": 9
+  },
+  {
+    "id": "npc8",
+    "label": "阿潮",
+    "original": 4748,
+    "triangles": 7108,
+    "renderers": 13
+  },
+  {
+    "id": "npc9",
+    "label": "鐵匠",
+    "original": 4756,
+    "triangles": 7080,
+    "renderers": 10
+  },
+  {
+    "id": "npc10",
+    "label": "店員",
+    "original": 5128,
+    "triangles": 7096,
+    "renderers": 11
+  },
+  {
+    "id": "npc11",
+    "label": "公會長",
+    "original": 5172,
+    "triangles": 7660,
+    "renderers": 10
+  }
+]
