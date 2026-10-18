@@ -95,11 +95,14 @@ namespace SpellDuel
             float reach = (a - o).magnitude;
             Vector3 da = (a - o).normalized, db = (b - o).normalized;
             for (int i = 0; i <= N; i++) lr.SetPosition(i, WorldFrame.FromWorld(o + Vector3.Lerp(da, db, i / (float)N).normalized * reach));
-            var c = warn ? new Color(1f, 0.25f, 0.2f, 0.85f) : Color.Lerp(f.cls.color, Color.white, 0.6f);
+            // 敵人的預警＝紅色；自己的預警＝職業色半透明（告訴你刀線在哪、還沒砍下）
+            var c = warn ? (f == Me ? new Color(f.cls.color.r, f.cls.color.g, f.cls.color.b, 0.5f) : new Color(1f, 0.25f, 0.2f, 0.85f)) : Color.Lerp(f.cls.color, Color.white, 0.6f);
             lr.startColor = lr.endColor = c;
             go.AddComponent<SlashLineFade>().Begin(lr, warn ? Mathf.Max(0.2f, f.windupUntil - battle.now) : 0.25f, c);
             if (warn) Sfx.Play("cast_swordsman", 0.3f, 0.7f);
             else Sfx.Play("cast_swordsman", 0.45f, 1.1f);
+            // 雙人對戰：我的刀線也送給對手（對手看到紅色預警才躲得掉）
+            if (f == Me && battle.remoteEnemy && !coop) NetSend?.Invoke(new Msg { t = "slash", pts = new[] { a, b, o }, ok = warn, s = Mathf.Max(0f, f.windupUntil - battle.now) });
         }
 
         /// <summary>震地波的環快到我腳邊（1.2 秒內）</summary>

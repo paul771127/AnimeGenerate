@@ -1193,6 +1193,14 @@ namespace SpellDuel
                 case "trapgone":
                     battle.RemoveRemoteTrap(m.id);
                     break;
+                case "slash":
+                    // 對手（劍士、刺客）的刀線：預警＝紅線，出手＝白光（傷害由對手那邊判定）
+                    if (m.pts != null && m.pts.Length >= 3 && En != null)
+                    {
+                        if (m.ok) En.windupUntil = battle.now + m.s;
+                        ShowSlashLine(En, m.pts[0], m.pts[1], m.pts[2], m.ok);
+                    }
+                    break;
                 case "dispel":
                     // 對手的抗拒法環：我站在圈內就被打斷
                     SpellFx.DispelRing(WorldFrame.FromWorld(m.p), m.rad, Skills.All["dispel"].color);

@@ -42,6 +42,8 @@ namespace SpellDuel
             Line("正在詠唱技能時不會普攻（唸完、放完招才會繼續）");
             if (!melee) Line("朝畫面中央的準星方向飛出");
             if (s.id == "na_sword") Line("只砍到手掌劃過的那一條線：手要劃過畫面上的敵人才打得到（一刀可以劃過好幾隻）");
+            if (s.id == "na_sword") Line($"劃完先出現刀線預警，約 {Battle.SlashWindup:0.##} 秒後才砍下（對手也看得到，會躲）");
+            if (s.id == "na_dagger") Line($"每一刺先出現扇形預警，約 {Battle.StabWindup:0.#} 秒後才刺下（對手也看得到，會躲）");
             sb.Append("\n【數值】\n");
             Line($"傷害 {s.damage}（會吃攻擊力加成{(melee ? "" : "，也會爆擊")}）");
             Line($"冷卻 {s.cooldown:0.#} 秒");

@@ -1255,7 +1255,11 @@ namespace SpellDuel
             float reach = s.rangeMax * f.rangeMul + SlashReach;
             if (from != Vector3.zero && to != Vector3.zero)
             {
-                SlashStrike(f, s, o, from.normalized, to.normalized, reach, false);
+                // 玩家也一樣先預警（對手看得到刀線），SlashWindup 秒後才砍下；能不能躲看刀線的位置（蹲低到線下面就砍不到）
+                var pa = from.normalized; var pb = to.normalized;
+                OnSlashLine?.Invoke(f, o + pa * reach, o + pb * reach, o, true);
+                f.windupUntil = now + SlashWindup;
+                After(SlashWindup, () => { if (f.Alive && !Over) SlashStrike(f, s, o, pa, pb, reach, false); });
                 return true;
             }
             if (f.isPlayer || f.isAlly) return false;   // 玩家沒給刀線（不該發生）：照舊砍前方半球
@@ -1274,10 +1278,10 @@ namespace SpellDuel
         /// <summary>電腦刺客連刺的預警時間（秒）：紅色扇形出現後才刺，退出 1m 或閃到它側面就打不到</summary>
         public const float StabWindup = 0.4f;
 
-        /// <summary>電腦刺客的普攻：先畫預警扇形、站定，StabWindup 秒後砍前方半球。玩家的刺客照舊（舉掌自動攻擊）。</summary>
+        /// <summary>刺客的普攻（電腦、玩家都一樣）：先畫預警扇形，StabWindup 秒後砍前方半球（電腦預警中站定）</summary>
         bool DaggerStab(Fighter f, SkillDef s)
         {
-            if (f.isPlayer || f.isAlly) return false;
+            if (f.isAlly) return false;
             var tgt = f.target != null && f.target.Alive ? f.target : NearestFoe(f, out _);
             if (tgt == null) return false;
             var o = f.Chest; var c = Fighter.Flat(tgt.Chest - o);
