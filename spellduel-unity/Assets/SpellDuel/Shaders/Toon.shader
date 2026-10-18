@@ -12,7 +12,7 @@ Shader "SpellDuel/Toon"
         [HideInInspector] _HumanWave ("Hair phase", Float) = 0
         [HideInInspector] _HumanFringe ("Hair shadow edge", Float) = 0.71
         [HideInInspector] _HumanOutline ("Human outline scale", Float) = 1
-        [HideInInspector] _HumanSkinShade ("Warm skin shade", Color) = (0.80,0.54,0.49,1)
+        [HideInInspector] _HumanSkinShade ("Soft pink skin shade", Color) = (0.93,0.85,0.85,1)
     }
     SubShader
     {
@@ -97,19 +97,22 @@ Shader "SpellDuel/Toon"
                     {
                         float front = dot(normalize(i.faceFront), L);
                         float side = dot(normalize(i.faceRight), L);
-                        float x = (i.uv.x - 0.5) * (side < 0 ? -2.0 : 2.0);
-                        // 固定臉頰輪廓，主光方向只改門檻，避免球面圓斑。
-                        float cheek = x + 0.12 * abs(i.uv.y - 0.48);
-                        float threshold = lerp(-0.65, 1.05, saturate(front * 0.5 + 0.5));
-                        float faceLit = 1.0 - smoothstep(threshold - 0.025, threshold + 0.025, cheek);
-                        // 鼻下小陰影與瀏海帶皆在臉部 UV 中計算，不需要陰影貼圖。
-                        float2 noseUV = (i.uv - float2(0.498, 0.267)) / float2(0.028, 0.012);
-                        float nose = 1.0 - smoothstep(0.35, 1.0, dot(noseUV, noseUV));
-                        float edge = _HumanFringe + 0.028 * sin(i.uv.x * 31.0 + _HumanWave)
-                            + 0.020 * sin(i.uv.x * 15.0 + _HumanPart * 4.0);
-                        float fringe = smoothstep(edge, edge + 0.015, i.uv.y) * (1.0 - smoothstep(0.87, 0.91, i.uv.y));
-                        faceLit *= 1.0 - max(nose * 0.24, fringe * 0.50);
-                        lit = lerp(lit, faceLit, i.data.g);
+                        float horizontal = max(0.001, length(float2(front,side)));
+                        // Same constants/equations as HumanFaceLight.Occlusion and the preview.
+                        float sideGate = 1.0 - smoothstep(0.22,0.50,front/horizontal);
+                        float x = (i.uv.x-0.5)*(side < 0 ? 2.0 : -2.0);
+                        float curve = 0.20 + 0.80*(i.uv.y-0.46)*(i.uv.y-0.46);
+                        float cheek = smoothstep(curve-0.20,curve+0.20,x)*sideGate;
+                        float2 noseUV = (i.uv-float2(0.498,0.267))/float2(0.028,0.012);
+                        float nose = 1.0-smoothstep(0.35,1.0,dot(noseUV,noseUV));
+                        float edge = _HumanFringe + 0.028*sin(i.uv.x*31.0+_HumanWave)
+                            + 0.020*sin(i.uv.x*15.0+_HumanPart*4.0);
+                        float fringe = smoothstep(edge-0.02,edge+0.06,i.uv.y)*(1.0-smoothstep(0.87,0.94,i.uv.y));
+                        float chin = (1.0-smoothstep(0.0,0.06,i.uv.y))*0.45;
+                        float occlusion = max(max(cheek,nose*0.24),max(fringe*0.32,chin));
+                        // Do not blend back to the sphere's N·L at the edge of the face.
+                        lit = 1.0-occlusion;
+                        shade = baseC.rgb*fixed3(0.93,0.85,0.85);
                     }
                 }
                 #endif

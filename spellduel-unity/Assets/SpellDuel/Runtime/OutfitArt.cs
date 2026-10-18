@@ -49,7 +49,8 @@ namespace SpellDuel
         static readonly Dictionary<string,Mesh> meshes=new Dictionary<string,Mesh>();
         internal sealed class Builder
         {
-            internal Color Skin;internal bool LegProfile;
+            internal Color Skin;
+            readonly Dictionary<int,Vector3> smoothNormals=new Dictionary<int,Vector3>();
             internal readonly List<Vector3> V=new List<Vector3>();internal readonly List<int> T=new List<int>();internal readonly List<Color> C=new List<Color>();
             void Vertex(Vector3 v,Color c){V.Add(v);C.Add(c);}
             internal void Tube(Vector3[] centers,float[] widths,float[] depths,Color color,int sides=10)
@@ -57,23 +58,31 @@ namespace SpellDuel
                 int start=V.Count;
                 for(int j=0;j<centers.Length;j++)for(int i=0;i<sides;i++)
                 {
-                    float a=i*2*Mathf.PI/sides,fold=LegProfile&&i%3==0&&j>0&&j<centers.Length-1?1.045f:1;
+                    float a=i*2*Mathf.PI/sides,fold=1;
                     float shade=1;
                     var paint=color*shade;paint.a=Mathf.Abs(color.r-Skin.r)+Mathf.Abs(color.g-Skin.g)+Mathf.Abs(color.b-Skin.b)<.001f?0:1;
                     Vertex(centers[j]+new Vector3(Mathf.Sin(a)*widths[j]*fold,0,Mathf.Cos(a)*depths[j]*fold),paint);
+                    // Analytic ring normals: independent of triangle diagonals and cap fans.
+                    int prev=j>0?j-1:0,next=j<centers.Length-1?j+1:centers.Length-1;
+                    var along=centers[next]-centers[prev]+new Vector3(Mathf.Sin(a)*(widths[next]-widths[prev]),0,Mathf.Cos(a)*(depths[next]-depths[prev]));
+                    var around=new Vector3(Mathf.Cos(a)*widths[j],0,-Mathf.Sin(a)*depths[j]);
+                    smoothNormals[V.Count-1]=Vector3.Cross(along,around).normalized;
                     if(j==centers.Length-1)continue;int k=start+j*sides+i,n=start+j*sides+(i+1)%sides;T.AddRange(new[]{k,k+sides,n,n,k+sides,n+sides});
                 }
                 // Horizontal rings go down the limb. Reverse caps for a closed outward hull.
                 for(int cap=0;cap<2;cap++){int k=start+(cap==0?0:(centers.Length-1)*sides);for(int i=1;i<sides-1;i++)T.AddRange(cap==0?new[]{k,k+i,k+i+1}:new[]{k,k+i+1,k+i});}
             }
-            internal void Loft(float[] y,float[] rx,float[] rz,Color c,float x=0,float z=0)
-            {var path=new Vector3[y.Length];for(int i=0;i<path.Length;i++)path[i]=new Vector3(x,y[i],z);Tube(path,rx,rz,c);}
+            internal void Loft(float[] y,float[] rx,float[] rz,Color c,float x=0,float z=0,int sides=12)
+            {var path=new Vector3[y.Length];for(int i=0;i<path.Length;i++)path[i]=new Vector3(x,y[i],z);Tube(path,rx,rz,c,sides);}
             internal void Panel(Vector3 a,Vector3 b,Vector3 c,Vector3 d,Color color,float bulge=.014f,int rows=4,int cols=3)
             {
                 int start=V.Count;
                 for(int face=0;face<2;face++)for(int j=0;j<=rows;j++)for(int i=0;i<=cols;i++)
                 {
-                    float t=j/(float)rows,u=i/(float)cols;var left=a*(1-t)+c*t;var right=b*(1-t)+d*t;
+                    float t=j/(float)rows,u=i/(float)cols;
+                    // Inset only the four corner samples; the following edge samples form a bevel.
+                    if(rows>1&&cols>1&&(j==0||j==rows)){if(i==0)u=.065f;else if(i==cols)u=.935f;}
+                    var left=a*(1-t)+c*t;var right=b*(1-t)+d*t;
                     var at=left*(1-u)+right*u;at.z+=Mathf.Sin(u*Mathf.PI)*Mathf.Sin(t*Mathf.PI)*bulge+(face==0?.004f:-.004f);
                     Color shade=color;shade.a=1;Vertex(at,shade);
                     if(j==rows||i==cols)continue;int k=start+face*(rows+1)*(cols+1)+j*(cols+1)+i;
@@ -95,7 +104,7 @@ namespace SpellDuel
             }
             internal void Badge(float x,float y,float z,float w,float h,Color color)
             {Panel(new Vector3(x-w*.5f,y+h*.5f,z),new Vector3(x+w*.5f,y+h*.5f,z),new Vector3(x-w*.43f,y-h*.5f,z+.003f),new Vector3(x+w*.43f,y-h*.5f,z+.003f),color,.006f,1,1);}
-            internal Mesh Finish(string name){var m=new Mesh{name=name};m.SetVertices(V);m.SetTriangles(T,0);m.colors=C.ToArray();m.RecalculateNormals();m.RecalculateBounds();return m;}
+            internal Mesh Finish(string name){var m=new Mesh{name=name};m.SetVertices(V);m.SetTriangles(T,0);m.colors=C.ToArray();m.RecalculateNormals();var normals=m.normals;foreach(var pair in smoothNormals)normals[pair.Key]=pair.Value;m.normals=normals;m.RecalculateBounds();return m;}
         }
         internal static Mesh MeshFor(string id,string part,Color skin)
         {
@@ -106,23 +115,23 @@ namespace SpellDuel
             else if(part.StartsWith("anatomy"))BuildArm(b,d,skin,part.StartsWith("anatomyUpper"),left,true);
             else if(part.StartsWith("thigh"))
             {
-                b.LegProfile=true;
+
                 float wide=d.Cut==10||d.Cut==20?.087f:d.Cut==3||d.Cut==12?.062f:.076f;
                 b.Loft(new[]{.01f,-.06f,-.17f,-.29f,-.415f},new[]{wide*.90f,wide,wide*.94f,wide*.78f,wide*.67f},new[]{wide*.90f,wide*.94f,wide*.88f,wide*.76f,wide*.69f},d.Cut==12&&left?skin:sub);
-                if(left&&(d.Cut==0||d.Cut==1||d.Cut==7||d.Cut==10||d.Cut==11||d.Cut==16))Pocket(b,-.012f,-.18f,.073f,.063f,.086f,sub,accent);
+
             }
             else if(part.StartsWith("calf"))
             {
-                b.LegProfile=true;
-                b.Loft(new[]{.025f,0f,-.025f},new[]{.035f,.055f,.035f},new[]{.034f,.053f,.034f},sub);
+
+
                 bool sneaker=d.Cut==0||d.Cut==10,tabi=d.Cut==11,high=d.Cut==4||d.Cut==5||d.Cut==13||d.Cut==12&&left;
                 Color boot=high?main:sub;float soleWidth=tabi?.064f:sneaker?.088f:.079f,toe=tabi?.112f:sneaker?.142f:.136f;
                 b.Loft(new[]{.005f,-.07f,-.15f,-.25f,-.34f},new[]{.051f,.069f,.067f,.049f,.045f},new[]{.051f,.065f,.06f,.046f,.045f},high?main:sub);
-                if(d.Cut==0||d.Cut==5||d.Cut==7||d.Cut==11)KneeGuard(b,sub,accent);
+                if(d.Cut==0||d.Cut==5)KneeGuard(b,sub,accent);
                 b.Loft(new[]{sneaker?-.33f:high?-.19f:-.285f,-.35f,-.385f,-.414f},new[]{high?.064f:.049f,.063f,soleWidth*.97f,soleWidth*.95f},new[]{.055f,.10f,toe*.985f,toe*.96f},boot,0,.038f);
                 b.Loft(new[]{-.414f,-.430f},new[]{soleWidth,soleWidth},new[]{toe,toe},accent,0,.038f);
-                if(high)b.Seam(new Vector3(-.03f,-.03f,.078f),new Vector3(-.03f,-.29f,.09f),.007f,accent);
-                for(int i=0;i<3;i++)b.Seam(new Vector3(-.041f,-.34f-i*.018f,.13f+i*.009f),new Vector3(.041f,-.34f-i*.018f,.13f+i*.009f),.006f,accent);
+
+
             }
             else if(part.StartsWith("hand"))BuildHand(b,d,skin,left,part.Contains("Open")?2:part.Contains("Grip")?1:0);
             else if(part=="cape"||part=="scarf"||part.StartsWith("ribbon"))
@@ -136,30 +145,44 @@ namespace SpellDuel
         internal static float Strength(Design d)=>d.Cut==0||d.Cut==5||d.Cut==6||d.Cut==16||d.Cut==24?1.15f:d.Cut==3||d.Cut==12||d.Cut==18||d.Cut==20||d.Cut==22?.86f:1;
         internal static string Components(Design d)
         {
-            bool fitted=d.Cut==3||d.Cut==11||d.Cut==12;
-            string list=(fitted?"貼身立領上衣":"圓弧肩線外套、內搭門襟、雙翻領與立領")+"、拉鍊與拉片、腰帶與扣環、單一胸袋（袋蓋＋開口）、袖口／護腕、手套、靴筒／鞋面、鞋底與鞋帶";
-            if(d.Hem>.01f)list+="、分襟下擺與內裡／滾邊";
-            if(d.Cut==0||d.Cut==1||d.Cut==7||d.Cut==10||d.Cut==11||d.Cut==16)list+="、左腿工裝袋（袋蓋＋開口）";
-            if(d.Cut==0||d.Cut==5||d.Cut==7||d.Cut==11)list+="、有厚度的弧形護膝";
-            if(d.Cut==0||d.Cut==5||d.Cut==6||d.Cut==14)list+="、左側弧形肩甲";
+            string list="輔色立領、細金屬拉鍊與圓頭拉片、整圈腰帶與唯一中央扣、完整袖口／手套邊環、手套、單色褲管、靴筒與鞋面、連續鞋底邊";
+            if(d.Hem>.01f)list+="、連續圓弧衣襬";
+            if(d.Cut==0||d.Cut==5)list+="、包覆弧形護膝";
+            if(d.Cut==0||d.Cut==5||d.Cut==6)list+="、左側圓弧肩甲";
             if(d.Cut==2||d.Cut==9||d.Cut==10)list+="、後垂兜帽";
-            if(d.Cut==6)list+="、扣帶皮革護胸／護腹裙與收納袋";
-            if(d.Cut==16||d.Cut==24||d.Cut==22||d.Cut==25)list+="、有肩帶與袋蓋的工作圍裙";
-            if(d.Cut==8||d.Cut==19||d.Cut==21||d.Cut==26)list+="、左肩披片與扣環";
-            if(d.Cut==4||d.Cut==5||d.Cut==13||d.Cut==14)list+="、領襟十字徽章";
+            if(d.Cut==6||d.Cut==16||d.Cut==24||d.Cut==22||d.Cut==25)list+="、完整肩帶工作圍裙與袋蓋口袋";
+            if(d.Cut==8||d.Cut==19||d.Cut==21||d.Cut==26)list+="、圓角單肩披片與扣環";
+            if(d.Cut==4||d.Cut==5||d.Cut==13||d.Cut==14)list+="、十字徽章";
             return list;
+        }
+        static void Skirt(Builder b,Design d)
+        {
+            // A continuous, smooth elliptical shell; a shallow front rise is the only opening.
+            const int sides=16,rows=5;int start=b.V.Count;
+            for(int layer=0;layer<2;layer++)for(int j=0;j<=rows;j++)for(int i=0;i<sides;i++)
+            {
+                float a=i*2*Mathf.PI/sides,t=j/(float)rows;
+                float rx=Mathf.Lerp(.175f,d.Cut==2||d.Cut==9||d.Cut==13?.26f:.218f,t)-layer*.005f;
+                float rz=Mathf.Lerp(.119f,.155f,t)-layer*.005f;
+                float rise=.045f*Mathf.Pow(Mathf.Max(0,Mathf.Cos(a)),4)*t*t;
+                b.V.Add(new Vector3(Mathf.Sin(a)*rx,.025f-d.Hem*t+rise,Mathf.Cos(a)*rz-.012f));b.C.Add(d.Main);
+                if(j==rows)continue;int k=start+layer*(rows+1)*sides+j*sides+i,n=start+layer*(rows+1)*sides+j*sides+(i+1)%sides;
+                b.T.AddRange(layer==0?new[]{k,k+sides,n,n,k+sides,n+sides}:new[]{k,n,k+sides,n,n+sides,k+sides});
+            }
+            int stride=(rows+1)*sides;for(int i=0;i<sides;i++)foreach(int j in new[]{0,rows})
+            {int k=start+j*sides+i,n=start+j*sides+(i+1)%sides;b.T.AddRange(j==0?new[]{k,n,k+stride,n,n+stride,k+stride}:new[]{k,k+stride,n,n,k+stride,n+stride});}
         }
         static void Pocket(Builder b,float x,float y,float z,float w,float h,Color cloth,Color trim)
         {
             b.Badge(x,y,z,w,h,cloth);
             b.Panel(new Vector3(x-w*.5f,y+h*.54f,z+.010f),new Vector3(x+w*.5f,y+h*.54f,z+.010f),new Vector3(x-w*.47f,y+h*.27f,z+.014f),new Vector3(x+w*.47f,y+h*.27f,z+.014f),cloth,0,1,2);
-            b.Seam(new Vector3(x-w*.40f,y+h*.25f,z+.018f),new Vector3(x+w*.40f,y+h*.25f,z+.018f),.003f,trim);
+
         }
         static void KneeGuard(Builder b,Color cloth,Color trim)
         {
             // Curved, thick strap-backed pad rather than a flat contrasting sticker.
-            b.Loft(new[]{-.015f,-.045f,-.08f},new[]{.047f,.052f,.043f},new[]{.032f,.038f,.027f},cloth,0,.040f);
-            b.Seam(new Vector3(-.025f,-.055f,.076f),new Vector3(.025f,-.055f,.076f),.004f,trim);
+            b.Loft(new[]{.005f,-.015f,-.045f,-.075f,-.09f},new[]{.043f,.058f,.063f,.054f,.039f},new[]{.052f,.062f,.067f,.058f,.048f},cloth,0,.007f);
+
         }
         static void BuildTorso(Builder b,Design d,Color skin,bool bare)
         {
@@ -171,30 +194,13 @@ namespace SpellDuel
             var path=new Vector3[ys.Length];
             for(int i=0;i<ys.Length;i++){rx[i]*=(.94f+.06f*bulk)*fit;path[i]=new Vector3(0,ys[i],i>=7?-.012f:i==4?.012f:0);if(!bare){rx[i]+=.008f;rz[i]+=.007f;}}
             b.Tube(path,rx,rz,bare?skin:d.Main,12);if(bare)return;
-            bool fitted=d.Cut==3||d.Cut==11||d.Cut==12;
-            // Inner shirt seen through a real jacket opening; restrained single lapel on either side.
-            if(!fitted)
-            {
-                b.Panel(new Vector3(-.050f,.475f,.116f),new Vector3(.050f,.475f,.116f),new Vector3(-.043f,.075f,.118f),new Vector3(.043f,.075f,.118f),d.Sub,.014f,5,3);
-                b.Panel(new Vector3(-.085f,.51f,.088f),new Vector3(-.022f,.43f,.132f),new Vector3(-.085f,.34f,.126f),new Vector3(-.043f,.37f,.143f),d.Main,0,3,2);
-                b.Panel(new Vector3(.022f,.43f,.132f),new Vector3(.085f,.51f,.088f),new Vector3(.043f,.37f,.143f),new Vector3(.085f,.34f,.126f),d.Main,0,3,2);
-            }
-            b.Loft(new[]{.575f,.535f},new[]{.073f,.084f},new[]{.066f,.074f},d.Sub);
-            b.Seam(new Vector3(0,.43f,.145f),new Vector3(0,.09f,.125f),.0045f,d.Accent);
-            b.Badge(.007f,.39f,.148f,.012f,.026f,d.Accent); // zipper pull
-            Pocket(b,.105f,.31f,.124f,.060f,.065f,d.Main,d.Accent);
-            b.Loft(new[]{.070f,.041f},new[]{.165f,.165f},new[]{.116f,.116f},d.Sub);
-            b.Badge(.015f,.055f,.121f,.042f,.025f,d.Accent);
-            if(d.Hem>.01f)
-            {
-                for(int side=-1;side<=1;side+=2)
-                {
-                    float end=-d.Hem*(side<0?1:.80f),outer=side*(d.Cut==2||d.Cut==9||d.Cut==13?.26f:.215f);
-                    b.Panel(new Vector3(side*.05f,.02f,.117f),new Vector3(side*.16f,.02f,.10f),new Vector3(side*.075f,end+.035f,.132f),new Vector3(outer,end,.07f),d.Main,.018f,5,3);
-                    b.Seam(new Vector3(side*.16f,.02f,.112f),new Vector3(outer,end+.008f,.079f),.006f,d.Accent);
-                }
-                b.Panel(new Vector3(.16f,.02f,-.12f),new Vector3(-.16f,.02f,-.12f),new Vector3(.205f,-d.Hem*.8f,-.16f),new Vector3(-.22f,-d.Hem,-.17f),d.Main,-.025f,5,4);
-            }
+            // One closed jacket: no overlapping dark shirt/tie or floating chest marks.
+            b.Loft(new[]{.575f,.555f,.535f},new[]{.073f,.080f,.084f},new[]{.066f,.071f,.074f},d.Sub);
+            b.Tube(new[]{new Vector3(0,.43f,.133f),new Vector3(0,.34f,.126f),new Vector3(0,.24f,.114f),new Vector3(0,.14f,.097f),new Vector3(0,.09f,.100f)},new[]{.0025f,.0025f,.0025f,.0025f,.0025f},new[]{.002f,.002f,.002f,.002f,.002f},d.Accent,6);
+            b.Loft(new[]{.405f,.392f,.379f},new[]{.005f,.007f,.005f},new[]{.003f,.004f,.003f},d.Accent,0,.134f,8); // rounded zipper pull
+            b.Loft(new[]{.070f,.041f},new[]{.171f,.176f},new[]{.120f,.123f},d.Sub,0,-.012f);
+            b.Loft(new[]{.068f,.055f,.042f},new[]{.018f,.022f,.018f},new[]{.005f,.007f,.005f},d.Accent,0,.116f,8); // one central buckle
+            if(d.Hem>.01f)Skirt(b,d);
             if(d.Cut==2||d.Cut==9||d.Cut==10)b.Loft(new[]{.54f,.48f,.40f},new[]{.115f,.14f,.09f},new[]{.11f,.14f,.10f},d.Main,0,-.105f);
             if(d.Cut==4||d.Cut==5||d.Cut==13||d.Cut==14){b.Seam(new Vector3(.09f,.40f,.134f),new Vector3(.09f,.33f,.137f),.009f,d.Accent);b.Seam(new Vector3(.065f,.375f,.138f),new Vector3(.115f,.375f,.138f),.009f,d.Accent);}
             if(d.Cut==6||d.Cut==16||d.Cut==24||d.Cut==22||d.Cut==25)
@@ -221,8 +227,8 @@ namespace SpellDuel
                 var rz=new[]{.019f,.043f,.064f,.060f,.065f,.056f,.037f,.033f};
                 var path=new Vector3[y.Length];for(int i=0;i<y.Length;i++){rx[i]*=power*(bare?1:sleeve);rz[i]*=power*(bare?1:sleeve);float outset=d.Cut==3||d.Cut==11||d.Cut==12||d.Cut>=15?.025f:0;path[i]=new Vector3((left?-1:1)*outset*(i==2?1:i==3?.65f:i==4?.20f:0),y[i],i==4?.008f:i==3?-.004f:0);}
                 b.Tube(path,rx,rz,cloth,12);
-                if(!anatomical&&left&&(d.Cut==0||d.Cut==5||d.Cut==6||d.Cut==14))
-                    b.Loft(new[]{-.015f,-.055f,-.10f},new[]{.058f*power,.077f*power,.066f*power},new[]{.056f*power,.073f*power,.064f*power},d.Sub);
+                if(!anatomical&&left&&(d.Cut==0||d.Cut==5||d.Cut==6))
+                    b.Loft(new[]{.003f,-.015f,-.040f,-.075f,-.105f},new[]{.048f*power,.064f*power,.074f*power,.073f*power,.065f*power},new[]{.046f*power,.062f*power,.071f*power,.069f*power,.063f*power},d.Sub);
                 if(!anatomical&&!bare)b.Loft(new[]{-.245f,-.273f},new[]{.043f*power,.039f*power},new[]{.041f*power,.037f*power},d.Sub);
             }
             else
@@ -233,14 +239,14 @@ namespace SpellDuel
                 var path=new Vector3[y.Length];for(int i=0;i<y.Length;i++){rx[i]*=power*(bare?1:sleeve);rz[i]*=power*(bare?1:sleeve);path[i]=new Vector3(0,y[i],i==2?.004f:0);}
                 b.Tube(path,rx,rz,cloth,12);
                 // A single fitted cuff follows the tapered wrist; no full-length colour strip.
-                if(!anatomical)b.Loft(new[]{-.205f,-.235f},new[]{.035f*power,.033f*power},new[]{.027f*power,.025f*power},d.Sub);
-                if(!bare)b.Seam(new Vector3(-.022f,-.025f,.041f),new Vector3(.018f,-.030f,.041f),.003f,d.Main*.85f);
+                if(!anatomical)b.Loft(new[]{-.205f,-.235f},new[]{.039f*power,.035f*power},new[]{.031f*power,.027f*power},d.Sub);
+
             }
         }
         static void BuildHand(Builder b,Design d,Color skin,bool left,int pose)
         {
             float side=left?-1:1;bool covered=d.Cut==3||d.Cut==11||d.Cut==5||d.Cut==13;
-            b.Loft(new[]{.012f,-.005f,-.037f},new[]{.029f,.035f,.034f},new[]{.021f,.020f,.017f},d.Sub); // palm and cuff
+            b.Loft(new[]{.012f,-.005f,-.037f},new[]{.029f,.035f,.034f},new[]{.021f,.020f,.017f},d.Sub,0,0,10); // palm and cuff
             for(int pair=-1;pair<=1;pair+=2)
             {
                 float x=pair*.018f,end=pose==2?-.101f:pose==1?-.055f:-.080f;

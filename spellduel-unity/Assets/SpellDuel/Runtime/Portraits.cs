@@ -227,16 +227,23 @@ namespace SpellDuel
                 Fill((x,y)=>shape(x,y)-ink,Ink);
                 Fill(shape,c,1f,true);
             }
-            // 人臉獨立的乾淨色塊與暖暗部，不影響怪物及其他配件的畫法。
+            // 人臉獨立的柔和淡粉遮蔽，不影響怪物及其他配件的畫法。
             public void Face(Paint skin,params float[] outline)
             {
                 Shape face=(x,y)=>PolygonD(x,y,outline);
                 Fill((x,y)=>face(x,y)-.006f,new Paint(skin.r*.40f,skin.g*.28f,skin.b*.29f));
                 Fill(face,skin);
-                var warm=Paint.Mix(skin,Paint.Hex("#EDAC9E"),.22f);
-                // A small feathered outer cheek, never a vertical mask through half the face.
-                Fill((x,y)=>Math.Max(face(x,y),OvalD(x,y,.40f,-.015f,.105f,.22f)),warm,.70f);
-                Fill((x,y)=>Math.Max(face(x,y),OvalD(x,y,.38f,-.02f,.105f,.20f)),warm,.35f);
+                var look=CharacterLook.Get(identity);float wave=look.Seed*.71f,fringe=HumanFaceLight.Fringe(look);
+                // Same UV convention and pink occlusion as the 3D face. Portrait key light is frontal.
+                for(int y=0;y<n;y++)for(int x=0;x<n;x++)
+                {
+                    float u=(x+.5f)*2/n-1,v=(y+.5f)*2/n-1,sx=u,sy=v;
+                    if(posing){float a=persona.Roll*.0174533f,ca=(float)Math.Cos(a),sa=(float)Math.Sin(a),dx=u-persona.Yaw*.0018f*(1+v),dy=v+.15f;sx=(dx*ca+dy*sa)/(1-Math.Abs(persona.Yaw)*.003f);sy=-dx*sa+dy*ca-.15f+persona.Pitch*.0015f;}
+                    if(face(sx,sy)>0)continue;
+                    float fu=.5f+sx/(.96f*persona.Width),fv=.5f+(sy-.09f)/(.96f*persona.Length);
+                    float shadow=HumanFaceLight.Occlusion(fu,fv,1,0,look.Part,wave,fringe);int k=y*n+x;
+                    red[k]=skin.r*(1-.07f*shadow);green[k]=skin.g*(1-.15f*shadow);blue[k]=skin.b*(1-.15f*shadow);
+                }
 
             }
             public void Oval(float x,float y,float rx,float ry,Paint c,float ink=0.015f) => Solid((u,v)=>OvalD(u,v,x,y,rx,ry),c,ink);
@@ -301,11 +308,11 @@ namespace SpellDuel
             cloth=new Paint(outfit.Main.r,outfit.Main.g,outfit.Main.b);
             var lining=new Paint(outfit.Sub.r,outfit.Sub.g,outfit.Sub.b);var trim=new Paint(outfit.Accent.r,outfit.Accent.g,outfit.Accent.b);
             cv.Poly(cloth,-.16f,-.49f,-.50f,-.59f,-.62f,-1f,.62f,-1f,.50f,-.59f,.16f,-.49f);
-            cv.Poly(lining,-.10f,-.51f,.10f,-.51f,.13f,-1f,-.13f,-1f);
-            cv.Poly(cloth,-.17f,-.49f,-.03f,-.66f,-.17f,-.77f,-.27f,-.60f);
-            cv.Poly(cloth,.17f,-.49f,.03f,-.66f,.17f,-.77f,.27f,-.60f);
-            cv.Line(0,-.64f,0,-1f,.005f,trim);cv.Box(.012f,-.70f,.012f,.025f,trim);
-            cv.Box(.34f,-.82f,.085f,.060f,cloth);cv.Line(.27f,-.79f,.41f,-.79f,.004f,trim);
+            // Closed jacket, complete collar and one readable metal zipper. No tie or chest marks.
+            cv.Poly(lining,-.16f,-.49f,-.11f,-.59f,.11f,-.59f,.16f,-.49f,.12f,-.46f,-.12f,-.46f);
+            cv.Line(0,-.61f,0,-1f,.005f,trim);cv.Oval(0,-.70f,.012f,.023f,trim,.003f);
+            if(outfit.Cut==0||outfit.Cut==5||outfit.Cut==6)cv.Oval(-.46f,-.69f,.10f,.08f,lining,.008f);
+            if(outfit.Cut==4||outfit.Cut==5||outfit.Cut==13||outfit.Cut==14){cv.Line(.27f,-.69f,.27f,-.83f,.009f,trim);cv.Line(.22f,-.75f,.32f,-.75f,.009f,trim);}
             var p=cv.persona;var plan=new FacePlan(p);
             float fw=.140f*p.Width*3,jaw=.094f*p.Width*(.70f+.30f*p.Jaw)*3,chin=plan.Chin*3+.09f;
             float et=plan.EarTop*3+.09f,eb=plan.EarBottom*3+.09f;
@@ -493,7 +500,6 @@ namespace SpellDuel
             cv.Poly(Paint.Hex("#514452"),0.20f,0.65f,0.33f,0.50f,0.28f,0.32f,0.14f,0.43f);
             cv.Line(0.22f,0.03f,0.29f,-0.10f,0.008f,Paint.Hex("#a96861"));
             cv.Line(0.265f,-0.025f,0.30f,-0.045f,0.005f,Paint.Hex("#a96861"));
-            for(int s=-1;s<=1;s+=2)cv.Poly(Gold,s*0.13f,-0.53f,s*0.49f,-0.51f,s*0.63f,-0.65f,s*0.27f,-0.76f);
             for(int i=-1;i<=1;i++)BellBrooch(cv,i*0.10f,-0.73f,0.055f);
         }
 

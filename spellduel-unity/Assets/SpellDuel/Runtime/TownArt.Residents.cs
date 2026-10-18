@@ -75,7 +75,6 @@ namespace SpellDuel
                     ResidentBox(p,"Medicine satchel",new Vector3(-.23f,.78f,.04f),new Vector3(.17f,.23f,.17f),Gold);Bottle(p,new Vector3(-.29f,.82f,.15f),C("e67985"),.17f);
                     break;
                 case "公會長":
-                    for(int s=-1;s<=1;s+=2){Ball(p,"Golden epaulette",new Vector3(s*.23f,1.21f,-.015f),new Vector3(.23f,.08f,.32f),Gold);}
                     for(int i=-1;i<=1;i++)BellPin(p,new Vector3(i*.08f,1.13f,.20f),.065f);
                     AnimeFace.Detail(face,key,persona,new Vector2(.100f,-.025f),new Vector2(.110f,-.061f),.002f,C("a96861"));break;
             }

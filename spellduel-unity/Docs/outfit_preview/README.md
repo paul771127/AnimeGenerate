@@ -1,16 +1,24 @@
-# 第五、六輪：人體、手型、帽飾與服裝預覽
+# 第七輪：乾淨服裝、圓弧構件與淡粉臉部光影
 
-[全員彩色並排](all_color.png) · [全員剪影並排](all_silhouettes.png) · [頭像總覽](portraits.png)
+[全員彩色](all_color.png) · [全員剪影](all_silhouettes.png) · [29 人頭像](portraits.png)
 
-[手型](hands.png) · [外衣下的人體三視圖](body_turntable.png) · [帽飾正側面](hats.png) · [新舊肩線](shoulders.png)
+[臉部正面／45°／90° 光照](face_light.png) · [五職業構件引線](component_callouts.png) · [肩／褲／衣襬前後對照](corners_before_after.png)
 
-15 個職業＋12 位居民，各有正面、3/4、背面，共 81 張；另有 7 張總覽／特寫，共 88 張 PNG。全部以同一正交相機比例呈現，兒童保留原身高。所有圖檔皆小於 200 KB。
+[手型](hands.png) · [外衣下的人體三視圖](body_turntable.png) · [帽飾](hats.png) · [肩線疊圖](shoulders.png)
 
-全身與特寫取自實際 C# 程序網格、頂點色及平滑法線，經 Unity API 測試替身匯出後作軟體投影。材質、光照與描邊為近似，這不是 Unity Editor 或手機截圖。`portraits.png` 則直接使用實際 `Portraits.Render()` 的 29 人像素。
+15 職業與 12 居民各有正面、3/4、背面，共 81 張；加 10 張總覽／特寫，共 91 張 PNG，全部低於 200 KB。使用相同相機尺度，保留兒童與成人的身高差。
 
-剪影上排包含裝備，下排去除職業武器以檢查服裝輪廓；居民保留生活物件。人體三視圖去除外衣，保留褲子／鞋，展示兩種體型的肩部、軀幹和手臂。帽飾圖固定在頭部局部軸，避免角色歪頭影響貼合判讀。
+全身、光照與構件圖由實際 C# 程序網格、頂點色、平滑法線及人類臉部公式作軟體投影；光照與描邊仍是近似，並非 Unity／真機截圖。頭像總覽直接使用 `Portraits.Render()` 輸出。
 
-構件清單與計數見 [第五、六輪結果](../../FACE_3D_BRIEF.md#第五六輪結果)、[components.json](components.json)、[metrics.json](metrics.json)、[hat_fitting.json](hat_fitting.json)。未戴帽的原始髮束網格保留；戴帽時僅壓低帽內髮頂，帽外／帽緣下髮束保持原風格。
+`face_light.png` 固定同一頭模與相機，只改主光水平角度；無髮版用於完整看見皮膚，瀏海柔影公式仍啟用。正面與 45° 不出現側頰陰影，90° 才沿顴骨／下顎柔化。Shader 與 `HumanFaceLight` 數值公式相同，C#／Python 2,646 取樣最大差約 0.00000053。
+
+構件引線對應 [components.json](components.json) 中五基本職業的 `callouts`，左右同名構件以鄰近一側標示；皮膚、眼睛、頭髮沿用，陰影是同一布料的法線光照，不是額外色塊。其餘職業／居民沿用同一套衣服構件產生器，生活物件仍為背包、藥袋、釣竿、故事板、鐵鎚、鐘扣等。
+
+衣襬為連續圓弧殼；前緣淺弧開口可看見同色內側，內側的暗色是布料背光。只在劍士／聖騎士保留弧形護膝，在劍士／聖騎士／狂戰士保留圓弧肩甲。公會長原有兩片大型金肩章刪除，保留鐘形胸扣。
+
+[三角形與 Renderer 計數](metrics.json) · [保留與光照檢查摘要](verification.json) · [帽飾貼合數值](hat_fitting.json) · [第七輪結果](../../FACE_3D_BRIEF.md#第七輪結果)
+
+最大 1.592× 原版，全部低於 2×。本機沒有 Unity Editor；尚未驗證 Unity 2022.3 或 Metal／GLES3／Vulkan 真機結果。較早的 `face_preview` 與 FACE 文件舊輪次屬歷史紀錄；本目錄第七輪圖為目前實作。
 
 |角色|正面|3/4|背面|
 |---|---|---|---|
