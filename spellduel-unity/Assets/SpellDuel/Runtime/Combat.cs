@@ -1227,6 +1227,7 @@ namespace SpellDuel
             }
             f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul * CdFactor(f);
             if (s.id == "na_sword" && SwordSlash(f, s, slashFrom, slashTo)) return true;
+            if (s.id == "na_dagger" && DaggerStab(f, s)) return true;
             MeleeSweep(f, s, Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now)));
             return true;
         }
@@ -1260,12 +1261,33 @@ namespace SpellDuel
             if (f.isPlayer || f.isAlly) return false;   // 玩家沒給刀線（不該發生）：照舊砍前方半球
             var tgt = f.target != null && f.target.Alive ? f.target : NearestFoe(f, out _);
             if (tgt == null) return false;
-            var c = (tgt.head + Vector3.down * 0.3f - o).normalized;
+            var c = (new Vector3(tgt.head.x, tgt.head.y * 0.82f, tgt.head.z) - o).normalized;   // 胸口高度（依目標身高）
             var side = Vector3.Cross(Vector3.up, Fighter.Flat(c));
             if (side == Vector3.zero) side = Vector3.right;
             var a = (c - side * SlashSpread).normalized; var b = (c + side * SlashSpread).normalized;
             OnSlashLine?.Invoke(f, o + a * reach, o + b * reach, o, true);
+            f.windupUntil = now + SlashWindup;   // 預警中站定（玩家退開就打不到）
             After(SlashWindup, () => { if (f.Alive && !Over) SlashStrike(f, s, o, a, b, reach, true); });
+            return true;
+        }
+
+        /// <summary>電腦刺客連刺的預警時間（秒）：紅色扇形出現後才刺，退出 1m 或閃到它側面就打不到</summary>
+        public const float StabWindup = 0.4f;
+
+        /// <summary>電腦刺客的普攻：先畫預警扇形、站定，StabWindup 秒後砍前方半球。玩家的刺客照舊（舉掌自動攻擊）。</summary>
+        bool DaggerStab(Fighter f, SkillDef s)
+        {
+            if (f.isPlayer || f.isAlly) return false;
+            var tgt = f.target != null && f.target.Alive ? f.target : NearestFoe(f, out _);
+            if (tgt == null) return false;
+            var o = f.Chest; var c = Fighter.Flat(tgt.Chest - o);
+            if (c == Vector3.zero) c = Fighter.Flat(f.forward);
+            var side = Vector3.Cross(Vector3.up, c);
+            var a = (c - side * 1.2f).normalized; var b = (c + side * 1.2f).normalized;
+            float reach = s.rangeMax * f.rangeMul + Fighter.BodyRadius;
+            OnSlashLine?.Invoke(f, o + a * reach, o + b * reach, o, true);
+            f.windupUntil = now + StabWindup;
+            After(StabWindup, () => { if (f.Alive && !Over) MeleeSweep(f, s, Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now))); });
             return true;
         }
 

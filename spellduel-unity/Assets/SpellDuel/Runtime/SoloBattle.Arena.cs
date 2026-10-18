@@ -18,12 +18,36 @@ namespace SpellDuel
             if (float.IsNaN(lastHeadY)) lastHeadY = y;
             float vy = (y - lastHeadY) / Mathf.Max(1e-3f, dt);
             lastHeadY = y;
-            if (y - standY > JumpRise && vy > JumpSpeed)
+            if (y - standY > JumpRiseNow && vy > JumpSpeed)
             {
                 if (me.airborneUntil < battle.now) Haptics.Play(Haptics.Kind.Light);
                 me.airborneUntil = battle.now + JumpHold;
             }
         }
+
+        // ---------------------------------------------------------------- 身高校正
+        /// <summary>開打後前 CalibTime 秒站直：記下手機離地的高度，蹲下、跳躍的門檻依身高調整（小孩、大人都公平）</summary>
+        public const float CalibTime = 2f;
+        float calibSum; int calibN; float standH = -1f;
+        bool Calibrating => battle != null && battle.now < CalibTime;
+        /// <summary>蹲下的門檻：站立高度的 22%（1.5m → 33cm、1.0m → 22cm）；還沒校正用預設值</summary>
+        float CrouchDropNow => standH > 0f ? Mathf.Clamp(standH * 0.22f, 0.18f, 0.4f) : CrouchDrop;
+        /// <summary>跳起來的門檻：站立高度的 7%（1.5m → 10.5cm）</summary>
+        float JumpRiseNow => standH > 0f ? Mathf.Clamp(standH * 0.07f, 0.06f, 0.12f) : JumpRise;
+
+        /// <summary>校正中回傳 true（這段時間不判斷蹲下／跳躍）</summary>
+        bool UpdateCalibration(float y)
+        {
+            if (Calibrating) { calibSum += y; calibN++; return true; }
+            if (calibN > 0)
+            {
+                float h = calibSum / calibN; calibN = 0;
+                if (h > 0.6f && h < 2.3f) { standH = h; standY = h; }
+            }
+            return false;
+        }
+
+        void ResetCalibration() { calibSum = 0f; calibN = 0; standH = -1f; }
 
         // ---------------------------------------------------------------- 震地波的環
         readonly Dictionary<Battle.Shockwave, LineRenderer> quakeGo = new Dictionary<Battle.Shockwave, LineRenderer>();
@@ -73,7 +97,7 @@ namespace SpellDuel
             for (int i = 0; i <= N; i++) lr.SetPosition(i, WorldFrame.FromWorld(o + Vector3.Lerp(da, db, i / (float)N).normalized * reach));
             var c = warn ? new Color(1f, 0.25f, 0.2f, 0.85f) : Color.Lerp(f.cls.color, Color.white, 0.6f);
             lr.startColor = lr.endColor = c;
-            go.AddComponent<SlashLineFade>().Begin(lr, warn ? Battle.SlashWindup : 0.25f, c);
+            go.AddComponent<SlashLineFade>().Begin(lr, warn ? Mathf.Max(0.2f, f.windupUntil - battle.now) : 0.25f, c);
             if (warn) Sfx.Play("cast_swordsman", 0.3f, 0.7f);
             else Sfx.Play("cast_swordsman", 0.45f, 1.1f);
         }
@@ -189,6 +213,7 @@ namespace SpellDuel
             if (QuakeComing(out _)) UiKit.Pill(H * 0.40f, "⬆ 跳！", fs * 2, new Color(1f, 0.85f, 0.3f), pillW);
             else if (Battle.IsQuake(ec)) UiKit.Pill(H * 0.40f, $"⚠ {ec.name}：環到腳邊時跳起來", fs, ec.color, pillW);
             if (Me.airborneUntil > battle.now) UiKit.Pill(H * 0.235f, "⬆ 跳躍", fsS, new Color(0.6f, 1f, 0.8f), pillW);
+            if (Calibrating) UiKit.Pill(H * 0.3f, "📏 站直 2 秒：依你的身高校正蹲下／跳躍", fsS, new Color(0.8f, 0.9f, 1f), pillW);
             if (pickups.Count > 0) UiKit.Pill(H * 0.53f, "✨ 地上有結晶：走過去蹲下撿起", fsS, new Color(0.7f, 1f, 0.8f), pillW);
         }
     }

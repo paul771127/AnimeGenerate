@@ -173,6 +173,7 @@ namespace SpellDuel
                     Line("法師的抗拒法環可以取消伏擊");
                 }
                 else if (s.id == "na_sword") Line($"揮砍前會先出現紅色刀線（約 {Battle.SlashWindup:0.##} 秒）：蹲下躲過、或退到 {s.rangeMax + Battle.SlashReach:0.#}m 外");
+                else if (s.id == "na_dagger") Line($"刺之前會先出現紅色扇形（約 {Battle.StabWindup:0.#} 秒）：退到 {s.rangeMax:0.#}m 外或閃到它側面");
                 else if (s.id == "slash" || Skills.IsMeleeBasic(s)) Line($"只砍前方半球（半徑 {s.rangeMax:0.#}m）：退到範圍外或繞到它背後");
                 else
                 {

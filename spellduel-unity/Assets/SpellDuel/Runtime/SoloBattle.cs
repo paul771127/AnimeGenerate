@@ -1330,7 +1330,7 @@ namespace SpellDuel
             foreach (var al in aimLines.Values) if (al) Destroy(al);
             aimLines.Clear();
             bossRig = null; bossAi = null; bossMode = false; bossWindup = null; resultShown = false; bossSeen = false;
-            standY = -1f; moveHist.Clear();
+            standY = -1f; moveHist.Clear(); ResetCalibration();
             projGo.Clear(); trapGo.Clear(); burnGo.Clear(); floaters.Clear();
             if (enemyShield) Destroy(enemyShield);
             if (enemyRig) Destroy(enemyRig.gameObject);
@@ -1427,7 +1427,8 @@ namespace SpellDuel
             // 站起來時基準很快跟上；蹲著時基準慢慢往下飄（蹲太久就不算閃避了）
             standY = y > standY ? Mathf.Lerp(standY, y, 1f - Mathf.Exp(-dt * 4f)) : Mathf.Lerp(standY, y, 1f - Mathf.Exp(-dt * 0.1f));
             bool was = me.crouching;
-            me.crouching = standY - y > CrouchDrop;
+            if (UpdateCalibration(y)) { me.crouching = false; return; }
+            me.crouching = standY - y > CrouchDropNow;
             if (me.crouching && !was) Haptics.Play(Haptics.Kind.Light);
 
             float now = battle.now;
