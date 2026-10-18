@@ -60,12 +60,17 @@ namespace SpellDuel
             }
             return SculptSurface(x,y,p);
         }
-        internal static Material Material(Color color,int kind=0)
+        internal static Material Material(Color color,int kind=0,string identity=null)
         {
-            string key=ColorUtility.ToHtmlStringRGBA(color)+"/"+kind;
+            string key=ColorUtility.ToHtmlStringRGBA(color)+"/"+kind+(identity??"");
             if(materials.TryGetValue(key,out var found)&&found!=null)return found;
             var m=new Material(kind==3?Shader.Find("Sprites/Default"):ToonStyle.LitShader()){color=color,name="Human "+key};
-            if(kind!=3&&m.shader.name=="SpellDuel/Toon"){m.EnableKeyword("SD_HUMAN");m.SetFloat("_HumanFace",kind);m.SetFloat("_HumanOutline",kind==1?.60f:.85f);}
+            if(kind!=3&&m.shader.name=="SpellDuel/Toon"){m.EnableKeyword("SD_HUMAN");m.SetFloat("_HumanFace",kind==4?0:kind);m.SetFloat("_HumanHair",kind==4?1:0);m.SetFloat("_HumanOutline",kind==1?.60f:.85f);}
+            if(kind==1&&identity!=null)
+            {
+                var look=CharacterLook.Get(identity);m.SetFloat("_HumanPart",look.Part);m.SetFloat("_HumanWave",look.Seed*.71f);
+                m.SetFloat("_HumanFringe",look.Hair==CharacterLook.HairKind.Crew||look.Hair==CharacterLook.HairKind.Slick?.82f:look.Hair==CharacterLook.HairKind.Bob?.65f:.71f);
+            }
             materials[key]=m;return m;
         }
         internal static GameObject Part(Transform parent,string name,Mesh mesh,Vector3 at,Material material)
@@ -152,24 +157,18 @@ namespace SpellDuel
         }
         internal static Features Build(Transform head,string identity,Portraits.Persona p,Color skin,Color brow,Color iris,bool precise=false,bool elder=false,bool elf=false)
         {
-            var plan=new Portraits.FacePlan(p);var result=new Features();Part(head,"立面頭型",Head(p,identity),Vector3.zero,Material(skin,1));
+            var plan=new Portraits.FacePlan(p);var result=new Features();Part(head,"立面頭型",Head(p,identity),Vector3.zero,Material(skin,1,identity));
             Color ink=new Color(.13f,.07f,.12f),white=new Color(1,.97f,.90f);
             for(int side=-1;side<=1;side+=2)
             {
                 float x=side*plan.EyeX,eyeHeight=plan.EyeHeight*.5f,angle=side*p.Tilt;float cover=p.Lid+(precise&&side<0?.04f:0);
                 var anchor=new Vector3(x,.013f,.118f);var eye=new GameObject("EyePaint").transform;eye.SetParent(head,false);eye.localPosition=anchor;result.Eyes.Add(eye);
-                Paint(eye,"眼白",identity,p,anchor,new Vector2(x,.013f),new Vector2(plan.EyeWidth*.5f,eyeHeight),angle,.0015f,white,white,true);
-                float gx=x+p.Gaze*.018f,gy=plan.EyeY-p.Pitch*.00015f;
-                Paint(eye,"虹膜漸層",identity,p,anchor,new Vector2(gx,gy),new Vector2(plan.EyeWidth*.235f,eyeHeight*.88f),angle,.0022f,Color.Lerp(iris,ink,.62f),Color.Lerp(iris,white,.40f));
-                Paint(eye,"瞳孔",identity,p,anchor,new Vector2(gx,gy+.001f),new Vector2(plan.EyeWidth*.09f*p.Pupil,eyeHeight*.61f),angle,.0029f,ink,ink);
-                Paint(eye,"主高光",identity,p,anchor,new Vector2(gx-.004f,gy+eyeHeight*.34f),new Vector2(.0035f,.0035f),0,.0035f,white,white);
-                Paint(eye,"副高光",identity,p,anchor,new Vector2(gx+.004f,gy-eyeHeight*.34f),new Vector2(.002f,.002f),0,.0035f,white,white);
+                Part(eye,"眼睛圖層",EyeMesh(identity,p,anchor,side),Vector3.zero,EyeMaterial(identity));
                 var lidAnchor=new Vector3(x,.037f,.122f);var lid=new GameObject("UpperLid").transform;lid.SetParent(head,false);lid.localPosition=lidAnchor;result.Lids.Add(lid);
-                float half=plan.EyeWidth*.5f,tilt=Mathf.Sin(angle*Mathf.Deg2Rad)*half;
-                float lidY=plan.EyeY+eyeHeight*(1-cover);
-                Stroke(lid,identity,p,lidAnchor,new Vector2(x-half,plan.EyeY-tilt),new Vector2(x,lidY),.0035f,ink,.004f);
-                Stroke(lid,identity,p,lidAnchor,new Vector2(x,lidY),new Vector2(x+half,plan.EyeY+tilt),.0030f,ink,.004f);
-                Stroke(head,identity,p,Vector3.zero,new Vector2(x-half*.8f,plan.EyeY-eyeHeight*.8f),new Vector2(x+half*.8f,plan.EyeY-eyeHeight*.8f),.001f,Color.Lerp(skin,ink,.26f));
+                float half=plan.EyeWidth*.5f;
+                Stroke(lid,identity,p,lidAnchor,new Vector2(x-half,plan.EyeY),new Vector2(x,plan.EyeY+.003f),.0025f,ink,.004f);
+                Stroke(lid,identity,p,lidAnchor,new Vector2(x,plan.EyeY+.003f),new Vector2(x+half,plan.EyeY),.0025f,ink,.004f);
+                foreach(var renderer in lid.GetComponentsInChildren<MeshRenderer>())renderer.enabled=false;
                 float inner=x-side*half,outer=inner+side*plan.EyeWidth*1.1f;
                 float by=plan.BrowY+(side>0?p.Asym*.0006f:0),bend=p.Brow*Mathf.Deg2Rad*plan.EyeWidth;
                 Stroke(head,identity,p,Vector3.zero,new Vector2(inner,by),new Vector2(x,by+.0015f+bend*.5f),elder?.005f:.0035f,brow);
@@ -219,42 +218,31 @@ namespace SpellDuel
                 Part(head,"解剖耳廓",mesh,Vector3.zero,Material(skin,2));
             }
         }
-        internal static void Hair(Transform parent,string identity,Portraits.Persona p,Color color)
+        internal static void Hair(Transform parent,string identity,Portraits.Persona p,Color color)=>AnimeHair.Build(parent,identity,p);
+        static Material EyeMaterial(string identity)
         {
-            // 六束髮片合成一個 Renderer，高光帶再合一個；僅第一次建立網格。
-            string lockKey="整組髮束/"+identity,shineKey="整組髮光/"+identity;
-            if(meshes.TryGetValue(lockKey,out var locksMesh)&&meshes.TryGetValue(shineKey,out var shineMesh))
-            {Part(parent,"成束瀏海",locksMesh,Vector3.zero,Material(color));Part(parent,"天使環",shineMesh,Vector3.zero,Material(Color.white,3));return;}
-            var locks=new List<CombineInstance>();var shine=new List<CombineInstance>();
-            for(int side=-1;side<=1;side+=2)for(int i=0;i<3;i++)
+            string key="眼睛圖集/"+identity;if(materials.TryGetValue(key,out var mat))return mat;
+            var px=new Color32[EyeArt.W*2*EyeArt.H];
+            for(int side=0;side<2;side++)
             {
-                string key=$"髮束/{identity}/{side}/{i}";float x=side*(.035f+i*.036f),y=.113f-i*.009f;
-                if(!meshes.TryGetValue(key,out var mesh))
-                {
-                    var v=new List<Vector3>{new Vector3(x-.026f,y+.028f,.073f),new Vector3(x+.024f,y+.027f,.072f),new Vector3(x+.018f,y-.008f,.123f),new Vector3(x+side*.008f,y-.062f,.124f),new Vector3(x-.025f,y-.009f,.123f),new Vector3(x,y+.009f,.145f)};
-                    var t=new List<int>{0,1,5,1,2,5,2,3,5,3,4,5,4,0,5,0,4,3,0,3,2,0,2,1};
-                    for(int j=0;j<t.Count;j+=3){int swap=t[j+1];t[j+1]=t[j+2];t[j+2]=swap;}
-                    mesh=Finish(key,v,t,new List<Color>{Color.white,Color.white,Color.white,Color.white,Color.white,Color.white});
-                }
-                locks.Add(new CombineInstance{mesh=mesh,transform=Matrix4x4.identity});
-                string glintKey=key+"/高光";
-                if(!meshes.TryGetValue(glintKey,out var glint))
-                {
-                    var gv=new List<Vector3>();var gt=new List<int>();var gc=new List<Color>();var vertices=mesh.vertices;
-                    for(int k=0;k<=8;k++)for(int side0=-1;side0<=1;side0+=2)
-                    {
-                        float gx=x-.012f+k*.022f/8,gy=y+.005f+side0*.002f,gz=.12f;
-                        for(int f=0;f<15;f+=3)if(OnTriangle(gx,gy,vertices[mesh.triangles[f]],vertices[mesh.triangles[f+1]],vertices[mesh.triangles[f+2]],out var hit))gz=Mathf.Max(gz,hit);
-                        gv.Add(new Vector3(gx,gy,gz+.0008f));gc.Add(Color.Lerp(color,Color.white,.45f));
-                    }
-                    for(int k=0;k<8;k++){int at=k*2;gt.AddRange(new[]{at,at+2,at+1,at+1,at+2,at+3});}
-                    glint=Finish(glintKey,gv,gt,gc);
-                }
-                shine.Add(new CombineInstance{mesh=glint,transform=Matrix4x4.identity});
+                var eye=EyeArt.Render(identity,side==0?-1:1);
+                for(int y=0;y<EyeArt.H;y++)for(int x=0;x<EyeArt.W;x++)px[y*EyeArt.W*2+side*EyeArt.W+x]=eye[y*EyeArt.W+x];
             }
-            locksMesh=new Mesh{name=lockKey};locksMesh.CombineMeshes(locks.ToArray(),true,true);locksMesh.RecalculateBounds();meshes[lockKey]=locksMesh;
-            shineMesh=new Mesh{name=shineKey};shineMesh.CombineMeshes(shine.ToArray(),true,true);shineMesh.RecalculateBounds();meshes[shineKey]=shineMesh;
-            Part(parent,"成束瀏海",locksMesh,Vector3.zero,Material(color));Part(parent,"天使環",shineMesh,Vector3.zero,Material(Color.white,3));
+            var texture=new Texture2D(EyeArt.W*2,EyeArt.H,TextureFormat.RGBA32,false){name=key,filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp};
+            texture.SetPixels32(px);texture.Apply(false,true);mat=new Material(Shader.Find("Sprites/Default")){name=key,color=Color.white,mainTexture=texture};materials[key]=mat;return mat;
+        }
+        static Mesh EyeMesh(string identity,Portraits.Persona p,Vector3 anchor,int side)
+        {
+            string key="曲面眼皮/"+identity+side;if(meshes.TryGetValue(key,out var mesh))return mesh;
+            var plan=new Portraits.FacePlan(p);var v=new List<Vector3>();var t=new List<int>();var c=new List<Color>();var uv=new List<Vector2>();
+            const int columns=10,rows=6;
+            for(int y=0;y<=rows;y++)for(int x=0;x<=columns;x++)
+            {
+                float u=x/(float)columns,w=y/(float)rows,px=anchor.x+(u*2-1)*plan.EyeWidth/1.44f,py=plan.EyeY+(w*2-1)*plan.EyeHeight/.90f;
+                v.Add(new Vector3(px,py,Surface(px,py,p)+.0018f)-anchor);c.Add(Color.white);uv.Add(new Vector2((u+(side>0?1:0))*.5f,w));
+                if(x==columns||y==rows)continue;int k=y*(columns+1)+x;t.AddRange(new[]{k,k+1,k+columns+1,k+1,k+columns+2,k+columns+1});
+            }
+            return Finish(key,v,t,c,uv);
         }
     }
 }

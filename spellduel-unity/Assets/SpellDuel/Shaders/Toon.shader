@@ -7,6 +7,10 @@ Shader "SpellDuel/Toon"
         _Color ("Color", Color) = (1,1,1,1)
         _MainTex ("Texture", 2D) = "white" {}
         [HideInInspector] _HumanFace ("Human face mode", Float) = 0
+        [HideInInspector] _HumanHair ("Human hair", Float) = 0
+        [HideInInspector] _HumanPart ("Hair part", Float) = 0
+        [HideInInspector] _HumanWave ("Hair phase", Float) = 0
+        [HideInInspector] _HumanFringe ("Hair shadow edge", Float) = 0.71
         [HideInInspector] _HumanOutline ("Human outline scale", Float) = 1
         [HideInInspector] _HumanSkinShade ("Warm skin shade", Color) = (0.80,0.54,0.49,1)
     }
@@ -33,6 +37,7 @@ Shader "SpellDuel/Toon"
             fixed4 _Color;
             #ifdef SD_HUMAN
             half _HumanFace;
+            half _HumanHair, _HumanPart, _HumanWave, _HumanFringe;
             fixed4 _HumanSkinShade;
             #endif
             // 全域風格參數（ToonStyle）
@@ -73,6 +78,9 @@ Shader "SpellDuel/Toon"
             fixed4 frag(v2f i) : SV_Target
             {
                 fixed4 baseC = tex2D(_MainTex, i.uv) * _Color;
+                #ifdef SD_HUMAN
+                if (_HumanHair > 0.5) baseC.rgb *= i.data.rgb;
+                #endif
                 float3 n = normalize(i.n);
                 float3 L = normalize(_WorldSpaceLightPos0.xyz);
                 float ndl = dot(n, L);
@@ -81,6 +89,7 @@ Shader "SpellDuel/Toon"
                 fixed3 shade = baseC.rgb * _SD_ShadeColor.rgb;
                 #ifdef SD_HUMAN
                 // 只處理人類材質；原始變體仍使用原本 N·L 與暗部。
+                if (_HumanHair > 0.5) shade = baseC.rgb * fixed3(0.52,0.48,0.55);
                 if (_HumanFace > 0.5)
                 {
                     shade = baseC.rgb * _HumanSkinShade.rgb;
@@ -96,7 +105,9 @@ Shader "SpellDuel/Toon"
                         // 鼻下小陰影與瀏海帶皆在臉部 UV 中計算，不需要陰影貼圖。
                         float nose = (1.0 - smoothstep(0.02, 0.065, abs(i.uv.x - 0.5)))
                             * smoothstep(0.25, 0.265, i.uv.y) * (1.0 - smoothstep(0.285, 0.30, i.uv.y));
-                        float fringe = smoothstep(0.72, 0.75, i.uv.y) * (1.0 - smoothstep(0.84, 0.88, i.uv.y));
+                        float edge = _HumanFringe + 0.028 * sin(i.uv.x * 31.0 + _HumanWave)
+                            + 0.020 * sin(i.uv.x * 15.0 + _HumanPart * 4.0);
+                        float fringe = smoothstep(edge, edge + 0.015, i.uv.y) * (1.0 - smoothstep(0.87, 0.91, i.uv.y));
                         faceLit *= 1.0 - max(nose * 0.42, fringe * 0.50);
                         lit = lerp(lit, faceLit, i.data.g);
                     }

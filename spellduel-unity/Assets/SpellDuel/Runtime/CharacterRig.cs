@@ -99,6 +99,7 @@ namespace SpellDuel
         // Keeping ink/iris paint unlit avoids a full-width hull swallowing tiny facial features.
         readonly List<Transform> eyePaint = new List<Transform>();
         readonly List<Transform> upperLids = new List<Transform>();
+        readonly List<Renderer> lidInk=new List<Renderer>();
         Transform mouthOpen, floatingBook;
         readonly List<Transform> motes = new List<Transform>();
         string advancedId;
@@ -112,6 +113,7 @@ namespace SpellDuel
             var features=AnimeFace.Build(head,advancedId??classId,p,Skin,Mul(Wood,.45f),
                 Color.Lerp(clsColor,new Color(.15f,.48f,.58f),.25f),advancedId=="marksman",advancedId=="bishop",classId=="archer");
             eyePaint.AddRange(features.Eyes);upperLids.AddRange(features.Lids);mouthOpen=features.Mouth;
+            foreach(var lid in upperLids)lidInk.AddRange(lid.GetComponentsInChildren<Renderer>());
             // 耳廓由共用比例建立，職業耳飾跟隨新的耳垂高度。
             var plan=new Portraits.FacePlan(p);
             Gem(head,new Vector3(-(.14f*p.Width+.016f),plan.EarBottom-.010f,-.01f),.017f,clsColor);
@@ -462,9 +464,13 @@ namespace SpellDuel
 
         void AnimateDetails(float cast, float hurt)
         {
-            float squint=1f-0.82f*hurt;
-            foreach(var eye in eyePaint) eye.localScale=new Vector3(1f,squint,1f);
-            foreach(var lid in upperLids) lid.localPosition=new Vector3(lid.localPosition.x,0.037f-0.018f*hurt,0.122f);
+            float phase=(clock+CharacterLook.Get(advancedId??classId).Seed*.17f)%4.3f;
+            float blink=Mathf.Clamp01(1f-Mathf.Abs(phase-.10f)/.09f);
+            float close=Mathf.Max(hurt,blink);float squint=1f-.97f*close;
+            var plan=new Portraits.FacePlan(facePersona);
+            foreach(var eye in eyePaint){eye.localScale=new Vector3(1f,squint,1f);eye.localPosition=new Vector3(eye.localPosition.x,plan.EyeY-plan.EyeHeight*.485f*close,.118f);}
+            foreach(var ink in lidInk)ink.enabled=visible&&close>.65f;
+            foreach(var lid in upperLids) lid.localPosition=new Vector3(lid.localPosition.x,0.037f-plan.EyeHeight*.45f*close,0.122f);
             if(mouthOpen!=null) mouthOpen.localScale=new Vector3(new Portraits.FacePlan(facePersona).MouthWidth,.001f+.016f*facePersona.Open+.017f*Mathf.Max(cast,chargeAmt*.45f),.003f);
             if(floatingBook!=null) { floatingBook.localPosition=new Vector3(-0.41f,0.31f+0.025f*Mathf.Sin(clock*2f),0.05f); floatingBook.localRotation=Quaternion.Euler(0f,clock*14f,8f); }
             for(int i=0;i<motes.Count;i++)
@@ -473,7 +479,6 @@ namespace SpellDuel
                 motes[i].localPosition=new Vector3(Mathf.Cos(a)*0.34f,0.34f+0.08f*Mathf.Sin(a*1.7f),Mathf.Sin(a)*0.24f);
             }
         }
-
 
         // ================================================================ 骨架
         string classId;
@@ -662,7 +667,7 @@ namespace SpellDuel
             MeshPart("Hat", cone, Frustum(0.165f, 0f, 0.27f, 20), Vector3.zero, Mat(hatC));
             MeshPart("HatBand", cone, Frustum(0.168f, 0.15f, 0.04f, 20), new Vector3(0f, 0.005f, 0f), Mat(Gold, 0.9f));
             // 頭髮（後腦）
-            Part(PrimitiveType.Sphere, head, new Vector3(0f, -0.02f, -0.045f), new Vector3(0.29f, 0.26f, 0.24f), Mat(new Color(0.92f, 0.92f, 0.95f), 0.9f));
+
             // 長袍：從腰到腳踝的喇叭狀圓台，袍擺鑲金邊
             MeshPart("Robe", spine, Frustum(0.25f, 0.16f, 0.95f, 24), new Vector3(0f, -0.8f, 0f), Mat(clsColor, 0.8f));
             MeshPart("RobeHem", spine, Frustum(0.255f, 0.245f, 0.05f, 24), new Vector3(0f, -0.81f, 0f), Mat(Gold, 0.75f));
@@ -689,7 +694,7 @@ namespace SpellDuel
         {
             var hoodC = Mul(clsColor, 0.78f);
             // 頭髮瀏海＋兜帽（往後偏，臉露出來）＋帽尖
-            Part(PrimitiveType.Sphere, head, new Vector3(0f, 0.075f, 0.02f), new Vector3(0.27f, 0.17f, 0.25f), Mat(new Color(0.55f, 0.35f, 0.2f)));
+
             Part(PrimitiveType.Sphere, head, new Vector3(0f, 0.025f, -0.05f), new Vector3(0.33f, 0.34f, 0.33f), Mat(hoodC));
             var tip = Pivot("HoodTip", head, new Vector3(0f, 0.04f, -0.17f));
             tip.localRotation = Quaternion.Euler(-120f, 0f, 0f);
@@ -809,10 +814,7 @@ namespace SpellDuel
         {
             var trim = Color.Lerp(Gold, clsColor, 0.35f);
             // 頭髮（淡金色，後腦＋兩側垂到耳下）
-            var hairC = new Color(0.93f, 0.82f, 0.55f);
-            Part(PrimitiveType.Sphere, head, new Vector3(0f, -0.01f, -0.045f), new Vector3(0.295f, 0.27f, 0.25f), Mat(hairC, 0.9f));
-            for (int sd = -1; sd <= 1; sd += 2)
-                Part(PrimitiveType.Capsule, head, new Vector3(0.12f * sd, -0.07f, -0.02f), new Vector3(0.06f, 0.09f, 0.08f), Mat(hairC, 0.85f));
+
             // 主教冠：前後壓扁的高圓台（往上收窄）＋金色底箍、正面直條與十字＋背後垂下的兩條飄帶
             var mitre = Pivot("Mitre", head, new Vector3(0f, 0.065f, -0.01f));
             mitre.localRotation = Quaternion.Euler(-6f, 0f, 0f);
