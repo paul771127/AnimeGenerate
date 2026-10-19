@@ -15,6 +15,7 @@ namespace SpellDuel
         public Screen screen = Screen.Map;
         public int town;                         // 目前所在城鎮（＝地區主題 0～2）
         public Action<StoryStage> OnStartStage;  // 出發打關卡
+        public Action<StoryStage> OnWatchStory;  // 重看這一關的故事（開場＋已通關的結尾）
         public Action OnBack;                    // 離開大地圖（回選擇畫面）
         public Action OnCharacter;               // 打開角色畫面
         public Action OnStartTrial;              // 出發挑戰轉職試煉
@@ -191,10 +192,14 @@ namespace SpellDuel
                 UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.3f, dr.width - gap * 2, fs * 1.4f), $"{sel.id}　{sel.title}" + (clear ? "　✔ 已通關" : ""), fs, Color.white, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(dr.x + gap, dr.y + fs * 1.7f, dr.width - gap * 2, fs * 2.6f),
                     (sel.desc.Length > 0 ? sel.desc.Split('\n')[0] + "\n" : "") + $"{RegionNames[sel.theme]}・{waves}・推薦 Lv{Mathf.Max(1, sel.FirstWave - 1)}+・掉落裝備 Lv{Story.LevelBand(sel.theme).lo}–{Story.LevelBand(sel.theme).hi}\n經驗 {sel.xp}・💰 {Economy.StageGold(sel)}", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
-                float bw = (dr.width - gap * 3) / 2f, bh = fs * 2f, by = dr.yMax - bh - gap * 0.4f;
+                bool story = Story.HasStory(sel) && Story.IsSeen(sel.id);   // 看過的故事不再自動播，可以按這裡重看
+                int nb = story ? 3 : 2;
+                float bw = (dr.width - gap * (nb + 1)) / nb, bh = fs * 2f, by = dr.yMax - bh - gap * 0.4f;
                 if (UiKit.Button(new Rect(dr.x + gap, by, bw, bh), clear ? "⚔ 再次挑戰（刷裝備）" : "⚔ 出發", fsS, true, new Color(0.4f, 0.8f, 1f), ok))
                 { var s = sel; sel = null; OnStartStage?.Invoke(s); return; }
-                if (UiKit.Button(new Rect(dr.x + gap * 2 + bw, by, bw, bh), "關閉", fsS)) sel = null;
+                if (story && UiKit.Button(new Rect(dr.x + gap * 2 + bw, by, bw, bh), "📖 看故事", fsS))
+                { var s = sel; OnWatchStory?.Invoke(s); return; }
+                if (UiKit.Button(new Rect(dr.x + gap * nb + bw * (nb - 1), by, bw, bh), "關閉", fsS)) sel = null;
             }
             // 下方：角色、返回
             float bw2 = (r.width - gap * 3) / 2f, by2 = r.yMax - gap - fs * 2.1f;
@@ -315,22 +320,17 @@ namespace SpellDuel
             UiKit.Text(new Rect(top.x + gap, top.y, top.width*.46f-gap, fs * 1.8f), $"🏘 {t.name}", fsL, Color.white, TextAnchor.MiddleLeft, true);
             string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
             UiKit.Text(new Rect(top.x + top.width*.46f, top.y, top.width*.54f-gap, fs * 1.8f), $"{cn} Lv{prof.level}　💰 {Economy.Gold}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
-            UiKit.Text(new Rect(top.x + gap, top.y + fs * 1.7f, top.width - gap * 2, fs * 1.8f), "📱 上下晃動手機＝往準心方向走　💬 走到居民面前說「你好」聊天", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleLeft);
+            UiKit.Text(new Rect(top.x + gap, top.y + fs * 1.7f, top.width - gap * 2, fs * 1.8f), "📱 上下晃動手機（原地踏步）＝往準心方向走　💬 走到居民面前說「你好」或揮手聊天", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleLeft);
             float y = top.yMax + gap * 0.5f;
             if (!string.IsNullOrEmpty(SpeechNote)) { UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), SpeechNote, fsS, new Color(1f, 0.8f, 0.5f), TextAnchor.MiddleLeft); y += fs * 1.4f; }
             if (Heard != null && Time.time - HeardAt < 2f) UiKit.Pill(y + fs, $"🎤 {Heard}", fsS, Color.white, r.width * 0.7f, 0.6f);
-            if (Walk.Walking) UiKit.Pill(H / 2f + fs * 2.5f, "🚶 前進中", fsS, new Color(0.7f, 1f, 0.7f), r.width * 0.4f, 0.4f);
+            if (Walk.Walking) UiKit.Pill(H / 2f + fs * 2.5f, "🚶 走路中", fsS, new Color(0.7f, 1f, 0.7f), r.width * 0.4f, 0.4f);
 
-            // 下方：前進（按住）／打招呼；角色／清單／大地圖
-            float bh = fs * 2.3f, bw = (r.width - gap * 3) / 2f, by = r.yMax - bh * 2 - gap;
-            var hold = new Rect(r.x + gap, by, bw, bh);
-            UiKit.Card(hold, 0.75f, new Color(0.6f, 1f, 0.6f), 0.8f);
-            UiKit.Text(hold, "⬆ 按住前進", fs, Color.white, TextAnchor.MiddleCenter, true);
-            if (GUI.RepeatButton(hold, "", GUIStyle.none)) holdAt = Time.time;
+            // 下方：沒有「前進」「打招呼」按鈕（晃動手機走路、說話或揮手打招呼）；角色／清單／大地圖
+            float bh = fs * 2.3f, by = r.yMax - bh - gap;
             var near = Walk.Near;
-            if (UiKit.Button(new Rect(r.x + gap * 2 + bw, by, bw, bh), near != null ? $"👋 和{Portraits.Key(near.name)}打招呼" : "👋 打招呼（走近居民）", fsS, near != null, t.color, near != null))
-                Walk.Greet();
-            float bw3 = (r.width - gap * 4) / 3f, by2 = by + bh + gap * 0.5f;
+            if (near != null) UiKit.Pill(by - fs * 2.2f, $"👋 對{Portraits.Key(near.name)}說「你好」，或舉起手掌揮一揮", fsS, Color.white, r.width * 0.9f, 0.7f);
+            float bw3 = (r.width - gap * 4) / 3f, by2 = by;
             int pts = prof.statPoints + prof.UsableSkillPoints;
             if (UiKit.Button(new Rect(r.x + gap, by2, bw3, bh * 0.85f), pts > 0 ? $"📜 角色 ×{pts}" : "📜 角色", fsS, pts > 0, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
             if (UiKit.Button(new Rect(r.x + gap * 2 + bw3, by2, bw3, bh * 0.85f), "📋 清單模式", fsS)) walkMode = false;
@@ -358,9 +358,13 @@ namespace SpellDuel
                 string waves = st.HasBoss && st.fromWave >= 10 ? "Boss 戰" : $"{st.toWave - st.fromWave + 1} 波" + (st.HasBoss ? "＋Boss" : "");
                 UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.68f, cr.height), $"{(clear ? "✔" : ok ? "▶" : "🔒")} {st.id}　{st.title}\n{waves}・推薦 Lv{Mathf.Max(1, st.FirstWave - 1)}+・經驗 {st.xp}・💰 {Economy.StageGold(st)}",
                     fsS, ok ? Color.white : Color.gray, TextAnchor.MiddleLeft, true);
-                var br = new Rect(cr.xMax - cr.width * 0.3f, cr.y + gap * 0.4f, cr.width * 0.3f - gap * 0.4f, cr.height - gap * 0.8f);
+                bool story = Story.HasStory(st) && Story.IsSeen(st.id);
+                float bwid = cr.width * (story ? 0.2f : 0.3f);
+                var br = new Rect(cr.xMax - bwid, cr.y + gap * 0.4f, bwid - gap * 0.4f, cr.height - gap * 0.8f);
                 if (UiKit.Button(br, ok ? (clear ? "⚔ 再打" : "⚔ 出發") : "🔒 先過前一關", fsS, ok && !clear, RegionColors[th], ok))
                 { OnStartStage?.Invoke(st); return; }
+                if (story && UiKit.Button(new Rect(br.x - bwid, br.y, bwid - gap * 0.4f, br.height), "📖 故事", fsS))
+                { OnWatchStory?.Invoke(st); return; }
                 y += ch + gap * 0.4f;
             }
             if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), $"🏘 回{Towns[town].name}", fs)) screen = Screen.Town;

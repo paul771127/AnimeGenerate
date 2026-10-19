@@ -153,7 +153,7 @@ namespace SpellDuel
             Step(ref y, pad, full, lineH, fs, fsS, 1, "找到地板", S(floor, !floor), "面向空曠的地方，慢慢左右移動手機、鏡頭對著地板");
             Step(ref y, pad, full, lineH, fs, fsS, 2, $"建立 {AutoAreaSize:0}m 場地（自動）", S(area, floor && !area), "場地會建在你前方");
             if (floor && UiKit.Button(new Rect(pad, y, full, bh), LobbyCaption($"↺ 在我前方重新放置 {AutoAreaSize:0}m 場地"), fs, false, new Color(0.4f, 0.85f, 1f), playArea.state != PlayArea.State.Drawing))
-            { WorldFrame.Reset(); playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); }
+            BeginAreaPreview(() => { WorldFrame.Reset(); playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); });
             if (floor) y += bh + pad * 0.4f;
         }
 
@@ -210,7 +210,7 @@ namespace SpellDuel
             bool area = playArea.state == PlayArea.State.Done;
             Step(ref y, pad, full, lineH, fs, fsS, 1, $"找到地板、建立 {AutoAreaSize:0}m 場地（自動）", S(area, !area), "面向房間裡最空的方向，慢慢移動手機、鏡頭對著地板");
             if (area && solo.phase == SoloBattle.Phase.Hidden && UiKit.Button(new Rect(pad, y, full, bh * 0.85f), LobbyCaption($"↺ 在我前方重新放置 {AutoAreaSize:0}m 場地"), fsS))
-            { playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); }
+            BeginAreaPreview(() => { playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); });
             if (area && solo.phase == SoloBattle.Phase.Hidden) y += bh * 0.85f + pad * 0.4f;
             Step(ref y, pad, full, lineH, fs, fsS, 2, HasPeer ? $"已連線（房間 {solo.PeerIds.Count + 1} 人）" : "連線：建立房間，或貼上朋友的代碼", S(HasPeer, !HasPeer),
                 net.Connected ? "等朋友加入…把代碼複製給他" : "一人建立房間、把代碼傳給朋友；朋友複製訊息後按「貼上並加入」");
@@ -238,7 +238,7 @@ namespace SpellDuel
             Step(ref y, pad, full, lineH, fs, fsS, 4, net.IsHost ? $"{AutoAreaSize:0}m 場地（自動建在你前方）" : $"收到房主的 {AutoAreaSize:0}m 場地", S(area, quickAligned && !area),
                 net.IsHost ? "面向空地；要換位置就按下面的「重新放置」" : "等房主的場地傳過來");
             if (net.IsHost && floor && !areaReceived && UiKit.Button(new Rect(pad, y, full, bh * 0.85f), LobbyCaption($"↺ 在我前方重新放置 {AutoAreaSize:0}m 場地"), fsS, false, null, playArea.state != PlayArea.State.Drawing))
-            { playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); }
+            BeginAreaPreview(() => { playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); });
             if (net.IsHost && floor && !areaReceived) y += bh * 0.85f + pad * 0.4f;
             Step(ref y, pad, full, lineH, fs, fsS, 5, "選職業開打（對齊好會自動打開）", S(false, conn && WorldReady && area), "分開站好，相距 2～5 公尺");
             if (net.Connected && WorldReady && UiKit.Button(new Rect(pad, y, full, bh * 1.1f), LobbyCaption("⚔ 選職業與技能"), fs, true, ModeColor)) solo.ShowSetup();

@@ -339,7 +339,18 @@ namespace SpellDuel
         void StartStory(StoryStage st)
         {
             storyMapOpen = false; storyStage = st;
+            // 故事只自動播一次；看過了直接開打（要看就在關卡說明按「📖 看故事」）
+            if (Story.IsSeen(st.id)) { StartStageBattle(); return; }
+            Story.MarkSeen(st.id);
             ShowDialogue(st.before, StartStageBattle);
+        }
+
+        /// <summary>重看故事：開場＋（通關過的）結尾，看完回到地圖</summary>
+        void WatchStory(StoryStage st)
+        {
+            var lines = new List<StoryLine>(st.before);
+            if (Story.IsCleared(st.id)) lines.AddRange(st.after);
+            ShowDialogue(lines, null);
         }
 
         void StartStageBattle()
@@ -366,6 +377,7 @@ namespace SpellDuel
             if (world.OnStartStage == null)
             {
                 world.OnStartStage = st => { storyMapOpen = false; StartStory(st); };
+                world.OnWatchStory = WatchStory;
                 world.OnBack = () => storyMapOpen = false;
                 world.OnCharacter = () => charOpen = true;
                 world.OnStartTrial = StartTrial;
@@ -380,6 +392,9 @@ namespace SpellDuel
 
         /// <summary>正在城鎮裡走動（可以打招呼）</summary>
         bool TownWalking => world.Walking && dlg == null && !charOpen && storyMapOpen;
+        float townWaveT;
+        /// <summary>在城鎮／世界地圖（不是戰鬥）：沒有場地範圍</summary>
+        public bool InTown => storyMapOpen && phase != Phase.Fighting;
 
         void UpdateTownWalk()
         {
@@ -395,8 +410,12 @@ namespace SpellDuel
             if (want && (!townWalk.Active || townWalk.Town != world.town)) townWalk.Enter(world.town, cam, cam.transform.position.y - 1.4f);
             else if (!want && townWalk.Active) townWalk.Leave();
             if (!townWalk.Active) return;
-            if (TownWalking) townWalk.Update(cam, Mathf.Min(Time.deltaTime, 0.1f), Time.time - world.holdAt < 0.15f);
-            world.SpeechNote = !UseSpeech ? "這支手機沒有語音辨識：走近居民後按「👋 打招呼」" : speech.Running ? null : $"語音：{speech.Status}";
+            if (TownWalking) townWalk.Update(cam, Mathf.Min(Time.deltaTime, 0.1f), false);
+            // 揮手打招呼：居民在面前時，張開手掌舉在鏡頭前 0.5 秒
+            bool palm = TownWalking && Hand != null && Hand.HandVisible && Hand.Current == HandGesture.Shape.Open;
+            townWaveT = palm ? townWaveT + Time.deltaTime : 0f;
+            if (townWaveT >= 0.5f && townWalk.Near != null) { townWaveT = -1.5f; townWalk.Greet(); }
+            world.SpeechNote = !UseSpeech ? "這支手機沒有語音辨識：走近居民，舉起手掌揮一揮就能聊天" : speech.Running ? null : $"語音：{speech.Status}";
         }
 
         void OnSpeechText(string text)
@@ -1118,7 +1137,7 @@ namespace SpellDuel
                         Say($"🏆 {st.title} 完成！獲得經驗 {st.xp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "" : "（再次通關）") + (loot.Length > 0 ? "\n" + loot : ""), 99f);
                     }
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
-                    ShowDialogue(st.after, null);
+                    if (!Story.IsSeen(st.id + "!")) { Story.MarkSeen(st.id + "!"); ShowDialogue(st.after, null); }   // 結尾也只自動播一次
                 }
                 else { LoseLoot(); Say($"💀 {st.title} 失敗…再挑戰一次吧（戰利品沒拿到）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;

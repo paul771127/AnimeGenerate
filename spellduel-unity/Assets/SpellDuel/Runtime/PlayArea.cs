@@ -37,7 +37,7 @@ namespace SpellDuel
         Camera cam;
         ARPlaneManager planes;
         Material lineMat, wallMat;
-        LineRenderer outline, drawLine, reticleRing;
+        LineRenderer outline, drawLine, reticleRing, previewLine, previewArrow;
         readonly List<Vector3> drawPts = new List<Vector3>();
         readonly List<MeshRenderer> walls = new List<MeshRenderer>();
 
@@ -50,6 +50,54 @@ namespace SpellDuel
             outline = MakeLine("PlayArea Outline", new Color(0.3f, 0.9f, 1f, 0.9f), 0.03f, true);
             drawLine = MakeLine("PlayArea Drawing", new Color(1f, 0.85f, 0.3f, 0.9f), 0.03f, false);
             reticleRing = MakeLine("Floor Reticle", new Color(1f, 1f, 1f, 0.8f), 0.012f, true);
+            previewLine = MakeLine("PlayArea Preview", new Color(1f, 0.85f, 0.25f, 0.95f), 0.05f, true);
+            previewArrow = MakeLine("PlayArea Preview Center", new Color(1f, 0.85f, 0.25f, 0.95f), 0.04f, false);
+        }
+
+        /// <summary>城鎮裡不需要場地：隱藏邊框、格子牆，也不提示「在場地外」</summary>
+        public bool Hidden
+        {
+            get => hidden;
+            set
+            {
+                if (hidden == value) return;
+                hidden = value;
+                outline.enabled = !value;
+                foreach (var w in walls) if (w != null) w.enabled = false;
+            }
+        }
+        bool hidden;
+
+        // ---------------------------------------------------------------- 重新放置前的預覽
+        /// <summary>「重新放置」預覽：照目前站的位置與面向，畫出新場地會在哪裡（黃色框＋中心往前的箭頭）；還沒找到地板回傳 false</summary>
+        public bool ShowPreview(float size)
+        {
+            if (!HasFloor || cam == null) { HidePreview(); return false; }
+            SquareCorners(size, out var c, out var fwd, out var pts);
+            for (int i = 0; i < pts.Count; i++) pts[i] += Vector3.up * 0.01f;
+            SetLine(previewLine, pts);
+            var arrow = new List<Vector3> { c + Vector3.up * 0.01f - fwd * 0.6f, c + Vector3.up * 0.01f + fwd * 0.6f,
+                c + Vector3.up * 0.01f + fwd * 0.3f + Vector3.Cross(Vector3.up, fwd) * 0.25f, c + Vector3.up * 0.01f + fwd * 0.6f,
+                c + Vector3.up * 0.01f + fwd * 0.3f - Vector3.Cross(Vector3.up, fwd) * 0.25f };
+            SetLine(previewArrow, arrow);
+            return true;
+        }
+
+        public void HidePreview()
+        {
+            if (previewLine != null) previewLine.positionCount = 0;
+            if (previewArrow != null) previewArrow.positionCount = 0;
+        }
+
+        void SquareCorners(float size, out Vector3 center, out Vector3 fwd, out List<Vector3> pts)
+        {
+            fwd = Flat(cam.transform.forward);
+            fwd = fwd.sqrMagnitude > 1e-4f ? fwd.normalized : Vector3.forward;
+            var right = Vector3.Cross(Vector3.up, fwd);
+            var me = new Vector3(cam.transform.position.x, FloorY, cam.transform.position.z);
+            center = me + fwd * (size / 2f - 0.5f);
+            float h = size / 2f;
+            pts = new List<Vector3> { center - right * h - fwd * h, center + right * h - fwd * h, center + right * h + fwd * h, center - right * h + fwd * h };
         }
 
         public void Begin()
@@ -90,6 +138,7 @@ namespace SpellDuel
                     SetLine(drawLine, drawPts);
                 }
             }
+            else if (state == State.Done && hidden) Hint = "";
             else if (state == State.Done)
             {
                 UpdateWalls();
@@ -145,17 +194,10 @@ namespace SpellDuel
         public bool AutoSquare(float size)
         {
             if (!HasFloor) return false;
-            var fwd = Flat(cam.transform.forward);
-            fwd = fwd.sqrMagnitude > 1e-4f ? fwd.normalized : Vector3.forward;
-            var right = Vector3.Cross(Vector3.up, fwd);
-            var me = new Vector3(cam.transform.position.x, FloorY, cam.transform.position.z);
-            var center = me + fwd * (size / 2f - 0.5f);
-            float h = size / 2f;
+            HidePreview();
+            SquareCorners(size, out _, out var fwd, out var pts);
             Polygon.Clear();
-            Polygon.Add(center - right * h - fwd * h);
-            Polygon.Add(center + right * h - fwd * h);
-            Polygon.Add(center + right * h + fwd * h);
-            Polygon.Add(center - right * h + fwd * h);
+            Polygon.AddRange(pts);
             Finish(fwd);
             return true;
         }

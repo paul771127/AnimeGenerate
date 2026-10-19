@@ -276,7 +276,7 @@ namespace SpellDuel
             // 雙人職業對戰：SoloBattle 的連線模式（訊息經由這裡收送）
             solo.NetSend = m => { if (net.Connected) Send(m); };
             solo.SharedClock = () => SharedTime;
-            solo.RequestRedraw = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); autoArea = false; Log($"面向空地，掃到地板會在你前方重新建 {AutoAreaSize:0}m 場地"); };
+            solo.RequestRedraw = () => { solo.Hide(); BeginAreaPreview(() => { WorldFrame.Reset(); playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); }); };
             solo.RequestChangeMode = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); mode = Mode.Choose; };
         }
 
@@ -341,6 +341,8 @@ namespace SpellDuel
             Tracking.Tick(Time.time);
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
             if (mode == Mode.Solo || AreaMode || remoteMode) UpdatePlayArea();
+            UpdateAreaPreview();
+            playArea.Hidden = solo.InTown;   // 城鎮沒有場地
             HandleNetwork();
             UpdateRemoteQuickStart();
             UpdateSeat();
@@ -396,8 +398,9 @@ namespace SpellDuel
             // 人體偵測只在雙人模式需要（單人的敵人是虛擬的）；手勢在雙人、單人戰鬥中都要
             bool soloFight = mode == Mode.Solo && solo.phase == SoloBattle.Phase.Fighting;
             poseDet.WantBody = mode == Mode.Duo && !remoteMode;   // 遠端：對方不在鏡頭裡，不用偵測人體
-            poseDet.WantHand = mode == Mode.Duo || soloFight;
-            poseDet.Enabled = Tracking.Ok && (soloFight || (mode == Mode.Duo && WorldFrame.Calibrated));
+            bool town = mode == Mode.Solo && solo.InTown;   // 城鎮：揮手打招呼
+            poseDet.WantHand = mode == Mode.Duo || soloFight || town;
+            poseDet.Enabled = Tracking.Ok && (soloFight || town || (mode == Mode.Duo && WorldFrame.Calibrated));
             poseDet.Tick();
         }
 
@@ -406,6 +409,33 @@ namespace SpellDuel
         // 2. 連上、場地好了 → 自動打開選職業畫面（不用再按「職業對戰／合作」）
         bool autoArea, autoSetup;
         public const float AutoAreaSize = 10f;
+
+        // ---------------------------------------------------------------- 重新放置場地：先預覽，按確定才移過去
+        bool areaPreview; System.Action areaPreviewConfirm;
+        void BeginAreaPreview(System.Action confirm) { areaPreview = true; areaPreviewConfirm = confirm; }
+        void UpdateAreaPreview()
+        {
+            if (areaPreview) playArea.ShowPreview(AutoAreaSize); else playArea.HidePreview();
+        }
+        /// <summary>預覽畫面：黃框＝新場地的位置；確定／取消</summary>
+        void DrawAreaPreview(float W, float H, float pad, int fs, int fsS)
+        {
+            float pw = W - pad * 2f, bh = fs * 2.6f;
+            UiKit.Pill(H * 0.12f, $"↺ 重新放置 {AutoAreaSize:0}m 場地", fs, new Color(1f, 0.85f, 0.3f), pw);
+            UiKit.Pill(H * 0.12f + fs * 2.4f, playArea.HasFloor
+                ? "黃色框＝新場地的範圍，黃色箭頭＝場地前方。轉身面向空地、走到想要的位置（你會站在靠近自己這一邊）"
+                : "先慢慢移動手機、鏡頭對著地板，找到地板才看得到預覽", fsS, Color.white, pw);
+            float by = H - bh * 2.6f - pad;
+            bool ok = playArea.HasFloor;
+            if (UiKit.Button(new Rect(pad, by, pw, bh), "✅ 確定放在這裡", fs, ok, new Color(0.45f, 1f, 0.6f), ok))
+            {
+                areaPreview = false; playArea.HidePreview();
+                areaPreviewConfirm?.Invoke(); areaPreviewConfirm = null;
+                Log($"✅ 場地已放在新的位置");
+            }
+            if (UiKit.Button(new Rect(pad, by + bh * 1.2f, pw, bh), "取消（場地不變）", fsS))
+            { areaPreview = false; areaPreviewConfirm = null; playArea.HidePreview(); }
+        }
 
         void UpdateRemoteQuickStart()
         {
@@ -509,7 +539,7 @@ namespace SpellDuel
                 }
             }
             // 走出場地：每秒震動一次
-            if (playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position) && Time.time - lastBoundaryBuzz > 1f)
+            if (playArea.state == PlayArea.State.Done && !solo.InTown && !playArea.Inside(cam.transform.position) && Time.time - lastBoundaryBuzz > 1f)
             {
                 lastBoundaryBuzz = Time.time;
                 Handheld.Vibrate();
@@ -1226,6 +1256,7 @@ namespace SpellDuel
             if (hitFlash > 0.01f) { GUI.color = new Color(1f, 0f, 0.05f, hitFlash * 0.45f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
 
             int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.8f);
+            if (areaPreview) { DrawAreaPreview(W, H, pad, fs, fsS); return; }
             // 一開始：選模式（首頁；畫面在 GameRoot.Lobby.cs）
             if (mode == Mode.Choose) { DrawHome(W, H, pad, top, lineH, fs, fsS); return; }
 
@@ -1242,7 +1273,7 @@ namespace SpellDuel
             if (mode == Mode.Solo && solo.phase != SoloBattle.Phase.Hidden)
             {
                 solo.DrawGUI();
-                if (playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position))
+                if (playArea.state == PlayArea.State.Done && !solo.InTown && !playArea.Inside(cam.transform.position))
                     UiKit.Pill(H * 0.68f, "⚠ 回到場地內", fs * 2, new Color(1f, 0.4f, 0.4f), W - pad * 2);
                 return;
             }
@@ -1305,7 +1336,7 @@ namespace SpellDuel
             foreach (var s in log) { UiKit.Text(new Rect(pad, ly, W - pad * 2, lineH), s, fsS, new Color(0.9f, 0.93f, 1f)); ly += lineH; }
             if (hp <= 0) GUI.Label(new Rect(0, H * 0.4f, W, H * 0.1f), "💀 敗北", big);
             else if (net.Connected && remoteHp <= 0) GUI.Label(new Rect(0, H * 0.4f, W, H * 0.1f), "🏆 勝利", big);
-            if (mode == Mode.Solo && playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position))
+            if (mode == Mode.Solo && playArea.state == PlayArea.State.Done && !solo.InTown && !playArea.Inside(cam.transform.position))
                 UiKit.Pill(H * 0.6f, "⚠ 回到場地內", fs * 2, new Color(1f, 0.4f, 0.4f), W - pad * 2);
         }
     }

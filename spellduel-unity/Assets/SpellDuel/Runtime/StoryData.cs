@@ -199,6 +199,22 @@ namespace SpellDuel
         public static bool IsUnlocked(StoryStage s) => s.req == null || IsCleared(s.req);
         public static void MarkCleared(string id) { if (Cleared.Add(id)) Set("sd_story_clear", string.Join(",", Cleared)); }
 
+        // 故事只自動播一次：看過的開場（id）／結尾（id+"!"）記下來，之後要看就按「📖 看故事」
+        static HashSet<string> seen;
+        static HashSet<string> Seen
+        {
+            get
+            {
+                if (seen != null) return seen;
+                seen = new HashSet<string>();
+                foreach (var s in (Get("sd_story_seen") ?? "").Split(',')) if (s.Length > 0) seen.Add(s);
+                return seen;
+            }
+        }
+        public static bool IsSeen(string key) => Seen.Contains(key);
+        public static void MarkSeen(string key) { if (Seen.Add(key)) Set("sd_story_seen", string.Join(",", Seen)); }
+        public static bool HasStory(StoryStage s) => s != null && ((s.before != null && s.before.Count > 0) || (s.after != null && s.after.Count > 0));
+
         /// <summary>把台詞裡的 {玩家} 換成現在的職業名稱</summary>
         public static string Fill(string text, string cls) =>
             (text ?? "").Replace("{玩家}", Skills.Classes.TryGetValue(cls, out var cd) ? cd.name : "勇者").Replace("{職業}", Skills.Classes.TryGetValue(cls, out var cd2) ? cd2.name : "");

@@ -6,7 +6,7 @@ namespace SpellDuel
 {
     /// <summary>
     /// 可以走動的 3D 城鎮（故事模式進城時）：
-    ///   走路：上下晃動手機（像原地踏步）＝往螢幕準心的方向前進；真的走路也會動（AR）。也可以按住「前進」。
+    ///   走路：上下晃動手機（像原地踏步）＝往螢幕準心的方向前進；真的走路也會動（AR）。
     ///   聊天：走到居民面前（約 2.5m 內、在畫面前方）說「嗨」「你好」之類的招呼語，就會開始對話；
     ///         設施的店員打完招呼後打開鐵匠鋪／道具店／職業工會。
     /// 外觀全部在 TownArt（美術負責）。座標：城鎮根物件放在進城時的腳下，面向進城時的鏡頭方向；
@@ -48,6 +48,8 @@ namespace SpellDuel
         readonly StepDetector steps = new StepDetector();
         float speed, walkUntil, holdUntil, greetLock;
         public const float GateHalf = 1.4f, ExitDepth = 1.2f;
+        /// <summary>居民的障礙半徑：太近時 AR 角色看起來超大，保持約 1.5m 的距離</summary>
+        public const float NpcKeepOff = 1.2f;
         public const float TownRadius = 13f, StepSpeed = 1.4f, StepHold = 0.5f, TalkRange = 2.6f, TalkAngle = 50f;
         static readonly Vector2 PlazaC = new Vector2(0f, 5f);
 
@@ -145,7 +147,7 @@ namespace SpellDuel
             n.tf = go.transform;
             n.tf.localPosition = n.pos; n.tf.localRotation = Quaternion.Euler(0f, n.yaw, 0f);
             npcs.Add(n);
-            walls.Add((new Vector2(n.pos.x, n.pos.z), 0.45f));
+            walls.Add((new Vector2(n.pos.x, n.pos.z), NpcKeepOff));
         }
 
         // ---------------------------------------------------------------- 每幀
