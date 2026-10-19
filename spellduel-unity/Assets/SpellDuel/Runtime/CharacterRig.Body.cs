@@ -14,8 +14,9 @@ namespace SpellDuel
     /// </summary>
     public partial class CharacterRig
     {
-        /// <summary>角色站直時眼睛離地的高度（未縮放，公尺）</summary>
-        const float RigEyeHeight = 1.57f;
+        /// <summary>角色站直時眼睛離地的高度（未縮放，公尺）；第一次驅動時量頭的位置（各角色頭身比不同）</summary>
+        float rigEye = -1f;
+        float RigEyeHeight => rigEye > 0f ? rigEye : 1.57f;
         /// <summary>手機拿在眼睛前方多遠（公尺）</summary>
         public const float PhoneReach = 0.3f;
         const float ThighLen = 0.42f, ShinLen = 0.43f;
@@ -36,6 +37,7 @@ namespace SpellDuel
             phonePos = phone; phoneRot = rot; gesture = gestureHand; gesturePos = gestureAt;
             if (stand > 0.6f && stand < 2.3f) standH = stand;
             crouchH = crouch > 0.2f && crouch < standH - 0.1f ? crouch : standH * 0.62f;
+            if (rigEye < 0f) rigEye = Mathf.Clamp(transform.InverseTransformPoint(head.position).y + 0.013f, 1.3f, 1.8f);
             phoneLast = Time.time; phoneDriven = true;
 
             // 腳在眼睛正下方，眼睛在手機後方 PhoneReach
@@ -64,6 +66,8 @@ namespace SpellDuel
             float a = SquatAngle(drop);                                  // 大腿往前抬的角度（度）
             float b = a * 0.9f;                                          // 小腿往後的角度
             float footZ = ThighLen * Mathf.Sin(a * Mathf.Deg2Rad) - ShinLen * Mathf.Sin(b * Mathf.Deg2Rad);
+            float hx = 0.085f * (classId == "assassin" ? 0.85f : 1f);   // 不套預設站姿：髖回到原位
+            hipL.localPosition = new Vector3(-hx, 0.85f, 0f); hipR.localPosition = new Vector3(hx, 0.85f, 0f);
             var bp = body.localPosition;
             body.localPosition = new Vector3(bp.x, bp.y - drop + lift, bp.z - footZ);
             float walkLegs = Mathf.Clamp01(1f - crouchAmt * 2f);           // 蹲下時不擺腿

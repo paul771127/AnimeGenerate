@@ -26,12 +26,16 @@ namespace SpellDuel
         }
         Arm PresentationArm(bool left)
         {
+            if(phoneDriven)return left?baseL:baseR;   // 真人分身：姿勢照手機（CharacterRig.Body.cs），不套預設站姿
+
             float t=combatAmount*combatAmount*(3-2*combatAmount);
             var v=Vector3.Lerp(left?idlePresentation.L:idlePresentation.R,left?battlePresentation.L:battlePresentation.R,t);
             return new Arm(v.x,v.y,v.z,classId=="assassin"?Mathf.Lerp(-45,65,t):0);
         }
         void PosePresentation(float deadE)
         {
+            if(phoneDriven)return;
+
             float t=combatAmount*combatAmount*(3-2*combatAmount),still=(1-walkAmt)*(1-deadE);
             float shift=Mathf.Lerp(idlePresentation.Shift,battlePresentation.Shift,t);
             float roll=Mathf.Lerp(idlePresentation.Roll,battlePresentation.Roll,t);
