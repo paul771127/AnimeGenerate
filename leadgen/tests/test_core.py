@@ -255,3 +255,22 @@ def test_tender_keywords_avoid_chinese_substring_traps():
     }
     bad = [f"{kw}({why})" for kw, why in banned.items() if kw in keywords]
     assert not bad, f"這些關鍵字會撈到無關的案子:{bad}"
+
+
+def test_extract_urls_skips_non_company_hosts():
+    """徵求外包的人會貼自家網址,但也常貼 ATS 與社群連結 —— 後者爬了找不到人。"""
+    from leadgen.models import extract_urls
+    body = ("Markforged | Software Engineers | https://www.markforged.com "
+            "apply at https://boards.greenhouse.io/markforged "
+            "or see https://github.com/markforged and https://linkedin.com/company/x")
+    assert extract_urls(body) == ["https://www.markforged.com"]
+    # 只有平台連結時要回空,不能把 ATS 當成官網去爬
+    assert extract_urls("apply https://jobs.lever.co/acme") == []
+    assert extract_urls("see https://news.ycombinator.com/item?id=1") == []
+    assert extract_urls("no links here") == []
+
+
+def test_extract_urls_dedupes_by_host_and_trims_punctuation():
+    from leadgen.models import extract_urls
+    out = extract_urls("see https://acme.io/about, and https://acme.io/contact.")
+    assert out == ["https://acme.io/about"], out

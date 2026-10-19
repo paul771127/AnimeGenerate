@@ -19,7 +19,7 @@ from typing import Iterable
 from bs4 import BeautifulSoup
 
 from ..http import Fetcher
-from ..models import Lead, extract_emails
+from ..models import Lead, extract_emails, extract_urls
 from .base import register
 
 log = logging.getLogger("leadgen.hn")
@@ -89,6 +89,9 @@ class HNFreelance:
                     continue
 
                 emails = extract_emails(body)
+                # 徵求外包的人通常會貼自家網址。沒留信箱的那些,就靠這個網址讓
+                # enricher 去官網的公開聯絡頁找 info@ —— 這是 enrich 最主要的輸入。
+                urls = extract_urls(body)
                 author = child.get("author") or "unknown"
                 yield Lead(
                     org=_first_line(body) or f"HN:{author}",
@@ -97,6 +100,7 @@ class HNFreelance:
                     signal_title=_first_line(body),
                     signal_type=signal_type,
                     signal_date=(child.get("created_at") or "")[:10],
+                    website=urls[0] if urls else "",
                     emails=emails,
                     tags=matched + [f"hn:{author}"],
                     evidence=body[:800],

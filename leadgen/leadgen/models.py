@@ -25,6 +25,22 @@ _PHONE = re.compile(
     r"\d(?:[-\s.]?\d){7,10}"
 )
 
+_URL = re.compile(r"https?://[\w.-]+(?:/[\w./?%&=+~#-]*)?")
+
+# 這些網域不是公司官網,去爬它們的聯絡頁找不到發案者:
+# ATS(求職系統)、社群、文件與表單服務、職缺聚合站。
+NOT_COMPANY_HOSTS = (
+    "greenhouse.io", "lever.co", "ashbyhq.com", "workable.com", "breezy.hr",
+    "bamboohr.com", "recruitee.com", "jobvite.com", "smartrecruiters.com",
+    "myworkdayjobs.com", "workday.com", "teamtailor.com", "rippling.com",
+    "linkedin.com", "twitter.com", "x.com", "github.com", "gitlab.com",
+    "facebook.com", "instagram.com", "youtube.com", "medium.com",
+    "news.ycombinator.com", "ycombinator.com", "remoteok.com",
+    "weworkremotely.com", "indeed.com", "wellfound.com", "angel.co",
+    "google.com", "docs.google.com", "forms.gle", "notion.so", "notion.site",
+    "airtable.com", "calendly.com", "typeform.com", "imgur.com", "bit.ly",
+)
+
 # 角色信箱:公開張貼給外界聯絡用,風險最低,優先採用
 ROLE_PREFIXES = (
     "info", "contact", "service", "sales", "hello", "support",
@@ -76,6 +92,21 @@ def extract_phones(text: str) -> list[str]:
         if 9 <= len(p) <= 14 and p not in seen:
             seen.add(p)
             out.append(p)
+    return out
+
+
+def extract_urls(text: str) -> list[str]:
+    """抽出內文裡的網址,去掉求職系統與社群這些非官網的。"""
+    out, seen = [], set()
+    for m in _URL.findall(text or ""):
+        url = m.rstrip(".,;)]}'\"")
+        host = registrable_domain(url)
+        if not host or host in seen:
+            continue
+        if any(host == h or host.endswith("." + h) for h in NOT_COMPANY_HOSTS):
+            continue
+        seen.add(host)
+        out.append(url)
     return out
 
 
