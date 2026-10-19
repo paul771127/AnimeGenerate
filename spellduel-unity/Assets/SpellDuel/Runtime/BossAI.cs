@@ -7,8 +7,9 @@ namespace SpellDuel
     /// <summary>
     /// Boss（熔岩巨像）的 AI：全部用場地座標（公尺）。
     ///   目標：單人打玩家；合作模式在兩位活著的玩家之間挑（近的優先，每 6～10 秒可能換人）。
-    ///   走位：慢慢逼近目標，保持在這次想用的招式射程內；永遠留在場地內。
-    ///   出招：依距離挑招（近：地裂、橫掃；遠：熔岩彈、落石雨），蓄力時間就是預警時間（畫面有紅圈／紅線提示）。
+    ///   走位：偏好站在中遠距離（約 5.5m，鏡頭看得到整隻 Boss）；最近只到離目標「一個身高」（約 3.3m），被靠近就慢慢退開。
+    ///   出招：以中遠距離招式為主（熔岩彈、落石雨、橫掃…）；玩家靠近到 4.6m 內才偶爾用強力的近身範圍招（地裂、踐踏、潮汐環），
+    ///         範圍都大於一個身高，站在最近距離也打得到。蓄力時間就是預警時間（畫面有紅圈／紅線提示）。
     ///   狂暴：血量低於一半 → 蓄力變快（chargeScale 0.7）、走路變快、出招間隔變短。
     /// </summary>
     public class BossAI
@@ -86,6 +87,12 @@ namespace SpellDuel
         }
 
         float Rand(float a, float c) => a + (float)rnd.NextDouble() * (c - a);
+        /// <summary>Boss 平常想站的距離（中遠距離）</summary>
+        public const float PreferDistance = 5.5f;
+        /// <summary>玩家靠近到這個距離內，才會偶爾用近身範圍招</summary>
+        public const float CloseDistance = 4.6f;
+        /// <summary>離目標最近的距離＝Boss 的身高</summary>
+        float Keep => Mathf.Max(2f, me.head.y + 0.1f);
         bool Ready(SkillDef s) => !me.cooldownUntil.TryGetValue(s.id, out var cd) || cd <= b.now;
 
         public void Update(float dt)
@@ -139,32 +146,34 @@ namespace SpellDuel
                     if (m > 1f && cdu - b.now <= s.cooldown * me.cdMul * (1f - 1f / m)) me.cooldownUntil[s.id] = b.now;
                 }
                 if (!Ready(s)) continue;
+                bool close = d < CloseDistance;
                 float w = s.id switch
                 {
-                    "b_slam" => d < 3.6f ? 6f : 0f,
-                    "b_sweep" => d < 5.5f ? 3.5f : 0.3f,
-                    "b_bolt" => d > 2.5f ? 2.5f : 1f,
+                    // 熔岩巨像：遠（熔岩彈、落石雨、橫掃衝擊波）為主；被靠近才偶爾地裂／震波
+                    "b_slam" => close ? 2.5f : 0f,
+                    "b_sweep" => d < 7f ? 2.5f : 1f,
+                    "b_bolt" => 3.5f,
                     "b_rain" => 3.5f,
                     "b_summon" => b.minions.Count < 2 ? 5f : 0f,   // 小怪少於 2 隻就常召喚
-                    "b_leap" => d > 4f ? 5f : 0f,                   // 離得遠：跳過去
-                    // 腐化樹王：近（踐踏、藤鞭）／遠（荊棘、毒孢彈、樹根爆發）
-                    "p_stomp" => d < 3.4f ? 6f : 0f,
-                    "p_whip" => d < 5.5f ? 3f : 0.3f,
-                    "p_thorn" => d > 2.5f ? 3f : 1f,
-                    "p_spore" => d > 3f ? 2.5f : 0.5f,
-                    "p_roots" => d > 3f ? 4.5f : 1.5f,
+                    "b_leap" => d > 8.5f ? 4f : 0f,                 // 離得太遠：跳到中距離
+                    // 腐化樹王：遠（荊棘、毒孢彈、樹根爆發、藤鞭）為主；被靠近才偶爾踐踏
+                    "p_stomp" => close ? 2.5f : 0f,
+                    "p_whip" => d < 7f ? 2.5f : 1f,
+                    "p_thorn" => 3.5f,
+                    "p_spore" => 3f,
+                    "p_roots" => 4f,
                     "p_summon" => b.minions.Count < 2 ? 5f : 0f,
-                    // 深淵海妖：觸手（任何距離）、巨浪／泡泡（遠）、漩渦、墨汁
-                    "s_tentacle" => d < 6f ? 5f : 3f,
-                    "s_wave" => d > 3f ? 3.5f : 1.5f,
-                    "s_bubbles" => d > 4f ? 3f : 1f,
-                    "s_whirl" => d > 2f ? 4f : 1.2f,
+                    // 深淵海妖：觸手、巨浪、泡泡、漩渦、墨汁都是遠距離；被靠近才偶爾潮汐環
+                    "s_tentacle" => 4f,
+                    "s_wave" => 3f,
+                    "s_bubbles" => 2.5f,
+                    "s_whirl" => 3f,
                     "s_ink" => 1.5f,
                     "s_summon" => b.minions.Count < 2 ? 5f : 0f,
-                    // 跳躍招：任何距離都會用；熔岩巨像最常用、樹根波接在藤鞭之後、潮汐環偶爾
-                    "x_quake" => 6f,
+                    // 跳躍招（震波環從 Boss 腳下擴散）：熔岩巨像常用；樹根波接在藤鞭之後；潮汐環被靠近時才多用
+                    "x_quake" => close ? 6f : 3f,
                     "x_rootwave" => Last == "p_whip" ? 9f : 2.5f,
-                    "x_ripple" => 2f,
+                    "x_ripple" => close ? 4f : 1f,
                     _ => 1f,
                 };
                 // 故事 Boss：大範圍、逼人動的招式更常出（橫掃→蹲、地裂／落石／觸手→跑、震地波→跳）；召喚少一點
@@ -177,7 +186,15 @@ namespace SpellDuel
             {
                 Last = pick.id;
                 Status = $"準備 {pick.name}";
-                if (pick.id == "b_leap" || pick.atTarget) { var at = tgt.Feet; at.y = 0f; me.aimPoint = at; }   // 落點／樹根爆發位置＝目標現在的位置
+                if (pick.atTarget) { var at = tgt.Feet; at.y = 0f; me.aimPoint = at; }   // 樹根爆發位置＝目標現在的位置
+                if (pick.id == "b_leap")
+                {
+                    // 落點：目標前方一個身高（不跳到臉上）；範圍比一個身高大，落點紅圈罩得到目標
+                    var away = Fighter.Flat(me.Feet - tgt.Feet); if (away == Vector3.zero) away = Vector3.forward;
+                    var at = tgt.Feet + away * Keep; at.y = 0f;
+                    if (!inside(at)) { at = tgt.Feet; at.y = 0f; }
+                    me.aimPoint = at;
+                }
             }
         }
 
@@ -221,14 +238,16 @@ namespace SpellDuel
             // 從場地外淡入出現：先走進場地（往場地中心，走到離邊界夠遠才開始正常走位）
             if (!inside(me.Feet) || edgeDistance(me.Feet) < 0.6f) { var home = -me.Feet; home.y = 0; me.head += (home.sqrMagnitude > 1e-4f ? home.normalized : Vector3.zero) * walkSpeed * 1.5f * dt; return; }
             var c = me.charging;
-            float want = c != null ? (c.areaRadius > 0f ? 0f : c.rangeMax * 0.7f) : 3.2f;
             if (c != null && c.areaRadius > 0f) return;   // 地裂蓄力時站著不動（紅圈固定）
+            float keep = Keep;
+            // 想站的距離：蓄力中的招式打得到的距離（不近於一個身高）；平常站在中遠距離
+            float want = c != null ? Mathf.Max(keep, Mathf.Min(PreferDistance, c.rangeMax * 0.85f)) : PreferDistance;
             var feet = me.Feet;
             var toBoss = Fighter.Flat(feet - tgt.Feet);
             if (toBoss == Vector3.zero) toBoss = Vector3.forward;
             float cur = Battle.FlatDistance(feet, tgt.Feet);
-            if (cur <= want + 0.2f && cur >= Mathf.Min(want, 2.2f)) return;
-            float goal = Mathf.Max(2.2f, Mathf.Min(want, cur));
+            if (cur >= keep && cur <= want + 0.6f && cur >= want - 1.2f) return;   // 在想要的距離附近：不動
+            float goal = Mathf.Max(keep, want);   // 太近：往後退；太遠：靠過去
             var dest = tgt.Feet + toBoss * goal;
             var delta = dest - feet; delta.y = 0;
             float dist = delta.magnitude;

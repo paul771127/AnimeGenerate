@@ -73,6 +73,8 @@ namespace SpellDuel
         public int shieldLeft;
         // 刺客的近身技能：放招後進入「伏擊」，時限內靠近到射程內就自動出手
         public SkillDef armed; public float armedUntil;
+        /// <summary>電腦敵人的近戰多伸出去的距離（公尺）：它們最近只走到離玩家「一個身高」，近戰仍要打得到（EnemyAI 設定；玩家＝0）</summary>
+        public float reachBonus;
         public bool palmVisible = true;        // 玩家：手掌有沒有出現在鏡頭前（刺客伏擊技能要看到手掌才會蓄力；電腦／對手一律 true）
         // 身體閃避：蹲下（躲橫向攻擊）、快速側跨（短暫無敵）
         public bool crouching; public float dodgeUntil;
@@ -470,6 +472,10 @@ namespace SpellDuel
         public const float BirdCruise = 3.5f;
         public const float VineStay = 3f;   // 藤蔓術士放出藤蔓後不能移動的秒數（＝藤蔓持續時間）
         public static bool IsPlant(int kind) => kind >= 7 && kind <= 12;
+        /// <summary>小怪最近只走到離玩家這麼遠（約一個身高，至少 1m），免得貼在鏡頭上看不清楚；近身攻擊的距離會補到打得到這裡</summary>
+        public static float MinionKeep(int kind) => Mathf.Max(1f, MinionHead[kind] + 0.1f);
+        /// <summary>近身小怪的出手距離：至少要打得到停下來的位置</summary>
+        static float MeleeReach(int kind, float reach) => Mathf.Max(reach, MinionKeep(kind) + 0.15f);
         public static bool IsRanged(int kind) => kind == 1 || kind == 4 || kind == 5 || kind == 6 || kind == 7 || kind == 9 || kind == 12 || kind == 15 || kind == 18;
         public const float VoidStay = 3f;   // 虛空術士出手後停留幾秒再瞬移
 
@@ -694,7 +700,7 @@ namespace SpellDuel
             }
             // 故事關卡的 Boss 多一招震地波（跳起來躲）
             enemy.loadout.RemoveAll(IsQuake);
-            if (bossAfterMinions) enemy.loadout.Add(Skills.All[QuakeOf(Theme)]);
+            if (bossAfterMinions && !enemy.loadout.Contains(Skills.All[QuakeOf(Theme)])) enemy.loadout.Add(Skills.All[QuakeOf(Theme)]);   // 深淵海妖本來就有潮汐環（被靠近時用）
             Emit("bossarrive", enemy.Feet, enemy.cls.color, bossAfterMinions ? $"{enemy.name}現身！" : $"第 {wave} 波 Boss 出現！");
             OnBossSpawn?.Invoke(bossIndex);
         }
@@ -778,7 +784,7 @@ namespace SpellDuel
                 }
                 if (m.snaredUntil > now || now < m.recoverUntil) continue;
                 // 出手條件：近戰／衝鋒獸／自爆要貼近；射手在 9m 內
-                float reach = MinionReach[kind];
+                float reach = IsRanged(kind) ? MinionReach[kind] : MeleeReach(kind, MinionReach[kind]);
                 float windup = MinionWindup[kind] < 0f ? claw.charge : MinionWindup[kind];
                 bool outside = minionInside != null && !minionInside(m.Feet) && !FreeRoam(kind);   // 還在場地外：先走進來（不在場外放招）；海裡／空中的不用
                 if (!outside && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt) { m.windupUntil = now + windup; Emit("minionwindup", m.Feet, claw.color, null); continue; }
@@ -793,7 +799,7 @@ namespace SpellDuel
                     float want = d > KeepMax[kind] ? d - KeepMax[kind] : d < KeepMin[kind] ? -(KeepMin[kind] - d) : 0f;
                     step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Clamp(want, -speed * dt, speed * dt);
                 }
-                else step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Min(speed * dt, Mathf.Max(0f, d - 0.8f));
+                else step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Min(speed * dt, Mathf.Max(0f, d - MinionKeep(kind)));   // 停在約一個身高的距離
                 foreach (var o in minions)
                 {
                     if (o == m) continue;
@@ -912,7 +918,7 @@ namespace SpellDuel
                     var pc = Skills.All["m_pincer"];
                     m.attackReadyAt = now + pc.cooldown;
                     Emit("minionattack", m.Feet, pc.color, null);
-                    if (d <= pc.rangeMax + tgt.bodyRadius)
+                    if (d <= MeleeReach(16, pc.rangeMax) + 0.1f + tgt.bodyRadius)
                     {
                         int dmg = Mathf.RoundToInt(pc.damage * m.dmgMul);
                         if (tgt.dodgeUntil > now && SidestepInvuln) Emit("evade", tgt.Chest, pc.color, "閃避！");
@@ -1021,7 +1027,7 @@ namespace SpellDuel
                     int dmg = Mathf.RoundToInt((m.minionKind == 2 ? 16 : chomp ? bite.damage : claw.damage) * m.dmgMul);
                     m.attackReadyAt = now + (m.minionKind == 2 ? 2.2f : chomp ? bite.cooldown : claw.cooldown);
                     Emit("minionattack", m.Feet, chomp ? bite.color : claw.color, null);
-                    float reach = m.minionKind == 2 ? 1.6f : chomp ? bite.rangeMax + 0.2f : claw.rangeMax;
+                    float reach = MeleeReach(m.minionKind, m.minionKind == 2 ? 1.6f : chomp ? bite.rangeMax + 0.2f : claw.rangeMax) + 0.1f;
                     if (d <= reach + tgt.bodyRadius)
                     {
                         if (tgt.dodgeUntil > now && SidestepInvuln) Emit("evade", tgt.Chest, claw.color, "閃避！");
@@ -1289,7 +1295,7 @@ namespace SpellDuel
         bool SwordSlash(Fighter f, SkillDef s, Vector3 from, Vector3 to)
         {
             var o = f.head;
-            float reach = s.rangeMax * f.rangeMul + SlashReach;
+            float reach = s.rangeMax * f.rangeMul + SlashReach + f.reachBonus;
             if (from != Vector3.zero && to != Vector3.zero)
             {
                 // 玩家也一樣先預警（對手看得到刀線），SlashWindup 秒後才砍下；能不能躲看刀線的位置（蹲低到線下面就砍不到）
@@ -1330,7 +1336,7 @@ namespace SpellDuel
             if (c == Vector3.zero) c = Fighter.Flat(f.forward);
             var side = Vector3.Cross(Vector3.up, c);
             var a = (c - side * 1.2f).normalized; var b = (c + side * 1.2f).normalized;
-            float reach = s.rangeMax * f.rangeMul + Fighter.BodyRadius;
+            float reach = s.rangeMax * f.rangeMul + Fighter.BodyRadius + f.reachBonus;
             OnSlashLine?.Invoke(f, o + a * reach, o + b * reach, o, true);
             f.windupUntil = now + StabWindup;
             After(StabWindup, () => { if (f.Alive && !Over) MeleeSweep(f, s, Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now))); });
@@ -1414,7 +1420,7 @@ namespace SpellDuel
             if (s.id == "na_sword" && f.comboStrike > 0f && ++f.basicHits % 3 == 0) { dmg = Mathf.RoundToInt(dmg * (1f + f.comboStrike)); Emit("buff", f.Chest, s.color, "連斬・重擊！"); }
             dmg = Riposte(f, dmg);
             foreach (var v in MeleeFoes(f))
-                if (v != null && v.Alive && InFrontHemisphere(f, v, s.rangeMax)) MeleeHit(f, s, v, dmg);   // 前方半球
+                if (v != null && v.Alive && InFrontHemisphere(f, v, s.rangeMax + f.reachBonus)) MeleeHit(f, s, v, dmg);   // 前方半球
         }
 
         /// <summary>刺客伏擊技能（刺殺、影襲、毒刃）：身邊這個半徑內不能有敵人才能蓄力；蓄力完成後靠近到這個距離就自動出手</summary>
@@ -1455,7 +1461,7 @@ namespace SpellDuel
         {
             if (s.type != SkillType.Projectile) return 0;
             float d = FlatDistance(f.head, Opponent(f).head);
-            if (d > s.rangeMax * f.rangeMul) return 1;
+            if (d > s.rangeMax * f.rangeMul + (Skills.IsMeleeBasic(s) ? f.reachBonus : 0f)) return 1;   // 電腦的近戰普攻：多伸出去的距離
             if (d < s.rangeMin) return -1;
             return 0;
         }
@@ -2308,7 +2314,7 @@ namespace SpellDuel
             if (s == null) return;
             if (now > f.armedUntil || !f.Alive) { f.armed = null; Emit("armedExpire", f.Chest, Color.gray, $"{s.name} 落空"); return; }
             // 前方半球內最近的敵人（影舞：出手距離加倍）
-            float reach = AmbushReach * (f.danceUntil > now ? 2f : 1f), best = float.MaxValue;
+            float reach = AmbushReach * (f.danceUntil > now ? 2f : 1f) + f.reachBonus, best = float.MaxValue;
             Fighter target = null;
             foreach (var v in FoesOf(f))
             {
@@ -2647,7 +2653,7 @@ namespace SpellDuel
             // 主教的復活祝福：倒下時以 30% HP 站起來
             if (!f.Alive && f.blessUntil > now) { f.blessUntil = 0f; f.hp = Mathf.Round(f.maxHp * 0.3f); Emit("heal", f.Chest, new Color(1f, 0.95f, 0.6f), "復活祝福！"); }
             if (dmg > 0 && f.prepUntil > now) { f.prepUntil = 0f; Emit("fail", f.Chest, Color.gray, "刺殺準備被打斷！"); }
-            if (dmg > 0 && kind != "dot" && kind != "burn" && f.armed != null && f.armed.releaseNear && !(NearestFoe(f, out var ad) != null && ad <= AmbushReach + 0.5f)) { f.cooldownUntil[f.armed.id] = now; Emit("fail", f.Chest, Color.gray, $"{f.armed.name}被打斷！要重新蓄力"); f.armed = null; }
+            if (dmg > 0 && kind != "dot" && kind != "burn" && f.armed != null && f.armed.releaseNear && !(NearestFoe(f, out var ad) != null && ad <= AmbushReach + 0.5f + f.reachBonus)) { f.cooldownUntil[f.armed.id] = now; Emit("fail", f.Chest, Color.gray, $"{f.armed.name}被打斷！要重新蓄力"); f.armed = null; }
             Emit(kind == "dot" || kind == "burn" ? kind : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");
             if (!f.Alive)
             {

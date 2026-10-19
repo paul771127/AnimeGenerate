@@ -778,7 +778,7 @@ namespace SpellDuel
             float dungeonRelief = 1f;
             if (dungeon != null)
             {
-                // 副本：以 4 人隊伍設計的難度；角色等級遠高於副本時才變簡單（每台手機用自己的等級算自己受到的傷害）
+                // 副本：以 3 人隊伍設計的難度；角色等級遠高於副本時才變簡單（每台手機用自己的等級算自己受到的傷害）
                 dungeonRelief = Dungeons.LevelRelief(prof != null ? prof.level : 1, dungeon.level);
                 me.damageTakenMul *= Dungeons.DungeonDmg * dungeonRelief;
             }

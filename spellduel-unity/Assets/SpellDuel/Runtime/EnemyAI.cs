@@ -51,11 +51,15 @@ namespace SpellDuel
         }
 
         float Rand(float a, float c) => a + (float)rnd.NextDouble() * (c - a);
+        /// <summary>離玩家最近的距離＝自己的身高（頭的高度再加一點頭頂）</summary>
+        float Keep => Mathf.Max(1f, me.head.y + 0.1f);
 
         public void Update(float dt)
         {
             var player = b.player;
             me.forward = Fighter.Flat(player.head - me.head);
+            // 最近只走到離玩家一個身高的距離（太近鏡頭看不清楚）；近戰（普攻、伏擊）多伸出去，站在這裡也打得到
+            me.reachBonus = Mathf.Max(0f, Keep + 0.3f - 1f);   // 普攻射程 1m → 約 2m
             if (b.Over) return;
             if (me.snaredUntil > b.now) { Status = "被定身"; return; }   // 定身：站著不動、不能施法
             Move(dt);
@@ -176,10 +180,12 @@ namespace SpellDuel
             else if (c != null && c.type == SkillType.Trap)
                 want = Mathf.Min(cur, c.trapRange * 0.8f);
 
+            want = Mathf.Max(want, Keep);   // 不貼臉：最近一個身高
+
             // 繞著玩家左右移動（約 ±35 度），讓玩家不容易瞄準
             strafePhase += dt * 0.6f;
             var dir = Battle.RotateY(toMe, Mathf.Sin(strafePhase) * 35f);
-            var target = FindInside(player.Feet, dir, want);
+            var target = FindInside(player.Feet, dir, want, Mathf.Min(want, Keep));
             if (target == null) return;
 
             var feet = me.Feet;
@@ -187,6 +193,10 @@ namespace SpellDuel
             float dist = delta.magnitude;
             if (dist < 0.05f) return;
             var next = feet + delta / dist * Mathf.Min(dist, walkSpeed * dt);
+            // 繞圈時走直線會切進圓內：推回一個身高外
+            var off = Fighter.Flat(next - player.Feet); float od = Battle.FlatDistance(next, player.Feet);
+            if (od < Keep && od < cur) next = player.Feet + (off == Vector3.zero ? toMe : off) * Mathf.Min(Keep, Mathf.Max(cur, od));
+            next.y = feet.y;
             if (inside(next) && edgeDistance(next) >= 0.3f) me.head = new Vector3(next.x, me.head.y, next.z);
             else if (!inside(feet))   // 不小心在場地外：直接往場地中心走
             {
@@ -195,10 +205,10 @@ namespace SpellDuel
             }
         }
 
-        /// <summary>從玩家位置沿 dir 走 want 公尺的點；不在場地內就左右轉角度找，找不到就縮短距離</summary>
-        Vector3? FindInside(Vector3 playerFeet, Vector3 dir, float want)
+        /// <summary>從玩家位置沿 dir 走 want 公尺的點；不在場地內就左右轉角度找，找不到就縮短距離（最短 min）</summary>
+        Vector3? FindInside(Vector3 playerFeet, Vector3 dir, float want, float min)
         {
-            for (float d = want; d >= 0.6f; d -= 0.4f)
+            for (float d = want; d >= min - 1e-3f; d -= 0.4f)
             {
                 for (int k = 0; k <= 9; k++)
                 {
