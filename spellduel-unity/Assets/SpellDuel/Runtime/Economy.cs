@@ -49,7 +49,8 @@ namespace SpellDuel
             new Consumable { id = "scroll", name = "回城捲軸", icon = "📜", price = 120, scroll = true, desc = "故事關卡中使用：帶著這關已經拿到的戰利品回到城鎮（不用打完）" },
         };
         public static Consumable Find(string id) => Consumables.Find(c => c.id == id);
-        public const float PotionCooldown = 8f;
+        /// <summary>藥水共用冷卻：30 秒只能喝一瓶（治療、魔力都算）</summary>
+        public const float PotionCooldown = 30f;
 
         static Dictionary<string, int> items;
         static Dictionary<string, int> Items

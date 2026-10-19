@@ -3175,7 +3175,7 @@ namespace SpellDuel
                 float bw2 = W * 0.5f;
                 if (UiKit.Button(new Rect((W - bw2) / 2f, xy + lh * 0.55f, bw2, lh * 1.1f), PendingUpgrades > 0 ? $"📜 角色（可加點 ×{PendingUpgrades}）" : "📜 角色／裝備", fsS, PendingUpgrades > 0, new Color(0.75f, 0.45f, 1f)))
                     charOpen = true;
-                // 道具快捷欄：點、說名稱（「喝藥水」「大藥水」「魔力藥水」「回城」）、或比🤙（自動選一瓶）；藥水共用冷卻 8 秒
+                // 道具快捷欄（只顯示，不能點）：說名稱（「喝藥水」「大藥水」「魔力藥水」「回城」）或比🤙（自動選一瓶）；藥水共用冷卻 30 秒
                 float iy = xy + lh * 1.75f, ibw = (W - pad * 2 - gap * 3) / 4f;
                 int ci = 0;
                 foreach (var c in Economy.Consumables)
@@ -3185,8 +3185,9 @@ namespace SpellDuel
                     bool cdOk = c.scroll || Time.time >= potionReadyAt;
                     var sr = new Rect(pad + ci * (ibw + gap), iy, ibw, lh * 1.25f);
                     string nm = c.id == "hp_s" ? "小藥水" : c.id == "hp_l" ? "大藥水" : c.id == "mp_s" ? "魔力藥水" : "回城";
-                    if (UiKit.Button(sr, $"{c.icon}{nm} ×{n}" + (!cdOk && n > 0 ? $"\n冷卻 {potionReadyAt - Time.time:0}s" : ""), fsS, false, new Color(0.5f, 0.85f, 1f), n > 0 && cdOk))
-                        UseConsumable(c);
+                    // 只顯示（不能點）：用唸的或喝水手勢
+                    UiKit.Card(sr, n > 0 && cdOk ? 0.55f : 0.3f, n > 0 && cdOk ? new Color(0.5f, 0.85f, 1f) : new Color(0.45f, 0.45f, 0.5f), 0.7f);
+                    UiKit.Text(sr, $"{c.icon}{nm} ×{n}" + (!cdOk && n > 0 ? $"\n冷卻 {potionReadyAt - Time.time:0}s" : ""), fsS, n > 0 ? Color.white : Color.gray, TextAnchor.MiddleCenter);
                     if (!cdOk && n > 0)
                     {
                         // 冷卻遮罩：由上往下退
@@ -3196,7 +3197,7 @@ namespace SpellDuel
                     ci++;
                 }
                 iy += lh * 0.25f;
-                UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.6f), "🎤 說「喝藥水／大藥水／魔力藥水」或比 🤙（喝水手勢）就會喝", fsS, new Color(0.75f, 0.9f, 1f), TextAnchor.MiddleCenter);
+                UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.6f), "🎤 說「喝藥水／大藥水／魔力藥水」或比 🤙 就會喝（30 秒一瓶）", fsS, new Color(0.75f, 0.9f, 1f), TextAnchor.MiddleCenter);
                 iy += lh * 0.6f;
                 if (pendingItems.Count > 0 || pendingGold > 0)
                     UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.7f), $"🎁 待領取：裝備 {pendingItems.Count} 件・💰 {pendingGold}（{(storyStage != null || dungeon != null ? "通關" : "清完這一波")}後才拿得到）", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleCenter);
