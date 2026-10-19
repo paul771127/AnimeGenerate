@@ -1,0 +1,121 @@
+# ===== leadgen 設定 =====
+# 預設值是針對「軟體 + 韌體 + 機構」一條龍接案者調的,請照你的實際狀況改。
+
+db: data/leads.sqlite3
+
+network:
+  # 必填:爬取時 User-Agent 會帶這個信箱,讓對方站長找得到人。
+  contact_email: ""
+  bot_name: leadgen-bot
+  cache_dir: data/.cache
+  cache_ttl_hours: 12
+  rate_per_host: 1.5      # 每個網域每秒最多幾次請求
+  timeout: 25
+  max_retries: 3
+  respect_robots: true    # 不要關掉
+
+# ---------- 來源 ----------
+sources:
+  # 政府標案:法律風險最低、意圖最強。機關聯絡人與預算金額都是法定公開資訊。
+  gov_tender:
+    enabled: true
+    keywords:
+      - 韌體
+      - 嵌入式
+      - 機構設計
+      - 系統開發
+      - 軟體開發
+      - 自動化設備
+      - 治具
+      - 物聯網
+      - 電路設計
+      - 控制器
+    max_pages: 2          # 每個關鍵字抓幾頁(一頁約 100 筆)
+    within_days: 120
+    detail_fetches: 40    # 抓細節頁(聯絡人/預算)的上限,控制對方站台負載
+    include_awards: true  # 決標公告 = 看哪些機關固定在買、誰在搶
+    drop_expired: true    # 投標期限已過的案子直接丟掉(設 false 會留著當情報)
+
+  # HN 每月外包串:對方自己公開徵求接案者並留下聯絡方式,可直接寫信。
+  hn_freelance:
+    enabled: true
+    threads: 3            # 抓最近幾串
+    include_who_is_hiring: true
+    skill_keywords:
+      - firmware
+      - embedded
+      - rtos
+      - stm32
+      - esp32
+      - zephyr
+      - bare metal
+      - hardware
+      - pcb
+      - mechanical
+      - cad
+      - solidworks
+      - iot
+      - driver
+      - kernel
+      - bluetooth
+
+  # 遠端職缺(Remote OK API + We Work Remotely RSS):
+  # 公司在徵這類工程師 = 有專案缺人,是外包切入點;國外客戶預算通常高一個級距。
+  # 注意:Remotive 的 robots.txt 明文禁止抓 /api/*,所以沒有收錄。
+  job_boards:
+    enabled: true
+    remoteok: true
+    weworkremotely: true
+    require_title_match: true   # 關鍵字只在內文出現不算,避免撈到業務職缺
+    # 只比對職稱,而且用詞界比對 —— 單字太泛的(hardware、driver)會撈到一堆雜訊,
+    # 所以用詞組。這裡寧可漏抓也不要髒名單。
+    keywords:
+      - firmware
+      - embedded
+      - rtos
+      - microcontroller
+      - fpga
+      - pcb
+      - hardware engineer
+      - mechanical engineer
+      - electrical engineer
+      - robotics
+      - iot
+
+  # 公司登記資料:只用來產生目標名單,不含任何個人聯絡資訊。
+  # 預設關掉,因為它沒有意圖訊號,開了會把資料庫灌滿低分名單。
+  # 要做「主動開發特定產業」時再開。
+  tw_company:
+    enabled: false
+    name_keywords: [科技, 電子, 自動化, 精密, 機電, 智能]
+    industry_terms: [電子零組件, 機械設備, 資訊軟體, 電腦及其週邊, 精密儀器, 自動控制]
+    regions: [新竹, 台中, 桃園, 台南, 新北, 台北]
+    min_capital: 10000000   # 資本額門檻:太小的公司通常沒有外包預算
+    max_pages: 2
+
+# ---------- 聯絡方式補齊 ----------
+enrich:
+  enabled: true
+  max_sites: 25           # 每次最多對幾個官網做聯絡頁抓取
+  pages_per_site: 4
+  min_prescore: 35        # 只對預估分數夠高的花網路成本
+
+# ---------- 評分 ----------
+scoring:
+  weights:                # 總和 100
+    intent: 30
+    budget: 25
+    fit: 25
+    reach: 10
+    fresh: 10
+  budget_full_at_twd: 2000000   # 預算到這個數字就拿滿分
+  fresh_half_life_days: 30
+  profile:
+    # 核心技能:命中就是高契合
+    core: [韌體, firmware, 嵌入式, embedded, 機構設計, mechanical, rtos,
+           stm32, esp32, 驅動程式, 電路, pcb, 系統開發, 軟體開發]
+    # 加分項
+    plus: [iot, 物聯網, bluetooth, ble, can bus, modbus, 自動化, solidworks,
+           linux, python, 治具, 量測, 控制器, 感測器]
+    # 命中就直接 0 分(避開你不做的案型)
+    exclude: [教育訓練, 研習, 保全, 清潔, 派遣, 保險, 房屋仲介]

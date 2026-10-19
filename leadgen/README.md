@@ -1,0 +1,191 @@
+# leadgen — 接案潛在客戶名單系統
+
+針對**軟體 / 韌體 / 機構**一條龍接案者的 lead generation pipeline。
+從公開資料源抓「有人正在找人做這件事」的訊號,去重、補聯絡方式、評分、匯出。
+
+## 設計前提:不要廣撈
+
+這套系統刻意**不**做「抓全網所有信箱」,因為那條路三面都是牆:
+
+| 問題 | 後果 |
+|---|---|
+| 無意圖名單的冷信回覆率約 0.5–2% | 抓 10 萬筆的產出 < 精準 500 筆 |
+| 爬來的信箱大量不存在 | 退信率拉高 → 寄件域名信譽燒掉 → 連正常信都進垃圾桶 |
+| 個資法第 9 條:間接蒐集要告知來源與目的 | 拿不出來源就是違法蒐集 |
+| LinkedIn / FB / IG / 104 的 ToS 明文禁止爬取 | 帳號封鎖,嚴重者民事求償 |
+
+所以這裡做的是**意圖訊號 + 公開商業聯絡資訊**:每筆名單都附帶
+「對方在什麼時候、在哪個公開頁面、說了什麼」,寫信時直接拿來當開場。
+
+## 快速開始
+
+```bash
+pip install -r requirements.txt
+
+# 1. 填你自己的信箱(爬取時 User-Agent 會帶它,讓對方站長找得到人)
+#    config.yaml -> network.contact_email
+vi config.yaml
+
+# 2. 抓取 -> 去重 -> 補聯絡方式 -> 評分 -> 入庫
+python -m leadgen collect
+
+# 3. 匯出
+python -m leadgen export --csv data/out/leads.csv --md data/out/today.md --min-score 70
+
+# 其他
+python -m leadgen sources          # 看來源與啟用狀態
+python -m leadgen stats            # 資料庫概況
+python -m leadgen rescore          # 改了權重後重算,不用重抓
+python -m leadgen suppress a@b.com # 退訂 -> 永久阻擋(寄信前一定要查)
+```
+
+## 四個來源(含實測評價)
+
+### 1. `gov_tender` — 政府電子採購網 ★ 主力
+
+走 g0v / openfun 的公開採購網 API。這是整套系統裡**法律風險最低、意圖最強**的來源:
+機關聯絡人、信箱、電話、預算金額都是依政府採購法公告的公開資訊,而且公告的目的
+就是「請廠商來聯絡」—— 蒐集目的與公告目的完全一致。
+
+實測(關鍵字「韌體 / 機構設計 / 系統開發」各一頁):**39 筆有效訊號,其中 11 筆是還可投標的案子**,
+全部帶機關信箱 + 預算金額。例如:
+
+- 國立成功大學「焊接協作手臂機器人及應用系統開發案」 126 萬
+- 國立臺北科技大學「射頻系統開發模組」 200 萬
+- 法務部調查局「115年AI資料中台系統開發」 44 萬,截止投標 2026-10-28
+
+已經**自動濾掉過期案子**(解析公告裡的民國日期「截止投標 115/08/21」)。
+`include_awards: true` 會另外留下決標公告 —— 那是情報:哪些機關固定在買這類服務、誰在搶。
+
+### 2. `hn_freelance` — Hacker News 每月外包串 ★ 可直接寫信
+
+抓官方 Algolia API 的兩種串:
+
+- `Ask HN: Freelancer? Seeking freelancer?` 的 **SEEKING FREELANCER** 留言
+  = 對方自己公開徵求接案者**並自己留下聯絡方式**。這是少數可以直接寫信的來源。
+  （`SEEKING WORK` 的是同行,已自動排除）
+- `Ask HN: Who is hiring?` 裡提到 firmware / embedded / hardware 的公司
+  = 有硬體專案但缺人。
+
+實測 2 串 → 121 筆命中技能關鍵字,48 筆附帶聯絡方式。
+缺點:幾乎都是英文客戶,要能用英文談案。
+
+### 3. `job_boards` — Remote OK API + We Work Remotely RSS ☆ 最弱
+
+公司在徵 firmware / embedded / mechanical 工程師 = 有專案缺人。
+國外客戶預算通常高一個級距。
+
+**實測結論要說實話:這兩個板子的職缺嚴重偏網頁與行銷,拿硬體關鍵字去濾,
+當天最新的 100 筆常常是 0 命中。** 它不花成本、有命中就是真機會,所以留著,
+但不要期待它是主力。
+
+關鍵字只比對**職稱**而且用詞界比對,因為:
+- Remote OK 的 tags 是人工亂貼的(運輸規劃師會被貼上 `engineer` / `medical` / `hr`)
+- 比對內文會把「公司簡介提到 firmware 的業務職缺」撈進來
+- 單字 `driver` 會命中「Gardener Handyman **Driver**」
+
+寧可漏抓也不要髒名單。另外 **Remotive 沒有收錄** —— 它的 robots.txt 明文
+`Disallow: /api/*`,要用請先取得對方書面同意。
+Remote OK 的 API 條款要求標註來源並連回原頁,所以匯出時**不要拿掉 `source_url`**。
+
+### 4. `tw_company` — 台灣公司登記資料 ☆ 預設關閉
+
+g0v 台灣公司資料 API。依營業項目、地區、資本額篩出目標名單(target account list),
+再由 enricher 去官網的公開聯絡頁取 `info@`。
+
+**預設關閉**:它完全沒有意圖訊號,開了會把資料庫灌滿低分名單。
+要做「主動開發新竹的自動化設備廠」這種事時再開。
+
+刻意**不保留負責人姓名** —— 那是可識別特定自然人的個資,拿它做行銷聯絡
+屬於目的外利用,風險遠高於它的價值,所以直接丟掉不入庫。
+
+## 聯絡方式補齊(`enrich`)
+
+對分數夠高、但還沒有信箱的公司,去它官網的公開聯絡頁抓 `info@` / `sales@` 這類角色信箱。
+
+明確的界線:
+- 只讀 robots.txt 允許的頁面;遇到 401/403 直接放棄,不繞
+- 每站最多 4 頁、每網域每秒 1.5 次請求
+- **絕不做 email pattern guessing**(不組 `名.姓@公司.com`)。那是猜測個資,
+  而且猜錯會造成大量退信、燒掉你的寄件域名信譽。有一條測試專門守這件事
+- 只收同網域的信箱,避免抓到合作夥伴或代理商
+
+`tw_company` 這類沒有官網欄位的來源,可以選用 Google Programmable Search JSON API
+找官網(官方 API,免費額度每天 100 次):設 `GOOGLE_CSE_KEY` 與 `GOOGLE_CSE_CX` 即啟用,
+沒設就自動停用。
+
+## 評分
+
+總分 100,權重在 `config.yaml` 可調:
+
+| 維度 | 權重 | 看什麼 |
+|---|---|---|
+| `intent` | 30 | 對方是不是「現在就在找人做這件事」 |
+| `budget` | 25 | 標案預算 / 薪資級距 / 資本額 |
+| `fit` | 25 | 跟你的技能棧契合度(`profile.core` / `plus` / `exclude`) |
+| `reach` | 10 | 有沒有可用的公開聯絡方式(角色信箱最高分) |
+| `fresh` | 10 | 訊號新鮮度,兩個月前的需求大多已經發出去了 |
+
+意圖強度按訊號類型:公開徵求外包 1.00 > 招標中 0.95 > 在徵相關職位 0.55 >
+已決標 0.35 > 投標期限已過 0.12 > 只是公司登記 0.08。
+
+**70 分以上才值得寄信。** 一天手動個人化 20–30 封,不要群發。
+改完 `profile` 或權重後跑 `rescore`,不用重抓。
+
+## 合規底線
+
+這些已經寫進程式,不是註解:
+
+- 每筆名單都存 `source_url` + `collected_at`,匯出的 CSV 一定帶這兩欄。
+  對方問「你從哪拿到我的聯絡方式」時,你要能在三秒內回答
+- `suppression` 表是**永久**阻擋名單。退訂寫進去之後,`upsert` 會直接拒絕寫入該網域
+- User-Agent 必須帶真實信箱,`contact_email` 沒填程式會拒絕執行
+- 遵守 robots.txt(`respect_robots` 不要關)
+- 不碰需登入才看得到的資料、不繞 CAPTCHA、不用假帳號
+- 不保留公司登記資料裡的負責人姓名
+- **寄信端不在這套系統裡** —— 這是故意的。寄信一律附退訂連結,
+  歐盟對象另外處理 GDPR(合法利益評估 + 告知)
+
+## 不要忽略另一半:讓客戶來找你
+
+抓名單是 outbound,天花板很明顯。同樣的工程時間投在這些地方,複利更高:
+
+- 作品集頁 + 針對「韌體外包」「機構設計委託」這類關鍵字的 SEO 落地頁
+- 在客戶聚集的地方持續產出(技術部落格、GitHub、社群)
+- 把服務掛上外包平台並累積評價
+
+最強的組合是:**outbound 名單系統負責冷啟動,inbound 負責長期壓低獲客成本。**
+
+## 加新來源
+
+```python
+# leadgen/sources/your_source.py
+from ..http import Fetcher
+from ..models import Lead
+from .base import register
+
+@register
+class YourSource:
+    name = "your_source"
+
+    def fetch(self, fetcher: Fetcher, cfg: dict):
+        yield Lead(org=..., source=self.name, source_url=..., signal_type=...)
+```
+
+掛進 `leadgen/sources/base.py` 的 `load_all()`,在 `config.yaml` 加一段設定就能用。
+adapter 只負責「把公開資料源變成 Lead 串流」,去重、評分、匯出都不用管。
+
+值得加的方向(按投報率):NCC/FCC 認證公告(剛認證完新無線產品 = 強硬體訊號)、
+募資平台新上線專案、Crunchbase 新融資、Steam / Google Play 新上架。
+要衝量的話,Apollo.io / Hunter.io / Clay 這類商用資料商比自己爬划算也安全得多 ——
+他們幫你擔合規與驗證。
+
+## 測試
+
+```bash
+python -m pytest tests -q   # 16 passed,完全不碰網路
+```
+
+涵蓋:去重與跨訊號聯絡方式互補、評分排序與排除規則、過期訊號、
+退訂阻擋、人工 status 不被覆寫、聯絡頁抽取(角色信箱優先 / 同網域過濾 /
+robots 拒絕 / 頁數上限),以及一條守住「不做 email pattern guessing」的測試。
