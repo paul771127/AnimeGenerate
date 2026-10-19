@@ -228,6 +228,66 @@ namespace SpellDuel
             UsePotion(c);
         }
 
+        // ---------------------------------------------------------------- 道具快捷欄：語音（「喝藥水」「大藥水」「魔力藥水」「回城」）、喝水手勢（🤙）
+        /// <summary>這場戰鬥可以用道具（故事、副本、無盡；對戰與一般 Boss 戰沒有背包）</summary>
+        bool ItemsUsable => battle != null && endless && phase == Phase.Fighting && !IsTrial;
+        float itemVoiceLock;
+
+        static readonly (string word, string id)[] ItemWords =
+        {
+            ("回城", "scroll"),
+            ("大藥水", "hp_l"), ("大药水", "hp_l"), ("大治療", "hp_l"), ("大治疗", "hp_l"), ("大瓶", "hp_l"),
+            ("魔力藥水", "mp_s"), ("魔力药水", "mp_s"), ("魔力水", "mp_s"), ("藍藥水", "mp_s"), ("蓝药水", "mp_s"), ("藍水", "mp_s"), ("蓝水", "mp_s"),
+            ("補魔", "mp_s"), ("补魔", "mp_s"), ("回魔", "mp_s"), ("喝魔力", "mp_s"),
+            ("小藥水", "hp_s"), ("小药水", "hp_s"), ("小治療", "hp_s"), ("小治疗", "hp_s"), ("紅藥水", "hp_s"), ("红药水", "hp_s"),
+            ("治療藥水", "hp"), ("治疗药水", "hp"), ("喝藥水", "hp"), ("喝药水", "hp"), ("補血", "hp"), ("补血", "hp"), ("喝水", "auto"), ("藥水", "hp"), ("药水", "hp"),
+        };
+
+        /// <summary>語音：聽到道具名稱就用（同一句話只用一次）</summary>
+        void ItemByVoice(string text)
+        {
+            if (!ItemsUsable || string.IsNullOrEmpty(text) || Time.time < itemVoiceLock) return;
+            foreach (var (word, id) in ItemWords)
+            {
+                if (!text.Contains(word)) continue;
+                itemVoiceLock = Time.time + 2f;
+                var c = PickItem(id);
+                if (c == null) { Say(id == "scroll" ? "沒有回城捲軸" : id == "mp_s" ? "沒有魔力藥水" : "沒有治療藥水", 1.5f); return; }
+                Say($"🎤 {c.name}", 1f);
+                UseConsumable(c);
+                return;
+            }
+        }
+
+        /// <summary>選要用哪一瓶：hp＝治療藥水（血很少時優先大瓶）、auto＝看血量和 MP（喝水手勢用）</summary>
+        Economy.Consumable PickItem(string id)
+        {
+            Economy.Consumable Have(string i) => Economy.Count(i) > 0 ? Economy.Find(i) : null;
+            if (id == "auto")
+            {
+                float hp = Me.hp / Mathf.Max(1f, Me.maxHp), mp = Me.mp / Mathf.Max(1f, Me.maxMp);
+                id = hp < 0.6f || mp > 0.4f ? "hp" : "mp_s";
+                if (id == "mp_s" && Have("mp_s") == null) id = "hp";
+                if (id == "hp" && Have("hp_s") == null && Have("hp_l") == null && hp >= 0.6f) id = "mp_s";
+            }
+            if (id == "hp")
+            {
+                float hp = Me.hp / Mathf.Max(1f, Me.maxHp);
+                return hp < 0.35f ? Have("hp_l") ?? Have("hp_s") : Have("hp_s") ?? Have("hp_l");
+            }
+            return Have(id);
+        }
+
+        /// <summary>喝水手勢：比「🤙」（拇指＋小指，像拿瓶子喝）維持一下 → 依血量／MP 自動選一瓶</summary>
+        void ItemByGesture(HandGesture.Shape selected)
+        {
+            if (selected != HandGesture.Shape.Call || !ItemsUsable || Me.charging != null) return;
+            var c = PickItem("auto");
+            if (c == null) { Say("沒有藥水了（到城鎮的道具店買）", 1.5f); return; }
+            Say($"🤙 {c.name}", 1f);
+            UseConsumable(c);
+        }
+
         bool scrollRequested;
         void DoReturnScroll()
         {
@@ -454,6 +514,7 @@ namespace SpellDuel
 
         void OnSpeechText(string text)
         {
+            if (phase == Phase.Fighting && battle != null) { ItemByVoice(text); return; }
             if (!TownWalking) return;
             if (Greeting.Find(text) != null) { world.Heard = text; world.HeardAt = Time.time; }
             townWalk.Heard(text);
@@ -1590,7 +1651,7 @@ namespace SpellDuel
                 Say("🏹 拉滿弓！把準星對準目標，手回到畫面張開放箭", 1.5f);
             }
             // 選技能只能用唸的：每次放技能前都要先唸出技能名稱（手勢只負責放招）
-            Hand.ConsumeSelect(out _);
+            if (Hand.ConsumeSelect(out var selShape)) ItemByGesture(selShape);   // 🤙＝喝藥水（選技能還是只能用唸的）
             // 放招動作依詠唱中的技能（陷阱往下壓、治癒收回、格擋舉盾…；其餘依職業）；沒在詠唱就不偵測
             Hand.ReleaseStyle = Me.charging != null ? HandGesture.ReleaseOf(Me.charging) : HandGesture.Style.None;
             Hand.RuneName = Me.charging != null && Hand.ReleaseStyle == HandGesture.Style.Rune ? RuneRecognizer.RuneOf(Me.charging.id) : null;
@@ -3114,7 +3175,7 @@ namespace SpellDuel
                 float bw2 = W * 0.5f;
                 if (UiKit.Button(new Rect((W - bw2) / 2f, xy + lh * 0.55f, bw2, lh * 1.1f), PendingUpgrades > 0 ? $"📜 角色（可加點 ×{PendingUpgrades}）" : "📜 角色／裝備", fsS, PendingUpgrades > 0, new Color(0.75f, 0.45f, 1f)))
                     charOpen = true;
-                // 消耗道具：藥水（冷卻 8 秒）、回城捲軸（故事關卡）；暫存戰利品
+                // 道具快捷欄：點、說名稱（「喝藥水」「大藥水」「魔力藥水」「回城」）、或比🤙（自動選一瓶）；藥水共用冷卻 8 秒
                 float iy = xy + lh * 1.75f, ibw = (W - pad * 2 - gap * 3) / 4f;
                 int ci = 0;
                 foreach (var c in Economy.Consumables)
@@ -3122,10 +3183,21 @@ namespace SpellDuel
                     if (c.scroll && storyStage == null) continue;
                     int n = Economy.Count(c.id);
                     bool cdOk = c.scroll || Time.time >= potionReadyAt;
-                    if (UiKit.Button(new Rect(pad + ci * (ibw + gap), iy, ibw, lh * 1f), $"{c.icon}×{n}" + (!cdOk && n > 0 ? $" {potionReadyAt - Time.time:0}s" : ""), fsS, false, new Color(0.5f, 0.85f, 1f), n > 0 && cdOk))
+                    var sr = new Rect(pad + ci * (ibw + gap), iy, ibw, lh * 1.25f);
+                    string nm = c.id == "hp_s" ? "小藥水" : c.id == "hp_l" ? "大藥水" : c.id == "mp_s" ? "魔力藥水" : "回城";
+                    if (UiKit.Button(sr, $"{c.icon}{nm} ×{n}" + (!cdOk && n > 0 ? $"\n冷卻 {potionReadyAt - Time.time:0}s" : ""), fsS, false, new Color(0.5f, 0.85f, 1f), n > 0 && cdOk))
                         UseConsumable(c);
+                    if (!cdOk && n > 0)
+                    {
+                        // 冷卻遮罩：由上往下退
+                        float k = Mathf.Clamp01((potionReadyAt - Time.time) / Economy.PotionCooldown);
+                        GUI.color = new Color(0f, 0f, 0f, 0.35f); GUI.DrawTexture(new Rect(sr.x, sr.y, sr.width, sr.height * k), Texture2D.whiteTexture); GUI.color = Color.white;
+                    }
                     ci++;
                 }
+                iy += lh * 0.25f;
+                UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.6f), "🎤 說「喝藥水／大藥水／魔力藥水」或比 🤙（喝水手勢）就會喝", fsS, new Color(0.75f, 0.9f, 1f), TextAnchor.MiddleCenter);
+                iy += lh * 0.6f;
                 if (pendingItems.Count > 0 || pendingGold > 0)
                     UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.7f), $"🎁 待領取：裝備 {pendingItems.Count} 件・💰 {pendingGold}（{(storyStage != null || dungeon != null ? "通關" : "清完這一波")}後才拿得到）", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleCenter);
             }
