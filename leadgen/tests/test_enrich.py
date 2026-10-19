@@ -84,3 +84,20 @@ def test_find_contacts_stays_within_page_budget():
     f = FakeFetcher(pages)
     find_contacts(f, "https://acme.com.tw", max_pages=3)
     assert len(f.calls) <= 4, f"抓了 {len(f.calls)} 頁,超過上限會對人家站台造成負擔"
+
+
+OFF_DOMAIN_ONLY = """
+<html><body>
+  <p>Site by <a href="mailto:ian@dashcam.io">ian@dashcam.io</a></p>
+  <p>範本 you@awesome.sauce</p>
+  <p>npm leaflet@1.9.4</p>
+</body></html>
+"""
+
+
+def test_find_contacts_returns_nothing_rather_than_a_foreign_email():
+    """同網域找不到信箱時,原本會退回用頁面上任何一個信箱 —— TestDriver.ai
+    因此拿到 ian@dashcam.io,那是別家公司的人。寄錯人比沒寄到更糟。"""
+    f = FakeFetcher({"https://testdriver.ai": OFF_DOMAIN_ONLY})
+    emails, _ = find_contacts(f, "https://testdriver.ai")
+    assert emails == [], emails

@@ -274,3 +274,42 @@ def test_extract_urls_dedupes_by_host_and_trims_punctuation():
     from leadgen.models import extract_urls
     out = extract_urls("see https://acme.io/about, and https://acme.io/contact.")
     assert out == ["https://acme.io/about"], out
+
+
+# ---------- 實測踩到的名單污染 ----------
+
+def test_email_regex_rejects_package_versions():
+    """shapertools 的頁面讓我們抓到 leaflet@1.9.4 和 flag-icons@6.6.6 當信箱。"""
+    assert extract_emails("leaflet@1.9.4 flag-icons@6.6.6 vue@3.4.21") == []
+    assert extract_emails("softwarejobs@spacex.com--") == ["softwarejobs@spacex.com"]
+
+
+def test_placeholder_emails_are_rejected():
+    """網頁範本裡的示範信箱寄出去就是退信。"""
+    from leadgen.models import is_placeholder_email
+    for e in ("you@awesome.sauce", "example@domain.com", "your@yourcompany.com",
+              "name@example.org", "test@foo.invalid"):
+        assert is_placeholder_email(e), e
+    for e in ("hiring@oxefit.com", "jobs@caladan.bio", "hr@powertools-tech.com"):
+        assert not is_placeholder_email(e), e
+
+
+def test_platform_domain_does_not_merge_unrelated_orgs():
+    """SpaceX 和 Canonical 都貼 grnh.se 短網址,原本被當成同一個組織合併,
+    Canonical 因此拿到了 SpaceX 的招募信箱。"""
+    a = Lead(org="SpaceX", source="hn_freelance", source_url="u1",
+             website="https://grnh.se/b6237bca2us")
+    b = Lead(org="Canonical", source="hn_freelance", source_url="u2",
+             website="https://grnh.se/32b29bd31us")
+    assert a.dedupe_key != b.dedupe_key
+    out = dedupe([a, b])
+    assert len(out) == 2
+
+
+def test_hn_org_name_is_the_company_not_the_sentence():
+    from leadgen.sources.hn_freelance import _org_name
+    assert _org_name("Zoo.dev is hiring a Senior Frontend Engineer focused on 3D") == "Zoo.dev"
+    assert _org_name("Charge Robotics | Senior Mechanical Engineer | Onsite") == "Charge Robotics"
+    assert _org_name("Elementary Robotics https://elementaryrobotics.com | Firmware") == "Elementary Robotics"
+    assert _org_name('Woods Hole Oceanographic Institute "We go to impossible places"') == \
+        "Woods Hole Oceanographic Institute"

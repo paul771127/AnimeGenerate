@@ -18,7 +18,9 @@ _ORG_NOISE = re.compile(
     re.IGNORECASE,
 )
 _NON_WORD = re.compile(r"[^\w一-鿿]+")
-_EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
+# TLD 必須是 2 個以上的字母,否則 "leaflet@1.9.4" 這種 npm 套件版本號會被
+# 當成信箱抓走。這樣也順手擋掉尾巴的標點("...@spacex.com--")。
+_EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.[A-Za-z]{2,}")
 # 台灣市話 / 手機 / 國際碼。支援 (02)2911-2241、02-2911-2241、0912-345-678、+886-2-...
 _PHONE = re.compile(
     r"(?:\+886[-\s.]?|\(0\d{1,3}\)[-\s.]?|0)"
@@ -39,7 +41,24 @@ NOT_COMPANY_HOSTS = (
     "weworkremotely.com", "indeed.com", "wellfound.com", "angel.co",
     "google.com", "docs.google.com", "forms.gle", "notion.so", "notion.site",
     "airtable.com", "calendly.com", "typeform.com", "imgur.com", "bit.ly",
+    # 這批是實測踩到的。grnh.se 最要命:它是 Greenhouse 的短網址,
+    # SpaceX 和 Canonical 都貼它,兩間公司就被當成同一個組織合併了。
+    "grnh.se", "youtu.be", "vimeo.com", "thehub.io", "icims.com",
+    "careers-page.com", "applytojob.com", "jazz.co", "paylocity.com",
+    "dover.io", "hire.withgoogle.com", "loom.com", "substack.com",
 )
+
+# 文件與網頁範本裡的示範信箱。抓到它們不只沒用,寄出去還會變成退信。
+_PLACEHOLDER_LOCALS = frozenset({
+    "you", "your", "yourname", "firstname", "lastname", "name", "email",
+    "e-mail", "user", "username", "test", "example", "sample", "someone",
+    "me", "admin@example", "foo", "bar", "abc", "xxx",
+})
+_PLACEHOLDER_DOMAINS = frozenset({
+    "example.com", "example.org", "example.net", "domain.com", "yourdomain.com",
+    "mydomain.com", "email.com", "test.com", "sample.com", "awesome.sauce",
+    "company.com", "yourcompany.com", "acme.com",
+})
 
 # 角色信箱:公開張貼給外界聯絡用,風險最低,優先採用
 ROLE_PREFIXES = (
@@ -93,6 +112,14 @@ def extract_phones(text: str) -> list[str]:
             seen.add(p)
             out.append(p)
     return out
+
+
+def is_placeholder_email(email: str) -> bool:
+    """擋掉網頁範本裡的示範信箱(you@awesome.sauce、example@domain.com)。"""
+    local, _, domain = email.lower().partition("@")
+    if local in _PLACEHOLDER_LOCALS or domain in _PLACEHOLDER_DOMAINS:
+        return True
+    return domain.endswith((".example", ".invalid", ".local", ".test"))
 
 
 def extract_urls(text: str) -> list[str]:
@@ -155,6 +182,10 @@ class Lead:
     def dedupe_key(self) -> str:
         """有網域就用網域,否則用正規化公司名 + 訊號標題。"""
         d = self.domain
+        # 平台網域(求職系統、短網址)會讓不相干的組織共用同一個 key 而被合併,
+        # 這種情況要退回用公司名。
+        if d and any(d == h or d.endswith("." + h) for h in NOT_COMPANY_HOSTS):
+            d = ""
         if d:
             base = f"domain:{d}"
         elif self.org:

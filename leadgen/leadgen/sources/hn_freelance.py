@@ -48,6 +48,40 @@ def _first_line(text: str, limit: int = 120) -> str:
     return text[:limit]
 
 
+# HN 徵才串的慣例格式是「公司 | 職稱 | 地點 | 其他」
+_ORG_CUT = re.compile(
+    r"\s+(?:is hiring|is looking|are hiring|are looking|seeks?|seeking|"
+    r"wants?|needs?|needed|requires?)\b",
+    re.IGNORECASE,
+)
+_SEEKING_PREFIX = re.compile(r"^\s*seeking\s*(freelancer|work)\b[\s:|–—-]*", re.IGNORECASE)
+_URL_IN_TEXT = re.compile(r"https?://\S+|\bwww\.\S+")
+_SENTENCE_START = re.compile(r'["“”(（\[]')
+
+
+def _org_name(text: str, limit: int = 60) -> str:
+    """從留言開頭取出組織名,而不是整段第一句。
+
+    原本直接用第一行,結果 org 變成「Zoo.dev is hiring a Senior Frontend
+    Software Engineer with a core focus on 3D web application performance...」。
+    """
+    head = _first_line(text, 300)
+    head = _URL_IN_TEXT.sub(" ", head)              # 公司名裡不要塞網址
+    head = _SEEKING_PREFIX.sub("", head)            # 去掉「SEEKING FREELANCER」前綴
+    head = _SENTENCE_START.split(head, maxsplit=1)[0]  # 切在引號或括號開始的句子前
+    head = " ".join(head.split())
+
+    def ok(v: str) -> str | None:
+        v = v.strip(" -–—:·,|")
+        return v if 2 < len(v) <= limit else None
+
+    if "|" in head and (v := ok(head.split("|", 1)[0])):
+        return v
+    if (v := ok(_ORG_CUT.split(head, maxsplit=1)[0])):
+        return v
+    return " ".join(head.split()[:6])[:limit]
+
+
 @register
 class HNFreelance:
     name = "hn_freelance"
@@ -93,8 +127,12 @@ class HNFreelance:
                 # enricher 去官網的公開聯絡頁找 info@ —— 這是 enrich 最主要的輸入。
                 urls = extract_urls(body)
                 author = child.get("author") or "unknown"
+                # 外包串的留言常常是個人發的,格式是「SEEKING FREELANCER | 地點 |
+                # 說明」,沒有公司名可抽 —— 硬抽會把地點當成公司。用作者帳號當
+                # 組織識別才準,而且同一個人跨月重複發文也能正確收斂。
+                org = f"HN:{author}" if is_freelance_thread else _org_name(body)
                 yield Lead(
-                    org=_first_line(body) or f"HN:{author}",
+                    org=org or f"HN:{author}",
                     source=self.name,
                     source_url=f"{HN_ITEM}{child.get('id')}",
                     signal_title=_first_line(body),

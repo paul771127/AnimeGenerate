@@ -16,7 +16,9 @@ from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 
 from ..http import Fetcher, RobotsDenied
-from ..models import extract_emails, extract_phones, is_role_email
+from ..models import (
+    extract_emails, extract_phones, is_placeholder_email, is_role_email,
+)
 
 log = logging.getLogger("leadgen.site_contact")
 
@@ -31,7 +33,7 @@ JUNK = re.compile(r"(no-?reply|example\.com|sentry\.io|wixpress|@email|u002)", r
 
 
 def _clean(emails: list[str]) -> list[str]:
-    out = [e for e in emails if not JUNK.search(e)]
+    out = [e for e in emails if not JUNK.search(e) and not is_placeholder_email(e)]
     # 角色信箱排前面
     out.sort(key=lambda e: (not is_role_email(e), len(e)))
     return out[:5]
@@ -94,9 +96,11 @@ def find_contacts(fetcher: Fetcher, website: str, max_pages: int = 4) -> tuple[l
         for a in soup.select('a[href^="mailto:"]'):
             emails += extract_emails(a["href"])
 
-    # 只留同網域(或其子網域)的信箱,避免抓到合作夥伴或代理商
+    # 只留同網域(或其子網域)的信箱。原本在找不到時會退回用頁面上任何一個
+    # 信箱,結果 TestDriver.ai 拿到 ian@dashcam.io、Tufts CTSI 拿到
+    # hn-...@clarkevans.com —— 那是別家公司的人。寄錯人比沒寄到更糟,
+    # 所以同網域找不到就回空,交給你自己去官網看。
     base = host.removeprefix("www.")
     same = [e for e in _clean(list(dict.fromkeys(emails)))
             if e.rsplit("@", 1)[-1].endswith(base) or base.endswith(e.rsplit("@", 1)[-1])]
-    return (same or _clean(list(dict.fromkeys(emails)))[:2],
-            list(dict.fromkeys(phones))[:3])
+    return same, list(dict.fromkeys(phones))[:3]
