@@ -852,6 +852,7 @@ namespace SpellDuel
                     auraMat.color = new Color(clsColor.r, clsColor.g, clsColor.b, 0.35f + 0.45f * ch + pulse * 0.1f);
                 }
             }
+            ApplyPhoneBody(dt, deadE);   // 真人分身：照手機的位置、朝向覆寫姿勢（CharacterRig.Body.cs）
             AnimateDetails(castK, hitLean);
         }
 

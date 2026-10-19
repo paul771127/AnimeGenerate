@@ -26,28 +26,63 @@ namespace SpellDuel
         }
 
         // ---------------------------------------------------------------- 身高校正
-        /// <summary>開打後前 CalibTime 秒站直：記下手機離地的高度，蹲下、跳躍的門檻依身高調整（小孩、大人都公平）</summary>
-        public const float CalibTime = 2f;
+        /// <summary>
+        /// 開打後前 CalibTime 秒站直、手機拿在眼前對著前方：記下手機離地的高度（站姿）。
+        /// 第一次還會請玩家蹲下（手機一樣對著前方）再站起來：記下蹲姿高度（比例存起來，之後不用再蹲）。
+        /// 蹲下、跳躍的門檻依這兩個高度調整；連線時也送給對方，對方畫面上的角色才能照著真人蹲下站起。
+        /// </summary>
+        public const float CalibTime = 2f, CrouchCalibTimeout = 15f;
+        const string CrouchRatioKey = "SD_CrouchRatio";
+        /// <summary>沒有校正過蹲姿時，蹲姿手機高度＝站姿的這個比例</summary>
+        public const float DefaultCrouchRatio = 0.62f;
         float calibSum; int calibN; float standH = -1f;
+        int crouchCalib;                 // 0 不用／完成、1 等蹲下、2 等站起來
+        float crouchCalibMin, crouchCalibUntil;
         bool Calibrating => battle != null && battle.now < CalibTime;
-        /// <summary>蹲下的門檻：站立高度的 22%（1.5m → 33cm、1.0m → 22cm）；還沒校正用預設值</summary>
-        float CrouchDropNow => standH > 0f ? Mathf.Clamp(standH * 0.22f, 0.18f, 0.4f) : CrouchDrop;
+        static float SavedCrouchRatio { get { try { return PlayerPrefs.GetFloat(CrouchRatioKey, -1f); } catch { return -1f; } } }
+        float CrouchRatio => SavedCrouchRatio > 0.3f && SavedCrouchRatio < 0.9f ? SavedCrouchRatio : DefaultCrouchRatio;
+        /// <summary>站姿手機高度（m）；還沒校正＝-1</summary>
+        public float StandH => standH;
+        /// <summary>蹲姿手機高度（m）；還沒校正站姿＝-1</summary>
+        public float CrouchH => standH > 0f ? standH * CrouchRatio : -1f;
+        /// <summary>蹲下的門檻：站姿與蹲姿高度差的 45%（夾在 18～40 公分）；還沒校正用預設值</summary>
+        float CrouchDropNow => standH > 0f ? Mathf.Clamp((standH - CrouchH) * 0.45f, 0.18f, 0.4f) : CrouchDrop;
         /// <summary>跳起來的門檻：站立高度的 7%（1.5m → 10.5cm）</summary>
         float JumpRiseNow => standH > 0f ? Mathf.Clamp(standH * 0.07f, 0.06f, 0.12f) : JumpRise;
 
-        /// <summary>校正中回傳 true（這段時間不判斷蹲下／跳躍）</summary>
+        /// <summary>站姿校正中回傳 true（這段時間不判斷蹲下／跳躍）</summary>
         bool UpdateCalibration(float y)
         {
             if (Calibrating) { calibSum += y; calibN++; return true; }
             if (calibN > 0)
             {
                 float h = calibSum / calibN; calibN = 0;
-                if (h > 0.6f && h < 2.3f) { standH = h; standY = h; }
+                if (h > 0.6f && h < 2.3f)
+                {
+                    standH = h; standY = h;
+                    if (SavedCrouchRatio <= 0f) { crouchCalib = 1; crouchCalibMin = h; crouchCalibUntil = battle.now + CrouchCalibTimeout; }
+                }
             }
+            UpdateCrouchCalibration(y);
             return false;
         }
 
-        void ResetCalibration() { calibSum = 0f; calibN = 0; standH = -1f; }
+        /// <summary>第一次的蹲姿校正：蹲到最低點、再站起來，記下最低的手機高度</summary>
+        void UpdateCrouchCalibration(float y)
+        {
+            if (crouchCalib == 0 || standH <= 0f) return;
+            if (battle.now > crouchCalibUntil) { crouchCalib = 0; return; }   // 沒蹲：先用預設比例，下一場再問
+            crouchCalibMin = Mathf.Min(crouchCalibMin, y);
+            if (crouchCalib == 1 && y < standH * 0.85f) crouchCalib = 2;
+            else if (crouchCalib == 2 && y > standH * 0.92f)
+            {
+                float r = crouchCalibMin / standH;
+                if (r > 0.3f && r < 0.85f) { try { PlayerPrefs.SetFloat(CrouchRatioKey, r); PlayerPrefs.Save(); } catch { } Say("📏 蹲姿校正完成", 1.2f); }
+                crouchCalib = 0;
+            }
+        }
+
+        void ResetCalibration() { calibSum = 0f; calibN = 0; standH = -1f; crouchCalib = 0; }
 
         // ---------------------------------------------------------------- 震地波的環
         readonly Dictionary<Battle.Shockwave, LineRenderer> quakeGo = new Dictionary<Battle.Shockwave, LineRenderer>();
@@ -262,7 +297,9 @@ namespace SpellDuel
             if (QuakeComing(out _)) UiKit.Pill(H * 0.40f, "⬆ 跳！", fs * 2, new Color(1f, 0.85f, 0.3f), pillW);
             else if (Battle.IsQuake(ec)) UiKit.Pill(H * 0.40f, $"⚠ {ec.name}：環到腳邊時跳起來", fs, ec.color, pillW);
             if (Me.airborneUntil > battle.now) UiKit.Pill(H * 0.235f, "⬆ 跳躍", fsS, new Color(0.6f, 1f, 0.8f), pillW);
-            if (Calibrating) UiKit.Pill(H * 0.3f, "📏 站直 2 秒：依你的身高校正蹲下／跳躍", fsS, new Color(0.8f, 0.9f, 1f), pillW);
+            if (Calibrating) UiKit.Pill(H * 0.3f, "📏 站直，手機拿在眼前對著前方（2 秒）", fsS, new Color(0.8f, 0.9f, 1f), pillW);
+            else if (crouchCalib == 1) UiKit.Pill(H * 0.3f, "📏 手機一樣對著前方，蹲下", fsS, new Color(0.8f, 0.9f, 1f), pillW);
+            else if (crouchCalib == 2) UiKit.Pill(H * 0.3f, "📏 好，再站起來", fsS, new Color(0.8f, 0.9f, 1f), pillW);
             if (pickups.Count > 0) UiKit.Pill(H * 0.53f, "✨ 地上有結晶：走過去蹲下撿起", fsS, new Color(0.7f, 1f, 0.8f), pillW);
         }
     }

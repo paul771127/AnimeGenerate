@@ -43,6 +43,7 @@ namespace SpellDuel
                 rig.MoveSpeed = Mathf.Lerp(rig.MoveSpeed, Fighter.Flat(a.Feet - lf).magnitude / dt, 0.2f);
                 allyLastFeet[a.pid] = a.Feet;
                 rig.SetDead(!a.Alive);
+                DriveFromPeer(rig, a.pid);
             }
             foreach (var kv in new List<KeyValuePair<int, CharacterRig>>(allyRigs))
                 if (battle.AllyByPid(kv.Key) == null) { if (kv.Value) Destroy(kv.Value.gameObject); allyRigs.Remove(kv.Key); }
@@ -57,7 +58,21 @@ namespace SpellDuel
         // 多人（2～4 人合作）：我的編號、房間裡其他人的編號與位置（GameRoot 設定）、每個人的準備狀態
         public int MyPid;
         public readonly List<int> PeerIds = new List<int>();
-        public class PeerPose { public Vector3 head, fwd; }
+        public class PeerPose
+        {
+            public Vector3 head, fwd;
+            // 真人分身用：手機的位置與朝向（world）、站姿／蹲姿高度、手勢的手
+            public Vector3 phone, gestureAt; public Quaternion rot = Quaternion.identity;
+            public float standH, crouchH, seen = -99f; public bool gesture;
+        }
+
+        /// <summary>讓這個角色照著那位真人的手機動（站蹲、轉向、拿手機的手、比手勢的手）</summary>
+        void DriveFromPeer(CharacterRig rig, int pid)
+        {
+            if (!rig || !NetPeers.TryGetValue(pid, out var pp) || Time.time - pp.seen > 0.6f) return;
+            rig.DrivePhone(WorldFrame.FromWorld(pp.phone), WorldFrame.RotFromWorld(pp.rot), pp.standH, pp.crouchH,
+                pp.gesture, WorldFrame.FromWorld(pp.gestureAt));
+        }
         public readonly Dictionary<int, PeerPose> NetPeers = new Dictionary<int, PeerPose>();
         class PeerInfo { public string cls, adv; public string[] loadout; public bool ready; public int mode; }
         readonly Dictionary<int, PeerInfo> peerInfo = new Dictionary<int, PeerInfo>();
@@ -2048,6 +2063,7 @@ namespace SpellDuel
                 enemyRig.SetPose(feetS, fwdS);
                 enemyRig.MoveSpeed = Mathf.Lerp(enemyRig.MoveSpeed, Fighter.Flat(en.Feet - lastEnemyFeet).magnitude / dt, 0.2f);
                 enemyRig.Charge = en.charging != null ? Mathf.Max(0.01f, battle.ChargeProgress(en)) : 0f;
+                if (RemotePlay && NetMode && !coop && PeerIds.Count > 0) DriveFromPeer(enemyRig, PeerIds[0]);   // 遠端對手：照他的手機動
             }
             if (bossRig)
             {

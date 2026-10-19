@@ -360,6 +360,9 @@ namespace SpellDuel
             if (net.Connected && WorldReady && Tracking.Ok && Time.time >= nextPose)
             {
                 nextPose = Time.time + 0.05f;
+                // 手勢的手：手掌在畫面上的位置往前 0.4m（對方畫面上的角色會把右手伸到這裡）
+                bool gestureUp = hand.HandVisible;
+                var gestureW = gestureUp ? WorldFrame.ToWorld(cam.ScreenPointToRay(hand.Palm).GetPoint(0.4f)) : Vector3.zero;
                 Send(new Msg
                 {
                     t = "pose",
@@ -367,6 +370,8 @@ namespace SpellDuel
                     r = WorldFrame.RotToWorld(cam.transform.rotation),
                     hp = hp,
                     t0 = SharedTime,
+                    s = solo.StandH, rad = solo.CrouchH,   // 站姿／蹲姿手機高度（對方的角色照著蹲下站起）
+                    ok = gestureUp, d = gestureW,
                 });
             }
             UpdateObservation();
@@ -773,6 +778,7 @@ namespace SpellDuel
                         var body = m.p + (bk.sqrMagnitude > 1e-4f ? -bk.normalized * 0.12f : Vector3.zero);
                         if (!solo.NetPeers.TryGetValue(m.pid, out var pp)) solo.NetPeers[m.pid] = pp = new SoloBattle.PeerPose();
                         pp.head = body; pp.fwd = m.r * Vector3.forward;
+                        pp.phone = m.p; pp.rot = m.r; pp.standH = m.s; pp.crouchH = m.rad; pp.gesture = m.ok; pp.gestureAt = m.d; pp.seen = Time.time;
                         peerFeetW[m.pid] = new Vector3(body.x, 0f, body.z); peerSeen[m.pid] = Time.time;
                         break;
                     }
