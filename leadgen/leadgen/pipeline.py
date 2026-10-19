@@ -74,14 +74,19 @@ def collect(cfg: dict, only: list[str] | None = None) -> list[Lead]:
 
 def dedupe(leads: list[Lead]) -> list[Lead]:
     """同一訊號只留一筆,並把同一組織的聯絡方式互相補齊。"""
-    by_signal: dict[str, Lead] = {}
+    # 機關發「更正公告」時同一個案子會以不同日期出現多次,所以收斂的 key 不含
+    # 日期,只留最新的那一筆,但把聯絡方式併進去。
+    by_signal: dict[tuple[str, str, str], Lead] = {}
     for lead in leads:
-        key = lead.signal_key
-        if key in by_signal:
-            cur = by_signal[key]
-            cur.emails = list(dict.fromkeys(cur.emails + lead.emails))
-            cur.phones = list(dict.fromkeys(cur.phones + lead.phones))
-            cur.website = cur.website or lead.website
+        key = (lead.dedupe_key, lead.signal_title, lead.signal_type)
+        if (cur := by_signal.get(key)) is not None:
+            newer = lead if (lead.signal_date or "") > (cur.signal_date or "") else cur
+            older = cur if newer is lead else lead
+            newer.emails = list(dict.fromkeys(newer.emails + older.emails))
+            newer.phones = list(dict.fromkeys(newer.phones + older.phones))
+            newer.website = newer.website or older.website
+            newer.budget_twd = newer.budget_twd or older.budget_twd
+            by_signal[key] = newer
             continue
         by_signal[key] = lead
 

@@ -20,21 +20,42 @@ sources:
   gov_tender:
     enabled: true
     keywords:
+      # 軟體 / 韌體
       - 韌體
       - 嵌入式
-      - 機構設計
       - 系統開發
       - 軟體開發
-      - 自動化設備
-      - 治具
       - 物聯網
       - 電路設計
       - 控制器
+      # 機構 / 打樣(家裡有 3D 列印機就吃得到這一段)
+      - 機構設計
+      - 自動化設備
+      # 不要加「試作」:中文沒有詞界,它會命中「向量圖磚測<試作>業」這種標題。
+      # 同理不要加「模型」(會命中「數值模型」)或「設計」(命中「設計監造」)。
+      - 3D列印
+      - 積層製造
+      - 快速成型
+      - 原型
+      - 樣品製作
+      - 模型製作
+      - 逆向工程
+      - 3D掃描
+      - 治具
+      - 夾具
+      - 機構件
     max_pages: 2          # 每個關鍵字抓幾頁(一頁約 100 筆)
     within_days: 120
-    detail_fetches: 40    # 抓細節頁(聯絡人/預算)的上限,控制對方站台負載
+    # 抓細節頁的上限。聯絡信箱與預算金額只存在細節頁,沒抓到的名單 reach 與
+    # budget 都是 0 分,所以這個數字直接決定有幾筆能上 70 分。
+    # 每筆一次請求,在 1.5 req/s 的限速下 60 筆約 40 秒。
+    detail_fetches: 60
     include_awards: true  # 決標公告 = 看哪些機關固定在買、誰在搶
     drop_expired: true    # 投標期限已過的案子直接丟掉(設 false 會留著當情報)
+    # 標案分四類:service(找人做)、goods(買零件,能代工就是機會)、
+    # equipment(買現成設備/軟體,對你無用)、construction(土木)。
+    # 打樣類關鍵字有九成命中 equipment,所以預設丟掉它和土木。
+    drop_kinds: [equipment, construction]
 
   # HN 每月外包串:對方自己公開徵求接案者並留下聯絡方式,可直接寫信。
   hn_freelance:
@@ -58,6 +79,12 @@ sources:
       - driver
       - kernel
       - bluetooth
+      - 3d printing
+      - prototyping
+      - enclosure
+      - injection molding
+      - cad
+      - mechanical design
 
   # 遠端職缺(Remote OK API + We Work Remotely RSS):
   # 公司在徵這類工程師 = 有專案缺人,是外包切入點;國外客戶預算通常高一個級距。
@@ -81,6 +108,9 @@ sources:
       - electrical engineer
       - robotics
       - iot
+      - prototype
+      - design engineer
+      - product design
 
   # 公司登記資料:只用來產生目標名單,不含任何個人聯絡資訊。
   # 預設關掉,因為它沒有意圖訊號,開了會把資料庫灌滿低分名單。
@@ -109,13 +139,23 @@ scoring:
     reach: 10
     fresh: 10
   budget_full_at_twd: 2000000   # 預算到這個數字就拿滿分
+  # 「預算未公開」拿到的比例。政府標案有一大部分不公開預算,職缺也多半不寫薪資,
+  # 把未知當 0 分等於懲罰資料缺失。設 0 會變回舊行為。
+  unknown_budget_ratio: 0.4
   fresh_half_life_days: 30
   profile:
     # 核心技能:命中就是高契合
     core: [韌體, firmware, 嵌入式, embedded, 機構設計, mechanical, rtos,
-           stm32, esp32, 驅動程式, 電路, pcb, 系統開發, 軟體開發]
+           stm32, esp32, 驅動程式, 電路, pcb, 系統開發, 軟體開發,
+           # 自家有 3D 列印機 -> 打樣與機構製作也算核心能力
+           3d列印, 積層製造, 快速成型, 打樣, 原型, prototype, 3d printing,
+           樣品製作, 模型製作, 治具, 夾具, 機構件]
     # 加分項
     plus: [iot, 物聯網, bluetooth, ble, can bus, modbus, 自動化, solidworks,
-           linux, python, 治具, 量測, 控制器, 感測器]
+           linux, python, 量測, 控制器, 感測器,
+           外殼, 殼件, 逆向工程, 3d掃描, 公差, 射出成型, cnc, fusion 360]
     # 命中就直接 0 分(避開你不做的案型)
-    exclude: [教育訓練, 研習, 保全, 清潔, 派遣, 保險, 房屋仲介]
+    # 命中就直接 0 分。職訓課程類特別要擋 —— 「AI智動控制與3D列印設計班」
+    # 會命中 3D列印,但那是在找講師開課,不是找人做東西。
+    exclude: [教育訓練, 職業訓練, 職前, 訓練班, 設計班, 課程, 招生, 師資, 研習,
+              營隊, 保全, 清潔, 派遣, 保險, 房屋仲介]

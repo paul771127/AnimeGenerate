@@ -49,6 +49,25 @@ def _parse_money(s: str) -> int | None:
         return None
 
 
+# 「機關要買一台機器」和「機關要找人做東西」在標題上混在一起。對接案者來說
+# 前者完全無用(他們買的是設備,不是你的工時),而打樣類關鍵字有九成命中前者,
+# 所以要先把它們分開 —— 不做這件事,「3D列印」一個關鍵字就會灌進 1800 筆垃圾。
+EQUIP_NOISE = re.compile(
+    r"(列印機|印表機|掃描[器儀機]|工作站|電腦|筆電|伺服器|投影|螢幕|設備|儀器|機台|"
+    r"耗材|碳粉|墨水|試劑|標準品|濾材|刀具|軟體(採購|授權|更新)|授權|訂閱|保固|保養|清潔)"
+)
+BUY_VERB = re.compile(r"(採購|購置|購買|租賃|續約|汰換|增購)")
+# 強動詞:明確是「委外找人做」,就算標題也有「採購」兩字也算你的機會
+STRONG_MAKE = re.compile(
+    r"(委託|委辦|委外|技術服務|勞務|開發|設計|研發|打樣|試作|客製|改版|整合|撰寫)"
+)
+# 弱動詞:可能是找人做,也可能只是買現成品的描述,要讓設備採購的判斷先走
+WEAK_MAKE = re.compile(r"(製作|建置|加工|組裝|改裝|製造|建模|逆向|供料)")
+# 買材料/耗材。「3D列印暨無人機組裝材料等2案」有「組裝」這個弱動詞,
+# 但它要買的是線材不是你的工時,所以材料 + 數量詞要先攔下來。
+MATERIAL_BUY = re.compile(r"(材料|耗材|線材|耗品|備品|零配件)")
+QTY = re.compile(r"(等\s*\d+\s*[案項式]|一批|乙批|\d+\s*[台臺套組箱])")
+
 _ROC = re.compile(r"(\d{2,3})/(\d{1,2})/(\d{1,2})")
 
 
@@ -71,6 +90,31 @@ def _parse_date(n: int) -> str:
         return ""
 
 
+def classify(title: str, category: str) -> str:
+    """把標案分成四類。
+
+      service      找人做(設計、開發、委託製作)—— 你的主場
+      goods        買東西,但買的是「零件/機構件/治具」這類要有人做出來的東西。
+                   對自己有列印機、能代工供貨的人來說這是真的機會,所以不丟掉,
+                   只是意圖分數低一些。
+      equipment    買現成設備(列印機、電腦、軟體授權)—— 對你完全無用,預設丟掉
+      construction 土木工程 —— 預設丟掉
+    """
+    if category.startswith("工程類"):
+        return "construction"
+    if STRONG_MAKE.search(title):
+        return "service"
+    if EQUIP_NOISE.search(title) and BUY_VERB.search(title):
+        return "equipment"
+    if MATERIAL_BUY.search(title) and QTY.search(title):
+        return "equipment"
+    if WEAK_MAKE.search(title):
+        return "service"
+    if EQUIP_NOISE.search(title):
+        return "equipment"
+    return "service" if category.startswith("勞務類") else "goods"
+
+
 @register
 class GovTender:
     name = "gov_tender"
@@ -82,10 +126,15 @@ class GovTender:
         detail_budget = int(cfg.get("detail_fetches", 40))  # 細節頁的抓取上限
         include_awards = bool(cfg.get("include_awards", True))
         drop_expired = bool(cfg.get("drop_expired", True))
+        # 預設丟掉「買設備」與土木工程,只留「找人做」的案子
+        drop_kinds = set(cfg.get("drop_kinds", ["equipment", "construction"]))
         cutoff = date.today() - timedelta(days=within_days)
 
         seen: set[str] = set()
-        details_used = 0
+        # (lead, rec) 的暫存。細節頁(聯絡信箱、預算、截止投標)每筆要一次請求,
+        # 額度有限,所以不能邊抓邊花 —— 照關鍵字順序先到先用會讓排在後面的
+        # 關鍵字被餓死,拿不到信箱就等於沒有 reach 分數。
+        pending: list[tuple[Lead, dict]] = []
 
         for kw in keywords:
             for page in range(1, max_pages + 1):
@@ -109,6 +158,11 @@ class GovTender:
                     if not (is_open or (include_awards and is_award)):
                         continue
 
+                    category = brief.get("category", "") or ""
+                    kind = classify(brief.get("title", "") or "", category)
+                    if kind in drop_kinds:
+                        continue
+
                     sig_date = _parse_date(rec.get("date", 0))
                     if sig_date and date.fromisoformat(sig_date) < cutoff:
                         continue
@@ -130,32 +184,43 @@ class GovTender:
                         source=self.name,
                         source_url=source_url,
                         signal_title=brief.get("title", ""),
-                        signal_type="tender_open" if is_open else "tender_award",
+                        signal_type=(
+                            ("tender_open" if kind == "service" else "tender_goods")
+                            if is_open else "tender_award"
+                        ),
                         signal_date=sig_date,
-                        tags=[t for t in [kw, brief.get("category", "")] if t],
+                        tags=[t for t in [kw, category, f"kind:{kind}"] if t],
                         evidence=f"{btype}:{brief.get('title','')}",
                         notes=f"案號 {rec.get('job_number','')} / {btype}",
                     )
-
-                    # 只對高價值的公告抓細節頁(聯絡人、預算金額)
-                    if is_open and details_used < detail_budget:
-                        details_used += 1
-                        self._attach_detail(fetcher, rec, lead)
-
-                    # 投標期限已過的案子不是機會,預設直接丟掉
-                    if deadline := next(
-                        (t[9:] for t in lead.tags if t.startswith("deadline:")), ""
-                    ):
-                        if date.fromisoformat(deadline) < date.today():
-                            if drop_expired:
-                                continue
-                            lead.signal_type = "tender_expired"
 
                     winners = (brief.get("companies") or {}).get("names") or []
                     if is_award and winners:
                         lead.notes += f" / 得標:{'、'.join(winners[:3])}"
 
-                    yield lead
+                    pending.append((lead, rec if is_open else {}))
+
+        # 細節頁的額度優先給「還能投標、而且公告最新」的案子
+        detail_targets = sorted(
+            (pair for pair in pending if pair[1]),
+            key=lambda pair: pair[0].signal_date or "",
+            reverse=True,
+        )[:detail_budget]
+        openable = sum(1 for pair in pending if pair[1])
+        log.info("抓細節頁 %s / %s 筆可投標公告", len(detail_targets), openable)
+        for lead, rec in detail_targets:
+            self._attach_detail(fetcher, rec, lead)
+
+        for lead, _ in pending:
+            # 截止投標只在細節頁才知道,所以過期判斷要等細節抓完才做
+            deadline = next(
+                (t[9:] for t in lead.tags if t.startswith("deadline:")), ""
+            )
+            if deadline and date.fromisoformat(deadline) < date.today():
+                if drop_expired:
+                    continue
+                lead.signal_type = "tender_expired"
+            yield lead
 
     def _attach_detail(self, fetcher: Fetcher, rec: dict, lead: Lead) -> None:
         url = f"{API}/tender"

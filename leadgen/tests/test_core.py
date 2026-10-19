@@ -79,7 +79,9 @@ def test_scoring_ranks_intent_above_registry():
     hot_score, detail = score_lead(hot, SCORING)
     cold_score, _ = score_lead(cold, SCORING)
     assert hot_score > 85, detail
-    assert cold_score < 20
+    # 公司登記資料沒有意圖、沒有聯絡方式、沒有技能契合,只拿到「預算未知」的
+    # 中性分與新鮮度,應該遠低於寄信門檻(70)
+    assert cold_score < 30, cold_score
     assert hot_score > cold_score
 
 
@@ -124,3 +126,132 @@ def test_store_preserves_manual_status(tmp_path):
     row = store.top()[0]
     assert row["status"] == "contacted" and row["notes"] == "已寄信"
     store.close()
+
+
+# ---------- 標案分類:設備採購 vs 委託製作 ----------
+# 這些標題全部來自政府採購網的真實公告。打樣類關鍵字有九成命中「機關要買一台
+# 機器」,對接案者完全無用,所以這個分類器是 gov_tender 名單品質的關鍵。
+
+def test_classify_tender_kinds():
+    from leadgen.sources.gov_tender import classify
+
+    cases = [
+        # 買現成設備 / 軟體授權 -> 對接案者無用
+        ("教學用所需3D列印機採購", "財物類", "equipment"),
+        ("工業級大型雷射光固化(SLA)3D快速成型設備壹台", "財物類", "equipment"),
+        ("3D逆向工程軟體、高速大尺寸3D列印機採購", "財物類", "equipment"),
+        ("辦公室電腦汰換採購", "財物類", "equipment"),
+        # 找人做 -> 主場
+        ("多數據生理監測裝置設計圖、樣品製作及送測費用", "勞務類", "service"),
+        ("文湖線未來車車頭暨駕駛平台模型製作採購案", "財物類", "service"),
+        ("焊接協作手臂機器人及應用系統開發案壹式", "勞務類", "service"),
+        ("「115年AI資料中台系統開發」採購案", "勞務類842-軟體執行服務", "service"),
+        ("積層製造蜂巢流道結構結合牡蠣殼粉陶瓷元件委託製作", "勞務類", "service"),
+        # 買零件,但零件要有人做出來 -> 有列印機/能代工的話是機會
+        ("電子鎖扣合機構件 等1項", "財物類", "goods"),
+        ("進氣端外殼等2項", "財物類", "goods"),
+        # 土木工程 -> 不是你的
+        ("國小校舍耐震補強工程", "工程類", "construction"),
+    ]
+    wrong = [(t, classify(t, c), want) for t, c, want in cases if classify(t, c) != want]
+    assert not wrong, f"分類錯誤:{wrong}"
+
+
+def test_classify_strong_verb_beats_purchase_wording():
+    """標題同時有「採購」和「開發」時,要判成 service —— 機關常把委外案寫成採購案。"""
+    from leadgen.sources.gov_tender import classify
+    assert classify("115年度物聯網監測系統開發採購案", "財物類") == "service"
+
+
+def test_tender_goods_scores_below_service():
+    from leadgen.models import Lead
+    from datetime import date
+    mk = lambda t: Lead(org="機關", source="gov_tender", source_url="u",
+                        signal_title="韌體開發案", signal_type=t,
+                        signal_date=date.today().isoformat(), budget_twd=1_000_000)
+    svc, _ = score_lead(mk("tender_open"), SCORING)
+    goods, _ = score_lead(mk("tender_goods"), SCORING)
+    assert svc > goods
+
+
+def test_classify_material_purchase_is_not_a_job():
+    """「3D列印暨無人機組裝材料等2案」有弱動詞「組裝」,但它買的是線材不是你的工時。"""
+    from leadgen.sources.gov_tender import classify
+    assert classify("3D列印暨無人機組裝材料等2案", "財物類") == "equipment"
+    assert classify("3D列印線材一批", "財物類") == "equipment"
+    # 但「材料」出現在要做的東西名稱裡時不能誤殺
+    assert classify("複合材料機構件設計與製作", "勞務類") == "service"
+    assert classify("明潭發電機組定子線圈熱壓模具及特殊治具長期供料一批", "財物類") == "service"
+
+
+def test_dedupe_collapses_correction_notices():
+    """機關發更正公告時同一個案子會以不同日期出現兩次,只該留最新的。"""
+    base = dict(org="臺北大眾捷運股份有限公司", source="gov_tender",
+                signal_title="文湖線未來車車頭暨駕駛平台模型製作採購案",
+                signal_type="tender_open", website="https://metro.taipei")
+    old = Lead(**base, source_url="u1", signal_date="2026-09-01")
+    new = Lead(**base, source_url="u2", signal_date="2026-09-20",
+               emails=["info@metro.taipei"])
+    out = dedupe([old, new])
+    assert len(out) == 1
+    assert out[0].signal_date == "2026-09-20"
+    assert out[0].emails == ["info@metro.taipei"], "舊公告的聯絡方式要併進新的"
+
+
+def test_dedupe_keeps_award_and_open_separately():
+    """同一個案子的招標公告與決標公告是兩種情報,不能合併。"""
+    base = dict(org="機關", source="gov_tender", signal_title="某案",
+                website="https://a.gov.tw")
+    out = dedupe([
+        Lead(**base, source_url="u1", signal_type="tender_open", signal_date="2026-09-01"),
+        Lead(**base, source_url="u2", signal_type="tender_award", signal_date="2026-10-01"),
+    ])
+    assert len(out) == 2
+
+
+def test_unknown_budget_is_not_zero():
+    """預算未公開的標案不該被當成預算是 0 來扣分。"""
+    from datetime import date
+    mk = lambda b: Lead(org="機關", source="gov_tender", source_url="u",
+                        signal_title="韌體開發案", signal_type="tender_open",
+                        signal_date=date.today().isoformat(), budget_twd=b)
+    unknown, _ = score_lead(mk(None), SCORING)
+    tiny, _ = score_lead(mk(1000), SCORING)
+    big, _ = score_lead(mk(5_000_000), SCORING)
+    assert tiny < unknown < big, f"{tiny} / {unknown} / {big}"
+
+
+def test_short_chinese_title_can_reach_high_fit():
+    """中文標案標題很短,命中兩個核心關鍵字就該接近滿分契合度。"""
+    from datetime import date
+    lead = Lead(org="機關", source="gov_tender", source_url="u",
+                signal_title="機構設計與韌體開發委託案", signal_type="tender_open",
+                signal_date=date.today().isoformat(), emails=["info@a.gov.tw"],
+                budget_twd=2_000_000)
+    score, detail = score_lead(lead, {**SCORING, "profile": {
+        "core": ["韌體", "機構設計"], "plus": [], "exclude": []}})
+    assert detail["fit"] >= 23, detail
+    assert score >= 85, detail
+
+
+def test_tender_keywords_avoid_chinese_substring_traps():
+    """中文沒有詞界,有些短關鍵字會被吞進完全無關的詞裡。
+
+    實測踩到的:關鍵字「試作」命中「…向量圖磚測<試作>業採購」,那是測繪案。
+    這跟「治具櫃」仍然是治具、「原型機」仍然是原型不一樣 —— 那些是合法的
+    複合詞,靠 classify() 分類就夠了。這條測試只擋跨詞邊界被吞掉的那幾個。
+    """
+    import yaml
+    cfg = yaml.safe_load(
+        (Path(__file__).resolve().parents[1] / "config.yaml").read_text(encoding="utf-8")
+    )
+    keywords = set(cfg["sources"]["gov_tender"]["keywords"])
+    banned = {
+        "試作": "會被「測試作業」「考試作業」吞掉",
+        "模型": "會命中「數值模型」「氣候模型」等研究案",
+        "設計": "太泛,會命中「設計監造」等土木案",
+        "製作": "太泛,會命中各種影片與文宣製作",
+        "開發": "太泛,會命中「土地開發」「觀光開發」",
+    }
+    bad = [f"{kw}({why})" for kw, why in banned.items() if kw in keywords]
+    assert not bad, f"這些關鍵字會撈到無關的案子:{bad}"
