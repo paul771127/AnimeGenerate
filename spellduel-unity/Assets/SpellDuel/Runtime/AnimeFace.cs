@@ -174,6 +174,8 @@ namespace SpellDuel
         {
             internal readonly List<Transform> Eyes=new List<Transform>(),Lids=new List<Transform>();
             internal Transform Mouth;
+            internal MeshFilter Lip;internal readonly List<Transform> Brows=new List<Transform>();
+            internal HumanExpressionMotion Motion;
         }
         internal static Features Build(Transform head,string identity,Portraits.Persona p,Color skin,Color brow,Color iris,bool precise=false,bool elder=false,bool elf=false)
         {
@@ -188,15 +190,18 @@ namespace SpellDuel
                 float half=plan.EyeWidth*.5f;
                 Stroke(lid,identity,p,lidAnchor,new Vector2(x-half,plan.EyeY),new Vector2(x,plan.EyeY+.003f),.0025f,ink,.004f);
                 Stroke(lid,identity,p,lidAnchor,new Vector2(x,plan.EyeY+.003f),new Vector2(x+half,plan.EyeY),.0025f,ink,.004f);
+                MergeInk(lid,identity+"/lid/"+side);
                 foreach(var renderer in lid.GetComponentsInChildren<MeshRenderer>())renderer.enabled=false;
                 float inner=x-side*half,outer=inner+side*plan.EyeWidth*1.1f;
                 float by=plan.BrowY+(side>0?p.Asym*.0006f:0),bend=p.Brow*Mathf.Deg2Rad*plan.EyeWidth;
-                Stroke(head,identity,p,Vector3.zero,new Vector2(inner,by),new Vector2(x,by+.0015f+bend*.5f),elder?.005f:.0035f,brow);
-                Stroke(head,identity,p,Vector3.zero,new Vector2(x,by+.0015f+bend*.5f),new Vector2(outer,by+bend),.003f,brow);
+                var browPivot=new GameObject("BrowPivot").transform;browPivot.SetParent(head,false);browPivot.localPosition=new Vector3(x,by,.12f);result.Brows.Add(browPivot);
+                Stroke(browPivot,identity,p,browPivot.localPosition,new Vector2(inner,by),new Vector2(x,by+.0015f+bend*.5f),elder?.005f:.0035f,brow);
+                Stroke(browPivot,identity,p,browPivot.localPosition,new Vector2(x,by+.0015f+bend*.5f),new Vector2(outer,by+bend),.003f,brow);
+                MergeInk(browPivot,identity+"/brow/"+side);
             }
             // 鼻子融入頭模，只留一筆暖色鼻底，不再另外黏三角錐。
             Stroke(head,identity,p,Vector3.zero,new Vector2(-.007f,plan.NoseY),new Vector2(.002f,plan.NoseY-.001f),.0012f,Color.Lerp(skin,new Color(.65f,.29f,.26f),.28f));
-            Part(head,"柔和唇縫",MouthLine(identity,p),Vector3.zero,Material(Color.white,3));
+            result.Lip=Part(head,"HumanLip",MouthLine(identity,p),Vector3.zero,Material(Color.white,3)).GetComponent<MeshFilter>();
             // 單位薄片保留原有 mouthOpen 縮放契約，施法時仍可張嘴。
             if(!meshes.TryGetValue("張嘴單位片",out var mouth))
             {
@@ -206,10 +211,25 @@ namespace SpellDuel
             }
             result.Mouth=Part(head,"mouthOpen",mouth,new Vector3(0,plan.MouthY,Surface(0,plan.MouthY,p)+.003f),Material(new Color(.30f,.10f,.14f),3)).transform;
             result.Mouth.localScale=new Vector3(plan.MouthWidth,.001f+.016f*p.Open,.003f);
-            if(p.Open>0)Paint(head,"笑容齒線",identity,p,Vector3.zero,new Vector2(0,plan.MouthY+.003f),new Vector2(plan.MouthWidth*.36f,.002f),0,.004f,white,white);
+            Part(result.Mouth,"UpperTeeth",mouth,new Vector3(0,.23f,.35f),Material(white,3)).transform.localScale=new Vector3(.72f,.15f,1);
+            result.Motion=head.gameObject.AddComponent<HumanExpressionMotion>();result.Motion.Initialize(identity,p,result);
             Ears(head,identity,p,skin,elf);return result;
         }
+        static void MergeInk(Transform pivot,string key)
+        {
+            var parts=pivot.GetComponentsInChildren<MeshFilter>();if(parts.Length<2)return;
+            var material=parts[0].GetComponent<Renderer>().sharedMaterial;
+            if(!meshes.TryGetValue("InkPair/"+key,out var mesh))
+            {
+                var pieces=new CombineInstance[parts.Length];for(int i=0;i<parts.Length;i++)pieces[i]=new CombineInstance{mesh=parts[i].sharedMesh,transform=pivot.worldToLocalMatrix*parts[i].transform.localToWorldMatrix};
+                mesh=new Mesh{name="InkPair "+key};mesh.CombineMeshes(pieces,true,true);mesh.RecalculateBounds();meshes["InkPair/"+key]=mesh;
+            }
+            for(int i=0;i<parts.Length;i++){var go=parts[i].gameObject;go.transform.SetParent(null,false);Object.Destroy(go);}
+            Part(pivot,"InkPair "+key,mesh,Vector3.zero,material);
+        }
         // One cached curved strip: tapered corners and a subtle cupid bend, not a two-line V.
+        internal static Mesh MouthShape(string identity,Portraits.Persona p,int state)
+        {HumanPersonality.Mouth(ref p,identity,state);return MouthLine(identity+"/expression/"+state,p);}
         static Mesh MouthLine(string identity,Portraits.Persona p)
         {
             string key="唇縫/"+identity;if(meshes.TryGetValue(key,out var mesh))return mesh;
@@ -217,7 +237,7 @@ namespace SpellDuel
             for(int i=0;i<=16;i++)
             {
                 float q=i/8f-1,x=q*plan.MouthWidth*.5f;
-                float y=plan.MouthY+p.Smile*.004f*q*q+p.Asym*.0002f*q
+                float y=plan.MouthY+p.Smile*.004f*q*q+p.Asym*.0009f*q
                     +.0006f*Mathf.Cos(q*Mathf.PI*2)*(1-q*q);
                 float half=.00085f*Mathf.Lerp(.25f,1,1-q*q);
                 for(int side=-1;side<=1;side+=2)
@@ -257,13 +277,13 @@ namespace SpellDuel
             }
         }
         internal static void Hair(Transform parent,string identity,Portraits.Persona p,Color color)=>AnimeHair.Build(parent,identity,p);
-        static Material EyeMaterial(string identity)
+        internal static Material EyeMaterial(string identity,int glance=0)
         {
-            string key="眼睛圖集/"+identity;if(materials.TryGetValue(key,out var mat))return mat;
+            string key="眼睛圖集/"+identity+"/"+glance;if(materials.TryGetValue(key,out var mat))return mat;
             var px=new Color32[EyeArt.W*2*EyeArt.H];
             for(int side=0;side<2;side++)
             {
-                var eye=EyeArt.Render(identity,side==0?-1:1);
+                var eye=EyeArt.Render(identity,side==0?-1:1,glance);
                 for(int y=0;y<EyeArt.H;y++)for(int x=0;x<EyeArt.W;x++)px[y*EyeArt.W*2+side*EyeArt.W+x]=eye[y*EyeArt.W+x];
             }
             var texture=new Texture2D(EyeArt.W*2,EyeArt.H,TextureFormat.RGBA32,false){name=key,filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp};

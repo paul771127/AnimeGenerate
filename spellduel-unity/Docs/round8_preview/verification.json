@@ -1,0 +1,30 @@
+{
+  "actors": 27,
+  "portraits": 29,
+  "headRange": [
+    6.623352,
+    6.9421606
+  ],
+  "childHeads": 4.986465,
+  "adultMeanHeadHeight": 0.25524480576923075,
+  "adultMaxHeadHeightDeviation": 0.041194083215691735,
+  "adultMaxSkullWidthDeviation": 0.0041855575904097275,
+  "mouthToPupilDistance": 0.65,
+  "maxTriangleRatio": 1.6112577,
+  "animation": {
+    "transitionSeconds": 0.4,
+    "hitClosureSeconds": 0.3,
+    "sampleFrames": 1000,
+    "allocatedBytes": 0
+  },
+  "engine": "Unity API test doubles plus software rasterization; not Unity engine or device captures",
+  "preserved": [
+    "raw outfit, hair and fitted hat mesh sources",
+    "head/sculpt/nose/ear/eye-surface methods",
+    "all existing public CharacterRig method bodies",
+    "human face lighting shader and rules"
+  ],
+  "pending": [
+    "Unity 2022.3 / IL2CPP / mobile AR validation"
+  ]
+}

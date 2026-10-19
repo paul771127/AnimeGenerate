@@ -1,5 +1,7 @@
 # 第七輪：乾淨服裝、圓弧構件與淡粉臉部光影
 
+目前頭身、表情與姿勢請看 [第八輪預覽](../round8_preview/README.md)；本目錄保留第七輪服裝修正對照。
+
 [全員彩色](all_color.png) · [全員剪影](all_silhouettes.png) · [29 人頭像](portraits.png)
 
 [腰帶下衣襬收合對照](hem_fit.png) · [臉部正面／45°／90° 光照](face_light.png) · [五職業構件引線](component_callouts.png) · [肩／褲／衣襬前後對照](corners_before_after.png)

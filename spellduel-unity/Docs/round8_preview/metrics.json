@@ -1,0 +1,218 @@
+[
+  {
+    "id": "swordsman",
+    "label": "劍士",
+    "original": 6772,
+    "triangles": 8180,
+    "ratio": 1.207915,
+    "renderers": 33
+  },
+  {
+    "id": "archer",
+    "label": "獵人",
+    "original": 6272,
+    "triangles": 7828,
+    "ratio": 1.2480867,
+    "renderers": 35
+  },
+  {
+    "id": "mage",
+    "label": "法師",
+    "original": 6292,
+    "triangles": 7460,
+    "ratio": 1.1856326,
+    "renderers": 30
+  },
+  {
+    "id": "assassin",
+    "label": "刺客",
+    "original": 5660,
+    "triangles": 7048,
+    "ratio": 1.2452297,
+    "renderers": 33
+  },
+  {
+    "id": "priest",
+    "label": "牧師",
+    "original": 8116,
+    "triangles": 8756,
+    "ratio": 1.0788566,
+    "renderers": 32
+  },
+  {
+    "id": "paladin",
+    "label": "聖騎士",
+    "original": 7496,
+    "triangles": 8956,
+    "ratio": 1.1947706,
+    "renderers": 34
+  },
+  {
+    "id": "berserker",
+    "label": "狂戰士",
+    "original": 6528,
+    "triangles": 7556,
+    "ratio": 1.1574755,
+    "renderers": 31
+  },
+  {
+    "id": "marksman",
+    "label": "神射手",
+    "original": 6380,
+    "triangles": 7916,
+    "ratio": 1.2407523,
+    "renderers": 35
+  },
+  {
+    "id": "ranger",
+    "label": "遊俠",
+    "original": 6856,
+    "triangles": 8640,
+    "ratio": 1.26021,
+    "renderers": 40
+  },
+  {
+    "id": "archmage",
+    "label": "大魔導士",
+    "original": 6512,
+    "triangles": 8060,
+    "ratio": 1.237715,
+    "renderers": 33
+  },
+  {
+    "id": "summoner",
+    "label": "召喚師",
+    "original": 6672,
+    "triangles": 8080,
+    "ratio": 1.2110312,
+    "renderers": 33
+  },
+  {
+    "id": "ninja",
+    "label": "忍者",
+    "original": 5964,
+    "triangles": 7304,
+    "ratio": 1.2246814,
+    "renderers": 35
+  },
+  {
+    "id": "shadowdancer",
+    "label": "影舞者",
+    "original": 6036,
+    "triangles": 7904,
+    "ratio": 1.3094765,
+    "renderers": 33
+  },
+  {
+    "id": "bishop",
+    "label": "主教",
+    "original": 8416,
+    "triangles": 8368,
+    "ratio": 0.99429655,
+    "renderers": 35
+  },
+  {
+    "id": "inquisitor",
+    "label": "審判者",
+    "original": 7228,
+    "triangles": 7048,
+    "ratio": 0.9750968,
+    "renderers": 30
+  },
+  {
+    "id": "npc0",
+    "label": "老焰",
+    "original": 4904,
+    "triangles": 7216,
+    "ratio": 1.4714519,
+    "renderers": 33
+  },
+  {
+    "id": "npc1",
+    "label": "小鐵",
+    "original": 4976,
+    "triangles": 7844,
+    "ratio": 1.5763665,
+    "renderers": 28
+  },
+  {
+    "id": "npc2",
+    "label": "米菈",
+    "original": 5028,
+    "triangles": 7764,
+    "ratio": 1.5441527,
+    "renderers": 31
+  },
+  {
+    "id": "npc3",
+    "label": "翠",
+    "original": 5196,
+    "triangles": 7460,
+    "ratio": 1.4357197,
+    "renderers": 30
+  },
+  {
+    "id": "npc4",
+    "label": "楓",
+    "original": 4752,
+    "triangles": 7544,
+    "ratio": 1.587542,
+    "renderers": 30
+  },
+  {
+    "id": "npc5",
+    "label": "小葉",
+    "original": 5112,
+    "triangles": 7692,
+    "ratio": 1.5046948,
+    "renderers": 31
+  },
+  {
+    "id": "npc6",
+    "label": "海斗",
+    "original": 5016,
+    "triangles": 7352,
+    "ratio": 1.4657097,
+    "renderers": 29
+  },
+  {
+    "id": "npc7",
+    "label": "凪",
+    "original": 4548,
+    "triangles": 7328,
+    "ratio": 1.6112577,
+    "renderers": 28
+  },
+  {
+    "id": "npc8",
+    "label": "阿潮",
+    "original": 4748,
+    "triangles": 7432,
+    "ratio": 1.5652907,
+    "renderers": 34
+  },
+  {
+    "id": "npc9",
+    "label": "鐵匠",
+    "original": 4756,
+    "triangles": 7312,
+    "ratio": 1.5374264,
+    "renderers": 31
+  },
+  {
+    "id": "npc10",
+    "label": "店員",
+    "original": 5128,
+    "triangles": 7460,
+    "ratio": 1.4547582,
+    "renderers": 30
+  },
+  {
+    "id": "npc11",
+    "label": "公會長",
+    "original": 5172,
+    "triangles": 7580,
+    "ratio": 1.4655839,
+    "renderers": 30
+  }
+]

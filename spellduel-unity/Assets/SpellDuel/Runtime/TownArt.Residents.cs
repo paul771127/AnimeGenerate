@@ -34,7 +34,7 @@ namespace SpellDuel
             var face=Group(p,"立體臉",new Vector3(0,1.48f,.055f));face.localScale=Vector3.one*1.15f;
             var features=AnimeFace.Build(face,key,persona,skin,hair,iris,false,elder,elf);
             // 居民不播放臉部動畫；停用閉眼線的物件，避免靜態合批把隱藏線烘焙成可見。
-            foreach(var lid in features.Lids){lid.gameObject.SetActive(false);Object.Destroy(lid.gameObject);}
+            // Eyes/brows stay articulated; HumanExpressionMotion also drives residents.
             AnimeFace.Hair(face,key,persona,hair);HeadwearArt.Build(face,key,persona);
             if(elder)for(int s=-1;s<=1;s+=2)AnimeFace.Detail(face,key,persona,new Vector2(s*.093f,-.006f),new Vector2(s*.110f,-.017f),.002f,C("ac6c56"));
             switch(key)
@@ -78,6 +78,12 @@ namespace SpellDuel
                     for(int i=-1;i<=1;i++)BellPin(p,new Vector3(i*.08f,1.13f,.20f),.065f);
                     AnimeFace.Detail(face,key,persona,new Vector2(.100f,-.025f),new Vector2(.110f,-.061f),.002f,C("a96861"));break;
             }
+            // Facial accessories share the fitted head frame rather than remaining full-size.
+            var headExtras=new System.Collections.Generic.List<Transform>();
+            foreach(var tf in p.GetComponentsInChildren<Transform>())if(tf.gameObject.name=="Pointed beard"||tf.gameObject.name=="Moustache"||tf.gameObject.name=="Soot cheek"||tf.gameObject.name=="Rosy cheek"||tf.gameObject.name=="Golden earring")headExtras.Add(tf);
+            foreach(var tf in headExtras)tf.SetParent(face,true);
+            HumanProportions.Fit(face,key,height,height/1.75f);
+            var neckSkin=p.Find("Neck");neckSkin.localPosition=new Vector3(0,1.39f,-.035f);neckSkin.localScale=new Vector3(.145f*persona.Width,.14f,.12f);
             // Bake a posed neck and rib cage into the merged meshes; feet remain planted.
             var neck=Group(p,"Persona neck",new Vector3(0,1.3f,0));
             var chest=Group(p,"Persona chest",new Vector3(0,.85f,0));
@@ -101,17 +107,24 @@ namespace SpellDuel
                 if(material.name!=null&&material.name.StartsWith("Town "))
                     renderer.sharedMaterial=AnimeFace.Material(material.color,ColorUtility.ToHtmlStringRGB(material.color)==ColorUtility.ToHtmlStringRGB(skin)?2:0);
             }
-            neck.SetParent(null,false);Batch(p);Batch(neck);neck.SetParent(chest,false);
-            p.gameObject.AddComponent<TownArtMotion>().breathe=.008f;return root.gameObject;
+            var motion=p.gameObject.AddComponent<HumanResidentMotion>();motion.Configure(key,chest,neck,face,p,skin);
+            // Merge only static chest props. Keep articulated head/arms/legs outside those batches.
+            var articulated=new System.Collections.Generic.List<Transform>();var parents=new System.Collections.Generic.List<Transform>();
+            foreach(var tf in p.GetComponentsInChildren<Transform>())
+                if(tf==face||tf.gameObject.name=="Outfit torso"||tf.gameObject.name=="Outfit shoulder"||tf.gameObject.name=="Outfit hip")articulated.Add(tf);
+            foreach(var tf in articulated){parents.Add(tf.parent);tf.SetParent(null,false);}
+            neck.SetParent(null,false);chest.SetParent(null,false);Batch(p);Batch(chest);Batch(neck);chest.SetParent(p,false);neck.SetParent(chest,false);
+            for(int i=0;i<articulated.Count;i++)articulated[i].SetParent(parents[i],false);
+            motion.Tick(0);HumanProportions.NormalizeProjected(face,key,root);return root.gameObject;
         }
         static void DressResident(Transform p,string id,Color skin)
         {
-            var torso=Group(p,"Outfit torso",new Vector3(0,.78f,0));torso.localScale=new Vector3(id=="鐵匠"?1.22f:1.08f,.86f,1.12f);OutfitArt.Add(torso,id,"torso",skin);
+            var torso=Group(p,"Outfit torso",new Vector3(0,.78f,0));torso.localScale=new Vector3(id=="鐵匠"?1.22f:1.08f,1.0492f,1.12f);OutfitArt.Add(torso,id,"torso",skin);
             for(int side=-1;side<=1;side+=2)
             {
                 string suffix=side<0?"L":"R";var hip=Group(p,"Outfit hip",new Vector3(side*.12f,.85f,0));
                 OutfitArt.Add(hip,id,"thigh"+suffix,skin);var knee=Group(hip,"Outfit knee",new Vector3(0,-.42f,0));OutfitArt.Add(knee,id,"calf"+suffix,skin);
-                var arm=Group(p,"Outfit shoulder",new Vector3(side*(id=="鐵匠"?.29f:.23f),1.205f,.045f));arm.localScale=Vector3.one*.74f;arm.localRotation=Quaternion.Euler(0,0,side*9);
+                var arm=Group(p,"Outfit shoulder",new Vector3(side*(id=="鐵匠"?.29f:.23f),1.325f,.045f));arm.localScale=Vector3.one*.74f;arm.localRotation=Quaternion.Euler(0,0,side*9);
                 OutfitArt.Add(arm,id,"upper"+suffix,skin);var elbow=Group(arm,"Outfit elbow",new Vector3(0,-.28f,0));if(id=="小葉"&&side>0)elbow.localRotation=Quaternion.Euler(-25,0,0);OutfitArt.Add(elbow,id,"fore"+suffix,skin);
                 var hand=Group(elbow,"Outfit hand",new Vector3(0,-.25f,0));OutfitArt.Add(hand,id,"hand"+((id=="老焰"||id=="阿潮")&&side<0||id=="鐵匠"&&side>0||id=="小葉"&&side>0?"Grip":"Relax")+suffix,skin);
             }

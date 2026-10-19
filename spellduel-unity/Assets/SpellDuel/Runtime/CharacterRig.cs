@@ -365,14 +365,7 @@ namespace SpellDuel
         void AnimateDetails(float cast, float hurt)
         {
             UpdateHandShapes(cast,hurt);
-            float phase=(clock+CharacterLook.Get(advancedId??classId).Seed*.17f)%4.3f;
-            float blink=Mathf.Clamp01(1f-Mathf.Abs(phase-.10f)/.09f);
-            float close=Mathf.Max(hurt,blink);float squint=1f-.97f*close;
-            var plan=new Portraits.FacePlan(facePersona);
-            foreach(var eye in eyePaint){eye.localScale=new Vector3(1f,squint,1f);eye.localPosition=new Vector3(eye.localPosition.x,plan.EyeY-plan.EyeHeight*.485f*close,.118f);}
-            foreach(var ink in lidInk)ink.enabled=visible&&close>.65f;
-            foreach(var lid in upperLids) lid.localPosition=new Vector3(lid.localPosition.x,0.037f-plan.EyeHeight*.45f*close,0.122f);
-            if(mouthOpen!=null) mouthOpen.localScale=new Vector3(new Portraits.FacePlan(facePersona).MouthWidth,.001f+.016f*facePersona.Open+.017f*Mathf.Max(cast,chargeAmt*.45f),.003f);
+            if(expressionMotion!=null){expressionMotion.Visible=visible;expressionMotion.Tick(clock,Mathf.Max(cast,chargeAmt*.45f),hurt,dead,combatAmount);}
             if(floatingBook!=null) { floatingBook.localPosition=new Vector3(-0.41f,0.31f+0.025f*Mathf.Sin(clock*2f),0.05f); floatingBook.localRotation=Quaternion.Euler(0f,clock*14f,8f); }
             for(int i=0;i<motes.Count;i++)
             {
@@ -485,6 +478,7 @@ namespace SpellDuel
             BuildAdvanced();
             BuildPersonaClothing();
             BuildLayeredOutfit();
+            SetupPresentation();
 
             // ---- 詠唱光圈（不跟身體倒下，固定在腳底）
             auraMat = new Material(glowShader) { color = new Color(clsColor.r, clsColor.g, clsColor.b, 0f), name = "RigAura" };
@@ -511,7 +505,10 @@ namespace SpellDuel
             origMats = new Material[all.Length];
             for (int i = 0; i < all.Length; i++) origMats[i] = all[i].sharedMaterial;
 
-            Animate(0f);
+            // Measure in the relaxed stance, so a crouched assassin is not fitted as a shorter adult.
+            combatAmount=0;InCombat=false;Animate(0f);
+            HumanProportions.NormalizeProjected(head,advancedId??classId,transform);
+            InCombat=true;combatAmount=1;Animate(0f);
         }
 
         Transform Leg(string side, float s, float sw, out Transform knee)
@@ -739,6 +736,7 @@ namespace SpellDuel
             if (body == null) return;
             if (isDummy) { AnimateDummy(dt); return; }
             clock += dt;
+            UpdatePresentation(dt);
 
             // 平滑的狀態量
             float speed = dead ? 0f : Mathf.Clamp(MoveSpeed, 0f, 3f);
@@ -788,10 +786,12 @@ namespace SpellDuel
             spine.localRotation = Quaternion.Euler(lean * (1f - deadE), Mathf.Sin(walkPhase) * 4f * walkAmt, 0f);
             neck.localRotation = Quaternion.Euler(-lean * 0.5f + Mathf.Sin(clock * 0.7f) * 2f, Mathf.Sin(clock * 0.43f) * 6f * (1f - walkAmt), 0f);
 
+            PosePresentation(deadE);
+
             // ---- 手臂：基本姿勢 → 加走路擺動 → 防禦 → 詠唱 → 出手 → 倒地
             float armSwing = sinP * amp * 0.8f;
-            var aL = baseL; aL.x -= armSwing * swingL;
-            var aR = baseR; aR.x += armSwing * swingR;
+            var aL = PresentationArm(true); aL.x -= armSwing * swingL;
+            var aR = PresentationArm(false); aR.x += armSwing * swingR;
             aL.zOut += breath * 1.5f; aR.zOut += breath * 1.5f;
             aL = Arm.Lerp(aL, guardL, guardAmt); aR = Arm.Lerp(aR, guardR, guardAmt);
             aL = Arm.Lerp(aL, chargeL, chargeAmt); aR = Arm.Lerp(aR, chargeR, chargeAmt);

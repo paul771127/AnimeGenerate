@@ -96,7 +96,7 @@ namespace SpellDuel
             internal Persona(float width,float jaw,float length,float eye,float tilt,float gaze,float brow,float asym,float smile,float open,float pitch,float yaw,float roll,float lean,float lid=0,float pupil=1)
             {
                 // 在正常人類比例內保留個性，不再用極端縮眼或歪頭區分角色。
-                Width=Clamp(width,.94f,1.06f);Jaw=Clamp(jaw,.94f,1.06f);Length=Clamp(length,.97f,1.03f);
+                Width=Clamp(width,.95f,1.05f);Jaw=Clamp(jaw,.94f,1.06f);Length=Clamp(length,.95f,1.05f);
                 Eye=Clamp(eye,.85f,1.15f);Tilt=Clamp(tilt,-6,6);Gaze=Clamp(gaze,-.22f,.22f);
                 Brow=Clamp(brow,-6,6);Asym=Clamp(asym,-3,3);Smile=Clamp(smile,-.6f,1);Open=Clamp(open,0,.8f);
                 Pitch=Clamp(pitch,-6,6);Yaw=Clamp(yaw,-6,6);Roll=Clamp(roll,-6,6);Lean=lean;
@@ -112,11 +112,15 @@ namespace SpellDuel
             {
                 Top=.157f*p.Length;Chin=-Top;EyeY=.013f;float d=EyeY-Chin;
                 EyeX=.056f*p.Width;EyeWidth=.057f*p.Width;EyeHeight=EyeWidth*(.66f+(p.Eye-1)*.10f);
-                NoseY=EyeY-.50f*d;MouthY=EyeY-.70f*d;MouthWidth=EyeX*2*.55f;
+                NoseY=EyeY-.50f*d;MouthY=EyeY-.70f*d;MouthWidth=EyeX*2*.65f;
                 BrowY=EyeY+EyeHeight*1.1f;EarTop=BrowY;EarBottom=NoseY;
             }
         }
         internal static Persona PersonaFor(string key)
+        {
+            var p=BasePersonaFor(key);HumanPersonality.Apply(ref p,Key(key));return p;
+        }
+        static Persona BasePersonaFor(string key)
         {
             switch(Key(key))
             {
@@ -199,7 +203,7 @@ namespace SpellDuel
                     red[k]=Lerp(red[k],c.r/255f,alpha);green[k]=Lerp(green[k],c.g/255f,alpha);blue[k]=Lerp(blue[k],c.b/255f,alpha);
                 }
             }
-            public void DrawEye(int side,FacePlan plan)=>Image(EyeArt.Render(identity,side),EyeArt.W,EyeArt.H,side*plan.EyeX*3,plan.EyeY*3+.09f,plan.EyeWidth*3/1.44f,plan.EyeHeight*3/.90f);
+            public void DrawEye(int side,FacePlan plan)=>Image(EyeArt.Render(identity,side),EyeArt.W,EyeArt.H,side*plan.EyeX*3,plan.EyeY*3+.09f,plan.EyeWidth*3/1.44f,plan.EyeHeight*3/.90f*(1-persona.Lid*1.6f));
             public void Headwear(){if(HeadwearArt.Has(identity))Image(HeadwearArt.Portrait(identity,persona),HeadwearArt.W,HeadwearArt.H,0,.12f*3+.09f,.34f*3,.28f*3);}
             public void Hair(bool front)=>Image(AnimeHair.Portrait(identity,persona,front),AnimeHair.W,AnimeHair.H,0,-.04f*3+.09f,.28f*3,.30f*3);
             public void Fill(Shape shape, Paint c, float opacity=1f, bool cel=false)
@@ -327,14 +331,14 @@ namespace SpellDuel
             float noseY=plan.NoseY*3+.09f,mouthY=plan.MouthY*3+.09f,mw=plan.MouthWidth*1.5f;
             cv.Oval(.006f,noseY+.023f,.009f,.012f,Paint.Mix(skin,White,.20f),0);
             cv.Line(-.012f,noseY,.003f,noseY-.003f,.003f,Paint.Mix(skin,Paint.Hex("#A45E50"),.38f));
-            if(p.Open>0){cv.Oval(0,mouthY,mw,.024f*p.Open,Paint.Hex("#74363F"),.003f);cv.Oval(0,mouthY+.004f,mw*.60f,.003f,Paint.Mix(skin,White,.85f),0);}
+            if(p.Open>0){float mh=plan.MouthWidth*.9f*p.Open;cv.Oval(0,mouthY,mw,mh,Paint.Hex("#74363F"),.003f);cv.Oval(0,mouthY+mh*.46f,mw*.72f,mh*.15f,White,0);}
             else
             {
                 for(int i=0;i<16;i++)
                 {
                     float a=i/8f-1,b=(i+1)/8f-1;
-                    float ay=mouthY+p.Smile*.012f*a*a+p.Asym*.0006f*a+.0018f*(float)Math.Cos(a*Math.PI*2)*(1-a*a);
-                    float by=mouthY+p.Smile*.012f*b*b+p.Asym*.0006f*b+.0018f*(float)Math.Cos(b*Math.PI*2)*(1-b*b);
+                    float ay=mouthY+p.Smile*.012f*a*a+p.Asym*.0027f*a+.0018f*(float)Math.Cos(a*Math.PI*2)*(1-a*a);
+                    float by=mouthY+p.Smile*.012f*b*b+p.Asym*.0027f*b+.0018f*(float)Math.Cos(b*Math.PI*2)*(1-b*b);
                     cv.Line(a*mw,ay,b*mw,by,.0025f*(1-.65f*a*a),Paint.Hex("#A36663"));
                 }
             }

@@ -68,10 +68,10 @@ namespace SpellDuel
         static float Clamp(float x)=>Math.Max(0,Math.Min(1,x));
         static float Mix(float a,float b,float t)=>a+(b-a)*t;
         static bool Oval(float x,float y,float cx,float cy,float rx,float ry)=>((x-cx)*(x-cx)/(rx*rx)+(y-cy)*(y-cy)/(ry*ry))<1;
-        internal static Color32[] Render(string id,int side)
+        internal static Color32[] Render(string id,int side,int glance=0)
         {
-            string key=id+side;if(pixels.TryGetValue(key,out var cached))return cached;
-            var look=CharacterLook.Get(id);float gaze=Portraits.PersonaFor(id).Gaze*.14f;var iris=look.Iris;var result=new Color32[W*H];
+            string key=id+side+"/"+glance;if(pixels.TryGetValue(key,out var cached))return cached;
+            var look=CharacterLook.Get(id);var persona=Portraits.PersonaFor(id);float pupil=look.Pupil*persona.Pupil;float gaze=persona.Gaze*.14f+glance*.085f;var iris=look.Iris;var result=new Color32[W*H];
             for(int py=0;py<H;py++)for(int px=0;px<W;px++)
             {
                 float red=0,green=0,blue=0,alpha=0;
@@ -100,7 +100,7 @@ namespace SpellDuel
                             float grad=Clamp((iy+ry-y)/(ry*2));r=Mix(.12f,Math.Min(1,iris.r*1.12f+.08f),grad);g=Mix(.075f,Math.Min(1,iris.g*1.12f+.08f),grad);b=Mix(.15f,Math.Min(1,iris.b*1.12f+.08f),grad);
                             if(d>.82f){r*=.65f;g*=.65f;b*=.70f;}
                             if(d>.46f&&d<.78f&&y<iy-.22f){r=Mix(r,1,.23f);g=Mix(g,1,.23f);b=Mix(b,1,.23f);}
-                            if(Oval(x,y,gaze,iy+.025f,rx*look.Pupil,.31f)){r=.10f;g=.055f;b=.13f;}
+                            if(Oval(x,y,gaze,iy+.025f,rx*pupil,.31f)){r=.10f;g=.055f;b=.13f;}
                             if(Oval(x,y,gaze-.135f,Math.Min(iy+.17f,top-.11f),.087f,.070f)||Oval(x,y,gaze+.145f,Math.Max(iy-.23f,bottom+.055f),.032f,.028f)){r=1;g=1;b=.97f;}
                         }
                     }
