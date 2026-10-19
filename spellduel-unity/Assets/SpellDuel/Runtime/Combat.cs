@@ -509,7 +509,9 @@ namespace SpellDuel
 
         // 故事模式的關卡：打第 firstWave～lastWave 波（同一套無盡模式的波次、主題、Boss），打完就通關
         public int stageEnd = -1, stageStart = 1;
-        string WaveLabel => stageEnd > 0 ? $"第 {wave - stageStart + 1}/{stageEnd - stageStart + 1} 波" : $"第 {wave} 波";
+        // 副本：照指定的波次順序打（每個房間一波，可以跨主題），打完最後一個房間就通關
+        public int[] waveSeq; public int seqIdx;
+        string WaveLabel => waveSeq != null ? $"房間 {seqIdx}/{waveSeq.Length}" : stageEnd > 0 ? $"第 {wave - stageStart + 1}/{stageEnd - stageStart + 1} 波" : $"第 {wave} 波";
         public bool stageCleared;
         /// <summary>故事關卡的敵人數量倍率（初級地區＝熔岩地帶 0.5；其他 1）</summary>
         public float stageEnemyMul = 1f;
@@ -518,12 +520,29 @@ namespace SpellDuel
         {
             endless = true; kills = 0; bossKills = 0; stageCleared = false;
             bossAfterMinions = true;   // 故事關卡：Boss 波先來一整波小怪，全部打倒後 Boss 才現身
+            waveSeq = null;
             wave = Mathf.Max(0, firstWave - 1); stageStart = firstWave; stageEnd = Mathf.Max(firstWave, lastWave);
             enemy.hp = 0f;
             NextWave(3f);
         }
+        public void StartDungeon(int[] waves)
+        {
+            endless = true; kills = 0; bossKills = 0; stageCleared = false;
+            bossAfterMinions = true;   // 首領房：先清一整波小怪，首領才現身
+            waveSeq = waves; seqIdx = 0; stageEnd = -1;
+            enemy.hp = 0f;
+            NextWave(3f);
+        }
+
         bool StageDone()
         {
+            if (waveSeq != null)
+            {
+                if (seqIdx < waveSeq.Length) return false;
+                stageCleared = true;
+                Emit("stageclear", player.Feet, Color.white, "副本完成！");
+                return true;
+            }
             if (stageEnd <= 0 || wave < stageEnd) return false;
             stageCleared = true;
             Emit("stageclear", player.Feet, Color.white, "關卡完成！");
@@ -532,7 +551,7 @@ namespace SpellDuel
 
         public void StartEndless()
         {
-            endless = true; wave = 0; kills = 0; bossKills = 0;
+            endless = true; wave = 0; kills = 0; bossKills = 0; waveSeq = null;
             enemy.hp = 0f;                        // 一開始沒有 Boss
             NextWave(3f);
         }
@@ -540,7 +559,8 @@ namespace SpellDuel
         /// <summary>進入下一波（delay 秒後開始出怪／Boss 出現）</summary>
         void NextWave(float delay)
         {
-            wave++;
+            if (waveSeq != null && waveSeq.Length > 0) wave = waveSeq[Mathf.Min(seqIdx++, waveSeq.Length - 1)];
+            else wave++;
             waveStartAt = now + delay;
             bossPending = false;
             if (IsBossWave && !bossAfterMinions) { waveToSpawn = 0; waveTotal = 1; }

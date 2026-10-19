@@ -107,6 +107,9 @@ namespace SpellDuel
         // 無盡模式：endless＝目前這場；netEndless／remoteEndless＝雙人選擇畫面上兩邊選的
         bool endless, netEndless, remoteEndless;
         float bossHideAt = -1f; int lastWaveSeen; bool bossAliveShown; int clientWaveRemaining;
+        // 副本：正在打的副本（StartBossBattle 時從 pendingDungeon 帶進來；其他模式＝null）、已經說過旁白的房間
+        DungeonDef dungeon, pendingDungeon; int dungeonRoomSaid = -1;
+        bool netDungeon; string netDungeonId = "ash_mine";
         int WaveRemainingShown => battle == null ? 0 : (NetMode && !NetIsHost ? clientWaveRemaining : battle.WaveRemaining);
 
         // ---------------------------------------------------------------- 無盡模式：角色養成（能力值、技能樹、裝備；存檔保留）
@@ -119,7 +122,7 @@ namespace SpellDuel
         readonly System.Random dropRng = new System.Random();
         int PendingUpgrades => endless && prof != null ? prof.statPoints + prof.UsableSkillPoints : 0;
         /// <summary>選技能畫面：這次是不是無盡模式（只有無盡模式用角色養成）</summary>
-        bool EndlessSetup => NetMode ? netEndless : enemyClass == "endless" || enemyClass == "story";   // 故事模式也用角色養成
+        bool EndlessSetup => NetMode ? netEndless || netDungeon : enemyClass == "endless" || enemyClass == "story";   // 故事模式也用角色養成
         /// <summary>選技能畫面可以選的技能：無盡模式＝角色會的技能；其他模式＝職業全部技能</summary>
         string[] SetupSkills => EndlessSetup ? Progress.Char(myClass).KnownSkills().ToArray() : AllowedSkills;
         /// <summary>其他模式可以選的技能：職業全部技能＋（轉職後）進階職業的全部技能</summary>
@@ -179,13 +182,23 @@ namespace SpellDuel
                     Sfx.Play("levelup", 0.8f); Haptics.Play(Haptics.Kind.Success);
                 }
             }
+            if (dungeon != null)
+            {
+                int room = dungeon.RoomOf(battle.wave);
+                if (room >= 0 && room != dungeonRoomSaid)
+                {
+                    dungeonRoomSaid = room;
+                    var rm = dungeon.rooms[room];
+                    Say($"🏰 {dungeon.name}・{rm.title}（{room + 1}/{dungeon.rooms.Count}）\n{rm.line}", 5f);
+                }
+            }
             int dk = battle.kills - lastKillsSeen; lastKillsSeen = battle.kills;
             for (int i = 0; i < dk; i++) { TryDrop(false); pendingGold += Economy.MinionGold(battle.wave); }
             if (dk > 0) { Sfx.Play("poof", 0.6f); Sfx.Play("coin", 0.35f, 1.1f); }   // 小怪倒下＋掉金幣
             int db = battle.bossKills - lastBossKillsSeen; lastBossKillsSeen = battle.bossKills;
             for (int i = 0; i < db; i++) { TryDrop(true); pendingGold += Economy.BossGold(battle.wave); }   // 每個敵人最多掉一件
             // 無盡模式（不是故事關卡）：清完一波＝過關，這一波的戰利品入袋
-            if (storyStage == null && battle.wave > lootWave)
+            if (storyStage == null && dungeon == null && battle.wave > lootWave)
             {
                 if (lootWave > 0) GrantLoot($"第 {lootWave} 波過關");
                 lootWave = battle.wave;
@@ -275,7 +288,8 @@ namespace SpellDuel
             if (!boss && dropRng.NextDouble() > 0.06 + 0.002 * luk) return;
             int rar = ItemGen.RollRarity(dropRng, luk * 0.3f, boss ? 2 : 0);
             int ilvl = Mathf.Max(1, prof.level + dropRng.Next(-1, 3) + battle.wave / 10);   // 無盡：物品等級跟著角色等級（越後面的波次略高）
-            if (storyStage != null)
+            if (dungeon != null) ilvl = dungeon.level + dropRng.Next(-1, 2);   // 副本：物品等級＝副本等級
+            else if (storyStage != null)
             {
                 // 故事：照地區的等級帶掉（熔岩 1～10、森林 11～20、海上 21～30），越後面的關卡越高
                 var (lo, hi) = Story.LevelBand(storyStage.theme);
@@ -345,6 +359,24 @@ namespace SpellDuel
             ShowDialogue(st.before, StartStageBattle);
         }
 
+        /// <summary>開打副本：第一次（單人）先播開場故事；連線時大家同時開打（故事看說明裡的「看故事」）</summary>
+        void StartDungeonRun(DungeonDef d, bool coopMode)
+        {
+            if (d == null) return;
+            storyMapOpen = false; storyStage = null;
+            void Go() { pendingDungeon = d; StartBossBattle(coopMode, true); }
+            if (!coopMode && !Story.IsSeen("dg:" + d.id)) { Story.MarkSeen("dg:" + d.id); ShowDialogue(d.before, Go); }
+            else { Go(); if (d.before.Count > 0) Say("🏰 " + d.name + "：" + d.before[0].text, 5f); }
+        }
+
+        /// <summary>重看副本的故事（開場＋通關過的結尾）</summary>
+        void WatchDungeonStory(DungeonDef d)
+        {
+            var lines = new List<StoryLine>(d.before);
+            if (Dungeons.IsCleared(d.id)) lines.AddRange(d.after);
+            ShowDialogue(lines, null);
+        }
+
         /// <summary>重看故事：開場＋（通關過的）結尾，看完回到地圖</summary>
         void WatchStory(StoryStage st)
         {
@@ -378,6 +410,8 @@ namespace SpellDuel
             {
                 world.OnStartStage = st => { storyMapOpen = false; StartStory(st); };
                 world.OnWatchStory = WatchStory;
+                world.OnStartDungeon = d => StartDungeonRun(d, false);
+                world.OnWatchDungeon = WatchDungeonStory;
                 world.OnBack = () => storyMapOpen = false;
                 world.OnCharacter = () => charOpen = true;
                 world.OnStartTrial = StartTrial;
@@ -468,7 +502,7 @@ namespace SpellDuel
             if (e.type == EventType.MouseUp) { dlgIdx++; Sfx.Play("talk", 0.6f); e.Use(); if (dlgIdx >= dlg.Count) EndDialogue(); }
         }
 
-        int NetModeCode => coop ? (netEndless ? 2 : 1) : 0;
+        int NetModeCode => coop ? (netDungeon ? 3 : netEndless ? 2 : 1) : 0;
         BossRig bossRig; BossAI bossAi; GameObject slamGo;
         VolcanoScene volcano;   // 無盡模式第 1～10 波的熔岩火山場景
         ForestScene forest;     // 第 11～20 波的森林場景
@@ -603,7 +637,8 @@ namespace SpellDuel
             foreach (var pi in peerInfo.Values) pi.ready = false;
             foreach (var pid in PeerIds) if (peerInfo[pid].mode != NetModeCode) { Say("大家選的模式不同（對戰／合作打 Boss／無盡），請選一樣的再按準備", 4f); return; }
             if (!coop && PeerIds.Count > 1) { Say($"⚔ 對戰只能兩個人（現在房間有 {PeerIds.Count + 1} 人），請選合作模式", 4f); return; }
-            if (coop) StartBossBattle(true, netEndless); else StartNetBattle();
+            if (coop && netDungeon) StartDungeonRun(Dungeons.Get(netDungeonId), true);
+            else if (coop) StartBossBattle(true, netEndless); else StartNetBattle();
         }
 
         void StartNetBattle()
@@ -657,6 +692,7 @@ namespace SpellDuel
             SaveChoices();
             EndBattle();
             bossMode = true; coop = coopMode; endless = endlessMode; dummyMode = false; enemyClassUsed = "boss";
+            dungeon = pendingDungeon; pendingDungeon = null; dungeonRoomSaid = -1;
             dummyDamage = 0f; dummyHits = 0; lastWaveSeen = 0; bossHideAt = -1f; bossAliveShown = false;
             ResetLoot(); potionReadyAt = 0f;
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
@@ -678,6 +714,13 @@ namespace SpellDuel
             float party = 1f + 0.5f * (partyN - 1);   // 參與人數倍率：每多一人，Boss 血量 +50%（攻擊力 +20%、施法頻率 +25% 在 BossAI）
             boss.maxHp = Mathf.RoundToInt(BossHpSolo * party * BossHpFor(difficulty)); boss.hp = boss.maxHp;
             me.damageTakenMul = DamageTakenFor(difficulty);
+            float dungeonRelief = 1f;
+            if (dungeon != null)
+            {
+                // 副本：以 4 人隊伍設計的難度；角色等級遠高於副本時才變簡單（每台手機用自己的等級算自己受到的傷害）
+                dungeonRelief = Dungeons.LevelRelief(prof != null ? prof.level : 1, dungeon.level);
+                me.damageTakenMul *= Dungeons.DungeonDmg * dungeonRelief;
+            }
             SyncPlayer(me);
             battle = new Battle(me, boss);
             battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine; battle.OnShotWarn += ShowShotLine;
@@ -726,7 +769,7 @@ namespace SpellDuel
                 bossAi = new BossAI(battle, boss, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
                 bossAi.OnEnrage += OnBossEnrage;
                 bossAi.SetDifficulty(difficulty);
-                bossAi.storyIntense = endlessMode && pendingStage != null;   // 故事 Boss：出招更頻繁、更多大範圍招式
+                bossAi.storyIntense = endlessMode && (pendingStage != null || dungeon != null);   // 故事／副本 Boss：出招更頻繁、更多大範圍招式
                 if (endlessMode)
                 {
                     battle.bossBaseHp = 150f * BossHpFor(difficulty);
@@ -738,6 +781,11 @@ namespace SpellDuel
                         battle.stageEnemyMul = pendingStage.theme == 0 ? 0.5f : 1f;   // 初級地圖（熔岩地帶）：敵人數量減半
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
+                    }
+                    else if (dungeon != null)
+                    {
+                        battle.hpBoost = Dungeons.DungeonHp * dungeonRelief;   // 副本：敵人更硬（主機的等級決定）
+                        battle.StartDungeon(dungeon.Waves);
                     }
                     else battle.StartEndless();
                 }
@@ -834,7 +882,7 @@ namespace SpellDuel
             var b = battle.enemy;
             int e = bossAi != null && bossAi.Enraged ? 1 : 0;
             NetSend?.Invoke(new Msg { t = "boss", id = TargetCode(b.target), p = b.head, d = b.forward, hp = Mathf.CeilToInt(b.hp), dmg = b.maxHp, k = b.charging != null ? b.charging.id : "", s = battle.ChargeProgress(b), e = e, pts = b.charging != null && (b.charging.id == "b_leap" || b.charging.atTarget) ? new[] { b.aimPoint } : null,
-                ks = endless ? new[] { battle.wave.ToString(), battle.WaveRemaining.ToString(), battle.kills.ToString(), battle.bossKills.ToString(), battle.xp.ToString(), battle.waveTotal.ToString() } : null });
+                ks = endless ? new[] { battle.wave.ToString(), battle.WaveRemaining.ToString(), battle.kills.ToString(), battle.bossKills.ToString(), battle.xp.ToString(), battle.waveTotal.ToString(), battle.stageCleared ? "1" : "0" } : null });
             // 小怪：位置與「編號,血量,最大血量,預備中」
             var ms = battle.minions;
             var pts = new Vector3[ms.Count]; var ks = new string[ms.Count];
@@ -955,6 +1003,7 @@ namespace SpellDuel
                             battle.wave = wv; battle.bossKills = bk;
                             int.TryParse(m.ks[1], out clientWaveRemaining);
                             if (m.ks.Length >= 6) int.TryParse(m.ks[5], out battle.waveTotal);
+                            if (m.ks.Length >= 7 && m.ks[6] == "1") battle.stageCleared = true;   // 副本：主機通關
                             int.TryParse(m.ks[2], out battle.kills);
                             if (m.ks.Length >= 5) int.TryParse(m.ks[4], out battle.xp);   // 隊友共用經驗值
                         }
@@ -1120,6 +1169,34 @@ namespace SpellDuel
                 else { LoseLoot(); Say("💀 試煉失敗…準備好再來挑戰（可以直接再挑戰，不用再付報名費）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
             }
+            if (endless && dungeon != null)
+            {
+                // 副本：通關 → 每個房間保底一件稀有以上、最後的首領保底一件史詩套裝（物品等級＝副本等級）
+                var d = dungeon;
+                if (battle.stageCleared)
+                {
+                    bool first = !Dungeons.IsCleared(d.id);
+                    Dungeons.MarkCleared(d.id);
+                    for (int i = 0; i < d.rooms.Count; i++)
+                    {
+                        bool last = i == d.rooms.Count - 1;
+                        ItemGen.SetTheme = last ? d.BossTheme : Battle.ThemeOf(d.rooms[i].wave);
+                        pendingItems.Add(ItemGen.Make(dropRng, d.level, last ? 3 : Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
+                    }
+                    pendingGold += 60 * d.level;
+                    string loot = GrantLoot($"{d.name} 通關", false);
+                    int xp = 40 * d.level;
+                    int ups = prof != null ? prof.AddXp(xp) : 0;
+                    if (prof != null) Progress.SaveChar(prof);
+                    int over = (prof != null ? prof.level : 1) - d.level;
+                    Say($"🏰 {d.name} 通關！獲得經驗 {xp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "（首次通關）" : "")
+                        + (loot.Length > 0 ? "\n" + loot : "") + (over >= 8 ? $"\n（掉落的裝備是 Lv{d.level}，比你低 {over} 級）" : ""), 99f);
+                    Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
+                    if (!Story.IsSeen("dg!" + d.id)) { Story.MarkSeen("dg!" + d.id); ShowDialogue(d.after, null); }
+                }
+                else { LoseLoot(); Say($"💀 {d.name} 失敗…副本是為 {d.minPlayers}～{d.maxPlayers} 人隊伍設計的，找夥伴一起來吧", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
+                return;
+            }
             if (endless && storyStage != null)
             {
                 // 故事關卡：通關 → 記錄、給經驗、結束對話；失敗 → 可以再挑戰
@@ -1167,8 +1244,9 @@ namespace SpellDuel
             switch (m.t)
             {
                 case "mode":
-                    coop = remoteCoop = m.e >= 1; netEndless = remoteEndless = m.e == 2; localReady = false;
-                    Say(m.e == 2 ? "對方選了：♾ 無盡（合作）" : coop ? "對方選了：🤝 合作打 Boss" : "對方選了：⚔ 對戰", 2.5f);
+                    coop = remoteCoop = m.e >= 1; netEndless = remoteEndless = m.e == 2; netDungeon = m.e == 3; localReady = false;
+                    if (netDungeon && Dungeons.Get(m.k) != null) netDungeonId = m.k;
+                    Say(m.e == 3 ? $"對方選了：🏰 副本「{Dungeons.Get(netDungeonId)?.name}」" : m.e == 2 ? "對方選了：♾ 無盡（合作）" : coop ? "對方選了：🤝 合作打 Boss" : "對方選了：⚔ 對戰", 2.5f);
                     return;
                 case "ready":
                     remoteClass = m.k; remoteLoadout = m.ks; remoteReady = true; remoteCoop = m.e >= 1; remoteEndless = m.e == 2;
@@ -2588,16 +2666,30 @@ namespace SpellDuel
             else
             {
                 // 雙人模式：對戰或合作打 Boss（切換時告訴對方，兩邊一起切）
-                float mw = (W - pad * 2 - gap * 2) / 3f;
-                string[] modeNames = { "⚔ 對戰", "🤝 合作 Boss", "♾ 無盡合作" };
-                Color[] modeCols = { new Color(1f, 0.55f, 0.35f), new Color(1f, 0.35f, 0.1f), new Color(0.75f, 0.45f, 1f) };
-                for (int mi = 0; mi < 3; mi++)
+                float mw = (W - pad * 2 - gap * 3) / 4f;
+                string[] modeNames = { "⚔ 對戰", "🤝 合作 Boss", "♾ 無盡合作", "🏰 副本" };
+                Color[] modeCols = { new Color(1f, 0.55f, 0.35f), new Color(1f, 0.35f, 0.1f), new Color(0.75f, 0.45f, 1f), new Color(0.4f, 0.85f, 0.75f) };
+                for (int mi = 0; mi < 4; mi++)
                     if (UiKit.Button(new Rect(pad + mi * (mw + gap), y, mw, u * 1.15f), modeNames[mi], fsS, NetModeCode == mi, modeCols[mi]) && NetModeCode != mi)
                     {
-                        coop = mi >= 1; netEndless = mi == 2; localReady = false;
-                        NetSend?.Invoke(new Msg { t = "mode", e = mi });
+                        coop = mi >= 1; netEndless = mi == 2; netDungeon = mi == 3; localReady = false;
+                        NetSend?.Invoke(new Msg { t = "mode", e = mi, k = netDungeonId });
                     }
                 y += u * 1.15f + gap;
+                if (netDungeon && coop)
+                {
+                    // 選副本（每個人都可以換；換了大家一起換）
+                    float dw = (W - pad * 2 - gap * (Dungeons.All.Count - 1)) / Dungeons.All.Count;
+                    for (int di = 0; di < Dungeons.All.Count; di++)
+                    {
+                        var dd = Dungeons.All[di];
+                        if (UiKit.Button(new Rect(pad + di * (dw + gap), y, dw, u * 1.3f), $"{dd.name}\nLv{dd.level}・{dd.minPlayers}～{dd.maxPlayers} 人", fsS, netDungeonId == dd.id, modeCols[3]) && netDungeonId != dd.id)
+                        { netDungeonId = dd.id; localReady = false; NetSend?.Invoke(new Msg { t = "mode", e = 3, k = dd.id }); }
+                    }
+                    y += u * 1.3f + gap;
+                    var sel = Dungeons.Get(netDungeonId);
+                    if (sel != null) { UiKit.Text(new Rect(pad, y, W - pad * 2, u * 1.3f), $"{sel.desc}（{sel.rooms.Count} 個房間）", fsS, new Color(0.85f, 0.95f, 0.9f), TextAnchor.UpperLeft); y += u * 1.3f + gap; }
+                }
                 if (coop) DrawDifficultyRow(ref y, pad, gap, u, fsS, W);
                 string who = coop ? "隊友" : "對手";
                 if (PeerIds.Count <= 1)
@@ -3035,7 +3127,7 @@ namespace SpellDuel
                     ci++;
                 }
                 if (pendingItems.Count > 0 || pendingGold > 0)
-                    UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.7f), $"🎁 待領取：裝備 {pendingItems.Count} 件・💰 {pendingGold}（{(storyStage != null ? "通關" : "清完這一波")}後才拿得到）", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleCenter);
+                    UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.7f), $"🎁 待領取：裝備 {pendingItems.Count} 件・💰 {pendingGold}（{(storyStage != null || dungeon != null ? "通關" : "清完這一波")}後才拿得到）", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleCenter);
             }
 
             // 蓄力／怎麼施法的提示：放在下方面板正上方（不在畫面中央，敵人靠近也不會被敵人和鎖定框擋住），底色較不透明、最後才畫
@@ -3078,6 +3170,20 @@ namespace SpellDuel
                 if (!IsTrial && UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), $"🏘 回{WorldUI.Towns[Mathf.Clamp(st.theme, 0, WorldUI.Towns.Length - 1)].name}", fs))
                 { ShowSetup(); storyMapOpen = true; world.OpenTown(Mathf.Clamp(st.theme, 0, WorldUI.Towns.Length - 1)); }
                 else if (IsTrial && UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "🗺 大地圖", fs)) { ShowSetup(); storyMapOpen = true; world.screen = WorldUI.Screen.Map; }
+            }
+            else if (phase == Phase.Over && dungeon != null)
+            {
+                // 副本結算：再挑戰（多人＝大家再按準備）／回城鎮（單人）或回大廳（多人）
+                var d = dungeon; bool won = battle.stageCleared;
+                var orr = new Rect(pad, top+(botY-top)*.24f, W-pad*2, (botY-top)*.36f);
+                UiKit.Result(orr, won);
+                UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, orr.height * 0.4f), won ? $"🏰 {d.name} 通關！" : $"💀 {d.name}…全隊倒下", fs * 2, Color.white, TextAnchor.MiddleCenter, true);
+                float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
+                if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), NetMode ? (localReady ? "等待隊友…" : "再挑戰") : "再挑戰", fs, true, new Color(0.4f, 0.85f, 0.75f), !(NetMode && localReady)))
+                { if (NetMode) SendReady(); else { ShowSetup(); StartDungeonRun(d, false); } }
+                if (!NetMode && UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "🏘 回城鎮", fs))
+                { ShowSetup(); storyMapOpen = true; world.OpenTown(world.town); }
+                else if (NetMode && UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "回大廳", fs)) ShowSetup();
             }
             else if (phase == Phase.Over)
             {

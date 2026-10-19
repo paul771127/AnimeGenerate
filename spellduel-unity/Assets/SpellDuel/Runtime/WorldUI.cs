@@ -11,11 +11,12 @@ namespace SpellDuel
     /// </summary>
     public class WorldUI
     {
-        public enum Screen { Map, Town, Smith, Shop, Guild, Gate, Warp }
+        public enum Screen { Map, Town, Smith, Shop, Guild, Gate, Warp, Dungeon }
         public Screen screen = Screen.Map;
         public int town;                         // 目前所在城鎮（＝地區主題 0～2）
         public Action<StoryStage> OnStartStage;  // 出發打關卡
         public Action<StoryStage> OnWatchStory;  // 重看這一關的故事（開場＋已通關的結尾）
+        public Action<DungeonDef> OnStartDungeon, OnWatchDungeon;   // 副本：進入／看故事
         public Action OnBack;                    // 離開大地圖（回選擇畫面）
         public Action OnCharacter;               // 打開角色畫面
         public Action OnStartTrial;              // 出發挑戰轉職試煉
@@ -122,6 +123,7 @@ namespace SpellDuel
                 case Screen.Guild: DrawGuild(r, prof, fs, fsS, fsL, gap); break;
                 case Screen.Gate: DrawGate(r, prof, fs, fsS, fsL, gap); break;
                 case Screen.Warp: DrawWarp(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Dungeon: DrawDungeons(r, prof, fs, fsS, fsL, gap); break;
             }
             if (toast != null && Time.time < toastUntil) UiKit.Pill(r.y + r.height * 0.5f, toast, fs, new Color(1f, 0.9f, 0.5f), r.width * 0.9f, 0.85f);
         }
@@ -264,10 +266,42 @@ namespace SpellDuel
             y += bh + gap;
             if (UiKit.Button(new Rect(r.x + gap, y, bw, bh), "🏛 職業工會\n轉職・職業任務", fs, false, new Color(0.85f, 0.6f, 1f))) screen = Screen.Guild;
             if (UiKit.Button(new Rect(r.x + gap * 2 + bw, y, bw, bh), "📜 角色／裝備", fs, false, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
+            y += bh + gap;
+            if (UiKit.Button(new Rect(r.x + gap, y, r.width - gap * 2, bh * 0.8f), "🏰 副本（多人合作）", fs, false, DungeonColor)) screen = Screen.Dungeon;
             // 回大地圖／走進城鎮
             float hb = (r.width - gap * 3) / 2f;
             if (UiKit.Button(new Rect(r.x + gap, r.yMax - gap - fs * 2.1f, hb, fs * 2.1f), "🚶 走進城鎮", fs, false, t.color)) walkMode = true;
             if (UiKit.Button(new Rect(r.x + gap * 2 + hb, r.yMax - gap - fs * 2.1f, hb, fs * 2.1f), "🗺 回大地圖", fs)) screen = Screen.Map;
+        }
+
+        // ---------------------------------------------------------------- 副本：清單、說明、進入（單人）／看故事；多人請從連線大廳選「🏰 副本」
+        static readonly Color DungeonColor = new Color(0.4f, 0.85f, 0.75f);
+        void DrawDungeons(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
+        {
+            float y = r.y + gap;
+            Header(r, "🏰 副本", DungeonColor, prof, fs, fsS, fsL, gap, ref y);
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.6f),
+                "副本是為 3～4 人隊伍設計的：多人請回首頁選「遠端連線」→ 合作模式選「🏰 副本」。\n一個人也能進，但要角色等級遠高於副本才打得過（那時掉的裝備等級＝副本等級）。", fsS, new Color(0.85f, 0.95f, 0.9f), TextAnchor.UpperLeft);
+            y += fs * 2.8f;
+            float bottom = r.yMax - gap * 2 - fs * 2.1f;
+            int n = Dungeons.All.Count;
+            float ch = Mathf.Min(fs * 5.2f, (bottom - y) / Mathf.Max(1, n) - gap * 0.4f);
+            foreach (var d in Dungeons.All)
+            {
+                bool clear = Dungeons.IsCleared(d.id);
+                var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
+                UiKit.Card(cr, 0.6f, clear ? new Color(1f, 0.85f, 0.3f) : DungeonColor, 0.8f);
+                float relief = Dungeons.LevelRelief(prof.level, d.level);
+                string diff = prof.level < d.level ? "⚠ 等級不足" : relief >= 0.95f ? "單人：非常困難" : relief >= 0.7f ? "單人：困難" : "單人：可以挑戰";
+                UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.62f, cr.height), $"{(clear ? "✔ " : "")}{d.name}　Lv{d.level}・{d.minPlayers}～{d.maxPlayers} 人・{d.rooms.Count} 房\n{d.desc}\n{diff}", fsS, Color.white, TextAnchor.MiddleLeft);
+                float bw = cr.width * 0.34f, bh = (cr.height - gap * 1.2f) / 2f;
+                if (UiKit.Button(new Rect(cr.xMax - bw - gap * 0.4f, cr.y + gap * 0.4f, bw, bh), "⚔ 單人進入", fsS, false, DungeonColor))
+                { OnStartDungeon?.Invoke(d); return; }
+                if (Story.IsSeen("dg:" + d.id) && UiKit.Button(new Rect(cr.xMax - bw - gap * 0.4f, cr.y + gap * 0.8f + bh, bw, bh), "📖 看故事", fsS))
+                { OnWatchDungeon?.Invoke(d); return; }
+                y += ch + gap * 0.4f;
+            }
+            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), $"🏘 回{Towns[town].name}", fs)) screen = Screen.Town;
         }
 
         // ---------------------------------------------------------------- 城鎮（3D 走動）：上方名稱、中間準心＋居民名牌、下方按鈕
@@ -330,11 +364,12 @@ namespace SpellDuel
             float bh = fs * 2.3f, by = r.yMax - bh - gap;
             var near = Walk.Near;
             if (near != null) UiKit.Pill(by - fs * 2.2f, $"👋 對{Portraits.Key(near.name)}說「你好」，或舉起手掌揮一揮", fsS, Color.white, r.width * 0.9f, 0.7f);
-            float bw3 = (r.width - gap * 4) / 3f, by2 = by;
+            float bw3 = (r.width - gap * 5) / 4f, by2 = by;
             int pts = prof.statPoints + prof.UsableSkillPoints;
             if (UiKit.Button(new Rect(r.x + gap, by2, bw3, bh * 0.85f), pts > 0 ? $"📜 角色 ×{pts}" : "📜 角色", fsS, pts > 0, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
-            if (UiKit.Button(new Rect(r.x + gap * 2 + bw3, by2, bw3, bh * 0.85f), "📋 清單模式", fsS)) walkMode = false;
-            if (UiKit.Button(new Rect(r.x + gap * 3 + bw3 * 2, by2, bw3, bh * 0.85f), "🗺 回大地圖", fsS)) screen = Screen.Map;
+            if (UiKit.Button(new Rect(r.x + gap * 2 + bw3, by2, bw3, bh * 0.85f), "🏰 副本", fsS, false, DungeonColor)) screen = Screen.Dungeon;
+            if (UiKit.Button(new Rect(r.x + gap * 3 + bw3 * 2, by2, bw3, bh * 0.85f), "📋 清單", fsS)) walkMode = false;
+            if (UiKit.Button(new Rect(r.x + gap * 4 + bw3 * 3, by2, bw3, bh * 0.85f), "🗺 大地圖", fsS)) screen = Screen.Map;
         }
 
         // ---------------------------------------------------------------- 城鎮出口：選這一章的關卡
