@@ -98,7 +98,7 @@ namespace SpellDuel
                 OnEnrage?.Invoke();
             }
             // 人數越多：施法越頻繁（冷卻、思考間隔 ÷(1＋0.25×多的人數)）、攻擊力越高（＋20%／人）
-            int extra = b.allies.Count;
+            int extra = b.ScaleAllies;   // 副本：固定以 3 人計
             me.cdMul = BaseCdMul / (1f + PartyCast * extra) * (storyIntense ? StoryCdMul : 1f);
             me.atkMul = 1f + PartyAtk * extra;
             PickTarget();

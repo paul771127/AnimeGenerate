@@ -13,7 +13,7 @@ namespace SpellDuel
     /// <summary>
     /// 多人副本（參考魔獸世界的副本：一段故事、幾個房間、最後的首領）。
     ///   ・在同一塊場地打：清完一個房間（一波）就換下一個房間的場景，房間可以跨主題（熔岩、森林、海上）。
-    ///   ・難度以「等級＝副本等級的 4 人隊伍」設計：敵人血量 ×DungeonHp、傷害 ×DungeonDmg，再加上每多一人的人數倍率。
+    ///   ・難度固定以「等級＝副本等級的 3 人隊伍」設計（不隨實際人數增減）：4 人輕鬆、3 人中等、2 人有一點機會。
     ///     一個人在同等級幾乎過不了；角色等級比副本高很多時敵人才會變弱（LevelRelief），
     ///     那時候副本掉的套裝等級（＝副本等級）已經遠低於角色等級。
     ///   ・通關：每個房間保底一件稀有以上的裝備（物品等級＝副本等級），最後的首領保底一件史詩套裝。
@@ -22,7 +22,7 @@ namespace SpellDuel
     {
         public string id, name, desc;
         public int level;                          // 副本等級（掉落的物品等級、難度基準）
-        public int minPlayers = 3, maxPlayers = 4; // 建議人數
+        public int minPlayers = 2, maxPlayers = 4; // 建議人數（2 人吃力、3 人中等、4 人輕鬆）
         public readonly List<DungeonRoom> rooms = new List<DungeonRoom>();
         public readonly List<StoryLine> before = new List<StoryLine>();
         public readonly List<StoryLine> after = new List<StoryLine>();
@@ -34,8 +34,13 @@ namespace SpellDuel
 
     public static class Dungeons
     {
-        /// <summary>同等級時敵人的血量、傷害倍率（4 人隊伍的難度；人數倍率另外再加）</summary>
-        public const float DungeonHp = 2.4f, DungeonDmg = 1.6f;
+        /// <summary>
+        /// 難度固定以「3 人隊伍」計算（敵人數量、血量、Boss 出招頻率都照 3 人，不隨實際人數增減）：
+        /// 4 人輕鬆、3 人中等、2 人有一點機會、1 人幾乎不可能（除非等級遠高於副本）。
+        /// </summary>
+        public const int DesignAllies = 2;
+        /// <summary>在 3 人難度之上，敵人的血量、玩家受到的傷害再加一點（副本比一般合作硬）</summary>
+        public const float DungeonHp = 1.15f, DungeonDmg = 1.1f;
 
         /// <summary>
         /// 等級差的修正：角色比副本高 3 級以上，每多 1 級敵人弱 4.5%（最低 30%）；比副本低，每低 1 級強 5%（最高 150%）。
@@ -106,7 +111,7 @@ namespace SpellDuel
             d.after.Add(L("凪", "三座鐘、三截鐘舌……有人想讓黎明永遠不要來。"));
             All.Add(d);
 
-            d = new DungeonDef { id = "dawn_gate", name = "黎明之門", level = 45, minPlayers = 4, desc = "三座晨鐘的鐘文拼出的位置。門後是讓黎明停止的人——三位守門的首領會依序出現。" };
+            d = new DungeonDef { id = "dawn_gate", name = "黎明之門", level = 45, minPlayers = 3, desc = "三座晨鐘的鐘文拼出的位置。門後是讓黎明停止的人——三位守門的首領會依序出現。" };
             d.rooms.Add(new DungeonRoom { wave = 40, title = "第一道門：熔岩巨像", line = "門後的熱浪撲面而來。第一個守門者，用的是灰燼礦坑那截鐘舌。" });
             d.rooms.Add(new DungeonRoom { wave = 50, title = "第二道門：腐化樹王", line = "地板長出了根。第二個守門者，在神殿裡被你們打倒過——牠又回來了。" });
             d.rooms.Add(new DungeonRoom { wave = 60, title = "最後的門：深海巨妖", line = "整個大廳開始進水。撐過去，黎明就在門後。" });

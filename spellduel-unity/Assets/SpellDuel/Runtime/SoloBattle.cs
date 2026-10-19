@@ -845,7 +845,8 @@ namespace SpellDuel
                     }
                     else if (dungeon != null)
                     {
-                        battle.hpBoost = Dungeons.DungeonHp * dungeonRelief;   // 副本：敵人更硬（主機的等級決定）
+                        battle.scaleAllies = Dungeons.DesignAllies;            // 副本：固定以 3 人隊伍的強度（2 人吃力、4 人輕鬆）
+                        battle.hpBoost = Dungeons.DungeonHp * dungeonRelief;   // 再硬一點（主機的等級決定）
                         battle.StartDungeon(dungeon.Waves);
                     }
                     else battle.StartEndless();
@@ -1255,7 +1256,7 @@ namespace SpellDuel
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
                     if (!Story.IsSeen("dg!" + d.id)) { Story.MarkSeen("dg!" + d.id); ShowDialogue(d.after, null); }
                 }
-                else { LoseLoot(); Say($"💀 {d.name} 失敗…副本是為 {d.minPlayers}～{d.maxPlayers} 人隊伍設計的，找夥伴一起來吧", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
+                else { LoseLoot(); Say($"💀 {d.name} 失敗…副本以 3 人隊伍的強度設計（4 人輕鬆、2 人吃力），找夥伴一起來吧", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
             }
             if (endless && storyStage != null)

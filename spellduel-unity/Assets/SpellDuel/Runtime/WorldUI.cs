@@ -281,7 +281,7 @@ namespace SpellDuel
             float y = r.y + gap;
             Header(r, "🏰 副本", DungeonColor, prof, fs, fsS, fsL, gap, ref y);
             UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.6f),
-                "副本是為 3～4 人隊伍設計的：多人請回首頁選「遠端連線」→ 合作模式選「🏰 副本」。\n一個人也能進，但要角色等級遠高於副本才打得過（那時掉的裝備等級＝副本等級）。", fsS, new Color(0.85f, 0.95f, 0.9f), TextAnchor.UpperLeft);
+                "副本以 3 人隊伍的強度設計：4 人輕鬆、3 人中等、2 人有一點機會。多人請回首頁選「遠端連線」→ 合作模式選「🏰 副本」。\n一個人也能進，但要角色等級遠高於副本才打得過（那時掉的裝備等級＝副本等級）。", fsS, new Color(0.85f, 0.95f, 0.9f), TextAnchor.UpperLeft);
             y += fs * 2.8f;
             float bottom = r.yMax - gap * 2 - fs * 2.1f;
             int n = Dungeons.All.Count;

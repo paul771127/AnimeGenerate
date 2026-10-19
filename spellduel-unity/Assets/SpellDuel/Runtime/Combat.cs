@@ -399,6 +399,9 @@ namespace SpellDuel
         public readonly List<Fighter> allies = new List<Fighter>();
         /// <summary>第一位隊友（舊程式相容用；多人時請用 allies）</summary>
         public Fighter ally => allies.Count > 0 ? allies[0] : null;
+        /// <summary>人數倍率用的「隊友人數」：一般＝實際人數；副本固定（以 3 人隊伍設計，2 人吃力、4 人輕鬆）</summary>
+        public int scaleAllies = -1;
+        public int ScaleAllies => scaleAllies >= 0 ? scaleAllies : allies.Count;
         public bool AnyAllyAlive { get { foreach (var a in allies) if (a.Alive) return true; return false; } }
         public Fighter AllyByPid(int pid) => allies.Find(a => a.pid == pid);
         public bool coopHost;
@@ -569,7 +572,7 @@ namespace SpellDuel
                 bossPending = IsBossWave;   // 故事關卡的 Boss 波：先清小怪
                 // 每波的小怪數：6＋波次（最多 28），合作 ×1.5
                 waveTotal = Mathf.Min(28, 6 + wave);
-                if (allies.Count > 0) waveTotal = Mathf.CeilToInt(waveTotal * (1f + 0.5f * allies.Count));
+                if (ScaleAllies > 0) waveTotal = Mathf.CeilToInt(waveTotal * (1f + 0.5f * ScaleAllies));
                 waveTotal = Mathf.Max(1, Mathf.CeilToInt(waveTotal * stageEnemyMul));
                 waveToSpawn = waveTotal;
             }
@@ -584,9 +587,9 @@ namespace SpellDuel
         public static int XpForLevel(int level) => 40 * (level - 1) + 15 * (level - 1) * (level - 1) + 0;
         public static int LevelOf(int xp) { int l = 1; while (xp >= XpForLevel(l + 1)) l++; return l; }
         /// <summary>參與人數倍率：每多一位玩家，敵人的血量與攻擊力 +30%</summary>
-        public float PartyMul => 1f + 0.3f * allies.Count;
+        public float PartyMul => 1f + 0.3f * ScaleAllies;
         /// <summary>Boss 血量的人數倍率：每多一位玩家 +50%</summary>
-        public float BossPartyMul => 1f + 0.5f * allies.Count;
+        public float BossPartyMul => 1f + 0.5f * ScaleAllies;
         int Tier => Mathf.Max(0, wave - 1);
         public float HpMul => (1f + 0.08f * Tier) * PartyMul * hpBoost;
         public float hpBoost = 1f;   // 轉職試煉：敵人更硬
@@ -608,7 +611,7 @@ namespace SpellDuel
                 return;
             }
             // 小怪波：照間隔陸續出現（每次兩隻）；場上同時最多 6＋波次/3×2 隻（合作 +4）
-            int maxAlive = Mathf.Max(2, Mathf.CeilToInt((Mathf.Min(16, 6 + wave / 3 * 2) + 4 * allies.Count) * stageEnemyMul));
+            int maxAlive = Mathf.Max(2, Mathf.CeilToInt((Mathf.Min(16, 6 + wave / 3 * 2) + 4 * ScaleAllies) * stageEnemyMul));
             if (waveToSpawn > 0 && now >= nextMinionAt && minions.Count < maxAlive)
             {
                 for (int k = 0; k < 2 && waveToSpawn > 0 && minions.Count < maxAlive; k++)
@@ -616,7 +619,7 @@ namespace SpellDuel
                     SpawnMinion(edgePoint(), 0, PickMinionKind(), HpMul, DmgMul, SpeedMul);
                     waveToSpawn--;
                 }
-                nextMinionAt = now + Mathf.Max(2.5f, 5f - 0.1f * wave) * (allies.Count > 0 ? Mathf.Max(0.5f, 1f - 0.25f * allies.Count) : 1f);
+                nextMinionAt = now + Mathf.Max(2.5f, 5f - 0.1f * wave) * (ScaleAllies > 0 ? Mathf.Max(0.5f, 1f - 0.25f * ScaleAllies) : 1f);
             }
             // 故事關卡的 Boss 波：小怪全部打倒 → 地面震動，Boss 現身
             if (bossPending && waveToSpawn == 0 && minions.Count == 0)
@@ -1726,7 +1729,7 @@ namespace SpellDuel
                 case SelfKind.Summon:
                 {
                     // Boss 召喚小怪：在身邊 1.6～2.4m 冒出來（合作時多一隻），最多同時 MaxMinions 隻
-                    int n = Mathf.Min(s.multi + allies.Count, MaxMinions - minions.Count);
+                    int n = Mathf.Min(s.multi + ScaleAllies, MaxMinions - minions.Count);
                     for (int i = 0; i < n; i++)
                     {
                         Vector3 at = f.Feet;
