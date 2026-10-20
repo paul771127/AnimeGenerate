@@ -134,7 +134,7 @@ namespace SpellDuel
             var c = warn ? (f == Me ? new Color(f.cls.color.r, f.cls.color.g, f.cls.color.b, 0.5f) : new Color(1f, 0.25f, 0.2f, 0.85f)) : Color.Lerp(f.cls.color, Color.white, 0.6f);
             lr.startColor = lr.endColor = c;
             go.AddComponent<SlashLineFade>().Begin(lr, warn ? Mathf.Max(0.2f, f.windupUntil - battle.now) : 0.25f, c);
-            if (warn) Sfx.Play("cast_swordsman", 0.3f, 0.7f);
+            if (warn) { Sfx.Play("cast_swordsman", 0.3f, 0.7f); if (f != Me) Sfx.Play("blade_warn", 0.7f); }   // 敵人的預警：拔刀聲
             else Sfx.Play("cast_swordsman", 0.45f, 1.1f);
             // 雙人對戰：我的刀線也送給對手（對手看到紅色預警才躲得掉）
             if (f == Me && battle.remoteEnemy && !coop) NetSend?.Invoke(new Msg { t = "slash", pts = new[] { a, b, o }, ok = warn, s = Mathf.Max(0f, f.windupUntil - battle.now) });
@@ -183,6 +183,7 @@ namespace SpellDuel
             fx.Add(mr, mesh);
 
             fx.Begin(Battle.ShotWindup + 0.15f);
+            if (f != Me) Sfx.Play("aim_warn", 0.6f);   // 敵人在瞄準：上升的蜂鳴
             if (f == Me && battle.remoteEnemy && !coop) NetSend?.Invoke(new Msg { t = "shotwarn", pts = new[] { from, to } });
         }
 

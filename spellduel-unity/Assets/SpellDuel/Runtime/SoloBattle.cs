@@ -489,6 +489,10 @@ namespace SpellDuel
         float townWaveT;
         /// <summary>在城鎮／世界地圖（不是戰鬥）：沒有場地範圍</summary>
         public bool InTown => storyMapOpen && phase != Phase.Fighting;
+        /// <summary>現在該播的背景音樂：戰鬥中＝依地圖主題（Boss 在場＝Boss 曲）；結算＝安靜；其他（城鎮、選單）＝城鎮曲</summary>
+        public string MusicTrack => phase == Phase.Over ? null
+            : phase == Phase.Fighting && battle != null ? (bossMode && En.Alive ? "boss" : "battle" + Mathf.Clamp(battle.Theme, 0, 2))
+            : "town";
 
         void UpdateTownWalk()
         {
@@ -1531,6 +1535,7 @@ namespace SpellDuel
         static void Shuffle<T>(List<T> l) { for (int i = l.Count - 1; i > 0; i--) { int j = UnityEngine.Random.Range(0, i + 1); (l[i], l[j]) = (l[j], l[i]); } }
 
         // ================================================================ 每幀
+        float nextHeartbeat;
         void Update()
         {
             UpdateMic();
@@ -1545,6 +1550,8 @@ namespace SpellDuel
             if (endless && charOpen && !coop) dt = 0f;   // 單人無盡：角色畫面開著時暫停
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
             shake = Mathf.Max(0f, shake - Time.deltaTime * Mathf.Max(40f, shake * 8f));
+            // 血量低（25% 以下）：心跳聲
+            if (phase == Phase.Fighting && Me.Alive && Me.hp < Me.maxHp * 0.25f && Time.time >= nextHeartbeat) { Sfx.Play("heartbeat", 0.9f); nextHeartbeat = Time.time + (Me.hp < Me.maxHp * 0.12f ? 0.7f : 1f); }
             // 蓄滿：叮一聲＋輕震動
             bool full = Me.charging != null && battle.ChargeProgress(Me) >= 1f;
             if (full && !chargeWasFull && Me.charging.charge > 0f) { Sfx.Play("charged", 0.8f); Haptics.Play(Haptics.Kind.Light); }
@@ -1997,12 +2004,14 @@ namespace SpellDuel
                     bool meBurn = Battle.FlatDistance(at, Me.Feet) < 0.5f || at == Me.Chest;
                     floaters.Add(new Floater { posMap = at + Vector3.up * 1.2f, text = "灼燒 " + text, color = new Color(1f, 0.55f, 0.2f), born = Time.time, screen = meBurn });
                     if (meBurn) { hitFlash = Mathf.Max(hitFlash, 0.45f); Haptics.Play(Haptics.Kind.Medium); Kick(4f, 0f); }
+                    if (meBurn || Vector3.Distance(at, Me.Chest) < 8f) Sfx.Play("burn", meBurn ? 0.8f : 0.4f);
                     break;
                 }
                 case "dot":
                     bool onMe = at == Me.Chest;
                     floaters.Add(new Floater { posMap = at, text = "毒 " + text, color = Color.green, born = Time.time, screen = onMe });
                     if (onMe) hitFlash = Mathf.Max(hitFlash, 0.4f);   // 中毒扣血：淡一點的紅
+                    Sfx.Play("poison", onMe ? 0.6f : 0.3f);
                     break;
                 case "miss":
                     if (Vector3.Distance(at, Me.Chest) < 6f) Sfx.Play("fizz", 0.35f);   // 法術飛超過射程淡出
@@ -2086,13 +2095,17 @@ namespace SpellDuel
                     break;
                 case "miniondie":
                     floaters.Add(new Floater { posMap = at + Vector3.up * 0.9f, text = "擊倒小怪", color = new Color(1f, 0.7f, 0.3f), born = Time.time });
-                    Sfx.Play("trap", 0.7f, 0.8f);
+                    Sfx.Play("poof", 0.8f); Sfx.Play("enemy_down", 0.45f, 1.5f);
                     break;
                 case "minionwindup":
                     if (Battle.FlatDistance(at, Me.Feet) < 2f) { Sfx.Play("warn", 0.4f, 1.3f); Haptics.Play(Haptics.Kind.Light); }
                     break;
                 case "minionattack":
-                    Sfx.Play("cast_assassin", 0.5f, 0.8f);
+                {
+                    var atk = battle.minions.Find(mm => Battle.FlatDistance(mm.Feet, at) < 0.05f);
+                    if (atk != null && Battle.IsRangedMinion(atk.minionKind)) Sfx.Play("shot", 0.6f, 0.9f + 0.05f * (atk.minionKind % 5));   // 遠程小怪：射擊聲
+                    else Sfx.Play("cast_assassin", 0.5f, 0.8f);
+                }
                     break;
                 case "minionexplode":
                 {
@@ -2906,8 +2919,8 @@ namespace SpellDuel
                 if (en.charging != null) UiKit.Text(new Rect(r.x - W * 0.12f, r.y - lh, r.width + W * 0.24f, lh * 0.95f), $"⚠ {en.charging.name}", fs, new Color(1f, 0.75f, 0.4f), TextAnchor.LowerCenter, true);
             }
 
-            // 最近的敵人（小怪或 Boss）：在畫面中 → 頭上標「▼ 最近 3.2m」；不在畫面中 → 畫面邊緣的箭頭指出方位與距離
-            if (bossMode && phase == Phase.Fighting) DrawNearestEnemy(W, H, lh, fsS);
+            // 所有敵人（Boss、電腦對手、小怪）：在畫面中 → 頭上標距離（最近的寫「最近」、正在出手的紅色 ⚠）；不在畫面中 → 畫面邊緣的箭頭
+            if (phase == Phase.Fighting && !dummyMode) DrawEnemyMarkers(W, H, lh, fsS);
 
             // 小怪頭上的小血條
             if (battle.minions.Count > 0)
@@ -2997,25 +3010,9 @@ namespace SpellDuel
             int nMin = 0; foreach (var mn in battle.minions) if (mn.Alive) nMin++;
             if (nMin > 0) UiKit.Pill(top + lh * 3.6f + (coop ? lh : 0f) + (endless ? lh * 2.0f : 0f), $"👹 小怪 ×{nMin}", fsS, new Color(1f, 0.6f, 0.3f), W * 0.4f);
 
-            // 準星（畫面中央）：所有技能都朝這裡放；蓄力完成（或符文畫好）時用技能顏色脈動
-            {
-                bool ready = me.charging != null && battle.ChargeProgress(me) >= 1f;
-                var cc = me.charging != null ? me.charging.color : Color.white;
-                float pulse = ready ? 0.6f + 0.4f * Mathf.Sin(Time.time * 10f) : 0.75f;
-                float arm = W * (ready ? 0.05f : 0.04f), th = Mathf.Max(3f, W * 0.006f), cg = W * 0.012f;
-                GUI.color = new Color(0f, 0f, 0f, 0.45f);
-                GUI.DrawTexture(new Rect(W / 2 - arm - 1, H / 2 - th / 2 - 1, arm - cg + 2, th + 2), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(W / 2 + cg - 1, H / 2 - th / 2 - 1, arm - cg + 2, th + 2), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(W / 2 - th / 2 - 1, H / 2 - arm - 1, th + 2, arm - cg + 2), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(W / 2 - th / 2 - 1, H / 2 + cg - 1, th + 2, arm - cg + 2), Texture2D.whiteTexture);
-                GUI.color = new Color(cc.r, cc.g, cc.b, pulse);
-                GUI.DrawTexture(new Rect(W / 2 - arm, H / 2 - th / 2, arm - cg, th), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(W / 2 + cg, H / 2 - th / 2, arm - cg, th), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(W / 2 - th / 2, H / 2 - arm, th, arm - cg), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(W / 2 - th / 2, H / 2 + cg, th, arm - cg), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(W / 2 - th / 2, H / 2 - th / 2, th, th), Texture2D.whiteTexture);
-                GUI.color = Color.white;
-            }
+            // 準星（畫面中央）＋蓄力進度：所有技能都朝這裡放；外圈刻度＝蓄力進度，蓄滿閃爍（畫法在 ChargeReticle.cs）
+            ChargeReticle.Draw(new Vector2(W / 2f, H / 2f), W * 0.04f, me.charging != null, me.charging != null ? battle.ChargeProgress(me) : 0f,
+                me.charging != null ? me.charging.color : Color.white, battle.OverchargeFrac(me));
             DrawRuneGuide(W, H);
             Hand?.DrawGUI(small, me.charging != null ? me.charging.color : Color.white);
             if (Time.time < heardUntil) UiKit.Pill(H * 0.24f, heard, fsL, new Color(1f, 0.95f, 0.6f), pillW);
@@ -3272,44 +3269,72 @@ namespace SpellDuel
         }
 
         /// <summary>標示離我最近的敵人在哪個方位（Boss 模式、無盡模式）</summary>
-        void DrawNearestEnemy(float W, float H, float lh, int fsS)
+        /// <summary>
+        /// 標出所有敵人（Boss、電腦對手、每一隻小怪）：
+        ///   在畫面中 → 頭上的小標籤（最近的那隻寫「最近」；正在預備／蓄力出手的變紅色「⚠」閃爍）；
+        ///   不在畫面中 → 畫面邊緣的箭頭指出方位與距離（最近的大一點；身後的也指得到）。
+        /// </summary>
+        void DrawEnemyMarkers(float W, float H, float lh, int fsS)
         {
+            var foes = new List<Fighter>();
+            if (En.Alive) foes.Add(En);
+            foreach (var mn in battle.minions) if (mn.Alive) foes.Add(mn);
+            if (foes.Count == 0) return;
             Fighter near = null; float best = float.MaxValue;
-            foreach (var mn in battle.minions) { if (!mn.Alive) continue; float d = Battle.FlatDistance(mn.Feet, Me.Feet); if (d < best) { best = d; near = mn; } }
-            if (En.Alive)
-            { float d = Battle.FlatDistance(En.Feet, Me.Feet); if (d < best) { best = d; near = En; } }
-            if (near == null) return;
-            var col = near == En ? new Color(1f, 0.35f, 0.15f) : new Color(1f, 0.75f, 0.3f);
-            string nm = near == En ? "Boss" : near.name;
-            var wp = WorldFrame.FromWorld(near.Chest);
-            var sp = cam.WorldToScreenPoint(wp);
-            bool onScreen = sp.z > 0.2f && sp.x > 0 && sp.x < W && sp.y > 0 && sp.y < H;
-            if (onScreen)
-            {
-                // 在畫面中：頭上的小標籤
-                var hp = cam.WorldToScreenPoint(WorldFrame.FromWorld(near.head + Vector3.up * (near == En ? 0.6f : 0.45f)));
-                if (hp.z > 0f) UiKit.Text(new Rect(hp.x - W * 0.2f, H - hp.y - lh * 1.1f, W * 0.4f, lh * 0.9f), $"▼ 最近 {best:F1}m", fsS, col, TextAnchor.LowerCenter, true);
-                return;
-            }
-            // 不在畫面中：用鏡頭座標算方位（背後的也能指），貼在畫面邊緣
-            var local = cam.transform.InverseTransformPoint(wp);
-            var dir2 = new Vector2(local.x, local.y);
-            if (local.z < 0f && dir2.sqrMagnitude < 0.01f) dir2 = new Vector2(0f, -1f);   // 正後方：指下方
-            if (dir2.sqrMagnitude < 1e-6f) dir2 = Vector2.right;
-            dir2.Normalize();
-            float margin = W * 0.12f;
-            var c = new Vector2(W / 2f, H / 2f);
-            float kx = (W / 2f - margin) / Mathf.Max(1e-4f, Mathf.Abs(dir2.x)), ky = (H / 2f - margin * 1.6f) / Mathf.Max(1e-4f, Mathf.Abs(dir2.y));
-            var edge = c + new Vector2(dir2.x, -dir2.y) * Mathf.Min(kx, ky);   // GUI 的 y 向下
-            float ang = Mathf.Atan2(-dir2.y, dir2.x) * Mathf.Rad2Deg;
-            string arrow = ang > -22.5f && ang <= 22.5f ? "➡" : ang > 22.5f && ang <= 67.5f ? "↘" : ang > 67.5f && ang <= 112.5f ? "⬇" : ang > 112.5f && ang <= 157.5f ? "↙"
-                : ang > 157.5f || ang <= -157.5f ? "⬅" : ang > -157.5f && ang <= -112.5f ? "↖" : ang > -112.5f && ang <= -67.5f ? "⬆" : "↗";
-            string back = local.z < 0f ? "（身後）" : "";
-            var r = new Rect(edge.x - W * 0.17f, edge.y - lh * 0.75f, W * 0.34f, lh * 1.5f);
+            foreach (var f in foes) { float d = Battle.FlatDistance(f.Feet, Me.Feet); if (d < best) { best = d; near = f; } }
             float pulse = 0.75f + 0.25f * Mathf.Sin(Time.time * 6f);
-            UiKit.Card(r, 0.6f * pulse, col, 0.9f);
-            UiKit.Text(new Rect(r.x + 4, r.y + 2, r.width - 8, r.height * 0.55f), $"{arrow} {nm}", fsS, col, TextAnchor.MiddleCenter, true);
-            UiKit.Text(new Rect(r.x + 4, r.y + r.height * 0.5f, r.width - 8, r.height * 0.45f), $"{best:F1}m{back}", fsS, Color.white, TextAnchor.MiddleCenter);
+            var used = new List<Rect>();   // 畫面邊緣的標籤不要疊在一起
+            // 先畫遠的、最後畫最近的（最近的在最上面）
+            foes.Sort((x, y) => Battle.FlatDistance(y.Feet, Me.Feet).CompareTo(Battle.FlatDistance(x.Feet, Me.Feet)));
+            foreach (var f in foes)
+            {
+                bool isNear = f == near, boss = f == En && bossMode;
+                bool attacking = f.isMinion ? f.windupUntil > 0f : f.charging != null || f.windupUntil > battle.now;
+                float d = Battle.FlatDistance(f.Feet, Me.Feet);
+                var col = attacking ? new Color(1f, 0.2f, 0.15f) : boss ? new Color(1f, 0.35f, 0.15f) : f == En ? new Color(1f, 0.45f, 0.45f) : new Color(1f, 0.75f, 0.3f);
+                string nm = boss ? "Boss" : f.name;
+                var wp = WorldFrame.FromWorld(f.Chest);
+                var sp = cam.WorldToScreenPoint(wp);
+                bool onScreen = sp.z > 0.2f && sp.x > 0 && sp.x < W && sp.y > 0 && sp.y < H;
+                if (onScreen)
+                {
+                    if (f == En && !bossMode) continue;   // 電腦對手：鎖定框已經標了
+                    var hp = cam.WorldToScreenPoint(WorldFrame.FromWorld(f.head + Vector3.up * (f == En ? 0.6f : 0.45f)));
+                    if (hp.z <= 0f) continue;
+                    string tag = attacking ? "⚠" : "▼";
+                    string txt = isNear ? $"{tag} 最近 {d:F1}m" : $"{tag} {d:F1}m";
+                    if (attacking) col.a = pulse;
+                    UiKit.Text(new Rect(hp.x - W * 0.2f, H - hp.y - lh * 1.1f, W * 0.4f, lh * 0.9f), txt, isNear ? fsS : Mathf.RoundToInt(fsS * 0.8f), col, TextAnchor.LowerCenter, true);
+                    continue;
+                }
+                // 不在畫面中：用鏡頭座標算方位（背後的也能指），貼在畫面邊緣
+                var local = cam.transform.InverseTransformPoint(wp);
+                var dir2 = new Vector2(local.x, local.y);
+                if (local.z < 0f && dir2.sqrMagnitude < 0.01f) dir2 = new Vector2(0f, -1f);   // 正後方：指下方
+                if (dir2.sqrMagnitude < 1e-6f) dir2 = Vector2.right;
+                dir2.Normalize();
+                float margin = W * 0.12f;
+                var c = new Vector2(W / 2f, H / 2f);
+                float kx = (W / 2f - margin) / Mathf.Max(1e-4f, Mathf.Abs(dir2.x)), ky = (H / 2f - margin * 1.6f) / Mathf.Max(1e-4f, Mathf.Abs(dir2.y));
+                var edge = c + new Vector2(dir2.x, -dir2.y) * Mathf.Min(kx, ky);   // GUI 的 y 向下
+                float ang = Mathf.Atan2(-dir2.y, dir2.x) * Mathf.Rad2Deg;
+                string arrow = ang > -22.5f && ang <= 22.5f ? "➡" : ang > 22.5f && ang <= 67.5f ? "↘" : ang > 67.5f && ang <= 112.5f ? "⬇" : ang > 112.5f && ang <= 157.5f ? "↙"
+                    : ang > 157.5f || ang <= -157.5f ? "⬅" : ang > -157.5f && ang <= -112.5f ? "↖" : ang > -112.5f && ang <= -67.5f ? "⬆" : "↗";
+                string back = local.z < 0f ? "（身後）" : "";
+                float bw = isNear || boss ? W * 0.34f : W * 0.2f, bh = isNear || boss ? lh * 1.5f : lh * 0.9f;
+                var r = new Rect(edge.x - bw / 2f, edge.y - bh / 2f, bw, bh);
+                // 和已經畫的標籤重疊：沿著邊往內側錯開
+                for (int k = 0; k < 6 && used.Exists(u => u.Overlaps(r)); k++) r.y += (edge.y > H / 2f ? -1f : 1f) * bh * 0.9f;
+                used.Add(r);
+                float a = (attacking ? pulse : 0.85f);
+                UiKit.Card(r, 0.6f * a, col, 0.9f);
+                if (isNear || boss)
+                {
+                    UiKit.Text(new Rect(r.x + 4, r.y + 2, r.width - 8, r.height * 0.55f), $"{arrow} {(attacking ? "⚠ " : "")}{nm}", fsS, col, TextAnchor.MiddleCenter, true);
+                    UiKit.Text(new Rect(r.x + 4, r.y + r.height * 0.5f, r.width - 8, r.height * 0.45f), $"{d:F1}m{back}", fsS, Color.white, TextAnchor.MiddleCenter);
+                }
+                else UiKit.Text(new Rect(r.x + 2, r.y, r.width - 4, r.height), $"{arrow}{(attacking ? "⚠" : "")} {d:F1}m", Mathf.RoundToInt(fsS * 0.8f), attacking ? col : Color.white, TextAnchor.MiddleCenter, true);
+            }
         }
 
         /// <summary>法師詠唱中：畫面中央畫出要照著畫的符文軌跡（起點有圓點、箭頭表示方向）</summary>

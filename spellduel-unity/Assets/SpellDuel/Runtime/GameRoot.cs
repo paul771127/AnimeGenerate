@@ -222,6 +222,8 @@ namespace SpellDuel
             net = new NetLink();
             ipInput = PlayerPrefs.GetString("sd_last_ip", ipInput);
             codeInput = PlayerPrefs.GetString("sd_last_code", "");
+            Sfx.Ensure(); Music.Ensure(); SettingsMenu.Ensure();
+            SettingsMenu.Hide = () => areaPreview;   // 場地預覽時不畫 ⚙（畫面要給確定／取消）
             Log("請選擇：單人或雙人");
         }
 
@@ -343,6 +345,7 @@ namespace SpellDuel
             if (mode == Mode.Solo || AreaMode || remoteMode) UpdatePlayArea();
             UpdateAreaPreview();
             playArea.Hidden = solo.InTown;   // 城鎮沒有場地
+            Music.Want(solo.phase == SoloBattle.Phase.Hidden ? "town" : solo.MusicTrack);   // 背景音樂（設定選單可關）
             HandleNetwork();
             UpdateRemoteQuickStart();
             UpdateSeat();

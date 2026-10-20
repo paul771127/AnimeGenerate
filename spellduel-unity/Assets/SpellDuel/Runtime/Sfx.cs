@@ -11,7 +11,13 @@ namespace SpellDuel
     public class Sfx : MonoBehaviour
     {
         public static Sfx I { get; private set; }
-        public static float Volume = 0.8f;
+        static float volume = 0.8f; static bool on = true, loaded;
+        /// <summary>設定選單的「音效」開關與音量（PlayerPrefs 記住；第一次用到才讀，不在靜態建構子裡讀）</summary>
+        static void Load() { if (loaded) return; loaded = true; on = PlayerPrefs.GetInt("SD_SfxOn", 1) == 1; volume = PlayerPrefs.GetFloat("SD_SfxVol", 0.8f); }
+        public static bool On { get { Load(); return on; } }
+        public static float Volume { get { Load(); return volume; } set { Load(); volume = Mathf.Clamp01(value); } }
+        public static void SetOn(bool v) { Load(); on = v; PlayerPrefs.SetInt("SD_SfxOn", v ? 1 : 0); PlayerPrefs.Save(); }
+        public static void SetVolume(float v) { Volume = v; PlayerPrefs.SetFloat("SD_SfxVol", volume); PlayerPrefs.Save(); }
 
         const int SR = 22050;
         readonly Dictionary<string, AudioClip> clips = new Dictionary<string, AudioClip>();
@@ -30,7 +36,7 @@ namespace SpellDuel
         void Awake()
         {
             I = this;
-            pool = new AudioSource[8];
+            pool = new AudioSource[10];
             for (int i = 0; i < pool.Length; i++)
             {
                 var s = gameObject.AddComponent<AudioSource>();
@@ -43,6 +49,7 @@ namespace SpellDuel
         /// <summary>播放音效（pitch 會加一點隨機變化，連續播不會聽起來一模一樣）</summary>
         public static void Play(string name, float volume = 1f, float pitch = 1f)
         {
+            if (!On) return;
             if (I == null) Ensure();
             if (!I.clips.TryGetValue(name, out var clip)) return;
             var s = I.pool[I.next]; I.next = (I.next + 1) % I.pool.Length;
@@ -123,6 +130,30 @@ namespace SpellDuel
             Add("poof", 0.25f, (t, d) => Env(t, 0.005f, d) * (0.6f * Sin(t, 300f - 700f * t) + 0.4f * LowNoise(0.25f)));
             // 召喚：魔法陣升起的嗡鳴
             Add("summon", 0.8f, (t, d) => Env(t, 0.15f, d) * 0.35f * (Sin(t, 220f + 330f * t) + 0.6f * Sin(t, 330f + 495f * t) + 0.3f * Sin(t, 440f + 660f * t)));
+            // ---- 戰鬥補充
+            // 敵人揮刀／刺擊的預警：拔刀的「鏘——」（金屬摩擦往上滑）
+            Add("blade_warn", 0.4f, (t, d) => Env(t, 0.03f, d) * (0.3f * Sin(t, 2200f + 1800f * t) + 0.2f * Sin(t, 3300f + 2600f * t)) + Env(t, 0.01f, d) * Swoosh(t, d, 5000f, 7000f) * 0.25f);
+            // 敵人遠程瞄準你：細細的上升蜂鳴（鎖定感）
+            Add("aim_warn", 0.32f, (t, d) => Env(t, 0.02f, d) * 0.28f * (Sin(t, 1400f + 1600f * t) + 0.5f * Sin(t, 2800f + 3200f * t)) * (((int)(t * 40f)) % 2 == 0 ? 1f : 0.55f));
+            // 遠程小怪射擊：「啾」
+            Add("shot", 0.16f, (t, d) => Env(t, 0.002f, d) * 0.5f * Sin(t, 1500f - 5000f * t) + (t < 0.01f ? 0.3f * Noise() : 0f));
+            // 灼燒：劈啪的火
+            Add("burn", 0.45f, (t, d) => Env(t, 0.02f, d) * (0.35f * LowNoise(0.35f) + (((int)(t * 140f)) % 7 == 0 ? 0.6f * Noise() : 0f)));
+            // 中毒：咕嘟的氣泡＋嘶
+            Add("poison", 0.4f, (t, d) => Env(t, 0.02f, d) * (0.35f * Sin(t, 220f + 160f * Mathf.Abs(Mathf.Sin(t * 60f))) + 0.15f * Hp()));
+            // 冰凍：碎冰的喀啦
+            Add("freeze", 0.4f, (t, d) => Mathf.Exp(-t * 10f) * (0.3f * Sin(t, 2600f) + 0.25f * Sin(t, 3900f) + 0.2f * Sin(t, 5200f)) + (((int)(t * 220f)) % 5 == 0 ? Mathf.Exp(-t * 8f) * 0.5f * Noise() : 0f));
+            // 敵人倒下：沉重的落地聲＋往下掉的音
+            Add("enemy_down", 0.7f, (t, d) => Env(t, 0.005f, d) * (0.7f * Sin(t, 180f - 200f * t) + 0.35f * Sin(t, 440f - 500f * t) * Mathf.Exp(-t * 6f)) + Mathf.Exp(-t * 20f) * 0.5f * LowNoise(0.2f));
+            // 血量低：心跳（兩下）
+            Add("heartbeat", 0.55f, (t, d) => { float t2 = t - 0.2f; return Mathf.Exp(-t * 28f) * 0.9f * Sin(t, 55f) + (t2 > 0f ? Mathf.Exp(-t2 * 30f) * 0.7f * Sin(t2, 50f) : 0f); });
+            // 按鈕：輕輕的「喀」
+            Add("click", 0.05f, (t, d) => Env(t, 0.001f, d) * 0.4f * (Sin(t, 1800f) + 0.5f * Square(t, 900f) * 0.3f));
+            // 開打倒數：短「嗶」；開打：高「嗶——」
+            Add("tick", 0.09f, (t, d) => Env(t, 0.003f, d) * 0.35f * Sin(t, 988f));
+            Add("go", 0.4f, (t, d) => Env(t, 0.005f, d) * 0.35f * (Sin(t, 1976f) + 0.4f * Sin(t, 2960f)));
+            // 護盾破掉：玻璃碎裂
+            Add("shatter", 0.5f, (t, d) => Mathf.Exp(-t * 7f) * (0.25f * Sin(t, 3100f) + 0.2f * Sin(t, 4700f)) + Mathf.Exp(-t * 12f) * 0.5f * Hp());
             Add("lose", 1.1f, (t, d) => { float[] n = { 392f, 370f, 349f, 262f }; int k = Mathf.Min(3, (int)(t / 0.22f)); return Env(t - k * 0.22f, 0.01f, k == 3 ? 0.6f : 0.25f) * 0.35f * Square(t, n[k]) * 0.6f; });
         }
 

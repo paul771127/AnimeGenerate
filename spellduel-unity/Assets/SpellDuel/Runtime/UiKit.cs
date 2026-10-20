@@ -89,7 +89,9 @@ namespace SpellDuel
             float pad=Mathf.Min(r.height*.12f,size*.4f);
             Text(Inset(face,pad),text,size,enabled?Paper:new Color(.57f,.61f,.68f),TextAnchor.MiddleCenter,selected);
             // Keep Unity's original hit rectangle/control semantics and the caller's enabled predicate.
-            return enabled&&GUI.Button(r,GUIContent.none,GUIStyle.none);
+            bool hit=enabled&&GUI.Button(r,GUIContent.none,GUIStyle.none);
+            if(hit)Sfx.Play("click",.5f);   // 按鈕音效
+            return hit;
         }
         public static void Bar(Rect r,float v,Color c,string text,int size)
         {
