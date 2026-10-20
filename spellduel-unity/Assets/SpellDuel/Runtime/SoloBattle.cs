@@ -1824,13 +1824,14 @@ namespace SpellDuel
         SkillDef sealFor; int sealStep;   // 忍者的手印：正在比第幾個
 
         /// <summary>人在場地外：只能移動，不能攻擊、詠唱、放招（回到場地內才可以）</summary>
-        bool OutOfArea => area != null && area.state == PlayArea.State.Done && !InTown && !area.Inside(cam.transform.position);
+        /// 高度異常（在場地地板底下或飛在空中）也算在場地外。
+        bool OutOfArea => area != null && area.state == PlayArea.State.Done && !InTown && (area.HeightBad || !area.Inside(cam.transform.position));
         float outWarnAt = -9f;
         /// <summary>場地外：提示一下（1.5 秒內不重複）並回傳 true＝不能出手</summary>
         bool BlockedOutside()
         {
             if (!OutOfArea) return false;
-            if (Time.time - outWarnAt > 1.5f) { outWarnAt = Time.time; Say("⚠ 在場地外不能攻擊或放技能：先回到場地內", 1.5f); Sfx.Play("fail", 0.5f); }
+            if (Time.time - outWarnAt > 1.5f) { outWarnAt = Time.time; Say(area.HeightBad ? "⚠ 位置異常不能攻擊或放技能：回到平地，或重新放置場地" : "⚠ 在場地外不能攻擊或放技能：先回到場地內", 1.5f); Sfx.Play("fail", 0.5f); }
             return true;
         }
 

@@ -414,8 +414,9 @@ namespace SpellDuel
         public const float AutoAreaSize = 10f;
 
         // ---------------------------------------------------------------- 重新放置場地：先預覽，按確定才移過去
-        bool areaPreview; System.Action areaPreviewConfirm;
-        void BeginAreaPreview(System.Action confirm) { areaPreview = true; areaPreviewConfirm = confirm; }
+        // 所有放置場地（第一次自動建、重新放置、高度異常重置）都要先看到黃框，按「確定」才放
+        bool areaPreview, areaPreviewFirst; System.Action areaPreviewConfirm;
+        void BeginAreaPreview(System.Action confirm) { areaPreview = true; areaPreviewConfirm = confirm; areaPreviewFirst = playArea.state != PlayArea.State.Done; }
         void UpdateAreaPreview()
         {
             if (areaPreview) playArea.ShowPreview(AutoAreaSize); else playArea.HidePreview();
@@ -424,7 +425,7 @@ namespace SpellDuel
         void DrawAreaPreview(float W, float H, float pad, int fs, int fsS)
         {
             float pw = W - pad * 2f, bh = fs * 2.6f;
-            UiKit.Pill(H * 0.12f, $"↺ 重新放置 {AutoAreaSize:0}m 場地", fs, new Color(1f, 0.85f, 0.3f), pw);
+            UiKit.Pill(H * 0.12f, areaPreviewFirst ? $"📐 放置 {AutoAreaSize:0}m 場地" : $"↺ 重新放置 {AutoAreaSize:0}m 場地", fs, new Color(1f, 0.85f, 0.3f), pw);
             UiKit.Pill(H * 0.12f + fs * 2.4f, playArea.HasFloor
                 ? "黃色框＝新場地的範圍，黃色箭頭＝場地前方。轉身面向空地、走到想要的位置（你會站在靠近自己這一邊）"
                 : "先慢慢移動手機、鏡頭對著地板，找到地板才看得到預覽", fsS, Color.white, pw);
@@ -434,10 +435,40 @@ namespace SpellDuel
             {
                 areaPreview = false; playArea.HidePreview();
                 areaPreviewConfirm?.Invoke(); areaPreviewConfirm = null;
-                Log($"✅ 場地已放在新的位置");
+                if (!areaPreviewFirst) Log($"✅ 場地已放在新的位置");
             }
-            if (UiKit.Button(new Rect(pad, by + bh * 1.2f, pw, bh), "取消（場地不變）", fsS))
+            if (areaPreviewFirst)
+            {
+                // 還沒有場地：沒有「取消」可以退回，只能回首頁
+                if (UiKit.Button(new Rect(pad, by + bh * 1.2f, pw, bh), "返回首頁", fsS))
+                { areaPreview = false; areaPreviewConfirm = null; playArea.HidePreview(); solo.Hide(); LeaveLobby(); }
+            }
+            else if (UiKit.Button(new Rect(pad, by + bh * 1.2f, pw, bh), "取消（場地不變）", fsS))
             { areaPreview = false; areaPreviewConfirm = null; playArea.HidePreview(); }
+        }
+
+        /// <summary>場地外／高度異常的提示；高度異常時給「重新放置場地」按鈕（同一個地方的對齊方不能自己放，要找平地或請房主重放）</summary>
+        void DrawOutsideWarning(float W, float H, float pad, int fs, int fsS)
+        {
+            var red = new Color(1f, 0.4f, 0.4f);
+            if (!playArea.HeightBad)
+            {
+                if (!playArea.Inside(cam.transform.position)) UiKit.Pill(H * 0.68f, "⚠ 回到場地內（場地外只能移動，不能攻擊）", fs, red, W - pad * 2);
+                return;
+            }
+            UiKit.Pill(H * 0.6f, playArea.HeightHint, fsS, red, W - pad * 2);
+            bool canPlace = mode == Mode.Solo || remoteMode || (AreaMode && net.IsHost && !areaReceived);
+            if (!canPlace) { UiKit.Pill(H * 0.6f + fs * 2.4f, "（場地是房主放的：找平地站好，或請房主重新放置）", fsS, Color.white, W - pad * 2); return; }
+            float bh = fs * 2.4f;
+            if (UiKit.Button(new Rect(pad, H * 0.6f + fs * 2.4f, W - pad * 2, bh), $"↺ 在我前方重新放置 {AutoAreaSize:0}m 場地", fs, true, red, playArea.HasFloor))
+                BeginAreaPreview(() =>
+                {
+                    playArea.Clear();
+                    if (!playArea.AutoSquare(AutoAreaSize)) return;
+                    // 單人：整個戰場（敵人、場景）跟著搬到新場地，戰鬥繼續；連線中：世界座標不動（對手的對齊才不會失效）
+                    if (mode == Mode.Solo) { WorldFrame.SetMarker(playArea.Origin); Log("✅ 場地已重新放置，戰鬥繼續"); }
+                    else OnPlayAreaReady();
+                });
         }
 
         void UpdateRemoteQuickStart()
@@ -448,8 +479,12 @@ namespace SpellDuel
             if (canAutoArea && !autoArea && playArea.HasFloor && playArea.state != PlayArea.State.Done && playArea.state != PlayArea.State.Drawing && Tracking.Ok)
             {
                 autoArea = true;
-                playArea.Clear();
-                if (playArea.AutoSquare(AutoAreaSize)) { OnPlayAreaReady(); Log($"✅ 已自動建好 {AutoAreaSize:0}m 場地（在你前方；要換位置就面向空地按「↺ 重新放置」）"); }
+                if (!areaPreview) BeginAreaPreview(() =>
+                {
+                    if (AreaMode && areaReceived) return;   // 預覽時已經收到房主的場地：用房主的
+                    playArea.Clear();
+                    if (playArea.AutoSquare(AutoAreaSize)) { OnPlayAreaReady(); Log($"✅ 已建好 {AutoAreaSize:0}m 場地（要換位置就面向空地按「↺ 重新放置」）"); }
+                });
             }
             if (mode == Mode.Solo) return;
             if (!net.Connected) { autoSetup = false; return; }
@@ -542,7 +577,7 @@ namespace SpellDuel
                 }
             }
             // 走出場地：每秒震動一次
-            if (playArea.state == PlayArea.State.Done && !solo.InTown && !playArea.Inside(cam.transform.position) && Time.time - lastBoundaryBuzz > 1f)
+            if (playArea.state == PlayArea.State.Done && !solo.InTown && (playArea.HeightBad || !playArea.Inside(cam.transform.position)) && Time.time - lastBoundaryBuzz > 1f)
             {
                 lastBoundaryBuzz = Time.time;
                 Handheld.Vibrate();
@@ -1267,8 +1302,7 @@ namespace SpellDuel
             if (mode == Mode.Duo && solo.phase != SoloBattle.Phase.Hidden)
             {
                 solo.DrawGUI();
-                if (AreaMode && playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position))
-                    UiKit.Pill(H * 0.68f, "⚠ 回到場地內（場地外只能移動，不能攻擊）", fs, new Color(1f, 0.4f, 0.4f), W - pad * 2);
+                if ((AreaMode || remoteMode) && playArea.state == PlayArea.State.Done) DrawOutsideWarning(W, H, pad, fs, fsS);
                 return;
             }
 
@@ -1276,8 +1310,7 @@ namespace SpellDuel
             if (mode == Mode.Solo && solo.phase != SoloBattle.Phase.Hidden)
             {
                 solo.DrawGUI();
-                if (playArea.state == PlayArea.State.Done && !solo.InTown && !playArea.Inside(cam.transform.position))
-                    UiKit.Pill(H * 0.68f, "⚠ 回到場地內（場地外只能移動，不能攻擊）", fs, new Color(1f, 0.4f, 0.4f), W - pad * 2);
+                if (playArea.state == PlayArea.State.Done && !solo.InTown) DrawOutsideWarning(W, H, pad, fs, fsS);
                 return;
             }
 

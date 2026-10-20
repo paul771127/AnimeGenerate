@@ -142,10 +142,49 @@ namespace SpellDuel
             else if (state == State.Done)
             {
                 UpdateWalls();
+                UpdateHeight(Time.time);
                 var me = Flat(cam.transform.position);
-                Hint = Inside(me) ? "" : "⚠ 你在場地外面！請回到場地內";
+                Hint = HeightBad ? HeightHint : Inside(me) ? "" : "⚠ 你在場地外面！請回到場地內";
             }
+            if (state != State.Done || hidden) { HeightBad = false; heightOffSince = -1f; }
         }
+
+        // ---------------------------------------------------------------- 高度異常（手機在場地地板底下，或飛在空中）
+        // 地板抓錯（桌面、樓梯）或場地放在別的樓層時，手機離場地地板的高度會不合理 → 視為人在場地外，要求重新放置或找平地。
+        public const float MinCamHeight = 0.35f;   // 蹲最低時手機也有 0.5m 左右；低於這個＝在地板底下或地板抓錯
+        public const float MaxCamHeight = 2.4f;    // 手舉高約 2.1m；高於這個＝飛在空中（換樓層、站到高處）
+        public const float HeightBadAfter = 1.0f, HeightOkAfter = 0.5f;   // 持續這麼久才切換，避免一閃一閃
+        public bool HeightBad { get; private set; }
+        public bool HeightLow { get; private set; }
+        float heightOffSince = -1f;
+
+        /// <summary>手機離場地地板的高度是否合理（純計算，方便測試）</summary>
+        public static bool HeightOk(float camY, float floorY, out bool low)
+        {
+            float h = camY - floorY;
+            low = h < MinCamHeight;
+            return h >= MinCamHeight && h <= MaxCamHeight;
+        }
+
+        /// <summary>依持續時間切換 HeightBad（異常 1 秒才算、恢復 0.5 秒才解除）</summary>
+        public static bool StepHeight(bool bad, bool okNow, ref float since, float now)
+        {
+            if (okNow == !bad) { since = -1f; return bad; }   // 跟目前狀態一致
+            if (since < 0f) since = now;
+            if (now - since >= (bad ? HeightOkAfter : HeightBadAfter)) { since = -1f; return !bad; }
+            return bad;
+        }
+
+        void UpdateHeight(float now)
+        {
+            bool ok = HeightOk(cam.transform.position.y, Origin.position.y, out bool low);
+            if (!ok) HeightLow = low;
+            HeightBad = StepHeight(HeightBad, ok, ref heightOffSince, now);
+        }
+
+        public string HeightHint => HeightLow
+            ? "⚠ 位置異常：你在場地地板底下（地板可能抓錯）。請重新放置場地，或走到平地"
+            : "⚠ 位置異常：你飛在場地上空（可能換了樓層或站到高處）。請回到平地，或重新放置場地";
 
         void UpdateFloor()
         {
