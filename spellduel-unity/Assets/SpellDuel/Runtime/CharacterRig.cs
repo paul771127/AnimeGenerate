@@ -802,6 +802,7 @@ namespace SpellDuel
                 aL.x += tremble; aR.x -= tremble;
             }
             aL = Arm.Lerp(aL, castL, castK * castMaskL); aR = Arm.Lerp(aR, castR, castK * castMaskR);
+            AttackArms(dt, ref aL, ref aR, deadE);   // 電腦敵人的攻擊動作（CharacterRig.Attack.cs）
             aL = Arm.Lerp(aL, Relaxed, deadE); aR = Arm.Lerp(aR, Relaxed, deadE);
             ApplyArm(shL, elL, handL, aL, -1f);
             ApplyArm(shR, elR, handR, aR, 1f);

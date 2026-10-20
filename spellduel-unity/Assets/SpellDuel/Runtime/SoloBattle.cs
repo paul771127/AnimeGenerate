@@ -1990,6 +1990,7 @@ namespace SpellDuel
                     floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time });
                     SpellFx.Impact("assassin", c, WorldFrame.FromWorld(at), 1.2f);
                     Sfx.Play("hit", 1f, 1.2f); Kick(8f, 0.08f);
+                    if (at == Me.Chest && enemyRig && !bossMode) enemyRig.PlayAttack("lunge", 0.05f);   // 敵人刺客撲上來
                     break;
                 case "armedExpire":
                     if (at == Me.Chest) Say(text + "（5 秒內沒靠近）", 1.5f);
@@ -2325,7 +2326,7 @@ namespace SpellDuel
                     projGo[p] = go;
                     if (p.owner == En && !bossMode)
                     {
-                        if (enemyRig) enemyRig.PlayCast();   // 敵人出招動作＋光效
+                        if (enemyRig && !enemyRig.Attacking) enemyRig.PlayAttack(AttackKindOf(enemyClassUsed), 0.08f);   // 敵人出招動作＋光效（普攻已經在預警時開始擺架勢）
                         SpellFx.CastBurst(enemyClassUsed, p.skill.color, WorldFrame.FromWorld(p.pos), WorldFrame.DirFromWorld(p.dir), 1f);
                         if (NetMode) Sfx.Cast(enemyClassUsed, 0.55f);   // 雙人：對手的法術不會經過 Battle 的 cast 事件
                     }
@@ -3269,6 +3270,9 @@ namespace SpellDuel
         }
 
         /// <summary>標示離我最近的敵人在哪個方位（Boss 模式、無盡模式）</summary>
+        /// <summary>電腦敵人用技能時的出手動作（劍士橫砍、刺客突刺、獵人放箭、法師／牧師推出）</summary>
+        static string AttackKindOf(string cls) => cls == "swordsman" ? "slash" : cls == "assassin" ? "stab" : cls == "archer" ? "shoot" : "magic";
+
         /// <summary>
         /// 標出所有敵人（Boss、電腦對手、每一隻小怪）：
         ///   在畫面中 → 頭上的小標籤（最近的那隻寫「最近」；正在預備／蓄力出手的變紅色「⚠」閃爍）；

@@ -135,6 +135,8 @@ namespace SpellDuel
             lr.startColor = lr.endColor = c;
             go.AddComponent<SlashLineFade>().Begin(lr, warn ? Mathf.Max(0.2f, f.windupUntil - battle.now) : 0.25f, c);
             if (warn) { Sfx.Play("cast_swordsman", 0.3f, 0.7f); if (f != Me) Sfx.Play("blade_warn", 0.7f); }   // 敵人的預警：拔刀聲
+            // 敵人的預警：同時擺出攻擊架勢（預備的長度＝預警時間，出手的瞬間＝判定）
+            if (warn && f == En && enemyRig) enemyRig.PlayAttack(f.cls != null && f.cls.id == "assassin" ? "stab" : "slash", Mathf.Max(0.05f, f.windupUntil - battle.now));
             else Sfx.Play("cast_swordsman", 0.45f, 1.1f);
             // 雙人對戰：我的刀線也送給對手（對手看到紅色預警才躲得掉）
             if (f == Me && battle.remoteEnemy && !coop) NetSend?.Invoke(new Msg { t = "slash", pts = new[] { a, b, o }, ok = warn, s = Mathf.Max(0f, f.windupUntil - battle.now) });
@@ -184,6 +186,7 @@ namespace SpellDuel
 
             fx.Begin(Battle.ShotWindup + 0.15f);
             if (f != Me) Sfx.Play("aim_warn", 0.6f);   // 敵人在瞄準：上升的蜂鳴
+            if (f == En && enemyRig) enemyRig.PlayAttack(f.cls != null && f.cls.id == "archer" ? "shoot" : "magic", Battle.ShotWindup);   // 拉弓／舉杖，射出時放開
             if (f == Me && battle.remoteEnemy && !coop) NetSend?.Invoke(new Msg { t = "shotwarn", pts = new[] { from, to } });
         }
 
