@@ -122,7 +122,7 @@ namespace SpellDuel
         readonly System.Random dropRng = new System.Random();
         int PendingUpgrades => endless && prof != null ? prof.statPoints + prof.UsableSkillPoints : 0;
         /// <summary>選技能畫面：這次是不是無盡模式（只有無盡模式用角色養成）</summary>
-        bool EndlessSetup => NetMode ? netEndless || netDungeon : enemyClass == "endless" || enemyClass == "story";   // 故事模式也用角色養成
+        bool EndlessSetup => NetMode ? netEndless || netDungeon : enemyClass == "endless" || enemyClass == "story" || enemyClass == "dungeon" || (prepGo != null && prepEndless);   // 故事、副本也用角色養成
         /// <summary>選技能畫面可以選的技能：無盡模式＝角色會的技能；其他模式＝職業全部技能</summary>
         string[] SetupSkills => EndlessSetup ? Progress.Char(myClass).KnownSkills().ToArray() : AllowedSkills;
         /// <summary>其他模式可以選的技能：職業全部技能＋（轉職後）進階職業的全部技能</summary>
@@ -216,7 +216,7 @@ namespace SpellDuel
 
         void UseConsumable(Economy.Consumable c)
         {
-            if (battle == null || Me == null || !Me.Alive || Economy.Count(c.id) <= 0) return;
+            if (battle == null || Me == null || !Me.Alive || CarryLeftOf(c.id) <= 0) return;
             if (IsTrial) { Say("⚔ 轉職試煉中不能使用道具", 2f); return; }
             if (c.scroll)
             {
@@ -252,7 +252,7 @@ namespace SpellDuel
                 if (!text.Contains(word)) continue;
                 itemVoiceLock = Time.time + 2f;
                 var c = PickItem(id);
-                if (c == null) { Say(id == "scroll" ? "沒有回城捲軸" : id == "mp_s" ? "沒有魔力藥水" : "沒有治療藥水", 1.5f); return; }
+                if (c == null) { Say(id == "scroll" ? "沒帶回城捲軸" : id == "mp_s" ? "沒帶魔力藥水（出發前在整備畫面選）" : "沒帶治療藥水（出發前在整備畫面選）", 1.5f); return; }
                 Say($"🎤 {c.name}", 1f);
                 UseConsumable(c);
                 return;
@@ -262,7 +262,7 @@ namespace SpellDuel
         /// <summary>選要用哪一瓶：hp＝治療藥水（血很少時優先大瓶）、auto＝看血量和 MP（喝水手勢用）</summary>
         Economy.Consumable PickItem(string id)
         {
-            Economy.Consumable Have(string i) => Economy.Count(i) > 0 ? Economy.Find(i) : null;
+            Economy.Consumable Have(string i) => CarryLeftOf(i) > 0 ? Economy.Find(i) : null;   // 只能用整備時帶出來的
             if (id == "auto")
             {
                 float hp = Me.hp / Mathf.Max(1f, Me.maxHp), mp = Me.mp / Mathf.Max(1f, Me.maxMp);
@@ -283,7 +283,7 @@ namespace SpellDuel
         {
             if (selected != HandGesture.Shape.Call || !ItemsUsable || Me.charging != null) return;
             var c = PickItem("auto");
-            if (c == null) { Say("沒有藥水了（到城鎮的道具店買）", 1.5f); return; }
+            if (c == null) { Say("沒有帶出來的藥水了（出發前在整備畫面選要帶幾瓶）", 1.5f); return; }
             Say($"🤙 {c.name}", 1f);
             UseConsumable(c);
         }
@@ -292,9 +292,9 @@ namespace SpellDuel
         void DoReturnScroll()
         {
             scrollRequested = false;
-            if (battle == null || storyStage == null || Economy.Count("scroll") <= 0) return;
+            if (battle == null || storyStage == null || CarryLeftOf("scroll") <= 0) return;
             {
-                Economy.AddItem("scroll", -1);
+                Economy.AddItem("scroll", -1); SpendCarry("scroll");
                 int theme = storyStage.theme;
                 string loot = GrantLoot("使用回城捲軸", false);
                 EndBattle(); ShowSetup();
@@ -307,7 +307,7 @@ namespace SpellDuel
         void UsePotion(Economy.Consumable c)
         {
             if (Time.time < potionReadyAt) { Say($"藥水冷卻中（{potionReadyAt - Time.time:0.0} 秒）", 1f); return; }
-            Economy.AddItem(c.id, -1);
+            Economy.AddItem(c.id, -1); SpendCarry(c.id);
             potionReadyAt = Time.time + Economy.PotionCooldown;
             if (c.hpFrac > 0f) Me.hp = Mathf.Min(Me.maxHp, Me.hp + Me.maxHp * c.hpFrac);
             if (c.mpFlat > 0f) Me.mp = Mathf.Min(Me.maxMp, Me.mp + c.mpFlat);
@@ -469,13 +469,13 @@ namespace SpellDuel
         {
             if (world.OnStartStage == null)
             {
-                world.OnStartStage = st => { storyMapOpen = false; StartStory(st); };
+                world.OnStartStage = st => OpenPrep(st.title, true, null, () => { storyMapOpen = false; StartStory(st); });   // 先整備再出發
                 world.OnWatchStory = WatchStory;
-                world.OnStartDungeon = d => StartDungeonRun(d, false);
+                world.OnStartDungeon = d => OpenPrep("🏰 " + d.name, true, null, () => StartDungeonRun(d, false));
                 world.OnWatchDungeon = WatchDungeonStory;
                 world.OnBack = () => storyMapOpen = false;
                 world.OnCharacter = () => charOpen = true;
-                world.OnStartTrial = StartTrial;
+                world.OnStartTrial = () => OpenPrep("⚔ 轉職試煉", true, "轉職試煉不能使用道具", StartTrial);
             }
             world.Draw(Progress.Char(myClass));
         }
@@ -1553,6 +1553,7 @@ namespace SpellDuel
         void EndBattle()
         {
             ClearDaily(); ClearTutorial();
+            ResetCarryLeft();   // 下一場能用的道具＝整備時決定帶的數量
             victory = null; hitsTaken = 0; lootLog.Clear(); lootGoldLog = 0; ResetExercise();
             if (prof != null) Progress.SaveChar(prof);
             charOpen = false;
@@ -2642,11 +2643,12 @@ namespace SpellDuel
             // 技能說明視窗開著：底下的畫面照畫但不能按（GUI.enabled=false），說明視窗畫在最上面
             bool infoOpen = infoSkill != null && Skills.All.ContainsKey(infoSkill);
             bool talking = dlg != null;
-            if (infoOpen || charOpen || storyMapOpen || talking) GUI.enabled = false;
+            if (infoOpen || charOpen || storyMapOpen || talking || prepGo != null) GUI.enabled = false;
             if (!(storyMapOpen && townWalk.Active)) DrawScreens();   // 3D 城鎮：不畫底下的選擇畫面（才看得到城鎮）
             GUI.enabled = true;
             if (talking) DrawDialogue();
             else if (charOpen) DrawCharacter();
+            else if (prepGo != null) { DrawPrep(); if (infoOpen) DrawSkillInfo(); }   // 出發前的整備（技能說明可以疊在上面）
             else if (storyMapOpen) DrawStoryMap();
             else if (infoOpen) DrawSkillInfo();
         }
@@ -2928,7 +2930,11 @@ namespace SpellDuel
             bool voiceOk = UseSpeech || VoiceReady;   // 沒有語音辨識時，要先把 3 個技能的咒語錄好
             string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? "📖 打開故事地圖" : enemyClass == "daily" ? $"📅 開始{DailyChallenge.Names[Mathf.Clamp(dailyPick, 0, 2)]}" : enemyClass == "tutorial" ? "🎓 開始教學" : enemyClass == "dungeon" ? "🏰 打開副本清單" : "⚔ 開始戰鬥");
             if (UiKit.Button(new Rect(pad, by, W - pad * 2, u * 1.6f), startText, fsL, true, cls.color, LoadoutReady && voiceOk))
-            { if (NetMode) SendReady(); else StartBattle(); }
+            {
+                if (NetMode) SendReady();
+                else if (enemyClass == "story" || enemyClass == "tutorial" || enemyClass == "dungeon") StartBattle();   // 打開地圖／清單、教學：不用整備
+                else OpenPrep(startText.Replace("⚔ ", "").Replace("🔥 ", "").Replace("♾ ", "").Replace("🪵 ", ""), EndlessSetup, enemyClass == "endless" ? null : "這個模式不能使用道具（故事、副本、無盡模式才能用）", StartBattle);
+            }
         }
 
         void DrawHud()
@@ -3281,7 +3287,7 @@ namespace SpellDuel
                 foreach (var c in Economy.Consumables)
                 {
                     if (c.scroll && storyStage == null) continue;
-                    int n = Economy.Count(c.id);
+                    int n = CarryLeftOf(c.id);   // 這一場帶出來、還剩幾個
                     bool cdOk = c.scroll || Time.time >= potionReadyAt;
                     var sr = new Rect(pad + ci * (ibw + gap), iy, ibw, lh * 1.25f);
                     string nm = c.id == "hp_s" ? "小藥水" : c.id == "hp_l" ? "大藥水" : c.id == "mp_s" ? "魔力藥水" : "回城";
