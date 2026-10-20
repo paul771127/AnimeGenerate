@@ -28,6 +28,7 @@ namespace SpellDuel
             var viewport=new Rect(area.x,area.y+headH+gap*.3f,area.width,Mathf.Max(fs*3,area.height-headH-footerH-gap*.3f));
             var bounds=new Rect(0,0,contentW,Mathf.Max(viewport.height,rows*rowH+gap));
             treeScroll.y=Mathf.Clamp(treeScroll.y,0,Mathf.Max(0,bounds.height-viewport.height));
+            treeScroll=UiKit.DragScroll(viewport,treeScroll,bounds);   // 手指拖曳捲動
             treeScroll=GUI.BeginScrollView(viewport,treeScroll,bounds,false,true);
             UiKit.Card(new Rect(0,0,contentW,bounds.height),.38f,tcol,.25f);
             Vector2 Center(TreeNode n)=>new Vector2((n.col+.5f)*colW,(n.row+.5f)*rowH);
@@ -96,6 +97,7 @@ namespace SpellDuel
             if(detailKey!=key){detailKey=key;detailScroll=Vector2.zero;}
             float width=viewport.width-fs*.85f;
             var content=new Rect(0,0,width,Mathf.Max(viewport.height,UiKit.TextHeight(text,width,fs)+4));
+            detailScroll=UiKit.DragScroll(viewport,detailScroll,content);
             detailScroll=GUI.BeginScrollView(viewport,detailScroll,content,false,true);
             UiKit.Text(content,text,fs,color,TextAnchor.UpperLeft,false,1f);
             GUI.EndScrollView();

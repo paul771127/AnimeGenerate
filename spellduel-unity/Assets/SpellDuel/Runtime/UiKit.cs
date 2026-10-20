@@ -10,6 +10,48 @@ namespace SpellDuel
         static readonly GUIContent content = new GUIContent();
         static readonly string[] statGlyphs={"力","智","體","敏","精","幸"};
         public static int BaseFont => Mathf.Max(18, Mathf.RoundToInt(Mathf.Min(Screen.height / 46f, Screen.width / 21f)));
+
+        // ---- 手指拖曳捲動（IMGUI 的捲動區在手機上只能拖捲軸）：在 GUI.BeginScrollView 之前呼叫，回傳新的捲動位置。
+        //      拖超過 12 像素才算拖曳（之前的點擊照常）；拖曳放開不會觸發按鈕；放開後有慣性滑行。
+        static int dragId=-1,glideId=-1;static Vector2 dragLast,dragVel,glideVel;static float dragTotal;static bool dragMoved;
+        public static Vector2 DragScroll(Rect view,Vector2 scroll,Rect content)
+        {
+            var e=Event.current;if(e==null)return scroll;
+            int id=Mathf.RoundToInt(view.x*7f+view.y*13f+view.width*17f+view.height*31f);
+            float maxX=Mathf.Max(0,content.width-view.width),maxY=Mathf.Max(0,content.height-view.height);
+            switch(e.type)
+            {
+                case EventType.MouseDown:
+                    if(view.Contains(e.mousePosition)){dragId=id;dragLast=e.mousePosition;dragTotal=0;dragMoved=false;dragVel=Vector2.zero;if(glideId==id)glideId=-1;}
+                    break;
+                case EventType.MouseDrag:
+                    if(dragId==id)
+                    {
+                        var d=e.mousePosition-dragLast;dragLast=e.mousePosition;dragTotal+=d.magnitude;
+                        if(dragTotal>12f)dragMoved=true;
+                        if(dragMoved)
+                        {
+                            if(maxX<=0)d.x=0;
+                            scroll-=d;dragVel=Vector2.Lerp(dragVel,d/Mathf.Max(1f/120f,Time.unscaledDeltaTime),.5f);
+                            GUIUtility.hotControl=0;e.Use();   // 取消按鈕的按下狀態：拖曳不會變成點擊
+                        }
+                    }
+                    break;
+                case EventType.MouseUp:
+                    if(dragId==id){if(dragMoved){e.Use();glideId=id;glideVel=dragVel;}dragId=-1;}
+                    break;
+                case EventType.Repaint:
+                    if(glideId==id&&dragId!=id)
+                    {
+                        float dt=Mathf.Min(.05f,Time.unscaledDeltaTime);
+                        scroll-=glideVel*dt;glideVel*=Mathf.Exp(-5f*dt);
+                        if(glideVel.sqrMagnitude<400f)glideId=-1;
+                    }
+                    break;
+            }
+            scroll.x=Mathf.Clamp(scroll.x,0,maxX);scroll.y=Mathf.Clamp(scroll.y,0,maxY);
+            return scroll;
+        }
         static void Init()
         {
             if(panel!=null)return;

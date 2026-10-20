@@ -1268,7 +1268,7 @@ namespace SpellDuel
             {
                 solo.DrawGUI();
                 if (AreaMode && playArea.state == PlayArea.State.Done && !playArea.Inside(cam.transform.position))
-                    UiKit.Pill(H * 0.68f, "⚠ 回到場地內", fs * 2, new Color(1f, 0.4f, 0.4f), W - pad * 2);
+                    UiKit.Pill(H * 0.68f, "⚠ 回到場地內（場地外只能移動，不能攻擊）", fs, new Color(1f, 0.4f, 0.4f), W - pad * 2);
                 return;
             }
 
@@ -1277,7 +1277,7 @@ namespace SpellDuel
             {
                 solo.DrawGUI();
                 if (playArea.state == PlayArea.State.Done && !solo.InTown && !playArea.Inside(cam.transform.position))
-                    UiKit.Pill(H * 0.68f, "⚠ 回到場地內", fs * 2, new Color(1f, 0.4f, 0.4f), W - pad * 2);
+                    UiKit.Pill(H * 0.68f, "⚠ 回到場地內（場地外只能移動，不能攻擊）", fs, new Color(1f, 0.4f, 0.4f), W - pad * 2);
                 return;
             }
 

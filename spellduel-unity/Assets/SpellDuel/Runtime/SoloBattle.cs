@@ -1782,9 +1782,21 @@ namespace SpellDuel
         static Vector2 ScreenCenter => new Vector2(Screen.width / 2f, Screen.height / 2f);
         SkillDef sealFor; int sealStep;   // 忍者的手印：正在比第幾個
 
+        /// <summary>人在場地外：只能移動，不能攻擊、詠唱、放招（回到場地內才可以）</summary>
+        bool OutOfArea => area != null && area.state == PlayArea.State.Done && !InTown && !area.Inside(cam.transform.position);
+        float outWarnAt = -9f;
+        /// <summary>場地外：提示一下（1.5 秒內不重複）並回傳 true＝不能出手</summary>
+        bool BlockedOutside()
+        {
+            if (!OutOfArea) return false;
+            if (Time.time - outWarnAt > 1.5f) { outWarnAt = Time.time; Say("⚠ 在場地外不能攻擊或放技能：先回到場地內", 1.5f); Sfx.Play("fail", 0.5f); }
+            return true;
+        }
+
         /// <summary>普通攻擊：朝畫面中央的準星（近身＝砍身邊的敵人）</summary>
         void DoBasic(SkillDef s)
         {
+            if (BlockedOutside()) return;
             var ray = cam.ScreenPointToRay(ScreenCenter);
             var o = WorldFrame.ToWorld(ray.origin);
             var d = WorldFrame.DirToWorld(ray.direction);
@@ -1804,6 +1816,7 @@ namespace SpellDuel
         void ReleaseAt(Vector2 sp, bool byGesture)
         {
             if (Me.charging == null) { Say("🎤 先唸出技能名稱才能放招", 1.5f); return; }
+            if (BlockedOutside()) return;
 
             // 點擊方向（場地座標）與地板交點（陷阱用）
             var ray = cam.ScreenPointToRay(sp);
@@ -1906,6 +1919,7 @@ namespace SpellDuel
             if (phase != Phase.Fighting || battle == null || frozen || !Skills.All.TryGetValue(id, out var skill)) return;
             heard = $"🎤 {skill.name}"; heardUntil = Time.time + 1.5f;
             if (Me.charging == skill) return;
+            if (BlockedOutside()) return;
             if (!battle.TryChant(Me, skill, out var why)) Say(why, 1.5f);
             else { Sfx.Play("select"); Haptics.Play(Haptics.Kind.Light); }
         }
@@ -1925,6 +1939,7 @@ namespace SpellDuel
             if (r.id == null) { heard = $"🎤 {r.reason}"; heardUntil = Time.time + 1.5f; return; }
             var skill = Skills.All[r.id];
             heard = $"🎤 {skill.name}"; heardUntil = Time.time + 1.5f;
+            if (BlockedOutside()) return;
             if (!battle.TryChant(Me, skill, out var why)) Say(why, 1.5f);
             else { Sfx.Play("select"); Haptics.Play(Haptics.Kind.Light); }
         }
@@ -2723,6 +2738,7 @@ namespace SpellDuel
             float y = 0f;
             float viewH=Mathf.Max(fs*4,avail-u*2.8f-gap*2);
             float contentWidth=W-Mathf.Max(18f,fs*.45f);
+            setupScroll=UiKit.DragScroll(new Rect(0,topY+pad,W,viewH),setupScroll,new Rect(0,0,contentWidth,Mathf.Max(viewH,setupContentHeight)));   // 手指拖曳捲動
             setupScroll=GUI.BeginScrollView(new Rect(0,topY+pad,W,viewH),setupScroll,new Rect(0,0,contentWidth,Mathf.Max(viewH,setupContentHeight)),false,true);
             W=contentWidth;
             var cls = Skills.Classes[myClass];

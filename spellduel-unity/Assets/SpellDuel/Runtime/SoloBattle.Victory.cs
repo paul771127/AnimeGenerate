@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SpellDuel
 {
     /// <summary>
-    /// 戰鬥勝利的結算窗格（獨立一個視窗，蓋在畫面中央；按「繼續」才回到原本的結算按鈕）：
+    /// 戰鬥勝利的結算窗格（獨立一個視窗，蓋在畫面中央；底下兩個按鈕：回村莊／繼續冒險）：
     ///   標題、評價（S／A／B／C）、通關時間（和這一關的最佳紀錄）、剩餘血量、被打中次數、
     ///   戰利品清單（每件裝備依稀有度上色、金幣、經驗、升級）。
     /// 評價＝時間分（標準時間內＝滿分）×0.5 ＋ 血量分（剩餘血量）×0.3 ＋ 受擊分（被打中越少越好）×0.2。
@@ -109,9 +109,63 @@ namespace SpellDuel
             }
             if (!string.IsNullOrEmpty(v.note)) UiKit.Text(new Rect(x, listBottom - lh * 0.2f, w, lh), v.note, Mathf.RoundToInt(fsS * 0.9f), UiKit.Muted, TextAnchor.MiddleCenter);
 
-            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - lh * 2.2f - gap * 0.5f, r.width * 0.5f, lh * 2.2f), "繼續", fs, true, RankColor(v.rank)))
-                victory = null;
+            // 兩個選擇：回村莊／繼續冒險（多人連線：回大廳／準備下一場）
+            float bw = (r.width - gap * 3) / 2f, bh = lh * 2.2f, by = r.yMax - bh - gap * 0.5f;
+            if (UiKit.Button(new Rect(r.x + gap, by, bw, bh), NetMode ? "回大廳" : $"🏘 回{WorldUI.Towns[VictoryTown()].name}", fs)) VictoryGoTown();
+            if (UiKit.Button(new Rect(r.x + gap * 2 + bw, by, bw, bh), VictoryContinueLabel(), fs, true, RankColor(v.rank))) VictoryContinue();
             return true;
+        }
+
+        /// <summary>勝利後回哪個村莊：故事＝這一關的地區、轉職試煉＝試煉的地區、其他＝目前所在的村莊</summary>
+        int VictoryTown()
+        {
+            int t = storyStage != null && !IsTrial ? storyStage.theme : IsTrial ? Battle.ThemeOf(Advanced.TrialLastWave) : world.town;
+            return Mathf.Clamp(t, 0, WorldUI.Towns.Length - 1);
+        }
+
+        void VictoryGoTown()
+        {
+            victory = null;
+            if (NetMode) { ShowSetup(); return; }
+            int t = VictoryTown();
+            ShowSetup(); storyMapOpen = true; world.OpenTown(t);
+        }
+
+        string VictoryContinueLabel()
+        {
+            if (NetMode) return localReady ? "等待其他人…" : "▶ 準備下一場";
+            if (tutorial) return "▶ 開始冒險（故事）";
+            if (IsTrial) return "▶ 去職業工會轉職";
+            if (dungeon != null) return "▶ 挑戰其他副本";
+            if (storyStage != null)
+            {
+                var next = NextStage(storyStage);
+                if (next != null && Story.IsUnlocked(next)) return next.theme != storyStage.theme ? $"▶ 前往{WorldUI.Towns[Mathf.Clamp(next.theme, 0, WorldUI.Towns.Length - 1)].name}" : $"▶ 下一關：{next.title}";
+                return "▶ 故事地圖";
+            }
+            return "▶ 再來一場";
+        }
+
+        /// <summary>繼續冒險：故事＝下一關（換地區＝先到下一個村莊）、副本＝副本清單、試煉＝職業工會、教學＝故事模式、其他＝再來一場</summary>
+        void VictoryContinue()
+        {
+            if (NetMode) { if (!localReady) { victory = null; SendReady(); } return; }
+            victory = null;
+            if (tutorial) { enemyClass = "story"; ShowSetup(); StartBattle(); return; }
+            if (IsTrial) { ShowSetup(); storyMapOpen = true; world.OpenTown(VictoryTown()); world.OpenGuild(); return; }
+            if (dungeon != null) { ShowSetup(); storyMapOpen = true; world.OpenTown(world.town); world.screen = WorldUI.Screen.Dungeon; return; }
+            if (storyStage != null)
+            {
+                var st = storyStage; var next = NextStage(st);
+                if (next != null && Story.IsUnlocked(next))
+                {
+                    if (next.theme != st.theme) { ShowSetup(); storyMapOpen = true; world.OpenTown(Mathf.Clamp(next.theme, 0, WorldUI.Towns.Length - 1)); }
+                    else { var n2 = next; ShowSetup(); StartStory(n2); }
+                }
+                else { ShowSetup(); storyMapOpen = true; world.screen = WorldUI.Screen.Map; }
+                return;
+            }
+            StartBattle();
         }
     }
 }

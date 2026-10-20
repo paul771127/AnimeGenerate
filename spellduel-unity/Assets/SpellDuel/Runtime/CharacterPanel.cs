@@ -57,6 +57,7 @@ namespace SpellDuel
         {
             var content=new Rect(0,0,viewport.width-fs*.85f,Mathf.Max(viewport.height,fs*30));
             var offset=equipment?gearScroll:statsScroll;
+            offset=UiKit.DragScroll(viewport,offset,content);   // 手指拖曳捲動
             offset=GUI.BeginScrollView(viewport,offset,content,false,true);
             if(equipment)gearScroll=offset;else statsScroll=offset;
             try{return equipment?DrawGear(content,p,fs,fsS,gap):DrawStats(content,p,fs,fsS,gap);}
