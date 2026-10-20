@@ -327,6 +327,7 @@ namespace SpellDuel
                 else { gold += Economy.SellPrice(it); sold++; }
             }
             Economy.Gold += gold;
+            lootLog.AddRange(pendingItems); lootGoldLog += gold;   // 給勝利結算窗格
             string msg = $"🎁 獲得裝備 {got} 件" + (sold > 0 ? $"（背包滿了，{sold} 件換成金幣）" : "") + $"、💰 {gold}";
             if (say) { Say($"{why}！{msg}", 3f); Sfx.Play("coin", 0.8f); Sfx.Play("charged", 0.5f, 1.2f); }
             pendingItems.Clear(); pendingGold = 0;
@@ -1261,7 +1262,9 @@ namespace SpellDuel
                 if (battle.stageCleared)
                 {
                     string loot = GrantLoot("轉職試煉通過", false);
-                    if (prof != null) { prof.trialPassed = true; prof.AddXp(st.xp); Progress.SaveChar(prof); }
+                    int tUps = 0;
+                    if (prof != null) { prof.trialPassed = true; tUps = prof.AddXp(st.xp); Progress.SaveChar(prof); }
+                    BuildVictory("轉職試煉通過", "trial_" + myClass, 240f, st.xp, tUps, "回職業工會選擇進階職業");
                     Say($"🏆 通過轉職試煉！回職業工會選擇進階職業" + (loot.Length > 0 ? "\n" + loot : ""), 99f);
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
                     ShowDialogue(st.after, null);
@@ -1289,6 +1292,7 @@ namespace SpellDuel
                     int ups = prof != null ? prof.AddXp(xp) : 0;
                     if (prof != null) Progress.SaveChar(prof);
                     int over = (prof != null ? prof.level : 1) - d.level;
+                    BuildVictory($"{d.name} 通關", "dg_" + d.id, d.rooms.Count * 75f, xp, ups, over >= 8 ? $"掉落的裝備是 Lv{d.level}，比你低 {over} 級" : first ? "首次通關！" : null);
                     Say($"🏰 {d.name} 通關！獲得經驗 {xp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "（首次通關）" : "")
                         + (loot.Length > 0 ? "\n" + loot : "") + (over >= 8 ? $"\n（掉落的裝備是 Lv{d.level}，比你低 {over} 級）" : ""), 99f);
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
@@ -1311,6 +1315,8 @@ namespace SpellDuel
                     {
                         int ups = prof.AddXp(st.xp);
                         Progress.SaveChar(prof);
+                        int nWaves = Mathf.Max(1, st.toWave - st.fromWave + 1);
+                        BuildVictory($"{st.title} 完成", "st_" + st.id, st.toWave % 10 == 0 && nWaves == 1 ? 120f : 45f * nWaves, st.xp, ups, first ? null : "再次通關");
                         Say($"🏆 {st.title} 完成！獲得經驗 {st.xp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "" : "（再次通關）") + (loot.Length > 0 ? "\n" + loot : ""), 99f);
                     }
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
@@ -1334,6 +1340,8 @@ namespace SpellDuel
             }
             bool win = !En.Alive;
             Say(win ? (bossMode ? "🏆 討伐成功！熔岩巨像倒下了" : "🏆 勝利！") : (coop ? "💀 全滅…" : "💀 敗北…"), 99f);
+            if (win && !dummyMode) BuildVictory(bossMode ? $"討伐成功！{En.name}倒下了" : NetMode ? "對戰勝利！" : $"擊敗{En.name}！",
+                bossMode ? $"boss_{difficulty}{(coop ? "_coop" : "")}" : NetMode ? "pvp" : $"ai_{enemyClassUsed}_{difficulty}", bossMode ? 150f : 60f, 0, 0);
             Sfx.Play(win ? "win" : "lose");
             Haptics.Play(win ? Haptics.Kind.Success : Haptics.Kind.Warning);
         }
@@ -1530,6 +1538,7 @@ namespace SpellDuel
         void EndBattle()
         {
             ClearDaily();
+            victory = null; hitsTaken = 0; lootLog.Clear(); lootGoldLog = 0;
             if (prof != null) Progress.SaveChar(prof);
             charOpen = false;
             ClearArena();
@@ -2009,6 +2018,7 @@ namespace SpellDuel
                 }
                 case "hurt":
                     // 被打中：震動＋整個畫面閃紅＋扣血（血量已在 Battle 裡扣掉）
+                    hitsTaken++;   // 勝利結算的評價用
                     floaters.Add(new Floater { text = text, color = new Color(1f, 0.3f, 0.3f), born = Time.time, screen = true });
                     hitFlash = 1f;
                     {
@@ -3274,7 +3284,8 @@ namespace SpellDuel
                 UiKit.Text(new Rect(fr.x + gap, fr.y + fr.height * 0.5f, fr.width - gap * 2, fr.height * 0.45f), Tracking.Reason + (NetMode ? "\n對手仍以你最後的位置判定" : "\n恢復追蹤後自動繼續"), fs, new Color(0.9f, 0.92f, 1f), TextAnchor.MiddleCenter);
             }
 
-            if (phase == Phase.Over && daily != null) DrawDailyResult(W, pad, top, botY, gap, lh, fs, fsS);
+            if (phase == Phase.Over && victory != null && DrawVictory(W, H, pad, top, botY, gap, lh, fs, fsS)) { }   // 勝利結算窗格（按「繼續」後才是原本的按鈕）
+            else if (phase == Phase.Over && daily != null) DrawDailyResult(W, pad, top, botY, gap, lh, fs, fsS);
             else if (phase == Phase.Over && storyStage != null)
             {
                 var st = storyStage; bool won = battle.stageCleared;

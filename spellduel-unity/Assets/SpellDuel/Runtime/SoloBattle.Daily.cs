@@ -20,7 +20,7 @@ namespace SpellDuel
         System.Random dailyRng;
         (int gold, int xp, int medal, bool newBest) dailyResult;
 
-        class DailyShot { public DailyChallenge.Attack kind; public Vector3 from; public float fireAt; public GameObject portal; }
+        class DailyShot { public DailyChallenge.Attack kind; public Vector3 from; public float fireAt, speed; public GameObject portal; }
         readonly List<DailyShot> dailyShots = new List<DailyShot>();
         Vector3 coinPos; GameObject coinGo, coinPillar; bool coinActive; float coinBorn;
 
@@ -110,15 +110,16 @@ namespace SpellDuel
             }
             me.hp = me.maxHp; dailyLastMeHp = me.hp;
             // 新的一波：先開光門（預備），時間到放出攻擊
-            if (dailyDirector.Next(t, out var kind, out var ang, out var dist))
+            foreach (var shot in dailyDirector.Poll(t))
             {
+                var kind = shot.kind;
                 var fwd = Fighter.Flat(me.forward); if (fwd == Vector3.zero) fwd = Vector3.forward;
-                var from = me.Feet + Battle.RotateY(fwd, ang) * dist; from.y = 0f;
+                var from = me.Feet + Battle.RotateY(fwd, shot.angle) * shot.dist; from.y = 0f;
                 var col = AttackColor(kind);
                 var portal = Prim(PrimitiveType.Sphere, new Color(col.r, col.g, col.b, 0.55f), true);
                 portal.transform.position = WorldFrame.FromWorld(from + Vector3.up * (kind == DailyChallenge.Attack.Quake ? 0.15f : 1.2f));
                 portal.transform.localScale = Vector3.one * 0.05f;
-                dailyShots.Add(new DailyShot { kind = kind, from = from, fireAt = now + DailyChallenge.DodgeDirector.Windup(t), portal = portal });
+                dailyShots.Add(new DailyShot { kind = kind, from = from, fireAt = now + DailyChallenge.DodgeDirector.Windup(t), speed = shot.speed, portal = portal });
                 Sfx.Play(kind == DailyChallenge.Attack.Sweep ? "blade_warn" : "aim_warn", 0.7f);
             }
             for (int i = dailyShots.Count - 1; i >= 0; i--)
@@ -140,7 +141,9 @@ namespace SpellDuel
                 {
                     en.charging = sk; en.chargeStart = now - 100f;
                     var hand = en.head + en.forward * 0.25f;
+                    int before = battle.projectiles.Count;
                     battle.TryRelease(en, (me.Chest - hand).normalized, me.Feet, out _);
+                    for (int j = before; j < battle.projectiles.Count; j++) battle.projectiles[j].speedMul = s.speed;   // 每一發快慢不同
                 }
                 dailyFired++;
                 if (s.portal) Destroy(s.portal);
@@ -261,12 +264,15 @@ namespace SpellDuel
             }
             else if (DailyElapsed < 1f) UiKit.Text(new Rect(0, H * 0.35f, W, H * 0.15f), "開始！", fsL * 2, col, TextAnchor.MiddleCenter, true);
 
-            // 閃避：最快要放出的攻擊 → 怎麼躲
+            // 閃避：每一個要放出的攻擊都標方向（身後的也指得到）；最快的兩種攻擊提示怎麼躲
             if (k == DailyChallenge.Kind.Dodge && dailyShots.Count > 0)
             {
-                DailyShot soon = dailyShots[0]; foreach (var s in dailyShots) if (s.fireAt < soon.fireAt) soon = s;
-                UiKit.Pill(H * 0.62f, DailyChallenge.AttackHint[(int)soon.kind], fsL, AttackColor(soon.kind), pillW);
-                DrawEdgeArrow(soon.from + Vector3.up * 1.2f, "⚠", AttackColor(soon.kind), W, H, lh, fsS);
+                var order = new List<DailyShot>(dailyShots); order.Sort((a, b) => a.fireAt.CompareTo(b.fireAt));
+                var kinds = new List<DailyChallenge.Attack>();
+                foreach (var s in order) if (!kinds.Contains(s.kind)) kinds.Add(s.kind);
+                for (int i = 0; i < Mathf.Min(2, kinds.Count); i++)
+                    UiKit.Pill(H * (0.62f + 0.07f * i), DailyChallenge.AttackHint[(int)kinds[i]], i == 0 ? fsL : fs, AttackColor(kinds[i]), pillW);
+                foreach (var s in order) DrawEdgeArrow(s.from + Vector3.up * 1.2f, s.kind == DailyChallenge.Attack.Bolt ? (s.speed > 1.25f ? "⚠ 快" : s.speed < 0.85f ? "⚠ 慢" : "⚠") : "⚠", AttackColor(s.kind), W, H, lh, fsS);
             }
             // 跑步：金幣的方向與距離
             if (k == DailyChallenge.Kind.Run && coinActive)

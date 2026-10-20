@@ -142,6 +142,7 @@ namespace SpellDuel
         public bool crit;               // 爆擊（傷害 ×2）
         public bool lob; public Vector3 vel, landAt;   // 拋物線投擲（毒液彈）：速度向量、預定落點
         public float rangeMul = 1f;     // 飛行距離倍率（無盡模式升級）
+        public float speedMul = 1f;     // 飛行速度倍率（每日閃避挑戰：每一發快慢不同）
         public int id;
         public bool remote;          // 雙人：對手的法術（只顯示，命中由對手判定）
         public HashSet<Fighter> pierced;   // 穿透箭已經打過的小怪
@@ -2235,7 +2236,7 @@ namespace SpellDuel
                         if (ang > 1e-4f) { float k = Mathf.Min(1f, p.homing * Mathf.Deg2Rad * dt / ang); p.dir = (p.dir * (1f - k) + want * k).normalized; p.basePos = p.pos; }
                     }
                 }
-                float step = p.skill.speed * dt;
+                float step = p.skill.speed * p.speedMul * dt;
                 // 分小段前進，快的箭也不會穿過身體
                 int sub = Mathf.Max(1, Mathf.CeilToInt(step / 0.08f));
                 for (int k = 0; k < sub && p.alive; k++)

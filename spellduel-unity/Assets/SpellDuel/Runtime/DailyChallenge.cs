@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SpellDuel
 {
     /// <summary>
     /// 每日挑戰（單人，60 秒）：
-    ///   閃避挑戰：四面八方的攻擊輪流飛來（直線彈→側跨、橫掃→蹲下、震地環→跳、落石→走出紅圈），越來越密；
+    ///   閃避挑戰：四面八方（含身後）快慢不同的火球隨時飛來，橫掃（蹲）、落石（走出紅圈）、震地環（跳）會同時出現，越來越密；
     ///             5 顆心，被打中扣一顆，扣完提早結束。分數＝閃過的攻擊數。
     ///   輸出挑戰：對木頭人 60 秒，分數＝總傷害（獎牌門檻依角色等級）。
     ///   跑步挑戰：場地內離你遠的隨機位置出現金幣，跑過去吃，吃到才出現下一個。分數＝金幣數。
@@ -18,7 +19,7 @@ namespace SpellDuel
         public static readonly string[] Names = { "🛡 閃避挑戰", "⚔ 輸出挑戰", "🏃 跑步挑戰" };
         public static readonly string[] Descs =
         {
-            "60 秒內閃過四面八方的攻擊：直線彈側跨、橫掃蹲下、震地環跳起、落石走出紅圈。5 顆心，被打中扣一顆。",
+            "60 秒內閃過四面八方（身後也有）快慢不同的火球，還會同時來橫掃（蹲）、落石（走出紅圈）、震地環（跳）。5 顆心，被打中扣一顆。",
             "60 秒內對木頭人打出最多傷害。技能、普攻、連段都算。",
             "60 秒內跑去吃場地裡的金幣：金幣會出現在離你遠的地方，吃到才出現下一個。",
         };
@@ -39,7 +40,7 @@ namespace SpellDuel
         {
             switch (k)
             {
-                case Kind.Dodge: return new[] { 12, 20, 26 };   // 一場約 27～28 波
+                case Kind.Dodge: return new[] { 25, 45, 65 };   // 一場約 85 波（60 秒撐滿、被打中不超過 5 次）
                 case Kind.Run: return new[] { 6, 10, 14 };
                 default:
                     float m = 1f + 0.12f * Mathf.Max(0, level - 1);
@@ -94,33 +95,46 @@ namespace SpellDuel
         public static readonly string[] AttackSkill = { "m_fireball", "b_sweep", "x_quake", "b_rain" };   // 直線彈用單發（扇形三發一步閃不掉）
         public static readonly string[] AttackHint = { "↔ 側跨閃開！", "↓ 蹲下！", "⤴ 跳起來！", "◎ 走出紅圈！" };
 
+        /// <summary>一發攻擊：種類、從哪個方向來（相對你面向的角度，0＝正前方，可以在身後）、距離、飛行速度倍率</summary>
+        public struct Shot { public Attack kind; public float angle, dist, speed; }
+
         /// <summary>
-        /// 閃避挑戰的題目：依序產生每一波攻擊（第幾秒出現、種類、從哪個方向來（相對你面向的角度）、距離）。
-        /// 越後面間隔越短；橫掃 8 秒後、落石 15 秒後、震地環 25 秒後才會出現。
+        /// 閃避挑戰的題目（兩條獨立的出題線，會重疊）：
+        ///   ①遠程彈：四面八方（360°，身後也會來），速度 0.6～1.7 倍隨機，間隔從 1.6 秒縮到 0.55 秒；20 秒後偶爾兩發齊射（不同方向）。
+        ///   ②範圍招：橫掃（蹲）、落石（走出紅圈）、震地環（跳），6 秒後開始，間隔從 6 秒縮到 3.5 秒——常常和遠程彈同時來。
         /// </summary>
         public class DodgeDirector
         {
             readonly System.Random rnd;
-            float nextAt = 1.5f;
+            float nextBolt = 1.2f, nextArea = 6f;
             public DodgeDirector(int seed) { rnd = new System.Random(seed); }
-            /// <summary>預備時間（從方向出現光門到攻擊放出）：越後面越短</summary>
-            public static float Windup(float t) => Mathf.Lerp(1.1f, 0.7f, Mathf.Clamp01(t / Duration));
-            public static float Interval(float t) => Mathf.Lerp(3.0f, 1.5f, Mathf.Clamp01(t / Duration));
+            /// <summary>預備時間（光門出現到攻擊放出）：越後面越短</summary>
+            public static float Windup(float t) => Mathf.Lerp(1.0f, 0.65f, Mathf.Clamp01(t / Duration));
+            public static float BoltInterval(float t) => Mathf.Lerp(1.6f, 0.55f, Mathf.Clamp01(t / Duration));
+            public static float AreaInterval(float t) => Mathf.Lerp(6f, 3.5f, Mathf.Clamp01(t / Duration));
+            float R(float a, float b) => a + (float)rnd.NextDouble() * (b - a);
 
-            /// <summary>到 t 秒時有沒有新的攻擊要出（有＝回傳 true 與內容）</summary>
-            public bool Next(float t, out Attack kind, out float angle, out float dist)
+            /// <summary>到 t 秒為止該出的攻擊（可能 0～3 發）</summary>
+            public List<Shot> Poll(float t)
             {
-                kind = Attack.Bolt; angle = 0f; dist = 5f;
-                if (t < nextAt) return false;
-                nextAt = t + Interval(t) * (0.85f + 0.3f * (float)rnd.NextDouble());
-                var pool = new System.Collections.Generic.List<Attack> { Attack.Bolt, Attack.Bolt };
-                if (t >= 8f) pool.Add(Attack.Sweep);
-                if (t >= 15f) pool.Add(Attack.Rain);
-                if (t >= 25f) pool.Add(Attack.Quake);
-                kind = pool[rnd.Next(pool.Count)];
-                angle = (float)(rnd.NextDouble() * 140.0 - 70.0);   // 前方 ±70°（看得到從哪裡來）
-                dist = kind == Attack.Quake ? 4.5f : 4.5f + (float)rnd.NextDouble() * 1.5f;
-                return true;
+                var list = new List<Shot>();
+                if (t >= nextBolt)
+                {
+                    nextBolt = t + BoltInterval(t) * R(0.7f, 1.3f);
+                    float a = R(-180f, 180f);
+                    list.Add(new Shot { kind = Attack.Bolt, angle = a, dist = R(4.5f, 6.5f), speed = R(0.6f, 1.7f) });
+                    if (t > 20f && rnd.NextDouble() < 0.3)   // 齊射：另一個方向（至少差 70°）
+                        list.Add(new Shot { kind = Attack.Bolt, angle = a + R(70f, 290f), dist = R(4.5f, 6.5f), speed = R(0.6f, 1.7f) });
+                }
+                if (t >= nextArea)
+                {
+                    nextArea = t + AreaInterval(t) * R(0.8f, 1.2f);
+                    var pool = new List<Attack> { Attack.Sweep, Attack.Rain };
+                    if (t >= 12f) pool.Add(Attack.Quake);
+                    var k = pool[rnd.Next(pool.Count)];
+                    list.Add(new Shot { kind = k, angle = k == Attack.Sweep ? R(-180f, 180f) : R(-60f, 60f), dist = k == Attack.Quake ? 4.5f : R(4.5f, 5.5f), speed = 1f });
+                }
+                return list;
             }
         }
     }
