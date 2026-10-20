@@ -22,7 +22,8 @@
    - ComfyUI：用它的 HTTP API 送工作流程。
    - 其他程式：用它的命令列。
 3. 生成時：
-   - 每個鏡頭的提示詞＝`prompt`（換掉角色記號）＋`style`，再加上 `negative`。
+   - 每個鏡頭的提示詞＝`style` **放在最前面**＋`prompt`（換掉角色記號）；負面提示詞用 `negative`。LTX 對開頭的字權重較高，風格放在後面容易變寫實。
+   - LTX-2.3：寬高要是 32 的倍數（用 768×448 或 1024×576）；幀數 121（24 fps 約 5 秒）。工作流：`workflow_ltx23_t2v.json`（ComfyUI API 格式）。
    - 同一角色先生成一張「角色定裝圖」，之後用圖生影片，臉才會一致。
 4. 輸出放到 `spellduel-unity/Docs/story_video/out/`，檔名用鏡頭 `id`。
 5. 每支影片的鏡頭生好後，用 ffmpeg 依順序接成一支（例如 `v0_prologue.mp4`），再配上遊戲的音樂與旁白字幕。
