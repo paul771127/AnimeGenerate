@@ -272,7 +272,7 @@ namespace SpellDuel
                 foreach (var s in order) if (!kinds.Contains(s.kind)) kinds.Add(s.kind);
                 for (int i = 0; i < Mathf.Min(2, kinds.Count); i++)
                     UiKit.Pill(H * (0.62f + 0.07f * i), DailyChallenge.AttackHint[(int)kinds[i]], i == 0 ? fsL : fs, AttackColor(kinds[i]), pillW);
-                foreach (var s in order) DrawEdgeArrow(s.from + Vector3.up * 1.2f, s.kind == DailyChallenge.Attack.Bolt ? (s.speed > 1.25f ? "⚠ 快" : s.speed < 0.85f ? "⚠ 慢" : "⚠") : "⚠", AttackColor(s.kind), W, H, lh, fsS);
+                foreach (var s in order) DrawEdgeArrow(s.from + Vector3.up * 1.2f, "⚠", AttackColor(s.kind), W, H, lh, fsS);
             }
             // 跑步：金幣的方向與距離
             if (k == DailyChallenge.Kind.Run && coinActive)

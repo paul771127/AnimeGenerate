@@ -6,7 +6,7 @@ namespace SpellDuel
 {
     /// <summary>
     /// 每日挑戰（單人，60 秒）：
-    ///   閃避挑戰：四面八方（含身後）快慢不同的火球隨時飛來，橫掃（蹲）、落石（走出紅圈）、震地環（跳）會同時出現，越來越密；
+    ///   閃避挑戰：四面八方（含身後）的火球隨時飛來、時間越久越多，橫掃（蹲）、落石（走出紅圈）、震地環（跳）會同時出現，越來越密；
     ///             5 顆心，被打中扣一顆，扣完提早結束。分數＝閃過的攻擊數。
     ///   輸出挑戰：對木頭人 60 秒，分數＝總傷害（獎牌門檻依角色等級）。
     ///   跑步挑戰：場地內離你遠的隨機位置出現金幣，跑過去吃，吃到才出現下一個。分數＝金幣數。
@@ -19,7 +19,7 @@ namespace SpellDuel
         public static readonly string[] Names = { "🛡 閃避挑戰", "⚔ 輸出挑戰", "🏃 跑步挑戰" };
         public static readonly string[] Descs =
         {
-            "60 秒內閃過四面八方（身後也有）快慢不同的火球，還會同時來橫掃（蹲）、落石（走出紅圈）、震地環（跳）。5 顆心，被打中扣一顆。",
+            "60 秒內閃過四面八方（身後也有）飛來的火球，時間越久越多；還會同時來橫掃（蹲）、落石（走出紅圈）、震地環（跳）。5 顆心，被打中扣一顆。",
             "60 秒內對木頭人打出最多傷害。技能、普攻、連段都算。",
             "60 秒內跑去吃場地裡的金幣：金幣會出現在離你遠的地方，吃到才出現下一個。",
         };
@@ -40,7 +40,7 @@ namespace SpellDuel
         {
             switch (k)
             {
-                case Kind.Dodge: return new[] { 25, 45, 65 };   // 一場約 85 波（60 秒撐滿、被打中不超過 5 次）
+                case Kind.Dodge: return new[] { 30, 55, 80 };   // 一場約 115 發（60 秒撐滿、被打中不超過 5 次）
                 case Kind.Run: return new[] { 6, 10, 14 };
                 default:
                     float m = 1f + 0.12f * Mathf.Max(0, level - 1);
@@ -100,7 +100,8 @@ namespace SpellDuel
 
         /// <summary>
         /// 閃避挑戰的題目（兩條獨立的出題線，會重疊）：
-        ///   ①遠程彈：四面八方（360°，身後也會來），速度 0.6～1.7 倍隨機，間隔從 1.6 秒縮到 0.55 秒；20 秒後偶爾兩發齊射（不同方向）。
+        ///   ①遠程火球：四面八方（360°，身後也會來），速度都一樣；時間越久越多——間隔從 1.6 秒縮到 0.55 秒，
+        ///     而且一次射出的數量越來越多（20 秒後偶爾 2 發、40 秒後 2～3 發，各自從不同方向）。
         ///   ②範圍招：橫掃（蹲）、落石（走出紅圈）、震地環（跳），6 秒後開始，間隔從 6 秒縮到 3.5 秒——常常和遠程彈同時來。
         /// </summary>
         public class DodgeDirector
@@ -113,6 +114,8 @@ namespace SpellDuel
             public static float BoltInterval(float t) => Mathf.Lerp(1.6f, 0.55f, Mathf.Clamp01(t / Duration));
             public static float AreaInterval(float t) => Mathf.Lerp(6f, 3.5f, Mathf.Clamp01(t / Duration));
             float R(float a, float b) => a + (float)rnd.NextDouble() * (b - a);
+            /// <summary>一次射幾發：20 秒前 1 發；20～40 秒 30% 機率 2 發；40 秒後 2 發、40% 機率 3 發</summary>
+            public static int VolleyOf(float t, double roll) => t < 20f ? 1 : t < 40f ? (roll < 0.3 ? 2 : 1) : (roll < 0.4 ? 3 : 2);
 
             /// <summary>到 t 秒為止該出的攻擊（可能 0～3 發）</summary>
             public List<Shot> Poll(float t)
@@ -122,9 +125,9 @@ namespace SpellDuel
                 {
                     nextBolt = t + BoltInterval(t) * R(0.7f, 1.3f);
                     float a = R(-180f, 180f);
-                    list.Add(new Shot { kind = Attack.Bolt, angle = a, dist = R(4.5f, 6.5f), speed = R(0.6f, 1.7f) });
-                    if (t > 20f && rnd.NextDouble() < 0.3)   // 齊射：另一個方向（至少差 70°）
-                        list.Add(new Shot { kind = Attack.Bolt, angle = a + R(70f, 290f), dist = R(4.5f, 6.5f), speed = R(0.6f, 1.7f) });
+                    int n = VolleyOf(t, rnd.NextDouble());
+                    for (int i = 0; i < n; i++)   // 齊射：每一發從不同方向（平均分開再加一點隨機）
+                        list.Add(new Shot { kind = Attack.Bolt, angle = a + i * 360f / n + R(-25f, 25f), dist = R(4.5f, 6.5f), speed = 1f });
                 }
                 if (t >= nextArea)
                 {
