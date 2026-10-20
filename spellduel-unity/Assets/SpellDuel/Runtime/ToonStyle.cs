@@ -43,6 +43,7 @@ namespace SpellDuel
             Shader.SetGlobalFloat("_SD_ShadeSoftness", ShadeSoftness);
             Shader.SetGlobalColor("_SD_RimColor", RimColor);
             Shader.SetGlobalFloat("_SD_Ambient", Ambient);
+            Shader.SetGlobalColor("_SD_EnvTint", Color.white);   // AR 光照估計開始前：不變色（ArLighting 每幀覆寫）
         }
     }
 }

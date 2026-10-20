@@ -84,7 +84,9 @@ namespace SpellDuel
             UiKit.Text(new Rect(sx, y, sw, lh), $"⏱ 通關時間　{Clock(v.time)}{best}", fs, Color.white, TextAnchor.MiddleLeft, true);
             UiKit.Text(new Rect(sx, y + lh, sw, lh), $"❤ 剩餘血量　{Mathf.RoundToInt(v.hpFrac * 100)}%", fsS, new Color(1f, 0.6f, 0.65f));
             UiKit.Text(new Rect(sx, y + lh * 2f, sw, lh), $"💥 被打中　{v.hits} 次　（標準時間 {Clock(v.par)}）", fsS, new Color(0.85f, 0.88f, 1f));
-            y += rk + gap;
+            y += rk + gap * 0.5f;
+            UiKit.Text(new Rect(x, y, w, lh), ExerciseLine(), fsS, new Color(1f, 0.7f, 0.45f), TextAnchor.MiddleCenter, true);   // 運動紀錄
+            y += lh + gap * 0.5f;
             UiKit.Divider(new Rect(x, y, w, 2f), RankColor(v.rank));
             y += gap;
 

@@ -248,7 +248,7 @@ namespace SpellDuel
             cam.backgroundColor = Color.black;
             cam.nearClipPlane = 0.05f;
             cam.farClipPlane = 60f;
-            camGo.AddComponent<ARCameraManager>();
+            ArLighting.Attach(camGo.AddComponent<ARCameraManager>());   // AR 光照估計：角色跟著房間明暗、色溫變化
             cameraBackground = camGo.AddComponent<ARCameraBackground>();
             var tpd = camGo.AddComponent<TrackedPoseDriver>();
             tpd.SetPoseSource(TrackedPoseDriver.DeviceType.GenericXRDevice, TrackedPoseDriver.TrackedPose.ColorCamera);

@@ -46,6 +46,7 @@ Shader "SpellDuel/Toon"
             half _SD_ShadeSoftness;     // 分界柔邊寬度
             fixed4 _SD_RimColor;        // 邊緣亮光（a＝強度）
             half _SD_Ambient;           // 環境光量
+            fixed4 _SD_EnvTint;         // AR 光照估計（ArLighting；預設白色＝不變）
 
             struct v2f
             {
@@ -126,6 +127,7 @@ Shader "SpellDuel/Toon"
                 // Vertex alpha: 0 skin, 0.5 luminous garment rune, 1 cloth/hair. No extra pass.
                 if (_HumanHair > 0.5 && i.data.a > 0.4 && i.data.a < 0.6) c = baseC.rgb;
                 #endif
+                c *= _SD_EnvTint.rgb;   // AR 光照估計（ArLighting）：房間亮度與色溫
                 return fixed4(c, baseC.a);
             }
             ENDCG

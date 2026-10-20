@@ -40,7 +40,7 @@ namespace SpellDuel
             // 背景變暗＋面板
             GUI.color = new Color(0f, 0f, 0f, 0.55f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
             float pw = Mathf.Min(W * 0.9f, fs * 22f), rowH = fs * 2.4f, pad = fs * 0.8f;
-            float ph = pad * 2 + fs * 2f + rowH * 3 + fs * 2.6f;
+            float ph = pad * 2 + fs * 2f + rowH * 4 + fs * 2.6f;
             var r = new Rect((W - pw) / 2f, (H - ph) / 2f, pw, ph);
             UiKit.Card(r, 0.95f, UiKit.Gold, 0.8f);
             UiKit.Text(new Rect(r.x + pad, r.y + pad * 0.6f, r.width - pad * 2, fs * 1.8f), "⚙ 設定", Mathf.RoundToInt(fs * 1.15f), UiKit.Gold, TextAnchor.MiddleCenter, true);
@@ -49,6 +49,7 @@ namespace SpellDuel
             Row(ref y, r, pad, rowH, fs, fsS, "🔊 音效", Sfx.On, v => { Sfx.SetOn(v); if (v) Sfx.Play("select"); }, Sfx.Volume, Sfx.SetVolume);
             Row(ref y, r, pad, rowH, fs, fsS, "🎵 音樂", Music.On, Music.SetOn, Music.Volume, Music.SetVolume);
             Row(ref y, r, pad, rowH, fs, fsS, "📳 震動", Haptics.Enabled, v => { Haptics.Enabled = v; PlayerPrefs.SetInt("SD_HapticsOn", v ? 1 : 0); PlayerPrefs.Save(); if (v) Haptics.Play(Haptics.Kind.Medium); }, -1f, null);
+            Row(ref y, r, pad, rowH, fs, fsS, "💡 環境光", ArLighting.On, ArLighting.SetOn, -1f, null);   // AR 光照估計：角色跟著房間明暗
 
             if (UiKit.Button(new Rect(r.x + pw * 0.25f, r.yMax - pad - fs * 2.2f, pw * 0.5f, fs * 2.2f), "關閉", fs, true, new Color(0.5f, 0.8f, 1f))) Open = false;
 

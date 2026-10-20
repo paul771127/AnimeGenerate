@@ -423,6 +423,7 @@ namespace SpellDuel
             var rig = go.AddComponent<CharacterRig>();
             rig.advancedId = validAdv;
             rig.Build(classId);
+            BlobShadow.Attach(go.transform, classId == DummyId ? 0.28f : 0.32f, 0.26f);   // 腳下的接觸陰影
             return rig;
         }
 

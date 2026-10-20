@@ -30,6 +30,7 @@ namespace SpellDuel
                 case "golem": rig.BuildGolem(); break;
                 default: rig.BuildClone(ownerColor); break;
             }
+            BlobShadow.Attach(rig.transform, kind == "golem" ? 0.45f : kind == "falcon" ? 0.22f : 0.3f, 0f, true);   // 腳下的接觸陰影（老鷹飛高時變淡）
             return rig;
         }
 

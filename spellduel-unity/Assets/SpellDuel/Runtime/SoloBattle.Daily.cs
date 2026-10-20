@@ -222,6 +222,7 @@ namespace SpellDuel
         void FinishDaily()
         {
             phase = Phase.Over; resultShown = true;
+            SaveExercise();
             foreach (var s in dailyShots) if (s.portal) Destroy(s.portal);
             dailyShots.Clear();
             if (coinGo) coinGo.SetActive(false);

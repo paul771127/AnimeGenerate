@@ -144,6 +144,7 @@ namespace SpellDuel
         void AddNpc(Npc n)
         {
             var go = TownArt.CreateNpc(n.name, root.transform);
+            BlobShadow.Attach(go.transform, 0.3f, 0.24f);   // 腳下的接觸陰影
             n.tf = go.transform;
             n.tf.localPosition = n.pos; n.tf.localRotation = Quaternion.Euler(0f, n.yaw, 0f);
             npcs.Add(n);

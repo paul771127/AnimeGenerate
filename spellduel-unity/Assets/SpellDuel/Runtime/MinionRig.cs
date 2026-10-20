@@ -48,6 +48,7 @@ namespace SpellDuel
             var go = new GameObject("Minion LavaImp");
             var rig = go.AddComponent<MinionRig>();
             rig.Build(0);
+            BlobShadow.Attach(go.transform, 0.3f, 0f, true);   // 腳下的接觸陰影（飄在空中的投到地板；大小在 SetVariant 依體型調整）
             return rig;
         }
 
@@ -67,6 +68,7 @@ namespace SpellDuel
                 body = null;
             }
             Build(kind);
+            BlobShadow.Attach(transform, 0.3f * Variants[kind].size, 0f, true);
         }
 
         /// <summary>攻擊預備姿勢（熔岩越來越亮），duration 秒擺到位後一直維持到 Attack。</summary>

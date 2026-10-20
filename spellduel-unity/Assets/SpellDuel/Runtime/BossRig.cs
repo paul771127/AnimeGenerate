@@ -59,6 +59,7 @@ namespace SpellDuel
             var rig = go.AddComponent<BossRig>();
             rig.Theme = theme;
             rig.Build();
+            BlobShadow.Attach(go.transform, theme == 2 ? 1.5f : 1.15f, theme == 2 ? 1.3f : 0.95f);   // 腳下的接觸陰影
             return rig;
         }
 

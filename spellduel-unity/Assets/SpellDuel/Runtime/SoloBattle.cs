@@ -650,7 +650,8 @@ namespace SpellDuel
             cam = camera; area = playArea; mat = baseMat;
             myClass = PlayerPrefs.GetString("sd_my_class", "mage");
             if (!Skills.Classes.ContainsKey(myClass)) myClass = "mage";
-            enemyClass = PlayerPrefs.GetString("sd_enemy_class", "random");
+            enemyClass = PlayerPrefs.GetString("sd_enemy_class", TutorialDone ? "random" : "tutorial");
+            if (!TutorialDone) enemyClass = "tutorial";   // 第一次玩：預設選教學
             dailyPick = Mathf.Clamp(PlayerPrefs.GetInt("sd_daily_pick", 0), 0, 2);
             difficulty = Mathf.Clamp(PlayerPrefs.GetInt("sd_difficulty", 1), 0, 2);
             voiceOn = true;   // 一定要唸技能名稱才能詠唱，語音固定開啟
@@ -1255,6 +1256,7 @@ namespace SpellDuel
         {
             if (resultShown) return;
             resultShown = true;
+            SaveExercise();
             if (endless && IsTrial)
             {
                 // 轉職試煉：通過 → 可以在職業工會選進階職業
@@ -1489,6 +1491,7 @@ namespace SpellDuel
             storyStage = null;
             if (enemyClass == "boss" || enemyClass == "endless") { StartBossBattle(false, enemyClass == "endless"); return; }
             if (enemyClass == "daily") { StartDaily((DailyChallenge.Kind)Mathf.Clamp(dailyPick, 0, 2)); return; }
+            if (enemyClass == "tutorial") { StartTutorial(); return; }
             SaveChoices();
             EndBattle();
             enemyClassUsed = enemyClass == "random" ? Skills.ClassOrder[UnityEngine.Random.Range(0, Skills.ClassOrder.Length)] : enemyClass;
@@ -1537,8 +1540,8 @@ namespace SpellDuel
 
         void EndBattle()
         {
-            ClearDaily();
-            victory = null; hitsTaken = 0; lootLog.Clear(); lootGoldLog = 0;
+            ClearDaily(); ClearTutorial();
+            victory = null; hitsTaken = 0; lootLog.Clear(); lootGoldLog = 0; ResetExercise();
             if (prof != null) Progress.SaveChar(prof);
             charOpen = false;
             ClearArena();
@@ -1611,7 +1614,9 @@ namespace SpellDuel
                 else if (bossAi != null) bossAi.Update(dt);
                 else if (!NetMode) en_FaceMe();
                 battle.Update(dt);
+                UpdateExercise(dt);   // 運動紀錄：蹲、跳、閃避、移動距離
                 if (daily != null && UpdateDaily()) { UpdateVisuals(); return; }   // 每日挑戰：時間到（或心用完）→ 結算
+                if (tutorial && UpdateTutorial()) { UpdateVisuals(); return; }      // 教學關：最後一步完成 → 結算
                 if (!frozen) HandleInput();
                 SendState();
                 SendBossState();
@@ -2072,7 +2077,7 @@ namespace SpellDuel
                 {
                     bool meEvade = Vector3.Distance(at, Me.Chest) < 0.6f;
                     floaters.Add(new Floater { posMap = at + Vector3.up * 0.4f, text = (meEvade ? "✨ " : "") + text, color = meEvade ? new Color(0.5f, 1f, 1f) : new Color(1f, 0.8f, 0.4f), born = Time.time, screen = meEvade });
-                    if (meEvade) { Sfx.Play("dodge"); Haptics.Play(Haptics.Kind.Success); }
+                    if (meEvade) { Sfx.Play("dodge"); Haptics.Play(Haptics.Kind.Success); exDodges++; }
                     break;
                 }
                 case "timeout":
@@ -2790,12 +2795,12 @@ namespace SpellDuel
                 UiKit.Text(new Rect(pad, y, W - pad * 2, u), "敵人", fsS, new Color(1f, 0.9f, 0.6f));
                 y += u;
                 float ew = (W - pad * 2 - gap * 3) / 4f;
-                int nOpt = nc + 6;
+                int nOpt = nc + 7;
                 for (int i = 0; i < nOpt; i++)
                 {
-                    string id = i == 0 ? "random" : i == nc + 1 ? "dummy" : i == nc + 2 ? "boss" : i == nc + 3 ? "endless" : i == nc + 4 ? "story" : i == nc + 5 ? "daily" : Skills.ClassOrder[i - 1];
-                    string nm = id == "random" ? "隨機" : id == "dummy" ? "🪵 木頭人" : id == "boss" ? "🔥 Boss" : id == "endless" ? "♾ 無盡" : id == "story" ? "📖 故事" : id == "daily" ? "📅 每日挑戰" : Skills.Classes[id].name;
-                    var c = id == "random" ? new Color(1f, 0.85f, 0.3f) : id == "dummy" ? new Color(0.75f, 0.55f, 0.3f) : id == "boss" ? new Color(1f, 0.35f, 0.1f) : id == "endless" ? new Color(0.75f, 0.45f, 1f) : id == "story" ? new Color(1f, 0.8f, 0.4f) : id == "daily" ? new Color(0.45f, 0.9f, 0.7f) : Skills.Classes[id].color;
+                    string id = i == 0 ? "random" : i == nc + 1 ? "dummy" : i == nc + 2 ? "boss" : i == nc + 3 ? "endless" : i == nc + 4 ? "story" : i == nc + 5 ? "daily" : i == nc + 6 ? "tutorial" : Skills.ClassOrder[i - 1];
+                    string nm = id == "random" ? "隨機" : id == "dummy" ? "🪵 木頭人" : id == "boss" ? "🔥 Boss" : id == "endless" ? "♾ 無盡" : id == "story" ? "📖 故事" : id == "daily" ? "📅 每日挑戰" : id == "tutorial" ? (TutorialDone ? "🎓 教學" : "🎓 教學（新手）") : Skills.Classes[id].name;
+                    var c = id == "random" ? new Color(1f, 0.85f, 0.3f) : id == "dummy" ? new Color(0.75f, 0.55f, 0.3f) : id == "boss" ? new Color(1f, 0.35f, 0.1f) : id == "endless" ? new Color(0.75f, 0.45f, 1f) : id == "story" ? new Color(1f, 0.8f, 0.4f) : id == "daily" ? new Color(0.45f, 0.9f, 0.7f) : id == "tutorial" ? new Color(0.35f, 0.95f, 1f) : Skills.Classes[id].color;
                     if (UiKit.Button(new Rect(pad + (i % 4) * (ew + gap), y + (i / 4) * (u * 1.15f + gap), ew, u * 1.15f), nm, fsS, id == enemyClass, c)) enemyClass = id;
                 }
                 y += ((nOpt + 3) / 4) * (u * 1.15f + gap);
@@ -2893,7 +2898,7 @@ namespace SpellDuel
             { if (NetMode) Hide(); else RequestChangeMode?.Invoke(); }
             by -= u * 1.6f + gap;
             bool voiceOk = UseSpeech || VoiceReady;   // 沒有語音辨識時，要先把 3 個技能的咒語錄好
-            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? "📖 打開故事地圖" : enemyClass == "daily" ? $"📅 開始{DailyChallenge.Names[Mathf.Clamp(dailyPick, 0, 2)]}" : "⚔ 開始戰鬥");
+            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? "📖 打開故事地圖" : enemyClass == "daily" ? $"📅 開始{DailyChallenge.Names[Mathf.Clamp(dailyPick, 0, 2)]}" : enemyClass == "tutorial" ? "🎓 開始教學" : "⚔ 開始戰鬥");
             if (UiKit.Button(new Rect(pad, by, W - pad * 2, u * 1.6f), startText, fsL, true, cls.color, LoadoutReady && voiceOk))
             { if (NetMode) SendReady(); else StartBattle(); }
         }
@@ -2953,6 +2958,7 @@ namespace SpellDuel
             y += lh * 0.9f;
             UiKit.Text(new Rect(ix, y, iw, lh * 0.8f), StatusText(en, now), fsS, new Color(0.75f, 0.85f, 1f));
             if (daily != null) DrawDailyHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 每日挑戰：計時、分數、獎牌（蓋在敵人卡片上）
+            if (tutorial && phase == Phase.Fighting) DrawTutorialHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 教學關：第幾步、要做什麼
             // 合作：隊友的血量（在敵人卡片下方）
             if (coop)
             {
@@ -3284,8 +3290,10 @@ namespace SpellDuel
                 UiKit.Text(new Rect(fr.x + gap, fr.y + fr.height * 0.5f, fr.width - gap * 2, fr.height * 0.45f), Tracking.Reason + (NetMode ? "\n對手仍以你最後的位置判定" : "\n恢復追蹤後自動繼續"), fs, new Color(0.9f, 0.92f, 1f), TextAnchor.MiddleCenter);
             }
 
+            if (phase == Phase.Over && victory == null) DrawExerciseCard(W, top + (botY - top) * 0.07f, pad, lh, fsS);   // 運動紀錄（勝利窗格裡另外顯示）
             if (phase == Phase.Over && victory != null && DrawVictory(W, H, pad, top, botY, gap, lh, fs, fsS)) { }   // 勝利結算窗格（按「繼續」後才是原本的按鈕）
             else if (phase == Phase.Over && daily != null) DrawDailyResult(W, pad, top, botY, gap, lh, fs, fsS);
+            else if (phase == Phase.Over && tutorial) DrawTutorialDone(W, pad, top, botY, gap, lh, fs);
             else if (phase == Phase.Over && storyStage != null)
             {
                 var st = storyStage; bool won = battle.stageCleared;
