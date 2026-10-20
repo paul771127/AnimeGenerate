@@ -10,7 +10,11 @@ namespace SpellDuel
     ///   走位：偏好站在中遠距離（約 5.5m，鏡頭看得到整隻 Boss）；最近只到離目標「一個身高」（約 3.3m），被靠近就慢慢退開。
     ///   出招：以中遠距離招式為主（熔岩彈、落石雨、橫掃…）；玩家靠近到 4.6m 內才偶爾用強力的近身範圍招（地裂、踐踏、潮汐環），
     ///         範圍都大於一個身高，站在最近距離也打得到。蓄力時間就是預警時間（畫面有紅圈／紅線提示）。
-    ///   狂暴：血量低於一半 → 蓄力變快（chargeScale 0.7）、走路變快、出招間隔變短。
+    ///   三個階段：
+    ///     第一階段（100%～66%）：一般招式。
+    ///     第二階段（66% 以下）：怒吼硬直 1.5 秒 → 召喚援軍、張開護盾（援軍還活著時 Boss 受到的傷害 −60%，最多 20 秒），
+    ///                         並學會震地波（熔岩震波／樹根波／潮汐環）。逼玩家先清小怪、再打 Boss。
+    ///     第三階段（33% 以下）＝狂暴：再怒吼一次，蓄力變快（chargeScale 0.7）、走路變快、出招間隔變短、冷卻 ×0.8。
     /// </summary>
     public class BossAI
     {
@@ -29,6 +33,14 @@ namespace SpellDuel
         /// <summary>Boss 招式冷卻倍率（所有 Boss 共通 0.75）、每多一位玩家的施法頻率／攻擊力加成</summary>
         public const float BaseCdMul = 0.75f, PartyCast = 0.25f, PartyAtk = 0.2f;
         public bool Enraged { get; private set; }
+        /// <summary>目前階段（1～3）；換階段時通知（SoloBattle 播怒吼、提示）</summary>
+        public int Phase { get; private set; } = 1;
+        public event Action<int> OnPhase;
+        /// <summary>第二階段的護盾：援軍還活著時 Boss 受到的傷害 ×ShellTaken（最多 ShellMax 秒）</summary>
+        public bool Shell { get; private set; }
+        public const float Phase2At = 0.66f, Phase3At = 0.33f, ShellTaken = 0.4f, ShellMax = 20f, PhaseStagger = 1.5f;
+        float staggerUntil = -1f, shellUntil, baseTaken = -1f; bool pendingSummon;
+        public event Action OnShellBroken;
         /// <summary>
         /// 故事關卡的 Boss：出招更頻繁、更常用大範圍招式（橫掃要蹲、震地波要跳、地裂與落石要跑開），
         /// 讓玩家一直動起來。由 SoloBattle 設定（並把「震地波」加進 Boss 的招式）。
@@ -63,6 +75,7 @@ namespace SpellDuel
         {
             if (walkBase < 0f) walkBase = walkSpeed;
             Enraged = false; walkSpeed = walkBase;
+            Phase = 1; SetShell(false); staggerUntil = -1f; pendingSummon = false;
             me.chargeScale = baseCharge * chargeMul;
             nextThink = b.now + 2.5f;
             me.target = null;
@@ -87,6 +100,39 @@ namespace SpellDuel
         }
 
         float Rand(float a, float c) => a + (float)rnd.NextDouble() * (c - a);
+
+        void EnterPhase(int p)
+        {
+            Phase = p;
+            staggerUntil = b.now + PhaseStagger;
+            me.charging = null; leapT = -1f;
+            nextThink = b.now + PhaseStagger + 0.5f;
+            if (p == 2)
+            {
+                // 學會震地波；召喚援軍並張開護盾（沒有召喚招式的 Boss——例如無盡模式——就只有震地波）
+                var q = Skills.All[Battle.QuakeOf(Battle.ThemeOf(BossWave))];
+                if (!me.loadout.Contains(q)) me.loadout.Add(q);
+                if (me.loadout.Exists(s => s.self == SelfKind.Summon)) { pendingSummon = true; SetShell(true); }
+            }
+            else if (p == 3 && !Enraged)
+            {
+                if (walkBase < 0f) walkBase = walkSpeed;
+                Enraged = true; me.chargeScale *= 0.7f; walkSpeed = walkBase * 1.45f;
+                OnEnrage?.Invoke();
+            }
+            OnPhase?.Invoke(p);
+        }
+
+        /// <summary>這隻 Boss 的主題（熔岩 0／森林 1／海上 2），用職業判斷</summary>
+        int BossWave => me.cls.id == "boss_forest" ? 20 : me.cls.id == "boss_sea" ? 30 : 10;
+
+        void SetShell(bool on)
+        {
+            Shell = on;
+            if (baseTaken < 0f) baseTaken = me.damageTakenMul;
+            me.damageTakenMul = on ? baseTaken * ShellTaken : baseTaken;
+            if (on) shellUntil = b.now + PhaseStagger + ShellMax;
+        }
         /// <summary>Boss 平常想站的距離（中遠距離）</summary>
         public const float PreferDistance = 5.5f;
         /// <summary>玩家靠近到這個距離內，才會偶爾用近身範圍招</summary>
@@ -98,15 +144,26 @@ namespace SpellDuel
         public void Update(float dt)
         {
             if (b.Over || !me.Alive) return;
-            if (!Enraged && me.hp < me.maxHp * 0.5f)
+            if (baseTaken < 0f) baseTaken = me.damageTakenMul;
+            // ---- 換階段
+            if (Phase == 1 && me.hp < me.maxHp * Phase2At) EnterPhase(2);
+            if (Phase == 2 && me.hp < me.maxHp * Phase3At) EnterPhase(3);
+            // 護盾：援軍全倒（或時間到）就破
+            if (Shell)
             {
-                if (walkBase < 0f) walkBase = walkSpeed;
-                Enraged = true; me.chargeScale *= 0.7f; walkSpeed = walkBase * 1.45f;
-                OnEnrage?.Invoke();
+                bool anyMinion = false; foreach (var m in b.minions) if (m.Alive) { anyMinion = true; break; }
+                if ((!anyMinion && !pendingSummon && b.now > staggerUntil + 2.5f) || b.now > shellUntil) { SetShell(false); OnShellBroken?.Invoke(); }
+            }
+            if (b.now < staggerUntil) { Status = "怒吼中"; me.charging = null; return; }   // 換階段的怒吼：硬直、不出招
+            if (pendingSummon)
+            {
+                pendingSummon = false;
+                var sum = me.loadout.Find(s => s.self == SelfKind.Summon);
+                if (sum != null) { me.cooldownUntil[sum.id] = b.now; if (b.TryChant(me, sum, out _)) { Last = sum.id; Status = $"準備 {sum.name}"; } }
             }
             // 人數越多：施法越頻繁（冷卻、思考間隔 ÷(1＋0.25×多的人數)）、攻擊力越高（＋20%／人）
             int extra = b.ScaleAllies;   // 副本：固定以 3 人計
-            me.cdMul = BaseCdMul / (1f + PartyCast * extra) * (storyIntense ? StoryCdMul : 1f);
+            me.cdMul = BaseCdMul / (1f + PartyCast * extra) * (storyIntense ? StoryCdMul : 1f) * (Phase >= 3 ? 0.8f : 1f);
             me.atkMul = 1f + PartyAtk * extra;
             PickTarget();
             var tgt = me.target ?? b.player;

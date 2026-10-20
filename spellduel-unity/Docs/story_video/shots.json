@@ -1,0 +1,67 @@
+{
+  "style": "anime cel-shaded cinematic, Zenless Zone Zero inspired character rendering, clean line art, soft rim light, rich color grading, 16:9, smooth camera motion, high detail, consistent character design",
+  "negative": "photorealistic, live action, 3D render plastic look, extra fingers, deformed hands, distorted face, text, watermark, logo, subtitles, blurry, low resolution, flicker, frame jitter",
+  "characters": {
+    "Erin": "Erin, young female mage scribe, shoulder-length silver-lilac hair, violet eyes, deep purple hooded coat with gold trim, leather satchel of scrolls, carved wooden staff with a glowing violet orb",
+    "Player": "the hero seen from behind or in silhouette, hooded traveler cloak, face never shown",
+    "Laoyan": "Laoyan, elderly bell keeper of the fire village, white hair and long white beard, red work robe, leaning on a wooden walking staff",
+    "Xiaotie": "Xiaotie, energetic teenage miner boy, spiky brown hair, red headband, orange goggles on forehead, soot on cheek, brown apron",
+    "Cui": "Cui, elderly elf woman, long pale-green white hair, green robe with leaf ornaments, calm wise eyes",
+    "Xiaoye": "Xiaoye, small elf child, green twin tails, yellow tunic, holding a wooden story tablet",
+    "Haido": "Haido, young sea captain, dark navy short hair, white captain cap, blue naval coat with gold anchor pin",
+    "Nagi": "Nagi, gentle young woman, short wine-red hair, pink dress with white apron, small gold earring, holding a lantern",
+    "Mio": "Mio, ghostly singer of the old ship, translucent pale blue figure, long flowing hair, soft glowing outline",
+    "Golem": "the Lava Colossus, a 3-meter golem of cracked black basalt with glowing orange magma veins, a black crystal lodged in its chest",
+    "TreeKing": "the Corrupted Tree King, a towering tree creature with twisted bark limbs, glowing purple spores, a black crystal binding its heart",
+    "Kraken": "the Abyssal Kraken, a colossal sea monster with deep teal skin, glowing cyan runes, huge tentacles, a black crystal engraved with names on its chest"
+  },
+  "videos": [
+    {
+      "id": "v0_prologue", "title": "序章：晨鐘啞了", "play": "第一次進入故事地圖時（約 40 秒）",
+      "shots": [
+        { "id": "v0_s01", "seconds": 5, "zh": "清晨的火山村落全景，灰燼像雪一樣落下，鐘樓上的大鐘靜止不動。", "prompt": "wide establishing shot of a volcanic mountain village at dawn, ash falling like snow, an old stone bell tower with a large bronze bell hanging still, warm orange sky, slow push-in" },
+        { "id": "v0_s02", "seconds": 5, "zh": "鐘樓內部特寫：鐘舌斷了一截，鐘身爬著黑色結晶。", "prompt": "close-up inside the bell tower, the bronze bell's clapper is broken in half, creeping black crystal veins on the bell surface, dust in light beams, slow orbit" },
+        { "id": "v0_s03", "seconds": 5, "zh": "老焰站在空蕩的廣場，拄杖抬頭望著不響的鐘。", "prompt": "{Laoyan} standing alone in an empty village square, looking up at the silent bell tower, ash drifting, melancholic, medium shot, gentle wind in his beard" },
+        { "id": "v0_s04", "seconds": 5, "zh": "旅人（玩家背影）走上村口石階，斗篷被風吹起。", "prompt": "{Player} walking up stone steps toward the village gate, cloak billowing in hot wind, camera behind at shoulder height, embers floating" },
+        { "id": "v0_s05", "seconds": 5, "zh": "艾琳從書卷中抬頭，對旅人微笑，法杖寶珠亮起。", "prompt": "{Erin} looks up from an open scroll and smiles at the viewer, her staff orb lights up with violet glow, medium close-up, soft rim light" },
+        { "id": "v0_s06", "seconds": 5, "zh": "遠方山腹裂縫透出紅光，傳來三下敲擊聲（畫面隨聲音震一下）。", "prompt": "distant volcano flank with a glowing red fissure, rocks tremble three times, camera shakes slightly, ominous, wide shot" },
+        { "id": "v0_s07", "seconds": 5, "zh": "三座鐘的剪影依序亮起：火山、森林、海港（伏筆），最後熄滅。", "prompt": "three bell silhouettes light up one after another over a volcano, a misty forest and a seaside harbor, then fade to darkness, mystical, symbolic montage" },
+        { "id": "v0_s08", "seconds": 5, "zh": "艾琳與旅人並肩走向冒煙的礦坑口，標題浮現前的空鏡。", "prompt": "{Erin} and {Player} walking side by side toward a smoking mine entrance, backs to camera, sunrise behind the volcano, epic wide shot, leave empty space at top for a title" }
+      ]
+    },
+    {
+      "id": "v1_golem", "title": "第一章終：熔岩巨像・守門人的拳", "play": "1-4 開打前（約 30 秒）與通關後（約 20 秒），可拆成兩段",
+      "shots": [
+        { "id": "v1_s01", "seconds": 5, "zh": "熔岩大廳，巨像守在石閘前，胸口黑晶脈動。", "prompt": "{Golem} guarding a massive stone gate in a magma hall, the black crystal in its chest pulsing, low angle hero shot, lava rivers glowing" },
+        { "id": "v1_s02", "seconds": 5, "zh": "巨像眼睛亮起，低聲說「封住……所有的路」，熔岩從身上流下。", "prompt": "close-up of {Golem}'s face, eyes ignite bright orange, magma drips from its jaw, slow menacing turn toward camera" },
+        { "id": "v1_s03", "seconds": 5, "zh": "艾琳舉杖擋在前方，喊「攔住牠！」，旅人拔劍。", "prompt": "{Erin} raises her staff defensively, violet barrier sparks, {Player} draws a weapon beside her, dynamic low angle, heat haze" },
+        { "id": "v1_s04", "seconds": 5, "zh": "巨像高舉雙拳砸地，衝擊波捲起火星。", "prompt": "{Golem} raises both fists and slams the ground, a ring shockwave of embers and molten rock bursts outward, camera shake, slow motion" },
+        { "id": "v1_s05", "seconds": 5, "zh": "（通關）黑晶碎裂，巨像緩緩跪下，熔岩轉暗。", "prompt": "the black crystal in {Golem}'s chest shatters into glowing shards, the colossus slowly kneels, its magma veins dim to soft orange, emotional, slow motion" },
+        { "id": "v1_s06", "seconds": 5, "zh": "艾琳把鐘舌扣回大鐘，鐘聲響起，金色聲波掃過整座山。", "prompt": "{Erin} fits the broken clapper back into the great bell, the bell rings, golden sound waves sweep across the volcano and village, triumphant sunrise" }
+      ]
+    },
+    {
+      "id": "v2_treeking", "title": "第二章終：腐化樹王・不肯入睡的心", "play": "2-4 開打前與通關後",
+      "shots": [
+        { "id": "v2_s01", "seconds": 5, "zh": "霧中的記名林，古樹上掛著無數刻名木牌。", "prompt": "a misty ancient forest where countless small wooden name tags hang from giant trees, soft green light rays, quiet and sacred, slow dolly forward" },
+        { "id": "v2_s02", "seconds": 5, "zh": "樹王從祭壇的根中站起，紫色孢子飄散。", "prompt": "{TreeKing} rises from tangled roots around a stone altar, purple glowing spores drift, ominous low angle, fog" },
+        { "id": "v2_s03", "seconds": 5, "zh": "翠與小葉抱著名冊站在後方，艾琳回頭點頭。", "prompt": "{Cui} and {Xiaoye} holding a large book of names behind the heroes, {Erin} glances back and nods reassuringly, medium shot, dappled light" },
+        { "id": "v2_s04", "seconds": 5, "zh": "藤鞭橫掃過來，旅人蹲下閃過。", "prompt": "a massive vine whip sweeps horizontally toward camera, {Player} ducks low under it, leaves scatter, slow motion action" },
+        { "id": "v2_s05", "seconds": 5, "zh": "（通關）黑晶裂開，樹根展平，一顆發光的種子落在名冊上。", "prompt": "the black crystal binding {TreeKing}'s heart cracks open, roots relax and flatten, a single glowing seed falls gently onto an open book of names, peaceful, golden light" }
+      ]
+    },
+    {
+      "id": "v3_kraken", "title": "終章：深海巨妖・黎明的三重奏", "play": "3-4 開打前與結局",
+      "shots": [
+        { "id": "v3_s01", "seconds": 5, "zh": "暴風夜的港口，舊燈塔的光在雨中掃過。", "prompt": "stormy night harbor, an old lighthouse beam sweeping through heavy rain, waves crashing on rocks, cinematic wide shot" },
+        { "id": "v3_s02", "seconds": 5, "zh": "巨妖攀上礁石，胸前刻滿名字的黑晶發光。", "prompt": "{Kraken} climbs onto the reef, tentacles coiling around rocks, the name-engraved black crystal on its chest glowing, lightning flash, low angle" },
+        { "id": "v3_s03", "seconds": 5, "zh": "海斗與凪在燈塔下，凪提燈、海斗拔出佩劍。", "prompt": "{Haido} draws his sword and {Nagi} raises a lantern at the foot of the lighthouse, rain streaming, determined expressions, medium shot" },
+        { "id": "v3_s04", "seconds": 5, "zh": "澪的幽影浮現在浪上，輕聲唱歌，歌聲化成光點。", "prompt": "{Mio} appears hovering above the waves, singing softly, her voice turns into drifting points of light, ethereal, slow orbit" },
+        { "id": "v3_s05", "seconds": 5, "zh": "（結局）黑晶崩散，巨妖沉回深海，雨停。", "prompt": "the black crystal on {Kraken}'s chest crumbles to sparkling dust, the giant sinks back into the deep sea, the rain stops, clouds part, calm" },
+        { "id": "v3_s06", "seconds": 5, "zh": "三座鐘隔著山、林、海同時響起，晨光灑落。", "prompt": "split-screen montage of three bells ringing at once on a volcano, in a forest and at a harbor, golden dawn light washing over all three, triumphant" },
+        { "id": "v3_s07", "seconds": 5, "zh": "白帆船化成晨光遠去；港口立起歸航者名碑。", "prompt": "a ghostly white-sailed ship dissolves into morning light on the horizon, villagers gather around a new memorial stone of names at the harbor, emotional wide shot" },
+        { "id": "v3_s08", "seconds": 5, "zh": "艾琳合上紀行，對旅人微笑（片尾）。", "prompt": "{Erin} closes a leather-bound travel journal and smiles warmly at the viewer, sunrise behind her, soft focus, ending shot" }
+      ]
+    }
+  ]
+}

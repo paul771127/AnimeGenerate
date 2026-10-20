@@ -833,6 +833,8 @@ namespace SpellDuel
             {
                 bossAi = new BossAI(battle, boss, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
                 bossAi.OnEnrage += OnBossEnrage;
+                bossAi.OnPhase += p => { if (p == 2) OnBossPhase2(); };
+                bossAi.OnShellBroken += OnBossShellBroken;
                 bossAi.SetDifficulty(difficulty);
                 bossAi.storyIntense = endlessMode && (pendingStage != null || dungeon != null);   // 故事／副本 Boss：出招更頻繁、更多大範圍招式
                 if (endlessMode)
@@ -936,9 +938,37 @@ namespace SpellDuel
         void OnBossEnrage()
         {
             if (bossRig) bossRig.SetEnraged(true);
-            Sfx.Play("roar"); Haptics.Play(Haptics.Kind.Heavy); Kick(18f, 0f);
-            Say($"🔥 {En.name}狂暴了！出招變快！", 3f);
+            BossRoar();
+            Say($"🔥 最終階段！{En.name}狂暴了！出招變快！", 3f);
         }
+
+        // ---- Boss 第二階段：怒吼、召喚援軍、張開護盾（援軍全倒才破）
+        bool bossPhase2Shown, bossShellShown; float bossRoarStrikeAt = -1f;
+        void OnBossPhase2()
+        {
+            bossPhase2Shown = true;
+            BossRoar();
+            bool shell = bossAi != null ? bossAi.Shell : bossShellShown;
+            Say(shell ? $"⚠ 第二階段！{En.name}召喚援軍、張開護盾（傷害 −60%）：先打倒小怪！" : $"⚠ 第二階段！{En.name}學會了震地波（環到腳邊時跳起來）", 3.5f);
+        }
+        void OnBossShellBroken()
+        {
+            bossShellShown = false;
+            Sfx.Play("shatter", 1f); Sfx.Play("boom", 0.5f, 1.4f); Haptics.Play(Haptics.Kind.Success); Kick(10f, 0f);
+            Say($"💥 護盾破了！全力攻擊{En.name}！", 2.5f);
+        }
+        /// <summary>換階段的怒吼：舉臂預備 → 1.5 秒後放下（Boss 硬直期間）</summary>
+        void BossRoar()
+        {
+            Sfx.Play("roar"); Haptics.Play(Haptics.Kind.Heavy); Kick(18f, 0f);
+            if (bossRig)
+            {
+                var sum = En.loadout.Find(s => s.self == SelfKind.Summon);
+                string pose = sum != null ? sum.id : battle.Theme == 1 ? "p_summon" : battle.Theme == 2 ? "s_summon" : "b_summon";
+                bossRig.Windup(pose, 0.5f); bossWindup = null; bossRoarStrikeAt = Time.time + BossAI.PhaseStagger; bossRoarPose = pose;
+            }
+        }
+        string bossRoarPose;
 
         /// <summary>主機：每 0.1 秒送 Boss 的位置、血量、蓄力、狂暴、目標給隊友</summary>
         void SendBossState()
@@ -946,7 +976,7 @@ namespace SpellDuel
             if (!coop || !NetIsHost || battle == null || Time.time < nextBossState) return;
             nextBossState = Time.time + 0.1f;
             var b = battle.enemy;
-            int e = bossAi != null && bossAi.Enraged ? 1 : 0;
+            int e = (bossAi != null && bossAi.Enraged ? 1 : 0) | (bossAi != null && bossAi.Phase >= 2 ? 2 : 0) | (bossAi != null && bossAi.Shell ? 4 : 0);   // 1 狂暴、2 第二階段、4 護盾
             NetSend?.Invoke(new Msg { t = "boss", id = TargetCode(b.target), p = b.head, d = b.forward, hp = Mathf.CeilToInt(b.hp), dmg = b.maxHp, k = b.charging != null ? b.charging.id : "", s = battle.ChargeProgress(b), e = e, pts = b.charging != null && (b.charging.id == "b_leap" || b.charging.atTarget) ? new[] { b.aimPoint } : null,
                 ks = endless ? new[] { battle.wave.ToString(), battle.WaveRemaining.ToString(), battle.kills.ToString(), battle.bossKills.ToString(), battle.xp.ToString(), battle.waveTotal.ToString(), battle.stageCleared ? "1" : "0" } : null });
             // 小怪：位置與「編號,血量,最大血量,預備中」
@@ -1087,6 +1117,9 @@ namespace SpellDuel
                         }
                         else b.charging = null;
                         b.target = FromTargetCode(m.id);
+                        if ((m.e & 2) != 0 && !bossPhase2Shown) { bossShellShown = (m.e & 4) != 0; OnBossPhase2(); }
+                        if ((m.e & 4) != 0) bossShellShown = true;
+                        else if (bossShellShown) OnBossShellBroken();
                         if ((m.e & 1) != 0 && bossRig && !bossEnragedShown) { bossEnragedShown = true; OnBossEnrage(); }
                         if (!bossSeen) { bossSeen = true; lastEnemyFeet = b.Feet; if (bossRig && !endless) { bossRig.SetVisible(true); SpawnFade.Play(bossRig.gameObject); } }
                     }
@@ -1520,7 +1553,7 @@ namespace SpellDuel
             minionGo.Clear(); minionLastHp.Clear(); minionWinding.Clear();
             foreach (var al in aimLines.Values) if (al) Destroy(al);
             aimLines.Clear();
-            bossRig = null; bossAi = null; bossMode = false; bossWindup = null; resultShown = false; bossSeen = false;
+            bossRig = null; bossAi = null; bossMode = false; bossWindup = null; resultShown = false; bossSeen = false; bossPhase2Shown = false; bossShellShown = false; bossRoarStrikeAt = -1f;
             standY = -1f; moveHist.Clear(); ResetCalibration();
             projGo.Clear(); trapGo.Clear(); burnGo.Clear(); floaters.Clear();
             if (enemyShield) Destroy(enemyShield);
@@ -2273,7 +2306,7 @@ namespace SpellDuel
                     }
                     if (en.Alive && !bossAliveShown)
                     {
-                        bossAliveShown = true; bossHideAt = -1f; bossEnragedShown = false;
+                        bossAliveShown = true; bossHideAt = -1f; bossEnragedShown = false; bossPhase2Shown = false; bossShellShown = false;
                         bossRig.SetDead(false); bossRig.SetEnraged(false); bossRig.SetVisible(true);
                         bossRig.transform.position = feetS;
                         SpawnFade.Play(bossRig.gameObject);   // 淡入出現
@@ -2310,8 +2343,19 @@ namespace SpellDuel
             if (!en.Alive && !enemyDeadShown) { if (enemyRig) enemyRig.SetDead(true); enemyDeadShown = true; }
             bool guarded = en.blockUntil > battle.now || en.shieldUntil > battle.now || en.counterUntil > battle.now || en.armorUntil > battle.now;
             if (enemyRig) enemyRig.Guarding = guarded && en.Alive;
-            enemyShield.SetActive(guarded && en.Alive && !NetMode);   // 雙人：對手是真人，不蓋護盾球（改用方框顏色表示）
-            if (guarded)
+            bool bossShell = bossMode && en.Alive && (bossAi != null ? bossAi.Shell : bossShellShown);
+            if (bossAi != null) bossShellShown = bossAi.Shell;
+            if (bossRoarStrikeAt > 0f && Time.time >= bossRoarStrikeAt) { bossRoarStrikeAt = -1f; if (bossRig) bossRig.Attack(bossRoarPose); }
+            enemyShield.SetActive((guarded && !NetMode || bossShell) && en.Alive);   // 雙人：對手是真人，不蓋護盾球（改用方框顏色表示）
+            if (bossShell)
+            {
+                // Boss 第二階段的護盾：罩住整隻 Boss 的金色光球（輕輕脈動）
+                float pz = 1f + 0.04f * Mathf.Sin(Time.time * 4f);
+                enemyShield.transform.position = WorldFrame.FromWorld(new Vector3(en.head.x, en.head.y * 0.5f, en.head.z));
+                enemyShield.transform.localScale = new Vector3(2.6f, 3.9f, 2.6f) * pz;
+                enemyShield.GetComponent<Renderer>().material.color = new Color(1f, 0.82f, 0.35f, 0.18f + 0.06f * Mathf.Sin(Time.time * 4f));
+            }
+            else if (guarded)
             {
                 enemyShield.transform.position = WorldFrame.FromWorld(en.Chest);
                 enemyShield.transform.localScale = new Vector3(0.9f, 1.9f, 0.9f);
@@ -2885,7 +2929,8 @@ namespace SpellDuel
             y += lh;
             string enState = dummyMode ? $"命中 {dummyHits} 次・累計傷害 {Mathf.RoundToInt(dummyDamage)}"
                 : en.charging != null ? $"⚠ 詠唱 {en.charging.name}（{Mathf.FloorToInt(battle.ChargeProgress(en) * 100)}%）" : (ai?.Status ?? bossAi?.Status ?? "");
-            if (bossMode && (bossAi != null ? bossAi.Enraged : bossEnragedShown)) enState = "🔥 狂暴　" + enState;
+            if (bossMode && (bossAi != null ? bossAi.Enraged : bossEnragedShown)) enState = "🔥 第 3 階段・狂暴　" + enState;
+            else if (bossMode && (bossAi != null ? bossAi.Phase >= 2 : bossPhase2Shown)) enState = (bossShellShown ? "🛡 第 2 階段・護盾（先打倒小怪）　" : "⚔ 第 2 階段　") + enState;
             if (en.snaredUntil > now) enState = "被定身";
             if (endless) enState = $"擊倒小怪 {battle.kills}・Boss {battle.bossKills}　" + (en.Alive ? enState : $"Boss 在第 {battle.NextBossWave} 波（還有 {battle.NextBossWave - battle.wave} 波）");
             if (coop && en.Alive && en.target != null && battle.allies.Count > 0) enState = (en.target == me ? "🎯 盯上你！　" : $"🎯 盯著 {en.target.name}　") + enState;   // 仇恨：Boss 現在的目標
