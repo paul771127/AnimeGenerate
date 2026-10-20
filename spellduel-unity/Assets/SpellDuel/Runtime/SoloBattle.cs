@@ -1256,6 +1256,7 @@ namespace SpellDuel
         {
             if (resultShown) return;
             resultShown = true;
+            if (endless && battle != null) TrackProgress();   // 先算這一刻的擊倒（打倒最後的 Boss／小怪的同一幀就結算了，掉落要在發獎勵前擲）
             SaveExercise();
             if (endless && IsTrial)
             {
@@ -1342,6 +1343,14 @@ namespace SpellDuel
             }
             bool win = !En.Alive;
             Say(win ? (bossMode ? "🏆 討伐成功！熔岩巨像倒下了" : "🏆 勝利！") : (coop ? "💀 全滅…" : "💀 敗北…"), 99f);
+            if (win && bossMode)
+            {
+                // Boss 模式：打贏保底一件稀有以上的裝備（物品等級跟著角色等級）＋金幣
+                if (prof == null) prof = Progress.Char(myClass);
+                TryDrop(true); pendingGold += Economy.BossGold(10);
+                GrantLoot("討伐成功", false);
+                Progress.SaveChar(prof);
+            }
             if (win && !dummyMode) BuildVictory(bossMode ? $"討伐成功！{En.name}倒下了" : NetMode ? "對戰勝利！" : $"擊敗{En.name}！",
                 bossMode ? $"boss_{difficulty}{(coop ? "_coop" : "")}" : NetMode ? "pvp" : $"ai_{enemyClassUsed}_{difficulty}", bossMode ? 150f : 60f, 0, 0);
             Sfx.Play(win ? "win" : "lose");
