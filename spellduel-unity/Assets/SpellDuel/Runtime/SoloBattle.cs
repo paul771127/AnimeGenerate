@@ -650,6 +650,7 @@ namespace SpellDuel
             myClass = PlayerPrefs.GetString("sd_my_class", "mage");
             if (!Skills.Classes.ContainsKey(myClass)) myClass = "mage";
             enemyClass = PlayerPrefs.GetString("sd_enemy_class", "random");
+            dailyPick = Mathf.Clamp(PlayerPrefs.GetInt("sd_daily_pick", 0), 0, 2);
             difficulty = Mathf.Clamp(PlayerPrefs.GetInt("sd_difficulty", 1), 0, 2);
             voiceOn = true;   // 一定要唸技能名稱才能詠唱，語音固定開啟
             voice = VoiceTemplates.Load();
@@ -1479,6 +1480,7 @@ namespace SpellDuel
             }
             storyStage = null;
             if (enemyClass == "boss" || enemyClass == "endless") { StartBossBattle(false, enemyClass == "endless"); return; }
+            if (enemyClass == "daily") { StartDaily((DailyChallenge.Kind)Mathf.Clamp(dailyPick, 0, 2)); return; }
             SaveChoices();
             EndBattle();
             enemyClassUsed = enemyClass == "random" ? Skills.ClassOrder[UnityEngine.Random.Range(0, Skills.ClassOrder.Length)] : enemyClass;
@@ -1527,6 +1529,7 @@ namespace SpellDuel
 
         void EndBattle()
         {
+            ClearDaily();
             if (prof != null) Progress.SaveChar(prof);
             charOpen = false;
             ClearArena();
@@ -1599,6 +1602,7 @@ namespace SpellDuel
                 else if (bossAi != null) bossAi.Update(dt);
                 else if (!NetMode) en_FaceMe();
                 battle.Update(dt);
+                if (daily != null && UpdateDaily()) { UpdateVisuals(); return; }   // 每日挑戰：時間到（或心用完）→ 結算
                 if (!frozen) HandleInput();
                 SendState();
                 SendBossState();
@@ -2372,7 +2376,7 @@ namespace SpellDuel
                 {
                     // 依技能的法術造型（箭、火球、冰錐、雷光、劍氣、飛刀…），已含光暈與拖尾
                     string fxCls = p.owner == En ? enemyClassUsed : (p.owner.isAlly ? p.owner.cls.id : myClass);
-                    go = (bossMode && (p.owner == En || p.owner.isMinion || p.skill.cls == "minion" || p.skill.cls == "boss") ? BossRig.CreateProjectileVisual(p.skill.id) : null) ?? SpellFx.CreateProjectileVisual(p.skill, fxCls);
+                    go = ((bossMode || daily != null) && (p.owner == En || p.owner.isMinion || p.skill.cls == "minion" || p.skill.cls == "boss") ? BossRig.CreateProjectileVisual(p.skill.id) : null) ?? SpellFx.CreateProjectileVisual(p.skill, fxCls);
                     projGo[p] = go;
                     if (p.owner == En && !bossMode)
                     {
@@ -2776,16 +2780,17 @@ namespace SpellDuel
                 UiKit.Text(new Rect(pad, y, W - pad * 2, u), "敵人", fsS, new Color(1f, 0.9f, 0.6f));
                 y += u;
                 float ew = (W - pad * 2 - gap * 3) / 4f;
-                int nOpt = nc + 5;
+                int nOpt = nc + 6;
                 for (int i = 0; i < nOpt; i++)
                 {
-                    string id = i == 0 ? "random" : i == nc + 1 ? "dummy" : i == nc + 2 ? "boss" : i == nc + 3 ? "endless" : i == nc + 4 ? "story" : Skills.ClassOrder[i - 1];
-                    string nm = id == "random" ? "隨機" : id == "dummy" ? "🪵 木頭人" : id == "boss" ? "🔥 Boss" : id == "endless" ? "♾ 無盡" : id == "story" ? "📖 故事" : Skills.Classes[id].name;
-                    var c = id == "random" ? new Color(1f, 0.85f, 0.3f) : id == "dummy" ? new Color(0.75f, 0.55f, 0.3f) : id == "boss" ? new Color(1f, 0.35f, 0.1f) : id == "endless" ? new Color(0.75f, 0.45f, 1f) : id == "story" ? new Color(1f, 0.8f, 0.4f) : Skills.Classes[id].color;
+                    string id = i == 0 ? "random" : i == nc + 1 ? "dummy" : i == nc + 2 ? "boss" : i == nc + 3 ? "endless" : i == nc + 4 ? "story" : i == nc + 5 ? "daily" : Skills.ClassOrder[i - 1];
+                    string nm = id == "random" ? "隨機" : id == "dummy" ? "🪵 木頭人" : id == "boss" ? "🔥 Boss" : id == "endless" ? "♾ 無盡" : id == "story" ? "📖 故事" : id == "daily" ? "📅 每日挑戰" : Skills.Classes[id].name;
+                    var c = id == "random" ? new Color(1f, 0.85f, 0.3f) : id == "dummy" ? new Color(0.75f, 0.55f, 0.3f) : id == "boss" ? new Color(1f, 0.35f, 0.1f) : id == "endless" ? new Color(0.75f, 0.45f, 1f) : id == "story" ? new Color(1f, 0.8f, 0.4f) : id == "daily" ? new Color(0.45f, 0.9f, 0.7f) : Skills.Classes[id].color;
                     if (UiKit.Button(new Rect(pad + (i % 4) * (ew + gap), y + (i / 4) * (u * 1.15f + gap), ew, u * 1.15f), nm, fsS, id == enemyClass, c)) enemyClass = id;
                 }
                 y += ((nOpt + 3) / 4) * (u * 1.15f + gap);
-                DrawDifficultyRow(ref y, pad, gap, u, fsS, W);
+                if (enemyClass == "daily") DrawDailyPicker(ref y, pad, gap, u, fs, fsS, W);
+                else DrawDifficultyRow(ref y, pad, gap, u, fsS, W);
                 if (enemyClass == "endless")
                     UiKit.Text(new Rect(pad, y - gap, W - pad * 2, u * 0.9f), $"♾ 無盡模式最佳分數：{PlayerPrefs.GetInt("sd_endless_best", 0)}", fsS, new Color(0.85f, 0.75f, 1f));
             }
@@ -2878,7 +2883,7 @@ namespace SpellDuel
             { if (NetMode) Hide(); else RequestChangeMode?.Invoke(); }
             by -= u * 1.6f + gap;
             bool voiceOk = UseSpeech || VoiceReady;   // 沒有語音辨識時，要先把 3 個技能的咒語錄好
-            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? "📖 打開故事地圖" : "⚔ 開始戰鬥");
+            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? "📖 打開故事地圖" : enemyClass == "daily" ? $"📅 開始{DailyChallenge.Names[Mathf.Clamp(dailyPick, 0, 2)]}" : "⚔ 開始戰鬥");
             if (UiKit.Button(new Rect(pad, by, W - pad * 2, u * 1.6f), startText, fsL, true, cls.color, LoadoutReady && voiceOk))
             { if (NetMode) SendReady(); else StartBattle(); }
         }
@@ -2937,6 +2942,7 @@ namespace SpellDuel
             UiKit.Text(new Rect(ix, y, iw, lh * 0.9f), enState, fsS, en.charging != null ? new Color(1f, 0.75f, 0.4f) : new Color(0.9f, 0.92f, 1f));
             y += lh * 0.9f;
             UiKit.Text(new Rect(ix, y, iw, lh * 0.8f), StatusText(en, now), fsS, new Color(0.75f, 0.85f, 1f));
+            if (daily != null) DrawDailyHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 每日挑戰：計時、分數、獎牌（蓋在敵人卡片上）
             // 合作：隊友的血量（在敵人卡片下方）
             if (coop)
             {
@@ -2972,7 +2978,7 @@ namespace SpellDuel
             }
 
             // 所有敵人（Boss、電腦對手、小怪）：在畫面中 → 頭上標距離（最近的寫「最近」、正在出手的紅色 ⚠）；不在畫面中 → 畫面邊緣的箭頭
-            if (phase == Phase.Fighting && !dummyMode) DrawEnemyMarkers(W, H, lh, fsS);
+            if (phase == Phase.Fighting && !dummyMode && daily == null) DrawEnemyMarkers(W, H, lh, fsS);
 
             // 小怪頭上的小血條
             if (battle.minions.Count > 0)
@@ -3071,7 +3077,7 @@ namespace SpellDuel
             else if (voiceOn && VoiceReady && mic.Running && mic.Spotter.InSpeech) UiKit.Pill(H * 0.25f, "🎤 …", fs, Color.white, pillW);
 
             // 鎖定框／敵人方向提示
-            if (phase == Phase.Fighting && en.Alive && !frozen)
+            if (phase == Phase.Fighting && en.Alive && !frozen && !NoEnemy)
             {
                 if (enemyOnScreen)
                 {
@@ -3268,7 +3274,8 @@ namespace SpellDuel
                 UiKit.Text(new Rect(fr.x + gap, fr.y + fr.height * 0.5f, fr.width - gap * 2, fr.height * 0.45f), Tracking.Reason + (NetMode ? "\n對手仍以你最後的位置判定" : "\n恢復追蹤後自動繼續"), fs, new Color(0.9f, 0.92f, 1f), TextAnchor.MiddleCenter);
             }
 
-            if (phase == Phase.Over && storyStage != null)
+            if (phase == Phase.Over && daily != null) DrawDailyResult(W, pad, top, botY, gap, lh, fs, fsS);
+            else if (phase == Phase.Over && storyStage != null)
             {
                 var st = storyStage; bool won = battle.stageCleared;
                 var orr = new Rect(pad, top+(botY-top)*.24f, W-pad*2, (botY-top)*.36f);
