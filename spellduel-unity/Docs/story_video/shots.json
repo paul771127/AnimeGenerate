@@ -1,6 +1,6 @@
 {
-  "style": "Anime cel-shaded cinematic scene, modern Japanese action RPG look inspired by Zenless Zone Zero: clean line art, flat two-tone cel shading, soft rim light, vivid color grading, smooth camera motion, 16:9, consistent character design.",
-  "negative": "photorealistic, live action, 3D render plastic look, extra fingers, deformed hands, distorted face, text, watermark, logo, subtitles, blurry, low resolution, flicker, frame jitter",
+  "style": "High-quality anime film still, modern Japanese action RPG look inspired by Zenless Zone Zero: thin clean line art, detailed anime illustration, flat two-tone cel shading, soft rim light, vivid color grading, smooth camera motion, 16:9, consistent character design.",
+  "negative": "photorealistic, live action, 3D render plastic look, extra fingers, deformed hands, distorted face, text, watermark, logo, subtitles, blurry, low resolution, flicker, frame jitter, manga, comic book, thick ink outlines, western cartoon, modern buildings",
   "characters": {
     "Erin": "Erin, young female mage scribe, shoulder-length silver-lilac hair, violet eyes, deep purple hooded coat with gold trim, leather satchel of scrolls, carved wooden staff with a glowing violet orb",
     "Player": "the hero seen from behind or in silhouette, hooded traveler cloak, face never shown",
@@ -25,7 +25,7 @@
           "id": "v0_s01",
           "seconds": 5,
           "zh": "清晨的火山村落全景，灰燼像雪一樣落下，鐘樓上的大鐘靜止不動。",
-          "prompt": "wide establishing shot of a volcanic mountain village at dawn, ash falling like snow, an old stone bell tower with a large bronze bell hanging still, warm orange sky, slow push-in"
+          "prompt": "wide establishing shot of a volcanic mountain village at dawn, ash falling like snow, an old stone bell tower with a large bronze bell hanging still, warm orange sky, slow push-in, rustic stone and timber houses with tiled roofs, no modern buildings"
         },
         {
           "id": "v0_s02",
