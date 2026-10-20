@@ -40,7 +40,7 @@ namespace SpellDuel
         {
             switch (k)
             {
-                case Kind.Dodge: return new[] { 30, 55, 80 };   // 一場約 115 發（60 秒撐滿、被打中不超過 5 次）
+                case Kind.Dodge: return new[] { 30, 55, 80 };   // 一場約 110 發（60 秒撐滿、被打中不超過 5 次）
                 case Kind.Run: return new[] { 6, 10, 14 };
                 default:
                     float m = 1f + 0.12f * Mathf.Max(0, level - 1);
@@ -100,8 +100,8 @@ namespace SpellDuel
 
         /// <summary>
         /// 閃避挑戰的題目（兩條獨立的出題線，會重疊）：
-        ///   ①遠程火球：四面八方（360°，身後也會來），速度都一樣；時間越久越多——間隔從 1.6 秒縮到 0.55 秒，
-        ///     而且一次射出的數量越來越多（20 秒後偶爾 2 發、40 秒後 2～3 發，各自從不同方向）。
+        ///   ①遠程火球：四面八方（360°，身後也會來），速度都一樣；每 BoltEvery 秒射一輪，
+        ///     每過 10 秒一輪就多一發（0～10 秒 1 發、10～20 秒 2 發……50～60 秒 6 發），各自從不同方向。
         ///   ②範圍招：橫掃（蹲）、落石（走出紅圈）、震地環（跳），6 秒後開始，間隔從 6 秒縮到 3.5 秒——常常和遠程彈同時來。
         /// </summary>
         public class DodgeDirector
@@ -111,11 +111,13 @@ namespace SpellDuel
             public DodgeDirector(int seed) { rnd = new System.Random(seed); }
             /// <summary>預備時間（光門出現到攻擊放出）：越後面越短</summary>
             public static float Windup(float t) => Mathf.Lerp(1.0f, 0.65f, Mathf.Clamp01(t / Duration));
-            public static float BoltInterval(float t) => Mathf.Lerp(1.6f, 0.55f, Mathf.Clamp01(t / Duration));
+            /// <summary>火球每一輪的間隔（固定）</summary>
+            public const float BoltEvery = 2f;
+            public static float BoltInterval(float t) => BoltEvery;
             public static float AreaInterval(float t) => Mathf.Lerp(6f, 3.5f, Mathf.Clamp01(t / Duration));
             float R(float a, float b) => a + (float)rnd.NextDouble() * (b - a);
-            /// <summary>一次射幾發：20 秒前 1 發；20～40 秒 30% 機率 2 發；40 秒後 2 發、40% 機率 3 發</summary>
-            public static int VolleyOf(float t, double roll) => t < 20f ? 1 : t < 40f ? (roll < 0.3 ? 2 : 1) : (roll < 0.4 ? 3 : 2);
+            /// <summary>一輪射幾發：每過 10 秒多一發（0～10 秒 1 發 … 50～60 秒 6 發）</summary>
+            public static int VolleyOf(float t, double roll = 0) => 1 + Mathf.Clamp(Mathf.FloorToInt(t / 10f), 0, 5);
 
             /// <summary>到 t 秒為止該出的攻擊（可能 0～3 發）</summary>
             public List<Shot> Poll(float t)
@@ -123,7 +125,7 @@ namespace SpellDuel
                 var list = new List<Shot>();
                 if (t >= nextBolt)
                 {
-                    nextBolt = t + BoltInterval(t) * R(0.7f, 1.3f);
+                    nextBolt = t + BoltInterval(t);
                     float a = R(-180f, 180f);
                     int n = VolleyOf(t, rnd.NextDouble());
                     for (int i = 0; i < n; i++)   // 齊射：每一發從不同方向（平均分開再加一點隨機）
