@@ -34,6 +34,21 @@ OPEN_TYPES = (
 # 已決標 = 情報價值(誰在買、誰在搶),意圖分數較低
 AWARD_TYPES = ("決標公告", "無法決標公告")
 
+# 個人接案者投得了的公告類型。
+#
+# 政府採購法第 8 條的「廠商」確實包含自然人,但實務上大案子的招標文件會要求
+# 營業登記、納稅證明與押標金,個人過不了資格審。真正吃得到的是這兩種:
+#   * 公開徵求廠商提供參考資料:這是 RFI,只是請你提供資料,沒有資格門檻,
+#     而且是讓機關認識你最便宜的方式 —— 後續的案子常常就找有回應過的人。
+#   * 公開取得報價單或企劃書:用於未達公告金額的採購,機關可以直接洽個人。
+# 「公開招標」與「限制性招標」預設排除,那些幾乎都要公司行號。
+INDIVIDUAL_FRIENDLY_TYPES = (
+    "公開徵求廠商提供參考資料公告",
+    "公開取得報價單或企劃書公告",
+)
+# 細節頁的「採購金額級距」寫這個,就是小額採購
+SMALL_VALUE = "未達公告金額"
+
 _MONEY = re.compile(r"([\d,]+)\s*元")
 
 
@@ -128,6 +143,8 @@ class GovTender:
         drop_expired = bool(cfg.get("drop_expired", True))
         # 預設丟掉「買設備」與土木工程,只留「找人做」的案子
         drop_kinds = set(cfg.get("drop_kinds", ["equipment", "construction"]))
+        # 只留個人接案者投得了的案子(沒有公司行號時的預設)
+        individual_only = bool(cfg.get("individual_only", True))
         cutoff = date.today() - timedelta(days=within_days)
 
         seen: set[str] = set()
@@ -212,6 +229,16 @@ class GovTender:
             self._attach_detail(fetcher, rec, lead)
 
         for lead, _ in pending:
+            if individual_only and lead.signal_type in ("tender_open", "tender_goods"):
+                btype = lead.notes
+                friendly = any(t in btype for t in INDIVIDUAL_FRIENDLY_TYPES)
+                # 細節頁有抓到的話,小額採購一律算個人可投
+                if not friendly and any(t == f"級距:{SMALL_VALUE}" for t in lead.tags):
+                    friendly = True
+                if not friendly:
+                    continue
+                lead.tags.append("個人可投")
+
             # 截止投標只在細節頁才知道,所以過期判斷要等細節抓完才做
             deadline = next(
                 (t[9:] for t in lead.tags if t.startswith("deadline:")), ""
@@ -252,6 +279,8 @@ class GovTender:
                 if (dl := _parse_roc(str(v))):
                     lead.tags.append(f"deadline:{dl}")
                     lead.notes += f" / 截止投標 {dl}"
+            elif "採購金額級距" in k:
+                lead.tags.append(f"級距:{str(v).strip()}")
             elif k.endswith("履約期限"):
                 lead.notes += f" / 履約 {v}"
         lead.phones = list(dict.fromkeys(lead.phones))

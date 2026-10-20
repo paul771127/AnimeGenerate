@@ -13,7 +13,7 @@ from .store import Store
 
 CSV_COLUMNS = [
     "score", "org", "signal_type", "signal_title", "signal_date",
-    "emails", "phones", "website", "location", "budget_twd",
+    "emails", "phones", "contacts_other", "website", "location", "budget_twd",
     "source", "source_url", "collected_at", "status", "notes",
 ]
 
@@ -37,6 +37,7 @@ def to_csv(store: Store, out: str | Path, min_score: int = 0,
             d = dict(r)
             d["emails"] = ";".join(_loads(d["emails"]) or [])
             d["phones"] = ";".join(_loads(d["phones"]) or [])
+            d["contacts_other"] = ";".join(_loads(d.get("contacts_other")) or [])
             w.writerow(d)
     return len(rows)
 
@@ -53,12 +54,14 @@ def to_markdown(store: Store, out: str | Path, min_score: int = 70,
     for i, r in enumerate(rows, 1):
         emails = _loads(r["emails"]) or []
         phones = _loads(r["phones"]) or []
+        other = _loads(r["contacts_other"]) or []
         detail = _loads(r["score_detail"]) or {}
         budget = f"{r['budget_twd']:,}" if r["budget_twd"] else "未公開"
         lines += [
             f"## {i}. [{r['score']}] {r['org']}",
             f"- 訊號:{r['signal_type']} — {r['signal_title']}（{r['signal_date'] or '日期未知'}）",
-            f"- 聯絡:{'、'.join(emails) or '—'}｜{'、'.join(phones) or '—'}",
+            f"- 聯絡:{'、'.join(emails) or '—'}｜{'、'.join(phones) or '—'}"
+            + (f"｜{'、'.join(other)}" if other else ""),
             f"- 預算/規模:{budget}｜地點:{r['location'] or '—'}",
             f"- 分數組成:{detail}",
             f"- 出處:{r['source_url']}",

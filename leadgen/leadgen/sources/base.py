@@ -40,4 +40,6 @@ def available() -> list[str]:
 
 def load_all():
     """import 所有 adapter 模組以觸發 register。"""
-    from . import gov_tender, hn_freelance, job_boards, tw_company  # noqa: F401
+    from . import (  # noqa: F401
+        freelancer, gov_tender, hn_freelance, job_boards, ptt, tw_company,
+    )

@@ -56,6 +56,12 @@ sources:
     # equipment(買現成設備/軟體,對你無用)、construction(土木)。
     # 打樣類關鍵字有九成命中 equipment,所以預設丟掉它和土木。
     drop_kinds: [equipment, construction]
+    # 個人接案者沒有營業登記,過不了大案子的資格審。開著只留兩種:
+    # 「公開徵求廠商提供參考資料」(RFI,無資格門檻,而且是讓機關認識你最便宜
+    # 的方式)與「公開取得報價單或企劃書」(未達公告金額,機關可直接洽個人),
+    # 外加細節頁顯示「未達公告金額」的小額採購。
+    # 之後成立公司行號了就改成 false,整個標案市場才會打開。
+    individual_only: true
 
   # HN 每月外包串:對方自己公開徵求接案者並留下聯絡方式,可直接寫信。
   hn_freelance:
@@ -112,6 +118,40 @@ sources:
       - design engineer
       - product design
 
+  # 外包平台:個人投標是常態,不需要任何公司資格。客戶是中小企業與個人。
+  # 兩個門檻一定要套,否則會灌進一堆 $30-250 搭配 90 幾人投標的殺價案。
+  freelancer:
+    enabled: true
+    queries: [firmware, embedded, stm32, pcb, mechanical design, 3d printing,
+              enclosure, iot, reverse engineering]
+    limit_per_query: 30
+    min_budget_twd: 15000     # 預算下限(台幣)
+    max_bids: 40              # 投標人數上限,人越多勝率與單價越低
+
+  # PTT 發案貼文。實測各板第一頁的需求密度:CodeJob 3/21(軟體外包,[發案]
+  # 標籤)、Mechanical 5/21(加工與機構,[徵求])、Soho 4/14 但全是行銷攝影、
+  # Programming 0/21。所以主力是前兩個板。
+  # Soho 預設不放進來:實測 5 頁 45 篇需求貼文只濾出 3 筆,而且是 1000~1500 元
+  # 的行銷微案。如果你也接小型網站或自動化腳本,再把它加回 boards。
+  ptt:
+    enabled: true
+    pages: 3
+    boards:
+      - {name: CodeJob, tags: ["[發案]", "[徵才]", "[外包]"]}
+      - {name: Mechanical, tags: ["[徵求]", "[徵才]"]}
+      # - {name: Soho, tags: ["[徵才]", "[外包]", "[委託]"]}
+    individual_only: false    # 設 true 只留「理想接案對象:個人接案」(僅 Soho 板有此欄位)
+    drop_expired: true
+    keywords: [程式, 軟體, 網站, 系統, app, 後端, api, 韌體, 電路, 硬體,
+               機構, 3d, 列印, 打樣, 模型, 加工, 治具, 夾具, 外殼, 自動化,
+               python, 嵌入式, 微控制, arduino, esp32, 樹莓派, raspberry,
+               爬蟲, 資料庫, 整合, 手臂, 設備, 逆向, 繪圖, cad, solidworks]
+    # 命中就排除。Soho 板以行銷與平面設計為主,光靠正面關鍵字會把「網站SEO」
+    # 「名片設計」一起撈進來 —— 它們的內容描述也會提到網站與系統。
+    exclude_keywords: [seo, 行銷, 廣告投放, 美編, 排版, 名片, 視覺設計, 文案,
+                       社群經營, 小編, 剪輯, 配音, 翻譯, 攝影, 模特, 手模,
+                       代購, 幣圈, 推廣夥伴, 合租, 問卷]
+
   # 公司登記資料:只用來產生目標名單,不含任何個人聯絡資訊。
   # 預設關掉,因為它沒有意圖訊號,開了會把資料庫灌滿低分名單。
   # 要做「主動開發特定產業」時再開。
@@ -138,7 +178,11 @@ scoring:
     fit: 25
     reach: 10
     fresh: 10
-  budget_full_at_twd: 2000000   # 預算到這個數字就拿滿分
+  # 預算到這個數字就拿滿分。30 萬是「對一個人來說是大案子」的量級 ——
+  # 原本設 200 萬是照政府標案的刻度,結果 20 萬的外包案(對個人是好案子)
+  # 只拿到 2.5/25 分,所有小客戶來源都被系統性壓在標案底下。
+  # 如果你之後成立公司行號、開始接百萬級的案子,再把它調回去。
+  budget_full_at_twd: 300000
   # 「預算未公開」拿到的比例。政府標案有一大部分不公開預算,職缺也多半不寫薪資,
   # 把未知當 0 分等於懲罰資料缺失。設 0 會變回舊行為。
   unknown_budget_ratio: 0.4

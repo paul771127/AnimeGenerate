@@ -17,7 +17,7 @@ from leadgen.store import Store  # noqa: E402
 
 SCORING = {
     "weights": {"intent": 30, "budget": 25, "fit": 25, "reach": 10, "fresh": 10},
-    "budget_full_at_twd": 2_000_000,
+    "budget_full_at_twd": 300_000,
     "fresh_half_life_days": 30,
     "profile": {"core": ["韌體", "firmware"], "plus": ["iot"], "exclude": ["保全"]},
 }
@@ -313,3 +313,76 @@ def test_hn_org_name_is_the_company_not_the_sentence():
     assert _org_name("Elementary Robotics https://elementaryrobotics.com | Firmware") == "Elementary Robotics"
     assert _org_name('Woods Hole Oceanographic Institute "We go to impossible places"') == \
         "Woods Hole Oceanographic Institute"
+
+
+# ---------- PTT 發案貼文解析 ----------
+
+def test_ptt_line_id_regex_rejects_chinese_and_substrings():
+    """\\w 在 Python 包含中文,原本抓到「LINE: 所在地區」當帳號;
+    而且 line 沒有詞界,「StreamlineBio」裡的 line 也被當成 LINE 帳號。"""
+    from leadgen.sources.ptt import _LINE_ID, _looks_like_line_id
+
+    def ids(text):
+        return [m.group(1) for m in _LINE_ID.finditer(text)
+                if _looks_like_line_id(m.group(1))]
+
+    assert ids("聯絡方式:line ID:katzeodin") == ["katzeodin"]
+    assert ids("請先line:nealrzl 說明需求") == ["nealrzl"]
+    assert ids("賴:kula3290") == ["kula3290"]
+    assert ids("StreamlineBio-資深機構/機械工程師") == []
+    assert ids("LINE: 所在地區") == []
+    assert ids("line id: 所在地區跟報價") == []
+
+
+def test_ptt_skips_selling_and_transfer_posts():
+    """[徵求] 板上也有賣東西和轉讓課程的貼文,那些不是案源。"""
+    from leadgen.sources.ptt import _NOT_A_JOB
+    for title in ("[徵求] 售 3D列印機-ATOM 2 正常可印", "[徵求] PTC Creo 課程轉讓",
+                  "[徵求] 二手銑床", "[徵求] 面交 鋁板"):
+        assert _NOT_A_JOB.search(title), title
+    # 不能誤殺:單字的售/賣要有詞界
+    for title in ("[發案] 銷售系統開發", "[徵求] 新竹 電木NC加工廠", "[發案] python爬蟲"):
+        assert not _NOT_A_JOB.search(title), title
+
+
+def test_ptt_budget_parsing():
+    from leadgen.sources.ptt import _parse_budget
+    assert _parse_budget("約5000～7000元之間") == 5000
+    assert _parse_budget("1.5萬") == 15000
+    assert _parse_budget("一週內") is None      # 不能把工期當預算
+    assert _parse_budget("") is None
+
+
+def test_ptt_deadline_year_rollover():
+    """徵求期限只寫「1/5」,年份要從發文日期推 —— 12 月發文表示跨年。"""
+    from datetime import date
+    from leadgen.sources.ptt import _parse_deadline
+    assert _parse_deadline("10/21", date(2026, 10, 19)) == "2026-10-21"
+    assert _parse_deadline("1/5", date(2026, 12, 20)) == "2027-01-05"
+    assert _parse_deadline("", date(2026, 10, 19)) == ""
+
+
+# ---------- 個人接案者投得了的標案 ----------
+
+def test_individual_friendly_tender_types():
+    """大案子的招標文件要營業登記與押標金,個人過不了資格審。
+    真正吃得到的是 RFI 與未達公告金額的報價單案。"""
+    from leadgen.sources.gov_tender import INDIVIDUAL_FRIENDLY_TYPES
+    assert "公開徵求廠商提供參考資料公告" in INDIVIDUAL_FRIENDLY_TYPES
+    assert "公開取得報價單或企劃書公告" in INDIVIDUAL_FRIENDLY_TYPES
+    assert not any("公開招標公告" == t for t in INDIVIDUAL_FRIENDLY_TYPES)
+
+
+def test_marketplace_project_scores_as_reachable():
+    """外包平台沒有 email,是站內投標。少了 contacts_other 這類來源的
+    reach 會永遠是 0 分,整個來源排不進寄信名單。"""
+    from datetime import date
+    lead = Lead(org="Freelancer 案件 #1", source="freelancer", source_url="u",
+                signal_title="Embedded STM32 firmware", signal_type="marketplace_project",
+                signal_date=date.today().isoformat(), budget_twd=200_000,
+                contacts_other=["freelancer.com 站內投標"])
+    score, detail = score_lead(lead, {**SCORING, "profile": {
+        "core": ["embedded", "firmware"], "plus": [], "exclude": []}})
+    assert lead.has_contact
+    assert detail["reach"] >= 8, detail
+    assert score >= 85, detail

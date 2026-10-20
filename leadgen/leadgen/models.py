@@ -155,6 +155,10 @@ class Lead:
     website: str = ""
     emails: list[str] = field(default_factory=list)
     phones: list[str] = field(default_factory=list)
+    # 不是 email 也不是電話的聯絡管道:LINE ID、Telegram、平台站內投標。
+    # 台灣的個人發案者多半只留 LINE,外包平台則根本不給聯絡方式(站內投標),
+    # 少了這個欄位這兩類來源的 reach 會永遠是 0 分。
+    contacts_other: list[str] = field(default_factory=list)
     location: str = ""
     budget_twd: int | None = None  # 統一換算成新台幣,無資料為 None
     tags: list[str] = field(default_factory=list)
@@ -171,6 +175,7 @@ class Lead:
         self.org = (self.org or "").strip()
         self.emails = [e.lower() for e in dict.fromkeys(self.emails)]
         self.phones = list(dict.fromkeys(self.phones))
+        self.contacts_other = list(dict.fromkeys(self.contacts_other))
 
     @property
     def domain(self) -> str:
@@ -202,7 +207,7 @@ class Lead:
 
     @property
     def has_contact(self) -> bool:
-        return bool(self.emails or self.phones)
+        return bool(self.emails or self.phones or self.contacts_other)
 
     def to_row(self) -> dict:
         d = asdict(self)

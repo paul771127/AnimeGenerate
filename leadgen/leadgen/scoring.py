@@ -20,6 +20,7 @@ DEFAULT_WEIGHTS = {"intent": 30, "budget": 25, "fit": 25, "reach": 10, "fresh": 
 # 訊號類型 -> 意圖強度(0..1)
 INTENT_BY_TYPE = {
     "freelance_request": 1.00,  # 公開說「我要找外包」
+    "marketplace_project": 0.90,  # 外包平台上的案子,直接投標即可,不需公司資格
     "tender_open": 0.95,        # 招標中,可直接投
     "tender_goods": 0.60,       # 招標中,但標的是零件/治具這類「買東西」(可代工供貨)
     "job": 0.55,                # 在徵相關職位 = 有專案缺人
@@ -70,6 +71,9 @@ def _reach_ratio(lead: Lead) -> float:
         return 1.0      # info@ / sales@ 這類角色信箱,最乾淨
     if lead.emails:
         return 0.8
+    # LINE ID 或平台站內投標:發案者自己留的直接管道,比電話還好用
+    if lead.contacts_other:
+        return 0.9
     if lead.phones:
         return 0.5
     if lead.website:
@@ -95,7 +99,7 @@ def _fresh_ratio(signal_date: str, half_life_days: int) -> float:
 def score_lead(lead: Lead, cfg: dict) -> tuple[int, dict]:
     w = {**DEFAULT_WEIGHTS, **(cfg.get("weights") or {})}
     profile = cfg.get("profile") or {}
-    budget_full_at = int(cfg.get("budget_full_at_twd", 2_000_000))
+    budget_full_at = int(cfg.get("budget_full_at_twd", 300_000))
     unknown_budget = float(cfg.get("unknown_budget_ratio", 0.4))
     half_life = int(cfg.get("fresh_half_life_days", 30))
 

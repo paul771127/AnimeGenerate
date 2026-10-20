@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS leads (
     website      TEXT,
     emails       TEXT,
     phones       TEXT,
+    contacts_other TEXT,
     location     TEXT,
     budget_twd   INTEGER,
     tags         TEXT,
@@ -59,7 +60,7 @@ CREATE TABLE IF NOT EXISTS outreach (
 CREATE INDEX IF NOT EXISTS idx_outreach_dedupe ON outreach(dedupe_key);
 """
 
-_LIST_COLS = ("emails", "phones", "tags")
+_LIST_COLS = ("emails", "phones", "contacts_other", "tags")
 
 
 class Store:
@@ -86,7 +87,8 @@ class Store:
         cols = [
             "signal_key", "dedupe_key", "org", "domain", "source", "source_url",
             "signal_title", "signal_type", "signal_date", "website", "emails",
-            "phones", "location", "budget_twd", "tags", "evidence", "notes",
+            "phones", "contacts_other", "location", "budget_twd", "tags",
+            "evidence", "notes",
             "score", "score_detail", "collected_at", "status",
         ]
         existing = self.conn.execute(
@@ -138,7 +140,8 @@ class Store:
             sql += " AND status = ?"
             args.append(status)
         if require_contact:
-            sql += " AND (emails != '[]' OR phones != '[]')"
+            sql += (" AND (emails != '[]' OR phones != '[]'"
+                    " OR (contacts_other IS NOT NULL AND contacts_other != '[]'))")
         sql += " ORDER BY score DESC, signal_date DESC LIMIT ?"
         args.append(limit)
         return self.conn.execute(sql, args).fetchall()
@@ -149,7 +152,8 @@ class Store:
             "signals": c.execute("SELECT COUNT(*) FROM leads").fetchone()[0],
             "orgs": c.execute("SELECT COUNT(DISTINCT dedupe_key) FROM leads").fetchone()[0],
             "with_contact": c.execute(
-                "SELECT COUNT(*) FROM leads WHERE emails != '[]' OR phones != '[]'"
+                "SELECT COUNT(*) FROM leads WHERE emails != '[]' OR phones != '[]' "
+                "OR (contacts_other IS NOT NULL AND contacts_other != '[]')"
             ).fetchone()[0],
             "score_70plus": c.execute("SELECT COUNT(*) FROM leads WHERE score >= 70").fetchone()[0],
             "by_source": dict(c.execute(
