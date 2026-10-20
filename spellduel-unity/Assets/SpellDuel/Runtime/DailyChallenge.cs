@@ -92,6 +92,8 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 閃避挑戰的出題
         /// <summary>攻擊種類：直線彈（側跨）、橫掃（蹲）、震地環（跳）、落石（走出紅圈）</summary>
         public enum Attack { Bolt, Sweep, Quake, Rain }
+        /// <summary>閃避挑戰火球的飛行速度（公尺／秒）</summary>
+        public const float BoltSpeed = 1.4f;
         public static readonly string[] AttackSkill = { "m_fireball", "b_sweep", "x_quake", "b_rain" };   // 直線彈用單發（扇形三發一步閃不掉）
         public static readonly string[] AttackHint = { "↔ 側跨閃開！", "↓ 蹲下！", "⤴ 跳起來！", "◎ 走出紅圈！" };
 

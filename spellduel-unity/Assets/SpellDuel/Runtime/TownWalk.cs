@@ -41,7 +41,11 @@ namespace SpellDuel
         public Action<int> OnExit;
         /// <summary>踏上傳送陣</summary>
         public Action OnWarp;
-        bool onWarp;
+        bool onWarp; float warpEnterAt = -1f;
+        /// <summary>要在傳送陣上站多久才會傳送（秒）</summary>
+        public const float WarpStay = 0.5f;
+        /// <summary>站上傳送陣的進度（0～1；畫面可以畫倒數）</summary>
+        public float WarpProgress => warpEnterAt < 0f ? 0f : Mathf.Clamp01((Time.time - warpEnterAt) / WarpStay);
 
         GameObject root;
         readonly List<(Vector2 c, float r)> walls = new List<(Vector2, float)>();
@@ -194,8 +198,14 @@ namespace SpellDuel
                 }
             // 傳送陣
             float wd = Vector2.Distance(meXZ, new Vector2(WarpPos.x, WarpPos.z));
-            if (!onWarp && wd < 0.8f) { onWarp = true; OnWarp?.Invoke(); }
-            else if (onWarp && wd > 1.3f) onWarp = false;
+            // 站在傳送陣上 WarpStay 秒才觸發（走過去不會誤傳送）；離開 1.3m 才重新計時
+            if (!onWarp && wd < 0.8f)
+            {
+                if (warpEnterAt < 0f) warpEnterAt = Time.time;
+                if (Time.time - warpEnterAt >= WarpStay) { onWarp = true; warpEnterAt = -1f; OnWarp?.Invoke(); }
+            }
+            else if (!onWarp) warpEnterAt = -1f;
+            if (onWarp && wd > 1.3f) onWarp = false;
             // 居民：玩家靠近時轉頭看玩家；找可以打招呼的人
             Near = null; float best = float.MaxValue;
             var camF = tr.InverseTransformDirection(cam.transform.forward); var camF2 = new Vector2(camF.x, camF.z);

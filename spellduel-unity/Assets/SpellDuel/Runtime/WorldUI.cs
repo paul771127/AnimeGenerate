@@ -339,7 +339,9 @@ namespace SpellDuel
                     float lw = fsS * 8f, lh = fsS * 2.4f;
                     var lr = new Rect(wg.x - lw / 2f, wg.y - lh, lw, lh);
                     UiKit.Card(lr, 0.55f, new Color(0.6f, 0.5f, 1f), 0.8f);
-                    UiKit.Text(lr, "🌀 傳送陣\n站上去傳送到其他城鎮", fsS, Color.white, TextAnchor.MiddleCenter, true);
+                    float wp = Walk.WarpProgress;
+                    UiKit.Text(lr, wp > 0f ? $"🌀 傳送中… {Mathf.RoundToInt(wp * 100)}%" : "🌀 傳送陣\n站上去 0.5 秒傳送到其他城鎮", fsS, Color.white, TextAnchor.MiddleCenter, true);
+                    if (wp > 0f) UiKit.Bar(new Rect(lr.x, lr.yMax + 2f, lr.width, lh * 0.25f), wp, new Color(0.6f, 0.5f, 1f), "", fsS);
                 }
             }
             // 準心
