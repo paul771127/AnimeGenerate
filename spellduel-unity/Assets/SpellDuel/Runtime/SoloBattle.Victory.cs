@@ -133,6 +133,7 @@ namespace SpellDuel
 
         string VictoryContinueLabel()
         {
+            if (NetMode && dungeon != null) return "▶ 回隊伍畫面";
             if (NetMode) return localReady ? "等待其他人…" : "▶ 準備下一場";
             if (tutorial) return "▶ 開始冒險（故事）";
             if (IsTrial) return "▶ 去職業工會轉職";
@@ -149,6 +150,7 @@ namespace SpellDuel
         /// <summary>繼續冒險：故事＝下一關（換地區＝先到下一個村莊）、副本＝副本清單、試煉＝職業工會、教學＝故事模式、其他＝再來一場</summary>
         void VictoryContinue()
         {
+            if (NetMode && dungeon != null) { victory = null; ShowSetup(); return; }   // 連線副本：回隊伍畫面
             if (NetMode) { if (!localReady) { victory = null; SendReady(); } return; }
             victory = null;
             if (tutorial) { enemyClass = "story"; ShowSetup(); StartBattle(); return; }

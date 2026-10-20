@@ -19,6 +19,27 @@ namespace SpellDuel
         enum StepState { Todo, Now, Done }
 
         // ================================================================ 首頁
+        bool homeDungeonPick;   // 首頁按了「副本」：選連線方式
+
+        /// <summary>副本的連線方式（和對決一樣）：身邊的朋友（同一個地方，畫同一個場地）／遠方的朋友（各自在家，對方以虛擬角色出現）</summary>
+        void DrawDungeonPick(float W, float H, float pad, float lineH, int fs, int fsS)
+        {
+            GUI.color = new Color(0f, 0f, 0f, 0.6f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
+            var col = new Color(0.4f, 0.85f, 0.75f);
+            float pw = W - pad * 2, ph = lineH * 9.5f;
+            var r = new Rect(pad, (H - ph) / 2f, pw, ph);
+            UiKit.Card(r, 0.96f, col, 0.9f);
+            UiKit.Text(new Rect(r.x, r.y + pad * 0.4f, r.width, lineH * 1.4f), "🏰 副本：和誰一起？", Mathf.RoundToInt(fs * 1.2f), Color.white, TextAnchor.MiddleCenter, true);
+            float bx = r.x + pad * 0.6f, bw = r.width - pad * 1.2f, bh = lineH * 2.6f, y = r.y + lineH * 2f;
+            if (UiKit.Button(new Rect(bx, y, bw, bh), "👥 和身邊的朋友\n同一個地方，一起畫場地、一起打", fs, false, new Color(1f, 0.55f, 0.35f)))
+            { homeDungeonPick = false; ChooseMode(Mode.Duo); solo.PresetNetMode(3); }
+            y += bh + pad * 0.4f;
+            if (UiKit.Button(new Rect(bx, y, bw, bh), "🌐 和遠方的朋友連線\n把代碼傳給朋友；隊友以虛擬角色出現", fs, false, new Color(0.75f, 0.55f, 1f)))
+            { homeDungeonPick = false; ChooseMode(Mode.Duo, false, true); solo.PresetNetMode(3); }
+            y += bh + pad * 0.4f;
+            if (UiKit.Button(new Rect(r.x + r.width * 0.3f, y, r.width * 0.4f, lineH * 1.4f), "取消", fsS)) homeDungeonPick = false;
+        }
+
         void DrawHome(float W, float H, float pad, float top, float lineH, int fs, int fsS)
         {
             var safe = Screen.safeArea;
@@ -56,9 +77,10 @@ namespace SpellDuel
                     if (i == 0) ChooseMode(Mode.Solo);
                     else if (i == 1) ChooseMode(Mode.Duo);
                     else if (i == 2) ChooseMode(Mode.Duo, false, true);
-                    else { ChooseMode(Mode.Duo, false, true); solo.PresetNetMode(3); }   // 副本：遠端連線，合作模式預先選好「🏰 副本」
+                    else homeDungeonPick = true;   // 副本：先選和身邊的朋友（同一個地方）或遠方的朋友（遠端連線）
                 }
             }
+            if (homeDungeonPick) { DrawDungeonPick(W, H, pad, lineH, fs, fsS); return; }
             // 進階：標記圖模式（同一個 Wi-Fi、掃描地上的標記圖）
             var mr = new Rect(W*.17f,cy+4*(ch+pad)+pad*.2f,W*.66f,lineH*1.05f);
             if (UiKit.Button(mr, LobbyCaption("🗺 進階：標記圖模式（同一個 Wi-Fi）"), fsS)) ChooseMode(Mode.Duo, true, false);

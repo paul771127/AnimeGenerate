@@ -702,6 +702,7 @@ namespace SpellDuel
         void TryStartNet()
         {
             if (!NetMode || !localReady || PeerIds.Count == 0) return;
+            if (coop && netDungeon) return;   // 副本：等大家到齊、準備好，由房主按「開始副本」（HostStartDungeon）
             foreach (var pid in PeerIds) if (!peerInfo.TryGetValue(pid, out var pi) || !pi.ready) return;
             localReady = remoteReady = false;
             foreach (var pi in peerInfo.Values) pi.ready = false;
@@ -709,6 +710,23 @@ namespace SpellDuel
             if (!coop && PeerIds.Count > 1) { Say($"⚔ 對戰只能兩個人（現在房間有 {PeerIds.Count + 1} 人），請選合作模式", 4f); return; }
             if (coop && netDungeon) StartDungeonRun(Dungeons.Get(netDungeonId), true);
             else if (coop) StartBossBattle(true, netEndless); else StartNetBattle();
+        }
+
+        /// <summary>副本隊伍：其他人都準備好了嗎（房主才看這個）</summary>
+        bool PartyReady => PeerIds.TrueForAll(pid => peerInfo.TryGetValue(pid, out var pi) && pi.ready && pi.mode == 3);
+
+        /// <summary>房主按「開始副本」：先送自己的職業與技能（隊友畫面上的角色用），再通知大家一起開打</summary>
+        void HostStartDungeon()
+        {
+            if (!NetIsHost || !(coop && netDungeon) || !PartyReady) return;
+            var d = Dungeons.Get(netDungeonId);
+            if (d == null) return;
+            SaveChoices();
+            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "" });
+            NetSend?.Invoke(new Msg { t = "dstart", k = d.id, e = difficulty });
+            localReady = remoteReady = false;
+            foreach (var pi in peerInfo.Values) pi.ready = false;
+            StartDungeonRun(d, true);
         }
 
         void StartNetBattle()
@@ -1368,6 +1386,16 @@ namespace SpellDuel
                     coop = remoteCoop = m.e >= 1; netEndless = remoteEndless = m.e == 2; netDungeon = m.e == 3; localReady = false;
                     if (netDungeon && Dungeons.Get(m.k) != null) netDungeonId = m.k;
                     Say(m.e == 3 ? $"對方選了：🏰 副本「{Dungeons.Get(netDungeonId)?.name}」" : m.e == 2 ? "對方選了：♾ 無盡（合作）" : coop ? "對方選了：🤝 合作打 Boss" : "對方選了：⚔ 對戰", 2.5f);
+                    return;
+                case "dstart":
+                    // 房主按了「開始副本」：大家一起開打（難度跟房主）
+                    if (NetIsHost) return;
+                    if (Dungeons.Get(m.k) != null) netDungeonId = m.k;
+                    difficulty = Mathf.Clamp(m.e, 0, 2);
+                    localReady = remoteReady = false;
+                    foreach (var pi0 in peerInfo.Values) pi0.ready = false;
+                    coop = true; netDungeon = true; netEndless = false;
+                    StartDungeonRun(Dungeons.Get(netDungeonId), true);
                     return;
                 case "ready":
                     remoteClass = m.k; remoteLoadout = m.ks; remoteReady = true; remoteCoop = m.e >= 1; remoteEndless = m.e == 2;
@@ -2866,9 +2894,10 @@ namespace SpellDuel
                     var sel = Dungeons.Get(netDungeonId);
                     if (sel != null) { UiKit.Text(new Rect(pad, y, W - pad * 2, u * 1.3f), $"{sel.desc}（{sel.rooms.Count} 個房間）", fsS, new Color(0.85f, 0.95f, 0.9f), TextAnchor.UpperLeft); y += u * 1.3f + gap; }
                 }
-                if (coop) DrawDifficultyRow(ref y, pad, gap, u, fsS, W);
+                if (coop && (NetIsHost || !netDungeon)) DrawDifficultyRow(ref y, pad, gap, u, fsS, W);   // 副本：難度由房主決定
                 string who = coop ? "隊友" : "對手";
-                if (PeerIds.Count <= 1)
+                if (coop && netDungeon) DrawDungeonParty(ref y, pad, gap, u, fs, fsS, W);   // 副本：等待玩家到齊的隊伍畫面
+                else if (PeerIds.Count <= 1)
                 {
                     bool rr = PeerIds.Count == 1 && peerInfo.TryGetValue(PeerIds[0], out var p0) && p0.ready;
                     string rs = rr ? $"{who}：{(Skills.Classes.TryGetValue(peerInfo[PeerIds[0]].cls ?? "", out var rc) ? rc.name : "?")}（已準備）" : PeerIds.Count == 0 ? "等待其他人加入…" : $"{who}：還沒準備好";
@@ -2929,9 +2958,18 @@ namespace SpellDuel
             by -= u * 1.6f + gap;
             bool voiceOk = UseSpeech || VoiceReady;   // 沒有語音辨識時，要先把 3 個技能的咒語錄好
             string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? "📖 打開故事地圖" : enemyClass == "daily" ? $"📅 開始{DailyChallenge.Names[Mathf.Clamp(dailyPick, 0, 2)]}" : enemyClass == "tutorial" ? "🎓 開始教學" : enemyClass == "dungeon" ? "🏰 打開副本清單" : "⚔ 開始戰鬥");
-            if (UiKit.Button(new Rect(pad, by, W - pad * 2, u * 1.6f), startText, fsL, true, cls.color, LoadoutReady && voiceOk))
+            bool dungeonParty = NetMode && coop && netDungeon;
+            if (dungeonParty)
             {
-                if (NetMode) SendReady();
+                int n = PeerIds.Count + 1;
+                startText = !voiceOk ? startText : NetIsHost ? (PartyReady ? (PeerIds.Count == 0 ? "🏰 一個人開始副本" : $"🏰 開始副本（{n} 人）") : $"等待隊友準備…（{ReadyCount()}/{PeerIds.Count}）")
+                    : localReady ? "✔ 已準備，等待房主開始…" : "✔ 準備好了";
+            }
+            bool startOk = LoadoutReady && voiceOk && (!dungeonParty || (NetIsHost ? PartyReady : !localReady));
+            if (UiKit.Button(new Rect(pad, by, W - pad * 2, u * 1.6f), startText, fsL, true, cls.color, startOk))
+            {
+                if (NetMode && coop && netDungeon && NetIsHost) HostStartDungeon();   // 副本：房主按開始
+                else if (NetMode) SendReady();
                 else if (enemyClass == "story" || enemyClass == "tutorial" || enemyClass == "dungeon") StartBattle();   // 打開地圖／清單、教學：不用整備
                 else OpenPrep(startText.Replace("⚔ ", "").Replace("🔥 ", "").Replace("♾ ", "").Replace("🪵 ", ""), EndlessSetup, enemyClass == "endless" ? null : "這個模式不能使用道具（故事、副本、無盡模式才能用）", StartBattle);
             }
@@ -3362,8 +3400,8 @@ namespace SpellDuel
                 UiKit.Result(orr, won);
                 UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, orr.height * 0.4f), won ? $"🏰 {d.name} 通關！" : $"💀 {d.name}…全隊倒下", fs * 2, Color.white, TextAnchor.MiddleCenter, true);
                 float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
-                if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), NetMode ? (localReady ? "等待隊友…" : "再挑戰") : "再挑戰", fs, true, new Color(0.4f, 0.85f, 0.75f), !(NetMode && localReady)))
-                { if (NetMode) SendReady(); else { ShowSetup(); StartDungeonRun(d, false); } }
+                if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), NetMode ? "回隊伍畫面" : "再挑戰", fs, true, new Color(0.4f, 0.85f, 0.75f)))
+                { if (NetMode) ShowSetup(); else { ShowSetup(); StartDungeonRun(d, false); } }   // 連線：回隊伍畫面，大家準備好再由房主開始
                 if (!NetMode && UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "🏘 回城鎮", fs))
                 { ShowSetup(); storyMapOpen = true; world.OpenTown(world.town); }
                 else if (NetMode && UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "回大廳", fs)) ShowSetup();
