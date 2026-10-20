@@ -47,9 +47,17 @@ USD_TWD = 32  # 粗估匯率,只用來做預算級距比較
 
 # 要到現場才能做的案子。平台的 local 旗標會漏(「On-Site ABB VFD Analysis」
 # 是 local=False),所以補一層標題判斷。
+# 「X-based」只有在 X 是地名時才代表駐點。原本用 [a-z]+-based 這個萬用模式,
+# 結果 Cloud-based、Web-based、AI-based、Rust-based、Linux-based 全被當成
+# 駐點案丟掉 —— 那些正好是要接的案子。寧可漏掉幾個駐點案,
+# 也不要無聲刪掉好名單,所以改成白名單。
 ONSITE = re.compile(
-    r"(on-?site|in-?person|must be (based|located) in|local(ly)? only|"
-    r"[a-z]+-based\b)",
+    r"(on-?site|in-?person|local(ly)? only|"
+    r"must be (based|located|living|residing) in|"
+    r"\b(uk|us|usa|u\.s\.|eu|canada|india|germany|france|spain|italy|"
+    r"netherlands|poland|japan|korea|china|singapore|malaysia|australia|"
+    r"nz|dubai|uae|israel|brazil|mexico|london|berlin|paris|sydney|toronto)"
+    r"[- ]based\b)",
     re.IGNORECASE,
 )
 

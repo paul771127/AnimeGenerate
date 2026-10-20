@@ -414,3 +414,17 @@ def test_freelancer_hourly_budget_is_not_compared_as_project_value():
     # 非美金要先換成美金再換台幣
     inr = {"budget": {"minimum": 150000.0}, "currency": {"exchange_rate": 0.0105}}
     assert 48_000 < _budget_twd(inr) < 53_000
+
+
+def test_onsite_filter_keeps_technical_based_terms():
+    """「X-based」只有在 X 是地名時才代表駐點。原本用 [a-z]+-based 萬用模式,
+    把 Cloud-based、Rust-based、Linux-based 全當成駐點案丟掉 —— 那些正好是
+    要接的案子,而且是無聲刪掉的。"""
+    from leadgen.sources.freelancer import ONSITE
+    for t in ("Cloud-based inventory system", "Web-based dashboard for IoT",
+              "AI-based defect detection", "Rust-based firmware for STM32",
+              "Linux-based embedded controller", "ESP32-based data logger"):
+        assert not ONSITE.search(t), f"誤殺:{t}"
+    for t in ("UK-Based Electronics Specialist", "India-based technician needed",
+              "On-Site ABB VFD Analysis", "Must be based in Germany"):
+        assert ONSITE.search(t), f"該排除卻沒排除:{t}"

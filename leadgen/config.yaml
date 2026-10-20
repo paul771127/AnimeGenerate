@@ -66,7 +66,7 @@ sources:
   # HN 每月外包串:對方自己公開徵求接案者並留下聯絡方式,可直接寫信。
   hn_freelance:
     enabled: true
-    threads: 3            # 抓最近幾串
+    threads: 6            # 抓最近幾串(一串是一個月份,多翻就是多月份的案源)
     include_who_is_hiring: true
     skill_keywords:
       - firmware
@@ -108,15 +108,22 @@ sources:
       - rtos
       - microcontroller
       - fpga
+      - verilog
       - pcb
       - hardware engineer
       - mechanical engineer
       - electrical engineer
+      - manufacturing engineer
       - robotics
       - iot
       - prototype
       - design engineer
-      - product design
+      - cad
+      - solidworks
+      - controls engineer
+      # 不要加 "product design":在軟體職缺裡那是 UI/UX(撈到 Product Design
+      # Lead / Director / Webflow Designer)。也不要加 "automation engineer",
+      # 那會命中 QA Automation Engineer。
 
   # 外包平台:個人投標是常態,不需要任何公司資格。客戶是中小企業與個人。
   # 兩個門檻一定要套,否則會灌進一堆 $30-250 搭配 90 幾人投標的殺價案。
@@ -135,11 +142,17 @@ sources:
     remote_only: true         # 丟掉駐點案(local 旗標 + 標題的 on-site/xx-based)
     # 真正的過濾靠平台自己的技能標籤。query 是對全文搜尋的,光靠它會撈到
     # 「Modern Logo for Arema Nasi Goreng」這種描述裡剛好有 cad 的行銷案。
-    skills: [cad/cam, solidworks, autocad, 3d modelling, 3d printing, 3d design,
-             mechanical engineering, product design, electronics, electrical
-             engineering, microcontroller, embedded software, pcb layout,
-             circuit design, arduino, raspberry pi, firmware, altium,
-             fusion 360, reverse engineering, python, automation]
+    skills: [cad/cam, solidworks, autocad, catia, creo, inventor, sketchup,
+             3d modelling, 3d printing, 3d design, 3d rendering,
+             mechanical engineering, manufacturing design, industrial design,
+             product design, product development, prototyping,
+             electronics, electrical engineering, electronic design,
+             microcontroller, embedded software, embedded systems,
+             pcb layout, circuit design, schematic, verilog, vhdl, fpga,
+             arduino, raspberry pi, firmware, altium, eagle, kicad,
+             fusion 360, reverse engineering, robotics, automation,
+             machine learning, computer vision, python, c programming,
+             c++ programming, rust, linux]
     exclude_skills: [building architecture, civil engineering, interior design,
                      home design, graphic design, logo design, social media,
                      marketing, copywriting, translation, video, animation,
@@ -173,9 +186,9 @@ sources:
   # r/3Dprintmything 整個板就是「幫我印這個」,對有列印機的人最直接。
   #
   # 兩個要知道的限制:
-  #   1. 代印請求多半要寄送實體件(標題的 [USA-IL] 是發文者所在州),從台灣
-  #      寄運費與時間都不划算 —— 真正吃得到的是 CAD 建模、逆向這種交檔案的
-  #      部分,以及 r/forhire 上的軟體與韌體案。
+  #   1. 代印請求的標題會標發文者所在州([USA-IL])。接國外沒問題,但寄實體件
+  #      的運費與時間要自己算進報價;CAD 建模、逆向、修檔這種交檔案的工作
+  #      沒有這個問題,r/forhire 上的軟體與韌體案也沒有。
   #   2. 只能走官方 API。Reddit 的 robots.txt 對所有 user-agent 是
   #      Disallow: /(連公開的 .rss 都在內),所以沒有憑證就自動停用,
   #      不會改用其他方式繞過。免費,註冊一個 script app 兩分鐘:
@@ -192,9 +205,11 @@ sources:
       - {name: jobbit, require: ["[hiring]"], skip: []}
       - {name: hwstartups, require: [], skip: []}
     keywords: [3d print, 3d model, cad, stl, step file, solidworks, fusion,
-               enclosure, bracket, mount, prototype, reverse engineer,
+               autocad, mesh, remesh, enclosure, bracket, mount, housing,
+               gasket, jig, fixture, prototype, reverse engineer, scan to cad,
                firmware, embedded, microcontroller, arduino, esp32, stm32,
-               pcb, kicad, altium, raspberry, automation, scraper, python]
+               rtos, pcb, kicad, altium, schematic, raspberry, automation,
+               scraper, python, api integration]
 
   # 公司登記資料:只用來產生目標名單,不含任何個人聯絡資訊。
   # 預設關掉,因為它沒有意圖訊號,開了會把資料庫灌滿低分名單。
