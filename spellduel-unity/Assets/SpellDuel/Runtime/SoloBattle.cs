@@ -1192,7 +1192,7 @@ namespace SpellDuel
                 if (jumped) { MinionRig.SpawnFx(oldPos); MinionRig.SpawnFx(newPos); Sfx.Play("dodge", 0.5f, 0.6f); }
                 rig.MoveSpeed = jumped ? 0f : Mathf.Lerp(rig.MoveSpeed, (newPos - oldPos).magnitude / dt, 0.25f);
                 bool winding = m.windupUntil > 0f;
-                if (winding && !minionWinding.Contains(m)) { minionWinding.Add(m); rig.Windup(Skills.All["m_claw"].charge); }
+                if (winding && !minionWinding.Contains(m)) { minionWinding.Add(m); rig.Windup(Battle.MinionWindupOf(m.minionKind)); }   // 預備時間＝這種小怪真正的預備時間（出手時剛好擺到位）
                 else if (!winding && minionWinding.Contains(m)) { minionWinding.Remove(m); rig.Attack(); }
                 if (minionLastHp.TryGetValue(m, out var lh) && m.hp < lh - 0.01f) rig.PlayHit();
                 minionLastHp[m] = m.hp;
@@ -2126,6 +2126,12 @@ namespace SpellDuel
                     break;
                 case "quake":
                     Sfx.Play("boom", 0.9f); Haptics.Play(Haptics.Kind.Medium); Kick(8f, 0f);
+                    // 震地波（熔岩震波／樹根波／潮汐環）不會發 cast 事件：在這裡讓 Boss 出手，不然會一直卡在預備姿勢
+                    if (bossMode && (!coop || NetIsHost) && bossRig && bossWindup != null && Battle.IsQuake(Skills.All.TryGetValue(bossWindup, out var qs) ? qs : null))
+                    {
+                        bossRig.Attack(bossWindup);
+                        if (coop && NetIsHost) NetSend?.Invoke(new Msg { t = "bfx", k = bossWindup, p = En.Feet });
+                    }
                     break;
                 case "wavestart":
                     Say("♾ " + text, 2.5f);

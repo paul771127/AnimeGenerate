@@ -465,6 +465,8 @@ namespace SpellDuel
         static readonly float[] MinionReach = { 0.95f, 9f, 1.2f, 1.3f, 11f, 14f, 13f, 8f, 5f, 6f, 1.0f, 1.3f, 9f, 7f, 9f, 11f, 1.3f, 1.4f, 5f };
         static readonly float[] MinionWindup = { -1f, 0.8f, 1.0f, 0.5f, 1.2f, 1.6f, 1.0f, 1.0f, 0.8f, 1.0f, 0.7f, 0.8f, 0.9f, 0.6f, 0.6f, 1.2f, 0.8f, 0.6f, 1.0f };
         public const int MinionKinds = 19;
+        /// <summary>這種小怪的預備時間（秒）：預備動作要剛好在出手時擺到位</summary>
+        public static float MinionWindupOf(int kind) => kind >= 0 && kind < MinionWindup.Length && MinionWindup[kind] >= 0f ? MinionWindup[kind] : Skills.All["m_claw"].charge;
         public static bool IsSea(int kind) => kind >= 13;
         /// <summary>海裡／空中的小怪：不用走進場地就能出手、可以在海上移動（寄居蟹例外，要爬上礁石）</summary>
         static bool FreeRoam(int kind) => kind == 13 || kind == 14 || kind == 15 || kind == 17 || kind == 18;
