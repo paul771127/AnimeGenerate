@@ -122,11 +122,28 @@ sources:
   # 兩個門檻一定要套,否則會灌進一堆 $30-250 搭配 90 幾人投標的殺價案。
   freelancer:
     enabled: true
-    queries: [firmware, embedded, stm32, pcb, mechanical design, 3d printing,
-              enclosure, iot, reverse engineering]
+    queries: [firmware, embedded, stm32, esp32, rtos, pcb, kicad, altium,
+              mechanical design, cad, solidworks, 3d printing, 3d modeling,
+              enclosure, injection molding, iot, reverse engineering,
+              arduino, raspberry pi, automation]
     limit_per_query: 30
-    min_budget_twd: 15000     # 預算下限(台幣)
+    project_types: [fixed, hourly]   # 時薪案常常比一次性的固定價案更值錢
+    min_budget_twd: 15000     # 固定價案的預算下限(台幣)
+    min_hourly_twd: 800       # 時薪案的費率下限(台幣/小時,約 US$25)
+    hourly_hours_assumed: 40  # 時薪案換算成專案金額時假設的工時
     max_bids: 40              # 投標人數上限,人越多勝率與單價越低
+    remote_only: true         # 丟掉駐點案(local 旗標 + 標題的 on-site/xx-based)
+    # 真正的過濾靠平台自己的技能標籤。query 是對全文搜尋的,光靠它會撈到
+    # 「Modern Logo for Arema Nasi Goreng」這種描述裡剛好有 cad 的行銷案。
+    skills: [cad/cam, solidworks, autocad, 3d modelling, 3d printing, 3d design,
+             mechanical engineering, product design, electronics, electrical
+             engineering, microcontroller, embedded software, pcb layout,
+             circuit design, arduino, raspberry pi, firmware, altium,
+             fusion 360, reverse engineering, python, automation]
+    exclude_skills: [building architecture, civil engineering, interior design,
+                     home design, graphic design, logo design, social media,
+                     marketing, copywriting, translation, video, animation,
+                     photoshop, illustrator]
 
   # PTT 發案貼文。實測各板第一頁的需求密度:CodeJob 3/21(軟體外包,[發案]
   # 標籤)、Mechanical 5/21(加工與機構,[徵求])、Soho 4/14 但全是行銷攝影、
@@ -151,6 +168,33 @@ sources:
     exclude_keywords: [seo, 行銷, 廣告投放, 美編, 排版, 名片, 視覺設計, 文案,
                        社群經營, 小編, 剪輯, 配音, 翻譯, 攝影, 模特, 手模,
                        代購, 幣圈, 推廣夥伴, 合租, 問卷]
+
+  # Reddit:個人接案完全沒有門檻,看到貼文直接私訊就能談。
+  # r/3Dprintmything 整個板就是「幫我印這個」,對有列印機的人最直接。
+  #
+  # 兩個要知道的限制:
+  #   1. 代印請求多半要寄送實體件(標題的 [USA-IL] 是發文者所在州),從台灣
+  #      寄運費與時間都不划算 —— 真正吃得到的是 CAD 建模、逆向這種交檔案的
+  #      部分,以及 r/forhire 上的軟體與韌體案。
+  #   2. 只能走官方 API。Reddit 的 robots.txt 對所有 user-agent 是
+  #      Disallow: /(連公開的 .rss 都在內),所以沒有憑證就自動停用,
+  #      不會改用其他方式繞過。免費,註冊一個 script app 兩分鐘:
+  #        REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET
+  #      申請處 https://www.reddit.com/prefs/apps(選 script 類型)
+  reddit:
+    enabled: true
+    limit: 25
+    delay_seconds: 8          # 板與板之間的請求間隔
+    subreddits:
+      - {name: 3Dprintmything, require: [], skip: []}
+      - {name: PrintRequests, require: [], skip: []}
+      - {name: forhire, require: ["[hiring]"], skip: ["[for hire]"]}
+      - {name: jobbit, require: ["[hiring]"], skip: []}
+      - {name: hwstartups, require: [], skip: []}
+    keywords: [3d print, 3d model, cad, stl, step file, solidworks, fusion,
+               enclosure, bracket, mount, prototype, reverse engineer,
+               firmware, embedded, microcontroller, arduino, esp32, stm32,
+               pcb, kicad, altium, raspberry, automation, scraper, python]
 
   # 公司登記資料:只用來產生目標名單,不含任何個人聯絡資訊。
   # 預設關掉,因為它沒有意圖訊號,開了會把資料庫灌滿低分名單。

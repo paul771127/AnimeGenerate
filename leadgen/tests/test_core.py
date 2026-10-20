@@ -386,3 +386,31 @@ def test_marketplace_project_scores_as_reachable():
     assert lead.has_contact
     assert detail["reach"] >= 8, detail
     assert score >= 85, detail
+
+
+# ---------- 外包平台的三個陷阱 ----------
+
+def test_freelancer_onsite_detection():
+    """平台的 local 旗標會漏:「On-Site ABB VFD Analysis」是 local=False
+    卻明顯要到現場。從台灣接不了的案子不該進名單。"""
+    from leadgen.sources.freelancer import ONSITE
+    for t in ("On-Site ABB VFD Analysis and Repair",
+              "UK-Based Electronics Specialist", "Must be based in Germany",
+              "In-person training needed", "Local only please"):
+        assert ONSITE.search(t), t
+    for t in ("Embedded STM32 BLDC Control Development",
+              "Semi-Automatic Pallet Shuttle Design", "3D Figurine Modeling"):
+        assert not ONSITE.search(t), t
+
+
+def test_freelancer_hourly_budget_is_not_compared_as_project_value():
+    """一個 $15/hr 的海報案換算成「預算」只有 480 台幣,拿它去比固定價的
+    預算下限是拿蘋果比橘子 —— 時薪案要用費率門檻判斷。"""
+    from leadgen.sources.freelancer import _budget_twd
+    hourly = {"budget": {"minimum": 15.0}, "currency": {"exchange_rate": 1.0}}
+    assert _budget_twd(hourly) == 480            # 這是時薪,不是專案金額
+    fixed = {"budget": {"minimum": 5000.0}, "currency": {"exchange_rate": 1.0}}
+    assert _budget_twd(fixed) == 160_000
+    # 非美金要先換成美金再換台幣
+    inr = {"budget": {"minimum": 150000.0}, "currency": {"exchange_rate": 0.0105}}
+    assert 48_000 < _budget_twd(inr) < 53_000

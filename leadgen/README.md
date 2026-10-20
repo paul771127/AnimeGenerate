@@ -39,7 +39,7 @@ python -m leadgen rescore          # 改了權重後重算,不用重抓
 python -m leadgen suppress a@b.com # 退訂 -> 永久阻擋(寄信前一定要查)
 ```
 
-## 六個來源(含實測評價)
+## 七個來源(含實測評價)
 
 **排序的前提是「個人接案、沒有公司行號」。** 政府標案的廠商資格要營業登記、
 納稅證明與押標金,大案子個人過不了資格審 —— 所以它不是主力,排在後面。
@@ -75,18 +75,36 @@ Soho 板的貼文有制式表格(個人名稱、聯絡方式、案件預算、�
 
 ### 2. `freelancer` — Freelancer.com 官方 API ★ 個人投標是常態
 
-不需要任何公司資格,客戶是中小企業與個人。但這個平台有個陷阱:**大量案子是
-$30–250 美金搭配 90 幾人投標的殺價市場** —— 實測「Vehicle LED VMS Display
-Design」預算 $30–250、98 人投標,投這種案子是在浪費時間。
+不需要任何公司資格,客戶是中小企業與個人。但這個平台有四個陷阱,
+不處理的話名單會是垃圾:
 
-所以預設一定會套兩個門檻:`min_budget_twd`(預算下限)與 `max_bids`
-(投標人數上限)。加上門檻後剩下的才是真的:
+1. **殺價市場。** 大量案子是 $30–250 美金搭配 90 幾人投標 —— 實測「Vehicle
+   LED VMS Display Design」預算 $30–250、98 人投標。要套 `min_budget_twd`
+   與 `max_bids`。
+2. **`query` 是對全文搜尋的。** 用 `cad`、`automation` 會撈到「Modern Logo
+   for Arema Nasi Goreng」「Facebook & Instagram Image Post」這種行銷案
+   (描述裡剛好有那些字)。所以真正的過濾靠**平台自己的技能標籤白名單**
+   (`skills` / `exclude_skills`):「Bow Sight STL Redesign」掛的是 CAD/CAM、
+   Solidworks、3D Modelling,「Cabin Foundation Blueprint」掛的是 Building
+   Architecture、Civil Engineering —— 兩者都命中 `cad`,只有前者是你的。
+3. **駐點案從台灣接不了。** 平台的 `local` 旗標能擋一部分,但不夠 ——
+   「On-Site ABB VFD Analysis and Repair」是 `local=False` 卻明顯要到現場。
+   所以 `remote_only` 再加一層標題判斷(on-site、UK-Based、must be based in)。
+4. **時薪案不能拿固定價的門檻去比。** 一個 $15/hr 的海報案換算成「預算」
+   只有 480 台幣,卻會通過「預算下限 / 40 小時」這種算法。時薪案改用
+   `min_hourly_twd` 判斷,再換算成「時薪 × 假設工時」讓預算分數可比。
 
-- Realistic 3D Figurine Modeling and Printing($1500–3000)
-- Semi-Automatic Pallet Shuttle Design($750–1500,28 人投)
-- Looking for a smart pH/EC meter PCBA design($1500–3000)
-- Custom Basecamp Enclosure Engineering($750–1500)
-- FPGA Hardware Engineer for PCIe(£250–750,只有 19 人投)
+**套完四層過濾後實測剩 10 筆,全部是 CAD / PCB / 機構 / 3D:**
+
+| 預算(台幣) | 案名 | 技能標籤 |
+|---|---|---|
+| 160,000 | License Your Archived KiCad PCB Projects | Electronics、PCB Layout |
+| 24,000 | Semi-Automatic Pallet Shuttle Design | CAD/CAM、Mechanical Engineering |
+| 48,000 | Realistic 3D Figurine Modeling and Printing | 3D Modelling、3D Design |
+| 24,000 | Custom Basecamp Enclosure Engineering | Industrial Design、Solidworks |
+
+時薪案在 800 元/小時(約 US$25)的門檻下當天全被濾掉 —— 那是正確結果,
+不是 bug:平台上的時薪案費率普遍偏低。
 
 平台案子沒有聯絡方式(站內投標),所以記在 `contacts_other`。
 
@@ -101,7 +119,36 @@ Design」預算 $30–250、98 人投標,投這種案子是在浪費時間。
 
 實測 2 串 → 127 筆命中技能關鍵字,51 筆附帶聯絡方式。缺點:幾乎都是英文客戶。
 
-### 4. `gov_tender` — 政府電子採購網 ☆ 只剩兩種個人投得了
+### 4. `reddit` — r/3Dprintmything、r/forhire 等 ☆ 需要免費憑證
+
+個人接案在 Reddit 完全沒有門檻 —— 看到貼文直接私訊就能談。
+對有 3D 列印機的人最直接,r/3Dprintmything 整個板就是「幫我印這個」:
+
+```
+[USA-IL] Drawer Insert for IKEA Helmer Storage Unit
+[US-MI] Nintendo Switch 2 Screen Cover in Black PETG
+[NJ, USA] Snowboard bevel guide
+```
+
+`[Hiring]` 是需求方,`[For Hire]` 是同行在推銷自己 —— 後者一定要排除,
+不然等於把競爭者當名單。
+
+**這個來源沒有憑證就自動停用,而且不會改用其他方式繞過。**
+Reddit 的 robots.txt 對所有 user-agent 是 `Disallow: /`,連公開的 `.rss`
+都包含在內(我先用 RSS 做了一版,跑起來才發現失敗原因是 RobotsDenied
+而不是限速,所以把整條 RSS 路徑刪掉了,並留了一條測試守住這件事)。
+合法的路只有官方 API,要兩個環境變數,免費、註冊一個 script app 兩分鐘:
+
+```
+REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET      # https://www.reddit.com/prefs/apps
+```
+
+兩個誠實的限制:**OAuth 連線沒有在這裡端到端驗證過**(需要你自己的憑證,
+我不會去申請),解析與過濾的邏輯有單元測試覆蓋;另外**代印請求多半要寄送
+實體件**(標題的 `[USA-IL]` 是發文者所在州),從台灣寄運費與時間都不划算 ——
+真正吃得到的是 CAD 建模、逆向這種交檔案的部分,以及 r/forhire 上的軟體案。
+
+### 5. `gov_tender` — 政府電子採購網 ☆ 只剩兩種個人投得了
 
 `individual_only: true`(預設)只留這兩類,其他的個人過不了資格審:
 
@@ -148,7 +195,7 @@ Design」預算 $30–250、98 人投標,投這種案子是在浪費時間。
 有一條測試擋住把它們加回來。(「治具櫃」仍然是治具、「原型機」仍然是原型,
 那是合法的複合詞,交給分類器處理就好。)
 
-### 5. `job_boards` — Remote OK API + We Work Remotely RSS ☆ 最弱
+### 6. `job_boards` — Remote OK API + We Work Remotely RSS ☆ 最弱
 
 公司在徵 firmware / embedded / mechanical 工程師 = 有專案缺人。
 **實測結論要說實話:這兩個板子的職缺嚴重偏網頁與行銷,拿硬體關鍵字去濾,
@@ -161,7 +208,7 @@ Design」預算 $30–250、98 人投標,投這種案子是在浪費時間。
 明文 `Disallow: /api/*`。Remote OK 的 API 條款要求標註來源,
 所以匯出時**不要拿掉 `source_url`**。
 
-### 6. `tw_company` — 台灣公司登記資料 ☆ 預設關閉
+### 7. `tw_company` — 台灣公司登記資料 ☆ 預設關閉
 
 依營業項目、地區、資本額篩出目標名單,再由 enricher 去官網的公開聯絡頁取 `info@`。
 **預設關閉**:它完全沒有意圖訊號,開了會把資料庫灌滿低分名單。
@@ -176,6 +223,10 @@ Design」預算 $30–250、98 人投標,投這種案子是在浪費時間。
 | Reddit（r/forhire 等） | 未登入的 API 回 403 |
 | Upwork RSS | Cloudflare 403 |
 | Remotive | robots.txt 明文 `Disallow: /api/*` |
+| Guru.com | 整站在 Incapsula 後面回 403,沒有公開 API |
+| PeoplePerHour | 有 `/api/v1/` 但端點未公開,猜不出來(也不該猜) |
+| freelancermap | robots.txt 完全允許,但搜出來是歐洲企業 IT 的駐點約聘(SAP Consultant、Commissioning Manager),不是遠端專案 |
+| Reddit 的 .rss | robots.txt 是 `Disallow: /`,只能走官方 API |
 
 募資平台的硬體專案確實是打樣的好客戶,但要走這條得用官方 API 或人工看。
 
@@ -289,13 +340,14 @@ adapter 只負責「把公開資料源變成 Lead 串流」,去重、評分、�
 ## 測試
 
 ```bash
-python -m pytest tests -q   # 38 passed,完全不碰網路
+python -m pytest tests -q   # 47 passed,完全不碰網路
 ```
 
 涵蓋:去重與跨訊號聯絡方式互補(含更正公告收斂)、評分排序與排除規則、
 預算未知的處理、中文短標題的契合度、過期訊號、退訂阻擋、人工 status 不被覆寫、
 標案四分類(12 個真實標題)、中文關鍵字陷阱、PTT 的 LINE ID 解析與賣物貼文排除、
-徵求期限的跨年推算、外包平台案子的 reach 計分、聯絡頁抽取(角色信箱優先 /
+徵求期限的跨年推算、外包平台案子的 reach 計分、駐點案偵測、時薪與固定價的
+預算換算、Reddit 的 [For Hire] 排除與「沒憑證就不發請求」、聯絡頁抽取(角色信箱優先 /
 同網域過濾 / robots 拒絕 / 頁數上限),以及一條守住「不做 email pattern
 guessing」的測試。
 

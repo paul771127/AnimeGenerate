@@ -111,7 +111,8 @@ class Fetcher:
             log.debug("cache write failed: %s", e)
 
     # ---------- 對外 ----------
-    def get(self, url: str, *, use_cache: bool = True, params: dict | None = None) -> str:
+    def get(self, url: str, *, use_cache: bool = True,
+            params: dict | list[tuple] | None = None) -> str:
         if params:
             req = requests.Request("GET", url, params=params).prepare()
             url = req.url
@@ -146,5 +147,6 @@ class Fetcher:
                 time.sleep(backoff)
         raise RuntimeError(f"fetch failed after retries: {url}") from last_err
 
-    def get_json(self, url: str, *, use_cache: bool = True, params: dict | None = None):
+    def get_json(self, url: str, *, use_cache: bool = True,
+                 params: dict | list[tuple] | None = None):
         return json.loads(self.get(url, use_cache=use_cache, params=params))
