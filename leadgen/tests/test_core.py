@@ -428,3 +428,38 @@ def test_onsite_filter_keeps_technical_based_terms():
     for t in ("UK-Based Electronics Specialist", "India-based technician needed",
               "On-Site ABB VFD Analysis", "Must be based in Germany"):
         assert ONSITE.search(t), f"該排除卻沒排除:{t}"
+
+
+def test_hn_thread_age_guard_drops_stale_threads():
+    """HN 的每月外包串在 2025-10 之後就停更了。原本用 /search(相關度排序)
+    再按 story id 挑「最新」,實測抓回來的是 2019~2024 年的串,
+    那些聯絡人早就不在 —— 379 筆 HN 名單裡只有 1 筆上得了 70 分。"""
+    import time
+    from leadgen.sources.hn_freelance import HNFreelance
+
+    now = int(time.time())
+    hits = {"hits": [
+        {"objectID": "100", "title": "Ask HN: Who is hiring? (October 2026)",
+         "created_at_i": now - 5 * 86400},
+        {"objectID": "99", "title": "Ask HN: Who is hiring? (January 2019)",
+         "created_at_i": now - 2000 * 86400},
+        {"objectID": "98", "title": "Unrelated story about hiring practices",
+         "created_at_i": now - 1 * 86400},
+    ]}
+
+    class FakeFetcher:
+        def get_json(self, url, **kw):
+            assert "search_by_date" in url, "必須用按日期排序的端點"
+            return hits
+
+    got = HNFreelance()._find_threads(FakeFetcher(), "Who is hiring", 6, 120)
+    assert [t for _, t in got] == ["Ask HN: Who is hiring? (October 2026)"], got
+
+
+def test_hn_thread_search_uses_date_sorted_endpoint():
+    """守住這件事:不能回去用相關度排序的 /search。"""
+    from pathlib import Path
+    from leadgen.sources import hn_freelance
+    src = Path(hn_freelance.__file__).read_text(encoding="utf-8")
+    assert "search_by_date" in src
+    assert '"/search"' not in src and "f\"{ALGOLIA}/search\"" not in src

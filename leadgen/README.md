@@ -108,16 +108,21 @@ Soho 板的貼文有制式表格(個人名稱、聯絡方式、案件預算、�
 
 平台案子沒有聯絡方式(站內投標),所以記在 `contacts_other`。
 
-### 3. `hn_freelance` — Hacker News 每月外包串 ★ 可直接寫信
+### 3. `hn_freelance` — Hacker News 每月徵才串 ☆ 外包串已停更
 
-抓官方 Algolia API 的兩種串:
+原本這是「可直接寫信」的主力:`Ask HN: Freelancer? Seeking freelancer?`
+裡的 SEEKING FREELANCER 留言是對方公開徵求接案者**並自己留下聯絡方式**。
 
-- `Ask HN: Freelancer? Seeking freelancer?` 的 **SEEKING FREELANCER** 留言
-  = 對方自己公開徵求接案者**並自己留下聯絡方式**。
-  （`SEEKING WORK` 的是同行,已自動排除）
-- `Ask HN: Who is hiring?` 裡提到 firmware / embedded / hardware 的公司。
+**但那個每月串在 2025-10 之後就沒再發了。** 所以現在只剩
+`Ask HN: Who is hiring?`(還在每月更新),那是公司在徵人,意圖比外包需求弱
+(0.55 vs 1.00),而且聯絡方式要靠留言裡自己貼的網址再去官網找。
 
-實測 2 串 → 127 筆命中技能關鍵字,51 筆附帶聯絡方式。缺點:幾乎都是英文客戶。
+這裡踩過一個很貴的 bug,值得記下來:我原本用 Algolia 的 `/search`
+(按相關度排序)再把回傳的 30 筆按 story id 排序,以為那樣就能拿到最新的串 ——
+其實那只是「相關度前 30 名裡最新的」。實測抓回來的是 2019~2024 年的串,
+**379 筆 HN 名單裡只有 1 筆上得了 70 分**,因為聯絡人早就不在了。
+改用 `/search_by_date` 才拿到真正的最新串,並加了 `max_thread_age_days`
+(預設 120 天)把停更的外包串自動擋掉。兩條測試守住這兩件事。
 
 ### 4. `reddit` — r/3Dprintmything、r/forhire 等 ☆ 需要免費憑證
 
@@ -340,14 +345,15 @@ adapter 只負責「把公開資料源變成 Lead 串流」,去重、評分、�
 ## 測試
 
 ```bash
-python -m pytest tests -q   # 47 passed,完全不碰網路
+python -m pytest tests -q   # 50 passed,完全不碰網路
 ```
 
 涵蓋:去重與跨訊號聯絡方式互補(含更正公告收斂)、評分排序與排除規則、
 預算未知的處理、中文短標題的契合度、過期訊號、退訂阻擋、人工 status 不被覆寫、
 標案四分類(12 個真實標題)、中文關鍵字陷阱、PTT 的 LINE ID 解析與賣物貼文排除、
 徵求期限的跨年推算、外包平台案子的 reach 計分、駐點案偵測、時薪與固定價的
-預算換算、Reddit 的 [For Hire] 排除與「沒憑證就不發請求」、聯絡頁抽取(角色信箱優先 /
+預算換算、駐點判斷不能誤殺 Cloud-based/Rust-based、HN 串的新鮮度與
+按日期排序、Reddit 的 [For Hire] 排除與「沒憑證就不發請求」、聯絡頁抽取(角色信箱優先 /
 同網域過濾 / robots 拒絕 / 頁數上限),以及一條守住「不做 email pattern
 guessing」的測試。
 

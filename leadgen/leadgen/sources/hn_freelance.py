@@ -14,6 +14,7 @@ from __future__ import annotations
 import html
 import logging
 import re
+import time
 from typing import Iterable
 
 from bs4 import BeautifulSoup
@@ -90,10 +91,16 @@ class HNFreelance:
         skills: list[str] = [s.lower() for s in cfg.get("skill_keywords", [])]
         months = int(cfg.get("threads", 3))
         include_hiring = bool(cfg.get("include_who_is_hiring", True))
+        # 太舊的串不要抓:「Ask HN: Freelancer? Seeking freelancer?」這個每月串
+        # 在 2025-10 之後就沒再發了,照 threads 數去翻會翻到一年前的貼文,
+        # 那些聯絡人早就不在。預設只收 120 天內的串。
+        max_age = int(cfg.get("max_thread_age_days", 120))
 
-        threads = self._find_threads(fetcher, "Freelancer", months)
+        threads = self._find_threads(fetcher, "Freelancer", months, max_age)
         if include_hiring:
-            threads += self._find_threads(fetcher, "Who is hiring", months)
+            threads += self._find_threads(fetcher, "Who is hiring", months, max_age)
+        if not threads:
+            log.warning("HN:%s 天內沒有符合的串(每月外包串可能已停更)", max_age)
 
         for story_id, title in threads:
             try:
@@ -145,25 +152,40 @@ class HNFreelance:
                     notes=f"來自「{title}」",
                 )
 
-    def _find_threads(self, fetcher: Fetcher, title_kw: str, n: int) -> list[tuple[int, str]]:
+    def _find_threads(self, fetcher: Fetcher, title_kw: str, n: int,
+                      max_age_days: int = 0) -> list[tuple[int, str]]:
+        """取最近的幾串。
+
+        這裡原本用 /search(按相關度排序)再把回傳的 30 筆按 story id 排序,
+        以為那樣就能拿到最新的 —— 其實只是「相關度前 30 名裡最新的」,
+        實測抓回來的是 2019~2024 年的串,聯絡人早就不在了。
+        要按時間排就得用 /search_by_date。
+        """
         try:
             d = fetcher.get_json(
-                f"{ALGOLIA}/search",
+                f"{ALGOLIA}/search_by_date",
                 params={
                     "tags": "story,author_whoishiring",
                     "query": title_kw,
-                    "hitsPerPage": 30,
+                    "hitsPerPage": 50,
                 },
                 use_cache=False,
             )
         except Exception as e:
             log.warning("HN 串搜尋失敗 (%s): %s", title_kw, e)
             return []
+        cutoff = 0
+        if max_age_days:
+            cutoff = int(time.time()) - max_age_days * 86400
+
         out = []
         for h in d.get("hits", []):
             t = h.get("title") or ""
-            if title_kw.lower() in t.lower():
-                out.append((int(h["objectID"]), t))
-        # Algolia 預設按相關度排,改成按建立時間取最新幾串
-        out.sort(key=lambda x: x[0], reverse=True)
+            if title_kw.lower() not in t.lower():
+                continue
+            created = h.get("created_at_i") or 0
+            if cutoff and created and created < cutoff:
+                continue      # 一年前的串裡的聯絡人早就不在了
+            out.append((int(h["objectID"]), t))
+        # search_by_date 已經是新到舊,直接取前 n 串
         return out[:n]

@@ -66,7 +66,11 @@ sources:
   # HN 每月外包串:對方自己公開徵求接案者並留下聯絡方式,可直接寫信。
   hn_freelance:
     enabled: true
-    threads: 6            # 抓最近幾串(一串是一個月份,多翻就是多月份的案源)
+    threads: 6            # 抓最近幾串(一串是一個月份)
+    # 太舊的串不要抓。「Ask HN: Freelancer? Seeking freelancer?」這個每月串
+    # 在 2025-10 之後就沒再發了,不設限會翻到一年前的貼文,那些聯絡人早就不在。
+    # 「Who is hiring?」還在每月更新,所以會正常流進來。
+    max_thread_age_days: 120
     include_who_is_hiring: true
     skill_keywords:
       - firmware
