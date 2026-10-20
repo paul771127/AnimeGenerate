@@ -569,6 +569,8 @@ namespace SpellDuel
         }
 
         int NetModeCode => coop ? (netDungeon ? 3 : netEndless ? 2 : 1) : 0;
+        /// <summary>首頁直接選模式（例如「🏰 副本」）：0 對戰、1 合作 Boss、2 無盡合作、3 副本</summary>
+        public void PresetNetMode(int mi) { coop = mi >= 1; netEndless = mi == 2; netDungeon = mi == 3; localReady = false; }
         BossRig bossRig; BossAI bossAi; GameObject slamGo;
         VolcanoScene volcano;   // 無盡模式第 1～10 波的熔岩火山場景
         ForestScene forest;     // 第 11～20 波的森林場景
@@ -1501,6 +1503,7 @@ namespace SpellDuel
             if (enemyClass == "boss" || enemyClass == "endless") { StartBossBattle(false, enemyClass == "endless"); return; }
             if (enemyClass == "daily") { StartDaily((DailyChallenge.Kind)Mathf.Clamp(dailyPick, 0, 2)); return; }
             if (enemyClass == "tutorial") { StartTutorial(); return; }
+            if (enemyClass == "dungeon") { SaveChoices(); storyMapOpen = true; world.OpenTown(world.town); world.screen = WorldUI.Screen.Dungeon; return; }   // 打開副本清單
             SaveChoices();
             EndBattle();
             enemyClassUsed = enemyClass == "random" ? Skills.ClassOrder[UnityEngine.Random.Range(0, Skills.ClassOrder.Length)] : enemyClass;
@@ -2820,12 +2823,12 @@ namespace SpellDuel
                 UiKit.Text(new Rect(pad, y, W - pad * 2, u), "敵人", fsS, new Color(1f, 0.9f, 0.6f));
                 y += u;
                 float ew = (W - pad * 2 - gap * 3) / 4f;
-                int nOpt = nc + 7;
+                int nOpt = nc + 8;
                 for (int i = 0; i < nOpt; i++)
                 {
-                    string id = i == 0 ? "random" : i == nc + 1 ? "dummy" : i == nc + 2 ? "boss" : i == nc + 3 ? "endless" : i == nc + 4 ? "story" : i == nc + 5 ? "daily" : i == nc + 6 ? "tutorial" : Skills.ClassOrder[i - 1];
-                    string nm = id == "random" ? "隨機" : id == "dummy" ? "🪵 木頭人" : id == "boss" ? "🔥 Boss" : id == "endless" ? "♾ 無盡" : id == "story" ? "📖 故事" : id == "daily" ? "📅 每日挑戰" : id == "tutorial" ? (TutorialDone ? "🎓 教學" : "🎓 教學（新手）") : Skills.Classes[id].name;
-                    var c = id == "random" ? new Color(1f, 0.85f, 0.3f) : id == "dummy" ? new Color(0.75f, 0.55f, 0.3f) : id == "boss" ? new Color(1f, 0.35f, 0.1f) : id == "endless" ? new Color(0.75f, 0.45f, 1f) : id == "story" ? new Color(1f, 0.8f, 0.4f) : id == "daily" ? new Color(0.45f, 0.9f, 0.7f) : id == "tutorial" ? new Color(0.35f, 0.95f, 1f) : Skills.Classes[id].color;
+                    string id = i == 0 ? "random" : i == nc + 1 ? "dummy" : i == nc + 2 ? "boss" : i == nc + 3 ? "endless" : i == nc + 4 ? "story" : i == nc + 5 ? "daily" : i == nc + 6 ? "tutorial" : i == nc + 7 ? "dungeon" : Skills.ClassOrder[i - 1];
+                    string nm = id == "random" ? "隨機" : id == "dummy" ? "🪵 木頭人" : id == "boss" ? "🔥 Boss" : id == "endless" ? "♾ 無盡" : id == "story" ? "📖 故事" : id == "daily" ? "📅 每日挑戰" : id == "tutorial" ? (TutorialDone ? "🎓 教學" : "🎓 教學（新手）") : id == "dungeon" ? "🏰 副本" : Skills.Classes[id].name;
+                    var c = id == "random" ? new Color(1f, 0.85f, 0.3f) : id == "dummy" ? new Color(0.75f, 0.55f, 0.3f) : id == "boss" ? new Color(1f, 0.35f, 0.1f) : id == "endless" ? new Color(0.75f, 0.45f, 1f) : id == "story" ? new Color(1f, 0.8f, 0.4f) : id == "daily" ? new Color(0.45f, 0.9f, 0.7f) : id == "tutorial" ? new Color(0.35f, 0.95f, 1f) : id == "dungeon" ? new Color(0.4f, 0.85f, 0.75f) : Skills.Classes[id].color;
                     if (UiKit.Button(new Rect(pad + (i % 4) * (ew + gap), y + (i / 4) * (u * 1.15f + gap), ew, u * 1.15f), nm, fsS, id == enemyClass, c)) enemyClass = id;
                 }
                 y += ((nOpt + 3) / 4) * (u * 1.15f + gap);
@@ -2923,7 +2926,7 @@ namespace SpellDuel
             { if (NetMode) Hide(); else RequestChangeMode?.Invoke(); }
             by -= u * 1.6f + gap;
             bool voiceOk = UseSpeech || VoiceReady;   // 沒有語音辨識時，要先把 3 個技能的咒語錄好
-            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? "📖 打開故事地圖" : enemyClass == "daily" ? $"📅 開始{DailyChallenge.Names[Mathf.Clamp(dailyPick, 0, 2)]}" : enemyClass == "tutorial" ? "🎓 開始教學" : "⚔ 開始戰鬥");
+            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? "📖 打開故事地圖" : enemyClass == "daily" ? $"📅 開始{DailyChallenge.Names[Mathf.Clamp(dailyPick, 0, 2)]}" : enemyClass == "tutorial" ? "🎓 開始教學" : enemyClass == "dungeon" ? "🏰 打開副本清單" : "⚔ 開始戰鬥");
             if (UiKit.Button(new Rect(pad, by, W - pad * 2, u * 1.6f), startText, fsL, true, cls.color, LoadoutReady && voiceOk))
             { if (NetMode) SendReady(); else StartBattle(); }
         }

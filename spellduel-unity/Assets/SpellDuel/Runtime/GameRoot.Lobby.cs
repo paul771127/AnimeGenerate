@@ -28,16 +28,17 @@ namespace SpellDuel
             LobbyLogo(new Rect(pad,top+h*.015f,W-pad*2,h*.235f),fs);
             UiKit.Text(new Rect(pad,top+h*.25f,W-pad*2,lineH),LobbyCaption("唸出咒語，在真實世界施法對決"),fsS,UiKit.Paper,TextAnchor.MiddleCenter);
 
-            string[] titles = { "🧍 單人冒險", "👥 和身邊的朋友對戰", "🌐 和遠方的朋友連線" };
+            string[] titles = { "🧍 單人冒險", "👥 和身邊的朋友對戰", "🌐 和遠方的朋友連線", "🏰 副本（多人合作）" };
             string[] descs =
             {
-                "故事模式、無盡模式、Boss 與木頭人練習",
+                "故事模式、無盡模式、Boss、每日挑戰與教學",
                 "建立房間、輸入代碼、手機並排一按就開打",
                 "把代碼傳給朋友；對方以虛擬角色出現在你的房間",
+                "和朋友連線組隊打副本（2～4 人）；一個人也能從村莊進入",
             };
-            Color[] acc = { new Color(0.4f, 0.85f, 1f), new Color(1f, 0.55f, 0.35f), new Color(0.75f, 0.55f, 1f) };
-            float cw=W-pad*3,ch=h*.155f,cx=pad*1.5f,cy=top+h*.325f;
-            for (int i = 0; i < 3; i++)
+            Color[] acc = { new Color(0.4f, 0.85f, 1f), new Color(1f, 0.55f, 0.35f), new Color(0.75f, 0.55f, 1f), new Color(0.4f, 0.85f, 0.75f) };
+            float cw=W-pad*3,ch=h*.125f,cx=pad*1.5f,cy=top+h*.3f;
+            for (int i = 0; i < 4; i++)
             {
                 var r = new Rect(cx, cy + i * (ch + pad), cw, ch);
                 bool hit = UiKit.Button(r, LobbyCaption(""), fs, false, acc[i]);
@@ -54,11 +55,12 @@ namespace SpellDuel
                 {
                     if (i == 0) ChooseMode(Mode.Solo);
                     else if (i == 1) ChooseMode(Mode.Duo);
-                    else ChooseMode(Mode.Duo, false, true);
+                    else if (i == 2) ChooseMode(Mode.Duo, false, true);
+                    else { ChooseMode(Mode.Duo, false, true); solo.PresetNetMode(3); }   // 副本：遠端連線，合作模式預先選好「🏰 副本」
                 }
             }
             // 進階：標記圖模式（同一個 Wi-Fi、掃描地上的標記圖）
-            var mr = new Rect(W*.17f,cy+3*(ch+pad)+pad*.2f,W*.66f,lineH*1.05f);
+            var mr = new Rect(W*.17f,cy+4*(ch+pad)+pad*.2f,W*.66f,lineH*1.05f);
             if (UiKit.Button(mr, LobbyCaption("🗺 進階：標記圖模式（同一個 Wi-Fi）"), fsS)) ChooseMode(Mode.Duo, true, false);
             UiKit.Text(new Rect(pad, bottom - lineH, W - pad * 2, lineH), LobbyCaption("版本 " + BuildInfo), Mathf.RoundToInt(fsS * 0.85f), new Color(0.6f, 0.65f, 0.75f), TextAnchor.MiddleCenter);
         }
@@ -402,6 +404,13 @@ namespace SpellDuel
                 UiKit.Star(new Rect(r.x+u*.59f,r.y+u*.13f,u*.23f,u*.23f),c);
                 UiKit.Divider(new Rect(r.x+u*.18f,r.y+u*.63f,u*.35f,u*.17f),UiKit.Paper);
                 LobbyStroke(new Vector2(r.x+u*.355f,r.y+u*.63f),new Vector2(r.x+u*.355f,r.y+u*.80f),u*.013f,c);
+            }
+            else if(kind==3)
+            {
+                // 副本：三座城塔＋頂上的星（組隊挑戰）
+                for(int t=0;t<3;t++){float x=r.x+u*(.25f+t*.25f),top=r.y+u*(t==1?.22f:.36f);LobbyStroke(new Vector2(x,r.y+u*.84f),new Vector2(x,top),u*(t==1?.09f:.07f),t==1?c:UiKit.Paper);}
+                LobbyStroke(new Vector2(r.x+u*.18f,r.y+u*.84f),new Vector2(r.x+u*.82f,r.y+u*.84f),u*.04f,UiKit.Gold);
+                UiKit.Star(new Rect(center.x-u*.11f,r.y+u*.02f,u*.22f,u*.22f),UiKit.Gold);
             }
             else if(kind==1)
             {
