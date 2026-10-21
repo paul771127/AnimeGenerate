@@ -82,7 +82,9 @@ namespace SpellDuel
             }
             if (homeDungeonPick) { DrawDungeonPick(W, H, pad, lineH, fs, fsS); return; }
             // 進階：標記圖模式（同一個 Wi-Fi、掃描地上的標記圖）
-            var mr = new Rect(W*.17f,cy+4*(ch+pad)+pad*.2f,W*.66f,lineH*1.05f);
+            var wr = new Rect(W*.17f,cy+4*(ch+pad)+pad*.2f,W*.66f,lineH*1.05f);
+            if (UiKit.Button(wr, LobbyCaption("👀 觀戰（輸入朋友的房間代碼）"), fsS, false, new Color(0.55f, 0.9f, 1f))) EnterWatch();
+            var mr = new Rect(W*.17f,wr.yMax+pad*.35f,W*.66f,lineH*1.05f);
             if (UiKit.Button(mr, LobbyCaption("🗺 進階：標記圖模式（同一個 Wi-Fi）"), fsS)) ChooseMode(Mode.Duo, true, false);
             UiKit.Text(new Rect(pad, bottom - lineH, W - pad * 2, lineH), LobbyCaption("版本 " + BuildInfo), Mathf.RoundToInt(fsS * 0.85f), new Color(0.6f, 0.65f, 0.75f), TextAnchor.MiddleCenter);
         }
@@ -129,6 +131,7 @@ namespace SpellDuel
             remoteMode = false; solo.RemotePlay = false;
             mode = Mode.Choose; WorldFrame.Reset(); playArea.Clear();
             areaOwner = areaReceived = aligned = quickAligned = false;
+            watchers.Clear();
         }
 
         /// <summary>一行步驟：編號／狀態圖示、標題、（現在這一步）提示</summary>
@@ -310,7 +313,7 @@ namespace SpellDuel
             if (mode == Mode.Duo)
             {
                 Line($"連線：{net.Status}" + (net.Connected && !net.IsHost ? $"　時鐘差 {clockOffset * 1000:F0}ms（來回 {bestRtt * 1000:F0}ms）" : ""));
-                if (net.Connected) Line($"👥 房間 {solo.PeerIds.Count + 1} 人（最多 {NetLink.MaxClients + 1} 人；我是{(net.IsHost ? "房主" : $" {net.MyPid} 號")}）" + (solo.PeerIds.Count > 1 ? "　多人只能玩合作" : ""));
+                if (net.Connected) Line($"👥 房間 {solo.PeerIds.Count + 1} 人（最多 {NetLink.MaxClients + 1} 人；我是{(net.IsHost ? "房主" : $" {net.MyPid} 號")}）" + (solo.PeerIds.Count > 1 ? "　多人只能玩合作" : "") + (watchers.Count > 0 ? $"　👀 {watchers.Count} 人觀戰" : ""));
                 if (areaOwner && net.Connected) Line(remoteAligned ? $"對手已對齊（誤差 {remoteAlignRms * 100f:F0}cm）" : "對手對齊中…");
                 if (areaReceived) Line(quickAligned ? (quickRefined > 0 ? $"對齊：並排＋鏡頭微調（誤差約 {align.Rms * 100f:F0}cm）" : "對齊：並排對齊")
                     : aligned ? $"對齊：鏡頭 誤差 {align.Rms * 100f:F0}cm（樣本 {align.Used}）" : $"鏡頭對齊：{align.Problem}");

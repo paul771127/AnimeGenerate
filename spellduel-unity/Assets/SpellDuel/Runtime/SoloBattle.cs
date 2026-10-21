@@ -29,7 +29,7 @@ namespace SpellDuel
         /// <summary>遠端合作：每位隊友的虛擬角色跟著他回報的位置走</summary>
         void UpdateAllyRigs()
         {
-            if (!RemotePlay || battle == null) return;
+            if ((!RemotePlay && !Watching) || battle == null) return;   // 觀戰：每位玩家都用角色顯示
             float dt = Mathf.Max(1e-3f, Time.deltaTime);
             foreach (var a in battle.allies)
             {
@@ -1274,7 +1274,7 @@ namespace SpellDuel
         /// <summary>戰鬥結束時顯示一次結果（合作模式：Boss 倒下＝勝利；兩人都倒下＝失敗）</summary>
         void ShowResult()
         {
-            if (resultShown) return;
+            if (resultShown || Watching) return;   // 觀眾：結算看房主送來的 wover，不拿獎勵
             resultShown = true;
             if (endless && battle != null) TrackProgress();   // 先算這一刻的擊倒（打倒最後的 Boss／小怪的同一幀就結算了，掉落要在發獎勵前擲）
             SaveExercise();
@@ -1380,6 +1380,7 @@ namespace SpellDuel
         /// <summary>GameRoot 轉來的對戰訊息</summary>
         public void OnNet(Msg m)
         {
+            if (Watching) { OnNetWatch(m); return; }   // 觀戰端（SoloBattle.Watch.cs）
             switch (m.t)
             {
                 case "mode":
@@ -1627,6 +1628,7 @@ namespace SpellDuel
         float nextHeartbeat;
         void Update()
         {
+            if (Watching) { UpdateWatchBattle(); return; }   // 觀戰：只跑顯示
             UpdateMic();
             UpdateTownWalk();
             if (phase != Phase.Fighting && phase != Phase.Over) return;

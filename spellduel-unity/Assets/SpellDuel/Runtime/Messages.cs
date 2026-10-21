@@ -24,6 +24,11 @@ namespace SpellDuel
     ///   hp2          被打的一方回報血量 hp、ok＝反擊成功
     ///   trap2 / trapgone   設置／移除陷阱：id、技能 k、位置 p、s＝幾秒後生效
     ///   state        每秒 10 次：詠唱中的技能 k、蓄力進度 s、血量 hp、狀態旗標 e
+    ///   觀戰（GameRoot.Watch.cs、SoloBattle.Watch.cs）：
+    ///   join         加入的人收到 _hello 後告訴房主：ok＝觀眾（不算玩家人數）；玩家滿了房主回 _full
+    ///   wply         房主→觀眾：玩家 id 的職業 k、技能 ks、進階職業 a
+    ///   wstart       房主→觀眾：開打（或中途加入時正在打）：模式 e（0 對戰、1 合作 Boss、2 無盡、3 副本）、副本 k、難度 hp、場地 pts
+    ///   wover / wend 房主→觀眾：結算（k＝勝負文字）／回到準備畫面
     /// 座標一律是世界座標（以標記圖為原點，單位公尺）。
     /// </summary>
     [Serializable]

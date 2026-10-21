@@ -23,6 +23,8 @@ namespace SpellDuel
     public class RelayLink : ILink
     {
         public const int MaxClients = NetLink.MaxClients;
+        /// <summary>觀戰的人（不算玩家人數）：連線數上限＝玩家 5＋觀戰 4；玩家滿了由 GameRoot 拒絕（join）</summary>
+        public const int MaxWatchers = 4, MaxConnections = MaxClients + MaxWatchers;
 
         public bool IsHost { get; private set; }
         public int MyPid { get; private set; } = -1;
@@ -68,7 +70,7 @@ namespace SpellDuel
             try
             {
                 await SignIn();
-                var alloc = await RelayService.Instance.CreateAllocationAsync(MaxClients);
+                var alloc = await RelayService.Instance.CreateAllocationAsync(MaxConnections);
                 JoinCode = await RelayService.Instance.GetJoinCodeAsync(alloc.AllocationId);
                 if (disposed) return;
                 var data = new RelayServerData(alloc, "dtls");
@@ -166,7 +168,7 @@ namespace SpellDuel
                         case NetworkEvent.Type.Data:
                         {
                             var line = Read(ref reader);
-                            if (line.StartsWith("{\"t\":\"_full\"")) { Status = $"房間已滿（最多 {MaxClients + 1} 人）"; Close(); return; }
+                            if (line.StartsWith("{\"t\":\"_full\"")) { Status = $"房間已滿（最多 {MaxClients + 1} 位玩家、{MaxWatchers} 位觀眾）"; Close(); return; }
                             if (line.StartsWith("{\"t\":\"_hello\""))
                             {
                                 int i = line.IndexOf("\"id\":", StringComparison.Ordinal);
@@ -188,8 +190,8 @@ namespace SpellDuel
 
         int FreePid()
         {
-            if (conns.Count >= MaxClients) return -1;
-            for (int p = 1; p <= MaxClients; p++) if (!pidOf.ContainsValue(p)) return p;
+            if (conns.Count >= MaxConnections) return -1;
+            for (int p = 1; p <= MaxConnections; p++) if (!pidOf.ContainsValue(p)) return p;
             return -1;
         }
 

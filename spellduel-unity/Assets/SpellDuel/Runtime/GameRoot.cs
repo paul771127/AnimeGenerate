@@ -43,7 +43,7 @@ namespace SpellDuel
         // 單人：畫場地（像 Meta Quest 的邊界），不需要標記圖
         // 雙人（畫場地）：其中一人畫場地，另一人收到場地資料，兩支手機用鏡頭互相看對方來對齊座標
         // 雙人（標記圖）：兩支手機掃同一張標記圖，共用座標
-        enum Mode { Choose, Solo, Duo }
+        enum Mode { Choose, Solo, Duo, Watch }   // Watch＝觀戰（GameRoot.Watch.cs）
         Mode mode = Mode.Choose;
         bool duoUseMarker;                 // 雙人：true＝標記圖對齊；false＝畫場地＋互相校正
         bool remoteMode;                   // 遠端連線：不同地方的人（Unity Relay），每人畫自己的場地，對方是虛擬角色
@@ -250,7 +250,7 @@ namespace SpellDuel
             cam.farClipPlane = 60f;
             ArLighting.Attach(camGo.AddComponent<ARCameraManager>());   // AR 光照估計：角色跟著房間明暗、色溫變化
             cameraBackground = camGo.AddComponent<ARCameraBackground>();
-            var tpd = camGo.AddComponent<TrackedPoseDriver>();
+            var tpd = poseDriver = camGo.AddComponent<TrackedPoseDriver>();
             tpd.SetPoseSource(TrackedPoseDriver.DeviceType.GenericXRDevice, TrackedPoseDriver.TrackedPose.ColorCamera);
             tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
 
@@ -276,7 +276,7 @@ namespace SpellDuel
             solo.Init(cam, playArea, mat);
             solo.Hand = hand;
             // 雙人職業對戰：SoloBattle 的連線模式（訊息經由這裡收送）
-            solo.NetSend = m => { if (net.Connected) Send(m); };
+            solo.NetSend = m => { if (net.Connected && mode != Mode.Watch) Send(m); };   // 觀戰者不送戰鬥訊息
             solo.SharedClock = () => SharedTime;
             solo.RequestRedraw = () => { solo.Hide(); BeginAreaPreview(() => { WorldFrame.Reset(); playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); }); };
             solo.RequestChangeMode = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); mode = Mode.Choose; };
@@ -347,6 +347,8 @@ namespace SpellDuel
             playArea.Hidden = solo.InTown;   // 城鎮沒有場地
             Music.Want(solo.phase == SoloBattle.Phase.Hidden ? "town" : solo.MusicTrack);   // 背景音樂（設定選單可關）
             HandleNetwork();
+            UpdateWatchers();   // 房主：把戰況告訴觀戰的人
+            if (mode == Mode.Watch) { UpdateWatchMode(); return; }   // 觀戰：只看不打（GameRoot.Watch.cs）
             UpdateRemoteQuickStart();
             UpdateSeat();
             if (AreaMode) UpdateDuoArea();
@@ -787,27 +789,28 @@ namespace SpellDuel
                 switch (m.t)
                 {
                     case "_hello":
-                        Log($"✅ 加入房間（我是 {net.MyPid} 號）");
+                        Log(mode == Mode.Watch ? "✅ 已進入房間觀戰" : $"✅ 加入房間（我是 {net.MyPid} 號）");
+                        Send(new Msg { t = "join", ok = mode == Mode.Watch, to = 1 });   // 告訴房主：我是玩家還是觀戰的人（只給房主）
+                        break;
+                    case "join":
+                        if (net.IsHost) OnJoin(m.pid, m.ok);
                         break;
                     case "peers":
                         SetSoloPeers(m.ks);
                         Log($"👥 房間 {solo.PeerIds.Count + 1} 人");
                         break;
                     case "_open":
-                        if (net.IsHost)
-                        {
-                            if (!roomPids.Contains(m.id)) roomPids.Add(m.id);
-                            roomPids.Sort();
-                            BroadcastPeers();
-                            Log($"✅ 隊友{m.id} 加入（房間 {roomPids.Count + 1} 人）");
-                        }
-                        else Log("✅ 已連線");
+                        // 房主：等對方說自己是玩家還是觀戰（join）才算進房間的人數
+                        if (!net.IsHost) Log("✅ 已連線");
                         hp = remoteHp = MaxHp;
                         damaged.Clear();
                         if (AreaMode) SendArea();
                         if (!net.IsHost) Send(new Msg { t = "ping", c = LocalTime });
                         break;
                     case "_close":
+                        if (net.IsHost && watchers.Remove(m.id)) { Log($"👀 一位觀眾離開（還有 {watchers.Count} 人觀戰）"); break; }
+                        if (mode == Mode.Watch) { Log("❌ 房主已離開，觀戰結束"); solo.WatchHostLeft(); break; }
+                        if (net.IsHost && !roomPids.Contains(m.id)) break;   // 還沒說自己是誰就斷線（或被拒絕）的連線
                         if (net.IsHost)
                         {
                             roomPids.Remove(m.id); peerAligned.Remove(m.id); peerFeetW.Remove(m.id); peerSeen.Remove(m.id);
@@ -1299,6 +1302,7 @@ namespace SpellDuel
             if (areaPreview) { DrawAreaPreview(W, H, pad, fs, fsS); return; }
             // 一開始：選模式（首頁；畫面在 GameRoot.Lobby.cs）
             if (mode == Mode.Choose) { DrawHome(W, H, pad, top, lineH, fs, fsS); return; }
+            if (mode == Mode.Watch) { DrawWatch(W, H, pad, top, lineH, fs, fsS); return; }
 
             // 雙人職業對戰：交給 SoloBattle 畫介面
             if (mode == Mode.Duo && solo.phase != SoloBattle.Phase.Hidden)
