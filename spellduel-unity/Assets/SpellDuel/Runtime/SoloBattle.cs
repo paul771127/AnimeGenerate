@@ -1256,6 +1256,7 @@ namespace SpellDuel
                 {
                     rig = MinionRig.Create();
                     rig.SetVariant(m.minionKind);
+                    rig.SetDress(battle.Theme);   // 角鬥場：黑晶項圈；山道：沙塵與頭巾（美術第十一輪）
                     minionGo[m] = rig; minionLastHp[m] = m.hp;
                     rig.transform.position = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);
                     SpawnFade.Play(rig.gameObject);   // 淡入出現

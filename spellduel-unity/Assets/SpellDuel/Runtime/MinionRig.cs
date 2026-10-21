@@ -57,6 +57,16 @@ namespace SpellDuel
         /// 森林：7 毒液噴花、8 荊棘衝鋒獸、9 藤蔓術士、10 食人花、11 孢子菇、12 種子槍手；
         /// 海洋：13 跳躍魚、14 俯衝海鳥、15 騎魚泡泡怪、16 寄居蟹、17 雷電水母、18 河豚），會重建外觀；請在 Create() 之後立刻呼叫。
         /// </summary>
+        /// <summary>
+        /// 依關卡主題加裝飾（第十一輪美術：3＝角鬥場的黑晶項圈與鐵鍊、4＝黃土山道的沙塵與頭巾）；其他主題不加。
+        /// 每次 SetVariant 之後呼叫一次（換外觀會重建身體）。目前是空的，等美術實作。
+        /// </summary>
+        public void SetDress(int theme)
+        {
+            dressTheme = theme;
+        }
+        int dressTheme = -1;
+
         public void SetVariant(int kind)
         {
             kind = Mathf.Clamp(kind, 0, 18);
