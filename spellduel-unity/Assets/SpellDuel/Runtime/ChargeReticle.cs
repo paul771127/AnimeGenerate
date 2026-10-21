@@ -1,89 +1,103 @@
 using UnityEngine;
-
 namespace SpellDuel
 {
-    /// <summary>
-    /// 畫面中央的準星＋蓄力進度（合在一起）：所有技能都朝準星放，蓄力進度畫成準星外圈的一圈刻度。
-    ///   ・沒在蓄力：白色十字準星。
-    ///   ・蓄力中：外圈刻度依進度順時針亮起（技能顏色）。
-    ///   ・蓄滿：整圈閃爍（白色 ↔ 技能顏色），準星張大一點。
-    ///   ・超蓄（獵人蓄力強化 100%→200%）：外面再一圈金色刻度。
-    /// 美術（Codex）可以只改這個檔的畫法；呼叫端只用 Draw()。
-    /// </summary>
+    /// <summary>Procedural charge HUD. Coordinates and gameplay progress come only from the caller.</summary>
     public static class ChargeReticle
     {
-        /// <summary>
-        /// 畫準星。center：畫面座標（GUI，y 向下）；size：基準大小（像素，約畫面寬 4%）；
-        /// charging：有沒有在蓄力；progress：0～1；color：技能顏色；overcharge：超蓄 0～1。
-        /// </summary>
-        public static void Draw(Vector2 center, float size, bool charging, float progress, Color color, float overcharge = 0f)
+        static Texture2D[] frames;
+        static bool wasReady;
+        static float readyAt;
+        static readonly Color Back=new Color(.025f,.035f,.065f,.88f);
+        /// <summary>classId is an optional visual hint; existing callers retain their exact size and position.</summary>
+        public static void Draw(Vector2 center,float size,bool charging,float progress,Color color,float overcharge=0f,string classId=null)
         {
-            bool ready = charging && progress >= 1f;
-            float t = Time.time;
-            float flash = ready ? 0.5f + 0.5f * Mathf.Sin(t * 14f) : 0f;            // 蓄滿：快速閃爍
-            var main = !charging ? Color.white : ready ? Color.Lerp(color, Color.white, flash) : color;
-            float arm = size * (ready ? 1.2f + 0.08f * flash : 1f), th = Mathf.Max(3f, size * 0.15f), gap = size * 0.3f;
-
-            // 十字（黑邊＋顏色）
-            Cross(center, arm, th + 2f, gap - 1f, new Color(0f, 0f, 0f, 0.45f));
-            Cross(center, arm, th, gap, new Color(main.r, main.g, main.b, charging ? 0.95f : 0.8f));
-            Rect(center, th, th, new Color(main.r, main.g, main.b, 0.95f));
-
-            if (!charging) return;
-            // 外圈刻度：已蓄的亮、沒蓄的暗
-            const int N = 32;
-            float radius = size * 1.75f, tick = Mathf.Max(4f, size * 0.32f), tw = Mathf.Max(3f, size * 0.12f);
-            int lit = Mathf.FloorToInt(Mathf.Clamp01(progress) * N + 0.0001f);
-            for (int i = 0; i < N; i++)
+            var oldColor=GUI.color;var oldMatrix=GUI.matrix;
+            try
             {
-                float ang = i * 360f / N;
-                bool on = i < lit;
-                var c = on ? (ready ? Color.Lerp(color, Color.white, flash) : color) : new Color(1f, 1f, 1f, 0.22f);
-                if (on && !ready && i == lit - 1) c = Color.Lerp(c, Color.white, 0.5f);   // 進度的前端亮一點
-                Tick(center, ang, radius, tick, tw, new Color(0f, 0f, 0f, on ? 0.5f : 0.25f), 2f);
-                Tick(center, ang, radius, tick, tw, c, 0f);
+                EnsureFrames();size=Mathf.Max(1,size);bool ready=charging&&progress>=1;
+                if(ready&&!wasReady)readyAt=Time.time;wasReady=ready;
+                float age=Mathf.Max(0,Time.time-readyAt),pulse=.5f+.5f*Mathf.Sin(Time.time*5.5f);
+                float impact=ready?Mathf.Clamp01(1-age/.24f):0;
+                var ink=ready?Color.Lerp(color,Color.white,.35f+.45f*pulse):color;
+                float radius=size*1.75f,thickness=Mathf.Max(4,size*.28f);
+                // Four separated sight arms leave the exact target unobstructed.
+                float gap=size*.32f,arm=size*.9f;
+                Cross(center,arm,Mathf.Max(4,size*.16f)+2,gap-1,Back);
+                Cross(center,arm,Mathf.Max(2,size*.13f),gap,charging?ink:Color.white);
+                Rect(center,4,4,Back);Rect(center,2,2,Color.white);
+                if(!charging)return;
+                int style=Style(classId,color);
+                GUI.color=new Color(1,1,1,.95f);GUI.DrawTexture(new Rect(center.x-size*2.25f,center.y-size*2.25f,size*4.5f,size*4.5f),frames[style]);
+                // Continuous partial segment at the leading edge: no 32-step quantisation.
+                Ring(center,radius,thickness,Mathf.Clamp01(progress),ink);
+                if(ready)
+                {
+                    Ring(center,radius+thickness*.75f+impact*size*.3f,Mathf.Max(1.5f,size*.08f),1,new Color(ink.r,ink.g,ink.b,.28f+.42f*pulse+impact*.25f));
+                    if(impact>0)Ring(center,radius+size*.6f*(1-impact),2,1,new Color(1,1,1,impact*.75f));
+                }
+                if(overcharge>0)
+                {
+                    float outer=radius+size*.72f;
+                    Ring(center,outer,thickness*.75f,1,Back);
+                    Ring(center,outer,thickness*.50f,Mathf.Clamp01(overcharge),new Color(1,.78f,.22f));
+                    for(int i=0;i<4;i++)Tick(center,i*90,outer,size*.23f,2,new Color(1,.94f,.65f));
+                }
             }
-            // 超蓄：外面一圈金色
-            if (overcharge > 0f)
+            finally{GUI.matrix=oldMatrix;GUI.color=oldColor;}
+        }
+        static int Style(string id,Color c)
+        {
+            if(id=="swordsman")return 0;if(id=="archer")return 1;if(id=="mage")return 2;if(id=="assassin")return 3;if(id=="priest")return 4;
+            // Existing calls only pass skill colour. This is a visual fallback, never a class/gameplay lookup.
+            if(c.r>.85f&&c.g>.7f&&c.b<.7f)return 4;
+            if(c.g>c.r&&c.g>c.b)return 1;
+            if(c.r>c.g*1.3f&&c.b>c.g*1.3f)return c.r>c.b?3:2;
+            return 0;
+        }
+        static void Ring(Vector2 c,float r,float width,float progress,Color color)
+        {
+            const int n=64;float amount=progress*n;
+            for(int i=0;i<n;i++)
             {
-                var gold = new Color(1f, 0.82f, 0.3f);
-                int litO = Mathf.FloorToInt(Mathf.Clamp01(overcharge) * N);
-                for (int i = 0; i < litO; i++) Tick(center, i * 360f / N, radius + tick * 1.3f, tick * 0.7f, tw, gold, 0f);
-            }
-            // 蓄滿：外圈往外擴散的光圈
-            if (ready)
-            {
-                float k = (t * 1.6f) % 1f;
-                var rc = new Color(color.r, color.g, color.b, (1f - k) * 0.6f);
-                for (int i = 0; i < N; i += 2) Tick(center, i * 360f / N + 5f, radius + tick + k * size * 1.2f, tick * 0.5f, tw * 0.8f, rc, 0f);
+                float fraction=Mathf.Clamp01(amount-i);if(fraction<=0)break;
+                // A tangential strip with a tiny overlap reads as a thick continuous arc.
+                float a=(i+fraction*.5f)*360/n;
+                Tick(c,a,r,width,Mathf.Max(.3f,r*2*Mathf.PI/n*fraction+.6f),color);
             }
         }
-
-        static void Cross(Vector2 c, float arm, float th, float gap, Color col)
+        static void Cross(Vector2 c,float arm,float width,float gap,Color color)
         {
-            float len = arm - gap;
-            Rect(new Vector2(c.x - gap - len / 2f, c.y), len, th, col);
-            Rect(new Vector2(c.x + gap + len / 2f, c.y), len, th, col);
-            Rect(new Vector2(c.x, c.y - gap - len / 2f), th, len, col);
-            Rect(new Vector2(c.x, c.y + gap + len / 2f), th, len, col);
+            float length=arm-gap;
+            Rect(new Vector2(c.x-(arm+gap)*.5f,c.y),length,width,color);Rect(new Vector2(c.x+(arm+gap)*.5f,c.y),length,width,color);
+            Rect(new Vector2(c.x,c.y-(arm+gap)*.5f),width,length,color);Rect(new Vector2(c.x,c.y+(arm+gap)*.5f),width,length,color);
         }
-
-        static void Rect(Vector2 c, float w, float h, Color col)
+        static void Rect(Vector2 c,float w,float h,Color color){GUI.color=color;GUI.DrawTexture(new Rect(c.x-w*.5f,c.y-h*.5f,w,h),Texture2D.whiteTexture);}
+        static void Tick(Vector2 c,float angle,float radius,float length,float width,Color color)
         {
-            GUI.color = col;
-            GUI.DrawTexture(new Rect(c.x - w / 2f, c.y - h / 2f, w, h), Texture2D.whiteTexture);
-            GUI.color = Color.white;
+            var m=GUI.matrix;GUIUtility.RotateAroundPivot(angle,c);GUI.color=color;
+            GUI.DrawTexture(new Rect(c.x-width*.5f,c.y-radius-length*.5f,width,length),Texture2D.whiteTexture);GUI.matrix=m;
         }
-
-        /// <summary>一根刻度：從圓心往外、角度 ang（0＝正上方，順時針），在半徑 r 處長 len、寬 w；grow＝黑邊加粗</summary>
-        static void Tick(Vector2 c, float ang, float r, float len, float w, Color col, float grow)
+        static void EnsureFrames()
         {
-            var m = GUI.matrix;
-            GUIUtility.RotateAroundPivot(ang, c);
-            GUI.color = col;
-            GUI.DrawTexture(new Rect(c.x - (w + grow) / 2f, c.y - r - len / 2f - grow / 2f, w + grow, len + grow), Texture2D.whiteTexture);
-            GUI.color = Color.white;
-            GUI.matrix = m;
+            if(frames!=null)return;frames=new Texture2D[5];
+            const int n=256;
+            for(int style=0;style<5;style++)
+            {
+                var pixels=new Color[n*n];
+                for(int y=0;y<n;y++)for(int x=0;x<n;x++)
+                {
+                    float dx=(x+.5f-n*.5f)/(n/4.5f),dy=(y+.5f-n*.5f)/(n/4.5f),r=Mathf.Sqrt(dx*dx+dy*dy);
+                    float angle=Mathf.Atan2(dx,dy),teeth=Mathf.Abs(Mathf.Sin(angle*(style==1?8:style==2?6:style==3?4:style==4?12:3)));
+                    float a=Mathf.Clamp01((.29f-Mathf.Abs(r-1.75f))*n/4.5f);
+                    Color col=new Color(.025f,.035f,.065f,a*.86f);
+                    if(Mathf.Abs(r-1.75f)<.12f)col=new Color(.75f,.83f,.96f,.18f);
+                    // Cached silhouette vocabulary: blades / feathers / rune gates / needles / halo beads.
+                    bool motif=style==4?Mathf.Abs(r-2.08f)<.04f&&teeth>.87f:style==2?r>2&&r<2.17f&&teeth>.90f:r>2&&r<2.05f+.12f*teeth&&teeth>.94f;
+                    if(motif)col=new Color(.88f,.94f,1,.85f);
+                    pixels[y*n+x]=col;
+                }
+                var t=new Texture2D(n,n,TextureFormat.RGBA32,false){name="Charge frame "+style,filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp};t.SetPixels(pixels);t.Apply(false,true);frames[style]=t;
+            }
         }
     }
 }
