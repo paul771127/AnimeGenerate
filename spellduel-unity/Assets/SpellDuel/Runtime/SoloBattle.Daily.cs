@@ -23,6 +23,9 @@ namespace SpellDuel
         class DailyShot { public DailyChallenge.Attack kind; public Vector3 from; public float fireAt, speed; public GameObject portal; }
         readonly List<DailyShot> dailyShots = new List<DailyShot>();
         Vector3 coinPos; GameObject coinGo, coinPillar; bool coinActive; float coinBorn;
+        Vector3 coinDir; float coinTurnAt;   // 金幣到處亂跑：目前的方向、下次轉向的時間
+        /// <summary>金幣亂跑的速度（m/s）：一開始 0.5，每撿到一枚 +0.05，最快 1.1（快走追得上）</summary>
+        float CoinSpeed => Mathf.Min(1.1f, 0.5f + 0.05f * dailyScore);
 
         float DailyStart => CalibTime + DailyChallenge.Countdown;   // 站好校正 2 秒＋倒數 3 秒
         float DailyElapsed => battle != null ? battle.now - DailyStart : 0f;
@@ -178,11 +181,43 @@ namespace SpellDuel
                 coinActive = false;
                 SpawnCoin();
             }
+            if (coinActive) MoveCoin(Mathf.Min(Time.deltaTime, 0.1f));
             if (coinActive && coinGo)
             {
+                coinPillar.transform.position = WorldFrame.FromWorld(coinPos + Vector3.up * 1.5f);
                 coinGo.transform.position = WorldFrame.FromWorld(coinPos + Vector3.up * (0.45f + 0.06f * Mathf.Sin(Time.time * 3f)));
                 coinGo.transform.Rotate(0f, 180f * Time.deltaTime, 0f, Space.World);
             }
+        }
+
+        /// <summary>金幣到處亂跑：每 1～2.5 秒隨機換方向；快碰到場地邊界（0.5m）就轉向場地裡面</summary>
+        void MoveCoin(float dt)
+        {
+            if (Time.time >= coinTurnAt || coinDir.sqrMagnitude < 0.01f) TurnCoin(false);
+            var next = coinPos + coinDir * CoinSpeed * dt;
+            var ns = WorldFrame.FromWorld(next);
+            if (!area.Inside(ns) || area.DistanceToEdge(ns) < 0.5f)
+            {
+                TurnCoin(true);   // 撞到邊界：改朝場地中心附近跑
+                next = coinPos + coinDir * CoinSpeed * dt;
+                ns = WorldFrame.FromWorld(next);
+                if (!area.Inside(ns) || area.DistanceToEdge(ns) < 0.3f) return;
+            }
+            coinPos = next;
+        }
+
+        void TurnCoin(bool inward)
+        {
+            float a = (float)(dailyRng.NextDouble() * Mathf.PI * 2.0);
+            var d = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+            if (inward)
+            {
+                var poly = area.Polygon; var c = Vector3.zero; foreach (var q in poly) c += q; c /= Mathf.Max(1, poly.Count);
+                var toC = WorldFrame.ToWorld(c) - coinPos; toC.y = 0f;
+                if (toC.sqrMagnitude > 1e-4f) d = (toC.normalized * 1.5f + d * 0.7f).normalized;   // 大致往中心，帶一點隨機
+            }
+            coinDir = d;
+            coinTurnAt = Time.time + 1f + (float)dailyRng.NextDouble() * 1.5f;
         }
 
         /// <summary>金幣：場地內、離你夠遠（場地最遠距離的 55% 以上、至少 1.6m）、離邊界 0.5m 以上的隨機位置（用今天的種子）</summary>
@@ -206,7 +241,7 @@ namespace SpellDuel
                 if (d > bestD) { bestD = d; best = w; }   // 場地太小：至少選最遠的
             }
             if (bestD < 0f) return;
-            coinPos = best; coinActive = true; coinBorn = Time.time;
+            coinPos = best; coinActive = true; coinBorn = Time.time; coinTurnAt = 0f;
             if (!coinGo)
             {
                 coinGo = Prim(PrimitiveType.Cylinder, new Color(1f, 0.82f, 0.25f), false);
