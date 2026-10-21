@@ -55,13 +55,13 @@
           "id": "v0_s06",
           "seconds": 5,
           "zh": "遠方山腹裂縫透出紅光，傳來三下敲擊聲（畫面隨聲音震一下）。",
-          "prompt": "distant volcano flank with a glowing red fissure, rocks tremble three times, camera shakes slightly, ominous, wide shot"
+          "prompt": "wide shot of a distant volcanic mountainside, a long glowing red lava fissure splits the dark rock, the red glow pulses three times as the ground trembles and loose stones roll down the slope, the camera shakes slightly, ash drifting in the air, ominous atmosphere, pure landscape, no people, no vehicles"
         },
         {
           "id": "v0_s07",
           "seconds": 5,
           "zh": "三座鐘的剪影依序亮起：火山、森林、海港（伏筆），最後熄滅。",
-          "prompt": "three bell silhouettes light up one after another over a volcano, a misty forest and a seaside harbor, then fade to darkness, mystical, symbolic montage"
+          "prompt": "symbolic montage of three scenes shown one after another: first a bronze bell in a stone tower on a volcano under an orange sky lights up with a golden glow, then a bronze bell hanging from a giant tree in a misty green forest lights up, then a bronze bell on a lighthouse at a seaside harbor lights up, finally all three fade to darkness, mystical and quiet, pure landscape, no people"
         },
         {
           "id": "v0_s08",
@@ -98,19 +98,19 @@
           "id": "v1_s04",
           "seconds": 5,
           "zh": "巨像高舉雙拳砸地，衝擊波捲起火星。",
-          "prompt": "{Golem} raises both fists and slams the ground, a ring shockwave of embers and molten rock bursts outward, camera shake, slow motion"
+          "prompt": "inside the magma hall in front of the massive stone gate, {Golem} raises both fists and slams the ground, a ring shockwave of embers and molten rock bursts outward, camera shake, slow motion"
         },
         {
           "id": "v1_s05",
           "seconds": 5,
           "zh": "（通關）黑晶碎裂，巨像緩緩跪下，熔岩轉暗。",
-          "prompt": "the black crystal in {Golem}'s chest shatters into glowing shards, the colossus slowly kneels, its magma veins dim to soft orange, emotional, slow motion"
+          "prompt": "the black crystal in {Golem}'s chest shatters into glowing shards, the colossus drops to one knee and lowers its head, the orange glow in its magma veins slowly fades to dim ember, emotional, slow motion"
         },
         {
           "id": "v1_s06",
           "seconds": 5,
           "zh": "艾琳把鐘舌扣回大鐘，鐘聲響起，金色聲波掃過整座山。",
-          "prompt": "{Erin} fits the broken clapper back into the great bell, the bell rings, golden sound waves sweep across the volcano and village, triumphant sunrise"
+          "prompt": "{Erin} lifts the bell's broken iron striker and fits it back inside the great bronze bell, the bell rings, golden sound waves sweep across the volcano and village, triumphant sunrise"
         }
       ]
     },
@@ -129,13 +129,13 @@
           "id": "v2_s02",
           "seconds": 5,
           "zh": "樹王從祭壇的根中站起，紫色孢子飄散。",
-          "prompt": "{TreeKing} rises from tangled roots around a stone altar, purple glowing spores drift, ominous low angle, fog"
+          "prompt": "a massive corrupted tree monster, {TreeKing}, slowly rises up out of the tangled roots surrounding an empty stone altar, bark limbs unfolding, purple glowing spores drift, ominous low angle, fog, pure creature shot, no people"
         },
         {
           "id": "v2_s03",
           "seconds": 5,
           "zh": "翠與小葉抱著名冊站在後方，艾琳回頭點頭。",
-          "prompt": "{Cui} and {Xiaoye} holding a large book of names behind the heroes, {Erin} glances back and nods reassuringly, medium shot, dappled light"
+          "prompt": "{Cui} and {Xiaoye} stand side by side in the foreground holding a large closed leather-bound book together, no writing visible, {Erin} in front of them glances back over her shoulder and nods reassuringly, all three faces visible, medium shot, dappled forest light"
         },
         {
           "id": "v2_s04",
@@ -160,7 +160,7 @@
           "id": "v3_s01",
           "seconds": 5,
           "zh": "暴風夜的港口，舊燈塔的光在雨中掃過。",
-          "prompt": "stormy night harbor, an old lighthouse beam sweeping through heavy rain, waves crashing on rocks, cinematic wide shot"
+          "prompt": "stormy night at an old stone harbor town, an ancient weathered stone lighthouse with a sweeping beam, heavy rain, waves crashing on rocks, wooden sailing ships moored at the pier, lantern-lit timber warehouses, fantasy medieval harbor, no modern buildings, no skyscrapers, no city skyline, no apartment blocks, cinematic wide shot"
         },
         {
           "id": "v3_s02",
@@ -190,7 +190,7 @@
           "id": "v3_s06",
           "seconds": 5,
           "zh": "三座鐘隔著山、林、海同時響起，晨光灑落。",
-          "prompt": "split-screen montage of three bells ringing at once on a volcano, in a forest and at a harbor, golden dawn light washing over all three, triumphant"
+          "prompt": "triptych landscape, three scenes side by side at the same moment: on the left a stone bell tower on a volcano, in the center a bronze bell hanging from a giant tree in a forest, on the right a bell on an ancient weathered stone harbor lighthouse with wooden sailing ships below, all three bells ringing at once with golden sound waves rippling outward, golden dawn light washing over every scene, triumphant, pure landscape, no people, no modern buildings"
         },
         {
           "id": "v3_s07",
@@ -202,7 +202,7 @@
           "id": "v3_s08",
           "seconds": 5,
           "zh": "艾琳合上紀行，對旅人微笑（片尾）。",
-          "prompt": "{Erin} closes a leather-bound travel journal and smiles warmly at the viewer, sunrise behind her, soft focus, ending shot"
+          "prompt": "{Erin} closes a leather-bound travel journal and smiles warmly at the viewer, behind her the volcanic village with its stone bell tower and the volcano at sunrise, soft focus, ending shot, no modern buildings, no skyscrapers, no city skyline"
         }
       ]
     }
