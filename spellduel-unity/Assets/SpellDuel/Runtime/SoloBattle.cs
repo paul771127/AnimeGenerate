@@ -877,7 +877,7 @@ namespace SpellDuel
                     battle.OnBossSpawn += w => bossAi.Respawn(Mathf.Max(0.7f, 1f - 0.06f * w));
                     if (pendingStage != null)
                     {
-                        battle.stageEnemyMul = pendingStage.theme == 0 ? 0.5f : 1f;   // 初級地圖（熔岩地帶）：敵人數量減半
+                        battle.stageEnemyMul = Battle.StoryEnemyMul(pendingStage.theme);   // 敵人數量：熔岩 0.5 → 每章 +0.1
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
                     }

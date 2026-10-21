@@ -604,16 +604,20 @@ namespace SpellDuel
         /// <summary>Boss 血量的人數倍率：每多一位玩家 +50%</summary>
         public float BossPartyMul => 1f + 0.5f * ScaleAllies;
         int Tier => Mathf.Max(0, wave - 1);
-        public float HpMul => (1f + 0.08f * Tier) * PartyMul * hpBoost;
+        public float HpMul => (1f + HpPerWave * Tier) * PartyMul * hpBoost;
+        // 每過一波敵人變強多少（2026-10 重調：原本 HP 8%、攻擊 5%，第二章起比玩家成長快太多，Lv18 撐不過一波；現在 HP 3.5%、攻擊 2%）
+        public const float HpPerWave = 0.035f, DmgPerWave = 0.02f;
+        /// <summary>故事關卡的敵人數量倍率（依章）：熔岩 0.5、森林 0.56、海上 0.62、角鬥場 0.68、山道 0.74</summary>
+        public static float StoryEnemyMul(int theme) => 0.5f + 0.06f * Mathf.Clamp(theme, 0, ThemeCount - 1);
         public float hpBoost = 1f;   // 轉職試煉：敵人更硬
-        public float DmgMul => 0.75f + 0.05f * Tier;
-        public const float EndlessRegen = 0.5f;   // 無盡模式：玩家每秒自然回血
+        public float DmgMul => 0.75f + DmgPerWave * Tier;
+        public const float EndlessRegen = 0.5f, EndlessRegenPct = 0.005f;   // 無盡／故事：玩家每秒自然回血（0.5 或最大 HP 的 0.5%，取大的）
         public float SpeedMul => Mathf.Min(1.5f, 1f + 0.02f * Tier);
 
         float Time_dt;
         void UpdateEndless()
         {
-            if (endless && player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + EndlessRegen * Time_dt);
+            if (endless && player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + Mathf.Max(EndlessRegen, player.maxHp * EndlessRegenPct) * Time_dt);
             if (!endless || remoteEnemy || edgePoint == null) return;
             if (stageCleared) return;   // 故事關卡已經通關
             if (!player.Alive && !AnyAllyAlive) return;
@@ -624,7 +628,7 @@ namespace SpellDuel
                 return;
             }
             // 小怪波：照間隔陸續出現（每次兩隻）；場上同時最多 6＋波次/3×2 隻（合作 +4）
-            int maxAlive = Mathf.Max(2, Mathf.CeilToInt((Mathf.Min(16, 6 + wave / 3 * 2) + 4 * ScaleAllies) * stageEnemyMul));
+            int maxAlive = Mathf.Max(2, Mathf.CeilToInt((Mathf.Min(12, 5 + wave / 4) + 4 * ScaleAllies) * stageEnemyMul));   // 同時在場的上限（第 1 波 5 隻、每 4 波 +1，最多 12）
             if (waveToSpawn > 0 && now >= nextMinionAt && minions.Count < maxAlive)
             {
                 for (int k = 0; k < 2 && waveToSpawn > 0 && minions.Count < maxAlive; k++)
@@ -2059,6 +2063,20 @@ namespace SpellDuel
         }
 
         /// <summary>毒液區：站在裡面的玩家每秒受傷一次並中毒（隊友端的毒液區只顯示，由主機判定）</summary>
+        /// <summary>
+        /// 加上持續傷害。打在玩家身上時，同一種（每秒傷害一樣）的只會刷新時間、不會疊加
+        /// （以前站在毒液區裡每秒疊一層中毒，毒液噴花的傷害是其他小怪的 4～5 倍）。打在敵人身上照舊可以疊。
+        /// </summary>
+        void AddDot(Fighter target, float dps, float dur)
+        {
+            if (target.isPlayer || target.isAlly)
+            {
+                var same = target.dots.Find(d => Mathf.Abs(d.dps - dps) < 0.01f);
+                if (same != null) { same.until = Mathf.Max(same.until, now + dur); return; }
+            }
+            target.dots.Add(new Fighter.Dot { dps = dps, until = now + dur });
+        }
+
         void UpdatePools()
         {
             if (pools.Count == 0) return;
@@ -2625,11 +2643,11 @@ namespace SpellDuel
             if (note != null) Emit("mitigate", at, new Color(0.58f, 0.77f, 0.99f), note);
             switch (eff)
             {
-                case EffectKind.Dot: target.dots.Add(new Fighter.Dot { dps = dps, until = now + dur }); Emit("effect", at, Color.green, "中毒"); break;
+                case EffectKind.Dot: AddDot(target, dps, dur); Emit("effect", at, Color.green, "中毒"); break;
                 case EffectKind.Blind: target.blindUntil = now + dur; Emit("effect", at, Color.gray, "致盲"); break;
                 case EffectKind.Snare: target.snaredUntil = now + dur; target.charging = null; Emit("effect", at, new Color(1f, 0.6f, 0.2f), "定身"); break;
                 case EffectKind.Mark: target.markedUntil = now + dur; Emit("effect", at, new Color(1f, 0.6f, 0.2f), "懲戒：受到傷害 +20%"); break;
-                case EffectKind.Burn: target.dots.Add(new Fighter.Dot { dps = dps, until = now + dur }); Emit("effect", at, new Color(1f, 0.5f, 0.15f), "灼燒"); break;
+                case EffectKind.Burn: AddDot(target, dps, dur); Emit("effect", at, new Color(1f, 0.5f, 0.15f), "灼燒"); break;
             }
             if (dmg > 0 || note == null) Damage(target, dmg, "hit", at);
         }
