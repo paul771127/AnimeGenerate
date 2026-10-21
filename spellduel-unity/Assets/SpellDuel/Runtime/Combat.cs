@@ -608,8 +608,8 @@ namespace SpellDuel
         public float HpMul => (1f + HpPerWave * Tier) * PartyMul * hpBoost;
         // 每過一波敵人變強多少（2026-10 重調：原本 HP 8%、攻擊 5%，第二章起比玩家成長快太多，Lv18 撐不過一波；現在 HP 3.5%、攻擊 2%）
         public const float HpPerWave = 0.035f, DmgPerWave = 0.02f;
-        /// <summary>故事關卡的敵人數量倍率（依章）：熔岩 0.5、森林 0.56、海上 0.62、角鬥場 0.68、山道 0.74</summary>
-        public static float StoryEnemyMul(int theme) => 0.5f + 0.06f * Mathf.Clamp(theme, 0, ThemeCount - 1);
+        /// <summary>故事關卡的敵人數量倍率：每一章都減半（使用者要求，和第一章一樣）</summary>
+        public static float StoryEnemyMul(int theme) => 0.5f;
         public float hpBoost = 1f;   // 轉職試煉：敵人更硬
         public float DmgMul => 0.75f + DmgPerWave * Tier;
         public const float EndlessRegen = 0.5f, EndlessRegenPct = 0.005f;   // 無盡／故事：玩家每秒自然回血（0.5 或最大 HP 的 0.5%，取大的）
