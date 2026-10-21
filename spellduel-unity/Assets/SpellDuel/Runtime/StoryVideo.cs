@@ -11,7 +11,7 @@ namespace SpellDuel
     ///   ・序章：1-1 開場前播整支。
     ///   ・第一～三章的 Boss 關（1-4、2-4、3-4）：開場前播前 4 個鏡頭，通關後播剩下的鏡頭。
     ///   ・「📖 看故事」重看時也會播。
-    /// 還沒下載時先問要不要下載（約 6～10 MB；可以勾「以後自動下載」）；播放時右上角可以跳過。
+    /// 還沒下載時先問要不要下載（約 6～10 MB；可以勾「以後自動下載」）；播放時長按畫面 1 秒跳過（點一下也會出現「跳過」按鈕）。
     /// 影片檔放在 repo 的 spellduel-unity/Docs/story_video/videos/（Assets 外面，不會被打包）。
     /// </summary>
     public class StoryVideo : MonoBehaviour
@@ -45,7 +45,9 @@ namespace SpellDuel
         Clip clip; Action done;
         UnityWebRequest req;
         VideoPlayer vp; RenderTexture rt;
-        double endT; float shownAt, tapAt = -9f;
+        double endT; float shownAt, tapAt = -9f, holdFrom = -1f;
+        bool holdArmed;   // 開始播放後手指要先放開過一次（按「下載並播放」那一下不算長按）
+        public const float HoldToSkip = 1f;   // 長按幾秒跳過
         string error;
 
         /// <summary>影片相關的畫面開著（問下載、下載中、播放中）：其他畫面不要畫、不要收點擊</summary>
@@ -125,6 +127,7 @@ namespace SpellDuel
         void StartPlayback()
         {
             rt = new RenderTexture(960, 544, 0);
+            holdArmed = false; holdFrom = -1f;
             vp = gameObject.AddComponent<VideoPlayer>();
             vp.playOnAwake = false;
             vp.source = VideoSource.Url;
@@ -153,6 +156,16 @@ namespace SpellDuel
         {
             if (state == State.Downloading) UpdateDownload();
             else if (state == State.Playing && vp && vp.time >= endT) Finish();
+            // 長按畫面跳過（觸控或滑鼠按住；載入中也可以）
+            if (state == State.Playing || state == State.Preparing)
+            {
+                bool down = Input.touchCount > 0 || Input.GetMouseButton(0);
+                if (!down) { holdFrom = -1f; holdArmed = true; }
+                else if (!holdArmed) { }
+                else if (holdFrom < 0f) holdFrom = Time.unscaledTime;
+                else if (Time.unscaledTime - holdFrom >= HoldToSkip) { holdFrom = -1f; Finish(); }
+            }
+            else holdFrom = -1f;
         }
 
         // ---------------------------------------------------------------- 畫面（SoloBattle.DrawGUI 最上層呼叫）
@@ -179,10 +192,17 @@ namespace SpellDuel
                 }
                 else UiKit.Text(new Rect(0, H * 0.45f, W, fs * 2f), "🎬 載入中…", fs, Color.white, TextAnchor.MiddleCenter);
                 UiKit.Text(new Rect(pad, H * 0.08f, bw, fs * 1.6f), "🎬 " + clip.title, fsS, new Color(1f, 1f, 1f, 0.7f), TextAnchor.MiddleLeft, true);
-                // 點畫面才出現「跳過」（開頭 3 秒一直顯示）
+                // 長按跳過：按住時下方出現進度條；點一下或開頭 3 秒顯示提示與「跳過」按鈕
                 if (Event.current.type == EventType.MouseDown) tapAt = Time.unscaledTime;
-                if (Time.unscaledTime - shownAt < 3f || Time.unscaledTime - tapAt < 3f)
-                    if (UiKit.Button(new Rect(W - pad - W * 0.3f, H - pad - bh - Screen.safeArea.y, W * 0.3f, bh), "跳過 ▶▶", fsS)) Finish();
+                float hold = holdFrom >= 0f ? Mathf.Clamp01((Time.unscaledTime - holdFrom) / HoldToSkip) : 0f;
+                float by = H - pad - bh - Screen.safeArea.y;
+                if (hold > 0.08f)
+                    UiKit.Bar(new Rect(pad, by, bw, bh * 0.6f), hold, UiKit.Gold, "繼續按住跳過…", fsS);
+                else if (Time.unscaledTime - shownAt < 3f || Time.unscaledTime - tapAt < 3f)
+                {
+                    UiKit.Text(new Rect(pad, by, bw - W * 0.32f, bh), "長按畫面 1 秒跳過", fsS, new Color(1f, 1f, 1f, 0.7f), TextAnchor.MiddleLeft);
+                    if (UiKit.Button(new Rect(W - pad - W * 0.3f, by, W * 0.3f, bh), "跳過 ▶▶", fsS)) Finish();
+                }
                 return;
             }
             var r = new Rect(pad, H * 0.3f, bw, H * 0.4f);
