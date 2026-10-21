@@ -1,0 +1,77 @@
+[
+  {
+    "town": 0,
+    "before": {
+      "town": 0,
+      "vertices": 43615,
+      "renderers": 271
+    },
+    "after": {
+      "town": 0,
+      "vertices": 41928,
+      "renderers": 253
+    },
+    "vertexRatio": 0.96132,
+    "rendererRatio": 0.93358
+  },
+  {
+    "town": 1,
+    "before": {
+      "town": 1,
+      "vertices": 50249,
+      "renderers": 281
+    },
+    "after": {
+      "town": 1,
+      "vertices": 50207,
+      "renderers": 264
+    },
+    "vertexRatio": 0.99916,
+    "rendererRatio": 0.9395
+  },
+  {
+    "town": 2,
+    "before": {
+      "town": 2,
+      "vertices": 44692,
+      "renderers": 277
+    },
+    "after": {
+      "town": 2,
+      "vertices": 44999,
+      "renderers": 252
+    },
+    "vertexRatio": 1.00687,
+    "rendererRatio": 0.90975
+  },
+  {
+    "town": 3,
+    "before": {
+      "town": 3,
+      "vertices": 43305,
+      "renderers": 261
+    },
+    "after": {
+      "town": 3,
+      "vertices": 39115,
+      "renderers": 240
+    },
+    "vertexRatio": 0.90324,
+    "rendererRatio": 0.91954
+  },
+  {
+    "town": 4,
+    "before": {
+      "town": 4,
+      "vertices": 43305,
+      "renderers": 261
+    },
+    "after": {
+      "town": 4,
+      "vertices": 42631,
+      "renderers": 246
+    },
+    "vertexRatio": 0.98444,
+    "rendererRatio": 0.94253
+  }
+]

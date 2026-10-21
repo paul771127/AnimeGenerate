@@ -1,0 +1,15 @@
+{
+  "validation": "Offline C# contract harness; not Unity Editor or device verification",
+  "runtimeSyntax": "all runtime C# parses",
+  "protectedHumanArtAndTownWalk": "unchanged from round11 base 5fc65a0",
+  "bossOriginalPoseIKDeathAndReviveMethods": "unchanged",
+  "bossPivots": "same names, rest positions and parent hierarchy as theme0",
+  "bossStateSmoke": "idle/windup/strike/death/rubble/revive",
+  "minionDress": "all 19 variants x themes3/4; repeated apply and removal; original renderer count restored",
+  "townBudget": "all 5 towns <1.5x; includes six NPCs, scenery, six buildings, fence, both gates where available, warp pad",
+  "limitations": [
+    "Particle API and rendering are stubbed offline; particle emission and native shader compilation require Unity.",
+    "Unity primitive meshes in Boss/offline renders use low-poly analogous lathed primitives; custom authored procedural mesh topology is exact.",
+    "Renderer counts count mesh renderers only in boss harness; five existing particle renderers remain in engine."
+  ]
+}

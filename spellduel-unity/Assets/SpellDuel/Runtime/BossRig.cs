@@ -31,7 +31,7 @@ namespace SpellDuel
     ///   死亡：癱倒前撲、觸手失去力氣攤平、頭套膜洩氣、光芒熄滅、珊瑚白化。
     ///   效能：本體約 60 個 Renderer（含粒子；golem 約 55），材質 12 個。
     /// </summary>
-    public class BossRig : MonoBehaviour
+    public partial class BossRig : MonoBehaviour
     {
         // ================================================================ 對外介面
         /// <summary>頭頂高度（公尺），血條與瞄準用。</summary>
@@ -548,6 +548,11 @@ namespace SpellDuel
             coreM = new Material(glowShader) { color = pal.glowN, name = "BossCore" };
             eyeM = new Material(glowShader) { color = pal.eyeN, name = "BossEye" };
 
+            if(Theme==3||Theme==4)
+            {
+                BuildChapterGolem();BuildGolemParticles();ConfigureChapterParticles();return;
+            }
+
             body = Pivot("Body", transform, Vector3.zero);
 
             // ---- 腿（髖 → 膝 → 腳踝），腳底剛好在 y = 0
@@ -592,6 +597,11 @@ namespace SpellDuel
             shL = BuildArm(-1f, out elL, out wrL);
             shR = BuildArm(1f, out elR, out wrR);
 
+            BuildGolemParticles();
+        }
+
+        void BuildGolemParticles()
+        {
             // ---- 特效：火星、核心光暈、腳步揚塵、熔岩噴吐、腳下熱光
             embers = SpellFx.NewPS(spine, "Embers", SpellFx.AddMat(SpellFx.TexSoft), 60, true);
             embers.transform.localPosition = new Vector3(0f, 0.7f, 0.1f);
@@ -2763,6 +2773,7 @@ namespace SpellDuel
 
         void OnDestroy()
         {
+            if(crystalM!=null)Destroy(crystalM);
             DestroyMat(rockA); DestroyMat(rockB); DestroyMat(rockC);
             DestroyMat(lavaM); DestroyMat(hotM); DestroyMat(coreM); DestroyMat(eyeM); DestroyMat(heatM);
             DestroyMat(leafM); DestroyMat(mossM); DestroyMat(hollowM); DestroyMat(coralM);

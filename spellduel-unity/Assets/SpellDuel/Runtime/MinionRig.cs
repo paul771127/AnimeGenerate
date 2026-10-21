@@ -34,7 +34,7 @@ namespace SpellDuel
     ///   效能：每隻 ≤ 18 個 Renderer（含 1 個火星／花粉粒子）；材質、網格全部 static 共用，
     ///   各自的顏色／閃色／蓄力發亮／死亡變暗都用 MaterialPropertyBlock（不複製材質、每幀不配置記憶體）。
     /// </summary>
-    public class MinionRig : MonoBehaviour
+    public partial class MinionRig : MonoBehaviour
     {
         // ================================================================ 對外介面
         public const float Height = 0.9f;
@@ -63,6 +63,7 @@ namespace SpellDuel
         /// </summary>
         public void SetDress(int theme)
         {
+            ApplyDress(theme);
             dressTheme = theme;
         }
         int dressTheme = -1;
@@ -77,6 +78,7 @@ namespace SpellDuel
                 Destroy(body.gameObject);
                 body = null;
             }
+            dressRoot=null;
             Build(kind);
             BlobShadow.Attach(transform, 0.3f * Variants[kind].size, 0f, true);
         }

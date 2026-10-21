@@ -31,7 +31,8 @@ namespace SpellDuel
                 var at=new Vector3(Mathf.Cos(a)*16,0,5+Mathf.Sin(a)*16);
                 if(town==2&&at.z<0)continue;
                 if(town==0){var rock=Ball(p,"Weathered basalt",at+Vector3.up*.7f,new Vector3(1.7f,1.6f,1.2f),C("805f62"));rock.transform.localRotation=Quaternion.Euler(12,i*47,17);}
-                else Tree(p,at,town,2.5f+(i%3)*.55f);
+                else if(town<3)Tree(p,at,town,2.5f+(i%3)*.55f);
+                else Ball(p,"Sandstone outcrop",at+Vector3.up*.4f,new Vector3(1.6f,.8f,1.3f),Stone(town));
             }
             // Readable distant silhouettes above the boundary, outside all walking routes.
             for(int i=0;i<7;i++)
@@ -39,6 +40,8 @@ namespace SpellDuel
                 float x=-25+i*8;
                 if(town==0){Cone(p,"Volcanic ridge",new Vector3(x,-.3f,29+i%2*4),new Vector3(13,7+i%3*2,12),C("9d747a"));Cone(p,"Copper summit",new Vector3(x,5+i%3,29+i%2*4),new Vector3(4,2,4),C("cf8e72"));}
                 else if(town==1)Tree(p,new Vector3(x,0,28+i%2*3),town,7+i%3);
+                else if(town==3)DesertHorizon(p,new Vector3(x,0,29+i%2*3),false);
+                else if(town==4)DesertHorizon(p,new Vector3(x,0,29+i%2*3),true);
                 else Cone(p,"Distant sea stack",new Vector3(x,-1,-24-i%2*4),new Vector3(4,2+i%3,4),C("779eae"));
             }
             if(town==2)
@@ -57,18 +60,19 @@ namespace SpellDuel
                 // Small memorial garden off the western avenue.
                 for(int i=0;i<5;i++){var at=new Vector3(-6+i*.5f,0,-2.2f);Box(p,"Memory tablet",at+Vector3.up*.42f,new Vector3(.24f,.64f,.09f),Wood);Box(p,"Inscribed name",at+new Vector3(0,.48f,-.05f),new Vector3(.04f,.26f,.01f),Gold);}
             }
-            else
+            else if(town==0)
             {
                 for(int i=0;i<3;i++){Cyl(p,"Village kiln",new Vector3(-5-i*.7f,.3f,-2.7f),new Vector3(.5f,.3f,.5f),C("bd7550"));Glow(p,"Banked coals",new Vector3(-5-i*.7f,.6f,-2.7f),.22f,C("ffc06b"));}
             }
             Batch(p);
             // One combined moving mesh per ambient color, rather than a particle renderer per mote.
-            var motes=Group(root,town==0?"Rising embers":town==1?"Drifting leaves":"Distant gulls",Vector3.zero);
+            var motes=Group(root,town==0?"Rising embers":town==1?"Drifting leaves":town>=3?"Drifting sand":"Distant gulls",Vector3.zero);
             for(int i=0;i<12;i++)
             {
                 float x=-10+(i*7%21),z=town==2?-10-i%4:2+(i*5%13),y=town==2?5+i%3:2+i%4*.6f;
                 if(town==1)Leaf(motes,new Vector3(x,y,z),.18f,Gold,i*39);
                 else if(town==0)Glow(motes,"Ember",new Vector3(x,y,z),.05f,Gold);
+                else if(town>=3)Ball(motes,"Drifting sand",new Vector3(x,y,z),new Vector3(.07f,.025f,.035f),Stone(town));
                 else {Beam(motes,"Gull wing",new Vector3(x-.25f,y+.1f,z),new Vector3(x,y,z),.035f,Cream);Beam(motes,"Gull wing",new Vector3(x,y,z),new Vector3(x+.25f,y+.1f,z),.035f,Cream);}
             }
             Batch(motes);motes.gameObject.AddComponent<TownArtMotion>().bob=.12f;
@@ -82,100 +86,7 @@ namespace SpellDuel
         {
             var p=Group(parent,kind+" art",Vector3.zero);
             if(kind=="landmark"){Landmark(town,p);Batch(p);return;}
-            bool guild=kind=="guild";float w=guild?4.1f:2.8f,d=guild?3.2f:2.5f,h=guild?3.15f:2.35f;
-            Color wall=town==0?C("d0a17e"):town==1?C("bca16b"):town==3?C("e8cfa4"):town==4?C("d6b47e"):C("f3ead1");Color roof=town==0?C("a34c3b"):town==1?C("467d58"):town==3?C("a8402f"):town==4?C("5a6f8f"):C("397eb6");
-            Box(p,"Stone footing",new Vector3(0,.13f,0),new Vector3(w+.1f,.26f,d+.1f),Stone(town));
-            Box(p,"Plaster walls",new Vector3(0,h*.5f+.12f,0),new Vector3(w,h,d),wall);
-            Part(p,"Pitched roof",Shape("roof"),new Vector3(0,h+.12f,0),new Vector3(w+.28f,.9f,d+.25f),roof);
-            Box(p,"Ridge cap",new Vector3(0,h+1.02f,0),new Vector3(.12f,.12f,d+.35f),Gold);
-            // Regional construction, not just a palette swap: masonry, timber ribs, coastal trim.
-            if(town==0)
-            {
-                for(int row=0;row<4;row++)
-                {
-                    float y=.38f+row*.48f;
-                    Box(p,"Masonry mortar course",new Vector3(0,y,-d*.5f-.012f),new Vector3(w,.025f,.018f),C("b58870"));
-                    for(int j=-1;j<=1;j++){float x=j*.85f+(row%2)*.28f;if(Mathf.Abs(x)<.48f)continue;Box(p,"Staggered stone joint",new Vector3(x,y+.22f,-d*.5f-.02f),new Vector3(.025f,.42f,.025f),C("b58870"));}
-                }
-            }
-            else if(town==1)
-            {
-                for(int sgn=-1;sgn<=1;sgn+=2)
-                {
-                    for(int row=0;row<5;row++)Box(p,"Timber siding",new Vector3(sgn*(w*.5f+.025f),.35f+row*.44f,0),new Vector3(.065f,.065f,d),Wood);
-                    Beam(p,"Forked wooden brace",new Vector3(sgn*w*.47f,.20f,-d*.48f),new Vector3(sgn*w*.38f,1.1f,-d*.48f),.17f,Wood);
-                }
-                for(int i=0;i<5;i++)
-                {
-                    float z=-d*.5f+i*d*.25f;
-                    Beam(p,"Leaf roof rib",new Vector3(-w*.5f,h+.16f,z),new Vector3(0,h+1.03f,z),.045f,C("8fba67"));
-                    Beam(p,"Leaf roof rib",new Vector3(w*.5f,h+.16f,z),new Vector3(0,h+1.03f,z),.045f,C("8fba67"));
-                }
-            }
-            else
-            {
-                Box(p,"Blue plinth trim",new Vector3(0,.34f,-d*.5f-.03f),new Vector3(w,.17f,.065f),roof);
-                for(int side=-1;side<=1;side+=2)
-                {
-                    Box(p,"White eave",new Vector3(side*w*.5f,h+.15f,0),new Vector3(.17f,.11f,d+.3f),Cream);
-                    Box(p,"Blue window shutter",new Vector3(side*(w*.32f+.36f),1.32f,-d*.5f-.08f),new Vector3(.14f,.77f,.06f),roof);
-                }
-            }
-
-            for(int s=-1;s<=1;s+=2)
-            {
-                Box(p,"Facade timber",new Vector3(s*(w*.5f-.06f),h*.5f,-d*.5f-.035f),new Vector3(.12f,h,.10f),town==2?roof:Wood);
-                Box(p,"Window frame",new Vector3(s*w*.32f,1.32f,-d*.5f-.055f),new Vector3(.62f,.8f,.10f),Wood);
-                Box(p,"Honey glass",new Vector3(s*w*.32f,1.32f,-d*.5f-.115f),new Vector3(.48f,.65f,.025f),town==1?C("c4d795"):C("f5ca77"));
-                Box(p,"Window mullion",new Vector3(s*w*.32f,1.32f,-d*.5f-.14f),new Vector3(.055f,.69f,.02f),Cream);
-                Box(p,"Window sill",new Vector3(s*w*.32f,.9f,-d*.5f-.12f),new Vector3(.73f,.10f,.25f),roof);
-            }
-            Box(p,"Door frame",new Vector3(0,.95f,-d*.5f-.05f),new Vector3(.94f,1.9f,.14f),Wood);
-            Box(p,"Door inset",new Vector3(0,.89f,-d*.5f-.13f),new Vector3(.72f,1.66f,.03f),Accent(town));
-            Ball(p,"Brass handle",new Vector3(.22f,.85f,-d*.5f-.17f),Vector3.one*.075f,Gold);
-            Box(p,"Lintel",new Vector3(0,2.02f,-d*.5f-.09f),new Vector3(w,.13f,.15f),Wood);
-            if(town==1){Leaf(p,new Vector3(-w*.4f,h+.4f,-d*.5f),.6f,C("8fba67"),-30);Leaf(p,new Vector3(w*.4f,h+.4f,-d*.5f),.6f,C("8fba67"),30);}
-            if(kind=="smith")
-            {
-                Box(p,"Basalt chimney",new Vector3(.82f,h+.45f,.5f),new Vector3(.47f,1.75f,.48f),C("847579"));
-                Box(p,"Chimney cap",new Vector3(.82f,h+1.35f,.5f),new Vector3(.65f,.15f,.63f),Stone(town));
-                Box(p,"Forge surround",new Vector3(-.92f,.48f,-1.25f),new Vector3(.7f,.95f,.6f),C("95665b"));
-                Box(p,"Furnace opening",new Vector3(-.92f,.44f,-1.565f),new Vector3(.48f,.48f,.02f),C("bd583c"));
-                Glow(p,"Forge flame",new Vector3(-.92f,.45f,-1.60f),.33f,C("ffca65"));
-                Cyl(p,"Anvil stump",new Vector3(.9f,.27f,-1.3f),new Vector3(.52f,.27f,.50f),Wood);
-                Box(p,"Anvil foot",new Vector3(.9f,.6f,-1.3f),new Vector3(.42f,.14f,.4f),Ink);
-                Box(p,"Anvil face",new Vector3(.9f,.77f,-1.3f),new Vector3(.66f,.17f,.33f),C("86a2ad"));
-                var horn=Cone(p,"Anvil horn",new Vector3(1.2f,.77f,-1.3f),new Vector3(.24f,.25f,.24f),C("86a2ad"));horn.transform.localRotation=Quaternion.Euler(0,0,-90);
-                Sign(p,h,d,Gold,"smith");
-                for(int i=0;i<3;i++)Ball(p,"Smoke puff",new Vector3(.82f+i*.1f,h+1.7f+i*.35f,.5f),Vector3.one*(.28f+i*.08f),C("c7b8ae"));
-            }
-            else if(kind=="shop")
-            {
-                var awning=Box(p,"Striped canopy",new Vector3(0,1.95f,-1.42f),new Vector3(2.65f,.09f,.75f),Accent(town));awning.transform.localRotation=Quaternion.Euler(-12,0,0);
-                for(int i=-2;i<=2;i++)Box(p,"Canvas stripes",new Vector3(i*.48f,1.95f,-1.44f),new Vector3(.20f,.11f,.71f),Cream);
-                Box(p,"Potion shelf",new Vector3(-.9f,.72f,-1.42f),new Vector3(.75f,.12f,.42f),Wood);
-                for(int i=0;i<3;i++)Bottle(p,new Vector3(-1.12f+i*.22f,.84f,-1.43f),i==0?C("e67985"):i==1?C("62b6d1"):C("a9c66b"),.22f);
-                Sign(p,h,d,C("70c9b7"),"shop");
-            }
-            else if(guild)
-            {
-                for(int s=-1;s<=1;s+=2)
-                {
-                    Cyl(p,"Guild pillar",new Vector3(s*1.55f,1.5f,-1.55f),new Vector3(.32f,1.5f,.32f),Cream);
-                    Box(p,"Pillar capital",new Vector3(s*1.55f,2.95f,-1.55f),new Vector3(.5f,.16f,.5f),Gold);
-                    Box(p,"Swallowtail banner",new Vector3(s*.98f,2.5f,-1.68f),new Vector3(.46f,1.12f,.045f),C("895776"));
-                    Cone(p,"Banner point",new Vector3(s*.98f,1.94f,-1.68f),new Vector3(.46f,.25f,.045f),C("895776")).transform.localRotation=Quaternion.Euler(0,0,180);
-                    Beam(p,"Banner sword",new Vector3(s*.98f,2.16f,-1.72f),new Vector3(s*.98f,2.83f,-1.72f),.045f,Gold);
-                    Box(p,"Sword crossguard",new Vector3(s*.98f,2.38f,-1.74f),new Vector3(.22f,.045f,.03f),Gold);
-                }
-                Sign(p,h,d,Gold,"guild");
-            }
-            else
-            {
-                Box(p,"Window box",new Vector3(.9f,.77f,-1.35f),new Vector3(.65f,.25f,.3f),Wood);
-                for(int i=0;i<3;i++)Ball(p,"Planter flowers",new Vector3(.7f+i*.18f,.97f,-1.35f),Vector3.one*.17f,i==1?Gold:C("d1858c"));
-            }
-            Batch(p);
+            RegionalBuilding(town,kind,p);Batch(p);
         }
         static void Sign(Transform p,float h,float d,Color c,string kind)
         {
@@ -210,6 +121,7 @@ namespace SpellDuel
                 for(int i=-1;i<=1;i++){Box(p,"Memorial tablet",new Vector3(i*.52f,.53f,-.88f),new Vector3(.32f,.68f,.075f),C("c99960"));Box(p,"Memorial lettering",new Vector3(i*.52f,.58f,-.93f),new Vector3(.055f,.32f,.015f),Cream);}
                 Leaf(p,new Vector3(.58f,2.7f,-.5f),.6f,Gold,18);Glow(p,"Leaf lantern",new Vector3(.58f,2.6f,-.5f),.24f,C("daf3a0"));
             }
+            else if(town==3||town==4){DesertLandmark(town,p);}
             else
             {
                 Cyl(p,"Lighthouse shaft",new Vector3(0,2.2f,0),new Vector3(1.2f,2.2f,1.2f),Cream);
@@ -247,21 +159,28 @@ namespace SpellDuel
                 float a=i*2*Mathf.PI/n,b=(i+1)*2*Mathf.PI/n;
                 Vector3 x=center+new Vector3(Mathf.Cos(a)*outer,0,Mathf.Sin(a)*outer),y=center+new Vector3(Mathf.Cos(b)*outer,0,Mathf.Sin(b)*outer);
                 if(!ClipGap(ref x,ref y))continue;
-                Color c=town==0?C("a28075"):town==1?C("59845a"):Cream;
-                var rail=Box(p,"Boundary panel",(x+y)*.5f+Vector3.up*.4f,new Vector3(.24f,.8f,(y-x).magnitude+.03f),c);rail.transform.localRotation=Quaternion.LookRotation(y-x,Vector3.up);
-                if(i%2==0){Box(p,"Boundary pier",x+Vector3.up*.56f,new Vector3(.32f,1.12f,.32f),town==1?Wood:Stone(town));Cone(p,"Pier cap",x+Vector3.up*1.12f,new Vector3(.45f,.15f,.45f),Accent(town));}
-                if(town==0)Beam(p,"Timber crown",x+Vector3.up*.9f,y+Vector3.up*.9f,.11f,Wood);
+                Color c=town==0?C("806866"):town==1?C("59845a"):town>=3?Stone(town):Cream;
+                var rail=Box(p,town==1?"Hedge boundary":town==3?"Sandstone boundary":town==4?"Rammed earth boundary":"Boundary panel",(x+y)*.5f+Vector3.up*.4f,new Vector3(.24f,.8f,(y-x).magnitude+.03f),c);rail.transform.localRotation=Quaternion.LookRotation(y-x,Vector3.up);
+                if(i%2==0)
+                {
+                    Box(p,"Boundary pier",x+Vector3.up*.56f,new Vector3(.32f,1.12f,.32f),town==1?Wood:Stone(town));
+                    if(town==1){var hedge=Ball(p,"Living hedge crown",(x+y)*.5f+Vector3.up*.67f,new Vector3(.55f,.57f,(y-x).magnitude+.12f),Accent(town));hedge.transform.localRotation=rail.transform.localRotation;}
+                    else if(town==4)Ball(p,"Rounded rammed earth coping",x+Vector3.up*1.11f,new Vector3(.43f,.20f,.43f),Stone(town));
+                    else if(town==3||town==0)Box(p,"Flat stone coping",x+Vector3.up*1.13f,new Vector3(.44f,.12f,.44f),Stone(town));
+                    else Cone(p,"Pier cap",x+Vector3.up*1.12f,new Vector3(.45f,.15f,.45f),Accent(town));
+                }
+                if(town==0){Beam(p,"Basalt crown",x+Vector3.up*.9f,y+Vector3.up*.9f,.15f,C("806866"));if(i%4==0)Beam(p,"Copper oxide basalt fissure",x+Vector3.up*.25f,x+Vector3.up*.65f,.025f,C("cf7951"));}
                 if(town==2)Beam(p,"Seawall coping",x+Vector3.up*.85f,y+Vector3.up*.85f,.17f,Accent(town));
             }
             Batch(p);
         }
         public static void BuildGate(int town,int theme,Transform parent)
         {
-            var p=Group(parent,"Open region gateway",Vector3.zero);Color c=Accent(Mathf.Clamp(theme,0,2));
+            var p=Group(parent,"Open region gateway",Vector3.zero);Color c=Accent(Mathf.Clamp(theme,0,4));
             for(int s=-1;s<=1;s+=2)
             {
                 // Inside edge is 1.34m from centre: the full walking aperture remains clear.
-                Box(p,"Gate pillar",new Vector3(s*1.52f,1.5f,0),new Vector3(.36f,3,.45f),town==2?Cream:Wood);
+                Box(p,"Gate pillar",new Vector3(s*1.52f,1.5f,0),new Vector3(.36f,3,.45f),town==2?Cream:town>=3?Stone(town):Wood);
                 Box(p,"Gate footing",new Vector3(s*1.52f,.15f,0),new Vector3(.36f,.3f,.5f),Stone(town));
                 Box(p,"Gate pennant",new Vector3(s*1.85f,2.3f,0),new Vector3(.35f,.8f,.05f),c);
                 Cone(p,"Pillar finial",new Vector3(s*1.52f,3.1f,0),new Vector3(.55f,.32f,.65f),c);
@@ -270,6 +189,7 @@ namespace SpellDuel
             Box(p,"Carved gate crest",new Vector3(0,2.83f,-.25f),new Vector3(1.1f,.38f,.09f),Gold);
             if(theme==0){for(int s=-1;s<=1;s+=2){Ball(p,"Beyond gate basalt",new Vector3(s*2.6f,.7f,4),new Vector3(1.2f,1.4f,1.3f),C("9e7270"));Glow(p,"Lava fissure",new Vector3(s*2.5f,.5f,3.5f),.3f,C("ffac5a"));}}
             else if(theme==1){Tree(p,new Vector3(-2.8f,0,4),1,3.4f);Tree(p,new Vector3(2.8f,0,5),1,4);}
+            else if(theme>=3){for(int side=-1;side<=1;side+=2)Ball(p,"Sandstone beside gateway",new Vector3(side*3,0,4),new Vector3(1.4f,.8f,1.3f),Stone(town));if(town==4)for(int i=-1;i<=1;i++)Part(p,"Gateway camel bell",Shape("bell"),new Vector3(i*.28f,2.6f,-.15f),Vector3.one*.18f,Gold);}
             else{for(int s=-1;s<=1;s+=2)Cone(p,"Reef beyond gate",new Vector3(s*2.5f,0,4),new Vector3(1.4f,1.3f,1.3f),C("719caa"));}
             Batch(p);
         }

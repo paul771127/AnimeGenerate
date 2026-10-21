@@ -6,6 +6,7 @@ namespace SpellDuel
         /// <summary>Named villagers share portrait palettes and identifying accessories. +z is the face.</summary>
         public static GameObject CreateNpc(string name,Transform parent)
         {
+            string regionalKey=Portraits.Key(name);if(regionalKey=="雷歐"||regionalKey=="小沙"||regionalKey=="鐵娘"||regionalKey=="老駝"||regionalKey=="阿鈴"||regionalKey=="石先生")return CreateDesertResident(regionalKey,parent);
             string key=Portraits.Key(name);var persona=Portraits.PersonaFor(key);var root=Group(parent,"Resident "+key,Vector3.zero);
             var p=Group(root,"Breathing figure",Vector3.zero);
             bool child=key=="小葉",elder=key=="老焰"||key=="翠"||key=="阿潮"||key=="公會長";
