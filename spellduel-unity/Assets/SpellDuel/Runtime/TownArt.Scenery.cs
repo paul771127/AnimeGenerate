@@ -4,13 +4,14 @@ namespace SpellDuel
 {
     public static partial class TownArt
     {
-        static Color Accent(int town)=>town==0?C("be543a"):town==1?C("45805d"):C("3988bc");
-        static Color Stone(int town)=>town==0?C("b58870"):town==1?C("b3b58b"):C("ded7b8");
+        // 3＝赤砂城（角鬥場的城市：砂岩＋緋紅旗）、4＝風沙驛（黃土山道的驛站：黃土＋靛藍布）；其他造型沿用潮騷港的通用版
+        static Color Accent(int town)=>town==0?C("be543a"):town==1?C("45805d"):town==3?C("b8322f"):town==4?C("3d5a8a"):C("3988bc");
+        static Color Stone(int town)=>town==0?C("b58870"):town==1?C("b3b58b"):town==3?C("d9b98a"):town==4?C("c9a46b"):C("ded7b8");
         public static void BuildScenery(int town,Transform root)
         {
             var p=Group(root,"Town landscape",Vector3.zero);
             // The harbour ground ends at the seawall; the sea stays below the walkable quay.
-            Box(p,"Town foundation",new Vector3(0,-.18f,town==2?7:5),new Vector3(32,.3f,town==2?27:32),town==0?C("9b7661"):town==1?C("668d55"):C("c9ba90"));
+            Box(p,"Town foundation",new Vector3(0,-.18f,town==2?7:5),new Vector3(32,.3f,town==2?27:32),town==0?C("9b7661"):town==1?C("668d55"):town==3?C("c79c64"):town==4?C("b38a52"):C("c9ba90"));
             Cyl(p,"Paved plaza",new Vector3(0,.005f,5),new Vector3(7,.015f,7),Stone(town));
             var plaza=Group(p,"Plaza mosaic",new Vector3(0,0,5));
             Ring(plaza,"Outer stone border",3.35f,.12f,.025f,Accent(town));Ring(plaza,"Inner inlay",2.95f,.025f,.025f,Gold);
@@ -82,7 +83,7 @@ namespace SpellDuel
             var p=Group(parent,kind+" art",Vector3.zero);
             if(kind=="landmark"){Landmark(town,p);Batch(p);return;}
             bool guild=kind=="guild";float w=guild?4.1f:2.8f,d=guild?3.2f:2.5f,h=guild?3.15f:2.35f;
-            Color wall=town==0?C("d0a17e"):town==1?C("bca16b"):C("f3ead1");Color roof=town==0?C("a34c3b"):town==1?C("467d58"):C("397eb6");
+            Color wall=town==0?C("d0a17e"):town==1?C("bca16b"):town==3?C("e8cfa4"):town==4?C("d6b47e"):C("f3ead1");Color roof=town==0?C("a34c3b"):town==1?C("467d58"):town==3?C("a8402f"):town==4?C("5a6f8f"):C("397eb6");
             Box(p,"Stone footing",new Vector3(0,.13f,0),new Vector3(w+.1f,.26f,d+.1f),Stone(town));
             Box(p,"Plaster walls",new Vector3(0,h*.5f+.12f,0),new Vector3(w,h,d),wall);
             Part(p,"Pitched roof",Shape("roof"),new Vector3(0,h+.12f,0),new Vector3(w+.28f,.9f,d+.25f),roof);

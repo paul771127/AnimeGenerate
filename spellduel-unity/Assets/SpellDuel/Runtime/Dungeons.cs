@@ -3,10 +3,11 @@ using UnityEngine;
 
 namespace SpellDuel
 {
-    /// <summary>副本的一個房間：打第幾波（決定場景主題、小怪種類與強度；10 的倍數＝Boss 波；31 波起主題重新輪一次），進房間時的旁白</summary>
+    /// <summary>副本的一個房間：打第幾波（決定場景主題、小怪種類與強度；10 的倍數＝Boss 波；51 波起主題重新輪一次；房間可以用 theme 指定場景），進房間時的旁白</summary>
     public class DungeonRoom
     {
         public int wave;
+        public int theme = -1;   // 指定場景主題（−1＝照波次算）：用高波次的強度、保留原本的場景
         public string title, line;
     }
 
@@ -27,7 +28,15 @@ namespace SpellDuel
         public readonly List<StoryLine> before = new List<StoryLine>();
         public readonly List<StoryLine> after = new List<StoryLine>();
         public int[] Waves { get { var w = new int[rooms.Count]; for (int i = 0; i < w.Length; i++) w[i] = rooms[i].wave; return w; } }
-        public int BossTheme => Battle.ThemeOf(rooms[rooms.Count - 1].wave);
+        public int BossTheme => ThemeOfRoom(rooms.Count - 1);
+        public int ThemeOfRoom(int i) => rooms[i].theme >= 0 ? rooms[i].theme : Battle.ThemeOf(rooms[i].wave);
+        /// <summary>有指定主題的房間（波次 → 主題），給 Battle.waveTheme</summary>
+        public Dictionary<int, int> ThemeMap()
+        {
+            Dictionary<int, int> m = null;
+            foreach (var r in rooms) if (r.theme >= 0) { m ??= new Dictionary<int, int>(); m[r.wave] = r.theme; }
+            return m;
+        }
         /// <summary>這一波是第幾個房間（0 起算；不是這個副本的波＝-1）</summary>
         public int RoomOf(int wave) { for (int i = 0; i < rooms.Count; i++) if (rooms[i].wave == wave) return i; return -1; }
     }
@@ -101,7 +110,7 @@ namespace SpellDuel
 
             d = new DungeonDef { id = "sunken_throne", name = "沉沒王座", level = 32, desc = "潮汐退去時才會浮出的海底王城。漁民說，王座上坐著不屬於海的東西。" };
             d.rooms.Add(new DungeonRoom { wave = 24, title = "退潮的城門", line = "城門只會開一個退潮的時間。快！" });
-            d.rooms.Add(new DungeonRoom { wave = 38, title = "被燒乾的庫房", line = "海底的庫房裡居然有熔岩……是誰把火帶到這裡的？" });
+            d.rooms.Add(new DungeonRoom { wave = 38, theme = 0, title = "被燒乾的庫房", line = "海底的庫房裡居然有熔岩……是誰把火帶到這裡的？" });
             d.rooms.Add(new DungeonRoom { wave = 28, title = "王的長廊", line = "牆上的壁畫，是三座城鎮的晨鐘。每一座都被畫上了裂痕。" });
             d.rooms.Add(new DungeonRoom { wave = 30, title = "首領：深海巨妖", line = "王座翻了過來——底下纏著的，是巨妖的觸手。" });
             d.before.Add(N("大潮將至。今晚之後，沉沒王座又要在海底睡上十年。"));
@@ -112,9 +121,9 @@ namespace SpellDuel
             All.Add(d);
 
             d = new DungeonDef { id = "dawn_gate", name = "黎明之門", level = 45, minPlayers = 3, desc = "三座晨鐘的鐘文拼出的位置。門後是讓黎明停止的人——三位守門的首領會依序出現。" };
-            d.rooms.Add(new DungeonRoom { wave = 40, title = "第一道門：熔岩巨像", line = "門後的熱浪撲面而來。第一個守門者，用的是灰燼礦坑那截鐘舌。" });
-            d.rooms.Add(new DungeonRoom { wave = 50, title = "第二道門：腐化樹王", line = "地板長出了根。第二個守門者，在神殿裡被你們打倒過——牠又回來了。" });
-            d.rooms.Add(new DungeonRoom { wave = 60, title = "最後的門：深海巨妖", line = "整個大廳開始進水。撐過去，黎明就在門後。" });
+            d.rooms.Add(new DungeonRoom { wave = 40, theme = 0, title = "第一道門：熔岩巨像", line = "門後的熱浪撲面而來。第一個守門者，用的是灰燼礦坑那截鐘舌。" });
+            d.rooms.Add(new DungeonRoom { wave = 50, theme = 1, title = "第二道門：腐化樹王", line = "地板長出了根。第二個守門者，在神殿裡被你們打倒過——牠又回來了。" });
+            d.rooms.Add(new DungeonRoom { wave = 60, theme = 2, title = "最後的門：深海巨妖", line = "整個大廳開始進水。撐過去，黎明就在門後。" });
             d.before.Add(N("三段鐘文拼在一起，指向一座不在任何地圖上的門。"));
             d.before.Add(L("公會長", "這一戰，我無法給你們任何建議。只有一句：誰倒下了，就去把他扶起來。"));
             d.before.Add(L("艾琳", "我會在門外敲鐘。只要鐘聲還在，就代表外面的人還等著你們回來。", "mage"));

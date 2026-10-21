@@ -49,13 +49,13 @@ namespace SpellDuel
         /// <summary>熔岩巨像（同 Create(0)）。</summary>
         public static BossRig Create() => Create(0);
 
-        /// <summary>theme：0 = 熔岩巨像，1 = 腐化樹王，2 = 深淵海妖；超出範圍的值夾到 0..2。</summary>
+        /// <summary>theme：0 = 熔岩巨像，1 = 腐化樹王，2 = 深淵海妖，3 = 青銅鬥魂（巨像骨架、青銅配色），4 = 黃土岩魔（巨像骨架、砂岩配色）；超出範圍的值夾到 0..4。</summary>
         public static BossRig Create(int theme)
         {
             InitShaders();
             EnsureLight();
-            theme = Mathf.Clamp(theme, 0, 2);
-            var go = new GameObject(theme == 2 ? "Boss AbyssalKraken" : theme == 1 ? "Boss CorruptedTreant" : "Boss LavaGolem");
+            theme = Mathf.Clamp(theme, 0, 4);
+            var go = new GameObject(theme == 2 ? "Boss AbyssalKraken" : theme == 1 ? "Boss CorruptedTreant" : theme == 3 ? "Boss BronzeGladiator" : theme == 4 ? "Boss LoessGolem" : "Boss LavaGolem");
             var rig = go.AddComponent<BossRig>();
             rig.Theme = theme;
             rig.Build();
@@ -207,6 +207,25 @@ namespace SpellDuel
             a = RockAC, b = RockBC, c = RockCC, glowN = LavaN, glowE = LavaE, glowDim = LavaDim, hotN = HotN, hotE = HotE,
             eyeN = EyeN, eyeE = EyeE, dead = DeadEmber, heatN = new Color(0.5f, 0.17f, 0.04f), heatE = new Color(0.5f, 0.32f, 0.04f),
             emberLo = 5f, emberHi = 16f,
+        };
+
+        // 青銅鬥魂：被黑晶驅動的巨大青銅鎧甲（青白色的魂火）
+        static readonly Palette ArenaPal = new Palette
+        {
+            a = new Color(0.55f, 0.4f, 0.22f), b = new Color(0.82f, 0.62f, 0.3f), c = new Color(0.3f, 0.24f, 0.2f),
+            glowN = new Color(0.3f, 0.85f, 1f), glowE = new Color(0.75f, 0.95f, 1f), glowDim = new Color(0.05f, 0.2f, 0.32f),
+            hotN = new Color(0.6f, 0.95f, 1f), hotE = new Color(0.95f, 1f, 1f), eyeN = new Color(0.45f, 0.95f, 1f), eyeE = new Color(1f, 1f, 1f),
+            dead = new Color(0.12f, 0.1f, 0.08f), heatN = new Color(0.05f, 0.3f, 0.45f), heatE = new Color(0.2f, 0.5f, 0.6f),
+            emberLo = 3f, emberHi = 9f,
+        };
+        // 黃土岩魔：黃土與砂岩堆成的巨像（岩縫透出琥珀色的光）
+        static readonly Palette CanyonPal = new Palette
+        {
+            a = new Color(0.72f, 0.56f, 0.34f), b = new Color(0.88f, 0.72f, 0.46f), c = new Color(0.5f, 0.38f, 0.25f),
+            glowN = new Color(1f, 0.7f, 0.25f), glowE = new Color(1f, 0.92f, 0.55f), glowDim = new Color(0.4f, 0.22f, 0.05f),
+            hotN = new Color(1f, 0.85f, 0.5f), hotE = new Color(1f, 0.98f, 0.85f), eyeN = new Color(1f, 0.8f, 0.3f), eyeE = new Color(1f, 1f, 0.85f),
+            dead = new Color(0.25f, 0.18f, 0.1f), heatN = new Color(0.45f, 0.28f, 0.08f), heatE = new Color(0.55f, 0.4f, 0.12f),
+            emberLo = 2f, emberHi = 7f,
         };
 
         static readonly Palette TreantPal = new Palette
@@ -491,7 +510,7 @@ namespace SpellDuel
         // ================================================================ 建立
         void Build()
         {
-            pal = Theme == 2 ? KrakenPal : Theme == 1 ? TreantPal : GolemPal;
+            pal = Theme == 2 ? KrakenPal : Theme == 1 ? TreantPal : Theme == 3 ? ArenaPal : Theme == 4 ? CanyonPal : GolemPal;
             if (Theme == 2) BuildKraken(); else if (Theme == 1) BuildTreant(); else BuildGolem();
 
             rends = GetComponentsInChildren<Renderer>(true);
@@ -520,13 +539,14 @@ namespace SpellDuel
         void BuildGolem()
         {
             // 每隻頭目自己的材質（要做閃色、脈動、狂暴變色）
-            rockA = new Material(litShader) { color = RockAC, name = "BossRockA" };
-            rockB = new Material(litShader) { color = RockBC, name = "BossRockB" };
-            rockC = new Material(litShader) { color = RockCC, name = "BossRockC" };
-            lavaM = new Material(glowShader) { color = LavaN, name = "BossLava" };
-            hotM = new Material(glowShader) { color = HotN, name = "BossLavaHot" };
-            coreM = new Material(glowShader) { color = LavaN, name = "BossCore" };
-            eyeM = new Material(glowShader) { color = EyeN, name = "BossEye" };
+            // 顏色來自調色盤（熔岩巨像／青銅鬥魂／黃土岩魔共用這副骨架）
+            rockA = new Material(litShader) { color = pal.a, name = "BossRockA" };
+            rockB = new Material(litShader) { color = pal.b, name = "BossRockB" };
+            rockC = new Material(litShader) { color = pal.c, name = "BossRockC" };
+            lavaM = new Material(glowShader) { color = pal.glowN, name = "BossLava" };
+            hotM = new Material(glowShader) { color = pal.hotN, name = "BossLavaHot" };
+            coreM = new Material(glowShader) { color = pal.glowN, name = "BossCore" };
+            eyeM = new Material(glowShader) { color = pal.eyeN, name = "BossEye" };
 
             body = Pivot("Body", transform, Vector3.zero);
 

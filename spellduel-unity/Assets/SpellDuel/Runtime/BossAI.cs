@@ -124,7 +124,7 @@ namespace SpellDuel
         }
 
         /// <summary>這隻 Boss 的主題（熔岩 0／森林 1／海上 2），用職業判斷</summary>
-        int BossWave => me.cls.id == "boss_forest" ? 20 : me.cls.id == "boss_sea" ? 30 : 10;
+        int BossWave => me.cls.id == "boss_forest" ? 20 : me.cls.id == "boss_sea" ? 30 : me.cls.id == "boss_arena" ? 40 : me.cls.id == "boss_canyon" ? 50 : 10;
 
         void SetShell(bool on)
         {

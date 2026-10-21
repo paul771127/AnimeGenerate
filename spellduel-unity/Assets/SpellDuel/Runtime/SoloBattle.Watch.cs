@@ -274,7 +274,10 @@ namespace SpellDuel
             foreach (var pid in PeerIds)
                 if (peerInfo.TryGetValue(pid, out var pi)) l.Add(new Msg { t = "wply", id = pid, k = pi.cls, ks = pi.loadout, a = pi.adv ?? "" });
             if (phase == Phase.Fighting && battle != null && NetMode)
+            {
                 l.Add(new Msg { t = "wstart", e = NetModeCode, k = netDungeonId ?? "", hp = difficulty, pts = areaWorld });
+                foreach (var h in battle.hazards) if (h.kind != Battle.HazardKind.Rock) l.Add(HazardMsg(h));   // 中途加入：現在場上的斧頭、地刺
+            }
             else
             {
                 l.Add(new Msg { t = "wend" });

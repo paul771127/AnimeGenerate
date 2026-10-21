@@ -18,7 +18,7 @@ namespace SpellDuel
     public class StoryStage
     {
         public string id, title, chapterId;
-        public int theme;           // 0 熔岩火山、1 森林、2 海上礁石
+        public int theme;           // 0 熔岩火山、1 森林、2 海上礁石、3 角鬥場、4 黃土山道
         public int fromWave = 1, toWave = 3;   // 這個主題的第幾波到第幾波（1～10；第 10 波＝Boss）
         public int xp = 100;        // 通關獎勵經驗
         public string req;          // 需要先通關的關卡（null＝前一關）
@@ -64,6 +64,8 @@ namespace SpellDuel
             v = v.Trim().ToLowerInvariant();
             if (v == "forest" || v == "森林" || v == "1") return 1;
             if (v == "sea" || v == "海" || v == "海上" || v == "2") return 2;
+            if (v == "arena" || v == "角鬥場" || v == "3") return 3;
+            if (v == "canyon" || v == "山道" || v == "黃土山道" || v == "4") return 4;
             return 0;
         }
 
@@ -167,10 +169,10 @@ namespace SpellDuel
         }
 
         /// <summary>名牌顏色：標記是職業 id 或職業名稱就用職業色</summary>
-        /// <summary>每個地區（章）的等級帶：熔岩 1～10（簡易）、森林 11～20（普通）、海上 21～30（困難）；掉落裝備也在這個範圍</summary>
-        public static (int lo, int hi) LevelBand(int theme) { int t = Mathf.Clamp(theme, 0, 2); return (t * 10 + 1, t * 10 + 10); }
-        public static readonly string[] BandNames = { "簡易", "普通", "困難" };
-        public static string BandText(int theme) { var (lo, hi) = LevelBand(theme); return $"{BandNames[Mathf.Clamp(theme, 0, 2)]}・推薦 Lv{lo}–{hi}"; }
+        /// <summary>每個地區（章）的等級帶：熔岩 1～10（簡易）、森林 11～20（普通）、海上 21～30（困難）、角鬥場 31～40（艱難）、黃土山道 41～50（極難）；掉落裝備也在這個範圍</summary>
+        public static (int lo, int hi) LevelBand(int theme) { int t = Mathf.Clamp(theme, 0, Battle.ThemeCount - 1); return (t * 10 + 1, t * 10 + 10); }
+        public static readonly string[] BandNames = { "簡易", "普通", "困難", "艱難", "極難" };
+        public static string BandText(int theme) { var (lo, hi) = LevelBand(theme); return $"{BandNames[Mathf.Clamp(theme, 0, BandNames.Length - 1)]}・推薦 Lv{lo}–{hi}"; }
 
         public static Color TagColor(string tag)
         {

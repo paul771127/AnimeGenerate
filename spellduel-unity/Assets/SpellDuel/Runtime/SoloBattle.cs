@@ -492,7 +492,7 @@ namespace SpellDuel
         public bool InTown => storyMapOpen && phase != Phase.Fighting;
         /// <summary>現在該播的背景音樂：戰鬥中＝依地圖主題（Boss 在場＝Boss 曲）；結算＝安靜；其他（城鎮、選單）＝城鎮曲</summary>
         public string MusicTrack => phase == Phase.Over ? null
-            : phase == Phase.Fighting && battle != null ? (bossMode && En.Alive ? "boss" : "battle" + Mathf.Clamp(battle.Theme, 0, 2))
+            : phase == Phase.Fighting && battle != null ? (bossMode && En.Alive ? "boss" : "battle" + (battle.Theme % 3))
             : "town";
 
         void UpdateTownWalk()
@@ -575,6 +575,8 @@ namespace SpellDuel
         VolcanoScene volcano;   // 無盡模式第 1～10 波的熔岩火山場景
         ForestScene forest;     // 第 11～20 波的森林場景
         SeaScene sea;           // 第 21～30 波的海上礁石場景
+        ArenaScene arenaScene;  // 第 31～40 波的角鬥場（第 4 章）
+        CanyonScene canyon;     // 第 41～50 波的黃土山道（第 5 章）
         readonly Dictionary<Fighter, MinionRig> minionGo = new Dictionary<Fighter, MinionRig>();
         readonly Dictionary<Fighter, float> minionLastHp = new Dictionary<Fighter, float>();
         readonly HashSet<Fighter> minionWinding = new HashSet<Fighter>();
@@ -848,6 +850,7 @@ namespace SpellDuel
             }
             battle.OnLane += ShowLane;
             battle.OnPool += pl => PlantFx.PoisonPool(WorldFrame.FromWorld(pl.pos), pl.radius, Mathf.Max(0.1f, pl.until - battle.now));
+            WireHazards();   // 角鬥場的陷阱、山道的落石（SoloBattle.Hazards.cs）
             // Boss 出生點：場地內、離玩家們夠遠的地方（隊友端先放在遠處，等主機的位置）
             battle_MeForSpawn = me;
             boss.head = host && !RemotePlay ? BossStartPoint(me) : new Vector3(0f, BossRig.Height, 0f);   // 遠端：Boss 在大家圍成的圓中間（開戰時才定座位）
@@ -923,7 +926,10 @@ namespace SpellDuel
                 var ps = Vector3.Lerp(poly[i], poly[(i + 1) % poly.Count], UnityEngine.Random.value);
                 var outward = ps - c; outward.y = 0f;
                 if (outward.sqrMagnitude < 1e-4f) continue;
-                ps += outward.normalized * (SpawnOutsideMin + UnityEngine.Random.value * (SpawnOutsideMax - SpawnOutsideMin));
+                // 角鬥場：圍牆離邊界最近只有 1.5m，出生點不要超過 1.3m（才不會出生在牆後）
+                float outMax = battle != null && battle.Theme == Battle.ArenaTheme ? 1.3f : SpawnOutsideMax;
+                ps += outward.normalized * (SpawnOutsideMin + UnityEngine.Random.value * (outMax - SpawnOutsideMin));
+                if (canyon && battle != null && battle.Theme == Battle.CanyonTheme && canyon.InGap(ps)) continue;   // 山道：山口沒有崖頂，不從那裡跳下來
                 var pw = WorldFrame.ToWorld(ps); pw.y = 0f;
                 float d = MinPartyDist(pw);
                 float score = Mathf.Min(d, 6f) + (preferFront && pm != null ? 2f * Vector3.Dot(Fighter.Flat(pw - pm.Feet).normalized, fwd) : 0f) + UnityEngine.Random.value * 0.5f;
@@ -1180,6 +1186,12 @@ namespace SpellDuel
                         foreach (var mf in battle.minions) if (!seen.Contains(mf.minionId)) mf.hp = 0f;
                     }
                     break;
+                case "haz":
+                    if (!NetIsHost) OnHazardMsg(m);   // 主機放的陷阱／落石
+                    break;
+                case "hazclr":
+                    if (!NetIsHost) battle.ClearRemoteHazards();
+                    break;
                 case "bfx":
                     // 主機的 Boss 出手：播動作與特效
                     if (bossRig) bossRig.Attack(m.k);
@@ -1213,16 +1225,22 @@ namespace SpellDuel
         void UpdateScene()
         {
             // 主題：第 1～10 波熔岩火山、11～20 波森林、21～30 波海上礁石，之後輪流
-            int theme = endless && battle.wave >= 1 ? Battle.ThemeOf(battle.wave) : -1;
+            int theme = endless && battle.wave >= 1 ? battle.Theme : -1;   // 副本的房間可以指定主題
             var poly = area.Polygon;
             float fy = poly.Count > 0 ? poly[0].y : area.FloorY;
-            // 三個場景在無盡模式一開始（第 1 波倒數時）就全部建好：貼圖產生要花一點時間，避免換主題時卡頓
-            if (theme >= 0 && volcano == null) volcano = VolcanoScene.Create(poly, fy);
-            if (theme >= 0 && forest == null) forest = ForestScene.Create(poly, fy);
-            if (theme >= 0 && sea == null) sea = SeaScene.Create(poly, fy);
+            // 前三個場景在一開始（第 1 波倒數時）就全部建好：貼圖產生要花一點時間，避免換主題時卡頓
+            // 角鬥場、黃土山道：用到才建（第 4、5 章的關卡一開始就是它們）
+            bool early = theme >= 0 && theme <= 2;
+            if (early && volcano == null) volcano = VolcanoScene.Create(poly, fy);
+            if (early && forest == null) forest = ForestScene.Create(poly, fy);
+            if (early && sea == null) sea = SeaScene.Create(poly, fy);
+            if (theme == Battle.ArenaTheme && arenaScene == null) arenaScene = ArenaScene.Create(poly, fy);
+            if (theme == Battle.CanyonTheme && canyon == null) canyon = CanyonScene.Create(poly, fy);
             if (volcano) volcano.SetVisible(theme == 0);
             if (forest) forest.SetVisible(theme == 1);
             if (sea) sea.SetVisible(theme == 2);
+            if (arenaScene) arenaScene.SetVisible(theme == Battle.ArenaTheme);
+            if (canyon) canyon.SetVisible(theme == Battle.CanyonTheme);
         }
 
         /// <summary>小怪的外觀：新的就生出來、跟著位置走、預備動作／出手／被打／倒下</summary>
@@ -1308,7 +1326,7 @@ namespace SpellDuel
                     for (int i = 0; i < d.rooms.Count; i++)
                     {
                         bool last = i == d.rooms.Count - 1;
-                        ItemGen.SetTheme = last ? d.BossTheme : Battle.ThemeOf(d.rooms[i].wave);
+                        ItemGen.SetTheme = d.ThemeOfRoom(i);
                         pendingItems.Add(ItemGen.Make(dropRng, d.level, last ? 3 : Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
                     }
                     pendingGold += 60 * d.level;
@@ -1603,6 +1621,9 @@ namespace SpellDuel
             if (volcano) Destroy(volcano.gameObject);
             if (forest) Destroy(forest.gameObject);
             if (sea) Destroy(sea.gameObject);
+            if (arenaScene) Destroy(arenaScene.gameObject);
+            if (canyon) Destroy(canyon.gameObject);
+            ClearHazardViews();
             foreach (var go in projLine.Values) if (go) Destroy(go);
             projLine.Clear();
             foreach (var go in laneGo.Values) if (go) Destroy(go);
@@ -2035,6 +2056,7 @@ namespace SpellDuel
             {
                 case "hit": case "trap": case "mitigate": case "effect": case "counter": case "buff": case "heal": case "trapSet": case "slice":
                     if (!string.IsNullOrEmpty(text)) floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time });
+                    if (battle.HazardHit) break;   // 陷阱打到小怪：只顯示數字（音效在 hazard 事件），不當成我的命中
                     if (kind == "hit" || kind == "trap")
                     {
                         // 命中特效：依打中的技能挑職業（普攻、召喚物也算；不認得就用自己的職業），傷害越高越大
@@ -2065,6 +2087,23 @@ namespace SpellDuel
                         case "buff": Sfx.Play("cast_priest", 0.6f); break;
                         case "trapSet": Sfx.Play("trap", 0.5f); break;
                     }
+                    break;
+                case "hazard":
+                    // 陷阱打到人：打到我＝大震動；打到小怪＝金屬聲
+                    if (!string.IsNullOrEmpty(text)) { floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time }); Haptics.Play(Haptics.Kind.Heavy); Kick(10f, 0f); }
+                    Sfx.Play("block", 0.5f, 0.7f);
+                    break;
+                case "rockland":
+                {
+                    HazardArt.RockImpact(WorldFrame.FromWorld(at), Battle.RockRadius);
+                    float rd = Battle.FlatDistance(at, Me.Feet);
+                    Sfx.Play("boom", Mathf.Clamp01(1.2f - rd / 10f) * 0.8f, 1.3f);
+                    if (rd < 4f) { Haptics.Play(Haptics.Kind.Medium); Kick(8f, 0f); }
+                    break;
+                }
+                case "minionland":
+                    BossRig.SlamShockwave(WorldFrame.FromWorld(at), 0.8f, c);
+                    Sfx.Play("dodge", 0.5f, 0.7f);
                     break;
                 case "cast":
                 {
@@ -2340,6 +2379,7 @@ namespace SpellDuel
 
         void UpdateVisuals()
         {
+            UpdateHazardViews();
             UpdatePetViews();
             UpdateQuakeVisuals();
             UpdatePickups();

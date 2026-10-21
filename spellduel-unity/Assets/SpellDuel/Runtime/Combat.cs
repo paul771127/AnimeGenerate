@@ -90,6 +90,7 @@ namespace SpellDuel
         public float dashUntil; public Vector3 dashDir; public bool dashHit;   // 荊棘衝鋒獸／跳躍魚／俯衝海鳥：衝刺中
         public float dashStart, dashFromAlt;   // 衝刺開始時間、俯衝開始的高度
         public float alt;               // 離地高度（海鳥飛在空中、水母和河豚浮著、跳躍魚跳起來）；0＝在地上
+        public float leapStart, leapEnd; public Vector3 leapFrom, leapTo;   // 黃土山道：從崖頂跳進場內（leapEnd＞0＝還在崖上／跳躍中）
         public int minionKind;                 // 0 近戰小鬼、1 火焰射手、2 岩石衝鋒獸、3 自爆小鬼、4 岩石投擲者、5 熔岩狙擊手
         public float recoverUntil;             // 小怪出手後原地不動到這個時間（1 秒）
         public float dmgMul = 1f, speedMul = 1f;   // 無盡模式：越後面的波次越強
@@ -206,7 +207,7 @@ namespace SpellDuel
         public bool Armed(float now) => now >= armAt;
     }
 
-    public class Battle
+    public partial class Battle
     {
         public float now;
         public readonly Fighter player, enemy;
@@ -588,6 +589,7 @@ namespace SpellDuel
                 waveToSpawn = waveTotal;
             }
             nextMinionAt = waveStartAt;
+            SetupHazards();   // 角鬥場：這一波的陷阱配置；山道：落石計時（Combat.Hazards.cs）
             Emit("wavestart", player.Feet, Color.white, IsBossWave ? (bossPending ? $"{WaveLabel}：{waveTotal} 隻小怪…（最深處有什麼在等著）" : $"{WaveLabel}：Boss 來了！") : $"{WaveLabel}：{waveTotal} 隻小怪");
         }
 
@@ -627,7 +629,8 @@ namespace SpellDuel
             {
                 for (int k = 0; k < 2 && waveToSpawn > 0 && minions.Count < maxAlive; k++)
                 {
-                    SpawnMinion(edgePoint(), 0, PickMinionKind(), HpMul, DmgMul, SpeedMul);
+                    var nm = SpawnMinion(edgePoint(), 0, PickMinionKind(), HpMul, DmgMul, SpeedMul);
+                    if (Theme == CanyonTheme) StartCliffLeap(nm);   // 黃土山道：從崖頂跳進場內
                     waveToSpawn--;
                 }
                 nextMinionAt = now + Mathf.Max(2.5f, 5f - 0.1f * wave) * (ScaleAllies > 0 ? Mathf.Max(0.5f, 1f - 0.25f * ScaleAllies) : 1f);
@@ -657,11 +660,13 @@ namespace SpellDuel
         // 熔岩狙擊手（遠程）第 8 波；自爆小鬼第 11 波（打倒第一隻 Boss 後）
         static readonly int[] UnlockWave = { 1, 1, 6, 11, 4, 8, 5 };
         public const float RangedShare = 0.2f;   // 遠程小怪約佔兩成
-        /// <summary>場景主題：第 1～10 波熔岩火山（0）、11～20 波森林（1）、21～30 波海上礁石（2），之後輪流</summary>
-        public static int ThemeOf(int wave) => ((Mathf.Max(1, wave) - 1) / 10) % 3;
-        public const int ThemeCount = 3;
-        public static string BossClassOf(int theme) => theme == 1 ? "boss_forest" : theme == 2 ? "boss_sea" : "boss";
-        public int Theme => endless ? ThemeOf(wave) : 0;
+        /// <summary>場景主題：第 1～10 波熔岩火山（0）、11～20 波森林（1）、21～30 波海上礁石（2）、31～40 波角鬥場（3）、41～50 波黃土山道（4），之後輪流</summary>
+        public static int ThemeOf(int wave) => ((Mathf.Max(1, wave) - 1) / 10) % ThemeCount;
+        public const int ThemeCount = 5, ArenaTheme = 3, CanyonTheme = 4;
+        public static string BossClassOf(int theme) => theme == 1 ? "boss_forest" : theme == 2 ? "boss_sea" : theme == 3 ? "boss_arena" : theme == 4 ? "boss_canyon" : "boss";
+        /// <summary>副本：指定某些波次的主題（房間用高波次的強度，但保留原本的場景）；沒指定就照波次算</summary>
+        public Dictionary<int, int> waveTheme;
+        public int Theme => endless ? (waveTheme != null && waveTheme.TryGetValue(wave, out var wt) ? wt : ThemeOf(wave)) : 0;
         // 森林小怪（7～12）在第 11～20 波的解鎖：這個主題的第幾波起（第二輪起全部解鎖）
         static readonly int[] ThemeUnlock = { 0, 0, 0, 0, 0, 0, 0, 1, 1, 3, 1, 5, 7, 1, 2, 3, 1, 5, 7 };   // 森林（7～12）、海上（13～18）
 
@@ -674,6 +679,7 @@ namespace SpellDuel
             bool firstCycle = wave <= 10 * ThemeCount;
             float[] w = { 3f, 2f, 1.2f + 0.08f * wave, 1.2f + 0.08f * wave, 1.5f, 1.0f + 0.05f * wave, 1.2f, 1.5f, 1.3f, 1.2f, 3f, 1.5f, 1.2f, 2.5f, 1.5f, 1.2f, 2f, 1.3f, 1.2f };
             bool Ok(int k) => IsRanged(k) == ranged && (theme == 0 ? k < 7 && wave >= UnlockWave[k]
+                : theme >= ArenaTheme ? Array.IndexOf(theme == ArenaTheme ? ArenaKinds : CanyonKinds, k) >= 0 && (!firstCycle || local >= LateUnlock(k))
                 : (theme == 1 ? IsPlant(k) : IsSea(k)) && (!firstCycle || local >= ThemeUnlock[k]));
             float sum = 0f;
             for (int k = 0; k < w.Length; k++) if (Ok(k)) sum += w[k];
@@ -685,6 +691,11 @@ namespace SpellDuel
             }
             return theme == 1 ? (ranged ? 7 : 10) : theme == 2 ? (ranged ? 15 : 13) : (ranged ? 1 : 0);
         }
+        // 角鬥場：各地抓來的怪物（熔岩、森林、海上的都有，不含要在海裡／空中的）；黃土山道：岩石系為主，加上荊棘衝鋒獸與孢子菇
+        static readonly int[] ArenaKinds = { 0, 1, 2, 3, 5, 8, 9, 11, 12, 16 };
+        static readonly int[] CanyonKinds = { 0, 1, 2, 3, 4, 5, 6, 8, 11 };
+        /// <summary>角鬥場／山道第一輪：自爆小鬼、虛空術士第 4 波起，其他一開始就有</summary>
+        static int LateUnlock(int k) => k == 3 || k == 6 ? 4 : 1;
 
         void SpawnBoss()
         {
@@ -737,6 +748,7 @@ namespace SpellDuel
             foreach (var m in minions)
             {
                 if (!m.Alive) continue;
+                if (m.leapEnd > 0f) { UpdateCliffLeap(m); continue; }   // 黃土山道：還在崖上／跳下來中
                 // 目標：最近的活著的玩家
                 Fighter tgt = null; float best = float.MaxValue;
                 foreach (var pl in Players()) { if (!pl.Alive) continue; float d0 = FlatDistance(m.Feet, pl.Feet); if (d0 < best) { best = d0; tgt = pl; } }
@@ -1751,7 +1763,8 @@ namespace SpellDuel
                             at = f.Feet + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
                             if (minionInside == null || minionInside(at)) break;
                         }
-                        int sk = Theme == 1 ? (rng.Next(3) == 0 ? 7 : 10) : Theme == 2 ? (rng.Next(2) == 0 ? 13 : 16) : 0;   // 森林：食人花為主；海上：跳躍魚與寄居蟹
+                        int sk = Theme == 1 ? (rng.Next(3) == 0 ? 7 : 10) : Theme == 2 ? (rng.Next(2) == 0 ? 13 : 16)
+                            : Theme == ArenaTheme ? (rng.Next(2) == 0 ? 2 : 8) : Theme == CanyonTheme ? (rng.Next(2) == 0 ? 0 : 4) : 0;   // 森林：食人花為主；海上：跳躍魚與寄居蟹；角鬥場：衝鋒獸；山道：小鬼與投擲者
                         SpawnMinion(at, 0, sk, PartyMul);
                     }
                     Emit("summon", f.Feet, s.color, n > 0 ? $"召喚了 {n} 隻小怪！" : null);
@@ -1868,7 +1881,7 @@ namespace SpellDuel
         public readonly List<Shockwave> shockwaves = new List<Shockwave>();
         public const float QuakeBand = 0.25f;
         /// <summary>各主題 Boss 的「跳躍招」：熔岩震波、樹根波、潮汐環</summary>
-        public static string QuakeOf(int theme) => theme == 1 ? "x_rootwave" : theme == 2 ? "x_ripple" : "x_quake";
+        public static string QuakeOf(int theme) => theme == 1 ? "x_rootwave" : theme == 2 ? "x_ripple" : "x_quake";   // 角鬥場、山道的 Boss 用震地波
         public static bool IsQuake(SkillDef s) => s != null && (s.id == "x_quake" || s.id == "x_rootwave" || s.id == "x_ripple");
 
         public void SpawnShockwave(Fighter owner, SkillDef s)
@@ -1984,6 +1997,7 @@ namespace SpellDuel
             UpdatePools();
             UpdateLanes();
             UpdatePets(dt);
+            UpdateHazards();   // 角鬥場的斧頭與地刺、山道的落石（Combat.Hazards.cs）
         }
 
         // ------------------------------------------------------------ 森林：拋物線毒液彈、毒液區、藤蔓／衝刺路線
