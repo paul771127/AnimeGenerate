@@ -457,6 +457,8 @@ namespace SpellDuel
                 return;
             }
             UiKit.Pill(H * 0.6f, playArea.HeightHint, fsS, red, W - pad * 2);
+            if (solo.phase == SoloBattle.Phase.Fighting)
+            { UiKit.Pill(H * 0.6f + fs * 2.4f, "（戰鬥中不能重置場地：先回到平地，戰鬥結束後才能重新放置）", fsS, Color.white, W - pad * 2); return; }
             bool canPlace = mode == Mode.Solo || remoteMode || (AreaMode && net.IsHost && !areaReceived);
             if (!canPlace) { UiKit.Pill(H * 0.6f + fs * 2.4f, "（場地是房主放的：找平地站好，或請房主重新放置）", fsS, Color.white, W - pad * 2); return; }
             float bh = fs * 2.4f;
@@ -465,8 +467,8 @@ namespace SpellDuel
                 {
                     playArea.Clear();
                     if (!playArea.AutoSquare(AutoAreaSize)) return;
-                    // 單人：整個戰場（敵人、場景）跟著搬到新場地，戰鬥繼續；連線中：世界座標不動（對手的對齊才不會失效）
-                    if (mode == Mode.Solo) { WorldFrame.SetMarker(playArea.Origin); Log("✅ 場地已重新放置，戰鬥繼續"); }
+                    // 單人（結算畫面等，戰鬥中不能重置）：世界原點跟著搬到新場地，不重開選職業；連線中：世界座標不動（對手的對齊才不會失效）
+                    if (mode == Mode.Solo) { WorldFrame.SetMarker(playArea.Origin); Log("✅ 場地已重新放置"); }
                     else OnPlayAreaReady();
                 });
         }

@@ -1831,7 +1831,7 @@ namespace SpellDuel
         bool BlockedOutside()
         {
             if (!OutOfArea) return false;
-            if (Time.time - outWarnAt > 1.5f) { outWarnAt = Time.time; Say(area.HeightBad ? "⚠ 位置異常不能攻擊或放技能：回到平地，或重新放置場地" : "⚠ 在場地外不能攻擊或放技能：先回到場地內", 1.5f); Sfx.Play("fail", 0.5f); }
+            if (Time.time - outWarnAt > 1.5f) { outWarnAt = Time.time; Say(area.HeightBad ? "⚠ 位置異常不能攻擊或放技能：先回到平地" : "⚠ 在場地外不能攻擊或放技能：先回到場地內", 1.5f); Sfx.Play("fail", 0.5f); }
             return true;
         }
 
