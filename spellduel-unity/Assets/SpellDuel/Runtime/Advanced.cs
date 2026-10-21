@@ -62,7 +62,7 @@ namespace SpellDuel
                 skills = new[] { "whirlwind", "bloodrage", "undying" } });
             // ---------------------------------------------------------------- 獵人
             Add(new AdvDef { id = "marksman", baseCls = "archer", name = "神射手", color = C("#facc15"), hpAdd = -5, crit = 0.1f, stats = S(luk: 6),
-                desc = "屏息守望遠方，以一箭貫穿戰局", core = "鷹眼：站著不動每 2 秒疊 1 層（最多 3 層），每層爆擊率 +10%、射程 +20%；一移動就清空", weak = "HP −5；移動就失去鷹眼",
+                desc = "屏息守望遠方，以一箭貫穿戰局", core = "鷹眼：站著不動每 2 秒疊 1 層（最多 3 層），每層爆擊率 +5%、射程 +20%；一移動就清空", weak = "HP −5；移動就失去鷹眼",
                 skills = new[] { "pierce", "deadmark", "arrowrain" } });
             Add(new AdvDef { id = "ranger", baseCls = "archer", name = "遊俠", color = C("#34d399"), hpAdd = 15, atkMul = 0.9f, stats = S(agi: 5, vit: 2),
                 desc = "與獵鷹追風而行，用箭與陷阱掌握獵場", core = "游擊：蓄力時可以自由移動（不受直徑 1m 限制）；陷阱上限加倍", weak = "攻擊 −10%",

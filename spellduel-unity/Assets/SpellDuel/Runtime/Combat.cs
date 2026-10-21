@@ -95,6 +95,7 @@ namespace SpellDuel
         public float recoverUntil;             // 小怪出手後原地不動到這個時間（1 秒）
         public float dmgMul = 1f, speedMul = 1f;   // 無盡模式：越後面的波次越強
         // 無盡模式的玩家升級：攻擊力、冷卻、爆擊率、攻擊距離、命中時附加灼燒／中毒／冰凍的機率
+        public float basicCdMul = 1f;   // 普攻冷卻倍率（敏捷越高越快；角色養成設定）
         public float atkMul = 1f, cdMul = 1f, critChance, rangeMul = 1f, burnChance, poisonChance, freezeChance, evadeChance;
         // 牧師的守護：時限內受到的直接傷害按比例減少
         public float armorUntil, armorReduce;
@@ -1290,7 +1291,7 @@ namespace SpellDuel
                 });
                 return true;
             }
-            f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul * CdFactor(f);
+            f.cooldownUntil[s.id] = now + s.cooldown * f.basicCdMul * CdFactor(f);   // 普攻冷卻看敏捷（不是精神）
             if (s.id == "na_sword" && SwordSlash(f, s, slashFrom, slashTo)) return true;
             if (s.id == "na_dagger" && DaggerStab(f, s)) return true;
             MeleeSweep(f, s, Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now)));
@@ -1517,7 +1518,7 @@ namespace SpellDuel
             if (s.id == "wave" && f.waveFreeUntil > now) { f.waveFreeUntil = 0f; Emit("buff", f.Chest, s.color, "劍意：劍氣免費！"); }
             f.mp -= mpCost;
             if (hpCost > 0) { f.hp = Mathf.Max(1f, f.hp - hpCost); Emit("buff", f.Chest, new Color(1f, 0.4f, 0.4f), $"殉道 -{hpCost} HP"); }
-            f.cooldownUntil[s.id] = now + s.cooldown * f.cdMul * (f.focusUntil > now ? 0.5f : 1f) * CdFactor(f);
+            f.cooldownUntil[s.id] = now + s.cooldown * (s.cls == "basic" ? f.basicCdMul : f.cdMul * (f.focusUntil > now ? 0.5f : 1f)) * CdFactor(f);   // 普攻看敏捷、技能看精神
             f.charging = null;
             if (s.id == "slash")
             {
@@ -1848,15 +1849,15 @@ namespace SpellDuel
             var p = new Projectile { owner = owner, skill = s, pos = from, basePos = from, dir = dir.normalized, damage = dmg, effect = eff, effectDps = dps, effectDur = dur, reflected = reflected, id = nextId++ };
             float outMul = reflected ? 1f : owner.OutMul(now);
             int eagle = EagleStacks(owner);
-            // 獵人「穩定瞄準」：站著不動夠久，箭必定爆擊
+            // 獵人「穩定瞄準」：站著不動 2 秒以上，箭的爆擊率提高（以前是必定爆擊，太強）
             bool steady = !reflected && owner.steadyAim > 0f && (s.cls == "archer" || s.id == "na_arrow") && now - owner.stillSince >= SteadyAimTime(owner);
             if (owner.atkMul != 1f || owner.critChance > 0f || owner.rangeMul != 1f || outMul != 1f || eagle > 0 || owner.markNextUntil > now || owner.faith >= FaithMax || steady)
             {
                 p.damage = Mathf.RoundToInt(dmg * owner.atkMul * outMul);
-                float crit = owner.critChance + 0.1f * eagle;   // 神射手鷹眼：每層爆擊率 +10%
-                bool forced = steady || (!reflected && owner.markNextUntil > now && s.cls == "archer" && s.type == SkillType.Projectile);   // 致命標記、獵殺時刻、穩定瞄準
+                float crit = owner.critChance + EagleCrit * eagle + (steady ? owner.steadyAim : 0f);   // 神射手鷹眼：每層 +5%；穩定瞄準：站穩後 +4%／級
+                bool forced = !reflected && owner.markNextUntil > now && s.cls == "archer" && s.type == SkillType.Projectile;   // 致命標記、獵殺時刻
                 if (forced || (crit > 0f && rng.NextDouble() < crit)) { p.crit = true; p.damage = Mathf.RoundToInt(p.damage * (2f + owner.critDmg)); }
-                if (forced && !steady) owner.markNextUntil = 0f;
+                if (forced) owner.markNextUntil = 0f;
                 // 審判者：信仰滿了，這一招傷害 ×2
                 if (!reflected && owner.adv == "inquisitor" && owner.faith >= FaithMax && p.damage > 0 && s.cls == "priest")
                 { p.damage *= 2; owner.faith = 0; Emit("buff", owner.Chest, new Color(1f, 0.8f, 0.3f), "信仰爆發！傷害 ×2"); }
@@ -2483,7 +2484,8 @@ namespace SpellDuel
         }
         /// <summary>殉道：牧師的攻擊技能改用 HP 施放（MP 的一半）</summary>
         public int HpCostOf(Fighter f, SkillDef s) => f.martyr > 0f && s.cls == "priest" && s.damage > 0 && s.cost > 0 ? Mathf.Max(1, Mathf.RoundToInt(s.cost * 0.5f)) : 0;
-        public float SteadyAimTime(Fighter f) => Mathf.Max(1f, 3f - f.steadyAim);
+        public float SteadyAimTime(Fighter f) => SteadyAimHold;
+        public const float SteadyAimHold = 2f, EagleCrit = 0.05f;   // 穩定瞄準要站穩幾秒；鷹眼每層爆擊率
         public int SealNeed(Fighter f) => Mathf.Max(2, 6 - Mathf.RoundToInt(f.holySeal));
         Fighter NearestFoeOf(Fighter f, Vector3 at)
         {

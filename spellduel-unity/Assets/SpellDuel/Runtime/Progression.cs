@@ -51,7 +51,7 @@ namespace SpellDuel
             Stat.Str => atk ? "攻擊傷害 +2%／點" : "（不是這個職業的攻擊能力值）HP +1／點",
             Stat.Int => atk ? "攻擊傷害 +2%／點、治療量 +2%／點、MP 上限 +2／點" : "MP 上限 +2／點、治療量 +2%／點",
             Stat.Vit => "HP 上限 +5／點、受到的傷害 -0.4%／點（最多 -30%）",
-            Stat.Agi => "蓄力時間 -1%／點（最多 -40%）、閃避率 +0.1%／點",
+            Stat.Agi => "蓄力時間 -1%／點（最多 -40%）、普攻速度：冷卻 -0.8%／點（最多 -50%）、閃避率 +0.1%／點",
             Stat.Spi => "MP 回復（基礎只有 30%，精神 99 點回到 100%）、冷卻時間 -0.8%／點（最多 -35%）",
             _ => "爆擊率 +0.6%／點（爆擊＝傷害 ×2）、掉寶機率與稀有度提升",
         };
@@ -222,7 +222,7 @@ namespace SpellDuel
                     // 狙擊
                     FLearn("ar_snipe", "snipe", 3, 1, "ar_root"),
                     FMod("ar_snipe2", "狙擊強化", "snipe", ModField.Damage, 0.12f, 5, 3, 2, "ar_snipe"),
-                    FPas("ar_steady", "穩定瞄準", PassiveKind.SteadyAim, 0.4f, 5, 3, 3, "ar_snipe2"),
+                    FPas("ar_steady", "穩定瞄準", PassiveKind.SteadyAim, 0.04f, 5, 3, 3, "ar_snipe2"),
                     FPas("ar_long", "遠射", PassiveKind.LongShot, 0.1f, 5, 4, 3, "ar_snipe2"),
                     FPas("ar_over", "蓄力強化", PassiveKind.Overcharge, 1f, 1, 4, 4, "ar_long"),
                     FPas("ar_crit", "銳利箭頭", PassiveKind.Crit, 0.03f, 5, 4, 5, "ar_over"),
@@ -357,7 +357,7 @@ namespace SpellDuel
                     FLearn("mk_mark", "deadmark", 3, 1, "mk_root"),
                     FMod("mk_mark2", "標記熟練", "deadmark", ModField.Cooldown, 0.08f, 5, 3, 2, "mk_mark"),
                     FPas("mk_atk", "強弓", PassiveKind.Atk, 0.03f, 5, 3, 3, "mk_mark2"),
-                    FPas("mk_steady", "鷹之靜", PassiveKind.SteadyAim, 0.3f, 5, 4, 2, "mk_mark"),
+                    FPas("mk_steady", "鷹之靜", PassiveKind.SteadyAim, 0.03f, 5, 4, 2, "mk_mark"),
                     FLearn("mk_rain", "arrowrain", 5, 1, "mk_root"),
                     FMod("mk_rain2", "密集箭雨", "arrowrain", ModField.Multi, 1f, 3, 5, 2, "mk_rain"),
                     FMod("mk_rain3", "箭雨強化", "arrowrain", ModField.Damage, 0.12f, 5, 6, 2, "mk_rain"),
@@ -530,7 +530,7 @@ namespace SpellDuel
                         PassiveKind.Melt => $"火球、隕石、回響火球打中被冰凍的敵人：傷害 +{v * 100:0}%，並解除冰凍",
                         PassiveKind.IceFreeze => $"冰槍命中時 {v * 100:0}% 機率冰凍 1.5 秒",
                         PassiveKind.LongShot => $"箭飛超過 {Battle.LongShotDist:0}m 才命中：傷害 +{v * 100:0}%",
-                        PassiveKind.SteadyAim => $"站著不動 {Mathf.Max(1f, 3f - v):0.#} 秒以上，射出的箭必定爆擊",
+                        PassiveKind.SteadyAim => $"站著不動 2 秒以上，射出的箭爆擊率 +{v * 100:0}%",
                         PassiveKind.TrapCrit => $"陷阱觸發後 {v:0} 秒內，下一個弓箭技能必定爆擊",
                         PassiveKind.ArrowBleed => $"箭命中時 {v * 100:0}% 機率出血：每秒 {Battle.BleedDps:0} 傷害、{Battle.BleedDur:0} 秒（可疊加）",
                         PassiveKind.ArrowPoison => $"箭命中時 {v * 100:0}% 機率中毒：每秒 3 傷害、6 秒（可疊加）",
@@ -991,6 +991,8 @@ namespace SpellDuel
             f.cdMul = Mathf.Clamp(1f - 0.008f * d(Stat.Spi) - GearSum(Affix.Cdr), 0.5f, 1.5f);
             // 蓄力：敏捷每點 -1%（最多 -40%）；側跨沒有無敵時間了 → 敏捷與「側跨」類特殊能力改成閃避率（下面 evadeChance）
             f.chargeScale = Mathf.Clamp(1f - 0.01f * d(Stat.Agi), 0.6f, 1.5f);
+            // 普攻速度：敏捷每點冷卻 -0.8%（最多 -50%）
+            f.basicCdMul = Mathf.Clamp(1f - 0.008f * d(Stat.Agi), 0.5f, 1.5f);
             f.dodgeBonus = 0f;
             // 幸運：爆擊率；技能樹與裝備的特殊能力
             f.critChance = Mathf.Clamp(0.006f * Total(Stat.Luk) + Passive(PassiveKind.Crit) + GearSum(Affix.Crit), 0f, 0.75f);
