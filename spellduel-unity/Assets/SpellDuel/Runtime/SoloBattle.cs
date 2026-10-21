@@ -1301,6 +1301,8 @@ namespace SpellDuel
         {
             if (resultShown || Watching) return;   // 觀眾：結算看房主送來的 wover，不拿獎勵
             resultShown = true;
+            GUIUtility.hotControl = 0;   // 戰鬥最後一刻手指還按在技能卡上：放掉，結算按鈕才點得到
+            infoSkill = null;
             if (endless && battle != null) TrackProgress();   // 先算這一刻的擊倒（打倒最後的 Boss／小怪的同一幀就結算了，掉落要在發獎勵前擲）
             SaveExercise();
             if (endless && IsTrial)
@@ -1542,6 +1544,19 @@ namespace SpellDuel
             NetSend?.Invoke(new Msg { t = "state", k = me.charging != null ? me.charging.id : "", s = battle.ChargeProgress(me), hp = Mathf.CeilToInt(me.hp), e = e });
         }
         public void Hide() { EndBattle(); phase = Phase.Hidden; }
+
+        /// <summary>設定選單的「回首頁」：關掉戰鬥、故事地圖、城鎮、對話、整備、所有視窗</summary>
+        public void ResetToHome()
+        {
+            if (Watching) StopWatch();
+            StoryVideo.Stop();
+            Hide();
+            storyMapOpen = false; charOpen = false; infoSkill = null; prepGo = null;
+            dlg = null; dlgDone = null;
+            if (townWalk.Active) townWalk.Leave();
+            NetMode = false; RemotePlay = false; coop = false; localReady = false;
+            PeerIds.Clear(); NetPeers.Clear(); peerInfo.Clear();
+        }
 
         // ================================================================ 開戰
         void StartBattle()
@@ -3320,7 +3335,7 @@ namespace SpellDuel
                 UiKit.Card(nr, 0.55f, nb.color, 0.6f);
                 if (ncd > 0) { GUI.color = new Color(0f, 0f, 0f, 0.45f); GUI.DrawTexture(new Rect(nr.x, nr.y, nr.width * Mathf.Clamp01(ncd / Mathf.Max(0.01f, nb.cooldown)), nr.height), Texture2D.whiteTexture); GUI.color = Color.white; }
                 UiKit.Text(nr, $"🗡 普攻：{SkillInfo.BasicGesture(nb)}", Mathf.RoundToInt(fsS * 0.85f), Color.white, TextAnchor.MiddleCenter);
-                if (GUI.Button(nr, GUIContent.none, GUIStyle.none)) infoSkill = nb.id;
+                if (phase == Phase.Fighting && GUI.Button(nr, GUIContent.none, GUIStyle.none)) infoSkill = nb.id;   // 結算時不收點擊（下面的隱形按鈕會搶走結算窗格按鈕的點擊）
             }
 
             for (int i = 0; i < me.loadout.Count; i++)
@@ -3356,7 +3371,7 @@ namespace SpellDuel
                 UiKit.Text(new Rect(tx, ty, tw, rowH), s.name + vtag, fs, tc, TextAnchor.MiddleCenter, true);
                 UiKit.Text(new Rect(tx, ty + rowH, tw, rowH), $"🎤→{HandGesture.ReleaseLabel(s)}", fsS, usable ? new Color(1f, 0.85f, 0.5f) : tc, TextAnchor.MiddleCenter);
                 UiKit.Text(new Rect(tx, ty + rowH * 2, tw, rowH), cd > 0 ? $"冷卻 {cd:F1}s" : $"MP {s.cost}", fsS, cd > 0 ? new Color(0.7f, 0.7f, 0.7f) : new Color(0.6f, 0.8f, 1f), TextAnchor.MiddleCenter);
-                if (GUI.Button(r, GUIContent.none, GUIStyle.none)) infoSkill = s.id;   // 點技能卡：看詳細說明（戰鬥不會暫停）
+                if (phase == Phase.Fighting && GUI.Button(r, GUIContent.none, GUIStyle.none)) infoSkill = s.id;   // 點技能卡：看詳細說明（戰鬥不會暫停）；結算時不收點擊，免得擋住結算按鈕
             }
 
             // 無盡模式：等級與經驗條；可以升級時顯示按鈕（單人會自動打開選單）

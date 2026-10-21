@@ -175,8 +175,23 @@ namespace SpellDuel
             return bad;
         }
 
+        /// <summary>遠端連線：不用高度異常擋人（GameRoot 會自動把地面拉平）</summary>
+        public bool IgnoreHeight;
+
+        /// <summary>把場地的地板高度改成 floorY（遠端連線：地板抓錯或不同樓層時，自動拉到手機下方的正常高度）</summary>
+        public void Relevel(float floorY)
+        {
+            if (Polygon.Count < 3) return;
+            float d = floorY - Origin.position.y;
+            for (int i = 0; i < Polygon.Count; i++) Polygon[i] += Vector3.up * d;
+            Origin = new Pose(Origin.position + Vector3.up * d, Origin.rotation);
+            ShowPolygon();
+            HeightBad = false; heightOffSince = -1f;
+        }
+
         void UpdateHeight(float now)
         {
+            if (IgnoreHeight) { HeightBad = false; heightOffSince = -1f; return; }
             bool ok = HeightOk(cam.transform.position.y, Origin.position.y, out bool low);
             if (!ok) HeightLow = low;
             HeightBad = StepHeight(HeightBad, ok, ref heightOffSince, now);

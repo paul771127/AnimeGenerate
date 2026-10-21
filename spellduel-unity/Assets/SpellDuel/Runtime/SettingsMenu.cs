@@ -12,6 +12,10 @@ namespace SpellDuel
         public static bool Open { get; private set; }
         /// <summary>這時候不要畫 ⚙（例如場地預覽）</summary>
         public static System.Func<bool> Hide;
+        /// <summary>「🏠 回首頁」（GameRoot 設定）；InBattle＝現在在戰鬥中（要多按一次確認）</summary>
+        public static System.Action GoHome;
+        public static System.Func<bool> InBattle;
+        bool homeConfirm;
 
         public static void Ensure()
         {
@@ -33,14 +37,14 @@ namespace SpellDuel
             var gear = new Rect(safe.xMax - sz - W * 0.01f, H * 0.3f, sz, sz);
             if (!Open)
             {
-                if (UiKit.Button(gear, "⚙", Mathf.RoundToInt(fs * 1.1f))) Open = true;
+                if (UiKit.Button(gear, "⚙", Mathf.RoundToInt(fs * 1.1f))) { Open = true; homeConfirm = false; }
                 return;
             }
 
             // 背景變暗＋面板
             GUI.color = new Color(0f, 0f, 0f, 0.55f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
             float pw = Mathf.Min(W * 0.9f, fs * 22f), rowH = fs * 2.4f, pad = fs * 0.8f;
-            float ph = pad * 2 + fs * 2f + rowH * 4 + fs * 2.6f;
+            float ph = pad * 2 + fs * 2f + rowH * 4 + fs * 2.6f + (GoHome != null ? fs * 3.6f : 0f);
             var r = new Rect((W - pw) / 2f, (H - ph) / 2f, pw, ph);
             UiKit.Card(r, 0.95f, UiKit.Gold, 0.8f);
             UiKit.Text(new Rect(r.x + pad, r.y + pad * 0.6f, r.width - pad * 2, fs * 1.8f), "⚙ 設定", Mathf.RoundToInt(fs * 1.15f), UiKit.Gold, TextAnchor.MiddleCenter, true);
@@ -51,7 +55,19 @@ namespace SpellDuel
             Row(ref y, r, pad, rowH, fs, fsS, "📳 震動", Haptics.Enabled, v => { Haptics.Enabled = v; PlayerPrefs.SetInt("SD_HapticsOn", v ? 1 : 0); PlayerPrefs.Save(); if (v) Haptics.Play(Haptics.Kind.Medium); }, -1f, null);
             Row(ref y, r, pad, rowH, fs, fsS, "💡 環境光", ArLighting.On, ArLighting.SetOn, -1f, null);   // AR 光照估計：角色跟著房間明暗
 
-            if (UiKit.Button(new Rect(r.x + pw * 0.25f, r.yMax - pad - fs * 2.2f, pw * 0.5f, fs * 2.2f), "關閉", fs, true, new Color(0.5f, 0.8f, 1f))) Open = false;
+            // 回首頁：戰鬥中要再按一次確認（這一場的戰利品不會保留）
+            if (GoHome != null)
+            {
+                bool battle = InBattle != null && InBattle();
+                var hr = new Rect(r.x + pad, y + fs * 0.4f, r.width - pad * 2, fs * 2.2f);
+                string label = homeConfirm ? (battle ? "⚠ 再按一次回首頁（這場的戰利品不會保留）" : "⚠ 再按一次回首頁") : "🏠 回首頁";
+                if (UiKit.Button(hr, label, homeConfirm ? fsS : fs, homeConfirm, new Color(1f, 0.55f, 0.45f)))
+                {
+                    if (homeConfirm) { homeConfirm = false; Open = false; GoHome(); return; }
+                    homeConfirm = true;
+                }
+            }
+            if (UiKit.Button(new Rect(r.x + pw * 0.25f, r.yMax - pad - fs * 2.2f, pw * 0.5f, fs * 2.2f), "關閉", fs, true, new Color(0.5f, 0.8f, 1f))) { Open = false; homeConfirm = false; }
 
             // 選單打開時：點擊不要傳到後面的介面
             var e = Event.current;

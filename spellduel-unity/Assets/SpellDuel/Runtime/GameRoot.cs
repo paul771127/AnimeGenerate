@@ -224,10 +224,56 @@ namespace SpellDuel
             codeInput = PlayerPrefs.GetString("sd_last_code", "");
             Sfx.Ensure(); Music.Ensure(); SettingsMenu.Ensure();
             SettingsMenu.Hide = () => areaPreview;   // 場地預覽時不畫 ⚙（畫面要給確定／取消）
+            SettingsMenu.GoHome = GoHome;
+            SettingsMenu.InBattle = () => solo.phase == SoloBattle.Phase.Fighting;
             Log("請選擇：單人或雙人");
         }
 
         void OnDestroy() => net?.Dispose();
+
+        // ---------------------------------------------------------------- 遠端連線：地面高度自動拉平
+        // 各自在自己家打，地面只是「虛擬的共同平地」。如果某一方的手機把別的平面（樓下、桌面）當成地板，
+        // 他回報的高度就整個偏掉（在對方畫面上永遠浮在空中或陷進地下）。
+        // 做法：追蹤我站著時手機離地多高（往上很快跟上、往下很慢，蹲下不影響）；持續 1.5 秒不在 0.9～2.0m，
+        // 就把場地與世界的地面移到「手機下方 1.45m」，大家都站在同一個平地上。
+        float levelEst = -1f, levelBadSince = -1f;
+        public const float LevelEye = 1.45f, LevelMin = 0.9f, LevelMax = 2.0f;
+
+        void UpdateRemoteLevel()
+        {
+            if (playArea.state != PlayArea.State.Done || !Tracking.Ok) { levelBadSince = -1f; return; }
+            float floor = playArea.Origin.position.y;
+            float h = cam.transform.position.y - floor;
+            if (levelEst < 0f) levelEst = h;
+            levelEst = h > levelEst ? Mathf.Lerp(levelEst, h, 0.3f) : Mathf.Lerp(levelEst, h, 1f - Mathf.Exp(-Time.deltaTime * 0.05f));
+            bool bad = levelEst < LevelMin || levelEst > LevelMax;
+            if (!bad) { levelBadSince = -1f; return; }
+            if (levelBadSince < 0f) { levelBadSince = Time.time; return; }
+            if (Time.time - levelBadSince < 1.5f) return;
+            float newFloor = floor + levelEst - LevelEye;
+            float d = newFloor - floor;
+            playArea.Relevel(newFloor);
+            // 世界原點（座位）也一起移：原點本來就在地板上
+            var mk = WorldFrame.Marker;
+            WorldFrame.SetMarker(new Pose(mk.position + Vector3.up * d, mk.rotation));
+            levelEst = LevelEye; levelBadSince = -1f;
+            Log("📏 地面高度不一樣：已自動拉到同一個平地");
+        }
+
+        /// <summary>設定選單的「🏠 回首頁」：不管在哪個畫面（戰鬥、城鎮、連線、觀戰），都斷線回到首頁</summary>
+        void GoHome()
+        {
+            if (mode == Mode.Watch) SetWatchView(false);
+            solo.ResetToHome();
+            areaPreview = false; areaPreviewConfirm = null; playArea.HidePreview();
+            homeDungeonPick = false;
+            net?.Dispose(); net = new NetLink();
+            remoteMode = false; duoUseMarker = false; autoArea = autoSetup = false;
+            mode = Mode.Choose; WorldFrame.Reset(); playArea.Clear();
+            areaOwner = areaReceived = aligned = quickAligned = false;
+            watchers.Clear(); seatKey = "";
+            Log("🏠 回到首頁");
+        }
 
         void BuildArRig()
         {
@@ -343,6 +389,8 @@ namespace SpellDuel
             Tracking.Tick(Time.time);
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
             if (mode == Mode.Solo || AreaMode || remoteMode) UpdatePlayArea();
+            playArea.IgnoreHeight = remoteMode;
+            if (remoteMode) UpdateRemoteLevel();
             UpdateAreaPreview();
             playArea.Hidden = solo.InTown;   // 城鎮沒有場地
             Music.Want(solo.phase == SoloBattle.Phase.Hidden ? "town" : solo.MusicTrack);   // 背景音樂（設定選單可關）
@@ -729,10 +777,12 @@ namespace SpellDuel
             }
             else
             {
-                // 開打後持續校正：慢慢靠過去，避免畫面跳動
+                // 開打後持續校正：只接受品質好的解、每次最多挪 3cm、轉 1°；差太多（>1m、>20°）當成認錯東西，不理它
+                // （以前會直接往新解靠 30%：鏡頭把附近的東西當成對手時，整場的對手位置都被拉到那個東西上）
                 var cur = WorldFrame.Marker;
                 float dPos = Vector3.Distance(cur.position, target.position), dAng = Quaternion.Angle(cur.rotation, target.rotation);
-                WorldFrame.SetMarker(new Pose(Vector3.Lerp(cur.position, target.position, 0.3f), Quaternion.Slerp(cur.rotation, target.rotation, 0.3f)));
+                if (align.Rms > QuickRefineMaxRms || align.Used < QuickRefineMinUsed || dPos > 1.0f || dAng > 20f) return;
+                WorldFrame.SetMarker(new Pose(Vector3.MoveTowards(cur.position, target.position, QuickRefineStep), Quaternion.RotateTowards(cur.rotation, target.rotation, QuickRefineDeg)));
                 if ((dPos > 0.02f || dAng > 0.5f) && Time.time - lastAreaRebuild > 1f) RebuildArea();
             }
             if (Time.time >= nextAlignMsg)
@@ -743,7 +793,12 @@ namespace SpellDuel
         }
 
         /// <summary>鏡頭看到對手的腳（世界座標 ground、拍攝時間 captureTime）→ 送給對方或加入對齊樣本</summary>
-        void OnFootObservation(Vector3 ground, float captureTime)
+        /// <summary>
+        /// 鏡頭看到的「人」能不能拿來對齊：已經對齊過 → 要落在對手回報的位置 1m 內（不然多半是把附近的東西認成人）；
+        /// 還沒對齊 → 要看得很清楚（肩、髖、兩腳踝都有把握）。
+        /// </summary>
+        public const float SeenGate = 1.0f;
+        void OnFootObservation(Vector3 ground, float captureTime, bool strong)
         {
             if (!AreaMode || !net.Connected) return;
             double tShared = SharedTime - (Time.time - captureTime);
@@ -751,12 +806,21 @@ namespace SpellDuel
             {
                 // 多人：只送給「看到的應該是他」的那位（只有一位還沒對齊 → 給他；否則給位置最接近、已對齊的人）
                 int to = SeenTarget(ground);
-                if (solo.PeerIds.Count <= 1) Send(new Msg { t = "seen", p = new Vector3(ground.x, 0f, ground.z), t0 = tShared });
+                if (solo.PeerIds.Count <= 1)
+                {
+                    int pid = solo.PeerIds.Count == 1 ? solo.PeerIds[0] : -1;
+                    bool peerOk = pid >= 0 && peerAligned.TryGetValue(pid, out var pa) && pa;
+                    if (peerOk) { if (!peerFeetW.TryGetValue(pid, out var pf) || Time.time - peerSeen[pid] > 0.5f || Vector2.Distance(new Vector2(pf.x, pf.z), new Vector2(ground.x, ground.z)) > SeenGate) return; }
+                    else if (!strong) return;
+                    Send(new Msg { t = "seen", p = new Vector3(ground.x, 0f, ground.z), t0 = tShared });
+                }
                 else if (to >= 0) Send(new Msg { t = "seen", p = new Vector3(ground.x, 0f, ground.z), t0 = tShared, to = to + 1 });
             }
             else if (Aligner && Interp(ownerFeetHist, tShared, out var ownerW))
             {
                 var local = WorldFrame.FromWorld(ground);   // 我的 AR 座標（xz 就是本地座標）
+                if (aligned) { var pred = WorldFrame.FromWorld(ownerW); if (Vector2.Distance(new Vector2(pred.x, pred.z), new Vector2(local.x, local.z)) > SeenGate) return; }
+                else if (!strong) return;
                 align.Add(ownerW, new Vector3(local.x, 0f, local.z), Time.time, DuoAlignment.KindISeeOwner);
             }
         }
@@ -861,7 +925,12 @@ namespace SpellDuel
                     case "seen":
                         // 場地主的鏡頭看到我：配上我自己在同一時間的位置 → 一組對齊樣本
                         if (Aligner && Interp(myFeetHist, m.t0, out var mine))
+                        {
+                            // 已經對齊：場地主看到的位置要在我自己（換成世界座標）1m 內，不然是他把別的東西當成我
+                            var myW = WorldFrame.ToWorld(mine);
+                            if (aligned && Vector2.Distance(new Vector2(myW.x, myW.z), new Vector2(m.p.x, m.p.z)) > SeenGate) break;
                             align.Add(m.p, new Vector3(mine.x, 0f, mine.z), Time.time, DuoAlignment.KindOwnerSeesMe);
+                        }
                         break;
                     case "align":
                         remoteAligned = m.ok; remoteAlignRms = m.s; peerAligned[m.pid] = m.ok;
@@ -1005,7 +1074,10 @@ namespace SpellDuel
                 // 輕微平滑，減少偵測抖動
                 obsGround = fresh && Vector3.Distance(Flat(obsGround), Flat(gNew)) < 0.6f ? Vector3.Lerp(obsGround, gNew, 0.6f) : gNew;
                 obsGround.y = 0f;
-                OnFootObservation(new Vector3(gNew.x, 0f, gNew.z), r.time);   // 對齊用原始值（不平滑）
+                // 看得很清楚：肩、髖至少 3 個有把握，而且兩隻腳踝都在
+                int solid = 0;
+                foreach (var i in new[] { PoseDetector.LShoulder, PoseDetector.RShoulder, PoseDetector.LHip, PoseDetector.RHip }) if (r.conf[i] >= 0.5f) solid++;
+                OnFootObservation(new Vector3(gNew.x, 0f, gNew.z), r.time, solid >= 3 && g == 2);   // 對齊用原始值（不平滑）
                 // 頭的高度：鼻子射線走到對手所在距離時的高度
                 obsHeadY = 1.55f;
                 if (Ok(PoseDetector.Nose))

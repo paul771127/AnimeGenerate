@@ -71,6 +71,13 @@ namespace SpellDuel
             inst.Begin(c, then);
         }
 
+        /// <summary>直接關掉（回首頁）：不呼叫播完後要做的事</summary>
+        public static void Stop()
+        {
+            if (inst == null || inst.state == State.Idle) return;
+            inst.done = null; inst.Finish();
+        }
+
         void Begin(Clip c, Action then)
         {
             Cleanup();

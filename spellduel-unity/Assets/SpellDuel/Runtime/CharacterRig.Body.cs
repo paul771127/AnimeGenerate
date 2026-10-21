@@ -45,7 +45,7 @@ namespace SpellDuel
             fwd = fwd.sqrMagnitude > 1e-4f ? fwd.normalized : transform.forward;
             float s = Mathf.Clamp(standH / RigEyeHeight, 0.6f, 1.3f);
             transform.localScale = Vector3.one * s;
-            var feet = phone - fwd * PhoneReach; feet.y = 0f;
+            var feet = phone - fwd * PhoneReach; feet.y = WorldFrame.Marker.position.y;   // 站在世界的地面上（世界原點在地板上；AR 座標的 y=0 不是地板）
             transform.SetPositionAndRotation(feet, Quaternion.LookRotation(fwd, Vector3.up));
         }
 
