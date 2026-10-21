@@ -40,7 +40,7 @@ namespace SpellDuel
         {
             switch (k)
             {
-                case Kind.Dodge: return new[] { 30, 55, 80 };   // 一場約 110 發（60 秒撐滿、被打中不超過 5 次）
+                case Kind.Dodge: return new[] { 20, 35, 50 };   // 一場約 65 發（2026-10 下修難度後）
                 case Kind.Run: return new[] { 5, 8, 12 };   // 金幣會到處亂跑（0.5→1.1 m/s），比以前難追一點
                 default:
                     float m = 1f + 0.12f * Mathf.Max(0, level - 1);
@@ -109,17 +109,18 @@ namespace SpellDuel
         public class DodgeDirector
         {
             readonly System.Random rnd;
-            float nextBolt = 1.2f, nextArea = 6f;
+            float nextBolt = 1.5f, nextArea = AreaFrom;
+            public const float AreaFrom = 12f, QuakeFrom = 25f;   // 範圍攻擊第 12 秒起、震地波第 25 秒起（2026-10 下修：太難）
             public DodgeDirector(int seed) { rnd = new System.Random(seed); }
             /// <summary>預備時間（光門出現到攻擊放出）：越後面越短</summary>
-            public static float Windup(float t) => Mathf.Lerp(1.0f, 0.65f, Mathf.Clamp01(t / Duration));
+            public static float Windup(float t) => Mathf.Lerp(1.2f, 0.85f, Mathf.Clamp01(t / Duration));
             /// <summary>火球每一輪的間隔（固定）</summary>
-            public const float BoltEvery = 2f;
+            public const float BoltEvery = 2.5f;
             public static float BoltInterval(float t) => BoltEvery;
-            public static float AreaInterval(float t) => Mathf.Lerp(6f, 3.5f, Mathf.Clamp01(t / Duration));
+            public static float AreaInterval(float t) => Mathf.Lerp(8f, 5f, Mathf.Clamp01(t / Duration));
             float R(float a, float b) => a + (float)rnd.NextDouble() * (b - a);
-            /// <summary>一輪射幾發：每過 10 秒多一發（0～10 秒 1 發 … 50～60 秒 6 發）</summary>
-            public static int VolleyOf(float t, double roll = 0) => 1 + Mathf.Clamp(Mathf.FloorToInt(t / 10f), 0, 5);
+            /// <summary>一輪射幾發：每過 15 秒多一發（0～15 秒 1 發 … 45～60 秒 4 發）</summary>
+            public static int VolleyOf(float t, double roll = 0) => 1 + Mathf.Clamp(Mathf.FloorToInt(t / 15f), 0, 3);
 
             /// <summary>到 t 秒為止該出的攻擊（可能 0～3 發）</summary>
             public List<Shot> Poll(float t)
@@ -137,7 +138,7 @@ namespace SpellDuel
                 {
                     nextArea = t + AreaInterval(t) * R(0.8f, 1.2f);
                     var pool = new List<Attack> { Attack.Sweep, Attack.Rain };
-                    if (t >= 12f) pool.Add(Attack.Quake);
+                    if (t >= QuakeFrom) pool.Add(Attack.Quake);
                     var k = pool[rnd.Next(pool.Count)];
                     list.Add(new Shot { kind = k, angle = k == Attack.Sweep ? R(-180f, 180f) : R(-60f, 60f), dist = k == Attack.Quake ? 4.5f : R(4.5f, 5.5f), speed = 1f });
                 }
