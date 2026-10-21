@@ -408,7 +408,9 @@ namespace SpellDuel
         public bool AnyAllyAlive { get { foreach (var a in allies) if (a.Alive) return true; return false; } }
         public Fighter AllyByPid(int pid) => allies.Find(a => a.pid == pid);
         public bool coopHost;
-        public event Action<Fighter, SkillDef, int, Vector3, int> OnAllyHit;      // Boss 打到隊友：哪位隊友、技能、傷害、位置、法術 id
+        public event Action<Fighter, SkillDef, int, Vector3, int> OnAllyHit;
+        /// <summary>我這台判定的法術命中（不含已經用 OnRemoteHit 廣播的）：給觀眾看命中、移除那一發（合作模式用）</summary>
+        public event Action<Projectile> OnProjectileHit;      // Boss 打到隊友：哪位隊友、技能、傷害、位置、法術 id
         public event Action<Vector3, float> OnDispel;                    // 我放了抗拒法環（中心、半徑）：要告訴另一支手機
         IEnumerable<Fighter> Players() { yield return player; foreach (var a in allies) yield return a; }
         public IEnumerable<Fighter> AllPlayers => Players();
@@ -1063,6 +1065,7 @@ namespace SpellDuel
                 if (remoteEnemy) { EmitHit(p.skill, p.pos); OnMinionHit?.Invoke(m.minionId, pd, p.skill); }
                 else { HitSkill = p.skill; HitCrit = p.crit; ApplyDamageAndEffect(m, pd, p.effect, p.effectDps, p.effectDur, p.pos); HitSkill = null; HitCrit = false; ApplyProcs(m, LastProcs, p.pos); }
                 OnDealt(p.owner, pd, m, p.skill, p);
+                OnProjectileHit?.Invoke(p);
                 if (p.skill.pierce) continue;
                 return true;
             }
@@ -2277,8 +2280,8 @@ namespace SpellDuel
                         LastProcs = RollProcs(p.owner, p.skill);
                         p.damage = PreHit(p.owner, target, p.skill, p.damage, p);
                         if (remoteEnemy && target == enemy) { EmitHit(p.skill, p.pos, p.crit); OnRemoteHit?.Invoke(p.skill, p.damage, p.pos, p.id); OnDealt(p.owner, p.damage, target, p.skill, p); }
-                        else if (target.isAlly) { Emit("allyhit", p.pos, p.skill.color, null); OnAllyHit?.Invoke(target, p.skill, p.damage, p.pos, p.id); }   // 主機：Boss 打到隊友
-                        else Hit(target, p);
+                        else if (target.isAlly) { Emit("allyhit", p.pos, p.skill.color, null); OnAllyHit?.Invoke(target, p.skill, p.damage, p.pos, p.id); OnProjectileHit?.Invoke(p); }   // 主機：Boss 打到隊友
+                        else { Hit(target, p); OnProjectileHit?.Invoke(p); }
                     }
                     else if (OutOfRange(p, p.skill.rangeMax * p.rangeMul)) Emit("miss", p.pos, p.skill.color, null);
                 }

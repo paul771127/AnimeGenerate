@@ -841,6 +841,8 @@ namespace SpellDuel
                 battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = theirs ? id : RId(MyPid, id) });
                 WireAdvNet();
                 battle.OnMinionHit += (id, dmg, sk) => SendTo(0, new Msg { t = "mhit", id = id, dmg = dmg, k = sk.id, e = battle.LastProcs });
+                // 觀眾：只有被打的人收得到的命中（Boss／小怪打到玩家、打到小怪、房主打到 Boss）另外廣播一則，讓那一發在觀眾畫面上爆開消失
+                battle.OnProjectileHit += p => NetSend?.Invoke(new Msg { t = "whit", id = p.id, k = p.skill.id, p = p.pos, ok = p.alive });
                 // 主機：藤蔓／衝刺路線送給隊友顯示（傷害由主機判定）
                 battle.OnLane += ln => { if (!ln.remote && NetIsHost) NetSend?.Invoke(new Msg { t = "lane", k = ln.kind, pts = new[] { ln.a, ln.b }, rad = ln.grow, s = ln.until - battle.now }); };
             }

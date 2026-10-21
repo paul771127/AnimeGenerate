@@ -74,6 +74,15 @@ namespace SpellDuel
                     if (watchMode >= 1) battle.ApplyRemoteSlice(m.id, false);
                     else battle.ApplyRemoteSlice(RId(m.ok ? OtherDuelist(m.pid) : m.pid, m.id), false);
                     return;
+                case "whit":
+                {
+                    // 只有被打的人知道的命中（見 StartBossBattle 的 OnProjectileHit）：ok＝貫穿、還在飛
+                    if (!Skills.All.TryGetValue(m.k ?? "", out var ws)) return;
+                    if (!m.ok && m.id != 0) battle.RemoveRemoteProjectile(RId(m.pid, m.id));
+                    Burst(m.p, ws.color);
+                    Sfx.Play("hit", 0.4f);
+                    return;
+                }
                 case "hit2":
                 {
                     // 打中了：把那一發（或陷阱）移除、在命中點爆一下（傷害由玩家自己算，血量看 state／hp2）
