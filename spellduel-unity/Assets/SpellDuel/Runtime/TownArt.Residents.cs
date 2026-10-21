@@ -83,7 +83,7 @@ namespace SpellDuel
             foreach(var tf in p.GetComponentsInChildren<Transform>())if(tf.gameObject.name=="Pointed beard"||tf.gameObject.name=="Moustache"||tf.gameObject.name=="Soot cheek"||tf.gameObject.name=="Rosy cheek"||tf.gameObject.name=="Golden earring")headExtras.Add(tf);
             foreach(var tf in headExtras)tf.SetParent(face,true);
             HumanProportions.Fit(face,key,height,height/1.75f);
-            var neckSkin=p.Find("Neck");neckSkin.localPosition=new Vector3(0,1.39f,-.035f);neckSkin.localScale=new Vector3(.145f*persona.Width,.14f,.12f);
+            var neckSkin=p.Find("Neck");neckSkin.localPosition=new Vector3(0,1.475f,-.005f);neckSkin.localScale=new Vector3(.105f*persona.Width,.045f,.10f);
             // Bake a posed neck and rib cage into the merged meshes; feet remain planted.
             var neck=Group(p,"Persona neck",new Vector3(0,1.3f,0));
             var chest=Group(p,"Persona chest",new Vector3(0,.85f,0));
@@ -119,14 +119,14 @@ namespace SpellDuel
         }
         static void DressResident(Transform p,string id,Color skin)
         {
-            var torso=Group(p,"Outfit torso",new Vector3(0,.78f,0));torso.localScale=new Vector3(id=="鐵匠"?1.22f:1.08f,1.0492f,1.12f);OutfitArt.Add(torso,id,"torso",skin);
+            var torso=Group(p,"Outfit torso",new Vector3(0,.78f,0));torso.localScale=Vector3.one;ResidentBody.Add(torso,id,"torso",skin);
             for(int side=-1;side<=1;side+=2)
             {
                 string suffix=side<0?"L":"R";var hip=Group(p,"Outfit hip",new Vector3(side*.12f,.85f,0));
-                OutfitArt.Add(hip,id,"thigh"+suffix,skin);var knee=Group(hip,"Outfit knee",new Vector3(0,-.42f,0));OutfitArt.Add(knee,id,"calf"+suffix,skin);
-                var arm=Group(p,"Outfit shoulder",new Vector3(side*(id=="鐵匠"?.29f:.23f),1.325f,.045f));arm.localScale=Vector3.one*.74f;arm.localRotation=Quaternion.Euler(0,0,side*9);
-                OutfitArt.Add(arm,id,"upper"+suffix,skin);var elbow=Group(arm,"Outfit elbow",new Vector3(0,-.28f,0));if(id=="小葉"&&side>0)elbow.localRotation=Quaternion.Euler(-25,0,0);OutfitArt.Add(elbow,id,"fore"+suffix,skin);
-                var hand=Group(elbow,"Outfit hand",new Vector3(0,-.25f,0));OutfitArt.Add(hand,id,"hand"+((id=="老焰"||id=="阿潮")&&side<0||id=="鐵匠"&&side>0||id=="小葉"&&side>0?"Grip":"Relax")+suffix,skin);
+                ResidentBody.Add(hip,id,"thigh"+suffix,skin);var knee=Group(hip,"Outfit knee",new Vector3(0,-.42f,0));ResidentBody.Add(knee,id,"calf"+suffix,skin);
+                var arm=Group(p,"Outfit shoulder",new Vector3(side*(id=="鐵匠"?.205f:.185f),1.425f,0));arm.localScale=Vector3.one*.94f;arm.localRotation=Quaternion.Euler(0,0,side*9);
+                ResidentBody.Add(arm,id,"upper"+suffix,skin);var elbow=Group(arm,"Outfit elbow",new Vector3(0,-.28f,0));if(id=="小葉"&&side>0)elbow.localRotation=Quaternion.Euler(-25,0,0);ResidentBody.Add(elbow,id,"fore"+suffix,skin);
+                var hand=Group(elbow,"Outfit hand",new Vector3(0,-.25f,0));ResidentBody.Add(hand,id,"hand"+((id=="老焰"||id=="阿潮")&&side<0||id=="鐵匠"&&side>0||id=="小葉"&&side>0?"Grip":"Relax")+suffix,skin);
             }
         }
         static readonly System.Collections.Generic.Dictionary<string,Mesh> residentPropCache=new System.Collections.Generic.Dictionary<string,Mesh>();

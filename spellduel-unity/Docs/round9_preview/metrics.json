@@ -1,0 +1,338 @@
+[
+  {
+    "id": "npc0",
+    "name": "老焰",
+    "triangles": 6556,
+    "original": 4904,
+    "ratio": 1.3368678,
+    "maxSoleError": 2.9802322e-08,
+    "handLength": 0.115,
+    "footLength": 0.24,
+    "attachmentCoverage": {
+      "upperL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03319
+      },
+      "upperR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03329
+      },
+      "thighL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09694
+      },
+      "thighR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09088
+      }
+    }
+  },
+  {
+    "id": "npc1",
+    "name": "小鐵",
+    "triangles": 7092,
+    "original": 4976,
+    "ratio": 1.4252411,
+    "maxSoleError": 2.9802322e-08,
+    "handLength": 0.105142854,
+    "footLength": 0.21942857,
+    "attachmentCoverage": {
+      "upperL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03047
+      },
+      "upperR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.0304
+      },
+      "thighL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.0684
+      },
+      "thighR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09349
+      }
+    }
+  },
+  {
+    "id": "npc2",
+    "name": "米菈",
+    "triangles": 7104,
+    "original": 5028,
+    "ratio": 1.4128878,
+    "maxSoleError": 2.9802322e-08,
+    "handLength": 0.115,
+    "footLength": 0.24,
+    "attachmentCoverage": {
+      "upperL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03379
+      },
+      "upperR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03314
+      },
+      "thighL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09351
+      },
+      "thighR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09333
+      }
+    }
+  },
+  {
+    "id": "npc3",
+    "name": "翠",
+    "triangles": 6800,
+    "original": 5196,
+    "ratio": 1.308699,
+    "maxSoleError": 2.9802322e-08,
+    "handLength": 0.115,
+    "footLength": 0.24,
+    "attachmentCoverage": {
+      "upperL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03292
+      },
+      "upperR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03263
+      },
+      "thighL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09044
+      },
+      "thighR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09664
+      }
+    }
+  },
+  {
+    "id": "npc4",
+    "name": "楓",
+    "triangles": 6796,
+    "original": 4752,
+    "ratio": 1.4301347,
+    "maxSoleError": 2.9802322e-08,
+    "handLength": 0.115,
+    "footLength": 0.24,
+    "attachmentCoverage": {
+      "upperL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03349
+      },
+      "upperR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03328
+      },
+      "thighL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09
+      },
+      "thighR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09875
+      }
+    }
+  },
+  {
+    "id": "npc5",
+    "name": "小葉",
+    "triangles": 7032,
+    "original": 5112,
+    "ratio": 1.3755869,
+    "maxSoleError": 8.940697e-08,
+    "handLength": 0.078857146,
+    "footLength": 0.16457143,
+    "attachmentCoverage": {
+      "upperL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.02272
+      },
+      "upperR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.02321
+      },
+      "thighL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.06588
+      },
+      "thighR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.06234
+      }
+    }
+  },
+  {
+    "id": "npc6",
+    "name": "海斗",
+    "triangles": 6604,
+    "original": 5016,
+    "ratio": 1.316587,
+    "maxSoleError": 2.9802322e-08,
+    "handLength": 0.115,
+    "footLength": 0.24,
+    "attachmentCoverage": {
+      "upperL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03346
+      },
+      "upperR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03306
+      },
+      "thighL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09023
+      },
+      "thighR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09551
+      }
+    }
+  },
+  {
+    "id": "npc7",
+    "name": "凪",
+    "triangles": 6700,
+    "original": 4548,
+    "ratio": 1.473175,
+    "maxSoleError": 2.9802322e-08,
+    "handLength": 0.115,
+    "footLength": 0.24,
+    "attachmentCoverage": {
+      "upperL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03349
+      },
+      "upperR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03323
+      },
+      "thighL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09522
+      },
+      "thighR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09178
+      }
+    }
+  },
+  {
+    "id": "npc8",
+    "name": "阿潮",
+    "triangles": 6648,
+    "original": 4748,
+    "ratio": 1.4001685,
+    "maxSoleError": 2.9802322e-08,
+    "handLength": 0.115,
+    "footLength": 0.24,
+    "attachmentCoverage": {
+      "upperL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03307
+      },
+      "upperR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03319
+      },
+      "thighL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.07853
+      },
+      "thighR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.1084
+      }
+    }
+  },
+  {
+    "id": "npc9",
+    "name": "鐵匠",
+    "triangles": 6648,
+    "original": 4756,
+    "ratio": 1.3978133,
+    "maxSoleError": 2.9802322e-08,
+    "handLength": 0.115,
+    "footLength": 0.24,
+    "attachmentCoverage": {
+      "upperL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03483
+      },
+      "upperR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03625
+      },
+      "thighL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.11005
+      },
+      "thighR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09364
+      }
+    }
+  },
+  {
+    "id": "npc10",
+    "name": "店員",
+    "triangles": 6668,
+    "original": 5128,
+    "ratio": 1.300312,
+    "maxSoleError": 2.9802322e-08,
+    "handLength": 0.115,
+    "footLength": 0.24,
+    "attachmentCoverage": {
+      "upperL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03254
+      },
+      "upperR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.0338
+      },
+      "thighL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09526
+      },
+      "thighR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09312
+      }
+    }
+  },
+  {
+    "id": "npc11",
+    "name": "公會長",
+    "triangles": 6832,
+    "original": 5172,
+    "ratio": 1.320959,
+    "maxSoleError": 2.9802322e-08,
+    "handLength": 0.115,
+    "footLength": 0.24,
+    "attachmentCoverage": {
+      "upperL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03332
+      },
+      "upperR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.03313
+      },
+      "thighL": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09107
+      },
+      "thighR": {
+        "minimumGapM": 0,
+        "jointEmbeddingM": 0.09527
+      }
+    }
+  }
+]

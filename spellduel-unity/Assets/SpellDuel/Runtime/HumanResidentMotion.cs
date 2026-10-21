@@ -19,7 +19,7 @@ namespace SpellDuel
                 if(tf.gameObject.name=="Outfit hip"){if(tf.localPosition.x<0)hipL=tf;else hipR=tf;}
             }
             leftElbow=left.Find("Outfit elbow");rightElbow=right.Find("Outfit elbow");kneeL=hipL.Find("Outfit knee");kneeR=hipR.Find("Outfit knee");
-            soleL=OutfitArt.MeshFor(id,"calfL",skin).vertices;soleR=OutfitArt.MeshFor(id,"calfR",skin).vertices;
+            soleL=ResidentBody.MeshFor(id,"calfL",skin).vertices;soleR=ResidentBody.MeshFor(id,"calfR",skin).vertices;
             caneGrip=AttachTool(root,"Walking staff",leftElbow.Find("Outfit hand"),new Vector3(-.33f,.80f,.11f));caneScale=caneGrip==null?Vector3.one:caneGrip.localScale;
             AttachTool(root,"Fishing rod",leftElbow.Find("Outfit hand"),new Vector3(-.34f,.82f,.04f));AttachTool(root,"Fishing line",leftElbow.Find("Outfit hand"),new Vector3(-.34f,.82f,.04f));
             AttachTool(root,"Smith hammer grip",rightElbow.Find("Outfit hand"),new Vector3(.31f,.80f,.08f));AttachTool(root,"Smith hammer head",rightElbow.Find("Outfit hand"),new Vector3(.31f,.80f,.08f));
@@ -42,9 +42,9 @@ namespace SpellDuel
             chest.localPosition=chestRest+new Vector3(pose.Shift+wave*.002f,wave*.0025f,0);
             chest.localRotation=chestRotation*Quaternion.Euler(pose.Lean,pose.Twist,-pose.Roll*.6f);
             neck.localRotation=neckRotation*Quaternion.Euler(-pose.Lean*.4f,-pose.Twist*.4f+gesture*3,pose.Roll*.35f);
-            left.localRotation=Quaternion.Euler(pose.L.x,-gesture*2,-pose.L.y);right.localRotation=Quaternion.Euler(pose.R.x,gesture*2,pose.R.y);
-            leftElbow.localRotation=Quaternion.Euler(pose.L.z+gesture*3,0,0);rightElbow.localRotation=Quaternion.Euler(pose.R.z-gesture*2,0,0);
-            hipL.localRotation=Quaternion.Euler(-3,0,coat?-1:0);hipR.localRotation=Quaternion.Euler(-5,0,coat?1:0);kneeL.localRotation=Quaternion.Euler(6,0,0);kneeR.localRotation=Quaternion.Euler(10,0,0);
+            left.localRotation=Quaternion.Euler(-4-wave,0,-2);right.localRotation=Quaternion.Euler(-6+wave,0,2);
+            leftElbow.localRotation=Quaternion.Euler(8+gesture*2,0,0);rightElbow.localRotation=Quaternion.Euler(12-gesture*2,0,0);
+            hipL.localRotation=Quaternion.Euler(-2,-6,0);hipR.localRotation=Quaternion.Euler(-3,7,0);kneeL.localRotation=Quaternion.Euler(4,0,0);kneeR.localRotation=Quaternion.Euler(6,0,0);
             hipL.localPosition=new Vector3(coat?-.105f:-.12f,.85f,pose.Step);hipR.localPosition=new Vector3(coat?.105f:.12f,.85f,-pose.Step);
             Plant(hipL,kneeL,soleL,-.12f);Plant(hipR,kneeR,soleR,.12f);
             if(caneGrip!=null)
