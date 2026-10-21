@@ -43,13 +43,14 @@ namespace SpellDuel
             switch(key)
             {
                 case "艾琳":
-                    ResidentBox(p,"Scribe leather satchel",new Vector3(.13f,1.01f,-.20f),new Vector3(.26f,.32f,.13f),C("875832"));
-                    for(int i=0;i<3;i++){Cyl(p,"Scribe scroll",new Vector3(.05f+i*.075f,1.22f,-.21f),new Vector3(.05f,.15f,.05f),Cream);}
-                    Beam(p,"Scribe satchel strap",new Vector3(-.14f,1.32f,.12f),new Vector3(.16f,.93f,.15f),.024f,C("875832"));
+                    ResidentBox(p,"Scribe leather satchel",new Vector3(.22f,.95f,.15f),new Vector3(.23f,.25f,.09f),C("875832"));
+                    for(int i=0;i<3;i++){Cyl(p,"Scribe scroll",new Vector3(.16f+i*.065f,1.12f,.15f),new Vector3(.05f,.15f,.05f),Cream);}
+                    Beam(p,"Scribe satchel strap",new Vector3(-.14f,1.32f,.12f),new Vector3(.25f,.94f,.20f),.024f,C("875832"));
                     break;
                 case "老焰":
                     Beard(p,hair);FitStoryBeard(p.Find("Pointed beard"));BellPin(p,new Vector3(.12f,1.13f,.2f),.09f);
-                    Beam(p,"Walking staff",new Vector3(-.33f,.04f,.11f),new Vector3(-.33f,1.16f,.11f),.045f,Wood);break;
+                    var cane=Group(p,"Walking staff",new Vector3(.33f,.80f,.11f));
+                    Beam(cane,"Cane shaft",new Vector3(.04f,-.76f,0),new Vector3(0,.29f,0),.028f,C("554333"));Beam(cane,"Curved cane crook",new Vector3(0,.29f,0),new Vector3(-.06f,.36f,0),.028f,C("554333"));Beam(cane,"Curved cane handle",new Vector3(-.06f,.36f,0),new Vector3(-.10f,.32f,0),.028f,C("554333"));break;
                 case "小鐵":
                     ResidentBox(p,"Soot cheek",new Vector3(-.12f,1.43f,.18f),new Vector3(.04f,.014f,.01f),C("6c6056"));break;
                 case "米菈":
@@ -58,16 +59,18 @@ namespace SpellDuel
                     Beam(p,"Crossbody strap",new Vector3(-.18f,1.22f,.15f),new Vector3(.17f,.78f,.20f),.035f,Gold);Earring(p,Gold);break;
                 case "翠":
 
-                    for(int side=-1;side<=1;side+=2)Leaf(p,new Vector3(side*.16f,1.18f,.14f),.17f,C("68a25c"),-side*40);break;
+                    break;
                 case "楓":
                     ResidentBox(p,"Leaf lamp frame",new Vector3(-.3f,.76f,.13f),new Vector3(.14f,.20f,.12f),Gold);
                     ResidentBox(p,"Leaf lamp paper",new Vector3(-.3f,.76f,.20f),new Vector3(.10f,.14f,.02f),C("d9ee87"));Leaf(p,new Vector3(-.3f,.9f,.14f),.1f,C("7ebf78"),15);
                     AnimeFace.Detail(face,key,persona,new Vector2(.100f,-.025f),new Vector2(.110f,-.055f),.002f,C("ac6c56"));break;
                 case "小葉":
                     for(int s=-1;s<=1;s+=2){Ball(p,"Rosy cheek",new Vector3(s*.12f,1.445f,.184f),new Vector3(.045f,.024f,.01f),C("e99786"));}
-                    ResidentBox(p,"Story tablet",new Vector3(.22f,.82f,.17f),new Vector3(.16f,.24f,.045f),C("ac7950"));Beam(p,"Tablet name",new Vector3(.22f,.76f,.20f),new Vector3(.22f,.88f,.20f),.014f,Cream);break;
+                    break;
                 case "海斗":
-                    Beam(p,"Anchor shank",new Vector3(0,1.13f,.20f),new Vector3(0,1.01f,.20f),.02f,Gold);ResidentBox(p,"Anchor flukes",new Vector3(0,1.01f,.20f),new Vector3(.10f,.02f,.02f),Gold);break;
+                    Beam(p,"Anchor shank",new Vector3(.10f,1.27f,.15f),new Vector3(.10f,1.15f,.15f),.012f,Gold);
+                    Beam(p,"Anchor left fluke",new Vector3(.05f,1.20f,.15f),new Vector3(.10f,1.15f,.15f),.012f,Gold);Beam(p,"Anchor right fluke",new Vector3(.15f,1.20f,.15f),new Vector3(.10f,1.15f,.15f),.012f,Gold);
+                    Beam(p,"Anchor crossbar",new Vector3(.065f,1.24f,.15f),new Vector3(.135f,1.24f,.15f),.010f,Gold);break;
                 case "凪":
                     Earring(p,Gold);break;
                 case "阿潮":
@@ -122,7 +125,7 @@ namespace SpellDuel
             foreach(var tf in articulated){parents.Add(tf.parent);tf.SetParent(null,false);}
             neck.SetParent(null,false);chest.SetParent(null,false);Batch(p);Batch(chest);Batch(neck);chest.SetParent(p,false);neck.SetParent(chest,false);
             for(int i=0;i<articulated.Count;i++)articulated[i].SetParent(parents[i],false);
-            motion.Tick(0);HumanProportions.NormalizeProjected(face,key,root);StoryResidentProps(key,p);return root.gameObject;
+            motion.Tick(0);HumanProportions.NormalizeProjected(face,key,root);FitStoryHeight(face,key,root,height);StoryResidentProps(key,p);return root.gameObject;
         }
         static void DressResident(Transform p,string id,Color skin)
         {

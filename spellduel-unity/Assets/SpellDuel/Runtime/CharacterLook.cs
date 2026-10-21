@@ -31,20 +31,20 @@ namespace SpellDuel
             {"shadowdancer",new Look(EyeKind.Upturned,HairKind.Bob,"d980b7","613c78",.40f,.9f,-.7f,.16f,13)},
             {"bishop",new Look(EyeKind.Droop,HairKind.Crew,"82aaa0","dcd5b9",.42f,-.3f,.3f,.04f,14)},
             {"inquisitor",new Look(EyeKind.HalfClosed,HairKind.Crop,"b29356","b9a16b",.35f,.35f,.6f,.055f,15)},
-            {"老焰",new Look(EyeKind.HalfClosed,HairKind.Crew,"b9954e","f3f3ed",.42f,-.2f,0,.035f,16)},
+            {"老焰",new Look(EyeKind.HalfClosed,HairKind.Bun,"b9954e","f3f3ed",.42f,-.2f,0,.035f,16)},
             {"小鐵",new Look(EyeKind.Sharp,HairKind.Spikes,"e0ac39","6c3b27",.36f,.65f,.25f,.14f,17)},
             {"米菈",new Look(EyeKind.Slender,HairKind.Bob,"ac6b3c","553354",.38f,.7f,.6f,.19f,18)},
-            {"翠",new Look(EyeKind.Slender,HairKind.Straight,"488e66","e3edd4",.39f,.0f,0,.32f,19)},
+            {"翠",new Look(EyeKind.HalfClosed,HairKind.Straight,"488e66","e3edd4",.39f,.0f,0,1.55f,19)},
             {"楓",new Look(EyeKind.Upturned,HairKind.Wolf,"dbb254","a75b35",.36f,.45f,-.5f,.20f,20)},
-            {"小葉",new Look(EyeKind.Round,HairKind.Twins,"76bc78","527e60",.45f,-.1f,.2f,.14f,21)},
-            {"海斗",new Look(EyeKind.Almond,HairKind.Slick,"76b8c5","253e59",.43f,.4f,-.4f,.10f,22)},
-            {"凪",new Look(EyeKind.Droop,HairKind.Bob,"a17385","812c48",.44f,-.6f,-.5f,.12f,23)},
+            {"小葉",new Look(EyeKind.Round,HairKind.Twins,"76bc78","83d34a",.45f,-.1f,.2f,.55f,21)},
+            {"海斗",new Look(EyeKind.Almond,HairKind.Crop,"d5a34b","253e59",.43f,.4f,-.4f,.10f,22)},
+            {"凪",new Look(EyeKind.Round,HairKind.Bob,"8d394a","812c48",.44f,-.6f,-.5f,.22f,23)},
             {"阿潮",new Look(EyeKind.HalfClosed,HairKind.Crop,"466b70","d4d7cb",.40f,-.3f,.5f,.05f,24)},
             {"鐵匠",new Look(EyeKind.Sharp,HairKind.Crop,"b88943","795341",.37f,.25f,-.2f,.085f,25)},
             {"店員",new Look(EyeKind.Round,HairKind.LowPony,"73915c","78533e",.45f,-.35f,.55f,.16f,26)},
             {"公會長",new Look(EyeKind.Sanpaku,HairKind.SidePart,"b09460","d7cebb",.35f,.25f,-.65f,.065f,27)},
-            {"艾琳",new Look(EyeKind.Almond,HairKind.Straight,"aa70e5","d1c3e8",.43f,.3f,-.4f,.27f,28)},
-            {"澪",new Look(EyeKind.HalfClosed,HairKind.LongSide,"91def5","bbecf5",.40f,-.4f,.55f,.42f,29)}
+            {"艾琳",new Look(EyeKind.Round,HairKind.Bob,"bd79ff","ded6f3",.45f,.1f,-.25f,.29f,28)},
+            {"澪",new Look(EyeKind.HalfClosed,HairKind.Straight,"91def5","bbecf5",.40f,-.4f,0,1.7f,29)}
         };
         internal static string ClassId(string name)
         {

@@ -1,0 +1,20 @@
+{
+  "basis": "d112739, direct inspection of 12 reference images and 19 video frames",
+  "checks": [
+    "All runtime C# syntax parses",
+    "Actual art sources compile under offline Unity API contracts",
+    "Seven residents: legal finite geometry, soles at zero, head/hair/hat envelope within 1.5cm of original nominal height",
+    "Three bosses: build, windup, death and revival smoke tests",
+    "All original BossRig methods except visual Build entry remain unchanged",
+    "All CharacterRig files, 15 player look/outfit rows, combat, TownWalk and dialogue sources unchanged",
+    "Mio alpha remains translucent",
+    "Active triangle counts stay below 2x baseline"
+  ],
+  "limitations": [
+    "No Unity Editor installed; no native shader, iOS, Android or AR validation",
+    "Software projection approximates primitive meshes and omits particles, outlines are a screen-space approximation",
+    "Octopus tentacles are CPU-skinned from original bones/bind poses with each original submesh material",
+    "Procedural low-poly adaptation; not pixel-identical reconstruction of reference artwork",
+    "Metrics count active MeshRenderer and SkinnedMeshRenderer geometry, excluding particles and hidden superseded attachments"
+  ]
+}

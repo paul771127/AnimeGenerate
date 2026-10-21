@@ -76,27 +76,27 @@ namespace SpellDuel
                 float length=kind==CharacterLook.HairKind.Straight||kind==CharacterLook.HairKind.LongSide||kind==CharacterLook.HairKind.Bob?look.Length:.055f+(look.Seed%3)*.019f;
                 if(kind==CharacterLook.HairKind.SidePart&&side<0)length*=.4f;
                 float flare=kind==CharacterLook.HairKind.Wolf?.035f:0;
-                Lock(v,tri,colors,new Vector3(side*.126f,.125f,-tier*.035f),new Vector3(side*(.171f+tier*.008f),.02f,.045f-tier*.055f),new Vector3(side*(.150f+flare+tier*.008f),-length+tier*.035f,.025f-tier*.045f),.029f,.014f,tier==0?1:.66f,side*.3f);
+                Lock(v,tri,colors,new Vector3(side*.126f,.125f,-tier*.035f),new Vector3(side*(.171f+tier*.008f),.02f,id=="翠"?.19f-tier*.035f:.045f-tier*.055f),new Vector3(side*(.150f+flare+tier*.008f),-length+tier*.035f,id=="翠"?.20f-tier*.035f:.025f-tier*.045f),.029f,.014f,tier==0?1:.66f,side*.3f);
             }
             bool longBack=kind==CharacterLook.HairKind.Straight||kind==CharacterLook.HairKind.LongSide||kind==CharacterLook.HairKind.Bob||kind==CharacterLook.HairKind.Wolf;
             if(longBack)for(int i=0;i<8;i++)
             {
                 float a=(i/7f-.5f)*2.5f,x=Mathf.Sin(a)*.132f,z=-Mathf.Cos(a)*.147f;
-                float flip=kind==CharacterLook.HairKind.Wolf?1.32f:1.08f;
+                float flip=kind==CharacterLook.HairKind.Wolf||id=="艾琳"||id=="凪"?1.32f:1.08f;
                 Lock(v,tri,colors,new Vector3(x,.07f,z),new Vector3(x*1.18f,-look.Length*.45f,z-.020f),new Vector3(x*flip,-look.Length+Mathf.Sin(i*2+look.Seed)*.028f,z*.84f),.037f,.017f,i%2==0?.72f:1,i*.06f);
             }
             if(kind==CharacterLook.HairKind.HighPony||kind==CharacterLook.HairKind.LowPony||kind==CharacterLook.HairKind.Twins||kind==CharacterLook.HairKind.Braid)
             {
                 int tails=kind==CharacterLook.HairKind.Twins?2:1;
-                for(int k=0;k<tails;k++)for(int strand=0;strand<4;strand++)
+                for(int k=0;k<tails;k++)for(int strand=0;strand<(id=="小葉"?8:4);strand++)
                 {
                     float side=tails==1?look.Part:(k==0?-1:1),x=tails==1?side*.08f:side*.16f,y=kind==CharacterLook.HairKind.LowPony?-.025f:look.Seed==21?.075f:.135f;
-                    Lock(v,tri,colors,new Vector3(x,y,-.11f),new Vector3(x+side*.11f,y+.14f,-.22f-strand*.011f),new Vector3(x+side*(.12f+(strand%2)*.02f),-look.Length+strand*.012f,-.20f+strand*.025f),.028f,.019f,strand==0?.65f:1,strand*.13f);
+                    Lock(v,tri,colors,new Vector3(x,y,-.11f),new Vector3(x+side*(id=="小葉"?.16f:.11f),y+.14f,-.22f-strand*.011f),new Vector3(x+side*(.12f+(strand%2)*.02f),-look.Length+strand*.012f,-.20f+strand*.025f),id=="小葉"?.060f:.028f,id=="小葉"?.033f:.019f,strand==0?.65f:1,strand*.13f);
                 }
             }
             if(kind==CharacterLook.HairKind.Bun)for(int i=0;i<6;i++)
             {
-                float a=i*Mathf.PI/3,shift=look.Part*.16f,bunY=look.Seed==23?.175f:.245f,bunZ=look.Seed==23?-.23f:-.17f;
+                float a=i*Mathf.PI/3,shift=look.Part*.16f,bunY=id=="老焰"?.32f:look.Seed==23?.175f:.245f,bunZ=id=="老焰"?-.03f:look.Seed==23?-.23f:-.17f;
                 Lock(v,tri,colors,new Vector3(shift,.13f,-.12f),new Vector3(shift+Mathf.Cos(a)*.08f,bunY+Mathf.Sin(a)*.035f,bunZ),new Vector3(shift,.13f,-.16f),.030f,.023f,i%2==0?.72f:1,.5f);
             }
             if(kind==CharacterLook.HairKind.Spikes)for(int i=0;i<8;i++)
@@ -104,7 +104,7 @@ namespace SpellDuel
                 float a=i*Mathf.PI/4;Lock(v,tri,colors,new Vector3(Mathf.Sin(a)*.085f,.135f,Mathf.Cos(a)*.065f),new Vector3(Mathf.Sin(a)*.15f,.19f,Mathf.Cos(a)*.10f),new Vector3(Mathf.Sin(a)*.19f,.18f+look.Length*.42f+(i%2)*.02f,Mathf.Cos(a)*.14f),.030f,.016f,i%2==0?.75f:1,.3f);
             }
             // Bespoke short-hair signatures; the silhouettes remain different without headgear.
-            if(look.Seed==1||look.Seed==3||look.Seed==6||look.Seed==14||look.Seed==15||look.Seed==16||look.Seed==22||look.Seed==24||look.Seed==25||look.Seed==27)
+            if(look.Seed==1||look.Seed==3||look.Seed==6||look.Seed==14||look.Seed==15||look.Seed==22||look.Seed==24||look.Seed==25||look.Seed==27)
             {
                 int mode=look.Seed;
                 for(int i=0;i<3;i++)

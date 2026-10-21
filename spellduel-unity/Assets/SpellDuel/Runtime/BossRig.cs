@@ -177,9 +177,9 @@ namespace SpellDuel
         static readonly Color DeadEmber = new Color(0.16f, 0.05f, 0.03f); // 熄滅後的餘燼
 
         // 腐化樹王的顏色
-        static readonly Color BarkAC = new Color(0.59f, 0.31f, 0.17f);    // 赭褐樹皮，暗部帶紫色
-        static readonly Color BarkBC = new Color(0.8f, 0.48f, 0.22f);     // 受光的樹瘤、肩、胸口樹皮門
-        static readonly Color BarkCC = new Color(0.39f, 0.22f, 0.28f);    // 最暗的枝指、樹根、眉骨
+        static readonly Color BarkAC = new Color(.31f,.27f,.22f);    // 赭褐樹皮，暗部帶紫色
+        static readonly Color BarkBC = new Color(.42f,.36f,.28f);     // 受光的樹瘤、肩、胸口樹皮門
+        static readonly Color BarkCC = new Color(.20f,.17f,.18f);    // 最暗的枝指、樹根、眉骨
         static readonly Color VeinN = new Color(0.62f, 0.2f, 0.95f);      // 腐化脈絡（紫）
         static readonly Color VeinE = new Color(0.95f, 0.32f, 1f);        // 狂暴（更亮的洋紫）
         static readonly Color VeinDim = new Color(0.2f, 0.05f, 0.3f);
@@ -513,7 +513,7 @@ namespace SpellDuel
             pal = Theme == 2 ? KrakenPal : Theme == 1 ? TreantPal : Theme == 3 ? ArenaPal : Theme == 4 ? CanyonPal : GolemPal;
             if (Theme == 2) BuildKraken(); else if (Theme == 1) BuildTreant(); else BuildGolem();
 
-            if(Theme<=2)BuildStoryCrystal();
+            if(Theme<=2){BuildStoryCrystal();BuildReferenceAppearance();}
             rends = GetComponentsInChildren<Renderer>(true);
 
             parts = partList.ToArray();
@@ -1276,7 +1276,7 @@ namespace SpellDuel
         static readonly Color KEyeE = new Color(1f, 0.3f, 0.42f);
         static readonly Color KDead = new Color(0.03f, 0.06f, 0.07f);
         static readonly Color KelpC = new Color(0.34f, 0.58f, 0.16f);       // 海帶
-        static readonly Color BarnC = new Color(0.97f, 0.85f, 0.6f);       // 藤壺、吸盤
+        static readonly Color BarnC = new Color(.68f,.85f,.88f);       // 藤壺、吸盤
         static readonly Color CoralN = new Color(1f, 0.36f, 0.29f);    // 珊瑚
         static readonly Color CoralE = new Color(0.91f, 0.18f, 0.34f);     // 狂暴：深紅
         static readonly Color CoralBleach = new Color(0.82f, 0.8f, 0.74f); // 死後珊瑚白化

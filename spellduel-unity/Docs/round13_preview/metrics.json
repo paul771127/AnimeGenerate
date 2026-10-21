@@ -1,0 +1,182 @@
+[
+  {
+    "id": "艾琳",
+    "before": {
+      "id": "艾琳",
+      "vertices": 4329,
+      "triangles": 7572,
+      "renderers": 32
+    },
+    "after": {
+      "id": "艾琳",
+      "vertices": 5817,
+      "triangles": 9776,
+      "renderers": 33
+    },
+    "vertexRatio": 1.3437283437283438,
+    "triangleRatio": 1.2910723718964607,
+    "rendererRatio": 1.03125
+  },
+  {
+    "id": "老焰",
+    "before": {
+      "id": "老焰",
+      "vertices": 3702,
+      "triangles": 6584,
+      "renderers": 33
+    },
+    "after": {
+      "id": "老焰",
+      "vertices": 4526,
+      "triangles": 7872,
+      "renderers": 35
+    },
+    "vertexRatio": 1.2225823878984332,
+    "triangleRatio": 1.1956257594167679,
+    "rendererRatio": 1.0606060606060606
+  },
+  {
+    "id": "小鐵",
+    "before": {
+      "id": "小鐵",
+      "vertices": 3882,
+      "triangles": 7092,
+      "renderers": 28
+    },
+    "after": {
+      "id": "小鐵",
+      "vertices": 4266,
+      "triangles": 7788,
+      "renderers": 28
+    },
+    "vertexRatio": 1.0989180834621328,
+    "triangleRatio": 1.0981387478849407,
+    "rendererRatio": 1.0
+  },
+  {
+    "id": "翠",
+    "before": {
+      "id": "翠",
+      "vertices": 3786,
+      "triangles": 6800,
+      "renderers": 30
+    },
+    "after": {
+      "id": "翠",
+      "vertices": 4410,
+      "triangles": 7816,
+      "renderers": 29
+    },
+    "vertexRatio": 1.1648177496038035,
+    "triangleRatio": 1.1494117647058824,
+    "rendererRatio": 0.9666666666666667
+  },
+  {
+    "id": "小葉",
+    "before": {
+      "id": "小葉",
+      "vertices": 3902,
+      "triangles": 7032,
+      "renderers": 31
+    },
+    "after": {
+      "id": "小葉",
+      "vertices": 5024,
+      "triangles": 8912,
+      "renderers": 31
+    },
+    "vertexRatio": 1.2875448487954895,
+    "triangleRatio": 1.2673492605233219,
+    "rendererRatio": 1.0
+  },
+  {
+    "id": "海斗",
+    "before": {
+      "id": "海斗",
+      "vertices": 3648,
+      "triangles": 6604,
+      "renderers": 29
+    },
+    "after": {
+      "id": "海斗",
+      "vertices": 3776,
+      "triangles": 6704,
+      "renderers": 28
+    },
+    "vertexRatio": 1.0350877192982457,
+    "triangleRatio": 1.0151423379769837,
+    "rendererRatio": 0.9655172413793104
+  },
+  {
+    "id": "凪",
+    "before": {
+      "id": "凪",
+      "vertices": 3989,
+      "triangles": 6960,
+      "renderers": 30
+    },
+    "after": {
+      "id": "凪",
+      "vertices": 4905,
+      "triangles": 8652,
+      "renderers": 29
+    },
+    "vertexRatio": 1.2296314865881173,
+    "triangleRatio": 1.243103448275862,
+    "rendererRatio": 0.9666666666666667
+  },
+  {
+    "id": "boss0",
+    "before": {
+      "id": "boss0",
+      "vertices": 5700,
+      "triangles": 2926,
+      "renderers": 51
+    },
+    "after": {
+      "id": "boss0",
+      "vertices": 1260,
+      "triangles": 2330,
+      "renderers": 44
+    },
+    "vertexRatio": 0.22105263157894736,
+    "triangleRatio": 0.7963089542036911,
+    "rendererRatio": 0.8627450980392157
+  },
+  {
+    "id": "boss1",
+    "before": {
+      "id": "boss1",
+      "vertices": 18837,
+      "triangles": 7696,
+      "renderers": 64
+    },
+    "after": {
+      "id": "boss1",
+      "vertices": 2381,
+      "triangles": 4146,
+      "renderers": 63
+    },
+    "vertexRatio": 0.12640016987843075,
+    "triangleRatio": 0.5387214137214137,
+    "rendererRatio": 0.984375
+  },
+  {
+    "id": "boss2",
+    "before": {
+      "id": "boss2",
+      "vertices": 51290,
+      "triangles": 18171,
+      "renderers": 57
+    },
+    "after": {
+      "id": "boss2",
+      "vertices": 23732,
+      "triangles": 9074,
+      "renderers": 26
+    },
+    "vertexRatio": 0.4627022811464223,
+    "triangleRatio": 0.49936712343844586,
+    "rendererRatio": 0.45614035087719296
+  }
+]

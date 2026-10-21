@@ -1,0 +1,44 @@
+[
+  {
+    "id": "艾琳",
+    "soleY": 0,
+    "headEnvelopeY": 1.746698,
+    "nominalHeight": 1.75
+  },
+  {
+    "id": "老焰",
+    "soleY": 0,
+    "headEnvelopeY": 1.7484974,
+    "nominalHeight": 1.75
+  },
+  {
+    "id": "小鐵",
+    "soleY": -2.9802322e-08,
+    "headEnvelopeY": 1.6012702,
+    "nominalHeight": 1.6
+  },
+  {
+    "id": "翠",
+    "soleY": 0,
+    "headEnvelopeY": 1.7519681,
+    "nominalHeight": 1.75
+  },
+  {
+    "id": "小葉",
+    "soleY": -8.940697e-08,
+    "headEnvelopeY": 1.1970906,
+    "nominalHeight": 1.2
+  },
+  {
+    "id": "海斗",
+    "soleY": 0,
+    "headEnvelopeY": 1.7474014,
+    "nominalHeight": 1.75
+  },
+  {
+    "id": "凪",
+    "soleY": 0,
+    "headEnvelopeY": 1.7511191,
+    "nominalHeight": 1.75
+  }
+]

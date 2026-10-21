@@ -8,7 +8,7 @@ namespace SpellDuel
         static readonly Dictionary<string,Mesh> meshes=new Dictionary<string,Mesh>();
         static readonly Dictionary<string,Color32[]> images=new Dictionary<string,Color32[]>();
         internal const int W=256,H=256;
-        internal static bool Has(string id)=>id=="mage"||id=="archmage"||id=="summoner"||id=="priest"||id=="bishop"||id=="米菈"||id=="海斗"||id=="阿潮"||id=="小鐵"||id=="翠"||id=="小葉"||id=="店員"||id=="凪";
+        internal static bool Has(string id)=>id=="艾琳"||id=="mage"||id=="archmage"||id=="summoner"||id=="priest"||id=="bishop"||id=="米菈"||id=="海斗"||id=="阿潮"||id=="小鐵"||id=="翠"||id=="小葉"||id=="店員";
         internal static float Seat(string id,Portraits.Persona p)
         {
             var v=AnimeHair.MeshFor(id,p).vertices;float top=-1;
@@ -33,7 +33,8 @@ namespace SpellDuel
             var b=new OutfitArt.Builder();if(!Has(id)){found=b.Finish("Headwear none");meshes[id]=found;return found;}
             var d=OutfitArt.Get(id);float seat=Seat(id,p),r=FitRadius(id,p,seat);var gold=CharacterLook.Hex("ffc94c");var navy=CharacterLook.Hex("253e75");
             bool crown=id=="priest"||id=="bishop",point=id=="mage"||id=="archmage"||id=="summoner",hat=crown||point||id=="米菈"||id=="海斗"||id=="阿潮";
-            if(hat)
+            if(StoryHeadwear.Build(b,id,p,seat,r)){}
+            else if(hat)
             {
                 Color c=id=="米菈"?CharacterLook.Hex("efbf55"):id=="阿潮"?CharacterLook.Hex("dca94d"):id=="海斗"?CharacterLook.Hex("fff2d8"):d.Main;
                 if(id=="阿潮")
@@ -48,7 +49,7 @@ namespace SpellDuel
                     var path=new[]{new Vector3(point?.035f:0,seat+height,-.015f),new Vector3(0,seat+height*.73f,-.008f),new Vector3(0,seat+.026f,0),new Vector3(0,seat-.008f,0)};
                     b.Tube(path,new[]{point?.008f:crown?.075f:r*.83f,point?r*.50f:crown?r*.70f:r*.98f,r,r},new[]{point?.008f:crown?.065f:r*.77f,point?r*.50f:crown?r*.65f:r*.90f,r*.93f,r*.93f},c,16);
                     b.Tube(new[]{new Vector3(0,seat+.027f,0),new Vector3(0,seat+.004f,0)},new[]{r*1.012f,r*1.012f},new[]{r*.95f,r*.95f},id=="海斗"?navy:d.Sub,16);
-                    if(id=="海斗")Ellipsoid(b,new Vector3(0,seat-.007f,.116f),new Vector3(r*1.1f,.012f,.12f),navy);
+                    if(id=="海斗")Ellipsoid(b,new Vector3(0,seat-.007f,.175f),new Vector3(r*1.1f,.012f,.12f),CharacterLook.Hex("252333"));
                     if(crown||id=="海斗")
                     {
                         b.Seam(new Vector3(0,seat+.035f,r*.96f),new Vector3(0,seat+.095f,r*.73f),.012f,gold);
@@ -106,7 +107,7 @@ namespace SpellDuel
                     float px=(x+.5f)/W*.68f-.34f,py=(y+.5f)/H*.56f-.16f,u=((b.y-c.y)*(px-c.x)+(c.x-b.x)*(py-c.y))/den,v=((c.y-a.y)*(px-c.x)+(a.x-c.x)*(py-c.y))/den,w=1-u-v;
                     if(u<0||v<0||w<0)continue;float z=u*a.z+v*b.z+w*c.z;int k=y*W+x;if(z<=depth[k])continue;
                     // Hair genuinely in front of the brim (bangs) remains visible below the fitted seat.
-                    if(py<seat-.012f&&Mathf.Abs(px)<.14f&&z<AnimeFace.Surface(px,py,p))continue;
+                    if(((py<seat-.012f&&Mathf.Abs(px)<.14f)||(id=="艾琳"&&Mathf.Abs(px)<.163f&&py<.184f&&py>-.16f))&&z<AnimeFace.Surface(px,py,p)+(id=="艾琳"?.002f:0))continue;
                     depth[k]=z;var ca=cs[ts[t]];var cb=cs[ts[t+1]];var cc=cs[ts[t+2]];image[k]=new Color32((byte)(Mathf.Clamp01(ca.r*u+cb.r*v+cc.r*w)*255),(byte)(Mathf.Clamp01(ca.g*u+cb.g*v+cc.g*w)*255),(byte)(Mathf.Clamp01(ca.b*u+cb.b*v+cc.b*w)*255),255);
                 }
             }

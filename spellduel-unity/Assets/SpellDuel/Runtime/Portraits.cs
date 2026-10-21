@@ -124,7 +124,7 @@ namespace SpellDuel
         {
             switch(Key(key))
             {
-                case "艾琳": return new Persona(0.984f,0.944f,1f,1.0338f,1.6f,0f,1.4f,0f,0.65f,0f,-0.8f,1.2f,-0.8f,0f,0f,1f);
+                case "艾琳": return new Persona(0.96f,0.944f,0.97f,1.14f,1.6f,0f,1.4f,0f,0.65f,0f,-0.8f,1.2f,-0.8f,0f,0f,1f);
                 case "澪": return new Persona(0.972f,0.944f,1.016f,0.883f,-3.6f,-0.22f,-1.75f,0f,0f,0f,2.8f,-4.8f,0.8f,0f,0.09f,1f);
                 case "老焰": return new Persona(1.016f,1f,1.004f,0.9064f,-2.8f,-0.08f,-4.55f,0f,0.22f,0f,2.4f,-2f,0f,3f,0.072f,1f);
                 case "小鐵": return new Persona(1.028f,1.056f,0.994f,0.9636f,3.6f,0.2f,4.9f,1f,0.42f,0f,-0.4f,3.6f,-1.2f,5f,0.028f,0.85f);
@@ -133,7 +133,7 @@ namespace SpellDuel
                 case "楓": return new Persona(0.976f,0.976f,1f,0.9272f,3.2f,0.12f,1.75f,0f,0.36f,0f,0f,-3.2f,0.4f,7f,0.056f,1f);
                 case "小葉": return new Persona(1.04f,1.04f,0.988f,1.117f,-2.4f,-0.12f,-4.2f,0.5f,0.15f,0.62f,1.6f,-2.8f,-3.6f,2f,0f,1.1f);
                 case "海斗": return new Persona(1.032f,1.06f,1f,1f,2f,0f,3.5f,0f,0.9f,0.65f,-2.8f,2f,0f,-3f,0f,1f);
-                case "凪": return new Persona(1.02f,1.02f,0.996f,0.9636f,-4f,0.06f,-1.4f,0f,0.8f,0f,0.4f,-2.4f,1.2f,0f,0.028f,1f);
+                case "凪": return new Persona(0.98f,0.96f,0.98f,1.10f,-4f,0.06f,-1.4f,0f,0.8f,0f,0.4f,-2.4f,1.2f,0f,0.028f,1f);
                 case "阿潮": return new Persona(1.028f,1.01f,1.012f,0.85f,-2.4f,0.13f,-3.5f,0.5f,-0.25f,0f,2.4f,4f,0.4f,5f,0.12f,1f);
                 case "鐵匠": return new Persona(1.048f,1.06f,0.996f,0.9272f,0.4f,0f,0f,0f,1f,0.8f,-2f,-1.6f,-0.8f,3f,0.056f,1f);
                 case "店員": return new Persona(1.032f,1.03f,0.992f,1.065f,-2.8f,-0.12f,-3.5f,1f,0.55f,0.25f,1.2f,2f,-2f,2f,0f,1.1f);
@@ -203,7 +203,59 @@ namespace SpellDuel
                     red[k]=Lerp(red[k],c.r/255f,alpha);green[k]=Lerp(green[k],c.g/255f,alpha);blue[k]=Lerp(blue[k],c.b/255f,alpha);
                 }
             }
-            public void DrawEye(int side,FacePlan plan)=>Image(EyeArt.Render(identity,side),EyeArt.W,EyeArt.H,side*plan.EyeX*3,plan.EyeY*3+.09f,plan.EyeWidth*3/1.44f,plan.EyeHeight*3/.90f*(1-persona.Lid*1.6f));
+            public void DrawEye(int side,FacePlan plan)
+            {
+                if(identity=="澪"||identity=="翠")
+                {
+                    float x=side*plan.EyeX*3,y=plan.EyeY*3+.09f;
+                    var c=identity=="澪"?Paint.Hex("#d8fbff"):Paint.Hex("#655848");
+                    Line(x-.069f,y+.008f,x,y-.009f,.007f,c);Line(x,y-.009f,x+.069f,y+.008f,.007f,c);return;
+                }
+                Image(EyeArt.Render(identity,side),EyeArt.W,EyeArt.H,side*plan.EyeX*3,plan.EyeY*3+.09f,plan.EyeWidth*3/1.44f,plan.EyeHeight*3/.90f*(1-persona.Lid*1.6f));
+            }
+            public void StoryDress()
+            {
+                if(!StoryCostume.Has(identity)&&identity!="澪")return;
+                var d=OutfitArt.Get(identity);var cloth=new Paint(d.Main.r,d.Main.g,d.Main.b);Paint cream=Paint.Hex("#fff5e8"),black=Paint.Hex("#252333");
+                Poly(cloth,-.17f,-.48f,-.50f,-.59f,-.62f,-1,.62f,-1,.50f,-.59f,.17f,-.48f);
+                if(identity=="艾琳"||identity=="老焰")
+                {
+                    Poly(identity=="艾琳"?cream:black,-.12f,-.50f,.12f,-.50f,.22f,-1,-.22f,-1);
+                    for(int side=-1;side<=1;side+=2)Line(side*.13f,-.51f,side*.23f,-1,.011f,identity=="艾琳"?Gold:cloth);
+                    if(identity=="艾琳"){Ring(0,-.48f,.14f,.035f,.023f,black);Gem(0,-.65f,.035f,Gold);}
+                }
+                else if(identity=="凪")
+                {
+                    for(int side=-1;side<=1;side+=2){Oval(side*.46f,-.66f,.12f,.13f,cream);Poly(cream,side*.11f,-.49f,0,-.60f,side*.19f,-.66f,side*.22f,-.53f);Line(side*.24f,-.57f,side*.20f,-1,.025f,cream);}
+                    Poly(cream,-.20f,-.75f,.20f,-.75f,.26f,-1,-.26f,-1);Bow(0,-.63f,.09f,black);
+                }
+                else if(identity=="小鐵")
+                {
+                    Poly(cream,-.17f,-.48f,-.50f,-.59f,-.62f,-1,.62f,-1,.50f,-.59f,.17f,-.48f);
+                    Poly(Paint.Hex("#966537"),-.25f,-.76f,.25f,-.76f,.30f,-1,-.30f,-1);
+                    for(int side=-1;side<=1;side+=2)Line(side*.30f,-.58f,side*.22f,-1,.025f,Paint.Hex("#966537"));
+                    Poly(Paint.Hex("#bf3434"),-.19f,-.48f,.19f,-.48f,.09f,-.69f,0,-.76f,-.10f,-.65f);
+                }
+                else if(identity=="海斗")
+                {
+                    for(int side=-1;side<=1;side+=2){Poly(Paint.Hex("#163d73"),side*.14f,-.49f,side*.29f,-.59f,side*.08f,-.77f,side*.02f,-.64f);Line(side*.34f,-.59f,side*.52f,-.65f,.025f,Gold);for(int i=0;i<3;i++)Oval(side*.11f,-.76f-i*.10f,.016f,.016f,Gold,.003f);}
+                    Ring(.34f,-.73f,.023f,.024f,.006f,Gold);Line(.34f,-.75f,.34f,-.88f,.009f,Gold);Line(.27f,-.83f,.34f,-.88f,.009f,Gold);Line(.41f,-.83f,.34f,-.88f,.009f,Gold);
+                }
+                else if(identity=="翠")
+                {
+                    Line(-.16f,-.48f,.16f,-.88f,.044f,cream);Line(.16f,-.48f,-.16f,-.88f,.044f,cream);Box(0,-.96f,.33f,.065f,Paint.Hex("#245b43"));Gem(0,-.94f,.04f,Gold);
+                }
+                else if(identity=="小葉")
+                {
+                    for(int side=-1;side<=1;side+=2)Oval(side*.46f,-.79f,.12f,.18f,cream);Box(0,-.98f,.33f,.045f,black);
+                }
+                else if(identity=="澪")
+                {
+                    Box(0,-.49f,.15f,.06f,Paint.Hex("#cceef5"));
+                    for(int i=0;i<9;i++){float x=-.20f+i*.05f;Oval(x,-.59f-Math.Abs(x)*.20f,.027f,.035f,White,.003f);Ring(x,-.67f,.018f,.024f,.004f,White);}
+                }
+            }
+            void Bow(float x,float y,float size,Paint c){Poly(c,x,y,x-size,y+size*.45f,x-size,y-size*.45f);Poly(c,x,y,x+size,y+size*.45f,x+size,y-size*.45f);Oval(x,y,.014f,.019f,c,.003f);}
             public void Headwear(){if(HeadwearArt.Has(identity))Image(HeadwearArt.Portrait(identity,persona),HeadwearArt.W,HeadwearArt.H,0,.12f*3+.09f,.34f*3,.28f*3);}
             public void Hair(bool front)=>Image(AnimeHair.Portrait(identity,persona,front),AnimeHair.W,AnimeHair.H,0,-.04f*3+.09f,.28f*3,.30f*3);
             public void Fill(Shape shape, Paint c, float opacity=1f, bool cel=false)
@@ -317,6 +369,7 @@ namespace SpellDuel
             cv.Line(0,-.61f,0,-1f,.005f,trim);cv.Oval(0,-.70f,.012f,.023f,trim,.003f);
             if(outfit.Cut==0||outfit.Cut==5||outfit.Cut==6)cv.Oval(-.46f,-.69f,.10f,.08f,lining,.008f);
             if(outfit.Cut==4||outfit.Cut==5||outfit.Cut==13||outfit.Cut==14){cv.Line(.27f,-.69f,.27f,-.83f,.009f,trim);cv.Line(.22f,-.75f,.32f,-.75f,.009f,trim);}
+            cv.StoryDress();
             var p=cv.persona;var plan=new FacePlan(p);
             float fw=.140f*p.Width*3,jaw=.094f*p.Width*(.70f+.30f*p.Jaw)*3,chin=plan.Chin*3+.09f;
             float et=plan.EarTop*3+.09f,eb=plan.EarBottom*3+.09f;
@@ -377,7 +430,7 @@ namespace SpellDuel
             cv.Box(.48f,-.66f,.13f,.30f,Paint.Hex("#875832"));
             for(int i=0;i<3;i++)cv.Box(.40f+i*.07f,-.32f,.025f,.14f,White);
             Bust(cv,Paint.Hex("#f7c9ac"),Paint.Hex("#d1c3e8"),Paint.Hex("#513180"),Paint.Hex("#aa70e5"));
-            // Lowered hood, gold piping, leather scroll strap and violet-tipped carved staff.
+            // Raised hood is rendered from the same headwear mesh as the resident.
             cv.Line(-.18f,-.50f,-.29f,-.95f,.014f,Gold);cv.Line(.18f,-.50f,.29f,-.95f,.014f,Gold);
             cv.Line(-.32f,-.62f,.26f,-.98f,.022f,Paint.Hex("#875832"));
             cv.Box(-.62f,-.52f,.018f,.40f,Paint.Hex("#865334"));cv.Oval(-.62f,-.12f,.07f,.07f,Paint.Hex("#ae74ef"),.006f);
@@ -387,7 +440,7 @@ namespace SpellDuel
             var hair=Paint.Hex("#f3f3ed");
             Bust(cv,Paint.Hex("#d7a27a"),hair,Paint.Hex("#a64232"),Paint.Hex("#b9954e"),true);
 
-            cv.Poly(hair,-0.30f,-0.07f,-0.13f,-0.13f,0f,-0.09f,0.13f,-0.13f,0.30f,-0.07f,0.22f,-0.39f,0f,-0.66f,-0.22f,-0.39f);
+            cv.Poly(hair,-0.30f,-0.07f,-0.13f,-0.13f,0f,-0.09f,0.13f,-0.13f,0.30f,-0.07f,0.22f,-0.39f,.16f,-.66f,.12f,-.63f,0f,-.92f,-.11f,-.66f,-.15f,-.70f,-0.22f,-0.39f);
             cv.Line(-0.15f,-0.14f,-0.02f,-0.20f,0.035f,hair*0.75f);cv.Line(0.15f,-0.14f,0.02f,-0.20f,0.035f,hair*0.75f);
             cv.Line(-0.08f,-0.235f,0.08f,-0.235f,0.007f,Ink);
             cv.Box(-0.47f,-0.76f,0.025f,0.28f,Paint.Hex("#75472c"),-0.20f);
@@ -400,8 +453,8 @@ namespace SpellDuel
             Bust(cv,Paint.Hex("#eeb88e"),hair,Paint.Hex("#9d5d32"),Paint.Hex("#e0ac39"));
 
             cv.Fill((x,y)=>OvalD(x,y,-0.27f,-0.08f,0.05f,0.018f),Paint.Hex("#6c6056"));
-            cv.Box(0f,-0.88f,0.29f,0.23f,Paint.Hex("#543c35"));
-            cv.Line(-0.30f,-0.60f,-0.20f,-0.90f,0.023f,Gold);cv.Line(0.30f,-0.60f,0.20f,-0.90f,0.023f,Gold);
+
+
         }
         static void Mila(Canvas cv)
         {
@@ -421,8 +474,8 @@ namespace SpellDuel
             Bust(cv,Paint.Hex("#eccca6"),hair,Paint.Hex("#376e5c"),Paint.Hex("#488e66"),true,false,true);
 
             for(int side=-1;side<=1;side+=2)cv.Line(side*.30f,.24f,side*.30f,-.59f,.012f,Gold);
-            cv.Gem(0f,-0.70f,0.075f,Paint.Hex("#885344"));
-            Leaf(cv,-0.36f,-0.71f,0.18f,Paint.Hex("#68a25c"));Leaf(cv,0.36f,-0.71f,0.18f,Paint.Hex("#68a25c"));
+
+
         }
         static void Maple(Canvas cv)
         {
@@ -445,18 +498,15 @@ namespace SpellDuel
 
             cv.Fill((x,y)=>OvalD(x,y,-0.27f,-0.07f,0.055f,0.025f),Paint.Hex("#e99786"),0.65f);
             cv.Fill((x,y)=>OvalD(x,y,0.27f,-0.07f,0.055f,0.025f),Paint.Hex("#e99786"),0.65f);
-            cv.Box(0.32f,-0.82f,0.10f,0.15f,Paint.Hex("#ac7950"),-0.10f);
-            cv.Line(0.28f,-0.73f,0.36f,-0.82f,0.006f,White);
+            cv.Box(0,-.83f,.18f,.19f,Paint.Hex("#ac7950"));cv.Box(0,-.83f,.145f,.16f,Paint.Hex("#e5cc91"));
+            for(int i=0;i<4;i++)cv.Line(-.10f,-.75f-i*.045f,.10f,-.75f-i*.045f,.004f,Paint.Hex("#765b3d"));
         }
         static void Kaito(Canvas cv)
         {
             var hair=Paint.Hex("#253e59");
             Bust(cv,Paint.Hex("#dba487"),hair,Paint.Hex("#365879"),Paint.Hex("#76b8c5"));
 
-            cv.Poly(Paint.Hex("#243b52"),-0.49f,-0.55f,-0.16f,-0.44f,-0.10f,-0.87f,-0.48f,-0.75f);
-            cv.Poly(Paint.Hex("#243b52"),0.49f,-0.55f,0.16f,-0.44f,0.10f,-0.87f,0.48f,-0.75f);
-            cv.Line(0f,-0.56f,0f,-0.89f,0.016f,Gold);
-            cv.Ring(0f,-0.84f,0.065f,0.030f,0.012f,Gold);
+
         }
         static void Nagi(Canvas cv)
         {
@@ -464,10 +514,10 @@ namespace SpellDuel
 
             Bust(cv,Paint.Hex("#efbba1"),hair,Paint.Hex("#9c4c64"),Paint.Hex("#a17385"));
 
-            cv.Poly(White,-0.30f,-0.61f,0.30f,-0.61f,0.37f,-1f,-0.37f,-1f);
-            cv.Line(-0.27f,-0.53f,-0.25f,-0.81f,0.020f,White);cv.Line(0.27f,-0.53f,0.25f,-0.81f,0.020f,White);
-            cv.Ring(-0.39f,-0.09f,0.031f,0.045f,0.010f,Gold);
-            cv.Ring(-.65f,-.56f,.06f,.06f,.009f,Gold);cv.Box(-.65f,-.76f,.085f,.12f,Gold);cv.Box(-.65f,-.76f,.057f,.09f,Paint.Hex("#fff0bb"));
+
+
+            cv.Ring(0.39f,-0.09f,0.031f,0.045f,0.010f,Gold);
+            cv.Ring(-.65f,-.56f,.06f,.06f,.009f,Ink);cv.Box(-.65f,-.76f,.085f,.12f,Ink);cv.Box(-.65f,-.76f,.057f,.09f,Paint.Hex("#fff0bb"));
 
         }
         static void Tide(Canvas cv)
@@ -481,7 +531,7 @@ namespace SpellDuel
         static void Mio(Canvas cv)
         {
             Bust(cv,Paint.Hex("#c9f1fa"),Paint.Hex("#bbecf5"),Paint.Hex("#a8e5ef"),Paint.Hex("#91def5"));
-            cv.Line(-.18f,-.51f,0,-.70f,.012f,White);cv.Line(.18f,-.51f,0,-.70f,.012f,White);
+
             for(int i=0;i<6;i++)cv.Oval(-.66f+i*.08f,.06f+i*.11f,.016f,.016f,Paint.Hex("#d8fbff"),0);
         }
 
@@ -512,53 +562,46 @@ namespace SpellDuel
         }
         static void LavaGolem(Canvas cv)
         {
-            Paint rock=Paint.Hex("#30313d"),light=Paint.Hex("#484c59"),lava=Paint.Hex("#ffb348");
-            cv.Poly(rock,-0.78f,-0.90f,-0.64f,-0.48f,-0.31f,-0.39f,0.34f,-0.39f,0.66f,-0.51f,0.79f,-0.92f);
-            cv.Poly(rock,-0.48f,0.42f,-0.29f,0.69f,0.23f,0.70f,0.51f,0.42f,0.43f,-0.30f,0.17f,-0.50f,-0.24f,-0.46f,-0.46f,-0.18f);
-            cv.Poly(light,-0.51f,0.43f,-0.20f,0.51f,-0.01f,0.32f,-0.14f,0.20f,-0.50f,0.29f);
-            cv.Poly(light,0.51f,0.43f,0.20f,0.51f,0.01f,0.32f,0.14f,0.20f,0.50f,0.29f);
-            cv.Poly(lava,-0.38f,0.21f,-0.07f,0.12f,-0.31f,0.05f);cv.Poly(lava,0.38f,0.21f,0.07f,0.12f,0.31f,0.05f);
-            cv.Box(0f,-0.22f,0.25f,0.055f,Ink);
-            cv.Poly(lava,-.19f,-.22f,-.10f,-.18f,.03f,-.22f,.18f,-.17f,.15f,-.30f,-.13f,-.30f);
-            cv.Line(0.06f,0.65f,-0.04f,0.49f,0.017f,lava);cv.Line(-0.04f,0.49f,0.05f,0.30f,0.017f,lava);
-            cv.Line(-0.16f,-0.56f,-0.03f,-0.73f,0.025f,lava);cv.Line(-0.03f,-0.73f,0.12f,-0.55f,0.025f,lava);
-            cv.Gem(0f,-0.77f,0.10f,Paint.Hex("#171329"));
+            Paint rock=Paint.Hex("#292c36"),light=Paint.Hex("#484c57"),lava=Paint.Hex("#ff8b23");
+            cv.Poly(rock,-.72f,-.94f,-.68f,-.10f,-.37f,.01f,.37f,.01f,.68f,-.10f,.72f,-.94f);
+            for(int side=-1;side<=1;side+=2)
+            {
+                cv.Poly(light,side*.28f,-.22f,side*.49f,.12f,side*.75f,.03f,side*.84f,-.27f,side*.55f,-.34f);
+                cv.Line(side*.13f,.19f,side*.27f,-.17f,.031f,lava);cv.Line(side*.27f,-.17f,side*.48f,-.38f,.020f,lava);cv.Line(side*.48f,-.38f,side*.29f,-.73f,.018f,lava);
+                cv.Poly(light,side*.03f,-.34f,side*.37f,-.27f,side*.48f,-.48f,side*.18f,-.58f);
+            }
+            cv.Poly(lava,-.12f,.30f,.12f,.30f,.20f,-.19f,-.20f,-.19f);
+            cv.Poly(rock,0,.69f,.18f,.52f,.17f,.28f,0,.12f,-.17f,.28f,-.18f,.52f);
+            for(int side=-1;side<=1;side+=2)cv.Line(side*.06f,.35f,side*.10f,.38f,.006f,lava);
+            cv.Poly(lava,0,-.31f,.12f,-.56f,0,-.83f,-.12f,-.56f);cv.Poly(Ink,0,-.36f,.083f,-.56f,0,-.76f,-.083f,-.56f);
         }
         static void Treant(Canvas cv)
         {
-            Paint wood=Paint.Hex("#9d623d"),leaf=Paint.Hex("#597e4a"),vein=Paint.Hex("#c67be8");
-            for(int s=-1;s<=1;s+=2)
+            Paint wood=Paint.Hex("#514538"),vein=Paint.Hex("#a34be9");
+            cv.Poly(wood,-.30f,-1,-.19f,-.55f,-.22f,-.05f,-.10f,.40f,.13f,.40f,.24f,-.06f,.17f,-.55f,.33f,-1);
+            for(int side=-1;side<=1;side+=2)for(int i=0;i<3;i++)
             {
-                cv.Poly(wood,s*0.24f,0.45f,s*0.39f,0.73f,s*0.68f,0.84f,s*0.48f,0.54f,s*0.55f,0.29f);
-                cv.Poly(wood,s*0.24f,-0.42f,s*0.69f,-0.88f,s*0.45f,-0.91f,s*0.09f,-0.56f);
-                Leaf(cv,s*0.48f,0.52f,0.24f,leaf,s*0.06f);
+                float y=.02f+i*.19f,x=side*(.43f+i*.15f);
+                cv.Line(0,-.10f,x,y,.055f-i*.012f,wood);cv.Line(x,y,x+side*.07f,.69f+i*.06f,.020f,wood);cv.Line(x,y,side*.79f,y+.17f,.018f,wood);
+                cv.Oval(x,y+.14f,.043f,.050f,vein,.003f);
+                cv.Line(side*.10f,-.75f,side*(.43f+i*.16f),-.90f-i*.02f,.032f,wood);
             }
-            cv.Poly(wood,-0.34f,0.51f,0f,0.67f,0.35f,0.49f,0.39f,-0.21f,0.21f,-0.53f,0f,-0.72f,-0.21f,-0.53f,-0.40f,-0.19f);
-            cv.Poly(Paint.Hex("#5a393b"),-0.29f,0.21f,-0.02f,0.10f,-0.25f,0.02f);cv.Poly(Paint.Hex("#5a393b"),0.29f,0.21f,0.02f,0.10f,0.25f,0.02f);
-            for(int s=-1;s<=1;s+=2)cv.Oval(s*0.18f,0.11f,0.044f,0.023f,Paint.Hex("#c6ed75"),0f);
-            cv.Line(-.30f,.28f,-.08f,.35f,.025f,wood);cv.Line(.30f,.28f,.08f,.35f,.025f,wood);
-            cv.Poly(Ink,-0.14f,-0.23f,-0.02f,-0.19f,0.16f,-0.27f,0.07f,-0.46f,-0.08f,-0.42f);
-            cv.Line(-0.02f,0.51f,0.06f,0.28f,0.015f,vein);cv.Line(0.06f,0.28f,-0.04f,-0.03f,0.015f,vein);
-            cv.Line(-0.26f,-0.12f,-0.20f,-0.45f,0.011f,Gold);cv.Line(0.24f,-0.16f,0.17f,-0.51f,0.011f,Gold);
-            Leaf(cv,0f,0.64f,0.19f,Paint.Hex("#81aa57"));cv.Gem(0,-.65f,.09f,Paint.Hex("#171329"));for(int i=0;i<4;i++)cv.Oval(-.6f+i*.4f,.4f+(i%2)*.2f,.018f,.022f,vein,0);
+            cv.Line(0,.16f,.10f,.81f,.028f,wood);
+            var hole=new float[40];for(int i=0;i<20;i++){float a=i*(float)Math.PI/10,r=i%2==0?.20f:.12f;hole[i*2]=(float)Math.Sin(a)*r;hole[i*2+1]=-.31f+(float)Math.Cos(a)*r;}
+            cv.Poly(Ink,hole);for(int i=0;i<7;i++){float a=i*(float)Math.PI*2/7;cv.Line((float)Math.Sin(a)*.09f,-.31f+(float)Math.Cos(a)*.09f,(float)Math.Sin(a)*.17f,-.31f+(float)Math.Cos(a)*.17f,.008f,vein);}
         }
         static void SeaDemon(Canvas cv)
         {
-            Paint hide=Paint.Hex("#226860"),coral=Paint.Hex("#bc6b91"),glow=Paint.Hex("#9aeae0");
-            for(int s=-1;s<=1;s+=2)
+            Paint hide=Paint.Hex("#18544f"),glow=Paint.Hex("#7ef2e5"),sucker=Paint.Hex("#b7dce0");
+            for(int side=-1;side<=1;side+=2)for(int i=0;i<4;i++)
             {
-                cv.Oval(s*0.49f,-0.56f,0.20f,0.36f,hide);
-                cv.Oval(s*0.62f,-0.39f,0.14f,0.16f,hide);
-                for(int i=0;i<3;i++)cv.Oval(s*(0.47f+i*0.05f),-0.76f+i*0.16f,0.028f,0.035f,glow,0.004f);
+                float x=side*(.39f+i*.12f),y=-.73f+i*.14f;
+                cv.Line(side*.16f,-.44f,x,y,.10f-i*.012f,hide);cv.Line(x,y,side*.80f,y+.15f,.053f-i*.006f,hide);cv.Line(side*.80f,y+.15f,side*.72f,y+.30f,.026f,hide);
+                for(int k=0;k<3;k++)cv.Oval(side*(.35f+k*.11f),y+.03f+k*.035f,.020f,.022f,sucker,.003f);
             }
-            cv.Oval(0f,0.15f,0.48f,0.56f,hide);
-            cv.Poly(coral,-0.39f,0.54f,-0.48f,0.81f,-0.18f,0.68f,0f,0.86f,0.18f,0.68f,0.48f,0.81f,0.39f,0.54f,0f,0.64f);
-            cv.Poly(Ink,-0.35f,0.18f,-0.08f,0.07f,-0.28f,-0.02f);cv.Poly(Ink,0.35f,0.18f,0.08f,0.07f,0.28f,-0.02f);
-            for(int s=-1;s<=1;s+=2)cv.Oval(s*0.23f,0.08f,0.058f,0.034f,glow,0f);
-            cv.Poly(Ink,-.23f,-.15f,.23f,-.05f,.14f,-.36f,-.07f,-.33f);
-            for(int s=-1;s<=1;s+=2)cv.Poly(White,s*0.12f,-0.16f,s*0.05f,-0.17f,s*0.06f,-0.27f);
-            for(int i=0;i<3;i++)cv.Gem((i-1)*0.12f,0.40f-(i%2)*0.07f,0.025f,glow);
-            cv.Ring(0f,-0.71f,0.21f,0.19f,0.025f,glow);cv.Gem(0,-.71f,.13f,Paint.Hex("#171329"));cv.Line(-.06f,-.67f,.06f,-.67f,.005f,glow);cv.Line(0,-.65f,0,-.76f,.005f,glow);
+            cv.Poly(hide,-.26f,-.49f,-.39f,-.12f,-.48f,.22f,-.31f,.55f,.02f,.70f,.20f,.79f,.36f,.63f,.48f,.22f,.39f,-.12f,.26f,-.49f);
+            for(int side=-1;side<=1;side+=2){cv.Line(side*.13f,.57f,side*.23f,.42f,.012f,glow);cv.Line(side*.23f,.42f,side*.13f,.29f,.012f,glow);cv.Line(side*.13f,.29f,side*.25f,.15f,.012f,glow);cv.Oval(side*.21f,-.16f,.062f,.042f,glow,.005f);}
+            cv.Poly(Ink,0,-.34f,.11f,-.56f,0,-.86f,-.11f,-.56f);for(int i=0;i<4;i++)cv.Line(-.038f,-.48f-i*.05f,.038f,-.48f-i*.05f,.004f,sucker);
         }
 
         static int Seed(string s) { int h = 17; foreach (var ch in s) h = h * 31 + ch; return h & 0x7fffffff; }

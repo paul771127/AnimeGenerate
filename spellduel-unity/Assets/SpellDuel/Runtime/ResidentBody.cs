@@ -12,7 +12,8 @@ namespace SpellDuel
         {
             string key=id+part+ColorUtility.ToHtmlStringRGB(skin);if(cache.TryGetValue(key,out var mesh))return mesh;
             var d=OutfitArt.Get(id);var b=new OutfitArt.Builder{Skin=skin};float bulk=id=="鐵匠"?1.10f:1;
-            if(part=="torso")
+            if(StoryCostume.Build(b,id,part,skin)){}
+            else if(part=="torso")
             {
                 b.Loft(new[]{.71f,.68f,.645f,.59f,.49f,.35f,.19f,.09f,0f},
                     new[]{.055f,.080f,.146f,.200f,.205f,.181f,.151f,.168f,.176f},
@@ -20,12 +21,6 @@ namespace SpellDuel
                 b.Loft(new[]{.075f,.045f},new[]{.173f,.178f},new[]{.120f,.123f},d.Sub,0,0,16);
                 if(d.Hem>.15f)b.Loft(new[]{.045f,-d.Hem*.35f,-d.Hem*.75f,-d.Hem},
                     new[]{.177f,.181f,.186f,.188f},new[]{.123f,.128f,.131f,.129f},d.Main,0,0,16);
-                if(id=="艾琳")
-                {
-                    // Lowered hood: a padded oval behind the neck, keeping all silver-lilac hair visible.
-                    b.Loft(new[]{.68f,.59f,.49f},new[]{.095f,.14f,.11f},new[]{.08f,.12f,.09f},d.Main,0,-.09f,16);
-                    for(int side=-1;side<=1;side+=2)b.Tube(new[]{new Vector3(side*.077f,.64f,.077f),new Vector3(side*.10f,.43f,.139f),new Vector3(side*.035f,.08f,.129f),new Vector3(side*.05f,-.46f,.131f)},new[]{.005f,.005f,.005f,.005f},new[]{.004f,.004f,.004f,.004f},d.Accent,6);
-                }
                 // One readable fastener; no loose contrasting panels.
                 b.Loft(new[]{.070f,.054f,.041f},new[]{.015f,.018f,.015f},new[]{.004f,.006f,.004f},d.Accent,0,.126f,8);
                 if(id=="鐵匠"||id=="小鐵"||id=="凪")
