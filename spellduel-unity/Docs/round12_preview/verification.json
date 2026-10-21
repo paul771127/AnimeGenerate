@@ -1,0 +1,18 @@
+{
+  "basis": "78ce38f; FACE_3D_BRIEF round12 + shots.json characters",
+  "references": "ref/ and frames/ absent in remote at start; used explicitly authorised text fallback",
+  "checks": [
+    "All Runtime C# syntax parses",
+    "Actual art sources compile under offline Unity API contracts",
+    "Seven residents: finite vertices, legal indices and grounded soles",
+    "Three bosses: build, windup, death and revival smoke test",
+    "All existing BossRig methods except visual Build entry unchanged",
+    "Fifteen player class look/outfit rows unchanged; CharacterRig files byte-identical",
+    "Mio portrait alpha below 200/255; other names/aliases untouched"
+  ],
+  "limitations": [
+    "No Unity Editor/device validation or video image similarity validation",
+    "Preview primitives are low-poly analogues; existing skinned Kraken tentacles CPU-baked from its bones and bind poses",
+    "Particles are omitted in software previews; renderer metrics exclude ParticleSystemRenderer and include eight baked tentacle proxies for both old/new Kraken"
+  ]
+}

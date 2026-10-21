@@ -1,0 +1,13 @@
+{
+  "commitBase": "78ce38f",
+  "mode": "authorised text fallback",
+  "checkedRemote": "claude/mobile-camera-mic-battle-game-v5nhfr",
+  "missingDirectories": [
+    "Docs/story_video/ref/",
+    "Docs/story_video/frames/"
+  ],
+  "source": "Docs/story_video/shots.json characters + FACE_3D_BRIEF round12",
+  "referenceImagesUsed": 0,
+  "comparisonLeftColumn": "text description + palette swatches, explicitly marked as no reference image",
+  "needsImageFollowup": "Real video/reference likeness cannot be verified until the other computer commits its images."
+}

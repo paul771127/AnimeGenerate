@@ -1,0 +1,143 @@
+[
+  {
+    "id": "艾琳",
+    "before": {
+      "id": "艾琳",
+      "triangles": 6228,
+      "renderers": 26
+    },
+    "after": {
+      "id": "艾琳",
+      "triangles": 7572,
+      "renderers": 32
+    },
+    "rendererRatio": 1.2307692307692308,
+    "triangleRatio": 1.2157996146435452
+  },
+  {
+    "id": "老焰",
+    "before": {
+      "id": "老焰",
+      "triangles": 6556,
+      "renderers": 33
+    },
+    "after": {
+      "id": "老焰",
+      "triangles": 6584,
+      "renderers": 33
+    },
+    "rendererRatio": 1.0,
+    "triangleRatio": 1.0042708968883465
+  },
+  {
+    "id": "小鐵",
+    "before": {
+      "id": "小鐵",
+      "triangles": 7092,
+      "renderers": 28
+    },
+    "after": {
+      "id": "小鐵",
+      "triangles": 7092,
+      "renderers": 28
+    },
+    "rendererRatio": 1.0,
+    "triangleRatio": 1.0
+  },
+  {
+    "id": "翠",
+    "before": {
+      "id": "翠",
+      "triangles": 6800,
+      "renderers": 30
+    },
+    "after": {
+      "id": "翠",
+      "triangles": 6800,
+      "renderers": 30
+    },
+    "rendererRatio": 1.0,
+    "triangleRatio": 1.0
+  },
+  {
+    "id": "小葉",
+    "before": {
+      "id": "小葉",
+      "triangles": 7032,
+      "renderers": 31
+    },
+    "after": {
+      "id": "小葉",
+      "triangles": 7032,
+      "renderers": 31
+    },
+    "rendererRatio": 1.0,
+    "triangleRatio": 1.0
+  },
+  {
+    "id": "海斗",
+    "before": {
+      "id": "海斗",
+      "triangles": 6604,
+      "renderers": 29
+    },
+    "after": {
+      "id": "海斗",
+      "triangles": 6604,
+      "renderers": 29
+    },
+    "rendererRatio": 1.0,
+    "triangleRatio": 1.0
+  },
+  {
+    "id": "凪",
+    "before": {
+      "id": "凪",
+      "triangles": 6700,
+      "renderers": 28
+    },
+    "after": {
+      "id": "凪",
+      "triangles": 6960,
+      "renderers": 30
+    },
+    "rendererRatio": 1.0714285714285714,
+    "triangleRatio": 1.0388059701492538
+  },
+  {
+    "id": "boss0",
+    "before": {
+      "id": "boss0",
+      "renderers": 51
+    },
+    "after": {
+      "id": "boss0",
+      "renderers": 51
+    },
+    "rendererRatio": 1.0
+  },
+  {
+    "id": "boss1",
+    "before": {
+      "id": "boss1",
+      "renderers": 64
+    },
+    "after": {
+      "id": "boss1",
+      "renderers": 64
+    },
+    "rendererRatio": 1.0
+  },
+  {
+    "id": "boss2",
+    "before": {
+      "id": "boss2",
+      "renderers": 54
+    },
+    "after": {
+      "id": "boss2",
+      "renderers": 57
+    },
+    "rendererRatio": 1.0555555555555556
+  }
+]

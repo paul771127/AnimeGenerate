@@ -59,7 +59,7 @@ namespace SpellDuel
             else if(id=="小鐵")
             {
                 b.Loft(new[]{seat+.012f,seat-.012f},new[]{r,r},new[]{r*.92f,r*.92f},CharacterLook.Hex("d34d32"));
-                for(int side=-1;side<=1;side+=2){Ellipsoid(b,new Vector3(side*.073f,seat+.012f,.155f),new Vector3(.050f,.035f,.020f),gold);Ellipsoid(b,new Vector3(side*.073f,seat+.012f,.174f),new Vector3(.035f,.024f,.006f),CharacterLook.Hex("59d2df"));}
+                for(int side=-1;side<=1;side+=2){Ellipsoid(b,new Vector3(side*.073f,seat+.012f,.155f),new Vector3(.050f,.035f,.020f),CharacterLook.Hex("e99731"));Ellipsoid(b,new Vector3(side*.073f,seat+.012f,.174f),new Vector3(.035f,.024f,.006f),CharacterLook.Hex("f3b956"));}
             }
             else if(id=="凪")b.Seam(new Vector3(-.145f,.145f,-.14f),new Vector3(-.045f,.205f,-.14f),.009f,gold);
             else

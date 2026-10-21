@@ -14,7 +14,9 @@ namespace SpellDuel
             Color skin=C("efbba1"),hair=C("623d54"),cloth=C("9c4c64"),iris=C("a17385");
             switch(key)
             {
-                case "老焰":skin=C("d7a27a");hair=C("e4d9bd");cloth=C("a64232");iris=C("b9954e");break;
+                case "艾琳":skin=C("f7c9ac");hair=C("d1c3e8");cloth=C("513180");iris=C("aa70e5");break;
+                case "凪":skin=C("efbba1");hair=C("812c48");cloth=C("e66e9c");iris=C("a17385");break;
+                case "老焰":skin=C("d7a27a");hair=C("f3f3ed");cloth=C("a64232");iris=C("b9954e");break;
                 case "小鐵":skin=C("eeb88e");hair=C("6c3b27");cloth=C("9d5d32");iris=C("e0ac39");break;
                 case "米菈":skin=C("dca17e");hair=C("553354");cloth=C("268e9c");iris=C("ac6b3c");break;
                 case "翠":skin=C("eccca6");hair=C("e3edd4");cloth=C("376e5c");iris=C("488e66");break;
@@ -40,8 +42,13 @@ namespace SpellDuel
             if(elder)for(int s=-1;s<=1;s+=2)AnimeFace.Detail(face,key,persona,new Vector2(s*.093f,-.006f),new Vector2(s*.110f,-.017f),.002f,C("ac6c56"));
             switch(key)
             {
+                case "艾琳":
+                    ResidentBox(p,"Scribe leather satchel",new Vector3(.13f,1.01f,-.20f),new Vector3(.26f,.32f,.13f),C("875832"));
+                    for(int i=0;i<3;i++){Cyl(p,"Scribe scroll",new Vector3(.05f+i*.075f,1.22f,-.21f),new Vector3(.05f,.15f,.05f),Cream);}
+                    Beam(p,"Scribe satchel strap",new Vector3(-.14f,1.32f,.12f),new Vector3(.16f,.93f,.15f),.024f,C("875832"));
+                    break;
                 case "老焰":
-                    Beard(p,hair);BellPin(p,new Vector3(.12f,1.13f,.2f),.09f);
+                    Beard(p,hair);FitStoryBeard(p.Find("Pointed beard"));BellPin(p,new Vector3(.12f,1.13f,.2f),.09f);
                     Beam(p,"Walking staff",new Vector3(-.33f,.04f,.11f),new Vector3(-.33f,1.16f,.11f),.045f,Wood);break;
                 case "小鐵":
                     ResidentBox(p,"Soot cheek",new Vector3(-.12f,1.43f,.18f),new Vector3(.04f,.014f,.01f),C("6c6056"));break;
@@ -62,7 +69,6 @@ namespace SpellDuel
                 case "海斗":
                     Beam(p,"Anchor shank",new Vector3(0,1.13f,.20f),new Vector3(0,1.01f,.20f),.02f,Gold);ResidentBox(p,"Anchor flukes",new Vector3(0,1.01f,.20f),new Vector3(.10f,.02f,.02f),Gold);break;
                 case "凪":
-
                     Earring(p,Gold);break;
                 case "阿潮":
                     Beard(p,hair);
@@ -116,7 +122,7 @@ namespace SpellDuel
             foreach(var tf in articulated){parents.Add(tf.parent);tf.SetParent(null,false);}
             neck.SetParent(null,false);chest.SetParent(null,false);Batch(p);Batch(chest);Batch(neck);chest.SetParent(p,false);neck.SetParent(chest,false);
             for(int i=0;i<articulated.Count;i++)articulated[i].SetParent(parents[i],false);
-            motion.Tick(0);HumanProportions.NormalizeProjected(face,key,root);return root.gameObject;
+            motion.Tick(0);HumanProportions.NormalizeProjected(face,key,root);StoryResidentProps(key,p);return root.gameObject;
         }
         static void DressResident(Transform p,string id,Color skin)
         {

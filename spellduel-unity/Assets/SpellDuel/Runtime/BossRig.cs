@@ -163,9 +163,9 @@ namespace SpellDuel
         }
 
         // 顏色
-        static readonly Color RockAC = new Color(0.58f, 0.34f, 0.24f);     // 暖赭色玄武岩，與橘色熔岩分開
-        static readonly Color RockBC = new Color(0.78f, 0.49f, 0.29f);     // 上方受光的大岩塊（肩、駝背、頭、拳）
-        static readonly Color RockCC = new Color(0.37f, 0.24f, 0.34f);     // 最暗的岩塊（四肢、下巴）
+        static readonly Color RockAC = new Color(0.16f, 0.17f, 0.21f);     // 黑玄武岩，冷灰三階亮面與橘色熔岩分開
+        static readonly Color RockBC = new Color(0.28f, 0.30f, 0.34f);     // 上方受光的大岩塊（肩、駝背、頭、拳）
+        static readonly Color RockCC = new Color(0.105f, 0.11f, 0.145f);     // 最暗的岩塊（四肢、下巴）
         static readonly Color FlashC = new Color(1f, 0.45f, 0.3f);
         static readonly Color LavaN = new Color(1f, 0.36f, 0.05f);        // 平常的熔岩（橘紅）
         static readonly Color LavaE = new Color(1f, 0.8f, 0.35f);         // 狂暴的熔岩（白黃）
@@ -513,6 +513,7 @@ namespace SpellDuel
             pal = Theme == 2 ? KrakenPal : Theme == 1 ? TreantPal : Theme == 3 ? ArenaPal : Theme == 4 ? CanyonPal : GolemPal;
             if (Theme == 2) BuildKraken(); else if (Theme == 1) BuildTreant(); else BuildGolem();
 
+            if(Theme<=2)BuildStoryCrystal();
             rends = GetComponentsInChildren<Renderer>(true);
 
             parts = partList.ToArray();
@@ -1263,9 +1264,9 @@ namespace SpellDuel
 
         // ================================================================ 深淵海妖（主題 2）
         // 顏色
-        static readonly Color HideAC = new Color(0.12f, 0.58f, 0.62f);    // 飽和青色鱗皮
-        static readonly Color HideBC = new Color(0.38f, 0.82f, 0.72f);    // 較淺的腹面、肩甲、貝殼
-        static readonly Color HideCC = new Color(0.18f, 0.29f, 0.52f);    // 最暗：爪、鰭棘、眉骨
+        static readonly Color HideAC = new Color(0.09f, 0.30f, 0.28f);    // 影片設定的深青綠鱗皮
+        static readonly Color HideBC = new Color(0.20f, 0.48f, 0.42f);    // 較淺的腹面、肩甲、貝殼
+        static readonly Color HideCC = new Color(0.07f, 0.20f, 0.22f);    // 最暗：爪、鰭棘、眉骨
         static readonly Color RuneN = new Color(0.15f, 1f, 0.88f);        // 水藍色符文與螢光斑點
         static readonly Color RuneE = new Color(1f, 0.16f, 0.58f);        // 狂暴：洋紅
         static readonly Color RuneDim = new Color(0.02f, 0.2f, 0.24f);
