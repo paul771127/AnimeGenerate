@@ -417,7 +417,7 @@ namespace SpellDuel
             // 故事只自動播一次；看過了直接開打（要看就在關卡說明按「📖 看故事」）
             if (Story.IsSeen(st.id)) { StartStageBattle(); return; }
             Story.MarkSeen(st.id);
-            ShowDialogue(st.before, StartStageBattle);
+            StoryVideo.Play(StoryVideo.For(st.id, true), () => ShowDialogue(st.before, StartStageBattle));   // 有劇情影片就先播影片，再接對話
         }
 
         /// <summary>開打副本：第一次（單人）先播開場故事；連線時大家同時開打（故事看說明裡的「看故事」）</summary>
@@ -441,9 +441,12 @@ namespace SpellDuel
         /// <summary>重看故事：開場＋（通關過的）結尾，看完回到地圖</summary>
         void WatchStory(StoryStage st)
         {
-            var lines = new List<StoryLine>(st.before);
-            if (Story.IsCleared(st.id)) lines.AddRange(st.after);
-            ShowDialogue(lines, null);
+            // 影片（開場）→ 開場對話 →（通關過）影片（結局）→ 結尾對話
+            bool cleared = Story.IsCleared(st.id);
+            StoryVideo.Play(StoryVideo.For(st.id, true), () => ShowDialogue(st.before, () =>
+            {
+                if (cleared) StoryVideo.Play(StoryVideo.For(st.id, false), () => ShowDialogue(st.after, null));
+            }));
         }
 
         void StartStageBattle()
@@ -491,7 +494,8 @@ namespace SpellDuel
         /// <summary>在城鎮／世界地圖（不是戰鬥）：沒有場地範圍</summary>
         public bool InTown => storyMapOpen && phase != Phase.Fighting;
         /// <summary>現在該播的背景音樂：戰鬥中＝依地圖主題（Boss 在場＝Boss 曲）；結算＝安靜；其他（城鎮、選單）＝城鎮曲</summary>
-        public string MusicTrack => phase == Phase.Over ? null
+        public string MusicTrack => StoryVideo.Playing ? null   // 播劇情影片時關掉背景音樂
+            : phase == Phase.Over ? null
             : phase == Phase.Fighting && battle != null ? (bossMode && En.Alive ? "boss" : "battle" + (battle.Theme % 3))
             : "town";
 
@@ -1364,7 +1368,7 @@ namespace SpellDuel
                         Say($"🏆 {st.title} 完成！獲得經驗 {st.xp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "" : "（再次通關）") + (loot.Length > 0 ? "\n" + loot : ""), 99f);
                     }
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
-                    if (!Story.IsSeen(st.id + "!")) { Story.MarkSeen(st.id + "!"); ShowDialogue(st.after, null); }   // 結尾也只自動播一次
+                    if (!Story.IsSeen(st.id + "!")) { Story.MarkSeen(st.id + "!"); StoryVideo.Play(StoryVideo.For(st.id, false), () => ShowDialogue(st.after, null)); }   // 結尾（影片＋對話）也只自動播一次
                 }
                 else { LoseLoot(); Say($"💀 {st.title} 失敗…再挑戰一次吧（戰利品沒拿到）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
@@ -2714,6 +2718,7 @@ namespace SpellDuel
         public void DrawGUI()
         {
             Styles();
+            if (StoryVideo.Active) { StoryVideo.DrawGUI(); return; }   // 劇情影片（問下載、下載中、播放）蓋住整個畫面
             // 技能說明視窗開著：底下的畫面照畫但不能按（GUI.enabled=false），說明視窗畫在最上面
             bool infoOpen = infoSkill != null && Skills.All.ContainsKey(infoSkill);
             bool talking = dlg != null;
