@@ -33,7 +33,7 @@ namespace SpellDuel
         void EnterStory()
         {
             SaveChoices();
-            if (!TutorialDone) { StartPrologue(); return; }
+            if (IntroPending) { StartPrologue(); return; }
             villageReturn = null;
             storyMapOpen = true; world.OpenTown(world.town);
         }

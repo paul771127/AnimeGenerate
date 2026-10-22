@@ -32,7 +32,7 @@ namespace SpellDuel
             UiKit.Text(new Rect(pad,top+h*.25f,W-pad*2,lineH),LobbyCaption("唸出咒語，在真實世界施法對決"),fsS,UiKit.Paper,TextAnchor.MiddleCenter);
 
             // 首頁只留：故事模式、附近對戰、遠距對戰、練習模式、設定（其他玩法都在故事模式的村子裡）
-            bool newbie = !SoloBattle.TutorialDone;
+            bool newbie = SoloBattle.IntroPending;
             string[] titles = { "📖 故事模式", "👥 附近對戰", "🌐 遠距對戰", "🎯 練習模式", "⚙ 設定" };
             string[] descs =
             {

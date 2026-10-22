@@ -20,6 +20,10 @@ namespace SpellDuel
 
         public const int TutSteps = 8;
         static readonly string[] TutTitles = { "站好校正", "走到光圈", "蹲下躲橫掃", "側跨閃火球", "跳過震地環", "唸技能名稱", "放出技能", "打中木頭人" };
+        /// <summary>第一次玩的序章＋教學要不要強制播（測試期間先關掉：直接進村子；訓練場仍可以上教學）</summary>
+        public const bool ForceIntro = false;
+        /// <summary>還沒看過序章＋教學、而且要強制播</summary>
+        public static bool IntroPending => ForceIntro && !TutorialDone;
         public static bool TutorialDone { get { try { return PlayerPrefs.GetInt("sd_tutorial_done", 0) == 1; } catch { return false; } } }
 
         void StartTutorial()

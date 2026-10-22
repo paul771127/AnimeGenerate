@@ -227,7 +227,7 @@ namespace SpellDuel
             SettingsMenu.GoHome = GoHome;
             SettingsMenu.InBattle = () => solo.phase == SoloBattle.Phase.Fighting;
             Log("請選擇模式");
-            if (!SoloBattle.TutorialDone) StartStoryEntry();   // 第一次打開遊戲：直接進故事模式（放場地 → 選職業 → 序章 → 教學 → 炎之里）
+            if (SoloBattle.IntroPending) StartStoryEntry();   // 第一次打開遊戲：直接進故事模式（放場地 → 選職業 → 序章 → 教學 → 炎之里）
         }
 
         void OnDestroy() => net?.Dispose();

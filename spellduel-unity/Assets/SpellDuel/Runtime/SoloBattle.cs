@@ -2940,7 +2940,7 @@ namespace SpellDuel
             // 敵人（練習模式：隨機、5 職業、木頭人；故事模式：說明＋進村子；雙人：顯示對手狀態）
             if (!NetMode && entry == Entry.Story)
             {
-                string info = TutorialDone
+                string info = !IntroPending
                     ? "📖 故事模式：選好職業和技能，進入村子。\n副本、每日挑戰、討伐 Boss、觀戰都在村子裡；無盡塔在大地圖上。關卡難度在出發前選。"
                     : "📖 第一次冒險：選好職業和技能後開始序章，接著由村口的教官木頭人帶你上一次教學，完成後正式進入炎之里。";
                 float ih = UiKit.TextHeight(info, W - pad * 2 - gap * 2, fsS) + gap;
@@ -3054,7 +3054,7 @@ namespace SpellDuel
             { if (NetMode) Hide(); else RequestChangeMode?.Invoke(); }
             by -= u * 1.6f + gap;
             bool voiceOk = UseSpeech || VoiceReady;   // 沒有語音辨識時，要先把 3 個技能的咒語錄好
-            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? (TutorialDone ? "🏘 進入村子" : "📖 開始序章") : enemyClass == "daily" ? $"📅 開始{DailyChallenge.Names[Mathf.Clamp(dailyPick, 0, DailyChallenge.KindCount - 1)]}" : enemyClass == "tutorial" ? "🎓 開始教學" : enemyClass == "dungeon" ? "🏰 打開副本清單" : "⚔ 開始戰鬥");
+            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? (!IntroPending ? "🏘 進入村子" : "📖 開始序章") : enemyClass == "daily" ? $"📅 開始{DailyChallenge.Names[Mathf.Clamp(dailyPick, 0, DailyChallenge.KindCount - 1)]}" : enemyClass == "tutorial" ? "🎓 開始教學" : enemyClass == "dungeon" ? "🏰 打開副本清單" : "⚔ 開始戰鬥");
             bool dungeonParty = NetMode && coop && netDungeon;
             if (dungeonParty)
             {
