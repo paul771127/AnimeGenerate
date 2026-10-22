@@ -369,6 +369,20 @@ namespace SpellDuel
                     string icon = n.opens == "smith" ? "⚒ " : n.opens == "shop" ? "🧪 " : n.opens == "guild" ? "🏛 " : FacilityIcon(n.opens);
                     UiKit.Text(lr, $"{icon}{n.name}\n{n.role}" + (isNear ? "\n💬 說「你好」" : ""), lf, isNear ? new Color(1f, 0.95f, 0.6f) : Color.white, TextAnchor.MiddleCenter, true);
                 }
+            // 建築招牌：走近（12m 內）時在屋頂上方顯示做什麼的、找誰；越近越清楚
+            if (Cam != null)
+                foreach (var site in Walk.sites)
+                {
+                    if (!Walk.ScreenPos(Cam, site.pos + Vector3.up * site.height, out var sg, out float sd) || sd > 12f) continue;
+                    var info = SiteInfo(site.kind);
+                    bool close = sd < 6f;
+                    float k = Mathf.Clamp(1.3f - sd / 14f, 0.6f, 1.15f);
+                    int sf = Mathf.RoundToInt(fsS * k);
+                    float sw = sf * 13f, sh = sf * (close ? 3.9f : 2.6f);
+                    var sr = new Rect(sg.x - sw / 2f, sg.y - sh, sw, sh);
+                    UiKit.Card(sr, close ? 0.85f : 0.55f, info.color, close ? 1f : 0.6f);
+                    UiKit.Text(sr, $"{info.title}\n{info.what}" + (close ? $"\n💬 找門口的{info.who}說「你好」" : ""), sf, close ? Color.white : new Color(0.92f, 0.94f, 1f), TextAnchor.MiddleCenter, true);
+                }
             // 出口與傳送陣的標示
             if (Cam != null)
             {

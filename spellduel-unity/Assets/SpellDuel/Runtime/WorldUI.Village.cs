@@ -36,6 +36,22 @@ namespace SpellDuel
         public const string TowerKeeper = "塔守";
         static readonly Color TowerColor = new Color(0.75f, 0.45f, 1f);
 
+        /// <summary>建築招牌：圖示＋名稱、做什麼、找誰（鐵匠鋪、道具店、職業工會＋村子的四個設施）</summary>
+        public static (string title, string what, string who, Color color) SiteInfo(string kind)
+        {
+            switch (kind)
+            {
+                case "smith": return ("⚒ 鐵匠鋪", "強化裝備（+1～+10）", "鐵匠", new Color(1f, 0.6f, 0.3f));
+                case "shop": return ("🧪 道具店", "買藥水、回城捲軸・賣裝備", "店員", new Color(0.5f, 0.85f, 1f));
+                case "guild": return ("🏛 職業工會", "轉職試煉・選進階職業", "公會長", new Color(0.85f, 0.6f, 1f));
+                case "dungeon": return ("🏰 副本入口", "單人或和朋友組隊挑戰副本", "嚮導", FacilityColors[0]);
+                case "training": return ("📅 訓練場", "每日挑戰（閃避、輸出、跑步、綜合）・再上一次教學", "教官", FacilityColors[1]);
+                case "bounty": return ("🔥 討伐告示板", "單人討伐 Boss", "懸賞官", FacilityColors[2]);
+                case "watch": return ("👀 觀戰席", "輸入房間代碼，看朋友比賽", "播報員", FacilityColors[3]);
+            }
+            return (kind, "", "", Color.white);
+        }
+
         static int FacilityIndex(string kind) { for (int i = 0; i < Facilities.Length; i++) if (Facilities[i].kind == kind) return i; return -1; }
         public static string FacilityIcon(string kind) { int i = FacilityIndex(kind); return i >= 0 ? Facilities[i].icon + " " : ""; }
 

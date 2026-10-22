@@ -29,6 +29,9 @@ namespace SpellDuel
 
         /// <summary>城鎮出口（柵欄的缺口）：走出去打開這一章的關卡選單</summary>
         public class Exit { public Vector2 dir; public int theme; public Vector3 pos; }
+        /// <summary>設施建築（走近時頭上顯示招牌：做什麼的、找誰）；pos＝建築中心，height＝招牌高度</summary>
+        public class Site { public string kind; public Vector3 pos; public float height; }
+        public readonly List<Site> sites = new List<Site>();
         public readonly List<Exit> exits = new List<Exit>();
         public Vector3 WarpPos { get; private set; }
 
@@ -77,7 +80,7 @@ namespace SpellDuel
             if (f.sqrMagnitude < 1e-4f) f = Vector3.forward;
             root.transform.SetPositionAndRotation(new Vector3(cam.transform.position.x, floorY, cam.transform.position.z), Quaternion.LookRotation(f.normalized, Vector3.up));
             TownArt.BuildScenery(town, root.transform);
-            walls.Clear();
+            walls.Clear(); sites.Clear();
             // 設施＋地標＋民房（門朝廣場）
             var t = WorldUI.Towns[town];
             Building("smith", new Vector2(-7f, 8f), 2.1f);
@@ -149,6 +152,7 @@ namespace SpellDuel
             go.transform.localRotation = Quaternion.Euler(0f, Yaw(at - PlazaC), 0f);
             TownArt.BuildBuilding(Town, kind, go.transform);
             walls.Add((at, radius));
+            if (kind != "house" && kind != "landmark") sites.Add(new Site { kind = kind, pos = new Vector3(at.x, 0f, at.y), height = kind == "guild" ? 4.4f : radius >= 2f ? 3.6f : 3.0f });
         }
 
         void Keeper(string name, string role, string opens, Vector2 building, string[] lines)
