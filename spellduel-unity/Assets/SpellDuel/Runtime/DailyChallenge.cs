@@ -40,7 +40,7 @@ namespace SpellDuel
         {
             switch (k)
             {
-                case Kind.Dodge: return new[] { 20, 35, 50 };   // 一場約 65 發（2026-10 下修難度後）
+                case Kind.Dodge: return new[] { 20, 35, 50 };   // 只有火球：一場約 55～60 發
                 case Kind.Run: return new[] { 5, 8, 12 };   // 金幣會到處亂跑（0.5→1.1 m/s），比以前難追一點
                 default:
                     float m = 1f + 0.12f * Mathf.Max(0, level - 1);
@@ -103,14 +103,16 @@ namespace SpellDuel
         /// <summary>
         /// 閃避挑戰的題目（兩條獨立的出題線，會重疊）：
         ///   ①遠程火球：四面八方（360°，身後也會來），速度都一樣；每 BoltEvery 秒射一輪，
-        ///     每過 10 秒一輪就多一發（0～10 秒 1 發、10～20 秒 2 發……50～60 秒 6 發），各自從不同方向。
-        ///   ②範圍招：橫掃（蹲）、落石（走出紅圈）、震地環（跳），6 秒後開始，間隔從 6 秒縮到 3.5 秒——常常和遠程彈同時來。
+        ///     每過 15 秒一輪就多一發（0～15 秒 1 發 …… 45～60 秒 4 發），各自從不同方向。
+        ///   ②範圍招：橫掃（蹲）、落石（走出紅圈）、震地環（跳）——目前關閉（AreaAttacks＝false，只出火球）。
         /// </summary>
         public class DodgeDirector
         {
             readonly System.Random rnd;
             float nextBolt = 1.5f, nextArea = AreaFrom;
             public const float AreaFrom = 12f, QuakeFrom = 25f;   // 範圍攻擊第 12 秒起、震地波第 25 秒起（2026-10 下修：太難）
+            /// <summary>範圍招（橫掃／落石／震地環）開關：先關掉，只出火球</summary>
+            public const bool AreaAttacks = false;
             public DodgeDirector(int seed) { rnd = new System.Random(seed); }
             /// <summary>預備時間（光門出現到攻擊放出）：越後面越短</summary>
             public static float Windup(float t) => Mathf.Lerp(1.2f, 0.85f, Mathf.Clamp01(t / Duration));
@@ -134,7 +136,7 @@ namespace SpellDuel
                     for (int i = 0; i < n; i++)   // 齊射：每一發從不同方向（平均分開再加一點隨機）
                         list.Add(new Shot { kind = Attack.Bolt, angle = a + i * 360f / n + R(-25f, 25f), dist = R(4.5f, 6.5f), speed = 1f });
                 }
-                if (t >= nextArea)
+                if (AreaAttacks && t >= nextArea)
                 {
                     nextArea = t + AreaInterval(t) * R(0.8f, 1.2f);
                     var pool = new List<Attack> { Attack.Sweep, Attack.Rain };
