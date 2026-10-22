@@ -75,7 +75,9 @@ namespace SpellDuel
                 pp.gesture, WorldFrame.FromWorld(pp.gestureAt));
         }
         public readonly Dictionary<int, PeerPose> NetPeers = new Dictionary<int, PeerPose>();
-        class PeerInfo { public string cls, adv, gear; public string[] loadout; public bool ready; public int mode; }
+        class PeerInfo { public string cls, adv, gear; public string[] loadout; public bool ready; public int mode, maxHp; }
+        /// <summary>我（故事模式角色）的最大血量：ready 時送給對手／隊友</summary>
+        int MyMaxHp { get { var f = new Fighter("我", Skills.Classes[myClass], myLoadout, true); ApplyProfile(f); return f.maxHp; } }
         /// <summary>我身上裝備的外觀（送給隊友／對手／觀眾，他們畫面上的我才會穿著）</summary>
         string MyGearCode => GearLook.Of(Progress.Char(myClass).equipped).Encode();
         /// <summary>把某位玩家的裝備穿到他的角色上（沒收到＝不穿）</summary>
@@ -132,7 +134,18 @@ namespace SpellDuel
         /// <summary>選技能畫面：這次是不是無盡模式（只有無盡模式用角色養成）</summary>
         bool EndlessSetup => NetMode ? netEndless || netDungeon : enemyClass == "endless" || enemyClass == "story" || enemyClass == "dungeon" || (prepGo != null && prepEndless);   // 故事、副本也用角色養成
         /// <summary>選技能畫面可以選的技能：無盡模式＝角色會的技能；其他模式＝職業全部技能</summary>
-        string[] SetupSkills => EndlessSetup ? Progress.Char(myClass).KnownSkills().ToArray() : AllowedSkills;
+        /// <summary>所有模式都用故事模式的角色（等級、能力值、技能樹、裝備）；觀戰除外</summary>
+        bool ProfileSetup => !Watching;
+        string[] SetupSkills => ProfileSetup ? Progress.Char(myClass).KnownSkills().ToArray() : AllowedSkills;
+        /// <summary>套用故事模式的角色到這位戰鬥者（等級、能力值、技能樹、裝備、進階職業）</summary>
+        void ApplyProfile(Fighter me) => Progress.Char(myClass).ApplyTo(me, Skills.Classes[myClass], myLoadout);
+        /// <summary>依我的等級把電腦對手變強（和小怪每波的成長一樣：血量 +3.5%／級、攻擊 +2%／級）</summary>
+        static void ScaleToLevel(Fighter en, int level)
+        {
+            int l = Mathf.Max(0, level - 1);
+            en.maxHp = Mathf.RoundToInt(en.maxHp * (1f + Battle.HpPerWave * l)); en.hp = en.maxHp;
+            en.atkMul *= (0.75f + Battle.DmgPerWave * l) / 0.75f;
+        }
         /// <summary>其他模式可以選的技能：職業全部技能＋（轉職後）進階職業的全部技能</summary>
         string[] AllowedSkills
         {
@@ -716,7 +729,7 @@ namespace SpellDuel
         {
             SaveChoices();
             localReady = true;
-            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "", g = MyGearCode });
+            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "", g = MyGearCode, hp = MyMaxHp });
             Say("已準備，等待對手…", 3f);
             TryStartNet();
         }
@@ -744,7 +757,7 @@ namespace SpellDuel
             var d = Dungeons.Get(netDungeonId);
             if (d == null) return;
             SaveChoices();
-            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "", g = MyGearCode });
+            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "", g = MyGearCode, hp = MyMaxHp });
             NetSend?.Invoke(new Msg { t = "dstart", k = d.id, e = difficulty });
             localReady = remoteReady = false;
             foreach (var pi in peerInfo.Values) pi.ready = false;
@@ -758,10 +771,11 @@ namespace SpellDuel
             enemyClassUsed = ec.id;
             dummyMode = false;
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
-            Advanced.ApplyStats(me, Progress.Char(myClass).Adv);   // 轉職後的能力（對戰不另外平衡）
+            ApplyProfile(me);   // 故事模式的角色（等級、能力值、技能樹、裝備、進階職業）
             var radv = peerInfo.TryGetValue(PeerIds.Count > 0 ? PeerIds[0] : 0, out var rpi0) ? Advanced.Get(rpi0.adv) : null;
             var en = new Fighter($"對手{(radv != null ? radv.name : ec.name)}", ec, remoteLoadout ?? new string[0], false);
             Advanced.ApplyStats(en, radv);
+            if (rpi0 != null && rpi0.maxHp > 0) { en.maxHp = rpi0.maxHp; en.hp = en.maxHp; }   // 對手的最大血量（他的等級與裝備，ready 送來）
             en.head = NetEnemyHeadW;
             SyncPlayer(me);
             battle = new Battle(me, en) { remoteEnemy = true };
@@ -814,7 +828,7 @@ namespace SpellDuel
                 prof.ApplyTo(me, Skills.Classes[myClass], myLoadout);
                 lastXpSeen = 0; lastKillsSeen = 0; lastBossKillsSeen = 0; levelLockSaid = false;
             }
-            else Advanced.ApplyStats(me, Progress.Char(myClass).Adv);
+            else ApplyProfile(me);   // 討伐 Boss、合作打 Boss：也用故事模式的角色（Boss 依等級變強，見下面）
             var bc = Skills.Classes["boss"];
             // 無盡模式的 Boss 不召喚小怪（小怪由場地邊緣陸續冒出）
             var bossSkills = new List<string>(bc.defaultLoadout);
@@ -836,6 +850,12 @@ namespace SpellDuel
             SyncPlayer(me);
             battle = new Battle(me, boss);
             if (LevelDifficulty) battle.levelBoost = LevelBoostFor(difficulty);   // 普通＋20 級、困難＋40 級
+            else if (!endlessMode)
+            {
+                // 討伐 Boss／合作打 Boss：Boss 依（房主的）角色等級變強（血量 +3.5%／級、攻擊 +2%／級，召喚的小怪也一樣）
+                battle.levelBoost = Mathf.Max(0, Progress.Char(myClass).level - 1);
+                boss.maxHp = Mathf.RoundToInt(boss.maxHp * battle.BoostHpMul); boss.hp = boss.maxHp;
+            }
             battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine; battle.OnShotWarn += ShowShotLine;
             bool host = !coopMode || NetIsHost;
             if (coopMode)
@@ -849,6 +869,7 @@ namespace SpellDuel
                     string an = aadv != null ? aadv.name : rc.name;
                     var af = new Fighter(PeerIds.Count > 1 ? $"{(pid == 0 ? "房主" : $"隊友{pid}")}・{an}" : $"隊友{an}", rc, pi?.loadout ?? new string[0], false) { head = head, isAlly = true, pid = pid };
                     Advanced.ApplyStats(af, aadv);
+                    if (pi != null && pi.maxHp > 0) { af.maxHp = pi.maxHp; af.hp = af.maxHp; }   // 隊友的最大血量（他的等級與裝備）
                     battle.allies.Add(af);
                 }
                 battle.coopHost = NetIsHost;
@@ -1410,7 +1431,7 @@ namespace SpellDuel
                 Sfx.Play(record ? "win" : "lose"); Haptics.Play(Haptics.Kind.Warning);
                 return;
             }
-            bool win = !En.Alive;
+            bool win = !En.Alive; int bossXp = 0, bossUps = 0;
             Say(win ? (bossMode ? "🏆 討伐成功！熔岩巨像倒下了" : "🏆 勝利！") : (coop ? "💀 全滅…" : "💀 敗北…"), 99f);
             if (win && bossMode)
             {
@@ -1418,10 +1439,11 @@ namespace SpellDuel
                 if (prof == null) prof = Progress.Char(myClass);
                 TryDrop(true); pendingGold += Economy.BossGold(10);
                 GrantLoot("討伐成功", false);
+                bossXp = 25 * prof.level; bossUps = prof.AddXp(bossXp);   // 經驗也算進故事模式的角色
                 Progress.SaveChar(prof);
             }
             if (win && !dummyMode) BuildVictory(bossMode ? $"討伐成功！{En.name}倒下了" : NetMode ? "對戰勝利！" : $"擊敗{En.name}！",
-                bossMode ? $"boss_{difficulty}{(coop ? "_coop" : "")}" : NetMode ? "pvp" : $"ai_{enemyClassUsed}_{difficulty}", bossMode ? 150f : 60f, 0, 0);
+                bossMode ? $"boss_{difficulty}{(coop ? "_coop" : "")}" : NetMode ? "pvp" : $"ai_{enemyClassUsed}_{difficulty}", bossMode ? 150f : 60f, win && bossMode ? bossXp : 0, win && bossMode ? bossUps : 0);
             Sfx.Play(win ? "win" : "lose");
             Haptics.Play(win ? Haptics.Kind.Success : Haptics.Kind.Warning);
         }
@@ -1450,7 +1472,7 @@ namespace SpellDuel
                 case "ready":
                     remoteClass = m.k; remoteLoadout = m.ks; remoteReady = true; remoteCoop = m.e >= 1; remoteEndless = m.e == 2;
                     if (!peerInfo.TryGetValue(m.pid, out var rpi)) peerInfo[m.pid] = rpi = new PeerInfo();
-                    rpi.cls = m.k; rpi.loadout = m.ks; rpi.ready = true; rpi.mode = m.e; rpi.adv = string.IsNullOrEmpty(m.a) ? null : m.a; rpi.gear = m.g;
+                    rpi.cls = m.k; rpi.loadout = m.ks; rpi.ready = true; rpi.mode = m.e; rpi.adv = string.IsNullOrEmpty(m.a) ? null : m.a; rpi.gear = m.g; rpi.maxHp = m.hp;
                     if (phase != Phase.Fighting) Say(PeerIds.Count > 1 ? $"{PeerName(m.pid)}已準備好（{ReadyCount()}/{PeerIds.Count}）" : "對手已準備好", 2f);
                     TryStartNet();
                     return;
@@ -1609,7 +1631,7 @@ namespace SpellDuel
             if (rest.Count > 0) enemySkills.Add(rest[0]);
 
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
-            Advanced.ApplyStats(me, Progress.Char(myClass).Adv);
+            ApplyProfile(me);   // 故事模式的角色
             dummyMode = enemyClass == "dummy";
             dummyDamage = 0f; dummyHits = 0;
             var en = dummyMode
@@ -1626,6 +1648,7 @@ namespace SpellDuel
             ai = dummyMode ? null : new EnemyAI(battle, en, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
             ai?.SetDifficulty(difficulty);
             me.damageTakenMul = DamageTakenFor(difficulty);
+            if (!dummyMode) ScaleToLevel(en, Progress.Char(myClass).level);   // 電腦對手跟著我的等級變強
 
             enemyRig = CharacterRig.Create(ec.id);
             if (!dummyMode) SpawnFade.Play(enemyRig.gameObject);   // 電腦對手從場地外淡入出現
@@ -2776,7 +2799,7 @@ namespace SpellDuel
 
         void DrawSkillInfo()
         {
-            var s = endless && phase != Phase.Setup || phase == Phase.Setup && EndlessSetup ? (Progress.Char(myClass).ModdedSkill(infoSkill) ?? Skills.All[infoSkill]) : Skills.All[infoSkill];   // 無盡模式：顯示技能樹強化後的數值
+            var s = phase != Phase.Setup || ProfileSetup ? (Progress.Char(myClass).ModdedSkill(infoSkill) ?? Skills.All[infoSkill]) : Skills.All[infoSkill];   // 無盡模式：顯示技能樹強化後的數值
             float W = Screen.width, H = Screen.height;
             var safe = Screen.safeArea;
             float topY = H - safe.yMax, botY = H - safe.y;
@@ -2905,10 +2928,10 @@ namespace SpellDuel
             y += u * 1.5f + gap;
 
             // 技能卡片（2 欄）：圖示＋名稱／手勢→放招／數值
-            UiKit.Text(new Rect(pad, y, EndlessSetup?W*.51f-pad:W-pad*2, u), AdvSlot ? $"選 3 個技能＋1 個進階技能（{BaseCount}/3・{AdvCount}/1）" : $"選 3 個技能（{myLoadout.Count}/3）　點技能看詳細說明", fsS, new Color(1f, 0.9f, 0.6f));
-            if (EndlessSetup)
+            UiKit.Text(new Rect(pad, y, ProfileSetup?W*.51f-pad:W-pad*2, u), AdvSlot ? $"選 3 個技能＋1 個進階技能（{BaseCount}/3・{AdvCount}/1）" : $"選 3 個技能（{myLoadout.Count}/3）　點技能看詳細說明", fsS, new Color(1f, 0.9f, 0.6f));
+            if (ProfileSetup)
             {
-                // 無盡／故事模式：角色養成（能力值、技能樹、裝備）
+                // 所有模式：角色養成（能力值、技能樹、裝備；和故事模式同一個角色）
                 var pf = Progress.Char(myClass);
                 float cbw = W * 0.4f;
                 if (UiKit.Button(new Rect(W - pad - cbw, y - u * 0.15f, cbw, u * 1.1f), $"📜 角色 Lv{pf.level}" + (pf.statPoints + pf.UsableSkillPoints > 0 ? "（可加點）" : ""), fsS, pf.statPoints + pf.UsableSkillPoints > 0, new Color(0.8f, 0.55f, 1f)))

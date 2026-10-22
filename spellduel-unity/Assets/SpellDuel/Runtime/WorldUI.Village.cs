@@ -129,7 +129,7 @@ namespace SpellDuel
             Header(r, $"{f.icon} {f.title}", c, prof, fs, fsS, fsL, gap, ref y);
             NpcIntro(r, f.npc, f.role, f.hello, c, fs, fsS, gap, ref y);
             UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 3.4f),
-                "一個人挑戰 Boss，會用到蹲、跳、閃和你全部的技能；Boss 血量剩一半會怒吼換招，還會召喚小怪。\n用職業的基本能力值（不看等級與裝備），不能使用道具。", fsS, new Color(0.95f, 0.9f, 0.85f), TextAnchor.UpperLeft);
+                "一個人挑戰 Boss，會用到蹲、跳、閃和你全部的技能；Boss 血量剩一半會怒吼換招，還會召喚小怪。\n用你在故事模式的角色（等級、能力值、技能樹、裝備），Boss 也會跟著你的等級變強；打贏有裝備、金幣和經驗。不能使用道具。", fsS, new Color(0.95f, 0.9f, 0.85f), TextAnchor.UpperLeft);
             y += fs * 3.6f;
             UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.2f), "難度（簡單：Boss 較慢、你受到的傷害較少）", fsS, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleLeft, true);
             y += fs * 1.3f;

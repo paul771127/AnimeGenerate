@@ -43,10 +43,10 @@ namespace SpellDuel
             PeerIds.Clear();
         }
 
-        void SetPeerInfo(int pid, string cls, string[] loadout, string adv, string gear)
+        void SetPeerInfo(int pid, string cls, string[] loadout, string adv, string gear, int maxHp = 0)
         {
             if (!peerInfo.TryGetValue(pid, out var pi)) peerInfo[pid] = pi = new PeerInfo();
-            pi.cls = cls; pi.loadout = loadout; pi.adv = string.IsNullOrEmpty(adv) ? null : adv; pi.gear = gear;
+            pi.cls = cls; pi.loadout = loadout; pi.adv = string.IsNullOrEmpty(adv) ? null : adv; pi.gear = gear; if (maxHp > 0) pi.maxHp = maxHp;
         }
 
         /// <summary>觀戰端的網路訊息（OnNet 開頭轉過來）</summary>
@@ -54,8 +54,8 @@ namespace SpellDuel
         {
             switch (m.t)
             {
-                case "wply": SetPeerInfo(m.id, m.k, m.ks, m.a, m.g); return;
-                case "ready": SetPeerInfo(m.pid, m.k, m.ks, m.a, m.g); return;
+                case "wply": SetPeerInfo(m.id, m.k, m.ks, m.a, m.g, m.hp); return;
+                case "ready": SetPeerInfo(m.pid, m.k, m.ks, m.a, m.g, m.hp); return;
                 case "wstart": StartWatchBattle(m); return;
                 case "wend": EndBattle(); phase = Phase.Hidden; watchMode = -1; return;
                 case "wover":
@@ -152,6 +152,7 @@ namespace SpellDuel
             var head = NetPeers.TryGetValue(pid, out var pp) ? pp.head : new Vector3(0f, 1.6f, 0f);
             var f = new Fighter(PlayerLabel(pid, rc.id, pi?.adv), rc, pi?.loadout ?? new string[0], false) { head = head, isAlly = true, pid = pid };
             Advanced.ApplyStats(f, adv);
+            if (pi != null && pi.maxHp > 0) { f.maxHp = pi.maxHp; f.hp = f.maxHp; }
             return f;
         }
 
@@ -270,9 +271,9 @@ namespace SpellDuel
         public List<Msg> WatchSnapshot(Vector3[] areaWorld)
         {
             var l = new List<Msg>();
-            l.Add(new Msg { t = "wply", id = MyPid, k = myClass, ks = myLoadout.ToArray(), a = Progress.Char(myClass).adv ?? "", g = MyGearCode });
+            l.Add(new Msg { t = "wply", id = MyPid, k = myClass, ks = myLoadout.ToArray(), a = Progress.Char(myClass).adv ?? "", g = MyGearCode, hp = MyMaxHp });
             foreach (var pid in PeerIds)
-                if (peerInfo.TryGetValue(pid, out var pi)) l.Add(new Msg { t = "wply", id = pid, k = pi.cls, ks = pi.loadout, a = pi.adv ?? "", g = pi.gear });
+                if (peerInfo.TryGetValue(pid, out var pi)) l.Add(new Msg { t = "wply", id = pid, k = pi.cls, ks = pi.loadout, a = pi.adv ?? "", g = pi.gear, hp = pi.maxHp });
             if (phase == Phase.Fighting && battle != null && NetMode)
             {
                 l.Add(new Msg { t = "wstart", e = NetModeCode, k = netDungeonId ?? "", hp = difficulty, pts = areaWorld });
