@@ -418,18 +418,11 @@ namespace SpellDuel
             }
             else if(kind==4)
             {
-                // 練習：靶心＋木樁
-                LobbyRing(center,u*.30f,c,Mathf.Max(1,u*.03f),24);
-                LobbyRing(center,u*.17f,UiKit.Paper,Mathf.Max(1,u*.03f),20);
-                UiKit.Gem(new Rect(center.x-u*.06f,center.y-u*.06f,u*.12f,u*.12f),UiKit.Gold);
-                LobbyStroke(new Vector2(r.x+u*.78f,r.y+u*.22f),new Vector2(center.x+u*.05f,center.y-u*.05f),u*.03f,UiKit.Paper);
+                UiKit.PracticeArt(r,c);
             }
             else if(kind==5)
             {
-                // 設定：齒輪
-                LobbyRing(center,u*.22f,c,Mathf.Max(1,u*.07f),20);
-                for(int t=0;t<8;t++){float a=t*Mathf.PI/4f;var d=new Vector2(Mathf.Cos(a),Mathf.Sin(a));LobbyStroke(center+d*u*.24f,center+d*u*.34f,u*.08f,c);}
-                UiKit.Gem(new Rect(center.x-u*.07f,center.y-u*.07f,u*.14f,u*.14f),UiKit.Paper);
+                UiKit.SettingsArt(r,c);
             }
             else if(kind==3)
             {

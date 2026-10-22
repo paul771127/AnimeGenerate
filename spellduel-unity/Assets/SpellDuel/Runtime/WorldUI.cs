@@ -209,7 +209,10 @@ namespace SpellDuel
             }
             // 無盡塔（地圖上的一個地點）
             var twr = new Rect(r.x + gap, bottom + gap * 0.3f, r.width - gap * 2, towerH);
-            if (UiKit.Button(twr, $"🗼 無盡塔　無盡模式・最佳 {EndlessBest?.Invoke() ?? 0} 分", fsS, false, TowerColor)) { screen = Screen.Tower; sel = null; return; }
+            string towerLabel = $"🗼 無盡塔　無盡模式・最佳 {EndlessBest?.Invoke() ?? 0} 分";
+            if (UiKit.Button(twr, "", fsS, false, TowerColor)) { screen = Screen.Tower; sel = null; return; }
+            UiKit.TowerArt(new Rect(twr.x+gap*.2f,twr.y+2,twr.height*1.1f,twr.height-4),TowerColor);
+            UiKit.Text(new Rect(twr.x+twr.height*1.15f,twr.y,twr.width-twr.height*1.2f,twr.height),towerLabel,fsS,Color.white,TextAnchor.MiddleCenter,true);
             bottom += towerH + gap * 0.4f;
             // 選中的關卡
             var dr = new Rect(r.x + gap, bottom + gap * 0.3f, r.width - gap * 2, detailH - gap * 0.3f);

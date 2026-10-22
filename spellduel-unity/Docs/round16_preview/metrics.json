@@ -1,0 +1,218 @@
+{
+  "method": "Actual C# art executed under .NET 10 with offline Unity API contracts; vertex measurements, not native Unity rendering or navigation.",
+  "syntaxFiles": 116,
+  "facilities": [
+    {
+      "town": 0,
+      "kind": "dungeon",
+      "radius": 1.6303757,
+      "limit": 2.1,
+      "triangles": 1472,
+      "renderers": 10
+    },
+    {
+      "town": 0,
+      "kind": "training",
+      "radius": 1.6500001,
+      "limit": 2.1,
+      "triangles": 1908,
+      "renderers": 8
+    },
+    {
+      "town": 0,
+      "kind": "bounty",
+      "radius": 1.1585443,
+      "limit": 1.5,
+      "triangles": 2288,
+      "renderers": 8
+    },
+    {
+      "town": 0,
+      "kind": "watch",
+      "radius": 1.3690974,
+      "limit": 1.5,
+      "triangles": 1008,
+      "renderers": 6
+    },
+    {
+      "town": 1,
+      "kind": "dungeon",
+      "radius": 1.6303757,
+      "limit": 2.1,
+      "triangles": 1312,
+      "renderers": 12
+    },
+    {
+      "town": 1,
+      "kind": "training",
+      "radius": 1.6500001,
+      "limit": 2.1,
+      "triangles": 1748,
+      "renderers": 10
+    },
+    {
+      "town": 1,
+      "kind": "bounty",
+      "radius": 1.1585443,
+      "limit": 1.5,
+      "triangles": 2128,
+      "renderers": 10
+    },
+    {
+      "town": 1,
+      "kind": "watch",
+      "radius": 1.3690974,
+      "limit": 1.5,
+      "triangles": 848,
+      "renderers": 7
+    },
+    {
+      "town": 2,
+      "kind": "dungeon",
+      "radius": 1.6303757,
+      "limit": 2.1,
+      "triangles": 1448,
+      "renderers": 9
+    },
+    {
+      "town": 2,
+      "kind": "training",
+      "radius": 1.6500001,
+      "limit": 2.1,
+      "triangles": 1884,
+      "renderers": 7
+    },
+    {
+      "town": 2,
+      "kind": "bounty",
+      "radius": 1.1585443,
+      "limit": 1.5,
+      "triangles": 2264,
+      "renderers": 7
+    },
+    {
+      "town": 2,
+      "kind": "watch",
+      "radius": 1.3690974,
+      "limit": 1.5,
+      "triangles": 984,
+      "renderers": 4
+    },
+    {
+      "town": 3,
+      "kind": "dungeon",
+      "radius": 1.6303757,
+      "limit": 2.1,
+      "triangles": 1088,
+      "renderers": 10
+    },
+    {
+      "town": 3,
+      "kind": "training",
+      "radius": 1.6500001,
+      "limit": 2.1,
+      "triangles": 1524,
+      "renderers": 8
+    },
+    {
+      "town": 3,
+      "kind": "bounty",
+      "radius": 1.1585443,
+      "limit": 1.5,
+      "triangles": 1904,
+      "renderers": 8
+    },
+    {
+      "town": 3,
+      "kind": "watch",
+      "radius": 1.3690974,
+      "limit": 1.5,
+      "triangles": 624,
+      "renderers": 6
+    },
+    {
+      "town": 4,
+      "kind": "dungeon",
+      "radius": 1.6303757,
+      "limit": 2.1,
+      "triangles": 1224,
+      "renderers": 9
+    },
+    {
+      "town": 4,
+      "kind": "training",
+      "radius": 1.6500001,
+      "limit": 2.1,
+      "triangles": 1660,
+      "renderers": 7
+    },
+    {
+      "town": 4,
+      "kind": "bounty",
+      "radius": 1.1585443,
+      "limit": 1.5,
+      "triangles": 2040,
+      "renderers": 7
+    },
+    {
+      "town": 4,
+      "kind": "watch",
+      "radius": 1.3690974,
+      "limit": 1.5,
+      "triangles": 760,
+      "renderers": 5
+    },
+    {
+      "npc": "嚮導",
+      "triangles": 7032,
+      "renderers": 33
+    },
+    {
+      "npc": "教官",
+      "triangles": 6120,
+      "renderers": 32
+    },
+    {
+      "npc": "懸賞官",
+      "triangles": 6644,
+      "renderers": 34
+    },
+    {
+      "npc": "播報員",
+      "triangles": 6564,
+      "renderers": 29
+    }
+  ],
+  "residents": [
+    {
+      "name": "嚮導",
+      "soleY": 0.0,
+      "topY": 1.6996303,
+      "horizontalEnvelope": 0.5103203751566485,
+      "ownFacilityClearance": 0.4896796248433515
+    },
+    {
+      "name": "教官",
+      "soleY": 0.0,
+      "topY": 1.6860447,
+      "horizontalEnvelope": 0.6783620823364834,
+      "ownFacilityClearance": 0.32163791766351657
+    },
+    {
+      "name": "懸賞官",
+      "soleY": 0.0,
+      "topY": 1.7059059,
+      "horizontalEnvelope": 0.3687323065047588,
+      "ownFacilityClearance": 1.2312676934952413
+    },
+    {
+      "name": "播報員",
+      "soleY": 0.0,
+      "topY": 1.7048625,
+      "horizontalEnvelope": 0.4778314237708341,
+      "ownFacilityClearance": 1.122168576229166
+    }
+  ],
+  "minNewFacilityPairGap": 4.032168761236873,
+  "minNewFacilityToArrivalCenterline": 4.0
+}

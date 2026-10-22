@@ -8,7 +8,7 @@ namespace SpellDuel
         static readonly Dictionary<string,Mesh> meshes=new Dictionary<string,Mesh>();
         static readonly Dictionary<string,Color32[]> images=new Dictionary<string,Color32[]>();
         internal const int W=256,H=256;
-        internal static bool Has(string id)=>id=="艾琳"||id=="mage"||id=="archmage"||id=="summoner"||id=="priest"||id=="bishop"||id=="米菈"||id=="海斗"||id=="阿潮"||id=="小鐵"||id=="翠"||id=="小葉"||id=="店員";
+        internal static bool Has(string id)=>id=="教官"||id=="艾琳"||id=="mage"||id=="archmage"||id=="summoner"||id=="priest"||id=="bishop"||id=="米菈"||id=="海斗"||id=="阿潮"||id=="小鐵"||id=="翠"||id=="小葉"||id=="店員";
         internal static float Seat(string id,Portraits.Persona p)
         {
             var v=AnimeHair.MeshFor(id,p).vertices;float top=-1;
@@ -57,6 +57,7 @@ namespace SpellDuel
                     }
                 }
             }
+            else if(id=="教官"){b.Loft(new[]{.095f,.072f},new[]{r+.005f,r+.005f},new[]{r*.96f,r*.96f},CharacterLook.Hex("bf5944"),0,0,16);b.Panel(new Vector3(-.11f,.09f,-.13f),new Vector3(-.10f,.07f,-.13f),new Vector3(-.18f,-.03f,-.14f),new Vector3(-.16f,-.04f,-.14f),d.Accent);}
             else if(id=="小鐵")
             {
                 b.Loft(new[]{seat+.012f,seat-.012f},new[]{r,r},new[]{r*.92f,r*.92f},CharacterLook.Hex("d34d32"));

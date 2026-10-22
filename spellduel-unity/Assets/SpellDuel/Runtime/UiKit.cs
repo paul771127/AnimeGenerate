@@ -2,7 +2,7 @@ using UnityEngine;
 namespace SpellDuel
 {
     /// <summary>Cached procedural nine-slice crystal panels. Drawing helpers never own game state.</summary>
-    public static class UiKit
+    public static partial class UiKit
     {
         public static readonly Color Gold = new Color(.94f,.76f,.43f), Paper = new Color(.97f,.94f,.85f), Muted = new Color(.72f,.79f,.88f);
         static Texture2D panel, outline, bevel, circle, diamond, hexagon;

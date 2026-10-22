@@ -1,0 +1,23 @@
+{
+  "homeDrawMethodByteEquivalent": true,
+  "homeSizes": [
+    [
+      1080,
+      2340
+    ],
+    [
+      360,
+      780
+    ]
+  ],
+  "homeButtonsPerSize": 5,
+  "protectedSourcesUnchanged": {
+    "TownWalk.cs": true,
+    "WorldUI.Village.cs": true,
+    "SoloBattle.Village.cs": true,
+    "CharacterRig.cs": true,
+    "GameRoot.cs": true,
+    "SpeechInput.cs": true
+  },
+  "towerButtonRectAndActionUnchanged": true
+}

@@ -59,6 +59,7 @@ namespace SpellDuel
             var canvas = new Canvas(size, r, g, b) { persona=PersonaFor(speaker), posing=true, identity=speaker };
             switch (speaker)
             {
+                case "嚮導": case "教官": case "懸賞官": case "播報員": case "塔守": FacilityPortrait(canvas,speaker); break;
                 case "艾琳": Erin(canvas); break;
                 case "老焰": OldFlame(canvas); break;
                 case "小鐵": LittleSmith(canvas); break;
@@ -127,6 +128,11 @@ namespace SpellDuel
         {
             switch(Key(key))
             {
+                case "嚮導": return new Persona(1f,1f,1f,0.92f,0f,0f,-1f,0f,0.3f,0f,0f,0f,0f,0f,.04f,1f);
+                case "教官": return new Persona(1f,1f,1f,0.91f,0f,0f,3f,0f,0f,0f,0f,0f,0f,0f,.04f,1f);
+                case "懸賞官": return new Persona(1f,1f,1f,0.96f,0f,0f,1f,0f,0.15f,0f,0f,0f,0f,0f,.04f,1f);
+                case "播報員": return new Persona(1f,1f,1f,1.06f,0f,0f,-1f,0f,0.9f,0f,0f,0f,0f,0f,.04f,1f);
+                case "塔守": return new Persona(1f,1f,1f,0.88f,0f,0f,-2f,0f,0.1f,0f,0f,0f,0f,0f,.04f,1f);
                 case "艾琳": return new Persona(0.96f,0.944f,0.97f,1.14f,1.6f,0f,1.4f,0f,0.65f,0f,-0.8f,1.2f,-0.8f,0f,0f,1f);
                 case "澪": return new Persona(0.972f,0.944f,1.016f,0.883f,-3.6f,-0.22f,-1.75f,0f,0f,0f,2.8f,-4.8f,0.8f,0f,0.09f,1f);
                 case "老焰": return new Persona(1.016f,1f,1.004f,0.9064f,-2.8f,-0.08f,-4.55f,0f,0.22f,0f,2.4f,-2f,0f,3f,0.072f,1f);
@@ -423,6 +429,41 @@ namespace SpellDuel
             var main=OutfitArt.Get(id).Main;var cloth=new Paint(main.r,main.g,main.b);
             Bust(cv,Paint.Hex("#f3c89f"),hair,cloth,new Paint(look.Iris.r,look.Iris.g,look.Iris.b));
 
+        }
+        static void FacilityPortrait(Canvas cv,string id)
+        {
+            var look=CharacterLook.Get(id);var design=OutfitArt.Get(id);var skin=FacilityPeople.Skin(id);
+            var leather=Paint.Hex("#9b673a");var main=new Paint(design.Main.r,design.Main.g,design.Main.b);
+            if(id=="嚮導")cv.Box(.43f,-.61f,.22f,.48f,leather);
+            if(id=="塔守")cv.Poly(main,-.66f,-.86f,-.58f,.36f,-.29f,.80f,.28f,.80f,.56f,.36f,.68f,-.86f);
+            Bust(cv,new Paint(skin.r,skin.g,skin.b),new Paint(look.HairColor.r,look.HairColor.g,look.HairColor.b),main,new Paint(look.Iris.r,look.Iris.g,look.Iris.b),id=="塔守");
+            if(id=="嚮導")
+            {
+                cv.Poly(leather,-.09f,-.49f,-.30f,-.51f,-.40f,-.98f,-.09f,-.98f);cv.Poly(leather,.09f,-.49f,.30f,-.51f,.40f,-.98f,.09f,-.98f);
+                cv.Line(-.30f,-.46f,-.32f,-.97f,.026f,leather);cv.Line(.30f,-.46f,.32f,-.97f,.026f,leather);
+                cv.Line(.225f,.060f,.306f,-.054f,.006f,Paint.Hex("#a86d59"));
+                cv.Ring(-.53f,-.61f,.065f,.08f,.012f,Gold);cv.Box(-.53f,-.83f,.14f,.22f,Gold);cv.Box(-.53f,-.83f,.09f,.15f,Paint.Hex("#ffe6a0"));
+            }
+            else if(id=="教官")
+            {
+                cv.Line(-.16f,-.48f,.03f,-.75f,.008f,White);cv.Line(.16f,-.48f,.03f,-.75f,.008f,White);cv.Box(.03f,-.76f,.075f,.05f,Gold);
+                for(int i=0;i<3;i++){cv.Line(-.62f,-.73f-i*.045f,-.48f,-.69f-i*.045f,.017f,White);cv.Line(.48f,-.69f-i*.045f,.62f,-.73f-i*.045f,.017f,White);}
+            }
+            else if(id=="懸賞官")
+            {
+                var plan=new FacePlan(cv.persona);for(int side=-1;side<=1;side+=2)cv.Ring(side*plan.EyeX*3,plan.EyeY*3+.09f,.126f,.09f,.008f,Gold);
+                cv.Line(-.04f,.09f,.04f,.09f,.007f,Gold);cv.Line(-.29f,-.48f,.34f,-.95f,.030f,leather);
+                cv.Box(-.51f,-.82f,.17f,.28f,White);cv.Box(-.51f,-.67f,.21f,.025f,Gold);cv.Box(-.51f,-.97f,.21f,.025f,Gold);Leaf(cv,.52f,-.68f,.16f,Paint.Hex("#b7aad9"),.05f);
+            }
+            else if(id=="播報員")
+            {
+                cv.Poly(Paint.Hex("#36b8bb"),-.34f,-.44f,-.70f,-.70f,-.55f,-.89f,-.23f,-.56f);cv.Poly(Paint.Hex("#36b8bb"),.34f,-.44f,.70f,-.70f,.55f,-.89f,.23f,-.56f);
+                cv.Poly(Gold,.35f,-.89f,.47f,-.80f,.67f,-.55f,.76f,-.78f);cv.Line(-.58f,-.99f,-.58f,-.51f,.015f,leather);cv.Poly(Paint.Hex("#36c8cb"),-.57f,-.51f,-.36f,-.59f,-.57f,-.69f);
+            }
+            else
+            {
+                cv.Line(-.49f,-.57f,-.49f,-.77f,.015f,Gold);var xy=new float[20];for(int i=0;i<10;i++){float a=Mathf.PI*.5f+i*Mathf.PI/5,rr=i%2==0?.13f:.060f;xy[i*2]=-.49f+Mathf.Cos(a)*rr;xy[i*2+1]=-.85f+Mathf.Sin(a)*rr;}cv.Poly(Gold,xy);cv.Oval(-.49f,-.85f,.07f,.07f,White);
+            }
         }
         static void BellBrooch(Canvas cv,float x,float y,float s)
         {

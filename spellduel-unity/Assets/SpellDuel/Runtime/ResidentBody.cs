@@ -27,9 +27,9 @@ namespace SpellDuel
                     b.Panel(new Vector3(-.10f,.50f,.137f),new Vector3(.10f,.50f,.137f),new Vector3(-.14f,id=="凪"?-.42f:-.16f,.137f),new Vector3(.14f,id=="凪"?-.42f:-.16f,.137f),d.Sub,.012f,6,5);
             }
             else if(part.StartsWith("upper"))
-                b.Loft(new[]{.042f,.012f,-.035f,-.10f,-.19f,-.28f,-.295f},new[]{.036f,.060f,.072f,.067f,.053f,.040f,.037f},new[]{.035f,.058f,.068f,.064f,.050f,.039f,.037f},id=="鐵匠"?skin:d.Main,0,0,12);
+                b.Loft(new[]{.042f,.012f,-.035f,-.10f,-.19f,-.28f,-.295f},new[]{.036f,.060f,.072f,.067f,.053f,.040f,.037f},new[]{.035f,.058f,.068f,.064f,.050f,.039f,.037f},id=="鐵匠"||id=="教官"?skin:d.Main,0,0,12);
             else if(part.StartsWith("fore"))
-                b.Loft(new[]{.025f,0f,-.055f,-.12f,-.20f,-.26f},new[]{.039f,.043f,.055f,.047f,.033f,.030f},new[]{.037f,.041f,.050f,.041f,.029f,.026f},id=="鐵匠"||id=="小鐵"?skin:d.Main,0,0,12);
+                b.Loft(new[]{.025f,0f,-.055f,-.12f,-.20f,-.26f},new[]{.039f,.043f,.055f,.047f,.033f,.030f},new[]{.037f,.041f,.050f,.041f,.029f,.026f},id=="鐵匠"||id=="小鐵"||id=="教官"?skin:d.Main,0,0,12);
             else if(part.StartsWith("hand"))
             {
                 // Joined fingers form a single mitten hull; only the thumb is separate.
@@ -44,6 +44,10 @@ namespace SpellDuel
                 b.Loft(new[]{.023f,-.025f,-.10f,-.18f,-.27f,-.355f},new[]{.054f,.057f,.069f,.064f,.045f,.037f},new[]{.052f,.055f,.068f,.062f,.043f,.037f},d.Sub,0,0,12);
                 b.Tube(new[]{new Vector3(0,-.32f,0),new Vector3(0,-.37f,.033f),new Vector3(0,-.414f,.040f),new Vector3(0,-.43f,.040f)},new[]{.039f,.060f,.068f,.068f},new[]{.045f,.093f,.120f,.120f},d.Sub,12);
             }
+            if(id=="嚮導"&&part=="torso")for(int side=-1;side<=1;side+=2)b.Panel(new Vector3(side*.035f,.54f,.125f),new Vector3(side*.13f,.54f,.125f),new Vector3(side*.035f,.12f,.151f),new Vector3(side*.14f,.12f,.151f),CharacterLook.Hex("9b673a"),.012f,4,5);
+            if(id=="播報員"&&part=="torso")for(int side=-1;side<=1;side+=2)b.Panel(new Vector3(side*.055f,.61f,.10f),new Vector3(side*.16f,.54f,.11f),new Vector3(side*.12f,.39f,.152f),new Vector3(side*.24f,.40f,.125f),d.Sub,.012f,4,4);
+            if(id=="教官"&&part.StartsWith("upper"))for(int i=0;i<3;i++)b.Loft(new[]{-.12f-i*.025f,-.135f-i*.025f},new[]{.074f,.073f},new[]{.071f,.070f},CharacterLook.Hex("e5d5af"),0,0,12);
+            if(id=="播報員"&&part=="torso")b.Panel(new Vector3(-.06f,.63f,-.09f),new Vector3(.06f,.63f,-.09f),new Vector3(-.22f,.24f,-.15f),new Vector3(.22f,.24f,-.17f),d.Sub,-.015f,4,6);
             StoryFigure.Tailor(b,id,part);
             if(bulk!=1)for(int i=0;i<b.V.Count;i++){var v=b.V[i];v.x*=bulk;b.V[i]=v;}
             mesh=b.Finish("Resident body "+key);cache[key]=mesh;return mesh;

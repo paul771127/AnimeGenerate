@@ -12,6 +12,7 @@ namespace SpellDuel
             bool child=key=="小葉",elder=key=="老焰"||key=="翠"||key=="阿潮"||key=="公會長";
             bool elf=key=="翠"||key=="楓"||child;
             Color skin=C("efbba1"),hair=C("623d54"),cloth=C("9c4c64"),iris=C("a17385");
+            if(FacilityPeople.Has(key)){skin=FacilityPeople.Skin(key);hair=CharacterLook.Get(key).HairColor;cloth=OutfitArt.Get(key).Main;iris=CharacterLook.Get(key).Iris;}
             switch(key)
             {
                 case "艾琳":skin=C("f7c9ac");hair=C("d1c3e8");cloth=C("513180");iris=C("aa70e5");break;
@@ -88,6 +89,7 @@ namespace SpellDuel
                     for(int i=-1;i<=1;i++)BellPin(p,new Vector3(i*.08f,1.13f,.20f),.065f);
                     AnimeFace.Detail(face,key,persona,new Vector2(.100f,-.025f),new Vector2(.110f,-.061f),.002f,C("a96861"));break;
             }
+            FacilityResidentProps(key,p,face);
             // Facial accessories share the fitted head frame rather than remaining full-size.
             var headExtras=new System.Collections.Generic.List<Transform>();
             foreach(var tf in p.GetComponentsInChildren<Transform>())if(tf.gameObject.name=="Pointed beard"||tf.gameObject.name=="Moustache"||tf.gameObject.name=="Soot cheek"||tf.gameObject.name=="Rosy cheek"||tf.gameObject.name=="Golden earring")headExtras.Add(tf);

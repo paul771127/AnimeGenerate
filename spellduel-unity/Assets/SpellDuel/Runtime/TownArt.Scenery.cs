@@ -86,12 +86,13 @@ namespace SpellDuel
         {
             var p=Group(parent,kind+" art",Vector3.zero);
             if(kind=="landmark"){Landmark(town,p);Batch(p);return;}
-            RegionalBuilding(town,kind,p);Batch(p);
+            if(!FacilityBuilding(town,kind,p))RegionalBuilding(town,kind,p);Batch(p);
         }
         static void Sign(Transform p,float h,float d,Color c,string kind)
         {
             var g=Group(p,"Pictogram sign",new Vector3(0,h-.12f,-d*.5f-.14f));
             Box(g,"Sign plaque",Vector3.zero,new Vector3(.72f,.53f,.08f),c);
+            if(FacilitySign(g,kind))return;
             if(kind=="shop")Bottle(g,new Vector3(0,-.17f,-.08f),C("528f9b"),.30f);
             else if(kind=="smith"){Beam(g,"Hammer haft",new Vector3(-.12f,-.18f,-.07f),new Vector3(.1f,.1f,-.07f),.055f,Wood);Box(g,"Hammer head",new Vector3(.1f,.12f,-.07f),new Vector3(.3f,.12f,.09f),Cream);}
             else{Beam(g,"Sword",new Vector3(0,-.19f,-.07f),new Vector3(0,.2f,-.07f),.055f,Cream);Box(g,"Guard",new Vector3(0,-.04f,-.08f),new Vector3(.3f,.06f,.06f),Cream);}

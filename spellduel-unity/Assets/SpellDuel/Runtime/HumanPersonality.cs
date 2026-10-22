@@ -8,9 +8,9 @@ namespace SpellDuel
         {
             switch(id)
             {
-                case "swordsman":case "mage":case "paladin":case "小鐵":return Temper.Confident;
-                case "ranger":case "summoner":case "小葉":case "海斗":case "鐵匠":return Temper.Cheerful;
-                case "archer":case "marksman":case "archmage":case "ninja":case "楓":case "澪":return Temper.Calm;
+                case "教官":case "swordsman":case "mage":case "paladin":case "小鐵":return Temper.Confident;
+                case "播報員":case "ranger":case "summoner":case "小葉":case "海斗":case "鐵匠":return Temper.Cheerful;
+                case "懸賞官":case "archer":case "marksman":case "archmage":case "ninja":case "楓":case "澪":return Temper.Calm;
                 case "priest":case "bishop":case "凪":case "艾琳":return Temper.Gentle;
                 case "berserker":case "inquisitor":return Temper.Fierce;
                 case "assassin":case "shadowdancer":case "米菈":return Temper.Cunning;
