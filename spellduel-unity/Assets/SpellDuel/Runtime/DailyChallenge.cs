@@ -40,7 +40,7 @@ namespace SpellDuel
         {
             switch (k)
             {
-                case Kind.Dodge: return new[] { 20, 35, 50 };   // 只有火球：一場約 55～60 發
+                case Kind.Dodge: return new[] { 25, 45, 60 };   // 一場約 70 發（火球約 58＋橫掃／震地環約 11）
                 case Kind.Run: return new[] { 5, 8, 12 };   // 金幣會到處亂跑（0.5→1.1 m/s），比以前難追一點
                 default:
                     float m = 1f + 0.12f * Mathf.Max(0, level - 1);
@@ -104,22 +104,22 @@ namespace SpellDuel
         /// 閃避挑戰的題目（兩條獨立的出題線，會重疊）：
         ///   ①遠程火球：四面八方（360°，身後也會來），速度都一樣；每 BoltEvery 秒射一輪，
         ///     每過 15 秒一輪就多一發（0～15 秒 1 發 …… 45～60 秒 4 發），各自從不同方向。
-        ///   ②範圍招：橫掃（蹲）、落石（走出紅圈）、震地環（跳）——目前關閉（AreaAttacks＝false，只出火球）。
+        ///   ②範圍招：橫掃（蹲）、震地環（跳），第 6 秒起、間隔從 6 秒縮到 4 秒；落石（走出紅圈）目前不出（RainAttacks＝false）。
         /// </summary>
         public class DodgeDirector
         {
             readonly System.Random rnd;
             float nextBolt = 1.5f, nextArea = AreaFrom;
-            public const float AreaFrom = 12f, QuakeFrom = 25f;   // 範圍攻擊第 12 秒起、震地波第 25 秒起（2026-10 下修：太難）
-            /// <summary>範圍招（橫掃／落石／震地環）開關：先關掉，只出火球</summary>
-            public const bool AreaAttacks = false;
+            public const float AreaFrom = 6f, QuakeFrom = 6f;   // 橫掃和震地環一起從第 6 秒開始
+            /// <summary>範圍招開關；落石先不出（只有橫掃＋震地環）</summary>
+            public const bool AreaAttacks = true, RainAttacks = false;
             public DodgeDirector(int seed) { rnd = new System.Random(seed); }
             /// <summary>預備時間（光門出現到攻擊放出）：越後面越短</summary>
             public static float Windup(float t) => Mathf.Lerp(1.2f, 0.85f, Mathf.Clamp01(t / Duration));
             /// <summary>火球每一輪的間隔（固定）</summary>
             public const float BoltEvery = 2.5f;
             public static float BoltInterval(float t) => BoltEvery;
-            public static float AreaInterval(float t) => Mathf.Lerp(8f, 5f, Mathf.Clamp01(t / Duration));
+            public static float AreaInterval(float t) => Mathf.Lerp(6f, 4f, Mathf.Clamp01(t / Duration));
             float R(float a, float b) => a + (float)rnd.NextDouble() * (b - a);
             /// <summary>一輪射幾發：每過 15 秒多一發（0～15 秒 1 發 … 45～60 秒 4 發）</summary>
             public static int VolleyOf(float t, double roll = 0) => 1 + Mathf.Clamp(Mathf.FloorToInt(t / 15f), 0, 3);
@@ -139,7 +139,8 @@ namespace SpellDuel
                 if (AreaAttacks && t >= nextArea)
                 {
                     nextArea = t + AreaInterval(t) * R(0.8f, 1.2f);
-                    var pool = new List<Attack> { Attack.Sweep, Attack.Rain };
+                    var pool = new List<Attack> { Attack.Sweep };
+                    if (RainAttacks) pool.Add(Attack.Rain);
                     if (t >= QuakeFrom) pool.Add(Attack.Quake);
                     var k = pool[rnd.Next(pool.Count)];
                     list.Add(new Shot { kind = k, angle = k == Attack.Sweep ? R(-180f, 180f) : R(-60f, 60f), dist = k == Attack.Quake ? 4.5f : R(4.5f, 5.5f), speed = 1f });
