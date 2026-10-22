@@ -627,6 +627,19 @@
 4. GitHub repo → Settings → Secrets and variables → Actions → New repository secret：名稱 `UNITY_CLOUD_PROJECT_ID`，值貼上 Project ID。
 5. 重新建置（推送或在 Actions 手動執行）。（目前的專案 ID 已經寫在 `BuildScript.cs` 的 `DefaultCloudProjectId`，不設定 Secret 也能用；設定 Secret 會覆蓋它。）沒設定時遊戲照常可以玩，只有遠端連線會顯示「沒有設定 Unity Cloud 專案」。
 
+## 遠端分身的平滑（2026-10）
+
+遠距對戰、遠端合作和觀戰時，別人的角色照他的手機動（`CharacterRig.DrivePhone`）。網路每 0.05 秒才來一筆，手拿手機也會小晃，直接照用角色會一直抖，所以畫面上做了平滑：
+
+| 部位 | 跟上時間 | 不理會的晃動 |
+|---|---|---|
+| 頭和手（手機位置、朝向、手勢的手） | 0.08 秒 | — |
+| 身體位置 | 0.25 秒 | 4 cm 內 |
+| 身體面向 | 0.3 秒 | 5° 內 |
+
+- 走路動作照平滑後的速度：每秒 0.12 m 以下算站著，不會原地踏步。
+- 只影響畫面，戰鬥判定仍用收到的位置。
+
 ## 觀戰模式
 
 首頁按「👀 觀戰（輸入朋友的房間代碼）」，輸入或貼上房間代碼就能看別人打。

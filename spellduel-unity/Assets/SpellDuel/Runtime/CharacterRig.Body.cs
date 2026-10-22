@@ -27,6 +27,12 @@ namespace SpellDuel
         float standH = 1.55f, crouchH = 0.95f, crouchAmt, gestureAmt, phoneLast = -99f;
         bool gesture;
 
+        // 平滑（遠距對戰／合作／觀戰的分身）：網路每 0.05 秒才來一筆、手拿手機也會小晃，直接照用角色會一直抖。
+        //   手機（頭、手）：0.08 秒跟上；身體位置：0.25 秒跟上、4cm 內的晃動不動；面向：0.3 秒跟上、5° 內不轉。
+        //   只影響畫面，戰鬥判定仍用收到的位置。
+        public const float PhoneSmooth = 0.08f, FeetSmooth = 0.25f, FeetDeadZone = 0.04f, YawSmooth = 0.3f, YawDeadZone = 5f;
+        Vector3 smPhone, smGesture, smFeet, feetGoal; Quaternion smRot = Quaternion.identity; float smYaw, yawGoal, smSpeed;
+
         /// <summary>
         /// 用真人手機的位置／朝向驅動角色（場景座標）。standH／crouchH：那個人站姿、蹲姿時的手機高度（≤0＝沒有校正，用預設）。
         /// gestureHand：手勢的手在鏡頭裡；gestureAt：那隻手的位置（場景座標）。每幀呼叫；超過 0.5 秒沒呼叫就回到一般動作。
@@ -34,7 +40,14 @@ namespace SpellDuel
         public void DrivePhone(Vector3 phone, Quaternion rot, float stand, float crouch, bool gestureHand, Vector3 gestureAt)
         {
             if (isDummy || body == null) return;
-            phonePos = phone; phoneRot = rot; gesture = gestureHand; gesturePos = gestureAt;
+            bool fresh = !phoneDriven || Time.time - phoneLast > 0.5f;   // 第一次（或斷了一陣子）：直接跳到位置
+            float dt = Mathf.Clamp(Time.deltaTime, 0f, 0.1f);
+            float aPhone = fresh ? 1f : 1f - Mathf.Exp(-dt / PhoneSmooth);
+            smPhone = Vector3.Lerp(smPhone, phone, aPhone);
+            smRot = Quaternion.Slerp(smRot, rot, aPhone);
+            smGesture = gestureHand && gesture ? Vector3.Lerp(smGesture, gestureAt, aPhone) : gestureAt;
+            phone = smPhone; rot = smRot;
+            phonePos = phone; phoneRot = rot; gesture = gestureHand; gesturePos = smGesture;
             if (stand > 0.6f && stand < 2.3f) standH = stand;
             crouchH = crouch > 0.2f && crouch < standH - 0.1f ? crouch : standH * 0.62f;
             if (rigEye < 0f) rigEye = Mathf.Clamp(transform.InverseTransformPoint(head.position).y + 0.013f, 1.3f, 1.8f);
@@ -46,7 +59,25 @@ namespace SpellDuel
             float s = Mathf.Clamp(standH / RigEyeHeight, 0.6f, 1.3f);
             transform.localScale = Vector3.one * s;
             var feet = phone - fwd * PhoneReach; feet.y = WorldFrame.Marker.position.y;   // 站在世界的地面上（世界原點在地板上；AR 座標的 y=0 不是地板）
-            transform.SetPositionAndRotation(feet, Quaternion.LookRotation(fwd, Vector3.up));
+            // 身體：目標移動超過 4cm 才換目標（手的小晃動不帶動整個人），再慢慢走過去
+            float yaw = Mathf.Atan2(fwd.x, fwd.z) * Mathf.Rad2Deg;
+            if (fresh) { smFeet = feetGoal = feet; smYaw = yawGoal = yaw; smSpeed = 0f; }
+            else
+            {
+                var gd = feet - feetGoal; gd.y = 0f;
+                if (gd.magnitude > FeetDeadZone) feetGoal = feet - gd.normalized * FeetDeadZone;
+                feetGoal.y = feet.y;
+                if (Mathf.Abs(Mathf.DeltaAngle(yawGoal, yaw)) > YawDeadZone) yawGoal = yaw - Mathf.Sign(Mathf.DeltaAngle(yawGoal, yaw)) * YawDeadZone;
+                var before = smFeet;
+                smFeet = Vector3.Lerp(smFeet, feetGoal, 1f - Mathf.Exp(-dt / FeetSmooth));
+                smYaw = Mathf.LerpAngle(smYaw, yawGoal, 1f - Mathf.Exp(-dt / YawSmooth));
+                // 走路動作照平滑後的速度（太慢＝站著，不會原地踏步）
+                var mv = smFeet - before; mv.y = 0f;
+                float v = dt > 1e-4f ? mv.magnitude / dt : 0f;
+                smSpeed = Mathf.Lerp(smSpeed, v < 0.12f ? 0f : v, 1f - Mathf.Exp(-dt / 0.15f));
+            }
+            MoveSpeed = smSpeed;
+            transform.SetPositionAndRotation(smFeet, Quaternion.Euler(0f, smYaw, 0f));
         }
 
         /// <summary>Animate 最後呼叫：有手機資料時覆寫腿、身體、頭、手臂</summary>
