@@ -21,6 +21,10 @@ namespace SpellDuel
             public Vector3 pos; public float yaw;
             public Transform tf;
             public int lineAt;            // 下次聊天從第幾句開始
+            // 村民的行為：一般居民在家附近閒晃（走走停停），設施的老闆守在店門口；玩家走近就停下來看玩家，打招呼會揮手
+            public Vector2 home, target; public float idleUntil, waveCooldown; public bool walking, nearShown;
+            internal HumanResidentMotion motion;
+            public bool Wanders => opens == null && motion != null;   // 沒有關節的居民（第 4、5 章的居民）先不走動，免得用滑的
         }
 
         /// <summary>城鎮出口（柵欄的缺口）：走出去打開這一章的關卡選單</summary>
@@ -160,8 +164,64 @@ namespace SpellDuel
             BlobShadow.Attach(go.transform, 0.3f, 0.24f);   // 腳下的接觸陰影
             n.tf = go.transform;
             n.tf.localPosition = n.pos; n.tf.localRotation = Quaternion.Euler(0f, n.yaw, 0f);
-            npcs.Add(n);
-            walls.Add((new Vector2(n.pos.x, n.pos.z), NpcKeepOff));
+            n.motion = go.GetComponentInChildren<HumanResidentMotion>();
+            n.home = new Vector2(n.pos.x, n.pos.z); n.target = n.home;
+            n.idleUntil = Time.time + UnityEngine.Random.Range(1f, 5f);
+            npcs.Add(n);   // 居民會走動：碰撞改在 Resolve 裡用目前的位置算
+        }
+
+        // ---------------------------------------------------------------- 村民閒晃
+        public const float NpcWalkSpeed = 0.55f, NpcWanderRadius = 2.4f, NpcNotice = 3.2f;
+
+        /// <summary>這一點村民能不能站（不在建築裡、不在柵欄外、不撞到其他村民和玩家）</summary>
+        bool NpcFree(Npc self, Vector2 p, Vector2 me)
+        {
+            if (Vector2.Distance(p, PlazaC) > TownRadius - 1.5f) return false;
+            foreach (var (c, r) in walls) if (Vector2.Distance(p, c) < r + 0.5f) return false;
+            if (Vector2.Distance(p, me) < 1.1f) return false;
+            if (Vector2.Distance(p, new Vector2(WarpPos.x, WarpPos.z)) < 1.2f) return false;
+            foreach (var o in npcs) if (o != self && Vector2.Distance(p, new Vector2(o.pos.x, o.pos.z)) < 1.0f) return false;
+            return true;
+        }
+
+        void UpdateNpc(Npc n, Vector2 me, float dt, float now)
+        {
+            var np = new Vector2(n.pos.x, n.pos.z);
+            float dist = Vector2.Distance(np, me);
+            bool notice = dist < NpcNotice;
+            // 玩家第一次走近：揮個手（之後 20 秒內不再揮）
+            if (notice && !n.nearShown && now > n.waveCooldown) { n.motion?.Wave(); n.waveCooldown = now + 20f; }
+            n.nearShown = notice;
+            float yaw = n.yaw;
+            if (notice) { n.walking = false; yaw = Yaw(me - np); n.idleUntil = Mathf.Max(n.idleUntil, now + 1.5f); }
+            else if (n.Wanders)
+            {
+                if (!n.walking && now >= n.idleUntil)
+                {
+                    // 選一個家附近的新地點走過去
+                    for (int k = 0; k < 8; k++)
+                    {
+                        var t = n.home + UnityEngine.Random.insideUnitCircle * NpcWanderRadius;
+                        if (Vector2.Distance(t, np) > 0.8f && NpcFree(n, t, me)) { n.target = t; n.walking = true; break; }
+                    }
+                    if (!n.walking) n.idleUntil = now + 2f;
+                }
+                if (n.walking)
+                {
+                    var d = n.target - np;
+                    if (d.magnitude < 0.1f) { n.walking = false; n.idleUntil = now + UnityEngine.Random.Range(2.5f, 7f); }
+                    else
+                    {
+                        var next = np + d.normalized * Mathf.Min(d.magnitude, NpcWalkSpeed * dt);
+                        if (NpcFree(n, next, me)) { n.pos = new Vector3(next.x, 0f, next.y); np = next; yaw = Yaw(d); }
+                        else { n.walking = false; n.idleUntil = now + 1.5f; }   // 前面有人：停下來等一下
+                    }
+                }
+                else yaw = n.tf.localEulerAngles.y;   // 停下來：維持現在的方向
+            }
+            if (n.motion != null) n.motion.walkSpeed = n.walking ? NpcWalkSpeed : 0f;
+            n.tf.localPosition = n.pos;
+            n.tf.localRotation = Quaternion.Slerp(n.tf.localRotation, Quaternion.Euler(0f, yaw, 0f), dt * (n.walking ? 6f : 4f));
         }
 
         // ---------------------------------------------------------------- 每幀
@@ -220,10 +280,9 @@ namespace SpellDuel
             var camF = tr.InverseTransformDirection(cam.transform.forward); var camF2 = new Vector2(camF.x, camF.z);
             foreach (var n in npcs)
             {
+                UpdateNpc(n, meXZ, dt, now);
                 var np = new Vector2(n.pos.x, n.pos.z);
                 float dist = Vector2.Distance(np, meXZ);
-                float yaw = dist < 4f ? Yaw(meXZ - np) : n.yaw;
-                n.tf.localRotation = Quaternion.Slerp(n.tf.localRotation, Quaternion.Euler(0f, yaw, 0f), dt * 4f);
                 if (dist > TalkRange) continue;
                 float ang = camF2.sqrMagnitude > 1e-4f ? Vector2.Angle(camF2, np - meXZ) : 0f;
                 if (ang > TalkAngle && dist > 1.2f) continue;
@@ -249,6 +308,13 @@ namespace SpellDuel
                     var v = p - c; float rr = r + 0.3f;
                     if (v.sqrMagnitude < rr * rr) p = c + (v.sqrMagnitude > 1e-6f ? v.normalized : Vector2.down) * rr;
                 }
+            // 村民（會走動，用目前的位置）
+            for (int k = 0; k < 2; k++)
+                foreach (var n in npcs)
+                {
+                    var c = new Vector2(n.pos.x, n.pos.z); var v = p - c; float rr = NpcKeepOff + 0.3f;
+                    if (v.sqrMagnitude < rr * rr) p = c + (v.sqrMagnitude > 1e-6f ? v.normalized : Vector2.down) * rr;
+                }
             return Fence(p, PlazaC, TownRadius, exits.ConvertAll(e => e.dir), GateHalf, ExitDepth + 0.5f);
         }
 
@@ -267,6 +333,7 @@ namespace SpellDuel
         {
             if (Near == null) return false;
             greetLock = Time.time + 1.5f;
+            Near.motion?.Wave();   // 打招呼：對方揮手回應
             OnGreet?.Invoke(Near);
             return true;
         }
