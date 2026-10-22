@@ -44,6 +44,7 @@ namespace SpellDuel
                 b.Loft(new[]{.023f,-.025f,-.10f,-.18f,-.27f,-.355f},new[]{.054f,.057f,.069f,.064f,.045f,.037f},new[]{.052f,.055f,.068f,.062f,.043f,.037f},d.Sub,0,0,12);
                 b.Tube(new[]{new Vector3(0,-.32f,0),new Vector3(0,-.37f,.033f),new Vector3(0,-.414f,.040f),new Vector3(0,-.43f,.040f)},new[]{.039f,.060f,.068f,.068f},new[]{.045f,.093f,.120f,.120f},d.Sub,12);
             }
+            StoryFigure.Tailor(b,id,part);
             if(bulk!=1)for(int i=0;i<b.V.Count;i++){var v=b.V[i];v.x*=bulk;b.V[i]=v;}
             mesh=b.Finish("Resident body "+key);cache[key]=mesh;return mesh;
         }

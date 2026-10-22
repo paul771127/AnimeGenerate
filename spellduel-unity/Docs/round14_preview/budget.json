@@ -1,0 +1,226 @@
+[
+  {
+    "id": "艾琳",
+    "triangles13": 9776,
+    "triangles14": 12604,
+    "ratio": 1.289279869067103,
+    "renderers13": 33,
+    "renderers14": 33
+  },
+  {
+    "id": "凪",
+    "triangles13": 8652,
+    "triangles14": 9880,
+    "ratio": 1.1419325011558021,
+    "renderers13": 29,
+    "renderers14": 29
+  },
+  {
+    "id": "老焰",
+    "triangles13": 7872,
+    "triangles14": 11312,
+    "ratio": 1.4369918699186992,
+    "renderers13": 35,
+    "renderers14": 35
+  },
+  {
+    "id": "海斗",
+    "triangles13": 6704,
+    "triangles14": 8980,
+    "ratio": 1.3394988066825775,
+    "renderers13": 28,
+    "renderers14": 28
+  },
+  {
+    "id": "小鐵",
+    "triangles13": 7788,
+    "triangles14": 9636,
+    "ratio": 1.2372881355932204,
+    "renderers13": 28,
+    "renderers14": 28
+  },
+  {
+    "id": "翠",
+    "triangles13": 7816,
+    "triangles14": 11348,
+    "ratio": 1.4518935516888434,
+    "renderers13": 29,
+    "renderers14": 29
+  },
+  {
+    "id": "小葉",
+    "triangles13": 8912,
+    "triangles14": 10196,
+    "ratio": 1.1440754039497307,
+    "renderers13": 31,
+    "renderers14": 31
+  },
+  {
+    "id": "米菈",
+    "triangles13": 7104,
+    "triangles14": 7104,
+    "ratio": 1.0,
+    "renderers13": 31,
+    "renderers14": 31
+  },
+  {
+    "id": "楓",
+    "triangles13": 6796,
+    "triangles14": 6796,
+    "ratio": 1.0,
+    "renderers13": 30,
+    "renderers14": 30
+  },
+  {
+    "id": "阿潮",
+    "triangles13": 6648,
+    "triangles14": 6648,
+    "ratio": 1.0,
+    "renderers13": 34,
+    "renderers14": 34
+  },
+  {
+    "id": "鐵匠",
+    "triangles13": 6648,
+    "triangles14": 6648,
+    "ratio": 1.0,
+    "renderers13": 31,
+    "renderers14": 31
+  },
+  {
+    "id": "店員",
+    "triangles13": 6668,
+    "triangles14": 6668,
+    "ratio": 1.0,
+    "renderers13": 30,
+    "renderers14": 30
+  },
+  {
+    "id": "公會長",
+    "triangles13": 6832,
+    "triangles14": 6832,
+    "ratio": 1.0,
+    "renderers13": 30,
+    "renderers14": 30
+  },
+  {
+    "id": "swordsman",
+    "triangles13": 8100,
+    "triangles14": 8100,
+    "ratio": 1.0,
+    "renderers13": 33,
+    "renderers14": 33
+  },
+  {
+    "id": "archer",
+    "triangles13": 7748,
+    "triangles14": 7748,
+    "ratio": 1.0,
+    "renderers13": 35,
+    "renderers14": 35
+  },
+  {
+    "id": "mage",
+    "triangles13": 7380,
+    "triangles14": 7380,
+    "ratio": 1.0,
+    "renderers13": 30,
+    "renderers14": 30
+  },
+  {
+    "id": "assassin",
+    "triangles13": 6968,
+    "triangles14": 6968,
+    "ratio": 1.0,
+    "renderers13": 33,
+    "renderers14": 33
+  },
+  {
+    "id": "priest",
+    "triangles13": 8676,
+    "triangles14": 8676,
+    "ratio": 1.0,
+    "renderers13": 32,
+    "renderers14": 32
+  },
+  {
+    "id": "paladin",
+    "triangles13": 8876,
+    "triangles14": 8876,
+    "ratio": 1.0,
+    "renderers13": 34,
+    "renderers14": 34
+  },
+  {
+    "id": "berserker",
+    "triangles13": 7476,
+    "triangles14": 7476,
+    "ratio": 1.0,
+    "renderers13": 31,
+    "renderers14": 31
+  },
+  {
+    "id": "marksman",
+    "triangles13": 7836,
+    "triangles14": 7836,
+    "ratio": 1.0,
+    "renderers13": 35,
+    "renderers14": 35
+  },
+  {
+    "id": "ranger",
+    "triangles13": 8560,
+    "triangles14": 8560,
+    "ratio": 1.0,
+    "renderers13": 40,
+    "renderers14": 40
+  },
+  {
+    "id": "archmage",
+    "triangles13": 7980,
+    "triangles14": 7980,
+    "ratio": 1.0,
+    "renderers13": 33,
+    "renderers14": 33
+  },
+  {
+    "id": "summoner",
+    "triangles13": 8000,
+    "triangles14": 8000,
+    "ratio": 1.0,
+    "renderers13": 33,
+    "renderers14": 33
+  },
+  {
+    "id": "ninja",
+    "triangles13": 7224,
+    "triangles14": 7224,
+    "ratio": 1.0,
+    "renderers13": 35,
+    "renderers14": 35
+  },
+  {
+    "id": "shadowdancer",
+    "triangles13": 7824,
+    "triangles14": 7824,
+    "ratio": 1.0,
+    "renderers13": 33,
+    "renderers14": 33
+  },
+  {
+    "id": "bishop",
+    "triangles13": 8288,
+    "triangles14": 8288,
+    "ratio": 1.0,
+    "renderers13": 35,
+    "renderers14": 35
+  },
+  {
+    "id": "inquisitor",
+    "triangles13": 6968,
+    "triangles14": 6968,
+    "ratio": 1.0,
+    "renderers13": 30,
+    "renderers14": 30
+  }
+]

@@ -42,7 +42,9 @@ namespace SpellDuel
         }
         internal static Mesh MeshFor(string id,Portraits.Persona p)
         {
-            if(meshes.TryGetValue(id,out var mesh))return mesh;var look=CharacterLook.Get(id);var kind=look.Hair;
+            if(meshes.TryGetValue(id,out var mesh))return mesh;
+            if(StoryHair.Has(id)){mesh=StoryHair.Build(id,p);meshes[id]=mesh;return mesh;}
+            var look=CharacterLook.Get(id);var kind=look.Hair;
             var v=new List<Vector3>{new Vector3(0,.177f*p.Length,-.009f)};var tri=new List<int>();var colors=new List<Color>{new Color(.46f,.46f,.46f)};
             const int sides=20,rows=6;
             for(int j=1;j<=rows;j++)for(int i=0;i<sides;i++)

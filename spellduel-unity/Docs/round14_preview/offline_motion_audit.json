@@ -1,0 +1,2946 @@
+{
+  "method": "Signed distance to the first closed torso loft; 60 Hz samples",
+  "rows": [
+    {
+      "id": "swordsman",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.079394914
+    },
+    {
+      "id": "swordsman",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.093609594
+    },
+    {
+      "id": "swordsman",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.10263845
+    },
+    {
+      "id": "swordsman",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.11563754
+    },
+    {
+      "id": "swordsman",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06721921
+    },
+    {
+      "id": "swordsman",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.062038075
+    },
+    {
+      "id": "swordsman",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.0644039
+    },
+    {
+      "id": "swordsman",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06570143
+    },
+    {
+      "id": "swordsman",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.13967337
+    },
+    {
+      "id": "swordsman",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.110536
+    },
+    {
+      "id": "swordsman",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.1193914
+    },
+    {
+      "id": "swordsman",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.18917397
+    },
+    {
+      "id": "swordsman",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07939403
+    },
+    {
+      "id": "swordsman",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09360879
+    },
+    {
+      "id": "swordsman",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07954676
+    },
+    {
+      "id": "swordsman",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.093754634
+    },
+    {
+      "id": "swordsman",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08590659
+    },
+    {
+      "id": "swordsman",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09983328
+    },
+    {
+      "id": "swordsman",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.096397586
+    },
+    {
+      "id": "swordsman",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.109825894
+    },
+    {
+      "id": "swordsman",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08878689
+    },
+    {
+      "id": "swordsman",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.10204219
+    },
+    {
+      "id": "swordsman",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.085005626
+    },
+    {
+      "id": "swordsman",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.10172432
+    },
+    {
+      "id": "swordsman",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08018722
+    },
+    {
+      "id": "swordsman",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09427958
+    },
+    {
+      "id": "swordsman",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.0993206
+    },
+    {
+      "id": "swordsman",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.11266625
+    },
+    {
+      "id": "archer",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06816574
+    },
+    {
+      "id": "archer",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07094934
+    },
+    {
+      "id": "archer",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08792305
+    },
+    {
+      "id": "archer",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09161031
+    },
+    {
+      "id": "archer",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.043157402
+    },
+    {
+      "id": "archer",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.046199825
+    },
+    {
+      "id": "archer",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.040313527
+    },
+    {
+      "id": "archer",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.042838655
+    },
+    {
+      "id": "archer",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.13664845
+    },
+    {
+      "id": "archer",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.13757198
+    },
+    {
+      "id": "archer",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.13033336
+    },
+    {
+      "id": "archer",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.14112878
+    },
+    {
+      "id": "archer",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.068165064
+    },
+    {
+      "id": "archer",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07094856
+    },
+    {
+      "id": "archer",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06828277
+    },
+    {
+      "id": "archer",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07108288
+    },
+    {
+      "id": "archer",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07333376
+    },
+    {
+      "id": "archer",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07675793
+    },
+    {
+      "id": "archer",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08216545
+    },
+    {
+      "id": "archer",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08638542
+    },
+    {
+      "id": "archer",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07857041
+    },
+    {
+      "id": "archer",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07993127
+    },
+    {
+      "id": "archer",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07509613
+    },
+    {
+      "id": "archer",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07867622
+    },
+    {
+      "id": "archer",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06879735
+    },
+    {
+      "id": "archer",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.071668915
+    },
+    {
+      "id": "archer",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.084681
+    },
+    {
+      "id": "archer",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08908105
+    },
+    {
+      "id": "mage",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.05626907
+    },
+    {
+      "id": "mage",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.083258025
+    },
+    {
+      "id": "mage",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.078697786
+    },
+    {
+      "id": "mage",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.101878636
+    },
+    {
+      "id": "mage",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.041413557
+    },
+    {
+      "id": "mage",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06658176
+    },
+    {
+      "id": "mage",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.03968397
+    },
+    {
+      "id": "mage",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06979661
+    },
+    {
+      "id": "mage",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.12492401
+    },
+    {
+      "id": "mage",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.14914888
+    },
+    {
+      "id": "mage",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.11725697
+    },
+    {
+      "id": "mage",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.12280742
+    },
+    {
+      "id": "mage",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.05626821
+    },
+    {
+      "id": "mage",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08325734
+    },
+    {
+      "id": "mage",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.056410167
+    },
+    {
+      "id": "mage",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08337218
+    },
+    {
+      "id": "mage",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.062409014
+    },
+    {
+      "id": "mage",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.0882717
+    },
+    {
+      "id": "mage",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.072561435
+    },
+    {
+      "id": "mage",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09676959
+    },
+    {
+      "id": "mage",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06628643
+    },
+    {
+      "id": "mage",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09243513
+    },
+    {
+      "id": "mage",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06428489
+    },
+    {
+      "id": "mage",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08999893
+    },
+    {
+      "id": "mage",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.05702944
+    },
+    {
+      "id": "mage",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08387381
+    },
+    {
+      "id": "mage",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07543293
+    },
+    {
+      "id": "mage",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.099145584
+    },
+    {
+      "id": "assassin",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.054522127
+    },
+    {
+      "id": "assassin",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06968029
+    },
+    {
+      "id": "assassin",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.0743073
+    },
+    {
+      "id": "assassin",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08854378
+    },
+    {
+      "id": "assassin",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.03172743
+    },
+    {
+      "id": "assassin",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.030146638
+    },
+    {
+      "id": "assassin",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.02964808
+    },
+    {
+      "id": "assassin",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.033574246
+    },
+    {
+      "id": "assassin",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.12298345
+    },
+    {
+      "id": "assassin",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.13538302
+    },
+    {
+      "id": "assassin",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.12902196
+    },
+    {
+      "id": "assassin",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.12508725
+    },
+    {
+      "id": "assassin",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.05452149
+    },
+    {
+      "id": "assassin",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.069679655
+    },
+    {
+      "id": "assassin",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.054629445
+    },
+    {
+      "id": "assassin",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06978575
+    },
+    {
+      "id": "assassin",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.059346456
+    },
+    {
+      "id": "assassin",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07438677
+    },
+    {
+      "id": "assassin",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06791345
+    },
+    {
+      "id": "assassin",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.082601644
+    },
+    {
+      "id": "assassin",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06516237
+    },
+    {
+      "id": "assassin",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07909708
+    },
+    {
+      "id": "assassin",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06110224
+    },
+    {
+      "id": "assassin",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07602667
+    },
+    {
+      "id": "assassin",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.055100717
+    },
+    {
+      "id": "assassin",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07025023
+    },
+    {
+      "id": "assassin",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07040643
+    },
+    {
+      "id": "assassin",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08494173
+    },
+    {
+      "id": "priest",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06816576
+    },
+    {
+      "id": "priest",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.070949346
+    },
+    {
+      "id": "priest",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08808588
+    },
+    {
+      "id": "priest",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09170267
+    },
+    {
+      "id": "priest",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.05446862
+    },
+    {
+      "id": "priest",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06156139
+    },
+    {
+      "id": "priest",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.051819876
+    },
+    {
+      "id": "priest",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06480917
+    },
+    {
+      "id": "priest",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.1366485
+    },
+    {
+      "id": "priest",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.137572
+    },
+    {
+      "id": "priest",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.120638356
+    },
+    {
+      "id": "priest",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.11402125
+    },
+    {
+      "id": "priest",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06816508
+    },
+    {
+      "id": "priest",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.070948586
+    },
+    {
+      "id": "priest",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06828275
+    },
+    {
+      "id": "priest",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07108291
+    },
+    {
+      "id": "priest",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.073333755
+    },
+    {
+      "id": "priest",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07675794
+    },
+    {
+      "id": "priest",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08216549
+    },
+    {
+      "id": "priest",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08638541
+    },
+    {
+      "id": "priest",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07857041
+    },
+    {
+      "id": "priest",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07993125
+    },
+    {
+      "id": "priest",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.075048916
+    },
+    {
+      "id": "priest",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07870349
+    },
+    {
+      "id": "priest",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06879734
+    },
+    {
+      "id": "priest",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.0716689
+    },
+    {
+      "id": "priest",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08468094
+    },
+    {
+      "id": "priest",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.089081
+    },
+    {
+      "id": "paladin",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07503751
+    },
+    {
+      "id": "paladin",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.098929815
+    },
+    {
+      "id": "paladin",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.09921622
+    },
+    {
+      "id": "paladin",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.119826116
+    },
+    {
+      "id": "paladin",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06568279
+    },
+    {
+      "id": "paladin",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06176799
+    },
+    {
+      "id": "paladin",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06282957
+    },
+    {
+      "id": "paladin",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.065819316
+    },
+    {
+      "id": "paladin",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.13378032
+    },
+    {
+      "id": "paladin",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.115772344
+    },
+    {
+      "id": "paladin",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.113639615
+    },
+    {
+      "id": "paladin",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.19519174
+    },
+    {
+      "id": "paladin",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.075036526
+    },
+    {
+      "id": "paladin",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09892901
+    },
+    {
+      "id": "paladin",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.0751981
+    },
+    {
+      "id": "paladin",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09906718
+    },
+    {
+      "id": "paladin",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08189582
+    },
+    {
+      "id": "paladin",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.10484292
+    },
+    {
+      "id": "paladin",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.09248877
+    },
+    {
+      "id": "paladin",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.114464395
+    },
+    {
+      "id": "paladin",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08398845
+    },
+    {
+      "id": "paladin",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.10753365
+    },
+    {
+      "id": "paladin",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08034866
+    },
+    {
+      "id": "paladin",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.10665232
+    },
+    {
+      "id": "paladin",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.075850666
+    },
+    {
+      "id": "paladin",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.099571265
+    },
+    {
+      "id": "paladin",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.09587498
+    },
+    {
+      "id": "paladin",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.117111795
+    },
+    {
+      "id": "berserker",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.079394914
+    },
+    {
+      "id": "berserker",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09360957
+    },
+    {
+      "id": "berserker",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.10289915
+    },
+    {
+      "id": "berserker",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.11591138
+    },
+    {
+      "id": "berserker",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06721923
+    },
+    {
+      "id": "berserker",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.062038045
+    },
+    {
+      "id": "berserker",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06440386
+    },
+    {
+      "id": "berserker",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06570148
+    },
+    {
+      "id": "berserker",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.13967332
+    },
+    {
+      "id": "berserker",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.110535994
+    },
+    {
+      "id": "berserker",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.11939144
+    },
+    {
+      "id": "berserker",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.18917395
+    },
+    {
+      "id": "berserker",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07939401
+    },
+    {
+      "id": "berserker",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09360877
+    },
+    {
+      "id": "berserker",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07954679
+    },
+    {
+      "id": "berserker",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09375467
+    },
+    {
+      "id": "berserker",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08590664
+    },
+    {
+      "id": "berserker",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.099833325
+    },
+    {
+      "id": "berserker",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.09639762
+    },
+    {
+      "id": "berserker",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.10982585
+    },
+    {
+      "id": "berserker",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.088786826
+    },
+    {
+      "id": "berserker",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.10204213
+    },
+    {
+      "id": "berserker",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08500564
+    },
+    {
+      "id": "berserker",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.10172438
+    },
+    {
+      "id": "berserker",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08018726
+    },
+    {
+      "id": "berserker",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09427961
+    },
+    {
+      "id": "berserker",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.099320576
+    },
+    {
+      "id": "berserker",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.112666205
+    },
+    {
+      "id": "marksman",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.068165764
+    },
+    {
+      "id": "marksman",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.070949346
+    },
+    {
+      "id": "marksman",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.087956
+    },
+    {
+      "id": "marksman",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.091603
+    },
+    {
+      "id": "marksman",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.043157447
+    },
+    {
+      "id": "marksman",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.04619983
+    },
+    {
+      "id": "marksman",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.040313542
+    },
+    {
+      "id": "marksman",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.042838614
+    },
+    {
+      "id": "marksman",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.13664843
+    },
+    {
+      "id": "marksman",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.13757195
+    },
+    {
+      "id": "marksman",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.13033344
+    },
+    {
+      "id": "marksman",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.14112881
+    },
+    {
+      "id": "marksman",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06816506
+    },
+    {
+      "id": "marksman",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07094857
+    },
+    {
+      "id": "marksman",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.068282776
+    },
+    {
+      "id": "marksman",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.0710829
+    },
+    {
+      "id": "marksman",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07333378
+    },
+    {
+      "id": "marksman",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.0767579
+    },
+    {
+      "id": "marksman",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.082165465
+    },
+    {
+      "id": "marksman",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08638537
+    },
+    {
+      "id": "marksman",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.0785704
+    },
+    {
+      "id": "marksman",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07993127
+    },
+    {
+      "id": "marksman",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.075096145
+    },
+    {
+      "id": "marksman",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07867619
+    },
+    {
+      "id": "marksman",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06879736
+    },
+    {
+      "id": "marksman",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.0716689
+    },
+    {
+      "id": "marksman",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.084681
+    },
+    {
+      "id": "marksman",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08908104
+    },
+    {
+      "id": "ranger",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.056269042
+    },
+    {
+      "id": "ranger",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08325799
+    },
+    {
+      "id": "ranger",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.078622706
+    },
+    {
+      "id": "ranger",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.10175201
+    },
+    {
+      "id": "ranger",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.04206817
+    },
+    {
+      "id": "ranger",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.045431495
+    },
+    {
+      "id": "ranger",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.040102106
+    },
+    {
+      "id": "ranger",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.046085536
+    },
+    {
+      "id": "ranger",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.124924004
+    },
+    {
+      "id": "ranger",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.14914882
+    },
+    {
+      "id": "ranger",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.117966354
+    },
+    {
+      "id": "ranger",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.15302229
+    },
+    {
+      "id": "ranger",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.05626823
+    },
+    {
+      "id": "ranger",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08325734
+    },
+    {
+      "id": "ranger",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.056410197
+    },
+    {
+      "id": "ranger",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08337218
+    },
+    {
+      "id": "ranger",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.062409
+    },
+    {
+      "id": "ranger",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08827163
+    },
+    {
+      "id": "ranger",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07256147
+    },
+    {
+      "id": "ranger",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09676964
+    },
+    {
+      "id": "ranger",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.066286415
+    },
+    {
+      "id": "ranger",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09243509
+    },
+    {
+      "id": "ranger",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06440761
+    },
+    {
+      "id": "ranger",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08996846
+    },
+    {
+      "id": "ranger",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.05702944
+    },
+    {
+      "id": "ranger",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08387378
+    },
+    {
+      "id": "ranger",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07543289
+    },
+    {
+      "id": "ranger",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09914558
+    },
+    {
+      "id": "archmage",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.061945442
+    },
+    {
+      "id": "archmage",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07690718
+    },
+    {
+      "id": "archmage",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08367407
+    },
+    {
+      "id": "archmage",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09659301
+    },
+    {
+      "id": "archmage",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.041750398
+    },
+    {
+      "id": "archmage",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06337439
+    },
+    {
+      "id": "archmage",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.039597906
+    },
+    {
+      "id": "archmage",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.066586606
+    },
+    {
+      "id": "archmage",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.13076557
+    },
+    {
+      "id": "archmage",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.14333281
+    },
+    {
+      "id": "archmage",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.12343655
+    },
+    {
+      "id": "archmage",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.1165946
+    },
+    {
+      "id": "archmage",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.061944723
+    },
+    {
+      "id": "archmage",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07690645
+    },
+    {
+      "id": "archmage",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06207397
+    },
+    {
+      "id": "archmage",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07703062
+    },
+    {
+      "id": "archmage",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06758118
+    },
+    {
+      "id": "archmage",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08230275
+    },
+    {
+      "id": "archmage",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.077065565
+    },
+    {
+      "id": "archmage",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09135337
+    },
+    {
+      "id": "archmage",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07223259
+    },
+    {
+      "id": "archmage",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.086032845
+    },
+    {
+      "id": "archmage",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06945386
+    },
+    {
+      "id": "archmage",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08412799
+    },
+    {
+      "id": "archmage",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.062638395
+    },
+    {
+      "id": "archmage",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07757248
+    },
+    {
+      "id": "archmage",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07976075
+    },
+    {
+      "id": "archmage",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09388838
+    },
+    {
+      "id": "summoner",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06816576
+    },
+    {
+      "id": "summoner",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07094936
+    },
+    {
+      "id": "summoner",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08853994
+    },
+    {
+      "id": "summoner",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09208934
+    },
+    {
+      "id": "summoner",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.042066667
+    },
+    {
+      "id": "summoner",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06017992
+    },
+    {
+      "id": "summoner",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.040529985
+    },
+    {
+      "id": "summoner",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06339787
+    },
+    {
+      "id": "summoner",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.13664849
+    },
+    {
+      "id": "summoner",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.13757198
+    },
+    {
+      "id": "summoner",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.12959716
+    },
+    {
+      "id": "summoner",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.110368595
+    },
+    {
+      "id": "summoner",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.068165064
+    },
+    {
+      "id": "summoner",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07094859
+    },
+    {
+      "id": "summoner",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06828275
+    },
+    {
+      "id": "summoner",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07108293
+    },
+    {
+      "id": "summoner",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07333375
+    },
+    {
+      "id": "summoner",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07675793
+    },
+    {
+      "id": "summoner",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08216545
+    },
+    {
+      "id": "summoner",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.086385414
+    },
+    {
+      "id": "summoner",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07857041
+    },
+    {
+      "id": "summoner",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07993126
+    },
+    {
+      "id": "summoner",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.075090386
+    },
+    {
+      "id": "summoner",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07868437
+    },
+    {
+      "id": "summoner",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06879741
+    },
+    {
+      "id": "summoner",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.071668915
+    },
+    {
+      "id": "summoner",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08468094
+    },
+    {
+      "id": "summoner",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.089081
+    },
+    {
+      "id": "ninja",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.047235273
+    },
+    {
+      "id": "ninja",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.075896196
+    },
+    {
+      "id": "ninja",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06805664
+    },
+    {
+      "id": "ninja",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09361246
+    },
+    {
+      "id": "ninja",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.030132992
+    },
+    {
+      "id": "ninja",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.028386695
+    },
+    {
+      "id": "ninja",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.02848344
+    },
+    {
+      "id": "ninja",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.032599494
+    },
+    {
+      "id": "ninja",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.1165009
+    },
+    {
+      "id": "ninja",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.14125346
+    },
+    {
+      "id": "ninja",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.122554466
+    },
+    {
+      "id": "ninja",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.13054487
+    },
+    {
+      "id": "ninja",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.04723454
+    },
+    {
+      "id": "ninja",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07589558
+    },
+    {
+      "id": "ninja",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.047353912
+    },
+    {
+      "id": "ninja",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.0760001
+    },
+    {
+      "id": "ninja",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.052558932
+    },
+    {
+      "id": "ninja",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.080290444
+    },
+    {
+      "id": "ninja",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.061847255
+    },
+    {
+      "id": "ninja",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08780939
+    },
+    {
+      "id": "ninja",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.057876617
+    },
+    {
+      "id": "ninja",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.085189275
+    },
+    {
+      "id": "ninja",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.054446977
+    },
+    {
+      "id": "ninja",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08180471
+    },
+    {
+      "id": "ninja",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.047877047
+    },
+    {
+      "id": "ninja",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07645405
+    },
+    {
+      "id": "ninja",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06453679
+    },
+    {
+      "id": "ninja",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08995109
+    },
+    {
+      "id": "shadowdancer",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.05452211
+    },
+    {
+      "id": "shadowdancer",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.069680244
+    },
+    {
+      "id": "shadowdancer",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.0743418
+    },
+    {
+      "id": "shadowdancer",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.088501595
+    },
+    {
+      "id": "shadowdancer",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.03172743
+    },
+    {
+      "id": "shadowdancer",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.03014662
+    },
+    {
+      "id": "shadowdancer",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.029648097
+    },
+    {
+      "id": "shadowdancer",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.033574276
+    },
+    {
+      "id": "shadowdancer",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.12298346
+    },
+    {
+      "id": "shadowdancer",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.13538307
+    },
+    {
+      "id": "shadowdancer",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.12902194
+    },
+    {
+      "id": "shadowdancer",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.12508719
+    },
+    {
+      "id": "shadowdancer",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.0545215
+    },
+    {
+      "id": "shadowdancer",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06967966
+    },
+    {
+      "id": "shadowdancer",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.05462946
+    },
+    {
+      "id": "shadowdancer",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06978575
+    },
+    {
+      "id": "shadowdancer",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.05934644
+    },
+    {
+      "id": "shadowdancer",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.074386746
+    },
+    {
+      "id": "shadowdancer",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06791347
+    },
+    {
+      "id": "shadowdancer",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.082601644
+    },
+    {
+      "id": "shadowdancer",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06516234
+    },
+    {
+      "id": "shadowdancer",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07909708
+    },
+    {
+      "id": "shadowdancer",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.061102223
+    },
+    {
+      "id": "shadowdancer",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07602662
+    },
+    {
+      "id": "shadowdancer",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.055100698
+    },
+    {
+      "id": "shadowdancer",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07025025
+    },
+    {
+      "id": "shadowdancer",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.070406415
+    },
+    {
+      "id": "shadowdancer",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08494172
+    },
+    {
+      "id": "bishop",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06816576
+    },
+    {
+      "id": "bishop",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.070949346
+    },
+    {
+      "id": "bishop",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.088243224
+    },
+    {
+      "id": "bishop",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.091680385
+    },
+    {
+      "id": "bishop",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.054468602
+    },
+    {
+      "id": "bishop",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.061561376
+    },
+    {
+      "id": "bishop",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.051819876
+    },
+    {
+      "id": "bishop",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06480923
+    },
+    {
+      "id": "bishop",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.13664842
+    },
+    {
+      "id": "bishop",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.13757196
+    },
+    {
+      "id": "bishop",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.12063829
+    },
+    {
+      "id": "bishop",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.1140212
+    },
+    {
+      "id": "bishop",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.068165034
+    },
+    {
+      "id": "bishop",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07094856
+    },
+    {
+      "id": "bishop",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.068282746
+    },
+    {
+      "id": "bishop",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.071082905
+    },
+    {
+      "id": "bishop",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07333377
+    },
+    {
+      "id": "bishop",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07675794
+    },
+    {
+      "id": "bishop",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.08216545
+    },
+    {
+      "id": "bishop",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08638545
+    },
+    {
+      "id": "bishop",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.07857038
+    },
+    {
+      "id": "bishop",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07993126
+    },
+    {
+      "id": "bishop",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.075048864
+    },
+    {
+      "id": "bishop",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.078703485
+    },
+    {
+      "id": "bishop",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06879738
+    },
+    {
+      "id": "bishop",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.071668915
+    },
+    {
+      "id": "bishop",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.084680974
+    },
+    {
+      "id": "bishop",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.089081
+    },
+    {
+      "id": "inquisitor",
+      "action": "idle",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.056269042
+    },
+    {
+      "id": "inquisitor",
+      "action": "idle",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.083257996
+    },
+    {
+      "id": "inquisitor",
+      "action": "combat",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.079112016
+    },
+    {
+      "id": "inquisitor",
+      "action": "combat",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.102036424
+    },
+    {
+      "id": "inquisitor",
+      "action": "walk",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.048272803
+    },
+    {
+      "id": "inquisitor",
+      "action": "walk",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.06794237
+    },
+    {
+      "id": "inquisitor",
+      "action": "dash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.045616742
+    },
+    {
+      "id": "inquisitor",
+      "action": "dash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.07120702
+    },
+    {
+      "id": "inquisitor",
+      "action": "guard",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.124924
+    },
+    {
+      "id": "inquisitor",
+      "action": "guard",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.1491488
+    },
+    {
+      "id": "inquisitor",
+      "action": "charge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.108379714
+    },
+    {
+      "id": "inquisitor",
+      "action": "charge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.12645149
+    },
+    {
+      "id": "inquisitor",
+      "action": "cast",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.056268238
+    },
+    {
+      "id": "inquisitor",
+      "action": "cast",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08325733
+    },
+    {
+      "id": "inquisitor",
+      "action": "hit",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.056410164
+    },
+    {
+      "id": "inquisitor",
+      "action": "hit",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.08337219
+    },
+    {
+      "id": "inquisitor",
+      "action": "slash",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06240904
+    },
+    {
+      "id": "inquisitor",
+      "action": "slash",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.0882717
+    },
+    {
+      "id": "inquisitor",
+      "action": "stab",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.0725615
+    },
+    {
+      "id": "inquisitor",
+      "action": "stab",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.09676965
+    },
+    {
+      "id": "inquisitor",
+      "action": "lunge",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.06628643
+    },
+    {
+      "id": "inquisitor",
+      "action": "lunge",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.092435114
+    },
+    {
+      "id": "inquisitor",
+      "action": "shoot",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.062552996
+    },
+    {
+      "id": "inquisitor",
+      "action": "shoot",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.090021215
+    },
+    {
+      "id": "inquisitor",
+      "action": "magic",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.057029475
+    },
+    {
+      "id": "inquisitor",
+      "action": "magic",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.083873786
+    },
+    {
+      "id": "inquisitor",
+      "action": "down",
+      "side": "L",
+      "samples": 72,
+      "minimumSignedDistance": 0.075432956
+    },
+    {
+      "id": "inquisitor",
+      "action": "down",
+      "side": "R",
+      "samples": 72,
+      "minimumSignedDistance": 0.099145584
+    }
+  ],
+  "failures": 0
+}

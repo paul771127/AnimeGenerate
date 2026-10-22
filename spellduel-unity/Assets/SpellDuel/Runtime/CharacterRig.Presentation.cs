@@ -10,6 +10,8 @@ namespace SpellDuel
         void SetupPresentation()
         {
             string id=advancedId??classId;idlePresentation=HumanPersonality.Stance(id,false);battlePresentation=HumanPersonality.Stance(id,true);
+            float variation=(CharacterLook.Get(id).Seed%3)-1;
+            idlePresentation.L=new Vector3(-4-variation,6,-10);idlePresentation.R=new Vector3(-5+variation,7,-11);
             expressionMotion=head.GetComponent<HumanExpressionMotion>();expressionMotion.External=true;
             HumanProportions.Fit(head,id,1.75f);Vector3 keep=head.position;
             // Lengthen the rib-cage/neck region into the space freed by the smaller head.

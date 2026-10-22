@@ -23,6 +23,7 @@ namespace SpellDuel
             float t=Mathf.Clamp01((y-ys[k])/(ys[k+1]-ys[k]));
             float jaw=Mathf.Lerp(.70f+.30f*p.Jaw,1,Mathf.Clamp01((y+.12f)/.12f));
             width=Mathf.Lerp(widths[k],widths[k+1],t)*p.Width*jaw;
+            if(p.Story&&y<-.030f)width=Mathf.Max(.003f,.14f*Mathf.Pow(Mathf.Clamp01((y+.157f)/.127f),.72f)*p.Width);
             front=Mathf.Lerp(fronts[k],fronts[k+1],t);back=Mathf.Lerp(backs[k],backs[k+1],t);
         }
         static float SculptSurface(float x,float y,Portraits.Persona p)
@@ -52,7 +53,8 @@ namespace SpellDuel
             float acceptedLips=.0015f*Bell(x,.028f)*Bell(y-(plan.MouthY-.003f),.006f)
                 -.0015f*Bell(x,.030f)*Bell(y-(plan.MouthY-.015f),.006f);
             float accepted=Mathf.Lerp(legacy,acceptedNose+acceptedLips,lower);
-            return front*(1-Mathf.Pow(side,4))+Mathf.Lerp(accepted,nose+lips,Mathf.Clamp01((-.040f-y)/.012f));
+            float detail=Mathf.Lerp(accepted,nose+lips,Mathf.Clamp01((-.040f-y)/.012f));
+            return front*(1-Mathf.Pow(side,4))+detail*(p.SoftNose?.18f:1);
         }
         static bool OnTriangle(float x,float y,Vector3 a,Vector3 b,Vector3 c,out float z)
         {
@@ -195,8 +197,8 @@ namespace SpellDuel
                 float inner=x-side*half,outer=inner+side*plan.EyeWidth*1.1f;
                 float by=plan.BrowY+(side>0?p.Asym*.0006f:0),bend=p.Brow*Mathf.Deg2Rad*plan.EyeWidth;
                 var browPivot=new GameObject("BrowPivot").transform;browPivot.SetParent(head,false);browPivot.localPosition=new Vector3(x,by,.12f);result.Brows.Add(browPivot);
-                Stroke(browPivot,identity,p,browPivot.localPosition,new Vector2(inner,by),new Vector2(x,by+.0015f+bend*.5f),elder?.005f:.0035f,brow);
-                Stroke(browPivot,identity,p,browPivot.localPosition,new Vector2(x,by+.0015f+bend*.5f),new Vector2(outer,by+bend),.003f,brow);
+                Stroke(browPivot,identity,p,browPivot.localPosition,new Vector2(inner,by),new Vector2(x,by+.0015f+bend*.5f),p.Story?.0018f:elder?.005f:.0035f,brow);
+                Stroke(browPivot,identity,p,browPivot.localPosition,new Vector2(x,by+.0015f+bend*.5f),new Vector2(outer,by+bend),p.Story?.0016f:.003f,brow);
                 MergeInk(browPivot,identity+"/brow/"+side);
             }
             // 鼻子融入頭模，只留一筆暖色鼻底，不再另外黏三角錐。

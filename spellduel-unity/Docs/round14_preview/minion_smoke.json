@@ -1,0 +1,97 @@
+[
+  {
+    "id": 0,
+    "renderers": 17,
+    "finite": true
+  },
+  {
+    "id": 1,
+    "renderers": 19,
+    "finite": true
+  },
+  {
+    "id": 2,
+    "renderers": 20,
+    "finite": true
+  },
+  {
+    "id": 3,
+    "renderers": 18,
+    "finite": true
+  },
+  {
+    "id": 4,
+    "renderers": 18,
+    "finite": true
+  },
+  {
+    "id": 5,
+    "renderers": 19,
+    "finite": true
+  },
+  {
+    "id": 6,
+    "renderers": 16,
+    "finite": true
+  },
+  {
+    "id": 7,
+    "renderers": 18,
+    "finite": true
+  },
+  {
+    "id": 8,
+    "renderers": 19,
+    "finite": true
+  },
+  {
+    "id": 9,
+    "renderers": 19,
+    "finite": true
+  },
+  {
+    "id": 10,
+    "renderers": 19,
+    "finite": true
+  },
+  {
+    "id": 11,
+    "renderers": 14,
+    "finite": true
+  },
+  {
+    "id": 12,
+    "renderers": 17,
+    "finite": true
+  },
+  {
+    "id": 13,
+    "renderers": 17,
+    "finite": true
+  },
+  {
+    "id": 14,
+    "renderers": 20,
+    "finite": true
+  },
+  {
+    "id": 15,
+    "renderers": 20,
+    "finite": true
+  },
+  {
+    "id": 16,
+    "renderers": 19,
+    "finite": true
+  },
+  {
+    "id": 17,
+    "renderers": 20,
+    "finite": true
+  },
+  {
+    "id": 18,
+    "renderers": 15,
+    "finite": true
+  }
+]

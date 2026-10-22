@@ -129,12 +129,12 @@ namespace SpellDuel
         }
         static void DressResident(Transform p,string id,Color skin)
         {
-            var torso=Group(p,"Outfit torso",new Vector3(0,.78f,0));torso.localScale=Vector3.one;ResidentBody.Add(torso,id,"torso",skin);
+            var torso=Group(p,"Outfit torso",new Vector3(0,StoryFigure.TorsoY(id),0));torso.localScale=Vector3.one;ResidentBody.Add(torso,id,"torso",skin);
             for(int side=-1;side<=1;side+=2)
             {
-                string suffix=side<0?"L":"R";var hip=Group(p,"Outfit hip",new Vector3(side*.12f,.85f,0));
-                ResidentBody.Add(hip,id,"thigh"+suffix,skin);var knee=Group(hip,"Outfit knee",new Vector3(0,-.42f,0));ResidentBody.Add(knee,id,"calf"+suffix,skin);
-                var arm=Group(p,"Outfit shoulder",new Vector3(side*(id=="鐵匠"?.205f:.185f),1.425f,0));arm.localScale=Vector3.one*.94f;arm.localRotation=Quaternion.Euler(0,0,side*9);
+                string suffix=side<0?"L":"R";var hip=Group(p,"Outfit hip",new Vector3(side*.12f,StoryFigure.HipY(id),0));
+                ResidentBody.Add(hip,id,"thigh"+suffix,skin);var knee=Group(hip,"Outfit knee",new Vector3(0,-StoryFigure.Thigh(id),0));ResidentBody.Add(knee,id,"calf"+suffix,skin);
+                var arm=Group(p,"Outfit shoulder",new Vector3(side*StoryFigure.ShoulderX(id),StoryFigure.ShoulderY(id),id=="老焰"?.025f:0));arm.localScale=Vector3.one*.94f;arm.localRotation=Quaternion.Euler(0,0,side*9);
                 ResidentBody.Add(arm,id,"upper"+suffix,skin);var elbow=Group(arm,"Outfit elbow",new Vector3(0,-.28f,0));if(id=="小葉"&&side>0)elbow.localRotation=Quaternion.Euler(-25,0,0);ResidentBody.Add(elbow,id,"fore"+suffix,skin);
                 var hand=Group(elbow,"Outfit hand",new Vector3(0,-.25f,0));ResidentBody.Add(hand,id,"hand"+((id=="老焰"||id=="阿潮")&&side<0||id=="鐵匠"&&side>0||id=="小葉"&&side>0?"Grip":"Relax")+suffix,skin);
             }

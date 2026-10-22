@@ -104,6 +104,7 @@ namespace SpellDuel
             }
             internal void Badge(float x,float y,float z,float w,float h,Color color)
             {Panel(new Vector3(x-w*.5f,y+h*.5f,z),new Vector3(x+w*.5f,y+h*.5f,z),new Vector3(x-w*.43f,y-h*.5f,z+.003f),new Vector3(x+w*.43f,y-h*.5f,z+.003f),color,.006f,1,1);}
+            internal void ClearSmoothNormals()=>smoothNormals.Clear();
             internal Mesh Finish(string name){var m=new Mesh{name=name};m.SetVertices(V);m.SetTriangles(T,0);m.colors=C.ToArray();m.RecalculateNormals();var normals=m.normals;foreach(var pair in smoothNormals)normals[pair.Key]=pair.Value;m.normals=normals;m.RecalculateBounds();return m;}
         }
         internal static Mesh MeshFor(string id,string part,Color skin)
@@ -190,8 +191,8 @@ namespace SpellDuel
         {
             float bulk=Strength(d),fit=d.Cut==3||d.Cut==11||d.Cut==12?.94f:1;
             // Neck -> trapezius -> round shoulder; ribs, waist, pelvis and rear gluteal curve.
-            var ys=new[]{.565f,.535f,.515f,.49f,.43f,.34f,.24f,.14f,.055f,-.01f};
-            var rx=new[]{.067f,.090f,.158f,.194f,.185f,.170f,.143f,.139f,.153f,.166f};
+            var ys=new[]{.565f,.535f,.505f,.475f,.43f,.34f,.24f,.14f,.055f,-.01f};
+            var rx=new[]{.067f,.090f,.137f,.175f,.185f,.170f,.143f,.139f,.153f,.166f};
             var rz=new[]{.061f,.069f,.085f,.094f,.113f,.108f,.096f,.091f,.103f,.108f};
             var path=new Vector3[ys.Length];
             for(int i=0;i<ys.Length;i++){rx[i]*=(.94f+.06f*bulk)*fit;path[i]=new Vector3(0,ys[i],i>=7?-.012f:i==4?.012f:0);if(!bare){rx[i]+=.008f;rz[i]+=.007f;}}
@@ -225,12 +226,13 @@ namespace SpellDuel
             if(upper)
             {
                 var y=new[]{.026f,.005f,-.025f,-.075f,-.13f,-.19f,-.25f,-.28f};
-                var rx=new[]{.020f,.045f,.068f,.065f,.060f,.051f,.039f,.034f};
-                var rz=new[]{.019f,.043f,.064f,.060f,.065f,.056f,.037f,.033f};
-                var path=new Vector3[y.Length];for(int i=0;i<y.Length;i++){rx[i]*=power*(bare?1:sleeve);rz[i]*=power*(bare?1:sleeve);float outset=d.Cut==3||d.Cut==11||d.Cut==12||d.Cut>=15?.025f:0;path[i]=new Vector3((left?-1:1)*outset*(i==2?1:i==3?.65f:i==4?.20f:0),y[i],i==4?.008f:i==3?-.004f:0);}
+                var rx=new[]{.015f,.033f,.058f,.065f,.060f,.051f,.039f,.034f};
+                var rz=new[]{.015f,.032f,.055f,.060f,.065f,.056f,.037f,.033f};
+                var path=new Vector3[y.Length];for(int i=0;i<y.Length;i++){rx[i]*=power*(bare?1:sleeve);rz[i]*=power*(bare?1:sleeve);float outset=d.Cut==3||d.Cut==11||d.Cut==12||d.Cut>=15?.012f:0;path[i]=new Vector3((left?-1:1)*outset*(i==2?1:i==3?.65f:i==4?.20f:0),y[i],i==4?.008f:i==3?-.004f:0);}
+                if(d.Cut!=0&&d.Cut!=5&&d.Cut!=6)for(int i=0;i<4;i++){rx[i]*=.80f;rz[i]*=.88f;}
                 b.Tube(path,rx,rz,cloth,12);
                 if(!anatomical&&left&&(d.Cut==0||d.Cut==5||d.Cut==6))
-                    b.Loft(new[]{.003f,-.015f,-.040f,-.075f,-.105f},new[]{.048f*power,.064f*power,.074f*power,.073f*power,.065f*power},new[]{.046f*power,.062f*power,.071f*power,.069f*power,.063f*power},d.Sub);
+                    b.Loft(new[]{-.010f,-.030f,-.055f,-.085f,-.115f},new[]{.030f*power,.050f*power,.072f*power,.073f*power,.060f*power},new[]{.046f*power,.062f*power,.071f*power,.069f*power,.063f*power},d.Sub);
                 if(!anatomical&&!bare)b.Loft(new[]{-.245f,-.273f},new[]{.043f*power,.039f*power},new[]{.041f*power,.037f*power},d.Sub);
             }
             else

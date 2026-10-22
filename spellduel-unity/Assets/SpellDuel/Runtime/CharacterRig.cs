@@ -521,7 +521,7 @@ namespace SpellDuel
 
         Transform ArmChain(string side, float s, float sw, out Transform elbow, out Transform hand)
         {
-            var sh = Pivot("Shoulder" + side, spine, new Vector3(0.2f * sw * s, 0.5f, 0f));
+            var sh = Pivot("Shoulder" + side, spine, new Vector3((classId=="swordsman"?.18f:.155f)*sw*s,classId=="assassin"?.49f:classId=="swordsman"?.475f:.48f,.012f));
             elbow = Pivot("Elbow" + side, sh, new Vector3(0f, -0.28f, 0f));
             hand = Pivot("Hand" + side, elbow, new Vector3(0f, -0.25f, 0f));
             return sh;

@@ -12,7 +12,9 @@ namespace SpellDuel
             identity=id;chest=rib;neck=n;face=head;figure=root;pose=HumanPersonality.Stance(id,false);
             coat=OutfitArt.Get(id).Hem>.15f;
             if(coat){pose.Twist*=.30f;pose.Roll*=.4f;pose.Shift*=.2f;pose.Step*=.2f;pose.Lean*=.5f;}
-            chestRest=chest.localPosition;neckRest=neck.localPosition;chestRotation=chest.localRotation;neckRotation=neck.localRotation;
+            if(id=="海斗"){pose.Twist*=.30f;pose.Roll*=.40f;pose.Shift*=.20f;}
+            chestRest=chest.localPosition;if(id=="老焰")pose.Lean=8;
+            neckRest=neck.localPosition;chestRotation=chest.localRotation;neckRotation=neck.localRotation;
             foreach(var tf in root.GetComponentsInChildren<Transform>())
             {
                 if(tf.gameObject.name=="Outfit shoulder"){if(tf.localPosition.x<0)left=tf;else right=tf;}
@@ -42,11 +44,12 @@ namespace SpellDuel
             chest.localPosition=chestRest+new Vector3(pose.Shift+wave*.002f,wave*.0025f,0);
             chest.localRotation=chestRotation*Quaternion.Euler(pose.Lean,pose.Twist,-pose.Roll*.6f);
             neck.localRotation=neckRotation*Quaternion.Euler(-pose.Lean*.4f,-pose.Twist*.4f+gesture*3,pose.Roll*.35f);
-            left.localRotation=Quaternion.Euler(-4-wave,0,-2);right.localRotation=Quaternion.Euler(-6+wave,0,2);
-            leftElbow.localRotation=Quaternion.Euler(8+gesture*2,0,0);rightElbow.localRotation=Quaternion.Euler(12-gesture*2,0,0);
+            left.localRotation=Quaternion.Euler(-3-wave*.4f,0,-6);right.localRotation=Quaternion.Euler(-4+wave*.4f,0,6);
+            leftElbow.localRotation=Quaternion.Euler(-10+gesture*2,0,0);rightElbow.localRotation=Quaternion.Euler(-10-gesture*2,0,0);
+            if(identity=="翠"){leftElbow.localRotation=Quaternion.Euler(-10,0,-6);rightElbow.localRotation=Quaternion.Euler(-10,0,6);}
             if(identity=="小葉"){left.localRotation=Quaternion.Euler(-12,0,-2);right.localRotation=Quaternion.Euler(-12,0,2);leftElbow.localRotation=Quaternion.Euler(-58,0,0);rightElbow.localRotation=Quaternion.Euler(-58,0,0);}
             hipL.localRotation=Quaternion.Euler(-2,-6,0);hipR.localRotation=Quaternion.Euler(-3,7,0);kneeL.localRotation=Quaternion.Euler(4,0,0);kneeR.localRotation=Quaternion.Euler(6,0,0);
-            hipL.localPosition=new Vector3(coat?-.105f:-.12f,.85f,pose.Step);hipR.localPosition=new Vector3(coat?.105f:.12f,.85f,-pose.Step);
+            hipL.localPosition=new Vector3(coat?-.105f:-.12f,StoryFigure.HipY(identity),pose.Step);hipR.localPosition=new Vector3(coat?.105f:.12f,StoryFigure.HipY(identity),-pose.Step);
             Plant(hipL,kneeL,soleL,-.12f);Plant(hipR,kneeR,soleR,.12f);
             if(caneGrip!=null)
             {

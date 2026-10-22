@@ -1,0 +1,76 @@
+{
+  "unityEditorAvailable": false,
+  "nativeUnityBuild": false,
+  "sourceSyntaxFiles": 107,
+  "syntaxErrors": 0,
+  "offlineArtCompile": "dotnet10 / Unity API contracts",
+  "feet": [
+    {
+      "id": "艾琳",
+      "soleY": 0,
+      "nominalHeight": 1.75
+    },
+    {
+      "id": "凪",
+      "soleY": 0,
+      "nominalHeight": 1.75
+    },
+    {
+      "id": "老焰",
+      "soleY": 0,
+      "nominalHeight": 1.75
+    },
+    {
+      "id": "海斗",
+      "soleY": 0,
+      "nominalHeight": 1.75
+    },
+    {
+      "id": "小鐵",
+      "soleY": -2.9802322e-08,
+      "nominalHeight": 1.6
+    },
+    {
+      "id": "翠",
+      "soleY": 0,
+      "nominalHeight": 1.75
+    },
+    {
+      "id": "小葉",
+      "soleY": 0,
+      "nominalHeight": 1.2
+    },
+    {
+      "id": "米菈",
+      "soleY": 0,
+      "nominalHeight": 1.75
+    },
+    {
+      "id": "楓",
+      "soleY": 0,
+      "nominalHeight": 1.75
+    },
+    {
+      "id": "阿潮",
+      "soleY": 0,
+      "nominalHeight": 1.75
+    },
+    {
+      "id": "鐵匠",
+      "soleY": 0,
+      "nominalHeight": 1.75
+    },
+    {
+      "id": "店員",
+      "soleY": 0,
+      "nominalHeight": 1.75
+    },
+    {
+      "id": "公會長",
+      "soleY": 0,
+      "nominalHeight": 1.75
+    }
+  ],
+  "baseline": "68f7e9f",
+  "note": "Not native Unity rendering or mobile/AR validation"
+}

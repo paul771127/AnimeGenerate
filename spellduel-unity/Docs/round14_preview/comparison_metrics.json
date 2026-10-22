@@ -1,0 +1,555 @@
+[
+  {
+    "id": "艾琳",
+    "reference": "Erin.png",
+    "referenceSha256": "e146043d5958e87fc2510b1cbf7fcbb1644bf79e8b74cdd8b75fff0b98a6d19f",
+    "referenceTop": 52,
+    "referenceFeet": 959,
+    "referenceChin": 203,
+    "referenceCenterX": 300,
+    "referenceShoulderWidthPixels": 135,
+    "referenceFaceWidthPixels": 86,
+    "referenceShoulderToFace": 1.569767441860465,
+    "referenceShoulderAngle": 22.649987581151954,
+    "referenceHeads": 6.006622516556291,
+    "iou13": 0.6668461458297148,
+    "iou14": 0.6817034990791897,
+    "delta": 0.014857353249474903,
+    "model": {
+      "id": "艾琳",
+      "height": 1.75,
+      "faceWidth": 0.18476477,
+      "shoulderWidth": 0.31730315,
+      "shoulderToFace": 1.7173357,
+      "shoulderAngle": 26.443602,
+      "headHeight": 0.2821591,
+      "heads": 6.2021747,
+      "anatomicalHeads": 7.5636706,
+      "headTop": 1.7467096,
+      "chin": 1.4645505,
+      "shinFraction": 0.3034517,
+      "neck": [
+        [
+          -0.06282083,
+          1.4251745,
+          -0.0067337113
+        ],
+        [
+          0.07632417,
+          1.4237752,
+          -0.0030798386
+        ]
+      ],
+      "caps": [
+        [
+          -0.12957627,
+          1.393853,
+          0.00023927755
+        ],
+        [
+          0.1439929,
+          1.388171,
+          -0.014265885
+        ]
+      ],
+      "faceCenter": [
+        0.01798471,
+        1.5650313,
+        0.123233296
+      ]
+    },
+    "landmarks": [
+      [
+        271,
+        232
+      ],
+      [
+        231,
+        248
+      ],
+      [
+        320,
+        232
+      ],
+      [
+        366,
+        252
+      ]
+    ],
+    "method": "gray border-connected flood fill; similarity transform by actor height and feet, no nonuniform warp; all geometry/props included"
+  },
+  {
+    "id": "凪",
+    "reference": "Nagi.png",
+    "referenceSha256": "6901b3345c47b2735b631f47ea22818fb6cf152b91c3be7313fb8c5cd1782ecf",
+    "referenceTop": 107,
+    "referenceFeet": 927,
+    "referenceChin": 234,
+    "referenceCenterX": 272,
+    "referenceShoulderWidthPixels": 127,
+    "referenceFaceWidthPixels": 78,
+    "referenceShoulderToFace": 1.6282051282051282,
+    "referenceShoulderAngle": 19.459970605072442,
+    "referenceHeads": 6.456692913385827,
+    "iou13": 0.6709441846201027,
+    "iou14": 0.7105562553329812,
+    "delta": 0.03961207071287842,
+    "model": {
+      "id": "凪",
+      "height": 1.75,
+      "faceWidth": 0.18537228,
+      "shoulderWidth": 0.30882478,
+      "shoulderToFace": 1.6659707,
+      "shoulderAngle": 27.564342,
+      "headHeight": 0.2731675,
+      "heads": 6.406326,
+      "anatomicalHeads": 6.406326,
+      "headTop": 1.7511172,
+      "chin": 1.4779497,
+      "shinFraction": 0.3034517,
+      "neck": [
+        [
+          -0.07966378,
+          1.425137,
+          0.0019086727
+        ],
+        [
+          0.059405446,
+          1.4266527,
+          0.007747723
+        ]
+      ],
+      "caps": [
+        [
+          -0.1452692,
+          1.3884878,
+          0.0006130042
+        ],
+        [
+          0.12275496,
+          1.3958377,
+          0.0059711137
+        ]
+      ],
+      "faceCenter": [
+        -0.019276178,
+        1.5949011,
+        0.15284657
+      ]
+    },
+    "landmarks": [
+      [
+        250,
+        253
+      ],
+      [
+        209,
+        268
+      ],
+      [
+        292,
+        253
+      ],
+      [
+        336,
+        268
+      ]
+    ],
+    "method": "gray border-connected flood fill; similarity transform by actor height and feet, no nonuniform warp; all geometry/props included"
+  },
+  {
+    "id": "老焰",
+    "reference": "Laoyan.png",
+    "referenceSha256": "3a5108271b228b52b5d1144b1c557eda8a6b595e111ed8aec870760e50b0caa1",
+    "referenceTop": 82,
+    "referenceFeet": 916,
+    "referenceChin": 199,
+    "referenceCenterX": 270,
+    "referenceShoulderWidthPixels": 170,
+    "referenceFaceWidthPixels": 66,
+    "referenceShoulderToFace": 2.5757575757575757,
+    "referenceShoulderAngle": 24.7096133825592,
+    "referenceHeads": 7.128205128205129,
+    "iou13": 0.7480261930911578,
+    "iou14": 0.7499480659769828,
+    "delta": 0.0019218728858250156,
+    "model": {
+      "id": "老焰",
+      "height": 1.75,
+      "faceWidth": 0.1852041,
+      "shoulderWidth": 0.40514925,
+      "shoulderToFace": 2.1875825,
+      "shoulderAngle": 22.342709,
+      "headHeight": 0.24677181,
+      "heads": 7.091572,
+      "anatomicalHeads": 7.091572,
+      "headTop": 1.7487985,
+      "chin": 1.5020267,
+      "shinFraction": 0.24948393,
+      "neck": [
+        [
+          -0.08962966,
+          1.4195185,
+          0.10938521
+        ],
+        [
+          0.060719978,
+          1.4212089,
+          0.11289094
+        ]
+      ],
+      "caps": [
+        [
+          -0.19265534,
+          1.3757994,
+          0.12511681
+        ],
+        [
+          0.16582522,
+          1.3794006,
+          0.12584192
+        ]
+      ],
+      "faceCenter": [
+        -0.015979778,
+        1.5834438,
+        0.2643094
+      ]
+    },
+    "landmarks": [
+      [
+        237,
+        226
+      ],
+      [
+        188,
+        249
+      ],
+      [
+        307,
+        226
+      ],
+      [
+        358,
+        249
+      ]
+    ],
+    "method": "gray border-connected flood fill; similarity transform by actor height and feet, no nonuniform warp; all geometry/props included"
+  },
+  {
+    "id": "海斗",
+    "reference": "Haido.png",
+    "referenceSha256": "acd6bac3675506b70e53251b206f08ea6b8451b96a253587c7963f3544a8d234",
+    "referenceTop": 24,
+    "referenceFeet": 939,
+    "referenceChin": 157,
+    "referenceCenterX": 275,
+    "referenceShoulderWidthPixels": 174,
+    "referenceFaceWidthPixels": 74,
+    "referenceShoulderToFace": 2.3513513513513513,
+    "referenceShoulderAngle": 18.71173787509977,
+    "referenceHeads": 6.879699248120301,
+    "iou13": 0.7023542392422796,
+    "iou14": 0.7477726737182118,
+    "delta": 0.04541843447593219,
+    "model": {
+      "id": "海斗",
+      "height": 1.75,
+      "faceWidth": 0.18434212,
+      "shoulderWidth": 0.4021846,
+      "shoulderToFace": 2.1817293,
+      "shoulderAngle": 21.248632,
+      "headHeight": 0.25354767,
+      "heads": 6.9020553,
+      "anatomicalHeads": 7.989007,
+      "headTop": 1.7474412,
+      "chin": 1.4938935,
+      "shinFraction": 0.249459,
+      "neck": [
+        [
+          -0.06333834,
+          1.4309119,
+          -0.036311384
+        ],
+        [
+          0.0866953,
+          1.4278629,
+          -0.046349756
+        ]
+      ],
+      "caps": [
+        [
+          -0.16829579,
+          1.3921882,
+          -0.021800132
+        ],
+        [
+          0.18746302,
+          1.3866462,
+          -0.06569593
+        ]
+      ],
+      "faceCenter": [
+        0.027099058,
+        1.6135782,
+        0.07730133
+      ]
+    },
+    "landmarks": [
+      [
+        247,
+        175
+      ],
+      [
+        185,
+        196
+      ],
+      [
+        297,
+        175
+      ],
+      [
+        359,
+        196
+      ]
+    ],
+    "method": "gray border-connected flood fill; similarity transform by actor height and feet, no nonuniform warp; all geometry/props included"
+  },
+  {
+    "id": "小鐵",
+    "reference": "Xiaotie.png",
+    "referenceSha256": "7397c13575a635ca9c320fa8fcd5a2ece3a684e72bc8d98ffc733dae8253a68a",
+    "referenceTop": 16,
+    "referenceFeet": 941,
+    "referenceChin": 212,
+    "referenceCenterX": 278,
+    "referenceShoulderWidthPixels": 145,
+    "referenceFaceWidthPixels": 83,
+    "referenceShoulderToFace": 1.7469879518072289,
+    "referenceShoulderAngle": 37.03843176527876,
+    "referenceHeads": 4.719387755102041,
+    "iou13": 0.6563424969655671,
+    "iou14": 0.6683650565631173,
+    "delta": 0.012022559597550164,
+    "model": {
+      "id": "小鐵",
+      "height": 1.6,
+      "faceWidth": 0.18467127,
+      "shoulderWidth": 0.33611384,
+      "shoulderToFace": 1.8200657,
+      "shoulderAngle": 23.869701,
+      "headHeight": 0.2421819,
+      "heads": 6.6066046,
+      "anatomicalHeads": 6.6066046,
+      "headTop": 1.6014704,
+      "chin": 1.3592885,
+      "shinFraction": 0.249459,
+      "neck": [
+        [
+          -0.022042114,
+          1.3068935,
+          0.081459045
+        ],
+        [
+          0.11359234,
+          1.3027245,
+          0.05922121
+        ]
+      ],
+      "caps": [
+        [
+          -0.10571947,
+          1.2722305,
+          0.093446165
+        ],
+        [
+          0.19136052,
+          1.2660668,
+          0.03048497
+        ]
+      ],
+      "faceCenter": [
+        0.07536617,
+        1.4438314,
+        0.1982005
+      ]
+    },
+    "landmarks": [
+      [
+        244,
+        236
+      ],
+      [
+        209,
+        264
+      ],
+      [
+        309,
+        236
+      ],
+      [
+        354,
+        268
+      ]
+    ],
+    "method": "gray border-connected flood fill; similarity transform by actor height and feet, no nonuniform warp; all geometry/props included"
+  },
+  {
+    "id": "翠",
+    "reference": "Cui.png",
+    "referenceSha256": "fd723609fbf6d239f0eff618cfa4c5dca63bdc4320e61ef3dbea5f644ae6725e",
+    "referenceTop": 32,
+    "referenceFeet": 947,
+    "referenceChin": 197,
+    "referenceCenterX": 272,
+    "referenceShoulderWidthPixels": 135,
+    "referenceFaceWidthPixels": 70,
+    "referenceShoulderToFace": 1.9285714285714286,
+    "referenceShoulderAngle": 28.42377688783141,
+    "referenceHeads": 5.545454545454546,
+    "iou13": 0.7218220173451051,
+    "iou14": 0.7038393816402053,
+    "delta": -0.017982635704899774,
+    "model": {
+      "id": "翠",
+      "height": 1.75,
+      "faceWidth": 0.1745727,
+      "shoulderWidth": 0.31558976,
+      "shoulderToFace": 1.8077841,
+      "shoulderAngle": 27.902582,
+      "headHeight": 0.3124559,
+      "heads": 5.6007905,
+      "anatomicalHeads": 6.632857,
+      "headTop": 1.7519684,
+      "chin": 1.4395125,
+      "shinFraction": 0.24948393,
+      "neck": [
+        [
+          -0.060499053,
+          1.4358689,
+          -0.023777459
+        ],
+        [
+          0.078648634,
+          1.4345767,
+          -0.027368082
+        ]
+      ],
+      "caps": [
+        [
+          -0.12827176,
+          1.401412,
+          -0.013861535
+        ],
+        [
+          0.14384918,
+          1.39865,
+          -0.04587411
+        ]
+      ],
+      "faceCenter": [
+        0.024171975,
+        1.563561,
+        0.093375355
+      ]
+    },
+    "landmarks": [
+      [
+        247,
+        224
+      ],
+      [
+        205,
+        247
+      ],
+      [
+        297,
+        224
+      ],
+      [
+        340,
+        247
+      ]
+    ],
+    "method": "gray border-connected flood fill; similarity transform by actor height and feet, no nonuniform warp; all geometry/props included"
+  },
+  {
+    "id": "小葉",
+    "reference": "Xiaoye.png",
+    "referenceSha256": "0a6392e75385c6ae249ee5a847dd86add27bdaf7931683e22ad665941ddde18c",
+    "referenceTop": 32,
+    "referenceFeet": 941,
+    "referenceChin": 244,
+    "referenceCenterX": 285,
+    "referenceShoulderWidthPixels": 139,
+    "referenceFaceWidthPixels": 107,
+    "referenceShoulderToFace": 1.2990654205607477,
+    "referenceShoulderAngle": 25.08502040391292,
+    "referenceHeads": 4.287735849056604,
+    "iou13": 0.7283722665174617,
+    "iou14": 0.7360787533896039,
+    "delta": 0.00770648687214226,
+    "model": {
+      "id": "小葉",
+      "height": 1.2,
+      "faceWidth": 0.17505151,
+      "shoulderWidth": 0.27643663,
+      "shoulderToFace": 1.5791731,
+      "shoulderAngle": 25.106125,
+      "headHeight": 0.24946839,
+      "heads": 4.810229,
+      "anatomicalHeads": 5.0295324,
+      "headTop": 1.1971096,
+      "chin": 0.9476412,
+      "shinFraction": 0.3034517,
+      "neck": [
+        [
+          -0.05643607,
+          0.97625375,
+          0.019857818
+        ],
+        [
+          0.03890167,
+          0.9776894,
+          0.015427252
+        ]
+      ],
+      "caps": [
+        [
+          -0.13272056,
+          0.9464869,
+          0.017808735
+        ],
+        [
+          0.12333141,
+          0.93108916,
+          0.010256088
+        ]
+      ],
+      "faceCenter": [
+        0.004465365,
+        1.0462881,
+        0.13927516
+      ]
+    },
+    "landmarks": [
+      [
+        254,
+        268
+      ],
+      [
+        214,
+        286
+      ],
+      [
+        316,
+        268
+      ],
+      [
+        353,
+        286
+      ]
+    ],
+    "method": "gray border-connected flood fill; similarity transform by actor height and feet, no nonuniform warp; all geometry/props included"
+  }
+]

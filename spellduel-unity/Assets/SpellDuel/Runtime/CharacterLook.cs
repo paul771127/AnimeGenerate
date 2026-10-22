@@ -70,6 +70,7 @@ namespace SpellDuel
         static bool Oval(float x,float y,float cx,float cy,float rx,float ry)=>((x-cx)*(x-cx)/(rx*rx)+(y-cy)*(y-cy)/(ry*ry))<1;
         internal static Color32[] Render(string id,int side,int glance=0)
         {
+            if(StoryCostume.Has(id)||id=="澪")return StoryEyes.Render(id,side,glance);
             string key=id+side+"/"+glance;if(pixels.TryGetValue(key,out var cached))return cached;
             var look=CharacterLook.Get(id);var persona=Portraits.PersonaFor(id);float pupil=look.Pupil*persona.Pupil;float gaze=persona.Gaze*.14f+glance*.085f;var iris=look.Iris;var result=new Color32[W*H];
             for(int py=0;py<H;py++)for(int px=0;px<W;px++)
