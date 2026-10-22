@@ -918,6 +918,7 @@ namespace SpellDuel
                     if (pendingStage != null)
                     {
                         battle.stageEnemyMul = Battle.StoryEnemyMul(pendingStage.theme);   // 敵人數量：熔岩 0.5 → 每章 +0.1
+                        if (pendingStage.theme == 1 && pendingStage.id != "trial") { battle.enemyHpMul = 2f; battle.enemyDmgMul = 2f; battle.bossHpMul = 5f; }   // 第二章森林：敵人血量、攻擊 ×2，Boss 血量 ×5（使用者要求）
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
                     }

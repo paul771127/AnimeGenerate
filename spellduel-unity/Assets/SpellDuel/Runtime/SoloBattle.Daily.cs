@@ -167,7 +167,7 @@ namespace SpellDuel
                     int before = battle.projectiles.Count;
                     battle.TryRelease(en, (me.Chest - hand).normalized, me.Feet, out _);
                     for (int j = before; j < battle.projectiles.Count; j++)
-                        battle.projectiles[j].speedMul = s.kind == DailyChallenge.Attack.Bolt ? DailyChallenge.BoltSpeed / Mathf.Max(0.1f, sk.speed) : 1f;   // 火球固定 1.4 m/s
+                    { battle.projectiles[j].speedMul = s.kind == DailyChallenge.Attack.Bolt ? DailyChallenge.BoltSpeed / Mathf.Max(0.1f, sk.speed) : 1f; battle.projectiles[j].hitMul = 1f; }   // 火球固定 1.4 m/s；閃避挑戰的命中範圍不變
                 }
                 dailyFired++;
                 if (s.portal) Destroy(s.portal);

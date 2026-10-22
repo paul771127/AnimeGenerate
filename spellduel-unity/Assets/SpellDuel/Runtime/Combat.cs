@@ -145,6 +145,7 @@ namespace SpellDuel
         public bool lob; public Vector3 vel, landAt;   // 拋物線投擲（毒液彈）：速度向量、預定落點
         public float rangeMul = 1f;     // 飛行距離倍率（無盡模式升級）
         public float speedMul = 1f;     // 飛行速度倍率（每日閃避挑戰：每一發快慢不同）
+        public float hitMul = 1f;       // 命中判定範圍倍率（電腦敵人的投射物 0.5：不用跑很遠才躲得掉）
         public int id;
         public bool remote;          // 雙人：對手的法術（只顯示，命中由對手判定）
         public HashSet<Fighter> pierced;   // 穿透箭已經打過的小怪
@@ -609,14 +610,16 @@ namespace SpellDuel
         public int levelBoost;
         /// <summary>難度加的等級對 Boss 的倍率（Boss 的血量不跟波次走，另外乘）</summary>
         public float BoostHpMul => 1f + HpPerWave * levelBoost;
-        public float BoostDmgMul => (0.75f + DmgPerWave * levelBoost) / 0.75f;
-        public float HpMul => (1f + HpPerWave * Tier) * PartyMul * hpBoost;
+        public float BoostDmgMul => (0.75f + DmgPerWave * levelBoost) / 0.75f * enemyDmgMul;
+        public float HpMul => (1f + HpPerWave * Tier) * PartyMul * hpBoost * enemyHpMul;
+        /// <summary>這一關敵人的額外倍率（故事第二章森林：血量、攻擊 ×2，Boss 血量 ×5）</summary>
+        public float enemyHpMul = 1f, enemyDmgMul = 1f, bossHpMul = 1f;
         // 每過一波敵人變強多少（2026-10 重調：原本 HP 8%、攻擊 5%，第二章起比玩家成長快太多，Lv18 撐不過一波；現在 HP 3.5%、攻擊 2%）
         public const float HpPerWave = 0.035f, DmgPerWave = 0.02f;
         /// <summary>故事關卡的敵人數量倍率：每一章都減半（使用者要求，和第一章一樣）</summary>
         public static float StoryEnemyMul(int theme) => 0.5f;
         public float hpBoost = 1f;   // 轉職試煉：敵人更硬
-        public float DmgMul => 0.75f + DmgPerWave * Tier;
+        public float DmgMul => (0.75f + DmgPerWave * Tier) * enemyDmgMul;
         public const float EndlessRegen = 0.5f, EndlessRegenPct = 0.005f;   // 無盡／故事：玩家每秒自然回血（0.5 或最大 HP 的 0.5%，取大的）
         public float SpeedMul => Mathf.Min(1.5f, 1f + 0.02f * Tier);
 
@@ -712,7 +715,7 @@ namespace SpellDuel
             bossSpawnedThisWave = true;
             int bossIndex = wave / BossEvery - 1;
             var at = (bossPoint ?? edgePoint)();
-            enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.5f * bossIndex) * BossPartyMul * hpBoost * BoostHpMul);
+            enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.5f * bossIndex) * BossPartyMul * hpBoost * BoostHpMul * bossHpMul);
             enemy.hp = enemy.maxHp;
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
             enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f; enemy.silencedUntil = 0f;
@@ -1099,6 +1102,10 @@ namespace SpellDuel
         // 判定規則（攻擊方判定）：我的法術／陷阱打到對手 → OnRemoteHit 送給對手，由對手自己扣血與套用格擋、護盾、反擊；
         // 對手判定打到我 → ApplyRemoteHit。
         public bool remoteEnemy;
+        /// <summary>電腦控制的敵人（小怪、Boss、電腦對手）；雙人對戰的對手是真人，不算</summary>
+        public bool EnemyNpc(Fighter o) => o != null && (o.isMinion || (o == enemy && !(remoteEnemy && allies.Count == 0)));
+        /// <summary>電腦敵人投射物：飛行速度、命中範圍倍率（使用者：太快、要跑很遠才躲得掉）</summary>
+        public const float EnemyShotSpeed = 0.5f, EnemyShotHit = 0.5f;
         public event Action<Projectile> OnSpawn;                 // 我方新增的法術（要送給對手）
         public event Action<Trap> OnTrapPlaced;                  // 我方新設的陷阱
         public event Action<SkillDef, int, Vector3, int> OnRemoteHit;   // 打到對手：技能、傷害、位置、法術或陷阱 id
@@ -1117,8 +1124,9 @@ namespace SpellDuel
                 projectiles.Add(p);
                 return p;
             }
+            if (EnemyNpc(p.owner)) { p.speedMul *= EnemyShotSpeed; p.hitMul = EnemyShotHit; }   // 合作：主機送來的 Boss／小怪投射物，和主機一樣慢
             SetCurve(p, curveAmp, pathLen);
-            Advance(p, s.speed * Mathf.Max(0f, elapsed));
+            Advance(p, s.speed * p.speedMul * Mathf.Max(0f, elapsed));
             projectiles.Add(p);
             return p;
         }
@@ -1219,7 +1227,7 @@ namespace SpellDuel
         public static bool Touches(Projectile p, Fighter v)
         {
             v.BodySegment(out var a, out var b);
-            if (!p.skill.crescent) return DistancePointSegment(p.pos, a, b) < p.skill.radius + v.bodyRadius;
+            if (!p.skill.crescent) return DistancePointSegment(p.pos, a, b) < (p.skill.radius + v.bodyRadius) * p.hitMul;
             var fw = Fighter.Flat(p.Heading); if (fw == Vector3.zero) fw = Fighter.Flat(p.dir); if (fw == Vector3.zero) fw = Vector3.forward;
             var right = Vector3.Cross(Vector3.up, fw);
             float D = Mathf.Max(0.06f, p.skill.radius * 2f), tube = Mathf.Max(0.05f, CrescentTube * D);
@@ -1227,7 +1235,7 @@ namespace SpellDuel
             {
                 var l = CrescentPoint(i / (CrescentSamples - 1f)) * D;
                 var w = p.pos + right * l.x + Vector3.up * l.y + fw * l.z;
-                if (DistancePointSegment(w, a, b) < tube + v.bodyRadius) return true;
+                if (DistancePointSegment(w, a, b) < (tube + v.bodyRadius) * p.hitMul) return true;
             }
             return false;
         }
@@ -1877,6 +1885,7 @@ namespace SpellDuel
             }
             if (!reflected && s.cls == "basic" && owner.basicHoming > 0f) p.homing = owner.basicHoming;
             if ((owner == enemy || owner.isMinion) && owner.target != null) p.target = owner.target;
+            if (EnemyNpc(owner)) { p.speedMul *= EnemyShotSpeed; p.hitMul = EnemyShotHit; }   // 電腦敵人的投射物：飛慢一半、命中範圍減半
             SetCurve(p, curveAmp, pathLen);
             projectiles.Add(p);
             // 要給另一支手機顯示的法術：雙人對戰的我方法術；合作模式的我方法術、主機上 Boss 的法術
