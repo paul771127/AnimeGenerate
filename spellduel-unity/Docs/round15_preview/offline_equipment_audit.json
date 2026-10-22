@@ -1,0 +1,4562 @@
+[
+  {
+    "id": "swordsman",
+    "label": "slot0_r0",
+    "baseTriangles": 8100,
+    "addedTriangles": 84,
+    "ratio": 0.01037037,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot0_r1",
+    "baseTriangles": 8100,
+    "addedTriangles": 84,
+    "ratio": 0.01037037,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot0_r2",
+    "baseTriangles": 8100,
+    "addedTriangles": 96,
+    "ratio": 0.011851852,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot0_r3",
+    "baseTriangles": 8100,
+    "addedTriangles": 100,
+    "ratio": 0.012345679,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot0_r4",
+    "baseTriangles": 8100,
+    "addedTriangles": 124,
+    "ratio": 0.015308642,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot1_r0",
+    "baseTriangles": 8100,
+    "addedTriangles": 56,
+    "ratio": 0.0069135805,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot1_r1",
+    "baseTriangles": 8100,
+    "addedTriangles": 56,
+    "ratio": 0.0069135805,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot1_r2",
+    "baseTriangles": 8100,
+    "addedTriangles": 56,
+    "ratio": 0.0069135805,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot1_r3",
+    "baseTriangles": 8100,
+    "addedTriangles": 60,
+    "ratio": 0.0074074073,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot1_r4",
+    "baseTriangles": 8100,
+    "addedTriangles": 84,
+    "ratio": 0.01037037,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot2_r0",
+    "baseTriangles": 8100,
+    "addedTriangles": 172,
+    "ratio": 0.021234568,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot2_r1",
+    "baseTriangles": 8100,
+    "addedTriangles": 172,
+    "ratio": 0.021234568,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot2_r2",
+    "baseTriangles": 8100,
+    "addedTriangles": 184,
+    "ratio": 0.02271605,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot2_r3",
+    "baseTriangles": 8100,
+    "addedTriangles": 188,
+    "ratio": 0.023209877,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot2_r4",
+    "baseTriangles": 8100,
+    "addedTriangles": 188,
+    "ratio": 0.023209877,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot3_r0",
+    "baseTriangles": 8100,
+    "addedTriangles": 344,
+    "ratio": 0.042469136,
+    "extraRenderers": 2
+  },
+  {
+    "id": "swordsman",
+    "label": "slot3_r1",
+    "baseTriangles": 8100,
+    "addedTriangles": 344,
+    "ratio": 0.042469136,
+    "extraRenderers": 2
+  },
+  {
+    "id": "swordsman",
+    "label": "slot3_r2",
+    "baseTriangles": 8100,
+    "addedTriangles": 368,
+    "ratio": 0.0454321,
+    "extraRenderers": 2
+  },
+  {
+    "id": "swordsman",
+    "label": "slot3_r3",
+    "baseTriangles": 8100,
+    "addedTriangles": 376,
+    "ratio": 0.046419755,
+    "extraRenderers": 2
+  },
+  {
+    "id": "swordsman",
+    "label": "slot3_r4",
+    "baseTriangles": 8100,
+    "addedTriangles": 376,
+    "ratio": 0.046419755,
+    "extraRenderers": 2
+  },
+  {
+    "id": "swordsman",
+    "label": "slot4_r0",
+    "baseTriangles": 8100,
+    "addedTriangles": 48,
+    "ratio": 0.005925926,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot4_r1",
+    "baseTriangles": 8100,
+    "addedTriangles": 48,
+    "ratio": 0.005925926,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot4_r2",
+    "baseTriangles": 8100,
+    "addedTriangles": 48,
+    "ratio": 0.005925926,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot4_r3",
+    "baseTriangles": 8100,
+    "addedTriangles": 52,
+    "ratio": 0.006419753,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "slot4_r4",
+    "baseTriangles": 8100,
+    "addedTriangles": 52,
+    "ratio": 0.006419753,
+    "extraRenderers": 1
+  },
+  {
+    "id": "swordsman",
+    "label": "set_flame",
+    "baseTriangles": 8100,
+    "addedTriangles": 1452,
+    "ratio": 0.17925926,
+    "extraRenderers": 6
+  },
+  {
+    "id": "swordsman",
+    "label": "set_grove",
+    "baseTriangles": 8100,
+    "addedTriangles": 1452,
+    "ratio": 0.17925926,
+    "extraRenderers": 6
+  },
+  {
+    "id": "swordsman",
+    "label": "set_tide",
+    "baseTriangles": 8100,
+    "addedTriangles": 1424,
+    "ratio": 0.17580247,
+    "extraRenderers": 6
+  },
+  {
+    "id": "swordsman",
+    "label": "set_gladiator",
+    "baseTriangles": 8100,
+    "addedTriangles": 1340,
+    "ratio": 0.1654321,
+    "extraRenderers": 6
+  },
+  {
+    "id": "swordsman",
+    "label": "set_loess",
+    "baseTriangles": 8100,
+    "addedTriangles": 1256,
+    "ratio": 0.15506172,
+    "extraRenderers": 6
+  },
+  {
+    "id": "swordsman",
+    "label": "set_gale",
+    "baseTriangles": 8100,
+    "addedTriangles": 1676,
+    "ratio": 0.20691358,
+    "extraRenderers": 6
+  },
+  {
+    "id": "swordsman",
+    "label": "set_guard",
+    "baseTriangles": 8100,
+    "addedTriangles": 1228,
+    "ratio": 0.15160494,
+    "extraRenderers": 6
+  },
+  {
+    "id": "swordsman",
+    "label": "all_r0",
+    "baseTriangles": 8100,
+    "addedTriangles": 704,
+    "ratio": 0.08691358,
+    "extraRenderers": 6
+  },
+  {
+    "id": "swordsman",
+    "label": "all_r1",
+    "baseTriangles": 8100,
+    "addedTriangles": 704,
+    "ratio": 0.08691358,
+    "extraRenderers": 6
+  },
+  {
+    "id": "swordsman",
+    "label": "all_r2",
+    "baseTriangles": 8100,
+    "addedTriangles": 752,
+    "ratio": 0.09283951,
+    "extraRenderers": 6
+  },
+  {
+    "id": "swordsman",
+    "label": "all_r3",
+    "baseTriangles": 8100,
+    "addedTriangles": 776,
+    "ratio": 0.09580247,
+    "extraRenderers": 6
+  },
+  {
+    "id": "swordsman",
+    "label": "all_r4",
+    "baseTriangles": 8100,
+    "addedTriangles": 824,
+    "ratio": 0.101728395,
+    "extraRenderers": 6
+  },
+  {
+    "id": "swordsman",
+    "label": "mixed",
+    "baseTriangles": 8100,
+    "addedTriangles": 1072,
+    "ratio": 0.13234568,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archer",
+    "label": "slot0_r0",
+    "baseTriangles": 7748,
+    "addedTriangles": 84,
+    "ratio": 0.010841507,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot0_r1",
+    "baseTriangles": 7748,
+    "addedTriangles": 84,
+    "ratio": 0.010841507,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot0_r2",
+    "baseTriangles": 7748,
+    "addedTriangles": 96,
+    "ratio": 0.012390294,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot0_r3",
+    "baseTriangles": 7748,
+    "addedTriangles": 100,
+    "ratio": 0.012906557,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot0_r4",
+    "baseTriangles": 7748,
+    "addedTriangles": 124,
+    "ratio": 0.01600413,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot1_r0",
+    "baseTriangles": 7748,
+    "addedTriangles": 56,
+    "ratio": 0.007227672,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot1_r1",
+    "baseTriangles": 7748,
+    "addedTriangles": 56,
+    "ratio": 0.007227672,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot1_r2",
+    "baseTriangles": 7748,
+    "addedTriangles": 56,
+    "ratio": 0.007227672,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot1_r3",
+    "baseTriangles": 7748,
+    "addedTriangles": 60,
+    "ratio": 0.0077439337,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot1_r4",
+    "baseTriangles": 7748,
+    "addedTriangles": 84,
+    "ratio": 0.010841507,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot2_r0",
+    "baseTriangles": 7748,
+    "addedTriangles": 172,
+    "ratio": 0.022199277,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot2_r1",
+    "baseTriangles": 7748,
+    "addedTriangles": 172,
+    "ratio": 0.022199277,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot2_r2",
+    "baseTriangles": 7748,
+    "addedTriangles": 184,
+    "ratio": 0.023748064,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot2_r3",
+    "baseTriangles": 7748,
+    "addedTriangles": 188,
+    "ratio": 0.024264326,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot2_r4",
+    "baseTriangles": 7748,
+    "addedTriangles": 188,
+    "ratio": 0.024264326,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot3_r0",
+    "baseTriangles": 7748,
+    "addedTriangles": 344,
+    "ratio": 0.044398554,
+    "extraRenderers": 2
+  },
+  {
+    "id": "archer",
+    "label": "slot3_r1",
+    "baseTriangles": 7748,
+    "addedTriangles": 344,
+    "ratio": 0.044398554,
+    "extraRenderers": 2
+  },
+  {
+    "id": "archer",
+    "label": "slot3_r2",
+    "baseTriangles": 7748,
+    "addedTriangles": 368,
+    "ratio": 0.04749613,
+    "extraRenderers": 2
+  },
+  {
+    "id": "archer",
+    "label": "slot3_r3",
+    "baseTriangles": 7748,
+    "addedTriangles": 376,
+    "ratio": 0.048528653,
+    "extraRenderers": 2
+  },
+  {
+    "id": "archer",
+    "label": "slot3_r4",
+    "baseTriangles": 7748,
+    "addedTriangles": 376,
+    "ratio": 0.048528653,
+    "extraRenderers": 2
+  },
+  {
+    "id": "archer",
+    "label": "slot4_r0",
+    "baseTriangles": 7748,
+    "addedTriangles": 48,
+    "ratio": 0.006195147,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot4_r1",
+    "baseTriangles": 7748,
+    "addedTriangles": 48,
+    "ratio": 0.006195147,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot4_r2",
+    "baseTriangles": 7748,
+    "addedTriangles": 48,
+    "ratio": 0.006195147,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot4_r3",
+    "baseTriangles": 7748,
+    "addedTriangles": 52,
+    "ratio": 0.0067114094,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "slot4_r4",
+    "baseTriangles": 7748,
+    "addedTriangles": 52,
+    "ratio": 0.0067114094,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archer",
+    "label": "set_flame",
+    "baseTriangles": 7748,
+    "addedTriangles": 1452,
+    "ratio": 0.1874032,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archer",
+    "label": "set_grove",
+    "baseTriangles": 7748,
+    "addedTriangles": 1452,
+    "ratio": 0.1874032,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archer",
+    "label": "set_tide",
+    "baseTriangles": 7748,
+    "addedTriangles": 1424,
+    "ratio": 0.18378937,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archer",
+    "label": "set_gladiator",
+    "baseTriangles": 7748,
+    "addedTriangles": 1340,
+    "ratio": 0.17294785,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archer",
+    "label": "set_loess",
+    "baseTriangles": 7748,
+    "addedTriangles": 1256,
+    "ratio": 0.16210635,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archer",
+    "label": "set_gale",
+    "baseTriangles": 7748,
+    "addedTriangles": 1676,
+    "ratio": 0.21631388,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archer",
+    "label": "set_guard",
+    "baseTriangles": 7748,
+    "addedTriangles": 1228,
+    "ratio": 0.15849252,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archer",
+    "label": "all_r0",
+    "baseTriangles": 7748,
+    "addedTriangles": 704,
+    "ratio": 0.090862155,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archer",
+    "label": "all_r1",
+    "baseTriangles": 7748,
+    "addedTriangles": 704,
+    "ratio": 0.090862155,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archer",
+    "label": "all_r2",
+    "baseTriangles": 7748,
+    "addedTriangles": 752,
+    "ratio": 0.097057305,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archer",
+    "label": "all_r3",
+    "baseTriangles": 7748,
+    "addedTriangles": 776,
+    "ratio": 0.10015488,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archer",
+    "label": "all_r4",
+    "baseTriangles": 7748,
+    "addedTriangles": 824,
+    "ratio": 0.10635003,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archer",
+    "label": "mixed",
+    "baseTriangles": 7748,
+    "addedTriangles": 1092,
+    "ratio": 0.1409396,
+    "extraRenderers": 6
+  },
+  {
+    "id": "mage",
+    "label": "slot0_r0",
+    "baseTriangles": 7380,
+    "addedTriangles": 84,
+    "ratio": 0.011382114,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot0_r1",
+    "baseTriangles": 7380,
+    "addedTriangles": 84,
+    "ratio": 0.011382114,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot0_r2",
+    "baseTriangles": 7380,
+    "addedTriangles": 96,
+    "ratio": 0.01300813,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot0_r3",
+    "baseTriangles": 7380,
+    "addedTriangles": 100,
+    "ratio": 0.013550135,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot0_r4",
+    "baseTriangles": 7380,
+    "addedTriangles": 124,
+    "ratio": 0.016802168,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot1_r0",
+    "baseTriangles": 7380,
+    "addedTriangles": 56,
+    "ratio": 0.007588076,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot1_r1",
+    "baseTriangles": 7380,
+    "addedTriangles": 56,
+    "ratio": 0.007588076,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot1_r2",
+    "baseTriangles": 7380,
+    "addedTriangles": 56,
+    "ratio": 0.007588076,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot1_r3",
+    "baseTriangles": 7380,
+    "addedTriangles": 60,
+    "ratio": 0.008130081,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot1_r4",
+    "baseTriangles": 7380,
+    "addedTriangles": 84,
+    "ratio": 0.011382114,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot2_r0",
+    "baseTriangles": 7380,
+    "addedTriangles": 172,
+    "ratio": 0.023306234,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot2_r1",
+    "baseTriangles": 7380,
+    "addedTriangles": 172,
+    "ratio": 0.023306234,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot2_r2",
+    "baseTriangles": 7380,
+    "addedTriangles": 184,
+    "ratio": 0.024932249,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot2_r3",
+    "baseTriangles": 7380,
+    "addedTriangles": 188,
+    "ratio": 0.025474254,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot2_r4",
+    "baseTriangles": 7380,
+    "addedTriangles": 188,
+    "ratio": 0.025474254,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot3_r0",
+    "baseTriangles": 7380,
+    "addedTriangles": 344,
+    "ratio": 0.046612468,
+    "extraRenderers": 2
+  },
+  {
+    "id": "mage",
+    "label": "slot3_r1",
+    "baseTriangles": 7380,
+    "addedTriangles": 344,
+    "ratio": 0.046612468,
+    "extraRenderers": 2
+  },
+  {
+    "id": "mage",
+    "label": "slot3_r2",
+    "baseTriangles": 7380,
+    "addedTriangles": 368,
+    "ratio": 0.049864497,
+    "extraRenderers": 2
+  },
+  {
+    "id": "mage",
+    "label": "slot3_r3",
+    "baseTriangles": 7380,
+    "addedTriangles": 376,
+    "ratio": 0.050948508,
+    "extraRenderers": 2
+  },
+  {
+    "id": "mage",
+    "label": "slot3_r4",
+    "baseTriangles": 7380,
+    "addedTriangles": 376,
+    "ratio": 0.050948508,
+    "extraRenderers": 2
+  },
+  {
+    "id": "mage",
+    "label": "slot4_r0",
+    "baseTriangles": 7380,
+    "addedTriangles": 48,
+    "ratio": 0.006504065,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot4_r1",
+    "baseTriangles": 7380,
+    "addedTriangles": 48,
+    "ratio": 0.006504065,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot4_r2",
+    "baseTriangles": 7380,
+    "addedTriangles": 48,
+    "ratio": 0.006504065,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot4_r3",
+    "baseTriangles": 7380,
+    "addedTriangles": 52,
+    "ratio": 0.0070460704,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "slot4_r4",
+    "baseTriangles": 7380,
+    "addedTriangles": 52,
+    "ratio": 0.0070460704,
+    "extraRenderers": 1
+  },
+  {
+    "id": "mage",
+    "label": "set_flame",
+    "baseTriangles": 7380,
+    "addedTriangles": 1452,
+    "ratio": 0.19674797,
+    "extraRenderers": 6
+  },
+  {
+    "id": "mage",
+    "label": "set_grove",
+    "baseTriangles": 7380,
+    "addedTriangles": 1452,
+    "ratio": 0.19674797,
+    "extraRenderers": 6
+  },
+  {
+    "id": "mage",
+    "label": "set_tide",
+    "baseTriangles": 7380,
+    "addedTriangles": 1424,
+    "ratio": 0.19295393,
+    "extraRenderers": 6
+  },
+  {
+    "id": "mage",
+    "label": "set_gladiator",
+    "baseTriangles": 7380,
+    "addedTriangles": 1340,
+    "ratio": 0.18157181,
+    "extraRenderers": 6
+  },
+  {
+    "id": "mage",
+    "label": "set_loess",
+    "baseTriangles": 7380,
+    "addedTriangles": 1256,
+    "ratio": 0.17018971,
+    "extraRenderers": 6
+  },
+  {
+    "id": "mage",
+    "label": "set_gale",
+    "baseTriangles": 7380,
+    "addedTriangles": 1676,
+    "ratio": 0.22710027,
+    "extraRenderers": 6
+  },
+  {
+    "id": "mage",
+    "label": "set_guard",
+    "baseTriangles": 7380,
+    "addedTriangles": 1228,
+    "ratio": 0.16639566,
+    "extraRenderers": 6
+  },
+  {
+    "id": "mage",
+    "label": "all_r0",
+    "baseTriangles": 7380,
+    "addedTriangles": 704,
+    "ratio": 0.09539296,
+    "extraRenderers": 6
+  },
+  {
+    "id": "mage",
+    "label": "all_r1",
+    "baseTriangles": 7380,
+    "addedTriangles": 704,
+    "ratio": 0.09539296,
+    "extraRenderers": 6
+  },
+  {
+    "id": "mage",
+    "label": "all_r2",
+    "baseTriangles": 7380,
+    "addedTriangles": 752,
+    "ratio": 0.101897016,
+    "extraRenderers": 6
+  },
+  {
+    "id": "mage",
+    "label": "all_r3",
+    "baseTriangles": 7380,
+    "addedTriangles": 776,
+    "ratio": 0.10514905,
+    "extraRenderers": 6
+  },
+  {
+    "id": "mage",
+    "label": "all_r4",
+    "baseTriangles": 7380,
+    "addedTriangles": 824,
+    "ratio": 0.11165312,
+    "extraRenderers": 6
+  },
+  {
+    "id": "mage",
+    "label": "mixed",
+    "baseTriangles": 7380,
+    "addedTriangles": 1120,
+    "ratio": 0.15176152,
+    "extraRenderers": 6
+  },
+  {
+    "id": "assassin",
+    "label": "slot0_r0",
+    "baseTriangles": 6968,
+    "addedTriangles": 84,
+    "ratio": 0.012055109,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot0_r1",
+    "baseTriangles": 6968,
+    "addedTriangles": 84,
+    "ratio": 0.012055109,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot0_r2",
+    "baseTriangles": 6968,
+    "addedTriangles": 96,
+    "ratio": 0.013777267,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot0_r3",
+    "baseTriangles": 6968,
+    "addedTriangles": 100,
+    "ratio": 0.01435132,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot0_r4",
+    "baseTriangles": 6968,
+    "addedTriangles": 124,
+    "ratio": 0.017795637,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot1_r0",
+    "baseTriangles": 6968,
+    "addedTriangles": 56,
+    "ratio": 0.008036739,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot1_r1",
+    "baseTriangles": 6968,
+    "addedTriangles": 56,
+    "ratio": 0.008036739,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot1_r2",
+    "baseTriangles": 6968,
+    "addedTriangles": 56,
+    "ratio": 0.008036739,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot1_r3",
+    "baseTriangles": 6968,
+    "addedTriangles": 60,
+    "ratio": 0.008610792,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot1_r4",
+    "baseTriangles": 6968,
+    "addedTriangles": 84,
+    "ratio": 0.012055109,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot2_r0",
+    "baseTriangles": 6968,
+    "addedTriangles": 172,
+    "ratio": 0.02468427,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot2_r1",
+    "baseTriangles": 6968,
+    "addedTriangles": 172,
+    "ratio": 0.02468427,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot2_r2",
+    "baseTriangles": 6968,
+    "addedTriangles": 184,
+    "ratio": 0.02640643,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot2_r3",
+    "baseTriangles": 6968,
+    "addedTriangles": 188,
+    "ratio": 0.026980482,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot2_r4",
+    "baseTriangles": 6968,
+    "addedTriangles": 188,
+    "ratio": 0.026980482,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot3_r0",
+    "baseTriangles": 6968,
+    "addedTriangles": 344,
+    "ratio": 0.04936854,
+    "extraRenderers": 2
+  },
+  {
+    "id": "assassin",
+    "label": "slot3_r1",
+    "baseTriangles": 6968,
+    "addedTriangles": 344,
+    "ratio": 0.04936854,
+    "extraRenderers": 2
+  },
+  {
+    "id": "assassin",
+    "label": "slot3_r2",
+    "baseTriangles": 6968,
+    "addedTriangles": 368,
+    "ratio": 0.05281286,
+    "extraRenderers": 2
+  },
+  {
+    "id": "assassin",
+    "label": "slot3_r3",
+    "baseTriangles": 6968,
+    "addedTriangles": 376,
+    "ratio": 0.053960964,
+    "extraRenderers": 2
+  },
+  {
+    "id": "assassin",
+    "label": "slot3_r4",
+    "baseTriangles": 6968,
+    "addedTriangles": 376,
+    "ratio": 0.053960964,
+    "extraRenderers": 2
+  },
+  {
+    "id": "assassin",
+    "label": "slot4_r0",
+    "baseTriangles": 6968,
+    "addedTriangles": 48,
+    "ratio": 0.0068886336,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot4_r1",
+    "baseTriangles": 6968,
+    "addedTriangles": 48,
+    "ratio": 0.0068886336,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot4_r2",
+    "baseTriangles": 6968,
+    "addedTriangles": 48,
+    "ratio": 0.0068886336,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot4_r3",
+    "baseTriangles": 6968,
+    "addedTriangles": 52,
+    "ratio": 0.0074626864,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "slot4_r4",
+    "baseTriangles": 6968,
+    "addedTriangles": 52,
+    "ratio": 0.0074626864,
+    "extraRenderers": 1
+  },
+  {
+    "id": "assassin",
+    "label": "set_flame",
+    "baseTriangles": 6968,
+    "addedTriangles": 1452,
+    "ratio": 0.20838118,
+    "extraRenderers": 6
+  },
+  {
+    "id": "assassin",
+    "label": "set_grove",
+    "baseTriangles": 6968,
+    "addedTriangles": 1452,
+    "ratio": 0.20838118,
+    "extraRenderers": 6
+  },
+  {
+    "id": "assassin",
+    "label": "set_tide",
+    "baseTriangles": 6968,
+    "addedTriangles": 1424,
+    "ratio": 0.2043628,
+    "extraRenderers": 6
+  },
+  {
+    "id": "assassin",
+    "label": "set_gladiator",
+    "baseTriangles": 6968,
+    "addedTriangles": 1340,
+    "ratio": 0.1923077,
+    "extraRenderers": 6
+  },
+  {
+    "id": "assassin",
+    "label": "set_loess",
+    "baseTriangles": 6968,
+    "addedTriangles": 1256,
+    "ratio": 0.18025258,
+    "extraRenderers": 6
+  },
+  {
+    "id": "assassin",
+    "label": "set_gale",
+    "baseTriangles": 6968,
+    "addedTriangles": 1676,
+    "ratio": 0.24052812,
+    "extraRenderers": 6
+  },
+  {
+    "id": "assassin",
+    "label": "set_guard",
+    "baseTriangles": 6968,
+    "addedTriangles": 1228,
+    "ratio": 0.17623422,
+    "extraRenderers": 6
+  },
+  {
+    "id": "assassin",
+    "label": "all_r0",
+    "baseTriangles": 6968,
+    "addedTriangles": 704,
+    "ratio": 0.10103329,
+    "extraRenderers": 6
+  },
+  {
+    "id": "assassin",
+    "label": "all_r1",
+    "baseTriangles": 6968,
+    "addedTriangles": 704,
+    "ratio": 0.10103329,
+    "extraRenderers": 6
+  },
+  {
+    "id": "assassin",
+    "label": "all_r2",
+    "baseTriangles": 6968,
+    "addedTriangles": 752,
+    "ratio": 0.10792193,
+    "extraRenderers": 6
+  },
+  {
+    "id": "assassin",
+    "label": "all_r3",
+    "baseTriangles": 6968,
+    "addedTriangles": 776,
+    "ratio": 0.11136624,
+    "extraRenderers": 6
+  },
+  {
+    "id": "assassin",
+    "label": "all_r4",
+    "baseTriangles": 6968,
+    "addedTriangles": 824,
+    "ratio": 0.11825488,
+    "extraRenderers": 6
+  },
+  {
+    "id": "assassin",
+    "label": "mixed",
+    "baseTriangles": 6968,
+    "addedTriangles": 1060,
+    "ratio": 0.152124,
+    "extraRenderers": 6
+  },
+  {
+    "id": "priest",
+    "label": "slot0_r0",
+    "baseTriangles": 8676,
+    "addedTriangles": 84,
+    "ratio": 0.009681881,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot0_r1",
+    "baseTriangles": 8676,
+    "addedTriangles": 84,
+    "ratio": 0.009681881,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot0_r2",
+    "baseTriangles": 8676,
+    "addedTriangles": 96,
+    "ratio": 0.011065007,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot0_r3",
+    "baseTriangles": 8676,
+    "addedTriangles": 100,
+    "ratio": 0.011526049,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot0_r4",
+    "baseTriangles": 8676,
+    "addedTriangles": 124,
+    "ratio": 0.014292301,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot1_r0",
+    "baseTriangles": 8676,
+    "addedTriangles": 56,
+    "ratio": 0.0064545874,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot1_r1",
+    "baseTriangles": 8676,
+    "addedTriangles": 56,
+    "ratio": 0.0064545874,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot1_r2",
+    "baseTriangles": 8676,
+    "addedTriangles": 56,
+    "ratio": 0.0064545874,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot1_r3",
+    "baseTriangles": 8676,
+    "addedTriangles": 60,
+    "ratio": 0.0069156294,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot1_r4",
+    "baseTriangles": 8676,
+    "addedTriangles": 84,
+    "ratio": 0.009681881,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot2_r0",
+    "baseTriangles": 8676,
+    "addedTriangles": 172,
+    "ratio": 0.019824805,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot2_r1",
+    "baseTriangles": 8676,
+    "addedTriangles": 172,
+    "ratio": 0.019824805,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot2_r2",
+    "baseTriangles": 8676,
+    "addedTriangles": 184,
+    "ratio": 0.02120793,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot2_r3",
+    "baseTriangles": 8676,
+    "addedTriangles": 188,
+    "ratio": 0.021668972,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot2_r4",
+    "baseTriangles": 8676,
+    "addedTriangles": 188,
+    "ratio": 0.021668972,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot3_r0",
+    "baseTriangles": 8676,
+    "addedTriangles": 344,
+    "ratio": 0.03964961,
+    "extraRenderers": 2
+  },
+  {
+    "id": "priest",
+    "label": "slot3_r1",
+    "baseTriangles": 8676,
+    "addedTriangles": 344,
+    "ratio": 0.03964961,
+    "extraRenderers": 2
+  },
+  {
+    "id": "priest",
+    "label": "slot3_r2",
+    "baseTriangles": 8676,
+    "addedTriangles": 368,
+    "ratio": 0.04241586,
+    "extraRenderers": 2
+  },
+  {
+    "id": "priest",
+    "label": "slot3_r3",
+    "baseTriangles": 8676,
+    "addedTriangles": 376,
+    "ratio": 0.043337945,
+    "extraRenderers": 2
+  },
+  {
+    "id": "priest",
+    "label": "slot3_r4",
+    "baseTriangles": 8676,
+    "addedTriangles": 376,
+    "ratio": 0.043337945,
+    "extraRenderers": 2
+  },
+  {
+    "id": "priest",
+    "label": "slot4_r0",
+    "baseTriangles": 8676,
+    "addedTriangles": 48,
+    "ratio": 0.0055325036,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot4_r1",
+    "baseTriangles": 8676,
+    "addedTriangles": 48,
+    "ratio": 0.0055325036,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot4_r2",
+    "baseTriangles": 8676,
+    "addedTriangles": 48,
+    "ratio": 0.0055325036,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot4_r3",
+    "baseTriangles": 8676,
+    "addedTriangles": 52,
+    "ratio": 0.0059935455,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "slot4_r4",
+    "baseTriangles": 8676,
+    "addedTriangles": 52,
+    "ratio": 0.0059935455,
+    "extraRenderers": 1
+  },
+  {
+    "id": "priest",
+    "label": "set_flame",
+    "baseTriangles": 8676,
+    "addedTriangles": 1452,
+    "ratio": 0.16735823,
+    "extraRenderers": 6
+  },
+  {
+    "id": "priest",
+    "label": "set_grove",
+    "baseTriangles": 8676,
+    "addedTriangles": 1452,
+    "ratio": 0.16735823,
+    "extraRenderers": 6
+  },
+  {
+    "id": "priest",
+    "label": "set_tide",
+    "baseTriangles": 8676,
+    "addedTriangles": 1424,
+    "ratio": 0.16413094,
+    "extraRenderers": 6
+  },
+  {
+    "id": "priest",
+    "label": "set_gladiator",
+    "baseTriangles": 8676,
+    "addedTriangles": 1340,
+    "ratio": 0.15444906,
+    "extraRenderers": 6
+  },
+  {
+    "id": "priest",
+    "label": "set_loess",
+    "baseTriangles": 8676,
+    "addedTriangles": 1256,
+    "ratio": 0.14476718,
+    "extraRenderers": 6
+  },
+  {
+    "id": "priest",
+    "label": "set_gale",
+    "baseTriangles": 8676,
+    "addedTriangles": 1676,
+    "ratio": 0.19317658,
+    "extraRenderers": 6
+  },
+  {
+    "id": "priest",
+    "label": "set_guard",
+    "baseTriangles": 8676,
+    "addedTriangles": 1228,
+    "ratio": 0.14153989,
+    "extraRenderers": 6
+  },
+  {
+    "id": "priest",
+    "label": "all_r0",
+    "baseTriangles": 8676,
+    "addedTriangles": 704,
+    "ratio": 0.08114339,
+    "extraRenderers": 6
+  },
+  {
+    "id": "priest",
+    "label": "all_r1",
+    "baseTriangles": 8676,
+    "addedTriangles": 704,
+    "ratio": 0.08114339,
+    "extraRenderers": 6
+  },
+  {
+    "id": "priest",
+    "label": "all_r2",
+    "baseTriangles": 8676,
+    "addedTriangles": 752,
+    "ratio": 0.08667589,
+    "extraRenderers": 6
+  },
+  {
+    "id": "priest",
+    "label": "all_r3",
+    "baseTriangles": 8676,
+    "addedTriangles": 776,
+    "ratio": 0.08944214,
+    "extraRenderers": 6
+  },
+  {
+    "id": "priest",
+    "label": "all_r4",
+    "baseTriangles": 8676,
+    "addedTriangles": 824,
+    "ratio": 0.094974644,
+    "extraRenderers": 6
+  },
+  {
+    "id": "priest",
+    "label": "mixed",
+    "baseTriangles": 8676,
+    "addedTriangles": 1108,
+    "ratio": 0.12770863,
+    "extraRenderers": 6
+  },
+  {
+    "id": "paladin",
+    "label": "slot0_r0",
+    "baseTriangles": 8876,
+    "addedTriangles": 84,
+    "ratio": 0.009463723,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot0_r1",
+    "baseTriangles": 8876,
+    "addedTriangles": 84,
+    "ratio": 0.009463723,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot0_r2",
+    "baseTriangles": 8876,
+    "addedTriangles": 96,
+    "ratio": 0.010815683,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot0_r3",
+    "baseTriangles": 8876,
+    "addedTriangles": 100,
+    "ratio": 0.011266336,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot0_r4",
+    "baseTriangles": 8876,
+    "addedTriangles": 124,
+    "ratio": 0.013970257,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot1_r0",
+    "baseTriangles": 8876,
+    "addedTriangles": 56,
+    "ratio": 0.0063091484,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot1_r1",
+    "baseTriangles": 8876,
+    "addedTriangles": 56,
+    "ratio": 0.0063091484,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot1_r2",
+    "baseTriangles": 8876,
+    "addedTriangles": 56,
+    "ratio": 0.0063091484,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot1_r3",
+    "baseTriangles": 8876,
+    "addedTriangles": 60,
+    "ratio": 0.006759802,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot1_r4",
+    "baseTriangles": 8876,
+    "addedTriangles": 84,
+    "ratio": 0.009463723,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot2_r0",
+    "baseTriangles": 8876,
+    "addedTriangles": 172,
+    "ratio": 0.019378098,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot2_r1",
+    "baseTriangles": 8876,
+    "addedTriangles": 172,
+    "ratio": 0.019378098,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot2_r2",
+    "baseTriangles": 8876,
+    "addedTriangles": 184,
+    "ratio": 0.020730058,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot2_r3",
+    "baseTriangles": 8876,
+    "addedTriangles": 188,
+    "ratio": 0.021180712,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot2_r4",
+    "baseTriangles": 8876,
+    "addedTriangles": 188,
+    "ratio": 0.021180712,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot3_r0",
+    "baseTriangles": 8876,
+    "addedTriangles": 344,
+    "ratio": 0.038756195,
+    "extraRenderers": 2
+  },
+  {
+    "id": "paladin",
+    "label": "slot3_r1",
+    "baseTriangles": 8876,
+    "addedTriangles": 344,
+    "ratio": 0.038756195,
+    "extraRenderers": 2
+  },
+  {
+    "id": "paladin",
+    "label": "slot3_r2",
+    "baseTriangles": 8876,
+    "addedTriangles": 368,
+    "ratio": 0.041460115,
+    "extraRenderers": 2
+  },
+  {
+    "id": "paladin",
+    "label": "slot3_r3",
+    "baseTriangles": 8876,
+    "addedTriangles": 376,
+    "ratio": 0.042361423,
+    "extraRenderers": 2
+  },
+  {
+    "id": "paladin",
+    "label": "slot3_r4",
+    "baseTriangles": 8876,
+    "addedTriangles": 376,
+    "ratio": 0.042361423,
+    "extraRenderers": 2
+  },
+  {
+    "id": "paladin",
+    "label": "slot4_r0",
+    "baseTriangles": 8876,
+    "addedTriangles": 48,
+    "ratio": 0.0054078414,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot4_r1",
+    "baseTriangles": 8876,
+    "addedTriangles": 48,
+    "ratio": 0.0054078414,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot4_r2",
+    "baseTriangles": 8876,
+    "addedTriangles": 48,
+    "ratio": 0.0054078414,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot4_r3",
+    "baseTriangles": 8876,
+    "addedTriangles": 52,
+    "ratio": 0.005858495,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "slot4_r4",
+    "baseTriangles": 8876,
+    "addedTriangles": 52,
+    "ratio": 0.005858495,
+    "extraRenderers": 1
+  },
+  {
+    "id": "paladin",
+    "label": "set_flame",
+    "baseTriangles": 8876,
+    "addedTriangles": 1452,
+    "ratio": 0.1635872,
+    "extraRenderers": 6
+  },
+  {
+    "id": "paladin",
+    "label": "set_grove",
+    "baseTriangles": 8876,
+    "addedTriangles": 1452,
+    "ratio": 0.1635872,
+    "extraRenderers": 6
+  },
+  {
+    "id": "paladin",
+    "label": "set_tide",
+    "baseTriangles": 8876,
+    "addedTriangles": 1424,
+    "ratio": 0.16043262,
+    "extraRenderers": 6
+  },
+  {
+    "id": "paladin",
+    "label": "set_gladiator",
+    "baseTriangles": 8876,
+    "addedTriangles": 1340,
+    "ratio": 0.15096891,
+    "extraRenderers": 6
+  },
+  {
+    "id": "paladin",
+    "label": "set_loess",
+    "baseTriangles": 8876,
+    "addedTriangles": 1256,
+    "ratio": 0.14150518,
+    "extraRenderers": 6
+  },
+  {
+    "id": "paladin",
+    "label": "set_gale",
+    "baseTriangles": 8876,
+    "addedTriangles": 1676,
+    "ratio": 0.18882379,
+    "extraRenderers": 6
+  },
+  {
+    "id": "paladin",
+    "label": "set_guard",
+    "baseTriangles": 8876,
+    "addedTriangles": 1228,
+    "ratio": 0.1383506,
+    "extraRenderers": 6
+  },
+  {
+    "id": "paladin",
+    "label": "all_r0",
+    "baseTriangles": 8876,
+    "addedTriangles": 704,
+    "ratio": 0.07931501,
+    "extraRenderers": 6
+  },
+  {
+    "id": "paladin",
+    "label": "all_r1",
+    "baseTriangles": 8876,
+    "addedTriangles": 704,
+    "ratio": 0.07931501,
+    "extraRenderers": 6
+  },
+  {
+    "id": "paladin",
+    "label": "all_r2",
+    "baseTriangles": 8876,
+    "addedTriangles": 752,
+    "ratio": 0.08472285,
+    "extraRenderers": 6
+  },
+  {
+    "id": "paladin",
+    "label": "all_r3",
+    "baseTriangles": 8876,
+    "addedTriangles": 776,
+    "ratio": 0.08742677,
+    "extraRenderers": 6
+  },
+  {
+    "id": "paladin",
+    "label": "all_r4",
+    "baseTriangles": 8876,
+    "addedTriangles": 824,
+    "ratio": 0.09283461,
+    "extraRenderers": 6
+  },
+  {
+    "id": "paladin",
+    "label": "mixed",
+    "baseTriangles": 8876,
+    "addedTriangles": 1132,
+    "ratio": 0.12753493,
+    "extraRenderers": 6
+  },
+  {
+    "id": "berserker",
+    "label": "slot0_r0",
+    "baseTriangles": 7476,
+    "addedTriangles": 84,
+    "ratio": 0.011235955,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot0_r1",
+    "baseTriangles": 7476,
+    "addedTriangles": 84,
+    "ratio": 0.011235955,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot0_r2",
+    "baseTriangles": 7476,
+    "addedTriangles": 96,
+    "ratio": 0.0128410915,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot0_r3",
+    "baseTriangles": 7476,
+    "addedTriangles": 100,
+    "ratio": 0.013376137,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot0_r4",
+    "baseTriangles": 7476,
+    "addedTriangles": 124,
+    "ratio": 0.01658641,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot1_r0",
+    "baseTriangles": 7476,
+    "addedTriangles": 56,
+    "ratio": 0.007490637,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot1_r1",
+    "baseTriangles": 7476,
+    "addedTriangles": 56,
+    "ratio": 0.007490637,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot1_r2",
+    "baseTriangles": 7476,
+    "addedTriangles": 56,
+    "ratio": 0.007490637,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot1_r3",
+    "baseTriangles": 7476,
+    "addedTriangles": 60,
+    "ratio": 0.0080256825,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot1_r4",
+    "baseTriangles": 7476,
+    "addedTriangles": 84,
+    "ratio": 0.011235955,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot2_r0",
+    "baseTriangles": 7476,
+    "addedTriangles": 172,
+    "ratio": 0.023006955,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot2_r1",
+    "baseTriangles": 7476,
+    "addedTriangles": 172,
+    "ratio": 0.023006955,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot2_r2",
+    "baseTriangles": 7476,
+    "addedTriangles": 184,
+    "ratio": 0.024612091,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot2_r3",
+    "baseTriangles": 7476,
+    "addedTriangles": 188,
+    "ratio": 0.025147138,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot2_r4",
+    "baseTriangles": 7476,
+    "addedTriangles": 188,
+    "ratio": 0.025147138,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot3_r0",
+    "baseTriangles": 7476,
+    "addedTriangles": 344,
+    "ratio": 0.04601391,
+    "extraRenderers": 2
+  },
+  {
+    "id": "berserker",
+    "label": "slot3_r1",
+    "baseTriangles": 7476,
+    "addedTriangles": 344,
+    "ratio": 0.04601391,
+    "extraRenderers": 2
+  },
+  {
+    "id": "berserker",
+    "label": "slot3_r2",
+    "baseTriangles": 7476,
+    "addedTriangles": 368,
+    "ratio": 0.049224183,
+    "extraRenderers": 2
+  },
+  {
+    "id": "berserker",
+    "label": "slot3_r3",
+    "baseTriangles": 7476,
+    "addedTriangles": 376,
+    "ratio": 0.050294276,
+    "extraRenderers": 2
+  },
+  {
+    "id": "berserker",
+    "label": "slot3_r4",
+    "baseTriangles": 7476,
+    "addedTriangles": 376,
+    "ratio": 0.050294276,
+    "extraRenderers": 2
+  },
+  {
+    "id": "berserker",
+    "label": "slot4_r0",
+    "baseTriangles": 7476,
+    "addedTriangles": 48,
+    "ratio": 0.0064205457,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot4_r1",
+    "baseTriangles": 7476,
+    "addedTriangles": 48,
+    "ratio": 0.0064205457,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot4_r2",
+    "baseTriangles": 7476,
+    "addedTriangles": 48,
+    "ratio": 0.0064205457,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot4_r3",
+    "baseTriangles": 7476,
+    "addedTriangles": 52,
+    "ratio": 0.006955591,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "slot4_r4",
+    "baseTriangles": 7476,
+    "addedTriangles": 52,
+    "ratio": 0.006955591,
+    "extraRenderers": 1
+  },
+  {
+    "id": "berserker",
+    "label": "set_flame",
+    "baseTriangles": 7476,
+    "addedTriangles": 1452,
+    "ratio": 0.19422151,
+    "extraRenderers": 6
+  },
+  {
+    "id": "berserker",
+    "label": "set_grove",
+    "baseTriangles": 7476,
+    "addedTriangles": 1452,
+    "ratio": 0.19422151,
+    "extraRenderers": 6
+  },
+  {
+    "id": "berserker",
+    "label": "set_tide",
+    "baseTriangles": 7476,
+    "addedTriangles": 1424,
+    "ratio": 0.1904762,
+    "extraRenderers": 6
+  },
+  {
+    "id": "berserker",
+    "label": "set_gladiator",
+    "baseTriangles": 7476,
+    "addedTriangles": 1340,
+    "ratio": 0.17924024,
+    "extraRenderers": 6
+  },
+  {
+    "id": "berserker",
+    "label": "set_loess",
+    "baseTriangles": 7476,
+    "addedTriangles": 1256,
+    "ratio": 0.16800427,
+    "extraRenderers": 6
+  },
+  {
+    "id": "berserker",
+    "label": "set_gale",
+    "baseTriangles": 7476,
+    "addedTriangles": 1676,
+    "ratio": 0.22418405,
+    "extraRenderers": 6
+  },
+  {
+    "id": "berserker",
+    "label": "set_guard",
+    "baseTriangles": 7476,
+    "addedTriangles": 1228,
+    "ratio": 0.16425896,
+    "extraRenderers": 6
+  },
+  {
+    "id": "berserker",
+    "label": "all_r0",
+    "baseTriangles": 7476,
+    "addedTriangles": 704,
+    "ratio": 0.09416801,
+    "extraRenderers": 6
+  },
+  {
+    "id": "berserker",
+    "label": "all_r1",
+    "baseTriangles": 7476,
+    "addedTriangles": 704,
+    "ratio": 0.09416801,
+    "extraRenderers": 6
+  },
+  {
+    "id": "berserker",
+    "label": "all_r2",
+    "baseTriangles": 7476,
+    "addedTriangles": 752,
+    "ratio": 0.10058855,
+    "extraRenderers": 6
+  },
+  {
+    "id": "berserker",
+    "label": "all_r3",
+    "baseTriangles": 7476,
+    "addedTriangles": 776,
+    "ratio": 0.10379882,
+    "extraRenderers": 6
+  },
+  {
+    "id": "berserker",
+    "label": "all_r4",
+    "baseTriangles": 7476,
+    "addedTriangles": 824,
+    "ratio": 0.11021937,
+    "extraRenderers": 6
+  },
+  {
+    "id": "berserker",
+    "label": "mixed",
+    "baseTriangles": 7476,
+    "addedTriangles": 1080,
+    "ratio": 0.14446227,
+    "extraRenderers": 6
+  },
+  {
+    "id": "marksman",
+    "label": "slot0_r0",
+    "baseTriangles": 7836,
+    "addedTriangles": 84,
+    "ratio": 0.010719755,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot0_r1",
+    "baseTriangles": 7836,
+    "addedTriangles": 84,
+    "ratio": 0.010719755,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot0_r2",
+    "baseTriangles": 7836,
+    "addedTriangles": 96,
+    "ratio": 0.012251149,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot0_r3",
+    "baseTriangles": 7836,
+    "addedTriangles": 100,
+    "ratio": 0.012761613,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot0_r4",
+    "baseTriangles": 7836,
+    "addedTriangles": 124,
+    "ratio": 0.0158244,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot1_r0",
+    "baseTriangles": 7836,
+    "addedTriangles": 56,
+    "ratio": 0.0071465033,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot1_r1",
+    "baseTriangles": 7836,
+    "addedTriangles": 56,
+    "ratio": 0.0071465033,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot1_r2",
+    "baseTriangles": 7836,
+    "addedTriangles": 56,
+    "ratio": 0.0071465033,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot1_r3",
+    "baseTriangles": 7836,
+    "addedTriangles": 60,
+    "ratio": 0.0076569677,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot1_r4",
+    "baseTriangles": 7836,
+    "addedTriangles": 84,
+    "ratio": 0.010719755,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot2_r0",
+    "baseTriangles": 7836,
+    "addedTriangles": 172,
+    "ratio": 0.021949975,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot2_r1",
+    "baseTriangles": 7836,
+    "addedTriangles": 172,
+    "ratio": 0.021949975,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot2_r2",
+    "baseTriangles": 7836,
+    "addedTriangles": 184,
+    "ratio": 0.023481367,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot2_r3",
+    "baseTriangles": 7836,
+    "addedTriangles": 188,
+    "ratio": 0.023991833,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot2_r4",
+    "baseTriangles": 7836,
+    "addedTriangles": 188,
+    "ratio": 0.023991833,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot3_r0",
+    "baseTriangles": 7836,
+    "addedTriangles": 344,
+    "ratio": 0.04389995,
+    "extraRenderers": 2
+  },
+  {
+    "id": "marksman",
+    "label": "slot3_r1",
+    "baseTriangles": 7836,
+    "addedTriangles": 344,
+    "ratio": 0.04389995,
+    "extraRenderers": 2
+  },
+  {
+    "id": "marksman",
+    "label": "slot3_r2",
+    "baseTriangles": 7836,
+    "addedTriangles": 368,
+    "ratio": 0.046962734,
+    "extraRenderers": 2
+  },
+  {
+    "id": "marksman",
+    "label": "slot3_r3",
+    "baseTriangles": 7836,
+    "addedTriangles": 376,
+    "ratio": 0.047983665,
+    "extraRenderers": 2
+  },
+  {
+    "id": "marksman",
+    "label": "slot3_r4",
+    "baseTriangles": 7836,
+    "addedTriangles": 376,
+    "ratio": 0.047983665,
+    "extraRenderers": 2
+  },
+  {
+    "id": "marksman",
+    "label": "slot4_r0",
+    "baseTriangles": 7836,
+    "addedTriangles": 48,
+    "ratio": 0.0061255745,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot4_r1",
+    "baseTriangles": 7836,
+    "addedTriangles": 48,
+    "ratio": 0.0061255745,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot4_r2",
+    "baseTriangles": 7836,
+    "addedTriangles": 48,
+    "ratio": 0.0061255745,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot4_r3",
+    "baseTriangles": 7836,
+    "addedTriangles": 52,
+    "ratio": 0.006636039,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "slot4_r4",
+    "baseTriangles": 7836,
+    "addedTriangles": 52,
+    "ratio": 0.006636039,
+    "extraRenderers": 1
+  },
+  {
+    "id": "marksman",
+    "label": "set_flame",
+    "baseTriangles": 7836,
+    "addedTriangles": 1452,
+    "ratio": 0.18529862,
+    "extraRenderers": 6
+  },
+  {
+    "id": "marksman",
+    "label": "set_grove",
+    "baseTriangles": 7836,
+    "addedTriangles": 1452,
+    "ratio": 0.18529862,
+    "extraRenderers": 6
+  },
+  {
+    "id": "marksman",
+    "label": "set_tide",
+    "baseTriangles": 7836,
+    "addedTriangles": 1424,
+    "ratio": 0.18172537,
+    "extraRenderers": 6
+  },
+  {
+    "id": "marksman",
+    "label": "set_gladiator",
+    "baseTriangles": 7836,
+    "addedTriangles": 1340,
+    "ratio": 0.17100562,
+    "extraRenderers": 6
+  },
+  {
+    "id": "marksman",
+    "label": "set_loess",
+    "baseTriangles": 7836,
+    "addedTriangles": 1256,
+    "ratio": 0.16028586,
+    "extraRenderers": 6
+  },
+  {
+    "id": "marksman",
+    "label": "set_gale",
+    "baseTriangles": 7836,
+    "addedTriangles": 1676,
+    "ratio": 0.21388464,
+    "extraRenderers": 6
+  },
+  {
+    "id": "marksman",
+    "label": "set_guard",
+    "baseTriangles": 7836,
+    "addedTriangles": 1228,
+    "ratio": 0.1567126,
+    "extraRenderers": 6
+  },
+  {
+    "id": "marksman",
+    "label": "all_r0",
+    "baseTriangles": 7836,
+    "addedTriangles": 704,
+    "ratio": 0.08984175,
+    "extraRenderers": 6
+  },
+  {
+    "id": "marksman",
+    "label": "all_r1",
+    "baseTriangles": 7836,
+    "addedTriangles": 704,
+    "ratio": 0.08984175,
+    "extraRenderers": 6
+  },
+  {
+    "id": "marksman",
+    "label": "all_r2",
+    "baseTriangles": 7836,
+    "addedTriangles": 752,
+    "ratio": 0.09596733,
+    "extraRenderers": 6
+  },
+  {
+    "id": "marksman",
+    "label": "all_r3",
+    "baseTriangles": 7836,
+    "addedTriangles": 776,
+    "ratio": 0.099030115,
+    "extraRenderers": 6
+  },
+  {
+    "id": "marksman",
+    "label": "all_r4",
+    "baseTriangles": 7836,
+    "addedTriangles": 824,
+    "ratio": 0.10515569,
+    "extraRenderers": 6
+  },
+  {
+    "id": "marksman",
+    "label": "mixed",
+    "baseTriangles": 7836,
+    "addedTriangles": 1072,
+    "ratio": 0.13680449,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ranger",
+    "label": "slot0_r0",
+    "baseTriangles": 8560,
+    "addedTriangles": 84,
+    "ratio": 0.009813084,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot0_r1",
+    "baseTriangles": 8560,
+    "addedTriangles": 84,
+    "ratio": 0.009813084,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot0_r2",
+    "baseTriangles": 8560,
+    "addedTriangles": 96,
+    "ratio": 0.011214953,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot0_r3",
+    "baseTriangles": 8560,
+    "addedTriangles": 100,
+    "ratio": 0.011682243,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot0_r4",
+    "baseTriangles": 8560,
+    "addedTriangles": 124,
+    "ratio": 0.014485981,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot1_r0",
+    "baseTriangles": 8560,
+    "addedTriangles": 56,
+    "ratio": 0.006542056,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot1_r1",
+    "baseTriangles": 8560,
+    "addedTriangles": 56,
+    "ratio": 0.006542056,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot1_r2",
+    "baseTriangles": 8560,
+    "addedTriangles": 56,
+    "ratio": 0.006542056,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot1_r3",
+    "baseTriangles": 8560,
+    "addedTriangles": 60,
+    "ratio": 0.0070093456,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot1_r4",
+    "baseTriangles": 8560,
+    "addedTriangles": 84,
+    "ratio": 0.009813084,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot2_r0",
+    "baseTriangles": 8560,
+    "addedTriangles": 172,
+    "ratio": 0.020093458,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot2_r1",
+    "baseTriangles": 8560,
+    "addedTriangles": 172,
+    "ratio": 0.020093458,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot2_r2",
+    "baseTriangles": 8560,
+    "addedTriangles": 184,
+    "ratio": 0.021495327,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot2_r3",
+    "baseTriangles": 8560,
+    "addedTriangles": 188,
+    "ratio": 0.021962617,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot2_r4",
+    "baseTriangles": 8560,
+    "addedTriangles": 188,
+    "ratio": 0.021962617,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot3_r0",
+    "baseTriangles": 8560,
+    "addedTriangles": 344,
+    "ratio": 0.040186916,
+    "extraRenderers": 2
+  },
+  {
+    "id": "ranger",
+    "label": "slot3_r1",
+    "baseTriangles": 8560,
+    "addedTriangles": 344,
+    "ratio": 0.040186916,
+    "extraRenderers": 2
+  },
+  {
+    "id": "ranger",
+    "label": "slot3_r2",
+    "baseTriangles": 8560,
+    "addedTriangles": 368,
+    "ratio": 0.042990655,
+    "extraRenderers": 2
+  },
+  {
+    "id": "ranger",
+    "label": "slot3_r3",
+    "baseTriangles": 8560,
+    "addedTriangles": 376,
+    "ratio": 0.043925233,
+    "extraRenderers": 2
+  },
+  {
+    "id": "ranger",
+    "label": "slot3_r4",
+    "baseTriangles": 8560,
+    "addedTriangles": 376,
+    "ratio": 0.043925233,
+    "extraRenderers": 2
+  },
+  {
+    "id": "ranger",
+    "label": "slot4_r0",
+    "baseTriangles": 8560,
+    "addedTriangles": 48,
+    "ratio": 0.0056074765,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot4_r1",
+    "baseTriangles": 8560,
+    "addedTriangles": 48,
+    "ratio": 0.0056074765,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot4_r2",
+    "baseTriangles": 8560,
+    "addedTriangles": 48,
+    "ratio": 0.0056074765,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot4_r3",
+    "baseTriangles": 8560,
+    "addedTriangles": 52,
+    "ratio": 0.006074766,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "slot4_r4",
+    "baseTriangles": 8560,
+    "addedTriangles": 52,
+    "ratio": 0.006074766,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ranger",
+    "label": "set_flame",
+    "baseTriangles": 8560,
+    "addedTriangles": 1452,
+    "ratio": 0.16962616,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ranger",
+    "label": "set_grove",
+    "baseTriangles": 8560,
+    "addedTriangles": 1452,
+    "ratio": 0.16962616,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ranger",
+    "label": "set_tide",
+    "baseTriangles": 8560,
+    "addedTriangles": 1424,
+    "ratio": 0.16635513,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ranger",
+    "label": "set_gladiator",
+    "baseTriangles": 8560,
+    "addedTriangles": 1340,
+    "ratio": 0.15654206,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ranger",
+    "label": "set_loess",
+    "baseTriangles": 8560,
+    "addedTriangles": 1256,
+    "ratio": 0.14672898,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ranger",
+    "label": "set_gale",
+    "baseTriangles": 8560,
+    "addedTriangles": 1676,
+    "ratio": 0.19579439,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ranger",
+    "label": "set_guard",
+    "baseTriangles": 8560,
+    "addedTriangles": 1228,
+    "ratio": 0.14345795,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ranger",
+    "label": "all_r0",
+    "baseTriangles": 8560,
+    "addedTriangles": 704,
+    "ratio": 0.08224299,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ranger",
+    "label": "all_r1",
+    "baseTriangles": 8560,
+    "addedTriangles": 704,
+    "ratio": 0.08224299,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ranger",
+    "label": "all_r2",
+    "baseTriangles": 8560,
+    "addedTriangles": 752,
+    "ratio": 0.08785047,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ranger",
+    "label": "all_r3",
+    "baseTriangles": 8560,
+    "addedTriangles": 776,
+    "ratio": 0.09065421,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ranger",
+    "label": "all_r4",
+    "baseTriangles": 8560,
+    "addedTriangles": 824,
+    "ratio": 0.09626168,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ranger",
+    "label": "mixed",
+    "baseTriangles": 8560,
+    "addedTriangles": 1092,
+    "ratio": 0.1275701,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archmage",
+    "label": "slot0_r0",
+    "baseTriangles": 7980,
+    "addedTriangles": 84,
+    "ratio": 0.010526316,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot0_r1",
+    "baseTriangles": 7980,
+    "addedTriangles": 84,
+    "ratio": 0.010526316,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot0_r2",
+    "baseTriangles": 7980,
+    "addedTriangles": 96,
+    "ratio": 0.012030075,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot0_r3",
+    "baseTriangles": 7980,
+    "addedTriangles": 100,
+    "ratio": 0.012531328,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot0_r4",
+    "baseTriangles": 7980,
+    "addedTriangles": 124,
+    "ratio": 0.015538847,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot1_r0",
+    "baseTriangles": 7980,
+    "addedTriangles": 56,
+    "ratio": 0.007017544,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot1_r1",
+    "baseTriangles": 7980,
+    "addedTriangles": 56,
+    "ratio": 0.007017544,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot1_r2",
+    "baseTriangles": 7980,
+    "addedTriangles": 56,
+    "ratio": 0.007017544,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot1_r3",
+    "baseTriangles": 7980,
+    "addedTriangles": 60,
+    "ratio": 0.007518797,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot1_r4",
+    "baseTriangles": 7980,
+    "addedTriangles": 84,
+    "ratio": 0.010526316,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot2_r0",
+    "baseTriangles": 7980,
+    "addedTriangles": 172,
+    "ratio": 0.021553885,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot2_r1",
+    "baseTriangles": 7980,
+    "addedTriangles": 172,
+    "ratio": 0.021553885,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot2_r2",
+    "baseTriangles": 7980,
+    "addedTriangles": 184,
+    "ratio": 0.023057643,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot2_r3",
+    "baseTriangles": 7980,
+    "addedTriangles": 188,
+    "ratio": 0.023558898,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot2_r4",
+    "baseTriangles": 7980,
+    "addedTriangles": 188,
+    "ratio": 0.023558898,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot3_r0",
+    "baseTriangles": 7980,
+    "addedTriangles": 344,
+    "ratio": 0.04310777,
+    "extraRenderers": 2
+  },
+  {
+    "id": "archmage",
+    "label": "slot3_r1",
+    "baseTriangles": 7980,
+    "addedTriangles": 344,
+    "ratio": 0.04310777,
+    "extraRenderers": 2
+  },
+  {
+    "id": "archmage",
+    "label": "slot3_r2",
+    "baseTriangles": 7980,
+    "addedTriangles": 368,
+    "ratio": 0.046115287,
+    "extraRenderers": 2
+  },
+  {
+    "id": "archmage",
+    "label": "slot3_r3",
+    "baseTriangles": 7980,
+    "addedTriangles": 376,
+    "ratio": 0.047117796,
+    "extraRenderers": 2
+  },
+  {
+    "id": "archmage",
+    "label": "slot3_r4",
+    "baseTriangles": 7980,
+    "addedTriangles": 376,
+    "ratio": 0.047117796,
+    "extraRenderers": 2
+  },
+  {
+    "id": "archmage",
+    "label": "slot4_r0",
+    "baseTriangles": 7980,
+    "addedTriangles": 48,
+    "ratio": 0.0060150377,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot4_r1",
+    "baseTriangles": 7980,
+    "addedTriangles": 48,
+    "ratio": 0.0060150377,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot4_r2",
+    "baseTriangles": 7980,
+    "addedTriangles": 48,
+    "ratio": 0.0060150377,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot4_r3",
+    "baseTriangles": 7980,
+    "addedTriangles": 52,
+    "ratio": 0.006516291,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "slot4_r4",
+    "baseTriangles": 7980,
+    "addedTriangles": 52,
+    "ratio": 0.006516291,
+    "extraRenderers": 1
+  },
+  {
+    "id": "archmage",
+    "label": "set_flame",
+    "baseTriangles": 7980,
+    "addedTriangles": 1452,
+    "ratio": 0.18195489,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archmage",
+    "label": "set_grove",
+    "baseTriangles": 7980,
+    "addedTriangles": 1452,
+    "ratio": 0.18195489,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archmage",
+    "label": "set_tide",
+    "baseTriangles": 7980,
+    "addedTriangles": 1424,
+    "ratio": 0.17844611,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archmage",
+    "label": "set_gladiator",
+    "baseTriangles": 7980,
+    "addedTriangles": 1340,
+    "ratio": 0.1679198,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archmage",
+    "label": "set_loess",
+    "baseTriangles": 7980,
+    "addedTriangles": 1256,
+    "ratio": 0.15739349,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archmage",
+    "label": "set_gale",
+    "baseTriangles": 7980,
+    "addedTriangles": 1676,
+    "ratio": 0.21002506,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archmage",
+    "label": "set_guard",
+    "baseTriangles": 7980,
+    "addedTriangles": 1228,
+    "ratio": 0.15388471,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archmage",
+    "label": "all_r0",
+    "baseTriangles": 7980,
+    "addedTriangles": 704,
+    "ratio": 0.08822055,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archmage",
+    "label": "all_r1",
+    "baseTriangles": 7980,
+    "addedTriangles": 704,
+    "ratio": 0.08822055,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archmage",
+    "label": "all_r2",
+    "baseTriangles": 7980,
+    "addedTriangles": 752,
+    "ratio": 0.09423559,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archmage",
+    "label": "all_r3",
+    "baseTriangles": 7980,
+    "addedTriangles": 776,
+    "ratio": 0.09724311,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archmage",
+    "label": "all_r4",
+    "baseTriangles": 7980,
+    "addedTriangles": 824,
+    "ratio": 0.10325815,
+    "extraRenderers": 6
+  },
+  {
+    "id": "archmage",
+    "label": "mixed",
+    "baseTriangles": 7980,
+    "addedTriangles": 1120,
+    "ratio": 0.14035088,
+    "extraRenderers": 6
+  },
+  {
+    "id": "summoner",
+    "label": "slot0_r0",
+    "baseTriangles": 8000,
+    "addedTriangles": 84,
+    "ratio": 0.0105,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot0_r1",
+    "baseTriangles": 8000,
+    "addedTriangles": 84,
+    "ratio": 0.0105,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot0_r2",
+    "baseTriangles": 8000,
+    "addedTriangles": 96,
+    "ratio": 0.012,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot0_r3",
+    "baseTriangles": 8000,
+    "addedTriangles": 100,
+    "ratio": 0.0125,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot0_r4",
+    "baseTriangles": 8000,
+    "addedTriangles": 124,
+    "ratio": 0.0155,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot1_r0",
+    "baseTriangles": 8000,
+    "addedTriangles": 56,
+    "ratio": 0.007,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot1_r1",
+    "baseTriangles": 8000,
+    "addedTriangles": 56,
+    "ratio": 0.007,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot1_r2",
+    "baseTriangles": 8000,
+    "addedTriangles": 56,
+    "ratio": 0.007,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot1_r3",
+    "baseTriangles": 8000,
+    "addedTriangles": 60,
+    "ratio": 0.0075,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot1_r4",
+    "baseTriangles": 8000,
+    "addedTriangles": 84,
+    "ratio": 0.0105,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot2_r0",
+    "baseTriangles": 8000,
+    "addedTriangles": 172,
+    "ratio": 0.0215,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot2_r1",
+    "baseTriangles": 8000,
+    "addedTriangles": 172,
+    "ratio": 0.0215,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot2_r2",
+    "baseTriangles": 8000,
+    "addedTriangles": 184,
+    "ratio": 0.023,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot2_r3",
+    "baseTriangles": 8000,
+    "addedTriangles": 188,
+    "ratio": 0.0235,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot2_r4",
+    "baseTriangles": 8000,
+    "addedTriangles": 188,
+    "ratio": 0.0235,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot3_r0",
+    "baseTriangles": 8000,
+    "addedTriangles": 344,
+    "ratio": 0.043,
+    "extraRenderers": 2
+  },
+  {
+    "id": "summoner",
+    "label": "slot3_r1",
+    "baseTriangles": 8000,
+    "addedTriangles": 344,
+    "ratio": 0.043,
+    "extraRenderers": 2
+  },
+  {
+    "id": "summoner",
+    "label": "slot3_r2",
+    "baseTriangles": 8000,
+    "addedTriangles": 368,
+    "ratio": 0.046,
+    "extraRenderers": 2
+  },
+  {
+    "id": "summoner",
+    "label": "slot3_r3",
+    "baseTriangles": 8000,
+    "addedTriangles": 376,
+    "ratio": 0.047,
+    "extraRenderers": 2
+  },
+  {
+    "id": "summoner",
+    "label": "slot3_r4",
+    "baseTriangles": 8000,
+    "addedTriangles": 376,
+    "ratio": 0.047,
+    "extraRenderers": 2
+  },
+  {
+    "id": "summoner",
+    "label": "slot4_r0",
+    "baseTriangles": 8000,
+    "addedTriangles": 48,
+    "ratio": 0.006,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot4_r1",
+    "baseTriangles": 8000,
+    "addedTriangles": 48,
+    "ratio": 0.006,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot4_r2",
+    "baseTriangles": 8000,
+    "addedTriangles": 48,
+    "ratio": 0.006,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot4_r3",
+    "baseTriangles": 8000,
+    "addedTriangles": 52,
+    "ratio": 0.0065,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "slot4_r4",
+    "baseTriangles": 8000,
+    "addedTriangles": 52,
+    "ratio": 0.0065,
+    "extraRenderers": 1
+  },
+  {
+    "id": "summoner",
+    "label": "set_flame",
+    "baseTriangles": 8000,
+    "addedTriangles": 1452,
+    "ratio": 0.1815,
+    "extraRenderers": 6
+  },
+  {
+    "id": "summoner",
+    "label": "set_grove",
+    "baseTriangles": 8000,
+    "addedTriangles": 1452,
+    "ratio": 0.1815,
+    "extraRenderers": 6
+  },
+  {
+    "id": "summoner",
+    "label": "set_tide",
+    "baseTriangles": 8000,
+    "addedTriangles": 1424,
+    "ratio": 0.178,
+    "extraRenderers": 6
+  },
+  {
+    "id": "summoner",
+    "label": "set_gladiator",
+    "baseTriangles": 8000,
+    "addedTriangles": 1340,
+    "ratio": 0.1675,
+    "extraRenderers": 6
+  },
+  {
+    "id": "summoner",
+    "label": "set_loess",
+    "baseTriangles": 8000,
+    "addedTriangles": 1256,
+    "ratio": 0.157,
+    "extraRenderers": 6
+  },
+  {
+    "id": "summoner",
+    "label": "set_gale",
+    "baseTriangles": 8000,
+    "addedTriangles": 1676,
+    "ratio": 0.2095,
+    "extraRenderers": 6
+  },
+  {
+    "id": "summoner",
+    "label": "set_guard",
+    "baseTriangles": 8000,
+    "addedTriangles": 1228,
+    "ratio": 0.1535,
+    "extraRenderers": 6
+  },
+  {
+    "id": "summoner",
+    "label": "all_r0",
+    "baseTriangles": 8000,
+    "addedTriangles": 704,
+    "ratio": 0.088,
+    "extraRenderers": 6
+  },
+  {
+    "id": "summoner",
+    "label": "all_r1",
+    "baseTriangles": 8000,
+    "addedTriangles": 704,
+    "ratio": 0.088,
+    "extraRenderers": 6
+  },
+  {
+    "id": "summoner",
+    "label": "all_r2",
+    "baseTriangles": 8000,
+    "addedTriangles": 752,
+    "ratio": 0.094,
+    "extraRenderers": 6
+  },
+  {
+    "id": "summoner",
+    "label": "all_r3",
+    "baseTriangles": 8000,
+    "addedTriangles": 776,
+    "ratio": 0.097,
+    "extraRenderers": 6
+  },
+  {
+    "id": "summoner",
+    "label": "all_r4",
+    "baseTriangles": 8000,
+    "addedTriangles": 824,
+    "ratio": 0.103,
+    "extraRenderers": 6
+  },
+  {
+    "id": "summoner",
+    "label": "mixed",
+    "baseTriangles": 8000,
+    "addedTriangles": 1060,
+    "ratio": 0.1325,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ninja",
+    "label": "slot0_r0",
+    "baseTriangles": 7224,
+    "addedTriangles": 84,
+    "ratio": 0.011627907,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot0_r1",
+    "baseTriangles": 7224,
+    "addedTriangles": 84,
+    "ratio": 0.011627907,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot0_r2",
+    "baseTriangles": 7224,
+    "addedTriangles": 96,
+    "ratio": 0.013289036,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot0_r3",
+    "baseTriangles": 7224,
+    "addedTriangles": 100,
+    "ratio": 0.013842747,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot0_r4",
+    "baseTriangles": 7224,
+    "addedTriangles": 124,
+    "ratio": 0.017165005,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot1_r0",
+    "baseTriangles": 7224,
+    "addedTriangles": 56,
+    "ratio": 0.007751938,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot1_r1",
+    "baseTriangles": 7224,
+    "addedTriangles": 56,
+    "ratio": 0.007751938,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot1_r2",
+    "baseTriangles": 7224,
+    "addedTriangles": 56,
+    "ratio": 0.007751938,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot1_r3",
+    "baseTriangles": 7224,
+    "addedTriangles": 60,
+    "ratio": 0.008305647,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot1_r4",
+    "baseTriangles": 7224,
+    "addedTriangles": 84,
+    "ratio": 0.011627907,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot2_r0",
+    "baseTriangles": 7224,
+    "addedTriangles": 172,
+    "ratio": 0.023809524,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot2_r1",
+    "baseTriangles": 7224,
+    "addedTriangles": 172,
+    "ratio": 0.023809524,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot2_r2",
+    "baseTriangles": 7224,
+    "addedTriangles": 184,
+    "ratio": 0.025470654,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot2_r3",
+    "baseTriangles": 7224,
+    "addedTriangles": 188,
+    "ratio": 0.026024364,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot2_r4",
+    "baseTriangles": 7224,
+    "addedTriangles": 188,
+    "ratio": 0.026024364,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot3_r0",
+    "baseTriangles": 7224,
+    "addedTriangles": 344,
+    "ratio": 0.04761905,
+    "extraRenderers": 2
+  },
+  {
+    "id": "ninja",
+    "label": "slot3_r1",
+    "baseTriangles": 7224,
+    "addedTriangles": 344,
+    "ratio": 0.04761905,
+    "extraRenderers": 2
+  },
+  {
+    "id": "ninja",
+    "label": "slot3_r2",
+    "baseTriangles": 7224,
+    "addedTriangles": 368,
+    "ratio": 0.050941307,
+    "extraRenderers": 2
+  },
+  {
+    "id": "ninja",
+    "label": "slot3_r3",
+    "baseTriangles": 7224,
+    "addedTriangles": 376,
+    "ratio": 0.052048728,
+    "extraRenderers": 2
+  },
+  {
+    "id": "ninja",
+    "label": "slot3_r4",
+    "baseTriangles": 7224,
+    "addedTriangles": 376,
+    "ratio": 0.052048728,
+    "extraRenderers": 2
+  },
+  {
+    "id": "ninja",
+    "label": "slot4_r0",
+    "baseTriangles": 7224,
+    "addedTriangles": 48,
+    "ratio": 0.006644518,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot4_r1",
+    "baseTriangles": 7224,
+    "addedTriangles": 48,
+    "ratio": 0.006644518,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot4_r2",
+    "baseTriangles": 7224,
+    "addedTriangles": 48,
+    "ratio": 0.006644518,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot4_r3",
+    "baseTriangles": 7224,
+    "addedTriangles": 52,
+    "ratio": 0.007198228,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "slot4_r4",
+    "baseTriangles": 7224,
+    "addedTriangles": 52,
+    "ratio": 0.007198228,
+    "extraRenderers": 1
+  },
+  {
+    "id": "ninja",
+    "label": "set_flame",
+    "baseTriangles": 7224,
+    "addedTriangles": 1452,
+    "ratio": 0.20099668,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ninja",
+    "label": "set_grove",
+    "baseTriangles": 7224,
+    "addedTriangles": 1452,
+    "ratio": 0.20099668,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ninja",
+    "label": "set_tide",
+    "baseTriangles": 7224,
+    "addedTriangles": 1424,
+    "ratio": 0.19712071,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ninja",
+    "label": "set_gladiator",
+    "baseTriangles": 7224,
+    "addedTriangles": 1340,
+    "ratio": 0.1854928,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ninja",
+    "label": "set_loess",
+    "baseTriangles": 7224,
+    "addedTriangles": 1256,
+    "ratio": 0.1738649,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ninja",
+    "label": "set_gale",
+    "baseTriangles": 7224,
+    "addedTriangles": 1676,
+    "ratio": 0.23200443,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ninja",
+    "label": "set_guard",
+    "baseTriangles": 7224,
+    "addedTriangles": 1228,
+    "ratio": 0.16998893,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ninja",
+    "label": "all_r0",
+    "baseTriangles": 7224,
+    "addedTriangles": 704,
+    "ratio": 0.09745293,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ninja",
+    "label": "all_r1",
+    "baseTriangles": 7224,
+    "addedTriangles": 704,
+    "ratio": 0.09745293,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ninja",
+    "label": "all_r2",
+    "baseTriangles": 7224,
+    "addedTriangles": 752,
+    "ratio": 0.104097456,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ninja",
+    "label": "all_r3",
+    "baseTriangles": 7224,
+    "addedTriangles": 776,
+    "ratio": 0.107419714,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ninja",
+    "label": "all_r4",
+    "baseTriangles": 7224,
+    "addedTriangles": 824,
+    "ratio": 0.11406423,
+    "extraRenderers": 6
+  },
+  {
+    "id": "ninja",
+    "label": "mixed",
+    "baseTriangles": 7224,
+    "addedTriangles": 1108,
+    "ratio": 0.15337764,
+    "extraRenderers": 6
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot0_r0",
+    "baseTriangles": 7824,
+    "addedTriangles": 84,
+    "ratio": 0.010736196,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot0_r1",
+    "baseTriangles": 7824,
+    "addedTriangles": 84,
+    "ratio": 0.010736196,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot0_r2",
+    "baseTriangles": 7824,
+    "addedTriangles": 96,
+    "ratio": 0.012269938,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot0_r3",
+    "baseTriangles": 7824,
+    "addedTriangles": 100,
+    "ratio": 0.012781186,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot0_r4",
+    "baseTriangles": 7824,
+    "addedTriangles": 124,
+    "ratio": 0.01584867,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot1_r0",
+    "baseTriangles": 7824,
+    "addedTriangles": 56,
+    "ratio": 0.007157464,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot1_r1",
+    "baseTriangles": 7824,
+    "addedTriangles": 56,
+    "ratio": 0.007157464,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot1_r2",
+    "baseTriangles": 7824,
+    "addedTriangles": 56,
+    "ratio": 0.007157464,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot1_r3",
+    "baseTriangles": 7824,
+    "addedTriangles": 60,
+    "ratio": 0.0076687117,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot1_r4",
+    "baseTriangles": 7824,
+    "addedTriangles": 84,
+    "ratio": 0.010736196,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot2_r0",
+    "baseTriangles": 7824,
+    "addedTriangles": 172,
+    "ratio": 0.02198364,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot2_r1",
+    "baseTriangles": 7824,
+    "addedTriangles": 172,
+    "ratio": 0.02198364,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot2_r2",
+    "baseTriangles": 7824,
+    "addedTriangles": 184,
+    "ratio": 0.023517383,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot2_r3",
+    "baseTriangles": 7824,
+    "addedTriangles": 188,
+    "ratio": 0.024028629,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot2_r4",
+    "baseTriangles": 7824,
+    "addedTriangles": 188,
+    "ratio": 0.024028629,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot3_r0",
+    "baseTriangles": 7824,
+    "addedTriangles": 344,
+    "ratio": 0.04396728,
+    "extraRenderers": 2
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot3_r1",
+    "baseTriangles": 7824,
+    "addedTriangles": 344,
+    "ratio": 0.04396728,
+    "extraRenderers": 2
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot3_r2",
+    "baseTriangles": 7824,
+    "addedTriangles": 368,
+    "ratio": 0.047034767,
+    "extraRenderers": 2
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot3_r3",
+    "baseTriangles": 7824,
+    "addedTriangles": 376,
+    "ratio": 0.048057258,
+    "extraRenderers": 2
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot3_r4",
+    "baseTriangles": 7824,
+    "addedTriangles": 376,
+    "ratio": 0.048057258,
+    "extraRenderers": 2
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot4_r0",
+    "baseTriangles": 7824,
+    "addedTriangles": 48,
+    "ratio": 0.006134969,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot4_r1",
+    "baseTriangles": 7824,
+    "addedTriangles": 48,
+    "ratio": 0.006134969,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot4_r2",
+    "baseTriangles": 7824,
+    "addedTriangles": 48,
+    "ratio": 0.006134969,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot4_r3",
+    "baseTriangles": 7824,
+    "addedTriangles": 52,
+    "ratio": 0.006646217,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "slot4_r4",
+    "baseTriangles": 7824,
+    "addedTriangles": 52,
+    "ratio": 0.006646217,
+    "extraRenderers": 1
+  },
+  {
+    "id": "shadowdancer",
+    "label": "set_flame",
+    "baseTriangles": 7824,
+    "addedTriangles": 1452,
+    "ratio": 0.18558282,
+    "extraRenderers": 6
+  },
+  {
+    "id": "shadowdancer",
+    "label": "set_grove",
+    "baseTriangles": 7824,
+    "addedTriangles": 1452,
+    "ratio": 0.18558282,
+    "extraRenderers": 6
+  },
+  {
+    "id": "shadowdancer",
+    "label": "set_tide",
+    "baseTriangles": 7824,
+    "addedTriangles": 1424,
+    "ratio": 0.1820041,
+    "extraRenderers": 6
+  },
+  {
+    "id": "shadowdancer",
+    "label": "set_gladiator",
+    "baseTriangles": 7824,
+    "addedTriangles": 1340,
+    "ratio": 0.1712679,
+    "extraRenderers": 6
+  },
+  {
+    "id": "shadowdancer",
+    "label": "set_loess",
+    "baseTriangles": 7824,
+    "addedTriangles": 1256,
+    "ratio": 0.1605317,
+    "extraRenderers": 6
+  },
+  {
+    "id": "shadowdancer",
+    "label": "set_gale",
+    "baseTriangles": 7824,
+    "addedTriangles": 1676,
+    "ratio": 0.21421269,
+    "extraRenderers": 6
+  },
+  {
+    "id": "shadowdancer",
+    "label": "set_guard",
+    "baseTriangles": 7824,
+    "addedTriangles": 1228,
+    "ratio": 0.15695296,
+    "extraRenderers": 6
+  },
+  {
+    "id": "shadowdancer",
+    "label": "all_r0",
+    "baseTriangles": 7824,
+    "addedTriangles": 704,
+    "ratio": 0.08997955,
+    "extraRenderers": 6
+  },
+  {
+    "id": "shadowdancer",
+    "label": "all_r1",
+    "baseTriangles": 7824,
+    "addedTriangles": 704,
+    "ratio": 0.08997955,
+    "extraRenderers": 6
+  },
+  {
+    "id": "shadowdancer",
+    "label": "all_r2",
+    "baseTriangles": 7824,
+    "addedTriangles": 752,
+    "ratio": 0.096114516,
+    "extraRenderers": 6
+  },
+  {
+    "id": "shadowdancer",
+    "label": "all_r3",
+    "baseTriangles": 7824,
+    "addedTriangles": 776,
+    "ratio": 0.099182,
+    "extraRenderers": 6
+  },
+  {
+    "id": "shadowdancer",
+    "label": "all_r4",
+    "baseTriangles": 7824,
+    "addedTriangles": 824,
+    "ratio": 0.105316974,
+    "extraRenderers": 6
+  },
+  {
+    "id": "shadowdancer",
+    "label": "mixed",
+    "baseTriangles": 7824,
+    "addedTriangles": 1132,
+    "ratio": 0.14468303,
+    "extraRenderers": 6
+  },
+  {
+    "id": "bishop",
+    "label": "slot0_r0",
+    "baseTriangles": 8288,
+    "addedTriangles": 84,
+    "ratio": 0.010135135,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot0_r1",
+    "baseTriangles": 8288,
+    "addedTriangles": 84,
+    "ratio": 0.010135135,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot0_r2",
+    "baseTriangles": 8288,
+    "addedTriangles": 96,
+    "ratio": 0.011583012,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot0_r3",
+    "baseTriangles": 8288,
+    "addedTriangles": 100,
+    "ratio": 0.012065637,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot0_r4",
+    "baseTriangles": 8288,
+    "addedTriangles": 124,
+    "ratio": 0.01496139,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot1_r0",
+    "baseTriangles": 8288,
+    "addedTriangles": 56,
+    "ratio": 0.006756757,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot1_r1",
+    "baseTriangles": 8288,
+    "addedTriangles": 56,
+    "ratio": 0.006756757,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot1_r2",
+    "baseTriangles": 8288,
+    "addedTriangles": 56,
+    "ratio": 0.006756757,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot1_r3",
+    "baseTriangles": 8288,
+    "addedTriangles": 60,
+    "ratio": 0.0072393822,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot1_r4",
+    "baseTriangles": 8288,
+    "addedTriangles": 84,
+    "ratio": 0.010135135,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot2_r0",
+    "baseTriangles": 8288,
+    "addedTriangles": 172,
+    "ratio": 0.020752896,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot2_r1",
+    "baseTriangles": 8288,
+    "addedTriangles": 172,
+    "ratio": 0.020752896,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot2_r2",
+    "baseTriangles": 8288,
+    "addedTriangles": 184,
+    "ratio": 0.022200773,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot2_r3",
+    "baseTriangles": 8288,
+    "addedTriangles": 188,
+    "ratio": 0.022683397,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot2_r4",
+    "baseTriangles": 8288,
+    "addedTriangles": 188,
+    "ratio": 0.022683397,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot3_r0",
+    "baseTriangles": 8288,
+    "addedTriangles": 344,
+    "ratio": 0.04150579,
+    "extraRenderers": 2
+  },
+  {
+    "id": "bishop",
+    "label": "slot3_r1",
+    "baseTriangles": 8288,
+    "addedTriangles": 344,
+    "ratio": 0.04150579,
+    "extraRenderers": 2
+  },
+  {
+    "id": "bishop",
+    "label": "slot3_r2",
+    "baseTriangles": 8288,
+    "addedTriangles": 368,
+    "ratio": 0.044401545,
+    "extraRenderers": 2
+  },
+  {
+    "id": "bishop",
+    "label": "slot3_r3",
+    "baseTriangles": 8288,
+    "addedTriangles": 376,
+    "ratio": 0.045366794,
+    "extraRenderers": 2
+  },
+  {
+    "id": "bishop",
+    "label": "slot3_r4",
+    "baseTriangles": 8288,
+    "addedTriangles": 376,
+    "ratio": 0.045366794,
+    "extraRenderers": 2
+  },
+  {
+    "id": "bishop",
+    "label": "slot4_r0",
+    "baseTriangles": 8288,
+    "addedTriangles": 48,
+    "ratio": 0.005791506,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot4_r1",
+    "baseTriangles": 8288,
+    "addedTriangles": 48,
+    "ratio": 0.005791506,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot4_r2",
+    "baseTriangles": 8288,
+    "addedTriangles": 48,
+    "ratio": 0.005791506,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot4_r3",
+    "baseTriangles": 8288,
+    "addedTriangles": 52,
+    "ratio": 0.006274131,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "slot4_r4",
+    "baseTriangles": 8288,
+    "addedTriangles": 52,
+    "ratio": 0.006274131,
+    "extraRenderers": 1
+  },
+  {
+    "id": "bishop",
+    "label": "set_flame",
+    "baseTriangles": 8288,
+    "addedTriangles": 1452,
+    "ratio": 0.17519306,
+    "extraRenderers": 6
+  },
+  {
+    "id": "bishop",
+    "label": "set_grove",
+    "baseTriangles": 8288,
+    "addedTriangles": 1452,
+    "ratio": 0.17519306,
+    "extraRenderers": 6
+  },
+  {
+    "id": "bishop",
+    "label": "set_tide",
+    "baseTriangles": 8288,
+    "addedTriangles": 1424,
+    "ratio": 0.17181467,
+    "extraRenderers": 6
+  },
+  {
+    "id": "bishop",
+    "label": "set_gladiator",
+    "baseTriangles": 8288,
+    "addedTriangles": 1340,
+    "ratio": 0.16167954,
+    "extraRenderers": 6
+  },
+  {
+    "id": "bishop",
+    "label": "set_loess",
+    "baseTriangles": 8288,
+    "addedTriangles": 1256,
+    "ratio": 0.1515444,
+    "extraRenderers": 6
+  },
+  {
+    "id": "bishop",
+    "label": "set_gale",
+    "baseTriangles": 8288,
+    "addedTriangles": 1676,
+    "ratio": 0.20222008,
+    "extraRenderers": 6
+  },
+  {
+    "id": "bishop",
+    "label": "set_guard",
+    "baseTriangles": 8288,
+    "addedTriangles": 1228,
+    "ratio": 0.14816602,
+    "extraRenderers": 6
+  },
+  {
+    "id": "bishop",
+    "label": "all_r0",
+    "baseTriangles": 8288,
+    "addedTriangles": 704,
+    "ratio": 0.08494209,
+    "extraRenderers": 6
+  },
+  {
+    "id": "bishop",
+    "label": "all_r1",
+    "baseTriangles": 8288,
+    "addedTriangles": 704,
+    "ratio": 0.08494209,
+    "extraRenderers": 6
+  },
+  {
+    "id": "bishop",
+    "label": "all_r2",
+    "baseTriangles": 8288,
+    "addedTriangles": 752,
+    "ratio": 0.09073359,
+    "extraRenderers": 6
+  },
+  {
+    "id": "bishop",
+    "label": "all_r3",
+    "baseTriangles": 8288,
+    "addedTriangles": 776,
+    "ratio": 0.093629345,
+    "extraRenderers": 6
+  },
+  {
+    "id": "bishop",
+    "label": "all_r4",
+    "baseTriangles": 8288,
+    "addedTriangles": 824,
+    "ratio": 0.09942085,
+    "extraRenderers": 6
+  },
+  {
+    "id": "bishop",
+    "label": "mixed",
+    "baseTriangles": 8288,
+    "addedTriangles": 1080,
+    "ratio": 0.13030888,
+    "extraRenderers": 6
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot0_r0",
+    "baseTriangles": 6968,
+    "addedTriangles": 84,
+    "ratio": 0.012055109,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot0_r1",
+    "baseTriangles": 6968,
+    "addedTriangles": 84,
+    "ratio": 0.012055109,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot0_r2",
+    "baseTriangles": 6968,
+    "addedTriangles": 96,
+    "ratio": 0.013777267,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot0_r3",
+    "baseTriangles": 6968,
+    "addedTriangles": 100,
+    "ratio": 0.01435132,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot0_r4",
+    "baseTriangles": 6968,
+    "addedTriangles": 124,
+    "ratio": 0.017795637,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot1_r0",
+    "baseTriangles": 6968,
+    "addedTriangles": 56,
+    "ratio": 0.008036739,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot1_r1",
+    "baseTriangles": 6968,
+    "addedTriangles": 56,
+    "ratio": 0.008036739,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot1_r2",
+    "baseTriangles": 6968,
+    "addedTriangles": 56,
+    "ratio": 0.008036739,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot1_r3",
+    "baseTriangles": 6968,
+    "addedTriangles": 60,
+    "ratio": 0.008610792,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot1_r4",
+    "baseTriangles": 6968,
+    "addedTriangles": 84,
+    "ratio": 0.012055109,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot2_r0",
+    "baseTriangles": 6968,
+    "addedTriangles": 172,
+    "ratio": 0.02468427,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot2_r1",
+    "baseTriangles": 6968,
+    "addedTriangles": 172,
+    "ratio": 0.02468427,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot2_r2",
+    "baseTriangles": 6968,
+    "addedTriangles": 184,
+    "ratio": 0.02640643,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot2_r3",
+    "baseTriangles": 6968,
+    "addedTriangles": 188,
+    "ratio": 0.026980482,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot2_r4",
+    "baseTriangles": 6968,
+    "addedTriangles": 188,
+    "ratio": 0.026980482,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot3_r0",
+    "baseTriangles": 6968,
+    "addedTriangles": 344,
+    "ratio": 0.04936854,
+    "extraRenderers": 2
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot3_r1",
+    "baseTriangles": 6968,
+    "addedTriangles": 344,
+    "ratio": 0.04936854,
+    "extraRenderers": 2
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot3_r2",
+    "baseTriangles": 6968,
+    "addedTriangles": 368,
+    "ratio": 0.05281286,
+    "extraRenderers": 2
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot3_r3",
+    "baseTriangles": 6968,
+    "addedTriangles": 376,
+    "ratio": 0.053960964,
+    "extraRenderers": 2
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot3_r4",
+    "baseTriangles": 6968,
+    "addedTriangles": 376,
+    "ratio": 0.053960964,
+    "extraRenderers": 2
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot4_r0",
+    "baseTriangles": 6968,
+    "addedTriangles": 48,
+    "ratio": 0.0068886336,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot4_r1",
+    "baseTriangles": 6968,
+    "addedTriangles": 48,
+    "ratio": 0.0068886336,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot4_r2",
+    "baseTriangles": 6968,
+    "addedTriangles": 48,
+    "ratio": 0.0068886336,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot4_r3",
+    "baseTriangles": 6968,
+    "addedTriangles": 52,
+    "ratio": 0.0074626864,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "slot4_r4",
+    "baseTriangles": 6968,
+    "addedTriangles": 52,
+    "ratio": 0.0074626864,
+    "extraRenderers": 1
+  },
+  {
+    "id": "inquisitor",
+    "label": "set_flame",
+    "baseTriangles": 6968,
+    "addedTriangles": 1452,
+    "ratio": 0.20838118,
+    "extraRenderers": 6
+  },
+  {
+    "id": "inquisitor",
+    "label": "set_grove",
+    "baseTriangles": 6968,
+    "addedTriangles": 1452,
+    "ratio": 0.20838118,
+    "extraRenderers": 6
+  },
+  {
+    "id": "inquisitor",
+    "label": "set_tide",
+    "baseTriangles": 6968,
+    "addedTriangles": 1424,
+    "ratio": 0.2043628,
+    "extraRenderers": 6
+  },
+  {
+    "id": "inquisitor",
+    "label": "set_gladiator",
+    "baseTriangles": 6968,
+    "addedTriangles": 1340,
+    "ratio": 0.1923077,
+    "extraRenderers": 6
+  },
+  {
+    "id": "inquisitor",
+    "label": "set_loess",
+    "baseTriangles": 6968,
+    "addedTriangles": 1256,
+    "ratio": 0.18025258,
+    "extraRenderers": 6
+  },
+  {
+    "id": "inquisitor",
+    "label": "set_gale",
+    "baseTriangles": 6968,
+    "addedTriangles": 1676,
+    "ratio": 0.24052812,
+    "extraRenderers": 6
+  },
+  {
+    "id": "inquisitor",
+    "label": "set_guard",
+    "baseTriangles": 6968,
+    "addedTriangles": 1228,
+    "ratio": 0.17623422,
+    "extraRenderers": 6
+  },
+  {
+    "id": "inquisitor",
+    "label": "all_r0",
+    "baseTriangles": 6968,
+    "addedTriangles": 704,
+    "ratio": 0.10103329,
+    "extraRenderers": 6
+  },
+  {
+    "id": "inquisitor",
+    "label": "all_r1",
+    "baseTriangles": 6968,
+    "addedTriangles": 704,
+    "ratio": 0.10103329,
+    "extraRenderers": 6
+  },
+  {
+    "id": "inquisitor",
+    "label": "all_r2",
+    "baseTriangles": 6968,
+    "addedTriangles": 752,
+    "ratio": 0.10792193,
+    "extraRenderers": 6
+  },
+  {
+    "id": "inquisitor",
+    "label": "all_r3",
+    "baseTriangles": 6968,
+    "addedTriangles": 776,
+    "ratio": 0.11136624,
+    "extraRenderers": 6
+  },
+  {
+    "id": "inquisitor",
+    "label": "all_r4",
+    "baseTriangles": 6968,
+    "addedTriangles": 824,
+    "ratio": 0.11825488,
+    "extraRenderers": 6
+  },
+  {
+    "id": "inquisitor",
+    "label": "mixed",
+    "baseTriangles": 6968,
+    "addedTriangles": 1072,
+    "ratio": 0.15384616,
+    "extraRenderers": 6
+  }
+]

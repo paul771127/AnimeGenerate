@@ -1,0 +1,137 @@
+[
+  {
+    "id": "swordsman",
+    "minimumPanelCentroidFrontGap": 0.006384488,
+    "headToEyeGap": 0.030815668,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  },
+  {
+    "id": "archer",
+    "minimumPanelCentroidFrontGap": 0.006384488,
+    "headToEyeGap": 0.031880103,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  },
+  {
+    "id": "mage",
+    "minimumPanelCentroidFrontGap": 0.006384488,
+    "headToEyeGap": 0.051800627,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  },
+  {
+    "id": "assassin",
+    "minimumPanelCentroidFrontGap": 0.006384488,
+    "headToEyeGap": 0.032283854,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  },
+  {
+    "id": "priest",
+    "minimumPanelCentroidFrontGap": 0.006718576,
+    "headToEyeGap": 0.049263775,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  },
+  {
+    "id": "paladin",
+    "minimumPanelCentroidFrontGap": 0.006524712,
+    "headToEyeGap": 0.030942291,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  },
+  {
+    "id": "berserker",
+    "minimumPanelCentroidFrontGap": 0.006384488,
+    "headToEyeGap": 0.03065338,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  },
+  {
+    "id": "marksman",
+    "minimumPanelCentroidFrontGap": 0.006384488,
+    "headToEyeGap": 0.032312308,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  },
+  {
+    "id": "ranger",
+    "minimumPanelCentroidFrontGap": 0.006384488,
+    "headToEyeGap": 0.031281672,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  },
+  {
+    "id": "archmage",
+    "minimumPanelCentroidFrontGap": 0.006384488,
+    "headToEyeGap": 0.053708665,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  },
+  {
+    "id": "summoner",
+    "minimumPanelCentroidFrontGap": 0.006384488,
+    "headToEyeGap": 0.049715668,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  },
+  {
+    "id": "ninja",
+    "minimumPanelCentroidFrontGap": 0.006384488,
+    "headToEyeGap": 0.032188606,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  },
+  {
+    "id": "shadowdancer",
+    "minimumPanelCentroidFrontGap": 0.0067017525,
+    "headToEyeGap": 0.032170035,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  },
+  {
+    "id": "bishop",
+    "minimumPanelCentroidFrontGap": 0.006718576,
+    "headToEyeGap": 0.051568303,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  },
+  {
+    "id": "inquisitor",
+    "minimumPanelCentroidFrontGap": 0.006384488,
+    "headToEyeGap": 0.03212187,
+    "feetToSoleGap": 0.16500002,
+    "cachedMeshesReused": true,
+    "fourPieceWithoutBody": true,
+    "hiddenSwapPassed": true
+  }
+]

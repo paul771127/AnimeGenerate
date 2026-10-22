@@ -1,0 +1,122 @@
+[
+  {
+    "id": "swordsman",
+    "baseTriangles": 8100,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.20691358,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  },
+  {
+    "id": "archer",
+    "baseTriangles": 7748,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.21631388,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  },
+  {
+    "id": "mage",
+    "baseTriangles": 7380,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.22710027,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  },
+  {
+    "id": "assassin",
+    "baseTriangles": 6968,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.24052812,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  },
+  {
+    "id": "priest",
+    "baseTriangles": 8676,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.19317658,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  },
+  {
+    "id": "paladin",
+    "baseTriangles": 8876,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.18882379,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  },
+  {
+    "id": "berserker",
+    "baseTriangles": 7476,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.22418405,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  },
+  {
+    "id": "marksman",
+    "baseTriangles": 7836,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.21388464,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  },
+  {
+    "id": "ranger",
+    "baseTriangles": 8560,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.19579439,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  },
+  {
+    "id": "archmage",
+    "baseTriangles": 7980,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.21002506,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  },
+  {
+    "id": "summoner",
+    "baseTriangles": 8000,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.2095,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  },
+  {
+    "id": "ninja",
+    "baseTriangles": 7224,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.23200443,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  },
+  {
+    "id": "shadowdancer",
+    "baseTriangles": 7824,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.21421269,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  },
+  {
+    "id": "bishop",
+    "baseTriangles": 8288,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.20222008,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  },
+  {
+    "id": "inquisitor",
+    "baseTriangles": 6968,
+    "maximumAddedTriangles": 1676,
+    "maximumRatio": 0.24052812,
+    "maximumExtraRenderers": 6,
+    "states": 38
+  }
+]

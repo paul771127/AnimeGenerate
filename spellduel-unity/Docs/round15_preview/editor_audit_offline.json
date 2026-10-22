@@ -1,0 +1,4565 @@
+{
+  "rows": [
+    {
+      "id": "swordsman",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 8100,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.01037037
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 8100,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.01037037
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 8100,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.011851852
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 8100,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.012345679
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 8100,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.015308642
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 8100,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.0069135805
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 8100,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.0069135805
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 8100,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.0069135805
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 8100,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.0074074073
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 8100,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.01037037
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 8100,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.021234568
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 8100,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.021234568
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 8100,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.02271605
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 8100,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.023209877
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 8100,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.023209877
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 8100,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.042469136
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 8100,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.042469136
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 8100,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.0454321
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 8100,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.046419755
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 8100,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.046419755
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 8100,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.005925926
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 8100,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.005925926
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 8100,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.005925926
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 8100,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.006419753
+    },
+    {
+      "id": "swordsman",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 8100,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.006419753
+    },
+    {
+      "id": "swordsman",
+      "configuration": "flame",
+      "baseTriangles": 8100,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.17925926
+    },
+    {
+      "id": "swordsman",
+      "configuration": "grove",
+      "baseTriangles": 8100,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.17925926
+    },
+    {
+      "id": "swordsman",
+      "configuration": "tide",
+      "baseTriangles": 8100,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.17580247
+    },
+    {
+      "id": "swordsman",
+      "configuration": "gladiator",
+      "baseTriangles": 8100,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.1654321
+    },
+    {
+      "id": "swordsman",
+      "configuration": "loess",
+      "baseTriangles": 8100,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.15506172
+    },
+    {
+      "id": "swordsman",
+      "configuration": "gale",
+      "baseTriangles": 8100,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.20691358
+    },
+    {
+      "id": "swordsman",
+      "configuration": "guard",
+      "baseTriangles": 8100,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.15160494
+    },
+    {
+      "id": "swordsman",
+      "configuration": "all/rarity0",
+      "baseTriangles": 8100,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.08691358
+    },
+    {
+      "id": "swordsman",
+      "configuration": "all/rarity1",
+      "baseTriangles": 8100,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.08691358
+    },
+    {
+      "id": "swordsman",
+      "configuration": "all/rarity2",
+      "baseTriangles": 8100,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.09283951
+    },
+    {
+      "id": "swordsman",
+      "configuration": "all/rarity3",
+      "baseTriangles": 8100,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.09580247
+    },
+    {
+      "id": "swordsman",
+      "configuration": "all/rarity4",
+      "baseTriangles": 8100,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.101728395
+    },
+    {
+      "id": "swordsman",
+      "configuration": "mixed",
+      "baseTriangles": 8100,
+      "addedTriangles": 1072,
+      "extraRenderers": 6,
+      "ratio": 0.13234568
+    },
+    {
+      "id": "archer",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 7748,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010841507
+    },
+    {
+      "id": "archer",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 7748,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010841507
+    },
+    {
+      "id": "archer",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 7748,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.012390294
+    },
+    {
+      "id": "archer",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 7748,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.012906557
+    },
+    {
+      "id": "archer",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 7748,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.01600413
+    },
+    {
+      "id": "archer",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 7748,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007227672
+    },
+    {
+      "id": "archer",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 7748,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007227672
+    },
+    {
+      "id": "archer",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 7748,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007227672
+    },
+    {
+      "id": "archer",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 7748,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.0077439337
+    },
+    {
+      "id": "archer",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 7748,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010841507
+    },
+    {
+      "id": "archer",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 7748,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.022199277
+    },
+    {
+      "id": "archer",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 7748,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.022199277
+    },
+    {
+      "id": "archer",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 7748,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.023748064
+    },
+    {
+      "id": "archer",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 7748,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.024264326
+    },
+    {
+      "id": "archer",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 7748,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.024264326
+    },
+    {
+      "id": "archer",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 7748,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.044398554
+    },
+    {
+      "id": "archer",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 7748,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.044398554
+    },
+    {
+      "id": "archer",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 7748,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.04749613
+    },
+    {
+      "id": "archer",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 7748,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.048528653
+    },
+    {
+      "id": "archer",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 7748,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.048528653
+    },
+    {
+      "id": "archer",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 7748,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006195147
+    },
+    {
+      "id": "archer",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 7748,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006195147
+    },
+    {
+      "id": "archer",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 7748,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006195147
+    },
+    {
+      "id": "archer",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 7748,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.0067114094
+    },
+    {
+      "id": "archer",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 7748,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.0067114094
+    },
+    {
+      "id": "archer",
+      "configuration": "flame",
+      "baseTriangles": 7748,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.1874032
+    },
+    {
+      "id": "archer",
+      "configuration": "grove",
+      "baseTriangles": 7748,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.1874032
+    },
+    {
+      "id": "archer",
+      "configuration": "tide",
+      "baseTriangles": 7748,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.18378937
+    },
+    {
+      "id": "archer",
+      "configuration": "gladiator",
+      "baseTriangles": 7748,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.17294785
+    },
+    {
+      "id": "archer",
+      "configuration": "loess",
+      "baseTriangles": 7748,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.16210635
+    },
+    {
+      "id": "archer",
+      "configuration": "gale",
+      "baseTriangles": 7748,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.21631388
+    },
+    {
+      "id": "archer",
+      "configuration": "guard",
+      "baseTriangles": 7748,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.15849252
+    },
+    {
+      "id": "archer",
+      "configuration": "all/rarity0",
+      "baseTriangles": 7748,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.090862155
+    },
+    {
+      "id": "archer",
+      "configuration": "all/rarity1",
+      "baseTriangles": 7748,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.090862155
+    },
+    {
+      "id": "archer",
+      "configuration": "all/rarity2",
+      "baseTriangles": 7748,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.097057305
+    },
+    {
+      "id": "archer",
+      "configuration": "all/rarity3",
+      "baseTriangles": 7748,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.10015488
+    },
+    {
+      "id": "archer",
+      "configuration": "all/rarity4",
+      "baseTriangles": 7748,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.10635003
+    },
+    {
+      "id": "archer",
+      "configuration": "mixed",
+      "baseTriangles": 7748,
+      "addedTriangles": 1092,
+      "extraRenderers": 6,
+      "ratio": 0.1409396
+    },
+    {
+      "id": "mage",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 7380,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.011382114
+    },
+    {
+      "id": "mage",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 7380,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.011382114
+    },
+    {
+      "id": "mage",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 7380,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.01300813
+    },
+    {
+      "id": "mage",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 7380,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.013550135
+    },
+    {
+      "id": "mage",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 7380,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.016802168
+    },
+    {
+      "id": "mage",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 7380,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007588076
+    },
+    {
+      "id": "mage",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 7380,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007588076
+    },
+    {
+      "id": "mage",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 7380,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007588076
+    },
+    {
+      "id": "mage",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 7380,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.008130081
+    },
+    {
+      "id": "mage",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 7380,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.011382114
+    },
+    {
+      "id": "mage",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 7380,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.023306234
+    },
+    {
+      "id": "mage",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 7380,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.023306234
+    },
+    {
+      "id": "mage",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 7380,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.024932249
+    },
+    {
+      "id": "mage",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 7380,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.025474254
+    },
+    {
+      "id": "mage",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 7380,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.025474254
+    },
+    {
+      "id": "mage",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 7380,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.046612468
+    },
+    {
+      "id": "mage",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 7380,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.046612468
+    },
+    {
+      "id": "mage",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 7380,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.049864497
+    },
+    {
+      "id": "mage",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 7380,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.050948508
+    },
+    {
+      "id": "mage",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 7380,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.050948508
+    },
+    {
+      "id": "mage",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 7380,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006504065
+    },
+    {
+      "id": "mage",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 7380,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006504065
+    },
+    {
+      "id": "mage",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 7380,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006504065
+    },
+    {
+      "id": "mage",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 7380,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.0070460704
+    },
+    {
+      "id": "mage",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 7380,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.0070460704
+    },
+    {
+      "id": "mage",
+      "configuration": "flame",
+      "baseTriangles": 7380,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.19674797
+    },
+    {
+      "id": "mage",
+      "configuration": "grove",
+      "baseTriangles": 7380,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.19674797
+    },
+    {
+      "id": "mage",
+      "configuration": "tide",
+      "baseTriangles": 7380,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.19295393
+    },
+    {
+      "id": "mage",
+      "configuration": "gladiator",
+      "baseTriangles": 7380,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.18157181
+    },
+    {
+      "id": "mage",
+      "configuration": "loess",
+      "baseTriangles": 7380,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.17018971
+    },
+    {
+      "id": "mage",
+      "configuration": "gale",
+      "baseTriangles": 7380,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.22710027
+    },
+    {
+      "id": "mage",
+      "configuration": "guard",
+      "baseTriangles": 7380,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.16639566
+    },
+    {
+      "id": "mage",
+      "configuration": "all/rarity0",
+      "baseTriangles": 7380,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.09539296
+    },
+    {
+      "id": "mage",
+      "configuration": "all/rarity1",
+      "baseTriangles": 7380,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.09539296
+    },
+    {
+      "id": "mage",
+      "configuration": "all/rarity2",
+      "baseTriangles": 7380,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.101897016
+    },
+    {
+      "id": "mage",
+      "configuration": "all/rarity3",
+      "baseTriangles": 7380,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.10514905
+    },
+    {
+      "id": "mage",
+      "configuration": "all/rarity4",
+      "baseTriangles": 7380,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.11165312
+    },
+    {
+      "id": "mage",
+      "configuration": "mixed",
+      "baseTriangles": 7380,
+      "addedTriangles": 1120,
+      "extraRenderers": 6,
+      "ratio": 0.15176152
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 6968,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.012055109
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 6968,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.012055109
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 6968,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.013777267
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 6968,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.01435132
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 6968,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.017795637
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 6968,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.008036739
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 6968,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.008036739
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 6968,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.008036739
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 6968,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.008610792
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 6968,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.012055109
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 6968,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.02468427
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 6968,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.02468427
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 6968,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.02640643
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 6968,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.026980482
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 6968,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.026980482
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 6968,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04936854
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 6968,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04936854
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 6968,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.05281286
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 6968,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.053960964
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 6968,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.053960964
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 6968,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0068886336
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 6968,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0068886336
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 6968,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0068886336
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 6968,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.0074626864
+    },
+    {
+      "id": "assassin",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 6968,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.0074626864
+    },
+    {
+      "id": "assassin",
+      "configuration": "flame",
+      "baseTriangles": 6968,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.20838118
+    },
+    {
+      "id": "assassin",
+      "configuration": "grove",
+      "baseTriangles": 6968,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.20838118
+    },
+    {
+      "id": "assassin",
+      "configuration": "tide",
+      "baseTriangles": 6968,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.2043628
+    },
+    {
+      "id": "assassin",
+      "configuration": "gladiator",
+      "baseTriangles": 6968,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.1923077
+    },
+    {
+      "id": "assassin",
+      "configuration": "loess",
+      "baseTriangles": 6968,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.18025258
+    },
+    {
+      "id": "assassin",
+      "configuration": "gale",
+      "baseTriangles": 6968,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.24052812
+    },
+    {
+      "id": "assassin",
+      "configuration": "guard",
+      "baseTriangles": 6968,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.17623422
+    },
+    {
+      "id": "assassin",
+      "configuration": "all/rarity0",
+      "baseTriangles": 6968,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.10103329
+    },
+    {
+      "id": "assassin",
+      "configuration": "all/rarity1",
+      "baseTriangles": 6968,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.10103329
+    },
+    {
+      "id": "assassin",
+      "configuration": "all/rarity2",
+      "baseTriangles": 6968,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.10792193
+    },
+    {
+      "id": "assassin",
+      "configuration": "all/rarity3",
+      "baseTriangles": 6968,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.11136624
+    },
+    {
+      "id": "assassin",
+      "configuration": "all/rarity4",
+      "baseTriangles": 6968,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.11825488
+    },
+    {
+      "id": "assassin",
+      "configuration": "mixed",
+      "baseTriangles": 6968,
+      "addedTriangles": 1060,
+      "extraRenderers": 6,
+      "ratio": 0.152124
+    },
+    {
+      "id": "priest",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 8676,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.009681881
+    },
+    {
+      "id": "priest",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 8676,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.009681881
+    },
+    {
+      "id": "priest",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 8676,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.011065007
+    },
+    {
+      "id": "priest",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 8676,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.011526049
+    },
+    {
+      "id": "priest",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 8676,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.014292301
+    },
+    {
+      "id": "priest",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 8676,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.0064545874
+    },
+    {
+      "id": "priest",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 8676,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.0064545874
+    },
+    {
+      "id": "priest",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 8676,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.0064545874
+    },
+    {
+      "id": "priest",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 8676,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.0069156294
+    },
+    {
+      "id": "priest",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 8676,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.009681881
+    },
+    {
+      "id": "priest",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 8676,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.019824805
+    },
+    {
+      "id": "priest",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 8676,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.019824805
+    },
+    {
+      "id": "priest",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 8676,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.02120793
+    },
+    {
+      "id": "priest",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 8676,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.021668972
+    },
+    {
+      "id": "priest",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 8676,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.021668972
+    },
+    {
+      "id": "priest",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 8676,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.03964961
+    },
+    {
+      "id": "priest",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 8676,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.03964961
+    },
+    {
+      "id": "priest",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 8676,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.04241586
+    },
+    {
+      "id": "priest",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 8676,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.043337945
+    },
+    {
+      "id": "priest",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 8676,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.043337945
+    },
+    {
+      "id": "priest",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 8676,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0055325036
+    },
+    {
+      "id": "priest",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 8676,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0055325036
+    },
+    {
+      "id": "priest",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 8676,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0055325036
+    },
+    {
+      "id": "priest",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 8676,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.0059935455
+    },
+    {
+      "id": "priest",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 8676,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.0059935455
+    },
+    {
+      "id": "priest",
+      "configuration": "flame",
+      "baseTriangles": 8676,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.16735823
+    },
+    {
+      "id": "priest",
+      "configuration": "grove",
+      "baseTriangles": 8676,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.16735823
+    },
+    {
+      "id": "priest",
+      "configuration": "tide",
+      "baseTriangles": 8676,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.16413094
+    },
+    {
+      "id": "priest",
+      "configuration": "gladiator",
+      "baseTriangles": 8676,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.15444906
+    },
+    {
+      "id": "priest",
+      "configuration": "loess",
+      "baseTriangles": 8676,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.14476718
+    },
+    {
+      "id": "priest",
+      "configuration": "gale",
+      "baseTriangles": 8676,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.19317658
+    },
+    {
+      "id": "priest",
+      "configuration": "guard",
+      "baseTriangles": 8676,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.14153989
+    },
+    {
+      "id": "priest",
+      "configuration": "all/rarity0",
+      "baseTriangles": 8676,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.08114339
+    },
+    {
+      "id": "priest",
+      "configuration": "all/rarity1",
+      "baseTriangles": 8676,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.08114339
+    },
+    {
+      "id": "priest",
+      "configuration": "all/rarity2",
+      "baseTriangles": 8676,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.08667589
+    },
+    {
+      "id": "priest",
+      "configuration": "all/rarity3",
+      "baseTriangles": 8676,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.08944214
+    },
+    {
+      "id": "priest",
+      "configuration": "all/rarity4",
+      "baseTriangles": 8676,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.094974644
+    },
+    {
+      "id": "priest",
+      "configuration": "mixed",
+      "baseTriangles": 8676,
+      "addedTriangles": 1108,
+      "extraRenderers": 6,
+      "ratio": 0.12770863
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 8876,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.009463723
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 8876,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.009463723
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 8876,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.010815683
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 8876,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.011266336
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 8876,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.013970257
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 8876,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.0063091484
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 8876,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.0063091484
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 8876,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.0063091484
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 8876,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.006759802
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 8876,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.009463723
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 8876,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.019378098
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 8876,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.019378098
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 8876,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.020730058
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 8876,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.021180712
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 8876,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.021180712
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 8876,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.038756195
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 8876,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.038756195
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 8876,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.041460115
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 8876,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.042361423
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 8876,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.042361423
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 8876,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0054078414
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 8876,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0054078414
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 8876,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0054078414
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 8876,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.005858495
+    },
+    {
+      "id": "paladin",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 8876,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.005858495
+    },
+    {
+      "id": "paladin",
+      "configuration": "flame",
+      "baseTriangles": 8876,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.1635872
+    },
+    {
+      "id": "paladin",
+      "configuration": "grove",
+      "baseTriangles": 8876,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.1635872
+    },
+    {
+      "id": "paladin",
+      "configuration": "tide",
+      "baseTriangles": 8876,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.16043262
+    },
+    {
+      "id": "paladin",
+      "configuration": "gladiator",
+      "baseTriangles": 8876,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.15096891
+    },
+    {
+      "id": "paladin",
+      "configuration": "loess",
+      "baseTriangles": 8876,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.14150518
+    },
+    {
+      "id": "paladin",
+      "configuration": "gale",
+      "baseTriangles": 8876,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.18882379
+    },
+    {
+      "id": "paladin",
+      "configuration": "guard",
+      "baseTriangles": 8876,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.1383506
+    },
+    {
+      "id": "paladin",
+      "configuration": "all/rarity0",
+      "baseTriangles": 8876,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.07931501
+    },
+    {
+      "id": "paladin",
+      "configuration": "all/rarity1",
+      "baseTriangles": 8876,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.07931501
+    },
+    {
+      "id": "paladin",
+      "configuration": "all/rarity2",
+      "baseTriangles": 8876,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.08472285
+    },
+    {
+      "id": "paladin",
+      "configuration": "all/rarity3",
+      "baseTriangles": 8876,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.08742677
+    },
+    {
+      "id": "paladin",
+      "configuration": "all/rarity4",
+      "baseTriangles": 8876,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.09283461
+    },
+    {
+      "id": "paladin",
+      "configuration": "mixed",
+      "baseTriangles": 8876,
+      "addedTriangles": 1132,
+      "extraRenderers": 6,
+      "ratio": 0.12753493
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 7476,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.011235955
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 7476,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.011235955
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 7476,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.0128410915
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 7476,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.013376137
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 7476,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.01658641
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 7476,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007490637
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 7476,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007490637
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 7476,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007490637
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 7476,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.0080256825
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 7476,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.011235955
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 7476,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.023006955
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 7476,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.023006955
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 7476,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.024612091
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 7476,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.025147138
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 7476,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.025147138
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 7476,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04601391
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 7476,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04601391
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 7476,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.049224183
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 7476,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.050294276
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 7476,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.050294276
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 7476,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0064205457
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 7476,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0064205457
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 7476,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0064205457
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 7476,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.006955591
+    },
+    {
+      "id": "berserker",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 7476,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.006955591
+    },
+    {
+      "id": "berserker",
+      "configuration": "flame",
+      "baseTriangles": 7476,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.19422151
+    },
+    {
+      "id": "berserker",
+      "configuration": "grove",
+      "baseTriangles": 7476,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.19422151
+    },
+    {
+      "id": "berserker",
+      "configuration": "tide",
+      "baseTriangles": 7476,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.1904762
+    },
+    {
+      "id": "berserker",
+      "configuration": "gladiator",
+      "baseTriangles": 7476,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.17924024
+    },
+    {
+      "id": "berserker",
+      "configuration": "loess",
+      "baseTriangles": 7476,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.16800427
+    },
+    {
+      "id": "berserker",
+      "configuration": "gale",
+      "baseTriangles": 7476,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.22418405
+    },
+    {
+      "id": "berserker",
+      "configuration": "guard",
+      "baseTriangles": 7476,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.16425896
+    },
+    {
+      "id": "berserker",
+      "configuration": "all/rarity0",
+      "baseTriangles": 7476,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.09416801
+    },
+    {
+      "id": "berserker",
+      "configuration": "all/rarity1",
+      "baseTriangles": 7476,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.09416801
+    },
+    {
+      "id": "berserker",
+      "configuration": "all/rarity2",
+      "baseTriangles": 7476,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.10058855
+    },
+    {
+      "id": "berserker",
+      "configuration": "all/rarity3",
+      "baseTriangles": 7476,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.10379882
+    },
+    {
+      "id": "berserker",
+      "configuration": "all/rarity4",
+      "baseTriangles": 7476,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.11021937
+    },
+    {
+      "id": "berserker",
+      "configuration": "mixed",
+      "baseTriangles": 7476,
+      "addedTriangles": 1080,
+      "extraRenderers": 6,
+      "ratio": 0.14446227
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 7836,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010719755
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 7836,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010719755
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 7836,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.012251149
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 7836,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.012761613
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 7836,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.0158244
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 7836,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.0071465033
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 7836,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.0071465033
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 7836,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.0071465033
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 7836,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.0076569677
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 7836,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010719755
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 7836,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.021949975
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 7836,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.021949975
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 7836,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.023481367
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 7836,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.023991833
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 7836,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.023991833
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 7836,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04389995
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 7836,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04389995
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 7836,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.046962734
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 7836,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.047983665
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 7836,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.047983665
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 7836,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0061255745
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 7836,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0061255745
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 7836,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0061255745
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 7836,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.006636039
+    },
+    {
+      "id": "marksman",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 7836,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.006636039
+    },
+    {
+      "id": "marksman",
+      "configuration": "flame",
+      "baseTriangles": 7836,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.18529862
+    },
+    {
+      "id": "marksman",
+      "configuration": "grove",
+      "baseTriangles": 7836,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.18529862
+    },
+    {
+      "id": "marksman",
+      "configuration": "tide",
+      "baseTriangles": 7836,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.18172537
+    },
+    {
+      "id": "marksman",
+      "configuration": "gladiator",
+      "baseTriangles": 7836,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.17100562
+    },
+    {
+      "id": "marksman",
+      "configuration": "loess",
+      "baseTriangles": 7836,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.16028586
+    },
+    {
+      "id": "marksman",
+      "configuration": "gale",
+      "baseTriangles": 7836,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.21388464
+    },
+    {
+      "id": "marksman",
+      "configuration": "guard",
+      "baseTriangles": 7836,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.1567126
+    },
+    {
+      "id": "marksman",
+      "configuration": "all/rarity0",
+      "baseTriangles": 7836,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.08984175
+    },
+    {
+      "id": "marksman",
+      "configuration": "all/rarity1",
+      "baseTriangles": 7836,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.08984175
+    },
+    {
+      "id": "marksman",
+      "configuration": "all/rarity2",
+      "baseTriangles": 7836,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.09596733
+    },
+    {
+      "id": "marksman",
+      "configuration": "all/rarity3",
+      "baseTriangles": 7836,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.099030115
+    },
+    {
+      "id": "marksman",
+      "configuration": "all/rarity4",
+      "baseTriangles": 7836,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.10515569
+    },
+    {
+      "id": "marksman",
+      "configuration": "mixed",
+      "baseTriangles": 7836,
+      "addedTriangles": 1072,
+      "extraRenderers": 6,
+      "ratio": 0.13680449
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 8560,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.009813084
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 8560,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.009813084
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 8560,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.011214953
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 8560,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.011682243
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 8560,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.014485981
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 8560,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.006542056
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 8560,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.006542056
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 8560,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.006542056
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 8560,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.0070093456
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 8560,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.009813084
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 8560,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.020093458
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 8560,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.020093458
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 8560,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.021495327
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 8560,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.021962617
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 8560,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.021962617
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 8560,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.040186916
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 8560,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.040186916
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 8560,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.042990655
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 8560,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.043925233
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 8560,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.043925233
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 8560,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0056074765
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 8560,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0056074765
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 8560,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0056074765
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 8560,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.006074766
+    },
+    {
+      "id": "ranger",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 8560,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.006074766
+    },
+    {
+      "id": "ranger",
+      "configuration": "flame",
+      "baseTriangles": 8560,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.16962616
+    },
+    {
+      "id": "ranger",
+      "configuration": "grove",
+      "baseTriangles": 8560,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.16962616
+    },
+    {
+      "id": "ranger",
+      "configuration": "tide",
+      "baseTriangles": 8560,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.16635513
+    },
+    {
+      "id": "ranger",
+      "configuration": "gladiator",
+      "baseTriangles": 8560,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.15654206
+    },
+    {
+      "id": "ranger",
+      "configuration": "loess",
+      "baseTriangles": 8560,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.14672898
+    },
+    {
+      "id": "ranger",
+      "configuration": "gale",
+      "baseTriangles": 8560,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.19579439
+    },
+    {
+      "id": "ranger",
+      "configuration": "guard",
+      "baseTriangles": 8560,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.14345795
+    },
+    {
+      "id": "ranger",
+      "configuration": "all/rarity0",
+      "baseTriangles": 8560,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.08224299
+    },
+    {
+      "id": "ranger",
+      "configuration": "all/rarity1",
+      "baseTriangles": 8560,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.08224299
+    },
+    {
+      "id": "ranger",
+      "configuration": "all/rarity2",
+      "baseTriangles": 8560,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.08785047
+    },
+    {
+      "id": "ranger",
+      "configuration": "all/rarity3",
+      "baseTriangles": 8560,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.09065421
+    },
+    {
+      "id": "ranger",
+      "configuration": "all/rarity4",
+      "baseTriangles": 8560,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.09626168
+    },
+    {
+      "id": "ranger",
+      "configuration": "mixed",
+      "baseTriangles": 8560,
+      "addedTriangles": 1092,
+      "extraRenderers": 6,
+      "ratio": 0.1275701
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 7980,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010526316
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 7980,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010526316
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 7980,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.012030075
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 7980,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.012531328
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 7980,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.015538847
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 7980,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007017544
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 7980,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007017544
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 7980,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007017544
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 7980,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.007518797
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 7980,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010526316
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 7980,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.021553885
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 7980,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.021553885
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 7980,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.023057643
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 7980,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.023558898
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 7980,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.023558898
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 7980,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04310777
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 7980,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04310777
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 7980,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.046115287
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 7980,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.047117796
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 7980,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.047117796
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 7980,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0060150377
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 7980,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0060150377
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 7980,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0060150377
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 7980,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.006516291
+    },
+    {
+      "id": "archmage",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 7980,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.006516291
+    },
+    {
+      "id": "archmage",
+      "configuration": "flame",
+      "baseTriangles": 7980,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.18195489
+    },
+    {
+      "id": "archmage",
+      "configuration": "grove",
+      "baseTriangles": 7980,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.18195489
+    },
+    {
+      "id": "archmage",
+      "configuration": "tide",
+      "baseTriangles": 7980,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.17844611
+    },
+    {
+      "id": "archmage",
+      "configuration": "gladiator",
+      "baseTriangles": 7980,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.1679198
+    },
+    {
+      "id": "archmage",
+      "configuration": "loess",
+      "baseTriangles": 7980,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.15739349
+    },
+    {
+      "id": "archmage",
+      "configuration": "gale",
+      "baseTriangles": 7980,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.21002506
+    },
+    {
+      "id": "archmage",
+      "configuration": "guard",
+      "baseTriangles": 7980,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.15388471
+    },
+    {
+      "id": "archmage",
+      "configuration": "all/rarity0",
+      "baseTriangles": 7980,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.08822055
+    },
+    {
+      "id": "archmage",
+      "configuration": "all/rarity1",
+      "baseTriangles": 7980,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.08822055
+    },
+    {
+      "id": "archmage",
+      "configuration": "all/rarity2",
+      "baseTriangles": 7980,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.09423559
+    },
+    {
+      "id": "archmage",
+      "configuration": "all/rarity3",
+      "baseTriangles": 7980,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.09724311
+    },
+    {
+      "id": "archmage",
+      "configuration": "all/rarity4",
+      "baseTriangles": 7980,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.10325815
+    },
+    {
+      "id": "archmage",
+      "configuration": "mixed",
+      "baseTriangles": 7980,
+      "addedTriangles": 1120,
+      "extraRenderers": 6,
+      "ratio": 0.14035088
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 8000,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.0105
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 8000,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.0105
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 8000,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.012
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 8000,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.0125
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 8000,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.0155
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 8000,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 8000,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 8000,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 8000,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.0075
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 8000,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.0105
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 8000,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.0215
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 8000,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.0215
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 8000,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.023
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 8000,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.0235
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 8000,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.0235
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 8000,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.043
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 8000,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.043
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 8000,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.046
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 8000,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.047
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 8000,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.047
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 8000,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 8000,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 8000,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 8000,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.0065
+    },
+    {
+      "id": "summoner",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 8000,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.0065
+    },
+    {
+      "id": "summoner",
+      "configuration": "flame",
+      "baseTriangles": 8000,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.1815
+    },
+    {
+      "id": "summoner",
+      "configuration": "grove",
+      "baseTriangles": 8000,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.1815
+    },
+    {
+      "id": "summoner",
+      "configuration": "tide",
+      "baseTriangles": 8000,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.178
+    },
+    {
+      "id": "summoner",
+      "configuration": "gladiator",
+      "baseTriangles": 8000,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.1675
+    },
+    {
+      "id": "summoner",
+      "configuration": "loess",
+      "baseTriangles": 8000,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.157
+    },
+    {
+      "id": "summoner",
+      "configuration": "gale",
+      "baseTriangles": 8000,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.2095
+    },
+    {
+      "id": "summoner",
+      "configuration": "guard",
+      "baseTriangles": 8000,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.1535
+    },
+    {
+      "id": "summoner",
+      "configuration": "all/rarity0",
+      "baseTriangles": 8000,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.088
+    },
+    {
+      "id": "summoner",
+      "configuration": "all/rarity1",
+      "baseTriangles": 8000,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.088
+    },
+    {
+      "id": "summoner",
+      "configuration": "all/rarity2",
+      "baseTriangles": 8000,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.094
+    },
+    {
+      "id": "summoner",
+      "configuration": "all/rarity3",
+      "baseTriangles": 8000,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.097
+    },
+    {
+      "id": "summoner",
+      "configuration": "all/rarity4",
+      "baseTriangles": 8000,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.103
+    },
+    {
+      "id": "summoner",
+      "configuration": "mixed",
+      "baseTriangles": 8000,
+      "addedTriangles": 1060,
+      "extraRenderers": 6,
+      "ratio": 0.1325
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 7224,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.011627907
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 7224,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.011627907
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 7224,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.013289036
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 7224,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.013842747
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 7224,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.017165005
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 7224,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007751938
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 7224,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007751938
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 7224,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007751938
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 7224,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.008305647
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 7224,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.011627907
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 7224,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.023809524
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 7224,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.023809524
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 7224,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.025470654
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 7224,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.026024364
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 7224,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.026024364
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 7224,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04761905
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 7224,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04761905
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 7224,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.050941307
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 7224,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.052048728
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 7224,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.052048728
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 7224,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006644518
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 7224,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006644518
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 7224,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006644518
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 7224,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.007198228
+    },
+    {
+      "id": "ninja",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 7224,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.007198228
+    },
+    {
+      "id": "ninja",
+      "configuration": "flame",
+      "baseTriangles": 7224,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.20099668
+    },
+    {
+      "id": "ninja",
+      "configuration": "grove",
+      "baseTriangles": 7224,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.20099668
+    },
+    {
+      "id": "ninja",
+      "configuration": "tide",
+      "baseTriangles": 7224,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.19712071
+    },
+    {
+      "id": "ninja",
+      "configuration": "gladiator",
+      "baseTriangles": 7224,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.1854928
+    },
+    {
+      "id": "ninja",
+      "configuration": "loess",
+      "baseTriangles": 7224,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.1738649
+    },
+    {
+      "id": "ninja",
+      "configuration": "gale",
+      "baseTriangles": 7224,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.23200443
+    },
+    {
+      "id": "ninja",
+      "configuration": "guard",
+      "baseTriangles": 7224,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.16998893
+    },
+    {
+      "id": "ninja",
+      "configuration": "all/rarity0",
+      "baseTriangles": 7224,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.09745293
+    },
+    {
+      "id": "ninja",
+      "configuration": "all/rarity1",
+      "baseTriangles": 7224,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.09745293
+    },
+    {
+      "id": "ninja",
+      "configuration": "all/rarity2",
+      "baseTriangles": 7224,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.104097456
+    },
+    {
+      "id": "ninja",
+      "configuration": "all/rarity3",
+      "baseTriangles": 7224,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.107419714
+    },
+    {
+      "id": "ninja",
+      "configuration": "all/rarity4",
+      "baseTriangles": 7224,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.11406423
+    },
+    {
+      "id": "ninja",
+      "configuration": "mixed",
+      "baseTriangles": 7224,
+      "addedTriangles": 1108,
+      "extraRenderers": 6,
+      "ratio": 0.15337764
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 7824,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010736196
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 7824,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010736196
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 7824,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.012269938
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 7824,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.012781186
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 7824,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.01584867
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 7824,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007157464
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 7824,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007157464
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 7824,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.007157464
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 7824,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.0076687117
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 7824,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010736196
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 7824,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.02198364
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 7824,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.02198364
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 7824,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.023517383
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 7824,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.024028629
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 7824,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.024028629
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 7824,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04396728
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 7824,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04396728
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 7824,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.047034767
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 7824,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.048057258
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 7824,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.048057258
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 7824,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006134969
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 7824,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006134969
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 7824,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.006134969
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 7824,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.006646217
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 7824,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.006646217
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "flame",
+      "baseTriangles": 7824,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.18558282
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "grove",
+      "baseTriangles": 7824,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.18558282
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "tide",
+      "baseTriangles": 7824,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.1820041
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "gladiator",
+      "baseTriangles": 7824,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.1712679
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "loess",
+      "baseTriangles": 7824,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.1605317
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "gale",
+      "baseTriangles": 7824,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.21421269
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "guard",
+      "baseTriangles": 7824,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.15695296
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "all/rarity0",
+      "baseTriangles": 7824,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.08997955
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "all/rarity1",
+      "baseTriangles": 7824,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.08997955
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "all/rarity2",
+      "baseTriangles": 7824,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.096114516
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "all/rarity3",
+      "baseTriangles": 7824,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.099182
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "all/rarity4",
+      "baseTriangles": 7824,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.105316974
+    },
+    {
+      "id": "shadowdancer",
+      "configuration": "mixed",
+      "baseTriangles": 7824,
+      "addedTriangles": 1132,
+      "extraRenderers": 6,
+      "ratio": 0.14468303
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 8288,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010135135
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 8288,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010135135
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 8288,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.011583012
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 8288,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.012065637
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 8288,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.01496139
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 8288,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.006756757
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 8288,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.006756757
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 8288,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.006756757
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 8288,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.0072393822
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 8288,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.010135135
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 8288,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.020752896
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 8288,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.020752896
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 8288,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.022200773
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 8288,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.022683397
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 8288,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.022683397
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 8288,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04150579
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 8288,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04150579
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 8288,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.044401545
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 8288,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.045366794
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 8288,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.045366794
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 8288,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.005791506
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 8288,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.005791506
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 8288,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.005791506
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 8288,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.006274131
+    },
+    {
+      "id": "bishop",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 8288,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.006274131
+    },
+    {
+      "id": "bishop",
+      "configuration": "flame",
+      "baseTriangles": 8288,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.17519306
+    },
+    {
+      "id": "bishop",
+      "configuration": "grove",
+      "baseTriangles": 8288,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.17519306
+    },
+    {
+      "id": "bishop",
+      "configuration": "tide",
+      "baseTriangles": 8288,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.17181467
+    },
+    {
+      "id": "bishop",
+      "configuration": "gladiator",
+      "baseTriangles": 8288,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.16167954
+    },
+    {
+      "id": "bishop",
+      "configuration": "loess",
+      "baseTriangles": 8288,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.1515444
+    },
+    {
+      "id": "bishop",
+      "configuration": "gale",
+      "baseTriangles": 8288,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.20222008
+    },
+    {
+      "id": "bishop",
+      "configuration": "guard",
+      "baseTriangles": 8288,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.14816602
+    },
+    {
+      "id": "bishop",
+      "configuration": "all/rarity0",
+      "baseTriangles": 8288,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.08494209
+    },
+    {
+      "id": "bishop",
+      "configuration": "all/rarity1",
+      "baseTriangles": 8288,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.08494209
+    },
+    {
+      "id": "bishop",
+      "configuration": "all/rarity2",
+      "baseTriangles": 8288,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.09073359
+    },
+    {
+      "id": "bishop",
+      "configuration": "all/rarity3",
+      "baseTriangles": 8288,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.093629345
+    },
+    {
+      "id": "bishop",
+      "configuration": "all/rarity4",
+      "baseTriangles": 8288,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.09942085
+    },
+    {
+      "id": "bishop",
+      "configuration": "mixed",
+      "baseTriangles": 8288,
+      "addedTriangles": 1080,
+      "extraRenderers": 6,
+      "ratio": 0.13030888
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot0/rarity0",
+      "baseTriangles": 6968,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.012055109
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot0/rarity1",
+      "baseTriangles": 6968,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.012055109
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot0/rarity2",
+      "baseTriangles": 6968,
+      "addedTriangles": 96,
+      "extraRenderers": 1,
+      "ratio": 0.013777267
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot0/rarity3",
+      "baseTriangles": 6968,
+      "addedTriangles": 100,
+      "extraRenderers": 1,
+      "ratio": 0.01435132
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot0/rarity4",
+      "baseTriangles": 6968,
+      "addedTriangles": 124,
+      "extraRenderers": 1,
+      "ratio": 0.017795637
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot1/rarity0",
+      "baseTriangles": 6968,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.008036739
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot1/rarity1",
+      "baseTriangles": 6968,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.008036739
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot1/rarity2",
+      "baseTriangles": 6968,
+      "addedTriangles": 56,
+      "extraRenderers": 1,
+      "ratio": 0.008036739
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot1/rarity3",
+      "baseTriangles": 6968,
+      "addedTriangles": 60,
+      "extraRenderers": 1,
+      "ratio": 0.008610792
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot1/rarity4",
+      "baseTriangles": 6968,
+      "addedTriangles": 84,
+      "extraRenderers": 1,
+      "ratio": 0.012055109
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot2/rarity0",
+      "baseTriangles": 6968,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.02468427
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot2/rarity1",
+      "baseTriangles": 6968,
+      "addedTriangles": 172,
+      "extraRenderers": 1,
+      "ratio": 0.02468427
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot2/rarity2",
+      "baseTriangles": 6968,
+      "addedTriangles": 184,
+      "extraRenderers": 1,
+      "ratio": 0.02640643
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot2/rarity3",
+      "baseTriangles": 6968,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.026980482
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot2/rarity4",
+      "baseTriangles": 6968,
+      "addedTriangles": 188,
+      "extraRenderers": 1,
+      "ratio": 0.026980482
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot3/rarity0",
+      "baseTriangles": 6968,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04936854
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot3/rarity1",
+      "baseTriangles": 6968,
+      "addedTriangles": 344,
+      "extraRenderers": 2,
+      "ratio": 0.04936854
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot3/rarity2",
+      "baseTriangles": 6968,
+      "addedTriangles": 368,
+      "extraRenderers": 2,
+      "ratio": 0.05281286
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot3/rarity3",
+      "baseTriangles": 6968,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.053960964
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot3/rarity4",
+      "baseTriangles": 6968,
+      "addedTriangles": 376,
+      "extraRenderers": 2,
+      "ratio": 0.053960964
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot4/rarity0",
+      "baseTriangles": 6968,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0068886336
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot4/rarity1",
+      "baseTriangles": 6968,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0068886336
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot4/rarity2",
+      "baseTriangles": 6968,
+      "addedTriangles": 48,
+      "extraRenderers": 1,
+      "ratio": 0.0068886336
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot4/rarity3",
+      "baseTriangles": 6968,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.0074626864
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "slot4/rarity4",
+      "baseTriangles": 6968,
+      "addedTriangles": 52,
+      "extraRenderers": 1,
+      "ratio": 0.0074626864
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "flame",
+      "baseTriangles": 6968,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.20838118
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "grove",
+      "baseTriangles": 6968,
+      "addedTriangles": 1452,
+      "extraRenderers": 6,
+      "ratio": 0.20838118
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "tide",
+      "baseTriangles": 6968,
+      "addedTriangles": 1424,
+      "extraRenderers": 6,
+      "ratio": 0.2043628
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "gladiator",
+      "baseTriangles": 6968,
+      "addedTriangles": 1340,
+      "extraRenderers": 6,
+      "ratio": 0.1923077
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "loess",
+      "baseTriangles": 6968,
+      "addedTriangles": 1256,
+      "extraRenderers": 6,
+      "ratio": 0.18025258
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "gale",
+      "baseTriangles": 6968,
+      "addedTriangles": 1676,
+      "extraRenderers": 6,
+      "ratio": 0.24052812
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "guard",
+      "baseTriangles": 6968,
+      "addedTriangles": 1228,
+      "extraRenderers": 6,
+      "ratio": 0.17623422
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "all/rarity0",
+      "baseTriangles": 6968,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.10103329
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "all/rarity1",
+      "baseTriangles": 6968,
+      "addedTriangles": 704,
+      "extraRenderers": 6,
+      "ratio": 0.10103329
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "all/rarity2",
+      "baseTriangles": 6968,
+      "addedTriangles": 752,
+      "extraRenderers": 6,
+      "ratio": 0.10792193
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "all/rarity3",
+      "baseTriangles": 6968,
+      "addedTriangles": 776,
+      "extraRenderers": 6,
+      "ratio": 0.11136624
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "all/rarity4",
+      "baseTriangles": 6968,
+      "addedTriangles": 824,
+      "extraRenderers": 6,
+      "ratio": 0.11825488
+    },
+    {
+      "id": "inquisitor",
+      "configuration": "mixed",
+      "baseTriangles": 6968,
+      "addedTriangles": 1072,
+      "extraRenderers": 6,
+      "ratio": 0.15384616
+    }
+  ],
+  "method": "Real CharacterRig.SetGear; mesh, renderer, idempotence, removal and material restoration checks"
+}
