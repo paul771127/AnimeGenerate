@@ -534,6 +534,8 @@ namespace SpellDuel
         public float stageEnemyMul = 1f;
         /// <summary>遠程／近戰小怪的數量倍率（故事第三章：遠程減半、近戰與飛鳥加倍）：總數跟著變，遠程的比例也跟著變</summary>
         public float rangedCountMul = 1f, meleeCountMul = 1f;
+        /// <summary>同一波裡每批小怪之間多等幾秒（故事第三章 +5 秒）</summary>
+        public float spawnGapAdd;
         float CountMixMul => RangedShare * rangedCountMul + (1f - RangedShare) * meleeCountMul;
         float EffectiveRangedShare => RangedShare * rangedCountMul / Mathf.Max(0.01f, CountMixMul);
 
@@ -650,7 +652,7 @@ namespace SpellDuel
                     if (Theme == CanyonTheme) StartCliffLeap(nm);   // 黃土山道：從崖頂跳進場內
                     waveToSpawn--;
                 }
-                nextMinionAt = now + Mathf.Max(2.5f, 5f - 0.1f * wave) * (ScaleAllies > 0 ? Mathf.Max(0.5f, 1f - 0.25f * ScaleAllies) : 1f);
+                nextMinionAt = now + Mathf.Max(2.5f, 5f - 0.1f * wave) * (ScaleAllies > 0 ? Mathf.Max(0.5f, 1f - 0.25f * ScaleAllies) : 1f) + spawnGapAdd;
             }
             // 故事關卡的 Boss 波：小怪全部打倒 → 地面震動，Boss 現身
             if (bossPending && waveToSpawn == 0 && minions.Count == 0)
