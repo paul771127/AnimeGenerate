@@ -10,24 +10,39 @@ namespace SpellDuel
     ///             5 顆心，被打中扣一顆，扣完提早結束。分數＝閃過的攻擊數。
     ///   輸出挑戰：對木頭人 60 秒，分數＝總傷害（獎牌門檻依角色等級）。
     ///   跑步挑戰：場地內離你遠的隨機位置出現金幣，金幣會到處亂跑，追上去吃，吃到才出現下一個。分數＝金幣數。
+    ///   綜合挑戰（90 秒）：每 30 秒出現一個會逃跑的木頭人（打倒＋20 分，沒打倒會跑掉換下一個），
+    ///             同時有閃避挑戰的攻擊（比閃避挑戰鬆一點）；5 顆心。分數＝閃過的攻擊數＋20×擊倒數。
     /// 每天的題目（攻擊順序、方向、金幣位置）用日期當種子，同一天每個人都一樣。
     /// 每個挑戰每天依「今天最好的獎牌」領一次獎勵（之後拿到更高的獎牌補發差額）。
     /// </summary>
     public static class DailyChallenge
     {
-        public enum Kind { Dodge = 0, Damage = 1, Run = 2 }
-        public static readonly string[] Names = { "🛡 閃避挑戰", "⚔ 輸出挑戰", "🏃 跑步挑戰" };
+        public enum Kind { Dodge = 0, Damage = 1, Run = 2, Combo = 3 }
+        public const int KindCount = 4;
+        public static readonly string[] Names = { "🛡 閃避挑戰", "⚔ 輸出挑戰", "🏃 跑步挑戰", "🎯 綜合挑戰" };
         public static readonly string[] Descs =
         {
             "60 秒內閃過四面八方（身後也有）飛來的火球，時間越久越多；還會同時來橫掃（蹲）、落石（走出紅圈）、震地環（跳）。5 顆心，被打中扣一顆。",
             "60 秒內對木頭人打出最多傷害。技能、普攻、連段都算。",
             "60 秒內追著吃場地裡的金幣：金幣會出現在離你遠的地方、還會到處亂跑（越吃越快），吃到才出現下一個。",
+            "90 秒：每 30 秒出現一個會到處逃跑的木頭人，追上去打倒它（＋20 分；30 秒內沒打倒就跑掉了）。同時四面八方會飛來火球、橫掃（蹲）、震地環（跳），閃過一次＋1 分。5 顆心，被打中扣一顆。",
         };
-        public static readonly Color[] Colors = { new Color(0.45f, 0.8f, 1f), new Color(1f, 0.5f, 0.35f), new Color(1f, 0.85f, 0.3f) };
+        public static readonly Color[] Colors = { new Color(0.45f, 0.8f, 1f), new Color(1f, 0.5f, 0.35f), new Color(1f, 0.85f, 0.3f), new Color(0.75f, 0.55f, 1f) };
         public static readonly string[] MedalNames = { "—", "🥉 銅牌", "🥈 銀牌", "🥇 金牌" };
 
         public const float Duration = 60f, Countdown = 3f;
         public const int Hearts = 5;
+        /// <summary>這個挑戰多長（綜合挑戰 90 秒，其他 60 秒）</summary>
+        public static float DurationOf(Kind k) => k == Kind.Combo ? 90f : Duration;
+
+        // ---------------------------------------------------------------- 綜合挑戰的木頭人
+        /// <summary>每隔幾秒出現一個木頭人（第 0、30、60 秒）</summary>
+        public const float TargetEvery = 30f;
+        public const int TargetCount = 3, KillPoints = 20;
+        /// <summary>木頭人的血量：隨角色等級提高（和輸出挑戰的門檻一樣的倍率）；一般輸出約 15 秒打倒</summary>
+        public static int TargetHp(int level) => Mathf.RoundToInt(100f * (1f + 0.12f * Mathf.Max(0, level - 1)));
+        /// <summary>木頭人逃跑速度（m/s）：平常閒晃，你靠近（2.5m 內）就加速跑開</summary>
+        public const float TargetWalk = 0.5f, TargetFlee = 0.9f, TargetFleeRange = 2.5f;
 
         /// <summary>今天的日期（yyyyMMdd，手機本地時間）</summary>
         public static string Today => DateTime.Now.ToString("yyyyMMdd");
@@ -42,6 +57,7 @@ namespace SpellDuel
             {
                 case Kind.Dodge: return new[] { 25, 45, 60 };   // 一場約 70 發（火球約 58＋橫掃／震地環約 11）
                 case Kind.Run: return new[] { 5, 8, 12 };   // 金幣會到處亂跑（0.5→1.1 m/s），比以前難追一點
+                case Kind.Combo: return new[] { 40, 70, 100 };   // 90 秒約 70 發攻擊＋最多 3 隻木頭人（每隻 20 分）：只閃不打最多銅牌，金牌要打倒木頭人
                 default:
                     float m = 1f + 0.12f * Mathf.Max(0, level - 1);
                     return new[] { Mathf.RoundToInt(200 * m), Mathf.RoundToInt(400 * m), Mathf.RoundToInt(650 * m) };
@@ -109,11 +125,16 @@ namespace SpellDuel
         public class DodgeDirector
         {
             readonly System.Random rnd;
-            float nextBolt = 1.5f, nextArea = AreaFrom;
+            readonly bool combo;   // 綜合挑戰：一邊追木頭人，攻擊鬆一點
+            float nextBolt = 1.5f, nextArea;
             public const float AreaFrom = 6f, QuakeFrom = 6f;   // 橫掃和震地環一起從第 6 秒開始
             /// <summary>範圍招開關；落石先不出（只有橫掃＋震地環）</summary>
             public const bool AreaAttacks = true, RainAttacks = false;
-            public DodgeDirector(int seed) { rnd = new System.Random(seed); }
+            public DodgeDirector(int seed, bool combo = false) { rnd = new System.Random(seed); this.combo = combo; nextArea = combo ? ComboAreaFrom : AreaFrom; }
+            /// <summary>綜合挑戰：每 3 秒一輪火球、每 30 秒多一發（最多 3 發）；橫掃／震地環第 10 秒起、每 8→6 秒</summary>
+            public const float ComboBoltEvery = 3f, ComboAreaFrom = 10f;
+            public static int ComboVolleyOf(float t) => 1 + Mathf.Clamp(Mathf.FloorToInt(t / 30f), 0, 2);
+            public static float ComboAreaInterval(float t) => Mathf.Lerp(8f, 6f, Mathf.Clamp01(t / 90f));
             /// <summary>預備時間（光門出現到攻擊放出）：越後面越短</summary>
             public static float Windup(float t) => Mathf.Lerp(1.2f, 0.85f, Mathf.Clamp01(t / Duration));
             /// <summary>火球每一輪的間隔（固定）</summary>
@@ -130,15 +151,15 @@ namespace SpellDuel
                 var list = new List<Shot>();
                 if (t >= nextBolt)
                 {
-                    nextBolt = t + BoltInterval(t);
+                    nextBolt = t + (combo ? ComboBoltEvery : BoltInterval(t));
                     float a = R(-180f, 180f);
-                    int n = VolleyOf(t, rnd.NextDouble());
+                    int n = combo ? ComboVolleyOf(t) : VolleyOf(t, rnd.NextDouble());
                     for (int i = 0; i < n; i++)   // 齊射：每一發從不同方向（平均分開再加一點隨機）
                         list.Add(new Shot { kind = Attack.Bolt, angle = a + i * 360f / n + R(-25f, 25f), dist = R(4.5f, 6.5f), speed = 1f });
                 }
                 if (AreaAttacks && t >= nextArea)
                 {
-                    nextArea = t + AreaInterval(t) * R(0.8f, 1.2f);
+                    nextArea = t + (combo ? ComboAreaInterval(t) : AreaInterval(t)) * R(0.8f, 1.2f);
                     var pool = new List<Attack> { Attack.Sweep };
                     if (RainAttacks) pool.Add(Attack.Rain);
                     if (t >= QuakeFrom) pool.Add(Attack.Quake);

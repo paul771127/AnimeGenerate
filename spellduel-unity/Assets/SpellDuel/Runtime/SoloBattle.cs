@@ -668,7 +668,7 @@ namespace SpellDuel
             if (!Skills.Classes.ContainsKey(myClass)) myClass = "mage";
             enemyClass = PlayerPrefs.GetString("sd_enemy_class", TutorialDone ? "random" : "tutorial");
             if (!TutorialDone) enemyClass = "tutorial";   // 第一次玩：預設選教學
-            dailyPick = Mathf.Clamp(PlayerPrefs.GetInt("sd_daily_pick", 0), 0, 2);
+            dailyPick = Mathf.Clamp(PlayerPrefs.GetInt("sd_daily_pick", 0), 0, DailyChallenge.KindCount - 1);
             difficulty = Mathf.Clamp(PlayerPrefs.GetInt("sd_difficulty", 1), 0, 2);
             voiceOn = true;   // 一定要唸技能名稱才能詠唱，語音固定開啟
             voice = VoiceTemplates.Load();
@@ -1578,7 +1578,7 @@ namespace SpellDuel
             }
             storyStage = null;
             if (enemyClass == "boss" || enemyClass == "endless") { StartBossBattle(false, enemyClass == "endless"); return; }
-            if (enemyClass == "daily") { StartDaily((DailyChallenge.Kind)Mathf.Clamp(dailyPick, 0, 2)); return; }
+            if (enemyClass == "daily") { StartDaily((DailyChallenge.Kind)Mathf.Clamp(dailyPick, 0, DailyChallenge.KindCount - 1)); return; }
             if (enemyClass == "tutorial") { StartTutorial(); return; }
             if (enemyClass == "dungeon") { SaveChoices(); storyMapOpen = true; world.OpenTown(world.town); world.screen = WorldUI.Screen.Dungeon; return; }   // 打開副本清單
             SaveChoices();
@@ -1740,6 +1740,7 @@ namespace SpellDuel
         // 木頭人永遠面向玩家
         void en_FaceMe()
         {
+            if (Combo) return;   // 綜合挑戰的木頭人：自己跑（UpdateCombo），也打得死
             var d = Fighter.Flat(Me.head - En.head);
             if (d.sqrMagnitude > 1e-4f) En.forward = d.normalized;
             if (En.hp < En.maxHp * 0.5f) En.hp = En.maxHp;   // 打不死：血量過半就補滿
@@ -3031,7 +3032,7 @@ namespace SpellDuel
             { if (NetMode) Hide(); else RequestChangeMode?.Invoke(); }
             by -= u * 1.6f + gap;
             bool voiceOk = UseSpeech || VoiceReady;   // 沒有語音辨識時，要先把 3 個技能的咒語錄好
-            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? "📖 打開故事地圖" : enemyClass == "daily" ? $"📅 開始{DailyChallenge.Names[Mathf.Clamp(dailyPick, 0, 2)]}" : enemyClass == "tutorial" ? "🎓 開始教學" : enemyClass == "dungeon" ? "🏰 打開副本清單" : "⚔ 開始戰鬥");
+            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? "📖 打開故事地圖" : enemyClass == "daily" ? $"📅 開始{DailyChallenge.Names[Mathf.Clamp(dailyPick, 0, DailyChallenge.KindCount - 1)]}" : enemyClass == "tutorial" ? "🎓 開始教學" : enemyClass == "dungeon" ? "🏰 打開副本清單" : "⚔ 開始戰鬥");
             bool dungeonParty = NetMode && coop && netDungeon;
             if (dungeonParty)
             {
