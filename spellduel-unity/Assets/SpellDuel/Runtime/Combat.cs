@@ -532,6 +532,10 @@ namespace SpellDuel
         public bool stageCleared;
         /// <summary>故事關卡的敵人數量倍率（初級地區＝熔岩地帶 0.5；其他 1）</summary>
         public float stageEnemyMul = 1f;
+        /// <summary>遠程／近戰小怪的數量倍率（故事第三章：遠程減半、近戰與飛鳥加倍）：總數跟著變，遠程的比例也跟著變</summary>
+        public float rangedCountMul = 1f, meleeCountMul = 1f;
+        float CountMixMul => RangedShare * rangedCountMul + (1f - RangedShare) * meleeCountMul;
+        float EffectiveRangedShare => RangedShare * rangedCountMul / Mathf.Max(0.01f, CountMixMul);
 
         public void StartStage(int firstWave, int lastWave)
         {
@@ -587,7 +591,7 @@ namespace SpellDuel
                 // 每波的小怪數：6＋波次（最多 28），合作 ×1.5
                 waveTotal = Mathf.Min(28, 6 + wave);
                 if (ScaleAllies > 0) waveTotal = Mathf.CeilToInt(waveTotal * (1f + 0.5f * ScaleAllies));
-                waveTotal = Mathf.Max(1, Mathf.CeilToInt(waveTotal * stageEnemyMul));
+                waveTotal = Mathf.Max(1, Mathf.CeilToInt(waveTotal * stageEnemyMul * CountMixMul));
                 waveToSpawn = waveTotal;
             }
             nextMinionAt = waveStartAt;
@@ -637,7 +641,7 @@ namespace SpellDuel
                 return;
             }
             // 小怪波：照間隔陸續出現（每次兩隻）；場上同時最多 6＋波次/3×2 隻（合作 +4）
-            int maxAlive = Mathf.Max(2, Mathf.CeilToInt((Mathf.Min(12, 5 + wave / 4) + 4 * ScaleAllies) * stageEnemyMul));   // 同時在場的上限（第 1 波 5 隻、每 4 波 +1，最多 12）
+            int maxAlive = Mathf.Max(2, Mathf.CeilToInt((Mathf.Min(12, 5 + wave / 4) + 4 * ScaleAllies) * stageEnemyMul * CountMixMul));   // 同時在場的上限（第 1 波 5 隻、每 4 波 +1，最多 12）
             if (waveToSpawn > 0 && now >= nextMinionAt && minions.Count < maxAlive)
             {
                 for (int k = 0; k < 2 && waveToSpawn > 0 && minions.Count < maxAlive; k++)
@@ -686,7 +690,7 @@ namespace SpellDuel
         int PickMinionKind()
         {
             // 先決定近戰或遠程（遠程約兩成），再在這個主題已解鎖的種類裡依權重挑
-            bool ranged = rng.NextDouble() < RangedShare;
+            bool ranged = rng.NextDouble() < EffectiveRangedShare;
             int theme = Theme;
             int local = wave - (wave - 1) / 10 * 10;       // 這個主題的第幾波（1～10）
             bool firstCycle = wave <= 10 * ThemeCount;
