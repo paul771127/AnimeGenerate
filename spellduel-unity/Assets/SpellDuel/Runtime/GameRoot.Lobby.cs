@@ -31,19 +31,20 @@ namespace SpellDuel
             LobbyLogo(new Rect(pad,top+h*.015f,W-pad*2,h*.235f),fs);
             UiKit.Text(new Rect(pad,top+h*.25f,W-pad*2,lineH),LobbyCaption("唸出咒語，在真實世界施法對決"),fsS,UiKit.Paper,TextAnchor.MiddleCenter);
 
-            // 首頁只留：故事模式、附近對戰、遠距對戰、練習模式、設定（其他玩法都在故事模式的村子裡）
+            // 首頁：故事模式、附近對戰、遠距對戰、練習模式、觀戰、設定（其他玩法都在故事模式的村子裡）
             bool newbie = SoloBattle.IntroPending;
-            string[] titles = { "📖 故事模式", "👥 附近對戰", "🌐 遠距對戰", "🎯 練習模式", "⚙ 設定" };
+            string[] titles = { "📖 故事模式", "👥 附近對戰", "🌐 遠距對戰", "🎯 練習模式", "👀 觀戰", "⚙ 設定" };
             string[] descs =
             {
                 newbie ? "新手從這裡開始：序章、教學，然後進入炎之里" : "大地圖、村子、關卡；副本、每日挑戰、討伐、觀戰、無盡塔都在這裡",
                 "和身邊的朋友：建立房間、輸入代碼，對戰或合作",
                 "和遠方的朋友：把代碼傳給朋友，對方以虛擬角色出現",
                 "對電腦對手練習，也可以打木頭人",
+                "輸入朋友的房間代碼，從斜上方看比賽（中途也能進）",
                 "音效、音樂、震動、環境光",
             };
-            Color[] acc = { new Color(1f, 0.8f, 0.4f), new Color(1f, 0.55f, 0.35f), new Color(0.75f, 0.55f, 1f), new Color(0.4f, 0.85f, 1f), new Color(0.7f, 0.75f, 0.85f) };
-            int[] art = { 0, 1, 2, 4, 5 };
+            Color[] acc = { new Color(1f, 0.8f, 0.4f), new Color(1f, 0.55f, 0.35f), new Color(0.75f, 0.55f, 1f), new Color(0.4f, 0.85f, 1f), new Color(0.55f, 0.9f, 1f), new Color(0.7f, 0.75f, 0.85f) };
+            int[] art = { 0, 1, 2, 4, 6, 5 };
             int n = titles.Length;
             float cw=W-pad*3,cx=pad*1.5f,cy=top+h*.29f;
             float ch=Mathf.Min(h*.125f,(bottom-lineH*1.4f-cy)/n-pad*.7f);
@@ -66,6 +67,7 @@ namespace SpellDuel
                     else if (i == 1) ChooseMode(Mode.Duo);
                     else if (i == 2) ChooseMode(Mode.Duo, false, true);
                     else if (i == 3) { solo.SetEntry(SoloBattle.Entry.Practice); ChooseMode(Mode.Solo); }
+                    else if (i == 4) EnterWatch();
                     else SettingsMenu.Show();
                 }
             }
@@ -423,6 +425,14 @@ namespace SpellDuel
             else if(kind==5)
             {
                 UiKit.SettingsArt(r,c);
+            }
+            else if(kind==6)
+            {
+                // 觀戰：眼睛（外框、虹膜、亮點）＋下方的看台
+                LobbyRing(center+new Vector2(0,-u*.05f),u*.26f,c,Mathf.Max(1,u*.035f),28);
+                UiKit.Gem(new Rect(center.x-u*.12f,center.y-u*.17f,u*.24f,u*.24f),c);
+                UiKit.Gem(new Rect(center.x-u*.05f,center.y-u*.10f,u*.08f,u*.08f),UiKit.Paper);
+                for(int t=0;t<3;t++)LobbyStroke(new Vector2(r.x+u*(.22f+t*.04f),r.y+u*(.70f+t*.07f)),new Vector2(r.x+u*(.78f-t*.04f),r.y+u*(.70f+t*.07f)),u*.03f,t==0?UiKit.Gold:UiKit.Paper);
             }
             else if(kind==3)
             {
