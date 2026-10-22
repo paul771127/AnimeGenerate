@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SpellDuel
 {
     /// <summary>
-    /// 互動教學關（敵人選「🎓 教學」；第一次玩預設選這個）：一步一步教，做對了才進下一步。
+    /// 互動教學關（第一次玩：序章對話之後自動開始；之後在村子的訓練場可以再上一次）：一步一步教，做對了才進下一步。
     ///   0 站好校正 → 1 走到地上的光圈（兩個）→ 2 橫掃來時蹲下 → 3 火球飛來時側跨 → 4 震地環到腳邊時跳起來
     ///   → 5 唸技能名稱詠唱 → 6 做放招動作把技能放出去 → 7 打中木頭人 3 次 → 完成（第一次完成送金幣與經驗）。
     /// 攻擊由「教官木頭人」放出（不會真的扣血；被打到就重來這一步）。每一步都可以「略過」。
@@ -242,9 +242,9 @@ namespace SpellDuel
             UiKit.Result(orr, true);
             UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, lh * 1.6f), "🎓 教學完成！準備好冒險了", Mathf.RoundToInt(fs * 1.3f), Color.white, TextAnchor.MiddleCenter, true);
             float bw = (orr.width - gap * 4) / 3f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
-            if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "📖 故事模式", fs, true, new Color(1f, 0.8f, 0.4f))) { enemyClass = "story"; ShowSetup(); StartBattle(); }
+            if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "🏘 進入村子", fs, true, new Color(1f, 0.8f, 0.4f))) AfterTutorial();
             if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "再練一次", fs, false, new Color(0.35f, 0.95f, 1f))) StartTutorial();
-            if (UiKit.Button(new Rect(orr.x + gap * 3 + bw * 2, oby, bw, bh), "回選單", fs)) { enemyClass = "story"; ShowSetup(); }
+            if (UiKit.Button(new Rect(orr.x + gap * 3 + bw * 2, oby, bw, bh), villageReturn.HasValue ? "🏘 回訓練場" : "回選單", fs)) { if (villageReturn.HasValue) GoVillage(); else { prologueRun = false; enemyClass = "story"; ShowSetup(); } }
         }
     }
 }

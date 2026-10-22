@@ -357,12 +357,12 @@ namespace SpellDuel
             if (!boss && dropRng.NextDouble() > 0.06 + 0.002 * luk) return;
             int rar = ItemGen.RollRarity(dropRng, luk * 0.3f, boss ? 2 : 0);
             int ilvl = Mathf.Max(1, prof.level + dropRng.Next(-1, 3) + battle.wave / 10);   // 無盡：物品等級跟著角色等級（越後面的波次略高）
-            if (dungeon != null) ilvl = dungeon.level + dropRng.Next(-1, 2);   // 副本：物品等級＝副本等級
+            if (dungeon != null) ilvl = dungeon.level + battle.levelBoost + dropRng.Next(-1, 2);   // 副本：物品等級＝副本等級（普通＋20、困難＋40）
             else if (storyStage != null)
             {
                 // 故事：照地區的等級帶掉（熔岩 1～10、森林 11～20、海上 21～30），越後面的關卡越高
                 var (lo, hi) = Story.LevelBand(storyStage.theme);
-                ilvl = Mathf.Clamp(battle.wave + dropRng.Next(-2, 2), lo, hi);
+                ilvl = Mathf.Clamp(battle.wave + dropRng.Next(-2, 2), lo, hi) + battle.levelBoost;   // 普通＋20、困難＋40
             }
             ItemGen.SetTheme = battle.Theme;   // 主題地圖掉對應的套裝
             var it = ItemGen.Make(dropRng, ilvl, rar, myClass);
@@ -487,6 +487,7 @@ namespace SpellDuel
                 world.OnBack = () => storyMapOpen = false;
                 world.OnCharacter = () => charOpen = true;
                 world.OnStartTrial = () => OpenPrep("⚔ 轉職試煉", true, "轉職試煉不能使用道具", StartTrial);
+                WireVillage();
             }
             world.Draw(Progress.Char(myClass));
         }
@@ -602,6 +603,13 @@ namespace SpellDuel
         // 電腦難度：0 簡單、1 普通、2 困難（電腦出招慢／瞄得不準／少防禦，玩家受到的傷害也打折）
         int difficulty = 1;
         static readonly string[] DifficultyNames = { "簡單", "普通", "困難" };
+        /// <summary>故事關卡、副本的難度＝等級：普通＝簡單再加 20 級、困難＝再加 40 級（敵人照加的等級變強；其他設定和簡單一樣）</summary>
+        public const int LevelPerDifficulty = 20;
+        public static int LevelBoostFor(int d) => Mathf.Clamp(d, 0, 2) * LevelPerDifficulty;
+        /// <summary>難度的獎勵倍率（經驗、金幣）：普通 ×1.5、困難 ×2</summary>
+        public static float RewardMulFor(int d) => 1f + 0.5f * Mathf.Clamp(d, 0, 2);
+        /// <summary>這一場是「難度＝等級」的模式（故事關卡、副本；轉職試煉除外）</summary>
+        bool LevelDifficulty => (pendingStage != null && pendingStage.id != "trial") || dungeon != null;
         static float DamageTakenFor(int d) => d == 0 ? 0.5f : d == 1 ? 0.75f : 1f;
         static float BossHpFor(int d) => d == 0 ? 0.7f : d == 1 ? 0.85f : 1f;
 
@@ -666,8 +674,7 @@ namespace SpellDuel
             cam = camera; area = playArea; mat = baseMat;
             myClass = PlayerPrefs.GetString("sd_my_class", "mage");
             if (!Skills.Classes.ContainsKey(myClass)) myClass = "mage";
-            enemyClass = PlayerPrefs.GetString("sd_enemy_class", TutorialDone ? "random" : "tutorial");
-            if (!TutorialDone) enemyClass = "tutorial";   // 第一次玩：預設選教學
+            enemyClass = PlayerPrefs.GetString("sd_enemy_class", "story");
             dailyPick = Mathf.Clamp(PlayerPrefs.GetInt("sd_daily_pick", 0), 0, DailyChallenge.KindCount - 1);
             difficulty = Mathf.Clamp(PlayerPrefs.GetInt("sd_difficulty", 1), 0, 2);
             voiceOn = true;   // 一定要唸技能名稱才能詠唱，語音固定開啟
@@ -814,8 +821,10 @@ namespace SpellDuel
             var boss = new Fighter(bc.name, bc, bossSkills, false) { bodyRadius = 0.75f };
             int partyN = coopMode ? 1 + PeerIds.Count : 1;
             float party = 1f + 0.5f * (partyN - 1);   // 參與人數倍率：每多一人，Boss 血量 +50%（攻擊力 +20%、施法頻率 +25% 在 BossAI）
-            boss.maxHp = Mathf.RoundToInt(BossHpSolo * party * BossHpFor(difficulty)); boss.hp = boss.maxHp;
-            me.damageTakenMul = DamageTakenFor(difficulty);
+            // 故事／副本：其他設定都照簡單，難度只加等級（下面的 battle.levelBoost）；無盡塔（單人無盡）固定普通；討伐 Boss、合作照選的難度
+            int diff = LevelDifficulty ? 0 : endlessMode && !coopMode ? 1 : difficulty;
+            boss.maxHp = Mathf.RoundToInt(BossHpSolo * party * BossHpFor(diff)); boss.hp = boss.maxHp;
+            me.damageTakenMul = DamageTakenFor(diff);
             float dungeonRelief = 1f;
             if (dungeon != null)
             {
@@ -825,6 +834,7 @@ namespace SpellDuel
             }
             SyncPlayer(me);
             battle = new Battle(me, boss);
+            if (LevelDifficulty) battle.levelBoost = LevelBoostFor(difficulty);   // 普通＋20 級、困難＋40 級
             battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine; battle.OnShotWarn += ShowShotLine;
             bool host = !coopMode || NetIsHost;
             if (coopMode)
@@ -875,11 +885,11 @@ namespace SpellDuel
                 bossAi.OnEnrage += OnBossEnrage;
                 bossAi.OnPhase += p => { if (p == 2) OnBossPhase2(); };
                 bossAi.OnShellBroken += OnBossShellBroken;
-                bossAi.SetDifficulty(difficulty);
+                bossAi.SetDifficulty(diff);
                 bossAi.storyIntense = endlessMode && (pendingStage != null || dungeon != null);   // 故事／副本 Boss：出招更頻繁、更多大範圍招式
                 if (endlessMode)
                 {
-                    battle.bossBaseHp = 150f * BossHpFor(difficulty);
+                    battle.bossBaseHp = 150f * BossHpFor(diff);
                     battle.edgePoint = () => OutsideEdgePoint();          // 小怪：場地邊緣外 1～2m 出現（淡入），再走進來
                     battle.bossPoint = () => OutsideEdgePoint(true);      // Boss 也一樣（優先在我面前）
                     battle.OnBossSpawn += w => bossAi.Respawn(Mathf.Max(0.7f, 1f - 0.06f * w));
@@ -898,7 +908,7 @@ namespace SpellDuel
                     else battle.StartEndless();
                 }
                 battle.minionInside = p => area.Inside(WorldFrame.FromWorld(p)) && area.DistanceToEdge(WorldFrame.FromWorld(p)) >= 0.3f;
-                battle.minionSpeed = difficulty == 0 ? 0.75f : difficulty == 1 ? 0.95f : 1.15f;
+                battle.minionSpeed = diff == 0 ? 0.75f : diff == 1 ? 0.95f : 1.15f;
             }
             ai = null;
             bossRig = BossRig.Create();
@@ -1342,11 +1352,12 @@ namespace SpellDuel
                     {
                         bool last = i == d.rooms.Count - 1;
                         ItemGen.SetTheme = d.ThemeOfRoom(i);
-                        pendingItems.Add(ItemGen.Make(dropRng, d.level, last ? 3 : Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
+                        pendingItems.Add(ItemGen.Make(dropRng, d.level + battle.levelBoost, last ? 3 : Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
                     }
-                    pendingGold += 60 * d.level;
+                    float drmul = 1f + battle.levelBoost / (2f * LevelPerDifficulty);   // 普通 ×1.5、困難 ×2
+                    pendingGold += Mathf.RoundToInt(60 * d.level * drmul);
                     string loot = GrantLoot($"{d.name} 通關", false);
-                    int xp = 40 * d.level;
+                    int xp = Mathf.RoundToInt(40 * d.level * drmul);
                     int ups = prof != null ? prof.AddXp(xp) : 0;
                     if (prof != null) Progress.SaveChar(prof);
                     int over = (prof != null ? prof.level : 1) - d.level;
@@ -1367,15 +1378,17 @@ namespace SpellDuel
                 {
                     bool first = !Story.IsCleared(st.id);
                     Story.MarkCleared(st.id);
-                    pendingGold += Economy.StageGold(st);
+                    float rmul = 1f + battle.levelBoost / (2f * LevelPerDifficulty);   // 普通 ×1.5、困難 ×2
+                    int stXp = Mathf.RoundToInt(st.xp * rmul);
+                    pendingGold += Mathf.RoundToInt(Economy.StageGold(st) * rmul);
                     string loot = GrantLoot($"{st.title} 通關", false);
                     if (prof != null)
                     {
-                        int ups = prof.AddXp(st.xp);
+                        int ups = prof.AddXp(stXp);
                         Progress.SaveChar(prof);
                         int nWaves = Mathf.Max(1, st.toWave - st.fromWave + 1);
-                        BuildVictory($"{st.title} 完成", "st_" + st.id, st.toWave % 10 == 0 && nWaves == 1 ? 120f : 45f * nWaves, st.xp, ups, first ? null : "再次通關");
-                        Say($"🏆 {st.title} 完成！獲得經驗 {st.xp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "" : "（再次通關）") + (loot.Length > 0 ? "\n" + loot : ""), 99f);
+                        BuildVictory($"{st.title} 完成", "st_" + st.id, st.toWave % 10 == 0 && nWaves == 1 ? 120f : 45f * nWaves, stXp, ups, first ? null : "再次通關");
+                        Say($"🏆 {st.title} 完成！獲得經驗 {stXp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "" : "（再次通關）") + (loot.Length > 0 ? "\n" + loot : ""), 99f);
                     }
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
                     if (!Story.IsSeen(st.id + "!")) { Story.MarkSeen(st.id + "!"); StoryVideo.Play(StoryVideo.For(st.id, false), () => ShowDialogue(st.after, null)); }   // 結尾（影片＋對話）也只自動播一次
@@ -1573,7 +1586,7 @@ namespace SpellDuel
             {
                 // 故事模式：在結算畫面按「再挑戰」＝重打這一關；否則打開故事地圖
                 if (phase == Phase.Over && storyStage != null) StartStageBattle();
-                else { SaveChoices(); storyMapOpen = true; world.screen = WorldUI.Screen.Map; }
+                else EnterStory();   // 進村子（第一次玩：先序章＋教學）
                 return;
             }
             storyStage = null;
@@ -1581,6 +1594,7 @@ namespace SpellDuel
             if (enemyClass == "daily") { StartDaily((DailyChallenge.Kind)Mathf.Clamp(dailyPick, 0, DailyChallenge.KindCount - 1)); return; }
             if (enemyClass == "tutorial") { StartTutorial(); return; }
             if (enemyClass == "dungeon") { SaveChoices(); storyMapOpen = true; world.OpenTown(world.town); world.screen = WorldUI.Screen.Dungeon; return; }   // 打開副本清單
+            if (!NetMode && entry == Entry.Practice && !PracticeEnemy(enemyClass)) enemyClass = "random";
             SaveChoices();
             EndBattle();
             enemyClassUsed = enemyClass == "random" ? Skills.ClassOrder[UnityEngine.Random.Range(0, Skills.ClassOrder.Length)] : enemyClass;
@@ -2922,25 +2936,32 @@ namespace SpellDuel
             }
             y += ((setupSkills.Length + 1) / 2) * (sh + gap);
 
-            // 敵人（單人：4×2＝隨機、5 職業、木頭人、Boss；雙人：顯示對手狀態）
-            if (!NetMode)
+            // 敵人（練習模式：隨機、5 職業、木頭人；故事模式：說明＋進村子；雙人：顯示對手狀態）
+            if (!NetMode && entry == Entry.Story)
             {
-                UiKit.Text(new Rect(pad, y, W - pad * 2, u), "敵人", fsS, new Color(1f, 0.9f, 0.6f));
+                string info = TutorialDone
+                    ? "📖 故事模式：選好職業和技能，進入村子。\n副本、每日挑戰、討伐 Boss、觀戰都在村子裡；無盡塔在大地圖上。關卡難度在出發前選。"
+                    : "📖 第一次冒險：選好職業和技能後開始序章，接著由村口的教官木頭人帶你上一次教學，完成後正式進入炎之里。";
+                float ih = UiKit.TextHeight(info, W - pad * 2 - gap * 2, fsS) + gap;
+                UiKit.Card(new Rect(pad, y, W - pad * 2, ih + gap), 0.55f, new Color(1f, 0.8f, 0.4f), 0.5f);
+                UiKit.Text(new Rect(pad + gap, y + gap * 0.5f, W - pad * 2 - gap * 2, ih), info, fsS, new Color(1f, 0.95f, 0.85f), TextAnchor.UpperLeft);
+                y += ih + gap * 2;
+            }
+            else if (!NetMode)
+            {
+                UiKit.Text(new Rect(pad, y, W - pad * 2, u), "對手（電腦）", fsS, new Color(1f, 0.9f, 0.6f));
                 y += u;
                 float ew = (W - pad * 2 - gap * 3) / 4f;
-                int nOpt = nc + 8;
+                int nOpt = nc + 2;
                 for (int i = 0; i < nOpt; i++)
                 {
-                    string id = i == 0 ? "random" : i == nc + 1 ? "dummy" : i == nc + 2 ? "boss" : i == nc + 3 ? "endless" : i == nc + 4 ? "story" : i == nc + 5 ? "daily" : i == nc + 6 ? "tutorial" : i == nc + 7 ? "dungeon" : Skills.ClassOrder[i - 1];
-                    string nm = id == "random" ? "隨機" : id == "dummy" ? "🪵 木頭人" : id == "boss" ? "🔥 Boss" : id == "endless" ? "♾ 無盡" : id == "story" ? "📖 故事" : id == "daily" ? "📅 每日挑戰" : id == "tutorial" ? (TutorialDone ? "🎓 教學" : "🎓 教學（新手）") : id == "dungeon" ? "🏰 副本" : Skills.Classes[id].name;
-                    var c = id == "random" ? new Color(1f, 0.85f, 0.3f) : id == "dummy" ? new Color(0.75f, 0.55f, 0.3f) : id == "boss" ? new Color(1f, 0.35f, 0.1f) : id == "endless" ? new Color(0.75f, 0.45f, 1f) : id == "story" ? new Color(1f, 0.8f, 0.4f) : id == "daily" ? new Color(0.45f, 0.9f, 0.7f) : id == "tutorial" ? new Color(0.35f, 0.95f, 1f) : id == "dungeon" ? new Color(0.4f, 0.85f, 0.75f) : Skills.Classes[id].color;
+                    string id = i == 0 ? "random" : i == nc + 1 ? "dummy" : Skills.ClassOrder[i - 1];
+                    string nm = id == "random" ? "隨機" : id == "dummy" ? "🪵 木頭人" : Skills.Classes[id].name;
+                    var c = id == "random" ? new Color(1f, 0.85f, 0.3f) : id == "dummy" ? new Color(0.75f, 0.55f, 0.3f) : Skills.Classes[id].color;
                     if (UiKit.Button(new Rect(pad + (i % 4) * (ew + gap), y + (i / 4) * (u * 1.15f + gap), ew, u * 1.15f), nm, fsS, id == enemyClass, c)) enemyClass = id;
                 }
                 y += ((nOpt + 3) / 4) * (u * 1.15f + gap);
-                if (enemyClass == "daily") DrawDailyPicker(ref y, pad, gap, u, fs, fsS, W);
-                else DrawDifficultyRow(ref y, pad, gap, u, fsS, W);
-                if (enemyClass == "endless")
-                    UiKit.Text(new Rect(pad, y - gap, W - pad * 2, u * 0.9f), $"♾ 無盡模式最佳分數：{PlayerPrefs.GetInt("sd_endless_best", 0)}", fsS, new Color(0.85f, 0.75f, 1f));
+                if (enemyClass != "dummy") DrawDifficultyRow(ref y, pad, gap, u, fsS, W);
             }
             else
             {
@@ -3027,12 +3048,12 @@ namespace SpellDuel
             // 下方固定：開始／準備、其他按鈕
             float by = botY - pad - u * 1.2f;
             float hw = (W - pad * 2 - gap) / 2f;
-            if (!NetMode && UiKit.Button(new Rect(pad, by, hw, u * 1.2f), "重新放置場地", fsS)) RequestRedraw?.Invoke();
+            if (!NetMode && UiKit.Button(new Rect(pad, by, hw, u * 1.2f), "重新放置場地", fsS)) RequestRedraw?.Invoke();   // （首頁的「換模式」）
             if (UiKit.Button(new Rect(NetMode ? pad : pad + hw + gap, by, NetMode ? W - pad * 2 : hw, u * 1.2f), NetMode ? "返回" : "換模式", fsS))
             { if (NetMode) Hide(); else RequestChangeMode?.Invoke(); }
             by -= u * 1.6f + gap;
             bool voiceOk = UseSpeech || VoiceReady;   // 沒有語音辨識時，要先把 3 個技能的咒語錄好
-            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? "📖 打開故事地圖" : enemyClass == "daily" ? $"📅 開始{DailyChallenge.Names[Mathf.Clamp(dailyPick, 0, DailyChallenge.KindCount - 1)]}" : enemyClass == "tutorial" ? "🎓 開始教學" : enemyClass == "dungeon" ? "🏰 打開副本清單" : "⚔ 開始戰鬥");
+            string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? (TutorialDone ? "🏘 進入村子" : "📖 開始序章") : enemyClass == "daily" ? $"📅 開始{DailyChallenge.Names[Mathf.Clamp(dailyPick, 0, DailyChallenge.KindCount - 1)]}" : enemyClass == "tutorial" ? "🎓 開始教學" : enemyClass == "dungeon" ? "🏰 打開副本清單" : "⚔ 開始戰鬥");
             bool dungeonParty = NetMode && coop && netDungeon;
             if (dungeonParty)
             {
@@ -3489,7 +3510,7 @@ namespace SpellDuel
                 float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
                 if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), NetMode ? (localReady ? "等待對手…" : "再來一局") : "再來一局", fs, true, new Color(0.4f, 0.8f, 1f), !(NetMode && localReady)))
                 { if (NetMode) SendReady(); else StartBattle(); }
-                if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "換職業", fs)) ShowSetup();
+                if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), villageReturn.HasValue ? "🏘 回村子" : "換職業", fs)) { if (villageReturn.HasValue) GoVillage(); else ShowSetup(); }
             }
         }
 

@@ -226,7 +226,8 @@ namespace SpellDuel
             SettingsMenu.Hide = () => areaPreview;   // 場地預覽時不畫 ⚙（畫面要給確定／取消）
             SettingsMenu.GoHome = GoHome;
             SettingsMenu.InBattle = () => solo.phase == SoloBattle.Phase.Fighting;
-            Log("請選擇：單人或雙人");
+            Log("請選擇模式");
+            if (!SoloBattle.TutorialDone) StartStoryEntry();   // 第一次打開遊戲：直接進故事模式（放場地 → 選職業 → 序章 → 教學 → 炎之里）
         }
 
         void OnDestroy() => net?.Dispose();
@@ -266,7 +267,6 @@ namespace SpellDuel
             if (mode == Mode.Watch) SetWatchView(false);
             solo.ResetToHome();
             areaPreview = false; areaPreviewConfirm = null; playArea.HidePreview();
-            homeDungeonPick = false;
             net?.Dispose(); net = new NetLink();
             remoteMode = false; duoUseMarker = false; autoArea = autoSetup = false;
             mode = Mode.Choose; WorldFrame.Reset(); playArea.Clear();
@@ -326,6 +326,9 @@ namespace SpellDuel
             solo.SharedClock = () => SharedTime;
             solo.RequestRedraw = () => { solo.Hide(); BeginAreaPreview(() => { WorldFrame.Reset(); playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); }); };
             solo.RequestChangeMode = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); mode = Mode.Choose; };
+            // 村子的副本嚮導、觀戰席：離開單人（回首頁的流程），改走連線大廳／觀戰
+            solo.RequestNetDungeon = remote => { GoHome(); ChooseMode(Mode.Duo, false, remote); solo.PresetNetMode(3); };
+            solo.RequestWatch = () => { GoHome(); EnterWatch(); };
         }
 
         // 執行期建立「可變參考圖庫」，把內建的標記圖加進去（不需要在編輯器裡建圖庫資產）

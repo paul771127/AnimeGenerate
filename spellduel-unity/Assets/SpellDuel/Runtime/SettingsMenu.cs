@@ -17,6 +17,9 @@ namespace SpellDuel
         public static System.Func<bool> InBattle;
         bool homeConfirm;
 
+        /// <summary>首頁的「⚙ 設定」卡片：直接打開選單</summary>
+        public static void Show() { Ensure(); Open = true; if (I != null) I.homeConfirm = false; }
+
         public static void Ensure()
         {
             if (I != null) return;

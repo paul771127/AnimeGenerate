@@ -56,6 +56,12 @@ namespace SpellDuel
         public const float NpcKeepOff = 1.2f;
         public const float TownRadius = 13f, StepSpeed = 1.4f, StepHold = 0.5f, TalkRange = 2.6f, TalkAngle = 50f;
         static readonly Vector2 PlazaC = new Vector2(0f, 5f);
+        /// <summary>村子設施的位置：副本入口、訓練場在廣場兩側（原本的民房），討伐告示板、觀戰席在入口兩邊</summary>
+        static readonly (string kind, Vector2 at)[] FacilitySpots =
+        {
+            ("dungeon", new Vector2(-9.5f, 1.5f)), ("training", new Vector2(9.5f, 1.5f)),
+            ("bounty", new Vector2(-5.5f, -5f)), ("watch", new Vector2(5.5f, -5f)),
+        };
 
         // ---------------------------------------------------------------- 進城／離開
         public void Enter(int town, Camera cam, float floorY)
@@ -73,8 +79,8 @@ namespace SpellDuel
             Building("smith", new Vector2(-7f, 8f), 2.1f);
             Building("shop", new Vector2(7f, 8f), 2.1f);
             Building("guild", new Vector2(0f, 13.5f), 2.9f);
-            Building("house", new Vector2(-9.5f, 1.5f), 2.1f);
-            Building("house", new Vector2(9.5f, 1.5f), 2.1f);
+            // 村子的其他設施（原本的兩間民房改成副本入口、訓練場；入口附近再加討伐告示板、觀戰席）
+            foreach (var (kind, at) in FacilitySpots) Building(kind, at, kind == "bounty" || kind == "watch" ? 1.5f : 2.1f);
             Building("landmark", town == 2 ? new Vector2(8f, 12f) : new Vector2(-8f, 12f), 1.4f);
             // 柵欄＋出口：東邊往這一章（主題＝城鎮），西邊回上一章
             exits.Clear();
@@ -104,6 +110,9 @@ namespace SpellDuel
             Keeper("鐵匠", "鐵匠鋪老闆", "smith", new Vector2(-7f, 8f), new[] { "要強化裝備嗎？把東西放上鐵砧吧。" });
             Keeper("店員", "道具店店員", "shop", new Vector2(7f, 8f), new[] { "歡迎光臨！藥水、回城捲軸都有，也收裝備喔。" });
             Keeper("公會長", "職業工會", "guild", new Vector2(0f, 13.5f), new[] { "歡迎來到職業工會。轉職試煉與進階職業，都在這裡辦。" });
+            foreach (var (kind, at) in FacilitySpots)
+                foreach (var fa in WorldUI.Facilities)
+                    if (fa.kind == kind) Keeper(fa.npc, fa.role, kind, at, new[] { fa.hello });
             var spots = new[] { new Vector2(-3.2f, 3.6f), new Vector2(3.4f, 4.2f), new Vector2(-1.2f, 8.4f) };
             for (int i = 0; i < t.npcs.Length; i++)
             {

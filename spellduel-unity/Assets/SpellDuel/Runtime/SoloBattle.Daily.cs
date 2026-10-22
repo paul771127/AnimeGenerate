@@ -490,7 +490,7 @@ namespace SpellDuel
             UiKit.Text(new Rect(orr.x, y, orr.width, lh * 0.9f), reward, fsS, new Color(0.8f, 1f, 0.85f), TextAnchor.MiddleCenter);
             float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
             if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "再挑戰", fs, true, col)) StartDaily(k);
-            if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "回選單", fs)) ShowSetup();
+            if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), villageReturn.HasValue ? "🏘 回訓練場" : "回選單", fs)) { if (villageReturn.HasValue) GoVillage(); else ShowSetup(); }
         }
 
         /// <summary>選單：三個挑戰的按鈕＋說明＋今天的紀錄</summary>

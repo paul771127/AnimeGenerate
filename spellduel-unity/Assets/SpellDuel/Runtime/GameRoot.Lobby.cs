@@ -19,26 +19,8 @@ namespace SpellDuel
         enum StepState { Todo, Now, Done }
 
         // ================================================================ 首頁
-        bool homeDungeonPick;   // 首頁按了「副本」：選連線方式
-
-        /// <summary>副本的連線方式（和對決一樣）：身邊的朋友（同一個地方，畫同一個場地）／遠方的朋友（各自在家，對方以虛擬角色出現）</summary>
-        void DrawDungeonPick(float W, float H, float pad, float lineH, int fs, int fsS)
-        {
-            GUI.color = new Color(0f, 0f, 0f, 0.6f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
-            var col = new Color(0.4f, 0.85f, 0.75f);
-            float pw = W - pad * 2, ph = lineH * 9.5f;
-            var r = new Rect(pad, (H - ph) / 2f, pw, ph);
-            UiKit.Card(r, 0.96f, col, 0.9f);
-            UiKit.Text(new Rect(r.x, r.y + pad * 0.4f, r.width, lineH * 1.4f), "🏰 副本：和誰一起？", Mathf.RoundToInt(fs * 1.2f), Color.white, TextAnchor.MiddleCenter, true);
-            float bx = r.x + pad * 0.6f, bw = r.width - pad * 1.2f, bh = lineH * 2.6f, y = r.y + lineH * 2f;
-            if (UiKit.Button(new Rect(bx, y, bw, bh), "👥 和身邊的朋友\n同一個地方，一起畫場地、一起打", fs, false, new Color(1f, 0.55f, 0.35f)))
-            { homeDungeonPick = false; ChooseMode(Mode.Duo); solo.PresetNetMode(3); }
-            y += bh + pad * 0.4f;
-            if (UiKit.Button(new Rect(bx, y, bw, bh), "🌐 和遠方的朋友連線\n把代碼傳給朋友；隊友以虛擬角色出現", fs, false, new Color(0.75f, 0.55f, 1f)))
-            { homeDungeonPick = false; ChooseMode(Mode.Duo, false, true); solo.PresetNetMode(3); }
-            y += bh + pad * 0.4f;
-            if (UiKit.Button(new Rect(r.x + r.width * 0.3f, y, r.width * 0.4f, lineH * 1.4f), "取消", fsS)) homeDungeonPick = false;
-        }
+        /// <summary>首頁「故事模式」（第一次打開遊戲也自動走這裡）：放好場地 → 選職業 → 序章／村子</summary>
+        void StartStoryEntry() { solo.SetEntry(SoloBattle.Entry.Story); ChooseMode(Mode.Solo); }
 
         void DrawHome(float W, float H, float pad, float top, float lineH, int fs, int fsS)
         {
@@ -49,24 +31,30 @@ namespace SpellDuel
             LobbyLogo(new Rect(pad,top+h*.015f,W-pad*2,h*.235f),fs);
             UiKit.Text(new Rect(pad,top+h*.25f,W-pad*2,lineH),LobbyCaption("唸出咒語，在真實世界施法對決"),fsS,UiKit.Paper,TextAnchor.MiddleCenter);
 
-            string[] titles = { "🧍 單人冒險", "👥 和身邊的朋友對戰", "🌐 和遠方的朋友連線", "🏰 副本（多人合作）" };
+            // 首頁只留：故事模式、附近對戰、遠距對戰、練習模式、設定（其他玩法都在故事模式的村子裡）
+            bool newbie = !SoloBattle.TutorialDone;
+            string[] titles = { "📖 故事模式", "👥 附近對戰", "🌐 遠距對戰", "🎯 練習模式", "⚙ 設定" };
             string[] descs =
             {
-                "故事模式、無盡模式、Boss、每日挑戰與教學",
-                "建立房間、輸入代碼、手機並排一按就開打",
-                "把代碼傳給朋友；對方以虛擬角色出現在你的房間",
-                "和朋友連線組隊打副本（2～4 人）；一個人也能從村莊進入",
+                newbie ? "新手從這裡開始：序章、教學，然後進入炎之里" : "大地圖、村子、關卡；副本、每日挑戰、討伐、觀戰、無盡塔都在這裡",
+                "和身邊的朋友：建立房間、輸入代碼，對戰或合作",
+                "和遠方的朋友：把代碼傳給朋友，對方以虛擬角色出現",
+                "對電腦對手練習，也可以打木頭人",
+                "音效、音樂、震動、環境光",
             };
-            Color[] acc = { new Color(0.4f, 0.85f, 1f), new Color(1f, 0.55f, 0.35f), new Color(0.75f, 0.55f, 1f), new Color(0.4f, 0.85f, 0.75f) };
-            float cw=W-pad*3,ch=h*.125f,cx=pad*1.5f,cy=top+h*.3f;
-            for (int i = 0; i < 4; i++)
+            Color[] acc = { new Color(1f, 0.8f, 0.4f), new Color(1f, 0.55f, 0.35f), new Color(0.75f, 0.55f, 1f), new Color(0.4f, 0.85f, 1f), new Color(0.7f, 0.75f, 0.85f) };
+            int[] art = { 0, 1, 2, 4, 5 };
+            int n = titles.Length;
+            float cw=W-pad*3,cx=pad*1.5f,cy=top+h*.29f;
+            float ch=Mathf.Min(h*.125f,(bottom-lineH*1.4f-cy)/n-pad*.7f);
+            for (int i = 0; i < n; i++)
             {
-                var r = new Rect(cx, cy + i * (ch + pad), cw, ch);
-                bool hit = UiKit.Button(r, LobbyCaption(""), fs, false, acc[i]);
-                float art=ch*.63f;
+                var r = new Rect(cx, cy + i * (ch + pad * 0.7f), cw, ch);
+                bool hit = UiKit.Button(r, LobbyCaption(""), fs, newbie && i == 0, acc[i]);
+                float artS=ch*.63f;
                 float press=r.Contains(Event.current.mousePosition)&&Input.GetMouseButton(0)?2f:0f;
-                if(press>0)UiKit.Halo(r,acc[i],1);
-                LobbyModeArt(new Rect(r.x+pad*.45f,r.y+ch*.18f+press,art,art),i,acc[i]);
+                if(press>0||(newbie&&i==0))UiKit.Halo(r,acc[i],1);
+                LobbyModeArt(new Rect(r.x+pad*.45f,r.y+ch*.18f+press,artS,artS),art[i],acc[i]);
                 UiKit.Divider(new Rect(r.x+pad*.3f,r.y+ch*.18f,2,ch*.64f),acc[i]);
                 UiKit.Gem(new Rect(r.xMax-pad*.8f,r.center.y-4,8,8),acc[i]);
                 float tx=r.x+ch*.63f+pad*.8f;
@@ -74,18 +62,13 @@ namespace SpellDuel
                 UiKit.Text(new Rect(tx, r.y + ch * 0.49f+press, r.xMax - tx - pad*1.2f, ch * 0.43f), LobbyCaption(descs[i]), fsS, new Color(0.82f, 0.86f, 0.96f));
                 if (hit)
                 {
-                    if (i == 0) ChooseMode(Mode.Solo);
+                    if (i == 0) StartStoryEntry();
                     else if (i == 1) ChooseMode(Mode.Duo);
                     else if (i == 2) ChooseMode(Mode.Duo, false, true);
-                    else homeDungeonPick = true;   // 副本：先選和身邊的朋友（同一個地方）或遠方的朋友（遠端連線）
+                    else if (i == 3) { solo.SetEntry(SoloBattle.Entry.Practice); ChooseMode(Mode.Solo); }
+                    else SettingsMenu.Show();
                 }
             }
-            if (homeDungeonPick) { DrawDungeonPick(W, H, pad, lineH, fs, fsS); return; }
-            // 進階：標記圖模式（同一個 Wi-Fi、掃描地上的標記圖）
-            var wr = new Rect(W*.17f,cy+4*(ch+pad)+pad*.2f,W*.66f,lineH*1.05f);
-            if (UiKit.Button(wr, LobbyCaption("👀 觀戰（輸入朋友的房間代碼）"), fsS, false, new Color(0.55f, 0.9f, 1f))) EnterWatch();
-            var mr = new Rect(W*.17f,wr.yMax+pad*.35f,W*.66f,lineH*1.05f);
-            if (UiKit.Button(mr, LobbyCaption("🗺 進階：標記圖模式（同一個 Wi-Fi）"), fsS)) ChooseMode(Mode.Duo, true, false);
             UiKit.Text(new Rect(pad, bottom - lineH, W - pad * 2, lineH), LobbyCaption("版本 " + BuildInfo), Mathf.RoundToInt(fsS * 0.85f), new Color(0.6f, 0.65f, 0.75f), TextAnchor.MiddleCenter);
         }
 
@@ -122,7 +105,7 @@ namespace SpellDuel
             panelBottom=card.yMax;
         }
 
-        string ModeTitle => mode == Mode.Solo ? "🧍 單人冒險" : remoteMode ? "🌐 和遠方的朋友連線" : duoUseMarker ? "🗺 標記圖模式" : "👥 和身邊的朋友對戰";
+        string ModeTitle => mode == Mode.Solo ? (solo.entry == SoloBattle.Entry.Story ? "📖 故事模式" : "🎯 練習模式") : remoteMode ? "🌐 和遠方的朋友連線" : duoUseMarker ? "🗺 標記圖模式" : "👥 和身邊的朋友對戰";
         Color ModeColor => mode == Mode.Solo ? new Color(0.4f, 0.85f, 1f) : remoteMode ? new Color(0.75f, 0.55f, 1f) : duoUseMarker ? new Color(0.6f, 0.9f, 0.45f) : new Color(1f, 0.55f, 0.35f);
 
         void LeaveLobby()
@@ -256,6 +239,9 @@ namespace SpellDuel
             Step(ref y, pad, full, lineH, fs, fsS, 2, conn ? $"已連線（房間 {solo.PeerIds.Count + 1} 人）" : "連線：一人建立房間，另一人輸入代碼", S(conn, floor && !conn),
                 net.Connected ? "請朋友在他的手機輸入上面的代碼按「加入」" : "朋友就在旁邊：看建立房間那支手機上的代碼，輸入後按「加入」");
             if (!conn) RoomCodeUI(ref y, pad, full, half, bh, lineH, fs, fsS, false);
+            // 進階：標記圖模式（同一個 Wi-Fi、掃描地上的標記圖）——原本在首頁，現在收在附近對戰這裡
+            if (!conn && !net.Connected && UiKit.Button(new Rect(pad, y, full, bh * 0.8f), LobbyCaption("🗺 進階：改用標記圖模式（同一個 Wi-Fi）"), fsS)) { ChooseMode(Mode.Duo, true, false); return; }
+            if (!conn && !net.Connected) y += bh * 0.8f + pad * 0.4f;
             Step(ref y, pad, full, lineH, fs, fsS, 3, "📱 並排對齊（兩人各按一次）", S(quickAligned, conn && !quickAligned), "兩人站在一起，手機側邊貼緊並排、鏡頭朝同一個方向，各按一次");
             if (conn || quickAligned)
             {
@@ -429,6 +415,21 @@ namespace SpellDuel
                 UiKit.Star(new Rect(r.x+u*.59f,r.y+u*.13f,u*.23f,u*.23f),c);
                 UiKit.Divider(new Rect(r.x+u*.18f,r.y+u*.63f,u*.35f,u*.17f),UiKit.Paper);
                 LobbyStroke(new Vector2(r.x+u*.355f,r.y+u*.63f),new Vector2(r.x+u*.355f,r.y+u*.80f),u*.013f,c);
+            }
+            else if(kind==4)
+            {
+                // 練習：靶心＋木樁
+                LobbyRing(center,u*.30f,c,Mathf.Max(1,u*.03f),24);
+                LobbyRing(center,u*.17f,UiKit.Paper,Mathf.Max(1,u*.03f),20);
+                UiKit.Gem(new Rect(center.x-u*.06f,center.y-u*.06f,u*.12f,u*.12f),UiKit.Gold);
+                LobbyStroke(new Vector2(r.x+u*.78f,r.y+u*.22f),new Vector2(center.x+u*.05f,center.y-u*.05f),u*.03f,UiKit.Paper);
+            }
+            else if(kind==5)
+            {
+                // 設定：齒輪
+                LobbyRing(center,u*.22f,c,Mathf.Max(1,u*.07f),20);
+                for(int t=0;t<8;t++){float a=t*Mathf.PI/4f;var d=new Vector2(Mathf.Cos(a),Mathf.Sin(a));LobbyStroke(center+d*u*.24f,center+d*u*.34f,u*.08f,c);}
+                UiKit.Gem(new Rect(center.x-u*.07f,center.y-u*.07f,u*.14f,u*.14f),UiKit.Paper);
             }
             else if(kind==3)
             {

@@ -135,7 +135,7 @@ namespace SpellDuel
         {
             if (NetMode && dungeon != null) return "▶ 回隊伍畫面";
             if (NetMode) return localReady ? "等待其他人…" : "▶ 準備下一場";
-            if (tutorial) return "▶ 開始冒險（故事）";
+            if (tutorial) return villageReturn.HasValue ? "▶ 回訓練場" : "▶ 進入村子";
             if (IsTrial) return "▶ 去職業工會轉職";
             if (dungeon != null) return "▶ 挑戰其他副本";
             if (storyStage != null)
@@ -153,7 +153,7 @@ namespace SpellDuel
             if (NetMode && dungeon != null) { victory = null; ShowSetup(); return; }   // 連線副本：回隊伍畫面
             if (NetMode) { if (!localReady) { victory = null; SendReady(); } return; }
             victory = null;
-            if (tutorial) { enemyClass = "story"; ShowSetup(); StartBattle(); return; }
+            if (tutorial) { AfterTutorial(); return; }
             if (IsTrial) { ShowSetup(); storyMapOpen = true; world.OpenTown(VictoryTown()); world.OpenGuild(); return; }
             if (dungeon != null) { ShowSetup(); storyMapOpen = true; world.OpenTown(world.town); world.screen = WorldUI.Screen.Dungeon; return; }
             if (storyStage != null)

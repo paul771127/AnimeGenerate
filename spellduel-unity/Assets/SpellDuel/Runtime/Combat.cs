@@ -604,7 +604,12 @@ namespace SpellDuel
         public float PartyMul => 1f + 0.3f * ScaleAllies;
         /// <summary>Boss 血量的人數倍率：每多一位玩家 +50%</summary>
         public float BossPartyMul => 1f + 0.5f * ScaleAllies;
-        int Tier => Mathf.Max(0, wave - 1);
+        int Tier => Mathf.Max(0, wave - 1 + levelBoost);
+        /// <summary>難度加的等級（故事關卡、副本：簡單 0、普通 +20、困難 +40）：敵人的血量、攻擊、速度照「波次＋這個數」成長</summary>
+        public int levelBoost;
+        /// <summary>難度加的等級對 Boss 的倍率（Boss 的血量不跟波次走，另外乘）</summary>
+        public float BoostHpMul => 1f + HpPerWave * levelBoost;
+        public float BoostDmgMul => (0.75f + DmgPerWave * levelBoost) / 0.75f;
         public float HpMul => (1f + HpPerWave * Tier) * PartyMul * hpBoost;
         // 每過一波敵人變強多少（2026-10 重調：原本 HP 8%、攻擊 5%，第二章起比玩家成長快太多，Lv18 撐不過一波；現在 HP 3.5%、攻擊 2%）
         public const float HpPerWave = 0.035f, DmgPerWave = 0.02f;
@@ -707,7 +712,7 @@ namespace SpellDuel
             bossSpawnedThisWave = true;
             int bossIndex = wave / BossEvery - 1;
             var at = (bossPoint ?? edgePoint)();
-            enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.5f * bossIndex) * BossPartyMul * hpBoost);
+            enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.5f * bossIndex) * BossPartyMul * hpBoost * BoostHpMul);
             enemy.hp = enemy.maxHp;
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
             enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f; enemy.silencedUntil = 0f;

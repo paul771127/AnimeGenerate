@@ -9,9 +9,9 @@ namespace SpellDuel
     ///   大地圖：三個地區（熔岩地帶、森林、海上礁石），每區一座城鎮＋這個地區的關卡；打過的關卡可以重打（刷裝備）。
     ///   城鎮：居民（點一下聊天）、鐵匠鋪（強化裝備）、道具店（買藥水／回城捲軸、賣裝備）、職業工會（Lv30 挑戰轉職試煉，通過後選進階職業）。
     /// </summary>
-    public class WorldUI
+    public partial class WorldUI
     {
-        public enum Screen { Map, Town, Smith, Shop, Guild, Gate, Warp, Dungeon }
+        public enum Screen { Map, Town, Smith, Shop, Guild, Gate, Warp, Dungeon, Training, Bounty, Watch, Tower }
         public Screen screen = Screen.Map;
         public int town;                         // 目前所在城鎮（＝地區主題 0～2）
         public Action<StoryStage> OnStartStage;  // 出發打關卡
@@ -144,6 +144,10 @@ namespace SpellDuel
                 case Screen.Gate: DrawGate(r, prof, fs, fsS, fsL, gap); break;
                 case Screen.Warp: DrawWarp(r, prof, fs, fsS, fsL, gap); break;
                 case Screen.Dungeon: DrawDungeons(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Training: DrawTraining(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Bounty: DrawBounty(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Watch: DrawWatchDesk(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Tower: DrawTower(r, prof, fs, fsS, fsL, gap); break;
             }
             if (toast != null && Time.time < toastUntil) UiKit.Pill(r.y + r.height * 0.5f, toast, fs, new Color(1f, 0.9f, 0.5f), r.width * 0.9f, 0.85f);
         }
@@ -164,8 +168,9 @@ namespace SpellDuel
         {
             float y = r.y + gap;
             Header(r, "🗺 大地圖", new Color(1f, 0.85f, 0.45f), prof, fs, fsS, fsL, gap, ref y);
-            float detailH = sel != null ? fs * 7.2f : fs * 2.4f;
-            float bottom = r.yMax - gap - fs * 2.3f - detailH;
+            float detailH = sel != null ? fs * 9.6f : fs * 2.4f;
+            float towerH = fs * 2.3f;
+            float bottom = r.yMax - gap - fs * 2.3f - detailH - towerH - gap * 0.4f;
             float regH = (bottom - y) / Towns.Length;
             for (int t = 0; t < Towns.Length; t++)
             {
@@ -202,6 +207,10 @@ namespace SpellDuel
                     UiKit.Text(nr, (clear ? "✔" : ok ? "▶" : "🔒") + "\n" + st.id, fsS, ok ? Color.white : Color.gray, TextAnchor.MiddleCenter, true);
                 }
             }
+            // 無盡塔（地圖上的一個地點）
+            var twr = new Rect(r.x + gap, bottom + gap * 0.3f, r.width - gap * 2, towerH);
+            if (UiKit.Button(twr, $"🗼 無盡塔　無盡模式・最佳 {EndlessBest?.Invoke() ?? 0} 分", fsS, false, TowerColor)) { screen = Screen.Tower; sel = null; return; }
+            bottom += towerH + gap * 0.4f;
             // 選中的關卡
             var dr = new Rect(r.x + gap, bottom + gap * 0.3f, r.width - gap * 2, detailH - gap * 0.3f);
             UiKit.Card(dr, 0.6f);
@@ -213,7 +222,8 @@ namespace SpellDuel
                 string waves = sel.HasBoss && sel.fromWave >= 10 ? "Boss 戰" : $"{sel.toWave - sel.fromWave + 1} 波" + (sel.HasBoss ? "＋Boss" : "");
                 UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.3f, dr.width - gap * 2, fs * 1.4f), $"{sel.id}　{sel.title}" + (clear ? "　✔ 已通關" : ""), fs, Color.white, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(dr.x + gap, dr.y + fs * 1.7f, dr.width - gap * 2, fs * 2.6f),
-                    (sel.desc.Length > 0 ? sel.desc.Split('\n')[0] + "\n" : "") + $"{RegionNames[sel.theme]}・{waves}・推薦 Lv{Mathf.Max(1, sel.FirstWave - 1)}+・掉落裝備 Lv{Story.LevelBand(sel.theme).lo}–{Story.LevelBand(sel.theme).hi}\n經驗 {sel.xp}・💰 {Economy.StageGold(sel)}", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
+                    (sel.desc.Length > 0 ? sel.desc.Split('\n')[0] + "\n" : "") + $"{RegionNames[sel.theme]}・{waves}・推薦 Lv{Mathf.Max(1, sel.FirstWave - 1) + Boost}+・掉落裝備 Lv{Story.LevelBand(sel.theme).lo + Boost}–{Story.LevelBand(sel.theme).hi + Boost}\n經驗 {Mathf.RoundToInt(sel.xp * SoloBattle.RewardMulFor(Difficulty))}・💰 {Mathf.RoundToInt(Economy.StageGold(sel) * SoloBattle.RewardMulFor(Difficulty))}", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
+                DifficultyRow(new Rect(dr.x + gap, dr.y + fs * 4.5f, dr.width - gap * 2, fs * 1.9f), fsS, true);
                 bool story = Story.HasStory(sel) && Story.IsSeen(sel.id);   // 看過的故事不再自動播，可以按這裡重看
                 int nb = story ? 3 : 2;
                 float bw = (dr.width - gap * (nb + 1)) / nb, bh = fs * 2f, by = dr.yMax - bh - gap * 0.4f;
@@ -287,7 +297,13 @@ namespace SpellDuel
             if (UiKit.Button(new Rect(r.x + gap, y, bw, bh), "🏛 職業工會\n轉職・職業任務", fs, false, new Color(0.85f, 0.6f, 1f))) screen = Screen.Guild;
             if (UiKit.Button(new Rect(r.x + gap * 2 + bw, y, bw, bh), "📜 角色／裝備", fs, false, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
             y += bh + gap;
-            if (UiKit.Button(new Rect(r.x + gap, y, r.width - gap * 2, bh * 0.8f), "🏰 副本（多人合作）", fs, false, DungeonColor)) screen = Screen.Dungeon;
+            // 村子的其他設施：副本入口、訓練場、討伐告示板、觀戰席（兩排）
+            float fw = (r.width - gap * 3) / 2f, fh = bh * 0.8f;
+            for (int i = 0; i < Facilities.Length; i++)
+            {
+                var fa = Facilities[i];
+                if (UiKit.Button(new Rect(r.x + gap + (i % 2) * (fw + gap), y + (i / 2) * (fh + gap * 0.5f), fw, fh), $"{fa.icon} {fa.title}", fsS, false, FacilityColors[i])) { OpenFacility(fa.kind); return; }
+            }
             // 回大地圖／走進城鎮
             float hb = (r.width - gap * 3) / 2f;
             if (UiKit.Button(new Rect(r.x + gap, r.yMax - gap - fs * 2.1f, hb, fs * 2.1f), "🚶 走進城鎮", fs, false, t.color)) walkMode = true;
@@ -299,10 +315,17 @@ namespace SpellDuel
         void DrawDungeons(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
             float y = r.y + gap;
-            Header(r, "🏰 副本", DungeonColor, prof, fs, fsS, fsL, gap, ref y);
+            Header(r, "🏰 副本入口", DungeonColor, prof, fs, fsS, fsL, gap, ref y);
             UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.6f),
-                "副本以 3 人隊伍的強度設計：4 人輕鬆、3 人中等、2 人有一點機會。多人請回首頁選「遠端連線」→ 合作模式選「🏰 副本」。\n一個人也能進，但要角色等級遠高於副本才打得過（那時掉的裝備等級＝副本等級）。", fsS, new Color(0.85f, 0.95f, 0.9f), TextAnchor.UpperLeft);
+                "「副本以 3 人隊伍的強度設計：4 人輕鬆、3 人中等、2 人有一點機會。一個人也能進，但要等級遠高於副本才打得過。」——嚮導", fsS, new Color(0.85f, 0.95f, 0.9f), TextAnchor.UpperLeft);
             y += fs * 2.8f;
+            // 找夥伴：轉到連線大廳（會離開村子；副本在隊伍畫面選）
+            float gw = (r.width - gap * 3) / 2f, gh = fs * 2.3f;
+            if (UiKit.Button(new Rect(r.x + gap, y, gw, gh), "👥 和身邊的朋友組隊", fsS, false, new Color(1f, 0.55f, 0.35f))) { OnNetDungeon?.Invoke(false); return; }
+            if (UiKit.Button(new Rect(r.x + gap * 2 + gw, y, gw, gh), "🌐 和遠方的朋友組隊", fsS, false, new Color(0.75f, 0.55f, 1f))) { OnNetDungeon?.Invoke(true); return; }
+            y += gh + gap * 0.5f;
+            DifficultyRow(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.9f), fsS, true);   // 單人進入的難度（組隊時由房主在隊伍畫面選）
+            y += fs * 2.2f;
             float bottom = r.yMax - gap * 2 - fs * 2.1f;
             int n = Dungeons.All.Count;
             float ch = Mathf.Min(fs * 5.2f, (bottom - y) / Mathf.Max(1, n) - gap * 0.4f);
@@ -312,8 +335,8 @@ namespace SpellDuel
                 var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
                 UiKit.Card(cr, 0.6f, clear ? new Color(1f, 0.85f, 0.3f) : DungeonColor, 0.8f);
                 float relief = Dungeons.LevelRelief(prof.level, d.level);
-                string diff = prof.level < d.level ? "⚠ 等級不足" : relief >= 0.95f ? "單人：非常困難" : relief >= 0.7f ? "單人：困難" : "單人：可以挑戰";
-                UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.62f, cr.height), $"{(clear ? "✔ " : "")}{d.name}　Lv{d.level}・{d.minPlayers}～{d.maxPlayers} 人・{d.rooms.Count} 房\n{d.desc}\n{diff}", fsS, Color.white, TextAnchor.MiddleLeft);
+                string diff = prof.level < d.level + Boost ? "⚠ 等級不足" : relief >= 0.95f ? "單人：非常困難" : relief >= 0.7f ? "單人：困難" : "單人：可以挑戰";
+                UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.62f, cr.height), $"{(clear ? "✔ " : "")}{d.name}　Lv{d.level + Boost}・{d.minPlayers}～{d.maxPlayers} 人・{d.rooms.Count} 房\n{d.desc}\n{diff}", fsS, Color.white, TextAnchor.MiddleLeft);
                 float bw = cr.width * 0.34f, bh = (cr.height - gap * 1.2f) / 2f;
                 if (UiKit.Button(new Rect(cr.xMax - bw - gap * 0.4f, cr.y + gap * 0.4f, bw, bh), "⚔ 單人進入", fsS, false, DungeonColor))
                 { OnStartDungeon?.Invoke(d); return; }
@@ -340,7 +363,7 @@ namespace SpellDuel
                     float lw = lf * 9f, lh = lf * (isNear ? 3.6f : 2.4f);
                     var lr = new Rect(g.x - lw / 2f, g.y - lh, lw, lh);
                     UiKit.Card(lr, isNear ? 0.8f : 0.45f, n.opens != null ? new Color(1f, 0.85f, 0.4f) : t.color, isNear ? 1f : 0.5f);
-                    string icon = n.opens == "smith" ? "⚒ " : n.opens == "shop" ? "🧪 " : n.opens == "guild" ? "🏛 " : "";
+                    string icon = n.opens == "smith" ? "⚒ " : n.opens == "shop" ? "🧪 " : n.opens == "guild" ? "🏛 " : FacilityIcon(n.opens);
                     UiKit.Text(lr, $"{icon}{n.name}\n{n.role}" + (isNear ? "\n💬 說「你好」" : ""), lf, isNear ? new Color(1f, 0.95f, 0.6f) : Color.white, TextAnchor.MiddleCenter, true);
                 }
             // 出口與傳送陣的標示
@@ -401,8 +424,10 @@ namespace SpellDuel
             float y = r.y + gap;
             Header(r, $"🚪 第 {th + 1} 章 {RegionNames[th]}", RegionColors[th], prof, fs, fsS, fsL, gap, ref y);
             var band = Story.LevelBand(th);
-            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), $"{Story.BandText(th)}　掉落裝備 Lv{band.lo}–{band.hi}　打過的關卡可以重打刷裝備", fsS, new Color(0.85f, 0.88f, 1f));
-            y += fs * 1.6f;
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), $"{Story.BandText(th)}　掉落裝備 Lv{band.lo + Boost}–{band.hi + Boost}　打過的關卡可以重打刷裝備", fsS, new Color(0.85f, 0.88f, 1f));
+            y += fs * 1.5f;
+            DifficultyRow(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.9f), fsS, true);   // 普通＝＋20 級、困難＝＋40 級
+            y += fs * 2.2f;
             var stages = new List<StoryStage>();
             foreach (var s in Story.AllStages()) if (s.theme == th) stages.Add(s);
             float bottom = r.yMax - gap * 2 - fs * 2.1f;
@@ -413,7 +438,7 @@ namespace SpellDuel
                 var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
                 UiKit.Card(cr, ok ? 0.6f : 0.35f, clear ? new Color(1f, 0.85f, 0.3f) : ok ? RegionColors[th] : new Color(0.4f, 0.4f, 0.45f), 0.8f);
                 string waves = st.HasBoss && st.fromWave >= 10 ? "Boss 戰" : $"{st.toWave - st.fromWave + 1} 波" + (st.HasBoss ? "＋Boss" : "");
-                UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.68f, cr.height), $"{(clear ? "✔" : ok ? "▶" : "🔒")} {st.id}　{st.title}\n{waves}・推薦 Lv{Mathf.Max(1, st.FirstWave - 1)}+・經驗 {st.xp}・💰 {Economy.StageGold(st)}",
+                UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.68f, cr.height), $"{(clear ? "✔" : ok ? "▶" : "🔒")} {st.id}　{st.title}\n{waves}・推薦 Lv{Mathf.Max(1, st.FirstWave - 1) + Boost}+・經驗 {Mathf.RoundToInt(st.xp * SoloBattle.RewardMulFor(Difficulty))}・💰 {Mathf.RoundToInt(Economy.StageGold(st) * SoloBattle.RewardMulFor(Difficulty))}",
                     fsS, ok ? Color.white : Color.gray, TextAnchor.MiddleLeft, true);
                 bool story = Story.HasStory(st) && Story.IsSeen(st.id);
                 float bwid = cr.width * (story ? 0.2f : 0.3f);
@@ -453,7 +478,7 @@ namespace SpellDuel
         public void OpenFacility(string kind)
         {
             selItem = null; page = 0;
-            screen = kind == "smith" ? Screen.Smith : kind == "shop" ? Screen.Shop : kind == "guild" ? Screen.Guild : Screen.Town;
+            screen = kind == "smith" ? Screen.Smith : kind == "shop" ? Screen.Shop : kind == "guild" ? Screen.Guild : FacilityScreen(kind);
         }
 
         // ---------------------------------------------------------------- 物品清單（身上＋背包，分頁）
