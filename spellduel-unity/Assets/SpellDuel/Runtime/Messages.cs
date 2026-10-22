@@ -16,7 +16,7 @@ namespace SpellDuel
     ///   seen         場地主的鏡頭看到對手站的位置（世界座標 p、拍攝時間 t0）→ 對齊樣本
     ///   align        對齊方回報對齊結果（ok、誤差 s、樣本數 id）
     ///   雙人職業對戰（SoloBattle 的連線模式）：
-    ///   ready        準備好了：職業 k、技能 ks、進階職業 a
+    ///   ready        準備好了：職業 k、技能 ks、進階職業 a、裝備外觀 g（GearLook）
     ///   pet / petgone   召喚物出現（id、種類 k、位置 p、存在秒數 s）／消失
     ///   oath         守護誓言：我受到的傷害轉給聖騎士（to＝聖騎士，dmg）
     ///   cast2        放出法術：id、技能 k、起點 p、方向 d、時間 t0、ok＝反擊打回去的
@@ -26,7 +26,7 @@ namespace SpellDuel
     ///   state        每秒 10 次：詠唱中的技能 k、蓄力進度 s、血量 hp、狀態旗標 e
     ///   觀戰（GameRoot.Watch.cs、SoloBattle.Watch.cs）：
     ///   join         加入的人收到 _hello 後告訴房主：ok＝觀眾（不算玩家人數）；玩家滿了房主回 _full
-    ///   wply         房主→觀眾：玩家 id 的職業 k、技能 ks、進階職業 a
+    ///   wply         房主→觀眾：玩家 id 的職業 k、技能 ks、進階職業 a、裝備外觀 g
     ///   wstart       房主→觀眾：開打（或中途加入時正在打）：模式 e（0 對戰、1 合作 Boss、2 無盡、3 副本）、副本 k、難度 hp、場地 pts
     ///   wover / wend 房主→觀眾：結算（k＝勝負文字）／回到準備畫面
     ///   whit         合作：我這台判定的法術命中 id（技能 k、位置 p、ok＝貫穿還在飛）→ 觀眾畫面上那一發爆開消失（玩家收到不處理）
@@ -55,6 +55,7 @@ namespace SpellDuel
         public int pid;          // 發送者編號（主機 0、加入的人 1～3）
         public int to;           // 0＝給所有人；n＝只給 pid n−1（主機轉送時看這個）
         public string a;         // ready：進階職業 id（沒轉職＝空）
+        public string g;         // ready／wply：身上裝備的外觀（GearLook.Encode；舊版沒有＝不顯示裝備）
 
         public string ToJson() => JsonUtility.ToJson(this);
         public static Msg FromJson(string json) => JsonUtility.FromJson<Msg>(json);

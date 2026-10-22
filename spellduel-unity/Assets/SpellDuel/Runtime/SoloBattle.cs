@@ -43,6 +43,7 @@ namespace SpellDuel
                 rig.MoveSpeed = Mathf.Lerp(rig.MoveSpeed, Fighter.Flat(a.Feet - lf).magnitude / dt, 0.2f);
                 allyLastFeet[a.pid] = a.Feet;
                 rig.SetDead(!a.Alive);
+                ApplyPeerGear(rig, a.pid);   // 一樣就不動；換了裝會跟著換
                 DriveFromPeer(rig, a.pid);
             }
             foreach (var kv in new List<KeyValuePair<int, CharacterRig>>(allyRigs))
@@ -74,7 +75,14 @@ namespace SpellDuel
                 pp.gesture, WorldFrame.FromWorld(pp.gestureAt));
         }
         public readonly Dictionary<int, PeerPose> NetPeers = new Dictionary<int, PeerPose>();
-        class PeerInfo { public string cls, adv; public string[] loadout; public bool ready; public int mode; }
+        class PeerInfo { public string cls, adv, gear; public string[] loadout; public bool ready; public int mode; }
+        /// <summary>我身上裝備的外觀（送給隊友／對手／觀眾，他們畫面上的我才會穿著）</summary>
+        string MyGearCode => GearLook.Of(Progress.Char(myClass).equipped).Encode();
+        /// <summary>把某位玩家的裝備穿到他的角色上（沒收到＝不穿）</summary>
+        void ApplyPeerGear(CharacterRig rig, int pid)
+        {
+            if (rig && peerInfo.TryGetValue(pid, out var pi)) rig.SetGear(GearLook.Parse(pi.gear));
+        }
         readonly Dictionary<int, PeerInfo> peerInfo = new Dictionary<int, PeerInfo>();
         const int IdSpace = 1000000;                         // 遠端法術／陷阱的編號：發送者 pid × IdSpace ＋ 對方的編號（多人時不會撞號）
         static int RId(int pid, int id) => pid * IdSpace + id;
@@ -700,7 +708,7 @@ namespace SpellDuel
         {
             SaveChoices();
             localReady = true;
-            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "" });
+            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "", g = MyGearCode });
             Say("已準備，等待對手…", 3f);
             TryStartNet();
         }
@@ -728,7 +736,7 @@ namespace SpellDuel
             var d = Dungeons.Get(netDungeonId);
             if (d == null) return;
             SaveChoices();
-            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "" });
+            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "", g = MyGearCode });
             NetSend?.Invoke(new Msg { t = "dstart", k = d.id, e = difficulty });
             localReady = remoteReady = false;
             foreach (var pi in peerInfo.Values) pi.ready = false;
@@ -759,7 +767,7 @@ namespace SpellDuel
             battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = id, ok = theirs });
             WireAdvNet();
             ai = null;
-            if (RemotePlay) enemyRig = CharacterRig.Create(ec.id, en.adv);   // 遠端對戰：對手是虛擬角色（進階職業有自己的外觀）
+            if (RemotePlay) { enemyRig = CharacterRig.Create(ec.id, en.adv); if (PeerIds.Count > 0) ApplyPeerGear(enemyRig, PeerIds[0]); }   // 遠端對戰：對手是虛擬角色（進階職業、身上裝備都看得到）
             remoteAnchor = new GameObject("Remote Anchor").transform;
             lastEnemyFeet = en.Feet; lastEnemyHp = en.hp; enemyDeadShown = false;
             enemyShield = Prim(PrimitiveType.Sphere, new Color(0.4f, 0.7f, 1f, 0.25f));
@@ -1428,7 +1436,7 @@ namespace SpellDuel
                 case "ready":
                     remoteClass = m.k; remoteLoadout = m.ks; remoteReady = true; remoteCoop = m.e >= 1; remoteEndless = m.e == 2;
                     if (!peerInfo.TryGetValue(m.pid, out var rpi)) peerInfo[m.pid] = rpi = new PeerInfo();
-                    rpi.cls = m.k; rpi.loadout = m.ks; rpi.ready = true; rpi.mode = m.e; rpi.adv = string.IsNullOrEmpty(m.a) ? null : m.a;
+                    rpi.cls = m.k; rpi.loadout = m.ks; rpi.ready = true; rpi.mode = m.e; rpi.adv = string.IsNullOrEmpty(m.a) ? null : m.a; rpi.gear = m.g;
                     if (phase != Phase.Fighting) Say(PeerIds.Count > 1 ? $"{PeerName(m.pid)}已準備好（{ReadyCount()}/{PeerIds.Count}）" : "對手已準備好", 2f);
                     TryStartNet();
                     return;

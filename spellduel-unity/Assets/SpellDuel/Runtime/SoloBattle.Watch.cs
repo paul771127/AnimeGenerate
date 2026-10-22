@@ -43,10 +43,10 @@ namespace SpellDuel
             PeerIds.Clear();
         }
 
-        void SetPeerInfo(int pid, string cls, string[] loadout, string adv)
+        void SetPeerInfo(int pid, string cls, string[] loadout, string adv, string gear)
         {
             if (!peerInfo.TryGetValue(pid, out var pi)) peerInfo[pid] = pi = new PeerInfo();
-            pi.cls = cls; pi.loadout = loadout; pi.adv = string.IsNullOrEmpty(adv) ? null : adv;
+            pi.cls = cls; pi.loadout = loadout; pi.adv = string.IsNullOrEmpty(adv) ? null : adv; pi.gear = gear;
         }
 
         /// <summary>觀戰端的網路訊息（OnNet 開頭轉過來）</summary>
@@ -54,8 +54,8 @@ namespace SpellDuel
         {
             switch (m.t)
             {
-                case "wply": SetPeerInfo(m.id, m.k, m.ks, m.a); return;
-                case "ready": SetPeerInfo(m.pid, m.k, m.ks, m.a); return;
+                case "wply": SetPeerInfo(m.id, m.k, m.ks, m.a, m.g); return;
+                case "ready": SetPeerInfo(m.pid, m.k, m.ks, m.a, m.g); return;
                 case "wstart": StartWatchBattle(m); return;
                 case "wend": EndBattle(); phase = Phase.Hidden; watchMode = -1; return;
                 case "wover":
@@ -270,9 +270,9 @@ namespace SpellDuel
         public List<Msg> WatchSnapshot(Vector3[] areaWorld)
         {
             var l = new List<Msg>();
-            l.Add(new Msg { t = "wply", id = MyPid, k = myClass, ks = myLoadout.ToArray(), a = Progress.Char(myClass).adv ?? "" });
+            l.Add(new Msg { t = "wply", id = MyPid, k = myClass, ks = myLoadout.ToArray(), a = Progress.Char(myClass).adv ?? "", g = MyGearCode });
             foreach (var pid in PeerIds)
-                if (peerInfo.TryGetValue(pid, out var pi)) l.Add(new Msg { t = "wply", id = pid, k = pi.cls, ks = pi.loadout, a = pi.adv ?? "" });
+                if (peerInfo.TryGetValue(pid, out var pi)) l.Add(new Msg { t = "wply", id = pid, k = pi.cls, ks = pi.loadout, a = pi.adv ?? "", g = pi.gear });
             if (phase == Phase.Fighting && battle != null && NetMode)
             {
                 l.Add(new Msg { t = "wstart", e = NetModeCode, k = netDungeonId ?? "", hp = difficulty, pts = areaWorld });

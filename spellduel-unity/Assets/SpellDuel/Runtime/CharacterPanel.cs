@@ -107,15 +107,17 @@ namespace SpellDuel
         {
             bool changed = false;
             // 身上的 5 個欄位
-            float sh = fs * 2.0f;
+            float sh = fs * 2.0f, slotW = b.width * 0.66f;
+            // 右邊：穿著這身裝備的角色（慢慢轉）
+            GearPreview.Draw(new Rect(b.x + slotW + gap * 0.5f, b.y, b.width - slotW - gap * 0.5f, 5 * (sh + gap * 0.3f) - gap * 0.3f), p);
             for (int i = 0; i < 5; i++)
             {
                 var it = p.equipped[i];
-                var sr = new Rect(b.x, b.y + i * (sh + gap * 0.3f), b.width, sh);
+                var sr = new Rect(b.x, b.y + i * (sh + gap * 0.3f), slotW, sh);
                 if (UiKit.Button(sr, "", fsS, selItem != null && selItem == it, it != null ? Item.RarityColors[it.rarity] : (Color?)null)) selItem = it;
                 UiKit.Tab(sr, selItem != null && selItem == it, it != null ? Item.RarityColors[it.rarity] : UiKit.Muted);
-                UiKit.Text(new Rect(sr.x + gap, sr.y, sr.width * 0.2f, sr.height), Item.SlotNames[i], fsS, new Color(0.8f, 0.82f, 0.9f), TextAnchor.MiddleLeft, true);
-                UiKit.Text(new Rect(sr.x + sr.width * 0.2f, sr.y, sr.width * 0.78f, sr.height), it != null ? $"[{Item.RarityNames[it.rarity]}] {it.FullName}" : "（空）", fsS, it != null ? Item.RarityColors[it.rarity] : Color.gray, TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(sr.x + gap, sr.y, sr.width * 0.24f, sr.height), Item.SlotNames[i], fsS, new Color(0.8f, 0.82f, 0.9f), TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(sr.x + sr.width * 0.24f, sr.y, sr.width * 0.74f, sr.height), it != null ? $"[{Item.RarityNames[it.rarity]}] {it.FullName}" : "（空）", fsS, it != null ? Item.RarityColors[it.rarity] : Color.gray, TextAnchor.MiddleLeft, true);
             }
             // 背包（分頁，3×4）
             float by = b.y + 5 * (sh + gap * 0.3f) + gap * 0.5f;
