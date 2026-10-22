@@ -80,8 +80,8 @@ namespace SpellDuel
                     float side=useLeft?-1:1;Arm(useLeft,new Vector3(side*.29f,elder?1.40f:1.46f,.23f),Quaternion.Euler(0,0,(identity=="播報員"?0:180)+side*(18+Mathf.Sin(waveT*10)*17)),k);
                 }
             }
-            if(sleeveL!=null)sleeveL.rotation=figure.rotation*Quaternion.Euler(0,0,-3+Mathf.Sin(t)*1.5f);
-            if(sleeveR!=null)sleeveR.rotation=figure.rotation*Quaternion.Euler(0,0,3-Mathf.Sin(t)*1.5f);
+            // 翠的大袖：袖子的下半截對準手的方向（包住前臂）。原本固定往下垂，手一動前臂就從袖子裡分出來，看起來像四隻手。
+            AimSleeve(sleeveL,handL,-3+Mathf.Sin(t)*1.5f);AimSleeve(sleeveR,handR,3-Mathf.Sin(t)*1.5f);
             UpdateFeet(dt,stride);float cloth=walking*walkAmt;
             if(hemL!=null)hemL.localRotation=Quaternion.Euler(cloth*(coat?4:6),0,Mathf.Sin(t*1.4f)*.6f+idleRoll*.10f);
             if(hemR!=null)hemR.localRotation=Quaternion.Euler(-cloth*(coat?4:6),0,-Mathf.Sin(t*1.4f)*.6f+idleRoll*.10f);
@@ -94,6 +94,13 @@ namespace SpellDuel
             }
         }
         static float Ease(float v)=>v*v*(3-2*v);
+        void AimSleeve(Transform sleeve,Transform hand,float sway)
+        {
+            if(sleeve==null||hand==null)return;
+            var down=figure.rotation*Vector3.down;var d=hand.position-sleeve.position;
+            var aim=d.sqrMagnitude>1e-6f?Quaternion.FromToRotation(down,d.normalized):Quaternion.identity;
+            sleeve.rotation=aim*figure.rotation*Quaternion.Euler(0,0,sway);
+        }
         void Arm(bool isLeft,Vector3 localGoal,Quaternion palm,float amount)
         {
             Transform shoulder=isLeft?left:right,elbow=isLeft?leftElbow:rightElbow,hand=isLeft?handL:handR;
