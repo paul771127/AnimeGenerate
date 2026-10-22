@@ -8,6 +8,44 @@ namespace SpellDuel
         static readonly Dictionary<string,Mesh> cache=new Dictionary<string,Mesh>();
         internal static GameObject Add(Transform parent,string id,string part,Color skin)
             =>AnimeFace.Part(parent,"Outfit "+part,MeshFor(id,part,skin),Vector3.zero,AnimeFace.Material(Color.white,4));
+        internal static void WalkingUpper(Transform shoulder,string id,string part,Color skin)
+        {
+            if(id!="翠"){Add(shoulder,id,part,skin);return;}
+            var sleeve=new GameObject("Resident sleeve "+(part.EndsWith("L")?"L":"R")).transform;sleeve.SetParent(shoulder,false);sleeve.localPosition=new Vector3(0,-.12f,-.035f);
+            string key="sleeve/"+id+part;if(!cache.TryGetValue(key,out var mesh))
+            {
+                var original=MeshFor(id,part,skin);var v=original.vertices;var weights=new BoneWeight[v.Length];
+                for(int i=0;i<v.Length;i++){float a=Mathf.Clamp01((-v[i].y-.18f)/.20f);a=a*a*(3-2*a);weights[i]=new BoneWeight{boneIndex0=0,weight0=1-a,boneIndex1=1,weight1=a};}
+                mesh=new Mesh{name="Hanging sleeve "+part,vertices=v,normals=original.normals,triangles=original.triangles,colors=original.colors,uv=original.uv,boneWeights=weights,bindposes=new[]{Matrix4x4.identity,Matrix4x4.TRS(sleeve.localPosition,Quaternion.identity,Vector3.one).inverse}};mesh.RecalculateBounds();cache[key]=mesh;
+            }
+            var go=new GameObject("Outfit hanging "+part);go.transform.SetParent(shoulder,false);var renderer=go.AddComponent<SkinnedMeshRenderer>();renderer.sharedMesh=mesh;renderer.bones=new[]{shoulder,sleeve};renderer.rootBone=shoulder;renderer.quality=SkinQuality.Bone2;renderer.sharedMaterial=AnimeFace.Material(Color.white,4);renderer.localBounds=new Bounds(new Vector3(0,-.25f,0),Vector3.one*2.4f);
+        }
+        internal static void WalkingCalf(Transform knee,Transform ankle,string id,string part,Color skin)
+        {
+            string key="walking/"+id+part+ColorUtility.ToHtmlStringRGB(skin);
+            if(!cache.TryGetValue(key,out var mesh))
+            {
+                var original=MeshFor(id,part,skin);var v=original.vertices;var weights=new BoneWeight[v.Length];float stretch=StoryFigure.LongLegs(id)?.525f/.43f:1;
+                for(int i=0;i<v.Length;i++){float a=Mathf.Clamp01((-v[i].y/stretch-.19f)/.13f);a=a*a*(3-2*a);weights[i]=new BoneWeight{boneIndex0=0,weight0=1-a,boneIndex1=1,weight1=a};}
+                mesh=new Mesh{name="Resident ankle skin "+id,vertices=v,normals=original.normals,triangles=original.triangles,colors=original.colors,uv=original.uv,boneWeights=weights,bindposes=new[]{Matrix4x4.identity,Matrix4x4.TRS(ankle.localPosition,Quaternion.identity,Vector3.one).inverse}};mesh.RecalculateBounds();cache[key]=mesh;
+            }
+            var go=new GameObject("Outfit walking "+part);go.transform.SetParent(knee,false);var renderer=go.AddComponent<SkinnedMeshRenderer>();renderer.sharedMesh=mesh;renderer.bones=new[]{knee,ankle};renderer.rootBone=knee;renderer.quality=SkinQuality.Bone2;renderer.sharedMaterial=AnimeFace.Material(Color.white,4);var bounds=mesh.bounds;bounds.Expand(.22f);renderer.localBounds=bounds;
+        }
+        internal static void WalkingTorso(Transform torso,string id,Color skin)
+        {
+            bool skirt=OutfitArt.Get(id).Hem>.15f||id=="凪"||id=="翠"||id=="老焰"||id=="小葉"||id=="艾琳";
+            if(!skirt){Add(torso,id,"torso",skin);return;}
+            var left=new GameObject("Resident hem L").transform;left.SetParent(torso,false);left.localPosition=new Vector3(-.10f,0,0);
+            var right=new GameObject("Resident hem R").transform;right.SetParent(torso,false);right.localPosition=new Vector3(.10f,0,0);
+            string key="hem/"+id+ColorUtility.ToHtmlStringRGB(skin);
+            if(!cache.TryGetValue(key,out var mesh))
+            {
+                var original=MeshFor(id,"torso",skin);var v=original.vertices;var weights=new BoneWeight[v.Length];
+                for(int i=0;i<v.Length;i++){float a=Mathf.Clamp01((-v[i].y-.025f)/.30f)*.65f;weights[i]=new BoneWeight{boneIndex0=0,weight0=1-a,boneIndex1=v[i].x<0?1:2,weight1=a};}
+                mesh=new Mesh{name="Resident cloth skin "+id,vertices=v,normals=original.normals,triangles=original.triangles,colors=original.colors,uv=original.uv,boneWeights=weights,bindposes=new[]{Matrix4x4.identity,Matrix4x4.TRS(left.localPosition,Quaternion.identity,Vector3.one).inverse,Matrix4x4.TRS(right.localPosition,Quaternion.identity,Vector3.one).inverse}};mesh.RecalculateBounds();cache[key]=mesh;
+            }
+            var go=new GameObject("Outfit moving hem");go.transform.SetParent(torso,false);var renderer=go.AddComponent<SkinnedMeshRenderer>();renderer.sharedMesh=mesh;renderer.bones=new[]{torso,left,right};renderer.rootBone=torso;renderer.quality=SkinQuality.Bone2;renderer.sharedMaterial=AnimeFace.Material(Color.white,4);var bounds=mesh.bounds;bounds.Expand(.22f);renderer.localBounds=bounds;
+        }
         internal static Mesh MeshFor(string id,string part,Color skin)
         {
             string key=id+part+ColorUtility.ToHtmlStringRGB(skin);if(cache.TryGetValue(key,out var mesh))return mesh;

@@ -7,12 +7,12 @@ namespace SpellDuel
         static GameObject CreateDesertResident(string id,Transform parent)
         {
             string basis=id=="雷歐"?"海斗":id=="小沙"?"店員":id=="鐵娘"?"凪":id=="老駝"?"老焰":id=="阿鈴"?"米菈":"公會長";
-            var go=CreateNpc(basis,parent);go.name="Resident "+id;
+            var go=CreateResident(basis,parent,false);go.name="Resident "+id;
             var figure=go.transform.Find("Breathing figure");Transform face=null,rightHand=null,leftHand=null;
             foreach(var tf in go.GetComponentsInChildren<Transform>())
             {
                 if(tf.gameObject.name=="立體臉")face=tf;
-                if(tf.gameObject.name=="Outfit hand"){if(tf.position.x>go.transform.position.x)rightHand=tf;else leftHand=tf;}
+                if(tf.gameObject.name=="Outfit shoulder"){var hand=tf.Find("Outfit elbow").Find("Outfit hand");if(tf.localPosition.x>0)rightHand=hand;else leftHand=hand;}
             }
             var chest=figure.Find("Persona chest");
             var garments=Group(chest,"Regional resident accessories",new Vector3(0,-.85f,0));
@@ -53,7 +53,7 @@ namespace SpellDuel
                 var scroll=Group(leftHand,"Storyteller scroll grip",new Vector3(0,-.02f,.06f));ResidentBox(scroll,"Story scroll parchment",Vector3.zero,new Vector3(.12f,.22f,.025f),Cream);
                 for(int side=-1;side<=1;side+=2)Cyl(scroll,"Scroll wooden roller",new Vector3(0,side*.11f,0),new Vector3(.035f,.09f,.035f),Wood).transform.localRotation=Quaternion.Euler(0,0,90);Batch(scroll);
             }
-            Batch(garments);return go;
+            Batch(garments);var motion=figure.GetComponent<HumanResidentMotion>();motion.SetIdleSet(id);ResidentActionProps(id,figure);motion.BindActionArt();return go;
         }
     }
 }

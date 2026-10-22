@@ -4,7 +4,8 @@ namespace SpellDuel
     public static partial class TownArt
     {
         /// <summary>Named villagers share portrait palettes and identifying accessories. +z is the face.</summary>
-        public static GameObject CreateNpc(string name,Transform parent)
+        public static GameObject CreateNpc(string name,Transform parent)=>CreateResident(name,parent,true);
+        static GameObject CreateResident(string name,Transform parent,bool idleArt)
         {
             string regionalKey=Portraits.Key(name);if(regionalKey=="雷歐"||regionalKey=="小沙"||regionalKey=="鐵娘"||regionalKey=="老駝"||regionalKey=="阿鈴"||regionalKey=="石先生")return CreateDesertResident(regionalKey,parent);
             string key=Portraits.Key(name);var persona=Portraits.PersonaFor(key);var root=Group(parent,"Resident "+key,Vector3.zero);
@@ -127,17 +128,17 @@ namespace SpellDuel
             foreach(var tf in articulated){parents.Add(tf.parent);tf.SetParent(null,false);}
             neck.SetParent(null,false);chest.SetParent(null,false);Batch(p);Batch(chest);Batch(neck);chest.SetParent(p,false);neck.SetParent(chest,false);
             for(int i=0;i<articulated.Count;i++)articulated[i].SetParent(parents[i],false);
-            motion.Tick(0);HumanProportions.NormalizeProjected(face,key,root);FitStoryHeight(face,key,root,height);StoryResidentProps(key,p);return root.gameObject;
+            motion.Tick(0);HumanProportions.NormalizeProjected(face,key,root);FitStoryHeight(face,key,root,height);StoryResidentProps(key,p);if(idleArt){ResidentActionProps(key,p);motion.BindActionArt();}return root.gameObject;
         }
         static void DressResident(Transform p,string id,Color skin)
         {
-            var torso=Group(p,"Outfit torso",new Vector3(0,StoryFigure.TorsoY(id),0));torso.localScale=Vector3.one;ResidentBody.Add(torso,id,"torso",skin);
+            var torso=Group(p,"Outfit torso",new Vector3(0,StoryFigure.TorsoY(id),0));torso.localScale=Vector3.one;ResidentBody.WalkingTorso(torso,id,skin);
             for(int side=-1;side<=1;side+=2)
             {
                 string suffix=side<0?"L":"R";var hip=Group(p,"Outfit hip",new Vector3(side*.12f,StoryFigure.HipY(id),0));
-                ResidentBody.Add(hip,id,"thigh"+suffix,skin);var knee=Group(hip,"Outfit knee",new Vector3(0,-StoryFigure.Thigh(id),0));ResidentBody.Add(knee,id,"calf"+suffix,skin);
+                ResidentBody.Add(hip,id,"thigh"+suffix,skin);var knee=Group(hip,"Outfit knee",new Vector3(0,-StoryFigure.Thigh(id),0));var ankle=Group(knee,"Resident ankle",new Vector3(0,-.355f*(StoryFigure.LongLegs(id)?.525f/.43f:1),0));ResidentBody.WalkingCalf(knee,ankle,id,"calf"+suffix,skin);
                 var arm=Group(p,"Outfit shoulder",new Vector3(side*StoryFigure.ShoulderX(id),StoryFigure.ShoulderY(id),id=="老焰"?.025f:0));arm.localScale=Vector3.one*.94f;arm.localRotation=Quaternion.Euler(0,0,side*9);
-                ResidentBody.Add(arm,id,"upper"+suffix,skin);var elbow=Group(arm,"Outfit elbow",new Vector3(0,-.28f,0));if(id=="小葉"&&side>0)elbow.localRotation=Quaternion.Euler(-25,0,0);ResidentBody.Add(elbow,id,"fore"+suffix,skin);
+                ResidentBody.WalkingUpper(arm,id,"upper"+suffix,skin);var elbow=Group(arm,"Outfit elbow",new Vector3(0,-.28f,0));if(id=="小葉"&&side>0)elbow.localRotation=Quaternion.Euler(-25,0,0);ResidentBody.Add(elbow,id,"fore"+suffix,skin);
                 var hand=Group(elbow,"Outfit hand",new Vector3(0,-.25f,0));ResidentBody.Add(hand,id,"hand"+((id=="老焰"||id=="阿潮")&&side<0||id=="鐵匠"&&side>0||id=="小葉"&&side>0?"Grip":"Relax")+suffix,skin);
             }
         }

@@ -5,6 +5,7 @@ namespace SpellDuel
     internal sealed class HumanExpressionMotion : MonoBehaviour
     {
         internal bool External,Visible=true;
+        internal float ResidentEyeClose,ResidentMouthOpen;
         string identity;Portraits.Persona persona;AnimeFace.Features features;Portraits.FacePlan plan;
         readonly Mesh[] lips=new Mesh[5];readonly Material[] gaze=new Material[3];
         Renderer[] eyes,lids;Renderer mouthRenderer,teethRenderer,lipRenderer;Vector3[] browOrigins;Quaternion headRest;
@@ -34,7 +35,7 @@ namespace SpellDuel
             Glance=t-glanceAt<1.6f?Mathf.Sin(Mathf.Clamp01((t-glanceAt)/1.6f)*Mathf.PI)*glanceSide:0;
             Micro=t-microAt<1.7f?Mathf.Sin(Mathf.Clamp01((t-microAt)/1.7f)*Mathf.PI):0;
             if(hurt>.001f&&(!hitWasActive||hurt>lastHurt+.01f))hitUntil=t+.3f;hitWasActive=hurt>.001f;lastHurt=hurt;
-            float hit=Mathf.Max(hurt,t<hitUntil?1:0),close=down?1:Mathf.Max(blink,hit);
+            float hit=Mathf.Max(hurt,t<hitUntil?1:0),close=down?1:Mathf.Max(blink,hit);if(!External)close=Mathf.Max(close,ResidentEyeClose);
             CurrentState=down?4:hit>0?4:cast>.08f?3:combat>.5f?2:Micro>.15f?1:0;
             if(features.Lip.sharedMesh!=lips[CurrentState])features.Lip.sharedMesh=lips[CurrentState];
             int gazeIndex=Glance>.3f?2:Glance<-.3f?0:1;
@@ -54,6 +55,7 @@ namespace SpellDuel
                 features.Brows[i].localRotation=Quaternion.Euler(0,0,side*(combat*7+hit*9-Micro*3+asym));
             }
             float open=down?0:Mathf.Max(persona.Open+(persona.Open>0?Micro*.06f*(1-combat):0),cast);
+            if(!External)open=Mathf.Max(open,ResidentMouthOpen);
             if(CurrentState==2)open=HumanPersonality.For(identity)==HumanPersonality.Temper.Fierce?.30f:HumanPersonality.For(identity)==HumanPersonality.Temper.Shy?.18f:0;
             if(CurrentState==3)open=Mathf.Max(open,.65f);
             if(hit>0)open=.22f;
