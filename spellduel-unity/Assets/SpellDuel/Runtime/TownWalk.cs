@@ -24,7 +24,7 @@ namespace SpellDuel
             // 村民的行為：一般居民在家附近閒晃（走走停停），設施的老闆守在店門口；玩家走近就停下來看玩家，打招呼會揮手
             public Vector2 home, target; public float idleUntil, waveCooldown; public bool walking, nearShown;
             internal HumanResidentMotion motion;
-            public bool Wanders => opens == null && motion != null;   // 沒有關節的居民（第 4、5 章的居民）先不走動，免得用滑的
+            public bool Wanders => opens == null && motion != null && !motion.LongRobe;   // 沒有關節的居民（第 4、5 章）、長袍的人（腿會穿出衣服）先不走動
         }
 
         /// <summary>城鎮出口（柵欄的缺口）：走出去打開這一章的關卡選單</summary>

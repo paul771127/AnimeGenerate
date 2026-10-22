@@ -13,6 +13,8 @@ namespace SpellDuel
         internal float walkSpeed;
         internal string Identity=>identity;internal string BodyIdentity=>bodyIdentity;
         internal void Wave(){waveT=0;}
+        /// <summary>長袍／長裙（衣襬很長）：走路時腿會穿出衣服，先不讓他走動</summary>
+        internal bool LongRobe=>coat;
         internal void Configure(string id,Transform rib,Transform n,Transform head,Transform root,Color skin)
         {
             identity=bodyIdentity=id;chest=rib;neck=n;face=head;figure=root;
