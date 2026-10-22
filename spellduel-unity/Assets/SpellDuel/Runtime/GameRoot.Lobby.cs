@@ -26,10 +26,10 @@ namespace SpellDuel
         {
             var safe = Screen.safeArea;
             float bottom = H - safe.y - pad, h = bottom - top;
-            UiKit.Backdrop(new Rect(0,0,W,H),UiKit.Gold,.48f);
+            LobbyHomeBackground(new Rect(0,0,W,H));
             LobbyDust(new Rect(0,top,W,h),UiKit.Gold);
-            LobbyLogo(new Rect(pad,top+h*.015f,W-pad*2,h*.235f),fs);
-            UiKit.Text(new Rect(pad,top+h*.25f,W-pad*2,lineH),LobbyCaption("唸出咒語，在真實世界施法對決"),fsS,UiKit.Paper,TextAnchor.MiddleCenter);
+            LobbyLogo(new Rect(pad,top+h*.012f,W-pad*2,h*.225f),fs);
+            UiKit.Text(new Rect(pad,top+h*.238f,W-pad*2,lineH),LobbyCaption("唸出咒語，在真實世界施法對決"),fsS,new Color(.90f,.87f,.81f),TextAnchor.MiddleCenter);
 
             // 首頁：故事模式、附近對戰、遠距對戰、練習模式、觀戰、設定（其他玩法都在故事模式的村子裡）
             bool newbie = SoloBattle.IntroPending;
@@ -43,24 +43,28 @@ namespace SpellDuel
                 "輸入朋友的房間代碼，從斜上方看比賽（中途也能進）",
                 "音效、音樂、震動、環境光",
             };
-            Color[] acc = { new Color(1f, 0.8f, 0.4f), new Color(1f, 0.55f, 0.35f), new Color(0.75f, 0.55f, 1f), new Color(0.4f, 0.85f, 1f), new Color(0.55f, 0.9f, 1f), new Color(0.7f, 0.75f, 0.85f) };
+            Color[] acc = { new Color(.94f,.76f,.43f), new Color(.94f,.56f,.45f), new Color(.72f,.61f,.94f), new Color(.40f,.77f,.85f), new Color(.51f,.73f,.93f), new Color(.73f,.78f,.85f) };
             int[] art = { 0, 1, 2, 4, 6, 5 };
             int n = titles.Length;
             float cw=W-pad*3,cx=pad*1.5f,cy=top+h*.29f;
-            float ch=Mathf.Min(h*.125f,(bottom-lineH*1.4f-cy)/n-pad*.7f);
+            float ch=Mathf.Min(h*.12f,(bottom-lineH*1.4f-cy-pad*.7f*(n-1))/(n+.12f));
+            float cardY=cy;
             for (int i = 0; i < n; i++)
             {
-                var r = new Rect(cx, cy + i * (ch + pad * 0.7f), cw, ch);
+                float cardH=ch*(i==0?1.12f:1f);
+                var r = new Rect(cx, cardY, cw, cardH);
+                cardY+=cardH+pad*.7f;
                 bool hit = UiKit.Button(r, LobbyCaption(""), fs, newbie && i == 0, acc[i]);
-                float artS=ch*.63f;
+                float artS=cardH*.61f;
                 float press=r.Contains(Event.current.mousePosition)&&Input.GetMouseButton(0)?2f:0f;
+                LobbyHomeCard(r,acc[i],i==0,press);
                 if(press>0||(newbie&&i==0))UiKit.Halo(r,acc[i],1);
-                LobbyModeArt(new Rect(r.x+pad*.45f,r.y+ch*.18f+press,artS,artS),art[i],acc[i]);
-                UiKit.Divider(new Rect(r.x+pad*.3f,r.y+ch*.18f,2,ch*.64f),acc[i]);
+                LobbyModeArt(new Rect(r.x+pad*.45f,r.y+cardH*.19f+press,artS,artS),art[i],acc[i]);
+                UiKit.Divider(new Rect(r.x+pad*.3f,r.y+cardH*.20f,2,cardH*.60f),acc[i]);
                 UiKit.Gem(new Rect(r.xMax-pad*.8f,r.center.y-4,8,8),acc[i]);
-                float tx=r.x+ch*.63f+pad*.8f;
-                UiKit.Text(new Rect(tx, r.y + ch * 0.1f+press, r.xMax - tx - pad*1.2f, ch * 0.38f), LobbyCaption(titles[i]), Mathf.RoundToInt(fs * 1.15f), Color.white, TextAnchor.MiddleLeft, true);
-                UiKit.Text(new Rect(tx, r.y + ch * 0.49f+press, r.xMax - tx - pad*1.2f, ch * 0.43f), LobbyCaption(descs[i]), fsS, new Color(0.82f, 0.86f, 0.96f));
+                float tx=r.x+cardH*.61f+pad*.8f;
+                UiKit.Text(new Rect(tx, r.y + cardH * 0.08f+press, r.xMax - tx - pad*1.2f, cardH * 0.37f), LobbyCaption(titles[i]), Mathf.RoundToInt(fs * 1.12f), i==0?new Color(1f,.94f,.78f):new Color(.96f,.96f,1f), TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(tx, r.y + cardH * 0.48f+press, r.xMax - tx - pad*1.2f, cardH * 0.45f), LobbyCaption(descs[i]), fsS, new Color(.78f,.83f,.91f));
                 if (hit)
                 {
                     if (i == 0) StartStoryEntry();
@@ -366,37 +370,174 @@ namespace SpellDuel
                 LobbyStroke(center+new Vector2(Mathf.Cos(a)*radius,Mathf.Sin(a)*radius),center+new Vector2(Mathf.Cos(b)*radius,Mathf.Sin(b)*radius),width,c);
             }
         }
+        // Home-only art: one opaque landscape and two nine-sliced panel textures.
+        static Texture2D homeLandscape;
+        static GUIStyle homeGlass,homeEdge;
+        static Color HomeColor(uint rgb)=>new Color(((rgb>>16)&255)/255f,((rgb>>8)&255)/255f,(rgb&255)/255f);
+        sealed class HomePainter
+        {
+            internal readonly int width,height;internal readonly Color32[] pixels;
+            internal HomePainter(int w,int h){width=w;height=h;pixels=new Color32[w*h];}
+            internal void Dot(int x,int y,Color color)
+            {
+                int i=(height-1-y)*width+x;var old=pixels[i];float a=color.a;
+                pixels[i]=new Color32((byte)Mathf.Clamp(old.r*(1-a)+color.r*255*a,0,255),(byte)Mathf.Clamp(old.g*(1-a)+color.g*255*a,0,255),(byte)Mathf.Clamp(old.b*(1-a)+color.b*255*a,0,255),255);
+            }
+            internal void Poly(Color color,params float[] points)
+            {
+                float x0=1,x1=0,y0=1,y1=0;
+                for(int i=0;i<points.Length;i+=2){x0=Mathf.Min(x0,points[i]);x1=Mathf.Max(x1,points[i]);y0=Mathf.Min(y0,points[i+1]);y1=Mathf.Max(y1,points[i+1]);}
+                for(int y=Mathf.Max(0,Mathf.FloorToInt(y0*height));y<Mathf.Min(height,Mathf.CeilToInt(y1*height));y++)
+                for(int x=Mathf.Max(0,Mathf.FloorToInt(x0*width));x<Mathf.Min(width,Mathf.CeilToInt(x1*width));x++)
+                {
+                    float px=(x+.5f)/width,py=(y+.5f)/height;bool inside=false;
+                    for(int i=0,j=points.Length-2;i<points.Length;j=i,i+=2)
+                        if((points[i+1]>py)!=(points[j+1]>py)&&px<(points[j]-points[i])*(py-points[i+1])/(points[j+1]-points[i+1])+points[i])inside=!inside;
+                    if(inside)Dot(x,y,color);
+                }
+            }
+            internal void Oval(float cx,float cy,float rx,float ry,Color color)
+            {
+                for(int y=Mathf.Max(0,Mathf.FloorToInt((cy-ry)*height));y<Mathf.Min(height,Mathf.CeilToInt((cy+ry)*height));y++)
+                for(int x=Mathf.Max(0,Mathf.FloorToInt((cx-rx)*width));x<Mathf.Min(width,Mathf.CeilToInt((cx+rx)*width));x++)
+                {float dx=((x+.5f)/width-cx)/rx,dy=((y+.5f)/height-cy)/ry;if(dx*dx+dy*dy<1)Dot(x,y,color);}
+            }
+            internal void Box(float x,float y,float w,float h,Color c)=>Poly(c,x,y,x+w,y,x+w,y+h,x,y+h);
+            internal Texture2D Finish(string name)
+            {
+                var texture=new Texture2D(width,height,TextureFormat.RGBA32,false){name=name,filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp};
+                texture.SetPixels32(pixels);texture.Apply(false,true);return texture;
+            }
+        }
+        static void LobbyHomeArtInit()
+        {
+            if(homeLandscape!=null)return;
+            var p=new HomePainter(540,1170);
+            Color night=HomeColor(0x172340),dusk=HomeColor(0x65556f),horizon=HomeColor(0xc58c69),low=HomeColor(0x182b40),gold=HomeColor(0xf1c986);
+            for(int y=0;y<p.height;y++)for(int x=0;x<p.width;x++)
+            {
+                float u=(x+.5f)/p.width,v=(y+.5f)/p.height;
+                Color c=v<.20f?Color.Lerp(night,dusk,v/.20f):v<.34f?Color.Lerp(dusk,horizon,(v-.20f)/.14f):Color.Lerp(horizon,low,Mathf.Clamp01((v-.34f)/.28f));
+                float dx=(u-.72f)/.40f,dy=(v-.28f)/.15f,light=Mathf.Exp(-3*(dx*dx+dy*dy))*.40f;
+                c=Color.Lerp(c,gold,light);c=Color.Lerp(c,night,Mathf.Clamp01(Mathf.Abs(u-.5f)*.5f));p.Dot(x,y,c);
+            }
+            // Five chapter silhouettes, with clear, deliberately broad cel shapes.
+            p.Oval(.79f,.105f,.027f,.0125f,HomeColor(0xf2ddae));p.Oval(.801f,.100f,.025f,.012f,HomeColor(0x2a3350));
+            for(int i=0;i<32;i++){float x=(i*.618034f)%1,y=.014f+((i*.317f)%.15f);p.Oval(x,y,.0009f+i%2*.0004f,.00045f+i%2*.0002f,new Color(.88f,.87f,1,.20f+i%3*.10f));}
+            p.Poly(HomeColor(0x55536b),-.04f,.37f,.04f,.276f,.11f,.30f,.19f,.213f,.27f,.279f,.35f,.24f,.45f,.36f,.61f,.31f,.72f,.36f,.84f,.27f,.95f,.30f,1.04f,.26f,1.04f,.48f,-.04f,.48f);
+            // Split volcanic summit and a single ember-coloured face.
+            p.Poly(HomeColor(0x3d435e),-.05f,.39f,.105f,.255f,.143f,.268f,.183f,.251f,.36f,.403f,.39f,.47f,-.05f,.47f);
+            p.Poly(HomeColor(0x9d6a69),.143f,.268f,.183f,.251f,.252f,.342f,.199f,.317f,.182f,.293f,.154f,.285f);
+            p.Poly(new Color(.89f,.66f,.48f,.26f),.120f,.242f,.149f,.222f,.177f,.227f,.203f,.213f,.256f,.223f,.215f,.234f,.176f,.235f,.148f,.250f);
+            // Sea and a line of gold reflected between the headlands.
+            p.Poly(HomeColor(0x526374),.40f,.344f,.77f,.331f,1.02f,.356f,1.02f,.45f,.40f,.45f);
+            for(int i=0;i<8;i++)p.Box(.56f-i*.013f,.35f+i*.009f,.18f+i*.016f,.0010f,new Color(.95f,.77f,.55f,.36f-i*.025f));
+            // Loess mesas and the distant red sandstone amphitheatre.
+            p.Poly(HomeColor(0x746070),.77f,.345f,.82f,.291f,.94f,.291f,.97f,.319f,1.06f,.319f,1.06f,.47f,.77f,.47f);
+            p.Poly(HomeColor(0xa07775),.82f,.291f,.94f,.291f,.954f,.305f,.83f,.305f);
+            p.Poly(HomeColor(0x51465f),.63f,.355f,.67f,.333f,.83f,.333f,.87f,.355f,.85f,.406f,.65f,.406f);
+            p.Box(.67f,.329f,.16f,.006f,HomeColor(0xaf8380));p.Box(.651f,.357f,.20f,.005f,HomeColor(0x98747c));
+            for(int i=0;i<8;i++){float x=.672f+i*.021f;p.Oval(x,.352f,.006f,.009f,HomeColor(0x28384e));p.Box(x-.006f,.352f,.012f,.016f,HomeColor(0x28384e));}
+            // Layered forest against the mountains.
+            for(int i=0;i<19;i++)
+            {
+                float x=-.02f+i*.030f,y=.345f+Mathf.Sin(i*.78f)*.016f,treeHeight=.025f+(i%4)*.007f;
+                p.Poly(HomeColor(0x33485b),x,y-treeHeight,x-.019f,y,x-.012f,y,x-.025f,y+.018f,x+.025f,y+.018f,x+.012f,y,x+.019f,y);
+            }
+            p.Poly(HomeColor(0x263b50),0,.41f,.10f,.386f,.22f,.407f,.38f,.389f,.54f,.418f,.73f,.397f,1,.433f,1,1,0,1);
+            // The village bell tower: roof, timber belfry, hanging bell and warm windows.
+            Color tower=HomeColor(0x25334b),roof=HomeColor(0x34344c),rim=HomeColor(0xba9271);
+            p.Poly(tower,.073f,.290f,.156f,.290f,.169f,.488f,.060f,.488f);
+            p.Box(.076f,.294f,.011f,.074f,rim);p.Box(.142f,.294f,.011f,.074f,rim);
+            p.Box(.087f,.300f,.055f,.063f,HomeColor(0x141f36));
+            p.Box(.112f,.297f,.005f,.026f,rim);p.Oval(.114f,.334f,.015f,.014f,gold);p.Poly(gold,.099f,.333f,.129f,.333f,.136f,.351f,.092f,.351f);p.Box(.090f,.351f,.048f,.004f,rim);
+            p.Poly(roof,.040f,.297f,.115f,.255f,.189f,.297f);p.Poly(rim,.051f,.296f,.115f,.261f,.124f,.267f,.064f,.299f);
+            p.Box(.055f,.299f,.120f,.008f,HomeColor(0x18253c));p.Box(.065f,.369f,.101f,.008f,rim);
+            for(int i=0;i<3;i++)p.Box(.095f,.392f+i*.028f,.032f,.011f,new Color(.96f,.76f,.47f,.85f));
+            p.Poly(HomeColor(0x23334a),-.04f,.50f,.09f,.448f,.21f,.50f,.34f,.458f,.47f,.512f,.65f,.46f,.82f,.525f,1.04f,.47f,1.04f,.72f,-.04f,.72f);
+            // Readability veil is baked once, darkest behind the lower six menu rows.
+            for(int y=0;y<p.height;y++)for(int x=0;x<p.width;x++)
+            {
+                float v=(y+.5f)/p.height,a=Mathf.Clamp01((v-.265f)/.53f)*.68f;
+                p.Dot(x,y,new Color(.035f,.060f,.11f,a));
+            }
+            homeLandscape=p.Finish("Home dusk landscape / opaque cached");
+            const int w=192,h=96;var glass=new Color32[w*h];var frame=new Color32[w*h];
+            for(int y=0;y<h;y++)for(int x=0;x<w;x++)
+            {
+                float bevel=Mathf.Min(Mathf.Min(x,w-1-x),Mathf.Min(y,h-1-y));bool cut=(x<9&&y<9&&x+y<9)||(x>w-10&&y<9&&(w-1-x)+y<9)||(x<9&&y>h-10&&x+(h-1-y)<9)||(x>w-10&&y>h-10&&(w-1-x)+(h-1-y)<9);
+                if(cut)continue;int i=y*w+x;float t=y/(float)(h-1);Color c=Color.Lerp(HomeColor(0x121e35),HomeColor(0x26324e),t);c.a=.91f;glass[i]=c;
+                float alpha=bevel<1.5f?.84f:bevel<3?.12f:bevel>5&&bevel<6?.16f:0;frame[i]=new Color(1,1,1,alpha);
+            }
+            Texture2D panel=new Texture2D(w,h,TextureFormat.RGBA32,false){name="Home glass nine slice",filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp};panel.SetPixels32(glass);panel.Apply(false,true);
+            Texture2D trim=new Texture2D(w,h,TextureFormat.RGBA32,false){name="Home metallic edge nine slice",filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp};trim.SetPixels32(frame);trim.Apply(false,true);
+            homeGlass=new GUIStyle{border=new RectOffset(12,12,12,12)};homeGlass.normal.background=panel;
+            homeEdge=new GUIStyle{border=new RectOffset(12,12,12,12)};homeEdge.normal.background=trim;
+        }
+        static void LobbyHomeBackground(Rect r)
+        {
+            LobbyHomeArtInit();var prior=GUI.color;GUI.color=Color.white;
+            GUI.DrawTexture(r,homeLandscape,ScaleMode.StretchToFill,false);GUI.color=prior;
+        }
+        static void LobbyHomeCard(Rect r,Color accent,bool primary,float press)
+        {
+            if(Event.current.type!=EventType.Repaint)return;
+            var prior=GUI.color;GUI.color=Color.white;
+            // Repaint the exact landscape crop over UiKit's opaque button skin, while
+            // keeping its original hit testing and sound. The glass below is home-only.
+            GUI.DrawTextureWithTexCoords(r,homeLandscape,new Rect(r.x/Screen.width,1-r.yMax/Screen.height,r.width/Screen.width,r.height/Screen.height),false);
+            var face=new Rect(r.x,r.y+press,r.width,r.height-2);homeGlass.Draw(face,false,false,false,false);
+            GUI.color=new Color(accent.r,accent.g,accent.b,primary?1f:.72f);homeEdge.Draw(face,false,false,false,false);GUI.color=prior;
+            float corner=Mathf.Min(r.height*.15f,12),inset=4;Color metal=Color.Lerp(accent,UiKit.Gold,.40f);metal.a=primary?.95f:.65f;
+            for(int side=-1;side<=1;side+=2)for(int row=-1;row<=1;row+=2)
+            {
+                var at=new Vector2(side<0?r.x+inset:r.xMax-inset,row<0?face.y+inset:face.yMax-inset);
+                LobbyStroke(at+new Vector2(-side*corner,0),at,1,metal);LobbyStroke(at,at+new Vector2(0,-row*corner),1,metal);
+            }
+            UiKit.Divider(new Rect(r.x+12,face.y+1,r.width-24,1),new Color(accent.r,accent.g,accent.b,primary?.26f:.10f));
+        }
         static void LobbyDust(Rect r,Color c)
         {
-            for(int i=0;i<14;i++)
+            float unit=r.width/540f;
+            // The background itself is cached; only these tiny glyphs move.
+            for(int i=0;i<22;i++)
             {
-                float x=r.x+r.width*(i%2==0?.055f:.945f)+Mathf.Sin(i*2.3f)*r.width*.025f;
-                float y=r.y+r.height*((i*.173f+Time.time*.007f)%1f);
-                float size=3+i%3*2;
-                UiKit.Gem(new Rect(x-size*.5f,y,size,size),new Color(c.r,c.g,c.b,.18f+.10f*Mathf.Sin(Time.time+i)));
+                float phase=(i*.137f+Time.time*(.004f+i%3*.0008f))%1f;
+                float x=r.x+r.width*(.05f+.90f*((i*.381966f)%1f))+Mathf.Sin(Time.time*.17f+i*2.3f)*r.width*.016f;
+                float y=r.y+r.height*(1-phase),size=(1.4f+i%3)*unit;
+                float alpha=(.20f+.16f*Mathf.Sin(Time.time*.65f+i))*Mathf.Sin(phase*Mathf.PI);
+                UiKit.Gem(new Rect(x-size*.5f,y,size,size),new Color(c.r,c.g,c.b,alpha));
+            }
+            var ring=new Vector2(r.x+r.width*.79f,r.y+r.height*.18f);
+            LobbyRing(ring,r.width*.32f,new Color(.93f,.76f,.47f,.075f),Mathf.Max(1,unit*.55f),56,Time.time*.012f);
+            LobbyRing(ring,r.width*.27f,new Color(.63f,.74f,.95f,.060f),Mathf.Max(1,unit*.45f),48,-Time.time*.009f);
+            for(int i=0;i<8;i++)
+            {
+                float a=i*Mathf.PI*.25f+Time.time*.012f;var at=ring+new Vector2(Mathf.Cos(a),Mathf.Sin(a))*r.width*.32f;
+                UiKit.Gem(new Rect(at.x-2*unit,at.y-2*unit,4*unit,4*unit),new Color(.96f,.81f,.54f,.14f));
             }
         }
         static void LobbyLogo(Rect r,int fs)
         {
-            float radius=Mathf.Min(r.width*.14f,r.height*.25f);
-            var center=new Vector2(r.center.x,r.y+radius*1.25f);
-            LobbyRing(center,radius,new Color(.94f,.76f,.43f,.50f),Mathf.Max(1,fs*.025f),40);
-            LobbyRing(center,radius*.80f,new Color(.55f,.73f,1,.24f),Mathf.Max(1,fs*.025f),32);
-            for(int i=0;i<8;i++)
+            float radius=Mathf.Min(r.width*.105f,r.height*.24f);
+            var center=new Vector2(r.center.x,r.y+radius*1.20f);
+            LobbyRing(center,radius,new Color(.95f,.78f,.47f,.72f),Mathf.Max(1,fs*.025f),48,Time.time*.022f);
+            LobbyRing(center,radius*.78f,new Color(.77f,.82f,1,.30f),Mathf.Max(1,fs*.021f),36,-Time.time*.018f);
+            for(int i=0;i<4;i++)
             {
-                float a=i*Mathf.PI*.25f+Time.time*.035f;
-                UiKit.Gem(new Rect(center.x+Mathf.Cos(a)*radius-3,center.y+Mathf.Sin(a)*radius-3,6,6),UiKit.Gold);
+                float a=i*Mathf.PI*.5f;var at=center+new Vector2(Mathf.Cos(a),Mathf.Sin(a))*radius;
+                UiKit.Gem(new Rect(at.x-3,at.y-3,6,6),UiKit.Gold);
             }
-            float blade=radius*.62f;
-            LobbyStroke(center+new Vector2(-blade*.45f,blade*.5f),center+new Vector2(blade*.45f,-blade*.6f),fs*.09f,UiKit.Paper);
-            LobbyStroke(center+new Vector2(blade*.45f,blade*.5f),center+new Vector2(-blade*.45f,-blade*.6f),fs*.09f,UiKit.Gold);
+            float blade=radius*.67f;
+            LobbyStroke(center+new Vector2(-blade*.45f,blade*.5f),center+new Vector2(blade*.45f,-blade*.6f),fs*.085f,UiKit.Paper);
+            LobbyStroke(center+new Vector2(blade*.45f,blade*.5f),center+new Vector2(-blade*.45f,-blade*.6f),fs*.085f,UiKit.Gold);
             UiKit.Star(new Rect(center.x-radius*.25f,center.y-radius*.25f,radius*.5f,radius*.5f),UiKit.Gold);
-            var title=new Rect(r.x,r.y+r.height*.57f,r.width,r.height*.36f);
-            UiKit.Text(new Rect(title.x,title.y+3,title.width,title.height),LobbyCaption("SpellDuel"),Mathf.RoundToInt(fs*2.75f),new Color(.40f,.29f,.19f),TextAnchor.MiddleCenter,true);
-            UiKit.Text(title,LobbyCaption("SpellDuel"),Mathf.RoundToInt(fs*2.75f),UiKit.Paper,TextAnchor.MiddleCenter,true);
+            var title=new Rect(r.x,r.y+r.height*.53f,r.width,r.height*.40f);
+            UiKit.Text(new Rect(title.x,title.y+fs*.065f,title.width,title.height),LobbyCaption("SpellDuel"),Mathf.RoundToInt(fs*2.75f),new Color(.25f,.18f,.25f),TextAnchor.MiddleCenter,true);
+            UiKit.Text(title,LobbyCaption("SpellDuel"),Mathf.RoundToInt(fs*2.75f),new Color(1f,.94f,.78f),TextAnchor.MiddleCenter,true);
             float lineW=r.width*.55f;
-            UiKit.Divider(new Rect(r.center.x-lineW*.5f,title.yMax+3,lineW,1),new Color(.94f,.76f,.43f,.6f));
-            UiKit.Gem(new Rect(r.center.x-5,title.yMax-1,10,10),UiKit.Gold);
+            UiKit.Divider(new Rect(r.center.x-lineW*.5f,title.yMax+3,lineW,1),new Color(.94f,.76f,.43f,.45f));
+            UiKit.Gem(new Rect(r.center.x-4,title.yMax,8,8),UiKit.Gold);
         }
         static void LobbyPhone(Rect r,Color c)
         {

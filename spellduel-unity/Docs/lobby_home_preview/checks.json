@@ -1,0 +1,53 @@
+{
+  "baseRevision": "25b7a98c1128be494e4dddbfab38d1b599375030",
+  "unchangedOtherMethods": [
+    "DrawLobby",
+    "LeaveLobby",
+    "LobbyArea",
+    "LobbyCaption",
+    "LobbyDetails",
+    "LobbyInput",
+    "LobbyMarker",
+    "LobbyPhone",
+    "LobbyRemote",
+    "LobbyRing",
+    "LobbySolo",
+    "LobbyStroke",
+    "RoomCodeUI",
+    "S",
+    "StartStoryEntry",
+    "Step"
+  ],
+  "homeStringLiteralsUnchanged": true,
+  "homeButtonBranchesUnchanged": true,
+  "homeSelectionPredicateUnchanged": true,
+  "artOrderUnchanged": true,
+  "syntaxFiles": 116,
+  "verifiedViewportSizes": [
+    [
+      1080,
+      2340
+    ],
+    [
+      360,
+      780
+    ]
+  ],
+  "animationSeconds": [
+    0,
+    8,
+    16
+  ],
+  "buttonsPerViewport": 6,
+  "cacheConstructedAfterWarmup": 12,
+  "cacheConstructedAfterRepeatedFrames": 12,
+  "newHomeTextureCount": 3,
+  "newHomeRGBABytes": 2674656,
+  "method": "Actual extracted C# GUI methods and UiKit under .NET 10 with offline Unity API contracts; not native Unity compilation or device rendering.",
+  "opaqueBackgroundMinAlpha": 255,
+  "backgroundPixelsChangedVsSecond0": {
+    "8": 3439,
+    "16": 3146
+  },
+  "newHomeTextureRGBA_MiB": 2.551
+}
