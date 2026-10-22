@@ -489,6 +489,7 @@ namespace SpellDuel
                 world.OnStartTrial = () => OpenPrep("⚔ 轉職試煉", true, "轉職試煉不能使用道具", StartTrial);
                 WireVillage();
             }
+            if (prepGo == null && phase == Phase.Setup && !NetMode) enemyClass = "story";   // 在村子裡（整備取消了也一樣）：回到故事模式
             world.Draw(Progress.Char(myClass));
         }
 
