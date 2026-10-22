@@ -6,7 +6,7 @@ namespace SpellDuel
     {
         internal static bool Girl(string id)=>id=="艾琳"||id=="凪"||id=="翠"||id=="小葉"||id=="米菈"||id=="店員";
         internal static bool LongLegs(string id)=>id=="艾琳"||id=="凪"||id=="小葉";
-        internal static float ShoulderX(string id)=>id=="鐵匠"?.205f:id=="小葉"?.16f:id=="小鐵"?.14f:Girl(id)?.110f:.15f;
+        internal static float ShoulderX(string id)=>id=="鐵匠"?.205f:id=="小葉"?.16f:id=="小鐵"?.14f:id=="翠"?.12f:(id=="米菈"||id=="店員")?.118f:Girl(id)?.110f:.15f;
         internal static float ShoulderY(string id)=>id=="小葉"?1.35f:id=="翠"?1.375f:id=="鐵匠"?1.345f:1.37f;
         internal static float TorsoY(string id)=>LongLegs(id)?.90f:.78f;
         internal static float HipY(string id)=>LongLegs(id)?.99f:.85f;
