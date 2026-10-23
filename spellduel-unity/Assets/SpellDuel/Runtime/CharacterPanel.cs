@@ -18,6 +18,8 @@ namespace SpellDuel
         Vector2 statsScroll, gearScroll;
         string toast; float toastUntil;
 
+        static string TreeLabel(string t) => t == Skills.Novice ? "初心者" : Advanced.Get(t)?.name ?? (Skills.Classes.TryGetValue(t, out var c) ? c.name : t);
+
         void Toast(string s) { toast = s; toastUntil = Time.time + 2f; }
 
         /// <summary>畫在 r 裡面；回傳這一幀有沒有改到角色</summary>
@@ -33,21 +35,28 @@ namespace SpellDuel
             int cur = CharacterProfile.XpForLevel(p.level), next = CharacterProfile.XpForLevel(p.level + 1);
             var adv = p.Adv;
             UiKit.Title(new Rect(x, y, w, lh), $"{(adv != null ? $"{adv.name}（{cd.name}）" : cd.name)}　Lv {p.level}", adv != null ? adv.color : cd.color, fsL);
-            UiKit.Text(new Rect(x, y+lh, w, fs*1.2f), p.cls == Skills.Novice ? $"能力點 {p.statPoints}　技能點 {p.skillPoints}（技能樹強化學會的招式；轉職時退回）" : $"能力點 {p.statPoints}　技能點 {p.skillPoints}　職業樹 {p.BaseSpent}/{CharacterProfile.TreeTotal(p.cls)}{(p.adv == null ? $"（轉職前最多 {p.BaseTreeCap}）" : "")}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
+            UiKit.Text(new Rect(x, y+lh, w, fs*1.2f), $"能力點 {p.statPoints}　技能點 " + string.Join("・", p.Trees.ConvertAll(t => $"{TreeLabel(t)} {p.AvailIn(t)}")), fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
             y += lh + fs*1.3f;
             UiKit.Bar(new Rect(x, y, w, lh * 0.5f), p.level >= CharacterProfile.MaxLevel ? 1f : (p.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f),
                 p.level >= CharacterProfile.MaxLevel ? "最高等級" : p.LevelLocked ? $"經驗已滿：到職業工會轉職才能升到 {p.level + 1} 級" : $"經驗 {p.xp - cur} / {next - cur}", fsS);
             y += lh * 0.5f + gap;
             // ---- 分頁
-            string[] tabs = adv != null ? new[] { "📊 能力值", "🌳 技能樹", "🛡 裝備", "✨ 進階" } : new[] { "📊 能力值", "🌳 技能樹", "🛡 裝備" };
+            // 分頁：能力值、技能樹（現在的職業）、裝備、進階（轉職後）、初心者（從初心者轉職來的：保留的舊技能樹）
+            var tabList = new List<string> { "📊 能力值", "🌳 技能樹", "🛡 裝備" };
+            if (adv != null) tabList.Add("✨ 進階");
+            int noviceTab = p.novicePast && p.cls != Skills.Novice ? tabList.Count : -1;
+            if (noviceTab >= 0) tabList.Add("🌱 初心者");
+            string[] tabs = tabList.ToArray();
+            int advTab = adv != null ? 3 : -1;
+            Color TabCol(int i) => i == advTab ? adv.color : i == noviceTab ? Skills.Classes[Skills.Novice].color : cd.color;
             if (tab >= tabs.Length) tab = 0;
             float tw = (w - gap * (tabs.Length - 1)) / tabs.Length;
             for (int i = 0; i < tabs.Length; i++)
-                if (UiKit.Button(new Rect(x + i * (tw + gap), y, tw, lh * 1.1f), tabs[i], fsS, tab == i, i == 3 ? adv.color : cd.color)) { tab = i; selNode = null; selItem = null; }
-            for(int i=0;i<tabs.Length;i++) UiKit.Tab(new Rect(x+i*(tw+gap),y,tw,lh*1.1f),tab==i,i==3?adv.color:cd.color);
+                if (UiKit.Button(new Rect(x + i * (tw + gap), y, tw, lh * 1.1f), tabs[i], fsS, tab == i, TabCol(i))) { tab = i; selNode = null; selItem = null; }
+            for(int i=0;i<tabs.Length;i++) UiKit.Tab(new Rect(x+i*(tw+gap),y,tw,lh*1.1f),tab==i,TabCol(i));
             y += lh * 1.1f + gap;
             var body = new Rect(x, y, w, r.yMax - gap - y);
-            bool changed = tab == 0 ? DrawBodyPage(body, p, fs, fsS, gap, false) : tab == 1 ? DrawTree(body, p, fs, fsS, gap, p.cls) : tab == 3 ? DrawTree(body, p, fs, fsS, gap, adv.id) : DrawBodyPage(body, p, fs, fsS, gap, true);
+            bool changed = tab == 0 ? DrawBodyPage(body, p, fs, fsS, gap, false) : tab == 1 ? DrawTree(body, p, fs, fsS, gap, p.cls) : tab == advTab ? DrawTree(body, p, fs, fsS, gap, adv.id) : tab == noviceTab ? DrawTree(body, p, fs, fsS, gap, Skills.Novice) : DrawBodyPage(body, p, fs, fsS, gap, true);
             if (Time.time < toastUntil) UiKit.Pill(r.y + r.height * 0.5f, toast, fs, new Color(1f, 0.85f, 0.5f), r.width * 0.9f, 0.9f);
             if (changed) Progress.SaveChar(p);
             return changed;

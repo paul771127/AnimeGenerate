@@ -153,7 +153,7 @@ namespace SpellDuel
             sb.Append("🌱 初心者的技能樹：木棍揮擊、投石、急救各可以強化 5 級（每升一級得 1 技能點）。招式要先到「炎之里」找居民解任務學會，才能點：\n");
             foreach (var q in NoviceQuests.All)
                 sb.Append($"・{Skills.All[q.skill].name}（{q.npc}「{q.title}」）：{NoviceQuests.Progress(q, p, Story.IsCleared)}\n");
-            sb.Append("轉職時這裡點的技能點會全部退回，拿去新職業的技能樹點。");
+            sb.Append($"這棵樹只能用 1～{Skills.JobLevel} 級拿到的技能點（剩 {p.AvailIn(Skills.Novice)} 點）。轉職後這棵樹會保留、不能重置，點數也不能拿去點新職業的技能樹。");
             return sb.ToString();
         }
 
@@ -169,7 +169,7 @@ namespace SpellDuel
             {
                 string help = treeId == Skills.Novice ? NoviceHelp(p) : advT != null
                     ? $"✨ {advT.name}的進階技能樹（和基本技能樹共用技能點）。轉職時已學會「{(Skills.All.TryGetValue(advT.skills[0], out var s0) ? s0.name : advT.skills[0])}」；📘 可以習得另外兩個進階技能。有些節點也會強化基本職業的技能，自由搭配。\n核心機制：{advT.core}"
-                    : $"點一個節點看說明。樹從最上面往下長：父節點點過 1 級，下面接著的節點才能點。整棵樹的點數比轉職前能拿到的多，轉職前最多點 {p.BaseTreeCap}（整棵樹的五分之一） 點，怎麼點由你決定。\n一開始只會 3 個基本技能：{string.Join("、", NamesOf(SkillTrees.Starters(p.cls)))}；📘＝習得新技能。";
+                    : $"點一個節點看說明。樹從最上面往下長：父節點點過 1 級，下面接著的節點才能點。整棵樹的點數比能拿到的多，怎麼點由你決定。這棵樹只能用 {(p.novicePast ? Skills.JobLevel + 1 : 1)}～{Advanced.Level} 級拿到的技能點（目前剩 {p.AvailIn(treeId)} 點；初心者、進階職業的點數各自分開，不能挪）。\n一開始只會 3 個基本技能：{string.Join("、", NamesOf(SkillTrees.Starters(p.cls)))}；📘＝習得新技能。";
                 DrawTreeParagraph(new Rect(dr.x+gap,dr.y+gap,dr.width-gap*2,dr.height-gap*2),treeId+" help",help,fsS,UiKit.Muted);
                 return changed;
             }

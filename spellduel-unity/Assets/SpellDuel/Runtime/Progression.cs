@@ -812,10 +812,47 @@ namespace SpellDuel
         public string adv;              // 進階職業（Advanced.All）；null＝還沒轉職
         public bool trialPassed;        // 轉職試煉通過了（可以選進階職業）
         public AdvDef Adv => Advanced.Get(adv);
-        /// <summary>這個角色所有的技能樹節點（基本＋進階）</summary>
-        public IEnumerable<TreeNode> Nodes => SkillTrees.AllOf(cls, adv);
-        /// <summary>節點屬於哪一棵樹（基本職業 id 或進階職業 id）</summary>
-        public string TreeOf(TreeNode n) => adv != null && SkillTrees.Of(adv).Contains(n) ? adv : cls;
+        /// <summary>從初心者轉職來的：初心者的技能樹保留（點過的不能重置，也不能把點數拿去別的樹）</summary>
+        public bool novicePast;
+        /// <summary>這個角色所有的技能樹節點（初心者（轉職前的）＋基本＋進階）</summary>
+        public IEnumerable<TreeNode> Nodes
+        {
+            get
+            {
+                if (novicePast && cls != Skills.Novice) foreach (var n in SkillTrees.Of(Skills.Novice)) yield return n;
+                foreach (var n in SkillTrees.AllOf(cls, adv)) yield return n;
+            }
+        }
+        /// <summary>節點屬於哪一棵樹（初心者、基本職業 id 或進階職業 id）</summary>
+        public string TreeOf(TreeNode n) => SkillTrees.Of(Skills.Novice).Contains(n) ? Skills.Novice : adv != null && SkillTrees.Of(adv).Contains(n) ? adv : cls;
+        /// <summary>這個角色有的技能樹（依階段：初心者 → 基本職業 → 進階職業）</summary>
+        public List<string> Trees
+        {
+            get
+            {
+                var l = new List<string>();
+                if (cls == Skills.Novice || novicePast) l.Add(Skills.Novice);
+                if (cls != Skills.Novice) l.Add(cls);
+                if (!string.IsNullOrEmpty(adv)) l.Add(adv);
+                return l;
+            }
+        }
+        /// <summary>
+        /// 這棵樹能用的技能點（每個階段的點數只能點那個階段的樹，不能挪）：
+        ///   初心者＝1～10 級拿到的（10 點）；基本職業＝11～30 級（從初心者轉職來的；20 點）；進階職業＝31 級以後。
+        /// </summary>
+        public int EarnedIn(string tree)
+        {
+            if (tree == Skills.Novice) return cls == Skills.Novice || novicePast ? Mathf.Min(level, Skills.JobLevel) * SkillPerLevel : 0;
+            if (tree == cls) return Mathf.Max(0, Mathf.Min(level, Advanced.Level) - (novicePast ? Skills.JobLevel : 0)) * SkillPerLevel;
+            if (!string.IsNullOrEmpty(adv) && tree == adv) return Mathf.Max(0, level - Advanced.Level) * SkillPerLevel;
+            return 0;
+        }
+        public int SpentIn(string tree) { int v = 0; foreach (var n in SkillTrees.Of(tree)) v += Rank(n.id); return v; }
+        public int AvailIn(string tree) => Mathf.Max(0, EarnedIn(tree) - SpentIn(tree));
+        /// <summary>重新算剩下的技能點（各棵樹剩下的加起來）</summary>
+        void RecalcSkillPoints() { int v = 0; foreach (var t in Trees) v += AvailIn(t); skillPoints = v; }
+        static string TreeName(string tree) => Advanced.Get(tree)?.name ?? (Skills.Classes.TryGetValue(tree, out var c) ? c.name : tree);
         public bool CanAdvance => adv == null && level >= Advanced.Level && trialPassed;
         /// <summary>轉職等級（30 級）還沒轉職：不能再升級（經驗停在滿格），要先完成轉職試煉並轉職</summary>
         public bool LevelLocked => cls == Skills.Novice ? level >= Skills.JobLevel : adv == null && level >= Advanced.Level;
@@ -846,7 +883,7 @@ namespace SpellDuel
         {
             var a = Advanced.Get(advId);
             if (!CanAdvance || a == null || a.baseCls != cls) return false;
-            adv = a.id;
+            adv = a.id; RecalcSkillPoints();   // 進階職業的技能點從 31 級開始拿（基本職業剩下的點不能挪過去）
             return true;
         }
 
@@ -871,7 +908,7 @@ namespace SpellDuel
         /// <summary>到目前等級總共拿到的技能點</summary>
         public int EarnedSkill => level * SkillPerLevel;
         /// <summary>現在點得出去的技能點（基本樹點滿 30 點、又還沒轉職時，剩下的點要等轉職才能用）</summary>
-        public int UsableSkillPoints => adv == null && BaseSpent >= BaseTreeCap ? 0 : skillPoints;
+        public int UsableSkillPoints => skillPoints;
         /// <summary>職業樹現在最多能點幾點：轉職前 30、轉職後全部</summary>
         public int BaseCapNow => adv == null ? BaseTreeCap : int.MaxValue;
 
@@ -886,8 +923,9 @@ namespace SpellDuel
             foreach (var k in new List<string>(ranks.Keys))
                 if (!all.TryGetValue(k, out var nd)) ranks.Remove(k);
                 else if (ranks[k] > nd.max) ranks[k] = nd.max;
-            if (BaseSpent > BaseCapNow) foreach (var n in SkillTrees.Of(cls)) ranks.Remove(n.id);
-            skillPoints = Mathf.Max(0, EarnedSkill - SpentSkill);
+            // 某一棵樹點超過這個階段拿到的點數（舊規則點的）：那棵樹退點
+            foreach (var t in Trees) if (SpentIn(t) > EarnedIn(t)) foreach (var n in SkillTrees.Of(t)) ranks.Remove(n.id);
+            RecalcSkillPoints();
         }
 
         /// <summary>升到 level+1 需要的累積經驗：75、200、375、600…</summary>
@@ -901,7 +939,8 @@ namespace SpellDuel
             if (amount <= 0 || level >= MaxLevel) return 0;
             xp += amount;
             int ups = 0;
-            while (level < MaxLevel && !LevelLocked && xp >= XpForLevel(level + 1)) { level++; statPoints += StatPerLevel; skillPoints += SkillPerLevel; ups++; }
+            while (level < MaxLevel && !LevelLocked && xp >= XpForLevel(level + 1)) { level++; statPoints += StatPerLevel; ups++; }
+            RecalcSkillPoints();
             if (LevelLocked) xp = Mathf.Min(xp, XpForLevel(level + 1));   // 經驗條停在滿格；轉職後下一次拿到經驗就升級
             return ups;
         }
@@ -938,9 +977,11 @@ namespace SpellDuel
         public List<Item> ResetPoints()
         {
             for (int i = 0; i < StatInfo.Count; i++) alloc[i] = 0;
-            ranks.Clear();
+            // 技能樹清空；轉職前的初心者技能樹不能重置（點數固定在上面）
+            foreach (var k in new List<string>(ranks.Keys))
+                if (!(novicePast && cls != Skills.Novice && SkillTrees.Find(Skills.Novice, k) != null)) ranks.Remove(k);
             statPoints = (level - 1) * StatPerLevel;
-            skillPoints = EarnedSkill;
+            RecalcSkillPoints();
             var off = new List<Item>();
             for (int i = 0; i < equipped.Length; i++) if (equipped[i] != null && !CanEquip(equipped[i], out _)) { off.Add(equipped[i]); equipped[i] = null; }
             return off;
@@ -950,21 +991,24 @@ namespace SpellDuel
         public string NodeBlock(TreeNode n)
         {
             if (Rank(n.id) >= n.max) return "已滿級";
-            if (cls == Skills.Novice && TreeOf(n) == Skills.Novice && n.skill != null && !noviceLearned.Contains(n.skill))
+            if (TreeOf(n) == Skills.Novice && n.skill != null && !noviceLearned.Contains(n.skill))
                 return $"先到炎之里解任務學會「{(Skills.All.TryGetValue(n.skill, out var ns) ? ns.name : n.skill)}」";
             foreach (var r in SkillTrees.Prereqs(TreeOf(n), n))
             {
                 if (n.free) { if (Rank(r.id) < 1) return $"需要先點「{r.name}」"; }
                 else if (Rank(r.id) < r.max) return $"需要先點滿「{r.name}」";
             }
-            if (skillPoints <= 0) return "技能點不足";
-            if (TreeOf(n) == cls && BaseSpent >= BaseCapNow) return $"轉職前職業技能樹最多只能點 {BaseTreeCap} 點；轉職後可以回來繼續點";
+            var tree = TreeOf(n);
+            if (AvailIn(tree) <= 0)
+                return tree == Skills.Novice ? (cls == Skills.Novice ? "技能點不足" : "初心者的技能點用完了（1～10 級拿到的點只能點這裡）")
+                    : tree == cls ? (EarnedIn(tree) == 0 ? $"「{TreeName(tree)}」的技能點從 {(novicePast ? Skills.JobLevel + 1 : 1)} 級開始拿（每升一級 1 點）" : $"「{TreeName(tree)}」的技能點用完了（{(novicePast ? Skills.JobLevel + 1 : 1)}～{Advanced.Level} 級拿到的點只能點這棵樹）")
+                    : $"「{TreeName(tree)}」的技能點用完了（{Advanced.Level + 1} 級以後拿到的點才能點這棵樹）";
             return null;
         }
         public bool Learn(TreeNode n)
         {
             if (NodeBlock(n) != null) return false;
-            skillPoints--; ranks[n.id] = Rank(n.id) + 1;
+            ranks[n.id] = Rank(n.id) + 1; RecalcSkillPoints();
             return true;
         }
 
@@ -973,6 +1017,7 @@ namespace SpellDuel
         {
             var list = new List<string>(SkillTrees.Starters(cls));
             if (cls == Skills.Novice) list.RemoveAll(id => !noviceLearned.Contains(id));   // 初心者：只會在炎之里解任務學到的招式
+            else if (novicePast) foreach (var id in noviceLearned) if (Skills.All.ContainsKey(id) && !list.Contains(id)) list.Add(id);   // 轉職後：初心者學會的招式還會用
             var a = Adv; if (a != null) list.Add(a.skills[0]);   // 轉職時學會第一個進階技能
             foreach (var n in Nodes) if (n.kind == NodeKind.Learn && Rank(n.id) > 0 && !list.Contains(n.skill)) list.Add(n.skill);
             return list;
@@ -1108,6 +1153,7 @@ namespace SpellDuel
             if (!string.IsNullOrEmpty(adv)) sb.Append("adv=").Append(adv).Append('\n');
             if (trialPassed) sb.Append("trial=1\n");
             if (jobTrial > 0) sb.Append("jt=").Append(jobTrial).Append('\n');
+            if (novicePast) sb.Append("np=1\n");
             foreach (var id in noviceLearned) sb.Append("nl=").Append(id).Append('\n');
             foreach (var kv in noviceQuest) sb.Append("nq=").Append(kv.Key).Append(':').Append(kv.Value).Append('\n');
             foreach (var kv in ranks) sb.Append("rank=").Append(kv.Key).Append(':').Append(kv.Value).Append('\n');
@@ -1139,6 +1185,7 @@ namespace SpellDuel
                         case "trial": p.trialPassed = v == "1"; break;
                         case "jt": p.jobTrial = Mathf.Clamp(int.Parse(v), 0, Skills.JobTrialRounds); break;
                         case "nl": p.noviceLearned.Add(v); break;
+                        case "np": p.novicePast = v == "1"; break;
                         case "nq": { var a = v.Split(':'); if (a.Length == 2) p.noviceQuest[a[0]] = int.Parse(a[1]); break; }
                         default:
                             if (k.StartsWith("eq") && int.TryParse(k.Substring(2), out var slot) && slot >= 0 && slot < p.equipped.Length) p.equipped[slot] = Item.Parse(v);
@@ -1343,7 +1390,9 @@ namespace SpellDuel
             var old = Char(Skills.Novice);
             if (!old.CanChangeJob || cls == Skills.Novice || !Skills.Classes.ContainsKey(cls) || Array.IndexOf(Skills.ClassOrder, cls) < 0) return null;
             var np = CharacterProfile.Parse(cls, old.Serialize());
-            np.ranks.Clear(); np.NormalizeSkillPoints();
+            np.novicePast = true;
+            foreach (var kv in old.ranks) if (SkillTrees.Find(Skills.Novice, kv.Key) != null) np.ranks[kv.Key] = kv.Value;   // 讀新職業時初心者節點被當成不存在的清掉了：照抄回來
+            np.NormalizeSkillPoints();   // 初心者的技能樹保留（點數固定在上面）；新職業的技能點從 11 級開始拿
             for (int i = 0; i < np.equipped.Length; i++)
                 if (np.equipped[i] != null && !np.CanEquip(np.equipped[i], out _)) { AddToBagOrMail(np.equipped[i], "轉職時脫下"); np.equipped[i] = null; }
             cache[cls] = np; SaveChar(np);
