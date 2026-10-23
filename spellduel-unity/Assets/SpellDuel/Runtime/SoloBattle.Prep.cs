@@ -85,7 +85,7 @@ namespace SpellDuel
             y += u * 1.35f;
 
             // ---- 技能
-            UiKit.Text(new Rect(pad, y, cw - pad * 2, u), $"✨ 技能（{myLoadout.Count}/{SlotCount}）：點技能看說明、換上或移除", fsS, UiKit.Gold, TextAnchor.MiddleLeft, true);
+            UiKit.Text(new Rect(pad, y, cw - pad * 2, u), LoadoutReady ? $"✨ 技能（{myLoadout.Count}/{SlotCount}）：點技能看說明、換上或移除" : $"✨ 技能（{myLoadout.Count}/{SlotCount}）：還有 {SlotCount - myLoadout.Count} 格空著，點技能換上", fsS, LoadoutReady ? UiKit.Gold : new Color(1f, 0.55f, 0.45f), TextAnchor.MiddleLeft, true);
             y += u;
             var skills = SetupSkills;
             float sw = (cw - pad * 2 - gap) / 2f, sh = u * 1.25f;

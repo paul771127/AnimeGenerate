@@ -46,6 +46,7 @@ namespace SpellDuel
             daily = kind;
             prof = Progress.Char(myClass);
             dailyLevel = prof.level;
+            EnsureLoadout();
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
             prof.ApplyTo(me, Skills.Classes[myClass], myLoadout);   // 用角色養成的能力值（輸出挑戰的門檻依等級）
             dummyMode = kind == DailyChallenge.Kind.Damage;

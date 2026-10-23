@@ -32,6 +32,7 @@ namespace SpellDuel
             EndBattle();
             storyStage = null; dungeon = null;
             tutorial = true;
+            EnsureLoadout();
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
             Advanced.ApplyStats(me, Progress.Char(myClass).Adv);
             me.maxHp = 9999; me.hp = me.maxHp;   // 教學不會倒（被打到只是重來這一步）

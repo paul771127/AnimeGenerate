@@ -165,6 +165,9 @@ namespace SpellDuel
         bool LoadoutReady => BaseCount == 3 && AdvCount == (AdvSlot ? 1 : 0);
 
         /// <summary>選一個技能：進階技能只有一格（換掉原本的）；基本技能最多 3 個（換掉最早選的）</summary>
+        /// <summary>沒經過整備畫面就開打（例如從地圖直接進關卡）而技能沒選滿：照順序補滿，免得少技能</summary>
+        void EnsureLoadout() { if (!LoadoutReady) FixLoadout(true); }
+
         void PickSkill(string id)
         {
             if (myLoadout.Contains(id)) return;
@@ -174,13 +177,17 @@ namespace SpellDuel
             myLoadout.Add(id);
         }
 
-        /// <summary>技能配置只保留能選的，不足就從頭補（基本 3 個＋進階 1 個）</summary>
-        void FixLoadout()
+        /// <summary>
+        /// 技能配置只保留能選的、超過格數的拿掉。fill＝空格自動補（只有讀存檔、或沒經過整備就開打時才補；
+        /// 整備時移除技能＝那一格空著，讓玩家自己選要換上的技能）
+        /// </summary>
+        void FixLoadout(bool fill = false)
         {
             var list = SetupSkills;
             myLoadout.RemoveAll(id => Array.IndexOf(list, id) < 0);
             while (BaseCount > 3) myLoadout.Remove(myLoadout.Find(x => !Advanced.IsAdvSkill(x)));
             while (AdvCount > 1) myLoadout.Remove(myLoadout.Find(Advanced.IsAdvSkill));
+            if (!fill) return;
             foreach (var id in list) { if (BaseCount >= 3) break; if (!Advanced.IsAdvSkill(id) && !myLoadout.Contains(id)) myLoadout.Add(id); }
             if (AdvSlot && AdvCount == 0) { var first = Array.Find(list, Advanced.IsAdvSkill); if (first != null) myLoadout.Add(first); }
         }
@@ -703,8 +710,8 @@ namespace SpellDuel
             var cls = Skills.Classes[myClass];
             var allowed = AllowedSkills;
             foreach (var id in saved.Split(',')) if (Array.IndexOf(allowed, id) >= 0 && !myLoadout.Contains(id)) myLoadout.Add(id);
-            if (BaseCount < 3) { myLoadout.RemoveAll(x => !Advanced.IsAdvSkill(x)); myLoadout.AddRange(cls.defaultLoadout); }
-            FixLoadout();
+            if (BaseCount == 0) myLoadout.AddRange(cls.defaultLoadout);   // 沒有存檔：預設技能
+            FixLoadout(true);
         }
 
         void SaveChoices()
@@ -763,6 +770,7 @@ namespace SpellDuel
             var ec = Skills.Classes.TryGetValue(remoteClass, out var found) ? found : Skills.Classes["mage"];
             enemyClassUsed = ec.id;
             dummyMode = false;
+            EnsureLoadout();
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
             ApplyProfile(me);   // 故事模式的角色（等級、能力值、技能樹、裝備、進階職業）
             var radv = peerInfo.TryGetValue(PeerIds.Count > 0 ? PeerIds[0] : 0, out var rpi0) ? Advanced.Get(rpi0.adv) : null;
@@ -812,6 +820,7 @@ namespace SpellDuel
             dungeon = pendingDungeon; pendingDungeon = null; dungeonRoomSaid = -1; ClearTicker();
             dummyDamage = 0f; dummyHits = 0; lastWaveSeen = 0; bossHideAt = -1f; bossAliveShown = false;
             ResetLoot(); potionReadyAt = 0f;
+            EnsureLoadout();
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
             prof = null; charOpen = false;
             if (endlessMode)
@@ -1637,6 +1646,7 @@ namespace SpellDuel
             var rest = new List<string>(attacks.GetRange(enemySkills.Count, attacks.Count - enemySkills.Count)); rest.AddRange(guards); Shuffle(rest);
             if (rest.Count > 0) enemySkills.Add(rest[0]);
 
+            EnsureLoadout();
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
             ApplyProfile(me);   // 故事模式的角色
             dummyMode = enemyClass == "dummy";
