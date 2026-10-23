@@ -707,7 +707,7 @@ namespace SpellDuel
         {
             bool ok = prof.CanChangeJob, lvOk = prof.level >= Skills.JobLevel;
             string status = ok ? "公會長：「你通過了試煉。五條路各有各的守護方式——選一條，往後就是你的職業。選定便不能更換。」"
-                : lvOk ? $"公會長：「到了 Lv{Skills.JobLevel}，就來接受轉職試煉吧。一共 {Skills.JobTrialRounds} 輪，一輪一輪來，失敗了可以再挑戰。」"
+                : lvOk ? $"公會長：「到了 Lv{Skills.JobLevel}，就來接受轉職試煉吧。不難：打倒空地上的 5 隻小怪就好，失敗了可以再挑戰。」"
                 : $"公會長：「初心者，先用木棍和石頭保護好自己。到了 Lv{Skills.JobLevel}，再來接受轉職試煉。」\n目前 Lv{prof.level}（還差 {Skills.JobLevel - prof.level} 級）";
             GUI.DrawTexture(new Rect(r.x + gap, y, fs * 2.6f, fs * 2.6f), Portraits.Get("公會長", "guild"), ScaleMode.ScaleToFit, true);
             UiKit.Text(new Rect(r.x + gap * 2 + fs * 2.6f, y, r.width - gap * 3 - fs * 2.6f, fs * 2.8f), status, fsS, Color.white, TextAnchor.UpperLeft);
@@ -715,7 +715,7 @@ namespace SpellDuel
             float bottom = r.yMax - gap * 2 - fs * 2.1f;
             if (!ok)
             {
-                // 轉職試煉：三輪，一輪一輪來（通過的打勾、下一輪可以挑戰、後面的鎖著）
+                // 轉職試煉（目前只有一項）：一項一項來（通過的打勾、下一輪可以挑戰、後面的鎖著）
                 float th = Mathf.Min(fs * 3.4f, (bottom - y) / Skills.JobTrialRounds - gap * 0.5f);
                 for (int i = 0; i < Skills.JobTrialRounds; i++)
                 {

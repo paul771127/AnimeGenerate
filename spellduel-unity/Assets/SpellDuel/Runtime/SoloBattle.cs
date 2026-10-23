@@ -1425,11 +1425,11 @@ namespace SpellDuel
                 if (battle.stageCleared)
                 {
                     string loot = GrantLoot("轉職試煉・實戰通過", false);
-                    JobTrialPassed(2);
+                    JobTrialPassed(0);
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
-                    if (loot.Length > 0) Say($"🎉 轉職試煉全部通過！回職業工會選擇你的職業\n{loot}", 99f);
+                    Say("🎉 轉職試煉通過！回職業工會選擇你的職業" + (loot.Length > 0 ? "\n" + loot : ""), 99f);
                 }
-                else { LoseLoot(); Say("💀 實戰沒有通過…休息一下再來挑戰（試煉可以重複挑戰）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
+                else { LoseLoot(); Say("💀 試煉沒有通過…休息一下再來挑戰（可以重複挑戰）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
             }
             if (endless && IsTrial)

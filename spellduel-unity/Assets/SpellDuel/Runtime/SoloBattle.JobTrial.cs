@@ -3,20 +3,16 @@ using UnityEngine;
 namespace SpellDuel
 {
     /// <summary>
-    /// 初心者的轉職試煉（10 級，在村子的職業工會找公會長）：三輪，一輪一輪來，全部通過才能選職業。
-    ///   第一輪 攻擊訓練：每日挑戰的「輸出挑戰」（打木頭人），拿到銅牌就通過。
-    ///   第二輪 閃避訓練：每日挑戰的「閃避挑戰」，拿到銅牌就通過。
-    ///   第三輪 實戰：熔岩地帶連打 3 波小怪（第 6～8 波強度），全部打倒就通過。
-    /// 試煉的每日挑戰不算進每日紀錄、也不發每日獎勵；通過幾輪記在角色上（CharacterProfile.jobTrial）。
+    /// 初心者的轉職試煉（10 級，在村子的職業工會找公會長）：只有一項，不難——
+    ///   4m×4m 的場地裡有 5 隻最弱的近戰小怪（第 1 波強度、不加難度等級），全部打倒就通過；可以用藥水，失敗可以重來。
+    /// 通過記在角色上（CharacterProfile.jobTrial）。（舊的每日挑戰型試煉程式保留，Skills.JobTrialRounds＝1 時不會用到）
     /// </summary>
     public partial class SoloBattle
     {
-        public static readonly string[] JobTrialNames = { "第一輪：攻擊訓練", "第二輪：閃避訓練", "第三輪：實戰" };
+        public static readonly string[] JobTrialNames = { "轉職試煉：打倒 5 隻小怪" };
         public static readonly string[] JobTrialDesc =
         {
-            "打木頭人：限時內造成足夠的傷害（拿到銅牌）",
-            "躲開飛來的攻擊：限時內閃過足夠的次數（拿到銅牌）",
-            "熔岩地帶連續三波小怪：全部打倒（可以用藥水）",
+            "4m×4m 的場地，5 隻最弱的近戰小怪，全部打倒就通過（可以用藥水，失敗可以重來）",
         };
         const string JobTrialStageId = "jobtrial";
         /// <summary>正在進行的試煉輪（−1＝不是試煉）：前兩輪用每日挑戰</summary>
@@ -32,16 +28,16 @@ namespace SpellDuel
             storyMapOpen = false;
             jobTrialRound = round;
             villageReturn = WorldUI.Screen.Guild;
-            if (round < 2)
+            if (round < 2 && Skills.JobTrialRounds > 1)
             {
                 enemyClass = "daily";
                 StartDaily(round == 0 ? DailyChallenge.Kind.Damage : DailyChallenge.Kind.Dodge);
                 Say($"🎓 轉職試煉・{JobTrialNames[round]}：{JobTrialDesc[round]}", 4f);
                 return;
             }
-            var st = new StoryStage { id = JobTrialStageId, title = "🎓 轉職試煉・實戰", theme = 0, fromWave = 6, toWave = 8, xp = 150, desc = JobTrialDesc[2] };
-            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "最後一輪。熔岩地帶的小怪會一波接一波來，三波都打倒就算通過。" });
-            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "藥水可以用。記住：活著回來，比打倒幾隻怪更重要。" });
+            var st = new StoryStage { id = JobTrialStageId, title = "🎓 轉職試煉", theme = 0, fromWave = 1, toWave = 1, xp = 150, desc = JobTrialDesc[0] };
+            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "轉職試煉很簡單：工會後面的空地放了 5 隻小怪，全部打倒就算通過。" });
+            st.before.Add(new StoryLine { speaker = "公會長", tag = "guild", text = "近的用木棍敲，遠的丟石頭，受傷了就喝藥水。去吧！" });
             storyStage = st;
             ShowDialogue(st.before, StartStageBattle);
         }

@@ -103,7 +103,7 @@ namespace SpellDuel
         public const string Novice = "novice";
         public const int JobLevel = 10;
         /// <summary>初心者的轉職試煉有幾輪（攻擊訓練、閃避訓練、實戰），全部通過才能選職業</summary>
-        public const int JobTrialRounds = 3;
+        public const int JobTrialRounds = 1;   // 轉職試煉只有一項（4m×4m 打倒 5 隻小怪）
         public static bool IsMeleeBasic(SkillDef s) => s != null && (s.id == "na_sword" || s.id == "na_dagger" || s.id == "na_stick");
         /// <summary>手掌劃一下、照刀線砍的普攻：劍士的斬擊、初心者的木棍敲擊（都不會砍掉法球）</summary>
         public static bool IsSwipeBasic(SkillDef s) => s != null && (s.id == "na_sword" || s.id == "na_stick");

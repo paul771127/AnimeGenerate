@@ -819,7 +819,7 @@ namespace SpellDuel
         public bool CanAdvance => adv == null && level >= Advanced.Level && trialPassed;
         /// <summary>轉職等級（30 級）還沒轉職：不能再升級（經驗停在滿格），要先完成轉職試煉並轉職</summary>
         public bool LevelLocked => cls == Skills.Novice ? level >= Skills.JobLevel : adv == null && level >= Advanced.Level;
-        /// <summary>初心者到 10 級、轉職試煉三輪都通過：可以到職業工會選職業</summary>
+        /// <summary>初心者到 10 級、轉職試煉通過：可以到職業工會選職業</summary>
         public bool CanChangeJob => cls == Skills.Novice && level >= Skills.JobLevel && jobTrial >= Skills.JobTrialRounds;
         /// <summary>初心者的轉職試煉通過了幾輪（0～3）</summary>
         public int jobTrial;

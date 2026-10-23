@@ -7,15 +7,15 @@ namespace SpellDuel
     /// 初心者的成長路線（第一章前半）：
     ///   教學結束 → 至少 5 級；故事 1-1 → 至少 7 級、1-2 → 至少 9 級、1-3 → 10 級（初心者上限，經驗不夠時補到）。
     ///   1-1～1-3：場地縮成 4m×4m（使用者的場地比較小就照原本的）；1-1、1-2 全部是近戰小怪，1-3 才開始有遠程。
-    ///   1-3 打完 → 回村子職業工會轉職（三輪試煉）→ 轉職完成才能打 1-4（之後場地與遠程小怪恢復正常）。
+    ///   1-3 打完 → 回村子職業工會轉職（試煉：4m×4m 打倒 5 隻小怪）→ 轉職完成才能打 1-4（之後場地與遠程小怪恢復正常）。
     /// 右上角的任務面板（背景透明、可以收起來）列出：導覽、主線、轉職、居民的任務。
     /// </summary>
     public partial class SoloBattle
     {
         /// <summary>小場地（4m×4m）的關卡</summary>
-        static bool SmallArenaStage(string id) => id == "1-1" || id == "1-2" || id == "1-3";
+        static bool SmallArenaStage(string id) => id == "1-1" || id == "1-2" || id == "1-3" || id == JobTrialStageId;
         /// <summary>只有近戰小怪的關卡</summary>
-        static bool MeleeOnlyStage(string id) => id == "1-1" || id == "1-2";
+        static bool MeleeOnlyStage(string id) => id == "1-1" || id == "1-2" || id == JobTrialStageId;
         public const float SmallArena = 4f;
         public const int TutorialLevel = 5;
         /// <summary>初心者通關這一關至少要到幾級（0＝不補）</summary>
@@ -84,6 +84,8 @@ namespace SpellDuel
             if (st == null) return;
             if (SmallArenaStage(st.id)) ShrinkArea(SmallArena);
             if (MeleeOnlyStage(st.id) && battle != null) { battle.rangedCountMul = 0f; battle.meleeCountMul = 1f / (1f - Battle.RangedShare); }   // 全部近戰（總數不變）
+            // 轉職試煉：剛好 5 隻最弱的小怪（第 1 波：7 隻 ×0.7），不加難度等級
+            if (st.id == JobTrialStageId && battle != null) { battle.stageEnemyMul = 0.7f; battle.levelBoost = 0; }
         }
 
         /// <summary>1-3 打完的初心者：該回村子轉職了</summary>
@@ -101,7 +103,7 @@ namespace SpellDuel
             ShowDialogue(new List<StoryLine>
             {
                 new StoryLine { speaker = "公會長", tag = "guild", text = "你已經 10 級了，初心者能學的都學會了。" },
-                new StoryLine { speaker = "公會長", tag = "guild", text = "接下來的熔岩巨像不是初心者對付得了的。挑戰轉職試煉（三輪），通過後選一個職業吧。" },
+                new StoryLine { speaker = "公會長", tag = "guild", text = "接下來的熔岩巨像不是初心者對付得了的。挑戰轉職試煉：打倒空地上的 5 隻小怪就好，通過後選一個職業吧。" },
             }, null);
         }
 
@@ -116,7 +118,7 @@ namespace SpellDuel
             if (GuideActive) { var g = GuideText(); list.Add(("🧭 導覽：" + g.title.Substring(g.title.IndexOf(' ') + 1), null, new Color(0.4f, 1f, 0.75f))); }
             if (p.cls == Skills.Novice && Story.IsCleared("1-3"))
             {
-                string d = p.level < Skills.JobLevel ? $"先升到 {Skills.JobLevel} 級（現在 {p.level}）" : p.CanChangeJob ? "試煉全部通過：到職業工會選職業" : $"職業工會找公會長，轉職試煉 {p.jobTrial}/{Skills.JobTrialRounds}";
+                string d = p.level < Skills.JobLevel ? $"先升到 {Skills.JobLevel} 級（現在 {p.level}）" : p.CanChangeJob ? "試煉通過了：到職業工會選職業" : "到職業工會找公會長：打倒 5 隻小怪";
                 list.Add(("🏛 轉職（打 1-4 之前）", d, new Color(0.85f, 0.6f, 1f)));
             }
             // 主線：下一個沒打過的故事關卡
