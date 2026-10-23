@@ -88,6 +88,10 @@ namespace SpellDuel
         /// <summary>法師目前要比的數字（SoloBattle 設定）</summary>
         public int RequiredNumber;
         public const float ChopDistance = 0.12f;   // 劍士揮砍：手掌移動距離（畫面短邊的比例）
+        /// <summary>普攻劃線要移動多遠才算（畫面短邊的比例；初心者調高，手晃一下或手機移動不會誤觸）</summary>
+        public float SwipeNeed = ChopDistance;
+        /// <summary>普攻劃線要在幾秒內劃完</summary>
+        public float SwipeWindow = 0.5f;
         /// <summary>目前手比出的數字（0＝不是 2～5）</summary>
         public int CurrentNumber { get; private set; }
         float numberSince = -99f; int numberSeen;
@@ -285,11 +289,11 @@ namespace SpellDuel
             if (swipeUntil >= 0f && fingersOut && Vector2.Distance(SwipeFrom, palm) > Vector2.Distance(SwipeFrom, SwipeTo)) SwipeTo = palm;
             if (BasicSwipe && swipeUntil < 0f && ReleaseStyle == Style.None && fingersOut && histN >= 3 && t - lastSwipe > 0.35f)
             {
-                float need = Mathf.Min(W, H) * ChopDistance, far = 0f; Vector2 from = palm;
+                float need = Mathf.Min(W, H) * SwipeNeed, far = 0f; Vector2 from = palm;
                 for (int k = 2; k < histN; k++)
                 {
                     var o = HistAgo(k);
-                    if (t - o.t > 0.5f) break;
+                    if (t - o.t > SwipeWindow) break;
                     if (o.shape == Shape.Fist || o.shape == Shape.None) break;
                     float d = Vector2.Distance(o.palm, palm);
                     if (d > far) { far = d; from = o.palm; }

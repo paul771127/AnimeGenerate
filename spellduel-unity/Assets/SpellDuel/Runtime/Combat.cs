@@ -1391,6 +1391,8 @@ namespace SpellDuel
             {
                 // 玩家也一樣先預警（對手看得到刀線），SlashWindup 秒後才砍下；能不能躲看刀線的位置（蹲低到線下面就砍不到）
                 var pa = from.normalized; var pb = to.normalized;
+                // 初心者的木棍敲擊（玩家）：手掌劃下去當下就敲（不先預警），一劃＝一下，看得出是自己打的
+                if (f.isPlayer && s.id == "na_stick") { SlashStrike(f, s, o, pa, pb, reach, false); return true; }
                 OnSlashLine?.Invoke(f, o + pa * reach, o + pb * reach, o, true);
                 f.windupUntil = now + SlashWindup;
                 After(SlashWindup, () => { if (f.Alive && !Over) SlashStrike(f, s, o, pa, pb, reach, false); });
@@ -1440,13 +1442,16 @@ namespace SpellDuel
             OnSlashLine?.Invoke(f, o + a * reach, o + b * reach, o, false);
             if (f.comboStrike > 0f && ++f.basicHits % 3 == 0) { dmg = Mathf.RoundToInt(dmg * (1f + f.comboStrike)); Emit("buff", f.Chest, s.color, "連斬・重擊！"); }
             dmg = Riposte(f, dmg);
+            int landed = 0;
             foreach (var v in MeleeFoes(f))
             {
                 if (v == null || !v.Alive || !InSlash(o, a, b, reach, v)) continue;
                 if (duckable && v.crouching) { Emit("evade", v.Chest, s.color, "蹲下閃過！"); continue; }
                 if (duckable && SidestepInvuln && v.dodgeUntil > now) { Emit("evade", v.Chest, s.color, "閃避！"); continue; }
-                MeleeHit(f, s, v, dmg);
+                MeleeHit(f, s, v, dmg); landed++;
             }
+            // 玩家的木棍沒打到人：告訴玩家「揮空」（太遠或方向不對）
+            if (landed == 0 && f.isPlayer && s.id == "na_stick") Emit("whiff", o + Fighter.Flat(Vector3.Lerp(a, b, 0.5f)).normalized * 1.2f, s.color, "揮空（太遠或沒對準）");
         }
 
         /// <summary>刀線（從 o 出發、方向 a 掃到 b、長 reach）有沒有碰到 v 的身體</summary>

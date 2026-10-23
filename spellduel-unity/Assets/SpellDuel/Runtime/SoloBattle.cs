@@ -1958,6 +1958,9 @@ namespace SpellDuel
             // 普通攻擊：沒在詠唱時，手勢舉著就自動攻擊（法師比 1、獵人比 5、牧師比 2、刺客舉掌、劍士手掌劃一下）
             var basic = Me.basic ?? Skills.BasicOf(myClass);   // 技能樹強化後的普攻
             Hand.BasicSwipe = Skills.IsSwipeBasic(basic) && Me.charging == null;
+            // 初心者：要明確地快速劃一下（畫面短邊 25%、0.35 秒內）才算，手晃或手機移動不會自己打出去
+            bool stickBasic = basic != null && basic.id == "na_stick";
+            Hand.SwipeNeed = stickBasic ? 0.25f : HandGesture.ChopDistance; Hand.SwipeWindow = stickBasic ? 0.35f : 0.5f;
             bool swiped = Hand.ConsumeSwipe();
             UpdateSwipeTrail(Hand.BasicSwipe && Hand.HandVisible && phase == Phase.Fighting && Hand.Current != HandGesture.Shape.Fist && Hand.Current != HandGesture.Shape.None);   // 手劃過的殘影（SoloBattle.SwipeTrail.cs）
             if (basic != null && Me.charging == null && !frozen && phase == Phase.Fighting && Hand.HandVisible)
@@ -1971,7 +1974,10 @@ namespace SpellDuel
                     "na_dagger" => Hand.Current == HandGesture.Shape.Open,
                     _ => false,
                 };
+                Me.cooldownUntil.TryGetValue(basic.id, out var cdBefore);
                 if (pose || (Skills.IsSwipeBasic(basic) && swiped)) DoBasic(basic);
+                if (swiped && stickBasic && Me.cooldownUntil.TryGetValue(basic.id, out var bcd) && bcd == cdBefore && bcd > battle.now + 0.05f)
+                    floaters.Add(new Floater { text = $"⏳ {bcd - battle.now:0.0} 秒後才能再敲", color = new Color(0.8f, 0.8f, 0.85f), born = Time.time, screen = true });   // 還在冷卻：告訴玩家為什麼沒反應
             }
             // 手勢放招：往放招動作的瞄準點放
             if (Hand.ConsumeRelease())
@@ -2256,6 +2262,10 @@ namespace SpellDuel
                         case "buff": Sfx.Play("cast_priest", 0.6f); break;
                         case "trapSet": Sfx.Play("trap", 0.5f); break;
                     }
+                    break;
+                case "whiff":
+                    floaters.Add(new Floater { posMap = at, text = "💨 " + text, color = new Color(0.8f, 0.8f, 0.85f), born = Time.time });
+                    Sfx.Play("dodge", 0.4f, 1.3f);
                     break;
                 case "hazard":
                     // 陷阱打到人：打到我＝大震動；打到小怪＝金屬聲
