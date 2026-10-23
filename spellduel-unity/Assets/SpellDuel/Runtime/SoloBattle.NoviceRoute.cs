@@ -110,6 +110,7 @@ namespace SpellDuel
 
         // ---------------------------------------------------------------- 右上角的任務面板
         bool questPanelOpen = true; bool questPanelLoaded;
+        float qpX = -9f, qpY = -9f; bool qpDrag; Vector2 qpGrab;   // 任務面板拖曳後的位置（畫面比例；−9＝預設位置）
 
         /// <summary>現在的任務（標題、進度）：導覽 → 主線 → 轉職 → 居民的任務</summary>
         List<(string title, string detail, Color color)> CurrentQuests()
@@ -150,8 +151,32 @@ namespace SpellDuel
             int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.72f);
             float pad = W * 0.03f, w = W * 0.5f, x = W - pad - w;
             float y = Mathf.Max(SettingsMenu.BelowGear, guideBottom + fs * 0.3f);
+            // 拖曳過：用存下來的位置（畫面比例）
+            if (qpX < -1f) { qpX = PlayerPrefs.GetFloat("sd_qp_x", -9f); qpY = PlayerPrefs.GetFloat("sd_qp_y", -9f); }
+            if (qpX > -1f) { x = Mathf.Clamp(qpX * W, 0f, W - w); y = Mathf.Clamp(qpY * H, 0f, H - fs * 3f); }
             var quests = CurrentQuests();
             var hr = new Rect(x + w * 0.45f, y, w * 0.55f, fs * 1.5f);
+            // 拖曳把手（標題左邊的 ✥）：按住拖到想要的位置，放開記住；點兩下回到預設位置
+            var grip = new Rect(hr.x - fs * 1.7f, y, fs * 1.5f, fs * 1.5f);
+            UiKit.Card(grip, 0.55f, new Color(1f, 0.85f, 0.4f), 0.6f);
+            UiKit.Text(grip, "✥", fs, Color.white, TextAnchor.MiddleCenter, true);
+            var ev = Event.current;
+            if (ev.type == EventType.MouseDown && grip.Contains(ev.mousePosition))
+            {
+                if (ev.clickCount >= 2) { qpX = qpY = -9f; PlayerPrefs.DeleteKey("sd_qp_x"); PlayerPrefs.DeleteKey("sd_qp_y"); }
+                else { qpDrag = true; qpGrab = ev.mousePosition - new Vector2(x, y); }
+                ev.Use();
+            }
+            else if (qpDrag && ev.type == EventType.MouseDrag)
+            {
+                var np = ev.mousePosition - qpGrab;
+                qpX = Mathf.Clamp(np.x, 0f, W - w) / W; qpY = Mathf.Clamp(np.y, 0f, H - fs * 3f) / H;
+                ev.Use();
+            }
+            else if (qpDrag && (ev.type == EventType.MouseUp || ev.rawType == EventType.MouseUp))
+            {
+                qpDrag = false; PlayerPrefs.SetFloat("sd_qp_x", qpX); PlayerPrefs.SetFloat("sd_qp_y", qpY); PlayerPrefs.Save();
+            }
             if (UiKit.Button(hr, (questPanelOpen ? "📜 任務 ▾" : $"📜 任務（{quests.Count}）▸"), fsS, false, new Color(1f, 0.85f, 0.4f)))
             { questPanelOpen = !questPanelOpen; PlayerPrefs.SetInt("sd_quest_panel", questPanelOpen ? 1 : 0); Sfx.Play("select", 0.4f); }
             if (!questPanelOpen) return;

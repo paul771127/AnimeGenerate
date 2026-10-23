@@ -540,6 +540,8 @@ namespace SpellDuel
         public float stageEnemyMul = 1f;
         /// <summary>遠程／近戰小怪的數量倍率（故事第三章：遠程減半、近戰與飛鳥加倍）：總數跟著變，遠程的比例也跟著變</summary>
         public float rangedCountMul = 1f, meleeCountMul = 1f;
+        /// <summary>遠程小怪：出手前的準備時間倍率、射出去的飛行速度倍率（故事第二章：準備 ×1.5、飛行 ×0.5）</summary>
+        public float rangedWindupMul = 1f, rangedShotSpeedMul = 1f;
         /// <summary>同一波裡每批小怪之間多等幾秒（故事第三章 +5 秒）</summary>
         public float spawnGapAdd;
         float CountMixMul => RangedShare * rangedCountMul + (1f - RangedShare) * meleeCountMul;
@@ -871,6 +873,7 @@ namespace SpellDuel
                 // 出手條件：近戰／衝鋒獸／自爆要貼近；射手在 9m 內
                 float reach = IsRanged(kind) ? MinionReach[kind] : MeleeReach(kind, MinionReach[kind]);
                 float windup = MinionWindup[kind] < 0f ? claw.charge : MinionWindup[kind];
+                if (IsRanged(kind)) windup *= rangedWindupMul;
                 bool outside = minionInside != null && !minionInside(m.Feet) && !FreeRoam(kind);   // 還在場地外：先走進來（不在場外放招）；海裡／空中的不用
                 if (!outside && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt) { m.windupUntil = now + windup; Emit("minionwindup", m.Feet, claw.color, null); continue; }
                 // 走位：射手保持 3.5～6m，其他走向目標（停在 0.8m）；小怪之間互相推開
@@ -917,6 +920,15 @@ namespace SpellDuel
 
         /// <summary>小怪預備完成、出手：近戰爪擊、射手丟火球、衝鋒獸重擊、自爆</summary>
         void MinionStrike(Fighter m, Fighter tgt, float d)
+        {
+            int before = projectiles.Count;
+            MinionStrikeCore(m, tgt, d);
+            // 遠程小怪射出去的東西：飛行速度倍率
+            if (rangedShotSpeedMul != 1f && IsRanged(m.minionKind))
+                for (int j = before; j < projectiles.Count; j++) if (projectiles[j].owner == m) projectiles[j].speedMul *= rangedShotSpeedMul;
+        }
+
+        void MinionStrikeCore(Fighter m, Fighter tgt, float d)
         {
             var claw = Skills.All["m_claw"];
             switch (m.minionKind)
@@ -1528,6 +1540,10 @@ namespace SpellDuel
         public const float FadeDistance = 0.8f;   // 伏擊中靠近到半徑 1.5m（直徑 3m）內：自動出手
 
         /// <summary>f 最近的敵人（玩家方：Boss／對手＋小怪；敵方：玩家）</summary>
+        /// <summary>刺殺流派：離最近的敵人超過這個距離也算「沒被發現」（Boss 一直盯著看也能蓄力）</summary>
+        public const float StealthFarDist = 2.5f;
+        public bool StealthFar(Fighter f) { var foe = NearestFoe(f, out var d); return foe == null || d > StealthFarDist; }
+
         public Fighter NearestFoe(Fighter f, out float dist)
         {
             dist = float.MaxValue; Fighter best = null;
@@ -2033,7 +2049,7 @@ namespace SpellDuel
                 if (f.charging != null && now - f.chargeStart > f.charging.charge + chargeTimeout + (f.charging.releaseNear ? 8f : 0f))
                 { f.charging = null; Emit("timeout", f.Chest, Color.gray, "詠唱逾時"); }
                 // 刺客伏擊技能：手掌不在鏡頭前、或身邊 2m 內有敵人 → 蓄力暫停；蓄滿自動進入伏擊（不用放招動作）
-                if (!f.seenByFoe && f.charging != null && f.charging.releaseNear) f.hiddenTime += dt;   // 刺殺流派：離開視線的秒數會累計（被看見只是暫停，不會歸零）
+                if (f.charging != null && f.charging.releaseNear && (!f.seenByFoe || StealthFar(f))) f.hiddenTime += dt;   // 刺殺流派：離開視線（或離所有敵人 2.5m 以上）的秒數會累計（被看見只是暫停，不會歸零）
                 if (f.charging != null && f.charging.releaseNear)
                 {
                     // 刺殺流派：離開敵人視線 1 秒＝判定完成（不用等蓄力、不用手掌）
