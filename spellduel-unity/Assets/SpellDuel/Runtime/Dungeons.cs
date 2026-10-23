@@ -6,11 +6,44 @@ namespace SpellDuel
     /// <summary>副本的一個房間：打第幾波（決定場景主題、小怪種類與強度；10 的倍數＝Boss 波；51 波起主題重新輪一次；房間可以用 theme 指定場景），進房間時的旁白</summary>
     public class DungeonRoom
     {
+        /// <summary>地點 id（地圖用；[room] 沒寫就是 r1、r2…）</summary>
+        public string id;
+        /// <summary>事件：battle 戰鬥、chest 寶箱（不用打）、boss 首領（wave 是 10 的倍數就自動是首領）</summary>
+        public string kind = "battle";
+        /// <summary>打完可以前往的地點（房主選）；空的＝線性副本照檔案順序走下一個房間</summary>
+        public readonly List<string> next = new List<string>();
+        /// <summary>進到這個地點時出現的劇情人物（[npc] 的 id）</summary>
+        public readonly List<string> npcs = new List<string>();
+        public bool IsChest => kind == "chest";
+        public bool IsBoss => kind == "boss" || (kind == "battle" && wave > 0 && wave % 10 == 0);
         public int wave;
         public int theme = -1;   // 指定場景主題（−1＝照波次算）：用高波次的強度、保留原本的場景
         public string title, line;
         /// <summary>進房間、清完房間、首領剩一半血時的台詞（戰鬥中以字幕卡顯示，不暫停）</summary>
         public readonly List<StoryLine> enter = new List<StoryLine>(), clear = new List<StoryLine>(), bossHalf = new List<StoryLine>();
+    }
+
+    /// <summary>
+    /// 副本裡的劇情人物：
+    ///   escort 保護目標（怪物會攻擊他，他倒下＝副本失敗）；
+    ///   choice 抉擇人物（房主選：加入我方 ally／變成敵人 enemy／第三勢力 third，誰都打）；
+    ///   quest 任務人物（打倒幾隻敵人 kill、收集東西 collect、抵達某地點 reach；完成給獎勵）。
+    /// </summary>
+    public class DungeonNpc
+    {
+        public string id, name, role = "escort", look = "priest", tag;
+        public int hp = 400;
+        /// <summary>保護目標：抵達這個地點就安全了（null＝撐到通關）</summary>
+        public string until;
+        public readonly List<StoryLine> meet = new List<StoryLine>(), die = new List<StoryLine>(), done = new List<StoryLine>(), safe = new List<StoryLine>();
+        public readonly List<StoryLine> ally = new List<StoryLine>(), enemy = new List<StoryLine>(), third = new List<StoryLine>();
+        /// <summary>抉擇的選項：文字 → ally／enemy／third</summary>
+        public readonly List<(string text, string result)> options = new List<(string, string)>();
+        /// <summary>任務：kill N、collect N 物品名、reach 地點id</summary>
+        public string goal, goalItem, goalNode; public int need;
+        /// <summary>任務獎勵：金幣、每人一件這個稀有度的裝備（0＝沒有）</summary>
+        public int rewardGold, rewardRarity;
+        public List<StoryLine> LinesOf(string result) => result == "ally" ? ally : result == "enemy" ? enemy : result == "third" ? third : null;
     }
 
     /// <summary>
@@ -31,9 +64,41 @@ namespace SpellDuel
         public readonly List<DungeonRoom> rooms = new List<DungeonRoom>();
         public readonly List<StoryLine> before = new List<StoryLine>();
         public readonly List<StoryLine> after = new List<StoryLine>();
+        public readonly List<DungeonNpc> npcs = new List<DungeonNpc>();
+        /// <summary>有固定地圖（有任何地點寫了 next）：打完一個地點由房主選下一站</summary>
+        public bool IsMap { get { foreach (var r in rooms) if (r.next.Count > 0) return true; return false; } }
+        public DungeonRoom Node(string id) => rooms.Find(r => r.id == id);
+        public DungeonNpc Npc(string id) => npcs.Find(n => n.id == id);
+        /// <summary>從這個地點可以去哪裡：地圖照 next；線性副本＝檔案裡的下一個房間；空的＝終點（通關）</summary>
+        public List<DungeonRoom> ExitsOf(DungeonRoom r)
+        {
+            var list = new List<DungeonRoom>();
+            if (r == null) return list;
+            if (IsMap) { foreach (var id in r.next) { var n = Node(id); if (n != null) list.Add(n); } }
+            else { int i = rooms.IndexOf(r); if (i >= 0 && i + 1 < rooms.Count) list.Add(rooms[i + 1]); }
+            return list;
+        }
+        /// <summary>從起點到首領最少要打幾個戰鬥地點（副本清單顯示用）</summary>
+        public int ShortestFights()
+        {
+            int best = int.MaxValue;
+            void Walk(DungeonRoom r, int n, int depth)
+            {
+                if (depth > 40) return;
+                if (!r.IsChest) n++;
+                var ex = ExitsOf(r);
+                if (ex.Count == 0) { best = System.Math.Min(best, n); return; }
+                foreach (var e in ex) Walk(e, n, depth + 1);
+            }
+            if (rooms.Count > 0) Walk(rooms[0], 0, 0);
+            return best == int.MaxValue ? rooms.Count : best;
+        }
+        /// <summary>清單上的規模說明：線性「4 房」；地圖「地圖 6 地點（最少 4 戰）」</summary>
+        public string SizeText => IsMap ? $"地圖 {rooms.Count} 地點（最少 {ShortestFights()} 戰）" : $"{rooms.Count} 房";
         public int[] Waves { get { var w = new int[rooms.Count]; for (int i = 0; i < w.Length; i++) w[i] = rooms[i].wave; return w; } }
         public int BossTheme => ThemeOfRoom(rooms.Count - 1);
-        public int ThemeOfRoom(int i) => rooms[i].theme >= 0 ? rooms[i].theme : Battle.ThemeOf(rooms[i].wave);
+        public int ThemeOfRoom(int i) => ThemeOf(rooms[i]);
+        public int ThemeOf(DungeonRoom r) => r.theme >= 0 ? r.theme : Battle.ThemeOf(Mathf.Max(1, r.wave));
         /// <summary>有指定主題的房間（波次 → 主題），給 Battle.waveTheme</summary>
         public Dictionary<int, int> ThemeMap()
         {
@@ -86,12 +151,13 @@ namespace SpellDuel
         /// <summary>
         /// 解析副本劇本（純 C#，可在 Unity 外測試）：
         ///   [dungeon id] 名稱 → 簡介文字、level／players／unlock、&lt;before&gt;／&lt;after&gt; 對話；
-        ///   [room] 房間名稱 → wave／theme、&lt;enter&gt;／&lt;clear&gt;／&lt;boss_half&gt; 對話。
+        ///   [room] 名稱 或 [node id] 名稱 → event／wave／theme／next／npc、&lt;enter&gt;／&lt;clear&gt;／&lt;boss_half&gt; 對話；
+        ///   [npc id] 名字 → role／hp／look／until／option／goal／reward、&lt;meet&gt;／&lt;die&gt;／&lt;done&gt;／&lt;safe&gt;／&lt;ally&gt;／&lt;enemy&gt;／&lt;third&gt; 對話。
         /// </summary>
         public static void Parse(string text)
         {
             all.Clear(); errors.Clear();
-            DungeonDef d = null; DungeonRoom room = null; List<StoryLine> lines = null;
+            DungeonDef d = null; DungeonRoom room = null; DungeonNpc npc = null; List<StoryLine> lines = null;
             var ids = new HashSet<string>();
             int ln = 0;
             foreach (var raw0 in (text ?? "").Replace("\r", "").Split('\n'))
@@ -105,20 +171,30 @@ namespace SpellDuel
                     if (close < 0) { errors.Add($"第 {ln} 行：缺少 ]"); continue; }
                     var head = raw.Substring(1, close - 1).Trim().Split(new[] { ' ' }, 2);
                     string kind = head[0].ToLowerInvariant(), title = raw.Substring(close + 1).Trim();
+                    string hid = head.Length > 1 ? head[1].Trim() : "";
                     lines = null;
                     if (kind == "dungeon")
                     {
-                        string id = head.Length > 1 ? head[1].Trim() : "";
-                        if (id.Length == 0) { errors.Add($"第 {ln} 行：[dungeon] 後面要寫 id"); d = null; continue; }
-                        if (!ids.Add(id)) errors.Add($"第 {ln} 行：副本 id「{id}」重複了");
-                        d = new DungeonDef { id = id, name = title.Length > 0 ? title : id, desc = "" };
-                        all.Add(d); room = null;
+                        if (hid.Length == 0) { errors.Add($"第 {ln} 行：[dungeon] 後面要寫 id"); d = null; continue; }
+                        if (!ids.Add(hid)) errors.Add($"第 {ln} 行：副本 id「{hid}」重複了");
+                        d = new DungeonDef { id = hid, name = title.Length > 0 ? title : hid, desc = "" };
+                        all.Add(d); room = null; npc = null;
                     }
-                    else if (kind == "room")
+                    else if (kind == "room" || kind == "node")
                     {
-                        if (d == null) { errors.Add($"第 {ln} 行：[room] 要放在 [dungeon] 底下"); continue; }
-                        room = new DungeonRoom { title = title, wave = 0 };
-                        d.rooms.Add(room);
+                        if (d == null) { errors.Add($"第 {ln} 行：[{kind}] 要放在 [dungeon] 底下"); continue; }
+                        if (kind == "node" && hid.Length == 0) errors.Add($"第 {ln} 行：[node] 後面要寫地點 id");
+                        room = new DungeonRoom { id = hid.Length > 0 ? hid : "r" + (d.rooms.Count + 1), title = title, wave = 0 };
+                        if (d.Node(room.id) != null) errors.Add($"第 {ln} 行：地點 id「{room.id}」重複了");
+                        d.rooms.Add(room); npc = null;
+                    }
+                    else if (kind == "npc")
+                    {
+                        if (d == null) { errors.Add($"第 {ln} 行：[npc] 要放在 [dungeon] 底下"); continue; }
+                        if (hid.Length == 0) { errors.Add($"第 {ln} 行：[npc] 後面要寫 id"); continue; }
+                        if (d.Npc(hid) != null) errors.Add($"第 {ln} 行：人物 id「{hid}」重複了");
+                        npc = new DungeonNpc { id = hid, name = title.Length > 0 ? title : hid };
+                        d.npcs.Add(npc); room = null;
                     }
                     else errors.Add($"第 {ln} 行：不認得的區塊 [{kind}]");
                     continue;
@@ -127,21 +203,27 @@ namespace SpellDuel
                 {
                     var tag = raw.Trim('<', '>', ' ').ToLowerInvariant();
                     lines = null;
-                    if (room != null) lines = tag == "enter" ? room.enter : tag == "clear" ? room.clear : tag == "boss_half" ? room.bossHalf : null;
+                    if (npc != null) lines = tag == "meet" ? npc.meet : tag == "die" ? npc.die : tag == "done" ? npc.done : tag == "safe" ? npc.safe : npc.LinesOf(tag);
+                    else if (room != null) lines = tag == "enter" ? room.enter : tag == "clear" ? room.clear : tag == "boss_half" ? room.bossHalf : null;
                     else if (d != null) lines = tag == "before" ? d.before : tag == "after" ? d.after : null;
-                    if (lines == null) errors.Add($"第 {ln} 行：<{tag}> 放錯地方（副本用 before／after，房間用 enter／clear／boss_half）");
+                    if (lines == null) errors.Add($"第 {ln} 行：<{tag}> 放錯地方（副本用 before／after，地點用 enter／clear／boss_half，人物用 meet／die／done／safe／ally／enemy／third）");
                     continue;
                 }
-                if (lines != null) { lines.Add(Story.ParseLine(raw)); continue; }
+                if (lines != null && !IsKeyLine(raw)) { lines.Add(Story.ParseLine(raw)); continue; }
+                lines = null;   // 「英文 key = 值」：對話區塊結束（例如寫在 <meet> 後面的 option）
                 int eq = raw.IndexOf('=');
                 if (eq > 0)
                 {
                     string k = raw.Substring(0, eq).Trim().ToLowerInvariant(), v = raw.Substring(eq + 1).Trim();
-                    if (room != null)
+                    if (npc != null) ParseNpcKey(npc, k, v, ln);
+                    else if (room != null)
                     {
                         if (k == "wave") { if (!int.TryParse(v, out room.wave) || room.wave < 1) errors.Add($"第 {ln} 行：wave 要是 1 以上的整數"); }
                         else if (k == "theme") room.theme = Story.ThemeOf(v);
-                        else errors.Add($"第 {ln} 行：房間不認得的設定 {k}");
+                        else if (k == "event") { room.kind = v.ToLowerInvariant(); if (room.kind != "battle" && room.kind != "chest" && room.kind != "boss") errors.Add($"第 {ln} 行：event 只能是 battle／chest／boss"); }
+                        else if (k == "next") { foreach (var x in v.Split(',', '，', '、')) if (x.Trim().Length > 0) room.next.Add(x.Trim()); }
+                        else if (k == "npc") { foreach (var x in v.Split(',', '，', '、')) if (x.Trim().Length > 0) room.npcs.Add(x.Trim()); }
+                        else errors.Add($"第 {ln} 行：地點不認得的設定 {k}");
                     }
                     else if (d != null)
                     {
@@ -159,19 +241,99 @@ namespace SpellDuel
                 }
                 // 普通文字：副本簡介（房間底下＝房間進場的一句話）
                 if (room != null) room.line = string.IsNullOrEmpty(room.line) ? raw : room.line + "\n" + raw;
-                else if (d != null) d.desc = d.desc.Length > 0 ? d.desc + "\n" + raw : raw;
+                else if (d != null && npc == null) d.desc = d.desc.Length > 0 ? d.desc + "\n" + raw : raw;
             }
-            foreach (var dd in all)
+            foreach (var dd in all) Validate(dd);
+        }
+
+        /// <summary>「英文小寫 key = 值」的設定行（台詞不會這樣開頭）</summary>
+        static bool IsKeyLine(string raw)
+        {
+            int eq = raw.IndexOf('=');
+            if (eq <= 0) return false;
+            var k = raw.Substring(0, eq).Trim();
+            if (k.Length == 0) return false;
+            foreach (var ch in k) if (!(ch >= 'a' && ch <= 'z' || ch == '_')) return false;
+            return true;
+        }
+
+        static void ParseNpcKey(DungeonNpc n, string k, string v, int ln)
+        {
+            var parts = v.Split(new[] { ' ', '\t' }, System.StringSplitOptions.RemoveEmptyEntries);
+            if (k == "role") { n.role = v.ToLowerInvariant(); if (n.role != "escort" && n.role != "choice" && n.role != "quest") errors.Add($"第 {ln} 行：role 只能是 escort／choice／quest"); }
+            else if (k == "hp") { if (!int.TryParse(v, out n.hp) || n.hp < 1) errors.Add($"第 {ln} 行：hp 要是 1 以上的整數"); }
+            else if (k == "look") n.look = v;
+            else if (k == "tag") n.tag = v;
+            else if (k == "until") n.until = v;
+            else if (k == "option")
             {
-                if (dd.rooms.Count == 0) errors.Add($"副本 {dd.id}：沒有房間");
-                if (dd.level < 1) errors.Add($"副本 {dd.id}：缺少 level");
-                foreach (var r in dd.rooms)
+                int arrow = v.IndexOf("->", System.StringComparison.Ordinal);
+                string res = arrow > 0 ? v.Substring(arrow + 2).Trim().ToLowerInvariant() : "";
+                if (arrow <= 0 || (res != "ally" && res != "enemy" && res != "third")) errors.Add($"第 {ln} 行：option 的格式是「選項文字 -> ally／enemy／third」");
+                else n.options.Add((v.Substring(0, arrow).Trim(), res));
+            }
+            else if (k == "goal")
+            {
+                n.goal = parts.Length > 0 ? parts[0].ToLowerInvariant() : "";
+                if (n.goal == "kill" && parts.Length >= 2 && int.TryParse(parts[1], out n.need)) { }
+                else if (n.goal == "collect" && parts.Length >= 3 && int.TryParse(parts[1], out n.need)) n.goalItem = string.Join(" ", parts, 2, parts.Length - 2);
+                else if (n.goal == "reach" && parts.Length >= 2) { n.goalNode = parts[1]; n.need = 1; }
+                else errors.Add($"第 {ln} 行：goal 的格式是「kill 數量」「collect 數量 物品名」或「reach 地點id」");
+            }
+            else if (k == "reward")
+            {
+                if (parts.Length >= 2 && parts[0] == "gold" && int.TryParse(parts[1], out var g)) n.rewardGold = g;
+                else if (parts.Length >= 2 && parts[0] == "item" && int.TryParse(parts[1], out var r) && r >= 1 && r <= 4) n.rewardRarity = r;
+                else errors.Add($"第 {ln} 行：reward 的格式是「gold 金額」或「item 稀有度(1～4)」");
+            }
+            else errors.Add($"第 {ln} 行：人物不認得的設定 {k}");
+        }
+
+        /// <summary>檢查一個副本：房間、地圖連線（每條路都通到首領、沒有繞圈）、劇情人物</summary>
+        static void Validate(DungeonDef dd)
+        {
+            if (dd.rooms.Count == 0) { errors.Add($"副本 {dd.id}：沒有房間"); return; }
+            if (dd.level < 1) errors.Add($"副本 {dd.id}：缺少 level");
+            foreach (var r in dd.rooms)
+            {
+                if (!r.IsChest && r.wave < 1) errors.Add($"副本 {dd.id} 地點「{r.title}」：缺少 wave");
+                if (r.kind == "boss" && r.wave % 10 != 0) errors.Add($"副本 {dd.id} 地點「{r.title}」：首領的 wave 要是 10 的倍數");
+                // 進房間的一句話：沒寫 line 就用 enter 的第一句
+                if (string.IsNullOrEmpty(r.line) && r.enter.Count > 0) r.line = r.enter[0].text;
+                foreach (var x in r.next) if (dd.Node(x) == null) errors.Add($"副本 {dd.id} 地點「{r.title}」：next 指到不存在的地點 {x}");
+                foreach (var x in r.npcs) if (dd.Npc(x) == null) errors.Add($"副本 {dd.id} 地點「{r.title}」：npc 指到不存在的人物 {x}");
+            }
+            if (!dd.IsMap)
+            {
+                if (dd.rooms[dd.rooms.Count - 1].wave % 10 != 0) errors.Add($"副本 {dd.id}：最後一個房間要是首領（wave 是 10 的倍數）");
+            }
+            else
+            {
+                // 地圖：從第一個地點出發，每個終點都要是首領；不能繞圈；每個地點都走得到
+                var seen = new HashSet<DungeonRoom>(); var stack = new HashSet<DungeonRoom>();
+                void Walk(DungeonRoom r)
                 {
-                    if (r.wave < 1) errors.Add($"副本 {dd.id} 房間「{r.title}」：缺少 wave");
-                    // 進房間的一句話：沒寫 line 就用 enter 的第一句
-                    if (string.IsNullOrEmpty(r.line) && r.enter.Count > 0) r.line = r.enter[0].text;
+                    if (stack.Contains(r)) { errors.Add($"副本 {dd.id}：地圖繞圈了（{r.id}）"); return; }
+                    if (!seen.Add(r)) return;
+                    stack.Add(r);
+                    var ex = dd.ExitsOf(r);
+                    if (ex.Count == 0 && !r.IsBoss) errors.Add($"副本 {dd.id}：地點 {r.id} 沒有 next，但不是首領（終點一定要是首領）");
+                    foreach (var e in ex) Walk(e);
+                    stack.Remove(r);
                 }
-                if (dd.rooms.Count > 0 && dd.rooms[dd.rooms.Count - 1].wave % 10 != 0) errors.Add($"副本 {dd.id}：最後一個房間要是首領（wave 是 10 的倍數）");
+                Walk(dd.rooms[0]);
+                foreach (var r in dd.rooms) if (!seen.Contains(r)) errors.Add($"副本 {dd.id}：地點 {r.id} 從起點走不到");
+                if (dd.rooms[0].IsChest) errors.Add($"副本 {dd.id}：第一個地點不能是寶箱");
+            }
+            foreach (var n in dd.npcs)
+            {
+                if (n.role == "choice" && n.options.Count < 2) errors.Add($"副本 {dd.id} 人物 {n.id}：抉擇人物至少要 2 個 option");
+                if (n.role == "quest" && string.IsNullOrEmpty(n.goal)) errors.Add($"副本 {dd.id} 人物 {n.id}：任務人物要寫 goal");
+                if (n.goalNode != null && dd.Node(n.goalNode) == null) errors.Add($"副本 {dd.id} 人物 {n.id}：goal reach 指到不存在的地點 {n.goalNode}");
+                if (n.until != null && dd.Node(n.until) == null) errors.Add($"副本 {dd.id} 人物 {n.id}：until 指到不存在的地點 {n.until}");
+                if (n.meet.Count == 0) errors.Add($"副本 {dd.id} 人物 {n.id}：要有 <meet>（登場台詞）");
+                bool used = false; foreach (var r in dd.rooms) if (r.npcs.Contains(n.id)) used = true;
+                if (!used) errors.Add($"副本 {dd.id} 人物 {n.id}：沒有任何地點寫 npc = {n.id}");
             }
         }
 

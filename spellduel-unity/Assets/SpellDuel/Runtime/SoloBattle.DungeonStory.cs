@@ -5,37 +5,28 @@ namespace SpellDuel
 {
     /// <summary>
     /// 副本的劇情字幕卡（不暫停戰鬥，多人連線時每支手機各自顯示）：
-    ///   進房間（enter）、清完房間（clear）、首領剩一半血（boss_half），多人開場時的副本開場白（before）。
+    ///   進地點（enter）、清完地點（clear）、劇情人物的台詞、首領剩一半血（boss_half），多人開場時的副本開場白（before）。
     ///   畫面上方一張卡：頭像＋名字＋台詞，依字數自動換下一句。台詞寫在 Resources/dungeons.txt。
     /// </summary>
     public partial class SoloBattle
     {
         readonly Queue<StoryLine> ticker = new Queue<StoryLine>();
         StoryLine tickerLine; float tickerUntil;
-        int dungeonClearSaid = -1, dungeonHalfSaid = -1;
+        int dungeonHalfSaid = -1;
 
-        void Ticker(IEnumerable<StoryLine> lines) { if (lines != null) foreach (var l in lines) ticker.Enqueue(l); }
-        void ClearTicker() { ticker.Clear(); tickerLine = null; dungeonClearSaid = dungeonHalfSaid = -1; }
+        void Ticker(IEnumerable<StoryLine> lines) { if (lines != null) foreach (var l in lines) { ticker.Enqueue(l); ChatLine(l); } }
+        void ClearTicker() { ticker.Clear(); tickerLine = null; dungeonHalfSaid = -1; }
 
-        /// <summary>每幀（副本戰鬥中）：換房間 → 上一個房間的 clear＋這個房間的 enter；首領剩一半血 → boss_half</summary>
+        /// <summary>每幀（副本戰鬥中）：地點的台詞由 DungeonRun 送進來（SoloBattle.DungeonMap.cs）；首領剩一半血 → boss_half；換下一句</summary>
         void UpdateDungeonStory()
         {
             if (dungeon == null || battle == null) return;
-            int room = dungeon.RoomOf(battle.wave);
-            if (room >= 0 && room != dungeonRoomSaid)
-            {
-                if (dungeonRoomSaid >= 0 && dungeonClearSaid != dungeonRoomSaid) { dungeonClearSaid = dungeonRoomSaid; Ticker(dungeon.rooms[dungeonRoomSaid].clear); }
-                dungeonRoomSaid = room;
-                var rm = dungeon.rooms[room];
-                Say($"🏰 {dungeon.name}・{rm.title}（{room + 1}/{dungeon.rooms.Count}）", 3.5f);
-                if (rm.enter.Count > 0) Ticker(rm.enter);
-                else if (!string.IsNullOrEmpty(rm.line)) Ticker(new[] { new StoryLine { speaker = "", text = rm.line } });
-            }
+            UpdateDungeonMap();
             // 首領剩一半血
-            if (room >= 0 && dungeonHalfSaid != room && battle.IsBossWave && En.Alive && En.maxHp > 0 && En.hp <= En.maxHp * 0.5f)
+            if (drun != null && dungeonHalfSaid != drun.Step && drun.node.IsBoss && battle.IsBossWave && En.Alive && En.maxHp > 0 && En.hp <= En.maxHp * 0.5f)
             {
-                dungeonHalfSaid = room;
-                Ticker(dungeon.rooms[room].bossHalf);
+                dungeonHalfSaid = drun.Step;
+                foreach (var l in drun.node.bossHalf) { ticker.Enqueue(l); ChatLine(l); }
             }
             if (tickerLine == null || Time.time >= tickerUntil)
             {

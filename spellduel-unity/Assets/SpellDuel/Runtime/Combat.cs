@@ -86,6 +86,8 @@ namespace SpellDuel
         // Boss 召喚的小怪：編號、攻擊狀態（預備到 windupUntil 出手，attackReadyAt 之後才能再攻擊）
         public bool isAlly; public int pid = -1;   // 合作：其他玩家的代理、那支手機的編號（主機 0、加入的人 1～3）
         public bool isMinion; public int minionId; public float windupUntil, attackReadyAt, teleportAt;
+        /// <summary>副本的劇情人物：0 我方（保護目標、友軍）、1 敵方、2 第三勢力（誰都打）；-1＝不是劇情人物</summary>
+        public int npcSide = -1; public string npcId; public bool npcEscort; public float npcNextAtk;
         public Vector3 aimPoint;        // Boss 熔岩躍擊／樹根爆發的落點（蓄力時畫紅圈）
         public float dashUntil; public Vector3 dashDir; public bool dashHit;   // 荊棘衝鋒獸／跳躍魚／俯衝海鳥：衝刺中
         public float dashStart, dashFromAlt;   // 衝刺開始時間、俯衝開始的高度
@@ -282,8 +284,9 @@ namespace SpellDuel
         List<Fighter> FoesOf(Fighter f)
         {
             var list = new List<Fighter>();
-            if (FoeSide(f)) { foreach (var pl in Players()) if (pl.Alive) list.Add(pl); }
-            else { if (enemy != null && enemy.Alive) list.Add(enemy); foreach (var m in minions) if (m.Alive) list.Add(m); }
+            if (FoeSide(f)) { foreach (var pl in Players()) if (pl.Alive) list.Add(pl); foreach (var n in npcs) if (n.Alive && n.npcSide != 1) list.Add(n); }
+            else if (f.npcSide >= 0) list.AddRange(NpcFoes(f));
+            else { if (enemy != null && enemy.Alive) list.Add(enemy); foreach (var m in minions) if (m.Alive) list.Add(m); foreach (var n in npcs) if (n.Alive && n.npcSide >= 1) list.Add(n); }
             return list;
         }
 
@@ -550,6 +553,28 @@ namespace SpellDuel
             enemy.hp = 0f;
             NextWave(3f);
         }
+        /// <summary>
+        /// 副本地圖（房主選路線）：開打後先等 EnterNode 指定第一個地點；每個地點打完 → awaitingNext，
+        /// 等房主選下一站（或寶箱開完）再 EnterNode；final＝首領地點，打完就通關。
+        /// </summary>
+        public void StartDungeonMap()
+        {
+            endless = true; kills = 0; bossKills = 0; stageCleared = false; stageFailed = false;
+            bossAfterMinions = true;
+            waveSeq = null; stageEnd = -1; manualWaves = true; awaitingNext = true;
+            enemy.hp = 0f;
+        }
+        public bool manualWaves, awaitingNext, finalRoom, stageFailed;
+        int queuedWave;
+        /// <summary>前往下一個戰鬥地點：wave 決定敵人強度，final＝最後的首領</summary>
+        public void EnterNode(int nodeWave, bool final, float delay = 3f)
+        {
+            queuedWave = Mathf.Max(1, nodeWave); finalRoom = final; awaitingNext = false; bossSpawnedThisWave = false;
+            enemy.hp = 0f;
+            NextWave(delay);
+        }
+        /// <summary>保護目標倒下：副本失敗</summary>
+        public void FailStage(string why) { if (stageFailed || stageCleared) return; stageFailed = true; Emit("stagefail", player.Feet, Color.red, why); }
         public void StartDungeon(int[] waves)
         {
             endless = true; kills = 0; bossKills = 0; stageCleared = false;
@@ -561,6 +586,14 @@ namespace SpellDuel
 
         bool StageDone()
         {
+            if (manualWaves)
+            {
+                // 副本地圖：一般地點打完 → 等房主選下一站；首領地點打完 → 通關
+                if (!finalRoom) { awaitingNext = true; return true; }
+                stageCleared = true;
+                Emit("stageclear", player.Feet, Color.white, "副本完成！");
+                return true;
+            }
             if (waveSeq != null)
             {
                 if (seqIdx < waveSeq.Length) return false;
@@ -584,7 +617,8 @@ namespace SpellDuel
         /// <summary>進入下一波（delay 秒後開始出怪／Boss 出現）</summary>
         void NextWave(float delay)
         {
-            if (waveSeq != null && waveSeq.Length > 0) wave = waveSeq[Mathf.Min(seqIdx++, waveSeq.Length - 1)];
+            if (manualWaves) wave = queuedWave;
+            else if (waveSeq != null && waveSeq.Length > 0) wave = waveSeq[Mathf.Min(seqIdx++, waveSeq.Length - 1)];
             else wave++;
             waveStartAt = now + delay;
             bossPending = false;
@@ -638,6 +672,7 @@ namespace SpellDuel
             if (endless && player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + Mathf.Max(EndlessRegen, player.maxHp * EndlessRegenPct) * Time_dt);
             if (!endless || remoteEnemy || edgePoint == null) return;
             if (stageCleared) return;   // 故事關卡已經通關
+            if (manualWaves && awaitingNext) return;   // 副本地圖：等房主選下一站（不能把剛打倒的首領又叫出來）
             if (!player.Alive && !AnyAllyAlive) return;
             if (now < waveStartAt) return;
             if (IsBossWave && !bossPending)
@@ -659,7 +694,7 @@ namespace SpellDuel
                 nextMinionAt = now + Mathf.Max(2.5f, 5f - 0.1f * wave) * (ScaleAllies > 0 ? Mathf.Max(0.5f, 1f - 0.25f * ScaleAllies) : 1f) + spawnGapAdd;
             }
             // 故事關卡的 Boss 波：小怪全部打倒 → 地面震動，Boss 現身
-            if (bossPending && waveToSpawn == 0 && minions.Count == 0)
+            if (bossPending && waveToSpawn == 0 && minions.Count == 0 && !HostileNpcAlive)
             {
                 bossPending = false; bossAt = now + BossEntranceDelay;
                 if (player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + player.maxHp * 0.1f);
@@ -667,7 +702,7 @@ namespace SpellDuel
                 return;
             }
             // 這一波全部打倒：回 10% 血，休息 4 秒進下一波
-            if (waveToSpawn == 0 && minions.Count == 0)
+            if (waveToSpawn == 0 && minions.Count == 0 && !HostileNpcAlive)
             {
                 if (player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + player.maxHp * 0.1f);
                 Emit("wavecleared", player.Feet, Color.white, $"{WaveLabel}清空！");
@@ -689,7 +724,9 @@ namespace SpellDuel
         public static string BossClassOf(int theme) => theme == 1 ? "boss_forest" : theme == 2 ? "boss_sea" : theme == 3 ? "boss_arena" : theme == 4 ? "boss_canyon" : "boss";
         /// <summary>副本：指定某些波次的主題（房間用高波次的強度，但保留原本的場景）；沒指定就照波次算</summary>
         public Dictionary<int, int> waveTheme;
-        public int Theme => endless ? (waveTheme != null && waveTheme.TryGetValue(wave, out var wt) ? wt : ThemeOf(wave)) : 0;
+        /// <summary>副本地圖：現在這個地點的場景（−1＝照波次）</summary>
+        public int themeOverride = -1;
+        public int Theme => themeOverride >= 0 && endless ? themeOverride : endless ? (waveTheme != null && waveTheme.TryGetValue(wave, out var wt) ? wt : ThemeOf(wave)) : 0;
         // 森林小怪（7～12）在第 11～20 波的解鎖：這個主題的第幾波起（第二輪起全部解鎖）
         static readonly int[] ThemeUnlock = { 0, 0, 0, 0, 0, 0, 0, 1, 1, 3, 1, 5, 7, 1, 2, 3, 1, 5, 7 };   // 森林（7～12）、海上（13～18）
 
@@ -754,7 +791,7 @@ namespace SpellDuel
             Emit("bossdown", enemy.Feet, enemy.cls.color, $"打倒第 {bossKills} 隻 Boss！之後的敵人更強、種類更多");
             if (!StageDone()) NextWave(5f);
         }
-        public Fighter MinionById(int id) => minions.Find(m => m.minionId == id);
+        public Fighter MinionById(int id) => minions.Find(m => m.minionId == id) ?? npcs.Find(n => n.minionId == id);
         /// <summary>主機：隊友打到小怪</summary>
         public void ApplyHitOnMinion(int id, int damage, SkillDef s)
         {
@@ -775,7 +812,10 @@ namespace SpellDuel
                 // 目標：最近的活著的玩家
                 Fighter tgt = null; float best = float.MaxValue;
                 foreach (var pl in Players()) { if (!pl.Alive) continue; float d0 = FlatDistance(m.Feet, pl.Feet); if (d0 < best) { best = d0; tgt = pl; } }
+                // 副本：保護目標比玩家更容易被盯上（多算 3m 的優勢）、友軍和第三勢力也會被打
+                foreach (var n in npcs) { if (!n.Alive || n.npcSide == 1) continue; float d0 = FlatDistance(m.Feet, n.Feet) - (n.npcEscort ? 3f : 0f); if (d0 < best) { best = d0; tgt = n; } }
                 if (tgt == null) continue;
+                if (tgt.npcSide >= 0) best = FlatDistance(m.Feet, tgt.Feet);
                 m.target = tgt;
                 m.forward = Fighter.Flat(tgt.head - m.head);
                 float d = best;
@@ -1082,10 +1122,10 @@ namespace SpellDuel
         /// <summary>法術有沒有打到小怪（玩家方的法術才會）；打到回傳 true</summary>
         bool HitMinions(Projectile p)
         {
-            if (minions.Count == 0 || p.owner == enemy || p.owner.isMinion) return false;
-            foreach (var m in minions)
+            if ((minions.Count == 0 && npcs.Count == 0) || p.owner == enemy || p.owner.isMinion || p.owner.npcSide == 1) return false;
+            foreach (var m in HittableBy(p.owner))
             {
-                if (!m.Alive) continue;
+                if (!m.Alive || m == p.owner) continue;
                 if (!Touches(p, m)) continue;
                 if (p.skill.pierce)
                 {
@@ -1271,7 +1311,7 @@ namespace SpellDuel
             }
         }
         public float Distance => FlatDistance(player.head, enemy.head);
-        public bool Over => (!endless && !enemy.Alive) || stageCleared || (!player.Alive && !AnyAllyAlive);
+        public bool Over => (!endless && !enemy.Alive) || stageCleared || stageFailed || (!player.Alive && !AnyAllyAlive);
 
         // ------------------------------------------------------------ 詠唱
         public bool TryChant(Fighter f, SkillDef s, out string why)
@@ -1488,6 +1528,7 @@ namespace SpellDuel
             }
             if (enemy != null && enemy.Alive) { dist = FlatDistance(f.head, enemy.head); best = enemy; }
             foreach (var m in minions) if (m.Alive) { float d = FlatDistance(f.head, m.head); if (d < dist) { dist = d; best = m; } }
+            foreach (var n in npcs) if (n.Alive && n.npcSide >= 1 && n != f) { float d = FlatDistance(f.head, n.head); if (d < dist) { dist = d; best = n; } }
             return best;
         }
 
@@ -1894,7 +1935,7 @@ namespace SpellDuel
                 { p.damage *= 2; owner.seals = 0; Emit("buff", owner.Chest, new Color(1f, 0.9f, 0.5f), "聖印爆發！傷害 ×2"); }
             }
             if (!reflected && s.cls == "basic" && owner.basicHoming > 0f) p.homing = owner.basicHoming;
-            if ((owner == enemy || owner.isMinion) && owner.target != null) p.target = owner.target;
+            if ((owner == enemy || owner.isMinion || owner.npcSide >= 0) && owner.target != null) p.target = owner.target;
             if (EnemyNpc(owner)) { p.speedMul *= EnemyShotSpeed; p.hitMul = EnemyShotHit; }   // 電腦敵人的投射物：飛慢一半、命中範圍減半
             SetCurve(p, curveAmp, pathLen);
             projectiles.Add(p);
@@ -2019,6 +2060,7 @@ namespace SpellDuel
                         if (d.until <= now) m.dots.RemoveAt(i);
                     }
             UpdateMinions(dt);
+            UpdateNpcs(dt);   // 副本的劇情人物（Combat.Npc.cs）
             Time_dt = dt;
             UpdateEndless();
             UpdateTraps();
@@ -2039,7 +2081,7 @@ namespace SpellDuel
             var flat = Fighter.Flat(to - from);
             var v = new Vector3((to.x - from.x) / T, (to.y - from.y + 0.5f * LobGravity * T * T) / T, (to.z - from.z) / T);
             var p = new Projectile { owner = owner, skill = s, pos = from, basePos = from, dir = v.normalized, damage = dmg, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur, id = nextId++, lob = true, vel = v, landAt = to, pathLen = v.magnitude };
-            if ((owner == enemy || owner.isMinion) && owner.target != null) p.target = owner.target;
+            if ((owner == enemy || owner.isMinion || owner.npcSide >= 0) && owner.target != null) p.target = owner.target;
             projectiles.Add(p);
             if ((owner == player && (remoteEnemy || allies.Count > 0)) || ((owner == enemy || owner.isMinion) && coopHost)) OnSpawn?.Invoke(p);
         }
@@ -2722,6 +2764,7 @@ namespace SpellDuel
             if (!f.Alive)
             {
                 if (f.isMinion) { kills++; if (endless) xp += Mathf.RoundToInt(MinionXp[f.minionKind] * (1f + 0.03f * wave)); Emit("miniondie", f.Chest, Color.white, null); }
+                else if (f.npcSide >= 0) Emit("npcdown", f.Chest, Color.white, $"{f.name}倒下了");
                 else if (f.isPlayer) Emit(AnyAllyAlive ? "down" : "lose", f.Chest, Color.white, null);
                 else if (endless && f == enemy) OnBossDown();
                 else Emit("win", f.Chest, Color.white, null);

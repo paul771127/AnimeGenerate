@@ -205,6 +205,7 @@ namespace SpellDuel
             }
             UpdateDungeonStory();   // 副本：房間的劇情字幕卡（SoloBattle.DungeonStory.cs）
             int dk = battle.kills - lastKillsSeen; lastKillsSeen = battle.kills;
+            QuestKills(dk);   // 副本任務：打倒幾隻敵人、收集東西
             for (int i = 0; i < dk; i++) { TryDrop(false); pendingGold += Economy.MinionGold(battle.wave); }
             if (dk > 0) { Sfx.Play("poof", 0.6f); Sfx.Play("coin", 0.35f, 1.1f); }   // 小怪倒下＋掉金幣
             int db = battle.bossKills - lastBossKillsSeen; lastBossKillsSeen = battle.bossKills;
@@ -538,7 +539,7 @@ namespace SpellDuel
 
         void OnSpeechText(string text)
         {
-            if (phase == Phase.Fighting && battle != null) { ItemByVoice(text); return; }
+            if (phase == Phase.Fighting && battle != null) { DungeonSpeech(text); ItemByVoice(text); return; }
             if (!TownWalking) return;
             if (Greeting.Find(text) != null) { world.Heard = text; world.HeardAt = Time.time; }
             townWalk.Heard(text);
@@ -921,7 +922,7 @@ namespace SpellDuel
                         battle.scaleAllies = battle.dungeonParty - 1;               // Boss 出招頻率、召喚數也照人數
                         battle.hpBoost = dungeonRelief;                          // 等級差修正（主機的等級決定）
                         battle.enemyHpMul = Dungeons.DungeonHp; battle.enemyDmgMul = Dungeons.DungeonDmg; battle.bossHpMul = Dungeons.DungeonHp;   // 副本：小怪與 Boss 的血量、攻擊 ×2
-                        battle.StartDungeon(dungeon.Waves);
+                        battle.StartDungeonMap();   // 副本地圖：每個地點由 BeginDungeonRun／房主選路線決定（SoloBattle.DungeonMap.cs）
                     }
                     else battle.StartEndless();
                 }
@@ -942,7 +943,8 @@ namespace SpellDuel
             {
                 if (!host) battle.endless = true;   // 隊友端：只用來判斷結束（兩人都倒下才結束）
                 bossRig.SetVisible(false);
-                Say("♾ 無盡模式：小怪會從場地邊緣不斷出現，每 60 秒來一隻 Boss！撐越久越好", 4f);
+                if (dungeon != null) BeginDungeonRun();   // 副本：從第一個地點開始（房主開打；隊友跟著房主的訊息走）
+                else Say("♾ 無盡模式：小怪會從場地邊緣不斷出現，每 60 秒來一隻 Boss！撐越久越好", 4f);
             }
             else Say(coopMode ? $"🔥 合作討伐：熔岩巨像（HP {boss.maxHp}）— 和隊友一起打倒它！" : $"🔥 Boss：熔岩巨像（HP {boss.maxHp}）— 看紅圈、紅線閃避！", 4f);
         }
@@ -1055,12 +1057,14 @@ namespace SpellDuel
             var pts = new Vector3[ms.Count]; var ks = new string[ms.Count];
             for (int i = 0; i < ms.Count; i++) { pts[i] = ms[i].head; ks[i] = $"{ms[i].minionId},{Mathf.CeilToInt(ms[i].hp)},{ms[i].maxHp},{(ms[i].windupUntil > 0f ? 1 : 0)},{ms[i].minionKind},{TargetCode(ms[i].target)},{ms[i].alt.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}"; }
             NetSend?.Invoke(new Msg { t = "mins", pts = pts, ks = ks });
+            SendNpcState();   // 副本的劇情人物
         }
 
         /// <summary>合作模式的網路訊息</summary>
         void OnNetCoop(Msg m)
         {
             var ally = battle.AllyByPid(m.pid);   // 送這則訊息的隊友
+            if (OnDungeonMsg(m)) return;          // 副本地圖：下一站、寶箱、抉擇、人物、對話（SoloBattle.DungeonMap.cs）
             switch (m.t)
             {
                 case "lane":
@@ -1366,10 +1370,13 @@ namespace SpellDuel
                 {
                     bool first = !Dungeons.IsCleared(d.id);
                     Dungeons.MarkCleared(d.id);
-                    for (int i = 0; i < d.rooms.Count; i++)
+                    // 走過的戰鬥地點（寶箱不算）：每個保底一件
+                    var fought = new List<DungeonRoom>();
+                    if (drun != null) { foreach (var r in drun.path) if (!r.IsChest) fought.Add(r); } else fought.AddRange(d.rooms);
+                    for (int i = 0; i < fought.Count; i++)
                     {
-                        bool last = i == d.rooms.Count - 1;
-                        ItemGen.SetTheme = d.ThemeOfRoom(i);
+                        bool last = i == fought.Count - 1;
+                        ItemGen.SetTheme = d.ThemeOf(fought[i]);
                         pendingItems.Add(ItemGen.Make(dropRng, d.level + battle.levelBoost, last ? 3 : Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
                         // 人數加成：每個房間有（倍率−1）的機會多掉一件（稀有度照常擲，越稀有越難掉）
                         if (dropRng.NextDouble() < Dungeons.LootMul(coop ? 1 + PeerIds.Count : 1) - 1f)
@@ -1382,12 +1389,13 @@ namespace SpellDuel
                     int ups = prof != null ? prof.AddXp(xp) : 0;
                     if (prof != null) Progress.SaveChar(prof);
                     int over = (prof != null ? prof.level : 1) - d.level;
-                    BuildVictory($"{d.name} 通關", "dg_" + d.id, d.rooms.Count * 75f, xp, ups, over >= 8 ? $"掉落的裝備是 Lv{d.level}，比你低 {over} 級" : first ? "首次通關！" : null);
+                    BuildVictory($"{d.name} 通關", "dg_" + d.id, fought.Count * 75f, xp, ups, over >= 8 ? $"掉落的裝備是 Lv{d.level}，比你低 {over} 級" : first ? "首次通關！" : null);
                     Say($"🏰 {d.name} 通關！獲得經驗 {xp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "（首次通關）" : "")
                         + (loot.Length > 0 ? "\n" + loot : "") + (over >= 8 ? $"\n（掉落的裝備是 Lv{d.level}，比你低 {over} 級）" : ""), 99f);
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
                     if (!Story.IsSeen("dg!" + d.id)) { Story.MarkSeen("dg!" + d.id); ShowDialogue(d.after, null); }
                 }
+                else if (drun != null && drun.failed) { LoseLoot(); Say($"💀 {drun.failText}\n（保護目標倒下就算失敗：小怪會優先撲向他，記得幫他擋）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 else { LoseLoot(); Say($"💀 {d.name} 失敗…副本的敵人跟著人數變多（最少以 2 人計算），等級再高一點或找夥伴一起來吧", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
             }
@@ -1678,6 +1686,7 @@ namespace SpellDuel
             foreach (var rig in petGo.Values) if (rig) Destroy(rig.gameObject);
             foreach (var ar in allyRigs.Values) if (ar) Destroy(ar.gameObject);
             allyRigs.Clear(); allyLastFeet.Clear();
+            ClearNpcRigs(); drun = null; chest = null;   // 副本地圖的劇情人物、寶箱
             petGo.Clear();
             foreach (var go in landGo.Values) if (go) Destroy(go);
             landGo.Clear();
@@ -2450,6 +2459,7 @@ namespace SpellDuel
             UpdateQuakeVisuals();
             UpdatePickups();
             UpdateAllyRigs();
+            UpdateNpcRigs();   // 副本的劇情人物
             var en = En;
             var feetS = WorldFrame.FromWorld(en.Feet);
             UpdateChargeFx();
@@ -3014,7 +3024,7 @@ namespace SpellDuel
                     }
                     y += ((shown + 1) / 2) * (u * 1.3f + gap * 0.5f) + gap * 0.5f;
                     var sel = Dungeons.Get(netDungeonId);
-                    if (sel != null) { UiKit.Text(new Rect(pad, y, W - pad * 2, u * 1.3f), $"{sel.desc}（{sel.rooms.Count} 個房間）", fsS, new Color(0.85f, 0.95f, 0.9f), TextAnchor.UpperLeft); y += u * 1.3f + gap; }
+                    if (sel != null) { UiKit.Text(new Rect(pad, y, W - pad * 2, u * 1.3f), $"{sel.desc}（{sel.SizeText}）", fsS, new Color(0.85f, 0.95f, 0.9f), TextAnchor.UpperLeft); y += u * 1.3f + gap; }
                 }
                 if (coop && (NetIsHost || !netDungeon)) DrawDifficultyRow(ref y, pad, gap, u, fsS, W);   // 副本：難度由房主決定
                 string who = coop ? "隊友" : "對手";
@@ -3484,6 +3494,13 @@ namespace SpellDuel
                 UiKit.Text(new Rect(fr.x + gap, fr.y + fr.height * 0.5f, fr.width - gap * 2, fr.height * 0.45f), Tracking.Reason + (NetMode ? "\n對手仍以你最後的位置判定" : "\n恢復追蹤後自動繼續"), fs, new Color(0.9f, 0.92f, 1f), TextAnchor.MiddleCenter);
             }
 
+            if (phase == Phase.Fighting && drun != null)
+            {
+                // 副本地圖：人物頭上的血條、對話窗（藥水列上方、提示文字再上面）、任務／抉擇／寶箱／選下一站（SoloBattle.DungeonMap.cs）
+                DrawNpcBars(W, H, lh, fsS);
+                DrawChatLog(W, H, pad, fsS, panelY - gap - fs * 7.6f);
+                DrawDungeonMapUi(W, H, pad, fs, fsS);
+            }
             if (phase == Phase.Fighting) DrawDungeonTicker(W, H, pad, fs, fsS);   // 副本的劇情字幕卡
             if (phase == Phase.Over && victory == null) DrawExerciseCard(W, top + (botY - top) * 0.07f, pad, lh, fsS);   // 運動紀錄（勝利窗格裡另外顯示）
             if (phase == Phase.Over && victory != null && DrawVictory(W, H, pad, top, botY, gap, lh, fs, fsS)) { }   // 勝利結算窗格（按「繼續」後才是原本的按鈕）
