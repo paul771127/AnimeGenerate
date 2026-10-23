@@ -336,19 +336,19 @@ namespace SpellDuel
             if (NetMode && coop) NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp) });
         }
 
-        /// <summary>把暫存的戰利品放進背包、金幣入帳（背包滿了就自動換成金幣）</summary>
+        /// <summary>把暫存的戰利品放進背包、金幣入帳（背包滿了就寄到信箱，保留 7 天）</summary>
         string GrantLoot(string why, bool say = true)
         {
             if (pendingItems.Count == 0 && pendingGold == 0) return "";
-            int got = 0, sold = 0, gold = pendingGold;
+            int got = 0, mailed = 0, gold = pendingGold;
             foreach (var it in pendingItems)
             {
-                if (Progress.AddToBag(it)) got++;
-                else { gold += Economy.SellPrice(it); sold++; }
+                if (Progress.AddToBagOrMail(it, why)) got++;
+                else mailed++;
             }
             Economy.Gold += gold;
             lootLog.AddRange(pendingItems); lootGoldLog += gold;   // 給勝利結算窗格
-            string msg = $"🎁 獲得裝備 {got} 件" + (sold > 0 ? $"（背包滿了，{sold} 件換成金幣）" : "") + $"、💰 {gold}";
+            string msg = $"🎁 獲得裝備 {got + mailed} 件" + (mailed > 0 ? $"（背包滿了，{mailed} 件寄到 📬 信箱，⚠ {Progress.MailKeepDays} 天內沒領會被刪除）" : "") + $"、💰 {gold}";
             if (say) { Say($"{why}！{msg}", 3f); Sfx.Play("coin", 0.8f); Sfx.Play("charged", 0.5f, 1.2f); }
             pendingItems.Clear(); pendingGold = 0;
             return msg;

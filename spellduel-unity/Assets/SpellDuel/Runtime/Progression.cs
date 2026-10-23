@@ -1156,5 +1156,67 @@ namespace SpellDuel
         }
 
         public static void Discard(Item it) { if (Bag.Remove(it)) SaveBag(); }
+
+        // ---- 背包容量與信箱：背包滿了，新拿到的裝備寄到信箱（保留 7 天，過期自動刪除）
+        public static bool BagFull => Bag.Count >= BagSize;
+        public static int BagFree => Mathf.Max(0, BagSize - Bag.Count);
+        public const int MailKeepDays = 7;
+        /// <summary>現在時間（Unix 秒；測試時可以換掉）</summary>
+        public static Func<long> Now = () => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+        public class Mail { public Item item; public long sentAt; public string from; }
+        static List<Mail> mail;
+        /// <summary>信箱（讀的時候順便刪掉過期的信）</summary>
+        public static List<Mail> Mailbox
+        {
+            get
+            {
+                if (mail == null)
+                {
+                    mail = new List<Mail>();
+                    foreach (var line in (Get("sd_mail") ?? "").Split('\n'))
+                    {
+                        var a = line.Split(new[] { '\t' }, 3);
+                        if (a.Length < 3 || !long.TryParse(a[0], out var t)) continue;
+                        var it = Item.Parse(a[2]);
+                        if (it != null) mail.Add(new Mail { sentAt = t, from = a[1], item = it });
+                    }
+                }
+                if (mail.RemoveAll(Expired) > 0) SaveMail();
+                return mail;
+            }
+        }
+        public static bool Expired(Mail m) => Now() - m.sentAt >= MailKeepDays * 86400L;
+        /// <summary>還剩幾天（不到 1 天＝0，畫面寫「今天到期」）</summary>
+        public static int MailDaysLeft(Mail m) => (int)Math.Max(0L, (m.sentAt + MailKeepDays * 86400L - Now()) / 86400L);
+        public static void SaveMail()
+        {
+            var sb = new StringBuilder();
+            foreach (var m in mail ?? new List<Mail>()) sb.Append(m.sentAt).Append('\t').Append((m.from ?? "").Replace('\t', ' ').Replace('\n', ' ')).Append('\t').Append(m.item.Serialize()).Append('\n');
+            Set("sd_mail", sb.ToString());
+        }
+        public static void SendMail(Item it, string from)
+        {
+            if (it == null) return;
+            Mailbox.Add(new Mail { item = it, sentAt = Now(), from = from ?? "" });
+            SaveMail();
+        }
+        /// <summary>放進背包；背包滿了就寄到信箱。回傳 true＝進背包、false＝寄到信箱</summary>
+        public static bool AddToBagOrMail(Item it, string from)
+        {
+            if (AddToBag(it)) return true;
+            SendMail(it, from);
+            return false;
+        }
+        /// <summary>從信箱領到背包（背包滿了回傳 false）</summary>
+        public static bool ClaimMail(Mail m)
+        {
+            if (m == null || BagFull || !Mailbox.Contains(m)) return false;
+            Bag.Add(m.item); mail.Remove(m);
+            SaveBag(); SaveMail();
+            return true;
+        }
+        /// <summary>測試用：清掉記憶體裡的背包與信箱（重新從存檔讀）</summary>
+        public static void ReloadStorage() { bag = null; mail = null; cache.Clear(); }
     }
 }

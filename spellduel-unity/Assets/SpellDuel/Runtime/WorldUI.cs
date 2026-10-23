@@ -159,7 +159,13 @@ namespace SpellDuel
             UiKit.Title(new Rect(r.x+gap,y,r.width-gap*2-(facility?fs*1.9f:0),fs*1.8f),title,c,fsL);
             if(facility)UiKit.ShopArt(new Rect(r.xMax-gap-fs*1.65f,y,fs*1.65f,fs*1.65f),screen==Screen.Smith?0:screen==Screen.Shop?1:2,c);
             string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
-            UiKit.Text(new Rect(r.x + gap, y+fs*1.9f, r.width - gap * 2, fs * 1.0f), $"{cn} Lv{prof.level}　💰 {Economy.Gold}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
+            // 背包容量（滿了紅字）、信箱（有信＝提醒幾天內要領）
+            int bc = Progress.Bag.Count; var mails = Progress.Mailbox;
+            int soonest = int.MaxValue; foreach (var m in mails) soonest = Mathf.Min(soonest, Progress.MailDaysLeft(m));
+            string bagTxt = $"🎒 {bc}/{Progress.BagSize}" + (bc >= Progress.BagSize ? " 已滿" : "");
+            string mailTxt = mails.Count > 0 ? $"📬 信箱 {mails.Count} 封（{(soonest <= 0 ? "今天" : soonest + " 天後")}刪除，到角色→裝備領取）" : "";
+            UiKit.Text(new Rect(r.x + gap, y+fs*1.9f, r.width - gap * 2, fs * 1.0f), mailTxt, fsS, soonest <= 2 ? new Color(1f, 0.5f, 0.4f) : new Color(1f, 0.8f, 0.4f), TextAnchor.MiddleLeft, true, 0.6f);
+            UiKit.Text(new Rect(r.x + gap, y+fs*1.9f, r.width - gap * 2, fs * 1.0f), $"{cn} Lv{prof.level}　💰 {Economy.Gold}　{bagTxt}", fsS, bc >= Progress.BagSize ? new Color(1f, 0.5f, 0.4f) : new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
             y += fs * 3.1f;
         }
 
@@ -617,6 +623,8 @@ namespace SpellDuel
             else
             {
                 var bag = new List<Item>(Progress.Bag);
+                UiKit.Bar(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.1f), bag.Count / (float)Progress.BagSize, bag.Count >= Progress.BagSize ? new Color(1f, 0.35f, 0.3f) : bag.Count >= Progress.BagSize * 0.8f ? new Color(1f, 0.8f, 0.3f) : new Color(0.45f, 0.85f, 0.5f), $"背包 {bag.Count}/{Progress.BagSize}" + (bag.Count >= Progress.BagSize ? "（已滿：新拿到的裝備會寄到信箱，7 天後刪除）" : $"（空 {Progress.BagFree} 格）"), fsS);
+                y += fs * 1.4f;
                 if (bag.Count == 0) UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2f), "背包是空的（身上穿的要先卸下才能賣）", fs, Color.gray);
                 y = DrawItemGrid(r, bag, prof, fs, fsS, gap, y, it => $"賣 💰 {Economy.SellPrice(it)}");
                 if (selItem != null && bag.Contains(selItem))
