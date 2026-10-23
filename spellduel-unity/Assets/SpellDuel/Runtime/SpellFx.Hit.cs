@@ -19,6 +19,7 @@ namespace SpellDuel
             if (s == null) return null;
             switch (s.id)
             {
+                case "yj_blade": case "wanjian": case "jianlai": return "swordsage";
                 case "na_mage": case "pet_fire": case "pet_blast": return "mage";
                 case "na_sword": case "pet_golem": return "swordsman";
                 case "na_arrow": case "pet_falcon": return "archer";
@@ -63,6 +64,7 @@ namespace SpellDuel
 
             switch (classId)
             {
+                case "swordsage": SageHit(anim,root,s); break;
                 case "swordsman": Sword(anim, root, color, s); break;
                 case "archer": Arrow(anim, root, color, s); break;
                 case "mage": Arcane(anim, root, color, s); break;
@@ -80,6 +82,18 @@ namespace SpellDuel
                 Stars(root, Color.white, s, 2, 0.35f, 0.5f, 0.7f);
                 anim.AddRing(root, Circle(48, 1f), true, 0.04f * s, Color.white, 0.03f, 0.3f, 0.1f * s, 1.1f * s);
             }
+        }
+
+        static void SageHit(FxAnim anim,Transform root,float s)
+        {
+            var cyan=new Color(.45f,.85f,1f,.75f);
+            var cut=new[]{new Vector3(0,-.65f,0),new Vector3(0,.65f,0)};
+            anim.AddSlash(root,cut,.032f*s,Color.white,0,.16f,.2f*s,.7f*s,-12);
+            anim.AddRing(root,Circle(28,1),true,.018f*s,cyan,0,.30f,.07f*s,.62f*s,false);
+            for(int i=0;i<4;i++)anim.AddSlash(root,cut,.013f*s,cyan,.025f,.23f,.08f*s,.28f*s,45+i*90);
+            var motes=NewPS(root,"Jade sword fragments",BlendMat(TexStar),8,true);
+            var m=motes.main;m.startLifetime=.28f;m.startSpeed=1.1f*s;m.startSize=.035f*s;m.startColor=cyan;
+            Sphere(motes,.04f);FadeOut(motes);motes.Emit(6);
         }
 
         static void NoviceHit(FxAnim anim,Transform root,string kind,float s)

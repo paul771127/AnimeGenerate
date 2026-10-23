@@ -49,6 +49,12 @@ namespace SpellDuel
             Background(cv, cc, sc, skillId);
             switch (skillId)
             {
+                case "jianlai": SageIcon(cv,0); break;
+                case "yujian": SageIcon(cv,1); break;
+                case "wanjian": SageIcon(cv,2); break;
+                case "jiangang": SageIcon(cv,3); break;
+                case "jianzhen": SageIcon(cv,4); break;
+                case "yj_blade": SageIcon(cv,1); break;
                 case "nv_swing": NoviceClub(cv); break;
                 case "nv_aid": NoviceBandage(cv); break;
                 case "na_pebble": NoviceStone(cv,false); break;
@@ -139,6 +145,49 @@ namespace SpellDuel
             Tri(x, y, cx, cy + s * 0.35f, cx - s * 0.30f, cy - s * 0.15f, cx + s * 0.30f, cy - s * 0.15f),
             Math.Min(Seg(x, y, cx - s * 0.10f, cy, cx - s * 0.27f, cy - s * 0.55f),
                      Seg(x, y, cx + s * 0.10f, cy, cx + s * 0.27f, cy - s * 0.55f)) - s * 0.065f));
+
+        static readonly V SageBlue=V.Hex("#75cddf"),SageWhite=V.Hex("#e7f7ff");
+        static void SageBlade(Cv cv,float x,float y,float h,float tilt=0)
+        {
+            float a=tilt*(float)Math.PI/180f,cs=(float)Math.Cos(a),sn=(float)Math.Sin(a);
+            Glyph(cv,(px,py)=>{
+                float dx=px-x,dy=py-y,u=dx*cs+dy*sn,v=-dx*sn+dy*cs;
+                return Math.Min(Tri(u,v,-h*.08f,-h*.18f,h*.08f,-h*.18f,0,h*.55f),
+                    Math.Min(Box(u,v,0,-h*.23f,h*.19f,h*.035f),Box(u,v,0,-h*.36f,h*.035f,h*.12f)));
+            },SageWhite);
+            float ax=x+sn*h*.12f,ay=y-cs*h*.12f,bx=x-sn*h*.39f,by=y+cs*h*.39f;
+            Stroke(cv,ax,ay,bx,by,.010f,SageBlue);
+        }
+        static void SageIcon(Cv cv,int kind)
+        {
+            if(kind==0)
+            {
+                Halo(cv,0,-.26f,.42f,.17f,SageBlue);SageBlade(cv,0,.08f,1.18f);
+                Stroke(cv,-.32f,-.32f,-.16f,-.20f,.032f,SageBlue);Stroke(cv,.32f,-.32f,.16f,-.20f,.032f,SageBlue);
+                Glyph(cv,(x,y)=>Diamond(x,y,.34f,.40f,.065f,.09f,0),SageWhite);
+            }
+            else if(kind==1)
+            {
+                SageBlade(cv,-.29f,.02f,.85f,-29);SageBlade(cv,.04f,.13f,1.05f,-29);SageBlade(cv,.36f,.18f,.72f,-29);
+                for(int i=0;i<3;i++)Stroke(cv,-.62f+i*.26f,-.57f,-.48f+i*.26f,-.37f,.018f,SageBlue);
+            }
+            else if(kind==2)
+            {
+                Halo(cv,0,-.42f,.54f,.16f,SageBlue);
+                SageBlade(cv,0,.02f,1.12f,180);SageBlade(cv,-.38f,.23f,.68f,180);SageBlade(cv,.38f,.23f,.68f,180);
+                Stroke(cv,-.19f,.63f,-.19f,.35f,.018f,SageBlue);Stroke(cv,.20f,.63f,.20f,.35f,.018f,SageBlue);
+            }
+            else if(kind==3)
+            {
+                Glyph(cv,Crest(0,.02f,1.10f),SageBlue);SageBlade(cv,0,.05f,.94f);
+                Halo(cv,0,.03f,.64f,.54f,SageWhite);
+            }
+            else
+            {
+                Halo(cv,0,-.04f,.61f,.32f,SageBlue);Halo(cv,0,-.04f,.43f,.21f,SageWhite);
+                for(int i=0;i<5;i++){float a=i*(float)Math.PI*2/5;SageBlade(cv,(float)Math.Cos(a)*.49f,(float)Math.Sin(a)*.36f,.47f);}
+            }
+        }
 
         static void NoviceClub(Cv cv)
         {

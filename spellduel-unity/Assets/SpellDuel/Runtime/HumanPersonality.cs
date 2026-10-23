@@ -10,9 +10,9 @@ namespace SpellDuel
             {
                 case "教官":case "swordsman":case "mage":case "paladin":case "小鐵":return Temper.Confident;
                 case "播報員":case "ranger":case "summoner":case "小葉":case "海斗":case "鐵匠":return Temper.Cheerful;
-                case "懸賞官":case "archer":case "marksman":case "archmage":case "ninja":case "楓":case "澪":return Temper.Calm;
+                case "berserker":case "懸賞官":case "archer":case "marksman":case "archmage":case "ninja":case "楓":case "澪":return Temper.Calm;
                 case "novice":case "priest":case "bishop":case "凪":case "艾琳":return Temper.Gentle;
-                case "berserker":case "inquisitor":return Temper.Fierce;
+                case "inquisitor":return Temper.Fierce;
                 case "assassin":case "shadowdancer":case "米菈":return Temper.Cunning;
                 case "店員":return Temper.Shy;
                 default:return Temper.Mature;
@@ -66,7 +66,7 @@ namespace SpellDuel
                 case "novice":return P(A(-26,18,-50),A(-34,20,-48),-3,9,5,-.012f,.028f,.050f);
                 case "swordsman":return P(A(-20,22,-70),A(-32,8,-62),-2,-9,3,-.008f,.025f,.060f);
                 case "paladin":return P(A(-36,18,-65),A(-22,5,-66),-1,-6,2,-.005f,.018f,.045f);
-                case "berserker":return P(A(-28,32,-42),A(-40,18,-38),3,12,6,.012f,.040f,.070f);
+                case "berserker":return P(A(-55,-8,-36),A(-14,8,-50),-1,-10,1,-.007f,.008f,.035f);
                 case "archer":return P(A(-58,10,-16),A(-35,-22,-102),-2,24,3,-.015f,.018f,.055f);
                 case "marksman":return P(A(-64,7,-14),A(-36,-25,-108),-1,28,2,-.012f,.023f,.065f);
                 case "ranger":return P(A(-48,15,-24),A(-27,-15,-90),3,18,4,.015f,.027f,.048f);
@@ -85,7 +85,7 @@ namespace SpellDuel
                 case "novice":return P(A(-6,16,-32),A(6,18,-28),-2,6,1,-.018f,.004f,.020f);
                 case "swordsman":return P(A(-10,35,-75),A(12,8,-24),-3,-5,-1,-.022f,.004f,.015f);
                 case "paladin":return P(A(-8,20,-38),A(4,5,-42),2,4,-1,.018f,.003f,.012f);
-                case "berserker":return P(A(-8,38,-74),A(-12,24,-50),4,10,2,.025f,.007f,.020f);
+                case "berserker":return P(A(-22,-10,-62),A(2,8,-30),1,-7,-1,.009f,.002f,.012f);
                 case "archer":return P(A(-8,7,-48),A(-25,32,-85),-3,17,1,-.020f,.005f,.018f);
                 case "marksman":return P(A(4,8,-50),A(-12,26,-96),2,20,0,.017f,.004f,.016f);
                 case "ranger":return P(A(-6,16,-44),A(-18,32,-70),4,-12,2,.026f,.006f,.025f);

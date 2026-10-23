@@ -736,6 +736,16 @@ namespace SpellDuel
                     StarGlint(root.transform, Color.white, D * 1.4f, new Vector3(0f, 0f, D * 1.25f));
                     break;
                 }
+                case "yj_blade":
+                case "wanjian":
+                {
+                    var sword=CreateSwordSageBlade();sword.transform.SetParent(body,false);
+                    sword.transform.localScale=Vector3.one*(id=="wanjian"?.62f:1f);
+                    var trail=root.AddComponent<TrailRenderer>();trail.sharedMaterial=BlendMat(TexSoft);
+                    trail.time=id=="wanjian"?.20f:.16f;trail.widthMultiplier=id=="wanjian"?.08f:.025f;
+                    trail.startColor=new Color(.50f,.87f,1f,.55f);trail.endColor=new Color(.50f,.87f,1f,0);
+                    break;
+                }
                 case "na_pebble":
                 case "nv_stone":
                 {
@@ -766,8 +776,56 @@ namespace SpellDuel
             }
             if (anim.flick != null) anim.flickBase = anim.flick.localScale;
             if (anim.spin == null && anim.flick == null && anim.jitter == null) anim.enabled = false;
-            if(id!="na_pebble"&&id!="nv_stone")DecorateProjectile(root, string.IsNullOrEmpty(classId) ? (s != null ? s.cls : "mage") : classId, sc, Mathf.Max(0.03f, radius));
+            if(id!="na_pebble"&&id!="nv_stone"&&id!="yj_blade"&&id!="wanjian")DecorateProjectile(root, string.IsNullOrEmpty(classId) ? (s != null ? s.cls : "mage") : classId, sc, Mathf.Max(0.03f, radius));
             return root;
+        }
+
+        /// <summary>Shared straight jian, +Z at the tip. Unit blade is 4.1 long; all meshes/materials are cached.</summary>
+        public static GameObject CreateSwordSageBlade(bool flow=true)
+        {
+            var go=new GameObject("SwordSage Jian");
+            SolidPart(go.transform,"sage.jian.v1",m=>{
+                m.sub=0;m.Lathe(Prof(.28f,.09f,.55f,.14f,3.55f,.085f,4.1f,0),4,null,1f,.18f,45);
+                m.sub=1;m.Lathe(Prof(.12f,.16f,.20f,.33f,.29f,.19f),8,null,1f,.19f);
+                m.sub=2;m.Lathe(Prof(-.68f,.07f,.13f,.07f),8,null);
+                m.sub=1;m.Lathe(Prof(-.91f,0,-.80f,.14f,-.67f,.07f),6,null,1f,.55f);
+            },new[]{new Color(.85f,.95f,.99f),new Color(.30f,.68f,.76f),new Color(.22f,.36f,.49f)});
+            GlowPart(go.transform,"sage.jian.ridge",m=>m.Lathe(Prof(.45f,.012f,.60f,.030f,3.45f,.016f,3.80f,0),4,(z,j)=>new Color(.47f,.88f,1f,.38f),1f,.15f,45,null,new Vector3(0,.024f,0),Quaternion.identity));
+            if(flow)
+            {
+                var streamer=NewChild(go.transform,"SwordFlow");
+                GlowPart(streamer,"sage.jian.flow",m=>m.Lathe(Prof(-.14f,0,0,.038f,.14f,0),4,(z,j)=>new Color(.75f,.97f,1f,.65f),1f,.18f,45));
+                go.AddComponent<SwordSageFlow>().stream=streamer;
+            }
+            return go;
+        }
+
+        /// <summary>Persistent presentation only. Caller owns timer, position and cleanup.</summary>
+        public static GameObject CreateSwordSageAura(bool formation)
+        {
+            var go=new GameObject(formation?"Sword formation":"Sword qi guard");
+            int count=formation?6:4;float radius=formation?.85f:.57f;
+            for(int i=0;i<count;i++)
+            {
+                float a=i*Mathf.PI*2f/count;var sword=CreateSwordSageBlade(false).transform;
+                sword.SetParent(go.transform,false);sword.localScale=Vector3.one*(formation?.10f:.085f);
+                sword.localPosition=new Vector3(Mathf.Cos(a)*radius,formation?.15f:.52f,Mathf.Sin(a)*radius);
+                sword.localRotation=Quaternion.Euler(-90,0,0);
+            }
+            var cyan=new Color(.38f,.80f,.94f,.30f);
+            var ground=NewChild(go.transform,"Ground qi circle");ground.localRotation=Quaternion.Euler(90,0,0);
+            ground.localPosition=Vector3.up*.025f;Line(ground,"Qi circle",Circle(40,radius),true,.015f,cyan,false,true);
+            if(!formation)
+            {
+                for(int i=0;i<3;i++)
+                {
+                    var hoop=NewChild(go.transform,"Guard meridian");hoop.localPosition=Vector3.up*.55f;
+                    hoop.localRotation=Quaternion.Euler(65,i*60,0);hoop.localScale=new Vector3(1,1.35f,1);
+                    Line(hoop,"Shield qi",Circle(36,radius),true,.012f,new Color(.48f,.81f,1f,.18f),false,true);
+                }
+            }
+            go.AddComponent<SwordSageFlow>();
+            return go;
         }
 
         public static string NoviceStyle(string skillId) => skillId=="nv_swing"?"novice_swing":skillId=="nv_aid"?"novice_aid":skillId=="nv_stone"?"novice_stone":"novice";
@@ -1487,6 +1545,17 @@ namespace SpellDuel
             var a = go.AddComponent<FxAnim>();
             a.killAt = life;
             return a;
+        }
+    }
+
+    internal sealed class SwordSageFlow : MonoBehaviour
+    {
+        internal Transform stream;
+        internal System.Func<bool> Visible;
+        void Update()
+        {
+            if(Visible!=null&&!Visible()){gameObject.SetActive(false);return;}
+            if(stream!=null)stream.localPosition=new Vector3(0,.033f,Mathf.Repeat(Time.time*.75f,1f)*2.75f+.55f);
         }
     }
 

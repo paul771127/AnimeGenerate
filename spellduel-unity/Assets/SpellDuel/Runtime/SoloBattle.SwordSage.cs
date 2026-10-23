@@ -10,10 +10,14 @@ namespace SpellDuel
     public partial class SoloBattle
     {
         GameObject heldSword; float yujianAcc;
+        Battle sageVisualBattle;
+        GameObject sageGuardVisual,sageArrayVisual;
+        float sageGuardUntil,sageArrayUntil;
 
         void UpdateSwordSage(float dt)
         {
             if (battle == null || Me == null) return;
+            UpdateSwordSageBuffVisuals();
             // 御劍術：照準星方向連射飛劍
             if (Me.yujianUntil > battle.now && Me.yujianSkill != null && Me.Alive)
             {
@@ -38,19 +42,9 @@ namespace SpellDuel
             if (!on) { if (heldSword) heldSword.SetActive(false); return; }
             if (!heldSword)
             {
-                heldSword = new GameObject("Held Sword");
-                var blade = Prim(PrimitiveType.Cube, new Color(0.75f, 0.92f, 1f, 0.9f), true);
-                blade.transform.SetParent(heldSword.transform, false);
-                blade.transform.localScale = new Vector3(0.025f, 0.006f, 0.75f); blade.transform.localPosition = new Vector3(0f, 0f, 0.42f);
-                var glow = Prim(PrimitiveType.Cube, new Color(0.5f, 0.85f, 1f, 0.35f), true);
-                glow.transform.SetParent(heldSword.transform, false);
-                glow.transform.localScale = new Vector3(0.05f, 0.012f, 0.78f); glow.transform.localPosition = new Vector3(0f, 0f, 0.42f);
-                var guard = Prim(PrimitiveType.Cube, new Color(0.95f, 0.8f, 0.4f), true);
-                guard.transform.SetParent(heldSword.transform, false);
-                guard.transform.localScale = new Vector3(0.11f, 0.02f, 0.02f); guard.transform.localPosition = new Vector3(0f, 0f, 0.04f);
-                var hilt = Prim(PrimitiveType.Cube, new Color(0.35f, 0.25f, 0.2f), true);
-                hilt.transform.SetParent(heldSword.transform, false);
-                hilt.transform.localScale = new Vector3(0.02f, 0.02f, 0.09f); hilt.transform.localPosition = new Vector3(0f, 0f, -0.02f);
+                heldSword=SpellFx.CreateSwordSageBlade();heldSword.name="Held Sword";
+                heldSword.transform.localScale=Vector3.one*.19f;
+                heldSword.GetComponent<SwordSageFlow>().Visible=()=>battle!=null&&Me!=null&&Me.Alive&&Me.swordUntil>battle.now&&phase==Phase.Fighting;
             }
             heldSword.SetActive(true);
             var t = cam.transform;
@@ -63,6 +57,51 @@ namespace SpellDuel
             heldSword.transform.rotation = Quaternion.LookRotation(t.forward * 0.6f + t.up * 0.8f, -t.forward) * Quaternion.Euler(sway, 0f, 0f);
         }
 
-        void ClearSwordSage() { if (heldSword) heldSword.SetActive(false); yujianAcc = 0.99f; }
+        // Observe the existing buff events; never write shield values, cooldowns or skill timers.
+        void OnSwordSageBuffVisual(string kind,Vector3 at,Color color,string text)
+        {
+            if(kind!="buff"||Me==null||string.IsNullOrEmpty(text)||Battle.FlatDistance(at,Me.Chest)>.5f)return;
+            if(text.Contains("劍罡護體"))sageGuardUntil=Me.shieldUntil;
+            if(text.Contains("劍陣"))sageArrayUntil=Me.shieldUntil;
+        }
+        bool SwordSageShieldVisible(bool formation)=>battle!=null&&Me!=null&&Me.Alive&&phase==Phase.Fighting&&Me.shieldLeft>0&&Me.shieldUntil>battle.now&&(formation?sageArrayUntil:sageGuardUntil)>battle.now;
+        void UpdateSwordSageBuffVisuals()
+        {
+            if(sageVisualBattle!=battle)
+            {
+                if(sageVisualBattle!=null)sageVisualBattle.OnEvent-=OnSwordSageBuffVisual;
+                sageVisualBattle=battle;sageVisualBattle.OnEvent+=OnSwordSageBuffVisual;
+                sageGuardUntil=sageArrayUntil=0;
+            }
+            bool alive=Me.Alive&&phase==Phase.Fighting&&Me.shieldLeft>0&&Me.shieldUntil>battle.now;
+            bool guard=alive&&sageGuardUntil>battle.now,formation=alive&&sageArrayUntil>battle.now;
+            if(guard&&!sageGuardVisual)
+            {
+                sageGuardVisual=SpellFx.CreateSwordSageAura(false);
+                sageGuardVisual.GetComponent<SwordSageFlow>().Visible=()=>SwordSageShieldVisible(false);
+            }
+            if(formation&&!sageArrayVisual)
+            {
+                sageArrayVisual=SpellFx.CreateSwordSageAura(true);
+                sageArrayVisual.GetComponent<SwordSageFlow>().Visible=()=>SwordSageShieldVisible(true);
+            }
+            if(sageGuardVisual)
+            {
+                sageGuardVisual.SetActive(guard);sageGuardVisual.transform.position=WorldFrame.FromWorld(Me.Feet);
+                sageGuardVisual.transform.rotation=Quaternion.Euler(0,Time.time*16,0);
+            }
+            if(sageArrayVisual)
+            {
+                sageArrayVisual.SetActive(formation);sageArrayVisual.transform.position=WorldFrame.FromWorld(Me.Feet);
+                sageArrayVisual.transform.rotation=Quaternion.Euler(0,-Time.time*22,0);
+            }
+        }
+        void ClearSwordSage()
+        {
+            if(sageVisualBattle!=null)sageVisualBattle.OnEvent-=OnSwordSageBuffVisual;
+            sageVisualBattle=null;sageGuardUntil=sageArrayUntil=0;
+            if(heldSword)Destroy(heldSword);if(sageGuardVisual)Destroy(sageGuardVisual);if(sageArrayVisual)Destroy(sageArrayVisual);
+            heldSword=sageGuardVisual=sageArrayVisual=null;yujianAcc=.99f;
+        }
     }
 }

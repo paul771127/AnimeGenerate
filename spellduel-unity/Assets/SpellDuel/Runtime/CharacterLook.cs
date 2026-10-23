@@ -23,7 +23,7 @@ namespace SpellDuel
             {"priest",new Look(EyeKind.Droop,HairKind.Straight,"69a9a4","e4c785",.44f,-.6f,0,.25f,5)},
             {"novice",new Look(EyeKind.Round,HairKind.Crop,"829c63","765039",.43f,.12f,.28f,.085f,13)},   // 初心者：圓眼、短髮
             {"paladin",new Look(EyeKind.Almond,HairKind.Slick,"b29547","b28a53",.40f,.1f,-.2f,.08f,6)},
-            {"berserker",new Look(EyeKind.Sanpaku,HairKind.Spikes,"cf7859","783c2e",.35f,.6f,.15f,.11f,7)},
+            {"berserker",new Look(EyeKind.Almond,HairKind.HighPony,"76b8ce","29475a",.38f,.12f,-.18f,.24f,7)},
             {"marksman",new Look(EyeKind.Slender,HairKind.LowPony,"b69b65","827b65",.35f,.1f,-.6f,.21f,8)},
             {"ranger",new Look(EyeKind.Round,HairKind.Wolf,"64bfa0","ad683d",.43f,.35f,-.4f,.17f,9)},
             {"archmage",new Look(EyeKind.HalfClosed,HairKind.LongSide,"9c7bc7","c2b6db",.38f,.4f,.65f,.30f,10)},

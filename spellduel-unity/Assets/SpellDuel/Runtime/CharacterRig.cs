@@ -266,8 +266,30 @@ namespace SpellDuel
                     break;
                 case "berserker":
                     RemoveNamed(handR,"Sword"); if(shield!=null) { RemoveVisual(shield.gameObject); shield=null; }
-                    MakeCape(new Color(0.39f,0.18f,0.25f),0.47f);
-                    BuildAxe(); break;
+                    // Blue-white sword robes, a straight jian and a sheathed spare; no axe or heavy armour.
+                    var jade=AnimeFace.Material(new Color(.24f,.65f,.70f));
+                    var silver=AnimeFace.Material(new Color(.78f,.91f,.97f));
+                    var sageSword=SpellFx.CreateSwordSageBlade();sageSword.name="Sword";
+                    sageSword.transform.SetParent(handR,false);sageSword.transform.localPosition=new Vector3(0,-.04f,0);
+                    sageSword.transform.localScale=Vector3.one*.19f;
+                    var scabbard=Pivot("SageScabbard",spine,new Vector3(-.13f,.25f,-.15f));
+                    scabbard.localRotation=Quaternion.Euler(0,0,-24);
+                    Part(PrimitiveType.Capsule,scabbard,new Vector3(0,-.20f,0),new Vector3(.055f,.32f,.035f),jade);
+                    Part(PrimitiveType.Cylinder,scabbard,new Vector3(0,.12f,0),new Vector3(.045f,.055f,.03f),silver);
+                    Seg(scabbard,new Vector3(-.06f,.065f,0),new Vector3(.06f,.065f,0),.016f,silver);
+                    Seg(spine,new Vector3(-.13f,.33f,-.14f),new Vector3(.13f,.06f,-.13f),.018f,jade);
+                    for(int side=-1;side<=1;side+=2)
+                    {
+                        var ribbon=Pivot("DanceRibbon",spine,new Vector3(side*.11f,.055f,-.08f));
+                        ribbon.localRotation=Quaternion.Euler(0,side*10,side*5);
+                    }
+                    // Slim jade hairpin sits in the knot, below the top of the actual hair silhouette.
+                    Seg(head,new Vector3(-.11f,.11f,-.04f),new Vector3(.11f,.11f,-.04f),.012f,jade);
+                    baseL=new Arm(-24,-12,-65,5);baseR=new Arm(-8,8,-42,0);
+                    chargeL=new Arm(-82,-8,-28,5);chargeR=new Arm(-18,12,-55,0);
+                    castL=new Arm(-88,0,-6,12);castR=new Arm(-12,10,-45,0);
+                    castMaskL=1;castMaskR=.30f;swingL=.22f;swingR=.18f;
+                    break;
                 case "marksman":
                     MakeCape(new Color(0.30f,0.40f,0.57f),1.05f);
                     var bow=handL.Find("Bow"); if(bow!=null) bow.localScale=new Vector3(1f,1.2f,1.3f);

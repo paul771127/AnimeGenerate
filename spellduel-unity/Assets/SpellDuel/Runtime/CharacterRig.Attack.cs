@@ -30,8 +30,9 @@ namespace SpellDuel
 
         struct AtkPose { public Arm l, r; public float yaw, lean, step, crouch; }
 
-        AtkPose WindPose(string k) => k switch
+        AtkPose WindPose(string k) => (advancedId=="berserker"?"swordsage":k) switch
         {
+            "swordsage" => new AtkPose { l = new Arm(-66,-12,-40,2), r = new Arm(-28,22,-52,0), yaw = 12, lean = -1, step = 0, crouch = .008f },
             "novice" => new AtkPose { l = new Arm(-35,28,-65,0), r = new Arm(-76,48,-72,-12), yaw = 19, lean = -5, step = -.025f, crouch = .035f },
             "novice_throw" => new AtkPose { l = new Arm(-112,24,-91,-10), r = new Arm(5,13,-27,-5), yaw = -16, lean = -4, step = -.02f, crouch = .02f },
             "slash" => new AtkPose { l = new Arm(-35f, 25f, -50f, 0f), r = new Arm(-85f, 75f, -45f, 0f), yaw = 28f, lean = -4f, step = 0f, crouch = 0.04f },
@@ -40,8 +41,9 @@ namespace SpellDuel
             _ => new AtkPose { l = chargeL, r = chargeR, yaw = 8f, lean = -6f, step = 0f, crouch = 0f },
         };
 
-        AtkPose StrikePose(string k) => k switch
+        AtkPose StrikePose(string k) => (advancedId=="berserker"?"swordsage":k) switch
         {
+            "swordsage" => new AtkPose { l = new Arm(-90,0,-6,8), r = new Arm(-48,-20,-18,10), yaw = -15, lean = 2, step = .045f, crouch = .006f },
             "novice" => new AtkPose { l = new Arm(-18,30,-42,8), r = new Arm(-62,-28,-24,20), yaw = -24, lean = 13, step = .075f, crouch = .025f },
             "novice_throw" => new AtkPose { l = new Arm(-73,-12,-8,38), r = new Arm(-9,20,-34,0), yaw = 17, lean = 11, step = .065f, crouch = .015f },
             "slash" => new AtkPose { l = new Arm(-20f, 15f, -40f, 0f), r = new Arm(-80f, -45f, -10f, 30f), yaw = -32f, lean = 10f, step = 0.1f, crouch = 0.02f },

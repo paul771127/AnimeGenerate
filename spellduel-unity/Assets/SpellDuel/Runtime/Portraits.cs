@@ -154,7 +154,7 @@ namespace SpellDuel
                 case "assassin": return new Persona(0.96f,0.94f,1.02f,0.8752f,4.8f,-0.22f,1.05f,3f,0.8f,0f,0.8f,-3.6f,1.2f,6f,0.096f,1f);
                 case "priest": return new Persona(1.02f,1.016f,0.994f,1.013f,-4f,0f,-1.4f,0f,0.7f,0f,0.8f,0f,0.4f,0f,0f,1f);
                 case "paladin": return new Persona(1.02f,1.06f,1.012f,0.9558f,-0.8f,0f,0f,0f,0.12f,0f,-2.4f,0f,0f,-3f,0.034f,1f);
-                case "berserker": return new Persona(1.04f,1.06f,1f,0.9272f,5.6f,0f,6f,-0.5f,-0.5f,0.65f,2f,-1.6f,-0.8f,12f,0.056f,0.85f);
+                case "berserker": return new Persona(.985f,.975f,1.02f,.94f,1f,-.02f,0f,0f,-.06f,0f,-1f,-2f,.2f,0f,.075f,1f);
                 case "marksman": return new Persona(0.96f,0.96f,1.016f,0.8648f,1.6f,0f,0.35f,0f,0f,0f,-2.4f,0f,0f,1f,0.104f,1f);
                 case "ranger": return new Persona(0.992f,0.98f,0.996f,1.0208f,2.4f,0.06f,4.2f,0.75f,0.9f,0.5f,-0.4f,-2f,3.2f,3f,0f,1f);
                 case "archmage": return new Persona(0.952f,0.94f,1.024f,0.8648f,3.6f,0f,2.8f,0f,0.4f,0f,-4.4f,2.4f,0f,-3f,0.104f,1f);
@@ -429,6 +429,12 @@ namespace SpellDuel
             var look=CharacterLook.Get(id);var hair=new Paint(look.HairColor.r,look.HairColor.g,look.HairColor.b);
             var main=OutfitArt.Get(id).Main;var cloth=new Paint(main.r,main.g,main.b);
             Bust(cv,Paint.Hex("#f3c89f"),hair,cloth,new Paint(look.Iris.r,look.Iris.g,look.Iris.b));
+            if(id=="berserker")
+            {
+                var blue=Paint.Hex("#397a96");var jade=Paint.Hex("#75cdd0");
+                cv.Line(-.16f,-.49f,.16f,-.91f,.040f,blue);
+                cv.Line(.16f,-.49f,-.05f,-.78f,.022f,jade);
+            }
             if(id=="novice")
             {
                 // Same canvas bag strap and folded collar as the 3D traveler.

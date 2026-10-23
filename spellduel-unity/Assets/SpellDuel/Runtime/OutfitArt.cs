@@ -21,7 +21,7 @@ namespace SpellDuel
             {"priest",new Design("priest","金邊分襟醫療長外套","fff0d4","3d68a2","e9b955",.59f,.082f,4)},
             {"novice",new Design("novice","短襟旅行布衣與捲袖","dfbd80","786044","d9ceaa",.065f,.065f,29)},   // 初心者：樸素的旅行布衣
             {"paladin",new Design("paladin","半披風白色軍裝","fff0d4","31569a","e8b94d",.42f,.075f,5)},
-            {"berserker",new Design("berserker","無袖騎士皮夾克","e34d39","792d4c","e9b66c",.02f,.062f,6)},
+            {"berserker",new Design("berserker","青玉交領長劍袍","e7f1f4","397a96","75cdd0",.56f,.088f,30)},
             {"marksman",new Design("marksman","單肩狙擊長夾克","327db5","293e73","ebcb66",.44f,.063f,7)},
             {"ranger",new Design("ranger","斜肩山地短斗篷","1bb88d","245a4b","efb36a",.24f,.077f,8)},
             {"archmage",new Design("archmage","符文寬袖長風衣","8d42dd","403080","75fff1",.63f,.109f,9)},
@@ -205,11 +205,11 @@ namespace SpellDuel
             b.Tube(path,rx,rz,bare?skin:d.Main,12);if(bare)return;
             // One closed jacket: no overlapping dark shirt/tie or floating chest marks.
             b.Loft(new[]{.575f,.555f,.535f},new[]{.073f,.080f,.084f},new[]{.066f,.071f,.074f},d.Sub);
-            if(d.Id!="novice") {
+            if(d.Id!="novice"&&d.Id!="berserker") {
             b.Tube(new[]{new Vector3(0,.43f,.133f),new Vector3(0,.34f,.126f),new Vector3(0,.24f,.114f),new Vector3(0,.14f,.097f),new Vector3(0,.09f,.100f)},new[]{.0025f,.0025f,.0025f,.0025f,.0025f},new[]{.002f,.002f,.002f,.002f,.002f},d.Accent,6);
             b.Loft(new[]{.405f,.392f,.379f},new[]{.005f,.007f,.005f},new[]{.003f,.004f,.003f},d.Accent,0,.134f,8); // rounded zipper pull
             }
-            else {
+            else if(d.Id=="novice") {
                 // An overlapping cloth neckline and one linen tie, not a metal zipper.
                 b.Seam(new Vector3(-.065f,.52f,.085f),new Vector3(.018f,.39f,.140f),.018f,d.Accent);
                 b.Seam(new Vector3(.018f,.39f,.140f),new Vector3(.045f,.34f,.138f),.008f,d.Sub);
@@ -225,6 +225,13 @@ namespace SpellDuel
                 b.Seam(new Vector3(-.085f,.29f,.14f),new Vector3(-.12f,.45f,.125f),.012f,d.Sub);b.Seam(new Vector3(.085f,.29f,.14f),new Vector3(.12f,.45f,.125f),.012f,d.Sub);
                 Pocket(b,0,-.13f,.160f,.12f,.075f,d.Sub,d.Accent);
             }
+            if(d.Id=="berserker")
+            {
+                // Crossed lapels follow the chest; both are functional cloth edges.
+                b.Seam(new Vector3(-.068f,.54f,.080f),new Vector3(.085f,.32f,.143f),.026f,d.Sub);
+                b.Seam(new Vector3(.068f,.54f,.080f),new Vector3(-.045f,.38f,.146f),.017f,d.Accent);
+                b.Loft(new[]{.098f,.068f,.038f},new[]{.172f,.174f,.174f},new[]{.121f,.122f,.124f},d.Sub,0,-.012f);
+            }
             if(d.Cut==8||d.Cut==19||d.Cut==21||d.Cut==26)
             {
                 b.Panel(new Vector3(-.225f,.47f,.075f),new Vector3(-.09f,.53f,.086f),new Vector3(-.27f,.19f,.10f),new Vector3(-.05f,.24f,.145f),d.Main,.018f,4,3);
@@ -233,7 +240,7 @@ namespace SpellDuel
         }
         static void BuildArm(Builder b,Design d,Color skin,bool upper,bool left,bool anatomical=false)
         {
-            float power=Strength(d),sleeve=d.Cut==2||d.Cut==9||d.Cut==13?1.18f:1;
+            float power=Strength(d),sleeve=d.Id=="berserker"?1.17f:d.Cut==2||d.Cut==9||d.Cut==13?1.18f:1;
             bool bare=anatomical||d.Cut==1||d.Cut==6||d.Cut==14||d.Cut==24||d.Cut==12;
             Color cloth=bare||d.Id=="novice"&&!upper?skin:d.Main;
             if(upper)
@@ -264,7 +271,13 @@ namespace SpellDuel
         {
             float side=left?-1:1;bool covered=d.Cut==3||d.Cut==11||d.Cut==5||d.Cut==13;
             b.Loft(new[]{.012f,-.005f,-.037f},new[]{.029f,.035f,.034f},new[]{.021f,.020f,.017f},d.Sub,0,0,10); // palm and cuff
-            for(int pair=-1;pair<=1;pair+=2)
+            bool swordSign=d.Id=="berserker"&&left;
+            if(swordSign)for(int finger=0;finger<4;finger++)
+            {
+                float x=-.027f+finger*.018f;bool straight=finger<2;
+                b.Tube(new[]{new Vector3(x,-.030f,0),new Vector3(x,-.060f,straight?0:.025f),new Vector3(x,straight?-.115f:-.052f,straight?-.003f:.043f)},new[]{.010f,.009f,.007f},new[]{.010f,.009f,.007f},skin,8);
+            }
+            if(!swordSign)for(int pair=-1;pair<=1;pair+=2)
             {
                 float x=pair*.018f,end=pose==2?-.101f:pose==1?-.055f:-.080f;
                 var path=new[]{new Vector3(x,-.032f,.001f),new Vector3(x*(pose==2?1.22f:1),-.053f,pose==1?.020f:.005f),new Vector3(x*(pose==2?1.45f:.90f),end,pose==1?.037f:pose==0?.020f:.002f)};
