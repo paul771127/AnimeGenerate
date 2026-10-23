@@ -228,7 +228,7 @@ namespace SpellDuel
             SettingsMenu.GoHome = GoHome;
             SettingsMenu.InBattle = () => solo.phase == SoloBattle.Phase.Fighting;
             Log("請選擇模式");
-            if (SoloBattle.IntroPending) StartStoryEntry();   // 第一次打開遊戲：直接進故事模式（放場地 → 選職業 → 序章 → 教學 → 炎之里）
+            OpenCharacterSelect();   // 打開遊戲先選角色（新角色進入遊戲時才直接進故事模式：序章 → 教學 → 炎之里）
         }
 
         void OnDestroy() => net?.Dispose();
@@ -1377,7 +1377,7 @@ namespace SpellDuel
             int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.8f);
             if (areaPreview) { DrawAreaPreview(W, H, pad, fs, fsS); return; }
             // 一開始：選模式（首頁；畫面在 GameRoot.Lobby.cs）
-            if (mode == Mode.Choose) { DrawHome(W, H, pad, top, lineH, fs, fsS); return; }
+            if (mode == Mode.Choose) { if (CharSelectOpen) DrawCharacterSelect(W, H, pad, top, lineH, fs, fsS); else DrawHome(W, H, pad, top, lineH, fs, fsS); return; }   // 先選角色（GameRoot.Characters.cs）
             if (mode == Mode.Watch) { DrawWatch(W, H, pad, top, lineH, fs, fsS); return; }
 
             // 雙人職業對戰：交給 SoloBattle 畫介面

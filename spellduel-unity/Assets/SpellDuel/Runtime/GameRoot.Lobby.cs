@@ -29,6 +29,7 @@ namespace SpellDuel
             LobbyHomeBackground(new Rect(0,0,W,H));
             LobbyDust(new Rect(0,top,W,h),UiKit.Gold);
             LobbyLogo(new Rect(pad,top+h*.012f,W-pad*2,h*.225f),fs);
+            DrawCurrentCharacter(W, pad, top, lineH, fsS);   // 左上：現在的角色＋換角色
             UiKit.Text(new Rect(pad,top+h*.238f,W-pad*2,lineH),LobbyCaption("唸出咒語，在真實世界施法對決"),fsS,new Color(.90f,.87f,.81f),TextAnchor.MiddleCenter);
 
             // 首頁：故事模式、附近對戰、遠距對戰、練習模式、觀戰、設定（其他玩法都在故事模式的村子裡）
@@ -75,7 +76,6 @@ namespace SpellDuel
                     else SettingsMenu.Show();
                 }
             }
-            if (SaveReset.JustReset) UiKit.Text(new Rect(pad, bottom - lineH * 2.1f, W - pad * 2, lineH), "🌱 改版：存檔已重置，從「初心者」重新開始（設定、錄好的咒語都保留）", fsS, new Color(1f, 0.85f, 0.5f), TextAnchor.MiddleCenter, true);
             UiKit.Text(new Rect(pad, bottom - lineH, W - pad * 2, lineH), LobbyCaption("版本 " + BuildInfo), Mathf.RoundToInt(fsS * 0.85f), new Color(0.6f, 0.65f, 0.75f), TextAnchor.MiddleCenter);
         }
 

@@ -501,6 +501,8 @@ namespace SpellDuel
                 world.OnCharacter = () => charOpen = true;
                 world.OnStartTrial = () => OpenPrep("⚔ 轉職試煉", true, "轉職試煉不能使用道具", StartTrial);
                 world.OnJobChange = JobChange;
+                world.OnJobTrial = StartJobTrial;
+                world.JobTrialNames = JobTrialNames; world.JobTrialDesc = JobTrialDesc;
                 WireVillage();
             }
             if (prepGo == null && phase == Phase.Setup && !NetMode) enemyClass = "story";   // 在村子裡（整備取消了也一樣）：回到故事模式
@@ -689,9 +691,7 @@ namespace SpellDuel
         public void Init(Camera camera, PlayArea playArea, Material baseMat)
         {
             cam = camera; area = playArea; mat = baseMat;
-            myClass = PlayerPrefs.GetString("sd_my_class", Skills.Novice);   // 一個主角色：新遊戲從初心者開始
-            if (!Skills.Classes.ContainsKey(myClass) || (myClass != Skills.Novice && Array.IndexOf(Skills.ClassOrder, myClass) < 0)) myClass = Skills.Novice;
-            enemyClass = PlayerPrefs.GetString("sd_enemy_class", "story");
+            ReadCharacterChoices();
             dailyPick = Mathf.Clamp(PlayerPrefs.GetInt("sd_daily_pick", 0), 0, DailyChallenge.KindCount - 1);
             difficulty = Mathf.Clamp(PlayerPrefs.GetInt("sd_difficulty", 1), 0, 2);
             voiceOn = true;   // 一定要唸技能名稱才能詠唱，語音固定開啟
@@ -699,8 +699,11 @@ namespace SpellDuel
             speech = new SpeechInput();
             speech.OnSkill += OnSpeechSkill;
             speech.OnText += OnSpeechText;
-            Progress.Get = k => PlayerPrefs.GetString(k, "");
-            Progress.Set = (k, v) => { PlayerPrefs.SetString(k, v); PlayerPrefs.Save(); };
+            // 存檔：每個角色自己一份（CharacterSlots.Key 加上角色欄位的前綴）；倉庫三個角色共用
+            Progress.Get = k => PlayerPrefs.GetString(CharacterSlots.Key(k), "");
+            Progress.Set = (k, v) => { PlayerPrefs.SetString(CharacterSlots.Key(k), v); PlayerPrefs.Save(); };
+            Progress.GetShared = k => PlayerPrefs.GetString(k, "");
+            Progress.SetShared = (k, v) => { PlayerPrefs.SetString(k, v); PlayerPrefs.Save(); };
             Story.Get = Progress.Get; Story.Set = Progress.Set;
             Progress.MarkReady();   // 存檔接好了（之前讀到的空白內容全部丟掉，重新從手機讀）
             LoadLoadout();
@@ -720,10 +723,46 @@ namespace SpellDuel
             Sfx.Play("levelup", 0.9f); Haptics.Play(Haptics.Kind.Success);
         }
 
+        /// <summary>讀現在這個角色的職業、對手選擇（換角色時也會叫）</summary>
+        void ReadCharacterChoices()
+        {
+            myClass = PlayerPrefs.GetString(CharacterSlots.Key("sd_my_class"), Skills.Novice);   // 新角色從初心者開始
+            if (!Skills.Classes.ContainsKey(myClass) || (myClass != Skills.Novice && Array.IndexOf(Skills.ClassOrder, myClass) < 0)) myClass = Skills.Novice;
+            enemyClass = PlayerPrefs.GetString(CharacterSlots.Key("sd_enemy_class"), "story");
+        }
+
+        /// <summary>選角色（選角畫面按「進入遊戲」）：之後所有存檔都是這個角色的；記憶體裡的舊角色資料全部丟掉重讀</summary>
+        public void UseSlot(int s)
+        {
+            if (!CharacterSlots.Select(s)) return;
+            Progress.ReloadStorage(); Story.ResetCache(); Dungeons.ResetCache(); Economy.ResetCache();
+            ReadCharacterChoices();
+            prof = null; levelLockSaid = false;
+            LoadLoadout(); ResetCarryLeft();
+        }
+        /// <summary>選角畫面刪掉了某個角色：如果是正在玩的，放掉（記憶體裡的資料丟掉）。回傳是不是正在玩的</summary>
+        public bool CharacterSlotGone(int s)
+        {
+            if (CharacterSlots.Current >= 0) return false;
+            Progress.ReloadStorage(); Story.ResetCache(); Dungeons.ResetCache(); Economy.ResetCache();
+            ReadCharacterChoices(); prof = null; LoadLoadout();
+            return true;
+        }
+        /// <summary>現在的角色：名字、職業、等級（首頁顯示）</summary>
+        public string CharacterLabel
+        {
+            get
+            {
+                if (CharacterSlots.Current < 0) return "";
+                var p = Progress.Char(myClass);
+                return $"{CharacterSlots.Name(CharacterSlots.Current)}・{(p.Adv != null ? p.Adv.name : Skills.Classes[myClass].name)} Lv{p.level}";
+            }
+        }
+
         void LoadLoadout()
         {
             myLoadout.Clear();
-            var saved = PlayerPrefs.GetString("sd_loadout_" + myClass, "");
+            var saved = PlayerPrefs.GetString(CharacterSlots.Key("sd_loadout_" + myClass), "");
             var cls = Skills.Classes[myClass];
             var allowed = AllowedSkills;
             foreach (var id in saved.Split(',')) if (Array.IndexOf(allowed, id) >= 0 && !myLoadout.Contains(id)) myLoadout.Add(id);
@@ -733,10 +772,10 @@ namespace SpellDuel
 
         void SaveChoices()
         {
-            PlayerPrefs.SetString("sd_my_class", myClass);
-            PlayerPrefs.SetString("sd_enemy_class", enemyClass);
+            PlayerPrefs.SetString(CharacterSlots.Key("sd_my_class"), myClass);
+            PlayerPrefs.SetString(CharacterSlots.Key("sd_enemy_class"), enemyClass);
             PlayerPrefs.SetInt("sd_difficulty", difficulty);
-            PlayerPrefs.SetString("sd_loadout_" + myClass, string.Join(",", myLoadout));
+            PlayerPrefs.SetString(CharacterSlots.Key("sd_loadout_" + myClass), string.Join(",", myLoadout));
         }
 
         public void ShowSetup() { EndBattle(); phase = Phase.Setup; localReady = false; }
@@ -1371,6 +1410,19 @@ namespace SpellDuel
             infoSkill = null;
             if (endless && battle != null) TrackProgress();   // 先算這一刻的擊倒（打倒最後的 Boss／小怪的同一幀就結算了，掉落要在發獎勵前擲）
             SaveExercise();
+            if (endless && IsJobTrial)
+            {
+                // 初心者轉職試煉・實戰：三波都打倒＝通過（給一點經驗，經驗卡在 10 級也沒關係）
+                if (battle.stageCleared)
+                {
+                    string loot = GrantLoot("轉職試煉・實戰通過", false);
+                    JobTrialPassed(2);
+                    Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
+                    if (loot.Length > 0) Say($"🎉 轉職試煉全部通過！回職業工會選擇你的職業\n{loot}", 99f);
+                }
+                else { LoseLoot(); Say("💀 實戰沒有通過…休息一下再來挑戰（試煉可以重複挑戰）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
+                return;
+            }
             if (endless && IsTrial)
             {
                 // 轉職試煉：通過 → 可以在職業工會選進階職業
@@ -1456,9 +1508,9 @@ namespace SpellDuel
                 // 無盡模式：結算（波次、擊倒數、存活時間），記錄最佳；倒下時這一波還沒過關的戰利品沒了
                 if (pendingItems.Count > 0 || pendingGold > 0) { pendingItems.Clear(); pendingGold = 0; }
                 int score = battle.wave * 100 + battle.bossKills * 500 + battle.kills * 10;
-                int best = PlayerPrefs.GetInt("sd_endless_best", 0);
+                int best = PlayerPrefs.GetInt(CharacterSlots.Key("sd_endless_best"), 0);
                 bool record = score > best;
-                if (record) PlayerPrefs.SetInt("sd_endless_best", score);
+                if (record) PlayerPrefs.SetInt(CharacterSlots.Key("sd_endless_best"), score);
                 int sec = Mathf.FloorToInt(battle.now);
                 Say($"♾ 遊戲結束：撐到第 {battle.wave} 波・擊倒小怪 {battle.kills}、Boss {battle.bossKills}・存活 {sec / 60}:{sec % 60:00}・分數 {score}" + (record ? "　🎉 新紀錄！" : $"（最佳 {best}）"), 99f);
                 Sfx.Play(record ? "win" : "lose"); Haptics.Play(Haptics.Kind.Warning);
@@ -3550,9 +3602,15 @@ namespace SpellDuel
                 var orr = new Rect(pad, top+(botY-top)*.24f, W-pad*2, (botY-top)*.36f);
                 UiKit.Result(orr,won);
                 UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, orr.height * 0.4f), won ? $"🏆 {st.title}" : "💀 失敗…", fs * 2, Color.white, TextAnchor.MiddleCenter, true);
-                var next = won && !IsTrial ? NextStage(st) : null;
+                var next = won && !IsTrial && !IsJobTrial ? NextStage(st) : null;
                 float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
-                if (IsTrial && won)
+                if (IsJobTrial)
+                {
+                    // 初心者轉職試煉・實戰：通過 → 回職業工會選職業；失敗 → 再挑戰／回工會
+                    if (!won && UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "再挑戰", fs, true, new Color(0.4f, 0.8f, 1f))) StartStageBattle();
+                    if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "🏛 回職業工會", fs, won, new Color(0.85f, 0.6f, 1f))) GoGuild();
+                }
+                else if (IsTrial && won)
                 {
                     if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "🏛 回職業工會", fs, true, new Color(0.85f, 0.6f, 1f)))
                     { ShowSetup(); storyMapOpen = true; world.OpenTown(Battle.ThemeOf(Advanced.TrialLastWave)); world.OpenGuild(); }
@@ -3566,7 +3624,7 @@ namespace SpellDuel
                 }
                 else if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), won ? (next != null && Story.IsUnlocked(next) ? "▶ 下一關" : "再打一次") : "再挑戰", fs, true, new Color(0.4f, 0.8f, 1f)))
                 { if (won && next != null && Story.IsUnlocked(next)) { var n2 = next; ShowSetup(); StartStory(n2); } else StartStageBattle(); }
-                if (!IsTrial && UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), $"🏘 回{WorldUI.Towns[Mathf.Clamp(st.theme, 0, WorldUI.Towns.Length - 1)].name}", fs))
+                if (!IsTrial && !IsJobTrial && UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), $"🏘 回{WorldUI.Towns[Mathf.Clamp(st.theme, 0, WorldUI.Towns.Length - 1)].name}", fs))
                 { ShowSetup(); storyMapOpen = true; world.OpenTown(Mathf.Clamp(st.theme, 0, WorldUI.Towns.Length - 1)); }
                 else if (IsTrial && UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "🗺 大地圖", fs)) { ShowSetup(); storyMapOpen = true; world.screen = WorldUI.Screen.Map; }
             }

@@ -379,6 +379,13 @@ namespace SpellDuel
             if (coinPillar) coinPillar.SetActive(false);
             if (Combo) HideComboTarget();
             var k = daily.Value;
+            if (InJobTrialDaily)
+            {
+                // 轉職試煉：不記每日紀錄、不發每日獎勵
+                FinishJobTrialDaily(k);
+                Sfx.Play(dailyResult.medal > 0 ? "win" : "lose"); Haptics.Play(dailyResult.medal > 0 ? Haptics.Kind.Success : Haptics.Kind.Warning);
+                return;
+            }
             dailyResult = DailyChallenge.Record(k, dailyScore, dailyLevel);
             if (dailyResult.gold > 0) Economy.Gold += dailyResult.gold;
             int ups = 0;
@@ -479,17 +486,25 @@ namespace SpellDuel
             var orr = new Rect(pad, top + (botY - top) * .2f, W - pad * 2, (botY - top) * .44f);
             UiKit.Result(orr, dailyResult.medal > 0);
             float y = orr.y + gap;
-            UiKit.Text(new Rect(orr.x, y, orr.width, lh * 1.5f), $"{DailyChallenge.Names[(int)k]}　{DailyChallenge.MedalNames[dailyResult.medal]}", Mathf.RoundToInt(fs * 1.4f), col, TextAnchor.MiddleCenter, true);
+            bool jt = InJobTrialDaily;
+            UiKit.Text(new Rect(orr.x, y, orr.width, lh * 1.5f), jt ? $"🎓 {JobTrialNames[jobTrialRound]}　{(dailyResult.medal > 0 ? "通過！" : "未通過")}" : $"{DailyChallenge.Names[(int)k]}　{DailyChallenge.MedalNames[dailyResult.medal]}", Mathf.RoundToInt(fs * 1.4f), col, TextAnchor.MiddleCenter, true);
             y += lh * 1.6f;
             UiKit.Text(new Rect(orr.x, y, orr.width, lh), DailyScoreText(k, dailyScore) + (dailyResult.newBest ? "　🎉 新紀錄！" : "") + (k == DailyChallenge.Kind.Dodge ? $"（被打中 {dailyHits} 次）" : k == DailyChallenge.Kind.Combo ? $"（打倒 {comboKills} 隻・閃過 {Mathf.Max(0, dailyFired - dailyHits)} 次）" : ""), fs, Color.white, TextAnchor.MiddleCenter, true);
             y += lh * 1.1f;
             var th = DailyChallenge.Thresholds(k, dailyLevel);
             UiKit.Text(new Rect(orr.x, y, orr.width, lh * 0.9f), $"🥉 {th[0]}　🥈 {th[1]}　🥇 {th[2]}", fsS, new Color(1f, 0.92f, 0.6f), TextAnchor.MiddleCenter);
             y += lh;
-            string reward = dailyResult.gold > 0 || dailyResult.xp > 0 ? $"今日獎勵：💰 {dailyResult.gold}　經驗 {dailyResult.xp}"
+            string reward = jt ? (dailyResult.medal > 0 ? "回職業工會挑戰下一輪" : "通過條件：拿到 🥉 銅牌以上（可以馬上再挑戰）")
+                : dailyResult.gold > 0 || dailyResult.xp > 0 ? $"今日獎勵：💰 {dailyResult.gold}　經驗 {dailyResult.xp}"
                 : DailyChallenge.MedalToday(k) > 0 ? "今天的獎勵已經領過了（拿到更高的獎牌會補發）" : "拿到銅牌以上就有獎勵";
             UiKit.Text(new Rect(orr.x, y, orr.width, lh * 0.9f), reward, fsS, new Color(0.8f, 1f, 0.85f), TextAnchor.MiddleCenter);
             float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
+            if (jt)
+            {
+                if (dailyResult.medal == 0 && UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "再挑戰", fs, true, col)) { int rr = jobTrialRound; StartJobTrial(rr); }
+                if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "🏛 回職業工會", fs, dailyResult.medal > 0, new Color(0.85f, 0.6f, 1f))) GoGuild();
+                return;
+            }
             if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "再挑戰", fs, true, col)) StartDaily(k);
             if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), villageReturn.HasValue ? "🏘 回訓練場" : "回選單", fs)) { if (villageReturn.HasValue) GoVillage(); else ShowSetup(); }
         }

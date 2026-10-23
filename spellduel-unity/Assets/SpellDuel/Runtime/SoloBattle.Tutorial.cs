@@ -24,7 +24,7 @@ namespace SpellDuel
         public const bool ForceIntro = false;
         /// <summary>還沒看過序章＋教學、而且要強制播</summary>
         public static bool IntroPending => ForceIntro && !TutorialDone;
-        public static bool TutorialDone { get { try { return PlayerPrefs.GetInt("sd_tutorial_done", 0) == 1; } catch { return false; } } }
+        public static bool TutorialDone { get { try { return PlayerPrefs.GetInt(CharacterSlots.Key("sd_tutorial_done"), 0) == 1; } catch { return false; } } }
 
         void StartTutorial()
         {
@@ -191,7 +191,7 @@ namespace SpellDuel
             int xp = 0, ups = 0;
             if (first)
             {
-                try { PlayerPrefs.SetInt("sd_tutorial_done", 1); PlayerPrefs.Save(); } catch { }
+                try { PlayerPrefs.SetInt(CharacterSlots.Key("sd_tutorial_done"), 1); PlayerPrefs.Save(); } catch { }
                 Economy.Gold += 100; lootGoldLog += 100;
                 var p = Progress.Char(myClass); xp = 100; ups = p.AddXp(xp); Progress.SaveChar(p);
                 prof = p;

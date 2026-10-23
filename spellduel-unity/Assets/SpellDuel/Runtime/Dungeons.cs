@@ -338,6 +338,7 @@ namespace SpellDuel
         }
 
         static HashSet<string> cleared;
+        public static void ResetCache() => cleared = null;   // 換角色：通關紀錄重新讀
         static HashSet<string> Cleared
         {
             get

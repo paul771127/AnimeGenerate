@@ -30,7 +30,7 @@ namespace SpellDuel
         {
             if (carryLoaded) return;
             carryLoaded = true;
-            string s = ""; try { s = PlayerPrefs.GetString("sd_carry", ""); } catch { }
+            string s = ""; try { s = PlayerPrefs.GetString(CharacterSlots.Key("sd_carry"), ""); } catch { }
             if (string.IsNullOrEmpty(s))
                 foreach (var c in Economy.Consumables) carry[c.id] = c.scroll ? 1 : 3;   // 第一次：每種藥水帶 3 瓶、捲軸 1 張
             else
@@ -44,7 +44,7 @@ namespace SpellDuel
         {
             var parts = new List<string>();
             foreach (var kv in carry) parts.Add(kv.Key + ":" + kv.Value);
-            try { PlayerPrefs.SetString("sd_carry", string.Join(",", parts)); PlayerPrefs.Save(); } catch { }
+            try { PlayerPrefs.SetString(CharacterSlots.Key("sd_carry"), string.Join(",", parts)); PlayerPrefs.Save(); } catch { }
         }
         int CarryOf(string id) { LoadCarry(); return carry.TryGetValue(id, out var n) ? n : 0; }
 

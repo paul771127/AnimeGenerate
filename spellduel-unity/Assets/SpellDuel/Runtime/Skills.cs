@@ -102,6 +102,8 @@ namespace SpellDuel
         /// <summary>初心者：還沒轉職的職業 id；轉職等級</summary>
         public const string Novice = "novice";
         public const int JobLevel = 10;
+        /// <summary>初心者的轉職試煉有幾輪（攻擊訓練、閃避訓練、實戰），全部通過才能選職業</summary>
+        public const int JobTrialRounds = 3;
         public static bool IsMeleeBasic(SkillDef s) => s != null && (s.id == "na_sword" || s.id == "na_dagger");
 
         /// <summary>遠距技能的飛行速度倍率</summary>

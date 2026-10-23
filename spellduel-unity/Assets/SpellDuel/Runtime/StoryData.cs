@@ -187,6 +187,8 @@ namespace SpellDuel
         public static Func<string, string> Get = k => "";
         public static Action<string, string> Set = (k, v) => { };
         static HashSet<string> cleared;
+        /// <summary>換角色：通關／看過的紀錄重新讀</summary>
+        public static void ResetCache() { cleared = null; seen = null; }
         static HashSet<string> Cleared
         {
             get

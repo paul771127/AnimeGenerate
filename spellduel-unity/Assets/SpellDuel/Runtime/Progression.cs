@@ -791,8 +791,10 @@ namespace SpellDuel
         public bool CanAdvance => adv == null && level >= Advanced.Level && trialPassed;
         /// <summary>轉職等級（30 級）還沒轉職：不能再升級（經驗停在滿格），要先完成轉職試煉並轉職</summary>
         public bool LevelLocked => cls == Skills.Novice ? level >= Skills.JobLevel : adv == null && level >= Advanced.Level;
-        /// <summary>初心者到 10 級：可以到職業工會選職業</summary>
-        public bool CanChangeJob => cls == Skills.Novice && level >= Skills.JobLevel;
+        /// <summary>初心者到 10 級、轉職試煉三輪都通過：可以到職業工會選職業</summary>
+        public bool CanChangeJob => cls == Skills.Novice && level >= Skills.JobLevel && jobTrial >= Skills.JobTrialRounds;
+        /// <summary>初心者的轉職試煉通過了幾輪（0～3）</summary>
+        public int jobTrial;
 
         /// <summary>轉職（選了不能換）：第一個進階技能直接學會</summary>
         public bool Advance(string advId)
@@ -1055,6 +1057,7 @@ namespace SpellDuel
             sb.Append("alloc=").Append(string.Join(",", alloc)).Append('\n');
             if (!string.IsNullOrEmpty(adv)) sb.Append("adv=").Append(adv).Append('\n');
             if (trialPassed) sb.Append("trial=1\n");
+            if (jobTrial > 0) sb.Append("jt=").Append(jobTrial).Append('\n');
             foreach (var kv in ranks) sb.Append("rank=").Append(kv.Key).Append(':').Append(kv.Value).Append('\n');
             for (int i = 0; i < equipped.Length; i++) if (equipped[i] != null) sb.Append("eq").Append(i).Append('=').Append(equipped[i].Serialize()).Append('\n');
             return sb.ToString();
@@ -1082,6 +1085,7 @@ namespace SpellDuel
                         case "rank": { var a = v.Split(':'); if (a.Length == 2) p.ranks[a[0]] = int.Parse(a[1]); break; }
                         case "adv": if (Advanced.Get(v) != null && Advanced.Get(v).baseCls == cls) p.adv = v; break;
                         case "trial": p.trialPassed = v == "1"; break;
+                        case "jt": p.jobTrial = Mathf.Clamp(int.Parse(v), 0, Skills.JobTrialRounds); break;
                         default:
                             if (k.StartsWith("eq") && int.TryParse(k.Substring(2), out var slot) && slot >= 0 && slot < p.equipped.Length) p.equipped[slot] = Item.Parse(v);
                             break;
@@ -1099,6 +1103,9 @@ namespace SpellDuel
     {
         public static Func<string, string> Get = k => "";
         public static Action<string, string> Set = (k, v) => { };
+        /// <summary>三個角色共用的存檔（倉庫）：不加角色欄位的前綴</summary>
+        public static Func<string, string> GetShared = k => Get(k);
+        public static Action<string, string> SetShared = (k, v) => Set(k, v);
         /// <summary>存檔接好了沒（SoloBattle 把 Get／Set 換成手機的 PlayerPrefs 之後才是 true）</summary>
         public static bool Ready { get; private set; }
         /// <summary>存檔接好：清掉接好之前讀到的（空白的）角色、背包、信箱，之後重新從手機讀</summary>
@@ -1242,6 +1249,42 @@ namespace SpellDuel
         }
 
         /// <summary>測試用：清掉記憶體裡的背包與信箱（重新從存檔讀）</summary>
-        public static void ReloadStorage() { bag = null; mail = null; cache.Clear(); }
+        public static void ReloadStorage() { bag = null; mail = null; stash = null; cache.Clear(); }
+
+        // ---- 倉庫：三個角色共用（存進去的裝備，任何一個角色都能拿出來）
+        public const int StashSize = 60;
+        static List<Item> stash;
+        public static List<Item> Stash
+        {
+            get
+            {
+                if (stash != null) return stash;
+                stash = new List<Item>();
+                foreach (var line in (GetShared("sd_stash") ?? "").Split('\n')) { var it = Item.Parse(line); if (it != null) stash.Add(it); }
+                return stash;
+            }
+        }
+        static void SaveStash()
+        {
+            var sb = new StringBuilder();
+            foreach (var it in Stash) sb.Append(it.Serialize()).Append('\n');
+            SetShared("sd_stash", sb.ToString());
+        }
+        /// <summary>背包 → 倉庫（倉庫滿了回傳 false）</summary>
+        public static bool Deposit(Item it)
+        {
+            if (it == null || Stash.Count >= StashSize || !Bag.Contains(it)) return false;
+            Bag.Remove(it); Stash.Add(it);
+            SaveStash(); SaveBag();   // 先存倉庫再存背包：中途斷掉最多變成兩邊都有，不會兩邊都沒有
+            return true;
+        }
+        /// <summary>倉庫 → 背包（背包滿了回傳 false）</summary>
+        public static bool Withdraw(Item it)
+        {
+            if (it == null || BagFull || !Stash.Contains(it)) return false;
+            Bag.Add(it); SaveBag();
+            Stash.Remove(it); SaveStash();
+            return true;
+        }
     }
 }

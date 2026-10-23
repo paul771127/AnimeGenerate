@@ -115,6 +115,48 @@ namespace SpellDuel
             return changed;
         }
 
+        // ================================================================ 倉庫（三個角色共用：存進去的裝備，任何角色都能取出）
+        bool stashOpen; int stashPage;
+        bool DrawStash(Rect r, CharacterProfile p, int fs, int fsS, float gap)
+        {
+            var st = Progress.Stash;
+            UiKit.Card(r, 0.85f, new Color(0.55f, 0.8f, 1f), 0.6f);
+            float x = r.x + gap, w = r.width - gap * 2, y = r.y + gap * 0.5f;
+            UiKit.Text(new Rect(x, y, w, fs * 1.6f), $"🏦 倉庫 {st.Count}/{Progress.StashSize}：三個角色共用。在背包選裝備按「存倉庫」放進來，任何角色都能取出。", fsS, new Color(0.8f, 0.9f, 1f), TextAnchor.UpperLeft, false, 0.6f);
+            y += fs * 1.8f;
+            if (st.Count == 0) { UiKit.Text(new Rect(x, y, w, fs * 2f), "倉庫是空的", fs, Color.gray, TextAnchor.MiddleCenter); return false; }
+            bool full = Progress.BagFull, changed = false;
+            float rh = fs * 2.1f, bw = w * 0.24f;
+            int per = Mathf.Max(1, Mathf.FloorToInt((r.yMax - y - fs * 2.4f) / (rh + gap * 0.3f)));
+            int pages = Mathf.Max(1, (st.Count + per - 1) / per);
+            stashPage = Mathf.Clamp(stashPage, 0, pages - 1);
+            for (int k = 0; k < per; k++)
+            {
+                int i = stashPage * per + k;
+                if (i >= st.Count) break;
+                var it = st[i];
+                var rr = new Rect(x, y, w, rh);
+                bool ok = p.CanEquip(it, out _);
+                UiKit.Card(rr, 0.6f, Item.RarityColors[it.rarity], 0.6f);
+                UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y, rr.width - bw - gap * 1.5f, rh * 0.55f), $"[{Item.RarityNames[it.rarity]}] {it.FullName}", fsS, Item.RarityColors[it.rarity], TextAnchor.MiddleLeft, true, 0.6f);
+                UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y + rh * 0.5f, rr.width - bw - gap * 1.5f, rh * 0.48f), $"{Item.SlotNames[(int)it.slot]}・Lv{it.ilvl}・限定 {it.ClassText()}{(ok ? "" : "（這個角色不能用）")}", fsS, ok ? new Color(0.8f, 0.85f, 0.95f) : new Color(1f, 0.55f, 0.5f), TextAnchor.MiddleLeft, false, 0.6f);
+                if (UiKit.Button(new Rect(rr.xMax - bw - gap * 0.3f, rr.y + rh * 0.12f, bw, rh * 0.76f), full ? "背包滿" : "取出", fsS, !full, Item.RarityColors[it.rarity], !full))
+                {
+                    if (Progress.Withdraw(it)) { Toast($"取出 {it.name}"); Sfx.Play("coin", 0.5f, 1.2f); changed = true; }
+                    break;
+                }
+                y += rh + gap * 0.3f;
+            }
+            if (pages > 1)
+            {
+                float by = r.yMax - fs * 2.2f;
+                if (UiKit.Button(new Rect(x, by, fs * 3f, fs * 1.8f), "◀", fsS, false, null, stashPage > 0)) stashPage--;
+                UiKit.Text(new Rect(x + fs * 3.2f, by, fs * 3f, fs * 1.8f), $"{stashPage + 1}/{pages}", fsS, Color.white, TextAnchor.MiddleCenter);
+                if (UiKit.Button(new Rect(x + fs * 6.4f, by, fs * 3f, fs * 1.8f), "▶", fsS, false, null, stashPage < pages - 1)) stashPage++;
+            }
+            return changed;
+        }
+
         // ================================================================ 信箱（背包滿了時拿到的裝備；7 天後自動刪除）
         bool mailOpen; int mailPage;
         bool DrawMailbox(Rect r, CharacterProfile p, int fs, int fsS, float gap)
@@ -192,13 +234,17 @@ namespace SpellDuel
             page = Mathf.Clamp(page, 0, pages - 1);
             // 背包容量：一條進度條（快滿了變黃、滿了變紅）＋信箱按鈕（有信才亮，數字＝封數）
             var mails = Progress.Mailbox;
-            float capW = b.width * 0.42f, mbW = b.width * 0.24f;
+            float capW = b.width * 0.42f, mbW = (b.width - capW - gap) / 2f - gap * 0.25f;
             float fill = bag.Count / (float)Progress.BagSize;
             var capCol = bag.Count >= Progress.BagSize ? new Color(1f, 0.35f, 0.3f) : fill >= 0.8f ? new Color(1f, 0.8f, 0.3f) : new Color(0.45f, 0.85f, 0.5f);
             UiKit.Bar(new Rect(b.x, by + fs * 0.1f, capW, fs * 1.1f), fill, capCol, bag.Count >= Progress.BagSize ? $"背包 {bag.Count}/{Progress.BagSize} 已滿" : $"背包 {bag.Count}/{Progress.BagSize}（空 {Progress.BagFree}）", fsS);
             if (UiKit.Button(new Rect(b.x + capW + gap * 0.5f, by, mbW, fs * 1.3f), mails.Count > 0 ? $"📬 信箱 {mails.Count}" : "📭 信箱", fsS, mailOpen, mails.Count > 0 ? new Color(1f, 0.75f, 0.3f) : (Color?)null))
-            { mailOpen = !mailOpen; selItem = null; }
+            { mailOpen = !mailOpen; stashOpen = false; selItem = null; }
+            // 倉庫（三個角色共用）
+            if (UiKit.Button(new Rect(b.x + capW + gap + mbW + gap * 0.25f, by, mbW, fs * 1.3f), $"🏦 倉庫 {Progress.Stash.Count}/{Progress.StashSize}", fsS, stashOpen, new Color(0.55f, 0.8f, 1f)))
+            { stashOpen = !stashOpen; mailOpen = false; selItem = null; }
             if (mailOpen) return DrawMailbox(new Rect(b.x, by + fs * 1.4f, b.width, b.yMax - by - fs * 1.4f), p, fs, fsS, gap) || changed;
+            if (stashOpen) return DrawStash(new Rect(b.x, by + fs * 1.4f, b.width, b.yMax - by - fs * 1.4f), p, fs, fsS, gap) || changed;
             if (pages > 1)
             {
                 if (UiKit.Button(new Rect(b.xMax - fs * 6.5f, by, fs * 3f, fs * 1.3f), "◀", fsS, false, null, page > 0)) page--;
@@ -252,14 +298,21 @@ namespace SpellDuel
             }
             else
             {
-                if (UiKit.Button(new Rect(dr.x + gap, byy, bw, bh), can ? "裝備" : "不能裝備", fsS, can, Item.RarityColors[s2.rarity], can))
+                float bw3 = (dr.width - gap * 4) / 3f;
+                if (UiKit.Button(new Rect(dr.x + gap, byy, bw3, bh), can ? "裝備" : "不能裝備", fsS, can, Item.RarityColors[s2.rarity], can))
                 {
                     if (Progress.Equip(p, s2, out var w2)) { changed = true; Sfx.Play("block", 0.7f, 1.3f); Toast($"裝備：{s2.name}"); selItem = null; }
                     else Toast(w2);
                 }
+                // 存倉庫：三個角色都拿得到
+                if (UiKit.Button(new Rect(dr.x + gap * 2 + bw3, byy, bw3, bh), "🏦 存倉庫", fsS, false, new Color(0.55f, 0.8f, 1f)))
+                {
+                    if (Progress.Deposit(s2)) { Toast($"存進倉庫：{s2.name}（其他角色也拿得到）"); selItem = null; Sfx.Play("coin", 0.5f, 1.3f); }
+                    else Toast($"倉庫滿了（{Progress.StashSize} 件）");
+                }
                 // 丟掉：要按兩次（3 秒內）才真的丟，免得誤刪
                 bool armed = discardArm == s2 && Time.time < discardArmUntil;
-                if (UiKit.Button(new Rect(dr.x + gap * 2 + bw, byy, bw, bh), armed ? "再按一次丟掉" : "丟掉", fsS, armed, new Color(1f, 0.45f, 0.4f)))
+                if (UiKit.Button(new Rect(dr.x + gap * 3 + bw3 * 2, byy, bw3, bh), armed ? "再按一次丟掉" : "丟掉", fsS, armed, new Color(1f, 0.45f, 0.4f)))
                 {
                     if (armed) { Progress.Discard(s2); selItem = null; discardArm = null; Toast($"丟掉了 {s2.name}"); }
                     else { discardArm = s2; discardArmUntil = Time.time + 3f; }

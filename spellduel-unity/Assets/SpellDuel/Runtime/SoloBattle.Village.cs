@@ -42,7 +42,7 @@ namespace SpellDuel
         void GoVillage()
         {
             var back = villageReturn;
-            villageReturn = null;
+            villageReturn = null; jobTrialRound = -1;
             ShowSetup();
             enemyClass = "story"; daily = null; tutorial = false;
             storyMapOpen = true; world.OpenTown(world.town);
@@ -72,7 +72,7 @@ namespace SpellDuel
             };
             world.OnNetDungeon = remote => RequestNetDungeon?.Invoke(remote);
             world.OnWatch = () => RequestWatch?.Invoke();
-            world.EndlessBest = () => PlayerPrefs.GetInt("sd_endless_best", 0);
+            world.EndlessBest = () => PlayerPrefs.GetInt(CharacterSlots.Key("sd_endless_best"), 0);
         }
 
         /// <summary>村子的副本嚮導：和朋友組隊（GameRoot 斷開單人、改走連線大廳；false＝身邊的朋友、true＝遠方的朋友）</summary>

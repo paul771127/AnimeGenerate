@@ -53,6 +53,7 @@ namespace SpellDuel
         public const float PotionCooldown = 30f;
 
         static Dictionary<string, int> items;
+        public static void ResetCache() => items = null;   // 換角色：道具重新讀
         static Dictionary<string, int> Items
         {
             get

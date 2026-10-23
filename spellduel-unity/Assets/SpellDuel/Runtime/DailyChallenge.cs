@@ -102,8 +102,9 @@ namespace SpellDuel
             try { PlayerPrefs.Save(); } catch { }
             return (d.gold, d.xp, medal, newBest);
         }
-        static int Get(string key) { try { return PlayerPrefs.GetInt(key, 0); } catch { return 0; } }
-        static void Set(string key, int v) { try { PlayerPrefs.SetInt(key, v); } catch { } }
+        // 每個角色自己的紀錄（CharacterSlots.Key 加上角色欄位的前綴）
+        static int Get(string key) { try { return PlayerPrefs.GetInt(CharacterSlots.Key(key), 0); } catch { return 0; } }
+        static void Set(string key, int v) { try { PlayerPrefs.SetInt(CharacterSlots.Key(key), v); } catch { } }
 
         // ---------------------------------------------------------------- 閃避挑戰的出題
         /// <summary>攻擊種類：直線彈（側跨）、橫掃（蹲）、震地環（跳）、落石（走出紅圈）</summary>
