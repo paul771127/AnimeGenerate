@@ -57,7 +57,9 @@ namespace SpellDuel
         public string adv;              // 進階職業 id（Advanced.All）；null＝沒轉職
         public float healMul = 1f;      // 治療量倍率（主教 ×1.2、審判者 ×0.6）
         /// <summary>狂戰士怒氣：HP 越低傷害越高（HP 30% 以下 +60%）</summary>
-        public float RageMul => adv == "berserker" && maxHp > 0 ? 1f + 0.6f * Mathf.Clamp01((1f - hp / maxHp) / 0.7f) : 1f;
+        public float RageMul => 1f;   // 原本狂戰士的怒氣（劍仙取代後不再使用）
+        /// <summary>劍仙：劍來（普攻強化到這個時間）、御劍術（飛劍連射到這個時間、用哪個技能的數值）</summary>
+        public float swordUntil, yujianUntil; public SkillDef yujianSkill;
         public float oathUntil, oathShare; public Fighter oathBy;   // 聖騎士的守護誓言：我受到的傷害有 oathShare 轉給 oathBy
         public float selfOathUntil;     // 聖騎士自己：誓言期間受到的傷害 -20%
         public float frenzyUntil, undyingUntil, invulnUntil;        // 狂戰士：血之狂暴、不死之軀、無敵
@@ -1400,7 +1402,7 @@ namespace SpellDuel
         bool SwordSlash(Fighter f, SkillDef s, Vector3 from, Vector3 to)
         {
             var o = f.head;
-            float reach = s.rangeMax * f.rangeMul + SlashReach + f.reachBonus;
+            float reach = s.rangeMax * f.rangeMul + SlashReach + f.reachBonus + (SwordComeOn(f, s) ? JianlaiReach : 0f);
             if (from != Vector3.zero && to != Vector3.zero)
             {
                 // 玩家也一樣先預警（對手看得到刀線），SlashWindup 秒後才砍下；能不能躲看刀線的位置（蹲低到線下面就砍不到）
@@ -1450,9 +1452,22 @@ namespace SpellDuel
             return true;
         }
 
+        /// <summary>劍仙・劍來：普攻傷害 +30%、距離 +2m</summary>
+        public const float JianlaiReach = 2f, JianlaiDmg = 1.3f, FlyingSwordShare = 0.4f;
+        bool SwordComeOn(Fighter f, SkillDef s) => f.swordUntil > now && s != null && s.cls == "basic";
+
+        /// <summary>劍仙・御劍術：射出一把飛劍（SoloBattle 在持續時間內照準星方向呼叫）；傷害＝這招傷害的 40%</summary>
+        public void FireFlyingSword(Fighter f, Vector3 from, Vector3 dir)
+        {
+            var src = f.yujianSkill; if (src == null || !f.Alive || Over) return;
+            var blade = Skills.All["yj_blade"];
+            Spawn(f, blade, from, dir.normalized, Mathf.Max(1, Mathf.RoundToInt(src.damage * FlyingSwordShare)), EffectKind.None, 0f, 0f, false);
+            Emit("cast", from, blade.color, null);
+        }
+
         void SlashStrike(Fighter f, SkillDef s, Vector3 o, Vector3 a, Vector3 b, float reach, bool duckable)
         {
-            int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
+            int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now) * (SwordComeOn(f, s) ? JianlaiDmg : 1f));
             OnSlashLine?.Invoke(f, o + a * reach, o + b * reach, o, false);
             if (f.comboStrike > 0f && ++f.basicHits % 3 == 0) { dmg = Mathf.RoundToInt(dmg * (1f + f.comboStrike)); Emit("buff", f.Chest, s.color, "連斬・重擊！"); }
             dmg = Riposte(f, dmg);
@@ -1804,6 +1819,8 @@ namespace SpellDuel
                     f.frenzyUntil = now + s.buffDur;
                     Emit("buff", f.Chest, s.color, $"{s.name}！{s.buffDur:0} 秒內攻速 ×1.5");
                     return;
+                case SelfKind.SwordCome: f.swordUntil = now + s.buffDur; Emit("buff", f.Chest, s.color, $"{s.name}！{s.buffDur:0} 秒內普攻傷害 +30%、距離 +{JianlaiReach:0}m"); return;
+                case SelfKind.FlyingSwords: f.yujianUntil = now + s.buffDur; f.yujianSkill = s; Emit("buff", f.Chest, s.color, $"{s.name}！飛劍朝準星射出"); return;
                 case SelfKind.Undying: f.undyingUntil = now + s.buffDur; Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0} 秒內不會倒下"); return;
                 case SelfKind.DeadMark: f.markNextUntil = now + s.buffDur; Emit("buff", f.Chest, s.color, $"{s.name}：下一箭必定爆擊"); return;
                 case SelfKind.RollShot: f.rollUntil = now + s.buffDur; f.lastDodgeSeen = f.dodgeUntil; Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0} 秒內側跨會自動射箭"); return;

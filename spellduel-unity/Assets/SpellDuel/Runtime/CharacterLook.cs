@@ -57,7 +57,7 @@ namespace SpellDuel
             switch(name)
             {
                 case "初心者":return "novice";case "劍士":return "swordsman";case "獵人":return "archer";case "法師":return "mage";case "刺客":return "assassin";case "牧師":return "priest";
-                case "聖騎士":return "paladin";case "狂戰士":return "berserker";case "神射手":return "marksman";case "遊俠":return "ranger";case "大魔導士":return "archmage";
+                case "聖騎士":return "paladin";case "狂戰士":case "劍仙":return "berserker";case "神射手":return "marksman";case "遊俠":return "ranger";case "大魔導士":return "archmage";
                 case "召喚師":return "summoner";case "忍者":return "ninja";case "影舞者":return "shadowdancer";case "主教":return "bishop";case "審判者":return "inquisitor";
                 default:return all.ContainsKey(name??"")&&name.Length>0&&name[0]<128?name:null;
             }

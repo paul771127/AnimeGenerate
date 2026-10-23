@@ -101,7 +101,7 @@ namespace SpellDuel
             "assassin" => new[] { "🧪 劇毒連刺（普攻）", "🗡 刺殺", "🔪 飛刀" },
             "priest" => new[] { "✨ 聖印（普攻）", "💚 治療守護", "🩸 殉道" },
             "paladin" => new[] { "🛡 聖盾", "🤝 守護", "⚖ 制裁" },
-            "berserker" => new[] { "🌪 旋風", "🩸 狂暴", "💀 不死" },
+            "berserker" => new[] { "🗡 劍來", "🌀 御劍", "☄ 萬劍" },
             "marksman" => new[] { "🎯 貫穿", "☠ 標記", "🌧 箭雨" },
             "ranger" => new[] { "🦅 獵鷹", "🤸 翻滾", "🪤 連環陷阱" },
             "archmage" => new[] { "⚡ 雷霆", "❄ 冰封", "🔷 魔力護盾" },
@@ -338,23 +338,22 @@ namespace SpellDuel
                     FPas("pa_scombo", "制裁連斬", PassiveKind.SanctionCombo, 1f, 1, 6, 2, "pa_sanc"),
                     FPas("pa_atk", "聖戰之力", PassiveKind.Atk, 0.03f, 5, 6, 3, "pa_scombo"),
                 };
+                // 劍仙（輸出）：劍來（普攻強化）／御劍（飛劍連射）／萬劍（天降劍雨）
                 case "berserker": return new List<TreeNode>
                 {
-                    FStat("be_root", "蠻力", Stat.Str, 5, 3, 0, null),
-                    FMod("be_whirl", "旋風強化", "whirlwind", ModField.Damage, 0.12f, 5, 1, 1, "be_root"),
-                    FMod("be_whirl2", "狂風", "whirlwind", ModField.Cooldown, 0.08f, 5, 0, 2, "be_whirl"),
-                    FPas("be_steal", "血祭", PassiveKind.Lifesteal, 0.03f, 5, 1, 2, "be_whirl"),
-                    FPas("be_bleech", "血之連斬", PassiveKind.BasicLeech, 0.04f, 5, 2, 2, "be_whirl"),
-                    FPas("be_combo", "狂斬", PassiveKind.ComboStrike, 0.2f, 5, 2, 3, "be_bleech"),
-                    FLearn("be_rage", "bloodrage", 3, 1, "be_root"),
-                    FMod("be_rage2", "狂暴延長", "bloodrage", ModField.BuffDur, 1f, 5, 3, 2, "be_rage"),
-                    FPas("be_atk", "嗜血", PassiveKind.Atk, 0.03f, 5, 3, 3, "be_rage2"),
-                    FPas("be_zeal", "狂怒", PassiveKind.Zeal, 0.15f, 5, 4, 2, "be_rage"),
-                    FLearn("be_undy", "undying", 5, 1, "be_root"),
-                    FMod("be_undy2", "不死強化", "undying", ModField.Cooldown, 0.08f, 5, 5, 2, "be_undy"),
-                    FPas("be_regen", "野性恢復", PassiveKind.NaturalRegen, 0.008f, 5, 5, 3, "be_undy2"),
-                    FPas("be_hp", "鋼鐵之軀", PassiveKind.Hp, 10f, 5, 6, 2, "be_undy"),
-                    FPas("be_last", "垂死反撲", PassiveKind.LastStand, 0.05f, 5, 6, 3, "be_hp"),
+                    FStat("sx_root", "劍心", Stat.Str, 5, 3, 0, null),
+                    FMod("sx_jl", "劍來延長", "jianlai", ModField.BuffDur, 2f, 5, 1, 1, "sx_root"),
+                    FPas("sx_crit", "劍意", PassiveKind.Crit, 0.02f, 5, 0, 2, "sx_jl"),
+                    FPas("sx_combo", "連斬", PassiveKind.ComboStrike, 0.2f, 5, 2, 2, "sx_jl"),
+                    FPas("sx_leech", "劍氣吸血", PassiveKind.BasicLeech, 0.03f, 5, 1, 3, "sx_combo"),
+                    FLearn("sx_yj", "yujian", 3, 1, "sx_root"),
+                    FMod("sx_yj2", "御劍數量", "yujian", ModField.Multi, 1f, 5, 3, 2, "sx_yj"),
+                    FMod("sx_yj3", "飛劍強化", "yujian", ModField.Damage, 0.12f, 5, 3, 3, "sx_yj2"),
+                    FMod("sx_yjcd", "御劍回氣", "yujian", ModField.Cooldown, 0.08f, 5, 4, 2, "sx_yj"),
+                    FLearn("sx_wj", "wanjian", 5, 1, "sx_root"),
+                    FMod("sx_wj2", "萬劍強化", "wanjian", ModField.Damage, 0.12f, 5, 5, 2, "sx_wj"),
+                    FMod("sx_wj3", "萬劍數量", "wanjian", ModField.Multi, 1f, 5, 6, 2, "sx_wj"),
+                    FPas("sx_atk", "劍氣縱橫", PassiveKind.Atk, 0.03f, 5, 5, 3, "sx_wj2"),
                 };
                 case "marksman": return new List<TreeNode>
                 {

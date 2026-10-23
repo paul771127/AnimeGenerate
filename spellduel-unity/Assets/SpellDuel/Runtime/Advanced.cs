@@ -57,9 +57,10 @@ namespace SpellDuel
             Add(new AdvDef { id = "paladin", baseCls = "swordsman", name = "聖騎士", color = C("#fde047"), hpAdd = 35, atkMul = 0.9f, armor = 0.15f, stats = S(vit: 6),
                 desc = "以聖盾接住風暴，替同伴守住歸途", core = "守護光環：自己與 3m 內的隊友受到的傷害 −15%", weak = "攻擊 −10%",
                 skills = new[] { "shieldbash", "oath", "sanction" } });
-            Add(new AdvDef { id = "berserker", baseCls = "swordsman", name = "狂戰士", color = C("#ef4444"), hpAdd = 10, atkMul = 1.2f, armor = -0.15f, stats = S(str: 6),
-                desc = "以傷口點燃怒火，在血色旋風中迎戰", core = "怒氣：HP 越低傷害越高（HP 30% 以下傷害 +60%）", weak = "受到的傷害 +15%；格擋、鐵壁效果減半",
-                skills = new[] { "whirlwind", "bloodrage", "undying" } });
+            // 劍仙（內部 id 沿用 berserker：存檔、外觀資料都用這個 id）：以氣御劍的輸出職業
+            Add(new AdvDef { id = "berserker", baseCls = "swordsman", name = "劍仙", color = C("#7dd3fc"), hpAdd = 0, atkMul = 1.25f, armor = -0.1f, crit = 0.05f, stats = S(str: 4, agi: 2),
+                desc = "以氣御劍，萬劍隨心——專精輸出的劍士", core = "劍意：攻擊 +25%、爆擊 +5%；劍來、御劍術、萬劍歸宗三招連續輸出", weak = "受到的傷害 +10%",
+                skills = new[] { "jianlai", "yujian", "wanjian" } });
             // ---------------------------------------------------------------- 獵人
             Add(new AdvDef { id = "marksman", baseCls = "archer", name = "神射手", color = C("#facc15"), hpAdd = -5, crit = 0.1f, stats = S(luk: 6),
                 desc = "屏息守望遠方，以一箭貫穿戰局", core = "鷹眼：站著不動每 2 秒疊 1 層（最多 3 層），每層爆擊率 +5%、射程 +20%；一移動就清空", weak = "HP −5；移動就失去鷹眼",

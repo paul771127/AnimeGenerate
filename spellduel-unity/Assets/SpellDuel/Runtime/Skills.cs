@@ -6,7 +6,7 @@ namespace SpellDuel
     public enum SkillType { Projectile, Self, Trap }
     public enum SelfKind { None, Heal, Block, Shield, Counter, Armor, Cleanse, Prayer, Dispel, Summon, Mana, Focus, Prep, Taunt,
         // 進階職業
-        Oath, Frenzy, Undying, DeadMark, RollShot, ManaShield, Pet, Detonate, Substitute, Clone, Dance, Fog, Revive, HealPct, TeamShield }
+        Oath, Frenzy, Undying, DeadMark, SwordCome, FlyingSwords, RollShot, ManaShield, Pet, Detonate, Substitute, Clone, Dance, Fog, Revive, HealPct, TeamShield }
     public enum EffectKind { None, Dot, Blind, Snare, Mark, Burn }
 
     /// <summary>
@@ -265,7 +265,12 @@ namespace SpellDuel
             P(new SkillDef { adv = "paladin", id = "shieldbash", cls = "swordsman", name = "聖盾衝鋒", type = SkillType.Projectile, color = C("#fde047"), cost = 20, damage = 20, charge = 0.5f, cooldown = 6f, speed = 8f, radius = 0.3f, rangeMax = 2.5f, effect = EffectKind.Snare, effectDur = 1f, desc = "舉掌往前推：近身衝撞，命中暈眩 1 秒（打斷蓄力）" });
             P(new SkillDef { adv = "paladin", id = "oath", cls = "swordsman", name = "守護誓言", type = SkillType.Self, self = SelfKind.Oath, color = C("#fef08a"), cost = 25, charge = 0.6f, cooldown = 18f, buffDur = 8f, buffReduce = 0.4f, desc = "8 秒內：3m 內隊友受到的傷害有 40% 轉到自己身上；自己受到的傷害 -20%" });
             P(new SkillDef { adv = "paladin", id = "sanction", cls = "swordsman", name = "神聖制裁", type = SkillType.Projectile, areaFoes = true, areaRadius = 2.5f, color = C("#facc15"), cost = 30, damage = 25, charge = 1.0f, cooldown = 10f, radius = 0f, rangeMax = 2.5f, buffAmount = 200, desc = "往下壓：周圍 2.5m 的敵人受傷，並把 Boss 的仇恨拉到自己身上" });
-            // 劍士・狂戰士
+            // 劍士・劍仙（取代原本的狂戰士；舊的三招資料保留給舊程式用）
+            P(new SkillDef { adv = "berserker", id = "jianlai", cls = "swordsman", name = "劍來", type = SkillType.Self, self = SelfKind.SwordCome, color = C("#7dd3fc"), cost = 20, charge = 0.4f, cooldown = 30f, buffDur = 20f, desc = "手中出現一把長劍：20 秒內普攻傷害 +30%、攻擊距離 +2m" });
+            P(new SkillDef { adv = "berserker", id = "yujian", cls = "swordsman", name = "御劍術", type = SkillType.Self, self = SelfKind.FlyingSwords, multi = 3, color = C("#bae6fd"), cost = 30, damage = 30, charge = 0.6f, cooldown = 12f, buffDur = 2f, speed = 12f, radius = 0.12f, rangeMax = 12f, desc = "召喚飛劍：2 秒內朝準星方向連續射出長劍（每秒 3 把，技能樹可以加），每把是這招傷害的 40%" });
+            P(new SkillDef { adv = "berserker", id = "wanjian", cls = "swordsman", fromAbove = true, dropHeight = 6f, multi = 8, name = "萬劍歸宗", type = SkillType.Projectile, color = C("#e0f2fe"), cost = 40, damage = 16, charge = 1.4f, cooldown = 14f, speed = 11f, radius = 0.45f, rangeMax = 12f, desc = "八把長劍從準星對準的地方上空落下，散在周圍 2.5m" });
+            P(new SkillDef { id = "yj_blade", cls = "swordsman", name = "飛劍", type = SkillType.Projectile, color = C("#bae6fd"), cost = 0, damage = 12, charge = 0f, cooldown = 0f, speed = 12f, radius = 0.12f, rangeMax = 12f, desc = "御劍術射出的飛劍" });
+            // 劍士・狂戰士（舊）
             P(new SkillDef { adv = "berserker", id = "whirlwind", cls = "swordsman", name = "旋風斬", type = SkillType.Projectile, areaFoes = true, areaRadius = 2f, hits = 3, hitGap = 0.25f, color = C("#f87171"), cost = 20, damage = 12, charge = 0f, cooldown = 5f, radius = 0f, rangeMax = 2f, desc = "不用蓄力，手刀揮過：360° 旋轉斬，周圍 2m 的敵人連續受到 3 段傷害" });
             P(new SkillDef { adv = "berserker", id = "bloodrage", cls = "swordsman", name = "血之狂暴", type = SkillType.Self, self = SelfKind.Frenzy, color = C("#dc2626"), cost = 10, charge = 0.3f, cooldown = 20f, buffDur = 8f, buffReduce = 0.2f, desc = "扣除目前 HP 的 20%，換 8 秒攻速 ×1.5（技能與普攻冷卻變快）" });
             P(new SkillDef { adv = "berserker", id = "undying", cls = "swordsman", name = "不死之軀", type = SkillType.Self, self = SelfKind.Undying, color = C("#991b1b"), cost = 20, charge = 0.5f, cooldown = 60f, buffDur = 10f, desc = "10 秒內受到致命傷害時：保留 1 HP，並無敵 3 秒" });

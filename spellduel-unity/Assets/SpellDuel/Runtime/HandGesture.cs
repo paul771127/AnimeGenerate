@@ -119,7 +119,9 @@ namespace SpellDuel
                 case "prep": return Style.Burst;                                                     // 刺殺準備：握拳→張開                                                      // 甩出飛刀
                 case "thrust": return Style.Thrust;                                                   // 劍士突刺
                 case "shieldbash": return Style.Thrust;                                               // 聖騎士：舉掌往前推
-                case "oath": case "bloodrage": case "undying": case "shadowdance": return Style.Burst; // 握拳→張開
+                case "oath": case "bloodrage": case "undying": case "shadowdance": case "jianlai": return Style.Burst; // 握拳→張開（劍來：手中出現長劍）
+                case "yujian": return Style.Thrust;                                                   // 御劍術：手往前推（飛劍射出）
+                case "wanjian": return Style.Press;                                                   // 萬劍歸宗：往下壓（劍從天而降）
                 case "sanction": case "poisonfog": return Style.Press;                               // 往下壓
             }
             if (s.type == SkillType.Trap) return Style.Press;

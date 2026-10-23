@@ -1787,7 +1787,7 @@ namespace SpellDuel
         void EndBattle()
         {
             outroUntil = -1f; introUntil = -1f;
-            ClearDaily(); ClearTutorial(); RestoreArea(); ClearSwipeTrail();
+            ClearDaily(); ClearTutorial(); RestoreArea(); ClearSwipeTrail(); ClearSwordSage();
             ResetCarryLeft();   // 下一場能用的道具＝整備時決定帶的數量
             victory = null; hitsTaken = 0; lootLog.Clear(); lootGoldLog = 0; ResetExercise();
             if (prof != null) Progress.SaveChar(prof);
@@ -1875,6 +1875,7 @@ namespace SpellDuel
                 else if (bossAi != null) bossAi.Update(dt);
                 else if (!NetMode) en_FaceMe();
                 battle.Update(dt);
+                UpdateSwordSage(dt);   // 劍仙：御劍術連射、劍來的長劍（SoloBattle.SwordSage.cs）
                 UpdateExercise(dt);   // 運動紀錄：蹲、跳、閃避、移動距離
                 if (daily != null && UpdateDaily()) { UpdateVisuals(); return; }   // 每日挑戰：時間到（或心用完）→ 結算
                 if (tutorial && UpdateTutorial()) { UpdateVisuals(); return; }      // 教學關：最後一步完成 → 結算
@@ -3869,7 +3870,8 @@ namespace SpellDuel
             int traps = 0; foreach (var t in battle.traps) if (t.owner == f) traps++;
             if (traps > 0) parts.Add($"陷阱×{traps}");
             // 進階職業
-            if (f.adv == "berserker" && f.RageMul > 1.01f) parts.Add($"怒氣 +{(f.RageMul - 1f) * 100f:0}%");
+            if (f.swordUntil > now) parts.Add($"劍來 {f.swordUntil - now:0} 秒");
+            if (f.yujianUntil > now) parts.Add("御劍中");
             if (f.adv == "marksman") { int st = battle.EagleStacks(f); parts.Add(st > 0 ? $"鷹眼 {st}/3" : "鷹眼（站著不動）"); }
             if (f.adv == "inquisitor") parts.Add($"信仰 {f.faith}/{Battle.FaithMax}");
             if (f.adv == "bishop" && battle.Still(f)) parts.Add("祈禱領域");
