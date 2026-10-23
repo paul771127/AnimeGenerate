@@ -10,7 +10,8 @@ namespace SpellDuel
     /// </summary>
     public partial class CharacterPanel
     {
-        public int tab;                 // 0 能力值、1 技能樹、2 裝備、3 進階技能樹（轉職後）
+        public int tab;                 // 0 能力值、1 技能樹（小分頁：初心者／職業／進階）、2 裝備
+        public int treeTab = -1;        // 技能樹的小分頁：0 初心者、1 職業、2 進階職業（−1＝自動選目前的）
         string selNode;                 // 技能樹：選中的節點
         Item selItem;                   // 裝備：選中的物品（背包或身上）
         Item discardArm; float discardArmUntil, resetArmUntil;   // 丟掉／重新分配：要按兩次確認
@@ -50,22 +51,44 @@ namespace SpellDuel
                 p.level >= CharacterProfile.MaxLevel ? "最高等級" : p.LevelLocked ? $"經驗已滿：到職業工會轉職才能升到 {p.level + 1} 級" : $"經驗 {p.xp - cur} / {next - cur}", fsS);
             y += lh * 0.5f + gap;
             // ---- 分頁
-            // 分頁：能力值、技能樹（現在的職業）、裝備、進階（轉職後）、初心者（從初心者轉職來的：保留的舊技能樹）
-            var tabList = new List<string> { "📊 能力值", "🌳 技能樹", "🛡 裝備" };
-            if (adv != null) tabList.Add("✨ 進階");
-            int noviceTab = p.novicePast && p.cls != Skills.Novice ? tabList.Count : -1;
-            if (noviceTab >= 0) tabList.Add("🌱 初心者");
-            string[] tabs = tabList.ToArray();
-            int advTab = adv != null ? 3 : -1;
-            Color TabCol(int i) => i == advTab ? adv.color : i == noviceTab ? Skills.Classes[Skills.Novice].color : cd.color;
+            // 分頁：能力值、技能樹、裝備；技能樹底下再分「初心者／職業／進階職業」三個小分頁
+            string[] tabs = { "📊 能力值", "🌳 技能樹", "🛡 裝備" };
             if (tab >= tabs.Length) tab = 0;
             float tw = (w - gap * (tabs.Length - 1)) / tabs.Length;
             for (int i = 0; i < tabs.Length; i++)
-                if (UiKit.Button(new Rect(x + i * (tw + gap), y, tw, lh * 1.1f), tabs[i], fsS, tab == i, TabCol(i))) { tab = i; selNode = null; selItem = null; }
-            for(int i=0;i<tabs.Length;i++) UiKit.Tab(new Rect(x+i*(tw+gap),y,tw,lh*1.1f),tab==i,TabCol(i));
+                if (UiKit.Button(new Rect(x + i * (tw + gap), y, tw, lh * 1.1f), tabs[i], fsS, tab == i, cd.color)) { tab = i; selNode = null; selItem = null; }
+            for(int i=0;i<tabs.Length;i++) UiKit.Tab(new Rect(x+i*(tw+gap),y,tw,lh*1.1f),tab==i,cd.color);
             y += lh * 1.1f + gap;
-            var body = new Rect(x, y, w, r.yMax - gap - y);
-            bool changed = tab == 0 ? DrawBodyPage(body, p, fs, fsS, gap, false) : tab == 1 ? DrawTree(body, p, fs, fsS, gap, p.cls) : tab == advTab ? DrawTree(body, p, fs, fsS, gap, adv.id) : tab == noviceTab ? DrawTree(body, p, fs, fsS, gap, Skills.Novice) : DrawBodyPage(body, p, fs, fsS, gap, true);
+            bool changed;
+            if (tab == 1)
+            {
+                // 小分頁：初心者（從初心者開始的角色）、職業（轉職後）、進階職業（30 級進階後）
+                bool hasNovice = p.cls == Skills.Novice || p.novicePast, hasCls = p.cls != Skills.Novice, hasAdv = adv != null;
+                string[] ids = { Skills.Novice, hasCls ? p.cls : null, hasAdv ? adv.id : null };
+                string[] labels =
+                {
+                    $"🌱 初心者 {(hasNovice ? p.AvailIn(Skills.Novice) + "點" : "")}",
+                    hasCls ? $"⚔ {cd.name} {p.AvailIn(p.cls)}點" : $"⚔ 職業（{Skills.JobLevel} 級轉職）",
+                    hasAdv ? $"✨ {adv.name} {p.AvailIn(adv.id)}點" : $"✨ 進階（{Advanced.Level} 級）",
+                };
+                bool[] okTab = { hasNovice, hasCls, hasAdv };
+                Color[] cols = { Skills.Classes[Skills.Novice].color, cd.color, hasAdv ? adv.color : UiKit.Muted };
+                if (treeTab < 0 || !okTab[treeTab]) treeTab = hasAdv ? 2 : hasCls ? 1 : 0;
+                float sw = (w - gap * 2) / 3f, sh = lh * 0.95f;
+                for (int i = 0; i < 3; i++)
+                {
+                    var sr = new Rect(x + i * (sw + gap), y, sw, sh);
+                    if (UiKit.Button(sr, labels[i], Mathf.RoundToInt(fsS * 0.9f), treeTab == i, cols[i], okTab[i])) { treeTab = i; selNode = null; }
+                }
+                y += sh + gap * 0.6f;
+                var tb = new Rect(x, y, w, r.yMax - gap - y);
+                changed = DrawTree(tb, p, fs, fsS, gap, ids[treeTab]);
+            }
+            else
+            {
+                var body = new Rect(x, y, w, r.yMax - gap - y);
+                changed = tab == 0 ? DrawBodyPage(body, p, fs, fsS, gap, false) : DrawBodyPage(body, p, fs, fsS, gap, true);
+            }
             if (Time.time < toastUntil) UiKit.Pill(r.y + r.height * 0.5f, toast, fs, new Color(1f, 0.85f, 0.5f), r.width * 0.9f, 0.9f);
             if (changed) Progress.SaveChar(p);
             return changed;
@@ -95,7 +118,7 @@ namespace SpellDuel
             bool edit = SkillsEditable();
             int baseOn = lo.FindAll(id => !IsAdvSkill(id)).Count, advOn = lo.FindAll(id => IsAdvSkill(id)).Count;
             float y = b.y;
-            string head = $"✨ 技能欄 {baseOn}/{baseSlots}" + (advSlot ? $"・進階 {advOn}/1" : "") + (edit ? "：點技能裝上／卸下（長按看說明）" : "：戰鬥中不能換（回城鎮或整備時換）");
+            string head = $"✨ 技能欄 {baseOn}/{baseSlots}" + (advSlot ? $"・進階 {advOn}/1" : "") + (edit ? "：點技能裝上／卸下（ⓘ 或長按看說明）" : "：戰鬥中不能換（回城鎮或整備時換）");
             UiKit.Text(new Rect(b.x, y, b.width, fs * 1.3f), head, fsS, baseOn < baseSlots || advSlot && advOn < 1 ? new Color(1f, 0.6f, 0.45f) : UiKit.Gold, TextAnchor.MiddleLeft, true);
             y += fs * 1.4f;
             if (all.Length == 0) { UiKit.Text(new Rect(b.x, y, b.width, fs * 1.4f), "還沒學會技能（初心者：到炎之里找居民解任務學）", fsS, UiKit.Muted, TextAnchor.MiddleLeft); return y + fs * 1.6f - b.y; }
@@ -105,6 +128,11 @@ namespace SpellDuel
                 var id = all[i]; if (!Skills.All.TryGetValue(id, out var sk)) continue;
                 bool on = lo.Contains(id);
                 var r = new Rect(b.x + (i % cols) * (cw + gap), y + (i / cols) * (chh + gap * 0.5f), cw, chh);
+                // 右上角 ⓘ：點一下看說明
+                var ir = new Rect(r.xMax - chh * 0.55f, r.y, chh * 0.55f, chh * 0.55f);
+                if (GUI.Button(ir, GUIContent.none, GUIStyle.none)) { ShowSkillInfo?.Invoke(id); continue; }
+                // 長按（按住 0.5 秒）看說明：要在按鈕之前偵測（按鈕會把按下的事件吃掉）
+                if (Event.current.type == EventType.MouseDown && r.Contains(Event.current.mousePosition)) { pressSkill = id; pressAt = Time.time; }
                 if (UiKit.Button(r, "", fsS, on, sk.color, edit || on))
                 {
                     if (longDone == id) longDone = null;   // 剛長按看完說明：放開手不算點一下
@@ -120,8 +148,7 @@ namespace SpellDuel
                 GUI.DrawTexture(new Rect(r.x + chh * 0.12f, r.y + chh * 0.14f, isz, isz), SkillIcons.Get(id));
                 GUI.color = Color.white;
                 UiKit.Text(new Rect(r.x + isz + chh * 0.2f, r.y, r.width - isz - chh * 0.25f, r.height), (on ? "✔ " : "") + (IsAdvSkill(id) ? "✨" : "") + sk.name, fsS, on ? Color.white : new Color(0.75f, 0.75f, 0.8f), TextAnchor.MiddleLeft, on);
-                // 長按（按住 0.5 秒）看說明
-                if (Event.current.type == EventType.MouseDown && r.Contains(Event.current.mousePosition)) { pressSkill = id; pressAt = Time.time; }
+                UiKit.Text(ir, "ⓘ", fsS, new Color(1f, 1f, 1f, 0.85f), TextAnchor.MiddleCenter, true);
             }
             if (pressSkill != null && Time.time - pressAt > 0.5f && Input.GetMouseButton(0)) { ShowSkillInfo?.Invoke(pressSkill); longDone = pressSkill; pressSkill = null; }
             if (!Input.GetMouseButton(0)) pressSkill = null;

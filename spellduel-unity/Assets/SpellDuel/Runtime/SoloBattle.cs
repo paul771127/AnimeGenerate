@@ -751,7 +751,7 @@ namespace SpellDuel
             myLoadout.Clear(); myLoadout.AddRange(Skills.Classes[cls].defaultLoadout); FixLoadout(true);
             SaveChoices(); PlayerPrefs.Save();
             levelLockSaid = false;
-            Say($"🎉 轉職成功！你現在是「{Skills.Classes[cls].name}」\n初心者的技能樹與招式保留（角色 → 🌱 初心者）；新職業的技能點從 {Skills.JobLevel + 1} 級開始，每升一級 1 點", 6f);
+            Say($"🎉 轉職成功！你現在是「{Skills.Classes[cls].name}」\n初心者的技能樹與招式保留（角色 → 技能樹 → 🌱 初心者）；新職業的技能點從 {Skills.JobLevel + 1} 級開始，每升一級 1 點", 6f);
             Sfx.Play("levelup", 0.9f); Haptics.Play(Haptics.Kind.Success);
         }
 
