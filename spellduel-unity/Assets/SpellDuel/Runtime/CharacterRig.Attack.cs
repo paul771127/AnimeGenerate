@@ -32,6 +32,8 @@ namespace SpellDuel
 
         AtkPose WindPose(string k) => k switch
         {
+            "novice" => new AtkPose { l = new Arm(-35,28,-65,0), r = new Arm(-76,48,-72,-12), yaw = 19, lean = -5, step = -.025f, crouch = .035f },
+            "novice_throw" => new AtkPose { l = new Arm(-52,-8,-38,0), r = new Arm(-112,24,-91,-10), yaw = 16, lean = -4, step = -.02f, crouch = .02f },
             "slash" => new AtkPose { l = new Arm(-35f, 25f, -50f, 0f), r = new Arm(-85f, 75f, -45f, 0f), yaw = 28f, lean = -4f, step = 0f, crouch = 0.04f },
             "stab" or "lunge" => new AtkPose { l = new Arm(-25f, 25f, -110f, 10f), r = new Arm(-15f, 20f, -120f, 10f), yaw = 18f, lean = 14f, step = -0.05f, crouch = 0.1f },
             "shoot" => new AtkPose { l = chargeL, r = chargeR, yaw = -12f, lean = 0f, step = 0f, crouch = 0f },
@@ -40,6 +42,8 @@ namespace SpellDuel
 
         AtkPose StrikePose(string k) => k switch
         {
+            "novice" => new AtkPose { l = new Arm(-18,30,-42,8), r = new Arm(-62,-28,-24,20), yaw = -24, lean = 13, step = .075f, crouch = .025f },
+            "novice_throw" => new AtkPose { l = new Arm(-15,25,-30,10), r = new Arm(-73,-12,-8,38), yaw = -17, lean = 11, step = .065f, crouch = .015f },
             "slash" => new AtkPose { l = new Arm(-20f, 15f, -40f, 0f), r = new Arm(-80f, -45f, -10f, 30f), yaw = -32f, lean = 10f, step = 0.1f, crouch = 0.02f },
             "stab" => new AtkPose { l = new Arm(-45f, 15f, -60f, 10f), r = new Arm(-92f, -6f, 0f, 0f), yaw = -10f, lean = 18f, step = 0.18f, crouch = 0.06f },
             "lunge" => new AtkPose { l = new Arm(-92f, 6f, 0f, 0f), r = new Arm(-92f, -6f, 0f, 0f), yaw = 0f, lean = 24f, step = 0.35f, crouch = 0.08f },

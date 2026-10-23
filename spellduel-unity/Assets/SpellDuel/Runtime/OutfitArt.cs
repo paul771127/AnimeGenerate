@@ -19,7 +19,7 @@ namespace SpellDuel
             {"mage",new Design("mage","符文連帽派克大衣","a353ef","3b3484","65fff0",.48f,.104f,2)},
             {"assassin",new Design("assassin","交叉綁帶高領戰鬥服","7443ab","343b7c","ff76dc",0f,.053f,3)},
             {"priest",new Design("priest","金邊分襟醫療長外套","fff0d4","3d68a2","e9b955",.59f,.082f,4)},
-            {"novice",new Design("novice","束腰旅行布衣","c9a77a","6b5440","e2c48d",.14f,.07f,17)},   // 初心者：樸素的旅行布衣
+            {"novice",new Design("novice","短襟旅行布衣與捲袖","dfbd80","786044","d9ceaa",.065f,.065f,29)},   // 初心者：樸素的旅行布衣
             {"paladin",new Design("paladin","半披風白色軍裝","fff0d4","31569a","e8b94d",.42f,.075f,5)},
             {"berserker",new Design("berserker","無袖騎士皮夾克","e34d39","792d4c","e9b66c",.02f,.062f,6)},
             {"marksman",new Design("marksman","單肩狙擊長夾克","327db5","293e73","ebcb66",.44f,.063f,7)},
@@ -136,7 +136,7 @@ namespace SpellDuel
                 b.Loft(new[]{.005f,-.07f,-.15f,-.25f,-.34f},new[]{.051f,.069f,.067f,.049f,.045f},new[]{.051f,.065f,.06f,.046f,.045f},high?main:sub);
                 if(d.Cut==0||d.Cut==5)KneeGuard(b,sub,accent);
                 b.Loft(new[]{sneaker?-.33f:high?-.19f:-.285f,-.35f,-.385f,-.414f},new[]{high?.064f:.049f,.063f,soleWidth*.97f,soleWidth*.95f},new[]{.055f,.10f,toe*.985f,toe*.96f},boot,0,.038f);
-                b.Loft(new[]{-.414f,-.430f},new[]{soleWidth,soleWidth},new[]{toe,toe},accent,0,.038f);
+                b.Loft(new[]{-.414f,-.430f},new[]{soleWidth,soleWidth},new[]{toe,toe},d.Id=="novice"?sub:accent,0,.038f);
 
 
             }
@@ -205,8 +205,15 @@ namespace SpellDuel
             b.Tube(path,rx,rz,bare?skin:d.Main,12);if(bare)return;
             // One closed jacket: no overlapping dark shirt/tie or floating chest marks.
             b.Loft(new[]{.575f,.555f,.535f},new[]{.073f,.080f,.084f},new[]{.066f,.071f,.074f},d.Sub);
+            if(d.Id!="novice") {
             b.Tube(new[]{new Vector3(0,.43f,.133f),new Vector3(0,.34f,.126f),new Vector3(0,.24f,.114f),new Vector3(0,.14f,.097f),new Vector3(0,.09f,.100f)},new[]{.0025f,.0025f,.0025f,.0025f,.0025f},new[]{.002f,.002f,.002f,.002f,.002f},d.Accent,6);
             b.Loft(new[]{.405f,.392f,.379f},new[]{.005f,.007f,.005f},new[]{.003f,.004f,.003f},d.Accent,0,.134f,8); // rounded zipper pull
+            }
+            else {
+                // An overlapping cloth neckline and one linen tie, not a metal zipper.
+                b.Seam(new Vector3(-.065f,.52f,.085f),new Vector3(.018f,.39f,.140f),.018f,d.Accent);
+                b.Seam(new Vector3(.018f,.39f,.140f),new Vector3(.045f,.34f,.138f),.008f,d.Sub);
+            }
             b.Loft(new[]{.070f,.041f},new[]{.171f,.176f},new[]{.120f,.123f},d.Sub,0,-.012f);
             b.Loft(new[]{.068f,.055f,.042f},new[]{.018f,.022f,.018f},new[]{.005f,.007f,.005f},d.Accent,0,.116f,8); // one central buckle
             if(d.Hem>.01f)Skirt(b,d);
@@ -228,7 +235,7 @@ namespace SpellDuel
         {
             float power=Strength(d),sleeve=d.Cut==2||d.Cut==9||d.Cut==13?1.18f:1;
             bool bare=anatomical||d.Cut==1||d.Cut==6||d.Cut==14||d.Cut==24||d.Cut==12;
-            Color cloth=bare?skin:d.Main;
+            Color cloth=bare||d.Id=="novice"&&!upper?skin:d.Main;
             if(upper)
             {
                 var y=new[]{.026f,.005f,-.025f,-.075f,-.13f,-.19f,-.25f,-.28f};
@@ -249,7 +256,7 @@ namespace SpellDuel
                 var path=new Vector3[y.Length];for(int i=0;i<y.Length;i++){rx[i]*=power*(bare?1:sleeve);rz[i]*=power*(bare?1:sleeve);path[i]=new Vector3(0,y[i],i==2?.004f:0);}
                 b.Tube(path,rx,rz,cloth,12);
                 // A single fitted cuff follows the tapered wrist; no full-length colour strip.
-                if(!anatomical)b.Loft(new[]{-.205f,-.235f},new[]{.039f*power,.035f*power},new[]{.031f*power,.027f*power},d.Sub);
+                if(!anatomical&&d.Id!="novice")b.Loft(new[]{-.205f,-.235f},new[]{.039f*power,.035f*power},new[]{.031f*power,.027f*power},d.Sub);
 
             }
         }

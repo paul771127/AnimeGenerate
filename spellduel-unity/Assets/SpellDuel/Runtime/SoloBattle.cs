@@ -2038,7 +2038,7 @@ namespace SpellDuel
             }
             if (!battle.BasicAttack(Me, s, d, floor, enemyOnScreen, from, to)) return;
             if (!Skills.IsMeleeBasic(s))
-                SpellFx.CastBurst(myClass, s.color, cam.transform.position + cam.transform.forward * 0.5f - cam.transform.up * 0.08f, ray.direction, 0.2f);
+                SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(s.id):myClass, s.color, cam.transform.position + cam.transform.forward * 0.5f - cam.transform.up * 0.08f, ray.direction, 0.2f);
         }
 
         void ReleaseAt(Vector2 sp, bool byGesture)
@@ -2053,12 +2053,13 @@ namespace SpellDuel
             // 準星朝上（指不到地面）時，取準星方向的遠處（隕石用）
             var floor = d.y < -0.01f ? o + d * (-o.y / d.y) : Me.Feet + Fighter.Flat(d) * 15f;
             // 沒鎖定敵人也能放招：一律朝準星方向（打不打得到看瞄準）
+            var visualSkill=Me.charging; // Presentation snapshot: TryRelease clears charging.
             if (!battle.TryRelease(Me, d, floor, out var why, enemyOnScreen)) Say(why, 1.5f);
             else
             {
                 if (byGesture) Say("🖐️ 放招！", 0.8f);
                 // 放招光效：在手機前方爆開，朝法術飛行方向
-                SpellFx.CastBurst(myClass, Me.charging != null ? Me.charging.color : Skills.Classes[myClass].color,
+                SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(visualSkill.id):myClass, myClass==Skills.Novice?visualSkill.color:Me.charging != null ? Me.charging.color : Skills.Classes[myClass].color,
                     cam.transform.position + cam.transform.forward * 0.5f - cam.transform.up * 0.08f, ray.direction, 0.35f);
             }
         }
@@ -2489,7 +2490,8 @@ namespace SpellDuel
                     {
                         bool mineSwing = Battle.FlatDistance(at, Me.Feet) < 0.7f;
                         var swingDir = mineSwing ? cam.transform.forward : WorldFrame.DirFromWorld(Fighter.Flat(Me.Chest - at));
-                        string swingCls = text == "na_dagger" ? "assassin" : "swordsman";
+                        string swingCls = text == "nv_swing" ? "novice_swing" : text == "na_dagger" ? "assassin" : "swordsman";
+                        if(text=="nv_swing"&&!mineSwing&&enemyRig)enemyRig.PlayAttack("novice",0f);
                         SpellFx.CastBurst(swingCls, c, WorldFrame.FromWorld(at + Vector3.up * 1f), swingDir, text == "slash" ? 1.4f : 0.9f);
                     }
                     Sfx.Play("cast_swordsman", 0.45f, text == "na_dagger" ? 1.4f : 1.1f);
@@ -2658,8 +2660,8 @@ namespace SpellDuel
                     projGo[p] = go;
                     if (p.owner == En && !bossMode)
                     {
-                        if (enemyRig && !enemyRig.Attacking) enemyRig.PlayAttack(AttackKindOf(enemyClassUsed), 0.08f);   // 敵人出招動作＋光效（普攻已經在預警時開始擺架勢）
-                        SpellFx.CastBurst(enemyClassUsed, p.skill.color, WorldFrame.FromWorld(p.pos), WorldFrame.DirFromWorld(p.dir), 1f);
+                        if (enemyRig && !enemyRig.Attacking) enemyRig.PlayAttack(enemyClassUsed==Skills.Novice?(p.skill.id=="nv_swing"?"novice":"novice_throw"):AttackKindOf(enemyClassUsed), 0.08f);   // 敵人出招動作＋光效（普攻已經在預警時開始擺架勢）
+                        SpellFx.CastBurst(enemyClassUsed==Skills.Novice?SpellFx.NoviceStyle(p.skill.id):enemyClassUsed, p.skill.color, WorldFrame.FromWorld(p.pos), WorldFrame.DirFromWorld(p.dir), 1f);
                         if (NetMode) Sfx.Cast(enemyClassUsed, 0.55f);   // 雙人：對手的法術不會經過 Battle 的 cast 事件
                     }
                 }
@@ -3662,7 +3664,7 @@ namespace SpellDuel
 
         /// <summary>標示離我最近的敵人在哪個方位（Boss 模式、無盡模式）</summary>
         /// <summary>電腦敵人用技能時的出手動作（劍士橫砍、刺客突刺、獵人放箭、法師／牧師推出）</summary>
-        static string AttackKindOf(string cls) => cls == "swordsman" || cls == Skills.Novice ? "slash" : cls == "assassin" ? "stab" : cls == "archer" ? "shoot" : "magic";
+        static string AttackKindOf(string cls) => cls == Skills.Novice ? "novice_throw" : cls == "swordsman" ? "slash" : cls == "assassin" ? "stab" : cls == "archer" ? "shoot" : "magic";
 
         /// <summary>
         /// 標出所有敵人（Boss、電腦對手、每一隻小怪）：

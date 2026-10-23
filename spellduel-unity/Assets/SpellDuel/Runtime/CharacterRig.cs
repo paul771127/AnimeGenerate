@@ -609,17 +609,38 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 初心者：右手一根木棍、腰間小布包（沒有盾）
         void BuildNovice()
         {
-            var stick = Pivot("Sword", handR, new Vector3(0f, -0.04f, 0f));   // 叫 Sword：揮砍動作沿用劍士的
-            Part(PrimitiveType.Cylinder, stick, new Vector3(0f, 0f, 0.26f), new Vector3(0.034f, 0.34f, 0.034f), Mat(new Color(0.55f, 0.38f, 0.2f), 0.2f), new Vector3(90f, 0f, 0f));
-            Part(PrimitiveType.Sphere, stick, new Vector3(0f, 0f, 0.6f), new Vector3(0.05f, 0.05f, 0.06f), Mat(new Color(0.47f, 0.32f, 0.17f), 0.2f));
-            Part(PrimitiveType.Cylinder, stick, new Vector3(0f, 0f, 0.02f), new Vector3(0.04f, 0.05f, 0.04f), Mat(Leather), new Vector3(90f, 0f, 0f));   // 握把纏布
-            var bag = Pivot("Satchel", body, new Vector3(-0.17f, 0.9f, 0.04f));
-            Part(PrimitiveType.Cube, bag, Vector3.zero, new Vector3(0.09f, 0.1f, 0.06f), Mat(new Color(0.6f, 0.47f, 0.3f), 0.15f));
-            Part(PrimitiveType.Cube, bag, new Vector3(0f, 0.035f, 0.031f), new Vector3(0.09f, 0.04f, 0.008f), Mat(new Color(0.5f, 0.38f, 0.24f), 0.15f));
-            baseR = new Arm(-10f, 8f, -40f, 0f); swingR = 0.6f;
-            baseL = new Arm(0f, 8f, -15f, 0f); swingL = 0.5f;
-            chargeR = new Arm(-150f, 10f, -30f, 0f);
-            castR = new Arm(-45f, -10f, 0f, 45f);
+            var bark = Mat(new Color(.49f,.32f,.18f), .12f);
+            var cut = Mat(new Color(.80f,.64f,.39f), .12f);
+            var linen = Mat(new Color(.94f,.87f,.68f), .12f);
+            var leather = Mat(new Color(.47f,.34f,.23f), .12f);
+            // Hand socket stays named Sword. Three bent segments, a trimmed knot and a cut end.
+            var stick = Pivot("Sword", handR, new Vector3(0f,-.04f,0f));
+            var wood = new[] {new Vector3(0,0,-.07f),new Vector3(.009f,0,.14f),new Vector3(-.008f,.012f,.34f),new Vector3(.020f,.008f,.55f)};
+            for(int i=0;i<3;i++)Seg(stick,wood[i],wood[i+1],.032f-i*.003f,bark);
+            Seg(stick,new Vector3(-.005f,.008f,.29f),new Vector3(-.065f,.028f,.35f),.018f,bark);
+            Part(PrimitiveType.Sphere,stick,new Vector3(.020f,.008f,.55f),new Vector3(.030f,.027f,.014f),cut);
+            for(int i=0;i<4;i++)Part(PrimitiveType.Cylinder,stick,new Vector3(0,0,-.015f+i*.018f),new Vector3(.039f,.008f,.039f),linen,new Vector3(90,0,i*9));
+            // Soft shoulder bag: rounded canvas volume, fitted flap, strap and a single fastening.
+            var bag=Pivot("Satchel",spine,new Vector3(-.18f,.11f,.065f));
+            Part(PrimitiveType.Sphere,bag,Vector3.zero,new Vector3(.17f,.19f,.09f),Mat(new Color(.52f,.63f,.40f),.12f));
+            Part(PrimitiveType.Sphere,bag,new Vector3(0,.053f,.035f),new Vector3(.17f,.09f,.024f),Mat(new Color(.68f,.75f,.48f),.12f));
+            Seg(bag,new Vector3(0,.05f,.052f),new Vector3(0,-.028f,.052f),.012f,leather);
+            Part(PrimitiveType.Sphere,bag,new Vector3(0,.002f,.058f),new Vector3(.024f,.020f,.01f),cut);
+            Seg(spine,new Vector3(.12f,.48f,.10f),new Vector3(-.02f,.30f,.139f),.022f,leather);
+            Seg(spine,new Vector3(-.02f,.30f,.139f),new Vector3(-.17f,.13f,.13f),.022f,leather);
+            Seg(spine,new Vector3(.12f,.48f,-.09f),new Vector3(-.17f,.13f,-.11f),.022f,leather);
+            var flask=Pivot("WaterFlask",spine,new Vector3(.18f,.10f,-.02f));
+            Part(PrimitiveType.Sphere,flask,Vector3.zero,new Vector3(.09f,.12f,.06f),Mat(new Color(.56f,.44f,.32f),.12f));
+            Part(PrimitiveType.Cylinder,flask,new Vector3(0,.069f,0),new Vector3(.027f,.015f,.027f),cut);
+            Seg(spine,new Vector3(.15f,.12f,.02f),new Vector3(.18f,.17f,-.02f),.012f,leather);
+            var roll=Pivot("BandageRoll",bag,new Vector3(-.015f,-.045f,-.055f));
+            Part(PrimitiveType.Cylinder,roll,Vector3.zero,new Vector3(.062f,.052f,.062f),linen,new Vector3(0,0,90));
+            Part(PrimitiveType.Cylinder,roll,new Vector3(-.054f,0,0),new Vector3(.023f,.002f,.023f),leather,new Vector3(0,0,90));
+            baseR=new Arm(5f,13f,-27f,-5f);baseL=new Arm(-5f,15f,-23f,4f);
+            swingR=.44f;swingL=.72f;
+            chargeR=new Arm(-105f,28f,-86f,-10f);chargeL=new Arm(-42f,-12f,-48f,0f);
+            castR=new Arm(-66f,-18f,-12f,38f);castL=new Arm(-22f,18f,-35f,0f);
+            guardL=new Arm(-55f,-12f,-70f,0f);guardR=new Arm(-42f,17f,-62f,0f);
         }
 
         // ---------------------------------------------------------------- 劍士：頭盔羽飾、護肩、胸甲、劍、圓盾

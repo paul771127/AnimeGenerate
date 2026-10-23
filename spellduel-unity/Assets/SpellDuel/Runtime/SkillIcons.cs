@@ -49,8 +49,10 @@ namespace SpellDuel
             Background(cv, cc, sc, skillId);
             switch (skillId)
             {
-                case "nv_swing": Slash(cv, sc); break;   // 初心者：木棍揮擊（借斬擊的圖）
-                case "nv_aid": Heal(cv, sc); break;      // 初心者：急救（借治癒的圖）
+                case "nv_swing": NoviceClub(cv); break;
+                case "nv_aid": NoviceBandage(cv); break;
+                case "na_pebble": NoviceStone(cv,false); break;
+                case "nv_stone": NoviceStone(cv,true); break;
                 case "quickshot": QuickShot(cv, sc); break;
                 case "snipe": Snipe(cv, sc); break;
                 case "triple": Triple(cv, sc); break;
@@ -137,6 +139,33 @@ namespace SpellDuel
             Tri(x, y, cx, cy + s * 0.35f, cx - s * 0.30f, cy - s * 0.15f, cx + s * 0.30f, cy - s * 0.15f),
             Math.Min(Seg(x, y, cx - s * 0.10f, cy, cx - s * 0.27f, cy - s * 0.55f),
                      Seg(x, y, cx + s * 0.10f, cy, cx + s * 0.27f, cy - s * 0.55f)) - s * 0.065f));
+
+        static void NoviceClub(Cv cv)
+        {
+            var wood=V.Hex("#b8824d");var wrap=V.Hex("#ead8aa");
+            Glyph(cv,(x,y)=>Math.Abs(Ellipse(x,y,.02f,.14f,.60f,.40f))-.023f,wood*.85f,.70f);
+            Stroke(cv,-.38f,-.54f,.34f,.48f,.085f,wood);
+            Stroke(cv,.16f,.22f,.39f,.22f,.038f,wood);
+            for(int i=0;i<3;i++)Stroke(cv,-.36f+i*.065f,-.42f+i*.075f,-.22f+i*.065f,-.50f+i*.075f,.025f,wrap);
+            Stroke(cv,.10f,.20f,.27f,.43f,.014f,wrap);
+        }
+        static readonly float[] NoviceRock = {-.34f,-.28f,-.42f,.10f,-.12f,.39f,.24f,.32f,.43f,.04f,.26f,-.32f,-.10f,-.40f};
+        static void NoviceStone(Cv cv,bool heavy)
+        {
+            var rock=V.Hex(heavy?"#c87c51":"#c5cbbf");float s=heavy?1f:.76f;
+            for(int i=0;i<3;i++)Stroke(cv,-.71f,-.35f+i*.20f,-.38f,-.25f+i*.20f,.020f,rock*.8f);
+            Glyph(cv,(x,y)=>Poly(x/s,y/s,NoviceRock),rock);
+            Stroke(cv,-.12f*s,.23f*s,.12f*s,.07f*s,.020f,V.White);
+            if(heavy){Stroke(cv,.12f,.07f,.02f,-.16f,.025f,V.Hex("#e9ad69"));Glyph(cv,(x,y)=>Diamond(x,y,.55f,-.36f,.075f,.09f,.4f),rock);}
+        }
+        static void NoviceBandage(Cv cv)
+        {
+            var linen=V.Hex("#e9dfb6");var sage=V.Hex("#75b28a");
+            Glyph(cv,(x,y)=>Box(x,y,-.06f,-.04f,.39f,.15f,-.45f,.07f),linen);
+            Glyph(cv,(x,y)=>Math.Abs(Ellipse(x,y,-.28f,.25f,.22f,.20f))-.075f,linen);
+            for(int i=0;i<3;i++)Stroke(cv,-.14f+i*.10f,-.12f+i*.04f,-.07f+i*.10f,.10f+i*.04f,.012f,sage*.8f);
+            CrossMark(cv,.36f,.26f,.20f,sage);
+        }
 
         static void ShieldBash(Cv cv, V sc)
         {

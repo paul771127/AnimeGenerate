@@ -21,8 +21,11 @@ namespace SpellDuel
             {
                 case "na_mage": case "pet_fire": case "pet_blast": return "mage";
                 case "na_sword": case "pet_golem": return "swordsman";
-                case "na_arrow": case "pet_falcon": case "na_pebble": case "nv_stone": return "archer";
-                case "nv_swing": return "swordsman";
+                case "na_arrow": case "pet_falcon": return "archer";
+                case "na_pebble": return "novice";
+                case "nv_stone": return "novice_stone";
+                case "nv_swing": return "novice_swing";
+                case "nv_aid": return "novice_aid";
                 case "na_holy": return "priest";
                 case "na_dagger": case "fogtick": return "assassin";
             }
@@ -48,6 +51,11 @@ namespace SpellDuel
             var root = anim.transform;
             var light = Color.Lerp(color, Color.white, 0.5f);
 
+            if(classId=="novice"||classId=="novice_stone"||classId=="novice_swing"||classId=="novice_aid")
+            {
+                NoviceHit(anim,root,classId,s);
+                return;
+            }
             // 共通：極短的白色閃光（打擊瞬間）
             var pop = NewPS(root, "Pop", AddMat(TexSoft), 2, false);
             Flash(pop, Color.white, 0.55f * s, 0.09f);
@@ -72,6 +80,24 @@ namespace SpellDuel
                 Stars(root, Color.white, s, 2, 0.35f, 0.5f, 0.7f);
                 anim.AddRing(root, Circle(48, 1f), true, 0.04f * s, Color.white, 0.03f, 0.3f, 0.1f * s, 1.1f * s);
             }
+        }
+
+        static void NoviceHit(FxAnim anim,Transform root,string kind,float s)
+        {
+            if(kind=="novice_aid"){NoviceCue(anim,root,kind,s);return;}
+            if(kind=="novice_swing")NoviceCue(anim,root,kind,s*.7f);
+            // A few opaque-looking chips and one short, translucent dust puff; no holy pillar/steel sparks.
+            var dust=NewPS(root,"Novice impact dust",BlendMat(TexSoft),8,true);
+            var m=dust.main;m.startLifetime=new ParticleSystem.MinMaxCurve(.18f,.32f);
+            m.startSpeed=new ParticleSystem.MinMaxCurve(.12f*s,.55f*s);
+            m.startSize=new ParticleSystem.MinMaxCurve(.08f*s,.17f*s);
+            m.startColor=new Color(.64f,.55f,.43f,.35f);Sphere(dust,.035f*s);FadeOut(dust);SizeCurve(dust,Grow);dust.Emit(kind=="novice_stone"?7:4);
+            var chips=NewPS(root,"Novice chips",BlendMat(TexLeaf),8,true);
+            var c=chips.main;c.startLifetime=new ParticleSystem.MinMaxCurve(.16f,.30f);
+            c.startSpeed=new ParticleSystem.MinMaxCurve(.7f*s,1.6f*s);c.startSize=new ParticleSystem.MinMaxCurve(.025f*s,.05f*s);
+            c.startRotation=new ParticleSystem.MinMaxCurve(0,Mathf.PI);c.gravityModifier=.65f;
+            c.startColor=kind=="novice_stone"?new Color(.75f,.43f,.29f):kind=="novice_swing"?new Color(.58f,.40f,.23f):new Color(.73f,.75f,.70f);
+            Sphere(chips,.035f*s);FadeOut(chips);chips.Emit(kind=="novice_stone"?7:4);
         }
 
         /// <summary>微彎的斬痕（本地 X 方向，長度 2，中間往上拱）</summary>

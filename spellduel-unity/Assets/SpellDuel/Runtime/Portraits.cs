@@ -128,6 +128,7 @@ namespace SpellDuel
         {
             switch(Key(key))
             {
+                case "novice": return new Persona(1.01f,.975f,1f,1.02f,-1f,.04f,-2f,0f,.42f,0f,1f,-2f,-1f,1f,.025f,1f);
                 case "嚮導": return new Persona(1f,1f,1f,0.92f,0f,0f,-1f,0f,0.3f,0f,0f,0f,0f,0f,.04f,1f);
                 case "教官": return new Persona(1f,1f,1f,0.91f,0f,0f,3f,0f,0f,0f,0f,0f,0f,0f,.04f,1f);
                 case "懸賞官": return new Persona(1f,1f,1f,0.96f,0f,0f,1f,0f,0.15f,0f,0f,0f,0f,0f,.04f,1f);
@@ -428,6 +429,14 @@ namespace SpellDuel
             var look=CharacterLook.Get(id);var hair=new Paint(look.HairColor.r,look.HairColor.g,look.HairColor.b);
             var main=OutfitArt.Get(id).Main;var cloth=new Paint(main.r,main.g,main.b);
             Bust(cv,Paint.Hex("#f3c89f"),hair,cloth,new Paint(look.Iris.r,look.Iris.g,look.Iris.b));
+            if(id=="novice")
+            {
+                // Same canvas bag strap and folded collar as the 3D traveler.
+                var leather=Paint.Hex("#786044");var linen=Paint.Hex("#d9ceaa");
+                cv.Line(.28f,-.50f,-.30f,-.96f,.045f,leather);
+                cv.Line(-.14f,-.48f,.02f,-.69f,.018f,linen);
+                cv.Line(.02f,-.69f,.08f,-.77f,.010f,leather);
+            }
 
         }
         static void FacilityPortrait(Canvas cv,string id)

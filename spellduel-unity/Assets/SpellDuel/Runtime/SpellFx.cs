@@ -37,6 +37,11 @@ namespace SpellDuel
             var root = anim.transform;
             var light = Color.Lerp(skillColor, Color.white, 0.5f);
 
+            if(classId=="novice"||classId=="novice_stone"||classId=="novice_swing"||classId=="novice_aid")
+            {
+                NoviceCue(anim,root,classId,s);
+                return;
+            }
             // 共用：中心閃光
             var core = NewPS(root, "Flash", AddMat(TexSoft), 3, false);
             Flash(core, light, 0.45f * s, 0.16f);
@@ -734,9 +739,17 @@ namespace SpellDuel
                 case "na_pebble":
                 case "nv_stone":
                 {
-                    // 初心者的小石子／投石：不發光的石塊，邊飛邊翻滾
-                    GlowPart(body, "rock", m => m.Lathe(SphereProf(0.5f, 5), 6, (z, j) => new Color(1f, 1f, 1f, 1f)), sc);
-                    anim.spin = body; anim.spinAxis = Vector3.right; anim.spinSpeed = 540f;
+                    bool heavy=id=="nv_stone";
+                    // Opaque, faceted stone: no additive shell, glow or magic projectile decoration.
+                    SolidPart(body,"novice.rock."+id,m=>m.Lathe(
+                        Prof(-.48f,0,-.32f,.34f,-.08f,.48f,.25f,.40f,.46f,.19f,.50f,0),7,
+                        (z,j)=>j%3==0?new Color(.78f,.73f,.64f):new Color(.53f,.52f,.48f),
+                        1f,.83f,12f,Jag9),new[]{heavy?new Color(.77f,.43f,.28f):new Color(.80f,.82f,.77f)});
+                    if(heavy)SolidPart(body,"novice.rock.vein",m=>{
+                        m.Tri(new Vector3(-.20f,.28f,-.24f),new Vector3(.07f,.39f,.04f),new Vector3(-.02f,.31f,.21f),Color.white);
+                        m.Tri(new Vector3(.31f,.13f,-.13f),new Vector3(.32f,.16f,.17f),new Vector3(.22f,.27f,.12f),Color.white);
+                    },new[]{new Color(.85f,.51f,.30f)});
+                    anim.spin=body;anim.spinAxis=new Vector3(.8f,.3f,.2f);anim.spinSpeed=heavy?410f:570f;
                     break;
                 }
                 default:
@@ -753,8 +766,38 @@ namespace SpellDuel
             }
             if (anim.flick != null) anim.flickBase = anim.flick.localScale;
             if (anim.spin == null && anim.flick == null && anim.jitter == null) anim.enabled = false;
-            DecorateProjectile(root, string.IsNullOrEmpty(classId) ? (s != null ? s.cls : "mage") : classId, sc, Mathf.Max(0.03f, radius));
+            if(id!="na_pebble"&&id!="nv_stone")DecorateProjectile(root, string.IsNullOrEmpty(classId) ? (s != null ? s.cls : "mage") : classId, sc, Mathf.Max(0.03f, radius));
             return root;
+        }
+
+        public static string NoviceStyle(string skillId) => skillId=="nv_swing"?"novice_swing":skillId=="nv_aid"?"novice_aid":skillId=="nv_stone"?"novice_stone":"novice";
+
+        // Small physical cues instead of a trained profession's magic crest or sword light.
+        static void NoviceCue(FxAnim anim,Transform root,string kind,float s)
+        {
+            if(kind=="novice_aid")
+            {
+                var sage=new Color(.45f,.74f,.51f,.72f);
+                for(int band=0;band<2;band++)
+                {
+                    var wrap=new Vector3[20];
+                    for(int i=0;i<wrap.Length;i++){float t=i/(float)(wrap.Length-1),a=t*Mathf.PI*2.4f+band*Mathf.PI;wrap[i]=new Vector3(Mathf.Cos(a)*.30f,t*.55f-.28f,Mathf.Sin(a)*.30f)*s;}
+                    anim.AddSlash(root,wrap,.035f*s,new Color(.83f,.91f,.71f,.8f),band*.10f,.65f,1f,1f,0);
+                }
+                var bar=new[]{new Vector3(-.12f,0,0),new Vector3(.12f,0,0)};
+                anim.AddSlash(root,bar,.055f*s,sage,.12f,.65f,s,s,0);
+                anim.AddSlash(root,bar,.055f*s,sage,.12f,.65f,s,s,90);
+                return;
+            }
+            if(kind=="novice_swing")
+            {
+                anim.AddSlash(root,SlashPts(.20f,10),.055f*s,new Color(.67f,.49f,.30f,.70f),0,.18f,.18f*s,.48f*s,-28);
+                anim.AddSlash(root,SlashPts(.18f,10),.018f*s,new Color(.86f,.74f,.52f,.65f),.025f,.14f,.16f*s,.43f*s,-28);
+                return;
+            }
+            var dust=NewPS(root,"Novice throw dust",BlendMat(TexSoft),5,true);
+            var m=dust.main;m.startLifetime=.18f;m.startSpeed=.35f*s;m.startSize=.035f*s;
+            m.startColor=new Color(.72f,.65f,.52f,.35f);Sphere(dust,.025f*s);FadeOut(dust);dust.Emit(kind=="novice_stone"?4:2);
         }
 
         // ---------------------------------------------------------------- 法術造型的零件
@@ -1732,6 +1775,12 @@ namespace SpellDuel
 
             switch (cls)
             {
+                case "novice":
+                    // A quiet aiming arc, not a spell circle: readable while learning to throw.
+                    var guide=new[]{new Vector3(-.13f,-.06f,0),new Vector3(-.10f,.05f,0),new Vector3(0,.11f,0),new Vector3(.10f,.05f,0),new Vector3(.13f,-.06f,0)};
+                    for(int i=0;i<guide.Length;i++)guide[i]*=s;
+                    AddLine(SpellFx.Line(disc,"Novice aim",guide,false,.010f*s,new Color(.78f,.70f,.49f,.5f),false,true),new Color(.78f,.70f,.49f,.5f));
+                    break;
                 case "archer": BuildArcher(disc, col, s); break;
                 case "assassin": BuildAssassin(disc, col, s); break;
                 case "swordsman": BuildSwordsman(disc, col, s); break;
