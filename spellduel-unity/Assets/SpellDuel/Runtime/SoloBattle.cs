@@ -1977,7 +1977,7 @@ namespace SpellDuel
                 Me.cooldownUntil.TryGetValue(basic.id, out var cdBefore);
                 if (pose || (Skills.IsSwipeBasic(basic) && swiped)) DoBasic(basic);
                 if (swiped && stickBasic && Me.cooldownUntil.TryGetValue(basic.id, out var bcd) && bcd == cdBefore && bcd > battle.now + 0.05f)
-                    floaters.Add(new Floater { text = $"⏳ {bcd - battle.now:0.0} 秒後才能再敲", color = new Color(0.8f, 0.8f, 0.85f), born = Time.time, screen = true });   // 還在冷卻：告訴玩家為什麼沒反應
+                    floaters.Add(new Floater { text = $"⏳ 集氣中：手掌變紅才能敲（還要 {bcd - battle.now:0.0} 秒）", color = new Color(0.8f, 0.8f, 0.85f), born = Time.time, screen = true });   // 還在冷卻：告訴玩家為什麼沒反應
             }
             // 手勢放招：往放招動作的瞄準點放
             if (Hand.ConsumeRelease())
@@ -3276,6 +3276,7 @@ namespace SpellDuel
             UiKit.Text(new Rect(ix, y, iw, lh * 0.8f), StatusText(en, now), fsS, new Color(0.75f, 0.85f, 1f));
             if (daily != null) DrawDailyHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 每日挑戰：計時、分數、獎牌（蓋在敵人卡片上）
             if (tutorial && phase == Phase.Fighting) DrawTutorialHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 教學關：第幾步、要做什麼
+            if (phase == Phase.Fighting) DrawPalmCharge(fs);   // 初心者普攻：手掌集氣指示（SoloBattle.SwipeTrail.cs）
             // 合作：隊友的血量（在敵人卡片下方）
             if (coop)
             {

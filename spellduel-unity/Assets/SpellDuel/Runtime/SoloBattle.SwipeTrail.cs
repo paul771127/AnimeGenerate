@@ -51,6 +51,48 @@ namespace SpellDuel
             for (int i = 0; i < trailPts.Count; i++) swipeTrail.SetPosition(i, trailPts[i].p);
         }
 
+        // ---------------------------------------------------------------- 初心者普攻的集氣指示
+        // 畫面上的手掌：集氣中＝灰色圓圈，紅色從中間慢慢長大；集氣完成＝閃一下（白→紅、輕震、音效），之後持續發紅脈動＝可以揮
+        float palmCdStart, palmCdEnd, palmReadyAt = -9f; bool palmWasReady = true;
+
+        void DrawPalmCharge(int fs)
+        {
+            var basic = Me?.basic ?? Skills.BasicOf(myClass);
+            if (basic == null || basic.id != "na_stick" || battle == null || Me == null || !Me.Alive) return;
+            float now = battle.now;
+            Me.cooldownUntil.TryGetValue(basic.id, out var cd);
+            if (cd > now && cd != palmCdEnd) { palmCdStart = now; palmCdEnd = cd; }   // 剛敲完：開始集氣
+            bool ready = cd <= now && Me.charging == null;
+            if (ready && !palmWasReady && Event.current.type == EventType.Repaint)
+            {
+                palmReadyAt = Time.time;   // 集氣完成的那一刻：閃一下
+                Sfx.Play("charged", 0.45f, 1.4f); Haptics.Play(Haptics.Kind.Light);
+            }
+            if (Event.current.type == EventType.Repaint) palmWasReady = ready;
+            if (Hand == null || !Hand.HandVisible) return;
+            float H = Screen.height;
+            var c = new Vector2(Hand.Palm.x, H - Hand.Palm.y);
+            float r = fs * 2.6f;
+            if (!ready)
+            {
+                float k = palmCdEnd > palmCdStart ? Mathf.Clamp01((now - palmCdStart) / (palmCdEnd - palmCdStart)) : 1f;
+                UiKit.Disc(new Rect(c.x - r, c.y - r, r * 2, r * 2), new Color(0.6f, 0.6f, 0.65f, 0.25f));
+                float rr = r * Mathf.Lerp(0.15f, 0.9f, k);
+                UiKit.Disc(new Rect(c.x - rr, c.y - rr, rr * 2, rr * 2), new Color(1f, 0.25f, 0.2f, 0.25f + 0.25f * k));
+                return;
+            }
+            float since = Time.time - palmReadyAt;
+            if (since < 0.35f)
+            {
+                // 閃一下：白色光圈往外擴散
+                float e = since / 0.35f, fr = r * (1f + 0.8f * e);
+                UiKit.Disc(new Rect(c.x - fr, c.y - fr, fr * 2, fr * 2), new Color(1f, 0.95f, 0.85f, 0.75f * (1f - e)));
+            }
+            float pulse = 0.45f + 0.15f * Mathf.Sin(Time.time * 9f);
+            UiKit.Disc(new Rect(c.x - r, c.y - r, r * 2, r * 2), new Color(1f, 0.15f, 0.1f, pulse));
+            UiKit.Text(new Rect(c.x - r, c.y + r * 0.9f, r * 2, fs * 1.3f), "揮！", fs, Color.white, TextAnchor.MiddleCenter, true);
+        }
+
         void ClearSwipeTrail() { trailPts.Clear(); if (swipeTrail) swipeTrail.enabled = false; }
     }
 }

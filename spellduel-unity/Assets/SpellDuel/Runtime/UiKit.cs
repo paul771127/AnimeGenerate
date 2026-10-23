@@ -167,6 +167,11 @@ namespace SpellDuel
         {
             if(Event.current.type!=EventType.Repaint)return;var keep=GUI.color;GUI.color=c;GUI.DrawTexture(r,Texture2D.whiteTexture);GUI.color=keep;
         }
+        /// <summary>實心圓（光暈、集氣指示用）</summary>
+        public static void Disc(Rect r,Color c)
+        {
+            Init();if(Event.current.type!=EventType.Repaint)return;var keep=GUI.color;GUI.color=c;GUI.DrawTexture(r,circle);GUI.color=keep;
+        }
         public static void Gem(Rect r,Color c)
         {
             Init();if(Event.current.type!=EventType.Repaint)return;var keep=GUI.color;GUI.color=c;GUI.DrawTexture(r,diamond);GUI.color=keep;

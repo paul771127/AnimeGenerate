@@ -297,7 +297,7 @@ namespace SpellDuel
                 case 5: return stoneLesson ? "對著手機唸「投石」開始蓄力（技能名稱）" : $"對著手機唸出技能名稱開始詠唱：{names}";
                 case 6: return $"詠唱中：{(Me.charging != null ? HandGesture.ReleaseHint(Me.charging) : "先唸技能名稱")}（把技能放出去）";
                 case 8: return $"初心者的普攻是近戰：先走到木頭人前面（{MeleeNear:0.#} 公尺內，現在 {dist:F1}m）";
-                case 9: return $"普攻「木棍敲擊」：手掌張開，在鏡頭前快速橫劃一下 → 出現刀線、木棍照線敲下去（每 1.1 秒一次）。打中 3 次（{Mathf.Max(0, dummyHits - tutDummyAt)}/3）"
+                case 9: return $"普攻「木棍敲擊」：手掌張開，在鏡頭前快速橫劃一下 → 木棍馬上敲下去。畫面上的手掌變紅＝集氣完成可以敲（約 2 秒一次）。打中 3 次（{Mathf.Max(0, dummyHits - tutDummyAt)}/3）"
                         + (dist > MeleeNear + 0.3f ? "　⚠ 太遠了，走近一點" : "");
                 case 10: return $"站在遠處（2 公尺外，現在 {dist:F1}m），唸「投石」→ 握拳再張開，用石頭打中木頭人 3 次（{Mathf.Max(0, dummyHits - tutDummyAt)}/3）";
                 default: return $"用普攻（手勢）或技能打中木頭人 3 次（{Mathf.Max(0, dummyHits - tutDummyAt)}/3）";

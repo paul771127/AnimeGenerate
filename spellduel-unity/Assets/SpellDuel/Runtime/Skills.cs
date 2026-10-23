@@ -252,7 +252,7 @@ namespace SpellDuel
             P(new SkillDef { id = "na_arrow", cls = "basic", name = "普通箭", type = SkillType.Projectile, color = C("#d9f99d"), cost = 0, damage = 9, charge = 0f, cooldown = 2f, speed = 16f, radius = 0.1f, rangeMax = 14f, desc = "獵人普攻：比 5（張開手掌），每 2 秒自動射出一箭" });
             // 初心者（10 級前）：普攻＝木棍敲擊（和劍士普攻一樣手掌劃一下、照刀線砍，不會砍掉法球）＋木棍揮擊、投石、急救
             // （丟小石子 na_pebble 保留定義，舊的特效／圖示還用得到）
-            P(new SkillDef { id = "na_stick", cls = "basic", name = "木棍敲擊", type = SkillType.Projectile, color = C("#c08a52"), cost = 0, damage = 7, charge = 0f, cooldown = 1.1f, radius = 1f, rangeMax = 1f, desc = "初心者普攻：手掌在鏡頭前劃一下，用木棍敲手劃過的那條線（1m 內，每 1.1 秒）；不會砍掉法球" });
+            P(new SkillDef { id = "na_stick", cls = "basic", name = "木棍敲擊", type = SkillType.Projectile, color = C("#c08a52"), cost = 0, damage = 12, charge = 0f, cooldown = 2f, radius = 1f, rangeMax = 1f, desc = "初心者普攻：畫面上的手掌變紅（集氣完成）時，手掌在鏡頭前劃一下，用木棍敲手劃過的那條線（1m 內；約 2 秒集氣一次，敏捷越高越快）；不會砍掉法球" });
             P(new SkillDef { id = "na_pebble", cls = "basic", name = "丟小石子", type = SkillType.Projectile, color = C("#c9ccc3"), cost = 0, damage = 6, charge = 0f, cooldown = 2f, speed = 10f, radius = 0.1f, rangeMax = 10f, desc = "初心者普攻：比 5（張開手掌），每 2 秒丟出一顆小石子" });
             P(new SkillDef { id = "nv_swing", cls = "novice", name = "木棍揮擊", type = SkillType.Projectile, color = C("#c08a52"), cost = 8, damage = 16, charge = 0f, cooldown = 1.2f, speed = 8f, radius = 0.3f, rangeMax = 1.8f, desc = "用木棍砍前方半球（半徑 1.8m）內的敵人；不用蓄力，手刀劈過就出招" });
             P(new SkillDef { id = "nv_stone", cls = "novice", name = "投石", type = SkillType.Projectile, color = C("#c87950"), cost = 10, damage = 15, charge = 0.6f, cooldown = 1.5f, speed = 11f, radius = 0.14f, rangeMax = 11f, desc = "用力丟出一顆石頭，飛得比普攻遠、比普攻痛" });
