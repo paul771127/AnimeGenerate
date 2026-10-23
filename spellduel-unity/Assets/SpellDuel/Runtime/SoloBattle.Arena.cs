@@ -119,6 +119,9 @@ namespace SpellDuel
 
         // ---------------------------------------------------------------- 劍士的刀線
         /// <summary>劍士揮砍的刀線：出手＝亮白一閃；電腦出手前的預警＝紅線（蹲下或退開）</summary>
+        /// <summary>自己的刀線畫在眼前多遠（m）</summary>
+        const float OwnSlashDraw = 0.6f;
+
         void ShowSlashLine(Fighter f, Vector3 a, Vector3 b, Vector3 o, bool warn)
         {
             const int N = 16;
@@ -129,6 +132,9 @@ namespace SpellDuel
             lr.widthMultiplier = warn ? 0.035f : 0.06f;
             float reach = (a - o).magnitude;
             Vector3 da = (a - o).normalized, db = (b - o).normalized;
+            // 自己的刀線：畫在眼前（約 0.6m，正好疊在手劃過的位置），不要畫在刀尖那一圈（手往下劃時會落到地上）
+            // 判定不變：整個扇面（從頭部出發到刀尖）都砍得到
+            if (f == Me) { reach = Mathf.Min(reach, OwnSlashDraw); lr.widthMultiplier = warn ? 0.015f : 0.03f; }
             for (int i = 0; i <= N; i++) lr.SetPosition(i, WorldFrame.FromWorld(o + Vector3.Lerp(da, db, i / (float)N).normalized * reach));
             // 敵人的預警＝紅色；自己的預警＝職業色半透明（告訴你刀線在哪、還沒砍下）
             var c = warn ? (f == Me ? new Color(f.cls.color.r, f.cls.color.g, f.cls.color.b, 0.5f) : new Color(1f, 0.25f, 0.2f, 0.85f)) : Color.Lerp(f.cls.color, Color.white, 0.6f);
@@ -139,7 +145,7 @@ namespace SpellDuel
             if (novice && !warn)
             {
                 var mid = o + Vector3.Lerp(da, db, 0.5f).normalized * reach;
-                SpellFx.CastBurst("novice_swing", c, WorldFrame.FromWorld(Vector3.Lerp(o, mid, 0.6f)), WorldFrame.DirFromWorld(Fighter.Flat(mid - o).normalized), 0.8f);
+                SpellFx.CastBurst("novice_swing", c, WorldFrame.FromWorld(f == Me ? mid : Vector3.Lerp(o, mid, 0.6f)), WorldFrame.DirFromWorld(Fighter.Flat(mid - o).normalized), 0.8f);
             }
             go.AddComponent<SlashLineFade>().Begin(lr, warn ? Mathf.Max(0.2f, f.windupUntil - battle.now) : 0.25f, c);
             if (warn) { Sfx.Play("cast_swordsman", 0.3f, 0.7f); if (f != Me) Sfx.Play("blade_warn", 0.7f); }   // 敵人的預警：拔刀聲
