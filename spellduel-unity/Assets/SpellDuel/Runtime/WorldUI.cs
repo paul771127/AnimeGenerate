@@ -22,6 +22,8 @@ namespace SpellDuel
         public Action OnStartTrial;              // 出發挑戰轉職試煉
         public Action<string> OnJobChange;       // 初心者 10 級：選了職業（SoloBattle 換成那個職業）
         public Action<int> OnJobTrial;           // 初心者 10 級：挑戰轉職試煉的第幾輪（0 起算）
+        public Func<string, string> NpcQuestLabel;   // 初心者：這位居民的任務按鈕文字（沒有＝null）
+        public Action<string> OnNpcQuest;            // 初心者：點了任務按鈕（開任務對話）
         public string[] JobTrialNames, JobTrialDesc;
         string jobArm; float jobArmUntil;
 
@@ -297,7 +299,12 @@ namespace SpellDuel
                 var pr = new Rect(talkR.x + gap, talkR.y + gap * 0.5f, ps, ps);
                 GUI.DrawTexture(pr, Portraits.Get(t.npcs[npcTalk].name, "npc"), ScaleMode.ScaleToFit, true);
                 UiKit.Text(new Rect(pr.x - gap * 0.5f, pr.yMax, ps + gap, fs * 1.4f), t.npcs[npcTalk].name, fsS, t.color, TextAnchor.MiddleCenter, true);
-                UiKit.Text(new Rect(pr.xMax + gap, talkR.y, talkR.xMax - pr.xMax - gap * 2, talkR.height), $"「{t.npcs[npcTalk].lines[npcLine]}」", fsS, Color.white, TextAnchor.MiddleLeft);
+                string ql = NpcQuestLabel?.Invoke(t.npcs[npcTalk].name);
+                float qh = ql != null ? fs * 1.6f : 0f;
+                UiKit.Text(new Rect(pr.xMax + gap, talkR.y, talkR.xMax - pr.xMax - gap * 2, talkR.height - qh), $"「{t.npcs[npcTalk].lines[npcLine]}」", fsS, Color.white, TextAnchor.MiddleLeft);
+                // 初心者：這位居民有任務（接任務／進度／回報學招式）
+                if (ql != null && UiKit.Button(new Rect(pr.xMax + gap, talkR.yMax - qh - gap * 0.3f, talkR.xMax - pr.xMax - gap * 2, qh), ql, fsS, true, new Color(1f, 0.8f, 0.35f)))
+                    OnNpcQuest?.Invoke(t.npcs[npcTalk].name);
             }
             else UiKit.Text(new Rect(talkR.x + gap, talkR.y, talkR.width - gap * 2, talkR.height), "（點居民和他聊天，再點一次換下一句）", fsS, Color.white, TextAnchor.MiddleLeft);
             y += talkR.height + gap;
@@ -401,7 +408,8 @@ namespace SpellDuel
                     var lr = new Rect(g.x - lw / 2f, g.y - lh, lw, lh);
                     UiKit.Card(lr, isNear ? 0.8f : 0.45f, n.opens != null ? new Color(1f, 0.85f, 0.4f) : t.color, isNear ? 1f : 0.5f);
                     string icon = n.opens == "smith" ? "⚒ " : n.opens == "shop" ? "🧪 " : n.opens == "guild" ? "🏛 " : FacilityIcon(n.opens);
-                    UiKit.Text(lr, $"{icon}{n.name}\n{n.role}" + (isNear ? "\n💬 說「你好」" : ""), lf, isNear ? new Color(1f, 0.95f, 0.6f) : Color.white, TextAnchor.MiddleCenter, true);
+                    string qmark = NpcQuestLabel?.Invoke(n.name) != null ? "❗" : "";   // 初心者：有任務的居民
+                    UiKit.Text(lr, $"{qmark}{icon}{n.name}\n{n.role}" + (isNear ? "\n💬 說「你好」" : ""), lf, isNear ? new Color(1f, 0.95f, 0.6f) : Color.white, TextAnchor.MiddleCenter, true);
                 }
             // 建築招牌：走近（12m 內）時在屋頂上方顯示做什麼的、找誰；越近越清楚
             if (Cam != null)

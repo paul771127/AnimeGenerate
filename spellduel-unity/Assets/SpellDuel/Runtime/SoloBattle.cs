@@ -159,10 +159,12 @@ namespace SpellDuel
         }
         /// <summary>技能欄：基本 3 格＋（轉職後）進階技能 1 格</summary>
         bool AdvSlot => Array.Exists(SetupSkills, Advanced.IsAdvSkill);
-        int SlotCount => AdvSlot ? 4 : 3;
+        /// <summary>基本技能要選幾個：3 個（初心者還沒學滿 3 招＝學會幾招選幾招）</summary>
+        int BaseNeed => Mathf.Min(3, Array.FindAll(SetupSkills, id => !Advanced.IsAdvSkill(id)).Length);
+        int SlotCount => BaseNeed + (AdvSlot ? 1 : 0);
         int BaseCount => myLoadout.FindAll(id => !Advanced.IsAdvSkill(id)).Count;
         int AdvCount => myLoadout.FindAll(Advanced.IsAdvSkill).Count;
-        bool LoadoutReady => BaseCount == 3 && AdvCount == (AdvSlot ? 1 : 0);
+        bool LoadoutReady => BaseCount == BaseNeed && AdvCount == (AdvSlot ? 1 : 0);
 
         /// <summary>選一個技能：進階技能只有一格（換掉原本的）；基本技能最多 3 個（換掉最早選的）</summary>
         /// <summary>沒經過整備畫面就開打（例如從地圖直接進關卡）而技能沒選滿：照順序補滿，免得少技能</summary>
@@ -212,6 +214,7 @@ namespace SpellDuel
             }
             UpdateDungeonStory();   // 副本：房間的劇情字幕卡（SoloBattle.DungeonStory.cs）
             int dk = battle.kills - lastKillsSeen; lastKillsSeen = battle.kills;
+            if (dk > 0 && prof != null && prof.NoviceKills(dk, dropRng)) { Progress.SaveChar(prof); NoviceQuestTick(); }   // 初心者的招式任務（打倒／收集）
             QuestKills(dk);   // 副本任務：打倒幾隻敵人、收集東西
             for (int i = 0; i < dk; i++) { TryDrop(false); pendingGold += Economy.MinionGold(battle.wave); }
             if (dk > 0) { Sfx.Play("poof", 0.6f); Sfx.Play("coin", 0.35f, 1.1f); }   // 小怪倒下＋掉金幣
@@ -501,6 +504,8 @@ namespace SpellDuel
                 world.OnCharacter = () => charOpen = true;
                 world.OnStartTrial = () => OpenPrep("⚔ 轉職試煉", true, "轉職試煉不能使用道具", StartTrial);
                 world.OnJobChange = JobChange;
+                world.NpcQuestLabel = NoviceQuestLabel;
+                world.OnNpcQuest = n => NoviceQuestTalk(n);
                 world.OnJobTrial = StartJobTrial;
                 world.JobTrialNames = JobTrialNames; world.JobTrialDesc = JobTrialDesc;
                 WireVillage();
@@ -560,6 +565,7 @@ namespace SpellDuel
         /// <summary>打招呼：居民說完自己的話；店員說完打開設施</summary>
         void GreetNpc(TownWalk.Npc n)
         {
+            if (NoviceQuestTalk(n.name)) return;   // 初心者：居民教招式的任務（SoloBattle.NoviceQuests.cs）
             var lines = new List<StoryLine>();
             int k = n.lines.Length;
             for (int i = 0; i < k; i++) lines.Add(new StoryLine { speaker = n.name, tag = "npc", text = n.lines[(n.lineAt + i) % k] });
@@ -2926,7 +2932,7 @@ namespace SpellDuel
                 bool on = myLoadout.Contains(s.id);
                 float bw = (r.width - gap * 4) / 2f;
                 bool advSk = Advanced.IsAdvSkill(s.id);
-                bool full = advSk ? AdvCount >= 1 : BaseCount >= 3;
+                bool full = advSk ? AdvCount >= 1 : BaseCount >= Mathf.Max(1, BaseNeed);
                 if (UiKit.Button(new Rect(r.x + gap * 1.5f, by, bw, bh), on ? "移除這個技能" : full ? (advSk ? "換到進階技能格" : "換上這個技能") : "✔ 選這個技能", fs, !on, on ? new Color(1f, 0.5f, 0.45f) : s.color))
                 {
                     if (on) myLoadout.Remove(s.id);
@@ -3022,7 +3028,7 @@ namespace SpellDuel
             y += u * 1.5f + gap;
 
             // 技能卡片（2 欄）：圖示＋名稱／手勢→放招／數值
-            UiKit.Text(new Rect(pad, y, ProfileSetup?W*.51f-pad:W-pad*2, u), AdvSlot ? $"選 3 個技能＋1 個進階技能（{BaseCount}/3・{AdvCount}/1）" : $"選 3 個技能（{myLoadout.Count}/3）　點技能看詳細說明", fsS, new Color(1f, 0.9f, 0.6f));
+            UiKit.Text(new Rect(pad, y, ProfileSetup?W*.51f-pad:W-pad*2, u), AdvSlot ? $"選 3 個技能＋1 個進階技能（{BaseCount}/3・{AdvCount}/1）" : BaseNeed == 0 ? "還沒學會技能：到炎之里找居民解任務學招式（普攻可以直接用）" : BaseNeed < 3 ? $"選 {BaseNeed} 個技能（{myLoadout.Count}/{BaseNeed}）　到炎之里解任務可以學更多招" : $"選 3 個技能（{myLoadout.Count}/3）　點技能看詳細說明", fsS, new Color(1f, 0.9f, 0.6f));
             if (ProfileSetup)
             {
                 // 所有模式：角色養成（能力值、技能樹、裝備；和故事模式同一個角色）

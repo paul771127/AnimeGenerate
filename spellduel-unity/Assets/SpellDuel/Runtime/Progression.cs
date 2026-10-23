@@ -121,7 +121,7 @@ namespace SpellDuel
             "mage" => new[] { "fire", "wind", "ice" },
             "assassin" => new[] { "knife", "shadow", "smoke" },
             "priest" => new[] { "holy", "prayheal", "cleanse" },
-            "novice" => new[] { "nv_swing", "nv_stone", "nv_aid" },   // 初心者：沒有技能樹，3 招一開始就會
+            "novice" => new[] { "nv_swing", "nv_stone", "nv_aid" },   // 初心者：沒有技能樹，3 招要到炎之里解任務學（KnownSkills 只列學會的）
             _ => new string[0],
         };
 
@@ -795,6 +795,23 @@ namespace SpellDuel
         public bool CanChangeJob => cls == Skills.Novice && level >= Skills.JobLevel && jobTrial >= Skills.JobTrialRounds;
         /// <summary>初心者的轉職試煉通過了幾輪（0～3）</summary>
         public int jobTrial;
+        /// <summary>初心者：解任務學會的招式、接了還沒完成的任務（技能 id → 進度）</summary>
+        public readonly HashSet<string> noviceLearned = new HashSet<string>();
+        public readonly Dictionary<string, int> noviceQuest = new Dictionary<string, int>();
+
+        /// <summary>打倒了 n 隻敵人：打倒型任務 +n、收集型任務每隻有機率掉一個。回傳有沒有進度變化</summary>
+        public bool NoviceKills(int n, System.Random rng)
+        {
+            if (cls != Skills.Novice || n <= 0) return false;
+            bool changed = false;
+            foreach (var q in NoviceQuests.All)
+            {
+                if (!noviceQuest.TryGetValue(q.skill, out var have) || have >= q.need) continue;
+                if (q.kind == "kill") { noviceQuest[q.skill] = Mathf.Min(q.need, have + n); changed = true; }
+                else if (q.kind == "collect") for (int i = 0; i < n && noviceQuest[q.skill] < q.need; i++) if (rng.NextDouble() < NoviceQuests.CollectChance) { noviceQuest[q.skill]++; changed = true; }
+            }
+            return changed;
+        }
 
         /// <summary>轉職（選了不能換）：第一個進階技能直接學會</summary>
         public bool Advance(string advId)
@@ -925,6 +942,7 @@ namespace SpellDuel
         public List<string> KnownSkills()
         {
             var list = new List<string>(SkillTrees.Starters(cls));
+            if (cls == Skills.Novice) list.RemoveAll(id => !noviceLearned.Contains(id));   // 初心者：只會在炎之里解任務學到的招式
             var a = Adv; if (a != null) list.Add(a.skills[0]);   // 轉職時學會第一個進階技能
             foreach (var n in Nodes) if (n.kind == NodeKind.Learn && Rank(n.id) > 0 && !list.Contains(n.skill)) list.Add(n.skill);
             return list;
@@ -1058,6 +1076,8 @@ namespace SpellDuel
             if (!string.IsNullOrEmpty(adv)) sb.Append("adv=").Append(adv).Append('\n');
             if (trialPassed) sb.Append("trial=1\n");
             if (jobTrial > 0) sb.Append("jt=").Append(jobTrial).Append('\n');
+            foreach (var id in noviceLearned) sb.Append("nl=").Append(id).Append('\n');
+            foreach (var kv in noviceQuest) sb.Append("nq=").Append(kv.Key).Append(':').Append(kv.Value).Append('\n');
             foreach (var kv in ranks) sb.Append("rank=").Append(kv.Key).Append(':').Append(kv.Value).Append('\n');
             for (int i = 0; i < equipped.Length; i++) if (equipped[i] != null) sb.Append("eq").Append(i).Append('=').Append(equipped[i].Serialize()).Append('\n');
             return sb.ToString();
@@ -1086,6 +1106,8 @@ namespace SpellDuel
                         case "adv": if (Advanced.Get(v) != null && Advanced.Get(v).baseCls == cls) p.adv = v; break;
                         case "trial": p.trialPassed = v == "1"; break;
                         case "jt": p.jobTrial = Mathf.Clamp(int.Parse(v), 0, Skills.JobTrialRounds); break;
+                        case "nl": p.noviceLearned.Add(v); break;
+                        case "nq": { var a = v.Split(':'); if (a.Length == 2) p.noviceQuest[a[0]] = int.Parse(a[1]); break; }
                         default:
                             if (k.StartsWith("eq") && int.TryParse(k.Substring(2), out var slot) && slot >= 0 && slot < p.equipped.Length) p.equipped[slot] = Item.Parse(v);
                             break;
@@ -1095,6 +1117,47 @@ namespace SpellDuel
             }
             p.NormalizeSkillPoints();
             return p;
+        }
+    }
+
+    /// <summary>
+    /// 初心者的招式任務（炎之里的居民教）：接任務 → 完成 → 回去找他 → 學會那一招。
+    ///   小鐵 教 木棍揮擊（打倒 5 隻小怪）；米菈 教 投石（收集 3 塊熔岩碎石：打倒小怪 35% 掉一塊）；老焰 教 急救（通關故事 1-1）。
+    /// 狀態存在角色上（CharacterProfile.noviceQuest／noviceLearned）。
+    /// </summary>
+    public static class NoviceQuests
+    {
+        public class Quest
+        {
+            public string skill, npc, title, kind, item, stage; public int need;
+            public string[] offer, wait, done;
+        }
+        public const double CollectChance = 0.35;
+        public static readonly Quest[] All =
+        {
+            new Quest { skill = "nv_swing", npc = "小鐵", title = "小鐵的試刀", kind = "kill", need = 5,
+                offer = new[] { "你就是新來的冒險者？拿根木棍就想出門，太危險了！", "這樣吧：去外面打倒 5 隻小怪，回來我教你怎麼把木棍揮得像樣一點。" },
+                wait = new[] { "還差一點！打倒 5 隻小怪再回來。" },
+                done = new[] { "不錯嘛！來，木棍要這樣揮——用手刀往下劈，力氣從腰帶過來。", "學會「木棍揮擊」了！手刀劈下去就會出招。" } },
+            new Quest { skill = "nv_stone", npc = "米菈", title = "米菈的熔岩碎石", kind = "collect", item = "熔岩碎石", need = 3,
+                offer = new[] { "我在收熔岩碎石——森之里的人拿它當暖爐的芯。", "幫我從小怪身上找 3 塊回來吧？做為交換，我教你怎麼把石頭丟得又遠又準。" },
+                wait = new[] { "熔岩碎石還不夠喔。打倒小怪時有機會撿到。" },
+                done = new[] { "就是這個！謝啦。丟石頭的訣竅是：先握拳，再一口氣張開手。", "學會「投石」了！握拳再張開就會丟出去。" } },
+            new Quest { skill = "nv_aid", npc = "老焰", title = "老焰的第一課", kind = "clear", stage = "1-1", need = 1,
+                offer = new[] { "孩子，出門前先學會照顧自己。", "先去走一趟「灰燼中的歸途」（故事 1-1），平安回來，我就教你包紮傷口。" },
+                wait = new[] { "還沒走完「灰燼中的歸途」嗎？不急，平安最重要。" },
+                done = new[] { "你回來了。來，傷口要先壓住，再纏緊——手掌收回自己身上就對了。", "學會「急救」了！手掌往自己收回來就會回血。" } },
+        };
+        public static Quest ByNpc(string npcName) => Array.Find(All, q => !string.IsNullOrEmpty(npcName) && npcName.Contains(q.npc));
+        /// <summary>任務有沒有完成（打倒／收集看進度；通關看故事紀錄）</summary>
+        public static bool Complete(Quest q, CharacterProfile p, Func<string, bool> stageCleared)
+            => p.noviceQuest.TryGetValue(q.skill, out var have) && (q.kind == "clear" ? stageCleared != null && stageCleared(q.stage) : have >= q.need);
+        public static string Progress(Quest q, CharacterProfile p, Func<string, bool> stageCleared)
+        {
+            if (p.noviceLearned.Contains(q.skill)) return "✔ 已學會";
+            if (!p.noviceQuest.TryGetValue(q.skill, out var have)) return "還沒接（到炎之里找" + q.npc + "）";
+            if (q.kind == "clear") return stageCleared != null && stageCleared(q.stage) ? "完成！回去找" + q.npc : $"通關故事 {q.stage}";
+            return have >= q.need ? "完成！回去找" + q.npc : q.kind == "kill" ? $"打倒小怪 {have}/{q.need}" : $"{q.item} {have}/{q.need}";
         }
     }
 

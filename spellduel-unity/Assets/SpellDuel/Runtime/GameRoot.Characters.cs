@@ -67,7 +67,7 @@ namespace SpellDuel
                 UiKit.Card(new Rect(pad, y, W - pad * 2, bh), 0.95f, UiKit.Gold, 0.8f);
                 charName = GUI.TextField(new Rect(pad + 4, y + 3, W - pad * 2 - 8, bh - 6), charName ?? "", CharacterSlots.NameMax, LobbyInput(fs));
                 y += bh + pad * 0.5f;
-                UiKit.Text(new Rect(pad, y, W - pad * 2, lineH * 2.2f), "新角色從「初心者」1 級開始：丟小石子、木棍揮擊、投石、急救。\n10 級到村子的職業工會挑戰轉職試煉，選擇自己的職業。", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperCenter);
+                UiKit.Text(new Rect(pad, y, W - pad * 2, lineH * 2.2f), "新角色從「初心者」1 級開始，只會丟小石子；到炎之里找居民解任務學木棍揮擊、投石、急救。\n10 級到村子的職業工會挑戰轉職試煉，選擇自己的職業。", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperCenter);
                 float half = (W - pad * 3) / 2f;
                 if (UiKit.Button(new Rect(pad, bottom - bh, half, bh), "取消", fs)) charCreating = false;
                 if (UiKit.Button(new Rect(pad * 2 + half, bottom - bh, half, bh), "✔ 建立", fs, true, UiKit.Gold))
