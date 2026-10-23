@@ -2056,6 +2056,33 @@ namespace SpellDuel
             return true;
         }
 
+        /// <summary>
+        /// 法術從手射出、飛向準星：起點＝畫面上手掌的位置往前 0.35m（手不在畫面＝手機前下方）；
+        /// 終點＝準星 12° 內最近的敵人胸口，沒有就沿準星方向到敵人的距離（不低於 0.7m，不會往地上飛）。回傳飛行方向（場地座標）。
+        /// </summary>
+        Vector3 AimFromHand(Ray ray, out Vector3 castAt)
+        {
+            var camW = WorldFrame.ToWorld(ray.origin);
+            var d = WorldFrame.DirToWorld(ray.direction).normalized;
+            castAt = Hand != null && Hand.HandVisible
+                ? WorldFrame.ToWorld(cam.ScreenPointToRay(Hand.Palm).GetPoint(0.35f))
+                : WorldFrame.ToWorld(cam.transform.position + cam.transform.forward * 0.3f - cam.transform.up * 0.15f);
+            Vector3 best = default; float bestAng = AimAssistDeg;
+            void Try(Fighter f) { if (f == null || !f.Alive || f.isAlly) return; float a = Vector3.Angle(d, f.Chest - camW); if (a < bestAng) { bestAng = a; best = f.Chest; } }
+            if (battle != null) { Try(battle.enemy); foreach (var m in battle.minions) Try(m); }
+            Vector3 target;
+            if (bestAng < AimAssistDeg) target = best;
+            else
+            {
+                float dist = En != null && En.Alive ? Mathf.Clamp(Battle.FlatDistance(camW, En.Feet), 3f, 12f) : 8f;
+                target = camW + d * dist;
+                if (target.y < 0.7f) target.y = 0.7f;
+            }
+            var dir = target - castAt;
+            return dir.sqrMagnitude > 1e-6f ? dir.normalized : d;
+        }
+        const float AimAssistDeg = 12f;
+
         /// <summary>普通攻擊：朝畫面中央的準星（近身＝砍身邊的敵人）</summary>
         void DoBasic(SkillDef s)
         {
@@ -2071,9 +2098,11 @@ namespace SpellDuel
                 from = WorldFrame.DirToWorld(cam.ScreenPointToRay(Hand.SwipeFrom).direction);
                 to = WorldFrame.DirToWorld(cam.ScreenPointToRay(Hand.SwipeTo).direction);
             }
-            if (!battle.BasicAttack(Me, s, d, floor, enemyOnScreen, from, to)) return;
+            Vector3 castAt = default;
+            if (!Skills.IsMeleeBasic(s)) { d = AimFromHand(ray, out castAt); Me.castFrom = castAt; Me.hasCastFrom = true; }   // 遠程普攻：從手射出、飛向準星對準的地方
+            if (!battle.BasicAttack(Me, s, d, floor, enemyOnScreen, from, to)) { Me.hasCastFrom = false; return; }
             if (!Skills.IsMeleeBasic(s))
-                SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(s.id):myClass, s.color, cam.transform.position + cam.transform.forward * 0.5f - cam.transform.up * 0.08f, ray.direction, 0.2f);
+                SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(s.id):myClass, s.color, WorldFrame.FromWorld(castAt), WorldFrame.DirFromWorld(d), 0.2f);
         }
 
         void ReleaseAt(Vector2 sp, bool byGesture)
@@ -2089,13 +2118,18 @@ namespace SpellDuel
             var floor = d.y < -0.01f ? o + d * (-o.y / d.y) : Me.Feet + Fighter.Flat(d) * 15f;
             // 沒鎖定敵人也能放招：一律朝準星方向（打不打得到看瞄準）
             var visualSkill=Me.charging; // Presentation snapshot: TryRelease clears charging.
-            if (!battle.TryRelease(Me, d, floor, out var why, enemyOnScreen)) Say(why, 1.5f);
+            // 法球：從畫面上手的位置射出，飛向準星對準的敵人（沒對準敵人＝準星方向、不往地上飛）
+            var aim = AimFromHand(ray, out var castAt);
+            Me.castFrom = castAt; Me.hasCastFrom = true;
+            bool released = battle.TryRelease(Me, aim, floor, out var why, enemyOnScreen);
+            Me.hasCastFrom = false;
+            if (!released) Say(why, 1.5f);
             else
             {
                 if (byGesture) Say("🖐️ 放招！", 0.8f);
                 // 放招光效：在手機前方爆開，朝法術飛行方向
                 SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(visualSkill.id):myClass, myClass==Skills.Novice?visualSkill.color:Me.charging != null ? Me.charging.color : Skills.Classes[myClass].color,
-                    cam.transform.position + cam.transform.forward * 0.5f - cam.transform.up * 0.08f, ray.direction, 0.35f);
+                    WorldFrame.FromWorld(castAt), WorldFrame.DirFromWorld(aim), 0.35f);
             }
         }
 

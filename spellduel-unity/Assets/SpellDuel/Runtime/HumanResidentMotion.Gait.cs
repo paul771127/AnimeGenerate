@@ -14,6 +14,24 @@ namespace SpellDuel
             }
         }
         Leg legL,legR;bool feetReady;Vector3 lastRoot;
+        // 城鎮走路是整個城鎮在移動／轉動：腳的落點（世界座標）要跟著城鎮一起移，不然腳會被留在原地、跟身體分開
+        Matrix4x4 lastSpaceInv;Quaternion lastSpaceRot;bool spaceReady;
+        void FollowSpace()
+        {
+            var space=figure.root;if(space==figure){spaceReady=false;return;}
+            if(spaceReady&&feetReady)
+            {
+                var m=space.localToWorldMatrix*lastSpaceInv;var r=space.rotation*Quaternion.Inverse(lastSpaceRot);
+                foreach(var leg in new[]{legL,legR})
+                {
+                    leg.anchor=m.MultiplyPoint3x4(leg.anchor);leg.takeoff=m.MultiplyPoint3x4(leg.takeoff);
+                    leg.landing=m.MultiplyPoint3x4(leg.landing);leg.lastGoal=m.MultiplyPoint3x4(leg.lastGoal);
+                    leg.contactRotation=r*leg.contactRotation;
+                }
+                lastRoot=m.MultiplyPoint3x4(lastRoot);
+            }
+            lastSpaceInv=space.worldToLocalMatrix;lastSpaceRot=space.rotation;spaceReady=true;
+        }
         void ResetFeet()
         {
             foreach(var leg in new[]{legL,legR})
@@ -25,6 +43,7 @@ namespace SpellDuel
         }
         void UpdateFeet(float dt,float strideWorld)
         {
+            FollowSpace();
             if(!feetReady||(figure.position-lastRoot).magnitude>1)ResetFeet();lastRoot=figure.position;
             StepFoot(legL,0,dt,strideWorld);StepFoot(legR,.5f,dt,strideWorld);
         }

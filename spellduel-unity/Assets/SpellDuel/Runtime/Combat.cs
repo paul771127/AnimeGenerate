@@ -49,6 +49,8 @@ namespace SpellDuel
         public float closeInstinct;     // 刺客「近身本能」等級（0＝沒點）        // 進階職業：盾擊格擋、制裁連斬、爆擊傷害、鷹眼標記、契約魔力
         public int basicHits, venomStacks, seals;
         // 刺殺流派：有沒有被敵人看見（SoloBattle 每幀設定：對戰＝對手的鏡頭有沒有拍到我；電腦／Boss／小怪＝我在不在它的視野內）、這次蓄力累計躲開視線幾秒
+        /// <summary>玩家：這一發法術從哪裡射出（畫面上手的位置；SoloBattle 放招前設定，用一次就清掉）</summary>
+        public Vector3 castFrom; public bool hasCastFrom;
         public bool seenByFoe = true; public float hiddenTime;                                 // 連斬計數、身上的毒層、聖印層數
         public float waveFreeUntil, riposteUntil, vanishUntil, venomUntil;
         // ---- 進階職業
@@ -1360,7 +1362,7 @@ namespace SpellDuel
                 if (f.isAlly) { f.charging = s; f.chargeStart = now - 1f; return TryRelease(f, aimDir, floor, out _, locked); }
                 // 遠程普攻（法師、獵人、牧師；玩家、電腦都一樣）：先畫瞄準預警線，ShotWindup 秒後才朝同一個方向射出
                 f.cooldownUntil[s.id] = now + ShotWindup + 0.05f;   // 預警中不重複觸發；射出時換成真正的冷卻
-                var start = f.Chest; var dir = aimDir.sqrMagnitude > 1e-6f ? aimDir.normalized : Fighter.Flat(f.forward);
+                var start = f.hasCastFrom ? f.castFrom : f.Chest; var dir = aimDir.sqrMagnitude > 1e-6f ? aimDir.normalized : Fighter.Flat(f.forward);   // 玩家：預警線從手的位置畫出去
                 OnShotWarn?.Invoke(f, start, start + dir * s.rangeMax * f.rangeMul);
                 if (!f.isPlayer) f.windupUntil = now + ShotWindup;   // 電腦預警中站定：射出的方向就是預警線
                 After(ShotWindup, () =>
@@ -1708,6 +1710,8 @@ namespace SpellDuel
                 }
                 default:
                     var hand = f.head + Fighter.Flat(f.forward) * 0.25f + Vector3.down * 0.25f;
+                    if (f.hasCastFrom && s.originHeight <= 0f) hand = f.castFrom;   // 玩家：從畫面上手的位置射出
+                    f.hasCastFrom = false;
                     aimDir = aimDir.sqrMagnitude > 1e-6f ? aimDir.normalized : Fighter.Flat(f.forward);
                     if (s.originHeight > 0f)
                     {
