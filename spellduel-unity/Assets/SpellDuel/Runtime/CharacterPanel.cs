@@ -17,9 +17,6 @@ namespace SpellDuel
         Vector2 statsScroll, gearScroll;
         string toast; float toastUntil;
 
-        /// <summary>這棵職業樹全部點滿要幾點（約 74～84；轉職前最多 30，大約三分之一）</summary>
-        static int TreeTotal(string cls) { int t = 0; foreach (var n in SkillTrees.Of(cls)) t += n.max; return t; }
-
         void Toast(string s) { toast = s; toastUntil = Time.time + 2f; }
 
         /// <summary>畫在 r 裡面；回傳這一幀有沒有改到角色</summary>
@@ -35,7 +32,7 @@ namespace SpellDuel
             int cur = CharacterProfile.XpForLevel(p.level), next = CharacterProfile.XpForLevel(p.level + 1);
             var adv = p.Adv;
             UiKit.Title(new Rect(x, y, w, lh), $"{(adv != null ? $"{adv.name}（{cd.name}）" : cd.name)}　Lv {p.level}", adv != null ? adv.color : cd.color, fsL);
-            UiKit.Text(new Rect(x, y+lh, w, fs*1.2f), $"能力點 {p.statPoints}　技能點 {p.skillPoints}　職業樹 {p.BaseSpent}/{TreeTotal(p.cls)}{(p.adv == null ? $"（轉職前最多 {CharacterProfile.BaseTreeCap}）" : "")}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
+            UiKit.Text(new Rect(x, y+lh, w, fs*1.2f), $"能力點 {p.statPoints}　技能點 {p.skillPoints}　職業樹 {p.BaseSpent}/{CharacterProfile.TreeTotal(p.cls)}{(p.adv == null ? $"（轉職前最多 {p.BaseTreeCap}）" : "")}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
             y += lh + fs*1.3f;
             UiKit.Bar(new Rect(x, y, w, lh * 0.5f), p.level >= CharacterProfile.MaxLevel ? 1f : (p.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f),
                 p.level >= CharacterProfile.MaxLevel ? "最高等級" : p.LevelLocked ? $"經驗已滿：到職業工會轉職才能升到 {p.level + 1} 級" : $"經驗 {p.xp - cur} / {next - cur}", fsS);

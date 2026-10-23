@@ -804,7 +804,11 @@ namespace SpellDuel
         /// 職業（基本）技能樹：樹上總共 40 點；轉職前最多只能點其中 30 點（＝30 級拿到的點數），要取捨。
         /// 轉職後可以回來繼續點職業樹（最多到 40 點），也可以點進階職業的技能樹。
         /// </summary>
-        public const int BaseTreeCap = Advanced.Level;
+        /// <summary>轉職前職業技能樹最多能點的點數＝整棵樹的 1/5（使用者：要有取捨；約 15～17 點）</summary>
+        public const float BaseTreeShare = 0.2f;
+        public static int TreeTotal(string cls) { int t = 0; foreach (var n in SkillTrees.Of(cls)) t += n.max; return t; }
+        public static int BaseTreeCapOf(string cls) => Mathf.Max(1, Mathf.RoundToInt(TreeTotal(cls) * BaseTreeShare));
+        public int BaseTreeCap => BaseTreeCapOf(cls);
         /// <summary>技能樹版本：2＝樹狀圖＋流派（舊存檔讀進來時退回職業樹點數）</summary>
         public const int TreeVersion = 3;
         public int treeVersion = TreeVersion;   // 新角色直接是最新版；讀檔時沒有 tv＝舊版

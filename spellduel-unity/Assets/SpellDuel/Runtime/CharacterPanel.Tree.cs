@@ -158,7 +158,7 @@ namespace SpellDuel
             {
                 string help = advT != null
                     ? $"✨ {advT.name}的進階技能樹（和基本技能樹共用技能點）。轉職時已學會「{(Skills.All.TryGetValue(advT.skills[0], out var s0) ? s0.name : advT.skills[0])}」；📘 可以習得另外兩個進階技能。有些節點也會強化基本職業的技能，自由搭配。\n核心機制：{advT.core}"
-                    : $"點一個節點看說明。樹從最上面往下長：父節點點過 1 級，下面接著的節點才能點。整棵樹的點數比轉職前能拿到的多，轉職前最多點 {CharacterProfile.BaseTreeCap} 點，怎麼點由你決定。\n一開始只會 3 個基本技能：{string.Join("、", NamesOf(SkillTrees.Starters(p.cls)))}；📘＝習得新技能。";
+                    : $"點一個節點看說明。樹從最上面往下長：父節點點過 1 級，下面接著的節點才能點。整棵樹的點數比轉職前能拿到的多，轉職前最多點 {p.BaseTreeCap}（整棵樹的五分之一） 點，怎麼點由你決定。\n一開始只會 3 個基本技能：{string.Join("、", NamesOf(SkillTrees.Starters(p.cls)))}；📘＝習得新技能。";
                 DrawTreeParagraph(new Rect(dr.x+gap,dr.y+gap,dr.width-gap*2,dr.height-gap*2),treeId+" help",help,fsS,UiKit.Muted);
                 return changed;
             }
