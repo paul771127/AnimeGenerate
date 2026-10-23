@@ -118,6 +118,9 @@ namespace SpellDuel
             var list = new List<(string, string, Color)>();
             var p = Progress.Char(myClass);
             if (GuideActive) { var g = GuideText(); list.Add(("🧭 導覽：" + g.title.Substring(g.title.IndexOf(' ') + 1), null, new Color(0.4f, 1f, 0.75f))); }
+            // 新手教學做完、還沒到 10 級：建議重打 1-1、1-2 練等
+            if (!GuideActive && p.cls == Skills.Novice && p.level < Skills.JobLevel && !NoviceQuests.StoneLessonPending(p) && Story.IsCleared("1-1"))
+                list.Add(($"📈 練等：目前 Lv{p.level}，10 級才能轉職", Story.IsCleared("1-2") ? "建議重打 1-1、1-2 刷經驗（打過的關卡可以重打）" : "建議重打 1-1 刷經驗，再挑戰 1-2", new Color(0.6f, 0.9f, 1f)));
             if (p.cls == Skills.Novice && Story.IsCleared("1-3"))
             {
                 string d = p.level < Skills.JobLevel ? $"先升到 {Skills.JobLevel} 級（現在 {p.level}）" : p.CanChangeJob ? "試煉通過了：到職業工會選職業" : "到職業工會找公會長：打倒 5 隻小怪";

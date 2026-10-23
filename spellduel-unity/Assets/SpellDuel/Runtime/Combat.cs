@@ -706,14 +706,12 @@ namespace SpellDuel
             if (bossPending && waveToSpawn == 0 && minions.Count == 0 && !HostileNpcAlive)
             {
                 bossPending = false; bossAt = now + BossEntranceDelay;
-                if (player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + player.maxHp * 0.1f);
                 Emit("bossincoming", player.Feet, new Color(1f, 0.5f, 0.3f), "大地在震動……");
                 return;
             }
-            // 這一波全部打倒：回 10% 血，休息 4 秒進下一波
+            // 這一波全部打倒：休息 4 秒進下一波（血量不會自己回：用藥水、治療技能，劍士可以點自然回復）
             if (waveToSpawn == 0 && minions.Count == 0 && !HostileNpcAlive)
             {
-                if (player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + player.maxHp * 0.1f);
                 Emit("wavecleared", player.Feet, Color.white, $"{WaveLabel}清空！");
                 if (!StageDone()) NextWave(4f);
             }

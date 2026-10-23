@@ -1267,8 +1267,7 @@ namespace SpellDuel
                             // 無盡模式：波次、這波剩幾隻、擊倒數（清完一波自己回 10% 血；打倒 Boss 回 30%）
                             int.TryParse(m.ks[0], out var wv);
                             int.TryParse(m.ks[3], out var bk);
-                            if (Me.Alive && bk > battle.bossKills) Me.hp = Mathf.Min(Me.maxHp, Me.hp + Me.maxHp * 0.3f);
-                            else if (Me.Alive && wv > battle.wave && battle.wave > 0) Me.hp = Mathf.Min(Me.maxHp, Me.hp + Me.maxHp * 0.1f);
+                            if (Me.Alive && bk > battle.bossKills) Me.hp = Mathf.Min(Me.maxHp, Me.hp + Me.maxHp * 0.3f);   // 打倒 Boss 回 30%（清完一波不再回血）
                             battle.wave = wv; battle.bossKills = bk;
                             int.TryParse(m.ks[1], out clientWaveRemaining);
                             if (m.ks.Length >= 6) int.TryParse(m.ks[5], out battle.waveTotal);
@@ -1787,6 +1786,7 @@ namespace SpellDuel
 
         void EndBattle()
         {
+            outroUntil = -1f; introUntil = -1f;
             ClearDaily(); ClearTutorial(); RestoreArea(); ClearSwipeTrail();
             ResetCarryLeft();   // 下一場能用的道具＝整備時決定帶的數量
             victory = null; hitsTaken = 0; lootLog.Clear(); lootGoldLog = 0; ResetExercise();
@@ -1836,9 +1836,16 @@ namespace SpellDuel
 
         // ================================================================ 每幀
         float nextHeartbeat;
+        // 戰鬥開始／結束：停幾秒、畫面中央用文字說明（不要突然開打、突然結算）
+        float introUntil = -1f, outroUntil = -1f; Phase lastPhase = Phase.Hidden; bool outroWin;
+        public const float IntroTime = 2.6f, OutroTime = 2.5f;
+        bool InIntro => phase == Phase.Fighting && Time.time < introUntil;
+
         void Update()
         {
             if (Watching) { UpdateWatchBattle(); return; }   // 觀戰：只跑顯示
+            if (phase == Phase.Fighting && lastPhase != Phase.Fighting && !NetMode) { introUntil = Time.time + IntroTime; Sfx.Play("select", 0.7f, 0.8f); }
+            lastPhase = phase;
             UpdateMic();
             UpdateTownWalk();
             if (phase != Phase.Fighting && phase != Phase.Over) return;
@@ -1861,6 +1868,7 @@ namespace SpellDuel
             UpdateScene();
             if (NetMode) SyncRemote();
             UpdateLock();
+            if (InIntro) { UpdateVisuals(); return; }   // 開場：先停幾秒（敵人不動、不能出手）
             if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
             {
                 if (ai != null) ai.Update(dt);
@@ -1873,7 +1881,13 @@ namespace SpellDuel
                 if (!frozen) HandleInput();
                 SendState();
                 SendBossState();
-                if (battle.Over) { phase = Phase.Over; ShowResult(); }
+                if (battle.Over)
+                {
+                    // 結束：停幾秒顯示「戰鬥結束」再結算（連線時照舊馬上結算，免得兩邊不同步）
+                    if (NetMode) { phase = Phase.Over; ShowResult(); }
+                    else if (outroUntil < 0f) { outroUntil = Time.time + OutroTime; outroWin = Me.Alive; Sfx.Play(outroWin ? "charged" : "fail", 0.8f); }
+                    else if (Time.time >= outroUntil) { outroUntil = -1f; phase = Phase.Over; ShowResult(); }
+                }
             }
             UpdateVisuals();
         }
@@ -2971,6 +2985,7 @@ namespace SpellDuel
             else if (storyMapOpen) DrawStoryMap();
             else if (infoOpen) DrawSkillInfo();
             DrawGuide();   // 村莊新手導覽（SoloBattle.Guide.cs）
+            DrawIntroOutro();   // 戰鬥開始／結束的文字
             DrawQuestPanel();   // 右上角的任務面板（SoloBattle.NoviceRoute.cs）
         }
 

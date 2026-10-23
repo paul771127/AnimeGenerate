@@ -702,10 +702,66 @@ namespace SpellDuel
         float advPickAt;
         int guildScroll;
 
-        /// <summary>初心者轉職：5 個職業選一個（10 級才能選；選了不能換，要按兩次確認）</summary>
+        string jobInfo; Vector2 jobInfoScroll; bool jobBrowse;   // 轉職：正在看哪個職業的介紹
+
+        /// <summary>職業介紹：特色、能力、普攻、一開始的 3 招、技能樹流派、30 級的兩個進階職業</summary>
+        static string JobIntro(string id)
+        {
+            var c = Skills.Classes[id];
+            var sb = new System.Text.StringBuilder();
+            sb.Append(c.desc).Append("\n\n");
+            sb.Append($"❤ HP {c.maxHp}　💧 MP {c.maxMp}　主要能力：{StatInfo.Names[(int)StatInfo.AttackStat(id)]}\n");
+            var basic = Skills.BasicOf(id);
+            if (basic != null) sb.Append($"\n👊 普攻「{basic.name}」：{basic.desc}\n");
+            sb.Append("\n✨ 一開始會的技能（唸技能名稱 → 放招手勢）：\n");
+            foreach (var sid in SkillTrees.Starters(id))
+                if (Skills.All.TryGetValue(sid, out var sk)) sb.Append($"・{sk.name}（{HandGesture.ReleaseLabel(sk)}）：{sk.desc}\n");
+            var schools = SkillTrees.Schools(id);
+            if (schools != null) sb.Append($"\n🌳 技能樹三個流派：{string.Join("、", schools)}\n");
+            sb.Append($"\n🏛 {Advanced.Level} 級可以進階（通過試煉後二選一，選了不能換）：\n");
+            foreach (var a in Advanced.All.Values)
+            {
+                if (a.baseCls != id) continue;
+                sb.Append($"\n【{a.name}】{a.desc}\n　核心：{a.core}\n" + (string.IsNullOrEmpty(a.weak) ? "" : $"　代價：{a.weak}\n"));
+                var names = new System.Collections.Generic.List<string>();
+                foreach (var sid in a.skills) if (Skills.All.TryGetValue(sid, out var sk)) names.Add(sk.name);
+                sb.Append($"　進階技能：{string.Join("、", names)}\n");
+            }
+            return sb.ToString();
+        }
+
+        void DrawJobInfo(Rect r, CharacterProfile prof, int fs, int fsS, float gap, float y)
+        {
+            var c = Skills.Classes[jobInfo];
+            bool ok = prof.CanChangeJob;
+            var cr = new Rect(r.x + gap, y, r.width - gap * 2, r.yMax - gap * 3 - fs * 2.2f - y);
+            UiKit.Card(cr, 0.9f, c.color, 0.9f);
+            UiKit.Text(new Rect(cr.x + gap, cr.y + gap * 0.5f, cr.width - gap * 2, fs * 1.6f), $"{c.name}的介紹", Mathf.RoundToInt(fs * 1.15f), c.color, TextAnchor.MiddleLeft, true);
+            string text = JobIntro(jobInfo);
+            var view = new Rect(cr.x + gap, cr.y + fs * 2f, cr.width - gap * 2, cr.height - fs * 2.4f);
+            float th = UiKit.TextHeight(text, view.width - fs, fsS) + fs;
+            var content = new Rect(0, 0, view.width - fs * 0.8f, Mathf.Max(view.height, th));
+            jobInfoScroll = UiKit.DragScroll(view, jobInfoScroll, content);
+            jobInfoScroll = GUI.BeginScrollView(view, jobInfoScroll, content, false, true);
+            UiKit.Text(new Rect(0, 0, content.width, th), text, fsS, new Color(0.93f, 0.95f, 1f), TextAnchor.UpperLeft, false, 0.55f);
+            GUI.EndScrollView();
+            float bw = (r.width - gap * 3) / 2f, by = r.yMax - gap - fs * 2.1f;
+            if (UiKit.Button(new Rect(r.x + gap, by, bw, fs * 2.1f), "◀ 返回", fs)) { jobInfo = null; return; }
+            bool armed = jobArm == jobInfo && Time.time < jobArmUntil;
+            if (UiKit.Button(new Rect(r.x + gap * 2 + bw, by, bw, fs * 2.1f), !ok ? $"Lv{Skills.JobLevel}＋試煉後可選" : armed ? "再按一次確定" : $"選{c.name}", fsS, armed, c.color, ok))
+            {
+                if (armed) { var id = jobInfo; jobArm = null; jobInfo = null; OnJobChange?.Invoke(id); return; }
+                jobArm = jobInfo; jobArmUntil = Time.time + 3f;
+                Toast($"選「{c.name}」？選了就不能換，3 秒內再按一次確定");
+            }
+        }
+
+        /// <summary>初心者轉職：5 個職業選一個（10 級才能選；選了不能換，要按兩次確認）；點職業看介紹</summary>
         void DrawJobChange(Rect r, CharacterProfile prof, int fs, int fsS, float gap, float y)
         {
+            if (jobInfo != null && Skills.Classes.ContainsKey(jobInfo)) { DrawJobInfo(r, prof, fs, fsS, gap, y); return; }
             bool ok = prof.CanChangeJob, lvOk = prof.level >= Skills.JobLevel;
+            bool browse = jobBrowse && !ok;   // 還不能轉職：也可以先看五個職業的介紹
             string status = ok ? "公會長：「你通過了試煉。五條路各有各的守護方式——選一條，往後就是你的職業。選定便不能更換。」"
                 : lvOk ? $"公會長：「到了 Lv{Skills.JobLevel}，就來接受轉職試煉吧。不難：打倒空地上的 5 隻小怪就好，失敗了可以再挑戰。」"
                 : $"公會長：「初心者，先用木棍和石頭保護好自己。到了 Lv{Skills.JobLevel}，再來接受轉職試煉。」\n目前 Lv{prof.level}（還差 {Skills.JobLevel - prof.level} 級）";
@@ -713,7 +769,7 @@ namespace SpellDuel
             UiKit.Text(new Rect(r.x + gap * 2 + fs * 2.6f, y, r.width - gap * 3 - fs * 2.6f, fs * 2.8f), status, fsS, Color.white, TextAnchor.UpperLeft);
             y += fs * 3f;
             float bottom = r.yMax - gap * 2 - fs * 2.1f;
-            if (!ok)
+            if (!ok && !browse)
             {
                 // 轉職試煉（目前只有一項）：一項一項來（通過的打勾、下一輪可以挑戰、後面的鎖著）
                 float th = Mathf.Min(fs * 3.4f, (bottom - y) / Skills.JobTrialRounds - gap * 0.5f);
@@ -731,7 +787,9 @@ namespace SpellDuel
                     if (UiKit.Button(new Rect(tr.xMax - bw2 - gap * 0.4f, tr.y + gap * 0.4f, bw2, th - gap * 0.8f), bt, fsS, next, tc, next)) { OnJobTrial?.Invoke(i); return; }
                     y += th + gap * 0.5f;
                 }
-                if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), "🏘 回城鎮", fs)) screen = Screen.Town;
+                float hb = (r.width - gap * 3) / 2f;
+                if (UiKit.Button(new Rect(r.x + gap, r.yMax - gap - fs * 2.1f, hb, fs * 2.1f), "📖 先看職業介紹", fsS, false, new Color(0.85f, 0.6f, 1f))) jobBrowse = true;
+                if (UiKit.Button(new Rect(r.x + gap * 2 + hb, r.yMax - gap - fs * 2.1f, hb, fs * 2.1f), "🏘 回城鎮", fs)) screen = Screen.Town;
                 return;
             }
             int n = Skills.ClassOrder.Length;
@@ -745,7 +803,8 @@ namespace SpellDuel
                 var basic = Skills.BasicOf(id);
                 float bs = ch * 0.62f;
                 if (basic != null) UiKit.Badge(new Rect(cr.x + gap * 0.5f, cr.y + (ch - bs) / 2f, bs, bs), SkillIcons.Get(basic.id), c.color);
-                UiKit.Text(new Rect(cr.x + bs + gap, cr.y, cr.width - bs - bw - gap * 2.5f, ch), $"{c.name}　HP {c.maxHp}・MP {c.maxMp}\n{c.desc}", fsS, ok ? Color.white : Color.gray, TextAnchor.MiddleLeft, false, 0.55f);
+                UiKit.Text(new Rect(cr.x + bs + gap, cr.y, cr.width - bs - bw - gap * 2.5f, ch), $"{c.name}　HP {c.maxHp}・MP {c.maxMp}　ⓘ 點這裡看介紹\n{c.desc}", fsS, ok ? Color.white : new Color(0.8f, 0.8f, 0.85f), TextAnchor.MiddleLeft, false, 0.55f);
+                if (GUI.Button(new Rect(cr.x, cr.y, cr.width - bw - gap, ch), GUIContent.none, GUIStyle.none)) { jobInfo = id; jobInfoScroll = Vector2.zero; Sfx.Play("select", 0.5f); return; }
                 bool armed = jobArm == id && Time.time < jobArmUntil;
                 if (UiKit.Button(new Rect(cr.xMax - bw - gap * 0.4f, cr.y + gap * 0.4f, bw, ch - gap * 0.8f), !ok ? $"Lv{Skills.JobLevel}" : armed ? "再按一次\n確定" : "選這個", fsS, armed, c.color, ok))
                 {
@@ -755,7 +814,7 @@ namespace SpellDuel
                 }
                 y += ch + gap * 0.4f;
             }
-            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), "🏘 回城鎮", fs)) screen = Screen.Town;
+            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), browse ? "◀ 回轉職試煉" : "🏘 回城鎮", fs)) { if (browse) jobBrowse = false; else screen = Screen.Town; }
         }
 
         void DrawGuild(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
