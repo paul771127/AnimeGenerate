@@ -320,7 +320,7 @@ namespace SpellDuel
             float y = r.y + gap;
             Header(r, "🏰 副本入口", DungeonColor, prof, fs, fsS, fsL, gap, ref y);
             UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.6f),
-                "「副本的敵人跟著隊伍人數變：最少以 2 人計算，3 人敵人數量和 Boss 血量 ×3、4 人 ×4。人越多掉寶率越高（3 人 ×1.25、4 人 ×1.5）。」——嚮導", fsS, new Color(0.85f, 0.95f, 0.9f), TextAnchor.UpperLeft);
+                "「副本的敵人血量、攻擊都是一般關卡的 2 倍，數量再跟著隊伍人數變：最少以 2 人計算，3 人敵人數量和 Boss 血量 ×3、4 人 ×4。人越多掉寶率越高（3 人 ×1.25、4 人 ×1.5）。」——嚮導", fsS, new Color(0.85f, 0.95f, 0.9f), TextAnchor.UpperLeft);
             y += fs * 2.8f;
             // 找夥伴：轉到連線大廳（會離開村子；副本在隊伍畫面選）
             float gw = (r.width - gap * 3) / 2f, gh = fs * 2.3f;

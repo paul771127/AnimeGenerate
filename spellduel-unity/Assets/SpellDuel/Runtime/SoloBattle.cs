@@ -846,7 +846,7 @@ namespace SpellDuel
             {
                 // 副本：以 3 人隊伍設計的難度；角色等級遠高於副本時才變簡單（每台手機用自己的等級算自己受到的傷害）
                 dungeonRelief = Dungeons.LevelRelief(prof != null ? prof.level : 1, dungeon.level);
-                me.damageTakenMul *= Dungeons.DungeonDmg * dungeonRelief;
+                me.damageTakenMul *= dungeonRelief;   // 等級差修正（敵人攻擊 ×2 在 battle.enemyDmgMul）
             }
             SyncPlayer(me);
             battle = new Battle(me, boss);
@@ -928,7 +928,8 @@ namespace SpellDuel
                     {
                         battle.dungeonParty = Dungeons.PartyScale(partyN);          // 副本：浮動難度（最少 2 人；敵人數量、Boss 血量 ×人數）
                         battle.scaleAllies = battle.dungeonParty - 1;               // Boss 出招頻率、召喚數也照人數
-                        battle.hpBoost = Dungeons.DungeonHp * dungeonRelief;   // 再硬一點（主機的等級決定）
+                        battle.hpBoost = dungeonRelief;                          // 等級差修正（主機的等級決定）
+                        battle.enemyHpMul = Dungeons.DungeonHp; battle.enemyDmgMul = Dungeons.DungeonDmg; battle.bossHpMul = Dungeons.DungeonHp;   // 副本：小怪與 Boss 的血量、攻擊 ×2
                         battle.StartDungeon(dungeon.Waves);
                     }
                     else battle.StartEndless();

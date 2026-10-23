@@ -38,7 +38,7 @@ namespace SpellDuel
             string hint = NetIsHost
                 ? (PeerIds.Count == 0 ? "等待玩家加入…（一個人也可以直接開始）" : PartyReady ? "大家都準備好了：按下方「開始副本」" : "等所有人按「準備好了」，再由你按「開始副本」")
                 : localReady ? "已準備：等房主按開始（副本與難度跟房主一樣）" : "選好技能後按下方「準備好了」";
-            hint += $"\n👥 {n} 人：敵人數量、Boss 血量 ×{Dungeons.PartyScale(n)}・掉寶率 ×{Dungeons.LootMul(n):0.##}";   // 浮動難度（最少以 2 人計算）
+            hint += $"\n👥 {n} 人：敵人血量、攻擊 ×2，數量、Boss 血量再 ×{Dungeons.PartyScale(n)}・掉寶率 ×{Dungeons.LootMul(n):0.##}";   // 浮動難度（最少以 2 人計算）
             UiKit.Text(new Rect(x, cy + gap * 0.3f, w, u * 1.6f), hint, fsS, new Color(0.9f, 0.95f, 1f), TextAnchor.UpperLeft);
             y = card.yMax + gap;
         }

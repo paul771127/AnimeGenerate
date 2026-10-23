@@ -50,8 +50,8 @@ namespace SpellDuel
         public static int PartyScale(int players) => Mathf.Max(2, players);
         public static float LootMul(int players) => 1f + 0.25f * Mathf.Clamp(players - 2, 0, 2);
         public const int DesignAllies = 2;
-        /// <summary>在 3 人難度之上，敵人的血量、玩家受到的傷害再加一點（副本比一般合作硬）</summary>
-        public const float DungeonHp = 1.15f, DungeonDmg = 1.1f;
+        /// <summary>副本的敵人（小怪與 Boss）血量、攻擊是一般關卡的 2 倍（使用者要求；再乘上人數倍率）</summary>
+        public const float DungeonHp = 2f, DungeonDmg = 2f;
 
         /// <summary>
         /// 等級差的修正：角色比副本高 3 級以上，每多 1 級敵人弱 4.5%（最低 30%）；比副本低，每低 1 級強 5%（最高 150%）。
