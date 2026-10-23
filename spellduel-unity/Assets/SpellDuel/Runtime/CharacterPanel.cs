@@ -20,6 +20,15 @@ namespace SpellDuel
 
         static string TreeLabel(string t) => t == Skills.Novice ? "初心者" : Advanced.Get(t)?.name ?? (Skills.Classes.TryGetValue(t, out var c) ? c.name : t);
 
+        // ---- 技能欄（裝備分頁最上面）：SoloBattle 接上
+        public System.Func<List<string>> Loadout;          // 目前裝上的技能
+        public System.Func<string[]> SkillChoices;         // 能選的技能（學會的）
+        public System.Func<string, bool> IsAdvSkill = id => false;
+        public System.Func<(int baseSlots, bool advSlot)> Slots;
+        public System.Func<string, bool, string> SetSkill; // 裝上／卸下；回傳 null＝成功，否則是不能的原因
+        public System.Func<bool> SkillsEditable = () => true;
+        public System.Action<string> ShowSkillInfo;
+
         void Toast(string s) { toast = s; toastUntil = Time.time + 2f; }
 
         /// <summary>畫在 r 裡面；回傳這一幀有沒有改到角色</summary>
@@ -65,14 +74,62 @@ namespace SpellDuel
         // Keep row targets readable on shorter phones; scrolling is presentation state only.
         bool DrawBodyPage(Rect viewport,CharacterProfile p,int fs,int fsS,float gap,bool equipment)
         {
-            var content=new Rect(0,0,viewport.width-fs*.85f,Mathf.Max(viewport.height,fs*30));
+            var content=new Rect(0,0,viewport.width-fs*.85f,Mathf.Max(viewport.height,fs*(equipment?40:30)));
             var offset=equipment?gearScroll:statsScroll;
             offset=UiKit.DragScroll(viewport,offset,content);   // 手指拖曳捲動
             offset=GUI.BeginScrollView(viewport,offset,content,false,true);
             if(equipment)gearScroll=offset;else statsScroll=offset;
-            try{return equipment?DrawGear(content,p,fs,fsS,gap):DrawStats(content,p,fs,fsS,gap);}
+            try{
+                if(!equipment)return DrawStats(content,p,fs,fsS,gap);
+                float used=DrawSkillSlots(content,fs,fsS,gap);
+                return DrawGear(new Rect(content.x,content.y+used,content.width,content.height-used),p,fs,fsS,gap);
+            }
             finally{GUI.EndScrollView();}
         }
+
+        // ================================================================ 技能欄：點技能裝上／卸下（只在城鎮、整備時能改；戰鬥中只能看）
+        float DrawSkillSlots(Rect b, int fs, int fsS, float gap)
+        {
+            if (Loadout == null || SkillChoices == null || Slots == null || SetSkill == null) return 0f;
+            var lo = Loadout(); var all = SkillChoices(); var (baseSlots, advSlot) = Slots();
+            bool edit = SkillsEditable();
+            int baseOn = lo.FindAll(id => !IsAdvSkill(id)).Count, advOn = lo.FindAll(id => IsAdvSkill(id)).Count;
+            float y = b.y;
+            string head = $"✨ 技能欄 {baseOn}/{baseSlots}" + (advSlot ? $"・進階 {advOn}/1" : "") + (edit ? "：點技能裝上／卸下（長按看說明）" : "：戰鬥中不能換（回城鎮或整備時換）");
+            UiKit.Text(new Rect(b.x, y, b.width, fs * 1.3f), head, fsS, baseOn < baseSlots || advSlot && advOn < 1 ? new Color(1f, 0.6f, 0.45f) : UiKit.Gold, TextAnchor.MiddleLeft, true);
+            y += fs * 1.4f;
+            if (all.Length == 0) { UiKit.Text(new Rect(b.x, y, b.width, fs * 1.4f), "還沒學會技能（初心者：到炎之里找居民解任務學）", fsS, UiKit.Muted, TextAnchor.MiddleLeft); return y + fs * 1.6f - b.y; }
+            int cols = 3; float cw = (b.width - gap * (cols - 1)) / cols, chh = fs * 2.3f;
+            for (int i = 0; i < all.Length; i++)
+            {
+                var id = all[i]; if (!Skills.All.TryGetValue(id, out var sk)) continue;
+                bool on = lo.Contains(id);
+                var r = new Rect(b.x + (i % cols) * (cw + gap), y + (i / cols) * (chh + gap * 0.5f), cw, chh);
+                if (UiKit.Button(r, "", fsS, on, sk.color, edit || on))
+                {
+                    if (longDone == id) longDone = null;   // 剛長按看完說明：放開手不算點一下
+                    else if (!edit) { ShowSkillInfo?.Invoke(id); }
+                    else
+                    {
+                        string why = SetSkill(id, !on);
+                        if (why != null) Toast(why); else Sfx.Play("select", 0.6f, on ? 0.9f : 1.2f);
+                    }
+                }
+                float isz = chh * 0.72f;
+                GUI.color = on ? Color.white : new Color(0.55f, 0.55f, 0.6f);
+                GUI.DrawTexture(new Rect(r.x + chh * 0.12f, r.y + chh * 0.14f, isz, isz), SkillIcons.Get(id));
+                GUI.color = Color.white;
+                UiKit.Text(new Rect(r.x + isz + chh * 0.2f, r.y, r.width - isz - chh * 0.25f, r.height), (on ? "✔ " : "") + (IsAdvSkill(id) ? "✨" : "") + sk.name, fsS, on ? Color.white : new Color(0.75f, 0.75f, 0.8f), TextAnchor.MiddleLeft, on);
+                // 長按（按住 0.5 秒）看說明
+                if (Event.current.type == EventType.MouseDown && r.Contains(Event.current.mousePosition)) { pressSkill = id; pressAt = Time.time; }
+            }
+            if (pressSkill != null && Time.time - pressAt > 0.5f && Input.GetMouseButton(0)) { ShowSkillInfo?.Invoke(pressSkill); longDone = pressSkill; pressSkill = null; }
+            if (!Input.GetMouseButton(0)) pressSkill = null;
+            y += ((all.Length + cols - 1) / cols) * (chh + gap * 0.5f) + gap * 0.5f;
+            UiKit.Divider(new Rect(b.x, y, b.width, 2f), UiKit.Gold);
+            return y + gap - b.y;
+        }
+        string pressSkill, longDone; float pressAt;
 
         // ================================================================ 能力值
         bool DrawStats(Rect b, CharacterProfile p, int fs, int fsS, float gap)

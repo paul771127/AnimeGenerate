@@ -398,13 +398,37 @@ namespace SpellDuel
             float bh = fs * 2.2f;
             var p = Progress.Char(myClass);
             var r = new Rect(pad, topY + pad, W - pad * 2, botY - topY - pad * 3 - bh);
-            if (charPanel.Draw(r, p) && battle != null && endless && phase != Phase.Setup)
+            if (charPanel.SetSkill == null)
+            {
+                // 裝備分頁的技能欄（CharacterPanel.DrawSkillSlots）
+                charPanel.Loadout = () => myLoadout;
+                charPanel.SkillChoices = () => SetupSkills;
+                charPanel.IsAdvSkill = Advanced.IsAdvSkill;
+                charPanel.Slots = () => (BaseNeed, AdvSlot);
+                charPanel.SkillsEditable = () => phase == Phase.Setup;
+                charPanel.ShowSkillInfo = id => infoSkill = id;
+                charPanel.SetSkill = (id, on) =>
+                {
+                    if (!on) myLoadout.Remove(id);
+                    else if (Advanced.IsAdvSkill(id)) PickSkill(id);
+                    else if (BaseCount >= BaseNeed) return "技能欄滿了：先點一個已裝上的技能卸下，再裝新的";
+                    else myLoadout.Add(id);
+                    SaveChoices(); PlayerPrefs.Save();
+                    return null;
+                };
+            }
+            bool infoUp = infoSkill != null && Skills.All.ContainsKey(infoSkill);
+            if (infoUp) GUI.enabled = false;   // 說明視窗開著：底下的角色畫面不能按
+            bool panelChanged = charPanel.Draw(r, p);
+            GUI.enabled = true;
+            if (panelChanged && battle != null && endless && phase != Phase.Setup)
             {
                 var ids = new List<string>(); foreach (var s in Me.loadout) ids.Add(s.id);
                 p.ApplyTo(Me, Skills.Classes[myClass], ids);
             }
             if (UiKit.Button(new Rect(W * 0.25f, botY - pad - bh, W * 0.5f, bh), phase == Phase.Setup ? "完成" : (coop ? "回到戰鬥" : "回到戰鬥（暫停中）"), fs, true, new Color(0.5f, 0.8f, 1f)))
             { charOpen = false; Progress.SaveChar(p); if (phase == Phase.Setup) FixLoadout(); }
+            if (infoSkill != null && Skills.All.ContainsKey(infoSkill)) DrawSkillInfo();   // 技能欄長按：技能說明疊在角色畫面上
         }
 
         // ---------------------------------------------------------------- 故事模式（劇本：Resources/story.txt，格式見 STORY_FORMAT.md）
