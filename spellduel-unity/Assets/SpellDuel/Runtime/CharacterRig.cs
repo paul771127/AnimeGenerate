@@ -609,10 +609,10 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 初心者：右手一根木棍、腰間小布包（沒有盾）
         void BuildNovice()
         {
-            var bark = Mat(new Color(.49f,.32f,.18f), .12f);
-            var cut = Mat(new Color(.80f,.64f,.39f), .12f);
-            var linen = Mat(new Color(.94f,.87f,.68f), .12f);
-            var leather = Mat(new Color(.47f,.34f,.23f), .12f);
+            var bark = AnimeFace.Material(new Color(.49f,.32f,.18f));
+            var cut = AnimeFace.Material(new Color(.80f,.64f,.39f));
+            var linen = AnimeFace.Material(new Color(.94f,.87f,.68f));
+            var leather = AnimeFace.Material(new Color(.47f,.34f,.23f));
             // Hand socket stays named Sword. Three bent segments, a trimmed knot and a cut end.
             var stick = Pivot("Sword", handR, new Vector3(0f,-.04f,0f));
             var wood = new[] {new Vector3(0,0,-.07f),new Vector3(.009f,0,.14f),new Vector3(-.008f,.012f,.34f),new Vector3(.020f,.008f,.55f)};
@@ -622,15 +622,15 @@ namespace SpellDuel
             for(int i=0;i<4;i++)Part(PrimitiveType.Cylinder,stick,new Vector3(0,0,-.015f+i*.018f),new Vector3(.039f,.008f,.039f),linen,new Vector3(90,0,i*9));
             // Soft shoulder bag: rounded canvas volume, fitted flap, strap and a single fastening.
             var bag=Pivot("Satchel",spine,new Vector3(-.18f,.11f,.065f));
-            Part(PrimitiveType.Sphere,bag,Vector3.zero,new Vector3(.17f,.19f,.09f),Mat(new Color(.52f,.63f,.40f),.12f));
-            Part(PrimitiveType.Sphere,bag,new Vector3(0,.053f,.035f),new Vector3(.17f,.09f,.024f),Mat(new Color(.68f,.75f,.48f),.12f));
+            Part(PrimitiveType.Sphere,bag,Vector3.zero,new Vector3(.17f,.19f,.09f),AnimeFace.Material(new Color(.52f,.63f,.40f)));
+            Part(PrimitiveType.Sphere,bag,new Vector3(0,.053f,.035f),new Vector3(.17f,.09f,.024f),AnimeFace.Material(new Color(.68f,.75f,.48f)));
             Seg(bag,new Vector3(0,.05f,.052f),new Vector3(0,-.028f,.052f),.012f,leather);
             Part(PrimitiveType.Sphere,bag,new Vector3(0,.002f,.058f),new Vector3(.024f,.020f,.01f),cut);
             Seg(spine,new Vector3(.12f,.48f,.10f),new Vector3(-.02f,.30f,.139f),.022f,leather);
             Seg(spine,new Vector3(-.02f,.30f,.139f),new Vector3(-.17f,.13f,.13f),.022f,leather);
             Seg(spine,new Vector3(.12f,.48f,-.09f),new Vector3(-.17f,.13f,-.11f),.022f,leather);
             var flask=Pivot("WaterFlask",spine,new Vector3(.18f,.10f,-.02f));
-            Part(PrimitiveType.Sphere,flask,Vector3.zero,new Vector3(.09f,.12f,.06f),Mat(new Color(.56f,.44f,.32f),.12f));
+            Part(PrimitiveType.Sphere,flask,Vector3.zero,new Vector3(.09f,.12f,.06f),AnimeFace.Material(new Color(.56f,.44f,.32f)));
             Part(PrimitiveType.Cylinder,flask,new Vector3(0,.069f,0),new Vector3(.027f,.015f,.027f),cut);
             Seg(spine,new Vector3(.15f,.12f,.02f),new Vector3(.18f,.17f,-.02f),.012f,leather);
             var roll=Pivot("BandageRoll",bag,new Vector3(-.015f,-.045f,-.055f));
