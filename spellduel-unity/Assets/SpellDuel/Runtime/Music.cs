@@ -14,6 +14,8 @@ namespace SpellDuel
     public class Music : MonoBehaviour
     {
         public static Music I { get; private set; }
+        /// <summary>壓低音量（播劇情影片時讓旁白聽得清楚）：1＝正常</summary>
+        public static float Duck = 1f;
         static float volume = 0.45f; static bool on = true, loaded;
         static void Load() { if (loaded) return; loaded = true; on = PlayerPrefs.GetInt("SD_MusicOn", 1) == 1; volume = PlayerPrefs.GetFloat("SD_MusicVol", 0.45f); }
         public static bool On { get { Load(); return on; } }
@@ -78,7 +80,7 @@ namespace SpellDuel
                 else a.Stop();
             }
             float dt = Time.unscaledDeltaTime;
-            a.volume = Mathf.MoveTowards(a.volume, playing != null ? Volume : 0f, dt * 0.6f);
+            a.volume = Mathf.MoveTowards(a.volume, playing != null ? Volume * Duck : 0f, dt * 0.6f);
             b.volume = Mathf.MoveTowards(b.volume, 0f, dt * 0.8f);
             if (b.isPlaying && b.volume <= 0f) b.Stop();
         }

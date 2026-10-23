@@ -398,6 +398,7 @@ namespace SpellDuel
             if (remoteMode) UpdateRemoteLevel();
             UpdateAreaPreview();
             playArea.Hidden = solo.InTown;   // 城鎮沒有場地
+            Music.Duck = StoryVideo.Playing ? 0.35f : 1f;   // 劇情影片的旁白：背景音樂壓低
             Music.Want(solo.phase == SoloBattle.Phase.Hidden ? "town" : solo.MusicTrack);   // 背景音樂（設定選單可關）
             HandleNetwork();
             UpdateWatchers();   // 房主：把戰況告訴觀戰的人

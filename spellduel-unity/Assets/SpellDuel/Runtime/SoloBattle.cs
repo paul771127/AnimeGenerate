@@ -551,7 +551,7 @@ namespace SpellDuel
         /// <summary>有視窗蓋在畫面上（整備、角色、地圖／村子、對話、技能說明、劇情影片、勝利結算）：GameRoot 的場地警告不要再疊上去</summary>
         public bool OverlayOpen => charOpen || storyMapOpen || dlg != null || prepGo != null || infoSkill != null || StoryVideo.Active || phase == Phase.Over;
         /// <summary>現在該播的背景音樂：戰鬥中＝依地圖主題（Boss 在場＝Boss 曲）；結算＝安靜；其他（城鎮、選單）＝城鎮曲</summary>
-        public string MusicTrack => StoryVideo.Playing ? null   // 播劇情影片時關掉背景音樂
+        public string MusicTrack => StoryVideo.Playing ? "town"   // 播劇情影片：整支用同一首城鎮曲（壓低音量，旁白聽得清楚）
             : phase == Phase.Over ? null
             : phase == Phase.Fighting && battle != null ? (bossMode && En.Alive ? "boss" : "battle" + (battle.Theme % 3))
             : "town";

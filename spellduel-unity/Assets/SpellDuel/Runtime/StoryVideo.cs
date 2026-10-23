@@ -31,10 +31,10 @@ namespace SpellDuel
         {
             switch (stageId)
             {
-                case "1-1": return before ? new Clip { file = "v0_prologue.mp4", title = "序章：晨鐘啞了", from = 0, to = 8, shots = 8, mb = 8 } : null;
-                case "1-4": return Split("v1_golem.mp4", "熔岩巨像・守門人的拳", 4, 6, 7, before);
-                case "2-4": return Split("v2_treeking.mp4", "腐化樹王・不肯入睡的心", 4, 5, 6, before);
-                case "3-4": return Split("v3_kraken.mp4", "深海巨妖・黎明的三重奏", 4, 8, 10, before);
+                case "1-1": return before ? new Clip { file = "v0_prologue_v2.mp4", title = "序章：晨鐘啞了", from = 0, to = 8, shots = 8, mb = 8 } : null;
+                case "1-4": return Split("v1_golem_v2.mp4", "熔岩巨像・守門人的拳", 4, 6, 7, before);
+                case "2-4": return Split("v2_treeking_v2.mp4", "腐化樹王・不肯入睡的心", 4, 5, 6, before);
+                case "3-4": return Split("v3_kraken_v2.mp4", "深海巨妖・黎明的三重奏", 4, 8, 10, before);
             }
             return null;
         }
@@ -42,48 +42,49 @@ namespace SpellDuel
             new Clip { file = file, title = title + (before ? "" : "（結局）"), from = before ? 0 : cut, to = before ? cut : shots, shots = shots, mb = mb };
 
         /// <summary>全部的影片檔（遊戲一開始全部下載）</summary>
-        public static readonly (string file, int mb)[] Files = { ("v0_prologue.mp4", 8), ("v1_golem.mp4", 7), ("v2_treeking.mp4", 6), ("v3_kraken.mp4", 10) };
+        public static readonly (string file, int mb)[] Files = { ("v0_prologue_v2.mp4", 8), ("v1_golem_v2.mp4", 7), ("v2_treeking_v2.mp4", 6), ("v3_kraken_v2.mp4", 10) };
 
-        /// <summary>字幕：每支影片每個鏡頭一句（鏡頭等長，約 5.2 秒）</summary>
+        /// <summary>字幕：每支影片每個鏡頭一句（鏡頭等長，約 5.2 秒）。影片的聲音＝同一個旁白念這些字幕（原本每段不同的配樂拿掉，播放時改用遊戲的背景音樂）；
+        /// 旁白的句子不標「旁白：」，角色的台詞前面寫名字。影片檔是 *_v2.mp4（換了聲音，檔名不同才會重新下載）。</summary>
         static readonly System.Collections.Generic.Dictionary<string, string[]> Subs = new System.Collections.Generic.Dictionary<string, string[]>
         {
-            ["v0_prologue.mp4"] = new[]
+            ["v0_prologue_v2.mp4"] = new[]
             {
-                "旁白：灰燼像雪一樣落下。炎之里的晨鐘，已經三天沒有響過。",
-                "旁白：鐘樓裡，鐘舌斷了一截，鐘身爬滿了黑色的結晶。",
+                "灰燼像雪一樣落下。炎之里的晨鐘，已經三天沒有響過。",
+                "鐘樓裡，鐘舌斷了一截，鐘身爬滿了黑色的結晶。",
                 "老焰：鐘聲該讓出門的人知道，家還在這裡……可它啞了。",
-                "旁白：一位旅人走上村口的石階——那就是你。",
-                "艾琳：我是來抄鐘文的艾琳。你也聽見了嗎？山裡有東西在敲。",
-                "旁白：山腹的裂縫透出紅光。咚、咚、咚——三下，停一拍，又是三下。",
-                "旁白：火山、森林、海港……三座鐘，一座接一座熄滅了。",
+                "一位旅人走上村口的石階——那就是你。",
+                "艾琳：我是艾琳。你也聽見了嗎？山裡有東西在敲。",
+                "山腹透出紅光。咚、咚、咚——三下，又是三下。",
+                "火山、森林、海港……三座鐘，一座接一座熄滅了。",
                 "艾琳：走吧，先去礦坑救採礦隊。我們把晨鐘找回來。",
             },
-            ["v1_golem.mp4"] = new[]
+            ["v1_golem_v2.mp4"] = new[]
             {
-                "旁白：熔岩大廳深處，巨像守在石閘前，胸口的黑晶不停脈動。",
+                "熔岩大廳深處，巨像守在石閘前，胸口的黑晶不停脈動。",
                 "熔岩巨像：放過一人……洪潮便會進來……封住……所有的路……",
                 "艾琳：牠被困在一次沒結束的守門裡。攔住牠！",
-                "旁白：巨像高舉雙拳砸向地面——小心衝擊波！",
-                "旁白：黑晶碎裂，巨像緩緩跪下，熔岩的光漸漸暗去。",
-                "旁白：艾琳扣回鐘舌。鐘聲響起，金色的聲波掃過整座山。",
+                "巨像高舉雙拳砸向地面——小心衝擊波！",
+                "黑晶碎裂，巨像緩緩跪下，熔岩的光漸漸暗去。",
+                "艾琳扣回鐘舌。鐘聲響起，金色的聲波掃過整座山。",
             },
-            ["v2_treeking.mp4"] = new[]
+            ["v2_treeking_v2.mp4"] = new[]
             {
-                "旁白：霧中的記名林。古樹上，掛著無數刻了名字的木牌。",
+                "霧中的記名林。古樹上，掛著無數刻了名字的木牌。",
                 "腐化樹王：我若睡去……再也沒有人，等他們回來……",
-                "艾琳：翠會重刻木牌，小葉會讀名冊。你不必獨自記住所有人。",
+                "艾琳：翠會重刻木牌，小葉會讀名冊。你不必獨自記住。",
                 "腐化樹王：別讓……最後一個名字……消失！",
-                "旁白：黑晶裂開，樹根緩緩展平。一顆發光的種子，落在名冊上。",
+                "黑晶裂開，樹根展平。一顆發光的種子落在名冊上。",
             },
-            ["v3_kraken.mp4"] = new[]
+            ["v3_kraken_v2.mp4"] = new[]
             {
-                "旁白：暴風雨的夜，港口的舊燈塔在雨中掃過一道光。",
-                "旁白：巨妖攀上礁石。胸前的黑晶上，刻滿了名字。",
+                "暴風雨的夜，港口的舊燈塔在雨中掃過一道光。",
+                "巨妖攀上礁石。胸前的黑晶上，刻滿了名字。",
                 "海斗：凪還在岸上守著燈。我們也不退！",
                 "澪：別把活人的名字給牠……聽，歌還沒唱完。",
-                "旁白：黑晶崩散，巨妖沉回深海。雨，停了。",
-                "旁白：三座鐘隔著山、林與海，終於一同響起。",
-                "旁白：白帆化入晨光。港口立起了歸航者的名碑。",
+                "黑晶崩散，巨妖沉回深海。雨，停了。",
+                "三座鐘隔著山、林與海，終於一同響起。",
+                "白帆化入晨光。港口立起了歸航者的名碑。",
                 "艾琳：這次我寫下了所有名字。回家吧，把紀行念給大家聽。",
             },
         };
@@ -116,6 +117,9 @@ namespace SpellDuel
         /// <summary>遊戲一開始：還沒下載的影片全部下載（畫面顯示「載入中」）</summary>
         public static void PreloadAll()
         {
+            // 舊版影片（原本的配樂）：刪掉，省手機空間
+            foreach (var old in new[] { "v0_prologue.mp4", "v1_golem.mp4", "v2_treeking.mp4", "v3_kraken.mp4" })
+                try { var op = Path.Combine(Dir, old); if (File.Exists(op)) File.Delete(op); } catch { }
             if (AllDownloaded) return;
             if (inst == null) inst = new GameObject("Story Video").AddComponent<StoryVideo>();
             inst.Cleanup();
