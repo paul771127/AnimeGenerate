@@ -132,7 +132,15 @@ namespace SpellDuel
             for (int i = 0; i <= N; i++) lr.SetPosition(i, WorldFrame.FromWorld(o + Vector3.Lerp(da, db, i / (float)N).normalized * reach));
             // 敵人的預警＝紅色；自己的預警＝職業色半透明（告訴你刀線在哪、還沒砍下）
             var c = warn ? (f == Me ? new Color(f.cls.color.r, f.cls.color.g, f.cls.color.b, 0.5f) : new Color(1f, 0.25f, 0.2f, 0.85f)) : Color.Lerp(f.cls.color, Color.white, 0.6f);
+            bool novice = f.cls != null && f.cls.id == Skills.Novice;
+            if (novice && !warn) c = new Color(0.78f, 0.55f, 0.3f);   // 初心者的木棍：木頭色（不像劍光那麼亮）
             lr.startColor = lr.endColor = c;
+            // 初心者的木棍敲下去：木頭色的短弧線殘影＋木屑（和木棍揮擊同一套光效）
+            if (novice && !warn)
+            {
+                var mid = o + Vector3.Lerp(da, db, 0.5f).normalized * reach;
+                SpellFx.CastBurst("novice_swing", c, WorldFrame.FromWorld(Vector3.Lerp(o, mid, 0.6f)), WorldFrame.DirFromWorld(Fighter.Flat(mid - o).normalized), 0.8f);
+            }
             go.AddComponent<SlashLineFade>().Begin(lr, warn ? Mathf.Max(0.2f, f.windupUntil - battle.now) : 0.25f, c);
             if (warn) { Sfx.Play("cast_swordsman", 0.3f, 0.7f); if (f != Me) Sfx.Play("blade_warn", 0.7f); }   // 敵人的預警：拔刀聲
             // 敵人的預警：同時擺出攻擊架勢（預備的長度＝預警時間，出手的瞬間＝判定）
