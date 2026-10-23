@@ -1216,6 +1216,30 @@ namespace SpellDuel
             SaveBag(); SaveMail();
             return true;
         }
+        /// <summary>
+        /// 一次性補發（2026-10）：以前「重新分配所有點數」會把能力值不夠穿的裝備直接刪掉，玩家的藍色（稀有）弓因此不見。
+        /// 寄一把稀有的獵人弓到信箱（等級＝獵人目前等級，需求調到現在穿得上），只寄一次。回傳有沒有寄。
+        /// </summary>
+        public static bool GrantLostBowOnce()
+        {
+            const string key = "sd_comp_lost_bow_202610";
+            if (Get(key) == "1") return false;
+            var p = Char("archer");
+            var rng = new System.Random(20261023);
+            Item bow = null;
+            for (int i = 0; i < 2000 && bow == null; i++)
+            {
+                var it = ItemGen.Make(rng, p.level, 2, "archer");
+                if (it.slot == Slot.Weapon && it.classes == "archer" && it.name.Contains("弓")) bow = it;
+            }
+            if (bow == null) return false;
+            bow.reqLevel = Mathf.Min(bow.reqLevel, p.level);
+            if (bow.reqValue > 0) bow.reqValue = Mathf.Min(bow.reqValue, p.Total(bow.reqStat) - p.GearStat(bow.reqStat));   // 現在的能力值就穿得上
+            SendMail(bow, "補發：重新分配點數時遺失的弓");
+            Set(key, "1");
+            return true;
+        }
+
         /// <summary>測試用：清掉記憶體裡的背包與信箱（重新從存檔讀）</summary>
         public static void ReloadStorage() { bag = null; mail = null; cache.Clear(); }
     }
