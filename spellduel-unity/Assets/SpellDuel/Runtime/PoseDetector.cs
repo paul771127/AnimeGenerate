@@ -65,6 +65,9 @@ namespace SpellDuel
         bool readbackPending, nativeBusy;
         Result pending;          // 已送出、等結果的那一張
         bool flipY;              // 有些繪圖 API 畫到 RenderTexture 會上下顛倒；一直找不到人就自動換方向試
+        // 方向確定之後就鎖住（手離開畫面一陣子不會再亂換方向，造成手的上下顛倒）：
+        //   找到人＝確定；只找到手時看手指方向投票（手掌舉在鏡頭前，中指根部大多在手腕上方）：上方多＝確定、下方多＝換方向
+        bool flipLocked; int votesUp, votesDown;
         int misses;
 
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -209,9 +212,27 @@ namespace SpellDuel
                 res.hand[i] = new Vector2(r[HandOffset + 1 + i * 3], 1f - r[HandOffset + 2 + i * 3]);
                 res.handConf[i] = r[HandOffset + 3 + i * 3];
             }
+            if (!flipLocked)
+            {
+                if (res.found) flipLocked = true;
+                else if (res.handFound)
+                {
+                    float up = res.hand[9].y - res.hand[0].y;   // 視埠座標（往上為正）：中指根部比手腕高＝正常方向
+                    float size = Vector2.Distance(res.hand[9], res.hand[0]);
+                    if (size > 0.02f) { if (up > size * 0.3f) votesUp++; else if (up < -size * 0.3f) votesDown++; }
+                    if (votesUp >= 6 && votesUp > votesDown * 2) flipLocked = true;
+                    else if (votesDown >= 4 && votesDown > votesUp * 2)
+                    {
+                        flipY = !flipY; votesUp = votesDown = 0;   // 手幾乎都是倒過來的：影像上下顛倒了，換方向（這一張先不用）
+                        Latest = new Result { time = res.time, camPos = res.camPos, camRot = res.camRot, proj = res.proj };
+                        return;
+                    }
+                }
+            }
             Latest = res;
             if (res.found || res.handFound) { misses = 0; Status = res.found ? "偵測中：有找到人" : "偵測中：有找到手"; }
-            else if (++misses % 12 == 0) { flipY = !flipY; Status = "偵測中：畫面中沒有人"; }
+            else if (++misses % 12 == 0 && !flipLocked) { flipY = !flipY; Status = "偵測中：畫面中沒有人"; }
+            else if (!res.found && !res.handFound) Status = "偵測中：畫面中沒有人";
         }
     }
 }
