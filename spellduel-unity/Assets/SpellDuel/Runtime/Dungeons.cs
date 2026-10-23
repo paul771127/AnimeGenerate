@@ -14,7 +14,7 @@ namespace SpellDuel
     /// <summary>
     /// 多人副本（參考魔獸世界的副本：一段故事、幾個房間、最後的首領）。
     ///   ・在同一塊場地打：清完一個房間（一波）就換下一個房間的場景，房間可以跨主題（熔岩、森林、海上）。
-    ///   ・難度固定以「等級＝副本等級的 3 人隊伍」設計（不隨實際人數增減）：4 人輕鬆、3 人中等、2 人有一點機會。
+    ///   ・浮動難度：最少以 2 人計算，敵人數量、Boss 血量 ×人數（3 人 ×3、4 人 ×4）；人越多掉寶率越高（最多 ×1.5）。
     ///     一個人在同等級幾乎過不了；角色等級比副本高很多時敵人才會變弱（LevelRelief），
     ///     那時候副本掉的套裝等級（＝副本等級）已經遠低於角色等級。
     ///   ・通關：每個房間保底一件稀有以上的裝備（物品等級＝副本等級），最後的首領保底一件史詩套裝。
@@ -44,9 +44,11 @@ namespace SpellDuel
     public static class Dungeons
     {
         /// <summary>
-        /// 難度固定以「3 人隊伍」計算（敵人數量、血量、Boss 出招頻率都照 3 人，不隨實際人數增減）：
-        /// 4 人輕鬆、3 人中等、2 人有一點機會、1 人幾乎不可能（除非等級遠高於副本）。
+        /// 浮動難度（使用者要求）：最低以 2 人計算；3 人＝敵人數量、Boss 血量 ×3，4 人 ×4（1、2 人都是 ×2）。
+        /// 人數越多掉寶率越高：2 人以下 ×1、3 人 ×1.25、4 人 ×1.5（稀有度照常擲，越稀有越難掉）。
         /// </summary>
+        public static int PartyScale(int players) => Mathf.Max(2, players);
+        public static float LootMul(int players) => 1f + 0.25f * Mathf.Clamp(players - 2, 0, 2);
         public const int DesignAllies = 2;
         /// <summary>在 3 人難度之上，敵人的血量、玩家受到的傷害再加一點（副本比一般合作硬）</summary>
         public const float DungeonHp = 1.15f, DungeonDmg = 1.1f;

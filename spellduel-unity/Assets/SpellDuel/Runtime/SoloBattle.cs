@@ -367,7 +367,8 @@ namespace SpellDuel
         void TryDrop(bool boss)
         {
             int luk = prof.Total(Stat.Luk);
-            if (!boss && dropRng.NextDouble() > 0.06 + 0.002 * luk) return;
+            float lootMul = dungeon != null ? Dungeons.LootMul(coop ? 1 + PeerIds.Count : 1) : 1f;   // 副本：人越多掉寶率越高（最多 ×1.5）
+            if (!boss && dropRng.NextDouble() > (0.06 + 0.002 * luk) * lootMul) return;
             int rar = ItemGen.RollRarity(dropRng, luk * 0.3f, boss ? 2 : 0);
             int ilvl = Mathf.Max(1, prof.level + dropRng.Next(-1, 3) + battle.wave / 10);   // 無盡：物品等級跟著角色等級（越後面的波次略高）
             if (dungeon != null) ilvl = dungeon.level + battle.levelBoost + dropRng.Next(-1, 2);   // 副本：物品等級＝副本等級（普通＋20、困難＋40）
@@ -925,7 +926,8 @@ namespace SpellDuel
                     }
                     else if (dungeon != null)
                     {
-                        battle.scaleAllies = Dungeons.DesignAllies;            // 副本：固定以 3 人隊伍的強度（2 人吃力、4 人輕鬆）
+                        battle.dungeonParty = Dungeons.PartyScale(partyN);          // 副本：浮動難度（最少 2 人；敵人數量、Boss 血量 ×人數）
+                        battle.scaleAllies = battle.dungeonParty - 1;               // Boss 出招頻率、召喚數也照人數
                         battle.hpBoost = Dungeons.DungeonHp * dungeonRelief;   // 再硬一點（主機的等級決定）
                         battle.StartDungeon(dungeon.Waves);
                     }
@@ -1377,6 +1379,9 @@ namespace SpellDuel
                         bool last = i == d.rooms.Count - 1;
                         ItemGen.SetTheme = d.ThemeOfRoom(i);
                         pendingItems.Add(ItemGen.Make(dropRng, d.level + battle.levelBoost, last ? 3 : Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
+                        // 人數加成：每個房間有（倍率−1）的機會多掉一件（稀有度照常擲，越稀有越難掉）
+                        if (dropRng.NextDouble() < Dungeons.LootMul(coop ? 1 + PeerIds.Count : 1) - 1f)
+                            pendingItems.Add(ItemGen.Make(dropRng, d.level + battle.levelBoost, ItemGen.RollRarity(dropRng, 0f, 0), myClass));
                     }
                     float drmul = 1f + battle.levelBoost / (2f * LevelPerDifficulty);   // 普通 ×1.5、困難 ×2
                     pendingGold += Mathf.RoundToInt(60 * d.level * drmul);
@@ -1391,7 +1396,7 @@ namespace SpellDuel
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
                     if (!Story.IsSeen("dg!" + d.id)) { Story.MarkSeen("dg!" + d.id); ShowDialogue(d.after, null); }
                 }
-                else { LoseLoot(); Say($"💀 {d.name} 失敗…副本以 3 人隊伍的強度設計（4 人輕鬆、2 人吃力），找夥伴一起來吧", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
+                else { LoseLoot(); Say($"💀 {d.name} 失敗…副本的敵人跟著人數變多（最少以 2 人計算），等級再高一點或找夥伴一起來吧", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
             }
             if (endless && storyStage != null)

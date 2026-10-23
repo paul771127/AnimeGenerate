@@ -408,6 +408,8 @@ namespace SpellDuel
         /// <summary>人數倍率用的「隊友人數」：一般＝實際人數；副本固定（以 3 人隊伍設計，2 人吃力、4 人輕鬆）</summary>
         public int scaleAllies = -1;
         public int ScaleAllies => scaleAllies >= 0 ? scaleAllies : allies.Count;
+        /// <summary>副本的浮動難度：隊伍人數（最少算 2 人；0＝不是副本）。敵人數量、Boss 血量 ×人數，小怪個別血量不另外加</summary>
+        public int dungeonParty;
         public bool AnyAllyAlive { get { foreach (var a in allies) if (a.Alive) return true; return false; } }
         public Fighter AllyByPid(int pid) => allies.Find(a => a.pid == pid);
         public bool coopHost;
@@ -592,7 +594,8 @@ namespace SpellDuel
                 bossPending = IsBossWave;   // 故事關卡的 Boss 波：先清小怪
                 // 每波的小怪數：6＋波次（最多 28），合作 ×1.5
                 waveTotal = Mathf.Min(28, 6 + wave);
-                if (ScaleAllies > 0) waveTotal = Mathf.CeilToInt(waveTotal * (1f + 0.5f * ScaleAllies));
+                if (dungeonParty > 0) waveTotal = Mathf.CeilToInt(waveTotal * dungeonParty);   // 副本：敵人數量 ×人數（最少 2）
+                else if (ScaleAllies > 0) waveTotal = Mathf.CeilToInt(waveTotal * (1f + 0.5f * ScaleAllies));
                 waveTotal = Mathf.Max(1, Mathf.CeilToInt(waveTotal * stageEnemyMul * CountMixMul));
                 waveToSpawn = waveTotal;
             }
@@ -608,9 +611,9 @@ namespace SpellDuel
         public static int XpForLevel(int level) => 40 * (level - 1) + 15 * (level - 1) * (level - 1) + 0;
         public static int LevelOf(int xp) { int l = 1; while (xp >= XpForLevel(l + 1)) l++; return l; }
         /// <summary>參與人數倍率：每多一位玩家，敵人的血量與攻擊力 +30%</summary>
-        public float PartyMul => 1f + 0.3f * ScaleAllies;
+        public float PartyMul => dungeonParty > 0 ? 1f : 1f + 0.3f * ScaleAllies;
         /// <summary>Boss 血量的人數倍率：每多一位玩家 +50%</summary>
-        public float BossPartyMul => 1f + 0.5f * ScaleAllies;
+        public float BossPartyMul => dungeonParty > 0 ? dungeonParty : 1f + 0.5f * ScaleAllies;
         int Tier => Mathf.Max(0, wave - 1 + levelBoost);
         /// <summary>難度加的等級（故事關卡、副本：簡單 0、普通 +20、困難 +40）：敵人的血量、攻擊、速度照「波次＋這個數」成長</summary>
         public int levelBoost;
@@ -643,7 +646,8 @@ namespace SpellDuel
                 return;
             }
             // 小怪波：照間隔陸續出現（每次兩隻）；場上同時最多 6＋波次/3×2 隻（合作 +4）
-            int maxAlive = Mathf.Max(2, Mathf.CeilToInt((Mathf.Min(12, 5 + wave / 4) + 4 * ScaleAllies) * stageEnemyMul * CountMixMul));   // 同時在場的上限（第 1 波 5 隻、每 4 波 +1，最多 12）
+            int maxAlive = dungeonParty > 0 ? Mathf.Min(24, Mathf.Min(12, 5 + wave / 4) * dungeonParty / 2 + 2)   // 副本：同時在場也跟著人數（最多 24）
+                : Mathf.Max(2, Mathf.CeilToInt((Mathf.Min(12, 5 + wave / 4) + 4 * ScaleAllies) * stageEnemyMul * CountMixMul));   // 同時在場的上限（第 1 波 5 隻、每 4 波 +1，最多 12）
             if (waveToSpawn > 0 && now >= nextMinionAt && minions.Count < maxAlive)
             {
                 for (int k = 0; k < 2 && waveToSpawn > 0 && minions.Count < maxAlive; k++)
