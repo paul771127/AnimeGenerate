@@ -444,7 +444,7 @@ namespace SpellDuel
             // 初心者：木棍揮擊、投石、急救（投石常被聽成「同時」）
             "tou 投頭头偷透|tong 同通童痛統统銅铜桶筒|mu 木目母幕慕墓牧|jiu 救就九久舊旧究酒揪|" +
             // 劍仙：劍來、御劍術、萬劍歸宗
-            "lai 來来賴赖萊莱|wan 萬万完玩晚碗彎弯灣湾|gui 歸归鬼貴贵櫃柜規规龜龟|zong 宗總总縱纵蹤踪棕粽";
+            "lai 來来賴赖萊莱|wan 萬万完玩晚碗彎弯灣湾|gui 歸归鬼貴贵櫃柜規规龜龟|zong 宗總总縱纵蹤踪棕粽|gang 罡剛刚鋼钢港崗岗綱纲缸|ti 體";
 
         static readonly Dictionary<char, char> toTrad = new Dictionary<char, char>();
         static readonly Dictionary<char, List<string>> pinyin = new Dictionary<char, List<string>>();

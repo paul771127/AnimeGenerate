@@ -1770,7 +1770,7 @@ namespace SpellDuel
         void CastSelf(Fighter f, SkillDef s)
         {
             // 牧師的輔助技能：作用在所有己方單位（自己＋合作隊友）
-            if (s.cls == "priest")
+            if (s.cls == "priest" || s.team)
             {
                 if (f.healMul != 1f && (s.heal > 0 || s.self == SelfKind.HealPct))
                 {

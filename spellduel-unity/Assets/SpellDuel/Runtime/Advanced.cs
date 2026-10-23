@@ -59,7 +59,7 @@ namespace SpellDuel
                 skills = new[] { "shieldbash", "oath", "sanction" } });
             // 劍仙（內部 id 沿用 berserker：存檔、外觀資料都用這個 id）：以氣御劍的輸出職業
             Add(new AdvDef { id = "berserker", baseCls = "swordsman", name = "劍仙", color = C("#7dd3fc"), hpAdd = 0, atkMul = 1.25f, armor = -0.1f, crit = 0.05f, stats = S(str: 4, agi: 2),
-                desc = "以氣御劍，萬劍隨心——專精輸出的劍士", core = "劍意：攻擊 +25%、爆擊 +5%；劍來、御劍術、萬劍歸宗三招連續輸出", weak = "受到的傷害 +10%",
+                desc = "以氣御劍，萬劍隨心——專精輸出的劍士", core = "劍意：攻擊 +25%、爆擊 +5%。技能樹三個流派：輸出（御劍術、萬劍歸宗）、防禦（劍罡護體）、輔助（劍陣）", weak = "受到的傷害 +10%",
                 skills = new[] { "jianlai", "yujian", "wanjian" } });
             // ---------------------------------------------------------------- 獵人
             Add(new AdvDef { id = "marksman", baseCls = "archer", name = "神射手", color = C("#facc15"), hpAdd = -5, crit = 0.1f, stats = S(luk: 6),

@@ -30,6 +30,8 @@ namespace SpellDuel
         public bool lobPool;            // 拋物線投擲落地後留下毒液區
         public bool atTarget;           // 範圍攻擊打在目標位置（樹根爆發），不是施放者周圍
         public float stillRadius;       // 蓄力時要站著不動：離開詠唱位置超過這個半徑（公尺）就失敗（刺殺準備）
+        /// <summary>輔助技能：和牧師一樣也作用在合作的隊友（劍仙的劍陣）</summary>
+        public bool team;
         public bool releaseNear;        // 距離不在射程內時不能出手（保留蓄力，靠近再放）
         public bool duckable;           // 胸口高度的橫向衝擊波（Boss 的橫掃、藤鞭）：蹲下就躲得過
         public bool crescent;           // 新月形法球（劍氣、風刃）：碰到新月本體才算命中（不是整片橫掃）
@@ -269,6 +271,8 @@ namespace SpellDuel
             P(new SkillDef { adv = "berserker", id = "jianlai", cls = "swordsman", name = "劍來", type = SkillType.Self, self = SelfKind.SwordCome, color = C("#7dd3fc"), cost = 20, charge = 0.4f, cooldown = 30f, buffDur = 20f, desc = "手中出現一把長劍：20 秒內普攻傷害 +30%、攻擊距離 +2m" });
             P(new SkillDef { adv = "berserker", id = "yujian", cls = "swordsman", name = "御劍術", type = SkillType.Self, self = SelfKind.FlyingSwords, multi = 3, color = C("#bae6fd"), cost = 30, damage = 30, charge = 0.6f, cooldown = 12f, buffDur = 2f, speed = 12f, radius = 0.12f, rangeMax = 12f, desc = "召喚飛劍：2 秒內朝準星方向連續射出長劍（每秒 3 把，技能樹可以加），每把是這招傷害的 40%" });
             P(new SkillDef { adv = "berserker", id = "wanjian", cls = "swordsman", fromAbove = true, dropHeight = 6f, multi = 8, name = "萬劍歸宗", type = SkillType.Projectile, color = C("#e0f2fe"), cost = 40, damage = 16, charge = 1.4f, cooldown = 14f, speed = 11f, radius = 0.45f, rangeMax = 12f, desc = "八把長劍從準星對準的地方上空落下，散在周圍 2.5m" });
+            P(new SkillDef { adv = "berserker", id = "jiangang", cls = "swordsman", name = "劍罡護體", type = SkillType.Self, self = SelfKind.Shield, color = C("#93c5fd"), cost = 25, charge = 0.5f, cooldown = 16f, buffDur = 8f, buffAmount = 60, desc = "劍氣繞身：8 秒護盾，擋下 60 點傷害（防禦流派）" });
+            P(new SkillDef { adv = "berserker", id = "jianzhen", cls = "swordsman", team = true, name = "劍陣", type = SkillType.Self, self = SelfKind.TeamShield, color = C("#a5f3fc"), cost = 35, charge = 0.8f, cooldown = 20f, buffDur = 8f, buffAmount = 40, desc = "飛劍在身邊列陣：自己與合作的隊友 8 秒護盾 40（輔助流派）" });
             P(new SkillDef { id = "yj_blade", cls = "swordsman", name = "飛劍", type = SkillType.Projectile, color = C("#bae6fd"), cost = 0, damage = 12, charge = 0f, cooldown = 0f, speed = 12f, radius = 0.12f, rangeMax = 12f, desc = "御劍術射出的飛劍" });
             // 劍士・狂戰士（舊）
             P(new SkillDef { adv = "berserker", id = "whirlwind", cls = "swordsman", name = "旋風斬", type = SkillType.Projectile, areaFoes = true, areaRadius = 2f, hits = 3, hitGap = 0.25f, color = C("#f87171"), cost = 20, damage = 12, charge = 0f, cooldown = 5f, radius = 0f, rangeMax = 2f, desc = "不用蓄力，手刀揮過：360° 旋轉斬，周圍 2m 的敵人連續受到 3 段傷害" });
