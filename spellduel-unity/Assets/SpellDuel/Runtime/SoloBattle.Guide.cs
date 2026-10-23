@@ -6,12 +6,14 @@ namespace SpellDuel
     /// 村莊新手導覽（新角色教學結束、進炎之里後開始）：一步一步教，做到了自動下一步，說明型的按「下一步」。
     ///   0 移動（方向鍵／晃手機，走 4m）→ 1 解任務（找頭上有❗的米菈上投石課）→ 2 點能力值（升級拿到的能力點加完）
     ///   → 3 穿裝備（米菈送的旅行布衣）→ 4 技能欄與技能點（可以打開整備看看）→ 5 設施介紹（一頁一個）
-    ///   → 6 其他任務怎麼看 → 7 出發（從村口去故事 1-1）→ 完成。
+    ///   → 6 其他任務怎麼看 → 完成（原本的 7「從村口出發」拿掉了：不會觸發）。
     /// 進度記在角色上（sd_guide；−1＝沒開始、99＝完成），隨時可以「略過導覽」；訓練場可以重看。
     /// </summary>
     public partial class SoloBattle
     {
         public const int GuideDone = 99;
+        /// <summary>導覽最後一步（6 其他任務）；做完就結束</summary>
+        const int LastGuideStep = 6;
         int GuideStep
         {
             get { try { return PlayerPrefs.GetInt(CharacterSlots.Key("sd_guide"), -1); } catch { return -1; } }
@@ -20,7 +22,7 @@ namespace SpellDuel
         int guidePage;
         float guideBottom;        // 導覽卡片的下緣（任務面板排在它下面）            // 設施介紹：第幾頁
         float guideMovedAt;       // 開始移動這一步時已經走過的距離
-        bool GuideActive => GuideStep >= 0 && GuideStep < GuideDone;
+        bool GuideActive => GuideStep >= 0 && GuideStep <= LastGuideStep;   // 舊存檔停在第 7 步（已拿掉）＝當作完成
 
         const string StarterGearName = "旅行布衣";
 
@@ -40,7 +42,7 @@ namespace SpellDuel
             GuideStep = to; guidePage = 0;
             // 照著做完一步：給經驗（重看導覽不重複給）
             int paid = PlayerPrefs.GetInt(CharacterSlots.Key("sd_guide_xp"), -1);
-            if (from >= 0 && from < GuideDone && from > paid && (to != GuideDone || from == 7))
+            if (from >= 0 && from < GuideDone && from > paid && (to != GuideDone || from == LastGuideStep))
             {
                 PlayerPrefs.SetInt(CharacterSlots.Key("sd_guide_xp"), from);
                 GrantQuestXp(GuideStepXp, "導覽完成一步");
@@ -79,7 +81,6 @@ namespace SpellDuel
                     var body = p.equipped[(int)Slot.Body];
                     if (GuideNextLater || body != null) { GuideNextLater = false; GuideNext(4); }   // 身上有衣服就算（重看導覽、布衣賣掉了也不會卡住）
                     break;
-                case 7: if (Story.IsCleared("1-1") || storyStage != null && storyStage.id == "1-1") GuideNext(GuideDone); break;
             }
         }
 
@@ -153,7 +154,7 @@ namespace SpellDuel
             if (UiKit.Button(nb, "下一步 ▶", fsS, true, col))
             {
                 if (GuideStep == 5 && guidePage < GuideFacilities.Length - 1) { guidePage++; Sfx.Play("select", 0.5f); }
-                else GuideNext(GuideStep + 1);
+                else GuideNext(GuideStep >= LastGuideStep ? GuideDone : GuideStep + 1);
             }
         }
     }

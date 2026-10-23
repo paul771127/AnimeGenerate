@@ -128,7 +128,7 @@ namespace SpellDuel
             {
                 string why = Story.LockReason(next);
                 bool ok = Story.IsUnlocked(next);
-                list.Add(($"📖 主線 {next.id}　{next.title}", ok ? "從村口出去（大地圖）出發" : why ?? "先過前一關", new Color(1f, 0.85f, 0.4f)));
+                list.Add(($"📖 主線 {next.id}　{next.title}", ok ? null : why ?? "先過前一關", new Color(1f, 0.85f, 0.4f)));
             }
             if (p.cls == Skills.Novice)
                 foreach (var q in NoviceQuests.All)
