@@ -215,6 +215,7 @@ namespace SpellDuel
         void Start()
         {
             SaveReset.RunOnce();   // 改成初心者制度：第一次開這個版本時清掉舊存檔（設定保留），一定要最先執行
+            StoryVideo.PreloadAll();   // 劇情影片一開始就全部下載（畫面顯示「載入中」）
             Application.targetFrameRate = 60;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             mat = new Material(Shader.Find("Sprites/Default"));
@@ -1375,6 +1376,7 @@ namespace SpellDuel
             if (hitFlash > 0.01f) { GUI.color = new Color(1f, 0f, 0.05f, hitFlash * 0.45f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
 
             int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.8f);
+            if (StoryVideo.Active) { StoryVideo.DrawGUI(); return; }   // 一開始下載影片（載入中）、播劇情影片：蓋住整個畫面
             if (areaPreview) { DrawAreaPreview(W, H, pad, fs, fsS); return; }
             // 一開始：選模式（首頁；畫面在 GameRoot.Lobby.cs）
             if (mode == Mode.Choose) { if (CharSelectOpen) DrawCharacterSelect(W, H, pad, top, lineH, fs, fsS); else DrawHome(W, H, pad, top, lineH, fs, fsS); return; }   // 先選角色（GameRoot.Characters.cs）

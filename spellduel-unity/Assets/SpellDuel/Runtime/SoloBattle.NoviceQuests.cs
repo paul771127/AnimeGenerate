@@ -15,10 +15,16 @@ namespace SpellDuel
         {
             var q = NoviceQuests.ByNpc(npcName);
             var p = Progress.Char(myClass);
-            if (q == null || p.cls != Skills.Novice || p.noviceLearned.Contains(q.skill)) return false;
+            if (q == null || !NoviceQuests.Pending(q, p)) return false;
             string who = npcName;
             List<StoryLine> L(string[] lines) { var l = new List<StoryLine>(); foreach (var t in lines) l.Add(new StoryLine { speaker = who, tag = "npc", text = t }); return l; }
             Sfx.Play("talk", 0.7f); Haptics.Play(Haptics.Kind.Light);
+            if (q.kind == "lesson")
+            {
+                // 上課型：說完就直接去空地上課（沒上完下次再來會再上一次）
+                ShowDialogue(L(p.noviceQuest.ContainsKey(q.skill) ? q.wait : q.offer), () => BeginLesson(q));
+                return true;
+            }
             if (!p.noviceQuest.ContainsKey(q.skill))
             {
                 // 接任務
@@ -41,6 +47,39 @@ namespace SpellDuel
             return true;
         }
 
+        /// <summary>米菈的投石課：先學會投石（放上技能欄），再到空地練習（木頭人站在遠處）</summary>
+        void BeginLesson(NoviceQuests.Quest q)
+        {
+            var p = Progress.Char(myClass);
+            p.noviceQuest[q.skill] = 0;
+            if (!p.noviceLearned.Contains(q.skill)) p.noviceLearned.Add(q.skill);
+            Progress.SaveChar(p);
+            if (!myLoadout.Contains(q.skill)) { if (myLoadout.Count < 3) myLoadout.Add(q.skill); else myLoadout[myLoadout.Count - 1] = q.skill; }
+            SaveChoices(); PlayerPrefs.Save();
+            villageReturn = WorldUI.Screen.Town; enemyClass = "tutorial"; storyMapOpen = false; prologueRun = false;
+            StartTutorial(true);
+        }
+
+        /// <summary>投石課練習過了：任務完成（故事 1-1 解鎖）</summary>
+        void StoneLessonDone()
+        {
+            var p = Progress.Char(myClass);
+            foreach (var q in NoviceQuests.All)
+                if (q.kind == "lesson" && p.noviceQuest.Remove(q.skill)) { Progress.SaveChar(p); lessonDoneLines = q; }
+        }
+        NoviceQuests.Quest lessonDoneLines;   // 練習結束回村子後要說的話（第一次通過）
+
+        /// <summary>投石課結束回村子：第一次通過＝米菈說完成的話</summary>
+        void AfterStoneLesson()
+        {
+            stoneLesson = false; tutorial = false;
+            var q = lessonDoneLines; lessonDoneLines = null;
+            GoVillage();
+            if (q == null) return;
+            var l = new List<StoryLine>(); foreach (var t in q.done) l.Add(new StoryLine { speaker = q.npc, tag = "npc", text = t });
+            ShowDialogue(l, () => Say("📜 下一步：故事 1-1「灰燼中的歸途」已解鎖（村口 → 地圖）", 5f));
+        }
+
         void LearnNoviceSkill(NoviceQuests.Quest q)
         {
             var p = Progress.Char(myClass);
@@ -57,7 +96,7 @@ namespace SpellDuel
         {
             var p = Progress.Char(myClass);
             foreach (var q in NoviceQuests.All)
-                if (p.noviceQuest.TryGetValue(q.skill, out var have) && q.kind != "clear" && have >= q.need && !noviceQuestSaid.Contains(q.skill))
+                if (p.noviceQuest.TryGetValue(q.skill, out var have) && q.kind != "clear" && q.kind != "lesson" && have >= q.need && !noviceQuestSaid.Contains(q.skill))
                 {
                     noviceQuestSaid.Add(q.skill);
                     floaters.Add(new Floater { text = $"📜 任務完成：{q.title}（回炎之里找{q.npc}）", color = new Color(1f, 0.85f, 0.4f), born = Time.time, screen = true });
@@ -71,7 +110,8 @@ namespace SpellDuel
         {
             var q = NoviceQuests.ByNpc(npcName);
             var p = Progress.Char(myClass);
-            if (q == null || p.cls != Skills.Novice || p.noviceLearned.Contains(q.skill)) return null;
+            if (q == null || !NoviceQuests.Pending(q, p)) return null;
+            if (q.kind == "lesson") return $"🪨 上{q.title}（學投石）";
             if (!p.noviceQuest.ContainsKey(q.skill)) return $"📜 接任務：{q.title}";
             return NoviceQuests.Complete(q, p, Story.IsCleared) ? $"✨ 回報任務：學「{Skills.All[q.skill].name}」" : $"📜 {NoviceQuests.Progress(q, p, Story.IsCleared)}";
         }

@@ -1131,7 +1131,7 @@ namespace SpellDuel
 
     /// <summary>
     /// 初心者的招式任務（炎之里的居民教）：接任務 → 完成 → 回去找他 → 學會那一招。
-    ///   小鐵 教 木棍揮擊（打倒 5 隻小怪）；米菈 教 投石（收集 3 塊熔岩碎石：打倒小怪 35% 掉一塊）；老焰 教 急救（通關故事 1-1）。
+    ///   小鐵 教 木棍揮擊（打倒 5 隻小怪）；米菈 教 投石（炎之里第一個任務：上投石課，故事 1-1 之前一定要上）；老焰 教 急救（通關故事 1-1）。
     /// 狀態存在角色上（CharacterProfile.noviceQuest／noviceLearned）。
     /// </summary>
     public static class NoviceQuests
@@ -1148,10 +1148,11 @@ namespace SpellDuel
                 offer = new[] { "你就是新來的冒險者？拿根木棍就想出門，太危險了！", "這樣吧：去外面打倒 5 隻小怪，回來我教你怎麼把木棍揮得像樣一點。" },
                 wait = new[] { "還差一點！打倒 5 隻小怪再回來。" },
                 done = new[] { "不錯嘛！來，木棍要這樣揮——用手刀往下劈，力氣從腰帶過來。", "學會「木棍揮擊」了！手刀劈下去就會出招。" } },
-            new Quest { skill = "nv_stone", npc = "米菈", title = "米菈的熔岩碎石", kind = "collect", item = "熔岩碎石", need = 3,
-                offer = new[] { "我在收熔岩碎石——森之里的人拿它當暖爐的芯。", "幫我從小怪身上找 3 塊回來吧？做為交換，我教你怎麼把石頭丟得又遠又準。" },
-                wait = new[] { "熔岩碎石還不夠喔。打倒小怪時有機會撿到。" },
-                done = new[] { "就是這個！謝啦。丟石頭的訣竅是：先握拳，再一口氣張開手。", "學會「投石」了！握拳再張開就會丟出去。" } },
+            // 投石課（kind "lesson"）：接任務就先學會投石，再上一堂練習（木頭人站在遠處）；練習過了任務才算完成，故事 1-1 才會開
+            new Quest { skill = "nv_stone", npc = "米菈", title = "米菈的投石課", kind = "lesson", need = 1,
+                offer = new[] { "等等，新來的！你只會拿木棍近身敲？碰到站得遠遠的、會丟火球的怪怎麼辦？", "我跑商路全靠這招：撿顆石頭，丟得又遠又準。來，我教你。", "先唸「投石」把力氣集中在手上，然後握拳，再一口氣張開手——石頭就飛出去了。", "去空地上試試：木頭人站在遠處，用投石丟中它 3 次！" },
+                wait = new[] { "投石課還沒上完喔。再去空地練一次：站遠遠的，用投石丟中木頭人 3 次。" },
+                done = new[] { "漂亮！離得遠也打得到，這就是投石。", "記住：近身用木棍敲（手掌劃一下），遠的就唸「投石」、握拳再張開。", "準備好了就去村口，走一趟故事 1-1「灰燼中的歸途」吧。小鐵和老焰也有事要拜託你喔。" } },
             new Quest { skill = "nv_aid", npc = "老焰", title = "老焰的第一課", kind = "clear", stage = "1-1", need = 1,
                 offer = new[] { "孩子，出門前先學會照顧自己。", "先去走一趟「灰燼中的歸途」（故事 1-1），平安回來，我就教你包紮傷口。" },
                 wait = new[] { "還沒走完「灰燼中的歸途」嗎？不急，平安最重要。" },
@@ -1160,11 +1161,17 @@ namespace SpellDuel
         public static Quest ByNpc(string npcName) => Array.Find(All, q => !string.IsNullOrEmpty(npcName) && npcName.Contains(q.npc));
         /// <summary>任務有沒有完成（打倒／收集看進度；通關看故事紀錄）</summary>
         public static bool Complete(Quest q, CharacterProfile p, Func<string, bool> stageCleared)
-            => p.noviceQuest.TryGetValue(q.skill, out var have) && (q.kind == "clear" ? stageCleared != null && stageCleared(q.stage) : have >= q.need);
+            => q.kind == "lesson" ? p.noviceLearned.Contains(q.skill) && !p.noviceQuest.ContainsKey(q.skill)
+             : p.noviceQuest.TryGetValue(q.skill, out var have) && (q.kind == "clear" ? stageCleared != null && stageCleared(q.stage) : have >= q.need);
+        /// <summary>這個任務還在進行（上課型：學會了但練習還沒過也算）</summary>
+        public static bool Pending(Quest q, CharacterProfile p) => p.cls == Skills.Novice && !(p.noviceLearned.Contains(q.skill) && !p.noviceQuest.ContainsKey(q.skill));
+        /// <summary>初心者還沒上完米菈的投石課（故事 1-1 鎖住）</summary>
+        public static bool StoneLessonPending(CharacterProfile p) { var q = Array.Find(All, x => x.kind == "lesson"); return q != null && Pending(q, p); }
         public static string Progress(Quest q, CharacterProfile p, Func<string, bool> stageCleared)
         {
-            if (p.noviceLearned.Contains(q.skill)) return "✔ 已學會";
+            if (p.noviceLearned.Contains(q.skill) && !p.noviceQuest.ContainsKey(q.skill)) return "✔ 已學會";
             if (!p.noviceQuest.TryGetValue(q.skill, out var have)) return "還沒接（到炎之里找" + q.npc + "）";
+            if (q.kind == "lesson") return "到炎之里找" + q.npc + "，上完投石課";
             if (q.kind == "clear") return stageCleared != null && stageCleared(q.stage) ? "完成！回去找" + q.npc : $"通關故事 {q.stage}";
             return have >= q.need ? "完成！回去找" + q.npc : q.kind == "kill" ? $"打倒小怪 {have}/{q.need}" : $"{q.item} {have}/{q.need}";
         }

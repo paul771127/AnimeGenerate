@@ -99,7 +99,8 @@ namespace SpellDuel
         static readonly List<StoryLine> TutorialOutroLines = Lines(
             ("小鐵", "", "哇……木頭人被打得團團轉！你真的會用咒語啊！"),
             ("老焰", "", "好身手。炎之里歡迎你，{玩家}。村裡有鐵匠鋪、道具店，還有能接副本和懸賞的地方，先去逛逛吧。"),
-            ("老焰", "", "準備好了，就從東邊的村口出發。採礦隊……就拜託你了。"));
+            ("老焰", "", "準備好了，就從東邊的村口出發。採礦隊……就拜託你了。"),
+            ("米菈", "", "等等等等！就靠一根木棍上山？太亂來了。到村子裡來，我先教你一招保命的。"));
 
         void StartPrologue()
         {
@@ -111,11 +112,17 @@ namespace SpellDuel
         void AfterTutorial()
         {
             victory = null;
+            if (stoneLesson) { AfterStoneLesson(); return; }
             if (prologueRun)
             {
                 prologueRun = false;
                 ShowSetup(); enemyClass = "story"; tutorial = false;
-                ShowDialogue(TutorialOutroLines, () => { villageReturn = null; storyMapOpen = true; world.OpenTown(0); });
+                // 結尾 → 進炎之里 → 第一個任務：米菈的投石課（初心者；上完故事 1-1 才會開）
+                ShowDialogue(TutorialOutroLines, () =>
+                {
+                    villageReturn = null; storyMapOpen = true; world.OpenTown(0);
+                    if (NoviceQuests.StoneLessonPending(Progress.Char(myClass))) NoviceQuestTalk("米菈");
+                });
                 return;
             }
             if (villageReturn.HasValue || entry == Entry.Story) { GoVillage(); return; }

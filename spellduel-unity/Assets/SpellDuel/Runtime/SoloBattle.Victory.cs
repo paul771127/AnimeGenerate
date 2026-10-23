@@ -135,7 +135,7 @@ namespace SpellDuel
         {
             if (NetMode && dungeon != null) return "▶ 回隊伍畫面";
             if (NetMode) return localReady ? "等待其他人…" : "▶ 準備下一場";
-            if (tutorial) return villageReturn.HasValue ? "▶ 回訓練場" : "▶ 進入村子";
+            if (tutorial) return stoneLesson ? "▶ 回炎之里" : villageReturn.HasValue ? "▶ 回訓練場" : "▶ 進入村子";
             if (IsTrial) return "▶ 去職業工會轉職";
             if (dungeon != null) return "▶ 挑戰其他副本";
             if (storyStage != null)

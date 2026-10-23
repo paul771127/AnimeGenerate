@@ -7,6 +7,8 @@ namespace SpellDuel
     /// 互動教學關（第一次玩：序章對話之後自動開始；之後在村子的訓練場可以再上一次）：一步一步教，做對了才進下一步。
     ///   0 站好校正 → 1 走到地上的光圈（兩個）→ 2 橫掃來時蹲下 → 3 火球飛來時側跨 → 4 震地環到腳邊時跳起來
     ///   → 5 唸技能名稱詠唱 → 6 做放招動作把技能放出去 → 7 打中木頭人 3 次 → 完成（第一次完成送金幣與經驗）。
+    /// 初心者（還沒有技能）：前五步一樣，接著 8 走到木頭人前面 → 9 用普攻「木棍敲擊」（手掌在鏡頭前劃一下）打中 3 次。
+    /// 米菈的投石課（炎之里第一個任務，故事 1-1 之前）：木頭人站在遠處 → 5 唸「投石」→ 6 握拳再張開丟出去 → 10 站在遠處用投石打中 3 次。
     /// 攻擊由「教官木頭人」放出（不會真的扣血；被打到就重來這一步）。每一步都可以「略過」。
     /// </summary>
     public partial class SoloBattle
@@ -18,17 +20,28 @@ namespace SpellDuel
         Vector3 tutTarget; GameObject tutRingGo, tutPillarGo;
         string tutMsg; float tutMsgUntil;
 
-        public const int TutSteps = 8;
-        static readonly string[] TutTitles = { "站好校正", "走到光圈", "蹲下躲橫掃", "側跨閃火球", "跳過震地環", "唸技能名稱", "放出技能", "打中木頭人" };
-        /// <summary>第一次玩的序章＋教學要不要強制播（測試期間先關掉：直接進村子；訓練場仍可以上教學）</summary>
-        public const bool ForceIntro = false;
+        static readonly int[] PlanFull = { 0, 1, 2, 3, 4, 5, 6, 7 };
+        static readonly int[] PlanNovice = { 0, 1, 2, 3, 4, 8, 9 };
+        static readonly int[] PlanStone = { 0, 5, 6, 10 };
+        int[] tutPlan = PlanFull;
+        /// <summary>正在上米菈的投石課（不是一般教學）</summary>
+        bool stoneLesson;
+        int TutSteps => tutPlan.Length;
+        /// <summary>這一步要教什麼（TutTitles 的索引）</summary>
+        int TutKind => tutPlan[Mathf.Clamp(tutStep, 0, tutPlan.Length - 1)];
+        static readonly string[] TutTitles = { "站好校正", "走到光圈", "蹲下躲橫掃", "側跨閃火球", "跳過震地環", "唸技能名稱", "放出技能", "打中木頭人", "走到木頭人前面", "木棍敲擊", "遠距離投石" };
+        /// <summary>第一次玩（新角色）要不要強制播序章＋教學（之後在訓練場可以再上）</summary>
+        public const bool ForceIntro = true;
         /// <summary>還沒看過序章＋教學、而且要強制播</summary>
         public static bool IntroPending => ForceIntro && !TutorialDone;
         public static bool TutorialDone { get { try { return PlayerPrefs.GetInt(CharacterSlots.Key("sd_tutorial_done"), 0) == 1; } catch { return false; } } }
 
-        void StartTutorial()
+        void StartTutorial() => StartTutorial(false);
+        void StartTutorial(bool stone)
         {
             SaveChoices();
+            stoneLesson = stone;
+            tutPlan = stone ? PlanStone : myClass == Skills.Novice ? PlanNovice : PlanFull;
             EndBattle();
             storyStage = null; dungeon = null;
             tutorial = true;
@@ -39,7 +52,7 @@ namespace SpellDuel
             dummyMode = true; dummyDamage = 0f; dummyHits = 0;
             var en = new Fighter("教官木頭人", DummyClass, new List<string>(), false);
             float reach = area.ReachInside(area.Origin.forward, 0.6f);
-            en.head = new Vector3(0f, 1.6f, Mathf.Clamp(reach, 1.5f, 3f));
+            en.head = new Vector3(0f, 1.6f, stone ? Mathf.Clamp(reach, 3f, 6f) : Mathf.Clamp(reach, 1.5f, 3f));   // 投石課：木頭人站遠一點（木棍敲不到）
             SyncPlayer(me);
             battle = new Battle(me, en);
             battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine; battle.OnShotWarn += ShowShotLine;
@@ -50,7 +63,7 @@ namespace SpellDuel
             enemyShield = Prim(PrimitiveType.Sphere, new Color(0.4f, 0.7f, 1f, 0.25f));
             tutStep = 0; tutRing = 0; tutFails = 0; BeginTutStep(0);
             phase = Phase.Fighting; resultShown = false;
-            Say("🎓 教學開始：照著畫面上方的指示一步一步做", 3f);
+            Say(stone ? "🪨 米菈的投石課：照著畫面上方的指示做" : "🎓 教學開始：照著畫面上方的指示一步一步做", 3f);
         }
 
         void ClearTutorial()
@@ -64,9 +77,10 @@ namespace SpellDuel
         {
             tutStep = s; tutStepAt = battle.now; tutFired = false; tutFireAt = -1f; tutPassAt = -1f; tutFails = 0;
             tutHitsAt = hitsTaken; tutDummyAt = dummyHits; tutWasCharging = false;
-            if (s == 1) { tutRing = 0; PlaceTutRing(); }
+            int k = tutPlan[Mathf.Clamp(s, 0, tutPlan.Length - 1)];
+            if (k == 1) { tutRing = 0; PlaceTutRing(); }
             else { if (tutRingGo) tutRingGo.SetActive(false); if (tutPillarGo) tutPillarGo.SetActive(false); }
-            if (s >= 2 && s <= 4) tutFireAt = battle.now + 2.5f;   // 給玩家 2.5 秒準備
+            if (k >= 2 && k <= 4) tutFireAt = battle.now + 2.5f;   // 給玩家 2.5 秒準備
         }
 
         void TutPass()
@@ -99,7 +113,8 @@ namespace SpellDuel
                 BeginTutStep(tutStep + 1);
                 return false;
             }
-            switch (tutStep)
+            int kind = TutKind;
+            switch (kind)
             {
                 case 0: if (now > CalibTime + 0.5f) TutPass(); break;
                 case 1:
@@ -116,11 +131,11 @@ namespace SpellDuel
                     }
                     break;
                 case 2: case 3: case 4:
-                    if (!tutFired && now >= tutFireAt) { TutFire(tutStep); tutFired = true; tutFireAt = now; }
+                    if (!tutFired && now >= tutFireAt) { TutFire(kind); tutFired = true; tutFireAt = now; }
                     if (tutFired)
                     {
-                        if (hitsTaken > tutHitsAt) { TutFail(tutStep == 2 ? "被橫掃打到了：看到地上的橘線就蹲低" : tutStep == 3 ? "被火球打到了：往旁邊跨一大步" : "被震地環打到了：環到腳邊時往上跳"); break; }
-                        bool gone = tutStep == 4 ? battle.shockwaves.Count == 0 : !battle.projectiles.Exists(p => p.owner == en);
+                        if (hitsTaken > tutHitsAt) { TutFail(kind == 2 ? "被橫掃打到了：看到地上的橘線就蹲低" : kind == 3 ? "被火球打到了：往旁邊跨一大步" : "被震地環打到了：環到腳邊時往上跳"); break; }
+                        bool gone = kind == 4 ? battle.shockwaves.Count == 0 : !battle.projectiles.Exists(p => p.owner == en);
                         if (gone && now - tutFireAt > 0.6f) TutPass();
                     }
                     break;
@@ -130,7 +145,16 @@ namespace SpellDuel
                     else if (tutWasCharging) { if (battle.projectiles.Exists(p => p.owner == me) || dummyHits > tutDummyAt || me.armed != null) TutPass(); else tutWasCharging = false; }
                     if (dummyHits > tutDummyAt) TutPass();
                     break;
-                case 7: if (dummyHits - tutDummyAt >= 3) TutPass(); break;
+                case 7: case 9: if (dummyHits - tutDummyAt >= 3) TutPass(); break;
+                case 8: if (Battle.FlatDistance(me.Feet, en.Feet) < MeleeNear) TutPass(); break;
+                case 10:
+                    // 要站遠遠的用投石打中：走過去用木棍敲不算
+                    if (dummyHits > tutDummyAt)
+                    {
+                        if (Battle.FlatDistance(me.Feet, en.Feet) < 2f) { tutDummyAt = dummyHits; tutMsg = "這次要站遠一點，用投石丟中它"; tutMsgUntil = Time.time + 2.5f; }
+                        else if (dummyHits - tutDummyAt >= 3) TutPass();
+                    }
+                    break;
             }
             return false;
         }
@@ -181,12 +205,22 @@ namespace SpellDuel
             SpawnFade.Play(tutRingGo, 0.3f);
         }
 
+        /// <summary>走到木頭人前面多近才算（木棍敲擊從頭部算起約 1.6m 搆得到）</summary>
+        const float MeleeNear = 1.3f;
+
         void FinishTutorial()
         {
             phase = Phase.Over; resultShown = true;
             if (tutRingGo) tutRingGo.SetActive(false);
             if (tutPillarGo) tutPillarGo.SetActive(false);
             SaveExercise();
+            if (stoneLesson)
+            {
+                StoneLessonDone();
+                BuildVictory("投石課完成！", "tutorial", 180f, 0, 0, "學會「投石」：唸「投石」，握拳再張開就會丟出去（遠距攻擊）");
+                Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
+                return;
+            }
             bool first = !TutorialDone;
             int xp = 0, ups = 0;
             if (first)
@@ -206,7 +240,7 @@ namespace SpellDuel
             var col = new Color(0.35f, 0.95f, 1f);
             UiKit.Card(topR, 0.92f, col, 0.8f);
             float gap = W * 0.015f, ix = topR.x + gap, iw = topR.width - gap * 2, y = topR.y + gap * 0.5f;
-            UiKit.Text(new Rect(ix, y, iw * 0.7f, lh), $"🎓 教學 {tutStep + 1}/{TutSteps}：{TutTitles[tutStep]}", fs, Color.white, TextAnchor.MiddleLeft, true);
+            UiKit.Text(new Rect(ix, y, iw * 0.7f, lh), $"{(stoneLesson ? "🪨 投石課" : "🎓 教學")} {tutStep + 1}/{TutSteps}：{TutTitles[TutKind]}", fs, Color.white, TextAnchor.MiddleLeft, true);
             // 進度點
             float dot = lh * 0.32f;
             for (int i = 0; i < TutSteps; i++)
@@ -218,24 +252,31 @@ namespace SpellDuel
                 TutPass();
             if (Time.time < tutMsgUntil) UiKit.Pill(H * 0.55f, "💥 " + tutMsg + "　再試一次！", fs, new Color(1f, 0.5f, 0.45f), pillW);
             // 攻擊倒數
-            if (tutStep >= 2 && tutStep <= 4 && !tutFired && tutPassAt < 0f)
+            if (TutKind >= 2 && TutKind <= 4 && !tutFired && tutPassAt < 0f)
                 UiKit.Text(new Rect(0, H * 0.36f, W, H * 0.12f), $"{Mathf.CeilToInt(tutFireAt - battle.now)}", fsL * 3, col, TextAnchor.MiddleCenter, true);
-            if (tutStep == 1 && tutRingGo && tutRingGo.activeSelf)
+            if (TutKind == 1 && tutRingGo && tutRingGo.activeSelf)
                 DrawEdgeArrow(tutTarget + Vector3.up * 0.3f, $"⭕ {Battle.FlatDistance(Me.Feet, tutTarget):F1}m", col, W, H, lh, fsS);
+            if (TutKind >= 8 && tutPassAt < 0f)
+                DrawEdgeArrow(En.Feet + Vector3.up * 1f, $"🪵 {Battle.FlatDistance(Me.Feet, En.Feet):F1}m", col, W, H, lh, fsS);
         }
 
         string TutInstruction()
         {
             string names = string.Join("、", myLoadout.ConvertAll(id => "「" + Skills.All[id].name + "」"));
-            switch (tutStep)
+            float dist = Battle.FlatDistance(Me.Feet, En.Feet);
+            switch (TutKind)
             {
                 case 0: return "站直、手機拿在眼前對著前方，別動（量你的身高，之後才知道你蹲下、跳起來）";
                 case 1: return $"走到地上發光的圓圈裡（{tutRing + 1}/2）。戰鬥中走位可以躲開攻擊";
                 case 2: return "木頭人會放出胸口高度的「橫掃」（地上會出現橘色的線）→ 蹲低讓它從頭上飛過";
                 case 3: return "木頭人會丟出火球（地上有紅線）→ 往旁邊跨一大步閃開";
                 case 4: return "地上會擴散出一圈震地環 → 環快到腳邊時往上跳";
-                case 5: return $"對著手機唸出技能名稱開始詠唱：{names}";
+                case 5: return stoneLesson ? "對著手機唸「投石」開始蓄力（技能名稱）" : $"對著手機唸出技能名稱開始詠唱：{names}";
                 case 6: return $"詠唱中：{(Me.charging != null ? HandGesture.ReleaseHint(Me.charging) : "先唸技能名稱")}（把技能放出去）";
+                case 8: return $"初心者的普攻是近戰：先走到木頭人前面（{MeleeNear:0.#} 公尺內，現在 {dist:F1}m）";
+                case 9: return $"普攻「木棍敲擊」：手掌張開，在鏡頭前快速橫劃一下 → 出現刀線、木棍照線敲下去（每 1.1 秒一次）。打中 3 次（{Mathf.Max(0, dummyHits - tutDummyAt)}/3）"
+                        + (dist > MeleeNear + 0.3f ? "　⚠ 太遠了，走近一點" : "");
+                case 10: return $"站在遠處（2 公尺外，現在 {dist:F1}m），唸「投石」→ 握拳再張開，用石頭打中木頭人 3 次（{Mathf.Max(0, dummyHits - tutDummyAt)}/3）";
                 default: return $"用普攻（手勢）或技能打中木頭人 3 次（{Mathf.Max(0, dummyHits - tutDummyAt)}/3）";
             }
         }
@@ -245,10 +286,10 @@ namespace SpellDuel
         {
             var orr = new Rect(pad, top + (botY - top) * .3f, W - pad * 2, (botY - top) * .3f);
             UiKit.Result(orr, true);
-            UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, lh * 1.6f), "🎓 教學完成！準備好冒險了", Mathf.RoundToInt(fs * 1.3f), Color.white, TextAnchor.MiddleCenter, true);
+            UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, lh * 1.6f), stoneLesson ? "🪨 學會投石了！" : "🎓 教學完成！準備好冒險了", Mathf.RoundToInt(fs * 1.3f), Color.white, TextAnchor.MiddleCenter, true);
             float bw = (orr.width - gap * 4) / 3f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
             if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "🏘 進入村子", fs, true, new Color(1f, 0.8f, 0.4f))) AfterTutorial();
-            if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "再練一次", fs, false, new Color(0.35f, 0.95f, 1f))) StartTutorial();
+            if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "再練一次", fs, false, new Color(0.35f, 0.95f, 1f))) StartTutorial(stoneLesson);
             if (UiKit.Button(new Rect(orr.x + gap * 3 + bw * 2, oby, bw, bh), villageReturn.HasValue ? "🏘 回訓練場" : "回選單", fs)) { if (villageReturn.HasValue) GoVillage(); else { prologueRun = false; enemyClass = "story"; ShowSetup(); } }
         }
     }

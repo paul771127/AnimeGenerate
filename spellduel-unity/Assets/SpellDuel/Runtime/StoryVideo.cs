@@ -11,7 +11,9 @@ namespace SpellDuel
     ///   ・序章：1-1 開場前播整支。
     ///   ・第一～三章的 Boss 關（1-4、2-4、3-4）：開場前播前 4 個鏡頭，通關後播剩下的鏡頭。
     ///   ・「📖 看故事」重看時也會播。
-    /// 還沒下載時直接下載（約 6～10 MB，不再詢問；下載中可以取消跳過）；播放時長按畫面 1 秒跳過（點一下也會出現「跳過」按鈕）。
+    /// 遊戲一開始（GameRoot.Start）就把四支影片全部下載好（約 31 MB，只有第一次）：畫面顯示「載入中」，不能取消；
+    /// 沒有網路下載失敗時才會出現「重試」與「先進遊戲」（之後要播時會再下載）。
+    /// 第一次看不能跳過；「📖 看故事」重看時可以長按畫面 1 秒跳過。播放時下方有字幕（每個鏡頭一句，Subs）。
     /// 影片檔放在 repo 的 spellduel-unity/Docs/story_video/videos/（Assets 外面，不會被打包）。
     /// </summary>
     public class StoryVideo : MonoBehaviour
@@ -39,7 +41,54 @@ namespace SpellDuel
         static Clip Split(string file, string title, int cut, int shots, int mb, bool before) =>
             new Clip { file = file, title = title + (before ? "" : "（結局）"), from = before ? 0 : cut, to = before ? cut : shots, shots = shots, mb = mb };
 
-        enum State { Idle, Downloading, Failed, Preparing, Playing }
+        /// <summary>全部的影片檔（遊戲一開始全部下載）</summary>
+        public static readonly (string file, int mb)[] Files = { ("v0_prologue.mp4", 8), ("v1_golem.mp4", 7), ("v2_treeking.mp4", 6), ("v3_kraken.mp4", 10) };
+
+        /// <summary>字幕：每支影片每個鏡頭一句（鏡頭等長，約 5.2 秒）</summary>
+        static readonly System.Collections.Generic.Dictionary<string, string[]> Subs = new System.Collections.Generic.Dictionary<string, string[]>
+        {
+            ["v0_prologue.mp4"] = new[]
+            {
+                "旁白：灰燼像雪一樣落下。炎之里的晨鐘，已經三天沒有響過。",
+                "旁白：鐘樓裡，鐘舌斷了一截，鐘身爬滿了黑色的結晶。",
+                "老焰：鐘聲該讓出門的人知道，家還在這裡……可它啞了。",
+                "旁白：一位旅人走上村口的石階——那就是你。",
+                "艾琳：我是來抄鐘文的艾琳。你也聽見了嗎？山裡有東西在敲。",
+                "旁白：山腹的裂縫透出紅光。咚、咚、咚——三下，停一拍，又是三下。",
+                "旁白：火山、森林、海港……三座鐘，一座接一座熄滅了。",
+                "艾琳：走吧，先去礦坑救採礦隊。我們把晨鐘找回來。",
+            },
+            ["v1_golem.mp4"] = new[]
+            {
+                "旁白：熔岩大廳深處，巨像守在石閘前，胸口的黑晶不停脈動。",
+                "熔岩巨像：放過一人……洪潮便會進來……封住……所有的路……",
+                "艾琳：牠被困在一次沒結束的守門裡。攔住牠！",
+                "旁白：巨像高舉雙拳砸向地面——小心衝擊波！",
+                "旁白：黑晶碎裂，巨像緩緩跪下，熔岩的光漸漸暗去。",
+                "旁白：艾琳扣回鐘舌。鐘聲響起，金色的聲波掃過整座山。",
+            },
+            ["v2_treeking.mp4"] = new[]
+            {
+                "旁白：霧中的記名林。古樹上，掛著無數刻了名字的木牌。",
+                "腐化樹王：我若睡去……再也沒有人，等他們回來……",
+                "艾琳：翠會重刻木牌，小葉會讀名冊。你不必獨自記住所有人。",
+                "腐化樹王：別讓……最後一個名字……消失！",
+                "旁白：黑晶裂開，樹根緩緩展平。一顆發光的種子，落在名冊上。",
+            },
+            ["v3_kraken.mp4"] = new[]
+            {
+                "旁白：暴風雨的夜，港口的舊燈塔在雨中掃過一道光。",
+                "旁白：巨妖攀上礁石。胸前的黑晶上，刻滿了名字。",
+                "海斗：凪還在岸上守著燈。我們也不退！",
+                "澪：別把活人的名字給牠……聽，歌還沒唱完。",
+                "旁白：黑晶崩散，巨妖沉回深海。雨，停了。",
+                "旁白：三座鐘隔著山、林與海，終於一同響起。",
+                "旁白：白帆化入晨光。港口立起了歸航者的名碑。",
+                "艾琳：這次我寫下了所有名字。回家吧，把紀行念給大家聽。",
+            },
+        };
+
+        enum State { Idle, Preloading, Downloading, Failed, Preparing, Playing }
         static StoryVideo inst;
         State state;
         Clip clip; Action done;
@@ -49,6 +98,9 @@ namespace SpellDuel
         bool holdArmed;   // 開始播放後手指要先放開過一次（點進來的那一下不算長按）
         public const float HoldToSkip = 1f;   // 長按幾秒跳過
         string error;
+        bool skippable;            // 「📖 看故事」重看：可以長按跳過（第一次看不行）
+        int preIdx, preTries;      // 一開始全部下載：第幾支、這支試了幾次
+        bool preFailed;            // 一開始全部下載失敗（Failed 畫面的按鈕不同）
 
         /// <summary>影片相關的畫面開著（下載中、播放中）：其他畫面不要畫、不要收點擊</summary>
         public static bool Active => inst != null && inst.state != State.Idle;
@@ -58,11 +110,34 @@ namespace SpellDuel
         static string PathOf(Clip c) => Path.Combine(Dir, c.file);
         public static bool Downloaded(Clip c) { try { return File.Exists(PathOf(c)) && new FileInfo(PathOf(c)).Length > 100_000; } catch { return false; } }
 
-        /// <summary>播一段劇情影片，播完（或跳過、沒有影片）再呼叫 then</summary>
-        public static void Play(Clip c, Action then)
+        static bool FileOk(string file) { try { var f = Path.Combine(Dir, file); return File.Exists(f) && new FileInfo(f).Length > 100_000; } catch { return false; } }
+        public static bool AllDownloaded => Array.TrueForAll(Files, f => FileOk(f.file));
+
+        /// <summary>遊戲一開始：還沒下載的影片全部下載（畫面顯示「載入中」）</summary>
+        public static void PreloadAll()
+        {
+            if (AllDownloaded) return;
+            if (inst == null) inst = new GameObject("Story Video").AddComponent<StoryVideo>();
+            inst.Cleanup();
+            inst.preIdx = 0; inst.preTries = 0; inst.preFailed = false; inst.error = null;
+            inst.NextPreload();
+        }
+
+        void NextPreload()
+        {
+            while (preIdx < Files.Length && FileOk(Files[preIdx].file)) { preIdx++; preTries = 0; }
+            if (preIdx >= Files.Length) { state = State.Idle; return; }
+            clip = new Clip { file = Files[preIdx].file, title = "", mb = Files[preIdx].mb };
+            StartDownload();
+            state = State.Preloading;
+        }
+
+        /// <summary>播一段劇情影片，播完（或沒有影片）再呼叫 then；skip＝可以長按跳過（重看）</summary>
+        public static void Play(Clip c, Action then, bool skip = false)
         {
             if (c == null) { then?.Invoke(); return; }
             if (inst == null) inst = new GameObject("Story Video").AddComponent<StoryVideo>();
+            inst.skippable = skip;
             inst.Begin(c, then);
         }
 
@@ -76,7 +151,7 @@ namespace SpellDuel
         void Begin(Clip c, Action then)
         {
             Cleanup();
-            clip = c; done = then; error = null;
+            clip = c; done = then; error = null; preFailed = false;
             if (Downloaded(c)) StartPlayback();
             else StartDownload();   // 沒下載過：直接下載（使用者要求，不再問）
         }
@@ -103,7 +178,7 @@ namespace SpellDuel
         {
             try { Directory.CreateDirectory(Dir); } catch { }
             string tmp = PathOf(clip) + ".part";
-            req = new UnityWebRequest(BaseUrl + clip.file, UnityWebRequest.kHttpVerbGET) { downloadHandler = new DownloadHandlerFile(tmp) { removeFileOnAbort = true }, timeout = 120 };
+            req = new UnityWebRequest(BaseUrl + clip.file, UnityWebRequest.kHttpVerbGET) { downloadHandler = new DownloadHandlerFile(tmp) { removeFileOnAbort = true }, timeout = 180 };
             req.SendWebRequest();
             state = State.Downloading;
         }
@@ -120,8 +195,12 @@ namespace SpellDuel
                 try { if (File.Exists(PathOf(clip))) File.Delete(PathOf(clip)); File.Move(tmp, PathOf(clip)); }
                 catch (Exception e) { ok = false; error = "存檔失敗：" + e.Message; }
             }
-            if (ok && Downloaded(clip)) StartPlayback();
-            else { try { if (File.Exists(tmp)) File.Delete(tmp); } catch { } state = State.Failed; error ??= "下載的檔案不完整"; }
+            bool pre = state == State.Preloading;
+            if (ok && Downloaded(clip)) { if (pre) { preIdx++; preTries = 0; NextPreload(); } else StartPlayback(); return; }
+            try { if (File.Exists(tmp)) File.Delete(tmp); } catch { }
+            error ??= "下載的檔案不完整";
+            if (pre && ++preTries < 3) { StartDownload(); state = State.Preloading; return; }   // 一開始的下載：自動重試 2 次
+            preFailed = pre; state = State.Failed;
         }
 
         // ---------------------------------------------------------------- 播放
@@ -155,10 +234,10 @@ namespace SpellDuel
 
         void Update()
         {
-            if (state == State.Downloading) UpdateDownload();
+            if (state == State.Downloading || state == State.Preloading) UpdateDownload();
             else if (state == State.Playing && vp && vp.time >= endT) Finish();
-            // 長按畫面跳過（觸控或滑鼠按住；載入中也可以）
-            if (state == State.Playing || state == State.Preparing)
+            // 長按畫面跳過（只有重看可以；觸控或滑鼠按住）
+            if (skippable && (state == State.Playing || state == State.Preparing))
             {
                 bool down = Input.touchCount > 0 || Input.GetMouseButton(0);
                 if (!down) { holdFrom = -1f; holdArmed = true; }
@@ -174,6 +253,17 @@ namespace SpellDuel
         {
             if (inst == null || inst.state == State.Idle) return;
             inst.Draw();
+        }
+
+        static int TotalMb { get { int n = 0; foreach (var f in Files) n += f.mb; return n; } }
+
+        /// <summary>現在播到的鏡頭的字幕（沒有＝null）</summary>
+        string Subtitle()
+        {
+            if (vp == null || clip == null || !Subs.TryGetValue(clip.file, out var lines)) return null;
+            double len = vp.length > 0 ? vp.length : 5.17 * clip.shots;
+            int shot = Mathf.FloorToInt((float)(vp.time / (len / Mathf.Max(1, clip.shots))));
+            return shot >= 0 && shot < lines.Length && shot >= clip.from && shot < clip.to ? lines[shot].Replace("{玩家}", "你") : null;
         }
 
         void Draw()
@@ -193,38 +283,47 @@ namespace SpellDuel
                 }
                 else UiKit.Text(new Rect(0, H * 0.45f, W, fs * 2f), "🎬 載入中…", fs, Color.white, TextAnchor.MiddleCenter);
                 UiKit.Text(new Rect(pad, H * 0.08f, bw, fs * 1.6f), "🎬 " + clip.title, fsS, new Color(1f, 1f, 1f, 0.7f), TextAnchor.MiddleLeft, true);
-                // 長按跳過：按住時下方出現進度條；點一下或開頭 3 秒顯示提示與「跳過」按鈕
+                float by = H - pad - bh - Screen.safeArea.y;
+                // 字幕：畫面下方（影片下面的黑邊），現在這個鏡頭的那一句
+                string sub = state == State.Playing ? Subtitle() : null;
+                if (sub != null)
+                {
+                    float sh = fs * 3.2f, sy = by - sh - pad * 0.5f;
+                    GUI.color = new Color(0f, 0f, 0f, 0.55f); GUI.DrawTexture(new Rect(pad * 0.5f, sy, W - pad, sh), Texture2D.whiteTexture); GUI.color = Color.white;
+                    UiKit.Text(new Rect(pad, sy, bw, sh), sub, fs, Color.white, TextAnchor.MiddleCenter, true);
+                }
+                if (!skippable) return;
+                // 重看：長按跳過（按住時下方出現進度條；點一下或開頭 3 秒顯示提示）
                 if (Event.current.type == EventType.MouseDown) tapAt = Time.unscaledTime;
                 float hold = holdFrom >= 0f ? Mathf.Clamp01((Time.unscaledTime - holdFrom) / HoldToSkip) : 0f;
-                float by = H - pad - bh - Screen.safeArea.y;
                 if (hold > 0.08f)
                     UiKit.Bar(new Rect(pad, by, bw, bh * 0.6f), hold, UiKit.Gold, "繼續按住跳過…", fsS);
                 else if (Time.unscaledTime - shownAt < 3f || Time.unscaledTime - tapAt < 3f)
-                {
-                    UiKit.Text(new Rect(pad, by, bw - W * 0.32f, bh), "長按畫面 1 秒跳過", fsS, new Color(1f, 1f, 1f, 0.7f), TextAnchor.MiddleLeft);
-                    if (UiKit.Button(new Rect(W - pad - W * 0.3f, by, W * 0.3f, bh), "跳過 ▶▶", fsS)) Finish();
-                }
+                    UiKit.Text(new Rect(pad, by, bw, bh), "長按畫面 1 秒跳過", fsS, new Color(1f, 1f, 1f, 0.7f), TextAnchor.MiddleCenter);
                 return;
             }
             var r = new Rect(pad, H * 0.3f, bw, H * 0.4f);
             UiKit.Card(r, 0.95f, UiKit.Gold, 0.9f);
             float y = r.y + pad * 0.6f, x = r.x + pad * 0.6f, w2 = r.width - pad * 1.2f;
-            UiKit.Text(new Rect(x, y, w2, fs * 1.6f), "🎬 劇情影片：" + clip.title, fs, Color.white, TextAnchor.MiddleLeft, true);
-            y += fs * 2f;
-            if (state == State.Downloading)
+            bool pre = state == State.Preloading || preFailed;
+            UiKit.Text(new Rect(x, y, w2, fs * 1.6f), "⏳ 載入中…", Mathf.RoundToInt(fs * 1.2f), Color.white, TextAnchor.MiddleCenter, true);
+            y += fs * 2.2f;
+            if (state == State.Downloading || state == State.Preloading)
             {
                 float p = req != null ? req.downloadProgress : 0f;
-                UiKit.Bar(new Rect(x, y, w2, fs * 1.2f), p, UiKit.Gold, $"下載中… {p * 100f:0}%（約 {clip.mb} MB，只有第一次）", fsS);
+                string what = pre ? $"劇情影片 {preIdx + 1}/{Files.Length}" : clip.title;
+                UiKit.Bar(new Rect(x, y, w2, fs * 1.2f), p, UiKit.Gold, $"{what}　{p * 100f:0}%", fsS);
                 y += fs * 2f;
-                if (UiKit.Button(new Rect(x, y, w2, bh * 0.85f), "取消（跳過影片）", fsS)) Finish();
+                UiKit.Text(new Rect(x, y, w2, fs * 2.4f), pre ? $"第一次開遊戲要下載劇情影片（共約 {TotalMb} MB），之後就不用再下載。建議連 Wi-Fi。" : "下載劇情影片中（只有第一次）", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperCenter);
             }
             else if (state == State.Failed)
             {
-                UiKit.Text(new Rect(x, y, w2, fs * 2.4f), "⚠ " + error, fsS, new Color(1f, 0.6f, 0.5f));
+                // 下載失敗（多半是沒有網路）：重試；真的不行可以先繼續（之後要播時會再下載）
+                UiKit.Text(new Rect(x, y, w2, fs * 2.4f), "⚠ " + error + "\n請確認網路後重試", fsS, new Color(1f, 0.6f, 0.5f), TextAnchor.UpperCenter);
                 y += fs * 2.8f;
                 float hw = (w2 - pad * 0.4f) / 2f;
-                if (UiKit.Button(new Rect(x, y, hw, bh), "重試", fs, true, UiKit.Gold)) { Cleanup(); StartDownload(); }
-                if (UiKit.Button(new Rect(x + hw + pad * 0.4f, y, hw, bh), "跳過", fs)) Finish();
+                if (UiKit.Button(new Rect(x, y, hw, bh), "重試", fs, true, UiKit.Gold)) { Cleanup(); if (preFailed) { preFailed = false; preTries = 0; NextPreload(); } else { StartDownload(); } }
+                if (UiKit.Button(new Rect(x + hw + pad * 0.4f, y, hw, bh), preFailed ? "先進遊戲" : "先繼續", fsS)) { if (preFailed) { preFailed = false; state = State.Idle; } else Finish(); }
             }
         }
     }

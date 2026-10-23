@@ -469,8 +469,8 @@ namespace SpellDuel
             bool cleared = Story.IsCleared(st.id);
             StoryVideo.Play(StoryVideo.For(st.id, true), () => ShowDialogue(st.before, () =>
             {
-                if (cleared) StoryVideo.Play(StoryVideo.For(st.id, false), () => ShowDialogue(st.after, null));
-            }));
+                if (cleared) StoryVideo.Play(StoryVideo.For(st.id, false), () => ShowDialogue(st.after, null), true);
+            }), true);   // 重看可以長按跳過
         }
 
         void StartStageBattle()
@@ -711,6 +711,7 @@ namespace SpellDuel
             Progress.GetShared = k => PlayerPrefs.GetString(k, "");
             Progress.SetShared = (k, v) => { PlayerPrefs.SetString(k, v); PlayerPrefs.Save(); };
             Story.Get = Progress.Get; Story.Set = Progress.Set;
+            Story.Gate = st => st.id == "1-1" && NoviceQuests.StoneLessonPending(Progress.Char(myClass)) ? "先到炎之里找米菈上投石課" : null;
             Progress.MarkReady();   // 存檔接好了（之前讀到的空白內容全部丟掉，重新從手機讀）
             LoadLoadout();
             Sfx.Ensure();

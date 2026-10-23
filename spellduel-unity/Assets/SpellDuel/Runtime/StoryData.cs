@@ -200,7 +200,10 @@ namespace SpellDuel
             }
         }
         public static bool IsCleared(string id) => Cleared.Contains(id);
-        public static bool IsUnlocked(StoryStage s) => s.req == null || IsCleared(s.req);
+        public static bool IsUnlocked(StoryStage s) => (s.req == null || IsCleared(s.req)) && LockReason(s) == null;
+        /// <summary>前一關以外的鎖（例如初心者要先上完米菈的投石課才能打 1-1）：null＝沒有</summary>
+        public static Func<StoryStage, string> Gate;
+        public static string LockReason(StoryStage s) => Gate?.Invoke(s);
         public static void MarkCleared(string id) { if (Cleared.Add(id)) Set("sd_story_clear", string.Join(",", Cleared)); }
 
         // 故事只自動播一次：看過的開場（id）／結尾（id+"!"）記下來，之後要看就按「📖 看故事」

@@ -236,7 +236,7 @@ namespace SpellDuel
             {
                 bool clear = Story.IsCleared(sel.id), ok = Story.IsUnlocked(sel);
                 string waves = sel.HasBoss && sel.fromWave >= 10 ? "Boss 戰" : $"{sel.toWave - sel.fromWave + 1} 波" + (sel.HasBoss ? "＋Boss" : "");
-                UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.3f, dr.width - gap * 2, fs * 1.4f), $"{sel.id}　{sel.title}" + (clear ? "　✔ 已通關" : ""), fs, Color.white, TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.3f, dr.width - gap * 2, fs * 1.4f), $"{sel.id}　{sel.title}" + (clear ? "　✔ 已通關" : Story.LockReason(sel) is string why ? $"　🔒 {why}" : ""), fs, Color.white, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(dr.x + gap, dr.y + fs * 1.7f, dr.width - gap * 2, fs * 2.6f),
                     (sel.desc.Length > 0 ? sel.desc.Split('\n')[0] + "\n" : "") + $"{RegionNames[sel.theme]}・{waves}・推薦 Lv{Mathf.Max(1, sel.FirstWave - 1) + Boost}+・掉落裝備 Lv{Story.LevelBand(sel.theme).lo + Boost}–{Story.LevelBand(sel.theme).hi + Boost}\n經驗 {Mathf.RoundToInt(sel.xp * SoloBattle.RewardMulFor(Difficulty))}・💰 {Mathf.RoundToInt(Economy.StageGold(sel) * SoloBattle.RewardMulFor(Difficulty))}", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
                 DifficultyRow(new Rect(dr.x + gap, dr.y + fs * 4.5f, dr.width - gap * 2, fs * 1.9f), fsS, true);
@@ -502,7 +502,7 @@ namespace SpellDuel
                 bool story = Story.HasStory(st) && Story.IsSeen(st.id);
                 float bwid = cr.width * (story ? 0.2f : 0.3f);
                 var br = new Rect(cr.xMax - bwid, cr.y + gap * 0.4f, bwid - gap * 0.4f, cr.height - gap * 0.8f);
-                if (UiKit.Button(br, ok ? (clear ? "⚔ 再打" : "⚔ 出發") : "🔒 先過前一關", fsS, ok && !clear, RegionColors[th], ok))
+                if (UiKit.Button(br, ok ? (clear ? "⚔ 再打" : "⚔ 出發") : Story.LockReason(st) != null ? "🔒 先上投石課" : "🔒 先過前一關", fsS, ok && !clear, RegionColors[th], ok))
                 { OnStartStage?.Invoke(st); return; }
                 if (story && UiKit.Button(new Rect(br.x - bwid, br.y, bwid - gap * 0.4f, br.height), "📖 故事", fsS))
                 { OnWatchStory?.Invoke(st); return; }
