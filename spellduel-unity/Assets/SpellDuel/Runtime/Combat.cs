@@ -42,6 +42,7 @@ namespace SpellDuel
         public float arrowBleed, arrowPoison, arrowSilence;                       // 獵人：箭命中時出血／中毒／沉默的機率（技能樹）
         public float silencedUntil;                                               // 被沉默：這段時間不能唸技能（普攻照常）
         public float comboStrike, basicLeech, waveFlow, riposte;                  // 劍士：連斬、飲血、劍意、反擊之刃
+        public float orbSlice;                                                    // 劍士技能樹「斬開法球」：斬擊能斬開飛來的法球（0＝沒點）
         public float venom, assassinate, vanish, knifeCdr;                        // 刺客：劇毒連刺、刺殺、遁影、飛刀節奏
         public float holySeal, martyr, zeal;                                      // 牧師：聖印、殉道、狂信
         public float bashGuard, sanctionCombo, critDmg, falconMark, petMp;
@@ -1591,7 +1592,7 @@ namespace SpellDuel
             if (s.id == "slash" || s.id == "nv_swing")   // 初心者的木棍揮擊和斬擊一樣砍前方半球
             {
                 // 斬擊：砍前方半球（半徑＝射程 2m），同時斬開正面飛來的法球；不會飛出去
-                f.sliceUntil = now + SliceWindow; SliceNow(f);
+                if (s.id == "slash" && f.orbSlice > 0f) { f.sliceUntil = now + SliceWindow; SliceNow(f); }   // 斬開法球：要點劍士技能樹「斬開法球」；初心者的木棍揮擊不會
                 if (f.waveFlow > 0f) f.waveFreeUntil = now + f.waveFlow;   // 劍意：斬擊後幾秒內劍氣免費
                 MeleeSweep(f, s, Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now) * (1f + f.chargeBonus)));
                 Emit("cast", f.head, s.color, null);

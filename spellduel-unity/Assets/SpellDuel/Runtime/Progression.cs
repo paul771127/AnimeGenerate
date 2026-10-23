@@ -66,7 +66,7 @@ namespace SpellDuel
         // 流派（技能樹 v2）
         SpellEcho, BasicMp, Overload, LowMp, Melt, IceFreeze,          // 法師
         LongShot, SteadyAim, TrapCrit, ArrowBleed, ArrowPoison, ArrowSilence,   // 獵人
-        ComboStrike, BasicLeech, WaveFlow, Riposte,                    // 劍士
+        ComboStrike, BasicLeech, WaveFlow, Riposte, OrbSlice,          // 劍士（OrbSlice＝斬擊能斬開法球）
         Venom, Assassinate, Vanish, KnifeCdr,                          // 刺客
         HolySeal, Homing, Martyr, Zeal,                                // 牧師
         // 進階職業（技能樹 v3）
@@ -246,6 +246,7 @@ namespace SpellDuel
                     FPas("sw_regen", "自然回復", PassiveKind.NaturalRegen, 0.008f, 5, 1, 3, "sw_leech"),
                     // 劍氣
                     FMod("sw_slash", "斬擊強化", "slash", ModField.Damage, 0.1f, 5, 3, 1, "sw_root"),
+                    FPas("sw_orb", "斬開法球", PassiveKind.OrbSlice, 1f, 1, 4, 2, "sw_slash"),   // 點了才會：斬擊斬開飛來的法球
                     FLearn("sw_wave", "wave", 3, 2, "sw_slash"),
                     FMod("sw_wave2", "劍氣分裂", "wave", ModField.Multi, 1f, 2, 2, 3, "sw_wave"),
                     FMod("sw_wavep", "劍氣穿透", "wave", ModField.Pierce, 1f, 1, 3, 3, "sw_wave"),
@@ -537,6 +538,7 @@ namespace SpellDuel
                         PassiveKind.ArrowPoison => $"箭命中時 {v * 100:0}% 機率中毒：每秒 3 傷害、6 秒（可疊加）",
                         PassiveKind.ArrowSilence => $"箭命中時 {v * 100:0}% 機率沉默 {Battle.SilenceDur:0} 秒：不能唸技能、正在唸的被打斷（Boss 減半）",
                         PassiveKind.ComboStrike => $"普攻每第 3 下是重擊：傷害 +{v * 100:0}%",
+                        PassiveKind.OrbSlice => $"「斬擊」揮出後 {Battle.SliceWindow:0.#} 秒內，斬開正面 {Battle.SliceRange:0.#}m 內飛來的法球（從天而降、地裂、橫掃等範圍攻擊無效）",
                         PassiveKind.BasicLeech => $"普攻造成傷害的 {v * 100:0}% 回復成 HP",
                         PassiveKind.WaveFlow => $"斬擊後 {v:0} 秒內，劍氣不花 MP",
                         PassiveKind.Riposte => $"格擋成功後 4 秒內，下一擊傷害 +{v * 100:0}%",
@@ -1055,7 +1057,7 @@ namespace SpellDuel
             f.melt = Passive(PassiveKind.Melt); f.iceFreeze = Passive(PassiveKind.IceFreeze);
             f.longShot = Passive(PassiveKind.LongShot); f.steadyAim = Passive(PassiveKind.SteadyAim); f.trapCrit = Passive(PassiveKind.TrapCrit);
             f.arrowBleed = Passive(PassiveKind.ArrowBleed); f.arrowPoison = Passive(PassiveKind.ArrowPoison); f.arrowSilence = Passive(PassiveKind.ArrowSilence);
-            f.comboStrike = Passive(PassiveKind.ComboStrike); f.basicLeech = Passive(PassiveKind.BasicLeech); f.waveFlow = Passive(PassiveKind.WaveFlow); f.riposte = Passive(PassiveKind.Riposte);
+            f.comboStrike = Passive(PassiveKind.ComboStrike); f.basicLeech = Passive(PassiveKind.BasicLeech); f.waveFlow = Passive(PassiveKind.WaveFlow); f.riposte = Passive(PassiveKind.Riposte); f.orbSlice = Passive(PassiveKind.OrbSlice);
             f.venom = Passive(PassiveKind.Venom); f.assassinate = Passive(PassiveKind.Assassinate); f.vanish = Passive(PassiveKind.Vanish); f.knifeCdr = Passive(PassiveKind.KnifeCdr);
             f.holySeal = Passive(PassiveKind.HolySeal); f.basicHoming = Passive(PassiveKind.Homing); f.martyr = Passive(PassiveKind.Martyr); f.zeal = Passive(PassiveKind.Zeal);
             f.bashGuard = Passive(PassiveKind.BashGuard); f.sanctionCombo = Passive(PassiveKind.SanctionCombo); f.critDmg = Passive(PassiveKind.CritDmg);

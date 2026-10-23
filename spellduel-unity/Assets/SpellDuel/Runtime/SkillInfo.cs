@@ -119,7 +119,8 @@ namespace SpellDuel
             if (s.self == SelfKind.Pet) E($"召喚物存在 {s.petLife:0} 秒；每 {s.petInterval:0.#} 秒攻擊 {s.petRange:0.#}m 內最近的敵人（傷害 {s.damage}）" + (s.petHp > 0 ? $"；HP {s.petHp}" : "") + $"；同時最多 {Battle.MaxPets} 隻");
             if (s.id == "meteor") E($"落地留下直徑 {Battle.BurnRadius * 2f:0.#}m 的火海，持續 {Battle.BurnDuration:0} 秒，站在裡面每秒 {Battle.BurnDps:0.#} 傷害");
             if (s.id == "wind") E("隨機從左或右側繞弧線飛向目標");
-            if (s.id == "slash") E($"揮出後 {Battle.SliceWindow:0.#} 秒內，斬開正面 {Battle.SliceRange:0.#}m 內飛來的法球（從天而降、地裂、橫掃等範圍攻擊無效）");
+            if (s.id == "slash") E($"點了劍士技能樹的「斬開法球」：揮出後 {Battle.SliceWindow:0.#} 秒內，斬開正面 {Battle.SliceRange:0.#}m 內飛來的法球（從天而降、地裂、橫掃等範圍攻擊無效）");
+            if (s.id == "nv_swing") E("不會斬開飛來的法球");
             if (s.releaseNear)
             {
                 E("蓄力條件：手掌伸到鏡頭前（敵人貼身也能蓄力；蓄滿時敵人已經在身邊就直接出手）");
