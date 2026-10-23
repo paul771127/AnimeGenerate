@@ -59,7 +59,7 @@ namespace SpellDuel
         public static IEnumerable<StoryStage> AllStages() { foreach (var c in chapters) foreach (var s in c.stages) yield return s; }
         public static StoryStage Find(string id) { foreach (var s in AllStages()) if (s.id == id) return s; return null; }
 
-        static int ThemeOf(string v)
+        internal static int ThemeOf(string v)
         {
             v = v.Trim().ToLowerInvariant();
             if (v == "forest" || v == "森林" || v == "1") return 1;

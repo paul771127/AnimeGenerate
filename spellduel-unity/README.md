@@ -54,6 +54,14 @@
   - 你走到 3.2m 內，村民會停下來看你，第一次靠近時揮手；跟他打招呼也會揮手。
   - 第 4、5 章的居民還沒有關節，先站著不走。
   - 各職業的待機小動作交給美術（`FACE_3D_BRIEF.md` 第十七輪）。
+- **副本改成劇本檔**（2026-10，方便量產）：
+  - 副本寫在 `Assets/SpellDuel/Resources/dungeons.txt`，格式與量產流程見 `DUNGEON_FORMAT.md`。新增副本只要加文字，不用改程式。
+  - 檢查：`python3 Tools/check_dungeons.py`。
+  - 原本的四個副本已經搬進劇本檔，房間、波次、主題都和以前一樣，劇情加長了。
+  - 每個房間有進房（`<enter>`）、清房（`<clear>`）、首領半血（`<boss_half>`）的台詞。
+  - 戰鬥中用不暫停的「字幕卡」顯示：頭像、名字、台詞，依字數自動換下一句。多人連線時，開場白也用字幕卡，大家都看得到（`SoloBattle.DungeonStory.cs`）。
+  - 副本可以設 `unlock`（要先通關的故事關卡）；目前的四個都沒設，一開始就開放。
+  - 副本入口的清單每頁 4 個；連線的副本選單兩個一排。
 - **多人副本浮動難度**（使用者要求；`Dungeons.PartyScale`、`LootMul`、`Battle.dungeonParty`）：
   - 副本的敵人（小怪與 Boss）血量、攻擊固定是一般關卡的 2 倍（`Dungeons.DungeonHp`、`DungeonDmg`）。
   - 數量再依人數：最少以 2 人計算，1、2 人時敵人數量和 Boss 血量 ×2，3 人 ×3，4 人 ×4。

@@ -315,6 +315,7 @@ namespace SpellDuel
 
         // ---------------------------------------------------------------- 副本：清單、說明、進入（單人）／看故事；多人請從連線大廳選「🏰 副本」
         static readonly Color DungeonColor = new Color(0.4f, 0.85f, 0.75f);
+        int dungeonPage;
         void DrawDungeons(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
             float y = r.y + gap;
@@ -330,11 +331,33 @@ namespace SpellDuel
             DifficultyRow(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.9f), fsS, true);   // 單人進入的難度（組隊時由房主在隊伍畫面選）
             y += fs * 2.2f;
             float bottom = r.yMax - gap * 2 - fs * 2.1f;
-            int n = Dungeons.All.Count;
-            float ch = Mathf.Min(fs * 5.2f, (bottom - y) / Mathf.Max(1, n) - gap * 0.4f);
-            foreach (var d in Dungeons.All)
+            // 副本很多時分頁（每頁 PerPage 個）
+            const int PerPage = 4;
+            int total = Dungeons.All.Count, pages = Mathf.Max(1, (total + PerPage - 1) / PerPage);
+            dungeonPage = Mathf.Clamp(dungeonPage, 0, pages - 1);
+            if (pages > 1)
             {
+                float pw = fs * 3f, py = bottom - fs * 1.5f;
+                UiKit.Text(new Rect(r.x + gap, py, r.width - gap * 2, fs * 1.4f), $"第 {dungeonPage + 1}／{pages} 頁（共 {total} 個副本）", fsS, new Color(0.85f, 0.95f, 0.9f), TextAnchor.MiddleCenter);
+                if (UiKit.Button(new Rect(r.x + gap, py, pw, fs * 1.4f), "◀", fsS, false, null, dungeonPage > 0)) dungeonPage--;
+                if (UiKit.Button(new Rect(r.xMax - gap - pw, py, pw, fs * 1.4f), "▶", fsS, false, null, dungeonPage < pages - 1)) dungeonPage++;
+                bottom = py - gap * 0.4f;
+            }
+            int n = Mathf.Min(PerPage, total - dungeonPage * PerPage);
+            float ch = Mathf.Min(fs * 5.2f, (bottom - y) / Mathf.Max(1, n) - gap * 0.4f);
+            for (int di = dungeonPage * PerPage; di < Mathf.Min(total, (dungeonPage + 1) * PerPage); di++)
+            {
+                var d = Dungeons.All[di];
                 bool clear = Dungeons.IsCleared(d.id);
+                if (!d.Unlocked)
+                {
+                    var lr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
+                    UiKit.Card(lr, 0.35f, new Color(0.4f, 0.4f, 0.45f), 0.6f);
+                    var us = Story.Find(d.unlock);
+                    UiKit.Text(new Rect(lr.x + gap, lr.y, lr.width - gap * 2, lr.height), $"🔒 {d.name}　Lv{d.level + Boost}\n先通關故事「{d.unlock}{(us != null ? " " + us.title : "")}」才會開放", fsS, Color.gray, TextAnchor.MiddleLeft);
+                    y += ch + gap * 0.4f;
+                    continue;
+                }
                 var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
                 UiKit.Card(cr, 0.6f, clear ? new Color(1f, 0.85f, 0.3f) : DungeonColor, 0.8f);
                 float relief = Dungeons.LevelRelief(prof.level, d.level);

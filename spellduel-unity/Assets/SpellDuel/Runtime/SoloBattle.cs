@@ -203,16 +203,7 @@ namespace SpellDuel
                     Sfx.Play("levelup", 0.8f); Haptics.Play(Haptics.Kind.Success);
                 }
             }
-            if (dungeon != null)
-            {
-                int room = dungeon.RoomOf(battle.wave);
-                if (room >= 0 && room != dungeonRoomSaid)
-                {
-                    dungeonRoomSaid = room;
-                    var rm = dungeon.rooms[room];
-                    Say($"🏰 {dungeon.name}・{rm.title}（{room + 1}/{dungeon.rooms.Count}）\n{rm.line}", 5f);
-                }
-            }
+            UpdateDungeonStory();   // 副本：房間的劇情字幕卡（SoloBattle.DungeonStory.cs）
             int dk = battle.kills - lastKillsSeen; lastKillsSeen = battle.kills;
             for (int i = 0; i < dk; i++) { TryDrop(false); pendingGold += Economy.MinionGold(battle.wave); }
             if (dk > 0) { Sfx.Play("poof", 0.6f); Sfx.Play("coin", 0.35f, 1.1f); }   // 小怪倒下＋掉金幣
@@ -449,7 +440,7 @@ namespace SpellDuel
             storyMapOpen = false; storyStage = null;
             void Go() { pendingDungeon = d; StartBossBattle(coopMode, true); }
             if (!coopMode && !Story.IsSeen("dg:" + d.id)) { Story.MarkSeen("dg:" + d.id); ShowDialogue(d.before, Go); }
-            else { Go(); if (d.before.Count > 0) Say("🏰 " + d.name + "：" + d.before[0].text, 5f); }
+            else { Go(); Ticker(d.before); }   // 連線（或看過開場）：開場白改成戰鬥中的字幕卡，大家都看得到
         }
 
         /// <summary>重看副本的故事（開場＋通關過的結尾）</summary>
@@ -817,7 +808,7 @@ namespace SpellDuel
             SaveChoices();
             EndBattle();
             bossMode = true; coop = coopMode; endless = endlessMode; dummyMode = false; enemyClassUsed = "boss";
-            dungeon = pendingDungeon; pendingDungeon = null; dungeonRoomSaid = -1;
+            dungeon = pendingDungeon; pendingDungeon = null; dungeonRoomSaid = -1; ClearTicker();
             dummyDamage = 0f; dummyHits = 0; lastWaveSeen = 0; bossHideAt = -1f; bossAliveShown = false;
             ResetLoot(); potionReadyAt = 0f;
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
@@ -3011,14 +3002,17 @@ namespace SpellDuel
                 if (netDungeon && coop)
                 {
                     // 選副本（每個人都可以換；換了大家一起換）
-                    float dw = (W - pad * 2 - gap * (Dungeons.All.Count - 1)) / Dungeons.All.Count;
-                    for (int di = 0; di < Dungeons.All.Count; di++)
+                    // 兩個一排（副本可以很多）；還沒解鎖的不能選
+                    float dw = (W - pad * 2 - gap) / 2f;
+                    int shown = 0;
+                    foreach (var dd in Dungeons.All)
                     {
-                        var dd = Dungeons.All[di];
-                        if (UiKit.Button(new Rect(pad + di * (dw + gap), y, dw, u * 1.3f), $"{dd.name}\nLv{dd.level}・{dd.minPlayers}～{dd.maxPlayers} 人", fsS, netDungeonId == dd.id, modeCols[3]) && netDungeonId != dd.id)
+                        if (!dd.Unlocked) continue;
+                        int di = shown++;
+                        if (UiKit.Button(new Rect(pad + (di % 2) * (dw + gap), y + (di / 2) * (u * 1.3f + gap * 0.5f), dw, u * 1.3f), $"{dd.name}\nLv{dd.level}・{dd.minPlayers}～{dd.maxPlayers} 人", fsS, netDungeonId == dd.id, modeCols[3]) && netDungeonId != dd.id)
                         { netDungeonId = dd.id; localReady = false; NetSend?.Invoke(new Msg { t = "mode", e = 3, k = dd.id }); }
                     }
-                    y += u * 1.3f + gap;
+                    y += ((shown + 1) / 2) * (u * 1.3f + gap * 0.5f) + gap * 0.5f;
                     var sel = Dungeons.Get(netDungeonId);
                     if (sel != null) { UiKit.Text(new Rect(pad, y, W - pad * 2, u * 1.3f), $"{sel.desc}（{sel.rooms.Count} 個房間）", fsS, new Color(0.85f, 0.95f, 0.9f), TextAnchor.UpperLeft); y += u * 1.3f + gap; }
                 }
@@ -3490,6 +3484,7 @@ namespace SpellDuel
                 UiKit.Text(new Rect(fr.x + gap, fr.y + fr.height * 0.5f, fr.width - gap * 2, fr.height * 0.45f), Tracking.Reason + (NetMode ? "\n對手仍以你最後的位置判定" : "\n恢復追蹤後自動繼續"), fs, new Color(0.9f, 0.92f, 1f), TextAnchor.MiddleCenter);
             }
 
+            if (phase == Phase.Fighting) DrawDungeonTicker(W, H, pad, fs, fsS);   // 副本的劇情字幕卡
             if (phase == Phase.Over && victory == null) DrawExerciseCard(W, top + (botY - top) * 0.07f, pad, lh, fsS);   // 運動紀錄（勝利窗格裡另外顯示）
             if (phase == Phase.Over && victory != null && DrawVictory(W, H, pad, top, botY, gap, lh, fs, fsS)) { }   // 勝利結算窗格（按「繼續」後才是原本的按鈕）
             else if (phase == Phase.Over && daily != null) DrawDailyResult(W, pad, top, botY, gap, lh, fs, fsS);
