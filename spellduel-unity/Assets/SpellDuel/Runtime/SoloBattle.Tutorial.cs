@@ -216,8 +216,8 @@ namespace SpellDuel
             SaveExercise();
             if (stoneLesson)
             {
-                StoneLessonDone();
-                BuildVictory("投石課完成！", "tutorial", 180f, 0, 0, "學會「投石」：唸「投石」，握拳再張開就會丟出去（遠距攻擊）");
+                int lvl0 = Progress.Char(myClass).level, lxp = StoneLessonDone();
+                BuildVictory("投石課完成！", "tutorial", 180f, lxp, Progress.Char(myClass).level - lvl0, (lxp > 0 ? $"第一次完成：經驗 {lxp}、💰{LessonGold}。" : "") + "學會「投石」：唸「投石」，握拳再張開就會丟出去（遠距攻擊）");
                 Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
                 return;
             }
@@ -230,7 +230,7 @@ namespace SpellDuel
                 var p = Progress.Char(myClass); xp = 100; ups = p.AddXp(xp); Progress.SaveChar(p);
                 prof = p;
             }
-            BuildVictory("教學完成！", "tutorial", 180f, xp, ups, first ? "第一次完成：送 💰100 與經驗 100" : "之後可以在敵人選單選「🎓 教學」再練習");
+            BuildVictory("教學完成！", "tutorial", 180f, xp, ups, first ? "第一次完成：經驗 100、💰100（升級會拿到能力點，進村子後導覽會教你怎麼加）" : "之後可以在村子的訓練場再上一次教學");
             Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
         }
 

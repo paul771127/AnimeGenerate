@@ -16,6 +16,7 @@ namespace SpellDuel
     {
         public Action<int> OnStartDaily;          // 每日挑戰（種類）
         public Action OnStartTutorial;            // 再上一次教學
+        public Action OnStartGuide;               // 重看村莊新手導覽
         public Action OnStartBounty;              // 討伐 Boss（單人）
         public Action OnStartTower;               // 無盡塔（無盡模式）
         public Action<bool> OnNetDungeon;         // 副本組隊：false＝身邊的朋友、true＝遠方的朋友
@@ -117,7 +118,9 @@ namespace SpellDuel
                 if (UiKit.Button(new Rect(cr.xMax - bw - gap * 0.4f, cr.y + gap * 0.4f, bw, ch - gap * 0.8f), "▶ 開始", fsS, true, DailyChallenge.Colors[i])) { OnStartDaily?.Invoke(i); return; }
                 y += ch + gap * 0.4f;
             }
-            if (UiKit.Button(new Rect(r.x + gap, r.yMax - gap * 2 - fs * 2.1f - fs * 2.2f, r.width - gap * 2, fs * 2.1f), "🎓 再上一次教學（蹲、跳、閃、詠唱、放招）", fsS, false, new Color(0.35f, 0.95f, 1f))) { OnStartTutorial?.Invoke(); return; }
+            float tby = r.yMax - gap * 2 - fs * 2.1f - fs * 2.2f, thw = (r.width - gap * 3) / 2f;
+            if (UiKit.Button(new Rect(r.x + gap, tby, thw, fs * 2.1f), "🎓 再上一次教學", fsS, false, new Color(0.35f, 0.95f, 1f))) { OnStartTutorial?.Invoke(); return; }
+            if (UiKit.Button(new Rect(r.x + gap * 2 + thw, tby, thw, fs * 2.1f), "🧭 重看村子導覽", fsS, false, new Color(0.4f, 1f, 0.75f))) { OnStartGuide?.Invoke(); return; }
             BackToTown(r, fs, gap);
         }
 

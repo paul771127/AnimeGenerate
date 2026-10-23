@@ -6,7 +6,7 @@ namespace SpellDuel
 {
     /// <summary>
     /// 可以走動的 3D 城鎮（故事模式進城時）：
-    ///   走路：上下晃動手機（像原地踏步）＝往螢幕準心的方向前進；真的走路也會動（AR）。
+    ///   走路：畫面上的方向鍵（▲前進 ▼後退 ◀▶ 橫移、↺↻ 轉身）；上下晃動手機（像原地踏步）＝往準心方向前進；真的走路也會動（AR）。
     ///   聊天：走到居民面前（約 2.5m 內、在畫面前方）說「嗨」「你好」之類的招呼語，就會開始對話；
     ///         設施的店員打完招呼後打開鐵匠鋪／道具店／職業工會。
     /// 外觀全部在 TownArt（美術負責）。座標：城鎮根物件放在進城時的腳下，面向進城時的鏡頭方向；
@@ -39,7 +39,11 @@ namespace SpellDuel
         public int Town { get; private set; } = -1;
         public readonly List<Npc> npcs = new List<Npc>();
         public Npc Near { get; private set; }            // 可以打招呼的居民
-        public bool Walking => speed > 0.15f;
+        public bool Walking => speed > 0.15f || padMoving;
+        bool padMoving;
+        /// <summary>走過的距離（m）：新手導覽看玩家有沒有學會走路</summary>
+        public float Moved;
+        public const float PadTurnSpeed = 90f;   // 轉身鈕：每秒幾度
         public string LastGreet { get; private set; } = ""; public float LastGreetAt = -9f;
 
         /// <summary>打招呼成功（SoloBattle 打開對話框）</summary>
@@ -230,7 +234,9 @@ namespace SpellDuel
 
         // ---------------------------------------------------------------- 每幀
         /// <param name="holdWalk">按住「前進」鈕</param>
-        public void Update(Camera cam, float dt, bool holdWalk)
+        /// <param name="pad">方向鍵（x＝右橫移、y＝前進；−1～1）</param>
+        /// <param name="turn">轉身鈕（+1＝往右轉）</param>
+        public void Update(Camera cam, float dt, bool holdWalk, Vector2 pad = default, float turn = 0f)
         {
             if (root == null || cam == null) return;
             float now = Time.time;
@@ -245,9 +251,26 @@ namespace SpellDuel
             float target = now < walkUntil || now < holdUntil ? StepSpeed : key * StepSpeed;
             speed = Mathf.MoveTowards(speed, target, dt * (Mathf.Abs(target) > Mathf.Abs(speed) ? 6f : 4f));
             var tr = root.transform;
+            // 轉身鈕：整個城鎮繞著玩家反方向轉，看起來就是玩家轉身
+            if (Mathf.Abs(turn) > 0.01f) tr.RotateAround(cam.transform.position, Vector3.up, -turn * PadTurnSpeed * dt);
             var me = tr.InverseTransformPoint(cam.transform.position);
             var meXZ = new Vector2(me.x, me.z);
-            if (Mathf.Abs(speed) > 0.01f)
+            padMoving = pad.sqrMagnitude > 0.01f;
+            if (padMoving)
+            {
+                // 方向鍵：照準心方向前進／後退、左右橫移
+                var f = tr.InverseTransformDirection(cam.transform.forward); f.y = 0f;
+                if (f.sqrMagnitude > 1e-4f)
+                {
+                    var fw = new Vector2(f.x, f.z).normalized; var rt = new Vector2(fw.y, -fw.x);
+                    var d = (fw * pad.y + rt * pad.x) * (StepSpeed * dt);
+                    if (d.magnitude > StepSpeed * dt) d = d.normalized * StepSpeed * dt;
+                    var to = Resolve(meXZ + d);
+                    Moved += (to - meXZ).magnitude;
+                    MovePlayer(tr, ref meXZ, to);
+                }
+            }
+            else if (Mathf.Abs(speed) > 0.01f)
             {
                 var f = tr.InverseTransformDirection(cam.transform.forward); f.y = 0f;
                 if (f.sqrMagnitude > 1e-4f)
@@ -255,6 +278,7 @@ namespace SpellDuel
                     var d = new Vector2(f.x, f.z).normalized * speed * dt;
                     var to = Resolve(meXZ + d);
                     var delta = to - meXZ;
+                    Moved += delta.magnitude;
                     // 城鎮往反方向移，玩家看起來就往前走
                     tr.position -= tr.TransformVector(new Vector3(delta.x, 0f, delta.y));
                     meXZ = to;

@@ -61,12 +61,21 @@ namespace SpellDuel
         }
 
         /// <summary>投石課練習過了：任務完成（故事 1-1 解鎖）</summary>
-        void StoneLessonDone()
+        /// <summary>投石課練習過了：任務完成（故事 1-1 解鎖）。第一次通過回傳拿到的經驗</summary>
+        int StoneLessonDone()
         {
             var p = Progress.Char(myClass);
             foreach (var q in NoviceQuests.All)
-                if (q.kind == "lesson" && p.noviceQuest.Remove(q.skill)) { Progress.SaveChar(p); lessonDoneLines = q; }
+                if (q.kind == "lesson" && p.noviceQuest.Remove(q.skill))
+                {
+                    lessonDoneLines = q;
+                    p.AddXp(LessonXp); Economy.Gold += LessonGold; lootGoldLog += LessonGold;
+                    Progress.SaveChar(p); prof = p;
+                    return LessonXp;
+                }
+            return 0;
         }
+        const int LessonXp = 60, LessonGold = 50;
         NoviceQuests.Quest lessonDoneLines;   // 練習結束回村子後要說的話（第一次通過）
 
         /// <summary>投石課結束回村子：第一次通過＝米菈說完成的話</summary>

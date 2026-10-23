@@ -61,9 +61,12 @@ namespace SpellDuel
         /// <summary>打開整備畫面；go＝按「出發」後要做的事</summary>
         void OpenPrep(string title, bool endlessLike, string noItems, Action go)
         {
-            prepTitle = title; prepEndless = endlessLike; prepNoItems = noItems; prepGo = go; prepScroll = Vector2.zero;
+            prepTitle = title; prepEndless = endlessLike; prepNoItems = noItems; prepGo = go; prepScroll = Vector2.zero; prepLookOnly = false;
             LoadCarry(); FixLoadout();
         }
+
+        /// <summary>只是看看（新手導覽打開的整備）：按「✔ 好了」關掉，不出發</summary>
+        bool prepLookOnly;
 
         void DrawPrep()
         {
@@ -144,7 +147,7 @@ namespace SpellDuel
             // ---- 取消／出發
             float hw = (W - pad * 2 - gap) / 2f;
             if (UiKit.Button(new Rect(pad, btnY, hw * 0.7f, bh), "取消", fs)) prepGo = null;
-            if (UiKit.Button(new Rect(pad + hw * 0.7f + gap, btnY, W - pad * 2 - hw * 0.7f - gap, bh), LoadoutReady ? "⚔ 出發" : "先選好技能", fsL, true, cls.color, LoadoutReady))
+            if (UiKit.Button(new Rect(pad + hw * 0.7f + gap, btnY, W - pad * 2 - hw * 0.7f - gap, bh), prepLookOnly ? "✔ 好了" : LoadoutReady ? "⚔ 出發" : "先選好技能", fsL, true, cls.color, LoadoutReady || prepLookOnly))
             {
                 SaveChoices(); SaveCarry();
                 var go = prepGo; prepGo = null; prepEndless = false;

@@ -546,7 +546,7 @@ namespace SpellDuel
             if (want && (!townWalk.Active || townWalk.Town != world.town)) townWalk.Enter(world.town, cam, cam.transform.position.y - 1.4f);
             else if (!want && townWalk.Active) townWalk.Leave();
             if (!townWalk.Active) return;
-            if (TownWalking) townWalk.Update(cam, Mathf.Min(Time.deltaTime, 0.1f), false);
+            if (TownWalking) townWalk.Update(cam, Mathf.Min(Time.deltaTime, 0.1f), false, world.PadLive ? world.PadMove : Vector2.zero, world.PadLive ? world.PadTurn : 0f);
             // 揮手打招呼：居民在面前時，張開手掌舉在鏡頭前 0.5 秒
             bool palm = TownWalking && Hand != null && Hand.HandVisible && Hand.Current == HandGesture.Shape.Open;
             townWaveT = palm ? townWaveT + Time.deltaTime : 0f;
@@ -2896,6 +2896,7 @@ namespace SpellDuel
             else if (prepGo != null) { DrawPrep(); if (infoOpen) DrawSkillInfo(); }   // 出發前的整備（技能說明可以疊在上面）
             else if (storyMapOpen) DrawStoryMap();
             else if (infoOpen) DrawSkillInfo();
+            DrawGuide();   // 村莊新手導覽（SoloBattle.Guide.cs）
         }
 
         // ---------------------------------------------------------------- 技能詳細說明（點技能卡打開）

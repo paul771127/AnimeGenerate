@@ -392,6 +392,48 @@ namespace SpellDuel
         }
 
         // ---------------------------------------------------------------- 城鎮（3D 走動）：上方名稱、中間準心＋居民名牌、下方按鈕
+        // ---------------------------------------------------------------- 方向鍵（3D 城鎮走路）
+        /// <summary>方向鍵目前按著的方向（x＝右、y＝前）與轉身（+1＝右轉）；padFrame＝最後一次畫方向鍵的幀（沒畫就不算）</summary>
+        public Vector2 PadMove; public float PadTurn; int padFrame = -9;
+        public bool PadLive => Time.frameCount - padFrame <= 2;
+
+        /// <summary>手指（或滑鼠）有沒有按在這個 GUI 範圍裡（按住不放也算）</summary>
+        static bool Held(Rect r)
+        {
+            float H = UnityEngine.Screen.height;
+            for (int i = 0; i < Input.touchCount; i++)
+            {
+                var t = Input.GetTouch(i);
+                if (t.phase != TouchPhase.Ended && t.phase != TouchPhase.Canceled && r.Contains(new Vector2(t.position.x, H - t.position.y))) return true;
+            }
+            return Input.touchCount == 0 && Input.GetMouseButton(0) && r.Contains(new Vector2(Input.mousePosition.x, H - Input.mousePosition.y));
+        }
+
+        /// <summary>左下角的方向鍵（▲▼◀▶）＋右下角的轉身鈕（↺↻）；回傳方向鍵區塊的上緣</summary>
+        float DrawPad(Rect r, float bottom, int fs, float gap)
+        {
+            float b = Mathf.Min(fs * 2.6f, r.width * 0.15f);
+            float cx = r.x + gap + b * 1.5f, top = bottom - b * 3f;
+            Rect up = new Rect(cx - b / 2f, top, b, b), dn = new Rect(cx - b / 2f, top + b * 2f, b, b);
+            Rect lf = new Rect(cx - b * 1.5f, top + b, b, b), rt = new Rect(cx + b / 2f, top + b, b, b);
+            Rect tl = new Rect(r.xMax - gap - b * 2.2f, top + b, b, b), tr = new Rect(r.xMax - gap - b, top + b, b, b);
+            bool hu = Held(up), hd = Held(dn), hl = Held(lf), hr = Held(rt), htl = Held(tl), htr = Held(tr);
+            var col = new Color(0.55f, 0.9f, 1f);
+            void Key(Rect k, string label, bool on)
+            {
+                UiKit.Card(k, on ? 0.85f : 0.5f, col, on ? 1f : 0.5f);
+                UiKit.Text(k, label, Mathf.RoundToInt(fs * 1.1f), on ? Color.white : new Color(1f, 1f, 1f, 0.85f), TextAnchor.MiddleCenter, true);
+                if (Event.current.type == EventType.MouseDown && k.Contains(Event.current.mousePosition)) Event.current.Use();   // 按方向鍵不要穿透到底下
+            }
+            Key(up, "▲", hu); Key(dn, "▼", hd); Key(lf, "◀", hl); Key(rt, "▶", hr);
+            Key(tl, "↺", htl); Key(tr, "↻", htr);
+            UiKit.Text(new Rect(tl.x - gap, tl.y - fs * 1.3f, tr.xMax - tl.x + gap * 2, fs * 1.2f), "轉身", Mathf.RoundToInt(fs * 0.75f), new Color(1f, 1f, 1f, 0.75f), TextAnchor.MiddleCenter);
+            PadMove = new Vector2((hr ? 1f : 0f) - (hl ? 1f : 0f), (hu ? 1f : 0f) - (hd ? 1f : 0f));
+            PadTurn = (htr ? 1f : 0f) - (htl ? 1f : 0f);
+            padFrame = Time.frameCount;
+            return top;
+        }
+
         void DrawTownWalk(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
             var t = Towns[town];
@@ -458,7 +500,7 @@ namespace SpellDuel
             UiKit.Text(new Rect(top.x + gap, top.y, top.width*.46f-gap, fs * 1.8f), $"🏘 {t.name}", fsL, Color.white, TextAnchor.MiddleLeft, true);
             string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
             UiKit.Text(new Rect(top.x + top.width*.46f, top.y, SettingsMenu.RightEdge(top.y, top.y + fs * 1.8f, top.xMax - gap) - (top.x + top.width*.46f), fs * 1.8f), $"{cn} Lv{prof.level}　💰 {Economy.Gold}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
-            UiKit.Text(new Rect(top.x + gap, top.y + fs * 1.7f, top.width - gap * 2, fs * 1.8f), "📱 上下晃動手機（原地踏步）＝往準心方向走　💬 走到居民面前說「你好」或揮手聊天", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleLeft);
+            UiKit.Text(new Rect(top.x + gap, top.y + fs * 1.7f, top.width - gap * 2, fs * 1.8f), "🕹 左下方向鍵走路、右下轉身（也可以上下晃動手機原地踏步）　💬 走到居民面前說「你好」或揮手聊天", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleLeft);
             float y = top.yMax + gap * 0.5f;
             if (!string.IsNullOrEmpty(SpeechNote)) { UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), SpeechNote, fsS, new Color(1f, 0.8f, 0.5f), TextAnchor.MiddleLeft); y += fs * 1.4f; }
             if (Heard != null && Time.time - HeardAt < 2f) UiKit.Pill(y + fs, $"🎤 {Heard}", fsS, Color.white, r.width * 0.7f, 0.6f);
@@ -467,7 +509,8 @@ namespace SpellDuel
             // 下方：沒有「前進」「打招呼」按鈕（晃動手機走路、說話或揮手打招呼）；角色／清單／大地圖
             float bh = fs * 2.3f, by = r.yMax - bh - gap;
             var near = Walk.Near;
-            if (near != null) UiKit.Pill(by - fs * 2.2f, $"👋 對{Portraits.Key(near.name)}說「你好」，或舉起手掌揮一揮", fsS, Color.white, r.width * 0.9f, 0.7f);
+            float padTop = DrawPad(r, by - gap, fs, gap);
+            if (near != null) UiKit.Pill(padTop - fs * 1.4f, $"👋 對{Portraits.Key(near.name)}說「你好」，或舉起手掌揮一揮", fsS, Color.white, r.width * 0.9f, 0.7f);
             float bw3 = (r.width - gap * 5) / 4f, by2 = by;
             int pts = prof.statPoints + prof.UsableSkillPoints;
             if (UiKit.Button(new Rect(r.x + gap, by2, bw3, bh * 0.85f), pts > 0 ? $"📜 角色 ×{pts}" : "📜 角色", fsS, pts > 0, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();

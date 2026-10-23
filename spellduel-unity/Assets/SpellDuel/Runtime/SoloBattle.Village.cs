@@ -59,6 +59,7 @@ namespace SpellDuel
                 villageReturn = WorldUI.Screen.Training; enemyClass = "daily"; dailyPick = k; PlayerPrefs.SetInt("sd_daily_pick", k);
                 OpenPrep(DailyChallenge.Names[k], false, "每日挑戰不能使用道具", () => { storyMapOpen = false; StartDaily((DailyChallenge.Kind)k); });
             };
+            world.OnStartGuide = () => { world.screen = WorldUI.Screen.Town; StartGuide(); };
             world.OnStartTutorial = () => { villageReturn = WorldUI.Screen.Training; enemyClass = "tutorial"; storyMapOpen = false; prologueRun = false; StartTutorial(); };
             world.OnStartBounty = () =>
             {
@@ -117,11 +118,11 @@ namespace SpellDuel
             {
                 prologueRun = false;
                 ShowSetup(); enemyClass = "story"; tutorial = false;
-                // 結尾 → 進炎之里 → 第一個任務：米菈的投石課（初心者；上完故事 1-1 才會開）
+                // 結尾 → 進炎之里 → 新手導覽（第一個任務：米菈的投石課；上完故事 1-1 才會開）
                 ShowDialogue(TutorialOutroLines, () =>
                 {
                     villageReturn = null; storyMapOpen = true; world.OpenTown(0);
-                    if (NoviceQuests.StoneLessonPending(Progress.Char(myClass))) NoviceQuestTalk("米菈");
+                    StartGuide();   // 村莊新手導覽：走路 → 找米菈上投石課 → 能力值 → 裝備 → 技能 → 設施 → 任務 → 出發（SoloBattle.Guide.cs）
                 });
                 return;
             }
