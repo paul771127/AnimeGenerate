@@ -96,7 +96,7 @@ namespace SpellDuel
                 case 1: return ("📜 解任務", "頭上有 ❗ 的居民有任務給你。走到「米菈」面前說「你好」（或舉起手掌揮一揮）跟她說話，接下投石課。\n（右下「📋 清單」也可以直接點居民說話）", false);
                 case 2: return ("📊 點能力值", $"升級了！每升一級得到 {CharacterProfile.StatPerLevel} 能力點。按下方「📜 角色」→「📊 能力值」，按 ＋ 加點（每個能力值的效果寫在旁邊）。\n剩下 {p.statPoints} 點", false);
                 case 3: return ("🛡 穿裝備", $"米菈送你一件「{StarterGearName}」，放在背包裡。按「📜 角色」→「🛡 裝備」，點背包裡的{StarterGearName} → 穿上。\n裝備有等級和能力值需求；穿不了的會寫原因。", false);
-                case 4: return ("✨ 技能", "學會的招式要放進「技能欄」才能在戰鬥中用（唸技能名稱 → 做放招手勢）。每次出發前的「整備」畫面點技能看說明、換上或移除。\n技能點：每升一級得 1 點，存起來；10 級轉職後在「🌳 技能樹」點技能。初心者的招式要找居民解任務學。", true);
+                case 4: return ("✨ 技能", "學會的招式要放進「技能欄」才能在戰鬥中用（唸技能名稱 → 做放招手勢）。每次出發前的「整備」畫面點技能看說明、換上或移除。\n技能點：每升一級得 1 點。到「📜 角色」→「🌳 技能樹」強化學會的招式（木棍揮擊、投石、急救各 5 級，學會才能點）；轉職時會全部退回。", true);
                 case 5:
                     var f = GuideFacilities[Mathf.Clamp(guidePage, 0, GuideFacilities.Length - 1)];
                     return ($"🏘 村子的設施 {guidePage + 1}/{GuideFacilities.Length}：{f.title}", f.text + "\n（走近建築，屋頂上會出現招牌；找門口的人說「你好」就能使用）", true);

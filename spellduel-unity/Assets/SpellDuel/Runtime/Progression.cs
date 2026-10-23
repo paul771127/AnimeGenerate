@@ -110,6 +110,7 @@ namespace SpellDuel
             "shadowdancer" => new[] { "🗡 處決", "💃 影舞", "☁ 毒霧" },
             "bishop" => new[] { "🕊 復活", "💚 群療", "⛪ 庇護" },
             "inquisitor" => new[] { "🔱 聖槍", "⛓ 懲戒", "☀ 天罰" },
+            "novice" => new[] { "🪵 木棍揮擊", "🪨 投石", "🩹 急救" },
             _ => null,
         };
 
@@ -121,7 +122,7 @@ namespace SpellDuel
             "mage" => new[] { "fire", "wind", "ice" },
             "assassin" => new[] { "knife", "shadow", "smoke" },
             "priest" => new[] { "holy", "prayheal", "cleanse" },
-            "novice" => new[] { "nv_swing", "nv_stone", "nv_aid" },   // 初心者：沒有技能樹，3 招要到炎之里解任務學（KnownSkills 只列學會的）
+            "novice" => new[] { "nv_swing", "nv_stone", "nv_aid" },   // 初心者：3 招要到炎之里解任務學（KnownSkills 只列學會的）；技能樹只有這 3 招的強化（各 5 級，學會才能點）
             _ => new string[0],
         };
 
@@ -182,6 +183,13 @@ namespace SpellDuel
             {
                 // ======================================================== 樹狀技能樹（v3）：可升級的節點最高 5 級
                 // 格子：x 0～6（左／中／右三個流派），y 由上往下；最後一個參數＝父節點（點過 1 級才能點）
+                // 初心者：解任務學會的 3 招各一個強化節點（5 級；沒學會的不能點）。轉職時全部退點，拿去新職業的技能樹
+                case "novice": return new List<TreeNode>
+                {
+                    FMod("nv_t_swing", "木棍揮擊強化", "nv_swing", ModField.Damage, 0.12f, 5, 1, 0, null),
+                    FMod("nv_t_stone", "投石強化", "nv_stone", ModField.Damage, 0.12f, 5, 3, 0, null),
+                    FMod("nv_t_aid", "急救強化", "nv_aid", ModField.Heal, 0.15f, 5, 5, 0, null),
+                };
                 case "mage": return new List<TreeNode>
                 {
                     FStat("mg_root", "魔力親和", Stat.Int, 5, 3, 0, null),
@@ -839,7 +847,7 @@ namespace SpellDuel
         /// <summary>轉職前職業技能樹最多能點的點數＝整棵樹的 1/5（使用者：要有取捨；約 15～17 點）</summary>
         public const float BaseTreeShare = 0.2f;
         public static int TreeTotal(string cls) { int t = 0; foreach (var n in SkillTrees.Of(cls)) t += n.max; return t; }
-        public static int BaseTreeCapOf(string cls) => Mathf.Max(1, Mathf.RoundToInt(TreeTotal(cls) * BaseTreeShare));
+        public static int BaseTreeCapOf(string cls) => cls == Skills.Novice ? TreeTotal(cls) : Mathf.Max(1, Mathf.RoundToInt(TreeTotal(cls) * BaseTreeShare));   // 初心者的小樹沒有上限
         public int BaseTreeCap => BaseTreeCapOf(cls);
         /// <summary>技能樹版本：2＝樹狀圖＋流派（舊存檔讀進來時退回職業樹點數）</summary>
         public const int TreeVersion = 3;
@@ -931,6 +939,8 @@ namespace SpellDuel
         public string NodeBlock(TreeNode n)
         {
             if (Rank(n.id) >= n.max) return "已滿級";
+            if (cls == Skills.Novice && TreeOf(n) == Skills.Novice && n.skill != null && !noviceLearned.Contains(n.skill))
+                return $"先到炎之里解任務學會「{(Skills.All.TryGetValue(n.skill, out var ns) ? ns.name : n.skill)}」";
             foreach (var r in SkillTrees.Prereqs(TreeOf(n), n))
             {
                 if (n.free) { if (Rank(r.id) < 1) return $"需要先點「{r.name}」"; }

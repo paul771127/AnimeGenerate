@@ -116,18 +116,6 @@ namespace SpellDuel
 
         bool DrawTree(Rect b, CharacterProfile p, int fs, int fsS, float gap, string treeId)
         {
-            if (treeId == Skills.Novice)
-            {
-                // 初心者沒有技能樹：技能點先存著，轉職後到新職業的技能樹點
-                UiKit.Card(b, 0.5f, Skills.Classes[Skills.Novice].color, 0.6f);
-                var sb = new System.Text.StringBuilder();
-                sb.Append("🌱 初心者沒有技能樹。招式要到「炎之里」找居民解任務學：\n\n");
-                foreach (var q in NoviceQuests.All)
-                    sb.Append($"・{Skills.All[q.skill].name}（{q.npc}「{q.title}」）：{NoviceQuests.Progress(q, p, Story.IsCleared)}\n");
-                sb.Append($"\n升級拿到的技能點會先存著（目前 {p.skillPoints} 點），{Skills.JobLevel} 級到職業工會通過轉職試煉、選了職業後，就能用在新職業的技能樹上。");
-                UiKit.Text(new Rect(b.x + gap, b.y + gap, b.width - gap * 2, b.height - gap * 2), sb.ToString(), fsS, new Color(0.92f, 0.9f, 0.8f), TextAnchor.UpperLeft);
-                return false;
-            }
             var nodes = SkillTrees.Of(treeId);
             if (nodes.Count > 0 && nodes[0].free)
             {
@@ -158,6 +146,17 @@ namespace SpellDuel
             return DrawNodeDetail(b, p, fs, fsS, gap, treeId, advT);
         }
 
+        /// <summary>初心者技能樹的說明：3 招各 5 級、學會才能點；任務進度；轉職時退點</summary>
+        static string NoviceHelp(CharacterProfile p)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append("🌱 初心者的技能樹：木棍揮擊、投石、急救各可以強化 5 級（每升一級得 1 技能點）。招式要先到「炎之里」找居民解任務學會，才能點：\n");
+            foreach (var q in NoviceQuests.All)
+                sb.Append($"・{Skills.All[q.skill].name}（{q.npc}「{q.title}」）：{NoviceQuests.Progress(q, p, Story.IsCleared)}\n");
+            sb.Append("轉職時這裡點的技能點會全部退回，拿去新職業的技能樹點。");
+            return sb.ToString();
+        }
+
         /// <summary>選中的節點：說明＋學習按鈕（下方 36%）</summary>
         bool DrawNodeDetail(Rect b, CharacterProfile p, int fs, int fsS, float gap, string treeId, AdvDef advT)
         {
@@ -168,7 +167,7 @@ namespace SpellDuel
             var sel = selNode != null ? SkillTrees.Find(treeId, selNode) : null;
             if (sel == null)
             {
-                string help = advT != null
+                string help = treeId == Skills.Novice ? NoviceHelp(p) : advT != null
                     ? $"✨ {advT.name}的進階技能樹（和基本技能樹共用技能點）。轉職時已學會「{(Skills.All.TryGetValue(advT.skills[0], out var s0) ? s0.name : advT.skills[0])}」；📘 可以習得另外兩個進階技能。有些節點也會強化基本職業的技能，自由搭配。\n核心機制：{advT.core}"
                     : $"點一個節點看說明。樹從最上面往下長：父節點點過 1 級，下面接著的節點才能點。整棵樹的點數比轉職前能拿到的多，轉職前最多點 {p.BaseTreeCap}（整棵樹的五分之一） 點，怎麼點由你決定。\n一開始只會 3 個基本技能：{string.Join("、", NamesOf(SkillTrees.Starters(p.cls)))}；📘＝習得新技能。";
                 DrawTreeParagraph(new Rect(dr.x+gap,dr.y+gap,dr.width-gap*2,dr.height-gap*2),treeId+" help",help,fsS,UiKit.Muted);
