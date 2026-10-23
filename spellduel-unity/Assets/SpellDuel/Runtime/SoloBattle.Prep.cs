@@ -75,7 +75,8 @@ namespace SpellDuel
             var cls = Skills.Classes[myClass];
             UiKit.Backdrop(new Rect(0, 0, W, H), cls.color, 0.97f);
             float bh = u * 1.5f, btnY = botY - pad - bh;
-            var view = new Rect(0, topY + pad, W, btnY - gap - (topY + pad));
+            float vTop = Mathf.Max(topY + pad, SettingsMenu.BelowGear);   // 捲動清單從 ⚙ 下面開始（右欄的技能卡捲上去才不會被 ⚙ 蓋住、點不到）
+            var view = new Rect(0, vTop, W, btnY - gap - vTop);
             float cw = W - Mathf.Max(18f, fs * 0.45f);
             var content = new Rect(0, 0, cw, Mathf.Max(view.height, prepContentH));
             prepScroll = UiKit.DragScroll(view, prepScroll, content);

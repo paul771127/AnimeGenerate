@@ -35,11 +35,12 @@ namespace SpellDuel
             }
         }
 
-        /// <summary>字幕卡：畫面上方（敵人資訊卡下面）</summary>
-        void DrawDungeonTicker(float W, float H, float pad, int fs, int fsS)
+        public float TickerHeight => UiKit.BaseFont * 3.4f;
+        /// <summary>字幕卡：上方資訊（敵人卡、隊友、經驗條、角色按鈕、藥水列）的正下方，y 由 DrawHud 算好傳進來</summary>
+        void DrawDungeonTicker(float W, float y, float pad, int fs, int fsS)
         {
             if (tickerLine == null || dungeon == null) return;
-            float h = fs * 3.4f, y = H - Screen.safeArea.yMax + H * 0.17f;
+            float h = TickerHeight;
             var r = new Rect(pad, y, W - pad * 2, h);
             float a = Mathf.Clamp01((tickerUntil - Time.time) * 3f);
             bool narr = string.IsNullOrEmpty(tickerLine.speaker);

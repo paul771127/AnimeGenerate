@@ -516,6 +516,8 @@ namespace SpellDuel
         float townWaveT;
         /// <summary>在城鎮／世界地圖（不是戰鬥）：沒有場地範圍</summary>
         public bool InTown => storyMapOpen && phase != Phase.Fighting;
+        /// <summary>有視窗蓋在畫面上（整備、角色、地圖／村子、對話、技能說明、劇情影片、勝利結算）：GameRoot 的場地警告不要再疊上去</summary>
+        public bool OverlayOpen => charOpen || storyMapOpen || dlg != null || prepGo != null || infoSkill != null || StoryVideo.Active || phase == Phase.Over;
         /// <summary>現在該播的背景音樂：戰鬥中＝依地圖主題（Boss 在場＝Boss 曲）；結算＝安靜；其他（城鎮、選單）＝城鎮曲</summary>
         public string MusicTrack => StoryVideo.Playing ? null   // 播劇情影片時關掉背景音樂
             : phase == Phase.Over ? null
@@ -2820,7 +2822,8 @@ namespace SpellDuel
 
         // ---------------------------------------------------------------- 技能詳細說明（點技能卡打開）
         string infoSkill;          // 正在看說明的技能（null＝沒開）
-        string infoCtx; int infoFrame;   // 說明視窗是在哪個畫面打開的、上次畫介面的幀
+        string infoCtx; int infoFrame;
+        float hudStackBottom;   // 戰鬥畫面上方資訊（敵人卡、隊友、經驗條、角色按鈕、藥水列）的下緣   // 說明視窗是在哪個畫面打開的、上次畫介面的幀
 
         void DrawSkillInfo()
         {
@@ -2916,10 +2919,11 @@ namespace SpellDuel
             int skillRows = (setupSkills.Length + 1) / 2;
             float u = fs * 1.65f; // Keep readable cards; the preparation sheet scrolls above the fixed actions.
             float y = 0f;
-            float viewH=Mathf.Max(fs*4,avail-u*2.8f-gap*2);
+            float vOff=Mathf.Max(0f,SettingsMenu.BelowGear-(topY+pad));   // 捲動清單從 ⚙ 下面開始（右欄的技能卡、角色按鈕才不會被 ⚙ 蓋住）
+            float viewH=Mathf.Max(fs*4,avail-u*2.8f-gap*2-vOff);
             float contentWidth=W-Mathf.Max(18f,fs*.45f);
-            setupScroll=UiKit.DragScroll(new Rect(0,topY+pad,W,viewH),setupScroll,new Rect(0,0,contentWidth,Mathf.Max(viewH,setupContentHeight)));   // 手指拖曳捲動
-            setupScroll=GUI.BeginScrollView(new Rect(0,topY+pad,W,viewH),setupScroll,new Rect(0,0,contentWidth,Mathf.Max(viewH,setupContentHeight)),false,true);
+            setupScroll=UiKit.DragScroll(new Rect(0,topY+pad+vOff,W,viewH),setupScroll,new Rect(0,0,contentWidth,Mathf.Max(viewH,setupContentHeight)));   // 手指拖曳捲動
+            setupScroll=GUI.BeginScrollView(new Rect(0,topY+pad+vOff,W,viewH),setupScroll,new Rect(0,0,contentWidth,Mathf.Max(viewH,setupContentHeight)),false,true);
             W=contentWidth;
             var cls = Skills.Classes[myClass];
 
@@ -3150,7 +3154,7 @@ namespace SpellDuel
 
             // 上方：敵人資訊卡
             var enColor = en.cls != null ? en.cls.color : new Color(1f, 0.4f, 0.4f);
-            var topR = new Rect(pad, top, W - pad * 2, lh * 2.9f);
+            var topR = new Rect(pad, top, SettingsMenu.RightEdge(top, top + lh * 2.9f, W - pad) - pad, lh * 2.9f);   // 右上角讓給 ⚙
             UiKit.Card(topR, 0.6f, enColor, 0.5f);
             float ix = topR.x + gap, iw = topR.width - gap * 2, y = topR.y + gap * 0.5f;
             if (endless && !en.Alive)
@@ -3242,6 +3246,12 @@ namespace SpellDuel
                 UiKit.Text(new Rect(p.x - W * 0.3f, p.y - lh, W * 0.6f, lh * 1.5f), f.text, fsL, new Color(f.color.r, f.color.g, f.color.b, 1f - age / 1.2f), TextAnchor.MiddleCenter, true);
             }
             floaters.RemoveAll(f => Time.time - f.born > 1.2f);
+
+            // 副本的劇情字幕卡：放在上方資訊的正下方（以前固定在 17% 高度，會蓋住角色按鈕和藥水列）；
+            // 先畫，後面的閃避／伏擊警告才會疊在它上面
+            float alliesH = coop && battle.allies.Count > 0 ? battle.allies.Count * ((battle.allies.Count > 1 ? lh * 0.7f : lh * 0.9f) + gap * 0.3f) + gap * 0.2f : 0f;
+            hudStackBottom = endless ? top + lh * 2.9f + gap + alliesH + lh * 4.4f + gap * 0.3f : topR.yMax + alliesH + gap;
+            if (phase == Phase.Fighting && dungeon != null) DrawDungeonTicker(W, hudStackBottom, pad, fs, fsS);
 
             // 蓄力狀態
             if (me.charging != null)
@@ -3514,10 +3524,9 @@ namespace SpellDuel
             {
                 // 副本地圖：人物頭上的血條、對話窗（藥水列上方、提示文字再上面）、任務／抉擇／寶箱／選下一站（SoloBattle.DungeonMap.cs）
                 DrawNpcBars(W, H, lh, fsS);
-                DrawChatLog(W, H, pad, fsS, panelY - gap - fs * 7.6f);
-                DrawDungeonMapUi(W, H, pad, fs, fsS);
+                DrawChatLog(W, H, pad, fsS, panelY - gap - fs * 7.6f, !DungeonPopupOpen);   // 有抉擇／寶箱／選下一站視窗時不畫 💬 按鈕（免得搶走視窗按鈕的點擊）
+                DrawDungeonMapUi(W, H, pad, fs, fsS, hudStackBottom + (tickerLine != null ? TickerHeight + gap : 0f));
             }
-            if (phase == Phase.Fighting) DrawDungeonTicker(W, H, pad, fs, fsS);   // 副本的劇情字幕卡
             if (phase == Phase.Over && victory == null) DrawExerciseCard(W, top + (botY - top) * 0.07f, pad, lh, fsS);   // 運動紀錄（勝利窗格裡另外顯示）
             if (phase == Phase.Over && victory != null && DrawVictory(W, H, pad, top, botY, gap, lh, fs, fsS)) { }   // 勝利結算窗格（按「繼續」後才是原本的按鈕）
             else if (phase == Phase.Over && daily != null) DrawDailyResult(W, pad, top, botY, gap, lh, fs, fsS);

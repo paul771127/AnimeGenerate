@@ -3,7 +3,7 @@ using UnityEngine;
 namespace SpellDuel
 {
     /// <summary>
-    /// 設定選單：畫面右側一直有個 ⚙ 按鈕，點開可以開關「音效」「音樂」「震動」、調音量（PlayerPrefs 記住）。
+    /// 設定選單：畫面右上角一直有個 ⚙ 按鈕（以前在右側 30% 高度，會壓到副本清單、技能卡等按鈕、搶走點擊），點開可以開關「音效」「音樂」「震動」、調音量（PlayerPrefs 記住）。
     /// 自己一個 MonoBehaviour、GUI.depth 最前面：選單打開時吃掉點擊，不會點到後面的按鈕。戰鬥不會暫停。
     /// </summary>
     public class SettingsMenu : MonoBehaviour
@@ -16,6 +16,26 @@ namespace SpellDuel
         public static System.Action GoHome;
         public static System.Func<bool> InBattle;
         bool homeConfirm;
+
+        /// <summary>⚙ 按鈕的位置（右上角，安全區內）：其他畫面用 RightEdge 讓出這一塊</summary>
+        public static Rect GearRect
+        {
+            get
+            {
+                float W = Screen.width, H = Screen.height, sz = UiKit.BaseFont * 1.8f;
+                var safe = Screen.safeArea;
+                return new Rect(safe.xMax - sz - W * 0.015f, H - safe.yMax + W * 0.012f, sz, sz);
+            }
+        }
+        /// <summary>y0～y1 這一條橫帶的右邊界：會碰到 ⚙ 就停在 ⚙ 左邊，否則用 fallback</summary>
+        public static float RightEdge(float y0, float y1, float fallback)
+        {
+            if (Hide != null && Hide()) return fallback;
+            var g = GearRect;
+            return y1 > g.y && y0 < g.yMax ? Mathf.Min(fallback, g.x - UiKit.BaseFont * 0.3f) : fallback;
+        }
+        /// <summary>⚙ 下面第一個不會被蓋到的 y（捲動清單的上緣用）</summary>
+        public static float BelowGear => GearRect.yMax + UiKit.BaseFont * 0.2f;
 
         /// <summary>首頁的「⚙ 設定」卡片：直接打開選單</summary>
         public static void Show() { Ensure(); Open = true; if (I != null) I.homeConfirm = false; }
@@ -36,8 +56,7 @@ namespace SpellDuel
             float W = Screen.width, H = Screen.height;
             int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.85f);
             var safe = Screen.safeArea;
-            float sz = fs * 2.1f;
-            var gear = new Rect(safe.xMax - sz - W * 0.01f, H * 0.3f, sz, sz);
+            var gear = GearRect;
             if (!Open)
             {
                 if (UiKit.Button(gear, "⚙", Mathf.RoundToInt(fs * 1.1f))) { Open = true; homeConfirm = false; }

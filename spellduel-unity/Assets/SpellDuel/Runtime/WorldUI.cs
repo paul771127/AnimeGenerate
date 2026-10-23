@@ -156,8 +156,9 @@ namespace SpellDuel
         {
             UiKit.Card(r, 0.95f, c, 0.9f);
             bool facility=screen==Screen.Smith||screen==Screen.Shop||screen==Screen.Guild;
-            UiKit.Title(new Rect(r.x+gap,y,r.width-gap*2-(facility?fs*1.9f:0),fs*1.8f),title,c,fsL);
-            if(facility)UiKit.ShopArt(new Rect(r.xMax-gap-fs*1.65f,y,fs*1.65f,fs*1.65f),screen==Screen.Smith?0:screen==Screen.Shop?1:2,c);
+            float hr = SettingsMenu.RightEdge(y, y + fs * 1.8f, r.xMax - gap);   // 右上角讓給 ⚙
+            UiKit.Title(new Rect(r.x+gap,y,hr-r.x-gap-(facility?fs*1.9f:0),fs*1.8f),title,c,fsL);
+            if(facility)UiKit.ShopArt(new Rect(hr-fs*1.65f,y,fs*1.65f,fs*1.65f),screen==Screen.Smith?0:screen==Screen.Shop?1:2,c);
             string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
             // 背包容量（滿了紅字）、信箱（有信＝提醒幾天內要領）
             int bc = Progress.Bag.Count; var mails = Progress.Mailbox;
@@ -444,7 +445,7 @@ namespace SpellDuel
             UiKit.Card(top, 0.7f, t.color, 0.9f);
             UiKit.Text(new Rect(top.x + gap, top.y, top.width*.46f-gap, fs * 1.8f), $"🏘 {t.name}", fsL, Color.white, TextAnchor.MiddleLeft, true);
             string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
-            UiKit.Text(new Rect(top.x + top.width*.46f, top.y, top.width*.54f-gap, fs * 1.8f), $"{cn} Lv{prof.level}　💰 {Economy.Gold}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
+            UiKit.Text(new Rect(top.x + top.width*.46f, top.y, SettingsMenu.RightEdge(top.y, top.y + fs * 1.8f, top.xMax - gap) - (top.x + top.width*.46f), fs * 1.8f), $"{cn} Lv{prof.level}　💰 {Economy.Gold}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
             UiKit.Text(new Rect(top.x + gap, top.y + fs * 1.7f, top.width - gap * 2, fs * 1.8f), "📱 上下晃動手機（原地踏步）＝往準心方向走　💬 走到居民面前說「你好」或揮手聊天", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleLeft);
             float y = top.yMax + gap * 0.5f;
             if (!string.IsNullOrEmpty(SpeechNote)) { UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), SpeechNote, fsS, new Color(1f, 0.8f, 0.5f), TextAnchor.MiddleLeft); y += fs * 1.4f; }

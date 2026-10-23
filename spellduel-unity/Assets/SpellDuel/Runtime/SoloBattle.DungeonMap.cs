@@ -422,19 +422,19 @@ namespace SpellDuel
         }
 
         /// <summary>對話窗：左下（藥水列上方），只有文字＋陰影；右上角的小按鈕切換行數</summary>
-        void DrawChatLog(float W, float H, float pad, int fsS, float bottomY)
+        void DrawChatLog(float W, float H, float pad, int fsS, float bottomY, bool showToggle = true)
         {
             if (drun == null) return;
             float lh = fsS * 1.45f, bw = fsS * 3.6f;
             var tog = new Rect(pad, bottomY - lh * 1.15f, bw, lh * 1.05f);
-            if (UiKit.Button(tog, ChatLines == 0 ? "💬 關" : $"💬 {ChatLines}", fsS, ChatLines > 0)) ChatLines = (ChatLines + 1) % (ChatMax + 1);
+            if (showToggle && UiKit.Button(tog, ChatLines == 0 ? "💬 關" : $"💬 {ChatLines}", fsS, ChatLines > 0)) ChatLines = (ChatLines + 1) % (ChatMax + 1);
             int n = Mathf.Min(ChatLines, chatLog.Count);
             float y = tog.y - lh * n - pad * 0.3f;
             for (int i = chatLog.Count - n; i < chatLog.Count; i++)
             {
                 var c = chatLog[i];
                 string s = c.who != null ? $"{c.who}：{c.text}" : c.text;
-                var r = new Rect(pad, y, W * 0.78f, lh);
+                var r = new Rect(pad, y, W * 0.58f, lh);   // 左邊 58%：右邊留給任務追蹤
                 UiKit.Text(new Rect(r.x + 1.5f, r.y + 1.5f, r.width, r.height), s, fsS, new Color(0f, 0f, 0f, 0.85f), TextAnchor.MiddleLeft, true, 0.7f);
                 UiKit.Text(r, s, fsS, c.col, TextAnchor.MiddleLeft, true, 0.7f);
                 y += lh;
@@ -442,15 +442,18 @@ namespace SpellDuel
         }
 
         // ---------------------------------------------------------------- 視窗：路線、抉擇、寶箱、任務
-        void DrawDungeonMapUi(float W, float H, float pad, int fs, int fsS)
+        /// <summary>抉擇／寶箱／選下一站的視窗開著</summary>
+        bool DungeonPopupOpen => drun != null && battle != null && phase == Phase.Fighting && !battle.Over &&
+            (drun.pendingChoice != null || (chest != null && chest.rarity >= DiceRoll.MinRollRarity && (!chest.done || Time.time < chest.doneAt + 2.5f)) || (battle.awaitingNext && RouteReady));
+
+        void DrawDungeonMapUi(float W, float H, float pad, int fs, int fsS, float questY)
         {
             if (drun == null || battle == null || phase != Phase.Fighting || battle.Over) return;
-            float top = H - Screen.safeArea.yMax;
-            // 任務追蹤（右上，敵人資訊卡下面）
-            float qy = top + H * 0.3f;
+            // 任務追蹤：右邊、字幕卡下面（左邊是對話窗）
+            float qy = questY;
             foreach (var st in drun.Quests)
             {
-                var r = new Rect(W * 0.52f, qy, W * 0.48f - pad, fsS * 2.6f);
+                var r = new Rect(W * 0.6f, qy, W * 0.4f - pad, fsS * 2.6f);
                 UiKit.Card(r, 0.45f, st.done ? new Color(0.4f, 1f, 0.5f) : new Color(1f, 0.85f, 0.4f), 0.6f);
                 UiKit.Text(new Rect(r.x + fsS * 0.4f, r.y, r.width - fsS * 0.8f, r.height * 0.5f), (st.done ? "✅ " : "📜 ") + st.def.name, fsS, Color.white, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(r.x + fsS * 0.4f, r.y + r.height * 0.45f, r.width - fsS * 0.8f, r.height * 0.5f), st.GoalText, fsS, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleLeft, false, 0.6f);

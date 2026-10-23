@@ -223,7 +223,7 @@ namespace SpellDuel
             ipInput = PlayerPrefs.GetString("sd_last_ip", ipInput);
             codeInput = PlayerPrefs.GetString("sd_last_code", "");
             Sfx.Ensure(); Music.Ensure(); SettingsMenu.Ensure();
-            SettingsMenu.Hide = () => areaPreview;   // 場地預覽時不畫 ⚙（畫面要給確定／取消）
+            SettingsMenu.Hide = () => areaPreview || StoryVideo.Active;   // 場地預覽、劇情影片時不畫 ⚙（畫面要給確定／取消、跳過）
             SettingsMenu.GoHome = GoHome;
             SettingsMenu.InBattle = () => solo.phase == SoloBattle.Phase.Fighting;
             Log("請選擇模式");
@@ -506,7 +506,7 @@ namespace SpellDuel
             var red = new Color(1f, 0.4f, 0.4f);
             if (!playArea.HeightBad)
             {
-                if (!playArea.Inside(cam.transform.position)) UiKit.Pill(H * 0.68f, "⚠ 回到場地內（場地外只能移動，不能攻擊）", fs, red, W - pad * 2);
+                if (solo.phase == SoloBattle.Phase.Fighting && !playArea.Inside(cam.transform.position)) UiKit.Pill(H * 0.68f, "⚠ 回到場地內（場地外只能移動，不能攻擊）", fs, red, W - pad * 2);   // 只有戰鬥中才提醒
                 return;
             }
             UiKit.Pill(H * 0.6f, playArea.HeightHint, fsS, red, W - pad * 2);
@@ -1383,7 +1383,7 @@ namespace SpellDuel
             if (mode == Mode.Duo && solo.phase != SoloBattle.Phase.Hidden)
             {
                 solo.DrawGUI();
-                if ((AreaMode || remoteMode) && playArea.state == PlayArea.State.Done) DrawOutsideWarning(W, H, pad, fs, fsS);
+                if ((AreaMode || remoteMode) && playArea.state == PlayArea.State.Done && !solo.OverlayOpen) DrawOutsideWarning(W, H, pad, fs, fsS);
                 return;
             }
 
@@ -1391,7 +1391,7 @@ namespace SpellDuel
             if (mode == Mode.Solo && solo.phase != SoloBattle.Phase.Hidden)
             {
                 solo.DrawGUI();
-                if (playArea.state == PlayArea.State.Done && !solo.InTown) DrawOutsideWarning(W, H, pad, fs, fsS);
+                if (playArea.state == PlayArea.State.Done && !solo.InTown && !solo.OverlayOpen) DrawOutsideWarning(W, H, pad, fs, fsS);   // 整備、角色、對話、結算等視窗開著時不疊警告（以前「重新放置場地」按鈕會壓在視窗上）
                 return;
             }
 
