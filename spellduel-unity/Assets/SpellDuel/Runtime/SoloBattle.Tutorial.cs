@@ -227,10 +227,12 @@ namespace SpellDuel
             {
                 try { PlayerPrefs.SetInt(CharacterSlots.Key("sd_tutorial_done"), 1); PlayerPrefs.Save(); } catch { }
                 Economy.Gold += 100; lootGoldLog += 100;
-                var p = Progress.Char(myClass); xp = 100; ups = p.AddXp(xp); Progress.SaveChar(p);
+                var p = Progress.Char(myClass); xp = 100; ups = p.AddXp(xp);
+                int xb = p.xp; ups += TopUpLevel(p, TutorialLevel); xp += p.xp - xb;   // 初心者：教學結束至少 5 級
+                Progress.SaveChar(p);
                 prof = p;
             }
-            BuildVictory("教學完成！", "tutorial", 180f, xp, ups, first ? "第一次完成：經驗 100、💰100（升級會拿到能力點，進村子後導覽會教你怎麼加）" : "之後可以在村子的訓練場再上一次教學");
+            BuildVictory("教學完成！", "tutorial", 180f, xp, ups, first ? $"第一次完成：經驗 {xp}、💰100（升到 Lv{Progress.Char(myClass).level}，拿到能力點，進村子後導覽會教你怎麼加）" : "之後可以在村子的訓練場再上一次教學");
             Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
         }
 

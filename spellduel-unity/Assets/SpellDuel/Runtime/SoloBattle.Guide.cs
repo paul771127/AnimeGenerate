@@ -17,7 +17,8 @@ namespace SpellDuel
             get { try { return PlayerPrefs.GetInt(CharacterSlots.Key("sd_guide"), -1); } catch { return -1; } }
             set { try { PlayerPrefs.SetInt(CharacterSlots.Key("sd_guide"), value); PlayerPrefs.Save(); } catch { } }
         }
-        int guidePage;            // 設施介紹：第幾頁
+        int guidePage;
+        float guideBottom;        // 導覽卡片的下緣（任務面板排在它下面）            // 設施介紹：第幾頁
         float guideMovedAt;       // 開始移動這一步時已經走過的距離
         bool GuideActive => GuideStep >= 0 && GuideStep < GuideDone;
 
@@ -108,6 +109,7 @@ namespace SpellDuel
         /// <summary>導覽提示卡：村子裡＝完整的卡片（有按鈕）；角色畫面、整備開著時＝上方一條提示（不能按，不擋操作）</summary>
         void DrawGuide()
         {
+            guideBottom = 0f;
             if (!GuideActive || !storyMapOpen || phase != Phase.Setup || dlg != null || infoSkill != null || StoryVideo.Active) return;
             if (Event.current.type == EventType.Repaint) GuideTick();
             if (!GuideActive) return;
@@ -127,6 +129,7 @@ namespace SpellDuel
             }
             float h = fs * 6.6f, y = topY + fs * 4.4f;
             var r = new Rect(pad, y, W - pad * 2, h);
+            guideBottom = r.yMax;
             UiKit.Card(r, 0.88f, col, 1f);
             UiKit.Text(new Rect(r.x + gap, r.y + gap * 0.5f, r.width * 0.7f, fs * 1.4f), $"🧭 新手導覽・{title}", fs, col, TextAnchor.MiddleLeft, true);
             float bw = r.width * 0.24f, bh = fs * 1.5f;

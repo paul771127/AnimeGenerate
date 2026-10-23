@@ -711,7 +711,8 @@ namespace SpellDuel
             Progress.GetShared = k => PlayerPrefs.GetString(k, "");
             Progress.SetShared = (k, v) => { PlayerPrefs.SetString(k, v); PlayerPrefs.Save(); };
             Story.Get = Progress.Get; Story.Set = Progress.Set;
-            Story.Gate = st => st.id == "1-1" && NoviceQuests.StoneLessonPending(Progress.Char(myClass)) ? "先到炎之里找米菈上投石課" : null;
+            Story.Gate = st => st.id == "1-1" && NoviceQuests.StoneLessonPending(Progress.Char(myClass)) ? "先到炎之里找米菈上投石課"
+                : st.id == "1-4" && Progress.Char(myClass).cls == Skills.Novice ? "先到職業工會轉職" : null;   // 初心者：1-3 打完要轉職才能打 1-4
             Progress.MarkReady();   // 存檔接好了（之前讀到的空白內容全部丟掉，重新從手機讀）
             LoadLoadout();
             Sfx.Ensure();
@@ -986,6 +987,7 @@ namespace SpellDuel
                         if (pendingStage.theme == 1 && pendingStage.id != "trial") { battle.enemyHpMul = 2f; battle.enemyDmgMul = 2f; battle.bossHpMul = 5f; }   // 第二章森林：敵人血量、攻擊 ×2，Boss 血量 ×5（使用者要求）
                         if (pendingStage.theme == 2 && pendingStage.id != "trial") { battle.rangedCountMul = 0.5f; battle.meleeCountMul = 1.5f; battle.spawnGapAdd = 5f; }   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
+                        ApplyNoviceRoute(pendingStage);   // 1-1～1-3：4m×4m 小場地；1-1、1-2 只有近戰小怪（SoloBattle.NoviceRoute.cs）
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
                     }
                     else if (dungeon != null)
@@ -1499,6 +1501,7 @@ namespace SpellDuel
                     if (prof != null)
                     {
                         int ups = prof.AddXp(stXp);
+                        int xb = prof.xp; ups += TopUpLevel(prof, StageLevelFloor(st.id)); stXp += prof.xp - xb;   // 初心者路線：1-1→7 級、1-2→9 級、1-3→10 級（SoloBattle.NoviceRoute.cs）
                         Progress.SaveChar(prof);
                         int nWaves = Mathf.Max(1, st.toWave - st.fromWave + 1);
                         BuildVictory($"{st.title} 完成", "st_" + st.id, st.toWave % 10 == 0 && nWaves == 1 ? 120f : 45f * nWaves, stXp, ups, first ? null : "再次通關");
@@ -1760,7 +1763,7 @@ namespace SpellDuel
 
         void EndBattle()
         {
-            ClearDaily(); ClearTutorial();
+            ClearDaily(); ClearTutorial(); RestoreArea();
             ResetCarryLeft();   // 下一場能用的道具＝整備時決定帶的數量
             victory = null; hitsTaken = 0; lootLog.Clear(); lootGoldLog = 0; ResetExercise();
             if (prof != null) Progress.SaveChar(prof);
@@ -2897,6 +2900,7 @@ namespace SpellDuel
             else if (storyMapOpen) DrawStoryMap();
             else if (infoOpen) DrawSkillInfo();
             DrawGuide();   // 村莊新手導覽（SoloBattle.Guide.cs）
+            DrawQuestPanel();   // 右上角的任務面板（SoloBattle.NoviceRoute.cs）
         }
 
         // ---------------------------------------------------------------- 技能詳細說明（點技能卡打開）
@@ -3625,6 +3629,11 @@ namespace SpellDuel
                 {
                     if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "🏛 回職業工會", fs, true, new Color(0.85f, 0.6f, 1f)))
                     { ShowSetup(); storyMapOpen = true; world.OpenTown(Battle.ThemeOf(Advanced.TrialLastWave)); world.OpenGuild(); }
+                }
+                // 初心者打完 1-3：回村子轉職（轉職完成才能打 1-4）
+                else if (won && st.id == "1-3" && NeedJobChange)
+                {
+                    if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "🏛 回村子轉職", fs, true, new Color(0.85f, 0.6f, 1f))) GoJobChange();
                 }
                 // 這一章全部打通：下一關在下一個城鎮之後 → 先抵達下一個城鎮
                 else if (won && next != null && next.theme != st.theme && Story.IsUnlocked(next))

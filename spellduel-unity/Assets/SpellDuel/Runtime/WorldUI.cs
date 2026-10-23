@@ -545,7 +545,7 @@ namespace SpellDuel
                 bool story = Story.HasStory(st) && Story.IsSeen(st.id);
                 float bwid = cr.width * (story ? 0.2f : 0.3f);
                 var br = new Rect(cr.xMax - bwid, cr.y + gap * 0.4f, bwid - gap * 0.4f, cr.height - gap * 0.8f);
-                if (UiKit.Button(br, ok ? (clear ? "⚔ 再打" : "⚔ 出發") : Story.LockReason(st) != null ? "🔒 先上投石課" : "🔒 先過前一關", fsS, ok && !clear, RegionColors[th], ok))
+                if (UiKit.Button(br, ok ? (clear ? "⚔ 再打" : "⚔ 出發") : Story.LockReason(st) is string lr ? (lr.Contains("轉職") ? "🔒 先轉職" : "🔒 先上投石課") : "🔒 先過前一關", fsS, ok && !clear, RegionColors[th], ok))
                 { OnStartStage?.Invoke(st); return; }
                 if (story && UiKit.Button(new Rect(br.x - bwid, br.y, bwid - gap * 0.4f, br.height), "📖 故事", fsS))
                 { OnWatchStory?.Invoke(st); return; }
