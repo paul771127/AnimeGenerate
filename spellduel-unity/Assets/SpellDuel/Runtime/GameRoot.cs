@@ -482,7 +482,7 @@ namespace SpellDuel
             float pw = W - pad * 2f, bh = fs * 2.6f;
             UiKit.Pill(H * 0.12f, areaPreviewFirst ? $"📐 放置 {AutoAreaSize:0}m 場地" : $"↺ 重新放置 {AutoAreaSize:0}m 場地", fs, new Color(1f, 0.85f, 0.3f), pw);
             UiKit.Pill(H * 0.12f + fs * 2.4f, playArea.HasFloor
-                ? "黃色框＝新場地的範圍，黃色箭頭＝場地前方。轉身面向空地、走到想要的位置（你會站在靠近自己這一邊）"
+                ? "黃色框＝新場地的範圍，黃色箭頭＝場地前方。站到空地的正中間、面向想要的前方（你會站在場地正中間）"
                 : "先慢慢移動手機、鏡頭對著地板，找到地板才看得到預覽", fsS, Color.white, pw);
             float by = H - bh * 2.6f - pad;
             bool ok = playArea.HasFloor;

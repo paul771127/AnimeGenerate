@@ -260,6 +260,27 @@ namespace SpellDuel
                 DrawEdgeArrow(tutTarget + Vector3.up * 0.3f, $"⭕ {Battle.FlatDistance(Me.Feet, tutTarget):F1}m", col, W, H, lh, fsS);
             if (TutKind >= 8 && tutPassAt < 0f)
                 DrawEdgeArrow(En.Feet + Vector3.up * 1f, $"🪵 {Battle.FlatDistance(Me.Feet, En.Feet):F1}m", col, W, H, lh, fsS);
+            if (TutKind == 9 && tutPassAt < 0f) DrawSwipeDemo(W, H, fs, col);
+        }
+
+        /// <summary>示範動畫：手掌從左往右劃過畫面（後面拖著殘影），每 1.6 秒一次</summary>
+        void DrawSwipeDemo(float W, float H, int fs, Color col)
+        {
+            float t = Time.time % 1.6f, k = Mathf.Clamp01(t / 0.7f);
+            float e = 1f - (1f - k) * (1f - k);   // 先快後慢
+            float y = H * 0.62f, x0 = W * 0.2f, x1 = W * 0.8f, x = Mathf.Lerp(x0, x1, e);
+            float a = t < 0.7f ? 1f : Mathf.Clamp01(1f - (t - 0.7f) / 0.5f);
+            // 殘影：一串越來越淡的點
+            for (int i = 0; i < 14; i++)
+            {
+                float px = Mathf.Lerp(x0, x, i / 13f), sz = fs * (0.15f + 0.35f * i / 13f);
+                GUI.color = new Color(1f, 0.8f, 0.45f, a * (0.15f + 0.6f * i / 13f));
+                GUI.DrawTexture(new Rect(px - sz / 2f, y - sz / 2f + Mathf.Sin(i * 0.4f) * fs * 0.15f, sz, sz), Texture2D.whiteTexture);
+            }
+            GUI.color = new Color(1f, 1f, 1f, a);
+            UiKit.Text(new Rect(x - fs * 1.6f, y - fs * 2.2f, fs * 3.2f, fs * 3.2f), "✋", fs * 2, Color.white, TextAnchor.MiddleCenter);
+            GUI.color = Color.white;
+            UiKit.Text(new Rect(0, y + fs * 1.4f, W, fs * 1.5f), "像這樣：張開手掌，在鏡頭前快速橫劃一下", fs, new Color(1f, 0.9f, 0.6f, Mathf.Max(0.6f, a)), TextAnchor.MiddleCenter, true);
         }
 
         string TutInstruction()

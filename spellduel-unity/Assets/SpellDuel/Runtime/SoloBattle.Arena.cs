@@ -134,20 +134,27 @@ namespace SpellDuel
             Vector3 da = (a - o).normalized, db = (b - o).normalized;
             // 自己的刀線：畫在眼前（約 0.6m，正好疊在手劃過的位置），不要畫在刀尖那一圈（手往下劃時會落到地上）
             // 判定不變：整個扇面（從頭部出發到刀尖）都砍得到
-            if (f == Me) { reach = Mathf.Min(reach, OwnSlashDraw); lr.widthMultiplier = warn ? 0.015f : 0.03f; }
+            if (f == Me)
+            {
+                reach = Mathf.Min(reach, OwnSlashDraw);
+                lr.widthMultiplier = warn ? 0.015f : 0.085f;
+                // 砍下去：中間粗、兩端尖的新月形刀光（看得出揮了一刀）
+                if (!warn) { lr.widthCurve = new AnimationCurve(new Keyframe(0f, 0.05f), new Keyframe(0.5f, 1f), new Keyframe(1f, 0.05f)); lr.numCapVertices = 4; }
+            }
             for (int i = 0; i <= N; i++) lr.SetPosition(i, WorldFrame.FromWorld(o + Vector3.Lerp(da, db, i / (float)N).normalized * reach));
             // 敵人的預警＝紅色；自己的預警＝職業色半透明（告訴你刀線在哪、還沒砍下）
             var c = warn ? (f == Me ? new Color(f.cls.color.r, f.cls.color.g, f.cls.color.b, 0.5f) : new Color(1f, 0.25f, 0.2f, 0.85f)) : Color.Lerp(f.cls.color, Color.white, 0.6f);
             bool novice = f.cls != null && f.cls.id == Skills.Novice;
-            if (novice && !warn) c = new Color(0.78f, 0.55f, 0.3f);   // 初心者的木棍：木頭色（不像劍光那麼亮）
+            if (novice && !warn) c = f == Me ? new Color(1f, 0.78f, 0.45f, 0.95f) : new Color(0.78f, 0.55f, 0.3f);   // 初心者的木棍：木頭色（自己的亮一點，看得清楚）
             lr.startColor = lr.endColor = c;
             // 初心者的木棍敲下去：木頭色的短弧線殘影＋木屑（和木棍揮擊同一套光效）
             if (novice && !warn)
             {
                 var mid = o + Vector3.Lerp(da, db, 0.5f).normalized * reach;
-                SpellFx.CastBurst("novice_swing", c, WorldFrame.FromWorld(f == Me ? mid : Vector3.Lerp(o, mid, 0.6f)), WorldFrame.DirFromWorld(Fighter.Flat(mid - o).normalized), 0.8f);
+                SpellFx.CastBurst("novice_swing", c, WorldFrame.FromWorld(f == Me ? mid : Vector3.Lerp(o, mid, 0.6f)), WorldFrame.DirFromWorld(Fighter.Flat(mid - o).normalized), f == Me ? 1.3f : 0.8f);
+                if (f == Me) { Haptics.Play(Haptics.Kind.Light); Kick(3f, 0f); }   // 揮下去手機輕震一下
             }
-            go.AddComponent<SlashLineFade>().Begin(lr, warn ? Mathf.Max(0.2f, f.windupUntil - battle.now) : 0.25f, c);
+            go.AddComponent<SlashLineFade>().Begin(lr, warn ? Mathf.Max(0.2f, f.windupUntil - battle.now) : f == Me ? 0.35f : 0.25f, c);
             if (warn) { Sfx.Play("cast_swordsman", 0.3f, 0.7f); if (f != Me) Sfx.Play("blade_warn", 0.7f); }   // 敵人的預警：拔刀聲
             // 敵人的預警：同時擺出攻擊架勢（預備的長度＝預警時間，出手的瞬間＝判定）
             if (warn && f == En && enemyRig) enemyRig.PlayAttack(f.cls != null && f.cls.id == "assassin" ? "stab" : "slash", Mathf.Max(0.05f, f.windupUntil - battle.now));

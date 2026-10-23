@@ -95,7 +95,7 @@ namespace SpellDuel
             fwd = fwd.sqrMagnitude > 1e-4f ? fwd.normalized : Vector3.forward;
             var right = Vector3.Cross(Vector3.up, fwd);
             var me = new Vector3(cam.transform.position.x, FloorY, cam.transform.position.z);
-            center = me + fwd * (size / 2f - 0.5f);
+            center = me;   // 人站在場地正中間（使用者要求）
             float h = size / 2f;
             pts = new List<Vector3> { center - right * h - fwd * h, center + right * h - fwd * h, center + right * h + fwd * h, center - right * h + fwd * h };
         }
@@ -244,7 +244,7 @@ namespace SpellDuel
         }
 
         // ---------------------------------------------------------------- 建立場地
-        /// <summary>在玩家腳下前方放一個正方形場地（玩家站在靠近自己這一側的邊內 0.5 公尺）</summary>
+        /// <summary>以玩家為中心放一個正方形場地（人站在正中間，+Z＝面向的方向）</summary>
         public bool AutoSquare(float size)
         {
             if (!HasFloor) return false;

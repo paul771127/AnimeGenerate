@@ -479,7 +479,7 @@ namespace SpellDuel
             pendingStage = storyStage;
             StartBossBattle(false, true);
             pendingStage = null;
-            Say($"📖 {storyStage.title}", 3f);
+            Say($"📖 {storyStage.title}" + (myClass == Skills.Novice && SmallArenaStage(storyStage.id) ? "\n🪵 近的敵人：手掌在鏡頭前橫劃一下用木棍敲；遠的：唸「投石」→ 握拳再張開" : ""), myClass == Skills.Novice ? 6f : 3f);
         }
 
         StoryStage NextStage(StoryStage st)
@@ -2231,7 +2231,9 @@ namespace SpellDuel
                         string fxCls = SpellFx.HitClassOf(hs) ?? (kind == "trap" ? "archer" : myClass);
                         lastHitCls = fxCls;
                         float hd = DmgOf(text); if (hd <= 0f && hs != null) hd = hs.damage;
-                        SpellFx.Hit(fxCls, hs != null ? hs.color : c, WorldFrame.FromWorld(at), 0.8f + hd / 60f, battle.HitCrit);
+                        bool stick = hs != null && (hs.id == "na_stick" || hs.id == "nv_swing");   // 初心者的木棍：命中特效放大、跳「砰！」（傷害小，原本看不太出來）
+                        SpellFx.Hit(fxCls, hs != null ? hs.color : c, WorldFrame.FromWorld(at), (0.8f + hd / 60f) * (stick ? 1.7f : 1f), battle.HitCrit);
+                        if (stick) { floaters.Add(new Floater { posMap = at + Vector3.up * 0.35f, text = "砰！", color = new Color(1f, 0.8f, 0.4f), born = Time.time }); Kick(8f, 0.06f); }
                     }
                     // 音效＋震動：打中敵人（傷害越高越重）、格擋、回復、增益、陷阱
                     switch (kind)
