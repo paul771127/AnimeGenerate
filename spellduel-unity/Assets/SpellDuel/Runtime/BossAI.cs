@@ -78,6 +78,7 @@ namespace SpellDuel
             Phase = 1; SetShell(false); staggerUntil = -1f; pendingSummon = false;
             me.chargeScale = baseCharge * chargeMul;
             nextThink = b.now + 2.5f;
+            centerDone = false; centerSince = -1f;
             me.target = null;
             b.ClearThreat();   // 新的 Boss：仇恨重新算
         }
@@ -89,6 +90,9 @@ namespace SpellDuel
         readonly Func<Vector3, float> edgeDistance;
         readonly System.Random rnd;
         float nextThink = 3f, nextRetarget;
+        // 出場：先走到場地中間（被玩家擋住就停在保持距離的地方）再開始攻擊；最多走 CenterMaxTime 秒
+        bool centerDone; float centerSince = -1f;
+        public const float CenterMaxTime = 6f, CenterPull = 0.4f;
         // 熔岩躍擊：蓄滿後在 LeapTime 秒內跳到落點，落地才判定傷害
         public const float LeapTime = 0.6f;
         float leapT = -1f; Vector3 leapFrom;
@@ -184,6 +188,12 @@ namespace SpellDuel
                     nextThink = b.now + 0.8f * thinkScale;   // 落地後很快接近身攻擊
                 }
                 return;
+            }
+            if (!centerDone && me.charging == null)
+            {
+                if (centerSince < 0f) centerSince = b.now;
+                if (WalkToCenter(dt, tgt) || b.now - centerSince > CenterMaxTime) { centerDone = true; nextThink = Mathf.Max(nextThink, b.now + 0.6f); }
+                else { Status = "走向場地中間"; return; }
             }
             Move(dt, tgt);
 
@@ -290,6 +300,26 @@ namespace SpellDuel
             if (b.TryRelease(me, dir, tgt.Feet, out _)) Status = "";
         }
 
+        /// <summary>場地中間（被目標擋住時：目標旁邊保持距離的那一點）</summary>
+        Vector3 CenterSpot(Fighter tgt)
+        {
+            var c = Vector3.zero; float keep = Keep + 0.3f;
+            var fromT = Fighter.Flat(me.Feet - tgt.Feet);
+            if (Battle.FlatDistance(c, tgt.Feet) < keep) c = tgt.Feet + (fromT == Vector3.zero ? Vector3.forward : fromT.normalized) * keep;
+            c.y = 0f; return c;
+        }
+
+        /// <summary>出場時走向場地中間；到了回傳 true</summary>
+        bool WalkToCenter(float dt, Fighter tgt)
+        {
+            var dest = CenterSpot(tgt); var feet = me.Feet; feet.y = 0f;
+            var d = dest - feet; float dist = d.magnitude;
+            if (dist < 0.4f) return true;
+            var next = feet + d / dist * Mathf.Min(dist, walkSpeed * 1.5f * dt);   // 出場走位比平常快（平常 ×0.3），約 3 秒走到
+            me.head = new Vector3(next.x, me.head.y, next.z);
+            return false;
+        }
+
         void Move(float dt, Fighter tgt)
         {
             // 從場地外淡入出現：先走進場地（往場地中心，走到離邊界夠遠才開始正常走位）
@@ -306,6 +336,9 @@ namespace SpellDuel
             if (cur >= keep && cur <= want + 0.6f && cur >= want - 1.2f) return;   // 在想要的距離附近：不動
             float goal = Mathf.Max(keep, want);   // 太近：往後退；太遠：靠過去
             var dest = tgt.Feet + toBoss * goal;
+            // 平常也偏向場地中間（不要一直貼著邊緣打）：往中間拉一些，但不能太靠近目標
+            var pulled = Vector3.Lerp(dest, CenterSpot(tgt), CenterPull);
+            if (Battle.FlatDistance(pulled, tgt.Feet) >= keep) dest = pulled;
             var delta = dest - feet; delta.y = 0;
             float dist = delta.magnitude;
             if (dist < 0.05f) return;

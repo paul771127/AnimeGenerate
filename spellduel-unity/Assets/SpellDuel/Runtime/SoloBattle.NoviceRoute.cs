@@ -16,7 +16,7 @@ namespace SpellDuel
         static bool SmallArenaStage(string id) => id == "1-1" || id == "1-2" || id == "1-3" || id == JobTrialStageId;
         /// <summary>只有近戰小怪的關卡</summary>
         static bool MeleeOnlyStage(string id) => id == "1-1" || id == "1-2" || id == JobTrialStageId;
-        public const float SmallArena = 4f;
+        public const float SmallArena = 4f, StoryArena = 6f;
         public const int TutorialLevel = 5;
         /// <summary>初心者通關這一關至少要到幾級（0＝不補）</summary>
         static int StageLevelFloor(string id) => id == "1-1" ? 7 : id == "1-2" ? 9 : id == "1-3" ? Skills.JobLevel : 0;
@@ -59,7 +59,7 @@ namespace SpellDuel
             var sq = new List<Vector3> { c - rt * hxL - fw * hzB, c + rt * hxR - fw * hzB, c + rt * hxR + fw * hzF, c - rt * hxL + fw * hzF };
             area.SetPolygon(sq, o);
             areaShrunk = true;
-            Say($"📏 這一關的場地是 {SmallArena:0}m×{SmallArena:0}m（地上的新框線）", 3f);
+            Say($"📏 這一關的場地是 {size:0}m×{size:0}m（地上的新框線）", 3f);
         }
 
         static bool SmallerThan(List<Vector3> poly, float size)
@@ -83,6 +83,7 @@ namespace SpellDuel
         {
             if (st == null) return;
             if (SmallArenaStage(st.id)) ShrinkArea(SmallArena);
+            else ShrinkArea(StoryArena);   // 其他故事關卡（含進階轉職試煉）：6m×6m
             if (MeleeOnlyStage(st.id) && battle != null) { battle.rangedCountMul = 0f; battle.meleeCountMul = 1f / (1f - Battle.RangedShare); }   // 全部近戰（總數不變）
             // 轉職試煉：剛好 5 隻最弱的小怪（第 1 波：7 隻 ×0.7），不加難度等級
             if (st.id == JobTrialStageId && battle != null) { battle.stageEnemyMul = 0.7f; battle.levelBoost = 0; }
