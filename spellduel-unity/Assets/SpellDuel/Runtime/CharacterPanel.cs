@@ -13,6 +13,7 @@ namespace SpellDuel
         public int tab;                 // 0 能力值、1 技能樹、2 裝備、3 進階技能樹（轉職後）
         string selNode;                 // 技能樹：選中的節點
         Item selItem;                   // 裝備：選中的物品（背包或身上）
+        Item discardArm; float discardArmUntil, resetArmUntil;   // 丟掉／重新分配：要按兩次確認
         int page;
         Vector2 statsScroll, gearScroll;
         string toast; float toastUntil;
@@ -96,8 +97,19 @@ namespace SpellDuel
                          (f.evadeChance > 0 ? $"　閃避 {f.evadeChance * 100:0.#}%" : "") + (f.healMul != 1f ? $"　治療 ×{f.healMul:0.0#}" : "") +
                          (adv != null ? $"\n✨ {adv.name}：{adv.core}" : "");
             UiKit.Text(new Rect(b.x, y, b.width, b.yMax - y - fs * 2.2f), sum, fsS, new Color(1f, 0.95f, 0.75f), TextAnchor.UpperLeft, false, 0.55f);
-            if (UiKit.Button(new Rect(b.x + b.width * 0.55f, b.yMax - fs * 2f, b.width * 0.45f, fs * 1.9f), "↺ 重新分配所有點數", fsS, false, new Color(1f, 0.5f, 0.45f)))
-            { p.ResetPoints(); changed = true; Toast("能力點與技能點都退回了"); }
+            bool resetArmed = Time.time < resetArmUntil;
+            if (UiKit.Button(new Rect(b.x + b.width * 0.55f, b.yMax - fs * 2f, b.width * 0.45f, fs * 1.9f), resetArmed ? "再按一次確認重新分配" : "↺ 重新分配所有點數", fsS, resetArmed, new Color(1f, 0.5f, 0.45f)))
+            if (!resetArmed) resetArmUntil = Time.time + 3f;   // 第一次按：3 秒內再按一次才執行
+            else
+            {
+                resetArmUntil = 0f;
+                // 能力值不夠穿的裝備：放回背包（背包滿了也照放，絕不丟掉）
+                var off = p.ResetPoints();
+                foreach (var it in off) Progress.Bag.Add(it);
+                Progress.SaveBag(); Progress.SaveChar(p);
+                changed = true;
+                Toast(off.Count == 0 ? "能力點與技能點都退回了" : $"點數都退回了；能力值不夠穿的 {off.Count} 件裝備（{string.Join("、", off.ConvertAll(x => x.name))}）放回背包，加完點再穿上");
+            }
             UiKit.Text(new Rect(b.x, b.yMax - fs * 2f, b.width * 0.53f, fs * 1.9f), "能力值越高，再加需要越多點（每 10 點 +1）", fsS, new Color(0.75f, 0.78f, 0.88f), TextAnchor.MiddleLeft, false, 0.55f);
             return changed;
         }
@@ -179,7 +191,13 @@ namespace SpellDuel
                     if (Progress.Equip(p, s2, out var w2)) { changed = true; Sfx.Play("block", 0.7f, 1.3f); Toast($"裝備：{s2.name}"); selItem = null; }
                     else Toast(w2);
                 }
-                if (UiKit.Button(new Rect(dr.x + gap * 2 + bw, byy, bw, bh), "丟掉", fsS, false, new Color(1f, 0.45f, 0.4f))) { Progress.Discard(s2); selItem = null; }
+                // 丟掉：要按兩次（3 秒內）才真的丟，免得誤刪
+                bool armed = discardArm == s2 && Time.time < discardArmUntil;
+                if (UiKit.Button(new Rect(dr.x + gap * 2 + bw, byy, bw, bh), armed ? "再按一次丟掉" : "丟掉", fsS, armed, new Color(1f, 0.45f, 0.4f)))
+                {
+                    if (armed) { Progress.Discard(s2); selItem = null; discardArm = null; Toast($"丟掉了 {s2.name}"); }
+                    else { discardArm = s2; discardArmUntil = Time.time + 3f; }
+                }
             }
             return changed;
         }

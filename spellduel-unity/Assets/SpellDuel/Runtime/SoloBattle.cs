@@ -2800,6 +2800,11 @@ namespace SpellDuel
         {
             Styles();
             if (StoryVideo.Active) { StoryVideo.DrawGUI(); return; }   // 劇情影片（下載中、播放）蓋住整個畫面
+            // 技能說明視窗只屬於打開它的那個畫面：換畫面（整備、角色、地圖、對話、開打／結算）或這個介面有一陣子沒畫（回到大廳、村子）就關掉，
+            // 免得說明視窗殘留、蓋在其他視窗上
+            string ctx = $"{phase}|{prepGo != null}|{charOpen}|{storyMapOpen}|{dlg != null}";
+            if (ctx != infoCtx || Time.frameCount - infoFrame > 2) infoSkill = null;
+            infoCtx = ctx; infoFrame = Time.frameCount;
             // 技能說明視窗開著：底下的畫面照畫但不能按（GUI.enabled=false），說明視窗畫在最上面
             bool infoOpen = infoSkill != null && Skills.All.ContainsKey(infoSkill);
             bool talking = dlg != null;
@@ -2815,6 +2820,7 @@ namespace SpellDuel
 
         // ---------------------------------------------------------------- 技能詳細說明（點技能卡打開）
         string infoSkill;          // 正在看說明的技能（null＝沒開）
+        string infoCtx; int infoFrame;   // 說明視窗是在哪個畫面打開的、上次畫介面的幀
 
         void DrawSkillInfo()
         {

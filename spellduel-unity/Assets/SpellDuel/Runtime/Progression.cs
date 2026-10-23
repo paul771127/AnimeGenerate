@@ -883,14 +883,16 @@ namespace SpellDuel
             return true;
         }
 
-        /// <summary>重新分配：全部能力點、技能點退回（技能樹清空）</summary>
-        public void ResetPoints()
+        /// <summary>重新分配：全部能力點、技能點退回（技能樹清空）。能力值不夠穿的裝備會脫下來，回傳脫下的裝備（呼叫的人要放回背包，不能丟掉）</summary>
+        public List<Item> ResetPoints()
         {
             for (int i = 0; i < StatInfo.Count; i++) alloc[i] = 0;
             ranks.Clear();
             statPoints = (level - 1) * StatPerLevel;
             skillPoints = EarnedSkill;
-            for (int i = 0; i < equipped.Length; i++) if (equipped[i] != null && !CanEquip(equipped[i], out _)) equipped[i] = null;
+            var off = new List<Item>();
+            for (int i = 0; i < equipped.Length; i++) if (equipped[i] != null && !CanEquip(equipped[i], out _)) { off.Add(equipped[i]); equipped[i] = null; }
+            return off;
         }
 
         // ---- 技能樹
