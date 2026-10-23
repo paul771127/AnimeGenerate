@@ -1095,6 +1095,10 @@ namespace SpellDuel
     {
         public static Func<string, string> Get = k => "";
         public static Action<string, string> Set = (k, v) => { };
+        /// <summary>存檔接好了沒（SoloBattle 把 Get／Set 換成手機的 PlayerPrefs 之後才是 true）</summary>
+        public static bool Ready { get; private set; }
+        /// <summary>存檔接好：清掉接好之前讀到的（空白的）角色、背包、信箱，之後重新從手機讀</summary>
+        public static void MarkReady() { Ready = true; ReloadStorage(); }
         public const int BagSize = 40;
 
         static readonly Dictionary<string, CharacterProfile> cache = new Dictionary<string, CharacterProfile>();
@@ -1223,7 +1227,7 @@ namespace SpellDuel
         public static bool GrantLostBowOnce()
         {
             const string key = "sd_comp_lost_bow_202610";
-            if (Get(key) == "1") return false;
+            if (!Ready || Get(key) == "1") return false;   // 存檔還沒接好：什麼都不做（不能讀到空白的角色）
             var p = Char("archer");
             var rng = new System.Random(20261023);
             Item bow = null;

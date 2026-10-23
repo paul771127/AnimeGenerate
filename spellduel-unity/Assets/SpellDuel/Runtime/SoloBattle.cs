@@ -694,7 +694,6 @@ namespace SpellDuel
             dailyPick = Mathf.Clamp(PlayerPrefs.GetInt("sd_daily_pick", 0), 0, DailyChallenge.KindCount - 1);
             difficulty = Mathf.Clamp(PlayerPrefs.GetInt("sd_difficulty", 1), 0, 2);
             voiceOn = true;   // 一定要唸技能名稱才能詠唱，語音固定開啟
-            if (Progress.GrantLostBowOnce()) Say("📬 補發：重新分配點數時遺失的稀有弓已寄到信箱（角色 → 裝備 → 📬 信箱，7 天內領取）", 8f);
             voice = VoiceTemplates.Load();
             speech = new SpeechInput();
             speech.OnSkill += OnSpeechSkill;
@@ -702,6 +701,8 @@ namespace SpellDuel
             Progress.Get = k => PlayerPrefs.GetString(k, "");
             Progress.Set = (k, v) => { PlayerPrefs.SetString(k, v); PlayerPrefs.Save(); };
             Story.Get = Progress.Get; Story.Set = Progress.Set;
+            Progress.MarkReady();   // 存檔接好了（之前讀到的空白內容全部丟掉，重新從手機讀）
+            if (Progress.GrantLostBowOnce()) Say("📬 補發：重新分配點數時遺失的稀有弓已寄到信箱（角色 → 裝備 → 📬 信箱，7 天內領取）", 8f);   // 一定要在存檔接好之後
             LoadLoadout();
             Sfx.Ensure();
         }
