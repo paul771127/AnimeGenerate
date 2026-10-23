@@ -244,3 +244,300 @@ theme = sea
 旁白：整個大廳開始進水。撐過去，黎明就在門後。
 <boss_half>
 艾琳（mage）：再一次！把鐘聲帶回去！
+
+# 三鐘重響後的支線：殘留黑晶重演舊日守護者的影子。
+
+[dungeon ember_bell_foundry] 餘燼鑄鐘坊
+晨鐘已響，舊鑄坊卻仍傳出敲門聲。循著鐘舌鑄模，找回被回音困住的歸途。
+level = 10
+players = 2-4
+unlock = 1-4
+<before>
+旁白：炎之里恢復報曉，廢棄鑄坊的煙囪卻夜夜冒出黑煙。
+老焰：鐘舌已回到鐘架，鑄模裡卻還留著黑晶。別讓它再替我說謊。
+小鐵：{玩家}，我先去側廊看排煙管。這次，我會留下路標。
+<after>
+旁白：鑄模裡的黑晶化成灰。真正的晨鐘從山下傳來，沒有第二個聲音。
+老焰：這回我會把鑄坊的事寫進村誌，不再讓孩子猜我瞞了什麼。
+旁白：舊工簿記著一筆送往森之里的木料，收件處寫著「記名林」。
+
+[node ember_gate] 煙囪下的門
+wave = 5
+theme = volcano
+next = ember_vent, ember_bridge
+<enter>
+旁白：煙裡響起三下敲擊，和當年礦工求救的節奏一樣。
+旁白：左邊側廊掛著小鐵的紅布，右邊鐵橋直通儲物間。
+<clear>
+旁白：門栓鬆開。黑煙沒有散，反而往舊鑄模的方向縮去。
+
+[node ember_vent] 卡住的排煙廊
+wave = 6
+theme = volcano
+next = ember_toolbox
+npc = ember_laoyan, ember_xiaotie
+<enter>
+旁白：排煙管垂在通道中央，小鐵護著手臂，腳邊散滿碎磚。
+<clear>
+旁白：追來的小鬼退入爐灰，通往儲物間的矮門露了出來。
+
+[node ember_bridge] 爐火上的鐵橋
+wave = 7
+theme = volcano
+next = ember_toolbox
+<enter>
+旁白：鐵橋只剩半邊。橋下的火焰，把求救聲反覆推回耳邊。
+<clear>
+旁白：橋端露出鑄模編號，和修補鐘舌時留下的印記相同。
+
+[node ember_toolbox] 鐵匠的防火箱
+event = chest
+theme = volcano
+next = ember_cooling
+<enter>
+旁白：防火箱裡有備用護具與舊工簿，頁角壓著一張排煙圖。
+旁白：圖上註記：「冷卻池後有避火石龕，進爐前先讓傷者安置。」
+
+[node ember_cooling] 冷卻池
+wave = 9
+theme = volcano
+next = ember_cast
+<enter>
+旁白：池邊石龕與山路相通，龕外卻盤踞著被黑晶吸引的魔物。
+<clear>
+旁白：水汽終於升向煙囪，爐心露出一具沒有心跳的巨像輪廓。
+
+[node ember_cast] 鑄模中的守門影
+event = boss
+wave = 10
+theme = volcano
+<enter>
+旁白：黑晶借熔岩凝成巨像。山腹的守護者已獲救，這只是殘留的恐懼。
+熔岩殘影（boss）：把門封住……就不會再有人求救……
+<boss_half>
+熔岩殘影（boss）：鐘舌已經接上……為什麼，還有人走進來……
+旁白：裂口裡傳來山下的晨鐘，巨拳第一次停在半空。
+<clear>
+旁白：巨像散回熔岩，鑄模再也模仿不了活人的聲音。
+
+[npc ember_laoyan] 老焰
+role = quest
+look = mage
+goal = kill 6
+reward = gold 300
+<meet>
+老焰：我在側廊外接應。{玩家}，請打退六隻魔物，讓煙道能重新通風。
+老焰：工簿是我留下的。裡面難看的事，也別替我撕掉。
+<done>
+老焰：煙道的風回來了。這份酬金請收下，我也該把話說完了。
+
+[npc ember_xiaotie] 小鐵
+role = escort
+look = swordsman
+hp = 500
+until = ember_cooling
+<meet>
+小鐵：我沒往爐心跑，是管子先塌的……好吧，這次真得請你幫忙。
+小鐵：{玩家}，帶我到冷卻池的石龕就好。我不想讓師父再等一夜。
+<safe>
+小鐵：石龕後面就是下山路。我在這裡包好手，你放心往前。
+<die>
+小鐵：手使不上力了……先撤，別為了救我硬闖！
+
+[dungeon mist_name_grove] 霧燈記名徑
+晨鐘的餘響喚醒了一條舊林徑。找回被黑晶吞沒的刻字，別讓回家的名字再被遺落。
+level = 20
+players = 2-4
+unlock = 2-4
+<before>
+旁白：樹王安睡後，記名林深處仍有葉燈朝著無人的地方搖晃。
+翠：木之鐘留下種子，也留下尚未散去的回音。這一回，我們一起記。
+楓（archer）：{玩家}，沿亮燈走。若要進側面的舊苗圃，先聽聽那裡的聲音。
+<after>
+旁白：黑晶凝成的樹影散去，新的葉燈照亮每一塊仍在原處的木牌。
+翠：主碑缺去的話已經補上。這條小徑的故事，我也會交給下一個人。
+旁白：林風帶來半句歸航曲。潮騷港那扇留燈的窗，彷彿就在霧的盡頭。
+
+[node mist_lantern] 雙燈岔口
+wave = 12
+theme = forest
+next = mist_nursery, mist_stream
+<enter>
+旁白：兩盞葉燈隔霧相望。一條路通往舊苗圃，另一條沿溪繞向碑亭。
+<clear>
+旁白：倒伏的藤蔓下，刻著「火照路，木記名」的石條重新見光。
+
+[node mist_nursery] 被封起的苗圃
+wave = 14
+theme = forest
+next = mist_casket
+npc = mist_cui, mist_feng
+<enter>
+旁白：一片刻字拓片卡在腐根間，楓橫弓攔在苗圃入口。
+<clear>
+旁白：腐根鬆開，露出通往碑亭的石階。原有的木牌一塊也沒有移位。
+
+[node mist_stream] 無聲溪床
+wave = 16
+theme = forest
+next = mist_casket
+<enter>
+旁白：溪水映著樹王舊日的枝影，岸上的樹卻一動也沒有動。
+<clear>
+旁白：水裡的黑晶碎屑順流散去。那不是樹王醒來，是痛苦還在重演。
+
+[node mist_casket] 碑亭的防潮匣
+event = chest
+theme = forest
+next = mist_roots
+<enter>
+旁白：防潮匣收著巡林護具，也保存著從腐根旁拾回的刻字拓片。
+旁白：匣蓋註明：「只取拓本，名牌留在林中。」
+
+[node mist_roots] 交纏的根橋
+wave = 19
+theme = forest
+next = mist_heart
+<enter>
+旁白：根橋另一端，黑晶沿舊刻痕發亮。每一聲低語都只念到名字的一半。
+<clear>
+旁白：霧裡的字終於連起來：「澪，白帆號領唱。」橋後的黑影劇烈搖晃。
+
+[node mist_heart] 不眠的樹心影
+event = boss
+wave = 20
+theme = forest
+<enter>
+旁白：殘留黑晶攏起腐根，模仿出樹王受困時的形貌。
+樹心殘影（boss）：若不把名字鎖住……就會再失去一次……
+<boss_half>
+樹心殘影（boss）：有人……接著念下去了？那我還要……守什麼……
+旁白：葉燈映亮林中木牌。記憶不必再靠一道傷口留下。
+<clear>
+旁白：腐根垂回泥土，真正的樹心在遠處安穩起伏。
+
+[npc mist_cui] 翠
+role = quest
+look = priest
+goal = collect 1 刻字拓片
+reward = gold 500
+<meet>
+翠：{玩家}，請帶回一張刻字拓片。腐根捲走了一些，防潮匣也留有備份。
+翠：不必摘下名牌。抄下它，讓林外也有人記得就好。
+<done>
+翠：字跡還在。我會把它補進村裡的副冊，原牌仍留給古樹守著。
+
+[npc mist_feng] 楓
+role = choice
+look = archer
+hp = 200
+option = 答應保留木牌，請楓同行 -> ally
+option = 堅持闖過弓線，接受楓的阻攔 -> enemy
+option = 請楓自行清根，雙方各守一側 -> third
+<meet>
+楓（archer）：{玩家}，腐根纏著木牌。先說好怎麼處理，我才放下弓。
+楓（archer）：別怪我多疑。我守過太多次，說要幫忙卻只留下斷枝的人。
+<ally>
+楓（archer）：好，我信你。你打散黑晶，我用箭替木牌擋開腐根。
+<enemy>
+楓（archer）：那就先過我這一關。我會收住箭鋒，但不會讓你硬踩過去。
+<third>
+楓（archer）：我清自己的那一側，誰越線我都會攔。這裡清完，我就回村巡燈。
+<die>
+楓（archer）：我站不住了……先收弓。那些名字，請別踩壞。
+
+[dungeon white_sail_echo_reef] 白帆回聲礁
+白帆號已迎來晨光，礁洞卻仍困著半句求救。沿舊航圖，替沒有答覆的回音點燈。
+level = 30
+players = 2-4
+unlock = 3-4
+<before>
+旁白：歸航者名碑落成後，退潮道深處仍有人反覆喊著「岸在哪裡」。
+海斗：白帆號已經歸航。洞裡的是黑晶留下的回聲，別讓它再騙過路的船。
+阿潮：{玩家}，我去側灣收舊浮標。燈塔走過一回，暗礁可還沒認得你。
+<after>
+旁白：礁洞的回聲停了。真正的白帆沒有再受困，港燈仍照著開闊的海。
+海斗：祖父的航圖，終點一直是家。如今我可以把這條危險的航線劃掉了。
+旁白：岸上的窗燈亮起，傳來凪熟悉的歌：「岸有燈，杯有茶。」
+
+[node sail_tideway] 退潮刻度
+wave = 21
+theme = sea
+next = sail_buoys, sail_breakwater
+<enter>
+旁白：潮痕下露出兩條路。側灣響著浮標聲，外側防波堤則直達船具箱。
+<clear>
+旁白：礁石上的白帆刻痕指向內灣，洞裡的呼救卻故意引人往深水走。
+
+[node sail_buoys] 斷纜浮標灣
+wave = 24
+theme = sea
+next = sail_locker
+npc = sail_kaito, sail_achao
+<enter>
+旁白：阿潮的腳卡在斷纜裡。海圖壓在高處，旁邊亮著海斗的信號燈。
+<clear>
+旁白：纜繩斷開，灣口的浪暫時退下，船具箱就在前方礁脊。
+
+[node sail_breakwater] 缺口防波堤
+wave = 26
+theme = sea
+next = sail_locker
+<enter>
+旁白：堤外浮起一張黑帆。下一道浪過去，它便碎成細小的黑晶。
+<clear>
+旁白：堤上的舊字露了出來：「望岸燈，不逐海火。」船具箱的銅環就在腳下。
+
+[node sail_locker] 舊船具箱
+event = chest
+theme = sea
+next = sail_beacon
+<enter>
+旁白：箱裡的備用索具仍可使用，防水布下壓著一張白帆號航圖的摹本。
+旁白：圖上的小燈記號指向高礁，並非那道呼救聲傳來的深溝。
+
+[node sail_beacon] 望港高礁
+wave = 29
+theme = sea
+next = sail_cavern
+<enter>
+旁白：高礁後有直通港口的石階。站在這裡，能同時看見舊塔與名碑旁的燈。
+<clear>
+旁白：潮水讓出洞口。裡面沒有船，只有一枚困著舊歌聲的黑晶。
+
+[node sail_cavern] 借歌的潮影
+event = boss
+wave = 30
+theme = sea
+<enter>
+旁白：黑晶拖起海水，凝成巨妖的影子。真正的巨妖早已墜回深海。
+潮影（boss）：岸上沒有人……把下一句，留給我……
+<boss_half>
+潮影（boss）：燈怎麼還亮著……他們不是，早就忘了嗎……
+旁白：晨鐘的餘響越過海面，蓋住黑晶反覆模仿的半首歌。
+<clear>
+旁白：潮影散成水霧。洞外有人收起漁網，平常的一天重新有了聲音。
+
+[npc sail_kaito] 海斗
+role = quest
+look = swordsman
+goal = reach sail_beacon
+reward = gold 700
+<meet>
+海斗：{玩家}，請到望港高礁確認燈位。舊圖畫的那一點，應該看得見家。
+海斗：我在灣口守著信號。你到高處，我就知道這條回程還通著。
+<done>
+海斗：看見你的信號了！港燈與舊塔都在原位，別再跟著海裡的假光走。
+
+[npc sail_achao] 阿潮
+role = escort
+look = archer
+hp = 550
+until = sail_beacon
+<meet>
+阿潮：人老了，居然讓自家的纜繩絆住。{玩家}，借我一段穩當的路吧。
+阿潮：送我到望港高礁就行。到了石階，我自己回港，不往洞裡添亂。
+<safe>
+阿潮：腳踏到石階了。你去收拾那個假聲音，我回港把熱湯煨上。
+<die>
+阿潮：腳撐不住了……先往灣口撤！這回不逞強了。
