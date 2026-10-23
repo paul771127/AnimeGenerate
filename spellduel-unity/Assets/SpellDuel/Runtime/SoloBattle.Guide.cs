@@ -31,9 +31,20 @@ namespace SpellDuel
             Say("🧭 新手導覽開始：照著畫面上的提示做", 3f);
         }
 
+        /// <summary>導覽每完成一步給的經驗（每一步只給一次；略過導覽不給）</summary>
+        public const int GuideStepXp = 40;
+
         void GuideNext(int to)
         {
+            int from = GuideStep;
             GuideStep = to; guidePage = 0;
+            // 照著做完一步：給經驗（重看導覽不重複給）
+            int paid = PlayerPrefs.GetInt(CharacterSlots.Key("sd_guide_xp"), -1);
+            if (from >= 0 && from < GuideDone && from > paid && (to != GuideDone || from == 7))
+            {
+                PlayerPrefs.SetInt(CharacterSlots.Key("sd_guide_xp"), from);
+                GrantQuestXp(GuideStepXp, "導覽完成一步");
+            }
             if (to == 0) guideMovedAt = townWalk.Moved;
             if (to == 3) GiveStarterGear();
             if (to >= GuideDone) { Say("🎉 新手導覽完成！之後可以在訓練場重看", 4f); Sfx.Play("levelup", 0.7f); }

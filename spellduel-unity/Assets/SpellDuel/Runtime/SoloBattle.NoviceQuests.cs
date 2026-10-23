@@ -31,7 +31,7 @@ namespace SpellDuel
                 ShowDialogue(L(q.offer), () =>
                 {
                     p.noviceQuest[q.skill] = 0; Progress.SaveChar(p);
-                    Say($"📜 接下任務「{q.title}」：{NoviceQuests.Progress(q, p, Story.IsCleared)}（角色 → 技能樹 可以看進度）", 4f);
+                    Say($"📜 接下任務「{q.title}」：{NoviceQuests.Progress(q, p, Story.IsCleared)}（完成獎勵：經驗 {q.xp}；右上任務面板看進度）", 4f);
                     Sfx.Play("select", 0.8f, 1.2f);
                 });
                 return true;
@@ -69,13 +69,13 @@ namespace SpellDuel
                 if (q.kind == "lesson" && p.noviceQuest.Remove(q.skill))
                 {
                     lessonDoneLines = q;
-                    p.AddXp(LessonXp); Economy.Gold += LessonGold; lootGoldLog += LessonGold;
+                    p.AddXp(q.xp); Economy.Gold += LessonGold; lootGoldLog += LessonGold;
                     Progress.SaveChar(p); prof = p;
-                    return LessonXp;
+                    return q.xp;
                 }
             return 0;
         }
-        const int LessonXp = 60, LessonGold = 50;
+        const int LessonGold = 50;
         NoviceQuests.Quest lessonDoneLines;   // 練習結束回村子後要說的話（第一次通過）
 
         /// <summary>投石課結束回村子：第一次通過＝米菈說完成的話</summary>
@@ -94,6 +94,7 @@ namespace SpellDuel
             var p = Progress.Char(myClass);
             p.noviceLearned.Add(q.skill); p.noviceQuest.Remove(q.skill);
             Progress.SaveChar(p);
+            GrantQuestXp(q.xp, q.title);
             if (myLoadout.Count < 3 && !myLoadout.Contains(q.skill)) { myLoadout.Add(q.skill); SaveChoices(); PlayerPrefs.Save(); }   // 技能欄有空：直接放上去
             var s = Skills.All[q.skill];
             Say($"✨ 學會了「{s.name}」！{HandGesture.ReleaseLabel(s)} 出招", 5f);

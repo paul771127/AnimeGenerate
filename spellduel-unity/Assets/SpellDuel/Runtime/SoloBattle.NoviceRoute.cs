@@ -29,6 +29,16 @@ namespace SpellDuel
             return need > 0 ? p.AddXp(need) : 0;
         }
 
+        /// <summary>任務完成的經驗：加上去、存檔、提示（升級時特別說）</summary>
+        void GrantQuestXp(int xp, string what)
+        {
+            if (xp <= 0) return;
+            var p = Progress.Char(myClass);
+            int ups = p.AddXp(xp); Progress.SaveChar(p);
+            Say($"📜 {what}：經驗 +{xp}" + (ups > 0 ? $"　⬆ 升到 Lv{p.level}！（能力點、技能點 +{ups * CharacterProfile.StatPerLevel}／+{ups}）" : ""), 4f);
+            if (ups > 0) { Sfx.Play("levelup", 0.8f); Haptics.Play(Haptics.Kind.Success); }
+        }
+
         // ---------------------------------------------------------------- 小場地
         List<Vector3> fullArea; Pose fullOrigin; bool areaShrunk;
 
@@ -122,8 +132,8 @@ namespace SpellDuel
                 foreach (var q in NoviceQuests.All)
                 {
                     if (!NoviceQuests.Pending(q, p)) continue;
-                    if (!p.noviceQuest.ContainsKey(q.skill) && q.kind != "lesson") { list.Add(($"❗ {q.title}", $"可以接：到炎之里找{q.npc}", new Color(0.8f, 0.85f, 0.9f))); continue; }
-                    list.Add(($"📜 {q.title}", NoviceQuests.Progress(q, p, Story.IsCleared), NoviceQuests.Complete(q, p, Story.IsCleared) ? new Color(0.5f, 1f, 0.6f) : Color.white));
+                    if (!p.noviceQuest.ContainsKey(q.skill) && q.kind != "lesson") { list.Add(($"❗ {q.title}（經驗 +{q.xp}）", $"可以接：到炎之里找{q.npc}", new Color(0.8f, 0.85f, 0.9f))); continue; }
+                    list.Add(($"📜 {q.title}（經驗 +{q.xp}）", NoviceQuests.Progress(q, p, Story.IsCleared), NoviceQuests.Complete(q, p, Story.IsCleared) ? new Color(0.5f, 1f, 0.6f) : Color.white));
                 }
             return list;
         }
