@@ -188,7 +188,7 @@ namespace SpellDuel
                 {
                     FMod("nv_t_swing", "木棍揮擊強化", "nv_swing", ModField.Damage, 0.12f, 5, 1, 0, null),
                     FMod("nv_t_stone", "投石強化", "nv_stone", ModField.Damage, 0.12f, 5, 3, 0, null),
-                    FMod("nv_t_aid", "急救強化", "nv_aid", ModField.Heal, 0.15f, 5, 5, 0, null),
+                    FMod("nv_t_aid", "急救強化", "nv_aid", ModField.Heal, 0.1f, 5, 5, 0, null),   // 特別算法（AidAt）：回復 20→30 HP、MP 18→30
                 };
                 case "mage": return new List<TreeNode>
                 {
@@ -489,11 +489,22 @@ namespace SpellDuel
             return new List<TreeNode>();
         }
 
+        /// <summary>急救強化：每級回復 +2 HP（20→30）、MP 消耗也變多（18→30）</summary>
+        public const string AidNode = "nv_t_aid";
+        public const int AidMaxHeal = 30, AidMaxCost = 30;
+        public static (int heal, int cost) AidAt(int rank)
+        {
+            var b = Skills.All["nv_aid"];
+            float t = Mathf.Clamp01(rank / 5f);
+            return (Mathf.RoundToInt(Mathf.Lerp(b.heal, AidMaxHeal, t)), Mathf.RoundToInt(Mathf.Lerp(b.cost, AidMaxCost, t)));
+        }
+
         /// <summary>節點每一級的效果文字</summary>
         public static string Describe(TreeNode n, int rank)
         {
             string skill = n.skill != null && Skills.All.TryGetValue(n.skill, out var s) ? s.name : n.skill;
             float v = n.per * Mathf.Max(1, rank);
+            if (n.id == AidNode) { var (h, c) = AidAt(Mathf.Max(1, rank)); return $"急救 回復 {h} HP、消耗 {c} MP"; }
             switch (n.kind)
             {
                 case NodeKind.Learn: return $"學會新技能「{skill}」";
@@ -986,6 +997,7 @@ namespace SpellDuel
                 if (n.kind != NodeKind.Mod || n.skill != id) continue;
                 int r = Rank(n.id); if (r <= 0) continue;
                 float v = n.per * r;
+                if (n.id == SkillTrees.AidNode) { var (h, c) = SkillTrees.AidAt(r); s.heal = h; s.cost = c; continue; }
                 switch (n.field)
                 {
                     case ModField.Damage: s.damage = Mathf.RoundToInt(s.damage * (1f + v)); break;
@@ -1006,6 +1018,7 @@ namespace SpellDuel
             float ov = Passive(PassiveKind.Overload);
             if (ov > 0f && s.cls == cls && s.damage > 0) { s.damage = Mathf.RoundToInt(s.damage * (1f + 0.15f * ov)); s.cost = Mathf.CeilToInt(s.cost * (1f + 0.2f * ov)); }
             if (s.heal > 0) s.heal = Mathf.RoundToInt(s.heal * heal);   // 智力：治療量
+            if (id == "nv_aid") s.heal = Mathf.Min(s.heal, SkillTrees.AidMaxHeal);   // 急救最多回復 30 HP（加了智力也一樣）
             return s;
         }
 
