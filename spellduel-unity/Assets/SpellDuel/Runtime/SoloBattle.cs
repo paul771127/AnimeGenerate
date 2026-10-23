@@ -2789,7 +2789,7 @@ namespace SpellDuel
         public void DrawGUI()
         {
             Styles();
-            if (StoryVideo.Active) { StoryVideo.DrawGUI(); return; }   // 劇情影片（問下載、下載中、播放）蓋住整個畫面
+            if (StoryVideo.Active) { StoryVideo.DrawGUI(); return; }   // 劇情影片（下載中、播放）蓋住整個畫面
             // 技能說明視窗開著：底下的畫面照畫但不能按（GUI.enabled=false），說明視窗畫在最上面
             bool infoOpen = infoSkill != null && Skills.All.ContainsKey(infoSkill);
             bool talking = dlg != null;

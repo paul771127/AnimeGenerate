@@ -11,7 +11,7 @@ namespace SpellDuel
     ///   ・序章：1-1 開場前播整支。
     ///   ・第一～三章的 Boss 關（1-4、2-4、3-4）：開場前播前 4 個鏡頭，通關後播剩下的鏡頭。
     ///   ・「📖 看故事」重看時也會播。
-    /// 還沒下載時先問要不要下載（約 6～10 MB；可以勾「以後自動下載」）；播放時長按畫面 1 秒跳過（點一下也會出現「跳過」按鈕）。
+    /// 還沒下載時直接下載（約 6～10 MB，不再詢問；下載中可以取消跳過）；播放時長按畫面 1 秒跳過（點一下也會出現「跳過」按鈕）。
     /// 影片檔放在 repo 的 spellduel-unity/Docs/story_video/videos/（Assets 外面，不會被打包）。
     /// </summary>
     public class StoryVideo : MonoBehaviour
@@ -39,26 +39,21 @@ namespace SpellDuel
         static Clip Split(string file, string title, int cut, int shots, int mb, bool before) =>
             new Clip { file = file, title = title + (before ? "" : "（結局）"), from = before ? 0 : cut, to = before ? cut : shots, shots = shots, mb = mb };
 
-        enum State { Idle, Ask, Downloading, Failed, Preparing, Playing }
+        enum State { Idle, Downloading, Failed, Preparing, Playing }
         static StoryVideo inst;
         State state;
         Clip clip; Action done;
         UnityWebRequest req;
         VideoPlayer vp; RenderTexture rt;
         double endT; float shownAt, tapAt = -9f, holdFrom = -1f;
-        bool holdArmed;   // 開始播放後手指要先放開過一次（按「下載並播放」那一下不算長按）
+        bool holdArmed;   // 開始播放後手指要先放開過一次（點進來的那一下不算長按）
         public const float HoldToSkip = 1f;   // 長按幾秒跳過
         string error;
 
-        /// <summary>影片相關的畫面開著（問下載、下載中、播放中）：其他畫面不要畫、不要收點擊</summary>
+        /// <summary>影片相關的畫面開著（下載中、播放中）：其他畫面不要畫、不要收點擊</summary>
         public static bool Active => inst != null && inst.state != State.Idle;
         public static bool Playing => inst != null && (inst.state == State.Playing || inst.state == State.Preparing);
 
-        static bool AutoDownload
-        {
-            get { try { return PlayerPrefs.GetInt("sd_video_auto", 0) == 1; } catch { return false; } }
-            set { try { PlayerPrefs.SetInt("sd_video_auto", value ? 1 : 0); PlayerPrefs.Save(); } catch { } }
-        }
         static string Dir => Path.Combine(Application.persistentDataPath, "story_video");
         static string PathOf(Clip c) => Path.Combine(Dir, c.file);
         public static bool Downloaded(Clip c) { try { return File.Exists(PathOf(c)) && new FileInfo(PathOf(c)).Length > 100_000; } catch { return false; } }
@@ -83,8 +78,7 @@ namespace SpellDuel
             Cleanup();
             clip = c; done = then; error = null;
             if (Downloaded(c)) StartPlayback();
-            else if (AutoDownload) StartDownload();
-            else state = State.Ask;
+            else StartDownload();   // 沒下載過：直接下載（使用者要求，不再問）
         }
 
         void Finish()
@@ -217,20 +211,10 @@ namespace SpellDuel
             float y = r.y + pad * 0.6f, x = r.x + pad * 0.6f, w2 = r.width - pad * 1.2f;
             UiKit.Text(new Rect(x, y, w2, fs * 1.6f), "🎬 劇情影片：" + clip.title, fs, Color.white, TextAnchor.MiddleLeft, true);
             y += fs * 2f;
-            if (state == State.Ask)
-            {
-                UiKit.Text(new Rect(x, y, w2, fs * 2.6f), $"第一次播放要先下載（約 {clip.mb} MB，建議用 Wi-Fi）。下載後存在手機裡，之後重看不用再下載。", fsS, new Color(0.85f, 0.88f, 1f));
-                y += fs * 3f;
-                if (UiKit.Button(new Rect(x, y, w2, bh), "⬇ 下載並播放", fs, true, UiKit.Gold)) StartDownload();
-                y += bh + pad * 0.4f;
-                float hw = (w2 - pad * 0.4f) / 2f;
-                if (UiKit.Button(new Rect(x, y, hw, bh * 0.85f), "以後都自動下載", fsS)) { AutoDownload = true; StartDownload(); }
-                if (UiKit.Button(new Rect(x + hw + pad * 0.4f, y, hw, bh * 0.85f), "這次跳過", fsS)) Finish();
-            }
-            else if (state == State.Downloading)
+            if (state == State.Downloading)
             {
                 float p = req != null ? req.downloadProgress : 0f;
-                UiKit.Bar(new Rect(x, y, w2, fs * 1.2f), p, UiKit.Gold, $"下載中… {p * 100f:0}%", fsS);
+                UiKit.Bar(new Rect(x, y, w2, fs * 1.2f), p, UiKit.Gold, $"下載中… {p * 100f:0}%（約 {clip.mb} MB，只有第一次）", fsS);
                 y += fs * 2f;
                 if (UiKit.Button(new Rect(x, y, w2, bh * 0.85f), "取消（跳過影片）", fsS)) Finish();
             }
