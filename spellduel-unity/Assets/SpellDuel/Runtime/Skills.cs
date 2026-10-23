@@ -94,11 +94,14 @@ namespace SpellDuel
         public static SkillDef BasicOf(string cls) => cls switch
         {
             "mage" => All["na_mage"], "swordsman" => All["na_sword"], "archer" => All["na_arrow"],
-            "priest" => All["na_holy"], "assassin" => All["na_dagger"], _ => null,
+            "priest" => All["na_holy"], "assassin" => All["na_dagger"], "novice" => All["na_pebble"], _ => null,
         };
         /// <summary>近身普攻（劍士、刺客）：直接砍身邊的敵人，不射出投射物</summary>
         /// <summary>普攻屬於哪個職業（不是普攻＝null）</summary>
         public static string BasicClassOf(SkillDef s) { if (s == null || s.cls != "basic") return null; foreach (var c in ClassOrder) if (BasicOf(c) == s) return c; return null; }
+        /// <summary>初心者：還沒轉職的職業 id；轉職等級</summary>
+        public const string Novice = "novice";
+        public const int JobLevel = 10;
         public static bool IsMeleeBasic(SkillDef s) => s != null && (s.id == "na_sword" || s.id == "na_dagger");
 
         /// <summary>遠距技能的飛行速度倍率</summary>
@@ -235,6 +238,7 @@ namespace SpellDuel
             Classes["boss"] = new ClassDef { id = "boss", name = "熔岩巨像", color = C("#ff5a1f"), maxHp = 500, maxMp = 999, mpRegen = 100, skills = new[] { "b_bolt", "b_sweep", "b_slam", "b_rain", "b_leap", "b_summon" }, defaultLoadout = new[] { "b_bolt", "b_sweep", "b_slam", "b_rain", "b_leap", "b_summon" }, desc = "Boss" };
             Classes["minion"] = new ClassDef { id = "minion", name = "熔岩小鬼", color = C("#ff8c42"), maxHp = 40, maxMp = 0, mpRegen = 0, skills = new string[0], defaultLoadout = new string[0], desc = "Boss 召喚的小怪" };
 
+            Classes["novice"] = new ClassDef { id = "novice", name = "初心者", color = C("#d6b98c"), maxHp = 110, maxMp = 80, mpRegen = 3.5f, skills = new[] { "nv_swing", "nv_stone", "nv_aid" }, defaultLoadout = new[] { "nv_swing", "nv_stone", "nv_aid" }, desc = "剛踏上旅程的冒險者：近戰、遠程、回復各一招。10 級到職業工會選擇職業" };
             Classes["priest"] = new ClassDef { id = "priest", name = "牧師", color = C("#fde68a"), maxHp = 105, maxMp = 130, mpRegen = 4, skills = new[] { "holy", "judgement", "prayheal", "cleanse", "guard", "prayer" }, defaultLoadout = new[] { "holy", "prayheal", "guard" }, desc = "回復、淨化、守護、減冷卻；聖光攻擊較弱" };
             Classes["swordsman"] = new ClassDef { id = "swordsman", name = "劍士", color = C("#60a5fa"), maxHp = 160, maxMp = 90, mpRegen = 3, skills = new[] { "slash", "thrust", "wave", "block", "ironwall", "counter", "taunt" }, defaultLoadout = new[] { "slash", "wave", "block" }, desc = "近遠攻擊都有，多種防禦" };
 
@@ -242,6 +246,11 @@ namespace SpellDuel
             P(new SkillDef { id = "na_mage", cls = "basic", name = "奧術飛彈", type = SkillType.Projectile, color = C("#a78bfa"), cost = 0, damage = 8, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.15f, rangeMax = 12f, desc = "法師普攻：比 1（食指），每 2 秒自動射出一發奧術飛彈" });
             P(new SkillDef { id = "na_sword", cls = "basic", name = "斬擊（普攻）", type = SkillType.Projectile, color = C("#93c5fd"), cost = 0, damage = 9, charge = 0f, cooldown = 1f, radius = 1f, rangeMax = 1f, desc = "劍士普攻：手掌劃一下，只砍手劃過的那條線（1m 內，每 1 秒）" });
             P(new SkillDef { id = "na_arrow", cls = "basic", name = "普通箭", type = SkillType.Projectile, color = C("#d9f99d"), cost = 0, damage = 9, charge = 0f, cooldown = 2f, speed = 16f, radius = 0.1f, rangeMax = 14f, desc = "獵人普攻：比 5（張開手掌），每 2 秒自動射出一箭" });
+            // 初心者（10 級前）：丟小石子普攻＋木棍揮擊、投石、急救
+            P(new SkillDef { id = "na_pebble", cls = "basic", name = "丟小石子", type = SkillType.Projectile, color = C("#d6c7a1"), cost = 0, damage = 6, charge = 0f, cooldown = 2f, speed = 10f, radius = 0.1f, rangeMax = 10f, desc = "初心者普攻：比 5（張開手掌），每 2 秒丟出一顆小石子" });
+            P(new SkillDef { id = "nv_swing", cls = "novice", name = "木棍揮擊", type = SkillType.Projectile, color = C("#c08a52"), cost = 8, damage = 16, charge = 0f, cooldown = 1.2f, speed = 8f, radius = 0.3f, rangeMax = 1.8f, desc = "用木棍砍前方半球（半徑 1.8m）內的敵人；不用蓄力，手刀劈過就出招" });
+            P(new SkillDef { id = "nv_stone", cls = "novice", name = "投石", type = SkillType.Projectile, color = C("#a8a29e"), cost = 10, damage = 15, charge = 0.6f, cooldown = 1.5f, speed = 11f, radius = 0.14f, rangeMax = 11f, desc = "用力丟出一顆石頭，飛得比普攻遠、比普攻痛" });
+            P(new SkillDef { id = "nv_aid", cls = "novice", name = "急救", type = SkillType.Self, self = SelfKind.Heal, color = C("#86efac"), cost = 18, heal = 20, charge = 1f, cooldown = 8f, desc = "包紮傷口，回復 20 HP（隊友也會回）" });
             P(new SkillDef { id = "na_holy", cls = "basic", name = "神聖飛彈", type = SkillType.Projectile, color = C("#fff3b0"), cost = 0, damage = 6, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.14f, rangeMax = 12f, desc = "牧師普攻：比 2，每 2 秒自動射出一發神聖飛彈" });
             P(new SkillDef { id = "na_dagger", cls = "basic", name = "連刺（普攻）", type = SkillType.Projectile, color = C("#e879f9"), cost = 0, damage = 8, charge = 0f, cooldown = 1.6f, radius = 0.5f, rangeMax = 1f, desc = "刺客普攻：舉掌（張開手掌），每 1.6 秒砍前方半球（半徑 1m）內的所有敵人" });
 

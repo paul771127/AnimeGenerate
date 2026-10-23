@@ -20,6 +20,8 @@ namespace SpellDuel
         public Action OnBack;                    // 離開大地圖（回選擇畫面）
         public Action OnCharacter;               // 打開角色畫面
         public Action OnStartTrial;              // 出發挑戰轉職試煉
+        public Action<string> OnJobChange;       // 初心者 10 級：選了職業（SoloBattle 換成那個職業）
+        string jobArm; float jobArmUntil;
 
         // 可走動的 3D 城鎮（TownWalk）：預設用走的；也可以切回清單模式
         public bool walkMode = true;
@@ -647,10 +649,45 @@ namespace SpellDuel
         float advPickAt;
         int guildScroll;
 
+        /// <summary>初心者轉職：5 個職業選一個（10 級才能選；選了不能換，要按兩次確認）</summary>
+        void DrawJobChange(Rect r, CharacterProfile prof, int fs, int fsS, float gap, float y)
+        {
+            bool ok = prof.CanChangeJob;
+            string status = ok ? "公會長：「你已經走過一段路了。五條路各有各的守護方式——選一條，往後就是你的職業。選定便不能更換。」"
+                : $"公會長：「初心者，先用木棍和石頭保護好自己。到了 Lv{Skills.JobLevel}，再來選你的職業。」\n目前 Lv{prof.level}（還差 {Skills.JobLevel - prof.level} 級）";
+            GUI.DrawTexture(new Rect(r.x + gap, y, fs * 2.6f, fs * 2.6f), Portraits.Get("公會長", "guild"), ScaleMode.ScaleToFit, true);
+            UiKit.Text(new Rect(r.x + gap * 2 + fs * 2.6f, y, r.width - gap * 3 - fs * 2.6f, fs * 2.8f), status, fsS, Color.white, TextAnchor.UpperLeft);
+            y += fs * 3f;
+            float bottom = r.yMax - gap * 2 - fs * 2.1f;
+            int n = Skills.ClassOrder.Length;
+            float ch = Mathf.Min(fs * 3.6f, (bottom - y) / n - gap * 0.4f);
+            for (int i = 0; i < n; i++)
+            {
+                var id = Skills.ClassOrder[i]; var c = Skills.Classes[id];
+                var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
+                UiKit.Card(cr, ok ? 0.6f : 0.35f, c.color, ok ? 0.8f : 0.4f);
+                float bw = cr.width * 0.28f;
+                var basic = Skills.BasicOf(id);
+                float bs = ch * 0.62f;
+                if (basic != null) UiKit.Badge(new Rect(cr.x + gap * 0.5f, cr.y + (ch - bs) / 2f, bs, bs), SkillIcons.Get(basic.id), c.color);
+                UiKit.Text(new Rect(cr.x + bs + gap, cr.y, cr.width - bs - bw - gap * 2.5f, ch), $"{c.name}　HP {c.maxHp}・MP {c.maxMp}\n{c.desc}", fsS, ok ? Color.white : Color.gray, TextAnchor.MiddleLeft, false, 0.55f);
+                bool armed = jobArm == id && Time.time < jobArmUntil;
+                if (UiKit.Button(new Rect(cr.xMax - bw - gap * 0.4f, cr.y + gap * 0.4f, bw, ch - gap * 0.8f), !ok ? $"Lv{Skills.JobLevel}" : armed ? "再按一次\n確定" : "選這個", fsS, armed, c.color, ok))
+                {
+                    if (armed) { jobArm = null; OnJobChange?.Invoke(id); return; }
+                    jobArm = id; jobArmUntil = Time.time + 3f;
+                    Toast($"選「{c.name}」？選了就不能換，3 秒內再按一次確定");
+                }
+                y += ch + gap * 0.4f;
+            }
+            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), "🏘 回城鎮", fs)) screen = Screen.Town;
+        }
+
         void DrawGuild(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
             float y = r.y + gap;
             Header(r, "🏛 職業工會", new Color(0.85f, 0.6f, 1f), prof, fs, fsS, fsL, gap, ref y);
+            if (prof.cls == Skills.Novice) { DrawJobChange(r, prof, fs, fsS, gap, y); return; }   // 初心者：選職業（10 級）
             string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
             bool lvOk = prof.level >= Advanced.Level;
             var cur = prof.Adv;

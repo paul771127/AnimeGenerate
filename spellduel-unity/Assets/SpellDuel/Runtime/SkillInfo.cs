@@ -28,7 +28,7 @@ namespace SpellDuel
         /// <summary>普通攻擊的手勢</summary>
         public static string BasicGesture(SkillDef s) => s?.id switch
         {
-            "na_mage" => "比 1（只伸食指）", "na_arrow" => "比 5（張開手掌）", "na_holy" => "比 2（食指＋中指）",
+            "na_mage" => "比 1（只伸食指）", "na_arrow" => "比 5（張開手掌）", "na_pebble" => "比 5（張開手掌）", "na_holy" => "比 2（食指＋中指）",
             "na_dagger" => "舉起張開的手掌", "na_sword" => "手掌在鏡頭前橫劃一下", _ => "",
         };
 

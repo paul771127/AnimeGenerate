@@ -116,6 +116,15 @@ namespace SpellDuel
 
         bool DrawTree(Rect b, CharacterProfile p, int fs, int fsS, float gap, string treeId)
         {
+            if (treeId == Skills.Novice)
+            {
+                // 初心者沒有技能樹：技能點先存著，轉職後到新職業的技能樹點
+                UiKit.Card(b, 0.5f, Skills.Classes[Skills.Novice].color, 0.6f);
+                UiKit.Text(new Rect(b.x + gap, b.y + gap, b.width - gap * 2, b.height - gap * 2),
+                    $"🌱 初心者沒有技能樹。\n\n一開始就會 3 招：木棍揮擊（近戰）、投石（遠程）、急救（回血）。\n\n升級拿到的技能點會先存著（目前 {p.skillPoints} 點），{Skills.JobLevel} 級到村子的「職業工會」選擇職業後，就能用在新職業的技能樹上。",
+                    fs, new Color(0.92f, 0.9f, 0.8f), TextAnchor.UpperLeft);
+                return false;
+            }
             var nodes = SkillTrees.Of(treeId);
             if (nodes.Count > 0 && nodes[0].free)
             {

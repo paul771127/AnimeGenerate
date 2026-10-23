@@ -19,6 +19,7 @@ namespace SpellDuel
             {"mage",new Design("mage","符文連帽派克大衣","a353ef","3b3484","65fff0",.48f,.104f,2)},
             {"assassin",new Design("assassin","交叉綁帶高領戰鬥服","7443ab","343b7c","ff76dc",0f,.053f,3)},
             {"priest",new Design("priest","金邊分襟醫療長外套","fff0d4","3d68a2","e9b955",.59f,.082f,4)},
+            {"novice",new Design("novice","束腰旅行布衣","c9a77a","6b5440","e2c48d",.14f,.07f,17)},   // 初心者：樸素的旅行布衣
             {"paladin",new Design("paladin","半披風白色軍裝","fff0d4","31569a","e8b94d",.42f,.075f,5)},
             {"berserker",new Design("berserker","無袖騎士皮夾克","e34d39","792d4c","e9b66c",.02f,.062f,6)},
             {"marksman",new Design("marksman","單肩狙擊長夾克","327db5","293e73","ebcb66",.44f,.063f,7)},

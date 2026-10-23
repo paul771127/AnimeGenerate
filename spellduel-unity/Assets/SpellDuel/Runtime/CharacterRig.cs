@@ -472,6 +472,7 @@ namespace SpellDuel
                 case "archer": BuildArcher(); break;
                 case "assassin": BuildAssassin(); break;
                 case "priest": BuildPriest(); break;
+                case "novice": BuildNovice(); break;
                 default: BuildSwordsman(); break;
             }
 
@@ -603,6 +604,22 @@ namespace SpellDuel
             Part(PrimitiveType.Cylinder, d, new Vector3(0f, 0f, 0f), new Vector3(0.03f, 0.045f, 0.03f), Mat(clsColor, 0.8f), new Vector3(90f, 0f, 0f));
             Part(PrimitiveType.Cube, d, new Vector3(0f, 0f, 0.05f), new Vector3(0.025f, 0.09f, 0.02f), Mat(Metal, 0.8f));
             Part(PrimitiveType.Cube, d, new Vector3(0f, 0f, 0.17f), new Vector3(0.012f, 0.04f, 0.22f), Mat(Color.Lerp(Metal, Color.white, 0.4f)));
+        }
+
+        // ---------------------------------------------------------------- 初心者：右手一根木棍、腰間小布包（沒有盾）
+        void BuildNovice()
+        {
+            var stick = Pivot("Sword", handR, new Vector3(0f, -0.04f, 0f));   // 叫 Sword：揮砍動作沿用劍士的
+            Part(PrimitiveType.Cylinder, stick, new Vector3(0f, 0f, 0.26f), new Vector3(0.034f, 0.34f, 0.034f), Mat(new Color(0.55f, 0.38f, 0.2f), 0.2f), new Vector3(90f, 0f, 0f));
+            Part(PrimitiveType.Sphere, stick, new Vector3(0f, 0f, 0.6f), new Vector3(0.05f, 0.05f, 0.06f), Mat(new Color(0.47f, 0.32f, 0.17f), 0.2f));
+            Part(PrimitiveType.Cylinder, stick, new Vector3(0f, 0f, 0.02f), new Vector3(0.04f, 0.05f, 0.04f), Mat(Leather), new Vector3(90f, 0f, 0f));   // 握把纏布
+            var bag = Pivot("Satchel", body, new Vector3(-0.17f, 0.9f, 0.04f));
+            Part(PrimitiveType.Cube, bag, Vector3.zero, new Vector3(0.09f, 0.1f, 0.06f), Mat(new Color(0.6f, 0.47f, 0.3f), 0.15f));
+            Part(PrimitiveType.Cube, bag, new Vector3(0f, 0.035f, 0.031f), new Vector3(0.09f, 0.04f, 0.008f), Mat(new Color(0.5f, 0.38f, 0.24f), 0.15f));
+            baseR = new Arm(-10f, 8f, -40f, 0f); swingR = 0.6f;
+            baseL = new Arm(0f, 8f, -15f, 0f); swingL = 0.5f;
+            chargeR = new Arm(-150f, 10f, -30f, 0f);
+            castR = new Arm(-45f, -10f, 0f, 45f);
         }
 
         // ---------------------------------------------------------------- 劍士：頭盔羽飾、護肩、胸甲、劍、圓盾

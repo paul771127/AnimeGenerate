@@ -214,6 +214,7 @@ namespace SpellDuel
         // ================================================================ 啟動
         void Start()
         {
+            SaveReset.RunOnce();   // 改成初心者制度：第一次開這個版本時清掉舊存檔（設定保留），一定要最先執行
             Application.targetFrameRate = 60;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             mat = new Material(Shader.Find("Sprites/Default"));

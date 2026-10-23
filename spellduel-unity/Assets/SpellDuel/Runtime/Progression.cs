@@ -121,6 +121,7 @@ namespace SpellDuel
             "mage" => new[] { "fire", "wind", "ice" },
             "assassin" => new[] { "knife", "shadow", "smoke" },
             "priest" => new[] { "holy", "prayheal", "cleanse" },
+            "novice" => new[] { "nv_swing", "nv_stone", "nv_aid" },   // 初心者：沒有技能樹，3 招一開始就會
             _ => new string[0],
         };
 
@@ -691,6 +692,7 @@ namespace SpellDuel
         /// <summary>產生一件裝備（ilvl＝物品等級；prefer＝優先掉落這個職業能用的）</summary>
         public static Item Make(System.Random rng, int ilvl, int rarity, string prefer)
         {
+            if (prefer == Skills.Novice) prefer = null;   // 初心者：什麼職業的都可能掉（轉職後用得到），不鎖成初心者專用
             ilvl = Mathf.Max(1, ilvl);
             var slot = (Slot)rng.Next(5);
             var it = new Item { slot = slot, rarity = rarity, ilvl = ilvl, uid = DateTime.UtcNow.Ticks + rng.Next(100000) };
@@ -788,7 +790,9 @@ namespace SpellDuel
         public string TreeOf(TreeNode n) => adv != null && SkillTrees.Of(adv).Contains(n) ? adv : cls;
         public bool CanAdvance => adv == null && level >= Advanced.Level && trialPassed;
         /// <summary>轉職等級（30 級）還沒轉職：不能再升級（經驗停在滿格），要先完成轉職試煉並轉職</summary>
-        public bool LevelLocked => adv == null && level >= Advanced.Level;
+        public bool LevelLocked => cls == Skills.Novice ? level >= Skills.JobLevel : adv == null && level >= Advanced.Level;
+        /// <summary>初心者到 10 級：可以到職業工會選職業</summary>
+        public bool CanChangeJob => cls == Skills.Novice && level >= Skills.JobLevel;
 
         /// <summary>轉職（選了不能換）：第一個進階技能直接學會</summary>
         public bool Advance(string advId)
@@ -1221,27 +1225,20 @@ namespace SpellDuel
             return true;
         }
         /// <summary>
-        /// 一次性補發（2026-10）：以前「重新分配所有點數」會把能力值不夠穿的裝備直接刪掉，玩家的藍色（稀有）弓因此不見。
-        /// 寄一把稀有的獵人弓到信箱（等級＝獵人目前等級，需求調到現在穿得上），只寄一次。回傳有沒有寄。
+        /// 初心者轉職（10 級，在職業工會選）：等級、經驗、加過的能力點、身上的裝備都帶過去，職業換成 cls；
+        /// 新職業穿不了的裝備放回背包（滿了寄信箱）。初心者的存檔刪掉。回傳新職業的角色（不能轉職＝null）
         /// </summary>
-        public static bool GrantLostBowOnce()
+        public static CharacterProfile ChangeJob(string cls)
         {
-            const string key = "sd_comp_lost_bow_202610";
-            if (!Ready || Get(key) == "1") return false;   // 存檔還沒接好：什麼都不做（不能讀到空白的角色）
-            var p = Char("archer");
-            var rng = new System.Random(20261023);
-            Item bow = null;
-            for (int i = 0; i < 2000 && bow == null; i++)
-            {
-                var it = ItemGen.Make(rng, p.level, 2, "archer");
-                if (it.slot == Slot.Weapon && it.classes == "archer" && it.name.Contains("弓")) bow = it;
-            }
-            if (bow == null) return false;
-            bow.reqLevel = Mathf.Min(bow.reqLevel, p.level);
-            if (bow.reqValue > 0) bow.reqValue = Mathf.Min(bow.reqValue, p.Total(bow.reqStat) - p.GearStat(bow.reqStat));   // 現在的能力值就穿得上
-            SendMail(bow, "補發：重新分配點數時遺失的弓");
-            Set(key, "1");
-            return true;
+            var old = Char(Skills.Novice);
+            if (!old.CanChangeJob || cls == Skills.Novice || !Skills.Classes.ContainsKey(cls) || Array.IndexOf(Skills.ClassOrder, cls) < 0) return null;
+            var np = CharacterProfile.Parse(cls, old.Serialize());
+            np.ranks.Clear(); np.NormalizeSkillPoints();
+            for (int i = 0; i < np.equipped.Length; i++)
+                if (np.equipped[i] != null && !np.CanEquip(np.equipped[i], out _)) { AddToBagOrMail(np.equipped[i], "轉職時脫下"); np.equipped[i] = null; }
+            cache[cls] = np; SaveChar(np);
+            cache.Remove(Skills.Novice); Set("sd_char_" + Skills.Novice, "");
+            return np;
         }
 
         /// <summary>測試用：清掉記憶體裡的背包與信箱（重新從存檔讀）</summary>

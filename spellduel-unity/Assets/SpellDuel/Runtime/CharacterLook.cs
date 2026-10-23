@@ -21,6 +21,7 @@ namespace SpellDuel
             {"mage",new Look(EyeKind.Upturned,HairKind.SidePart,"b18bcf","d8d9e8",.38f,.7f,-.55f,.09f,3)},
             {"assassin",new Look(EyeKind.Sanpaku,HairKind.Wolf,"bd7897","4f355e",.35f,.5f,.45f,.19f,4)},
             {"priest",new Look(EyeKind.Droop,HairKind.Straight,"69a9a4","e4c785",.44f,-.6f,0,.25f,5)},
+            {"novice",new Look(EyeKind.Round,HairKind.Crew,"7d9a6a","5a4030",.44f,.2f,.1f,.08f,13)},   // 初心者：圓眼、短髮
             {"paladin",new Look(EyeKind.Almond,HairKind.Slick,"b29547","b28a53",.40f,.1f,-.2f,.08f,6)},
             {"berserker",new Look(EyeKind.Sanpaku,HairKind.Spikes,"cf7859","783c2e",.35f,.6f,.15f,.11f,7)},
             {"marksman",new Look(EyeKind.Slender,HairKind.LowPony,"b69b65","827b65",.35f,.1f,-.6f,.21f,8)},
@@ -55,7 +56,7 @@ namespace SpellDuel
         {
             switch(name)
             {
-                case "劍士":return "swordsman";case "獵人":return "archer";case "法師":return "mage";case "刺客":return "assassin";case "牧師":return "priest";
+                case "初心者":return "novice";case "劍士":return "swordsman";case "獵人":return "archer";case "法師":return "mage";case "刺客":return "assassin";case "牧師":return "priest";
                 case "聖騎士":return "paladin";case "狂戰士":return "berserker";case "神射手":return "marksman";case "遊俠":return "ranger";case "大魔導士":return "archmage";
                 case "召喚師":return "summoner";case "忍者":return "ninja";case "影舞者":return "shadowdancer";case "主教":return "bishop";case "審判者":return "inquisitor";
                 default:return all.ContainsKey(name??"")&&name.Length>0&&name[0]<128?name:null;

@@ -201,7 +201,7 @@ namespace SpellDuel
             {
                 lastXpSeen = battle.xp;
                 int ups = prof.AddXp(dx);
-                if (prof.LevelLocked && !levelLockSaid) { levelLockSaid = true; Say($"已達 {Advanced.Level} 級：到職業工會完成轉職試煉並轉職，才能繼續升級", 3.5f); }
+                if (prof.LevelLocked && !levelLockSaid) { levelLockSaid = true; Say(prof.cls == Skills.Novice ? $"已達 {Skills.JobLevel} 級：回村子到職業工會選擇職業，才能繼續升級" : $"已達 {Advanced.Level} 級：到職業工會完成轉職試煉並轉職，才能繼續升級", 3.5f); }
                 if (ups > 0)
                 {
                     Progress.SaveChar(prof);
@@ -500,6 +500,7 @@ namespace SpellDuel
                 world.OnBack = () => storyMapOpen = false;
                 world.OnCharacter = () => charOpen = true;
                 world.OnStartTrial = () => OpenPrep("⚔ 轉職試煉", true, "轉職試煉不能使用道具", StartTrial);
+                world.OnJobChange = JobChange;
                 WireVillage();
             }
             if (prepGo == null && phase == Phase.Setup && !NetMode) enemyClass = "story";   // 在村子裡（整備取消了也一樣）：回到故事模式
@@ -688,8 +689,8 @@ namespace SpellDuel
         public void Init(Camera camera, PlayArea playArea, Material baseMat)
         {
             cam = camera; area = playArea; mat = baseMat;
-            myClass = PlayerPrefs.GetString("sd_my_class", "mage");
-            if (!Skills.Classes.ContainsKey(myClass)) myClass = "mage";
+            myClass = PlayerPrefs.GetString("sd_my_class", Skills.Novice);   // 一個主角色：新遊戲從初心者開始
+            if (!Skills.Classes.ContainsKey(myClass) || (myClass != Skills.Novice && Array.IndexOf(Skills.ClassOrder, myClass) < 0)) myClass = Skills.Novice;
             enemyClass = PlayerPrefs.GetString("sd_enemy_class", "story");
             dailyPick = Mathf.Clamp(PlayerPrefs.GetInt("sd_daily_pick", 0), 0, DailyChallenge.KindCount - 1);
             difficulty = Mathf.Clamp(PlayerPrefs.GetInt("sd_difficulty", 1), 0, 2);
@@ -702,9 +703,21 @@ namespace SpellDuel
             Progress.Set = (k, v) => { PlayerPrefs.SetString(k, v); PlayerPrefs.Save(); };
             Story.Get = Progress.Get; Story.Set = Progress.Set;
             Progress.MarkReady();   // 存檔接好了（之前讀到的空白內容全部丟掉，重新從手機讀）
-            if (Progress.GrantLostBowOnce()) Say("📬 補發：重新分配點數時遺失的稀有弓已寄到信箱（角色 → 裝備 → 📬 信箱，7 天內領取）", 8f);   // 一定要在存檔接好之後
             LoadLoadout();
             Sfx.Ensure();
+        }
+
+        /// <summary>初心者轉職（職業工會選的）：角色換成那個職業，技能換成新職業的預設技能</summary>
+        void JobChange(string cls)
+        {
+            var np = Progress.ChangeJob(cls);
+            if (np == null) return;
+            myClass = cls; prof = np;
+            myLoadout.Clear(); myLoadout.AddRange(Skills.Classes[cls].defaultLoadout); FixLoadout(true);
+            SaveChoices(); PlayerPrefs.Save();
+            levelLockSaid = false;
+            Say($"🎉 轉職成功！你現在是「{Skills.Classes[cls].name}」\n技能換成新職業的技能，存著的 {np.skillPoints} 技能點可以到「角色 → 技能樹」點", 6f);
+            Sfx.Play("levelup", 0.9f); Haptics.Play(Haptics.Kind.Success);
         }
 
         void LoadLoadout()
@@ -1890,6 +1903,7 @@ namespace SpellDuel
                 {
                     "na_mage" => Hand.Current == HandGesture.Shape.One,
                     "na_arrow" => Hand.Current == HandGesture.Shape.Open,
+                    "na_pebble" => Hand.Current == HandGesture.Shape.Open,   // 初心者：比 5 丟小石子
                     "na_holy" => Hand.Current == HandGesture.Shape.Two,
                     "na_dagger" => Hand.Current == HandGesture.Shape.Open,
                     _ => false,
@@ -2929,23 +2943,20 @@ namespace SpellDuel
             W=contentWidth;
             var cls = Skills.Classes[myClass];
 
-            UiKit.Title(new Rect(pad,y,W-pad*2,u*1.2f),NetMode ? "職業對戰：選擇職業與技能" : "選擇職業與技能",cls.color,fsL);
+            UiKit.Title(new Rect(pad,y,W-pad*2,u*1.2f),NetMode ? "職業對戰：選擇技能" : "選擇技能",cls.color,fsL);
             y += u * 1.3f;
 
-            // 職業（5 個）
-            int nc = Skills.ClassOrder.Length;
-            float cw = (W - pad * 2 - gap * (nc - 1)) / nc;
-            for (int i = 0; i < nc; i++)
+            // 目前的角色（一個主角色：初心者 10 級到職業工會轉職，之後職業固定；不能在這裡換職業）
             {
-                var id = Skills.ClassOrder[i]; var c = Skills.Classes[id];
-                var classR=new Rect(pad+i*(cw+gap),y,cw,u*1.3f);
-                if (UiKit.Button(classR, "", fs, id == myClass, c.color) && id != myClass) { myClass = id; LoadLoadout(); }
-                float badgeSize=classR.height*.66f;
-                var classBasic=Skills.BasicOf(id);
-                UiKit.Badge(new Rect(classR.x+gap*.3f,classR.y+classR.height*.17f,badgeSize,badgeSize),classBasic!=null?SkillIcons.Get(classBasic.id):null,c.color);
-                UiKit.Text(new Rect(classR.x+badgeSize+gap*.4f,classR.y,classR.width-badgeSize-gap*.6f,classR.height),c.name,fs,c.color,TextAnchor.MiddleCenter,true);
+                var mp = Progress.Char(myClass);
+                var classR = new Rect(pad, y, W - pad * 2, u * 1.3f);
+                UiKit.Card(classR, 0.6f, cls.color, 0.8f);
+                float badgeSize = classR.height * .66f;
+                var classBasic = Skills.BasicOf(myClass);
+                UiKit.Badge(new Rect(classR.x + gap * .5f, classR.y + classR.height * .17f, badgeSize, badgeSize), classBasic != null ? SkillIcons.Get(classBasic.id) : null, cls.color);
+                string jobNote = myClass == Skills.Novice ? (mp.CanChangeJob ? "　✨ 可以轉職了！到村子的職業工會選職業" : $"　（{Skills.JobLevel} 級到職業工會轉職）") : "";
+                UiKit.Text(new Rect(classR.x + badgeSize + gap, classR.y, classR.width - badgeSize - gap * 1.5f, classR.height), $"{cls.name}　Lv{mp.level}{jobNote}", fsS, myClass == Skills.Novice && mp.CanChangeJob ? new Color(1f, 0.9f, 0.4f) : Color.white, TextAnchor.MiddleLeft, true);
             }
-            for(int i=0;i<nc;i++) UiKit.Tab(new Rect(pad+i*(cw+gap),y,cw,u*1.3f),Skills.ClassOrder[i]==myClass,Skills.Classes[Skills.ClassOrder[i]].color);
             y += u * 1.3f + gap;
             cls = Skills.Classes[myClass];
             var descR = new Rect(pad, y, W - pad * 2, u * 1.5f);
@@ -3007,7 +3018,7 @@ namespace SpellDuel
                 UiKit.Text(new Rect(pad, y, W - pad * 2, u), "對手（電腦）", fsS, new Color(1f, 0.9f, 0.6f));
                 y += u;
                 float ew = (W - pad * 2 - gap * 3) / 4f;
-                int nOpt = nc + 2;
+                int nc = Skills.ClassOrder.Length, nOpt = nc + 2;
                 for (int i = 0; i < nOpt; i++)
                 {
                     string id = i == 0 ? "random" : i == nc + 1 ? "dummy" : Skills.ClassOrder[i - 1];
@@ -3581,13 +3592,13 @@ namespace SpellDuel
                 float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
                 if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), NetMode ? (localReady ? "等待對手…" : "再來一局") : "再來一局", fs, true, new Color(0.4f, 0.8f, 1f), !(NetMode && localReady)))
                 { if (NetMode) SendReady(); else StartBattle(); }
-                if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), villageReturn.HasValue ? "🏘 回村子" : "換職業", fs)) { if (villageReturn.HasValue) GoVillage(); else ShowSetup(); }
+                if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), villageReturn.HasValue ? "🏘 回村子" : "選技能", fs)) { if (villageReturn.HasValue) GoVillage(); else ShowSetup(); }
             }
         }
 
         /// <summary>標示離我最近的敵人在哪個方位（Boss 模式、無盡模式）</summary>
         /// <summary>電腦敵人用技能時的出手動作（劍士橫砍、刺客突刺、獵人放箭、法師／牧師推出）</summary>
-        static string AttackKindOf(string cls) => cls == "swordsman" ? "slash" : cls == "assassin" ? "stab" : cls == "archer" ? "shoot" : "magic";
+        static string AttackKindOf(string cls) => cls == "swordsman" || cls == Skills.Novice ? "slash" : cls == "assassin" ? "stab" : cls == "archer" ? "shoot" : "magic";
 
         /// <summary>
         /// 標出所有敵人（Boss、電腦對手、每一隻小怪）：

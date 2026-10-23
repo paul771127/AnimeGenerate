@@ -75,6 +75,7 @@ namespace SpellDuel
                     else SettingsMenu.Show();
                 }
             }
+            if (SaveReset.JustReset) UiKit.Text(new Rect(pad, bottom - lineH * 2.1f, W - pad * 2, lineH), "🌱 改版：存檔已重置，從「初心者」重新開始（設定、錄好的咒語都保留）", fsS, new Color(1f, 0.85f, 0.5f), TextAnchor.MiddleCenter, true);
             UiKit.Text(new Rect(pad, bottom - lineH, W - pad * 2, lineH), LobbyCaption("版本 " + BuildInfo), Mathf.RoundToInt(fsS * 0.85f), new Color(0.6f, 0.65f, 0.75f), TextAnchor.MiddleCenter);
         }
 

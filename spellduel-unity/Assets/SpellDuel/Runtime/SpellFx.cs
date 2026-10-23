@@ -731,6 +731,14 @@ namespace SpellDuel
                     StarGlint(root.transform, Color.white, D * 1.4f, new Vector3(0f, 0f, D * 1.25f));
                     break;
                 }
+                case "na_pebble":
+                case "nv_stone":
+                {
+                    // 初心者的小石子／投石：不發光的石塊，邊飛邊翻滾
+                    GlowPart(body, "rock", m => m.Lathe(SphereProf(0.5f, 5), 6, (z, j) => new Color(1f, 1f, 1f, 1f)), sc);
+                    anim.spin = body; anim.spinAxis = Vector3.right; anim.spinSpeed = 540f;
+                    break;
+                }
                 default:
                 {
                     // 其他（含自身/陷阱技能，正常不會飛）：發光球

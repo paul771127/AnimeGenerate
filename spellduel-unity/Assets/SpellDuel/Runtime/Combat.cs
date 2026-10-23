@@ -1588,7 +1588,7 @@ namespace SpellDuel
             if (hpCost > 0) { f.hp = Mathf.Max(1f, f.hp - hpCost); Emit("buff", f.Chest, new Color(1f, 0.4f, 0.4f), $"殉道 -{hpCost} HP"); }
             f.cooldownUntil[s.id] = now + s.cooldown * (s.cls == "basic" ? f.basicCdMul : f.cdMul * (f.focusUntil > now ? 0.5f : 1f)) * CdFactor(f);   // 普攻看敏捷、技能看精神
             f.charging = null;
-            if (s.id == "slash")
+            if (s.id == "slash" || s.id == "nv_swing")   // 初心者的木棍揮擊和斬擊一樣砍前方半球
             {
                 // 斬擊：砍前方半球（半徑＝射程 2m），同時斬開正面飛來的法球；不會飛出去
                 f.sliceUntil = now + SliceWindow; SliceNow(f);

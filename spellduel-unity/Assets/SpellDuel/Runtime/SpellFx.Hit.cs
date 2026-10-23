@@ -21,7 +21,8 @@ namespace SpellDuel
             {
                 case "na_mage": case "pet_fire": case "pet_blast": return "mage";
                 case "na_sword": case "pet_golem": return "swordsman";
-                case "na_arrow": case "pet_falcon": return "archer";
+                case "na_arrow": case "pet_falcon": case "na_pebble": case "nv_stone": return "archer";
+                case "nv_swing": return "swordsman";
                 case "na_holy": return "priest";
                 case "na_dagger": case "fogtick": return "assassin";
             }

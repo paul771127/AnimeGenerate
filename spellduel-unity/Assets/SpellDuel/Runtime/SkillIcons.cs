@@ -49,6 +49,8 @@ namespace SpellDuel
             Background(cv, cc, sc, skillId);
             switch (skillId)
             {
+                case "nv_swing": Slash(cv, sc); break;   // 初心者：木棍揮擊（借斬擊的圖）
+                case "nv_aid": Heal(cv, sc); break;      // 初心者：急救（借治癒的圖）
                 case "quickshot": QuickShot(cv, sc); break;
                 case "snipe": Snipe(cv, sc); break;
                 case "triple": Triple(cv, sc); break;

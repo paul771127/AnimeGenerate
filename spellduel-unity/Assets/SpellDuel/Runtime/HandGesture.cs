@@ -103,6 +103,9 @@ namespace SpellDuel
             if (s.cls == "archer") return Style.Burst;                    // 獵人：握拳→比五（張開）就放招
             switch (s.id)
             {
+                case "nv_swing": return Style.Chop;    // 初心者：揮木棍＝手刀揮砍
+                case "nv_stone": return Style.Burst;   // 投石：握拳→張開（丟出去）
+                case "nv_aid": return Style.Pull;      // 急救：手掌收回自己
                 case "snaretrap": case "blasttrap": case "smoke": case "thunder": return Style.Press;   // 往下壓／往下砸／往下劈
                 case "heal": return Style.Pull;                                                       // 手掌收回自己
                 case "block": case "ironwall": return Style.Hold;                                     // 舉盾停住
