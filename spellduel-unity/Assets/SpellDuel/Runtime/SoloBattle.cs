@@ -1763,7 +1763,7 @@ namespace SpellDuel
 
         void EndBattle()
         {
-            ClearDaily(); ClearTutorial(); RestoreArea();
+            ClearDaily(); ClearTutorial(); RestoreArea(); ClearSwipeTrail();
             ResetCarryLeft();   // 下一場能用的道具＝整備時決定帶的數量
             victory = null; hitsTaken = 0; lootLog.Clear(); lootGoldLog = 0; ResetExercise();
             if (prof != null) Progress.SaveChar(prof);
@@ -1959,6 +1959,7 @@ namespace SpellDuel
             var basic = Me.basic ?? Skills.BasicOf(myClass);   // 技能樹強化後的普攻
             Hand.BasicSwipe = Skills.IsSwipeBasic(basic) && Me.charging == null;
             bool swiped = Hand.ConsumeSwipe();
+            UpdateSwipeTrail(Hand.BasicSwipe && Hand.HandVisible && phase == Phase.Fighting && Hand.Current != HandGesture.Shape.Fist && Hand.Current != HandGesture.Shape.None);   // 手劃過的殘影（SoloBattle.SwipeTrail.cs）
             if (basic != null && Me.charging == null && !frozen && phase == Phase.Fighting && Hand.HandVisible)
             {
                 bool pose = basic.id switch
