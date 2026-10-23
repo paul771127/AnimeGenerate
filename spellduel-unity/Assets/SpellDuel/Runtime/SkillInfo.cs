@@ -29,7 +29,7 @@ namespace SpellDuel
         public static string BasicGesture(SkillDef s) => s?.id switch
         {
             "na_mage" => "比 1（只伸食指）", "na_arrow" => "比 5（張開手掌）", "na_pebble" => "比 5（張開手掌）", "na_holy" => "比 2（食指＋中指）",
-            "na_dagger" => "舉起張開的手掌", "na_sword" => "手掌在鏡頭前橫劃一下", _ => "",
+            "na_dagger" => "舉起張開的手掌", "na_sword" => "手掌在鏡頭前橫劃一下", "na_stick" => "手掌在鏡頭前橫劃一下", _ => "",
         };
 
         static void BasicDetail(SkillDef s, StringBuilder sb)
@@ -38,11 +38,12 @@ namespace SpellDuel
             bool melee = Skills.IsMeleeBasic(s);
             sb.Append("【怎麼用】\n");
             Line("普通攻擊：不用唸技能名稱、不花 MP，也不佔技能欄");
-            Line(s.id == "na_sword" ? $"{BasicGesture(s)}就出手（每 {s.cooldown:0.#} 秒最多一次）" : $"{(s.id == "na_dagger" ? "" : "手")}{BasicGesture(s)}並維持，每 {s.cooldown:0.#} 秒自動攻擊一次（放下手勢就停）");
+            Line(Skills.IsSwipeBasic(s) ? $"{BasicGesture(s)}就出手（每 {s.cooldown:0.#} 秒最多一次）" : $"{(s.id == "na_dagger" ? "" : "手")}{BasicGesture(s)}並維持，每 {s.cooldown:0.#} 秒自動攻擊一次（放下手勢就停）");
             Line("正在詠唱技能時不會普攻（唸完、放完招才會繼續）");
             if (!melee) Line($"朝畫面中央的準星方向飛出；先出現瞄準預警線，約 {Battle.ShotWindup:0.##} 秒後才射出（對手也看得到）");
-            if (s.id == "na_sword") Line("只砍到手掌劃過的那一條線：手要劃過畫面上的敵人才打得到（一刀可以劃過好幾隻）");
-            if (s.id == "na_sword") Line($"劃完先出現刀線預警，約 {Battle.SlashWindup:0.##} 秒後才砍下（對手也看得到，會躲）");
+            if (Skills.IsSwipeBasic(s)) Line("只砍到手掌劃過的那一條線：手要劃過畫面上的敵人才打得到（一刀可以劃過好幾隻）");
+            if (s.id == "na_stick") Line("不會砍掉飛來的法球（劍士的「斬擊」技能才砍得掉）");
+            if (Skills.IsSwipeBasic(s)) Line($"劃完先出現刀線預警，約 {Battle.SlashWindup:0.##} 秒後才砍下（對手也看得到，會躲）");
             if (s.id == "na_dagger") Line($"每一刺先出現扇形預警，約 {Battle.StabWindup:0.#} 秒後才刺下（對手也看得到，會躲）");
             sb.Append("\n【數值】\n");
             Line($"傷害 {s.damage}（會吃攻擊力加成{(melee ? "" : "，也會爆擊")}）");
@@ -174,7 +175,7 @@ namespace SpellDuel
                     Line("刺客點了「近身本能」時，2m 內打它傷害會降低、它的閃避也會提高");
                     Line("法師的抗拒法環可以取消伏擊");
                 }
-                else if (s.id == "na_sword") Line($"揮砍前會先出現紅色刀線（約 {Battle.SlashWindup:0.##} 秒）：蹲下躲過、或退到 {s.rangeMax + Battle.SlashReach:0.#}m 外");
+                else if (Skills.IsSwipeBasic(s)) Line($"揮砍前會先出現紅色刀線（約 {Battle.SlashWindup:0.##} 秒）：蹲下躲過、或退到 {s.rangeMax + Battle.SlashReach:0.#}m 外");
                 else if (s.id == "na_dagger") Line($"刺之前會先出現紅色扇形（約 {Battle.StabWindup:0.#} 秒）：退到 {s.rangeMax:0.#}m 外或閃到它側面");
                 else if (s.id == "slash" || Skills.IsMeleeBasic(s)) Line($"只砍前方半球（半徑 {s.rangeMax:0.#}m）：退到範圍外或繞到它背後");
                 else

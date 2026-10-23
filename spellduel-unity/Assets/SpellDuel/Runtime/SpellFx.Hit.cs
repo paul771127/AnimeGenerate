@@ -24,7 +24,7 @@ namespace SpellDuel
                 case "na_arrow": case "pet_falcon": return "archer";
                 case "na_pebble": return "novice";
                 case "nv_stone": return "novice_stone";
-                case "nv_swing": return "novice_swing";
+                case "nv_swing": case "na_stick": return "novice_swing";
                 case "nv_aid": return "novice_aid";
                 case "na_holy": return "priest";
                 case "na_dagger": case "fogtick": return "assassin";

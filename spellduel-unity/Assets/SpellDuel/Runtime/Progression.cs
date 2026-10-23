@@ -584,7 +584,14 @@ namespace SpellDuel
             new Color(0.78f, 0.45f, 1f), new Color(1f, 0.65f, 0.15f),
         };
 
-        public bool ClassOk(string cls) => string.IsNullOrEmpty(classes) || Array.IndexOf(classes.Split(','), cls) >= 0;
+        public bool ClassOk(string cls)
+        {
+            if (string.IsNullOrEmpty(classes)) return true;
+            var cs = classes.Split(',');
+            if (Array.IndexOf(cs, cls) >= 0) return true;
+            // 初心者：可以穿劍士、刺客的裝備（拿木棍近戰，和他們同一路）
+            return cls == Skills.Novice && (Array.IndexOf(cs, "swordsman") >= 0 || Array.IndexOf(cs, "assassin") >= 0);
+        }
 
         public string ClassText()
         {

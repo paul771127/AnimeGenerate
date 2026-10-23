@@ -1953,7 +1953,7 @@ namespace SpellDuel
             if (seal != null) { Hand.ReleaseStyle = HandGesture.Style.Number; Hand.RequiredNumber = seal[Mathf.Min(sealStep, seal.Length - 1)]; }
             // 普通攻擊：沒在詠唱時，手勢舉著就自動攻擊（法師比 1、獵人比 5、牧師比 2、刺客舉掌、劍士手掌劃一下）
             var basic = Me.basic ?? Skills.BasicOf(myClass);   // 技能樹強化後的普攻
-            Hand.BasicSwipe = basic != null && basic.id == "na_sword" && Me.charging == null;
+            Hand.BasicSwipe = Skills.IsSwipeBasic(basic) && Me.charging == null;
             bool swiped = Hand.ConsumeSwipe();
             if (basic != null && Me.charging == null && !frozen && phase == Phase.Fighting && Hand.HandVisible)
             {
@@ -1966,7 +1966,7 @@ namespace SpellDuel
                     "na_dagger" => Hand.Current == HandGesture.Shape.Open,
                     _ => false,
                 };
-                if (pose || (basic.id == "na_sword" && swiped)) DoBasic(basic);
+                if (pose || (Skills.IsSwipeBasic(basic) && swiped)) DoBasic(basic);
             }
             // 手勢放招：往放招動作的瞄準點放
             if (Hand.ConsumeRelease())
@@ -2031,7 +2031,7 @@ namespace SpellDuel
             var floor = d.y < -0.01f ? o + d * (-o.y / d.y) : Me.Feet + Fighter.Flat(d) * 15f;
             // 劍士：刀線＝手掌在畫面上劃過的起點→終點
             Vector3 from = default, to = default;
-            if (s.id == "na_sword")
+            if (Skills.IsSwipeBasic(s))
             {
                 from = WorldFrame.DirToWorld(cam.ScreenPointToRay(Hand.SwipeFrom).direction);
                 to = WorldFrame.DirToWorld(cam.ScreenPointToRay(Hand.SwipeTo).direction);
@@ -2490,8 +2490,9 @@ namespace SpellDuel
                     {
                         bool mineSwing = Battle.FlatDistance(at, Me.Feet) < 0.7f;
                         var swingDir = mineSwing ? cam.transform.forward : WorldFrame.DirFromWorld(Fighter.Flat(Me.Chest - at));
-                        string swingCls = text == "nv_swing" ? "novice_swing" : text == "na_dagger" ? "assassin" : "swordsman";
-                        if(text=="nv_swing"&&!mineSwing&&enemyRig)enemyRig.PlayAttack("novice",0f);
+                        bool noviceSwing = text == "nv_swing" || text == "na_stick";   // 初心者：木頭色的短弧線
+                        string swingCls = noviceSwing ? "novice_swing" : text == "na_dagger" ? "assassin" : "swordsman";
+                        if(noviceSwing&&!mineSwing&&enemyRig)enemyRig.PlayAttack("novice",0f);
                         SpellFx.CastBurst(swingCls, c, WorldFrame.FromWorld(at + Vector3.up * 1f), swingDir, text == "slash" ? 1.4f : 0.9f);
                     }
                     Sfx.Play("cast_swordsman", 0.45f, text == "na_dagger" ? 1.4f : 1.1f);

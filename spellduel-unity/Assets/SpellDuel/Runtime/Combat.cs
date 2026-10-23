@@ -1359,7 +1359,7 @@ namespace SpellDuel
                 return true;
             }
             f.cooldownUntil[s.id] = now + s.cooldown * f.basicCdMul * CdFactor(f);   // 普攻冷卻看敏捷（不是精神）
-            if (s.id == "na_sword" && SwordSlash(f, s, slashFrom, slashTo)) return true;
+            if (Skills.IsSwipeBasic(s) && SwordSlash(f, s, slashFrom, slashTo)) return true;   // 劍士、初心者：照刀線砍
             if (s.id == "na_dagger" && DaggerStab(f, s)) return true;
             MeleeSweep(f, s, Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now)));
             return true;
