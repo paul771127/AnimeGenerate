@@ -293,10 +293,37 @@ next = ember_toolbox
 [node ember_toolbox] 鐵匠的防火箱
 event = chest
 theme = volcano
-next = ember_cooling
+next = ember_sluice
 <enter>
 旁白：防火箱裡有備用護具與舊工簿，頁角壓著一張排煙圖。
 旁白：圖上註記：「冷卻池後有避火石龕，進爐前先讓傷者安置。」
+
+[node ember_sluice] 排渣水閘
+wave = 7
+theme = volcano
+next = ember_bellows
+<enter>
+旁白：水閘被爐渣堵住，黑晶的回音正從縫裡擠出來。
+<clear>
+旁白：爐渣崩落，水流帶走管壁上的黑晶粉。
+
+[node ember_bellows] 破風箱間
+wave = 8
+theme = volcano
+next = ember_ramp
+<enter>
+旁白：風箱每鼓動一次，通往冷卻池的火就升高一截。
+<clear>
+旁白：風箱停下，露出通往運料坡的石門。
+
+[node ember_ramp] 運料緩坡
+wave = 9
+theme = volcano
+next = ember_cooling
+<enter>
+旁白：沉重的鑄模沿坡滑落，魔物正守著坡頂的出口。
+<clear>
+旁白：坡道清空，冷卻池的水聲終於蓋過敲門聲。
 
 [node ember_cooling] 冷卻池
 wave = 9
@@ -389,10 +416,46 @@ next = mist_casket
 [node mist_casket] 碑亭的防潮匣
 event = chest
 theme = forest
-next = mist_roots
+next = mist_stones
 <enter>
 旁白：防潮匣收著巡林護具，也保存著從腐根旁拾回的刻字拓片。
 旁白：匣蓋註明：「只取拓本，名牌留在林中。」
+
+[node mist_stones] 認字石階
+wave = 15
+theme = forest
+next = mist_bower
+<enter>
+旁白：石階上的舊字一半藏在苔下，腐根卻把它們當成傷口護著。
+<clear>
+旁白：苔下露出清晰的筆畫。走過這裡的人，也曾停下來認字。
+
+[node mist_bower] 落葉書亭
+wave = 16
+theme = forest
+next = mist_hollow
+<enter>
+旁白：書亭倒了半面牆，攤開的抄本仍壓在石頭下面。
+<clear>
+旁白：魔物散去，留下沒有被雨水沖掉的姓名。
+
+[node mist_hollow] 空心古木
+wave = 17
+theme = forest
+next = mist_ring
+<enter>
+旁白：古木裡傳來翻頁聲。黑晶學會了聲音，卻念不完一個名字。
+<clear>
+旁白：樹洞安靜下來，遠處的葉燈重新接成一線。
+
+[node mist_ring] 巡燈環道
+wave = 18
+theme = forest
+next = mist_roots
+<enter>
+旁白：舊燈架圍成一圈，根橋就在燈光最薄的缺口後。
+<clear>
+旁白：環道上的腐根退去，最後一盞燈照上根橋。
 
 [node mist_roots] 交纏的根橋
 wave = 19
@@ -473,9 +536,9 @@ next = sail_buoys, sail_breakwater
 wave = 24
 theme = sea
 next = sail_locker
-npc = sail_kaito, sail_achao
+npc = sail_kaito
 <enter>
-旁白：阿潮的腳卡在斷纜裡。海圖壓在高處，旁邊亮著海斗的信號燈。
+旁白：阿潮收回的舊浮標堆在灣口。海圖壓在高處，旁邊亮著海斗的信號燈。
 <clear>
 旁白：纜繩斷開，灣口的浪暫時退下，船具箱就在前方礁脊。
 
@@ -491,10 +554,55 @@ next = sail_locker
 [node sail_locker] 舊船具箱
 event = chest
 theme = sea
-next = sail_beacon
+next = sail_pools
 <enter>
 旁白：箱裡的備用索具仍可使用，防水布下壓著一張白帆號航圖的摹本。
 旁白：圖上的小燈記號指向高礁，並非那道呼救聲傳來的深溝。
+
+[node sail_pools] 潮池石道
+wave = 24
+theme = sea
+next = sail_anchor
+<enter>
+旁白：潮池間的石道仍可辨認，假求救聲卻總從另一邊傳來。
+<clear>
+旁白：池面恢復平靜，石道上的燈位刻痕露出水面。
+
+[node sail_anchor] 舊錨礁脊
+wave = 25
+theme = sea
+next = sail_wind
+<enter>
+旁白：一枚舊錨卡住礁縫，繩結朝著望港高礁的方向。
+<clear>
+旁白：礁脊清出一條窄路，回頭仍能看見船具箱。
+
+[node sail_wind] 穿風岩隙
+wave = 26
+theme = sea
+next = sail_marks
+<enter>
+旁白：風在岩隙裡吹成斷續的歌，黑晶把每個停頓都變成呼救。
+<clear>
+旁白：風穿過清空的岩隙，這次只剩海浪的聲音。
+
+[node sail_marks] 引水人刻線
+wave = 27
+theme = sea
+next = sail_steps
+<enter>
+旁白：礁壁的刻線標著退潮時辰。魔物聚在最後一道刻痕下。
+<clear>
+旁白：刻線盡頭指向上坡，沒有一條通往深溝。
+
+[node sail_steps] 高礁下的石階
+wave = 28
+theme = sea
+next = sail_beacon
+<enter>
+旁白：上坡石階被潮水磨得發亮，階頂就是望港高礁。
+<clear>
+旁白：石階上的魔物退去，港口的燈光從階頂照下。
 
 [node sail_beacon] 望港高礁
 wave = 29
@@ -528,16 +636,3 @@ reward = gold 700
 海斗：我在灣口守著信號。你到高處，我就知道這條回程還通著。
 <done>
 海斗：看見你的信號了！港燈與舊塔都在原位，別再跟著海裡的假光走。
-
-[npc sail_achao] 阿潮
-role = escort
-look = archer
-hp = 550
-until = sail_beacon
-<meet>
-阿潮：人老了，居然讓自家的纜繩絆住。{玩家}，借我一段穩當的路吧。
-阿潮：送我到望港高礁就行。到了石階，我自己回港，不往洞裡添亂。
-<safe>
-阿潮：腳踏到石階了。你去收拾那個假聲音，我回港把熱湯煨上。
-<die>
-阿潮：腳撐不住了……先往灣口撤！這回不逞強了。

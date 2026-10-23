@@ -620,6 +620,7 @@ namespace SpellDuel
             if (manualWaves) wave = queuedWave;
             else if (waveSeq != null && waveSeq.Length > 0) wave = waveSeq[Mathf.Min(seqIdx++, waveSeq.Length - 1)];
             else wave++;
+            dungeonSpawnOrdinal = 0;
             waveStartAt = now + delay;
             bossPending = false;
             if (IsBossWave && !bossAfterMinions) { waveToSpawn = 0; waveTotal = 1; }
@@ -687,7 +688,10 @@ namespace SpellDuel
             {
                 for (int k = 0; k < 2 && waveToSpawn > 0 && minions.Count < maxAlive; k++)
                 {
-                    var nm = SpawnMinion(edgePoint(), 0, PickMinionKind(), HpMul, DmgMul, SpeedMul);
+                    int ordinal = dungeonSpawnOrdinal++;
+                    var at = FixedDungeonSpawns ? DungeonSpawnPoint(ordinal) : edgePoint();
+                    int kind = FixedDungeonSpawns ? DungeonMinionKind(ordinal) : PickMinionKind();
+                    var nm = SpawnMinion(at, 0, kind, HpMul, DmgMul, SpeedMul);
                     if (Theme == CanyonTheme) StartCliffLeap(nm);   // 黃土山道：從崖頂跳進場內
                     waveToSpawn--;
                 }
@@ -761,7 +765,7 @@ namespace SpellDuel
         {
             bossSpawnedThisWave = true;
             int bossIndex = wave / BossEvery - 1;
-            var at = (bossPoint ?? edgePoint)();
+            var at = FixedDungeonSpawns ? DungeonSpawnPoint(0) : (bossPoint ?? edgePoint)();
             enemy.maxHp = Mathf.RoundToInt(bossBaseHp * (1f + 0.5f * bossIndex) * BossPartyMul * hpBoost * BoostHpMul * bossHpMul);
             enemy.hp = enemy.maxHp;
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
