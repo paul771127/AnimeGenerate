@@ -544,6 +544,8 @@ namespace SpellDuel
         public float rangedCountMul = 1f, meleeCountMul = 1f;
         /// <summary>遠程小怪：出手前的準備時間倍率、射出去的飛行速度倍率（故事第二章：準備 ×1.5、飛行 ×0.5）</summary>
         public float rangedWindupMul = 1f, rangedShotSpeedMul = 1f;
+        /// <summary>近戰小怪血量倍率；遠程小怪每次出手後多休息幾秒（故事第二章：近戰 ×0.7、遠程 +3 秒）</summary>
+        public float meleeHpMul = 1f, rangedRecoverAdd;
         /// <summary>同一波裡每批小怪之間多等幾秒（故事第三章 +5 秒）</summary>
         public float spawnGapAdd;
         float CountMixMul => RangedShare * rangedCountMul + (1f - RangedShare) * meleeCountMul;
@@ -696,7 +698,7 @@ namespace SpellDuel
                     int ordinal = dungeonSpawnOrdinal++;
                     var at = FixedDungeonSpawns ? DungeonSpawnPoint(ordinal) : edgePoint();
                     int kind = FixedDungeonSpawns ? DungeonMinionKind(ordinal) : PickMinionKind();
-                    var nm = SpawnMinion(at, 0, kind, HpMul, DmgMul, SpeedMul);
+                    var nm = SpawnMinion(at, 0, kind, HpMul * (IsRanged(kind) ? 1f : meleeHpMul), DmgMul, SpeedMul);
                     if (Theme == CanyonTheme) StartCliffLeap(nm);   // 黃土山道：從崖頂跳進場內
                     waveToSpawn--;
                 }
@@ -855,7 +857,7 @@ namespace SpellDuel
                     m.windupUntil = 0f;
                     MinionStrike(m, tgt, d);
                     // 出手後原地不動：一般 1 秒、虛空術士 3 秒、藤蔓術士在藤蔓消失前（3 秒）；衝鋒獸改由衝刺決定
-                    m.recoverUntil = kind == 8 || kind == 13 || kind == 14 ? 0f : now + (kind == 6 ? VoidStay : kind == 9 ? VineStay : MinionRecover);
+                    m.recoverUntil = kind == 8 || kind == 13 || kind == 14 ? 0f : now + (kind == 6 ? VoidStay : kind == 9 ? VineStay : MinionRecover) + (IsRanged(kind) ? rangedRecoverAdd : 0f);
                     if (kind == 6) m.teleportAt = now + VoidStay;                   // 停留完就瞬移
                     continue;
                 }

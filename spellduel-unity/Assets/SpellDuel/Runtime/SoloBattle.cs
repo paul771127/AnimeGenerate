@@ -1008,7 +1008,7 @@ namespace SpellDuel
                     if (pendingStage != null)
                     {
                         battle.stageEnemyMul = Battle.StoryEnemyMul(pendingStage.theme);   // 敵人數量：熔岩 0.5 → 每章 +0.1
-                        if (pendingStage.theme == 1 && pendingStage.id != "trial") { battle.enemyHpMul = 2f; battle.enemyDmgMul = 2f; battle.bossHpMul = 5f; battle.rangedWindupMul = 1.5f; battle.rangedShotSpeedMul = 0.5f; }   // 第二章：遠程小怪出手前準備 ×1.5、飛行速度 ×0.5   // 第二章森林：敵人血量、攻擊 ×2，Boss 血量 ×5（使用者要求）
+                        if (pendingStage.theme == 1 && pendingStage.id != "trial") { battle.enemyHpMul = 2f; battle.enemyDmgMul = 2f; battle.bossHpMul = 5f; battle.rangedWindupMul = 1.5f; battle.rangedShotSpeedMul = 0.5f; battle.meleeHpMul = 0.7f; battle.rangedRecoverAdd = 3f; }   // 第二章：遠程小怪出手前準備 ×1.5、飛行速度 ×0.5、每次出手後多休息 3 秒；近戰小怪血量 ×0.7   // 第二章森林：敵人血量、攻擊 ×2，Boss 血量 ×5（使用者要求）
                         if (pendingStage.theme == 2 && pendingStage.id != "trial") { battle.rangedCountMul = 0.5f; battle.meleeCountMul = 1.5f; battle.spawnGapAdd = 5f; }   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         ApplyNoviceRoute(pendingStage);   // 1-1～1-3：4m×4m 小場地；1-1、1-2 只有近戰小怪（SoloBattle.NoviceRoute.cs）
