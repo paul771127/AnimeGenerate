@@ -638,8 +638,9 @@ namespace SpellDuel
             Part(PrimitiveType.Cylinder,roll,new Vector3(-.054f,0,0),new Vector3(.023f,.002f,.023f),leather,new Vector3(0,0,90));
             baseR=new Arm(5f,13f,-27f,-5f);baseL=new Arm(-5f,15f,-23f,4f);
             swingR=.44f;swingL=.72f;
-            chargeR=new Arm(-105f,28f,-86f,-10f);chargeL=new Arm(-42f,-12f,-48f,0f);
-            castR=new Arm(-66f,-18f,-12f,38f);castL=new Arm(-22f,18f,-35f,0f);
+            chargeR=baseR;chargeL=new Arm(-105f,28f,-86f,-10f);
+            castR=baseR;castL=new Arm(-66f,-18f,-12f,38f);
+            castMaskL=1f;castMaskR=.15f; // Throw with the free hand; keep the branch gripped in the right.
             guardL=new Arm(-55f,-12f,-70f,0f);guardR=new Arm(-42f,17f,-62f,0f);
         }
 
