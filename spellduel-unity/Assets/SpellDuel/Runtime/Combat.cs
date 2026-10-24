@@ -116,6 +116,7 @@ namespace SpellDuel
         public float leapStart, leapEnd; public Vector3 leapFrom, leapTo;   // 黃土山道：從崖頂跳進場內（leapEnd＞0＝還在崖上／跳躍中）
         public int minionKind;                 // 0 近戰小鬼、1 火焰射手、2 岩石衝鋒獸、3 自爆小鬼、4 岩石投擲者、5 熔岩狙擊手
         public float recoverUntil;             // 小怪出手後原地不動到這個時間（1 秒）
+        public float restUntil;                // 浮空／飛行的小怪出手後：降到場內地上休息到這個時間（近戰打得到），之後才飛回空中
         public bool repositionNext;            // 遠程小怪：出手後（站定結束）要先隨機換個位置才能再出手
         public Vector3 moveTo; public float moveUntil;   // 換位置的目的地、最晚走到什麼時候
         public float dmgMul = 1f, speedMul = 1f;   // 無盡模式：越後面的波次越強
@@ -913,6 +914,14 @@ namespace SpellDuel
                     else DashStep(m, dt);
                     continue;
                 }
+                // 浮空／飛行的小怪（海鳥、雷電水母、河豚）出手後：降到場內地上休息 AirRest 秒（這時候近戰打得到），休息完才回到空中
+                if (m.restUntil > now)
+                {
+                    if (m.alt > 0f) { m.alt = Mathf.Max(0f, m.alt - AirLandSpeed * dt); m.head.y = MinionHead[kind] + m.alt; }
+                    continue;
+                }
+                if ((kind == 17 || kind == 18) && m.windupUntil <= 0f && m.alt < BaseAlt(kind))
+                { m.alt = Mathf.Min(BaseAlt(kind), m.alt + 0.8f * dt); m.head.y = MinionHead[kind] + m.alt; }   // 休息完慢慢浮回原本的高度
                 // 海鳥：俯衝完飛回空中；平常在玩家上空 4～6m 繞圈
                 if (kind == 14 && m.windupUntil <= 0f)
                 {
@@ -933,6 +942,7 @@ namespace SpellDuel
                     if (now < m.windupUntil) continue;   // 預備中站著不動
                     m.windupUntil = 0f;
                     MinionStrike(m, tgt, d);
+                    if (kind == 17 || kind == 18) { LandToRest(m); continue; }   // 浮空的：出手後降到地上休息
                     // 出手後原地不動：一般 1 秒、虛空術士 3 秒、藤蔓術士在藤蔓消失前（3 秒）；衝鋒獸改由衝刺決定
                     m.recoverUntil = kind == 8 || kind == 13 || kind == 14 ? 0f : now + (kind == 6 ? VoidStay : kind == 9 ? VineStay : MinionRecover) + (IsRanged(kind) ? rangedRecoverAdd : 0f);
                     if (kind == 6) m.teleportAt = now + VoidStay;                   // 停留完就瞬移
@@ -2455,7 +2465,23 @@ namespace SpellDuel
                 Emit("splash", m.Feet, Skills.All["m_leap"].color, null);
                 m.recoverUntil = now + 1.5f;
             }
-            else m.recoverUntil = now + (kind == 14 ? 0.2f : MinionRecover);   // 海鳥：馬上飛回空中
+            else if (kind == 14) LandToRest(m);   // 海鳥：俯衝完落到場內地上休息，再飛回空中
+            else m.recoverUntil = now + MinionRecover;
+        }
+
+        /// <summary>浮空／飛行的小怪出手後降落的休息時間（秒）、降落速度（公尺／秒）</summary>
+        public const float AirRest = 3f, AirLandSpeed = 3f;
+        /// <summary>降到場內地上休息：在場外就先拉回場內最近的地方</summary>
+        void LandToRest(Fighter m)
+        {
+            if (minionInside != null && !minionInside(m.Feet))
+            {
+                var p = m.Feet;
+                for (int i = 0; i < 40 && !minionInside(p); i++) p = Vector3.MoveTowards(p, Vector3.zero, 0.15f);   // 往場地中心拉
+                m.head = new Vector3(p.x, m.head.y, p.z);
+            }
+            m.restUntil = now + AirRest; m.recoverUntil = m.restUntil;
+            Emit("minionland", m.Feet, Color.white, null);
         }
 
         void DashStep(Fighter m, float dt)
