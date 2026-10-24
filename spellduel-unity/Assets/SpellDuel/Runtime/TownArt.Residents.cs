@@ -41,7 +41,7 @@ namespace SpellDuel
             // 居民不播放臉部動畫；停用閉眼線的物件，避免靜態合批把隱藏線烘焙成可見。
             // Eyes/brows stay articulated; HumanExpressionMotion also drives residents.
             AnimeFace.Hair(face,key,persona,hair);HeadwearArt.Build(face,key,persona);
-            if(elder)for(int s=-1;s<=1;s+=2)AnimeFace.Detail(face,key,persona,new Vector2(s*.093f,-.006f),new Vector2(s*.110f,-.017f),.002f,C("ac6c56"));
+            // Age creases follow the shared eye/nose coordinates in AnimeFace.Build.
             switch(key)
             {
                 case "艾琳":
@@ -54,7 +54,7 @@ namespace SpellDuel
                     var cane=Group(p,"Walking staff",new Vector3(.33f,.80f,.11f));
                     Beam(cane,"Cane shaft",new Vector3(.04f,-.76f,0),new Vector3(0,.29f,0),.028f,C("554333"));Beam(cane,"Curved cane crook",new Vector3(0,.29f,0),new Vector3(-.06f,.36f,0),.028f,C("554333"));Beam(cane,"Curved cane handle",new Vector3(-.06f,.36f,0),new Vector3(-.10f,.32f,0),.028f,C("554333"));break;
                 case "小鐵":
-                    ResidentBox(p,"Soot cheek",new Vector3(-.12f,1.43f,.18f),new Vector3(.04f,.014f,.01f),C("6c6056"));break;
+                    AnimeFace.Detail(face,key,persona,new Vector2(-.075f,-.047f),new Vector2(-.057f,-.050f),.002f,C("6c6056"));break;
                 case "米菈":
                     ResidentBox(p,"Merchant backpack",new Vector3(0,1.03f,-.26f),new Vector3(.44f,.57f,.27f),C("8d7251"));
                     var roll=Cyl(p,"Rolled blanket",new Vector3(0,1.36f,-.26f),new Vector3(.18f,.28f,.18f),Cream);roll.transform.localRotation=Quaternion.Euler(0,0,90);
@@ -65,9 +65,9 @@ namespace SpellDuel
                 case "楓":
                     ResidentBox(p,"Leaf lamp frame",new Vector3(-.3f,.76f,.13f),new Vector3(.14f,.20f,.12f),Gold);
                     ResidentBox(p,"Leaf lamp paper",new Vector3(-.3f,.76f,.20f),new Vector3(.10f,.14f,.02f),C("d9ee87"));Leaf(p,new Vector3(-.3f,.9f,.14f),.1f,C("7ebf78"),15);
-                    AnimeFace.Detail(face,key,persona,new Vector2(.100f,-.025f),new Vector2(.110f,-.055f),.002f,C("ac6c56"));break;
+                    AnimeFace.Detail(face,key,persona,new Vector2(.072f,-.042f),new Vector2(.081f,-.060f),.002f,C("ac6c56"));break;
                 case "小葉":
-                    for(int s=-1;s<=1;s+=2){Ball(p,"Rosy cheek",new Vector3(s*.12f,1.445f,.184f),new Vector3(.045f,.024f,.01f),C("e99786"));}
+                    // Shared soft blush is fitted to the face, including the child.
                     break;
                 case "海斗":
                     Beam(p,"Anchor shank",new Vector3(.10f,1.27f,.15f),new Vector3(.10f,1.15f,.15f),.012f,Gold);
@@ -88,7 +88,7 @@ namespace SpellDuel
                     break;
                 case "公會長":
                     for(int i=-1;i<=1;i++)BellPin(p,new Vector3(i*.08f,1.13f,.20f),.065f);
-                    AnimeFace.Detail(face,key,persona,new Vector2(.100f,-.025f),new Vector2(.110f,-.061f),.002f,C("a96861"));break;
+                    AnimeFace.Detail(face,key,persona,new Vector2(.072f,-.042f),new Vector2(.081f,-.060f),.002f,C("a96861"));break;
             }
             FacilityResidentProps(key,p,face);
             // Facial accessories share the fitted head frame rather than remaining full-size.
@@ -128,7 +128,28 @@ namespace SpellDuel
             foreach(var tf in articulated){parents.Add(tf.parent);tf.SetParent(null,false);}
             neck.SetParent(null,false);chest.SetParent(null,false);Batch(p);Batch(chest);Batch(neck);chest.SetParent(p,false);neck.SetParent(chest,false);
             for(int i=0;i<articulated.Count;i++)articulated[i].SetParent(parents[i],false);
-            motion.Tick(0);HumanProportions.NormalizeProjected(face,key,root);FitStoryHeight(face,key,root,height);StoryResidentProps(key,p);if(idleArt){ResidentActionProps(key,p);motion.BindActionArt();}return root.gameObject;
+            motion.Tick(0);HumanProportions.NormalizeProjected(face,key,root);FitStoryHeight(face,key,root,height);FitFaceBeard(face,key,persona);AnimeFace.AlignOval(face);StoryResidentProps(key,p);if(idleArt){ResidentActionProps(key,p);motion.BindActionArt();}return root.gameObject;
+        }
+        static void FitFaceBeard(Transform face,string key,Portraits.Persona persona)
+        {
+            if(key!="老焰")return;
+            var plan=new Portraits.FacePlan(persona);
+            for(int i=0;i<face.childCount;i++)
+            {
+                var part=face.GetChild(i);
+                if(part.gameObject.name=="Moustache")
+                {
+                    float x=part.localPosition.x<0?-.026f:.026f,y=plan.MouthY+.006f;
+                    part.localPosition=new Vector3(x,y,AnimeFace.Surface(x,y,persona)+.010f);
+                    part.localScale=new Vector3(.060f,.018f,.020f);
+                }
+                else if(part.gameObject.name=="Pointed beard")
+                {
+                    float y=plan.MouthY-.008f;
+                    part.localPosition=new Vector3(0,y,AnimeFace.Surface(0,y,persona)-.013f);
+                    part.localScale=new Vector3(.60f,part.localScale.y,.55f);
+                }
+            }
         }
         static void DressResident(Transform p,string id,Color skin)
         {

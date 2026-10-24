@@ -13,7 +13,7 @@ namespace SpellDuel
                 foreach(var v in f.sharedMesh.vertices)top=Mathf.Max(top,m.MultiplyPoint3x4(v).y);
             }
             var mx=actor.worldToLocalMatrix*face.localToWorldMatrix;
-            foreach(var v in AnimeFace.Head(Portraits.PersonaFor(id),id).vertices){var w=mx.MultiplyPoint3x4(v);chin=Mathf.Min(chin,w.y);lo=Mathf.Min(lo,w.x);hi=Mathf.Max(hi,w.x);}
+            foreach(var v in AnimeFace.FittingVertices(Portraits.PersonaFor(id))){var w=mx.MultiplyPoint3x4(v);chin=Mathf.Min(chin,w.y);lo=Mathf.Min(lo,w.x);hi=Mathf.Max(hi,w.x);}
             float heads=id=="小葉"?4.8f:id=="艾琳"?6.2f:id=="凪"?6.4f:id=="翠"?5.6f:id=="老焰"?7.1f:id=="海斗"?6.9f:6.6f;
             float sy=(height/heads)/(top-chin),width=id=="小葉"?.175f:id=="翠"?.175f:.185f;
             var scale=face.localScale;scale.x*=width/(hi-lo);scale.y*=sy;scale.z*=sy;face.localScale=scale;

@@ -7,7 +7,7 @@ namespace SpellDuel
         internal static void Extents(string id,Portraits.Persona p,out float chin,out float top,out float width)
         {
             chin=1;top=-1;float lo=1,hi=-1;
-            var skull=AnimeFace.Head(p,id).vertices;for(int i=0;i<skull.Length;i++){chin=Mathf.Min(chin,skull[i].y);top=Mathf.Max(top,skull[i].y);lo=Mathf.Min(lo,skull[i].x);hi=Mathf.Max(hi,skull[i].x);}
+            var skull=AnimeFace.FittingVertices(p);for(int i=0;i<skull.Length;i++){chin=Mathf.Min(chin,skull[i].y);top=Mathf.Max(top,skull[i].y);lo=Mathf.Min(lo,skull[i].x);hi=Mathf.Max(hi,skull[i].x);}
             var hair=HeadwearArt.HairFor(id,p).vertices;for(int i=0;i<hair.Length;i++)top=Mathf.Max(top,hair[i].y);width=hi-lo;
         }
         internal static void Fit(Transform head,string id,float height,float actorScale=1)
@@ -39,7 +39,7 @@ namespace SpellDuel
             float target=id=="小葉"?top/5f:Mathf.Clamp(top/6.75f,.245f,.260f);
             float before=Envelope(head,actor);head.localScale*=target/(top-chin);
             // Match projected adult skull width as well as height; retain jaw/cheek geometry.
-            var skull=AnimeFace.Head(p,id).vertices;var mx=actor.worldToLocalMatrix*head.localToWorldMatrix;float lo=10,hi=-10;
+            var skull=AnimeFace.FittingVertices(p);var mx=actor.worldToLocalMatrix*head.localToWorldMatrix;float lo=10,hi=-10;
             for(int i=0;i<skull.Length;i++){float x=mx.MultiplyPoint3x4(skull[i]).x;lo=Mathf.Min(lo,x);hi=Mathf.Max(hi,x);}
             var scale=head.localScale;scale.x*=(id=="小葉"?.190f:.198f)/(hi-lo);head.localScale=scale;
             float after=Envelope(head,actor);
@@ -47,7 +47,7 @@ namespace SpellDuel
         }
         static void Projected(Transform head,string id,Portraits.Persona p,Transform actor,out float top,out float chin)
         {
-            top=-10;chin=10;var m=actor.worldToLocalMatrix*head.localToWorldMatrix;var skull=AnimeFace.Head(p,id).vertices;
+            top=-10;chin=10;var m=actor.worldToLocalMatrix*head.localToWorldMatrix;var skull=AnimeFace.FittingVertices(p);
             float localChin=10;for(int i=0;i<skull.Length;i++){var v=m.MultiplyPoint3x4(skull[i]);chin=Mathf.Min(chin,v.y);top=Mathf.Max(top,v.y);localChin=Mathf.Min(localChin,skull[i].y);}
             var hair=HeadwearArt.HairFor(id,p).vertices;for(int i=0;i<hair.Length;i++)if(hair[i].y>=localChin)top=Mathf.Max(top,m.MultiplyPoint3x4(hair[i]).y);
         }

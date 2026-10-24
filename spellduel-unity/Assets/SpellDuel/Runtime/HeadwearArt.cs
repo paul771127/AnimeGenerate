@@ -66,7 +66,7 @@ namespace SpellDuel
             else if(id=="凪")b.Seam(new Vector3(-.145f,.145f,-.14f),new Vector3(-.045f,.205f,-.14f),.009f,gold);
             else
             {
-                float x=id=="翠"?0:.105f,y=seat+.005f,z=AnimeFace.Surface(x,y,p)+.015f;
+                float x=id=="翠"?0:.105f,y=seat+.005f,z=AnimeFace.HairSeat(x,y,p)+.015f;
                 Ellipsoid(b,new Vector3(x,y,z),new Vector3(.030f,.013f,.009f),id=="翠"?CharacterLook.Hex("70e38c"):CharacterLook.Hex("b5ed60"));
                 b.Seam(new Vector3(x-.024f,y-.004f,z+.006f),new Vector3(x+.024f,y+.004f,z+.006f),.004f,gold);
             }
@@ -108,7 +108,7 @@ namespace SpellDuel
                     float px=(x+.5f)/W*.68f-.34f,py=(y+.5f)/H*.56f-.16f,u=((b.y-c.y)*(px-c.x)+(c.x-b.x)*(py-c.y))/den,v=((c.y-a.y)*(px-c.x)+(a.x-c.x)*(py-c.y))/den,w=1-u-v;
                     if(u<0||v<0||w<0)continue;float z=u*a.z+v*b.z+w*c.z;int k=y*W+x;if(z<=depth[k])continue;
                     // Hair genuinely in front of the brim (bangs) remains visible below the fitted seat.
-                    if(((py<seat-.012f&&Mathf.Abs(px)<.14f)||(id=="艾琳"&&Mathf.Abs(px)<.163f&&py<.184f&&py>-.16f))&&z<AnimeFace.Surface(px,py,p)+(id=="艾琳"?.002f:0))continue;
+                    if(((py<seat-.012f&&Mathf.Abs(px)<.14f)||(id=="艾琳"&&Mathf.Abs(px)<.163f&&py<.184f&&py>-.16f))&&z<AnimeFace.HairSeat(px,py,p)+(id=="艾琳"?.002f:0))continue;
                     depth[k]=z;var ca=cs[ts[t]];var cb=cs[ts[t+1]];var cc=cs[ts[t+2]];image[k]=new Color32((byte)(Mathf.Clamp01(ca.r*u+cb.r*v+cc.r*w)*255),(byte)(Mathf.Clamp01(ca.g*u+cb.g*v+cc.g*w)*255),(byte)(Mathf.Clamp01(ca.b*u+cb.b*v+cc.b*w)*255),255);
                 }
             }

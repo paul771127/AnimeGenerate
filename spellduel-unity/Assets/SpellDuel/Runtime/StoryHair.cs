@@ -43,7 +43,7 @@ namespace SpellDuel
             for(int i=0;i<4;i++)
             {
                 float x=(i-1.5f)*.064f,y=(id=="老焰"?.105f:.038f)+(i%2)*.012f;float root=look.Part*.035f;
-                Lock(m,new Vector3(root+x*.22f,.155f,.06f),new Vector3(x*.6f,.135f,.17f),new Vector3(x,.075f,.177f),new Vector3(x+(i<2?-.012f:.012f),y,AnimeFace.Surface(x,y,p)+.012f),.041f,.021f,i%2==0?.96f:1.02f);
+                Lock(m,new Vector3(root+x*.22f,.155f,.06f),new Vector3(x*.6f,.135f,.17f),new Vector3(x,.075f,.177f),new Vector3(x+(i<2?-.012f:.012f),y,AnimeFace.HairSeat(x,y,p)+.012f),.041f,.021f,i%2==0?.96f:1.02f);
             }
             for(int side=-1;side<=1;side+=2)for(int tier=0;tier<2;tier++)
             {

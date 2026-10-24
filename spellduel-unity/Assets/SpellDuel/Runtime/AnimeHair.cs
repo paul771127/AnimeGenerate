@@ -71,7 +71,7 @@ namespace SpellDuel
                 if(kind==CharacterLook.HairKind.SidePart||kind==CharacterLook.HairKind.LongSide)y-=.026f*(look.Part<0?u:1-u);
                 if(kind==CharacterLook.HairKind.Straight)y=.065f+(i%2)*.009f;
                 if(crew)y=.132f+(i%2)*.012f;if(slick)y=.115f;
-                Lock(v,tri,colors,new Vector3(root+(x-root)*.2f,.153f,.052f),new Vector3(x*.70f+root*.3f,.123f,.158f),new Vector3(x,y,AnimeFace.Surface(x,y,p)+.009f),crew?.015f:.025f+(i%2)*.004f,.010f,i%3==0?.80f:1,.25f*(i%2==0?1:-1));
+                Lock(v,tri,colors,new Vector3(root+(x-root)*.2f,.153f,.052f),new Vector3(x*.70f+root*.3f,.123f,.158f),new Vector3(x,y,AnimeFace.HairSeat(x,y,p)+.009f),crew?.015f:.025f+(i%2)*.004f,.010f,i%3==0?.80f:1,.25f*(i%2==0?1:-1));
             }
             if(!crew)for(int side=-1;side<=1;side+=2)for(int tier=0;tier<2;tier++)
             {

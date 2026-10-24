@@ -47,7 +47,7 @@ namespace SpellDuel
                 eye.localPosition=new Vector3(eye.localPosition.x,plan.EyeY-plan.EyeHeight*.485f*close,.118f);
             }
             for(int i=0;i<lids.Length;i++)if(lids[i]!=null)lids[i].enabled=Visible&&close>.65f;
-            for(int i=0;i<features.Lids.Count;i++){var lidTf=features.Lids[i];lidTf.localPosition=new Vector3(lidTf.localPosition.x,.037f-plan.EyeHeight*.45f*close,.122f);}
+            for(int i=0;i<features.Lids.Count;i++){var lidTf=features.Lids[i];lidTf.localPosition=new Vector3(lidTf.localPosition.x,plan.EyeY+.024f-plan.EyeHeight*.45f*close,.122f);}
             for(int i=0;i<browOrigins.Length;i++)
             {
                 float side=i==0?-1:1,asym=HumanPersonality.For(identity)==HumanPersonality.Temper.Cunning&&i==1?3:0;
@@ -59,7 +59,8 @@ namespace SpellDuel
             if(CurrentState==2)open=HumanPersonality.For(identity)==HumanPersonality.Temper.Fierce?.30f:HumanPersonality.For(identity)==HumanPersonality.Temper.Shy?.18f:0;
             if(CurrentState==3)open=Mathf.Max(open,.65f);
             if(hit>0)open=.22f;
-            features.Mouth.localScale=new Vector3(plan.MouthWidth,Mathf.Max(.0005f,plan.MouthWidth*.60f*open),.003f);
+            float mouthHeight=Mathf.Max(.0005f,plan.MouthWidth*.60f*open);
+            features.Mouth.localScale=new Vector3(plan.MouthWidth,mouthHeight,mouthHeight);
             mouthRenderer.enabled=teethRenderer.enabled=Visible&&!down&&open>.01f;
             lipRenderer.enabled=Visible&&open<.10f;
             transform.localRotation=headRest*Quaternion.Euler(0,Glance*4*(1-combat),Micro*.5f*(1-combat));lastTime=t;

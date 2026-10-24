@@ -94,10 +94,10 @@ namespace SpellDuel
         internal struct Persona
         {
             internal float Width,Jaw,Length,Eye,Tilt,Gaze,Brow,Asym,Smile,Open,Pitch,Yaw,Roll,Lean,Lid,Pupil;
-            internal bool Story,SoftNose;
+            internal bool Story,SoftNose,Masculine,Elder;
             internal Persona(float width,float jaw,float length,float eye,float tilt,float gaze,float brow,float asym,float smile,float open,float pitch,float yaw,float roll,float lean,float lid=0,float pupil=1)
             {
-                Story=SoftNose=false;
+                Story=SoftNose=Masculine=Elder=false;
                 // 在正常人類比例內保留個性，不再用極端縮眼或歪頭區分角色。
                 Width=Clamp(width,.95f,1.05f);Jaw=Clamp(jaw,.94f,1.06f);Length=Clamp(length,.95f,1.05f);
                 Eye=Clamp(eye,.85f,1.15f);Tilt=Clamp(tilt,-6,6);Gaze=Clamp(gaze,-.22f,.22f);
@@ -110,19 +110,24 @@ namespace SpellDuel
         // 共用解剖基準；3D 與頭像皆由此換算，單位與戰鬥頭模相同。
         internal struct FacePlan
         {
-            internal float Top,Chin,EyeY,EyeX,EyeWidth,EyeHeight,NoseY,MouthY,MouthWidth,BrowY,EarTop,EarBottom;
+            internal float FaceWidth,Hairline,Top,Chin,EyeY,EyeX,EyeWidth,EyeHeight,NoseY,MouthY,MouthWidth,BrowY,EarTop,EarBottom;
             internal FacePlan(Persona p)
             {
-                Top=.157f*p.Length;Chin=-Top;EyeY=.013f;float d=EyeY-Chin;
-                EyeX=.056f*p.Width;EyeWidth=.057f*p.Width;EyeHeight=EyeWidth*(.66f+(p.Eye-1)*.10f);
-                NoseY=EyeY-.50f*d;MouthY=EyeY-.70f*d;MouthWidth=EyeX*2*.65f;
-                if(p.Story){EyeWidth*=1.40f;EyeHeight*=1.20f;MouthWidth*=.65f;}
-                BrowY=EyeY+EyeHeight*1.1f;EarTop=BrowY;EarBottom=NoseY;
+                Top=.157f*p.Length;Chin=-Top;Hairline=.123f*p.Length;float height=Hairline-Chin;
+                FaceWidth=.206f*p.Length*Lerp(.984f,1.012f,(p.Width-.95f)/.10f);
+                EyeY=Chin+height*.465f;EyeWidth=FaceWidth*.25f;EyeX=EyeWidth;
+                EyeHeight=EyeWidth*(p.Elder?.47f:p.Masculine?.55f:.70f+(p.Eye-1)*.15f);
+                NoseY=Chin+height*.30f;MouthY=Chin+height*.17f;MouthWidth=EyeWidth*.60f;
+                BrowY=EyeY+height*.07f;EarTop=BrowY;EarBottom=NoseY;
+
             }
         }
         internal static Persona PersonaFor(string key)
         {
-            var p=BasePersonaFor(key);HumanPersonality.Apply(ref p,Key(key));p.Story=StoryCostume.Has(Key(key))||Key(key)=="澪";p.SoftNose=Key(key)=="艾琳"||Key(key)=="凪"||Key(key)=="小葉"||Key(key)=="澪";if(p.Story)p.Open*=.15f;return p;
+            var p=BasePersonaFor(key);HumanPersonality.Apply(ref p,Key(key));p.Story=StoryCostume.Has(Key(key))||Key(key)=="澪";p.SoftNose=Key(key)=="艾琳"||Key(key)=="凪"||Key(key)=="小葉"||Key(key)=="澪";if(p.Story)p.Open*=.15f;
+            string id=Key(key);p.Elder=id=="老焰"||id=="阿潮"||id=="公會長"||id=="塔守";
+            p.Masculine=p.Elder||id=="海斗"||id=="小鐵"||id=="鐵匠"||id=="教官"||id=="swordsman"||id=="paladin"||id=="inquisitor";
+            return p;
         }
         static Persona BasePersonaFor(string key)
         {
@@ -385,23 +390,15 @@ namespace SpellDuel
             float et=plan.EarTop*3+.09f,eb=plan.EarBottom*3+.09f;
             for(int side=-1;side<=1;side+=2)
             {
-                float ex=side*(.14f*p.Width+.007f)*3;
+                float ex=side*(plan.FaceWidth*.5f+.006f)*3;
                 if(elf)cv.Poly(skin,ex-side*.04f,et,ex+side*.09f,(et+eb)*.5f+.04f,ex,eb);
-                else cv.Oval(ex,(et+eb)*.5f,.055f,(et-eb)*.5f,skin);
+                else cv.Oval(ex,(et+eb)*.5f,.042f,(et-eb)*.5f,skin);
             }
-            if(p.Story)
-            {
-                var vertices=AnimeFace.Head(p,cv.identity).vertices;var outline=new List<float>();
-                for(int row=22;row>=0;row--){var v=vertices[row*25+6];outline.Add(-Math.Abs(v.x)*3);outline.Add(v.y*3+.09f);}
-                for(int row=0;row<=22;row++){var v=vertices[row*25+6];outline.Add(Math.Abs(v.x)*3);outline.Add(v.y*3+.09f);}
-                cv.Face(skin,outline.ToArray());
-            }
-            else
-                cv.Face(skin,-.32f*p.Width,.46f,-fw*.95f,.23f,-fw,.06f,-jaw,plan.MouthY*3+.09f,-.15f,chin+.055f,-plan.MouthWidth*1.5f,chin,plan.MouthWidth*1.5f,chin,.15f,chin+.055f,jaw,plan.MouthY*3+.09f,fw,.06f,fw*.95f,.23f,.32f*p.Width,.46f,0,plan.Top*3+.09f);
+            cv.Face(skin,AnimeFace.Outline(p));
             for(int side=-1;side<=1;side+=2)cv.DrawEye(side,plan);
             float noseY=plan.NoseY*3+.09f,mouthY=plan.MouthY*3+.09f,mw=plan.MouthWidth*1.5f;
             if(!p.SoftNose)cv.Oval(.006f,noseY+.023f,.009f,.012f,Paint.Mix(skin,White,.20f),0);
-            cv.Line(-.012f,noseY,.003f,noseY-.003f,.003f,Paint.Mix(skin,Paint.Hex("#A45E50"),.38f));
+            cv.Line(-.0105f,noseY,.0045f,noseY-.0021f,.0024f,Paint.Mix(skin,Paint.Hex("#A45E50"),.38f));
             if(p.Open>0){float mh=plan.MouthWidth*.9f*p.Open;cv.Oval(0,mouthY,mw,mh,Paint.Hex("#74363F"),.003f);cv.Oval(0,mouthY+mh*.46f,mw*.72f,mh*.15f,White,0);}
             else
             {
@@ -417,10 +414,17 @@ namespace SpellDuel
             for(int side=-1;side<=1;side+=2)
             {
                 float inner=side*(plan.EyeX-plan.EyeWidth*.5f)*3,outer=inner+side*plan.EyeWidth*3.3f;
-                float by=plan.BrowY*3+.09f+(side>0?p.Asym*.0018f:0),bend=p.Brow*.0174533f*plan.EyeWidth*3;
-                cv.Line(inner,by,side*plan.EyeX*3,by+.0045f+bend*.5f,p.Story?.006f:elder?.014f:.010f,hair);
-                cv.Line(side*plan.EyeX*3,by+.0045f+bend*.5f,outer,by+bend,p.Story?.005f:elder?.012f:.008f,hair);
-                if(elder){cv.Line(side*.29f,.11f,side*.33f,.09f,.004f,skin*.65f);cv.Line(side*.28f,.07f,side*.31f,.05f,.004f,skin*.65f);}
+                float by=plan.BrowY*3+.09f+(side>0?p.Asym*.0018f:0),bend=(p.Masculine?0:p.Brow*.35f-1)*.0174533f*plan.EyeWidth*3;
+                cv.Line(inner,by,side*plan.EyeX*3,by+.0045f+bend*.5f,p.Elder?.0135f:p.Masculine?.009f:.0048f,hair);
+                cv.Line(side*plan.EyeX*3,by+.0045f+bend*.5f,outer,by+bend,p.Elder?.012f:p.Masculine?.0084f:.0042f,hair);
+                float cx=side*plan.EyeX*3.66f,cy=(plan.EyeY-plan.EyeHeight*.72f)*3+.09f;
+                cv.Fill((u,v)=>OvalD(u,v,cx,cy,.051f,.021f),Paint.Mix(skin,Paint.Hex("#f27385"),.06f));
+                if(p.Elder)
+                {
+                    var crease=Paint.Mix(skin,Paint.Hex("#875048"),.30f);
+                    cv.Line(side*(plan.EyeX-.018f)*3,(plan.EyeY-.012f)*3+.09f,side*(plan.EyeX+.022f)*3,(plan.EyeY-.014f)*3+.09f,.0027f,crease);
+                    cv.Line(side*.048f,noseY-.012f,side*.066f,mouthY+.003f,.0024f,crease);
+                }
             }
             cv.Hair(true);
         }

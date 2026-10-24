@@ -116,7 +116,7 @@ namespace SpellDuel
             foreach(var lid in upperLids)lidInk.AddRange(lid.GetComponentsInChildren<Renderer>());
             // 耳廓由共用比例建立，職業耳飾跟隨新的耳垂高度。
             var plan=new Portraits.FacePlan(p);
-            Gem(head,new Vector3(-(.14f*p.Width+.016f),plan.EarBottom-.010f,-.01f),.017f,clsColor);
+            Gem(head,new Vector3(-(plan.FaceWidth*.5f+.015f),plan.EarBottom-.010f,-.01f),.017f,clsColor);
         }
 
         // Unit sphere/capsule surfaces, shared by every accessory. Pole triangles are not duplicated.
@@ -379,9 +379,9 @@ namespace SpellDuel
         void BuildPersonaClothing()
         {
             AnimeFace.Hair(head,advancedId??classId,facePersona,CharacterLook.Get(advancedId??classId).HairColor);
-            if(advancedId=="berserker")AnimeFace.Detail(head,advancedId,facePersona,new Vector2(.100f,-.025f),new Vector2(.109f,-.058f),.003f,new Color(.63f,.22f,.20f));
-            if(advancedId=="shadowdancer")for(int side=-1;side<=1;side+=2)AnimeFace.Detail(head,advancedId,facePersona,new Vector2(side*.082f,.019f),new Vector2(side*.095f,.026f),.003f,EyeCol);
-            if(advancedId=="bishop")for(int side=-1;side<=1;side+=2)AnimeFace.Detail(head,advancedId,facePersona,new Vector2(side*.093f,-.006f),new Vector2(side*.106f,-.018f),.002f,Mul(Skin,.70f));
+            if(advancedId=="berserker")AnimeFace.Detail(head,advancedId,facePersona,new Vector2(.073f,-.039f),new Vector2(.079f,-.062f),.003f,new Color(.63f,.22f,.20f));
+            if(advancedId=="shadowdancer")for(int side=-1;side<=1;side+=2)AnimeFace.Detail(head,advancedId,facePersona,new Vector2(side*.070f,-.024f),new Vector2(side*.079f,-.018f),.003f,EyeCol);
+            if(advancedId=="bishop")for(int side=-1;side<=1;side+=2)AnimeFace.Detail(head,advancedId,facePersona,new Vector2(side*.065f,-.044f),new Vector2(side*.080f,-.049f),.002f,Mul(Skin,.70f));
         }
 
         void AnimateDetails(float cast, float hurt)
@@ -531,7 +531,7 @@ namespace SpellDuel
 
             // Measure in the relaxed stance, so a crouched assassin is not fitted as a shorter adult.
             combatAmount=0;InCombat=false;Animate(0f);
-            HumanProportions.NormalizeProjected(head,advancedId??classId,transform);
+            HumanProportions.NormalizeProjected(head,advancedId??classId,transform);AnimeFace.AlignOval(head);
             InCombat=true;combatAmount=1;Animate(0f);
         }
 

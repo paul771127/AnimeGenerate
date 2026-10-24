@@ -1,0 +1,1654 @@
+{
+  "method": "Actual procedural meshes executed under offline Unity API contracts; physical axis scale retained in head-relative front/45 projections. Not Unity or AR captures.",
+  "baseline": "99847c3",
+  "actors": 41,
+  "statesPerActor": 5,
+  "sampledPoints": 80883,
+  "headTriangles": 2064,
+  "unchangedBodyMeshes": 452,
+  "unchangedHairAndHatMeshes": 57,
+  "actorsMeasured": [
+    {
+      "id": "novice",
+      "fighter": true,
+      "headPosition": [
+        -3.375858e-05,
+        0.122371554,
+        -5.4618344e-05
+      ],
+      "headScale": [
+        0.7013829,
+        0.6648611,
+        0.73134726
+      ],
+      "headRotation": [
+        -0.034894176,
+        -0.017452406,
+        0.9992387
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026800007,
+      "noseY": -0.073,
+      "mouthY": -0.109400004,
+      "eyeWidth": 0.0515412,
+      "mouthWidth": 0.030924723,
+      "chin": -0.157,
+      "top": 0.157,
+      "earTop": -0.0072000064,
+      "earBottom": -0.073,
+      "faceWidthToHairlineHeight": 0.7348856428571428,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "swordsman",
+      "fighter": true,
+      "headPosition": [
+        -3.178045e-05,
+        0.14752162,
+        3.7226826e-05
+      ],
+      "headScale": [
+        0.6879605,
+        0.5990378,
+        0.6589416
+      ],
+      "headRotation": [
+        0,
+        0.01396218,
+        0.9999025
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026800007,
+      "noseY": -0.073,
+      "mouthY": -0.109400004,
+      "eyeWidth": 0.051800758,
+      "mouthWidth": 0.031080456,
+      "chin": -0.157,
+      "top": 0.157,
+      "earTop": -0.0072000064,
+      "earBottom": -0.073,
+      "faceWidthToHairlineHeight": 0.7433470714285714,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "archer",
+      "fighter": true,
+      "headPosition": [
+        -4.8515387e-05,
+        0.12430227,
+        -0.00021749735
+      ],
+      "headScale": [
+        0.73033977,
+        0.6558397,
+        0.7214237
+      ],
+      "headRotation": [
+        -0.02792164,
+        0,
+        0.9996101
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026960805,
+      "noseY": -0.073438,
+      "mouthY": -0.11005641,
+      "eyeWidth": 0.05135723,
+      "mouthWidth": 0.030814338,
+      "chin": -0.15794201,
+      "top": 0.15794201,
+      "earTop": -0.007243203,
+      "earBottom": -0.073438,
+      "faceWidthToHairlineHeight": 0.7269912561578771,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "mage",
+      "fighter": true,
+      "headPosition": [
+        -1.6564503e-05,
+        0.11831248,
+        0.000106882304
+      ],
+      "headScale": [
+        0.73488235,
+        0.73173696,
+        0.8049106
+      ],
+      "headRotation": [
+        0.03487824,
+        0.0348995,
+        0.99878204
+      ],
+      "triangles": 2064,
+      "eyeY": -0.02701439,
+      "noseY": -0.073584,
+      "mouthY": -0.1102752,
+      "eyeWidth": 0.05128491,
+      "mouthWidth": 0.030770946,
+      "chin": -0.15825601,
+      "top": 0.15825601,
+      "earTop": -0.0072575863,
+      "earBottom": -0.073584,
+      "faceWidthToHairlineHeight": 0.7236767187275496,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "assassin",
+      "fighter": true,
+      "headPosition": [
+        0.00016824156,
+        0.12721157,
+        -0.0007912591
+      ],
+      "headScale": [
+        0.7459079,
+        0.63851535,
+        0.7023669
+      ],
+      "headRotation": [
+        -0.06278439,
+        -0.0139621785,
+        0.9979293
+      ],
+      "triangles": 2064,
+      "eyeY": -0.027336001,
+      "noseY": -0.07446,
+      "mouthY": -0.111588,
+      "eyeWidth": 0.051836602,
+      "mouthWidth": 0.031101963,
+      "chin": -0.16014001,
+      "top": 0.16014001,
+      "earTop": -0.007344,
+      "earBottom": -0.07446,
+      "faceWidthToHairlineHeight": 0.7228341005206275,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "priest",
+      "fighter": true,
+      "headPosition": [
+        -4.6761706e-06,
+        0.115838766,
+        -9.451924e-08
+      ],
+      "headScale": [
+        0.6930379,
+        0.7427953,
+        0.81707484
+      ],
+      "headRotation": [
+        -4.656613e-10,
+        -0.013962181,
+        0.99990255
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026639208,
+      "noseY": -0.07256201,
+      "mouthY": -0.10874361,
+      "eyeWidth": 0.05137529,
+      "mouthWidth": 0.030825173,
+      "chin": -0.15605801,
+      "top": 0.15605801,
+      "earTop": -0.007156808,
+      "earBottom": -0.07256201,
+      "faceWidthToHairlineHeight": 0.7392528988785277,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "paladin",
+      "fighter": true,
+      "headPosition": [
+        -8.853152e-06,
+        0.13300979,
+        -0.00010547042
+      ],
+      "headScale": [
+        0.6922999,
+        0.63770455,
+        0.701475
+      ],
+      "headRotation": [
+        0,
+        0.041875653,
+        0.9991228
+      ],
+      "triangles": 2064,
+      "eyeY": -0.027121603,
+      "noseY": -0.073876,
+      "mouthY": -0.110712804,
+      "eyeWidth": 0.052305624,
+      "mouthWidth": 0.031383377,
+      "chin": -0.158884,
+      "top": 0.158884,
+      "earTop": -0.0072864033,
+      "earBottom": -0.073876,
+      "faceWidthToHairlineHeight": 0.7417430124223602,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "berserker",
+      "fighter": true,
+      "headPosition": [
+        -7.422641e-07,
+        0.121783376,
+        -2.075918e-06
+      ],
+      "headScale": [
+        0.71953666,
+        0.6676575,
+        0.7344233
+      ],
+      "headRotation": [
+        -0.034894176,
+        0.017452404,
+        0.9992385
+      ],
+      "triangles": 2064,
+      "eyeY": -0.027336001,
+      "noseY": -0.07446,
+      "mouthY": -0.111588,
+      "eyeWidth": 0.05220431,
+      "mouthWidth": 0.031322587,
+      "chin": -0.16014001,
+      "top": 0.16014001,
+      "earTop": -0.007344,
+      "earBottom": -0.07446,
+      "faceWidthToHairlineHeight": 0.7297386098933943,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "marksman",
+      "fighter": true,
+      "headPosition": [
+        -2.630055e-06,
+        0.12195408,
+        6.908551e-06
+      ],
+      "headScale": [
+        0.73880833,
+        0.66781586,
+        0.7345975
+      ],
+      "headRotation": [
+        0,
+        0.041875653,
+        0.9991228
+      ],
+      "triangles": 2064,
+      "eyeY": -0.027228802,
+      "noseY": -0.074168,
+      "mouthY": -0.11115041,
+      "eyeWidth": 0.051633324,
+      "mouthWidth": 0.030979997,
+      "chin": -0.15951201,
+      "top": 0.15951201,
+      "earTop": -0.0073152,
+      "earBottom": -0.074168,
+      "faceWidthToHairlineHeight": 0.7237556492275588,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "ranger",
+      "fighter": true,
+      "headPosition": [
+        2.3363158e-05,
+        0.12049317,
+        -9.8053366e-05
+      ],
+      "headScale": [
+        0.7163765,
+        0.6692101,
+        0.736131
+      ],
+      "headRotation": [
+        -0.034898646,
+        0.00698126,
+        0.9993666
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026692808,
+      "noseY": -0.07270801,
+      "mouthY": -0.10896241,
+      "eyeWidth": 0.051076513,
+      "mouthWidth": 0.030645909,
+      "chin": -0.15637201,
+      "top": 0.15637201,
+      "earTop": -0.007171208,
+      "earBottom": -0.07270801,
+      "faceWidthToHairlineHeight": 0.7314883353210992,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "archmage",
+      "fighter": true,
+      "headPosition": [
+        1.0345131e-05,
+        0.12116909,
+        0.00015827641
+      ],
+      "headScale": [
+        0.7457566,
+        0.7208566,
+        0.7929423
+      ],
+      "headRotation": [
+        0.04175224,
+        0.07671902,
+        0.99617815
+      ],
+      "triangles": 2064,
+      "eyeY": -0.0274432,
+      "noseY": -0.074752,
+      "mouthY": -0.11202561,
+      "eyeWidth": 0.05192176,
+      "mouthWidth": 0.031153057,
+      "chin": -0.16076802,
+      "top": 0.16076802,
+      "earTop": -0.0073727984,
+      "earBottom": -0.074752,
+      "faceWidthToHairlineHeight": 0.7212134984486164,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "summoner",
+      "fighter": true,
+      "headPosition": [
+        -0.00020657107,
+        0.14297378,
+        -0.0009129159
+      ],
+      "headScale": [
+        0.7122693,
+        0.6277903,
+        0.6905693
+      ],
+      "headRotation": [
+        -0.05582015,
+        0.0069812606,
+        0.9984165
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026692808,
+      "noseY": -0.07270801,
+      "mouthY": -0.10896241,
+      "eyeWidth": 0.05113396,
+      "mouthWidth": 0.030680377,
+      "chin": -0.15637201,
+      "top": 0.15637201,
+      "earTop": -0.007171208,
+      "earBottom": -0.07270801,
+      "faceWidthToHairlineHeight": 0.7314058984359523,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "ninja",
+      "fighter": true,
+      "headPosition": [
+        -0.00014324207,
+        0.14230442,
+        -0.00075953454
+      ],
+      "headScale": [
+        0.74033654,
+        0.5991784,
+        0.65909624
+      ],
+      "headRotation": [
+        0,
+        -0.0069812606,
+        0.9999757
+      ],
+      "triangles": 2064,
+      "eyeY": -0.027121603,
+      "noseY": -0.073876,
+      "mouthY": -0.110712804,
+      "eyeWidth": 0.051488418,
+      "mouthWidth": 0.030893052,
+      "chin": -0.158884,
+      "top": 0.158884,
+      "earTop": -0.0072864033,
+      "earBottom": -0.073876,
+      "faceWidthToHairlineHeight": 0.7245801101072841,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "shadowdancer",
+      "fighter": true,
+      "headPosition": [
+        1.5713274e-05,
+        0.121008635,
+        3.8896687e-06
+      ],
+      "headScale": [
+        0.7445354,
+        0.66877145,
+        0.7356486
+      ],
+      "headRotation": [
+        0.069729276,
+        0.027921641,
+        0.99717516
+      ],
+      "triangles": 2064,
+      "eyeY": -0.027068004,
+      "noseY": -0.07373,
+      "mouthY": -0.110494,
+      "eyeWidth": 0.051328402,
+      "mouthWidth": 0.030797042,
+      "chin": -0.15857,
+      "top": 0.15857,
+      "earTop": -0.007272003,
+      "earBottom": -0.07373,
+      "faceWidthToHairlineHeight": 0.7228566831683167,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "bishop",
+      "fighter": true,
+      "headPosition": [
+        4.861504e-06,
+        0.11959088,
+        1.4410354e-05
+      ],
+      "headScale": [
+        0.6931875,
+        0.729029,
+        0.8019319
+      ],
+      "headRotation": [
+        -0.027915515,
+        -0.02094242,
+        0.9993909
+      ],
+      "triangles": 2064,
+      "eyeY": -0.027228802,
+      "noseY": -0.074168,
+      "mouthY": -0.11115041,
+      "eyeWidth": 0.052512366,
+      "mouthWidth": 0.03150742,
+      "chin": -0.15951201,
+      "top": 0.15951201,
+      "earTop": -0.0073152,
+      "earBottom": -0.074168,
+      "faceWidthToHairlineHeight": 0.738913058288571,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "inquisitor",
+      "fighter": true,
+      "headPosition": [
+        -6.025657e-06,
+        0.12233615,
+        2.3579225e-05
+      ],
+      "headScale": [
+        0.730575,
+        0.6645182,
+        0.73096997
+      ],
+      "headRotation": [
+        0,
+        0.034899496,
+        0.99939084
+      ],
+      "triangles": 2064,
+      "eyeY": -0.027336001,
+      "noseY": -0.07446,
+      "mouthY": -0.111588,
+      "eyeWidth": 0.05195427,
+      "mouthWidth": 0.031172562,
+      "chin": -0.16014001,
+      "top": 0.16014001,
+      "earTop": -0.007344,
+      "earBottom": -0.07446,
+      "faceWidthToHairlineHeight": 0.7281930217546151,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "艾琳",
+      "fighter": false,
+      "headPosition": [
+        0.00070818886,
+        0.26609063,
+        0.054463893
+      ],
+      "headScale": [
+        0.6893795,
+        0.6491987,
+        0.6491987
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.025996014,
+      "noseY": -0.07081001,
+      "mouthY": -0.106118016,
+      "eyeWidth": 0.049295597,
+      "mouthWidth": 0.02957736,
+      "chin": -0.15229002,
+      "top": 0.15229002,
+      "earTop": -0.006984014,
+      "earBottom": -0.07081001,
+      "faceWidthToHairlineHeight": 0.7230222172705173,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "澪",
+      "fighter": false,
+      "headPosition": [
+        0,
+        0,
+        0
+      ],
+      "headScale": [
+        1,
+        1,
+        1
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.027228802,
+      "noseY": -0.074168,
+      "mouthY": -0.11115041,
+      "eyeWidth": 0.051809132,
+      "mouthWidth": 0.03108548,
+      "chin": -0.15951201,
+      "top": 0.15951201,
+      "earTop": -0.0073152,
+      "earBottom": -0.074168,
+      "faceWidthToHairlineHeight": 0.7254841080618316,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "凪",
+      "fighter": false,
+      "headPosition": [
+        0.00085552596,
+        0.2948116,
+        0.054703094
+      ],
+      "headScale": [
+        0.6768295,
+        0.7621967,
+        0.7621967
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026263997,
+      "noseY": -0.07154,
+      "mouthY": -0.10721201,
+      "eyeWidth": 0.05008643,
+      "mouthWidth": 0.03005186,
+      "chin": -0.15386,
+      "top": 0.15386,
+      "earTop": -0.007055998,
+      "earBottom": -0.07154,
+      "faceWidthToHairlineHeight": 0.7278657434402331,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "翠",
+      "fighter": false,
+      "headPosition": [
+        0.00017098646,
+        0.25391006,
+        0.053842824
+      ],
+      "headScale": [
+        0.6563634,
+        0.72540516,
+        0.72540516
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.0274432,
+      "noseY": -0.074752,
+      "mouthY": -0.11202561,
+      "eyeWidth": 0.051980827,
+      "mouthWidth": 0.031188497,
+      "chin": -0.16076802,
+      "top": 0.16076802,
+      "earTop": -0.0073727984,
+      "earBottom": -0.074752,
+      "faceWidthToHairlineHeight": 0.722450217044765,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "海斗",
+      "fighter": false,
+      "headPosition": [
+        -0.0009708265,
+        0.30186963,
+        0.06093649
+      ],
+      "headScale": [
+        0.6413831,
+        0.69497925,
+        0.69497925
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026800007,
+      "noseY": -0.073,
+      "mouthY": -0.109400004,
+      "eyeWidth": 0.051858436,
+      "mouthWidth": 0.031115063,
+      "chin": -0.157,
+      "top": 0.157,
+      "earTop": -0.0072000064,
+      "earBottom": -0.073,
+      "faceWidthToHairlineHeight": 0.7442289714285714,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "老焰",
+      "fighter": false,
+      "headPosition": [
+        -0.000105022686,
+        0.3114823,
+        0.059229136
+      ],
+      "headScale": [
+        0.6511218,
+        0.5466944,
+        0.5466944
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.02690719,
+      "noseY": -0.073291995,
+      "mouthY": -0.1098376,
+      "eyeWidth": 0.05183423,
+      "mouthWidth": 0.03110054,
+      "chin": -0.157628,
+      "top": 0.157628,
+      "earTop": -0.00722879,
+      "earBottom": -0.073291995,
+      "faceWidthToHairlineHeight": 0.7375225526465565,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "小鐵",
+      "fighter": false,
+      "headPosition": [
+        0.00046157092,
+        0.29280794,
+        0.05653785
+      ],
+      "headScale": [
+        0.7055768,
+        0.6149782,
+        0.6149782
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026639208,
+      "noseY": -0.07256201,
+      "mouthY": -0.10874361,
+      "eyeWidth": 0.051489953,
+      "mouthWidth": 0.030893972,
+      "chin": -0.15605801,
+      "top": 0.15605801,
+      "earTop": -0.007156808,
+      "earBottom": -0.07256201,
+      "faceWidthToHairlineHeight": 0.7431740541317204,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "小葉",
+      "fighter": false,
+      "headPosition": [
+        -0.0013240129,
+        0.2416048,
+        0.053415008
+      ],
+      "headScale": [
+        0.876036,
+        0.94769055,
+        0.94769055
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.02647841,
+      "noseY": -0.072124004,
+      "mouthY": -0.10808721,
+      "eyeWidth": 0.051350113,
+      "mouthWidth": 0.03081007,
+      "chin": -0.155116,
+      "top": 0.155116,
+      "earTop": -0.0071136095,
+      "earBottom": -0.072124004,
+      "faceWidthToHairlineHeight": 0.7447450477154425,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "米菈",
+      "fighter": false,
+      "headPosition": [
+        0.00043784827,
+        0.256364,
+        0.054992475
+      ],
+      "headScale": [
+        0.73044574,
+        0.7827052,
+        0.7827052
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.02701439,
+      "noseY": -0.073584,
+      "mouthY": -0.1102752,
+      "eyeWidth": 0.05145933,
+      "mouthWidth": 0.030875599,
+      "chin": -0.15825601,
+      "top": 0.15825601,
+      "earTop": -0.0072575863,
+      "earBottom": -0.073584,
+      "faceWidthToHairlineHeight": 0.7261381202160078,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "楓",
+      "fighter": false,
+      "headPosition": [
+        -0.00012547709,
+        0.26835024,
+        0.05386295
+      ],
+      "headScale": [
+        0.7284431,
+        0.69165707,
+        0.69165707
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026800007,
+      "noseY": -0.073,
+      "mouthY": -0.109400004,
+      "eyeWidth": 0.05105092,
+      "mouthWidth": 0.030630553,
+      "chin": -0.157,
+      "top": 0.157,
+      "earTop": -0.0072000064,
+      "earBottom": -0.073,
+      "faceWidthToHairlineHeight": 0.7279395714285714,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "阿潮",
+      "fighter": false,
+      "headPosition": [
+        0.00021744333,
+        0.27704215,
+        0.05189263
+      ],
+      "headScale": [
+        0.6909916,
+        0.740362,
+        0.740362
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.027121603,
+      "noseY": -0.073876,
+      "mouthY": -0.110712804,
+      "eyeWidth": 0.052422367,
+      "mouthWidth": 0.031453423,
+      "chin": -0.158884,
+      "top": 0.158884,
+      "earTop": -0.0072864033,
+      "earBottom": -0.073876,
+      "faceWidthToHairlineHeight": 0.7405622035573123,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "鐵匠",
+      "fighter": false,
+      "headPosition": [
+        -2.80682e-05,
+        0.26275003,
+        0.05489848
+      ],
+      "headScale": [
+        0.6749547,
+        0.7183984,
+        0.7183984
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026692808,
+      "noseY": -0.07270801,
+      "mouthY": -0.10896241,
+      "eyeWidth": 0.0518808,
+      "mouthWidth": 0.031128481,
+      "chin": -0.15637201,
+      "top": 0.15637201,
+      "earTop": -0.007171208,
+      "earBottom": -0.07270801,
+      "faceWidthToHairlineHeight": 0.7475399694064723,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "店員",
+      "fighter": false,
+      "headPosition": [
+        -0.00016124547,
+        0.26507723,
+        0.05461234
+      ],
+      "headScale": [
+        0.6867181,
+        0.70886534,
+        0.70886534
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026585594,
+      "noseY": -0.072416,
+      "mouthY": -0.1085248,
+      "eyeWidth": 0.051443566,
+      "mouthWidth": 0.03086614,
+      "chin": -0.155744,
+      "top": 0.155744,
+      "earTop": -0.007142393,
+      "earBottom": -0.072416,
+      "faceWidthToHairlineHeight": 0.7425235887096774,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "公會長",
+      "fighter": false,
+      "headPosition": [
+        -2.1721004e-05,
+        0.26315856,
+        0.055076938
+      ],
+      "headScale": [
+        0.72421485,
+        0.71366465,
+        0.71366465
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.0274968,
+      "noseY": -0.074898005,
+      "mouthY": -0.11224441,
+      "eyeWidth": 0.052378245,
+      "mouthWidth": 0.031426948,
+      "chin": -0.16108201,
+      "top": 0.16108201,
+      "earTop": -0.0073871985,
+      "earBottom": -0.074898005,
+      "faceWidthToHairlineHeight": 0.730625685636776,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "嚮導",
+      "fighter": false,
+      "headPosition": [
+        -2.1049054e-05,
+        0.2627821,
+        0.0550095
+      ],
+      "headScale": [
+        0.7072649,
+        0.7204305,
+        0.7204305
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026800007,
+      "noseY": -0.073,
+      "mouthY": -0.109400004,
+      "eyeWidth": 0.051397003,
+      "mouthWidth": 0.030838203,
+      "chin": -0.157,
+      "top": 0.157,
+      "earTop": -0.0072000064,
+      "earBottom": -0.073,
+      "faceWidthToHairlineHeight": 0.7342264999999999,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "教官",
+      "fighter": false,
+      "headPosition": [
+        -2.7961098e-05,
+        0.25299442,
+        0.05501262
+      ],
+      "headScale": [
+        0.7072648,
+        0.74264014,
+        0.74264014
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026800007,
+      "noseY": -0.073,
+      "mouthY": -0.109400004,
+      "eyeWidth": 0.051397003,
+      "mouthWidth": 0.030838203,
+      "chin": -0.157,
+      "top": 0.157,
+      "earTop": -0.0072000064,
+      "earBottom": -0.073,
+      "faceWidthToHairlineHeight": 0.7342264285714285,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "懸賞官",
+      "fighter": false,
+      "headPosition": [
+        -2.0776293e-05,
+        0.26433468,
+        0.055009376
+      ],
+      "headScale": [
+        0.7072649,
+        0.7167461,
+        0.7167461
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026800007,
+      "noseY": -0.073,
+      "mouthY": -0.109400004,
+      "eyeWidth": 0.051397003,
+      "mouthWidth": 0.030838203,
+      "chin": -0.157,
+      "top": 0.157,
+      "earTop": -0.0072000064,
+      "earBottom": -0.073,
+      "faceWidthToHairlineHeight": 0.7342265714285714,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "播報員",
+      "fighter": false,
+      "headPosition": [
+        -2.1195738e-05,
+        0.26293516,
+        0.055009566
+      ],
+      "headScale": [
+        0.70726484,
+        0.7199752,
+        0.7199752
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026800007,
+      "noseY": -0.073,
+      "mouthY": -0.109400004,
+      "eyeWidth": 0.051397003,
+      "mouthWidth": 0.030838203,
+      "chin": -0.157,
+      "top": 0.157,
+      "earTop": -0.0072000064,
+      "earBottom": -0.073,
+      "faceWidthToHairlineHeight": 0.7342264999999999,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "塔守",
+      "fighter": false,
+      "headPosition": [
+        -2.2823573e-05,
+        0.26133907,
+        0.0550103
+      ],
+      "headScale": [
+        0.7072648,
+        0.72322404,
+        0.72322404
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026800007,
+      "noseY": -0.073,
+      "mouthY": -0.109400004,
+      "eyeWidth": 0.051397003,
+      "mouthWidth": 0.030838203,
+      "chin": -0.157,
+      "top": 0.157,
+      "earTop": -0.0072000064,
+      "earBottom": -0.073,
+      "faceWidthToHairlineHeight": 0.7342264571428571,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "雷歐",
+      "fighter": false,
+      "headPosition": [
+        -0.0009708265,
+        0.30186963,
+        0.06093649
+      ],
+      "headScale": [
+        0.6413831,
+        0.69497925,
+        0.69497925
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026800007,
+      "noseY": -0.073,
+      "mouthY": -0.109400004,
+      "eyeWidth": 0.051858436,
+      "mouthWidth": 0.031115063,
+      "chin": -0.157,
+      "top": 0.157,
+      "earTop": -0.0072000064,
+      "earBottom": -0.073,
+      "faceWidthToHairlineHeight": 0.7442289714285714,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "小沙",
+      "fighter": false,
+      "headPosition": [
+        -0.00016124547,
+        0.26507723,
+        0.05461234
+      ],
+      "headScale": [
+        0.6867181,
+        0.70886534,
+        0.70886534
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026585594,
+      "noseY": -0.072416,
+      "mouthY": -0.1085248,
+      "eyeWidth": 0.051443566,
+      "mouthWidth": 0.03086614,
+      "chin": -0.155744,
+      "top": 0.155744,
+      "earTop": -0.007142393,
+      "earBottom": -0.072416,
+      "faceWidthToHairlineHeight": 0.7425235887096774,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "鐵娘",
+      "fighter": false,
+      "headPosition": [
+        0.00085552596,
+        0.2948116,
+        0.054703094
+      ],
+      "headScale": [
+        0.6768295,
+        0.7621967,
+        0.7621967
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.026263997,
+      "noseY": -0.07154,
+      "mouthY": -0.10721201,
+      "eyeWidth": 0.05008643,
+      "mouthWidth": 0.03005186,
+      "chin": -0.15386,
+      "top": 0.15386,
+      "earTop": -0.007055998,
+      "earBottom": -0.07154,
+      "faceWidthToHairlineHeight": 0.7278657434402331,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "老駝",
+      "fighter": false,
+      "headPosition": [
+        -0.000105022686,
+        0.3114823,
+        0.059229136
+      ],
+      "headScale": [
+        0.6511218,
+        0.5466944,
+        0.5466944
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.02690719,
+      "noseY": -0.073291995,
+      "mouthY": -0.1098376,
+      "eyeWidth": 0.05183423,
+      "mouthWidth": 0.03110054,
+      "chin": -0.157628,
+      "top": 0.157628,
+      "earTop": -0.00722879,
+      "earBottom": -0.073291995,
+      "faceWidthToHairlineHeight": 0.7375225526465565,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "阿鈴",
+      "fighter": false,
+      "headPosition": [
+        0.00043784827,
+        0.256364,
+        0.054992475
+      ],
+      "headScale": [
+        0.73044574,
+        0.7827052,
+        0.7827052
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.02701439,
+      "noseY": -0.073584,
+      "mouthY": -0.1102752,
+      "eyeWidth": 0.05145933,
+      "mouthWidth": 0.030875599,
+      "chin": -0.15825601,
+      "top": 0.15825601,
+      "earTop": -0.0072575863,
+      "earBottom": -0.073584,
+      "faceWidthToHairlineHeight": 0.7261381202160078,
+      "headFittingUnchanged": true
+    },
+    {
+      "id": "石先生",
+      "fighter": false,
+      "headPosition": [
+        -2.1721004e-05,
+        0.26315856,
+        0.055076938
+      ],
+      "headScale": [
+        0.72421485,
+        0.71366465,
+        0.71366465
+      ],
+      "headRotation": [
+        0,
+        0,
+        1
+      ],
+      "triangles": 2064,
+      "eyeY": -0.0274968,
+      "noseY": -0.074898005,
+      "mouthY": -0.11224441,
+      "eyeWidth": 0.052378245,
+      "mouthWidth": 0.031426948,
+      "chin": -0.16108201,
+      "top": 0.16108201,
+      "earTop": -0.0073871985,
+      "earBottom": -0.074898005,
+      "faceWidthToHairlineHeight": 0.730625685636776,
+      "headFittingUnchanged": true
+    }
+  ],
+  "featureClearance": [
+    {
+      "id": "novice",
+      "minGap": 0.00031170994,
+      "maxGap": 0.0055367276,
+      "samples": 2096,
+      "low": "2/眼睛圖層",
+      "high": "2/InkPair novice/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "swordsman",
+      "minGap": 0.00088685006,
+      "maxGap": 0.0053270385,
+      "samples": 1926,
+      "low": "2/眼睛圖層",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "archer",
+      "minGap": 0.0011858195,
+      "maxGap": 0.005573772,
+      "samples": 1871,
+      "low": "0/眼睛圖層",
+      "high": "2/InkPair archer/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "mage",
+      "minGap": 0.0010899231,
+      "maxGap": 0.0057561398,
+      "samples": 2016,
+      "low": "4/InkPair mage/brow/1",
+      "high": "2/InkPair mage/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "assassin",
+      "minGap": 0.0003395453,
+      "maxGap": 0.0057045,
+      "samples": 2016,
+      "low": "4/InkPair assassin/brow/1",
+      "high": "2/InkPair assassin/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "priest",
+      "minGap": 0.0003338307,
+      "maxGap": 0.0053284615,
+      "samples": 2066,
+      "low": "2/眼睛圖層",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "paladin",
+      "minGap": 0.0008875802,
+      "maxGap": 0.005308084,
+      "samples": 2056,
+      "low": "2/眼睛圖層",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "berserker",
+      "minGap": 0.0008228645,
+      "maxGap": 0.0054631457,
+      "samples": 2056,
+      "low": "2/眼睛圖層",
+      "high": "2/InkPair berserker/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "marksman",
+      "minGap": 0.0011918247,
+      "maxGap": 0.005527027,
+      "samples": 1876,
+      "low": "0/眼睛圖層",
+      "high": "2/InkPair marksman/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "ranger",
+      "minGap": 0.00032828003,
+      "maxGap": 0.005479373,
+      "samples": 2108,
+      "low": "2/眼睛圖層",
+      "high": "2/InkPair ranger/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "archmage",
+      "minGap": 0.0011364445,
+      "maxGap": 0.005689837,
+      "samples": 1801,
+      "low": "0/眼睛圖層",
+      "high": "2/InkPair archmage/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "summoner",
+      "minGap": 0.00028572977,
+      "maxGap": 0.0056607276,
+      "samples": 2128,
+      "low": "2/眼睛圖層",
+      "high": "2/InkPair summoner/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "ninja",
+      "minGap": 0.0011898056,
+      "maxGap": 0.0055427775,
+      "samples": 1946,
+      "low": "0/眼睛圖層",
+      "high": "2/InkPair ninja/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "shadowdancer",
+      "minGap": 0.00032440573,
+      "maxGap": 0.0057348534,
+      "samples": 2016,
+      "low": "4/InkPair shadowdancer/brow/1",
+      "high": "2/InkPair shadowdancer/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "bishop",
+      "minGap": 0.0004735738,
+      "maxGap": 0.0053030252,
+      "samples": 2036,
+      "low": "2/眼睛圖層",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "inquisitor",
+      "minGap": 0.0010278746,
+      "maxGap": 0.0052654967,
+      "samples": 1823,
+      "low": "4/InkPair inquisitor/brow/1",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "艾琳",
+      "minGap": 0.00029293448,
+      "maxGap": 0.0058575645,
+      "samples": 2056,
+      "low": "2/眼睛圖層",
+      "high": "2/InkPair 艾琳/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "澪",
+      "minGap": 0.0017079338,
+      "maxGap": 0.0056865066,
+      "samples": 1496,
+      "low": "4/InkPair 澪/brow/1",
+      "high": "2/InkPair 澪/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "凪",
+      "minGap": 0.00028906763,
+      "maxGap": 0.0057016015,
+      "samples": 2066,
+      "low": "2/眼睛圖層",
+      "high": "2/InkPair 凪/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "翠",
+      "minGap": 0.0019243434,
+      "maxGap": 0.005610734,
+      "samples": 1496,
+      "low": "4/InkPair 翠/brow/1",
+      "high": "2/InkPair 翠/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "海斗",
+      "minGap": 0.00088652223,
+      "maxGap": 0.0053293854,
+      "samples": 2047,
+      "low": "2/眼睛圖層",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "老焰",
+      "minGap": 0.00057160854,
+      "maxGap": 0.0053142384,
+      "samples": 2071,
+      "low": "4/InkPair 老焰/brow/1",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "小鐵",
+      "minGap": 0.00089871883,
+      "maxGap": 0.005333774,
+      "samples": 2021,
+      "low": "2/眼睛圖層",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "小葉",
+      "minGap": 0.00012348592,
+      "maxGap": 0.005348131,
+      "samples": 2187,
+      "low": "2/眼睛圖層",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "米菈",
+      "minGap": 0.00033388287,
+      "maxGap": 0.0057458505,
+      "samples": 1861,
+      "low": "4/InkPair 米菈/brow/1",
+      "high": "2/InkPair 米菈/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "楓",
+      "minGap": 0.0011605769,
+      "maxGap": 0.005444728,
+      "samples": 2006,
+      "low": "0/眼睛圖層",
+      "high": "2/InkPair 楓/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "阿潮",
+      "minGap": 0.0006226599,
+      "maxGap": 0.005312644,
+      "samples": 1796,
+      "low": "4/InkPair 阿潮/brow/1",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "鐵匠",
+      "minGap": 0.0008851513,
+      "maxGap": 0.005344346,
+      "samples": 1983,
+      "low": "2/眼睛圖層",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "店員",
+      "minGap": 0.0001892373,
+      "maxGap": 0.0053386763,
+      "samples": 2113,
+      "low": "2/眼睛圖層",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "公會長",
+      "minGap": 0.0006345585,
+      "maxGap": 0.0052637383,
+      "samples": 2016,
+      "low": "4/InkPair 公會長/brow/1",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "嚮導",
+      "minGap": 0.0012945458,
+      "maxGap": 0.0053084493,
+      "samples": 1786,
+      "low": "0/眼睛圖層",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "教官",
+      "minGap": 0.0010088161,
+      "maxGap": 0.0053086504,
+      "samples": 1921,
+      "low": "4/InkPair 教官/brow/1",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "懸賞官",
+      "minGap": 0.00063509494,
+      "maxGap": 0.0053084344,
+      "samples": 2056,
+      "low": "2/眼睛圖層",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "播報員",
+      "minGap": 0.00026307255,
+      "maxGap": 0.005329758,
+      "samples": 2108,
+      "low": "2/眼睛圖層",
+      "high": "2/InkPair 播報員/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "塔守",
+      "minGap": 0.0005465001,
+      "maxGap": 0.005308889,
+      "samples": 1786,
+      "low": "4/InkPair 塔守/brow/1",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "海斗",
+      "minGap": 0.00088652223,
+      "maxGap": 0.0053293854,
+      "samples": 2047,
+      "low": "2/眼睛圖層",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "店員",
+      "minGap": 0.0001892373,
+      "maxGap": 0.0053386763,
+      "samples": 2113,
+      "low": "2/眼睛圖層",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "凪",
+      "minGap": 0.00028906763,
+      "maxGap": 0.0057016015,
+      "samples": 2066,
+      "low": "2/眼睛圖層",
+      "high": "2/InkPair 凪/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "老焰",
+      "minGap": 0.00057160854,
+      "maxGap": 0.0053142384,
+      "samples": 2071,
+      "low": "4/InkPair 老焰/brow/1",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    },
+    {
+      "id": "米菈",
+      "minGap": 0.00033388287,
+      "maxGap": 0.0057458505,
+      "samples": 1861,
+      "low": "4/InkPair 米菈/brow/1",
+      "high": "2/InkPair 米菈/lid/-1",
+      "cachesStable": true
+    },
+    {
+      "id": "公會長",
+      "minGap": 0.0006345585,
+      "maxGap": 0.0052637383,
+      "samples": 2016,
+      "low": "4/InkPair 公會長/brow/1",
+      "high": "1/mouthOpen",
+      "cachesStable": true
+    }
+  ]
+}
