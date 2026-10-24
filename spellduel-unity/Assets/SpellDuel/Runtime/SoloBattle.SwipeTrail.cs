@@ -84,6 +84,7 @@ namespace SpellDuel
         void DrawPalmCharge(int fs)
         {
             DrawSlashScreenFlash();
+            DrawBasicScreenFx();   // 其他職業普攻出手的光影（SoloBattle.BasicFx.cs）
             var basic = Me?.basic ?? Skills.BasicOf(myClass);
             if (!Skills.IsChargedBasic(basic) || battle == null || Me == null || !Me.Alive) return;
             float now = battle.now;
@@ -108,6 +109,7 @@ namespace SpellDuel
             float since = Time.time - palmReadyAt;
             Rect Sq(float rad) => new Rect(c.x - rad, c.y - rad, rad * 2, rad * 2);
             if (ready) ReadyRipples(c, r, col, since, fs, Sq, ReadyHint(basic.id));   // 可以出手：一圈一圈往外擴散的光環＋「集氣完成」字樣
+            if (basic.id != "na_sword") DrawChargeAura(basic.id, c, r, k, ready, since, fs);   // 集氣光絲、完成的光芒（各職業顏色）
             switch (basic.id)
             {
                 case "na_sword": DrawSwordCharge(c, r, k, ready, since, fs, Sq); break;

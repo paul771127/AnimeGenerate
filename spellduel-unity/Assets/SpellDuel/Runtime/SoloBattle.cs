@@ -2227,8 +2227,9 @@ namespace SpellDuel
             Vector3 castAt = default;
             if (!Skills.IsMeleeBasic(s)) { d = AimFromHand(ray, out castAt); Me.castFrom = castAt; Me.hasCastFrom = true; }   // 遠程普攻：從手射出、飛向準星對準的地方
             if (!battle.BasicAttack(Me, s, d, floor, enemyOnScreen, from, to)) { Me.hasCastFrom = false; return; }
+            TriggerBasicFx(s);   // 出手的畫面光影（各職業顏色、動作）
             if (!Skills.IsMeleeBasic(s))
-                SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(s.id):myClass, s.color, WorldFrame.FromWorld(castAt), WorldFrame.DirFromWorld(d), 0.2f);
+                SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(s.id):myClass, s.color, WorldFrame.FromWorld(castAt), WorldFrame.DirFromWorld(d), 0.6f);   // 手上的出手爆光（以前 0.2 太小）
         }
 
         void ReleaseAt(Vector2 sp, bool byGesture)
