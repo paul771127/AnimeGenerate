@@ -2786,7 +2786,7 @@ namespace SpellDuel
             if (target == null || target == a) return;
             SoulVictim(a, target, dmg);
             if (a.soulProcs.Count == 0 || (s != null && s.cls == Souls.SoulCls)) return;   // 精魄發動的招式不再觸發精魄（不會連鎖）
-            bool killed = !target.Alive;
+            bool killed = !target.Alive, cast = false;   // 好幾顆會發動招式的精魄：一次命中最多發動一招
             foreach (var x in a.soulProcs)
             {
                 switch (x.op)
@@ -2795,7 +2795,7 @@ namespace SpellDuel
                         if (!killed && rng.NextDouble() < x.chance) { target.snaredUntil = now + (target.bodyRadius > 0.5f ? x.dur * 0.5f : x.dur); target.charging = null; Emit("effect", target.Chest, new Color(0.3f, 0.85f, 0.3f), "藤蔓纏繞：定身"); }
                         break;
                     case SoulOp.HitCast:
-                        if (!killed && rng.NextDouble() < x.chance) SoulCast(a, target, x.skill);
+                        if (!killed && !cast && rng.NextDouble() < x.chance) { SoulCast(a, target, x.skill); cast = true; }
                         break;
                     case SoulOp.KillHeal:
                         if (killed && rng.NextDouble() < x.chance) { float h = a.maxHp * x.v; a.hp = Mathf.Min(a.maxHp, a.hp + h); Emit("heal", a.Chest, new Color(0.6f, 1f, 0.6f), $"+{h:0}"); }

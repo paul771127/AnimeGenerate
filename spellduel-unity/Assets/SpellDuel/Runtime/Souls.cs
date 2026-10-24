@@ -79,32 +79,33 @@ namespace SpellDuel
 
         static Souls()
         {
+            // 每一顆精魄只有一種效果（使用者要求）：加能力值／特殊能力值、或機率附加狀態、或機率發動技能、或機率好處、或「好處＋副作用」其中一種
             // ---- 小怪（0.1%～0.5%）：越常見的越難掉
-            M(0, 0.001f, "#ff7a3d", S(Stat.Str, 3), F(SoulOp.Burn, 0.03f));                                                             // 熔岩小鬼
-            M(1, 0.003f, "#ff9f43", F(SoulOp.HitCast, 0, 0.04f, skill: "fire"));                                                         // 火焰射手：法師的火球術
-            M(2, 0.002f, "#b08968", F(SoulOp.Hp, 40), F(SoulOp.Reduce, 0.03f), F(SoulOp.BasicSpeed, -0.10f));                           // 岩石衝鋒獸：硬，但普攻變慢
-            M(3, 0.002f, "#ff4d4d", F(SoulOp.Atk, 0.12f), F(SoulOp.Taken, 0.08f));                                                       // 自爆小鬼：攻擊高、更怕痛
-            M(4, 0.003f, "#a8a29e", F(SoulOp.Block, 0.06f));                                                                              // 岩石投擲者
-            M(5, 0.004f, "#f97316", F(SoulOp.CritDmg, 0.20f), S(Stat.Luk, 2));                                                           // 熔岩狙擊手
-            M(6, 0.005f, "#9d6bff", F(SoulOp.HurtInvuln, 0, 0.06f, 1f));                                                                 // 虛空術士：虛空閃現
-            M(7, 0.002f, "#84cc16", F(SoulOp.Poison, 0.05f));                                                                              // 毒液噴花
-            M(8, 0.003f, "#65a30d", F(SoulOp.Thorns, 0.15f));                                                                              // 荊棘衝鋒獸
-            M(9, 0.004f, "#22c55e", F(SoulOp.HitSnare, 0, 0.04f, 0.8f));                                                                  // 藤蔓術士
-            M(10, 0.002f, "#e11d48", F(SoulOp.Lifesteal, 0.02f));                                                                          // 食人花
-            M(11, 0.003f, "#c4b5fd", F(SoulOp.KillHeal, 0.08f, 0.25f));                                                                    // 孢子菇
-            M(12, 0.004f, "#a3e635", F(SoulOp.BasicSpeed, 0.08f), F(SoulOp.HitCast, 0, 0.03f, skill: "quickshot"));                       // 種子槍手：獵人的速射
-            M(13, 0.002f, "#38bdf8", F(SoulOp.Evade, 0.04f));                                                                              // 跳躍魚
-            M(14, 0.003f, "#e0f2fe", S(Stat.Agi, 4), F(SoulOp.Xp, 0.06f), F(SoulOp.Hp, -20));                                             // 俯衝海鳥：輕盈，但 HP 少一點
-            M(15, 0.004f, "#7dd3fc", F(SoulOp.HurtShield, 25, 0.08f, 4f));                                                                // 騎魚泡泡怪
-            M(16, 0.003f, "#f59e0b", F(SoulOp.Reduce, 0.04f), F(SoulOp.Gold, 0.08f), F(SoulOp.Atk, -0.04f));                              // 寄居蟹：守財，但攻擊弱一點
-            M(17, 0.005f, "#facc15", F(SoulOp.HitCast, 0, 0.04f, skill: "thunder"), F(SoulOp.Freeze, 0.03f));                             // 雷電水母：法師的雷擊
-            M(18, 0.004f, "#fde68a", F(SoulOp.Retaliate, 4f, 0.10f, 4f), S(Stat.Vit, 3));                                                 // 河豚
-            // ---- Boss（2%）：更強、更特殊
-            B("boss", "#ff5a1f", F(SoulOp.Atk, 0.10f), F(SoulOp.Reduce, 0.05f), F(SoulOp.Burn, 0.08f), F(SoulOp.HitCast, 0, 0.05f, skill: "meteor"));   // 熔岩巨像：隕石
-            B("boss_forest", "#4ade80", F(SoulOp.Regen, 0.01f), F(SoulOp.HitSnare, 0, 0.06f, 1.2f), F(SoulOp.Mp, -15));                                    // 腐化樹王：每秒回 1% HP，但 MP 少
-            B("boss_sea", "#22d3ee", F(SoulOp.HurtShield, 60, 0.12f, 5f), F(SoulOp.Freeze, 0.06f), F(SoulOp.HitCast, 0, 0.04f, skill: "ice"));            // 深淵海妖：冰槍
-            B("boss_arena", "#d4a24c", F(SoulOp.Block, 0.12f), F(SoulOp.Crit, 0.06f), F(SoulOp.Undying, 0));                                                // 青銅鬥魂：不死一次
-            B("boss_canyon", "#c8a165", F(SoulOp.Atk, 0.18f), F(SoulOp.CritDmg, 0.25f), F(SoulOp.HitCast, 0, 0.04f, skill: "snipe"), F(SoulOp.Taken, 0.10f));   // 黃土岩魔：攻擊很強，但更怕痛
+            M(0, 0.001f, "#ff7a3d", S(Stat.Str, 3));                                         // 熔岩小鬼：能力值
+            M(1, 0.003f, "#ff9f43", F(SoulOp.HitCast, 0, 0.04f, skill: "fire"));             // 火焰射手：機率發動法師的火球術
+            M(2, 0.002f, "#b08968", F(SoulOp.Hp, 40), F(SoulOp.BasicSpeed, -0.10f));        // 岩石衝鋒獸：好處＋副作用（普攻變慢）
+            M(3, 0.002f, "#ff4d4d", F(SoulOp.Atk, 0.12f), F(SoulOp.Taken, 0.08f));           // 自爆小鬼：好處＋副作用（更怕痛）
+            M(4, 0.003f, "#a8a29e", F(SoulOp.Block, 0.06f));                                  // 岩石投擲者：格擋率
+            M(5, 0.004f, "#f97316", F(SoulOp.CritDmg, 0.20f));                                // 熔岩狙擊手：爆擊傷害
+            M(6, 0.005f, "#9d6bff", F(SoulOp.HurtInvuln, 0, 0.06f, 1f));                     // 虛空術士：機率好處（虛空閃現）
+            M(7, 0.002f, "#84cc16", F(SoulOp.Poison, 0.05f));                                 // 毒液噴花：機率附加中毒
+            M(8, 0.003f, "#65a30d", F(SoulOp.Thorns, 0.15f));                                 // 荊棘衝鋒獸：反彈
+            M(9, 0.004f, "#22c55e", F(SoulOp.HitSnare, 0, 0.04f, 0.8f));                      // 藤蔓術士：機率定身
+            M(10, 0.002f, "#e11d48", F(SoulOp.Lifesteal, 0.02f));                              // 食人花：吸血
+            M(11, 0.003f, "#c4b5fd", F(SoulOp.KillHeal, 0.08f, 0.25f));                        // 孢子菇：機率好處（擊殺回血）
+            M(12, 0.004f, "#a3e635", F(SoulOp.HitCast, 0, 0.03f, skill: "quickshot"));        // 種子槍手：機率發動獵人的速射
+            M(13, 0.002f, "#38bdf8", F(SoulOp.Evade, 0.04f));                                  // 跳躍魚：閃避率
+            M(14, 0.003f, "#e0f2fe", S(Stat.Agi, 5), F(SoulOp.Hp, -20));                      // 俯衝海鳥：好處＋副作用（HP 少一點）
+            M(15, 0.004f, "#7dd3fc", F(SoulOp.HurtShield, 25, 0.08f, 4f));                    // 騎魚泡泡怪：機率好處（護盾）
+            M(16, 0.003f, "#f59e0b", F(SoulOp.Gold, 0.08f), F(SoulOp.Atk, -0.04f));           // 寄居蟹：好處＋副作用（攻擊弱一點）
+            M(17, 0.005f, "#facc15", F(SoulOp.HitCast, 0, 0.04f, skill: "thunder"));          // 雷電水母：機率發動法師的雷擊
+            M(18, 0.004f, "#fde68a", F(SoulOp.Retaliate, 4f, 0.10f, 4f));                     // 河豚：被打時機率讓攻擊者中毒
+            // ---- Boss（2%）：一樣只有一種效果，但更強、更特殊
+            B("boss", "#ff5a1f", F(SoulOp.HitCast, 0, 0.05f, skill: "meteor"));               // 熔岩巨像：機率發動隕石
+            B("boss_forest", "#4ade80", F(SoulOp.Regen, 0.01f));                               // 腐化樹王：每秒回 1% HP
+            B("boss_sea", "#22d3ee", F(SoulOp.HurtShield, 60, 0.12f, 5f));                    // 深淵海妖：機率大護盾
+            B("boss_arena", "#d4a24c", F(SoulOp.Undying, 0));                                  // 青銅鬥魂：每場一次不死
+            B("boss_canyon", "#c8a165", F(SoulOp.Atk, 0.25f), F(SoulOp.Taken, 0.12f));        // 黃土岩魔：好處＋副作用（攻擊很強，但更怕痛）
         }
 
         public static SoulDef Get(string id) => id != null && byId.TryGetValue(id, out var d) ? d : null;
@@ -113,7 +114,10 @@ namespace SpellDuel
 
         // ---------------------------------------------------------------- 說明
         static string Pct(float v) => $"{v * 100f:0.#}%";
-        public static string FxText(SoulFx x)
+        /// <summary>一個效果的說明；副作用（負的能力值、攻擊、HP、MP）前面加 ⚠</summary>
+        public static string FxText(SoulFx x) =>
+            (x.v < 0 && (x.op == SoulOp.Stat || x.op == SoulOp.Atk || x.op == SoulOp.Hp || x.op == SoulOp.Mp) ? "⚠ " : "") + FxBody(x);
+        static string FxBody(SoulFx x)
         {
             string skillName = x.skill != null && Skills.All.TryGetValue(x.skill, out var s) ? s.name : x.skill;
             string sg(float v) => v >= 0 ? "+" : "−";
