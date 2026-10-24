@@ -10,7 +10,7 @@ namespace SpellDuel
     ///   🔥 討伐告示板（懸賞官）：單人挑戰 Boss（選難度）。
     ///   👀 觀戰席（播報員）：輸入朋友的房間代碼觀戰。
     ///   🗼 無盡塔（大地圖上，塔守）：無盡模式。
-    /// 故事關卡、副本的難度在出發前選：普通＝簡單再加 20 級、困難＝再加 40 級。
+    /// 故事關卡、副本的難度在出發前選：普通＝簡單再加 40 級、困難＝再加 80 級。簡單全部通關才開普通，普通全部通關才開困難。
     /// </summary>
     public partial class WorldUI
     {
@@ -63,20 +63,21 @@ namespace SpellDuel
         static readonly string[] DiffNames = { "簡單", "普通", "困難" };
         static readonly Color[] DiffColors = { new Color(0.4f, 0.9f, 0.5f), new Color(1f, 0.8f, 0.3f), new Color(1f, 0.35f, 0.35f) };
 
-        /// <summary>難度三個按鈕（故事關卡、副本：普通＋20 級、困難＋40 級）</summary>
+        /// <summary>難度三個按鈕（故事關卡、副本：普通＋40 級、困難＋80 級；還沒解鎖的按不了）</summary>
         void DifficultyRow(Rect r, int fsS, bool levels)
         {
             float gap = r.height * 0.15f, bw = (r.width - gap * 2) / 3f;
             for (int i = 0; i < 3; i++)
             {
-                string label = DiffNames[i] + (levels && i > 0 ? $"（＋{i * SoloBattle.LevelPerDifficulty} 級）" : "");
-                if (UiKit.Button(new Rect(r.x + i * (bw + gap), r.y, bw, r.height), label, fsS, Difficulty == i, DiffColors[i])) SetDifficulty?.Invoke(i);
+                bool open = Story.DifficultyOpen(i);
+                string label = (open ? "" : "🔒 ") + DiffNames[i] + (!open ? (i == 1 ? "（簡單全破）" : "（普通全破）") : levels && i > 0 ? $"（＋{i * SoloBattle.LevelPerDifficulty} 級）" : "");
+                if (UiKit.Button(new Rect(r.x + i * (bw + gap), r.y, bw, r.height), label, fsS, Difficulty == i, DiffColors[i], open)) SetDifficulty?.Invoke(i);
             }
         }
 
         /// <summary>難度加的等級（說明文字用）</summary>
         int Boost => SoloBattle.LevelBoostFor(Difficulty);
-        string BoostText => Boost > 0 ? $"（{DiffNames[Difficulty]}：敵人＋{Boost} 級、獎勵 ×{SoloBattle.RewardMulFor(Difficulty):0.#}、掉落裝備等級不變・稀有度提高）" : "";
+        string BoostText => Boost > 0 ? $"（{DiffNames[Difficulty]}：敵人＋{Boost} 級、獎勵 ×{SoloBattle.RewardMulFor(Difficulty):0.#}、掉落裝備＋{Boost} 級）" : "";
 
         /// <summary>設施畫面上方：NPC 頭像＋名字＋介紹（一段話）</summary>
         void NpcIntro(Rect r, string npc, string role, string text, Color c, int fs, int fsS, float gap, ref float y)

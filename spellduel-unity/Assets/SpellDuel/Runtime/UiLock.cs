@@ -7,7 +7,6 @@ namespace SpellDuel
     /// 新手指引的最上層（GUI.depth 最前面）：
     ///   UiKit.LockKey 有值時，畫面變暗、只留下要按的按鈕（閃爍＋手指），旁邊的說明框寫現在要按什麼、為什麼；
     ///   要按的按鈕以外的點擊全部吃掉（手指拖曳、方向鍵也不行）。說明型的步驟有「下一步 ▶」。
-    ///   找不到要按的按鈕超過 1.5 秒（例如畫面被別的視窗蓋住）：暫時不擋，免得卡住。
     /// 內容由 SoloBattle.Walkthrough.cs 每幀設定。
     /// </summary>
     public class UiLock : MonoBehaviour
@@ -23,8 +22,6 @@ namespace SpellDuel
         /// <summary>指引每一幀都要回報（SoloBattle 沒在畫＝回到首頁等：鎖自動解除）</summary>
         public static int Beat = -99;
         static readonly List<Rect> rects = new List<Rect>();
-        static float lastSeen = -99f;
-        const float LostAfter = 1.5f;
 
         public static void Ensure()
         {
@@ -55,16 +52,14 @@ namespace SpellDuel
                     rects.Add(Rect.MinMaxRect(a.x, a.y, b.x, b.y));
                 }
                 UiKit.LockRectsBuilding.Clear();
-                if (rects.Count > 0) lastSeen = Time.unscaledTime;
             }
-            bool lost = UiKit.LockKey != null && Time.unscaledTime - lastSeen > LostAfter;
-            UiKit.LockBypass = !Block || (lost && !NextButton);
+            UiKit.LockBypass = !Block;   // 找不到按鈕也不放行：完全不准按其他地方
 
             float W = Screen.width, H = Screen.height;
             int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.85f);
             var safe = Screen.safeArea;
             float pad = W * 0.04f, topY = H - safe.yMax, botY = H - safe.y;
-            bool haveTarget = rects.Count > 0 && !lost;
+            bool haveTarget = rects.Count > 0;
             var tgt = haveTarget ? rects[0] : new Rect(W / 2f, H / 2f, 0f, 0f);
             // 說明框：放在目標的另一半邊（目標在下半部 → 說明在上面）
             float ch = fs * 6.2f, cw = W - pad * 2;
@@ -77,7 +72,7 @@ namespace SpellDuel
             if (Blocking && IsPointer(e.type))
             {
                 bool ok = NextButton && nb.Contains(e.mousePosition);
-                if (!lost) foreach (var r in rects) if (r.Contains(e.mousePosition)) { ok = true; break; }
+                foreach (var r in rects) if (r.Contains(e.mousePosition)) { ok = true; break; }
                 if (!ok) { e.Use(); return; }
             }
 
@@ -109,7 +104,6 @@ namespace SpellDuel
             string head = "🧭 新手指引" + (StepCount > 0 ? $" {StepNo}/{StepCount}" : "") + (string.IsNullOrEmpty(Title) ? "" : "・" + Title);
             UiKit.Text(new Rect(card.x + gap, card.y + gap * 0.4f, card.width - gap * 2, fs * 1.4f), head, fs, col, TextAnchor.MiddleLeft, true);
             string body = Text ?? "";
-            if (lost && !NextButton) body += "\n（畫面上找不到要按的按鈕：照說明操作就好，這時候其他按鈕暫時也能按）";
             UiKit.Text(new Rect(card.x + gap, card.y + fs * 1.6f, card.width - gap * 2 - (NextButton ? fs * 7.5f : 0f), card.height - fs * 1.8f), body, fsS, new Color(0.95f, 0.97f, 1f), TextAnchor.UpperLeft, false, 0.6f);
             if (NextButton)
             {

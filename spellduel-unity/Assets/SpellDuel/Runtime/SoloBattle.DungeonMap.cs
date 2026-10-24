@@ -116,7 +116,7 @@ namespace SpellDuel
                 if (n.rewardRarity > 0)
                 {
                     ItemGen.SetTheme = drun.Theme;
-                    var it = ItemGen.Make(dropRng, dungeon.level, n.rewardRarity, myClass);
+                    var it = ItemGen.Make(dropRng, dungeon.level + battle.levelBoost, n.rewardRarity, myClass);
                     pendingItems.Add(it);
                     got += (got.Length > 0 ? "、" : "") + $"[{Item.RarityNames[n.rewardRarity]}] {it.name}";
                 }
@@ -294,7 +294,7 @@ namespace SpellDuel
         void HostOpenChest()
         {
             int rar = DiceRoll.ChestRarity(runRng);
-            int ilvl = dungeon.level;   // 難度不加物品等級
+            int ilvl = dungeon.level + battle.levelBoost;
             int seed = runRng.Next(1, int.MaxValue);
             int id = ++chestSeq + MyPid * 1000;
             NetSend?.Invoke(new Msg { t = "chest", id = id, e = rar, dmg = ilvl, hp = seed });

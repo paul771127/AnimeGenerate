@@ -104,6 +104,9 @@ namespace SpellDuel
             UiLock.StepNo = walkStep + 1; UiLock.StepCount = walkSteps.Count;
         }
 
+        /// <summary>還有沒有能加的能力值（點數不夠下一點的花費也算沒有：免得卡在這一步）</summary>
+        static bool AnyRaise(CharacterProfile p) { foreach (Stat s in Enum.GetValues(typeof(Stat))) if ((int)s < StatInfo.Count && p.CanRaise(s)) return true; return false; }
+
         Item FindItem(long uid)
         {
             if (uid == 0) return null;
@@ -145,13 +148,13 @@ namespace SpellDuel
                     Node("nv_t_stone", "nv_stone");
                     Node("nv_t_swing", "nv_swing");
                     Node("nv_t_aid", "nv_aid");
-                    S("📊 能力值", "能力值", () => "再來是能力值：按上面的「📊 能力值」分頁。", () => charOpen && charPanel.tab == 0, () => P().statPoints <= 0)
+                    S("📊 能力值", "能力值", () => "再來是能力值：按上面的「📊 能力值」分頁。", () => charOpen && charPanel.tab == 0, () => !AnyRaise(P()))
                         .enter = () => walkStatStart = P().statPoints;
                     S("＋", "加能力點", () =>
                     {
                         int need = Mathf.Min(5, walkStatStart), did = walkStatStart - P().statPoints;
                         return $"按能力值旁邊的「＋」加點（至少 {need} 點，加哪一項都可以；每項的效果寫在旁邊）。力量＝木棍更痛、體質＝血更多、敏捷＝普攻集氣更快。\n已經加了 {Mathf.Max(0, did)}/{need} 點";
-                    }, () => walkStatStart - P().statPoints >= Mathf.Min(5, walkStatStart) || P().statPoints <= 0)
+                    }, () => walkStatStart - P().statPoints >= Mathf.Min(5, walkStatStart) || !AnyRaise(P()))
                         .enter = () => walkStatStart = P().statPoints;
                     S("=完成", "完成", () => "點好了！按下面的「完成」關掉角色畫面。", () => !charOpen);
                     S("大地圖", "前往大地圖", () => "準備出發：按「🗺 大地圖」。", () => storyMapOpen && world.screen == WorldUI.Screen.Map);
@@ -172,12 +175,14 @@ namespace SpellDuel
                     ToList("鐵匠鋪也在清單裡。");
                     S("📜 角色", "打開角色", () => "穿上小鐵送的武器：按「📜 角色」。", () => charOpen, () => !Have());
                     S("🛡 裝備", "裝備", () => "按上面的「🛡 裝備」分頁。上面是身上穿的、下面是背包。", () => charOpen && charPanel.tab == 2, () => !Have());
-                    S("item:" + uid, "選武器", () => "在背包裡點小鐵送你的武器（藍色的名字），右邊會比較它和身上的裝備。", () => charPanel.SelItem != null && charPanel.SelItem.uid == uid, () => !Have() || P().equipped[(int)Slot.Weapon]?.uid == uid);
+                    S("item:" + uid, "選武器", () => "在背包裡點小鐵送你的武器（藍色的名字），右邊會比較它和身上的裝備。", () => charPanel.SelItem != null && charPanel.SelItem.uid == uid, () => !Have() || P().equipped[(int)Slot.Weapon]?.uid == uid)
+                        .enter = () => charPanel.FocusUid = uid;
                     S("=裝備", "穿上", () => "按「裝備」穿上它！穿不上的話，按鈕會寫原因（等級、能力值不夠）。", () => P().equipped[(int)Slot.Weapon]?.uid == uid, () => !Have());
                     S("=完成", "完成", () => "穿好了！按「完成」關掉角色畫面。", () => !charOpen);
                     S("⚒ 鐵匠鋪", "鐵匠鋪", () => "最後是強化：按「⚒ 鐵匠鋪」。", () => storyMapOpen && world.screen == WorldUI.Screen.Smith, () => !Have());
-                    S("item:" + uid, "選要強化的裝備", () => "點剛穿上的武器（👕＝身上穿著的）。", () => world.SelItem != null && world.SelItem.uid == uid, () => !Have());
-                    S("⚒ 強化（", "強化", () => "按「⚒ 強化」：付金幣讓武器變強（每一級所有屬性 +8%）。", () => (FindItem(uid)?.plus ?? 1) > 0, () => !Have());
+                    S("item:" + uid, "選要強化的裝備", () => "點剛穿上的武器（👕＝身上穿著的）。", () => world.SelItem != null && world.SelItem.uid == uid, () => !Have())
+                        .enter = () => world.FocusUid = uid;
+                    S("⚒ 強化（", "強化", () => "按「⚒ 強化」：付金幣讓武器變強（每一級所有屬性 +8%）。", () => (FindItem(uid)?.plus ?? 1) > 0, () => !Have() || Economy.Gold < Economy.EnhanceCost(FindItem(uid)));
                     S("@next", "強化的規則", () => "+5 之前保證成功；再往上會有機會失敗（失敗不會壞掉，只是金幣花掉了）。打怪拿到的金幣，記得回來強化裝備！", null);
                     break;
                 }

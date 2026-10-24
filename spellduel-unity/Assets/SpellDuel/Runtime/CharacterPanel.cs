@@ -16,6 +16,8 @@ namespace SpellDuel
         Item selItem;                   // 裝備：選中的物品（背包或身上）
         /// <summary>新手指引用</summary>
         public string SelNode => selNode;
+        /// <summary>新手指引：下次畫背包時翻到這一件所在的那一頁（並關掉信箱、倉庫）</summary>
+        public long FocusUid;
         public Item SelItem => selItem;
         Item discardArm; float discardArmUntil, resetArmUntil;   // 丟掉／重新分配：要按兩次確認
         int page;
@@ -328,6 +330,7 @@ namespace SpellDuel
             float by = b.y + 5 * (sh + gap * 0.3f) + gap * 0.5f;
             var bag = Progress.Bag;
             int per = 12, pages = Mathf.Max(1, (bag.Count + per - 1) / per);
+            if (FocusUid != 0) { int fi = bag.FindIndex(x => x.uid == FocusUid); if (fi >= 0) page = fi / per; mailOpen = false; stashOpen = false; FocusUid = 0; }   // 新手指引：翻到要點的那一件
             page = Mathf.Clamp(page, 0, pages - 1);
             // 背包容量：一條進度條（快滿了變黃、滿了變紅）＋信箱按鈕（有信才亮，數字＝封數）
             var mails = Progress.Mailbox;

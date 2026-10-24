@@ -197,7 +197,7 @@ namespace SpellDuel
         public static Action<string, string> Set = (k, v) => { };
         static HashSet<string> cleared;
         /// <summary>換角色：通關／看過的紀錄重新讀</summary>
-        public static void ResetCache() { cleared = null; seen = null; }
+        public static void ResetCache() { cleared = null; seen = null; clearedAt = new HashSet<string>[3]; }
         static HashSet<string> Cleared
         {
             get
@@ -214,6 +214,30 @@ namespace SpellDuel
         public static Func<StoryStage, string> Gate;
         public static string LockReason(StoryStage s) => Gate?.Invoke(s);
         public static void MarkCleared(string id) { if (Cleared.Add(id)) Set("sd_story_clear", string.Join(",", Cleared)); }
+        // 普通、困難的通關紀錄（簡單＝上面的 Cleared；以前的紀錄都算簡單）：困難通關也算普通通關
+        static HashSet<string>[] clearedAt = new HashSet<string>[3];
+        static HashSet<string> ClearedAt(int d)
+        {
+            d = Mathf.Clamp(d, 1, 2);
+            if (clearedAt[d] == null) { clearedAt[d] = new HashSet<string>(); foreach (var s in (Get?.Invoke("sd_story_clear_d" + d) ?? "").Split(',')) if (s.Length > 0) clearedAt[d].Add(s); }
+            return clearedAt[d];
+        }
+        public static bool IsClearedAt(string id, int d) => d <= 0 ? IsCleared(id) : ClearedAt(d).Contains(id);
+        public static void MarkCleared(string id, int d)
+        {
+            MarkCleared(id);
+            for (int k = 1; k <= Mathf.Min(2, d); k++) if (ClearedAt(k).Add(id)) Set("sd_story_clear_d" + k, string.Join(",", ClearedAt(k)));
+        }
+        /// <summary>難度開放了沒：簡單一直開；普通＝所有故事關卡簡單通關；困難＝所有故事關卡普通（或困難）通關</summary>
+        public static bool DifficultyOpen(int d)
+        {
+            if (d <= 0) return true;
+            int n = 0;
+            foreach (var s in AllStages()) { n++; if (!IsClearedAt(s.id, d - 1)) return false; }
+            return n > 0;   // 關卡還沒讀進來：先當作沒開
+        }
+        /// <summary>現在能選的最高難度</summary>
+        public static int MaxOpenDifficulty => DifficultyOpen(2) ? 2 : DifficultyOpen(1) ? 1 : 0;
 
         // 故事只自動播一次：看過的開場（id）／結尾（id+"!"）記下來，之後要看就按「📖 看故事」
         static HashSet<string> seen;

@@ -54,7 +54,7 @@ namespace SpellDuel
         void WireVillage()
         {
             world.GetDifficulty = () => difficulty;
-            world.SetDifficulty = d => { difficulty = Mathf.Clamp(d, 0, 2); PlayerPrefs.SetInt("sd_difficulty", difficulty); };
+            world.SetDifficulty = d => { d = Mathf.Clamp(d, 0, 2); if (!Story.DifficultyOpen(d)) return; difficulty = d; PlayerPrefs.SetInt("sd_difficulty", difficulty); };
             world.OnStartDaily = k =>
             {
                 villageReturn = WorldUI.Screen.Training; enemyClass = "daily"; dailyPick = k; PlayerPrefs.SetInt("sd_daily_pick", k);

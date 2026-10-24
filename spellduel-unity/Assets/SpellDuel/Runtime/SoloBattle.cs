@@ -420,18 +420,18 @@ namespace SpellDuel
             int luk = prof.Total(Stat.Luk);
             float lootMul = dungeon != null ? Dungeons.LootMul(coop ? 1 + PeerIds.Count : 1) : 1f;   // 副本：人越多掉寶率越高（最多 ×1.5）
             if (!boss && dropRng.NextDouble() > (0.06 + 0.002 * luk) * lootMul) return;
-            int rar = ItemGen.RollRarity(dropRng, luk * 0.3f + (storyStage != null || dungeon != null ? battle.levelBoost * 0.5f : 0f), boss ? 2 : 0);   // 普通、困難：稀有度提高（物品等級不變）
+            int rar = ItemGen.RollRarity(dropRng, luk * 0.3f, boss ? 2 : 0);
             int ilvl = Mathf.Max(1, prof.level + dropRng.Next(-1, 3) + battle.wave / 10);   // 無盡：物品等級跟著角色等級（越後面的波次略高）
-            if (dungeon != null) ilvl = dungeon.level + dropRng.Next(-1, 2);   // 副本：物品等級＝副本等級（難度不加物品等級：難度只加稀有度、金幣、經驗）
+            if (dungeon != null) ilvl = dungeon.level + battle.levelBoost + dropRng.Next(-1, 2);   // 副本：物品等級＝副本等級（普通＋40、困難＋80）
             else if (storyStage != null)
             {
                 // 故事：照地區的等級帶掉（熔岩 1～10、森林 11～20、海上 21～30），越後面的關卡越高
                 var (lo, hi) = Story.LevelBand(storyStage.theme);
-                ilvl = Mathf.Clamp(battle.wave + dropRng.Next(-2, 2), lo, hi);   // 難度不加物品等級（以前普通＋20：第一章掉出 25 級才能穿的裝備）
+                ilvl = Mathf.Clamp(battle.wave + dropRng.Next(-2, 2), lo, hi) + battle.levelBoost;   // 簡單＝這一章的等級帶（第一章 1～10）；普通＋40、困難＋80
             }
             ItemGen.SetTheme = battle.Theme;   // 主題地圖掉對應的套裝
             var it = ItemGen.Make(dropRng, ilvl, rar, myClass);
-            if (storyStage != null) { var (blo, bhi) = Story.LevelBand(storyStage.theme); it.reqLevel = Mathf.Clamp(it.reqLevel, blo, bhi); }   // 需求等級也在這一章的等級帶裡（第一章 1～10）
+            if (storyStage != null) { var (blo, bhi) = Story.LevelBand(storyStage.theme); it.reqLevel = Mathf.Clamp(it.reqLevel, blo + battle.levelBoost, bhi + battle.levelBoost); }   // 需求等級也在這一章的等級帶裡（簡單第一章 1～10；普通、困難再加難度的等級）
             pendingItems.Add(it);   // 先暫存：過關才拿得到
             floaters.Add(new Floater { text = $"🎁 [{Item.RarityNames[rar]}] {it.name}（過關後獲得）", color = Item.RarityColors[rar], born = Time.time, screen = true });
             Sfx.Play(rar >= 3 ? "win" : "select", rar >= 3 ? 0.7f : 0.8f, 1.2f);
@@ -675,8 +675,8 @@ namespace SpellDuel
         // 電腦難度：0 簡單、1 普通、2 困難（電腦出招慢／瞄得不準／少防禦，玩家受到的傷害也打折）
         int difficulty = 1;
         static readonly string[] DifficultyNames = { "簡單", "普通", "困難" };
-        /// <summary>故事關卡、副本的難度＝等級：普通＝簡單再加 20 級、困難＝再加 40 級（敵人照加的等級變強；其他設定和簡單一樣）</summary>
-        public const int LevelPerDifficulty = 20;
+        /// <summary>故事關卡、副本的難度＝等級：普通＝簡單再加 40 級、困難＝再加 80 級（敵人、掉落裝備照加的等級變強；其他設定和簡單一樣）。簡單全破才開普通、普通全破才開困難</summary>
+        public const int LevelPerDifficulty = 40;
         public static int LevelBoostFor(int d) => Mathf.Clamp(d, 0, 2) * LevelPerDifficulty;
         /// <summary>難度的獎勵倍率（經驗、金幣）：普通 ×1.5、困難 ×2</summary>
         public static float RewardMulFor(int d) => 1f + 0.5f * Mathf.Clamp(d, 0, 2);
@@ -760,7 +760,7 @@ namespace SpellDuel
             cam = camera; area = playArea; mat = baseMat;
             ReadCharacterChoices();
             dailyPick = Mathf.Clamp(PlayerPrefs.GetInt("sd_daily_pick", 0), 0, DailyChallenge.KindCount - 1);
-            difficulty = Mathf.Clamp(PlayerPrefs.GetInt("sd_difficulty", 1), 0, 2);
+            difficulty = Mathf.Clamp(PlayerPrefs.GetInt("sd_difficulty", 0), 0, 2);
             voiceOn = true;   // 一定要唸技能名稱才能詠唱，語音固定開啟
             voice = VoiceTemplates.Load();
             speech = new SpeechInput();
@@ -931,7 +931,7 @@ namespace SpellDuel
             UiKit.Text(new Rect(pad, y, lw, u * 1.1f), "難度", fsS, new Color(1f, 0.9f, 0.6f));
             Color[] cols = { new Color(0.4f, 0.9f, 0.5f), new Color(1f, 0.8f, 0.3f), new Color(1f, 0.35f, 0.35f) };
             for (int i = 0; i < 3; i++)
-                if (UiKit.Button(new Rect(pad + lw + gap + i * (bw + gap), y, bw, u * 1.1f), DifficultyNames[i], fsS, difficulty == i, cols[i]))
+                if (UiKit.Button(new Rect(pad + lw + gap + i * (bw + gap), y, bw, u * 1.1f), Story.DifficultyOpen(i) ? DifficultyNames[i] : "🔒 " + DifficultyNames[i], fsS, difficulty == i, cols[i], Story.DifficultyOpen(i)))
                 { difficulty = i; PlayerPrefs.SetInt("sd_difficulty", difficulty); }
             y += u * 1.1f + gap;
         }
@@ -981,7 +981,7 @@ namespace SpellDuel
             }
             SyncPlayer(me);
             battle = new Battle(me, boss);
-            if (LevelDifficulty) battle.levelBoost = LevelBoostFor(difficulty);   // 普通＋20 級、困難＋40 級
+            if (LevelDifficulty) battle.levelBoost = LevelBoostFor(difficulty);   // 普通＋40 級、困難＋80 級
             else if (!endlessMode)
             {
                 // 討伐 Boss／合作打 Boss：Boss 依（房主的）角色等級變強（血量 +3.5%／級、攻擊 +2%／級，召喚的小怪也一樣）
@@ -1055,7 +1055,7 @@ namespace SpellDuel
                         if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.theme >= 0 && pendingStage.theme < StoryBossHp.Length)
                         { battle.storyBossHp = StoryBossHp[pendingStage.theme]; battle.storyBossDmg = StoryBossDmg[pendingStage.theme]; }
                         if (pendingStage.theme == 1 && pendingStage.id != "trial") { battle.enemyHpMul = 2f; battle.enemyDmgMul = 2f; battle.rangedWindupMul = 1.5f; battle.rangedShotSpeedMul = 0.5f; battle.meleeHpMul = 0.7f; battle.rangedRecoverAdd = 3f; }   // 第二章：遠程小怪出手前準備 ×1.5、飛行速度 ×0.5、每次出手後多休息 3 秒；近戰小怪血量 ×0.7   // 第二章森林：小怪血量、攻擊 ×2（Boss 照上面的表）
-                        if (pendingStage.id == "1-1" || pendingStage.id == "1-2" || pendingStage.id == "1-3") { battle.enemyHpMul *= EarlyStageMul; battle.enemyDmgMul *= EarlyStageMul; }   // 1-1～1-3：敵人血量、傷害 ×60%（新手關）
+                        if ((pendingStage.id == "1-1" || pendingStage.id == "1-2" || pendingStage.id == "1-3") && difficulty == 0) { battle.enemyHpMul *= EarlyStageMul; battle.enemyDmgMul *= EarlyStageMul; }   // 1-1～1-3 簡單：敵人血量、傷害 ×60%（新手關；普通、困難照一般設計）
                         if (pendingStage.theme == 2 && pendingStage.id != "trial") { battle.rangedCountMul = 0.5f; battle.meleeCountMul = 1.5f; battle.spawnGapAdd = 5f; }   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         ApplyNoviceRoute(pendingStage);   // 1-1～1-3：4m×4m 小場地；1-1、1-2 只有近戰小怪（SoloBattle.NoviceRoute.cs）
@@ -1559,10 +1559,10 @@ namespace SpellDuel
                     {
                         bool last = i == fought.Count - 1;
                         ItemGen.SetTheme = d.ThemeOf(fought[i]);
-                        pendingItems.Add(ItemGen.Make(dropRng, d.level, last ? 3 : Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
+                        pendingItems.Add(ItemGen.Make(dropRng, d.level + battle.levelBoost, last ? 3 : Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
                         // 人數加成：每個房間有（倍率−1）的機會多掉一件（稀有度照常擲，越稀有越難掉）
                         if (dropRng.NextDouble() < Dungeons.LootMul(coop ? 1 + PeerIds.Count : 1) - 1f)
-                            pendingItems.Add(ItemGen.Make(dropRng, d.level, ItemGen.RollRarity(dropRng, 0f, 0), myClass));
+                            pendingItems.Add(ItemGen.Make(dropRng, d.level + battle.levelBoost, ItemGen.RollRarity(dropRng, 0f, 0), myClass));
                     }
                     float drmul = 1f + battle.levelBoost / (2f * LevelPerDifficulty);   // 普通 ×1.5、困難 ×2
                     pendingGold += Mathf.RoundToInt(60 * d.level * drmul);
@@ -1588,7 +1588,7 @@ namespace SpellDuel
                 if (battle.stageCleared)
                 {
                     bool first = !Story.IsCleared(st.id);
-                    Story.MarkCleared(st.id);
+                    Story.MarkCleared(st.id, difficulty);   // 記下在哪個難度通關（簡單全破開普通、普通全破開困難）
                     float rmul = 1f + battle.levelBoost / (2f * LevelPerDifficulty);   // 普通 ×1.5、困難 ×2
                     int stXp = Mathf.RoundToInt(st.xp * rmul);
                     pendingGold += Mathf.RoundToInt(Economy.StageGold(st) * rmul);
@@ -3102,6 +3102,7 @@ namespace SpellDuel
         {
             Styles();
             TickWalk();   // 新手指引：這一步要按哪一顆按鈕（SoloBattle.Walkthrough.cs）
+            if (!NetMode && phase != Phase.Fighting && !Story.DifficultyOpen(difficulty)) difficulty = Story.MaxOpenDifficulty;   // 還沒解鎖的難度不能用（以前預設普通的存檔：退回簡單）
             if (StoryVideo.Active) { StoryVideo.DrawGUI(); return; }   // 劇情影片（下載中、播放）蓋住整個畫面
             TipInput();   // 情境教學的提示卡：先吃掉落在卡片上的點擊（SoloBattle.Tips.cs）
             // 技能說明視窗只屬於打開它的那個畫面：換畫面（整備、角色、地圖、對話、開打／結算）或這個介面有一陣子沒畫（回到大廳、村子）就關掉，

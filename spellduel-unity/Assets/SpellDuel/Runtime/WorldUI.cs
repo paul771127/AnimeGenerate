@@ -129,6 +129,7 @@ namespace SpellDuel
         public string TalkingTo => screen == Screen.Town && !walkMode && npcTalk >= 0 && npcTalk < Towns[town].npcs.Length ? Towns[town].npcs[npcTalk].name : null;
         public string SelStageId => sel?.id;
         public Item SelItem => selItem;
+        public long FocusUid;
 
         // ---------------------------------------------------------------- 畫面
         public void Draw(CharacterProfile prof)
@@ -243,7 +244,7 @@ namespace SpellDuel
                 string waves = sel.HasBoss && sel.fromWave >= 10 ? "Boss 戰" : $"{sel.toWave - sel.fromWave + 1} 波" + (sel.HasBoss ? "＋Boss" : "");
                 UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.3f, dr.width - gap * 2, fs * 1.4f), $"{sel.id}　{sel.title}" + (clear ? "　✔ 已通關" : Story.LockReason(sel) is string why ? $"　🔒 {why}" : ""), fs, Color.white, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(dr.x + gap, dr.y + fs * 1.7f, dr.width - gap * 2, fs * 2.6f),
-                    (sel.desc.Length > 0 ? sel.desc.Split('\n')[0] + "\n" : "") + $"{RegionNames[sel.theme]}・{waves}・推薦 Lv{Mathf.Max(1, sel.FirstWave - 1) + Boost}+・掉落裝備 Lv{Story.LevelBand(sel.theme).lo}–{Story.LevelBand(sel.theme).hi}\n經驗 {Mathf.RoundToInt(sel.xp * SoloBattle.RewardMulFor(Difficulty))}・💰 {Mathf.RoundToInt(Economy.StageGold(sel) * SoloBattle.RewardMulFor(Difficulty))}", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
+                    (sel.desc.Length > 0 ? sel.desc.Split('\n')[0] + "\n" : "") + $"{RegionNames[sel.theme]}・{waves}・推薦 Lv{Mathf.Max(1, sel.FirstWave - 1) + Boost}+・掉落裝備 Lv{Story.LevelBand(sel.theme).lo + Boost}–{Story.LevelBand(sel.theme).hi + Boost}\n經驗 {Mathf.RoundToInt(sel.xp * SoloBattle.RewardMulFor(Difficulty))}・💰 {Mathf.RoundToInt(Economy.StageGold(sel) * SoloBattle.RewardMulFor(Difficulty))}", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
                 DifficultyRow(new Rect(dr.x + gap, dr.y + fs * 4.5f, dr.width - gap * 2, fs * 1.9f), fsS, true);
                 bool story = Story.HasStory(sel) && Story.IsSeen(sel.id);   // 看過的故事不再自動播，可以按這裡重看
                 int nb = story ? 3 : 2;
@@ -533,9 +534,9 @@ namespace SpellDuel
             float y = r.y + gap;
             Header(r, $"🚪 第 {th + 1} 章 {RegionNames[th]}", RegionColors[th], prof, fs, fsS, fsL, gap, ref y);
             var band = Story.LevelBand(th);
-            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), $"{Story.BandText(th)}　掉落裝備 Lv{band.lo}–{band.hi}　打過的關卡可以重打刷裝備", fsS, new Color(0.85f, 0.88f, 1f));
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), $"{Story.BandText(th)}　掉落裝備 Lv{band.lo + Boost}–{band.hi + Boost}　打過的關卡可以重打刷裝備", fsS, new Color(0.85f, 0.88f, 1f));
             y += fs * 1.5f;
-            DifficultyRow(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.9f), fsS, true);   // 普通＝＋20 級、困難＝＋40 級
+            DifficultyRow(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.9f), fsS, true);   // 普通＝＋40 級、困難＝＋80 級
             y += fs * 2.2f;
             var stages = new List<StoryStage>();
             foreach (var s in Story.AllStages()) if (s.theme == th) stages.Add(s);
@@ -604,6 +605,7 @@ namespace SpellDuel
         {
             const int per = 8;
             int pages = Mathf.Max(1, (items.Count + per - 1) / per);
+            if (FocusUid != 0) { int fi = items.FindIndex(x => x.uid == FocusUid); if (fi >= 0) page = fi / per; FocusUid = 0; }   // 新手指引：翻到要點的那一件
             page = Mathf.Clamp(page, 0, pages - 1);
             float cw = (r.width - gap * 3) / 2f, ch = fs * 2.2f;
             for (int i = 0; i < per; i++)

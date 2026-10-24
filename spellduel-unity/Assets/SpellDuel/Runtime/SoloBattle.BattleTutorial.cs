@@ -43,7 +43,7 @@ namespace SpellDuel
             btStage = 0; btStep = 0; btTarget = null; btSpawned = 0; btDodged = 0;
             if (battle == null || st == null) return;
             var p = Progress.Char(myClass);
-            bool early = st.id == "1-1" || st.id == "1-2" || st.id == "1-3";
+            bool early = (st.id == "1-1" || st.id == "1-2" || st.id == "1-3") && difficulty == 0;   // 只有簡單難度是新手設計
             if (early && p.cls == Skills.Novice)
             {
                 string sid = st.id;
@@ -51,7 +51,7 @@ namespace SpellDuel
                 battle.minionHpOverride = k => k == 0 ? Mathf.Floor(StickDamage * 0.9f)
                     : k == 2 && sid == "1-2" ? Mathf.Max(StickDamage + 1f, Mathf.Floor(SwingDamage * 0.95f)) : 0f;
             }
-            if (NetMode || coop || p.cls != Skills.Novice) return;
+            if (NetMode || coop || p.cls != Skills.Novice || difficulty != 0) return;
             if (st.id == "1-1" && !BtFlag("11"))
             {
                 btStage = 11; BeginBt(Bt11Wait);

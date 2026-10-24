@@ -734,7 +734,7 @@ namespace SpellDuel
         /// <summary>Boss 血量的人數倍率：每多一位玩家 +50%</summary>
         public float BossPartyMul => dungeonParty > 0 ? dungeonParty : 1f + 0.5f * ScaleAllies;
         int Tier => Mathf.Max(0, wave - 1 + levelBoost);
-        /// <summary>難度加的等級（故事關卡、副本：簡單 0、普通 +20、困難 +40）：敵人的血量、攻擊、速度照「波次＋這個數」成長</summary>
+        /// <summary>難度加的等級（故事關卡、副本：簡單 0、普通 +40、困難 +80）：敵人的血量、攻擊、速度照「波次＋這個數」成長</summary>
         public int levelBoost;
         /// <summary>難度加的等級對 Boss 的倍率（Boss 的血量不跟波次走，另外乘）</summary>
         public float BoostHpMul => 1f + HpPerWave * levelBoost;
