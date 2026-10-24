@@ -2714,7 +2714,7 @@ namespace SpellDuel
             var live = new HashSet<Pet>(battle.pets);
             foreach (var p in battle.pets)
             {
-                if (!p.alive) continue;
+                if (!p.alive || p.kind == "tamed") continue;   // 收服的魔物：身體用小怪的模型畫（SoloBattle.DungeonMap.cs UpdateNpcRigs）
                 if (!petGo.TryGetValue(p, out var rig) || rig == null)
                 {
                     var ownerCol = p.owner != null && p.owner.cls != null ? p.owner.cls.color : Color.white;
@@ -3794,6 +3794,7 @@ namespace SpellDuel
                 UiKit.Text(new Rect(fr.x + gap, fr.y + fr.height * 0.5f, fr.width - gap * 2, fr.height * 0.45f), Tracking.Reason + (NetMode ? "\n對手仍以你最後的位置判定" : "\n恢復追蹤後自動繼續"), fs, new Color(0.9f, 0.92f, 1f), TextAnchor.MiddleCenter);
             }
 
+            if (phase == Phase.Fighting && drun == null && battle != null && battle.npcs.Count > 0) DrawNpcBars(W, H, lh, fsS);   // 收服的魔物：頭上的名字與血條
             if (phase == Phase.Fighting && drun != null)
             {
                 // 副本地圖：人物頭上的血條、對話窗（藥水列上方、提示文字再上面）、任務／抉擇／寶箱／選下一站（SoloBattle.DungeonMap.cs）

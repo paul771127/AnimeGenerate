@@ -6,7 +6,7 @@ namespace SpellDuel
     public enum SkillType { Projectile, Self, Trap }
     public enum SelfKind { None, Heal, Block, Shield, Counter, Armor, Cleanse, Prayer, Dispel, Summon, Mana, Focus, Prep, Taunt,
         // 進階職業
-        Oath, Frenzy, Undying, DeadMark, SwordCome, FlyingSwords, RollShot, ManaShield, Pet, Detonate, Substitute, Clone, Dance, Fog, Revive, HealPct, TeamShield }
+        Oath, Frenzy, Undying, DeadMark, SwordCome, FlyingSwords, RollShot, ManaShield, Pet, Detonate, Substitute, Clone, Dance, Fog, Revive, HealPct, TeamShield, Capture }
     public enum EffectKind { None, Dot, Blind, Snare, Mark, Burn }
 
     /// <summary>
@@ -127,7 +127,7 @@ namespace SpellDuel
             ["na_arrow"] = 3f, ["quickshot"] = 3f, ["snipe"] = 3f, ["triple"] = 3f, ["pierce"] = 3f, ["rollarrow"] = 3f, ["arrowrain"] = 3f, ["pet_falcon"] = 3f,
             // 法師：奧術飛彈、火球 1.4；風刃 2.2；冰槍 1.8；雷擊 2.2；隕石落下 2.0
             ["na_mage"] = 1.4f, ["fire"] = 1.4f, ["echo_fire"] = 2f, ["echo_ice"] = 2f, ["wind"] = 2.2f, ["ice"] = 1.8f, ["thunder"] = 2.2f, ["meteor"] = 2.0f,
-            ["tjudge"] = 2.2f, ["frostfield"] = 1.4f, ["pet_fire"] = 1.4f,
+            ["tjudge"] = 2.2f, ["frostfield"] = 1.4f, ["pet_fire"] = 1.4f, ["pet_ice"] = 1.6f, ["pet_tamed"] = 1.4f,
             // 牧師：約 1.4
             ["na_holy"] = 1.4f, ["holy"] = 1.4f, ["judgement"] = 1.4f, ["chastise"] = 1.4f, ["heavenpunish"] = 1.4f, ["holylance"] = 1.6f,
             // 劍士、刺客的飛行技能
@@ -297,6 +297,9 @@ namespace SpellDuel
             // 法師・召喚師
             P(new SkillDef { adv = "summoner", id = "firespirit", cls = "mage", name = "火靈", type = SkillType.Self, self = SelfKind.Pet, petKind = "fire", petLife = 15f, petInterval = 2f, petRange = 7f, color = C("#fb923c"), cost = 45, damage = 12, charge = 1.5f, cooldown = 12f, chant = "火之精靈啊回應契約現身吧", desc = "召喚火靈 15 秒：浮在身邊，每 2 秒朝 7m 內最近的敵人丟火球" });
             P(new SkillDef { adv = "summoner", id = "golem", cls = "mage", name = "石像守衛", type = SkillType.Self, self = SelfKind.Pet, petKind = "golem", petLife = 15f, petInterval = 1.5f, petRange = 1.8f, petHp = 80, color = C("#a8a29e"), cost = 50, damage = 9, charge = 1.8f, cooldown = 18f, chant = "大地的守衛啊以岩石之軀守護吾身", desc = "召喚石像 15 秒（HP 80）：替你承受一半的傷害，並攻擊靠近它的敵人" });
+            P(new SkillDef { adv = "summoner", id = "icespirit", cls = "mage", name = "冰靈", type = SkillType.Self, self = SelfKind.Pet, petKind = "ice", petLife = 15f, petInterval = 2.5f, petRange = 7f, petHp = 40, color = C("#7dd3fc"), cost = 40, damage = 9, charge = 1.4f, cooldown = 14f, chant = "冰之精靈啊凍結敵人吧", desc = "召喚冰靈 15 秒：浮在身邊，每 2.5 秒朝 7m 內最近的敵人射冰錐，命中定身 0.6 秒" });
+            P(new SkillDef { adv = "summoner", id = "fairy", cls = "mage", name = "治癒妖精", type = SkillType.Self, self = SelfKind.Pet, petKind = "fairy", petLife = 18f, petInterval = 3f, petRange = 0f, petHp = 30, heal = 8, color = C("#f9a8d4"), cost = 40, charge = 1.4f, cooldown = 18f, chant = "癒之妖精啊守護吾身", desc = "召喚治癒妖精 18 秒：在頭上飛，每 3 秒幫你回 8 HP（隊友在 3m 內也會回）" });
+            P(new SkillDef { adv = "summoner", id = "capture", cls = "mage", name = "魔物捕捉", type = SkillType.Self, self = SelfKind.Capture, petLife = 30f, color = C("#84cc16"), cost = 30, charge = 1.0f, cooldown = 15f, chant = "野性之魂啊歸順吾之契約", desc = "收服面前 6m 內、血量剩一半以下的野生敵人（不含 Boss）：成為你的召喚獸 30 秒，用牠原本的攻擊幫你打；怪物也會攻擊牠" });
             P(new SkillDef { adv = "summoner", id = "detonate", cls = "mage", name = "元素爆裂", type = SkillType.Self, self = SelfKind.Detonate, areaRadius = 2f, color = C("#f97316"), cost = 20, damage = 30, charge = 0.8f, cooldown = 8f, chant = "契約破棄化為爆炎吧", desc = "引爆自己所有的召喚物：每隻在周圍 2m 造成爆炸傷害" });
             // 刺客・忍者（忍術：依序比出手印，見 Advanced.SealOf）
             P(new SkillDef { adv = "ninja", id = "substitute", cls = "assassin", name = "替身術", type = SkillType.Self, self = SelfKind.Substitute, color = C("#94a3b8"), cost = 15, charge = 0f, cooldown = 8f, buffDur = 1.5f, desc = "手印 3→2：1.5 秒內被打中時完全不受傷害（換成木頭替身）" });
@@ -317,6 +320,8 @@ namespace SpellDuel
             // 召喚物的攻擊（不在技能表裡；只用來判定命中與同步畫面）
             P(new SkillDef { id = "pet_falcon", cls = "pet", name = "獵鷹啄擊", type = SkillType.Projectile, color = C("#a16207"), damage = 7, speed = 12f, radius = 0.1f, rangeMax = 8f, desc = "獵鷹的攻擊" });
             P(new SkillDef { id = "pet_fire", cls = "pet", name = "火靈火球", type = SkillType.Projectile, color = C("#fb923c"), damage = 12, speed = 8f, radius = 0.12f, rangeMax = 7f, desc = "火靈的火球" });
+            P(new SkillDef { id = "pet_ice", cls = "pet", name = "冰靈冰錐", type = SkillType.Projectile, color = C("#7dd3fc"), damage = 9, speed = 8f, radius = 0.12f, rangeMax = 7f, effect = EffectKind.Snare, effectDur = 0.6f, desc = "冰靈的冰錐" });
+            P(new SkillDef { id = "pet_tamed", cls = "pet", name = "召喚獸攻擊", type = SkillType.Projectile, color = C("#84cc16"), damage = 9, speed = 6f, radius = 0.14f, rangeMax = 7f, desc = "收服的魔物的遠程攻擊" });
             P(new SkillDef { id = "pet_golem", cls = "pet", name = "石像重拳", type = SkillType.Projectile, color = C("#a8a29e"), damage = 9, speed = 8f, radius = 0.2f, rangeMax = 2f, desc = "石像的重拳" });
             P(new SkillDef { id = "pet_blast", cls = "pet", name = "召喚物爆炸", type = SkillType.Projectile, color = C("#f97316"), damage = 30, speed = 8f, radius = 0.3f, rangeMax = 2f, desc = "召喚物爆炸" });
             P(new SkillDef { id = "fogtick", cls = "pet", name = "毒霧侵蝕", type = SkillType.Projectile, color = C("#86efac"), damage = 6, speed = 1f, radius = 0f, rangeMax = 2f, desc = "毒霧" });

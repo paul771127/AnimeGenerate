@@ -17,7 +17,7 @@ namespace SpellDuel
         /// <summary>房主：劇情人物倒下（SoloBattle 套用到 DungeonRun、送給隊友）</summary>
         public event Action<Fighter> OnNpcDown;
         public const float NpcSpeed = 1.3f, NpcAttackGap = 1.6f;
-        static bool NpcMelee(Fighter n) => n.cls != null && (n.cls.id == "swordsman" || n.cls.id == "assassin");
+        static bool NpcMelee(Fighter n) => n.tamedKind >= 0 ? !IsRanged(n.tamedKind) : n.cls != null && (n.cls.id == "swordsman" || n.cls.id == "assassin");
 
         /// <summary>還有活著的敵方人物（第三勢力不算：打完這波就撤退）</summary>
         public bool HostileNpcAlive { get { foreach (var n in npcs) if (n.Alive && n.npcSide == 1) return true; return false; } }
@@ -57,6 +57,88 @@ namespace SpellDuel
             if (mv.sqrMagnitude > 1e-4f) n.forward = mv;
             n.head = head; n.hp = hp; n.maxHp = maxHp; n.npcSide = side;
             return n;
+        }
+
+        // ------------------------------------------------------------ 召喚師：魔物捕捉、餵養召喚物
+        /// <summary>魔物捕捉：面前 6m 內、血量剩一半以下的小怪（不含 Boss）→ 變成自己的召喚獸</summary>
+        void Capture(Fighter f, SkillDef s)
+        {
+            Fighter best = null; float bestScore = float.MaxValue;
+            var fw = Fighter.Flat(f.forward);
+            foreach (var m in minions)
+            {
+                if (!m.Alive || m.tamedKind >= 0) continue;
+                var to = m.Feet - f.Feet; to.y = 0f;
+                float d = to.magnitude;
+                if (d > CaptureRange + m.bodyRadius) continue;
+                if (d > 0.5f && fw != Vector3.zero && Vector3.Angle(fw, to) > 45f) continue;
+                float score = m.hp / Mathf.Max(1f, m.maxHp) + d * 0.02f;
+                if (score < bestScore) { bestScore = score; best = m; }
+            }
+            if (best == null) { Emit("fail", f.Chest, s.color, "魔物捕捉失敗：面前 6m 內沒有能收服的敵人（Boss 不行）"); return; }
+            if (best.hp > best.maxHp * TamedHpNeed) { Emit("fail", best.Chest, s.color, $"{best.name}還太有精神（血量要剩一半以下）"); return; }
+            // 成功：從敵人裡移走，變成友方的召喚獸（血量補滿，攻擊照牠原本的強度）
+            minions.Remove(best);
+            var mine = pets.FindAll(x => x.alive && !x.remote && x.owner == f && x.kind != "clone");
+            for (int i = 0; i <= mine.Count - MaxPets; i++) KillPet(mine[i]);
+            var body = SpawnNpc("tamed_" + nextId, "🐾 " + best.name.Replace("精銳・", ""), "priest", 0, false, Mathf.RoundToInt(best.maxHp), 0, best.Feet);
+            body.tamedKind = best.minionKind; body.maxHp = best.maxHp; body.hp = body.maxHp; body.dmgMul = best.dmgMul;
+            body.bodyRadius = best.bodyRadius; body.head = best.head; body.speedMul = best.speedMul;
+            var p = new Pet { id = nextId++, owner = f, kind = "tamed", until = now + s.petLife, body = body, pos = body.Chest, hp = body.hp, maxHp = body.maxHp };
+            pets.Add(p);
+            Emit("buff", body.Chest, s.color, $"收服了{best.name}！（{s.petLife:0} 秒）");   // 收服的魔物只在自己這台跑（不送給其他手機）
+        }
+
+        /// <summary>收服的魔物出手：近戰的直接打，遠程的射出綠色的召喚獸攻擊</summary>
+        void TamedStrike(Fighter n, Fighter tgt)
+        {
+            var pet = pets.Find(x => x.alive && x.body == n);
+            float pow = pet != null ? pet.power : 1f;
+            int dmg = Mathf.Max(1, Mathf.RoundToInt(9f * n.dmgMul * pow));
+            var s = Skills.All["pet_tamed"];
+            var owner = pet != null ? pet.owner : player;
+            if (NpcMelee(n))
+            {
+                Emit("minionattack", n.Feet, s.color, null);
+                HitFoe(owner, tgt, s, dmg);
+                return;
+            }
+            var from = n.head + Fighter.Flat(n.forward) * 0.3f;
+            var pr = Spawn(owner, s, from, (tgt.Chest - from).normalized, dmg, EffectKind.None, 0f, 0f, false);
+            pr.damage = dmg; pr.crit = false;
+        }
+
+        /// <summary>
+        /// 召喚師的攻擊（不是召喚物自己射的）飛過自己的召喚物 → 餵養：回血（＝這一發的傷害），攻擊、血量各 +1%（重新召喚就歸零）。
+        /// 剛出手的 0.6m 內不算（火靈、冰靈就浮在肩膀旁邊）。
+        /// </summary>
+        bool TryFeedPet(Projectile pr)
+        {
+            var o = pr.owner;
+            if (o == null || o.adv != "summoner" || pr.skill == null || pr.skill.cls == "pet" || pr.skill.cls == Souls.SoulCls || pr.traveled < 0.6f) return false;
+            foreach (var p in pets)
+            {
+                if (!p.alive || p.remote || p.owner != o || p.kind == "clone") continue;
+                float r = (p.body != null ? p.body.bodyRadius : 0.22f) + pr.skill.radius;
+                if ((pr.pos - p.pos).sqrMagnitude > r * r) continue;
+                pr.alive = false;
+                p.feeds++;
+                p.power *= 1f + FeedGrow;
+                float heal = Mathf.Max(1f, pr.damage);
+                if (p.body != null)
+                {
+                    p.body.maxHp = Mathf.RoundToInt(p.body.maxHp * (1f + FeedGrow)) + 1;
+                    p.body.hp = Mathf.Min(p.body.maxHp, p.body.hp + heal);
+                }
+                else
+                {
+                    p.maxHp *= 1f + FeedGrow;
+                    p.hp = Mathf.Min(p.maxHp, p.hp + heal);
+                }
+                Emit("heal", p.pos, new Color(0.55f, 1f, 0.5f), $"+{heal:0}　攻擊・血量 +{(p.power - 1f) * 100f:0}%");
+                return true;
+            }
+            return false;
         }
 
         /// <summary>人物離場（撤退、抵達安全地點、隊友端房主說他不在了）</summary>
@@ -143,6 +225,7 @@ namespace SpellDuel
         void NpcStrike(Fighter n, Fighter tgt, float d)
         {
             n.npcNextAtk = now + NpcAttackGap;
+            if (n.tamedKind >= 0) { TamedStrike(n, tgt); return; }
             var s = Skills.BasicOf(n.cls.id) ?? Skills.All["na_holy"];
             int dmg = Mathf.Max(1, Mathf.RoundToInt((n.npcSide == 0 ? 12f : 10f) * n.dmgMul));
             if (NpcMelee(n))

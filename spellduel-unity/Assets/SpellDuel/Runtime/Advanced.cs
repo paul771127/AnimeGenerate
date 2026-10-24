@@ -73,7 +73,7 @@ namespace SpellDuel
                 desc = "延長古老咒文，喚來雷霆與冰封之境", core = "咒文延長：唸完咒語後再唸增幅咒「" + AmpChant + "」→ 這一招傷害 +50%", weak = "HP −5；念錯咒語就放不出來",
                 skills = new[] { "tjudge", "frostfield", "manashield" } });
             Add(new AdvDef { id = "summoner", baseCls = "mage", name = "召喚師", color = C("#fb923c"), hpAdd = 15, mpAdd = 20, atkMul = 0.7f, stats = S(spi: 6),
-                desc = "與火靈和石像締約，讓元素並肩作戰", core = "契約：最多同時 2 隻召喚物，召喚物自動攻擊；有召喚物在場時自己受到的傷害 −15%", weak = "本人的直接傷害 −30%",
+                desc = "與火靈和石像締約，讓元素並肩作戰", core = "契約：最多同時 2 隻召喚物（火靈、石像、冰靈、治癒妖精、收服的魔物），自動作戰；有召喚物在場時自己受到的傷害 −15%。用自己的攻擊打中召喚物＝餵養：幫牠回血，並讓牠的攻擊、血量 +1%（召喚物消失後重新召喚就歸零）", weak = "本人的直接傷害 −30%",
                 skills = new[] { "firespirit", "golem", "detonate" } });
             // ---------------------------------------------------------------- 刺客
             Add(new AdvDef { id = "ninja", baseCls = "assassin", name = "忍者", color = C("#64748b"), evade = 0.15f, stats = S(agi: 6),

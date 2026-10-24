@@ -28,6 +28,8 @@ namespace SpellDuel
                 case "falcon": rig.BuildFalcon(); break;
                 case "fire": rig.BuildFire(); break;
                 case "golem": rig.BuildGolem(); break;
+                case "ice": rig.BuildIce(); break;
+                case "fairy": rig.BuildFairy(); break;
                 default: rig.BuildClone(ownerColor); break;
             }
             BlobShadow.Attach(rig.transform, kind == "golem" ? 0.45f : kind == "falcon" ? 0.22f : 0.3f, 0f, true);   // 腳下的接觸陰影（老鷹飛高時變淡）
@@ -111,6 +113,39 @@ namespace SpellDuel
             m.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.3f, 0.04f), new Color(1f, 0.86f, 0.2f));
             m.startSpeed = 0.16f;
             SpellFx.FadeOut(tail); SpellFx.SizeCurve(tail, SpellFx.Shrink); SpellFx.Rate(tail, 22f); tail.Play();
+        }
+
+        /// <summary>冰靈：藍白色的冰晶精靈（三顆尖晶＋冷霧）</summary>
+        void BuildIce()
+        {
+            flame = Pivot("Ice", transform, Vector3.zero);
+            Part(PrimitiveType.Sphere, flame, Vector3.zero, new Vector3(0.28f, 0.34f, 0.26f), new Color(0.55f, 0.85f, 1f));
+            Part(PrimitiveType.Sphere, flame, new Vector3(0f, -0.04f, 0.09f), new Vector3(0.2f, 0.22f, 0.14f), new Color(0.9f, 0.97f, 1f));
+            for (int i = -1; i <= 1; i++)
+                Part(PrimitiveType.Cube, flame, new Vector3(i * 0.09f, 0.2f + (i == 0 ? 0.07f : 0f), 0f), new Vector3(0.06f, 0.16f, 0.06f), new Color(0.75f, 0.93f, 1f), false, new Vector3(0f, 45f, i * -20f));
+            for (int s = -1; s <= 1; s += 2)
+                Part(PrimitiveType.Sphere, flame, new Vector3(s * 0.06f, 0.02f, 0.15f), new Vector3(0.03f, 0.055f, 0.02f), new Color(0.12f, 0.2f, 0.35f));
+            var mist = SpellFx.NewPS(transform, "Frost", SpellFx.AddMat(SpellFx.TexSoft), 20, true);
+            mist.transform.localPosition = new Vector3(0f, -0.1f, 0f);
+            var m = mist.main; m.startLifetime = 0.6f; m.startSize = new ParticleSystem.MinMaxCurve(0.04f, 0.1f);
+            m.startColor = new ParticleSystem.MinMaxGradient(new Color(0.7f, 0.9f, 1f, 0.6f), Color.white);
+            m.startSpeed = 0.08f;
+            SpellFx.FadeOut(mist); SpellFx.SizeCurve(mist, SpellFx.Shrink); SpellFx.Rate(mist, 16f); mist.Play();
+        }
+
+        /// <summary>治癒妖精：粉紅色的小光球＋一對半透明翅膀＋往下灑的光點</summary>
+        void BuildFairy()
+        {
+            flame = Pivot("Fairy", transform, Vector3.zero);
+            Part(PrimitiveType.Sphere, flame, Vector3.zero, new Vector3(0.14f, 0.16f, 0.14f), new Color(1f, 0.75f, 0.88f));
+            Part(PrimitiveType.Sphere, flame, new Vector3(0f, 0.11f, 0f), new Vector3(0.1f, 0.1f, 0.1f), new Color(1f, 0.92f, 0.85f));
+            for (int s = -1; s <= 1; s += 2)
+                Part(PrimitiveType.Sphere, flame, new Vector3(s * 0.12f, 0.05f, -0.03f), new Vector3(0.16f, 0.1f, 0.02f), new Color(0.95f, 0.85f, 1f, 0.55f), true, new Vector3(0f, s * 20f, s * 25f));
+            var dust = SpellFx.NewPS(transform, "Fairy dust", SpellFx.AddMat(SpellFx.TexSoft), 24, true);
+            var m = dust.main; m.startLifetime = 0.7f; m.startSize = new ParticleSystem.MinMaxCurve(0.02f, 0.045f);
+            m.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.7f, 0.9f), new Color(1f, 1f, 0.8f));
+            m.startSpeed = 0.05f; m.gravityModifier = 0.05f;
+            SpellFx.FadeOut(dust); SpellFx.Rate(dust, 14f); dust.Play();
         }
 
         Renderer Rock(Vector3 pos, Vector3 size)

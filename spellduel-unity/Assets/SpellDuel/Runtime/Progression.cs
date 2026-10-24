@@ -105,7 +105,7 @@ namespace SpellDuel
             "marksman" => new[] { "🎯 貫穿", "☠ 標記", "🌧 箭雨" },
             "ranger" => new[] { "🦅 獵鷹", "🤸 翻滾", "🪤 連環陷阱" },
             "archmage" => new[] { "⚡ 雷霆", "❄ 冰封", "🔷 魔力護盾" },
-            "summoner" => new[] { "🔥 火靈", "🗿 石像", "💥 爆裂" },
+            "summoner" => new[] { "🔥 元素召喚", "🗿 守衛・捕捉", "💥 爆裂" },
             "ninja" => new[] { "🍃 替身", "👥 分身", "🔥 火遁" },
             "shadowdancer" => new[] { "🗡 處決", "💃 影舞", "☁ 毒霧" },
             "bishop" => new[] { "🕊 復活", "💚 群療", "⛪ 庇護" },
@@ -432,6 +432,9 @@ namespace SpellDuel
                     FMod("su_det2", "爆裂熟練", "detonate", ModField.Cooldown, 0.08f, 5, 5, 2, "su_det"),
                     FPas("su_atk", "元素之力", PassiveKind.Atk, 0.03f, 5, 6, 2, "su_det"),
                     FPas("su_echo", "元素共鳴", PassiveKind.SpellEcho, 0.06f, 5, 6, 3, "su_atk"),
+                    FLearn("su_ice", "icespirit", 1, 3, "su_petmp"),
+                    FLearn("su_cap", "capture", 2, 3, "su_burn"),
+                    FLearn("su_fairy", "fairy", 4, 3, "su_armor"),
                 };
                 case "ninja": return new List<TreeNode>
                 {

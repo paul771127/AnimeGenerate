@@ -80,6 +80,8 @@ namespace SpellDuel
         public float blockChance, soulTaken = 1f, thorns;
         /// <summary>無盡塔每 5 波出現的精銳敵人（血量 ×6、攻擊 ×1.6、體型 ×1.5）</summary>
         public bool isElite;
+        /// <summary>召喚師收服的魔物（小怪種類；−1＝不是）</summary>
+        public int tamedKind = -1;
         public readonly List<SoulFx> soulProcs = new List<SoulFx>();
         // 刺客的近身技能：放招後進入「伏擊」，時限內靠近到射程內就自動出手
         public SkillDef armed; public float armedUntil;
@@ -206,6 +208,9 @@ namespace SpellDuel
         public float until, next, hp, maxHp, range, interval;
         public int dmg, blast;         // 每次攻擊的傷害、被引爆時的爆炸傷害
         public bool remote;            // 別人的召喚物（只顯示）
+        public Fighter body;           // 收服的魔物：在戰場上的身體（友方人物，怪物會打牠）
+        public float power = 1f;       // 餵養累積的倍率（每次 +1%；重新召喚歸零）
+        public int feeds;              // 被主人餵養幾次
         public bool alive = true;
         public Vector3 home;           // 石像：站的位置；分身：相對主人的偏移
         public SkillDef Attack => Skills.All.TryGetValue("pet_" + kind, out var s) ? s : null;
@@ -261,6 +266,8 @@ namespace SpellDuel
         readonly List<KeyValuePair<float, Action>> timers = new List<KeyValuePair<float, Action>>();
         void After(float sec, Action a) => timers.Add(new KeyValuePair<float, Action>(now + sec, a));
         public const int MaxPets = 2, FaithMax = 5;
+        /// <summary>石像替主人承受的比例；餵養（主人打中自己的召喚物）每次 +1% 攻擊與血量</summary>
+        public const float GolemShare = 0.8f, FeedGrow = 0.01f, TamedHpNeed = 0.5f, CaptureRange = 6f;
         public const float StillMove = 0.35f, PrayerField = 3f, PrayerRegen = 0.015f, AuraRange = 3f, AuraReduce = 0.15f;
         /// <summary>敵方（Boss／對手代理／小怪）</summary>
         bool FoeSide(Fighter f) => f == enemy || f.isMinion;
@@ -335,11 +342,15 @@ namespace SpellDuel
                 dmg = Mathf.RoundToInt(s.damage * power), blast = Mathf.RoundToInt(Skills.All["pet_blast"].damage * power),
                 range = s.petRange, interval = s.petInterval, hp = s.petHp, maxHp = s.petHp,
             };
+            if (p.maxHp <= 0f && kind != "clone") { p.maxHp = 40f; p.hp = 40f; }   // 沒寫血量的召喚物：40（餵養時回的血才有意義）
+            if (kind == "fairy") p.dmg = Mathf.RoundToInt(s.heal * power);         // 妖精：每次回的血
             switch (kind)
             {
                 case "golem": p.home = f.Feet + Fighter.Flat(f.forward) * 1f; p.pos = p.home + Vector3.up * 0.6f; break;
                 case "clone": p.home = -side * 1.1f; p.pos = f.Feet + p.home + Vector3.up * 0.9f; break;
                 case "falcon": p.pos = f.head + Vector3.up * 1f; break;
+                case "ice": p.pos = f.head - side * 0.5f; break;
+                case "fairy": p.pos = f.head + Vector3.up * 0.5f; break;
                 default: p.pos = f.head + side * 0.5f; break;
             }
             pets.Add(p);
@@ -352,6 +363,7 @@ namespace SpellDuel
         {
             if (!p.alive) return;
             p.alive = false;
+            if (p.body != null && p.body.Alive) { p.body.hp = 0f; Emit("buff", p.body.Chest, new Color(0.5f, 0.9f, 0.3f), $"{p.body.name}回到野外了"); }   // 收服的魔物：時間到就離開
             Emit("petgone", p.pos, Color.white, p.kind);
             if (!p.remote && p.owner == player) OnPetGone?.Invoke(p);
         }
@@ -372,6 +384,13 @@ namespace SpellDuel
                 if (!p.alive) continue;
                 var o = p.owner;
                 if (now > p.until || o == null || (!o.Alive && p.kind != "golem") || (p.kind == "clone" && !p.remote && o.cloneUntil <= now)) { KillPet(p); continue; }
+                if (p.body != null)
+                {
+                    // 收服的魔物：走路、出手交給友方人物的 AI（Combat.Npc.cs）；倒下＝召喚物消失
+                    if (!p.body.Alive) { KillPet(p); continue; }
+                    p.pos = p.body.Chest; p.hp = p.body.hp; p.maxHp = p.body.maxHp;
+                    continue;
+                }
                 var side = Vector3.Cross(Vector3.up, Fighter.Flat(o.forward)).normalized;
                 // 位置：火靈浮在主人肩膀旁、獵鷹在頭上盤旋、石像站著不動、分身站在主人旁邊
                 Vector3 want = p.kind switch
@@ -379,26 +398,39 @@ namespace SpellDuel
                     "fire" => o.head + side * 0.55f + Vector3.up * 0.1f,
                     "falcon" => o.head + Vector3.up * 1.2f + new Vector3(Mathf.Cos(now * 1.7f), 0f, Mathf.Sin(now * 1.7f)) * 1.2f,
                     "golem" => p.home + Vector3.up * 0.6f,
+                    "ice" => o.head - side * 0.55f + Vector3.up * 0.1f,
+                    "fairy" => o.head + Vector3.up * 0.45f + new Vector3(Mathf.Cos(now * 2.2f), 0f, Mathf.Sin(now * 2.2f)) * 0.35f,
                     _ => o.Feet + (p.remote ? p.home : -side * 1.1f) + Vector3.up * 0.9f,
                 };
                 p.pos = Vector3.Lerp(p.pos, want, 1f - Mathf.Exp(-dt * 6f));
                 if (p.remote || p.kind == "clone" || now < p.next) continue;
+                if (p.kind == "fairy")
+                {
+                    // 治癒妖精：每 interval 秒幫主人（和 3m 內的隊友）回血
+                    p.next = now + p.interval;
+                    int h = Mathf.Max(1, Mathf.RoundToInt(p.dmg * p.power));
+                    foreach (var pl in Players())
+                        if (pl.Alive && (pl == o || FlatDistance(pl.Feet, o.Feet) <= 3f) && pl.hp < pl.maxHp)
+                        { pl.hp = Mathf.Min(pl.maxHp, pl.hp + h); Emit("heal", pl.Chest, new Color(1f, 0.65f, 0.85f), $"+{h}"); }
+                    continue;
+                }
                 // 攻擊：範圍內最近的敵人
                 Fighter tgt = null; float best = p.range;
                 foreach (var v in FoesOf(o)) { float d = FlatDistance(p.pos, v.Feet); if (d <= best + v.bodyRadius) { best = d; tgt = v; } }
                 if (tgt == null) continue;
                 p.next = now + p.interval;
                 var atk = p.Attack;
+                int pd = Mathf.Max(1, Mathf.RoundToInt(p.dmg * p.power));   // 餵養過的召喚物更痛
                 if (p.kind == "golem")
                 {
                     Emit("basicmelee", tgt.Feet, atk.color, "pet_golem");
-                    HitFoe(o, tgt, atk, p.dmg);
+                    HitFoe(o, tgt, atk, pd);
                 }
                 else
                 {
                     var dir = (tgt.Chest - p.pos).normalized;
-                    var pr = Spawn(o, atk, p.pos, dir, p.dmg, EffectKind.None, 0f, 0f, false);
-                    pr.damage = p.dmg; pr.crit = false;
+                    var pr = Spawn(o, atk, p.pos, dir, pd, atk.effect, atk.effectDps, atk.effectDur, false);
+                    pr.damage = pd; pr.crit = false;
                     Emit("cast", p.pos, atk.color, null);
                 }
             }
@@ -1930,6 +1962,7 @@ namespace SpellDuel
                 case SelfKind.RollShot: f.rollUntil = now + s.buffDur; f.lastDodgeSeen = f.dodgeUntil; Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0} 秒內側跨會自動射箭"); return;
                 case SelfKind.ManaShield: f.manaShieldUntil = now + s.buffDur; Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0} 秒內用 MP 擋傷害"); return;
                 case SelfKind.Pet: SpawnPet(f, s, s.petKind, s.petLife); Emit("buff", f.Chest, s.color, $"召喚{s.name}！"); return;
+                case SelfKind.Capture: Capture(f, s); return;
                 case SelfKind.Detonate:
                 {
                     int n = 0;
@@ -1939,7 +1972,7 @@ namespace SpellDuel
                         n++;
                         var c = new Vector3(p.pos.x, 0f, p.pos.z);
                         Emit("aoe", c, s.color, s.id);
-                        foreach (var v in FoesOf(f)) if (InSphere(v, c + Vector3.up * 0.3f, s.areaRadius)) HitFoe(f, v, Skills.All["pet_blast"], p.blast);   // 爆炸是球形
+                        foreach (var v in FoesOf(f)) if (InSphere(v, c + Vector3.up * 0.3f, s.areaRadius)) HitFoe(f, v, Skills.All["pet_blast"], Mathf.RoundToInt(p.blast * p.power));   // 爆炸是球形（餵養過的炸得更痛）
                         KillPet(p);
                     }
                     Emit("buff", f.Chest, s.color, n > 0 ? $"{s.name}！引爆 {n} 隻召喚物" : "沒有召喚物可以引爆");
@@ -2497,6 +2530,7 @@ namespace SpellDuel
                     Advance(p, step / sub);
                     if (p.Fading) { if (p.traveled >= p.fadeEnd || p.pos.y < 0f) p.alive = false; continue; }   // 淡出中：不再打到人
                     if (TrySlice(p)) break;
+                    if (!p.remote && TryFeedPet(p)) break;   // 召喚師：打中自己的召喚物＝餵養
                     // 隕石落地：留下火海（我方的才判定傷害；對手的只顯示）
                     if (p.skill.id == "meteor" && p.pos.y <= 0.05f)
                     {
@@ -2956,11 +2990,11 @@ namespace SpellDuel
                 // 守護誓言：在聖騎士 3m 內，一部分傷害轉給他
                 if (kind != "oath" && f.oathUntil > now && f.oathBy != null && f.oathBy.Alive && FlatDistance(f.oathBy.Feet, f.Feet) <= AuraRange)
                 { float share = dmg * f.oathShare; dmg -= share; OnOathShare?.Invoke(f.oathBy, share); }
-                // 石像守衛：替主人承受一半的傷害
+                // 石像守衛：替主人承受 80% 的傷害
                 var golem = pets.Find(x => x.alive && !x.remote && x.owner == f && x.kind == "golem" && x.hp > 0f);
                 if (golem != null)
                 {
-                    float share = Mathf.Min(golem.hp, dmg * 0.5f);
+                    float share = Mathf.Min(golem.hp, dmg * GolemShare);
                     golem.hp -= share; dmg -= share;
                     if (golem.hp <= 0f) KillPet(golem);
                 }

@@ -145,7 +145,7 @@ namespace SpellDuel
         /// <summary>房主：人物倒下</summary>
         void OnNpcDown(Fighter f)
         {
-            if (drun == null || f.npcId == null) return;
+            if (drun == null || f.npcId == null || f.tamedKind >= 0) return;   // 收服的魔物不是劇情人物
             NetSend?.Invoke(new Msg { t = "ndie", k = f.npcId });
             NpcDied(f.npcId);
         }
@@ -160,7 +160,7 @@ namespace SpellDuel
         void SendNpcState()
         {
             if (drun == null || !coop || !NetIsHost) return;
-            var ns = battle.npcs;
+            var ns = battle.npcs.FindAll(n => n.tamedKind < 0);   // 收服的魔物只在自己這台
             if (ns.Count == 0 && npcSentCount == 0) return;
             npcSentCount = ns.Count;
             var pts = new Vector3[ns.Count]; var ks = new string[ns.Count];
@@ -190,8 +190,10 @@ namespace SpellDuel
         {
             if (battle == null) return;
             float dt = Mathf.Max(1e-3f, Time.deltaTime);
+            UpdateTamedRigs(dt);
             foreach (var n in battle.npcs)
             {
+                if (n.tamedKind >= 0) continue;
                 if (!npcRigs.TryGetValue(n.minionId, out var rig) || !rig)
                 {
                     rig = CharacterRig.Create(n.cls != null ? n.cls.id : "priest");
@@ -208,8 +210,37 @@ namespace SpellDuel
                 if (battle.npcs.Find(n => n.minionId == kv.Key) == null) { if (kv.Value) Destroy(kv.Value.gameObject); npcRigs.Remove(kv.Key); npcLastFeet.Remove(kv.Key); }
         }
 
+        // 收服的魔物：用小怪的模型，腳下一圈綠色光環（看得出是自己這邊的）
+        readonly Dictionary<int, MinionRig> tamedRigs = new Dictionary<int, MinionRig>();
+        void UpdateTamedRigs(float dt)
+        {
+            foreach (var n in battle.npcs)
+            {
+                if (n.tamedKind < 0) continue;
+                if (!tamedRigs.TryGetValue(n.minionId, out var rig) || !rig)
+                {
+                    rig = MinionRig.Create();
+                    rig.SetVariant(n.tamedKind); rig.SetDress(battle.Theme);
+                    var ring = SpellFx.Line(rig.transform, "Tamed ring", SpellFx.Circle(32, 0.45f), true, 0.025f, new Color(0.45f, 1f, 0.35f, 0.8f), true, true);
+                    ring.transform.localRotation = Quaternion.Euler(90f, 0f, 0f); ring.transform.localPosition = new Vector3(0f, 0.03f, 0f);
+                    tamedRigs[n.minionId] = rig; npcLastFeet[n.minionId] = n.Feet;
+                    MinionRig.SpawnFx(WorldFrame.FromWorld(n.Feet));
+                }
+                var pos = WorldFrame.FromWorld(n.Feet);
+                var f = WorldFrame.DirFromWorld(n.forward); f.y = 0f;
+                npcLastFeet.TryGetValue(n.minionId, out var lf);
+                rig.MoveSpeed = Mathf.Lerp(rig.MoveSpeed, Fighter.Flat(n.Feet - lf).magnitude / dt, 0.25f);
+                npcLastFeet[n.minionId] = n.Feet;
+                rig.transform.SetPositionAndRotation(pos, f.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(f.normalized, Vector3.up) : rig.transform.rotation);
+            }
+            foreach (var kv in new List<KeyValuePair<int, MinionRig>>(tamedRigs))
+                if (battle.npcs.Find(n => n.minionId == kv.Key && n.Alive) == null) { if (kv.Value) { MinionRig.SpawnFx(kv.Value.transform.position); Destroy(kv.Value.gameObject); } tamedRigs.Remove(kv.Key); }
+        }
+
         void ClearNpcRigs()
         {
+            foreach (var r in tamedRigs.Values) if (r) Destroy(r.gameObject);
+            tamedRigs.Clear();
             foreach (var r in npcRigs.Values) if (r) Destroy(r.gameObject);
             npcRigs.Clear(); npcLastFeet.Clear();
         }
