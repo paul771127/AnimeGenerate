@@ -42,6 +42,7 @@ namespace SpellDuel
                 NoviceCue(anim,root,classId,s);
                 return;
             }
+            if (IsSwordStyle(classId)) { SwordCast(anim, root, classId, skillColor, s); return; }   // 劍士各招式（SpellFx.Swordsman.cs）
             // 共用：中心閃光
             var core = NewPS(root, "Flash", AddMat(TexSoft), 3, false);
             Flash(core, light, 0.45f * s, 0.16f);
@@ -2126,6 +2127,18 @@ namespace SpellDuel
                 sh.position = new Vector3(0f, 0.9f * s, 0f);
             }
             else SpellFx.Sphere(gl, H * 0.45f);
+            {
+                // 劍氣往手上聚集：周圍的金色光點往中心收（越蓄越密）
+                var conv = SpellFx.NewPS(transform, "Converge", SpellFx.AddMat(SpellFx.TexSoft), 48, false);
+                var cm = conv.main;
+                cm.startLifetime = 0.35f;
+                cm.startSpeed = -(ground ? 2.6f : 0.75f) * s;
+                cm.startSize = new ParticleSystem.MinMaxCurve((ground ? 0.03f : 0.01f) * s, (ground ? 0.06f : 0.022f) * s);
+                cm.startColor = new ParticleSystem.MinMaxGradient(SpellFx.WithA(gold, alphaMul), SpellFx.WithA(Color.white, alphaMul));
+                SpellFx.Sphere(conv, ground ? 0.9f * s : H * 0.75f, 0.05f);
+                SpellFx.FadeInOut(conv);
+                AddPS(conv, 36f);
+            }
             SpellFx.SizeCurve(gl, SpellFx.PopCurve);
             AddPS(gl, ground ? 9f : 6f);
 

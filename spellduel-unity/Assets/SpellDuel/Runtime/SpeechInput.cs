@@ -483,6 +483,13 @@ namespace SpellDuel
             { "瘋人", "風刃" }, { "疯人", "風刃" }, { "楓刃", "風刃" }, { "蜂刃", "風刃" }, { "風潤", "風刃" }, { "風润", "風刃" },
         };
 
+        /// <summary>只有整句很短（4 個字以內）時才替換的誤聽：「劍氣」常被聽成「天氣」，但「今天天氣很好」這種聊天不能觸發</summary>
+        static readonly string[,] MisheardShort =
+        {
+            { "天氣", "劍氣" }, { "天器", "劍氣" }, { "劍器", "劍氣" }, { "見氣", "劍氣" }, { "建氣", "劍氣" }, { "健氣", "劍氣" }, { "件氣", "劍氣" },
+            { "劍起", "劍氣" }, { "見起", "劍氣" }, { "建起", "劍氣" }, { "健起", "劍氣" }, { "漸起", "劍氣" }, { "劍棄", "劍氣" },
+        };
+
         /// <summary>去掉空白與標點、全形轉半形、簡體轉繁體、英文轉小寫</summary>
         public static string Normalize(string s)
         {
@@ -498,6 +505,7 @@ namespace SpellDuel
             }
             var r = sb.ToString();
             for (int i = 0; i < Misheard.GetLength(0); i++) if (r.Contains(Misheard[i, 0])) r = r.Replace(Misheard[i, 0], Misheard[i, 1]);
+            if (r.Length <= 4) for (int i = 0; i < MisheardShort.GetLength(0); i++) if (r.Contains(MisheardShort[i, 0])) r = r.Replace(MisheardShort[i, 0], MisheardShort[i, 1]);
             return r;
         }
 

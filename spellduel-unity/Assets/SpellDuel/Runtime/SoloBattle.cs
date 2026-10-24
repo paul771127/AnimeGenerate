@@ -1884,7 +1884,7 @@ namespace SpellDuel
         void EndBattle()
         {
             outroUntil = -1f; introUntil = -1f;
-            ClearDaily(); ClearTutorial(); RestoreArea(); ClearSwipeTrail(); ClearSwordSage();
+            ClearDaily(); ClearTutorial(); RestoreArea(); ClearSwipeTrail(); ClearSwordSage(); ClearGuardFx();
             ResetCarryLeft();   // 下一場能用的道具＝整備時決定帶的數量
             victory = null; hitsTaken = 0; lootLog.Clear(); lootGoldLog = 0; ResetExercise();
             if (prof != null) Progress.SaveChar(prof);
@@ -1973,6 +1973,7 @@ namespace SpellDuel
                 else if (!NetMode) en_FaceMe();
                 battle.Update(dt);
                 UpdateSwordSage(dt);   // 劍仙：御劍術連射、劍來的長劍（SoloBattle.SwordSage.cs）
+                UpdateGuardFx();       // 格擋、反擊、護盾中：眼前的防禦光盾（SoloBattle.GuardFx.cs）
                 UpdateExercise(dt);   // 運動紀錄：蹲、跳、閃避、移動距離
                 if (daily != null && UpdateDaily()) { UpdateVisuals(); return; }   // 每日挑戰：時間到（或心用完）→ 結算
                 if (tutorial && UpdateTutorial()) { UpdateVisuals(); return; }      // 教學關：最後一步完成 → 結算
@@ -2243,7 +2244,7 @@ namespace SpellDuel
             {
                 if (byGesture) Say("🖐️ 放招！", 0.8f);
                 // 放招光效：在手機前方爆開，朝法術飛行方向
-                SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(visualSkill.id):myClass, myClass==Skills.Novice?visualSkill.color:Me.charging != null ? Me.charging.color : Skills.Classes[myClass].color,
+                SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(visualSkill.id):myClass=="swordsman"?SpellFx.SwordStyle(visualSkill.id):myClass, myClass==Skills.Novice?visualSkill.color:Me.charging != null ? Me.charging.color : Skills.Classes[myClass].color,
                     WorldFrame.FromWorld(castAt), WorldFrame.DirFromWorld(aim), 0.35f);
             }
         }
@@ -2430,7 +2431,7 @@ namespace SpellDuel
                             break;
                         }
                         case "slice": Burst(at, c); Sfx.Play("block", 1f, 1.3f); Sfx.Play("cast_swordsman", 0.6f); Haptics.Play(Haptics.Kind.Medium); Kick(4f, 0.04f); break;
-                        case "mitigate": case "counter": Sfx.Play("block"); Haptics.Play(Haptics.Kind.Medium); Kick(5f, 0.05f); break;
+                        case "mitigate": case "counter": Sfx.Play("block"); Haptics.Play(Haptics.Kind.Medium); Kick(5f, 0.05f); if (Me != null && Vector3.Distance(at, Me.Chest) < 0.8f) guardFlashAt = Time.time; break;   // 擋下：眼前的光盾亮一下
                         case "heal": Sfx.Play("heal"); break;
                         case "buff": Sfx.Play("cast_priest", 0.6f); break;
                         case "trapSet": Sfx.Play("trap", 0.5f); break;
@@ -2855,7 +2856,7 @@ namespace SpellDuel
                     if (p.owner == En && !bossMode)
                     {
                         if (enemyRig && !enemyRig.Attacking) enemyRig.PlayAttack(enemyClassUsed==Skills.Novice?(p.skill.id=="nv_swing"?"novice":"novice_throw"):AttackKindOf(enemyClassUsed), 0.08f);   // 敵人出招動作＋光效（普攻已經在預警時開始擺架勢）
-                        SpellFx.CastBurst(enemyClassUsed==Skills.Novice?SpellFx.NoviceStyle(p.skill.id):enemyClassUsed, p.skill.color, WorldFrame.FromWorld(p.pos), WorldFrame.DirFromWorld(p.dir), 1f);
+                        SpellFx.CastBurst(enemyClassUsed==Skills.Novice?SpellFx.NoviceStyle(p.skill.id):enemyClassUsed=="swordsman"?SpellFx.SwordStyle(p.skill.id):enemyClassUsed, p.skill.color, WorldFrame.FromWorld(p.pos), WorldFrame.DirFromWorld(p.dir), 1f);
                         if (NetMode) Sfx.Cast(enemyClassUsed, 0.55f);   // 雙人：對手的法術不會經過 Battle 的 cast 事件
                     }
                 }

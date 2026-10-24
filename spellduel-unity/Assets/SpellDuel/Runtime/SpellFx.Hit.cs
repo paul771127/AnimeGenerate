@@ -22,6 +22,9 @@ namespace SpellDuel
                 case "yj_blade": case "wanjian": case "yijian": case "jianlai": return "swordsage";
                 case "na_mage": case "pet_fire": case "pet_blast": return "mage";
                 case "na_sword": case "pet_golem": return "swordsman";
+                case "slash": return "sword_slash";
+                case "thrust": return "sword_thrust";
+                case "wave": return "sword_wave";
                 case "na_arrow": case "pet_falcon": return "archer";
                 case "na_pebble": return "novice";
                 case "nv_stone": return "novice_stone";
@@ -66,6 +69,7 @@ namespace SpellDuel
             {
                 case "swordsage": SageHit(anim,root,s); break;
                 case "swordsman": Sword(anim, root, color, s); break;
+                case "sword_slash": case "sword_thrust": case "sword_wave": SwordHit(anim, root, classId, color, s); break;
                 case "archer": Arrow(anim, root, color, s); break;
                 case "mage": Arcane(anim, root, color, s); break;
                 case "assassin": Shadow(anim, root, color, s); break;
@@ -137,6 +141,7 @@ namespace SpellDuel
             Sparks(root, new Color(1f, 0.9f, 0.6f), s, 42, 3f, 7f);
             anim.AddRing(root, Circle(48, 1f), true, 0.045f * s, gold, 0.02f, 0.28f, 0.08f * s, 0.85f * s);
             Stars(root, new Color(1f, 0.92f, 0.65f), s, 4, 0.25f, 0.14f, 0.26f);
+            LightFlash(root, new Color(1f, 0.85f, 0.45f), 1.8f * s, 2f, 0.18f);   // 普攻也照亮一下
         }
 
         static void Arrow(FxAnim anim, Transform root, Color color, float s)
