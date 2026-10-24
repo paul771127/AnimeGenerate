@@ -44,7 +44,7 @@ namespace SpellDuel
             if (!melee) Line($"朝畫面中央的準星方向飛出；先出現瞄準預警線，約 {Battle.ShotWindup:0.##} 秒後才射出（對手也看得到）");
             if (Skills.IsSwipeBasic(s)) Line("只砍到手掌劃過的那一條線：手要劃過畫面上的敵人才打得到（一刀可以劃過好幾隻）");
             if (s.id == "na_stick") Line("不會砍掉飛來的法球（劍士的「斬擊」技能才砍得掉）");
-            if (s.id == "na_sword") Line("手劃下去當下就砍，砍完眼前劍光一閃");
+            if (s.id == "na_sword") Line($"劃完先出現紅色預警線，約 {Battle.SlashWindup:0.##} 秒後劍光沿線閃過砍下（對手也看得到，會躲）");
             if (s.id == "na_dagger") Line($"往準星方向刺：準星左右約 {Battle.StabHalfAngle:0}° 內、{s.rangeMax:0.#}m 內的敵人都刺得到；刺出時眼前一道紅光");
             sb.Append("\n【數值】\n");
             Line($"傷害 {s.damage}（會吃攻擊力加成{(melee ? "" : "，也會爆擊")}）");

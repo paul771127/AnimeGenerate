@@ -143,7 +143,7 @@ namespace SpellDuel
             }
             for (int i = 0; i <= N; i++) lr.SetPosition(i, WorldFrame.FromWorld(o + Vector3.Lerp(da, db, i / (float)N).normalized * reach));
             // 敵人的預警＝紅色；自己的預警＝職業色半透明（告訴你刀線在哪、還沒砍下）
-            var c = warn ? (f == Me ? new Color(f.cls.color.r, f.cls.color.g, f.cls.color.b, 0.5f) : new Color(1f, 0.25f, 0.2f, 0.85f)) : Color.Lerp(f.cls.color, Color.white, 0.6f);
+            var c = warn ? (f == Me && f.cls.id != "swordsman" ? new Color(f.cls.color.r, f.cls.color.g, f.cls.color.b, 0.5f) : new Color(1f, 0.25f, 0.2f, 0.85f)) : Color.Lerp(f.cls.color, Color.white, 0.6f);   // 劍士自己的預警也是紅線（下一下劍光就從這裡閃過）
             bool novice = f.cls != null && f.cls.id == Skills.Novice;
             if (novice && !warn) c = f == Me ? new Color(1f, 0.78f, 0.45f, 0.95f) : new Color(0.78f, 0.55f, 0.3f);   // 初心者的木棍：木頭色（自己的亮一點，看得清楚）
             lr.startColor = lr.endColor = c;

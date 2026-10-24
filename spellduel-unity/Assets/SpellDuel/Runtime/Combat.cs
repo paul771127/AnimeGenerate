@@ -929,23 +929,34 @@ namespace SpellDuel
         /// <summary>遠程小怪出手後的隨機走位：距離、最低速度（公尺／秒）、最多走幾秒</summary>
         public const float RepositionMin = 0.8f, RepositionMax = 1.8f, RepositionMinSpeed = 0.5f, RepositionMaxTime = 3.5f;
 
-        /// <summary>遠程小怪換位置的目的地：從現在的位置往隨機方向走 0.8～1.8m，和目標保持射擊距離、留在場地內；找不到就不走</summary>
+        /// <summary>
+        /// 遠程小怪換位置的目的地：從現在的位置往隨機方向走 0.8～1.8m。一定會換位置——現在的位置可能是玩家實際走不過去的地方
+        /// （家具、牆邊），一直站著射就打不到它。先找「和目標保持射擊距離、在場地內」的點；找不到就放寬距離；
+        /// 再找不到就往玩家那一側（場地裡面）走 1m。
+        /// </summary>
         bool PickRepositionPoint(Fighter m, Fighter tgt, out Vector3 dest)
         {
             dest = m.Feet;
             int kind = m.minionKind;
+            bool Inside(Vector3 p) => minionInside == null || FreeRoam(kind) || minionInside(p);
             float lo = Mathf.Max(1.5f, KeepMin[kind] - 0.5f), hi = Mathf.Max(lo + 0.5f, Mathf.Min(KeepMax[kind] + 0.5f, MinionReach[kind]));
-            for (int tries = 0; tries < 16; tries++)
-            {
-                float a = (float)rng.NextDouble() * Mathf.PI * 2f, r = RepositionMin + (float)rng.NextDouble() * (RepositionMax - RepositionMin);
-                var p = m.Feet + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
-                float d = FlatDistance(p, tgt.Feet);
-                if (d < lo || d > hi) continue;
-                if (minionInside != null && !FreeRoam(kind) && !minionInside(p)) continue;
-                dest = new Vector3(p.x, m.Feet.y, p.z);
-                return true;
-            }
-            return false;
+            for (int pass = 0; pass < 2; pass++)
+                for (int tries = 0; tries < 24; tries++)
+                {
+                    float a = (float)rng.NextDouble() * Mathf.PI * 2f, r = RepositionMin + (float)rng.NextDouble() * (RepositionMax - RepositionMin);
+                    var p = m.Feet + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
+                    float d = FlatDistance(p, tgt.Feet);
+                    if (pass == 0 && (d < lo || d > hi)) continue;   // 第二輪：只要不貼到玩家身上就好
+                    if (d < 1.2f || !Inside(p)) continue;
+                    dest = new Vector3(p.x, m.Feet.y, p.z);
+                    return true;
+                }
+            // 都找不到（卡在角落）：往玩家那一側側移 1m（玩家在場地裡，往那邊走一定比較進來）
+            var toward = Fighter.Flat(tgt.Feet - m.Feet); if (toward == Vector3.zero) toward = Vector3.forward;
+            var side = new Vector3(-toward.z, 0f, toward.x) * (rng.NextDouble() < 0.5 ? -1f : 1f);
+            var q = m.Feet + (toward * 0.7f + side * 0.7f).normalized * 1f;
+            dest = new Vector3(q.x, m.Feet.y, q.z);
+            return true;
         }
 
         /// <summary>場內隨機一點（虛空術士瞬移用）：離玩家 3～10m、在場地內；找不到就留在原地</summary>
@@ -1452,8 +1463,7 @@ namespace SpellDuel
                 // 玩家也一樣先預警（對手看得到刀線），SlashWindup 秒後才砍下；能不能躲看刀線的位置（蹲低到線下面就砍不到）
                 var pa = from.normalized; var pb = to.normalized;
                 // 初心者的木棍敲擊（玩家）：手掌劃下去當下就敲（不先預警），一劃＝一下，看得出是自己打的
-                // 劍士的斬擊（玩家）也一樣：集氣完成後手掌劃下去當下就砍
-                if (f.isPlayer && (s.id == "na_stick" || s.id == "na_sword")) { SlashStrike(f, s, o, pa, pb, reach, false); return true; }
+                if (f.isPlayer && s.id == "na_stick") { SlashStrike(f, s, o, pa, pb, reach, false); return true; }
                 OnSlashLine?.Invoke(f, o + pa * reach, o + pb * reach, o, true);
                 f.windupUntil = now + SlashWindup;
                 After(SlashWindup, () => { if (f.Alive && !Over) SlashStrike(f, s, o, pa, pb, reach, false); });

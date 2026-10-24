@@ -252,7 +252,7 @@ namespace SpellDuel
 
             // ---------------------------------------------------------- 普通攻擊（不耗 MP、不用唸；手勢舉著就自動攻擊，見 BasicOf）
             P(new SkillDef { id = "na_mage", cls = "basic", name = "奧術飛彈", type = SkillType.Projectile, color = C("#a78bfa"), cost = 0, damage = 8, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.15f, rangeMax = 12f, desc = "法師普攻：比 1（食指），每 2 秒自動射出一發奧術飛彈" });
-            P(new SkillDef { id = "na_sword", cls = "basic", name = "斬擊（普攻）", type = SkillType.Projectile, color = C("#93c5fd"), cost = 0, damage = 9, charge = 0f, cooldown = 1f, radius = 1f, rangeMax = 1f, desc = "劍士普攻：畫面上的手掌泛起藍白劍光（集氣完成）時，手掌在鏡頭前劃一下，砍手劃過的那條線（1m 內；約 1 秒集氣一次，敏捷越高越快），砍完劍光一閃" });
+            P(new SkillDef { id = "na_sword", cls = "basic", name = "斬擊（普攻）", type = SkillType.Projectile, color = C("#93c5fd"), cost = 0, damage = 9, charge = 0f, cooldown = 1f, radius = 1f, rangeMax = 1f, desc = "劍士普攻：畫面上的手掌泛起藍白劍光（集氣完成）時，手掌在鏡頭前劃一下：先出現紅色預警線，接著劍光沿線閃過砍下（1m 內；約 1 秒集氣一次，敏捷越高越快）" });
             P(new SkillDef { id = "na_arrow", cls = "basic", name = "普通箭", type = SkillType.Projectile, color = C("#d9f99d"), cost = 0, damage = 9, charge = 0f, cooldown = 2f, speed = 16f, radius = 0.1f, rangeMax = 14f, desc = "獵人普攻：比 5（張開手掌），每 2 秒自動射出一箭" });
             // 初心者（10 級前）：普攻＝木棍敲擊（和劍士普攻一樣手掌劃一下、照刀線砍，不會砍掉法球）＋木棍揮擊、投石、急救
             // （丟小石子 na_pebble 保留定義，舊的特效／圖示還用得到）
