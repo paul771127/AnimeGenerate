@@ -92,7 +92,11 @@ namespace SpellDuel
         float nextThink = 3f, nextRetarget;
         // 出場：先走到場地中間（被玩家擋住就停在保持距離的地方）再開始攻擊；最多走 CenterMaxTime 秒
         bool centerDone; float centerSince = -1f;
-        public const float CenterMaxTime = 6f, CenterPull = 0.4f;
+        public const float CenterMaxTime = 10f, CenterPull = 0.4f;
+        /// <summary>Boss 平常只在場地中心這個半徑內走動（房間的邊角常常走不到；玩家要能繞到 Boss 身邊）</summary>
+        public const float LeashRadius = 1.2f;
+        /// <summary>靠中間時最近可以離玩家多近（比平常的 Keep 近：玩家站在正中間時，Boss 寧可站近一點也不退到邊角）</summary>
+        float CenterKeep => Mathf.Min(Keep, me.bodyRadius + 1.2f);
         // 熔岩躍擊：蓄滿後在 LeapTime 秒內跳到落點，落地才判定傷害
         public const float LeapTime = 0.6f;
         float leapT = -1f; Vector3 leapFrom;
@@ -303,7 +307,7 @@ namespace SpellDuel
         /// <summary>場地中間（被目標擋住時：目標旁邊保持距離的那一點）</summary>
         Vector3 CenterSpot(Fighter tgt)
         {
-            var c = Vector3.zero; float keep = Keep + 0.3f;
+            var c = Vector3.zero; float keep = CenterKeep;
             var fromT = Fighter.Flat(me.Feet - tgt.Feet);
             if (Battle.FlatDistance(c, tgt.Feet) < keep) c = tgt.Feet + (fromT == Vector3.zero ? Vector3.forward : fromT.normalized) * keep;
             c.y = 0f; return c;
@@ -333,12 +337,21 @@ namespace SpellDuel
             var toBoss = Fighter.Flat(feet - tgt.Feet);
             if (toBoss == Vector3.zero) toBoss = Vector3.forward;
             float cur = Battle.FlatDistance(feet, tgt.Feet);
-            if (cur >= keep && cur <= want + 0.6f && cur >= want - 1.2f) return;   // 在想要的距離附近：不動
+            float fromCenter = new Vector3(feet.x, 0f, feet.z).magnitude;   // 離場地中心多遠（Fighter.Flat 會正規化，不能用）
+            if (cur >= keep && cur <= want + 0.6f && cur >= want - 1.2f && fromCenter <= LeashRadius + 0.3f) return;   // 在想要的距離附近、又在中間：不動
             float goal = Mathf.Max(keep, want);   // 太近：往後退；太遠：靠過去
             var dest = tgt.Feet + toBoss * goal;
-            // 平常也偏向場地中間（不要一直貼著邊緣打）：往中間拉一些，但不能太靠近目標
-            var pulled = Vector3.Lerp(dest, CenterSpot(tgt), CenterPull);
-            if (Battle.FlatDistance(pulled, tgt.Feet) >= keep) dest = pulled;
+            // 一律待在場地中間附近（中心 LeashRadius 內）：想退遠也不會退到邊角
+            dest.y = 0f;
+            if (dest.magnitude > LeashRadius) dest = dest.normalized * LeashRadius;
+            if (Battle.FlatDistance(dest, tgt.Feet) < CenterKeep)
+            {
+                // 玩家就站在中間：在中心圈上找離玩家最遠的那一點（還是太近就照原地，不往邊角跑）
+                var away = Fighter.Flat(-tgt.Feet);
+                if (away == Vector3.zero) away = toBoss;
+                var alt = away.normalized * LeashRadius;
+                dest = Battle.FlatDistance(alt, tgt.Feet) > Battle.FlatDistance(feet, tgt.Feet) || fromCenter > LeashRadius + 0.3f ? alt : feet;
+            }
             var delta = dest - feet; delta.y = 0;
             float dist = delta.magnitude;
             if (dist < 0.05f) return;

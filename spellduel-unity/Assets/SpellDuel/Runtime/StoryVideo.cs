@@ -31,24 +31,26 @@ namespace SpellDuel
         {
             switch (stageId)
             {
-                case "1-1": return before ? new Clip { file = "v0_prologue_v2.mp4", title = "序章：晨鐘啞了", from = 0, to = 8, shots = 8, mb = 8 } : null;
-                case "1-4": return Split("v1_golem_v2.mp4", "熔岩巨像・守門人的拳", 4, 6, 7, before);
-                case "2-4": return Split("v2_treeking_v2.mp4", "腐化樹王・不肯入睡的心", 4, 5, 6, before);
-                case "3-4": return Split("v3_kraken_v2.mp4", "深海巨妖・黎明的三重奏", 4, 8, 10, before);
+                case "1-1": return before ? new Clip { file = "v0_prologue_v3.mp4", title = "序章：晨鐘啞了", from = 0, to = 8, shots = 8, mb = 8 } : null;
+                case "1-4": return Split("v1_golem_v3.mp4", "熔岩巨像・守門人的拳", 4, 6, 7, before);
+                case "2-4": return Split("v2_treeking_v3.mp4", "腐化樹王・不肯入睡的心", 4, 5, 6, before);
+                case "3-4": return Split("v3_kraken_v3.mp4", "深海巨妖・黎明的三重奏", 4, 8, 10, before);
             }
             return null;
         }
         static Clip Split(string file, string title, int cut, int shots, int mb, bool before) =>
             new Clip { file = file, title = title + (before ? "" : "（結局）"), from = before ? 0 : cut, to = before ? cut : shots, shots = shots, mb = mb };
 
+        /// <summary>每個鏡頭的長度（秒）：生成時固定 125 幀 ÷ 24 fps</summary>
+        public const double ShotSec = 5.184;
         /// <summary>全部的影片檔（遊戲一開始全部下載）</summary>
-        public static readonly (string file, int mb)[] Files = { ("v0_prologue_v2.mp4", 8), ("v1_golem_v2.mp4", 7), ("v2_treeking_v2.mp4", 6), ("v3_kraken_v2.mp4", 10) };
+        public static readonly (string file, int mb)[] Files = { ("v0_prologue_v3.mp4", 8), ("v1_golem_v3.mp4", 7), ("v2_treeking_v3.mp4", 6), ("v3_kraken_v3.mp4", 10) };
 
-        /// <summary>字幕：每支影片每個鏡頭一句（鏡頭等長，約 5.2 秒）。影片的聲音＝同一個旁白念這些字幕（原本每段不同的配樂拿掉，播放時改用遊戲的背景音樂）；
-        /// 旁白的句子不標「旁白：」，角色的台詞前面寫名字。影片檔是 *_v2.mp4（換了聲音，檔名不同才會重新下載）。</summary>
+        /// <summary>字幕：每支影片每個鏡頭一句（鏡頭等長，約 5.2 秒）。影片的聲音＝旁白與角色各自的配音念這些字幕（v3：老焰是老人男聲、Boss 是怪物聲；播放時背景音樂用遊戲的）；
+        /// 旁白的句子不標「旁白：」，角色的台詞前面寫名字。影片檔是 *_v3.mp4（換了聲音，檔名不同才會重新下載）。</summary>
         static readonly System.Collections.Generic.Dictionary<string, string[]> Subs = new System.Collections.Generic.Dictionary<string, string[]>
         {
-            ["v0_prologue_v2.mp4"] = new[]
+            ["v0_prologue_v3.mp4"] = new[]
             {
                 "灰燼像雪一樣落下。炎之里的晨鐘，已經三天沒有響過。",
                 "鐘樓裡，鐘舌斷了一截，鐘身爬滿了黑色的結晶。",
@@ -59,7 +61,7 @@ namespace SpellDuel
                 "火山、森林、海港……三座鐘，一座接一座熄滅了。",
                 "艾琳：走吧，先去礦坑救採礦隊。我們把晨鐘找回來。",
             },
-            ["v1_golem_v2.mp4"] = new[]
+            ["v1_golem_v3.mp4"] = new[]
             {
                 "熔岩大廳深處，巨像守在石閘前，胸口的黑晶不停脈動。",
                 "熔岩巨像：放過一人……洪潮便會進來……封住……所有的路……",
@@ -68,7 +70,7 @@ namespace SpellDuel
                 "黑晶碎裂，巨像緩緩跪下，熔岩的光漸漸暗去。",
                 "艾琳扣回鐘舌。鐘聲響起，金色的聲波掃過整座山。",
             },
-            ["v2_treeking_v2.mp4"] = new[]
+            ["v2_treeking_v3.mp4"] = new[]
             {
                 "霧中的記名林。古樹上，掛著無數刻了名字的木牌。",
                 "腐化樹王：我若睡去……再也沒有人，等他們回來……",
@@ -76,7 +78,7 @@ namespace SpellDuel
                 "腐化樹王：別讓……最後一個名字……消失！",
                 "黑晶裂開，樹根展平。一顆發光的種子落在名冊上。",
             },
-            ["v3_kraken_v2.mp4"] = new[]
+            ["v3_kraken_v3.mp4"] = new[]
             {
                 "暴風雨的夜，港口的舊燈塔在雨中掃過一道光。",
                 "巨妖攀上礁石。胸前的黑晶上，刻滿了名字。",
@@ -223,9 +225,9 @@ namespace SpellDuel
             vp.errorReceived += (p, msg) => { error = "播放失敗：" + msg; state = State.Failed; };
             vp.prepareCompleted += p =>
             {
-                double len = p.length > 0 ? p.length : 5.17 * clip.shots;
-                double startT = len * clip.from / Mathf.Max(1, clip.shots);
-                endT = clip.to >= clip.shots ? len + 1 : len * clip.to / Mathf.Max(1, clip.shots);
+                double len = p.length > 0 ? p.length : ShotSec * clip.shots;
+                double startT = ShotSec * clip.from;   // 鏡頭固定 ShotSec 秒（v3 影片最後一格會多停一下讓台詞講完，不能用總長平均）
+                endT = clip.to >= clip.shots ? len + 1 : ShotSec * clip.to;
                 p.time = startT;
                 p.SetDirectAudioVolume(0, 1f);
                 p.Play();
@@ -265,8 +267,7 @@ namespace SpellDuel
         string Subtitle()
         {
             if (vp == null || clip == null || !Subs.TryGetValue(clip.file, out var lines)) return null;
-            double len = vp.length > 0 ? vp.length : 5.17 * clip.shots;
-            int shot = Mathf.FloorToInt((float)(vp.time / (len / Mathf.Max(1, clip.shots))));
+            int shot = Mathf.Min(clip.shots - 1, Mathf.FloorToInt((float)(vp.time / ShotSec)));
             return shot >= 0 && shot < lines.Length && shot >= clip.from && shot < clip.to ? lines[shot].Replace("{玩家}", "你") : null;
         }
 
