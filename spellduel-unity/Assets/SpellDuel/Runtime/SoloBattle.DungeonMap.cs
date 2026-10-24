@@ -240,6 +240,7 @@ namespace SpellDuel
                 if (battle.npcs.Find(n => n.minionId == kv.Key && n.Alive) == null) { if (kv.Value) { MinionRig.SpawnFx(kv.Value.transform.position); Destroy(kv.Value.gameObject); } tamedRigs.Remove(kv.Key); }
         }
 
+        // Existing ambush carries only impact position. Precise replica action FX need source owner/npc id + action timestamp; fnpc stays unchanged here.
         void FlashShadowNear(Vector3 at)
         {
             ShadowDoubleView best=null;float distance=4f;
