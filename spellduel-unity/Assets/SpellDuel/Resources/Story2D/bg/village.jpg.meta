@@ -5,6 +5,7 @@ TextureImporter:
   serializedVersion: 12
   mipmaps:
     enableMipMap: 0
+  nPOTScale: 0
   maxTextureSize: 2048
   textureType: 0
   alphaSource: 0

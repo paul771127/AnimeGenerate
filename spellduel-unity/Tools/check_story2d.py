@@ -29,6 +29,8 @@ def main():
             count+=1
     with Image.open(ART/'bg/village.jpg') as image:
         assert image.size==(1080,1920) and image.mode=='RGB'
+    for meta in ART.rglob('*.meta'):
+        assert 'nPOTScale: 0' in meta.read_text(encoding='utf-8'),(meta,'texture dimensions may be rescaled')
     size=sum(p.stat().st_size for p in ART.rglob('*') if p.suffix.lower() in ('.png','.jpg','.jpeg'))
     assert size<=40*1024*1024,size
     print(f'{count} transparent sprites + village: dimensions, expressions, unchanged non-face pixels passed; {size/1024/1024:.2f} MiB')
