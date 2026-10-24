@@ -36,7 +36,7 @@ namespace SpellDuel
         /// <summary>現在的畫面該出現哪一張提示（沒有＝null）。照順序找第一張還沒看過、條件成立的。</summary>
         (string id, string title, string text)? CurrentTip()
         {
-            if (TipsOff || StoryVideo.Active || dlg != null || infoSkill != null) return null;
+            if (TipsOff || StoryVideo.Active || dlg != null || infoSkill != null || WalkActive) return null;   // 新手指引進行中：不跳提示卡（免得蓋住要按的按鈕）
             if (phase == Phase.Over && !NetMode)
                 return Want("result", "🏁 結算畫面",
                     "・通關才拿得到這一關的戰利品（裝備、金幣）；中途輸了或離開，打到一半的東西都不算。\n" +

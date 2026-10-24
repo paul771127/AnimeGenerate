@@ -50,6 +50,7 @@ namespace SpellDuel
                 var col=rank>=n.max?UiKit.Gold:rank>0?new Color(.5f,1,.68f):locked?new Color(.45f,.49f,.57f):tcol;
                 if(seenRanks.TryGetValue(n.id,out var before)&&rank>before)rankFlash[n.id]=Time.time;
                 seenRanks[n.id]=rank;
+                UiKit.NextTag("node:" + n.id);
                 if (UiKit.Button(nr, "", fsS, selNode == n.id || rank > 0, col)) selNode = n.id;
                 float side=n.kind==NodeKind.Learn?nh*.92f:n.kind==NodeKind.Stat?nh*.69f:nh*.83f;
                 var iconRect=new Rect(c.x-side*.5f,c.y-side*.5f,side,side);
@@ -139,6 +140,7 @@ namespace SpellDuel
                 string block = p.NodeBlock(n);
                 bool locked = rank == 0 && block != null && block != "技能點不足";
                 var col = rank >= n.max ? new Color(1f, 0.85f, 0.3f) : rank > 0 ? new Color(0.5f, 1f, 0.6f) : locked ? new Color(0.5f, 0.5f, 0.55f) : tcol;
+                UiKit.NextTag("node:" + n.id);
                 if (UiKit.Button(nr, "", fsS, selNode == n.id || rank > 0, col)) selNode = n.id;
                 UiKit.Text(new Rect(nr.x + 4, nr.y + 2, nr.width - 8, nr.height * 0.58f), n.name, fsS, locked ? new Color(0.6f, 0.6f, 0.65f) : Color.white, TextAnchor.MiddleCenter, true);
                 UiKit.Text(new Rect(nr.x + 4, nr.y + nr.height * 0.55f, nr.width - 8, nr.height * 0.4f), n.max > 1 ? $"{rank}/{n.max}" : rank > 0 ? "已學會" : locked ? "🔒" : "未學", fsS, col, TextAnchor.MiddleCenter);

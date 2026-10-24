@@ -528,9 +528,25 @@ namespace SpellDuel
         /// <summary>遠距離小怪（攻擊距離 5m 以上：射手、狙擊手、藤蔓、毒液…）</summary>
         public static bool IsRangedMinion(int kind) => kind >= 0 && kind < MinionReach.Length && MinionReach[kind] >= 5f;
         static readonly float[] MinionReach = { 0.95f, 9f, 1.2f, 1.3f, 11f, 14f, 13f, 8f, 5f, 6f, 1.0f, 1.3f, 9f, 7f, 9f, 11f, 1.3f, 1.4f, 5f };
-        static readonly float[] MinionWindup = { -1f, 0.8f, 1.0f, 0.5f, 1.2f, 1.6f, 1.0f, 1.0f, 0.8f, 1.0f, 0.7f, 0.8f, 0.9f, 0.6f, 0.6f, 1.2f, 0.8f, 0.6f, 1.0f };
+        static readonly float[] MinionWindup = { 1.5f, 0.8f, 1.5f, 0.5f, 1.2f, 1.6f, 1.0f, 1.0f, 0.8f, 1.0f, 0.7f, 0.8f, 0.9f, 0.6f, 0.6f, 1.2f, 0.8f, 0.6f, 1.0f };
         public const int MinionKinds = 19;
         /// <summary>這種小怪的預備時間（秒）：預備動作要剛好在出手時擺到位</summary>
+        /// <summary>近身重擊的小怪（熔岩小鬼、岩石衝鋒獸、食人花）：預備時地上畫紅色受擊範圍（中心＝小怪腳下；玩家站在圈外就打不到）</summary>
+        public static bool HasMeleeWarnDisc(int kind) => kind == 0 || kind == 2 || kind == 10;
+        /// <summary>近身重擊打得到多遠（小怪腳下到玩家身體中心；已含玩家身體半徑）</summary>
+        public static float MeleeStrikeRadius(int kind) => MeleeReach(kind, kind == 2 ? 1.6f : kind == 10 ? Skills.All["m_bite"].rangeMax + 0.2f : Skills.All["m_claw"].rangeMax) + 0.1f + Fighter.BodyRadius;
+        /// <summary>
+        /// 教學用的控制：0＝照常、1＝定住（不動、不出手；預備中的取消）、2＝只走位不出手。null＝全部照常
+        /// </summary>
+        public Func<Fighter, int> minionHold;
+        /// <summary>教學用：暫停出怪</summary>
+        public bool holdSpawns;
+        /// <summary>教學用：指定下一隻小怪的種類（回傳 −1＝照常隨機）</summary>
+        public Func<int> kindOverride;
+        /// <summary>教學／新手關：指定某種小怪的血量（回傳 0＝照常）</summary>
+        public Func<int, float> minionHpOverride;
+        /// <summary>小怪站在中間攻擊區裡了沒（教學：走進來才定住）</summary>
+        public bool MinionInZone(Fighter m) => CanAttackFrom(m.Feet);
         public static float MinionWindupOf(int kind) => kind >= 0 && kind < MinionWindup.Length && MinionWindup[kind] >= 0f ? MinionWindup[kind] : Skills.All["m_claw"].charge;
         public static bool IsSea(int kind) => kind >= 13;
         /// <summary>海裡／空中的小怪：不用走進場地就能出手、可以在海上移動（寄居蟹例外，要爬上礁石）</summary>
@@ -767,14 +783,18 @@ namespace SpellDuel
             // 小怪波：照間隔陸續出現（每次兩隻）；場上同時最多 6＋波次/3×2 隻（合作 +4）
             int maxAlive = dungeonParty > 0 ? Mathf.Min(24, Mathf.Min(12, 5 + wave / 4) * dungeonParty / 2 + 2)   // 副本：同時在場也跟著人數（最多 24）
                 : Mathf.Max(2, Mathf.CeilToInt((Mathf.Min(12, 5 + wave / 4) + 4 * ScaleAllies) * stageEnemyMul * CountMixMul));   // 同時在場的上限（第 1 波 5 隻、每 4 波 +1，最多 12）
-            if (waveToSpawn > 0 && now >= nextMinionAt && minions.Count < maxAlive)
+            if (holdSpawns) nextMinionAt = Mathf.Max(nextMinionAt, now);
+            else if (waveToSpawn > 0 && now >= nextMinionAt && minions.Count < maxAlive)
             {
                 for (int k = 0; k < 2 && waveToSpawn > 0 && minions.Count < maxAlive; k++)
                 {
                     int ordinal = dungeonSpawnOrdinal++;
                     var at = FixedDungeonSpawns ? DungeonSpawnPoint(ordinal) : edgePoint();
-                    int kind = FixedDungeonSpawns ? DungeonMinionKind(ordinal) : PickMinionKind();
+                    int forced = kindOverride != null ? kindOverride() : -1;
+                    int kind = forced >= 0 ? forced : FixedDungeonSpawns ? DungeonMinionKind(ordinal) : PickMinionKind();
                     var nm = SpawnMinion(at, 0, kind, HpMul * (IsRanged(kind) ? 1f : meleeHpMul), DmgMul, SpeedMul);
+                    float fixHp = minionHpOverride != null ? minionHpOverride(kind) : 0f;
+                    if (fixHp > 0f) { nm.maxHp = Mathf.Max(1, Mathf.RoundToInt(fixHp)); nm.hp = nm.maxHp; }
                     if (eliteLeft > 0) { eliteLeft--; MakeElite(nm); }
                     if (Theme == CanyonTheme) StartCliffLeap(nm);   // 黃土山道：從崖頂跳進場內
                     waveToSpawn--;
@@ -919,6 +939,9 @@ namespace SpellDuel
                 m.forward = Fighter.Flat(tgt.head - m.head);
                 float d = best;
                 int kind = m.minionKind;
+                int hold = minionHold != null ? minionHold(m) : 0;
+                if (hold == 1) { m.windupUntil = 0f; m.attackReadyAt = Mathf.Max(m.attackReadyAt, now + 0.6f); continue; }   // 教學：定住
+                if (hold == 2) { m.windupUntil = 0f; m.attackReadyAt = Mathf.Max(m.attackReadyAt, now + 0.6f); }          // 教學：只走位
                 // 衝刺中（荊棘衝鋒獸、跳躍魚的飛撲、海鳥的俯衝）：直線往前衝，撞到玩家就停
                 if (m.dashUntil > 0f)
                 {

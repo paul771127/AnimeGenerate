@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 namespace SpellDuel
 {
@@ -118,7 +119,48 @@ namespace SpellDuel
             GUI.Label(new Rect(r.x+o,r.y+o,r.width,r.height),content,textStyle);
             GUI.color=color;GUI.Label(r,content,textStyle);GUI.color=keep;textStyle.normal.textColor=prior;
         }
+        // ---- 教學鎖（新手指引，SoloBattle.Walkthrough.cs）：LockKey 不是 null 時，只有標籤（或 NextTag 給的標記）符合的按鈕能按，
+        //      符合的按鈕會閃爍；其他地方的點擊由 UiLock（最上層）吃掉。LockKey 可以用 | 分開好幾個；開頭是 = 表示標籤要完全一樣。
+        public static string LockKey;
+        static string nextTag;
+        /// <summary>下一個 Button 的教學標記（沒有文字的按鈕：居民、關卡、裝備格、技能節點）</summary>
+        public static void NextTag(string tag){nextTag=tag;}
+        /// <summary>這一幀畫出來的目標按鈕（螢幕座標）；UiLock 在每一幀最後收走</summary>
+        public static readonly List<Rect> LockRectsBuilding=new List<Rect>();
+        public static bool LockMatch(string key,string text,string tag)
+        {
+            if(string.IsNullOrEmpty(key))return false;
+            foreach(var part in key.Split('|'))
+            {
+                if(part.Length==0)continue;
+                if(part[0]=='='){if(text==part.Substring(1))return true;continue;}
+                if((tag!=null&&tag.Contains(part))||(text!=null&&text.Contains(part)))return true;
+            }
+            return false;
+        }
         public static bool Button(Rect r,string text,int size,bool selected=false,Color? accent=null,bool enabled=true)
+        {
+            string tag=nextTag;nextTag=null;
+            bool locked=LockKey!=null,target=locked&&enabled&&LockMatch(LockKey,text,tag);
+            if(target&&Event.current.type==EventType.Repaint)
+            {
+                var a=GUIUtility.GUIToScreenPoint(new Vector2(r.x,r.y));var b=GUIUtility.GUIToScreenPoint(new Vector2(r.xMax,r.yMax));
+                LockRectsBuilding.Add(Rect.MinMaxRect(a.x,a.y,b.x,b.y));
+            }
+            bool hit0=ButtonCore(r,text,size,selected||target,accent,enabled);
+            if(target)
+            {
+                // 要按的按鈕：金色外框閃爍
+                float k=.5f+.5f*Mathf.Sin(Time.unscaledTime*7f);
+                var g=new Rect(r.x-4,r.y-4,r.width+8,r.height+8);
+                Paint(g,frameStyle,new Color(1f,.92f,.35f,.45f+.55f*k));
+                Paint(Inset(g,-3),frameStyle,new Color(1f,.85f,.2f,.25f*k));
+            }
+            return hit0&&(!locked||target||LockBypass);
+        }
+        /// <summary>教學鎖暫時不擋（例如找不到目標按鈕時，免得卡住）</summary>
+        public static bool LockBypass;
+        static bool ButtonCore(Rect r,string text,int size,bool selected,Color? accent,bool enabled)
         {
             Init();var ac=accent??Gold;
             bool pressed=enabled&&r.Contains(Event.current.mousePosition)&&Input.GetMouseButton(0);

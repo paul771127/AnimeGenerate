@@ -420,17 +420,18 @@ namespace SpellDuel
             int luk = prof.Total(Stat.Luk);
             float lootMul = dungeon != null ? Dungeons.LootMul(coop ? 1 + PeerIds.Count : 1) : 1f;   // 副本：人越多掉寶率越高（最多 ×1.5）
             if (!boss && dropRng.NextDouble() > (0.06 + 0.002 * luk) * lootMul) return;
-            int rar = ItemGen.RollRarity(dropRng, luk * 0.3f, boss ? 2 : 0);
+            int rar = ItemGen.RollRarity(dropRng, luk * 0.3f + (storyStage != null || dungeon != null ? battle.levelBoost * 0.5f : 0f), boss ? 2 : 0);   // 普通、困難：稀有度提高（物品等級不變）
             int ilvl = Mathf.Max(1, prof.level + dropRng.Next(-1, 3) + battle.wave / 10);   // 無盡：物品等級跟著角色等級（越後面的波次略高）
-            if (dungeon != null) ilvl = dungeon.level + battle.levelBoost + dropRng.Next(-1, 2);   // 副本：物品等級＝副本等級（普通＋20、困難＋40）
+            if (dungeon != null) ilvl = dungeon.level + dropRng.Next(-1, 2);   // 副本：物品等級＝副本等級（難度不加物品等級：難度只加稀有度、金幣、經驗）
             else if (storyStage != null)
             {
                 // 故事：照地區的等級帶掉（熔岩 1～10、森林 11～20、海上 21～30），越後面的關卡越高
                 var (lo, hi) = Story.LevelBand(storyStage.theme);
-                ilvl = Mathf.Clamp(battle.wave + dropRng.Next(-2, 2), lo, hi) + battle.levelBoost;   // 普通＋20、困難＋40
+                ilvl = Mathf.Clamp(battle.wave + dropRng.Next(-2, 2), lo, hi);   // 難度不加物品等級（以前普通＋20：第一章掉出 25 級才能穿的裝備）
             }
             ItemGen.SetTheme = battle.Theme;   // 主題地圖掉對應的套裝
             var it = ItemGen.Make(dropRng, ilvl, rar, myClass);
+            if (storyStage != null) { var (blo, bhi) = Story.LevelBand(storyStage.theme); it.reqLevel = Mathf.Clamp(it.reqLevel, blo, bhi); }   // 需求等級也在這一章的等級帶裡（第一章 1～10）
             pendingItems.Add(it);   // 先暫存：過關才拿得到
             floaters.Add(new Floater { text = $"🎁 [{Item.RarityNames[rar]}] {it.name}（過關後獲得）", color = Item.RarityColors[rar], born = Time.time, screen = true });
             Sfx.Play(rar >= 3 ? "win" : "select", rar >= 3 ? 0.7f : 0.8f, 1.2f);
@@ -663,6 +664,7 @@ namespace SpellDuel
         readonly Dictionary<Fighter, MinionRig> minionGo = new Dictionary<Fighter, MinionRig>();
         readonly Dictionary<Fighter, float> minionLastHp = new Dictionary<Fighter, float>();
         readonly HashSet<Fighter> minionWinding = new HashSet<Fighter>();
+        readonly Dictionary<Fighter, GameObject> minionWarn = new Dictionary<Fighter, GameObject>();   // 近身重擊預備的紅圈
         readonly Dictionary<Fighter, GameObject> aimLines = new Dictionary<Fighter, GameObject>();   // （已不用：狙擊手改成射出後才畫紅線）
         readonly Dictionary<Projectile, GameObject> projLine = new Dictionary<Projectile, GameObject>();   // 敵人已放出的攻擊：飛行路線紅線
         readonly Dictionary<Battle.Lane, GameObject> laneGo = new Dictionary<Battle.Lane, GameObject>();   // 藤蔓／衝刺路線
@@ -788,6 +790,7 @@ namespace SpellDuel
             levelLockSaid = false;
             Say($"🎉 轉職成功！你現在是「{Skills.Classes[cls].name}」\n初心者的技能樹與招式保留（角色 → 技能樹 → 🌱 初心者）；新職業的技能點從 {Skills.JobLevel + 1} 級開始，每升一級 1 點", 6f);
             Sfx.Play("levelup", 0.9f); Haptics.Play(Haptics.Kind.Success);
+            TryStarterGift(() => StartWalk("smith"));   // 新手指引的最後：小鐵的武器＋500 金幣 → 穿上、到鐵匠鋪強化（SoloBattle.StarterGift.cs）
         }
 
         /// <summary>讀現在這個角色的職業、對手選擇（換角色時也會叫）</summary>
@@ -805,14 +808,14 @@ namespace SpellDuel
             Progress.ReloadStorage(); Story.ResetCache(); Dungeons.ResetCache(); Economy.ResetCache();
             ReadCharacterChoices();
             prof = null; levelLockSaid = false;
-            LoadLoadout(); ResetCarryLeft();
+            LoadLoadout(); ResetCarryLeft(); ReloadWalk();
         }
         /// <summary>選角畫面刪掉了某個角色：如果是正在玩的，放掉（記憶體裡的資料丟掉）。回傳是不是正在玩的</summary>
         public bool CharacterSlotGone(int s)
         {
             if (CharacterSlots.Current >= 0) return false;
             Progress.ReloadStorage(); Story.ResetCache(); Dungeons.ResetCache(); Economy.ResetCache();
-            ReadCharacterChoices(); prof = null; LoadLoadout();
+            ReadCharacterChoices(); prof = null; LoadLoadout(); ReloadWalk();
             return true;
         }
         /// <summary>現在的角色：名字、職業、等級（首頁顯示）</summary>
@@ -1056,6 +1059,7 @@ namespace SpellDuel
                         if (pendingStage.theme == 2 && pendingStage.id != "trial") { battle.rangedCountMul = 0.5f; battle.meleeCountMul = 1.5f; battle.spawnGapAdd = 5f; }   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         ApplyNoviceRoute(pendingStage);   // 1-1～1-3：4m×4m 小場地；1-1、1-2 只有近戰小怪（SoloBattle.NoviceRoute.cs）
+                        SetupNoviceBattle(pendingStage);  // 新手關：小鬼／衝鋒獸的血量、1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
                     }
                     else if (dungeon != null)
@@ -1467,6 +1471,18 @@ namespace SpellDuel
                 bool winding = m.windupUntil > 0f;
                 if (winding && !minionWinding.Contains(m)) { minionWinding.Add(m); rig.Windup(Battle.MinionWindupOf(m.minionKind)); }   // 預備時間＝這種小怪真正的預備時間（出手時剛好擺到位）
                 else if (!winding && minionWinding.Contains(m)) { minionWinding.Remove(m); rig.Attack(); }
+                // 近身重擊預備中：地上的紅色受擊範圍（越接近出手越亮；走出紅圈就打不到）
+                if (winding && Battle.HasMeleeWarnDisc(m.minionKind) && m.Alive)
+                {
+                    if (!minionWarn.TryGetValue(m, out var wg) || !wg) { wg = Prim(PrimitiveType.Cylinder, new Color(1f, 0.1f, 0.05f, 0.3f), true); minionWarn[m] = wg; }
+                    float rr = Battle.MeleeStrikeRadius(m.minionKind), wu = Battle.MinionWindupOf(m.minionKind);
+                    float pr = Mathf.Clamp01(1f - (m.windupUntil - battle.now) / Mathf.Max(0.1f, wu)), pk = 0.5f + 0.5f * Mathf.Sin(Time.time * (6f + 12f * pr));
+                    wg.SetActive(true);
+                    wg.transform.position = WorldFrame.FromWorld(new Vector3(m.Feet.x, 0.02f, m.Feet.z));
+                    wg.transform.localScale = new Vector3(rr * 2f, 0.003f, rr * 2f);
+                    wg.GetComponent<Renderer>().material.color = new Color(1f, 0.12f, 0.05f, (0.18f + 0.35f * pr) * (0.6f + 0.4f * pk));
+                }
+                else if (minionWarn.TryGetValue(m, out var wg0) && wg0) wg0.SetActive(false);
                 if (minionLastHp.TryGetValue(m, out var lh) && m.hp < lh - 0.01f) rig.PlayHit();
                 minionLastHp[m] = m.hp;
             }
@@ -1475,6 +1491,7 @@ namespace SpellDuel
                 {
                     if (kv.Value) { kv.Value.SetDead(true); Destroy(kv.Value.gameObject, 1.2f); }
                     minionGo.Remove(kv.Key); minionLastHp.Remove(kv.Key); minionWinding.Remove(kv.Key);
+                    if (minionWarn.TryGetValue(kv.Key, out var wgo)) { if (wgo) Destroy(wgo); minionWarn.Remove(kv.Key); }
                     if (aimLines.TryGetValue(kv.Key, out var dl)) { if (dl) Destroy(dl); aimLines.Remove(kv.Key); }
                 }
         }
@@ -1542,10 +1559,10 @@ namespace SpellDuel
                     {
                         bool last = i == fought.Count - 1;
                         ItemGen.SetTheme = d.ThemeOf(fought[i]);
-                        pendingItems.Add(ItemGen.Make(dropRng, d.level + battle.levelBoost, last ? 3 : Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
+                        pendingItems.Add(ItemGen.Make(dropRng, d.level, last ? 3 : Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
                         // 人數加成：每個房間有（倍率−1）的機會多掉一件（稀有度照常擲，越稀有越難掉）
                         if (dropRng.NextDouble() < Dungeons.LootMul(coop ? 1 + PeerIds.Count : 1) - 1f)
-                            pendingItems.Add(ItemGen.Make(dropRng, d.level + battle.levelBoost, ItemGen.RollRarity(dropRng, 0f, 0), myClass));
+                            pendingItems.Add(ItemGen.Make(dropRng, d.level, ItemGen.RollRarity(dropRng, 0f, 0), myClass));
                     }
                     float drmul = 1f + battle.levelBoost / (2f * LevelPerDifficulty);   // 普通 ×1.5、困難 ×2
                     pendingGold += Mathf.RoundToInt(60 * d.level * drmul);
@@ -1586,8 +1603,8 @@ namespace SpellDuel
                         Say($"🏆 {st.title} 完成！獲得經驗 {stXp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "" : "（再次通關）") + (loot.Length > 0 ? "\n" + loot : ""), 99f);
                     }
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
-                    if (!Story.IsSeen(st.id + "!")) { Story.MarkSeen(st.id + "!"); StoryVideo.Play(StoryVideo.For(st.id, false), () => ShowDialogue(st.after, () => TryStarterGift(null))); }   // 結尾（影片＋對話）也只自動播一次；1-2 第一次通關：送武器與金幣（SoloBattle.StarterGift.cs）
-                    else TryStarterGift(null);
+                    if (first) OnStoryFirstClear(st);   // 1-1：回村子學招式、點技能和能力值、出發 1-2；1-3：轉職（SoloBattle.Walkthrough.cs）
+                    if (!Story.IsSeen(st.id + "!")) { Story.MarkSeen(st.id + "!"); StoryVideo.Play(StoryVideo.For(st.id, false), () => ShowDialogue(st.after, null)); }   // 結尾（影片＋對話）也只自動播一次
                 }
                 else { LoseLoot(); Say($"💀 {st.title} 失敗…再挑戰一次吧（戰利品沒拿到）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
@@ -1863,7 +1880,7 @@ namespace SpellDuel
 
         void EndBattle()
         {
-            outroUntil = -1f; introUntil = -1f;
+            outroUntil = -1f; introUntil = -1f; btStage = 0;
             ClearDaily(); ClearTutorial(); RestoreArea(); ClearSwipeTrail(); ClearSwordSage(); ClearGuardFx();
             ResetCarryLeft();   // 下一場能用的道具＝整備時決定帶的數量
             victory = null; hitsTaken = 0; lootLog.Clear(); lootGoldLog = 0; ResetExercise();
@@ -1896,6 +1913,8 @@ namespace SpellDuel
             if (bossRig) Destroy(bossRig.gameObject);
             foreach (var mr in minionGo.Values) if (mr) Destroy(mr.gameObject);
             minionGo.Clear(); minionLastHp.Clear(); minionWinding.Clear();
+            foreach (var wg in minionWarn.Values) if (wg) Destroy(wg);
+            minionWarn.Clear();
             foreach (var al in aimLines.Values) if (al) Destroy(al);
             aimLines.Clear();
             bossRig = null; bossAi = null; bossMode = false; bossWindup = null; resultShown = false; bossSeen = false; bossPhase2Shown = false; bossShellShown = false; bossRoarStrikeAt = -1f;
@@ -1960,6 +1979,7 @@ namespace SpellDuel
                 UpdateExercise(dt);   // 運動紀錄：蹲、跳、閃避、移動距離
                 if (daily != null && UpdateDaily()) { UpdateVisuals(); return; }   // 每日挑戰：時間到（或心用完）→ 結算
                 if (tutorial && UpdateTutorial()) { UpdateVisuals(); return; }      // 教學關：最後一步完成 → 結算
+                UpdateBattleTut();   // 1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）
                 if (!frozen) HandleInput();
                 UpdateCastGuide();   // 放招的分步驟提示（SoloBattle.CastGuide.cs）
                 SendState();
@@ -3081,6 +3101,7 @@ namespace SpellDuel
         public void DrawGUI()
         {
             Styles();
+            TickWalk();   // 新手指引：這一步要按哪一顆按鈕（SoloBattle.Walkthrough.cs）
             if (StoryVideo.Active) { StoryVideo.DrawGUI(); return; }   // 劇情影片（下載中、播放）蓋住整個畫面
             TipInput();   // 情境教學的提示卡：先吃掉落在卡片上的點擊（SoloBattle.Tips.cs）
             // 技能說明視窗只屬於打開它的那個畫面：換畫面（整備、角色、地圖、對話、開打／結算）或這個介面有一陣子沒畫（回到大廳、村子）就關掉，
@@ -3467,6 +3488,7 @@ namespace SpellDuel
             UiKit.Text(new Rect(ix, y, iw, lh * 0.8f), StatusText(en, now), fsS, new Color(0.75f, 0.85f, 1f));
             if (daily != null) DrawDailyHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 每日挑戰：計時、分數、獎牌（蓋在敵人卡片上）
             if (tutorial && phase == Phase.Fighting) DrawTutorialHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 教學關：第幾步、要做什麼
+            DrawBattleTutHud(topR, W, H, lh, fs, fsS, pillW);   // 1-1／1-2 的戰鬥教學
             if (phase == Phase.Fighting) DrawPalmCharge(fs);   // 初心者普攻：手掌集氣指示（SoloBattle.SwipeTrail.cs）
             // 合作：隊友的血量（在敵人卡片下方）
             if (coop)

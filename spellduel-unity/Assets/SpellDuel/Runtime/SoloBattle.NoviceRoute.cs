@@ -83,6 +83,7 @@ namespace SpellDuel
         {
             if (st == null) return;
             if (SmallArenaStage(st.id)) ShrinkArea(SmallArena);
+            if (SmallArenaStage(st.id) && battle != null && Progress.Char(myClass).cls == Skills.Novice) battle.levelBoost = 0;   // 初心者的新手關：不管選什麼難度，敵人都不加等級
             // 其他故事關卡：場地維持 10m×10m，小怪要進到中間 6m×6m 才出手（Battle.attackHalf）
             if (MeleeOnlyStage(st.id) && battle != null) { battle.rangedCountMul = 0f; battle.meleeCountMul = 1f / (1f - Battle.RangedShare); }   // 全部近戰（總數不變）
             // 轉職試煉：剛好 5 隻最弱的小怪（第 1 波：7 隻 ×0.7），不加難度等級

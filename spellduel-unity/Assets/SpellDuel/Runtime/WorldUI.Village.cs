@@ -76,7 +76,7 @@ namespace SpellDuel
 
         /// <summary>難度加的等級（說明文字用）</summary>
         int Boost => SoloBattle.LevelBoostFor(Difficulty);
-        string BoostText => Boost > 0 ? $"（{DiffNames[Difficulty]}：敵人＋{Boost} 級、獎勵 ×{SoloBattle.RewardMulFor(Difficulty):0.#}、掉落裝備＋{Boost} 級）" : "";
+        string BoostText => Boost > 0 ? $"（{DiffNames[Difficulty]}：敵人＋{Boost} 級、獎勵 ×{SoloBattle.RewardMulFor(Difficulty):0.#}、掉落裝備等級不變・稀有度提高）" : "";
 
         /// <summary>設施畫面上方：NPC 頭像＋名字＋介紹（一段話）</summary>
         void NpcIntro(Rect r, string npc, string role, string text, Color c, int fs, int fsS, float gap, ref float y)

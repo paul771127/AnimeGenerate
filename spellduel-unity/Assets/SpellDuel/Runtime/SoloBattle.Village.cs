@@ -47,7 +47,7 @@ namespace SpellDuel
             enemyClass = "story"; daily = null; tutorial = false;
             storyMapOpen = true; world.OpenTown(world.town);
             if (back.HasValue && back.Value != WorldUI.Screen.Town) world.screen = back.Value;
-            TryStarterGift(null);   // 更新前就打過 1-2：回村子時補送
+            TryStarterGift(() => StartWalk("smith"));   // 更新前就已經轉職的角色：回村子時補送
         }
 
         // ---------------------------------------------------------------- 村子的設施（WorldUI 呼叫）

@@ -14,6 +14,9 @@ namespace SpellDuel
         public int treeTab = -1;        // 技能樹的小分頁：0 初心者、1 職業、2 進階職業（−1＝自動選目前的）
         string selNode;                 // 技能樹：選中的節點
         Item selItem;                   // 裝備：選中的物品（背包或身上）
+        /// <summary>新手指引用</summary>
+        public string SelNode => selNode;
+        public Item SelItem => selItem;
         Item discardArm; float discardArmUntil, resetArmUntil;   // 丟掉／重新分配：要按兩次確認
         int page;
         Vector2 statsScroll, gearScroll;
@@ -315,6 +318,7 @@ namespace SpellDuel
             {
                 var it = p.equipped[i];
                 var sr = new Rect(b.x, b.y + i * (sh + gap * 0.3f), slotW, sh);
+                UiKit.NextTag(it != null ? "item:" + it.uid : null);
                 if (UiKit.Button(sr, "", fsS, selItem != null && selItem == it, it != null ? Item.RarityColors[it.rarity] : (Color?)null)) selItem = it;
                 UiKit.Tab(sr, selItem != null && selItem == it, it != null ? Item.RarityColors[it.rarity] : UiKit.Muted);
                 UiKit.Text(new Rect(sr.x + gap, sr.y, sr.width * 0.24f, sr.height), Item.SlotNames[i], fsS, new Color(0.8f, 0.82f, 0.9f), TextAnchor.MiddleLeft, true);
@@ -352,6 +356,7 @@ namespace SpellDuel
                 var it = bag[idx];
                 var cr = new Rect(b.x + (k % 3) * (cw + gap), by + (k / 3) * (ch + gap * 0.3f), cw, ch);
                 bool ok = p.CanEquip(it, out var whyNot);
+                UiKit.NextTag("item:" + it.uid);
                 if (UiKit.Button(cr, "", fsS, selItem == it, Item.RarityColors[it.rarity])) { selItem = it; if (!ok) Toast($"不能裝備：{whyNot}"); }
                 UiKit.Text(new Rect(cr.x + 3, cr.y + 1, cr.width - 6, cr.height * 0.55f), it.FullName, fsS, ok ? Item.RarityColors[it.rarity] : Item.RarityColors[it.rarity] * 0.6f, TextAnchor.MiddleCenter, true);
                 UiKit.Text(new Rect(cr.x + 3, cr.y + cr.height * 0.5f, cr.width - 6, cr.height * 0.45f), $"{Item.SlotNames[(int)it.slot]}{(ok ? "" : "・不能用")}", fsS, ok ? new Color(0.8f, 0.85f, 0.95f) : new Color(1f, 0.5f, 0.45f), TextAnchor.MiddleCenter);
