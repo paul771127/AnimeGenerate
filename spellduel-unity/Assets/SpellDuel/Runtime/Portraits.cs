@@ -117,7 +117,7 @@ namespace SpellDuel
                 FaceWidth=.206f*AnimeFace.FaceWidthScale*AnimeFace.IdentityWidth(p)*p.Length*Lerp(.984f,1.012f,(p.Width-.95f)/.10f);
                 EyeY=Chin+height*.480f;EyeWidth=(FaceWidth/(AnimeFace.FaceWidthScale*AnimeFace.IdentityWidth(p)))*.285f;EyeX=FaceWidth*.26f;
                 EyeHeight=EyeWidth*(p.Elder?.53f:p.Masculine?.63f:.82f+(p.Eye-1)*.15f);
-                NoseY=Chin+height*.30f;MouthY=Chin+height*.17f;MouthWidth=EyeWidth*.60f;
+                NoseY=Chin+height*.30f;MouthY=Chin+height*.17f;MouthWidth=EyeWidth*(p.Captain?.40f:.60f);
                 BrowY=EyeY+Math.Max(height*.07f,EyeHeight*.60f+height*.02f);EarTop=BrowY;EarBottom=NoseY;
 
             }
@@ -125,7 +125,7 @@ namespace SpellDuel
         internal static Persona PersonaFor(string key)
         {
             var p=BasePersonaFor(key);HumanPersonality.Apply(ref p,Key(key));p.Story=StoryCostume.Has(Key(key))||Key(key)=="澪";p.SoftNose=Key(key)=="艾琳"||Key(key)=="凪"||Key(key)=="小葉"||Key(key)=="澪";if(p.Story)p.Open*=.15f;
-            string id=Key(key);p.Captain=id=="海斗";p.Elder=id=="老焰"||id=="阿潮"||id=="公會長"||id=="塔守";
+            string id=Key(key);p.Captain=id=="海斗";if(p.Captain)p.Open=0;p.Elder=id=="老焰"||id=="阿潮"||id=="公會長"||id=="塔守";
             p.Masculine=p.Elder||id=="海斗"||id=="小鐵"||id=="鐵匠"||id=="教官"||id=="swordsman"||id=="paladin"||id=="inquisitor";
             return p;
         }

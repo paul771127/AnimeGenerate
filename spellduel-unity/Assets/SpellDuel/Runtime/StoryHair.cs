@@ -42,6 +42,22 @@ namespace SpellDuel
         }
         static void FilmLock(OutfitArt.Builder m,Vector3 a,Vector3 b,Vector3 c,Vector3 d,float width,float depth,float tone=1)
         {Lock(m,a,b,c,d,width,depth,tone,.65f);}
+        static void FitRearLocks(List<Vector3> vertices,Portraits.Persona p)
+        {
+            // Preserve every six-vertex tube ring: translate the ring rather than flattening individual vertices.
+            for(int i=0;i<121;i++){var v=vertices[i];if(v.z<0){v.z=Mathf.Min(v.z,AnimeFace.HairBackSurface(v.x,v.y,p)-.005f);vertices[i]=v;}}
+            for(int start=121;start+48<vertices.Count;start+=49)
+            {
+                for(int ring=0;ring<8;ring++)
+                {
+                    int at=start+ring*6;float z=0,push=0;for(int k=0;k<6;k++)z+=vertices[at+k].z;
+                    if(z>=-.06f)continue;
+                    for(int k=0;k<6;k++){var v=vertices[at+k];push=Mathf.Min(push,AnimeFace.HairBackSurface(v.x,v.y,p)-.006f-v.z);}
+                    for(int k=0;k<6;k++){var v=vertices[at+k];v.z+=push;vertices[at+k]=v;}
+                }
+                var tip=vertices[start+48];if(tip.z<0){tip.z=Mathf.Min(tip.z,AnimeFace.HairBackSurface(tip.x,tip.y,p)-.006f);vertices[start+48]=tip;}
+            }
+        }
         static readonly Dictionary<string,Mesh> filmHair=new Dictionary<string,Mesh>();
         // Visible film silhouettes are fitted AFTER the legacy sizing pass: body/head scale stays unchanged.
         internal static Mesh FilmMesh(string id,Portraits.Persona p)
@@ -94,7 +110,13 @@ namespace SpellDuel
                 FilmLock(m,new Vector3(side*.16f,.14f,-.065f),new Vector3(side*.225f,.09f,-.10f),new Vector3(side*.215f,-.09f,-.11f),new Vector3(side*(.165f+i*.012f),-.15f+i*.012f,-.08f),.021f,.015f,i==1?1:.85f);
             if(elder)for(int i=0;i<6;i++){float a=i*Mathf.PI/3;FilmLock(m,new Vector3(0,.15f,-.06f),new Vector3(Mathf.Cos(a)*.045f,.30f,-.04f),new Vector3(Mathf.Cos(a)*.045f,.30f,.015f),new Vector3(0,.18f,.025f),.020f,.016f);}
             if(id=="艾琳"||male)for(int i=0;i<m.V.Count;i++)
-            {var v=m.V[i];v.x*=id=="艾琳"?.80f:.82f;if(id=="艾琳")v.x*=1-.18f*Mathf.SmoothStep(0,1,Mathf.InverseLerp(.08f,.16f,v.y));if(v.z<0)v.z*=id=="艾琳"?.82f:.74f;m.V[i]=v;}
+            {var v=m.V[i];v.x*=id=="艾琳"?.80f:.82f;if(id=="艾琳")v.x*=1-.18f*Mathf.SmoothStep(0,1,Mathf.InverseLerp(.08f,.16f,v.y));if(v.z<0)v.z*=id=="艾琳"?.82f:.74f;
+                if(id=="艾琳")
+                {
+                    if(v.z>.12f)v.z=.12f+(v.z-.12f)*.55f;
+                    if(v.z<0)v.z=-.009f+(v.z+.009f)*.90f;
+                }m.V[i]=v;}
+            if(id=="艾琳")FitRearLocks(m.V,p);
             cached=m.Finish("Film silhouette "+id);filmHair[id]=cached;return cached;
         }
         internal static Mesh Build(string id,Portraits.Persona p)

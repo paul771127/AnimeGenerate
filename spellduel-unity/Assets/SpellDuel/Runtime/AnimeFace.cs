@@ -40,6 +40,13 @@ namespace SpellDuel
 
             front=Profile(fronts,k,t);back=Mathf.Lerp(Profile(backs,k,t),-.072f,ChinBlend(y,p));
         }
+        internal static float HairBackSurface(float x,float y,Portraits.Persona p)
+        {
+            if(y<=-.157f*p.Length||y>=.157f*p.Length)return 1;
+            Section(y,p,out var width,out _,out var back);if(Mathf.Abs(x)>=width)return 1;
+            float offset=.075f*ChinBlend(y/p.Length,p);
+            return offset-(back+offset)*Mathf.Sqrt(Mathf.Max(0,1-x*x/(width*width)));
+        }
         static float SculptSurface(float x,float y,Portraits.Persona p)
         {
             Section(y,p,out var width,out var front,out _);

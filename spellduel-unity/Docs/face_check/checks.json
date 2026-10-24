@@ -4,7 +4,7 @@
   "actors": 41,
   "statesPerActor": 39,
   "statesTotal": 1599,
-  "sampledPoints": 614349,
+  "sampledPoints": 610893,
   "unchangedBodyMeshes": 452,
   "headTriangles": 2064,
   "equipmentAudit": [
@@ -865,7 +865,7 @@
       "hairTriangles": 7176,
       "hairVertices": 3747,
       "hairZeroAreaTriangles": 0,
-      "activeActorTriangles": 13544,
+      "activeActorTriangles": 14708,
       "hairStrands": 74
     },
     {
@@ -1017,7 +1017,7 @@
       "noseY": -0.073,
       "mouthY": -0.109400004,
       "eyeWidth": 0.059118614,
-      "mouthWidth": 0.03547117,
+      "mouthWidth": 0.023647446,
       "chin": -0.157,
       "top": 0.157,
       "actualHairline": 0.08875135535069358,
@@ -1033,7 +1033,7 @@
       "hairTriangles": 7928,
       "hairVertices": 4139,
       "hairZeroAreaTriangles": 0,
-      "activeActorTriangles": 13656,
+      "activeActorTriangles": 13608,
       "hairStrands": 82
     },
     {
@@ -1646,25 +1646,25 @@
       "eyeY": -0.02260001,
       "noseY": -0.073,
       "mouthY": -0.109400004,
-      "eyeWidth": 0.059118617,
-      "mouthWidth": 0.03547117,
+      "eyeWidth": 0.059118614,
+      "mouthWidth": 0.023647446,
       "chin": -0.157,
       "top": 0.157,
-      "actualHairline": 0.08875136535069357,
-      "upperSeam": 0.01598818,
-      "earTop": 0.005346829,
+      "actualHairline": 0.08875135535069358,
+      "upperSeam": 0.015988175,
+      "earTop": 0.0053468253,
       "earBottom": -0.073,
-      "nominalFaceWidthToHeight": 0.6698059714285713,
-      "faceWidthToHairlineHeight": 0.7631521059196048,
-      "bareHeadHeight": 0.27862408,
-      "bareHeightReduction": 0.11266216560509557,
+      "nominalFaceWidthToHeight": 0.6430136857142856,
+      "faceWidthToHairlineHeight": 0.7326259981072037,
+      "bareHeadHeight": 0.27862409,
+      "bareHeightReduction": 0.11266213375796186,
       "skinHex": "#f1cebb",
       "headPositionDelta": 0.00047373000000000554,
-      "hairTriangles": 7176,
-      "hairVertices": 3747,
+      "hairTriangles": 7928,
+      "hairVertices": 4139,
       "hairZeroAreaTriangles": 0,
-      "activeActorTriangles": 12392,
-      "hairStrands": 74
+      "activeActorTriangles": 13096,
+      "hairStrands": 82
     },
     {
       "id": "小沙",
@@ -2081,8 +2081,8 @@
     {
       "id": "海斗",
       "minGap": 0.001094073,
-      "maxGap": 0.0056417063,
-      "samples": 15630,
+      "maxGap": 0.0047766715,
+      "samples": 13902,
       "low": "6/眼睛圖層",
       "high": "1/mouthOpen",
       "surfaceParity": 2.9057264e-07,
@@ -2231,8 +2231,8 @@
     {
       "id": "海斗",
       "minGap": 0.001094073,
-      "maxGap": 0.0056417063,
-      "samples": 15630,
+      "maxGap": 0.0047766715,
+      "samples": 13902,
       "low": "6/眼睛圖層",
       "high": "1/mouthOpen",
       "surfaceParity": 2.9057264e-07,
@@ -2292,24 +2292,37 @@
   "latestFocusedRun": {
     "actors": [
       "艾琳",
-      "海斗"
+      "海斗",
+      "雷歐"
     ],
     "statesPerActor": 39,
-    "statesTotal": 78,
-    "reason": "film headwear/hair silhouettes and Haido jaw; other 39 actor records retained from b1f04a7 regression",
-    "defaultFaceWidthScale": 0.9,
-    "haidoAdditionalWidthScale": 0.96,
-    "haidoLowerJawTaper": 0.14,
-    "publicApiChanged": false
+    "statesTotal": 117,
+    "reason": "rounded continuous hood and folded rim, slimmer hair depth, shorter closed neutral Haido mouth",
+    "bodyMeshesUnchanged": 452,
+    "publicApiChanged": false,
+    "other38Actors": "retained from passing suite; Leo inherits Haido art template"
+  },
+  "hoodDepthComparison": {
+    "前版": {
+      "hairDepth": 0.34863635000000004,
+      "hairFront": 0.16012107,
+      "hairBack": -0.18851528
+    },
+    "本次": {
+      "hairDepth": 0.31277837,
+      "hairFront": 0.14206658,
+      "hairBack": -0.17071179
+    },
+    "depthReduction": 0.10285209789512784
   },
   "silhouetteComparison": [
     {
       "id": "艾琳",
       "faceWidth": 0.17673555000000002,
       "hairWidth": 0.27706176,
-      "hatWidth": 0.36842373,
+      "hatWidth": 0.36847487,
       "hairToFace": 1.5676628725799646,
-      "hatToFace": 2.084604540512647
+      "hatToFace": 2.084893899388097
     },
     {
       "id": "海斗",

@@ -12,6 +12,41 @@ namespace SpellDuel
                 for(int i=0;i<n;i++){float a=i*Mathf.PI/4;b.V.Add(path[j]+(side*Mathf.Cos(a)+cross*Mathf.Sin(a))*radius*(1-j*.28f));b.C.Add(color);if(j<path.Length-1){int k=start+j*n+i,k1=start+j*n+(i+1)%n;b.T.AddRange(new[]{k,k1,k+n,k1,k1+n,k+n});}}
             }
         }
+        static void HoodRoof(OutfitArt.Builder b,Vector3[] front,Color color)
+        {
+            const int rows=7;int n=front.Length;
+            for(int layer=0;layer<2;layer++)
+            {
+                int start=b.V.Count;
+                for(int j=0;j<rows;j++)for(int i=0;i<n;i++)
+                {
+                    float t=j/(float)(rows-1),smooth=t*t*(3-2*t);var f=front[i];
+                    float rearY=f.y>.10f?.10f+(f.y-.10f)*.45f:f.y-.006f;
+                    var v=new Vector3(Mathf.Lerp(f.x,f.x*.98f,smooth),Mathf.Lerp(f.y,rearY,smooth)+.014f*Mathf.Sin(t*Mathf.PI)*Mathf.Clamp01((f.y+.01f)/.20f),Mathf.Lerp(.108f,-.176f,t));
+                    v.y+=layer==0?.002f:-.002f;b.V.Add(v);b.C.Add(color);
+                    if(j==rows-1||i==n-1)continue;int k=start+j*n+i;
+                    if(layer==0)b.T.AddRange(new[]{k,k+1,k+n,k+1,k+n+1,k+n});else b.T.AddRange(new[]{k,k+n,k+1,k+1,k+n,k+n+1});
+                }
+                int center=b.V.Count;b.V.Add(new Vector3(0,.025f,layer==0?-.180f:-.174f));b.C.Add(color);
+                for(int i=0;i<n-1;i++){int k=start+(rows-1)*n+i;if(layer==0)b.T.AddRange(new[]{center,k,k+1});else b.T.AddRange(new[]{center,k+1,k});}
+            }
+        }
+        static void HoodRim(OutfitArt.Builder b,Vector3[] front,Color cloth,Color lining)
+        {
+            int n=front.Length;
+            for(int layer=0;layer<2;layer++)
+            {
+                int start=b.V.Count;
+                for(int row=0;row<3;row++)for(int i=0;i<n;i++)
+                {
+                    var f=front[i];float side=f.x<0?-1:1;
+                    var v=row==0?f:row==1?new Vector3(side*Mathf.Max(0,Mathf.Abs(f.x)-.022f),f.y-.014f,.148f):new Vector3(side*Mathf.Max(0,Mathf.Abs(f.x)-.034f),f.y-.023f,.140f);
+                    v.z+=layer==0?.001f:-.001f;b.V.Add(v);b.C.Add(row==2?lining:cloth);
+                    if(row==2||i==n-1)continue;int k=start+row*n+i;
+                    if(layer==0)b.T.AddRange(new[]{k,k+n,k+1,k+1,k+n,k+n+1});else b.T.AddRange(new[]{k,k+1,k+n,k+1,k+n+1,k+n});
+                }
+            }
+        }
         // Final head-local coordinates, deliberately independent of the old fitting envelope.
         internal static void FilmBuild(OutfitArt.Builder b,string id)
         {
@@ -19,16 +54,17 @@ namespace SpellDuel
             if(id=="艾琳")
             {
                 var purple=CharacterLook.Hex("382354");var lining=CharacterLook.Hex("8959bd");
-                float[] xs={0,.055f,.105f,.137f,.160f,.172f,.160f,.115f};
-                float[] ys={.245f,.204f,.130f,.040f,-.050f,-.115f,-.135f,-.145f};
-                for(int side=-1;side<=1;side+=2)for(int i=0;i<xs.Length-1;i++)
+                // Dense Bezier aperture: rounded upper shoulders and a soft central peak.
+                const int arc=18,tail=5;var half=new Vector3[arc+tail+1];
+                for(int i=0;i<=arc;i++){float t=i/(float)arc,u=1-t;half[i]=new Vector3(0,.240f,.108f)*(u*u*u)+new Vector3(.060f,.238f,.108f)*(3*u*u*t)+new Vector3(.135f,.075f,.108f)*(3*u*t*t)+new Vector3(.172f,-.115f,.108f)*(t*t*t);}
+                for(int i=1;i<=tail;i++){float t=i/(float)tail,u=1-t;half[arc+i]=new Vector3(.172f,-.115f,.108f)*(u*u*u)+new Vector3(.180f,-.140f,.108f)*(3*u*u*t)+new Vector3(.140f,-.153f,.108f)*(3*u*t*t)+new Vector3(.115f,-.145f,.108f)*(t*t*t);}
+                var front=new Vector3[half.Length*2-1];
+                for(int i=0;i<half.Length;i++){front[half.Length-1+i]=half[i];var v=half[i];v.x=-v.x;front[half.Length-1-i]=v;}
+                HoodRoof(b,front,purple);HoodRim(b,front,purple,lining);
+                for(int i=0;i<front.Length-1;i++)
                 {
-                    var a=new Vector3(side*xs[i],ys[i],.108f);var c=new Vector3(side*xs[i+1],ys[i+1],.108f);
-                    var ia=new Vector3(side*Mathf.Max(0,xs[i]-.018f),ys[i]-.019f,.128f);var ic=new Vector3(side*Mathf.Max(0,xs[i+1]-.018f),ys[i+1]-.019f,.128f);
-                    var ba=new Vector3(a.x*.84f,a.y>.10f?.10f+(a.y-.10f)*.45f:a.y-.008f,-.205f);var bc=new Vector3(c.x*.84f,c.y>.10f?.10f+(c.y-.10f)*.45f:c.y-.008f,-.205f);
-                    b.Panel(a,c,ba,bc,purple,.003f,2,1);b.Panel(a,c,ia,ic,purple,0,1,1);
-                    b.Seam(ia,ic,.006f,lining);b.Seam(a+Vector3.forward*.005f,c+Vector3.forward*.005f,.003f,gold);
-                    b.Panel(ba,bc,new Vector3(0,.035f,-.217f),new Vector3(0,.035f,-.217f),purple,0,1,1);
+                    var a=front[i];var c=front[i+1];
+                    b.Seam(a+Vector3.forward*.005f,c+Vector3.forward*.005f,.003f,gold);
                 }
                 return;
             }
