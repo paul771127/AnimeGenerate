@@ -24,7 +24,7 @@ namespace SpellDuel
         /// <summary>裝備說明裡的精魄那幾行</summary>
         static void SoulLines(Item it, List<string> lines)
         {
-            lines.Add($"💠 精魄孔 {it.souls.Count}/{it.soulSlots}　{SlotDots(it)}");
+            lines.Add($"💠 精魄孔 {it.souls.Count}/{it.soulSlots}　{SlotDots(it)}（鑲{Souls.PartNames[(int)Souls.PartOf(it.slot)]}類精魄）");
             foreach (var id in it.souls) { var d = Souls.Get(id); if (d != null) lines.Add($"　◆ {d.name}：{Souls.Desc(d)}"); }
         }
 
@@ -42,7 +42,7 @@ namespace SpellDuel
             if (it != null)
             {
                 // 精魄孔：已鑲的（不能取出）／空的
-                UiKit.Text(new Rect(dr.x + gap, y, dr.width - gap * 2, fs * 1.1f), it.soulSlots == 0 ? "這件裝備沒有精魄孔（孔數是掉落時隨機的，越稀有的裝備上限越高）" : $"精魄孔 {it.souls.Count}/{it.soulSlots}　⚠ 鑲上後不能取出（跟著這件裝備）", fsS, new Color(0.85f, 0.88f, 1f));
+                UiKit.Text(new Rect(dr.x + gap, y, dr.width - gap * 2, fs * 1.1f), it.soulSlots == 0 ? "這件裝備沒有精魄孔（孔數是掉落時隨機的，越稀有的裝備上限越高）" : $"精魄孔 {it.souls.Count}/{it.soulSlots}　只能鑲{Souls.PartText(Souls.PartOf(it.slot))}類精魄　⚠ 鑲上後不能取出", fsS, new Color(0.85f, 0.88f, 1f));
                 y += fs * 1.2f;
                 if (it.soulSlots > 0)
                 {
@@ -64,6 +64,8 @@ namespace SpellDuel
             // 背包裡的精魄（鑲嵌模式：點＝鑲上）／圖鑑（全部，沒有的寫來源）
             var list = new List<SoulDef>();
             foreach (var d in Souls.All) if (it == null || (p.souls.TryGetValue(d.id, out int n) && n > 0)) list.Add(d);
+            if (it != null) list.Sort((x, y) => (x.part == Souls.PartOf(it.slot) ? 0 : 1).CompareTo(y.part == Souls.PartOf(it.slot) ? 0 : 1));   // 能鑲的排前面
+            else list.Sort((x, y) => x.part.CompareTo(y.part));   // 圖鑑：武器、防具、飾品分組
             var view = new Rect(dr.x + gap, y, dr.width - gap * 2, dr.yMax - y - gap * 0.4f);
             if (it != null && list.Count == 0)
             {
@@ -79,7 +81,8 @@ namespace SpellDuel
                 var d = list[k];
                 int have = p.souls.TryGetValue(d.id, out int c) ? c : 0;
                 var rr = new Rect(0, k * (rowH + gap * 0.3f), cw, rowH);
-                bool canPut = it != null && have > 0 && it.souls.Count < it.soulSlots;
+                bool partOk = it == null || d.part == Souls.PartOf(it.slot);
+                bool canPut = it != null && have > 0 && partOk && it.souls.Count < it.soulSlots;
                 if (it != null)
                 {
                     bool armed = soulArm == d.id && Time.time < soulArmUntil;
@@ -91,8 +94,8 @@ namespace SpellDuel
                     }
                 }
                 else UiKit.Card(rr, have > 0 ? 0.75f : 0.4f, d.color, have > 0 ? 0.8f : 0.3f);
-                string title = (d.IsBoss ? "👑 " : "") + d.name + (have > 0 ? $" ×{have}" : "") + (it != null && soulArm == d.id && Time.time < soulArmUntil ? "　← 再按一次確定" : "");
-                UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y, rr.width - gap, fs * 1.2f), title, fsS, have > 0 || it == null ? d.color : Color.gray, TextAnchor.MiddleLeft, true);
+                string title = (d.IsBoss ? "👑 " : "") + d.name + (have > 0 ? $" ×{have}" : "") + (partOk ? "" : $"　（只能鑲{Souls.PartNames[(int)d.part]}）") + (it != null && soulArm == d.id && Time.time < soulArmUntil ? "　← 再按一次確定" : "");
+                UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y, rr.width - gap, fs * 1.2f), title, fsS, (have > 0 && partOk) || it == null ? d.color : Color.gray, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y + fs * 1.1f, rr.width - gap, rowH - fs * 1.15f), Souls.Desc(d) + "　（" + Souls.DropText(d) + "）", Mathf.RoundToInt(fsS * 0.9f), new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft, false, 0.5f);
             }
             GUI.EndScrollView();

@@ -37,6 +37,9 @@ namespace SpellDuel
         Undying,       // 每場戰鬥一次：受到致命傷害時留 1 HP、無敵 3 秒
     }
 
+    /// <summary>精魄能鑲在哪一類裝備：武器（傷害）、防具（頭、身體、鞋子；防禦）、飾品（技能、輔助、特殊）</summary>
+    public enum SoulPart { Weapon, Armor, Trinket }
+
     public struct SoulFx
     {
         public SoulOp op; public Stat stat; public float v, chance, dur; public string skill;
@@ -50,6 +53,7 @@ namespace SpellDuel
         public string boss;                 // Boss 的職業 id
         public float chance;                // 掉落機率（打倒一隻）
         public Color color;
+        public SoulPart part;
         public SoulFx[] fx;
         public bool IsBoss => boss != null;
     }
@@ -106,7 +110,22 @@ namespace SpellDuel
             B("boss_sea", "#22d3ee", F(SoulOp.HurtShield, 60, 0.12f, 5f));                    // 深淵海妖：機率大護盾
             B("boss_arena", "#d4a24c", F(SoulOp.Undying, 0));                                  // 青銅鬥魂：每場一次不死
             B("boss_canyon", "#c8a165", F(SoulOp.Atk, 0.25f), F(SoulOp.Taken, 0.12f));        // 黃土岩魔：好處＋副作用（攻擊很強，但更怕痛）
+            AssignParts();
         }
+
+        /// <summary>武器類（傷害）、飾品類（技能、輔助、特殊）；其他都是防具類（防禦）</summary>
+        static readonly string[] WeaponSouls = { "soul_m0", "soul_m3", "soul_m5", "soul_m7", "soul_m9", "soul_m10", "soul_boss_canyon" };
+        static readonly string[] TrinketSouls = { "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_boss", "soul_boss_forest" };
+        static void AssignParts()
+        {
+            foreach (var d in All)
+                d.part = System.Array.IndexOf(WeaponSouls, d.id) >= 0 ? SoulPart.Weapon : System.Array.IndexOf(TrinketSouls, d.id) >= 0 ? SoulPart.Trinket : SoulPart.Armor;
+        }
+        public static readonly string[] PartNames = { "武器", "防具", "飾品" };
+        public static readonly string[] PartIcons = { "⚔", "🛡", "💍" };
+        /// <summary>這個部位的裝備能鑲哪一類精魄</summary>
+        public static SoulPart PartOf(Slot slot) => slot == Slot.Weapon ? SoulPart.Weapon : slot == Slot.Trinket ? SoulPart.Trinket : SoulPart.Armor;
+        public static string PartText(SoulPart p) => p == SoulPart.Weapon ? "⚔ 武器" : p == SoulPart.Trinket ? "💍 飾品" : "🛡 防具（頭、身體、鞋子）";
 
         public static SoulDef Get(string id) => id != null && byId.TryGetValue(id, out var d) ? d : null;
         public static SoulDef OfMinion(int kind) => All.Find(d => d.kind == kind);
@@ -163,7 +182,7 @@ namespace SpellDuel
             foreach (var x in d.fx) { if (sb.Length > 0) sb.Append('、'); sb.Append(FxText(x)); }
             return sb.ToString();
         }
-        public static string DropText(SoulDef d) => d.IsBoss ? $"{d.source}（Boss）・掉落率 {d.chance * 100f:0.#}%" : $"{d.source}・掉落率 {d.chance * 100f:0.#}%";
+        public static string DropText(SoulDef d) => $"{PartIcons[(int)d.part]}{PartNames[(int)d.part]}用・" + (d.IsBoss ? $"{d.source}（Boss）・掉落率 {d.chance * 100f:0.#}%" : $"{d.source}・掉落率 {d.chance * 100f:0.#}%");
 
         // ---------------------------------------------------------------- 精魄孔
         /// <summary>新裝備的精魄孔數：0～4，越稀有上限越高（普通最多 1、優良 2、稀有 3、史詩 4、傳說 1～4）</summary>
@@ -248,6 +267,8 @@ namespace SpellDuel
         {
             why = null;
             if (it == null || Get(id) == null) { why = "沒有這個精魄"; return false; }
+            var d = Get(id);
+            if (d.part != PartOf(it.slot)) { why = $"{d.name}只能鑲在{PartText(d.part)}上"; return false; }
             if (it.souls.Count >= it.soulSlots) { why = it.soulSlots == 0 ? "這件裝備沒有精魄孔" : "精魄孔都滿了（先取出一個）"; return false; }
             if (!p.souls.TryGetValue(id, out int n) || n <= 0) { why = "背包裡沒有這個精魄"; return false; }
             if (n == 1) p.souls.Remove(id); else p.souls[id] = n - 1;
