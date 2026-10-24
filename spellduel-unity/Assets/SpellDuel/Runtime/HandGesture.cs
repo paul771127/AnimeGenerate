@@ -122,7 +122,7 @@ namespace SpellDuel
                 case "oath": case "bloodrage": case "undying": case "shadowdance": case "jianlai": return Style.Burst; // 握拳→張開（劍來：手中出現長劍）
                 case "yujian": return Style.Thrust;
                 case "jiangang": case "jianzhen": return Style.Burst;                                // 劍罡護體、劍陣：握拳→張開                                                   // 御劍術：手往前推（飛劍射出）
-                case "wanjian": return Style.Press;                                                   // 萬劍歸宗：往下壓（劍從天而降）
+                case "wanjian": case "yijian": return Style.Press;                                    // 萬劍歸宗、一劍開天：往下壓（往下劈）                                                   // 萬劍歸宗：往下壓（劍從天而降）
                 case "sanction": case "poisonfog": return Style.Press;                               // 往下壓
             }
             if (s.type == SkillType.Trap) return Style.Press;

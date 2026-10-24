@@ -390,7 +390,7 @@ namespace SpellDuel
             "击擊连連兽獸夹夾术術枪槍鎗槍风風陨隕愈癒瘉癒袭襲飞飛烟煙菸煙雾霧弹彈斩斬剑劍劒劍剣劍气氣挡擋铁鐵疗療猎獵" +
             "圣聖审審护護祷禱净淨广廣杀殺腾騰冻凍结結坠墜静靜灵靈恶惡恒恆环環电電闪閃极極讽諷点點" +
             "鹰鷹领領将將应應现現罚罰记記听聽躯軀冲衝贯貫标標滚滾从從号號凛凜为為约約卫衛弃棄处處决決复復体體惩懲" +
-            "时時头頭实實识識来來万萬归歸总總";
+            "时時头頭实實识識来來万萬归歸总總开開";
 
         // 拼音（不含聲調）→ 字：技能名稱的每個字，加上辨識器可能輸出的同音字（繁簡都有）
         const string PinyinTable =
@@ -444,7 +444,7 @@ namespace SpellDuel
             // 初心者：木棍揮擊、投石、急救（投石常被聽成「同時」）
             "tou 投頭头偷透|tong 同通童痛統统銅铜桶筒|mu 木目母幕慕墓牧|jiu 救就九久舊旧究酒揪|" +
             // 劍仙：劍來、御劍術、萬劍歸宗
-            "lai 來来賴赖萊莱|wan 萬万完玩晚碗彎弯灣湾|gui 歸归鬼貴贵櫃柜規规龜龟|zong 宗總总縱纵蹤踪棕粽|gang 罡剛刚鋼钢港崗岗綱纲缸|ti 體";
+            "lai 來来賴赖萊莱|wan 萬万完玩晚碗彎弯灣湾|gui 歸归鬼貴贵櫃柜規规龜龟|zong 宗總总縱纵蹤踪棕粽|gang 罡剛刚鋼钢港崗岗綱纲缸|ti 體|kai 開开凱凯慨楷揩";
 
         static readonly Dictionary<char, char> toTrad = new Dictionary<char, char>();
         static readonly Dictionary<char, List<string>> pinyin = new Dictionary<char, List<string>>();

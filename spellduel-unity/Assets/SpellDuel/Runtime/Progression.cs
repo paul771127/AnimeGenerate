@@ -352,6 +352,9 @@ namespace SpellDuel
                     FLearn("sx_wj", "wanjian", 0, 3, "sx_crit"),
                     FMod("sx_wj2", "萬劍強化", "wanjian", ModField.Damage, 0.12f, 5, 0, 4, "sx_wj"),
                     FPas("sx_atk", "劍氣縱橫", PassiveKind.Atk, 0.03f, 5, 1, 4, "sx_yj2"),
+                    FLearn("sx_yjkt", "yijian", 2, 4, "sx_yj3"),
+                    FMod("sx_yjkt2", "開天強化", "yijian", ModField.Damage, 0.12f, 5, 2, 5, "sx_yjkt"),
+                    FMod("sx_yjkt3", "開天蓄勢", "yijian", ModField.Charge, 0.08f, 5, 1, 5, "sx_yjkt"),
                     // 🛡 防禦
                     FLearn("sx_jg", "jiangang", 3, 1, "sx_root"),
                     FMod("sx_jg2", "劍罡加厚", "jiangang", ModField.BuffAmount, 15f, 5, 3, 2, "sx_jg"),
