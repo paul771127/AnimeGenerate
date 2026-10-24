@@ -136,9 +136,9 @@ namespace SpellDuel
         {
             if (!Supported) return;
             Poll();
-            // 偵測器一有空就送出已經讀回的那張（讀回和偵測同時進行，不用等偵測完才開始讀下一張）
             if (frameReady && !nativeBusy) SubmitReady();
-            if (!Enabled || (!WantBody && !WantHand) || readbackPending || frameReady || Time.time < nextCapture) return;
+            // 偵測器有空才抓新畫面：讀回只要幾毫秒，先抓好放著反而要排隊等（實測排隊 110ms，畫面送進去時已經舊了）
+            if (!Enabled || (!WantBody && !WantHand) || readbackPending || frameReady || nativeBusy || Time.time < nextCapture) return;
             if (background == null || background.material == null) return;
             nextCapture = Time.time + Interval;
             Capture();
