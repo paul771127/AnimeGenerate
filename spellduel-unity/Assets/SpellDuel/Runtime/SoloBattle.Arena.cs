@@ -53,6 +53,7 @@ namespace SpellDuel
         /// <summary>站姿校正中回傳 true（這段時間不判斷蹲下／跳躍）</summary>
         bool UpdateCalibration(float y)
         {
+            if (readyCalibrated) return false;   // 開打前的戰鬥準備已經量過站姿、蹲姿
             if (Calibrating) { calibSum += y; calibN++; return true; }
             if (calibN > 0)
             {
@@ -82,7 +83,7 @@ namespace SpellDuel
             }
         }
 
-        void ResetCalibration() { calibSum = 0f; calibN = 0; standH = -1f; crouchCalib = 0; }
+        void ResetCalibration() { calibSum = 0f; calibN = 0; standH = -1f; crouchCalib = 0; readyCalibrated = false; }
 
         // ---------------------------------------------------------------- 震地波的環
         readonly Dictionary<Battle.Shockwave, LineRenderer> quakeGo = new Dictionary<Battle.Shockwave, LineRenderer>();

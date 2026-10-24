@@ -57,6 +57,23 @@ namespace SpellDuel
         //   劍士：掌心一道藍白劍芒由下往上凝聚，完成後藍白劍光＋星芒閃爍「斬！」
         //   刺客：暗紅的圈從外往掌心收攏，完成後掌心一點紅光跳動「刺！」
         float palmCdStart, palmCdEnd, palmReadyAt = -9f; bool palmWasReady = true;
+        float slashScreenAt = -9f;   // 劍士砍下去的時間：畫面上斜斜閃一道劍光
+
+        /// <summary>劍士砍下去：整個畫面斜斜劃過一道藍白劍光（0.3 秒），加上畫面邊緣閃一下</summary>
+        void DrawSlashScreenFlash()
+        {
+            float e = (Time.time - slashScreenAt) / 0.3f;
+            if (e < 0f || e > 1f) return;
+            float W = Screen.width, H = Screen.height, L = Mathf.Sqrt(W * W + H * H);
+            var cpt = new Vector2(W * 0.5f, H * 0.5f);
+            var dir = new Vector2(W, -H).normalized;
+            float grow = Mathf.Clamp01(e / 0.35f), fade = 1f - Mathf.Clamp01((e - 0.35f) / 0.65f);
+            var a = cpt - dir * L * 0.5f * grow; var b = cpt + dir * L * 0.5f * grow;
+            Seg(a, b, Mathf.Min(W, H) * 0.09f * fade, new Color(0.4f, 0.7f, 1f, 0.25f * fade));
+            Seg(a, b, Mathf.Min(W, H) * 0.035f * fade, new Color(0.75f, 0.92f, 1f, 0.6f * fade));
+            Seg(a, b, Mathf.Min(W, H) * 0.01f, new Color(1f, 1f, 1f, 0.95f * fade));
+            if (e < 0.5f) EdgeFlash(new Color(0.7f, 0.9f, 1f), 1f - e / 0.5f);
+        }
 
         static string ChargeReadyHint(SkillDef s) => s.id switch
         {
@@ -66,6 +83,7 @@ namespace SpellDuel
 
         void DrawPalmCharge(int fs)
         {
+            DrawSlashScreenFlash();
             var basic = Me?.basic ?? Skills.BasicOf(myClass);
             if (!Skills.IsChargedBasic(basic) || battle == null || Me == null || !Me.Alive) return;
             float now = battle.now;
@@ -240,8 +258,22 @@ namespace SpellDuel
         static void DrawSwordCharge(Vector2 c, float r, float k, bool ready, float since, int fs, System.Func<float, Rect> Sq)
         {
             var steel = new Color(0.62f, 0.85f, 1f);
-            float bladeH = r * 2.2f, bladeW = r * 0.16f;
-            UiKit.Disc(Sq(r * 0.95f), new Color(0.35f, 0.55f, 0.8f, ready ? 0.22f : 0.15f));
+            float bladeH = r * 3f, bladeW = r * 0.24f;
+            UiKit.Disc(Sq(r * 1.1f), new Color(0.35f, 0.55f, 0.8f, ready ? 0.3f : 0.2f + 0.15f * k));
+            // 集氣中：一道道藍白光絲從四周往劍身收攏（越接近完成越多、越亮）
+            if (!ready)
+            {
+                int nStreak = 4 + Mathf.RoundToInt(8 * k);
+                for (int i = 0; i < nStreak; i++)
+                {
+                    float a = i * Mathf.PI * 2f / nStreak + Time.time * 1.7f;
+                    float ph = Mathf.Repeat(Time.time * 1.6f + i * 0.37f, 1f);
+                    float outR = r * Mathf.Lerp(2.4f, 0.4f, ph), inR = outR - r * 0.5f;
+                    var dir = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+                    Seg(c + dir * outR, c + dir * Mathf.Max(r * 0.15f, inR), r * 0.06f, new Color(0.75f, 0.92f, 1f, (0.25f + 0.6f * k) * (1f - ph * 0.6f)));
+                }
+                UiKit.Halo(Sq(r * Mathf.Lerp(2.2f, 1.1f, k)), new Color(0.6f, 0.85f, 1f, 0.25f + 0.5f * k), 0.7f);
+            }
             var prev = GUI.color;
             // 劍芒的底（暗）＋已凝聚的部分（由下往上）
             GUI.color = new Color(0.45f, 0.6f, 0.8f, 0.25f);
@@ -254,12 +286,20 @@ namespace SpellDuel
             GUI.DrawTexture(new Rect(c.x - r * 0.45f, c.y + bladeH * 0.28f, r * 0.9f, bladeW * 0.8f), Texture2D.whiteTexture);
             GUI.color = prev;
             if (!ready) return;
-            if (since < 0.35f) { float e = since / 0.35f; UiKit.Halo(Sq(r * (1.1f + 1.2f * e)), new Color(0.85f, 0.95f, 1f, 1f - e), 1f); }   // 集氣完成：劍光往外一閃
-            UiKit.Disc(Sq(r * 1.05f), new Color(0.55f, 0.8f, 1f, 0.3f + 0.15f * Mathf.Sin(Time.time * 9f)));   // 整個手掌泛藍白光
-            UiKit.Halo(Sq(r * 1.25f), new Color(0.75f, 0.92f, 1f, 0.8f + 0.2f * Mathf.Sin(Time.time * 7f)), 1f);
-            float tw = r * (0.55f + 0.2f * Mathf.Abs(Mathf.Sin(Time.time * 5f)));   // 劍尖的星芒
-            UiKit.Star(new Rect(c.x - tw / 2, c.y - bladeH / 2 - tw / 2, tw, tw), new Color(1f, 1f, 1f, 0.9f));
-            UiKit.Text(new Rect(c.x - r, c.y + r * 1.15f, r * 2, fs * 1.3f), "斬！", fs, new Color(0.85f, 0.95f, 1f), TextAnchor.MiddleCenter, true);
+            if (since < 0.5f) { float e = since / 0.5f; UiKit.Halo(Sq(r * (1.1f + 2.4f * e)), new Color(0.85f, 0.95f, 1f, 1f - e), 1f); UiKit.Disc(Sq(r * (1.5f - 0.5f * e)), new Color(1f, 1f, 1f, 0.55f * (1f - e))); }   // 集氣完成：白光炸開＋劍光往外一圈
+            UiKit.Disc(Sq(r * 1.3f), new Color(0.55f, 0.8f, 1f, 0.38f + 0.18f * Mathf.Sin(Time.time * 9f)));   // 整個手掌泛藍白光
+            UiKit.Halo(Sq(r * 1.5f), new Color(0.75f, 0.92f, 1f, 0.85f + 0.15f * Mathf.Sin(Time.time * 7f)), 1f);
+            // 旋轉的劍氣光芒（8 道）
+            for (int i = 0; i < 8; i++)
+            {
+                float a = i * Mathf.PI / 4f + Time.time * 2.2f;
+                var dir = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+                float len = r * (0.5f + 0.25f * Mathf.Abs(Mathf.Sin(Time.time * 6f + i)));
+                Seg(c + dir * r * 1.55f, c + dir * (r * 1.55f + len), r * 0.07f, new Color(0.85f, 0.96f, 1f, 0.85f));
+            }
+            float tw = r * (0.9f + 0.35f * Mathf.Abs(Mathf.Sin(Time.time * 5f)));   // 劍尖的星芒
+            UiKit.Star(new Rect(c.x - tw / 2, c.y - bladeH / 2 - tw / 2, tw, tw), new Color(1f, 1f, 1f, 0.95f));
+            UiKit.Text(new Rect(c.x - r * 1.5f, c.y + r * 1.75f, r * 3, fs * 2f), "⚔ 斬！", Mathf.RoundToInt(fs * 1.5f), new Color(0.9f, 0.97f, 1f), TextAnchor.MiddleCenter, true);
         }
 
         /// <summary>刺客：暗紅的圈從外往掌心收攏（凝聚殺氣）；完成後掌心一點紅光跳動</summary>
@@ -302,14 +342,23 @@ namespace SpellDuel
         /// <summary>劍士砍下去：沿著刀線（自己眼前那一段）一道細白劍光從頭掃到尾，掃完刀尖亮一下星芒</summary>
         void ShowSwordGleam(Vector3[] pts)
         {
-            var go = new GameObject("Sword Gleam");
-            var lr = go.AddComponent<LineRenderer>();
-            lr.material = new Material(Shader.Find("Sprites/Default"));
-            lr.useWorldSpace = true; lr.numCapVertices = 4;
-            lr.widthCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.75f, 1f), new Keyframe(1f, 0.2f));
-            lr.widthMultiplier = 0.045f;
-            go.AddComponent<SwordGleamFx>().Begin(lr, pts);
-            Sfx.Play("cast_swordsman", 0.4f, 1.8f);
+            // 三層：外層寬的藍色光暈、中層亮藍、中心白色（比以前粗很多、停留久一點）
+            foreach (var (w, glow) in new[] { (0.24f, 0), (0.1f, 1), (0.04f, 2) })
+            {
+                var go = new GameObject("Sword Gleam");
+                var lr = go.AddComponent<LineRenderer>();
+                lr.material = new Material(Shader.Find("Sprites/Default"));
+                lr.useWorldSpace = true; lr.numCapVertices = 6;
+                lr.widthCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.7f, 1f), new Keyframe(1f, 0.15f));
+                lr.widthMultiplier = w;
+                go.AddComponent<SwordGleamFx>().Begin(lr, pts, glow);
+            }
+            var mid = pts[pts.Length / 2];
+            var dir = (pts[pts.Length - 1] - pts[0]).normalized;
+            SpellFx.CastBurst("sword_slash", new Color(0.7f, 0.9f, 1f), mid, dir, 1.4f);   // 刀光中間爆出劍氣火花
+            slashScreenAt = Time.time;   // 畫面上也閃一道斜斜的劍光
+            Haptics.Play(Haptics.Kind.Medium); Kick(6f, 0f);
+            Sfx.Play("cast_swordsman", 0.6f, 1.8f);
         }
 
         /// <summary>刺客突刺：從畫面上手的位置往準星方向刺出一道紅光（外層暗紅、中間亮），尖端爆一下</summary>
@@ -354,21 +403,22 @@ namespace SpellDuel
     /// <summary>劍光一閃：一小段亮光沿著刀線從頭掃到尾（約 0.12 秒），再淡掉</summary>
     public class SwordGleamFx : MonoBehaviour
     {
-        LineRenderer lr; Vector3[] pts; float t;
-        const float Sweep = 0.12f, Fade = 0.15f;
-        public void Begin(LineRenderer l, Vector3[] p) { lr = l; pts = p; Update(); }
+        LineRenderer lr; Vector3[] pts; float t; int layer;
+        const float Sweep = 0.1f, Hold = 0.08f, Fade = 0.3f;
+        public void Begin(LineRenderer l, Vector3[] p, int glow = 2) { lr = l; pts = p; layer = glow; Update(); }
         void Update()
         {
             t += Time.deltaTime;
             if (lr == null || pts == null || pts.Length < 2) { Destroy(gameObject); return; }
             int n = pts.Length - 1;
-            float head = Mathf.Clamp01(t / Sweep) * n, tail = Mathf.Max(0f, head - n * 0.45f);
+            float head = Mathf.Clamp01(t / Sweep) * n, tail = t > Sweep ? Mathf.Clamp01((t - Sweep) / (Hold + Fade)) * n * 0.6f : Mathf.Max(0f, head - n * 0.6f);
             const int M = 10;
             lr.positionCount = M + 1;
             for (int i = 0; i <= M; i++) lr.SetPosition(i, At(Mathf.Lerp(tail, head, i / (float)M)));
-            float a = t <= Sweep ? 1f : 1f - Mathf.Clamp01((t - Sweep) / Fade);
-            lr.startColor = new Color(0.7f, 0.9f, 1f, 0f); lr.endColor = new Color(1f, 1f, 1f, a);
-            if (t > Sweep + Fade) { Destroy(lr.material); Destroy(gameObject); }
+            float a = t <= Sweep + Hold ? 1f : 1f - Mathf.Clamp01((t - Sweep - Hold) / Fade);
+            var col = layer == 0 ? new Color(0.35f, 0.65f, 1f, 0.45f) : layer == 1 ? new Color(0.6f, 0.88f, 1f, 0.85f) : new Color(1f, 1f, 1f, 1f);
+            lr.startColor = new Color(col.r, col.g, col.b, 0f); lr.endColor = new Color(col.r, col.g, col.b, col.a * a);
+            if (t > Sweep + Hold + Fade) { Destroy(lr.material); Destroy(gameObject); }
         }
         Vector3 At(float x) { int i = Mathf.Min(pts.Length - 2, Mathf.FloorToInt(x)); return Vector3.Lerp(pts[i], pts[i + 1], x - i); }
     }

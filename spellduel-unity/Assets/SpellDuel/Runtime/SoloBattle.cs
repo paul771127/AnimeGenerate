@@ -1946,7 +1946,8 @@ namespace SpellDuel
         void Update()
         {
             if (Watching) { UpdateWatchBattle(); return; }   // 觀戰：只跑顯示
-            if (phase == Phase.Fighting && lastPhase != Phase.Fighting && !NetMode) { introUntil = Time.time + IntroTime; Sfx.Play("select", 0.7f, 0.8f); }
+            if (phase == Phase.Fighting && lastPhase != Phase.Fighting && !NetMode) { introUntil = Time.time + IntroTime; BeginReadyCheck(); }   // 先做戰鬥準備（身高校正），完成才倒數開打
+            if (phase != Phase.Fighting) readyStep = -1;
             lastPhase = phase;
             UpdateMic();
             UpdateTownWalk();
@@ -1970,6 +1971,7 @@ namespace SpellDuel
             UpdateScene();
             if (NetMode) SyncRemote();
             UpdateLock();
+            UpdateReadyCheck();   // 戰鬥準備：站直 → 蹲下 → 站起來（SoloBattle.ReadyCheck.cs）
             if (InIntro) { UpdateVisuals(); return; }   // 開場：先停幾秒（敵人不動、不能出手）
             if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
             {
@@ -3122,6 +3124,7 @@ namespace SpellDuel
             else if (infoOpen) DrawSkillInfo();
             DrawGuide();   // 村莊新手導覽（SoloBattle.Guide.cs）
             DrawIntroOutro();   // 戰鬥開始／結束的文字
+            DrawReadyCheck();   // 戰鬥準備的步驟卡
             DrawQuestPanel();   // 右上角的任務面板（SoloBattle.NoviceRoute.cs）
             DrawTip();   // 情境教學：畫在最上面
         }

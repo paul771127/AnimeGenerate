@@ -10,7 +10,7 @@ namespace SpellDuel
             if (Watching || StoryVideo.Active) return;
             float W = Screen.width, H = Screen.height;
             int fs = UiKit.BaseFont;
-            if (InIntro)
+            if (InIntro && !InReady)
             {
                 float left = introUntil - Time.time;
                 string title = storyStage != null ? storyStage.title : dungeon != null ? dungeon.name : daily.HasValue ? DailyChallenge.Names[(int)daily.Value] : tutorial ? "教學" : "";
