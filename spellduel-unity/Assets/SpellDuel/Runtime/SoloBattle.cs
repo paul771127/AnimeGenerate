@@ -1983,6 +1983,7 @@ namespace SpellDuel
                 if (daily != null && UpdateDaily()) { UpdateVisuals(); return; }   // 每日挑戰：時間到（或心用完）→ 結算
                 if (tutorial && UpdateTutorial()) { UpdateVisuals(); return; }      // 教學關：最後一步完成 → 結算
                 if (!frozen) HandleInput();
+                UpdateCastGuide();   // 放招的分步驟提示（SoloBattle.CastGuide.cs）
                 SendState();
                 SendBossState();
                 SendFriends();
@@ -3742,6 +3743,7 @@ namespace SpellDuel
                 bool usable = me.mp >= s.cost && cd <= 0;
                 // 技能卡（點了看詳細說明）：上面圖示、下面名稱／手勢→放招／MP 或冷卻；手正比著這個手勢時亮起來
                 UiKit.Card(r, charging ? 0.8f : 0.5f, charging ? s.color : (Color?)null, charging ? 1f : 0.6f);
+                if (charging || (me.armed == s && phase == Phase.Fighting)) DrawCastingTile(r, s.color, fsS);   // 正在放的這一招：一直閃
                 var ir = new Rect(r.center.x - isz / 2, r.y + gap * 0.6f, isz, isz);
                 // 技能圖示（發光徽章）：詠唱中外圈脈動發光；冷卻中由上往下蓋暗；MP 不足變灰
                 if (charging)
@@ -3811,8 +3813,13 @@ namespace SpellDuel
             // 蓄力／怎麼施法的提示：放在下方面板正上方（不在畫面中央，敵人靠近也不會被敵人和鎖定框擋住），底色較不透明、最後才畫
             {
                 float chargeY = panelY - gap - fs * 1.9f;
-                if (chargeTip != null) UiKit.Pill(chargeY, chargeTip, fs, chargeTipColor, pillW, 0.88f);
-                if (Time.time < messageUntil) UiKit.Pill(chargeTip != null ? chargeY - fs * 3.6f : H * 0.64f, message, fs, Color.white, pillW);
+                float guideTop = DrawCastGuide(panelY - gap * 2.5f, W, pillW, fs, fsS, fsL, me.charging != null ? chargeTip?.Substring(me.charging.name.Length).Trim() : null);   // 放招提示卡（可以關）
+                if (guideTop >= 0f) { if (Time.time < messageUntil) UiKit.Pill(guideTop - fs * 1.6f, message, fs, Color.white, pillW); }
+                else
+                {
+                    if (chargeTip != null) UiKit.Pill(chargeY, chargeTip, fs, chargeTipColor, pillW, 0.88f);
+                    if (Time.time < messageUntil) UiKit.Pill(chargeTip != null ? chargeY - fs * 3.6f : H * 0.64f, message, fs, Color.white, pillW);
+                }
             }
 
             if (frozen)
