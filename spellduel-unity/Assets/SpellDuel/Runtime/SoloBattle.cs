@@ -15,6 +15,20 @@ namespace SpellDuel
         public enum Phase { Hidden, Setup, Fighting, Over }
         public Phase phase { get; private set; } = Phase.Hidden;
         public Action RequestRedraw, RequestChangeMode;
+        /// <summary>開戰前請玩家重新放置場地（GameRoot 顯示預覽，按確定才呼叫 go；取消就不開戰）</summary>
+        public Action<Action> RequestAreaConfirm;
+        bool areaGatePassed;
+
+        /// <summary>
+        /// 每場戰鬥（單人）開打前都要先重新放置一次場地，確認場地位置。回傳 true＝先去放場地，放好後會再呼叫 again。
+        /// 連線、觀戰不問（場地由房主決定）；同一個開戰流程裡只問一次。
+        /// </summary>
+        bool GateArea(Action again)
+        {
+            if (areaGatePassed || NetMode || RequestAreaConfirm == null) return false;
+            RequestAreaConfirm(() => { areaGatePassed = true; try { again(); } finally { areaGatePassed = false; } });
+            return true;
+        }
         public HandGesture Hand;          // 手勢（GameRoot 每幀更新）
 
         // ---------------------------------------------------------------- 雙人連線模式（由 GameRoot 設定）
@@ -473,7 +487,7 @@ namespace SpellDuel
         {
             if (d == null) return;
             storyMapOpen = false; storyStage = null;
-            void Go() { pendingDungeon = d; StartBossBattle(coopMode, true); }
+            void Go() { if (!coopMode && GateArea(Go)) return; pendingDungeon = d; StartBossBattle(coopMode, true); }
             if (!coopMode && !Story.IsSeen("dg:" + d.id)) { Story.MarkSeen("dg:" + d.id); ShowDialogue(d.before, Go); }
             else { Go(); Ticker(d.before); }   // 連線（或看過開場）：開場白改成戰鬥中的字幕卡，大家都看得到
         }
@@ -500,6 +514,7 @@ namespace SpellDuel
         void StartStageBattle()
         {
             if (storyStage == null) return;
+            if (GateArea(StartStageBattle)) return;   // 先重新放置場地
             pendingStage = storyStage;
             StartBossBattle(false, true);
             pendingStage = null;
@@ -902,6 +917,7 @@ namespace SpellDuel
         /// <summary>開打 Boss：單人（coopMode=false）或雙人合作（主機跑 Boss，隊友端的 Boss 由主機的狀態驅動）</summary>
         void StartBossBattle(bool coopMode, bool endlessMode = false)
         {
+            if (!coopMode && pendingStage == null && pendingDungeon == null && GateArea(() => StartBossBattle(coopMode, endlessMode))) return;   // 討伐 Boss、無盡塔：先重新放置場地
             SaveChoices();
             EndBattle();
             bossMode = true; coop = coopMode; endless = endlessMode; dummyMode = false; enemyClassUsed = "boss";
@@ -1736,6 +1752,7 @@ namespace SpellDuel
             if (enemyClass == "tutorial") { StartTutorial(); return; }
             if (enemyClass == "dungeon") { SaveChoices(); storyMapOpen = true; world.OpenTown(world.town); world.screen = WorldUI.Screen.Dungeon; return; }   // 打開副本清單
             if (!NetMode && entry == Entry.Practice && !PracticeEnemy(enemyClass)) enemyClass = "random";
+            if (GateArea(StartBattle)) return;   // 練習對戰：先重新放置場地
             SaveChoices();
             EndBattle();
             enemyClassUsed = enemyClass == "random" ? Skills.ClassOrder[UnityEngine.Random.Range(0, Skills.ClassOrder.Length)] : enemyClass;
@@ -2975,6 +2992,7 @@ namespace SpellDuel
         {
             Styles();
             if (StoryVideo.Active) { StoryVideo.DrawGUI(); return; }   // 劇情影片（下載中、播放）蓋住整個畫面
+            TipInput();   // 情境教學的提示卡：先吃掉落在卡片上的點擊（SoloBattle.Tips.cs）
             // 技能說明視窗只屬於打開它的那個畫面：換畫面（整備、角色、地圖、對話、開打／結算）或這個介面有一陣子沒畫（回到大廳、村子）就關掉，
             // 免得說明視窗殘留、蓋在其他視窗上
             string ctx = $"{phase}|{prepGo != null}|{charOpen}|{storyMapOpen}|{dlg != null}";
@@ -2994,6 +3012,7 @@ namespace SpellDuel
             DrawGuide();   // 村莊新手導覽（SoloBattle.Guide.cs）
             DrawIntroOutro();   // 戰鬥開始／結束的文字
             DrawQuestPanel();   // 右上角的任務面板（SoloBattle.NoviceRoute.cs）
+            DrawTip();   // 情境教學：畫在最上面
         }
 
         // ---------------------------------------------------------------- 技能詳細說明（點技能卡打開）

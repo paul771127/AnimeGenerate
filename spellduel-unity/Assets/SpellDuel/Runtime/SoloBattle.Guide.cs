@@ -30,6 +30,7 @@ namespace SpellDuel
         void StartGuide()
         {
             GuideStep = 0; guidePage = 0; guideMovedAt = townWalk.Moved;
+            ResetTips();   // 重看導覽：情境提示也重新出現
             Say("🧭 新手導覽開始：照著畫面上的提示做", 3f);
         }
 

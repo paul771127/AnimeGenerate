@@ -268,7 +268,7 @@ namespace SpellDuel
         {
             if (mode == Mode.Watch) SetWatchView(false);
             solo.ResetToHome();
-            areaPreview = false; areaPreviewConfirm = null; playArea.HidePreview();
+            areaPreview = false; areaPreviewBattle = false; areaPreviewConfirm = null; playArea.HidePreview();
             net?.Dispose(); net = new NetLink();
             remoteMode = false; duoUseMarker = false; autoArea = autoSetup = false;
             mode = Mode.Choose; WorldFrame.Reset(); playArea.Clear();
@@ -326,6 +326,20 @@ namespace SpellDuel
             // 雙人職業對戰：SoloBattle 的連線模式（訊息經由這裡收送）
             solo.NetSend = m => { if (net.Connected && mode != Mode.Watch) Send(m); };   // 觀戰者不送戰鬥訊息
             solo.SharedClock = () => SharedTime;
+            // 單人每場戰鬥開打前：重新放置場地（剛放好場地、還沒打過仗的第一場不用再放）
+            solo.RequestAreaConfirm = go =>
+            {
+                if (mode != Mode.Solo || areaFresh) { areaFresh = false; go(); return; }
+                areaPreviewBattle = true;
+                BeginAreaPreview(() =>
+                {
+                    playArea.Clear();
+                    if (!playArea.AutoSquare(AutoAreaSize)) { Log("⚠ 找不到地板：鏡頭對著地板慢慢移動，再試一次"); return; }
+                    WorldFrame.SetMarker(playArea.Origin);
+                    areaFresh = false;
+                    go();
+                });
+            };
             solo.RequestRedraw = () => { solo.Hide(); BeginAreaPreview(() => { WorldFrame.Reset(); playArea.Clear(); if (playArea.AutoSquare(AutoAreaSize)) OnPlayAreaReady(); }); };
             solo.RequestChangeMode = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); mode = Mode.Choose; };
             // 村子的副本嚮導、觀戰席：離開單人（回首頁的流程），改走連線大廳／觀戰
@@ -472,6 +486,8 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 重新放置場地：先預覽，按確定才移過去
         // 所有放置場地（第一次自動建、重新放置、高度異常重置）都要先看到黃框，按「確定」才放
         bool areaPreview, areaPreviewFirst; System.Action areaPreviewConfirm;
+        bool areaPreviewBattle;   // 開戰前的場地確認（取消＝不開戰）
+        bool areaFresh;           // 剛放好場地、還沒開打過：下一場不用再放一次
         void BeginAreaPreview(System.Action confirm) { areaPreview = true; areaPreviewConfirm = confirm; areaPreviewFirst = playArea.state != PlayArea.State.Done; }
         void UpdateAreaPreview()
         {
@@ -481,26 +497,31 @@ namespace SpellDuel
         void DrawAreaPreview(float W, float H, float pad, int fs, int fsS)
         {
             float pw = W - pad * 2f, bh = fs * 2.6f;
-            UiKit.Pill(H * 0.12f, areaPreviewFirst ? $"📐 放置 {AutoAreaSize:0}m 場地" : $"↺ 重新放置 {AutoAreaSize:0}m 場地", fs, new Color(1f, 0.85f, 0.3f), pw);
+            UiKit.Pill(H * 0.12f, areaPreviewBattle ? "⚔ 開戰前：重新放置場地" : areaPreviewFirst ? $"📐 放置 {AutoAreaSize:0}m 場地" : $"↺ 重新放置 {AutoAreaSize:0}m 場地", fs, new Color(1f, 0.85f, 0.3f), pw);
             UiKit.Pill(H * 0.12f + fs * 2.4f, playArea.HasFloor
-                ? "黃色框＝新場地的範圍，黃色箭頭＝場地前方。站到空地的正中間、面向想要的前方（你會站在場地正中間）"
+                ? (areaPreviewBattle ? "每場戰鬥前都要確認場地：站到空地的正中間、面向想要的前方，黃色框裡不要有桌椅、牆壁等走不過去的東西。" : "") +
+                  "黃色框＝新場地的範圍，黃色箭頭＝場地前方。站到空地的正中間、面向想要的前方（你會站在場地正中間）"
                 : "先慢慢移動手機、鏡頭對著地板，找到地板才看得到預覽", fsS, Color.white, pw);
             float by = H - bh * 2.6f - pad;
             bool ok = playArea.HasFloor;
-            if (UiKit.Button(new Rect(pad, by, pw, bh), "✅ 確定放在這裡", fs, ok, new Color(0.45f, 1f, 0.6f), ok))
+            if (UiKit.Button(new Rect(pad, by, pw, bh), areaPreviewBattle ? "✅ 確定，開始戰鬥" : "✅ 確定放在這裡", fs, ok, new Color(0.45f, 1f, 0.6f), ok))
             {
                 areaPreview = false; playArea.HidePreview();
-                areaPreviewConfirm?.Invoke(); areaPreviewConfirm = null;
+                bool battle = areaPreviewBattle; areaPreviewBattle = false;
+                areaFresh = true;   // 剛放好：開戰前的確認就是這一次（開戰的回呼會把它用掉）
+                var confirm = areaPreviewConfirm; areaPreviewConfirm = null;
+                confirm?.Invoke();
+                if (battle) return;
                 if (!areaPreviewFirst) Log($"✅ 場地已放在新的位置");
             }
             if (areaPreviewFirst)
             {
                 // 還沒有場地：沒有「取消」可以退回，只能回首頁
                 if (UiKit.Button(new Rect(pad, by + bh * 1.2f, pw, bh), "返回首頁", fsS))
-                { areaPreview = false; areaPreviewConfirm = null; playArea.HidePreview(); solo.Hide(); LeaveLobby(); }
+                { areaPreview = false; areaPreviewBattle = false; areaPreviewConfirm = null; playArea.HidePreview(); solo.Hide(); LeaveLobby(); }
             }
-            else if (UiKit.Button(new Rect(pad, by + bh * 1.2f, pw, bh), "取消（場地不變）", fsS))
-            { areaPreview = false; areaPreviewConfirm = null; playArea.HidePreview(); }
+            else if (UiKit.Button(new Rect(pad, by + bh * 1.2f, pw, bh), areaPreviewBattle ? "取消（不開戰，回到剛才的畫面）" : "取消（場地不變）", fsS))
+            { areaPreview = false; areaPreviewBattle = false; areaPreviewConfirm = null; playArea.HidePreview(); }
         }
 
         /// <summary>場地外／高度異常的提示；高度異常時給「重新放置場地」按鈕（同一個地方的對齊方不能自己放，要找平地或請房主重放）</summary>

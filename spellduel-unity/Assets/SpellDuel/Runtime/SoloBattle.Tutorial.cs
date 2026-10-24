@@ -39,6 +39,7 @@ namespace SpellDuel
         void StartTutorial() => StartTutorial(false);
         void StartTutorial(bool stone)
         {
+            if (GateArea(() => StartTutorial(stone))) return;   // 先重新放置場地
             SaveChoices();
             stoneLesson = stone;
             tutPlan = stone ? PlanStone : myClass == Skills.Novice ? PlanNovice : PlanFull;

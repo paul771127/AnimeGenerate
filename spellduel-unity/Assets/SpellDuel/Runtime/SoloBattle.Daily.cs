@@ -40,6 +40,7 @@ namespace SpellDuel
 
         void StartDaily(DailyChallenge.Kind kind)
         {
+            if (GateArea(() => StartDaily(kind))) return;   // 先重新放置場地
             SaveChoices();
             EndBattle();
             storyStage = null; dungeon = null;
