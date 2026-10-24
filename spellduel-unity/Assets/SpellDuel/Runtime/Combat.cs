@@ -725,6 +725,8 @@ namespace SpellDuel
         public float BoostDmgMul => (0.75f + DmgPerWave * levelBoost) / 0.75f * enemyDmgMul;
         /// <summary>故事關卡的 Boss：指定的血量（簡單難度、1 人；普通／困難再照等級加成）與攻擊倍率（不吃小怪的 enemyDmgMul）；0＝照舊</summary>
         public float storyBossHp, storyBossDmg;
+        /// <summary>所有 Boss 的血量再 ×70%（使用者要求；故事、無盡、無盡塔、副本、討伐 Boss、合作都算）</summary>
+        public const float BossHpCut = 0.7f;
         public float BossDmgMul => storyBossDmg > 0f ? (0.75f + DmgPerWave * levelBoost) / 0.75f * storyBossDmg : BoostDmgMul;
         public float HpMul => (1f + HpPerWave * Tier) * PartyMul * hpBoost * enemyHpMul;
         /// <summary>這一關敵人的額外倍率（故事第二章森林：血量、攻擊 ×2，Boss 血量 ×5）</summary>
@@ -848,7 +850,7 @@ namespace SpellDuel
             bossSpawnedThisWave = true;
             int bossIndex = wave / BossEvery - 1;
             var at = FixedDungeonSpawns ? DungeonSpawnPoint(0) : (bossPoint ?? edgePoint)();
-            enemy.maxHp = Mathf.RoundToInt((storyBossHp > 0f ? storyBossHp : bossBaseHp * (1f + 0.5f * bossIndex) * bossHpMul) * BossPartyMul * hpBoost * BoostHpMul);
+            enemy.maxHp = Mathf.RoundToInt((storyBossHp > 0f ? storyBossHp : bossBaseHp * (1f + 0.5f * bossIndex) * bossHpMul) * BossPartyMul * hpBoost * BoostHpMul * BossHpCut);
             enemy.hp = enemy.maxHp;
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
             enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f; enemy.silencedUntil = 0f;

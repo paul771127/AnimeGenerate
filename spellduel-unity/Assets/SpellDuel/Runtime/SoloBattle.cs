@@ -967,7 +967,7 @@ namespace SpellDuel
             float party = 1f + 0.5f * (partyN - 1);   // 參與人數倍率：每多一人，Boss 血量 +50%（攻擊力 +20%、施法頻率 +25% 在 BossAI）
             // 故事／副本：其他設定都照簡單，難度只加等級（下面的 battle.levelBoost）；無盡塔（單人無盡）固定普通；討伐 Boss、合作照選的難度
             int diff = LevelDifficulty ? 0 : endlessMode && !coopMode ? 1 : difficulty;
-            boss.maxHp = Mathf.RoundToInt(BossHpSolo * party * BossHpFor(diff)); boss.hp = boss.maxHp;
+            boss.maxHp = Mathf.RoundToInt(BossHpSolo * party * BossHpFor(diff) * Battle.BossHpCut); boss.hp = boss.maxHp;   // 所有 Boss 血量 ×70%
             me.damageTakenMul = DamageTakenFor(diff);
             float dungeonRelief = 1f;
             if (dungeon != null)
