@@ -100,6 +100,8 @@ namespace SpellDuel
         public float leapStart, leapEnd; public Vector3 leapFrom, leapTo;   // 黃土山道：從崖頂跳進場內（leapEnd＞0＝還在崖上／跳躍中）
         public int minionKind;                 // 0 近戰小鬼、1 火焰射手、2 岩石衝鋒獸、3 自爆小鬼、4 岩石投擲者、5 熔岩狙擊手
         public float recoverUntil;             // 小怪出手後原地不動到這個時間（1 秒）
+        public bool repositionNext;            // 遠程小怪：出手後（站定結束）要先隨機換個位置才能再出手
+        public Vector3 moveTo; public float moveUntil;   // 換位置的目的地、最晚走到什麼時候
         public float dmgMul = 1f, speedMul = 1f;   // 無盡模式：越後面的波次越強
         // 無盡模式的玩家升級：攻擊力、冷卻、爆擊率、攻擊距離、命中時附加灼燒／中毒／冰凍的機率
         public float basicCdMul = 1f;   // 普攻冷卻倍率（敏捷越高越快；角色養成設定）
@@ -861,6 +863,7 @@ namespace SpellDuel
                     // 出手後原地不動：一般 1 秒、虛空術士 3 秒、藤蔓術士在藤蔓消失前（3 秒）；衝鋒獸改由衝刺決定
                     m.recoverUntil = kind == 8 || kind == 13 || kind == 14 ? 0f : now + (kind == 6 ? VoidStay : kind == 9 ? VineStay : MinionRecover) + (IsRanged(kind) ? rangedRecoverAdd : 0f);
                     if (kind == 6) m.teleportAt = now + VoidStay;                   // 停留完就瞬移
+                    else if (IsRanged(kind)) m.repositionNext = true;              // 其他遠程：站定完先隨機走位一下，才會再出手
                     continue;
                 }
                 // 虛空術士：停留結束 → 瞬移到場內隨機位置
@@ -874,6 +877,24 @@ namespace SpellDuel
                     continue;
                 }
                 if (m.snaredUntil > now || now < m.recoverUntil) continue;
+                // 遠程小怪出手後的隨機走位：挑附近一點（和目標保持射擊距離、在場地內）走過去，走到（或逾時）才能再出手
+                if (m.repositionNext)
+                {
+                    m.repositionNext = false;
+                    if (PickRepositionPoint(m, tgt, out var dest)) { m.moveTo = dest; m.moveUntil = now + RepositionMaxTime; }
+                }
+                if (m.moveUntil > 0f)
+                {
+                    var to = m.moveTo - m.Feet; to.y = 0f;
+                    if (now < m.moveUntil && to.magnitude > 0.05f)
+                    {
+                        float rs = Mathf.Max(RepositionMinSpeed, minionSpeed * MinionSpeed[kind] * m.speedMul * EnemySpeedScale * 2f);
+                        var mv = to.normalized * Mathf.Min(to.magnitude, rs * dt);
+                        m.head += mv;
+                        continue;   // 走位中不出手（一直面向目標，像側移找角度）
+                    }
+                    m.moveUntil = 0f;
+                }
                 // 出手條件：近戰／衝鋒獸／自爆要貼近；射手在 9m 內
                 float reach = IsRanged(kind) ? MinionReach[kind] : MeleeReach(kind, MinionReach[kind]);
                 float windup = MinionWindup[kind] < 0f ? claw.charge : MinionWindup[kind];
@@ -903,6 +924,28 @@ namespace SpellDuel
                 // 場地外出生的小怪：還在場地外時也可以走（朝玩家走進場地）；進到場地後就不會再走出去
                 if (minionInside == null || FreeRoam(kind) || minionInside(next) || !minionInside(m.Feet)) m.head = new Vector3(next.x, m.head.y, next.z);
             }
+        }
+
+        /// <summary>遠程小怪出手後的隨機走位：距離、最低速度（公尺／秒）、最多走幾秒</summary>
+        public const float RepositionMin = 0.8f, RepositionMax = 1.8f, RepositionMinSpeed = 0.5f, RepositionMaxTime = 3.5f;
+
+        /// <summary>遠程小怪換位置的目的地：從現在的位置往隨機方向走 0.8～1.8m，和目標保持射擊距離、留在場地內；找不到就不走</summary>
+        bool PickRepositionPoint(Fighter m, Fighter tgt, out Vector3 dest)
+        {
+            dest = m.Feet;
+            int kind = m.minionKind;
+            float lo = Mathf.Max(1.5f, KeepMin[kind] - 0.5f), hi = Mathf.Max(lo + 0.5f, Mathf.Min(KeepMax[kind] + 0.5f, MinionReach[kind]));
+            for (int tries = 0; tries < 16; tries++)
+            {
+                float a = (float)rng.NextDouble() * Mathf.PI * 2f, r = RepositionMin + (float)rng.NextDouble() * (RepositionMax - RepositionMin);
+                var p = m.Feet + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
+                float d = FlatDistance(p, tgt.Feet);
+                if (d < lo || d > hi) continue;
+                if (minionInside != null && !FreeRoam(kind) && !minionInside(p)) continue;
+                dest = new Vector3(p.x, m.Feet.y, p.z);
+                return true;
+            }
+            return false;
         }
 
         /// <summary>場內隨機一點（虛空術士瞬移用）：離玩家 3～10m、在場地內；找不到就留在原地</summary>
