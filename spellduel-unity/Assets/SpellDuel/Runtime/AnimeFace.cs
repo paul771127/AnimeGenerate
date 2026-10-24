@@ -9,7 +9,8 @@ namespace SpellDuel
         static readonly Dictionary<string, Mesh> meshes = new Dictionary<string, Mesh>();
         static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
         // 下巴到頭頂的半寬、前臉深度、後腦深度；前臉不使用球體經緯變形。
-        internal const float FaceWidthScale=.90f; // Film comparison: narrower cheeks/jaw; height and fitting envelope stay fixed.
+        internal const float FaceWidthScale=.90f;
+        internal static float IdentityWidth(Portraits.Persona p)=>p.Captain?.96f:1; // Film comparison: narrower cheeks/jaw; height and fitting envelope stay fixed.
         static readonly float[] ys = {-0.15700f,-0.14000f,-0.12200f,-0.11500f,-0.11000f,-0.10600f,-0.10100f,-0.09600f,-0.08500f,-0.08100f,-0.07200f,-0.06500f,-0.05500f,-0.04800f,-0.04000f,-0.03000f,-0.01000f,0.01300f,0.04800f,0.08700f,0.12300f,0.14700f,0.15700f};
         static readonly float[] fittingWidths = {0.03080f,0.05000f,0.07400f,0.08275f,0.08900f,0.09400f,0.09924f,0.10448f,0.11600f,0.11908f,0.12600f,0.12888f,0.13300f,0.13468f,0.13660f,0.13900f,0.14000f,0.13700f,0.13300f,0.12600f,0.10700f,0.06700f,0.00300f};
         static readonly float[] widths = {0.009000f,0.051479f,0.071005f,0.076529f,0.079996f,0.082521f,0.085400f,0.087999f,0.092840f,0.094330f,0.097204f,0.099011f,0.100985f,0.101960f,0.102680f,0.103000f,0.102500f,0.101500f,0.099000f,0.093000f,0.080000f,0.047000f,0.003000f};
@@ -34,8 +35,8 @@ namespace SpellDuel
             float t=Mathf.Clamp01((y-ys[k])/(ys[k+1]-ys[k]));
             float jaw=Mathf.Lerp(.70f+.30f*p.Jaw,1,Mathf.Clamp01((y+.12f)/.12f));
             float lower=Mathf.Clamp01((-.045f-y)/.112f);lower=lower*lower*(3-2*lower);
-            bool mature=p.Masculine||p.Elder;float pointed=1-(mature?.10f:0)*lower;
-            width=Profile(mature?widths:feminineWidths,k,t)*FaceWidthScale*p.Length*Mathf.Lerp(.984f,1.012f,(p.Width-.95f)/.10f)*jaw*pointed;
+            bool mature=p.Masculine||p.Elder;float pointed=1-((mature?.10f:0)+(p.Captain?.14f:0))*lower;
+            width=Profile(mature?widths:feminineWidths,k,t)*FaceWidthScale*IdentityWidth(p)*p.Length*Mathf.Lerp(.984f,1.012f,(p.Width-.95f)/.10f)*jaw*pointed;
 
             front=Profile(fronts,k,t);back=Mathf.Lerp(Profile(backs,k,t),-.072f,ChinBlend(y,p));
         }
@@ -185,6 +186,7 @@ namespace SpellDuel
         internal static float HeadwearDrop(Portraits.Persona p)=>UpperY(.177f*p.Length,p)+Dome(0,.177f*p.Length,-.009f,p)+CrownCrest(0,.177f*p.Length,-.009f,p)-.177f*p.Length;
         internal static Mesh CompactPresentationMesh(Mesh source,string identity,Portraits.Persona p,int kind)
         {
+            if(kind==2&&source.name.StartsWith("Film headwear "))return source;
             string key="Compact upper/"+identity+"/"+kind+"/"+source.GetInstanceID();if(meshes.TryGetValue(key,out var found))return found;
             var mesh=Object.Instantiate(source);mesh.name=key;var vertices=mesh.vertices;float seam=UpperSeam(p),drop=HeadwearDrop(p);
             for(int i=0;i<vertices.Length;i++)
@@ -231,7 +233,7 @@ namespace SpellDuel
             {
                 string n=filter.gameObject.name;
                 int kind=n=="立面頭型"?0:n=="整體髮型"?1:n.StartsWith("Headwear fitted ")?2:-1;
-                if(kind>=0)filter.sharedMesh=CompactPresentationMesh(kind==1?HeadwearArt.HairFor(identity,p,true):filter.sharedMesh,identity,p,kind);
+                if(kind>=0)filter.sharedMesh=CompactPresentationMesh(kind==1?HeadwearArt.HairFor(identity,p,true):kind==2?HeadwearArt.VisibleMeshFor(identity,p):filter.sharedMesh,identity,p,kind);
             }
             var halo=head.Find("Halo");if(halo!=null)halo.localPosition+=Vector3.up*HeadwearDrop(p);
         }

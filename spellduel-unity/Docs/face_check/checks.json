@@ -865,7 +865,7 @@
       "hairTriangles": 7176,
       "hairVertices": 3747,
       "hairZeroAreaTriangles": 0,
-      "activeActorTriangles": 13816,
+      "activeActorTriangles": 13544,
       "hairStrands": 74
     },
     {
@@ -1016,25 +1016,25 @@
       "eyeY": -0.02260001,
       "noseY": -0.073,
       "mouthY": -0.109400004,
-      "eyeWidth": 0.059118617,
+      "eyeWidth": 0.059118614,
       "mouthWidth": 0.03547117,
       "chin": -0.157,
       "top": 0.157,
-      "actualHairline": 0.08875136535069357,
-      "upperSeam": 0.01598818,
-      "earTop": 0.005346829,
+      "actualHairline": 0.08875135535069358,
+      "upperSeam": 0.015988175,
+      "earTop": 0.0053468253,
       "earBottom": -0.073,
-      "nominalFaceWidthToHeight": 0.6698059714285713,
-      "faceWidthToHairlineHeight": 0.7631521059196048,
-      "bareHeadHeight": 0.27862408,
-      "bareHeightReduction": 0.11266216560509557,
+      "nominalFaceWidthToHeight": 0.6430136857142856,
+      "faceWidthToHairlineHeight": 0.7326259981072037,
+      "bareHeadHeight": 0.27862409,
+      "bareHeightReduction": 0.11266213375796186,
       "skinHex": "#f1cebb",
       "headPositionDelta": 0.00047373000000000554,
-      "hairTriangles": 7176,
-      "hairVertices": 3747,
+      "hairTriangles": 7928,
+      "hairVertices": 4139,
       "hairZeroAreaTriangles": 0,
-      "activeActorTriangles": 12576,
-      "hairStrands": 74
+      "activeActorTriangles": 13656,
+      "hairStrands": 82
     },
     {
       "id": "老焰",
@@ -2080,12 +2080,12 @@
     },
     {
       "id": "海斗",
-      "minGap": 0.0012092814,
-      "maxGap": 0.005643949,
+      "minGap": 0.001094073,
+      "maxGap": 0.0056417063,
       "samples": 15630,
-      "low": "0/眼睛圖層",
+      "low": "6/眼睛圖層",
       "high": "1/mouthOpen",
-      "surfaceParity": 2.644956e-07,
+      "surfaceParity": 2.9057264e-07,
       "cachesStable": true
     },
     {
@@ -2230,12 +2230,12 @@
     },
     {
       "id": "海斗",
-      "minGap": 0.0012092814,
-      "maxGap": 0.005643949,
+      "minGap": 0.001094073,
+      "maxGap": 0.0056417063,
       "samples": 15630,
-      "low": "0/眼睛圖層",
+      "low": "6/眼睛圖層",
       "high": "1/mouthOpen",
-      "surfaceParity": 2.644956e-07,
+      "surfaceParity": 2.9057264e-07,
       "cachesStable": true
     },
     {
@@ -2289,213 +2289,35 @@
       "cachesStable": true
     }
   ],
-  "filmWidthComparison": [
-    {
-      "id": "novice",
-      "widthRatio": 0.899999985420273,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "swordsman",
-      "widthRatio": 0.8999999615637998,
-      "heightRatio": 0.999999928215395
-    },
-    {
-      "id": "archer",
-      "widthRatio": 0.9000000048833819,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "mage",
-      "widthRatio": 0.9000000146878444,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "assassin",
-      "widthRatio": 0.8999998837442826,
-      "heightRatio": 0.9999999300910373
-    },
-    {
-      "id": "priest",
-      "widthRatio": 0.8999999902792802,
-      "heightRatio": 0.9999999641929908
-    },
-    {
-      "id": "paladin",
-      "widthRatio": 0.8999999714530729,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "berserker",
-      "widthRatio": 0.9000001976867463,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "marksman",
-      "widthRatio": 0.9,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "ranger",
-      "widthRatio": 0.9000000147062693,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "archmage",
-      "widthRatio": 0.9000000677027312,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "summoner",
-      "widthRatio": 0.9000001078581314,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "ninja",
-      "widthRatio": 0.8999999756470873,
-      "heightRatio": 1.0000000352271037
-    },
-    {
-      "id": "shadowdancer",
-      "widthRatio": 0.8999999412984432,
-      "heightRatio": 1.0000000141164056
-    },
-    {
-      "id": "bishop",
-      "widthRatio": 0.9000000761168386,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "inquisitor",
-      "widthRatio": 0.8999998557497986,
-      "heightRatio": 1.0
-    },
+  "latestFocusedRun": {
+    "actors": [
+      "艾琳",
+      "海斗"
+    ],
+    "statesPerActor": 39,
+    "statesTotal": 78,
+    "reason": "film headwear/hair silhouettes and Haido jaw; other 39 actor records retained from b1f04a7 regression",
+    "defaultFaceWidthScale": 0.9,
+    "haidoAdditionalWidthScale": 0.96,
+    "haidoLowerJawTaper": 0.14,
+    "publicApiChanged": false
+  },
+  "silhouetteComparison": [
     {
       "id": "艾琳",
-      "widthRatio": 0.899999850284815,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "澪",
-      "widthRatio": 0.9000000058143555,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "凪",
-      "widthRatio": 0.8999999299031473,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "翠",
-      "widthRatio": 0.900000096552627,
-      "heightRatio": 1.0
+      "faceWidth": 0.17673555000000002,
+      "hairWidth": 0.27706176,
+      "hatWidth": 0.36842373,
+      "hairToFace": 1.5676628725799646,
+      "hatToFace": 2.084604540512647
     },
     {
       "id": "海斗",
-      "widthRatio": 0.9,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "老焰",
-      "widthRatio": 0.8999999228292123,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "小鐵",
-      "widthRatio": 0.8999999129763061,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "小葉",
-      "widthRatio": 0.900000009707632,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "米菈",
-      "widthRatio": 0.9,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "楓",
-      "widthRatio": 0.8999999352370843,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "阿潮",
-      "widthRatio": 0.9000000095308124,
-      "heightRatio": 0.9999999643747317
-    },
-    {
-      "id": "鐵匠",
-      "widthRatio": 0.8999999712194244,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "店員",
-      "widthRatio": 0.8999999272693949,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "公會長",
-      "widthRatio": 0.9000000571716607,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "嚮導",
-      "widthRatio": 0.9000000972854443,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "教官",
-      "widthRatio": 0.9000000194568201,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "懸賞官",
-      "widthRatio": 0.9000000097285435,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "播報員",
-      "widthRatio": 0.9000000097285435,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "塔守",
-      "widthRatio": 0.9000000194568201,
-      "heightRatio": 0.9999999459051868
-    },
-    {
-      "id": "雷歐",
-      "widthRatio": 0.9,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "小沙",
-      "widthRatio": 0.8999999272693949,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "鐵娘",
-      "widthRatio": 0.8999999299031473,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "老駝",
-      "widthRatio": 0.8999999228292123,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "阿鈴",
-      "widthRatio": 0.9,
-      "heightRatio": 1.0
-    },
-    {
-      "id": "石先生",
-      "widthRatio": 0.9000000571716607,
-      "heightRatio": 1.0
+      "faceWidth": 0.180043832,
+      "hairWidth": 0.26778906,
+      "hatWidth": 0.27066032,
+      "hairToFace": 1.487354812576973,
+      "hatToFace": 1.5033023736131101
     }
-  ],
-  "widthScale": 0.9,
-  "eyesAndMouthKeepPreviousSize": true
+  ]
 }

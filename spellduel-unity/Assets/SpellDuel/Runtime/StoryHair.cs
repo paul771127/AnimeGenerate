@@ -76,21 +76,25 @@ namespace SpellDuel
                 FilmLock(m,new Vector3(part+side*.045f,.15f,.080f),new Vector3(side*.095f,.12f,.150f),new Vector3(side*.125f,.045f,.149f),new Vector3(side*.132f,-.050f,.125f),.029f,.014f,.96f);
             for(int side=-1;side<=1;side+=2)for(int tier=0;tier<3;tier++)
             {
-                float end=elder?-.055f:male?-.050f:longHair?-.29f:id=="艾琳"?-.17f:-.145f;
-                float bulge=id=="凪"?.182f:.151f,tip=male?.132f:id=="艾琳"?.116f:.140f;
+                float end=elder?-.055f:male?-.025f:longHair?-.29f:id=="艾琳"?-.17f:-.145f;
+                float bulge=id=="凪"?.182f:male?.135f:.151f,tip=male?.132f:id=="艾琳"?.116f:.140f;
                 float z=.126f-tier*.042f;
                 FilmLock(m,new Vector3(side*.128f,.125f,z*.5f),new Vector3(side*bulge,.035f,z),new Vector3(side*bulge,end*.78f,z+.012f),new Vector3(side*tip,end+tier*.009f,z+.022f),elder?.012f:.028f,.014f,tier==0?1:.83f);
             }
             for(int i=0;i<10;i++)
             {
                 float a=(i/9f-.5f)*2.7f,x=Mathf.Sin(a)*.14f,z=-Mathf.Cos(a)*.151f;
-                float len=longHair?CharacterLook.Get(id).Length:male||elder?.055f:id=="艾琳"?.185f:.16f;
+                float len=longHair?CharacterLook.Get(id).Length:male?.035f+(i%3)*.009f:elder?.055f:id=="艾琳"?.185f:.16f;
                 float fan=longHair?2.0f:1.04f;
-                FilmLock(m,new Vector3(x,.070f,z),new Vector3(x*fan,-len*.25f,z-.065f),new Vector3(x*fan,-len*.78f,z-.10f),new Vector3(x*(longHair?1.65f:.90f),-len,z-.055f),.029f,.017f,i%3==0?.80f:1);
+                FilmLock(m,new Vector3(x,.070f,z),new Vector3(x*fan,-len*.25f,z-(male?.012f:.065f)),new Vector3(x*fan,-len*.78f,z-(male?.018f:.10f)),new Vector3(x*(longHair?1.65f:.90f),-len,z-.055f),.029f,.017f,i%3==0?.80f:1);
             }
+            if(male)for(int side=-1;side<=1;side+=2)for(int i=0;i<2;i++)
+                FilmLock(m,new Vector3(side*.115f,.075f,-.035f-i*.035f),new Vector3(side*.145f,.060f,-.025f-i*.040f),new Vector3(side*.158f,.030f,-.020f-i*.040f),new Vector3(side*.174f,.035f-i*.022f,-.015f-i*.040f),.012f,.009f,i==0?1:.85f);
             if(twins)for(int side=-1;side<=1;side+=2)for(int i=0;i<3;i++)
                 FilmLock(m,new Vector3(side*.16f,.14f,-.065f),new Vector3(side*.225f,.09f,-.10f),new Vector3(side*.215f,-.09f,-.11f),new Vector3(side*(.165f+i*.012f),-.15f+i*.012f,-.08f),.021f,.015f,i==1?1:.85f);
             if(elder)for(int i=0;i<6;i++){float a=i*Mathf.PI/3;FilmLock(m,new Vector3(0,.15f,-.06f),new Vector3(Mathf.Cos(a)*.045f,.30f,-.04f),new Vector3(Mathf.Cos(a)*.045f,.30f,.015f),new Vector3(0,.18f,.025f),.020f,.016f);}
+            if(id=="艾琳"||male)for(int i=0;i<m.V.Count;i++)
+            {var v=m.V[i];v.x*=id=="艾琳"?.80f:.82f;if(id=="艾琳")v.x*=1-.18f*Mathf.SmoothStep(0,1,Mathf.InverseLerp(.08f,.16f,v.y));if(v.z<0)v.z*=id=="艾琳"?.82f:.74f;m.V[i]=v;}
             cached=m.Finish("Film silhouette "+id);filmHair[id]=cached;return cached;
         }
         internal static Mesh Build(string id,Portraits.Persona p)

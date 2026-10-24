@@ -72,6 +72,13 @@ namespace SpellDuel
             }
             found=b.Finish("Headwear "+id);meshes[id]=found;return found;
         }
+        static readonly Dictionary<string,Mesh> visibleHeadwear=new Dictionary<string,Mesh>();
+        internal static Mesh VisibleMeshFor(string id,Portraits.Persona p)
+        {
+            if(id!="艾琳"&&id!="海斗")return MeshFor(id,p);
+            if(visibleHeadwear.TryGetValue(id,out var mesh))return mesh;
+            var b=new OutfitArt.Builder();StoryHeadwear.FilmBuild(b,id);mesh=b.Finish("Film headwear "+id);visibleHeadwear[id]=mesh;return mesh;
+        }
         static readonly Dictionary<string,Mesh> fittedHair=new Dictionary<string,Mesh>();
         internal static Mesh HairFor(string id,Portraits.Persona p,bool film=false)
         {
@@ -93,10 +100,28 @@ namespace SpellDuel
         }
         internal static void Build(Transform head,string id,Portraits.Persona p)
         {if(Has(id))AnimeFace.Part(head,"Headwear fitted "+id,MeshFor(id,p),Vector3.zero,AnimeFace.Material(Color.white,4));}
+        static float[] PortraitHairDepth(string id,Portraits.Persona p)
+        {
+            var mesh=AnimeFace.CompactPresentationMesh(HairFor(id,p,true),id,p,1);var v=mesh.vertices;var t=mesh.triangles;var depth=new float[W*H];for(int i=0;i<depth.Length;i++)depth[i]=-100;
+            for(int i=0;i<t.Length;i+=3)
+            {
+                var a=v[t[i]];var b=v[t[i+1]];var c=v[t[i+2]];if(Vector3.Cross(b-a,c-a).z<=0)continue;
+                float den=(b.y-c.y)*(a.x-c.x)+(c.x-b.x)*(a.y-c.y);if(Mathf.Abs(den)<1e-9f)continue;
+                int x0=Mathf.Clamp((int)((Mathf.Min(a.x,Mathf.Min(b.x,c.x))+.34f)/.68f*W),0,W-1),x1=Mathf.Clamp((int)((Mathf.Max(a.x,Mathf.Max(b.x,c.x))+.34f)/.68f*W)+1,0,W-1);
+                int y0=Mathf.Clamp((int)((Mathf.Min(a.y,Mathf.Min(b.y,c.y))+.16f)/.56f*H),0,H-1),y1=Mathf.Clamp((int)((Mathf.Max(a.y,Mathf.Max(b.y,c.y))+.16f)/.56f*H)+1,0,H-1);
+                for(int y=y0;y<=y1;y++)for(int x=x0;x<=x1;x++)
+                {
+                    float px=(x+.5f)/W*.68f-.34f,py=(y+.5f)/H*.56f-.16f,u=((b.y-c.y)*(px-c.x)+(c.x-b.x)*(py-c.y))/den,w=((c.y-a.y)*(px-c.x)+(a.x-c.x)*(py-c.y))/den,q=1-u-w;
+                    if(u<0||w<0||q<0)continue;int k=y*W+x;depth[k]=Mathf.Max(depth[k],u*a.z+w*b.z+q*c.z);
+                }
+            }
+            return depth;
+        }
         internal static Color32[] Portrait(string id,Portraits.Persona p)
         {
             if(images.TryGetValue(id,out var image))return image;image=new Color32[W*H];if(!Has(id)){if(images.Count>=12)images.Clear();images[id]=image;return image;}
-            float seat=AnimeFace.UpperY(Seat(id,p),p);var mesh=AnimeFace.CompactPresentationMesh(MeshFor(id,p),id,p,2);var vs=mesh.vertices;var ts=mesh.triangles;var cs=mesh.colors;var depth=new float[W*H];for(int k=0;k<depth.Length;k++)depth[k]=-100;
+            var hairDepth=id=="艾琳"||id=="海斗"?PortraitHairDepth(id,p):null;
+            float seat=AnimeFace.UpperY(Seat(id,p),p);var mesh=AnimeFace.CompactPresentationMesh(VisibleMeshFor(id,p),id,p,2);var vs=mesh.vertices;var ts=mesh.triangles;var cs=mesh.colors;var depth=new float[W*H];for(int k=0;k<depth.Length;k++)depth[k]=-100;
             for(int t=0;t<ts.Length;t+=3)
             {
                 var a=vs[ts[t]];var b=vs[ts[t+1]];var c=vs[ts[t+2]];if(Vector3.Cross(b-a,c-a).z<=0)continue;
@@ -106,7 +131,7 @@ namespace SpellDuel
                 for(int y=y0;y<=y1;y++)for(int x=x0;x<=x1;x++)
                 {
                     float px=(x+.5f)/W*.68f-.34f,py=(y+.5f)/H*.56f-.16f,u=((b.y-c.y)*(px-c.x)+(c.x-b.x)*(py-c.y))/den,v=((c.y-a.y)*(px-c.x)+(a.x-c.x)*(py-c.y))/den,w=1-u-v;
-                    if(u<0||v<0||w<0)continue;float z=u*a.z+v*b.z+w*c.z;int k=y*W+x;if(z<=depth[k])continue;
+                    if(u<0||v<0||w<0)continue;float z=u*a.z+v*b.z+w*c.z;int k=y*W+x;if(z<=depth[k]||(hairDepth!=null&&z<hairDepth[k]-.001f))continue;
                     // Hair genuinely in front of the brim (bangs) remains visible below the fitted seat.
                     if(py<AnimeFace.UpperY(.157f*p.Length,p)&&((py<seat-.012f&&Mathf.Abs(px)<.14f)||(id=="艾琳"&&Mathf.Abs(px)<.163f&&py<.184f&&py>-.16f))&&z<AnimeFace.Surface(px,py,p)+(id=="艾琳"?.002f:0))continue;
                     depth[k]=z;var ca=cs[ts[t]];var cb=cs[ts[t+1]];var cc=cs[ts[t+2]];image[k]=new Color32((byte)(Mathf.Clamp01(ca.r*u+cb.r*v+cc.r*w)*255),(byte)(Mathf.Clamp01(ca.g*u+cb.g*v+cc.g*w)*255),(byte)(Mathf.Clamp01(ca.b*u+cb.b*v+cc.b*w)*255),255);

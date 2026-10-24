@@ -94,10 +94,10 @@ namespace SpellDuel
         internal struct Persona
         {
             internal float Width,Jaw,Length,Eye,Tilt,Gaze,Brow,Asym,Smile,Open,Pitch,Yaw,Roll,Lean,Lid,Pupil;
-            internal bool Story,SoftNose,Masculine,Elder;
+            internal bool Story,SoftNose,Masculine,Elder,Captain;
             internal Persona(float width,float jaw,float length,float eye,float tilt,float gaze,float brow,float asym,float smile,float open,float pitch,float yaw,float roll,float lean,float lid=0,float pupil=1)
             {
-                Story=SoftNose=Masculine=Elder=false;
+                Story=SoftNose=Masculine=Elder=Captain=false;
                 // 在正常人類比例內保留個性，不再用極端縮眼或歪頭區分角色。
                 Width=Clamp(width,.95f,1.05f);Jaw=Clamp(jaw,.94f,1.06f);Length=Clamp(length,.95f,1.05f);
                 Eye=Clamp(eye,.85f,1.15f);Tilt=Clamp(tilt,-6,6);Gaze=Clamp(gaze,-.22f,.22f);
@@ -114,8 +114,8 @@ namespace SpellDuel
             internal FacePlan(Persona p)
             {
                 Top=.157f*p.Length;Chin=-Top;Hairline=.123f*p.Length;float height=Hairline-Chin;
-                FaceWidth=.206f*AnimeFace.FaceWidthScale*p.Length*Lerp(.984f,1.012f,(p.Width-.95f)/.10f);
-                EyeY=Chin+height*.480f;EyeWidth=(FaceWidth/AnimeFace.FaceWidthScale)*.285f;EyeX=FaceWidth*.26f;
+                FaceWidth=.206f*AnimeFace.FaceWidthScale*AnimeFace.IdentityWidth(p)*p.Length*Lerp(.984f,1.012f,(p.Width-.95f)/.10f);
+                EyeY=Chin+height*.480f;EyeWidth=(FaceWidth/(AnimeFace.FaceWidthScale*AnimeFace.IdentityWidth(p)))*.285f;EyeX=FaceWidth*.26f;
                 EyeHeight=EyeWidth*(p.Elder?.53f:p.Masculine?.63f:.82f+(p.Eye-1)*.15f);
                 NoseY=Chin+height*.30f;MouthY=Chin+height*.17f;MouthWidth=EyeWidth*.60f;
                 BrowY=EyeY+Math.Max(height*.07f,EyeHeight*.60f+height*.02f);EarTop=BrowY;EarBottom=NoseY;
@@ -125,7 +125,7 @@ namespace SpellDuel
         internal static Persona PersonaFor(string key)
         {
             var p=BasePersonaFor(key);HumanPersonality.Apply(ref p,Key(key));p.Story=StoryCostume.Has(Key(key))||Key(key)=="澪";p.SoftNose=Key(key)=="艾琳"||Key(key)=="凪"||Key(key)=="小葉"||Key(key)=="澪";if(p.Story)p.Open*=.15f;
-            string id=Key(key);p.Elder=id=="老焰"||id=="阿潮"||id=="公會長"||id=="塔守";
+            string id=Key(key);p.Captain=id=="海斗";p.Elder=id=="老焰"||id=="阿潮"||id=="公會長"||id=="塔守";
             p.Masculine=p.Elder||id=="海斗"||id=="小鐵"||id=="鐵匠"||id=="教官"||id=="swordsman"||id=="paladin"||id=="inquisitor";
             return p;
         }
