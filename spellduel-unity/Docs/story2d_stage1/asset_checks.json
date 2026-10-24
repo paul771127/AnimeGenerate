@@ -1,0 +1,253 @@
+{
+  "erin": {
+    "canvas": [
+      768,
+      1152
+    ],
+    "masterScale": 0.75,
+    "translation": [
+      0,
+      21
+    ],
+    "sourceFaceMask": [
+      503,
+      244,
+      710,
+      425
+    ],
+    "files": [
+      {
+        "expression": "normal",
+        "file": "Assets/SpellDuel/Resources/Story2D/chars/erin_normal.png",
+        "bytes": 949269
+      },
+      {
+        "expression": "smile",
+        "file": "Assets/SpellDuel/Resources/Story2D/chars/erin_smile.png",
+        "bytes": 950337
+      },
+      {
+        "expression": "angry",
+        "file": "Assets/SpellDuel/Resources/Story2D/chars/erin_angry.png",
+        "bytes": 949131
+      },
+      {
+        "expression": "sad",
+        "file": "Assets/SpellDuel/Resources/Story2D/chars/erin_sad.png",
+        "bytes": 949288
+      },
+      {
+        "expression": "surprised",
+        "file": "Assets/SpellDuel/Resources/Story2D/chars/erin_surprised.png",
+        "bytes": 949656
+      },
+      {
+        "expression": "serious",
+        "file": "Assets/SpellDuel/Resources/Story2D/chars/erin_serious.png",
+        "bytes": 949406
+      }
+    ],
+    "invariance": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "changeBox": null
+      },
+      {
+        "expression": "smile",
+        "changedPixels": 15693,
+        "changeBox": [
+          376,
+          202,
+          533,
+          340
+        ]
+      },
+      {
+        "expression": "angry",
+        "changedPixels": 15475,
+        "changeBox": [
+          378,
+          204,
+          533,
+          339
+        ]
+      },
+      {
+        "expression": "sad",
+        "changedPixels": 15510,
+        "changeBox": [
+          378,
+          202,
+          533,
+          338
+        ]
+      },
+      {
+        "expression": "surprised",
+        "changedPixels": 15577,
+        "changeBox": [
+          376,
+          202,
+          533,
+          340
+        ]
+      },
+      {
+        "expression": "serious",
+        "changedPixels": 15655,
+        "changeBox": [
+          376,
+          202,
+          533,
+          339
+        ]
+      }
+    ],
+    "outsideFacePixelsExactlyIdentical": true
+  },
+  "laoyan": {
+    "canvas": [
+      768,
+      1152
+    ],
+    "masterScale": 0.78,
+    "translation": [
+      -16,
+      39
+    ],
+    "sourceFaceMask": [
+      443,
+      172,
+      646,
+      354
+    ],
+    "files": [
+      {
+        "expression": "normal",
+        "file": "Assets/SpellDuel/Resources/Story2D/chars/laoyan_normal.png",
+        "bytes": 633569
+      },
+      {
+        "expression": "smile",
+        "file": "Assets/SpellDuel/Resources/Story2D/chars/laoyan_smile.png",
+        "bytes": 634096
+      },
+      {
+        "expression": "angry",
+        "file": "Assets/SpellDuel/Resources/Story2D/chars/laoyan_angry.png",
+        "bytes": 633565
+      },
+      {
+        "expression": "sad",
+        "file": "Assets/SpellDuel/Resources/Story2D/chars/laoyan_sad.png",
+        "bytes": 633853
+      },
+      {
+        "expression": "surprised",
+        "file": "Assets/SpellDuel/Resources/Story2D/chars/laoyan_surprised.png",
+        "bytes": 636163
+      },
+      {
+        "expression": "serious",
+        "file": "Assets/SpellDuel/Resources/Story2D/chars/laoyan_serious.png",
+        "bytes": 632993
+      }
+    ],
+    "invariance": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "changeBox": null
+      },
+      {
+        "expression": "smile",
+        "changedPixels": 16126,
+        "changeBox": [
+          329,
+          175,
+          482,
+          315
+        ]
+      },
+      {
+        "expression": "angry",
+        "changedPixels": 15991,
+        "changeBox": [
+          329,
+          175,
+          482,
+          315
+        ]
+      },
+      {
+        "expression": "sad",
+        "changedPixels": 16223,
+        "changeBox": [
+          329,
+          174,
+          482,
+          316
+        ]
+      },
+      {
+        "expression": "surprised",
+        "changedPixels": 15985,
+        "changeBox": [
+          329,
+          175,
+          482,
+          315
+        ]
+      },
+      {
+        "expression": "serious",
+        "changedPixels": 16035,
+        "changeBox": [
+          329,
+          175,
+          482,
+          315
+        ]
+      }
+    ],
+    "outsideFacePixelsExactlyIdentical": true
+  },
+  "background": {
+    "file": "Assets/SpellDuel/Resources/Story2D/bg/village.jpg",
+    "size": [
+      1080,
+      1920
+    ]
+  },
+  "totalBytes": 10032897,
+  "scopedCharacters": [
+    "erin",
+    "laoyan"
+  ],
+  "scopedBackgrounds": [
+    "village"
+  ],
+  "expressions": [
+    "normal",
+    "smile",
+    "angry",
+    "sad",
+    "surprised",
+    "serious"
+  ],
+  "sourceCommitRequired": "935bc9e",
+  "scriptAnnotations": {
+    "story": 58,
+    "dungeons": 13,
+    "backgroundDirectivesAdded": 1
+  },
+  "headAlignment": {
+    "approximateFaceHeightPixels": {
+      "erin": 143,
+      "laoyan": 149
+    },
+    "headwearTopPixels": 69,
+    "note": "Visual anchors exclude hood, bun and beard; expression canvases are exactly locked."
+  }
+}
