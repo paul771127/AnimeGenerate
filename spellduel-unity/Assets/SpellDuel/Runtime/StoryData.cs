@@ -13,6 +13,7 @@ namespace SpellDuel
         public string speaker;      // 說話的人（空＝旁白）
         public string tag;          // 括號裡的標記：職業 id（mage…）或任意文字，用來決定名牌顏色
         public string text;
+        public string expr;         // 表情（normal／smile／angry／sad／surprised／serious；劇本寫在名字後面：艾琳［笑］）；null＝從台詞猜
     }
 
     public class StoryStage
@@ -156,7 +157,15 @@ namespace SpellDuel
             int c = raw.IndexOf('：'); if (c < 0) c = raw.IndexOf(':');
             if (c <= 0 || c > 24) return new StoryLine { speaker = "", text = raw };
             string who = raw.Substring(0, c).Trim(), text = raw.Substring(c + 1).Trim();
-            string tag = null;
+            string tag = null, expr = null;
+            // 表情：艾琳［笑］／艾琳[smile]
+            int eb = who.IndexOfAny(new[] { '［', '[' });
+            if (eb > 0)
+            {
+                int ee = who.IndexOfAny(new[] { '］', ']' }, eb);
+                expr = Story2D.NormExpr(who.Substring(eb + 1, (ee > eb ? ee : who.Length) - eb - 1));
+                who = (who.Substring(0, eb) + (ee > eb && ee + 1 < who.Length ? who.Substring(ee + 1) : "")).Trim();
+            }
             int p = who.IndexOf('（'); if (p < 0) p = who.IndexOf('(');
             if (p > 0)
             {
@@ -165,7 +174,7 @@ namespace SpellDuel
                 who = who.Substring(0, p).Trim();
             }
             if (who == "旁白" || who.ToLowerInvariant() == "narrator") who = "";
-            return new StoryLine { speaker = who, tag = tag, text = text };
+            return new StoryLine { speaker = who, tag = tag, text = text, expr = expr };
         }
 
         /// <summary>名牌顏色：標記是職業 id 或職業名稱就用職業色</summary>

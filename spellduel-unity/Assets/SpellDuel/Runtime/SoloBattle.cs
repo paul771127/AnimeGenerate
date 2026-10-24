@@ -488,7 +488,7 @@ namespace SpellDuel
         void ShowDialogue(List<StoryLine> lines, Action done)
         {
             if (lines == null || lines.Count == 0) { done?.Invoke(); return; }
-            dlg = lines; dlgIdx = 0; dlgDone = done;
+            dlg = lines; dlgIdx = 0; dlgDone = done; ResetVn();
         }
 
         void EndDialogue() { var d = dlgDone; dlg = null; dlgDone = null; d?.Invoke(); }
@@ -649,36 +649,7 @@ namespace SpellDuel
             ShowDialogue(lines, () => { if (opens != null) world.OpenFacility(opens); });
         }
 
-        /// <summary>對話框：畫面下方，點一下下一句；右上「跳過」</summary>
-        void DrawDialogue()
-        {
-            float W = Screen.width, H = Screen.height;
-            var safe = Screen.safeArea;
-            float topY = H - safe.yMax, botY = H - safe.y, pad = W * 0.04f, gap = pad * 0.5f;
-            int fs = UiKit.BaseFont, fsL = Mathf.RoundToInt(fs * 1.15f);
-            GUI.color = new Color(0f, 0f, 0f, 0.45f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
-            if (dlgIdx >= dlg.Count) { EndDialogue(); return; }
-            var line = dlg[dlgIdx];
-            var col = Story.TagColor(line.tag);
-            var r = new Rect(pad, botY - pad - Mathf.Min(H*.32f,(botY-topY)*.42f), W - pad * 2, Mathf.Min(H*.32f,(botY-topY)*.42f));
-            UiKit.Card(r, 0.93f, string.IsNullOrEmpty(line.speaker) ? (Color?)null : col, 0.9f);
-            float y = r.y + gap*1.5f, tx = r.x + gap * 1.5f;
-            if (!string.IsNullOrEmpty(line.speaker))
-            {
-                // 說話者的頭像（左邊）＋名字（頭像下方）；台詞在右邊
-                float ps = Mathf.Min(r.height - fs * 2.6f - gap * 2f, r.width * 0.28f);
-                var pr = new Rect(r.x + gap * 1.5f, r.y + gap * 1.2f, ps, ps);
-                GUI.DrawTexture(pr, Portraits.Get(line.speaker, line.tag), ScaleMode.ScaleToFit, true);
-                UiKit.Title(new Rect(pr.x-gap*.3f,pr.yMax+gap*.4f,ps+gap*.6f,fs*1.6f),line.speaker,col,Mathf.RoundToInt(fs*.85f));
-                tx = pr.xMax + gap * 1.5f;
-            }
-            UiKit.Text(new Rect(tx, y, r.xMax - tx - gap * 1.5f, r.yMax - y - fs * 1.6f), Story.Fill(line.text, myClass), fsL,
-                string.IsNullOrEmpty(line.speaker) ? new Color(0.85f, 0.88f, 1f) : Color.white, TextAnchor.UpperLeft, false, 0.6f);
-            UiKit.Text(new Rect(r.x, r.yMax - fs * 1.6f, r.width - gap * 1.5f, fs * 1.4f), $"{dlgIdx + 1}/{dlg.Count}　▶ 點一下繼續", Mathf.RoundToInt(fs * 0.75f), new Color(0.8f, 0.8f, 0.85f), TextAnchor.MiddleRight);
-            if (UiKit.Button(new Rect(W - pad - W * 0.22f, topY + pad, W * 0.22f, fs * 1.8f), "跳過 ⏭", Mathf.RoundToInt(fs * 0.8f))) { EndDialogue(); return; }
-            var e = Event.current;
-            if (e.type == EventType.MouseUp) { dlgIdx++; Sfx.Play("talk", 0.6f); e.Use(); if (dlgIdx >= dlg.Count) EndDialogue(); }
-        }
+        // 對話介面：SoloBattle.VnDialogue.cs（《永遠的7日之都》風格）
 
         int NetModeCode => coop ? (netDungeon ? 3 : netEndless ? 2 : 1) : 0;
         /// <summary>首頁直接選模式（例如「🏰 副本」）：0 對戰、1 合作 Boss、2 無盡合作、3 副本</summary>

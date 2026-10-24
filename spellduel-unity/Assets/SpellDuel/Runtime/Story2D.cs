@@ -1,0 +1,81 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace SpellDuel
+{
+    /// <summary>
+    /// 對話的 2D 美術（立繪、表情、背景）：圖檔放在 Resources/Story2D/（Codex 生成，規格見 STORY_2D_BRIEF.md）。
+    ///   立繪：Story2D/chars/{角色id}_{表情}.png（透明背景、大腿以上、臉朝畫面右邊）；沒有這個表情就用 _normal，再沒有就用程式畫的頭像。
+    ///   背景：Story2D/bg/{背景id}.png／.jpg；沒有就照舊用半透明暗色蓋在 AR 畫面上。
+    /// </summary>
+    public static class Story2D
+    {
+        /// <summary>角色名稱 → 圖檔 id（城鎮居民的「職稱・名字」只看名字）</summary>
+        public static readonly Dictionary<string, string> Cast = new Dictionary<string, string>
+        {
+            ["艾琳"] = "erin", ["老焰"] = "laoyan", ["小鐵"] = "xiaotie", ["米菈"] = "mila",
+            ["翠"] = "cui", ["楓"] = "feng", ["小葉"] = "xiaoye",
+            ["海斗"] = "haido", ["凪"] = "nagi", ["澪"] = "mio", ["阿潮"] = "achao",
+            ["雷歐"] = "leo", ["小沙"] = "xiaosha", ["鐵娘"] = "tieniang",
+            ["老駝"] = "laotuo", ["阿鈴"] = "aling", ["石先生"] = "shi",
+            ["工頭老石"] = "foreman", ["阿岩"] = "ayan", ["黑衣鑄鐘匠"] = "bellsmith",
+            ["公會長"] = "guildmaster", ["塔守"] = "towerkeeper",
+            ["熔岩巨像"] = "golem", ["腐化樹王"] = "treeking", ["深海巨妖"] = "kraken",
+            ["青銅鬥魂"] = "bronze", ["黃土岩魔"] = "rockfiend", ["霸主"] = "overlord",
+            ["熔岩殘影"] = "lavashade", ["樹心殘影"] = "treeshade", ["潮影"] = "tideshade",
+        };
+        /// <summary>表情（劇本裡寫在名字後面的［］中）：中文或英文都可以</summary>
+        public static readonly string[] Exprs = { "normal", "smile", "angry", "sad", "surprised", "serious" };
+        static readonly Dictionary<string, string> ExprAlias = new Dictionary<string, string>
+        {
+            ["普通"] = "normal", ["平常"] = "normal", ["笑"] = "smile", ["微笑"] = "smile", ["開心"] = "smile",
+            ["怒"] = "angry", ["生氣"] = "angry", ["哀"] = "sad", ["難過"] = "sad", ["悲傷"] = "sad",
+            ["驚"] = "surprised", ["驚訝"] = "surprised", ["認真"] = "serious", ["嚴肅"] = "serious",
+        };
+        public static string NormExpr(string e)
+        {
+            if (string.IsNullOrEmpty(e)) return null;
+            e = e.Trim();
+            if (ExprAlias.TryGetValue(e, out var x)) return x;
+            e = e.ToLowerInvariant();
+            return System.Array.IndexOf(Exprs, e) >= 0 ? e : null;
+        }
+
+        public static string IdOf(string speaker)
+        {
+            if (string.IsNullOrEmpty(speaker)) return null;
+            int dot = speaker.LastIndexOf('・'); if (dot >= 0) speaker = speaker.Substring(dot + 1);
+            return Cast.TryGetValue(speaker.Trim(), out var id) ? id : null;
+        }
+
+        /// <summary>沒寫表情時：從台詞猜（……＝難過、！＝驚訝／認真、笑聲＝開心）</summary>
+        public static string GuessExpr(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return "normal";
+            if (text.Contains("哈") || text.Contains("♪") || text.Contains("嘿嘿") || text.Contains("太好了")) return "smile";
+            if (text.Contains("！？") || text.Contains("?!") || text.StartsWith("咦") || text.StartsWith("什麼")) return "surprised";
+            if (text.StartsWith("……") || text.Contains("對不起")) return "sad";
+            if (text.Contains("！")) return "serious";
+            return "normal";
+        }
+
+        static readonly Dictionary<string, Texture2D> cache = new Dictionary<string, Texture2D>();
+        static Texture2D Load(string path)
+        {
+            if (cache.TryGetValue(path, out var t)) return t;
+            t = Resources.Load<Texture2D>(path);
+            cache[path] = t;
+            return t;
+        }
+        /// <summary>立繪（找不到回傳 null）</summary>
+        public static Texture2D Portrait(string id, string expr)
+        {
+            if (id == null) return null;
+            return Load($"Story2D/chars/{id}_{expr ?? "normal"}") ?? Load($"Story2D/chars/{id}_normal");
+        }
+        public static Texture2D Background(string id) => string.IsNullOrEmpty(id) ? null : Load("Story2D/bg/" + id);
+
+        public static readonly string[] ThemeKeys = { "volcano", "forest", "sea", "arena", "canyon" };
+        public static readonly string[] TownKeys = { "village", "town_forest", "town_port", "town_arena", "town_canyon" };
+    }
+}
