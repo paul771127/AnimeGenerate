@@ -6,7 +6,7 @@ namespace SpellDuel
     public enum SkillType { Projectile, Self, Trap }
     public enum SelfKind { None, Heal, Block, Shield, Counter, Armor, Cleanse, Prayer, Dispel, Summon, Mana, Focus, Prep, Taunt,
         // 進階職業
-        Oath, Frenzy, Undying, DeadMark, SwordCome, FlyingSwords, RollShot, ManaShield, Pet, Detonate, Substitute, Clone, Dance, Fog, Revive, HealPct, TeamShield, Capture }
+        Oath, Frenzy, Undying, DeadMark, SwordCome, FlyingSwords, RollShot, ManaShield, Pet, Detonate, Substitute, Clone, Dance, Fog, Revive, HealPct, TeamShield, Capture, ShadowClone, Barrier }
     public enum EffectKind { None, Dot, Blind, Snare, Mark, Burn }
 
     /// <summary>
@@ -32,6 +32,8 @@ namespace SpellDuel
         public float stillRadius;       // 蓄力時要站著不動：離開詠唱位置超過這個半徑（公尺）就失敗（刺殺準備）
         /// <summary>輔助技能：和牧師一樣也作用在合作的隊友（劍仙的劍陣）</summary>
         public bool team;
+        /// <summary>落地（或命中）後留下地面範圍：半徑 areaRadius、持續 buffDur 秒、每秒 effectDps 傷害（審判、天罰）</summary>
+        public bool groundZone;
         public bool releaseNear;        // 距離不在射程內時不能出手（保留蓄力，靠近再放）
         public bool duckable;           // 胸口高度的橫向衝擊波（Boss 的橫掃、藤鞭）：蹲下就躲得過
         public bool crescent;           // 新月形法球（劍氣、風刃）：碰到新月本體才算命中（不是整片橫掃）
@@ -109,7 +111,7 @@ namespace SpellDuel
         public static bool IsMeleeBasic(SkillDef s) => s != null && (s.id == "na_sword" || s.id == "na_dagger" || s.id == "na_stick");
         /// <summary>手掌劃一下、照刀線砍的普攻：劍士的斬擊、初心者的木棍敲擊（都不會砍掉法球）</summary>
         /// <summary>集氣制的普攻：畫面上的手掌集氣完成才出手（初心者、劍士手掌劃一下；刺客手往前突刺）</summary>
-        public static bool IsChargedBasic(SkillDef s) => s != null && (s.id == "na_stick" || s.id == "na_sword" || s.id == "na_dagger" || s.id == "na_mage" || s.id == "na_arrow" || s.id == "na_holy");
+        public static bool IsChargedBasic(SkillDef s) => s != null && (s.id == "na_stick" || s.id == "na_sword" || s.id == "na_dagger" || s.id == "na_kunai" || s.id == "na_mage" || s.id == "na_arrow" || s.id == "na_holy");
         public static bool IsSwipeBasic(SkillDef s) => s != null && (s.id == "na_sword" || s.id == "na_stick");
 
         /// <summary>遠距技能的飛行速度倍率</summary>
@@ -127,7 +129,7 @@ namespace SpellDuel
             ["na_arrow"] = 3f, ["quickshot"] = 3f, ["snipe"] = 3f, ["triple"] = 3f, ["pierce"] = 3f, ["rollarrow"] = 3f, ["arrowrain"] = 3f, ["pet_falcon"] = 3f,
             // 法師：奧術飛彈、火球 1.4；風刃 2.2；冰槍 1.8；雷擊 2.2；隕石落下 2.0
             ["na_mage"] = 1.4f, ["fire"] = 1.4f, ["echo_fire"] = 2f, ["echo_ice"] = 2f, ["wind"] = 2.2f, ["ice"] = 1.8f, ["thunder"] = 2.2f, ["meteor"] = 2.0f,
-            ["tjudge"] = 2.2f, ["frostfield"] = 1.4f, ["pet_fire"] = 1.4f, ["pet_ice"] = 1.6f, ["pet_tamed"] = 1.4f,
+            ["tjudge"] = 2.2f, ["frostfield"] = 1.4f, ["pet_fire"] = 1.4f, ["na_kunai"] = 2.6f, ["shuriken"] = 2.4f, ["raiton"] = 3f, ["kunai_fire"] = 2.6f, ["kunai_ice"] = 2.6f, ["kunai_bolt"] = 2.8f, ["deadlypoison"] = 2.2f, ["plague"] = 2.2f, ["pet_ice"] = 1.6f, ["pet_tamed"] = 1.4f,
             // 牧師：約 1.4
             ["na_holy"] = 1.4f, ["holy"] = 1.4f, ["judgement"] = 1.4f, ["chastise"] = 1.4f, ["heavenpunish"] = 1.4f, ["holylance"] = 1.6f,
             // 劍士、刺客的飛行技能
@@ -179,7 +181,7 @@ namespace SpellDuel
             P(new SkillDef { id = "ironwall", cls = "swordsman", name = "鐵壁", type = SkillType.Self, self = SelfKind.Shield, color = C("#94a3b8"), cost = 30, charge = 0.6f, cooldown = 12f, buffDur = 8f, buffAmount = 35, desc = "8 秒護盾，吸收 35 傷害" });
             // ---------------------------------------------------------- 牧師：回復、淨化、守護、減冷卻；也有聖光攻擊
             P(new SkillDef { id = "holy", cls = "priest", name = "聖光彈", type = SkillType.Projectile, color = C("#fff3b0"), cost = 15, damage = 18, charge = 1.0f, cooldown = 1.0f, speed = 9f, radius = 0.12f, rangeMax = 9f, desc = "聖光球，射程 9m" });
-            P(new SkillDef { fromAbove = true, dropHeight = 4f, id = "judgement", cls = "priest", name = "審判", type = SkillType.Projectile, color = C("#fbbf24"), cost = 30, damage = 30, charge = 2.0f, cooldown = 3.5f, speed = 9f, radius = 0.45f, rangeMax = 10f, desc = "光柱從敵人正上方落下（可閃）" });
+            P(new SkillDef { fromAbove = true, dropHeight = 4f, groundZone = true, areaRadius = 1.5f, buffDur = 5f, effectDps = 8f, id = "judgement", cls = "priest", name = "審判", type = SkillType.Projectile, color = C("#fbbf24"), cost = 30, damage = 12, charge = 2.0f, cooldown = 6f, speed = 9f, radius = 0.45f, rangeMax = 10f, desc = "光柱從準星對準的地方落下，在地面留下半徑 1.5m 的審判之地 5 秒：經過的敵人每秒受到 8 傷害" });
             P(new SkillDef { id = "prayheal", cls = "priest", name = "治療術", type = SkillType.Self, self = SelfKind.Heal, color = C("#86efac"), cost = 30, heal = 35, charge = 1.5f, cooldown = 6f, desc = "自己與隊友各回復 35 HP" });
             P(new SkillDef { id = "cleanse", cls = "priest", name = "淨化", type = SkillType.Self, self = SelfKind.Cleanse, color = C("#a5f3fc"), cost = 15, heal = 8, charge = 0.6f, cooldown = 6f, desc = "自己與隊友：解除中毒、定身、致盲，並回復 8 HP" });
             P(new SkillDef { id = "guard", cls = "priest", name = "守護", type = SkillType.Self, self = SelfKind.Armor, color = C("#fcd34d"), cost = 25, charge = 1.0f, cooldown = 10f, buffDur = 6f, buffReduce = 0.4f, desc = "自己與隊友 6 秒內受到的傷害 -40%" });
@@ -306,6 +308,17 @@ namespace SpellDuel
             P(new SkillDef { adv = "ninja", id = "clone", cls = "assassin", name = "分身術", type = SkillType.Self, self = SelfKind.Clone, color = C("#cbd5e1"), cost = 25, charge = 0.5f, cooldown = 16f, buffDur = 6f, desc = "手印 2→3→4：放出分身 6 秒，期間受到的攻擊有一半會打到分身" });
             P(new SkillDef { adv = "ninja", id = "fireseal", cls = "assassin", name = "火遁", type = SkillType.Projectile, multi = 5, spreadDeg = 10f, color = C("#fb7185"), cost = 30, damage = 10, charge = 0.8f, cooldown = 6f, speed = 6f, radius = 0.15f, rangeMax = 4f, effect = EffectKind.Burn, effectDps = 4f, effectDur = 3f, desc = "手印 2→4→5：往前噴出五道火焰，命中灼燒 3 秒" });
             // 刺客・影舞者
+            P(new SkillDef { adv = "ninja", id = "shuriken", cls = "assassin", name = "手裏劍", type = SkillType.Projectile, multi = 3, spreadDeg = 12f, color = C("#cbd5e1"), cost = 10, damage = 7, charge = 0.2f, cooldown = 2.5f, speed = 10f, radius = 0.08f, rangeMax = 8f, desc = "幾乎不用蓄力：一次射出三枚手裏劍（扇形）" });
+            P(new SkillDef { adv = "ninja", id = "raiton", cls = "assassin", name = "雷遁", type = SkillType.Projectile, color = C("#facc15"), cost = 15, damage = 18, charge = 0.3f, cooldown = 4f, speed = 16f, radius = 0.1f, rangeMax = 9f, effect = EffectKind.Snare, effectDur = 0.5f, desc = "瞬間放出一道雷光：命中麻痺 0.5 秒（打斷蓄力）" });
+            P(new SkillDef { id = "na_kunai", cls = "basic", name = "苦無", type = SkillType.Projectile, color = C("#cbd5e1"), cost = 0, damage = 8, charge = 0f, cooldown = 1.2f, speed = 12f, radius = 0.08f, rangeMax = 9f, desc = "忍者普攻：手掌凝聚紅光（集氣完成）時手往前刺，射出一枚苦無（約 1.2 秒集氣一次）；技能樹可以讓苦無機率附帶火、冰、雷" });
+            P(new SkillDef { id = "kunai_fire", cls = "assassin", name = "火遁苦無", type = SkillType.Projectile, color = C("#fb7185"), damage = 6, speed = 12f, radius = 0.09f, rangeMax = 9f, effect = EffectKind.Burn, effectDps = 4f, effectDur = 3f, desc = "燃燒的苦無：灼燒 3 秒" });
+            P(new SkillDef { id = "kunai_ice", cls = "assassin", name = "冰遁苦無", type = SkillType.Projectile, color = C("#7dd3fc"), damage = 5, speed = 12f, radius = 0.09f, rangeMax = 9f, effect = EffectKind.Snare, effectDur = 1.2f, desc = "冰凍的苦無：定身 1.2 秒" });
+            P(new SkillDef { id = "kunai_bolt", cls = "assassin", name = "雷遁苦無", type = SkillType.Projectile, color = C("#facc15"), damage = 10, speed = 14f, radius = 0.09f, rangeMax = 9f, effect = EffectKind.Mark, effectDur = 3f, desc = "帶電的苦無：3 秒內目標受到的傷害 +20%" });
+            P(new SkillDef { adv = "shadowdancer", id = "shadowclone", cls = "assassin", name = "影分身", type = SkillType.Self, self = SelfKind.ShadowClone, color = C("#c084fc"), cost = 30, charge = 1.0f, cooldown = 25f, desc = "分出一個由電腦操作的影分身一起戰鬥（會攻擊、放影殺與劇毒）：召喚時自己的 HP 上限和目前 HP 都分一半給它；它倒下時 HP 上限恢復，但受的傷不會回來" });
+            P(new SkillDef { adv = "shadowdancer", id = "shadowkill", cls = "assassin", execute = true, name = "影殺", type = SkillType.Projectile, color = C("#7e22ce"), cost = 35, damage = 70, charge = 1.8f, cooldown = 12f, speed = 10f, radius = 0.08f, rangeMax = 1.5f, releaseNear = true, desc = "伏擊技能：蓄力後靠近就出手的致命一擊（傷害 70）；對 HP 低於 25% 的敵人傷害 ×3" });
+            P(new SkillDef { adv = "shadowdancer", id = "deadlypoison", cls = "assassin", name = "致命劇毒", type = SkillType.Projectile, color = C("#4ade80"), cost = 15, damage = 6, charge = 0.4f, cooldown = 3f, speed = 8f, radius = 0.1f, rangeMax = 7f, effect = EffectKind.Dot, effectDps = 5f, effectDur = 8f, desc = "毒針：中毒 8 秒、每秒 5（可以一直疊）" });
+            P(new SkillDef { adv = "shadowdancer", id = "plague", cls = "assassin", name = "萬毒引爆", type = SkillType.Projectile, color = C("#22c55e"), cost = 25, damage = 10, charge = 0.8f, cooldown = 10f, speed = 9f, radius = 0.12f, rangeMax = 7f, desc = "引爆目標身上所有的毒：剩下的毒傷 ×1.5 一次打完" });
+            P(new SkillDef { adv = "bishop", id = "holybarrier", cls = "priest", name = "聖域障壁", type = SkillType.Self, self = SelfKind.Barrier, areaRadius = 2.5f, buffDur = 15f, buffAmount = 3, color = C("#fde68a"), cost = 40, charge = 1.2f, cooldown = 30f, desc = "在腳下展開半徑 2.5m 的障壁 15 秒：障壁內的友軍被攻擊時不會受傷，共可抵擋 3 次，用完障壁就消失" });
             P(new SkillDef { adv = "shadowdancer", id = "execute", cls = "assassin", execute = true, name = "處決", type = SkillType.Projectile, color = C("#a21caf"), cost = 25, damage = 30, charge = 1.5f, cooldown = 6f, speed = 10f, radius = 0.08f, rangeMax = 1.5f, releaseNear = true, desc = "伏擊技能：對 HP 低於 25% 的敵人傷害 ×3" });
             P(new SkillDef { adv = "shadowdancer", id = "shadowdance", cls = "assassin", name = "影舞", type = SkillType.Self, self = SelfKind.Dance, color = C("#e879f9"), cost = 20, charge = 0.5f, cooldown = 20f, buffDur = 8f, desc = "8 秒內：伏擊技能蓄力時間減半，伏擊出手距離加倍" });
             P(new SkillDef { adv = "shadowdancer", id = "poisonfog", cls = "assassin", name = "毒霧", type = SkillType.Self, self = SelfKind.Fog, areaRadius = 2f, buffDur = 6f, effectDps = 6f, color = C("#86efac"), cost = 25, charge = 0.8f, cooldown = 14f, desc = "在腳下放出直徑 4m 的毒霧 6 秒，範圍內的敵人每秒受到 6 傷害" });
@@ -316,7 +329,7 @@ namespace SpellDuel
             // 牧師・審判者
             P(new SkillDef { adv = "inquisitor", id = "holylance", cls = "priest", name = "聖光之槍", type = SkillType.Projectile, color = C("#fcd34d"), cost = 25, damage = 28, charge = 1.0f, cooldown = 1.5f, speed = 14f, radius = 0.07f, rangeMax = 11f, desc = "飛得很快的聖光長槍" });
             P(new SkillDef { adv = "inquisitor", id = "chastise", cls = "priest", name = "懲戒", type = SkillType.Projectile, color = C("#fb923c"), cost = 20, damage = 15, charge = 0.8f, cooldown = 10f, speed = 9f, radius = 0.12f, rangeMax = 9f, effect = EffectKind.Mark, effectDur = 8f, desc = "命中後 8 秒內，目標受到的所有傷害 +20%" });
-            P(new SkillDef { adv = "inquisitor", fromAbove = true, dropHeight = 6f, multi = 3, id = "heavenpunish", cls = "priest", name = "天罰", type = SkillType.Projectile, color = C("#f59e0b"), cost = 55, damage = 30, charge = 2.4f, cooldown = 7f, speed = 9f, radius = 0.6f, rangeMax = 10f, desc = "三道光柱從目標上方落下（可閃）" });
+            P(new SkillDef { adv = "inquisitor", fromAbove = true, dropHeight = 6f, groundZone = true, areaRadius = 3f, buffDur = 6f, effectDps = 16f, id = "heavenpunish", cls = "priest", name = "天罰", type = SkillType.Projectile, color = C("#f59e0b"), cost = 55, damage = 24, charge = 2.4f, cooldown = 30f, speed = 9f, radius = 0.9f, rangeMax = 10f, desc = "強化版審判：巨大光柱落下，留下半徑 3m（審判的 2 倍）的天罰之地 6 秒（技能樹最多 10 秒），每秒 16 傷害（審判的 2 倍）" });
             // 召喚物的攻擊（不在技能表裡；只用來判定命中與同步畫面）
             P(new SkillDef { id = "pet_falcon", cls = "pet", name = "獵鷹啄擊", type = SkillType.Projectile, color = C("#a16207"), damage = 7, speed = 12f, radius = 0.1f, rangeMax = 8f, desc = "獵鷹的攻擊" });
             P(new SkillDef { id = "pet_fire", cls = "pet", name = "火靈火球", type = SkillType.Projectile, color = C("#fb923c"), damage = 12, speed = 8f, radius = 0.12f, rangeMax = 7f, desc = "火靈的火球" });

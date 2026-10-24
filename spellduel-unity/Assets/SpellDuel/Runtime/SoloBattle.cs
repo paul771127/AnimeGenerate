@@ -120,6 +120,7 @@ namespace SpellDuel
             peerInfo.Remove(pid); NetPeers.Remove(pid);
             var a = battle?.AllyByPid(pid);
             if (a != null && a.Alive) { a.hp = 0f; Say($"⚠ {a.name} 斷線了", 3f); }
+            battle?.DropFriends(pid);   // 他的影分身、收服的魔物
         }
         float nextState;
         Transform remoteAnchor;           // 對手位置的空物件（光效跟著它）
@@ -1040,6 +1041,7 @@ namespace SpellDuel
                 // 斬開法球：送「發射者 pid 空間」的編號（自己的法術換成 RId(我, id)；遠端的本來就是）
                 battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = theirs ? id : RId(MyPid, id) });
                 WireAdvNet();
+                WireFriendNet();   // 影分身、收服的魔物、主教治療、障壁（SoloBattle.Friends.cs）
                 battle.OnMinionHit += (id, dmg, sk) => SendTo(0, new Msg { t = "mhit", id = id, dmg = dmg, k = sk.id, e = battle.LastProcs });
                 // 觀眾：只有被打的人收得到的命中（Boss／小怪打到玩家、打到小怪、房主打到 Boss）另外廣播一則，讓那一發在觀眾畫面上爆開消失
                 battle.OnProjectileHit += p => NetSend?.Invoke(new Msg { t = "whit", id = p.id, k = p.skill.id, p = p.pos, ok = p.alive });
@@ -1238,6 +1240,7 @@ namespace SpellDuel
         {
             var ally = battle.AllyByPid(m.pid);   // 送這則訊息的隊友
             if (OnDungeonMsg(m)) return;          // 副本地圖：下一站、寶箱、抉擇、人物、對話（SoloBattle.DungeonMap.cs）
+            if (OnFriendMsg(m)) return;           // 友方人物、治療、障壁（SoloBattle.Friends.cs）
             switch (m.t)
             {
                 case "lane":
@@ -1390,7 +1393,8 @@ namespace SpellDuel
                             if (parts.Length < 4 || !int.TryParse(parts[0], out var mid)) continue;
                             seen.Add(mid);
                             int mkind = parts.Length >= 5 && int.TryParse(parts[4], out var mk2) ? mk2 : 0;
-                            var mf = battle.MinionById(mid) ?? battle.SpawnMinion(new Vector3(m.pts[i].x, 0f, m.pts[i].z), mid, mkind);
+                            if (battle.captured.Contains(mid)) continue;   // 我剛收服的（主機還沒拿掉）
+                            var mf = battle.minions.Find(x => x.minionId == mid) ?? battle.SpawnMinion(new Vector3(m.pts[i].x, 0f, m.pts[i].z), mid, mkind);
                             mf.forward = Fighter.Flat(m.pts[i] - mf.head) != Vector3.zero ? Fighter.Flat(m.pts[i] - mf.head) : mf.forward;
                             mf.head = m.pts[i];
                             if (float.TryParse(parts[1], out var mhp)) mf.hp = mhp;
@@ -1897,6 +1901,7 @@ namespace SpellDuel
             foreach (var ar in allyRigs.Values) if (ar) Destroy(ar.gameObject);
             allyRigs.Clear(); allyLastFeet.Clear();
             ClearNpcRigs(); drun = null; chest = null;   // 副本地圖的劇情人物、寶箱
+            ClearBarrierViews();
             petGo.Clear();
             foreach (var go in landGo.Values) if (go) Destroy(go);
             landGo.Clear();
@@ -1980,6 +1985,7 @@ namespace SpellDuel
                 if (!frozen) HandleInput();
                 SendState();
                 SendBossState();
+                SendFriends();
                 if (battle.Over)
                 {
                     // 結束：停幾秒顯示「戰鬥結束」再結算（連線時照舊馬上結算，免得兩邊不同步）
@@ -2102,7 +2108,7 @@ namespace SpellDuel
             bool swiped = Hand.ConsumeSwipe();
             Hand.BasicMove = Me.charging != null || basic == null ? HandGesture.Move.None : basic.id switch
             {
-                "na_dagger" => HandGesture.Move.Thrust, "na_mage" => HandGesture.Move.Poke, "na_arrow" => HandGesture.Move.Bow, "na_holy" => HandGesture.Move.Raise, _ => HandGesture.Move.None,
+                "na_dagger" => HandGesture.Move.Thrust, "na_kunai" => HandGesture.Move.Thrust, "na_mage" => HandGesture.Move.Poke, "na_arrow" => HandGesture.Move.Bow, "na_holy" => HandGesture.Move.Raise, _ => HandGesture.Move.None,
             };
             bool moved = Hand.ConsumeMove();
             UpdateSwipeTrail(Hand.BasicSwipe && Hand.HandVisible && phase == Phase.Fighting && Hand.Current != HandGesture.Shape.Fist && Hand.Current != HandGesture.Shape.None);   // 手劃過的殘影（SoloBattle.SwipeTrail.cs）
@@ -2668,6 +2674,19 @@ namespace SpellDuel
                     Haptics.Play(Haptics.Kind.Medium); Kick(6f, 0.04f);
                     break;
                 }
+                case "holyzone":
+                    SpellFx.Impact("priest", c, WorldFrame.FromWorld(at), text == "heavenpunish" ? 2.6f : 1.6f);   // 光柱落地
+                    Sfx.Play("boom", Mathf.Clamp01(1f - Battle.FlatDistance(at, Me.Feet) / 15f), 1.4f);
+                    if (text == "heavenpunish") Kick(10f, 0.05f);
+                    break;
+                case "barrier":
+                    SpellFx.Impact("priest", c, WorldFrame.FromWorld(at + Vector3.up * 0.5f), 1.8f);
+                    Sfx.Play("heal", 0.8f, 0.8f);
+                    if (!string.IsNullOrEmpty(text)) Say("🛡 " + text, 2f);
+                    break;
+                case "barrierbreak":
+                    Sfx.Play("fail", 0.6f, 1.4f);
+                    break;
                 case "fogzone":
                     AdvancedFx.FogCast(WorldFrame.FromWorld(at));
                     Sfx.Play("cast_assassin", 0.7f, 0.7f);
@@ -2743,6 +2762,7 @@ namespace SpellDuel
             UpdatePickups();
             UpdateAllyRigs();
             UpdateNpcRigs();   // 副本的劇情人物
+            UpdateBarrierViews();   // 主教的聖域障壁
             var en = En;
             var feetS = WorldFrame.FromWorld(en.Feet);
             UpdateChargeFx();
@@ -2891,6 +2911,8 @@ namespace SpellDuel
                 {
                     if (z.skill != null && z.skill.self == SelfKind.Fog)
                         go = PoisonFogView.Create(z.radius);
+                    else if (z.skill != null && z.skill.groundZone)
+                        go = HolyZoneView(z);
                     else
                     {
                         go = Prim(PrimitiveType.Cylinder, new Color(1f, 0.35f, 0.05f, 0.45f), true);
@@ -2908,6 +2930,7 @@ namespace SpellDuel
                     go.GetComponent<PoisonFogView>().SetFade(left);
                     continue;
                 }
+                if (z.skill != null && z.skill.groundZone) { TickHolyZone(z, go); continue; }   // 審判之地
                 go.GetComponent<Renderer>().material.color = new Color(1f, 0.3f + 0.15f * flick, 0.05f, flick * left);
                 if (UnityEngine.Random.value < Time.deltaTime * 2.2f)
                 {

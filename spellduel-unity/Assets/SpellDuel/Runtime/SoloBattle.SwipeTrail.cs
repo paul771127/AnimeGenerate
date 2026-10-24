@@ -60,7 +60,7 @@ namespace SpellDuel
 
         static string ChargeReadyHint(SkillDef s) => s.id switch
         {
-            "na_sword" => "手掌泛起劍光才能斬", "na_dagger" => "手掌凝聚紅光才能刺", "na_mage" => "紫色法陣亮起才能點",
+            "na_sword" => "手掌泛起劍光才能斬", "na_dagger" => "手掌凝聚紅光才能刺", "na_kunai" => "手掌凝聚銀光才能射苦無", "na_mage" => "紫色法陣亮起才能點",
             "na_arrow" => "弓拉滿才能放箭", "na_holy" => "聖光環亮起才能舉", _ => "手掌變紅才能敲",
         };
 
@@ -75,7 +75,7 @@ namespace SpellDuel
             if (ready && !palmWasReady && Event.current.type == EventType.Repaint)
             {
                 palmReadyAt = Time.time;   // 集氣完成的那一刻：閃一下
-                Sfx.Play("charged", 0.85f, basic.id == "na_sword" ? 1.7f : basic.id == "na_dagger" ? 1.1f : basic.id == "na_mage" ? 1.9f : basic.id == "na_arrow" ? 1.25f : basic.id == "na_holy" ? 2.1f : 1.4f);
+                Sfx.Play("charged", 0.85f, basic.id == "na_sword" ? 1.7f : basic.id == "na_dagger" ? 1.1f : basic.id == "na_kunai" ? 1.5f : basic.id == "na_mage" ? 1.9f : basic.id == "na_arrow" ? 1.25f : basic.id == "na_holy" ? 2.1f : 1.4f);
                 Haptics.Play(Haptics.Kind.Medium);   // 集氣完成：震一下（比以前明顯）
             }
             if (Event.current.type == EventType.Repaint) palmWasReady = ready;
@@ -93,7 +93,7 @@ namespace SpellDuel
             switch (basic.id)
             {
                 case "na_sword": DrawSwordCharge(c, r, k, ready, since, fs, Sq); break;
-                case "na_dagger": DrawDaggerCharge(c, r, k, ready, since, fs, Sq); break;
+                case "na_dagger": case "na_kunai": DrawDaggerCharge(c, r, k, ready, since, fs, Sq); break;
                 case "na_mage": DrawMageCharge(c, r, k, ready, since, fs, Sq); break;
                 case "na_arrow": DrawBowCharge(c, r, k, ready, since, fs, Sq); break;
                 case "na_holy": DrawHolyCharge(c, r, k, ready, since, fs, Sq); break;
@@ -103,13 +103,13 @@ namespace SpellDuel
 
         static Color ChargeColor(string id) => id switch
         {
-            "na_sword" => new Color(0.6f, 0.85f, 1f), "na_dagger" => new Color(1f, 0.15f, 0.2f), "na_mage" => new Color(0.7f, 0.5f, 1f),
+            "na_sword" => new Color(0.6f, 0.85f, 1f), "na_dagger" => new Color(1f, 0.15f, 0.2f), "na_kunai" => new Color(0.85f, 0.88f, 0.95f), "na_mage" => new Color(0.7f, 0.5f, 1f),
             "na_arrow" => new Color(0.6f, 1f, 0.45f), "na_holy" => new Color(1f, 0.9f, 0.45f), _ => new Color(1f, 0.3f, 0.2f),
         };
         /// <summary>出手動作的提示（集氣完成時寫在手掌下面）</summary>
         static string ReadyHint(string id) => id switch
         {
-            "na_sword" => "手掌劃一下", "na_dagger" => "手往前刺", "na_mage" => "比 1 往前點", "na_arrow" => "握拳→張開", "na_holy" => "比 2 往上舉", _ => "手掌劃一下",
+            "na_sword" => "手掌劃一下", "na_dagger" => "手往前刺", "na_kunai" => "手往前刺（射苦無）", "na_mage" => "比 1 往前點", "na_arrow" => "握拳→張開", "na_holy" => "比 2 往上舉", _ => "手掌劃一下",
         };
 
         /// <summary>集氣完成那一下：畫面四邊亮起職業色的光框</summary>

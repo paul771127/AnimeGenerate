@@ -72,6 +72,7 @@ namespace SpellDuel
         // 進階職業（技能樹 v3）
         BashGuard, SanctionCombo, CritDmg, FalconMark, PetMp,
         CloseInstinct,
+        KunaiFire, KunaiIce, KunaiBolt, DmgShield,   // 忍者：苦無附帶屬性；審判者：傷害轉護盾
     }
 
     public class TreeNode
@@ -451,6 +452,12 @@ namespace SpellDuel
                     FMod("nj_fire2", "火遁強化", "fireseal", ModField.Damage, 0.12f, 5, 5, 2, "nj_fire"),
                     FMod("nj_fire3", "火遁擴散", "fireseal", ModField.Multi, 1f, 2, 6, 2, "nj_fire"),
                     FPas("nj_burn", "業火", PassiveKind.Burn, 0.05f, 5, 6, 3, "nj_fire3"),
+                    FLearn("nj_shur", "shuriken", 2, 1, "nj_root"),
+                    FLearn("nj_rai", "raiton", 4, 1, "nj_root"),
+                    FPas("nj_kfire", "火遁苦無", PassiveKind.KunaiFire, 0.04f, 5, 0, 3, "nj_vanish"),
+                    FPas("nj_kice", "冰遁苦無", PassiveKind.KunaiIce, 0.04f, 5, 1, 3, "nj_evade"),
+                    FPas("nj_kbolt", "雷遁苦無", PassiveKind.KunaiBolt, 0.04f, 5, 2, 3, "nj_dodge"),
+                    FMod("nj_kspd", "苦無連射", "na_kunai", ModField.Cooldown, 0.06f, 5, 4, 3, "nj_knife"),
                 };
                 case "shadowdancer": return new List<TreeNode>
                 {
@@ -467,6 +474,10 @@ namespace SpellDuel
                     FMod("sd_fog2", "劇毒之霧", "poisonfog", ModField.EffectDps, 1.5f, 5, 5, 2, "sd_fog"),
                     FPas("sd_venom", "毒霧疊毒", PassiveKind.Venom, 6f, 5, 6, 2, "sd_fog"),
                     FMod("sd_bspd", "毒舞連刺", "na_dagger", ModField.Cooldown, 0.06f, 5, 6, 3, "sd_venom"),
+                    FLearn("sd_clone", "shadowclone", 2, 1, "sd_root"),
+                    FLearn("sd_kill", "shadowkill", 0, 3, "sd_exe2"),
+                    FLearn("sd_dpoison", "deadlypoison", 5, 3, "sd_fog2"),
+                    FLearn("sd_plague", "plague", 4, 3, "sd_vanish"),
                 };
                 case "bishop": return new List<TreeNode>
                 {
@@ -483,6 +494,9 @@ namespace SpellDuel
                     FMod("bi_sanc2", "庇護強化", "sanctuary", ModField.BuffAmount, 10f, 5, 5, 2, "bi_sanc"),
                     FPas("bi_seal", "聖域之印", PassiveKind.HolySeal, 0.6f, 5, 6, 2, "bi_sanc"),
                     FPas("bi_armor", "神聖帷幕", PassiveKind.Armor, 0.02f, 5, 6, 3, "bi_seal"),
+                    FMod("bi_phcd", "快速治療", "prayheal", ModField.Cooldown, 0.1f, 5, 0, 3, "bi_hp"),
+                    FLearn("bi_bar", "holybarrier", 4, 3, "bi_quick"),
+                    FMod("bi_bar2", "障壁加厚", "holybarrier", ModField.BuffAmount, 1f, 2, 5, 3, "bi_sanc2"),
                 };
                 case "inquisitor": return new List<TreeNode>
                 {
@@ -499,6 +513,11 @@ namespace SpellDuel
                     FMod("iq_heaven2", "天罰強化", "heavenpunish", ModField.Damage, 0.12f, 5, 5, 2, "iq_heaven"),
                     FPas("iq_zeal", "殉教之怒", PassiveKind.Zeal, 0.15f, 5, 6, 2, "iq_heaven"),
                     FPas("iq_leech", "聖血契約", PassiveKind.Lifesteal, 0.02f, 5, 6, 3, "iq_zeal"),
+                    FMod("iq_judcd", "審判連禱", "judgement", ModField.Cooldown, 0.08f, 5, 0, 3, "iq_lance2"),
+                    FMod("iq_juddmg", "審判之火", "judgement", ModField.EffectDps, 1.5f, 5, 1, 3, "iq_critd"),
+                    FMod("iq_juddmg2", "審判強化", "judgement", ModField.Damage, 0.12f, 5, 2, 3, "iq_crit"),
+                    FPas("iq_shield", "聖盾轉化", PassiveKind.DmgShield, 0.04f, 5, 4, 3, "iq_seal"),
+                    FMod("iq_heaven3", "天罰延長", "heavenpunish", ModField.BuffDur, 1f, 4, 5, 3, "iq_heaven2"),
                 };
             }
             return new List<TreeNode>();
@@ -589,6 +608,10 @@ namespace SpellDuel
                         PassiveKind.CritDmg => $"爆擊傷害 +{v * 100:0}%（原本 ×2）",
                         PassiveKind.FalconMark => $"獵鷹攻擊時 {v * 100:0}% 機率標記：4 秒內下一個弓箭技能必定爆擊",
                         PassiveKind.PetMp => $"召喚物命中時回復 {v:0.#} MP",
+                        PassiveKind.KunaiFire => $"苦無普攻 {v * 100:0}% 機率同時射出燃燒的苦無（灼燒 3 秒）",
+                        PassiveKind.KunaiIce => $"苦無普攻 {v * 100:0}% 機率同時射出冰凍的苦無（定身 1.2 秒）",
+                        PassiveKind.KunaiBolt => $"苦無普攻 {v * 100:0}% 機率同時射出帶電的苦無（3 秒內受到的傷害 +20%）",
+                        PassiveKind.DmgShield => $"造成傷害的 {v * 100:0}% 轉成自己的護盾（6 秒，最多最大 HP 的 40%）",
                         PassiveKind.CloseInstinct => $"2m 內有敵人時：受到的傷害 −{v * Battle.CloseReducePer * 100:0}%、閃避率 +{v * Battle.CloseEvadePer * 100:0}%（持續傷害不減）",
                         _ => $"HP 低於 30% 時受到的傷害 -{v * 100:0}%",
                     };
@@ -1157,7 +1180,8 @@ namespace SpellDuel
             f.holySeal = Passive(PassiveKind.HolySeal); f.basicHoming = Passive(PassiveKind.Homing); f.martyr = Passive(PassiveKind.Martyr); f.zeal = Passive(PassiveKind.Zeal);
             f.bashGuard = Passive(PassiveKind.BashGuard); f.sanctionCombo = Passive(PassiveKind.SanctionCombo); f.critDmg = Passive(PassiveKind.CritDmg);
             f.falconMark = Passive(PassiveKind.FalconMark); f.petMp = Passive(PassiveKind.PetMp); f.closeInstinct = Passive(PassiveKind.CloseInstinct);
-            var bs = Skills.BasicOf(cls); f.basic = bs != null ? ModdedSkill(bs.id) : null;   // 普攻也吃技能樹
+            var bs = adv == "ninja" ? Skills.All["na_kunai"] : Skills.BasicOf(cls); f.basic = bs != null ? ModdedSkill(bs.id) : null;   // 普攻也吃技能樹（忍者：苦無）
+            f.kunaiFire = Passive(PassiveKind.KunaiFire); f.kunaiIce = Passive(PassiveKind.KunaiIce); f.kunaiBolt = Passive(PassiveKind.KunaiBolt); f.dmgShield = Passive(PassiveKind.DmgShield);
             // 技能：只帶會的技能，數值換成技能樹強化後的版本
             f.loadout.Clear();
             var known = KnownSkills();
@@ -1166,6 +1190,7 @@ namespace SpellDuel
             f.hp = Mathf.Max(1f, f.maxHp * hpRatio); f.mp = f.maxMp * mpRatio;
             Advanced.ApplyStats(f, Adv);   // 進階職業：HP、MP、攻擊、減傷、爆擊、閃避、治療量
             Souls.ApplyTo(f, this);        // 裝備上的精魄
+            if (f.cloneLent > 0) { f.maxHp = Mathf.Max(1, f.maxHp - f.cloneLent); f.hp = Mathf.Min(f.hp, f.maxHp); }   // 影分身借走的 HP 上限
         }
 
         // ---- 存檔（一行一個欄位）

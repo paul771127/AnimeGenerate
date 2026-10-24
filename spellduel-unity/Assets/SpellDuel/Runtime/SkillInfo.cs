@@ -120,6 +120,9 @@ namespace SpellDuel
             if (s.self == SelfKind.Pet) E($"召喚物存在 {s.petLife:0} 秒；每 {s.petInterval:0.#} 秒攻擊 {s.petRange:0.#}m 內最近的敵人（傷害 {s.damage}）" + (s.petHp > 0 ? $"；HP {s.petHp}" : "") + $"；同時最多 {Battle.MaxPets} 隻");
             if (s.id == "meteor") E($"落地留下直徑 {Battle.BurnRadius * 2f:0.#}m 的火海，持續 {Battle.BurnDuration:0} 秒，站在裡面每秒 {Battle.BurnDps:0.#} 傷害");
             if (s.id == "wind") E("隨機從左或右側繞弧線飛向目標");
+            if (s.groundZone) E($"落地（或砸中）留下直徑 {s.areaRadius * 2f:0.#}m 的光圈，持續 {s.buffDur:0.#} 秒；經過的敵人每秒 {s.effectDps:0.#} 傷害");
+            if (s.id == "plague") E($"引爆目標身上所有中毒／灼燒：剩下的持續傷害 ×{Battle.PlagueMul:0.#} 一次打完");
+            if (s.id == "na_kunai") E("技能樹「火遁／冰遁／雷遁苦無」：每發普攻有機率同時多射出燃燒、冰凍、帶電的苦無");
             if (s.id == "slash") E($"點了劍士技能樹的「斬開法球」：揮出後 {Battle.SliceWindow:0.#} 秒內，斬開正面 {Battle.SliceRange:0.#}m 內飛來的法球（從天而降、地裂、橫掃等範圍攻擊無效）");
             if (s.id == "nv_swing") E("不會斬開飛來的法球");
             if (s.releaseNear)
@@ -160,8 +163,10 @@ namespace SpellDuel
                 case SelfKind.Revive: E($"倒下的隊友以 {s.buffAmount}% HP 復活；活著的人（含自己）獲得 {s.buffDur:0} 秒復活祝福：倒下時自動以 30% HP 站起來"); break;
                 case SelfKind.HealPct: E($"回復最大 HP 的 {s.buffAmount}%"); break;
                 case SelfKind.TeamShield: E($"護盾 {s.buffDur:0} 秒，吸收 {s.buffAmount} 傷害"); break;
+                case SelfKind.ShadowClone: E($"影分身（電腦操作，最多 {Battle.CloneLife:0} 秒）：自己的 HP 上限、目前 HP 各分一半給它；每 3 次攻擊放一次影殺（×3）、每 4 次讓目標中毒；倒下或時間到 HP 上限恢復（受的傷不會回來）"); break;
+                case SelfKind.Barrier: E($"腳下半徑 {s.areaRadius:0.#}m 的障壁 {s.buffDur:0} 秒：裡面的友軍（含隊友、召喚獸）被攻擊時不受傷，共抵擋 {s.buffAmount} 次（持續傷害不算）"); break;
             }
-            if (s.cls == "priest" && s.type == SkillType.Self) E("作用在所有己方單位：自己＋合作模式的隊友（不限距離）");
+            if (s.cls == "priest" && s.type == SkillType.Self && s.self != SelfKind.Barrier) E("作用在所有己方單位：自己＋合作模式的隊友（不限距離）");
             if (eff.Length > 0) sb.Append("\n【效果】\n").Append(eff);
 
             // ---- 怎麼躲（攻擊技能）

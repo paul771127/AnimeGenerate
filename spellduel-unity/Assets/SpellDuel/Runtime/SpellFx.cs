@@ -578,8 +578,9 @@ namespace SpellDuel
                 }
                 case "backstab":
                 case "knife":
+                case "na_kunai": case "kunai_fire": case "kunai_ice": case "kunai_bolt": case "shuriken":   // 忍者的苦無、手裏劍：暫時借飛刀（Codex 會換成專屬造型）
                 {
-                    bool knife = id == "knife";
+                    bool knife = id != "backstab";
                     var spin = NewChild(body, "Blade");
                     if (knife) spin.localScale = Vector3.one * 1.6f;   // 飛刀的判定小，刀身相對放大才看得見
                     var edge = knife ? Color.Lerp(sc, new Color(0.8f, 0.5f, 1f), 0.5f) : new Color(1f, 0.12f, 0.25f);

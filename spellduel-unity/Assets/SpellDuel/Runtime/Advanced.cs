@@ -76,18 +76,18 @@ namespace SpellDuel
                 desc = "與火靈和石像締約，讓元素並肩作戰", core = "契約：最多同時 2 隻召喚物（火靈、石像、冰靈、治癒妖精、收服的魔物），自動作戰；有召喚物在場時自己受到的傷害 −15%。用自己的攻擊打中召喚物＝餵養：幫牠回血，並讓牠的攻擊、血量 +1%（召喚物消失後重新召喚就歸零）", weak = "本人的直接傷害 −30%",
                 skills = new[] { "firespirit", "golem", "detonate" } });
             // ---------------------------------------------------------------- 刺客
-            Add(new AdvDef { id = "ninja", baseCls = "assassin", name = "忍者", color = C("#64748b"), evade = 0.15f, stats = S(agi: 6),
-                desc = "結印換影，以替身與忍火穿過險境", core = "忍術手印：忍術要依序比出手印（數字序列）才能放出；閃避率 +15%", weak = "手印操作難，傷害普通",
+            Add(new AdvDef { id = "ninja", baseCls = "assassin", name = "忍者", color = C("#64748b"), hpAdd = -10, regenMul = 0.75f, evade = 0.15f, stats = S(agi: 6),
+                desc = "苦無與忍術交錯，在一瞬間連續出手", core = "快速施放：普攻改成遠距射苦無（技能樹可讓苦無機率附帶火／冰／雷）；手裏劍、雷遁幾乎不用蓄力；忍術（替身、分身、火遁）要比手印；閃避率 +15%", weak = "HP −10、MP 回復 −25%：不擅長持久戰",
                 skills = new[] { "substitute", "clone", "fireseal" } });
             Add(new AdvDef { id = "shadowdancer", baseCls = "assassin", name = "影舞者", color = C("#c026d3"), hpAdd = -5, crit = 0.15f, stats = S(str: 6),
-                desc = "以連擊追逐破綻，在毒霧間舞出致命一瞬", core = "連殺：伏擊命中後 3 秒內，伏擊技能冷卻歸零、蓄力時間 −70%", weak = "HP −5，防禦很脆",
+                desc = "以連擊追逐破綻，在毒霧間舞出致命一瞬", core = "連殺：伏擊命中後 3 秒內，伏擊技能冷卻歸零、蓄力時間 −70%。技能樹學影分身（電腦操作、分走一半 HP）、影殺（強力伏擊）、致命劇毒與萬毒引爆（疊毒再一次引爆）", weak = "HP −5，防禦很脆",
                 skills = new[] { "execute", "shadowdance", "poisonfog" } });
             // ---------------------------------------------------------------- 牧師
             Add(new AdvDef { id = "bishop", baseCls = "priest", name = "主教", color = C("#fef9c3"), hpAdd = 5, mpAdd = 40, atkMul = 0.7f, healMul = 1.2f, stats = S(spi: 8),
-                desc = "為同伴留下燈火，以祈禱喚回將熄的生命", core = "祈禱領域：站著不動時，自己與 3m 內的隊友每秒回復最大 HP 的 1.5%", weak = "攻擊 −30%",
+                desc = "為同伴留下燈火，以祈禱喚回將熄的生命", core = "祈禱領域：站著不動時，自己與 3m 內的隊友每秒回復最大 HP 的 1.5%。普攻神聖飛彈打中隊友（含召喚物）會幫他回血；技能樹學聖域障壁（擋 3 次攻擊）", weak = "攻擊 −30%",
                 skills = new[] { "revive", "massheal", "sanctuary" } });
             Add(new AdvDef { id = "inquisitor", baseCls = "priest", name = "審判者", color = C("#f59e0b"), hpAdd = 20, atkMul = 1.25f, healMul = 0.6f, stats = S(str: 3, intl: 4),
-                desc = "將信仰凝成聖槍，迎向吞沒光明的敵人", core = "信仰：每次命中累積 1 點信仰（最多 5 點），滿了下一招攻擊傷害 ×2", weak = "治療量 −40%",
+                desc = "將信仰凝成聖槍，迎向吞沒光明的敵人", core = "信仰：每次命中累積 1 點信仰（最多 5 點），滿了下一招攻擊傷害 ×2。強化審判：技能樹降低審判冷卻、提高審判之地傷害；天罰＝範圍與傷害都是審判 2 倍的審判之地；造成的傷害可以轉成護盾", weak = "治療量 −40%",
                 skills = new[] { "holylance", "chastise", "heavenpunish" } });
         }
 

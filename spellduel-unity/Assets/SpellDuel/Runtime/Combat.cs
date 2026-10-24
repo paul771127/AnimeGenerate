@@ -82,6 +82,15 @@ namespace SpellDuel
         public bool isElite;
         /// <summary>召喚師收服的魔物（小怪種類；−1＝不是）</summary>
         public int tamedKind = -1;
+        /// <summary>忍者：苦無普攻同時射出火／冰／雷苦無的機率；審判者：造成傷害轉護盾的比例</summary>
+        public float kunaiFire, kunaiIce, kunaiBolt, dmgShield;
+        /// <summary>影舞者：借給影分身的 HP 上限（分身倒下時還回來）；影分身本體（null＝沒有）</summary>
+        public int cloneLent; public Fighter shadowClone;
+        /// <summary>影分身：主人（攻擊算主人的）、出手次數（每 3 次影殺、每 4 次劇毒）</summary>
+        public Fighter cloneOf; public int cloneStrikes;
+        /// <summary>友方人物：localFriend＝這台手機在跑 AI（影分身、收服的魔物）；friendOwner＝別台手機的代理（−1＝不是）、在那台的編號；影分身的時限</summary>
+        public bool localFriend; public int friendOwner = -1, friendLocalId; public float friendUntil;
+        public float dmgShieldAcc;
         public readonly List<SoulFx> soulProcs = new List<SoulFx>();
         // 刺客的近身技能：放招後進入「伏擊」，時限內靠近到射程內就自動出手
         public SkillDef armed; public float armedUntil;
@@ -864,6 +873,7 @@ namespace SpellDuel
         {
             var m = MinionById(id);
             if (m != null && m.Alive) ApplyDamageAndEffect(m, damage, s != null ? s.effect : EffectKind.None, s != null ? s.effectDps : 0f, s != null ? s.effectDur : 0f, m.Chest);
+            if (m != null && s != null && s.id == "plague") Plague(m);   // 隊友的毒爆：主機引爆
         }
 
         void UpdateMinions(float dt)
@@ -1270,6 +1280,7 @@ namespace SpellDuel
                 else { HitSkill = p.skill; HitCrit = p.crit; ApplyDamageAndEffect(m, pd, p.effect, p.effectDps, p.effectDur, p.pos); HitSkill = null; HitCrit = false; ApplyProcs(m, LastProcs, p.pos); }
                 OnDealt(p.owner, pd, m, p.skill, p);
                 OnProjectileHit?.Invoke(p);
+                if (p.skill.groundZone) AddBurn(p, m.Feet);   // 審判砸中小怪：一樣留下審判之地
                 if (p.skill.pierce) continue;
                 return true;
             }
@@ -1479,7 +1490,7 @@ namespace SpellDuel
                 {
                     if (!f.Alive || Over || f.charging != null) return;   // 這段時間開始詠唱技能：這一發取消
                     f.charging = s; f.chargeStart = now - 1f;
-                    TryRelease(f, dir, floor, out _, locked);
+                    if (TryRelease(f, dir, floor, out _, locked) && s.id == "na_kunai") KunaiProcs(f, start, dir);
                 });
                 return true;
             }
@@ -1534,6 +1545,20 @@ namespace SpellDuel
             f.windupUntil = now + SlashWindup;   // 預警中站定（玩家退開就打不到）
             After(SlashWindup, () => { if (f.Alive && !Over) SlashStrike(f, s, o, a, b, reach, true); });
             return true;
+        }
+
+        /// <summary>忍者苦無普攻：依技能樹機率，同時多射出火／冰／雷苦無（只偏 2～3.5 度，跟主苦無打同一個目標）</summary>
+        void KunaiProcs(Fighter f, Vector3 from, Vector3 dir)
+        {
+            int n = 0;
+            void Try(float chance, string id)
+            {
+                if (chance <= 0f || rng.NextDouble() >= chance || !Skills.All.TryGetValue(id, out var k)) return;
+                float ang = (n % 2 == 0 ? 1f : -1f) * (2f + 1.5f * (n / 2)); n++;   // 幾乎同一條線（偏太多會打不到）
+                Spawn(f, k, from, RotateY(dir, ang), k.damage, k.effect, k.effectDps, k.effectDur, false);
+            }
+            Try(f.kunaiFire, "kunai_fire"); Try(f.kunaiIce, "kunai_ice"); Try(f.kunaiBolt, "kunai_bolt");
+            if (n > 0) Emit("cast", from, new Color(1f, 0.85f, 0.4f), null);
         }
 
         /// <summary>遠程普攻的預警時間（秒）：瞄準線出現後才射出</summary>
@@ -1906,7 +1931,7 @@ namespace SpellDuel
         void CastSelf(Fighter f, SkillDef s)
         {
             // 牧師的輔助技能：作用在所有己方單位（自己＋合作隊友）
-            if (s.cls == "priest" || s.team)
+            if ((s.cls == "priest" && s.self != SelfKind.Barrier) || s.team)
             {
                 if (f.healMul != 1f && (s.heal > 0 || s.self == SelfKind.HealPct))
                 {
@@ -1963,6 +1988,8 @@ namespace SpellDuel
                 case SelfKind.ManaShield: f.manaShieldUntil = now + s.buffDur; Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0} 秒內用 MP 擋傷害"); return;
                 case SelfKind.Pet: SpawnPet(f, s, s.petKind, s.petLife); Emit("buff", f.Chest, s.color, $"召喚{s.name}！"); return;
                 case SelfKind.Capture: Capture(f, s); return;
+                case SelfKind.ShadowClone: SpawnShadowClone(f, s); return;
+                case SelfKind.Barrier: AddBarrier(f, s); return;
                 case SelfKind.Detonate:
                 {
                     int n = 0;
@@ -2249,6 +2276,7 @@ namespace SpellDuel
             UpdateEndless();
             UpdateTraps();
             UpdateBurns(dt);
+            UpdateBarriers();   // 主教的聖域障壁（Combat.Friends.cs）
             UpdatePools();
             UpdateLanes();
             UpdatePets(dt);
@@ -2531,8 +2559,9 @@ namespace SpellDuel
                     if (p.Fading) { if (p.traveled >= p.fadeEnd || p.pos.y < 0f) p.alive = false; continue; }   // 淡出中：不再打到人
                     if (TrySlice(p)) break;
                     if (!p.remote && TryFeedPet(p)) break;   // 召喚師：打中自己的召喚物＝餵養
+                    if (!p.remote && TryHealFriend(p)) break;   // 主教：普攻打中友軍＝治療
                     // 隕石落地：留下火海（我方的才判定傷害；對手的只顯示）
-                    if (p.skill.id == "meteor" && p.pos.y <= 0.05f)
+                    if ((p.skill.id == "meteor" || p.skill.groundZone) && p.pos.y <= 0.05f)
                     {
                         p.alive = false;
                         AddBurn(p, p.pos);
@@ -2559,7 +2588,7 @@ namespace SpellDuel
                             continue;
                         }
                         p.alive = false;
-                        if (p.skill.id == "meteor" && !p.reflected) AddBurn(p, target.Feet);   // 直接砸中也留下火海
+                        if ((p.skill.id == "meteor" || p.skill.groundZone) && !p.reflected) AddBurn(p, target.Feet);   // 直接砸中也留下火海／審判之地
                         if (p.crit) Emit("crit", p.pos, p.skill.color, "爆擊！");
                         LastProcs = RollProcs(p.owner, p.skill);
                         p.damage = PreHit(p.owner, target, p.skill, p.damage, p);
@@ -2635,6 +2664,14 @@ namespace SpellDuel
         void AddBurn(Projectile p, Vector3 at)
         {
             var c = new Vector3(at.x, 0f, at.z);
+            if (p.skill.groundZone)
+            {
+                // 審判／天罰：留下審判之地（技能樹的持續時間、每秒傷害都算進去；攻擊力加成也算）
+                var zs = p.skill; float mul = p.owner != null ? p.owner.atkMul : 1f;
+                burns.Add(new BurnZone { owner = p.owner, skill = zs, pos = c, radius = zs.areaRadius, until = now + zs.buffDur, dps = zs.effectDps * mul, remote = p.remote });
+                Emit("holyzone", c, zs.color, zs.id);
+                return;
+            }
             burns.Add(new BurnZone { owner = p.owner, skill = p.skill, pos = c, radius = BurnRadius, until = now + BurnDuration, dps = BurnDps, remote = p.remote });
             Emit("burnzone", c, p.skill.color, null);
         }
@@ -2666,6 +2703,7 @@ namespace SpellDuel
                         {
                             if (victim == enemy) AddThreat(z.owner, z.dps);
                             Damage(victim, z.dps, "burn", victim.isMinion ? victim.Chest : (Vector3?)null);
+                            if (z.skill.groundZone) GainDmgShield(z.owner, z.dps);
                             if (z.skill.id == "poisonfog" && z.owner != null && z.owner.venom > 0f) PostHit(z.owner, victim, Skills.All["fogtick"], z.dps);   // 影舞者「毒霧疊毒」
                         }
                     }
@@ -2829,6 +2867,8 @@ namespace SpellDuel
             if (a.lifesteal > 0f) a.hp = Mathf.Min(a.maxHp, a.hp + dmg * a.lifesteal);
             if (a.mpOnHit > 0f) a.mp = Mathf.Min(a.maxMp, a.mp + a.mpOnHit);
             if (a.adv == "inquisitor" && a.faith < FaithMax && ++a.faith == FaithMax) Emit("buff", a.Chest, new Color(1f, 0.8f, 0.3f), "信仰已滿！下一招傷害 ×2");
+            GainDmgShield(a, dmg);   // 審判者「聖盾轉化」
+            if (s != null && s.id == "plague" && target != null && !(remoteEnemy && (target.isMinion || target == enemy))) Plague(target);   // 影舞者：毒爆（隊友端交給主機）
             SoulOnHit(a, target, dmg, s);
         }
 
@@ -2975,6 +3015,8 @@ namespace SpellDuel
         void Damage(Fighter f, float dmg, string kind, Vector3? at = null)
         {
             if (!f.Alive) return;
+            if (f.friendOwner >= 0) { if (dmg > 0f) { OnFriendHurt?.Invoke(f, dmg); Emit("hit", at ?? f.Chest, Color.red, $"-{dmg:0}"); } return; }   // 別台手機的召喚獸／影分身：傷害交給那台算
+            if (dmg > 0f && kind != "dot" && kind != "burn" && kind != "oath" && kind != "thorns" && BarrierGuards(f) && TryBarrier(f, at)) return;   // 主教的聖域障壁
             if (f.invulnUntil > now && dmg > 0f) return;   // 狂戰士不死之軀的無敵
             dmg *= f.damageTakenMul * (1f - f.gearReduce) * f.soulTaken;
             // 精魄：格擋（這一下傷害減半；持續傷害不算）

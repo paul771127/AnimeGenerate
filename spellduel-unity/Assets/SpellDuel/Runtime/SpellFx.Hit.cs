@@ -31,7 +31,7 @@ namespace SpellDuel
                 case "nv_swing": case "na_stick": return "novice_swing";
                 case "nv_aid": return "novice_aid";
                 case "na_holy": return "priest";
-                case "na_dagger": case "fogtick": return "assassin";
+                case "na_dagger": case "fogtick": case "na_kunai": case "kunai_fire": case "kunai_ice": case "kunai_bolt": case "shuriken": case "deadlypoison": case "plague": return "assassin";
             }
             foreach (var c in Skills.ClassOrder) if (s.cls == c) return c;
             return null;

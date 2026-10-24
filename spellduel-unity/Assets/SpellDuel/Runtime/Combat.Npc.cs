@@ -79,14 +79,15 @@ namespace SpellDuel
             if (best.hp > best.maxHp * TamedHpNeed) { Emit("fail", best.Chest, s.color, $"{best.name}還太有精神（血量要剩一半以下）"); return; }
             // 成功：從敵人裡移走，變成友方的召喚獸（血量補滿，攻擊照牠原本的強度）
             minions.Remove(best);
+            if (remoteEnemy) { captured.Add(best.minionId); OnCaptured?.Invoke(best.minionId); }   // 隊友端：請主機把那隻拿掉
             var mine = pets.FindAll(x => x.alive && !x.remote && x.owner == f && x.kind != "clone");
             for (int i = 0; i <= mine.Count - MaxPets; i++) KillPet(mine[i]);
             var body = SpawnNpc("tamed_" + nextId, "🐾 " + best.name.Replace("精銳・", ""), "priest", 0, false, Mathf.RoundToInt(best.maxHp), 0, best.Feet);
             body.tamedKind = best.minionKind; body.maxHp = best.maxHp; body.hp = body.maxHp; body.dmgMul = best.dmgMul;
-            body.bodyRadius = best.bodyRadius; body.head = best.head; body.speedMul = best.speedMul;
+            body.bodyRadius = best.bodyRadius; body.head = best.head; body.speedMul = best.speedMul; body.localFriend = true;
             var p = new Pet { id = nextId++, owner = f, kind = "tamed", until = now + s.petLife, body = body, pos = body.Chest, hp = body.hp, maxHp = body.maxHp };
             pets.Add(p);
-            Emit("buff", body.Chest, s.color, $"收服了{best.name}！（{s.petLife:0} 秒）");   // 收服的魔物只在自己這台跑（不送給其他手機）
+            Emit("buff", body.Chest, s.color, $"收服了{best.name}！（{s.petLife:0} 秒）");   // 收服的魔物在自己這台跑 AI，位置血量送給隊友顯示
         }
 
         /// <summary>收服的魔物出手：近戰的直接打，遠程的射出綠色的召喚獸攻擊</summary>
@@ -175,11 +176,13 @@ namespace SpellDuel
                 var n = npcs[i];
                 if (n.Alive) continue;
                 npcs.RemoveAt(i);
-                if (!remoteEnemy) OnNpcDown?.Invoke(n);
+                if (n.cloneOf != null) EndClone(n, "影分身倒下了");
+                if (!remoteEnemy && n.friendOwner < 0 && !n.localFriend) OnNpcDown?.Invoke(n);
             }
-            if (remoteEnemy) return;
+            UpdateFriends();
             foreach (var n in npcs)
             {
+                if (n.friendOwner >= 0 || (remoteEnemy && !n.localFriend)) continue;   // 別台手機的代理、隊友端的劇情人物：不跑 AI
                 // 身上的持續傷害
                 for (int i = n.dots.Count - 1; i >= 0; i--)
                 {
@@ -226,6 +229,7 @@ namespace SpellDuel
         {
             n.npcNextAtk = now + NpcAttackGap;
             if (n.tamedKind >= 0) { TamedStrike(n, tgt); return; }
+            if (n.cloneOf != null) { CloneStrike(n, tgt); n.npcNextAtk = now + 1.1f; return; }
             var s = Skills.BasicOf(n.cls.id) ?? Skills.All["na_holy"];
             int dmg = Mathf.Max(1, Mathf.RoundToInt((n.npcSide == 0 ? 12f : 10f) * n.dmgMul));
             if (NpcMelee(n))

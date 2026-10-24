@@ -145,7 +145,7 @@ namespace SpellDuel
         /// <summary>房主：人物倒下</summary>
         void OnNpcDown(Fighter f)
         {
-            if (drun == null || f.npcId == null || f.tamedKind >= 0) return;   // 收服的魔物不是劇情人物
+            if (drun == null || f.npcId == null || f.tamedKind >= 0 || f.localFriend || f.friendOwner >= 0) return;   // 收服的魔物、影分身不是劇情人物
             NetSend?.Invoke(new Msg { t = "ndie", k = f.npcId });
             NpcDied(f.npcId);
         }
@@ -160,7 +160,7 @@ namespace SpellDuel
         void SendNpcState()
         {
             if (drun == null || !coop || !NetIsHost) return;
-            var ns = battle.npcs.FindAll(n => n.tamedKind < 0);   // 收服的魔物只在自己這台
+            var ns = battle.npcs.FindAll(n => !n.localFriend && n.friendOwner < 0);   // 收服的魔物、影分身另外送（SoloBattle.Friends.cs）
             if (ns.Count == 0 && npcSentCount == 0) return;
             npcSentCount = ns.Count;
             var pts = new Vector3[ns.Count]; var ks = new string[ns.Count];
@@ -182,7 +182,7 @@ namespace SpellDuel
                 battle.SyncNpc(id, a[1], def != null ? def.name : a[1], def != null ? def.look : "priest", side, a[3] == "1", m.pts[i], hp, mhp);
                 keep.Add(id);
             }
-            battle.npcs.RemoveAll(n => !keep.Contains(n.minionId));
+            battle.npcs.RemoveAll(n => !n.localFriend && n.friendOwner < 0 && !keep.Contains(n.minionId));
         }
 
         /// <summary>人物的角色模型：跟著位置走、倒下</summary>
