@@ -1,0 +1,158 @@
+{
+  "archer": {
+    "size": [
+      768,
+      1152
+    ],
+    "offset": [
+      -28,
+      61
+    ],
+    "bytes": 656943,
+    "sha256": "33dd057f7aed4d395550a007519e1b3a572bc1aa26c525a5ffbc27fe3c6f84ce"
+  },
+  "assassin": {
+    "size": [
+      768,
+      1152
+    ],
+    "offset": [
+      -28,
+      61
+    ],
+    "bytes": 629410,
+    "sha256": "40fc06abb4b6a03e932e0110d68b357c7926a914fc2be7ae18c3b6c7ed5b622e"
+  },
+  "priest": {
+    "size": [
+      768,
+      1152
+    ],
+    "offset": [
+      -28,
+      61
+    ],
+    "bytes": 753389,
+    "sha256": "8c4943a08094ea7f9855e55a30423caec71b8fec0dd7e8c2d3c06732211e1d8c"
+  },
+  "paladin": {
+    "size": [
+      768,
+      1152
+    ],
+    "offset": [
+      -28,
+      61
+    ],
+    "bytes": 639004,
+    "sha256": "9b8910cadfe5bf781848b231ae3e14b2105080937a989e420773d90087ea8062"
+  },
+  "berserker": {
+    "size": [
+      768,
+      1152
+    ],
+    "offset": [
+      -28,
+      61
+    ],
+    "bytes": 761398,
+    "sha256": "04f9ff4ed8c1a0e80e735671c7bf8930e8e0457cea81eba176610c7908bfbb16"
+  },
+  "marksman": {
+    "size": [
+      768,
+      1152
+    ],
+    "offset": [
+      -28,
+      61
+    ],
+    "bytes": 693534,
+    "sha256": "0156e6878df6d3f30a12be28474fc722e17538901ab31f275fa9fcca67256e07"
+  },
+  "ranger": {
+    "size": [
+      768,
+      1152
+    ],
+    "offset": [
+      -28,
+      61
+    ],
+    "bytes": 635115,
+    "sha256": "e285aa07a3b890552de0fcd14d288cab25ae5e2236d999ccd4c9afecf3c7bc87"
+  },
+  "archmage": {
+    "size": [
+      768,
+      1152
+    ],
+    "offset": [
+      -28,
+      61
+    ],
+    "bytes": 719250,
+    "sha256": "07208ec562954bf55e6cb00774d434bc29f6bc376b99312857097ba07835993c"
+  },
+  "summoner": {
+    "size": [
+      768,
+      1152
+    ],
+    "offset": [
+      -28,
+      61
+    ],
+    "bytes": 795442,
+    "sha256": "0daee147c62cf9f30972e1091729fa99206a58b9e761d91404b273dc1c580c55"
+  },
+  "ninja": {
+    "size": [
+      768,
+      1152
+    ],
+    "offset": [
+      -28,
+      61
+    ],
+    "bytes": 649622,
+    "sha256": "b8011c45ca72678b04a0a3a8cf4332cc997961a24b6769fd5910f0c004b3f1f8"
+  },
+  "shadowdancer": {
+    "size": [
+      768,
+      1152
+    ],
+    "offset": [
+      -28,
+      61
+    ],
+    "bytes": 712689,
+    "sha256": "66d4fcbf55ae9954c6768d9f269a41a2d4976e39f8126b0bb63ecc9d95254634"
+  },
+  "bishop": {
+    "size": [
+      768,
+      1152
+    ],
+    "offset": [
+      -28,
+      -4
+    ],
+    "bytes": 685165,
+    "sha256": "886501730abdc4404793bdced3d00eb38645020cac242ece2c44f2db55f3695f"
+  },
+  "inquisitor": {
+    "size": [
+      768,
+      1152
+    ],
+    "offset": [
+      -28,
+      61
+    ],
+    "bytes": 726259,
+    "sha256": "8fed2594782b631e2754f3db785f8c413f228667d65daac4556cd77be03f1c67"
+  }
+}

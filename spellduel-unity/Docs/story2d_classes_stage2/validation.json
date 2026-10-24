@@ -1,0 +1,151 @@
+{
+  "stage": "all",
+  "assets": [
+    {
+      "id": "novice",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 610486
+    },
+    {
+      "id": "swordsman",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 506295
+    },
+    {
+      "id": "archer",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 656943
+    },
+    {
+      "id": "mage",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 645895
+    },
+    {
+      "id": "assassin",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 629410
+    },
+    {
+      "id": "priest",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 753389
+    },
+    {
+      "id": "paladin",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 639004
+    },
+    {
+      "id": "berserker",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 761398
+    },
+    {
+      "id": "marksman",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 693534
+    },
+    {
+      "id": "ranger",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 635115
+    },
+    {
+      "id": "archmage",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 719250
+    },
+    {
+      "id": "summoner",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 795442
+    },
+    {
+      "id": "ninja",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 649622
+    },
+    {
+      "id": "shadowdancer",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 712689
+    },
+    {
+      "id": "bishop",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 685165
+    },
+    {
+      "id": "inquisitor",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 726259
+    }
+  ],
+  "pending": [],
+  "totalBytes": 10819896
+}
