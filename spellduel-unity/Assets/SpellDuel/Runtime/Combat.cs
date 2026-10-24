@@ -536,6 +536,8 @@ namespace SpellDuel
         static bool FreeRoam(int kind) => kind == 13 || kind == 14 || kind == 15 || kind == 17 || kind == 18;
         static float BaseAlt(int kind) => kind == 14 ? 3.5f : kind == 17 ? 0.9f : kind == 18 ? 0.5f : 0f;
         public const float BirdCruise = 3.5f;
+        /// <summary>海鳥在玩家上空繞圈的半徑（以前 5m，在 6m 場地會繞到場外）</summary>
+        public const float BirdCircle = 2.2f;
         public const float VineStay = 3f;   // 藤蔓術士放出藤蔓後不能移動的秒數（＝藤蔓持續時間）
         public static bool IsPlant(int kind) => kind >= 7 && kind <= 12;
         /// <summary>小怪最近只走到離玩家這麼遠（約一個身高，至少 1m），免得貼在鏡頭上看不清楚；近身攻擊的距離會補到打得到這裡</summary>
@@ -911,11 +913,11 @@ namespace SpellDuel
                     if (m.alt > BirdCruise) { m.alt = Mathf.Max(BirdCruise, m.alt - 1f * dt); m.head.y = MinionHead[kind] + m.alt; }
                     var rad = Fighter.Flat(m.Feet - tgt.Feet); if (rad == Vector3.zero) rad = Vector3.forward;
                     var tan = new Vector3(-rad.z, 0f, rad.x);
-                    float corr = Mathf.Clamp(5f - d, -1f, 1f);
+                    float corr = Mathf.Clamp(BirdCircle - d, -1f, 1f);   // 繞圈的半徑要在場地裡（6m 場地）
                     var fly = (tan + rad * corr).normalized * 1.5f * m.speedMul * dt;
                     m.head += fly;
                     m.forward = Fighter.Flat(fly);
-                    if (now >= m.recoverUntil && m.alt >= BirdCruise - 0.3f && d <= MinionReach[kind] && now >= m.attackReadyAt)
+                    if (now >= m.recoverUntil && m.alt >= BirdCruise - 0.3f && d <= MinionReach[kind] && now >= m.attackReadyAt && (minionInside == null || minionInside(m.Feet)))   // 飛到場地上空才俯衝
                     { m.windupUntil = now + MinionWindup[kind]; Emit("minionwindup", m.Feet, Skills.All["m_dive"].color, null); }
                     continue;
                 }
@@ -963,7 +965,7 @@ namespace SpellDuel
                 float reach = IsRanged(kind) ? MinionReach[kind] : MeleeReach(kind, MinionReach[kind]);
                 float windup = MinionWindup[kind] < 0f ? claw.charge : MinionWindup[kind];
                 if (IsRanged(kind)) windup *= rangedWindupMul;
-                bool outside = minionInside != null && !minionInside(m.Feet) && !FreeRoam(kind);   // 還在場地外：先走進來（不在場外放招）；海裡／空中的不用
+                bool outside = minionInside != null && !minionInside(m.Feet);   // 還在場地外：先走進來（不在場外放招）；海裡、空中的也一樣要進到場地才出手
                 if (!outside && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt) { m.windupUntil = now + windup; Emit("minionwindup", m.Feet, claw.color, null); continue; }
                 // 走位：射手保持 3.5～6m，其他走向目標（停在 0.8m）；小怪之間互相推開
                 float speed = minionSpeed * MinionSpeed[kind] * m.speedMul * EnemySpeedScale;
@@ -986,7 +988,7 @@ namespace SpellDuel
                 }
                 var next = m.Feet + step;
                 // 場地外出生的小怪：還在場地外時也可以走（朝玩家走進場地）；進到場地後就不會再走出去
-                if (minionInside == null || FreeRoam(kind) || minionInside(next) || !minionInside(m.Feet)) m.head = new Vector3(next.x, m.head.y, next.z);
+                if (minionInside == null || minionInside(next) || !minionInside(m.Feet)) m.head = new Vector3(next.x, m.head.y, next.z);   // 進場後就不再走出去（海裡的也一樣）
             }
         }
 
@@ -1002,7 +1004,7 @@ namespace SpellDuel
         {
             dest = m.Feet;
             int kind = m.minionKind;
-            bool Inside(Vector3 p) => minionInside == null || FreeRoam(kind) || minionInside(p);
+            bool Inside(Vector3 p) => minionInside == null || minionInside(p);   // 走位一律在場地內（海裡、空中的也是）
             float lo = Mathf.Max(1.5f, KeepMin[kind] - 0.5f), hi = Mathf.Max(lo + 0.5f, Mathf.Min(KeepMax[kind] + 0.5f, MinionReach[kind]));
             for (int pass = 0; pass < 2; pass++)
                 for (int tries = 0; tries < 24; tries++)
