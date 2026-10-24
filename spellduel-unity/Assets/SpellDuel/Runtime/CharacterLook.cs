@@ -78,7 +78,7 @@ namespace SpellDuel
         {switch(eye){case CharacterLook.EyeKind.Upturned:return .40f;case CharacterLook.EyeKind.Droop:return .42f;case CharacterLook.EyeKind.Round:return .50f;case CharacterLook.EyeKind.Slender:return .31f;case CharacterLook.EyeKind.HalfClosed:return .10f;case CharacterLook.EyeKind.Sharp:return .36f;case CharacterLook.EyeKind.Sanpaku:return .37f;default:return .46f;}}
         internal static Vector2[] LashTriangles(float opening,float slope,bool simple,bool closed)
         {
-            int count=simple?2:3;var result=new Vector2[count*3];
+            int count=simple?1:2;var result=new Vector2[count*3];
             for(int i=0;i<count;i++)
             {
                 float q=count==2?.58f+i*.12f:.50f+i*.10f;
@@ -88,7 +88,7 @@ namespace SpellDuel
                 float yr=closed?-.03f+.09f*v*v:opening*Mathf.Sqrt(Mathf.Max(0,1-v*v))+slope*v;
                 float cy=closed?-.03f+.09f*w*w:opening*Mathf.Sqrt(Mathf.Max(0,1-w*w))+slope*w;
                 result[i*3]=new Vector2(left,yl-.015f);result[i*3+1]=new Vector2(right,yr-.015f);
-                result[i*3+2]=new Vector2(q+(simple?.10f:.12f)+i*.02f,cy+(closed?.095f:simple?.10f:.14f)+i*.025f);
+                result[i*3+2]=new Vector2(q+(simple?.035f:.055f)+i*.008f,cy+(closed?.025f:simple?.020f:.040f)+i*.008f);
             }
             return result;
         }

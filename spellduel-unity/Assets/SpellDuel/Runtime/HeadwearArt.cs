@@ -73,11 +73,11 @@ namespace SpellDuel
             found=b.Finish("Headwear "+id);meshes[id]=found;return found;
         }
         static readonly Dictionary<string,Mesh> fittedHair=new Dictionary<string,Mesh>();
-        internal static Mesh HairFor(string id,Portraits.Persona p)
+        internal static Mesh HairFor(string id,Portraits.Persona p,bool film=false)
         {
-            var source=AnimeHair.MeshFor(id,p);
+            var source=film?StoryHair.FilmMesh(id,p):AnimeHair.MeshFor(id,p);
             bool covered=id=="mage"||id=="archmage"||id=="summoner"||id=="priest"||id=="bishop"||id=="米菈"||id=="海斗"||id=="阿潮";
-            if(!covered)return source;if(fittedHair.TryGetValue(id,out var mesh))return mesh;
+            string cacheKey=id+(film?"/film":"");if(!covered)return source;if(fittedHair.TryGetValue(cacheKey,out var mesh))return mesh;
             float seat=Seat(id,p),r=FitRadius(id,p,seat);var vertices=new Vector3[source.vertices.Length];System.Array.Copy(source.vertices,vertices,vertices.Length);
             for(int i=0;i<vertices.Length;i++)
             {
@@ -89,7 +89,7 @@ namespace SpellDuel
                     if(radial>limit){v.x*=limit/radial;v.z*=limit/radial;}vertices[i]=v;
                 }
             }
-            mesh=new Mesh{name="Hat-compressed crown "+id,vertices=vertices,triangles=source.triangles,colors=source.colors,uv=source.uv};mesh.RecalculateNormals();mesh.RecalculateBounds();fittedHair[id]=mesh;return mesh;
+            mesh=new Mesh{name="Hat-compressed crown "+id,vertices=vertices,triangles=source.triangles,colors=source.colors,uv=source.uv};mesh.RecalculateNormals();mesh.RecalculateBounds();fittedHair[cacheKey]=mesh;return mesh;
         }
         internal static void Build(Transform head,string id,Portraits.Persona p)
         {if(Has(id))AnimeFace.Part(head,"Headwear fitted "+id,MeshFor(id,p),Vector3.zero,AnimeFace.Material(Color.white,4));}

@@ -114,8 +114,8 @@ namespace SpellDuel
             internal FacePlan(Persona p)
             {
                 Top=.157f*p.Length;Chin=-Top;Hairline=.123f*p.Length;float height=Hairline-Chin;
-                FaceWidth=.206f*p.Length*Lerp(.984f,1.012f,(p.Width-.95f)/.10f);
-                EyeY=Chin+height*.480f;EyeWidth=FaceWidth*.285f;EyeX=FaceWidth*.26f;
+                FaceWidth=.206f*AnimeFace.FaceWidthScale*p.Length*Lerp(.984f,1.012f,(p.Width-.95f)/.10f);
+                EyeY=Chin+height*.480f;EyeWidth=(FaceWidth/AnimeFace.FaceWidthScale)*.285f;EyeX=FaceWidth*.26f;
                 EyeHeight=EyeWidth*(p.Elder?.53f:p.Masculine?.63f:.82f+(p.Eye-1)*.15f);
                 NoseY=Chin+height*.30f;MouthY=Chin+height*.17f;MouthWidth=EyeWidth*.60f;
                 BrowY=EyeY+Math.Max(height*.07f,EyeHeight*.60f+height*.02f);EarTop=BrowY;EarBottom=NoseY;

@@ -156,7 +156,7 @@ namespace SpellDuel
         internal static Color32[] Portrait(string id,Portraits.Persona p,bool frontOnly)
         {
             string key=id+frontOnly;if(images.TryGetValue(key,out var image))return image;
-            var mesh=AnimeFace.CompactPresentationMesh(HeadwearArt.HairFor(id,p),id,p,1);var vertices=mesh.vertices;var tri=mesh.triangles;var colors=mesh.colors;var hair=CharacterLook.Get(id).HairColor;
+            var mesh=AnimeFace.CompactPresentationMesh(HeadwearArt.HairFor(id,p,true),id,p,1);var vertices=mesh.vertices;var tri=mesh.triangles;var colors=mesh.colors;var hair=CharacterLook.Get(id).HairColor;
             var depth=new float[W*H];for(int i=0;i<depth.Length;i++)depth[i]=-100;image=new Color32[W*H];
             for(int i=0;i<tri.Length;i+=3)
             {
