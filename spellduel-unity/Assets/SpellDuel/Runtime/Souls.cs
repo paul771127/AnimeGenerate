@@ -21,7 +21,7 @@ namespace SpellDuel
         Taken,         // 受到的傷害 +v（副作用）
         BasicSpeed,    // 普攻集氣 -v（負的＝變慢）
         ChargeSpeed,   // 技能蓄力 -v
-        Regen,         // 每秒回復 v×最大 HP
+        Regen,         // 每秒回復 v×最大 HP（說明寫成每 10 秒）
         MpRegen,       // MP 回復 +v
         Gold, Xp,      // 金幣、經驗 +v
         Burn, Poison, Freeze,   // 命中附加狀態的機率 +v
@@ -102,7 +102,7 @@ namespace SpellDuel
             M(18, 0.004f, "#fde68a", F(SoulOp.Retaliate, 4f, 0.10f, 4f));                     // 河豚：被打時機率讓攻擊者中毒
             // ---- Boss（0.5%）：一樣只有一種效果，但更強、更特殊
             B("boss", "#ff5a1f", F(SoulOp.HitCast, 0, 0.05f, skill: "meteor"));               // 熔岩巨像：機率發動隕石
-            B("boss_forest", "#4ade80", F(SoulOp.Regen, 0.01f));                               // 腐化樹王：每秒回 1% HP
+            B("boss_forest", "#4ade80", F(SoulOp.Regen, 0.001f));                              // 腐化樹王：每 10 秒回 1% HP
             B("boss_sea", "#22d3ee", F(SoulOp.HurtShield, 60, 0.12f, 5f));                    // 深淵海妖：機率大護盾
             B("boss_arena", "#d4a24c", F(SoulOp.Undying, 0));                                  // 青銅鬥魂：每場一次不死
             B("boss_canyon", "#c8a165", F(SoulOp.Atk, 0.25f), F(SoulOp.Taken, 0.12f));        // 黃土岩魔：好處＋副作用（攻擊很強，但更怕痛）
@@ -137,7 +137,7 @@ namespace SpellDuel
                 case SoulOp.Taken: return $"⚠ 受到的傷害 +{Pct(x.v)}";
                 case SoulOp.BasicSpeed: return x.v >= 0 ? $"普攻集氣 −{Pct(x.v)}（更快）" : $"⚠ 普攻集氣 +{Pct(-x.v)}（更慢）";
                 case SoulOp.ChargeSpeed: return $"技能蓄力 −{Pct(x.v)}";
-                case SoulOp.Regen: return $"每秒回復 {Pct(x.v)} HP";
+                case SoulOp.Regen: return $"每 10 秒回復 {Pct(x.v * 10f)} HP";
                 case SoulOp.MpRegen: return $"MP 回復 +{Pct(x.v)}";
                 case SoulOp.Gold: return $"金幣 +{Pct(x.v)}";
                 case SoulOp.Xp: return $"經驗 +{Pct(x.v)}";
