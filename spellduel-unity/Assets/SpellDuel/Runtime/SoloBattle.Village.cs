@@ -66,11 +66,14 @@ namespace SpellDuel
                 villageReturn = WorldUI.Screen.Bounty; enemyClass = "boss";
                 OpenPrep("🔥 討伐 Boss", false, "討伐 Boss 不能使用道具", () => { storyMapOpen = false; StartBossBattle(false, false); });
             };
-            world.OnStartTower = () =>
+            world.OnStartTower = restart =>
             {
-                villageReturn = WorldUI.Screen.Tower; enemyClass = "endless";
-                OpenPrep("🗼 無盡塔", true, null, () => { storyMapOpen = false; StartBossBattle(false, true); });
+                villageReturn = WorldUI.Screen.Tower; enemyClass = "endless"; towerRestart = restart;
+                int from = (restart ? 0 : TowerBlocks) * TowerBlock + 1;
+                OpenPrep($"🗼 無盡塔 第 {from}～{from + TowerBlock - 1} 波", true, null, () => { storyMapOpen = false; StartBossBattle(false, true); });
             };
+            world.TowerBlocks = () => TowerBlocks;
+            world.TowerBest = () => PlayerPrefs.GetInt(CharacterSlots.Key("sd_tower_best"), 0);
             world.OnNetDungeon = remote => RequestNetDungeon?.Invoke(remote);
             world.OnWatch = () => RequestWatch?.Invoke();
             world.EndlessBest = () => PlayerPrefs.GetInt(CharacterSlots.Key("sd_endless_best"), 0);

@@ -237,8 +237,8 @@ namespace SpellDuel
             if (dk > 0) { Sfx.Play("poof", 0.6f); Sfx.Play("coin", 0.35f, 1.1f); }   // 小怪倒下＋掉金幣
             int db = battle.bossKills - lastBossKillsSeen; lastBossKillsSeen = battle.bossKills;
             for (int i = 0; i < db; i++) { TryDrop(true); pendingGold += Mathf.RoundToInt(Economy.BossGold(battle.wave) * goldMul); }   // 每個敵人最多掉一件
-            // 無盡模式（不是故事關卡）：清完一波＝過關，這一波的戰利品入袋
-            if (storyStage == null && dungeon == null && battle.wave > lootWave)
+            // 無盡模式（不是故事關卡、不是無盡塔）：清完一波＝過關，這一波的戰利品入袋（無盡塔：5 波打完才結算）
+            if (storyStage == null && dungeon == null && !towerRun && battle.wave > lootWave)
             {
                 if (lootWave > 0) GrantLoot($"第 {lootWave} 波過關");
                 lootWave = battle.wave;
@@ -710,6 +710,16 @@ namespace SpellDuel
         bool LevelDifficulty => (pendingStage != null && pendingStage.id != "trial") || dungeon != null;
         static float DamageTakenFor(int d) => d == 0 ? 0.5f : d == 1 ? 0.75f : 1f;
         /// <summary>故事各章的 Boss：血量（簡單難度、1 人）、攻擊倍率（第一章＝1）</summary>
+        // ---------------------------------------------------------------- 無盡塔：每次 5 波、6m×6m 場地
+        public const int TowerBlock = 5;
+        public const float TowerArena = 6f;
+        bool towerRun, towerRestart; int towerFrom = 1;
+        /// <summary>無盡塔已經通過幾段（每段 5 波）：下一次從第 段數×5＋1 波開始</summary>
+        int TowerBlocks
+        {
+            get { try { return PlayerPrefs.GetInt(CharacterSlots.Key("sd_tower_blocks"), 0); } catch { return 0; } }
+            set { try { PlayerPrefs.SetInt(CharacterSlots.Key("sd_tower_blocks"), value); PlayerPrefs.Save(); } catch { } }
+        }
         public static readonly float[] StoryBossHp = { 800f, 1600f, 2500f, 5000f, 8000f }, StoryBossDmg = { 1f, 1.5f, 2f, 2.5f, 3f };
         static float BossHpFor(int d) => d == 0 ? 0.7f : d == 1 ? 0.85f : 1f;
 
@@ -954,6 +964,8 @@ namespace SpellDuel
         void StartBossBattle(bool coopMode, bool endlessMode = false)
         {
             if (!coopMode && pendingStage == null && pendingDungeon == null && GateArea(() => StartBossBattle(coopMode, endlessMode))) return;   // 討伐 Boss、無盡塔：先重新放置場地
+            towerRun = endlessMode && !coopMode && !NetMode && pendingStage == null && pendingDungeon == null && villageReturn == WorldUI.Screen.Tower;
+            if (towerRun) { towerFrom = (towerRestart ? 0 : TowerBlocks) * TowerBlock + 1; towerRestart = false; }
             SaveChoices();
             EndBattle();
             bossMode = true; coop = coopMode; endless = endlessMode; dummyMode = false; enemyClassUsed = "boss";
@@ -1077,6 +1089,13 @@ namespace SpellDuel
                         battle.enemyHpMul = Dungeons.DungeonHp; battle.enemyDmgMul = Dungeons.DungeonDmg; battle.bossHpMul = Dungeons.DungeonHp;   // 副本：小怪與 Boss 的血量、攻擊 ×2
                         battle.StartDungeonMap();   // 副本地圖：每個地點由 BeginDungeonRun／房主選路線決定（SoloBattle.DungeonMap.cs）
                     }
+                    else if (towerRun)
+                    {
+                        // 無盡塔：每次挑戰 5 波（6m×6m 場地），第 5 波有精銳、第 10 波有大 Boss；打完 5 波就結算、回到塔外
+                        battle.eliteWaves = true;
+                        ShrinkArea(TowerArena);
+                        battle.StartStage(towerFrom, towerFrom + TowerBlock - 1);
+                    }
                     else battle.StartEndless();
                 }
                 battle.minionInside = p => area.Inside(WorldFrame.FromWorld(p)) && area.DistanceToEdge(WorldFrame.FromWorld(p)) >= 0.3f;
@@ -1097,6 +1116,7 @@ namespace SpellDuel
                 if (!host) battle.endless = true;   // 隊友端：只用來判斷結束（兩人都倒下才結束）
                 bossRig.SetVisible(false);
                 if (dungeon != null) BeginDungeonRun();   // 副本：從第一個地點開始（房主開打；隊友跟著房主的訊息走）
+                else if (towerRun) Say($"🗼 無盡塔 第 {towerFrom}～{towerFrom + TowerBlock - 1} 波：" + (towerFrom % 10 == 6 ? "第 5 波（第 " + (towerFrom + 4) + " 波）有大 Boss！" : "最後一波有精銳敵人！") + "全部打完就挑戰成功", 4f);
                 else Say("♾ 無盡模式：小怪會從場地邊緣不斷出現，每 60 秒來一隻 Boss！撐越久越好", 4f);
             }
             else Say(coopMode ? $"🔥 合作討伐：熔岩巨像（HP {boss.maxHp}）— 和隊友一起打倒它！" : $"🔥 Boss：熔岩巨像（HP {boss.maxHp}）— 看紅圈、紅線閃避！", 4f);
@@ -1453,6 +1473,7 @@ namespace SpellDuel
                     rig = MinionRig.Create();
                     rig.SetVariant(m.minionKind);
                     rig.SetDress(battle.Theme);   // 角鬥場：黑晶項圈；山道：沙塵與頭巾（美術第十一輪）
+                    if (m.isElite) rig.transform.localScale = Vector3.one * 1.5f;   // 無盡塔的精銳：大一號
                     minionGo[m] = rig; minionLastHp[m] = m.hp;
                     rig.transform.position = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);
                     SpawnFade.Play(rig.gameObject);   // 淡入出現
@@ -1589,6 +1610,26 @@ namespace SpellDuel
                     if (!Story.IsSeen(st.id + "!")) { Story.MarkSeen(st.id + "!"); StoryVideo.Play(StoryVideo.For(st.id, false), () => ShowDialogue(st.after, null)); }   // 結尾（影片＋對話）也只自動播一次
                 }
                 else { LoseLoot(); Say($"💀 {st.title} 失敗…再挑戰一次吧（戰利品沒拿到）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
+                return;
+            }
+            if (endless && towerRun)
+            {
+                // 無盡塔：5 波打完＝挑戰成功（結算戰利品、記錄進度，之後回到塔外）；倒下＝這 5 波的戰利品沒了
+                int to = towerFrom + TowerBlock - 1;
+                int reached = battle.stageCleared ? to : battle.wave - 1;   // 打完的最高一波
+                if (reached > PlayerPrefs.GetInt(CharacterSlots.Key("sd_tower_best"), 0)) PlayerPrefs.SetInt(CharacterSlots.Key("sd_tower_best"), reached);
+                if (battle.stageCleared)
+                {
+                    TowerBlocks = Mathf.Max(TowerBlocks, to / TowerBlock);
+                    pendingGold += 40 * to;
+                    string loot = GrantLoot($"無盡塔 第 {towerFrom}～{to} 波", false);
+                    int txp = 30 * to, tups = prof != null ? prof.AddXp(txp) : 0;
+                    if (prof != null) Progress.SaveChar(prof);
+                    BuildVictory($"🗼 挑戰成功！第 {towerFrom}～{to} 波", "tower_" + to, 60f * TowerBlock, txp, tups, $"下一次從第 {to + 1} 波開始");
+                    Say($"🏆 挑戰成功！無盡塔第 {towerFrom}～{to} 波" + (loot.Length > 0 ? "\n" + loot : ""), 99f);
+                    Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
+                }
+                else { LoseLoot(); Say($"💀 在第 {battle.wave} 波倒下…這 5 波的戰利品沒拿到（進度停在第 {towerFrom - 1} 波）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
             }
             if (endless)
@@ -3799,6 +3840,17 @@ namespace SpellDuel
                 if (!IsTrial && !IsJobTrial && UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), $"🏘 回{WorldUI.Towns[Mathf.Clamp(st.theme, 0, WorldUI.Towns.Length - 1)].name}", fs))
                 { ShowSetup(); storyMapOpen = true; world.OpenTown(Mathf.Clamp(st.theme, 0, WorldUI.Towns.Length - 1)); }
                 else if (IsTrial && UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "🗺 大地圖", fs)) { ShowSetup(); storyMapOpen = true; world.screen = WorldUI.Screen.Map; }
+            }
+            else if (phase == Phase.Over && towerRun && battle != null)
+            {
+                // 無盡塔：挑戰成功 → 直接回到塔外；失敗 → 再挑戰／回塔外
+                if (battle.stageCleared) { GoVillage(); return; }
+                var orr = new Rect(pad, top + (botY - top) * .24f, W - pad * 2, (botY - top) * .36f);
+                UiKit.Result(orr, false);
+                UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, orr.height * 0.4f), $"💀 第 {battle.wave} 波倒下", fs * 2, Color.white, TextAnchor.MiddleCenter, true);
+                float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
+                if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), $"再挑戰第 {towerFrom} 波起", fs, true, new Color(0.7f, 0.55f, 1f))) { ShowSetup(); villageReturn = WorldUI.Screen.Tower; StartBossBattle(false, true); }
+                if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "🗼 回無盡塔", fs)) GoVillage();
             }
             else if (phase == Phase.Over && dungeon != null)
             {

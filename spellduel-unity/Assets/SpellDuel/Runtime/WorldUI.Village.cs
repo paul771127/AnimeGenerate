@@ -18,7 +18,8 @@ namespace SpellDuel
         public Action OnStartTutorial;            // 再上一次教學
         public Action OnStartGuide;               // 重看村莊新手導覽
         public Action OnStartBounty;              // 討伐 Boss（單人）
-        public Action OnStartTower;               // 無盡塔（無盡模式）
+        public Action<bool> OnStartTower;         // 無盡塔（true＝從第 1 波重新挑戰）
+        public Func<int> TowerBlocks, TowerBest;  // 無盡塔已經通過幾段（每段 5 波）、最高打完第幾波
         public Action<bool> OnNetDungeon;         // 副本組隊：false＝身邊的朋友、true＝遠方的朋友
         public Action OnWatch;                    // 觀戰
         public Func<int> GetDifficulty;           // 難度（0 簡單、1 普通、2 困難）
@@ -162,11 +163,13 @@ namespace SpellDuel
             float y = r.y + gap;
             Header(r, "🗼 無盡塔", TowerColor, prof, fs, fsS, fsL, gap, ref y);
             NpcIntro(r, TowerKeeper, "無盡塔的守塔人", "這座塔沒有頂。每往上一層，敵人就更強一點；能爬多高，全看你自己。", TowerColor, fs, fsS, gap, ref y);
-            int best = EndlessBest?.Invoke() ?? 0;
+            int best = TowerBest?.Invoke() ?? 0, blocks = TowerBlocks?.Invoke() ?? 0, from = blocks * 5 + 1;
             UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 4.4f),
-                $"無盡模式：一波接一波，每 10 波一隻 Boss，地圖從熔岩、森林、海上、角鬥場到山道輪替。\n用角色的等級、技能樹與裝備，可以帶道具；每過一波結算戰利品。\n🏆 最佳紀錄：{best} 分", fsS, new Color(0.92f, 0.88f, 1f), TextAnchor.UpperLeft);
+                $"每次挑戰 5 波（6m×6m 場地）：第 5 波有一隻精銳敵人、第 10 波有大 Boss。5 波全部打完＝挑戰成功，結算戰利品後回到塔外；中途倒下，這 5 波的戰利品就沒了。\n地圖從熔岩、森林、海上、角鬥場到山道輪替。可以帶道具。\n🏆 已通過第 {blocks * 5} 波（最高到過第 {best} 波）", fsS, new Color(0.92f, 0.88f, 1f), TextAnchor.UpperLeft);
             y += fs * 4.6f;
-            if (UiKit.Button(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.4f), "🗼 走進無盡塔", fs, true, TowerColor)) { OnStartTower?.Invoke(); return; }
+            if (UiKit.Button(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.4f), $"🗼 挑戰第 {from}～{from + 4} 波" + (from % 10 == 6 ? "（有大 Boss）" : "（有精銳）"), fs, true, TowerColor)) { OnStartTower?.Invoke(false); return; }
+            y += fs * 2.6f;
+            if (blocks > 0 && UiKit.Button(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.8f), "↺ 從第 1 波重新爬（進度不會消失）", fsS)) { OnStartTower?.Invoke(true); return; }
             if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), "🗺 回大地圖", fs)) screen = Screen.Map;
         }
     }

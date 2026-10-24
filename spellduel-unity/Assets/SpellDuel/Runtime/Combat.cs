@@ -78,6 +78,8 @@ namespace SpellDuel
         public int shieldLeft;
         /// <summary>精魄（Souls.cs）：格擋率、受到的傷害倍率（副作用）、反彈、觸發型效果</summary>
         public float blockChance, soulTaken = 1f, thorns;
+        /// <summary>無盡塔每 5 波出現的精銳敵人（血量 ×6、攻擊 ×1.6、體型 ×1.5）</summary>
+        public bool isElite;
         public readonly List<SoulFx> soulProcs = new List<SoulFx>();
         // 刺客的近身技能：放招後進入「伏擊」，時限內靠近到射程內就自動出手
         public SkillDef armed; public float armedUntil;
@@ -635,6 +637,7 @@ namespace SpellDuel
             else if (waveSeq != null && waveSeq.Length > 0) wave = waveSeq[Mathf.Min(seqIdx++, waveSeq.Length - 1)];
             else wave++;
             dungeonSpawnOrdinal = 0;
+            eliteLeft = eliteWaves && wave % 5 == 0 && !IsBossWave ? 1 : 0;   // 無盡塔：第 5、15、25…波有一隻精銳
             waveStartAt = now + delay;
             bossPending = false;
             if (IsBossWave && !bossAfterMinions) { waveToSpawn = 0; waveTotal = 1; }
@@ -709,6 +712,7 @@ namespace SpellDuel
                     var at = FixedDungeonSpawns ? DungeonSpawnPoint(ordinal) : edgePoint();
                     int kind = FixedDungeonSpawns ? DungeonMinionKind(ordinal) : PickMinionKind();
                     var nm = SpawnMinion(at, 0, kind, HpMul * (IsRanged(kind) ? 1f : meleeHpMul), DmgMul, SpeedMul);
+                    if (eliteLeft > 0) { eliteLeft--; MakeElite(nm); }
                     if (Theme == CanyonTheme) StartCliffLeap(nm);   // 黃土山道：從崖頂跳進場內
                     waveToSpawn--;
                 }
@@ -727,6 +731,18 @@ namespace SpellDuel
                 Emit("wavecleared", player.Feet, Color.white, $"{WaveLabel}清空！");
                 if (!StageDone()) NextWave(4f);
             }
+        }
+        /// <summary>無盡塔：每 5 波（不是 Boss 波）出現一隻精銳敵人</summary>
+        public bool eliteWaves;
+        int eliteLeft;
+        public const float EliteHp = 6f, EliteDmg = 1.6f;
+        void MakeElite(Fighter m)
+        {
+            m.isElite = true;
+            m.maxHp = Mathf.RoundToInt(m.maxHp * EliteHp); m.hp = m.maxHp;
+            m.dmgMul *= EliteDmg; m.bodyRadius *= 1.3f;
+            m.name = "精銳・" + m.name;
+            Emit("bossarrive", m.Feet, new Color(1f, 0.75f, 0.2f), $"⚠ 精銳敵人：{m.name}！");
         }
         bool bossSpawnedThisWave;
         public bool bossAfterMinions;   // 故事關卡：Boss 波先清小怪
