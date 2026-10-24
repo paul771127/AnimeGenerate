@@ -30,6 +30,7 @@ namespace SpellDuel
                 case "店員":skin=C("f1c5a1");hair=C("78533e");cloth=C("589b9b");iris=C("73915c");break;
                 case "公會長":skin=C("d2a383");hair=C("d7cebb");cloth=C("743948");iris=C("b09460");break;
             }
+            skin=AnimeFace.SkinFor(key);
             float height=child?1.2f:key=="小鐵"?1.6f:1.75f;
             // Build in adult proportions; scale the inner figure so caller placement remains untouched.
             p.localScale=Vector3.one*(height/1.75f);

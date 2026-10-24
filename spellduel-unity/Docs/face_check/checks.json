@@ -1,25 +1,25 @@
 {
-  "method": "Actual procedural meshes executed under offline Unity API contracts; physical axis scale retained in head-relative front/45 projections. Not Unity or AR captures.",
+  "method": "Actual procedural C# meshes under offline Unity API contracts. Physical axis scale retained in head-relative projections; not Unity/AR captures.",
   "baseline": "99847c3",
   "actors": 41,
-  "statesPerActor": 5,
-  "sampledPoints": 80883,
-  "headTriangles": 2064,
+  "statesPerActor": 39,
+  "statesTotal": 1599,
+  "sampledPoints": 580897,
   "unchangedBodyMeshes": 452,
-  "unchangedHairAndHatMeshes": 57,
+  "headTriangles": 2064,
   "actorsMeasured": [
     {
       "id": "novice",
       "fighter": true,
       "headPosition": [
-        -3.375858e-05,
-        0.122371554,
-        -5.4618344e-05
+        -2.8692186e-05,
+        0.1221602,
+        -4.6424568e-05
       ],
       "headScale": [
         0.7013829,
-        0.6648611,
-        0.73134726
+        0.66600984,
+        0.7326109
       ],
       "headRotation": [
         -0.034894176,
@@ -27,30 +27,36 @@
         0.9992387
       ],
       "triangles": 2064,
-      "eyeY": -0.026800007,
+      "eyeY": -0.02260001,
       "noseY": -0.073,
       "mouthY": -0.109400004,
-      "eyeWidth": 0.0515412,
-      "mouthWidth": 0.030924723,
+      "eyeWidth": 0.05875697,
+      "mouthWidth": 0.035254184,
       "chin": -0.157,
       "top": 0.157,
-      "earTop": -0.0072000064,
+      "earTop": 0.012014184,
       "earBottom": -0.073,
-      "faceWidthToHairlineHeight": 0.7348856428571428,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.734875607142857,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.00021135399999999693,
+      "hairTriangles": 2772,
+      "hairVertices": 1485,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9180,
+      "hairStrands": 44
     },
     {
       "id": "swordsman",
       "fighter": true,
       "headPosition": [
-        -3.178045e-05,
-        0.14752162,
-        3.7226826e-05
+        -2.8539449e-05,
+        0.1474042,
+        3.3432618e-05
       ],
       "headScale": [
-        0.6879605,
-        0.5990378,
-        0.6589416
+        0.68796045,
+        0.59947723,
+        0.65942496
       ],
       "headRotation": [
         0,
@@ -58,30 +64,36 @@
         0.9999025
       ],
       "triangles": 2064,
-      "eyeY": -0.026800007,
+      "eyeY": -0.02260001,
       "noseY": -0.073,
       "mouthY": -0.109400004,
-      "eyeWidth": 0.051800758,
-      "mouthWidth": 0.031080456,
+      "eyeWidth": 0.059052862,
+      "mouthWidth": 0.03543172,
       "chin": -0.157,
       "top": 0.157,
-      "earTop": -0.0072000064,
+      "earTop": 0.005321974,
       "earBottom": -0.073,
-      "faceWidthToHairlineHeight": 0.7433470714285714,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7433468571428571,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.00011741999999997921,
+      "hairTriangles": 3120,
+      "hairVertices": 1671,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9996,
+      "hairStrands": 50
     },
     {
       "id": "archer",
       "fighter": true,
       "headPosition": [
-        -4.8515387e-05,
-        0.12430227,
-        -0.00021749735
+        -5.0986186e-05,
+        0.124428034,
+        -0.00022857636
       ],
       "headScale": [
-        0.73033977,
-        0.6558397,
-        0.7214237
+        0.7303397,
+        0.65523547,
+        0.720759
       ],
       "headRotation": [
         -0.02792164,
@@ -89,30 +101,36 @@
         0.9996101
       ],
       "triangles": 2064,
-      "eyeY": -0.026960805,
+      "eyeY": -0.02273561,
       "noseY": -0.073438,
       "mouthY": -0.11005641,
-      "eyeWidth": 0.05135723,
-      "mouthWidth": 0.030814338,
+      "eyeWidth": 0.05854724,
+      "mouthWidth": 0.035128344,
       "chin": -0.15794201,
       "top": 0.15794201,
-      "earTop": -0.007243203,
+      "earTop": 0.011251129,
       "earBottom": -0.073438,
-      "faceWidthToHairlineHeight": 0.7269912561578771,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7269813158006536,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.00012576400000000043,
+      "hairTriangles": 3236,
+      "hairVertices": 1733,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9684,
+      "hairStrands": 52
     },
     {
       "id": "mage",
       "fighter": true,
       "headPosition": [
-        -1.6564503e-05,
-        0.11831248,
-        0.000106882304
+        -1.6568229e-05,
+        0.11830294,
+        0.000106904656
       ],
       "headScale": [
         0.73488235,
-        0.73173696,
-        0.8049106
+        0.73173225,
+        0.8049055
       ],
       "headRotation": [
         0.03487824,
@@ -120,30 +138,36 @@
         0.99878204
       ],
       "triangles": 2064,
-      "eyeY": -0.02701439,
+      "eyeY": -0.02278079,
       "noseY": -0.073584,
       "mouthY": -0.1102752,
-      "eyeWidth": 0.05128491,
-      "mouthWidth": 0.030770946,
+      "eyeWidth": 0.058464795,
+      "mouthWidth": 0.03507888,
       "chin": -0.15825601,
       "top": 0.15825601,
-      "earTop": -0.0072575863,
+      "earTop": 0.01132771,
       "earBottom": -0.073584,
-      "faceWidthToHairlineHeight": 0.7236767187275496,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7236767187275497,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 9.540000000002324e-06,
+      "hairTriangles": 3120,
+      "hairVertices": 1671,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9276,
+      "hairStrands": 50
     },
     {
       "id": "assassin",
       "fighter": true,
       "headPosition": [
-        0.00016824156,
-        0.12721157,
-        -0.0007912591
+        0.00015182234,
+        0.1266787,
+        -0.0007140264
       ],
       "headScale": [
-        0.7459079,
-        0.63851535,
-        0.7023669
+        0.74590784,
+        0.64079803,
+        0.7048779
       ],
       "headRotation": [
         -0.06278439,
@@ -151,30 +175,36 @@
         0.9979293
       ],
       "triangles": 2064,
-      "eyeY": -0.027336001,
+      "eyeY": -0.023052007,
       "noseY": -0.07446,
       "mouthY": -0.111588,
-      "eyeWidth": 0.051836602,
-      "mouthWidth": 0.031101963,
+      "eyeWidth": 0.059093725,
+      "mouthWidth": 0.035456236,
       "chin": -0.16014001,
       "top": 0.16014001,
-      "earTop": -0.007344,
+      "earTop": 0.011070367,
       "earBottom": -0.07446,
-      "faceWidthToHairlineHeight": 0.7228341005206275,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.722834198559837,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.0005328699999999909,
+      "hairTriangles": 3700,
+      "hairVertices": 1981,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9064,
+      "hairStrands": 60
     },
     {
       "id": "priest",
       "fighter": true,
       "headPosition": [
-        -4.6761706e-06,
-        0.115838766,
-        -9.451924e-08
+        -4.656613e-06,
+        0.11597812,
+        -9.412361e-08
       ],
       "headScale": [
         0.6930379,
-        0.7427953,
-        0.81707484
+        0.7428653,
+        0.81715184
       ],
       "headRotation": [
         -4.656613e-10,
@@ -182,30 +212,36 @@
         0.99990255
       ],
       "triangles": 2064,
-      "eyeY": -0.026639208,
+      "eyeY": -0.02246441,
       "noseY": -0.07256201,
       "mouthY": -0.10874361,
-      "eyeWidth": 0.05137529,
-      "mouthWidth": 0.030825173,
+      "eyeWidth": 0.05856783,
+      "mouthWidth": 0.0351407,
       "chin": -0.15605801,
       "top": 0.15605801,
-      "earTop": -0.007156808,
+      "earTop": 0.011985891,
       "earBottom": -0.07256201,
-      "faceWidthToHairlineHeight": 0.7392528988785277,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7392428385169995,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.0001393540000000082,
+      "hairTriangles": 3700,
+      "hairVertices": 1981,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 10772,
+      "hairStrands": 60
     },
     {
       "id": "paladin",
       "fighter": true,
       "headPosition": [
-        -8.853152e-06,
-        0.13300979,
-        -0.00010547042
+        -5.456619e-06,
+        0.13380349,
+        -6.5013766e-05
       ],
       "headScale": [
-        0.6922999,
-        0.63770455,
-        0.701475
+        0.69229984,
+        0.6347891,
+        0.69826806
       ],
       "headRotation": [
         0,
@@ -213,30 +249,36 @@
         0.9991228
       ],
       "triangles": 2064,
-      "eyeY": -0.027121603,
+      "eyeY": -0.022871211,
       "noseY": -0.073876,
       "mouthY": -0.110712804,
-      "eyeWidth": 0.052305624,
-      "mouthWidth": 0.031383377,
+      "eyeWidth": 0.059628412,
+      "mouthWidth": 0.035777047,
       "chin": -0.158884,
       "top": 0.158884,
-      "earTop": -0.0072864033,
+      "earTop": 0.0053355284,
       "earBottom": -0.073876,
-      "faceWidthToHairlineHeight": 0.7417430124223602,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7417428006775832,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.0007937000000000083,
+      "hairTriangles": 3120,
+      "hairVertices": 1671,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 10772,
+      "hairStrands": 50
     },
     {
       "id": "berserker",
       "fighter": true,
       "headPosition": [
-        -7.422641e-07,
-        0.121783376,
-        -2.075918e-06
+        -5.21075e-07,
+        0.12189567,
+        -1.4579855e-06
       ],
       "headScale": [
-        0.71953666,
-        0.6676575,
-        0.7344233
+        0.7195366,
+        0.66732275,
+        0.73405504
       ],
       "headRotation": [
         -0.034894176,
@@ -244,30 +286,36 @@
         0.9992385
       ],
       "triangles": 2064,
-      "eyeY": -0.027336001,
+      "eyeY": -0.023052007,
       "noseY": -0.07446,
       "mouthY": -0.111588,
-      "eyeWidth": 0.05220431,
-      "mouthWidth": 0.031322587,
+      "eyeWidth": 0.059512913,
+      "mouthWidth": 0.03570775,
       "chin": -0.16014001,
       "top": 0.16014001,
-      "earTop": -0.007344,
+      "earTop": 0.011618979,
       "earBottom": -0.07446,
-      "faceWidthToHairlineHeight": 0.7297386098933943,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7297287079332284,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.0001122939999999989,
+      "hairTriangles": 3236,
+      "hairVertices": 1733,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9312,
+      "hairStrands": 52
     },
     {
       "id": "marksman",
       "fighter": true,
       "headPosition": [
-        -2.630055e-06,
-        0.12195408,
-        6.908551e-06
+        -1.6074628e-06,
+        0.12223554,
+        4.220754e-06
       ],
       "headScale": [
-        0.73880833,
-        0.66781586,
-        0.7345975
+        0.7388084,
+        0.66710854,
+        0.7338194
       ],
       "headRotation": [
         0,
@@ -275,30 +323,36 @@
         0.9991228
       ],
       "triangles": 2064,
-      "eyeY": -0.027228802,
+      "eyeY": -0.022961602,
       "noseY": -0.074168,
       "mouthY": -0.11115041,
-      "eyeWidth": 0.051633324,
-      "mouthWidth": 0.030979997,
+      "eyeWidth": 0.05886199,
+      "mouthWidth": 0.035317194,
       "chin": -0.15951201,
       "top": 0.15951201,
-      "earTop": -0.0073152,
+      "earTop": 0.010971867,
       "earBottom": -0.074168,
-      "faceWidthToHairlineHeight": 0.7237556492275588,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.723745736404783,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.00028145999999999727,
+      "hairTriangles": 3236,
+      "hairVertices": 1733,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9772,
+      "hairStrands": 52
     },
     {
       "id": "ranger",
       "fighter": true,
       "headPosition": [
-        2.3363158e-05,
-        0.12049317,
-        -9.8053366e-05
+        3.1467527e-05,
+        0.12159455,
+        -0.00013207272
       ],
       "headScale": [
-        0.7163765,
-        0.6692101,
-        0.736131
+        0.71637654,
+        0.6669061,
+        0.73359674
       ],
       "headRotation": [
         -0.034898646,
@@ -306,30 +360,36 @@
         0.9993666
       ],
       "triangles": 2064,
-      "eyeY": -0.026692808,
+      "eyeY": -0.02250962,
       "noseY": -0.07270801,
       "mouthY": -0.10896241,
-      "eyeWidth": 0.051076513,
-      "mouthWidth": 0.030645909,
+      "eyeWidth": 0.058227222,
+      "mouthWidth": 0.034936335,
       "chin": -0.15637201,
       "top": 0.15637201,
-      "earTop": -0.007171208,
+      "earTop": 0.0118247755,
       "earBottom": -0.07270801,
-      "faceWidthToHairlineHeight": 0.7314883353210992,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7314781158725273,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.001101379999999999,
+      "hairTriangles": 3700,
+      "hairVertices": 1981,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 10656,
+      "hairStrands": 60
     },
     {
       "id": "archmage",
       "fighter": true,
       "headPosition": [
-        1.0345131e-05,
-        0.12116909,
-        0.00015827641
+        1.0278076e-05,
+        0.121364355,
+        0.00015726313
       ],
       "headScale": [
-        0.7457566,
-        0.7208566,
-        0.7929423
+        0.74575657,
+        0.72095186,
+        0.793047
       ],
       "headRotation": [
         0.04175224,
@@ -337,30 +397,36 @@
         0.99617815
       ],
       "triangles": 2064,
-      "eyeY": -0.0274432,
+      "eyeY": -0.023142397,
       "noseY": -0.074752,
       "mouthY": -0.11202561,
-      "eyeWidth": 0.05192176,
-      "mouthWidth": 0.031153057,
+      "eyeWidth": 0.059190806,
+      "mouthWidth": 0.035514485,
       "chin": -0.16076802,
       "top": 0.16076802,
-      "earTop": -0.0073727984,
+      "earTop": 0.010993648,
       "earBottom": -0.074752,
-      "faceWidthToHairlineHeight": 0.7212134984486164,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7212134286941608,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.00019526500000000002,
+      "hairTriangles": 3700,
+      "hairVertices": 1981,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 10076,
+      "hairStrands": 60
     },
     {
       "id": "summoner",
       "fighter": true,
       "headPosition": [
-        -0.00020657107,
-        0.14297378,
-        -0.0009129159
+        -0.0001823809,
+        0.14073122,
+        -0.000806015
       ],
       "headScale": [
-        0.7122693,
-        0.6277903,
-        0.6905693
+        0.71224785,
+        0.63813657,
+        0.7019503
       ],
       "headRotation": [
         -0.05582015,
@@ -368,30 +434,36 @@
         0.9984165
       ],
       "triangles": 2064,
-      "eyeY": -0.026692808,
+      "eyeY": -0.02250962,
       "noseY": -0.07270801,
       "mouthY": -0.10896241,
-      "eyeWidth": 0.05113396,
-      "mouthWidth": 0.030680377,
+      "eyeWidth": 0.058292713,
+      "mouthWidth": 0.03497563,
       "chin": -0.15637201,
       "top": 0.15637201,
-      "earTop": -0.007171208,
+      "earTop": 0.012157213,
       "earBottom": -0.07270801,
-      "faceWidthToHairlineHeight": 0.7314058984359523,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7313956789873803,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.0022425600000000045,
+      "hairTriangles": 3700,
+      "hairVertices": 1981,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 10096,
+      "hairStrands": 60
     },
     {
       "id": "ninja",
       "fighter": true,
       "headPosition": [
-        -0.00014324207,
-        0.14230442,
-        -0.00075953454
+        -0.00015567709,
+        0.1429317,
+        -0.0008254647
       ],
       "headScale": [
         0.74033654,
-        0.5991784,
-        0.65909624
+        0.59674865,
+        0.6564235
       ],
       "headRotation": [
         0,
@@ -399,30 +471,36 @@
         0.9999757
       ],
       "triangles": 2064,
-      "eyeY": -0.027121603,
+      "eyeY": -0.022871211,
       "noseY": -0.073876,
       "mouthY": -0.110712804,
-      "eyeWidth": 0.051488418,
-      "mouthWidth": 0.030893052,
+      "eyeWidth": 0.058696795,
+      "mouthWidth": 0.03521808,
       "chin": -0.158884,
       "top": 0.158884,
-      "earTop": -0.0072864033,
+      "earTop": 0.011056736,
       "earBottom": -0.073876,
-      "faceWidthToHairlineHeight": 0.7245801101072841,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7245703345567476,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.0006272800000000078,
+      "hairTriangles": 3468,
+      "hairVertices": 1857,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9240,
+      "hairStrands": 56
     },
     {
       "id": "shadowdancer",
       "fighter": true,
       "headPosition": [
-        1.5713274e-05,
-        0.121008635,
-        3.8896687e-06
+        4.6860427e-05,
+        0.12195742,
+        1.1611264e-05
       ],
       "headScale": [
-        0.7445354,
-        0.66877145,
-        0.7356486
+        0.7445353,
+        0.665456,
+        0.7320016
       ],
       "headRotation": [
         0.069729276,
@@ -430,30 +508,36 @@
         0.99717516
       ],
       "triangles": 2064,
-      "eyeY": -0.027068004,
+      "eyeY": -0.022826001,
       "noseY": -0.07373,
       "mouthY": -0.110494,
-      "eyeWidth": 0.051328402,
-      "mouthWidth": 0.030797042,
+      "eyeWidth": 0.05851438,
+      "mouthWidth": 0.03510863,
       "chin": -0.15857,
       "top": 0.15857,
-      "earTop": -0.007272003,
+      "earTop": 0.011180919,
       "earBottom": -0.07373,
-      "faceWidthToHairlineHeight": 0.7228566831683167,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7228567185289956,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.0009487849999999937,
+      "hairTriangles": 3700,
+      "hairVertices": 1981,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9920,
+      "hairStrands": 60
     },
     {
       "id": "bishop",
       "fighter": true,
       "headPosition": [
-        4.861504e-06,
-        0.11959088,
-        1.4410354e-05
+        4.7492795e-06,
+        0.11999905,
+        1.4077406e-05
       ],
       "headScale": [
-        0.6931875,
-        0.729029,
-        0.8019319
+        0.6931876,
+        0.72923386,
+        0.8021573
       ],
       "headRotation": [
         -0.027915515,
@@ -461,30 +545,36 @@
         0.9993909
       ],
       "triangles": 2064,
-      "eyeY": -0.027228802,
+      "eyeY": -0.022961602,
       "noseY": -0.074168,
       "mouthY": -0.11115041,
-      "eyeWidth": 0.052512366,
-      "mouthWidth": 0.03150742,
+      "eyeWidth": 0.059864096,
+      "mouthWidth": 0.03591846,
       "chin": -0.15951201,
       "top": 0.15951201,
-      "earTop": -0.0073152,
+      "earTop": 0.011732873,
       "earBottom": -0.074168,
-      "faceWidthToHairlineHeight": 0.738913058288571,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7389030751620878,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.00040816999999999937,
+      "hairTriangles": 2888,
+      "hairVertices": 1547,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 10104,
+      "hairStrands": 46
     },
     {
       "id": "inquisitor",
       "fighter": true,
       "headPosition": [
-        -6.025657e-06,
-        0.12233615,
-        2.3579225e-05
+        -6.248243e-06,
+        0.12235749,
+        2.4454668e-05
       ],
       "headScale": [
         0.730575,
-        0.6645182,
-        0.73096997
+        0.6643653,
+        0.7308019
       ],
       "headRotation": [
         0,
@@ -492,17 +582,23 @@
         0.99939084
       ],
       "triangles": 2064,
-      "eyeY": -0.027336001,
+      "eyeY": -0.023052007,
       "noseY": -0.07446,
       "mouthY": -0.111588,
-      "eyeWidth": 0.05195427,
-      "mouthWidth": 0.031172562,
+      "eyeWidth": 0.059227865,
+      "mouthWidth": 0.03553672,
       "chin": -0.16014001,
       "top": 0.16014001,
-      "earTop": -0.007344,
+      "earTop": 0.005048128,
       "earBottom": -0.07446,
-      "faceWidthToHairlineHeight": 0.7281930217546151,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7281931618106288,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 2.1339999999994697e-05,
+      "hairTriangles": 3236,
+      "hairVertices": 1733,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 8920,
+      "hairStrands": 52
     },
     {
       "id": "艾琳",
@@ -510,12 +606,12 @@
       "headPosition": [
         0.00070818886,
         0.26609063,
-        0.054463893
+        0.0544639
       ],
       "headScale": [
-        0.6893795,
-        0.6491987,
-        0.6491987
+        0.68937945,
+        0.64919895,
+        0.64919895
       ],
       "headRotation": [
         0,
@@ -523,17 +619,23 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.025996014,
+      "eyeY": -0.021922022,
       "noseY": -0.07081001,
       "mouthY": -0.106118016,
-      "eyeWidth": 0.049295597,
-      "mouthWidth": 0.02957736,
+      "eyeWidth": 0.05619698,
+      "mouthWidth": 0.03371819,
       "chin": -0.15229002,
       "top": 0.15229002,
-      "earTop": -0.006984014,
+      "earTop": 0.011866976,
       "earBottom": -0.07081001,
-      "faceWidthToHairlineHeight": 0.7230222172705173,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7230222393618251,
+      "skinHex": "#f7d8cc",
+      "headPositionDelta": 7.000000003254403e-09,
+      "hairTriangles": 4732,
+      "hairVertices": 2473,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 11372,
+      "hairStrands": 48
     },
     {
       "id": "澪",
@@ -554,30 +656,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.027228802,
+      "eyeY": -0.022961602,
       "noseY": -0.074168,
       "mouthY": -0.11115041,
-      "eyeWidth": 0.051809132,
-      "mouthWidth": 0.03108548,
+      "eyeWidth": 0.05906241,
+      "mouthWidth": 0.035437446,
       "chin": -0.15951201,
       "top": 0.15951201,
-      "earTop": -0.0073152,
+      "earTop": 0.011164777,
       "earBottom": -0.074168,
       "faceWidthToHairlineHeight": 0.7254841080618316,
-      "headFittingUnchanged": true
+      "skinHex": "#cdebf5",
+      "headPositionDelta": 0.0,
+      "hairTriangles": 4732,
+      "hairVertices": 2473,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 7356,
+      "hairStrands": 48
     },
     {
       "id": "凪",
       "fighter": false,
       "headPosition": [
-        0.00085552596,
-        0.2948116,
-        0.054703094
+        0.0008596163,
+        0.29495013,
+        0.054701675
       ],
       "headScale": [
         0.6768295,
-        0.7621967,
-        0.7621967
+        0.7634826,
+        0.7634826
       ],
       "headRotation": [
         0,
@@ -585,30 +693,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.026263997,
+      "eyeY": -0.022148013,
       "noseY": -0.07154,
       "mouthY": -0.10721201,
-      "eyeWidth": 0.05008643,
-      "mouthWidth": 0.03005186,
+      "eyeWidth": 0.05709853,
+      "mouthWidth": 0.03425912,
       "chin": -0.15386,
       "top": 0.15386,
-      "earTop": -0.007055998,
+      "earTop": 0.01194635,
       "earBottom": -0.07154,
-      "faceWidthToHairlineHeight": 0.7278657434402331,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7278559037900874,
+      "skinHex": "#f7d8ca",
+      "headPositionDelta": 0.00013852999999997007,
+      "hairTriangles": 4732,
+      "hairVertices": 2473,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9620,
+      "hairStrands": 48
     },
     {
       "id": "翠",
       "fighter": false,
       "headPosition": [
-        0.00017098646,
-        0.25391006,
-        0.053842824
+        0.000170986,
+        0.25390995,
+        0.053842817
       ],
       "headScale": [
         0.6563634,
-        0.72540516,
-        0.72540516
+        0.72540534,
+        0.72540534
       ],
       "headRotation": [
         0,
@@ -616,30 +730,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.0274432,
+      "eyeY": -0.023142397,
       "noseY": -0.074752,
       "mouthY": -0.11202561,
-      "eyeWidth": 0.051980827,
-      "mouthWidth": 0.031188497,
+      "eyeWidth": 0.05925814,
+      "mouthWidth": 0.035554886,
       "chin": -0.16076802,
       "top": 0.16076802,
-      "earTop": -0.0073727984,
+      "earTop": 0.011053689,
       "earBottom": -0.074752,
-      "faceWidthToHairlineHeight": 0.722450217044765,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7224501054376361,
+      "skinHex": "#f3ddcf",
+      "headPositionDelta": 1.0999999999761201e-07,
+      "hairTriangles": 4732,
+      "hairVertices": 2473,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 8504,
+      "hairStrands": 48
     },
     {
       "id": "海斗",
       "fighter": false,
       "headPosition": [
-        -0.0009708265,
-        0.30186963,
-        0.06093649
+        -0.0009538336,
+        0.3013959,
+        0.060832568
       ],
       "headScale": [
         0.6413831,
-        0.69497925,
-        0.69497925
+        0.6919516,
+        0.6919516
       ],
       "headRotation": [
         0,
@@ -647,30 +767,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.026800007,
+      "eyeY": -0.02260001,
       "noseY": -0.073,
       "mouthY": -0.109400004,
-      "eyeWidth": 0.051858436,
-      "mouthWidth": 0.031115063,
+      "eyeWidth": 0.059118617,
+      "mouthWidth": 0.03547117,
       "chin": -0.157,
       "top": 0.157,
-      "earTop": -0.0072000064,
+      "earTop": 0.005346829,
       "earBottom": -0.073,
-      "faceWidthToHairlineHeight": 0.7442289714285714,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.744228857142857,
+      "skinHex": "#f1cebb",
+      "headPositionDelta": 0.00047373000000000554,
+      "hairTriangles": 4732,
+      "hairVertices": 2473,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 10132,
+      "hairStrands": 48
     },
     {
       "id": "老焰",
       "fighter": false,
       "headPosition": [
-        -0.000105022686,
-        0.3114823,
-        0.059229136
+        -0.00010484306,
+        0.31153,
+        0.05922188
       ],
       "headScale": [
         0.6511218,
-        0.5466944,
-        0.5466944
+        0.5469779,
+        0.5469779
       ],
       "headRotation": [
         0,
@@ -678,30 +804,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.02690719,
+      "eyeY": -0.0226904,
       "noseY": -0.073291995,
       "mouthY": -0.1098376,
-      "eyeWidth": 0.05183423,
-      "mouthWidth": 0.03110054,
+      "eyeWidth": 0.05909102,
+      "mouthWidth": 0.035454612,
       "chin": -0.157628,
       "top": 0.157628,
-      "earTop": -0.00722879,
+      "earTop": 0.0017229449,
       "earBottom": -0.073291995,
       "faceWidthToHairlineHeight": 0.7375225526465565,
-      "headFittingUnchanged": true
+      "skinHex": "#edc6aa",
+      "headPositionDelta": 4.7699999999983866e-05,
+      "hairTriangles": 5860,
+      "hairVertices": 3061,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 10356,
+      "hairStrands": 60
     },
     {
       "id": "小鐵",
       "fighter": false,
       "headPosition": [
-        0.00046157092,
-        0.29280794,
-        0.05653785
+        0.0004613977,
+        0.29281437,
+        0.056537285
       ],
       "headScale": [
         0.7055768,
-        0.6149782,
-        0.6149782
+        0.6150259,
+        0.6150259
       ],
       "headRotation": [
         0,
@@ -709,30 +841,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.026639208,
+      "eyeY": -0.02246441,
       "noseY": -0.07256201,
       "mouthY": -0.10874361,
-      "eyeWidth": 0.051489953,
-      "mouthWidth": 0.030893972,
+      "eyeWidth": 0.058698546,
+      "mouthWidth": 0.03521913,
       "chin": -0.15605801,
       "top": 0.15605801,
-      "earTop": -0.007156808,
+      "earTop": 0.0052900426,
       "earBottom": -0.07256201,
-      "faceWidthToHairlineHeight": 0.7431740541317204,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7431740685036654,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 6.430000000001712e-06,
+      "hairTriangles": 4732,
+      "hairVertices": 2473,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 10764,
+      "hairStrands": 48
     },
     {
       "id": "小葉",
       "fighter": false,
       "headPosition": [
-        -0.0013240129,
-        0.2416048,
-        0.053415008
+        -0.0013232753,
+        0.24159145,
+        0.053415902
       ],
       "headScale": [
-        0.876036,
-        0.94769055,
-        0.94769055
+        0.8760225,
+        0.9477525,
+        0.9477525
       ],
       "headRotation": [
         0,
@@ -740,30 +878,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.02647841,
+      "eyeY": -0.022328809,
       "noseY": -0.072124004,
       "mouthY": -0.10808721,
-      "eyeWidth": 0.051350113,
-      "mouthWidth": 0.03081007,
+      "eyeWidth": 0.05853913,
+      "mouthWidth": 0.03512348,
       "chin": -0.155116,
       "top": 0.155116,
-      "earTop": -0.0071136095,
+      "earTop": 0.01262166,
       "earBottom": -0.072124004,
-      "faceWidthToHairlineHeight": 0.7447450477154425,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7447349262579526,
+      "skinHex": "#f8ddce",
+      "headPositionDelta": 1.334999999999531e-05,
+      "hairTriangles": 5108,
+      "hairVertices": 2669,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9572,
+      "hairStrands": 52
     },
     {
       "id": "米菈",
       "fighter": false,
       "headPosition": [
         0.00043784827,
-        0.256364,
+        0.25674677,
         0.054992475
       ],
       "headScale": [
         0.73044574,
-        0.7827052,
-        0.7827052
+        0.7828834,
+        0.7828834
       ],
       "headRotation": [
         0,
@@ -771,30 +915,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.02701439,
+      "eyeY": -0.02278079,
       "noseY": -0.073584,
       "mouthY": -0.1102752,
-      "eyeWidth": 0.05145933,
-      "mouthWidth": 0.030875599,
+      "eyeWidth": 0.058663636,
+      "mouthWidth": 0.035198182,
       "chin": -0.15825601,
       "top": 0.15825601,
-      "earTop": -0.0072575863,
+      "earTop": 0.0112597905,
       "earBottom": -0.073584,
-      "faceWidthToHairlineHeight": 0.7261381202160078,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7261379926649953,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.00038277000000003225,
+      "hairTriangles": 3700,
+      "hairVertices": 1981,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 10344,
+      "hairStrands": 60
     },
     {
       "id": "楓",
       "fighter": false,
       "headPosition": [
-        -0.00012547709,
-        0.26835024,
-        0.05386295
+        -0.000121628866,
+        0.26807678,
+        0.05389782
       ],
       "headScale": [
-        0.7284431,
-        0.69165707,
-        0.69165707
+        0.728443,
+        0.6930264,
+        0.6930264
       ],
       "headRotation": [
         0,
@@ -802,30 +952,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.026800007,
+      "eyeY": -0.02260001,
       "noseY": -0.073,
       "mouthY": -0.109400004,
-      "eyeWidth": 0.05105092,
-      "mouthWidth": 0.030630553,
+      "eyeWidth": 0.05819805,
+      "mouthWidth": 0.03491883,
       "chin": -0.157,
       "top": 0.157,
-      "earTop": -0.0072000064,
+      "earTop": 0.01125212,
       "earBottom": -0.073,
-      "faceWidthToHairlineHeight": 0.7279395714285714,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7279298142857142,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.00027346000000000315,
+      "hairTriangles": 3700,
+      "hairVertices": 1981,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 8024,
+      "hairStrands": 60
     },
     {
       "id": "阿潮",
       "fighter": false,
       "headPosition": [
-        0.00021744333,
-        0.27704215,
-        0.05189263
+        0.00021808781,
+        0.27756548,
+        0.051883437
       ],
       "headScale": [
-        0.6909916,
-        0.740362,
-        0.740362
+        0.69099164,
+        0.7405685,
+        0.7405685
       ],
       "headRotation": [
         0,
@@ -833,30 +989,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.027121603,
+      "eyeY": -0.022871211,
       "noseY": -0.073876,
       "mouthY": -0.110712804,
-      "eyeWidth": 0.052422367,
-      "mouthWidth": 0.031453423,
+      "eyeWidth": 0.059761498,
+      "mouthWidth": 0.0358569,
       "chin": -0.158884,
       "top": 0.158884,
-      "earTop": -0.0072864033,
+      "earTop": 0.0018001441,
       "earBottom": -0.073876,
-      "faceWidthToHairlineHeight": 0.7405622035573123,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7405621823828346,
+      "skinHex": "#e7c5b0",
+      "headPositionDelta": 0.0005233299999999885,
+      "hairTriangles": 3120,
+      "hairVertices": 1671,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 8544,
+      "hairStrands": 50
     },
     {
       "id": "鐵匠",
       "fighter": false,
       "headPosition": [
-        -2.80682e-05,
-        0.26275003,
-        0.05489848
+        -2.8029084e-05,
+        0.26274395,
+        0.054898623
       ],
       "headScale": [
-        0.6749547,
-        0.7183984,
-        0.7183984
+        0.6749548,
+        0.71842724,
+        0.71842724
       ],
       "headRotation": [
         0,
@@ -864,30 +1026,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.026692808,
+      "eyeY": -0.02250962,
       "noseY": -0.07270801,
       "mouthY": -0.10896241,
-      "eyeWidth": 0.0518808,
-      "mouthWidth": 0.031128481,
+      "eyeWidth": 0.05914411,
+      "mouthWidth": 0.035486467,
       "chin": -0.15637201,
       "top": 0.15637201,
-      "earTop": -0.007171208,
+      "earTop": 0.005424455,
       "earBottom": -0.07270801,
-      "faceWidthToHairlineHeight": 0.7475399694064723,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7475398976910436,
+      "skinHex": "#e6bea4",
+      "headPositionDelta": 6.080000000019403e-06,
+      "hairTriangles": 3120,
+      "hairVertices": 1671,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 8588,
+      "hairStrands": 50
     },
     {
       "id": "店員",
       "fighter": false,
       "headPosition": [
-        -0.00016124547,
-        0.26507723,
-        0.05461234
+        -0.00015109405,
+        0.2646978,
+        0.054636747
       ],
       "headScale": [
         0.6867181,
-        0.70886534,
-        0.70886534
+        0.71066236,
+        0.71066236
       ],
       "headRotation": [
         0,
@@ -895,30 +1063,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.026585594,
+      "eyeY": -0.0224192,
       "noseY": -0.072416,
       "mouthY": -0.1085248,
-      "eyeWidth": 0.051443566,
-      "mouthWidth": 0.03086614,
+      "eyeWidth": 0.058645666,
+      "mouthWidth": 0.0351874,
       "chin": -0.155744,
       "top": 0.155744,
-      "earTop": -0.007142393,
+      "earTop": 0.012332745,
       "earBottom": -0.072416,
-      "faceWidthToHairlineHeight": 0.7425235887096774,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7425135008640552,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.0003794300000000139,
+      "hairTriangles": 3236,
+      "hairVertices": 1733,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9764,
+      "hairStrands": 52
     },
     {
       "id": "公會長",
       "fighter": false,
       "headPosition": [
-        -2.1721004e-05,
-        0.26315856,
-        0.055076938
+        -2.1874206e-05,
+        0.26318562,
+        0.055077482
       ],
       "headScale": [
         0.72421485,
-        0.71366465,
-        0.71366465
+        0.71353084,
+        0.71353084
       ],
       "headRotation": [
         0,
@@ -926,30 +1100,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.0274968,
+      "eyeY": -0.023187608,
       "noseY": -0.074898005,
       "mouthY": -0.11224441,
-      "eyeWidth": 0.052378245,
-      "mouthWidth": 0.031426948,
+      "eyeWidth": 0.0597112,
+      "mouthWidth": 0.03582672,
       "chin": -0.16108201,
       "top": 0.16108201,
-      "earTop": -0.0073871985,
+      "earTop": 0.0015461538,
       "earBottom": -0.074898005,
-      "faceWidthToHairlineHeight": 0.730625685636776,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7306258248737487,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 2.7060000000023177e-05,
+      "hairTriangles": 3352,
+      "hairVertices": 1795,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 8156,
+      "hairStrands": 54
     },
     {
       "id": "嚮導",
       "fighter": false,
       "headPosition": [
-        -2.1049054e-05,
-        0.2627821,
-        0.0550095
+        -2.1113548e-05,
+        0.26279235,
+        0.05500953
       ],
       "headScale": [
-        0.7072649,
-        0.7204305,
-        0.7204305
+        0.70726496,
+        0.72037905,
+        0.72037905
       ],
       "headRotation": [
         0,
@@ -957,30 +1137,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.026800007,
+      "eyeY": -0.02260001,
       "noseY": -0.073,
       "mouthY": -0.109400004,
-      "eyeWidth": 0.051397003,
-      "mouthWidth": 0.030838203,
+      "eyeWidth": 0.058592584,
+      "mouthWidth": 0.035155553,
       "chin": -0.157,
       "top": 0.157,
-      "earTop": -0.0072000064,
+      "earTop": 0.011405677,
       "earBottom": -0.073,
-      "faceWidthToHairlineHeight": 0.7342264999999999,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7342164285714285,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 1.0249999999989434e-05,
+      "hairTriangles": 2772,
+      "hairVertices": 1485,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 7600,
+      "hairStrands": 44
     },
     {
       "id": "教官",
       "fighter": false,
       "headPosition": [
-        -2.7961098e-05,
-        0.25299442,
-        0.05501262
+        -2.7567847e-05,
+        0.25293183,
+        0.055012446
       ],
       "headScale": [
         0.7072648,
-        0.74264014,
-        0.74264014
+        0.7429708,
+        0.7429708
       ],
       "headRotation": [
         0,
@@ -988,30 +1174,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.026800007,
+      "eyeY": -0.02260001,
       "noseY": -0.073,
       "mouthY": -0.109400004,
-      "eyeWidth": 0.051397003,
-      "mouthWidth": 0.030838203,
+      "eyeWidth": 0.058592584,
+      "mouthWidth": 0.035155553,
       "chin": -0.157,
       "top": 0.157,
-      "earTop": -0.0072000064,
+      "earTop": 0.005147988,
       "earBottom": -0.073,
-      "faceWidthToHairlineHeight": 0.7342264285714285,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7342265714285714,
+      "skinHex": "#ecc9b4",
+      "headPositionDelta": 6.25899999999735e-05,
+      "hairTriangles": 2540,
+      "hairVertices": 1361,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 7352,
+      "hairStrands": 40
     },
     {
       "id": "懸賞官",
       "fighter": false,
       "headPosition": [
-        -2.0776293e-05,
-        0.26433468,
-        0.055009376
+        -2.0851963e-05,
+        0.26434672,
+        0.055009414
       ],
       "headScale": [
-        0.7072649,
-        0.7167461,
-        0.7167461
+        0.70726484,
+        0.7166875,
+        0.7166875
       ],
       "headRotation": [
         0,
@@ -1019,30 +1211,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.026800007,
+      "eyeY": -0.02260001,
       "noseY": -0.073,
       "mouthY": -0.109400004,
-      "eyeWidth": 0.051397003,
-      "mouthWidth": 0.030838203,
+      "eyeWidth": 0.058592584,
+      "mouthWidth": 0.035155553,
       "chin": -0.157,
       "top": 0.157,
-      "earTop": -0.0072000064,
+      "earTop": 0.01161661,
       "earBottom": -0.073,
-      "faceWidthToHairlineHeight": 0.7342265714285714,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7342164999999999,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 1.2039999999990947e-05,
+      "hairTriangles": 2772,
+      "hairVertices": 1485,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 7584,
+      "hairStrands": 44
     },
     {
       "id": "播報員",
       "fighter": false,
       "headPosition": [
-        -2.1195738e-05,
-        0.26293516,
-        0.055009566
+        -2.1275133e-05,
+        0.2629478,
+        0.055009604
       ],
       "headScale": [
-        0.70726484,
-        0.7199752,
-        0.7199752
+        0.7072649,
+        0.7199129,
+        0.7199129
       ],
       "headRotation": [
         0,
@@ -1050,30 +1248,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.026800007,
+      "eyeY": -0.02260001,
       "noseY": -0.073,
       "mouthY": -0.109400004,
-      "eyeWidth": 0.051397003,
-      "mouthWidth": 0.030838203,
+      "eyeWidth": 0.058592584,
+      "mouthWidth": 0.035155553,
       "chin": -0.157,
       "top": 0.157,
-      "earTop": -0.0072000064,
+      "earTop": 0.01214394,
       "earBottom": -0.073,
-      "faceWidthToHairlineHeight": 0.7342264999999999,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7342164999999999,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 1.26400000000082e-05,
+      "hairTriangles": 3236,
+      "hairVertices": 1733,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 8052,
+      "hairStrands": 52
     },
     {
       "id": "塔守",
       "fighter": false,
       "headPosition": [
-        -2.2823573e-05,
-        0.26133907,
-        0.0550103
+        -2.2488064e-05,
+        0.26128566,
+        0.05501015
       ],
       "headScale": [
-        0.7072648,
-        0.72322404,
-        0.72322404
+        0.70726484,
+        0.72348887,
+        0.72348887
       ],
       "headRotation": [
         0,
@@ -1081,30 +1285,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.026800007,
+      "eyeY": -0.02260001,
       "noseY": -0.073,
       "mouthY": -0.109400004,
-      "eyeWidth": 0.051397003,
-      "mouthWidth": 0.030838203,
+      "eyeWidth": 0.058592584,
+      "mouthWidth": 0.035155553,
       "chin": -0.157,
       "top": 0.157,
-      "earTop": -0.0072000064,
+      "earTop": 0.0016324315,
       "earBottom": -0.073,
-      "faceWidthToHairlineHeight": 0.7342264571428571,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7342265714285714,
+      "skinHex": "#e9d4c8",
+      "headPositionDelta": 5.341000000003149e-05,
+      "hairTriangles": 3700,
+      "hairVertices": 1981,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 7716,
+      "hairStrands": 60
     },
     {
       "id": "雷歐",
       "fighter": false,
       "headPosition": [
-        -0.0009708265,
-        0.30186963,
-        0.06093649
+        -0.0009538336,
+        0.3013959,
+        0.060832568
       ],
       "headScale": [
         0.6413831,
-        0.69497925,
-        0.69497925
+        0.6919516,
+        0.6919516
       ],
       "headRotation": [
         0,
@@ -1112,30 +1322,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.026800007,
+      "eyeY": -0.02260001,
       "noseY": -0.073,
       "mouthY": -0.109400004,
-      "eyeWidth": 0.051858436,
-      "mouthWidth": 0.031115063,
+      "eyeWidth": 0.059118617,
+      "mouthWidth": 0.03547117,
       "chin": -0.157,
       "top": 0.157,
-      "earTop": -0.0072000064,
+      "earTop": 0.005346829,
       "earBottom": -0.073,
-      "faceWidthToHairlineHeight": 0.7442289714285714,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.744228857142857,
+      "skinHex": "#f1cebb",
+      "headPositionDelta": 0.00047373000000000554,
+      "hairTriangles": 4732,
+      "hairVertices": 2473,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9948,
+      "hairStrands": 48
     },
     {
       "id": "小沙",
       "fighter": false,
       "headPosition": [
-        -0.00016124547,
-        0.26507723,
-        0.05461234
+        -0.00015109405,
+        0.2646978,
+        0.054636747
       ],
       "headScale": [
         0.6867181,
-        0.70886534,
-        0.70886534
+        0.71066236,
+        0.71066236
       ],
       "headRotation": [
         0,
@@ -1143,30 +1359,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.026585594,
+      "eyeY": -0.0224192,
       "noseY": -0.072416,
       "mouthY": -0.1085248,
-      "eyeWidth": 0.051443566,
-      "mouthWidth": 0.03086614,
+      "eyeWidth": 0.058645666,
+      "mouthWidth": 0.0351874,
       "chin": -0.155744,
       "top": 0.155744,
-      "earTop": -0.007142393,
+      "earTop": 0.012332745,
       "earBottom": -0.072416,
-      "faceWidthToHairlineHeight": 0.7425235887096774,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7425135008640552,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.0003794300000000139,
+      "hairTriangles": 3236,
+      "hairVertices": 1733,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 7912,
+      "hairStrands": 52
     },
     {
       "id": "鐵娘",
       "fighter": false,
       "headPosition": [
-        0.00085552596,
-        0.2948116,
-        0.054703094
+        0.0008596163,
+        0.29495013,
+        0.054701675
       ],
       "headScale": [
         0.6768295,
-        0.7621967,
-        0.7621967
+        0.7634826,
+        0.7634826
       ],
       "headRotation": [
         0,
@@ -1174,30 +1396,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.026263997,
+      "eyeY": -0.022148013,
       "noseY": -0.07154,
       "mouthY": -0.10721201,
-      "eyeWidth": 0.05008643,
-      "mouthWidth": 0.03005186,
+      "eyeWidth": 0.05709853,
+      "mouthWidth": 0.03425912,
       "chin": -0.15386,
       "top": 0.15386,
-      "earTop": -0.007055998,
+      "earTop": 0.01194635,
       "earBottom": -0.07154,
-      "faceWidthToHairlineHeight": 0.7278657434402331,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7278559037900874,
+      "skinHex": "#f7d8ca",
+      "headPositionDelta": 0.00013852999999997007,
+      "hairTriangles": 4732,
+      "hairVertices": 2473,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9748,
+      "hairStrands": 48
     },
     {
       "id": "老駝",
       "fighter": false,
       "headPosition": [
-        -0.000105022686,
-        0.3114823,
-        0.059229136
+        -0.00010484306,
+        0.31153,
+        0.05922188
       ],
       "headScale": [
         0.6511218,
-        0.5466944,
-        0.5466944
+        0.5469779,
+        0.5469779
       ],
       "headRotation": [
         0,
@@ -1205,30 +1433,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.02690719,
+      "eyeY": -0.0226904,
       "noseY": -0.073291995,
       "mouthY": -0.1098376,
-      "eyeWidth": 0.05183423,
-      "mouthWidth": 0.03110054,
+      "eyeWidth": 0.05909102,
+      "mouthWidth": 0.035454612,
       "chin": -0.157628,
       "top": 0.157628,
-      "earTop": -0.00722879,
+      "earTop": 0.0017229449,
       "earBottom": -0.073291995,
       "faceWidthToHairlineHeight": 0.7375225526465565,
-      "headFittingUnchanged": true
+      "skinHex": "#edc6aa",
+      "headPositionDelta": 4.7699999999983866e-05,
+      "hairTriangles": 5860,
+      "hairVertices": 3061,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 11256,
+      "hairStrands": 60
     },
     {
       "id": "阿鈴",
       "fighter": false,
       "headPosition": [
         0.00043784827,
-        0.256364,
+        0.25674677,
         0.054992475
       ],
       "headScale": [
         0.73044574,
-        0.7827052,
-        0.7827052
+        0.7828834,
+        0.7828834
       ],
       "headRotation": [
         0,
@@ -1236,30 +1470,36 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.02701439,
+      "eyeY": -0.02278079,
       "noseY": -0.073584,
       "mouthY": -0.1102752,
-      "eyeWidth": 0.05145933,
-      "mouthWidth": 0.030875599,
+      "eyeWidth": 0.058663636,
+      "mouthWidth": 0.035198182,
       "chin": -0.15825601,
       "top": 0.15825601,
-      "earTop": -0.0072575863,
+      "earTop": 0.0112597905,
       "earBottom": -0.073584,
-      "faceWidthToHairlineHeight": 0.7261381202160078,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7261379926649953,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 0.00038277000000003225,
+      "hairTriangles": 3700,
+      "hairVertices": 1981,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 9444,
+      "hairStrands": 60
     },
     {
       "id": "石先生",
       "fighter": false,
       "headPosition": [
-        -2.1721004e-05,
-        0.26315856,
-        0.055076938
+        -2.1874206e-05,
+        0.26318562,
+        0.055077482
       ],
       "headScale": [
         0.72421485,
-        0.71366465,
-        0.71366465
+        0.71353084,
+        0.71353084
       ],
       "headRotation": [
         0,
@@ -1267,386 +1507,392 @@
         1
       ],
       "triangles": 2064,
-      "eyeY": -0.0274968,
+      "eyeY": -0.023187608,
       "noseY": -0.074898005,
       "mouthY": -0.11224441,
-      "eyeWidth": 0.052378245,
-      "mouthWidth": 0.031426948,
+      "eyeWidth": 0.0597112,
+      "mouthWidth": 0.03582672,
       "chin": -0.16108201,
       "top": 0.16108201,
-      "earTop": -0.0073871985,
+      "earTop": 0.0015461538,
       "earBottom": -0.074898005,
-      "faceWidthToHairlineHeight": 0.730625685636776,
-      "headFittingUnchanged": true
+      "faceWidthToHairlineHeight": 0.7306258248737487,
+      "skinHex": "#f4d2bf",
+      "headPositionDelta": 2.7060000000023177e-05,
+      "hairTriangles": 3352,
+      "hairVertices": 1795,
+      "hairZeroAreaTriangles": 0,
+      "activeActorTriangles": 8148,
+      "hairStrands": 54
     }
   ],
   "featureClearance": [
     {
       "id": "novice",
-      "minGap": 0.00031170994,
-      "maxGap": 0.0055367276,
-      "samples": 2096,
-      "low": "2/眼睛圖層",
-      "high": "2/InkPair novice/lid/-1",
+      "minGap": 0.0011447072,
+      "maxGap": 0.005629681,
+      "samples": 14960,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "swordsman",
-      "minGap": 0.00088685006,
-      "maxGap": 0.0053270385,
-      "samples": 1926,
-      "low": "2/眼睛圖層",
+      "minGap": 0.0020782202,
+      "maxGap": 0.0056433454,
+      "samples": 13634,
+      "low": "20/InkPair swordsman/lid/1",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "archer",
-      "minGap": 0.0011858195,
-      "maxGap": 0.005573772,
-      "samples": 1871,
-      "low": "0/眼睛圖層",
-      "high": "2/InkPair archer/lid/-1",
+      "minGap": 0.0010672137,
+      "maxGap": 0.005597584,
+      "samples": 13205,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "mage",
-      "minGap": 0.0010899231,
-      "maxGap": 0.0057561398,
-      "samples": 2016,
-      "low": "4/InkPair mage/brow/1",
-      "high": "2/InkPair mage/lid/-1",
+      "minGap": 0.0008478239,
+      "maxGap": 0.005586341,
+      "samples": 14336,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "assassin",
-      "minGap": 0.0003395453,
-      "maxGap": 0.0057045,
-      "samples": 2016,
-      "low": "4/InkPair assassin/brow/1",
-      "high": "2/InkPair assassin/lid/-1",
+      "minGap": 0.0008855462,
+      "maxGap": 0.005567707,
+      "samples": 14336,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "priest",
-      "minGap": 0.0003338307,
-      "maxGap": 0.0053284615,
-      "samples": 2066,
-      "low": "2/眼睛圖層",
+      "minGap": 0.0015663728,
+      "maxGap": 0.005644746,
+      "samples": 14726,
+      "low": "20/眼睛圖層",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "paladin",
-      "minGap": 0.0008875802,
-      "maxGap": 0.005308084,
-      "samples": 2056,
-      "low": "2/眼睛圖層",
+      "minGap": 0.0020807162,
+      "maxGap": 0.005621776,
+      "samples": 14648,
+      "low": "20/InkPair paladin/lid/1",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "berserker",
-      "minGap": 0.0008228645,
-      "maxGap": 0.0054631457,
-      "samples": 2056,
-      "low": "2/眼睛圖層",
-      "high": "2/InkPair berserker/lid/-1",
+      "minGap": 0.0012045801,
+      "maxGap": 0.005585462,
+      "samples": 14648,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "marksman",
-      "minGap": 0.0011918247,
-      "maxGap": 0.005527027,
-      "samples": 1876,
-      "low": "0/眼睛圖層",
-      "high": "2/InkPair marksman/lid/-1",
+      "minGap": 0.001099743,
+      "maxGap": 0.0055735633,
+      "samples": 13244,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "ranger",
-      "minGap": 0.00032828003,
-      "maxGap": 0.005479373,
-      "samples": 2108,
-      "low": "2/眼睛圖層",
-      "high": "2/InkPair ranger/lid/-1",
+      "minGap": 0.0012083054,
+      "maxGap": 0.005621627,
+      "samples": 15380,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "archmage",
-      "minGap": 0.0011364445,
-      "maxGap": 0.005689837,
-      "samples": 1801,
-      "low": "0/眼睛圖層",
-      "high": "2/InkPair archmage/lid/-1",
+      "minGap": 0.0010085329,
+      "maxGap": 0.00555712,
+      "samples": 12659,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "summoner",
-      "minGap": 0.00028572977,
-      "maxGap": 0.0056607276,
-      "samples": 2128,
-      "low": "2/眼睛圖層",
-      "high": "2/InkPair summoner/lid/-1",
+      "minGap": 0.0010136887,
+      "maxGap": 0.0056245476,
+      "samples": 15536,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "ninja",
-      "minGap": 0.0011898056,
-      "maxGap": 0.0055427775,
-      "samples": 1946,
-      "low": "0/眼睛圖層",
-      "high": "2/InkPair ninja/lid/-1",
+      "minGap": 0.0010889918,
+      "maxGap": 0.0055810586,
+      "samples": 13790,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "shadowdancer",
-      "minGap": 0.00032440573,
-      "maxGap": 0.0057348534,
-      "samples": 2016,
-      "low": "4/InkPair shadowdancer/brow/1",
-      "high": "2/InkPair shadowdancer/lid/-1",
+      "minGap": 0.0008664578,
+      "maxGap": 0.005580403,
+      "samples": 14336,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "bishop",
-      "minGap": 0.0004735738,
-      "maxGap": 0.0053030252,
-      "samples": 2036,
-      "low": "2/眼睛圖層",
+      "minGap": 0.0015433058,
+      "maxGap": 0.005615175,
+      "samples": 14492,
+      "low": "20/眼睛圖層",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "inquisitor",
-      "minGap": 0.0010278746,
-      "maxGap": 0.0052654967,
-      "samples": 1823,
-      "low": "4/InkPair inquisitor/brow/1",
+      "minGap": 0.0022825152,
+      "maxGap": 0.0055749267,
+      "samples": 13733,
+      "low": "3/HumanLip",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "艾琳",
-      "minGap": 0.00029293448,
-      "maxGap": 0.0058575645,
-      "samples": 2056,
-      "low": "2/眼睛圖層",
-      "high": "2/InkPair 艾琳/lid/-1",
+      "minGap": 0.0007406324,
+      "maxGap": 0.005632527,
+      "samples": 14648,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "澪",
-      "minGap": 0.0017079338,
-      "maxGap": 0.0056865066,
-      "samples": 1496,
-      "low": "4/InkPair 澪/brow/1",
-      "high": "2/InkPair 澪/lid/-1",
+      "minGap": 0.0022733063,
+      "maxGap": 0.0055813715,
+      "samples": 10280,
+      "low": "0/HumanLip",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "凪",
-      "minGap": 0.00028906763,
-      "maxGap": 0.0057016015,
-      "samples": 2066,
-      "low": "2/眼睛圖層",
-      "high": "2/InkPair 凪/lid/-1",
+      "minGap": 0.0009730756,
+      "maxGap": 0.00563398,
+      "samples": 14726,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "翠",
-      "minGap": 0.0019243434,
-      "maxGap": 0.005610734,
-      "samples": 1496,
-      "low": "4/InkPair 翠/brow/1",
-      "high": "2/InkPair 翠/lid/-1",
+      "minGap": 0.0022592694,
+      "maxGap": 0.0055596754,
+      "samples": 10280,
+      "low": "0/HumanLip",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "海斗",
-      "minGap": 0.00088652223,
-      "maxGap": 0.0053293854,
-      "samples": 2047,
-      "low": "2/眼睛圖層",
+      "minGap": 0.0020772517,
+      "maxGap": 0.0056461915,
+      "samples": 15557,
+      "low": "20/InkPair 海斗/lid/1",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "老焰",
-      "minGap": 0.00057160854,
-      "maxGap": 0.0053142384,
-      "samples": 2071,
-      "low": "4/InkPair 老焰/brow/1",
+      "minGap": 0.00225202,
+      "maxGap": 0.0056288987,
+      "samples": 14765,
+      "low": "0/HumanLip",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "小鐵",
-      "minGap": 0.00089871883,
-      "maxGap": 0.005333774,
-      "samples": 2021,
-      "low": "2/眼睛圖層",
+      "minGap": 0.002098307,
+      "maxGap": 0.0056513026,
+      "samples": 14375,
+      "low": "20/InkPair 小鐵/lid/1",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "小葉",
-      "minGap": 0.00012348592,
-      "maxGap": 0.005348131,
-      "samples": 2187,
-      "low": "2/眼睛圖層",
+      "minGap": 0.0017040744,
+      "maxGap": 0.00566712,
+      "samples": 16649,
+      "low": "20/眼睛圖層",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "米菈",
-      "minGap": 0.00033388287,
-      "maxGap": 0.0057458505,
-      "samples": 1861,
-      "low": "4/InkPair 米菈/brow/1",
-      "high": "2/InkPair 米菈/lid/-1",
+      "minGap": 0.00085768104,
+      "maxGap": 0.005594708,
+      "samples": 13127,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "楓",
-      "minGap": 0.0011605769,
-      "maxGap": 0.005444728,
-      "samples": 2006,
-      "low": "0/眼睛圖層",
-      "high": "2/InkPair 楓/lid/-1",
+      "minGap": 0.0012262166,
+      "maxGap": 0.00560531,
+      "samples": 14258,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "阿潮",
-      "minGap": 0.0006226599,
-      "maxGap": 0.005312644,
-      "samples": 1796,
-      "low": "4/InkPair 阿潮/brow/1",
+      "minGap": 0.0022551566,
+      "maxGap": 0.0056270882,
+      "samples": 12620,
+      "low": "0/HumanLip",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "鐵匠",
-      "minGap": 0.0008851513,
-      "maxGap": 0.005344346,
-      "samples": 1983,
-      "low": "2/眼睛圖層",
+      "minGap": 0.0020730495,
+      "maxGap": 0.0056627393,
+      "samples": 14405,
+      "low": "20/InkPair 鐵匠/lid/1",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "店員",
-      "minGap": 0.0001892373,
-      "maxGap": 0.0053386763,
-      "samples": 2113,
-      "low": "2/眼睛圖層",
+      "minGap": 0.0016726255,
+      "maxGap": 0.005655974,
+      "samples": 15995,
+      "low": "20/眼睛圖層",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "公會長",
-      "minGap": 0.0006345585,
-      "maxGap": 0.0052637383,
-      "samples": 2016,
-      "low": "4/InkPair 公會長/brow/1",
+      "minGap": 0.00226067,
+      "maxGap": 0.00557252,
+      "samples": 14336,
+      "low": "0/HumanLip",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "嚮導",
-      "minGap": 0.0012945458,
-      "maxGap": 0.0053084493,
-      "samples": 1786,
-      "low": "0/眼睛圖層",
+      "minGap": 0.0015297756,
+      "maxGap": 0.0056224763,
+      "samples": 12542,
+      "low": "20/眼睛圖層",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "教官",
-      "minGap": 0.0010088161,
-      "maxGap": 0.0053086504,
-      "samples": 1921,
-      "low": "4/InkPair 教官/brow/1",
+      "minGap": 0.0022289306,
+      "maxGap": 0.00562302,
+      "samples": 13595,
+      "low": "6/眼睛圖層",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "懸賞官",
-      "minGap": 0.00063509494,
-      "maxGap": 0.0053084344,
-      "samples": 2056,
-      "low": "2/眼睛圖層",
+      "minGap": 0.0014436767,
+      "maxGap": 0.005622044,
+      "samples": 14648,
+      "low": "20/眼睛圖層",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "播報員",
-      "minGap": 0.00026307255,
-      "maxGap": 0.005329758,
-      "samples": 2108,
-      "low": "2/眼睛圖層",
-      "high": "2/InkPair 播報員/lid/-1",
+      "minGap": 0.001394257,
+      "maxGap": 0.0056224912,
+      "samples": 15380,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "塔守",
-      "minGap": 0.0005465001,
-      "maxGap": 0.005308889,
-      "samples": 1786,
-      "low": "4/InkPair 塔守/brow/1",
+      "minGap": 0.0022508204,
+      "maxGap": 0.005623333,
+      "samples": 12542,
+      "low": "0/HumanLip",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "海斗",
-      "minGap": 0.00088652223,
-      "maxGap": 0.0053293854,
-      "samples": 2047,
-      "low": "2/眼睛圖層",
+      "minGap": 0.0020772517,
+      "maxGap": 0.0056461915,
+      "samples": 15557,
+      "low": "20/InkPair 海斗/lid/1",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "店員",
-      "minGap": 0.0001892373,
-      "maxGap": 0.0053386763,
-      "samples": 2113,
-      "low": "2/眼睛圖層",
+      "minGap": 0.0016726255,
+      "maxGap": 0.005655974,
+      "samples": 15995,
+      "low": "20/眼睛圖層",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "凪",
-      "minGap": 0.00028906763,
-      "maxGap": 0.0057016015,
-      "samples": 2066,
-      "low": "2/眼睛圖層",
-      "high": "2/InkPair 凪/lid/-1",
+      "minGap": 0.0009730756,
+      "maxGap": 0.00563398,
+      "samples": 14726,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "老焰",
-      "minGap": 0.00057160854,
-      "maxGap": 0.0053142384,
-      "samples": 2071,
-      "low": "4/InkPair 老焰/brow/1",
+      "minGap": 0.00225202,
+      "maxGap": 0.0056288987,
+      "samples": 14765,
+      "low": "0/HumanLip",
       "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "米菈",
-      "minGap": 0.00033388287,
-      "maxGap": 0.0057458505,
-      "samples": 1861,
-      "low": "4/InkPair 米菈/brow/1",
-      "high": "2/InkPair 米菈/lid/-1",
+      "minGap": 0.00085768104,
+      "maxGap": 0.005594708,
+      "samples": 13127,
+      "low": "20/眼睛圖層",
+      "high": "1/mouthOpen",
       "cachesStable": true
     },
     {
       "id": "公會長",
-      "minGap": 0.0006345585,
-      "maxGap": 0.0052637383,
-      "samples": 2016,
-      "low": "4/InkPair 公會長/brow/1",
+      "minGap": 0.00226067,
+      "maxGap": 0.00557252,
+      "samples": 14336,
+      "low": "0/HumanLip",
       "high": "1/mouthOpen",
       "cachesStable": true
     }

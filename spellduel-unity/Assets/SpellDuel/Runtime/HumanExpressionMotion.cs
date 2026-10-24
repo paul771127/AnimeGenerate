@@ -8,6 +8,7 @@ namespace SpellDuel
         internal float ResidentEyeClose,ResidentMouthOpen;
         string identity;Portraits.Persona persona;AnimeFace.Features features;Portraits.FacePlan plan;
         readonly Mesh[] lips=new Mesh[5];readonly Material[] gaze=new Material[3];
+        readonly Mesh[] eyePoses=new Mesh[36],lidPoses=new Mesh[18];MeshFilter[] eyeFilters,lidFilters;
         Renderer[] eyes,lids;Renderer mouthRenderer,teethRenderer,lipRenderer;Vector3[] browOrigins;Quaternion headRest;
         uint rng;float nextBlink,blinkAt=-100,nextGlance,glanceAt=-100,nextMicro,microAt=-100,hitUntil=-100,lastTime;
         int glanceSide=1;bool hitWasActive;float lastHurt;internal int CurrentState;internal float Micro,Glance;
@@ -18,8 +19,14 @@ namespace SpellDuel
             identity=id;persona=p;features=f;plan=new Portraits.FacePlan(p);headRest=transform.localRotation;rng=(uint)(CharacterLook.Get(id).Seed*7919+17);
             nextBlink=2+4*Rand();nextGlance=8+7*Rand();nextMicro=6+6*Rand();
             eyes=new Renderer[f.Eyes.Count];lids=new Renderer[f.Lids.Count*2];browOrigins=new Vector3[f.Brows.Count];
-            for(int i=0;i<eyes.Length;i++)eyes[i]=f.Eyes[i].GetComponentInChildren<MeshRenderer>();
-            for(int i=0;i<f.Lids.Count;i++){var list=f.Lids[i].GetComponentsInChildren<Renderer>();for(int k=0;k<list.Length;k++)lids[i*2+k]=list[k];}
+            eyeFilters=new MeshFilter[eyes.Length];
+            for(int i=0;i<eyes.Length;i++)
+            {
+                eyes[i]=f.Eyes[i].GetComponentInChildren<MeshRenderer>();eyeFilters[i]=f.Eyes[i].GetComponentInChildren<MeshFilter>();
+                for(int pose=0;pose<9;pose++)for(int mode=0;mode<2;mode++)eyePoses[i*18+pose*2+mode]=AnimeFace.EyePose(id,p,i==0?-1:1,pose,mode==1);
+            }
+            lidFilters=new MeshFilter[f.Lids.Count];
+            for(int i=0;i<f.Lids.Count;i++){lidFilters[i]=f.Lids[i].GetComponentInChildren<MeshFilter>();for(int pose=0;pose<9;pose++)lidPoses[i*9+pose]=AnimeFace.LidPose(id,p,i==0?-1:1,pose);var list=f.Lids[i].GetComponentsInChildren<Renderer>();for(int k=0;k<list.Length;k++)lids[i*2+k]=list[k];}
             for(int i=0;i<browOrigins.Length;i++)browOrigins[i]=f.Brows[i].localPosition;
             for(int i=0;i<5;i++)lips[i]=AnimeFace.MouthShape(id,p,i);
             for(int i=0;i<3;i++)gaze[i]=AnimeFace.EyeMaterial(id,i-1);
@@ -40,14 +47,17 @@ namespace SpellDuel
             if(features.Lip.sharedMesh!=lips[CurrentState])features.Lip.sharedMesh=lips[CurrentState];
             int gazeIndex=Glance>.3f?2:Glance<-.3f?0:1;
             float lid=persona.Lid*1.6f+(combat*.045f),squint=(1-lid)*(1-.995f*close);
+            int blinkPose=Mathf.Clamp(Mathf.RoundToInt(close*8),0,8),eyeMode=combat>.5f?1:0;
             for(int i=0;i<eyes.Length;i++)
             {
                 if(eyes[i].sharedMaterial!=gaze[gazeIndex])eyes[i].sharedMaterial=gaze[gazeIndex];eyes[i].enabled=Visible;
+                int poseIndex=i*18+blinkPose*2+eyeMode;
+                if(eyeFilters[i].sharedMesh!=eyePoses[poseIndex])eyeFilters[i].sharedMesh=eyePoses[poseIndex];
                 var eye=features.Eyes[i];eye.localScale=new Vector3(1,squint,1);
                 eye.localPosition=new Vector3(eye.localPosition.x,plan.EyeY-plan.EyeHeight*.485f*close,.118f);
             }
             for(int i=0;i<lids.Length;i++)if(lids[i]!=null)lids[i].enabled=Visible&&close>.65f;
-            for(int i=0;i<features.Lids.Count;i++){var lidTf=features.Lids[i];lidTf.localPosition=new Vector3(lidTf.localPosition.x,plan.EyeY+.024f-plan.EyeHeight*.45f*close,.122f);}
+            for(int i=0;i<features.Lids.Count;i++){var lidTf=features.Lids[i];var lidMesh=lidPoses[i*9+blinkPose];if(lidFilters[i].sharedMesh!=lidMesh)lidFilters[i].sharedMesh=lidMesh;lidTf.localPosition=new Vector3(lidTf.localPosition.x,plan.EyeY+.024f-plan.EyeHeight*.45f*close,.122f);}
             for(int i=0;i<browOrigins.Length;i++)
             {
                 float side=i==0?-1:1,asym=HumanPersonality.For(identity)==HumanPersonality.Temper.Cunning&&i==1?3:0;

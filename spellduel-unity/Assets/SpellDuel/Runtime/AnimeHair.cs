@@ -10,35 +10,55 @@ namespace SpellDuel
         static readonly Dictionary<string,Color32[]> images=new Dictionary<string,Color32[]>();
         internal const int W=256,H=320;
         static Vector3 Curve(Vector3 a,Vector3 b,Vector3 c,float t)=>a*((1-t)*(1-t))+b*(2*t*(1-t))+c*(t*t);
-        // Seven cross sections along a quadratic curve; five-sided flattened lens, closed ends.
+        static float originalTop;
+        // Two fine strands occupy the old root envelope; each ends in a single tip vertex.
         static void Lock(List<Vector3> v,List<int> tri,List<Color> colors,Vector3 a,Vector3 b,Vector3 c,float width,float depth,float layer=1,float twist=0)
         {
-            int start=v.Count;const int rows=7,sides=5;
-            for(int j=0;j<=rows;j++)
+            // Preserve the old upper envelope while refining only the strand construction.
+            for(int j=0;j<=7;j++)
             {
-                float t=j/(float)rows;var at=Curve(a,b,c,t);var dir=((b-a)*(2*(1-t))+(c-b)*(2*t)).normalized;
-                var right=Vector3.Cross(dir,new Vector3(0,0,1)).normalized;if(right.sqrMagnitude<.1f)right=new Vector3(1,0,0);
-                var normal=Vector3.Cross(right,dir).normalized;
+                float t=j/7f;var at=Curve(a,b,c,t);var dir=((b-a)*(2*(1-t))+(c-b)*(2*t)).normalized;
+                var right=Vector3.Cross(dir,Vector3.forward).normalized;if(right.sqrMagnitude<.1f)right=Vector3.right;var normal=Vector3.Cross(right,dir).normalized;
                 float taper=(.88f+.12f*Mathf.Sin(t*Mathf.PI))*Mathf.Pow(1-t,.62f)+.012f;
-                for(int i=0;i<sides;i++)
-                {
-                    float q=i*2*Mathf.PI/sides+twist*t;
-                    v.Add(at+right*(Mathf.Cos(q)*width*taper)+normal*(Mathf.Sin(q)*depth*taper));
-                    // Deliberate cel blocks, a darker underside and a broken highlight following the lock.
-                    float tone=(j<=1?.48f:j==3||j==4?1.20f:.83f)*layer*(Mathf.Sin(q)<-.2f?.68f:1);
-                    colors.Add(new Color(tone*(1+.09f*t),tone,tone*(1-.12f*t)));
-                    if(j<rows){int k=start+j*sides+i,n=start+j*sides+(i+1)%sides;tri.AddRange(new[]{k,k+sides,n,n,k+sides,n+sides});}
-                }
+                for(int i=0;i<5;i++){float q=i*2*Mathf.PI/5+twist*t;originalTop=Mathf.Max(originalTop,(at+right*(Mathf.Cos(q)*width*taper)+normal*(Mathf.Sin(q)*depth*taper)).y);}
             }
-            for(int cap=0;cap<2;cap++){int k=start+(cap==0?0:rows*sides);for(int i=1;i<sides-1;i++)tri.AddRange(cap==0?new[]{k,k+i,k+i+1}:new[]{k,k+i+1,k+i});}
+            const int rows=6,sides=5;
+            for(int strand=-1;strand<=1;strand+=2)
+            {
+                int start=v.Count;
+                for(int j=0;j<rows;j++)
+                {
+                    float t=j/(float)rows;var at=Curve(a,b,c,t);var dir=((b-a)*(2*(1-t))+(c-b)*(2*t)).normalized;
+                    var right=Vector3.Cross(dir,Vector3.forward).normalized;if(right.sqrMagnitude<.1f)right=Vector3.right;var normal=Vector3.Cross(right,dir).normalized;
+                    float taper=(.88f+.12f*Mathf.Sin(t*Mathf.PI))*Mathf.Pow(1-t,1.12f);
+                    at+=right*(strand*width*.5f*taper)+Vector3.right*(strand*width*.16f*t*t);
+                    for(int i=0;i<sides;i++)
+                    {
+                        float q=i*2*Mathf.PI/sides+twist*t;
+                        v.Add(at+right*(Mathf.Cos(q)*width*.50f*taper)+normal*(Mathf.Sin(q)*depth*.80f*taper));
+                        float tone=(t<.17f?.48f:t>.30f&&t<.66f?1.20f:.83f)*layer*(Mathf.Sin(q)<-.2f?.68f:1)*(strand<0?.96f:1);
+                        colors.Add(new Color(tone*(1+.09f*t),tone,tone*(1-.12f*t)));
+                        if(j<rows-1){int k=start+j*sides+i,n=start+j*sides+(i+1)%sides;tri.AddRange(new[]{k,k+sides,n,n,k+sides,n+sides});}
+                    }
+                }
+                int tip=v.Count;v.Add(c+Vector3.right*(strand*width*.16f));colors.Add(new Color(.73f*layer,.73f*layer,.73f*layer));
+                for(int i=0;i<sides;i++){int k=start+(rows-1)*sides+i,n=start+(rows-1)*sides+(i+1)%sides;tri.AddRange(new[]{k,tip,n});}
+                for(int i=1;i<sides-1;i++)tri.AddRange(new[]{start,start+i,start+i+1});
+            }
+        }
+        internal static void KeepHairTop(List<Vector3> vertices,float reference)
+        {
+            float top=.12f;for(int i=0;i<vertices.Count;i++)top=Mathf.Max(top,vertices[i].y);
+            float scale=(reference-.12f)/Mathf.Max(.001f,top-.12f);
+            for(int i=0;i<vertices.Count;i++){var v=vertices[i];if(v.y>.12f)v.y=.12f+(v.y-.12f)*scale;vertices[i]=v;}
         }
         static Vector3 Shell(float t,float phi,Portraits.Persona p,CharacterLook.Look look)
         {
             float front=Mathf.Cos(phi),limit=front>.3f?1.05f+(1-front)*.5f:1.75f+(1-front)*.15f;
-            if(look.Hair==CharacterLook.HairKind.Crew)limit-=front>0?.20f:0;
+            if(look.Hair==CharacterLook.HairKind.Crew)limit-=front>0?.08f:0;
             float theta=t*limit;
             float part=1-.055f*Mathf.Exp(-Mathf.Pow((Mathf.Sin(phi)-look.Part)/.19f,2))*Mathf.Sin(theta);
-            return new Vector3(.158f*p.Width*Mathf.Sin(theta)*Mathf.Sin(phi)*part,.177f*p.Length*Mathf.Cos(theta),(.153f+.008f*(front<0?1:0))*Mathf.Sin(theta)*front-.009f);
+            return new Vector3(.158f*p.Width*Mathf.Sin(theta)*Mathf.Sin(phi)*part,.177f*p.Length*Mathf.Cos(theta),(front>0?.165f:.161f)*Mathf.Sin(theta)*front-.009f);
         }
         internal static Mesh MeshFor(string id,Portraits.Persona p)
         {
@@ -52,6 +72,7 @@ namespace SpellDuel
                 float phi=i*2*Mathf.PI/sides;v.Add(Shell(j/(float)rows,phi,p,look));colors.Add(new Color(.44f,.44f,.47f));int n=(i+1)%sides;
                 if(j==1)tri.AddRange(new[]{0,1+i,1+n});else {int a=1+(j-2)*sides+i,b=1+(j-2)*sides+n;tri.AddRange(new[]{a,a+sides,b,b,a+sides,b+sides});}
             }
+            originalTop=.177f*p.Length;
             bool crew=kind==CharacterLook.HairKind.Crew,slick=kind==CharacterLook.HairKind.Slick;
             // Twelve interleaved crown sweeps, not a smooth cap. The part has a visible shallow valley.
             for(int i=0;i<12;i++)
@@ -70,7 +91,8 @@ namespace SpellDuel
                 float y=.060f+.022f*Mathf.Sin(i*2.3f+look.Seed);
                 if(kind==CharacterLook.HairKind.SidePart||kind==CharacterLook.HairKind.LongSide)y-=.026f*(look.Part<0?u:1-u);
                 if(kind==CharacterLook.HairKind.Straight)y=.065f+(i%2)*.009f;
-                if(crew)y=.132f+(i%2)*.012f;if(slick)y=.115f;
+                y=Mathf.Max(.013f,y-.020f);
+                if(crew)y=.095f+(i%2)*.012f;if(slick)y=.079f;
                 Lock(v,tri,colors,new Vector3(root+(x-root)*.2f,.153f,.052f),new Vector3(x*.70f+root*.3f,.123f,.158f),new Vector3(x,y,AnimeFace.HairSeat(x,y,p)+.009f),crew?.015f:.025f+(i%2)*.004f,.010f,i%3==0?.80f:1,.25f*(i%2==0?1:-1));
             }
             if(!crew)for(int side=-1;side<=1;side+=2)for(int tier=0;tier<2;tier++)
@@ -127,6 +149,7 @@ namespace SpellDuel
             }
             if(look.Seed==27)for(int i=0;i<2;i++)Lock(v,tri,colors,new Vector3(-.13f,.025f,-.04f),new Vector3(-.225f,-.065f,-.065f),new Vector3(-.19f+i*.014f,-.19f,-.06f),.017f,.010f,i==0?.7f:1,.7f);
             if(look.Seed==15)Lock(v,tri,colors,new Vector3(-.13f,.09f,.02f),new Vector3(-.21f,-.015f,.04f),new Vector3(-.185f,-.12f,.04f),.025f,.011f,.85f,.2f);
+            KeepHairTop(v,originalTop);
             mesh=new Mesh{name="髮型 "+id};mesh.SetVertices(v);mesh.SetTriangles(tri,0);mesh.colors=colors.ToArray();mesh.RecalculateNormals();mesh.RecalculateBounds();meshes[id]=mesh;return mesh;
         }
         internal static void Build(Transform head,string id,Portraits.Persona p)=>AnimeFace.Part(head,"整體髮型",HeadwearArt.HairFor(id,p),Vector3.zero,AnimeFace.Material(CharacterLook.Get(id).HairColor,4));

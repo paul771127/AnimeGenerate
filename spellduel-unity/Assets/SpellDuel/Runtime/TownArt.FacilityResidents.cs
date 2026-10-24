@@ -4,7 +4,7 @@ namespace SpellDuel
     internal static class FacilityPeople
     {
         internal static bool Has(string id)=>id=="嚮導"||id=="教官"||id=="懸賞官"||id=="播報員"||id=="塔守";
-        internal static Color Skin(string id)=>CharacterLook.Hex(id=="教官"?"c99370":id=="嚮導"?"d7a47f":id=="懸賞官"?"edc5a6":id=="塔守"?"d3bbab":"f1c3a1");
+        internal static Color Skin(string id)=>AnimeFace.SkinFor(id);
     }
     public static partial class TownArt
     {

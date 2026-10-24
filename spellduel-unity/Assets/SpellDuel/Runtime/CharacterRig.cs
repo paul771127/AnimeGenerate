@@ -33,7 +33,7 @@ namespace SpellDuel
         static readonly Dictionary<Color32, Material> glowCache = new Dictionary<Color32, Material>();
         static readonly Dictionary<string, Mesh> meshCache = new Dictionary<string, Mesh>();
 
-        static readonly Color Skin = new Color(1f, 0.8f, 0.62f);
+        static readonly Color Skin = AnimeFace.SkinFor("novice");
         static readonly Color Cloth = new Color(0.27f, 0.38f, 0.62f);
         static readonly Color DarkCloth = new Color(0.36f, 0.22f, 0.58f);
         static readonly Color Metal = new Color(0.7f, 0.84f, 0.96f);

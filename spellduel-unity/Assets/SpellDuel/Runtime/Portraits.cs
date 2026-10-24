@@ -115,10 +115,10 @@ namespace SpellDuel
             {
                 Top=.157f*p.Length;Chin=-Top;Hairline=.123f*p.Length;float height=Hairline-Chin;
                 FaceWidth=.206f*p.Length*Lerp(.984f,1.012f,(p.Width-.95f)/.10f);
-                EyeY=Chin+height*.465f;EyeWidth=FaceWidth*.25f;EyeX=EyeWidth;
-                EyeHeight=EyeWidth*(p.Elder?.47f:p.Masculine?.55f:.70f+(p.Eye-1)*.15f);
+                EyeY=Chin+height*.480f;EyeWidth=FaceWidth*.285f;EyeX=FaceWidth*.26f;
+                EyeHeight=EyeWidth*(p.Elder?.53f:p.Masculine?.63f:.82f+(p.Eye-1)*.15f);
                 NoseY=Chin+height*.30f;MouthY=Chin+height*.17f;MouthWidth=EyeWidth*.60f;
-                BrowY=EyeY+height*.07f;EarTop=BrowY;EarBottom=NoseY;
+                BrowY=EyeY+Math.Max(height*.07f,EyeHeight*.60f+height*.02f);EarTop=BrowY;EarBottom=NoseY;
 
             }
         }
@@ -224,7 +224,8 @@ namespace SpellDuel
                 {
                     float x=side*plan.EyeX*3,y=plan.EyeY*3+.09f;
                     var c=identity=="澪"?Paint.Hex("#d8fbff"):Paint.Hex("#655848");
-                    Line(x-.069f,y+.008f,x,y-.009f,.007f,c);Line(x,y-.009f,x+.069f,y+.008f,.007f,c);return;
+                    float half=plan.EyeWidth*1.5f,height=plan.EyeHeight*3/.90f;
+                    for(int i=0;i<16;i++){float a=i/8f-1,b=(i+1)/8f-1;Line(x+a*half,y+(-.03f+.09f*a*a)*height,x+b*half,y+(-.03f+.09f*b*b)*height,.035f*height,c);}return;
                 }
                 Image(EyeArt.Render(identity,side),EyeArt.W,EyeArt.H,side*plan.EyeX*3,plan.EyeY*3+.09f,plan.EyeWidth*3/1.44f,plan.EyeHeight*3/.90f*(1-persona.Lid*1.6f));
             }
@@ -374,6 +375,7 @@ namespace SpellDuel
         // silhouette, hair, costume and facial proportions rather than palette swapping.
         static void Bust(Canvas cv,Paint skin,Paint hair,Paint cloth,Paint iris,bool elder=false,bool child=false,bool elf=false)
         {
+            var complexion=AnimeFace.SkinFor(cv.identity);skin=new Paint(complexion.r,complexion.g,complexion.b);
             cv.Hair(false);
             var outfit=OutfitArt.Get(cv.identity);
             cloth=new Paint(outfit.Main.r,outfit.Main.g,outfit.Main.b);

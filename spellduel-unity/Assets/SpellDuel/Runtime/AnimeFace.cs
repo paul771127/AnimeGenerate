@@ -12,6 +12,8 @@ namespace SpellDuel
         static readonly float[] ys = {-0.15700f,-0.14000f,-0.12200f,-0.11500f,-0.11000f,-0.10600f,-0.10100f,-0.09600f,-0.08500f,-0.08100f,-0.07200f,-0.06500f,-0.05500f,-0.04800f,-0.04000f,-0.03000f,-0.01000f,0.01300f,0.04800f,0.08700f,0.12300f,0.14700f,0.15700f};
         static readonly float[] fittingWidths = {0.03080f,0.05000f,0.07400f,0.08275f,0.08900f,0.09400f,0.09924f,0.10448f,0.11600f,0.11908f,0.12600f,0.12888f,0.13300f,0.13468f,0.13660f,0.13900f,0.14000f,0.13700f,0.13300f,0.12600f,0.10700f,0.06700f,0.00300f};
         static readonly float[] widths = {0.009000f,0.051479f,0.071005f,0.076529f,0.079996f,0.082521f,0.085400f,0.087999f,0.092840f,0.094330f,0.097204f,0.099011f,0.100985f,0.101960f,0.102680f,0.103000f,0.102500f,0.101500f,0.099000f,0.093000f,0.080000f,0.047000f,0.003000f};
+        // Convex Bezier jaw: outward cheek arcs end in a short, rounded point.
+        static readonly float[] feminineWidths = {0.005000f,0.041486f,0.062515f,0.068839f,0.072905f,0.075918f,0.079412f,0.082624f,0.088784f,0.090736f,0.094593f,0.097096f,0.099926f,0.101379f,0.102488f,0.103000f,0.102500f,0.101500f,0.099000f,0.093000f,0.080000f,0.047000f,0.003000f};
         static readonly float[] fronts = {0.08600f,0.09300f,0.10100f,0.10688f,0.11100f,0.11400f,0.11448f,0.11495f,0.11600f,0.11692f,0.11900f,0.12024f,0.12200f,0.12200f,0.12200f,0.12200f,0.12000f,0.11600f,0.12400f,0.11800f,0.10400f,0.06100f,0.00400f};
         static readonly float[] backs = {0.03000f,0.05000f,0.07500f,0.08419f,0.09075f,0.09600f,0.10124f,0.10648f,0.11800f,0.12169f,0.13000f,0.13412f,0.14000f,0.14224f,0.14480f,0.14800f,0.15200f,0.15300f,0.15100f,0.14500f,0.12500f,0.08700f,0.00500f};
         static readonly float[] meshYs=HeadRows();
@@ -19,15 +21,22 @@ namespace SpellDuel
         static readonly float[] frontAngles={0,7,16,30,48,68,90};
         static float FrontAngle(int column)=>frontAngles[column<0?-column:column]*(column<0?-1:1)*Mathf.Deg2Rad;
         static float Bell(float x,float w) => Mathf.Exp(-x*x/(w*w));
+        static float ChinBlend(float normalizedY,Portraits.Persona p)
+        {
+            if(p.Masculine||p.Elder)return 0;
+            float t=Mathf.Clamp01((-.118f-normalizedY)/.039f);return t*t*(3-2*t);
+        }
         static void Section(float y,Portraits.Persona p,out float width,out float front,out float back)
         {
             y=Mathf.Clamp(y/p.Length,ys[0],ys[ys.Length-1]);int k=0;
             while(k<ys.Length-2&&y>ys[k+1])k++;
             float t=Mathf.Clamp01((y-ys[k])/(ys[k+1]-ys[k]));
             float jaw=Mathf.Lerp(.70f+.30f*p.Jaw,1,Mathf.Clamp01((y+.12f)/.12f));
-            width=Profile(widths,k,t)*p.Length*Mathf.Lerp(.984f,1.012f,(p.Width-.95f)/.10f)*jaw;
+            float lower=Mathf.Clamp01((-.045f-y)/.112f);lower=lower*lower*(3-2*lower);
+            bool mature=p.Masculine||p.Elder;float pointed=1-(mature?.10f:0)*lower;
+            width=Profile(mature?widths:feminineWidths,k,t)*p.Length*Mathf.Lerp(.984f,1.012f,(p.Width-.95f)/.10f)*jaw*pointed;
 
-            front=Profile(fronts,k,t);back=Profile(backs,k,t);
+            front=Profile(fronts,k,t);back=Mathf.Lerp(Profile(backs,k,t),-.072f,ChinBlend(y,p));
         }
         static float SculptSurface(float x,float y,Portraits.Persona p)
         {
@@ -41,7 +50,8 @@ namespace SpellDuel
                 -.001f*Bell(x,.013f)*Bell(y-(plan.NoseY-.004f),.005f);
             float lips=.0012f*Bell(x,plan.MouthWidth*.6f)*Bell(y-(plan.MouthY-.003f),.005f)
                 -.001f*Bell(x,.023f)*Bell(y-(plan.MouthY-.013f),.006f);
-            return front*(1-Mathf.Pow(side,4))+nose+lips;
+            float offset=.075f*ChinBlend(y/p.Length,p);
+            return offset+(front-offset)*(1-Mathf.Pow(side,4))+nose+lips;
         }
         // Monotone cubic: a continuous tangent through cheek/jaw sections, without overshoot.
         static float Profile(float[] values,int k,float t)
@@ -180,6 +190,14 @@ namespace SpellDuel
             foreach(var part in parts)part.SetParent(frame,false);
             var fitted=head.lossyScale;frame.localScale=new Vector3(fitted.y/Mathf.Max(.001f,fitted.x),1,1);
         }
+        // Reference-based skin palette, shared by face, exposed body and portrait.
+        internal static Color SkinFor(string identity)
+        {
+            string id=Portraits.Key(identity);
+            return CharacterLook.Hex(id=="澪"?"cdebf5":id=="艾琳"?"f7d8cc":id=="凪"?"f7d8ca":id=="翠"?"f3ddcf":
+                id=="海斗"?"f1cebb":id=="老焰"?"edc6aa":id=="小葉"?"f8ddce":id=="鐵匠"?"e6bea4":
+                id=="阿潮"?"e7c5b0":id=="教官"?"ecc9b4":id=="塔守"?"e9d4c8":"f4d2bf");
+        }
         internal static Material Material(Color color,int kind=0,string identity=null)
         {
             string key=ColorUtility.ToHtmlStringRGBA(color)+"/"+kind+(identity??"");
@@ -212,7 +230,8 @@ namespace SpellDuel
             {
                 float a=i<=6?FrontAngle(i):i<18?(90+(i-6)*15)*Mathf.Deg2Rad:FrontAngle(i-24),y=meshYs[j]*p.Length;
                 Section(y,p,out var width,out _,out var back);float x=Mathf.Sin(a)*width,c=Mathf.Cos(a);
-                float z=c>=0?SculptSurface(x,y,p):-back*(-c);
+                float offset=.075f*ChinBlend(y/p.Length,p);
+                float z=c>=0?SculptSurface(x,y,p):offset-(back+offset)*(-c);
                 v.Add(new Vector3(x,y,z));uv.Add(new Vector2(.5f+x/(.32f*p.Width),.5f+y/(.32f*p.Length)));
                 float outline=c>0?Mathf.Lerp(.18f,.65f,Mathf.Clamp01(Mathf.Abs(x)/.13f)):.85f;
                 colors.Add(new Color(outline,c>0?1:0,0,1));
@@ -254,7 +273,7 @@ namespace SpellDuel
         }
         static void Paint(Transform parent,string label,string identity,Portraits.Persona p,Vector3 anchor,Vector2 center,Vector2 radius,float angle,float depth,Color top,Color bottom,bool almond=false)
             =>Part(parent,label,Patch(identity,p,anchor,center,radius,angle,depth,top,bottom,almond),Vector3.zero,Material(Color.white,3));
-        static void Stroke(Transform parent,string identity,Portraits.Persona p,Vector3 anchor,Vector2 a,Vector2 b,float width,Color color,float depth=.0042f)
+        static void Stroke(Transform parent,string identity,Portraits.Persona p,Vector3 anchor,Vector2 a,Vector2 b,float width,Color color,float depth=.0046f)
             =>Part(parent,"曲面線 "+identity,LineMesh(identity,p,anchor,a,b,width,color,depth),Vector3.zero,Material(Color.white,3));
         static Mesh LineMesh(string identity,Portraits.Persona p,Vector3 anchor,Vector2 a,Vector2 b,float width,Color color,float depth)
         {
@@ -401,15 +420,35 @@ namespace SpellDuel
             var texture=new Texture2D(EyeArt.W*2,EyeArt.H,TextureFormat.RGBA32,false){name=key,filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp};
             texture.SetPixels32(px);texture.Apply(false,true);mat=new Material(Shader.Find("Sprites/Default")){name=key,color=Color.white,mainTexture=texture};materials[key]=mat;return mat;
         }
-        static Mesh EyeMesh(string identity,Portraits.Persona p,Vector3 anchor,int side)
+        internal static Mesh LidPose(string identity,Portraits.Persona p,int side,int blink)
         {
-            string key="曲面眼皮/"+identity+side;if(meshes.TryGetValue(key,out var mesh))return mesh;
+            string key="Fitted blink/"+identity+"/"+side+"/"+blink;if(meshes.TryGetValue(key,out var mesh))return mesh;
+            var plan=new Portraits.FacePlan(p);float cx=side*plan.EyeX;var anchor=new Vector3(cx,plan.EyeY+.024f,.122f);
+            var v=new List<Vector3>();var t=new List<int>();var c=new List<Color>();
+            for(int i=0;i<=16;i++)
+            {
+                float q=i/8f-1,x=cx+q*plan.EyeWidth*.5f,y=plan.EyeY+.003f*(1-Mathf.Abs(q));
+                for(int edge=-1;edge<=1;edge+=2)
+                {
+                    float py=y+edge*.00125f;v.Add(new Vector3(x,py,Surface(x,py-plan.EyeHeight*.45f*blink/8f,p)+.0035f)-anchor);c.Add(new Color(.13f,.07f,.12f));
+                }
+                if(i<16){int k=i*2;t.AddRange(new[]{k,k+2,k+1,k+1,k+2,k+3});}
+            }
+            return Finish(key,v,t,c);
+        }
+        internal static Mesh EyePose(string identity,Portraits.Persona p,int side,int blink,bool combat)
+        {
+            var plan=new Portraits.FacePlan(p);return EyeMesh(identity,p,new Vector3(side*plan.EyeX,plan.EyeY,.118f),side,blink,combat);
+        }
+        static Mesh EyeMesh(string identity,Portraits.Persona p,Vector3 anchor,int side,int blink=0,bool combat=false)
+        {
+            string key="曲面眼皮/"+identity+side+"/"+blink+"/"+combat;if(meshes.TryGetValue(key,out var mesh))return mesh;
             var plan=new Portraits.FacePlan(p);var v=new List<Vector3>();var t=new List<int>();var c=new List<Color>();var uv=new List<Vector2>();
             const int columns=10,rows=6;
             for(int y=0;y<=rows;y++)for(int x=0;x<=columns;x++)
             {
                 float u=x/(float)columns,w=y/(float)rows,px=anchor.x+(u*2-1)*plan.EyeWidth/1.44f,py=plan.EyeY+(w*2-1)*plan.EyeHeight/.90f;
-                v.Add(new Vector3(px,py,Surface(px,py,p)+.0035f)-anchor);c.Add(Color.white);uv.Add(new Vector2((u+(side>0?1:0))*.5f,w));
+                v.Add(new Vector3(px,py,Surface(px,plan.EyeY+(py-plan.EyeY)*(1-p.Lid*1.6f-(combat?.045f:0))*(1-.995f*blink/8f)-plan.EyeHeight*.485f*blink/8f,p)+.0043f)-anchor);c.Add(Color.white);uv.Add(new Vector2((u+(side>0?1:0))*.5f,w));
                 if(x==columns||y==rows)continue;int k=y*(columns+1)+x;t.AddRange(new[]{k,k+1,k+columns+1,k+1,k+columns+2,k+columns+1});
             }
             return Finish(key,v,t,c,uv);
