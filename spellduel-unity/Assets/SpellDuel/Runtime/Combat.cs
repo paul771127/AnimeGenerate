@@ -533,6 +533,13 @@ namespace SpellDuel
         public static float MinionWindupOf(int kind) => kind >= 0 && kind < MinionWindup.Length && MinionWindup[kind] >= 0f ? MinionWindup[kind] : Skills.All["m_claw"].charge;
         public static bool IsSea(int kind) => kind >= 13;
         /// <summary>海裡／空中的小怪：不用走進場地就能出手、可以在海上移動（寄居蟹例外，要爬上礁石）</summary>
+        /// <summary>
+        /// 遠程小怪想站的距離（夾在 RangedKeepCap 以內）：原本 6～9m（騎魚泡泡怪、狙擊手）在 6m×6m 場地會一直退到最邊邊，
+        /// 近戰職業根本追不到；現在最遠只想站 2.5～4m，射程不變。
+        /// </summary>
+        public const float RangedKeepLoCap = 2.5f, RangedKeepHiCap = 4f;
+        static float KeepLo(int kind) => Mathf.Min(KeepMin[kind], RangedKeepLoCap);
+        static float KeepHi(int kind) => Mathf.Min(KeepMax[kind], RangedKeepHiCap);
         static bool FreeRoam(int kind) => kind == 13 || kind == 14 || kind == 15 || kind == 17 || kind == 18;
         static float BaseAlt(int kind) => kind == 14 ? 3.5f : kind == 17 ? 0.9f : kind == 18 ? 0.5f : 0f;
         public const float BirdCruise = 3.5f;
@@ -975,7 +982,7 @@ namespace SpellDuel
                 if (IsRanged(kind) && !outside)
                 {
                     // 遠程：保持在 KeepMin～KeepMax 之間（太近就後退）
-                    float want = d > KeepMax[kind] ? d - KeepMax[kind] : d < KeepMin[kind] ? -(KeepMin[kind] - d) : 0f;
+                    float want = d > KeepHi(kind) ? d - KeepHi(kind) : d < KeepLo(kind) ? -(KeepLo(kind) - d) : 0f;
                     step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Clamp(want, -speed * dt, speed * dt);
                 }
                 else step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Min(speed * dt, Mathf.Max(0f, d - MinionKeep(kind)));   // 停在約一個身高的距離
@@ -1005,7 +1012,7 @@ namespace SpellDuel
             dest = m.Feet;
             int kind = m.minionKind;
             bool Inside(Vector3 p) => minionInside == null || minionInside(p);   // 走位一律在場地內（海裡、空中的也是）
-            float lo = Mathf.Max(1.5f, KeepMin[kind] - 0.5f), hi = Mathf.Max(lo + 0.5f, Mathf.Min(KeepMax[kind] + 0.5f, MinionReach[kind]));
+            float lo = Mathf.Max(1.5f, KeepLo(kind) - 0.5f), hi = Mathf.Max(lo + 0.5f, Mathf.Min(KeepHi(kind) + 0.5f, MinionReach[kind]));
             for (int pass = 0; pass < 2; pass++)
                 for (int tries = 0; tries < 24; tries++)
                 {
