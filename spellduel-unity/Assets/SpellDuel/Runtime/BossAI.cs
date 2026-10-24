@@ -168,7 +168,7 @@ namespace SpellDuel
             // 人數越多：施法越頻繁（冷卻、思考間隔 ÷(1＋0.25×多的人數)）、攻擊力越高（＋20%／人）
             int extra = b.ScaleAllies;   // 副本：固定以 3 人計
             me.cdMul = BaseCdMul / (1f + PartyCast * extra) * (storyIntense ? StoryCdMul : 1f) * (Phase >= 3 ? 0.8f : 1f);
-            me.atkMul = (1f + PartyAtk * extra) * b.BoostDmgMul;   // 故事／副本的普通、困難：Boss 攻擊跟著難度等級變強
+            me.atkMul = (1f + PartyAtk * extra) * b.BossDmgMul;   // 故事／副本的普通、困難：Boss 攻擊跟著難度等級變強
             PickTarget();
             var tgt = me.target ?? b.player;
             me.forward = Fighter.Flat(tgt.head - me.head);

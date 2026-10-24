@@ -709,6 +709,8 @@ namespace SpellDuel
         /// <summary>這一場是「難度＝等級」的模式（故事關卡、副本；轉職試煉除外）</summary>
         bool LevelDifficulty => (pendingStage != null && pendingStage.id != "trial") || dungeon != null;
         static float DamageTakenFor(int d) => d == 0 ? 0.5f : d == 1 ? 0.75f : 1f;
+        /// <summary>故事各章的 Boss：血量（簡單難度、1 人）、攻擊倍率（第一章＝1）</summary>
+        public static readonly float[] StoryBossHp = { 800f, 1600f, 2500f, 5000f, 8000f }, StoryBossDmg = { 1f, 1.5f, 2f, 2.5f, 3f };
         static float BossHpFor(int d) => d == 0 ? 0.7f : d == 1 ? 0.85f : 1f;
 
         // 語音詠唱：唸出咒語就開始詠唱（本機比對自己錄的樣本）
@@ -1058,8 +1060,10 @@ namespace SpellDuel
                     if (pendingStage != null)
                     {
                         battle.stageEnemyMul = Battle.StoryEnemyMul(pendingStage.theme);   // 敵人數量：熔岩 0.5 → 每章 +0.1
-                        if (pendingStage.theme == 0 && pendingStage.id != "trial" && pendingStage.id != JobTrialStageId) battle.bossHpMul = 5f;   // 第一章：Boss 血量 ×5（使用者要求：太弱）
-                        if (pendingStage.theme == 1 && pendingStage.id != "trial") { battle.enemyHpMul = 2f; battle.enemyDmgMul = 2f; battle.bossHpMul = 15f; battle.rangedWindupMul = 1.5f; battle.rangedShotSpeedMul = 0.5f; battle.meleeHpMul = 0.7f; battle.rangedRecoverAdd = 3f; }   // 第二章：遠程小怪出手前準備 ×1.5、飛行速度 ×0.5、每次出手後多休息 3 秒；近戰小怪血量 ×0.7   // 第二章森林：敵人血量、攻擊 ×2，Boss 血量 ×15（原本 ×5，再 +200%；使用者要求）
+                        // 各章 Boss（使用者要求）：血量 800／1600／2500／5000／8000，攻擊為第一章的 ×1／1.5／2／2.5／3（普通、困難再照等級加成）
+                        if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.theme >= 0 && pendingStage.theme < StoryBossHp.Length)
+                        { battle.storyBossHp = StoryBossHp[pendingStage.theme]; battle.storyBossDmg = StoryBossDmg[pendingStage.theme]; }
+                        if (pendingStage.theme == 1 && pendingStage.id != "trial") { battle.enemyHpMul = 2f; battle.enemyDmgMul = 2f; battle.rangedWindupMul = 1.5f; battle.rangedShotSpeedMul = 0.5f; battle.meleeHpMul = 0.7f; battle.rangedRecoverAdd = 3f; }   // 第二章：遠程小怪出手前準備 ×1.5、飛行速度 ×0.5、每次出手後多休息 3 秒；近戰小怪血量 ×0.7   // 第二章森林：小怪血量、攻擊 ×2（Boss 照上面的表）
                         if (pendingStage.theme == 2 && pendingStage.id != "trial") { battle.rangedCountMul = 0.5f; battle.meleeCountMul = 1.5f; battle.spawnGapAdd = 5f; }   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         ApplyNoviceRoute(pendingStage);   // 1-1～1-3：4m×4m 小場地；1-1、1-2 只有近戰小怪（SoloBattle.NoviceRoute.cs）
