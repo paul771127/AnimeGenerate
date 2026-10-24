@@ -1070,12 +1070,12 @@ namespace SpellDuel
                     {
                         // 無盡塔：每次挑戰 5 波（6m×6m 場地），第 5 波有精銳、第 10 波有大 Boss；打完 5 波就結算、回到塔外
                         battle.eliteWaves = true;
-                        ShrinkArea(TowerArena);
                         battle.StartStage(towerFrom, towerFrom + TowerBlock - 1);
                     }
                     else battle.StartEndless();
                 }
                 battle.minionInside = p => area.Inside(WorldFrame.FromWorld(p)) && area.DistanceToEdge(WorldFrame.FromWorld(p)) >= 0.3f;
+                battle.attackHalf = Battle.AttackZoneHalf;   // 小怪進到中間 6m×6m 才出手（場地本身 10m×10m）
                 battle.minionSpeed = diff == 0 ? 0.75f : diff == 1 ? 0.95f : 1.15f;
             }
             ai = null;

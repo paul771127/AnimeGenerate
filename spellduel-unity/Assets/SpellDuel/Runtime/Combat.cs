@@ -727,6 +727,16 @@ namespace SpellDuel
         public float storyBossHp, storyBossDmg;
         /// <summary>所有 Boss 的血量再 ×70%（使用者要求；故事、無盡、無盡塔、副本、討伐 Boss、合作都算）</summary>
         public const float BossHpCut = 0.7f;
+        /// <summary>
+        /// 攻擊區：場地中間 2×attackHalf 公尺的方形（世界座標＝場地座標，場地中心是原點）。小怪要先走進這一區才會出手，
+        /// 進來之後就待在這一區裡（場地本身還是 10m×10m，玩家可以走動閃避）。0＝不限制（整個場地都能出手）
+        /// </summary>
+        public float attackHalf;
+        public const float AttackZoneHalf = 3f;
+        bool InAttackZone(Vector3 p) => attackHalf <= 0f || (Mathf.Abs(p.x) <= attackHalf && Mathf.Abs(p.z) <= attackHalf);
+        bool CanAttackFrom(Vector3 p) => (minionInside == null || minionInside(p)) && InAttackZone(p);
+        /// <summary>攻擊區裡離 p 最近的一點（邊界往內 0.3m）</summary>
+        Vector3 ClampToZone(Vector3 p) { if (attackHalf <= 0f) return p; float h = attackHalf - 0.3f; return new Vector3(Mathf.Clamp(p.x, -h, h), 0f, Mathf.Clamp(p.z, -h, h)); }
         public float BossDmgMul => storyBossDmg > 0f ? (0.75f + DmgPerWave * levelBoost) / 0.75f * storyBossDmg : BoostDmgMul;
         public float HpMul => (1f + HpPerWave * Tier) * PartyMul * hpBoost * enemyHpMul;
         /// <summary>這一關敵人的額外倍率（故事第二章森林：血量、攻擊 ×2，Boss 血量 ×5）</summary>
@@ -935,7 +945,7 @@ namespace SpellDuel
                     var fly = (tan + rad * corr).normalized * 1.5f * m.speedMul * dt;
                     m.head += fly;
                     m.forward = Fighter.Flat(fly);
-                    if (now >= m.recoverUntil && m.alt >= BirdCruise - 0.3f && d <= MinionReach[kind] && now >= m.attackReadyAt && (minionInside == null || minionInside(m.Feet)))   // 飛到場地上空才俯衝
+                    if (now >= m.recoverUntil && m.alt >= BirdCruise - 0.3f && d <= MinionReach[kind] && now >= m.attackReadyAt && CanAttackFrom(m.Feet))   // 飛到攻擊區上空才俯衝
                     { m.windupUntil = now + MinionWindup[kind]; Emit("minionwindup", m.Feet, Skills.All["m_dive"].color, null); }
                     continue;
                 }
@@ -985,13 +995,20 @@ namespace SpellDuel
                 float windup = MinionWindup[kind] < 0f ? claw.charge : MinionWindup[kind];
                 if (IsRanged(kind)) windup *= rangedWindupMul;
                 bool outside = minionInside != null && !minionInside(m.Feet);   // 還在場地外：先走進來（不在場外放招）；海裡、空中的也一樣要進到場地才出手
-                if (!outside && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt) { m.windupUntil = now + windup; Emit("minionwindup", m.Feet, claw.color, null); continue; }
+                bool outZone = !CanAttackFrom(m.Feet);   // 還沒進到中間的攻擊區（6m×6m）：先走進去才出手
+                if (!outZone && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt) { m.windupUntil = now + windup; Emit("minionwindup", m.Feet, claw.color, null); continue; }
                 // 走位：射手保持 3.5～6m，其他走向目標（停在 0.8m）；小怪之間互相推開
                 float speed = minionSpeed * MinionSpeed[kind] * m.speedMul * EnemySpeedScale;
                 if (kind == 13 && minionInside != null && !minionInside(m.Feet)) speed *= 3f;   // 跳躍魚在海裡游得很快
                 if (outside && endless) speed *= 2f;   // 無盡／故事：還在場地外的小怪移動速度 2 倍（快點進場）
                 Vector3 step;
-                if (IsRanged(kind) && !outside)
+                if (outZone && attackHalf > 0f)
+                {
+                    // 還沒進攻擊區（場地外或場地邊緣）：走向攻擊區裡離目標最近的那一點
+                    var goal = ClampToZone(tgt.Feet); var to = goal - m.Feet; to.y = 0f;
+                    step = to.magnitude > 0.05f ? to.normalized * Mathf.Min(speed * dt, to.magnitude) : Vector3.zero;
+                }
+                else if (IsRanged(kind) && !outside)
                 {
                     // 遠程：保持在 KeepMin～KeepMax 之間（太近就後退）
                     float want = d > KeepHi(kind) ? d - KeepHi(kind) : d < KeepLo(kind) ? -(KeepLo(kind) - d) : 0f;
@@ -1007,7 +1024,8 @@ namespace SpellDuel
                 }
                 var next = m.Feet + step;
                 // 場地外出生的小怪：還在場地外時也可以走（朝玩家走進場地）；進到場地後就不會再走出去
-                if (minionInside == null || minionInside(next) || !minionInside(m.Feet)) m.head = new Vector3(next.x, m.head.y, next.z);   // 進場後就不再走出去（海裡的也一樣）
+                bool stayZone = InAttackZone(next) || !InAttackZone(m.Feet);   // 進了攻擊區就不再走出去
+                if ((minionInside == null || minionInside(next) || !minionInside(m.Feet)) && stayZone) m.head = new Vector3(next.x, m.head.y, next.z);   // 進場後就不再走出去（海裡的也一樣）
             }
         }
 
@@ -1023,7 +1041,7 @@ namespace SpellDuel
         {
             dest = m.Feet;
             int kind = m.minionKind;
-            bool Inside(Vector3 p) => minionInside == null || minionInside(p);   // 走位一律在場地內（海裡、空中的也是）
+            bool Inside(Vector3 p) => CanAttackFrom(p);   // 走位一律在攻擊區內（海裡、空中的也是）
             float lo = Mathf.Max(1.5f, KeepLo(kind) - 0.5f), hi = Mathf.Max(lo + 0.5f, Mathf.Min(KeepHi(kind) + 0.5f, MinionReach[kind]));
             for (int pass = 0; pass < 2; pass++)
                 for (int tries = 0; tries < 24; tries++)
@@ -2476,10 +2494,10 @@ namespace SpellDuel
         /// <summary>降到場內地上休息：在場外就先拉回場內最近的地方</summary>
         void LandToRest(Fighter m)
         {
-            if (minionInside != null && !minionInside(m.Feet))
+            if (!CanAttackFrom(m.Feet))
             {
                 var p = m.Feet;
-                for (int i = 0; i < 40 && !minionInside(p); i++) p = Vector3.MoveTowards(p, Vector3.zero, 0.15f);   // 往場地中心拉
+                for (int i = 0; i < 60 && !CanAttackFrom(p); i++) p = Vector3.MoveTowards(p, Vector3.zero, 0.15f);   // 往場地中心拉
                 m.head = new Vector3(p.x, m.head.y, p.z);
             }
             m.restUntil = now + AirRest; m.recoverUntil = m.restUntil;
