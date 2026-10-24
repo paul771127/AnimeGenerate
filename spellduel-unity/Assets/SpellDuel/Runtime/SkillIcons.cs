@@ -198,7 +198,8 @@ namespace SpellDuel
             else if(kind==4)
             {
                 Glyph(cv,(x,y)=>Ellipse(x,y,0,-.40f,.57f,.15f),V.Hex("#75508d"));
-                KunaiGlyph(cv,.08f,.06f,.79f);
+                Glyph(cv,(x,y)=>Math.Min(Tri(x,y,-.045f,-.10f,.20f,-.10f,.08f,.57f),Tri(x,y,-.045f,-.10f,.20f,-.10f,.08f,-.19f)),V.Hex("#d9c8f3"));
+                Stroke(cv,-.09f,-.19f,.25f,-.19f,.035f,purple);Stroke(cv,.08f,-.19f,.08f,-.40f,.045f,V.Hex("#9a70bc"));
                 Stroke(cv,-.46f,-.33f,-.23f,-.09f,.028f,purple);Stroke(cv,.43f,-.32f,.30f,-.08f,.028f,purple);
             }
             else if(kind==5)

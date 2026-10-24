@@ -208,7 +208,7 @@ namespace SpellDuel
     internal sealed class HolyGroundView:ReworkFadeView
     {
         internal Transform seal;internal bool heaven;
-        internal void Tick(float fade){if(seal)seal.localRotation=Quaternion.Euler(0,Time.time*(heaven?10:6),0);Fade(fade);}
+        internal void Tick(float fade){if(seal)seal.localRotation=Quaternion.Euler(0,Time.time*(heaven?10:6),0);Fade(fade*(heaven?1.30f:1f));}
     }
     internal sealed class BarrierArtView:ReworkFadeView
     {
@@ -217,8 +217,13 @@ namespace SpellDuel
     }
     internal sealed class ReworkGlassShard:MonoBehaviour
     {
-        internal Vector3 velocity,spin;
-        void Update(){float dt=Time.deltaTime;velocity.y-=dt*.8f;transform.localPosition+=velocity*dt;transform.Rotate(spin*dt,Space.Self);}
+        internal Vector3 velocity,spin;float age;Renderer surface;MaterialPropertyBlock block;
+        void Update()
+        {
+            float dt=Time.deltaTime;age+=dt;velocity.y-=dt*.8f;transform.localPosition+=velocity*dt;transform.Rotate(spin*dt,Space.Self);
+            if(!surface){surface=GetComponentInChildren<Renderer>();block=new MaterialPropertyBlock();}
+            if(surface){var c=new Color(1,1,1,Mathf.Clamp01(1-age/.9f));block.SetColor(Shader.PropertyToID("_Color"),c);block.SetColor(Shader.PropertyToID("_TintColor"),c);surface.SetPropertyBlock(block);}
+        }
     }
     internal sealed class ReworkArcFlicker:MonoBehaviour
     {void Update(){float p=.8f+.2f*Mathf.Sin(Time.time*47);transform.localScale=new Vector3(p,1/p,1);}}
