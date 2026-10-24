@@ -692,6 +692,8 @@ namespace SpellDuel
             get { try { return PlayerPrefs.GetInt(CharacterSlots.Key("sd_tower_blocks"), 0); } catch { return 0; } }
             set { try { PlayerPrefs.SetInt(CharacterSlots.Key("sd_tower_blocks"), value); PlayerPrefs.Save(); } catch { } }
         }
+        /// <summary>故事 1-1～1-3 的敵人血量、傷害倍率（新手關調低）</summary>
+        public const float EarlyStageMul = 0.6f;
         public static readonly float[] StoryBossHp = { 800f, 1600f, 2500f, 5000f, 8000f }, StoryBossDmg = { 1f, 1.5f, 2f, 2.5f, 3f };
         static float BossHpFor(int d) => d == 0 ? 0.7f : d == 1 ? 0.85f : 1f;
 
@@ -1050,6 +1052,7 @@ namespace SpellDuel
                         if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.theme >= 0 && pendingStage.theme < StoryBossHp.Length)
                         { battle.storyBossHp = StoryBossHp[pendingStage.theme]; battle.storyBossDmg = StoryBossDmg[pendingStage.theme]; }
                         if (pendingStage.theme == 1 && pendingStage.id != "trial") { battle.enemyHpMul = 2f; battle.enemyDmgMul = 2f; battle.rangedWindupMul = 1.5f; battle.rangedShotSpeedMul = 0.5f; battle.meleeHpMul = 0.7f; battle.rangedRecoverAdd = 3f; }   // 第二章：遠程小怪出手前準備 ×1.5、飛行速度 ×0.5、每次出手後多休息 3 秒；近戰小怪血量 ×0.7   // 第二章森林：小怪血量、攻擊 ×2（Boss 照上面的表）
+                        if (pendingStage.id == "1-1" || pendingStage.id == "1-2" || pendingStage.id == "1-3") { battle.enemyHpMul *= EarlyStageMul; battle.enemyDmgMul *= EarlyStageMul; }   // 1-1～1-3：敵人血量、傷害 ×60%（新手關）
                         if (pendingStage.theme == 2 && pendingStage.id != "trial") { battle.rangedCountMul = 0.5f; battle.meleeCountMul = 1.5f; battle.spawnGapAdd = 5f; }   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         ApplyNoviceRoute(pendingStage);   // 1-1～1-3：4m×4m 小場地；1-1、1-2 只有近戰小怪（SoloBattle.NoviceRoute.cs）
