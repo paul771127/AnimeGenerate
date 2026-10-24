@@ -239,7 +239,7 @@ namespace SpellDuel
             }
         }
 
-        /// <summary>把背包裡的精魄鑲到裝備的空孔上（成功＝true）</summary>
+        /// <summary>把背包裡的精魄鑲到裝備的空孔上（成功＝true）。鑲上去就不能取出（跟著裝備走：賣掉、丟掉就沒了）</summary>
         public static bool Socket(CharacterProfile p, Item it, string id, out string why)
         {
             why = null;
@@ -248,14 +248,6 @@ namespace SpellDuel
             if (!p.souls.TryGetValue(id, out int n) || n <= 0) { why = "背包裡沒有這個精魄"; return false; }
             if (n == 1) p.souls.Remove(id); else p.souls[id] = n - 1;
             it.souls.Add(id);
-            return true;
-        }
-        /// <summary>從裝備上取出第 i 個精魄，放回背包</summary>
-        public static bool Unsocket(CharacterProfile p, Item it, int i)
-        {
-            if (it == null || i < 0 || i >= it.souls.Count) return false;
-            string id = it.souls[i]; it.souls.RemoveAt(i);
-            p.souls[id] = (p.souls.TryGetValue(id, out int n) ? n : 0) + 1;
             return true;
         }
     }
