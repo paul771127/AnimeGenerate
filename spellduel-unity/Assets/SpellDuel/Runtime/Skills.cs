@@ -82,7 +82,7 @@ namespace SpellDuel
         }
 
         // 自己解析 #rrggbb（不用 ColorUtility，讓純邏輯可在 Unity 外測試）
-        static Color C(string hex)
+        public static Color C(string hex)
         {
             int v = System.Convert.ToInt32(hex.TrimStart('#'), 16);
             return new Color(((v >> 16) & 255) / 255f, ((v >> 8) & 255) / 255f, (v & 255) / 255f, 1f);

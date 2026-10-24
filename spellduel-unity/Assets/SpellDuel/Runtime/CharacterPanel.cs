@@ -56,7 +56,7 @@ namespace SpellDuel
             if (tab >= tabs.Length) tab = 0;
             float tw = (w - gap * (tabs.Length - 1)) / tabs.Length;
             for (int i = 0; i < tabs.Length; i++)
-                if (UiKit.Button(new Rect(x + i * (tw + gap), y, tw, lh * 1.1f), tabs[i], fsS, tab == i, cd.color)) { tab = i; selNode = null; selItem = null; }
+                if (UiKit.Button(new Rect(x + i * (tw + gap), y, tw, lh * 1.1f), tabs[i], fsS, tab == i, cd.color)) { tab = i; selNode = null; selItem = null; soulOpen = false; }
             for(int i=0;i<tabs.Length;i++) UiKit.Tab(new Rect(x+i*(tw+gap),y,tw,lh*1.1f),tab==i,cd.color);
             y += lh * 1.1f + gap;
             bool changed;
@@ -359,10 +359,20 @@ namespace SpellDuel
             // 選中物品的說明
             float dy = by + 4 * (ch + gap * 0.3f) + gap * 0.3f;
             var dr = new Rect(b.x, dy, b.width, b.yMax - dy);
+            // 精魄視窗（CharacterPanel.Souls.cs）：換了選中的裝備就關掉
+            if (soulOpen && soulFor != null && soulFor != selItem) soulOpen = false;
+            if (soulOpen)
+            {
+                if (DrawSouls(dr, p, fs, fsS, gap)) { Progress.SaveBag(); changed = true; }
+                return changed;
+            }
             UiKit.Card(dr, 0.9f, selItem != null ? Item.RarityColors[selItem.rarity] : (Color?)null, 0.5f);
             if (selItem == null)
             {
-                UiKit.Text(new Rect(dr.x + gap, dr.y + gap, dr.width - gap * 2, dr.height - gap * 2), "點裝備看說明。無盡模式打倒小怪有機會掉裝備，Boss 一定掉稀有以上。稀有度：普通→優良→稀有→史詩→傳說，越高越強、限制越嚴。", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
+                UiKit.Text(new Rect(dr.x + gap, dr.y + gap, dr.width - gap * 2, dr.height - gap * 2 - fs * 2f), "點裝備看說明。無盡模式打倒小怪有機會掉裝備，Boss 一定掉稀有以上。稀有度：普通→優良→稀有→史詩→傳說，越高越強、限制越嚴。\n💠 裝備有 0～4 個精魄孔（越稀有上限越高），可以鑲上打倒怪物掉的精魄。", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
+                int owned = 0; foreach (var kv in p.souls) owned += kv.Value;
+                if (UiKit.Button(new Rect(dr.x + gap, dr.yMax - gap * 0.4f - fs * 1.8f, dr.width - gap * 2, fs * 1.8f), $"💠 精魄圖鑑・背包（{owned} 個）", fsS, false, new Color(0.55f, 0.75f, 1f)))
+                { soulOpen = true; soulFor = null; soulScroll = Vector2.zero; }
                 return changed;
             }
             var s2 = selItem;
@@ -374,11 +384,14 @@ namespace SpellDuel
                 $"需求：等級 {s2.reqLevel}" + (s2.reqValue > 0 ? $"、{StatInfo.Names[(int)s2.reqStat]} {s2.reqValue}" : "") + (worn || can ? "" : $"　❌ {why}"),
             };
             foreach (var kv in s2.mods) lines.Add("・" + Item.AffixText(kv.Key, kv.Value * s2.PlusMul));
+            SoulLines(s2, lines);   // 精魄孔與鑲上的精魄
             var sd = Economy.SetOf(s2.setId);
             if (sd != null) lines.Add(Economy.SetText(sd, p.equipped));
             var on = p.equipped[(int)s2.slot];
             if (!worn && on != null) lines.Add($"（目前穿著：{on.name}）");
-            UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.4f, dr.width - gap * 2, fs * 1.3f), $"[{Item.RarityNames[s2.rarity]}] {s2.FullName}", fs, Item.RarityColors[s2.rarity], TextAnchor.MiddleLeft, true);
+            UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.4f, dr.width - gap * 2 - fs * 5.6f, fs * 1.3f), $"[{Item.RarityNames[s2.rarity]}] {s2.FullName}", fs, Item.RarityColors[s2.rarity], TextAnchor.MiddleLeft, true);
+            if (UiKit.Button(new Rect(dr.xMax - gap - fs * 5.4f, dr.y + gap * 0.3f, fs * 5.4f, fs * 1.4f), $"💠 精魄 {s2.souls.Count}/{s2.soulSlots}", fsS, false, new Color(0.55f, 0.75f, 1f)))
+            { soulOpen = true; soulFor = s2; soulScroll = Vector2.zero; }
             UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.4f + fs * 1.3f, dr.width - gap * 2, dr.height - fs * 4f), string.Join("\n", lines), fsS, new Color(0.88f, 0.9f, 1f), TextAnchor.UpperLeft, false, 0.5f);
             float bw = (dr.width - gap * 3) / 2f, bh = fs * 1.9f, byy = dr.yMax - bh - gap * 0.4f;
             if (worn)

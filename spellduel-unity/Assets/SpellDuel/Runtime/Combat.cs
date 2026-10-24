@@ -76,6 +76,9 @@ namespace SpellDuel
         public bool overcharge;         // 獵人「蓄力強化」：蓄滿後可以繼續蓄到 200%
         public float chargeBonus;       // 這一發的蓄力加成（200% 時 +150%）；放招當下設定        // 劍士斬擊：這段時間內會斬開正面 1m 內飛來的法球
         public int shieldLeft;
+        /// <summary>精魄（Souls.cs）：格擋率、受到的傷害倍率（副作用）、反彈、觸發型效果</summary>
+        public float blockChance, soulTaken = 1f, thorns;
+        public readonly List<SoulFx> soulProcs = new List<SoulFx>();
         // 刺客的近身技能：放招後進入「伏擊」，時限內靠近到射程內就自動出手
         public SkillDef armed; public float armedUntil;
         /// <summary>電腦敵人的近戰多伸出去的距離（公尺）：它們最近只走到離玩家「一個身高」，近戰仍要打得到（EnemyAI 設定；玩家＝0）</summary>
@@ -1078,7 +1081,7 @@ namespace SpellDuel
                         int dmg = Mathf.RoundToInt(pc.damage * m.dmgMul);
                         if (tgt.dodgeUntil > now && SidestepInvuln) Emit("evade", tgt.Chest, pc.color, "閃避！");
                         else if (tgt.isAlly) { Emit("allyhit", tgt.Chest, pc.color, null); OnAllyHit?.Invoke(tgt, pc, dmg, tgt.Chest, 0); }
-                        else ApplyDamageAndEffect(tgt, dmg, EffectKind.None, 0f, 0f, tgt.Chest);
+                        else { ApplyDamageAndEffect(tgt, dmg, EffectKind.None, 0f, 0f, tgt.Chest); SoulVictim(m, tgt, dmg); }
                     }
                     return;
                 }
@@ -1094,7 +1097,7 @@ namespace SpellDuel
                         int dmg = Mathf.RoundToInt(sh.damage * m.dmgMul);
                         if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, sh.color, "閃避！");
                         else if (v.isAlly) { Emit("allyhit", v.Chest, sh.color, null); OnAllyHit?.Invoke(v, sh, dmg, v.Chest, 0); }
-                        else ApplyDamageAndEffect(v, dmg, sh.effect, sh.effectDps, sh.effectDur, v.Chest);
+                        else { ApplyDamageAndEffect(v, dmg, sh.effect, sh.effectDps, sh.effectDur, v.Chest); SoulVictim(m, v, dmg); }
                     }
                     return;
                 }
@@ -1122,7 +1125,7 @@ namespace SpellDuel
                         int dmg = Mathf.RoundToInt(sp.damage * m.dmgMul);
                         if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, sp.color, "閃避！");
                         else if (v.isAlly) { Emit("allyhit", v.Chest, sp.color, null); OnAllyHit?.Invoke(v, sp, dmg, v.Chest, 0); }
-                        else ApplyDamageAndEffect(v, dmg, sp.effect, sp.effectDps, sp.effectDur, v.Chest);
+                        else { ApplyDamageAndEffect(v, dmg, sp.effect, sp.effectDps, sp.effectDur, v.Chest); SoulVictim(m, v, dmg); }
                     }
                     return;
                 }
@@ -1169,7 +1172,7 @@ namespace SpellDuel
                         int dmg = Mathf.RoundToInt(bomb.damage * m.dmgMul);
                         if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, bomb.color, "閃避！");
                         else if (v.isAlly) { Emit("allyhit", v.Chest, bomb.color, null); OnAllyHit?.Invoke(v, bomb, dmg, v.Chest, 0); }
-                        else ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest);
+                        else { ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest); SoulVictim(m, v, dmg); }
                     }
                     m.hp = 0f;
                     return;
@@ -1187,7 +1190,7 @@ namespace SpellDuel
                     {
                         if (tgt.dodgeUntil > now && SidestepInvuln) Emit("evade", tgt.Chest, claw.color, "閃避！");
                         else if (tgt.isAlly) { Emit("allyhit", tgt.Chest, claw.color, null); OnAllyHit?.Invoke(tgt, claw, dmg, tgt.Chest, 0); }
-                        else ApplyDamageAndEffect(tgt, dmg, EffectKind.None, 0f, 0f, tgt.Chest);
+                        else { ApplyDamageAndEffect(tgt, dmg, EffectKind.None, 0f, 0f, tgt.Chest); SoulVictim(m, tgt, dmg); }
                     }
                     return;
                 }
@@ -2388,7 +2391,7 @@ namespace SpellDuel
                 int dmg = Mathf.RoundToInt(ds.damage * m.dmgMul);
                 if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, ds.color, "閃避！");
                 else if (v.isAlly) { Emit("allyhit", v.Chest, ds.color, null); OnAllyHit?.Invoke(v, ds, dmg, v.Chest, 0); }
-                else ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest);
+                else { ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest); SoulVictim(m, v, dmg); }
                 if (kind == 8) { m.dashUntil = 0f; m.recoverUntil = now + MinionRecover; }   // 衝鋒獸撞到就停；魚和鳥衝完全程
                 return;
             }
@@ -2773,7 +2776,74 @@ namespace SpellDuel
             if (a.lifesteal > 0f) a.hp = Mathf.Min(a.maxHp, a.hp + dmg * a.lifesteal);
             if (a.mpOnHit > 0f) a.mp = Mathf.Min(a.maxMp, a.mp + a.mpOnHit);
             if (a.adv == "inquisitor" && a.faith < FaithMax && ++a.faith == FaithMax) Emit("buff", a.Chest, new Color(1f, 0.8f, 0.3f), "信仰已滿！下一招傷害 ×2");
+            SoulOnHit(a, target, dmg, s);
         }
+
+        // ------------------------------------------------------------ 精魄（Souls.cs）的觸發效果
+        /// <summary>命中、打倒：攻擊者的精魄；被打：受害者的反彈、反擊中毒</summary>
+        void SoulOnHit(Fighter a, Fighter target, float dmg, SkillDef s)
+        {
+            if (target == null || target == a) return;
+            SoulVictim(a, target, dmg);
+            if (a.soulProcs.Count == 0 || (s != null && s.cls == Souls.SoulCls)) return;   // 精魄發動的招式不再觸發精魄（不會連鎖）
+            bool killed = !target.Alive;
+            foreach (var x in a.soulProcs)
+            {
+                switch (x.op)
+                {
+                    case SoulOp.HitSnare:
+                        if (!killed && rng.NextDouble() < x.chance) { target.snaredUntil = now + (target.bodyRadius > 0.5f ? x.dur * 0.5f : x.dur); target.charging = null; Emit("effect", target.Chest, new Color(0.3f, 0.85f, 0.3f), "藤蔓纏繞：定身"); }
+                        break;
+                    case SoulOp.HitCast:
+                        if (!killed && rng.NextDouble() < x.chance) SoulCast(a, target, x.skill);
+                        break;
+                    case SoulOp.KillHeal:
+                        if (killed && rng.NextDouble() < x.chance) { float h = a.maxHp * x.v; a.hp = Mathf.Min(a.maxHp, a.hp + h); Emit("heal", a.Chest, new Color(0.6f, 1f, 0.6f), $"+{h:0}"); }
+                        break;
+                    case SoulOp.KillMp:
+                        if (killed && rng.NextDouble() < x.chance) a.mp = Mathf.Min(a.maxMp, a.mp + x.v);
+                        break;
+                }
+            }
+        }
+
+        /// <summary>被打到的人身上的精魄：反彈、讓攻擊者中毒（小怪的近戰沒經過 OnDealt，也直接呼叫這個）</summary>
+        void SoulVictim(Fighter a, Fighter target, float dmg)
+        {
+            if (a == null || target == null || a == target || !a.Alive || dmg <= 0f) return;
+            if (target.thorns > 0f) { Damage(a, dmg * target.thorns, "thorns"); Emit("effect", a.Chest, new Color(0.5f, 0.8f, 0.3f), $"反彈 {dmg * target.thorns:0}"); }
+            foreach (var x in target.soulProcs)
+                if (x.op == SoulOp.Retaliate && a.Alive && rng.NextDouble() < x.chance) { AddDot(a, x.v, x.dur); Emit("effect", a.Chest, Color.green, "河豚之刺：中毒"); }
+        }
+
+        /// <summary>精魄發動技能（Lv1、不花 MP）：從胸口朝目標射出</summary>
+        void SoulCast(Fighter a, Fighter target, string id)
+        {
+            if (id == null || !Skills.All.TryGetValue(id, out var b) || b.type != SkillType.Projectile) return;
+            var s = b.Clone(); s.cls = Souls.SoulCls;
+            var from = a.hasCastFrom ? a.castFrom : a.Chest;
+            var dir = (target.Chest - from); if (dir.sqrMagnitude < 1e-4f) dir = Fighter.Flat(a.forward);
+            Spawn(a, s, from, dir.normalized, Mathf.Max(1, Mathf.RoundToInt(s.damage * a.atkMul)), s.effect, s.effectDps, s.effectDur, false);
+            Emit("buff", a.Chest, b.color, $"💠 精魄發動：{b.name}");
+        }
+
+        /// <summary>被打到之後：精魄的護盾、無敵、回血</summary>
+        void SoulOnHurt(Fighter f)
+        {
+            foreach (var x in f.soulProcs)
+            {
+                if (rng.NextDouble() >= x.chance) continue;
+                switch (x.op)
+                {
+                    case SoulOp.HurtShield: f.shieldUntil = now + x.dur; f.shieldLeft = Mathf.Max(f.shieldLeft, Mathf.RoundToInt(x.v)); Emit("buff", f.Chest, new Color(0.5f, 0.85f, 1f), $"💠 泡泡護盾 {x.v:0}"); break;
+                    case SoulOp.HurtInvuln: f.invulnUntil = Mathf.Max(f.invulnUntil, now + x.dur); Emit("buff", f.Chest, new Color(0.65f, 0.4f, 1f), "💠 虛空閃現：無敵"); break;
+                    case SoulOp.HurtHeal: { float h = f.maxHp * x.v; f.hp = Mathf.Min(f.maxHp, f.hp + h); Emit("heal", f.Chest, new Color(0.6f, 1f, 0.6f), $"+{h:0}"); break; }
+                }
+            }
+        }
+
+        /// <summary>打倒的敵人（"m"＋小怪種類、Boss 的職業 id）：SoloBattle 用來擲精魄</summary>
+        public readonly List<string> killLog = new List<string>();
 
         // ------------------------------------------------------------ 命中附加效果（無盡模式升級）
         /// <summary>最近一次命中擲出的附加效果（1 灼燒、2 中毒、4 冰凍、8 出血、16 沉默）；連線時送給對方套用</summary>
@@ -2853,7 +2923,9 @@ namespace SpellDuel
         {
             if (!f.Alive) return;
             if (f.invulnUntil > now && dmg > 0f) return;   // 狂戰士不死之軀的無敵
-            dmg *= f.damageTakenMul * (1f - f.gearReduce);
+            dmg *= f.damageTakenMul * (1f - f.gearReduce) * f.soulTaken;
+            // 精魄：格擋（這一下傷害減半；持續傷害不算）
+            if (f.blockChance > 0f && dmg > 0f && kind != "dot" && kind != "burn" && kind != "thorns" && rng.NextDouble() < f.blockChance) { dmg *= 0.5f; Emit("mitigate", at ?? f.Chest, new Color(0.8f, 0.8f, 0.7f), "格擋！"); }
             if (f.lastStand > 0f && f.hp < f.maxHp * 0.3f) dmg *= 1f - f.lastStand;   // 不屈：低血量減傷
             if (f.markedUntil > now) dmg *= 1.2f;                                       // 被懲戒
             if (dmg > 0f && kind != "dot" && kind != "burn" && CloseInstinct(f)) dmg *= 1f - CloseReducePer * f.closeInstinct;   // 刺客近身本能
@@ -2890,8 +2962,11 @@ namespace SpellDuel
             if (dmg > 0 && f.prepUntil > now) { f.prepUntil = 0f; Emit("fail", f.Chest, Color.gray, "刺殺準備被打斷！"); }
             if (dmg > 0 && kind != "dot" && kind != "burn" && f.armed != null && f.armed.releaseNear && !(NearestFoe(f, out var ad) != null && ad <= AmbushReach + 0.5f + f.reachBonus)) { f.cooldownUntil[f.armed.id] = now; Emit("fail", f.Chest, Color.gray, $"{f.armed.name}被打斷！要重新蓄力"); f.armed = null; }
             Emit(kind == "dot" || kind == "burn" ? kind : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");
+            if (f.Alive && dmg > 0f && f.soulProcs.Count > 0 && kind != "dot" && kind != "burn" && kind != "thorns") SoulOnHurt(f);
             if (!f.Alive)
             {
+                if (f.isMinion) killLog.Add("m" + f.minionKind);
+                else if (!f.isPlayer && f.npcSide < 0 && f == enemy && f.cls != null) killLog.Add(f.cls.id);
                 if (f.isMinion) { kills++; if (endless) xp += Mathf.RoundToInt(MinionXp[f.minionKind] * (1f + 0.03f * wave)); Emit("miniondie", f.Chest, Color.white, null); }
                 else if (f.npcSide >= 0) Emit("npcdown", f.Chest, Color.white, $"{f.name}倒下了");
                 else if (f.isPlayer) Emit(AnyAllyAlive ? "down" : "lose", f.Chest, Color.white, null);

@@ -606,6 +606,9 @@ namespace SpellDuel
         public long uid;
         public int plus;                // 鐵匠鋪強化等級（+1～+10；每級所有屬性 +8%）
         public string setId = "";       // 套裝（Economy.Sets）；空＝不是套裝
+        /// <summary>精魄孔數（0～4，掉落時隨機，越稀有上限越高）與鑲上去的精魄（Souls.cs）</summary>
+        public int soulSlots;
+        public readonly List<string> souls = new List<string>();
         /// <summary>顯示用名稱：+強化等級</summary>
         public string FullName => (plus > 0 ? $"+{plus} " : "") + name;
 
@@ -661,6 +664,7 @@ namespace SpellDuel
                 sb.Append((int)mods[i].Key).Append(':').Append(mods[i].Value.ToString("0.####", CultureInfo.InvariantCulture));
             }
             sb.Append('|').Append(plus).Append('|').Append(setId ?? "");
+            sb.Append('|').Append(soulSlots).Append('|').Append(string.Join(",", souls));
             return sb.ToString();
         }
 
@@ -682,6 +686,12 @@ namespace SpellDuel
                         if (kv.Length == 2) it.mods.Add(new KeyValuePair<Affix, float>((Affix)int.Parse(kv[0]), float.Parse(kv[1], CultureInfo.InvariantCulture)));
                     }
                 if (p.Length >= 12) { int.TryParse(p[10], out it.plus); it.setId = p[11]; }   // 新版：強化等級、套裝
+                if (p.Length >= 14)
+                {
+                    int.TryParse(p[12], out it.soulSlots); it.soulSlots = Mathf.Clamp(it.soulSlots, 0, Souls.MaxSlots);
+                    if (p[13].Length > 0) foreach (var id in p[13].Split(',')) if (Souls.Get(id) != null && it.souls.Count < it.soulSlots) it.souls.Add(id);
+                }
+                else it.soulSlots = Souls.SlotsFromUid(it.uid, it.rarity);   // 精魄之前的舊裝備：照 uid 固定給孔數
                 return it;
             }
             catch (Exception) { return null; }
@@ -735,7 +745,7 @@ namespace SpellDuel
             if (prefer == Skills.Novice) prefer = null;   // 初心者：什麼職業的都可能掉（轉職後用得到），不鎖成初心者專用
             ilvl = Mathf.Max(1, ilvl);
             var slot = (Slot)rng.Next(5);
-            var it = new Item { slot = slot, rarity = rarity, ilvl = ilvl, uid = DateTime.UtcNow.Ticks + rng.Next(100000) };
+            var it = new Item { slot = slot, rarity = rarity, ilvl = ilvl, uid = DateTime.UtcNow.Ticks + rng.Next(100000), soulSlots = Souls.RollSlots(rng, rarity) };
             float power = ilvl * (1f + 0.35f * rarity);          // 稀有度越高越強
             string baseName;
             switch (slot)
@@ -875,6 +885,8 @@ namespace SpellDuel
         /// <summary>初心者：解任務學會的招式、接了還沒完成的任務（技能 id → 進度）</summary>
         public readonly HashSet<string> noviceLearned = new HashSet<string>();
         public readonly Dictionary<string, int> noviceQuest = new Dictionary<string, int>();
+        /// <summary>背包裡還沒鑲上去的精魄（id → 個數）</summary>
+        public readonly Dictionary<string, int> souls = new Dictionary<string, int>();
 
         /// <summary>打倒了 n 隻敵人：打倒型任務 +n、收集型任務每隻有機率掉一個。回傳有沒有進度變化</summary>
         public bool NoviceKills(int n, System.Random rng)
@@ -970,7 +982,7 @@ namespace SpellDuel
         {
             float v = 0f; var a = (Affix)(int)s;
             foreach (var it in equipped) if (it != null) v += it.Sum(a);
-            return Mathf.RoundToInt(v);
+            return Mathf.RoundToInt(v) + Souls.StatSum(this, s);   // 精魄加的能力值也算裝備的
         }
         /// <summary>自己的能力值（初始＋自己加的）：決定加點的花費</summary>
         public int OwnStat(Stat s) => BaseStat(s) + alloc[(int)s];
@@ -1150,6 +1162,7 @@ namespace SpellDuel
             if (f.loadout.Count == 0) foreach (var id in known) { if (f.loadout.Count >= 3) break; f.loadout.Add(ModdedSkill(id)); }
             f.hp = Mathf.Max(1f, f.maxHp * hpRatio); f.mp = f.maxMp * mpRatio;
             Advanced.ApplyStats(f, Adv);   // 進階職業：HP、MP、攻擊、減傷、爆擊、閃避、治療量
+            Souls.ApplyTo(f, this);        // 裝備上的精魄
         }
 
         // ---- 存檔（一行一個欄位）
@@ -1166,6 +1179,7 @@ namespace SpellDuel
             if (trialPassed) sb.Append("trial=1\n");
             if (jobTrial > 0) sb.Append("jt=").Append(jobTrial).Append('\n');
             if (novicePast) sb.Append("np=1\n");
+            if (souls.Count > 0) sb.Append("souls=").Append(Souls.SerializeBag(souls)).Append('\n');
             foreach (var id in noviceLearned) sb.Append("nl=").Append(id).Append('\n');
             foreach (var kv in noviceQuest) sb.Append("nq=").Append(kv.Key).Append(':').Append(kv.Value).Append('\n');
             foreach (var kv in ranks) sb.Append("rank=").Append(kv.Key).Append(':').Append(kv.Value).Append('\n');
@@ -1198,6 +1212,7 @@ namespace SpellDuel
                         case "jt": p.jobTrial = Mathf.Clamp(int.Parse(v), 0, Skills.JobTrialRounds); break;
                         case "nl": p.noviceLearned.Add(v); break;
                         case "np": p.novicePast = v == "1"; break;
+                        case "souls": Souls.ParseBag(v, p.souls); break;
                         case "nq": { var a = v.Split(':'); if (a.Length == 2) p.noviceQuest[a[0]] = int.Parse(a[1]); break; }
                         default:
                             if (k.StartsWith("eq") && int.TryParse(k.Substring(2), out var slot) && slot >= 0 && slot < p.equipped.Length) p.equipped[slot] = Item.Parse(v);

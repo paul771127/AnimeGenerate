@@ -12,7 +12,7 @@ namespace SpellDuel
     public partial class SoloBattle
     {
         /// <summary>所有提示的 id（重置用）</summary>
-        static readonly string[] TipIds = { "list", "gate", "prep", "char", "char_stats", "char_tree", "char_gear", "new_item", "skill_pt", "stat_pt", "new_skill", "job", "result", "dungeon", "smith", "shop", "guild" };
+        static readonly string[] TipIds = { "list", "gate", "prep", "char", "char_stats", "char_tree", "char_gear", "new_item", "skill_pt", "stat_pt", "new_skill", "job", "result", "dungeon", "smith", "shop", "guild", "soul" };
 
         string tipId, tipTitle, tipText;   // 正在顯示的提示
         int tipPress = -1;                  // 按下去的按鈕（0 知道了、1 不再顯示）
@@ -126,6 +126,13 @@ namespace SpellDuel
                             "新的裝備放在背包裡，要穿上才有效果：按「📜 角色」→「🛡 裝備」，點背包裡的裝備 → 比較能力 → 「穿上」。\n用不到的可以到道具店賣掉換金幣。");
                         if (t != null) return t;
                         tipBagSeen = bag;
+                    }
+                    if (p.souls.Count > 0)
+                    {
+                        var t = Want("soul", "💠 拿到精魄了",
+                            "精魄是打倒怪物時很少掉的寶物（小怪 0.1～0.5%、Boss 2%），每一種怪物的效果都不一樣：加能力值、爆擊、閃避、格擋，命中時機率附加狀態或發動別的職業的招式……有些很強但有副作用。\n" +
+                            "裝備有 0～4 個精魄孔（越稀有的裝備上限越高）。按「📜 角色」→「🛡 裝備」→ 點一件裝備 →「💠 精魄」→ 點背包裡的精魄鑲上；點已鑲的可以取出。\n沒選裝備時按「💠 精魄圖鑑」看所有精魄的來源和效果。");
+                        if (t != null) return t;
                     }
                     if (p.UsableSkillPoints > 0)
                     {
