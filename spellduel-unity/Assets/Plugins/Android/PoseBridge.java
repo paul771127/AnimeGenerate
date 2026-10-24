@@ -44,7 +44,7 @@ public class PoseBridge {
         PoseLandmark.LEFT_ANKLE, PoseLandmark.RIGHT_ANKLE,
     };
     private static final int BODY = 7, HAND = 21;
-    private static final int LEN = 2 + BODY * 3 + 1 + HAND * 3;
+    private static final int LEN = 2 + BODY * 3 + 1 + HAND * 3 + 1;   // 最後一格：這張辨識花了幾毫秒（手勢速度顯示用）
 
     private final PoseDetector detector;
     private HandLandmarker hands;
@@ -111,6 +111,7 @@ public class PoseBridge {
             worker.execute(new Runnable() {
                 @Override public void run() {
                     float[] r = new float[LEN];
+                    long t0 = android.os.SystemClock.elapsedRealtimeNanos();
                     try {
                         if (bmp == null || bmp.getWidth() != w || bmp.getHeight() != h) bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
                         bmp.copyPixelsFromBuffer(ByteBuffer.wrap(rgba));
@@ -132,6 +133,7 @@ public class PoseBridge {
                             }
                         }
                     } catch (Throwable ignored) { }
+                    r[LEN - 1] = (android.os.SystemClock.elapsedRealtimeNanos() - t0) / 1e6f;
                     r[0] = ++seq;
                     latest = r;
                     busy = false;

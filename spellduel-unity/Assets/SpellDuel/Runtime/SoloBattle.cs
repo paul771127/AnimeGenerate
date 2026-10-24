@@ -3127,6 +3127,7 @@ namespace SpellDuel
             DrawGuide();   // 村莊新手導覽（SoloBattle.Guide.cs）
             DrawIntroOutro();   // 戰鬥開始／結束的文字
             DrawReadyCheck();   // 戰鬥準備的步驟卡
+            GestureStatsPref.Draw();   // 📊 手勢速度（設定打開時）
             DrawQuestPanel();   // 右上角的任務面板（SoloBattle.NoviceRoute.cs）
             DrawTip();   // 情境教學：畫在最上面
         }

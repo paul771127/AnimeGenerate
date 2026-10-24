@@ -16,6 +16,23 @@ namespace SpellDuel
     ///   Android：手用 Google MediaPipe Hand Landmarker；iOS：Apple Vision。
     /// 全部在手機上跑，不需要網路。
     /// </summary>
+    /// <summary>「📊 手勢速度」顯示開關（預設關）</summary>
+    public static class GestureStatsPref
+    {
+        static int on = -1;
+        public static bool On { get { if (on < 0) on = PlayerPrefs.GetInt("SD_GestureStats", 0); return on == 1; } }
+        public static void Set(bool v) { on = v ? 1 : 0; PlayerPrefs.SetInt("SD_GestureStats", on); PlayerPrefs.Save(); }
+        /// <summary>畫在畫面左邊（設定打開時；GUI 呼叫）</summary>
+        public static void Draw()
+        {
+            if (!On || string.IsNullOrEmpty(PoseDetector.Stats)) return;
+            float W = Screen.width, H = Screen.height; int fs = Mathf.RoundToInt(UiKit.BaseFont * 0.75f);
+            var r = new Rect(W * 0.02f, H * 0.42f, W * 0.62f, fs * 3.2f);
+            GUI.color = new Color(0f, 0f, 0f, 0.55f); GUI.DrawTexture(r, Texture2D.whiteTexture); GUI.color = Color.white;
+            UiKit.Text(new Rect(r.x + fs * 0.4f, r.y, r.width - fs * 0.8f, r.height), PoseDetector.Stats, fs, new Color(0.7f, 1f, 0.75f), TextAnchor.MiddleLeft);
+        }
+    }
+
     public class PoseDetector
     {
         // 關鍵點順序（原生端回傳的也是這個順序）
@@ -23,12 +40,17 @@ namespace SpellDuel
         public const int HandCount = 21;   // MediaPipe 手部關鍵點：0 手腕、1-4 拇指、5-8 食指、9-12 中指、13-16 無名指、17-20 小指
         const int HandOffset = 2 + Count * 3;
         const int ResultLength = HandOffset + 1 + HandCount * 3;
+#if UNITY_ANDROID
+        const int CaptureWidth = 224;   // Android：手部模型本來就縮到 224 處理；小一點讀回、複製、傳給 Java 都比較快
+#else
         const int CaptureWidth = 288;
+#endif
         const float Interval = 0.04f;   // 最多每秒約 25 次（實際上受偵測速度限制）
 
         public class Result
         {
             public float time;                       // 拍攝時間（Time.time）
+            public float capturedAt, stagedAt, submittedAt;   // （realtimeSinceStartup）      // 讀回完成、送進偵測器的時間（手勢速度顯示用）
             public Vector3 camPos; public Quaternion camRot; public Matrix4x4 proj;   // 拍攝當下的鏡頭（AR 座標）
             public bool found;
             public readonly Vector2[] pt = new Vector2[Count];   // 視埠座標（0～1，左下為原點，和 Camera.ViewportToWorldPoint 相同）
@@ -53,6 +75,16 @@ namespace SpellDuel
         public RenderTexture Preview => rt;          // 除錯用：送去偵測的畫面
         public bool Enabled = true;
         public bool WantBody = true, WantHand = true;   // 要偵測人體／手
+
+        // ---- 手勢速度（⚙ 設定 →「📊 手勢速度」顯示在畫面左上）：每一段花的毫秒數（平滑過）
+        public float MsReadback, MsWait, MsDetect, MsTotal, Hz;
+        int hzCount; float hzSince;
+        public static string Stats = "";
+        /// <summary>Android 的 GPU 非同步讀回太慢（平均超過 SyncSwitchMs）：改成同步讀回（會卡一下 GPU，但少等好幾幀）</summary>
+        public bool SyncReadback { get; private set; }
+        public const float SyncSwitchMs = 45f;
+        int readbackSamples;
+        static float Ema(float a, float x) => a <= 0f ? x : a + (x - a) * 0.2f;
 
         Camera cam;
         ARCameraBackground background;
@@ -130,13 +162,13 @@ namespace SpellDuel
 
             capturing = new Result
             {
-                time = Time.time,
+                time = Time.time, capturedAt = Time.realtimeSinceStartup,
                 camPos = cam.transform.position,
                 camRot = cam.transform.rotation,
                 proj = cam.projectionMatrix,
             };
 
-            if (SystemInfo.supportsAsyncGPUReadback)
+            if (SystemInfo.supportsAsyncGPUReadback && !SyncReadback)
             {
                 readbackPending = true;
                 AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBA32, req =>
@@ -170,6 +202,14 @@ namespace SpellDuel
             }
             for (int i = 3; i < frame.Length; i += 4) frame[i] = 255;   // alpha 一律不透明
             frameReady = true;
+            if (capturing != null)
+            {
+                capturing.stagedAt = Time.realtimeSinceStartup;
+                MsReadback = Ema(MsReadback, (capturing.stagedAt - capturing.capturedAt) * 1000f);
+#if UNITY_ANDROID
+                if (!SyncReadback && ++readbackSamples >= 10 && MsReadback > SyncSwitchMs) SyncReadback = true;   // 非同步讀回等太久：改同步
+#endif
+            }
             if (!nativeBusy) SubmitReady();
         }
 
@@ -177,6 +217,7 @@ namespace SpellDuel
         {
             frameReady = false;
             pending = capturing;
+            if (pending != null) { pending.submittedAt = Time.realtimeSinceStartup; MsWait = Ema(MsWait, (pending.submittedAt - pending.stagedAt) * 1000f); }
             try
             {
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -210,6 +251,11 @@ namespace SpellDuel
             nativeBusy = false;
             var res = pending;
             if (res == null) return;
+            float nowT = Time.realtimeSinceStartup;
+            if (r.Length > raw.Length) MsDetect = Ema(MsDetect, r[r.Length - 1]);
+            MsTotal = Ema(MsTotal, (nowT - res.capturedAt) * 1000f);
+            hzCount++; if (nowT - hzSince >= 1f) { Hz = hzCount / (nowT - hzSince); hzCount = 0; hzSince = nowT; }
+            Stats = $"手勢 {Hz:0} 次/秒　總延遲 {MsTotal:0}ms\n讀回 {MsReadback:0}・排隊 {MsWait:0}・辨識 {MsDetect:0}ms{(SyncReadback ? "（同步讀回）" : "")}";
             res.found = r[1] > 0.5f;
             for (int i = 0; i < Count; i++)
             {
