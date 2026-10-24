@@ -1,0 +1,360 @@
+{
+  "xiaotie": {
+    "group": 1,
+    "ref": "Xiaotie",
+    "design": "Young apprentice blacksmith boy, spiky chestnut brown hair, amber eyes, soot smudges on cheeks, orange goggles with dark frame on his forehead, vivid red neck scarf, rolled-sleeve white work shirt, brown bib overalls and dark tool belt, dark fingerless work gloves. Stubborn competitive but kind; neutral one-corner closed smirk. One hand holds a small blacksmith hammer lowered at hip; other arm relaxed. EXACT provided reference.",
+    "box": [
+      504,
+      247,
+      705,
+      437
+    ],
+    "headTop": 17
+  },
+  "mila": {
+    "group": 1,
+    "design": "Clever adult travelling merchant woman: dark plum-purple chin-length bob, narrow upward almond amber-brown eyes, one brow slightly raised, knowing closed smile. Teal turquoise long many-pocket travelling vest, purple side panels over cream blouse, tan/gold diagonal strap, mustard soft wide-brim travel hat, small gold hoop earring, leather coin pouch and pack with rolled parchment. Refined oval face, confident slight head tilt. One hand rests on pouch, other relaxed. Colors from Portraits.cs and OutfitArt.",
+    "box": [
+      507,
+      225,
+      706,
+      414
+    ],
+    "headTop": 9
+  },
+  "foreman": {
+    "group": 1,
+    "design": "Foreman Lao Shi, older sturdy male mine foreman, graying short dark brown hair and thick short salt-and-pepper beard, tired warm brown eyes, coarse concerned brows and soot marks. Worn ochre-brown mining coat over off-white shirt, charcoal work trousers, leather belt, simple brass miner lamp clipped at waist, old pickaxe held lowered beside body, leather work gloves. Reliable weary leader keeping colleagues' name tags, no modern hardhat or text.",
+    "box": [
+      512,
+      133,
+      691,
+      325
+    ],
+    "headTop": 25
+  },
+  "ayan": {
+    "group": 1,
+    "design": "Ayan, young adult injured miner man: messy dark brown short hair, muted hazel eyes, worried sloping brows, pale warm skin with soot, timid tense closed mouth. Faded slate-blue work shirt with sleeves rolled, plain brown leather mining vest, dark work trousers, worn satchel and cloth bandage at forearm. Holds simple wooden crutch under one arm, other hand grips a small miner lantern. Upright supported pose, no blood or gore.",
+    "box": [
+      500,
+      235,
+      704,
+      428
+    ],
+    "headTop": 50
+  },
+  "bellsmith": {
+    "group": 1,
+    "design": "Mysterious black-clad bellsmith man, lean middle-aged, charcoal hood and dark iron-gray blacksmith coat over muted burgundy shirt, layered leather apron, brass bell-mold tools at belt, compact forging hammer resting low in one hand. Narrow amber eyes visible in shadow, sharp tired cheekbones, short dark stubble, tense guarded closed mouth. Face remains visible, not a featureless mask; no modern tactical gear. Reclusive suspicious artisan, not a horned demon.",
+    "box": [
+      553,
+      212,
+      711,
+      401
+    ],
+    "headTop": 68
+  },
+  "cui": {
+    "group": 2,
+    "ref": "Cui",
+    "frame": "v2_s03",
+    "design": "EXACT elf elder Cui in reference and film: very long pale sage hair with center-part soft bangs, long pointed ears, half-open green eyes (film v2_s03), slender graceful face. Gold branching leaf crown and central green jewel, light olive-green wide-sleeve crossover kimono with ivory collar, dark forest-green obi and gold vine clasp, fine golden vine embroidery, long dark green panels. Composed distant wise neutral expression. Hands relaxed low, no staff or new jewelry.",
+    "box": [
+      548,
+      302,
+      705,
+      440
+    ],
+    "headTop": 50
+  },
+  "feng": {
+    "group": 2,
+    "design": "Feng, agile adult male forest ranger: copper auburn tousled wolf-cut hair, sharp upward amber eyes, easy alert closed smile, small narrow healed cheek scar. Forest green asymmetric ranger tunic and dark green hood folded at shoulders, fitted leather bracers and brown diagonal strap, simple quiver behind shoulder, small green-glass belt lantern and leaf pin. Lean athletic build, one hand rests lightly on a lowered wooden bow, relaxed watchful posture.",
+    "box": [
+      529,
+      188,
+      704,
+      357
+    ],
+    "headTop": 18
+  },
+  "xiaoye": {
+    "group": 2,
+    "ref": "Xiaoye",
+    "frame": "v2_s03",
+    "design": "EXACT young elf girl Xiaoye: bright green twin ponytails tied with red bows, short center bangs, large curious green eyes, pointed elf ears, round child face, innocent slightly uncertain closed mouth. Yellow gold dress with white detached puff sleeves and ivory collar, black bow belt, thin gold leaf embroidery, holding a small worn book gently at belly. Keep child proportions and modest fully covered outfit as reference, no adult curves.",
+    "box": [
+      522,
+      289,
+      742,
+      474
+    ],
+    "headTop": 20
+  },
+  "haido": {
+    "group": 3,
+    "ref": "Haido",
+    "frame": "v3_s03",
+    "design": "EXACT Haido film captain: navy-blue short tousled side-part hair, golden amber eyes, confident youthful masculine face with slim angular jaw. Low white naval peaked cap, black band and visor, gold anchor badge, blue double-breasted naval jacket with two rows gold buttons, gold shoulder epaulettes, anchor chest badge, red upper sleeve patch, white trousers. Upright confident but relaxed neutral closed mouth, hands relaxed or one resting on belt. No coat redesign.",
+    "box": [
+      480,
+      260,
+      657,
+      421
+    ],
+    "headTop": 53
+  },
+  "nagi": {
+    "group": 3,
+    "ref": "Nagi",
+    "frame": "v3_s03",
+    "design": "EXACT Nagi innkeeper: dark wine-red short rounded bob with outward tiny nape tufts and middle fringe, reddish brown large gentle eyes, gold teardrop hoop earring. Pink fitted short puff-sleeve long dress, white collar, white ruffled shoulder trims, black ribbon bow at collar, plain white apron tied at waist. Warm composed neutral closed smile, holds a small black metal lantern lowered in one hand, other hand relaxed. Same outfit as reference.",
+    "box": [
+      458,
+      289,
+      660,
+      475
+    ],
+    "headTop": 88
+  },
+  "mio": {
+    "group": 3,
+    "ref": "Mio",
+    "frame": "v3_s04",
+    "design": "EXACT Mio from film, spectral young woman with long pale-blue flowing hair and soft fringe, delicate downturned closed eyelids in normal expression. Translucent icy blue-white high-neck dress with intricate white floral lace at shoulders, collar, bodice, cuffs and skirt border; long delicate sleeves. Hands gently together near waist. Sad secretive calm neutral, head slightly lowered but turned screen right. Preserve pale cyan spirit glow and subtle translucency within silhouette, no colored opaque body or separate background particles.",
+    "box": [
+      549,
+      334,
+      744,
+      490
+    ],
+    "headTop": 114
+  },
+  "achao": {
+    "group": 3,
+    "design": "Achao, elderly experienced fisherman man: sun-warmed light tan skin, gray short cropped hair, thick gray moustache and short scruffy beard, wrinkled kindly narrowed teal-gray eyes, worried but warm brows. Worn broad straw fishing hat, teal turquoise short-sleeve fishing work coat over muted indigo shirt, cream undershirt collar, weathered rope belt and small leather tackle pouch. Holds simple wooden fishing rod lowered beside body; no fish or extra scenery. Slightly stooped but dignified.",
+    "box": [
+      510,
+      267,
+      679,
+      448
+    ],
+    "headTop": 104
+  },
+  "leo": {
+    "group": 4,
+    "design": "Leo, retired arena fighter, mature sturdy man based on Haido template: short navy hair, amber eyes, facial scar and mature lines, sober regretful closed mouth. Bronze helmet with ONE intact horn on viewer left and broken stump on viewer right, worn bronze breastplate over faded navy coat and dark trousers, red-brown leather belt, old gloves. One hand rests on belt, other carries lowered old sword sheathed, no modern naval cap. Reliable veteran, no full face mask.",
+    "box": [
+      489,
+      249,
+      650,
+      420
+    ],
+    "headTop": 11
+  },
+  "xiaosha": {
+    "group": 4,
+    "design": "Xiaosha, young adult ticket seller girl: warm brown hair tied in low ponytail, green large anxious-friendly eyes, soft round face and mildly worried brows. Turquoise short collared coat with ivory blouse, simple gold trim, brown belt and modest long skirt. Holds ticket ledger with three pale blank ticket stubs in front of waist. Compassionate quiet closed smile, slight inward shoulders, no lettering anywhere.",
+    "box": [
+      516,
+      288,
+      698,
+      475
+    ],
+    "headTop": 106
+  },
+  "tieniang": {
+    "group": 4,
+    "design": "Tieniang, adult female armor smith based on Nagi: wine-red short bob, reddish brown eyes, stronger arms and confident firm brow, practical kind closed mouth. Muted rose work blouse with rolled sleeves, broad dark brown leather armor-smith apron, tool belt with tongs and rivets, dark work gloves. Holds a small heavy riveting hammer lowered near hip. No maid frills, no decorative meaningless panels, credible worn craftsman clothing.",
+    "box": [
+      526,
+      261,
+      694,
+      438
+    ],
+    "headTop": 90
+  },
+  "laotuo": {
+    "group": 5,
+    "design": "Laotuo, elderly caravan station keeper based on Laoyan: receding white hair with small topknot, white brows, long white beard, wrinkled warm brown eyes, patient worried neutral mouth. Faded red traditional long robe over charcoal clothes, red waist sash, broad indigo shawl around shoulders and an old brass station-key bell at belt. One hand rests on a weathered wooden walking stick. Humane tired waystation elder, no camel or scenery.",
+    "box": [
+      470,
+      255,
+      645,
+      442
+    ],
+    "headTop": 90
+  },
+  "aling": {
+    "group": 5,
+    "design": "Aling, young adult caravan daughter based on Mila: dark plum bob, warm amber brown eyes, determined but worried brows, small closed mouth. Turquoise travelling vest over ivory blouse with muted purple side panels, ochre caravan scarf, brown diagonal pack strap and belt, THREE small brass bells across upper chest. One hand gently holds a cracked small brass bell at chest, other rests near travel satchel. No merchant broad hat, no text.",
+    "box": [
+      526,
+      280,
+      704,
+      458
+    ],
+    "headTop": 112
+  },
+  "shi": {
+    "group": 5,
+    "design": "Mr Shi, mature male storyteller based on guildmaster template: ash-blond silver side-part short hair, small neat gray goatee, amber-brown watchful eyes and long thoughtful face, dignified restrained closed smile. Burgundy long crossover travelling coat with dark blue shoulder shawl and subtle gold trim over ivory inner collar, leather belt. Holds an old rolled parchment scroll with plain wooden rollers low in one hand, other hand relaxed. Scholarly, grounded, not royal.",
+    "box": [
+      501,
+      219,
+      658,
+      412
+    ],
+    "headTop": 96
+  },
+  "guildmaster": {
+    "group": 6,
+    "design": "Guildmaster: mature stern male authority, ash-blond gray side-part hair, strong straight brows, sharp amber brown eyes, narrow dignified long face, healed fine cheek scars, closed straight serious mouth. Rich burgundy long guild coat, asymmetric dark blue shoulder mantle, neat ivory high collar, antique gold edging and THREE small bell-shaped guild emblems at upper chest. Hands calmly clasped at waist, upright fair and imposing. No crown or weapon.",
+    "box": [
+      515,
+      216,
+      691,
+      410
+    ],
+    "headTop": 120
+  },
+  "towerkeeper": {
+    "group": 6,
+    "design": "Towerkeeper, androgynous older adult mystic with long silver-lilac side-part hair, half-lidded pale lavender eyes, calm distant long face, quiet closed mouth. Muted violet star-lantern hooded cloak with dark indigo lining and understated antique gold hem, ivory inner collar, a small gold star-shaped lantern hanging near belt. One hand holds lantern chain low, other relaxed, no constellation background or extra glyphs. Readable face, refined wise presence.",
+    "box": [
+      513,
+      224,
+      661,
+      401
+    ],
+    "headTop": 105
+  },
+  "golem": {
+    "group": 1,
+    "ref": "Golem",
+    "frame": "v1_s02",
+    "boss": true,
+    "design": "EXACT molten golem: towering muscular humanoid made of angular charcoal obsidian armor/stone slabs separated by glowing orange magma fissures, narrow blazing amber eyes in black wedge helmet-like head, fiery throat, large black diamond crystal embedded at sternum with orange rim. Same broad shoulders and massive stone fists from reference, three-quarter toward screen right, upper-body crop. Normal is grim sealed eyes, not attacking; no extra weapons or background.",
+    "box": [
+      474,
+      95,
+      802,
+      427
+    ]
+  },
+  "treeking": {
+    "group": 2,
+    "ref": "TreeKing",
+    "frame": "v2_s05",
+    "boss": true,
+    "design": "EXACT corrupted tree king: ancient twisting brown bark trunk with recognizable sorrowful carved face, branch antler crown, many bare pointed branches, thorny black-purple crystalline core in chest, subtle violet corrupted glow. Root-like arms arranged quietly around trunk, same branch silhouette and bark structure as reference, slightly oriented screen right, upper trunk portrait. No scenery, no leaves added to bare crown.",
+    "box": [
+      566,
+      485,
+      748,
+      651
+    ]
+  },
+  "kraken": {
+    "group": 3,
+    "ref": "Kraken",
+    "frame": "v3_s02",
+    "boss": true,
+    "design": "EXACT deep sea kraken: dark teal cephalopod mantle pointed at back, cyan glowing angular rune markings over head, bright cyan menacing eyes with ridged brows, black diamond crystalline core at mouth, curling thick tentacles with pale teal suction cups arranged close inside canvas. Three-quarter toward screen right, upper-body/face crop. Preserve exact shape and palette of reference, no new horns or fish anatomy.",
+    "box": [
+      359,
+      497,
+      712,
+      733
+    ]
+  },
+  "bronze": {
+    "group": 4,
+    "boss": true,
+    "design": "Bronze arena spirit Casi: colossal empty weathered bronze gladiator armor animated by a trapped soul, battered enclosed helmet with narrow sorrowful ghostly amber eye slit, heavy curved bronze pauldrons and chestplate containing a jagged BLACK crystal, old red faded sash and ancient engraved armor seams, strong silent spectral fighter. Upper body with resting gauntlets, slight screen-right three-quarter view. No flesh or gore, no modern robot, no pose change.",
+    "box": [
+      536,
+      237,
+      750,
+      472
+    ]
+  },
+  "rockfiend": {
+    "group": 5,
+    "boss": true,
+    "design": "Yellow-earth rock demon: massive ancient ochre sandstone humanoid cliff guardian, layered eroded rock shoulders and angular boulder forearms, solemn carved stone face and warm amber stone eyes. Half-buried bronze rock bell in chest tangled with jagged black crystals, a few canyon-name gouges as abstract marks without readable letters. Upper-body mountainlike portrait slightly toward screen right, quiet planted pose, no full environment.",
+    "box": [
+      635,
+      219,
+      815,
+      427
+    ]
+  },
+  "overlord": {
+    "group": 4,
+    "boss": true,
+    "design": "Arena overlord, humanlike villain boss: imposing middle-aged male arena master, slick black hair with a few gray streaks, cruel upward narrow gold eyes, smug angular face and thin dark moustache. Dark crimson and black richly tailored arena-owner coat with antique bronze fittings, fur-edged asymmetric mantle, broad leather belt and heavy iron keys, holds a CLOSED unlettered account ledger at hip. Upper-body portrait to screen right, no crown or monster horns, same pose normal/angry.",
+    "box": [
+      523,
+      161,
+      694,
+      348
+    ]
+  },
+  "lavashade": {
+    "group": 1,
+    "boss": true,
+    "design": "Lava afterimage: translucent spectral echo of the obsidian lava golem, same wedge stone face, narrow amber eyes, black stone slab shoulders and glowing orange seams, chest black crystal. Edges dissolve gently into translucent ember-haze WITHIN silhouette; no separate particle cloud or background. Quiet upper-body three-quarter right portrait, not a second different monster.",
+    "box": [
+      478,
+      138,
+      805,
+      467
+    ]
+  },
+  "treeshade": {
+    "group": 2,
+    "boss": true,
+    "design": "Tree-heart afterimage: translucent ghostly echo of the corrupted tree king, recognizable sorrowful bark face, twisting trunk shoulders, bare branch antlers, violet crystalline heart. Pale desaturated wood with spectral violet rim inside silhouette, softly fading edges, no forest or scenery. Quiet upper-trunk screen-right portrait.",
+    "box": [
+      622,
+      523,
+      871,
+      759
+    ]
+  },
+  "tideshade": {
+    "group": 3,
+    "boss": true,
+    "design": "Tide afterimage: translucent spectral echo of the dark-teal kraken, cyan rune mantle and ridged glowing cyan eyes, black crystal mouth core and a few close curled sucker-lined tentacles. Pale cyan desaturated body with gentle translucent fading edges within silhouette, no water or background. Upper-body screen-right portrait.",
+    "box": [
+      359,
+      497,
+      712,
+      733
+    ]
+  },
+  "erin": {
+    "box": [
+      377,
+      204,
+      532,
+      340
+    ],
+    "headTop": 69,
+    "lockedEdits": true,
+    "group": 0
+  },
+  "laoyan": {
+    "box": [
+      330,
+      173,
+      488,
+      315
+    ],
+    "headTop": 69,
+    "lockedEdits": true,
+    "group": 0
+  }
+}

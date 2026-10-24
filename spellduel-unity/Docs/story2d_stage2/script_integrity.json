@@ -1,0 +1,12 @@
+{
+  "story.txt": {
+    "baseline": "188fb99",
+    "canonicalSha256": "1ac05be7d76c1c76e963dbc7b5d598e3dba80610cfc453cdddf1a0c0d7f13ee7",
+    "originalTextAndSettingsPreserved": true
+  },
+  "dungeons.txt": {
+    "baseline": "188fb99",
+    "canonicalSha256": "7bccd859b461493a1f5cf98eaadd2da1d0b61083abc426e067d9b5e0faae7bc2",
+    "originalTextAndSettingsPreserved": true
+  }
+}

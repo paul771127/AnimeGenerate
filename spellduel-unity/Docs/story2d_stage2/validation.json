@@ -1,0 +1,938 @@
+{
+  "complete": true,
+  "characters": [
+    {
+      "id": "achao",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11400
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 11617
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 11392
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 11823
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 11140
+        }
+      ]
+    },
+    {
+      "id": "aling",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 8955
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 8506
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9399
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 9597
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 7874
+        }
+      ]
+    },
+    {
+      "id": "ayan",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11634
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10567
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 10714
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 9692
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10495
+        }
+      ]
+    },
+    {
+      "id": "bellsmith",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 10283
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 9816
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 10168
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 10750
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 9940
+        }
+      ]
+    },
+    {
+      "id": "bronze",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 16625
+        }
+      ]
+    },
+    {
+      "id": "cui",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 6162
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 7705
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 7127
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 7846
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 5775
+        }
+      ]
+    },
+    {
+      "id": "erin",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 9289
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 8785
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 8535
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 9175
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 8567
+        }
+      ]
+    },
+    {
+      "id": "feng",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 10187
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10178
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9070
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 8814
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10328
+        }
+      ]
+    },
+    {
+      "id": "foreman",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11748
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 11871
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 12010
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 11654
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 11750
+        }
+      ]
+    },
+    {
+      "id": "golem",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 26078
+        }
+      ]
+    },
+    {
+      "id": "guildmaster",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11021
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10334
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9905
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 11399
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10203
+        }
+      ]
+    },
+    {
+      "id": "haido",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 6945
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 7237
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 7154
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 8583
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 6821
+        }
+      ]
+    },
+    {
+      "id": "kraken",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 28308
+        }
+      ]
+    },
+    {
+      "id": "laotuo",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11790
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10179
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9368
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 10228
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10949
+        }
+      ]
+    },
+    {
+      "id": "laoyan",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 9454
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 9174
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 10066
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 9340
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 8840
+        }
+      ]
+    },
+    {
+      "id": "lavashade",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 21992
+        }
+      ]
+    },
+    {
+      "id": "leo",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 10492
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10478
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9675
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 10613
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10567
+        }
+      ]
+    },
+    {
+      "id": "mila",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11944
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 12126
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 10652
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 12254
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10691
+        }
+      ]
+    },
+    {
+      "id": "mio",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11810
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10849
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 11144
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 11090
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 11784
+        }
+      ]
+    },
+    {
+      "id": "nagi",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 12240
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 13069
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 12184
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 13118
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10507
+        }
+      ]
+    },
+    {
+      "id": "overlord",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 9793
+        }
+      ]
+    },
+    {
+      "id": "rockfiend",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10974
+        }
+      ]
+    },
+    {
+      "id": "shi",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 9929
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 9973
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9797
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 10093
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 8879
+        }
+      ]
+    },
+    {
+      "id": "tideshade",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 31765
+        }
+      ]
+    },
+    {
+      "id": "tieniang",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 9177
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 8605
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9893
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 8504
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10964
+        }
+      ]
+    },
+    {
+      "id": "towerkeeper",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 9246
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 9135
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9293
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 9163
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 8128
+        }
+      ]
+    },
+    {
+      "id": "treeking",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10430
+        }
+      ]
+    },
+    {
+      "id": "treeshade",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 17663
+        }
+      ]
+    },
+    {
+      "id": "xiaosha",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11367
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 11365
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 11525
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 11895
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10989
+        }
+      ]
+    },
+    {
+      "id": "xiaotie",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 10444
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 11625
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 11110
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 11254
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 11842
+        }
+      ]
+    },
+    {
+      "id": "xiaoye",
+      "size": [
+        640,
+        960
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 13359
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 13007
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 14224
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 10918
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 11344
+        }
+      ]
+    }
+  ],
+  "backgrounds": [
+    "boss_arena",
+    "boss_canyon",
+    "boss_forest",
+    "boss_sea",
+    "boss_volcano",
+    "dungeon",
+    "guild",
+    "stage_arena",
+    "stage_canyon",
+    "stage_forest",
+    "stage_sea",
+    "stage_volcano",
+    "tower",
+    "town_arena",
+    "town_canyon",
+    "town_forest",
+    "town_port",
+    "village"
+  ],
+  "pending": [],
+  "totalBytes": 39273419,
+  "annotatedLines": 244
+}

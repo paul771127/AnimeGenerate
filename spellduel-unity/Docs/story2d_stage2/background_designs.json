@@ -1,0 +1,78 @@
+{
+  "stage_volcano": {
+    "group": 1,
+    "frame": "v0_s08",
+    "design": "Empty volcanic mountain approach at sunset, charcoal basalt path winding up toward glowing orange volcano and black cliffs, thin lava channels far beside the safe path, scattered old stone gate ruins. Match the film's volcanic ridge and warm orange sky. No characters or monsters."
+  },
+  "boss_volcano": {
+    "group": 1,
+    "frame": "v1_s01",
+    "design": "EXACT film lava hall architecture without golem: vast dark basalt chamber, tall carved stone sealed gate at center, massive angular pillars, glowing orange lava falls at both sides of gate, quiet raised stone platform and broad dark floor foreground. The GOLEM MUST BE ABSENT."
+  },
+  "dungeon": {
+    "group": 6,
+    "design": "Empty old mountain mine/ruin entrance, weathered stone arch into a blue-gray cavern, abandoned wooden support beams and rails, one unlit mining cart and crates at side, warm lanterns attached to stone, mist and green moss around entrance. No people, skeletons, creatures, faces or humanoid statues."
+  },
+  "town_forest": {
+    "group": 2,
+    "frame": "v2_s03",
+    "design": "Mori village, serene inhabited-looking but EMPTY elven forest town: ancient giant living trees framing timber houses nestled around trunks, soft leaf-shaped lanterns suspended on vines, several blank carved wooden memorial name plaques, quiet wooden paths and mossy stone foreground. Dappled green morning light, no elf figures or readable writing."
+  },
+  "stage_forest": {
+    "group": 2,
+    "frame": "v2_s04",
+    "design": "Misty deep forest approach, immense arching roots and twisting vines over a mossy path, filtered green daylight, pale floating mist, small leaf lanterns marking a route, distant trunk columns. Match the film's lush green root forest, remove the ranger and all creatures."
+  },
+  "boss_forest": {
+    "group": 2,
+    "frame": "v2_s02",
+    "design": "The Name Grove deep sanctuary: enormous tangled ancient tree-root vault framing a hollow central grove, an empty stone memorial altar and blank wood plaques, sparse violet corrupted light deep inside a root arch, mist and mossy stone steps. Match film scale but REMOVE the Tree King character: no face, eyes, humanoid tree or creature silhouette in any trunk."
+  },
+  "town_port": {
+    "group": 3,
+    "frame": "v3_s03",
+    "design": "Shiosai harbor, empty old seaside port: slate-roof timber-and-stone tavern near quay, old cylindrical stone lighthouse farther back, uncrewed small fishing boats with pale folded sails, mooring ropes, lanterns and quiet damp stone paving. Cool blue hour, warm tavern window light. No lettering, patrons, sailors, monsters or person silhouettes."
+  },
+  "stage_sea": {
+    "group": 3,
+    "frame": "v3_s04",
+    "design": "Empty offshore black-rock reefs along a narrow safe stone landing, slate-blue rolling sea, distant old lighthouse beacon, pale moon haze and spray, a few tide pools reflecting cyan. Foreground flat dark wet rock. No ghost girl, kraken, people, sea creatures or silhouettes."
+  },
+  "boss_sea": {
+    "group": 3,
+    "frame": "v3_s05",
+    "design": "Storm lighthouse reef battlefield from film without characters: towering cylindrical stone lighthouse on jagged black reef, dark blue-gray storm clouds with sharp pale lightning, crashing white surf and deep teal waves, old golden beacon at top. Clear empty wet rock platform foreground. No kraken, tentacles, people, ships with crews or creatures."
+  },
+  "town_arena": {
+    "group": 4,
+    "design": "Empty Red Sand City outside a grand circular stone colosseum: warm ochre sandstone walls, bronze gates and lamp fittings, faded crimson cloth awnings, simple market stalls closed without people, large entrance arch in upper two thirds. Dry clear afternoon light, quiet sandy stone paving foreground. No statues shaped as people, crowds, animals, writing or arena fighter."
+  },
+  "stage_arena": {
+    "group": 4,
+    "design": "Empty arena spectator access corridor, sunlit sandstone arches with stepped stands glimpsed beyond, bronze railings, old red cloth banners without symbols, worn stone passage leading toward light. Dramatic warm light and cool architectural shadows, uncluttered lower floor. No spectators, gladiators, monsters or readable marks."
+  },
+  "boss_arena": {
+    "group": 4,
+    "design": "Empty center of ancient bronze-fitted colosseum, circular golden sand stage framed by towering ochre stands and arched VIP balcony, enormous old bronze gong off to side, idle overhead axe machinery barely at top edge, gates closed. Warm sunset. No armor spirit, people, bones, fighting characters or crowds."
+  },
+  "town_canyon": {
+    "group": 5,
+    "design": "Empty Windsand caravan waystation on ochre mountain pass, layered yellow-earth cliffs, timber-and-plaster inn under simple slate tiles, indigo shawls and cream canvas awnings, old bronze camel-bell string beside gate, stacked trade crates and well. No caravanners, camels or animals, no readable text. Muted golden daylight, simple packed-earth forecourt."
+  },
+  "stage_canyon": {
+    "group": 5,
+    "design": "Empty winding yellow-earth mountain caravan trail between tall layered cliffs, weathered abstract name gouges on rock (NOT readable letters), old rope handrail and a few stacked cairns, dusty haze and high blue sky. Safe broad foreground trail, no people, camels, beasts or falling rock action."
+  },
+  "boss_canyon": {
+    "group": 5,
+    "design": "Empty cliff-top shrine of the Rock Bell: enormous ancient bronze bell half embedded in yellow sandstone cliff with some jagged black crystals around its socket, wind-eroded plateau and deep ochre canyon beyond, small empty stone altar. No rock demon, stone faces, people or humanoid silhouettes. Sunset amber light, simple flat foreground."
+  },
+  "guild": {
+    "group": 6,
+    "design": "Empty fantasy profession guild interior in same Japanese anime world: sturdy timber beams, warm plaster walls, brass bell insignia above service counter, empty noticeboard with blank papers, shelves of closed ledgers, rolled maps, a simple sword rack at side, tall sunlit windows. Quiet polished wood floor in bottom third. No clerk, clients, portraits, humanoid statues or readable text."
+  },
+  "tower": {
+    "group": 6,
+    "design": "Empty entrance to the Endless Tower: impossibly tall pale stone tower rising beyond frame, ornate arched dark doorway with subtle violet starlight, brass lanterns and a small seven-point star inlay in stone, ancient steps and floating mist. Dark indigo dusk with warm doorway glow, broad empty foreground landing. No towerkeeper, silhouettes, creatures or readable runes."
+  }
+}

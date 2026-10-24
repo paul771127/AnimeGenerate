@@ -1,0 +1,2191 @@
+{
+  "characters": {
+    "xiaotie": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        504,
+        247,
+        705,
+        437
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/xiaotie.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 3.376858711242676,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 10444
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 11625
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 11110
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 11254
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 11842
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 168116,
+          "sha256": "db49d530fd90a9fea1fe131f3abc5153c37f2caf1c6494ba73429a4d817465c5"
+        },
+        {
+          "expression": "smile",
+          "bytes": 168178,
+          "sha256": "594fed73b1c970a1868d58e885e288c54ee8f3657ad93bc3ce8ede7ca0985101"
+        },
+        {
+          "expression": "angry",
+          "bytes": 168462,
+          "sha256": "69ed68a99ed2a65392ef0f29e273af40afbb0ddd6d262b9bc6eea3e5d23a49db"
+        },
+        {
+          "expression": "sad",
+          "bytes": 168495,
+          "sha256": "e42131e8f80255be45906e34a3b912be4b672ddc4acb2a137246403d3ae524d7"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 168786,
+          "sha256": "cc4e2f9766c4a9ebf204f1316cf61751afbff4ef907411fa860378f7644c3f32"
+        },
+        {
+          "expression": "serious",
+          "bytes": 167776,
+          "sha256": "fe8fa45b8fab5d2fb71b7c34cfd7892e792a6d6103c42f41069414e18fb38d11"
+        }
+      ]
+    },
+    "mila": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        507,
+        225,
+        706,
+        414
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/mila.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 4.143021106719971,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11944
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 12126
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 10652
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 12254
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10691
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 201514,
+          "sha256": "498659ccf13f88f645d67d6b5d8c649a3c656307c67c3e5b6a29a4e96ab746e8"
+        },
+        {
+          "expression": "smile",
+          "bytes": 202094,
+          "sha256": "c526d7a56de431f41e13745ac1c1e7e4a02379621becb3705baf6fa7710d05c2"
+        },
+        {
+          "expression": "angry",
+          "bytes": 201898,
+          "sha256": "b6b682d92ec05f9494eb64c5ad9a8b933bab23e3770928f55bdfda077544cd23"
+        },
+        {
+          "expression": "sad",
+          "bytes": 201359,
+          "sha256": "02316d1f7a248d9e47a530e0c97b31b0cdbc793c4f70f1f39d2bd66601f1bf34"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 201848,
+          "sha256": "065617563e1898a82f0406ecb02f0202a2752971d8005d40fccf6fae117c2005"
+        },
+        {
+          "expression": "serious",
+          "bytes": 201647,
+          "sha256": "16f008a1e486d089f2c697d57f90564b8cf1dff61e12304dd7613a3f38d7e132"
+        }
+      ]
+    },
+    "foreman": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        512,
+        133,
+        691,
+        325
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/foreman.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 2.702598810195923,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11748
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 11871
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 12010
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 11654
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 11750
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 229210,
+          "sha256": "e7d5c70f3b418d134f62a01b453a909695566232f7a9d50858d69d5d4451f9a5"
+        },
+        {
+          "expression": "smile",
+          "bytes": 228819,
+          "sha256": "663e2b5a6db093328a7fb315cf51d8b16a26f15c96627fb680b082fb4b06ffd1"
+        },
+        {
+          "expression": "angry",
+          "bytes": 228587,
+          "sha256": "32f5be0c318203c58b4080f7ced3dcd54a58eb040f0cf0be6d6f8773e0f266d7"
+        },
+        {
+          "expression": "sad",
+          "bytes": 228705,
+          "sha256": "d362d6b23fa34d7da8f53c21d020c544e660a2067b3b609affc208ad97bafcd0"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 228851,
+          "sha256": "a1f6f05f07d02e03a907543322329d4d81feb6cd1ecd9f0fb1725150f9b0f97b"
+        },
+        {
+          "expression": "serious",
+          "bytes": 228669,
+          "sha256": "c698288b780e0fad4e9ddd91bf7e06873d2d6228ffb6345f58684c4257101e8a"
+        }
+      ]
+    },
+    "ayan": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        500,
+        235,
+        704,
+        428
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/ayan.png",
+      "headTop": 57,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 2.8960442543029785,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11634
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10567
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 10714
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 9692
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10495
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 245739,
+          "sha256": "b1a442bf2bbc4e85a01cadcccc5aa00b4ea437468323052451ba8b895a3cd558"
+        },
+        {
+          "expression": "smile",
+          "bytes": 245664,
+          "sha256": "ff81156148408ebdc48ea54775b134faee16a69425cb98bc9024f090d284057d"
+        },
+        {
+          "expression": "angry",
+          "bytes": 245734,
+          "sha256": "d654ab8143c40f1ab1e7162bdf5d7ab33ba5cce2d1a0027c4d7b7d5d0d76c1fc"
+        },
+        {
+          "expression": "sad",
+          "bytes": 246128,
+          "sha256": "ccce70b0c5c4d2367a7b5699202367c2c2b558b08b0689628fef7e957854f31b"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 246180,
+          "sha256": "a27f99f59f38ebda708eabce6cfc5e73b4f2a8f3a45f8e26a0e181fc7c3389f0"
+        },
+        {
+          "expression": "serious",
+          "bytes": 246361,
+          "sha256": "c76e0b41dd4bdc2ada3b3e80d8c6dc91d3ff912f715ab0be9f5532deaf5b40f9"
+        }
+      ]
+    },
+    "bellsmith": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        553,
+        212,
+        711,
+        401
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/bellsmith.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 2.4823572635650635,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 10283
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 9816
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 10168
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 10750
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 9940
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 264687,
+          "sha256": "06f26aacf0c02e58f8e83e9a1964721f3f111a4d9552dbf9d51c3c2e9d349594"
+        },
+        {
+          "expression": "smile",
+          "bytes": 264617,
+          "sha256": "39726a04b6938addd162e3865a50a5c085f7eaba0b73011ff4fd91c9eb2ef28d"
+        },
+        {
+          "expression": "angry",
+          "bytes": 264327,
+          "sha256": "a0c293d2c757ba3c0c0544b435f171f1034b9aec7292adb8fac100144ea3f52f"
+        },
+        {
+          "expression": "sad",
+          "bytes": 264321,
+          "sha256": "ca02c2225ce7fb35a1efd720c508739f87b456458a181a89cd2d463e7895ba7d"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 264240,
+          "sha256": "b00ac7b264fa34451e7abf5e94449f8062f8a9310252212ee304316bdcaa53e1"
+        },
+        {
+          "expression": "serious",
+          "bytes": 264566,
+          "sha256": "cfd6662d9e2b431e974d8887d24a796fbf97b43395804fe6fab8c80aac4008f7"
+        }
+      ]
+    },
+    "golem": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        474,
+        95,
+        802,
+        427
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/golem.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 3.787367820739746,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 26078
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 229596,
+          "sha256": "84419b9e6765184dbbc8e2455efa29aed789f2f031b11744b60659ac1032bff2"
+        },
+        {
+          "expression": "angry",
+          "bytes": 229268,
+          "sha256": "eac604d831b742a76308b60e9be59084c9b446ecb5646196d10a866722a84092"
+        }
+      ]
+    },
+    "lavashade": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        478,
+        138,
+        805,
+        467
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/lavashade.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 4.655976295471191,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 21992
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 228028,
+          "sha256": "0aa75afd8cffb61add689e7d3409f50834a1188e65c3f8da2be96c1d797f90ee"
+        },
+        {
+          "expression": "angry",
+          "bytes": 227125,
+          "sha256": "3c3022d9de102cd344145c2cb342e72d888e033cd86b101144446dceecbb739d"
+        }
+      ]
+    },
+    "feng": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        529,
+        188,
+        704,
+        357
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/feng.png",
+      "headTop": 57,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 3.0120255947113037,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 10187
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10178
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9070
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 8814
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10328
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 224592,
+          "sha256": "f155e222c5ea89afc204d84d7d4c7f24c2015113346f20d6742e7a921deee60a"
+        },
+        {
+          "expression": "smile",
+          "bytes": 224814,
+          "sha256": "c4e1198d5fb3139207d886d179b640bc30925c01f9c3ecd7df55599833f590d2"
+        },
+        {
+          "expression": "angry",
+          "bytes": 224510,
+          "sha256": "e259bd7b0f67cc31e9bba095cf5f3ce2b077965ad4e4547ce9e490a521ecf177"
+        },
+        {
+          "expression": "sad",
+          "bytes": 225201,
+          "sha256": "f95befaa06c76117b79cd62f2e8dc9034aa686dbffa95f5e633c28281920aca6"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 224831,
+          "sha256": "5d3ced6921ca907bd52a2657e212221e53ff9a6763e291c742caff6adb88f196"
+        },
+        {
+          "expression": "serious",
+          "bytes": 224524,
+          "sha256": "85f7f5d5aba08f222c69a3149bf68ce07ace09879894e8e7f69f2d6628e02320"
+        }
+      ]
+    },
+    "xiaoye": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        522,
+        289,
+        742,
+        474
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/xiaoye.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 4.732640266418457,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 13359
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 13007
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 14224
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 10918
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 11344
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 187150,
+          "sha256": "b82be17730bd3d175fb8321dcbb31acacd31855fbf54ebf795f8b5feca1f7eb5"
+        },
+        {
+          "expression": "smile",
+          "bytes": 187369,
+          "sha256": "9d0d394cb7106bbc8751fb53ef42cb6fa807436b1252b35a65704cbb33bd8415"
+        },
+        {
+          "expression": "angry",
+          "bytes": 187669,
+          "sha256": "9fc660e6542ce1f27ae31b49d446f9535fa510f57f655bfc59a539e2b44ed509"
+        },
+        {
+          "expression": "sad",
+          "bytes": 187045,
+          "sha256": "bd9a4777ea6cb54eddc9fbe15805a5f4842990a31c2bd183365ce16bed545c23"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 187130,
+          "sha256": "c781c6b35a4ee7a7950a36f48cedb76b2556bf7a36b1a433518831fcee52867d"
+        },
+        {
+          "expression": "serious",
+          "bytes": 187087,
+          "sha256": "4095ec3b06870407b1e8cc4a89475672b4f7ab8f14c5ff9bfb33207bb0459a20"
+        }
+      ]
+    },
+    "treeking": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        566,
+        485,
+        748,
+        651
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/treeking.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 4.1700897216796875,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10430
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 399360,
+          "sha256": "57226c37d0f2ed33e0c201e16f295a8fef02408b847f8a7204d2c32056df023a"
+        },
+        {
+          "expression": "angry",
+          "bytes": 398905,
+          "sha256": "5684ccce095ba2ff8b7a9661268a2aad2d33dc6c880334845c53bdbb6313e461"
+        }
+      ]
+    },
+    "treeshade": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        622,
+        523,
+        871,
+        759
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/treeshade.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 5.091497421264648,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 17663
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 366682,
+          "sha256": "d9b8697f69193bf232364cddedca3c2fe6b4b5904ec432ba14ac1951cc318a85"
+        },
+        {
+          "expression": "angry",
+          "bytes": 365959,
+          "sha256": "4b99b37036449c1aed42c5e629d1426caabcd49a2b6f1e963dfdb5952d5d983d"
+        }
+      ]
+    },
+    "erin": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        377,
+        204,
+        532,
+        340
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/erin.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 4.987529754638672,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 9289
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 8785
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 8535
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 9175
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 8567
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 191260,
+          "sha256": "044b40b9e9ea70664cfb259590adb00b97c8c8f8b7879f4ab1ee0d6533405908"
+        },
+        {
+          "expression": "smile",
+          "bytes": 192665,
+          "sha256": "d9571f51df2eadfe4ec1e04945476789c69314f5d69b7a1479c78bd8dd5354c4"
+        },
+        {
+          "expression": "angry",
+          "bytes": 192150,
+          "sha256": "bb6a5caad281825240eacb73059bf132636330d7d88acb4c905d759f069d8944"
+        },
+        {
+          "expression": "sad",
+          "bytes": 191929,
+          "sha256": "75f7814f064569ec9327f996491228bfa77cb8cb592bc0220a6e66ae6988e0ba"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 192336,
+          "sha256": "f010bc0ed56d72a9ce74f1dcd4373e8016f57887daf675b83fc0d74896ac76ac"
+        },
+        {
+          "expression": "serious",
+          "bytes": 192628,
+          "sha256": "5b51562b64ca45606f30a108c43d680dc10cff9bac1a7cf34d3c99d2f3827148"
+        }
+      ]
+    },
+    "laoyan": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        330,
+        173,
+        488,
+        315
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/laoyan.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 2.474687099456787,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 9454
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 9174
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 10066
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 9340
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 8840
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 163427,
+          "sha256": "f7ddb6c2ca5e98f576b1dd4aad1a45241301faebd90bd55a331e4845411b9f3a"
+        },
+        {
+          "expression": "smile",
+          "bytes": 163321,
+          "sha256": "e1ff153a4bc9a8146dff0d6c732208d569a91a314415010655dae022a8c2b29f"
+        },
+        {
+          "expression": "angry",
+          "bytes": 162979,
+          "sha256": "da1cc2426f1d697a3ad03c5e9e8358df110c88671bc994fb96b8a8e07e26614f"
+        },
+        {
+          "expression": "sad",
+          "bytes": 163648,
+          "sha256": "6f1914aea1e7e916028eecc1dee6b9e54d0a71c07cb5802474129df7c091b338"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 164489,
+          "sha256": "8cc7ad1c22d83deb4edc34d192859a2522f2ab56d64669114ede83dfd1a5f4fa"
+        },
+        {
+          "expression": "serious",
+          "bytes": 162931,
+          "sha256": "2b6b076036c4b4f4748685e45961f3d0d1fe1191e9a3b4bad02e917851b5f5f3"
+        }
+      ]
+    },
+    "cui": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        548,
+        302,
+        705,
+        440
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/cui.png",
+      "headTop": 57,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 4.643404483795166,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 6162
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 7705
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 7127
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 7846
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 5775
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 202213,
+          "sha256": "e0207e9abe9e606f7180a4332aa241d748d4791d5bdb7c2334d46be154b81b26"
+        },
+        {
+          "expression": "smile",
+          "bytes": 202977,
+          "sha256": "213452662187f3cdd88e8257728ae82c36e43e3ec425c903055453527297bc9e"
+        },
+        {
+          "expression": "angry",
+          "bytes": 201956,
+          "sha256": "d0f10fa1c63cc4fe3b70f3916cd7c56aaad9edff86744b2d03b03f97ac86781d"
+        },
+        {
+          "expression": "sad",
+          "bytes": 202552,
+          "sha256": "b764d07910008521331ac7e6f93b008d237c739ff38b57ca4ad482bb9ecf6022"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 203124,
+          "sha256": "78c7ecb7f8d66e6e4f28a359ca41dcabf823971c85cd6eb45c750d0ddc3efe1e"
+        },
+        {
+          "expression": "serious",
+          "bytes": 202694,
+          "sha256": "ce7b851aa116befc934a9ea2cf1817c12ed8254de2479e50a9ea8f5142b5d745"
+        }
+      ]
+    },
+    "tideshade": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        359,
+        497,
+        712,
+        733
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/tideshade.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 3.4671425819396973,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 31765
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 517775,
+          "sha256": "16b039bd39c12d682804a26c93840adee3ab1a1826132c7860f740b9ffa62c2b"
+        },
+        {
+          "expression": "angry",
+          "bytes": 518522,
+          "sha256": "6692ebb279f9ab51057c7fe2e28831b92652c7c6e30a149725efc25ad17ccc70"
+        }
+      ]
+    },
+    "haido": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        480,
+        260,
+        657,
+        421
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/haido.png",
+      "headTop": 57,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 3.8246283531188965,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 6945
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 7237
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 7154
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 8583
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 6821
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 150803,
+          "sha256": "e3c4a5f119d0e71a35879476b3a117c2999bb1851d6a93de594a35b178e57dfc"
+        },
+        {
+          "expression": "smile",
+          "bytes": 151156,
+          "sha256": "46876176a721f670b8f3223d53e5d5889450f60110e797bbccb753893609f463"
+        },
+        {
+          "expression": "angry",
+          "bytes": 151213,
+          "sha256": "e40fcfbf025a9814416fbfa86777c2e57af84b45821934ae19e98464fb2ecde4"
+        },
+        {
+          "expression": "sad",
+          "bytes": 151353,
+          "sha256": "45d8e037d82f9734edcdfff676744aea9d090dc05491f93dc7751cbc717362ed"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 150906,
+          "sha256": "16c24fffa5e03e720ab59c0e5725639ab802b32d2a3eae9ff17ac7b1e50659da"
+        },
+        {
+          "expression": "serious",
+          "bytes": 150932,
+          "sha256": "12b4abf68feb5a2aa2d0b692a8d87a97589075ff756b57bb275a365c6784f593"
+        }
+      ]
+    },
+    "nagi": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        458,
+        289,
+        660,
+        475
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/nagi.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 2.5748438835144043,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 12240
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 13069
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 12184
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 13118
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10507
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 161199,
+          "sha256": "72d66774e6398894fab348b34747336c19407d9c6b09945aa182ec3182745fa3"
+        },
+        {
+          "expression": "smile",
+          "bytes": 161245,
+          "sha256": "67dac4aa97f8e165a85ece418115cdb8e43472ef88ee1e44eb10e553d867cdfe"
+        },
+        {
+          "expression": "angry",
+          "bytes": 161254,
+          "sha256": "f39d0b71734f73b287b22a328197f7119eeaade6bd7de1d649e2cb13ecfc4d7a"
+        },
+        {
+          "expression": "sad",
+          "bytes": 161229,
+          "sha256": "82a4cfcae286f3af59e9583b6d788163436a39c49937f506b055b2b4973df239"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 161216,
+          "sha256": "5e836ccb02cd4beb96b9e4db9fa89b439939e44f31964886fb9360e8e58a1ea1"
+        },
+        {
+          "expression": "serious",
+          "bytes": 161101,
+          "sha256": "847d16a74db9ce6bf5855645e6ec4d5ee2f285d3bd10508c63e8b3bc3b1cbf2d"
+        }
+      ]
+    },
+    "mio": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        549,
+        334,
+        744,
+        490
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/mio.png",
+      "headTop": 57,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 1.8526207208633423,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11810
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10849
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 11144
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 11090
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 11784
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 315303,
+          "sha256": "743b394c3389310b273208c6f7f5a86c6feec090f0d1f664938cf854f3cd0efc"
+        },
+        {
+          "expression": "smile",
+          "bytes": 315554,
+          "sha256": "74725a7b037a069c645f6772c10fbfb1251aa2b8355c256f7472a7f650d1fc54"
+        },
+        {
+          "expression": "angry",
+          "bytes": 315629,
+          "sha256": "b3d5bf1d16adcda88a147595d817369a1493f8d11bebeae72b8e5204ab88ae8c"
+        },
+        {
+          "expression": "sad",
+          "bytes": 315146,
+          "sha256": "ea2a08d2c104e0ef9f3402905d4144725d13fd2bd1e04fefc2ea34100bcb506b"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 315721,
+          "sha256": "6f27728d6e270839a64c707c50c6a35323d2824326e282e12704876b19f0a414"
+        },
+        {
+          "expression": "serious",
+          "bytes": 315449,
+          "sha256": "5f916b227a0d8e9e9b20308a391eac7c7ecadab264d169c985922ce0f568b07b"
+        }
+      ]
+    },
+    "achao": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        510,
+        267,
+        679,
+        448
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/achao.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 2.7570009231567383,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11400
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 11617
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 11392
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 11823
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 11140
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 191015,
+          "sha256": "3888bf358d21bce33a92991e0df073624a8831015283bbf94512e52f2415a0d2"
+        },
+        {
+          "expression": "smile",
+          "bytes": 192412,
+          "sha256": "83a038dfda47f08798c27ae8b6fcbcf5c3887bf9737e70f0ba14b23c92ee3b7e"
+        },
+        {
+          "expression": "angry",
+          "bytes": 192353,
+          "sha256": "028eed53e2a4f4578c4ab1b181d8e939fce7f5270794993f91b32ad8b0cd1230"
+        },
+        {
+          "expression": "sad",
+          "bytes": 191660,
+          "sha256": "b2a2634edea40d9ba9df17f115615a4a1cd8af7be9400e1d27b8accd41b383ae"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 192158,
+          "sha256": "94a3ba8dfb4aebb3fb4f79e7fb0e0e2dce22f96499f175e73d80c287ef797f97"
+        },
+        {
+          "expression": "serious",
+          "bytes": 191477,
+          "sha256": "8508c0cf30b024cde94a5312844415719a535b6cdec497b4ae09a8dbbce1c755"
+        }
+      ]
+    },
+    "leo": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        489,
+        249,
+        650,
+        420
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/leo.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 2.4723217487335205,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 10492
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10478
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9675
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 10613
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10567
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 197239,
+          "sha256": "7aa5337dec2d1a9398f51cd2afe23d727aedbadb8ded9e3eeadbbcd29462c900"
+        },
+        {
+          "expression": "smile",
+          "bytes": 197389,
+          "sha256": "5e5564c96918be5f016f0faab7d16afc715d39072e0c3581f25611a7b9cd5967"
+        },
+        {
+          "expression": "angry",
+          "bytes": 196839,
+          "sha256": "32342edccc05497de2660e05c4c6035199a3b0d6d9ed073ad3c6ffce88b35cd3"
+        },
+        {
+          "expression": "sad",
+          "bytes": 197501,
+          "sha256": "7c8e757f6973c5da8c98175d254908522476f40a341faddcf3c4aada89cca19b"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 197545,
+          "sha256": "9b4b4921cdae3b8a30997dfdd4cc2a356ebdf47a2315e1d1511b281d10c4dfa2"
+        },
+        {
+          "expression": "serious",
+          "bytes": 196993,
+          "sha256": "c281ac04e88b9d6d3588b2088accd93783da4b812124fcf725f1be2706f74029"
+        }
+      ]
+    },
+    "xiaosha": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        516,
+        288,
+        698,
+        475
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/xiaosha.png",
+      "headTop": 57,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 2.695517063140869,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11367
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 11365
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 11525
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 11895
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10989
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 153754,
+          "sha256": "7f40922b2aab9eb17e8d90cc3376f8da3a79355f6c578548dd423eafc04ce1c9"
+        },
+        {
+          "expression": "smile",
+          "bytes": 153755,
+          "sha256": "937cfb1ed4ab944be8f4a615633fbeaf238a4b2c50a7a5f00338dbdec3323437"
+        },
+        {
+          "expression": "angry",
+          "bytes": 152775,
+          "sha256": "0561d4c7c3ca68f8fd2929590d22d08e7bef05a575586e3fbb7194d3e14e24ce"
+        },
+        {
+          "expression": "sad",
+          "bytes": 153094,
+          "sha256": "7787d12c02f9b4daeff6c9940d3289d6283913adc521fe6e996b32ae96c3742e"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 152763,
+          "sha256": "d691e0d14661179ae2871512bc3ee1c69c1981b69b098d6f1db20d82297f63c6"
+        },
+        {
+          "expression": "serious",
+          "bytes": 153435,
+          "sha256": "3da5cef60d227fdb071ed8d9bd96715376aeb2f7e6e586376b06d586aec54580"
+        }
+      ]
+    },
+    "tieniang": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        526,
+        261,
+        694,
+        438
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/tieniang.png",
+      "headTop": 57,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 2.3541197776794434,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 9177
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 8605
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9893
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 8504
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10964
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 185071,
+          "sha256": "9aad90244c4baad2574cb13bd898f6656a5cffab37d726804f7696ccf61017d6"
+        },
+        {
+          "expression": "smile",
+          "bytes": 186078,
+          "sha256": "adaa5654a0a4889791436aa369af91a902709b29c154ab7a6a16b1bb79ab9823"
+        },
+        {
+          "expression": "angry",
+          "bytes": 184473,
+          "sha256": "bc84717ca00e9741a79038ada36f7a6073c93fb9b79637c327dfefe0eb310f4c"
+        },
+        {
+          "expression": "sad",
+          "bytes": 185210,
+          "sha256": "c9ecf74b5cd20792e2ac27fd3798a1cdaafdc22bc621391edc77ca8fda432b35"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 184875,
+          "sha256": "b0909d6bd513a28575e08d08ca08038548e59843af5c3ac9c44d45ec3314fcaa"
+        },
+        {
+          "expression": "serious",
+          "bytes": 185193,
+          "sha256": "cea1f6381a3377496027663126bd12741728c6053e39fec12f571da897faca68"
+        }
+      ]
+    },
+    "laotuo": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        470,
+        255,
+        645,
+        442
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/laotuo.png",
+      "headTop": 57,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 2.8109052181243896,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11790
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10179
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9368
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 10228
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10949
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 164228,
+          "sha256": "bfd2348e6cb8dd9bf0a62c202c79bc70f2989ef825230b4ef7bb043669187a79"
+        },
+        {
+          "expression": "smile",
+          "bytes": 164715,
+          "sha256": "a6d475fcb8cba3522bfb1c3ac361bc2b88dbd4c9e8f92835e2d33a80942c5d25"
+        },
+        {
+          "expression": "angry",
+          "bytes": 164422,
+          "sha256": "8be4b93ea5fe1e9b487e8f56d95e291e2414d569b0806e1992d9e026c98d2a90"
+        },
+        {
+          "expression": "sad",
+          "bytes": 164596,
+          "sha256": "3c72205dc65648c7e2346f96634c1fe23195721aa14f00202064cc5de56a989f"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 165529,
+          "sha256": "387b78ba7be003e0946974a174223645eceea1a19bd659f7df4bda0839e2f833"
+        },
+        {
+          "expression": "serious",
+          "bytes": 164464,
+          "sha256": "2ec5260a45dd4860ae46af23061fc141e85757783575f3325bc19ec7af8d546d"
+        }
+      ]
+    },
+    "aling": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        526,
+        280,
+        704,
+        458
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/aling.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 3.68701171875,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 8955
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 8506
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9399
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 9597
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 7874
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 155022,
+          "sha256": "c2a54fa1a92db489abc8d8a775eef883efea5104fd38489d53d6304b006981d2"
+        },
+        {
+          "expression": "smile",
+          "bytes": 155592,
+          "sha256": "612655f96501a18c8402d593524d0f5827a847dae078612ba1efe85873475760"
+        },
+        {
+          "expression": "angry",
+          "bytes": 154776,
+          "sha256": "2d2e7be2ed452a1d300485af313961fba5a7347bbfcfe731af5d224455d3d5f4"
+        },
+        {
+          "expression": "sad",
+          "bytes": 155083,
+          "sha256": "e93210ac9fa8fa783e48ce48306e700e8de9e2c5d6c49944ed0d6787b1347e2b"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 155524,
+          "sha256": "0c189b07896f7b2a54ccaf3ee262cbee05ad13571c8714bf8c567cd0538ef702"
+        },
+        {
+          "expression": "serious",
+          "bytes": 155255,
+          "sha256": "92b9ba0735baac0c93087e32658b6bf0e572faa49bc9b1311875302927b489f8"
+        }
+      ]
+    },
+    "shi": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        501,
+        219,
+        658,
+        412
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/shi.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 2.764432430267334,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 9929
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 9973
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9797
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 10093
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 8879
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 161527,
+          "sha256": "ba09af38117e2d94590617d07040dd0672725246ef10ca71598e725df84d8b84"
+        },
+        {
+          "expression": "smile",
+          "bytes": 161410,
+          "sha256": "24408666caa52d0bafedb13fc28cd00f646a1a7f8ff619fc368ced29d9e8bf1c"
+        },
+        {
+          "expression": "angry",
+          "bytes": 161711,
+          "sha256": "35836595b7db8a09ab4e7a3645989f0d5bc460bd049eb382504c22ac6f413d44"
+        },
+        {
+          "expression": "sad",
+          "bytes": 161003,
+          "sha256": "e69a33cda904217e8e2c61d74a95a219eab9233110d4b8e787a809232398976b"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 161488,
+          "sha256": "065b69d4cba60427e92509045b189346d6d23f6280fd5a18a2fa7410565f19af"
+        },
+        {
+          "expression": "serious",
+          "bytes": 160714,
+          "sha256": "d7676d80211940b6a484b0e7ec37b47b5ea8bf445eabaeb05629fbab8f0d7e64"
+        }
+      ]
+    },
+    "guildmaster": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        515,
+        216,
+        691,
+        410
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/guildmaster.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 3.0435585975646973,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 11021
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10334
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9905
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 11399
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 10203
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 191979,
+          "sha256": "ee684aedbcb36c7f7bcb0c22cf8ea54c3b75c5b0dceecde488f240c5fcbb5c08"
+        },
+        {
+          "expression": "smile",
+          "bytes": 192945,
+          "sha256": "9f82528cccb2f9d9683ed0269337088a09090df751ded7ae509c7d21f32ea02b"
+        },
+        {
+          "expression": "angry",
+          "bytes": 191254,
+          "sha256": "f98b7da58076b8e73df6b6fd7e129aad91c2c2f4d517973023aa5dd4e123d52d"
+        },
+        {
+          "expression": "sad",
+          "bytes": 190957,
+          "sha256": "40d30dfff34525be28d62865c460ce0a2713ed9dcb3c5dfdb708be74c2484c5a"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 192545,
+          "sha256": "adc7ebf60d030e8101f32f8bbcfe6395b5dd4aaff7dadc0d9c775e7336cc25e8"
+        },
+        {
+          "expression": "serious",
+          "bytes": 190612,
+          "sha256": "6bed343c81371d0ca081ebc7caa450b5b57406749ad25fd1640c8c7b5c33c227"
+        }
+      ]
+    },
+    "towerkeeper": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        513,
+        224,
+        661,
+        401
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/towerkeeper.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 3.6597824096679688,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 9246
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 9135
+        },
+        {
+          "expression": "sad",
+          "changedPixels": 9293
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 9163
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 8128
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 170297,
+          "sha256": "9e25cb19787de673d3a7d27b1afed04a416da54aeefe240ef9752b6cb3adba88"
+        },
+        {
+          "expression": "smile",
+          "bytes": 170640,
+          "sha256": "54769cb4feb0723d296dc4309dfd73b9eeb2c1fa2486a66aa1b5c527fc97d368"
+        },
+        {
+          "expression": "angry",
+          "bytes": 171508,
+          "sha256": "fbdc5d1ef2f44f1face49df5e519b55b1f3077ddf87462886e4c4d2d5795dbba"
+        },
+        {
+          "expression": "sad",
+          "bytes": 171048,
+          "sha256": "d839e282a53b4e49bd03d0906ed53eaca3f7af8c165d30417217b9de96a2a301"
+        },
+        {
+          "expression": "surprised",
+          "bytes": 170947,
+          "sha256": "9475ce30f2ab26958d76da0d247fdf0c92cf17b76ec384e05f4a2d1f555bb612"
+        },
+        {
+          "expression": "serious",
+          "bytes": 170028,
+          "sha256": "b2b2509f1f71df4c013aab5be909f4ea316dae848afa2e5590d39acecfc60cf1"
+        }
+      ]
+    },
+    "kraken": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        359,
+        497,
+        712,
+        733
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/kraken.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 3.7347216606140137,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 28308
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 244691,
+          "sha256": "7255d4d41f15a739fbc10374639d833845df28bfa375f0f92093badd154b922c"
+        },
+        {
+          "expression": "angry",
+          "bytes": 246061,
+          "sha256": "d3ec04c00a6110a6fbaa9204001f36a472f11479d3baed22f95445a0fa6fe86e"
+        }
+      ]
+    },
+    "bronze": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        536,
+        237,
+        750,
+        472
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/bronze.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 2.451356887817383,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 16625
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 333484,
+          "sha256": "a479a61ca93ed38d1d0838cc5c06e4f80832b557ead25fe10330f5edb436dddc"
+        },
+        {
+          "expression": "angry",
+          "bytes": 332981,
+          "sha256": "7c682d33e8e412b183374d95d011db6d9828834c1df3394115bfc24ec17c0258"
+        }
+      ]
+    },
+    "rockfiend": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        635,
+        219,
+        815,
+        427
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/rockfiend.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 2.486323595046997,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 10974
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 321330,
+          "sha256": "3a9f0193fc0979add71a20a00404949441c0e2a5f61daf97a1a0aa3f643e7192"
+        },
+        {
+          "expression": "angry",
+          "bytes": 320478,
+          "sha256": "0a311d7ef346202644f2b317e520459197799b207377a0b32c2eaae5c2cf8b32"
+        }
+      ]
+    },
+    "overlord": {
+      "size": [
+        640,
+        960
+      ],
+      "faceBoxSource": [
+        523,
+        161,
+        694,
+        348
+      ],
+      "faceMask": "Docs/story2d_stage2/masks/overlord.png",
+      "headTop": 58,
+      "sharedFacePaletteColors": 256,
+      "sharedBodyPaletteColors": 64,
+      "meanRgbError": 2.580753803253174,
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 9793
+        }
+      ],
+      "files": [
+        {
+          "expression": "normal",
+          "bytes": 237800,
+          "sha256": "172b5bf5b1915493b60c2fed01d56237ddd93a8fadeb776fd12c770ef75fd9bd"
+        },
+        {
+          "expression": "angry",
+          "bytes": 237439,
+          "sha256": "da6481af7e7723cce0fedf74f448f12ffca544babed0ccc1483faf9c04894b8a"
+        }
+      ]
+    }
+  },
+  "backgrounds": {
+    "stage_volcano": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 423658,
+      "referenceFrame": "v0_s08",
+      "sha256": "b172f41f812eb49684302b715cfa7e86735ac19337f4fa31be8006531a432940"
+    },
+    "boss_volcano": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 277602,
+      "referenceFrame": "v1_s01",
+      "sha256": "4c4785bedb6a003ced6830180fe2875516b9c892ed9d835f3079dd9583fbd2fb"
+    },
+    "dungeon": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 516466,
+      "referenceFrame": null,
+      "sha256": "8c5544501c2d2ec87c9d09f7053269f4df7a0a9330269c92fae73f414edd75df"
+    },
+    "town_forest": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 573148,
+      "referenceFrame": "v2_s03",
+      "sha256": "4fdc9f998245126a7904ffa20fd30ad04c2806dc37d37b407fba76b01a0c0ce9"
+    },
+    "stage_forest": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 497668,
+      "referenceFrame": "v2_s04",
+      "sha256": "04e49ed67cc70be045152829f41bda63b41dab9218f51b8a8dd8add4ec22a1e8"
+    },
+    "boss_forest": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 447910,
+      "referenceFrame": "v2_s02",
+      "sha256": "57c2a5e39d99bc7f271f2fd359e0ac3871e10abb9a0ece4c96daed24cdb67e6a"
+    },
+    "town_port": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 372591,
+      "referenceFrame": "v3_s03",
+      "sha256": "3e19c578406f036e66edc8f28657deb7a999b5a905f5bcd746332f17fe0f8be4"
+    },
+    "stage_sea": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 372879,
+      "referenceFrame": "v3_s04",
+      "sha256": "fe6f9247a83b856ec8bb45be81d01002e8084b4789fb1c4966a9ef84a8872a08"
+    },
+    "boss_sea": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 433182,
+      "referenceFrame": "v3_s05",
+      "sha256": "13c1ef6124241681db03ec61c7812d09897b94be2aaf079262849ecf9ed723d8"
+    },
+    "town_arena": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 432152,
+      "referenceFrame": null,
+      "sha256": "3ebd4756357e5e6c05d3fefb0366bb8e5eb065fc4f9b57b08ccf7dc907d76aad"
+    },
+    "stage_arena": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 410635,
+      "referenceFrame": null,
+      "sha256": "5529a8547d5d486d147ae801d3b55e93ae0dd13f30a5e7bb9d444209a73d7b9b"
+    },
+    "boss_arena": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 398287,
+      "referenceFrame": null,
+      "sha256": "4de19e169d35ab053dd5433a30d5f97d4fbd58efdcbf963bd34d001a12652221"
+    },
+    "town_canyon": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 483485,
+      "referenceFrame": null,
+      "sha256": "a93ab7bdcdc8670c757e0763a588ffbc392ee95cb90131c676cc3218b5514847"
+    },
+    "stage_canyon": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 482652,
+      "referenceFrame": null,
+      "sha256": "1cb730c044429ecabf119ec76958e8f71090e481253d6d8136ef1c42d829b205"
+    },
+    "boss_canyon": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 418412,
+      "referenceFrame": null,
+      "sha256": "0e9e79bc367e175a8ae2cb944d555a916162455be3624481b7396a6f7d4f7e6c"
+    },
+    "guild": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 361332,
+      "referenceFrame": null,
+      "sha256": "a4eb4ec9fcdb7122de91a9f847356dbe32dac10b49cea675d3ebdee9ec992493"
+    },
+    "tower": {
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 414241,
+      "referenceFrame": null,
+      "sha256": "bae830babf57d3f67e88d8731cbca79129a3b06b73cecf85883bb35e33a16027"
+    }
+  }
+}
