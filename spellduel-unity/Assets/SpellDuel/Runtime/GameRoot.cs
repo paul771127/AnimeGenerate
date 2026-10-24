@@ -327,6 +327,14 @@ namespace SpellDuel
             solo.NetSend = m => { if (net.Connected && mode != Mode.Watch) Send(m); };   // 觀戰者不送戰鬥訊息
             solo.SharedClock = () => SharedTime;
             // 單人每場戰鬥開打前：重新放置場地（剛放好場地、還沒打過仗的第一場不用再放）
+            // 戰鬥準備（站直、蹲下）發現地板抓錯：場地與世界原點一起上下移
+            solo.RequestRelevel = d =>
+            {
+                if (playArea.state != PlayArea.State.Done) return;
+                playArea.Relevel(playArea.Origin.position.y + d);
+                var mk = WorldFrame.Marker;
+                WorldFrame.SetMarker(new Pose(mk.position + Vector3.up * d, mk.rotation));
+            };
             solo.RequestAreaConfirm = go =>
             {
                 if (mode != Mode.Solo || areaFresh) { areaFresh = false; go(); return; }

@@ -36,8 +36,8 @@ namespace SpellDuel
             {
                 case 0:
                 {
-                    // 手機在眼前（約 1～2.2m 高）、鏡頭大致朝前（不往地上或天花板看），而且穩住
-                    bool ok = y > 0.95f && y < 2.3f && Mathf.Abs(fw.y) < 0.45f;
+                    // 鏡頭大致朝前（不往地上或天花板看），而且穩住。高度先不管：地板可能抓錯（桌面、樓下），蹲完再校正
+                    bool ok = Mathf.Abs(fw.y) < 0.45f;
                     if (ok) { readyYs.Add(y); if (readyYs.Count > 90) readyYs.RemoveAt(0); }
                     bool steady = false;
                     if (ok && readyYs.Count >= 10)
@@ -65,7 +65,7 @@ namespace SpellDuel
                     break;
                 case 2:
                     readyMin = Mathf.Min(readyMin, y);
-                    if (y > readyStand - 0.1f) { SaveReadyCalibration(true); ReadyNext(); }
+                    if (y > readyStand - 0.1f) { FixFloorHeight(); SaveReadyCalibration(true); ReadyNext(); }
                     break;
             }
         }
@@ -76,6 +76,37 @@ namespace SpellDuel
             Haptics.Play(readyStep >= 3 ? Haptics.Kind.Success : Haptics.Kind.Medium);
             Sfx.Play(readyStep >= 3 ? "charged" : "select", 0.8f, 1f + 0.15f * readyStep);
             if (readyStep >= 3) { introUntil = Time.time + IntroTime; Sfx.Play("select", 0.7f, 0.8f); }
+        }
+
+        /// <summary>GameRoot：把場地地板上下移 d 公尺（正＝往上）</summary>
+        public System.Action<float> RequestRelevel;
+        /// <summary>站著時手機離地的合理範圍（m）；不在範圍內＝地板抓錯（桌面、椅子、樓下）</summary>
+        public const float StandMin = 1.05f, StandMax = 2.05f;
+        /// <summary>蹲下的幅度大約是站姿高度的 40%</summary>
+        public const float CrouchShare = 0.4f;
+
+        /// <summary>
+        /// 用蹲下的幅度推算站姿的手機高度（和地板抓到哪裡無關），拿來檢查地板：
+        /// 量到的站姿高度不合理 → 地板移到「站姿高度＝推算值」的位置（推算夾在 1.25～1.75m；沒蹲下用 1.5m）。
+        /// 回傳地板要往上移幾公尺（負的＝往下；0＝不用改）。純計算，方便測試。
+        /// </summary>
+        public static float FloorCorrection(float stand, float lowest)
+        {
+            if (stand >= StandMin && stand <= StandMax) return 0f;
+            float drop = stand - lowest;
+            float est = drop >= 0.2f ? Mathf.Clamp(drop / CrouchShare, 1.25f, 1.75f) : 1.5f;
+            return stand - est;
+        }
+
+        void FixFloorHeight()
+        {
+            float d = FloorCorrection(readyStand, readyMin);
+            if (Mathf.Abs(d) < 0.01f || RequestRelevel == null) return;
+            RequestRelevel(d);
+            // 已經建好的場景（熔岩、森林、海上、角鬥場、山道）跟著地板一起移
+            foreach (var sc in new Component[] { volcano, forest, sea, arenaScene, canyon }) if (sc) sc.transform.position += Vector3.up * d;
+            readyStand -= d; readyMin -= d; standY -= d; lastHeadY = float.NaN;
+            Say($"📏 地板高度校正了（{(d > 0 ? "往上" : "往下")} {Mathf.Abs(d) * 100f:0} 公分）", 2.5f);
         }
 
         /// <summary>把準備步驟量到的高度交給身高校正（站姿＋蹲姿比例）</summary>
@@ -119,7 +150,7 @@ namespace SpellDuel
             {
                 // 坐著玩、空間太矮：可以跳過蹲姿（用預設的蹲姿比例）
                 if (UiKit.Button(new Rect(r.center.x - fs * 5f, y, fs * 10f, fs * 2f), "跳過蹲下", fs))
-                { SaveReadyCalibration(false); readyStep = 2; ReadyNext(); }
+                { readyMin = readyStand; FixFloorHeight(); SaveReadyCalibration(false); readyStep = 2; ReadyNext(); }
             }
         }
     }
