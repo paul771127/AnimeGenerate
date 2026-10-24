@@ -7,7 +7,7 @@ namespace SpellDuel
         static readonly Dictionary<Material,Material> tints=new Dictionary<Material,Material>();
         static readonly Dictionary<Mesh,Mesh> whites=new Dictionary<Mesh,Mesh>();
         static readonly HashSet<Mesh> whitened=new HashSet<Mesh>();
-        static int active;bool bound;
+        static int active;bool bound;static Material fallback;
         MeshFilter[] filters;Renderer[] renderers;Material[][] ghost;
         MaterialPropertyBlock block;float flashUntil,deadAt=-1;
         internal bool Dying=>deadAt>=0;
@@ -18,9 +18,14 @@ namespace SpellDuel
             for(int i=0;i<filters.Length;i++)
             {
                 var r=filters[i].GetComponent<Renderer>();renderers[i]=r;if(!r)continue;
-                var src=r.sharedMaterials;ghost[i]=new Material[src.Length];
+                var src=r.sharedMaterials;if(src==null||src.Length==0)src=new[]{r.sharedMaterial};ghost[i]=new Material[src.Length];
                 for(int j=0;j<src.Length;j++)
                 {
+                    if(!src[j])
+                    {
+                        if(!fallback)fallback=new Material(Shader.Find("Sprites/Default")){name="Shadow empty surface",color=new Color(.28f,.12f,.47f,.46f)};
+                        ghost[i][j]=fallback;continue;
+                    }
                     if(!tints.TryGetValue(src[j],out var m))
                     {m=new Material(Shader.Find("Sprites/Default")){name="Shadow double spectral",color=new Color(.28f,.12f,.47f,.46f),mainTexture=src[j].mainTexture};tints[src[j]]=m;}
                     ghost[i][j]=m;
@@ -35,7 +40,7 @@ namespace SpellDuel
         {
             if(!bound||--active>0)return;
             foreach(var mesh in whites.Values)if(mesh)Destroy(mesh);whites.Clear();whitened.Clear();
-            foreach(var material in tints.Values)if(material)Destroy(material);tints.Clear();
+            foreach(var material in tints.Values)if(material)Destroy(material);tints.Clear();if(fallback)Destroy(fallback);fallback=null;
         }
         internal void Flash(){flashUntil=Time.time+.13f;}
         internal void Dissolve(){if(Dying)return;deadAt=Time.time;SpellFx.ShadowDissolve(transform.position);}
