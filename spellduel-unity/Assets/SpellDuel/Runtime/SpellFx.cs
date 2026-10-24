@@ -576,9 +576,12 @@ namespace SpellDuel
                     CoreGlow(root.transform, new Color(1f, 0.45f, 0.15f), D * 1.6f, Vector3.zero);
                     break;
                 }
+                case "na_kunai": case "kunai_fire": case "kunai_ice": case "kunai_bolt":
+                    BuildKunai(body,id);break;
+                case "shuriken":
+                    BuildShuriken(body);anim.spin=body;anim.spinAxis=Vector3.forward;anim.spinSpeed=1440f;break;
                 case "backstab":
                 case "knife":
-                case "na_kunai": case "kunai_fire": case "kunai_ice": case "kunai_bolt": case "shuriken":   // 忍者的苦無、手裏劍：暫時借飛刀（Codex 會換成專屬造型）
                 {
                     bool knife = id != "backstab";
                     var spin = NewChild(body, "Blade");
@@ -781,7 +784,7 @@ namespace SpellDuel
             }
             if (anim.flick != null) anim.flickBase = anim.flick.localScale;
             if (anim.spin == null && anim.flick == null && anim.jitter == null) anim.enabled = false;
-            if(id!="na_pebble"&&id!="nv_stone"&&id!="yj_blade"&&id!="wanjian"&&id!="yijian")DecorateProjectile(root, string.IsNullOrEmpty(classId) ? (s != null ? s.cls : "mage") : classId, sc, Mathf.Max(0.03f, radius));
+            if(id!="na_kunai"&&id!="kunai_fire"&&id!="kunai_ice"&&id!="kunai_bolt"&&id!="shuriken"&&id!="na_pebble"&&id!="nv_stone"&&id!="yj_blade"&&id!="wanjian"&&id!="yijian")DecorateProjectile(root, string.IsNullOrEmpty(classId) ? (s != null ? s.cls : "mage") : classId, sc, Mathf.Max(0.03f, radius));
             return root;
         }
 

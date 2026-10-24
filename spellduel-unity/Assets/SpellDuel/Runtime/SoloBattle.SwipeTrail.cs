@@ -93,7 +93,8 @@ namespace SpellDuel
             switch (basic.id)
             {
                 case "na_sword": DrawSwordCharge(c, r, k, ready, since, fs, Sq); break;
-                case "na_dagger": case "na_kunai": DrawDaggerCharge(c, r, k, ready, since, fs, Sq); break;
+                case "na_kunai": DrawKunaiCharge(c,r,k,ready,since,fs,Sq); break;
+                case "na_dagger": DrawDaggerCharge(c, r, k, ready, since, fs, Sq); break;
                 case "na_mage": DrawMageCharge(c, r, k, ready, since, fs, Sq); break;
                 case "na_arrow": DrawBowCharge(c, r, k, ready, since, fs, Sq); break;
                 case "na_holy": DrawHolyCharge(c, r, k, ready, since, fs, Sq); break;
@@ -262,6 +263,23 @@ namespace SpellDuel
         }
 
         /// <summary>刺客：暗紅的圈從外往掌心收攏（凝聚殺氣）；完成後掌心一點紅光跳動</summary>
+        static void DrawKunaiCharge(Vector2 c,float r,float k,bool ready,float since,int fs,System.Func<float,Rect> Sq)
+        {
+            var silver=new Color(.83f,.92f,1f,ready?1f:.28f+.6f*k);
+            UiKit.Halo(Sq(r*(1.1f-.30f*k)),new Color(.67f,.83f,1f,.16f+.35f*k),.5f);
+            // A filled silver diamond, ring grip and red cloth suspended over the palm.
+            float grow=.55f+.45f*k;
+            for(int i=0;i<22;i++)
+            {
+                float t=i/21f,y=Mathf.Lerp(-.80f,.12f,t),width=(t<.63f?t/.63f:(1-t)/.37f)*.22f;
+                Seg(c+new Vector2(-width*r,y*r)*grow,c+new Vector2(width*r,y*r)*grow,r*.045f,silver);
+            }
+            Seg(c+new Vector2(0,.10f*r)*grow,c+new Vector2(0,.47f*r)*grow,r*.08f,new Color(.36f,.43f,.55f,silver.a));
+            UiKit.Halo(new Rect(c.x-r*.13f*grow,c.y+r*.46f*grow,r*.26f*grow,r*.26f*grow),silver,.55f);
+            Seg(c+new Vector2(.04f,.32f)*r*grow,c+new Vector2(.37f,.58f)*r*grow,r*.05f,new Color(.93f,.22f,.34f,silver.a));
+            if(ready)UiKit.Text(new Rect(c.x-r,c.y+r*.98f,r*2,fs*1.3f),"射！",fs,silver,TextAnchor.MiddleCenter,true);
+        }
+
         static void DrawDaggerCharge(Vector2 c, float r, float k, bool ready, float since, int fs, System.Func<float, Rect> Sq)
         {
             var blood = new Color(1f, 0.12f, 0.18f);

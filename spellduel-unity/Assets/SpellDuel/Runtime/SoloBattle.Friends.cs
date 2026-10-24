@@ -63,69 +63,52 @@ namespace SpellDuel
             return false;
         }
 
-        // ------------------------------------------------------------ 障壁的畫面：金色半透明圓頂＋地上的光圈，剩幾次就幾道光環
+        // Presentation only: remaining charges and life always come from Battle.Barrier.
         readonly Dictionary<Battle.Barrier, GameObject> barrierGo = new Dictionary<Battle.Barrier, GameObject>();
         void UpdateBarrierViews()
         {
-            if (battle == null) return;
-            var live = new HashSet<Battle.Barrier>(battle.barriers);
-            foreach (var b in battle.barriers)
+            if(battle==null)return;var live=new HashSet<Battle.Barrier>(battle.barriers);
+            foreach(var b in battle.barriers)
             {
-                if (!barrierGo.TryGetValue(b, out var go) || !go)
+                if(!barrierGo.TryGetValue(b,out var go)||!go)
                 {
-                    go = new GameObject("Holy barrier");
-                    var dome = Prim(PrimitiveType.Sphere, new Color(1f, 0.85f, 0.4f, 0.1f), true);
-                    dome.name = "Dome"; dome.transform.SetParent(go.transform, false);
-                    dome.transform.localScale = new Vector3(b.radius * 2f, b.radius * 1.2f, b.radius * 2f);
-                    for (int i = 0; i < Mathf.Max(1, b.maxCharges); i++)
-                    {
-                        var ring = SpellFx.Line(go.transform, "Charge ring " + i, SpellFx.Circle(48, b.radius * (1f - 0.08f * i)), true, 0.03f, new Color(1f, 0.9f, 0.5f, 0.9f), true, true);
-                        ring.transform.localRotation = Quaternion.Euler(90f, 0f, 0f); ring.transform.localPosition = new Vector3(0f, 0.02f + 0.01f * i, 0f);
-                    }
-                    barrierGo[b] = go;
+                    go=SpellFx.BarrierShell(b.radius,Mathf.Max(1,b.maxCharges));barrierGo[b]=go;
+                    go.GetComponent<BarrierArtView>().LastCharges=b.charges;
                 }
-                go.transform.position = WorldFrame.FromWorld(b.pos);
-                float left = Mathf.Clamp01((b.until - battle.now) / 1.5f);
-                float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 3f);
-                var dr = go.transform.Find("Dome").GetComponent<Renderer>();
-                dr.material.color = new Color(1f, 0.85f, 0.4f, (0.08f + 0.05f * pulse) * left);
-                for (int i = 0; i < go.transform.childCount; i++)
-                {
-                    var ch = go.transform.GetChild(i);
-                    if (ch.name.StartsWith("Charge ring ")) ch.gameObject.SetActive(int.Parse(ch.name.Substring(12)) < b.charges);
-                }
+                go.transform.position=WorldFrame.FromWorld(b.pos);var view=go.GetComponent<BarrierArtView>();
+                if(b.charges<view.LastCharges&&b.charges>0)SpellFx.BarrierRipple(WorldFrame.FromWorld(b.pos+Vector3.up*b.radius*.55f));
+                view.Tick(b.charges,Mathf.Clamp01((b.until-battle.now)/1.5f));
             }
-            foreach (var kv in new List<KeyValuePair<Battle.Barrier, GameObject>>(barrierGo))
-                if (!live.Contains(kv.Key)) { if (kv.Value) { SpellFx.Impact("priest", new Color(1f, 0.9f, 0.5f), WorldFrame.FromWorld(kv.Key.pos + Vector3.up * 0.8f), 1.5f); Destroy(kv.Value); } barrierGo.Remove(kv.Key); }
+            foreach(var kv in new List<KeyValuePair<Battle.Barrier,GameObject>>(barrierGo))
+                if(!live.Contains(kv.Key))
+                {
+                    if(kv.Value)
+                    {
+                        var view=kv.Value.GetComponent<BarrierArtView>();
+                        if(kv.Key.charges<=0&&!view.shattered){view.shattered=true;SpellFx.BarrierShatter(kv.Value.transform.position,kv.Key.radius);}
+                        Destroy(kv.Value);
+                    }
+                    barrierGo.Remove(kv.Key);
+                }
+        }
+        void BarrierHitArt(Vector3 at)
+        {
+            SpellFx.BarrierRipple(WorldFrame.FromWorld(at));
+            foreach(var kv in barrierGo)if(kv.Value&&Battle.FlatDistance(at,kv.Key.pos)<=kv.Key.radius)
+            {var view=kv.Value.GetComponent<BarrierArtView>();if(view.LastCharges>kv.Key.charges){view.LastCharges=kv.Key.charges;break;}}
+        }
+        void BarrierBreakArt(Vector3 at)
+        {
+            foreach(var kv in barrierGo)if(kv.Value&&Battle.FlatDistance(at,kv.Key.pos)<.1f)
+            {var view=kv.Value.GetComponent<BarrierArtView>();if(!view.shattered){view.shattered=true;SpellFx.BarrierShatter(WorldFrame.FromWorld(at),kv.Key.radius);}return;}
+            SpellFx.BarrierShatter(WorldFrame.FromWorld(at),2.5f);
         }
         void ClearBarrierViews()
         {
-            foreach (var go in barrierGo.Values) if (go) Destroy(go);
-            barrierGo.Clear();
+            foreach(var go in barrierGo.Values)if(go)Destroy(go);barrierGo.Clear();
         }
-
-        /// <summary>審判之地：金色的地面光圈，偶爾冒出光柱碎片</summary>
-        GameObject HolyZoneView(BurnZone z)
-        {
-            var go = new GameObject("Judgement ground");
-            var disc = Prim(PrimitiveType.Cylinder, new Color(1f, 0.85f, 0.35f, 0.35f), true);
-            disc.name = "Disc"; disc.transform.SetParent(go.transform, false);
-            disc.transform.localScale = new Vector3(z.radius * 2f, 0.004f, z.radius * 2f);
-            var ring = SpellFx.Line(go.transform, "Edge", SpellFx.Circle(48, z.radius), true, 0.035f, new Color(1f, 0.9f, 0.5f, 0.95f), true, true);
-            ring.transform.localRotation = Quaternion.Euler(90f, 0f, 0f); ring.transform.localPosition = new Vector3(0f, 0.02f, 0f);
-            return go;
-        }
-        void TickHolyZone(BurnZone z, GameObject go)
-        {
-            float left = Mathf.Clamp01((z.until - battle.now) / 1.5f);
-            float flick = 0.25f + 0.12f * Mathf.Sin(Time.time * 6f + z.pos.x * 5f);
-            var d = go.transform.Find("Disc");
-            if (d) d.GetComponent<Renderer>().material.color = new Color(1f, 0.85f, 0.35f, flick * left);
-            if (UnityEngine.Random.value < Time.deltaTime * 3f)
-            {
-                var r2 = UnityEngine.Random.insideUnitCircle * z.radius * 0.85f;
-                SpellFx.Impact("priest", new Color(1f, 0.9f, 0.5f), WorldFrame.FromWorld(z.pos + new Vector3(r2.x, 0.05f, r2.y)), 0.5f);
-            }
-        }
+        GameObject HolyZoneView(BurnZone z)=>SpellFx.HolyGround(z.radius,z.skill!=null&&z.skill.id=="heavenpunish");
+        void TickHolyZone(BurnZone z,GameObject go)
+        {go.GetComponent<HolyGroundView>().Tick(Mathf.Clamp01((z.until-battle.now)/1.5f));}
     }
 }

@@ -1902,7 +1902,7 @@ namespace SpellDuel
             allyRigs.Clear(); allyLastFeet.Clear();
             ClearNpcRigs(); drun = null; chest = null;   // 副本地圖的劇情人物、寶箱
             ClearBarrierViews();
-            petGo.Clear();
+            petGo.Clear();petVisualNext.Clear();
             foreach (var go in landGo.Values) if (go) Destroy(go);
             landGo.Clear();
             if (warnLine) Destroy(warnLine);
@@ -2414,6 +2414,7 @@ namespace SpellDuel
                     {
                         // 命中特效：依打中的技能挑職業（普攻、召喚物也算；不認得就用自己的職業），傷害越高越大
                         var hs = battle.HitSkill;
+                        if(hs!=null&&hs.groundZone)SpellFx.HolyNeedle(WorldFrame.FromWorld(at));
                         string fxCls = SpellFx.HitClassOf(hs) ?? (kind == "trap" ? "archer" : myClass);
                         lastHitCls = fxCls;
                         float hd = DmgOf(text); if (hd <= 0f && hs != null) hd = hs.damage;
@@ -2437,7 +2438,7 @@ namespace SpellDuel
                             break;
                         }
                         case "slice": Burst(at, c); Sfx.Play("block", 1f, 1.3f); Sfx.Play("cast_swordsman", 0.6f); Haptics.Play(Haptics.Kind.Medium); Kick(4f, 0.04f); break;
-                        case "mitigate": case "counter": Sfx.Play("block"); Haptics.Play(Haptics.Kind.Medium); Kick(5f, 0.05f); if (Me != null && Vector3.Distance(at, Me.Chest) < 0.8f) guardFlashAt = Time.time; break;   // 擋下：眼前的光盾亮一下
+                        case "mitigate": case "counter": if(kind=="mitigate"&&(text??"").Contains("障壁抵擋"))BarrierHitArt(at); Sfx.Play("block"); Haptics.Play(Haptics.Kind.Medium); Kick(5f, 0.05f); if (Me != null && Vector3.Distance(at, Me.Chest) < 0.8f) guardFlashAt = Time.time; break;   // 擋下：眼前的光盾亮一下
                         case "heal": Sfx.Play("heal"); break;
                         case "buff": Sfx.Play("cast_priest", 0.6f); break;
                         case "trapSet": Sfx.Play("trap", 0.5f); break;
@@ -2503,6 +2504,7 @@ namespace SpellDuel
                     // 伏擊出手：在被刺的人身上爆開
                     floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time });
                     SpellFx.Impact("assassin", c, WorldFrame.FromWorld(at), 1.2f);
+                    if((text??"").Contains("影分身"))FlashShadowNear(at);
                     Sfx.Play("hit", 1f, 1.2f); Kick(8f, 0.08f);
                     if (at == Me.Chest && enemyRig && !bossMode) enemyRig.PlayAttack("lunge", 0.05f);   // 敵人刺客撲上來
                     break;
@@ -2675,7 +2677,7 @@ namespace SpellDuel
                     break;
                 }
                 case "holyzone":
-                    SpellFx.Impact("priest", c, WorldFrame.FromWorld(at), text == "heavenpunish" ? 2.6f : 1.6f);   // 光柱落地
+                    SpellFx.HolyLanding(WorldFrame.FromWorld(at),text=="heavenpunish");   // 光柱落地
                     Sfx.Play("boom", Mathf.Clamp01(1f - Battle.FlatDistance(at, Me.Feet) / 15f), 1.4f);
                     if (text == "heavenpunish") Kick(10f, 0.05f);
                     break;
@@ -2685,6 +2687,7 @@ namespace SpellDuel
                     if (!string.IsNullOrEmpty(text)) Say("🛡 " + text, 2f);
                     break;
                 case "barrierbreak":
+                    BarrierBreakArt(at);
                     Sfx.Play("fail", 0.6f, 1.4f);
                     break;
                 case "fogzone":
@@ -2728,6 +2731,7 @@ namespace SpellDuel
         // 召喚物的外觀（獵鷹、火靈、石像、分身）
         readonly Dictionary<Pet, PetRig> petGo = new Dictionary<Pet, PetRig>();
 
+        readonly Dictionary<Pet,float> petVisualNext=new Dictionary<Pet,float>();
         void UpdatePetViews()
         {
             var live = new HashSet<Pet>(battle.pets);
@@ -2738,8 +2742,9 @@ namespace SpellDuel
                 {
                     var ownerCol = p.owner != null && p.owner.cls != null ? p.owner.cls.color : Color.white;
                     rig = PetRig.Create(p.kind, ownerCol);
-                    petGo[p] = rig;
+                    petGo[p] = rig;petVisualNext[p]=p.next;
                 }
+                if(petVisualNext.TryGetValue(p,out var previous)&&p.next>previous+.001f){rig.ActionPulse();petVisualNext[p]=p.next;}
                 var forward = p.owner != null ? p.owner.forward : Vector3.forward;
                 forward.y = 0f;
                 var rotation = forward.sqrMagnitude > 1e-4f ? Quaternion.LookRotation(forward.normalized, Vector3.up) : Quaternion.identity;
@@ -2750,7 +2755,7 @@ namespace SpellDuel
                 if (!live.Contains(kv.Key) || !kv.Key.alive)
                 {
                     if (kv.Value != null) Destroy(kv.Value.gameObject);
-                    petGo.Remove(kv.Key);
+                    petGo.Remove(kv.Key);petVisualNext.Remove(kv.Key);
                 }
         }
 
@@ -2873,6 +2878,7 @@ namespace SpellDuel
                     string fxCls = p.owner == En ? enemyClassUsed : (p.owner.isAlly ? p.owner.cls.id : myClass);
                     go = ((bossMode || daily != null) && (p.owner == En || p.owner.isMinion || p.skill.cls == "minion" || p.skill.cls == "boss") ? BossRig.CreateProjectileVisual(p.skill.id) : null) ?? SpellFx.CreateProjectileVisual(p.skill, fxCls);
                     projGo[p] = go;
+                    if(p.skill.id=="pet_ice")foreach(var pair in petGo)if(pair.Key.kind=="ice"&&pair.Value&&Vector3.Distance(pair.Key.pos,p.pos)<.8f)pair.Value.ActionPulse();
                     if (p.owner == En && !bossMode)
                     {
                         if (enemyRig && !enemyRig.Attacking) enemyRig.PlayAttack(enemyClassUsed==Skills.Novice?(p.skill.id=="nv_swing"?"novice":"novice_throw"):AttackKindOf(enemyClassUsed), 0.08f);   // 敵人出招動作＋光效（普攻已經在預警時開始擺架勢）

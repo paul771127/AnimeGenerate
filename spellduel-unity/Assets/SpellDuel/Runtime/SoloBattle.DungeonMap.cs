@@ -196,7 +196,10 @@ namespace SpellDuel
                 if (n.tamedKind >= 0) continue;
                 if (!npcRigs.TryGetValue(n.minionId, out var rig) || !rig)
                 {
-                    rig = CharacterRig.Create(n.cls != null ? n.cls.id : "priest");
+                    bool shadow=n.cloneOf!=null||n.friendOwner>=0&&n.tamedKind<0;
+                    var owner=n.cloneOf??(n.friendOwner>=0?battle.allies.Find(a=>a.pid==n.friendOwner):null);
+                    rig = shadow?CharacterRig.Create(owner!=null&&owner.cls!=null?owner.cls.id:n.cls!=null?n.cls.id:"assassin",owner!=null?owner.adv:null):CharacterRig.Create(n.cls != null ? n.cls.id : "priest");
+                    if(shadow)rig.gameObject.AddComponent<ShadowDoubleView>().Bind();
                     npcRigs[n.minionId] = rig; npcLastFeet[n.minionId] = n.Feet;
                     SpawnFade.Play(rig.gameObject);
                 }
@@ -205,9 +208,10 @@ namespace SpellDuel
                 rig.MoveSpeed = Mathf.Lerp(rig.MoveSpeed, Fighter.Flat(n.Feet - lf).magnitude / dt, 0.2f);
                 npcLastFeet[n.minionId] = n.Feet;
                 rig.SetDead(!n.Alive);
+                var shadowView=rig.GetComponent<ShadowDoubleView>();if(shadowView&&!n.Alive)shadowView.Dissolve();
             }
             foreach (var kv in new List<KeyValuePair<int, CharacterRig>>(npcRigs))
-                if (battle.npcs.Find(n => n.minionId == kv.Key) == null) { if (kv.Value) Destroy(kv.Value.gameObject); npcRigs.Remove(kv.Key); npcLastFeet.Remove(kv.Key); }
+                if (battle.npcs.Find(n => n.minionId == kv.Key) == null) { if (kv.Value) {var shadow=kv.Value.GetComponent<ShadowDoubleView>();if(shadow)shadow.Dissolve();Destroy(kv.Value.gameObject);} npcRigs.Remove(kv.Key); npcLastFeet.Remove(kv.Key); }
         }
 
         // 收服的魔物：用小怪的模型，腳下一圈綠色光環（看得出是自己這邊的）
@@ -221,10 +225,9 @@ namespace SpellDuel
                 {
                     rig = MinionRig.Create();
                     rig.SetVariant(n.tamedKind); rig.SetDress(battle.Theme);
-                    var ring = SpellFx.Line(rig.transform, "Tamed ring", SpellFx.Circle(32, 0.45f), true, 0.025f, new Color(0.45f, 1f, 0.35f, 0.8f), true, true);
-                    ring.transform.localRotation = Quaternion.Euler(90f, 0f, 0f); ring.transform.localPosition = new Vector3(0f, 0.03f, 0f);
+                    SpellFx.ContractSeal(rig.transform,Mathf.Max(.6f,n.head.y-n.Feet.y)+.22f);
                     tamedRigs[n.minionId] = rig; npcLastFeet[n.minionId] = n.Feet;
-                    MinionRig.SpawnFx(WorldFrame.FromWorld(n.Feet));
+                    SpellFx.ContractSigned(WorldFrame.FromWorld(n.Feet));
                 }
                 var pos = WorldFrame.FromWorld(n.Feet);
                 var f = WorldFrame.DirFromWorld(n.forward); f.y = 0f;
@@ -235,6 +238,17 @@ namespace SpellDuel
             }
             foreach (var kv in new List<KeyValuePair<int, MinionRig>>(tamedRigs))
                 if (battle.npcs.Find(n => n.minionId == kv.Key && n.Alive) == null) { if (kv.Value) { MinionRig.SpawnFx(kv.Value.transform.position); Destroy(kv.Value.gameObject); } tamedRigs.Remove(kv.Key); }
+        }
+
+        void FlashShadowNear(Vector3 at)
+        {
+            ShadowDoubleView best=null;float distance=4f;
+            foreach(var pair in npcRigs)
+            {
+                if(!pair.Value)continue;var shadow=pair.Value.GetComponent<ShadowDoubleView>();if(!shadow||shadow.Dying)continue;
+                float d=Vector3.Distance(pair.Value.transform.position,WorldFrame.FromWorld(at));if(d<distance){distance=d;best=shadow;}
+            }
+            if(best)best.Flash();
         }
 
         void ClearNpcRigs()

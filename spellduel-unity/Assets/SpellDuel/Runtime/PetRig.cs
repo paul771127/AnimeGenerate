@@ -15,7 +15,10 @@ namespace SpellDuel
         static readonly Color Stone = new Color(0.52f, 0.68f, 0.74f);
         string kind;
         Transform wingL, wingR, flame, echoL, echoR;
-        float previousHealth = 1f, hurtUntil;
+        float previousHealth = 1f, hurtUntil, actionUntil, nextFairyLight;
+        readonly List<Renderer> iceFaces=new List<Renderer>();
+        Transform iceHandL,iceHandR;
+        internal void ActionPulse(){actionUntil=Time.time+.28f;if(kind=="fairy"){SpellFx.FairySprinkle(transform.position);nextFairyLight=Time.time+3f;}}
 
         void Awake() { block = new MaterialPropertyBlock(); }
 
@@ -34,6 +37,16 @@ namespace SpellDuel
             }
             BlobShadow.Attach(rig.transform, kind == "golem" ? 0.45f : kind == "falcon" ? 0.22f : 0.3f, 0f, true);   // 腳下的接觸陰影（老鷹飛高時變淡）
             return rig;
+        }
+
+        static Mesh smallSphere,smallCapsule;
+        static Mesh SmallBody(bool capsule)
+        {
+            if(capsule&&smallCapsule)return smallCapsule;if(!capsule&&smallSphere)return smallSphere;
+            var m=new PMesh(1);m.Lathe(capsule?new[]{-1f,0f,-.85f,.35f,-.5f,.5f,.5f,.5f,.85f,.35f,1f,0f}:new[]{-.5f,0f,-.35f,.35f,0f,.5f,.35f,.35f,.5f,0f},10,null);
+            var mesh=m.Build(capsule?"Small pet capsule":"Small pet sphere",true);var v=mesh.vertices;
+            for(int i=0;i<v.Length;i++)v[i]=new Vector3(v[i].x,v[i].z,-v[i].y);mesh.vertices=v;mesh.RecalculateNormals();mesh.RecalculateBounds();
+            if(capsule)smallCapsule=mesh;else smallSphere=mesh;return mesh;
         }
 
         static Material Mat(Color c, bool transparent)
@@ -59,6 +72,7 @@ namespace SpellDuel
             // Disabled immediately; Destroy is deferred until the end of the frame.
             var collider = go.GetComponent<Collider>();
             if (collider != null) { collider.enabled = false; Destroy(collider); }
+            if((kind=="ice"||kind=="fairy")&&(type==PrimitiveType.Sphere||type==PrimitiveType.Capsule))go.GetComponent<MeshFilter>().sharedMesh=SmallBody(type==PrimitiveType.Capsule);
             if (type == PrimitiveType.Cube && !transparent)
             {
                 var mf = go.GetComponent<MeshFilter>();
@@ -118,34 +132,48 @@ namespace SpellDuel
         /// <summary>冰靈：藍白色的冰晶精靈（三顆尖晶＋冷霧）</summary>
         void BuildIce()
         {
-            flame = Pivot("Ice", transform, Vector3.zero);
-            Part(PrimitiveType.Sphere, flame, Vector3.zero, new Vector3(0.28f, 0.34f, 0.26f), new Color(0.55f, 0.85f, 1f));
-            Part(PrimitiveType.Sphere, flame, new Vector3(0f, -0.04f, 0.09f), new Vector3(0.2f, 0.22f, 0.14f), new Color(0.9f, 0.97f, 1f));
-            for (int i = -1; i <= 1; i++)
-                Part(PrimitiveType.Cube, flame, new Vector3(i * 0.09f, 0.2f + (i == 0 ? 0.07f : 0f), 0f), new Vector3(0.06f, 0.16f, 0.06f), new Color(0.75f, 0.93f, 1f), false, new Vector3(0f, 45f, i * -20f));
-            for (int s = -1; s <= 1; s += 2)
-                Part(PrimitiveType.Sphere, flame, new Vector3(s * 0.06f, 0.02f, 0.15f), new Vector3(0.03f, 0.055f, 0.02f), new Color(0.12f, 0.2f, 0.35f));
-            var mist = SpellFx.NewPS(transform, "Frost", SpellFx.AddMat(SpellFx.TexSoft), 20, true);
-            mist.transform.localPosition = new Vector3(0f, -0.1f, 0f);
-            var m = mist.main; m.startLifetime = 0.6f; m.startSize = new ParticleSystem.MinMaxCurve(0.04f, 0.1f);
-            m.startColor = new ParticleSystem.MinMaxGradient(new Color(0.7f, 0.9f, 1f, 0.6f), Color.white);
-            m.startSpeed = 0.08f;
-            SpellFx.FadeOut(mist); SpellFx.SizeCurve(mist, SpellFx.Shrink); SpellFx.Rate(mist, 16f); mist.Play();
+            flame=Pivot("Ice",transform,Vector3.zero);
+            // Closed hexagonal crystal; tapered top/bottom, six lit facets instead of a ball.
+            var m=new PMesh(1);m.Lathe(new[]{-.22f,0f,-.08f,.15f,.10f,.14f,.27f,0f},6,(z,j)=>j%2==0?new Color(.48f,.84f,1f):new Color(.78f,.96f,1f),1,1,30);
+            var crystal=new GameObject("Hex crystal");crystal.transform.SetParent(flame,false);crystal.transform.localRotation=Quaternion.Euler(-90,0,0);
+            crystal.AddComponent<MeshFilter>().sharedMesh=m.Build("Ice spirit crystal",true);
+            var shell=crystal.AddComponent<MeshRenderer>();shell.sharedMaterial=Mat(Color.white,false);iceFaces.Add(shell);
+            for(int side=-1;side<=1;side+=2)
+            {
+                Part(PrimitiveType.Sphere,flame,new Vector3(side*.055f,.015f,.135f),new Vector3(.035f,.050f,.016f),new Color(.13f,.24f,.48f));
+                Part(PrimitiveType.Sphere,flame,new Vector3(side*.050f,.029f,.146f),Vector3.one*.012f,Color.white);
+                var hand=Pivot("Ice hand",flame,new Vector3(side*.19f,-.015f,0));if(side<0)iceHandL=hand;else iceHandR=hand;
+                var palm=Part(PrimitiveType.Capsule,hand,Vector3.zero,new Vector3(.07f,.055f,.065f),new Color(.45f,.84f,1f),false,new Vector3(0,0,side*35));iceFaces.Add(palm);
+                for(int i=0;i<2;i++)Part(PrimitiveType.Sphere,hand,new Vector3((i-.5f)*.025f,.045f,.01f),new Vector3(.025f,.045f,.03f),new Color(.76f,.96f,1f));
+            }
+            Part(PrimitiveType.Sphere,flame,new Vector3(0,-.052f,.144f),new Vector3(.035f,.016f,.012f),new Color(.28f,.48f,.69f));
+            SpellFx.Snow(transform);
         }
 
-        /// <summary>治癒妖精：粉紅色的小光球＋一對半透明翅膀＋往下灑的光點</summary>
         void BuildFairy()
         {
-            flame = Pivot("Fairy", transform, Vector3.zero);
-            Part(PrimitiveType.Sphere, flame, Vector3.zero, new Vector3(0.14f, 0.16f, 0.14f), new Color(1f, 0.75f, 0.88f));
-            Part(PrimitiveType.Sphere, flame, new Vector3(0f, 0.11f, 0f), new Vector3(0.1f, 0.1f, 0.1f), new Color(1f, 0.92f, 0.85f));
-            for (int s = -1; s <= 1; s += 2)
-                Part(PrimitiveType.Sphere, flame, new Vector3(s * 0.12f, 0.05f, -0.03f), new Vector3(0.16f, 0.1f, 0.02f), new Color(0.95f, 0.85f, 1f, 0.55f), true, new Vector3(0f, s * 20f, s * 25f));
-            var dust = SpellFx.NewPS(transform, "Fairy dust", SpellFx.AddMat(SpellFx.TexSoft), 24, true);
-            var m = dust.main; m.startLifetime = 0.7f; m.startSize = new ParticleSystem.MinMaxCurve(0.02f, 0.045f);
-            m.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.7f, 0.9f), new Color(1f, 1f, 0.8f));
-            m.startSpeed = 0.05f; m.gravityModifier = 0.05f;
-            SpellFx.FadeOut(dust); SpellFx.Rate(dust, 14f); dust.Play();
+            nextFairyLight=Time.time+3f;
+            flame=Pivot("Fairy",transform,Vector3.zero);
+            var pink=new Color(1f,.30f,.61f);var skin=new Color(1f,.88f,.77f);
+            Part(PrimitiveType.Capsule,flame,new Vector3(0,-.015f,0),new Vector3(.095f,.105f,.075f),new Color(.86f,.32f,.72f));
+            Part(PrimitiveType.Sphere,flame,new Vector3(0,.12f,0),new Vector3(.11f,.12f,.10f),skin);
+            Part(PrimitiveType.Sphere,flame,new Vector3(0,.155f,-.015f),new Vector3(.12f,.075f,.11f),pink);
+            for(int side=-1;side<=1;side+=2)
+            {
+                Part(PrimitiveType.Sphere,flame,new Vector3(side*.057f,.12f,-.01f),new Vector3(.055f,.11f,.06f),pink,false,new Vector3(0,0,side*12));
+                Part(PrimitiveType.Sphere,flame,new Vector3(side*.023f,.122f,.050f),new Vector3(.015f,.025f,.010f),new Color(.24f,.17f,.40f));
+                Part(PrimitiveType.Capsule,flame,new Vector3(side*.065f,.01f,.01f),new Vector3(.025f,.060f,.025f),skin,false,new Vector3(0,0,side*40));
+                Part(PrimitiveType.Capsule,flame,new Vector3(side*.025f,-.15f,0),new Vector3(.022f,.065f,.023f),skin);
+                // Four petal dress, not a glowing sphere.
+                Part(PrimitiveType.Sphere,flame,new Vector3(side*.035f,-.075f,0),new Vector3(.075f,.095f,.075f),new Color(1f,.56f,.80f),false,new Vector3(0,0,side*22));
+                var wing=Pivot("Butterfly wing",flame,new Vector3(side*.035f,.045f,-.045f));if(side<0)wingL=wing;else wingR=wing;
+                Part(PrimitiveType.Sphere,wing,new Vector3(side*.085f,.05f,0),new Vector3(.19f,.15f,.009f),new Color(.88f,.72f,1f,.50f),true,new Vector3(0,0,side*24));
+                Part(PrimitiveType.Sphere,wing,new Vector3(side*.068f,-.045f,0),new Vector3(.125f,.11f,.009f),new Color(1f,.73f,.90f,.45f),true,new Vector3(0,0,side*-18));
+                SpellFx.Line(wing,"Wing vein",new[]{Vector3.zero,new Vector3(side*.09f,.07f,.008f),new Vector3(side*.16f,.09f,.008f)},false,.006f,new Color(1f,.88f,1f,.70f),false,true);
+            }
+            var dust=SpellFx.NewPS(transform,"Fairy light tail",SpellFx.BlendMat(SpellFx.TexStar),16,true);var d=dust.main;
+            d.startLifetime=.7f;d.startSize=new ParticleSystem.MinMaxCurve(.015f,.030f);d.startSpeed=.04f;d.gravityModifier=.03f;
+            d.startColor=new Color(1f,.72f,.92f,.65f);SpellFx.FadeOut(dust);SpellFx.Rate(dust,9);dust.Play();
         }
 
         Renderer Rock(Vector3 pos, Vector3 size)
@@ -211,15 +239,22 @@ namespace SpellDuel
             previousHealth = health;
             if (wingL != null)
             {
-                float flap = Mathf.Sin(clock * 10f) * 32f;
+                float flap = Mathf.Sin(clock * (kind=="fairy"?22f:10f)) * (kind=="fairy"?42f:32f);
                 wingL.localRotation = Quaternion.Euler(0f, 0f, flap);
                 wingR.localRotation = Quaternion.Euler(0f, 0f, -flap);
             }
-            if (flame != null) flame.localScale = new Vector3(1f, 1f + 0.08f * Mathf.Sin(clock * 13f), 1f);
+            if (flame != null) flame.localScale = new Vector3(1f, 1f + 0.08f * Mathf.Sin(clock * 13f), 1f)*(kind=="fairy"?.75f:1f);
+            if(kind=="fairy"&&Time.time>=nextFairyLight){SpellFx.FairySprinkle(transform.position);nextFairyLight=Time.time+3f;}
             if (echoL != null)
             {
                 echoL.localPosition = new Vector3(-0.17f - 0.04f * Mathf.Sin(clock * 5f), 0f, -0.15f);
                 echoR.localPosition = new Vector3(0.20f, 0f, -0.28f - 0.05f * Mathf.Cos(clock * 5f));
+            }
+            if(kind=="ice")
+            {
+                float glow=Time.time<actionUntil?1f:0;
+                block.SetColor(ColorId,Color.Lerp(Color.white,new Color(1.35f,1.50f,1.65f),glow));foreach(var r in iceFaces)r.SetPropertyBlock(block);
+                if(iceHandL){iceHandL.localRotation=Quaternion.Euler(-glow*35,0,-12+Mathf.Sin(clock*4)*8);iceHandR.localRotation=Quaternion.Euler(-glow*35,0,12-Mathf.Sin(clock*4)*8);}
             }
             if (kind != "golem") return;
             var tint = Color.Lerp(new Color(0.94f, 0.32f, 0.24f), Stone, health);
