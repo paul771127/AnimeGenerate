@@ -1,0 +1,48 @@
+{
+  "stage": "first three, awaiting user style confirmation",
+  "assets": [
+    {
+      "id": "novice",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 610486
+    },
+    {
+      "id": "swordsman",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 506295
+    },
+    {
+      "id": "mage",
+      "size": [
+        768,
+        1152
+      ],
+      "mode": "RGBA",
+      "bytes": 645895
+    }
+  ],
+  "pending": [
+    "archer",
+    "assassin",
+    "priest",
+    "paladin",
+    "berserker",
+    "marksman",
+    "ranger",
+    "archmage",
+    "summoner",
+    "ninja",
+    "shadowdancer",
+    "bishop",
+    "inquisitor"
+  ],
+  "totalBytes": 1762676
+}

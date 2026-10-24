@@ -1,0 +1,74 @@
+{
+  "novice": {
+    "sha256": "ca7607f1ecd26b948c98372ed16af92db117f4a145f97188849385eeedac1b0a",
+    "size": [
+      768,
+      1152
+    ],
+    "thumbnailCrop": [
+      230,
+      23,
+      538,
+      346
+    ],
+    "transform": {
+      "resize": [
+        768,
+        1152
+      ],
+      "offset": [
+        -28,
+        61
+      ]
+    },
+    "bytes": 610486
+  },
+  "swordsman": {
+    "sha256": "5f6142ce5603d79529e33978fff21f08c09b8e198cc9ad756c7e69371adcac52",
+    "size": [
+      768,
+      1152
+    ],
+    "thumbnailCrop": [
+      230,
+      23,
+      538,
+      346
+    ],
+    "transform": {
+      "resize": [
+        768,
+        1152
+      ],
+      "offset": [
+        -28,
+        61
+      ]
+    },
+    "bytes": 506295
+  },
+  "mage": {
+    "sha256": "6a985e3e59141ac2f1c24c0ee316ae392b154ca31f86f03d25473c36e7318c97",
+    "size": [
+      768,
+      1152
+    ],
+    "thumbnailCrop": [
+      230,
+      23,
+      538,
+      346
+    ],
+    "transform": {
+      "resize": [
+        768,
+        1152
+      ],
+      "offset": [
+        -28,
+        61
+      ]
+    },
+    "bytes": 645895
+  }
+}
