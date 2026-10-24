@@ -205,6 +205,8 @@ namespace SpellDuel
         }
         /// <summary>身上所有精魄的某一種效果加總</summary>
         public static float Sum(CharacterProfile p, SoulOp op) { float v = 0f; foreach (var x in Equipped(p)) if (x.op == op) v += x.v; return v; }
+        /// <summary>一件裝備上的精魄加了多少能力值</summary>
+        public static float ItemStat(Item it, Stat s) { float v = 0f; if (it != null) foreach (var id in it.souls) { var d = Get(id); if (d != null) foreach (var x in d.fx) if (x.op == SoulOp.Stat && x.stat == s) v += x.v; } return v; }
         public static int StatSum(CharacterProfile p, Stat s) { float v = 0f; foreach (var x in Equipped(p)) if (x.op == SoulOp.Stat && x.stat == s) v += x.v; return Mathf.RoundToInt(v); }
 
         /// <summary>CharacterProfile.ApplyTo 最後呼叫（能力值的部分已經算在 Total 裡）</summary>

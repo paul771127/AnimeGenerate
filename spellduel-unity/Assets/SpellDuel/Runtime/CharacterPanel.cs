@@ -229,10 +229,10 @@ namespace SpellDuel
                 if (i >= st.Count) break;
                 var it = st[i];
                 var rr = new Rect(x, y, w, rh);
-                bool ok = p.CanEquip(it, out _);
+                bool ok = p.CanEquip(it, out var whyNot);
                 UiKit.Card(rr, 0.6f, Item.RarityColors[it.rarity], 0.6f);
                 UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y, rr.width - bw - gap * 1.5f, rh * 0.55f), $"[{Item.RarityNames[it.rarity]}] {it.FullName}", fsS, Item.RarityColors[it.rarity], TextAnchor.MiddleLeft, true, 0.6f);
-                UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y + rh * 0.5f, rr.width - bw - gap * 1.5f, rh * 0.48f), $"{Item.SlotNames[(int)it.slot]}・Lv{it.ilvl}・限定 {it.ClassText()}{(ok ? "" : "（這個角色不能用）")}", fsS, ok ? new Color(0.8f, 0.85f, 0.95f) : new Color(1f, 0.55f, 0.5f), TextAnchor.MiddleLeft, false, 0.6f);
+                UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y + rh * 0.5f, rr.width - bw - gap * 1.5f, rh * 0.48f), $"{Item.SlotNames[(int)it.slot]}・Lv{it.ilvl}・限定 {it.ClassText()}{(ok ? "" : $"（不能用：{whyNot}）")}", fsS, ok ? new Color(0.8f, 0.85f, 0.95f) : new Color(1f, 0.55f, 0.5f), TextAnchor.MiddleLeft, false, 0.6f);
                 if (UiKit.Button(new Rect(rr.xMax - bw - gap * 0.3f, rr.y + rh * 0.12f, bw, rh * 0.76f), full ? "背包滿" : "取出", fsS, !full, Item.RarityColors[it.rarity], !full))
                 {
                     if (Progress.Withdraw(it)) { Toast($"取出 {it.name}"); Sfx.Play("coin", 0.5f, 1.2f); changed = true; }
@@ -351,8 +351,8 @@ namespace SpellDuel
                 if (idx >= bag.Count) break;
                 var it = bag[idx];
                 var cr = new Rect(b.x + (k % 3) * (cw + gap), by + (k / 3) * (ch + gap * 0.3f), cw, ch);
-                bool ok = p.CanEquip(it, out _);
-                if (UiKit.Button(cr, "", fsS, selItem == it, Item.RarityColors[it.rarity])) selItem = it;
+                bool ok = p.CanEquip(it, out var whyNot);
+                if (UiKit.Button(cr, "", fsS, selItem == it, Item.RarityColors[it.rarity])) { selItem = it; if (!ok) Toast($"不能裝備：{whyNot}"); }
                 UiKit.Text(new Rect(cr.x + 3, cr.y + 1, cr.width - 6, cr.height * 0.55f), it.FullName, fsS, ok ? Item.RarityColors[it.rarity] : Item.RarityColors[it.rarity] * 0.6f, TextAnchor.MiddleCenter, true);
                 UiKit.Text(new Rect(cr.x + 3, cr.y + cr.height * 0.5f, cr.width - 6, cr.height * 0.45f), $"{Item.SlotNames[(int)it.slot]}{(ok ? "" : "・不能用")}", fsS, ok ? new Color(0.8f, 0.85f, 0.95f) : new Color(1f, 0.5f, 0.45f), TextAnchor.MiddleCenter);
             }
@@ -405,10 +405,11 @@ namespace SpellDuel
             else
             {
                 float bw3 = (dr.width - gap * 4) / 3f;
-                if (UiKit.Button(new Rect(dr.x + gap, byy, bw3, bh), can ? "裝備" : "不能裝備", fsS, can, Item.RarityColors[s2.rarity], can))
+                // 不能裝備也可以按：按了用提示告訴你為什麼
+                if (UiKit.Button(new Rect(dr.x + gap, byy, bw3, bh), can ? "裝備" : "❌ 不能裝備", fsS, can, can ? Item.RarityColors[s2.rarity] : new Color(1f, 0.5f, 0.45f)))
                 {
                     if (Progress.Equip(p, s2, out var w2)) { changed = true; Sfx.Play("block", 0.7f, 1.3f); Toast($"裝備：{s2.name}"); selItem = null; }
-                    else Toast(w2);
+                    else { Toast($"不能裝備：{w2}"); Sfx.Play("fail", 0.5f); }
                 }
                 // 存倉庫：三個角色都拿得到
                 if (UiKit.Button(new Rect(dr.x + gap * 2 + bw3, byy, bw3, bh), "🏦 存倉庫", fsS, false, new Color(0.55f, 0.8f, 1f)))

@@ -1032,8 +1032,19 @@ namespace SpellDuel
                 if (!(novicePast && cls != Skills.Novice && SkillTrees.Find(Skills.Novice, k) != null)) ranks.Remove(k);
             statPoints = (level - 1) * StatPerLevel;
             RecalcSkillPoints();
+            return DropInvalid();
+        }
+
+        /// <summary>能力值不夠穿的裝備脫下來（脫一件可能讓別件也不夠，重複檢查到沒有為止）；回傳脫下的裝備</summary>
+        public List<Item> DropInvalid()
+        {
             var off = new List<Item>();
-            for (int i = 0; i < equipped.Length; i++) if (equipped[i] != null && !CanEquip(equipped[i], out _)) { off.Add(equipped[i]); equipped[i] = null; }
+            for (bool again = true; again;)
+            {
+                again = false;
+                for (int i = 0; i < equipped.Length; i++)
+                    if (equipped[i] != null && !CanEquip(equipped[i], out _)) { off.Add(equipped[i]); equipped[i] = null; again = true; }
+            }
             return off;
         }
 
@@ -1124,8 +1135,30 @@ namespace SpellDuel
             if (it == null) { why = "沒有裝備"; return false; }
             if (!it.ClassOk(cls)) { why = $"限定職業：{it.ClassText()}"; return false; }
             if (level < it.reqLevel) { why = $"需要等級 {it.reqLevel}"; return false; }
-            if (it.reqValue > 0 && Total(it.reqStat) - GearStat(it.reqStat) < it.reqValue) { why = $"需要{StatInfo.Names[(int)it.reqStat]} {it.reqValue}"; return false; }
+            if (it.reqValue > 0)
+            {
+                int have = StatForReq(it);
+                if (have < it.reqValue) { why = $"需要{StatInfo.Names[(int)it.reqStat]} {it.reqValue}（目前 {have}，不含這件和同部位那件的加成）"; return false; }
+            }
             return true;
+        }
+
+        /// <summary>
+        /// 穿這件時算得到的能力值：全部（含其他裝備、精魄、技能樹），但不含這件自己、也不含同部位正在穿的那件（換上去它就脫下來了）。
+        /// 以前只算自己的能力值（不含任何裝備），角色畫面顯示的數字明明夠卻穿不上。
+        /// </summary>
+        public int StatForReq(Item it)
+        {
+            var s = it.reqStat; var a = (Affix)(int)s;
+            float v = Total(s);
+            int slot = (int)it.slot;
+            for (int i = 0; i < equipped.Length; i++)
+            {
+                var e = equipped[i];
+                if (e == null || !(e == it || i == slot)) continue;
+                v -= e.Sum(a) + Souls.ItemStat(e, s);
+            }
+            return Mathf.RoundToInt(v);
         }
 
         /// <summary>把角色的能力值、技能樹、裝備套用到戰鬥中的角色身上（保留目前 HP 比例）</summary>
@@ -1361,6 +1394,7 @@ namespace SpellDuel
             Bag.Remove(it);
             if (old != null) Bag.Add(old);
             p.equipped[s] = it;
+            foreach (var x in p.DropInvalid()) AddToBagOrMail(x, "能力值不夠，自動脫下");   // 換下的那件加的能力值沒了：別件可能不夠穿
             SaveBag(); SaveChar(p);
             return true;
         }
@@ -1371,6 +1405,7 @@ namespace SpellDuel
             if (it == null || Bag.Count >= BagSize) return false;
             p.equipped[(int)slot] = null;
             Bag.Add(it);
+            foreach (var x in p.DropInvalid()) AddToBagOrMail(x, "能力值不夠，自動脫下");
             SaveBag(); SaveChar(p);
             return true;
         }

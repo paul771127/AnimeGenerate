@@ -63,12 +63,12 @@ namespace SpellDuel
             world.OnStartTutorial = () => { villageReturn = WorldUI.Screen.Training; enemyClass = "tutorial"; storyMapOpen = false; prologueRun = false; StartTutorial(); };
             world.OnStartBounty = () =>
             {
-                villageReturn = WorldUI.Screen.Bounty; enemyClass = "boss";
+                villageReturn = WorldUI.Screen.Bounty; enemyClass = "boss"; storyStage = null;
                 OpenPrep("🔥 討伐 Boss", false, "討伐 Boss 不能使用道具", () => { storyMapOpen = false; StartBossBattle(false, false); });
             };
             world.OnStartTower = restart =>
             {
-                villageReturn = WorldUI.Screen.Tower; enemyClass = "endless"; towerRestart = restart;
+                villageReturn = WorldUI.Screen.Tower; enemyClass = "endless"; towerRestart = restart; storyStage = null;
                 int from = (restart ? 0 : TowerBlocks) * TowerBlock + 1;
                 OpenPrep($"🗼 無盡塔 第 {from}～{from + TowerBlock - 1} 波", true, null, () => { storyMapOpen = false; StartBossBattle(false, true); });
             };

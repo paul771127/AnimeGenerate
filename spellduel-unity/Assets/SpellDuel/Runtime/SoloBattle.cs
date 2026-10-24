@@ -966,7 +966,8 @@ namespace SpellDuel
         {
             if (!coopMode && pendingStage == null && pendingDungeon == null && GateArea(() => StartBossBattle(coopMode, endlessMode))) return;   // 討伐 Boss、無盡塔：先重新放置場地
             towerRun = endlessMode && !coopMode && !NetMode && pendingStage == null && pendingDungeon == null && villageReturn == WorldUI.Screen.Tower;
-            if (towerRun) { towerFrom = (towerRestart ? 0 : TowerBlocks) * TowerBlock + 1; towerRestart = false; }
+            if (towerRun) { towerFrom = (towerRestart ? 0 : TowerBlocks) * TowerBlock + 1; towerRestart = false; storyStage = null; }   // 之前打過的故事關卡要清掉（不然結算會被當成故事關卡，塔的進度存不到）
+            else if (!coopMode && pendingStage == null && villageReturn == WorldUI.Screen.Bounty) storyStage = null;
             SaveChoices();
             EndBattle();
             bossMode = true; coop = coopMode; endless = endlessMode; dummyMode = false; enemyClassUsed = "boss";
@@ -1589,7 +1590,7 @@ namespace SpellDuel
                 else { LoseLoot(); Say($"💀 {d.name} 失敗…副本的敵人跟著人數變多（最少以 2 人計算），等級再高一點或找夥伴一起來吧", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
             }
-            if (endless && storyStage != null)
+            if (endless && storyStage != null && !towerRun)
             {
                 // 故事關卡：通關 → 記錄、給經驗、結束對話；失敗 → 可以再挑戰
                 var st = storyStage;
