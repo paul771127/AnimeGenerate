@@ -128,3 +128,35 @@
 
 ## 完成後
 確認 `UNITY_IOS`、`UNITY_ANDROID` 都能編譯，commit 並 push 到 `claude/mobile-camera-mic-battle-game-v5nhfr`。
+
+---
+
+## 追加：選角畫面的職業頭像（使用者要求：帥一點、放大、每個職業不一樣）
+
+選角畫面（打開遊戲先看到的「選擇角色」）上方會顯示目前選中角色的**職業頭像**，放大到卡片高度；下面三個欄位用同一張圖裁出臉部當小頭像。程式已完成（`GameRoot.Characters.cs`、`Story2D.ClassPortrait`），有圖就自動換上（沒有圖時照舊顯示 3D 預覽）。
+
+- 檔案：`Assets/SpellDuel/Resources/Story2D/classes/{id}.png`，透明背景，**768×1152**，大腿以上。
+- 主角是玩家自己：**同一位年輕冒險者**（帥氣、自信），臉和髮型在所有職業都相同，只換服裝、武器、姿勢、氛圍。參考 `Docs/story_video/ref/Player.png`（褐色兜帽旅人、背著長劍）當作初心者的造型。
+- 姿勢要帥：有動感的戰鬥架勢、武器拿在手上、職業色的光效（但光效不要蓋到臉）。臉朝畫面右前方，頭部在上方 1/4 內、水平置中（程式會從上方中間裁出臉當小頭像：寬 30%～70%、高 2%～30% 的範圍）。
+- 服裝參考遊戲裡 3D 角色的職業造型（`Runtime/CharacterRig*.cs`、`CharacterLook.cs`）與職業色（`Skills.Classes[...].color`、`Advanced.cs` 的 color）。
+
+| id | 職業 | 造型重點 |
+|---|---|---|
+| novice | 初心者 | 褐色兜帽旅人＋木棍／長劍（照 Player.png） |
+| swordsman | 劍士 | 輕甲、長劍、藍白劍光 |
+| archer | 獵人 | 皮甲、長弓、綠色 |
+| mage | 法師 | 法袍、法杖、紫色魔法陣 |
+| assassin | 刺客 | 深色緊身裝、雙匕首、紅光 |
+| priest | 牧師 | 白金法衣、權杖、金色聖光 |
+| paladin | 聖騎士 | 重甲＋大盾、金黃 |
+| berserker | 劍仙 | 仙俠風長袍、飛劍環繞、血紅與白 |
+| marksman | 神射手 | 長狙擊弓、單眼瞄準鏡、金色 |
+| ranger | 遊俠 | 獵鷹停在手臂、翠綠披風 |
+| archmage | 大魔導士 | 華麗法袍、浮空魔導書、深紫雷光 |
+| summoner | 召喚師 | 身邊有火靈與小石像、橘色 |
+| ninja | 忍者 | 忍裝、苦無、結印手勢、灰藍 |
+| shadowdancer | 影舞者 | 身後有紫色影分身、毒綠匕首 |
+| bishop | 主教 | 高冠、聖典、金色障壁 |
+| inquisitor | 審判者 | 審判長槍、天罰光柱、橘金 |
+
+先做 novice、swordsman、mage 三張 push 讓使用者確認，再做其餘 13 張。

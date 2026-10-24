@@ -46,10 +46,13 @@ namespace SpellDuel
             // 角色預覽（選中的欄位；建立中＝初心者）
             bool exists = CharacterSlots.Exists(charPick);
             var p = charCreating ? novicePeek : Peek(charPick);
-            float pvH = h * 0.38f;
+            var art = p != null ? Story2D.ClassPortrait(p.cls, p.adv) : null;   // 職業的 2D 頭像（Codex 畫的）；沒有就用 3D 預覽
+            float pvH = h * (art != null ? 0.46f : 0.38f);
             var pv = new Rect(W * 0.2f, y, W * 0.6f, pvH);
-            UiKit.Card(new Rect(pad, y, W - pad * 2, pvH), 0.55f, p != null ? Skills.Classes[p.cls].color : UiKit.Muted, 0.6f);
-            if (p != null) GearPreview.Draw(pv, p);
+            var cardR = new Rect(pad, y, W - pad * 2, pvH);
+            UiKit.Card(cardR, 0.55f, p != null ? Skills.Classes[p.cls].color : UiKit.Muted, 0.6f);
+            if (art != null) DrawClassArt(cardR, art, Skills.Classes[p.cls].color);
+            else if (p != null) GearPreview.Draw(pv, p);
             else UiKit.Text(pv, "（空的欄位）\n點下面的「＋ 建立角色」", fs, UiKit.Muted, TextAnchor.MiddleCenter);
             if (p != null && !charCreating)
             {
@@ -89,8 +92,16 @@ namespace SpellDuel
                 if (sp != null)
                 {
                     var basic = Skills.BasicOf(sp.cls);
-                    float bs = ch * 0.62f;
-                    if (basic != null) UiKit.Badge(new Rect(r.x + pad * 0.5f, r.y + (ch - bs) / 2f, bs, bs), SkillIcons.Get(basic.id), col);
+                    float bs = ch * 0.82f;
+                    var face = Story2D.ClassPortrait(sp.cls, sp.adv);
+                    var fr = new Rect(r.x + pad * 0.4f, r.y + (ch - bs) / 2f, bs, bs);
+                    if (face != null)
+                    {
+                        // 頭像的臉部（立繪上方中間）裁成方形，外面一圈職業色
+                        UiKit.Disc(new Rect(fr.x - 2f, fr.y - 2f, fr.width + 4f, fr.height + 4f), col);
+                        GUI.DrawTextureWithTexCoords(fr, face, new Rect(0.3f, 0.7f, 0.4f, 0.28f), true);
+                    }
+                    else if (basic != null) UiKit.Badge(new Rect(r.x + pad * 0.5f, r.y + (ch - bs * 0.75f) / 2f, bs * 0.75f, bs * 0.75f), SkillIcons.Get(basic.id), col);
                     string cn = sp.Adv != null ? sp.Adv.name : Skills.Classes[sp.cls].name;
                     UiKit.Text(new Rect(r.x + bs + pad, r.y, r.width - bs - pad * 1.5f, ch), $"{CharacterSlots.Name(i)}\n{cn}　Lv{sp.level}", fs, Color.white, TextAnchor.MiddleLeft, true);
                 }
@@ -120,6 +131,22 @@ namespace SpellDuel
                 if (UiKit.Button(new Rect(pad * 2 + hw, by, hw, bh2), "▶ 進入遊戲", fs, true, UiKit.Gold)) EnterWithSlot(charPick);
                 if (armed) UiKit.Text(new Rect(pad, by - lineH * 1.1f, W - pad * 2, lineH), "刪除後角色、背包、信箱、進度都會消失（倉庫裡的東西會保留）", fsS, new Color(1f, 0.55f, 0.5f), TextAnchor.MiddleCenter, true);
             }
+        }
+
+        /// <summary>選角畫面的大頭像：職業色的光暈＋光線，立繪靠下對齊、上半身放大</summary>
+        static void DrawClassArt(Rect r, Texture2D art, Color col)
+        {
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 1.6f);
+            var c = new Vector2(r.center.x, r.y + r.height * 0.42f);
+            float R = r.height * 0.55f;
+            UiKit.Disc(new Rect(c.x - R, c.y - R, R * 2, R * 2), new Color(col.r, col.g, col.b, 0.18f + 0.08f * pulse));
+            UiKit.Halo(new Rect(c.x - R * 0.8f, c.y - R * 0.8f, R * 1.6f, R * 1.6f), new Color(col.r, col.g, col.b, 0.55f), 0.8f);
+            // 立繪：顯示上面 75%（大腿以上 → 腰以上），放大填滿卡片高度
+            float show = 0.75f, h = r.height * 1.02f, w = h * art.width / (art.height * show);
+            var ar = new Rect(r.center.x - w / 2f, r.yMax - h, w, h);
+            GUI.BeginGroup(r);
+            GUI.DrawTextureWithTexCoords(new Rect(ar.x - r.x, ar.y - r.y, ar.width, ar.height), art, new Rect(0f, 1f - show, 1f, show), true);
+            GUI.EndGroup();
         }
 
         void EnterWithSlot(int s)

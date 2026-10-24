@@ -73,6 +73,9 @@ namespace SpellDuel
             if (id == null) return null;
             return Load($"Story2D/chars/{id}_{expr ?? "normal"}") ?? Load($"Story2D/chars/{id}_normal");
         }
+        /// <summary>選角畫面的職業頭像：Story2D/classes/{進階職業 id 或職業 id}.png（沒有進階的圖就用基本職業的）</summary>
+        public static Texture2D ClassPortrait(string cls, string adv)
+            => (string.IsNullOrEmpty(adv) ? null : Load("Story2D/classes/" + adv)) ?? Load("Story2D/classes/" + cls);
         public static Texture2D Background(string id) => string.IsNullOrEmpty(id) ? null : Load("Story2D/bg/" + id);
 
         public static readonly string[] ThemeKeys = { "volcano", "forest", "sea", "arena", "canyon" };
