@@ -19,7 +19,7 @@ namespace SpellDuel
             if (s == null) return null;
             switch (s.id)
             {
-                case "yj_blade": case "wanjian": case "jianlai": return "swordsage";
+                case "yj_blade": case "wanjian": case "yijian": case "jianlai": return "swordsage";
                 case "na_mage": case "pet_fire": case "pet_blast": return "mage";
                 case "na_sword": case "pet_golem": return "swordsman";
                 case "na_arrow": case "pet_falcon": return "archer";

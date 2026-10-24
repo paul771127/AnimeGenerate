@@ -54,6 +54,7 @@ namespace SpellDuel
                 case "wanjian": SageIcon(cv,2); break;
                 case "jiangang": SageIcon(cv,3); break;
                 case "jianzhen": SageIcon(cv,4); break;
+                case "yijian": SageIcon(cv,5); break;
                 case "yj_blade": SageIcon(cv,1); break;
                 case "nv_swing": NoviceClub(cv); break;
                 case "nv_aid": NoviceBandage(cv); break;
@@ -181,6 +182,12 @@ namespace SpellDuel
             {
                 Glyph(cv,Crest(0,.02f,1.10f),SageBlue);SageBlade(cv,0,.05f,.94f);
                 Halo(cv,0,.03f,.64f,.54f,SageWhite);
+            }
+            else if(kind==5)
+            {
+                // 一劍開天：一把巨劍往下劈，兩側是裂開的劍氣
+                SageBlade(cv,0,0,1.3f,180);Halo(cv,0,-.55f,.62f,.12f,SageWhite);
+                Stroke(cv,-.62f,-.50f,-.22f,-.58f,.03f,SageBlue);Stroke(cv,.62f,-.50f,.22f,-.58f,.03f,SageBlue);
             }
             else
             {

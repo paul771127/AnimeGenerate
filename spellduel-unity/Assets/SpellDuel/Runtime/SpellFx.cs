@@ -738,11 +738,14 @@ namespace SpellDuel
                 }
                 case "yj_blade":
                 case "wanjian":
+                case "yijian":
                 {
+                    // 一劍開天：橫放的巨大劍氣（比萬劍歸宗大一倍，拖一條寬寬的光痕）
                     var sword=CreateSwordSageBlade();sword.transform.SetParent(body,false);
-                    sword.transform.localScale=Vector3.one*(id=="wanjian"?.62f:1f);
+                    sword.transform.localScale=Vector3.one*(id=="yijian"?.8f:id=="wanjian"?.62f:1f);
+                    if(id=="yijian")sword.transform.localRotation=Quaternion.Euler(0,0,90);
                     var trail=root.AddComponent<TrailRenderer>();trail.sharedMaterial=BlendMat(TexSoft);
-                    trail.time=id=="wanjian"?.20f:.16f;trail.widthMultiplier=id=="wanjian"?.08f:.025f;
+                    trail.time=id=="yijian"?.35f:id=="wanjian"?.20f:.16f;trail.widthMultiplier=id=="yijian"?1.2f:id=="wanjian"?.08f:.025f;
                     trail.startColor=new Color(.50f,.87f,1f,.55f);trail.endColor=new Color(.50f,.87f,1f,0);
                     break;
                 }
@@ -776,7 +779,7 @@ namespace SpellDuel
             }
             if (anim.flick != null) anim.flickBase = anim.flick.localScale;
             if (anim.spin == null && anim.flick == null && anim.jitter == null) anim.enabled = false;
-            if(id!="na_pebble"&&id!="nv_stone"&&id!="yj_blade"&&id!="wanjian")DecorateProjectile(root, string.IsNullOrEmpty(classId) ? (s != null ? s.cls : "mage") : classId, sc, Mathf.Max(0.03f, radius));
+            if(id!="na_pebble"&&id!="nv_stone"&&id!="yj_blade"&&id!="wanjian"&&id!="yijian")DecorateProjectile(root, string.IsNullOrEmpty(classId) ? (s != null ? s.cls : "mage") : classId, sc, Mathf.Max(0.03f, radius));
             return root;
         }
 
