@@ -313,4 +313,4 @@ jobs:
           issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
           api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
           api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
-          uses-non-exempt-encryption: "false"
+          # 加密申報已寫在 Info.plist（ITSAppUsesNonExemptEncryption=false），不再用 API 另外設定
