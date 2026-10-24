@@ -220,14 +220,18 @@ namespace SpellDuel
             }
             public void DrawEye(int side,FacePlan plan)
             {
-                if(identity=="澪"||identity=="翠")
-                {
-                    float x=side*plan.EyeX*3,y=plan.EyeY*3+.09f;
-                    var c=identity=="澪"?Paint.Hex("#d8fbff"):Paint.Hex("#655848");
-                    float half=plan.EyeWidth*1.5f,height=plan.EyeHeight*3/.90f;
-                    for(int i=0;i<16;i++){float a=i/8f-1,b=(i+1)/8f-1;Line(x+a*half,y+(-.03f+.09f*a*a)*height,x+b*half,y+(-.03f+.09f*b*b)*height,.035f*height,c);}return;
-                }
                 Image(EyeArt.Render(identity,side),EyeArt.W,EyeArt.H,side*plan.EyeX*3,plan.EyeY*3+.09f,plan.EyeWidth*3/1.44f,plan.EyeHeight*3/.90f*(1-persona.Lid*1.6f));
+            }
+            public void DrawBrow(int side,FacePlan plan)
+            {
+                float inner=side*(plan.EyeX-plan.EyeWidth*.5f),outer=inner+side*plan.EyeWidth*1.1f;
+                float by=plan.BrowY+(side>0?persona.Asym*.0006f:0);var c=AnimeFace.BrowColor(identity);var shade=new Paint(c.r,c.g,c.b);
+                for(int i=0;i<16;i++)
+                {
+                    float a=i/16f,b=(i+1)/16f,x=Mathf.Lerp(inner,outer,a)*3,xx=Mathf.Lerp(inner,outer,b)*3,y=(by+AnimeFace.BrowCurve(a,persona))*3+.09f,yy=(by+AnimeFace.BrowCurve(b,persona))*3+.09f;
+                    float width=AnimeFace.BrowThickness(persona)*1.5f*(1-.45f*a);Line(x,y,xx,yy,width,shade);
+                    if(persona.Elder){var light=Color.Lerp(CharacterLook.Get(identity).HairColor,Color.white,.55f);Line(x,y,xx,yy,width*.43f,new Paint(light.r,light.g,light.b));}
+                }
             }
             public void StoryDress()
             {
@@ -305,14 +309,15 @@ namespace SpellDuel
                 Shape face=(x,y)=>PolygonD(x,y,outline);
                 Fill((x,y)=>face(x,y)-.006f,identity=="澪"?Paint.Hex("#d8fbff"):new Paint(skin.r*.40f,skin.g*.28f,skin.b*.29f));
                 Fill(face,skin);
-                var look=CharacterLook.Get(identity);float wave=look.Seed*.71f,fringe=HumanFaceLight.Fringe(look);
+                var look=CharacterLook.Get(identity);float wave=look.Seed*.71f,fringe=HumanFaceLight.Fringe(look),faceSeam=AnimeFace.UpperSeam(persona)*3+.09f;
                 // Same UV convention and pink occlusion as the 3D face. Portrait key light is frontal.
                 for(int y=0;y<n;y++)for(int x=0;x<n;x++)
                 {
                     float u=(x+.5f)*2/n-1,v=(y+.5f)*2/n-1,sx=u,sy=v;
                     if(posing){float a=persona.Roll*.0174533f,ca=(float)Math.Cos(a),sa=(float)Math.Sin(a),dx=u-persona.Yaw*.0018f*(1+v),dy=v+.15f;sx=(dx*ca+dy*sa)/(1-Math.Abs(persona.Yaw)*.003f);sy=-dx*sa+dy*ca-.15f+persona.Pitch*.0015f;}
                     if(face(sx,sy)>0)continue;
-                    float fu=.5f+sx/(.96f*persona.Width),fv=.5f+(sy-.09f)/(.96f*persona.Length);
+                    float originalY=sy<=faceSeam?sy:faceSeam+(sy-faceSeam)/.65f;
+                    float fu=.5f+sx/(.96f*persona.Width),fv=.5f+(originalY-.09f)/(.96f*persona.Length);
                     float shadow=HumanFaceLight.Occlusion(fu,fv,1,0,look.Part,wave,fringe);int k=y*n+x;
                     red[k]=skin.r*(1-.07f*shadow);green[k]=skin.g*(1-.15f*shadow);blue[k]=skin.b*(1-.15f*shadow);
                 }
@@ -415,10 +420,7 @@ namespace SpellDuel
             cv.Oval(0,mouthY-.016f,mw*.45f,.004f,Paint.Mix(skin,White,.12f),0);
             for(int side=-1;side<=1;side+=2)
             {
-                float inner=side*(plan.EyeX-plan.EyeWidth*.5f)*3,outer=inner+side*plan.EyeWidth*3.3f;
-                float by=plan.BrowY*3+.09f+(side>0?p.Asym*.0018f:0),bend=(p.Masculine?0:p.Brow*.35f-1)*.0174533f*plan.EyeWidth*3;
-                cv.Line(inner,by,side*plan.EyeX*3,by+.0045f+bend*.5f,p.Elder?.0135f:p.Masculine?.009f:.0048f,hair);
-                cv.Line(side*plan.EyeX*3,by+.0045f+bend*.5f,outer,by+bend,p.Elder?.012f:p.Masculine?.0084f:.0042f,hair);
+                cv.DrawBrow(side,plan);
                 float cx=side*plan.EyeX*3.66f,cy=(plan.EyeY-plan.EyeHeight*.72f)*3+.09f;
                 cv.Fill((u,v)=>OvalD(u,v,cx,cy,.051f,.021f),Paint.Mix(skin,Paint.Hex("#f27385"),.06f));
                 if(p.Elder)

@@ -156,7 +156,7 @@ namespace SpellDuel
         internal static Color32[] Portrait(string id,Portraits.Persona p,bool frontOnly)
         {
             string key=id+frontOnly;if(images.TryGetValue(key,out var image))return image;
-            var mesh=HeadwearArt.HairFor(id,p);var vertices=mesh.vertices;var tri=mesh.triangles;var colors=mesh.colors;var hair=CharacterLook.Get(id).HairColor;
+            var mesh=AnimeFace.CompactPresentationMesh(HeadwearArt.HairFor(id,p),id,p,1);var vertices=mesh.vertices;var tri=mesh.triangles;var colors=mesh.colors;var hair=CharacterLook.Get(id).HairColor;
             var depth=new float[W*H];for(int i=0;i<depth.Length;i++)depth[i]=-100;image=new Color32[W*H];
             for(int i=0;i<tri.Length;i+=3)
             {
@@ -171,7 +171,7 @@ namespace SpellDuel
                     float u=((b.y-c.y)*(px-c.x)+(c.x-b.x)*(py-c.y))/den,v0=((c.y-a.y)*(px-c.x)+(a.x-c.x)*(py-c.y))/den,w=1-u-v0;
                     if(u<0||v0<0||w<0)continue;float z=u*a.z+v0*b.z+w*c.z;int k=y*W+x;
                     if(z<=depth[k])continue;
-                    if(frontOnly&&Mathf.Abs(px)<.14f*p.Width&&py>-.157f*p.Length&&py<.157f*p.Length&&z<AnimeFace.Surface(px,py,p)+.001f)continue;
+                    if(frontOnly&&Mathf.Abs(px)<.14f*p.Width&&py>-.157f*p.Length&&py<AnimeFace.UpperY(.157f*p.Length,p)&&z<AnimeFace.Surface(px,py,p)+.001f)continue;
                     // Back hair belongs behind the neck/shoulders; don't paint it over the portrait collar.
                     if(frontOnly&&py<-.157f&&Mathf.Abs(px)<.105f&&z<.08f)continue;
                     if(frontOnly&&py<-.22f&&Mathf.Abs(px)<.22f&&z<.10f)continue;

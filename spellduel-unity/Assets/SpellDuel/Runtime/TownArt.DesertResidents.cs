@@ -21,7 +21,7 @@ namespace SpellDuel
             {
                 // Helmet hugs the fitted hair frame. One intact horn and one visibly broken stump.
                 var oldHat=face.Find("Headwear fitted 海斗");if(oldHat!=null){oldHat.gameObject.SetActive(false);Object.Destroy(oldHat.gameObject);}
-                var helm=Group(face,"Retired fighter broken horn helmet",new Vector3(0,.10f,-.015f));
+                var helm=Group(face,"Retired fighter broken horn helmet",new Vector3(0,.10f+AnimeFace.HeadwearDrop(Portraits.PersonaFor(basis)),-.015f));
                 Ball(helm,"Bronze helmet shell",Vector3.zero,new Vector3(.35f,.21f,.29f),Gold);
                 Cone(helm,"Intact left horn",new Vector3(-.17f,.045f,0),new Vector3(.07f,.16f,.07f),Cream).transform.localRotation=Quaternion.Euler(0,0,35);
                 Cyl(helm,"Broken right horn stump",new Vector3(.17f,.045f,0),new Vector3(.07f,.026f,.07f),Cream);

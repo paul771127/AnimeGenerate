@@ -148,19 +148,56 @@ namespace SpellDuel
         {
             float y=meshYs[row]*p.Length,a=FrontAngle(column);
             Section(y,p,out var width,out _,out _);float x=Mathf.Sin(a)*width;
-            return new Vector3(x,y,SculptSurface(x,y,p));
+            float z=SculptSurface(x,y,p);return new Vector3(x,UpperY(y,p)+Dome(x,y,z,p),z);
         }
         internal static float Surface(float x,float y,Portraits.Persona p)
         {
             // 取實際三角面而非理想曲面，薄片才不會陷入低面數頭模。
-            int row=0;while(row<meshYs.Length-2&&y>meshYs[row+1]*p.Length)row++;
-            for(int i=-6;i<6;i++)
+            int row=0;while(row<meshYs.Length-2&&y>UpperY(meshYs[row+1]*p.Length,p))row++;
+            int first=y>UpperY(.070f*p.Length,p)?Mathf.Max(0,row-3):row;
+            for(int r=first;r<=row;r++)for(int i=-6;i<6;i++)
             {
-                var a=FrontVertex(row,i,p);var b=FrontVertex(row,i+1,p);
-                var c=FrontVertex(row+1,i,p);var d=FrontVertex(row+1,i+1,p);
+                var a=FrontVertex(r,i,p);var b=FrontVertex(r,i+1,p);
+                var c=FrontVertex(r+1,i,p);var d=FrontVertex(r+1,i+1,p);
                 if(OnTriangle(x,y,a,b,c,out var z)||OnTriangle(x,y,b,d,c,out z))return z;
             }
             return SculptSurface(x,y,p);
+        }
+        // Physical upper-head correction. It is applied AFTER the old body/head fitting,
+        // so automatic height normalisation cannot stretch the compact head tall again.
+        internal static float UpperSeam(Portraits.Persona p)
+        {var plan=new Portraits.FacePlan(p);return plan.BrowY+plan.EyeWidth*.18f;}
+        internal static float UpperY(float y,Portraits.Persona p)
+        {float seam=UpperSeam(p);return y<=seam?y:seam+(y-seam)*.65f;}
+        internal static float Dome(float x,float originalY,float z,Portraits.Persona p)
+        {
+            float t=Mathf.SmoothStep(0,1,Mathf.InverseLerp(.070f*p.Length,.145f*p.Length,originalY));
+            float radius=x*x/(.100f*.100f*p.Width*p.Width)+(z+.009f)*(z+.009f)/(.120f*.120f);
+            return .014f*p.Length*t*Mathf.Exp(-1.4f*radius);
+        }
+        static float CrownCrest(float x,float y,float z,Portraits.Persona p)
+        {
+            float t=Mathf.SmoothStep(0,1,Mathf.InverseLerp(.100f*p.Length,.160f*p.Length,y));
+            float r=x*x/(.055f*.055f*p.Width*p.Width)+(z+.009f)*(z+.009f)/(.085f*.085f);
+            return .018f*p.Length*t*Mathf.Exp(-1.6f*r);
+        }
+        internal static float HeadwearDrop(Portraits.Persona p)=>UpperY(.177f*p.Length,p)+Dome(0,.177f*p.Length,-.009f,p)+CrownCrest(0,.177f*p.Length,-.009f,p)-.177f*p.Length;
+        internal static Mesh CompactPresentationMesh(Mesh source,string identity,Portraits.Persona p,int kind)
+        {
+            string key="Compact upper/"+identity+"/"+kind+"/"+source.GetInstanceID();if(meshes.TryGetValue(key,out var found))return found;
+            var mesh=Object.Instantiate(source);mesh.name=key;var vertices=mesh.vertices;float seam=UpperSeam(p),drop=HeadwearDrop(p);
+            for(int i=0;i<vertices.Length;i++)
+            {
+                var v=vertices[i];float y=v.y;
+                if(kind==2&&identity!="艾琳")v.y=y+drop; // Rigid hats move to the hair; their design stays intact.
+                else
+                {
+                    v.y=UpperY(y,p)+Dome(v.x,y,v.z,p);
+                    if(kind==1)v.y+=CrownCrest(v.x,y,v.z,p)-.015f*(1-Mathf.SmoothStep(0,1,Mathf.InverseLerp(seam+.020f,.160f*p.Length,y)));
+                }
+                vertices[i]=v;
+            }
+            mesh.vertices=vertices;mesh.RecalculateNormals();mesh.RecalculateBounds();meshes[key]=mesh;return mesh;
         }
         internal static float[] Outline(Portraits.Persona p)
         {
@@ -168,13 +205,13 @@ namespace SpellDuel
             for(int side=-1;side<=1;side+=2)for(int step=0;step<=88;step++)
             {
                 float y=Mathf.Lerp(ys[0],ys[ys.Length-1],side<0?1-step/88f:step/88f)*p.Length;
-                Section(y,p,out var w,out _,out _);points.Add(side*w*3);points.Add(y*3+.09f);
+                Section(y,p,out var w,out _,out _);points.Add(side*w*3);points.Add((UpperY(y,p)+Dome(side*w,y,0,p))*3+.09f);
             }
             return points.ToArray();
         }
         // Old rigs fit hats/hair with a nonuniform head scale. Compensate only facial
         // children, once, so their visible oval has the same aspect as the 2D portrait.
-        internal static void AlignOval(Transform head)
+        internal static void AlignOval(Transform head,string identity,Portraits.Persona p)
         {
             if(head.Find("Oval facial frame")!=null)return;
             var parts=new List<Transform>();
@@ -189,6 +226,13 @@ namespace SpellDuel
             var frame=new GameObject("Oval facial frame").transform;frame.SetParent(head,false);
             foreach(var part in parts)part.SetParent(frame,false);
             var fitted=head.lossyScale;frame.localScale=new Vector3(fitted.y/Mathf.Max(.001f,fitted.x),1,1);
+            foreach(var filter in head.GetComponentsInChildren<MeshFilter>(true))
+            {
+                string n=filter.gameObject.name;
+                int kind=n=="立面頭型"?0:n=="整體髮型"?1:n.StartsWith("Headwear fitted ")?2:-1;
+                if(kind>=0)filter.sharedMesh=CompactPresentationMesh(filter.sharedMesh,identity,p,kind);
+            }
+            var halo=head.Find("Halo");if(halo!=null)halo.localPosition+=Vector3.up*HeadwearDrop(p);
         }
         // Reference-based skin palette, shared by face, exposed body and portrait.
         internal static Color SkinFor(string identity)
@@ -296,6 +340,32 @@ namespace SpellDuel
             internal MeshFilter Lip;internal readonly List<Transform> Brows=new List<Transform>();
             internal HumanExpressionMotion Motion;
         }
+        internal static Color BrowColor(string identity)
+        {return Color.Lerp(new Color(.15f,.08f,.12f),CharacterLook.Get(identity).HairColor,.32f);}
+        internal static float BrowThickness(Portraits.Persona p)=>p.Elder?.0068f:p.Masculine?.0048f:.0032f;
+        internal static float BrowCurve(float t,Portraits.Persona p)
+        {
+            float arch=p.Elder?.0022f:p.Masculine?.0012f:.0035f;
+            float bend=p.Elder?-.004f:p.Masculine?0:(p.Brow*.25f-1)*Mathf.Deg2Rad*new Portraits.FacePlan(p).EyeWidth;
+            return arch*Mathf.Sin(t*Mathf.PI)+bend*t;
+        }
+        static Mesh BrowMesh(string identity,Portraits.Persona p,Vector3 anchor,int side)
+        {
+            string key="Brow curve/"+identity+"/"+side;if(meshes.TryGetValue(key,out var mesh))return mesh;
+            var plan=new Portraits.FacePlan(p);var v=new List<Vector3>();var tris=new List<int>();var colors=new List<Color>();
+            for(int layer=0;layer<(p.Elder?2:1);layer++)
+            {
+                int start=v.Count;float inner=side*(plan.EyeX-plan.EyeWidth*.5f),outer=inner+side*plan.EyeWidth*1.1f;
+                for(int i=0;i<=16;i++)
+                {
+                    float t=i/16f,x=Mathf.Lerp(inner,outer,t),y=anchor.y+BrowCurve(t,p);
+                    float half=BrowThickness(p)*.5f*(1-.45f*t)*(layer==0?1:.43f);
+                    for(int edge=-1;edge<=1;edge+=2){float py=y+edge*half;v.Add(new Vector3(x,py,Surface(x,py,p)+.0046f+layer*.0004f)-anchor);colors.Add(layer==0?BrowColor(identity):Color.Lerp(CharacterLook.Get(identity).HairColor,Color.white,.55f));}
+                    if(i<16){int k=start+i*2;tris.AddRange(new[]{k,k+2,k+1,k+1,k+2,k+3});}
+                }
+            }
+            return Finish(key,v,tris,colors);
+        }
         internal static Features Build(Transform head,string identity,Portraits.Persona p,Color skin,Color brow,Color iris,bool precise=false,bool elder=false,bool elf=false)
         {
             var plan=new Portraits.FacePlan(p);var result=new Features();Part(head,"立面頭型",Head(p,identity),Vector3.zero,Material(skin,1,identity));
@@ -311,12 +381,9 @@ namespace SpellDuel
                 Stroke(lid,identity,p,lidAnchor,new Vector2(x,plan.EyeY+.003f),new Vector2(x+half,plan.EyeY),.0025f,ink,.004f);
                 MergeInk(lid,identity+"/lid/"+side);
                 foreach(var renderer in lid.GetComponentsInChildren<MeshRenderer>())renderer.enabled=false;
-                float inner=x-side*half,outer=inner+side*plan.EyeWidth*1.1f;
-                float by=plan.BrowY+(side>0?p.Asym*.0006f:0),bend=(p.Masculine?0:p.Brow*.35f-1)*Mathf.Deg2Rad*plan.EyeWidth;
+                float by=plan.BrowY+(side>0?p.Asym*.0006f:0);
                 var browPivot=new GameObject("BrowPivot").transform;browPivot.SetParent(head,false);browPivot.localPosition=new Vector3(x,by,.12f);result.Brows.Add(browPivot);
-                Stroke(browPivot,identity,p,browPivot.localPosition,new Vector2(inner,by),new Vector2(x,by+.0015f+bend*.5f),p.Elder?.0045f:p.Masculine?.003f:.0016f,brow);
-                Stroke(browPivot,identity,p,browPivot.localPosition,new Vector2(x,by+.0015f+bend*.5f),new Vector2(outer,by+bend),p.Elder?.004f:p.Masculine?.0028f:.0014f,brow);
-                MergeInk(browPivot,identity+"/brow/"+side);
+                Part(browPivot,"Brow "+identity,BrowMesh(identity,p,browPivot.localPosition,side),Vector3.zero,Material(Color.white,3));
             }
             // 鼻子融入頭模，只留一筆暖色鼻底，不再另外黏三角錐。
             Stroke(head,identity,p,Vector3.zero,new Vector2(-.0035f,plan.NoseY),new Vector2(.0015f,plan.NoseY-.0007f),.0008f,Color.Lerp(skin,new Color(.65f,.29f,.26f),.28f));
@@ -433,6 +500,12 @@ namespace SpellDuel
                     float py=y+edge*.00125f;v.Add(new Vector3(x,py,Surface(x,py-plan.EyeHeight*.45f*blink/8f,p)+.0035f)-anchor);c.Add(new Color(.13f,.07f,.12f));
                 }
                 if(i<16){int k=i*2;t.AddRange(new[]{k,k+2,k+1,k+1,k+2,k+3});}
+            }
+            for(int lash=0;lash<2;lash++)
+            {
+                float x=cx+side*(plan.EyeWidth*.5f-.003f+lash*.003f),y=plan.EyeY+.001f;
+                var points=new[]{new Vector2(x-side*.002f,y-.001f),new Vector2(x+side*.0015f,y),new Vector2(x+side*(.006f+lash*.001f),y+.004f+lash*.001f)};
+                int start=v.Count;foreach(var q in points){v.Add(new Vector3(q.x,q.y,Surface(q.x,q.y-plan.EyeHeight*.45f*blink/8f,p)+.0035f)-anchor);c.Add(identity=="澪"?CharacterLook.Hex("56879d"):new Color(.13f,.07f,.12f));}t.AddRange(new[]{start,start+1,start+2});
             }
             return Finish(key,v,t,c);
         }

@@ -9,8 +9,9 @@ namespace SpellDuel
         internal static Color32[] Render(string id,int side,int glance)
         {
             string key=id+side+"/"+glance;if(cache.TryGetValue(key,out var image))return image;
-            image=new Color32[EyeArt.W*EyeArt.H];var look=CharacterLook.Get(id);var ink=CharacterLook.Hex(id=="澪"?"d9fbff":"281529");
+            image=new Color32[EyeArt.W*EyeArt.H];var look=CharacterLook.Get(id);var ink=CharacterLook.Hex(id=="澪"?"56879d":"281529");
             bool closed=id=="翠"||id=="澪";float opening=id=="海斗"?.36f:id=="小鐵"?.44f:.52f;
+            var p=Portraits.PersonaFor(id);var lashes=EyeArt.LashTriangles(opening,look.Tail*.10f,p.Masculine||p.Elder,closed);
             for(int py=0;py<EyeArt.H;py++)for(int px=0;px<EyeArt.W;px++)
             {
                 Color sum=new Color(0,0,0,0);float weight=0;
@@ -44,6 +45,7 @@ namespace SpellDuel
                         // The outer lash is a tapering wedge, never a complete lower outline.
                         if(outward>.65f&&outward<1.04f&&y>upper&&y<upper+.12f*(1-(outward-.65f)/.39f))c=ink;
                     }
+                    if(EyeArt.OnLashes(x,y,side,lashes))c=ink;
                     sum.r+=c.r*c.a;sum.g+=c.g*c.a;sum.b+=c.b*c.a;weight+=c.a;
                 }
                 if(weight>0)image[py*EyeArt.W+px]=(Color32)new Color(sum.r/weight,sum.g/weight,sum.b/weight,weight*.25f);

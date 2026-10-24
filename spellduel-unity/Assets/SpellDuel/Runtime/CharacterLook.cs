@@ -74,11 +74,35 @@ namespace SpellDuel
         static float Clamp(float x)=>Math.Max(0,Math.Min(1,x));
         static float Mix(float a,float b,float t)=>a+(b-a)*t;
         static bool Oval(float x,float y,float cx,float cy,float rx,float ry)=>((x-cx)*(x-cx)/(rx*rx)+(y-cy)*(y-cy)/(ry*ry))<1;
+        internal static float UpperOpening(CharacterLook.EyeKind eye)
+        {switch(eye){case CharacterLook.EyeKind.Upturned:return .40f;case CharacterLook.EyeKind.Droop:return .42f;case CharacterLook.EyeKind.Round:return .50f;case CharacterLook.EyeKind.Slender:return .31f;case CharacterLook.EyeKind.HalfClosed:return .10f;case CharacterLook.EyeKind.Sharp:return .36f;case CharacterLook.EyeKind.Sanpaku:return .37f;default:return .46f;}}
+        internal static Vector2[] LashTriangles(float opening,float slope,bool simple,bool closed)
+        {
+            int count=simple?2:3;var result=new Vector2[count*3];
+            for(int i=0;i<count;i++)
+            {
+                float q=count==2?.58f+i*.12f:.50f+i*.10f;
+                float left=q-.045f,right=q+.045f;
+                float u=left/.72f,v=right/.72f,w=q/.72f;
+                float yl=closed?-.03f+.09f*u*u:opening*Mathf.Sqrt(Mathf.Max(0,1-u*u))+slope*u;
+                float yr=closed?-.03f+.09f*v*v:opening*Mathf.Sqrt(Mathf.Max(0,1-v*v))+slope*v;
+                float cy=closed?-.03f+.09f*w*w:opening*Mathf.Sqrt(Mathf.Max(0,1-w*w))+slope*w;
+                result[i*3]=new Vector2(left,yl-.015f);result[i*3+1]=new Vector2(right,yr-.015f);
+                result[i*3+2]=new Vector2(q+(simple?.10f:.12f)+i*.02f,cy+(closed?.095f:simple?.10f:.14f)+i*.025f);
+            }
+            return result;
+        }
+        static float Edge(Vector2 a,Vector2 b,float x,float y)=>(b.x-a.x)*(y-a.y)-(b.y-a.y)*(x-a.x);
+        internal static bool OnLashes(float x,float y,int side,Vector2[] triangles)
+        {
+            x*=side;for(int i=0;i<triangles.Length;i+=3){float a=Edge(triangles[i],triangles[i+1],x,y),b=Edge(triangles[i+1],triangles[i+2],x,y),c=Edge(triangles[i+2],triangles[i],x,y);if(a>=0&&b>=0&&c>=0||a<=0&&b<=0&&c<=0)return true;}return false;
+        }
         internal static Color32[] Render(string id,int side,int glance=0)
         {
             if(StoryCostume.Has(id)||id=="澪")return StoryEyes.Render(id,side,glance);
             string key=id+side+"/"+glance;if(pixels.TryGetValue(key,out var cached))return cached;
             var look=CharacterLook.Get(id);var persona=Portraits.PersonaFor(id);float pupil=look.Pupil*persona.Pupil;float gaze=persona.Gaze*.14f+glance*.085f;var iris=look.Iris;var result=new Color32[W*H];
+            var lashes=LashTriangles(UpperOpening(look.Eye),look.Tail*.12f,persona.Masculine||persona.Elder,false);
             for(int py=0;py<H;py++)for(int px=0;px<W;px++)
             {
                 float red=0,green=0,blue=0,alpha=0;
@@ -116,7 +140,7 @@ namespace SpellDuel
                     bool upper=Math.Abs(u)<1&&Math.Abs(y-top)<thick*.5f;
                     float ox=side*x,t=(ox-.68f)/.28f,ty=look.Tail*.12f+t*look.Tail*.16f;
                     bool tail=t>=0&&t<=1&&Math.Abs(y-ty)<.065f*(1-t);
-                    if(upper||tail){r=.14f;g=.07f;b=.17f;a=1;}
+                    if(upper||tail||OnLashes(x,y,side,lashes)){r=.14f;g=.07f;b=.17f;a=1;}
                     else if(Math.Abs(u)<.93f&&outward>.34f&&Math.Abs(y-bottom)<.018f){r=.40f;g=.27f;b=.36f;a=.75f;}
                     else if((look.Eye==CharacterLook.EyeKind.Droop||look.Eye==CharacterLook.EyeKind.HalfClosed)&&Math.Abs(u)<.65f&&Math.Abs(y-top-.18f)<.012f){r=.48f;g=.30f;b=.33f;a=.50f;}
                     red+=r*a;green+=g*a;blue+=b*a;alpha+=a;

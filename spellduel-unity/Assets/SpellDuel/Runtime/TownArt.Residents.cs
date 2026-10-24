@@ -129,7 +129,7 @@ namespace SpellDuel
             foreach(var tf in articulated){parents.Add(tf.parent);tf.SetParent(null,false);}
             neck.SetParent(null,false);chest.SetParent(null,false);Batch(p);Batch(chest);Batch(neck);chest.SetParent(p,false);neck.SetParent(chest,false);
             for(int i=0;i<articulated.Count;i++)articulated[i].SetParent(parents[i],false);
-            motion.Tick(0);HumanProportions.NormalizeProjected(face,key,root);FitStoryHeight(face,key,root,height);FitFaceBeard(face,key,persona);AnimeFace.AlignOval(face);StoryResidentProps(key,p);if(idleArt){ResidentActionProps(key,p);motion.BindActionArt();}return root.gameObject;
+            motion.Tick(0);HumanProportions.NormalizeProjected(face,key,root);FitStoryHeight(face,key,root,height);FitFaceBeard(face,key,persona);AnimeFace.AlignOval(face,key,persona);StoryResidentProps(key,p);if(idleArt){ResidentActionProps(key,p);motion.BindActionArt();}return root.gameObject;
         }
         static void FitFaceBeard(Transform face,string key,Portraits.Persona persona)
         {

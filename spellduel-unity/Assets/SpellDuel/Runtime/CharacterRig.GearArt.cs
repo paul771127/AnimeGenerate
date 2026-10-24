@@ -78,6 +78,7 @@ namespace SpellDuel
         {
             string key=id+"/"+slot+"/"+piece.rarity+"/"+piece.set+"/"+full;
             if(!gearArtMeshes.TryGetValue(key,out var mesh)){mesh=MakeGearMesh(id,slot,piece,full);gearArtMeshes[key]=mesh;}
+            if(slot=="head")mesh=AnimeFace.CompactPresentationMesh(mesh,id,Portraits.PersonaFor(id),2);
             GearPart(AnimeFace.Part(parent,"Equipment "+slot,mesh,Vector3.zero,AnimeFace.Material(Color.white,4)));
         }
         sealed class GearSurfaceData { internal Vector3[] v;internal int[] t; }

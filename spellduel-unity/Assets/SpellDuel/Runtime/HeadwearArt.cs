@@ -96,7 +96,7 @@ namespace SpellDuel
         internal static Color32[] Portrait(string id,Portraits.Persona p)
         {
             if(images.TryGetValue(id,out var image))return image;image=new Color32[W*H];if(!Has(id)){if(images.Count>=12)images.Clear();images[id]=image;return image;}
-            float seat=Seat(id,p);var mesh=MeshFor(id,p);var vs=mesh.vertices;var ts=mesh.triangles;var cs=mesh.colors;var depth=new float[W*H];for(int k=0;k<depth.Length;k++)depth[k]=-100;
+            float seat=AnimeFace.UpperY(Seat(id,p),p);var mesh=AnimeFace.CompactPresentationMesh(MeshFor(id,p),id,p,2);var vs=mesh.vertices;var ts=mesh.triangles;var cs=mesh.colors;var depth=new float[W*H];for(int k=0;k<depth.Length;k++)depth[k]=-100;
             for(int t=0;t<ts.Length;t+=3)
             {
                 var a=vs[ts[t]];var b=vs[ts[t+1]];var c=vs[ts[t+2]];if(Vector3.Cross(b-a,c-a).z<=0)continue;
@@ -108,7 +108,7 @@ namespace SpellDuel
                     float px=(x+.5f)/W*.68f-.34f,py=(y+.5f)/H*.56f-.16f,u=((b.y-c.y)*(px-c.x)+(c.x-b.x)*(py-c.y))/den,v=((c.y-a.y)*(px-c.x)+(a.x-c.x)*(py-c.y))/den,w=1-u-v;
                     if(u<0||v<0||w<0)continue;float z=u*a.z+v*b.z+w*c.z;int k=y*W+x;if(z<=depth[k])continue;
                     // Hair genuinely in front of the brim (bangs) remains visible below the fitted seat.
-                    if(((py<seat-.012f&&Mathf.Abs(px)<.14f)||(id=="艾琳"&&Mathf.Abs(px)<.163f&&py<.184f&&py>-.16f))&&z<AnimeFace.HairSeat(px,py,p)+(id=="艾琳"?.002f:0))continue;
+                    if(py<AnimeFace.UpperY(.157f*p.Length,p)&&((py<seat-.012f&&Mathf.Abs(px)<.14f)||(id=="艾琳"&&Mathf.Abs(px)<.163f&&py<.184f&&py>-.16f))&&z<AnimeFace.Surface(px,py,p)+(id=="艾琳"?.002f:0))continue;
                     depth[k]=z;var ca=cs[ts[t]];var cb=cs[ts[t+1]];var cc=cs[ts[t+2]];image[k]=new Color32((byte)(Mathf.Clamp01(ca.r*u+cb.r*v+cc.r*w)*255),(byte)(Mathf.Clamp01(ca.g*u+cb.g*v+cc.g*w)*255),(byte)(Mathf.Clamp01(ca.b*u+cb.b*v+cc.b*w)*255),255);
                 }
             }
