@@ -169,19 +169,46 @@ jobs:
           path: build/iOS
           if-no-files-found: error
 
-  # 公開 repo 的 GitHub macOS 機器免費；產出「未簽署」IPA，用 Sideloadly + 免費 Apple ID 安裝
+  # 公開 repo 的 GitHub macOS 機器免費；產出「未簽署」IPA（之後由 ios-testflight 簽章上傳）
+  # App Store Connect 要求用 iOS 26 SDK（Xcode 26）以上編譯，所以用 macos-26 機器
   ios-ipa:
     needs: ios-export
-    runs-on: macos-14
+    runs-on: macos-26
     timeout-minutes: 60
     steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src
+          sparse-checkout: spellduel-unity/AppIcon
       - uses: actions/download-artifact@v4
         with:
           name: SpellDuel-iOS-XcodeProject
           path: xcode
+      - name: 放入 App 圖示（1024×1024，App Store 必要）
+        run: |
+          set -eo pipefail
+          ICON=src/spellduel-unity/AppIcon/AppIcon-1024.png
+          ICONSET=$(find xcode -type d -path "*Images.xcassets/AppIcon.appiconset" | head -1)
+          if [ -z "$ICONSET" ]; then
+            XCASSETS=$(find xcode -type d -name "Images.xcassets" | head -1)
+            ICONSET="$XCASSETS/AppIcon.appiconset"; mkdir -p "$ICONSET"
+          fi
+          echo "圖示資料夾：$ICONSET"
+          rm -f "$ICONSET"/*
+          cp "$ICON" "$ICONSET/AppIcon-1024.png"
+          # 單一尺寸圖示：Xcode 會自動產生其他所有尺寸
+          cat > "$ICONSET/Contents.json" <<'JSON'
+          {
+            "images" : [
+              { "filename" : "AppIcon-1024.png", "idiom" : "universal", "platform" : "ios", "size" : "1024x1024" }
+            ],
+            "info" : { "author" : "xcode", "version" : 1 }
+          }
+          JSON
       - name: 編譯未簽署 IPA
         run: |
           set -eo pipefail
+          xcodebuild -version
           PROJ=$(find xcode -name "Unity-iPhone.xcodeproj" -maxdepth 3 | head -1)
           echo "Xcode 專案：$PROJ"
           xcodebuild -project "$PROJ" -scheme Unity-iPhone -configuration Release \
@@ -192,6 +219,9 @@ jobs:
           mkdir -p Payload && cp -R "$APP" Payload/
           zip -qry SpellDuel-unsigned.ipa Payload
           ls -la SpellDuel-unsigned.ipa
+          echo "--- 檢查：SDK 版本與 1024 圖示 ---"
+          /usr/libexec/PlistBuddy -c "Print :DTSDKName" Payload/*.app/Info.plist || true
+          xcrun --sdk iphoneos assetutil --info Payload/*.app/Assets.car | grep -E '"(Name|PixelHeight)"' | grep -B1 '1024' | head -4 || echo "::warning::Assets.car 裡沒找到 1024 圖示"
       - uses: actions/upload-artifact@v4
         with:
           name: SpellDuel-iOS-unsigned-IPA
