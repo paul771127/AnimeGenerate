@@ -10,6 +10,11 @@ namespace SpellDuel
         internal static void StrokeMesh(PMesh m,Vector3 a,Vector3 b,float width,Color c,Vector3 normal)
         { var side=Vector3.Cross(b-a,normal).normalized*width; m.Ribbon(new[]{a,b},side,new[]{c,c}); }
         internal static Vector3 FloorPoint(float angle,float radius,float y=.025f)=>new Vector3(Mathf.Cos(angle)*radius,y,Mathf.Sin(angle)*radius);
+        static Quaternion ReworkFacing(Vector3 at,bool keepUp)
+        {
+            if(!Camera.main)return Quaternion.identity;var d=Camera.main.transform.position-at;if(keepUp)d.y=0;
+            return d.sqrMagnitude>.000001f?Quaternion.LookRotation(d.normalized,Vector3.up):Quaternion.identity;
+        }
         internal static void Snow(Transform parent)
         {
             var ps=NewPS(parent,"Six point snow",BlendMat(TexStar),16,true);var m=ps.main;
@@ -18,7 +23,7 @@ namespace SpellDuel
         }
         internal static void FairySprinkle(Vector3 at)
         {
-            var a=NewAnim("Fairy healing crosses",at,Quaternion.identity,.8f);
+            var a=NewAnim("Fairy healing crosses",at,ReworkFacing(at,false),.8f);
             for(int i=0;i<4;i++)
             {
                 var t=NewChild(a.transform,"Healing cross");t.localPosition=new Vector3((i-1.5f)*.08f,-.05f-i*.035f,0);
@@ -52,7 +57,7 @@ namespace SpellDuel
         }
         internal static void ContractSigned(Vector3 at)
         {
-            var a=NewAnim("Contract signed",at,Quaternion.identity,.9f);
+            var a=NewAnim("Contract signed",at,ReworkFacing(at,true),.9f);
             var line=new[]{Vector3.zero,Vector3.up*2.2f};
             a.AddSlash(a.transform,line,.12f,new Color(.45f,1f,.65f,.55f),0,.55f,1,1,0);
             var floor=NewChild(a.transform,"Seal burst");floor.localRotation=Quaternion.Euler(90,0,0);
@@ -68,7 +73,7 @@ namespace SpellDuel
         }
         internal static void HolyLanding(Vector3 at,bool heaven)
         {
-            var a=NewAnim("Holy descent",at,Quaternion.identity,.8f);float s=heaven?1.7f:1f;
+            var a=NewAnim("Holy descent",at,ReworkFacing(at,true),.8f);float s=heaven?1.7f:1f;
             var line=new[]{Vector3.up*7,Vector3.up*.08f};
             a.AddSlash(a.transform,line,.42f*s,new Color(1f,.81f,.30f,.4f),0,.38f,1,1,0);
             a.AddSlash(a.transform,line,.10f*s,new Color(1f,.98f,.82f,.85f),0,.25f,1,1,0);
@@ -77,7 +82,7 @@ namespace SpellDuel
         }
         internal static void HolyNeedle(Vector3 at)
         {
-            var a=NewAnim("Holy needle hit",at,Quaternion.identity,.3f);
+            var a=NewAnim("Holy needle hit",at,ReworkFacing(at,true),.3f);
             a.AddSlash(a.transform,new[]{Vector3.up*1.5f,Vector3.zero},.026f,new Color(1f,.96f,.72f,.85f),0,.18f,1,1,0);
         }
         internal static GameObject HolyGround(float radius,bool heaven)

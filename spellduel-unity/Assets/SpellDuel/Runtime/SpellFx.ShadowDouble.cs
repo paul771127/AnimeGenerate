@@ -14,7 +14,7 @@ namespace SpellDuel
         internal void Bind()
         {
             active++;bound=true;
-            filters=GetComponentsInChildren<MeshFilter>();renderers=new Renderer[filters.Length];ghost=new Material[filters.Length][];block=new MaterialPropertyBlock();
+            filters=GetComponentsInChildren<MeshFilter>(true);renderers=new Renderer[filters.Length];ghost=new Material[filters.Length][];block=new MaterialPropertyBlock();
             for(int i=0;i<filters.Length;i++)
             {
                 var r=filters[i].GetComponent<Renderer>();renderers[i]=r;if(!r)continue;
