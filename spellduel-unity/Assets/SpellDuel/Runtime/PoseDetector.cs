@@ -24,7 +24,7 @@ namespace SpellDuel
         const int HandOffset = 2 + Count * 3;
         const int ResultLength = HandOffset + 1 + HandCount * 3;
         const int CaptureWidth = 288;
-        const float Interval = 0.08f;   // 最多每秒約 12 次
+        const float Interval = 0.04f;   // 最多每秒約 25 次（實際上受偵測速度限制）
 
         public class Result
         {
@@ -62,7 +62,8 @@ namespace SpellDuel
         sbyte[] frameS;
         int w, h;
         float nextCapture;
-        bool readbackPending, nativeBusy;
+        bool readbackPending, nativeBusy, frameReady;
+        Result capturing;        // 正在讀回（或已讀回、等偵測器有空）的那一張：拍攝當下的鏡頭
         Result pending;          // 已送出、等結果的那一張
         bool flipY;              // 有些繪圖 API 畫到 RenderTexture 會上下顛倒；一直找不到人就自動換方向試
         // 方向確定之後就鎖住（手離開畫面一陣子不會再亂換方向，造成手的上下顛倒）：
@@ -103,7 +104,9 @@ namespace SpellDuel
         {
             if (!Supported) return;
             Poll();
-            if (!Enabled || (!WantBody && !WantHand) || readbackPending || nativeBusy || Time.time < nextCapture) return;
+            // 偵測器一有空就送出已經讀回的那張（讀回和偵測同時進行，不用等偵測完才開始讀下一張）
+            if (frameReady && !nativeBusy) SubmitReady();
+            if (!Enabled || (!WantBody && !WantHand) || readbackPending || frameReady || Time.time < nextCapture) return;
             if (background == null || background.material == null) return;
             nextCapture = Time.time + Interval;
             Capture();
@@ -125,7 +128,7 @@ namespace SpellDuel
             Graphics.Blit(null, rt, background.material);
             RenderTexture.active = prev;
 
-            pending = new Result
+            capturing = new Result
             {
                 time = Time.time,
                 camPos = cam.transform.position,
@@ -140,7 +143,7 @@ namespace SpellDuel
                 {
                     readbackPending = false;
                     if (req.hasError) return;
-                    Submit(req.GetData<byte>());
+                    Stage(req.GetData<byte>());
                 });
             }
             else
@@ -150,22 +153,30 @@ namespace SpellDuel
                 RenderTexture.active = rt;
                 readTex.ReadPixels(new Rect(0, 0, w, h), 0, 0, false);
                 RenderTexture.active = prev;
-                Submit(readTex.GetRawTextureData<byte>());
+                Stage(readTex.GetRawTextureData<byte>());
             }
         }
 
         // Unity 讀回的資料是由下往上；偵測器要由上往下的正常影像
-        void Submit(Unity.Collections.NativeArray<byte> data)
+        // 讀回的資料直接逐列複製到 frame（不再先 ToArray 多配一份記憶體）
+        void Stage(Unity.Collections.NativeArray<byte> data)
         {
             if (data.Length < w * h * 4) return;
             int row = w * 4;
-            var tmp = data.ToArray();
             for (int y = 0; y < h; y++)
             {
                 int src = (flipY ? y : h - 1 - y) * row;
-                Buffer.BlockCopy(tmp, src, frame, y * row, row);
+                Unity.Collections.NativeArray<byte>.Copy(data, src, frame, y * row, row);
             }
             for (int i = 3; i < frame.Length; i += 4) frame[i] = 255;   // alpha 一律不透明
+            frameReady = true;
+            if (!nativeBusy) SubmitReady();
+        }
+
+        void SubmitReady()
+        {
+            frameReady = false;
+            pending = capturing;
             try
             {
 #if UNITY_ANDROID && !UNITY_EDITOR

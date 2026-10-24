@@ -9,6 +9,7 @@ import com.google.mediapipe.framework.image.BitmapImageBuilder;
 import com.google.mediapipe.framework.image.MPImage;
 import com.google.mediapipe.tasks.components.containers.NormalizedLandmark;
 import com.google.mediapipe.tasks.core.BaseOptions;
+import com.google.mediapipe.tasks.core.Delegate;
 import com.google.mediapipe.tasks.vision.core.RunningMode;
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarker;
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarkerResult;
@@ -52,6 +53,9 @@ public class PoseBridge {
     private volatile boolean busy;
     private volatile float[] latest;
     private int seq;
+    private Bitmap bmp;            // 重複使用（以前每張都新建一張 Bitmap）
+    private long lastTs;           // VIDEO 模式的時間戳記要一直遞增
+    private String handMode = "";
 
     public PoseBridge() {
         PoseDetectorOptions options = new PoseDetectorOptions.Builder()
@@ -75,20 +79,30 @@ public class PoseBridge {
             while ((n = in.read(b)) > 0) out.write(b, 0, n);
             in.close();
             byte[] model = out.toByteArray();
-            ByteBuffer buf = ByteBuffer.allocateDirect(model.length).order(ByteOrder.nativeOrder());
-            buf.put(model);
-            buf.rewind();
-            HandLandmarker.HandLandmarkerOptions opts = HandLandmarker.HandLandmarkerOptions.builder()
-                    .setBaseOptions(BaseOptions.builder().setModelAssetBuffer(buf).build())
-                    .setRunningMode(RunningMode.IMAGE)
-                    .setNumHands(3)   // 畫面裡可能有別人的手：最多找 3 隻，取最大的
-                    .setMinHandDetectionConfidence(0.5f)
-                    .build();
-            hands = HandLandmarker.createFromOptions(ctx, opts);
+            // 用 CPU：GPU 在部分手機會直接閃退（原生層，接不到例外）；VIDEO 模式的追蹤已經夠快
+            hands = create(ctx, model, Delegate.CPU); handMode = "CPU";
         } catch (Throwable t) {
             handError = String.valueOf(t.getMessage());
         }
     }
+
+    // VIDEO 模式：上一張找到手，下一張直接追蹤（不用每張重新跑「找手」的模型），延遲少很多
+    private static HandLandmarker create(Context ctx, byte[] model, Delegate d) {
+        ByteBuffer buf = ByteBuffer.allocateDirect(model.length).order(ByteOrder.nativeOrder());
+        buf.put(model);
+        buf.rewind();
+        HandLandmarker.HandLandmarkerOptions opts = HandLandmarker.HandLandmarkerOptions.builder()
+                .setBaseOptions(BaseOptions.builder().setModelAssetBuffer(buf).setDelegate(d).build())
+                .setRunningMode(RunningMode.VIDEO)
+                .setNumHands(2)   // 畫面裡可能有別人的手：最多找 2 隻，取最大的
+                .setMinHandDetectionConfidence(0.5f)
+                .setMinHandPresenceConfidence(0.5f)
+                .setMinTrackingConfidence(0.4f)
+                .build();
+        return HandLandmarker.createFromOptions(ctx, opts);
+    }
+
+    public String getHandMode() { return handMode; }
 
     public boolean submit(final byte[] rgba, final int w, final int h, final int flags) {
         if (busy) return false;
@@ -98,7 +112,7 @@ public class PoseBridge {
                 @Override public void run() {
                     float[] r = new float[LEN];
                     try {
-                        Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+                        if (bmp == null || bmp.getWidth() != w || bmp.getHeight() != h) bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
                         bmp.copyPixelsFromBuffer(ByteBuffer.wrap(rgba));
                         if ((flags & 1) != 0) {
                             try {
@@ -111,7 +125,9 @@ public class PoseBridge {
                             if (hands != null) {
                                 try {
                                     MPImage img = new BitmapImageBuilder(bmp).build();
-                                    fillHand(r, hands.detect(img), w, h);
+                                    long ts = Math.max(lastTs + 1, android.os.SystemClock.uptimeMillis());
+                                    lastTs = ts;
+                                    fillHand(r, hands.detectForVideo(img, ts), w, h);
                                 } catch (Throwable ignored) { }
                             }
                         }
