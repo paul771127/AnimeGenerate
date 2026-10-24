@@ -109,7 +109,7 @@ namespace SpellDuel
         public static bool IsMeleeBasic(SkillDef s) => s != null && (s.id == "na_sword" || s.id == "na_dagger" || s.id == "na_stick");
         /// <summary>手掌劃一下、照刀線砍的普攻：劍士的斬擊、初心者的木棍敲擊（都不會砍掉法球）</summary>
         /// <summary>集氣制的普攻：畫面上的手掌集氣完成才出手（初心者、劍士手掌劃一下；刺客手往前突刺）</summary>
-        public static bool IsChargedBasic(SkillDef s) => s != null && (s.id == "na_stick" || s.id == "na_sword" || s.id == "na_dagger");
+        public static bool IsChargedBasic(SkillDef s) => s != null && (s.id == "na_stick" || s.id == "na_sword" || s.id == "na_dagger" || s.id == "na_mage" || s.id == "na_arrow" || s.id == "na_holy");
         public static bool IsSwipeBasic(SkillDef s) => s != null && (s.id == "na_sword" || s.id == "na_stick");
 
         /// <summary>遠距技能的飛行速度倍率</summary>
@@ -251,9 +251,9 @@ namespace SpellDuel
             Classes["swordsman"] = new ClassDef { id = "swordsman", name = "劍士", color = C("#60a5fa"), maxHp = 160, maxMp = 90, mpRegen = 3, skills = new[] { "slash", "thrust", "wave", "block", "ironwall", "counter", "taunt" }, defaultLoadout = new[] { "slash", "wave", "block" }, desc = "近遠攻擊都有，多種防禦" };
 
             // ---------------------------------------------------------- 普通攻擊（不耗 MP、不用唸；手勢舉著就自動攻擊，見 BasicOf）
-            P(new SkillDef { id = "na_mage", cls = "basic", name = "奧術飛彈", type = SkillType.Projectile, color = C("#a78bfa"), cost = 0, damage = 8, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.15f, rangeMax = 12f, desc = "法師普攻：比 1（食指），每 2 秒自動射出一發奧術飛彈" });
+            P(new SkillDef { id = "na_mage", cls = "basic", name = "奧術飛彈", type = SkillType.Projectile, color = C("#a78bfa"), cost = 0, damage = 8, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.15f, rangeMax = 12f, desc = "法師普攻：畫面上的手掌浮現紫色法陣（集氣完成）時，比 1 往前一點（食指往前戳），射出一發奧術飛彈（約 2 秒集氣一次，敏捷越高越快）" });
             P(new SkillDef { id = "na_sword", cls = "basic", name = "斬擊（普攻）", type = SkillType.Projectile, color = C("#93c5fd"), cost = 0, damage = 9, charge = 0f, cooldown = 1f, radius = 1f, rangeMax = 1f, desc = "劍士普攻：畫面上的手掌泛起藍白劍光（集氣完成）時，手掌在鏡頭前劃一下：先出現紅色預警線，接著劍光沿線閃過砍下（1m 內；約 1 秒集氣一次，敏捷越高越快）" });
-            P(new SkillDef { id = "na_arrow", cls = "basic", name = "普通箭", type = SkillType.Projectile, color = C("#d9f99d"), cost = 0, damage = 9, charge = 0f, cooldown = 2f, speed = 16f, radius = 0.1f, rangeMax = 14f, desc = "獵人普攻：比 5（張開手掌），每 2 秒自動射出一箭" });
+            P(new SkillDef { id = "na_arrow", cls = "basic", name = "普通箭", type = SkillType.Projectile, color = C("#d9f99d"), cost = 0, damage = 9, charge = 0f, cooldown = 2f, speed = 16f, radius = 0.1f, rangeMax = 14f, desc = "獵人普攻：畫面上的弓拉滿（集氣完成）時，握拳再張開放箭（約 2 秒集氣一次，敏捷越高越快）" });
             // 初心者（10 級前）：普攻＝木棍敲擊（和劍士普攻一樣手掌劃一下、照刀線砍，不會砍掉法球）＋木棍揮擊、投石、急救
             // （丟小石子 na_pebble 保留定義，舊的特效／圖示還用得到）
             P(new SkillDef { id = "na_stick", cls = "basic", name = "木棍敲擊", type = SkillType.Projectile, color = C("#c08a52"), cost = 0, damage = 12, charge = 0f, cooldown = 2f, radius = 1f, rangeMax = 1f, desc = "初心者普攻：畫面上的手掌變紅（集氣完成）時，手掌在鏡頭前劃一下，用木棍敲手劃過的那條線（1m 內；約 2 秒集氣一次，敏捷越高越快）；不會砍掉法球" });
@@ -261,7 +261,7 @@ namespace SpellDuel
             P(new SkillDef { id = "nv_swing", cls = "novice", name = "木棍揮擊", type = SkillType.Projectile, color = C("#c08a52"), cost = 8, damage = 16, charge = 0f, cooldown = 1.2f, speed = 8f, radius = 0.3f, rangeMax = 1.8f, desc = "用木棍砍前方半球（半徑 1.8m）內的敵人；不用蓄力，手刀劈過就出招" });
             P(new SkillDef { id = "nv_stone", cls = "novice", name = "投石", type = SkillType.Projectile, color = C("#c87950"), cost = 10, damage = 15, charge = 0.6f, cooldown = 1.5f, speed = 11f, radius = 0.14f, rangeMax = 11f, desc = "用力丟出一顆石頭，飛得比普攻遠、比普攻痛" });
             P(new SkillDef { id = "nv_aid", cls = "novice", name = "急救", type = SkillType.Self, self = SelfKind.Heal, color = C("#86efac"), cost = 18, heal = 20, charge = 1f, cooldown = 8f, desc = "包紮傷口，回復 20 HP（隊友也會回）" });
-            P(new SkillDef { id = "na_holy", cls = "basic", name = "神聖飛彈", type = SkillType.Projectile, color = C("#fff3b0"), cost = 0, damage = 6, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.14f, rangeMax = 12f, desc = "牧師普攻：比 2，每 2 秒自動射出一發神聖飛彈" });
+            P(new SkillDef { id = "na_holy", cls = "basic", name = "神聖飛彈", type = SkillType.Projectile, color = C("#fff3b0"), cost = 0, damage = 6, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.14f, rangeMax = 12f, desc = "牧師普攻：畫面上的手掌聖光環亮起（集氣完成）時，比 2 往上一舉，射出一發神聖飛彈（約 2 秒集氣一次，敏捷越高越快）" });
             P(new SkillDef { id = "na_dagger", cls = "basic", name = "連刺（普攻）", type = SkillType.Projectile, color = C("#e879f9"), cost = 0, damage = 8, charge = 0f, cooldown = 1.6f, radius = 0.5f, rangeMax = 1f, desc = "刺客普攻：畫面上的手掌凝聚紅光（集氣完成）時，手往前突刺，往準星方向刺出一道紅光（1m 內；約 1.6 秒集氣一次，敏捷越高越快）" });
 
             // ---------------------------------------------------------- 進階職業（cls＝基本職業，沿用職業的放招方式；adv＝進階職業）

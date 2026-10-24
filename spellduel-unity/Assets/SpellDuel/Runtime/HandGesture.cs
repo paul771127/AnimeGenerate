@@ -305,18 +305,14 @@ namespace SpellDuel
             }
             FlushSwipe(t);
 
-            // 普通攻擊（刺客）：沒在詠唱時，手往前刺（畫面上手掌在 0.35 秒內縮小 25% 以上）＝刺一下
-            if (!BasicThrust) thrustQueued = false;
-            if (BasicThrust && ReleaseStyle == Style.None && fingersOut && histN >= 3 && t - lastThrust > 0.4f)
-            {
-                for (int k = 2; k < histN; k++)
-                {
-                    var o = HistAgo(k);
-                    if (t - o.t > 0.35f) break;
-                    if (o.shape == Shape.Fist || o.shape == Shape.None) break;
-                    if (palmSize < o.size * 0.75f) { thrustQueued = true; lastThrust = t; break; }
-                }
-            }
+            // 集氣制普攻的出手動作（沒在詠唱時；SoloBattle 依職業設定 BasicMove）：
+            //   刺客 Thrust：手往前刺（手掌 0.35 秒內縮小 25%）
+            //   法師 Poke：比 1 往前一點（食指伸著、手掌 0.35 秒內縮小 15%）
+            //   獵人 Bow：握拳（拉弦）→ 張開（放箭）：0.5 秒內從握拳變成張開
+            //   牧師 Raise：比 2 往上一舉（0.4 秒內往上移動畫面高度的 12%）
+            if (BasicMove == Move.None) moveQueued = false;
+            if (BasicMove != Move.None && ReleaseStyle == Style.None && histN >= 3 && t - lastMove > 0.4f && DetectMove(t, palm, palmSize, shape, H))
+            { moveQueued = true; lastMove = t; }
 
             // 劍士：張開的手掌在 0.5 秒內往任何方向移動一小段（短邊的 12%）就出招（不用大幅橫劈）
             if (ReleaseStyle == Style.Chop && fingersOut && histN >= 3)
@@ -492,9 +488,55 @@ namespace SpellDuel
         /// <summary>普通攻擊（劍士）：偵測「手掌劃一下」（SoloBattle 設定）</summary>
         public bool BasicSwipe;
         /// <summary>普通攻擊（刺客）：偵測「手往前突刺」（SoloBattle 設定）</summary>
-        public bool BasicThrust;
-        bool thrustQueued; float lastThrust = -99f;
-        public bool ConsumeThrust() { bool q = thrustQueued; thrustQueued = false; return q; }
+        public enum Move { None, Thrust, Poke, Bow, Raise }
+        /// <summary>集氣制普攻要偵測哪一種出手動作（SoloBattle 設定）</summary>
+        public Move BasicMove;
+        bool moveQueued; float lastMove = -99f;
+        public bool ConsumeMove() { bool q = moveQueued; moveQueued = false; return q; }
+        bool DetectMove(float t, Vector2 palm, float palmSize, Shape shape, float H)
+        {
+            switch (BasicMove)
+            {
+                case Move.Thrust:
+                case Move.Poke:
+                {
+                    if (BasicMove == Move.Thrust ? (shape == Shape.Fist || shape == Shape.None) : shape != Shape.One) return false;
+                    float need = BasicMove == Move.Thrust ? 0.75f : 0.85f;
+                    for (int k = 2; k < histN; k++)
+                    {
+                        var o = HistAgo(k);
+                        if (t - o.t > 0.35f) break;
+                        if (o.shape == Shape.Fist || o.shape == Shape.None) break;
+                        if (palmSize < o.size * need) return true;
+                    }
+                    return false;
+                }
+                case Move.Bow:
+                {
+                    if (shape != Shape.Open) return false;
+                    for (int k = 1; k < histN; k++)
+                    {
+                        var o = HistAgo(k);
+                        if (t - o.t > 0.5f) break;
+                        if (o.shape == Shape.Fist) return true;
+                    }
+                    return false;
+                }
+                case Move.Raise:
+                {
+                    if (shape != Shape.Two) return false;
+                    for (int k = 2; k < histN; k++)
+                    {
+                        var o = HistAgo(k);
+                        if (t - o.t > 0.4f) break;
+                        if (o.shape == Shape.Fist || o.shape == Shape.None) break;
+                        if (palm.y - o.palm.y > H * 0.12f) return true;   // 螢幕座標往上＝y 變大
+                    }
+                    return false;
+                }
+            }
+            return false;
+        }
         bool swipeQueued; float lastSwipe = -99f, swipeUntil = -1f;
         /// <summary>這一刀手掌劃過的起點、終點（螢幕像素，左下為原點）</summary>
         public Vector2 SwipeFrom { get; private set; }

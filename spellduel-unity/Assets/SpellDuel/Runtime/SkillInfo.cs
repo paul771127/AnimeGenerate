@@ -28,7 +28,7 @@ namespace SpellDuel
         /// <summary>普通攻擊的手勢</summary>
         public static string BasicGesture(SkillDef s) => s?.id switch
         {
-            "na_mage" => "比 1（只伸食指）", "na_arrow" => "比 5（張開手掌）", "na_pebble" => "比 5（張開手掌）", "na_holy" => "比 2（食指＋中指）",
+            "na_mage" => "比 1（只伸食指）往前一點", "na_arrow" => "握拳（拉弦）再張開（放箭）", "na_pebble" => "比 5（張開手掌）", "na_holy" => "比 2（食指＋中指）往上一舉",
             "na_dagger" => "手往前突刺（手遠離手機）", "na_sword" => "手掌在鏡頭前橫劃一下", "na_stick" => "手掌在鏡頭前橫劃一下", _ => "",
         };
 
@@ -38,7 +38,7 @@ namespace SpellDuel
             bool melee = Skills.IsMeleeBasic(s);
             sb.Append("【怎麼用】\n");
             Line("普通攻擊：不用唸技能名稱、不花 MP，也不佔技能欄");
-            if (Skills.IsChargedBasic(s)) Line($"畫面上的手掌集氣完成（{(s.id == "na_sword" ? "泛起藍白劍光" : s.id == "na_dagger" ? "凝聚紅光" : "變紅")}）後，{BasicGesture(s)}就出手；出手後重新集氣（約 {s.cooldown:0.#} 秒，敏捷越高越快）");
+            if (Skills.IsChargedBasic(s)) Line($"畫面上的手掌集氣完成（{(s.id == "na_sword" ? "泛起藍白劍光" : s.id == "na_dagger" ? "凝聚紅光" : s.id == "na_mage" ? "浮現紫色法陣" : s.id == "na_arrow" ? "弓拉滿" : s.id == "na_holy" ? "聖光環亮起" : "變紅")}）後，{BasicGesture(s)}就出手；出手後重新集氣（約 {s.cooldown:0.#} 秒，敏捷越高越快）");
             else Line(Skills.IsSwipeBasic(s) ? $"{BasicGesture(s)}就出手（每 {s.cooldown:0.#} 秒最多一次）" : $"手{BasicGesture(s)}並維持，每 {s.cooldown:0.#} 秒自動攻擊一次（放下手勢就停）");
             Line("正在詠唱技能時不會普攻（唸完、放完招才會繼續）");
             if (!melee) Line($"朝畫面中央的準星方向飛出；先出現瞄準預警線，約 {Battle.ShotWindup:0.##} 秒後才射出（對手也看得到）");
