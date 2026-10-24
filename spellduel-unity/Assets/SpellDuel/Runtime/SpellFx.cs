@@ -798,7 +798,10 @@ namespace SpellDuel
             {
                 var streamer=NewChild(go.transform,"SwordFlow");
                 GlowPart(streamer,"sage.jian.flow",m=>m.Lathe(Prof(-.14f,0,0,.038f,.14f,0),4,(z,j)=>new Color(.75f,.97f,1f,.65f),1f,.18f,45));
-                go.AddComponent<SwordSageFlow>().stream=streamer;
+                var flowView=go.AddComponent<SwordSageFlow>();flowView.stream=streamer;
+                var charge=NewChild(go.transform,"Sword charge bloom");
+                GlowPart(charge,"sage.jian.charge",m=>m.Lathe(Prof(.35f,0,.60f,.18f,3.55f,.11f,4.15f,0),4,(z,j)=>new Color(.55f,.90f,1f,.40f),1.12f,.18f,45));
+                flowView.chargeGlow=charge;flowView.chargeRenderer=charge.GetComponentInChildren<Renderer>();charge.gameObject.SetActive(false);
             }
             return go;
         }
@@ -1553,11 +1556,25 @@ namespace SpellDuel
 
     internal sealed class SwordSageFlow : MonoBehaviour
     {
-        internal Transform stream;
+        internal Transform stream,chargeGlow;
+        internal Renderer chargeRenderer;
+        internal float Charge;
+        MaterialPropertyBlock chargeBlock;
         internal System.Func<bool> Visible;
         void Update()
         {
             if(Visible!=null&&!Visible()){gameObject.SetActive(false);return;}
+            if(chargeGlow!=null)
+            {
+                chargeGlow.gameObject.SetActive(Charge>.001f);
+                if(Charge>.001f&&chargeRenderer!=null)
+                {
+                    if(chargeBlock==null)chargeBlock=new MaterialPropertyBlock();
+                    var tint=new Color(.40f+.50f*Charge,.72f+.25f*Charge,1f,.18f+.60f*Charge);
+                    chargeBlock.SetColor(Shader.PropertyToID("_Color"),tint);chargeBlock.SetColor(Shader.PropertyToID("_TintColor"),tint);
+                    chargeRenderer.SetPropertyBlock(chargeBlock);
+                }
+            }
             if(stream!=null)stream.localPosition=new Vector3(0,.033f,Mathf.Repeat(Time.time*.75f,1f)*2.75f+.55f);
         }
     }

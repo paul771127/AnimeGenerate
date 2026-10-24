@@ -38,15 +38,16 @@ namespace SpellDuel
         /// <summary>劍來：手上的長劍（跟著畫面上手掌的位置）</summary>
         void UpdateHeldSword()
         {
-            bool on = battle != null && Me != null && Me.Alive && Me.swordUntil > battle.now && phase == Phase.Fighting && cam != null;
+            bool on = SwordSageHeldVisible() && cam != null;
             if (!on) { if (heldSword) heldSword.SetActive(false); return; }
             if (!heldSword)
             {
                 heldSword=SpellFx.CreateSwordSageBlade();heldSword.name="Held Sword";
                 heldSword.transform.localScale=Vector3.one*.19f;
-                heldSword.GetComponent<SwordSageFlow>().Visible=()=>battle!=null&&Me!=null&&Me.Alive&&Me.swordUntil>battle.now&&phase==Phase.Fighting;
+                heldSword.GetComponent<SwordSageFlow>().Visible=SwordSageHeldVisible;
             }
             heldSword.SetActive(true);
+            heldSword.GetComponent<SwordSageFlow>().Charge=Me.charging!=null&&Me.charging.id=="yijian"?battle.ChargeProgress(Me):0f;
             var t = cam.transform;
             Vector3 at = Hand != null && Hand.HandVisible
                 ? cam.ScreenPointToRay(Hand.Palm).GetPoint(0.3f)
@@ -56,6 +57,8 @@ namespace SpellDuel
             float sway = Mathf.Sin(Time.time * 2.3f) * 3f;
             heldSword.transform.rotation = Quaternion.LookRotation(t.forward * 0.6f + t.up * 0.8f, -t.forward) * Quaternion.Euler(sway, 0f, 0f);
         }
+
+        bool SwordSageHeldVisible()=>battle!=null&&Me!=null&&Me.Alive&&phase==Phase.Fighting&&(Me.swordUntil>battle.now||Me.charging!=null&&Me.charging.id=="yijian");
 
         // Observe the existing buff events; never write shield values, cooldowns or skill timers.
         void OnSwordSageBuffVisual(string kind,Vector3 at,Color color,string text)
