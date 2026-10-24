@@ -1994,13 +1994,16 @@ namespace SpellDuel
             var seal = Me.charging != null ? Advanced.SealOf(Me.charging.id) : null;
             if (Me.charging != sealFor) { sealFor = Me.charging; sealStep = 0; }
             if (seal != null) { Hand.ReleaseStyle = HandGesture.Style.Number; Hand.RequiredNumber = seal[Mathf.Min(sealStep, seal.Length - 1)]; }
-            // 普通攻擊：沒在詠唱時，手勢舉著就自動攻擊（法師比 1、獵人比 5、牧師比 2、刺客舉掌、劍士手掌劃一下）
+            // 普通攻擊：沒在詠唱時，手勢舉著就自動攻擊（法師比 1、獵人比 5、牧師比 2）；
+            //   劍士、刺客、初心者＝集氣制：手掌集氣完成後，劍士／初心者手掌劃一下、刺客手往前突刺才出手
             var basic = Me.basic ?? Skills.BasicOf(myClass);   // 技能樹強化後的普攻
             Hand.BasicSwipe = Skills.IsSwipeBasic(basic) && Me.charging == null;
             // 初心者：要明確地快速劃一下（畫面短邊 25%、0.35 秒內）才算，手晃或手機移動不會自己打出去
             bool stickBasic = basic != null && basic.id == "na_stick";
             Hand.SwipeNeed = stickBasic ? 0.25f : HandGesture.ChopDistance; Hand.SwipeWindow = stickBasic ? 0.35f : 0.5f;
             bool swiped = Hand.ConsumeSwipe();
+            Hand.BasicThrust = basic != null && basic.id == "na_dagger" && Me.charging == null;
+            bool thrusted = Hand.ConsumeThrust();
             UpdateSwipeTrail(Hand.BasicSwipe && Hand.HandVisible && phase == Phase.Fighting && Hand.Current != HandGesture.Shape.Fist && Hand.Current != HandGesture.Shape.None);   // 手劃過的殘影（SoloBattle.SwipeTrail.cs）
             if (basic != null && Me.charging == null && !frozen && phase == Phase.Fighting && Hand.HandVisible)
             {
@@ -2010,13 +2013,13 @@ namespace SpellDuel
                     "na_arrow" => Hand.Current == HandGesture.Shape.Open,
                     "na_pebble" => Hand.Current == HandGesture.Shape.Open,   // 初心者：比 5 丟小石子
                     "na_holy" => Hand.Current == HandGesture.Shape.Two,
-                    "na_dagger" => Hand.Current == HandGesture.Shape.Open,
                     _ => false,
                 };
                 Me.cooldownUntil.TryGetValue(basic.id, out var cdBefore);
-                if (pose || (Skills.IsSwipeBasic(basic) && swiped)) DoBasic(basic);
-                if (swiped && stickBasic && Me.cooldownUntil.TryGetValue(basic.id, out var bcd) && bcd == cdBefore && bcd > battle.now + 0.05f)
-                    floaters.Add(new Floater { text = $"⏳ 集氣中：手掌變紅才能敲（還要 {bcd - battle.now:0.0} 秒）", color = new Color(0.8f, 0.8f, 0.85f), born = Time.time, screen = true });   // 還在冷卻：告訴玩家為什麼沒反應
+                bool acted = (Skills.IsSwipeBasic(basic) && swiped) || (basic.id == "na_dagger" && thrusted);
+                if (pose || acted) DoBasic(basic);
+                if (acted && Skills.IsChargedBasic(basic) && Me.cooldownUntil.TryGetValue(basic.id, out var bcd) && bcd == cdBefore && bcd > battle.now + 0.05f)
+                    floaters.Add(new Floater { text = $"⏳ 集氣中：{ChargeReadyHint(basic)}（還要 {bcd - battle.now:0.0} 秒）", color = new Color(0.8f, 0.8f, 0.85f), born = Time.time, screen = true });   // 還在冷卻：告訴玩家為什麼沒反應
             }
             // 手勢放招：往放招動作的瞄準點放
             if (Hand.ConsumeRelease())
@@ -2335,6 +2338,9 @@ namespace SpellDuel
                         case "buff": Sfx.Play("cast_priest", 0.6f); break;
                         case "trapSet": Sfx.Play("trap", 0.5f); break;
                     }
+                    break;
+                case "stab":
+                    ShowStabFlash(at, c);   // 刺客突刺：眼前往前刺出一道紅光（SoloBattle.SwipeTrail.cs）
                     break;
                 case "whiff":
                     floaters.Add(new Floater { posMap = at, text = "💨 " + text, color = new Color(0.8f, 0.8f, 0.85f), born = Time.time });

@@ -1377,6 +1377,7 @@ namespace SpellDuel
             }
             f.cooldownUntil[s.id] = now + s.cooldown * f.basicCdMul * CdFactor(f);   // 普攻冷卻看敏捷（不是精神）
             if (Skills.IsSwipeBasic(s) && SwordSlash(f, s, slashFrom, slashTo)) return true;   // 劍士、初心者：照刀線砍
+            if (s.id == "na_dagger" && f.isPlayer) { PlayerStab(f, s, aimDir); return true; }   // 玩家刺客：集氣完手往前突刺，當下就刺
             if (s.id == "na_dagger" && DaggerStab(f, s)) return true;
             MeleeSweep(f, s, Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now)));
             return true;
@@ -1408,7 +1409,8 @@ namespace SpellDuel
                 // 玩家也一樣先預警（對手看得到刀線），SlashWindup 秒後才砍下；能不能躲看刀線的位置（蹲低到線下面就砍不到）
                 var pa = from.normalized; var pb = to.normalized;
                 // 初心者的木棍敲擊（玩家）：手掌劃下去當下就敲（不先預警），一劃＝一下，看得出是自己打的
-                if (f.isPlayer && s.id == "na_stick") { SlashStrike(f, s, o, pa, pb, reach, false); return true; }
+                // 劍士的斬擊（玩家）也一樣：集氣完成後手掌劃下去當下就砍
+                if (f.isPlayer && (s.id == "na_stick" || s.id == "na_sword")) { SlashStrike(f, s, o, pa, pb, reach, false); return true; }
                 OnSlashLine?.Invoke(f, o + pa * reach, o + pb * reach, o, true);
                 f.windupUntil = now + SlashWindup;
                 After(SlashWindup, () => { if (f.Alive && !Over) SlashStrike(f, s, o, pa, pb, reach, false); });
@@ -1452,6 +1454,33 @@ namespace SpellDuel
             return true;
         }
 
+        /// <summary>玩家刺客的突刺可以刺到準星左右多少度內的敵人</summary>
+        public const float StabHalfAngle = 35f;
+
+        /// <summary>
+        /// 玩家刺客普攻：集氣完成後手往前突刺，當下就往準星方向刺一下（不先預警）。
+        /// 刺到準星方向左右 StabHalfAngle 度、射程內的敵人；發出 "stab" 事件（at＝刺出的尖端），沒刺到人就「刺空」。
+        /// </summary>
+        void PlayerStab(Fighter f, SkillDef s, Vector3 aimDir)
+        {
+            var o = f.Chest;
+            var dir = Fighter.Flat(aimDir);
+            dir = dir == Vector3.zero ? Fighter.Flat(f.forward) : dir.normalized;
+            float reach = s.rangeMax * f.rangeMul + Fighter.BodyRadius + f.reachBonus;
+            Emit("stab", o + dir * reach, s.color, s.id);
+            int dmg = Riposte(f, Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now)));
+            int landed = 0;
+            foreach (var v in MeleeFoes(f))
+            {
+                if (v == null || !v.Alive) continue;
+                var to = v.Chest - o; to.y = 0f;
+                if (to.magnitude > reach + v.bodyRadius) continue;
+                if (to.magnitude > v.bodyRadius && Vector3.Angle(dir, to) > StabHalfAngle) continue;   // 貼身（在身體半徑內）不看角度
+                MeleeHit(f, s, v, dmg); landed++;
+            }
+            if (landed == 0) Emit("whiff", o + dir * 1.2f, s.color, "刺空（太遠或沒對準）");
+        }
+
         /// <summary>劍仙・劍來：普攻傷害 +30%、距離 +2m</summary>
         public const float JianlaiReach = 2f, JianlaiDmg = 1.3f, FlyingSwordShare = 0.4f;
         bool SwordComeOn(Fighter f, SkillDef s) => f.swordUntil > now && s != null && s.cls == "basic";
@@ -1480,7 +1509,7 @@ namespace SpellDuel
                 MeleeHit(f, s, v, dmg); landed++;
             }
             // 玩家的木棍沒打到人：告訴玩家「揮空」（太遠或方向不對）
-            if (landed == 0 && f.isPlayer && s.id == "na_stick") Emit("whiff", o + Fighter.Flat(Vector3.Lerp(a, b, 0.5f)).normalized * 1.2f, s.color, "揮空（太遠或沒對準）");
+            if (landed == 0 && f.isPlayer && (s.id == "na_stick" || s.id == "na_sword")) Emit("whiff", o + Fighter.Flat(Vector3.Lerp(a, b, 0.5f)).normalized * 1.2f, s.color, "揮空（太遠或沒對準）");
         }
 
         /// <summary>刀線（從 o 出發、方向 a 掃到 b、長 reach）有沒有碰到 v 的身體</summary>

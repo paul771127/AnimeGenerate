@@ -154,6 +154,13 @@ namespace SpellDuel
                 SpellFx.CastBurst("novice_swing", c, WorldFrame.FromWorld(f == Me ? mid : Vector3.Lerp(o, mid, 0.6f)), WorldFrame.DirFromWorld(Fighter.Flat(mid - o).normalized), f == Me ? 1.3f : 0.8f);
                 if (f == Me) { Haptics.Play(Haptics.Kind.Light); Kick(3f, 0f); }   // 揮下去手機輕震一下
             }
+            // 劍士砍下去（自己）：沿著刀線劍光一閃（細白光從刀線一端掃到另一端，加一顆星芒）
+            if (f == Me && !warn && f.cls != null && f.cls.id == "swordsman")
+            {
+                var pts = new Vector3[N + 1];
+                for (int i = 0; i <= N; i++) pts[i] = WorldFrame.FromWorld(o + Vector3.Lerp(da, db, i / (float)N).normalized * reach);
+                ShowSwordGleam(pts);
+            }
             go.AddComponent<SlashLineFade>().Begin(lr, warn ? Mathf.Max(0.2f, f.windupUntil - battle.now) : f == Me ? 0.35f : 0.25f, c);
             if (warn) { Sfx.Play("cast_swordsman", 0.3f, 0.7f); if (f != Me) Sfx.Play("blade_warn", 0.7f); }   // 敵人的預警：拔刀聲
             // 敵人的預警：同時擺出攻擊架勢（預備的長度＝預警時間，出手的瞬間＝判定）

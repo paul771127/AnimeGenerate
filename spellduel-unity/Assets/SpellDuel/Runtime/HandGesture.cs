@@ -305,6 +305,19 @@ namespace SpellDuel
             }
             FlushSwipe(t);
 
+            // 普通攻擊（刺客）：沒在詠唱時，手往前刺（畫面上手掌在 0.35 秒內縮小 25% 以上）＝刺一下
+            if (!BasicThrust) thrustQueued = false;
+            if (BasicThrust && ReleaseStyle == Style.None && fingersOut && histN >= 3 && t - lastThrust > 0.4f)
+            {
+                for (int k = 2; k < histN; k++)
+                {
+                    var o = HistAgo(k);
+                    if (t - o.t > 0.35f) break;
+                    if (o.shape == Shape.Fist || o.shape == Shape.None) break;
+                    if (palmSize < o.size * 0.75f) { thrustQueued = true; lastThrust = t; break; }
+                }
+            }
+
             // 劍士：張開的手掌在 0.5 秒內往任何方向移動一小段（短邊的 12%）就出招（不用大幅橫劈）
             if (ReleaseStyle == Style.Chop && fingersOut && histN >= 3)
             {
@@ -478,6 +491,10 @@ namespace SpellDuel
         /// <summary>取走「放招」事件（一次性）</summary>
         /// <summary>普通攻擊（劍士）：偵測「手掌劃一下」（SoloBattle 設定）</summary>
         public bool BasicSwipe;
+        /// <summary>普通攻擊（刺客）：偵測「手往前突刺」（SoloBattle 設定）</summary>
+        public bool BasicThrust;
+        bool thrustQueued; float lastThrust = -99f;
+        public bool ConsumeThrust() { bool q = thrustQueued; thrustQueued = false; return q; }
         bool swipeQueued; float lastSwipe = -99f, swipeUntil = -1f;
         /// <summary>這一刀手掌劃過的起點、終點（螢幕像素，左下為原點）</summary>
         public Vector2 SwipeFrom { get; private set; }

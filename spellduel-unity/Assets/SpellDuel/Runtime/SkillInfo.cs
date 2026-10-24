@@ -29,7 +29,7 @@ namespace SpellDuel
         public static string BasicGesture(SkillDef s) => s?.id switch
         {
             "na_mage" => "比 1（只伸食指）", "na_arrow" => "比 5（張開手掌）", "na_pebble" => "比 5（張開手掌）", "na_holy" => "比 2（食指＋中指）",
-            "na_dagger" => "舉起張開的手掌", "na_sword" => "手掌在鏡頭前橫劃一下", "na_stick" => "手掌在鏡頭前橫劃一下", _ => "",
+            "na_dagger" => "手往前突刺（手遠離手機）", "na_sword" => "手掌在鏡頭前橫劃一下", "na_stick" => "手掌在鏡頭前橫劃一下", _ => "",
         };
 
         static void BasicDetail(SkillDef s, StringBuilder sb)
@@ -38,13 +38,14 @@ namespace SpellDuel
             bool melee = Skills.IsMeleeBasic(s);
             sb.Append("【怎麼用】\n");
             Line("普通攻擊：不用唸技能名稱、不花 MP，也不佔技能欄");
-            Line(Skills.IsSwipeBasic(s) ? $"{BasicGesture(s)}就出手（每 {s.cooldown:0.#} 秒最多一次）" : $"{(s.id == "na_dagger" ? "" : "手")}{BasicGesture(s)}並維持，每 {s.cooldown:0.#} 秒自動攻擊一次（放下手勢就停）");
+            if (Skills.IsChargedBasic(s)) Line($"畫面上的手掌集氣完成（{(s.id == "na_sword" ? "泛起藍白劍光" : s.id == "na_dagger" ? "凝聚紅光" : "變紅")}）後，{BasicGesture(s)}就出手；出手後重新集氣（約 {s.cooldown:0.#} 秒，敏捷越高越快）");
+            else Line(Skills.IsSwipeBasic(s) ? $"{BasicGesture(s)}就出手（每 {s.cooldown:0.#} 秒最多一次）" : $"手{BasicGesture(s)}並維持，每 {s.cooldown:0.#} 秒自動攻擊一次（放下手勢就停）");
             Line("正在詠唱技能時不會普攻（唸完、放完招才會繼續）");
             if (!melee) Line($"朝畫面中央的準星方向飛出；先出現瞄準預警線，約 {Battle.ShotWindup:0.##} 秒後才射出（對手也看得到）");
             if (Skills.IsSwipeBasic(s)) Line("只砍到手掌劃過的那一條線：手要劃過畫面上的敵人才打得到（一刀可以劃過好幾隻）");
             if (s.id == "na_stick") Line("不會砍掉飛來的法球（劍士的「斬擊」技能才砍得掉）");
-            if (Skills.IsSwipeBasic(s)) Line($"劃完先出現刀線預警，約 {Battle.SlashWindup:0.##} 秒後才砍下（對手也看得到，會躲）");
-            if (s.id == "na_dagger") Line($"每一刺先出現扇形預警，約 {Battle.StabWindup:0.#} 秒後才刺下（對手也看得到，會躲）");
+            if (s.id == "na_sword") Line("手劃下去當下就砍，砍完眼前劍光一閃");
+            if (s.id == "na_dagger") Line($"往準星方向刺：準星左右約 {Battle.StabHalfAngle:0}° 內、{s.rangeMax:0.#}m 內的敵人都刺得到；刺出時眼前一道紅光");
             sb.Append("\n【數值】\n");
             Line($"傷害 {s.damage}（會吃攻擊力加成{(melee ? "" : "，也會爆擊")}）");
             Line($"冷卻 {s.cooldown:0.#} 秒");
