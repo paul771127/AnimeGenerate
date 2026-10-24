@@ -74,8 +74,8 @@ namespace SpellDuel
         }
         static void Add(SoulDef d) { All.Add(d); byId[d.id] = d; }
 
-        /// <summary>Boss 掉落精魄的機率（比小怪高、效果也更強）</summary>
-        public const float BossChance = 0.02f;
+        /// <summary>Boss 掉落精魄的機率（0.5%；效果比小怪強）</summary>
+        public const float BossChance = 0.005f;
 
         static Souls()
         {
@@ -100,7 +100,7 @@ namespace SpellDuel
             M(16, 0.003f, "#f59e0b", F(SoulOp.Gold, 0.08f), F(SoulOp.Atk, -0.04f));           // 寄居蟹：好處＋副作用（攻擊弱一點）
             M(17, 0.005f, "#facc15", F(SoulOp.HitCast, 0, 0.04f, skill: "thunder"));          // 雷電水母：機率發動法師的雷擊
             M(18, 0.004f, "#fde68a", F(SoulOp.Retaliate, 4f, 0.10f, 4f));                     // 河豚：被打時機率讓攻擊者中毒
-            // ---- Boss（2%）：一樣只有一種效果，但更強、更特殊
+            // ---- Boss（0.5%）：一樣只有一種效果，但更強、更特殊
             B("boss", "#ff5a1f", F(SoulOp.HitCast, 0, 0.05f, skill: "meteor"));               // 熔岩巨像：機率發動隕石
             B("boss_forest", "#4ade80", F(SoulOp.Regen, 0.01f));                               // 腐化樹王：每秒回 1% HP
             B("boss_sea", "#22d3ee", F(SoulOp.HurtShield, 60, 0.12f, 5f));                    // 深淵海妖：機率大護盾

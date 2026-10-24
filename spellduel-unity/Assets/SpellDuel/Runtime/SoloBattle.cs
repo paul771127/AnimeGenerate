@@ -232,7 +232,7 @@ namespace SpellDuel
             QuestKills(dk);   // 副本任務：打倒幾隻敵人、收集東西
             float goldMul = 1f + Souls.Sum(prof, SoulOp.Gold);   // 精魄：金幣加成
             for (int i = 0; i < dk; i++) { TryDrop(false); pendingGold += Mathf.RoundToInt(Economy.MinionGold(battle.wave) * goldMul); }
-            // 精魄：打倒的每一隻怪物各自擲一次（小怪 0.1～0.5%、Boss 2%；幸運每點 +1%）
+            // 精魄：打倒的每一隻怪物各自擲一次（小怪 0.1～0.5%、Boss 0.5%；幸運每點 +1%）
             FlushSoulDrops();
             if (dk > 0) { Sfx.Play("poof", 0.6f); Sfx.Play("coin", 0.35f, 1.1f); }   // 小怪倒下＋掉金幣
             int db = battle.bossKills - lastBossKillsSeen; lastBossKillsSeen = battle.bossKills;

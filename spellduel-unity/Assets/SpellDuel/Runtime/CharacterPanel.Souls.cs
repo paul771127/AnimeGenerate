@@ -67,7 +67,7 @@ namespace SpellDuel
             var view = new Rect(dr.x + gap, y, dr.width - gap * 2, dr.yMax - y - gap * 0.4f);
             if (it != null && list.Count == 0)
             {
-                UiKit.Text(view, "背包裡還沒有精魄。打倒怪物有機率掉落（小怪 0.1～0.5%、Boss 2%，幸運越高越容易），過關後拿到。", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
+                UiKit.Text(view, "背包裡還沒有精魄。打倒怪物有機率掉落（小怪 0.1～0.5%、Boss 0.5%，幸運越高越容易），過關後拿到。", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);
                 return changed;
             }
             float rowH = fs * 2.6f, cw = view.width - fs * 0.85f;
