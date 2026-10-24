@@ -205,7 +205,7 @@ jobs:
   ios-testflight:
     needs: ios-ipa
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 75  # 上傳後會等 Apple 處理完 build（可能 30 分鐘以上）
     steps:
       - name: 檢查簽章與上傳設定
         id: check
