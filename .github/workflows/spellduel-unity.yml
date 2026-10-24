@@ -197,3 +197,90 @@ jobs:
           name: SpellDuel-iOS-unsigned-IPA
           path: SpellDuel-unsigned.ipa
           if-no-files-found: error
+
+  # 用 Apple Distribution 憑證重簽 IPA，上傳到 App Store Connect（TestFlight）。
+  # 需要的 secrets（缺任何一個就自動略過，不會讓流程變紅）：
+  #   IOS_DIST_P12_BASE64 / IOS_DIST_P12_PASSWORD / IOS_APPSTORE_PROFILE_BASE64
+  #   APPSTORE_ISSUER_ID / APPSTORE_API_KEY_ID / APPSTORE_API_PRIVATE_KEY
+  ios-testflight:
+    needs: ios-ipa
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: 檢查簽章與上傳設定
+        id: check
+        env:
+          P12: ${{ secrets.IOS_DIST_P12_BASE64 }}
+          P12_PASS: ${{ secrets.IOS_DIST_P12_PASSWORD }}
+          PROFILE: ${{ secrets.IOS_APPSTORE_PROFILE_BASE64 }}
+          ISSUER: ${{ secrets.APPSTORE_ISSUER_ID }}
+          KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+        run: |
+          if [ -n "$P12" ] && [ -n "$P12_PASS" ] && [ -n "$PROFILE" ] && [ -n "$ISSUER" ] && [ -n "$KEY_ID" ] && [ -n "$KEY" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::尚未設定 iOS 簽章 / App Store Connect secrets，略過 TestFlight 上傳。"
+          fi
+
+      - uses: actions/download-artifact@v4
+        if: steps.check.outputs.ok == 'true'
+        with:
+          name: SpellDuel-iOS-unsigned-IPA
+          path: unsigned
+
+      - name: 編譯 zsign（Linux 上的 iOS 簽章工具）
+        if: steps.check.outputs.ok == 'true'
+        run: |
+          set -eo pipefail
+          sudo apt-get update -q >/dev/null
+          sudo apt-get install -y -q g++ make pkg-config libssl-dev libminizip-dev zlib1g-dev >/dev/null
+          git clone -q https://github.com/zhlynn/zsign.git "$RUNNER_TEMP/zsign"
+          git -C "$RUNNER_TEMP/zsign" checkout -q 9299685bab7ef99827e06e5dfda93af747386590
+          make -C "$RUNNER_TEMP/zsign/build/linux" -j4 >/dev/null
+          echo "$RUNNER_TEMP/zsign/bin" >> "$GITHUB_PATH"
+
+      - name: 調整 Info.plist 並簽章
+        id: sign
+        if: steps.check.outputs.ok == 'true'
+        env:
+          P12: ${{ secrets.IOS_DIST_P12_BASE64 }}
+          P12_PASS: ${{ secrets.IOS_DIST_P12_PASSWORD }}
+          PROFILE: ${{ secrets.IOS_APPSTORE_PROFILE_BASE64 }}
+        run: |
+          set -eo pipefail
+          S="$RUNNER_TEMP/sign"; mkdir -p "$S/x"
+          echo "$P12" | base64 -d > "$S/dist.p12"
+          echo "$PROFILE" | base64 -d > "$S/appstore.mobileprovision"
+          unzip -q unsigned/SpellDuel-unsigned.ipa -d "$S/x"
+          PLIST=$(ls -d "$S"/x/Payload/*.app)/Info.plist
+          # Build 號：Unity 寫入的 yyMMddHH 加上流程編號，同一小時內多次建置也不會撞號
+          python3 -I - "$PLIST" "${{ github.run_number }}" <<'PY'
+          import plistlib, sys
+          path, run = sys.argv[1], sys.argv[2]
+          with open(path, 'rb') as f: p = plistlib.load(f)
+          base = str(p.get('CFBundleVersion', '0')).split('.')[0]
+          p['CFBundleVersion'] = f"{base}.{run}"
+          p['ITSAppUsesNonExemptEncryption'] = False
+          with open(path, 'wb') as f: plistlib.dump(p, f)
+          print("Bundle ID:", p['CFBundleIdentifier'], " Version:", p.get('CFBundleShortVersionString'), " Build:", p['CFBundleVersion'])
+          PY
+          (cd "$S/x" && zip -qry "$S/patched.ipa" Payload)
+          zsign -k "$S/dist.p12" -p "$P12_PASS" -m "$S/appstore.mobileprovision" -o "$S/signed.ipa" "$S/patched.ipa"
+          # zsign 輸出不壓縮，重新壓縮讓上傳更快
+          rm -rf "$S/y" && mkdir -p "$S/y" && unzip -q "$S/signed.ipa" -d "$S/y"
+          (cd "$S/y" && zip -q -9 -ry "$GITHUB_WORKSPACE/SpellDuel-appstore.ipa" Payload)
+          rm -f "$S/dist.p12"
+          ls -la "$GITHUB_WORKSPACE/SpellDuel-appstore.ipa"
+          echo "ipa=$GITHUB_WORKSPACE/SpellDuel-appstore.ipa" >> "$GITHUB_OUTPUT"
+
+      - name: 上傳到 TestFlight
+        if: steps.check.outputs.ok == 'true'
+        uses: apple-actions/upload-testflight-build@v5
+        with:
+          app-path: ${{ steps.sign.outputs.ipa }}
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          uses-non-exempt-encryption: "false"
