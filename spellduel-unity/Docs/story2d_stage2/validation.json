@@ -933,9 +933,10 @@
     "village"
   ],
   "pending": [],
-  "totalBytes": 50093315,
+  "totalBytes": 68718816,
   "dialogueBytes": 39273419,
   "classPortraitBytes": 10819896,
+  "villageStaffBytes": 18625501,
   "combinedExceeds40MiB": true,
-  "annotatedLines": 244
+  "annotatedLines": 312
 }

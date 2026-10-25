@@ -1,8 +1,14 @@
 {
   "story.txt": {
-    "baseline": "188fb99",
-    "canonicalSha256": "1ac05be7d76c1c76e963dbc7b5d598e3dba80610cfc453cdddf1a0c0d7f13ee7",
-    "originalTextAndSettingsPreserved": true
+    "baseline": "chapter-area-enemy-expansion",
+    "previousBaseline": {
+      "baseline": "188fb99",
+      "canonicalSha256": "1ac05be7d76c1c76e963dbc7b5d598e3dba80610cfc453cdddf1a0c0d7f13ee7",
+      "originalTextAndSettingsPreserved": true
+    },
+    "canonicalSha256": "95cdc89ba57684835adfe45e477fc72fcd9bff0fd6b40fcd9247afba3c5a0d7d",
+    "originalTextAndSettingsPreserved": false,
+    "authorizedChange": "Chapters 2-5 add stages 4/5; move unchanged boss dialogue to stage 6; sequence prerequisites."
   },
   "dungeons.txt": {
     "baseline": "188fb99",

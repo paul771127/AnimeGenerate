@@ -1,0 +1,19 @@
+{
+  "chapter1Sha256": "5fd921be07bab078f21b1e11757fc2d9538df9d918577fa47378bdcc2c83cb33",
+  "bossDialogueSha256": {
+    "2-6": "dd9a2fe0d3c9ac3bbc458f16893c4254891b585071cf5cf3a14013db05056483",
+    "3-6": "5ddd51c5ac23d78eebf01ba417958fed9ed66593c373e8481e77369623166447",
+    "4-6": "f2d58b2086e392cc47054ab40e47c1a4d13aa98f2cd4be888c998ecbaff97333",
+    "5-6": "a8ceea8a2a8af7b99384125b97331ef851cbe14ec4b59f7bee2163cddf3331e8"
+  },
+  "addedStages": [
+    "2-4",
+    "2-5",
+    "3-4",
+    "3-5",
+    "4-4",
+    "4-5",
+    "5-4",
+    "5-5"
+  ]
+}
