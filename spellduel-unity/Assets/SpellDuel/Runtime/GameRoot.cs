@@ -354,6 +354,7 @@ namespace SpellDuel
             solo.RequestChangeMode = () => { solo.Hide(); playArea.Clear(); WorldFrame.Reset(); mode = Mode.Choose; };
             // 村子的副本嚮導、觀戰席：離開單人（回首頁的流程），改走連線大廳／觀戰
             solo.RequestNetDungeon = remote => { GoHome(); ChooseMode(Mode.Duo, false, remote); solo.PresetNetMode(3); };
+            solo.RequestNetStory = remote => { string sid = solo.InviteStageId; int dif = solo.InviteDifficulty; GoHome(); ChooseMode(Mode.Duo, false, remote); solo.PresetNetStory(sid, dif); };   // 故事關卡的整備畫面：邀請隊友
             solo.RequestWatch = () => { GoHome(); EnterWatch(); };
         }
 

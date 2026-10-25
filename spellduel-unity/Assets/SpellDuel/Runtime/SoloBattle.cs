@@ -269,7 +269,9 @@ namespace SpellDuel
             var d = key[0] == 'm' && int.TryParse(key.Substring(1), out int kind) ? Souls.OfMinion(kind) : Souls.OfBoss(key);
             if (d == null) return;
             float chance = d.chance * (1f + 0.01f * prof.Total(Stat.Luk));
+            if (StoryCoop && !NetIsHost) return;   // 故事合作：精魄只由房主擲（擲骰決定歸屬）
             if (dropRng.NextDouble() >= chance) return;
+            if (CoopRollSoul(d.id)) return;
             pendingSouls.Add(d.id);
             floaters.Add(new Floater { text = $"💠 {d.name}！（過關後獲得）", color = d.color, born = Time.time, screen = true });
             Say($"💠 掉落精魄「{d.name}」：{Souls.Desc(d)}", 4f);
@@ -486,6 +488,7 @@ namespace SpellDuel
                 ilvl = Mathf.Clamp(battle.wave + dropRng.Next(-2, 2), lo, hi) + battle.levelBoost;   // 簡單＝這一章的等級帶（第一章 1～10）；普通＋40、困難＋80
             }
             ItemGen.SetTheme = battle.Theme;   // 主題地圖掉對應的套裝
+            if (CoopRollItem(ref rar, ilvl, battle.Theme)) return;   // 故事合作：史詩以上由房主擲出來、大家擲骰（SoloBattle.StoryCoop.cs）
             var it = ItemGen.Make(dropRng, ilvl, rar, myClass);
             if (storyStage != null) { var (blo, bhi) = Story.LevelBand(storyStage.theme); it.reqLevel = Mathf.Clamp(it.reqLevel, blo + battle.levelBoost, bhi + battle.levelBoost); }   // 需求等級也在這一章的等級帶裡（簡單第一章 1～10；普通、困難再加難度的等級）
             pendingItems.Add(it);   // 先暫存：過關才拿得到
@@ -627,7 +630,7 @@ namespace SpellDuel
         {
             if (world.OnStartStage == null)
             {
-                world.OnStartStage = st => OpenPrep(st.title, true, null, () => { storyMapOpen = false; StartStory(st); });   // 先整備再出發
+                world.OnStartStage = st => { OpenPrep(st.title, true, null, () => { storyMapOpen = false; StartStory(st); }); prepStage = IsGuideStage(st) ? null : st; };   // 先整備再出發（可以邀請隊友一起打）
                 world.OnWatchStory = WatchStory;
                 world.OnStartDungeon = d => OpenPrep("🏰 " + d.name, true, null, () => StartDungeonRun(d, false));
                 world.OnWatchDungeon = WatchDungeonStory;
@@ -708,9 +711,9 @@ namespace SpellDuel
 
         // 對話介面：SoloBattle.VnDialogue.cs（《永遠的7日之都》風格）
 
-        int NetModeCode => coop ? (netDungeon ? 3 : netEndless ? 2 : 1) : 0;
+        int NetModeCode => coop ? (netStory ? 4 : netDungeon ? 3 : netEndless ? 2 : 1) : 0;
         /// <summary>首頁直接選模式（例如「🏰 副本」）：0 對戰、1 合作 Boss、2 無盡合作、3 副本</summary>
-        public void PresetNetMode(int mi) { coop = mi >= 1; netEndless = mi == 2; netDungeon = mi == 3; localReady = false; }
+        public void PresetNetMode(int mi) { coop = mi >= 1; netEndless = mi == 2; netDungeon = mi == 3; netStory = mi == 4; localReady = false; }
         BossRig bossRig; BossAI bossAi; GameObject slamGo;
         VolcanoScene volcano;   // 無盡模式第 1～10 波的熔岩火山場景
         ForestScene forest;     // 第 11～20 波的森林場景
@@ -950,7 +953,7 @@ namespace SpellDuel
         void TryStartNet()
         {
             if (!NetMode || !localReady || PeerIds.Count == 0) return;
-            if (coop && netDungeon) return;   // 副本：等大家到齊、準備好，由房主按「開始副本」（HostStartDungeon）
+            if (coop && (netDungeon || netStory)) return;   // 副本、故事合作：等大家到齊、準備好，由房主按「開始」（HostStartDungeon／HostStartStory）
             foreach (var pid in PeerIds) if (!peerInfo.TryGetValue(pid, out var pi) || !pi.ready) return;
             localReady = remoteReady = false;
             foreach (var pi in peerInfo.Values) pi.ready = false;
@@ -1684,8 +1687,9 @@ namespace SpellDuel
                 var st = storyStage;
                 if (battle.stageCleared)
                 {
-                    bool first = !Story.IsCleared(st.id);
-                    Story.MarkCleared(st.id, difficulty);   // 記下在哪個難度通關（簡單全破開普通、普通全破開困難）
+                    bool guest = StoryCoop && !NetIsHost;   // 故事合作的隊友：故事進度不變（只有房主推進）；經驗、金幣、戰利品照拿
+                    bool first = !guest && !Story.IsCleared(st.id);
+                    if (!guest) Story.MarkCleared(st.id, difficulty);   // 記下在哪個難度通關（簡單全破開普通、普通全破開困難）
                     float rmul = 1f + battle.levelBoost / (2f * LevelPerDifficulty);   // 普通 ×1.5、困難 ×2
                     int stXp = Mathf.RoundToInt(st.xp * rmul);
                     pendingGold += Mathf.RoundToInt(Economy.StageGold(st) * rmul);
@@ -1700,8 +1704,9 @@ namespace SpellDuel
                         Say($"🏆 {st.title} 完成！獲得經驗 {stXp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "" : "（再次通關）") + (loot.Length > 0 ? "\n" + loot : ""), 99f);
                     }
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
-                    if (first) OnStoryFirstClear(st);   // 1-1：回村子學招式、點技能和能力值、出發 1-2；1-3：轉職（SoloBattle.Walkthrough.cs）
-                    if (!Story.IsSeen(st.id + "!")) { Story.MarkSeen(st.id + "!"); StoryVideo.Play(StoryVideo.For(st.id, false), () => ShowDialogue(st.after, null)); }   // 結尾（影片＋對話）也只自動播一次
+                    if (first && !NetMode) OnStoryFirstClear(st);   // 1-1：回村子學招式、點技能和能力值、出發 1-2；1-3：轉職（SoloBattle.Walkthrough.cs）
+                    if (guest) { }   // 故事合作的隊友：不播結尾（故事進度是房主的）
+                    else if (!Story.IsSeen(st.id + "!")) { Story.MarkSeen(st.id + "!"); StoryVideo.Play(StoryVideo.For(st.id, false), () => ShowDialogue(st.after, null)); }   // 結尾（影片＋對話）也只自動播一次
                 }
                 else { LoseLoot(); Say($"💀 {st.title} 失敗…再挑戰一次吧（戰利品沒拿到）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
@@ -1760,11 +1765,15 @@ namespace SpellDuel
         public void OnNet(Msg m)
         {
             if (Watching) { OnNetWatch(m); return; }   // 觀戰端（SoloBattle.Watch.cs）
+            if (OnNetStoryCoop(m)) return;              // 故事合作：開打、每秒傷害、擲骰（SoloBattle.StoryCoop.cs）
             switch (m.t)
             {
                 case "mode":
-                    coop = remoteCoop = m.e >= 1; netEndless = remoteEndless = m.e == 2; netDungeon = m.e == 3; localReady = false;
+                    bool wasStory = netStory && netStoryId == m.k && m.e == 4;
+                    coop = remoteCoop = m.e >= 1; netEndless = remoteEndless = m.e == 2; netDungeon = m.e == 3; netStory = m.e == 4;
+                    if (!wasStory) localReady = false;
                     if (netDungeon && Dungeons.Get(m.k) != null) netDungeonId = m.k;
+                    if (netStory) { if (Story.Find(m.k ?? "") != null) netStoryId = m.k; difficulty = Mathf.Clamp(m.hp, 0, 2); if (wasStory) return; Say($"房主選了：📖 故事 {netStoryId}（{DiffNames[difficulty]}）", 2.5f); return; }
                     Say(m.e == 3 ? $"對方選了：🏰 副本「{Dungeons.Get(netDungeonId)?.name}」" : m.e == 2 ? "對方選了：♾ 無盡（合作）" : coop ? "對方選了：🤝 合作打 Boss" : "對方選了：⚔ 對戰", 2.5f);
                     return;
                 case "dstart":
@@ -2064,6 +2073,7 @@ namespace SpellDuel
             if (NetMode) SyncRemote();
             UpdateLock();
             UpdateReadyCheck();   // 戰鬥準備：站直 → 蹲下 → 站起來（SoloBattle.ReadyCheck.cs）
+            UpdateStoryCoop();    // 故事合作：房主廣播模式、高度以房主為準、每秒傷害／治療、擲骰（SoloBattle.StoryCoop.cs）
             if (InIntro) { UpdateVisuals(); return; }   // 開場：先停幾秒（敵人不動、不能出手）
             if (scrollAsk && phase == Phase.Fighting && !NetMode) { UpdateVisuals(); return; }   // 回城捲軸的確認視窗：戰鬥暫停
             if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
@@ -3453,7 +3463,7 @@ namespace SpellDuel
                 for (int mi = 0; mi < 4; mi++)
                     if (UiKit.Button(new Rect(pad + mi * (mw + gap), y, mw, u * 1.15f), modeNames[mi], fsS, NetModeCode == mi, modeCols[mi]) && NetModeCode != mi)
                     {
-                        coop = mi >= 1; netEndless = mi == 2; netDungeon = mi == 3; localReady = false;
+                        coop = mi >= 1; netEndless = mi == 2; netDungeon = mi == 3; netStory = false; localReady = false;
                         NetSend?.Invoke(new Msg { t = "mode", e = mi, k = netDungeonId });
                     }
                 y += u * 1.15f + gap;
@@ -3474,9 +3484,10 @@ namespace SpellDuel
                     var sel = Dungeons.Get(netDungeonId);
                     if (sel != null) { UiKit.Text(new Rect(pad, y, W - pad * 2, u * 1.3f), $"{sel.desc}（{sel.SizeText}）", fsS, new Color(0.85f, 0.95f, 0.9f), TextAnchor.UpperLeft); y += u * 1.3f + gap; }
                 }
-                if (coop && (NetIsHost || !netDungeon)) DrawDifficultyRow(ref y, pad, gap, u, fsS, W);   // 副本：難度由房主決定
+                if (coop && (NetIsHost || !(netDungeon || netStory))) DrawDifficultyRow(ref y, pad, gap, u, fsS, W);   // 副本、故事合作：難度由房主決定
                 string who = coop ? "隊友" : "對手";
-                if (coop && netDungeon) DrawDungeonParty(ref y, pad, gap, u, fs, fsS, W);   // 副本：等待玩家到齊的隊伍畫面
+                if (coop && netStory) DrawStoryParty(ref y, pad, gap, u, fs, fsS, W);   // 故事合作：等待隊友到齊（SoloBattle.StoryCoop.cs）
+                else if (coop && netDungeon) DrawDungeonParty(ref y, pad, gap, u, fs, fsS, W);   // 副本：等待玩家到齊的隊伍畫面
                 else if (PeerIds.Count <= 1)
                 {
                     bool rr = PeerIds.Count == 1 && peerInfo.TryGetValue(PeerIds[0], out var p0) && p0.ready;
@@ -3538,17 +3549,24 @@ namespace SpellDuel
             by -= u * 1.6f + gap;
             bool voiceOk = UseSpeech || VoiceReady;   // 沒有語音辨識時，要先把 3 個技能的咒語錄好
             string startText = !voiceOk ? "🎤 先錄好 3 個技能的咒語" : NetMode ? (localReady ? "等待對方準備…" : netEndless && coop ? "♾ 準備好了（無盡合作）" : coop ? "🤝 準備好了（合作打 Boss）" : "⚔ 準備好了") : (enemyClass == "dummy" ? "🪵 開始練習" : enemyClass == "boss" ? "🔥 挑戰 Boss" : enemyClass == "endless" ? "♾ 開始無盡模式" : enemyClass == "story" ? (!IntroPending ? "🏘 進入村子" : "📖 開始序章") : enemyClass == "daily" ? $"📅 開始{DailyChallenge.Names[Mathf.Clamp(dailyPick, 0, DailyChallenge.KindCount - 1)]}" : enemyClass == "tutorial" ? "🎓 開始教學" : enemyClass == "dungeon" ? "🏰 打開副本清單" : "⚔ 開始戰鬥");
-            bool dungeonParty = NetMode && coop && netDungeon;
+            bool dungeonParty = NetMode && coop && netDungeon, storyParty = NetMode && coop && netStory;
             if (dungeonParty)
             {
                 int n = PeerIds.Count + 1;
                 startText = !voiceOk ? startText : NetIsHost ? (PartyReady ? (PeerIds.Count == 0 ? "🏰 一個人開始副本" : $"🏰 開始副本（{n} 人）") : $"等待隊友準備…（{ReadyCount()}/{PeerIds.Count}）")
                     : localReady ? "✔ 已準備，等待房主開始…" : "✔ 準備好了";
             }
-            bool startOk = LoadoutReady && voiceOk && (!dungeonParty || (NetIsHost ? PartyReady : !localReady));
+            if (storyParty)
+            {
+                int n = PeerIds.Count + 1;
+                startText = !voiceOk ? startText : NetIsHost ? (StoryPartyReady ? (PeerIds.Count == 0 ? "📖 一個人開始" : $"📖 開始（{n} 人）") : $"等待隊友準備…（{ReadyCount()}/{PeerIds.Count}）")
+                    : localReady ? "✔ 已準備，等待房主開始…" : "✔ 準備好了";
+            }
+            bool startOk = LoadoutReady && voiceOk && (!dungeonParty || (NetIsHost ? PartyReady : !localReady)) && (!storyParty || (NetIsHost ? StoryPartyReady : !localReady));
             if (UiKit.Button(new Rect(pad, by, W - pad * 2, u * 1.6f), startText, fsL, true, cls.color, startOk))
             {
-                if (NetMode && coop && netDungeon && NetIsHost) HostStartDungeon();   // 副本：房主按開始
+                if (NetMode && coop && netStory && NetIsHost) HostStartStory();   // 故事合作：房主按開始
+                else if (NetMode && coop && netDungeon && NetIsHost) HostStartDungeon();   // 副本：房主按開始
                 else if (NetMode) SendReady();
                 else if (enemyClass == "story" || enemyClass == "tutorial" || enemyClass == "dungeon") StartBattle();   // 打開地圖／清單、教學：不用整備
                 else OpenPrep(startText.Replace("⚔ ", "").Replace("🔥 ", "").Replace("♾ ", "").Replace("🪵 ", ""), EndlessSetup, enemyClass == "endless" ? null : "這個模式不能使用道具（故事、副本、無盡模式才能用）", StartBattle);
@@ -3614,21 +3632,10 @@ namespace SpellDuel
             DrawBattleTutHud(topR, W, H, lh, fs, fsS, pillW);   // 1-1／1-2 的戰鬥教學
             DrawPotionLesson(W, H, fs, fsS, fsL);   // 1-2：喝藥水教學
             DrawScrollAsk(W, H, fs, fsS);           // 回城捲軸：暫停＋確認
+            DrawLootRoll(W, H, fs, fsS);            // 故事合作：擲骰（史詩以上、精魄）
             if (phase == Phase.Fighting) DrawPalmCharge(fs);   // 初心者普攻：手掌集氣指示（SoloBattle.SwipeTrail.cs）
-            // 合作：隊友的血量（在敵人卡片下方）
-            if (coop)
-            {
-                // 每位隊友一行（最多 3 位）
-                float ay = topR.yMax + gap * 0.5f, ah = battle.allies.Count > 1 ? lh * 0.7f : lh * 0.9f;
-                foreach (var al in battle.allies)
-                {
-                    var ar = new Rect(topR.x, ay, topR.width, ah);
-                    UiKit.Card(ar, 0.5f, al.cls.color, 0.5f);
-                    UiKit.Text(new Rect(ar.x + gap, ar.y, iw * 0.42f, ar.height), al.Alive ? $"{(en.target == al ? "🎯" : "🤝")} {al.name}" : $"💀 {al.name}（倒下）", fsS, Color.white, TextAnchor.MiddleLeft, true);
-                    UiKit.Bar(new Rect(ar.x + gap + iw * 0.44f, ar.y + ar.height * 0.2f, iw * 0.56f, ar.height * 0.6f), al.hp / al.maxHp, new Color(0.3f, 0.85f, 0.45f), $"{Mathf.CeilToInt(al.hp)}", fsS);
-                    ay += ah + gap * 0.3f;
-                }
-            }
+            // 合作：右上角的隊伍（頭像、名字、血量、每秒傷害、每秒治療；SoloBattle.StoryCoop.cs）
+            if (coop && battle.allies.Count > 0) DrawPartyFrame(topR.yMax + gap * 0.5f, W, lh, fsS, en);
 
             // 敵人頭上的血條
             var hs = cam.WorldToScreenPoint(WorldFrame.FromWorld(en.head + Vector3.up * 0.3f));
@@ -3681,9 +3688,9 @@ namespace SpellDuel
 
             // 副本的劇情字幕卡：放在上方資訊的正下方（以前固定在 17% 高度，會蓋住角色按鈕和藥水列）；
             // 先畫，後面的閃避／伏擊警告才會疊在它上面
-            float alliesH = coop && battle.allies.Count > 0 ? battle.allies.Count * ((battle.allies.Count > 1 ? lh * 0.7f : lh * 0.9f) + gap * 0.3f) + gap * 0.2f : 0f;
+            float alliesH = coop && battle.allies.Count > 0 ? PartyFrameH(lh) + gap * 0.2f : 0f;
             hudStackBottom = endless ? top + lh * 2.9f + gap + alliesH + lh * 4.4f + gap * 0.3f : topR.yMax + alliesH + gap;
-            if (phase == Phase.Fighting && dungeon != null) DrawDungeonTicker(W, hudStackBottom, pad, fs, fsS);
+            if (phase == Phase.Fighting && (dungeon != null || StoryCoop)) DrawDungeonTicker(W, hudStackBottom, pad, fs, fsS);
 
             // 蓄力狀態
             if (me.charging != null)
@@ -3905,7 +3912,7 @@ namespace SpellDuel
                 var pf = prof ?? Progress.Char(myClass);
                 int lv = pf.level;
                 int cur = CharacterProfile.XpForLevel(lv), next = CharacterProfile.XpForLevel(lv + 1);
-                float xy = top + lh * 2.9f + gap + (coop && battle.allies.Count > 0 ? battle.allies.Count * ((battle.allies.Count > 1 ? lh * 0.7f : lh * 0.9f) + gap * 0.3f) + gap * 0.2f : 0f);
+                float xy = top + lh * 2.9f + gap + (coop && battle.allies.Count > 0 ? PartyFrameH(lh) + gap * 0.2f : 0f);
                 UiKit.Bar(new Rect(pad, xy, W - pad * 2, lh * 0.45f), (pf.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f), pf.LevelLocked ? $"Lv {lv}　要轉職才能繼續升級" : $"Lv {lv}　{pf.xp - cur}/{next - cur}", fsS);
                 float bw2 = W * 0.5f;
                 if (UiKit.Button(new Rect((W - bw2) / 2f, xy + lh * 0.55f, bw2, lh * 1.1f), PendingUpgrades > 0 ? $"📜 角色（可加點 ×{PendingUpgrades}）" : "📜 角色／裝備", fsS, PendingUpgrades > 0, new Color(0.75f, 0.45f, 1f)))
@@ -3971,6 +3978,18 @@ namespace SpellDuel
             if (phase == Phase.Over && victory != null && DrawVictory(W, H, pad, top, botY, gap, lh, fs, fsS)) { }   // 勝利結算窗格（按「繼續」後才是原本的按鈕）
             else if (phase == Phase.Over && daily != null) DrawDailyResult(W, pad, top, botY, gap, lh, fs, fsS);
             else if (phase == Phase.Over && tutorial) DrawTutorialDone(W, pad, top, botY, gap, lh, fs);
+            else if (phase == Phase.Over && storyStage != null && NetMode)
+            {
+                // 故事合作的結算：回隊伍畫面（房主再選關卡要回村子重新邀請）／回大廳
+                var st = storyStage; bool won = battle.stageCleared;
+                var orr = new Rect(pad, top + (botY - top) * .24f, W - pad * 2, (botY - top) * .36f);
+                UiKit.Result(orr, won);
+                UiKit.Text(new Rect(orr.x, orr.y + gap, orr.width, orr.height * 0.4f), won ? $"🏆 {st.title}" : "💀 全隊倒下…", fs * 2, Color.white, TextAnchor.MiddleCenter, true);
+                if (won && !NetIsHost) UiKit.Text(new Rect(orr.x, orr.y + orr.height * 0.42f, orr.width, lh), "（你的故事進度不變：只有房主的會推進）", fsS, new Color(0.85f, 0.9f, 1f), TextAnchor.MiddleCenter);
+                float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
+                if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "回隊伍畫面", fs, true, new Color(0.4f, 0.85f, 0.75f))) ShowSetup();   // 大家準備好再由房主開始（同一關）
+                if (UiKit.Button(new Rect(orr.x + gap * 2 + bw, oby, bw, bh), "回大廳", fs)) ShowSetup();
+            }
             else if (phase == Phase.Over && storyStage != null)
             {
                 var st = storyStage; bool won = battle.stageCleared;

@@ -106,6 +106,7 @@ namespace SpellDuel
             {
                 if (a == o || !a.Alive || !Touches(pr, a)) continue;
                 pr.alive = false;
+                o.healDone += amt;
                 Emit("heal", a.Chest, new Color(1f, 0.95f, 0.6f), $"+{amt}");
                 OnAllyHeal?.Invoke(a, amt);
                 return true;

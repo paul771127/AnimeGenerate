@@ -20,7 +20,8 @@ namespace SpellDuel
         /// <summary>每幀（副本戰鬥中）：地點的台詞由 DungeonRun 送進來（SoloBattle.DungeonMap.cs）；首領剩一半血 → boss_half；換下一句</summary>
         void UpdateDungeonStory()
         {
-            if (dungeon == null || battle == null) return;
+            if (battle == null) return;
+            if (dungeon == null) { if (StoryCoop) AdvanceTicker(); return; }   // 故事合作：開場／結尾的字幕卡
             UpdateDungeonMap();
             // 首領剩一半血
             if (drun != null && dungeonHalfSaid != drun.Step && drun.node.IsBoss && battle.IsBossWave && En.Alive && En.maxHp > 0 && En.hp <= En.maxHp * 0.5f)
@@ -28,6 +29,11 @@ namespace SpellDuel
                 dungeonHalfSaid = drun.Step;
                 foreach (var l in drun.node.bossHalf) { ticker.Enqueue(l); ChatLine(l); }
             }
+            AdvanceTicker();
+        }
+
+        void AdvanceTicker()
+        {
             if (tickerLine == null || Time.time >= tickerUntil)
             {
                 tickerLine = ticker.Count > 0 ? ticker.Dequeue() : null;
@@ -39,7 +45,7 @@ namespace SpellDuel
         /// <summary>字幕卡：上方資訊（敵人卡、隊友、經驗條、角色按鈕、藥水列）的正下方，y 由 DrawHud 算好傳進來</summary>
         void DrawDungeonTicker(float W, float y, float pad, int fs, int fsS)
         {
-            if (tickerLine == null || dungeon == null) return;
+            if (tickerLine == null || (dungeon == null && !StoryCoop)) return;
             float h = TickerHeight;
             var r = new Rect(pad, y, W - pad * 2, h);
             float a = Mathf.Clamp01((tickerUntil - Time.time) * 3f);

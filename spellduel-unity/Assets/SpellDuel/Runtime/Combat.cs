@@ -42,6 +42,8 @@ namespace SpellDuel
         public float arcaneBurst, arcaneTwin;   // 法師：奧術爆裂（命中爆炸的範圍傷害比例）、奧術連射（連射兩發的機率）
         /// <summary>法師的魔力盾（開關）：開著時受到的傷害改扣 MP（MP 不夠才扣 HP），只能用奧術飛彈</summary>
         public bool manaCoat;
+        /// <summary>這一場累計打出的傷害、治療（合作時的每秒傷害／每秒治療）</summary>
+        public float dealtDone, healDone;
         public float longShot, steadyAim, trapCrit, basicHoming;                  // 獵人：遠射、穩定瞄準、獵殺時刻；牧師：普攻追蹤
         public float arrowBleed, arrowPoison, arrowSilence;                       // 獵人：箭命中時出血／中毒／沉默的機率（技能樹）
         public float silencedUntil;                                               // 被沉默：這段時間不能唸技能（普攻照常）
@@ -2176,7 +2178,7 @@ namespace SpellDuel
             }
             switch (s.self)
             {
-                case SelfKind.Heal: AddThreat(f, s.heal); f.hp = Mathf.Min(f.maxHp, f.hp + s.heal); Emit("heal", f.Chest, s.color, $"+{s.heal}"); return;
+                case SelfKind.Heal: AddThreat(f, s.heal); f.healDone += Mathf.Min(s.heal, f.maxHp - f.hp); f.hp = Mathf.Min(f.maxHp, f.hp + s.heal); Emit("heal", f.Chest, s.color, $"+{s.heal}"); return;
                 case SelfKind.Block: f.blockUntil = now + s.buffDur; f.blockReduce = s.buffReduce; break;
                 case SelfKind.Shield: f.shieldUntil = now + s.buffDur; f.shieldLeft = s.buffAmount; break;
                 case SelfKind.Counter: f.counterUntil = now + s.buffDur; break;
@@ -2289,7 +2291,7 @@ namespace SpellDuel
             string by = from != null ? $"{from}的" : "";
             switch (s.self)
             {
-                case SelfKind.Heal: t.hp = Mathf.Min(t.maxHp, t.hp + s.heal); Emit("heal", t.Chest, s.color, $"{by}{s.name} +{s.heal}"); return;
+                case SelfKind.Heal: if (from == null) player.healDone += Mathf.Min(s.heal, t.maxHp - t.hp); t.hp = Mathf.Min(t.maxHp, t.hp + s.heal); Emit("heal", t.Chest, s.color, $"{by}{s.name} +{s.heal}"); return;
                 case SelfKind.Armor: t.armorUntil = now + s.buffDur; t.armorReduce = s.buffReduce; Emit("buff", t.Chest, s.color, by + s.name); return;
                 case SelfKind.Cleanse:
                     t.dots.Clear(); t.snaredUntil = 0f; t.blindUntil = 0f; t.silencedUntil = 0f;
@@ -2312,6 +2314,7 @@ namespace SpellDuel
                 case SelfKind.HealPct:
                 {
                     float amt = Mathf.Round(t.maxHp * s.buffAmount / 100f);
+                    if (from == null) player.healDone += Mathf.Min(amt, t.maxHp - t.hp);
                     t.hp = Mathf.Min(t.maxHp, t.hp + amt);
                     Emit("heal", t.Chest, s.color, $"{by}{s.name} +{amt:0}");
                     return;
@@ -3121,6 +3124,7 @@ namespace SpellDuel
         void OnDealt(Fighter a, float dmg, Fighter target = null, SkillDef s = null, Projectile p = null)
         {
             if (a == null || !a.Alive || dmg <= 0f) return;
+            a.dealtDone += dmg;
             PostHit(a, target, s, dmg);
             if (a.lifesteal > 0f) a.hp = Mathf.Min(a.maxHp, a.hp + dmg * a.lifesteal);
             if (a.mpOnHit > 0f) a.mp = Mathf.Min(a.maxMp, a.mp + a.mpOnHit);

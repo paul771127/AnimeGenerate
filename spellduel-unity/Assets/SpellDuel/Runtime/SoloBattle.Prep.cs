@@ -61,7 +61,7 @@ namespace SpellDuel
         /// <summary>打開整備畫面；go＝按「出發」後要做的事</summary>
         void OpenPrep(string title, bool endlessLike, string noItems, Action go)
         {
-            prepTitle = title; prepEndless = endlessLike; prepNoItems = noItems; prepGo = go; prepScroll = Vector2.zero; prepLookOnly = false;
+            prepTitle = title; prepEndless = endlessLike; prepNoItems = noItems; prepGo = go; prepScroll = Vector2.zero; prepLookOnly = false; prepStage = null; inviteAsk = false;
             LoadCarry(); FixLoadout();
         }
 
@@ -122,6 +122,9 @@ namespace SpellDuel
             }
             if (UiKit.Button(new Rect(pad, y, cw - pad * 2, u * 1.1f), "🛡 更換裝備・分配點數（角色畫面）", fsS, false, new Color(0.75f, 0.45f, 1f))) charOpen = true;
             y += u * 1.1f + gap * 1.5f;
+            // ---- 故事關卡：邀請隊友一起打（附近／遠距連線；SoloBattle.StoryCoop.cs）
+            float iv = DrawInviteButton(pad, y, cw - pad * 2, u, fsS);
+            if (iv > 0f) y += iv + gap * 1.5f;
 
             // ---- 道具
             UiKit.Text(new Rect(pad, y, cw - pad * 2, u), prepNoItems != null ? "🧪 道具：" + prepNoItems : $"🧪 帶出去的道具（每種最多 {CarryMax} 瓶；戰鬥中只能用帶出來的）", fsS, UiKit.Gold, TextAnchor.MiddleLeft, true);
