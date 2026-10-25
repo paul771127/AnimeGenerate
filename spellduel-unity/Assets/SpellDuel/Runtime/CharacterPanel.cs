@@ -109,12 +109,18 @@ namespace SpellDuel
             offset=UiKit.DragScroll(viewport,offset,content);   // 手指拖曳捲動
             offset=GUI.BeginScrollView(viewport,offset,content,false,true);
             if(equipment)gearScroll=offset;else statsScroll=offset;
+            int seq=UiKit.LockSeq;
             try{
                 if(!equipment)return DrawStats(content,p,fs,fsS,gap);
                 float used=DrawSkillSlots(content,fs,fsS,gap);
                 return DrawGear(new Rect(content.x,content.y+used,content.width,content.height-used),p,fs,fsS,gap);
             }
-            finally{GUI.EndScrollView();}
+            finally{
+                GUI.EndScrollView();
+                // 新手指引：要按的按鈕在畫面外 → 自動捲過去（不然框在看不到的地方，按不到）
+                var to=UiKit.ScrollToLock(seq,viewport,offset,content,fs*1.2f);
+                if(equipment)gearScroll=to;else statsScroll=to;
+            }
         }
 
         // ================================================================ 技能欄：點技能裝上／卸下（只在城鎮、整備時能改；戰鬥中只能看）
@@ -380,7 +386,7 @@ namespace SpellDuel
                 UiKit.Text(new Rect(b.x + pbw, dy, b.width - pbw * 2, pbh), $"{dots}\n第 {page + 1}/{pages} 頁", Mathf.RoundToInt(fsS * 0.85f), new Color(0.75f, 0.82f, 0.95f), TextAnchor.MiddleCenter);
                 dy += pbh + gap * 0.3f;
             }
-            var dr = new Rect(b.x, dy, b.width, b.yMax - dy);
+            var dr = new Rect(b.x, dy, b.width, soulOpen ? b.yMax - dy : Mathf.Min(b.yMax - dy, fs * 13f));   // 說明框不要拉到內容最底下（「裝備」按鈕才不會跑到畫面外）
             // 精魄視窗（CharacterPanel.Souls.cs）：換了選中的裝備就關掉
             if (soulOpen && soulFor != null && soulFor != selItem) soulOpen = false;
             if (soulOpen)

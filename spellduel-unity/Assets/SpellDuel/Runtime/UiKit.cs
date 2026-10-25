@@ -185,6 +185,7 @@ namespace SpellDuel
             {
                 var a=GUIUtility.GUIToScreenPoint(new Vector2(r.x,r.y));var b=GUIUtility.GUIToScreenPoint(new Vector2(r.xMax,r.yMax));
                 LockRectsBuilding.Add(Rect.MinMaxRect(a.x,a.y,b.x,b.y));
+                LockLocal=r;LockSeq++;
             }
             bool hit0=ButtonCore(r,text,size,selected||target,accent,enabled);
             if(target)
@@ -212,6 +213,18 @@ namespace SpellDuel
         }
         /// <summary>教學鎖暫時不擋（例如找不到目標按鈕時，免得卡住）</summary>
         public static bool LockBypass;
+        /// <summary>最近一個目標按鈕（畫它時的 GUI 座標）＋計數：捲動區用來把畫面外的目標自動捲進來</summary>
+        public static Rect LockLocal;public static int LockSeq;
+        /// <summary>捲動區畫完內容後呼叫：這次畫的內容裡有目標按鈕、而且不在看得到的範圍 → 捲過去（手動拖過畫面的幾秒內不捲）</summary>
+        public static Vector2 ScrollToLock(int seqBefore,Rect view,Vector2 scroll,Rect content,float margin)
+        {
+            if(LockKey==null||LockSeq==seqBefore||UiLock.RecentPan)return scroll;
+            var r=LockLocal;
+            if(r.yMax>scroll.y+view.height)scroll.y=r.yMax-view.height+margin;
+            if(r.y<scroll.y)scroll.y=r.y-margin;
+            scroll.y=Mathf.Clamp(scroll.y,0,Mathf.Max(0,content.height-view.height));
+            return scroll;
+        }
         static bool ButtonCore(Rect r,string text,int size,bool selected,Color? accent,bool enabled)
         {
             Init();var ac=accent??Gold;
