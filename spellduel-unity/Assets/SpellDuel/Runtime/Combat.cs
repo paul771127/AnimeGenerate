@@ -938,6 +938,27 @@ namespace SpellDuel
         /// 碰撞：近戰小怪的身體不會和玩家重疊（玩家走過去會把牠推開；在地上的才算，飛在空中的不算）。
         /// 推出去的位置在場地外就不推（不會把小怪推出場地）。
         /// </summary>
+        /// <summary>Boss 模型的半徑；判定（受擊、碰撞）再往外加 BossBodyExtra，玩家碰到就靠不過去（太近會看不清楚）</summary>
+        public const float BossModelRadius = 0.75f, BossBodyExtra = 1f;
+
+        /// <summary>碰撞：Boss 的身體（判定半徑）不會和玩家重疊，玩家走過去會把 Boss 推開；推出去在場地外就不推</summary>
+        void PushBossFromPlayers()
+        {
+            if (remoteEnemy || enemy == null || !enemy.Alive || enemy.bodyRadius <= BossModelRadius) return;
+            foreach (var pl in Players())
+            {
+                if (!pl.Alive || pl == enemy) continue;
+                var away = enemy.Feet - pl.Feet; away.y = 0f;
+                float d = away.magnitude, min = enemy.bodyRadius + pl.bodyRadius;
+                if (d >= min) continue;
+                var dir = d > 1e-3f ? away / d : Fighter.Flat(-pl.forward);
+                if (dir == Vector3.zero) dir = Vector3.forward;
+                var to = pl.Feet + dir * min; to.y = enemy.Feet.y;
+                if (minionInside != null && !minionInside(to)) continue;
+                enemy.head = new Vector3(to.x, enemy.head.y, to.z);
+            }
+        }
+
         void PushMinionsFromPlayers()
         {
             foreach (var m in minions)
@@ -964,6 +985,7 @@ namespace SpellDuel
             minions.RemoveAll(m => !m.Alive);
             if (remoteEnemy) return;   // 隊友端：代理，不跑 AI
             PushMinionsFromPlayers();
+            PushBossFromPlayers();
             var claw = Skills.All["m_claw"];
             foreach (var m in minions)
             {

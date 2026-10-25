@@ -987,7 +987,7 @@ namespace SpellDuel
             // 無盡模式的 Boss 不召喚小怪（小怪由場地邊緣陸續冒出）
             var bossSkills = new List<string>(bc.defaultLoadout);
             if (endlessMode) bossSkills.Remove("b_summon");
-            var boss = new Fighter(bc.name, bc, bossSkills, false) { bodyRadius = 0.75f };
+            var boss = new Fighter(bc.name, bc, bossSkills, false) { bodyRadius = Battle.BossModelRadius + Battle.BossBodyExtra };   // 判定半徑：模型 0.75m＋1m（玩家碰到就靠不過去）
             int partyN = coopMode ? 1 + PeerIds.Count : 1;
             float party = 1f + 0.5f * (partyN - 1);   // 參與人數倍率：每多一人，Boss 血量 +50%（攻擊力 +20%、施法頻率 +25% 在 BossAI）
             // 故事／副本：其他設定都照簡單，難度只加等級（下面的 battle.levelBoost）；無盡塔（單人無盡）固定普通；討伐 Boss、合作照選的難度
@@ -2434,7 +2434,7 @@ namespace SpellDuel
             if (enemyOnScreen)
             {
                 float depth = Mathf.Max(0.3f, Vector3.Dot(toEn, cam.transform.forward));
-                float halfW = en.bodyRadius / depth * Screen.height / (2f * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
+                float halfW = Mathf.Min(en.bodyRadius, Battle.BossModelRadius) / depth * Screen.height / (2f * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
                 float cx = (xMin + xMax) * 0.5f;
                 enemyRect = Rect.MinMaxRect(cx - halfW, Screen.height - yMax, cx + halfW, Screen.height - yMin);
             }
