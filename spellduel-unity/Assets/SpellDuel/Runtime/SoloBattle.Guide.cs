@@ -4,7 +4,7 @@ namespace SpellDuel
 {
     /// <summary>
     /// 村莊新手導覽（新角色教學結束、進炎之里後開始）：一步一步教，做到了自動下一步，說明型的按「下一步」。
-    ///   0 移動（方向鍵／晃手機，走 4m）→ 1 解任務（找頭上有❗的米菈上投石課）→ 2 點能力值（升級拿到的能力點加完）
+    ///   0 城鎮圖說明（逛街只用說的）→ 1 解任務（找頭上有❗的米菈上投石課）→ 2 點能力值（升級拿到的能力點加完）
     ///   → 3 穿裝備（米菈送的旅行布衣）→ 4 技能欄與技能點（可以打開整備看看）→ 5 設施介紹（一頁一個）
     ///   → 6 其他任務怎麼看 → 完成（原本的 7「從村口出發」拿掉了：不會觸發）。
     /// 進度記在角色上（sd_guide；−1＝沒開始、99＝完成），隨時可以「略過導覽」；訓練場可以重看。
@@ -75,7 +75,7 @@ namespace SpellDuel
             int st = GuideStep;
             switch (st)
             {
-                case 0: if (townWalk.Moved - guideMovedAt >= 4f) GuideNext(1); break;
+                case 0: break;   // 說明型（按「下一步」）：不用真的去逛街
                 case 1: if (!NoviceQuests.StoneLessonPending(p)) GuideNext(p.statPoints > 0 ? 2 : 3); break;
                 case 2: if (p.statPoints == 0) GuideNext(3); break;
                 case 3:
@@ -105,8 +105,8 @@ namespace SpellDuel
             var p = Progress.Char(myClass);
             switch (GuideStep)
             {
-                case 0: return ("🕹 移動", $"先按下方的「🚶 逛街」進到 3D 村子，再按左下的方向鍵走路：▲ 前進、▼ 後退、◀▶ 橫移；右下的 ↺↻ 轉身。也可以上下晃動手機原地踏步（往準心方向走）。\n走一走試試（{Mathf.Min(4f, townWalk.Moved - guideMovedAt):0.0}/4 公尺）", false);
-                case 1: return ("📜 解任務", "頭上有 ❗ 的居民有任務給你。走到「米菈」面前說「你好」（或舉起手掌揮一揮）跟她說話，接下投石課。\n（在 2D 城鎮圖上也可以直接點居民說話）", false);
+                case 0: return ("🏘 城鎮圖", "這是村子的 2D 城鎮圖：點建築的名牌就能進去（鐵匠鋪、道具店、職業工會…），點居民就能聊天、接任務。可以上下左右拖曳看整個村子。\n想在 3D 村子裡走走，可以按下方的「🚶 逛街」（之後再逛就好）。", true);
+                case 1: return ("📜 解任務", "頭上有 ❗ 的居民有任務給你。在城鎮圖上點「米菈」跟她說話，接下投石課。", false);
                 case 2: return ("📊 點能力值", $"升級了！每升一級得到 {CharacterProfile.StatPerLevel} 能力點。按下方「📜 角色」→「📊 能力值」，按 ＋ 加點（每個能力值的效果寫在旁邊）。\n剩下 {p.statPoints} 點", false);
                 case 3: return ("🛡 穿裝備", $"米菈送你一件「{StarterGearName}」，放在背包裡。按「📜 角色」→「🛡 裝備」，點背包裡的{StarterGearName} → 穿上。\n裝備有等級和能力值需求；穿不了的會寫原因。", false);
                 case 4: return ("✨ 技能", "學會的招式要放進「技能欄」才能在戰鬥中用（唸技能名稱 → 做放招手勢）。每次出發前的「整備」畫面點技能看說明、換上或移除。\n技能點：每升一級得 1 點。到「📜 角色」→「🌳 技能樹」強化學會的招式（木棍揮擊、投石、急救各 5 級，學會才能點）。這些點數只能點初心者的樹，轉職後也會保留（不能重置、不能挪去新職業）。", true);
