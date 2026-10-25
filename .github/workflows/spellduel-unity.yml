@@ -228,6 +228,33 @@ jobs:
           path: SpellDuel-unsigned.ipa
           if-no-files-found: error
 
+  # 把最新 APK 放到公開的 Release（不用登入 GitHub 就能下載，網址固定）：
+  #   https://github.com/<owner>/<repo>/releases/download/spellduel-latest/SpellDuel.apk
+  publish-apk:
+    needs: android
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: SpellDuel-Android-APK
+          path: apk
+      - name: 上傳到 Release「spellduel-latest」
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -eo pipefail
+          cp "$(ls apk/*.apk | head -1)" SpellDuel.apk
+          NOTES="最新 Android 版（${GITHUB_SHA::7}，$(date -u +'%Y-%m-%d %H:%M') UTC）。下載 SpellDuel.apk 直接安裝。"
+          if ! gh release view spellduel-latest >/dev/null 2>&1; then
+            gh release create spellduel-latest --target "$GITHUB_SHA" --title "SpellDuel 最新測試版" --notes "$NOTES" --latest
+          fi
+          gh release upload spellduel-latest SpellDuel.apk --clobber
+          gh release edit spellduel-latest --notes "$NOTES"
+
   # 用 Apple Distribution 憑證重簽 IPA，上傳到 App Store Connect（TestFlight）。
   # 需要的 secrets（缺任何一個就自動略過，不會讓流程變紅）：
   #   IOS_DIST_P12_BASE64 / IOS_DIST_P12_PASSWORD / IOS_APPSTORE_PROFILE_BASE64
