@@ -39,7 +39,8 @@ namespace SpellDuel
         // ---- 技能樹的流派效果（CharacterProfile.ApplyTo 設定；0＝沒點）
         public SkillDef basic;          // 普攻（技能樹強化後的版本；null＝用 Skills.BasicOf）
         public float spellEcho, basicMp, lowMpBonus, melt, iceFreeze;            // 法師：奧術回響、奧術迴路、孤注一擲、融化、寒冰
-        public float arcaneBurst, arcaneTwin;   // 法師：奧術爆裂（命中爆炸的範圍傷害比例）、奧術連射（連射兩發的機率）
+        public float arcaneBurst, arcaneTwin;
+        public float fireBurst, icePierce, windOrbit, windOrbitTime;   // 法師：火球爆裂、冰槍穿透（幾隻）、風刃迴旋（有沒有學）、迴旋延長（秒）   // 法師：奧術爆裂（命中爆炸的範圍傷害比例）、奧術連射（連射兩發的機率）
         /// <summary>法師的魔力盾（開關）：開著時受到的傷害改扣 MP（MP 不夠才扣 HP），只能用奧術飛彈</summary>
         public bool manaCoat;
         /// <summary>這一場累計打出的傷害、治療（合作時的每秒傷害／每秒治療）</summary>
@@ -171,6 +172,7 @@ namespace SpellDuel
         public Vector3 pos, dir;
         public float traveled;
         public int damage;
+        public int pierceLeft;          // 還能穿透幾個敵人（法師「冰槍穿透」；skill.pierce＝無限）
         public EffectKind effect; public float effectDps, effectDur;
         public bool reflected, alive = true;
         public bool crit;               // 爆擊（傷害 ×2）
@@ -808,8 +810,11 @@ namespace SpellDuel
         bool CanAttackFrom(Vector3 p) => (minionInside == null || minionInside(p)) && InAttackZone(p);
         /// <summary>攻擊區裡離 p 最近的一點（邊界往內 0.3m）</summary>
         Vector3 ClampToZone(Vector3 p) { if (attackHalf <= 0f) return p; float h = attackHalf - 0.3f; return new Vector3(Mathf.Clamp(p.x, -h, h), 0f, Mathf.Clamp(p.z, -h, h)); }
-        public float BossDmgMul => storyBossDmg > 0f ? (0.75f + DmgPerWave * levelBoost) / 0.75f * storyBossDmg : BoostDmgMul;
-        public float HpMul => (1f + HpPerWave * Tier) * PartyMul * hpBoost * enemyHpMul;
+        public float BossDmgMul => (storyBossDmg > 0f ? (0.75f + DmgPerWave * levelBoost) / 0.75f * storyBossDmg : BoostDmgMul) * TowerMul;
+        public float HpMul => (1f + HpPerWave * Tier) * PartyMul * hpBoost * enemyHpMul * TowerMul;
+        /// <summary>無盡塔第 11 波（層）以上：敵人血量、傷害 ×1.5（Boss 也是）</summary>
+        public const int TowerHardWave = 11; public const float TowerHardMul = 1.5f;
+        public float TowerMul => eliteWaves && wave >= TowerHardWave ? TowerHardMul : 1f;
         /// <summary>這一關敵人的額外倍率（故事第二章森林：血量、攻擊 ×2，Boss 血量 ×5）</summary>
         public float enemyHpMul = 1f, enemyDmgMul = 1f, bossHpMul = 1f;
         // 每過一波敵人變強多少（2026-10 重調：原本 HP 8%、攻擊 5%，第二章起比玩家成長快太多，Lv18 撐不過一波；現在 HP 3.5%、攻擊 2%）
@@ -817,7 +822,7 @@ namespace SpellDuel
         /// <summary>故事關卡的敵人數量倍率：每一章都減半（使用者要求，和第一章一樣）</summary>
         public static float StoryEnemyMul(int theme) => 0.5f;
         public float hpBoost = 1f;   // 轉職試煉：敵人更硬
-        public float DmgMul => (0.75f + DmgPerWave * Tier) * enemyDmgMul;
+        public float DmgMul => (0.75f + DmgPerWave * Tier) * enemyDmgMul * TowerMul;
         public const float EndlessRegen = 0.5f, EndlessRegenPct = 0.005f;   // 無盡／故事：玩家每秒自然回血（0.5 或最大 HP 的 0.5%，取大的）
         public float SpeedMul => Mathf.Min(1.5f, 1f + 0.02f * Tier);
 
@@ -959,7 +964,7 @@ namespace SpellDuel
             bossSpawnedThisWave = true;
             int bossIndex = wave / BossEvery - 1;
             var at = FixedDungeonSpawns ? DungeonSpawnPoint(0) : (bossPoint ?? edgePoint)();
-            enemy.maxHp = Mathf.RoundToInt((storyBossHp > 0f ? storyBossHp : bossBaseHp * (1f + 0.5f * bossIndex) * bossHpMul) * BossPartyMul * hpBoost * BoostHpMul * BossHpCut);
+            enemy.maxHp = Mathf.RoundToInt((storyBossHp > 0f ? storyBossHp : bossBaseHp * (1f + 0.5f * bossIndex) * bossHpMul) * BossPartyMul * hpBoost * BoostHpMul * BossHpCut * TowerMul);
             enemy.hp = enemy.maxHp;
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
             enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f; enemy.silencedUntil = 0f;
@@ -1534,7 +1539,15 @@ namespace SpellDuel
             {
                 if (!m.Alive || m == p.owner) continue;
                 if (!Touches(p, m)) continue;
-                if (p.skill.pierce)
+                if (p.pierced != null && p.pierced.Contains(m)) continue;   // 穿過的敵人不會再打一次
+                bool limited = !p.skill.pierce && p.pierceLeft > 0;   // 冰槍穿透：還能穿幾個
+                if (limited)
+                {
+                    if (p.pierced == null) p.pierced = new HashSet<Fighter>();
+                    if (!p.pierced.Add(m)) continue;
+                    p.pierceLeft--;
+                }
+                else if (p.skill.pierce)
                 {
                     // 貫穿：同一隻只打一次，箭繼續飛
                     if (p.pierced == null) p.pierced = new HashSet<Fighter>();
@@ -1549,6 +1562,7 @@ namespace SpellDuel
                 OnDealt(p.owner, pd, m, p.skill, p);
                 OnProjectileHit?.Invoke(p);
                 if (p.skill.groundZone) AddBurn(p, m.Feet);   // 審判砸中小怪：一樣留下審判之地
+                if (limited) continue;   // 冰槍穿透：繼續飛
                 if (p.skill.pierce)
                 {
                     // 穿透第一個敵人之後：傷害 −50%（只降一次，之後打到的都是一半）
@@ -2408,6 +2422,8 @@ namespace SpellDuel
         Projectile Spawn(Fighter owner, SkillDef s, Vector3 from, Vector3 dir, int dmg, EffectKind eff, float dps, float dur, bool reflected, float curveAmp = 0f, float pathLen = 0f)
         {
             var p = new Projectile { owner = owner, skill = s, pos = from, basePos = from, dir = dir.normalized, damage = dmg, effect = eff, effectDps = dps, effectDur = dur, reflected = reflected, id = nextId++ };
+            if (!reflected && s.id == "ice" && owner.icePierce > 0f) p.pierceLeft = Mathf.RoundToInt(owner.icePierce);   // 冰槍穿透
+            if (!reflected && s.id == "wind" && owner.windOrbit > 0f) StartWindOrbit(owner, s, dmg);                        // 風刃迴旋
             float outMul = reflected ? 1f : owner.OutMul(now);
             int eagle = EagleStacks(owner);
             // 獵人「穩定瞄準」：站著不動 2 秒以上，箭的爆擊率提高（以前是必定爆擊，太強）
@@ -2486,6 +2502,7 @@ namespace SpellDuel
         {
             now += dt;
             if (shockwaves.Count > 0) UpdateShockwaves();
+            if (windOrbits.Count > 0) UpdateWindOrbits(dt);
             // 計時的效果（旋風斬的後兩段…）
             for (int i = 0; i < timers.Count; i++) if (timers[i].Key <= now) { var a = timers[i].Value; timers.RemoveAt(i--); a(); }
             // 站著不動的時間（神射手鷹眼、主教祈禱領域）
@@ -3115,6 +3132,40 @@ namespace SpellDuel
             }
             return Mathf.RoundToInt(dmg * m);
         }
+        // ------------------------------------------------------------ 法師「風刃迴旋」：放風刃時，另一把風刃在身邊轉圈，碰到的敵人受傷
+        public class WindOrbit { public Fighter owner; public SkillDef skill; public float until, angle; public int dmg; public readonly Dictionary<Fighter, float> lastHit = new Dictionary<Fighter, float>(); public Vector3 pos; }
+        public readonly List<WindOrbit> windOrbits = new List<WindOrbit>();
+        public const float WindOrbitBase = 3f, WindOrbitRadius = 1.3f, WindOrbitSpin = 0.8f, WindOrbitHitGap = 0.6f, WindOrbitDmg = 0.5f, WindOrbitTouch = 0.45f;
+
+        void StartWindOrbit(Fighter o, SkillDef s, int dmg)
+        {
+            float dur = WindOrbitBase + o.windOrbitTime;
+            var w = windOrbits.Find(x => x.owner == o);
+            int d = Mathf.Max(1, Mathf.RoundToInt(dmg * o.atkMul * WindOrbitDmg));
+            if (w != null) { w.until = Mathf.Max(w.until, now + dur); w.dmg = Mathf.Max(w.dmg, d); return; }   // 已經在轉：延長
+            windOrbits.Add(new WindOrbit { owner = o, skill = s, until = now + dur, dmg = d, angle = Mathf.Atan2(o.forward.z, o.forward.x) });
+            Emit("buff", o.Chest, s.color, $"風刃迴旋 {dur:0} 秒");
+        }
+
+        void UpdateWindOrbits(float dt)
+        {
+            for (int i = windOrbits.Count - 1; i >= 0; i--)
+            {
+                var w = windOrbits[i];
+                if (!w.owner.Alive || now >= w.until || Over) { windOrbits.RemoveAt(i); continue; }
+                w.angle += Mathf.PI * 2f * WindOrbitSpin * dt;
+                var c = w.owner.Feet;
+                w.pos = new Vector3(c.x + Mathf.Cos(w.angle) * WindOrbitRadius, Mathf.Max(0.8f, w.owner.Chest.y - 0.2f), c.z + Mathf.Sin(w.angle) * WindOrbitRadius);
+                foreach (var v in FoesOf(w.owner))
+                {
+                    if (!v.Alive || FlatDistance(w.pos, v.Feet) > WindOrbitTouch + v.bodyRadius) continue;
+                    if (w.lastHit.TryGetValue(v, out var lt) && now - lt < WindOrbitHitGap) continue;
+                    w.lastHit[v] = now;
+                    HitFoe(w.owner, v, w.skill, w.dmg);
+                }
+            }
+        }
+
         /// <summary>奧術爆裂的半徑、奧術連射兩發的間隔（秒）</summary>
         public const float ArcaneBurstRadius = 1.5f, ArcaneTwinGap = 0.18f;
         static SkillDef BurstSkill => Skills.All["arcaneburst"];
@@ -3123,12 +3174,13 @@ namespace SpellDuel
         void PostHit(Fighter o, Fighter t, SkillDef s, float dmg)
         {
             if (s == null) return;
-            // 法師「奧術爆裂」：奧術飛彈命中爆炸，周圍的其他敵人受到一部分傷害
-            if (s.id == "na_mage" && o.arcaneBurst > 0f && t != null && dmg > 0f)
+            // 法師「奧術爆裂」「火球爆裂」：奧術飛彈／火球命中爆炸，周圍的其他敵人受到一部分傷害
+            float burstK = s.id == "na_mage" ? o.arcaneBurst : s.id == "fire" ? o.fireBurst : 0f;
+            if (burstK > 0f && t != null && dmg > 0f)
             {
-                int bd = Mathf.Max(1, Mathf.RoundToInt(dmg * o.arcaneBurst));
+                int bd = Mathf.Max(1, Mathf.RoundToInt(dmg * burstK));
                 var c = t.Feet; var hitT = t;
-                Emit("aoe", c, s.color, "arcaneburst");
+                Emit("aoe", c, s.color, s.id == "fire" ? "fireburst" : "arcaneburst");
                 foreach (var v in FoesOf(o)) if (v != hitT && v.Alive && FlatDistance(v.Feet, c) <= ArcaneBurstRadius + v.bodyRadius) HitFoe(o, v, BurstSkill, bd);
             }
             bool basicHit = s.cls == "basic";

@@ -64,7 +64,7 @@ namespace SpellDuel
     {
         Lifesteal, Crit, Dodge, MpOnHit, Regen, Burn, Poison, LastStand, Freeze, Evade, FastCast, Overcharge, NaturalRegen, QuickCd, Atk, Armor, Hp,
         // 流派（技能樹 v2）
-        SpellEcho, BasicMp, Overload, LowMp, Melt, IceFreeze, ArcaneBurst, ArcaneTwin,   // 法師
+        SpellEcho, BasicMp, Overload, LowMp, Melt, IceFreeze, ArcaneBurst, ArcaneTwin, FireBurst, IcePierce, WindOrbit, WindOrbitTime,   // 法師
         LongShot, SteadyAim, TrapCrit, ArrowBleed, ArrowPoison, ArrowSilence,   // 獵人
         ComboStrike, BasicLeech, WaveFlow, Riposte, OrbSlice,          // 劍士（OrbSlice＝斬擊能斬開法球）
         Venom, Assassinate, Vanish, KnifeCdr,                          // 刺客
@@ -209,15 +209,21 @@ namespace SpellDuel
                     FPas("mg_over", "過載", PassiveKind.Overload, 0.8f, 5, 3, 2, "mg_fire"),
                     FPas("mg_low", "孤注一擲", PassiveKind.LowMp, 0.1f, 5, 3, 3, "mg_over"),
                     FLearn("mg_med", "meditate", 3, 4, "mg_low"),
+                    FMod("mg_fmulti", "多重火球", "fire", ModField.Multi, 1f, 2, 4, 1, "mg_fire"),
+                    FPas("mg_fburst", "火球爆裂", PassiveKind.FireBurst, 0.2f, 5, 4, 2, "mg_fire"),
                     FLearn("mg_meteor", "meteor", 4, 3, "mg_over"),
                     FMod("mg_meteor2", "隕石強化", "meteor", ModField.Damage, 0.12f, 5, 4, 4, "mg_meteor"),
+                    FMod("mg_mrain", "隕石雨", "meteor", ModField.Multi, 1f, 3, 4, 5, "mg_meteor2"),
                     // 元素反應
                     FMod("mg_ice", "冰槍強化", "ice", ModField.Damage, 0.14f, 5, 5, 1, "mg_root"),
                     FPas("mg_frost", "寒冰", PassiveKind.IceFreeze, 0.15f, 5, 5, 2, "mg_ice"),
+                    FPas("mg_ipierce", "冰槍穿透", PassiveKind.IcePierce, 1f, 3, 6, 1, "mg_ice"),
                     FPas("mg_melt", "融化", PassiveKind.Melt, 0.4f, 5, 5, 3, "mg_frost"),
                     FPas("mg_burn", "元素灼燒", PassiveKind.Burn, 0.05f, 5, 5, 4, "mg_melt"),
                     FMod("mg_wind", "風刃強化", "wind", ModField.Damage, 0.1f, 5, 6, 2, "mg_ice"),
                     FLearn("mg_dispel", "dispel", 6, 3, "mg_wind"),
+                    FPas("mg_worbit", "風刃迴旋", PassiveKind.WindOrbit, 1f, 1, 5, 5, "mg_wind"),
+                    FPas("mg_wtime", "迴旋延長", PassiveKind.WindOrbitTime, 1f, 5, 6, 5, "mg_worbit"),
                 };
                 case "archer": return new List<TreeNode>
                 {
@@ -582,6 +588,10 @@ namespace SpellDuel
                         PassiveKind.Atk => $"攻擊傷害 +{v * 100:0}%",
                         PassiveKind.Armor => $"受到的傷害 -{v * 100:0}%",
                         PassiveKind.Hp => $"HP 上限 +{v:0}",
+                        PassiveKind.FireBurst => $"火球命中時爆炸：周圍 {Battle.ArcaneBurstRadius:0.#}m 的其他敵人受到 {v * 100:0}% 的傷害",
+                        PassiveKind.IcePierce => $"冰槍可以穿透 {v:0} 個敵人（繼續往後飛）",
+                        PassiveKind.WindOrbit => $"放出風刃時，另一把風刃在身邊轉圈 {Battle.WindOrbitBase:0} 秒（半徑 {Battle.WindOrbitRadius:0.#}m），碰到的敵人受傷（每隻 {Battle.WindOrbitHitGap:0.#} 秒最多一次、風刃傷害的 {Battle.WindOrbitDmg * 100:0}%）",
+                        PassiveKind.WindOrbitTime => $"風刃迴旋的時間 +{v:0} 秒",
                         PassiveKind.ArcaneBurst => $"奧術飛彈命中時爆炸：周圍 {Battle.ArcaneBurstRadius:0.#}m 的其他敵人受到 {v * 100:0}% 的傷害",
                         PassiveKind.ArcaneTwin => $"奧術飛彈 {v * 100:0}% 機率連射兩發（第二發不用再集氣）",
                         PassiveKind.SpellEcho => $"奧術飛彈命中時 {v * 100:0}% 機率追加一發小火球或小冰錐（小冰錐冰凍 0.8 秒）",
@@ -1238,6 +1248,7 @@ namespace SpellDuel
             f.arcaneBurst = Passive(PassiveKind.ArcaneBurst); f.arcaneTwin = Passive(PassiveKind.ArcaneTwin);
             f.spellEcho = Passive(PassiveKind.SpellEcho); f.basicMp = Passive(PassiveKind.BasicMp); f.lowMpBonus = Passive(PassiveKind.LowMp);
             f.melt = Passive(PassiveKind.Melt); f.iceFreeze = Passive(PassiveKind.IceFreeze);
+            f.fireBurst = Passive(PassiveKind.FireBurst); f.icePierce = Passive(PassiveKind.IcePierce); f.windOrbit = Passive(PassiveKind.WindOrbit); f.windOrbitTime = Passive(PassiveKind.WindOrbitTime);
             f.longShot = Passive(PassiveKind.LongShot); f.steadyAim = Passive(PassiveKind.SteadyAim); f.trapCrit = Passive(PassiveKind.TrapCrit);
             f.arrowBleed = Passive(PassiveKind.ArrowBleed); f.arrowPoison = Passive(PassiveKind.ArrowPoison); f.arrowSilence = Passive(PassiveKind.ArrowSilence);
             f.comboStrike = Passive(PassiveKind.ComboStrike); f.basicLeech = Passive(PassiveKind.BasicLeech); f.waveFlow = Passive(PassiveKind.WaveFlow); f.riposte = Passive(PassiveKind.Riposte); f.orbSlice = Passive(PassiveKind.OrbSlice);

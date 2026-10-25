@@ -89,8 +89,28 @@ namespace SpellDuel
         readonly Dictionary<Battle.Shockwave, LineRenderer> quakeGo = new Dictionary<Battle.Shockwave, LineRenderer>();
         const int QuakeSegs = 64;
 
+        // ---------------------------------------------------------------- 法師「風刃迴旋」：身邊轉圈的風刃
+        readonly Dictionary<Battle.WindOrbit, GameObject> orbitGo = new Dictionary<Battle.WindOrbit, GameObject>();
+        void UpdateWindOrbitVisuals()
+        {
+            var live = battle != null ? new HashSet<Battle.WindOrbit>(battle.windOrbits) : new HashSet<Battle.WindOrbit>();
+            if (battle != null)
+                foreach (var w in battle.windOrbits)
+                {
+                    if (!orbitGo.TryGetValue(w, out var go) || !go) { go = SpellFx.CreateProjectileVisual(w.skill, "mage"); orbitGo[w] = go; }
+                    if (!go) continue;
+                    go.transform.position = WorldFrame.FromWorld(w.pos);
+                    var tan = new Vector3(-Mathf.Sin(w.angle), 0f, Mathf.Cos(w.angle));   // 轉圈的切線方向（風刃朝前進方向）
+                    var d = WorldFrame.DirFromWorld(tan);
+                    if (d.sqrMagnitude > 1e-6f) go.transform.rotation = Quaternion.LookRotation(d, Vector3.up);
+                }
+            foreach (var kv in new List<KeyValuePair<Battle.WindOrbit, GameObject>>(orbitGo))
+                if (!live.Contains(kv.Key)) { if (kv.Value) Destroy(kv.Value); orbitGo.Remove(kv.Key); }
+        }
+
         void UpdateQuakeVisuals()
         {
+            UpdateWindOrbitVisuals();
             if (battle == null) return;
             var live = new HashSet<Battle.Shockwave>(battle.shockwaves);
             foreach (var w in battle.shockwaves)
@@ -326,6 +346,8 @@ namespace SpellDuel
         void ClearArena()
         {
             foreach (var lr in quakeGo.Values) if (lr) Destroy(lr.gameObject);
+            foreach (var og in orbitGo.Values) if (og) Destroy(og);
+            orbitGo.Clear();
             quakeGo.Clear();
             foreach (var k in pickups) if (k.go) Destroy(k.go);
             pickups.Clear();
