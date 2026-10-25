@@ -1,0 +1,4 @@
+2026-10-25T17:51:31.0044206Z [SpellDuel] Elite combat audit passed: 50 host/client skill paths, cooldowns, jump/crouch/range and soul kill keys
+2026-10-25T17:51:31.2035232Z Dungeon spawn audit passed: 180 theme/wave/party cases, re-entry, RNG/player independence, boss and non-dungeon isolation.
+2026-10-25T17:51:31.6085975Z [SpellDuel] Elite audit: 25 rigs, 50 skills, host/client hit and crouch/range checks, souls, spawn exclusion passed
+2026-10-25T17:51:42.5253542Z [SpellDuel] World boss art audit: 3 bosses, 9 phases, 18 warnings/strikes, breakable parts and scale previews passed

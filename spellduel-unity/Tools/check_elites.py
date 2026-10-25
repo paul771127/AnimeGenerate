@@ -7,7 +7,8 @@ DOC=Path(__file__).resolve().parents[1]/'Docs/elite_preview'
 def colored_pixels(path,chapter):
     # Sky/floor and white placeholder models fail these theme-specific color checks.
     image=Image.open(path).convert('RGB');w,h=image.size
-    pixels=image.crop((w//4,h//6,w*3//4,h*5//6)).getdata()
+    raw=image.crop((w//4,h//6,w*3//4,h*5//6)).tobytes()
+    pixels=zip(raw[0::3],raw[1::3],raw[2::3])
     if chapter==1:return sum(g>r*1.2 and g>b*1.2 for r,g,b in pixels)
     if chapter==2:return sum(b>r*1.25 and g>r*1.25 for r,g,b in pixels)
     return sum(r>g*1.2 and r>b*1.4 for r,g,b in pixels)

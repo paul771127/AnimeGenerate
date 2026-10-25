@@ -1,0 +1,256 @@
+{
+    "unity": "2022.3.62f2",
+    "classes": [
+        {
+            "kind": 23,
+            "triangles": 720,
+            "baseline": 1668,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 24,
+            "triangles": 738,
+            "baseline": 2304,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 25,
+            "triangles": 720,
+            "baseline": 1476,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 26,
+            "triangles": 792,
+            "baseline": 2292,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 27,
+            "triangles": 666,
+            "baseline": 1542,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 28,
+            "triangles": 720,
+            "baseline": 758,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 29,
+            "triangles": 738,
+            "baseline": 3178,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 30,
+            "triangles": 720,
+            "baseline": 5056,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 31,
+            "triangles": 792,
+            "baseline": 2262,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 32,
+            "triangles": 666,
+            "baseline": 3296,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 33,
+            "triangles": 720,
+            "baseline": 2854,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 34,
+            "triangles": 738,
+            "baseline": 4442,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 35,
+            "triangles": 720,
+            "baseline": 2732,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 36,
+            "triangles": 792,
+            "baseline": 852,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 37,
+            "triangles": 666,
+            "baseline": 2154,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 38,
+            "triangles": 756,
+            "baseline": 1668,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 39,
+            "triangles": 774,
+            "baseline": 2304,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 40,
+            "triangles": 756,
+            "baseline": 1476,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 41,
+            "triangles": 828,
+            "baseline": 2292,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 42,
+            "triangles": 702,
+            "baseline": 1542,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 43,
+            "triangles": 720,
+            "baseline": 1668,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 44,
+            "triangles": 738,
+            "baseline": 2292,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 45,
+            "triangles": 720,
+            "baseline": 1476,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 46,
+            "triangles": 792,
+            "baseline": 758,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        },
+        {
+            "kind": 47,
+            "triangles": 666,
+            "baseline": 1542,
+            "soul": true,
+            "hostWarning": true,
+            "remoteWarning": true,
+            "remoteStrike": true,
+            "vertexColors": true
+        }
+    ],
+    "testedSkills": 50
+}

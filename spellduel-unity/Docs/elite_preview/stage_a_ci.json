@@ -1,0 +1,65 @@
+{
+  "head": "39e1fd775a6c886c4ad19bd2662c139ddfb2a6ed",
+  "workflows": {
+    "spellduel-unity.yml": {
+      "run": 40214774706,
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40214774706",
+      "status": "in_progress",
+      "conclusion": null,
+      "jobs": [
+        {
+          "id": 121233418054,
+          "name": "check-license",
+          "status": "completed",
+          "conclusion": "success",
+          "current": []
+        },
+        {
+          "id": 121233445149,
+          "name": "ios-export",
+          "status": "completed",
+          "conclusion": "success",
+          "current": []
+        },
+        {
+          "id": 121233445156,
+          "name": "android",
+          "status": "completed",
+          "conclusion": "success",
+          "current": []
+        },
+        {
+          "id": 121236673209,
+          "name": "publish-apk",
+          "status": "completed",
+          "conclusion": "success",
+          "current": []
+        },
+        {
+          "id": 121236693244,
+          "name": "ios-ipa",
+          "status": "in_progress",
+          "conclusion": null,
+          "current": [
+            "編譯未簽署 IPA"
+          ]
+        }
+      ]
+    },
+    "spellduel-snapshots.yml": {
+      "run": 40214774756,
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40214774756",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 121233417901,
+          "name": "snapshots",
+          "status": "completed",
+          "conclusion": "failure",
+          "current": []
+        }
+      ]
+    }
+  }
+}

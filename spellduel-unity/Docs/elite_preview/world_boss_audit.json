@@ -1,0 +1,32 @@
+{
+    "unity": "2022.3.62f2",
+    "bosses": [
+        {
+            "id": "wb_furnace",
+            "triangles": 576,
+            "renderers": 19,
+            "phases": 3,
+            "skills": 6,
+            "brokenAppearance": true,
+            "vertexColors": true
+        },
+        {
+            "id": "wb_canopy",
+            "triangles": 1080,
+            "renderers": 22,
+            "phases": 3,
+            "skills": 6,
+            "brokenAppearance": true,
+            "vertexColors": true
+        },
+        {
+            "id": "wb_leviathan",
+            "triangles": 468,
+            "renderers": 18,
+            "phases": 3,
+            "skills": 6,
+            "brokenAppearance": true,
+            "vertexColors": true
+        }
+    ]
+}
