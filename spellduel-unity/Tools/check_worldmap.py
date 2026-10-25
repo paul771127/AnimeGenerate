@@ -23,6 +23,7 @@ def main():
   if not partial or r in spec['availableRegions']:image(ART/f'region_{r}.jpg',(2160,1920))
  for key in ['locked','open','clear','boss','boss_clear','town','tower']:image(ART/'ui'/f'node_{key}.png',(128,128) if key in ['locked','open','clear'] else (160,160),True)
  image(ART/'ui/label_plate.png',(512,128),True)
+ t=(ART/'ui/label_plate.png.meta').read_text();assert 'textureType: 8' in t and 'spriteBorder: {x: 64, y: 32, z: 64, w: 32}' in t,'label 9slice'
  for i in range(3):image(ART/'ui'/f'fog_{i}.png',(1024,1024),True)
  for i in range(4):image(ART/'ui'/f'stars_{i}.png',(96,32),True)
  for c in CLASSES:
@@ -62,5 +63,14 @@ def main():
  for m in ART.rglob('*.meta'):
   match=re.search(r'^guid: ([0-9a-f]{32})$',m.read_text(),re.M);assert match,m;guids.append(match[1])
  assert len(guids)==len(set(guids)),'duplicate GUID'
+ if not partial:
+  for name in ['01_start','02_tower_branch','03_select_1_3']:
+   path=DOC/'mockups'/(name+'.jpg');assert path.exists() and Image.open(path).size==(1080,1920),path
+   layout=read(DOC/'mockups'/(name+'.json'));assert not any(nodes[k]['reserved'] for k in layout['visibleNodes']),name
+   texts={e.get('text') for e in layout['elements']};assert {'🗺 大地圖','📜 角色','🏘 回城鎮'}<=texts,name
+   if name=='03_select_1_3':assert {'⚔ 出發','📖 看故事'}<=texts,name
+  assert Image.open(DOC/'full_preview.jpg').size==(5400,960)
+  seams=read(DOC/'seams/validation.json');assert len(seams)==4 and all(s['afterMeanEdgeDelta']<s['beforeMeanEdgeDelta'] for s in seams),'seam continuity'
+  for c in CLASSES:assert (DOC/'heroes'/f'{c}_frames.jpg').exists() and (DOC/'heroes'/f'{c}_walk.gif').exists(),c
  write(DOC/'validation.json',{'complete':not pending,'imagesChecked':len(checked),'checked':checked,'nodes':len(nodes),'paths':len(paths),'activeReachableNodes':sorted(seen),'reservedNodes':sorted(k for k,n in nodes.items() if n['reserved']),'pending':pending});print(len(checked),'images;',len(nodes),'nodes;',len(paths),'paths;',len(pending),'pending')
 if __name__=='__main__':main()

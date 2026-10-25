@@ -79,8 +79,8 @@
       1086,
       1448
     ],
-    "bytes": 52255,
-    "sha256": "eca1715295840b636b9c356270bd348bc16d1eb1a326f88adb62d5c8f00170c5"
+    "bytes": 41114,
+    "sha256": "f042ff2cbecf5ed9358161344232028d338caaf8f43d33173d3e3a28b0fcef06"
   },
   "Assets/SpellDuel/Resources/WorldMap/hero_novice_idle_1.png": {
     "size": [
@@ -92,8 +92,8 @@
       1086,
       1448
     ],
-    "bytes": 54023,
-    "sha256": "1b3eca7f02e0bd35d14521460fc477d5dc0f2f7c5b7a5ce8ad242075f2dc0c33"
+    "bytes": 42425,
+    "sha256": "48af7159f9431e60327b161155a71896bc24b7b684c5e65fa3859aa8d067ef32"
   },
   "Assets/SpellDuel/Resources/WorldMap/hero_novice_side_0.png": {
     "size": [
@@ -105,8 +105,8 @@
       1086,
       1448
     ],
-    "bytes": 54529,
-    "sha256": "41edf8086d29e03654a8b26086374d31be4f321ff0d3df3ffa5a5215ba1dd02d"
+    "bytes": 42801,
+    "sha256": "14d63ee174e692e64e0664ad08f099c41d8e0b697538097d536b173e9e6e019f"
   },
   "Assets/SpellDuel/Resources/WorldMap/hero_novice_side_1.png": {
     "size": [
@@ -118,8 +118,8 @@
       1086,
       1448
     ],
-    "bytes": 54346,
-    "sha256": "1603c91a8e68ef31fd0518fb501a862916ca977834ebc25f87c0ea6b2fbe96bd"
+    "bytes": 42302,
+    "sha256": "6fe3c56012e3af9010b83ab838d74c043e04e129caeae6666a5e0be3a1ee82e6"
   },
   "Assets/SpellDuel/Resources/WorldMap/hero_novice_side_2.png": {
     "size": [
@@ -131,8 +131,8 @@
       1086,
       1448
     ],
-    "bytes": 53486,
-    "sha256": "6d5957dac953afc58dcfe57f258bfc0f1a6249863bf69564450dfb40997907d4"
+    "bytes": 42041,
+    "sha256": "0fbbde8cff6c7f2b2c7f4c0562beea2dd81d740df3e014ee2931be88de1ad722"
   },
   "Assets/SpellDuel/Resources/WorldMap/hero_novice_side_3.png": {
     "size": [
@@ -144,8 +144,8 @@
       1086,
       1448
     ],
-    "bytes": 54356,
-    "sha256": "b49746760beee057b09b1909516f6da6b992f5b1025dcee07ffb6c02f75ba3d3"
+    "bytes": 42378,
+    "sha256": "0df63f902d530c433663cd41595460e26ea55148e7c91ac67cc8aa76273fd504"
   },
   "Assets/SpellDuel/Resources/WorldMap/ui/fog_0.png": {
     "size": [
@@ -341,5 +341,395 @@
     ],
     "bytes": 5884,
     "sha256": "91ab44f5b99522cbcbbee962d261e3a41e74dee7d1798be09a63e83f4f0ffe78"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_swordsman_idle_0.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1449
+    ],
+    "bytes": 49131,
+    "sha256": "225ca33840c9c17796eac9b68a51664820e4b1b00fcb8e819fa91b3e63d3191c"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_swordsman_idle_1.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 50069,
+    "sha256": "1378a93d32ce8a3935771a25733431fed4be5ee3128f5ee37c87f4f3ec3e06dd"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_swordsman_side_0.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 50529,
+    "sha256": "ebf55a8642fddbabe858170e865885a156cb7fbdb17d1247fb72ad17162de7fc"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_swordsman_side_1.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 49817,
+    "sha256": "96ec9910e59857861d61689c0043d6bc60491bbbba8f43b8663c8a026cc5c842"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_swordsman_side_2.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 49603,
+    "sha256": "337b5d024030365b27d2b7afd87ec48deab44f0a18436996270b5d505d27882b"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_swordsman_side_3.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 50513,
+    "sha256": "f13f49ba6556183ab8351c1f7ddfb5926eb0208eedabc72d6e8fd080e176ac76"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_archer_idle_0.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 52907,
+    "sha256": "06cc600cbedb9bf782e3da84c3fd0c0ab16ccb919e4d61a4606152f89e0bba5f"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_archer_idle_1.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 53208,
+    "sha256": "c83d4d2bed3652be11f466c787670f7171c7a02455d93b817e0509baaeb5ee4a"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_archer_side_0.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 52904,
+    "sha256": "b1a773530715573047f9523f913fcbe1c2278f41e564d8dfda268fad80f27700"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_archer_side_1.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 51984,
+    "sha256": "59d1e20815ef10c0a9bee700845242fc80d7cdd2acdd3da7d432dbddc22a3bf6"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_archer_side_2.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 51080,
+    "sha256": "3e8ba7c13d8f6a264511bbbbce0eccea8045b023f513ebd905d6deea7eee60f6"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_archer_side_3.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 51766,
+    "sha256": "28f1e48e7da9b820408f2a5b03896a898990be8a57be46a13c5db3003e4998e0"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_mage_idle_0.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 52187,
+    "sha256": "9ad1721015a6dcbcf2824b552dd6cb41ae3f0417d953237fde12ac523e4d728a"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_mage_idle_1.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 55585,
+    "sha256": "989f9fa26b8126b631036c155cbe7715b337f89db36f1b6ee0b4ddfa40ce0226"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_mage_side_0.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 55130,
+    "sha256": "34bfdfc34a717aa3524376232039d3e5110573cc7684f043ff7808483dc0e5c9"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_mage_side_1.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 54832,
+    "sha256": "765eed45459a5d542001671028ee3a39d9215ec07e44eceaab72caab8ea85d85"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_mage_side_2.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 53545,
+    "sha256": "ad3f5897353cac9e0d47eaf318544ce4da94594a7ca8b391700133c163bc7b4d"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_mage_side_3.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 55249,
+    "sha256": "d7a25f7245d7501a2c20400baf1ecbbace4b6c1530ff3a2d654f45381f656eb1"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_assassin_idle_0.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 50762,
+    "sha256": "cb0418335ad0bf3923ed5dc46063350f8351a523d1644e520a389db15aa67454"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_assassin_idle_1.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 53012,
+    "sha256": "3bc8835b44fcbdb0e4e75dd92926ccbd7c773ea737fd58d81c29120a0bc52cc8"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_assassin_side_0.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 51755,
+    "sha256": "cd7f470ab54416dfdbdaae38cb5c4abd158e3a0b9cbfd645d239040f56a78478"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_assassin_side_1.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 52480,
+    "sha256": "c65aba60a7305058521fa907859890e4e5611b352648f281982d3201e0f97039"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_assassin_side_2.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 49227,
+    "sha256": "71d03415a34b03d28982da2a25d72f2eea89b56e2ad18c2830f7a36d82cde815"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_assassin_side_3.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 52637,
+    "sha256": "02b499dcb82dd188414635e0e1c938ddc81e5c83bc3e869a28cf869f853823d1"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_priest_idle_0.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 55992,
+    "sha256": "7e8f20d6315fedb2615b1ca6b179245d4dd7a8f0fe28144684a86ed4f6601d78"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_priest_idle_1.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 56357,
+    "sha256": "008c361282ec50e12d1331ac5a646e67b121d7016417a1033fdcb62a933a219a"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_priest_side_0.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 58703,
+    "sha256": "a66799845776ccc804b966d591f5cddb858b566b6b210618b858feeae03118ad"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_priest_side_1.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 57729,
+    "sha256": "a33c8020e11ba879bc53404b082f8a387e2d584102b5a6dedc38fa8b69c1eba6"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_priest_side_2.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 53920,
+    "sha256": "30db1d955f81edf4236a24e76df8dbedb9b295dc8ec50a03a614aac99a989b65"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_priest_side_3.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 57269,
+    "sha256": "9d2bd5e51418e634bd3f04284ec0ef28a6abd9875847aab76117329adc9a0eca"
   }
 }

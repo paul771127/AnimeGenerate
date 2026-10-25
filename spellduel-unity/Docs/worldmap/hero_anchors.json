@@ -1,0 +1,50 @@
+{
+  "novice": {
+    "height": 200,
+    "anchor": [
+      96,
+      252
+    ],
+    "method": "bottom 15% alpha centroid; common stature across six frames; retain whole weapon and cape"
+  },
+  "swordsman": {
+    "height": 200,
+    "anchor": [
+      96,
+      252
+    ],
+    "method": "bottom 15% alpha centroid; common stature across six frames; retain whole weapon and cape"
+  },
+  "archer": {
+    "height": 200,
+    "anchor": [
+      96,
+      252
+    ],
+    "method": "bottom 15% alpha centroid; common stature across six frames; retain whole weapon and cape"
+  },
+  "mage": {
+    "height": 200,
+    "anchor": [
+      96,
+      252
+    ],
+    "method": "bottom 15% alpha centroid; common stature across six frames; retain whole weapon and cape"
+  },
+  "assassin": {
+    "height": 200,
+    "anchor": [
+      96,
+      252
+    ],
+    "method": "bottom 15% alpha centroid; common stature across six frames; retain whole weapon and cape"
+  },
+  "priest": {
+    "height": 200,
+    "anchor": [
+      96,
+      252
+    ],
+    "method": "bottom 15% alpha centroid; common stature across six frames; retain whole weapon and cape"
+  }
+}
