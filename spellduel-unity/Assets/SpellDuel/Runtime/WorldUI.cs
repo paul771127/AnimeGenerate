@@ -667,6 +667,7 @@ namespace SpellDuel
         void DrawShop(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
             float y = r.y + gap;
+            if (DrawShop2D(prof, fs, fsS, fsL)) return;   // 2D 道具店（WorldUI.Shop2D.cs）
             Header(r, $"🧪 道具店（{Towns[town].name}）", new Color(0.5f, 0.85f, 1f), prof, fs, fsS, fsL, gap, ref y);
             float tw = (r.width - gap * 3) / 2f;
             if (UiKit.Button(new Rect(r.x + gap, y, tw, fs * 1.8f), "買道具", fs, shopTab == 0)) { shopTab = 0; selItem = null; }
@@ -842,6 +843,7 @@ namespace SpellDuel
         void DrawGuild(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
             float y = r.y + gap;
+            if (DrawGuild2D(prof, fs, fsS, fsL)) return;   // 2D 職業工會：初心者選職業（WorldUI.Shop2D.cs）
             Header(r, "🏛 職業工會", new Color(0.85f, 0.6f, 1f), prof, fs, fsS, fsL, gap, ref y);
             if (prof.cls == Skills.Novice) { DrawJobChange(r, prof, fs, fsS, gap, y); return; }   // 初心者：選職業（10 級）
             string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
