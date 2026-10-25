@@ -227,6 +227,7 @@ namespace SpellDuel
                     UiKit.NextTag("stage:" + st.id);
                     if (UiKit.Button(nr, "", fsS, sel == st, col, ok)) sel = st;
                     UiKit.Text(nr, (clear ? "✔" : ok ? "▶" : "🔒") + "\n" + st.id, fsS, ok ? Color.white : Color.gray, TextAnchor.MiddleCenter, true);
+                    if (ok) UiKit.Text(new Rect(nr.x - nd * 0.2f, nr.yMax - fsS * 0.2f, nd * 1.4f, fsS * 1.1f), Story.StarText(st.id), Mathf.RoundToInt(fsS * 0.8f), new Color(1f, 0.85f, 0.3f), TextAnchor.MiddleCenter, true);   // 簡單／普通／困難各通關一次一顆星
                 }
             }
             // 無盡塔（地圖上的一個地點）
@@ -552,7 +553,7 @@ namespace SpellDuel
                 var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
                 UiKit.Card(cr, ok ? 0.6f : 0.35f, clear ? new Color(1f, 0.85f, 0.3f) : ok ? RegionColors[th] : new Color(0.4f, 0.4f, 0.45f), 0.8f);
                 string waves = st.HasBoss && st.fromWave >= 10 ? "Boss 戰" : $"{st.toWave - st.fromWave + 1} 波" + (st.HasBoss ? "＋Boss" : "");
-                UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.68f, cr.height), $"{(clear ? "✔" : ok ? "▶" : "🔒")} {st.id}　{st.title}\n{waves}・推薦 Lv{Mathf.Max(1, st.FirstWave - 1) + Boost}+・經驗 {Mathf.RoundToInt(st.xp * SoloBattle.RewardMulFor(Difficulty))}・💰 {Mathf.RoundToInt(Economy.StageGold(st) * SoloBattle.RewardMulFor(Difficulty))}",
+                UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.68f, cr.height), $"{(clear ? "✔" : ok ? "▶" : "🔒")} {st.id}　{st.title}　{(ok ? Story.StarText(st.id) : "")}\n{waves}・推薦 Lv{Mathf.Max(1, st.FirstWave - 1) + Boost}+・經驗 {Mathf.RoundToInt(st.xp * SoloBattle.RewardMulFor(Difficulty))}・💰 {Mathf.RoundToInt(Economy.StageGold(st) * SoloBattle.RewardMulFor(Difficulty))}",
                     fsS, ok ? Color.white : Color.gray, TextAnchor.MiddleLeft, true);
                 bool story = Story.HasStory(st) && Story.IsSeen(st.id);
                 float bwid = cr.width * (story ? 0.2f : 0.3f);

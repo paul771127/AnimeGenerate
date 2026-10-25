@@ -236,6 +236,10 @@ namespace SpellDuel
             foreach (var s in AllStages()) { n++; if (!IsClearedAt(s.id, d - 1)) return false; }
             return n > 0;   // 關卡還沒讀進來：先當作沒開
         }
+        /// <summary>這一關的星星：簡單、普通、困難各通關一次得一顆（0～3）</summary>
+        public static int Stars(string id) { int n = 0; for (int d = 0; d < 3; d++) if (IsClearedAt(id, d)) n++; return n; }
+        /// <summary>星星文字：★★☆</summary>
+        public static string StarText(string id) { int n = Stars(id); return new string('★', n) + new string('☆', 3 - n); }
         /// <summary>現在能選的最高難度</summary>
         public static int MaxOpenDifficulty => DifficultyOpen(2) ? 2 : DifficultyOpen(1) ? 1 : 0;
 
