@@ -2376,11 +2376,11 @@ namespace SpellDuel
             string by = from != null ? $"{from}的" : "";
             switch (s.self)
             {
-                case SelfKind.Heal: if (from == null) player.healDone += Mathf.Min(s.heal, t.maxHp - t.hp); t.hp = Mathf.Min(t.maxHp, t.hp + s.heal); Emit("heal", t.Chest, s.color, $"{by}{s.name} +{s.heal}"); return;
+                case SelfKind.Heal: if (!t.Alive) return; if (from == null) player.healDone += Mathf.Min(s.heal, t.maxHp - t.hp); t.hp = Mathf.Min(t.maxHp, t.hp + s.heal); Emit("heal", t.Chest, s.color, $"{by}{s.name} +{s.heal}"); return;
                 case SelfKind.Armor: t.armorUntil = now + s.buffDur; t.armorReduce = s.buffReduce; Emit("buff", t.Chest, s.color, by + s.name); return;
                 case SelfKind.Cleanse:
                     t.dots.Clear(); t.snaredUntil = 0f; t.blindUntil = 0f; t.silencedUntil = 0f;
-                    if (s.heal > 0) t.hp = Mathf.Min(t.maxHp, t.hp + s.heal);
+                    if (s.heal > 0 && t.Alive) t.hp = Mathf.Min(t.maxHp, t.hp + s.heal);
                     Emit("heal", t.Chest, s.color, by + (s.heal > 0 ? $"淨化 +{s.heal}" : "淨化"));
                     return;
                 case SelfKind.Prayer:
@@ -2393,11 +2393,12 @@ namespace SpellDuel
                     return;
                 }
                 case SelfKind.Revive:
-                    if (!t.Alive) { t.hp = Mathf.Round(t.maxHp * s.buffAmount / 100f); Emit("heal", t.Chest, s.color, $"{by}{s.name}：復活！"); }
+                    if (!t.Alive) { if (t == player) playerDown = false; t.hp = Mathf.Round(t.maxHp * s.buffAmount / 100f); Emit("heal", t.Chest, s.color, $"{by}{s.name}：復活！"); }
                     else { t.blessUntil = now + s.buffDur; Emit("buff", t.Chest, s.color, $"{by}復活祝福（{s.buffDur:0} 秒）"); }
                     return;
                 case SelfKind.HealPct:
                 {
+                    if (!t.Alive) return;   // 倒下的人只有復活術能救起來
                     float amt = Mathf.Round(t.maxHp * s.buffAmount / 100f);
                     if (from == null) player.healDone += Mathf.Min(amt, t.maxHp - t.hp);
                     t.hp = Mathf.Min(t.maxHp, t.hp + amt);
@@ -2531,9 +2532,13 @@ namespace SpellDuel
             }
         }
 
+        /// <summary>合作：我倒下了（只有復活術、復活祝福能救起來；藥水、治療、每波回血都不算）</summary>
+        bool playerDown;
+
         public void Update(float dt)
         {
             now += dt;
+            if (allies.Count > 0) { if (!player.Alive) playerDown = true; else if (playerDown) player.hp = 0f; }
             if (shockwaves.Count > 0) UpdateShockwaves();
             UpdateTeamRegen(dt);
             if (windOrbits.Count > 0) UpdateWindOrbits(dt);
@@ -3466,7 +3471,7 @@ namespace SpellDuel
             if (f.undyingUntil > now && f.hp - dmg < 1f) { dmg = Mathf.Max(0f, f.hp - 1f); f.undyingUntil = 0f; f.invulnUntil = now + 3f; Emit("buff", f.Chest, new Color(0.8f, 0.1f, 0.1f), "不死之軀！無敵 3 秒"); }
             f.hp = Mathf.Max(0, f.hp - dmg);
             // 主教的復活祝福：倒下時以 30% HP 站起來
-            if (!f.Alive && f.blessUntil > now) { f.blessUntil = 0f; f.hp = Mathf.Round(f.maxHp * 0.3f); Emit("heal", f.Chest, new Color(1f, 0.95f, 0.6f), "復活祝福！"); }
+            if (!f.Alive && f.blessUntil > now) { if (f == player) playerDown = false; f.blessUntil = 0f; f.hp = Mathf.Round(f.maxHp * 0.3f); Emit("heal", f.Chest, new Color(1f, 0.95f, 0.6f), "復活祝福！"); }
             if (dmg > 0 && f.prepUntil > now) { f.prepUntil = 0f; Emit("fail", f.Chest, Color.gray, "刺殺準備被打斷！"); }
             if (dmg > 0 && kind != "dot" && kind != "burn" && f.armed != null && f.armed.releaseNear && !(NearestFoe(f, out var ad) != null && ad <= AmbushReach + 0.5f + f.reachBonus)) { f.cooldownUntil[f.armed.id] = now; Emit("fail", f.Chest, Color.gray, $"{f.armed.name}被打斷！要重新蓄力"); f.armed = null; }
             Emit(kind == "dot" || kind == "burn" ? kind : (f.isPlayer ? "hurt" : "hit"), at ?? f.Chest, Color.red, dmg > 0 ? $"-{dmg:0}" : "");

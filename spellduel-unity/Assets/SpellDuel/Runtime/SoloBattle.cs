@@ -120,8 +120,30 @@ namespace SpellDuel
             peerInfo.Remove(pid); NetPeers.Remove(pid);
             var a = battle?.AllyByPid(pid);
             if (a != null && a.Alive) { a.hp = 0f; Say($"⚠ {a.name} 斷線了", 3f); }
+            // 合作的隊友：房主（跑怪物的那一台）離開了 → 這場沒辦法繼續，直接結束（不然會卡在場上，小怪停在原地打不到）
             battle?.DropFriends(pid);   // 他的影分身、收服的魔物
+            if (pid == 0) HostLeft();
         }
+        /// <summary>合作的隊友：房主（跑怪物的那一台）離線了 → 這場沒辦法繼續：直接結算（不然會卡在場上，小怪停在原地打不到）</summary>
+        public bool HostLeft()
+        {
+            if (!coop || NetIsHost || battle == null || phase != Phase.Fighting || battle.Over) return false;
+            battle.FailStage("房主離線了");
+            foreach (var mf in battle.minions) mf.hp = 0f;
+            Say("⚠ 房主離線了，戰鬥結束", 4f);
+            return true;
+        }
+        float lastHostMsgAt; bool hostHeard;
+        /// <summary>
+        /// 每幀（隊友端）：這場已經收過房主的訊息，之後 12 秒都沒有任何訊息（關掉 App、網路斷了但連線還沒逾時）→ 當作離線。
+        /// 開打前、開場倒數、房主還在看開場影片（還沒送過訊息）都不算。
+        /// </summary>
+        void CheckHostAlive()
+        {
+            if (!coop || NetIsHost || !NetMode || battle == null || phase != Phase.Fighting || InIntro) { hostHeard = false; return; }
+            if (hostHeard && Time.time - lastHostMsgAt > HostSilentLimit) HostLeft();
+        }
+        public const float HostSilentLimit = 12f;
         float nextState;
         Transform remoteAnchor;           // 對手位置的空物件（光效跟著它）
         public bool NetIsHost;            // 這支手機是主機（合作模式由主機跑 Boss）
@@ -430,6 +452,7 @@ namespace SpellDuel
         void UsePotion(Economy.Consumable c)
         {
             if (Time.time < potionReadyAt) { Say($"藥水冷卻中（{potionReadyAt - Time.time:0.0} 秒）", 1f); return; }
+            if (Me != null && !Me.Alive) { Say("倒下了不能喝藥水（要靠隊友的復活術）", 1.5f); return; }
             Economy.AddItem(c.id, -1); SpendCarry(c.id);
             potionReadyAt = Time.time + Economy.PotionCooldown;
             if (c.hpFrac > 0f) Me.hp = Mathf.Min(Me.maxHp, Me.hp + Me.maxHp * c.hpFrac);
@@ -1466,6 +1489,12 @@ namespace SpellDuel
                         var mm = battle.MinionById(m.id); if (mm != null) battle.ApplyProcs(mm, m.e, mm.Chest);   // 隊友升級的附加效果
                     }
                     break;
+                case "bover":
+                    // 隊友端：房主那邊戰鬥結束了 → 我這邊也結束（通關／失敗跟房主一樣），場上的小怪全部清掉
+                    if (NetIsHost || battle == null || phase != Phase.Fighting) break;
+                    if (m.ok) battle.stageCleared = true; else battle.FailStage(m.e == 1 ? "任務失敗" : "全員倒下");
+                    foreach (var mf in battle.minions) mf.hp = 0f;
+                    break;
                 case "mins":
                     if (NetIsHost || m.ks == null || m.pts == null) break;
                     {
@@ -1784,6 +1813,7 @@ namespace SpellDuel
         public void OnNet(Msg m)
         {
             if (Watching) { OnNetWatch(m); return; }   // 觀戰端（SoloBattle.Watch.cs）
+            if (m.pid == 0) { lastHostMsgAt = Time.time; if (phase == Phase.Fighting && !InIntro) hostHeard = true; }   // 房主還在（CheckHostAlive）
             if (OnNetStoryCoop(m)) return;              // 故事合作：開打、每秒傷害、擲骰（SoloBattle.StoryCoop.cs）
             switch (m.t)
             {
@@ -2093,6 +2123,7 @@ namespace SpellDuel
             UpdateLock();
             UpdateReadyCheck();   // 戰鬥準備：站直 → 蹲下 → 站起來（SoloBattle.ReadyCheck.cs）
             UpdateStoryCoop();    // 故事合作：房主廣播模式、高度以房主為準、每秒傷害／治療、擲骰（SoloBattle.StoryCoop.cs）
+            CheckHostAlive();
             if (InIntro) { UpdateVisuals(); return; }   // 開場：先停幾秒（敵人不動、不能出手）
             if (scrollAsk && phase == Phase.Fighting && !NetMode) { UpdateVisuals(); return; }   // 回城捲軸的確認視窗：戰鬥暫停
             if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
@@ -2117,7 +2148,12 @@ namespace SpellDuel
                 if (battle.Over)
                 {
                     // 結束：停幾秒顯示「戰鬥結束」再結算（連線時照舊馬上結算，免得兩邊不同步）
-                    if (NetMode) { phase = Phase.Over; ShowResult(); }
+                    if (NetMode)
+                    {
+                        // 合作的主機：明確告訴隊友「打完了」（Boss 狀態每 0.1 秒才送一次，最後那一包常常來不及送，隊友會卡在場上、小怪停在原地）
+                        if (coop && NetIsHost) NetSend?.Invoke(new Msg { t = "bover", ok = battle.stageCleared, e = battle.stageFailed ? 1 : 0 });
+                        phase = Phase.Over; ShowResult();
+                    }
                     else if (outroUntil < 0f) { outroUntil = Time.time + OutroTime; outroWin = Me.Alive; Sfx.Play(outroWin ? "charged" : "fail", 0.8f); }
                     else if (Time.time >= outroUntil) { outroUntil = -1f; phase = Phase.Over; ShowResult(); }
                 }

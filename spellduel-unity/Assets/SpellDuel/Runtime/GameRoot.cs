@@ -924,8 +924,10 @@ namespace SpellDuel
                         else
                         {
                             Log("❌ 主機已斷線");
+                            // 合作戰鬥中：直接顯示戰鬥結算（不要突然跳走）；其他時候照舊離開
+                            bool result = solo.HostLeft();
                             solo.PeerIds.Clear();
-                            if (mode == Mode.Duo && solo.phase != SoloBattle.Phase.Hidden) solo.Hide();
+                            if (!result && mode == Mode.Duo && solo.phase != SoloBattle.Phase.Hidden) solo.Hide();
                         }
                         break;
                     case "ping":
