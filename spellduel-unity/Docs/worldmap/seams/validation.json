@@ -1,0 +1,16 @@
+[
+  {
+    "boundaryX": 2160,
+    "sourceSize": [
+      793,
+      1983
+    ],
+    "beforeMeanEdgeDelta": 71.48975694444445,
+    "afterMeanEdgeDelta": 15.860590277777778,
+    "editableBand": [
+      1968,
+      2352
+    ],
+    "method": "imagegen repair; fixed feather mask; all pixels outside band unchanged before JPG encoding"
+  }
+]

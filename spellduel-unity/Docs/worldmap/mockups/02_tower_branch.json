@@ -1,0 +1,114 @@
+{
+  "canvas": [
+    1080,
+    1920
+  ],
+  "origin": "top-left",
+  "viewportOffset": [
+    3240,
+    0
+  ],
+  "heroNode": "2-4",
+  "selectedNode": null,
+  "visibleNodes": [
+    "2-1",
+    "2-2",
+    "2-3",
+    "2-4",
+    "tower",
+    "town:1"
+  ],
+  "fogBeginsScreenX": 1040,
+  "elements": [
+    {
+      "id": "2-3",
+      "mapPosition": [
+        3480,
+        1025
+      ],
+      "labelRect": [
+        80,
+        637,
+        320,
+        96
+      ]
+    },
+    {
+      "id": "2-4",
+      "mapPosition": [
+        3840,
+        1010
+      ],
+      "labelRect": [
+        440,
+        542,
+        320,
+        96
+      ]
+    },
+    {
+      "id": "tower",
+      "mapPosition": [
+        3985,
+        1370
+      ],
+      "labelRect": [
+        710,
+        972,
+        320,
+        96
+      ]
+    },
+    {
+      "id": "title",
+      "rect": [
+        30,
+        35,
+        570,
+        100
+      ],
+      "text": "🗺 大地圖"
+    },
+    {
+      "id": "gold",
+      "rect": [
+        630,
+        35,
+        420,
+        100
+      ],
+      "text": "💰 {gold}"
+    },
+    {
+      "id": "difficulty",
+      "rect": [
+        30,
+        160,
+        1020,
+        85
+      ],
+      "text": "簡單　／　普通　／　困難"
+    },
+    {
+      "id": "character",
+      "rect": [
+        30,
+        1800,
+        490,
+        95
+      ],
+      "text": "📜 角色"
+    },
+    {
+      "id": "return",
+      "rect": [
+        560,
+        1800,
+        490,
+        95
+      ],
+      "text": "🏘 回城鎮"
+    }
+  ],
+  "note": "Art-only example. Keep existing unlock, currency, difficulty and travel behavior; no gameplay implementation."
+}

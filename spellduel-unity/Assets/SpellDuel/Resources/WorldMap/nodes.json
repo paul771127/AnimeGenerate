@@ -6,7 +6,8 @@
     "regionWidth": 2160
   },
   "availableRegions": [
-    1
+    1,
+    2
   ],
   "nodes": {
     "town:0": {
@@ -74,6 +75,83 @@
       "reserved": true,
       "visibleByDefault": false,
       "name": "預留第5關"
+    },
+    "town:1": {
+      "x": 2460,
+      "y": 990,
+      "label_x": 2460,
+      "label_y": 650,
+      "region": 2,
+      "type": "town",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "森之里"
+    },
+    "2-1": {
+      "x": 2810,
+      "y": 1015,
+      "label_x": 2810,
+      "label_y": 675,
+      "region": 2,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "葉燈照著來時路"
+    },
+    "2-2": {
+      "x": 3135,
+      "y": 1000,
+      "label_x": 3135,
+      "label_y": 660,
+      "region": 2,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "碑文缺去的半行"
+    },
+    "2-3": {
+      "x": 3480,
+      "y": 1025,
+      "label_x": 3480,
+      "label_y": 685,
+      "region": 2,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "接住快要散去的字"
+    },
+    "2-4": {
+      "x": 3840,
+      "y": 1010,
+      "label_x": 3840,
+      "label_y": 590,
+      "region": 2,
+      "type": "boss",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "腐化樹王・不肯入睡的心"
+    },
+    "2-5": {
+      "x": 4140,
+      "y": 1005,
+      "label_x": 4140,
+      "label_y": 665,
+      "region": 2,
+      "type": "reserved",
+      "reserved": true,
+      "visibleByDefault": false,
+      "name": "預留第5關"
+    },
+    "tower": {
+      "x": 3985,
+      "y": 1370,
+      "label_x": 4110,
+      "label_y": 1020,
+      "region": 2,
+      "type": "tower",
+      "name": "無盡塔",
+      "reserved": false,
+      "visibleByDefault": true
     }
   },
   "paths": [
@@ -192,6 +270,227 @@
         [
           1980,
           1080
+        ]
+      ],
+      "enabled": false,
+      "layout": "future-five-stage"
+    },
+    {
+      "from": "town:1",
+      "to": "2-1",
+      "points": [
+        [
+          2460,
+          990
+        ],
+        [
+          2576,
+          998
+        ],
+        [
+          2694,
+          1007
+        ],
+        [
+          2810,
+          1015
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "2-1",
+      "to": "2-2",
+      "points": [
+        [
+          2810,
+          1015
+        ],
+        [
+          2917,
+          1010
+        ],
+        [
+          3028,
+          1005
+        ],
+        [
+          3135,
+          1000
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "2-2",
+      "to": "2-3",
+      "points": [
+        [
+          3135,
+          1000
+        ],
+        [
+          3249,
+          1008
+        ],
+        [
+          3366,
+          1017
+        ],
+        [
+          3480,
+          1025
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "2-3",
+      "to": "2-4",
+      "points": [
+        [
+          3480,
+          1025
+        ],
+        [
+          3599,
+          1020
+        ],
+        [
+          3721,
+          1015
+        ],
+        [
+          3840,
+          1010
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "2-4",
+      "to": "2-5",
+      "points": [
+        [
+          3840,
+          1010
+        ],
+        [
+          3939,
+          1008
+        ],
+        [
+          4041,
+          1007
+        ],
+        [
+          4140,
+          1005
+        ]
+      ],
+      "enabled": false,
+      "layout": "future-five-stage"
+    },
+    {
+      "from": "2-4",
+      "to": "tower",
+      "points": [
+        [
+          3840,
+          1010
+        ],
+        [
+          3760,
+          1030
+        ],
+        [
+          3805,
+          1100
+        ],
+        [
+          3765,
+          1170
+        ],
+        [
+          3830,
+          1230
+        ],
+        [
+          3865,
+          1310
+        ],
+        [
+          3920,
+          1340
+        ],
+        [
+          3985,
+          1370
+        ]
+      ],
+      "enabled": true,
+      "layout": "current",
+      "futureBranchFrom": "2-5"
+    },
+    {
+      "from": "1-4",
+      "to": "town:1",
+      "points": [
+        [
+          1680,
+          1130
+        ],
+        [
+          1980,
+          1080
+        ],
+        [
+          2050,
+          1080
+        ],
+        [
+          2160,
+          1035
+        ],
+        [
+          2280,
+          990
+        ],
+        [
+          2460,
+          990
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "1-5",
+      "to": "town:1",
+      "points": [
+        [
+          1980,
+          1080
+        ],
+        [
+          2050,
+          1080
+        ],
+        [
+          2160,
+          1035
+        ],
+        [
+          2280,
+          990
+        ],
+        [
+          2460,
+          990
         ]
       ],
       "enabled": false,

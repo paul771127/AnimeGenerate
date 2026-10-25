@@ -21,7 +21,7 @@ def mockup(name,offset,hero,visible,selected=None,fogstart=None):
  for key in visible:
   if key not in spec['nodes']:continue
   node=spec['nodes'][key];x=node['x']-offset;y=node['y']
-  if not -200<x<1280:continue
+  if not 0<=x<=1080:continue
   kind='town' if node['type']=='town' else 'tower' if key=='tower' else 'boss' if node['type']=='boss' else 'open' if key==selected or key=='1-1' else 'clear';src=Image.open(ART/'ui'/f'node_{kind}.png').convert('RGBA');im.alpha_composite(src,(round(x-src.width/2),round(y-src.height/2)));lx=max(160,min(920,node['label_x']-offset));ly=node['label_y'];plate(im,(round(lx-160),round(ly-48),320,96));d=ImageDraw.Draw(im)
   text=node['name'].split('・')[0]
   if node['type'] in ['town','tower']:rich(d,(lx,ly),text,30,fill='#4c3421',center=True)
@@ -30,7 +30,7 @@ def mockup(name,offset,hero,visible,selected=None,fogstart=None):
   elements.append({'id':key,'mapPosition':[node['x'],y],'labelRect':[round(lx-160),round(ly-48),320,96]})
  if fogstart is not None:
   # An opaque unrevealed layer prevents terrain leaking through the transparent cloud fringes.
-  m=Image.new('L',im.size);ImageDraw.Draw(m).rectangle((fogstart+70,0,1080,1920),fill=255);m=m.filter(ImageFilter.GaussianBlur(45));veil=Image.new('RGBA',im.size,'#e8e6de');im=Image.composite(veil,im,m)
+  m=Image.new('L',im.size);ImageDraw.Draw(m).rectangle((min(1080,fogstart+70),0,1080,1920),fill=255);m=m.filter(ImageFilter.GaussianBlur(45));veil=Image.new('RGBA',im.size,'#e8e6de');im=Image.composite(veil,im,m)
   for i,y in enumerate([-180,480,1120]):
    cloud=Image.open(ART/'ui'/f'fog_{i%3}.png').convert('RGBA');im.alpha_composite(cloud,(fogstart-170,y))
  if hero in spec['nodes']:

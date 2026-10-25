@@ -13,8 +13,8 @@ def build(regions):
   for i in range(5):
    a,b=keys[i:i+2];p=nodes[a];q=nodes[b];paths.append({'from':a,'to':b,'points':[[p['x'],p['y']],[round(p['x']+(q['x']-p['x'])*.33),round(p['y']*.67+q['y']*.33)],[round(p['x']+(q['x']-p['x'])*.67),round(p['y']*.33+q['y']*.67)],[q['x'],q['y']]],'enabled':i<4,'layout':'current' if i<4 else 'future-five-stage'})
   if r==2:
-   nodes['tower']={'x':offset+1955,'y':1740,'label_x':offset+1875,'label_y':1510,'region':2,'type':'tower','name':'無盡塔','reserved':False,'visibleByDefault':True}
-   a=nodes['2-4'];b=nodes['tower'];paths.append({'from':'2-4','to':'tower','points':[[a['x'],a['y']],[offset+1590,1060],[offset+1620,1140],[offset+1585,1215],[offset+1640,1310],[offset+1710,1420],[offset+1810,1540],[b['x'],b['y']]],'enabled':True,'layout':'current','futureBranchFrom':'2-5'})
+   nodes['tower']={'x':offset+1825,'y':1370,'label_x':offset+1950,'label_y':1020,'region':2,'type':'tower','name':'無盡塔','reserved':False,'visibleByDefault':True}
+   a=nodes['2-4'];b=nodes['tower'];paths.append({'from':'2-4','to':'tower','points':[[a['x'],a['y']],[offset+1600,1030],[offset+1645,1100],[offset+1605,1170],[offset+1670,1230],[offset+1705,1310],[offset+1760,1340],[b['x'],b['y']]],'enabled':True,'layout':'current','futureBranchFrom':'2-5'})
  for r in regions:
   if r+1 not in regions:continue
   a=f'{r}-4';b=f'town:{r}';p=nodes[a];q=nodes[b];reserve=nodes[f'{r}-5'];seam=r*2160

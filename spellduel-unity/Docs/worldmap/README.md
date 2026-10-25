@@ -23,3 +23,9 @@
 素材使用內建 image_gen，參考 Village2D 與已確認的 Story2D 職業主角。提示詞、來源尺寸、匯出尺寸和雜湊在 prompts.json／assets.json。輸出按規格重採樣，並不宣稱全部為原生目標解析度。JPG 地圖最大匯入 4096，PNG 最大 2048，全部關 mipmap、NPOT 不縮放。
 
 檢查：`python spellduel-unity/Tools/check_worldmap.py --partial` 用於分批交付，最後應執行不帶 partial 的完整檢查。partial 的 pending 不能當作全套完成。
+
+## 第二批：森林與無盡塔
+
+新增 region_2、森之里、四關與預留點，及 2-4 → tower 的八點支線。塔站位量測在上層橋入口，避免角色走到森林懸崖或下層裝飾橋；塔頂沒入霧中。
+
+`mockups/02_tower_branch.jpg` 顯示岔路。`seams/seam_1.jpg` 是第一、二區接縫放大檢查；邊界先由 image_gen 補繪，再以固定羽化遮罩合成，只有接縫附近變動。數值差異報告只用來輔助找接縫，不能代替視覺驗收。

@@ -9,8 +9,9 @@
       1330,
       1182
     ],
-    "bytes": 2112860,
-    "sha256": "d2e5e59dda63065da197c0d533b0a33b38d058c67ee106fdbc78969bf835e766"
+    "bytes": 2137412,
+    "sha256": "deaa8a5f2460c784f3771e7011d236f587f97a316c3f8d306c6d8bb42f8b60cc",
+    "seamRepair": true
   },
   "Assets/SpellDuel/Resources/WorldMap/region_2.jpg": {
     "size": [
@@ -19,11 +20,12 @@
     ],
     "mode": "RGB",
     "sourceSize": [
-      1330,
+      1331,
       1182
     ],
-    "bytes": 2390441,
-    "sha256": "6977a2cb08b3bc470a4680ef668befd79a8e2d23c32a68a64eeb75c5660ceba2"
+    "bytes": 2137774,
+    "sha256": "9f03e4095dc739a33b0f4c003e8d514177a31432bf3f1460ab87bbb042243855",
+    "seamRepair": true
   },
   "Assets/SpellDuel/Resources/WorldMap/region_3.jpg": {
     "size": [
