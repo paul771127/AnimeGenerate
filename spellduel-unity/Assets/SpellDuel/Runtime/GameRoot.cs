@@ -892,6 +892,7 @@ namespace SpellDuel
                 {
                     case "_hello":
                         Log(mode == Mode.Watch ? "✅ 已進入房間觀戰" : $"✅ 加入房間（我是 {net.MyPid} 號）");
+                        solo.PeerIds.Remove(net.MyPid);   // 房間名單比 _hello 早到：名單裡的自己拿掉（不然會把自己當隊友，畫面上出現自己的角色）
                         Send(new Msg { t = "join", ok = mode == Mode.Watch, to = 1 });   // 告訴房主：我是玩家還是觀戰的人（只給房主）
                         break;
                     case "join":

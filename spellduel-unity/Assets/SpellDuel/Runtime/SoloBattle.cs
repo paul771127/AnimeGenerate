@@ -1113,6 +1113,7 @@ namespace SpellDuel
             {
                 foreach (var pid in PeerIds)
                 {
+                    if (pid == MyPid) continue;   // 自己不是隊友
                     peerInfo.TryGetValue(pid, out var pi);
                     var rc = Skills.Classes.TryGetValue(pi?.cls ?? "", out var found) ? found : Skills.Classes["mage"];
                     var head = NetPeers.TryGetValue(pid, out var pp) ? pp.head : NetEnemyHeadW;
