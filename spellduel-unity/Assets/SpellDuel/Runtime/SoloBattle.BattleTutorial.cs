@@ -42,6 +42,7 @@ namespace SpellDuel
         {
             btStage = 0; btStep = 0; btTarget = null; btSpawned = 0; btDodged = 0;
             if (battle == null || st == null) return;
+            SetupPotionLesson(st);   // 1-2：血量第一次低於 1/3 時教喝藥水
             var p = Progress.Char(myClass);
             bool early = (st.id == "1-1" || st.id == "1-2" || st.id == "1-3") && difficulty == 0;   // 只有簡單難度是新手設計
             if (early && p.cls == Skills.Novice)
@@ -81,6 +82,7 @@ namespace SpellDuel
         /// <summary>小怪要不要定住：0 照常、1 定住、2 只走位</summary>
         int BtHold(Fighter m)
         {
+            if (PotLessonFreeze) return 1;   // 喝藥水教學：全部定住（SoloBattle.PotionLesson.cs）
             if (btStage == 11)
             {
                 if (btStep == Bt11Dodge && m == btTarget) return battle.MinionInZone(m) ? 0 : 2;   // 閃避教學：只放這一隻出手

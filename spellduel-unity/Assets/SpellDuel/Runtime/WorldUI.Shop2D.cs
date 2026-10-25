@@ -115,6 +115,7 @@ namespace SpellDuel
                     UiKit.Text(new Rect(rr.x + fs * 0.6f, rr.y + rr.height * 0.06f, rr.width - fs * 1.2f, rr.height * 0.28f), $"{c.icon} {c.name}　持有 {Economy.Count(c.id)}", fs, Color.white, TextAnchor.MiddleLeft, true);
                     UiKit.Text(new Rect(rr.x + fs * 0.6f, rr.y + rr.height * 0.34f, rr.width - fs * 1.2f, rr.height * 0.26f), c.desc, fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleLeft, false, 0.5f);
                     var bb = new Rect(rr.xMax - rr.width * 0.52f, rr.y + rr.height * 0.62f, rr.width * 0.5f - fs * 0.3f, rr.height * 0.33f);
+                    UiKit.NextTag("buy:" + c.id);   // 新手指引：買小藥水
                     if (UiKit.Button(bb, $"💰 {c.price} 購買", fsS, false, new Color(1f, 0.55f, 0.2f)))
                     {
                         if (Economy.Gold < c.price) { shopExpr = "surprised"; shopLine = ShopLine("insufficient", rng) ?? "金幣好像還差一些。"; Sfx.Play("fail", 0.5f); }

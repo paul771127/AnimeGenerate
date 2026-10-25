@@ -24,7 +24,8 @@ namespace SpellDuel
             public Action enter;
         }
 
-        string walkFlow; int walkStep; List<WStep> walkSteps; int walkStatStart;
+        string walkFlow; int walkStep; List<WStep> walkSteps; int walkStatStart, walkPotStart;
+        static int SmallPotionPrice => Economy.Find("hp_s")?.price ?? 30;
         bool walkLoaded;
         bool WalkActive { get { LoadWalk(); return walkSteps != null; } }
 
@@ -157,6 +158,12 @@ namespace SpellDuel
                     }, () => walkStatStart - P().statPoints >= Mathf.Min(5, walkStatStart) || !AnyRaise(P()))
                         .enter = () => walkStatStart = P().statPoints;
                     S("=完成", "完成", () => "點好了！按下面的「完成」關掉角色畫面。", () => !charOpen);
+                    // 出發前買小藥水（一定要買）
+                    S("🧪 道具店", "道具店", () => "出門前要準備藥水：按地圖上的「🧪 道具店」。", () => storyMapOpen && world.screen == WorldUI.Screen.Shop)
+                        .enter = () => { if (Economy.Gold < SmallPotionPrice) Economy.Gold = SmallPotionPrice; };   // 錢不夠：補到剛好買得起一瓶
+                    S("buy:hp_s", "買小藥水", () => "按「小治療藥水」的「💰 購買」。戰鬥中血變少時，說「喝藥水」或比 🤙 就能喝（回復 25% HP）。", () => Economy.Count("hp_s") > walkPotStart)
+                        .enter = () => walkPotStart = Economy.Count("hp_s");
+                    S("回城鎮", "回城鎮", () => "買好了！按「🏘 回城鎮」。", () => Town());
                     S("大地圖", "前往大地圖", () => "準備出發：按「🗺 大地圖」。", () => storyMapOpen && world.screen == WorldUI.Screen.Map);
                     S("stage:1-2", "選關卡 1-2", () => "點地圖上的「1-2」，下面會出現這一關的說明。", () => world.SelStageId == "1-2");
                     S("⚔ 出發", "出發", () => "按「⚔ 出發」。", () => prepGo != null || !storyMapOpen);

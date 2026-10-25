@@ -1880,7 +1880,7 @@ namespace SpellDuel
 
         void EndBattle()
         {
-            outroUntil = -1f; introUntil = -1f; btStage = 0;
+            outroUntil = -1f; introUntil = -1f; btStage = 0; potStage = 0;
             ClearDaily(); ClearTutorial(); RestoreArea(); ClearSwipeTrail(); ClearSwordSage(); ClearGuardFx();
             ResetCarryLeft();   // 下一場能用的道具＝整備時決定帶的數量
             victory = null; hitsTaken = 0; lootLog.Clear(); lootGoldLog = 0; ResetExercise();
@@ -1971,7 +1971,7 @@ namespace SpellDuel
             if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
             {
                 if (ai != null) ai.Update(dt);
-                else if (bossAi != null) bossAi.Update(dt);
+                else if (bossAi != null && !PotLessonFreeze) bossAi.Update(dt);   // 喝藥水教學中 Boss 也暫停
                 else if (!NetMode) en_FaceMe();
                 battle.Update(dt);
                 UpdateSwordSage(dt);   // 劍仙：御劍術連射、劍來的長劍（SoloBattle.SwordSage.cs）
@@ -1980,6 +1980,7 @@ namespace SpellDuel
                 if (daily != null && UpdateDaily()) { UpdateVisuals(); return; }   // 每日挑戰：時間到（或心用完）→ 結算
                 if (tutorial && UpdateTutorial()) { UpdateVisuals(); return; }      // 教學關：最後一步完成 → 結算
                 UpdateBattleTut();   // 1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）
+                UpdatePotionLesson();   // 1-2：喝藥水教學（SoloBattle.PotionLesson.cs）
                 if (!frozen) HandleInput();
                 UpdateCastGuide();   // 放招的分步驟提示（SoloBattle.CastGuide.cs）
                 SendState();
@@ -2065,6 +2066,17 @@ namespace SpellDuel
 
         void HandleInput()
         {
+            if (PotLessonFreeze)
+            {
+                // 喝藥水教學：只能喝藥水（🤙），其他動作（普攻、放招）都不算
+                if (Hand != null)
+                {
+                    if (Hand.ConsumeSelect(out var potShape)) ItemByGesture(potShape);
+                    Hand.ConsumeSwipe(); Hand.ConsumeMove(); Hand.ConsumeRelease();
+                }
+                if (Me != null) Me.charging = null;
+                return;
+            }
             if (Me != null) Me.palmVisible = Hand == null || Hand.HandVisible;   // 刺客伏擊技能：手掌在鏡頭前才蓄力
             if (Me != null && battle != null) Me.seenByFoe = SeenByFoe();       // 刺殺流派：有沒有被敵人看見
             if (Hand == null) return;
@@ -2337,6 +2349,7 @@ namespace SpellDuel
         {
             if (id.StartsWith(SpeechInput.ChantPrefix)) { OnChant(id.Substring(SpeechInput.ChantPrefix.Length)); return; }
             if (phase != Phase.Fighting || battle == null || frozen || !Skills.All.TryGetValue(id, out var skill)) return;
+            if (PotLessonFreeze) { Say("🧪 先喝藥水！說「喝藥水」或比 🤙", 1.5f); return; }
             heard = $"🎤 {skill.name}"; heardUntil = Time.time + 1.5f;
             if (Me.charging == skill) return;
             if (BlockedOutside()) return;
@@ -3490,6 +3503,7 @@ namespace SpellDuel
             if (daily != null) DrawDailyHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 每日挑戰：計時、分數、獎牌（蓋在敵人卡片上）
             if (tutorial && phase == Phase.Fighting) DrawTutorialHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 教學關：第幾步、要做什麼
             DrawBattleTutHud(topR, W, H, lh, fs, fsS, pillW);   // 1-1／1-2 的戰鬥教學
+            DrawPotionLesson(W, H, fs, fsS, fsL);   // 1-2：喝藥水教學
             if (phase == Phase.Fighting) DrawPalmCharge(fs);   // 初心者普攻：手掌集氣指示（SoloBattle.SwipeTrail.cs）
             // 合作：隊友的血量（在敵人卡片下方）
             if (coop)

@@ -252,7 +252,7 @@ namespace SpellDuel
             switch (key)
             {
                 case "smith": screen = Screen.Smith; selItem = null; page = 0; break;
-                case "shop": screen = Screen.Shop; selItem = null; page = 0; break;
+                case "shop": screen = Screen.Shop; selItem = null; page = 0; shopTab = 0; break;
                 case "guild": screen = Screen.Guild; break;
                 case "gate": OpenGate(town); break;
                 case "warp": OpenWarp(); break;

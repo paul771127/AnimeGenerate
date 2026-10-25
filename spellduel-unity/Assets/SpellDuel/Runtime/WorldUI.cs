@@ -684,6 +684,7 @@ namespace SpellDuel
                     var cr = new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.6f);
                     UiKit.Card(cr, 0.8f, new Color(.5f,.85f,1));
                     UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.62f, cr.height), $"{c.icon} {c.name}（持有 {Economy.Count(c.id)}）\n{c.desc}", fsS, Color.white, TextAnchor.MiddleLeft, true);
+                    UiKit.NextTag("buy:" + c.id);
                     if (UiKit.Button(new Rect(cr.xMax - cr.width * 0.33f, cr.y + gap * 0.3f, cr.width * 0.32f - gap * 0.3f, cr.height - gap * 0.6f), $"💰 {c.price}", fsS, false, new Color(1f, 0.85f, 0.3f), Economy.Gold >= c.price))
                     {
                         if (Economy.Buy(c, out var why)) { Toast($"買了 {c.name}"); Sfx.Play("coin", 0.8f); } else Toast(why);
