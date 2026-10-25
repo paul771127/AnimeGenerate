@@ -106,7 +106,7 @@ namespace SpellDuel
             f.maxHp = Mathf.Max(10, f.maxHp + a.hpAdd);
             f.maxMp = Mathf.Max(10, f.maxMp + a.mpAdd);
             f.atkMul *= a.atkMul;
-            f.gearReduce = Mathf.Clamp(f.gearReduce + a.armor, -0.5f, 0.6f);
+            f.gearReduce = Mathf.Clamp(f.gearReduce + a.armor, -0.5f, Fighter.MaxReduce);
             f.critChance = Mathf.Clamp(f.critChance + a.crit, 0f, 0.75f);
             f.evadeChance = Mathf.Clamp(f.evadeChance + a.evade, 0f, 0.5f);
             f.healMul = a.healMul;

@@ -141,6 +141,8 @@ namespace SpellDuel
         public float armorUntil, armorReduce;
         // 角色養成（無盡模式）：裝備減傷、側跨無敵時間加長、吸血、命中回 MP、每秒回血、低血量減傷
         public float gearReduce, dodgeBonus, lifesteal, mpOnHit, hpRegen, lastStand;
+        /// <summary>減傷（能力值、裝備、技能樹、職業、精魄全部加起來）最多 30%（使用者要求）</summary>
+        public const float MaxReduce = 0.3f;
         public readonly List<Dot> dots = new List<Dot>();
 
         public class Dot { public float dps, until, acc; }
@@ -3445,7 +3447,7 @@ namespace SpellDuel
             if (f.friendOwner >= 0) { if (dmg > 0f) { OnFriendHurt?.Invoke(f, dmg); Emit("hit", at ?? f.Chest, Color.red, $"-{dmg:0}"); } return; }   // 別台手機的召喚獸／影分身：傷害交給那台算
             if (dmg > 0f && kind != "dot" && kind != "burn" && kind != "oath" && kind != "thorns" && BarrierGuards(f) && TryBarrier(f, at)) return;   // 主教的聖域障壁
             if (f.invulnUntil > now && dmg > 0f) return;   // 狂戰士不死之軀的無敵
-            dmg *= f.damageTakenMul * (1f - f.gearReduce) * f.soulTaken;
+            dmg *= f.damageTakenMul * (1f - Mathf.Min(f.gearReduce, Fighter.MaxReduce)) * f.soulTaken;
             // 精魄：格擋（這一下傷害減半；持續傷害不算）
             if (f.blockChance > 0f && dmg > 0f && kind != "dot" && kind != "burn" && kind != "thorns" && rng.NextDouble() < f.blockChance) { dmg *= 0.5f; Emit("mitigate", at ?? f.Chest, new Color(0.8f, 0.8f, 0.7f), "格擋！"); }
             if (f.lastStand > 0f && f.hp < f.maxHp * 0.3f) dmg *= 1f - f.lastStand;   // 不屈：低血量減傷

@@ -247,7 +247,7 @@ namespace SpellDuel
                     case SoulOp.Block: f.blockChance = Mathf.Min(0.5f, f.blockChance + x.v); break;
                     case SoulOp.Lifesteal: f.lifesteal += x.v; break;
                     case SoulOp.Cdr: f.cdMul = Mathf.Max(0.4f, f.cdMul * (1f - x.v)); break;
-                    case SoulOp.Reduce: f.gearReduce = Mathf.Min(0.6f, f.gearReduce + x.v); break;
+                    case SoulOp.Reduce: f.gearReduce = Mathf.Min(Fighter.MaxReduce, f.gearReduce + x.v); break;
                     case SoulOp.Taken: f.soulTaken *= 1f + x.v; break;
                     case SoulOp.BasicSpeed: f.basicCdMul = Mathf.Clamp(f.basicCdMul * (1f - x.v), 0.4f, 2f); break;
                     case SoulOp.ChargeSpeed: f.chargeScale = Mathf.Max(0.4f, f.chargeScale * (1f - x.v)); break;

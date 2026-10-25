@@ -711,7 +711,7 @@ namespace SpellDuel
         /// </summary>
         public Affix MainAffix => mods.Count > 0 ? mods[0].Key : Affix.Hp;
         /// <summary>第 i 個屬性現在的數值（主屬性算上強化）</summary>
-        public float ModValue(int i) => i < 0 || i >= mods.Count ? 0f : IsStatusAffix(mods[i].Key) ? Mathf.Min(ItemGen.StatusChanceMax, mods[i].Value) : mods[i].Value * (i == 0 ? PlusMul : 1f);   // 附加狀態機率：最多 5%（舊存檔的也一樣）、不吃強化
+        public float ModValue(int i) => i < 0 || i >= mods.Count ? 0f : IsStatusAffix(mods[i].Key) ? Mathf.Min(ItemGen.StatusChanceMax, mods[i].Value) : mods[i].Key == Affix.Armor ? Mathf.Min(ItemGen.ArmorMax, mods[i].Value) : mods[i].Value * (i == 0 ? PlusMul : 1f);   // 減傷：每件最多 3%（舊存檔的也一樣）   // 附加狀態機率：最多 5%（舊存檔的也一樣）、不吃強化
         public static bool IsStatusAffix(Affix a) => a == Affix.Burn || a == Affix.Poison || a == Affix.Freeze;
         public float Sum(Affix a) { float s = 0f; for (int i = 0; i < mods.Count; i++) if (mods[i].Key == a) s += ModValue(i); return s; }
         public float PlusMul => 1f + Economy.EnhancePerLevel * plus;
@@ -721,7 +721,7 @@ namespace SpellDuel
             var l = new List<string>();
             for (int i = 0; i < mods.Count; i++)
             {
-                float v = i == 0 ? mods[0].Value * (1f + Economy.EnhancePerLevel * (plusOverride >= 0 ? plusOverride : plus)) : mods[i].Value;
+                float v = i == 0 ? mods[0].Value * (1f + Economy.EnhancePerLevel * (plusOverride >= 0 ? plusOverride : plus)) : ModValue(i);
                 l.Add((i == 0 ? "【主】" : "") + AffixText(mods[i].Key, v));
             }
             return l;
@@ -838,7 +838,7 @@ namespace SpellDuel
                     break;
                 }
                 case Slot.Head: { var h = Pick(rng, Heads, prefer); baseName = h.name; it.classes = h.cls; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Mp, Mathf.Round(4f + 1.6f * power))); break; }
-                case Slot.Body: { var b = Pick(rng, Bodies, prefer); baseName = b.name; it.classes = b.cls; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Hp, Mathf.Round(8f + 3f * power))); it.mods.Add(new KeyValuePair<Affix, float>(Affix.Armor, Mathf.Min(0.2f, 0.01f + 0.004f * power))); break; }
+                case Slot.Body: { var b = Pick(rng, Bodies, prefer); baseName = b.name; it.classes = b.cls; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Hp, Mathf.Round(8f + 3f * power))); it.mods.Add(new KeyValuePair<Affix, float>(Affix.Armor, Mathf.Round(Mathf.Lerp(ArmorMin, ArmorMax, Mathf.Clamp01(power / 100f)) * 1000f) / 1000f)); break; }
                 case Slot.Feet: { var f = Pick(rng, Feets, prefer); baseName = f.name; it.classes = f.cls; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Agi, Mathf.Round(1f + 0.35f * power))); break; }
                 default: baseName = Trinkets[rng.Next(Trinkets.Length)]; it.classes = ""; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Luk, Mathf.Round(1f + 0.3f * power))); break;
             }
@@ -887,6 +887,8 @@ namespace SpellDuel
 
         /// <summary>裝備的附加狀態（灼燒、中毒、冰凍）機率：每一條 2～5%（使用者要求，不要更高）</summary>
         public const float StatusChanceMin = 0.02f, StatusChanceMax = 0.05f;
+        /// <summary>裝備的減傷：每一件 1～3%（使用者要求）；全部加起來（能力值、裝備、技能樹、職業、精魄）最多 30%（Fighter.MaxReduce）</summary>
+        public const float ArmorMin = 0.01f, ArmorMax = 0.03f;
 
         static float AffixValue(Affix a, float power, System.Random rng)
         {
@@ -1230,7 +1232,7 @@ namespace SpellDuel
             // HP：體質每點 +5、非攻擊用的力量每點 +1、裝備
             f.maxHp = Mathf.Max(10, cd.maxHp + 5 * d(Stat.Vit) + (atkStat != Stat.Str ? d(Stat.Str) : 0) + Mathf.RoundToInt(GearSum(Affix.Hp)));
             // 受到的傷害：體質每點 -0.4%（最多 -30%）、裝備護甲
-            f.gearReduce = Mathf.Min(0.5f, Mathf.Clamp(0.004f * d(Stat.Vit), 0f, 0.3f) + GearSum(Affix.Armor));
+            f.gearReduce = Mathf.Min(Fighter.MaxReduce, Mathf.Clamp(0.004f * d(Stat.Vit), 0f, 0.3f) + GearSum(Affix.Armor));
             // MP：智力每點 +2、裝備；MP 回復：基礎 30%，精神加到 99 點才回到 100%（線性；裝備把精神加超過 99 會再更快）
             f.maxMp = Mathf.Max(10, cd.maxMp + 2 * d(Stat.Int) + Mathf.RoundToInt(GearSum(Affix.Mp)));
             float spiFrac = Mathf.Max(0f, d(Stat.Spi) / (float)Mathf.Max(1, Fighter.MpRegenFullSpi - BaseStat(Stat.Spi)));
@@ -1259,7 +1261,7 @@ namespace SpellDuel
             f.rangeMul = 1f;
             // 進階技能樹的特殊能力：攻擊、減傷、HP
             f.atkMul *= 1f + Passive(PassiveKind.Atk);
-            f.gearReduce = Mathf.Min(0.6f, f.gearReduce + Passive(PassiveKind.Armor));
+            f.gearReduce = Mathf.Min(Fighter.MaxReduce, f.gearReduce + Passive(PassiveKind.Armor));
             f.maxHp += Mathf.RoundToInt(Passive(PassiveKind.Hp));
             // 技能樹 v2 的流派效果
             f.arcaneBurst = Passive(PassiveKind.ArcaneBurst); f.arcaneTwin = Passive(PassiveKind.ArcaneTwin);
