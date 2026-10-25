@@ -49,7 +49,7 @@ namespace SpellDuel
         }
 
         /// <summary>共用框架：背景、標題、NPC、對話泡泡、回城鎮。回傳有沒有按「回城鎮」</summary>
-        bool Facility2DFrame(Texture2D bg, string title, Color col, string npcId, string expr, string npcName, string line, int fs, int fsS, int fsL)
+        bool Facility2DFrame(Texture2D bg, string title, Color col, string npcId, string expr, string npcName, string line, int fs, int fsS, int fsL, bool drawReturn = true)
         {
             float W = UnityEngine.Screen.width, H = UnityEngine.Screen.height;
             GUI.DrawTexture(new Rect(0, 0, W, H), bg, ScaleMode.ScaleAndCrop);
@@ -63,7 +63,27 @@ namespace SpellDuel
             var br = Design(675, 730, 365, 190);
             UiKit.Card(br, 0.9f, col, 0.7f);
             UiKit.Text(new Rect(br.x + fs * 0.5f, br.y + fs * 0.3f, br.width - fs, br.height - fs * 0.6f), $"{npcName}：\n{line}", fsS, Color.white, TextAnchor.UpperLeft, false, 0.5f);
-            return UiKit.Button(Design(270, 1795, 540, 92), "🏘 回城鎮", fs, false, new Color(1f, 0.55f, 0.2f));
+            return drawReturn && UiKit.Button(Design(270, 1795, 540, 92), "🏘 回城鎮", fs, false, new Color(1f, 0.55f, 0.2f));
+        }
+
+        // ---------------------------------------------------------------- 第四批：六個設施共用的框架
+        bool frame2D; string frameLine;
+        readonly Dictionary<string, string> frameLines = new Dictionary<string, string>();
+        /// <summary>
+        /// 有 2D 背景（in_{key}_flame）就畫框架，再把原本的功能畫在左邊（標題、NPC 介紹在框架模式下不畫；介紹的話放進對話泡泡）。
+        /// 回城鎮等按鈕沿用原本功能畫面裡的。回傳 false＝沒有素材。
+        /// </summary>
+        bool DrawFramed(string key, string title, Color col, string npcId, string npcName, string hello, System.Action<Rect> body, int fs, int fsS, int fsL)
+        {
+            var bg = FacilityBg(key);
+            if (bg == null) return false;
+            frameLines.TryGetValue(key, out var line);
+            Facility2DFrame(bg, title, col, npcId, "normal", npcName, line ?? hello, fs, fsS, fsL, false);
+            frame2D = true; frameLine = null;
+            try { body(Design(30, 190, 610, 1710)); }
+            finally { frame2D = false; }
+            if (frameLine != null) frameLines[key] = frameLine;
+            return true;
         }
 
         // ---------------------------------------------------------------- 道具店

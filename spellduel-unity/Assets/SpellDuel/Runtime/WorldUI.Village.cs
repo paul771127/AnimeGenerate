@@ -82,6 +82,7 @@ namespace SpellDuel
         /// <summary>設施畫面上方：NPC 頭像＋名字＋介紹（一段話）</summary>
         void NpcIntro(Rect r, string npc, string role, string text, Color c, int fs, int fsS, float gap, ref float y)
         {
+            if (frame2D) { frameLine = text; return; }   // 2D 設施框架：NPC 已經畫在右邊，這句話放進對話泡泡
             float h = fs * 4.4f;
             var cr = new Rect(r.x + gap, y, r.width - gap * 2, h);
             UiKit.Card(cr, 0.6f, c, 0.75f);

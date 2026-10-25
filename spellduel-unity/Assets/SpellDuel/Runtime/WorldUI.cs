@@ -152,12 +152,13 @@ namespace SpellDuel
                 case Screen.Smith: DrawSmith(r, prof, fs, fsS, fsL, gap); break;
                 case Screen.Shop: DrawShop(r, prof, fs, fsS, fsL, gap); break;
                 case Screen.Guild: DrawGuild(r, prof, fs, fsS, fsL, gap); break;
-                case Screen.Gate: DrawGate(r, prof, fs, fsS, fsL, gap); break;
-                case Screen.Warp: DrawWarp(r, prof, fs, fsS, fsL, gap); break;
-                case Screen.Dungeon: DrawDungeons(r, prof, fs, fsS, fsL, gap); break;
-                case Screen.Training: DrawTraining(r, prof, fs, fsS, fsL, gap); break;
-                case Screen.Bounty: DrawBounty(r, prof, fs, fsS, fsL, gap); break;
-                case Screen.Watch: DrawWatchDesk(r, prof, fs, fsS, fsL, gap); break;
+                // 第四批的六個設施：有 2D 背景就用共用框架（背景、標題、右邊 NPC＋對話泡泡），左邊照舊畫功能（WorldUI.Shop2D.cs）
+                case Screen.Gate: if (!DrawFramed("gate", "🚪 村口", new Color(1f, 0.85f, 0.45f), "guide", "嚮導", "往東走就是山路。這一章的關卡都從這裡出發。", a => DrawGate(a, prof, fs, fsS, fsL, gap), fs, fsS, fsL)) DrawGate(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Warp: if (!DrawFramed("warp", "🌀 傳送陣", new Color(0.55f, 0.65f, 1f), "guide", "嚮導", "站上法陣，就能回到去過的城鎮。", a => DrawWarp(a, prof, fs, fsS, fsL, gap), fs, fsS, fsL)) DrawWarp(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Dungeon: if (!DrawFramed("dungeon", "🏰 副本入口", new Color(0.4f, 0.85f, 0.75f), "guide", "嚮導", Facilities[0].hello, a => DrawDungeons(a, prof, fs, fsS, fsL, gap), fs, fsS, fsL)) DrawDungeons(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Training: if (!DrawFramed("training", "📅 訓練場", new Color(0.45f, 0.9f, 0.7f), "instructor", "教官", Facilities[1].hello, a => DrawTraining(a, prof, fs, fsS, fsL, gap), fs, fsS, fsL)) DrawTraining(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Bounty: if (!DrawFramed("bounty", "🔥 討伐告示板", new Color(1f, 0.45f, 0.2f), "bountyofficer", "懸賞官", Facilities[2].hello, a => DrawBounty(a, prof, fs, fsS, fsL, gap), fs, fsS, fsL)) DrawBounty(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Watch: if (!DrawFramed("watch", "👀 觀戰席", new Color(0.55f, 0.9f, 1f), "announcer", "播報員", Facilities[3].hello, a => DrawWatchDesk(a, prof, fs, fsS, fsL, gap), fs, fsS, fsL)) DrawWatchDesk(r, prof, fs, fsS, fsL, gap); break;
                 case Screen.Tower: DrawTower(r, prof, fs, fsS, fsL, gap); break;
             }
             if (toast != null && Time.time < toastUntil) UiKit.Pill(r.y + r.height * 0.5f, toast, fs, new Color(1f, 0.9f, 0.5f), r.width * 0.9f, 0.85f);
@@ -165,6 +166,7 @@ namespace SpellDuel
 
         void Header(Rect r, string title, Color c, CharacterProfile prof, int fs, int fsS, int fsL, float gap, ref float y)
         {
+            if (frame2D) { UiKit.Card(r, 0.72f, c, 0.7f); y += gap * 0.5f; return; }   // 2D 設施框架裡：標題、金幣已經畫在上方
             UiKit.Card(r, 0.95f, c, 0.9f);
             bool facility=screen==Screen.Smith||screen==Screen.Shop||screen==Screen.Guild;
             float hr = SettingsMenu.RightEdge(y, y + fs * 1.8f, r.xMax - gap);   // 右上角讓給 ⚙
