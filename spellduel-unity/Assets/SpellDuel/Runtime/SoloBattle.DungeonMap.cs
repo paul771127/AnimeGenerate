@@ -29,6 +29,7 @@ namespace SpellDuel
         void BeginDungeonRun()
         {
             drun = new DungeonRun(dungeon);
+            BeginGallery();
             chest = null; chatLog.Clear(); ClearNpcRigs();
             if (DungeonDecider) battle.OnNpcDown += OnNpcDown;
             ApplyNode();
@@ -39,6 +40,7 @@ namespace SpellDuel
         {
             var r = drun.node;
             battle.themeOverride = drun.Theme;
+            GalleryEnter();
             dungeonHalfSaid = -1; nodeClearedSeen = false; routeAutoAt = 0f;
             Say($"🏰 {dungeon.name}・{r.title}（第 {drun.Step} 站）", 3.5f);
             ChatEvent($"📍 來到「{r.title}」");
@@ -54,6 +56,7 @@ namespace SpellDuel
             if (nodeFightStarted || drun.node.IsChest) return;
             nodeFightStarted = true;
             SyncRunNpcs();
+            if(InGallery)battle.bossAfterMinions=!drun.AtEnd;
             battle.EnterNode(drun.node.wave, drun.AtEnd, drun.Step == 1 ? 3f : 4f);
         }
 
@@ -89,11 +92,12 @@ namespace SpellDuel
         }
 
         /// <summary>可以選下一站了：這個地點打完（或寶箱開完）、沒有在等抉擇</summary>
-        bool RouteReady => drun != null && !drun.AtEnd && drun.pendingChoice == null && (drun.node.IsChest ? chest != null && chest.done && Time.time >= chest.doneAt + 2.5f : nodeClearedSeen);
+        bool RouteReady => GalleryRouteReady && drun != null && !drun.AtEnd && drun.pendingChoice == null && (drun.node.IsChest ? chest != null && chest.done && Time.time >= chest.doneAt + 2.5f : nodeClearedSeen);
 
         void OnNodeCleared()
         {
             drun.Cleared();
+            GalleryClearedRoom();
             drun.ThirdLeaves();
             SyncRunNpcs();
             if (!drun.AtEnd) ChatEvent(drun.Exits.Count > 1 ? "🧭 打完了！房主選下一站" : $"🧭 前往「{drun.Exits[0].title}」");
@@ -153,6 +157,7 @@ namespace SpellDuel
         void NpcDied(string id)
         {
             drun.NpcDied(id);
+            GalleryNpcDied(id);
             if (drun.failed) { battle.FailStage(drun.failText); ChatEvent("💀 " + drun.failText); }
         }
 
@@ -200,6 +205,7 @@ namespace SpellDuel
                     var owner=n.cloneOf??(n.friendOwner>=0?battle.allies.Find(a=>a.pid==n.friendOwner):null);
                     rig = shadow?CharacterRig.Create(owner!=null&&owner.cls!=null?owner.cls.id:n.cls!=null?n.cls.id:"assassin",owner!=null?owner.adv:null):CharacterRig.Create(n.cls != null ? n.cls.id : "priest");
                     if(shadow)rig.gameObject.AddComponent<ShadowDoubleView>().Bind();
+                    if(InGallery&&!shadow)GalleryResidentArt.Decorate(rig,n.npcId);
                     npcRigs[n.minionId] = rig; npcLastFeet[n.minionId] = n.Feet;
                     SpawnFade.Play(rig.gameObject);
                 }
@@ -293,8 +299,9 @@ namespace SpellDuel
         /// <summary>房主：開寶箱（決定大獎，送給大家）</summary>
         void HostOpenChest()
         {
+            GalleryChestOpened();
             int rar = DiceRoll.ChestRarity(runRng);
-            int ilvl = dungeon.level + battle.levelBoost;
+            int ilvl = dungeon.level + (InGallery?0:battle.levelBoost);
             int seed = runRng.Next(1, int.MaxValue);
             int id = ++chestSeq + MyPid * 1000;
             NetSend?.Invoke(new Msg { t = "chest", id = id, e = rar, dmg = ilvl, hp = seed });
@@ -393,6 +400,7 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 連線訊息
         bool OnDungeonMsg(Msg m)
         {
+            if(GalleryMessage(m))return true;
             if (drun == null) return false;
             switch (m.t)
             {

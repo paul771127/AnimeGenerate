@@ -397,7 +397,7 @@ namespace SpellDuel
                 UiKit.Card(cr, 0.6f, clear ? new Color(1f, 0.85f, 0.3f) : DungeonColor, 0.8f);
                 float relief = Dungeons.LevelRelief(prof.level, d.level);
                 string diff = prof.level < d.level + Boost ? "⚠ 等級不足" : relief >= 0.95f ? "單人：非常困難" : relief >= 0.7f ? "單人：困難" : "單人：可以挑戰";
-                UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.62f, cr.height), $"{(clear ? "✔ " : "")}{d.name}　Lv{d.level + Boost}・{d.minPlayers}～{d.maxPlayers} 人・{d.SizeText}\n{d.desc}\n{diff}", fsS, Color.white, TextAnchor.MiddleLeft);
+                UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.62f, cr.height), $"{(clear ? "✔ " : "")}{d.name}　Lv{d.level + Boost}・{d.minPlayers}～{d.maxPlayers} 人・{d.SizeText}\n{d.desc}\n{diff}{(d.id==TrapGallery.Id ? (TrapGallery.BestSeconds>0 ? $"・最快 {TrapGallery.BestSeconds:0.0} 秒" : "・限時25分鐘") : "")}", fsS, Color.white, TextAnchor.MiddleLeft);
                 float bw = cr.width * 0.34f, bh = (cr.height - gap * 1.2f) / 2f;
                 if (UiKit.Button(new Rect(cr.xMax - bw - gap * 0.4f, cr.y + gap * 0.4f, bw, bh), "⚔ 單人進入", fsS, false, DungeonColor))
                 { OnStartDungeon?.Invoke(d); return; }

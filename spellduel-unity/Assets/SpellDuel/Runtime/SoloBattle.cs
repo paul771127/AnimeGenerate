@@ -604,6 +604,7 @@ namespace SpellDuel
             if (d == null) return;
             storyMapOpen = false; storyStage = null;
             void Go() { if (!coopMode && GateArea(Go)) return; pendingDungeon = d; StartBossBattle(coopMode, true); }
+            if (d.id == TrapGallery.Id) { Story.MarkSeen("dg:"+d.id); Go(); return; }
             if (!coopMode && !Story.IsSeen("dg:" + d.id)) { Story.MarkSeen("dg:" + d.id); ShowDialogue(d.before, Go); }
             else { Go(); Ticker(d.before); }   // 連線（或看過開場）：開場白改成戰鬥中的字幕卡，大家都看得到
         }
@@ -1717,20 +1718,23 @@ namespace SpellDuel
                     for (int i = 0; i < fought.Count; i++)
                     {
                         bool last = i == fought.Count - 1;
+                        if(InGallery && last)continue;
                         ItemGen.SetTheme = d.ThemeOf(fought[i]);
-                        pendingItems.Add(ItemGen.Make(dropRng, d.level + battle.levelBoost, last ? 3 : Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
+                        pendingItems.Add(ItemGen.Make(dropRng, d.level + (InGallery ? 0 : battle.levelBoost), last ? 3 : Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
                         // 人數加成：每個房間有（倍率−1）的機會多掉一件（稀有度照常擲，越稀有越難掉）
                         if (dropRng.NextDouble() < Dungeons.LootMul(coop ? 1 + PeerIds.Count : 1) - 1f)
-                            pendingItems.Add(ItemGen.Make(dropRng, d.level + battle.levelBoost, ItemGen.RollRarity(dropRng, 0f, 0), myClass));
+                            pendingItems.Add(ItemGen.Make(dropRng, d.level + (InGallery?0:battle.levelBoost), ItemGen.RollRarity(dropRng, 0f, 0), myClass));
                     }
+                    GalleryRewards();
                     float drmul = 1f + battle.levelBoost / (2f * LevelPerDifficulty);   // 普通 ×1.5、困難 ×2
-                    pendingGold += Mathf.RoundToInt(60 * d.level * drmul);
+                    pendingGold += Mathf.RoundToInt((InGallery ? 300 : 60) * d.level * drmul);
                     string loot = GrantLoot($"{d.name} 通關", false);
+                    if(InGallery)loot=$"通關時間 {galleryClock.finishSeconds:0.0} 秒\n"+loot;
                     int xp = Mathf.RoundToInt(40 * d.level * drmul);
                     int ups = prof != null ? prof.AddXp(xp) : 0;
                     if (prof != null) Progress.SaveChar(prof);
                     int over = (prof != null ? prof.level : 1) - d.level;
-                    BuildVictory($"{d.name} 通關", "dg_" + d.id, fought.Count * 75f, xp, ups, over >= 8 ? $"掉落的裝備是 Lv{d.level}，比你低 {over} 級" : first ? "首次通關！" : null);
+                    BuildVictory($"{d.name} 通關", "dg_" + d.id, fought.Count * 75f, xp, ups, InGallery ? $"通關時間 {galleryClock.finishSeconds:0.0} 秒・最快 {TrapGallery.BestSeconds:0.0} 秒" : over >= 8 ? $"掉落的裝備是 Lv{d.level}，比你低 {over} 級" : first ? "首次通關！" : null);
                     Say($"🏰 {d.name} 通關！獲得經驗 {xp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "（首次通關）" : "")
                         + (loot.Length > 0 ? "\n" + loot : "") + (over >= 8 ? $"\n（掉落的裝備是 Lv{d.level}，比你低 {over} 級）" : ""), 99f);
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
@@ -2046,6 +2050,7 @@ namespace SpellDuel
 
         void EndBattle()
         {
+            ClearGallery();
             outroUntil = -1f; introUntil = -1f; btStage = 0; potStage = 0;
             ClearDaily(); ClearTutorial(); RestoreArea(); ClearSwipeTrail(); ClearSwordSage(); ClearGuardFx();
             ResetCarryLeft();   // 下一場能用的道具＝整備時決定帶的數量
@@ -2106,6 +2111,7 @@ namespace SpellDuel
 
         void Update()
         {
+            GalleryTick();
             if (Watching) { UpdateWatchBattle(); return; }   // 觀戰：只跑顯示
             if (phase == Phase.Fighting && lastPhase != Phase.Fighting && !NetMode) { introUntil = Time.time + IntroTime; BeginReadyCheck(); }   // 先做戰鬥準備（身高校正），完成才倒數開打
             if (phase != Phase.Fighting) readyStep = -1;
@@ -2140,7 +2146,7 @@ namespace SpellDuel
             if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
             {
                 if (ai != null) ai.Update(dt);
-                else if (bossAi != null && !PotLessonFreeze) bossAi.Update(dt);   // 喝藥水教學中 Boss 也暫停
+                else if (bossAi != null && !PotLessonFreeze && !battle.Gallery) bossAi.Update(dt);   // 喝藥水教學中 Boss 也暫停
                 else if (!NetMode) en_FaceMe();
                 battle.Update(dt);
                 UpdateSwordSage(dt);   // 劍仙：御劍術連射、劍來的長劍（SoloBattle.SwordSage.cs）
@@ -3303,6 +3309,7 @@ namespace SpellDuel
 
         public void DrawGUI()
         {
+            DrawGalleryHud();
             Styles();
             TickWalk();   // 新手指引：這一步要按哪一顆按鈕（SoloBattle.Walkthrough.cs）
             if (!NetMode && phase != Phase.Fighting && !Story.DifficultyOpen(difficulty)) difficulty = Story.MaxOpenDifficulty;   // 還沒解鎖的難度不能用（以前預設普通的存檔：退回簡單）

@@ -181,3 +181,11 @@ until = boss              # 保護目標：抵達這個地點就安全了（不�
 格式檢查：`python3 spellduel-unity/Tools/check_dungeons.py`。
 路線場次檢查：`python3 spellduel-unity/Tools/check_dungeon_routes.py`。
 Unity 編輯器可執行 `SpellDuel > Audit > Dungeon fixed spawns`，檢查固定配置、重進、Boss 與一般模式隔離。
+
+## 限時機關副本擴充
+
+- `[dungeon]`可加`time_limit = 25`（分鐘正整數）、`traps = on`，省略不影響舊副本。目前機關規則只作用於`thousand_trap_gallery`。
+- 地點`theme = vault`沿用角鬥場場景再疊加程序機關，不擴大全域故事主題編號。
+- 新NPC角色`role = shop`使用meet/done；`role = lever`可寫三個option，結果為correct／wrong／neutral，對應done／enemy／third台詞，20秒由房主逾時選擇。拉桿與商店不暫停倒數。
+- `escort`可加`optional = on`，倒下只失去該NPC的額外獎勵；省略則維持倒下失敗的原規則。
+- 千機迴廊所有路線固定九場一般戰鬥加首領，寶箱不計戰鬥。`check_dungeons.py`會另外檢查這個副本的每條路徑。

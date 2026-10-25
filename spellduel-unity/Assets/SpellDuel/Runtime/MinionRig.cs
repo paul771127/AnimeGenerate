@@ -63,6 +63,7 @@ namespace SpellDuel
         /// </summary>
         public void SetDress(int theme)
         {
+            if(variantId>=48)return;
             ApplyDress(theme);
             dressTheme = theme;
         }
@@ -70,7 +71,7 @@ namespace SpellDuel
 
         public void SetVariant(int kind)
         {
-            kind = Mathf.Clamp(kind, 0, 47);
+            kind = Mathf.Clamp(kind, 0, 52);
             if (kind == variantId && body != null) return;
             if (body != null)
             {
@@ -497,6 +498,7 @@ namespace SpellDuel
         // ================================================================ 建立
         void Build(int k)
         {
+            if (k >= 48) { BuildTrapEnemy(k); return; }
             if (k >= 23) { BuildElite(k); return; }
             if (k >= 19) { BuildAreaEnemy(k); return; }
             sea = k >= 13;
@@ -666,6 +668,7 @@ namespace SpellDuel
         void Animate(float dt)
         {
             if (body == null) return;
+            if (variantId >= 48) { AnimateTrapEnemy(dt); return; }
             if (variantId >= 23) { AnimateElite(dt); return; }
             if (variantId >= 19) { AnimateAreaEnemy(dt); return; }
             if (sea) { AnimateSea(dt); return; }

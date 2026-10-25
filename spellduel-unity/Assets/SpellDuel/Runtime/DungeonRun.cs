@@ -43,6 +43,7 @@ namespace SpellDuel
         public readonly List<NpcState> justDone = new List<NpcState>();
         /// <summary>等房主做抉擇的人物（null＝沒有）</summary>
         public NpcState pendingChoice;
+        public int ChoiceSerial;public string lastChoiceId,lastChoiceResult;
         public bool failed; public string failText;
         int theme;
 
@@ -77,10 +78,10 @@ namespace SpellDuel
                 if (npcs.ContainsKey(id)) continue;
                 var n = def.Npc(id);
                 if (n == null) continue;
-                var st = new NpcState { def = n, side = n.role == "choice" ? "pending" : n.role };
+                var st = new NpcState { def = n, side = (n.role == "choice" || n.role == "lever") ? "pending" : n.role };
                 npcs[id] = st;
                 foreach (var l in n.meet) lines.Enqueue(l);
-                if (n.role == "choice") pendingChoice = st;
+                if (n.role == "choice" || n.role == "lever") pendingChoice = st;
             }
         }
 
@@ -92,6 +93,7 @@ namespace SpellDuel
             pendingChoice = null;
             option = Math.Max(0, Math.Min(st.def.options.Count - 1, option));
             st.side = st.def.options.Count > 0 ? st.def.options[option].result : "ally";
+            lastChoiceId=st.def.id;lastChoiceResult=st.side;ChoiceSerial++;
             var ls = st.def.LinesOf(st.side);
             if (ls != null) foreach (var l in ls) lines.Enqueue(l);
         }
@@ -142,7 +144,7 @@ namespace SpellDuel
             if (!npcs.TryGetValue(id, out var st) || st.dead) return;
             st.dead = true;
             foreach (var l in st.def.die) lines.Enqueue(l);
-            if (st.side == "escort" && !st.safe) { failed = true; failText = $"{st.def.name}倒下了…副本失敗"; }
+            if (st.side == "escort" && !st.safe && !st.def.optionalEscort) { failed = true; failText = $"{st.def.name}倒下了…副本失敗"; }
         }
 
         /// <summary>第三勢力：這個地點打完就撤退（不用打倒）</summary>

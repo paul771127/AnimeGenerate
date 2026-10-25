@@ -35,6 +35,7 @@ namespace SpellDuel
         public int hp = 400;
         /// <summary>保護目標：抵達這個地點就安全了（null＝撐到通關）</summary>
         public string until;
+        public bool optionalEscort;
         public readonly List<StoryLine> meet = new List<StoryLine>(), die = new List<StoryLine>(), done = new List<StoryLine>(), safe = new List<StoryLine>();
         public readonly List<StoryLine> ally = new List<StoryLine>(), enemy = new List<StoryLine>(), third = new List<StoryLine>();
         /// <summary>抉擇的選項：文字 → ally／enemy／third</summary>
@@ -43,7 +44,7 @@ namespace SpellDuel
         public string goal, goalItem, goalNode; public int need;
         /// <summary>任務獎勵：金幣、每人一件這個稀有度的裝備（0＝沒有）</summary>
         public int rewardGold, rewardRarity;
-        public List<StoryLine> LinesOf(string result) => result == "ally" ? ally : result == "enemy" ? enemy : result == "third" ? third : null;
+        public List<StoryLine> LinesOf(string result) => result == "correct" ? done : result == "wrong" ? enemy : result == "neutral" ? third : result == "ally" ? ally : result == "enemy" ? enemy : result == "third" ? third : null;
     }
 
     /// <summary>
@@ -57,6 +58,7 @@ namespace SpellDuel
     public class DungeonDef
     {
         public string id, name, desc;
+        public int timeLimit; public bool traps;
         public int level;                          // 副本等級（掉落的物品等級、難度基準）
         public int minPlayers = 2, maxPlayers = 4; // 建議人數
         public string unlock;                      // 要先通關的故事關卡（例如 2-3；null＝一開始就開放）
@@ -219,7 +221,7 @@ namespace SpellDuel
                     else if (room != null)
                     {
                         if (k == "wave") { if (!int.TryParse(v, out room.wave) || room.wave < 1) errors.Add($"第 {ln} 行：wave 要是 1 以上的整數"); }
-                        else if (k == "theme") room.theme = Story.ThemeOf(v);
+                        else if (k == "theme") room.theme = v == "vault" ? 3 : Story.ThemeOf(v);
                         else if (k == "event") { room.kind = v.ToLowerInvariant(); if (room.kind != "battle" && room.kind != "chest" && room.kind != "boss") errors.Add($"第 {ln} 行：event 只能是 battle／chest／boss"); }
                         else if (k == "next") { foreach (var x in v.Split(',', '，', '、')) if (x.Trim().Length > 0) room.next.Add(x.Trim()); }
                         else if (k == "npc") { foreach (var x in v.Split(',', '，', '、')) if (x.Trim().Length > 0) room.npcs.Add(x.Trim()); }
@@ -234,6 +236,8 @@ namespace SpellDuel
                             if (int.TryParse(a[0].Trim(), out var lo)) d.minPlayers = lo;
                             if (a.Length > 1 && int.TryParse(a[1].Trim(), out var hi)) d.maxPlayers = hi;
                         }
+                        else if (k == "time_limit") { if (!int.TryParse(v, out d.timeLimit) || d.timeLimit < 1) errors.Add($"第 {ln} 行：time_limit 為分鐘正整數"); }
+                        else if (k == "traps") d.traps = v == "on";
                         else if (k == "unlock") d.unlock = v.Length == 0 || v == "none" ? null : v;
                         else errors.Add($"第 {ln} 行：副本不認得的設定 {k}");
                     }
@@ -260,16 +264,17 @@ namespace SpellDuel
         static void ParseNpcKey(DungeonNpc n, string k, string v, int ln)
         {
             var parts = v.Split(new[] { ' ', '\t' }, System.StringSplitOptions.RemoveEmptyEntries);
-            if (k == "role") { n.role = v.ToLowerInvariant(); if (n.role != "escort" && n.role != "choice" && n.role != "quest") errors.Add($"第 {ln} 行：role 只能是 escort／choice／quest"); }
+            if (k == "role") { n.role = v.ToLowerInvariant(); if (n.role != "escort" && n.role != "choice" && n.role != "quest" && n.role != "lever" && n.role != "shop") errors.Add($"第 {ln} 行：role 只能是 escort／choice／quest"); }
             else if (k == "hp") { if (!int.TryParse(v, out n.hp) || n.hp < 1) errors.Add($"第 {ln} 行：hp 要是 1 以上的整數"); }
             else if (k == "look") n.look = v;
             else if (k == "tag") n.tag = v;
             else if (k == "until") n.until = v;
+            else if (k == "optional") n.optionalEscort = v == "on";
             else if (k == "option")
             {
                 int arrow = v.IndexOf("->", System.StringComparison.Ordinal);
                 string res = arrow > 0 ? v.Substring(arrow + 2).Trim().ToLowerInvariant() : "";
-                if (arrow <= 0 || (res != "ally" && res != "enemy" && res != "third")) errors.Add($"第 {ln} 行：option 的格式是「選項文字 -> ally／enemy／third」");
+                if (arrow <= 0 || (res != "ally" && res != "enemy" && res != "third" && !(n.role == "lever" && (res == "correct" || res == "wrong" || res == "neutral")))) errors.Add($"第 {ln} 行：option 的格式是「選項文字 -> ally／enemy／third」");
                 else n.options.Add((v.Substring(0, arrow).Trim(), res));
             }
             else if (k == "goal")
@@ -327,7 +332,7 @@ namespace SpellDuel
             }
             foreach (var n in dd.npcs)
             {
-                if (n.role == "choice" && n.options.Count < 2) errors.Add($"副本 {dd.id} 人物 {n.id}：抉擇人物至少要 2 個 option");
+                if ((n.role == "choice" || n.role == "lever") && n.options.Count < 2) errors.Add($"副本 {dd.id} 人物 {n.id}：抉擇人物至少要 2 個 option");
                 if (n.role == "quest" && string.IsNullOrEmpty(n.goal)) errors.Add($"副本 {dd.id} 人物 {n.id}：任務人物要寫 goal");
                 if (n.goalNode != null && dd.Node(n.goalNode) == null) errors.Add($"副本 {dd.id} 人物 {n.id}：goal reach 指到不存在的地點 {n.goalNode}");
                 if (n.until != null && dd.Node(n.until) == null) errors.Add($"副本 {dd.id} 人物 {n.id}：until 指到不存在的地點 {n.until}");

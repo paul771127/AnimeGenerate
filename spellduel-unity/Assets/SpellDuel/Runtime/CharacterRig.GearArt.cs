@@ -155,7 +155,7 @@ namespace SpellDuel
         }
         static Mesh MakeGearMesh(string id,string slot,GearLook.Piece p,string full)
         {
-            var b=new OutfitArt.Builder();GearLook.PieceColors(p,out var main,out var accent);int r=Mathf.Clamp(p.rarity,0,4);
+            var b=new OutfitArt.Builder();GearLook.PieceColors(p,out var main,out var accent);int r=Mathf.Clamp(p.rarity,0,5);
             if(slot=="head")
             {
                 var persona=Portraits.PersonaFor(id);float y=HeadwearArt.Has(id)?HeadwearArt.Seat(id,persona)+.022f:.095f;

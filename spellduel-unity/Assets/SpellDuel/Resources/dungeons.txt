@@ -702,3 +702,216 @@ reward = gold 700
 海斗［serious］：我在灣口守著信號。你到高處，我就知道這條回程還通著。
 <done>
 海斗［smile］：看見你的信號了！港燈與舊塔都在原位，別再跟著海裡的假光走。
+
+
+[dungeon thousand_trap_gallery] 千機迴廊
+二十五分鐘後，古代庫房將再次上鎖。循齒輪聲尋回萬象之心。
+level = 45
+players = 1-4
+unlock = 4-6
+time_limit = 25
+traps = on
+<before>
+鈴音（mage）［serious］：鎖輪已經開始計時。二十五分鐘，別拿命試機關。
+{玩家}：先找到還活著的人，再去最深處。
+鈴音（mage）［normal］：好心可以。記得留力氣跳，和低頭。
+<after>
+千機匠魂（boss）［normal］：萬象之心……不是讓兵器重生，是讓選擇重生。
+萬象之心（mage）［surprised］：校驗完成。下一座鐘的地址，要聽嗎？
+鈴音（mage）［surprised］：齒輪會說話？我家祖譜可沒寫這一段。
+{玩家}：先帶你出去。這次，門不會再關上。
+
+[node gate] 斷鎖大門
+theme = vault
+wave = 41
+next = cogway
+npc = lingyin
+<enter>
+鈴音（mage）［serious］：只有一座噴火柱。腳邊亮紅時移開，火環過來就跳。
+<clear>
+鈴音（mage）［normal］：這一輪停了。下一區的機關又會換，跟上。
+
+[node cogway] 齒輪長廊
+theme = vault
+wave = 42
+next = arrowhall,cells
+<enter>
+鈴音（mage）［serious］：箭孔只亮一面。別追著光跑，找沒有紅線的空檔。
+<clear>
+鈴音（mage）［normal］：這一輪停了。下一區的機關又會換，跟上。
+
+[node arrowhall] 箭雨走廊
+theme = vault
+wave = 43
+next = shaft
+npc = ark
+<enter>
+鈴音（mage）［serious］：箭孔還是新的……盜寶團動過這裡。
+<clear>
+鈴音（mage）［normal］：這一輪停了。下一區的機關又會換，跟上。
+
+[node cells] 盜寶團囚籠
+theme = vault
+wave = 43
+next = logrun
+npc = wheat
+<enter>
+鈴音（mage）［serious］：籠門卡住了。救人之前，先看頭上的橫刀。
+<clear>
+鈴音（mage）［normal］：這一輪停了。下一區的機關又會換，跟上。
+
+[node shaft] 落石豎井
+theme = vault
+wave = 44
+next = market
+<enter>
+鈴音（mage）［serious］：灰塵落在哪一角，就離開那一角。
+<clear>
+鈴音（mage）［normal］：這一輪停了。下一區的機關又會換，跟上。
+
+[node logrun] 滾木坑道
+theme = vault
+wave = 44
+next = market
+<enter>
+鈴音（mage）［serious］：刀偶的低掃要跳，橫木要蹲。我會替你數拍。
+<clear>
+鈴音（mage）［normal］：這一輪停了。下一區的機關又會換，跟上。
+
+[node market] 齒輪市集
+theme = vault
+event = chest
+next = furnace
+npc = merchant
+<enter>
+鈴音（mage）［serious］：這裡暫時沒有敵人。買東西也會計時，別問我能不能賒帳。
+<clear>
+鈴音（mage）［normal］：這一輪停了。下一區的機關又會換，跟上。
+
+[node furnace] 熔爐機房
+theme = vault
+wave = 45
+next = twinflame
+<enter>
+鈴音（mage）［serious］：從這裡起，三種隨機機關都會輪到。配置又換了。
+<clear>
+鈴音（mage）［normal］：這一輪停了。下一區的機關又會換，跟上。
+
+[node twinflame] 雙炎大廳
+theme = vault
+wave = 46
+next = mirror
+<enter>
+鈴音（mage）［serious］：兩座火柱差十拍。看噴口，不要只盯著敵人。
+<clear>
+鈴音（mage）［normal］：這一輪停了。下一區的機關又會換，跟上。
+
+[node mirror] 鏡面迴廊
+theme = vault
+wave = 47
+next = hub
+<enter>
+鈴音（mage）［serious］：低刃跳，高刃蹲。別被鏡子裡的動作帶走。
+<clear>
+鈴音（mage）［normal］：這一輪停了。下一區的機關又會換，跟上。
+
+[node hub] 中樞齒輪室
+theme = vault
+wave = 48
+next = antechamber
+<enter>
+鈴音（mage）［serious］：碎圖還沒收齊？中樞的備件箱能補上最後一角。
+<clear>
+鈴音（mage）［normal］：這一輪停了。下一區的機關又會換，跟上。
+
+[node antechamber] 匠魂前廳
+theme = vault
+wave = 49
+next = core
+npc = oldsmith
+<enter>
+鈴音（mage）［serious］：三根拉桿只有一根斷火。先聽提示，再動手。
+<clear>
+鈴音（mage）［normal］：這一輪停了。下一區的機關又會換，跟上。
+
+[node core] 首領：萬象核心
+theme = vault
+wave = 50
+event = boss
+<enter>
+鈴音（mage）［serious］：最後一道鎖。匠魂的機關臂會換形，別提早起跳。
+<clear>
+千機匠魂（boss）［normal］：鎖已解開。萬象之心，交給會選擇的人。
+<boss_half>
+千機匠魂（boss）［angry］：弩臂校準。來者，證明你不是下一個盜賊。
+鈴音（mage）［serious］：齒輪環亮了！看低火，不要跟橫刀弄反。
+
+[npc lingyin] 鈴音
+role = quest
+look = mage
+goal = collect 3 機關圖碎片
+reward = gold 600
+<meet>
+鈴音（mage）［normal］：我是鈴音。圖紙裂成三片，機關人偶裡或許還有。
+<done>
+鈴音（mage）［smile］：接好了。下一個機關，我替你預報。別說我沒提醒。
+<die>
+鈴音（mage）［sad］：別回頭。先出去。
+[npc ark] 疤面亞克
+role = choice
+look = assassin
+hp = 1600
+option = 救他，並肩出去 -> ally
+option = 留下路，讓他自己選 -> third
+option = 拿下他，交出偷來的鑰匙 -> enemy
+<meet>
+疤面亞克（assassin）［smile］：朋友，救個場？我只是來替寶物擦灰。
+<ally>
+疤面亞克（assassin）［smile］：你走前面……咳，我去吸引那些鐵疙瘩。
+<enemy>
+疤面亞克（assassin）［angry］：萬象之心只認一個主人，那就別怪我！
+<third>
+疤面亞克（assassin）［serious］：誰擋出口，我就砍誰。出去後互不相欠。
+<die>
+疤面亞克（assassin）［sad］：鑰匙……在我袖子裡。別讓它再鎖住別人。
+<done>
+疤面亞克（assassin）［smile］：這回我欠的，可不是一袋金幣。
+[npc wheat] 小麥
+role = escort
+look = archer
+hp = 2400
+until = market
+optional = on
+<meet>
+小麥（archer）［sad］：我不敢跑了……但我知道備用箱的鎖在哪。
+<safe>
+小麥（archer）［smile］：我撐過來了！我替你開藏箱，不能白受你照顧。
+<die>
+小麥（archer）［sad］：對不起……至少，你們要出去。
+<done>
+小麥（archer）［serious］：我不回盜寶團了。這次，跟對的人走。
+[npc oldsmith] 老匠的殘影
+role = lever
+look = priest
+option = 左桿：冷爐不吐火 -> correct
+option = 中桿：催輪便有路 -> wrong
+option = 右桿：留力予行人 -> neutral
+<meet>
+老匠的殘影（priest）［serious］：冷爐無舌，快輪多齒，空掌尚能贈藥。選吧。
+<done>
+老匠的殘影（priest）［normal］：你懂得止火，不只是催火。弩臂的火輪，停了。
+<enemy>
+老匠的殘影（priest）［sad］：催動了鎖輪。最後一室，機關會更急。
+<third>
+老匠的殘影（priest）［smile］：不猜也罷。每人一瓶大藥，留力氣活著出去。
+<die>
+老匠的殘影（priest）［sad］：魂不會死，只會等下一次開門。
+[npc merchant] 齒輪商人
+role = shop
+look = swordsman
+<meet>
+齒輪商人（swordsman）［normal］：歡迎。藥水溢價百分之五十。歡迎、歡迎。
+<done>
+齒輪商人（swordsman）［smile］：交易完成。珍惜時間。時間、時間。
+<die>
+齒輪商人（swordsman）［sad］：營業中止。下次、下次。

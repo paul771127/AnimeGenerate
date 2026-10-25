@@ -92,6 +92,7 @@ namespace SpellDuel
         // ------------------------------------------------------------ 每波的配置（主機／單人）
         void SetupHazards()
         {
+            if (Gallery) { ClearHazards(); nextRockAt=-1; return; }
             if (remoteEnemy || !endless) return;
             if (hazards.Exists(h => h.kind != HazardKind.Rock)) ClearHazards();
             nextRockAt = Theme == CanyonTheme ? waveStartAt + 3f : -1f;
@@ -295,6 +296,7 @@ namespace SpellDuel
         // ------------------------------------------------------------ 每幀
         void UpdateHazards()
         {
+            if (Gallery) return;
             if (endless && !remoteEnemy && Theme == CanyonTheme && nextRockAt > 0f && now >= nextRockAt && !stageCleared && (player.Alive || AnyAllyAlive))
             {
                 LaunchRocks();
@@ -335,6 +337,7 @@ namespace SpellDuel
 
         void HazardDamage(Fighter f, int dmg, Vector3 at, string label)
         {
+            dmg=Mathf.RoundToInt(dmg*(1-Mathf.Clamp(f.trapReduce,0,.7f)));
             Emit("hazard", at, new Color(1f, 0.55f, 0.3f), f.isPlayer ? $"{label}！" : null);
             HazardHit = true;   // 這一下的 hit／hurt 事件是陷阱造成的（畫面不要當成我打中了而震動）
             ApplyDamageAndEffect(f, dmg, EffectKind.None, 0f, 0f, at);

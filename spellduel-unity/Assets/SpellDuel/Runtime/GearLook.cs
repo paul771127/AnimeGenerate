@@ -29,7 +29,7 @@ namespace SpellDuel
             var g = new GearLook();
             if (equipped == null) return g;
             for (int i = 0; i < Slots && i < equipped.Length; i++)
-                if (equipped[i] != null) g.pieces[i] = new Piece { rarity = Mathf.Clamp(equipped[i].rarity, 0, 4), set = equipped[i].setId ?? "" };
+                if (equipped[i] != null) g.pieces[i] = new Piece { rarity = Mathf.Clamp(equipped[i].rarity, 0, 5), set = equipped[i].setId ?? "" };
             return g;
         }
 
@@ -60,6 +60,7 @@ namespace SpellDuel
         {
             switch (setId)
             {
+                case "clockwork": main=new Color(.45f,.31f,.16f);accent=new Color(.2f,.95f,.9f);return;
                 case "flame": main = new Color(0.78f, 0.18f, 0.1f); accent = new Color(1f, 0.62f, 0.15f); return;       // 炎龍：赤紅＋熔金
                 case "grove": main = new Color(0.2f, 0.52f, 0.25f); accent = new Color(0.72f, 0.9f, 0.35f); return;      // 森羅：深綠＋嫩葉
                 case "tide": main = new Color(0.12f, 0.38f, 0.62f); accent = new Color(0.45f, 0.9f, 0.9f); return;       // 海神：深海藍＋青
@@ -80,6 +81,7 @@ namespace SpellDuel
                 case 0: main = new Color(0.55f, 0.36f, 0.2f); accent = new Color(0.7f, 0.55f, 0.35f); return;
                 case 1: main = new Color(0.5f, 0.53f, 0.56f); accent = new Color(0.4f, 0.95f, 0.45f); return;
                 case 2: main = new Color(0.45f, 0.58f, 0.75f); accent = new Color(0.4f, 0.65f, 1f); return;
+                case 5: main=new Color(.65f,.13f,.18f);accent=new Color(1,.27f,.27f);return;
                 case 3: main = new Color(0.36f, 0.22f, 0.5f); accent = new Color(0.78f, 0.45f, 1f); return;
                 default: main = new Color(0.85f, 0.65f, 0.25f); accent = new Color(1f, 0.85f, 0.4f); return;
             }
@@ -107,7 +109,7 @@ namespace SpellDuel
                 if (!int.TryParse(r, out var rarity) || rarity < 0) continue;
                 string set = c >= 0 ? parts[i].Substring(c + 1) : "";
                 if (Economy.SetOf(set) == null) set = "";
-                g.pieces[i] = new Piece { rarity = Mathf.Clamp(rarity, 0, 4), set = set };
+                g.pieces[i] = new Piece { rarity = Mathf.Clamp(rarity, 0, 5), set = set };
             }
             return g;
         }

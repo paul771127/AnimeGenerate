@@ -11,6 +11,7 @@ namespace SpellDuel
 
         int DungeonMinionKind(int ordinal)
         {
+            if (Gallery) return GalleryRoster(ordinal);
             // Every fifth entry is ranged. Select from the wave's unlocked theme roster
             // in a stable order, without consuming the combat RNG (hits/AI cannot alter it).
             bool ranged = ordinal % 5 == 4;

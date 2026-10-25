@@ -17,6 +17,11 @@ namespace SpellDuel
             MinionReach=EliteArray(MinionReach,d=>2.6f);
             MinionWindup=EliteArray(MinionWindup,d=>1.5f);
             MinionXp=EliteArray(MinionXp,d=>MinionXp[d.baseKind]*4);
+            MinionNames=GalleryArray(MinionNames,k=>TrapGallery.Names[k-48]);
+            MinionHp=GalleryArray(MinionHp,k=>new[]{45,120,80,90,40}[k-48]);
+            MinionSpeed=GalleryArray(MinionSpeed,k=>.8f);MinionRadius=GalleryArray(MinionRadius,k=>k==52?.3f:.42f);
+            MinionHead=GalleryArray(MinionHead,k=>k==52?1.2f:1.7f);KeepMin=GalleryArray(KeepMin,k=>0f);KeepMax=GalleryArray(KeepMax,k=>0f);
+            MinionReach=GalleryArray(MinionReach,k=>3f);MinionWindup=GalleryArray(MinionWindup,k=>3.5f);MinionXp=GalleryArray(MinionXp,k=>35);
         }
         static T[] EliteArray<T>(T[] old,Func<EliteDef,T> value)
         {var a=new T[48];Array.Copy(old,a,old.Length);foreach(var d in EliteCatalog.All)a[d.kind]=value(d);return a;}
@@ -55,6 +60,7 @@ namespace SpellDuel
         public const float StoryEliteChance=0.15f;
         int EliteSpawnKind(int original,int ordinal,bool forced)
         {
+            if(Gallery)return original;
             if(eliteWaveAt>0)
             {
                 // 故事關（擲中的那一關）：那一波的第 2 隻（之後）換成這一章的菁英怪；稀有怪、菁英怪活著時先等下一隻
@@ -152,7 +158,7 @@ namespace SpellDuel
             foreach(var v in foes)
             {
                 if(v==null||!v.Alive||(!remote&&coopHost&&v.isAlly)||!EliteInside(move,center,forward,v))continue;
-                if(move==EliteMove.Sweep&&v.crouching){Emit("evade",v.Chest,def.color,"蹲下閃過！");continue;}
+                if(move==EliteMove.Sweep&&v.crouching){v.evadeBoostUntil=now+3;Emit("evade",v.Chest,def.color,"蹲下閃過！");continue;}
                 HitFoe(m,v,skill,damage,skill.effect,skill.effectDps,skill.effectDur);
             }
         }

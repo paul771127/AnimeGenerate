@@ -71,6 +71,7 @@ namespace SpellDuel.EditorTools
             MatchOverview();
             EliteShots(cam);
             WorldBossShots(cam);
+            TrapDungeonShots(cam);
             Debug.Log("[SpellDuel] snapshots saved to " + Path.GetFullPath("snapshots"));
         }
 

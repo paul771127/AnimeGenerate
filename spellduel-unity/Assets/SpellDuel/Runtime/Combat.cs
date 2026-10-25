@@ -37,7 +37,7 @@ namespace SpellDuel
         public float teamAtkUntil, teamAtk, teamHasteUntil, teamHaste, teamRegenUntil, teamRegen, teamCritUntil, teamCrit;
         public float HasteMul(float now) => teamHasteUntil > now ? Mathf.Max(0.4f, 1f - teamHaste) : 1f;
         public float TeamCritAt(float now) => teamCritUntil > now ? teamCrit : 0f;
-        public float OutMul(float now) => (prepUntil > now ? 1f + prepBonus : 1f) * (1f + chargeBonus) * RageMul * (teamAtkUntil > now ? 1f + teamAtk : 1f)
+        public float OutMul(float now) => (evadeBoostUntil > now ? 1f + evadeBoost : 1f) * (prepUntil > now ? 1f + prepBonus : 1f) * (1f + chargeBonus) * RageMul * (teamAtkUntil > now ? 1f + teamAtk : 1f)
             * (lowMpBonus > 0f && maxMp > 0f && mp < maxMp * 0.3f ? 1f + lowMpBonus : 1f)       // 法師「孤注一擲」：MP 低於 30%
             * (zeal > 0f && maxHp > 0f ? 1f + zeal * Mathf.Clamp01(1f - hp / maxHp) : 1f);        // 牧師「狂信」：HP 越低傷害越高
         // ---- 技能樹的流派效果（CharacterProfile.ApplyTo 設定；0＝沒點）
@@ -91,6 +91,7 @@ namespace SpellDuel
         public int shieldLeft;
         /// <summary>精魄（Souls.cs）：格擋率、受到的傷害倍率（副作用）、反彈、觸發型效果</summary>
         public float blockChance, soulTaken = 1f, thorns;
+        public float trapReduce,evadeBoost,evadeBoostUntil;
         /// <summary>無盡塔每 5 波出現的精銳敵人（血量 ×6、攻擊 ×1.6、體型 ×1.5）</summary>
         public bool isElite;
         /// <summary>召喚師收服的魔物（小怪種類；−1＝不是）</summary>
@@ -544,7 +545,7 @@ namespace SpellDuel
         public static bool IsRangedMinion(int kind) => kind >= 0 && kind < MinionReach.Length && MinionReach[kind] >= 5f;
         static readonly float[] MinionReach = { 0.95f, 9f, 1.2f, 1.3f, 11f, 14f, 13f, 8f, 5f, 6f, 1.0f, 1.3f, 9f, 7f, 9f, 11f, 1.3f, 1.4f, 5f, 1.8f, 1.8f, 1.8f, 1.8f };
         static readonly float[] MinionWindup = { 1.5f, 0.8f, 1.5f, 0.5f, 1.2f, 1.6f, 1.0f, 1.0f, 0.8f, 1.0f, 0.7f, 0.8f, 0.9f, 0.6f, 0.6f, 1.2f, 0.8f, 0.6f, 1.0f, SpecialWindup, SpecialWindup, SpecialWindup, SpecialWindup };
-        public const int MinionKinds = 48;
+        public const int MinionKinds = 53;
         // ---- 第二～五章 x-4、x-5 的特殊敵人（19 古根撼地獸、20 潮鞭鰻、21 鏈錘鬥奴、22 裂岩甲蜥）：
         //      場上同時最多 1 隻、出現頻率低；大範圍招式（比 Boss 小），要跳起來（地面震環）或蹲下（胸口高度橫掃）才躲得掉，走出範圍也打不到
         public const float SpecialWindup = 1.5f;
@@ -978,12 +979,13 @@ namespace SpellDuel
             bossSpawnedThisWave = true;
             int bossIndex = wave / BossEvery - 1;
             var at = FixedDungeonSpawns ? DungeonSpawnPoint(0) : (bossPoint ?? edgePoint)();
+            if(Gallery){GalleryFrame(out var center,out float x,out float z);at=center+Vector3.forward*Mathf.Min(.6f,z*.3f);}
             enemy.maxHp = Mathf.RoundToInt((storyBossHp > 0f ? storyBossHp : bossBaseHp * (1f + 0.5f * bossIndex) * bossHpMul) * BossPartyMul * hpBoost * BoostHpMul * BossHpCut * TowerMul);
             enemy.hp = enemy.maxHp;
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
             enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f; enemy.silencedUntil = 0f;
             // 依主題換 Boss：熔岩巨像／腐化樹王（招式不同）
-            var bc = Skills.Classes[BossClassOf(Theme)];
+            var bc = Skills.Classes[Gallery ? "boss_clockwork" : BossClassOf(Theme)];
             if (enemy.cls != bc)
             {
                 enemy.cls = bc; enemy.name = bc.name;
@@ -1086,6 +1088,7 @@ namespace SpellDuel
                 float d = best;
                 int kind = m.minionKind;
                 int hold = minionHold != null ? minionHold(m) : 0;
+                if (Gallery && kind >= 48) { TickGalleryMinion(m,tgt,d,dt,hold); continue; }
                 if (EliteCatalog.IsElite(kind)) { TickElite(m, tgt, d, dt, hold); continue; }
                 if (hold == 1) { m.windupUntil = 0f; m.attackReadyAt = Mathf.Max(m.attackReadyAt, now + 0.6f); continue; }   // 教學：定住
                 if (hold == 2) { m.windupUntil = 0f; m.attackReadyAt = Mathf.Max(m.attackReadyAt, now + 0.6f); }          // 教學：只走位
@@ -1304,7 +1307,7 @@ namespace SpellDuel
             var to = v.Feet - center; to.y = 0f;
             if (to.magnitude > R) return;
             if (half < 180f && to.sqrMagnitude > 1e-4f && fwd != Vector3.zero && Vector3.Angle(fwd, to) > half) return;
-            if (v.crouching) { Emit("evade", v.Chest, new Color(0.6f, 0.9f, 1f), "蹲下閃過！"); return; }
+            if (v.crouching) { v.evadeBoostUntil=now+3; Emit("evade", v.Chest, new Color(0.6f, 0.9f, 1f), "蹲下閃過！"); return; }
             HitFoe(m, v, s, dmg);
         }
 
@@ -1331,7 +1334,7 @@ namespace SpellDuel
                 var to = v.Feet - m.Feet; to.y = 0f;
                 if (to.magnitude > R) continue;
                 if (half < 180f && to.sqrMagnitude > 1e-4f && fw != Vector3.zero && Vector3.Angle(fw, to) > half) continue;
-                if (v.crouching) { Emit("evade", v.Chest, new Color(0.6f, 0.9f, 1f), "蹲下閃過！"); continue; }
+                if (v.crouching) { v.evadeBoostUntil=now+3; Emit("evade", v.Chest, new Color(0.6f, 0.9f, 1f), "蹲下閃過！"); continue; }
                 HitFoe(m, v, s, dmg);
             }
             Emit("minionattack", m.Feet, s.color, null);
@@ -1954,7 +1957,7 @@ namespace SpellDuel
             foreach (var v in MeleeFoes(f))
             {
                 if (v == null || !v.Alive || !InSlash(o, a, b, reach, v)) continue;
-                if (duckable && v.crouching) { Emit("evade", v.Chest, s.color, "蹲下閃過！"); continue; }
+                if (duckable && v.crouching) { v.evadeBoostUntil=now+3; Emit("evade", v.Chest, s.color, "蹲下閃過！"); continue; }
                 if (duckable && SidestepInvuln && v.dodgeUntil > now) { Emit("evade", v.Chest, s.color, "閃避！"); continue; }
                 MeleeHit(f, s, v, dmg); landed++;
             }
@@ -2530,7 +2533,7 @@ namespace SpellDuel
                     if (EliteCatalog.IsElite(w.owner.minionKind) && w.owner.isMinion && d > w.maxR) continue;
                     if (d < w.lastR - QuakeBand || d > r + QuakeBand) continue;   // 環還沒到／已經過去
                     w.done.Add(v);
-                    if (v.airborneUntil > now) { Emit("evade", v.Chest, new Color(0.6f, 1f, 0.8f), "跳過了！"); continue; }
+                    if (v.airborneUntil > now) { v.evadeBoostUntil=now+3; Emit("evade", v.Chest, new Color(0.6f, 1f, 0.8f), "跳過了！"); continue; }
                     HitFoe(w.owner, v, w.skill, w.dmg);
                 }
                 w.lastR = r;
@@ -2629,6 +2632,7 @@ namespace SpellDuel
             UpdatePools();
             UpdateLanes();
             UpdatePets(dt);
+            UpdateGalleryTraps();
             UpdateHazards();   // 角鬥場的斧頭與地刺、山道的落石（Combat.Hazards.cs）
         }
 
@@ -3457,7 +3461,7 @@ namespace SpellDuel
                 { float share = dmg * f.oathShare; dmg -= share; OnOathShare?.Invoke(f.oathBy, share); }
                 // 石像守衛：替主人承受 80% 的傷害
                 var golem = pets.Find(x => x.alive && !x.remote && x.owner == f && x.kind == "golem" && x.hp > 0f);
-                if (golem != null)
+                if (golem != null && !galleryTrapDamage)
                 {
                     float share = Mathf.Min(golem.hp, dmg * GolemShare);
                     golem.hp -= share; dmg -= share;

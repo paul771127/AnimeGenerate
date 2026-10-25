@@ -650,7 +650,7 @@ namespace SpellDuel
 
     // ---------------------------------------------------------------- 裝備
     public enum Slot { Weapon, Head, Body, Feet, Trinket }
-    public enum Affix { Str, Int, Vit, Agi, Spi, Luk, Hp, Mp, Crit, Cdr, Lifesteal, Burn, Poison, Freeze, Atk, Armor }
+    public enum Affix { Str, Int, Vit, Agi, Spi, Luk, Hp, Mp, Crit, Cdr, Lifesteal, Burn, Poison, Freeze, Atk, Armor, TrapReduce, DodgePower }
 
     public class Item
     {
@@ -668,11 +668,11 @@ namespace SpellDuel
         public string FullName => (plus > 0 ? $"+{plus} " : "") + name;
 
         public static readonly string[] SlotNames = { "武器", "頭部", "身體", "鞋子", "飾品" };
-        public static readonly string[] RarityNames = { "普通", "優良", "稀有", "史詩", "傳說" };
+        public static readonly string[] RarityNames = { "普通", "優良", "稀有", "史詩", "傳說", "神話" };
         public static readonly Color[] RarityColors =
         {
             new Color(0.85f, 0.85f, 0.85f), new Color(0.4f, 0.95f, 0.45f), new Color(0.4f, 0.65f, 1f),
-            new Color(0.78f, 0.45f, 1f), new Color(1f, 0.65f, 0.15f),
+            new Color(0.78f, 0.45f, 1f), new Color(1f, 0.65f, 0.15f), new Color(.937f,.267f,.267f),
         };
 
         public bool ClassOk(string cls)
@@ -701,6 +701,7 @@ namespace SpellDuel
             Affix.Crit => $"爆擊率 +{v * 100:0.#}%", Affix.Cdr => $"冷卻 -{v * 100:0.#}%",
             Affix.Lifesteal => $"吸血 {v * 100:0.#}%",
             Affix.Burn => $"灼燒機率 +{v * 100:0}%", Affix.Poison => $"中毒機率 +{v * 100:0}%", Affix.Freeze => $"冰凍機率 +{v * 100:0}%",
+            Affix.TrapReduce => $"陷阱傷害 -{v*100:0}%", Affix.DodgePower => $"身體閃避後3秒傷害 +{v*100:0}%",
             Affix.Atk => $"攻擊傷害 +{v * 100:0}%", _ => $"受到的傷害 -{v * 100:0.#}%",
         };
 
@@ -797,6 +798,7 @@ namespace SpellDuel
             new[] { "符文", "秘銀", "星光" },
             new[] { "熔岩之心", "古樹之魂", "深海之怒", "龍鱗" },
             new[] { "傳說・烈焰王", "傳說・世界樹", "傳說・海神", "傳說・天命" },
+            new[] { "神話・萬象", "神話・千機" },
         };
         static readonly Affix[] Pool = { Affix.Str, Affix.Int, Affix.Vit, Affix.Agi, Affix.Spi, Affix.Luk, Affix.Hp, Affix.Mp, Affix.Crit, Affix.Cdr, Affix.Burn, Affix.Poison, Affix.Freeze, Affix.Lifesteal };
 
@@ -818,9 +820,10 @@ namespace SpellDuel
         {
             if (prefer == Skills.Novice) prefer = null;   // 初心者：什麼職業的都可能掉（轉職後用得到），不鎖成初心者專用
             ilvl = Mathf.Max(1, ilvl);
+            rarity = Mathf.Clamp(rarity,0,5);
             var slot = (Slot)rng.Next(5);
             var it = new Item { slot = slot, rarity = rarity, ilvl = ilvl, uid = DateTime.UtcNow.Ticks + rng.Next(100000), soulSlots = Souls.RollSlots(rng, rarity) };
-            float power = ilvl * (1f + 0.35f * rarity);          // 稀有度越高越強
+            float power = ilvl * (1f + 0.35f * Mathf.Min(rarity,4));          // 稀有度越高越強
             string baseName;
             switch (slot)
             {
@@ -839,6 +842,7 @@ namespace SpellDuel
                 case Slot.Feet: { var f = Pick(rng, Feets, prefer); baseName = f.name; it.classes = f.cls; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Agi, Mathf.Round(1f + 0.35f * power))); break; }
                 default: baseName = Trinkets[rng.Next(Trinkets.Length)]; it.classes = ""; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Luk, Mathf.Round(1f + 0.3f * power))); break;
             }
+            if (rarity == 5 && it.mods.Count > 0) { var main = it.mods[0]; it.mods[0] = new KeyValuePair<Affix,float>(main.Key,main.Value*1.2f); }
             // 稀有度越高：附加屬性越多、限制越嚴（傳說只能單一職業）
             int affixes = rarity;
             for (int i = 0; i < affixes; i++)
@@ -1278,6 +1282,7 @@ namespace SpellDuel
             if (f.loadout.Count == 0) foreach (var id in known) { if (f.loadout.Count >= 3) break; f.loadout.Add(ModdedSkill(id)); }
             f.hp = Mathf.Max(1f, f.maxHp * hpRatio); f.mp = f.maxMp * mpRatio;
             Advanced.ApplyStats(f, Adv);   // 進階職業：HP、MP、攻擊、減傷、爆擊、閃避、治療量
+            f.trapReduce = GearSum(Affix.TrapReduce); f.evadeBoost = GearSum(Affix.DodgePower);
             Souls.ApplyTo(f, this);        // 裝備上的精魄
             if (f.cloneLent > 0) { f.maxHp = Mathf.Max(1, f.maxHp - f.cloneLent); f.hp = Mathf.Min(f.hp, f.maxHp); }   // 影分身借走的 HP 上限
         }

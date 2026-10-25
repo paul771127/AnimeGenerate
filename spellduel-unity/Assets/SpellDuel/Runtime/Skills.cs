@@ -378,6 +378,7 @@ namespace SpellDuel
             // 職業特色：箭最快（3 m/s，獵人的優勢＝射程遠、飛得快）；其他職業的法術慢很多（約 1.4～2.5 m/s）
             foreach (var kv in ClassSpeeds) if (All.TryGetValue(kv.Key, out var cs)) cs.speed = kv.Value;
             EliteCatalog.RegisterSkills();
+            TrapGallery.Register();
         }
     }
 }

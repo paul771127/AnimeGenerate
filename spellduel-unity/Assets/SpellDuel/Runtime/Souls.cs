@@ -35,6 +35,7 @@ namespace SpellDuel
         KillMp,        // 打倒敵人時 chance 機率回復 v MP
         Retaliate,     // 被打到時 chance 機率讓攻擊者中毒（v 每秒、dur 秒）
         Undying,       // 每場戰鬥一次：受到致命傷害時留 1 HP、無敵 3 秒
+        TrapReduce, DodgePower,
     }
 
     /// <summary>精魄能鑲在哪一類裝備：武器（傷害）、防具（頭、身體、鞋子；防禦）、飾品（技能、輔助、特殊）</summary>
@@ -120,6 +121,11 @@ namespace SpellDuel
                 SoulFx fx = e.role == 0 ? F(SoulOp.Block,.08f) : e.role == 1 ? F(SoulOp.CritDmg,.25f) : e.role == 2 ? F(SoulOp.HitSnare,0,.06f,.8f) : e.role == 3 ? F(SoulOp.KillHeal,.08f,.30f) : F(SoulOp.BasicSpeed,.10f);
                 M(e.kind,.01f,ColorUtility.ToHtmlStringRGB(e.color).Insert(0,"#"),fx);
             }
+            M(48,.005f,"#d6ae67",F(SoulOp.CritDmg,.15f));
+            M(49,.005f,"#aa8854",F(SoulOp.TrapReduce,.20f));
+            M(50,.005f,"#38dddd",F(SoulOp.DodgePower,.15f));
+            M(51,.005f,"#a5b0b9",F(SoulOp.Block,.06f));
+            M(52,.005f,"#91c9e2",F(SoulOp.Evade,.05f));
             AssignParts();
         }
 
@@ -152,6 +158,8 @@ namespace SpellDuel
             string sg(float v) => v >= 0 ? "+" : "−";
             switch (x.op)
             {
+                case SoulOp.TrapReduce: return $"陷阱傷害 -{x.v*100:0}%";
+                case SoulOp.DodgePower: return $"跳／蹲閃避後3秒傷害 +{x.v*100:0}%";
                 case SoulOp.Stat: return $"{StatInfo.Names[(int)x.stat]} {sg(x.v)}{Mathf.Abs(x.v):0}";
                 case SoulOp.Atk: return $"攻擊傷害 {sg(x.v)}{Pct(Mathf.Abs(x.v))}";
                 case SoulOp.Hp: return $"HP 上限 {sg(x.v)}{Mathf.Abs(x.v):0}";
@@ -228,6 +236,8 @@ namespace SpellDuel
             {
                 switch (x.op)
                 {
+                    case SoulOp.TrapReduce: f.trapReduce=Mathf.Clamp01(f.trapReduce+x.v);break;
+                    case SoulOp.DodgePower: f.evadeBoost+=x.v;break;
                     case SoulOp.Atk: f.atkMul *= Mathf.Max(0.2f, 1f + x.v); break;
                     case SoulOp.Hp: f.maxHp = Mathf.Max(10, f.maxHp + Mathf.RoundToInt(x.v)); break;
                     case SoulOp.Mp: f.maxMp = Mathf.Max(10, f.maxMp + Mathf.RoundToInt(x.v)); break;

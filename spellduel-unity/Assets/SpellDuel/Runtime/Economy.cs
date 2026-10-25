@@ -113,7 +113,7 @@ namespace SpellDuel
         public class SetDef
         {
             public string id, name, desc;
-            public int theme = -1;                       // 哪個主題的地圖掉（−1＝到處都會掉）
+            public int theme = -1; public bool exclusive;                       // 哪個主題的地圖掉（−1＝到處都會掉）
             public KeyValuePair<Affix, float>[] two, four;
         }
 
@@ -121,6 +121,7 @@ namespace SpellDuel
 
         public static readonly List<SetDef> Sets = new List<SetDef>
         {
+            new SetDef {id="clockwork",name="千機",theme=3,exclusive=true,desc="千機迴廊專屬",two=new[]{A(Affix.TrapReduce,.12f)},four=new[]{A(Affix.DodgePower,.15f)}},
             new SetDef { id = "flame", name = "炎龍", theme = 0, desc = "熔岩地帶掉落",
                 two = new[] { A(Affix.Atk, 0.08f) }, four = new[] { A(Affix.Burn, Economy.SetStatusChance), A(Affix.Crit, 0.08f) } },
             new SetDef { id = "grove", name = "森羅", theme = 1, desc = "森林掉落",
@@ -143,9 +144,9 @@ namespace SpellDuel
         /// <summary>挑一套：主題地圖 60% 掉主題套裝，其他時候從通用套裝挑</summary>
         public static SetDef RollSet(System.Random rng, int theme)
         {
-            var themed = Sets.Find(s => s.theme == theme && theme >= 0);
+            var themed = Sets.Find(s => !s.exclusive && s.theme == theme && theme >= 0);
             if (themed != null && rng.NextDouble() < 0.6) return themed;
-            var common = Sets.FindAll(s => s.theme < 0);
+            var common = Sets.FindAll(s => !s.exclusive && s.theme < 0);
             return common[rng.Next(common.Count)];
         }
 

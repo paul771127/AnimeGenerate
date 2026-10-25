@@ -9,7 +9,7 @@ import re, sys, os
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT = os.path.join(HERE, "..", "Assets", "SpellDuel", "Resources", "dungeons.txt")
 STORY = os.path.join(HERE, "..", "Assets", "SpellDuel", "Resources", "story.txt")
-THEMES = {"volcano", "熔岩", "0", "forest", "森林", "1", "sea", "海", "海上", "2", "arena", "角鬥場", "3", "canyon", "山道", "黃土山道", "4"}
+THEMES = {"vault","volcano", "熔岩", "0", "forest", "森林", "1", "sea", "海", "海上", "2", "arena", "角鬥場", "3", "canyon", "山道", "黃土山道", "4"}
 LOOKS = {"mage", "archer", "swordsman", "priest", "assassin"}
 MAX_LINE = 60
 ROOM_TAGS = ("enter", "clear", "boss_half")
@@ -95,17 +95,17 @@ def check(path):
             parts = v.split()
             if npc is not None:
                 if k == "role":
-                    if v not in ("escort", "choice", "quest"): errors.append(f"第 {ln} 行：role 只能是 escort／choice／quest")
+                    if v not in ("escort", "choice", "quest", "lever", "shop"): errors.append(f"第 {ln} 行：role 只能是 escort／choice／quest")
                     npc["role"] = v
                 elif k == "hp":
                     if not v.isdigit() or int(v) < 1: errors.append(f"第 {ln} 行：hp 要是 1 以上的整數")
                 elif k == "look":
                     if v not in LOOKS: errors.append(f"第 {ln} 行：look 只能是 mage／archer／swordsman／priest／assassin")
-                elif k == "tag": pass
+                elif k in ("tag", "optional"): pass
                 elif k == "until": npc["until"] = v
                 elif k == "option":
                     m = re.match(r"(.+?)\s*->\s*(\w+)\s*$", v)
-                    if not m or m.group(2).lower() not in ("ally", "enemy", "third"): errors.append(f"第 {ln} 行：option 的格式是「選項文字 -> ally／enemy／third」")
+                    if not m or m.group(2).lower() not in (("correct", "wrong", "neutral") if npc["role"] == "lever" else ("ally", "enemy", "third")): errors.append(f"第 {ln} 行：option 的格式是「選項文字 -> ally／enemy／third」")
                     else: npc["options"] += 1
                 elif k == "goal":
                     g = parts[0].lower() if parts else ""
@@ -135,6 +135,12 @@ def check(path):
                     else: d["level"] = int(v)
                 elif k == "players":
                     if not re.fullmatch(r"\d+(-\d+)?", v): errors.append(f"第 {ln} 行：players 寫成 2-4 這樣")
+                elif k == "time_limit":
+                    if not v.isdigit() or int(v)<1: errors.append(f"第 {ln} 行：time_limit 必須為分鐘正整數")
+                    else: d["time_limit"]=int(v)
+                elif k == "traps":
+                    if v not in ("on","off"): errors.append(f"第 {ln} 行：traps 只能是 on/off")
+                    d["traps"]=v
                 elif k == "unlock": d["unlock"] = None if v in ("", "none") else v
                 else: errors.append(f"第 {ln} 行：副本不認得的設定 {k}")
             continue
@@ -178,12 +184,25 @@ def check(path):
                 if r["id"] not in seen: errors.append(f"副本 {d['id']}：地點 {r['id']} 從起點走不到")
             if rooms[0]["kind"] == "chest": errors.append(f"副本 {d['id']}：第一個地點不能是寶箱")
         for n in npcs:
-            if n["role"] == "choice" and n["options"] < 2: errors.append(f"副本 {d['id']} 人物 {n['id']}：抉擇人物至少要 2 個 option")
+            if n["role"] in ("choice", "lever") and n["options"] < 2: errors.append(f"副本 {d['id']} 人物 {n['id']}：抉擇人物至少要 2 個 option")
             if n["role"] == "quest" and not n["goal"]: errors.append(f"副本 {d['id']} 人物 {n['id']}：任務人物要寫 goal")
             if n["goal_node"] and n["goal_node"] not in by_id: errors.append(f"副本 {d['id']} 人物 {n['id']}：goal reach 指到不存在的地點 {n['goal_node']}")
             if n["until"] and n["until"] not in by_id: errors.append(f"副本 {d['id']} 人物 {n['id']}：until 指到不存在的地點 {n['until']}")
             if n["meet"] == 0: errors.append(f"副本 {d['id']} 人物 {n['id']}：要有 <meet>（登場台詞）")
             if not any(n["id"] in r["npcs"] for r in rooms): errors.append(f"副本 {d['id']} 人物 {n['id']}：沒有任何地點寫 npc = {n['id']}")
+    for d in dungeons:
+        if d['id'] != 'thousand_trap_gallery': continue
+        by_id={r['id']:r for r in d['rooms']}
+        def paths(r,n,visited):
+            if r['id'] in visited:return
+            n+=r['kind']!='chest'
+            if not r['next']:
+                if n!=10:errors.append(f"千機迴廊路線必須恰好10戰，目前{n}")
+                return
+            for key in r['next']:
+                if key in by_id:paths(by_id[key],n,visited|{r['id']})
+        paths(d['rooms'][0],0,set())
+        if d.get('time_limit')!=25 or d.get('traps')!='on':errors.append('千機迴廊必須25分鐘且traps=on')
     return errors, dungeons
 
 
