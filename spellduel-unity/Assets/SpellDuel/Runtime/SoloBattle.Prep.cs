@@ -25,6 +25,21 @@ namespace SpellDuel
         readonly Dictionary<string, int> carryLeft = new Dictionary<string, int>();
         bool carryLoaded;
         static int CarryCap(Economy.Consumable c) => c.scroll ? 1 : CarryMax;
+        /// <summary>以前存的帶出數量超過合計上限：從帶最多的那種開始減</summary>
+        void TrimCarry()
+        {
+            for (int guard = 0; guard < 50 && CarriedPotions > PotionTotalMax; guard++)
+            {
+                Economy.Consumable most = null; int mn = 0;
+                foreach (var c in Economy.Consumables) { if (c.scroll) continue; int n = Mathf.Min(CarryOf(c.id), Economy.Count(c.id)); if (n > mn) { mn = n; most = c; } }
+                if (most == null) break;
+                carry[most.id] = mn - 1;
+            }
+            SaveCarry();
+        }
+        /// <summary>每一關帶的藥水合計最多幾瓶（回城捲軸另外算）</summary>
+        public const int PotionTotalMax = 5;
+        int CarriedPotions { get { int t = 0; foreach (var c in Economy.Consumables) if (!c.scroll) t += Mathf.Min(CarryOf(c.id), Economy.Count(c.id)); return t; } }
 
         void LoadCarry()
         {
@@ -62,7 +77,7 @@ namespace SpellDuel
         void OpenPrep(string title, bool endlessLike, string noItems, Action go)
         {
             prepTitle = title; prepEndless = endlessLike; prepNoItems = noItems; prepGo = go; prepScroll = Vector2.zero; prepLookOnly = false; prepStage = null; inviteAsk = false;
-            LoadCarry(); FixLoadout();
+            LoadCarry(); TrimCarry(); FixLoadout();
         }
 
         /// <summary>只是看看（新手導覽打開的整備）：按「✔ 好了」關掉，不出發</summary>
@@ -127,7 +142,7 @@ namespace SpellDuel
             if (iv > 0f) y += iv + gap * 1.5f;
 
             // ---- 道具
-            UiKit.Text(new Rect(pad, y, cw - pad * 2, u), prepNoItems != null ? "🧪 道具：" + prepNoItems : $"🧪 帶出去的道具（每種最多 {CarryMax} 瓶；戰鬥中只能用帶出來的）", fsS, UiKit.Gold, TextAnchor.MiddleLeft, true);
+            UiKit.Text(new Rect(pad, y, cw - pad * 2, u), prepNoItems != null ? "🧪 道具：" + prepNoItems : $"🧪 帶出去的道具（藥水合計最多 {PotionTotalMax} 瓶，現在 {CarriedPotions} 瓶；回城捲軸 1 張；戰鬥中只能用帶出來的）", fsS, UiKit.Gold, TextAnchor.MiddleLeft, true);
             y += u;
             if (prepNoItems == null)
                 foreach (var c in Economy.Consumables)
@@ -139,7 +154,7 @@ namespace SpellDuel
                     UiKit.Text(new Rect(r.x + gap, r.y, r.width - bw * 3 - gap * 3, r.height), $"{c.icon} {c.name}　（背包 {own}）", fsS, own > 0 ? Color.white : Color.gray, TextAnchor.MiddleLeft);
                     if (UiKit.Button(new Rect(r.xMax - bw * 3 - gap, r.y + 2, bw, r.height - 4), "−", fs, false, null, n > 0)) { carry[c.id] = n - 1; SaveCarry(); }
                     UiKit.Text(new Rect(r.xMax - bw * 2 - gap, r.y, bw, r.height), $"{n}", fs, n > 0 ? Color.white : Color.gray, TextAnchor.MiddleCenter, true);
-                    if (UiKit.Button(new Rect(r.xMax - bw - gap, r.y + 2, bw, r.height - 4), "＋", fs, false, null, n < cap)) { carry[c.id] = n + 1; SaveCarry(); }
+                    if (UiKit.Button(new Rect(r.xMax - bw - gap, r.y + 2, bw, r.height - 4), "＋", fs, false, null, n < cap && (c.scroll || CarriedPotions < PotionTotalMax))) { carry[c.id] = n + 1; SaveCarry(); }
                     y += u * 1.15f + gap * 0.4f;
                 }
             if (prepNoItems == null && Economy.Consumables.TrueForAll(c => Economy.Count(c.id) == 0))

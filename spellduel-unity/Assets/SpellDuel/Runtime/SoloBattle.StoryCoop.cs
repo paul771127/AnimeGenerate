@@ -17,6 +17,8 @@ namespace SpellDuel
     public partial class SoloBattle
     {
         bool netStory; string netStoryId;
+        /// <summary>故事出怪：每人場上最多 5 隻、打倒後 5 秒補滿；第二章以後的 Boss ×1.3</summary>
+        public const int StoryMaxAlive = 5; public const float StoryRefillDelay = 5f, LateBossMul = 1.3f;
         /// <summary>首頁／村子：故事關卡的整備畫面按「邀請隊友」（GameRoot 進連線大廳）</summary>
         public System.Action<bool> RequestNetStory;
         StoryStage prepStage;   // 整備畫面是哪一關（邀請隊友用）

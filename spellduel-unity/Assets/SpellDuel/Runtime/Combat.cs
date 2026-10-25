@@ -67,6 +67,8 @@ namespace SpellDuel
         public float RageMul => 1f;   // 原本狂戰士的怒氣（劍仙取代後不再使用）
         /// <summary>劍仙：劍來（普攻強化到這個時間）、御劍術（飛劍連射到這個時間、用哪個技能的數值）</summary>
         public float swordUntil, yujianUntil; public SkillDef yujianSkill;
+        /// <summary>劍來期間普攻的集氣多幾秒（0.5～2 秒，依「劍來延長」的等級）</summary>
+        public float jianlaiSlow;
         public float oathUntil, oathShare; public Fighter oathBy;   // 聖騎士的守護誓言：我受到的傷害有 oathShare 轉給 oathBy
         public float selfOathUntil;     // 聖騎士自己：誓言期間受到的傷害 -20%
         public float frenzyUntil, undyingUntil, invulnUntil;        // 狂戰士：血之狂暴、不死之軀、無敵
@@ -672,7 +674,11 @@ namespace SpellDuel
         /// 補怪間隔（秒；0＝照常）：同時在場的一批出齊之後，每打倒一隻要等這麼久才補下一隻（一次補一隻），直到這一波全部打倒（故事第三章 20 秒）
         /// </summary>
         public float refillDelay;
+        /// <summary>故事關卡：場上同時最多幾隻小怪（Boss 不算；5 × 人數）；0＝照公式</summary>
+        public int storyMaxAlive;
+        int pendingRefill;   // 到時間但場上滿了（還沒補）的隻數
         bool batchOut; int lastMinionCount;
+        readonly Queue<float> refillAt = new Queue<float>();   // 每打倒一隻：排定 refillDelay 秒後補一隻
         /// <summary>這種小怪這一場的預備時間（含倍率）</summary>
         public float WindupOf(int kind) => MinionWindupOf(kind) * minionWindupMul;
         /// <summary>近戰小怪血量倍率；遠程小怪每次出手後多休息幾秒（故事第二章：近戰 ×0.7、遠程 +3 秒）</summary>
@@ -775,7 +781,7 @@ namespace SpellDuel
             }
             nextMinionAt = waveStartAt;
             nextSpecialAt = waveStartAt + SpecialFirstDelay;
-            batchOut = false; lastMinionCount = 0;
+            batchOut = false; lastMinionCount = 0; refillAt.Clear(); pendingRefill = 0;
             SetupHazards();   // 角鬥場：這一波的陷阱配置；山道：落石計時（Combat.Hazards.cs）
             Emit("wavestart", player.Feet, Color.white, IsBossWave ? (bossPending ? $"{WaveLabel}：{waveTotal} 隻小怪…（最深處有什麼在等著）" : $"{WaveLabel}：Boss 來了！") : $"{WaveLabel}：{waveTotal} 隻小怪");
         }
@@ -843,18 +849,22 @@ namespace SpellDuel
             // 小怪波：照間隔陸續出現（每次兩隻）；場上同時最多 6＋波次/3×2 隻（合作 +4）
             int maxAlive = dungeonParty > 0 ? Mathf.Min(24, Mathf.Min(12, 5 + wave / 4) * dungeonParty / 2 + 2)   // 副本：同時在場也跟著人數（最多 24）
                 : Mathf.Max(2, Mathf.CeilToInt((Mathf.Min(12, 5 + wave / 4) + 4 * ScaleAllies) * stageEnemyMul * CountMixMul));   // 同時在場的上限（第 1 波 5 隻、每 4 波 +1，最多 12）
+            if (storyMaxAlive > 0) maxAlive = Mathf.Min(maxAlive, storyMaxAlive);   // 故事：最多 5 隻 × 人數
+            int due = 0;
             if (refillDelay > 0f)
             {
-                // 補怪間隔：一批出齊之後，打倒一隻 → refillDelay 秒後才補下一隻
+                // 補怪：一批出齊之後，每打倒一隻 → refillDelay 秒後補一隻（場上最多 maxAlive）
                 if (minions.Count >= maxAlive || waveToSpawn == 0) batchOut = true;
-                if (batchOut && minions.Count < lastMinionCount) nextMinionAt = Mathf.Max(nextMinionAt, now + refillDelay);
+                if (batchOut) for (int i = minions.Count; i < lastMinionCount; i++) refillAt.Enqueue(now + refillDelay);
                 lastMinionCount = minions.Count;
+                while (refillAt.Count > 0 && refillAt.Peek() <= now) { refillAt.Dequeue(); due++; }
+                pendingRefill += due; due = pendingRefill;
             }
             bool refilling = refillDelay > 0f && batchOut;
             if (holdSpawns) nextMinionAt = Mathf.Max(nextMinionAt, now);
-            else if (waveToSpawn > 0 && now >= nextMinionAt && minions.Count < maxAlive)
+            else if (waveToSpawn > 0 && (refilling ? due > 0 : now >= nextMinionAt) && minions.Count < maxAlive)
             {
-                for (int k = 0; k < (refilling ? 1 : 2) && waveToSpawn > 0 && minions.Count < maxAlive; k++)
+                for (int k = 0; k < (refilling ? due : 2) && waveToSpawn > 0 && minions.Count < maxAlive; k++, pendingRefill = refilling ? pendingRefill - 1 : pendingRefill)   // 補怪：到時間的那幾隻
                 {
                     int ordinal = dungeonSpawnOrdinal++;
                     var at = FixedDungeonSpawns ? DungeonSpawnPoint(ordinal) : edgePoint();
@@ -868,7 +878,6 @@ namespace SpellDuel
                     waveToSpawn--;
                 }
                 nextMinionAt = now + Mathf.Max(2.5f, 5f - 0.1f * wave) * (ScaleAllies > 0 ? Mathf.Max(0.5f, 1f - 0.25f * ScaleAllies) : 1f) + spawnGapAdd;
-                if (refilling) nextMinionAt = now + refillDelay;   // 補怪：一次一隻，下一隻再等 refillDelay 秒
                 lastMinionCount = minions.Count;
             }
             UpdateSpecialSpawn();
@@ -1793,7 +1802,7 @@ namespace SpellDuel
                 });
                 return true;
             }
-            f.cooldownUntil[s.id] = now + s.cooldown * f.basicCdMul * CdFactor(f);   // 普攻冷卻看敏捷（不是精神）
+            f.cooldownUntil[s.id] = now + s.cooldown * f.basicCdMul * CdFactor(f) + (SwordComeOn(f, s) ? f.jianlaiSlow : 0f);   // 普攻冷卻看敏捷（不是精神）；劍來：長劍比較重，集氣多 0.5～2 秒
             if (Skills.IsSwipeBasic(s) && SwordSlash(f, s, slashFrom, slashTo)) return true;   // 劍士、初心者：照刀線砍
             if (s.id == "na_dagger" && f.isPlayer) { PlayerStab(f, s, aimDir); return true; }   // 玩家刺客：集氣完手往前突刺，當下就刺
             if (s.id == "na_dagger" && DaggerStab(f, s)) return true;
@@ -1915,6 +1924,8 @@ namespace SpellDuel
         /// <summary>劍仙・劍來：普攻傷害 +30%、距離 +2m</summary>
         public const float JianlaiReach = 2f, JianlaiDmg = 1.3f, FlyingSwordShare = 0.4f;
         bool SwordComeOn(Fighter f, SkillDef s) => f.swordUntil > now && s != null && s.cls == "basic";
+        /// <summary>劍來的普攻集氣加長：「劍來延長」每級（持續 +2 秒）多 0.3 秒，0 級 0.5 秒、5 級 2 秒</summary>
+        public static float JianlaiSlowOf(SkillDef s) { int rank = Mathf.Clamp(Mathf.RoundToInt((s.buffDur - 20f) / 2f), 0, 5); return 0.5f + 0.3f * rank; }
 
         /// <summary>劍仙・御劍術：射出一把飛劍（SoloBattle 在持續時間內照準星方向呼叫）；傷害＝這招傷害的 40%</summary>
         public void FireFlyingSword(Fighter f, Vector3 from, Vector3 dir)
@@ -2279,7 +2290,7 @@ namespace SpellDuel
                     f.frenzyUntil = now + s.buffDur;
                     Emit("buff", f.Chest, s.color, $"{s.name}！{s.buffDur:0} 秒內攻速 ×1.5");
                     return;
-                case SelfKind.SwordCome: f.swordUntil = now + s.buffDur; Emit("buff", f.Chest, s.color, $"{s.name}！{s.buffDur:0} 秒內普攻傷害 +30%、距離 +{JianlaiReach:0}m"); return;
+                case SelfKind.SwordCome: f.swordUntil = now + s.buffDur; f.jianlaiSlow = JianlaiSlowOf(s); Emit("buff", f.Chest, s.color, $"{s.name}！{s.buffDur:0} 秒內普攻傷害 +30%、距離 +{JianlaiReach:0}m"); return;
                 case SelfKind.FlyingSwords: f.yujianUntil = now + s.buffDur; f.yujianSkill = s; Emit("buff", f.Chest, s.color, $"{s.name}！飛劍朝準星射出"); return;
                 case SelfKind.Undying: f.undyingUntil = now + s.buffDur; Emit("buff", f.Chest, s.color, $"{s.name}：{s.buffDur:0} 秒內不會倒下"); return;
                 case SelfKind.DeadMark: f.markNextUntil = now + s.buffDur; Emit("buff", f.Chest, s.color, $"{s.name}：下一箭必定爆擊"); return;

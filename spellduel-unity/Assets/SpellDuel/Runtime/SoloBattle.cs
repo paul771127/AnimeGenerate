@@ -1152,13 +1152,17 @@ namespace SpellDuel
                             battle.rangedCountMul = 0.5f; battle.meleeCountMul = 1.5f; battle.spawnGapAdd = 5f;   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
                             // 第三章潮騷港（使用者要求）：敵人血量、傷害 ×2（Boss 也是）；出手前的預備時間（紅圈閃爍）×2；海鳥移動速度 ×0.5；一批出齊後打倒一隻要等 20 秒才補下一隻
                             battle.enemyHpMul *= 2f; battle.enemyDmgMul *= 2f; battle.storyBossHp *= 2f; battle.storyBossDmg *= 2f;
-                            battle.minionWindupMul = 2f; battle.birdSpeedMul = 0.5f; battle.refillDelay = 20f;
+                            battle.minionWindupMul = 2f; battle.birdSpeedMul = 0.5f;
                             if (bossAi != null) { bossAi.chargeExtra = 2f; boss.chargeScale *= 2f; }
                         }   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         ApplyNoviceRoute(pendingStage);   // 1-1～1-3：4m×4m 小場地；1-1、1-2 只有近戰小怪（SoloBattle.NoviceRoute.cs）
                         SetupNoviceBattle(pendingStage);  // 新手關：小鬼／衝鋒獸的血量、1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）
                         battle.specialKind = SpecialKindOfStage(pendingStage);   // 第二～五章 x-4、x-5：特殊敵人（場上最多 1 隻）
+                        // 故事出怪（使用者要求）：Boss 以外場上同時最多 5 隻 × 人數；一批出齊後，打倒敵人 5 秒後補滿
+                        if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId) { battle.storyMaxAlive = StoryMaxAlive * partyN; battle.refillDelay = StoryRefillDelay; }
+                        // 第二章以後的 Boss：血量、傷害 ×1.3
+                        if (pendingStage.theme >= 1 && pendingStage.id != "trial") { battle.storyBossHp *= LateBossMul; battle.storyBossDmg *= LateBossMul; }
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
                     }
                     else if (dungeon != null)
