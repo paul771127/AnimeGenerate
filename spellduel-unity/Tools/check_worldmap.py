@@ -40,11 +40,15 @@ def main():
   if r not in regions:
    if partial:pending.append('region '+str(r)+' nodes');continue
    raise AssertionError(('missing region nodes',r))
-  for k in [f'town:{r-1}']+[f'{r}-{i}' for i in range(1,6)]:assert k in nodes,k
+  for k in [f'town:{r-1}']+[f'{r}-{i}' for i in range(1,6 if r==1 else 7)]:assert k in nodes,k
  for key,n in nodes.items():
   assert 0<=n['x']<10800 and 0<=n['y']<1920 and 0<=n['label_x']<10800 and 0<=n['label_y']<1920,(key,n)
   assert (n['region']-1)*2160<=n['x']<n['region']*2160,(key,'wrong region')
-  if key.endswith('-5'):assert n['reserved'] and not n['visibleByDefault'],key
+  if key=='1-5':assert n['reserved'] and not n['visibleByDefault'],key
+  elif re.fullmatch(r'[2-5]-[1-6]',key):
+   assert not n['reserved'] and n['visibleByDefault'],key
+   assert n['type']==('boss' if key.endswith('-6') else 'stage'),key
+   if key.endswith('-6'):assert n['x']-(n['region']-1)*2160==1680,(key,'Boss landmark')
  graph={k:[] for k in nodes};edges=set()
  for path in paths:
   a,b=path['from'],path['to'];assert a in nodes and b in nodes,(a,b);points=path['points'];assert 3<=len(points)<=8,(a,b)
@@ -58,7 +62,16 @@ def main():
   for k in graph[todo.pop()]:
    if k not in seen:seen.add(k);todo.append(k)
  assert {k for k,n in nodes.items() if not n['reserved']}<=seen,'current route disconnected'
- if 2 in regions:assert ('2-4','tower','current') in edges and nodes['tower']['y']>nodes['2-4']['y'],'tower branch'
+ if 2 in regions:assert ('2-5','tower','current') in edges and nodes['tower']['y']>nodes['2-5']['y'],'tower branch'
+ # Every story stage must exist and have an enabled chain through the final Boss.
+ story_ids=re.findall(r'^\[stage ([\d-]+)\]',(ROOT/'Assets/SpellDuel/Resources/story.txt').read_text(encoding='utf-8'),re.M)
+ assert {k for k in story_ids if int(k.split('-')[0]) in regions}=={k for k,n in nodes.items() if n['type'] in ('stage','boss')},'story/map stage mismatch'
+ for r in regions:
+  end=4 if r==1 else 6
+  chain=[f'town:{r-1}']+[f'{r}-{n}' for n in range(1,end+1)]
+  for a,b in zip(chain,chain[1:]):assert b in graph[a],(a,b,'missing sequential path')
+  if r<5 and r+1 in regions:assert f'town:{r}' in graph[f'{r}-{end}'],(r,'Boss exit')
+ assert not any('futureBranchFrom' in p for p in paths),'stale tower branch metadata'
  guids=[]
  for m in ART.rglob('*.meta'):
   match=re.search(r'^guid: ([0-9a-f]{32})$',m.read_text(),re.M);assert match,m;guids.append(match[1])

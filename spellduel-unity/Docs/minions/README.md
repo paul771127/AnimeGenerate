@@ -28,4 +28,4 @@ MinionRig.GroundRingFx(feet, 3f, new Color(1f,.74f,.3f), 1f);
 
 `new_enemies.jpg` 是實際 C# 程序網格、姿勢與材質色的軟體投影（正面／側面／1.5秒預備），不是概念生成圖，也不是手機截圖。Unity Editor 可從 `SpellDuel/Art/Render new area enemies` 以真實 Toon shader 重拍同名檔。編輯器工具只建立臨時預覽物件，不修改場景或遊戲設定。
 
-`validation.json` 記錄 .NET Unity API contract 煙霧檢查：19個舊變體仍可建構；四個新變體六種狀態可執行、頂點有限且三角索引合法、主題裝飾不越界。此檢查不是 Unity Android／iOS 完整編譯；本機沒有 Unity Editor。共用程序網格／材質保留快取；新大型敵人約2200～3500三角、27～35個部位 Renderer（含主題裝飾，出場限一隻由 Claude 接）。
+`validation.json` 記錄 .NET Unity API contract 煙霧檢查：19個舊變體仍可建構；四個新變體六種狀態可執行、頂點有限且三角索引合法、主題裝飾不越界。此檢查不是 Unity Android／iOS 完整編譯；本機沒有 Unity Editor。共用程序網格／材質保留快取；新大型敵人約2000～3600三角、24～35個部位 Renderer（含主題裝飾，出場限一隻由 Claude 接）。

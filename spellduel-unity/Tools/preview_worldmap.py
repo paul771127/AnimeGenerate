@@ -65,6 +65,6 @@ def main():
   x,y=n['x'],n['y'];d.ellipse((x-18,y-18,x+18,y+18),fill='#626b79' if n['reserved'] else '#ffbb45',outline='#352b22',width=4);text=key+' (reserved)' if n['reserved'] else key+' '+n['name'].split('・')[0];rich(d,(x-110,n['label_y']),text,27,fill='#fff4d2')
  overview.convert('RGB').resize((5400,960),Image.Resampling.LANCZOS).save(DOC/'nodes_preview.jpg',quality=93,optimize=True)
  mockup('03_select_1_3',780,'1-3',{'1-1','1-2','1-3'},selected='1-3',fogstart=950)
- if 'tower' in spec['nodes']:mockup('02_tower_branch',3240,'2-4',{k for k in visible if k.startswith('2-') or k in ['town:1','tower']},fogstart=1040)
+ if 'tower' in spec['nodes']:mockup('02_tower_branch',3240,'2-5',{k for k in visible if k.startswith('2-') or k in ['town:1','tower']},fogstart=1040)
  heroes()
 if __name__=='__main__':main()

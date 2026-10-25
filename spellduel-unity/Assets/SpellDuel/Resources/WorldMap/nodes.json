@@ -83,7 +83,7 @@
       "x": 2460,
       "y": 990,
       "label_x": 2460,
-      "label_y": 650,
+      "label_y": 440,
       "region": 2,
       "type": "town",
       "reserved": false,
@@ -91,10 +91,10 @@
       "name": "森之里"
     },
     "2-1": {
-      "x": 2810,
-      "y": 1015,
-      "label_x": 2810,
-      "label_y": 675,
+      "x": 2730,
+      "y": 1009,
+      "label_x": 2730,
+      "label_y": 719,
       "region": 2,
       "type": "stage",
       "reserved": false,
@@ -102,10 +102,10 @@
       "name": "葉燈照著來時路"
     },
     "2-2": {
-      "x": 3135,
-      "y": 1000,
-      "label_x": 3135,
-      "label_y": 660,
+      "x": 2970,
+      "y": 1008,
+      "label_x": 2970,
+      "label_y": 498,
       "region": 2,
       "type": "stage",
       "reserved": false,
@@ -113,10 +113,10 @@
       "name": "碑文缺去的半行"
     },
     "2-3": {
-      "x": 3480,
-      "y": 1025,
-      "label_x": 3480,
-      "label_y": 685,
+      "x": 3210,
+      "y": 1005,
+      "label_x": 3210,
+      "label_y": 715,
       "region": 2,
       "type": "stage",
       "reserved": false,
@@ -124,26 +124,37 @@
       "name": "接住快要散去的字"
     },
     "2-4": {
+      "x": 3420,
+      "y": 1021,
+      "label_x": 3420,
+      "label_y": 511,
+      "region": 2,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "根下仍有回聲"
+    },
+    "2-5": {
+      "x": 3630,
+      "y": 1019,
+      "label_x": 3630,
+      "label_y": 729,
+      "region": 2,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "把名字讀到天亮"
+    },
+    "2-6": {
       "x": 3840,
       "y": 1010,
-      "label_x": 3840,
+      "label_x": 4000,
       "label_y": 590,
       "region": 2,
       "type": "boss",
       "reserved": false,
       "visibleByDefault": true,
       "name": "腐化樹王・不肯入睡的心"
-    },
-    "2-5": {
-      "x": 4140,
-      "y": 1005,
-      "label_x": 4140,
-      "label_y": 665,
-      "region": 2,
-      "type": "reserved",
-      "reserved": true,
-      "visibleByDefault": false,
-      "name": "預留第5關"
     },
     "tower": {
       "x": 3985,
@@ -160,7 +171,7 @@
       "x": 4620,
       "y": 1080,
       "label_x": 4620,
-      "label_y": 740,
+      "label_y": 530,
       "region": 3,
       "type": "town",
       "reserved": false,
@@ -168,10 +179,10 @@
       "name": "潮騷港"
     },
     "3-1": {
-      "x": 4970,
-      "y": 1045,
-      "label_x": 4970,
-      "label_y": 705,
+      "x": 4890,
+      "y": 1053,
+      "label_x": 4890,
+      "label_y": 763,
       "region": 3,
       "type": "stage",
       "reserved": false,
@@ -179,10 +190,10 @@
       "name": "航圖終點是家"
     },
     "3-2": {
-      "x": 5295,
-      "y": 1115,
-      "label_x": 5295,
-      "label_y": 775,
+      "x": 5130,
+      "y": 1079,
+      "label_x": 5130,
+      "label_y": 569,
       "region": 3,
       "type": "stage",
       "reserved": false,
@@ -190,10 +201,10 @@
       "name": "窗邊留著的半首歌"
     },
     "3-3": {
-      "x": 5640,
-      "y": 1070,
-      "label_x": 5640,
-      "label_y": 730,
+      "x": 5370,
+      "y": 1105,
+      "label_x": 5370,
+      "label_y": 815,
       "region": 3,
       "type": "stage",
       "reserved": false,
@@ -201,9 +212,31 @@
       "name": "白帆不再獨行"
     },
     "3-4": {
+      "x": 5580,
+      "y": 1078,
+      "label_x": 5580,
+      "label_y": 568,
+      "region": 3,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "橫過胸口的浪"
+    },
+    "3-5": {
+      "x": 5790,
+      "y": 1087,
+      "label_x": 5790,
+      "label_y": 797,
+      "region": 3,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "讓燈照見鐘口"
+    },
+    "3-6": {
       "x": 6000,
       "y": 1110,
-      "label_x": 6000,
+      "label_x": 6160,
       "label_y": 690,
       "region": 3,
       "type": "boss",
@@ -211,22 +244,11 @@
       "visibleByDefault": true,
       "name": "深海巨妖・黎明的三重奏"
     },
-    "3-5": {
-      "x": 6300,
-      "y": 1070,
-      "label_x": 6300,
-      "label_y": 730,
-      "region": 3,
-      "type": "reserved",
-      "reserved": true,
-      "visibleByDefault": false,
-      "name": "預留第5關"
-    },
     "town:3": {
       "x": 6780,
       "y": 1100,
       "label_x": 6780,
-      "label_y": 760,
+      "label_y": 550,
       "region": 4,
       "type": "town",
       "reserved": false,
@@ -234,10 +256,10 @@
       "name": "赤砂城"
     },
     "4-1": {
-      "x": 7130,
-      "y": 1060,
-      "label_x": 7130,
-      "label_y": 720,
+      "x": 7050,
+      "y": 1069,
+      "label_x": 7050,
+      "label_y": 779,
       "region": 4,
       "type": "stage",
       "reserved": false,
@@ -245,10 +267,10 @@
       "name": "鐵門後的第一聲鑼"
     },
     "4-2": {
-      "x": 7455,
-      "y": 1120,
-      "label_x": 7455,
-      "label_y": 780,
+      "x": 7290,
+      "y": 1090,
+      "label_x": 7290,
+      "label_y": 580,
       "region": 4,
       "type": "stage",
       "reserved": false,
@@ -256,10 +278,10 @@
       "name": "地刺下的名字"
     },
     "4-3": {
-      "x": 7800,
-      "y": 1060,
-      "label_x": 7800,
-      "label_y": 720,
+      "x": 7530,
+      "y": 1107,
+      "label_x": 7530,
+      "label_y": 817,
       "region": 4,
       "type": "stage",
       "reserved": false,
@@ -267,9 +289,31 @@
       "name": "看台最高的那一排"
     },
     "4-4": {
+      "x": 7740,
+      "y": 1070,
+      "label_x": 7740,
+      "label_y": 560,
+      "region": 4,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "鐵面具後的喘息"
+    },
+    "4-5": {
+      "x": 7950,
+      "y": 1077,
+      "label_x": 7950,
+      "label_y": 787,
+      "region": 4,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "不必贏的出口"
+    },
+    "4-6": {
       "x": 8160,
       "y": 1100,
-      "label_x": 8160,
+      "label_x": 8320,
       "label_y": 680,
       "region": 4,
       "type": "boss",
@@ -277,22 +321,11 @@
       "visibleByDefault": true,
       "name": "青銅鬥魂・最後一次落幕"
     },
-    "4-5": {
-      "x": 8460,
-      "y": 1100,
-      "label_x": 8460,
-      "label_y": 760,
-      "region": 4,
-      "type": "reserved",
-      "reserved": true,
-      "visibleByDefault": false,
-      "name": "預留第5關"
-    },
     "town:4": {
       "x": 8940,
       "y": 1030,
       "label_x": 8940,
-      "label_y": 690,
+      "label_y": 480,
       "region": 5,
       "type": "town",
       "reserved": false,
@@ -300,10 +333,10 @@
       "name": "風沙驛"
     },
     "5-1": {
-      "x": 9290,
-      "y": 1040,
-      "label_x": 9290,
-      "label_y": 700,
+      "x": 9210,
+      "y": 1038,
+      "label_x": 9210,
+      "label_y": 748,
       "region": 5,
       "type": "stage",
       "reserved": false,
@@ -311,10 +344,10 @@
       "name": "崖下的駝鈴"
     },
     "5-2": {
-      "x": 9615,
-      "y": 1010,
-      "label_x": 9615,
-      "label_y": 670,
+      "x": 9450,
+      "y": 1025,
+      "label_x": 9450,
+      "label_y": 515,
       "region": 5,
       "type": "stage",
       "reserved": false,
@@ -322,10 +355,10 @@
       "name": "不讓人看的箱子"
     },
     "5-3": {
-      "x": 9960,
-      "y": 1060,
-      "label_x": 9960,
-      "label_y": 720,
+      "x": 9690,
+      "y": 1021,
+      "label_x": 9690,
+      "label_y": 731,
       "region": 5,
       "type": "stage",
       "reserved": false,
@@ -333,26 +366,37 @@
       "name": "岩壁上的刻痕"
     },
     "5-4": {
+      "x": 9900,
+      "y": 1051,
+      "label_x": 9900,
+      "label_y": 541,
+      "region": 5,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "地波還有下一聲"
+    },
+    "5-5": {
+      "x": 10110,
+      "y": 1039,
+      "label_x": 10110,
+      "label_y": 749,
+      "region": 5,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "小鈴也能回答山"
+    },
+    "5-6": {
       "x": 10320,
       "y": 1010,
-      "label_x": 10320,
+      "label_x": 10480,
       "label_y": 590,
       "region": 5,
       "type": "boss",
       "reserved": false,
       "visibleByDefault": true,
       "name": "黃土岩魔・岩之鐘"
-    },
-    "5-5": {
-      "x": 10620,
-      "y": 1000,
-      "label_x": 10620,
-      "label_y": 660,
-      "region": 5,
-      "type": "reserved",
-      "reserved": true,
-      "visibleByDefault": false,
-      "name": "預留第5關"
     }
   },
   "paths": [
@@ -485,16 +529,16 @@
           990
         ],
         [
-          2576,
-          998
+          2549,
+          996
         ],
         [
-          2694,
-          1007
+          2641,
+          1003
         ],
         [
-          2810,
-          1015
+          2730,
+          1009
         ]
       ],
       "enabled": true,
@@ -505,20 +549,20 @@
       "to": "2-2",
       "points": [
         [
-          2810,
-          1015
+          2730,
+          1009
         ],
         [
-          2917,
-          1010
+          2809,
+          1009
         ],
         [
-          3028,
-          1005
+          2891,
+          1008
         ],
         [
-          3135,
-          1000
+          2970,
+          1008
         ]
       ],
       "enabled": true,
@@ -529,20 +573,20 @@
       "to": "2-3",
       "points": [
         [
-          3135,
-          1000
-        ],
-        [
-          3249,
+          2970,
           1008
         ],
         [
-          3366,
-          1017
+          3049,
+          1007
         ],
         [
-          3480,
-          1025
+          3131,
+          1006
+        ],
+        [
+          3210,
+          1005
         ]
       ],
       "enabled": true,
@@ -553,20 +597,20 @@
       "to": "2-4",
       "points": [
         [
-          3480,
-          1025
+          3210,
+          1005
         ],
         [
-          3599,
-          1020
-        ],
-        [
-          3721,
-          1015
-        ],
-        [
-          3840,
+          3279,
           1010
+        ],
+        [
+          3351,
+          1016
+        ],
+        [
+          3420,
+          1021
         ]
       ],
       "enabled": true,
@@ -577,32 +621,56 @@
       "to": "2-5",
       "points": [
         [
-          3840,
-          1010
+          3420,
+          1021
         ],
         [
-          3939,
-          1008
+          3489,
+          1020
         ],
         [
-          4041,
-          1007
+          3561,
+          1020
         ],
         [
-          4140,
-          1005
+          3630,
+          1019
         ]
       ],
-      "enabled": false,
-      "layout": "future-five-stage"
+      "enabled": true,
+      "layout": "current"
     },
     {
-      "from": "2-4",
+      "from": "2-5",
+      "to": "2-6",
+      "points": [
+        [
+          3630,
+          1019
+        ],
+        [
+          3699,
+          1016
+        ],
+        [
+          3771,
+          1013
+        ],
+        [
+          3840,
+          1010
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "2-5",
       "to": "tower",
       "points": [
         [
-          3840,
-          1010
+          3630,
+          1019
         ],
         [
           3760,
@@ -634,8 +702,7 @@
         ]
       ],
       "enabled": true,
-      "layout": "current",
-      "futureBranchFrom": "2-5"
+      "layout": "current"
     },
     {
       "from": "town:2",
@@ -646,16 +713,16 @@
           1080
         ],
         [
-          4736,
-          1068
+          4709,
+          1071
         ],
         [
-          4854,
-          1057
+          4801,
+          1062
         ],
         [
-          4970,
-          1045
+          4890,
+          1053
         ]
       ],
       "enabled": true,
@@ -666,20 +733,20 @@
       "to": "3-2",
       "points": [
         [
-          4970,
-          1045
+          4890,
+          1053
         ],
         [
-          5077,
-          1068
+          4969,
+          1062
         ],
         [
-          5188,
-          1092
+          5051,
+          1070
         ],
         [
-          5295,
-          1115
+          5130,
+          1079
         ]
       ],
       "enabled": true,
@@ -690,20 +757,20 @@
       "to": "3-3",
       "points": [
         [
-          5295,
-          1115
+          5130,
+          1079
         ],
         [
-          5409,
-          1100
+          5209,
+          1088
         ],
         [
-          5526,
-          1085
+          5291,
+          1096
         ],
         [
-          5640,
-          1070
+          5370,
+          1105
         ]
       ],
       "enabled": true,
@@ -714,20 +781,20 @@
       "to": "3-4",
       "points": [
         [
-          5640,
-          1070
+          5370,
+          1105
         ],
         [
-          5759,
-          1083
+          5439,
+          1096
         ],
         [
-          5881,
-          1097
+          5511,
+          1087
         ],
         [
-          6000,
-          1110
+          5580,
+          1078
         ]
       ],
       "enabled": true,
@@ -738,24 +805,48 @@
       "to": "3-5",
       "points": [
         [
-          6000,
-          1110
+          5580,
+          1078
         ],
         [
-          6099,
-          1097
+          5649,
+          1081
         ],
         [
-          6201,
-          1083
+          5721,
+          1084
         ],
         [
-          6300,
-          1070
+          5790,
+          1087
         ]
       ],
-      "enabled": false,
-      "layout": "future-five-stage"
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "3-5",
+      "to": "3-6",
+      "points": [
+        [
+          5790,
+          1087
+        ],
+        [
+          5859,
+          1095
+        ],
+        [
+          5931,
+          1102
+        ],
+        [
+          6000,
+          1110
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
     },
     {
       "from": "town:3",
@@ -766,16 +857,16 @@
           1100
         ],
         [
-          6896,
-          1087
+          6869,
+          1090
         ],
         [
-          7014,
-          1073
+          6961,
+          1079
         ],
         [
-          7130,
-          1060
+          7050,
+          1069
         ]
       ],
       "enabled": true,
@@ -786,20 +877,20 @@
       "to": "4-2",
       "points": [
         [
-          7130,
-          1060
+          7050,
+          1069
         ],
         [
-          7237,
-          1080
+          7129,
+          1076
         ],
         [
-          7348,
-          1100
+          7211,
+          1083
         ],
         [
-          7455,
-          1120
+          7290,
+          1090
         ]
       ],
       "enabled": true,
@@ -810,20 +901,20 @@
       "to": "4-3",
       "points": [
         [
-          7455,
-          1120
+          7290,
+          1090
         ],
         [
-          7569,
-          1100
+          7369,
+          1096
         ],
         [
-          7686,
-          1080
+          7451,
+          1101
         ],
         [
-          7800,
-          1060
+          7530,
+          1107
         ]
       ],
       "enabled": true,
@@ -834,20 +925,20 @@
       "to": "4-4",
       "points": [
         [
-          7800,
-          1060
+          7530,
+          1107
         ],
         [
-          7919,
-          1073
+          7599,
+          1095
         ],
         [
-          8041,
-          1087
+          7671,
+          1082
         ],
         [
-          8160,
-          1100
+          7740,
+          1070
         ]
       ],
       "enabled": true,
@@ -858,24 +949,48 @@
       "to": "4-5",
       "points": [
         [
+          7740,
+          1070
+        ],
+        [
+          7809,
+          1072
+        ],
+        [
+          7881,
+          1075
+        ],
+        [
+          7950,
+          1077
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "4-5",
+      "to": "4-6",
+      "points": [
+        [
+          7950,
+          1077
+        ],
+        [
+          8019,
+          1085
+        ],
+        [
+          8091,
+          1092
+        ],
+        [
           8160,
-          1100
-        ],
-        [
-          8259,
-          1100
-        ],
-        [
-          8361,
-          1100
-        ],
-        [
-          8460,
           1100
         ]
       ],
-      "enabled": false,
-      "layout": "future-five-stage"
+      "enabled": true,
+      "layout": "current"
     },
     {
       "from": "town:4",
@@ -886,16 +1001,16 @@
           1030
         ],
         [
-          9056,
+          9029,
           1033
         ],
         [
-          9174,
-          1037
+          9121,
+          1035
         ],
         [
-          9290,
-          1040
+          9210,
+          1038
         ]
       ],
       "enabled": true,
@@ -906,20 +1021,20 @@
       "to": "5-2",
       "points": [
         [
-          9290,
-          1040
+          9210,
+          1038
         ],
         [
-          9397,
-          1030
+          9289,
+          1034
         ],
         [
-          9508,
-          1020
+          9371,
+          1029
         ],
         [
-          9615,
-          1010
+          9450,
+          1025
         ]
       ],
       "enabled": true,
@@ -930,20 +1045,20 @@
       "to": "5-3",
       "points": [
         [
-          9615,
-          1010
+          9450,
+          1025
         ],
         [
-          9729,
-          1026
+          9529,
+          1024
         ],
         [
-          9846,
-          1044
+          9611,
+          1022
         ],
         [
-          9960,
-          1060
+          9690,
+          1021
         ]
       ],
       "enabled": true,
@@ -954,20 +1069,20 @@
       "to": "5-4",
       "points": [
         [
-          9960,
-          1060
+          9690,
+          1021
         ],
         [
-          10079,
-          1044
+          9759,
+          1031
         ],
         [
-          10201,
-          1026
+          9831,
+          1041
         ],
         [
-          10320,
-          1010
+          9900,
+          1051
         ]
       ],
       "enabled": true,
@@ -978,24 +1093,48 @@
       "to": "5-5",
       "points": [
         [
-          10320,
-          1010
+          9900,
+          1051
         ],
         [
-          10419,
-          1007
+          9969,
+          1047
         ],
         [
-          10521,
-          1003
+          10041,
+          1043
         ],
         [
-          10620,
-          1000
+          10110,
+          1039
         ]
       ],
-      "enabled": false,
-      "layout": "future-five-stage"
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "5-5",
+      "to": "5-6",
+      "points": [
+        [
+          10110,
+          1039
+        ],
+        [
+          10179,
+          1029
+        ],
+        [
+          10251,
+          1020
+        ],
+        [
+          10320,
+          1010
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
     },
     {
       "from": "1-4",
@@ -1058,7 +1197,7 @@
       "layout": "future-five-stage"
     },
     {
-      "from": "2-4",
+      "from": "2-6",
       "to": "town:2",
       "points": [
         [
@@ -1090,35 +1229,7 @@
       "layout": "current"
     },
     {
-      "from": "2-5",
-      "to": "town:2",
-      "points": [
-        [
-          4140,
-          1005
-        ],
-        [
-          4210,
-          1005
-        ],
-        [
-          4320,
-          1042
-        ],
-        [
-          4440,
-          1080
-        ],
-        [
-          4620,
-          1080
-        ]
-      ],
-      "enabled": false,
-      "layout": "future-five-stage"
-    },
-    {
-      "from": "3-4",
+      "from": "3-6",
       "to": "town:3",
       "points": [
         [
@@ -1150,35 +1261,7 @@
       "layout": "current"
     },
     {
-      "from": "3-5",
-      "to": "town:3",
-      "points": [
-        [
-          6300,
-          1070
-        ],
-        [
-          6370,
-          1070
-        ],
-        [
-          6480,
-          1085
-        ],
-        [
-          6600,
-          1100
-        ],
-        [
-          6780,
-          1100
-        ]
-      ],
-      "enabled": false,
-      "layout": "future-five-stage"
-    },
-    {
-      "from": "4-4",
+      "from": "4-6",
       "to": "town:4",
       "points": [
         [
@@ -1208,40 +1291,20 @@
       ],
       "enabled": true,
       "layout": "current"
-    },
-    {
-      "from": "4-5",
-      "to": "town:4",
-      "points": [
-        [
-          8460,
-          1100
-        ],
-        [
-          8530,
-          1100
-        ],
-        [
-          8640,
-          1065
-        ],
-        [
-          8760,
-          1030
-        ],
-        [
-          8940,
-          1030
-        ]
-      ],
-      "enabled": false,
-      "layout": "future-five-stage"
     }
   ],
   "integrationNotes": {
-    "currentStagesPerChapter": 4,
+    "currentStagesPerChapter": 6,
+    "chapterStageCounts": {
+      "1": 4,
+      "2": 6,
+      "3": 6,
+      "4": 6,
+      "5": 6
+    },
     "reservedNodesHidden": true,
-    "filterPaths": "Use only enabled=true for the present four-stage layout. Other edges are future art positions only.",
-    "towerBranch": "2-4 now; move to 2-5 only after gameplay adds a fifth stage."
+    "filterPaths": "Use enabled=true; chapter 1 remains four stages. Chapters 2-5 have five normal encounters then Boss stage 6.",
+    "towerBranch": "2-5 -> tower is now active; futureBranchFrom has been removed. Runtime tower unlock conditions are owned by Claude.",
+    "bossLandmarks": "Boss stage 6 keeps the original large landmark at local x=1680; stage 4/5 are normal route points. Region JPGs are unchanged."
   }
 }

@@ -8,18 +8,46 @@
     3240,
     0
   ],
-  "heroNode": "2-4",
+  "heroNode": "2-5",
   "selectedNode": null,
   "visibleNodes": [
     "2-1",
     "2-2",
     "2-3",
     "2-4",
+    "2-5",
+    "2-6",
     "tower",
     "town:1"
   ],
   "fogBeginsScreenX": 1040,
   "elements": [
+    {
+      "id": "2-4",
+      "mapPosition": [
+        3420,
+        1021
+      ],
+      "labelRect": [
+        20,
+        463,
+        320,
+        96
+      ]
+    },
+    {
+      "id": "2-6",
+      "mapPosition": [
+        3840,
+        1010
+      ],
+      "labelRect": [
+        600,
+        542,
+        320,
+        96
+      ]
+    },
     {
       "id": "tower",
       "mapPosition": [
@@ -34,27 +62,14 @@
       ]
     },
     {
-      "id": "2-4",
+      "id": "2-5",
       "mapPosition": [
-        3840,
-        1010
+        3630,
+        1019
       ],
       "labelRect": [
-        440,
-        542,
-        320,
-        96
-      ]
-    },
-    {
-      "id": "2-3",
-      "mapPosition": [
-        3480,
-        1025
-      ],
-      "labelRect": [
-        80,
-        637,
+        230,
+        681,
         320,
         96
       ]
