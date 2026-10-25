@@ -84,6 +84,9 @@ namespace SpellDuel
             spine.localRotation=Quaternion.Euler(hitT*90+(move==EliteMove.Burst?-wind*25:wind*8)+strike*16,move==EliteMove.Sweep?-wind*40+strike*95:0,0);
             eliteArmL.localRotation=Quaternion.Euler(move==EliteMove.Quake?-wind*155+strike*70:-wind*65+strike*40,0,wind*20);
             eliteArmR.localRotation=Quaternion.Euler(-wind*(move==EliteMove.Line?80:145)+strike*100,move==EliteMove.Sweep?wind*65:0,-wind*18);
+            if(move==EliteMove.Summon){eliteArmL.localRotation=Quaternion.Euler(-wind*100,wind*35,wind*55);eliteArmR.localRotation=Quaternion.Euler(-wind*100,-wind*35,-wind*55);eliteTool.localRotation=Quaternion.Euler(0,wind*180,0);}
+            else if(move==EliteMove.Heal){eliteArmL.localRotation=Quaternion.Euler(-wind*65,-wind*30,wind*8);eliteArmR.localRotation=Quaternion.Euler(-wind*65,wind*30,-wind*8);eliteTool.localRotation=Quaternion.Euler(0,0,wind*25);}
+            else if(move==EliteMove.Shield){eliteArmL.localRotation=Quaternion.Euler(-wind*80,-wind*45,-wind*25);eliteArmR.localRotation=Quaternion.Euler(-wind*80,wind*45,wind*25);}
             eliteLegL.localRotation=Quaternion.Euler(walk*24,0,0);eliteLegR.localRotation=Quaternion.Euler(-walk*24,0,0);
             head.localRotation=Quaternion.Euler(-wind*15,Mathf.Sin(clock)*5,0);
             if(dead){float t=Mathf.Clamp01(deadT/.9f);body.localRotation=Quaternion.Euler(t*85,0,0);body.localScale=Vector3.one*(1-t*.65f);}

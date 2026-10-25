@@ -48,7 +48,8 @@ namespace SpellDuel
             int local=(wave-1)%10+1;
             if(!tower&&(!(eliteEncounters||FixedDungeonSpawns)||local<3||ordinal!=5||(IsBossWave&&!bossPending)))return original;
             if(tower)eliteLeft=0;
-            return 23+Mathf.Clamp(Theme,0,4)*5+((wave/10+local-1)%5);
+            int role = FixedDungeonSpawns ? (wave/10+local-1)%5 : tower ? ((wave-1)/50+Theme)%5 : rng.Next(5);
+            return 23+Mathf.Clamp(Theme,0,4)*5+role;
         }
         void TickElite(Fighter m,Fighter target,float distance,float dt,int hold)
         {
@@ -133,7 +134,7 @@ namespace SpellDuel
             {
                 if(v==null||!v.Alive||(!remote&&coopHost&&v.isAlly)||!EliteInside(move,center,forward,v))continue;
                 if(move==EliteMove.Sweep&&v.crouching){Emit("evade",v.Chest,def.color,"蹲下閃過！");continue;}
-                HitFoe(m,v,skill,damage);
+                HitFoe(m,v,skill,damage,skill.effect,skill.effectDps,skill.effectDur);
             }
         }
     }

@@ -7,6 +7,8 @@ on:
       - 'spellduel-unity/Assets/SpellDuel/Editor/Snapshot*.cs'
       - 'spellduel-unity/Assets/SpellDuel/Editor/PlayerMatch2DAudit.cs'
       - 'spellduel-unity/Assets/SpellDuel/Editor/EliteAudit.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Editor/EliteCombatAudit.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/BossRig.World.cs'
       - 'spellduel-unity/Assets/SpellDuel/Runtime/*Elite*.cs'
       - 'spellduel-unity/Assets/SpellDuel/Runtime/EnemyArt.cs'
       - 'spellduel-unity/Assets/SpellDuel/Runtime/CharacterRig*.cs'
@@ -58,4 +60,5 @@ jobs:
             spellduel-unity/snapshots/*.png
             spellduel-unity/snapshots/match_validation.json
             spellduel-unity/snapshots/elite_audit.json
+            spellduel-unity/snapshots/world_boss_audit.json
           if-no-files-found: error

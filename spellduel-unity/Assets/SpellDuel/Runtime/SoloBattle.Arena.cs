@@ -121,7 +121,7 @@ namespace SpellDuel
                     if (!quakeGo.ContainsKey(w))
                     {
                         quakeGo[w] = null;
-                        MinionRig.GroundRingFx(WorldFrame.FromWorld(new Vector3(w.center.x, 0.03f, w.center.z)), w.maxR, w.owner.minionKind == 22 ? new Color(1f, 0.74f, 0.3f) : new Color(0.65f, 1f, 0.3f), w.maxR / Mathf.Max(0.1f, w.speed));
+                        MinionRig.GroundRingFx(WorldFrame.FromWorld(new Vector3(w.center.x, 0.03f, w.center.z)), w.maxR, EliteCatalog.IsElite(w.owner.minionKind) ? EliteCatalog.Get(w.owner.minionKind).color : w.owner.minionKind == 22 ? new Color(1f, 0.74f, 0.3f) : new Color(0.65f, 1f, 0.3f), w.maxR / Mathf.Max(0.1f, w.speed));
                     }
                     continue;
                 }

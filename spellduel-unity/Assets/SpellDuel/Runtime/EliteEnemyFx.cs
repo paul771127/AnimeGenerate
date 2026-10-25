@@ -4,7 +4,7 @@ namespace SpellDuel
     // Persistent warning geometry. Only transform/color changes each frame; SpellFx owns shared FX materials.
     public sealed class EliteEnemyFx : MonoBehaviour
     {
-        LineRenderer edge,guide;Transform cross;float age,life;bool transient;EliteMove move;
+        LineRenderer edge,guide;float age,life;bool transient;EliteMove move;
         public static EliteEnemyFx Create(Transform parent,EliteMove move)
         {
             var go=new GameObject("Elite "+move+" telegraph");if(parent)go.transform.SetParent(parent,false);
@@ -29,7 +29,7 @@ namespace SpellDuel
         }
         public static void Impact(Vector3 at,Vector3 forward,EliteMove move,Color color)
         {
-            if(move==EliteMove.Quake){MinionRig.GroundRingFx(at,2.6f,color,1.2f);return;}
+            if(move==EliteMove.Quake)return; // The actual Battle.Shockwave view owns its single expanding ring.
             if(move==EliteMove.Sweep){MinionRig.SweepArcFx(at,forward,2.4f,180,1.2f,color);return;}
             var fx=Create(null,move);fx.transient=true;fx.life=.55f;fx.Place(at,forward,color,0,true);
         }

@@ -1605,18 +1605,18 @@ namespace SpellDuel
                     rig.transform.position = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);
                     SpawnFade.Play(rig.gameObject);   // 淡入出現
                 }
-                UpdateEliteVisual(m, rig);
                 var oldPos = rig.transform.position;
                 var newPos = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);   // 飛在空中／浮著／跳起來的高度
                 var f = WorldFrame.DirFromWorld(m.forward); f.y = 0f;
                 rig.transform.SetPositionAndRotation(newPos, f.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(f.normalized, Vector3.up) : rig.transform.rotation);
+                UpdateEliteVisual(m, rig);
                 bool jumped = (newPos - oldPos).magnitude > 2f;   // 虛空術士瞬移（隊友端也看得到）：兩邊都冒出傳送光
                 if (jumped) { MinionRig.SpawnFx(oldPos); MinionRig.SpawnFx(newPos); Sfx.Play("dodge", 0.5f, 0.6f); }
                 rig.MoveSpeed = jumped ? 0f : Mathf.Lerp(rig.MoveSpeed, (newPos - oldPos).magnitude / dt, 0.25f);
                 bool winding = m.windupUntil > 0f;
                 if (winding && !minionWinding.Contains(m))
                 {
-                    minionWinding.Add(m); rig.Windup(battle.WindupOf(m.minionKind));
+                    minionWinding.Add(m); rig.Windup(EliteCatalog.IsElite(m.minionKind) && battle.EliteView(m) != null ? battle.EliteView(m).duration : battle.WindupOf(m.minionKind));
                     if (battle.remoteEnemy && Battle.IsSpecial(m.minionKind))   // 合作（隊友）：稀有怪預備大招 → 一樣跳出「跳起來／蹲下」
                         OnBattleEvent("specialwarn", m.Feet, Skills.All[Battle.SpecialSkillId(m.minionKind)].color, Battle.SpecialNeedsJump(m.minionKind) ? "⬆ 跳起來！（或離遠一點）" : "⬇ 蹲下！（或離遠一點）");
                 }   // 預備時間＝這種小怪真正的預備時間（出手時剛好擺到位）

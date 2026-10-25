@@ -70,6 +70,7 @@ namespace SpellDuel.EditorTools
             }
             MatchOverview();
             EliteShots(cam);
+            WorldBossShots(cam);
             Debug.Log("[SpellDuel] snapshots saved to " + Path.GetFullPath("snapshots"));
         }
 

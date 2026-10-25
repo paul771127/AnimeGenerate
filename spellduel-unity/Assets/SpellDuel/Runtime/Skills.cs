@@ -146,7 +146,6 @@ namespace SpellDuel
 
         static Skills()
         {
-            EliteCatalog.RegisterSkills();
             // ---------------------------------------------------------- 獵人：蓄力長、箭速快、遠距離、判定小；近距離只有速射
             P(new SkillDef { id = "quickshot", cls = "archer", stillRadius = 0.5f, name = "速射", type = SkillType.Projectile, color = C("#d9f99d"), cost = 12, damage = 12, charge = 0.6f, cooldown = 0.5f, speed = 14f, radius = 0.05f, rangeMax = 12f, desc = "唯一的近距離技能，貼身也能射" });
             P(new SkillDef { id = "snipe", cls = "archer", stillRadius = 0.5f, name = "狙擊", type = SkillType.Projectile, color = C("#fde047"), cost = 30, damage = 34, charge = 1.4f, cooldown = 1.8f, speed = 16f, radius = 0.04f, rangeMin = 3f, rangeMax = 15f, desc = "蓄力最久的重箭，判定最小；3m 內打不到" });
@@ -378,6 +377,7 @@ namespace SpellDuel
                 if (Flies(sk) || sk.id == "wind") sk.speed = Mathf.Min(sk.speed, MaxProjectileSpeed);   // 風刃射程短但也是飛出去的
             // 職業特色：箭最快（3 m/s，獵人的優勢＝射程遠、飛得快）；其他職業的法術慢很多（約 1.4～2.5 m/s）
             foreach (var kv in ClassSpeeds) if (All.TryGetValue(kv.Key, out var cs)) cs.speed = kv.Value;
+            EliteCatalog.RegisterSkills();
         }
     }
 }

@@ -2527,6 +2527,7 @@ namespace SpellDuel
                     if (w.done.Contains(v)) continue;
                     if (w.owner.isMinion && v.isAlly && (coopHost || remoteEnemy)) continue;   // 合作：特殊敵人的震環，每個人只判定自己（跳是自己的手機才知道）
                     float d = FlatDistance(w.center, v.Feet);
+                    if (EliteCatalog.IsElite(w.owner.minionKind) && w.owner.isMinion && d > w.maxR) continue;
                     if (d < w.lastR - QuakeBand || d > r + QuakeBand) continue;   // 環還沒到／已經過去
                     w.done.Add(v);
                     if (v.airborneUntil > now) { Emit("evade", v.Chest, new Color(0.6f, 1f, 0.8f), "跳過了！"); continue; }

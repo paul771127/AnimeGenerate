@@ -20,6 +20,7 @@ namespace SpellDuel.EditorTools
         [MenuItem("SpellDuel/Audit/Elite encounters")]
         public static void Run()
         {
+            EliteCombatAudit.Run();DungeonSpawnAudit.Run();
             var report=new Report{unity=Application.unityVersion};
             foreach(var d in EliteCatalog.All)
             {
@@ -47,7 +48,7 @@ namespace SpellDuel.EditorTools
                 }
                 rig.PlayHit();rig.SetDead(true);typeof(MinionRig).GetMethod("Animate",Private).Invoke(rig,new object[]{.4f});UnityEngine.Object.DestroyImmediate(rig.gameObject);report.classes.Add(row);
             }
-            var spawn=Make();spawn.wave=15;spawn.themeOverride=1;spawn.eliteEncounters=true;
+            var spawn=Make();spawn.endless=true;spawn.wave=15;spawn.themeOverride=1;spawn.eliteEncounters=true;
             int k=(int)Call(spawn,"EliteSpawnKind",7,5,false);Require(k>=28&&k<=32,"Wrong theme elite");spawn.SpawnMinion(Vector3.zero,1,k);Require((int)Call(spawn,"EliteSpawnKind",7,5,false)==7,"Two elites at once");
             spawn.minions.Clear();spawn.specialKind=19;Require((int)Call(spawn,"EliteSpawnKind",7,5,false)==7,"Elite mixed with rare encounter");
             Directory.CreateDirectory("snapshots");File.WriteAllText("snapshots/elite_audit.json",JsonUtility.ToJson(report,true));
