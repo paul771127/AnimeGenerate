@@ -239,7 +239,7 @@ namespace SpellDuel
             }
             float bw = (r.width - gap * 4) / 3f;
             if (UiKit.Button(new Rect(r.x + gap, by, bw, btnH), "📜 角色／裝備", fsS, false, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
-            if (UiKit.Button(new Rect(r.x + gap * 2 + bw, by, bw, btnH), "🚶 走進城鎮", fsS, false, t.color)) walkMode = true;
+            if (UiKit.Button(new Rect(r.x + gap * 2 + bw, by, bw, btnH), "🚶 逛街", fsS, false, t.color)) walkMode = true;   // 3D 逛村子
             if (UiKit.Button(new Rect(r.x + gap * 3 + bw * 2, by, bw, btnH), "🗺 回大地圖", fsS)) screen = Screen.Map;
             return true;
         }

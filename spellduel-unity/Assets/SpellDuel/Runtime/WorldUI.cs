@@ -28,7 +28,7 @@ namespace SpellDuel
         string jobArm; float jobArmUntil;
 
         // 可走動的 3D 城鎮（TownWalk）：預設用走的；也可以切回清單模式
-        public bool walkMode = true;
+        public bool walkMode = false;   // 進村子預設是 2D 城鎮圖；按「🚶 逛街」才進 3D 村子
         public TownWalk Walk;                    // SoloBattle 提供
         public Camera Cam;
         public string SpeechNote;                // 語音狀態（不支援語音時提示用按鈕打招呼）
@@ -337,7 +337,7 @@ namespace SpellDuel
             }
             // 回大地圖／走進城鎮
             float hb = (r.width - gap * 3) / 2f;
-            if (UiKit.Button(new Rect(r.x + gap, r.yMax - gap - fs * 2.1f, hb, fs * 2.1f), "🚶 走進城鎮", fs, false, t.color)) walkMode = true;
+            if (UiKit.Button(new Rect(r.x + gap, r.yMax - gap - fs * 2.1f, hb, fs * 2.1f), "🚶 逛街", fs, false, t.color)) walkMode = true;
             if (UiKit.Button(new Rect(r.x + gap * 2 + hb, r.yMax - gap - fs * 2.1f, hb, fs * 2.1f), "🗺 回大地圖", fs)) screen = Screen.Map;
         }
 
@@ -526,7 +526,7 @@ namespace SpellDuel
             int pts = prof.statPoints + prof.UsableSkillPoints;
             if (UiKit.Button(new Rect(r.x + gap, by2, bw3, bh * 0.85f), pts > 0 ? $"📜 角色 ×{pts}" : "📜 角色", fsS, pts > 0, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
             if (UiKit.Button(new Rect(r.x + gap * 2 + bw3, by2, bw3, bh * 0.85f), "🏰 副本", fsS, false, DungeonColor)) screen = Screen.Dungeon;
-            if (UiKit.Button(new Rect(r.x + gap * 3 + bw3 * 2, by2, bw3, bh * 0.85f), "📋 清單", fsS)) walkMode = false;
+            if (UiKit.Button(new Rect(r.x + gap * 3 + bw3 * 2, by2, bw3, bh * 0.85f), "🗺 城鎮圖", fsS)) walkMode = false;   // 回 2D 城鎮圖
             if (UiKit.Button(new Rect(r.x + gap * 4 + bw3 * 3, by2, bw3, bh * 0.85f), "🗺 大地圖", fsS)) screen = Screen.Map;
         }
 

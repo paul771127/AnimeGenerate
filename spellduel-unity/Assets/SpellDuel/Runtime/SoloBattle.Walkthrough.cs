@@ -123,7 +123,7 @@ namespace SpellDuel
             var L = new List<WStep>();
             WStep S(string key, string title, Func<string> text, Func<bool> done, Func<bool> skip = null) { var s = new WStep { key = key, title = title, text = text, done = done, skip = skip }; L.Add(s); return s; }
             // 走路模式（3D 村子）切到清單（設施、居民都在清單裡）
-            void ToList(string why) => S("📋 清單", "打開清單", () => $"按下方的「📋 清單」：打開村子的地圖，居民和設施都在上面。{why}", () => Town() && !world.walkMode, () => Town() && !world.walkMode);
+            void ToList(string why) => S("🗺 城鎮圖", "回城鎮圖", () => $"按下方的「🗺 城鎮圖」：回到村子的 2D 地圖，居民和設施都在上面。{why}", () => Town() && !world.walkMode, () => Town() && !world.walkMode);
             void Learn(string npcKey, string npc, string skill)
             {
                 string sn = Skills.All[skill].name;
@@ -164,7 +164,7 @@ namespace SpellDuel
                     break;
                 case "job":
                     S("回村子轉職", "回村子轉職", () => "你已經 10 級了！初心者的路走完了，回村子的職業工會轉職。按「🏛 回村子轉職」。", () => storyMapOpen && phase == Phase.Setup && world.screen == WorldUI.Screen.Guild);
-                    S("挑戰|工會|回炎之里|📋 清單", "轉職試煉", () => P().CanChangeJob ? "通過試煉了！回到「🏛 職業工會」選職業。" : "按「挑戰」開始轉職試煉：打倒空地上的 5 隻小怪就通過（失敗可以再挑戰）。", () => P().CanChangeJob && storyMapOpen && phase == Phase.Setup && world.screen == WorldUI.Screen.Guild);
+                    S("挑戰|工會|回炎之里|🗺 城鎮圖", "轉職試煉", () => P().CanChangeJob ? "通過試煉了！回到「🏛 職業工會」選職業。" : "按「挑戰」開始轉職試煉：打倒空地上的 5 隻小怪就通過（失敗可以再挑戰）。", () => P().CanChangeJob && storyMapOpen && phase == Phase.Setup && world.screen == WorldUI.Screen.Guild);
                     S("選這個|再按一次", "選職業", () => "選一個職業（這一步你自己決定）：點職業卡片可以看介紹；按「選這個」，再按一次確定。選定就不能換了。", () => P().cls != Skills.Novice).block = false;
                     break;
                 case "smith":
