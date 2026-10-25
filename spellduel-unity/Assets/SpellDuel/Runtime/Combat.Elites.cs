@@ -41,8 +41,27 @@ namespace SpellDuel
         }
         bool EliteOrRareAlive()
         {foreach(var m in minions)if(m.Alive&&(EliteCatalog.IsElite(m.minionKind)||IsSpecial(m.minionKind)))return true;return false;}
+        /// <summary>故事關：這一關要出菁英怪的那一波（−1＝這關不出）、出過了沒（一關最多一隻）</summary>
+        int eliteWaveAt=-1;bool eliteDone;
+        /// <summary>故事關開打時擲一次（使用者要求：普通難度每關 15% 出一隻菁英怪）：中的話在這關隨機一波（有 Boss 的最後一波以外）出現</summary>
+        public bool RollStoryElite(float chance,int firstWave,int lastWave)
+        {
+            eliteWaveAt=-1;eliteDone=false;
+            if(chance<=0f||rng.NextDouble()>=chance)return false;
+            int last=lastWave>firstWave&&lastWave%BossEvery==0?lastWave-1:lastWave;
+            eliteWaveAt=rng.Next(firstWave,Mathf.Max(firstWave,last)+1);
+            return true;
+        }
+        public const float StoryEliteChance=0.15f;
         int EliteSpawnKind(int original,int ordinal,bool forced)
         {
+            if(eliteWaveAt>0)
+            {
+                // 故事關（擲中的那一關）：那一波的第 2 隻（之後）換成這一章的菁英怪；稀有怪、菁英怪活著時先等下一隻
+                if(forced||holdSpawns||eliteDone||wave!=eliteWaveAt||ordinal<1||EliteOrRareAlive())return original;
+                eliteDone=true;
+                return 23+Mathf.Clamp(Theme,0,4)*5+rng.Next(5);
+            }
             if(forced||holdSpawns||specialKind>=0||EliteOrRareAlive())return original;
             bool tower=eliteWaves&&eliteLeft>0;
             int local=(wave-1)%10+1;

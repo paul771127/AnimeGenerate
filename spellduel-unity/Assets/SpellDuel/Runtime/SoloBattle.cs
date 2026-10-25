@@ -1191,7 +1191,9 @@ namespace SpellDuel
                         ApplyNoviceRoute(pendingStage);   // 1-1～1-3：4m×4m 小場地；1-1、1-2 只有近戰小怪（SoloBattle.NoviceRoute.cs）
                         SetupNoviceBattle(pendingStage);  // 新手關：小鬼／衝鋒獸的血量、1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）
                         battle.specialKind = SpecialKindOfStage(pendingStage);
-                        battle.eliteEncounters = pendingStage.id == "1-4" || (pendingStage.id.EndsWith("-3") && pendingStage.theme > 0);   // 第二～五章 x-4、x-5：特殊敵人（場上最多 1 隻）
+                        // 菁英怪（使用者要求）：普通（以上）難度，每一關 15% 機率出一隻這一章的菁英怪（一關最多一隻）；新手關、試煉不出
+                        bool eliteOk = difficulty >= 1 && pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.id != "1-1" && pendingStage.id != "1-2" && pendingStage.id != "1-3";
+                        if (eliteOk) battle.RollStoryElite(Battle.StoryEliteChance, pendingStage.FirstWave, pendingStage.LastWave);
                         // 故事出怪（使用者要求）：Boss 以外場上同時最多 5 隻 × 人數；一批出齊後，打倒敵人 5 秒後補滿
                         if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId) { battle.storyMaxAlive = StoryMaxAlive * partyN; battle.refillDelay = StoryRefillDelay; }
                         // 第二章以後的 Boss：血量、傷害 ×1.3
