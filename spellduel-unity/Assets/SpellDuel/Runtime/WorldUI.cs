@@ -236,7 +236,9 @@ namespace SpellDuel
             // 無盡塔（地圖上的一個地點）
             var twr = new Rect(r.x + gap, bottom + gap * 0.3f, r.width - gap * 2, towerH);
             string towerLabel = $"🗼 無盡塔　每次 5 波・已通過第 {(TowerBlocks?.Invoke() ?? 0) * 5} 波";
-            if (UiKit.Button(twr, "", fsS, false, TowerColor)) { screen = Screen.Tower; sel = null; return; }
+            bool towerOpen = Story.IsCleared("2-5");   // 打完 2-5 才能進無盡塔
+            if (UiKit.Button(twr, "", fsS, false, TowerColor, towerOpen)) { screen = Screen.Tower; sel = null; return; }
+            if (!towerOpen) towerLabel = "🔒 無盡塔　打完 2-5 才開放";
             UiKit.TowerArt(new Rect(twr.x+gap*.2f,twr.y+2,twr.height*1.1f,twr.height-4),TowerColor);
             UiKit.Text(new Rect(twr.x+twr.height*1.15f,twr.y,twr.width-twr.height*1.2f,twr.height),towerLabel,fsS,Color.white,TextAnchor.MiddleCenter,true);
             bottom += towerH + gap * 0.4f;
