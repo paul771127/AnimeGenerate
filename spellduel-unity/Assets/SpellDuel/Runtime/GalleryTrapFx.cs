@@ -5,10 +5,11 @@ namespace SpellDuel
     public sealed class GalleryTrapFx:MonoBehaviour
     {
         public Battle.TrapCue Cue {get;private set;}
+        readonly Dictionary<LineRenderer,float> warningWidths=new Dictionary<LineRenderer,float>();
         readonly List<LineRenderer> warnings=new List<LineRenderer>();readonly List<Transform> missiles=new List<Transform>();
         Transform moving;float width;static readonly Color Red=new Color(1,.12f,.06f,.85f),Bronze=new Color(.65f,.43f,.2f);
         LineRenderer Line(string name,Vector3[] p,float w=.05f)
-        {var l=SpellFx.Line(transform,name,p,false,w,Red,true,false);warnings.Add(l);return l;}
+        {var l=SpellFx.Line(transform,name,p,false,w,Red,true,false);warnings.Add(l);warningWidths[l]=w;return l;}
         public static GameObject Pillar(Vector3 world)
         {
             var go=new GameObject("Indestructible bronze flame column");go.transform.position=world;
@@ -72,7 +73,7 @@ namespace SpellDuel
         public void Tick(float time)
         {
             var c=Cue;bool show=!c.done&&time>=c.Start&&time<=c.hit+c.duration;
-            foreach(var r in warnings){r.gameObject.SetActive(show);float p=Mathf.Clamp01((time-c.Start)/c.warn);var col=time>=c.hit?new Color(1,.65f,.12f,1):Red;col.a=.35f+.6f*p;r.startColor=r.endColor=col;r.widthMultiplier=1+(p>.85f?Mathf.Sin(time*22)*.3f:0);}
+            foreach(var r in warnings){r.gameObject.SetActive(show);float p=Mathf.Clamp01((time-c.Start)/c.warn);var col=time>=c.hit?new Color(1,.65f,.12f,1):Red;col.a=.35f+.6f*p;r.startColor=r.endColor=col;r.widthMultiplier=warningWidths[r]*(1+(p>.85f?Mathf.Sin(time*22)*.3f:0));}
             float u=Mathf.Clamp01((time-c.hit)/Mathf.Max(.01f,c.duration));
             if(moving){moving.gameObject.SetActive(show&&time>=c.hit);moving.localRotation=Quaternion.Euler(0,u*360,0);}
             foreach(var m in missiles)
