@@ -197,7 +197,7 @@ namespace SpellDuel
             void Learn(string npcKey, string npc, string skill)
             {
                 string sn = Skills.All[skill].name;
-                S("npc:" + npcKey, $"找{npc}", () => $"點「{npc}」（地圖上的名字）跟他說話。有任務的居民會教你新招式。", () => world.TalkingTo != null && world.TalkingTo.Contains(npcKey), () => P().noviceLearned.Contains(skill));
+                S(npcKey, $"找{npc}", () => $"點「{npc}」（地圖上的名字）跟他說話。有任務的居民會教你新招式。", () => world.TalkingTo != null && world.TalkingTo.Contains(npcKey), () => P().noviceLearned.Contains(skill));
                 S("回報任務", $"學「{sn}」", () => $"按「✨ 回報任務」，{npc}會教你「{sn}」（學會的招式會自動放進技能欄）。", () => P().noviceLearned.Contains(skill));
             }
             void Node(string node, string skill)
