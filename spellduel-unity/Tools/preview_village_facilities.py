@@ -3,6 +3,17 @@ import json
 from PIL import Image,ImageDraw,ImageOps
 from preview_village2d import ROOT,ART,DOC,NAMES,rich
 CHARS=ROOT/'Assets/SpellDuel/Resources/Story2D/chars'
+def frame(im,asset,rect):
+ path=ART/'ui'/(asset+'.png')
+ if not path.exists():return False
+ src=Image.open(path).convert('RGBA');x,y,w,h=rect;sw,sh=src.size
+ l=r=min(70,sw//4);t=b=min(50,sh//4)
+ if asset=='speech_bubble':r=110;b=95
+ xs=[0,l,sw-r,sw];ys=[0,t,sh-b,sh];dx=[0,min(l,w//3),w-min(r,w//3),w];dy=[0,min(t,h//3),h-min(b,h//3),h]
+ for i in range(3):
+  for j in range(3):
+   tile=src.crop((xs[i],ys[j],xs[i+1],ys[j+1])).resize((dx[i+1]-dx[i],dy[j+1]-dy[j]),Image.Resampling.LANCZOS);im.alpha_composite(tile,(x+dx[i],y+dy[j]))
+ return True
 STAFF={'smith':'xiaotie','shop':'clerk','guild':'guildmaster','dungeon':'guide','training':'instructor','bounty':'bountyofficer','watch':'announcer','warp':'guide','gate':'guide'}
 ROWS={
  'smith':[('晨光長劍 +3','👕 穿著中　稀有'),('旅人護甲 +2','👕 穿著中　精良'),('灰燼短杖 +0','未穿著　普通'),('霧林長弓 +1','未穿著　稀有')],
@@ -20,15 +31,19 @@ def make(key):
  im=Image.open(bg).convert('RGBA');im.alpha_composite(Image.new('RGBA',im.size,(12,17,29,65)));entries=[]
  def box(id,rect,text='',kind='panel',size=28,selected=False):
   x,y,w,h=rect;entries.append({'id':id,'rect':rect,'type':kind,'text':text});d=ImageDraw.Draw(im)
-  d.rounded_rectangle((x,y,x+w,y+h),18,fill=(18,31,46,205) if kind!='button' else (153,73,28,245),outline='#f6d08c' if selected or kind=='button' else '#a59070',width=4 if selected else 2)
-  if text:rich(d,(x+18,y+14),text,size)
+  asset='btn_big' if kind=='button' else 'list_row_sel' if selected else 'list_row' if kind=='row' else 'speech_bubble' if id=='speech' else 'list_frame'
+  if not frame(im,asset,rect):d.rounded_rectangle((x,y,x+w,y+h),18,fill=(18,31,46,205) if kind!='button' else (153,73,28,245),outline='#f6d08c' if selected or kind=='button' else '#a59070',width=4 if selected else 2)
+  d=ImageDraw.Draw(im)
+  if id=='speech':fill='#513525'
+  else:fill='#fff4dd'
+  if text:rich(d,(x+w//2,y+h//2) if kind=='button' else (x+30,y+20),text,size,fill=fill,center=kind=='button')
  def label(x,y,text,size=28):rich(ImageDraw.Draw(im),(x,y),text,size)
  box('header',[30,45,1020,115]);label(55,65,NAMES[key],40);label(770,80,'💰 {gold}',28)
  box('return',[270,1795,540,92],'🏘 回城鎮','button',32)
  # All functional content is deliberately confined to left60%; NPC never covers buttons.
  top=300
  if key=='smith':
-  label(45,205,'要強化的裝備',38);box('enhance',[680,205,360,185],'⚒ 強化','button',34);label(699,275,'💰 {cost}',27);label(699,322,'成功率 {rate}%',27)
+  label(45,205,'要強化的裝備',38);box('enhance',[680,205,360,185],'','button',34);label(715,225,'⚒ 強化',34);label(715,275,'💰 {cost}',27);label(715,322,'成功率 {rate}%',27)
   entries[-1]['text']='⚒ 強化（💰 {cost}・成功率 {rate}%）'
   box('stats',[680,420,360,230]);label(700,450,'強化前 → 強化後',28);label(700,510,'{before} → {after}',26)
  elif key=='shop':
@@ -64,7 +79,7 @@ def make(key):
  if key=='training':
   box('tutorial',[40,1370,580,110],'🎓 再上一次教學','button',29);box('walkthrough',[40,1500,580,110],'🧭 重看村子導覽','button',29)
  speech={'smith':'火候到了，交給我吧！','shop':'旅途的補給準備好了。','guild':'選擇屬於你的道路。','dungeon':'岔路很多，記得互相照應。','training':'準備好了？先穩住呼吸。','bounty':'請確認目標再出發。','watch':'輸入朋友的房間代碼吧！','warp':'去過的地方，都記在這裡。','gate':'晨鐘會為歸來的人響起。'}[key]
- box('speech',[675,730,365,190]);label(695,755,speech[:10],28);label(695,805,speech[10:],28)
+ box('speech',[675,730,365,190]);rich(ImageDraw.Draw(im),(705,760),speech[:9],28,fill='#513525');rich(ImageDraw.Draw(im),(705,805),speech[9:],28,fill='#513525')
  npc=CHARS/(STAFF[key]+'_normal.png')
  if npc.exists():pic=ImageOps.contain(Image.open(npc).convert('RGBA'),(390,730));im.alpha_composite(pic,(660+(390-pic.width)//2,990));entries.append({'id':'npc','rect':[660,990,390,730],'type':'portrait','asset':npc.relative_to(ROOT).as_posix()})
  if key=='smith':pic=Image.open(ART/'anvil_0.png').resize((365,274));im.alpha_composite(pic,(675,1460));entries.append({'id':'anvil','rect':[675,1460,365,274],'type':'animation','frames':6,'loops':3,'durationMs':1500})

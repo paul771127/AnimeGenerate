@@ -1,0 +1,179 @@
+{
+  "canvas": [
+    1080,
+    1920
+  ],
+  "origin": "top-left",
+  "units": "design-pixels",
+  "illustrativeDataOnly": true,
+  "runtimeConditions": "Preserve all existing visibility, eligibility and enabled conditions.",
+  "elements": [
+    {
+      "id": "header",
+      "rect": [
+        30,
+        45,
+        1020,
+        115
+      ],
+      "type": "panel",
+      "text": ""
+    },
+    {
+      "id": "return",
+      "rect": [
+        270,
+        1795,
+        540,
+        92
+      ],
+      "type": "button",
+      "text": "🏘 回城鎮"
+    },
+    {
+      "id": "scroll",
+      "rect": [
+        30,
+        290,
+        610,
+        960
+      ],
+      "type": "panel",
+      "text": "",
+      "axis": "vertical",
+      "clip": true
+    },
+    {
+      "id": "row_0",
+      "rect": [
+        45,
+        300,
+        580,
+        215
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "challenge_0",
+      "rect": [
+        65,
+        432,
+        535,
+        70
+      ],
+      "type": "button",
+      "text": "挑戰"
+    },
+    {
+      "id": "row_1",
+      "rect": [
+        45,
+        530,
+        580,
+        215
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "challenge_1",
+      "rect": [
+        65,
+        662,
+        535,
+        70
+      ],
+      "type": "button",
+      "text": "挑戰"
+    },
+    {
+      "id": "row_2",
+      "rect": [
+        45,
+        760,
+        580,
+        215
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "challenge_2",
+      "rect": [
+        65,
+        892,
+        535,
+        70
+      ],
+      "type": "button",
+      "text": "挑戰"
+    },
+    {
+      "id": "row_3",
+      "rect": [
+        45,
+        990,
+        580,
+        215
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "challenge_3",
+      "rect": [
+        65,
+        1122,
+        535,
+        70
+      ],
+      "type": "button",
+      "text": "挑戰"
+    },
+    {
+      "id": "tutorial",
+      "rect": [
+        40,
+        1370,
+        580,
+        110
+      ],
+      "type": "button",
+      "text": "🎓 再上一次教學"
+    },
+    {
+      "id": "walkthrough",
+      "rect": [
+        40,
+        1500,
+        580,
+        110
+      ],
+      "type": "button",
+      "text": "🧭 重看村子導覽"
+    },
+    {
+      "id": "speech",
+      "rect": [
+        675,
+        730,
+        365,
+        190
+      ],
+      "type": "panel",
+      "text": ""
+    },
+    {
+      "id": "npc",
+      "rect": [
+        660,
+        990,
+        390,
+        730
+      ],
+      "type": "portrait",
+      "asset": "Assets/SpellDuel/Resources/Story2D/chars/instructor_normal.png"
+    }
+  ]
+}

@@ -1,0 +1,210 @@
+{
+  "canvas": [
+    1080,
+    1920
+  ],
+  "origin": "top-left",
+  "units": "design-pixels",
+  "illustrativeDataOnly": true,
+  "runtimeConditions": "Preserve all existing visibility, eligibility and enabled conditions.",
+  "elements": [
+    {
+      "id": "header",
+      "rect": [
+        30,
+        45,
+        1020,
+        115
+      ],
+      "type": "panel",
+      "text": ""
+    },
+    {
+      "id": "return",
+      "rect": [
+        270,
+        1795,
+        540,
+        92
+      ],
+      "type": "button",
+      "text": "🏘 回城鎮"
+    },
+    {
+      "id": "roomcode",
+      "rect": [
+        40,
+        220,
+        580,
+        160
+      ],
+      "type": "panel",
+      "text": "房間代碼"
+    },
+    {
+      "id": "key_0",
+      "rect": [
+        40,
+        420,
+        180,
+        140
+      ],
+      "type": "button",
+      "text": "1"
+    },
+    {
+      "id": "key_1",
+      "rect": [
+        235,
+        420,
+        180,
+        140
+      ],
+      "type": "button",
+      "text": "2"
+    },
+    {
+      "id": "key_2",
+      "rect": [
+        430,
+        420,
+        180,
+        140
+      ],
+      "type": "button",
+      "text": "3"
+    },
+    {
+      "id": "key_3",
+      "rect": [
+        40,
+        580,
+        180,
+        140
+      ],
+      "type": "button",
+      "text": "4"
+    },
+    {
+      "id": "key_4",
+      "rect": [
+        235,
+        580,
+        180,
+        140
+      ],
+      "type": "button",
+      "text": "5"
+    },
+    {
+      "id": "key_5",
+      "rect": [
+        430,
+        580,
+        180,
+        140
+      ],
+      "type": "button",
+      "text": "6"
+    },
+    {
+      "id": "key_6",
+      "rect": [
+        40,
+        740,
+        180,
+        140
+      ],
+      "type": "button",
+      "text": "7"
+    },
+    {
+      "id": "key_7",
+      "rect": [
+        235,
+        740,
+        180,
+        140
+      ],
+      "type": "button",
+      "text": "8"
+    },
+    {
+      "id": "key_8",
+      "rect": [
+        430,
+        740,
+        180,
+        140
+      ],
+      "type": "button",
+      "text": "9"
+    },
+    {
+      "id": "key_9",
+      "rect": [
+        40,
+        900,
+        180,
+        140
+      ],
+      "type": "button",
+      "text": "清除"
+    },
+    {
+      "id": "key_10",
+      "rect": [
+        235,
+        900,
+        180,
+        140
+      ],
+      "type": "button",
+      "text": "0"
+    },
+    {
+      "id": "key_11",
+      "rect": [
+        430,
+        900,
+        180,
+        140
+      ],
+      "type": "button",
+      "text": "⌫"
+    },
+    {
+      "id": "spectate",
+      "rect": [
+        40,
+        1100,
+        580,
+        165
+      ],
+      "type": "button",
+      "text": "👀 去看台（輸入房間代碼）"
+    },
+    {
+      "id": "speech",
+      "rect": [
+        675,
+        730,
+        365,
+        190
+      ],
+      "type": "panel",
+      "text": ""
+    },
+    {
+      "id": "npc",
+      "rect": [
+        660,
+        990,
+        390,
+        730
+      ],
+      "type": "portrait",
+      "asset": "Assets/SpellDuel/Resources/Story2D/chars/announcer_normal.png"
+    }
+  ]
+}

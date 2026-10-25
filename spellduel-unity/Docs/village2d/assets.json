@@ -191,8 +191,8 @@
       1448,
       1086
     ],
-    "bytes": 137772,
-    "sha256": "29e1dc9a6c47905192356d06184d071e727e046812d40afa87536f817c9278b6"
+    "bytes": 140032,
+    "sha256": "dd6aea825a71de7a7f9ebbd80168115ea956cd2c21d9318b9f91c156c2843193"
   },
   "Assets/SpellDuel/Resources/Village2D/anvil_2.png": {
     "size": [
@@ -204,8 +204,8 @@
       1448,
       1086
     ],
-    "bytes": 135383,
-    "sha256": "d3ef2a437281c2e85ab7384e560a861b2ca27bf6b44ca0c04ddee55f92b1c619"
+    "bytes": 137765,
+    "sha256": "d2de741fe53179d6919b4659f0ada1415d5b8371fb26f435a43eb64cd63a59ae"
   },
   "Assets/SpellDuel/Resources/Village2D/anvil_3.png": {
     "size": [
@@ -217,8 +217,8 @@
       1448,
       1086
     ],
-    "bytes": 163724,
-    "sha256": "4deed3179af6e001962a2a32b81feb853e990a9d4bceae495c7c545230a12e33"
+    "bytes": 164678,
+    "sha256": "857def751ef809cb633d091648585168bae1a0dd8ac4bf3e048d5792fa239006"
   },
   "Assets/SpellDuel/Resources/Village2D/anvil_4.png": {
     "size": [
@@ -230,8 +230,8 @@
       1448,
       1086
     ],
-    "bytes": 139801,
-    "sha256": "f9680be591c8d5c66c8700b84be61262bd951061ed363d49b9c58dc51bfbb51d"
+    "bytes": 142777,
+    "sha256": "d1c69a2895ebbabd2c3bf4e1fb281cb5490d5dd6fc8a5f8dcded2dfd52a9f2f5"
   },
   "Assets/SpellDuel/Resources/Village2D/anvil_5.png": {
     "size": [
@@ -243,8 +243,8 @@
       1448,
       1086
     ],
-    "bytes": 138190,
-    "sha256": "5f4d937c2bb53158497d79476c9804fd9816a36526506ca2ab597e996922dcde"
+    "bytes": 140205,
+    "sha256": "94c53658d5578f95923fb569177059c1fb3efd21dd6f7c1963a16ea0662333e9"
   },
   "Assets/SpellDuel/Resources/Village2D/in_shop_flame.jpg": {
     "size": [
@@ -310,5 +310,330 @@
     ],
     "bytes": 744961,
     "sha256": "57cca08c7c7c86d5bf27f54c1a8e67bd9054e02a184e07725c43281516a86016"
+  },
+  "Assets/SpellDuel/Resources/Village2D/in_dungeon_flame.jpg": {
+    "size": [
+      1080,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      941,
+      1672
+    ],
+    "bytes": 481749,
+    "sha256": "520fa0bc45f2c906e813cd865b809ebdbb09d8cd5290fc8bcced560f69b9c9ac"
+  },
+  "Assets/SpellDuel/Resources/Village2D/in_training_flame.jpg": {
+    "size": [
+      1080,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      941,
+      1672
+    ],
+    "bytes": 565036,
+    "sha256": "f6c087f136faea3cef1df9b6518ddae26bf5e5594b6cfd83aeb6f5ad3abf6e26"
+  },
+  "Assets/SpellDuel/Resources/Village2D/in_bounty_flame.jpg": {
+    "size": [
+      1080,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      941,
+      1672
+    ],
+    "bytes": 519957,
+    "sha256": "a67dbebee34a85079c11d0776170350f9d244f5491181749bfb33a49cbc836e0"
+  },
+  "Assets/SpellDuel/Resources/Village2D/in_watch_flame.jpg": {
+    "size": [
+      1080,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      941,
+      1672
+    ],
+    "bytes": 497498,
+    "sha256": "67e8d6171b7a9cbfe0ab10cfe6e65c8c4f3f182273854399f05e23cfb1b15d1d"
+  },
+  "Assets/SpellDuel/Resources/Village2D/in_warp_flame.jpg": {
+    "size": [
+      1080,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      941,
+      1672
+    ],
+    "bytes": 526289,
+    "sha256": "5f8cdce112cf818633f89b10f20395b842825257bfa34f796390f356cda63406"
+  },
+  "Assets/SpellDuel/Resources/Village2D/in_gate_flame.jpg": {
+    "size": [
+      1080,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      941,
+      1672
+    ],
+    "bytes": 534934,
+    "sha256": "65798505df2300e310d873c7a054ad4859e9ae0292ec1ef97cc74cf68b0d7317"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/guide_normal.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 886217,
+    "sha256": "b3ba0a980b011ac0dc7c8d1568c9dec953761118e20c4761bb5a4c5f93922ba5"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/guide_smile.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 886725,
+    "sha256": "401e21c2ee79ebf4eef4f1150542713714f1d2881e0ded84103b0b0d72e85135"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/guide_surprised.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 886773,
+    "sha256": "0f98c5d55c96de03b74bb71c54aa1e666bffaac4440ef37ffc1828df72c6d975"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/instructor_normal.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 754076,
+    "sha256": "484de5e781a34b21b78326b4448da5e294132c60fa141befe057326329d7f6df"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/instructor_smile.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 754712,
+    "sha256": "bedadf7b5669f48bfcf337eec61000849dc224d787ef0703476349da7ad948c4"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/instructor_surprised.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 755582,
+    "sha256": "9753bfbbbea41530d0b83075dd9dbfdd7276528d5c1402ad63e0296475d67b45"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/bountyofficer_normal.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 831358,
+    "sha256": "e7cd479d95ae57b1d226f483a1846c0263c511052d0b9bb6bdbaf9ae2edf862f"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/bountyofficer_smile.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 832186,
+    "sha256": "8fafe679f6457a6a4c579e59d26e8d0801ec4c001fc9a1f9ffe243b03b38ff73"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/bountyofficer_surprised.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 832667,
+    "sha256": "d5da6bb359d8c45c2a0d65fb298379b5192a05b4d56ad099b35a5d5948b5977c"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/announcer_normal.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 903647,
+    "sha256": "74e26e1024ff85ee0b5027356dbbf7ac4e01df4cdde672898da25302ec971066"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/announcer_smile.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 903094,
+    "sha256": "e4c1f70d5adff8d0088e4beacf018552aadcb03621ca004f62cab087797a4204"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/announcer_surprised.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 902750,
+    "sha256": "1e7589081fb06a0ff273df2643989c7cccf6bf2862c85d16dfa36aafd93f6958"
+  },
+  "Assets/SpellDuel/Resources/Village2D/ui/btn_big.png": {
+    "size": [
+      640,
+      200
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "bytes": 144293,
+    "sha256": "cb1aca5cbf03d6a9426931dd8c1649f35a311d16a72c523e865fc99d6858e9d0"
+  },
+  "Assets/SpellDuel/Resources/Village2D/ui/btn_big_press.png": {
+    "size": [
+      640,
+      200
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "bytes": 146120,
+    "sha256": "9924dfd68e4b5fb4cecef56f0e5b0e4ccc4ffbbf91533fa53ff7d53b8c407865"
+  },
+  "Assets/SpellDuel/Resources/Village2D/ui/list_frame.png": {
+    "size": [
+      512,
+      768
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 405333,
+    "sha256": "57101d06cadbf78f3f44ee5711d0f46207cfc12d91a27d5ad2742addf112310b"
+  },
+  "Assets/SpellDuel/Resources/Village2D/ui/list_row.png": {
+    "size": [
+      640,
+      160
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "bytes": 84297,
+    "sha256": "c9bc337d049ab6d38cfae9787e72a7212c289e4218b7b410d4d0b6e7e8c59172"
+  },
+  "Assets/SpellDuel/Resources/Village2D/ui/list_row_sel.png": {
+    "size": [
+      640,
+      160
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "bytes": 119370,
+    "sha256": "aade4437a46b718eeb609780e44ba2ba2b85664042cf88f935f66fd2f8a0f843"
+  },
+  "Assets/SpellDuel/Resources/Village2D/ui/name_plate.png": {
+    "size": [
+      384,
+      96
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1983,
+      793
+    ],
+    "bytes": 35450,
+    "sha256": "d69556c878fe2605db9ea58e9c91ee4246a284684eaaf55aa21446c639efca1e"
+  },
+  "Assets/SpellDuel/Resources/Village2D/ui/speech_bubble.png": {
+    "size": [
+      512,
+      320
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "bytes": 139830,
+    "sha256": "639d497819c3c04445606b708e1ce16b8dcf74d7f0a85432dba8b13fe8b2d233"
   }
 }

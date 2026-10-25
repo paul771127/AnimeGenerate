@@ -2,7 +2,8 @@
 """Validate Village2D image specifications, hotspot geometry and handoff assets."""
 import argparse,json,re
 from pathlib import Path
-from PIL import Image
+from PIL import Image,ImageFilter
+import numpy as np
 ROOT=Path(__file__).resolve().parents[1];ART=ROOT/'Assets/SpellDuel/Resources/Village2D';DOC=ROOT/'Docs/village2d'
 TOWNS={'flame':['laoyan','xiaotie','mila'],'forest':['cui','feng','xiaoye'],'harbor':['haido','nagi','achao'],'desert':['leo','xiaosha','tieniang'],'snow':['laotuo','aling','shi']}
 KEYS=['smith','shop','guild','dungeon','training','bounty','watch','warp','gate'];UI=['name_plate','list_frame','list_row','list_row_sel','speech_bubble','btn_big','btn_big_press']
@@ -44,6 +45,47 @@ def main():
         if exists(path):
             with Image.open(path) as im:size=im.size
             picture(path,size,True)
+    castpath=ART/'cast.json'
+    if exists(castpath):
+        for id,spec in json.loads(castpath.read_text(encoding='utf-8')).items():
+            master=None
+            for expr in spec['expressions']:
+                path=ROOT/f'Assets/SpellDuel/Resources/Story2D/chars/{id}_{expr}.png';picture(path,(768,1152),True)
+                if not path.exists():continue
+                pixels=np.array(Image.open(path))
+                if not spec['poseVariants']:
+                    if master is None:master=pixels
+                    else:
+                        mask=DOC/'staff_masks'/f'{id}.png';assert mask.exists(),mask
+                        allowed=np.array(Image.open(mask).convert('L').filter(ImageFilter.MaxFilter(9)))>0
+                        delta=np.any(pixels!=master,axis=2);assert not (delta&~allowed).any(),(id,expr,'outside-face pixel drift');assert delta.sum()>15,(id,expr,'identical expression')
+    for key in KEYS:
+        batch=2 if key=='smith' else 3 if key in ['shop','guild'] else 4
+        path=DOC/f'batch{batch}/{key}_layout.json'
+        if exists(path):
+            spec=json.loads(path.read_text(encoding='utf-8'));assert spec['canvas']==[1080,1920],path
+            ids=[]
+            for v in spec['elements']:
+                ids.append(v['id']);x,y,w,h=v['rect'];assert 0<=x and 0<=y and w>0 and h>0 and x+w<=1080 and y+h<=1920,(key,v)
+            assert len(ids)==len(set(ids)),(key,'duplicate control IDs');assert 'return' in ids and 'npc' in ids,(key,'missing common controls')
+    for name,section in [('lines_smith.txt',['success','failure']),('lines_shop.txt',['sale','insufficient','sell'])]:
+        path=ART/name
+        if exists(path):
+            groups={};current=None
+            for line in path.read_text(encoding='utf-8').splitlines():
+                if line.startswith('['):current=line.strip('[]');groups[current]=[]
+                elif line.strip():assert current;groups[current].append(line)
+            assert all(k in groups for k in section),path
+            if name=='lines_smith.txt':assert all(len(groups[k])>=8 for k in section),path
+    slices=ART/'ui/slices.json'
+    if exists(slices):
+        data=json.loads(slices.read_text(encoding='utf-8'));assert set(data)==set(UI)
+        for key,v in data.items():
+            t=(ART/'ui'/f'{key}.png.meta').read_text();assert 'textureType: 8' in t and 'spriteBorder:' in t,(key,'9slice import')
+    frames=[ART/f'anvil_{i}.png' for i in range(6)]
+    if all(p.exists() for p in frames):
+        lower=Image.open(frames[0]).crop((0,192,512,384)).tobytes()
+        assert all(Image.open(p).crop((0,192,512,384)).tobytes()==lower for p in frames),'anvil base drift'
     guids=[]
     for path in ART.rglob('*.meta'):
         m=re.search(r'^guid: ([0-9a-f]{32})$',path.read_text(),re.M);assert m,path;guids.append(m[1])

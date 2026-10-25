@@ -1,0 +1,135 @@
+{
+  "canvas": [
+    1080,
+    1920
+  ],
+  "origin": "top-left",
+  "units": "design-pixels",
+  "illustrativeDataOnly": true,
+  "runtimeConditions": "Preserve all existing visibility, eligibility and enabled conditions.",
+  "elements": [
+    {
+      "id": "header",
+      "rect": [
+        30,
+        45,
+        1020,
+        115
+      ],
+      "type": "panel",
+      "text": ""
+    },
+    {
+      "id": "return",
+      "rect": [
+        270,
+        1795,
+        540,
+        92
+      ],
+      "type": "button",
+      "text": "🏘 回城鎮"
+    },
+    {
+      "id": "scroll",
+      "rect": [
+        30,
+        290,
+        610,
+        1060
+      ],
+      "type": "panel",
+      "text": "",
+      "axis": "vertical",
+      "clip": true
+    },
+    {
+      "id": "row_0",
+      "rect": [
+        45,
+        300,
+        580,
+        325
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "accept_0",
+      "rect": [
+        65,
+        524,
+        535,
+        80
+      ],
+      "type": "button",
+      "text": "🔥 接下懸賞，出發討伐"
+    },
+    {
+      "id": "row_1",
+      "rect": [
+        45,
+        640,
+        580,
+        325
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "accept_1",
+      "rect": [
+        65,
+        864,
+        535,
+        80
+      ],
+      "type": "button",
+      "text": "🔥 接下懸賞，出發討伐"
+    },
+    {
+      "id": "row_2",
+      "rect": [
+        45,
+        980,
+        580,
+        325
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "accept_2",
+      "rect": [
+        65,
+        1204,
+        535,
+        80
+      ],
+      "type": "button",
+      "text": "🔥 接下懸賞，出發討伐"
+    },
+    {
+      "id": "speech",
+      "rect": [
+        675,
+        730,
+        365,
+        190
+      ],
+      "type": "panel",
+      "text": ""
+    },
+    {
+      "id": "npc",
+      "rect": [
+        660,
+        990,
+        390,
+        730
+      ],
+      "type": "portrait",
+      "asset": "Assets/SpellDuel/Resources/Story2D/chars/bountyofficer_normal.png"
+    }
+  ]
+}

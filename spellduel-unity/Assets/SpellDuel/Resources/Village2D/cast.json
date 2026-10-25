@@ -26,5 +26,41 @@
       "surprised"
     ],
     "poseVariants": false
+  },
+  "guide": {
+    "role": "副本嚮導",
+    "expressions": [
+      "normal",
+      "smile",
+      "surprised"
+    ],
+    "poseVariants": false
+  },
+  "instructor": {
+    "role": "訓練教官",
+    "expressions": [
+      "normal",
+      "smile",
+      "surprised"
+    ],
+    "poseVariants": false
+  },
+  "bountyofficer": {
+    "role": "懸賞官",
+    "expressions": [
+      "normal",
+      "smile",
+      "surprised"
+    ],
+    "poseVariants": false
+  },
+  "announcer": {
+    "role": "觀戰播報員",
+    "expressions": [
+      "normal",
+      "smile",
+      "surprised"
+    ],
+    "poseVariants": false
   }
 }

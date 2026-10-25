@@ -81,7 +81,11 @@ def main():
                 assert who not in cast,(name,no,'unmarked cast line',who)
     size=sum(p.stat().st_size for p in ART.rglob('*') if p.suffix.lower() in ('.png','.jpg','.jpeg'))
     class_size=sum(p.stat().st_size for p in (ART/'classes').glob('*.png'))
-    dialogue_size=size-class_size
+    village_size=0
+    if village_cast.exists():
+        for identity,spec in json.loads(village_cast.read_text(encoding='utf-8')).items():
+            village_size+=sum((ART/'chars'/f'{identity}_{e}.png').stat().st_size for e in spec['expressions'] if (ART/'chars'/f'{identity}_{e}.png').exists())
+    dialogue_size=size-class_size-village_size
     if not args.partial:assert dialogue_size<=40*1024*1024,('dialogue art exceeds 40 MiB',dialogue_size)
     if not args.partial:
         for identity in ids:assert (DOC/f'{identity}_expressions.png').is_file(),(identity,'missing expression overview')

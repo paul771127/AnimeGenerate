@@ -1,0 +1,142 @@
+{
+  "name_plate": {
+    "size": [
+      384,
+      96
+    ],
+    "borderLTRB": [
+      60,
+      26,
+      60,
+      26
+    ],
+    "unityBorderXY ZW": "left,bottom,right,top",
+    "safeTextPadding": [
+      60,
+      26,
+      60,
+      26
+    ],
+    "nineSlice": true
+  },
+  "list_frame": {
+    "size": [
+      512,
+      768
+    ],
+    "borderLTRB": [
+      70,
+      50,
+      70,
+      50
+    ],
+    "unityBorderXY ZW": "left,bottom,right,top",
+    "safeTextPadding": [
+      70,
+      50,
+      70,
+      50
+    ],
+    "nineSlice": true
+  },
+  "list_row": {
+    "size": [
+      640,
+      160
+    ],
+    "borderLTRB": [
+      70,
+      45,
+      70,
+      45
+    ],
+    "unityBorderXY ZW": "left,bottom,right,top",
+    "safeTextPadding": [
+      70,
+      45,
+      70,
+      45
+    ],
+    "nineSlice": true
+  },
+  "list_row_sel": {
+    "size": [
+      640,
+      160
+    ],
+    "borderLTRB": [
+      70,
+      45,
+      70,
+      45
+    ],
+    "unityBorderXY ZW": "left,bottom,right,top",
+    "safeTextPadding": [
+      70,
+      45,
+      70,
+      45
+    ],
+    "nineSlice": true
+  },
+  "speech_bubble": {
+    "size": [
+      512,
+      320
+    ],
+    "borderLTRB": [
+      70,
+      50,
+      110,
+      95
+    ],
+    "unityBorderXY ZW": "left,bottom,right,top",
+    "safeTextPadding": [
+      70,
+      95,
+      110,
+      50
+    ],
+    "nineSlice": true
+  },
+  "btn_big": {
+    "size": [
+      640,
+      200
+    ],
+    "borderLTRB": [
+      70,
+      50,
+      70,
+      50
+    ],
+    "unityBorderXY ZW": "left,bottom,right,top",
+    "safeTextPadding": [
+      70,
+      50,
+      70,
+      50
+    ],
+    "nineSlice": true
+  },
+  "btn_big_press": {
+    "size": [
+      640,
+      200
+    ],
+    "borderLTRB": [
+      70,
+      50,
+      70,
+      50
+    ],
+    "unityBorderXY ZW": "left,bottom,right,top",
+    "safeTextPadding": [
+      70,
+      50,
+      70,
+      50
+    ],
+    "nineSlice": true
+  }
+}

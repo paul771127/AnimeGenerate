@@ -1,0 +1,168 @@
+{
+  "canvas": [
+    1080,
+    1920
+  ],
+  "origin": "top-left",
+  "units": "design-pixels",
+  "illustrativeDataOnly": true,
+  "runtimeConditions": "Preserve all existing visibility, eligibility and enabled conditions.",
+  "elements": [
+    {
+      "id": "header",
+      "rect": [
+        30,
+        45,
+        1020,
+        115
+      ],
+      "type": "panel",
+      "text": ""
+    },
+    {
+      "id": "return",
+      "rect": [
+        270,
+        1795,
+        540,
+        92
+      ],
+      "type": "button",
+      "text": "🏘 回城鎮"
+    },
+    {
+      "id": "scroll",
+      "rect": [
+        30,
+        290,
+        610,
+        1060
+      ],
+      "type": "panel",
+      "text": "",
+      "axis": "vertical",
+      "clip": true
+    },
+    {
+      "id": "row_0",
+      "rect": [
+        45,
+        300,
+        580,
+        325
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "solo_0",
+      "rect": [
+        65,
+        450,
+        535,
+        75
+      ],
+      "type": "button",
+      "text": "⚔ 單人進入"
+    },
+    {
+      "id": "party_0",
+      "rect": [
+        65,
+        535,
+        535,
+        75
+      ],
+      "type": "button",
+      "text": "組隊進入"
+    },
+    {
+      "id": "row_1",
+      "rect": [
+        45,
+        640,
+        580,
+        325
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "solo_1",
+      "rect": [
+        65,
+        790,
+        535,
+        75
+      ],
+      "type": "button",
+      "text": "⚔ 單人進入"
+    },
+    {
+      "id": "party_1",
+      "rect": [
+        65,
+        875,
+        535,
+        75
+      ],
+      "type": "button",
+      "text": "組隊進入"
+    },
+    {
+      "id": "row_2",
+      "rect": [
+        45,
+        980,
+        580,
+        325
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "solo_2",
+      "rect": [
+        65,
+        1130,
+        535,
+        75
+      ],
+      "type": "button",
+      "text": "⚔ 單人進入"
+    },
+    {
+      "id": "party_2",
+      "rect": [
+        65,
+        1215,
+        535,
+        75
+      ],
+      "type": "button",
+      "text": "組隊進入"
+    },
+    {
+      "id": "speech",
+      "rect": [
+        675,
+        730,
+        365,
+        190
+      ],
+      "type": "panel",
+      "text": ""
+    },
+    {
+      "id": "npc",
+      "rect": [
+        660,
+        990,
+        390,
+        730
+      ],
+      "type": "portrait",
+      "asset": "Assets/SpellDuel/Resources/Story2D/chars/guide_normal.png"
+    }
+  ]
+}
