@@ -1,0 +1,148 @@
+{
+  "canvas": [
+    1080,
+    1920
+  ],
+  "origin": "top-left",
+  "units": "design-pixels",
+  "illustrativeDataOnly": true,
+  "runtimeConditions": "Preserve all existing visibility, eligibility and enabled conditions.",
+  "elements": [
+    {
+      "id": "header",
+      "rect": [
+        30,
+        45,
+        1020,
+        115
+      ],
+      "type": "panel",
+      "text": ""
+    },
+    {
+      "id": "return",
+      "rect": [
+        270,
+        1795,
+        540,
+        92
+      ],
+      "type": "button",
+      "text": "🏘 回城鎮"
+    },
+    {
+      "id": "enhance",
+      "rect": [
+        680,
+        205,
+        360,
+        185
+      ],
+      "type": "button",
+      "text": "⚒ 強化（💰 {cost}・成功率 {rate}%）"
+    },
+    {
+      "id": "stats",
+      "rect": [
+        680,
+        420,
+        360,
+        230
+      ],
+      "type": "panel",
+      "text": ""
+    },
+    {
+      "id": "scroll",
+      "rect": [
+        30,
+        290,
+        610,
+        880
+      ],
+      "type": "panel",
+      "text": "",
+      "axis": "vertical",
+      "clip": true
+    },
+    {
+      "id": "row_0",
+      "rect": [
+        45,
+        300,
+        580,
+        195
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "row_1",
+      "rect": [
+        45,
+        510,
+        580,
+        195
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "row_2",
+      "rect": [
+        45,
+        720,
+        580,
+        195
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "row_3",
+      "rect": [
+        45,
+        930,
+        580,
+        195
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "speech",
+      "rect": [
+        675,
+        730,
+        365,
+        190
+      ],
+      "type": "panel",
+      "text": ""
+    },
+    {
+      "id": "npc",
+      "rect": [
+        660,
+        990,
+        390,
+        730
+      ],
+      "type": "portrait",
+      "asset": "Assets/SpellDuel/Resources/Story2D/chars/xiaotie_normal.png"
+    },
+    {
+      "id": "anvil",
+      "rect": [
+        675,
+        1460,
+        365,
+        274
+      ],
+      "type": "animation",
+      "frames": 6,
+      "loops": 3,
+      "durationMs": 1500
+    }
+  ]
+}

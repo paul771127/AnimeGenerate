@@ -46,6 +46,10 @@ def main():
         with Image.open(path) as image:assert image.size==(1080,1920) and image.mode=='RGB',path
         backgrounds.append(identity);assert path.with_suffix('.jpg.meta').is_file(),path
     expected={f'{identity}_{expr}.png' for identity in ids for expr in (('normal','angry') if identity in BOSSES else EXPRS)}
+    village_cast=ROOT/'Assets/SpellDuel/Resources/Village2D/cast.json'
+    if village_cast.exists():
+        for identity,spec in json.loads(village_cast.read_text(encoding='utf-8')).items():
+            expected.update(f'{identity}_{e}.png' for e in spec['expressions'])
     assert not {p.name for p in (ART/'chars').glob('*.png')}-expected,'unknown sprites'
     assert not {p.stem for p in (ART/'bg').glob('*.jpg')}-BACKGROUNDS,'unknown backgrounds'
     guids=[]

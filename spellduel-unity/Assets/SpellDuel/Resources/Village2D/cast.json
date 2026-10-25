@@ -1,0 +1,21 @@
+{
+  "smith": {
+    "expressions": [
+      "normal",
+      "focus",
+      "proud",
+      "awkward"
+    ],
+    "role": "鐵匠師父",
+    "poseVariants": true
+  },
+  "xiaotie": {
+    "expressions": [
+      "focus",
+      "proud",
+      "awkward"
+    ],
+    "role": "小鐵",
+    "poseVariants": true
+  }
+}

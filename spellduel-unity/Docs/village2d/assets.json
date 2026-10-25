@@ -63,5 +63,187 @@
     ],
     "bytes": 28175,
     "sha256": "f5dbd9a7d376d7fe6459d9785aad7fa7d738fd339c9e304c1200b192c681cfba"
+  },
+  "Assets/SpellDuel/Resources/Village2D/in_smith_flame.jpg": {
+    "size": [
+      1080,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      941,
+      1672
+    ],
+    "bytes": 533361,
+    "sha256": "ac186f5c9534cc7eea0a1a75dbeefc519f55e03add3f0d7929eba53fbfdba86d"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/smith_awkward.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 932005,
+    "sha256": "a243873a44716d665783f6356b768d256d5355da67a645c6ca84b46d32acbc68"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/smith_focus.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 1052825,
+    "sha256": "62fb26637b33ea2421a4cba762f1ddcf12771a76a1430919cd357375475027fe"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/smith_proud.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 926412,
+    "sha256": "a60925b54d90c001de94b79d5ec7c176b7bc0803fa4ef77a1ae1e995e8643d7a"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/xiaotie_awkward.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 747762,
+    "sha256": "c8bc97fc6edcab9ebf8908722c3aaf0ed92a5017ad7d02c4a1289693fd73f590"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/xiaotie_focus.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 933375,
+    "sha256": "017515e64e4a5d403c0cc1960370605c55051250f22ccfb38c311bd8a5521aaf"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/xiaotie_proud.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 780204,
+    "sha256": "e0b07be2e615aa1d63197cda90bccc27aebec979b6cc00070589723c60a9a561"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/smith_normal.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 888230,
+    "sha256": "ef6541c0be028fc52b3ba6cc2353c9f0983831b62be2575f6b7ed56040125288"
+  },
+  "Assets/SpellDuel/Resources/Village2D/anvil_0.png": {
+    "size": [
+      512,
+      384
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "bytes": 140727,
+    "sha256": "faaf843b46bfc62ee20772669d8560ddf02d70a105cc8328be3a8e9f1aa751c9"
+  },
+  "Assets/SpellDuel/Resources/Village2D/anvil_1.png": {
+    "size": [
+      512,
+      384
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "bytes": 137772,
+    "sha256": "29e1dc9a6c47905192356d06184d071e727e046812d40afa87536f817c9278b6"
+  },
+  "Assets/SpellDuel/Resources/Village2D/anvil_2.png": {
+    "size": [
+      512,
+      384
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "bytes": 135383,
+    "sha256": "d3ef2a437281c2e85ab7384e560a861b2ca27bf6b44ca0c04ddee55f92b1c619"
+  },
+  "Assets/SpellDuel/Resources/Village2D/anvil_3.png": {
+    "size": [
+      512,
+      384
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "bytes": 163724,
+    "sha256": "4deed3179af6e001962a2a32b81feb853e990a9d4bceae495c7c545230a12e33"
+  },
+  "Assets/SpellDuel/Resources/Village2D/anvil_4.png": {
+    "size": [
+      512,
+      384
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "bytes": 139801,
+    "sha256": "f9680be591c8d5c66c8700b84be61262bd951061ed363d49b9c58dc51bfbb51d"
+  },
+  "Assets/SpellDuel/Resources/Village2D/anvil_5.png": {
+    "size": [
+      512,
+      384
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "bytes": 138190,
+    "sha256": "5f4d937c2bb53158497d79476c9804fd9816a36526506ca2ab597e996922dcde"
   }
 }
