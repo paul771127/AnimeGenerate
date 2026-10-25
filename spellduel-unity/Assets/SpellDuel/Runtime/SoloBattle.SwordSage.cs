@@ -53,9 +53,34 @@ namespace SpellDuel
                 ? cam.ScreenPointToRay(Hand.Palm).GetPoint(0.3f)
                 : t.position + t.forward * 0.3f + t.right * 0.12f - t.up * 0.12f;
             heldSword.transform.position = at;
-            // 劍尖朝前上方，微微晃動
+            float su = (Time.time - swingAt) / HeldSwingTime;
+            if (su >= 0f && su < 1f)
+            {
+                // 揮劍：整把劍以手為支點，沿著手劃的方向掃出一個扇形（劍尖從一側掃到另一側，前後各 80°）
+                float e = su * su * (3f - 2f * su);
+                float th = Mathf.Lerp(-HeldSwingHalf, HeldSwingHalf, e) * Mathf.Deg2Rad;
+                var f = (t.forward * 0.85f + t.up * 0.2f).normalized;
+                var blade = f * Mathf.Cos(th) + swingDir * Mathf.Sin(th);
+                var normal = Vector3.Cross(f, swingDir); if (normal.sqrMagnitude < 1e-4f) normal = -t.forward;
+                heldSword.transform.rotation = Quaternion.LookRotation(blade, normal);
+                return;
+            }
+            // 平常：劍尖朝前上方，微微晃動
             float sway = Mathf.Sin(Time.time * 2.3f) * 3f;
             heldSword.transform.rotation = Quaternion.LookRotation(t.forward * 0.6f + t.up * 0.8f, -t.forward) * Quaternion.Euler(sway, 0f, 0f);
+        }
+
+        float swingAt = -9f; Vector3 swingDir = Vector3.right;
+        public const float HeldSwingTime = 0.32f, HeldSwingHalf = 80f;
+        /// <summary>劍來：揮砍了（手在畫面上從 from 劃到 to）→ 手上的長劍跟著掃一個扇形</summary>
+        void StartHeldSwing(Vector2 from, Vector2 to)
+        {
+            if (!heldSword || !heldSword.activeSelf || cam == null) return;
+            var t = cam.transform;
+            var d = cam.ScreenPointToRay(to).direction - cam.ScreenPointToRay(from).direction;
+            d -= Vector3.Project(d, t.forward);
+            swingDir = d.sqrMagnitude > 1e-6f ? d.normalized : t.right;
+            swingAt = Time.time;
         }
 
         bool SwordSageHeldVisible()=>battle!=null&&Me!=null&&Me.Alive&&phase==Phase.Fighting&&(Me.swordUntil>battle.now||Me.charging!=null&&Me.charging.id=="yijian");

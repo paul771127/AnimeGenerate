@@ -20,6 +20,8 @@ namespace SpellDuel
     {
         public float walkSpeed = 0.55f;
         float thinkScale = 1f, baseCharge = 1f;
+        /// <summary>關卡加的蓄力倍率（故事第三章 ×2：出招前的預備時間變兩倍）</summary>
+        public float chargeExtra = 1f;
 
         /// <summary>難度：0 簡單、1 普通、2 困難（蓄力＝預警時間越長越好躲、出招間隔越長）</summary>
         public void SetDifficulty(int d)
@@ -27,7 +29,7 @@ namespace SpellDuel
             thinkScale = d == 0 ? 1.6f : d == 1 ? 1.25f : 1f;
             baseCharge = d == 0 ? 1.35f : d == 1 ? 1.15f : 1f;
             walkSpeed = d == 0 ? 0.4f : d == 1 ? 0.5f : 0.55f;
-            me.chargeScale = baseCharge;
+            me.chargeScale = baseCharge * chargeExtra;
         }
         public string Status { get; private set; } = "";
         /// <summary>Boss 招式冷卻倍率（所有 Boss 共通 0.75）、每多一位玩家的施法頻率／攻擊力加成</summary>
@@ -76,7 +78,7 @@ namespace SpellDuel
             if (walkBase < 0f) walkBase = walkSpeed;
             Enraged = false; walkSpeed = walkBase;
             Phase = 1; SetShell(false); staggerUntil = -1f; pendingSummon = false;
-            me.chargeScale = baseCharge * chargeMul;
+            me.chargeScale = baseCharge * chargeMul * chargeExtra;
             nextThink = b.now + 2.5f;
             centerDone = false; centerSince = -1f;
             me.target = null;

@@ -625,6 +625,7 @@ namespace SpellDuel
             m.alt = kind == 14 ? 5f : BaseAlt(kind);   // 海鳥從高空飛來
             m.head = new Vector3(feet.x, MinionHead[kind] + m.alt, feet.z);
             if (kind == 16) m.damageTakenMul = 0.7f;   // 寄居蟹：殼很硬
+            if (kind == 14) m.speedMul *= birdSpeedMul;   // 俯衝海鳥：飛行速度倍率（故事第三章 ×0.5）
             m.attackReadyAt = now + 1.2f;
             minions.Add(m);
             Emit("minionspawn", m.Feet, c.color, null);
@@ -661,6 +662,17 @@ namespace SpellDuel
         public float rangedCountMul = 1f, meleeCountMul = 1f;
         /// <summary>遠程小怪：出手前的準備時間倍率、射出去的飛行速度倍率（故事第二章：準備 ×1.5、飛行 ×0.5）</summary>
         public float rangedWindupMul = 1f, rangedShotSpeedMul = 1f;
+        /// <summary>所有小怪出手前的預備時間倍率（紅圈閃爍的時間；故事第三章 ×2）</summary>
+        public float minionWindupMul = 1f;
+        /// <summary>俯衝海鳥的移動速度倍率（飛行、俯衝；故事第三章 ×0.5）</summary>
+        public float birdSpeedMul = 1f;
+        /// <summary>
+        /// 補怪間隔（秒；0＝照常）：同時在場的一批出齊之後，每打倒一隻要等這麼久才補下一隻（一次補一隻），直到這一波全部打倒（故事第三章 20 秒）
+        /// </summary>
+        public float refillDelay;
+        bool batchOut; int lastMinionCount;
+        /// <summary>這種小怪這一場的預備時間（含倍率）</summary>
+        public float WindupOf(int kind) => MinionWindupOf(kind) * minionWindupMul;
         /// <summary>近戰小怪血量倍率；遠程小怪每次出手後多休息幾秒（故事第二章：近戰 ×0.7、遠程 +3 秒）</summary>
         public float meleeHpMul = 1f, rangedRecoverAdd;
         /// <summary>同一波裡每批小怪之間多等幾秒（故事第三章 +5 秒）</summary>
@@ -761,6 +773,7 @@ namespace SpellDuel
             }
             nextMinionAt = waveStartAt;
             nextSpecialAt = waveStartAt + SpecialFirstDelay;
+            batchOut = false; lastMinionCount = 0;
             SetupHazards();   // 角鬥場：這一波的陷阱配置；山道：落石計時（Combat.Hazards.cs）
             Emit("wavestart", player.Feet, Color.white, IsBossWave ? (bossPending ? $"{WaveLabel}：{waveTotal} 隻小怪…（最深處有什麼在等著）" : $"{WaveLabel}：Boss 來了！") : $"{WaveLabel}：{waveTotal} 隻小怪");
         }
@@ -825,10 +838,18 @@ namespace SpellDuel
             // 小怪波：照間隔陸續出現（每次兩隻）；場上同時最多 6＋波次/3×2 隻（合作 +4）
             int maxAlive = dungeonParty > 0 ? Mathf.Min(24, Mathf.Min(12, 5 + wave / 4) * dungeonParty / 2 + 2)   // 副本：同時在場也跟著人數（最多 24）
                 : Mathf.Max(2, Mathf.CeilToInt((Mathf.Min(12, 5 + wave / 4) + 4 * ScaleAllies) * stageEnemyMul * CountMixMul));   // 同時在場的上限（第 1 波 5 隻、每 4 波 +1，最多 12）
+            if (refillDelay > 0f)
+            {
+                // 補怪間隔：一批出齊之後，打倒一隻 → refillDelay 秒後才補下一隻
+                if (minions.Count >= maxAlive || waveToSpawn == 0) batchOut = true;
+                if (batchOut && minions.Count < lastMinionCount) nextMinionAt = Mathf.Max(nextMinionAt, now + refillDelay);
+                lastMinionCount = minions.Count;
+            }
+            bool refilling = refillDelay > 0f && batchOut;
             if (holdSpawns) nextMinionAt = Mathf.Max(nextMinionAt, now);
             else if (waveToSpawn > 0 && now >= nextMinionAt && minions.Count < maxAlive)
             {
-                for (int k = 0; k < 2 && waveToSpawn > 0 && minions.Count < maxAlive; k++)
+                for (int k = 0; k < (refilling ? 1 : 2) && waveToSpawn > 0 && minions.Count < maxAlive; k++)
                 {
                     int ordinal = dungeonSpawnOrdinal++;
                     var at = FixedDungeonSpawns ? DungeonSpawnPoint(ordinal) : edgePoint();
@@ -842,6 +863,8 @@ namespace SpellDuel
                     waveToSpawn--;
                 }
                 nextMinionAt = now + Mathf.Max(2.5f, 5f - 0.1f * wave) * (ScaleAllies > 0 ? Mathf.Max(0.5f, 1f - 0.25f * ScaleAllies) : 1f) + spawnGapAdd;
+                if (refilling) nextMinionAt = now + refillDelay;   // 補怪：一次一隻，下一隻再等 refillDelay 秒
+                lastMinionCount = minions.Count;
             }
             UpdateSpecialSpawn();
             // 故事關卡的 Boss 波：小怪全部打倒 → 地面震動，Boss 現身
@@ -1072,7 +1095,7 @@ namespace SpellDuel
                     m.head += fly;
                     m.forward = Fighter.Flat(fly);
                     if (now >= m.recoverUntil && m.alt >= BirdCruise - 0.3f && d <= MinionReach[kind] && now >= m.attackReadyAt && CanAttackFrom(m.Feet))   // 飛到攻擊區上空才俯衝
-                    { m.windupUntil = now + MinionWindup[kind]; Emit("minionwindup", m.Feet, Skills.All["m_dive"].color, null); }
+                    { m.windupUntil = now + MinionWindup[kind] * minionWindupMul; Emit("minionwindup", m.Feet, Skills.All["m_dive"].color, null); }
                     continue;
                 }
                 if (m.windupUntil > 0f)
@@ -1120,6 +1143,7 @@ namespace SpellDuel
                 float reach = IsRanged(kind) ? MinionReach[kind] : MeleeReach(kind, MinionReach[kind]);
                 float windup = MinionWindup[kind] < 0f ? claw.charge : MinionWindup[kind];
                 if (IsRanged(kind)) windup *= rangedWindupMul;
+                windup *= minionWindupMul;
                 bool outside = minionInside != null && !minionInside(m.Feet);   // 還在場地外：先走進來（不在場外放招）；海裡、空中的也一樣要進到場地才出手
                 bool outZone = !CanAttackFrom(m.Feet);   // 還沒進到中間的攻擊區（6m×6m）：先走進去才出手
                 if (!outZone && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt)
@@ -2690,13 +2714,16 @@ namespace SpellDuel
 
         /// <summary>荊棘衝鋒獸衝刺一步：撞到玩家就受傷並停下；衝出場地也停</summary>
         static SkillDef DashSkill(int kind) => Skills.All[kind == 13 ? "m_leap" : kind == 14 ? "m_dive" : "m_dash"];
+        /// <summary>衝刺速度（海鳥吃 birdSpeedMul）</summary>
+        float DashSpeed(Fighter m) => DashSkill(m.minionKind).speed * (m.minionKind == 14 ? birdSpeedMul : 1f);
 
         /// <summary>開始衝刺：朝目標現在的位置衝 len 公尺；地上畫出路線（衝刺開始才畫）</summary>
         void StartDash(Fighter m, Fighter tgt, float len, SkillDef ds)
         {
             var dir = Fighter.Flat(tgt.Feet - m.Feet); if (dir == Vector3.zero) dir = Fighter.Flat(m.forward);
-            m.dashDir = dir; m.dashHit = false; m.dashStart = now; m.dashUntil = now + len / ds.speed;
-            AddLane("dash", m.Feet, m.Feet + dir * len, 0f, len / ds.speed + 0.15f, m.bodyRadius, ds, 0, false);
+            float sp = DashSpeed(m);
+            m.dashDir = dir; m.dashHit = false; m.dashStart = now; m.dashUntil = now + len / sp;
+            AddLane("dash", m.Feet, m.Feet + dir * len, 0f, len / sp + 0.15f, m.bodyRadius, ds, 0, false);
         }
 
         void EndDash(Fighter m)
@@ -2733,7 +2760,7 @@ namespace SpellDuel
         {
             int kind = m.minionKind;
             var ds = DashSkill(kind);
-            var next = m.Feet + m.dashDir * ds.speed * dt;
+            var next = m.Feet + m.dashDir * DashSpeed(m) * dt;
             bool roam = FreeRoam(kind);
             if (!roam && minionInside != null && !minionInside(next)) { EndDash(m); return; }
             m.head = new Vector3(next.x, m.head.y, next.z);

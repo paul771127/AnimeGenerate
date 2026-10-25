@@ -1147,7 +1147,14 @@ namespace SpellDuel
                         { battle.storyBossHp = StoryBossHp[pendingStage.theme]; battle.storyBossDmg = StoryBossDmg[pendingStage.theme]; }
                         if (pendingStage.theme == 1 && pendingStage.id != "trial") { battle.enemyHpMul = 2f; battle.enemyDmgMul = 2f; battle.rangedWindupMul = 1.5f; battle.rangedShotSpeedMul = 0.5f; battle.meleeHpMul = 0.7f; battle.rangedRecoverAdd = 3f; }   // 第二章：遠程小怪出手前準備 ×1.5、飛行速度 ×0.5、每次出手後多休息 3 秒；近戰小怪血量 ×0.7   // 第二章森林：小怪血量、攻擊 ×2（Boss 照上面的表）
                         if ((pendingStage.id == "1-1" || pendingStage.id == "1-2" || pendingStage.id == "1-3") && difficulty == 0) { battle.enemyHpMul *= EarlyStageMul; battle.enemyDmgMul *= EarlyStageMul; }   // 1-1～1-3 簡單：敵人血量、傷害 ×60%（新手關；普通、困難照一般設計）
-                        if (pendingStage.theme == 2 && pendingStage.id != "trial") { battle.rangedCountMul = 0.5f; battle.meleeCountMul = 1.5f; battle.spawnGapAdd = 5f; }   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
+                        if (pendingStage.theme == 2 && pendingStage.id != "trial")
+                        {
+                            battle.rangedCountMul = 0.5f; battle.meleeCountMul = 1.5f; battle.spawnGapAdd = 5f;   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
+                            // 第三章潮騷港（使用者要求）：敵人血量、傷害 ×2（Boss 也是）；出手前的預備時間（紅圈閃爍）×2；海鳥移動速度 ×0.5；一批出齊後打倒一隻要等 20 秒才補下一隻
+                            battle.enemyHpMul *= 2f; battle.enemyDmgMul *= 2f; battle.storyBossHp *= 2f; battle.storyBossDmg *= 2f;
+                            battle.minionWindupMul = 2f; battle.birdSpeedMul = 0.5f; battle.refillDelay = 20f;
+                            if (bossAi != null) { bossAi.chargeExtra = 2f; boss.chargeScale *= 2f; }
+                        }   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         ApplyNoviceRoute(pendingStage);   // 1-1～1-3：4m×4m 小場地；1-1、1-2 只有近戰小怪（SoloBattle.NoviceRoute.cs）
                         SetupNoviceBattle(pendingStage);  // 新手關：小鬼／衝鋒獸的血量、1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）
@@ -1563,7 +1570,7 @@ namespace SpellDuel
                 bool winding = m.windupUntil > 0f;
                 if (winding && !minionWinding.Contains(m))
                 {
-                    minionWinding.Add(m); rig.Windup(Battle.MinionWindupOf(m.minionKind));
+                    minionWinding.Add(m); rig.Windup(battle.WindupOf(m.minionKind));
                     if (battle.remoteEnemy && Battle.IsSpecial(m.minionKind))   // 合作（隊友）：稀有怪預備大招 → 一樣跳出「跳起來／蹲下」
                         OnBattleEvent("specialwarn", m.Feet, Skills.All[Battle.SpecialSkillId(m.minionKind)].color, Battle.SpecialNeedsJump(m.minionKind) ? "⬆ 跳起來！（或離遠一點）" : "⬇ 蹲下！（或離遠一點）");
                 }   // 預備時間＝這種小怪真正的預備時間（出手時剛好擺到位）
@@ -1579,7 +1586,7 @@ namespace SpellDuel
                 if (winding && Battle.HasMeleeWarnDisc(m.minionKind) && m.Alive)
                 {
                     if (!minionWarn.TryGetValue(m, out var wg) || !wg) { wg = Prim(PrimitiveType.Quad, new Color(1f, 0.1f, 0.05f, 0.3f), true); wg.GetComponent<MeshFilter>().sharedMesh = FanMesh(Battle.WarnArcHalf(m.minionKind)); minionWarn[m] = wg; }   // 前方扇形（特殊敵人：半圓／整圈）
-                    float rr = Battle.MeleeStrikeRadius(m.minionKind), wu = Battle.MinionWindupOf(m.minionKind);
+                    float rr = Battle.MeleeStrikeRadius(m.minionKind), wu = battle.WindupOf(m.minionKind);
                     float pr = Mathf.Clamp01(1f - (m.windupUntil - battle.now) / Mathf.Max(0.1f, wu)), pk = 0.5f + 0.5f * Mathf.Sin(Time.time * (6f + 12f * pr));
                     wg.SetActive(true);
                     wg.transform.position = WorldFrame.FromWorld(new Vector3(m.Feet.x, 0.02f, m.Feet.z));
@@ -2350,6 +2357,7 @@ namespace SpellDuel
             Vector3 castAt = default;
             if (!Skills.IsMeleeBasic(s)) { d = AimFromHand(ray, out castAt); Me.castFrom = castAt; Me.hasCastFrom = true; }   // 遠程普攻：從手射出、飛向準星對準的地方
             if (!battle.BasicAttack(Me, s, d, floor, enemyOnScreen, from, to)) { Me.hasCastFrom = false; return; }
+            if (Skills.IsSwipeBasic(s)) StartHeldSwing(Hand.SwipeFrom, Hand.SwipeTo);   // 劍仙的劍來：手上的長劍跟著揮一個扇形
             TriggerBasicFx(s);   // 出手的畫面光影（各職業顏色、動作）
             if (!Skills.IsMeleeBasic(s))
                 SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(s.id):myClass, s.color, WorldFrame.FromWorld(castAt), WorldFrame.DirFromWorld(d), 0.6f);   // 手上的出手爆光（以前 0.2 太小）

@@ -90,7 +90,13 @@ namespace SpellDuel
             return new Color(((v >> 16) & 255) / 255f, ((v >> 8) & 255) / 255f, (v & 255) / 255f, 1f);
         }
 
-        static void P(SkillDef s) => All[s.id] = s;
+        static void P(SkillDef s)
+        {
+            // 法師的所有法術（含進階職業、回響、召喚物）傷害 ×1.5（使用者要求：法師太弱）
+            if (s.cls == "mage" && s.damage > 0) s.damage = Mathf.RoundToInt(s.damage * MageDamageMul);
+            All[s.id] = s;
+        }
+        public const float MageDamageMul = 1.5f;
         /// <summary>會飛出去的遠距投射物（射程 3m 以上；伏擊、近身揮砍、小怪衝刺／跳躍／俯衝不算）</summary>
         static bool Flies(SkillDef sk) => sk.type == SkillType.Projectile && !sk.releaseNear && sk.rangeMax >= 3f && sk.id != "m_dash" && sk.id != "m_leap" && sk.id != "m_dive";
 
@@ -258,7 +264,7 @@ namespace SpellDuel
             Classes["swordsman"] = new ClassDef { id = "swordsman", name = "劍士", color = C("#60a5fa"), maxHp = 160, maxMp = 90, mpRegen = 3, skills = new[] { "slash", "thrust", "wave", "block", "ironwall", "counter", "taunt" }, defaultLoadout = new[] { "slash", "wave", "block" }, desc = "近遠攻擊都有，多種防禦" };
 
             // ---------------------------------------------------------- 普通攻擊（不耗 MP、不用唸；手勢舉著就自動攻擊，見 BasicOf）
-            P(new SkillDef { id = "na_mage", cls = "basic", name = "奧術飛彈", type = SkillType.Projectile, color = C("#a78bfa"), cost = 0, damage = 12, charge = 0f, cooldown = 2f, speed = 10f, radius = 0.18f, rangeMax = 12f, desc = "法師普攻：手比 1 就射出一發奧術飛彈（一直比著會照集氣自動連射，約 2 秒一發，敏捷越高越快）；傷害看智力。技能樹可以讓它命中爆炸、機率連射兩發" });
+            P(new SkillDef { id = "na_mage", cls = "basic", name = "奧術飛彈", type = SkillType.Projectile, color = C("#a78bfa"), cost = 0, damage = 18, charge = 0f, cooldown = 2f, speed = 10f, radius = 0.18f, rangeMax = 12f, desc = "法師普攻：手比 1 就射出一發奧術飛彈（一直比著會照集氣自動連射，約 2 秒一發，敏捷越高越快）；傷害看智力。技能樹可以讓它命中爆炸、機率連射兩發" });
             P(new SkillDef { id = "na_sword", cls = "basic", name = "斬擊（普攻）", type = SkillType.Projectile, color = C("#93c5fd"), cost = 0, damage = 9, charge = 0f, cooldown = 1f, radius = 1f, rangeMax = 1f, desc = "劍士普攻：畫面上的手掌泛起藍白劍光（集氣完成）時，手掌在鏡頭前劃一下：先出現紅色預警線，接著劍光沿線閃過砍下（1m 內；約 1 秒集氣一次，敏捷越高越快）" });
             P(new SkillDef { id = "na_arrow", cls = "basic", name = "普通箭", type = SkillType.Projectile, color = C("#d9f99d"), cost = 0, damage = 9, charge = 0f, cooldown = 2f, speed = 16f, radius = 0.1f, rangeMax = 14f, desc = "獵人普攻：畫面上的弓拉滿（集氣完成）時，握拳再張開放箭（約 2 秒集氣一次，敏捷越高越快）" });
             // 初心者（10 級前）：普攻＝木棍敲擊（和劍士普攻一樣手掌劃一下、照刀線砍，不會砍掉法球）＋木棍揮擊、投石、急救
