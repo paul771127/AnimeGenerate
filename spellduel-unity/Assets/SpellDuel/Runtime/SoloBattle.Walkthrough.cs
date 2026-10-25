@@ -27,6 +27,8 @@ namespace SpellDuel
             public Action enter;
             /// <summary>這一步要在哪個畫面做（不在那裡：先把玩家帶過去；帶不過去就不鎖，只提示）</summary>
             public WCtx ctx = WCtx.Any;
+            /// <summary>角色畫面的分頁（-1＝不管）、要先選中的裝備 uid（0＝不管）</summary>
+            public int tab = -1; public long sel;
         }
 
         string walkFlow; int walkStep; List<WStep> walkSteps; int walkStatStart, walkPotStart;
@@ -112,6 +114,17 @@ namespace SpellDuel
                 if (rk != null) { key = rk; title = "先回到要去的地方"; text = rt + $"\n（接著：{cur.title}）"; }
                 else { key = null; UiLock.Hint = $"🧭 新手指引：{CtxName(cur.ctx)}，指引會接著繼續（{cur.title}）"; }
             }
+            if (!pause && key == cur.key && charOpen && cur.tab >= 0)
+            {
+                // 角色畫面不在這一步的分頁（例如關掉再打開，回到了「能力值」）：先切分頁；要選的裝備沒選中：先選
+                string[] tabKeys = { "📊 能力值", "🌳 技能樹", "🛡 裝備" };
+                if (charPanel.tab != cur.tab) { key = tabKeys[cur.tab]; title = "先切到分頁"; text = $"先按上面的「{tabKeys[cur.tab]}」分頁。\n（接著：{cur.title}）"; }
+                else if (cur.sel != 0 && (charPanel.SelItem == null || charPanel.SelItem.uid != cur.sel) && FindItem(cur.sel) != null)
+                {
+                    key = "item:" + cur.sel; title = "先選裝備"; text = $"先在背包裡點被框起來的那一件。\n（接著：{cur.title}）";
+                    if (charPanel.SelItem == null && e.type == EventType.Layout) charPanel.FocusUid = cur.sel;   // 翻到那一件所在的背包頁
+                }
+            }
             UiKit.LockKey = pause || key == "@next" ? null : key;
             UiLock.NextButton = !pause && key != null && key.StartsWith("@");   // @next：說明；@show:xxx：圈起來介紹，按「下一步」
             UiLock.Block = cur.block || key != cur.key;
@@ -192,6 +205,8 @@ namespace SpellDuel
             WCtx at = WCtx.Any;   // 接下來加的步驟在哪個畫面做
             WStep S(string key, string title, Func<string> text, Func<bool> done, Func<bool> skip = null) { var s = new WStep { key = key, title = title, text = text, done = done, skip = skip, ctx = at }; L.Add(s); return s; }
             bool InVillage() => storyMapOpen && phase == Phase.Setup;
+            // 角色畫面的步驟：要在哪個分頁、要先選中哪一件（重新打開角色畫面會回到「能力值」分頁、選的裝備也沒了：先帶回去）
+            WStep T(int tab, WStep s, long sel = 0) { s.tab = tab; s.sel = sel; return s; }
             // 走路模式（3D 村子）切到清單（設施、居民都在清單裡）
             void ToList(string why) => S("🗺 城鎮圖", "回城鎮圖", () => $"按下方的「🗺 城鎮圖」：回到村子的 2D 地圖，居民和設施都在上面。{why}", () => Town() && !world.walkMode, () => Town() && !world.walkMode);
             void Learn(string npcKey, string npc, string skill)
@@ -203,8 +218,8 @@ namespace SpellDuel
             void Node(string node, string skill)
             {
                 string sn = Skills.All[skill].name;
-                S("node:" + node, $"選「{sn}強化」", () => $"點技能樹上的「{sn}強化」，下面會出現說明：每一級傷害（或回復量）提高多少。", () => charPanel.SelNode == node, () => P().AvailIn(Skills.Novice) <= 0 || P().Rank(node) > 0);
-                S("學習", $"點一點{sn}", () => $"按「學習（1 技能點）」，把技能點投到「{sn}」。每升一級得 1 技能點。（剩 {P().AvailIn(Skills.Novice)} 點）", () => P().Rank(node) > 0, () => P().AvailIn(Skills.Novice) <= 0);
+                T(1, S("node:" + node, $"選「{sn}強化」", () => $"點技能樹上的「{sn}強化」，下面會出現說明：每一級傷害（或回復量）提高多少。", () => charPanel.SelNode == node, () => P().AvailIn(Skills.Novice) <= 0 || P().Rank(node) > 0));
+                T(1, S("學習", $"點一點{sn}", () => $"按「學習（1 技能點）」，把技能點投到「{sn}」。每升一級得 1 技能點。（剩 {P().AvailIn(Skills.Novice)} 點）", () => P().Rank(node) > 0, () => P().AvailIn(Skills.Novice) <= 0));
             }
             // 圈起來介紹一個名牌／按鈕（只能按「下一步」）
             void Show(string label, string title, string text) => S("@show:" + label, title, () => text, null);
@@ -228,12 +243,12 @@ namespace SpellDuel
                     S("📜 角色", "打開角色", () => "練習完升級了，拿到了能力點！按下面被框起來的「📜 角色／裝備」。", () => charOpen, () => !AnyRaise(P()));
                     at = WCtx.Char;
                     S("📊 能力值", "能力值分頁", () => "按上面的「📊 能力值」分頁。", () => charOpen && charPanel.tab == 0, () => !AnyRaise(P()));
-                    S("＋", "加能力點", () => $"按能力值旁邊的「＋」加點，把點數全部加完（剩 {P().statPoints} 點）。\n力量＝攻擊更痛、體質＝血更多、敏捷＝普攻集氣更快、智力＝技能更強、精神＝魔力回復更快、幸運＝爆擊與掉寶。", () => !AnyRaise(P()));
+                    T(0, S("＋", "加能力點", () => $"按能力值旁邊的「＋」加點，把點數全部加完（剩 {P().statPoints} 點）。\n力量＝攻擊更痛、體質＝血更多、敏捷＝普攻集氣更快、智力＝技能更強、精神＝魔力回復更快、幸運＝爆擊與掉寶。", () => !AnyRaise(P())));
                     // 穿新手裝備
                     S("🛡 裝備", "裝備分頁", () => "米菈送你一件「旅行布衣」，放在背包裡。按上面的「🛡 裝備」分頁。", () => charOpen && charPanel.tab == 2, () => P().equipped[(int)Slot.Body] != null);
-                    S("item:" + su, "選衣服", () => "在下面的背包裡，點被框起來的「旅行布衣」。右邊會顯示它的數值、和身上的比較。", () => charPanel.SelItem != null && charPanel.SelItem.uid == starter(), () => P().equipped[(int)Slot.Body] != null || FindItem(starter()) == null)
+                    T(2, S("item:" + su, "選衣服", () => "在下面的背包裡，點被框起來的「旅行布衣」。右邊會顯示它的數值、和身上的比較。", () => charPanel.SelItem != null && charPanel.SelItem.uid == starter(), () => P().equipped[(int)Slot.Body] != null || FindItem(starter()) == null))
                         .enter = () => charPanel.FocusUid = su;
-                    S("=裝備", "穿上", () => "按「裝備」穿上它！裝備有等級和能力值需求；穿不上的話，按鈕會寫原因。", () => P().equipped[(int)Slot.Body] != null, () => FindItem(starter()) == null);
+                    T(2, S("=裝備", "穿上", () => "按衣服說明下面、閃爍的「裝備」按鈕穿上它（不是最上面的「🛡 裝備」分頁）。裝備有等級和能力值需求；穿不上的話，按鈕會寫原因。", () => P().equipped[(int)Slot.Body] != null, () => FindItem(starter()) == null), su);
                     S("=完成", "完成", () => "好了！按下面的「完成」關掉角色畫面。", () => !charOpen);
                     // 認識每一棟建築（圈起來介紹，不能點進去）
                     at = WCtx.Town;
@@ -273,11 +288,11 @@ namespace SpellDuel
                     Node("nv_t_aid", "nv_aid");
                     S("📊 能力值", "能力值", () => "再來是能力值：按上面的「📊 能力值」分頁。", () => charOpen && charPanel.tab == 0, () => !AnyRaise(P()))
                         .enter = () => walkStatStart = P().statPoints;
-                    S("＋", "加能力點", () =>
+                    T(0, S("＋", "加能力點", () =>
                     {
                         int need = Mathf.Min(5, walkStatStart), did = walkStatStart - P().statPoints;
                         return $"按能力值旁邊的「＋」加點（至少 {need} 點，加哪一項都可以；每項的效果寫在旁邊）。力量＝木棍更痛、體質＝血更多、敏捷＝普攻集氣更快。\n已經加了 {Mathf.Max(0, did)}/{need} 點";
-                    }, () => walkStatStart - P().statPoints >= Mathf.Min(5, walkStatStart) || !AnyRaise(P()))
+                    }, () => walkStatStart - P().statPoints >= Mathf.Min(5, walkStatStart) || !AnyRaise(P())))
                         .enter = () => walkStatStart = P().statPoints;
                     S("=完成", "完成", () => "點好了！按下面的「完成」關掉角色畫面。", () => !charOpen);
                     // 出發前買小藥水（一定要買）
@@ -314,9 +329,9 @@ namespace SpellDuel
                     S("📜 角色", "打開角色", () => "穿上小鐵送的武器：按「📜 角色」。", () => charOpen, () => !Have());
                     at = WCtx.Char;
                     S("🛡 裝備", "裝備", () => "按上面的「🛡 裝備」分頁。上面是身上穿的、下面是背包。", () => charOpen && charPanel.tab == 2, () => !Have());
-                    S("item:" + uid, "選武器", () => "在背包裡點小鐵送你的武器（藍色的名字），右邊會比較它和身上的裝備。", () => charPanel.SelItem != null && charPanel.SelItem.uid == uid, () => !Have() || P().equipped[(int)Slot.Weapon]?.uid == uid)
+                    T(2, S("item:" + uid, "選武器", () => "在背包裡點小鐵送你的武器（藍色的名字），右邊會比較它和身上的裝備。", () => charPanel.SelItem != null && charPanel.SelItem.uid == uid, () => !Have() || P().equipped[(int)Slot.Weapon]?.uid == uid))
                         .enter = () => charPanel.FocusUid = uid;
-                    S("=裝備", "穿上", () => "按「裝備」穿上它！穿不上的話，按鈕會寫原因（等級、能力值不夠）。", () => P().equipped[(int)Slot.Weapon]?.uid == uid, () => !Have());
+                    T(2, S("=裝備", "穿上", () => "按武器說明下面、閃爍的「裝備」按鈕穿上它（不是最上面的「🛡 裝備」分頁）。穿不上的話，按鈕會寫原因（等級、能力值不夠）。", () => P().equipped[(int)Slot.Weapon]?.uid == uid, () => !Have()), uid);
                     S("=完成", "完成", () => "穿好了！按「完成」關掉角色畫面。", () => !charOpen);
                     at = WCtx.Town;
                     S("⚒ 鐵匠鋪", "鐵匠鋪", () => "最後是強化：按「⚒ 鐵匠鋪」。", () => storyMapOpen && world.screen == WorldUI.Screen.Smith, () => !Have());
