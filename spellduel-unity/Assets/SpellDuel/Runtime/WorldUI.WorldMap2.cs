@@ -194,15 +194,14 @@ namespace SpellDuel
         /// <summary>畫新的大地圖；回傳 false＝不能用（改畫原本的）</summary>
         bool DrawWorldMap2(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
-            if (useOldMap || !WorldMap2Usable) return false;
+            useOldMap = false;   // 「📋 關卡清單」拿掉了（使用者要求）：只用路線圖；路線圖不能用時才退回舊的清單
+            if (!WorldMap2Usable) return false;
             LoadSeen();
             float now = Time.unscaledTime;
             float y = r.y + gap;
             Header(r, "🗺 大地圖", new Color(1f, 0.85f, 0.45f), prof, fs, fsS, fsL, gap, ref y);
-            // 難度＋切換到原本的大地圖（清單）
-            float tw = fs * 4.6f;
-            DifficultyRow(new Rect(r.x + gap, y, r.width - gap * 3 - tw, fs * 1.8f), fsS, true);
-            if (UiKit.Button(new Rect(r.xMax - gap - tw, y, tw, fs * 1.8f), "📋 關卡清單", fsS)) { useOldMap = true; return true; }
+            // 難度（「📋 關卡清單」按鈕已拿掉）
+            DifficultyRow(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.8f), fsS, true);
             y += fs * 2.1f;
             float btnH = fs * 2.1f, detH = sel != null ? fs * 6.4f : 0f;
             float bottom = r.yMax - gap - btnH - (detH > 0f ? detH + gap * 0.5f : 0f) - gap * 0.4f;
