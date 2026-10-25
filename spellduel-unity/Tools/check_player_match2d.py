@@ -15,7 +15,7 @@ def main():
   assert r['ratio']<=1.5 and r['allRenderersRatio']<=1.5,(r['id'],'triangle budget')
   assert r['maxSocketLocalDelta']<=.000001 and abs(r['beforeSoleY']-r['afterSoleY'])<=.00001,(r['id'],'anchors')
  audit=json.loads((DOC/'contract_audit.json').read_text(encoding='utf-8-sig'));assert audit['failures']==0
- assert all(r['torsoMeshCached'] and r['gearVisible'] and r['crownPreserved'] for r in audit['classes'])
+ assert all(r['torsoMeshCached'] and r['gearVisible'] and r['crownPreserved'] and r['neckJoined'] for r in audit['classes'])
  if args.require_unity:
   ci=json.loads((DOC/'ci_validation.json').read_text(encoding='utf-8-sig'))
   assert all(ci[k]['conclusion']=='success' for k in ('android','ios-export','snapshots')),ci

@@ -19,6 +19,7 @@ namespace SpellDuel.EditorTools
         {
             Directory.CreateDirectory("snapshots");
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            ToonStyle.Apply();
             PlayerMatch2DAudit.Run();
             foreach(var keyLight in Object.FindObjectsOfType<Light>())if(keyLight.type==LightType.Directional)keyLight.transform.rotation=Quaternion.Euler(40f,150f,0f);
             var camGo = new GameObject("SnapCam");

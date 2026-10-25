@@ -3,131 +3,147 @@
   "classes": [
     {
       "id": "novice",
-      "triangles": 12208,
+      "triangles": 12260,
       "renderers": 43,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "swordsman",
-      "triangles": 12672,
+      "triangles": 12724,
       "renderers": 31,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "archer",
-      "triangles": 13304,
+      "triangles": 13356,
       "renderers": 36,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "mage",
-      "triangles": 11700,
+      "triangles": 11752,
       "renderers": 31,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "assassin",
-      "triangles": 11856,
+      "triangles": 11908,
       "renderers": 33,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "priest",
-      "triangles": 12928,
+      "triangles": 12980,
       "renderers": 32,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "paladin",
-      "triangles": 12868,
+      "triangles": 12920,
       "renderers": 32,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "berserker",
-      "triangles": 11566,
+      "triangles": 11618,
       "renderers": 39,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "marksman",
-      "triangles": 14076,
+      "triangles": 14128,
       "renderers": 36,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "ranger",
-      "triangles": 13636,
+      "triangles": 13688,
       "renderers": 41,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "archmage",
-      "triangles": 12572,
+      "triangles": 12624,
       "renderers": 35,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "summoner",
-      "triangles": 11740,
+      "triangles": 11792,
       "renderers": 31,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "ninja",
-      "triangles": 12276,
+      "triangles": 12328,
       "renderers": 32,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "shadowdancer",
-      "triangles": 11484,
+      "triangles": 11536,
       "renderers": 34,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "bishop",
-      "triangles": 13172,
+      "triangles": 13224,
       "renderers": 36,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     },
     {
       "id": "inquisitor",
-      "triangles": 12038,
+      "triangles": 12090,
       "renderers": 30,
       "torsoMeshCached": true,
       "gearVisible": true,
-      "crownPreserved": true
+      "crownPreserved": true,
+      "neckJoined": true
     }
   ],
   "failures": 0

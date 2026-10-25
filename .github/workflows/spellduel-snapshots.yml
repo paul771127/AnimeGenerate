@@ -4,7 +4,17 @@ name: SpellDuel snapshots (character renders)
 on:
   push:
     paths:
-      - 'spellduel-unity/Assets/SpellDuel/Editor/Snapshot.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Editor/Snapshot*.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Editor/PlayerMatch2DAudit.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/CharacterRig*.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/PlayerClassArt.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/AnimeFace.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/AnimeHair.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/CharacterLook.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/HeadwearArt.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/OutfitArt.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/Portraits.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Shaders/Toon.shader'
       - '.github/workflows/spellduel-snapshots.yml'
   workflow_dispatch:
 
@@ -41,5 +51,7 @@ jobs:
         if: always()
         with:
           name: SpellDuel-snapshots
-          path: spellduel-unity/snapshots/*.png
+          path: |
+            spellduel-unity/snapshots/*.png
+            spellduel-unity/snapshots/match_validation.json
           if-no-files-found: error

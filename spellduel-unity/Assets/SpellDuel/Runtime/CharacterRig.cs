@@ -465,7 +465,7 @@ namespace SpellDuel
             var posture=Pivot("PersonaStance",body,new Vector3(0,.85f,0));
             posture.localRotation=Quaternion.Euler(facePersona.Lean,0,facePersona.Roll*.12f);
             spine = Pivot("Spine", posture, Vector3.zero);
-            Part(PrimitiveType.Cylinder, spine, new Vector3(0f, 0.56f, -.035f), new Vector3(.126f*facePersona.Width, 0.04f, .10f), Mat(Skin, 0.85f));
+            PlayerClassArt.Add(spine,advancedId??classId,"neck");
 
             // ---- 頭（脖子樞紐 → 頭中心）
             neck = Pivot("Neck", spine, new Vector3(0f, 0.57f, 0f));

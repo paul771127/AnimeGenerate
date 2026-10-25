@@ -168,6 +168,12 @@ namespace SpellDuel
                 if(id=="novice"||id=="archer"||id=="ranger")
                     b.Loft(new[]{.03f,-.02f,-.11f,-.19f},new[]{.11f,.14f,.14f,.07f},new[]{.10f,.13f,.115f,.06f},cape,0,.025f);
             }
+            else if(part=="neck")
+            {
+                // A continuous tapered bridge into the fitted jaw; bones and height stay unchanged.
+                b.Skin=AnimeFace.SkinFor("novice");
+                b.Loft(new[]{.660f,.610f,.570f,.535f},new[]{.028f,.039f,.051f,.060f},new[]{.032f,.041f,.048f,.054f},b.Skin,0,-.020f,12);
+            }
             else if(part=="crown")
             {
                 // Purple mitre with a white front and gold ribs, seated on the unchanged short hair.
