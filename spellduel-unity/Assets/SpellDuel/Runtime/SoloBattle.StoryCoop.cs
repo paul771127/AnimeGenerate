@@ -147,6 +147,14 @@ namespace SpellDuel
                 case "spx":   // 稀有怪出招（主機 → 隊友）：在我這台重現震環／橫掃，只判定我自己
                     if (!NetIsHost && battle != null && coop) battle.RemoteSpecialStrike(m.id, m.k, m.p, m.d, m.dmg);
                     return true;
+                case "dmgn":
+                    // 隊友打出的傷害數字（主機本來就看得到大家的命中，不重複）
+                    if (!NetIsHost && battle != null && m.dmg > 0)
+                    {
+                        var col = peerInfo.TryGetValue(m.pid, out var dpi) && Skills.Classes.TryGetValue(dpi.cls ?? "", out var dcls) ? Color.Lerp(dcls.color, Color.white, 0.35f) : new Color(0.85f, 0.9f, 1f);
+                        floaters.Add(new Floater { posMap = m.p + Vector3.up * 0.15f, text = (m.ok ? "💥" : "") + m.dmg, color = col, born = Time.time });
+                    }
+                    return true;
                 case "pst":
                     partyStats[m.pid] = (m.dmg, m.hp);
                     return true;

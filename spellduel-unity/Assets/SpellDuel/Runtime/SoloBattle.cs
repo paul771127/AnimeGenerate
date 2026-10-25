@@ -1095,6 +1095,7 @@ namespace SpellDuel
                     battle.allies.Add(af);
                 }
                 battle.coopHost = NetIsHost;
+                battle.OnDealtNumber += (at, dn, crit) => NetSend?.Invoke(new Msg { t = "dmgn", p = at, dmg = Mathf.RoundToInt(dn), ok = crit });   // 我的傷害數字：隊友也看得到
                 battle.OnSpecialStrike += (sm, ss, sc, sf, sd) => NetSend?.Invoke(new Msg { t = "spx", id = sm.minionId, k = ss.id, p = sc, d = sf, dmg = sd });   // 稀有怪出招：隊友自己重現、判定
                 battle.remoteEnemy = !NetIsHost;   // 隊友端：Boss 是主機的代理
                 battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.basePos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected, rad = p.curveAmp, s = p.pathLen, e = p.owner == battle.enemy || p.owner.isMinion ? 1 : 0 });
@@ -3654,7 +3655,9 @@ namespace SpellDuel
             DrawLootRoll(W, H, fs, fsS);            // 故事合作：擲骰（史詩以上、精魄）
             if (phase == Phase.Fighting) DrawPalmCharge(fs);   // 初心者普攻：手掌集氣指示（SoloBattle.SwipeTrail.cs）
             // 合作：右上角的隊伍（頭像、名字、血量、每秒傷害、每秒治療；SoloBattle.StoryCoop.cs）
-            if (coop && battle.allies.Count > 0) DrawPartyFrame(topR.yMax + gap * 0.5f, W, lh, fsS, en);
+            float partyH = coop && battle.allies.Count > 0 ? DrawPartyFrame(topR.yMax + gap * 0.5f, W, lh, fsS, en) : 0f;
+            // 我身上的持續狀態：技能圖示＋倒數（正面綠框、負面紅框；SoloBattle.StatusIcons.cs）
+            DrawStatusIcons(Me, now, W - W * 0.02f, topR.yMax + gap * 0.5f + (partyH > 0f ? partyH + gap * 0.3f : 0f), fs);
 
             // 敵人頭上的血條
             var hs = cam.WorldToScreenPoint(WorldFrame.FromWorld(en.head + Vector3.up * 0.3f));

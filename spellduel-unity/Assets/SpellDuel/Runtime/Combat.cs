@@ -2239,6 +2239,8 @@ namespace SpellDuel
         }
 
         public event Action<SkillDef> OnTeamBuff;
+        /// <summary>我打出的傷害（位置、數字、爆擊）：合作時送給隊友顯示</summary>
+        public event Action<Vector3, float, bool> OnDealtNumber;
         public const float AmpBonus = 0.5f;   // 大魔導士增幅咒：傷害 +50%
         public event Action<SkillDef> OnTaunt;      // 合作的隊友端：我嘲諷了 → 告訴主機（主機的 Boss 才有仇恨）   // 合作：牧師的輔助技能也要作用在隊友（隊友那支手機自己套用）
 
@@ -3267,6 +3269,7 @@ namespace SpellDuel
         {
             if (a == null || !a.Alive || dmg <= 0f) return;
             a.dealtDone += dmg;
+            if (a == player && target != null) OnDealtNumber?.Invoke(target.Chest, dmg, p != null && p.crit);   // 合作：我的傷害數字也給隊友看
             PostHit(a, target, s, dmg);
             if (a.lifesteal > 0f) a.hp = Mathf.Min(a.maxHp, a.hp + dmg * a.lifesteal);
             if (a.mpOnHit > 0f) a.mp = Mathf.Min(a.maxMp, a.mp + a.mpOnHit);
