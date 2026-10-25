@@ -214,9 +214,10 @@
   "trianglesWithin150Percent": true,
   "originalSkeletonSocketPositionsPreserved": true,
   "originalSoleHeightPreserved": true,
-  "unityAndroid": "pending CI",
-  "unityIos": "pending CI",
+  "unityAndroid": "success",
+  "unityIos": "success",
   "cachedTorsoMeshes": true,
   "gearSmokeChecks": true,
-  "neckContinuityChecked": true
+  "neckContinuityChecked": true,
+  "verifiedUnityCommit": "b62e0a344c76082016e5f685fadc2b5142d1f3c5"
 }

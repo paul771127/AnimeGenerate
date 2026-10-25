@@ -1,0 +1,23 @@
+{
+  "verifiedCommit": "b62e0a344c76082016e5f685fadc2b5142d1f3c5",
+  "ios-export": {
+    "conclusion": "success",
+    "jobId": 121226313669,
+    "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40212413020/job/121226313669"
+  },
+  "android": {
+    "conclusion": "success",
+    "jobId": 121226313711,
+    "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40212413020/job/121226313711"
+  },
+  "ios-ipa": {
+    "conclusion": null,
+    "jobId": 121229362271,
+    "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40212413020/job/121229362271"
+  },
+  "snapshots": {
+    "conclusion": "success",
+    "jobId": 121226291759,
+    "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40212413034/job/121226291759"
+  }
+}

@@ -19,5 +19,14 @@ def main():
  if args.require_unity:
   ci=json.loads((DOC/'ci_validation.json').read_text(encoding='utf-8-sig'))
   assert all(ci[k]['conclusion']=='success' for k in ('android','ios-export','snapshots')),ci
+  native=json.loads((DOC/'unity/native_audit.json').read_text(encoding='utf-8-sig'))
+  images=json.loads((DOC/'unity/validation.json').read_text(encoding='utf-8-sig'))
+  assert images['verifiedCommit']==ci['verifiedCommit']
+  assert native['unityVersion'].startswith('2022.3.') and native['failures']==0
+  assert {r['id'] for r in native['classes']}==set(IDS)
+  assert all(r['neckJoined'] and r['torsoMeshCached'] and r['gearVisible'] and r['crownPreserved'] for r in native['classes'])
+  for key in IDS:
+   assert Image.open(DOC/'unity'/('match_'+key+'.png')).size==(1536,768),key
+  assert Image.open(DOC/'unity/match_all_16.png').size==(1536,768)
  print('16 comparisons + overview + 32 full views; triangle budgets, skeleton anchors, soles, mesh caches and gear checks passed')
 if __name__=='__main__':main()

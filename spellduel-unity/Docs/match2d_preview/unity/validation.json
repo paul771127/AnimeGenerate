@@ -1,0 +1,24 @@
+{
+  "verifiedCommit": "b62e0a344c76082016e5f685fadc2b5142d1f3c5",
+  "run": "https://github.com/paul771127/AnimeGenerate/actions/runs/40212413034",
+  "nativeUnityRigAuditPassed": true,
+  "triangles": {
+    "novice": 12260,
+    "archer": 13356,
+    "mage": 11752,
+    "assassin": 11908,
+    "swordsman": 12724,
+    "priest": 12980,
+    "marksman": 14128,
+    "ranger": 13688,
+    "archmage": 12624,
+    "summoner": 11792,
+    "ninja": 12328,
+    "shadowdancer": 11536,
+    "paladin": 12920,
+    "berserker": 11408,
+    "bishop": 13224,
+    "inquisitor": 12090
+  },
+  "pngFiles": 97
+}

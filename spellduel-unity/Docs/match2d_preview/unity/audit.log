@@ -1,0 +1,18 @@
+2026-10-25T16:44:49.2047742Z [SpellDuel] 16 player rigs: mesh budget, cache, animation and equipment audit passed
+2026-10-25T16:44:49.2160518Z [SpellDuel] novice: 12260 triangles
+2026-10-25T16:45:00.3401311Z [SpellDuel] archer: 13356 triangles
+2026-10-25T16:45:01.7890726Z [SpellDuel] mage: 11752 triangles
+2026-10-25T16:45:02.6466979Z [SpellDuel] assassin: 11908 triangles
+2026-10-25T16:45:03.5231824Z [SpellDuel] swordsman: 12724 triangles
+2026-10-25T16:45:04.3875113Z [SpellDuel] priest: 12980 triangles
+2026-10-25T16:45:05.5311333Z [SpellDuel] marksman: 14128 triangles
+2026-10-25T16:45:06.5044273Z [SpellDuel] ranger: 13688 triangles
+2026-10-25T16:45:07.4952821Z [SpellDuel] archmage: 12624 triangles
+2026-10-25T16:45:08.4119765Z [SpellDuel] summoner: 11792 triangles
+2026-10-25T16:45:09.2304942Z [SpellDuel] ninja: 12328 triangles
+2026-10-25T16:45:10.0640341Z [SpellDuel] shadowdancer: 11536 triangles
+2026-10-25T16:45:10.8994691Z [SpellDuel] paladin: 12920 triangles
+2026-10-25T16:45:11.7632433Z [SpellDuel] berserker: 11408 triangles
+2026-10-25T16:45:12.8671517Z [SpellDuel] bishop: 13224 triangles
+2026-10-25T16:45:13.7190881Z [SpellDuel] inquisitor: 12090 triangles
+2026-10-25T16:45:16.3634556Z [SpellDuel] snapshots saved to /github/workspace/spellduel-unity/snapshots
