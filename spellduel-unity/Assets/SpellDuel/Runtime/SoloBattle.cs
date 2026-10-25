@@ -40,10 +40,10 @@ namespace SpellDuel
         readonly Dictionary<int, CharacterRig> allyRigs = new Dictionary<int, CharacterRig>();
         readonly Dictionary<int, Vector3> allyLastFeet = new Dictionary<int, Vector3>();
 
-        /// <summary>遠端合作：每位隊友的虛擬角色跟著他回報的位置走</summary>
+        /// <summary>合作（遠端、近距離都一樣）：每位隊友用他自己的角色造型（職業、進階職業、裝備）出現，跟著他回報的位置走</summary>
         void UpdateAllyRigs()
         {
-            if ((!RemotePlay && !Watching) || battle == null) return;   // 觀戰：每位玩家都用角色顯示
+            if ((!RemotePlay && !Watching && !(coop && NetMode)) || battle == null) return;   // 觀戰：每位玩家都用角色顯示
             float dt = Mathf.Max(1e-3f, Time.deltaTime);
             foreach (var a in battle.allies)
             {
