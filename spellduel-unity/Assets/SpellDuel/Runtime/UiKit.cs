@@ -64,6 +64,31 @@ namespace SpellDuel
             scroll.x=Mathf.Clamp(scroll.x,0,maxX);scroll.y=Mathf.Clamp(scroll.y,0,maxY);
             return scroll;
         }
+        // ---- 左右滑動換頁（背包）：手指在 area 裡橫向拖超過一段距離＝換一頁；回傳 +1＝下一頁（往左滑）、−1＝上一頁、0＝沒有
+        static int swipeId=-1;static Vector2 swipeStart;static bool swipeFired;
+        public static int SwipePage(Rect area)
+        {
+            var e=Event.current;if(e==null)return 0;
+            int id=Mathf.RoundToInt(area.x*7f+area.y*13f+area.width*17f+area.height*31f)+7;
+            switch(e.type)
+            {
+                case EventType.MouseDown:
+                    if(area.Contains(e.mousePosition)){swipeId=id;swipeStart=e.mousePosition;swipeFired=false;}
+                    break;
+                case EventType.MouseDrag:
+                    if(swipeId==id)
+                    {
+                        var d=e.mousePosition-swipeStart;
+                        if(swipeFired||Mathf.Abs(d.x)>DragSlop&&Mathf.Abs(d.x)>Mathf.Abs(d.y)){GUIUtility.hotControl=0;e.Use();}   // 橫向拖：取消按鈕的按下狀態（不會變成點擊）
+                        if(!swipeFired&&Mathf.Abs(d.x)>Mathf.Max(DragSlop*2.5f,area.width*0.15f)&&Mathf.Abs(d.x)>Mathf.Abs(d.y)*1.3f){swipeFired=true;return d.x<0?1:-1;}
+                    }
+                    break;
+                case EventType.MouseUp:
+                    if(swipeId==id){if(swipeFired)e.Use();swipeId=-1;}
+                    break;
+            }
+            return 0;
+        }
         static void Init()
         {
             if(panel!=null)return;

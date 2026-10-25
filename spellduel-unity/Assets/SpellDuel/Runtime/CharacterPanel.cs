@@ -347,13 +347,15 @@ namespace SpellDuel
             { stashOpen = !stashOpen; mailOpen = false; selItem = null; }
             if (mailOpen) return DrawMailbox(new Rect(b.x, by + fs * 1.4f, b.width, b.yMax - by - fs * 1.4f), p, fs, fsS, gap) || changed;
             if (stashOpen) return DrawStash(new Rect(b.x, by + fs * 1.4f, b.width, b.yMax - by - fs * 1.4f), p, fs, fsS, gap) || changed;
-            if (pages > 1)
-            {
-                if (UiKit.Button(new Rect(b.xMax - fs * 6.5f, by, fs * 3f, fs * 1.3f), "◀", fsS, false, null, page > 0)) page--;
-                if (UiKit.Button(new Rect(b.xMax - fs * 3.2f, by, fs * 3f, fs * 1.3f), "▶", fsS, false, null, page < pages - 1)) page++;
-            }
             by += fs * 1.4f;
             float cw = (b.width - gap * 2) / 3f, ch = fs * 2.2f;
+            // 換頁：在格子上左右滑動（不用按鈕；按鈕會被倉庫擋住）；下面一行小字顯示第幾頁
+            var grid = new Rect(b.x, by, b.width, 4 * (ch + gap * 0.3f));
+            if (pages > 1)
+            {
+                int sw = UiKit.SwipePage(grid);
+                if (sw != 0) { int np = Mathf.Clamp(page + sw, 0, pages - 1); if (np != page) { page = np; Sfx.Play("click", 0.4f, 1.2f); } }
+            }
             for (int k = 0; k < per; k++)
             {
                 int idx = page * per + k;
@@ -368,6 +370,12 @@ namespace SpellDuel
             }
             // 選中物品的說明
             float dy = by + 4 * (ch + gap * 0.3f) + gap * 0.3f;
+            if (pages > 1)
+            {
+                string dots = ""; for (int i = 0; i < pages; i++) dots += i == page ? "●" : "○";
+                UiKit.Text(new Rect(b.x, dy - gap * 0.2f, b.width, fsS * 1.2f), $"{(page > 0 ? "‹ " : "")}{dots}  第 {page + 1}/{pages} 頁・左右滑動換頁{(page < pages - 1 ? " ›" : "")}", Mathf.RoundToInt(fsS * 0.85f), new Color(0.75f, 0.82f, 0.95f), TextAnchor.MiddleCenter);
+                dy += fsS * 1.1f;
+            }
             var dr = new Rect(b.x, dy, b.width, b.yMax - dy);
             // 精魄視窗（CharacterPanel.Souls.cs）：換了選中的裝備就關掉
             if (soulOpen && soulFor != null && soulFor != selItem) soulOpen = false;
