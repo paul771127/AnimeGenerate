@@ -372,9 +372,13 @@ namespace SpellDuel
             float dy = by + 4 * (ch + gap * 0.3f) + gap * 0.3f;
             if (pages > 1)
             {
+                // 背包欄下方：◀ 第幾頁 ▶（左右滑動在上下捲動的畫面裡不好用，改成按鈕）
                 string dots = ""; for (int i = 0; i < pages; i++) dots += i == page ? "●" : "○";
-                UiKit.Text(new Rect(b.x, dy - gap * 0.2f, b.width, fsS * 1.2f), $"{(page > 0 ? "‹ " : "")}{dots}  第 {page + 1}/{pages} 頁・左右滑動換頁{(page < pages - 1 ? " ›" : "")}", Mathf.RoundToInt(fsS * 0.85f), new Color(0.75f, 0.82f, 0.95f), TextAnchor.MiddleCenter);
-                dy += fsS * 1.1f;
+                float pbw = fs * 3.4f, pbh = fs * 1.5f;
+                if (UiKit.Button(new Rect(b.x, dy, pbw, pbh), "◀ 上頁", fsS, false, null, page > 0)) { page--; Sfx.Play("click", 0.4f, 1.1f); }
+                if (UiKit.Button(new Rect(b.xMax - pbw, dy, pbw, pbh), "下頁 ▶", fsS, false, null, page < pages - 1)) { page++; Sfx.Play("click", 0.4f, 1.2f); }
+                UiKit.Text(new Rect(b.x + pbw, dy, b.width - pbw * 2, pbh), $"{dots}\n第 {page + 1}/{pages} 頁", Mathf.RoundToInt(fsS * 0.85f), new Color(0.75f, 0.82f, 0.95f), TextAnchor.MiddleCenter);
+                dy += pbh + gap * 0.3f;
             }
             var dr = new Rect(b.x, dy, b.width, b.yMax - dy);
             // 精魄視窗（CharacterPanel.Souls.cs）：換了選中的裝備就關掉
