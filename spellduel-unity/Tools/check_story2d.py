@@ -91,8 +91,8 @@ def main():
         for identity in ids:assert (DOC/f'{identity}_expressions.png').is_file(),(identity,'missing expression overview')
         for key in ('mine','forest','sea','arena','canyon','guild'):assert (DOC/f'dialogue_{key}.jpg').is_file(),(key,'missing dialogue mockup')
         for name in ('cast_lineup.jpg','backgrounds.jpg'):assert (DOC/name).is_file(),name
-    report={'complete':not pending,'characters':records,'backgrounds':backgrounds,'pending':pending,'totalBytes':size,'dialogueBytes':dialogue_size,'classPortraitBytes':class_size,'combinedExceeds40MiB':size>40*1024*1024,'annotatedLines':annotations}
+    report={'complete':not pending,'characters':records,'backgrounds':backgrounds,'pending':pending,'totalBytes':size,'dialogueBytes':dialogue_size,'classPortraitBytes':class_size,'villageStaffBytes':village_size,'combinedExceeds40MiB':size>40*1024*1024,'annotatedLines':annotations}
     DOC.mkdir(parents=True,exist_ok=True);(DOC/'validation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
-    print(f'{len(records)} characters / {sum(len(r["changes"]) for r in records)} sprites, {len(backgrounds)} backgrounds; dialogue {dialogue_size/1024/1024:.2f} MiB + classes {class_size/1024/1024:.2f} MiB = {size/1024/1024:.2f} MiB; dialogue checks passed; pending {len(pending)}')
+    print(f'{len(records)} characters / {sum(len(r["changes"]) for r in records)} sprites, {len(backgrounds)} backgrounds; dialogue {dialogue_size/1024/1024:.2f} MiB + classes {class_size/1024/1024:.2f} MiB + village staff {village_size/1024/1024:.2f} MiB = {size/1024/1024:.2f} MiB; dialogue checks passed; pending {len(pending)}')
     if size>40*1024*1024:print('Combined dialogue + class art exceeds the original 40 MiB target; see the separate class-art report.')
 if __name__=='__main__':main()

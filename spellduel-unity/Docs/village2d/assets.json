@@ -635,5 +635,265 @@
     ],
     "bytes": 139830,
     "sha256": "639d497819c3c04445606b708e1ce16b8dcf74d7f0a85432dba8b13fe8b2d233"
+  },
+  "Assets/SpellDuel/Resources/Village2D/map_desert.png": {
+    "size": [
+      2048,
+      3072
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 10528587,
+    "sha256": "102d7f37b00bfa42150a92b31233e280015a51ce95518280a671aa14096c9b37"
+  },
+  "Assets/SpellDuel/Resources/Village2D/map_desert_fit.png": {
+    "size": [
+      1080,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 3726269,
+    "sha256": "1c2d6964252a226ac8924b513b666061c577a570fe4eb31ffb778ddb7ef94ac7"
+  },
+  "Assets/SpellDuel/Resources/Village2D/map_forest.png": {
+    "size": [
+      2048,
+      3072
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 11736985,
+    "sha256": "a111cbd89703b8771ca4caca83249456b6cb54498164244465a97cf59c9b4d41"
+  },
+  "Assets/SpellDuel/Resources/Village2D/map_forest_fit.png": {
+    "size": [
+      1080,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 4054328,
+    "sha256": "1a2a4933c6fbb8bc3b3e68993a2e3980cb21b7391597d5e37341f205f96e5f09"
+  },
+  "Assets/SpellDuel/Resources/Village2D/map_harbor.png": {
+    "size": [
+      2048,
+      3072
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 10789331,
+    "sha256": "d37fa2ea75b113c268b3460443053ec8c773ed67cea3e9b35ec869f82e1476ec"
+  },
+  "Assets/SpellDuel/Resources/Village2D/map_harbor_fit.png": {
+    "size": [
+      1080,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 3821840,
+    "sha256": "f2ef35f25d61a166f809cc3cf1e7a2bec5c5f3b35425e8985f9d3a16292af40e"
+  },
+  "Assets/SpellDuel/Resources/Village2D/map_snow.png": {
+    "size": [
+      2048,
+      3072
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 11143062,
+    "sha256": "6d020c20613e7d5c327e5bcfdb0aeb8117d0b196016ffd219713c9ae437ceb85"
+  },
+  "Assets/SpellDuel/Resources/Village2D/map_snow_fit.png": {
+    "size": [
+      1080,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 3881298,
+    "sha256": "2ba1e9c653e5c30b8531206a102addcea3c3979db9e1467093011406e08dc03a"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_achao.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 32418,
+    "sha256": "eebdb180c5f344ac347851ecedbda9e1b638f7e0af0f1a45e405b0117ea6807b"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_aling.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 29310,
+    "sha256": "71cfb71a18c410db4526b57c5c65b7e6a1e17cad55ed03003f031dd4ff83c01c"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_cui.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 42631,
+    "sha256": "10f2179aeb1b7b0fab1dd6d942781df0688dfc0a5a887001bb03bc57535ca495"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_feng.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 32383,
+    "sha256": "412d2b97fab1488aecd708780b9f1d30a3c5c945a74deaf78046a552508bf11b"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_haido.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 24862,
+    "sha256": "d79db972f04a54261b6121d6abcf99e84f0bbbf86200a3af89a09a5c18b71e99"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_laotuo.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 31163,
+    "sha256": "46af3ad2eea53988f184c9c0f4889d82a858c43d6e0b27c36e9d1fe8399b4224"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_leo.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 31745,
+    "sha256": "f3b4885520af6fa54bcf5f2caff2dec1963ac54bbfdde750ab030be4060b5284"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_nagi.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 27618,
+    "sha256": "0c710b8c7e37b915890a99eb5ee78d7ab75f4b4a617048b47765c08e5cef0968"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_shi.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 30869,
+    "sha256": "3dfb79ee876396b0399905a7744085db916fc7909e1fedbe65ac989b33a3cdcb"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_tieniang.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 26964,
+    "sha256": "02d2554bc15a9951a3c4ea244bf57c381654433e928abeca0e2b00a8db9fd646"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_xiaosha.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 26358,
+    "sha256": "7e22c405db741b50345119758a7b3d7403094ec3a66864d30b8953a6734b0f6b"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_xiaoye.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 31035,
+    "sha256": "9f93ae75d6de3dc9b6d1debbb9bdaff26e8db984f46c0bfba5e0b5f6f59fc452"
   }
 }

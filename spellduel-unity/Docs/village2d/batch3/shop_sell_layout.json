@@ -1,0 +1,157 @@
+{
+  "canvas": [
+    1080,
+    1920
+  ],
+  "origin": "top-left",
+  "units": "design-pixels",
+  "illustrativeDataOnly": true,
+  "runtimeConditions": "Preserve all existing visibility, eligibility and enabled conditions.",
+  "elements": [
+    {
+      "id": "header",
+      "rect": [
+        30,
+        45,
+        1020,
+        115
+      ],
+      "type": "panel",
+      "text": ""
+    },
+    {
+      "id": "return",
+      "rect": [
+        270,
+        1795,
+        540,
+        92
+      ],
+      "type": "button",
+      "text": "🏘 回城鎮"
+    },
+    {
+      "id": "buy_tab",
+      "rect": [
+        40,
+        195,
+        285,
+        85
+      ],
+      "type": "button",
+      "text": "買道具"
+    },
+    {
+      "id": "sell_tab",
+      "rect": [
+        335,
+        195,
+        285,
+        85
+      ],
+      "type": "button",
+      "text": "賣裝備"
+    },
+    {
+      "id": "scroll",
+      "rect": [
+        30,
+        290,
+        610,
+        850
+      ],
+      "type": "panel",
+      "text": "",
+      "axis": "vertical",
+      "clip": true
+    },
+    {
+      "id": "row_0",
+      "rect": [
+        45,
+        300,
+        580,
+        255
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "sell_0",
+      "rect": [
+        310,
+        450,
+        290,
+        85
+      ],
+      "type": "button",
+      "text": "💰 {sellPrice} 賣出"
+    },
+    {
+      "id": "row_1",
+      "rect": [
+        45,
+        570,
+        580,
+        255
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "sell_1",
+      "rect": [
+        310,
+        720,
+        290,
+        85
+      ],
+      "type": "button",
+      "text": "💰 {sellPrice} 賣出"
+    },
+    {
+      "id": "row_2",
+      "rect": [
+        45,
+        840,
+        580,
+        255
+      ],
+      "type": "row",
+      "text": ""
+    },
+    {
+      "id": "sell_2",
+      "rect": [
+        310,
+        990,
+        290,
+        85
+      ],
+      "type": "button",
+      "text": "💰 {sellPrice} 賣出"
+    },
+    {
+      "id": "speech",
+      "rect": [
+        675,
+        730,
+        365,
+        190
+      ],
+      "type": "panel",
+      "text": ""
+    },
+    {
+      "id": "npc",
+      "rect": [
+        660,
+        990,
+        390,
+        730
+      ],
+      "type": "portrait",
+      "asset": "Assets/SpellDuel/Resources/Story2D/chars/clerk_normal.png"
+    }
+  ]
+}

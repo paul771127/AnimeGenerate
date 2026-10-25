@@ -16,12 +16,15 @@ def map_preview(town):
     data=json.loads(p.read_text(encoding='utf-8'));im=Image.open(ART/f'map_{town}_fit.png').convert('RGBA');d=ImageDraw.Draw(im);scale=1080/2048
     for key,v in data.items():
         if key=='npc':continue
-        x=round(v['label_x']*scale);y=round(v['label_y']*scale+150);d.rounded_rectangle((x-112,y-27,x+112,y+27),radius=10,fill='#674730',outline='#ebca83',width=2);rich(d,(x,y),NAMES[key],24,center=True)
+        x=round(v['label_x']*scale);y=round(v['label_y']*scale+150)
+        from preview_village_facilities import frame
+        if not frame(im,'name_plate',[x-112,y-27,224,54]):d.rounded_rectangle((x-112,y-27,x+112,y+27),radius=10,fill='#674730',outline='#ebca83',width=2)
+        d=ImageDraw.Draw(im);rich(d,(x,y),NAMES[key],24,fill='#4d3523',center=True)
     for identity,v in data['npc'].items():
         path=ART/f'npc_{identity}.png'
         if not path.exists():continue
         npc=Image.open(path).convert('RGBA').resize((84,127),Image.Resampling.LANCZOS);im.alpha_composite(npc,(round(v['x']*scale-42),round(v['y']*scale+150-127)))
-    d=ImageDraw.Draw(im);rich(d,(35,50),'📋 清單　｜　🚶 走動　｜　村莊地圖',28);out=DOC/('batch1' if town=='flame' else 'maps');out.mkdir(parents=True,exist_ok=True);im.convert('RGB').save(out/f'map_{town}_labels.jpg',quality=92,optimize=True)
+    d=ImageDraw.Draw(im);rich(d,(35,50),'📋 清單　｜　🚶 走動　｜　村莊地圖',28,fill='#4d3523');out=DOC/('batch1' if town=='flame' else 'maps');out.mkdir(parents=True,exist_ok=True);im.convert('RGB').save(out/f'map_{town}_labels.jpg',quality=92,optimize=True)
     d=ImageDraw.Draw(im)
     for key,v in data.items():
         if key=='npc':continue
