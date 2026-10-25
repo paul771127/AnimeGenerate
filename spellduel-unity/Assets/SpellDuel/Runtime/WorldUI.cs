@@ -637,7 +637,7 @@ namespace SpellDuel
         {
             float y = r.y + gap;
             Header(r, $"⚒ 鐵匠鋪（{Towns[town].name}）", new Color(1f, 0.6f, 0.3f), prof, fs, fsS, fsL, gap, ref y);
-            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), $"每強化 1 級：所有屬性 +{Economy.EnhancePerLevel * 100:0}%（最多 +{Economy.MaxPlus}）。+5 之前一定成功，之後失敗只扣金幣。", fsS, new Color(0.85f, 0.88f, 1f));
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), $"每強化 1 級：主屬性 +{Economy.EnhancePerLevel * 100:0}%（最多 +{Economy.MaxPlus}）。+5 之前一定成功，之後失敗只扣金幣。", fsS, new Color(0.85f, 0.88f, 1f));
             y += fs * 1.5f;
             var items = AllItems(prof);
             if (items.Count == 0) UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2f), "沒有裝備可以強化（過關才拿得到裝備）", fs, Color.gray);
@@ -647,7 +647,8 @@ namespace SpellDuel
                 var dr = new Rect(r.x + gap, y, r.width - gap * 2, fs * 4.2f);
                 UiKit.Card(dr, 0.6f, Item.RarityColors[selItem.rarity], 0.8f);
                 var mods = new List<string>();
-                foreach (var kv in selItem.mods) mods.Add(Item.AffixText(kv.Key, kv.Value * selItem.PlusMul));
+                mods.AddRange(selItem.ModLines());
+                if (selItem.plus < Economy.MaxPlus && selItem.mods.Count > 0) mods.Add($"強化後 {Item.AffixText(selItem.mods[0].Key, selItem.mods[0].Value * (1f + Economy.EnhancePerLevel * (selItem.plus + 1)))}（只加主屬性）");
                 UiKit.Text(new Rect(dr.x + gap, dr.y, dr.width - gap * 2, dr.height * 0.55f), $"{selItem.FullName}\n{string.Join("、", mods)}", fsS, Color.white, TextAnchor.MiddleLeft, false, 0.5f);
                 bool can = selItem.plus < Economy.MaxPlus;
                 if (UiKit.Button(new Rect(dr.x + dr.width * 0.2f, dr.yMax - fs * 1.9f, dr.width * 0.6f, fs * 1.7f), can ? $"⚒ 強化（💰 {Economy.EnhanceCost(selItem)}・成功率 {Economy.EnhanceRate(selItem) * 100:0}%）" : "已經是 +10", fsS, true, new Color(1f, 0.6f, 0.3f), can))

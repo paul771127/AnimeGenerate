@@ -84,7 +84,7 @@ namespace SpellDuel
                 case WorldUI.Screen.Dungeon: return Want("dungeon", "🏰 副本",
                     "比故事關卡更難的地城：一路上可以選路線、開寶箱、遇到 NPC。點一個副本看說明 → 出發。\n想和朋友一起打：回首頁選連線，在大廳選「🏰 副本」。");
                 case WorldUI.Screen.Smith: return Want("smith", "⚒ 鐵匠鋪",
-                    "點一件裝備 → 「強化」：每 +1 所有屬性 +8%。+5 以前不會失敗；之後越來越難，失敗會掉級。強化要花金幣。");
+                    "點一件裝備 → 「強化」：每 +1 主屬性 +8%（其他屬性、機率不變）。+5 以前不會失敗；之後越來越難，失敗會掉級。強化要花金幣。");
                 case WorldUI.Screen.Shop: return Want("shop", "🧪 道具店",
                     "上面買藥水（回血、回魔）和回城捲軸；下面點背包裡的裝備可以賣掉換金幣。\n買的藥水在出發前的整備選要帶幾瓶。");
                 case WorldUI.Screen.Guild: return Want("guild", "🏛 職業工會",

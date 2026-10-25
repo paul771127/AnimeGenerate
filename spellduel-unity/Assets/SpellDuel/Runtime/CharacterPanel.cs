@@ -391,7 +391,7 @@ namespace SpellDuel
                 $"{Item.SlotNames[(int)s2.slot]}・物品等級 {s2.ilvl}　限定：{s2.ClassText()}",
                 $"需求：等級 {s2.reqLevel}" + (s2.reqValue > 0 ? $"、{StatInfo.Names[(int)s2.reqStat]} {s2.reqValue}" : "") + (worn || can ? "" : $"　❌ {why}"),
             };
-            foreach (var kv in s2.mods) lines.Add("・" + Item.AffixText(kv.Key, kv.Value * s2.PlusMul));
+            foreach (var ml in s2.ModLines()) lines.Add("・" + ml);
             SoulLines(s2, lines);   // 精魄孔與鑲上的精魄
             var sd = Economy.SetOf(s2.setId);
             if (sd != null) lines.Add(Economy.SetText(sd, p.equipped));

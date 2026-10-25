@@ -182,7 +182,7 @@ namespace SpellDuel
                     S("⚒ 鐵匠鋪", "鐵匠鋪", () => "最後是強化：按「⚒ 鐵匠鋪」。", () => storyMapOpen && world.screen == WorldUI.Screen.Smith, () => !Have());
                     S("item:" + uid, "選要強化的裝備", () => "點剛穿上的武器（👕＝身上穿著的）。", () => world.SelItem != null && world.SelItem.uid == uid, () => !Have())
                         .enter = () => world.FocusUid = uid;
-                    S("⚒ 強化（", "強化", () => "按「⚒ 強化」：付金幣讓武器變強（每一級所有屬性 +8%）。", () => (FindItem(uid)?.plus ?? 1) > 0, () => !Have() || Economy.Gold < Economy.EnhanceCost(FindItem(uid)));
+                    S("⚒ 強化（", "強化", () => "按「⚒ 強化」：付金幣讓武器變強（每一級主屬性 +8%，其他屬性與機率不變）。", () => (FindItem(uid)?.plus ?? 1) > 0, () => !Have() || Economy.Gold < Economy.EnhanceCost(FindItem(uid)));
                     S("@next", "強化的規則", () => "+5 之前保證成功；再往上會有機會失敗（失敗不會壞掉，只是金幣花掉了）。打怪拿到的金幣，記得回來強化裝備！", null);
                     break;
                 }

@@ -630,7 +630,7 @@ namespace SpellDuel
         public int reqLevel; public Stat reqStat; public int reqValue;
         public readonly List<KeyValuePair<Affix, float>> mods = new List<KeyValuePair<Affix, float>>();
         public long uid;
-        public int plus;                // 鐵匠鋪強化等級（+1～+10；每級所有屬性 +8%）
+        public int plus;                // 鐵匠鋪強化等級（+1～+10；每級主屬性 +8%，其他屬性不變）
         public string setId = "";       // 套裝（Economy.Sets）；空＝不是套裝
         /// <summary>精魄孔數（0～4，掉落時隨機，越稀有上限越高）與鑲上去的精魄（Souls.cs）</summary>
         public int soulSlots;
@@ -675,8 +675,26 @@ namespace SpellDuel
             Affix.Atk => $"攻擊傷害 +{v * 100:0}%", _ => $"受到的傷害 -{v * 100:0.#}%",
         };
 
-        public float Sum(Affix a) { float s = 0f; foreach (var kv in mods) if (kv.Key == a) s += kv.Value; return s * PlusMul; }
+        /// <summary>
+        /// 主屬性＝第一個屬性（ItemGen.Make 先放）：武器＝攻擊傷害、頭＝MP、身體＝HP、鞋子＝敏捷、飾品＝幸運。
+        /// 強化只加主屬性；其他屬性（特殊能力值、爆擊／灼燒等機率、減傷）不變。
+        /// </summary>
+        public Affix MainAffix => mods.Count > 0 ? mods[0].Key : Affix.Hp;
+        /// <summary>第 i 個屬性現在的數值（主屬性算上強化）</summary>
+        public float ModValue(int i) => i < 0 || i >= mods.Count ? 0f : mods[i].Value * (i == 0 ? PlusMul : 1f);
+        public float Sum(Affix a) { float s = 0f; for (int i = 0; i < mods.Count; i++) if (mods[i].Key == a) s += ModValue(i); return s; }
         public float PlusMul => 1f + Economy.EnhancePerLevel * plus;
+        /// <summary>屬性一覽（主屬性標「主」；強化只加主屬性）</summary>
+        public List<string> ModLines(int plusOverride = -1)
+        {
+            var l = new List<string>();
+            for (int i = 0; i < mods.Count; i++)
+            {
+                float v = i == 0 ? mods[0].Value * (1f + Economy.EnhancePerLevel * (plusOverride >= 0 ? plusOverride : plus)) : mods[i].Value;
+                l.Add((i == 0 ? "【主】" : "") + AffixText(mods[i].Key, v));
+            }
+            return l;
+        }
 
         // ---- 存檔：一行文字
         public string Serialize()

@@ -90,7 +90,7 @@ namespace SpellDuel
 
         // ---------------------------------------------------------------- 鐵匠鋪：強化
         public const int MaxPlus = 10;
-        public const float EnhancePerLevel = 0.08f;   // 每強化 1 級，所有屬性 +8%
+        public const float EnhancePerLevel = 0.08f;   // 每強化 1 級，主屬性 +8%（其他屬性、機率不變）
         public static int EnhanceCost(Item it) => (it.plus + 1) * 50 + it.ilvl * 5 + it.rarity * 30;
         /// <summary>成功率：+1～+5 一定成功，之後越來越難</summary>
         public static float EnhanceRate(Item it) => it.plus < 5 ? 1f : it.plus switch { 5 => 0.8f, 6 => 0.65f, 7 => 0.5f, 8 => 0.4f, _ => 0.3f };
