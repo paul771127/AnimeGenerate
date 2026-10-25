@@ -51,7 +51,8 @@ namespace SpellDuel
                 if(c.kind==Battle.TrapKind.Bolt||c.kind==Battle.TrapKind.Volley)
                 {
                     int n=c.kind==Battle.TrapKind.Volley?3:1;
-                    for(int i=0;i<n;i++){float s=(i-(n-1)*.5f)*.3f;fx.Line("Locked crossbow laser",new[]{new Vector3(0,.05f,0),new Vector3(s*c.radius,.05f,c.radius)},.065f);}
+                    for(int i=0;i<n;i++){float s=(i-(n-1)*.5f)*.3f;fx.Line("Locked crossbow laser",new[]{new Vector3(0,.05f,0),new Vector3(s*c.radius,.05f,c.radius)},.065f);
+                        var bolt=EnemyArt.Pivot(fx.transform,"Clockwork bolt "+i,new Vector3(0,1,0));EnemyArt.Part(bolt,"Charged bolt",Vector3.zero,new Vector3(.08f,.08f,.65f),new Color(.3f,1,1));EnemyArt.Bake(bolt,"vault bolt/"+i);fx.missiles.Add(bolt);}
                 }
                 else
                 {
@@ -61,6 +62,7 @@ namespace SpellDuel
                 {
                     fx.moving=EnemyArt.Pivot(fx.transform,"Rotating ankle flame",Vector3.zero);
                     var points=new[]{new Vector3(0,.15f,.12f),new Vector3(0,.15f,2)};
+                    fx.Line("Clockwise rotation arrow",new[]{new Vector3(.5f,.05f,1.8f),new Vector3(0,.05f,2),new Vector3(.15f,.05f,1.5f)},.08f);
                     SpellFx.Line(fx.moving,"Low flame tongue",points,false,.18f,new Color(1,.35f,.05f,.85f),true,false);
                     SpellFx.Line(fx.moving,"Bright flame core",points,false,.055f,new Color(1,.9f,.4f,.9f),true,false);
                 }
@@ -70,13 +72,14 @@ namespace SpellDuel
         public void Tick(float time)
         {
             var c=Cue;bool show=!c.done&&time>=c.Start&&time<=c.hit+c.duration;
-            foreach(var r in warnings){r.gameObject.SetActive(show);float p=Mathf.Clamp01((time-c.Start)/c.warn);var col=Red;col.a=.35f+.6f*p;r.startColor=r.endColor=col;r.widthMultiplier=1+(p>.85f?Mathf.Sin(time*22)*.3f:0);}
+            foreach(var r in warnings){r.gameObject.SetActive(show);float p=Mathf.Clamp01((time-c.Start)/c.warn);var col=time>=c.hit?new Color(1,.65f,.12f,1):Red;col.a=.35f+.6f*p;r.startColor=r.endColor=col;r.widthMultiplier=1+(p>.85f?Mathf.Sin(time*22)*.3f:0);}
             float u=Mathf.Clamp01((time-c.hit)/Mathf.Max(.01f,c.duration));
             if(moving){moving.gameObject.SetActive(show&&time>=c.hit);moving.localRotation=Quaternion.Euler(0,u*360,0);}
             foreach(var m in missiles)
             {
                 m.gameObject.SetActive(show);var p=m.localPosition;
                 if(c.kind==Battle.TrapKind.Rock)p.y=time<c.hit?3:.18f+3*(1-u);
+                else if(c.kind==Battle.TrapKind.Bolt||c.kind==Battle.TrapKind.Volley){m.gameObject.SetActive(show&&time>=c.hit);int i=missiles.IndexOf(m);p.z=c.radius*u;p.x=c.kind==Battle.TrapKind.Volley?(i-1)*.3f*p.z:0;}
                 else {p.z=time<c.hit?-c.radius:-c.radius+c.radius*2*u;p.y=c.kind==Battle.TrapKind.Log?(time<c.hit?2:1.3f):1;}
                 m.localPosition=p;
             }

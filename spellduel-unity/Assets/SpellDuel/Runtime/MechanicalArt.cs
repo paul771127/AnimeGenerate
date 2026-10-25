@@ -51,6 +51,11 @@ namespace SpellDuel
             if(Kind==53)visible=Phase-1;
             for(int i=0;i<tools.Length;i++)if(tools[i])tools[i].gameObject.SetActive(i==visible);
         }
+        public void SlashLow(bool low)
+        {
+            if(Kind!=53||!tools[2])return;var parent=low?torso:right;if(tools[2].parent==parent)return;
+            tools[2].SetParent(parent,false);tools[2].localPosition=low?new Vector3(0,-.65f,.2f):new Vector3(0,-.48f,.25f);
+        }
         public void Tick(float dt)
         {
             clock+=dt;if(Dead)death+=dt;else death=0;

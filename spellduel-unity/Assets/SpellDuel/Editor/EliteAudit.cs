@@ -20,7 +20,7 @@ namespace SpellDuel.EditorTools
             bool found=false;
             foreach(var f in go.GetComponentsInChildren<MeshFilter>())
             {
-                if(!f.sharedMesh||!f.sharedMesh.name.StartsWith("elite/")&&!f.sharedMesh.name.StartsWith("world/"))continue;
+                if(!f.sharedMesh||!f.sharedMesh.name.StartsWith("elite/")&&!f.sharedMesh.name.StartsWith("world/")&&!f.sharedMesh.name.StartsWith("mechanical/"))continue;
                 var m=f.GetComponent<Renderer>().sharedMaterial;
                 if(!m.IsKeywordEnabled("SD_HUMAN")||m.GetFloat("_HumanHair")<.5f||m.GetFloat("_HumanFace")>.5f)return false;
                 var colors=f.sharedMesh.colors;if(colors.Length!=f.sharedMesh.vertexCount)return false;

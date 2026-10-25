@@ -82,7 +82,7 @@ def check(path):
                 lines = tag
             continue
         if lines and not is_key_line(raw):
-            text = re.split(r"[：:]", raw, 1)[-1].strip() if re.match(r"^[^：:]{1,24}[：:]", raw) else raw
+            text = re.split(r"[：:]", raw, maxsplit=1)[-1].strip() if re.match(r"^[^：:]{1,24}[：:]", raw) else raw
             if len(text) > MAX_LINE: errors.append(f"第 {ln} 行：台詞超過 {MAX_LINE} 字（{len(text)}），請拆成兩句")
             if npc is not None and lines == "meet": npc["meet"] += 1
             elif room is not None and lines == "enter": room["enter"] += 1

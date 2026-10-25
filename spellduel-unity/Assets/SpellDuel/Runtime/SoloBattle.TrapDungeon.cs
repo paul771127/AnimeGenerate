@@ -14,6 +14,7 @@ namespace SpellDuel
     public partial class SoloBattle
     {
         GalleryClock galleryClock;double nextGallerySync,nextGalleryBeep,leverUntil;int galleryChoiceSeen;string galleryLever;
+        bool galleryClockSynced;
         bool galleryShopOpen,galleryNeutralGranted,galleryKey,galleryMarketBonus,galleryHubBonus;int galleryExtraChests;
         readonly HashSet<int> galleryKeep=new HashSet<int>();readonly List<int> galleryRemove=new List<int>();
         readonly Dictionary<int,GalleryTrapFx> galleryFx=new Dictionary<int,GalleryTrapFx>();
@@ -24,7 +25,7 @@ namespace SpellDuel
         void BeginGallery()
         {
             if(dungeon==null||dungeon.id!=TrapGallery.Id||!dungeon.traps)return;
-            galleryClock=new GalleryClock(GalleryNow,dungeon.timeLimit);Ticker(dungeon.before);galleryShopOpen=galleryNeutralGranted=galleryKey=galleryMarketBonus=galleryHubBonus=false;
+            galleryClockSynced=DungeonDecider;galleryClock=new GalleryClock(GalleryNow,dungeon.timeLimit);Ticker(dungeon.before);galleryShopOpen=galleryNeutralGranted=galleryKey=galleryMarketBonus=galleryHubBonus=false;
             galleryLever=null;galleryExtraChests=0;galleryChoiceSeen=0;nextGallerySync=nextGalleryBeep=0;
             battle.OnTrapAdd+=cue=>{if(coop&&NetIsHost)NetSend?.Invoke(new Msg{t="trap",k=JsonUtility.ToJson(cue),c=galleryClock.started,t0=GalleryNow+cue.hit-battle.now});};
         }
@@ -53,6 +54,7 @@ namespace SpellDuel
             if(!InGallery||!DungeonDecider||!coop)return;
             NetSend?.Invoke(new Msg{t="vault",t0=galleryClock.deadline,c=galleryClock.started,h=leverUntil,ok=galleryClock.wound,k=galleryLever??"",e=galleryKey?1:0});
             NetSend?.Invoke(new Msg{t="trapcfg",hp=battle.galleryEpoch,c=galleryClock.started,k=drun.node.id,pts=battle.flamePillars.ToArray()});
+            foreach(var cue in battle.trapCues)if(!cue.done&&cue.hit+cue.duration>=battle.now)NetSend?.Invoke(new Msg{t="trap",k=JsonUtility.ToJson(cue),c=galleryClock.started,t0=GalleryNow+cue.hit-battle.now});
         }
         void ApplyGalleryLever(string result)
         {
@@ -67,7 +69,7 @@ namespace SpellDuel
             if(galleryClock.Expired(now)&&!battle.stageCleared)
             {
                 battle.FailStage("機關重新上鎖了…");introUntil=-1;readyStep=-1;scrollAsk=false;
-                if(DungeonDecider&&coop)NetSend?.Invoke(new Msg{t="bover",ok=false,e=1});
+                if(DungeonDecider&&coop)NetSend?.Invoke(new Msg{t="bover",ok=false,e=1,k="機關重新上鎖了…"});
                 phase=Phase.Over;ShowResult();return;
             }
             if(galleryClock.Remaining(now)<=180&&now>=nextGalleryBeep){nextGalleryBeep=now+15;Sfx.Play("warn",.7f);}
@@ -111,7 +113,7 @@ namespace SpellDuel
             }
             if(m.t=="vault")
             {
-                if(NetIsHost||m.c<galleryClock.started-.5)return true;galleryClock.deadline=m.t0;galleryClock.started=m.c;galleryClock.wound=m.ok;if(m.h>0)leverUntil=m.h;galleryKey=m.e==1;ApplyGalleryLever(m.k);return true;
+                if(NetIsHost||galleryClockSynced&&Math.Abs(m.c-galleryClock.started)>.5)return true;galleryClockSynced=true;galleryClock.deadline=m.t0;galleryClock.started=m.c;galleryClock.wound=m.ok;if(m.h>0)leverUntil=m.h;galleryKey=m.e==1;ApplyGalleryLever(m.k);return true;
             }
             if(m.t=="trapcfg")
             {if(!NetIsHost&&Math.Abs(m.c-galleryClock.started)<.5&&m.hp==battle.galleryEpoch&&m.k==drun.node.id){battle.flamePillars.Clear();if(m.pts!=null)battle.flamePillars.AddRange(m.pts);}return true;}
@@ -141,7 +143,7 @@ namespace SpellDuel
             {
                 if(!galleryBoss){galleryBoss=MechanicalArt.Create(53);galleryLastHp=En.hp;}
                 galleryBoss.transform.SetPositionAndRotation(WorldFrame.FromWorld(En.Feet),Quaternion.LookRotation(WorldFrame.DirFromWorld(En.forward),Vector3.up));
-                int ph=En.hp<=En.maxHp*.35f?3:En.hp<=En.maxHp*.7f?2:1;battle.GalleryPhase=ph;galleryBoss.SetPhase(ph);
+                int ph=En.hp<=En.maxHp*.35f?3:En.hp<=En.maxHp*.7f?2:1;battle.GalleryPhase=ph;galleryBoss.SetPhase(ph);galleryBoss.SlashLow(battle.trapCues.Exists(c=>c.source<0&&!c.done&&c.kind==Battle.TrapKind.Low));
                 galleryBoss.Hit=En.hp<galleryLastHp;galleryLastHp=En.hp;galleryBoss.Wind=En.windupUntil>battle.now?Mathf.Clamp01(1-(En.windupUntil-battle.now)/3.5f):0;galleryBoss.Striking=En.windupUntil<=0&&battle.trapCues.Exists(c=>c.source<0&&battle.now>=c.hit&&battle.now<c.hit+.5f);
             }
             else if(galleryBoss)galleryBoss.Dead=true;

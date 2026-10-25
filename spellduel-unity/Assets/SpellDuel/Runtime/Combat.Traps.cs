@@ -99,7 +99,7 @@ namespace SpellDuel
         public void RemoteTrap(TrapCue cue,float localHit)
         {
             if(!Gallery||!remoteEnemy||cue.epoch!=galleryEpoch||cue.id<1)return;
-            var old=trapCues.Find(x=>x.id==cue.id);if(old!=null){old.hit=localHit;old.mask=cue.mask;old.notified=false;return;}
+            var old=trapCues.Find(x=>x.id==cue.id);if(old!=null){if(Mathf.Abs(old.hit-localHit)>.2f)old.notified=false;old.hit=localHit;old.mask=cue.mask;return;}
             cue.hit=localHit;cue.sent=true;if(cue.struck==null)cue.struck=new HashSet<Fighter>();trapCues.Add(cue);
         }
         public static string TrapHint(TrapKind k)=>k==TrapKind.Flame||k==TrapKind.Low?"⬆ 跳！":k==TrapKind.Log||k==TrapKind.High?"⬇ 蹲下！":k==TrapKind.Summon?"增援即將啟動！":"⬅ 移開！";
@@ -146,7 +146,7 @@ namespace SpellDuel
             if(!lastRush&&enemy.hp<=enemy.maxHp*.1f)
             {
                 lastRush=true;galleryPause=now+5;nextGalleryBoss=galleryPause+1;
-                foreach(var c in trapCues)if(!c.done&&c.source<=0){if(c.source<0){c.done=true;enemy.windupUntil=0;}else{c.hit=ReserveGallery(galleryPause+3.5f,c.duration);c.notified=false;OnTrapAdd?.Invoke(c);}}
+                foreach(var c in trapCues)if(!c.done){if(c.source<0){c.done=true;enemy.windupUntil=0;}else{c.hit=ReserveGallery(galleryPause+3.5f,c.duration);c.notified=false;var minion=minions.Find(m=>m.minionId==c.source);if(minion!=null)minion.windupUntil=c.hit;OnTrapAdd?.Invoke(c);}}
                 Emit("specialwarn",enemy.Feet,Color.cyan,"全機關停擺五秒，現在輸出！");return;
             }
             if(now<galleryPause)return;

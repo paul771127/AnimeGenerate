@@ -29,6 +29,12 @@ for(int i=0;i<host.trapCues.Count;i++){var c=host.trapCues[i];Check(c.warn>=3.5f
 foreach(var p in host.flamePillars)Check(Vector3.Distance(p,host.player.Feet)>=1.5f,"pillar spawn distance");
 var peer=Make(true);var cue=new Battle.TrapCue{id=1,epoch=2,kind=Battle.TrapKind.Rock};peer.RemoteTrap(cue,8);Check(peer.trapCues.Count==0,"stale room packet");cue.epoch=1;peer.RemoteTrap(cue,8);Check(peer.trapCues.Count==1&&peer.trapCues[0].hit==8,"remote schedule");peer.RemoteTrap(cue,12);Check(peer.trapCues.Count==1&&peer.trapCues[0].hit==12,"reschedule duplicate");
 var reduce=Make();reduce.now=10;reduce.player.trapReduce=.2f;var hit=new Battle.TrapCue{kind=Battle.TrapKind.Rock,mask=15,halfX=2,halfZ=2,hit=10,power=.22f};Call(reduce,"GalleryHit",hit,reduce.player,null);Check(Math.Abs(reduce.player.hp-8240)<1,"trap reduction applied twice/wrong");
+// Real spawn/completion loop for all ten waves, at solo and four-player scale.
+foreach(int party in new[]{2,4}){var run=Make();run.dungeonParty=party;run.edgePoint=()=>Vector3.forward*4;run.bossPoint=()=>Vector3.forward;run.StartDungeonMap();
+for(int wave=41;wave<=50;wave++){run.ConfigureGallery(wave==50?"core":"furnace",wave,1);run.bossAfterMinions=wave!=50;run.EnterNode(wave,wave==50,0);
+for(int tick=0;tick<500&&!run.awaitingNext&&!run.stageCleared;tick++){run.now+=5;Call(run,"UpdateEndless");foreach(var m in run.minions)Check(TrapGallery.IsKind(m.minionKind),"old monster leaked into gallery");run.minions.Clear();if(wave==50&&run.enemy.Alive){Check(run.enemy.cls.id=="boss_clockwork","wrong gallery boss");run.enemy.hp=0;Call(run,"StageDone");}}
+Check(wave==50?run.stageCleared:run.awaitingNext,"wave stalled "+wave);tests++;}}
+var boss=Make();boss.wave=50;boss.enemy.hp=boss.enemy.maxHp=10000;boss.now=10;Call(boss,"TickGalleryBoss");Check(boss.GalleryPhase==1,"phase 1");boss.enemy.hp=6000;boss.now=12;Call(boss,"TickGalleryBoss");Check(boss.GalleryPhase==2&&boss.flamePillars.Count<=3,"phase 2");boss.enemy.hp=3000;boss.now=14;Call(boss,"TickGalleryBoss");Check(boss.GalleryPhase==3,"phase 3");boss.enemy.hp=900;boss.now=16;Call(boss,"TickGalleryBoss");foreach(var c in boss.trapCues)Check(c.done||c.hit>=24.5f,"last rush pause + fresh warning");
 Debug.Log("[SpellDuel] Trap combat audit passed: "+tests+" contact/avoidance/new enemy cases, schedule spacing, local-only damage and room epochs");return tests;
 }
 }}

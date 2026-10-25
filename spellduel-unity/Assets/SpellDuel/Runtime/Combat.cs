@@ -904,7 +904,7 @@ namespace SpellDuel
         /// <summary>特殊敵人：場上最多 1 隻；還有一般小怪要出的時候才出（不會在一波快結束時才冒出來）；上一隻在場上時計時重算</summary>
         void UpdateSpecialSpawn()
         {
-            if (specialKind < 0 || holdSpawns || edgePoint == null) return;
+            if (Gallery || specialKind < 0 || holdSpawns || edgePoint == null) return;
             bool alive = false; foreach (var m in minions) if (m.Alive && (IsSpecial(m.minionKind) || EliteCatalog.IsElite(m.minionKind))) { alive = true; break; }
             if (alive) { nextSpecialAt = Mathf.Max(nextSpecialAt, now + SpecialGap); return; }
             if (waveToSpawn <= 0 || now < nextSpecialAt) return;

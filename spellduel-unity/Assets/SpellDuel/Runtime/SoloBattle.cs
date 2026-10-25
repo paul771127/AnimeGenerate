@@ -1502,7 +1502,7 @@ namespace SpellDuel
                 case "bover":
                     // 隊友端：房主那邊戰鬥結束了 → 我這邊也結束（通關／失敗跟房主一樣），場上的小怪全部清掉
                     if (NetIsHost || battle == null || phase != Phase.Fighting) break;
-                    if (m.ok) battle.stageCleared = true; else battle.FailStage(m.e == 1 ? "任務失敗" : "全員倒下");
+                    if (m.ok) battle.stageCleared = true; else battle.FailStage(InGallery && !string.IsNullOrEmpty(m.k) ? m.k : m.e == 1 ? "任務失敗" : "全員倒下");
                     foreach (var mf in battle.minions) mf.hp = 0f;
                     break;
                 case "mins":
