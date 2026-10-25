@@ -256,8 +256,8 @@ namespace SpellDuel
                 case "guild": screen = Screen.Guild; break;
                 case "gate": OpenGate(town); break;
                 case "warp": OpenWarp(); break;
-                case "mayorhome": { int i = Npc("老焰"); if (i >= 0) { npcTalk = i; npcLine = 0; } break; }
-                case "belltower": { int i = Npc("老焰"); if (i >= 0) { npcTalk = i; npcLine = 0; } break; }   // 晨鐘塔：村長守的鐘（之後有專屬對話再換）
+                case "mayorhome": { int i = Npc("老焰"); if (i < 0 && t.npcs.Length > 0) i = 0; if (i >= 0) { npcTalk = i; npcLine = 0; } break; }   // 其他城鎮：第一位居民（村長／船長／長老…）
+                case "belltower": { int i = Npc("老焰"); if (i < 0 && t.npcs.Length > 0) i = 0; if (i >= 0) { npcTalk = i; npcLine = 0; } break; }   // 晨鐘塔：村長守的鐘（之後有專屬對話再換）
                 default: OpenFacility(key); break;
             }
         }
