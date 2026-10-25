@@ -115,7 +115,8 @@ namespace SpellDuel
                 case EffectKind.Mark: E($"懲戒 {s.effectDur:0.#} 秒：目標受到的所有傷害 +20%"); break;
                 case EffectKind.Burn: E($"灼燒：每秒 {s.effectDps:0.#} 傷害，持續 {s.effectDur:0.#} 秒"); break;
             }
-            if (s.pierce) E("穿透：一路穿過所有小怪（每隻打一次），最後打到 Boss／對手");
+            if (s.pierce) E($"穿透：一路穿過所有小怪（每隻打一次），最後打到 Boss／對手；穿透第一個敵人後，之後的傷害 −{Battle.PierceFalloff * 100:0}%");
+            if (s.id == "na_arrow" && s.multi > 1) E($"一次射 {s.multi} 支箭：每多一支箭攻擊速度 −{SkillTrees.ExtraArrowSlow * 100:0}%（集氣約 {s.cooldown:0.#} 秒一次）");
             if (s.execute) E("處決：目標 HP 低於 25% 時傷害 ×3");
             if (s.self == SelfKind.Pet) E($"召喚物存在 {s.petLife:0} 秒；每 {s.petInterval:0.#} 秒攻擊 {s.petRange:0.#}m 內最近的敵人（傷害 {s.damage}）" + (s.petHp > 0 ? $"；HP {s.petHp}" : "") + $"；同時最多 {Battle.MaxPets} 隻");
             if (s.id == "meteor") E($"落地留下直徑 {Battle.BurnRadius * 2f:0.#}m 的火海，持續 {Battle.BurnDuration:0} 秒，站在裡面每秒 {Battle.BurnDps:0.#} 傷害");

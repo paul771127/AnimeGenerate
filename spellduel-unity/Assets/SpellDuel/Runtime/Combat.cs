@@ -175,6 +175,7 @@ namespace SpellDuel
         public int id;
         public bool remote;          // 雙人：對手的法術（只顯示，命中由對手判定）
         public HashSet<Fighter> pierced;   // 穿透箭已經打過的小怪
+        public bool pierceCut;             // 穿透箭已經穿過第一個敵人（之後傷害減半）
         // 弧線飛行（風刃）：沿直線前進的「基準點」＋往側邊的偏移 sin(π×進度)
         public Vector3 basePos, curveSide;   // curveSide：側向單位向量 × 振幅（公尺，可為負）
         public float curveAmp, pathLen;
@@ -1320,6 +1321,8 @@ namespace SpellDuel
             }
         }
 
+        /// <summary>穿透箭穿過第一個敵人後，傷害降低的比例</summary>
+        public const float PierceFalloff = 0.5f;
         /// <summary>法術有沒有打到小怪（玩家方的法術才會）；打到回傳 true</summary>
         bool HitMinions(Projectile p)
         {
@@ -1343,7 +1346,12 @@ namespace SpellDuel
                 OnDealt(p.owner, pd, m, p.skill, p);
                 OnProjectileHit?.Invoke(p);
                 if (p.skill.groundZone) AddBurn(p, m.Feet);   // 審判砸中小怪：一樣留下審判之地
-                if (p.skill.pierce) continue;
+                if (p.skill.pierce)
+                {
+                    // 穿透第一個敵人之後：傷害 −50%（只降一次，之後打到的都是一半）
+                    if (!p.pierceCut) { p.pierceCut = true; p.damage = Mathf.Max(1, Mathf.RoundToInt(p.damage * (1f - PierceFalloff))); }
+                    continue;
+                }
                 return true;
             }
             return false;

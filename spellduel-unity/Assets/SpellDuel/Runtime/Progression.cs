@@ -91,6 +91,8 @@ namespace SpellDuel
 
     public static class SkillTrees
     {
+        /// <summary>獵人普攻「分裂箭」：每多一支箭，攻擊速度降低的比例</summary>
+        public const float ExtraArrowSlow = 0.2f;
         /// <summary>「側跨」類特殊能力（舊的側跨無敵秒數）換算成閃避率：每 0.1 → +3%</summary>
         public const float DodgeToEvade = 0.3f;
         /// <summary>樹狀技能樹的三個流派名稱（左＝普攻流派、中、右）</summary>
@@ -551,12 +553,12 @@ namespace SpellDuel
                         ModField.Cooldown => $"{skill} 冷卻 -{v * 100:0}%",
                         ModField.Charge => $"{skill} 蓄力 -{v * 100:0}%",
                         ModField.Cost => $"{skill} MP -{v * 100:0}%",
-                        ModField.Multi => $"{skill} 多 {v:0} 發",
+                        ModField.Multi => n.skill == "na_arrow" ? $"{skill} 多 {v:0} 支箭（每多一支箭，攻擊速度 −{ExtraArrowSlow * 100:0}%：集氣時間變長）" : $"{skill} 多 {v:0} 發",
                         ModField.EffectDur => $"{skill} 效果時間 +{v:0.#} 秒",
                         ModField.EffectDps => $"{skill} 中毒每秒 +{v:0}",
                         ModField.BuffAmount => $"{skill} 效果量 +{v:0}",
                         ModField.BuffReduce => $"{skill} 減傷 +{v * 100:0}%",
-                        ModField.Pierce => $"{skill} 可以穿透敵人（打到小怪後繼續飛）",
+                        ModField.Pierce => $"{skill} 可以穿透敵人（打到小怪後繼續飛；穿透第一個敵人後，之後的傷害 −{Battle.PierceFalloff * 100:0}%）",
                         _ => $"{skill} 持續 +{v:0.#} 秒",
                     };
                 default:
@@ -1129,7 +1131,10 @@ namespace SpellDuel
                     case ModField.Cooldown: s.cooldown *= Mathf.Max(0.3f, 1f - v); break;
                     case ModField.Charge: s.charge *= Mathf.Max(0.3f, 1f - v); break;
                     case ModField.Cost: s.cost = Mathf.RoundToInt(s.cost * Mathf.Max(0.3f, 1f - v)); break;
-                    case ModField.Multi: s.multi = Mathf.Max(1, s.multi) + Mathf.RoundToInt(v); if (s.spreadDeg <= 0f) s.spreadDeg = 8f; break;
+                    case ModField.Multi:
+                        s.multi = Mathf.Max(1, s.multi) + Mathf.RoundToInt(v); if (s.spreadDeg <= 0f) s.spreadDeg = 8f;
+                        if (s.id == "na_arrow") s.cooldown /= Mathf.Pow(1f - SkillTrees.ExtraArrowSlow, Mathf.RoundToInt(v));   // 獵人普攻多一支箭：攻擊速度 −20%（集氣時間 ÷0.8）
+                        break;
                     case ModField.EffectDur: s.effectDur += v; break;
                     case ModField.EffectDps: s.effectDps += v; break;
                     case ModField.BuffAmount: if (s.self == SelfKind.Pet) s.petHp += Mathf.RoundToInt(v); else s.buffAmount += Mathf.RoundToInt(v); break;
