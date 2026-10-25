@@ -24,6 +24,13 @@ namespace SpellDuel
             for(int j=0;j<=rings;j++)for(int i=0;i<sides;i++)
             {float t=(float)j/rings,a=i*Mathf.PI*2/sides;float radius=pointed?(1-t)*.5f:Mathf.Sin(t*Mathf.PI)*.5f;v.Add(new Vector3(Mathf.Cos(a)*radius,pointed?t-.5f:-Mathf.Cos(t*Mathf.PI)*.5f,Mathf.Sin(a)*radius));}
             for(int j=0;j<rings;j++)for(int i=0;i<sides;i++){int a=j*sides+i,b=j*sides+(i+1)%sides,c=a+sides,d=b+sides;tri.Add(a);tri.Add(c);tri.Add(b);tri.Add(b);tri.Add(c);tri.Add(d);}
+            if(pointed)
+            {
+                // Close the broad base of fins, horns and blades; an open base exposes the black outline pass.
+                int start=v.Count;for(int i=0;i<sides;i++){float a=i*Mathf.PI*2/sides;v.Add(new Vector3(Mathf.Cos(a)*.5f,-.5f,Mathf.Sin(a)*.5f));}
+                int center=v.Count;v.Add(new Vector3(0,-.5f,0));
+                for(int i=0;i<sides;i++){tri.Add(center);tri.Add(start+i);tri.Add(start+(i+1)%sides);}
+            }
             var m=new Mesh{name=pointed?"Tapered horn":"Curved six-sided solid"};m.SetVertices(v);m.SetTriangles(tri,0);m.RecalculateNormals();m.RecalculateBounds();return m;
         }
         public static Transform Part(Transform p,string n,Vector3 at,Vector3 size,Color c,bool pointed=false,Vector3 euler=default(Vector3))
