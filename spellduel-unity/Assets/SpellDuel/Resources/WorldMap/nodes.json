@@ -1,0 +1,207 @@
+{
+  "coordinateSystem": {
+    "width": 10800,
+    "height": 1920,
+    "origin": "top-left",
+    "regionWidth": 2160
+  },
+  "availableRegions": [
+    1
+  ],
+  "nodes": {
+    "town:0": {
+      "x": 300,
+      "y": 1090,
+      "label_x": 300,
+      "label_y": 750,
+      "region": 1,
+      "type": "town",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "炎之里"
+    },
+    "1-1": {
+      "x": 650,
+      "y": 1070,
+      "label_x": 650,
+      "label_y": 730,
+      "region": 1,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "灰燼中的歸途"
+    },
+    "1-2": {
+      "x": 975,
+      "y": 1140,
+      "label_x": 975,
+      "label_y": 800,
+      "region": 1,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "赤爐裡的斷鐘"
+    },
+    "1-3": {
+      "x": 1320,
+      "y": 1080,
+      "label_x": 1320,
+      "label_y": 740,
+      "region": 1,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "守鐘人的沉默"
+    },
+    "1-4": {
+      "x": 1680,
+      "y": 1130,
+      "label_x": 1680,
+      "label_y": 710,
+      "region": 1,
+      "type": "boss",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "熔岩巨像・守門人的拳"
+    },
+    "1-5": {
+      "x": 1980,
+      "y": 1080,
+      "label_x": 1980,
+      "label_y": 740,
+      "region": 1,
+      "type": "reserved",
+      "reserved": true,
+      "visibleByDefault": false,
+      "name": "預留第5關"
+    }
+  },
+  "paths": [
+    {
+      "from": "town:0",
+      "to": "1-1",
+      "points": [
+        [
+          300,
+          1090
+        ],
+        [
+          416,
+          1083
+        ],
+        [
+          534,
+          1077
+        ],
+        [
+          650,
+          1070
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "1-1",
+      "to": "1-2",
+      "points": [
+        [
+          650,
+          1070
+        ],
+        [
+          757,
+          1093
+        ],
+        [
+          868,
+          1117
+        ],
+        [
+          975,
+          1140
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "1-2",
+      "to": "1-3",
+      "points": [
+        [
+          975,
+          1140
+        ],
+        [
+          1089,
+          1120
+        ],
+        [
+          1206,
+          1100
+        ],
+        [
+          1320,
+          1080
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "1-3",
+      "to": "1-4",
+      "points": [
+        [
+          1320,
+          1080
+        ],
+        [
+          1439,
+          1096
+        ],
+        [
+          1561,
+          1114
+        ],
+        [
+          1680,
+          1130
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "1-4",
+      "to": "1-5",
+      "points": [
+        [
+          1680,
+          1130
+        ],
+        [
+          1779,
+          1114
+        ],
+        [
+          1881,
+          1096
+        ],
+        [
+          1980,
+          1080
+        ]
+      ],
+      "enabled": false,
+      "layout": "future-five-stage"
+    }
+  ],
+  "integrationNotes": {
+    "currentStagesPerChapter": 4,
+    "reservedNodesHidden": true,
+    "filterPaths": "Use only enabled=true for the present four-stage layout. Other edges are future art positions only.",
+    "towerBranch": "2-4 now; move to 2-5 only after gameplay adds a fifth stage."
+  }
+}

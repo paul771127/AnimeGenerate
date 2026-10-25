@@ -1,0 +1,340 @@
+{
+  "Assets/SpellDuel/Resources/WorldMap/region_1.jpg": {
+    "size": [
+      2160,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1330,
+      1182
+    ],
+    "bytes": 2112860,
+    "sha256": "d2e5e59dda63065da197c0d533b0a33b38d058c67ee106fdbc78969bf835e766"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/region_2.jpg": {
+    "size": [
+      2160,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1330,
+      1182
+    ],
+    "bytes": 2390441,
+    "sha256": "6977a2cb08b3bc470a4680ef668befd79a8e2d23c32a68a64eeb75c5660ceba2"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/region_3.jpg": {
+    "size": [
+      2160,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1330,
+      1182
+    ],
+    "bytes": 2410744,
+    "sha256": "0cf07e9f2bae3ee8db48f06afdf3c7f0f3612f8c7a5813d43a1f73510e0b8304"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/region_4.jpg": {
+    "size": [
+      2160,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1330,
+      1182
+    ],
+    "bytes": 2242394,
+    "sha256": "0c86a5a01424f00f7385a12fe7dbcb472da966fd621b43235ba0ed3e0918f3e3"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/region_5.jpg": {
+    "size": [
+      2160,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1330,
+      1182
+    ],
+    "bytes": 2207675,
+    "sha256": "ffc1fc30ad2126134c688f888d4e84d03cfc2f40a95579c366dfaf120d4fcbf7"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_novice_idle_0.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 52255,
+    "sha256": "eca1715295840b636b9c356270bd348bc16d1eb1a326f88adb62d5c8f00170c5"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_novice_idle_1.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 54023,
+    "sha256": "1b3eca7f02e0bd35d14521460fc477d5dc0f2f7c5b7a5ce8ad242075f2dc0c33"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_novice_side_0.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 54529,
+    "sha256": "41edf8086d29e03654a8b26086374d31be4f321ff0d3df3ffa5a5215ba1dd02d"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_novice_side_1.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 54346,
+    "sha256": "1603c91a8e68ef31fd0518fb501a862916ca977834ebc25f87c0ea6b2fbe96bd"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_novice_side_2.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 53486,
+    "sha256": "6d5957dac953afc58dcfe57f258bfc0f1a6249863bf69564450dfb40997907d4"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/hero_novice_side_3.png": {
+    "size": [
+      192,
+      256
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1086,
+      1448
+    ],
+    "bytes": 54356,
+    "sha256": "b49746760beee057b09b1909516f6da6b992f5b1025dcee07ffb6c02f75ba3d3"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/fog_0.png": {
+    "size": [
+      1024,
+      1024
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bytes": 1198643,
+    "sha256": "54dbfa77f3bc33a8e2584f31139517e2512d631ba46750c8d9dd74882aa86bcf"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/fog_1.png": {
+    "size": [
+      1024,
+      1024
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bytes": 1187890,
+    "sha256": "0930a1bc7abf736d61e8de7e56cbdc892bbbfcc6f91436e10252fff166f63342"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/fog_2.png": {
+    "size": [
+      1024,
+      1024
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bytes": 1287075,
+    "sha256": "6426782dc85d6a024b2909cf52d9063e7abb3792b9f4f954993b7cd75a321b62"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/label_plate.png": {
+    "size": [
+      512,
+      128
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1983,
+      793
+    ],
+    "bytes": 80081,
+    "sha256": "1c38d4618b23e5578b889d59141e9af5c2b291ee29dae0e07bf68b7a9fb9f0db"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/node_boss.png": {
+    "size": [
+      160,
+      160
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bytes": 39688,
+    "sha256": "c7ffa173b3a0b2b5ac128c011feefb425d8bb4744cf38a868887b3d9bb3d5b18"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/node_boss_clear.png": {
+    "size": [
+      160,
+      160
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bytes": 42975,
+    "sha256": "2d7528cb0e7a2773082e5882bbc66d295ceb3175ab62cfb54d0037ae634c86a2"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/node_clear.png": {
+    "size": [
+      128,
+      128
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bytes": 26448,
+    "sha256": "88ad502278eb44fdcf497384ef155fd0f11aa258e5611cd12d1af5cc936fd2b7"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/node_locked.png": {
+    "size": [
+      128,
+      128
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bytes": 22269,
+    "sha256": "8f845a25a6161a033a93f3dfd3c0f5c424ec2825ac3ecad111912580dafa81af"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/node_open.png": {
+    "size": [
+      128,
+      128
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bytes": 18231,
+    "sha256": "2254989d1f82db548ed1c2f821b79fd6f47990af33026bd143a59f45d8421f2d"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/node_tower.png": {
+    "size": [
+      160,
+      160
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bytes": 17110,
+    "sha256": "3f95fc76308025ed4344ebee304ae3519d8b56398279fc41f95847422cc9014d"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/node_town.png": {
+    "size": [
+      160,
+      160
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bytes": 34503,
+    "sha256": "3af81b87d74a5c62edb26194a8569584e05988b56e851dba55edc8190f9a7edc"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/stars_0.png": {
+    "size": [
+      96,
+      32
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "bytes": 6034,
+    "sha256": "d963c5c1966def2a9db53a6daa4faf89fa9dea0d30b79d47ab9b0634c12f6f9b"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/stars_1.png": {
+    "size": [
+      96,
+      32
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      2163,
+      727
+    ],
+    "bytes": 5746,
+    "sha256": "8d1b3a80f30c740d4713d0d47a0f28092cb165692ff3f48dc83ccc83dc46140a"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/stars_2.png": {
+    "size": [
+      96,
+      32
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "bytes": 6109,
+    "sha256": "8e204b52b9d54fcb48237417580ed5aaa47486d919dbf35c555affce15a9b372"
+  },
+  "Assets/SpellDuel/Resources/WorldMap/ui/stars_3.png": {
+    "size": [
+      96,
+      32
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "bytes": 5884,
+    "sha256": "91ab44f5b99522cbcbbee962d261e3a41e74dee7d1798be09a63e83f4f0ffe78"
+  }
+}

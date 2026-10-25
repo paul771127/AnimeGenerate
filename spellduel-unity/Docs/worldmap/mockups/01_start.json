@@ -1,0 +1,97 @@
+{
+  "canvas": [
+    1080,
+    1920
+  ],
+  "origin": "top-left",
+  "viewportOffset": [
+    0,
+    0
+  ],
+  "heroNode": "town:0",
+  "selectedNode": null,
+  "visibleNodes": [
+    "1-1",
+    "town:0"
+  ],
+  "fogBeginsScreenX": 800,
+  "elements": [
+    {
+      "id": "town:0",
+      "mapPosition": [
+        300,
+        1090
+      ],
+      "labelRect": [
+        140,
+        702,
+        320,
+        96
+      ]
+    },
+    {
+      "id": "1-1",
+      "mapPosition": [
+        650,
+        1070
+      ],
+      "labelRect": [
+        490,
+        682,
+        320,
+        96
+      ]
+    },
+    {
+      "id": "title",
+      "rect": [
+        30,
+        35,
+        570,
+        100
+      ],
+      "text": "🗺 大地圖"
+    },
+    {
+      "id": "gold",
+      "rect": [
+        630,
+        35,
+        420,
+        100
+      ],
+      "text": "💰 {gold}"
+    },
+    {
+      "id": "difficulty",
+      "rect": [
+        30,
+        160,
+        1020,
+        85
+      ],
+      "text": "簡單　／　普通　／　困難"
+    },
+    {
+      "id": "character",
+      "rect": [
+        30,
+        1800,
+        490,
+        95
+      ],
+      "text": "📜 角色"
+    },
+    {
+      "id": "return",
+      "rect": [
+        560,
+        1800,
+        490,
+        95
+      ],
+      "text": "🏘 回城鎮"
+    }
+  ],
+  "note": "Art-only example. Keep existing unlock, currency, difficulty and travel behavior; no gameplay implementation."
+}
