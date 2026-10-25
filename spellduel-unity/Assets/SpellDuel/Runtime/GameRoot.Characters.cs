@@ -51,7 +51,17 @@ namespace SpellDuel
             var pv = new Rect(W * 0.2f, y, W * 0.6f, pvH);
             var cardR = new Rect(pad, y, W - pad * 2, pvH);
             UiKit.Card(cardR, 0.55f, p != null ? Skills.Classes[p.cls].color : UiKit.Muted, 0.6f);
-            if (art != null) DrawClassArt(cardR, art, Skills.Classes[p.cls].color);
+            if (art != null)
+            {
+                var artR = DrawClassArt(cardR, art, Skills.Classes[p.cls].color);
+                // 立繪右下角：實際 3D 模型（含目前裝備），高度約立繪的 1/3
+                bool named = !charCreating;
+                float mh = artR.height / 3f, mw = mh * 2f / 3f;   // 預覽貼圖是 2:3
+                float mb = cardR.yMax - (named ? lineH * 1.25f : pad * 0.4f);
+                var mr = new Rect(Mathf.Min(artR.xMax, cardR.xMax - pad * 0.4f) - mw, mb - mh, mw, mh);
+                UiKit.Card(mr, 0.55f, Skills.Classes[p.cls].color, 0.6f);
+                GearPreview.Draw(mr, p);
+            }
             else if (p != null) GearPreview.Draw(pv, p);
             else UiKit.Text(pv, "（空的欄位）\n點下面的「＋ 建立角色」", fs, UiKit.Muted, TextAnchor.MiddleCenter);
             if (p != null && !charCreating)
@@ -132,8 +142,8 @@ namespace SpellDuel
             }
         }
 
-        /// <summary>選角畫面的大頭像：職業色的光暈＋光線，立繪靠下對齊、上半身放大</summary>
-        static void DrawClassArt(Rect r, Texture2D art, Color col)
+        /// <summary>選角畫面的大頭像：職業色的光暈＋光線，立繪靠下對齊、上半身放大。回傳立繪在卡片裡實際看得到的範圍</summary>
+        static Rect DrawClassArt(Rect r, Texture2D art, Color col)
         {
             float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 1.6f);
             var c = new Vector2(r.center.x, r.y + r.height * 0.42f);
@@ -146,6 +156,8 @@ namespace SpellDuel
             GUI.BeginGroup(r);
             GUI.DrawTextureWithTexCoords(new Rect(ar.x - r.x, ar.y - r.y, ar.width, ar.height), art, new Rect(0f, 1f - show, 1f, show), true);
             GUI.EndGroup();
+            float x0 = Mathf.Max(ar.x, r.x), x1 = Mathf.Min(ar.xMax, r.xMax), y0 = Mathf.Max(ar.y, r.y);
+            return new Rect(x0, y0, x1 - x0, r.yMax - y0);
         }
 
         void EnterWithSlot(int s)
