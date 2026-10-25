@@ -70,7 +70,7 @@ namespace SpellDuel
 
         public void SetVariant(int kind)
         {
-            kind = Mathf.Clamp(kind, 0, 18);
+            kind = Mathf.Clamp(kind, 0, 22);
             if (kind == variantId && body != null) return;
             if (body != null)
             {
@@ -80,7 +80,7 @@ namespace SpellDuel
             }
             dressRoot=null;
             Build(kind);FitHumanoidShoulders();
-            BlobShadow.Attach(transform, 0.3f * Variants[kind].size, 0f, true);
+            BlobShadow.Attach(transform, 0.3f * (kind >= 19 ? 1.8f : Variants[kind].size), 0f, true);
         }
 
         /// <summary>攻擊預備姿勢（熔岩越來越亮），duration 秒擺到位後一直維持到 Attack。</summary>
@@ -497,6 +497,7 @@ namespace SpellDuel
         // ================================================================ 建立
         void Build(int k)
         {
+            if (k >= 19) { BuildAreaEnemy(k); return; }
             sea = k >= 13;
             plant = k >= 7 && !sea;
             if (sea) { BuildSea(k); return; }
@@ -664,6 +665,7 @@ namespace SpellDuel
         void Animate(float dt)
         {
             if (body == null) return;
+            if (variantId >= 19) { AnimateAreaEnemy(dt); return; }
             if (sea) { AnimateSea(dt); return; }
             if (plant) { AnimatePlant(dt); return; }
             clock += dt;

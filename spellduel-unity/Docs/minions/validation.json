@@ -1,0 +1,30 @@
+{
+  "method": ".NET Unity contract smoke test, not Unity player compilation",
+  "legacyVariants": 19,
+  "enemies": [
+    {
+      "kind": 19,
+      "triangles": 2202,
+      "renderers": 27,
+      "states": 6
+    },
+    {
+      "kind": 20,
+      "triangles": 2060,
+      "renderers": 24,
+      "states": 6
+    },
+    {
+      "kind": 21,
+      "triangles": 2556,
+      "renderers": 33,
+      "states": 6
+    },
+    {
+      "kind": 22,
+      "triangles": 3516,
+      "renderers": 35,
+      "states": 6
+    }
+  ]
+}

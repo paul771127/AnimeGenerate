@@ -12,7 +12,7 @@ namespace SpellDuel
             if(dressRoot!=null){dressRoot.gameObject.SetActive(false);Destroy(dressRoot.gameObject);dressRoot=null;}
             if(theme!=3&&theme!=4||body==null)return;
             var anchor=head!=null?head:spine!=null?spine:body;
-            dressRoot=Pivot("Regional dress",anchor,DressAt[variantId]);float r=DressRadius[variantId];
+            dressRoot=Pivot("Regional dress",anchor,(variantId >= 19 ? new Vector3(0,-.10f,0) : DressAt[variantId]));float r=(variantId >= 19 ? .24f : DressRadius[variantId]);
             if(theme==3)
             {
                 // A closed collar with one black crystal and a recognisably broken three-link chain.
