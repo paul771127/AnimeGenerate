@@ -1095,6 +1095,7 @@ namespace SpellDuel
                     battle.allies.Add(af);
                 }
                 battle.coopHost = NetIsHost;
+                battle.OnSpecialStrike += (sm, ss, sc, sf, sd) => NetSend?.Invoke(new Msg { t = "spx", id = sm.minionId, k = ss.id, p = sc, d = sf, dmg = sd });   // 稀有怪出招：隊友自己重現、判定
                 battle.remoteEnemy = !NetIsHost;   // 隊友端：Boss 是主機的代理
                 battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.basePos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected, rad = p.curveAmp, s = p.pathLen, e = p.owner == battle.enemy || p.owner.isMinion ? 1 : 0 });
                 battle.OnAllyHit += (who, sk, dmg, at, id) => SendTo(who.pid, new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });   // 主機：只送給被打到的那位
@@ -1560,7 +1561,12 @@ namespace SpellDuel
                 if (jumped) { MinionRig.SpawnFx(oldPos); MinionRig.SpawnFx(newPos); Sfx.Play("dodge", 0.5f, 0.6f); }
                 rig.MoveSpeed = jumped ? 0f : Mathf.Lerp(rig.MoveSpeed, (newPos - oldPos).magnitude / dt, 0.25f);
                 bool winding = m.windupUntil > 0f;
-                if (winding && !minionWinding.Contains(m)) { minionWinding.Add(m); rig.Windup(Battle.MinionWindupOf(m.minionKind)); }   // 預備時間＝這種小怪真正的預備時間（出手時剛好擺到位）
+                if (winding && !minionWinding.Contains(m))
+                {
+                    minionWinding.Add(m); rig.Windup(Battle.MinionWindupOf(m.minionKind));
+                    if (battle.remoteEnemy && Battle.IsSpecial(m.minionKind))   // 合作（隊友）：稀有怪預備大招 → 一樣跳出「跳起來／蹲下」
+                        OnBattleEvent("specialwarn", m.Feet, Skills.All[Battle.SpecialSkillId(m.minionKind)].color, Battle.SpecialNeedsJump(m.minionKind) ? "⬆ 跳起來！（或離遠一點）" : "⬇ 蹲下！（或離遠一點）");
+                }   // 預備時間＝這種小怪真正的預備時間（出手時剛好擺到位）
                 else if (!winding && minionWinding.Contains(m))
                 {
                     minionWinding.Remove(m); rig.Attack();

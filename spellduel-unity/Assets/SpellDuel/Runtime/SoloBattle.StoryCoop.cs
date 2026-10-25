@@ -142,6 +142,9 @@ namespace SpellDuel
                     StartStoryCoop(st);
                     return true;
                 }
+                case "spx":   // 稀有怪出招（主機 → 隊友）：在我這台重現震環／橫掃，只判定我自己
+                    if (!NetIsHost && battle != null && coop) battle.RemoteSpecialStrike(m.id, m.k, m.p, m.d, m.dmg);
+                    return true;
                 case "pst":
                     partyStats[m.pid] = (m.dmg, m.hp);
                     return true;

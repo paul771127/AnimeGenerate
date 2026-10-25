@@ -269,7 +269,7 @@ namespace SpellDuel
             P(new SkillDef { id = "nv_stone", cls = "novice", name = "投石", type = SkillType.Projectile, color = C("#c87950"), cost = 10, damage = 15, charge = 0.6f, cooldown = 1.5f, speed = 11f, radius = 0.14f, rangeMax = 11f, desc = "用力丟出一顆石頭，飛得比普攻遠、比普攻痛" });
             P(new SkillDef { id = "nv_aid", cls = "novice", name = "急救", type = SkillType.Self, self = SelfKind.Heal, color = C("#86efac"), cost = 18, heal = 20, charge = 1f, cooldown = 8f, desc = "包紮傷口，回復 20 HP（隊友也會回）" });
             P(new SkillDef { id = "na_holy", cls = "basic", name = "神聖飛彈", type = SkillType.Projectile, color = C("#fff3b0"), cost = 0, damage = 6, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.14f, rangeMax = 12f, desc = "牧師普攻：畫面上的手掌聖光環亮起（集氣完成）時，比 2 往上一舉，射出一發神聖飛彈（約 2 秒集氣一次，敏捷越高越快）" });
-            P(new SkillDef { id = "na_dagger", cls = "basic", name = "連刺（普攻）", type = SkillType.Projectile, color = C("#e879f9"), cost = 0, damage = 8, charge = 0f, cooldown = 1.6f, radius = 0.5f, rangeMax = 1f, desc = "刺客普攻：畫面上的手掌凝聚紅光（集氣完成）時，手往前突刺，往準星方向刺出一道紅光（1m 內；約 1.6 秒集氣一次，敏捷越高越快）" });
+            P(new SkillDef { id = "na_dagger", cls = "basic", name = "連刺（普攻）", type = SkillType.Projectile, color = C("#e879f9"), cost = 0, damage = 12, charge = 0f, cooldown = 2.1f, radius = 0.5f, rangeMax = 1f, desc = "刺客普攻：畫面上的手掌凝聚紅光（集氣完成）時，手往前突刺，往準星方向刺出一道紅光（1m 內；約 2.1 秒集氣一次，敏捷越高越快）" });
 
             // ---------------------------------------------------------- 進階職業（cls＝基本職業，沿用職業的放招方式；adv＝進階職業）
             // 劍士・聖騎士

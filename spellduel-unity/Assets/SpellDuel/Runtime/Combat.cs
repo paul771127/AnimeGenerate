@@ -1229,8 +1229,37 @@ namespace SpellDuel
         {
             if (!m.Alive) return;
             var c = m.Feet; c.y = 0f;
-            shockwaves.Add(new Shockwave { owner = m, skill = s, center = c, born = now, speed = s.speed, maxR = s.rangeMax, dmg = Mathf.RoundToInt(s.damage * m.dmgMul) });
+            int dmg = Mathf.RoundToInt(s.damage * m.dmgMul);
+            shockwaves.Add(new Shockwave { owner = m, skill = s, center = c, born = now, speed = s.speed, maxR = s.rangeMax, dmg = dmg });
             Emit("quake", c, s.color, null);
+            if (coopHost) OnSpecialStrike?.Invoke(m, s, c, Vector3.zero, dmg);   // 合作：隊友的手機自己重現震環、自己判定（跳）
+        }
+
+        /// <summary>合作（主機）：特殊敵人出招了（小怪、招式、中心、橫掃方向、傷害）→ 送給隊友，隊友自己重現、自己判定</summary>
+        public event Action<Fighter, SkillDef, Vector3, Vector3, int> OnSpecialStrike;
+
+        /// <summary>合作（隊友）：主機的特殊敵人出招 → 在我這台重現（震環／橫掃），只判定我自己（跳、蹲是我這台才知道）</summary>
+        public void RemoteSpecialStrike(int minionId, string skillId, Vector3 center, Vector3 fwd, int dmg)
+        {
+            if (!Skills.All.TryGetValue(skillId ?? "", out var s)) return;
+            var m = minions.Find(x => x.minionId == minionId);
+            if (m == null) return;
+            int kind = m.minionKind;
+            if (s.id == "m_rootquake" || s.id == "m_twinquake")
+            {
+                center.y = 0f;
+                shockwaves.Add(new Shockwave { owner = m, skill = s, center = center, born = now, speed = s.speed, maxR = s.rangeMax, dmg = dmg });
+                Emit("quake", center, s.color, null);
+                return;
+            }
+            float R = SpecialRadius(kind), half = SpecialArcHalf(kind);
+            var v = player;
+            if (v == null || !v.Alive) return;
+            var to = v.Feet - center; to.y = 0f;
+            if (to.magnitude > R) return;
+            if (half < 180f && to.sqrMagnitude > 1e-4f && fwd != Vector3.zero && Vector3.Angle(fwd, to) > half) return;
+            if (v.crouching) { Emit("evade", v.Chest, new Color(0.6f, 0.9f, 1f), "蹲下閃過！"); return; }
+            HitFoe(m, v, s, dmg);
         }
 
         /// <summary>特殊敵人的招式：震環（跳）、胸口高度的橫掃（蹲）</summary>
@@ -1249,9 +1278,10 @@ namespace SpellDuel
             float R = SpecialRadius(kind), half = SpecialArcHalf(kind);
             var fw = m.lockFwd != Vector3.zero ? m.lockFwd : Fighter.Flat(m.forward);
             int dmg = Mathf.RoundToInt(s.damage * m.dmgMul);
+            if (coopHost) OnSpecialStrike?.Invoke(m, s, m.Feet, fw, dmg);   // 合作：隊友自己判定（蹲）
             foreach (var v in FoesOf(m))
             {
-                if (!v.Alive) continue;
+                if (!v.Alive || (coopHost && v.isAlly)) continue;   // 隊友由他自己的手機判定
                 var to = v.Feet - m.Feet; to.y = 0f;
                 if (to.magnitude > R) continue;
                 if (half < 180f && to.sqrMagnitude > 1e-4f && fw != Vector3.zero && Vector3.Angle(fw, to) > half) continue;
@@ -2417,6 +2447,7 @@ namespace SpellDuel
                 foreach (var v in FoesOf(w.owner))
                 {
                     if (w.done.Contains(v)) continue;
+                    if (w.owner.isMinion && v.isAlly && (coopHost || remoteEnemy)) continue;   // 合作：特殊敵人的震環，每個人只判定自己（跳是自己的手機才知道）
                     float d = FlatDistance(w.center, v.Feet);
                     if (d < w.lastR - QuakeBand || d > r + QuakeBand) continue;   // 環還沒到／已經過去
                     w.done.Add(v);
