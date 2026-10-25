@@ -76,6 +76,15 @@ namespace SpellDuel
         /// <summary>選角畫面的職業頭像：Story2D/classes/{進階職業 id 或職業 id}.png（沒有進階的圖就用基本職業的）</summary>
         public static Texture2D ClassPortrait(string cls, string adv)
             => (string.IsNullOrEmpty(adv) ? null : Load("Story2D/classes/" + adv)) ?? Load("Story2D/classes/" + cls);
+        /// <summary>職業頭像的臉部（立繪上方中間）裁成方形，外面一圈顏色；沒有圖回傳 false</summary>
+        public static bool DrawFace(Rect r, Texture2D tex, Color ring)
+        {
+            if (tex == null) return false;
+            UiKit.Disc(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), ring);
+            GUI.DrawTextureWithTexCoords(r, tex, FaceUV, true);
+            return true;
+        }
+        public static readonly Rect FaceUV = new Rect(0.3f, 0.7f, 0.4f, 0.28f);
         public static Texture2D Background(string id) => string.IsNullOrEmpty(id) ? null : Load("Story2D/bg/" + id);
 
         public static readonly string[] ThemeKeys = { "volcano", "forest", "sea", "arena", "canyon" };

@@ -49,7 +49,9 @@ namespace SpellDuel
             // ---- 標題：職業、等級、經驗、點數
             int cur = CharacterProfile.XpForLevel(p.level), next = CharacterProfile.XpForLevel(p.level + 1);
             var adv = p.Adv;
-            UiKit.Title(new Rect(x, y, w, lh), $"{(adv != null ? $"{adv.name}（{cd.name}）" : cd.name)}　Lv {p.level}", adv != null ? adv.color : cd.color, fsL);
+            // 職業的 2D 頭像（Codex）：標題左邊的小臉
+            float faceW = Story2D.DrawFace(new Rect(x, y, lh, lh), Story2D.ClassPortrait(p.cls, p.adv), adv != null ? adv.color : cd.color) ? lh + gap * 0.5f : 0f;
+            UiKit.Title(new Rect(x + faceW, y, w - faceW, lh), $"{(adv != null ? $"{adv.name}（{cd.name}）" : cd.name)}　Lv {p.level}", adv != null ? adv.color : cd.color, fsL);
             UiKit.Text(new Rect(x, y+lh, w, fs*1.2f), $"能力點 {p.statPoints}　技能點 " + string.Join("・", p.Trees.ConvertAll(t => $"{TreeLabel(t)} {p.AvailIn(t)}")), fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
             y += lh + fs*1.3f;
             UiKit.Bar(new Rect(x, y, w, lh * 0.5f), p.level >= CharacterProfile.MaxLevel ? 1f : (p.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f),

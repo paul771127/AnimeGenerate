@@ -98,8 +98,7 @@ namespace SpellDuel
                     if (face != null)
                     {
                         // 頭像的臉部（立繪上方中間）裁成方形，外面一圈職業色
-                        UiKit.Disc(new Rect(fr.x - 2f, fr.y - 2f, fr.width + 4f, fr.height + 4f), col);
-                        GUI.DrawTextureWithTexCoords(fr, face, new Rect(0.3f, 0.7f, 0.4f, 0.28f), true);
+                        Story2D.DrawFace(fr, face, col);
                     }
                     else if (basic != null) UiKit.Badge(new Rect(r.x + pad * 0.5f, r.y + (ch - bs * 0.75f) / 2f, bs * 0.75f, bs * 0.75f), SkillIcons.Get(basic.id), col);
                     string cn = sp.Adv != null ? sp.Adv.name : Skills.Classes[sp.cls].name;

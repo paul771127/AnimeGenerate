@@ -750,7 +750,15 @@ namespace SpellDuel
             UiKit.Card(cr, 0.9f, c.color, 0.9f);
             UiKit.Text(new Rect(cr.x + gap, cr.y + gap * 0.5f, cr.width - gap * 2, fs * 1.6f), $"{c.name}的介紹", Mathf.RoundToInt(fs * 1.15f), c.color, TextAnchor.MiddleLeft, true);
             string text = JobIntro(jobInfo);
-            var view = new Rect(cr.x + gap, cr.y + fs * 2f, cr.width - gap * 2, cr.height - fs * 2.4f);
+            // 職業 2D 立繪（Codex）：放在右邊，介紹文字在左邊
+            var art = Story2D.ClassPortrait(jobInfo, null);
+            float artW = art != null ? cr.width * 0.42f : 0f;
+            if (art != null)
+            {
+                float ah = Mathf.Min(cr.height - fs * 2.2f, artW * art.height / Mathf.Max(1f, art.width));
+                GUI.DrawTexture(new Rect(cr.xMax - artW - gap * 0.5f, cr.y + fs * 2f, artW, ah), art, ScaleMode.ScaleToFit, true);
+            }
+            var view = new Rect(cr.x + gap, cr.y + fs * 2f, cr.width - gap * 2 - artW, cr.height - fs * 2.4f);
             float th = UiKit.TextHeight(text, view.width - fs, fsS) + fs;
             var content = new Rect(0, 0, view.width - fs * 0.8f, Mathf.Max(view.height, th));
             jobInfoScroll = UiKit.DragScroll(view, jobInfoScroll, content);
@@ -814,7 +822,8 @@ namespace SpellDuel
                 float bw = cr.width * 0.28f;
                 var basic = Skills.BasicOf(id);
                 float bs = ch * 0.62f;
-                if (basic != null) UiKit.Badge(new Rect(cr.x + gap * 0.5f, cr.y + (ch - bs) / 2f, bs, bs), SkillIcons.Get(basic.id), c.color);
+                var bsr = new Rect(cr.x + gap * 0.5f, cr.y + (ch - bs) / 2f, bs, bs);
+                if (!Story2D.DrawFace(bsr, Story2D.ClassPortrait(id, null), c.color) && basic != null) UiKit.Badge(bsr, SkillIcons.Get(basic.id), c.color);   // 職業 2D 頭像（Codex）；沒有圖用普攻圖示
                 UiKit.Text(new Rect(cr.x + bs + gap, cr.y, cr.width - bs - bw - gap * 2.5f, ch), $"{c.name}　HP {c.maxHp}・MP {c.maxMp}　ⓘ 點這裡看介紹\n{c.desc}", fsS, ok ? Color.white : new Color(0.8f, 0.8f, 0.85f), TextAnchor.MiddleLeft, false, 0.55f);
                 if (GUI.Button(new Rect(cr.x, cr.y, cr.width - bw - gap, ch), GUIContent.none, GUIStyle.none)) { jobInfo = id; jobInfoScroll = Vector2.zero; Sfx.Play("select", 0.5f); return; }
                 bool armed = jobArm == id && Time.time < jobArmUntil;
@@ -882,7 +891,10 @@ namespace SpellDuel
                               $"🔷 {a.core}\n" +
                               $"⚠ {a.weak}\n" +
                               $"📜 新技能：{string.Join("、", names)}";
-                UiKit.Text(new Rect(cr.x + gap, cr.y + gap * 0.3f, cr.width * 0.7f - gap, cr.height - gap * 0.6f), body, fsS, Color.white, TextAnchor.UpperLeft, false, 0.5f);
+                float fsz = cr.height * 0.42f;   // 進階職業的 2D 頭像（Codex）
+                bool hasFace = Story2D.DrawFace(new Rect(cr.x + gap * 0.6f, cr.y + gap * 0.6f, fsz, fsz), Story2D.ClassPortrait(a.baseCls, a.id), a.color);
+                float tx = hasFace ? fsz + gap * 1.2f : 0f;
+                UiKit.Text(new Rect(cr.x + gap + tx, cr.y + gap * 0.3f, cr.width * 0.7f - gap - tx, cr.height - gap * 0.6f), body, fsS, Color.white, TextAnchor.UpperLeft, false, 0.5f);
                 if (cur == null && prof.CanAdvance)
                 {
                     bool confirming = advPick == a.id && Time.time - advPickAt < 6f;
