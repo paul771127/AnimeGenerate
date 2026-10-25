@@ -120,11 +120,11 @@ namespace SpellDuel
         public static readonly List<SetDef> Sets = new List<SetDef>
         {
             new SetDef { id = "flame", name = "炎龍", theme = 0, desc = "熔岩地帶掉落",
-                two = new[] { A(Affix.Atk, 0.08f) }, four = new[] { A(Affix.Burn, 0.2f), A(Affix.Crit, 0.08f) } },
+                two = new[] { A(Affix.Atk, 0.08f) }, four = new[] { A(Affix.Burn, ItemGen.StatusChanceMax), A(Affix.Crit, 0.08f) } },
             new SetDef { id = "grove", name = "森羅", theme = 1, desc = "森林掉落",
-                two = new[] { A(Affix.Hp, 60f) }, four = new[] { A(Affix.Poison, 0.2f), A(Affix.Lifesteal, 0.05f) } },
+                two = new[] { A(Affix.Hp, 60f) }, four = new[] { A(Affix.Poison, ItemGen.StatusChanceMax), A(Affix.Lifesteal, 0.05f) } },
             new SetDef { id = "tide", name = "海神", theme = 2, desc = "海上礁石掉落",
-                two = new[] { A(Affix.Mp, 40f), A(Affix.Cdr, 0.06f) }, four = new[] { A(Affix.Freeze, 0.2f), A(Affix.Armor, 0.1f) } },
+                two = new[] { A(Affix.Mp, 40f), A(Affix.Cdr, 0.06f) }, four = new[] { A(Affix.Freeze, ItemGen.StatusChanceMax), A(Affix.Armor, 0.1f) } },
             new SetDef { id = "gladiator", name = "鬥魂", theme = 3, desc = "角鬥場掉落",
                 two = new[] { A(Affix.Atk, 0.1f) }, four = new[] { A(Affix.Lifesteal, 0.06f), A(Affix.Crit, 0.1f) } },
             new SetDef { id = "loess", name = "黃沙", theme = 4, desc = "黃土山道掉落",

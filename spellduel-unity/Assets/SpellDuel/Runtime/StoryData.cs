@@ -205,6 +205,7 @@ namespace SpellDuel
                 if (cleared != null) return cleared;
                 cleared = new HashSet<string>();
                 foreach (var s in (Get("sd_story_clear") ?? "").Split(',')) if (s.Length > 0) cleared.Add(s);
+                if (MigrateSix(cleared, "sd_story_clear")) Set("sd_story_clear", string.Join(",", cleared));
                 return cleared;
             }
         }
@@ -219,7 +220,11 @@ namespace SpellDuel
         static HashSet<string> ClearedAt(int d)
         {
             d = Mathf.Clamp(d, 1, 2);
-            if (clearedAt[d] == null) { clearedAt[d] = new HashSet<string>(); foreach (var s in (Get?.Invoke("sd_story_clear_d" + d) ?? "").Split(',')) if (s.Length > 0) clearedAt[d].Add(s); }
+            if (clearedAt[d] == null)
+            {
+                clearedAt[d] = new HashSet<string>(); foreach (var s in (Get?.Invoke("sd_story_clear_d" + d) ?? "").Split(',')) if (s.Length > 0) clearedAt[d].Add(s);
+                if (MigrateSix(clearedAt[d], "sd_story_clear_d" + d)) Set("sd_story_clear_d" + d, string.Join(",", clearedAt[d]));
+            }
             return clearedAt[d];
         }
         public static bool IsClearedAt(string id, int d) => d <= 0 ? IsCleared(id) : ClearedAt(d).Contains(id);
@@ -243,6 +248,28 @@ namespace SpellDuel
         /// <summary>現在能選的最高難度</summary>
         public static int MaxOpenDifficulty => DifficultyOpen(2) ? 2 : DifficultyOpen(1) ? 1 : 0;
 
+        /// <summary>
+        /// 第二～五章從 4 關改成 6 關（舊的 x-4 Boss 關改名 x-6，x-4、x-5 是新關卡）：舊存檔打過 x-4（Boss）＝x-4～x-6 都算打過；
+        /// 看過的故事：舊 x-4 的改成 x-6（新的 x-4 第一次還是會自動播）。每份紀錄只轉一次（key＋"_v6" 記著）；有改動回傳 true
+        /// </summary>
+        public static bool MigrateSix(HashSet<string> set, string key, bool seenKeys = false)
+        {
+            if (Get?.Invoke(key + "_v6") == "1") return false;
+            Set?.Invoke(key + "_v6", "1");
+            bool changed = false;
+            for (int c = 2; c <= 5; c++)
+            {
+                string old = c + "-4";
+                if (seenKeys)
+                {
+                    foreach (var suf in new[] { "", "!" })
+                        if (set.Remove(old + suf)) { set.Add(c + "-6" + suf); changed = true; }
+                }
+                else if (set.Contains(old)) { changed |= set.Add(c + "-5"); changed |= set.Add(c + "-6"); }
+            }
+            return changed;
+        }
+
         // 故事只自動播一次：看過的開場（id）／結尾（id+"!"）記下來，之後要看就按「📖 看故事」
         static HashSet<string> seen;
         static HashSet<string> Seen
@@ -252,6 +279,7 @@ namespace SpellDuel
                 if (seen != null) return seen;
                 seen = new HashSet<string>();
                 foreach (var s in (Get("sd_story_seen") ?? "").Split(',')) if (s.Length > 0) seen.Add(s);
+                if (MigrateSix(seen, "sd_story_seen", true)) Set("sd_story_seen", string.Join(",", seen));
                 return seen;
             }
         }

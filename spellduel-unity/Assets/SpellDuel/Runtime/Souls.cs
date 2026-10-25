@@ -104,6 +104,11 @@ namespace SpellDuel
             M(16, 0.003f, "#f59e0b", F(SoulOp.Gold, 0.08f), F(SoulOp.Atk, -0.04f));           // 寄居蟹：好處＋副作用（攻擊弱一點）
             M(17, 0.005f, "#facc15", F(SoulOp.HitCast, 0, 0.04f, skill: "thunder"));          // 雷電水母：機率發動法師的雷擊
             M(18, 0.004f, "#fde68a", F(SoulOp.Retaliate, 4f, 0.10f, 4f));                     // 河豚：被打時機率讓攻擊者中毒
+            // ---- 第二～五章 x-4、x-5 的稀有怪（2%；一場只會出現幾隻，效果比一般小怪強約一倍）
+            M(19, 0.02f, "#a3e635", F(SoulOp.Hp, 150));                                        // 古根撼地獸：HP 上限
+            M(20, 0.02f, "#38bdf8", F(SoulOp.Cdr, 0.10f));                                      // 潮鞭鰻：技能冷卻
+            M(21, 0.02f, "#f59e0b", F(SoulOp.CritDmg, 0.40f));                                  // 鏈錘鬥奴：爆擊傷害
+            M(22, 0.02f, "#d97706", F(SoulOp.Reduce, 0.10f));                                   // 裂岩甲蜥：受到的傷害 −10%
             // ---- Boss（0.5%）：一樣只有一種效果，但更強、更特殊
             B("boss", "#ff5a1f", F(SoulOp.HitCast, 0, 0.05f, skill: "meteor"));               // 熔岩巨像：機率發動隕石
             B("boss_forest", "#4ade80", F(SoulOp.Regen, 0.001f));                              // 腐化樹王：每 10 秒回 1% HP
@@ -114,8 +119,8 @@ namespace SpellDuel
         }
 
         /// <summary>武器類（傷害）、飾品類（技能、輔助、特殊）；其他都是防具類（防禦）</summary>
-        static readonly string[] WeaponSouls = { "soul_m0", "soul_m3", "soul_m5", "soul_m7", "soul_m9", "soul_m10", "soul_boss_canyon" };
-        static readonly string[] TrinketSouls = { "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_boss", "soul_boss_forest" };
+        static readonly string[] WeaponSouls = { "soul_m0", "soul_m3", "soul_m5", "soul_m7", "soul_m9", "soul_m10", "soul_m21", "soul_boss_canyon" };
+        static readonly string[] TrinketSouls = { "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_m20", "soul_boss", "soul_boss_forest" };
         static void AssignParts()
         {
             foreach (var d in All)

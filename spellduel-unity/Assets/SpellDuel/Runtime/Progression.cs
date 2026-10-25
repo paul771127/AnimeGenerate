@@ -683,7 +683,8 @@ namespace SpellDuel
         /// </summary>
         public Affix MainAffix => mods.Count > 0 ? mods[0].Key : Affix.Hp;
         /// <summary>第 i 個屬性現在的數值（主屬性算上強化）</summary>
-        public float ModValue(int i) => i < 0 || i >= mods.Count ? 0f : mods[i].Value * (i == 0 ? PlusMul : 1f);
+        public float ModValue(int i) => i < 0 || i >= mods.Count ? 0f : IsStatusAffix(mods[i].Key) ? Mathf.Min(ItemGen.StatusChanceMax, mods[i].Value) : mods[i].Value * (i == 0 ? PlusMul : 1f);   // 附加狀態機率：最多 5%（舊存檔的也一樣）、不吃強化
+        public static bool IsStatusAffix(Affix a) => a == Affix.Burn || a == Affix.Poison || a == Affix.Freeze;
         public float Sum(Affix a) { float s = 0f; for (int i = 0; i < mods.Count; i++) if (mods[i].Key == a) s += ModValue(i); return s; }
         public float PlusMul => 1f + Economy.EnhancePerLevel * plus;
         /// <summary>屬性一覽（主屬性標「主」；強化只加主屬性）</summary>
@@ -853,6 +854,9 @@ namespace SpellDuel
             return list[rng.Next(list.Count)];
         }
 
+        /// <summary>裝備的附加狀態（灼燒、中毒、冰凍）機率：每一條 2～5%（使用者要求，不要更高）</summary>
+        public const float StatusChanceMin = 0.02f, StatusChanceMax = 0.05f;
+
         static float AffixValue(Affix a, float power, System.Random rng)
         {
             float k = 0.8f + 0.4f * (float)rng.NextDouble();
@@ -863,7 +867,7 @@ namespace SpellDuel
                 Affix.Crit => Mathf.Min(0.15f, (0.01f + 0.003f * power) * k),
                 Affix.Cdr => Mathf.Min(0.12f, (0.01f + 0.0025f * power) * k),
                 Affix.Lifesteal => Mathf.Min(0.08f, (0.01f + 0.0015f * power) * k),
-                Affix.Burn or Affix.Poison or Affix.Freeze => Mathf.Min(0.15f, (0.02f + 0.003f * power) * k),
+                Affix.Burn or Affix.Poison or Affix.Freeze => Mathf.Clamp(Mathf.Round((StatusChanceMin + (StatusChanceMax - StatusChanceMin) * Mathf.Clamp01(power / 50f)) * k * 100f) / 100f, StatusChanceMin, StatusChanceMax),   // 附加狀態：每一條 2～5%
                 _ => Mathf.Max(1f, Mathf.Round((1f + 0.3f * power) * k)),
             };
         }

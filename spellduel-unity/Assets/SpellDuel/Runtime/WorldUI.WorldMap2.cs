@@ -88,7 +88,7 @@ namespace SpellDuel
         {
             if (n.reserved || n.region > wmMaxRegion) return false;
             if (n.id.StartsWith("town:")) { int.TryParse(n.id.Substring(5), out var t); return TownOpen(t); }
-            if (n.type == "tower" || n.id == "tower") return Story.IsCleared("2-4");
+            if (n.type == "tower" || n.id == "tower") return Story.IsCleared("2-5");   // 無盡塔：2-5 下方的岔路
             var st = Story.Find(n.id);
             return st != null && (Story.IsUnlocked(st) || Story.IsCleared(st.id));
         }

@@ -9,7 +9,7 @@ namespace SpellDuel
     /// <summary>
     /// 劇情影片（MiniMax 生成，960×544、H.264）：不打包進 App，第一次要播時才從 GitHub 下載，存在手機裡之後就不用再下載。
     ///   ・序章：1-1 開場前播整支。
-    ///   ・第一～三章的 Boss 關（1-4、2-4、3-4）：開場前播前 4 個鏡頭，通關後播剩下的鏡頭。
+    ///   ・第一～三章的 Boss 關（1-4、2-6、3-6）：開場前播前 4 個鏡頭，通關後播剩下的鏡頭。
     ///   ・「📖 看故事」重看時也會播。
     /// 遊戲一開始（GameRoot.Start）就把四支影片全部下載好（約 31 MB，只有第一次）：畫面顯示「載入中」，不能取消；
     /// 沒有網路下載失敗時才會出現「重試」與「先進遊戲」（之後要播時會再下載）。
@@ -33,8 +33,8 @@ namespace SpellDuel
             {
                 case "1-1": return before ? new Clip { file = "v0_prologue_v3.mp4", title = "序章：晨鐘啞了", from = 0, to = 8, shots = 8, mb = 8 } : null;
                 case "1-4": return Split("v1_golem_v3.mp4", "熔岩巨像・守門人的拳", 4, 6, 7, before);
-                case "2-4": return Split("v2_treeking_v3.mp4", "腐化樹王・不肯入睡的心", 4, 5, 6, before);
-                case "3-4": return Split("v3_kraken_v3.mp4", "深海巨妖・黎明的三重奏", 4, 8, 10, before);
+                case "2-6": return Split("v2_treeking_v3.mp4", "腐化樹王・不肯入睡的心", 4, 5, 6, before);
+                case "3-6": return Split("v3_kraken_v3.mp4", "深海巨妖・黎明的三重奏", 4, 8, 10, before);
             }
             return null;
         }

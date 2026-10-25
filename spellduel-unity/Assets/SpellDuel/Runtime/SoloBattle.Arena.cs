@@ -95,6 +95,16 @@ namespace SpellDuel
             var live = new HashSet<Battle.Shockwave>(battle.shockwaves);
             foreach (var w in battle.shockwaves)
             {
+                if (w.owner != null && w.owner.isMinion)
+                {
+                    // 特殊敵人的震環：Codex 的地波特效（線性擴散，到範圍邊緣剛好結束）；出現時播一次
+                    if (!quakeGo.ContainsKey(w))
+                    {
+                        quakeGo[w] = null;
+                        MinionRig.GroundRingFx(WorldFrame.FromWorld(new Vector3(w.center.x, 0.03f, w.center.z)), w.maxR, w.owner.minionKind == 22 ? new Color(1f, 0.74f, 0.3f) : new Color(0.65f, 1f, 0.3f), w.maxR / Mathf.Max(0.1f, w.speed));
+                    }
+                    continue;
+                }
                 if (!quakeGo.TryGetValue(w, out var lr) || !lr)
                 {
                     var go = new GameObject("Quake Ring");

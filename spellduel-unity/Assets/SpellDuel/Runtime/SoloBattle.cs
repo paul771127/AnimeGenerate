@@ -689,16 +689,24 @@ namespace SpellDuel
         readonly Dictionary<Fighter, float> minionLastHp = new Dictionary<Fighter, float>();
         readonly HashSet<Fighter> minionWinding = new HashSet<Fighter>();
         readonly Dictionary<Fighter, GameObject> minionWarn = new Dictionary<Fighter, GameObject>();   // 近身重擊預備的紅色扇形
-        static Mesh fanMesh;
-        /// <summary>地上的扇形（半徑 1、朝 +Z、左右各 Battle.MeleeFanHalf 度；兩面都看得到）</summary>
-        static Mesh FanMesh()
+        /// <summary>第二～五章的 x-4、x-5（不是 Boss 關）：這一章的特殊敵人；其他關卡 −1</summary>
+        public static int SpecialKindOfStage(StoryStage st)
         {
-            if (fanMesh != null) return fanMesh;
-            const int seg = 24;
+            if (st == null || st.HasBoss) return -1;
+            var a = (st.id ?? "").Split('-');
+            if (a.Length != 2 || !int.TryParse(a[0], out var ch) || !int.TryParse(a[1], out var no)) return -1;
+            return no == 4 || no == 5 ? Battle.SpecialKindOfChapter(ch) : -1;
+        }
+        static readonly Dictionary<float, Mesh> fanMeshes = new Dictionary<float, Mesh>();
+        /// <summary>地上的扇形（半徑 1、朝 +Z、左右各 half 度（預設 Battle.MeleeFanHalf；180＝整圈）；兩面都看得到）</summary>
+        static Mesh FanMesh(float half = Battle.MeleeFanHalf)
+        {
+            if (fanMeshes.TryGetValue(half, out var fanMesh) && fanMesh != null) return fanMesh;
+            int seg = Mathf.Max(24, Mathf.CeilToInt(half / 4f));
             var v = new Vector3[seg + 2]; v[0] = Vector3.zero;
             for (int i = 0; i <= seg; i++)
             {
-                float a = Mathf.Deg2Rad * Mathf.Lerp(-Battle.MeleeFanHalf, Battle.MeleeFanHalf, i / (float)seg);
+                float a = Mathf.Deg2Rad * Mathf.Lerp(-half, half, i / (float)seg);
                 v[i + 1] = new Vector3(Mathf.Sin(a), 0f, Mathf.Cos(a));
             }
             var t = new int[seg * 6];
@@ -709,6 +717,7 @@ namespace SpellDuel
             }
             fanMesh = new Mesh { name = "MinionFan", vertices = v, triangles = t };
             fanMesh.RecalculateNormals(); fanMesh.RecalculateBounds();
+            fanMeshes[half] = fanMesh;
             return fanMesh;
         }
         readonly Dictionary<Fighter, GameObject> aimLines = new Dictionary<Fighter, GameObject>();   // （已不用：狙擊手改成射出後才畫紅線）
@@ -1106,6 +1115,7 @@ namespace SpellDuel
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         ApplyNoviceRoute(pendingStage);   // 1-1～1-3：4m×4m 小場地；1-1、1-2 只有近戰小怪（SoloBattle.NoviceRoute.cs）
                         SetupNoviceBattle(pendingStage);  // 新手關：小鬼／衝鋒獸的血量、1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）
+                        battle.specialKind = SpecialKindOfStage(pendingStage);   // 第二～五章 x-4、x-5：特殊敵人（場上最多 1 隻）
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
                     }
                     else if (dungeon != null)
@@ -1516,11 +1526,18 @@ namespace SpellDuel
                 rig.MoveSpeed = jumped ? 0f : Mathf.Lerp(rig.MoveSpeed, (newPos - oldPos).magnitude / dt, 0.25f);
                 bool winding = m.windupUntil > 0f;
                 if (winding && !minionWinding.Contains(m)) { minionWinding.Add(m); rig.Windup(Battle.MinionWindupOf(m.minionKind)); }   // 預備時間＝這種小怪真正的預備時間（出手時剛好擺到位）
-                else if (!winding && minionWinding.Contains(m)) { minionWinding.Remove(m); rig.Attack(); }
+                else if (!winding && minionWinding.Contains(m))
+                {
+                    minionWinding.Remove(m); rig.Attack();
+                    // 特殊敵人的橫掃：胸口高度的弧光（Codex 的特效；震環在 UpdateQuakeVisuals 接）
+                    if (m.Alive && Battle.IsSpecial(m.minionKind) && !Battle.SpecialNeedsJump(m.minionKind))
+                        MinionRig.SweepArcFx(WorldFrame.FromWorld(new Vector3(m.Feet.x, 0f, m.Feet.z)), WorldFrame.DirFromWorld(m.lockFwd != Vector3.zero ? m.lockFwd : m.forward),
+                            Battle.SpecialRadius(m.minionKind), Battle.SpecialArcHalf(m.minionKind) * 2f, 1.2f, m.minionKind == 20 ? new Color(0.35f, 0.9f, 1f, 0.7f) : new Color(1f, 0.68f, 0.28f, 0.7f));
+                }
                 // 近身重擊預備中：地上的紅色受擊範圍（越接近出手越亮；走出紅圈就打不到）
                 if (winding && Battle.HasMeleeWarnDisc(m.minionKind) && m.Alive)
                 {
-                    if (!minionWarn.TryGetValue(m, out var wg) || !wg) { wg = Prim(PrimitiveType.Quad, new Color(1f, 0.1f, 0.05f, 0.3f), true); wg.GetComponent<MeshFilter>().sharedMesh = FanMesh(); minionWarn[m] = wg; }   // 前方扇形
+                    if (!minionWarn.TryGetValue(m, out var wg) || !wg) { wg = Prim(PrimitiveType.Quad, new Color(1f, 0.1f, 0.05f, 0.3f), true); wg.GetComponent<MeshFilter>().sharedMesh = FanMesh(Battle.WarnArcHalf(m.minionKind)); minionWarn[m] = wg; }   // 前方扇形（特殊敵人：半圓／整圈）
                     float rr = Battle.MeleeStrikeRadius(m.minionKind), wu = Battle.MinionWindupOf(m.minionKind);
                     float pr = Mathf.Clamp01(1f - (m.windupUntil - battle.now) / Mathf.Max(0.1f, wu)), pk = 0.5f + 0.5f * Mathf.Sin(Time.time * (6f + 12f * pr));
                     wg.SetActive(true);
@@ -2676,6 +2693,12 @@ namespace SpellDuel
                 case "miniondie":
                     floaters.Add(new Floater { posMap = at + Vector3.up * 0.9f, text = "擊倒小怪", color = new Color(1f, 0.7f, 0.3f), born = Time.time });
                     Sfx.Play("poof", 0.8f); Sfx.Play("enemy_down", 0.45f, 1.5f);
+                    break;
+                case "specialwarn":
+                    // 特殊敵人預備大招：大字提示要跳還是要蹲
+                    Say(text, 1.6f);
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 2.2f, text = text, color = c, born = Time.time });
+                    Sfx.Play("warn", 0.8f, 0.9f); Haptics.Play(Haptics.Kind.Medium);
                     break;
                 case "minionwindup":
                     if (Battle.FlatDistance(at, Me.Feet) < 2f) { Sfx.Play("warn", 0.4f, 1.3f); Haptics.Play(Haptics.Kind.Light); }
