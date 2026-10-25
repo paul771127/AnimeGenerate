@@ -15,7 +15,20 @@ namespace SpellDuel.EditorTools
         public static int Triangles(GameObject go){int n=0;foreach(var f in go.GetComponentsInChildren<MeshFilter>())if(f.sharedMesh)n+=f.sharedMesh.triangles.Length/3;return n;}
         static Battle Make(bool remote=false)
         {var p=new Fighter("audit",Skills.Classes["mage"],new string[0],true);p.head=new Vector3(0,1.7f,1.2f);p.maxHp=10000;p.hp=10000;var e=new Fighter("boss",Skills.Classes["boss"],new string[0],false);return new Battle(p,e){remoteEnemy=remote};}
-        [Serializable] public class Row{public int kind,triangles,baseline;public bool soul,hostWarning,remoteWarning,remoteStrike;}
+        public static bool VertexColorPath(GameObject go)
+        {
+            bool found=false;
+            foreach(var f in go.GetComponentsInChildren<MeshFilter>())
+            {
+                if(!f.sharedMesh||!f.sharedMesh.name.StartsWith("elite/")&&!f.sharedMesh.name.StartsWith("world/"))continue;
+                var m=f.GetComponent<Renderer>().sharedMaterial;
+                if(!m.IsKeywordEnabled("SD_HUMAN")||m.GetFloat("_HumanHair")<.5f||m.GetFloat("_HumanFace")>.5f)return false;
+                var colors=f.sharedMesh.colors;if(colors.Length!=f.sharedMesh.vertexCount)return false;
+                foreach(var c in colors)if(Mathf.Abs(c.r-c.b)>.08f||Mathf.Abs(c.g-c.b)>.08f)found=true;
+            }
+            return found;
+        }
+        [Serializable] public class Row{public int kind,triangles,baseline;public bool soul,hostWarning,remoteWarning,remoteStrike,vertexColors;}
         [Serializable] public class Report{public string unity;public List<Row> classes=new List<Row>();public int testedSkills;}
         [MenuItem("SpellDuel/Audit/Elite encounters")]
         public static void Run()
@@ -28,6 +41,7 @@ namespace SpellDuel.EditorTools
                 var rig=MinionRig.Create();rig.SetVariant(d.kind);int tris=Triangles(rig.gameObject);
                 Require(tris<=baseline*2,d.name+" exceeds double baseline triangles: "+tris+" / "+baseline);
                 var row=new Row{kind=d.kind,triangles=tris,baseline=baseline,soul=Souls.OfMinion(d.kind)!=null&&Mathf.Abs(Souls.OfMinion(d.kind).chance-.01f)<.00001f};Require(row.soul,d.name+" soul missing");
+                row.vertexColors=VertexColorPath(rig.gameObject);Require(row.vertexColors,d.name+" vertex color material disabled");
                 for(int slot=0;slot<2;slot++)
                 {
                     var b=Make();var m=b.SpawnMinion(Vector3.zero,1,d.kind);var skill=Skills.All[EliteCatalog.SkillId(d.kind,slot)];var state=b.EliteView(m);

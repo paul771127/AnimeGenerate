@@ -11,7 +11,13 @@ namespace SpellDuel
         public static Transform Pivot(Transform p,string n,Vector3 at)
         {var t=new GameObject(n).transform;t.SetParent(p,false);t.localPosition=at;return t;}
         static Material Mat(Color c)
-        {if(materials.TryGetValue(c,out var m)&&m)return m;ToonStyle.Apply();m=new Material(Shader.Find("SpellDuel/Toon")){color=c};materials[c]=m;return m;}
+        {
+            if(materials.TryGetValue(c,out var m)&&m)return m;ToonStyle.Apply();m=new Material(Shader.Find("SpellDuel/Toon")){color=c};
+            // Reuse the existing vertex-color garment path, with facial lighting disabled.
+            // The unbatched temporary pieces only supply colors to Bake; the white batch material renders them.
+            if(c==Color.white){m.EnableKeyword("SD_HUMAN");m.SetFloat("_HumanHair",1);m.SetFloat("_HumanFace",0);m.SetFloat("_HumanOutline",1);}
+            materials[c]=m;return m;
+        }
         static Mesh Solid(bool pointed)
         {
             var v=new List<Vector3>();var tri=new List<int>();const int sides=6;int rings=pointed?1:3;

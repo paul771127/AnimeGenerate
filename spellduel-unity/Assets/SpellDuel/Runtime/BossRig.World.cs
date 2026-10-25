@@ -54,7 +54,7 @@ namespace SpellDuel
             {
                 Height=6.8f;body.localPosition=new Vector3(0,2.15f,0);
                 P(body,"Ancient dragon trunk",new Vector3(0,.3f,-.1f),new Vector3(3.1f,2.8f,4.4f),armor);
-                for(int i=0;i<6;i++){var leg=legs[i]=EnemyArt.Pivot(body,"Root leg "+i,new Vector3((i%2==0?-1:1)*1.3f,-.1f,(i/2-1)*1.25f));P(leg,"Curving root limb",new Vector3(0,-.75f,.1f),new Vector3(.6f,1.8f,.72f),armor);P(leg,"Root talon",new Vector3(0,-1.65f,.28f),new Vector3(.85f,.45f,1.1f),gold);}
+                for(int i=0;i<6;i++){var leg=legs[i]=EnemyArt.Pivot(body,"Root leg "+i,new Vector3((i%2==0?-1:1)*1.3f,-.1f,(i/2-1)*1.25f));P(leg,"Curving root limb",new Vector3(0,-.75f,.1f),new Vector3(.6f,1.8f,.72f),armor);P(leg,"Root talon",new Vector3(0,-1.825f,.28f),new Vector3(.85f,.45f,1.1f),gold);}
                 head=EnemyArt.Pivot(body,"Lowered readable dragon head",new Vector3(0,.3f,2.4f));P(head,"Long moss skull",Vector3.zero,new Vector3(1.5f,1.15f,1.9f),Tint);
                 for(int s=-1;s<=1;s+=2){P(head,"Amber eye",new Vector3(s*.55f,.18f,.7f),new Vector3(.18f,.18f,.2f),gold);P(head,"Branch antler",new Vector3(s*.65f,.95f,-.3f),new Vector3(.34f,2,.34f),armor,true,new Vector3(0,0,-s*30));}
                 heart=EnemyArt.Pivot(body,"Amber heart",new Vector3(0,.6f,1.95f));P(heart,"Named amber core",Vector3.zero,new Vector3(.7f,.9f,.32f),gold);
@@ -79,11 +79,12 @@ namespace SpellDuel
             }
             for(int i=0;i<3;i++)
             {
-                var cover=EnemyArt.Pivot(i==0?head:body,"Breakable armor "+i,new Vector3((i-1)*.8f,i==0?.65f:.6f,i==0?0:1));
+                float surface=type==0?1.05f:type==1?2.15f:2.95f;
+                var cover=EnemyArt.Pivot(i==0?head:body,"Breakable armor "+i,new Vector3((i-1)*.8f,i==0?.65f:.6f,i==0?0:surface));
                 P(cover,"Intact weak point cover",Vector3.zero,new Vector3(.6f,.75f,.3f),armor);covers.Add(cover);
                 var broken=EnemyArt.Pivot(cover.parent,"Broken core "+i,cover.localPosition);P(broken,"Exposed named core",Vector3.zero,new Vector3(.35f,.48f,.22f),gold);
                 for(int j=-1;j<=1;j++)P(broken,"Fractured armor rim",new Vector3(j*.23f,-.2f,0),new Vector3(.18f,.32f,.18f),armor,true,new Vector3(0,0,j*35));breaks.Add(broken);
-                AddPhase(body,phase2,"Opened glowing rib "+i,new Vector3((i-1)*.55f,1,1),new Vector3(.15f,1.1f,.13f),Tint);
+                AddPhase(body,phase2,"Opened glowing rib "+i,new Vector3((i-1)*.55f,1,surface),new Vector3(.15f,1.1f,.13f),Tint);
             }
             EnemyArt.Bake(body,"world/"+Id);renderers=GetComponentsInChildren<Renderer>(true);flash=new MaterialPropertyBlock();SetPhase(1);SetPartBroken(0,false);SetPartBroken(1,false);SetPartBroken(2,false);Preview(0);
         }

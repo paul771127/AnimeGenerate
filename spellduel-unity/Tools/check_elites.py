@@ -10,7 +10,7 @@ def main():
     assert {r['kind'] for r in audit['classes']}==set(range(23,48))
     for r in audit['classes']:
         assert r['triangles']<=r['baseline']*2
-        assert all(r[k] for k in ('soul','hostWarning','remoteWarning','remoteStrike'))
+        assert all(r[k] for k in ('soul','hostWarning','remoteWarning','remoteStrike','vertexColors'))
         for view in ('front','45'):
             assert Image.open(DOC/f"elite_{r['kind']}_{view}.png").size==(640,640)
         for slot in range(2):
@@ -21,7 +21,7 @@ def main():
     world=json.loads((DOC/'world_boss_audit.json').read_text(encoding='utf-8-sig'))
     assert {b['id'] for b in world['bosses']}=={'wb_furnace','wb_canopy','wb_leviathan'}
     for b in world['bosses']:
-        assert b['phases']==3 and b['skills']==6 and b['brokenAppearance'] and b['triangles']<=20000
+        assert b['phases']==3 and b['skills']==6 and b['brokenAppearance'] and b['vertexColors'] and b['triangles']<=20000
         key=b['id']
         for p in range(1,4):
             for view in ('front','45'):Image.open(DOC/f'{key}_phase{p}_{view}.png').verify()

@@ -24,6 +24,8 @@ namespace SpellDuel.EditorTools
                         var fx=EliteEnemyFx.Create(null,move);fx.Place(new Vector3(0,0,move==EliteMove.Burst?1.4f:0),Vector3.forward,d.color,.85f);
                         Shot(cam,rig.gameObject,prefix+"_skill"+slot+"_warn",new Vector3(4,4,5),new Vector3(0,.5f,.6f),800,640);
                         rig.Attack();step.Invoke(rig,new object[]{.17f});fx.Place(Vector3.zero,Vector3.forward,d.color,.2f,true);
+                        if(move==EliteMove.Sweep)fx.transform.position+=Vector3.up*1.2f;
+                        if(move==EliteMove.Quake)fx.transform.localScale=Vector3.one*.4f;
                         Shot(cam,rig.gameObject,prefix+"_skill"+slot+"_impact",new Vector3(4,3.6f,5),new Vector3(0,.6f,.6f),800,640);Object.DestroyImmediate(fx.gameObject);
                     }
                     Object.DestroyImmediate(rig.gameObject);

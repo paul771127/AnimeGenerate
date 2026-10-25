@@ -7,7 +7,7 @@ namespace SpellDuel.EditorTools
 {
     public static partial class Snapshot
     {
-        [Serializable] class WorldRow {public string id;public int triangles,renderers,phases,skills;public bool brokenAppearance;}
+        [Serializable] class WorldRow {public string id;public int triangles,renderers,phases,skills;public bool brokenAppearance,vertexColors;}
         [Serializable] class WorldReport {public string unity;public List<WorldRow> bosses=new List<WorldRow>();}
         static void WorldBossShots(Camera cam)
         {
@@ -16,6 +16,7 @@ namespace SpellDuel.EditorTools
             {
                 string id=WorldBossArt.Ids[index];var art=BossRig.CreateWorld(id);var row=new WorldRow{id=id,phases=3,skills=6};
                 row.triangles=EliteAudit.Triangles(art.gameObject);row.renderers=art.GetComponentsInChildren<Renderer>(true).Length;
+                row.vertexColors=EliteAudit.VertexColorPath(art.gameObject);if(!row.vertexColors)throw new Exception(id+" vertex colors disabled");
                 if(row.triangles>20000)throw new Exception(id+" world boss geometry budget exceeded");
                 for(int phase=1;phase<=3;phase++)
                 {
@@ -34,6 +35,8 @@ namespace SpellDuel.EditorTools
                     if(fx.GetComponentsInChildren<LineRenderer>().Length==0)throw new Exception(id+" telegraph missing: "+move);
                     Shot(cam,art.gameObject,id+"_"+move+"_warn",new Vector3(10,8,13),new Vector3(0,2.2f,0),900,800);
                     art.Attack();art.Preview(.25f);
+                    if(move=="sweep")fx.transform.position+=Vector3.up*1.2f;
+                    if(move=="quake")fx.transform.localScale=Vector3.one*.5f;
                     foreach(var line in fx.GetComponentsInChildren<LineRenderer>()){line.startColor=line.endColor=art.Tint;line.widthMultiplier=2;}
                     Shot(cam,art.gameObject,id+"_"+move+"_impact",new Vector3(10,8,13),new Vector3(0,2.2f,0),900,800);
                     UnityEngine.Object.DestroyImmediate(fx);
