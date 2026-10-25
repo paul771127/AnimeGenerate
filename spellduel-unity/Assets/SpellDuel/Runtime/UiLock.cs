@@ -24,6 +24,23 @@ namespace SpellDuel
         /// <summary>指引每一幀都要回報（SoloBattle 沒在畫＝回到首頁等：鎖自動解除）</summary>
         public static int Beat = -99;
         static readonly List<Rect> rects = new List<Rect>();
+        /// <summary>說明框收起來了（點說明框收起、點「💬 說明」再打開；換下一步自動打開）</summary>
+        public static bool CardHidden;
+        static string cardFor;
+        // 拖曳畫面：鎖定時不在目標上的手指會被吃掉，拖曳的位移轉交給手指按下去那個位置的捲動區（UiKit.DragScroll）
+        static bool panDown, panMoved, downOnCard, downOnChip;
+        static Vector2 panLast, panAccum;
+        public static Vector2 PanStart;
+        static float panTotal, lastPanAt = -99f;
+        /// <summary>剛剛手動拖曳過畫面（幾秒內不要自動捲回要按的地方）</summary>
+        public static bool RecentPan => Time.unscaledTime - lastPanAt < 3f;
+        /// <summary>捲動區（螢幕座標 view）拿走累積的拖曳位移：手指是在這一塊按下去的才給</summary>
+        public static bool TakePan(Rect screenView, out Vector2 d)
+        {
+            d = Vector2.zero;
+            if (panAccum == Vector2.zero || !screenView.Contains(PanStart)) return false;
+            d = panAccum; panAccum = Vector2.zero; return true;
+        }
 
         public static void Ensure()
         {
@@ -62,6 +79,8 @@ namespace SpellDuel
                 UiKit.LockRectsBuilding.Clear();
             }
             UiKit.LockBypass = !Block;   // 找不到按鈕也不放行：完全不准按其他地方
+            string key = Title + "\n" + Text + "\n" + UiKit.LockKey;
+            if (key != cardFor) { cardFor = key; CardHidden = false; }
 
             float W = Screen.width, H = Screen.height;
             int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.85f);
@@ -74,14 +93,44 @@ namespace SpellDuel
             bool cardTop = !haveTarget || tgt.center.y > H * 0.5f;
             var card = new Rect(pad, cardTop ? topY + fs * 3.2f : botY - ch - fs * 1.2f, cw, ch);
             if (haveTarget && card.Overlaps(tgt)) card.y = cardTop ? Mathf.Max(topY + 4f, tgt.y - ch - fs) : Mathf.Min(botY - ch - 4f, tgt.yMax + fs);
-            Rect nb = NextButton ? new Rect(card.xMax - fs * 7.5f, card.yMax - fs * 2.3f, fs * 6.9f, fs * 1.9f) : default;
+            // 說明框收起來時：右上角一個小「💬 說明」（說明型的步驟旁邊再一個小「下一步 ▶」）
+            var chip = new Rect(W - pad - fs * 5.2f, topY + fs * 3.2f, fs * 5.2f, fs * 1.7f);
+            if (haveTarget && chip.Overlaps(new Rect(tgt.x - 6f, tgt.y - 6f, tgt.width + 12f, tgt.height + 12f))) chip.y = botY - fs * 4.2f;
+            Rect nb = !NextButton ? default : CardHidden ? new Rect(chip.x - fs * 6.4f, chip.y, fs * 6f, chip.height) : new Rect(card.xMax - fs * 7.5f, card.yMax - fs * 2.3f, fs * 6.9f, fs * 1.9f);
 
-            // 擋點擊：不在目標按鈕（或「下一步」）上的點擊全部吃掉
+            // 擋點擊：不在目標按鈕（或「下一步」）上的點擊全部吃掉；拖曳轉給底下的捲動區（可以把畫面外的目標拉進來）
             if (Blocking && IsPointer(e.type))
             {
-                bool ok = NextButton && nb.Contains(e.mousePosition);
-                if (!UiKit.ShowOnly) foreach (var r in rects) if (r.Contains(e.mousePosition)) { ok = true; break; }   // 介紹模式：圈起來的只能看，只能按「下一步」
-                if (!ok) { e.Use(); return; }
+                var mp = e.mousePosition;
+                bool ok = NextButton && nb.Contains(mp);
+                if (!UiKit.ShowOnly) foreach (var r in rects) if (r.Contains(mp)) { ok = true; break; }   // 介紹模式：圈起來的只能看，只能按「下一步」
+                if (!ok || panDown)
+                {
+                    switch (e.type)
+                    {
+                        case EventType.MouseDown:
+                            panDown = true; panMoved = false; panTotal = 0f; PanStart = panLast = mp;
+                            downOnCard = !CardHidden && card.Contains(mp); downOnChip = CardHidden && chip.Contains(mp);
+                            break;
+                        case EventType.MouseDrag:
+                            if (panDown)
+                            {
+                                var d = mp - panLast; panLast = mp; panTotal += d.magnitude;
+                                if (panTotal > Mathf.Max(12f, Mathf.Min(W, H) * 0.025f)) panMoved = true;
+                                if (panMoved) { panAccum += d; lastPanAt = Time.unscaledTime; }
+                            }
+                            break;
+                        case EventType.MouseUp:
+                            if (panDown && !panMoved)
+                            {
+                                if (downOnCard && card.Contains(mp)) CardHidden = true;         // 點說明框：收起來，只留閃爍的目標
+                                else if (downOnChip && chip.Contains(mp)) CardHidden = false;   // 點「💬 說明」：再打開
+                            }
+                            panDown = false;
+                            break;
+                    }
+                    e.Use(); return;
+                }
             }
 
             if (e.type == EventType.Repaint && Block && haveTarget)
@@ -107,10 +156,22 @@ namespace SpellDuel
                 }
             }
             var col = new Color(0.4f, 1f, 0.75f);
+            if (CardHidden && Block)
+            {
+                if (e.type == EventType.Repaint) { UiKit.Card(chip, 0.92f, col, 1f); UiKit.Text(chip, "💬 說明", fsS, col, TextAnchor.MiddleCenter, true); }
+                if (NextButton)
+                {
+                    var keep0 = UiKit.LockKey; UiKit.LockKey = null;
+                    if (UiKit.Button(nb, "下一步 ▶", fsS, true, col)) NextPressed = true;
+                    UiKit.LockKey = keep0;
+                }
+                return;
+            }
             UiKit.Card(card, 0.96f, col, 1f);
             float gap = fs * 0.45f;
             string head = "🧭 新手指引" + (StepCount > 0 ? $" {StepNo}/{StepCount}" : "") + (string.IsNullOrEmpty(Title) ? "" : "・" + Title);
             UiKit.Text(new Rect(card.x + gap, card.y + gap * 0.4f, card.width - gap * 2, fs * 1.4f), head, fs, col, TextAnchor.MiddleLeft, true);
+            if (Block) UiKit.Text(new Rect(card.x + gap, card.y + gap * 0.4f, card.width - gap * 2, fs * 1.4f), "點我收起・可拖曳畫面", Mathf.RoundToInt(fs * 0.62f), new Color(0.75f, 0.85f, 0.9f), TextAnchor.MiddleRight, false);
             string body = Text ?? "";
             UiKit.Text(new Rect(card.x + gap, card.y + fs * 1.6f, card.width - gap * 2 - (NextButton ? fs * 7.5f : 0f), card.height - fs * 1.8f), body, fsS, new Color(0.95f, 0.97f, 1f), TextAnchor.UpperLeft, false, 0.6f);
             if (NextButton)

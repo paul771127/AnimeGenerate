@@ -239,12 +239,12 @@ namespace SpellDuel
             float? want = null;
             if (revealNode != null) want = wmNodes[revealNode].pos.x * s;
             else if (heroPts != null) want = heroPos.x * s;
-            else if (UiKit.LockKey != null)
+            else if (UiKit.LockKey != null && !UiLock.RecentPan)
                 foreach (var n in open) if (UiKit.LockMatch(UiKit.LockKey, "", n.id.StartsWith("town:") ? n.id : "stage:" + n.id)) { want = n.pos.x * s; break; }
             if (want is float wx && (wx < wmScrollX + view.width * 0.2f || wx > wmScrollX + view.width * 0.8f))
                 wmScrollX = Mathf.Lerp(wmScrollX, Mathf.Clamp(wx - view.width / 2f, 0f, maxX), 0.15f);
             var sc = new Vector2(wmScrollX, 0f);
-            if (UiKit.LockKey == null && heroPts == null && zoomAt < 0f) sc = UiKit.DragScroll(view, sc, content);
+            if (heroPts == null && zoomAt < 0f) sc = UiKit.DragScroll(view, sc, content);   // 新手指引中也能拖曳（UiLock 轉過來）
             wmScrollX = Mathf.Clamp(sc.x, 0f, maxX);
             sc = GUI.BeginScrollView(view, new Vector2(wmScrollX, 0f), content, false, false, GUIStyle.none, GUIStyle.none);
 

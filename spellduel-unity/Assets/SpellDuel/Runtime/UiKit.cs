@@ -22,6 +22,15 @@ namespace SpellDuel
             var e=Event.current;if(e==null)return scroll;
             int id=Mathf.RoundToInt(view.x*7f+view.y*13f+view.width*17f+view.height*31f);
             float maxX=Mathf.Max(0,content.width-view.width),maxY=Mathf.Max(0,content.height-view.height);
+            if(UiLock.Blocking)
+            {
+                // 新手指引中：手指被 UiLock 接走，拖曳的位移由 UiLock 轉過來（按下去的位置在這一塊才給）
+                dragId=-1;
+                var a=GUIUtility.GUIToScreenPoint(new Vector2(view.x,view.y));var b=GUIUtility.GUIToScreenPoint(new Vector2(view.xMax,view.yMax));
+                if(UiLock.TakePan(Rect.MinMaxRect(a.x,a.y,b.x,b.y),out var pd)){if(maxX<=0)pd.x=0;scroll-=pd;}
+                scroll.x=Mathf.Clamp(scroll.x,0,maxX);scroll.y=Mathf.Clamp(scroll.y,0,maxY);
+                return scroll;
+            }
             switch(e.type)
             {
                 case EventType.MouseDown:

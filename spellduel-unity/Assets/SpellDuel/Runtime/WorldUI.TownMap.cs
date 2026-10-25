@@ -161,7 +161,7 @@ namespace SpellDuel
 
             // 捲動：第一次進來置中；新手指引要按的東西在畫面外 → 自動捲過去（指引中不能拖曳）
             if (townMapInit != town) { townMapInit = town; townMapScroll = new Vector2((cw - view.width) / 2f, 0f); }
-            if (UiKit.LockKey != null)
+            if (UiKit.LockKey != null && !UiLock.RecentPan)   // 剛手動拖過：先不要自動捲回去
             {
                 Rect? want = null;
                 foreach (var pl in plates) if (UiKit.LockMatch(UiKit.LockKey, MapSites[pl.key].label, null)) { want = pl.rect; break; }
@@ -174,7 +174,7 @@ namespace SpellDuel
                         townMapScroll = Vector2.Lerp(townMapScroll, new Vector2(wr.center.x - view.width / 2f, wr.center.y - view.height / 2f), 0.2f);
                 }
             }
-            if (UiKit.LockKey == null) townMapScroll = UiKit.DragScroll(view, townMapScroll, content);   // 新手指引中不能拖曳（會自動捲到要點的地方）
+            townMapScroll = UiKit.DragScroll(view, townMapScroll, content);   // 新手指引中也能拖曳（拖曳由 UiLock 轉過來；沒拖的時候自動捲到要點的地方）
             townMapScroll.x = Mathf.Clamp(townMapScroll.x, 0f, Mathf.Max(0f, cw - view.width));
             townMapScroll.y = Mathf.Clamp(townMapScroll.y, 0f, Mathf.Max(0f, ch - view.height));
             townMapScroll = GUI.BeginScrollView(view, townMapScroll, content, false, false, GUIStyle.none, GUIStyle.none);
