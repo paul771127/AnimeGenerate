@@ -245,5 +245,70 @@
     ],
     "bytes": 138190,
     "sha256": "5f4d937c2bb53158497d79476c9804fd9816a36526506ca2ab597e996922dcde"
+  },
+  "Assets/SpellDuel/Resources/Village2D/in_shop_flame.jpg": {
+    "size": [
+      1080,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      941,
+      1672
+    ],
+    "bytes": 422228,
+    "sha256": "8f7f4d1b42722325a91ee519420b492b5717cdcbb32a60149a61b584f9011520"
+  },
+  "Assets/SpellDuel/Resources/Village2D/in_guild_flame.jpg": {
+    "size": [
+      1080,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      941,
+      1672
+    ],
+    "bytes": 478667,
+    "sha256": "b3ecc0e5f3c8a501350bb4f63bf350f9c98b5f211ab227e779a70df8f4103787"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/clerk_normal.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 743996,
+    "sha256": "e84c717ae1a1ad5c196753c650026b4d004c1ab35f20ac8ac0981741f55bb78c"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/clerk_smile.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 745944,
+    "sha256": "330fa3e4732e909bb94128e1672e2967d2ed9050f6fdc1b15c6fd533c969aa75"
+  },
+  "Assets/SpellDuel/Resources/Story2D/chars/clerk_surprised.png": {
+    "size": [
+      768,
+      1152
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 744961,
+    "sha256": "57cca08c7c7c86d5bf27f54c1a8e67bd9054e02a184e07725c43281516a86016"
   }
 }

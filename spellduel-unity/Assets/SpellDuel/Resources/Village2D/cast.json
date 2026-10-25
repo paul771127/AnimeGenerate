@@ -17,5 +17,14 @@
     ],
     "role": "小鐵",
     "poseVariants": true
+  },
+  "clerk": {
+    "role": "道具店店員",
+    "expressions": [
+      "normal",
+      "smile",
+      "surprised"
+    ],
+    "poseVariants": false
   }
 }
