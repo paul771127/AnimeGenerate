@@ -141,8 +141,9 @@ namespace SpellDuel
         public float armorUntil, armorReduce;
         // 角色養成（無盡模式）：裝備減傷、側跨無敵時間加長、吸血、命中回 MP、每秒回血、低血量減傷
         public float gearReduce, dodgeBonus, lifesteal, mpOnHit, hpRegen, lastStand;
-        /// <summary>減傷（能力值、裝備、技能樹、職業、精魄全部加起來）最多 30%（使用者要求）</summary>
-        public const float MaxReduce = 0.3f;
+        /// <summary>減傷（使用者要求）：體質加到 99 點＝30%；裝備、精魄、技能樹、職業另外加；全部加起來最多 70%（超過沒有作用）</summary>
+        public const float MaxReduce = 0.7f, VitMaxReduce = 0.3f;
+        public const int VitFullReduce = 99;
         public readonly List<Dot> dots = new List<Dot>();
 
         public class Dot { public float dps, until, acc; }

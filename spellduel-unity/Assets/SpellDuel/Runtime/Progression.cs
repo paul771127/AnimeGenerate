@@ -50,7 +50,7 @@ namespace SpellDuel
         {
             Stat.Str => atk ? "攻擊傷害 +2%／點" : "（不是這個職業的攻擊能力值）HP +1／點",
             Stat.Int => atk ? "攻擊傷害 +2%／點、治療量 +2%／點、MP 上限 +2／點" : "MP 上限 +2／點、治療量 +2%／點",
-            Stat.Vit => "HP 上限 +5／點、受到的傷害 -0.4%／點（最多 -30%）",
+            Stat.Vit => "HP 上限 +5／點、受到的傷害：加到 99 點 -30%（照比例）",
             Stat.Agi => "蓄力時間 -1%／點（最多 -40%）、普攻速度：冷卻 -0.8%／點（最多 -50%）、閃避率 +0.1%／點",
             Stat.Spi => "MP 回復（基礎只有 30%，精神 99 點回到 100%）、冷卻時間 -0.8%／點（最多 -35%）",
             _ => "爆擊率 +0.6%／點（爆擊＝傷害 ×2）、掉寶機率與稀有度提升",
@@ -887,7 +887,7 @@ namespace SpellDuel
 
         /// <summary>裝備的附加狀態（灼燒、中毒、冰凍）機率：每一條 2～5%（使用者要求，不要更高）</summary>
         public const float StatusChanceMin = 0.02f, StatusChanceMax = 0.05f;
-        /// <summary>裝備的減傷：每一件 1～3%（使用者要求）；全部加起來（能力值、裝備、技能樹、職業、精魄）最多 30%（Fighter.MaxReduce）</summary>
+        /// <summary>裝備的減傷：每一件 1～3%（使用者要求）；體質最多 30%，裝備、精魄等另外加，全部加起來最多 70%（Fighter.MaxReduce）</summary>
         public const float ArmorMin = 0.01f, ArmorMax = 0.03f;
 
         static float AffixValue(Affix a, float power, System.Random rng)
@@ -1231,8 +1231,9 @@ namespace SpellDuel
             f.atkMul = Mathf.Max(0.3f, 1f + 0.02f * d(atkStat)) * (1f + GearSum(Affix.Atk));
             // HP：體質每點 +5、非攻擊用的力量每點 +1、裝備
             f.maxHp = Mathf.Max(10, cd.maxHp + 5 * d(Stat.Vit) + (atkStat != Stat.Str ? d(Stat.Str) : 0) + Mathf.RoundToInt(GearSum(Affix.Hp)));
-            // 受到的傷害：體質每點 -0.4%（最多 -30%）、裝備護甲
-            f.gearReduce = Mathf.Min(Fighter.MaxReduce, Mathf.Clamp(0.004f * d(Stat.Vit), 0f, 0.3f) + GearSum(Affix.Armor));
+            // 受到的傷害（使用者要求）：體質從初始值加到 99 點＝減傷 30%（線性）；裝備、精魄、技能樹、職業另外加；全部加起來最多 70%（Fighter.MaxReduce）
+            float vitFrac = Mathf.Clamp01(d(Stat.Vit) / (float)Mathf.Max(1, Fighter.VitFullReduce - BaseStat(Stat.Vit)));
+            f.gearReduce = Mathf.Min(Fighter.MaxReduce, Fighter.VitMaxReduce * vitFrac + GearSum(Affix.Armor));
             // MP：智力每點 +2、裝備；MP 回復：基礎 30%，精神加到 99 點才回到 100%（線性；裝備把精神加超過 99 會再更快）
             f.maxMp = Mathf.Max(10, cd.maxMp + 2 * d(Stat.Int) + Mathf.RoundToInt(GearSum(Affix.Mp)));
             float spiFrac = Mathf.Max(0f, d(Stat.Spi) / (float)Mathf.Max(1, Fighter.MpRegenFullSpi - BaseStat(Stat.Spi)));

@@ -109,7 +109,7 @@ namespace SpellDuel
             M(19, 0.02f, "#a3e635", F(SoulOp.Hp, 150));                                        // 古根撼地獸：HP 上限
             M(20, 0.02f, "#38bdf8", F(SoulOp.Cdr, 0.10f));                                      // 潮鞭鰻：技能冷卻
             M(21, 0.02f, "#f59e0b", F(SoulOp.CritDmg, 0.40f));                                  // 鏈錘鬥奴：爆擊傷害
-            M(22, 0.02f, "#d97706", F(SoulOp.Reduce, 0.10f));                                   // 裂岩甲蜥：受到的傷害 −10%
+            M(22, 0.02f, "#d97706", F(SoulOp.Reduce, 0.02f));                                   // 裂岩甲蜥：受到的傷害 −2%（使用者要求：精魄的減傷 2%）
             // ---- Boss（0.5%）：一樣只有一種效果，但更強、更特殊
             B("boss", "#ff5a1f", F(SoulOp.HitCast, 0, 0.05f, skill: "meteor"));               // 熔岩巨像：機率發動隕石
             B("boss_forest", "#4ade80", F(SoulOp.Regen, 0.001f));                              // 腐化樹王：每 10 秒回 1% HP
