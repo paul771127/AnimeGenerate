@@ -258,10 +258,40 @@ namespace SpellDuel
             if (TutKind >= 2 && TutKind <= 4 && !tutFired && tutPassAt < 0f)
                 UiKit.Text(new Rect(0, H * 0.36f, W, H * 0.12f), $"{Mathf.CeilToInt(tutFireAt - battle.now)}", fsL * 3, col, TextAnchor.MiddleCenter, true);
             if (TutKind == 1 && tutRingGo && tutRingGo.activeSelf)
-                DrawEdgeArrow(tutTarget + Vector3.up * 0.3f, $"⭕ {Battle.FlatDistance(Me.Feet, tutTarget):F1}m", col, W, H, lh, fsS);
+                DrawRingPointer(tutTarget, Battle.FlatDistance(Me.Feet, tutTarget), col, W, H, lh, fs, fsS);
             if (TutKind >= 8 && tutPassAt < 0f)
                 DrawEdgeArrow(En.Feet + Vector3.up * 1f, $"🪵 {Battle.FlatDistance(Me.Feet, En.Feet):F1}m", col, W, H, lh, fsS);
             if (TutKind == 9 && tutPassAt < 0f) DrawSwipeDemo(W, H, fs, col);
+        }
+
+        /// <summary>
+        /// 光圈的指示：光圈在畫面裡＝上方一個會跳的 ▼；不在畫面裡＝螢幕左邊或右邊中間一個大箭頭（會閃、往外推），
+        /// 寫「往左轉／往右轉」和距離；在身後也照左右指（轉過去比較近的那一邊）。
+        /// </summary>
+        void DrawRingPointer(Vector3 at, float dist, Color col, float W, float H, float lh, int fs, int fsS)
+        {
+            var wp = WorldFrame.FromWorld(at + Vector3.up * 0.05f);
+            var sp = cam.WorldToScreenPoint(wp);
+            float k = 0.5f + 0.5f * Mathf.Sin(Time.time * 6f);
+            float mx = W * 0.06f, my = H * 0.08f;
+            if (sp.z > 0.2f && sp.x > mx && sp.x < W - mx && sp.y > my && sp.y < H - my)
+            {
+                float bob = Mathf.Sin(Time.time * 5f) * lh * 0.25f, gy = H - sp.y;
+                UiKit.Text(new Rect(sp.x - W * 0.2f, gy - lh * 3.2f + bob, W * 0.4f, lh * 2f), "▼", Mathf.RoundToInt(fs * 2.2f), col, TextAnchor.LowerCenter, true);
+                UiKit.Text(new Rect(sp.x - W * 0.25f, gy - lh * 4.3f + bob, W * 0.5f, lh), $"⭕ 光圈 {dist:F1}m", fsS, col, TextAnchor.LowerCenter, true);
+                return;
+            }
+            var local = cam.transform.InverseTransformPoint(wp);
+            bool right = local.x >= 0f, behind = local.z < 0f;
+            // 箭頭：螢幕左右邊的中間，一閃一閃、往外推
+            float aw = W * 0.2f, ah = H * 0.16f, push = k * W * 0.025f;
+            float ax = right ? W - aw - W * 0.02f + push : W * 0.02f - push, ay = H * 0.5f - ah / 2f;
+            var ar = new Rect(ax, ay, aw, ah);
+            UiKit.Card(ar, 0.55f + 0.3f * k, col, 0.9f);
+            UiKit.Text(ar, right ? "▶" : "◀", Mathf.RoundToInt(fs * 3.2f), Color.white, TextAnchor.MiddleCenter, true);
+            string turn = behind ? (right ? "在身後・往右轉" : "在身後・往左轉") : (right ? "往右轉" : "往左轉");
+            var lr = new Rect(right ? W - W * 0.42f : W * 0.02f, ay + ah + lh * 0.2f, W * 0.4f, lh * 2.2f);
+            UiKit.Text(lr, $"⭕ 光圈\n{turn} {dist:F1}m", fsS, col, right ? TextAnchor.UpperRight : TextAnchor.UpperLeft, true);
         }
 
         /// <summary>示範動畫：手掌從左往右劃過畫面（後面拖著殘影），每 1.6 秒一次</summary>

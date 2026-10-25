@@ -123,7 +123,7 @@ namespace SpellDuel
         public void OpenGate(int theme) { gateTheme = theme; screen = Screen.Gate; sel = null; }
         public void OpenWarp() { screen = Screen.Warp; }
 
-        public void OpenTown(int t) { town = Mathf.Clamp(t, 0, Towns.Length - 1); screen = Screen.Town; npcTalk = -1; selItem = null; }
+        public void OpenTown(int t) { town = Mathf.Clamp(t, 0, Towns.Length - 1); screen = Screen.Town; npcTalk = -1; selItem = null; townMapInit = -1; }
         public void OpenGuild() { screen = Screen.Guild; npcTalk = -1; selItem = null; }
         /// <summary>新手指引用：正在聊天的居民、選中的關卡、選中的物品</summary>
         public string TalkingTo => screen == Screen.Town && !walkMode && npcTalk >= 0 && npcTalk < Towns[town].npcs.Length ? Towns[town].npcs[npcTalk].name : null;
