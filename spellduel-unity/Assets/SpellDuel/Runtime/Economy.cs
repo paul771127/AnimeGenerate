@@ -127,7 +127,7 @@ namespace SpellDuel
             new SetDef { id = "grove", name = "森羅", theme = 1, desc = "森林掉落",
                 two = new[] { A(Affix.Hp, 60f) }, four = new[] { A(Affix.Poison, Economy.SetStatusChance), A(Affix.Lifesteal, 0.05f) } },
             new SetDef { id = "tide", name = "海神", theme = 2, desc = "海上礁石掉落",
-                two = new[] { A(Affix.Mp, 40f), A(Affix.Cdr, 0.06f) }, four = new[] { A(Affix.Freeze, Economy.SetStatusChance), A(Affix.Armor, 0.03f) } },
+                two = new[] { A(Affix.Mp, 40f), A(Affix.Cdr, 0.06f) }, four = new[] { A(Affix.Freeze, Economy.SetStatusChance), A(Affix.MagicArmor, 0.03f) } },
             new SetDef { id = "gladiator", name = "鬥魂", theme = 3, desc = "角鬥場掉落",
                 two = new[] { A(Affix.Atk, 0.1f) }, four = new[] { A(Affix.Lifesteal, 0.06f), A(Affix.Crit, 0.1f) } },
             new SetDef { id = "loess", name = "黃沙", theme = 4, desc = "黃土山道掉落",

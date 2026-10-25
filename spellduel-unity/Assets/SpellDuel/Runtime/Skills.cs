@@ -82,6 +82,7 @@ namespace SpellDuel
             "m_seed", "m_tidewhip", "m_twinquake", "m_vine", "p_roots", "p_stomp", "p_thorn", "p_whip", "s_tentacle", "x_rootwave", "vault_hit" };
         /// <summary>法系職業：技能都算魔法攻擊</summary>
         static readonly HashSet<string> MagicClasses = new HashSet<string> { "mage", "archmage", "summoner", "priest", "bishop", "inquisitor" };
+        const string PhysicalWords = "刃苦斬劍刀拳箭矢爪咬撞鋒鉗錘槌棍";
         const string MagicWords = "火焰炎熔冰雷電魔咒毒暗光聖虛泡水潮孢墨浪漩符魂靈法";
         static readonly Dictionary<string, bool> magicCache = new Dictionary<string, bool>();
         /// <summary>這個技能是魔法攻擊嗎（其他＝物理）。敵人技能照清單；法系職業全部魔法；其他照名稱判斷（火、冰、雷、毒、聖…）</summary>
@@ -92,11 +93,15 @@ namespace SpellDuel
             if (MagicIds.Contains(s.id)) m = true;
             else if (PhysicalIds.Contains(s.id)) m = false;
             else if (s.cls != null && MagicClasses.Contains(s.cls)) m = true;
+            // 菁英怪：看攻擊方式（使用者要求：揮刀、衝撞、弩箭、砲擊＝物理）：施法型（縛咒師、司祭、織潮者…）和輔助型＝魔法，其他＝物理
+            else if (EliteCatalog.TrySkill(s.id, out var ed, out _)) m = ed.role == 2 || ed.role == 3;
             else
             {
                 m = false;
-                if (s.name != null) foreach (char c in s.name) if (MagicWords.IndexOf(c) >= 0) { m = true; break; }
-                if (s.effect == EffectKind.Burn) m = true;
+                bool weapon = false;   // 看攻擊方式：用刀劍、苦無、弓箭、拳爪、衝撞打的＝物理（就算名字有火、冰、毒）
+                if (s.name != null) foreach (char c in s.name) if (PhysicalWords.IndexOf(c) >= 0) { weapon = true; break; }
+                if (!weapon && s.name != null) foreach (char c in s.name) if (MagicWords.IndexOf(c) >= 0) { m = true; break; }
+                if (s.effect == EffectKind.Burn && !weapon) m = true;
             }
             magicCache[s.id] = m;
             return m;

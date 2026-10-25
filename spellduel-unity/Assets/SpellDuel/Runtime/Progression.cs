@@ -650,7 +650,7 @@ namespace SpellDuel
 
     // ---------------------------------------------------------------- 裝備
     public enum Slot { Weapon, Head, Body, Feet, Trinket }
-    public enum Affix { Str, Int, Vit, Agi, Spi, Luk, Hp, Mp, Crit, Cdr, Lifesteal, Burn, Poison, Freeze, Atk, Armor, TrapReduce, DodgePower }
+    public enum Affix { Str, Int, Vit, Agi, Spi, Luk, Hp, Mp, Crit, Cdr, Lifesteal, Burn, Poison, Freeze, Atk, Armor, TrapReduce, DodgePower, MagicArmor }   // 存檔用數字：新的只能加在最後面
 
     public class Item
     {
@@ -702,7 +702,7 @@ namespace SpellDuel
             Affix.Lifesteal => $"吸血 {v * 100:0.#}%",
             Affix.Burn => $"灼燒機率 +{v * 100:0}%", Affix.Poison => $"中毒機率 +{v * 100:0}%", Affix.Freeze => $"冰凍機率 +{v * 100:0}%",
             Affix.TrapReduce => $"陷阱傷害 -{v*100:0}%", Affix.DodgePower => $"身體閃避後3秒傷害 +{v*100:0}%",
-            Affix.Atk => $"攻擊傷害 +{v * 100:0}%", Affix.Armor => $"物理減傷 +{v * 100:0.#}%", _ => $"受到的傷害 -{v * 100:0.#}%",
+            Affix.Atk => $"攻擊傷害 +{v * 100:0}%", Affix.Armor => $"物理減傷 +{v * 100:0.#}%", Affix.MagicArmor => $"魔法減傷 +{v * 100:0.#}%", _ => $"受到的傷害 -{v * 100:0.#}%",
         };
 
         /// <summary>
@@ -711,7 +711,7 @@ namespace SpellDuel
         /// </summary>
         public Affix MainAffix => mods.Count > 0 ? mods[0].Key : Affix.Hp;
         /// <summary>第 i 個屬性現在的數值（主屬性算上強化）</summary>
-        public float ModValue(int i) => i < 0 || i >= mods.Count ? 0f : IsStatusAffix(mods[i].Key) ? Mathf.Min(ItemGen.StatusChanceMax, mods[i].Value) : mods[i].Key == Affix.Armor ? Mathf.Min(ItemGen.ArmorMax, mods[i].Value) : mods[i].Value * (i == 0 ? PlusMul : 1f);   // 減傷：每件最多 3%（舊存檔的也一樣）   // 附加狀態機率：最多 5%（舊存檔的也一樣）、不吃強化
+        public float ModValue(int i) => i < 0 || i >= mods.Count ? 0f : IsStatusAffix(mods[i].Key) ? Mathf.Min(ItemGen.StatusChanceMax, mods[i].Value) : (mods[i].Key == Affix.Armor || mods[i].Key == Affix.MagicArmor) ? Mathf.Min(ItemGen.ArmorMax, mods[i].Value) : mods[i].Value * (i == 0 ? PlusMul : 1f);   // 減傷：每件最多 3%（舊存檔的也一樣）   // 附加狀態機率：最多 5%（舊存檔的也一樣）、不吃強化
         public static bool IsStatusAffix(Affix a) => a == Affix.Burn || a == Affix.Poison || a == Affix.Freeze;
         public float Sum(Affix a) { float s = 0f; for (int i = 0; i < mods.Count; i++) if (mods[i].Key == a) s += ModValue(i); return s; }
         public float PlusMul => 1f + Economy.EnhancePerLevel * plus;
@@ -760,6 +760,9 @@ namespace SpellDuel
                         var kv = m.Split(':');
                         if (kv.Length == 2) it.mods.Add(new KeyValuePair<Affix, float>((Affix)int.Parse(kv[0]), float.Parse(kv[1], CultureInfo.InvariantCulture)));
                     }
+                // 法袍改成魔法減傷（舊存檔的法袍：物理減傷換成魔法減傷）
+                if (it.slot == Slot.Body && it.name != null && it.name.Contains("法袍"))
+                    for (int mi = 0; mi < it.mods.Count; mi++) if (it.mods[mi].Key == Affix.Armor) it.mods[mi] = new KeyValuePair<Affix, float>(Affix.MagicArmor, it.mods[mi].Value);
                 if (p.Length >= 12) { int.TryParse(p[10], out it.plus); it.setId = p[11]; }   // 新版：強化等級、套裝
                 if (p.Length >= 14)
                 {
@@ -838,7 +841,7 @@ namespace SpellDuel
                     break;
                 }
                 case Slot.Head: { var h = Pick(rng, Heads, prefer); baseName = h.name; it.classes = h.cls; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Mp, Mathf.Round(4f + 1.6f * power))); break; }
-                case Slot.Body: { var b = Pick(rng, Bodies, prefer); baseName = b.name; it.classes = b.cls; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Hp, Mathf.Round(8f + 3f * power))); it.mods.Add(new KeyValuePair<Affix, float>(Affix.Armor, Mathf.Round(Mathf.Lerp(ArmorMin, ArmorMax, Mathf.Clamp01(power / 100f)) * 1000f) / 1000f)); break; }
+                case Slot.Body: { var b = Pick(rng, Bodies, prefer); baseName = b.name; it.classes = b.cls; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Hp, Mathf.Round(8f + 3f * power))); it.mods.Add(new KeyValuePair<Affix, float>(b.name == "法袍" ? Affix.MagicArmor : Affix.Armor, Mathf.Round(Mathf.Lerp(ArmorMin, ArmorMax, Mathf.Clamp01(power / 100f)) * 1000f) / 1000f)); break; }
                 case Slot.Feet: { var f = Pick(rng, Feets, prefer); baseName = f.name; it.classes = f.cls; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Agi, Mathf.Round(1f + 0.35f * power))); break; }
                 default: baseName = Trinkets[rng.Next(Trinkets.Length)]; it.classes = ""; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Luk, Mathf.Round(1f + 0.3f * power))); break;
             }
@@ -1233,12 +1236,12 @@ namespace SpellDuel
             f.maxHp = Mathf.Max(10, cd.maxHp + 5 * d(Stat.Vit) + (atkStat != Stat.Str ? d(Stat.Str) : 0) + Mathf.RoundToInt(GearSum(Affix.Hp)));
             // 減傷（使用者要求）分物理、魔法：
             //   物理減傷＝體質從初始值加到 99 點 30%（線性）＋裝備的物理減傷（每件 1～3%、套裝）
-            //   魔法減傷＝智力從初始值加到 99 點 30%（線性）
+            //   魔法減傷＝智力從初始值加到 99 點 30%（線性）＋裝備的魔法減傷（法袍、海神套裝）
             //   精魄、技能樹、進階職業的減傷兩種都加；各自最多 70%（Fighter.MaxReduce）
             float vitFrac = Mathf.Clamp01(d(Stat.Vit) / (float)Mathf.Max(1, Fighter.VitFullReduce - BaseStat(Stat.Vit)));
             float intFrac = Mathf.Clamp01(d(Stat.Int) / (float)Mathf.Max(1, Fighter.VitFullReduce - BaseStat(Stat.Int)));
             f.gearReduce = Mathf.Min(Fighter.MaxReduce, Fighter.VitMaxReduce * vitFrac + GearSum(Affix.Armor));
-            f.magicReduce = Mathf.Min(Fighter.MaxReduce, Fighter.VitMaxReduce * intFrac);
+            f.magicReduce = Mathf.Min(Fighter.MaxReduce, Fighter.VitMaxReduce * intFrac + GearSum(Affix.MagicArmor));
             // MP：智力每點 +2、裝備；MP 回復：基礎 30%，精神加到 99 點才回到 100%（線性；裝備把精神加超過 99 會再更快）
             f.maxMp = Mathf.Max(10, cd.maxMp + 2 * d(Stat.Int) + Mathf.RoundToInt(GearSum(Affix.Mp)));
             float spiFrac = Mathf.Max(0f, d(Stat.Spi) / (float)Mathf.Max(1, Fighter.MpRegenFullSpi - BaseStat(Stat.Spi)));
