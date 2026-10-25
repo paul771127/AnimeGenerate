@@ -355,6 +355,38 @@ namespace SpellDuel
         }
 
         bool scrollRequested;
+
+        // ---------------------------------------------------------------- 法師的魔力盾（開關）：說「魔力盾 開／關」，再比 3 確認
+        static readonly string[] CoatWords = { "魔力盾開", "魔力盾關", "開魔力盾", "關魔力盾" };
+        /// <summary>說了「魔力盾 開」（+1）／「關」（−1），等比 3 確認；0＝沒有</summary>
+        int coatPending; float coatPendingUntil, coatHeardAt = -99f;
+        public const float CoatConfirmTime = 6f;
+
+        void CoatByVoice(string text)
+        {
+            if (myClass != "mage" || Me == null || string.IsNullOrEmpty(text)) return;
+            string t = text.Replace(" ", "").Replace("　", "");
+            if (!t.Contains("魔力盾") && !t.Contains("魔力頓") && !t.Contains("魔力顿")) return;
+            bool off = t.Contains("關") || t.Contains("关") || t.Contains("取消");
+            coatPending = off ? -1 : 1; coatPendingUntil = Time.time + CoatConfirmTime; coatHeardAt = Time.time;
+            if (off && !Me.manaCoat) { coatPending = 0; Say("魔力盾本來就是關著的", 1.5f); return; }
+            if (!off && Me.manaCoat) { coatPending = 0; Say("魔力盾已經開著了", 1.5f); return; }
+            Say(off ? "🛡 比 3 關閉魔力盾" : "🛡 比 3 張開魔力盾（開著時受傷扣 MP，只能用奧術飛彈）", 2.5f);
+            Sfx.Play("select", 0.6f, 1.1f);
+        }
+
+        /// <summary>每幀：說過「魔力盾 開／關」，6 秒內比 3 就切換</summary>
+        void UpdateCoatGesture()
+        {
+            if (coatPending == 0 || Me == null) return;
+            if (Time.time > coatPendingUntil) { coatPending = 0; return; }
+            if (Hand == null || !Hand.HandVisible || Hand.Current != HandGesture.Shape.Three) return;
+            bool on = coatPending > 0; coatPending = 0;
+            Me.manaCoat = on;
+            if (on) Me.charging = null;   // 正在唸的法術取消（魔力盾期間只能用奧術飛彈）
+            Say(on ? "🛡 魔力盾張開！受到的傷害改扣 MP；只能用奧術飛彈（比 1）" : "魔力盾關閉，可以正常使用法術了", 2.5f);
+            Sfx.Play(on ? "charged" : "select", 0.8f, on ? 0.9f : 1.2f); Haptics.Play(Haptics.Kind.Medium);
+        }
         /// <summary>回城捲軸的確認視窗開著：戰鬥暫停（敵人、Boss、計時都停），等玩家按「是／否」</summary>
         bool scrollAsk;
 
@@ -655,7 +687,7 @@ namespace SpellDuel
 
         void OnSpeechText(string text)
         {
-            if (phase == Phase.Fighting && battle != null) { if (scrollAsk) return; DungeonSpeech(text); ItemByVoice(text); return; }   // 回城確認中：暫停，不聽指令
+            if (phase == Phase.Fighting && battle != null) { if (scrollAsk) return; DungeonSpeech(text); ItemByVoice(text); CoatByVoice(text); return; }   // 回城確認中：暫停，不聽指令
             if (!TownWalking) return;
             if (Greeting.Find(text) != null) { world.Heard = text; world.HeardAt = Time.time; }
             townWalk.Heard(text);
@@ -2048,6 +2080,7 @@ namespace SpellDuel
                 UpdateBattleTut();   // 1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）
                 UpdatePotionLesson();   // 1-2：喝藥水教學（SoloBattle.PotionLesson.cs）
                 if (!frozen) HandleInput();
+                UpdateCoatGesture();  // 法師的魔力盾：說完「魔力盾 開／關」比 3
                 UpdateCastGuide();   // 放招的分步驟提示（SoloBattle.CastGuide.cs）
                 SendState();
                 SendBossState();
@@ -2194,6 +2227,7 @@ namespace SpellDuel
                 bool pose = basic.id switch
                 {
                     "na_pebble" => Hand.Current == HandGesture.Shape.Open,   // 初心者：比 5 丟小石子
+                    "na_mage" => Hand.Current == HandGesture.Shape.One,      // 法師：比 1 就射奧術飛彈（比著不放＝照集氣連射）
                     _ => false,
                 };
                 Me.cooldownUntil.TryGetValue(basic.id, out var cdBefore);
@@ -2345,7 +2379,7 @@ namespace SpellDuel
             if (wantSpeech && (!speech.Running || town != speechTown))
             {
                 speech.Candidates = town ? NoSkills : SpeechCandidates;
-                speech.ExtraHints = town ? Greeting.Words : null;
+                speech.ExtraHints = town ? Greeting.Words : myClass == "mage" ? CoatWords : null;
                 speechTown = town;
                 if (!speech.Running) speech.Start();
             }
@@ -2417,6 +2451,8 @@ namespace SpellDuel
             if (phase != Phase.Fighting || battle == null || frozen || !Skills.All.TryGetValue(id, out var skill)) return;
             if (PotLessonFreeze) { Say("🧪 先喝藥水！說「喝藥水」或比 🤙", 1.5f); return; }
             if (scrollAsk) return;   // 回城確認中：暫停
+            if (Time.time - coatHeardAt < 1.5f && skill.self == SelfKind.ManaShield) return;   // 剛說「魔力盾 開／關」：不要當成大魔導士的「魔力護盾」
+            if (Me != null && Me.manaCoat) { Say("🛡 魔力盾開著只能用奧術飛彈（比 1）。說「魔力盾 關」再比 3 就能關掉", 2.5f); return; }
             heard = $"🎤 {skill.name}"; heardUntil = Time.time + 1.5f;
             if (Me.charging == skill) return;
             if (BlockedOutside()) return;
@@ -4128,6 +4164,7 @@ namespace SpellDuel
             if (f.undyingUntil > now) parts.Add(f.undyingUntil > 1e8f ? "💠 鬥魂（不死一次）" : "不死之軀");
             if (f.invulnUntil > now) parts.Add($"無敵 {f.invulnUntil - now:F1}s");
             if (f.manaShieldUntil > now) parts.Add($"魔力護盾 {f.manaShieldUntil - now:F1}s");
+            if (f.manaCoat) parts.Add("🛡 魔力盾（受傷扣 MP）");
             if (f.selfOathUntil > now) parts.Add("守護誓言");
             if (f.oathUntil > now) parts.Add("受誓言守護");
             if (f.subUntil > now) parts.Add("替身");

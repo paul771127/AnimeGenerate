@@ -258,7 +258,7 @@ namespace SpellDuel
             Classes["swordsman"] = new ClassDef { id = "swordsman", name = "劍士", color = C("#60a5fa"), maxHp = 160, maxMp = 90, mpRegen = 3, skills = new[] { "slash", "thrust", "wave", "block", "ironwall", "counter", "taunt" }, defaultLoadout = new[] { "slash", "wave", "block" }, desc = "近遠攻擊都有，多種防禦" };
 
             // ---------------------------------------------------------- 普通攻擊（不耗 MP、不用唸；手勢舉著就自動攻擊，見 BasicOf）
-            P(new SkillDef { id = "na_mage", cls = "basic", name = "奧術飛彈", type = SkillType.Projectile, color = C("#a78bfa"), cost = 0, damage = 8, charge = 0f, cooldown = 2f, speed = 4f, radius = 0.15f, rangeMax = 12f, desc = "法師普攻：畫面上的手掌浮現紫色法陣（集氣完成）時，比 1 往前一點（食指往前戳），射出一發奧術飛彈（約 2 秒集氣一次，敏捷越高越快）" });
+            P(new SkillDef { id = "na_mage", cls = "basic", name = "奧術飛彈", type = SkillType.Projectile, color = C("#a78bfa"), cost = 0, damage = 12, charge = 0f, cooldown = 2f, speed = 10f, radius = 0.18f, rangeMax = 12f, desc = "法師普攻：手比 1 就射出一發奧術飛彈（一直比著會照集氣自動連射，約 2 秒一發，敏捷越高越快）；傷害看智力。技能樹可以讓它命中爆炸、機率連射兩發" });
             P(new SkillDef { id = "na_sword", cls = "basic", name = "斬擊（普攻）", type = SkillType.Projectile, color = C("#93c5fd"), cost = 0, damage = 9, charge = 0f, cooldown = 1f, radius = 1f, rangeMax = 1f, desc = "劍士普攻：畫面上的手掌泛起藍白劍光（集氣完成）時，手掌在鏡頭前劃一下：先出現紅色預警線，接著劍光沿線閃過砍下（1m 內；約 1 秒集氣一次，敏捷越高越快）" });
             P(new SkillDef { id = "na_arrow", cls = "basic", name = "普通箭", type = SkillType.Projectile, color = C("#d9f99d"), cost = 0, damage = 9, charge = 0f, cooldown = 2f, speed = 16f, radius = 0.1f, rangeMax = 14f, desc = "獵人普攻：畫面上的弓拉滿（集氣完成）時，握拳再張開放箭（約 2 秒集氣一次，敏捷越高越快）" });
             // 初心者（10 級前）：普攻＝木棍敲擊（和劍士普攻一樣手掌劃一下、照刀線砍，不會砍掉法球）＋木棍揮擊、投石、急救
@@ -344,6 +344,7 @@ namespace SpellDuel
             P(new SkillDef { id = "pet_blast", cls = "pet", name = "召喚物爆炸", type = SkillType.Projectile, color = C("#f97316"), damage = 30, speed = 8f, radius = 0.3f, rangeMax = 2f, desc = "召喚物爆炸" });
             P(new SkillDef { id = "fogtick", cls = "pet", name = "毒霧侵蝕", type = SkillType.Projectile, color = C("#86efac"), damage = 6, speed = 1f, radius = 0f, rangeMax = 2f, desc = "毒霧" });
             // 技能樹流派的附加攻擊（不在技能欄；只用來判定命中與同步畫面）
+            P(new SkillDef { id = "arcaneburst", cls = "mage", name = "奧術爆裂", type = SkillType.Projectile, color = C("#c4b5fd"), damage = 0, areaRadius = 1.5f, speed = 1f, radius = 0f, rangeMax = 1f, desc = "奧術飛彈命中時的爆炸（技能樹「奧術爆裂」）" });
             P(new SkillDef { id = "echo_fire", cls = "mage", name = "回響火球", type = SkillType.Projectile, color = C("#fb923c"), damage = 12, speed = 2f, radius = 0.1f, rangeMax = 10f, desc = "奧術回響：普攻追加的小火球" });
             P(new SkillDef { id = "echo_ice", cls = "mage", name = "回響冰錐", type = SkillType.Projectile, color = C("#7dd3fc"), damage = 9, speed = 2f, radius = 0.08f, rangeMax = 10f, effect = EffectKind.Snare, effectDur = 0.8f, desc = "奧術回響：普攻追加的小冰錐（冰凍 0.8 秒）" });
             P(new SkillDef { id = "venom_burst", cls = "assassin", name = "毒爆", type = SkillType.Projectile, color = C("#4ade80"), damage = 20, speed = 1f, radius = 0f, rangeMax = 1f, desc = "劇毒連刺：毒疊滿爆開" });

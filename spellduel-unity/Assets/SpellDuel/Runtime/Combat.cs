@@ -39,6 +39,9 @@ namespace SpellDuel
         // ---- 技能樹的流派效果（CharacterProfile.ApplyTo 設定；0＝沒點）
         public SkillDef basic;          // 普攻（技能樹強化後的版本；null＝用 Skills.BasicOf）
         public float spellEcho, basicMp, lowMpBonus, melt, iceFreeze;            // 法師：奧術回響、奧術迴路、孤注一擲、融化、寒冰
+        public float arcaneBurst, arcaneTwin;   // 法師：奧術爆裂（命中爆炸的範圍傷害比例）、奧術連射（連射兩發的機率）
+        /// <summary>法師的魔力盾（開關）：開著時受到的傷害改扣 MP（MP 不夠才扣 HP），只能用奧術飛彈</summary>
+        public bool manaCoat;
         public float longShot, steadyAim, trapCrit, basicHoming;                  // 獵人：遠射、穩定瞄準、獵殺時刻；牧師：普攻追蹤
         public float arrowBleed, arrowPoison, arrowSilence;                       // 獵人：箭命中時出血／中毒／沉默的機率（技能樹）
         public float silencedUntil;                                               // 被沉默：這段時間不能唸技能（普攻照常）
@@ -1673,6 +1676,7 @@ namespace SpellDuel
             why = null;
             if (Over) { why = "戰鬥結束"; return false; }
             if (!f.Alive) { why = "你已倒下，等隊友"; return false; }
+            if (f.manaCoat && s.cls != "basic") { why = "魔力盾開著只能用奧術飛彈（說「魔力盾 關」再比 3）"; return false; }
             if (f.cooldownUntil.TryGetValue(s.id, out var cd) && cd > now) { why = $"{s.name} 冷卻中"; return false; }
             if (f.mp < CostOf(f, s)) { why = "MP 不足"; return false; }
             if (HpCostOf(f, s) > 0 && f.hp <= HpCostOf(f, s)) { why = "HP 不足（殉道：技能改用 HP 施放）"; return false; }
@@ -1704,7 +1708,18 @@ namespace SpellDuel
                 {
                     if (!f.Alive || Over || f.charging != null) return;   // 這段時間開始詠唱技能：這一發取消
                     f.charging = s; f.chargeStart = now - 1f;
-                    if (TryRelease(f, dir, floor, out _, locked) && s.id == "na_kunai") KunaiProcs(f, start, dir);
+                    bool shot = TryRelease(f, dir, floor, out _, locked);
+                    if (shot && s.id == "na_kunai") KunaiProcs(f, start, dir);
+                    // 法師「奧術連射」：機率馬上再射一發（不用再集氣，冷卻照第一發）
+                    if (shot && s.id == "na_mage" && f.arcaneTwin > 0f && rng.NextDouble() < f.arcaneTwin)
+                        After(ArcaneTwinGap, () =>
+                        {
+                            if (!f.Alive || Over || f.charging != null) return;
+                            f.cooldownUntil.TryGetValue(s.id, out var keepCd); f.cooldownUntil.Remove(s.id);
+                            f.charging = s; f.chargeStart = now - 1f;
+                            if (TryRelease(f, dir, floor, out _, locked)) Emit("buff", f.Chest, s.color, "奧術連射！");
+                            f.charging = null; f.cooldownUntil[s.id] = keepCd;
+                        });
                 });
                 return true;
             }
@@ -3039,10 +3054,22 @@ namespace SpellDuel
             }
             return Mathf.RoundToInt(dmg * m);
         }
+        /// <summary>奧術爆裂的半徑、奧術連射兩發的間隔（秒）</summary>
+        public const float ArcaneBurstRadius = 1.5f, ArcaneTwinGap = 0.18f;
+        static SkillDef BurstSkill => Skills.All["arcaneburst"];
+
         /// <summary>命中後：奧術回響、奧術迴路、飲血、劇毒、聖印、飛刀節奏、寒冰</summary>
         void PostHit(Fighter o, Fighter t, SkillDef s, float dmg)
         {
             if (s == null) return;
+            // 法師「奧術爆裂」：奧術飛彈命中爆炸，周圍的其他敵人受到一部分傷害
+            if (s.id == "na_mage" && o.arcaneBurst > 0f && t != null && dmg > 0f)
+            {
+                int bd = Mathf.Max(1, Mathf.RoundToInt(dmg * o.arcaneBurst));
+                var c = t.Feet; var hitT = t;
+                Emit("aoe", c, s.color, "arcaneburst");
+                foreach (var v in FoesOf(o)) if (v != hitT && v.Alive && FlatDistance(v.Feet, c) <= ArcaneBurstRadius + v.bodyRadius) HitFoe(o, v, BurstSkill, bd);
+            }
             bool basicHit = s.cls == "basic";
             if (basicHit && o.basicMp > 0f) o.mp = Mathf.Min(o.maxMp, o.mp + o.basicMp);
             if (basicHit && o.basicLeech > 0f) o.hp = Mathf.Min(o.maxHp, o.hp + dmg * o.basicLeech);
@@ -3277,12 +3304,12 @@ namespace SpellDuel
                     golem.hp -= share; dmg -= share;
                     if (golem.hp <= 0f) KillPet(golem);
                 }
-                // 魔力護盾：先扣 MP
-                if (f.manaShieldUntil > now && f.mp > 0f)
+                // 魔力護盾（大魔導士的限時護盾）、魔力盾（法師的開關）：先扣 MP
+                if ((f.manaShieldUntil > now || f.manaCoat) && f.mp > 0f)
                 {
                     float absorb = Mathf.Min(f.mp, dmg);
                     f.mp -= absorb; dmg -= absorb;
-                    if (absorb > 0f) Emit("mitigate", at ?? f.Chest, new Color(0.5f, 0.55f, 1f), $"魔力護盾 -{absorb:0} MP");
+                    if (absorb > 0f) Emit("mitigate", at ?? f.Chest, new Color(0.5f, 0.55f, 1f), $"{(f.manaCoat ? "魔力盾" : "魔力護盾")} -{absorb:0} MP");
                 }
             }
             dmg = Mathf.Round(Mathf.Max(0f, dmg));

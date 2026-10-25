@@ -64,7 +64,7 @@ namespace SpellDuel
     {
         Lifesteal, Crit, Dodge, MpOnHit, Regen, Burn, Poison, LastStand, Freeze, Evade, FastCast, Overcharge, NaturalRegen, QuickCd, Atk, Armor, Hp,
         // 流派（技能樹 v2）
-        SpellEcho, BasicMp, Overload, LowMp, Melt, IceFreeze,          // 法師
+        SpellEcho, BasicMp, Overload, LowMp, Melt, IceFreeze, ArcaneBurst, ArcaneTwin,   // 法師
         LongShot, SteadyAim, TrapCrit, ArrowBleed, ArrowPoison, ArrowSilence,   // 獵人
         ComboStrike, BasicLeech, WaveFlow, Riposte, OrbSlice,          // 劍士（OrbSlice＝斬擊能斬開法球）
         Venom, Assassinate, Vanish, KnifeCdr,                          // 刺客
@@ -199,6 +199,8 @@ namespace SpellDuel
                     // 奧術連射（普攻）
                     FMod("mg_bspd", "奧術速射", "na_mage", ModField.Cooldown, 0.08f, 5, 1, 1, "mg_root"),
                     FMod("mg_bdmg", "奧術強化", "na_mage", ModField.Damage, 0.15f, 5, 0, 2, "mg_bspd"),
+                    FPas("mg_burst", "奧術爆裂", PassiveKind.ArcaneBurst, 0.2f, 5, 0, 3, "mg_bdmg"),
+                    FPas("mg_twin", "奧術連射", PassiveKind.ArcaneTwin, 0.06f, 5, 0, 4, "mg_burst"),
                     FPas("mg_echo", "奧術回響", PassiveKind.SpellEcho, 0.1f, 5, 2, 2, "mg_bspd"),
                     FPas("mg_flow", "奧術迴路", PassiveKind.BasicMp, 1.5f, 5, 2, 3, "mg_echo"),
                     FPas("mg_fast", "快速詠唱", PassiveKind.FastCast, 0.06f, 5, 2, 4, "mg_flow"),
@@ -580,6 +582,8 @@ namespace SpellDuel
                         PassiveKind.Atk => $"攻擊傷害 +{v * 100:0}%",
                         PassiveKind.Armor => $"受到的傷害 -{v * 100:0}%",
                         PassiveKind.Hp => $"HP 上限 +{v:0}",
+                        PassiveKind.ArcaneBurst => $"奧術飛彈命中時爆炸：周圍 {Battle.ArcaneBurstRadius:0.#}m 的其他敵人受到 {v * 100:0}% 的傷害",
+                        PassiveKind.ArcaneTwin => $"奧術飛彈 {v * 100:0}% 機率連射兩發（第二發不用再集氣）",
                         PassiveKind.SpellEcho => $"奧術飛彈命中時 {v * 100:0}% 機率追加一發小火球或小冰錐（小冰錐冰凍 0.8 秒）",
                         PassiveKind.BasicMp => $"普攻命中回復 {v:0} MP",
                         PassiveKind.Overload => $"法師技能傷害 +{v * 15:0}%，但 MP 消耗 +{v * 20:0}%",
@@ -1231,6 +1235,7 @@ namespace SpellDuel
             f.gearReduce = Mathf.Min(0.6f, f.gearReduce + Passive(PassiveKind.Armor));
             f.maxHp += Mathf.RoundToInt(Passive(PassiveKind.Hp));
             // 技能樹 v2 的流派效果
+            f.arcaneBurst = Passive(PassiveKind.ArcaneBurst); f.arcaneTwin = Passive(PassiveKind.ArcaneTwin);
             f.spellEcho = Passive(PassiveKind.SpellEcho); f.basicMp = Passive(PassiveKind.BasicMp); f.lowMpBonus = Passive(PassiveKind.LowMp);
             f.melt = Passive(PassiveKind.Melt); f.iceFreeze = Passive(PassiveKind.IceFreeze);
             f.longShot = Passive(PassiveKind.LongShot); f.steadyAim = Passive(PassiveKind.SteadyAim); f.trapCrit = Passive(PassiveKind.TrapCrit);
