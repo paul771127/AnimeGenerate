@@ -19,6 +19,8 @@ namespace SpellDuel
         public static bool NextButton, NextPressed;
         /// <summary>第幾步／共幾步（顯示用）</summary>
         public static int StepNo, StepCount;
+        /// <summary>不鎖的時候的提示（指引的這一步不在目前的畫面，又帶不過去）</summary>
+        public static string Hint;
         /// <summary>指引每一幀都要回報（SoloBattle 沒在畫＝回到首頁等：鎖自動解除）</summary>
         public static int Beat = -99;
         static readonly List<Rect> rects = new List<Rect>();
@@ -41,7 +43,13 @@ namespace SpellDuel
         {
             GUI.depth = -1000;
             var e = Event.current;
-            if (Time.frameCount - Beat > 3) { UiKit.LockKey = null; NextButton = false; }
+            if (Time.frameCount - Beat > 3) { UiKit.LockKey = null; NextButton = false; Hint = null; }
+            if (!Active && !string.IsNullOrEmpty(Hint) && e.type == EventType.Repaint)
+            {
+                int hf = UiKit.BaseFont;
+                var top = UnityEngine.Screen.height - UnityEngine.Screen.safeArea.yMax;
+                UiKit.Pill(top + hf * 4.2f, Hint, Mathf.RoundToInt(hf * 0.8f), new Color(0.4f, 1f, 0.75f), UnityEngine.Screen.width * 0.92f, 0.8f);
+            }
             if (!Active) { UiKit.LockRectsBuilding.Clear(); UiKit.LockBypass = false; return; }
             if (e.type == EventType.Repaint)
             {

@@ -15,6 +15,9 @@ namespace SpellDuel
     /// </summary>
     public partial class SoloBattle
     {
+        /// <summary>指引每一步所在的畫面</summary>
+        enum WCtx { Any, Result, Town, Char, Shop, Smith, Guild, Map, Prep }
+
         class WStep
         {
             public string key, title;
@@ -22,6 +25,8 @@ namespace SpellDuel
             public Func<bool> done, skip;
             public bool block = true;
             public Action enter;
+            /// <summary>這一步要在哪個畫面做（不在那裡：先把玩家帶過去；帶不過去就不鎖，只提示）</summary>
+            public WCtx ctx = WCtx.Any;
         }
 
         string walkFlow; int walkStep; List<WStep> walkSteps; int walkStatStart, walkPotStart;
@@ -98,11 +103,73 @@ namespace SpellDuel
             if (walkSteps == null || walkStep >= walkSteps.Count) return;
             var cur = walkSteps[walkStep];
             bool pause = phase == Phase.Fighting || dlg != null || StoryVideo.Active || infoSkill != null || phase == Phase.Hidden;
-            UiKit.LockKey = pause || cur.key == "@next" ? null : cur.key;
-            UiLock.NextButton = !pause && cur.key == "@next";
-            UiLock.Block = cur.block;
-            UiLock.Title = cur.title; UiLock.Text = cur.text != null ? cur.text() : "";
+            UiLock.Hint = null;
+            string key = cur.key, title = cur.title, text = cur.text != null ? cur.text() : "";
+            if (!pause && cur.key != "@next" && !InCtx(cur.ctx))
+            {
+                // 不在這一步的畫面（例如中途跳出遊戲、重新進來）：先帶回去；帶不回去就不鎖，只提示
+                var (rk, rt) = RouteTo(cur.ctx);
+                if (rk != null) { key = rk; title = "先回到要去的地方"; text = rt + $"\n（接著：{cur.title}）"; }
+                else { key = null; UiLock.Hint = $"🧭 新手指引：{CtxName(cur.ctx)}，指引會接著繼續（{cur.title}）"; }
+            }
+            UiKit.LockKey = pause || key == "@next" ? null : key;
+            UiLock.NextButton = !pause && key == "@next";
+            UiLock.Block = cur.block || key != cur.key;
+            UiLock.Title = title; UiLock.Text = text;
             UiLock.StepNo = walkStep + 1; UiLock.StepCount = walkSteps.Count;
+        }
+
+        bool InCtx(WCtx c)
+        {
+            bool village = storyMapOpen && phase == Phase.Setup;
+            switch (c)
+            {
+                case WCtx.Result: return phase == Phase.Over;
+                case WCtx.Char: return charOpen;
+                case WCtx.Prep: return prepGo != null;
+                case WCtx.Town: return village && !charOpen && prepGo == null && world.screen == WorldUI.Screen.Town;
+                case WCtx.Shop: return village && !charOpen && world.screen == WorldUI.Screen.Shop;
+                case WCtx.Smith: return village && !charOpen && world.screen == WorldUI.Screen.Smith;
+                case WCtx.Guild: return (village && !charOpen && world.screen == WorldUI.Screen.Guild) || phase == Phase.Over;   // 轉職試煉打完的結算畫面也算（回職業工會）
+                case WCtx.Map: return village && !charOpen && prepGo == null && world.screen == WorldUI.Screen.Map;
+                default: return true;
+            }
+        }
+        static string CtxName(WCtx c) => c switch
+        {
+            WCtx.Result => "先打完這一關", WCtx.Char => "先打開「📜 角色」", WCtx.Prep => "先到出發前的整備畫面",
+            WCtx.Shop => "先到村子的「🧪 道具店」", WCtx.Smith => "先到村子的「⚒ 鐵匠鋪」", WCtx.Guild => "先到村子的「🏛 職業工會」",
+            WCtx.Map => "先到「🗺 大地圖」", _ => "先回到村子",
+        };
+
+        /// <summary>現在在哪、要去哪：這一刻該按哪個按鈕（null＝帶不過去）</summary>
+        (string key, string text) RouteTo(WCtx want)
+        {
+            bool village = storyMapOpen && phase == Phase.Setup;
+            if (charOpen) return ("=完成", "先按「完成」關掉角色畫面。");
+            if (prepGo != null) return ("取消", "先按「取消」回去。");
+            if (!village) return (null, null);
+            var sc = world.screen;
+            if (sc == WorldUI.Screen.Town)
+            {
+                if (world.walkMode) return ("🗺 城鎮圖", "先按「🗺 城鎮圖」回到村子的地圖。");
+                switch (want)
+                {
+                    case WCtx.Char: return ("📜 角色", "先按「📜 角色」打開角色畫面。");
+                    case WCtx.Shop: return ("🧪 道具店", "先按「🧪 道具店」。");
+                    case WCtx.Smith: return ("⚒ 鐵匠鋪", "先按「⚒ 鐵匠鋪」。");
+                    case WCtx.Guild: return ("🏛 職業工會", "先按「🏛 職業工會」。");
+                    case WCtx.Map: case WCtx.Prep: return ("大地圖", "先按「🗺 回大地圖」。");
+                }
+                return (null, null);
+            }
+            if (sc == WorldUI.Screen.Map)
+            {
+                if (want == WCtx.Map || want == WCtx.Prep) return (null, null);
+                return ("town:" + Mathf.Max(0, world.town), "先點地圖上的城鎮，回到村子。");
+            }
+            // 其他設施畫面：回城鎮（傳送陣是「留在…」）
+            return ("🏘 回|🏘 留|🗺 回大地圖", "先按下面的「🏘 回…」回到村子。");
         }
 
         /// <summary>還有沒有能加的能力值（點數不夠下一點的花費也算沒有：免得卡在這一步）</summary>
@@ -122,7 +189,9 @@ namespace SpellDuel
             CharacterProfile P() => Progress.Char(myClass);
             bool Town() => storyMapOpen && phase == Phase.Setup && world.screen == WorldUI.Screen.Town;
             var L = new List<WStep>();
-            WStep S(string key, string title, Func<string> text, Func<bool> done, Func<bool> skip = null) { var s = new WStep { key = key, title = title, text = text, done = done, skip = skip }; L.Add(s); return s; }
+            WCtx at = WCtx.Any;   // 接下來加的步驟在哪個畫面做
+            WStep S(string key, string title, Func<string> text, Func<bool> done, Func<bool> skip = null) { var s = new WStep { key = key, title = title, text = text, done = done, skip = skip, ctx = at }; L.Add(s); return s; }
+            bool InVillage() => storyMapOpen && phase == Phase.Setup;
             // 走路模式（3D 村子）切到清單（設施、居民都在清單裡）
             void ToList(string why) => S("🗺 城鎮圖", "回城鎮圖", () => $"按下方的「🗺 城鎮圖」：回到村子的 2D 地圖，居民和設施都在上面。{why}", () => Town() && !world.walkMode, () => Town() && !world.walkMode);
             void Learn(string npcKey, string npc, string skill)
@@ -140,11 +209,14 @@ namespace SpellDuel
             switch (flow)
             {
                 case "v11":
-                    S("回炎之里", "回村子", () => "打得好！先回村子：這一戰拿到了經驗和新的任務進度。按「🏘 回炎之里」。", () => Town());
+                    at = WCtx.Result;
+                    S("回炎之里", "回村子", () => "打得好！先回村子：這一戰拿到了經驗和新的任務進度。按「🏘 回炎之里」。", () => Town(), InVillage);   // 重新進遊戲時已經在村子：跳過
+                    at = WCtx.Town;
                     ToList("找居民學招式要從這裡點。");
                     Learn("・小鐵", "小鐵", "nv_swing");
                     Learn("・老焰", "老焰", "nv_aid");
                     S("📜 角色", "打開角色", () => "學會新招了！按「📜 角色」：能力值、技能樹、裝備都在這裡。", () => charOpen);
+                    at = WCtx.Char;
                     S("🌳 技能樹", "技能樹", () => "按上面的「🌳 技能樹」分頁。", () => charOpen && charPanel.tab == 1);
                     Node("nv_t_stone", "nv_stone");
                     Node("nv_t_swing", "nv_swing");
@@ -159,18 +231,25 @@ namespace SpellDuel
                         .enter = () => walkStatStart = P().statPoints;
                     S("=完成", "完成", () => "點好了！按下面的「完成」關掉角色畫面。", () => !charOpen);
                     // 出發前買小藥水（一定要買）
+                    at = WCtx.Town;
                     S("🧪 道具店", "道具店", () => "出門前要準備藥水：按地圖上的「🧪 道具店」。", () => storyMapOpen && world.screen == WorldUI.Screen.Shop)
                         .enter = () => { if (Economy.Gold < SmallPotionPrice) Economy.Gold = SmallPotionPrice; };   // 錢不夠：補到剛好買得起一瓶
+                    at = WCtx.Shop;
                     S("buy:hp_s", "買小藥水", () => "按「小治療藥水」的「💰 購買」。戰鬥中血變少時，說「喝藥水」或比 🤙 就能喝（回復 25% HP）。", () => Economy.Count("hp_s") > walkPotStart)
                         .enter = () => walkPotStart = Economy.Count("hp_s");
                     S("回城鎮", "回城鎮", () => "買好了！按「🏘 回城鎮」。", () => Town());
+                    at = WCtx.Town;
                     S("大地圖", "前往大地圖", () => "準備出發：按「🗺 大地圖」。", () => storyMapOpen && world.screen == WorldUI.Screen.Map);
+                    at = WCtx.Map;
                     S("stage:1-2", "選關卡 1-2", () => "點地圖上的「1-2」，下面會出現這一關的說明。", () => world.SelStageId == "1-2");
                     S("⚔ 出發", "出發", () => "按「⚔ 出發」。", () => prepGo != null || !storyMapOpen);
+                    at = WCtx.Prep;
                     S("⚔ 出發", "整備", () => "這是出發前的整備：技能欄、要帶的藥水。這次直接按「⚔ 出發」！", () => prepGo == null && (!storyMapOpen || phase == Phase.Fighting));
                     break;
                 case "job":
-                    S("回村子轉職", "回村子轉職", () => "你已經 10 級了！初心者的路走完了，回村子的職業工會轉職。按「🏛 回村子轉職」。", () => storyMapOpen && phase == Phase.Setup && world.screen == WorldUI.Screen.Guild);
+                    at = WCtx.Result;
+                    S("回村子轉職", "回村子轉職", () => "你已經 10 級了！初心者的路走完了，回村子的職業工會轉職。按「🏛 回村子轉職」。", () => storyMapOpen && phase == Phase.Setup && world.screen == WorldUI.Screen.Guild, InVillage);
+                    at = WCtx.Guild;
                     S("挑戰|工會|回炎之里|🗺 城鎮圖", "轉職試煉", () => P().CanChangeJob ? "通過試煉了！回到「🏛 職業工會」選職業。" : "按「挑戰」開始轉職試煉：打倒空地上的 5 隻小怪就通過（失敗可以再挑戰）。", () => P().CanChangeJob && storyMapOpen && phase == Phase.Setup && world.screen == WorldUI.Screen.Guild);
                     S("選這個|再按一次", "選職業", () => "選一個職業（這一步你自己決定）：點職業卡片可以看介紹；按「選這個」，再按一次確定。選定就不能換了。", () => P().cls != Skills.Novice).block = false;
                     break;
@@ -178,18 +257,24 @@ namespace SpellDuel
                 {
                     long uid = GiftUid;
                     bool Have() => FindItem(uid) != null;
-                    S("回城鎮", "回村子", () => "收下禮物了！先回到村子：按「🏘 回城鎮」。", () => Town(), () => Town());
+                    at = WCtx.Guild;
+                    S("回城鎮", "回村子", () => "收下禮物了！先回到村子：按「🏘 回城鎮」。", () => Town(), () => Town() || !(InVillage() && world.screen == WorldUI.Screen.Guild));   // 不在工會（例如重新進遊戲）：跳過，下一步會帶回村子
+                    at = WCtx.Town;
                     ToList("鐵匠鋪也在清單裡。");
                     S("📜 角色", "打開角色", () => "穿上小鐵送的武器：按「📜 角色」。", () => charOpen, () => !Have());
+                    at = WCtx.Char;
                     S("🛡 裝備", "裝備", () => "按上面的「🛡 裝備」分頁。上面是身上穿的、下面是背包。", () => charOpen && charPanel.tab == 2, () => !Have());
                     S("item:" + uid, "選武器", () => "在背包裡點小鐵送你的武器（藍色的名字），右邊會比較它和身上的裝備。", () => charPanel.SelItem != null && charPanel.SelItem.uid == uid, () => !Have() || P().equipped[(int)Slot.Weapon]?.uid == uid)
                         .enter = () => charPanel.FocusUid = uid;
                     S("=裝備", "穿上", () => "按「裝備」穿上它！穿不上的話，按鈕會寫原因（等級、能力值不夠）。", () => P().equipped[(int)Slot.Weapon]?.uid == uid, () => !Have());
                     S("=完成", "完成", () => "穿好了！按「完成」關掉角色畫面。", () => !charOpen);
+                    at = WCtx.Town;
                     S("⚒ 鐵匠鋪", "鐵匠鋪", () => "最後是強化：按「⚒ 鐵匠鋪」。", () => storyMapOpen && world.screen == WorldUI.Screen.Smith, () => !Have());
+                    at = WCtx.Smith;
                     S("item:" + uid, "選要強化的裝備", () => "點剛穿上的武器（👕＝身上穿著的）。", () => world.SelItem != null && world.SelItem.uid == uid, () => !Have())
                         .enter = () => world.FocusUid = uid;
                     S("⚒ 強化（", "強化", () => "按「⚒ 強化」：付金幣讓武器變強（每一級主屬性 +8%，其他屬性與機率不變）。", () => (FindItem(uid)?.plus ?? 1) > 0, () => !Have() || Economy.Gold < Economy.EnhanceCost(FindItem(uid)));
+                    at = WCtx.Any;
                     S("@next", "強化的規則", () => "+5 之前保證成功；再往上會有機會失敗（失敗不會壞掉，只是金幣花掉了）。打怪拿到的金幣，記得回來強化裝備！", null);
                     break;
                 }

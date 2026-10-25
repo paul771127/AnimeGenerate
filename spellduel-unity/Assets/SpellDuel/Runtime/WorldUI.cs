@@ -202,6 +202,7 @@ namespace SpellDuel
                 // 城鎮
                 float tw = rr.width * 0.26f, th = Mathf.Min(rr.height - fs * 1.4f, fs * 3.2f);
                 var trr = new Rect(rr.x + gap * 0.5f, rr.y + fs * 1.35f, tw, th);
+                UiKit.NextTag("town:" + t);   // 新手指引：回村子
                 if (UiKit.Button(trr, "", fsS, false, Towns[t].color, open)) { OpenTown(t); return; }
                 UiKit.Text(new Rect(trr.x, trr.y, trr.width, trr.height), open ? $"🏘\n{Towns[t].name}" : "🔒\n未開放", fsS, open ? Color.white : Color.gray, TextAnchor.MiddleCenter, true);
                 // 這個地區的關卡：沿著路線排開
