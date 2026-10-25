@@ -664,7 +664,29 @@ namespace SpellDuel
         readonly Dictionary<Fighter, MinionRig> minionGo = new Dictionary<Fighter, MinionRig>();
         readonly Dictionary<Fighter, float> minionLastHp = new Dictionary<Fighter, float>();
         readonly HashSet<Fighter> minionWinding = new HashSet<Fighter>();
-        readonly Dictionary<Fighter, GameObject> minionWarn = new Dictionary<Fighter, GameObject>();   // 近身重擊預備的紅圈
+        readonly Dictionary<Fighter, GameObject> minionWarn = new Dictionary<Fighter, GameObject>();   // 近身重擊預備的紅色扇形
+        static Mesh fanMesh;
+        /// <summary>地上的扇形（半徑 1、朝 +Z、左右各 Battle.MeleeFanHalf 度；兩面都看得到）</summary>
+        static Mesh FanMesh()
+        {
+            if (fanMesh != null) return fanMesh;
+            const int seg = 24;
+            var v = new Vector3[seg + 2]; v[0] = Vector3.zero;
+            for (int i = 0; i <= seg; i++)
+            {
+                float a = Mathf.Deg2Rad * Mathf.Lerp(-Battle.MeleeFanHalf, Battle.MeleeFanHalf, i / (float)seg);
+                v[i + 1] = new Vector3(Mathf.Sin(a), 0f, Mathf.Cos(a));
+            }
+            var t = new int[seg * 6];
+            for (int i = 0; i < seg; i++)
+            {
+                t[i * 6] = 0; t[i * 6 + 1] = i + 1; t[i * 6 + 2] = i + 2;
+                t[i * 6 + 3] = 0; t[i * 6 + 4] = i + 2; t[i * 6 + 5] = i + 1;
+            }
+            fanMesh = new Mesh { name = "MinionFan", vertices = v, triangles = t };
+            fanMesh.RecalculateNormals(); fanMesh.RecalculateBounds();
+            return fanMesh;
+        }
         readonly Dictionary<Fighter, GameObject> aimLines = new Dictionary<Fighter, GameObject>();   // （已不用：狙擊手改成射出後才畫紅線）
         readonly Dictionary<Projectile, GameObject> projLine = new Dictionary<Projectile, GameObject>();   // 敵人已放出的攻擊：飛行路線紅線
         readonly Dictionary<Battle.Lane, GameObject> laneGo = new Dictionary<Battle.Lane, GameObject>();   // 藤蔓／衝刺路線
@@ -1474,12 +1496,14 @@ namespace SpellDuel
                 // 近身重擊預備中：地上的紅色受擊範圍（越接近出手越亮；走出紅圈就打不到）
                 if (winding && Battle.HasMeleeWarnDisc(m.minionKind) && m.Alive)
                 {
-                    if (!minionWarn.TryGetValue(m, out var wg) || !wg) { wg = Prim(PrimitiveType.Cylinder, new Color(1f, 0.1f, 0.05f, 0.3f), true); minionWarn[m] = wg; }
+                    if (!minionWarn.TryGetValue(m, out var wg) || !wg) { wg = Prim(PrimitiveType.Quad, new Color(1f, 0.1f, 0.05f, 0.3f), true); wg.GetComponent<MeshFilter>().sharedMesh = FanMesh(); minionWarn[m] = wg; }   // 前方扇形
                     float rr = Battle.MeleeStrikeRadius(m.minionKind), wu = Battle.MinionWindupOf(m.minionKind);
                     float pr = Mathf.Clamp01(1f - (m.windupUntil - battle.now) / Mathf.Max(0.1f, wu)), pk = 0.5f + 0.5f * Mathf.Sin(Time.time * (6f + 12f * pr));
                     wg.SetActive(true);
                     wg.transform.position = WorldFrame.FromWorld(new Vector3(m.Feet.x, 0.02f, m.Feet.z));
-                    wg.transform.localScale = new Vector3(rr * 2f, 0.003f, rr * 2f);
+                    var fdir = WorldFrame.DirFromWorld(m.lockFwd != Vector3.zero ? m.lockFwd : m.forward); fdir.y = 0f;
+                    if (fdir.sqrMagnitude > 1e-6f) wg.transform.rotation = Quaternion.LookRotation(fdir.normalized, Vector3.up);
+                    wg.transform.localScale = new Vector3(rr, 1f, rr);
                     wg.GetComponent<Renderer>().material.color = new Color(1f, 0.12f, 0.05f, (0.18f + 0.35f * pr) * (0.6f + 0.4f * pk));
                 }
                 else if (minionWarn.TryGetValue(m, out var wg0) && wg0) wg0.SetActive(false);

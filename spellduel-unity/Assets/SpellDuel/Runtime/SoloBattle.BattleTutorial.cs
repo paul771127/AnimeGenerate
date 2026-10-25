@@ -142,7 +142,7 @@ namespace SpellDuel
                         // 這一隻出手了（預備結束）：被打到＝再一次；沒被打到＝閃過
                         if (btPrevWindup > 0f && btTarget.windupUntil <= 0f)
                         {
-                            if (hitsTaken > btHitsAt) { btMsg = "被打到了：紅圈出現時，走到紅圈外面"; btMsgUntil = Time.time + 3f; Sfx.Play("fail", 0.7f); btHitsAt = hitsTaken; }
+                            if (hitsTaken > btHitsAt) { btMsg = "被打到了：紅色扇形出現時，走到扇形外面（側邊或後面）"; btMsgUntil = Time.time + 3f; Sfx.Play("fail", 0.7f); btHitsAt = hitsTaken; }
                             else if (++btDodged >= 1) { BtPass("閃過了！"); BeginBt(BtFree); return; }
                         }
                         btPrevWindup = btTarget.windupUntil;
@@ -211,7 +211,7 @@ namespace SpellDuel
                     }
                     default:
                         title = "🔴 閃避：紅色預警範圍";
-                        text = "這隻小鬼會攻擊你：出手前約 1.5 秒，牠腳下會出現紅色的受擊範圍。紅圈出現時，走（或跳）到紅圈外面，就不會受傷！"; break;
+                        text = "這隻小鬼會攻擊你：出手前約 1.5 秒，牠前方的地上會出現紅色扇形（受擊範圍）。扇形出現時，往旁邊或後面走出扇形，就不會受傷！"; break;
                 }
             }
             else

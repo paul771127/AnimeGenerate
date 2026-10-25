@@ -23,6 +23,7 @@ namespace SpellDuel
         public int maxHp, maxMp;
         public Vector3 head;                  // 頭（玩家＝手機）的位置
         public Vector3 forward = Vector3.forward;   // 面向（水平）
+        public Vector3 lockFwd;                     // 小怪近身攻擊預備時鎖住的面向（扇形範圍跟著它，不會追著玩家轉）
         public bool isPlayer;
 
         public readonly Dictionary<string, float> cooldownUntil = new Dictionary<string, float>();
@@ -533,9 +534,23 @@ namespace SpellDuel
         public const int MinionKinds = 19;
         /// <summary>這種小怪的預備時間（秒）：預備動作要剛好在出手時擺到位</summary>
         /// <summary>近身重擊的小怪（熔岩小鬼、岩石衝鋒獸、食人花）：預備時地上畫紅色受擊範圍（中心＝小怪腳下；玩家站在圈外就打不到）</summary>
-        public static bool HasMeleeWarnDisc(int kind) => kind == 0 || kind == 2 || kind == 10;
+        public static bool HasMeleeWarnDisc(int kind) => kind == 0 || kind == 2 || kind == 10 || kind == 16;
+        /// <summary>近戰小怪的身體半徑多加 0.5m：不會貼到玩家臉上（看不清楚），玩家走過去也會把牠推開；攻擊距離照舊（從中心算）</summary>
+        public const float MeleeBodyExtra = 0.5f;
+        /// <summary>近戰小怪的攻擊範圍：前方扇形（左右各 60°，共 120°）</summary>
+        public const float MeleeFanHalf = 60f;
+        /// <summary>玩家在不在這隻小怪攻擊的扇形裡（貼在身上也算）</summary>
+        public static bool InMeleeFan(Fighter m, Fighter tgt)
+        {
+            var to = tgt.Feet - m.Feet; to.y = 0f;
+            if (to.magnitude <= m.bodyRadius + tgt.bodyRadius * 0.5f) return true;
+            var fw = Fighter.Flat(m.forward); if (fw == Vector3.zero) return true;
+            return Vector3.Angle(fw, to) <= MeleeFanHalf;
+        }
+        /// <summary>小怪停下來的距離（中心到中心）：身體不重疊、也不比原本更近</summary>
+        static float KeepDist(Fighter m, Fighter tgt) => Mathf.Max(MinionKeep(m.minionKind), m.bodyRadius + tgt.bodyRadius + 0.05f);
         /// <summary>近身重擊打得到多遠（小怪腳下到玩家身體中心；已含玩家身體半徑）</summary>
-        public static float MeleeStrikeRadius(int kind) => MeleeReach(kind, kind == 2 ? 1.6f : kind == 10 ? Skills.All["m_bite"].rangeMax + 0.2f : Skills.All["m_claw"].rangeMax) + 0.1f + Fighter.BodyRadius;
+        public static float MeleeStrikeRadius(int kind) => MeleeReach(kind, kind == 2 ? 1.6f : kind == 10 ? Skills.All["m_bite"].rangeMax + 0.2f : kind == 16 ? Skills.All["m_pincer"].rangeMax : Skills.All["m_claw"].rangeMax) + 0.1f + Fighter.BodyRadius;
         /// <summary>
         /// 教學用的控制：0＝照常、1＝定住（不動、不出手；預備中的取消）、2＝只走位不出手。null＝全部照常
         /// </summary>
@@ -578,7 +593,7 @@ namespace SpellDuel
             var c = Skills.Classes["minion"];
             var m = new Fighter(MinionNames[kind], c, new string[0], false)
             {
-                isMinion = true, minionKind = kind, bodyRadius = MinionRadius[kind], minionId = id > 0 ? id : nextId++,
+                isMinion = true, minionKind = kind, bodyRadius = MinionRadius[kind] + (IsRanged(kind) ? 0f : MeleeBodyExtra), minionId = id > 0 ? id : nextId++,
                 dmgMul = dmgMul, speedMul = speedMul,
             };
             m.maxHp = Mathf.RoundToInt(MinionHp[kind] * hpMul); m.hp = m.maxHp;
@@ -919,11 +934,36 @@ namespace SpellDuel
             if (m != null && s != null && s.id == "plague") Plague(m);   // 隊友的毒爆：主機引爆
         }
 
+        /// <summary>
+        /// 碰撞：近戰小怪的身體不會和玩家重疊（玩家走過去會把牠推開；在地上的才算，飛在空中的不算）。
+        /// 推出去的位置在場地外就不推（不會把小怪推出場地）。
+        /// </summary>
+        void PushMinionsFromPlayers()
+        {
+            foreach (var m in minions)
+            {
+                if (!m.Alive || IsRanged(m.minionKind) || m.alt > 0.5f || m.leapEnd > 0f) continue;
+                foreach (var pl in Players())
+                {
+                    if (!pl.Alive) continue;
+                    var away = m.Feet - pl.Feet; away.y = 0f;
+                    float d = away.magnitude, min = m.bodyRadius + pl.bodyRadius;
+                    if (d >= min) continue;
+                    var dir = d > 1e-3f ? away / d : Fighter.Flat(-pl.forward);
+                    if (dir == Vector3.zero) dir = Vector3.forward;
+                    var to = pl.Feet + dir * min; to.y = m.Feet.y;
+                    if (minionInside != null && !minionInside(to)) continue;
+                    m.head = new Vector3(to.x, m.head.y, to.z);
+                }
+            }
+        }
+
         void UpdateMinions(float dt)
         {
             if (!enemy.Alive && !endless) { foreach (var m in minions) if (m.Alive) { m.hp = 0; Emit("miniondie", m.Feet, m.cls.color, null); } }
             minions.RemoveAll(m => !m.Alive);
             if (remoteEnemy) return;   // 隊友端：代理，不跑 AI
+            PushMinionsFromPlayers();
             var claw = Skills.All["m_claw"];
             foreach (var m in minions)
             {
@@ -937,7 +977,7 @@ namespace SpellDuel
                 if (tgt == null) continue;
                 if (tgt.npcSide >= 0) best = FlatDistance(m.Feet, tgt.Feet);
                 m.target = tgt;
-                m.forward = Fighter.Flat(tgt.head - m.head);
+                m.forward = m.windupUntil > 0f && m.lockFwd != Vector3.zero ? m.lockFwd : Fighter.Flat(tgt.head - m.head);   // 預備中：面向鎖住（扇形不追著玩家轉）
                 float d = best;
                 int kind = m.minionKind;
                 int hold = minionHold != null ? minionHold(m) : 0;
@@ -1020,7 +1060,7 @@ namespace SpellDuel
                 if (IsRanged(kind)) windup *= rangedWindupMul;
                 bool outside = minionInside != null && !minionInside(m.Feet);   // 還在場地外：先走進來（不在場外放招）；海裡、空中的也一樣要進到場地才出手
                 bool outZone = !CanAttackFrom(m.Feet);   // 還沒進到中間的攻擊區（6m×6m）：先走進去才出手
-                if (!outZone && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt) { m.windupUntil = now + windup; Emit("minionwindup", m.Feet, claw.color, null); continue; }
+                if (!outZone && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt) { m.windupUntil = now + windup; m.lockFwd = Fighter.Flat(tgt.Feet - m.Feet); Emit("minionwindup", m.Feet, claw.color, null); continue; }
                 // 走位：射手保持 3.5～6m，其他走向目標（停在 0.8m）；小怪之間互相推開
                 float speed = minionSpeed * MinionSpeed[kind] * m.speedMul * EnemySpeedScale;
                 if (kind == 13 && minionInside != null && !minionInside(m.Feet)) speed *= 3f;   // 跳躍魚在海裡游得很快
@@ -1038,7 +1078,7 @@ namespace SpellDuel
                     float want = d > KeepHi(kind) ? d - KeepHi(kind) : d < KeepLo(kind) ? -(KeepLo(kind) - d) : 0f;
                     step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Clamp(want, -speed * dt, speed * dt);
                 }
-                else step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Min(speed * dt, Mathf.Max(0f, d - MinionKeep(kind)));   // 停在約一個身高的距離
+                else step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Min(speed * dt, Mathf.Max(0f, d - KeepDist(m, tgt)));   // 停在約一個身高的距離（身體不重疊）
                 foreach (var o in minions)
                 {
                     if (o == m) continue;
@@ -1200,7 +1240,7 @@ namespace SpellDuel
                     var pc = Skills.All["m_pincer"];
                     m.attackReadyAt = now + pc.cooldown;
                     Emit("minionattack", m.Feet, pc.color, null);
-                    if (d <= MeleeReach(16, pc.rangeMax) + 0.1f + tgt.bodyRadius)
+                    if (d <= MeleeReach(16, pc.rangeMax) + 0.1f + tgt.bodyRadius && InMeleeFan(m, tgt))   // 前方扇形
                     {
                         int dmg = Mathf.RoundToInt(pc.damage * m.dmgMul);
                         if (tgt.dodgeUntil > now && SidestepInvuln) Emit("evade", tgt.Chest, pc.color, "閃避！");
@@ -1310,7 +1350,7 @@ namespace SpellDuel
                     m.attackReadyAt = now + (m.minionKind == 2 ? 2.2f : chomp ? bite.cooldown : claw.cooldown);
                     Emit("minionattack", m.Feet, chomp ? bite.color : claw.color, null);
                     float reach = MeleeReach(m.minionKind, m.minionKind == 2 ? 1.6f : chomp ? bite.rangeMax + 0.2f : claw.rangeMax) + 0.1f;
-                    if (d <= reach + tgt.bodyRadius)
+                    if (d <= reach + tgt.bodyRadius && InMeleeFan(m, tgt))   // 前方扇形
                     {
                         if (tgt.dodgeUntil > now && SidestepInvuln) Emit("evade", tgt.Chest, claw.color, "閃避！");
                         else if (tgt.isAlly) { Emit("allyhit", tgt.Chest, claw.color, null); OnAllyHit?.Invoke(tgt, claw, dmg, tgt.Chest, 0); }
