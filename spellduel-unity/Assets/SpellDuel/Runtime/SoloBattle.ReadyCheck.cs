@@ -14,8 +14,11 @@ namespace SpellDuel
     /// </summary>
     public partial class SoloBattle
     {
-        int readyStep = -1;              // -1 不用（連線、沒開打）、0～4 進行中、5（ReadyDone）完成
-        public const int ReadyDone = 5;
+        int readyStep = -1;              // -1 不用（連線、沒開打）、0～5 進行中（5＝手勢校正的結果）、6（ReadyDone）完成
+        public const int ReadyDone = 6;
+        /// <summary>手勢校正：往上做完後停一下才開始量往下（不會一做完就馬上切換、誤判）；結果畫面停幾秒（可以重新校正）</summary>
+        public const float HandPause = 0.7f, HandResultTime = 5f;
+        float handTopY = float.NaN; string handResult;
         /// <summary>GameRoot：手勢影像上下翻過來（並鎖住）／確認方向正確（鎖住）</summary>
         public System.Action FlipHand, LockHand;
         float handAnchorY = float.NaN; int handDir1;
@@ -25,11 +28,14 @@ namespace SpellDuel
         readonly List<float> readyYs = new List<float>();
         bool readyCalibrated;            // 這場已經用準備步驟校正過（戰鬥中的自動校正就不再做）
         public const float ReadyHoldTime = 1f, ReadySkipAfter = 15f;
-        static readonly string[] ReadyTitles = { "📱 站直，手機舉在眼前", "⬇ 蹲下", "⬆ 站起來", "✋ 手掌比五，往上移", "✋ 再往下移" };
+        static readonly string[] ReadyTitles = { "📱 站直，手機舉在眼前", "⬇ 蹲下", "⬆ 站起來", "✋ 手掌比五，往上移", "✋ 再往下移", "✔ 手勢方向確認" };
 
         bool InReady => readyStep >= 0 && readyStep < ReadyDone && phase == Phase.Fighting;
 
-        void BeginReadyCheck() { readyStep = 0; readyHoldSince = -1f; readyStepAt = Time.time; readyYs.Clear(); readyCalibrated = false; handAnchorY = float.NaN; handDir1 = 0; }
+        void BeginReadyCheck() { readyStep = 0; readyHoldSince = -1f; readyStepAt = Time.time; readyYs.Clear(); readyCalibrated = false; handAnchorY = float.NaN; handDir1 = 0; handTopY = float.NaN; }
+
+        /// <summary>重新校正手勢方向（回到「往上移」）</summary>
+        void RestartHandCheck() { readyStep = 3; readyStepAt = Time.time; readyHoldSince = -1f; handAnchorY = float.NaN; handTopY = float.NaN; handDir1 = 0; handResult = null; Sfx.Play("select", 0.6f, 1.1f); }
 
         /// <summary>
         /// 手勢方向校正：手掌在畫面上移動超過 HandMoveShare → 回傳方向（+1＝往上、−1＝往下；0＝還沒）。
@@ -93,26 +99,27 @@ namespace SpellDuel
                 case 3:
                 {
                     int m = HandMoved();
-                    if (m != 0) { handDir1 = m; handAnchorY = Hand.Palm.y; ReadyNext(); }
+                    if (m != 0) { handDir1 = m; handTopY = Hand.Palm.y; ReadyNext(); }   // 往上做到了：記下最高點（停一下才量往下）
                     break;
                 }
                 case 4:
                 {
-                    int m = HandMoved();
-                    if (m == 0) break;
-                    int v = HandFlipVerdict(handDir1, m);
-                    if (v == 0)
-                    {
-                        // 兩次都往同一邊：看不出來，重做
-                        Say("沒看清楚，再一次：手掌比五，先往上、再往下", 2.5f);
-                        readyStep = 3; readyStepAt = Time.time; handAnchorY = float.NaN; handDir1 = 0; Sfx.Play("warn", 0.5f);
-                        break;
-                    }
-                    if (v < 0) { FlipHand?.Invoke(); Say("🔄 手勢方向修正了（畫面上下顛倒，已翻正）", 3f); }
-                    else { LockHand?.Invoke(); Say("✅ 手勢方向正確", 1.5f); }
-                    ReadyNext();
+                    // 往下：從往上的最高點（畫面上手掌走到最遠的地方）往回走超過門檻才算；手暫時離開畫面不會重新起算
+                    if (Hand == null || !Hand.HandVisible) break;
+                    float hy = Hand.Palm.y;
+                    if (handDir1 > 0 ? hy > handTopY : hy < handTopY) handTopY = hy;   // 繼續往同一邊：最高點跟著走
+                    if (Time.time - readyStepAt < HandPause) break;
+                    float back = (handTopY - hy) * handDir1;   // 往回走了多少（像素）
+                    if (back < Screen.height * HandMoveShare) break;
+                    int v = HandFlipVerdict(handDir1, -handDir1);
+                    if (v < 0) { FlipHand?.Invoke(); handResult = "🔄 畫面上下顛倒，已經翻正了"; }
+                    else { LockHand?.Invoke(); handResult = "✅ 手勢方向正確"; }
+                    ReadyNext();   // 結果畫面：停幾秒，可以重新校正
                     break;
                 }
+                case 5:
+                    if (Time.time - readyStepAt >= HandResultTime) ReadyNext();
+                    break;
             }
         }
 
@@ -171,7 +178,7 @@ namespace SpellDuel
             float since = Time.time - readyFlashAt;
             if (since < 0.45f) EdgeFlash(new Color(0.45f, 1f, 0.5f), 1f - since / 0.45f);   // 做到了：畫面四邊亮一下
             if (readyStep >= ReadyDone) return;   // 完成：接著是「⚔ 戰鬥開始」倒數（DrawIntroOutro）
-            var r = new Rect(W * 0.06f, H * 0.16f, W * 0.88f, fs * 17.4f);
+            var r = new Rect(W * 0.06f, H * 0.14f, W * 0.88f, fs * 19.5f);
             UiKit.Card(r, 0.88f, UiKit.Gold, 0.8f);
             float x = r.x + fs, w = r.width - fs * 2, y = r.y + fs * 0.6f;
             UiKit.Text(new Rect(x, y, w, fs * 1.8f), readyStep >= 3 ? "戰鬥準備：手勢方向校正" : "戰鬥準備：身高校正", Mathf.RoundToInt(fs * 1.2f), UiKit.Gold, TextAnchor.MiddleCenter, true);
@@ -190,11 +197,20 @@ namespace SpellDuel
                 1 => "手機一樣對著前方，整個人蹲下去（之後蹲下就能躲開橫掃攻擊）",
                 2 => "站起來，回到剛才的高度",
                 3 => Hand == null || !Hand.HandVisible ? "把手伸到鏡頭前面、手掌比五（張開），讓畫面看得到手" : "很好，看到手了！手掌慢慢往上移",
-                _ => Hand == null || !Hand.HandVisible ? "手跑出畫面了，手掌比五放回鏡頭前" : "手掌慢慢往下移（校正手勢的上下方向）",
+                4 => Time.time - readyStepAt < HandPause ? "✅ 往上 OK！停一下…" : Hand == null || !Hand.HandVisible ? "手跑出畫面了，手掌比五放回鏡頭前（剛才的往上還算數）" : "✅ 往上 OK！接著手掌慢慢往下移",
+                _ => $"{handResult}　（{Mathf.Max(0f, HandResultTime - (Time.time - readyStepAt)):0} 秒後開始）",
             };
             UiKit.Text(new Rect(x, y, w, fs * 2.4f), tip, fs, new Color(0.85f, 0.92f, 1f), TextAnchor.MiddleCenter);
             y += fs * 2.6f;
-            if (readyStep >= 3 && Time.time - readyStepAt > ReadySkipAfter)
+            if (readyStep == 5)
+            {
+                // 手勢校正的結果：直接開始，或重新校正
+                float bw2 = (w - fs) / 2f;
+                if (UiKit.Button(new Rect(x, y, bw2, fs * 2f), "⚔ 開始", fs, true, UiKit.Gold)) ReadyNext();
+                if (UiKit.Button(new Rect(x + bw2 + fs, y, bw2, fs * 2f), "🔄 重新校正", fs)) RestartHandCheck();
+            }
+            else if (readyStep == 4 && UiKit.Button(new Rect(r.center.x - fs * 6f, y, fs * 12f, fs * 2f), "🔄 重新校正", fs)) RestartHandCheck();
+            else if (readyStep >= 3 && Time.time - readyStepAt > ReadySkipAfter)
             {
                 // 偵測不到手（光線太暗等）：可以跳過手勢校正（照原本的自動判斷）
                 if (UiKit.Button(new Rect(r.center.x - fs * 6f, y, fs * 12f, fs * 2f), "跳過手勢校正", fs))
