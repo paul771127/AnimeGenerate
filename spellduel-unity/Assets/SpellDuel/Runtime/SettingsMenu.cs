@@ -57,6 +57,14 @@ namespace SpellDuel
             int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.85f);
             var safe = Screen.safeArea;
             var gear = GearRect;
+            if (VoiceCalib.Open)
+            {
+                // 語音校正（VoiceCalib.cs）：蓋在最上面，點擊不要傳到後面
+                VoiceCalib.Draw();
+                var ev = Event.current;
+                if (ev.type == EventType.MouseDown || ev.type == EventType.MouseUp || ev.type == EventType.MouseDrag) ev.Use();
+                return;
+            }
             if (!Open)
             {
                 if (UiKit.Button(gear, "⚙", Mathf.RoundToInt(fs * 1.1f))) { Open = true; homeConfirm = false; }
@@ -66,7 +74,7 @@ namespace SpellDuel
             // 背景變暗＋面板
             GUI.color = new Color(0f, 0f, 0f, 0.55f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
             float pw = Mathf.Min(W * 0.9f, fs * 22f), rowH = fs * 2.4f, pad = fs * 0.8f;
-            float ph = pad * 2 + fs * 2f + rowH * 6 + fs * 2.6f + (GoHome != null ? fs * 3.6f : 0f);
+            float ph = pad * 2 + fs * 2f + rowH * 6 + fs * 2.6f + (GoHome != null ? fs * 3.6f : 0f) + fs * 2.8f;
             var r = new Rect((W - pw) / 2f, (H - ph) / 2f, pw, ph);
             UiKit.Card(r, 0.95f, UiKit.Gold, 0.8f);
             UiKit.Text(new Rect(r.x + pad, r.y + pad * 0.6f, r.width - pad * 2, fs * 1.8f), "⚙ 設定", Mathf.RoundToInt(fs * 1.15f), UiKit.Gold, TextAnchor.MiddleCenter, true);
@@ -79,6 +87,13 @@ namespace SpellDuel
             Row(ref y, r, pad, rowH, fs, fsS, "🧭 放招提示", CastGuidePref.On, CastGuidePref.Set, -1f, null);
             Row(ref y, r, pad, rowH, fs, fsS, "📊 手勢速度", GestureStatsPref.On, GestureStatsPref.Set, -1f, null);   // 畫面左邊顯示手勢辨識每一段花的時間（找延遲用）   // 唸完技能後一步一步教你怎麼放   // AR 光照估計：角色跟著房間明暗
 
+            // 語音校正：自己唸幾次技能名稱，記下辨識器聽到的字（VoiceCalib.cs）；戰鬥中不能開
+            {
+                bool fighting = InBattle != null && InBattle();
+                var vr = new Rect(r.x + pad, y + fs * 0.2f, r.width - pad * 2, fs * 2.2f);
+                if (UiKit.Button(vr, fighting ? "🎙 語音校正（戰鬥中不能用）" : "🎙 語音校正", fighting ? fsS : fs, false, new Color(1f, 0.6f, 0.45f), !fighting)) { Open = false; VoiceCalib.Show(); }
+                y += fs * 2.8f;
+            }
             // 回首頁：戰鬥中要再按一次確認（這一場的戰利品不會保留）
             if (GoHome != null)
             {

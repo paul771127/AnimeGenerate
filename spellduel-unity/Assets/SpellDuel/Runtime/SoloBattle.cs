@@ -711,8 +711,10 @@ namespace SpellDuel
             world.SpeechNote = !UseSpeech ? "這支手機沒有語音辨識：走近居民，舉起手掌揮一揮就能聊天" : speech.Running ? null : $"語音：{speech.Status}";
         }
 
+        bool speechCalib;
         void OnSpeechText(string text)
         {
+            if (VoiceCalib.Open) { VoiceCalib.Heard(text); return; }
             if (phase == Phase.Fighting && battle != null) { if (scrollAsk) return; DungeonSpeech(text); ItemByVoice(text); CoatByVoice(text); return; }   // 回城確認中：暫停，不聽指令
             if (!TownWalking) return;
             if (Greeting.Find(text) != null) { world.Heard = text; world.HeardAt = Time.time; }
@@ -879,6 +881,10 @@ namespace SpellDuel
             speech = new SpeechInput();
             speech.OnSkill += OnSpeechSkill;
             speech.OnText += OnSpeechText;
+            VoiceAliases.Load = k => PlayerPrefs.GetString(k, "");   // 語音校正的別名：記在手機上（所有角色共用）
+            VoiceAliases.Store = (k, v) => { PlayerPrefs.SetString(k, v); PlayerPrefs.Save(); };
+            VoiceCalib.Skills = () => SetupSkills;   // 語音校正：學會的技能（VoiceCalib.cs）
+            VoiceCalib.Supported = () => UseSpeech;
             // 存檔：每個角色自己一份（CharacterSlots.Key 加上角色欄位的前綴）；倉庫三個角色共用
             Progress.Get = k => PlayerPrefs.GetString(CharacterSlots.Key(k), "");
             Progress.Set = (k, v) => { PlayerPrefs.SetString(CharacterSlots.Key(k), v); PlayerPrefs.Save(); };
@@ -2440,11 +2446,14 @@ namespace SpellDuel
         {
             // 手機內建語音辨識：戰鬥中語音開啟就聽，唸技能名稱即詠唱（不能和下面的錄音比對同時用麥克風）
             // 城鎮裡走動時也開著：聽「你好」之類的招呼語
-            bool town = TownWalking && UseSpeech;
-            bool wantSpeech = UseSpeech && (voiceOn && phase == Phase.Fighting || town) && recordingSkill == null;
+            bool calib = VoiceCalib.Listening && UseSpeech && phase != Phase.Fighting;   // 語音校正中（⚙ 設定）
+            bool town = TownWalking && UseSpeech && !calib;
+            bool wantSpeech = UseSpeech && (voiceOn && phase == Phase.Fighting || town || calib) && recordingSkill == null;
+            if (calib != speechCalib && speech.Running) speech.Stop();   // 換成校正／換回來：重新開（候選名稱不同）
+            speechCalib = calib;
             if (wantSpeech && (!speech.Running || town != speechTown))
             {
-                speech.Candidates = town ? NoSkills : SpeechCandidates;
+                speech.Candidates = calib ? VoiceCalib.Candidates : town ? NoSkills : SpeechCandidates;
                 speech.ExtraHints = town ? Greeting.Words : myClass == "mage" ? CoatWords : null;
                 speechTown = town;
                 if (!speech.Running) speech.Start();
@@ -2513,6 +2522,7 @@ namespace SpellDuel
 
         void OnSpeechSkill(string id)
         {
+            if (VoiceCalib.Open) { if (!id.StartsWith(SpeechInput.ChantPrefix)) VoiceCalib.Recognized(id); return; }   // 語音校正的「試試看」
             if (id.StartsWith(SpeechInput.ChantPrefix)) { OnChant(id.Substring(SpeechInput.ChantPrefix.Length)); return; }
             if (phase != Phase.Fighting || battle == null || frozen || !Skills.All.TryGetValue(id, out var skill)) return;
             if (PotLessonFreeze) { Say("🧪 先喝藥水！說「喝藥水」或比 🤙", 1.5f); return; }

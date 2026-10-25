@@ -217,7 +217,7 @@ namespace SpellDuel
             if (candidates != null)
                 foreach (var id in candidates)
                     if (id != null && !ids.Contains(id) && Skills.All.TryGetValue(id, out var s) && !string.IsNullOrEmpty(s.name))
-                    { ids.Add(id); names.Add(s.name); }
+                    { ids.Add(id); names.Add(VoiceAliases.WithAliases(id, s.name)); }   // 語音校正記下的別名一起比對
             // 法師的咒語：唸完技能名稱後（同一句話裡也可以）接著唸
             chantFrom = names.Count;
             if (candidates != null)
@@ -279,11 +279,11 @@ namespace SpellDuel
         /// <summary>names[hit] 是別的名稱的開頭，而且句尾剛好停在那個較長名稱的前半段（還可能接下去）</summary>
         static bool MayContinue(string t0, IList<string> names, int hit)
         {
-            string n = SpeechMatcher.Normalize(names[hit]);
+            string n = SpeechMatcher.Primary(names[hit]);
             for (int i = 0; i < names.Count; i++)
             {
                 if (i == hit) continue;
-                string l = SpeechMatcher.Normalize(names[i]);
+                string l = SpeechMatcher.Primary(names[i]);
                 if (l.Length <= n.Length || !l.StartsWith(n, StringComparison.Ordinal)) continue;
                 for (int k = n.Length; k < l.Length; k++)
                     if (t0.EndsWith(l.Substring(0, k), StringComparison.Ordinal)) return true;
@@ -357,7 +357,7 @@ namespace SpellDuel
                     locked = true;
                     // 技能名稱在這段文字的哪裡結束：後面的字留給咒語
                     int skip0 = Math.Min(consumed, SpeechMatcher.CommonPrefix(t0, prev));
-                    chantPos = skip0 + SpeechMatcher.MatchEnd(t0.Substring(Math.Min(skip0, t0.Length)), SpeechMatcher.Normalize(names[hit]));
+                    chantPos = skip0 + SpeechMatcher.MatchEnd(t0.Substring(Math.Min(skip0, t0.Length)), SpeechMatcher.Primary(names[hit]));
                     consumed = t0.Length;
                     if (hit < lockedFrom) queued = MatchChant(alts, names, lockedFrom, t0);
                 }
@@ -494,6 +494,9 @@ namespace SpellDuel
         };
 
         /// <summary>去掉空白與標點、全形轉半形、簡體轉繁體、英文轉小寫</summary>
+        /// <summary>名稱（可能帶 | 別名）的正式名稱部分，正規化後</summary>
+        public static string Primary(string name) { if (string.IsNullOrEmpty(name)) return ""; int i = name.IndexOf('|'); return Normalize(i >= 0 ? name.Substring(0, i) : name); }
+
         public static string Normalize(string s)
         {
             if (string.IsNullOrEmpty(s)) return "";
@@ -630,21 +633,30 @@ namespace SpellDuel
             int bestIdx = -1;
             float bestRel = float.MinValue;
             var normNames = new string[names.Count];
-            for (int k = 0; k < names.Count; k++) normNames[k] = Normalize(names[k]);
+            for (int k = 0; k < names.Count; k++) normNames[k] = Primary(names[k]);
             // 每個名稱取所有候選文字中的最高分；以「超過門檻多少」排名，讓長短名稱公平比較
+            // 名稱可以用 | 帶別名（語音校正記下的「我唸這個技能時辨識器聽到的字」）：取名稱和別名中最好的一個
             var rel = new float[names.Count];
             var raw = new float[names.Count];
             for (int k = 0; k < names.Count; k++)
             {
-                float s = 0f;
-                foreach (var h in hypotheses)
+                float best = float.MinValue, bestRaw = 0f;
+                foreach (var v0 in names[k].Split('|'))
                 {
-                    string t = normalized ? h : Normalize(h);
-                    if (string.IsNullOrEmpty(t)) continue;
-                    s = Math.Max(s, Score(t, normNames[k]));
+                    string v = Normalize(v0);
+                    if (v.Length == 0) continue;
+                    float s = 0f;
+                    foreach (var h in hypotheses)
+                    {
+                        string t = normalized ? h : Normalize(h);
+                        if (string.IsNullOrEmpty(t)) continue;
+                        s = Math.Max(s, Score(t, v));
+                    }
+                    float r = s - Threshold(v);
+                    if (r > best) { best = r; bestRaw = s; }
                 }
-                raw[k] = s;
-                rel[k] = s - Threshold(normNames[k]);
+                raw[k] = bestRaw;
+                rel[k] = best;
                 if (rel[k] > bestRel) { bestRel = rel[k]; bestIdx = k; }
             }
             if (bestIdx < 0) return -1;
@@ -665,9 +677,92 @@ namespace SpellDuel
             var ids = new List<string>();
             var names = new List<string>();
             foreach (var id in skillIds)
-                if (id != null && Skills.All.TryGetValue(id, out var s)) { ids.Add(id); names.Add(s.name); }
+                if (id != null && Skills.All.TryGetValue(id, out var s)) { ids.Add(id); names.Add(VoiceAliases.WithAliases(id, s.name)); }
             int k = Best(hypotheses, names, out _, out _);
             return k >= 0 ? ids[k] : null;
+        }
+    }
+
+    /// <summary>
+    /// 語音校正（⚙ 設定 →「🎙 語音校正」）：玩家對著每個技能唸幾次，記下辨識器實際聽到的字，當作那個技能的別名。
+    /// 之後辨識到很像別名的字，也算唸了那個技能（口音、辨識器習慣聽錯的字都能自己校正）。記在手機上（所有角色共用）。
+    /// </summary>
+    public static class VoiceAliases
+    {
+        public const int MaxPerSkill = 6;
+        const string Key = "sd_voice_alias";
+        static Dictionary<string, List<string>> map;
+        /// <summary>存檔（SoloBattle 接到 PlayerPrefs；沒接＝只記在記憶體，方便測試）</summary>
+        public static Func<string, string> Load;
+        public static Action<string, string> Store;
+
+        static Dictionary<string, List<string>> Map
+        {
+            get
+            {
+                if (map != null) return map;
+                map = new Dictionary<string, List<string>>();
+                string raw = "";
+                if (Load != null) { try { raw = Load(Key) ?? ""; } catch (Exception) { } }
+                foreach (var entry in raw.Split('\n'))
+                {
+                    int eq = entry.IndexOf('=');
+                    if (eq <= 0) continue;
+                    var list = new List<string>();
+                    foreach (var a in entry.Substring(eq + 1).Split('|')) if (a.Length > 0) list.Add(a);
+                    if (list.Count > 0) map[entry.Substring(0, eq)] = list;
+                }
+                return map;
+            }
+        }
+
+        static void Save()
+        {
+            if (Store == null) return;
+            var sb = new StringBuilder();
+            foreach (var kv in Map) if (kv.Value.Count > 0) sb.Append(kv.Key).Append('=').Append(string.Join("|", kv.Value)).Append('\n');
+            try { Store(Key, sb.ToString()); } catch (Exception) { }
+        }
+
+        public static IList<string> Of(string id) => id != null && Map.TryGetValue(id, out var l) ? l : (IList<string>)Array.Empty<string>();
+
+        /// <summary>名稱＋別名（用 | 接起來，SpeechMatcher.Best 會拆開比）</summary>
+        public static string WithAliases(string id, string name)
+        {
+            var l = Of(id);
+            return l.Count == 0 ? name : name + "|" + string.Join("|", l);
+        }
+
+        /// <summary>記下一次「唸 id 時聽到 heard」；回傳正規化後記下的字（太短、空的不記，回傳 null）</summary>
+        public static string Add(string id, string heard)
+        {
+            string n = SpeechMatcher.Normalize(heard);
+            if (string.IsNullOrEmpty(id) || n.Length < 2 || n.Length > 12) return null;
+            if (!Map.TryGetValue(id, out var l)) Map[id] = l = new List<string>();
+            l.Remove(n); l.Add(n);
+            while (l.Count > MaxPerSkill) l.RemoveAt(0);
+            Save();
+            return n;
+        }
+
+        public static void Remove(string id, string alias) { if (id != null && Map.TryGetValue(id, out var l) && l.Remove(alias)) Save(); }
+        public static void Clear(string id) { if (id != null && Map.Remove(id)) Save(); }
+
+        /// <summary>這個別名跟其他技能（名稱或別名）太像：可能會誤判，提醒玩家（回傳那個技能 id）</summary>
+        public static string ClashWith(string id, string alias, IList<string> skillIds)
+        {
+            foreach (var other in skillIds)
+            {
+                if (other == id || !Skills.All.TryGetValue(other, out var s)) continue;
+                var names = new List<string> { s.name };
+                foreach (var a in Of(other)) names.Add(a);
+                foreach (var n in names)
+                {
+                    string v = SpeechMatcher.Normalize(n);
+                    if (v.Length > 0 && SpeechMatcher.Score(alias, v) >= SpeechMatcher.MinScore) return other;
+                }
+            }
+            return null;
         }
     }
 }
