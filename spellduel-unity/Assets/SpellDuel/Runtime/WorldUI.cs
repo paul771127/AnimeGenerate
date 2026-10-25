@@ -186,8 +186,11 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 大地圖
         void DrawMap(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
+            if (DrawWorldMap2(r, prof, fs, fsS, fsL, gap)) return;   // 新的路線圖（WorldUI.WorldMap2.cs）；不能用時照舊
             float y = r.y + gap;
             Header(r, "🗺 大地圖", new Color(1f, 0.85f, 0.45f), prof, fs, fsS, fsL, gap, ref y);
+            if (useOldMap && WorldMap2Usable && UiKit.Button(new Rect(r.xMax - gap - fs * 5f, y, fs * 5f, fs * 1.6f), "🗺 路線圖", fsS, false, new Color(1f, 0.85f, 0.45f))) { useOldMap = false; return; }
+            if (useOldMap && WorldMap2Usable) y += fs * 1.8f;
             float detailH = sel != null ? fs * 9.6f : fs * 2.4f;
             float towerH = fs * 2.3f;
             float bottom = r.yMax - gap - fs * 2.3f - detailH - towerH - gap * 0.4f;

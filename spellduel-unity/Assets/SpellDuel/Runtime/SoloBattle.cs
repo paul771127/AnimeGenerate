@@ -830,7 +830,7 @@ namespace SpellDuel
             Progress.ReloadStorage(); Story.ResetCache(); Dungeons.ResetCache(); Economy.ResetCache();
             ReadCharacterChoices();
             prof = null; levelLockSaid = false;
-            LoadLoadout(); ResetCarryLeft(); ReloadWalk();
+            LoadLoadout(); ResetCarryLeft(); ReloadWalk(); world.ResetWorldMapState();
         }
         /// <summary>選角畫面刪掉了某個角色：如果是正在玩的，放掉（記憶體裡的資料丟掉）。回傳是不是正在玩的</summary>
         public bool CharacterSlotGone(int s)
