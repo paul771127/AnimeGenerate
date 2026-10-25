@@ -111,7 +111,7 @@ namespace SpellDuel
         {
             var p=facePersona;head.localRotation=Quaternion.Euler(p.Pitch,p.Yaw,p.Roll);
             var features=AnimeFace.Build(head,advancedId??classId,p,Skin,Mul(Wood,.45f),
-                Color.Lerp(clsColor,new Color(.15f,.48f,.58f),.25f),advancedId=="marksman",advancedId=="bishop",classId=="archer");
+                Color.Lerp(clsColor,new Color(.15f,.48f,.58f),.25f),advancedId=="marksman",false,false);
             eyePaint.AddRange(features.Eyes);upperLids.AddRange(features.Lids);mouthOpen=features.Mouth;
             foreach(var lid in upperLids)lidInk.AddRange(lid.GetComponentsInChildren<Renderer>());
             // 耳廓由共用比例建立，職業耳飾跟隨新的耳垂高度。
@@ -267,7 +267,7 @@ namespace SpellDuel
                 case "berserker":
                     RemoveNamed(handR,"Sword"); if(shield!=null) { RemoveVisual(shield.gameObject); shield=null; }
                     // Blue-white sword robes, a straight jian and a sheathed spare; no axe or heavy armour.
-                    var jade=AnimeFace.Material(new Color(.24f,.65f,.70f));
+                    var jade=AnimeFace.Material(new Color(.25f,.31f,.42f));
                     var silver=AnimeFace.Material(new Color(.78f,.91f,.97f));
                     var sageSword=SpellFx.CreateSwordSageBlade();sageSword.name="Sword";
                     sageSword.transform.SetParent(handR,false);sageSword.transform.localPosition=new Vector3(0,-.04f,0);
@@ -283,8 +283,7 @@ namespace SpellDuel
                         var ribbon=Pivot("DanceRibbon",spine,new Vector3(side*.11f,.055f,-.08f));
                         ribbon.localRotation=Quaternion.Euler(0,side*10,side*5);
                     }
-                    // Slim jade hairpin sits in the knot, below the top of the actual hair silhouette.
-                    Seg(head,new Vector3(-.11f,.11f,-.04f),new Vector3(.11f,.11f,-.04f),.012f,jade);
+                    // The reference protagonist wears no bun or hairpin. Keep the existing sword poses.
                     baseL=new Arm(-24,-12,-65,5);baseR=new Arm(-8,8,-42,0);
                     chargeL=new Arm(-82,-8,-28,5);chargeR=new Arm(-18,12,-55,0);
                     castL=new Arm(-88,0,-6,12);castR=new Arm(-12,10,-45,0);
@@ -379,9 +378,7 @@ namespace SpellDuel
         void BuildPersonaClothing()
         {
             AnimeFace.Hair(head,advancedId??classId,facePersona,CharacterLook.Get(advancedId??classId).HairColor);
-            if(advancedId=="berserker")AnimeFace.Detail(head,advancedId,facePersona,new Vector2(.073f,-.039f),new Vector2(.079f,-.062f),.003f,new Color(.63f,.22f,.20f));
-            if(advancedId=="shadowdancer")for(int side=-1;side<=1;side+=2)AnimeFace.Detail(head,advancedId,facePersona,new Vector2(side*.070f,-.024f),new Vector2(side*.079f,-.018f),.003f,EyeCol);
-            if(advancedId=="bishop")for(int side=-1;side<=1;side+=2)AnimeFace.Detail(head,advancedId,facePersona,new Vector2(side*.065f,-.044f),new Vector2(side*.080f,-.049f),.002f,Mul(Skin,.70f));
+
         }
 
         void AnimateDetails(float cast, float hurt)
@@ -500,6 +497,7 @@ namespace SpellDuel
 
             BuildAccessories();
             BuildAdvanced();
+            MatchDefaultWeapons();
             BuildPersonaClothing();
             BuildLayeredOutfit();
             SetupPresentation();

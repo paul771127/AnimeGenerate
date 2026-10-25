@@ -1,0 +1,134 @@
+{
+  "unityVersion": "offline contracts",
+  "classes": [
+    {
+      "id": "novice",
+      "triangles": 11280,
+      "renderers": 43,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "swordsman",
+      "triangles": 11744,
+      "renderers": 31,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "archer",
+      "triangles": 12376,
+      "renderers": 36,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "mage",
+      "triangles": 10772,
+      "renderers": 31,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "assassin",
+      "triangles": 10928,
+      "renderers": 33,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "priest",
+      "triangles": 12000,
+      "renderers": 32,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "paladin",
+      "triangles": 11940,
+      "renderers": 32,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "berserker",
+      "triangles": 10638,
+      "renderers": 39,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "marksman",
+      "triangles": 13148,
+      "renderers": 36,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "ranger",
+      "triangles": 12708,
+      "renderers": 41,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "archmage",
+      "triangles": 11644,
+      "renderers": 35,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "summoner",
+      "triangles": 10812,
+      "renderers": 31,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "ninja",
+      "triangles": 11348,
+      "renderers": 32,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "shadowdancer",
+      "triangles": 10556,
+      "renderers": 34,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "bishop",
+      "triangles": 12244,
+      "renderers": 36,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    },
+    {
+      "id": "inquisitor",
+      "triangles": 11110,
+      "renderers": 30,
+      "torsoMeshCached": true,
+      "gearVisible": true,
+      "crownPreserved": true
+    }
+  ],
+  "failures": 0
+}

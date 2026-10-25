@@ -68,7 +68,7 @@ namespace SpellDuel
             OutfitArt.Add(knL,identity,"calfL",Skin);OutfitArt.Add(knR,identity,"calfR",Skin);
             OutfitArt.Add(shL,identity,"upperL",Skin);OutfitArt.Add(shR,identity,"upperR",Skin);
             OutfitArt.Add(elL,identity,"foreL",Skin);OutfitArt.Add(elR,identity,"foreR",Skin);
-            BuildHands(identity);HeadwearArt.Build(head,identity,facePersona);
+            BuildHands(identity);if(identity=="bishop")PlayerClassArt.Add(head,identity,"crown");
             if(cape!=null)OutfitArt.Add(cape,identity,"cape",Skin);
             if(scarfTail!=null)OutfitArt.Add(scarfTail,identity,"scarf",Skin);
             foreach(var part in spine.GetComponentsInChildren<Transform>())if(part.gameObject.name=="DanceRibbon")OutfitArt.Add(part,identity,part.localPosition.x<0?"ribbonL":"ribbonR",Skin);

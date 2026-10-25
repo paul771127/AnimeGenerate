@@ -43,7 +43,7 @@ namespace SpellDuel
             float roll=Mathf.Lerp(idlePresentation.Roll,battlePresentation.Roll,t);
             float twist=Mathf.Lerp(idlePresentation.Twist,battlePresentation.Twist,t);
             float lean=Mathf.Lerp(idlePresentation.Lean,battlePresentation.Lean,t);
-            bool coat=OutfitArt.Get(advancedId??classId).Hem>.15f;
+            bool coat=OutfitArt.Get(advancedId??classId).AnimationHem>.15f;
             // Long garments use a compact stance so the unchanged cloth never intersects the thighs.
             shift*=coat?.4f:.65f;if(coat){roll*=.3f;twist*=.3f;lean*=.5f;}
             // A seeded 6..12 second cycle, with a short smooth adjustment once per cycle.

@@ -62,6 +62,7 @@ namespace SpellDuel
         }
         internal static Mesh MeshFor(string id,Portraits.Persona p)
         {
+            if(PlayerClassArt.IsPlayer(id))return MeshFor("player_identity",p);
             if(meshes.TryGetValue(id,out var mesh))return mesh;
             if(StoryHair.Has(id)){mesh=StoryHair.Build(id,p);meshes[id]=mesh;return mesh;}
             var look=CharacterLook.Get(id);var kind=look.Hair;
@@ -149,6 +150,16 @@ namespace SpellDuel
             }
             if(look.Seed==27)for(int i=0;i<2;i++)Lock(v,tri,colors,new Vector3(-.13f,.025f,-.04f),new Vector3(-.225f,-.065f,-.065f),new Vector3(-.19f+i*.014f,-.19f,-.06f),.017f,.010f,i==0?.7f:1,.7f);
             if(look.Seed==15)Lock(v,tri,colors,new Vector3(-.13f,.09f,.02f),new Vector3(-.21f,-.015f,.04f),new Vector3(-.185f,-.12f,.04f),.025f,.011f,.85f,.2f);
+            if(id=="player_identity")
+            {
+                // Film protagonist: compact short silhouette, many fine tapered locks, no class ponytail.
+                for(int i=0;i<v.Count;i++){var at=v[i];at.x*=.76f;at.z=at.z*.90f;v[i]=at;}
+                for(int i=0;i<7;i++)
+                {
+                    float x=-.08f+i*.022f;
+                    Lock(v,tri,colors,new Vector3(-.035f+x*.20f,.152f,.045f),new Vector3(x*.75f+.015f,.145f,.151f),new Vector3(x+.028f,.050f+i*.006f,.153f),.014f,.006f,i%2==0?.78f:1,.25f);
+                }
+            }
             KeepHairTop(v,originalTop);
             mesh=new Mesh{name="髮型 "+id};mesh.SetVertices(v);mesh.SetTriangles(tri,0);mesh.colors=colors.ToArray();mesh.RecalculateNormals();mesh.RecalculateBounds();meshes[id]=mesh;return mesh;
         }

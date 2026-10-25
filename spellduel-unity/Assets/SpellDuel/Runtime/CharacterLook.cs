@@ -62,7 +62,7 @@ namespace SpellDuel
                 default:return all.ContainsKey(name??"")&&name.Length>0&&name[0]<128?name:null;
             }
         }
-        internal static Look Get(string key)=>all.TryGetValue(Portraits.Key(key),out var look)?look:all["swordsman"];
+        internal static Look Get(string key)=>PlayerClassArt.IsPlayer(Portraits.Key(key))||key=="player_identity"?PlayerClassArt.HeroLook:all.TryGetValue(Portraits.Key(key),out var look)?look:all["swordsman"];
         internal static Color Hex(string hex){int n=Convert.ToInt32(hex,16);return new Color(((n>>16)&255)/255f,((n>>8)&255)/255f,(n&255)/255f);}
         internal static IEnumerable<KeyValuePair<string,Look>> All=>all;
     }

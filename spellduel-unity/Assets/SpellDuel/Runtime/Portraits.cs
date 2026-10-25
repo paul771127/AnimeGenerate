@@ -124,6 +124,7 @@ namespace SpellDuel
         }
         internal static Persona PersonaFor(string key)
         {
+            if(PlayerClassArt.IsPlayer(Key(key)))return PlayerClassArt.HeroPersona(BasePersonaFor(key));
             var p=BasePersonaFor(key);HumanPersonality.Apply(ref p,Key(key));p.Story=StoryCostume.Has(Key(key))||Key(key)=="澪";p.SoftNose=Key(key)=="艾琳"||Key(key)=="凪"||Key(key)=="小葉"||Key(key)=="澪";if(p.Story)p.Open*=.15f;
             string id=Key(key);p.Captain=id=="海斗";if(p.Captain)p.Open=0;p.Elder=id=="老焰"||id=="阿潮"||id=="公會長"||id=="塔守";
             p.Masculine=p.Elder||id=="海斗"||id=="小鐵"||id=="鐵匠"||id=="教官"||id=="swordsman"||id=="paladin"||id=="inquisitor";

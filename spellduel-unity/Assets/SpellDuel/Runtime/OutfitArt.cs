@@ -8,9 +8,9 @@ namespace SpellDuel
     {
         internal sealed class Design
         {
-            internal string Id,Name;internal Color Main,Sub,Accent;internal float Hem,Sleeve;internal int Cut;
+            internal string Id,Name;internal Color Main,Sub,Accent;internal float Hem,Sleeve,AnimationHem;internal int Cut;
             internal Design(string id,string name,string main,string sub,string accent,float hem,float sleeve,int cut)
-            {Id=id;Name=name;Main=CharacterLook.Hex(main);Sub=CharacterLook.Hex(sub);Accent=CharacterLook.Hex(accent);Hem=hem;Sleeve=sleeve;Cut=cut;}
+            {Id=id;Name=name;Main=CharacterLook.Hex(main);Sub=CharacterLook.Hex(sub);Accent=CharacterLook.Hex(accent);Hem=AnimationHem=hem;Sleeve=sleeve;Cut=cut;}
         }
         static readonly Dictionary<string,Design> designs=new Dictionary<string,Design>
         {
@@ -50,7 +50,7 @@ namespace SpellDuel
             {"澪",new Design("澪","潮汐觀測短外套","a8e5ef","79bccf","e3faff",.3f,.07f,28)},
             {"公會長",new Design("公會長","斜披肩公會長風衣","a32d56","3c467e","d7af5e",.60f,.084f,26)}
         };
-        internal static Design Get(string id)=>designs.TryGetValue(Portraits.Key(id),out var d)?d:designs["swordsman"];
+        internal static Design Get(string id)=>PlayerClassArt.IsPlayer(Portraits.Key(id))?PlayerClassArt.Design(Portraits.Key(id)):designs.TryGetValue(Portraits.Key(id),out var d)?d:designs["swordsman"];
         internal static IEnumerable<KeyValuePair<string,Design>> All=>designs;
         static readonly Dictionary<string,Mesh> meshes=new Dictionary<string,Mesh>();
         internal sealed class Builder
@@ -115,6 +115,7 @@ namespace SpellDuel
         }
         internal static Mesh MeshFor(string id,string part,Color skin)
         {
+            if(PlayerClassArt.IsPlayer(id)&&(part=="torso"||part=="cape"))return PlayerClassArt.MeshFor(id,part);
             string key=id+"/"+part+ColorUtility.ToHtmlStringRGB(skin);if(meshes.TryGetValue(key,out var m))return m;
             var d=Get(id);var b=new Builder{Skin=skin};var main=d.Main;var sub=d.Sub;var accent=d.Accent;bool left=part.EndsWith("L");float side=left?-1:1;
             if(part=="torso"||part=="body")BuildTorso(b,d,skin,part=="body");
@@ -243,6 +244,7 @@ namespace SpellDuel
             float power=Strength(d),sleeve=d.Id=="berserker"?1.17f:d.Cut==2||d.Cut==9||d.Cut==13?1.18f:1;
             bool bare=anatomical||d.Cut==1||d.Cut==6||d.Cut==14||d.Cut==24||d.Cut==12;
             Color cloth=bare||d.Id=="novice"&&!upper?skin:d.Main;
+            if(PlayerClassArt.IsPlayer(d.Id)&&!anatomical)cloth=PlayerClassArt.ArmCloth(d.Id,upper,skin);
             if(upper)
             {
                 var y=new[]{.026f,.005f,-.025f,-.075f,-.13f,-.19f,-.25f,-.28f};
@@ -266,6 +268,7 @@ namespace SpellDuel
                 if(!anatomical&&d.Id!="novice")b.Loft(new[]{-.205f,-.235f},new[]{.039f*power,.035f*power},new[]{.031f*power,.027f*power},d.Sub);
 
             }
+            if(PlayerClassArt.IsPlayer(d.Id)&&!anatomical)PlayerClassArt.ArmDetail(b,d,upper,left);
         }
         static void BuildHand(Builder b,Design d,Color skin,bool left,int pose)
         {

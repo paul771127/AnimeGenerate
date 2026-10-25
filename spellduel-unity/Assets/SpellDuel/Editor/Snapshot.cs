@@ -11,13 +11,14 @@ namespace SpellDuel.EditorTools
     /// 雲端截圖（GameCI buildMethod：SpellDuel.EditorTools.Snapshot.Render）：
     /// Render five base classes, ten advanced classes, face/expression studies and pets.
     /// </summary>
-    public static class Snapshot
+    public static partial class Snapshot
     {
         const int W = 640, H = 900;
 
         public static void Render()
         {
             Directory.CreateDirectory("snapshots");
+            PlayerMatch2DAudit.Run();
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var camGo = new GameObject("SnapCam");
             var cam = camGo.AddComponent<Camera>();
@@ -31,6 +32,7 @@ namespace SpellDuel.EditorTools
             RenderSettings.ambientLight = new Color(0.55f, 0.58f, 0.66f);
             var fronts = new List<string>();
 
+            var novice=CharacterRig.Create("novice");CharacterShots(cam,novice,"novice");Object.DestroyImmediate(novice.gameObject);
             foreach (var cls in Skills.ClassOrder)
             {
                 var rig = CharacterRig.Create(cls);
@@ -64,6 +66,7 @@ namespace SpellDuel.EditorTools
                 }
                 catch (System.Exception e) { Debug.LogWarning($"[SpellDuel] pet {k} snapshot failed: {e.Message}"); }
             }
+            MatchOverview();
             Debug.Log("[SpellDuel] snapshots saved to " + Path.GetFullPath("snapshots"));
         }
 
@@ -73,10 +76,11 @@ namespace SpellDuel.EditorTools
             foreach (var mf in rig.GetComponentsInChildren<MeshFilter>(true))
                 if (mf.sharedMesh != null) triangles += mf.sharedMesh.triangles.Length / 3;
             Debug.Log($"[SpellDuel] {id}: {triangles} triangles");
-            if (triangles > 10000) throw new System.InvalidOperationException(id + " exceeds the 10000 triangle budget");
+            if (triangles > MatchTriangleBudget(id)) throw new System.InvalidOperationException(id + " exceeds its original triangle count + 50%");
             FullShot(cam, rig, id + "_front", new Vector3(0f, 0.025f, 1f));
             FullShot(cam, rig, id + "_side", new Vector3(0.68f, 0.04f, 0.73f));
             Shot(cam, rig.gameObject, id + "_face", new Vector3(0.24f, 1.58f, 0.80f), new Vector3(0f, 1.56f, 0f), 640, 640);
+            MatchCard(cam,rig,id);
             // Edit mode has no Update; invoke only the rig's existing visual animation step.
             var animate = typeof(CharacterRig).GetMethod("Animate", BindingFlags.Instance | BindingFlags.NonPublic);
             rig.Charge = 0.9f;

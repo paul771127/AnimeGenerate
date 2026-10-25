@@ -8,7 +8,7 @@ namespace SpellDuel
         static readonly Dictionary<string,Mesh> meshes=new Dictionary<string,Mesh>();
         static readonly Dictionary<string,Color32[]> images=new Dictionary<string,Color32[]>();
         internal const int W=256,H=256;
-        internal static bool Has(string id)=>id=="教官"||id=="艾琳"||id=="mage"||id=="archmage"||id=="summoner"||id=="priest"||id=="bishop"||id=="米菈"||id=="海斗"||id=="阿潮"||id=="小鐵"||id=="翠"||id=="小葉"||id=="店員";
+        internal static bool Has(string id)=>PlayerClassArt.IsPlayer(id)?id=="bishop":id=="教官"||id=="艾琳"||id=="mage"||id=="archmage"||id=="summoner"||id=="priest"||id=="bishop"||id=="米菈"||id=="海斗"||id=="阿潮"||id=="小鐵"||id=="翠"||id=="小葉"||id=="店員";
         internal static float Seat(string id,Portraits.Persona p)
         {
             var v=AnimeHair.MeshFor(id,p).vertices;float top=-1;
@@ -29,6 +29,7 @@ namespace SpellDuel
         }
         internal static Mesh MeshFor(string id,Portraits.Persona p)
         {
+            if(id=="bishop")return PlayerClassArt.MeshFor(id,"crown");
             if(meshes.TryGetValue(id,out var found))return found;
             var b=new OutfitArt.Builder();if(!Has(id)){found=b.Finish("Headwear none");meshes[id]=found;return found;}
             var d=OutfitArt.Get(id);float seat=Seat(id,p),r=FitRadius(id,p,seat);var gold=CharacterLook.Hex("ffc94c");var navy=CharacterLook.Hex("253e75");
@@ -82,6 +83,7 @@ namespace SpellDuel
         static readonly Dictionary<string,Mesh> fittedHair=new Dictionary<string,Mesh>();
         internal static Mesh HairFor(string id,Portraits.Persona p,bool film=false)
         {
+            if(PlayerClassArt.IsPlayer(id))return AnimeHair.MeshFor(id,p);
             var source=film?StoryHair.FilmMesh(id,p):AnimeHair.MeshFor(id,p);
             bool covered=id=="mage"||id=="archmage"||id=="summoner"||id=="priest"||id=="bishop"||id=="米菈"||id=="海斗"||id=="阿潮";
             string cacheKey=id+(film?"/film":"");if(!covered)return source;if(fittedHair.TryGetValue(cacheKey,out var mesh))return mesh;
