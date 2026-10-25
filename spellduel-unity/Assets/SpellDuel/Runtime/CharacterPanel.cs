@@ -129,7 +129,8 @@ namespace SpellDuel
             if (Loadout == null || SkillChoices == null || Slots == null || SetSkill == null) return 0f;
             var lo = Loadout(); var all = SkillChoices(); var (baseSlots, advSlot) = Slots();
             bool edit = SkillsEditable();
-            int baseOn = lo.FindAll(id => !IsAdvSkill(id)).Count, advOn = lo.FindAll(id => IsAdvSkill(id)).Count;
+            // 沒有專用的進階格（advSlot＝false）：所有技能都算在同一排格子裡（進階職業 4 格）
+            int baseOn = advSlot ? lo.FindAll(id => !IsAdvSkill(id)).Count : lo.Count, advOn = lo.FindAll(id => IsAdvSkill(id)).Count;
             float y = b.y;
             string head = $"✨ 技能欄 {baseOn}/{baseSlots}" + (advSlot ? $"・進階 {advOn}/1" : "") + (edit ? "：點技能裝上／卸下（ⓘ 或長按看說明）" : "：戰鬥中不能換（回城鎮或整備時換）");
             UiKit.Text(new Rect(b.x, y, b.width, fs * 1.3f), head, fsS, baseOn < baseSlots || advSlot && advOn < 1 ? new Color(1f, 0.6f, 0.45f) : UiKit.Gold, TextAnchor.MiddleLeft, true);

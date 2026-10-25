@@ -194,25 +194,26 @@ namespace SpellDuel
                 return list.ToArray();
             }
         }
-        /// <summary>技能欄：基本 3 格＋（轉職後）進階技能 1 格</summary>
-        bool AdvSlot => Array.Exists(SetupSkills, Advanced.IsAdvSkill);
-        /// <summary>基本技能要選幾個：3 個（初心者還沒學滿 3 招＝學會幾招選幾招）</summary>
-        int BaseNeed => Mathf.Min(3, Array.FindAll(SetupSkills, id => !Advanced.IsAdvSkill(id)).Length);
-        int SlotCount => BaseNeed + (AdvSlot ? 1 : 0);
-        int BaseCount => myLoadout.FindAll(id => !Advanced.IsAdvSkill(id)).Count;
-        int AdvCount => myLoadout.FindAll(Advanced.IsAdvSkill).Count;
-        bool LoadoutReady => BaseCount == BaseNeed && AdvCount == (AdvSlot ? 1 : 0);
+        /// <summary>
+        /// 技能欄（使用者要求：取消進階技能格）：所有學會的技能都能放；一般 3 格，進階職業 4 格（任意技能）。
+        /// AdvSlot 固定 false（沒有專用的進階格了）；BaseNeed＝要選幾個（學會的招不夠＝學會幾招選幾招）
+        /// </summary>
+        bool AdvSlot => false;
+        int MaxSlots => Progress.Char(myClass).Adv != null ? 4 : 3;
+        int BaseNeed => Mathf.Min(MaxSlots, SetupSkills.Length);
+        int SlotCount => BaseNeed;
+        int BaseCount => myLoadout.Count;
+        int AdvCount => 0;
+        bool LoadoutReady => BaseCount == BaseNeed;
 
-        /// <summary>選一個技能：進階技能只有一格（換掉原本的）；基本技能最多 3 個（換掉最早選的）</summary>
+        /// <summary>選一個技能：格子滿了就換掉最早選的</summary>
         /// <summary>沒經過整備畫面就開打（例如從地圖直接進關卡）而技能沒選滿：照順序補滿，免得少技能</summary>
         void EnsureLoadout() { if (!LoadoutReady) FixLoadout(true); }
 
         void PickSkill(string id)
         {
             if (myLoadout.Contains(id)) return;
-            bool adv = Advanced.IsAdvSkill(id);
-            if (adv) myLoadout.RemoveAll(Advanced.IsAdvSkill);
-            else if (BaseCount >= 3) myLoadout.Remove(myLoadout.Find(x => !Advanced.IsAdvSkill(x)));
+            if (BaseCount >= Mathf.Max(1, BaseNeed)) myLoadout.RemoveAt(0);
             myLoadout.Add(id);
         }
 
@@ -224,11 +225,9 @@ namespace SpellDuel
         {
             var list = SetupSkills;
             myLoadout.RemoveAll(id => Array.IndexOf(list, id) < 0);
-            while (BaseCount > 3) myLoadout.Remove(myLoadout.Find(x => !Advanced.IsAdvSkill(x)));
-            while (AdvCount > 1) myLoadout.Remove(myLoadout.Find(Advanced.IsAdvSkill));
+            while (BaseCount > BaseNeed) myLoadout.RemoveAt(0);
             if (!fill) return;
-            foreach (var id in list) { if (BaseCount >= 3) break; if (!Advanced.IsAdvSkill(id) && !myLoadout.Contains(id)) myLoadout.Add(id); }
-            if (AdvSlot && AdvCount == 0) { var first = Array.Find(list, Advanced.IsAdvSkill); if (first != null) myLoadout.Add(first); }
+            foreach (var id in list) { if (BaseCount >= BaseNeed) break; if (!myLoadout.Contains(id)) myLoadout.Add(id); }
         }
 
         /// <summary>無盡模式：經驗值存進角色、升級提示、打倒敵人掉裝備</summary>
@@ -542,7 +541,6 @@ namespace SpellDuel
                 charPanel.SetSkill = (id, on) =>
                 {
                     if (!on) myLoadout.Remove(id);
-                    else if (Advanced.IsAdvSkill(id)) PickSkill(id);
                     else if (BaseCount >= BaseNeed) return "技能欄滿了：先點一個已裝上的技能卸下，再裝新的";
                     else myLoadout.Add(id);
                     SaveChoices(); PlayerPrefs.Save();
@@ -3371,9 +3369,8 @@ namespace SpellDuel
             {
                 bool on = myLoadout.Contains(s.id);
                 float bw = (r.width - gap * 4) / 2f;
-                bool advSk = Advanced.IsAdvSkill(s.id);
-                bool full = advSk ? AdvCount >= 1 : BaseCount >= Mathf.Max(1, BaseNeed);
-                if (UiKit.Button(new Rect(r.x + gap * 1.5f, by, bw, bh), on ? "移除這個技能" : full ? (advSk ? "換到進階技能格" : "換上這個技能") : "✔ 選這個技能", fs, !on, on ? new Color(1f, 0.5f, 0.45f) : s.color))
+                bool full = BaseCount >= Mathf.Max(1, BaseNeed);
+                if (UiKit.Button(new Rect(r.x + gap * 1.5f, by, bw, bh), on ? "移除這個技能" : full ? "換上這個技能" : "✔ 選這個技能", fs, !on, on ? new Color(1f, 0.5f, 0.45f) : s.color))
                 {
                     if (on) myLoadout.Remove(s.id);
                     else PickSkill(s.id);
@@ -3468,7 +3465,7 @@ namespace SpellDuel
             y += u * 1.5f + gap;
 
             // 技能卡片（2 欄）：圖示＋名稱／手勢→放招／數值
-            UiKit.Text(new Rect(pad, y, ProfileSetup?W*.51f-pad:W-pad*2, u), AdvSlot ? $"選 3 個技能＋1 個進階技能（{BaseCount}/3・{AdvCount}/1）" : BaseNeed == 0 ? "還沒學會技能：到炎之里找居民解任務學招式（普攻可以直接用）" : BaseNeed < 3 ? $"選 {BaseNeed} 個技能（{myLoadout.Count}/{BaseNeed}）　到炎之里解任務可以學更多招" : $"選 3 個技能（{myLoadout.Count}/3）　點技能看詳細說明", fsS, new Color(1f, 0.9f, 0.6f));
+            UiKit.Text(new Rect(pad, y, ProfileSetup?W*.51f-pad:W-pad*2, u), BaseNeed == 0 ? "還沒學會技能：到炎之里找居民解任務學招式（普攻可以直接用）" : BaseNeed < MaxSlots ? $"選 {BaseNeed} 個技能（{myLoadout.Count}/{BaseNeed}）　學更多招就能放滿 {MaxSlots} 格" : $"選 {MaxSlots} 個技能（{myLoadout.Count}/{MaxSlots}）　{(MaxSlots == 4 ? "進階職業：4 格放任意技能" : "點技能看詳細說明")}", fsS, new Color(1f, 0.9f, 0.6f));
             if (ProfileSetup)
             {
                 // 所有模式：角色養成（能力值、技能樹、裝備；和故事模式同一個角色）
