@@ -43,6 +43,26 @@ namespace SpellDuel
 
         /// <summary>每個鏡頭的長度（秒）：生成時固定 125 幀 ÷ 24 fps</summary>
         public const double ShotSec = 5.184;
+        /// <summary>準備畫面的 kuso 標題：每 2.5 秒隨機換一句（不說「下載影片」）</summary>
+        static readonly string[] KusoLines =
+        {
+            "準備招待勇者中…", "努力布置場景中…", "老焰正在擦亮晨鐘…", "小鐵在搬鐵砧，請稍等…", "米菈在整理貨箱…",
+            "熔岩小鬼在排隊彩排…", "正在幫史萊姆…喔不，沒有史萊姆", "幫 Boss 化妝中…", "替熔岩巨像暖身中…",
+            "掃掉村口的落葉中…", "把雲霧吹到正確位置…", "替關卡插好旗子…", "點亮葉燈中…", "幫海鳥練習俯衝…",
+            "調整重力中，請勿跳躍…", "替勇者泡一杯熱茶…", "數金幣數到一半…", "說服樹王先別睡…", "幫角鬥場鋪沙中…",
+            "替藥水貼標籤中…", "正在背台詞的 NPC：請稍候…", "鐘聲調音中…",
+        };
+        static int kusoIdx = -1; static float kusoAt = -99f;
+        static string KusoLine()
+        {
+            if (kusoIdx < 0 || Time.unscaledTime - kusoAt > 2.5f)
+            {
+                int n; do n = UnityEngine.Random.Range(0, KusoLines.Length); while (n == kusoIdx && KusoLines.Length > 1);
+                kusoIdx = n; kusoAt = Time.unscaledTime;
+            }
+            return KusoLines[kusoIdx];
+        }
+
         /// <summary>全部的影片檔（遊戲一開始全部下載）</summary>
         public static readonly (string file, int mb)[] Files = { ("v0_prologue_v3.mp4", 8), ("v1_golem_v3.mp4", 7), ("v2_treeking_v3.mp4", 6), ("v3_kraken_v3.mp4", 10) };
 
@@ -311,15 +331,15 @@ namespace SpellDuel
             UiKit.Card(r, 0.95f, UiKit.Gold, 0.9f);
             float y = r.y + pad * 0.6f, x = r.x + pad * 0.6f, w2 = r.width - pad * 1.2f;
             bool pre = state == State.Preloading || preFailed;
-            UiKit.Text(new Rect(x, y, w2, fs * 1.6f), "⏳ 載入中…", Mathf.RoundToInt(fs * 1.2f), Color.white, TextAnchor.MiddleCenter, true);
+            UiKit.Text(new Rect(x, y, w2, fs * 1.6f), state == State.Failed ? "⏳ 載入中…" : "⏳ " + KusoLine(), Mathf.RoundToInt(fs * 1.2f), Color.white, TextAnchor.MiddleCenter, true);
             y += fs * 2.2f;
             if (state == State.Downloading || state == State.Preloading)
             {
                 float p = req != null ? req.downloadProgress : 0f;
-                string what = pre ? $"劇情影片 {preIdx + 1}/{Files.Length}" : clip.title;
+                string what = pre ? $"準備中 {preIdx + 1}/{Files.Length}" : "準備中";
                 UiKit.Bar(new Rect(x, y, w2, fs * 1.2f), p, UiKit.Gold, $"{what}　{p * 100f:0}%", fsS);
                 y += fs * 2f;
-                UiKit.Text(new Rect(x, y, w2, fs * 2.4f), pre ? $"第一次開遊戲要下載劇情影片（共約 {TotalMb} MB），之後就不用再下載。建議連 Wi-Fi。" : "下載劇情影片中（只有第一次）", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperCenter);
+                UiKit.Text(new Rect(x, y, w2, fs * 2.4f), pre ? "第一次開遊戲要多準備一下（之後就不用了），建議連 Wi-Fi。" : "馬上就好（只有第一次）", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperCenter);
             }
             else if (state == State.Failed)
             {

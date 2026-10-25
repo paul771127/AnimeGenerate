@@ -3116,7 +3116,7 @@ namespace SpellDuel
                 switch (x.op)
                 {
                     case SoulOp.HitSnare:
-                        if (!killed && rng.NextDouble() < x.chance) { target.snaredUntil = now + (target.bodyRadius > 0.5f ? x.dur * 0.5f : x.dur); target.charging = null; Emit("effect", target.Chest, new Color(0.3f, 0.85f, 0.3f), "藤蔓纏繞：定身"); }
+                        if (!killed && !CcImmune(target) && rng.NextDouble() < x.chance) { target.snaredUntil = now + (target.bodyRadius > 0.5f ? x.dur * 0.5f : x.dur); target.charging = null; Emit("effect", target.Chest, new Color(0.3f, 0.85f, 0.3f), "藤蔓纏繞：定身"); }
                         break;
                     case SoulOp.HitCast:
                         if (!killed && !cast && rng.NextDouble() < x.chance) { SoulCast(a, target, x.skill); cast = true; }
@@ -3192,9 +3192,14 @@ namespace SpellDuel
             return r;
         }
         /// <summary>套用附加效果：灼燒（每秒 5、4 秒）、中毒（每秒 3、6 秒）、冰凍（定身 1.5 秒，打斷蓄力）、出血（每秒 4、5 秒）、沉默（2 秒不能唸技能）</summary>
+        /// <summary>Boss 對異常狀態（冰凍、定身、沉默、致盲）免疫；灼燒、中毒、出血這類持續傷害照常</summary>
+        public static bool CcImmune(Fighter t) => t != null && t.cls != null && t.cls.id != null && t.cls.id.StartsWith("boss");
+        void ImmuneNote(Vector3 at) => Emit("effect", at, new Color(0.8f, 0.8f, 0.85f), "免疫");
+
         public void ApplyProcs(Fighter target, int procs, Vector3 at)
         {
             if (procs == 0 || target == null || !target.Alive) return;
+            if (CcImmune(target) && (procs & (4 | 16)) != 0) { procs &= ~(4 | 16); ImmuneNote(at); }   // Boss：冰凍、沉默無效
             if ((procs & 1) != 0) { target.dots.Add(new Fighter.Dot { dps = 5f, until = now + 4f }); Emit("effect", at, new Color(1f, 0.5f, 0.15f), "灼燒"); }
             if ((procs & 2) != 0) { target.dots.Add(new Fighter.Dot { dps = 3f, until = now + 6f }); Emit("effect", at, Color.green, "中毒"); }
             if ((procs & 4) != 0) { target.snaredUntil = now + 1.5f; target.charging = null; target.windupUntil = 0f; Emit("effect", at, new Color(0.6f, 0.9f, 1f), "冰凍"); }
@@ -3235,6 +3240,7 @@ namespace SpellDuel
             switch (eff)
             {
                 case EffectKind.Dot: AddDot(target, dps, dur); Emit("effect", at, Color.green, "中毒"); break;
+                case EffectKind.Blind when CcImmune(target): case EffectKind.Snare when CcImmune(target): ImmuneNote(at); break;   // Boss：致盲、定身無效
                 case EffectKind.Blind: target.blindUntil = now + dur; Emit("effect", at, Color.gray, "致盲"); break;
                 case EffectKind.Snare: target.snaredUntil = now + dur; target.charging = null; Emit("effect", at, new Color(1f, 0.6f, 0.2f), "定身"); break;
                 case EffectKind.Mark: target.markedUntil = now + dur; Emit("effect", at, new Color(1f, 0.6f, 0.2f), "懲戒：受到傷害 +20%"); break;

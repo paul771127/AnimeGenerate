@@ -12,6 +12,8 @@ namespace SpellDuel
     /// </summary>
     public static class Economy
     {
+        /// <summary>套裝 4 件效果的附加狀態機率（使用者：套裝最高到 15% 沒問題；單件裝備的詞綴仍是 2～5%）</summary>
+        public const float SetStatusChance = 0.15f;
         // ---------------------------------------------------------------- 金幣
         public static int Gold
         {
@@ -120,11 +122,11 @@ namespace SpellDuel
         public static readonly List<SetDef> Sets = new List<SetDef>
         {
             new SetDef { id = "flame", name = "炎龍", theme = 0, desc = "熔岩地帶掉落",
-                two = new[] { A(Affix.Atk, 0.08f) }, four = new[] { A(Affix.Burn, ItemGen.StatusChanceMax), A(Affix.Crit, 0.08f) } },
+                two = new[] { A(Affix.Atk, 0.08f) }, four = new[] { A(Affix.Burn, Economy.SetStatusChance), A(Affix.Crit, 0.08f) } },
             new SetDef { id = "grove", name = "森羅", theme = 1, desc = "森林掉落",
-                two = new[] { A(Affix.Hp, 60f) }, four = new[] { A(Affix.Poison, ItemGen.StatusChanceMax), A(Affix.Lifesteal, 0.05f) } },
+                two = new[] { A(Affix.Hp, 60f) }, four = new[] { A(Affix.Poison, Economy.SetStatusChance), A(Affix.Lifesteal, 0.05f) } },
             new SetDef { id = "tide", name = "海神", theme = 2, desc = "海上礁石掉落",
-                two = new[] { A(Affix.Mp, 40f), A(Affix.Cdr, 0.06f) }, four = new[] { A(Affix.Freeze, ItemGen.StatusChanceMax), A(Affix.Armor, 0.1f) } },
+                two = new[] { A(Affix.Mp, 40f), A(Affix.Cdr, 0.06f) }, four = new[] { A(Affix.Freeze, Economy.SetStatusChance), A(Affix.Armor, 0.1f) } },
             new SetDef { id = "gladiator", name = "鬥魂", theme = 3, desc = "角鬥場掉落",
                 two = new[] { A(Affix.Atk, 0.1f) }, four = new[] { A(Affix.Lifesteal, 0.06f), A(Affix.Crit, 0.1f) } },
             new SetDef { id = "loess", name = "黃沙", theme = 4, desc = "黃土山道掉落",
