@@ -1,0 +1,67 @@
+{
+  "Assets/SpellDuel/Resources/Village2D/map_flame.png": {
+    "size": [
+      2048,
+      3072
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 11396162,
+    "sha256": "f8546406857819c948acec4c82c976adeae6028d50c1aafbfe53f885e55efd43"
+  },
+  "Assets/SpellDuel/Resources/Village2D/map_flame_fit.png": {
+    "size": [
+      1080,
+      1920
+    ],
+    "mode": "RGB",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 3953012,
+    "sha256": "ce4d22b78035a991425f17bbffa5768aa1a66e95e5cf525585136e2cf0c02be9"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_laoyan.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 25928,
+    "sha256": "9f3b039841b0c127275634b42b5d586ffb204ffe72f283c13eecf8b336a4a504"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_xiaotie.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 29997,
+    "sha256": "ffd7a6f9471e5a1d55e89ff8c9a70e72329f2762f2a94d5193856c800f9194aa"
+  },
+  "Assets/SpellDuel/Resources/Village2D/npc_mila.png": {
+    "size": [
+      160,
+      240
+    ],
+    "mode": "RGBA",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "bytes": 28175,
+    "sha256": "f5dbd9a7d376d7fe6459d9785aad7fa7d738fd339c9e304c1200b192c681cfba"
+  }
+}
