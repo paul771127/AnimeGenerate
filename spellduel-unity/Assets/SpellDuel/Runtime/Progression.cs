@@ -49,8 +49,8 @@ namespace SpellDuel
         public static string Effect(Stat s, bool atk) => s switch
         {
             Stat.Str => atk ? "攻擊傷害 +2%／點" : "（不是這個職業的攻擊能力值）HP +1／點",
-            Stat.Int => atk ? "攻擊傷害 +2%／點、治療量 +2%／點、MP 上限 +2／點" : "MP 上限 +2／點、治療量 +2%／點",
-            Stat.Vit => "HP 上限 +5／點、受到的傷害：加到 99 點 -30%（照比例）",
+            Stat.Int => atk ? "攻擊傷害 +2%／點、治療量 +2%／點、MP 上限 +2／點、魔法減傷：加到 99 點 30%" : "MP 上限 +2／點、治療量 +2%／點、魔法減傷：加到 99 點 30%（照比例）",
+            Stat.Vit => "HP 上限 +5／點、物理減傷：加到 99 點 30%（照比例）",
             Stat.Agi => "蓄力時間 -1%／點（最多 -40%）、普攻速度：冷卻 -0.8%／點（最多 -50%）、閃避率 +0.1%／點",
             Stat.Spi => "MP 回復（基礎只有 30%，精神 99 點回到 100%）、冷卻時間 -0.8%／點（最多 -35%）",
             _ => "爆擊率 +0.6%／點（爆擊＝傷害 ×2）、掉寶機率與稀有度提升",
@@ -702,7 +702,7 @@ namespace SpellDuel
             Affix.Lifesteal => $"吸血 {v * 100:0.#}%",
             Affix.Burn => $"灼燒機率 +{v * 100:0}%", Affix.Poison => $"中毒機率 +{v * 100:0}%", Affix.Freeze => $"冰凍機率 +{v * 100:0}%",
             Affix.TrapReduce => $"陷阱傷害 -{v*100:0}%", Affix.DodgePower => $"身體閃避後3秒傷害 +{v*100:0}%",
-            Affix.Atk => $"攻擊傷害 +{v * 100:0}%", _ => $"受到的傷害 -{v * 100:0.#}%",
+            Affix.Atk => $"攻擊傷害 +{v * 100:0}%", Affix.Armor => $"物理減傷 +{v * 100:0.#}%", _ => $"受到的傷害 -{v * 100:0.#}%",
         };
 
         /// <summary>
@@ -1231,9 +1231,14 @@ namespace SpellDuel
             f.atkMul = Mathf.Max(0.3f, 1f + 0.02f * d(atkStat)) * (1f + GearSum(Affix.Atk));
             // HP：體質每點 +5、非攻擊用的力量每點 +1、裝備
             f.maxHp = Mathf.Max(10, cd.maxHp + 5 * d(Stat.Vit) + (atkStat != Stat.Str ? d(Stat.Str) : 0) + Mathf.RoundToInt(GearSum(Affix.Hp)));
-            // 受到的傷害（使用者要求）：體質從初始值加到 99 點＝減傷 30%（線性）；裝備、精魄、技能樹、職業另外加；全部加起來最多 70%（Fighter.MaxReduce）
+            // 減傷（使用者要求）分物理、魔法：
+            //   物理減傷＝體質從初始值加到 99 點 30%（線性）＋裝備的物理減傷（每件 1～3%、套裝）
+            //   魔法減傷＝智力從初始值加到 99 點 30%（線性）
+            //   精魄、技能樹、進階職業的減傷兩種都加；各自最多 70%（Fighter.MaxReduce）
             float vitFrac = Mathf.Clamp01(d(Stat.Vit) / (float)Mathf.Max(1, Fighter.VitFullReduce - BaseStat(Stat.Vit)));
+            float intFrac = Mathf.Clamp01(d(Stat.Int) / (float)Mathf.Max(1, Fighter.VitFullReduce - BaseStat(Stat.Int)));
             f.gearReduce = Mathf.Min(Fighter.MaxReduce, Fighter.VitMaxReduce * vitFrac + GearSum(Affix.Armor));
+            f.magicReduce = Mathf.Min(Fighter.MaxReduce, Fighter.VitMaxReduce * intFrac);
             // MP：智力每點 +2、裝備；MP 回復：基礎 30%，精神加到 99 點才回到 100%（線性；裝備把精神加超過 99 會再更快）
             f.maxMp = Mathf.Max(10, cd.maxMp + 2 * d(Stat.Int) + Mathf.RoundToInt(GearSum(Affix.Mp)));
             float spiFrac = Mathf.Max(0f, d(Stat.Spi) / (float)Mathf.Max(1, Fighter.MpRegenFullSpi - BaseStat(Stat.Spi)));
@@ -1263,6 +1268,7 @@ namespace SpellDuel
             // 進階技能樹的特殊能力：攻擊、減傷、HP
             f.atkMul *= 1f + Passive(PassiveKind.Atk);
             f.gearReduce = Mathf.Min(Fighter.MaxReduce, f.gearReduce + Passive(PassiveKind.Armor));
+            f.magicReduce = Mathf.Min(Fighter.MaxReduce, f.magicReduce + Passive(PassiveKind.Armor));
             f.maxHp += Mathf.RoundToInt(Passive(PassiveKind.Hp));
             // 技能樹 v2 的流派效果
             f.arcaneBurst = Passive(PassiveKind.ArcaneBurst); f.arcaneTwin = Passive(PassiveKind.ArcaneTwin);

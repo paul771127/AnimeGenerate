@@ -73,6 +73,35 @@ namespace SpellDuel
 
     public static class Skills
     {
+        // ---- 物理／魔法攻擊（使用者要求）：被打中時分別吃物理減傷（體質、裝備）或魔法減傷（智力）
+        static readonly HashSet<string> MagicIds = new HashSet<string> {
+            "b_bolt", "x_quake", "m_bubble", "m_fireball", "m_pool", "m_shock", "m_snipe", "m_spore", "m_venom", "m_void", "m_bomb", "m_spine",
+            "p_spore", "s_bubbles", "s_ink", "s_wave", "s_whirl", "x_ripple", "na_mage" };
+        static readonly HashSet<string> PhysicalIds = new HashSet<string> {
+            "b_leap", "b_rain", "b_slam", "b_sweep", "m_bite", "m_chainsweep", "m_claw", "m_dash", "m_dive", "m_leap", "m_pincer", "m_rock", "m_rootquake",
+            "m_seed", "m_tidewhip", "m_twinquake", "m_vine", "p_roots", "p_stomp", "p_thorn", "p_whip", "s_tentacle", "x_rootwave", "vault_hit" };
+        /// <summary>法系職業：技能都算魔法攻擊</summary>
+        static readonly HashSet<string> MagicClasses = new HashSet<string> { "mage", "archmage", "summoner", "priest", "bishop", "inquisitor" };
+        const string MagicWords = "火焰炎熔冰雷電魔咒毒暗光聖虛泡水潮孢墨浪漩符魂靈法";
+        static readonly Dictionary<string, bool> magicCache = new Dictionary<string, bool>();
+        /// <summary>這個技能是魔法攻擊嗎（其他＝物理）。敵人技能照清單；法系職業全部魔法；其他照名稱判斷（火、冰、雷、毒、聖…）</summary>
+        public static bool IsMagic(SkillDef s)
+        {
+            if (s == null || s.id == null) return false;
+            if (magicCache.TryGetValue(s.id, out var m)) return m;
+            if (MagicIds.Contains(s.id)) m = true;
+            else if (PhysicalIds.Contains(s.id)) m = false;
+            else if (s.cls != null && MagicClasses.Contains(s.cls)) m = true;
+            else
+            {
+                m = false;
+                if (s.name != null) foreach (char c in s.name) if (MagicWords.IndexOf(c) >= 0) { m = true; break; }
+                if (s.effect == EffectKind.Burn) m = true;
+            }
+            magicCache[s.id] = m;
+            return m;
+        }
+
         public static readonly Dictionary<string, SkillDef> All = new Dictionary<string, SkillDef>();
         public static readonly Dictionary<string, ClassDef> Classes = new Dictionary<string, ClassDef>();
         public static readonly string[] ClassOrder = { "archer", "mage", "assassin", "swordsman", "priest" };

@@ -141,6 +141,8 @@ namespace SpellDuel
         public float armorUntil, armorReduce;
         // 角色養成（無盡模式）：裝備減傷、側跨無敵時間加長、吸血、命中回 MP、每秒回血、低血量減傷
         public float gearReduce, dodgeBonus, lifesteal, mpOnHit, hpRegen, lastStand;
+        /// <summary>魔法減傷（智力）；gearReduce＝物理減傷（體質、裝備）</summary>
+        public float magicReduce;
         /// <summary>減傷（使用者要求）：體質加到 99 點＝30%；裝備、精魄、技能樹、職業另外加；全部加起來最多 70%（超過沒有作用）</summary>
         public const float MaxReduce = 0.7f, VitMaxReduce = 0.3f;
         public const int VitFullReduce = 99;
@@ -278,6 +280,8 @@ namespace SpellDuel
         void Emit(string kind, Vector3 at, Color c, string text) => OnEvent?.Invoke(kind, at, c, text);
         /// <summary>正在發生的命中是哪個技能打的、是否爆擊（"hit" 事件期間有效，給畫面挑命中特效用）</summary>
         public SkillDef HitSkill { get; private set; }
+        /// <summary>正在打到人的技能（判斷物理／魔法減傷用）；沒有＝物理</summary>
+        SkillDef incoming;
         public bool HitCrit { get; private set; }
         void EmitHit(SkillDef s, Vector3 at, bool crit = false)
         {
@@ -501,7 +505,7 @@ namespace SpellDuel
         {
             if (isTrap) Emit("trap", at, s.color, $"{s.name}！");
             AddThreat(by, damage);
-            ApplyDamageAndEffect(enemy, damage, s.effect, s.effectDps, s.effectDur, at);
+            incoming = s; ApplyDamageAndEffect(enemy, damage, s.effect, s.effectDps, s.effectDur, at); incoming = null;
         }
         public void ApplyBurnOnEnemy(float dmg, Vector3 at, Fighter by = null) { AddThreat(by, dmg); Damage(enemy, dmg, "burn", at); }
 
@@ -1017,7 +1021,7 @@ namespace SpellDuel
         public void ApplyHitOnMinion(int id, int damage, SkillDef s)
         {
             var m = MinionById(id);
-            if (m != null && m.Alive) ApplyDamageAndEffect(m, damage, s != null ? s.effect : EffectKind.None, s != null ? s.effectDps : 0f, s != null ? s.effectDur : 0f, m.Chest);
+            if (m != null && m.Alive) { incoming = s; ApplyDamageAndEffect(m, damage, s != null ? s.effect : EffectKind.None, s != null ? s.effectDps : 0f, s != null ? s.effectDur : 0f, m.Chest); incoming = null; }
             if (m != null && s != null && s.id == "plague") Plague(m);   // 隊友的毒爆：主機引爆
         }
 
@@ -1452,7 +1456,7 @@ namespace SpellDuel
                         int dmg = Mathf.RoundToInt(sh.damage * m.dmgMul);
                         if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, sh.color, "閃避！");
                         else if (v.isAlly) { Emit("allyhit", v.Chest, sh.color, null); OnAllyHit?.Invoke(v, sh, dmg, v.Chest, 0); }
-                        else { ApplyDamageAndEffect(v, dmg, sh.effect, sh.effectDps, sh.effectDur, v.Chest); SoulVictim(m, v, dmg); }
+                        else { incoming = sh; ApplyDamageAndEffect(v, dmg, sh.effect, sh.effectDps, sh.effectDur, v.Chest); incoming = null; SoulVictim(m, v, dmg); }
                     }
                     return;
                 }
@@ -1480,7 +1484,7 @@ namespace SpellDuel
                         int dmg = Mathf.RoundToInt(sp.damage * m.dmgMul);
                         if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, sp.color, "閃避！");
                         else if (v.isAlly) { Emit("allyhit", v.Chest, sp.color, null); OnAllyHit?.Invoke(v, sp, dmg, v.Chest, 0); }
-                        else { ApplyDamageAndEffect(v, dmg, sp.effect, sp.effectDps, sp.effectDur, v.Chest); SoulVictim(m, v, dmg); }
+                        else { incoming = sp; ApplyDamageAndEffect(v, dmg, sp.effect, sp.effectDps, sp.effectDur, v.Chest); incoming = null; SoulVictim(m, v, dmg); }
                     }
                     return;
                 }
@@ -1684,7 +1688,7 @@ namespace SpellDuel
                 return true;
             }
             if (isTrap) Emit("trap", at, s.color, $"{s.name}！");
-            ApplyDamageAndEffect(player, damage, s.effect, s.effectDps, s.effectDur, at);
+            incoming = s; ApplyDamageAndEffect(player, damage, s.effect, s.effectDps, s.effectDur, at); incoming = null;
             return false;
         }
 
@@ -2169,7 +2173,7 @@ namespace SpellDuel
                         if (v.dodgeUntil > now && SidestepInvuln) { Emit("evade", v.Chest, s.color, "閃避！"); continue; }
                         int ad = Mathf.RoundToInt(s.damage * f.atkMul);   // Boss 攻擊力（人多時更痛）
                         if (v.isAlly) { Emit("allyhit", v.Chest, s.color, null); OnAllyHit?.Invoke(v, s, ad, v.Chest, 0); }
-                        else ApplyDamageAndEffect(v, ad, s.effect, s.effectDps, s.effectDur, v.Chest);
+                        else { incoming = s; ApplyDamageAndEffect(v, ad, s.effect, s.effectDps, s.effectDur, v.Chest); incoming = null; }
                     }
                     break;
                 }
@@ -2677,7 +2681,7 @@ namespace SpellDuel
                     if (!v.Alive || FlatDistance(at, v.Feet) > p.skill.radius + v.bodyRadius) continue;
                     if (v.dodgeUntil > now && SidestepInvuln) { Emit("evade", v.Chest, p.skill.color, "閃避！"); continue; }
                     if (v.isAlly) { Emit("allyhit", v.Chest, p.skill.color, null); OnAllyHit?.Invoke(v, p.skill, p.damage, v.Chest, 0); }
-                    else ApplyDamageAndEffect(v, p.damage, p.effect, p.effectDps, p.effectDur, v.Chest);
+                    else { incoming = p.skill; ApplyDamageAndEffect(v, p.damage, p.effect, p.effectDps, p.effectDur, v.Chest); incoming = null; }
                 }
             if (p.skill.lobPool) AddPool(at, p.remote);
         }
@@ -2726,7 +2730,7 @@ namespace SpellDuel
                     if (pl.next.TryGetValue(v, out var t) && now < t) continue;
                     pl.next[v] = now + 1f;
                     if (v.isAlly) { Emit("allyhit", v.Chest, ps.color, null); OnAllyHit?.Invoke(v, ps, ps.damage, v.Chest, 0); }
-                    else { ApplyDamageAndEffect(v, ps.damage, ps.effect, ps.effectDps, ps.effectDur, v.Chest); Emit("poolstep", v.Feet, ps.color, "踩到毒液！"); }
+                    else { incoming = ps; ApplyDamageAndEffect(v, ps.damage, ps.effect, ps.effectDps, ps.effectDur, v.Chest); incoming = null; Emit("poolstep", v.Feet, ps.color, "踩到毒液！"); }
                 }
             }
             pools.RemoveAll(x => !x.alive);
@@ -3105,9 +3109,9 @@ namespace SpellDuel
                     else
                     {
                         if (victim == enemy) AddThreat(t.owner, t.skill.damage);
-                        HitSkill = t.skill;
+                        HitSkill = t.skill; incoming = t.skill;
                         ApplyDamageAndEffect(victim, t.skill.damage, t.skill.effect, t.skill.effectDps, t.skill.effectDur, t.pos);
-                        HitSkill = null;
+                        HitSkill = null; incoming = null;
                         if (allies.Count > 0) OnTrapGone?.Invoke(t.id);   // 合作模式：告訴隊友陷阱沒了
                     }
                 }
@@ -3129,9 +3133,9 @@ namespace SpellDuel
                 return;
             }
             if (target == enemy) AddThreat(p.owner, p.damage);
-            HitSkill = p.skill; HitCrit = p.crit;
+            HitSkill = p.skill; HitCrit = p.crit; incoming = p.skill;
             ApplyDamageAndEffect(target, p.damage, p.effect, p.effectDps, p.effectDur, p.pos);
-            HitSkill = null; HitCrit = false;
+            HitSkill = null; HitCrit = false; incoming = null;
             ApplyProcs(target, LastProcs, p.pos);
             OnDealt(p.owner, p.damage, target, p.skill, p);
         }
@@ -3448,7 +3452,9 @@ namespace SpellDuel
             if (f.friendOwner >= 0) { if (dmg > 0f) { OnFriendHurt?.Invoke(f, dmg); Emit("hit", at ?? f.Chest, Color.red, $"-{dmg:0}"); } return; }   // 別台手機的召喚獸／影分身：傷害交給那台算
             if (dmg > 0f && kind != "dot" && kind != "burn" && kind != "oath" && kind != "thorns" && BarrierGuards(f) && TryBarrier(f, at)) return;   // 主教的聖域障壁
             if (f.invulnUntil > now && dmg > 0f) return;   // 狂戰士不死之軀的無敵
-            dmg *= f.damageTakenMul * (1f - Mathf.Min(f.gearReduce, Fighter.MaxReduce)) * f.soulTaken;
+            // 物理／魔法減傷：持續傷害（毒、灼燒）和魔法攻擊（Skills.IsMagic）用魔法減傷，其他用物理減傷
+            bool magic = kind == "dot" || kind == "burn" || (incoming != null && Skills.IsMagic(incoming));
+            dmg *= f.damageTakenMul * (1f - Mathf.Min(magic ? f.magicReduce : f.gearReduce, Fighter.MaxReduce)) * f.soulTaken;
             // 精魄：格擋（這一下傷害減半；持續傷害不算）
             if (f.blockChance > 0f && dmg > 0f && kind != "dot" && kind != "burn" && kind != "thorns" && rng.NextDouble() < f.blockChance) { dmg *= 0.5f; Emit("mitigate", at ?? f.Chest, new Color(0.8f, 0.8f, 0.7f), "格擋！"); }
             if (f.lastStand > 0f && f.hp < f.maxHp * 0.3f) dmg *= 1f - f.lastStand;   // 不屈：低血量減傷
