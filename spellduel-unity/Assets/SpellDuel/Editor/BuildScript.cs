@@ -183,8 +183,30 @@ namespace SpellDuel.EditorTools
             IncludeShader("SpellDuel/Toon");   // 角色、小怪、Boss 的賽璐珞著色（程式中 Shader.Find）
 
             ConfigureXR(BuildTargetGroup.Android, "UnityEngine.XR.ARCore.ARCoreLoader");
+            ArCoreOptional();
             ConfigureXR(BuildTargetGroup.iOS, "UnityEngine.XR.ARKit.ARKitLoader");
             AssetDatabase.SaveAssets();
+        }
+
+        // ARCore 改成「選用」：預設是「必要」，手機沒裝（或版本太舊）「Google Play 服務 AR 版」時，一開就在 Unity logo 閃退（例如 Galaxy S20 FE）。
+        // 選用：沒有 AR 也能進遊戲（GameRoot 會顯示「這支手機不支援 AR」），有的話照常用。用反射，套件版本變了也不會編譯失敗。
+        static void ArCoreOptional()
+        {
+            try
+            {
+                var t = Type.GetType("UnityEditor.XR.ARCore.ARCoreSettings, Unity.XR.ARCore.Editor");
+                if (t == null) { Debug.LogWarning("[SpellDuel] 找不到 ARCoreSettings"); return; }
+                var get = t.GetMethod("GetOrCreateSettings", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                var settings = get?.Invoke(null, null) as UnityEngine.Object;
+                if (settings == null) { Debug.LogWarning("[SpellDuel] 取不到 ARCoreSettings"); return; }
+                var req = t.GetProperty("requirement");
+                if (req != null) req.SetValue(settings, Enum.Parse(req.PropertyType, "Optional"));
+                var cur = t.GetProperty("currentSettings", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                if (cur != null && cur.CanWrite) cur.SetValue(null, settings);
+                EditorUtility.SetDirty(settings);
+                Debug.Log("[SpellDuel] ARCore requirement = " + req?.GetValue(settings));
+            }
+            catch (Exception ex) { Debug.LogWarning("[SpellDuel] ARCore 設定失敗：" + ex.Message); }
         }
 
         // 加入 Graphics Settings → Always Included Shaders
