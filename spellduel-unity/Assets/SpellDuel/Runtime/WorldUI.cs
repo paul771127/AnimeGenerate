@@ -637,6 +637,7 @@ namespace SpellDuel
         void DrawSmith(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
             float y = r.y + gap;
+            if (DrawSmith2D(prof, fs, fsS, fsL)) return;   // 2D 鐵匠鋪（WorldUI.Smith2D.cs）
             Header(r, $"⚒ 鐵匠鋪（{Towns[town].name}）", new Color(1f, 0.6f, 0.3f), prof, fs, fsS, fsL, gap, ref y);
             UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), $"每強化 1 級：主屬性 +{Economy.EnhancePerLevel * 100:0}%（最多 +{Economy.MaxPlus}）。+5 之前一定成功，之後失敗只扣金幣。", fsS, new Color(0.85f, 0.88f, 1f));
             y += fs * 1.5f;
