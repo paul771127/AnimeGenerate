@@ -323,6 +323,8 @@ namespace SpellDuel
             solo = gameObject.AddComponent<SoloBattle>();
             solo.Init(cam, playArea, mat);
             solo.Hand = hand;
+            solo.FlipHand = () => poseDet?.FlipVertical();   // 戰鬥前的手勢方向校正（SoloBattle.ReadyCheck.cs）
+            solo.LockHand = () => poseDet?.LockFlip();
             // 雙人職業對戰：SoloBattle 的連線模式（訊息經由這裡收送）
             solo.NetSend = m => { if (net.Connected && mode != Mode.Watch) Send(m); };   // 觀戰者不送戰鬥訊息
             solo.SharedClock = () => SharedTime;

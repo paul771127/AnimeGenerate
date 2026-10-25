@@ -287,7 +287,8 @@ namespace SpellDuel
             {
                 // 回城捲軸：帶著這關已經拿到的戰利品回城鎮（關卡不算通關）
                 if (storyStage == null || NetMode) { Say("回城捲軸只能在故事關卡使用", 2f); return; }
-                scrollRequested = true;   // 畫面繪製中不能結束戰鬥：下一幀在 Update 處理
+                scrollAsk = true;   // 先暫停、問要不要回城（按「是」才用掉捲軸；按「否」繼續打、不消耗）
+                Sfx.Play("click", 0.6f);
                 return;
             }
             UsePotion(c);
@@ -354,6 +355,29 @@ namespace SpellDuel
         }
 
         bool scrollRequested;
+        /// <summary>回城捲軸的確認視窗開著：戰鬥暫停（敵人、Boss、計時都停），等玩家按「是／否」</summary>
+        bool scrollAsk;
+
+        void DrawScrollAsk(float W, float H, int fs, int fsS)
+        {
+            if (!scrollAsk) return;
+            if (battle == null || phase != Phase.Fighting || storyStage == null) { scrollAsk = false; return; }
+            GUI.color = new Color(0f, 0f, 0.03f, 0.6f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white;
+            float cw = W * 0.86f, ch = fs * 9.5f, gap = fs * 0.5f;
+            var card = new Rect((W - cw) / 2f, (H - ch) / 2f, cw, ch);
+            var col = new Color(1f, 0.8f, 0.4f);
+            UiKit.Card(card, 0.97f, col, 1f);
+            UiKit.Text(new Rect(card.x + gap, card.y + gap, card.width - gap * 2, fs * 1.6f), "📜 使用回城捲軸？", Mathf.RoundToInt(fs * 1.2f), col, TextAnchor.MiddleCenter, true);
+            UiKit.Text(new Rect(card.x + gap, card.y + fs * 2.4f, card.width - gap * 2, fs * 3.6f),
+                $"遊戲已暫停。\n回城：帶著這關已經拿到的戰利品回到城鎮（這關不算通關），消耗 1 張回城捲軸（剩 {CarryLeftOf("scroll")} 張）。\n不回城：繼續戰鬥，不消耗。",
+                fsS, new Color(0.95f, 0.96f, 1f), TextAnchor.UpperLeft, false, 0.6f);
+            float bw = (card.width - gap * 3) / 2f, bh = fs * 2.2f, by = card.yMax - gap - bh;
+            if (UiKit.Button(new Rect(card.x + gap, by, bw, bh), "✔ 是，回城", fs, true, new Color(1f, 0.6f, 0.25f)))
+            { scrollAsk = false; scrollRequested = true; }   // 畫面繪製中不能結束戰鬥：下一幀在 Update 處理
+            if (UiKit.Button(new Rect(card.x + gap * 2 + bw, by, bw, bh), "✖ 否，繼續戰鬥", fs, false, new Color(0.5f, 0.85f, 1f)))
+            { scrollAsk = false; Say("繼續戰鬥（回城捲軸沒有消耗）", 1.5f); }
+        }
+
         void DoReturnScroll()
         {
             scrollRequested = false;
@@ -631,7 +655,7 @@ namespace SpellDuel
 
         void OnSpeechText(string text)
         {
-            if (phase == Phase.Fighting && battle != null) { DungeonSpeech(text); ItemByVoice(text); return; }
+            if (phase == Phase.Fighting && battle != null) { if (scrollAsk) return; DungeonSpeech(text); ItemByVoice(text); return; }   // 回城確認中：暫停，不聽指令
             if (!TownWalking) return;
             if (Greeting.Find(text) != null) { world.Heard = text; world.HeardAt = Time.time; }
             townWalk.Heard(text);
@@ -1992,6 +2016,7 @@ namespace SpellDuel
             UpdateLock();
             UpdateReadyCheck();   // 戰鬥準備：站直 → 蹲下 → 站起來（SoloBattle.ReadyCheck.cs）
             if (InIntro) { UpdateVisuals(); return; }   // 開場：先停幾秒（敵人不動、不能出手）
+            if (scrollAsk && phase == Phase.Fighting && !NetMode) { UpdateVisuals(); return; }   // 回城捲軸的確認視窗：戰鬥暫停
             if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
             {
                 if (ai != null) ai.Update(dt);
@@ -2374,6 +2399,7 @@ namespace SpellDuel
             if (id.StartsWith(SpeechInput.ChantPrefix)) { OnChant(id.Substring(SpeechInput.ChantPrefix.Length)); return; }
             if (phase != Phase.Fighting || battle == null || frozen || !Skills.All.TryGetValue(id, out var skill)) return;
             if (PotLessonFreeze) { Say("🧪 先喝藥水！說「喝藥水」或比 🤙", 1.5f); return; }
+            if (scrollAsk) return;   // 回城確認中：暫停
             heard = $"🎤 {skill.name}"; heardUntil = Time.time + 1.5f;
             if (Me.charging == skill) return;
             if (BlockedOutside()) return;
@@ -3528,6 +3554,7 @@ namespace SpellDuel
             if (tutorial && phase == Phase.Fighting) DrawTutorialHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 教學關：第幾步、要做什麼
             DrawBattleTutHud(topR, W, H, lh, fs, fsS, pillW);   // 1-1／1-2 的戰鬥教學
             DrawPotionLesson(W, H, fs, fsS, fsL);   // 1-2：喝藥水教學
+            DrawScrollAsk(W, H, fs, fsS);           // 回城捲軸：暫停＋確認
             if (phase == Phase.Fighting) DrawPalmCharge(fs);   // 初心者普攻：手掌集氣指示（SoloBattle.SwipeTrail.cs）
             // 合作：隊友的血量（在敵人卡片下方）
             if (coop)
@@ -3834,7 +3861,8 @@ namespace SpellDuel
                     bool cdOk = c.scroll || Time.time >= potionReadyAt;
                     var sr = new Rect(pad + ci * (ibw + gap), iy, ibw, lh * 1.25f);
                     string nm = c.id == "hp_s" ? "小藥水" : c.id == "hp_l" ? "大藥水" : c.id == "mp_s" ? "魔力藥水" : "回城";
-                    // 只顯示（不能點）：用唸的或喝水手勢
+                    // 藥水只顯示（不能點）：用唸的或喝水手勢；回城捲軸可以點（會先暫停問要不要回城）
+                    if (c.scroll && n > 0 && !scrollAsk && UiKit.Button(sr, "", fsS, false, new Color(1f, 0.8f, 0.4f))) UseConsumable(c);
                     UiKit.Card(sr, n > 0 && cdOk ? 0.55f : 0.3f, n > 0 && cdOk ? new Color(0.5f, 0.85f, 1f) : new Color(0.45f, 0.45f, 0.5f), 0.7f);
                     UiKit.Text(sr, $"{c.icon}{nm} ×{n}" + (!cdOk && n > 0 ? $"\n冷卻 {potionReadyAt - Time.time:0}s" : ""), fsS, n > 0 ? Color.white : Color.gray, TextAnchor.MiddleCenter);
                     if (!cdOk && n > 0)
@@ -3846,7 +3874,7 @@ namespace SpellDuel
                     ci++;
                 }
                 iy += lh * 0.25f;
-                UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.6f), "🎤 說「喝藥水／大藥水／魔力藥水」或比 🤙 就會喝（30 秒一瓶）", fsS, new Color(0.75f, 0.9f, 1f), TextAnchor.MiddleCenter);
+                UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.6f), storyStage != null ? "🎤 說「喝藥水／大藥水／魔力藥水」或比 🤙 就會喝（30 秒一瓶）；回城：說「回城」或點📜" : "🎤 說「喝藥水／大藥水／魔力藥水」或比 🤙 就會喝（30 秒一瓶）", fsS, new Color(0.75f, 0.9f, 1f), TextAnchor.MiddleCenter);
                 iy += lh * 0.6f;
                 if (pendingItems.Count > 0 || pendingGold > 0)
                     UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.7f), $"🎁 待領取：裝備 {pendingItems.Count} 件・💰 {pendingGold}（{(storyStage != null || dungeon != null ? "通關" : "清完這一波")}後才拿得到）", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleCenter);

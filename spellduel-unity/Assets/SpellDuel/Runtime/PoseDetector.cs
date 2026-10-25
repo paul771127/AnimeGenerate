@@ -112,6 +112,11 @@ namespace SpellDuel
         [DllImport("__Internal")] static extern int sd_pose_poll(float[] result, int n);
 #endif
 
+        /// <summary>戰鬥前的手勢方向校正：玩家往上移手，畫面上卻往下 → 影像上下顛倒了：換方向並鎖住</summary>
+        public void FlipVertical() { flipY = !flipY; flipLocked = true; votesUp = votesDown = 0; }
+        /// <summary>手勢方向校正確認方向正確：鎖住（之後不再自動換）</summary>
+        public void LockFlip() { flipLocked = true; votesUp = votesDown = 0; }
+
         public void Init(Camera camera, ARCameraBackground bg)
         {
             cam = camera;
