@@ -1099,7 +1099,7 @@ namespace SpellDuel
                 battle.remoteEnemy = !NetIsHost;   // 隊友端：Boss 是主機的代理
                 battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.basePos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected, rad = p.curveAmp, s = p.pathLen, e = p.owner == battle.enemy || p.owner.isMinion ? 1 : 0 });
                 battle.OnAllyHit += (who, sk, dmg, at, id) => SendTo(who.pid, new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at });   // 主機：只送給被打到的那位
-                battle.OnTeamBuff += sk => NetSend?.Invoke(new Msg { t = "tbuff", k = sk.id });
+                battle.OnTeamBuff += sk => NetSend?.Invoke(new Msg { t = "tbuff", k = sk.id, s = sk.buffDur, dmg = sk.buffAmount, rad = sk.buffReduce, hp = sk.heal, ok = true });   // 連技能樹強化後的時間、數值一起送
                 battle.OnTaunt += sk => SendTo(0, new Msg { t = "taunt", k = sk.id });   // 隊友端：嘲諷交給主機算仇恨
                 battle.OnRemoteHit += (sk, dmg, at, id) => NetSend?.Invoke(new Msg { t = "hit2", id = id, k = sk.id, dmg = dmg, p = at, e = battle.LastProcs });
                 battle.OnRemoteBurn += (sk, dmg, at) => SendTo(0, new Msg { t = "burn2", k = sk.id, dmg = Mathf.RoundToInt(dmg), p = at });
@@ -1348,6 +1348,7 @@ namespace SpellDuel
                     // 隊友（牧師）的治療／淨化／守護／祈禱也作用在我身上
                     if (Skills.All.TryGetValue(m.k, out var tb))
                     {
+                        if (m.ok) { tb = tb.Clone(); tb.buffDur = m.s; tb.buffAmount = m.dmg; tb.buffReduce = m.rad; tb.heal = m.hp; }   // 施放者技能樹強化後的數值
                         bool wasDown = !Me.Alive;
                         battle.ApplyTeamBuff(tb, ally != null ? ally.name : "隊友", ally);
                         if (wasDown && Me.Alive) { Say($"✨ {(ally != null ? ally.name : "隊友")}的復活術！你站起來了", 3f); Sfx.Play("heal"); Haptics.Play(Haptics.Kind.Success); }

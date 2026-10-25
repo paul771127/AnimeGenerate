@@ -33,7 +33,11 @@ namespace SpellDuel
         public float focusUntil;        // 獵人精神集中：這段時間內新的冷卻減半
         public float prepUntil, prepBonus;   // 刺殺準備：這段時間內傷害 +prepBonus（受到傷害就取消）
         public Vector3 chargeFrom;      // 開始詠唱時腳的位置（刺殺準備要站著不動）
-        public float OutMul(float now) => (prepUntil > now ? 1f + prepBonus : 1f) * (1f + chargeBonus) * RageMul
+        // 牧師的全隊輔助：攻擊 +、加速（集氣／蓄力）、持續回復、爆擊率 +（到期就失效）
+        public float teamAtkUntil, teamAtk, teamHasteUntil, teamHaste, teamRegenUntil, teamRegen, teamCritUntil, teamCrit;
+        public float HasteMul(float now) => teamHasteUntil > now ? Mathf.Max(0.4f, 1f - teamHaste) : 1f;
+        public float TeamCritAt(float now) => teamCritUntil > now ? teamCrit : 0f;
+        public float OutMul(float now) => (prepUntil > now ? 1f + prepBonus : 1f) * (1f + chargeBonus) * RageMul * (teamAtkUntil > now ? 1f + teamAtk : 1f)
             * (lowMpBonus > 0f && maxMp > 0f && mp < maxMp * 0.3f ? 1f + lowMpBonus : 1f)       // 法師「孤注一擲」：MP 低於 30%
             * (zeal > 0f && maxHp > 0f ? 1f + zeal * Mathf.Clamp01(1f - hp / maxHp) : 1f);        // 牧師「狂信」：HP 越低傷害越高
         // ---- 技能樹的流派效果（CharacterProfile.ApplyTo 設定；0＝沒點）
@@ -299,7 +303,7 @@ namespace SpellDuel
         /// <summary>冷卻倍率（狂戰士血之狂暴：攻速 ×1.5）</summary>
         float CdFactor(Fighter f) => f.frenzyUntil > now ? 1f / 1.5f : 1f;
         /// <summary>這招要蓄力多久（影舞者連殺：伏擊技能 −70%）</summary>
-        public float ChargeTime(Fighter f, SkillDef s) => s.charge * f.chargeScale * (f.comboUntil > now && s.releaseNear ? 0.3f : 1f) * (f.danceUntil > now && s.releaseNear ? 0.5f : 1f);   // 連殺 −70%、影舞 −50%
+        public float ChargeTime(Fighter f, SkillDef s) => s.charge * f.chargeScale * f.HasteMul(now) * (f.comboUntil > now && s.releaseNear ? 0.3f : 1f) * (f.danceUntil > now && s.releaseNear ? 0.5f : 1f);   // 連殺 −70%、影舞 −50%
         public bool HasPet(Fighter f) { foreach (var p in pets) if (p.alive && p.owner == f && p.kind != "clone") return true; return false; }
         /// <summary>聖騎士的守護光環：自己是聖騎士，或 3m 內有活著的聖騎士隊友</summary>
         bool InAura(Fighter f)
@@ -1802,7 +1806,7 @@ namespace SpellDuel
                 });
                 return true;
             }
-            f.cooldownUntil[s.id] = now + s.cooldown * f.basicCdMul * CdFactor(f) + (SwordComeOn(f, s) ? f.jianlaiSlow : 0f);   // 普攻冷卻看敏捷（不是精神）；劍來：長劍比較重，集氣多 0.5～2 秒
+            f.cooldownUntil[s.id] = now + s.cooldown * f.basicCdMul * CdFactor(f) * f.HasteMul(now) + (SwordComeOn(f, s) ? f.jianlaiSlow : 0f);   // 普攻冷卻看敏捷（不是精神）；劍來：長劍比較重，集氣多 0.5～2 秒
             if (Skills.IsSwipeBasic(s) && SwordSlash(f, s, slashFrom, slashTo)) return true;   // 劍士、初心者：照刀線砍
             if (s.id == "na_dagger" && f.isPlayer) { PlayerStab(f, s, aimDir); return true; }   // 玩家刺客：集氣完手往前突刺，當下就刺
             if (s.id == "na_dagger" && DaggerStab(f, s)) return true;
@@ -2399,8 +2403,24 @@ namespace SpellDuel
                     return;
                 }
                 case SelfKind.TeamShield: t.shieldUntil = now + s.buffDur; t.shieldLeft = s.buffAmount; Emit("buff", t.Chest, s.color, $"{by}{s.name}（護盾 {s.buffAmount}）"); return;
+                case SelfKind.TeamAtk: t.teamAtkUntil = now + s.buffDur; t.teamAtk = s.buffAmount / 100f; Emit("buff", t.Chest, s.color, $"{by}{s.name}：攻擊 +{s.buffAmount}%（{s.buffDur:0} 秒）"); return;
+                case SelfKind.TeamHaste: t.teamHasteUntil = now + s.buffDur; t.teamHaste = s.buffAmount / 100f; Emit("buff", t.Chest, s.color, $"{by}{s.name}：加快 {s.buffAmount}%（{s.buffDur:0} 秒）"); return;
+                case SelfKind.TeamRegen: t.teamRegenUntil = now + s.buffDur; t.teamRegen = s.buffAmount; if (from == null) teamRegenBy = player; Emit("buff", t.Chest, s.color, $"{by}{s.name}：每秒 +{s.buffAmount} HP（{s.buffDur:0} 秒）"); return;
+                case SelfKind.TeamCrit: t.teamCritUntil = now + s.buffDur; t.teamCrit = s.buffAmount / 100f; Emit("buff", t.Chest, s.color, $"{by}{s.name}：爆擊率 +{s.buffAmount}%（{s.buffDur:0} 秒）"); return;
                 default: Emit("buff", t.Chest, s.color, by + s.name); return;
             }
+        }
+
+        /// <summary>生命湧泉：每秒回復（我這台只補我自己；是我放的就算進我的治療量）</summary>
+        Fighter teamRegenBy;
+        void UpdateTeamRegen(float dt)
+        {
+            var p = player;
+            if (p == null || !p.Alive || p.teamRegenUntil <= now || p.teamRegen <= 0f) return;
+            float h = Mathf.Min(p.teamRegen * dt, p.maxHp - p.hp);
+            if (h <= 0f) return;
+            p.hp += h;
+            if (teamRegenBy == p) p.healDone += h;
         }
 
         /// <summary>合作：隊友（牧師）的輔助技能作用在我身上</summary>
@@ -2439,10 +2459,10 @@ namespace SpellDuel
             int eagle = EagleStacks(owner);
             // 獵人「穩定瞄準」：站著不動 2 秒以上，箭的爆擊率提高（以前是必定爆擊，太強）
             bool steady = !reflected && owner.steadyAim > 0f && (s.cls == "archer" || s.id == "na_arrow") && now - owner.stillSince >= SteadyAimTime(owner);
-            if (owner.atkMul != 1f || owner.critChance > 0f || owner.rangeMul != 1f || outMul != 1f || eagle > 0 || owner.markNextUntil > now || owner.faith >= FaithMax || steady)
+            if (owner.atkMul != 1f || owner.critChance > 0f || owner.TeamCritAt(now) > 0f || owner.rangeMul != 1f || outMul != 1f || eagle > 0 || owner.markNextUntil > now || owner.faith >= FaithMax || steady)
             {
                 p.damage = Mathf.RoundToInt(dmg * owner.atkMul * outMul);
-                float crit = owner.critChance + EagleCrit * eagle + (steady ? owner.steadyAim : 0f);   // 神射手鷹眼：每層 +5%；穩定瞄準：站穩後 +4%／級
+                float crit = owner.critChance + owner.TeamCritAt(now) + EagleCrit * eagle + (steady ? owner.steadyAim : 0f);   // 神射手鷹眼：每層 +5%；穩定瞄準：站穩後 +4%／級
                 bool forced = !reflected && owner.markNextUntil > now && s.cls == "archer" && s.type == SkillType.Projectile;   // 致命標記、獵殺時刻
                 if (forced || (crit > 0f && rng.NextDouble() < crit)) { p.crit = true; p.damage = Mathf.RoundToInt(p.damage * (2f + owner.critDmg)); }
                 if (forced) owner.markNextUntil = 0f;
@@ -2513,6 +2533,7 @@ namespace SpellDuel
         {
             now += dt;
             if (shockwaves.Count > 0) UpdateShockwaves();
+            UpdateTeamRegen(dt);
             if (windOrbits.Count > 0) UpdateWindOrbits(dt);
             // 計時的效果（旋風斬的後兩段…）
             for (int i = 0; i < timers.Count; i++) if (timers[i].Key <= now) { var a = timers[i].Value; timers.RemoveAt(i--); a(); }

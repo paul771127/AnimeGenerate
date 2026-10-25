@@ -6,7 +6,9 @@ namespace SpellDuel
     public enum SkillType { Projectile, Self, Trap }
     public enum SelfKind { None, Heal, Block, Shield, Counter, Armor, Cleanse, Prayer, Dispel, Summon, Mana, Focus, Prep, Taunt,
         // 進階職業
-        Oath, Frenzy, Undying, DeadMark, SwordCome, FlyingSwords, RollShot, ManaShield, Pet, Detonate, Substitute, Clone, Dance, Fog, Revive, HealPct, TeamShield, Capture, ShadowClone, Barrier }
+        Oath, Frenzy, Undying, DeadMark, SwordCome, FlyingSwords, RollShot, ManaShield, Pet, Detonate, Substitute, Clone, Dance, Fog, Revive, HealPct, TeamShield, Capture, ShadowClone, Barrier,
+        // 牧師的全隊輔助（時間、數值看技能樹）
+        TeamAtk, TeamHaste, TeamRegen, TeamCrit }
     public enum EffectKind { None, Dot, Blind, Snare, Mark, Burn }
 
     /// <summary>
@@ -191,6 +193,11 @@ namespace SpellDuel
             P(new SkillDef { id = "prayheal", cls = "priest", name = "治療術", type = SkillType.Self, self = SelfKind.Heal, color = C("#86efac"), cost = 30, heal = 35, charge = 1.5f, cooldown = 6f, desc = "自己與隊友各回復 35 HP" });
             P(new SkillDef { id = "cleanse", cls = "priest", name = "淨化", type = SkillType.Self, self = SelfKind.Cleanse, color = C("#a5f3fc"), cost = 15, heal = 8, charge = 0.6f, cooldown = 6f, desc = "自己與隊友：解除中毒、定身、致盲，並回復 8 HP" });
             P(new SkillDef { id = "guard", cls = "priest", name = "守護", type = SkillType.Self, self = SelfKind.Armor, color = C("#fcd34d"), cost = 25, charge = 1.0f, cooldown = 10f, buffDur = 6f, buffReduce = 0.4f, desc = "自己與隊友 6 秒內受到的傷害 -40%" });
+            // 牧師的全隊輔助（自己＋所有隊友；buffAmount＝百分比或每秒回復量，技能樹加時間與數值）
+            P(new SkillDef { id = "bless", cls = "priest", name = "聖光祝福", type = SkillType.Self, self = SelfKind.TeamAtk, color = C("#fde047"), cost = 30, charge = 1.0f, cooldown = 20f, buffDur = 10f, buffAmount = 15, desc = "自己與隊友 10 秒內攻擊傷害 +15%" });
+            P(new SkillDef { id = "haste", cls = "priest", name = "迅捷禱言", type = SkillType.Self, self = SelfKind.TeamHaste, color = C("#67e8f9"), cost = 30, charge = 1.0f, cooldown = 20f, buffDur = 10f, buffAmount = 15, desc = "自己與隊友 10 秒內普攻集氣、技能蓄力加快 15%" });
+            P(new SkillDef { id = "spring", cls = "priest", name = "生命湧泉", type = SkillType.Self, self = SelfKind.TeamRegen, color = C("#86efac"), cost = 25, charge = 1.0f, cooldown = 18f, buffDur = 10f, buffAmount = 4, desc = "自己與隊友 10 秒內每秒回復 4 HP" });
+            P(new SkillDef { id = "focus", cls = "priest", name = "精準聖歌", type = SkillType.Self, self = SelfKind.TeamCrit, color = C("#f0abfc"), cost = 30, charge = 1.0f, cooldown = 20f, buffDur = 10f, buffAmount = 10, desc = "自己與隊友 10 秒內爆擊率 +10%" });
             P(new SkillDef { id = "prayer", cls = "priest", name = "祈禱", type = SkillType.Self, self = SelfKind.Prayer, color = C("#c4b5fd"), cost = 0, charge = 1.5f, cooldown = 15f, buffAmount = 20, buffDur = 4f, desc = "自己與隊友：所有技能目前的冷卻時間減半，並回復 20 MP" });
 
             P(new SkillDef { id = "counter", cls = "swordsman", name = "反擊", type = SkillType.Self, self = SelfKind.Counter, color = C("#f472b6"), cost = 18, charge = 0.2f, cooldown = 6f, buffDur = 1.5f, desc = "1.5 秒內被打中：無傷，並把攻擊打回去" });
@@ -260,7 +267,7 @@ namespace SpellDuel
             Classes["minion"] = new ClassDef { id = "minion", name = "熔岩小鬼", color = C("#ff8c42"), maxHp = 40, maxMp = 0, mpRegen = 0, skills = new string[0], defaultLoadout = new string[0], desc = "Boss 召喚的小怪" };
 
             Classes["novice"] = new ClassDef { id = "novice", name = "初心者", color = C("#d6b98c"), maxHp = 110, maxMp = 80, mpRegen = 3.5f, skills = new[] { "nv_swing", "nv_stone", "nv_aid" }, defaultLoadout = new[] { "nv_swing", "nv_stone", "nv_aid" }, desc = "剛踏上旅程的冒險者：一開始只會用木棍敲（近戰普攻），到炎之里找居民解任務學木棍揮擊、投石、急救。10 級到職業工會挑戰轉職試煉" };
-            Classes["priest"] = new ClassDef { id = "priest", name = "牧師", color = C("#fde68a"), maxHp = 105, maxMp = 130, mpRegen = 4, skills = new[] { "holy", "judgement", "prayheal", "cleanse", "guard", "prayer" }, defaultLoadout = new[] { "holy", "prayheal", "guard" }, desc = "回復、淨化、守護、減冷卻；聖光攻擊較弱" };
+            Classes["priest"] = new ClassDef { id = "priest", name = "牧師", color = C("#fde68a"), maxHp = 105, maxMp = 130, mpRegen = 4, skills = new[] { "holy", "judgement", "prayheal", "cleanse", "guard", "prayer", "bless", "haste", "spring", "focus" }, defaultLoadout = new[] { "holy", "prayheal", "guard" }, desc = "回復、淨化、守護、減冷卻；聖光攻擊較弱" };
             Classes["swordsman"] = new ClassDef { id = "swordsman", name = "劍士", color = C("#60a5fa"), maxHp = 160, maxMp = 90, mpRegen = 3, skills = new[] { "slash", "thrust", "wave", "block", "ironwall", "counter", "taunt" }, defaultLoadout = new[] { "slash", "wave", "block" }, desc = "近遠攻擊都有，多種防禦" };
 
             // ---------------------------------------------------------- 普通攻擊（不耗 MP、不用唸；手勢舉著就自動攻擊，見 BasicOf）

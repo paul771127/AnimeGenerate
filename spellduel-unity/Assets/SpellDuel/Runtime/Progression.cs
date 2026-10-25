@@ -328,6 +328,19 @@ namespace SpellDuel
                     FPas("pr_zeal", "狂信", PassiveKind.Zeal, 0.2f, 5, 5, 3, "pr_martyr"),
                     FPas("pr_leech", "聖血", PassiveKind.Lifesteal, 0.03f, 5, 6, 3, "pr_martyr"),
                     FPas("pr_quick", "快速施法", PassiveKind.QuickCd, 0.06f, 5, 6, 2, "pr_holy"),
+                    // 全隊輔助：學會後再點「效果」「時間」
+                    FLearn("pr_bless", "bless", 0, 5, "pr_guard"),
+                    FMod("pr_bless_a", "祝福效果", "bless", ModField.BuffAmount, 5f, 5, 0, 6, "pr_bless"),
+                    FMod("pr_bless_t", "祝福時間", "bless", ModField.BuffDur, 2f, 5, 0, 7, "pr_bless_a"),
+                    FLearn("pr_haste", "haste", 2, 5, "pr_guard"),
+                    FMod("pr_haste_a", "迅捷效果", "haste", ModField.BuffAmount, 3f, 5, 2, 6, "pr_haste"),
+                    FMod("pr_haste_t", "迅捷時間", "haste", ModField.BuffDur, 2f, 5, 2, 7, "pr_haste_a"),
+                    FLearn("pr_spring", "spring", 4, 5, "pr_regen"),
+                    FMod("pr_spring_a", "湧泉效果", "spring", ModField.BuffAmount, 2f, 5, 4, 6, "pr_spring"),
+                    FMod("pr_spring_t", "湧泉時間", "spring", ModField.BuffDur, 2f, 5, 4, 7, "pr_spring_a"),
+                    FLearn("pr_focus", "focus", 6, 5, "pr_quick"),
+                    FMod("pr_focus_a", "聖歌效果", "focus", ModField.BuffAmount, 3f, 5, 6, 6, "pr_focus"),
+                    FMod("pr_focus_t", "聖歌時間", "focus", ModField.BuffDur, 2f, 5, 6, 7, "pr_focus_a"),
                 };
                 // ======================================================== 進階職業（轉職時已學會第一個進階技能）：三個流派，可以和基本職業的流派搭配
                 case "paladin": return new List<TreeNode>

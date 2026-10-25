@@ -155,6 +155,10 @@ namespace SpellDuel
                 case SelfKind.Undying: E($"{s.buffDur:0} 秒內受到致命傷害：保留 1 HP，並無敵 3 秒（只觸發一次）"); break;
                 case SelfKind.DeadMark: E($"{s.buffDur:0} 秒內射出的下一箭必定爆擊（傷害 ×2）"); break;
                 case SelfKind.RollShot: E($"{s.buffDur:0} 秒內：每次側跨閃避自動朝最近的敵人射一箭（傷害 {Skills.All["rollarrow"].damage}）"); break;
+                case SelfKind.TeamAtk: E($"自己與隊友 {s.buffDur:0} 秒內攻擊傷害 +{s.buffAmount}%"); break;
+                case SelfKind.TeamHaste: E($"自己與隊友 {s.buffDur:0} 秒內普攻集氣、技能蓄力加快 {s.buffAmount}%"); break;
+                case SelfKind.TeamRegen: E($"自己與隊友 {s.buffDur:0} 秒內每秒回復 {s.buffAmount} HP（共 {s.buffAmount * s.buffDur:0}）"); break;
+                case SelfKind.TeamCrit: E($"自己與隊友 {s.buffDur:0} 秒內爆擊率 +{s.buffAmount}%"); break;
                 case SelfKind.ManaShield: E($"{s.buffDur:0} 秒內受到的傷害先扣 MP（1 MP 擋 1 點），MP 用完才扣 HP"); break;
                 case SelfKind.Detonate: E($"每隻召喚物在周圍 {s.areaRadius:0.#}m 爆炸（傷害 {Skills.All["pet_blast"].damage}），召喚物消失"); break;
                 case SelfKind.Substitute: E($"{s.buffDur:0.#} 秒內下一次被打中：完全不受傷害（陷阱、範圍攻擊也算）"); break;
