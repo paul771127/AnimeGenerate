@@ -126,7 +126,7 @@ namespace SpellDuel
             }
             if(kind==CharacterLook.HairKind.Spikes)for(int i=0;i<8;i++)
             {
-                float a=i*Mathf.PI/4;Lock(v,tri,colors,new Vector3(Mathf.Sin(a)*.085f,.135f,Mathf.Cos(a)*.065f),new Vector3(Mathf.Sin(a)*.15f,.19f,Mathf.Cos(a)*.10f),new Vector3(Mathf.Sin(a)*.19f,.18f+look.Length*.42f+(i%2)*.02f,Mathf.Cos(a)*.14f),.030f,.016f,i%2==0?.75f:1,.3f);
+                float a=i*Mathf.PI/4,spread=id=="player_identity"?.163f:.19f;Lock(v,tri,colors,new Vector3(Mathf.Sin(a)*.085f,.135f,Mathf.Cos(a)*.065f),new Vector3(Mathf.Sin(a)*.15f,.19f,Mathf.Cos(a)*.10f),new Vector3(Mathf.Sin(a)*spread,.18f+look.Length*.42f+(i%2)*.02f,Mathf.Cos(a)*.14f),.030f,.016f,i%2==0?.75f:1,.3f);
             }
             // Bespoke short-hair signatures; the silhouettes remain different without headgear.
             if(look.Seed==1||look.Seed==3||look.Seed==6||look.Seed==14||look.Seed==15||look.Seed==22||look.Seed==24||look.Seed==25||look.Seed==27)

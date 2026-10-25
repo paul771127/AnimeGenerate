@@ -7,7 +7,7 @@ namespace SpellDuel
     {
         internal static readonly string[] Ids={"novice","swordsman","archer","mage","assassin","priest","paladin","berserker","marksman","ranger","archmage","summoner","ninja","shadowdancer","bishop","inquisitor"};
         internal static bool IsPlayer(string id){for(int i=0;i<Ids.Length;i++)if(Ids[i]==id)return true;return false;}
-        internal static readonly CharacterLook.Look HeroLook=new CharacterLook.Look(CharacterLook.EyeKind.Sharp,CharacterLook.HairKind.SidePart,"947447","65432e",.40f,.22f,-.48f,.09f,31);
+        internal static readonly CharacterLook.Look HeroLook=new CharacterLook.Look(CharacterLook.EyeKind.Sharp,CharacterLook.HairKind.Spikes,"947447","65432e",.40f,.22f,-.48f,.09f,31);
         internal static Portraits.Persona HeroPersona(Portraits.Persona old)
         {
             var p=new Portraits.Persona(.97f,.96f,.98f,1.04f,1,0,.5f,0,.30f,0,old.Pitch,old.Yaw,old.Roll,old.Lean,.02f,1);
