@@ -432,7 +432,7 @@ namespace SpellDuel
                 var pieces=new CombineInstance[parts.Length];for(int i=0;i<parts.Length;i++)pieces[i]=new CombineInstance{mesh=parts[i].sharedMesh,transform=pivot.worldToLocalMatrix*parts[i].transform.localToWorldMatrix};
                 mesh=new Mesh{name="InkPair "+key};mesh.CombineMeshes(pieces,true,true);mesh.RecalculateBounds();meshes["InkPair/"+key]=mesh;
             }
-            for(int i=0;i<parts.Length;i++){var go=parts[i].gameObject;go.transform.SetParent(null,false);Object.Destroy(go);}
+            for(int i=0;i<parts.Length;i++){var go=parts[i].gameObject;go.transform.SetParent(null,false);if(Application.isPlaying)Object.Destroy(go);else Object.DestroyImmediate(go);}
             Part(pivot,"InkPair "+key,mesh,Vector3.zero,material);
         }
         // One cached curved strip: tapered corners and a subtle cupid bend, not a two-line V.
@@ -487,7 +487,7 @@ namespace SpellDuel
         internal static void Hair(Transform parent,string identity,Portraits.Persona p,Color color)=>AnimeHair.Build(parent,identity,p);
         internal static Material EyeMaterial(string identity,int glance=0)
         {
-            string key="眼睛圖集/"+identity+"/"+glance;if(materials.TryGetValue(key,out var mat))return mat;
+            string key="眼睛圖集/"+identity+"/"+glance;if(materials.TryGetValue(key,out var mat)&&mat!=null)return mat;
             var px=new Color32[EyeArt.W*2*EyeArt.H];
             for(int side=0;side<2;side++)
             {

@@ -1048,7 +1048,7 @@ namespace SpellDuel
 
         void OnDestroy()
         {
-            if (auraMat != null) Destroy(auraMat);
+            if (auraMat != null) { if(Application.isPlaying)Destroy(auraMat);else DestroyImmediate(auraMat); }
         }
 
         // ================================================================ 建構小工具

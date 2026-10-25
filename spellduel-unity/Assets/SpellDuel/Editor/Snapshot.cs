@@ -18,8 +18,8 @@ namespace SpellDuel.EditorTools
         public static void Render()
         {
             Directory.CreateDirectory("snapshots");
-            PlayerMatch2DAudit.Run();
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            PlayerMatch2DAudit.Run();
             var camGo = new GameObject("SnapCam");
             var cam = camGo.AddComponent<Camera>();
             cam.clearFlags = CameraClearFlags.SolidColor;
