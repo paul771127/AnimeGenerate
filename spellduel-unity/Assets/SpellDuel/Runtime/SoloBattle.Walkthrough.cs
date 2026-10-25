@@ -123,11 +123,11 @@ namespace SpellDuel
             var L = new List<WStep>();
             WStep S(string key, string title, Func<string> text, Func<bool> done, Func<bool> skip = null) { var s = new WStep { key = key, title = title, text = text, done = done, skip = skip }; L.Add(s); return s; }
             // 走路模式（3D 村子）切到清單（設施、居民都在清單裡）
-            void ToList(string why) => S("📋 清單", "打開清單", () => $"按下方的「📋 清單」：村子的居民和設施都列在清單裡。{why}", () => Town() && !world.walkMode, () => Town() && !world.walkMode);
+            void ToList(string why) => S("📋 清單", "打開清單", () => $"按下方的「📋 清單」：打開村子的地圖，居民和設施都在上面。{why}", () => Town() && !world.walkMode, () => Town() && !world.walkMode);
             void Learn(string npcKey, string npc, string skill)
             {
                 string sn = Skills.All[skill].name;
-                S("npc:" + npcKey, $"找{npc}", () => $"點「{npc}」跟他說話。頭上有任務的居民會教你新招式。", () => world.TalkingTo != null && world.TalkingTo.Contains(npcKey), () => P().noviceLearned.Contains(skill));
+                S("npc:" + npcKey, $"找{npc}", () => $"點「{npc}」（地圖上的名字）跟他說話。有任務的居民會教你新招式。", () => world.TalkingTo != null && world.TalkingTo.Contains(npcKey), () => P().noviceLearned.Contains(skill));
                 S("回報任務", $"學「{sn}」", () => $"按「✨ 回報任務」，{npc}會教你「{sn}」（學會的招式會自動放進技能欄）。", () => P().noviceLearned.Contains(skill));
             }
             void Node(string node, string skill)

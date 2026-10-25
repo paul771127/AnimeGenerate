@@ -274,6 +274,7 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 城鎮
         void DrawTown(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
+            if (DrawTownMap(r, prof, fs, fsS, fsL, gap)) return;   // 有 2D 俯瞰圖的城鎮（WorldUI.TownMap.cs）
             var t = Towns[town];
             float y = r.y + gap;
             Header(r, $"🏘 {t.name}", t.color, prof, fs, fsS, fsL, gap, ref y);
