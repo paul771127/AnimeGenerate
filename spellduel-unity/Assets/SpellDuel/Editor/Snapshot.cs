@@ -69,6 +69,7 @@ namespace SpellDuel.EditorTools
                 catch (System.Exception e) { Debug.LogWarning($"[SpellDuel] pet {k} snapshot failed: {e.Message}"); }
             }
             MatchOverview();
+            EliteShots(cam);
             Debug.Log("[SpellDuel] snapshots saved to " + Path.GetFullPath("snapshots"));
         }
 

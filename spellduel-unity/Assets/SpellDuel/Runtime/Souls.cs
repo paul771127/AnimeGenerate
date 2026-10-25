@@ -115,6 +115,11 @@ namespace SpellDuel
             B("boss_sea", "#22d3ee", F(SoulOp.HurtShield, 60, 0.12f, 5f));                    // 深淵海妖：機率大護盾
             B("boss_arena", "#d4a24c", F(SoulOp.Undying, 0));                                  // 青銅鬥魂：每場一次不死
             B("boss_canyon", "#c8a165", F(SoulOp.Atk, 0.25f), F(SoulOp.Taken, 0.12f));        // 黃土岩魔：好處＋副作用（攻擊很強，但更怕痛）
+            foreach (var e in EliteCatalog.All)
+            {
+                SoulFx fx = e.role == 0 ? F(SoulOp.Block,.08f) : e.role == 1 ? F(SoulOp.CritDmg,.25f) : e.role == 2 ? F(SoulOp.HitSnare,0,.06f,.8f) : e.role == 3 ? F(SoulOp.KillHeal,.08f,.30f) : F(SoulOp.BasicSpeed,.10f);
+                M(e.kind,.01f,ColorUtility.ToHtmlStringRGB(e.color).Insert(0,"#"),fx);
+            }
             AssignParts();
         }
 
@@ -124,7 +129,7 @@ namespace SpellDuel
         static void AssignParts()
         {
             foreach (var d in All)
-                d.part = System.Array.IndexOf(WeaponSouls, d.id) >= 0 ? SoulPart.Weapon : System.Array.IndexOf(TrinketSouls, d.id) >= 0 ? SoulPart.Trinket : SoulPart.Armor;
+                d.part = EliteCatalog.IsElite(d.kind) ? (EliteCatalog.Get(d.kind).role == 1 || EliteCatalog.Get(d.kind).role == 4 ? SoulPart.Weapon : EliteCatalog.Get(d.kind).role == 0 ? SoulPart.Armor : SoulPart.Trinket) : System.Array.IndexOf(WeaponSouls, d.id) >= 0 ? SoulPart.Weapon : System.Array.IndexOf(TrinketSouls, d.id) >= 0 ? SoulPart.Trinket : SoulPart.Armor;
         }
         public static readonly string[] PartNames = { "武器", "防具", "飾品" };
         public static readonly string[] PartIcons = { "⚔", "🛡", "💍" };

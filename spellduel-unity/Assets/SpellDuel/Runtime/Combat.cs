@@ -544,7 +544,7 @@ namespace SpellDuel
         public static bool IsRangedMinion(int kind) => kind >= 0 && kind < MinionReach.Length && MinionReach[kind] >= 5f;
         static readonly float[] MinionReach = { 0.95f, 9f, 1.2f, 1.3f, 11f, 14f, 13f, 8f, 5f, 6f, 1.0f, 1.3f, 9f, 7f, 9f, 11f, 1.3f, 1.4f, 5f, 1.8f, 1.8f, 1.8f, 1.8f };
         static readonly float[] MinionWindup = { 1.5f, 0.8f, 1.5f, 0.5f, 1.2f, 1.6f, 1.0f, 1.0f, 0.8f, 1.0f, 0.7f, 0.8f, 0.9f, 0.6f, 0.6f, 1.2f, 0.8f, 0.6f, 1.0f, SpecialWindup, SpecialWindup, SpecialWindup, SpecialWindup };
-        public const int MinionKinds = 23;
+        public const int MinionKinds = 48;
         // ---- 第二～五章 x-4、x-5 的特殊敵人（19 古根撼地獸、20 潮鞭鰻、21 鏈錘鬥奴、22 裂岩甲蜥）：
         //      場上同時最多 1 隻、出現頻率低；大範圍招式（比 Boss 小），要跳起來（地面震環）或蹲下（胸口高度橫掃）才躲得掉，走出範圍也打不到
         public const float SpecialWindup = 1.5f;
@@ -627,7 +627,7 @@ namespace SpellDuel
             var m = new Fighter(MinionNames[kind], c, new string[0], false)
             {
                 isMinion = true, minionKind = kind, bodyRadius = MinionRadius[kind] + (IsRanged(kind) ? 0f : MeleeBodyExtra), minionId = id > 0 ? id : nextId++,
-                dmgMul = dmgMul, speedMul = speedMul,
+                dmgMul = dmgMul * (EliteCatalog.IsElite(kind) ? EliteCatalog.Get(kind).damage : 1f), speedMul = speedMul,
             };
             m.maxHp = Mathf.RoundToInt(MinionHp[kind] * hpMul); m.hp = m.maxHp;
             m.alt = kind == 14 ? 5f : BaseAlt(kind);   // 海鳥從高空飛來
@@ -874,10 +874,11 @@ namespace SpellDuel
                     var at = FixedDungeonSpawns ? DungeonSpawnPoint(ordinal) : edgePoint();
                     int forced = kindOverride != null ? kindOverride() : -1;
                     int kind = forced >= 0 ? forced : FixedDungeonSpawns ? DungeonMinionKind(ordinal) : PickMinionKind();
+                    kind = EliteSpawnKind(kind, ordinal, forced >= 0);
                     var nm = SpawnMinion(at, 0, kind, HpMul * (IsRanged(kind) ? 1f : meleeHpMul), DmgMul, SpeedMul);
                     float fixHp = minionHpOverride != null ? minionHpOverride(kind) : 0f;
                     if (fixHp > 0f) { nm.maxHp = Mathf.Max(1, Mathf.RoundToInt(fixHp)); nm.hp = nm.maxHp; }
-                    if (eliteLeft > 0) { eliteLeft--; MakeElite(nm); }
+                    if (eliteLeft > 0 && !EliteCatalog.IsElite(kind)) { eliteLeft--; MakeElite(nm); }
                     if (Theme == CanyonTheme) StartCliffLeap(nm);   // 黃土山道：從崖頂跳進場內
                     waveToSpawn--;
                 }
@@ -903,7 +904,7 @@ namespace SpellDuel
         void UpdateSpecialSpawn()
         {
             if (specialKind < 0 || holdSpawns || edgePoint == null) return;
-            bool alive = false; foreach (var m in minions) if (m.Alive && IsSpecial(m.minionKind)) { alive = true; break; }
+            bool alive = false; foreach (var m in minions) if (m.Alive && (IsSpecial(m.minionKind) || EliteCatalog.IsElite(m.minionKind))) { alive = true; break; }
             if (alive) { nextSpecialAt = Mathf.Max(nextSpecialAt, now + SpecialGap); return; }
             if (waveToSpawn <= 0 || now < nextSpecialAt) return;
             var sp = SpawnMinion(edgePoint(), 0, specialKind, HpMul * meleeHpMul, DmgMul, SpeedMul);
@@ -1062,6 +1063,7 @@ namespace SpellDuel
 
         void UpdateMinions(float dt)
         {
+            CleanupElites();
             if (!enemy.Alive && !endless) { foreach (var m in minions) if (m.Alive) { m.hp = 0; Emit("miniondie", m.Feet, m.cls.color, null); } }
             minions.RemoveAll(m => !m.Alive);
             if (remoteEnemy) return;   // 隊友端：代理，不跑 AI
@@ -1084,6 +1086,7 @@ namespace SpellDuel
                 float d = best;
                 int kind = m.minionKind;
                 int hold = minionHold != null ? minionHold(m) : 0;
+                if (EliteCatalog.IsElite(kind)) { TickElite(m, tgt, d, dt, hold); continue; }
                 if (hold == 1) { m.windupUntil = 0f; m.attackReadyAt = Mathf.Max(m.attackReadyAt, now + 0.6f); continue; }   // 教學：定住
                 if (hold == 2) { m.windupUntil = 0f; m.attackReadyAt = Mathf.Max(m.attackReadyAt, now + 0.6f); }          // 教學：只走位
                 // 衝刺中（荊棘衝鋒獸、跳躍魚的飛撲、海鳥的俯衝）：直線往前衝，撞到玩家就停
@@ -1284,6 +1287,7 @@ namespace SpellDuel
         public void RemoteSpecialStrike(int minionId, string skillId, Vector3 center, Vector3 fwd, int dmg)
         {
             if (!Skills.All.TryGetValue(skillId ?? "", out var s)) return;
+            if (EliteCatalog.TrySkill(skillId, out var ed, out int es)) { var em = minions.Find(x => x.minionId == minionId); if (em == null) em = SpawnMinion(center, minionId, ed.kind); EliteStrike(em, s, center, fwd, dmg, true); return; }
             var m = minions.Find(x => x.minionId == minionId);
             if (m == null) return;
             int kind = m.minionKind;

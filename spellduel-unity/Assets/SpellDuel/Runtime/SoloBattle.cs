@@ -1126,6 +1126,7 @@ namespace SpellDuel
                 }
                 battle.coopHost = NetIsHost;
                 battle.OnDealtNumber += (at, dn, crit) => NetSend?.Invoke(new Msg { t = "dmgn", p = at, dmg = Mathf.RoundToInt(dn), ok = crit });   // 我的傷害數字：隊友也看得到
+                battle.OnEliteWarn += (em, es, ec, ef, et) => NetSend?.Invoke(new Msg { t = "ewarn", id = em.minionId, k = es.id, p = ec, d = ef, s = et });
                 battle.OnSpecialStrike += (sm, ss, sc, sf, sd) => NetSend?.Invoke(new Msg { t = "spx", id = sm.minionId, k = ss.id, p = sc, d = sf, dmg = sd });   // 稀有怪出招：隊友自己重現、判定
                 battle.remoteEnemy = !NetIsHost;   // 隊友端：Boss 是主機的代理
                 battle.OnSpawn += p => NetSend?.Invoke(new Msg { t = "cast2", id = p.id, k = p.skill.id, p = p.basePos, d = p.dir, t0 = SharedClock?.Invoke() ?? 0, ok = p.reflected, rad = p.curveAmp, s = p.pathLen, e = p.owner == battle.enemy || p.owner.isMinion ? 1 : 0 });
@@ -1189,7 +1190,8 @@ namespace SpellDuel
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         ApplyNoviceRoute(pendingStage);   // 1-1～1-3：4m×4m 小場地；1-1、1-2 只有近戰小怪（SoloBattle.NoviceRoute.cs）
                         SetupNoviceBattle(pendingStage);  // 新手關：小鬼／衝鋒獸的血量、1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）
-                        battle.specialKind = SpecialKindOfStage(pendingStage);   // 第二～五章 x-4、x-5：特殊敵人（場上最多 1 隻）
+                        battle.specialKind = SpecialKindOfStage(pendingStage);
+                        battle.eliteEncounters = pendingStage.id == "1-4" || (pendingStage.id.EndsWith("-3") && pendingStage.theme > 0);   // 第二～五章 x-4、x-5：特殊敵人（場上最多 1 隻）
                         // 故事出怪（使用者要求）：Boss 以外場上同時最多 5 隻 × 人數；一批出齊後，打倒敵人 5 秒後補滿
                         if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId) { battle.storyMaxAlive = StoryMaxAlive * partyN; battle.refillDelay = StoryRefillDelay; }
                         // 第二章以後的 Boss：血量、傷害 ×1.3
@@ -1343,7 +1345,7 @@ namespace SpellDuel
             // 小怪：位置與「編號,血量,最大血量,預備中」
             var ms = battle.minions;
             var pts = new Vector3[ms.Count]; var ks = new string[ms.Count];
-            for (int i = 0; i < ms.Count; i++) { pts[i] = ms[i].head; ks[i] = $"{ms[i].minionId},{Mathf.CeilToInt(ms[i].hp)},{ms[i].maxHp},{(ms[i].windupUntil > 0f ? 1 : 0)},{ms[i].minionKind},{TargetCode(ms[i].target)},{ms[i].alt.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}"; }
+            for (int i = 0; i < ms.Count; i++) { pts[i] = ms[i].head; ks[i] = $"{ms[i].minionId},{Mathf.CeilToInt(ms[i].hp)},{ms[i].maxHp},{(ms[i].windupUntil > 0f ? 1 : 0)},{ms[i].minionKind},{TargetCode(ms[i].target)},{ms[i].alt.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}" + EliteWire(ms[i]); }
             NetSend?.Invoke(new Msg { t = "mins", pts = pts, ks = ks });
             SendNpcState();   // 副本的劇情人物
         }
@@ -1522,6 +1524,7 @@ namespace SpellDuel
                             mf.windupUntil = parts[3] == "1" ? battle.now + 1f : 0f;
                             if (parts.Length >= 6 && int.TryParse(parts[5], out var tcode)) mf.target = FromTargetCode(tcode);
                             if (parts.Length >= 7 && float.TryParse(parts[6], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var malt)) mf.alt = malt;   // 飛行／浮空高度
+                            ReadEliteWire(mf, parts);
                         }
                         foreach (var mf in battle.minions) if (!seen.Contains(mf.minionId)) mf.hp = 0f;
                     }
@@ -1597,11 +1600,12 @@ namespace SpellDuel
                     rig = MinionRig.Create();
                     rig.SetVariant(m.minionKind);
                     rig.SetDress(battle.Theme);   // 角鬥場：黑晶項圈；山道：沙塵與頭巾（美術第十一輪）
-                    if (m.isElite) rig.transform.localScale = Vector3.one * 1.5f;   // 無盡塔的精銳：大一號
+                    if (m.isElite && !EliteCatalog.IsElite(m.minionKind)) rig.transform.localScale = Vector3.one * 1.5f;   // 無盡塔的精銳：大一號
                     minionGo[m] = rig; minionLastHp[m] = m.hp;
                     rig.transform.position = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);
                     SpawnFade.Play(rig.gameObject);   // 淡入出現
                 }
+                UpdateEliteVisual(m, rig);
                 var oldPos = rig.transform.position;
                 var newPos = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);   // 飛在空中／浮著／跳起來的高度
                 var f = WorldFrame.DirFromWorld(m.forward); f.y = 0f;

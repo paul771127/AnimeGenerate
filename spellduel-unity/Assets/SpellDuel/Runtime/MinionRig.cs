@@ -70,12 +70,12 @@ namespace SpellDuel
 
         public void SetVariant(int kind)
         {
-            kind = Mathf.Clamp(kind, 0, 22);
+            kind = Mathf.Clamp(kind, 0, 47);
             if (kind == variantId && body != null) return;
             if (body != null)
             {
                 body.gameObject.SetActive(false);
-                Destroy(body.gameObject);
+                if (Application.isPlaying) Destroy(body.gameObject); else DestroyImmediate(body.gameObject);
                 body = null;
             }
             dressRoot=null;
@@ -497,6 +497,7 @@ namespace SpellDuel
         // ================================================================ 建立
         void Build(int k)
         {
+            if (k >= 23) { BuildElite(k); return; }
             if (k >= 19) { BuildAreaEnemy(k); return; }
             sea = k >= 13;
             plant = k >= 7 && !sea;
@@ -665,6 +666,7 @@ namespace SpellDuel
         void Animate(float dt)
         {
             if (body == null) return;
+            if (variantId >= 23) { AnimateElite(dt); return; }
             if (variantId >= 19) { AnimateAreaEnemy(dt); return; }
             if (sea) { AnimateSea(dt); return; }
             if (plant) { AnimatePlant(dt); return; }

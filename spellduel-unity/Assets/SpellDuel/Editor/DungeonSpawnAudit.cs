@@ -59,6 +59,7 @@ namespace SpellDuel.EditorTools
                 {
                     Require(ar[i].Equals(br[i]), "Roster/position changed with RNG or player pose");
                     int kind = ar[i].kind;
+                    if (EliteCatalog.IsElite(kind)) { Require(EliteCatalog.Get(kind).chapter == theme && i == 5, "Wrong fixed elite slot/theme"); continue; }
                     Require(theme != 0 || kind < 7, "Wrong volcano roster");
                     Require(theme != 1 || Battle.IsPlant(kind), "Wrong forest roster");
                     Require(theme != 2 || Battle.IsSea(kind), "Wrong sea roster");
