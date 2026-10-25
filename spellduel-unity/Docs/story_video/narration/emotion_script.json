@@ -1,0 +1,210 @@
+{
+ "voices": {
+  "旁白": "沉穩自然的說書人（女聲或中性），不要播音腔",
+  "艾琳": "年輕女性，聲音偏溫柔、柔和、親切（使用者指定：艾琳要偏溫柔）",
+  "老焰": "蒼老的老爺爺：低沉、沙啞、說話慢、氣息重、略帶顫音（使用者指定）",
+  "熔岩巨像": "巨大石頭怪物：極低、粗、悶，有回聲",
+  "腐化樹王": "古老的樹精：低沉、空洞、像多個聲音重疊",
+  "海斗": "年輕男性，熱血、有精神",
+  "澪": "年輕女性，空靈、溫柔、帶一點哀傷"
+ },
+ "videos": {
+  "v0_prologue.mp4": [
+   {
+    "file": "v0_prologue_00.mp3",
+    "speaker": "旁白",
+    "text": "灰燼像雪一樣落下。炎之里的晨鐘，已經三天沒有響過。",
+    "emotion": "哀傷、低語",
+    "direction": "緩慢、帶點寂寥，像在講一段被遺忘的往事"
+   },
+   {
+    "file": "v0_prologue_01.mp3",
+    "speaker": "旁白",
+    "text": "鐘樓裡，鐘舌斷了一截，鐘身爬滿了黑色的結晶。",
+    "emotion": "凝重",
+    "direction": "低聲描述，句尾放輕"
+   },
+   {
+    "file": "v0_prologue_02.mp3",
+    "speaker": "老焰",
+    "text": "鐘聲該讓出門的人知道，家還在這裡……可它啞了。",
+    "emotion": "悲傷、懷念",
+    "direction": "蒼老、微微顫抖，『……可它啞了』要停頓、嘆氣般說出"
+   },
+   {
+    "file": "v0_prologue_03.mp3",
+    "speaker": "旁白",
+    "text": "一位旅人走上村口的石階——那就是你。",
+    "emotion": "期待、溫和",
+    "direction": "語氣轉亮一點，『那就是你』帶笑意"
+   },
+   {
+    "file": "v0_prologue_04.mp3",
+    "speaker": "艾琳",
+    "text": "我是艾琳。你也聽見了嗎？山裡有東西在敲。",
+    "emotion": "溫柔、帶點不安",
+    "direction": "溫柔地自我介紹，後半句『山裡有東西在敲』壓低聲音、有點緊張"
+   },
+   {
+    "file": "v0_prologue_05.mp3",
+    "speaker": "旁白",
+    "text": "山腹透出紅光。咚、咚、咚——三下，又是三下。",
+    "emotion": "緊張、懸疑",
+    "direction": "『咚、咚、咚』一字一頓，越來越緊"
+   },
+   {
+    "file": "v0_prologue_06.mp3",
+    "speaker": "旁白",
+    "text": "火山、森林、海港……三座鐘，一座接一座熄滅了。",
+    "emotion": "沉重、遺憾",
+    "direction": "放慢，每個地名之間停頓"
+   },
+   {
+    "file": "v0_prologue_07.mp3",
+    "speaker": "艾琳",
+    "text": "走吧，先去礦坑救採礦隊。我們把晨鐘找回來。",
+    "emotion": "堅定、溫柔",
+    "direction": "鼓勵的口吻，溫柔但有決心"
+   }
+  ],
+  "v1_golem.mp4": [
+   {
+    "file": "v1_golem_00.mp3",
+    "speaker": "旁白",
+    "text": "熔岩大廳深處，巨像守在石閘前，胸口的黑晶不停脈動。",
+    "emotion": "壓迫、緊張",
+    "direction": "低沉，營造大魔王登場的壓迫感"
+   },
+   {
+    "file": "v1_golem_01.mp3",
+    "speaker": "熔岩巨像",
+    "text": "放過一人……洪潮便會進來……封住……所有的路……",
+    "emotion": "痛苦、執念",
+    "direction": "斷斷續續、像被困住的怒吼與哀鳴"
+   },
+   {
+    "file": "v1_golem_02.mp3",
+    "speaker": "艾琳",
+    "text": "牠被困在一次沒結束的守門裡。攔住牠！",
+    "emotion": "急切、同情",
+    "direction": "先帶同情，『攔住牠！』轉為急促有力"
+   },
+   {
+    "file": "v1_golem_03.mp3",
+    "speaker": "旁白",
+    "text": "巨像高舉雙拳砸向地面——小心衝擊波！",
+    "emotion": "緊急、驚呼",
+    "direction": "語速加快，『小心衝擊波！』要喊出來"
+   },
+   {
+    "file": "v1_golem_04.mp3",
+    "speaker": "旁白",
+    "text": "黑晶碎裂，巨像緩緩跪下，熔岩的光漸漸暗去。",
+    "emotion": "釋然、平靜",
+    "direction": "放慢、放輕，帶一點感傷"
+   },
+   {
+    "file": "v1_golem_05.mp3",
+    "speaker": "旁白",
+    "text": "艾琳扣回鐘舌。鐘聲響起，金色的聲波掃過整座山。",
+    "emotion": "感動、希望",
+    "direction": "溫暖、上揚，結尾有餘韻"
+   }
+  ],
+  "v2_treeking.mp4": [
+   {
+    "file": "v2_treeking_00.mp3",
+    "speaker": "旁白",
+    "text": "霧中的記名林。古樹上，掛著無數刻了名字的木牌。",
+    "emotion": "神秘、幽靜",
+    "direction": "輕聲，像在霧裡說話"
+   },
+   {
+    "file": "v2_treeking_01.mp3",
+    "speaker": "腐化樹王",
+    "text": "我若睡去……再也沒有人，等他們回來……",
+    "emotion": "孤獨、疲憊",
+    "direction": "低沉、緩慢、很累的樣子"
+   },
+   {
+    "file": "v2_treeking_02.mp3",
+    "speaker": "艾琳",
+    "text": "翠會重刻木牌，小葉會讀名冊。你不必獨自記住。",
+    "emotion": "溫柔、安慰",
+    "direction": "非常溫柔，像在安撫一個孩子"
+   },
+   {
+    "file": "v2_treeking_03.mp3",
+    "speaker": "腐化樹王",
+    "text": "別讓……最後一個名字……消失！",
+    "emotion": "絕望、嘶吼",
+    "direction": "激動、撕裂般大喊"
+   },
+   {
+    "file": "v2_treeking_04.mp3",
+    "speaker": "旁白",
+    "text": "黑晶裂開，樹根展平。一顆發光的種子落在名冊上。",
+    "emotion": "平靜、希望",
+    "direction": "輕柔，結尾帶希望"
+   }
+  ],
+  "v3_kraken.mp4": [
+   {
+    "file": "v3_kraken_00.mp3",
+    "speaker": "旁白",
+    "text": "暴風雨的夜，港口的舊燈塔在雨中掃過一道光。",
+    "emotion": "緊張、陰暗",
+    "direction": "壓低聲音，有風雨的緊迫感"
+   },
+   {
+    "file": "v3_kraken_01.mp3",
+    "speaker": "旁白",
+    "text": "巨妖攀上礁石。胸前的黑晶上，刻滿了名字。",
+    "emotion": "恐懼、凝重",
+    "direction": "慢、沉重，『刻滿了名字』要讓人發寒"
+   },
+   {
+    "file": "v3_kraken_02.mp3",
+    "speaker": "海斗",
+    "text": "凪還在岸上守著燈。我們也不退！",
+    "emotion": "熱血、堅決",
+    "direction": "大聲、有力，年輕男生的衝勁"
+   },
+   {
+    "file": "v3_kraken_03.mp3",
+    "speaker": "澪",
+    "text": "別把活人的名字給牠……聽，歌還沒唱完。",
+    "emotion": "哀傷、溫柔",
+    "direction": "輕聲、帶哭腔，『聽』之後停頓"
+   },
+   {
+    "file": "v3_kraken_04.mp3",
+    "speaker": "旁白",
+    "text": "黑晶崩散，巨妖沉回深海。雨，停了。",
+    "emotion": "釋然",
+    "direction": "放慢，『雨，停了。』兩段停頓"
+   },
+   {
+    "file": "v3_kraken_05.mp3",
+    "speaker": "旁白",
+    "text": "三座鐘隔著山、林與海，終於一同響起。",
+    "emotion": "感動、壯闊",
+    "direction": "上揚、有力，像音樂高潮"
+   },
+   {
+    "file": "v3_kraken_06.mp3",
+    "speaker": "旁白",
+    "text": "白帆化入晨光。港口立起了歸航者的名碑。",
+    "emotion": "溫暖、懷念",
+    "direction": "溫柔、緩慢"
+   },
+   {
+    "file": "v3_kraken_07.mp3",
+    "speaker": "艾琳",
+    "text": "這次我寫下了所有名字。回家吧，把紀行念給大家聽。",
+    "emotion": "溫柔、感動",
+    "direction": "溫柔帶微笑，結尾輕輕的"
+   }
+  ]
+ }
+}
