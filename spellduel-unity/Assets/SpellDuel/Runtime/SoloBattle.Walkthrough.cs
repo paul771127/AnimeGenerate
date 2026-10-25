@@ -90,7 +90,7 @@ namespace SpellDuel
                 for (int guard = 0; guard < 6 && walkSteps != null && walkStep < walkSteps.Count; guard++)
                 {
                     var s = walkSteps[walkStep];
-                    bool next = s.key == "@next" ? UiLock.NextPressed : (s.skip != null && s.skip()) || (s.done != null && s.done());
+                    bool next = s.key.StartsWith("@") ? UiLock.NextPressed : (s.skip != null && s.skip()) || (s.done != null && s.done());
                     if (!next) break;
                     UiLock.NextPressed = false;
                     walkStep++;
@@ -113,7 +113,7 @@ namespace SpellDuel
                 else { key = null; UiLock.Hint = $"🧭 新手指引：{CtxName(cur.ctx)}，指引會接著繼續（{cur.title}）"; }
             }
             UiKit.LockKey = pause || key == "@next" ? null : key;
-            UiLock.NextButton = !pause && key == "@next";
+            UiLock.NextButton = !pause && key != null && key.StartsWith("@");   // @next：說明；@show:xxx：圈起來介紹，按「下一步」
             UiLock.Block = cur.block || key != cur.key;
             UiLock.Title = title; UiLock.Text = text;
             UiLock.StepNo = walkStep + 1; UiLock.StepCount = walkSteps.Count;
@@ -197,8 +197,8 @@ namespace SpellDuel
             void Learn(string npcKey, string npc, string skill)
             {
                 string sn = Skills.All[skill].name;
-                S(npcKey, $"找{npc}", () => $"點「{npc}」（地圖上的名字）跟他說話。有任務的居民會教你新招式。", () => world.TalkingTo != null && world.TalkingTo.Contains(npcKey), () => P().noviceLearned.Contains(skill));
-                S("回報任務", $"學「{sn}」", () => $"按「✨ 回報任務」，{npc}會教你「{sn}」（學會的招式會自動放進技能欄）。", () => P().noviceLearned.Contains(skill));
+                S(npcKey, $"找{npc}", () => $"點被框起來的「{npc}」（點他本人或下面的名字都可以）。他頭上有 ❗，表示任務做完了，可以回報、學新招式。", () => world.TalkingTo != null && world.TalkingTo.Contains(npcKey), () => P().noviceLearned.Contains(skill));
+                S("回報任務", $"學「{sn}」", () => $"對話框下面出現黃色的「✨ 回報任務」按鈕：按它，{npc}會教你「{sn}」（學會的招式會自動放進技能欄）。", () => P().noviceLearned.Contains(skill));
             }
             void Node(string node, string skill)
             {
@@ -206,8 +206,58 @@ namespace SpellDuel
                 S("node:" + node, $"選「{sn}強化」", () => $"點技能樹上的「{sn}強化」，下面會出現說明：每一級傷害（或回復量）提高多少。", () => charPanel.SelNode == node, () => P().AvailIn(Skills.Novice) <= 0 || P().Rank(node) > 0);
                 S("學習", $"點一點{sn}", () => $"按「學習（1 技能點）」，把技能點投到「{sn}」。每升一級得 1 技能點。（剩 {P().AvailIn(Skills.Novice)} 點）", () => P().Rank(node) > 0, () => P().AvailIn(Skills.Novice) <= 0);
             }
+            // 圈起來介紹一個名牌／按鈕（只能按「下一步」）
+            void Show(string label, string title, string text) => S("@show:" + label, title, () => text, null);
             switch (flow)
             {
+                case "intro":
+                {
+                    // 第一次進村子（教學結束後）：認識居民 → 米菈的投石課 → 能力值 → 穿新手裝備 → 認識每一棟建築 → 出發 1-1
+                    GiveStarterGear();   // 旅行布衣（只送一次）：先放進背包，指引才知道要框哪一件
+                    long starter() { long.TryParse(WalkGet("sd_starter_uid", "0"), out var u); return u; }
+                    long su = starter();
+                    bool StoneLeft() => NoviceQuests.StoneLessonPending(P());
+                    at = WCtx.Town;
+                    S("@next", "炎之里", () => "歡迎來到炎之里！這是村子的地圖：上面有居民（人物＋名字）和建築（名牌）。\n接下來一步一步帶你認識村子：畫面上被框起來、在閃的地方才能點，其他地方暫時不能點。按「下一步 ▶」。", null);
+                    S("・老焰", "找村長", () => "先跟村長打招呼：點被框起來的「老焰」（白頭髮、紅色長袍的老爺爺）。點他本人或下面的名字都可以。", () => world.TalkingTo != null && world.TalkingTo.Contains("・老焰"));
+                    S("@next", "對話框", () => "畫面下方出現了對話框：左邊是頭像，右邊是他說的話。\n・再點同一個人一次 → 換下一句話\n・有任務的居民，對話框下面會多一個黃色的任務按鈕\n按「下一步 ▶」。", null);
+                    S("・小鐵", "認識小鐵", () => "再來認識見習鐵匠「小鐵」（戴護目鏡、紅色圍巾），他在鐵匠鋪門口。點被框起來的小鐵。", () => world.TalkingTo != null && world.TalkingTo.Contains("・小鐵"));
+                    S("・米菈", "找米菈", () => "旅行商人「米菈」頭上有 ❗：表示她有任務給你。點被框起來的米菈。", () => world.TalkingTo != null && world.TalkingTo.Contains("・米菈"), () => !StoneLeft());
+                    S("投石課", "接任務：投石課", () => "對話框下面的黃色按鈕「🪨 上米菈的投石課」就是任務：按它，米菈會教你遠距離攻擊「投石」，接著到空地上練習。", () => !StoneLeft(), () => !StoneLeft());
+                    // 能力值（升級拿到的點數全部加完）
+                    S("📜 角色", "打開角色", () => "練習完升級了，拿到了能力點！按下面被框起來的「📜 角色／裝備」。", () => charOpen, () => !AnyRaise(P()));
+                    at = WCtx.Char;
+                    S("📊 能力值", "能力值分頁", () => "按上面的「📊 能力值」分頁。", () => charOpen && charPanel.tab == 0, () => !AnyRaise(P()));
+                    S("＋", "加能力點", () => $"按能力值旁邊的「＋」加點，把點數全部加完（剩 {P().statPoints} 點）。\n力量＝攻擊更痛、體質＝血更多、敏捷＝普攻集氣更快、智力＝技能更強、精神＝魔力回復更快、幸運＝爆擊與掉寶。", () => !AnyRaise(P()));
+                    // 穿新手裝備
+                    S("🛡 裝備", "裝備分頁", () => "米菈送你一件「旅行布衣」，放在背包裡。按上面的「🛡 裝備」分頁。", () => charOpen && charPanel.tab == 2, () => P().equipped[(int)Slot.Body] != null);
+                    S("item:" + su, "選衣服", () => "在下面的背包裡，點被框起來的「旅行布衣」。右邊會顯示它的數值、和身上的比較。", () => charPanel.SelItem != null && charPanel.SelItem.uid == starter(), () => P().equipped[(int)Slot.Body] != null || FindItem(starter()) == null)
+                        .enter = () => charPanel.FocusUid = su;
+                    S("=裝備", "穿上", () => "按「裝備」穿上它！裝備有等級和能力值需求；穿不上的話，按鈕會寫原因。", () => P().equipped[(int)Slot.Body] != null, () => FindItem(starter()) == null);
+                    S("=完成", "完成", () => "好了！按下面的「完成」關掉角色畫面。", () => !charOpen);
+                    // 認識每一棟建築（圈起來介紹，不能點進去）
+                    at = WCtx.Town;
+                    Show("⚒ 鐵匠鋪", "⚒ 鐵匠鋪", "鐵匠鋪：花金幣強化裝備，每 +1 主屬性 +8%。+5 以前一定成功，之後越來越難（失敗只扣金幣）。");
+                    Show("🧪 道具店", "🧪 道具店", "道具店：買藥水（戰鬥中說「喝藥水」或比 🤙 喝）、回城捲軸；用不到的裝備可以賣掉換金幣。");
+                    Show("🏛 職業工會", "🏛 職業工會", "職業工會：10 級時來這裡挑戰轉職試煉，通過後選職業（劍士、獵人、法師、刺客、牧師）。");
+                    Show("🏰 副本入口", "🏰 副本入口", "副本入口：比故事更難的地城，可以選路線、開寶箱；一個人或和朋友組隊都可以。");
+                    Show("📅 訓練場", "📅 訓練場", "訓練場：每日挑戰（閃避、輸出、跑步、綜合）拿獎牌換獎勵；也可以再上一次教學。");
+                    Show("🔥 討伐告示板", "🔥 討伐告示板", "討伐告示板：單人挑戰 Boss，打倒拿懸賞金。");
+                    Show("👀 觀戰席", "👀 觀戰席", "觀戰席：輸入房間代碼，看朋友的比賽。");
+                    Show("🌀 傳送陣", "🌀 傳送陣", "傳送陣：傳送到去過的城鎮。");
+                    Show("🚪 村口", "🚪 村口", "村口：這一章的故事關卡從這裡出發（也可以從大地圖選）。");
+                    Show("📜 角色", "📜 角色／裝備", "角色／裝備：能力值、技能樹、裝備、背包、信箱、倉庫都在這裡。升級後記得來加點。");
+                    Show("🚶 逛街", "🚶 逛街", "逛街：進到 3D 的村子裡走走（用方向鍵或晃手機走路）。想回到這張地圖時，按「🗺 城鎮圖」。");
+                    Show("大地圖", "🗺 回大地圖", "大地圖：選故事關卡、到其他城鎮、無盡塔。");
+                    // 出發 1-1
+                    S("大地圖", "前往大地圖", () => "村子都認識了！準備第一場冒險：按「🗺 回大地圖」。", () => storyMapOpen && world.screen == WorldUI.Screen.Map, () => Story.IsCleared("1-1"));
+                    at = WCtx.Map;
+                    S("stage:1-1", "選關卡 1-1", () => "點地圖上被框起來的「1-1」（灰燼中的歸途），下面會出現這一關的說明。", () => world.SelStageId == "1-1", () => Story.IsCleared("1-1"));
+                    S("⚔ 出發", "出發", () => "按「⚔ 出發」。", () => prepGo != null || !storyMapOpen, () => Story.IsCleared("1-1"));
+                    at = WCtx.Prep;
+                    S("⚔ 出發", "整備", () => "這是出發前的整備：上面是技能欄，下面是要帶的藥水。這次直接按「⚔ 出發」！", () => prepGo == null && (!storyMapOpen || phase == Phase.Fighting), () => Story.IsCleared("1-1"));
+                    break;
+                }
                 case "v11":
                     at = WCtx.Result;
                     S("回炎之里", "回村子", () => "打得好！先回村子：這一戰拿到了經驗和新的任務進度。按「🏘 回炎之里」。", () => Town(), InVillage);   // 重新進遊戲時已經在村子：跳過

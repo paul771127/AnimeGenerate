@@ -63,6 +63,7 @@ namespace SpellDuel
             it.mods.Add(new System.Collections.Generic.KeyValuePair<Affix, float>(Affix.Hp, 15f));
             it.mods.Add(new System.Collections.Generic.KeyValuePair<Affix, float>(Affix.Armor, 0.02f));
             Progress.AddToBagOrMail(it, "米菈");
+            try { PlayerPrefs.SetString(CharacterSlots.Key("sd_starter_uid"), it.uid.ToString()); PlayerPrefs.Save(); } catch { }   // 新手指引：帶玩家穿上這件
             if (p.equipped[(int)Slot.Body] != null) GuideNextLater = true;   // 身上已經有衣服：這一步自動過
         }
         bool GuideNextLater;

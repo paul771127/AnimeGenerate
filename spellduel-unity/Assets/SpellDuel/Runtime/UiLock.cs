@@ -80,7 +80,7 @@ namespace SpellDuel
             if (Blocking && IsPointer(e.type))
             {
                 bool ok = NextButton && nb.Contains(e.mousePosition);
-                foreach (var r in rects) if (r.Contains(e.mousePosition)) { ok = true; break; }
+                if (!UiKit.ShowOnly) foreach (var r in rects) if (r.Contains(e.mousePosition)) { ok = true; break; }   // 介紹模式：圈起來的只能看，只能按「下一步」
                 if (!ok) { e.Use(); return; }
             }
 

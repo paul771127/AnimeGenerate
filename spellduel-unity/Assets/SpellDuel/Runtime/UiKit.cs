@@ -129,9 +129,12 @@ namespace SpellDuel
         public static void NextTag(string tag){nextTag=tag;}
         /// <summary>這一幀畫出來的目標按鈕（螢幕座標）；UiLock 在每一幀最後收走</summary>
         public static readonly List<Rect> LockRectsBuilding=new List<Rect>();
+        /// <summary>介紹模式（key 開頭是 @show:）：符合的按鈕只圈起來介紹，不能按（只能按「下一步」）</summary>
+        public static bool ShowOnly=>LockKey!=null&&LockKey.StartsWith("@show:");
         public static bool LockMatch(string key,string text,string tag)
         {
             if(string.IsNullOrEmpty(key))return false;
+            if(key.StartsWith("@show:"))key=key.Substring(6);
             foreach(var part in key.Split('|'))
             {
                 if(part.Length==0)continue;
@@ -158,7 +161,7 @@ namespace SpellDuel
                 Paint(g,frameStyle,new Color(1f,.92f,.35f,.45f+.55f*k));
                 Paint(Inset(g,-3),frameStyle,new Color(1f,.85f,.2f,.25f*k));
             }
-            return hit0&&(!locked||target||LockBypass);
+            return hit0&&(!locked||(target&&!ShowOnly)||LockBypass);
         }
         /// <summary>
         /// 不是 Button 的可點區域（例如地圖上的居民本人）：符合教學鎖就登記成可以點的範圍（UiLock 不擋），回傳 true＝這一塊是指引要點的

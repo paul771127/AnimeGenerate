@@ -60,7 +60,7 @@ namespace SpellDuel
                 villageReturn = WorldUI.Screen.Training; enemyClass = "daily"; dailyPick = k; PlayerPrefs.SetInt("sd_daily_pick", k);
                 OpenPrep(DailyChallenge.Names[k], false, "每日挑戰不能使用道具", () => { storyMapOpen = false; StartDaily((DailyChallenge.Kind)k); });
             };
-            world.OnStartGuide = () => { world.screen = WorldUI.Screen.Town; StartGuide(); };
+            world.OnStartGuide = () => { world.OpenTown(world.town); StartWalk("intro"); };   // 重看：做過的步驟會自動跳過
             world.OnStartTutorial = () => { villageReturn = WorldUI.Screen.Training; enemyClass = "tutorial"; storyMapOpen = false; prologueRun = false; StartTutorial(); };
             world.OnStartBounty = () =>
             {
@@ -126,7 +126,7 @@ namespace SpellDuel
                 ShowDialogue(TutorialOutroLines, () =>
                 {
                     villageReturn = null; storyMapOpen = true; world.OpenTown(0);
-                    StartGuide();   // 村莊新手導覽：走路 → 找米菈上投石課 → 能力值 → 裝備 → 技能 → 設施 → 任務 → 出發（SoloBattle.Guide.cs）
+                    StartWalk("intro");   // 村莊新手指引：認識居民 → 米菈的投石課 → 能力值 → 穿裝備 → 認識每棟建築 → 出發 1-1（SoloBattle.Walkthrough.cs）
                 });
                 return;
             }
