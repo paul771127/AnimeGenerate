@@ -15,6 +15,8 @@ namespace SpellDuel
         // ---- 手指拖曳捲動（IMGUI 的捲動區在手機上只能拖捲軸）：在 GUI.BeginScrollView 之前呼叫，回傳新的捲動位置。
         //      拖超過 12 像素才算拖曳（之前的點擊照常）；拖曳放開不會觸發按鈕；放開後有慣性滑行。
         static int dragId=-1,glideId=-1;static Vector2 dragLast,dragVel,glideVel;static float dragTotal;static bool dragMoved;
+        /// <summary>手指移動超過多少像素才算拖曳（高解析度手機輕點時手指也會晃 10～20 像素，太小會把點擊當成拖曳取消掉）</summary>
+        static float DragSlop=>Mathf.Max(12f,Mathf.Min(Screen.width,Screen.height)*0.025f);
         public static Vector2 DragScroll(Rect view,Vector2 scroll,Rect content)
         {
             var e=Event.current;if(e==null)return scroll;
@@ -29,7 +31,7 @@ namespace SpellDuel
                     if(dragId==id)
                     {
                         var d=e.mousePosition-dragLast;dragLast=e.mousePosition;dragTotal+=d.magnitude;
-                        if(dragTotal>12f)dragMoved=true;
+                        if(dragTotal>DragSlop)dragMoved=true;
                         if(dragMoved)
                         {
                             if(maxX<=0)d.x=0;
@@ -157,6 +159,19 @@ namespace SpellDuel
                 Paint(Inset(g,-3),frameStyle,new Color(1f,.85f,.2f,.25f*k));
             }
             return hit0&&(!locked||target||LockBypass);
+        }
+        /// <summary>
+        /// 不是 Button 的可點區域（例如地圖上的居民本人）：符合教學鎖就登記成可以點的範圍（UiLock 不擋），回傳 true＝這一塊是指引要點的
+        /// </summary>
+        public static bool LockTarget(Rect r,string text,string tag)
+        {
+            if(LockKey==null||!LockMatch(LockKey,text,tag))return false;
+            if(Event.current.type==EventType.Repaint)
+            {
+                var a=GUIUtility.GUIToScreenPoint(new Vector2(r.x,r.y));var b=GUIUtility.GUIToScreenPoint(new Vector2(r.xMax,r.yMax));
+                LockRectsBuilding.Add(Rect.MinMaxRect(a.x,a.y,b.x,b.y));
+            }
+            return true;
         }
         /// <summary>教學鎖暫時不擋（例如找不到目標按鈕時，免得卡住）</summary>
         public static bool LockBypass;
