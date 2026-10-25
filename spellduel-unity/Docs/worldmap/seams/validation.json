@@ -12,5 +12,47 @@
       2352
     ],
     "method": "imagegen repair; fixed feather mask; all pixels outside band unchanged before JPG encoding"
+  },
+  {
+    "boundaryX": 4320,
+    "sourceSize": [
+      793,
+      1983
+    ],
+    "beforeMeanEdgeDelta": 81.60590277777777,
+    "afterMeanEdgeDelta": 18.74392361111111,
+    "editableBand": [
+      4128,
+      4512
+    ],
+    "method": "imagegen repair; fixed feather mask; all pixels outside band unchanged before JPG encoding"
+  },
+  {
+    "boundaryX": 6480,
+    "sourceSize": [
+      793,
+      1983
+    ],
+    "beforeMeanEdgeDelta": 79.79322916666666,
+    "afterMeanEdgeDelta": 17.300694444444446,
+    "editableBand": [
+      6288,
+      6672
+    ],
+    "method": "imagegen repair; fixed feather mask; all pixels outside band unchanged before JPG encoding"
+  },
+  {
+    "boundaryX": 8640,
+    "sourceSize": [
+      793,
+      1983
+    ],
+    "beforeMeanEdgeDelta": 60.736805555555556,
+    "afterMeanEdgeDelta": 16.660069444444446,
+    "editableBand": [
+      8448,
+      8832
+    ],
+    "method": "imagegen repair; fixed feather mask; all pixels outside band unchanged before JPG encoding"
   }
 ]

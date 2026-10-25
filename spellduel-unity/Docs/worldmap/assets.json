@@ -23,8 +23,8 @@
       1331,
       1182
     ],
-    "bytes": 2137774,
-    "sha256": "9f03e4095dc739a33b0f4c003e8d514177a31432bf3f1460ab87bbb042243855",
+    "bytes": 2188918,
+    "sha256": "aee72a99295c842ab30bb40addfa3131a25d63ad769b9dc46c17c382dec2b3ca",
     "seamRepair": true
   },
   "Assets/SpellDuel/Resources/WorldMap/region_3.jpg": {
@@ -37,8 +37,9 @@
       1330,
       1182
     ],
-    "bytes": 2410744,
-    "sha256": "0cf07e9f2bae3ee8db48f06afdf3c7f0f3612f8c7a5813d43a1f73510e0b8304"
+    "bytes": 2472540,
+    "sha256": "4f8997c7aee8dd89bccd2901641789a3f03be9e593d3a0af05d768f7bbe3bf8f",
+    "seamRepair": true
   },
   "Assets/SpellDuel/Resources/WorldMap/region_4.jpg": {
     "size": [
@@ -50,8 +51,9 @@
       1330,
       1182
     ],
-    "bytes": 2242394,
-    "sha256": "0c86a5a01424f00f7385a12fe7dbcb472da966fd621b43235ba0ed3e0918f3e3"
+    "bytes": 2277527,
+    "sha256": "3138e7c3ba1051a2001d3eac2634a80ad540f3c996cbb4b4fdf486acd9cbfaa5",
+    "seamRepair": true
   },
   "Assets/SpellDuel/Resources/WorldMap/region_5.jpg": {
     "size": [
@@ -63,8 +65,9 @@
       1330,
       1182
     ],
-    "bytes": 2207675,
-    "sha256": "ffc1fc30ad2126134c688f888d4e84d03cfc2f40a95579c366dfaf120d4fcbf7"
+    "bytes": 2222591,
+    "sha256": "62f9f5e10bde01eae3818693f1d7e12712e17c22b36bdd33cefb44068881c12a",
+    "seamRepair": true
   },
   "Assets/SpellDuel/Resources/WorldMap/hero_novice_idle_0.png": {
     "size": [

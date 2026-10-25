@@ -17,19 +17,6 @@
   "fogBeginsScreenX": 800,
   "elements": [
     {
-      "id": "town:0",
-      "mapPosition": [
-        300,
-        1090
-      ],
-      "labelRect": [
-        140,
-        702,
-        320,
-        96
-      ]
-    },
-    {
       "id": "1-1",
       "mapPosition": [
         650,
@@ -38,6 +25,19 @@
       "labelRect": [
         490,
         682,
+        320,
+        96
+      ]
+    },
+    {
+      "id": "town:0",
+      "mapPosition": [
+        300,
+        1090
+      ],
+      "labelRect": [
+        140,
+        702,
         320,
         96
       ]

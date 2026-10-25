@@ -7,7 +7,10 @@
   },
   "availableRegions": [
     1,
-    2
+    2,
+    3,
+    4,
+    5
   ],
   "nodes": {
     "town:0": {
@@ -152,6 +155,204 @@
       "name": "無盡塔",
       "reserved": false,
       "visibleByDefault": true
+    },
+    "town:2": {
+      "x": 4620,
+      "y": 1080,
+      "label_x": 4620,
+      "label_y": 740,
+      "region": 3,
+      "type": "town",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "潮騷港"
+    },
+    "3-1": {
+      "x": 4970,
+      "y": 1045,
+      "label_x": 4970,
+      "label_y": 705,
+      "region": 3,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "航圖終點是家"
+    },
+    "3-2": {
+      "x": 5295,
+      "y": 1115,
+      "label_x": 5295,
+      "label_y": 775,
+      "region": 3,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "窗邊留著的半首歌"
+    },
+    "3-3": {
+      "x": 5640,
+      "y": 1070,
+      "label_x": 5640,
+      "label_y": 730,
+      "region": 3,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "白帆不再獨行"
+    },
+    "3-4": {
+      "x": 6000,
+      "y": 1110,
+      "label_x": 6000,
+      "label_y": 690,
+      "region": 3,
+      "type": "boss",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "深海巨妖・黎明的三重奏"
+    },
+    "3-5": {
+      "x": 6300,
+      "y": 1070,
+      "label_x": 6300,
+      "label_y": 730,
+      "region": 3,
+      "type": "reserved",
+      "reserved": true,
+      "visibleByDefault": false,
+      "name": "預留第5關"
+    },
+    "town:3": {
+      "x": 6780,
+      "y": 1100,
+      "label_x": 6780,
+      "label_y": 760,
+      "region": 4,
+      "type": "town",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "赤砂城"
+    },
+    "4-1": {
+      "x": 7130,
+      "y": 1060,
+      "label_x": 7130,
+      "label_y": 720,
+      "region": 4,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "鐵門後的第一聲鑼"
+    },
+    "4-2": {
+      "x": 7455,
+      "y": 1120,
+      "label_x": 7455,
+      "label_y": 780,
+      "region": 4,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "地刺下的名字"
+    },
+    "4-3": {
+      "x": 7800,
+      "y": 1060,
+      "label_x": 7800,
+      "label_y": 720,
+      "region": 4,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "看台最高的那一排"
+    },
+    "4-4": {
+      "x": 8160,
+      "y": 1100,
+      "label_x": 8160,
+      "label_y": 680,
+      "region": 4,
+      "type": "boss",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "青銅鬥魂・最後一次落幕"
+    },
+    "4-5": {
+      "x": 8460,
+      "y": 1100,
+      "label_x": 8460,
+      "label_y": 760,
+      "region": 4,
+      "type": "reserved",
+      "reserved": true,
+      "visibleByDefault": false,
+      "name": "預留第5關"
+    },
+    "town:4": {
+      "x": 8940,
+      "y": 1030,
+      "label_x": 8940,
+      "label_y": 690,
+      "region": 5,
+      "type": "town",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "風沙驛"
+    },
+    "5-1": {
+      "x": 9290,
+      "y": 1040,
+      "label_x": 9290,
+      "label_y": 700,
+      "region": 5,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "崖下的駝鈴"
+    },
+    "5-2": {
+      "x": 9615,
+      "y": 1010,
+      "label_x": 9615,
+      "label_y": 670,
+      "region": 5,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "不讓人看的箱子"
+    },
+    "5-3": {
+      "x": 9960,
+      "y": 1060,
+      "label_x": 9960,
+      "label_y": 720,
+      "region": 5,
+      "type": "stage",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "岩壁上的刻痕"
+    },
+    "5-4": {
+      "x": 10320,
+      "y": 1010,
+      "label_x": 10320,
+      "label_y": 590,
+      "region": 5,
+      "type": "boss",
+      "reserved": false,
+      "visibleByDefault": true,
+      "name": "黃土岩魔・岩之鐘"
+    },
+    "5-5": {
+      "x": 10620,
+      "y": 1000,
+      "label_x": 10620,
+      "label_y": 660,
+      "region": 5,
+      "type": "reserved",
+      "reserved": true,
+      "visibleByDefault": false,
+      "name": "預留第5關"
     }
   },
   "paths": [
@@ -437,6 +638,366 @@
       "futureBranchFrom": "2-5"
     },
     {
+      "from": "town:2",
+      "to": "3-1",
+      "points": [
+        [
+          4620,
+          1080
+        ],
+        [
+          4736,
+          1068
+        ],
+        [
+          4854,
+          1057
+        ],
+        [
+          4970,
+          1045
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "3-1",
+      "to": "3-2",
+      "points": [
+        [
+          4970,
+          1045
+        ],
+        [
+          5077,
+          1068
+        ],
+        [
+          5188,
+          1092
+        ],
+        [
+          5295,
+          1115
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "3-2",
+      "to": "3-3",
+      "points": [
+        [
+          5295,
+          1115
+        ],
+        [
+          5409,
+          1100
+        ],
+        [
+          5526,
+          1085
+        ],
+        [
+          5640,
+          1070
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "3-3",
+      "to": "3-4",
+      "points": [
+        [
+          5640,
+          1070
+        ],
+        [
+          5759,
+          1083
+        ],
+        [
+          5881,
+          1097
+        ],
+        [
+          6000,
+          1110
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "3-4",
+      "to": "3-5",
+      "points": [
+        [
+          6000,
+          1110
+        ],
+        [
+          6099,
+          1097
+        ],
+        [
+          6201,
+          1083
+        ],
+        [
+          6300,
+          1070
+        ]
+      ],
+      "enabled": false,
+      "layout": "future-five-stage"
+    },
+    {
+      "from": "town:3",
+      "to": "4-1",
+      "points": [
+        [
+          6780,
+          1100
+        ],
+        [
+          6896,
+          1087
+        ],
+        [
+          7014,
+          1073
+        ],
+        [
+          7130,
+          1060
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "4-1",
+      "to": "4-2",
+      "points": [
+        [
+          7130,
+          1060
+        ],
+        [
+          7237,
+          1080
+        ],
+        [
+          7348,
+          1100
+        ],
+        [
+          7455,
+          1120
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "4-2",
+      "to": "4-3",
+      "points": [
+        [
+          7455,
+          1120
+        ],
+        [
+          7569,
+          1100
+        ],
+        [
+          7686,
+          1080
+        ],
+        [
+          7800,
+          1060
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "4-3",
+      "to": "4-4",
+      "points": [
+        [
+          7800,
+          1060
+        ],
+        [
+          7919,
+          1073
+        ],
+        [
+          8041,
+          1087
+        ],
+        [
+          8160,
+          1100
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "4-4",
+      "to": "4-5",
+      "points": [
+        [
+          8160,
+          1100
+        ],
+        [
+          8259,
+          1100
+        ],
+        [
+          8361,
+          1100
+        ],
+        [
+          8460,
+          1100
+        ]
+      ],
+      "enabled": false,
+      "layout": "future-five-stage"
+    },
+    {
+      "from": "town:4",
+      "to": "5-1",
+      "points": [
+        [
+          8940,
+          1030
+        ],
+        [
+          9056,
+          1033
+        ],
+        [
+          9174,
+          1037
+        ],
+        [
+          9290,
+          1040
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "5-1",
+      "to": "5-2",
+      "points": [
+        [
+          9290,
+          1040
+        ],
+        [
+          9397,
+          1030
+        ],
+        [
+          9508,
+          1020
+        ],
+        [
+          9615,
+          1010
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "5-2",
+      "to": "5-3",
+      "points": [
+        [
+          9615,
+          1010
+        ],
+        [
+          9729,
+          1026
+        ],
+        [
+          9846,
+          1044
+        ],
+        [
+          9960,
+          1060
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "5-3",
+      "to": "5-4",
+      "points": [
+        [
+          9960,
+          1060
+        ],
+        [
+          10079,
+          1044
+        ],
+        [
+          10201,
+          1026
+        ],
+        [
+          10320,
+          1010
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "5-4",
+      "to": "5-5",
+      "points": [
+        [
+          10320,
+          1010
+        ],
+        [
+          10419,
+          1007
+        ],
+        [
+          10521,
+          1003
+        ],
+        [
+          10620,
+          1000
+        ]
+      ],
+      "enabled": false,
+      "layout": "future-five-stage"
+    },
+    {
       "from": "1-4",
       "to": "town:1",
       "points": [
@@ -491,6 +1052,186 @@
         [
           2460,
           990
+        ]
+      ],
+      "enabled": false,
+      "layout": "future-five-stage"
+    },
+    {
+      "from": "2-4",
+      "to": "town:2",
+      "points": [
+        [
+          3840,
+          1010
+        ],
+        [
+          4140,
+          1005
+        ],
+        [
+          4210,
+          1005
+        ],
+        [
+          4320,
+          1042
+        ],
+        [
+          4440,
+          1080
+        ],
+        [
+          4620,
+          1080
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "2-5",
+      "to": "town:2",
+      "points": [
+        [
+          4140,
+          1005
+        ],
+        [
+          4210,
+          1005
+        ],
+        [
+          4320,
+          1042
+        ],
+        [
+          4440,
+          1080
+        ],
+        [
+          4620,
+          1080
+        ]
+      ],
+      "enabled": false,
+      "layout": "future-five-stage"
+    },
+    {
+      "from": "3-4",
+      "to": "town:3",
+      "points": [
+        [
+          6000,
+          1110
+        ],
+        [
+          6300,
+          1070
+        ],
+        [
+          6370,
+          1070
+        ],
+        [
+          6480,
+          1085
+        ],
+        [
+          6600,
+          1100
+        ],
+        [
+          6780,
+          1100
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "3-5",
+      "to": "town:3",
+      "points": [
+        [
+          6300,
+          1070
+        ],
+        [
+          6370,
+          1070
+        ],
+        [
+          6480,
+          1085
+        ],
+        [
+          6600,
+          1100
+        ],
+        [
+          6780,
+          1100
+        ]
+      ],
+      "enabled": false,
+      "layout": "future-five-stage"
+    },
+    {
+      "from": "4-4",
+      "to": "town:4",
+      "points": [
+        [
+          8160,
+          1100
+        ],
+        [
+          8460,
+          1100
+        ],
+        [
+          8530,
+          1100
+        ],
+        [
+          8640,
+          1065
+        ],
+        [
+          8760,
+          1030
+        ],
+        [
+          8940,
+          1030
+        ]
+      ],
+      "enabled": true,
+      "layout": "current"
+    },
+    {
+      "from": "4-5",
+      "to": "town:4",
+      "points": [
+        [
+          8460,
+          1100
+        ],
+        [
+          8530,
+          1100
+        ],
+        [
+          8640,
+          1065
+        ],
+        [
+          8760,
+          1030
+        ],
+        [
+          8940,
+          1030
         ]
       ],
       "enabled": false,

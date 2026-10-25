@@ -58,6 +58,12 @@ def heroes():
 def main():
  DOC.mkdir(parents=True,exist_ok=True);atlas().resize((5400,960),Image.Resampling.LANCZOS).save(DOC/'full_preview.jpg',quality=93,optimize=True,subsampling=0)
  spec=read(ART/'nodes.json');visible={k for k,n in spec['nodes'].items() if not n['reserved']};mockup('01_start',0,'town:0',{'town:0','1-1'},fogstart=800)
+ overview=atlas().convert('RGBA');d=ImageDraw.Draw(overview)
+ for path in spec['paths']:
+  if path['enabled']:d.line([tuple(p) for p in path['points']],fill='#ffe79b',width=9,joint='curve')
+ for key,n in spec['nodes'].items():
+  x,y=n['x'],n['y'];d.ellipse((x-18,y-18,x+18,y+18),fill='#626b79' if n['reserved'] else '#ffbb45',outline='#352b22',width=4);text=key+' (reserved)' if n['reserved'] else key+' '+n['name'].split('・')[0];rich(d,(x-110,n['label_y']),text,27,fill='#fff4d2')
+ overview.convert('RGB').resize((5400,960),Image.Resampling.LANCZOS).save(DOC/'nodes_preview.jpg',quality=93,optimize=True)
  mockup('03_select_1_3',780,'1-3',{'1-1','1-2','1-3'},selected='1-3',fogstart=950)
  if 'tower' in spec['nodes']:mockup('02_tower_branch',3240,'2-4',{k for k in visible if k.startswith('2-') or k in ['town:1','tower']},fogstart=1040)
  heroes()
