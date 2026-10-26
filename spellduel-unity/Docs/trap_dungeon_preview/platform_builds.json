@@ -1,0 +1,20 @@
+{
+  "commit": "9394d2bcc7ab37b3fcfeaeb5839ffb1890d2ec49",
+  "workflow": "https://github.com/paul771127/AnimeGenerate/actions/runs/40246963414",
+  "checkedUtc": "2026-10-26T00:11:58.096180+00:00",
+  "android": {
+    "id": 121330482247,
+    "name": "android",
+    "status": "completed",
+    "conclusion": "success",
+    "current": []
+  },
+  "iosExport": {
+    "id": 121330482257,
+    "name": "ios-export",
+    "status": "completed",
+    "conclusion": "success",
+    "current": []
+  },
+  "physicalArAndFpsTested": false
+}

@@ -20,7 +20,12 @@ if report.exists():
  expected=['trap_'+k+'_'+state+'.png' for k in ['Rock','Flame','Arrows','Log'] for state in ['warn','impact']]
  expected+=['vault_enemy_'+str(k)+'_phase1.png' for k in range(48,53)]
  expected+=['vault_enemy_53_phase'+str(k)+'.png' for k in range(1,4)]+['vault_mythic_card.png']
- for name in expected:assert (native/name).exists(),name
+ for name in expected:
+  path=native/name;assert path.exists(),name
+  data=path.read_bytes();assert data[:8]==b'\x89PNG\r\n\x1a\n',name
+  size=(int.from_bytes(data[16:20],'big'),int.from_bytes(data[20:24],'big'))
+  required=(900,800) if name.startswith('trap_') else (768,960) if name=='vault_mythic_card.png' else (800,900)
+  assert size==required,(name,size,required)
  print('Native Unity gallery audit and 17 requested previews passed.')
 elif args.require_native:raise SystemExit('Native Unity evidence is missing; run Snapshot.Render in Unity first.')
 else:print('Content passed; native Unity evidence not present yet.')

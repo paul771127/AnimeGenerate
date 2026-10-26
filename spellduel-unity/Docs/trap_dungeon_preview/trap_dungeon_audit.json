@@ -1,0 +1,15 @@
+{
+    "unity": "2022.3.62f2",
+    "combatCases": 65,
+    "paths": 2,
+    "lootSamples": 10000,
+    "mythic": 331,
+    "setPieces": 2998,
+    "clock": true,
+    "save": true,
+    "oldSave": true,
+    "exclusive": true,
+    "optionalEscort": true,
+    "lever": true,
+    "hostClientRoutes": true
+}
