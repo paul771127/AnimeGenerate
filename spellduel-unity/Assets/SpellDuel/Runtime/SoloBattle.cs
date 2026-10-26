@@ -1254,6 +1254,9 @@ namespace SpellDuel
                 {
                     battle.bossBaseHp = 150f * BossHpFor(diff);
                     battle.edgePoint = () => OutsideEdgePoint();          // 小怪：場地邊緣外 1～2m 出現（淡入），再走進來
+                    battle.edgePointAt = a => OutsideEdgeAt(a);           // 三拍出怪：依相對我面向的方位出現
+                    battle.rhythmMaxAlive = difficulty == 0 ? 3 : 4;      // 簡單 3 隻、其他 4 隻同時在場（故事關的 diff 固定 0，這裡看選的難度）
+                    battle.easySides = difficulty == 0;                   // 簡單：主要只從一～兩面來
                     battle.bossPoint = () => OutsideEdgePoint(true);      // Boss 也一樣（優先在我面前）
                     battle.OnBossSpawn += w => bossAi.Respawn(Mathf.Max(0.7f, 1f - 0.06f * w));
                     if (pendingStage != null)
@@ -1359,6 +1362,36 @@ namespace SpellDuel
             return best;
         }
         public const float SpawnOutsideMin = 1f, SpawnOutsideMax = 2f;
+
+        /// <summary>依方位出生：bearing＝相對我面向的角度（0 正前、90 右、180 後）。在邊緣外取樣，挑方向最接近的一點（離我太近扣分）</summary>
+        Vector3 OutsideEdgeAt(float bearing)
+        {
+            var poly = area.Polygon;
+            var pm = Me ?? battle_MeForSpawn;
+            var fwd = pm != null ? Fighter.Flat(pm.forward) : Vector3.forward; if (fwd == Vector3.zero) fwd = Vector3.forward;
+            var want = Quaternion.AngleAxis(bearing, Vector3.up) * fwd.normalized;
+            var origin = pm != null ? pm.Feet : Vector3.zero;
+            var fallback = origin + want * 6f;
+            if (poly == null || poly.Count < 3) return fallback;
+            var c = Vector3.zero; foreach (var q in poly) c += q; c /= poly.Count;
+            Vector3 best = fallback; float bestScore = float.MinValue;
+            for (int tries = 0; tries < 32; tries++)
+            {
+                int i = UnityEngine.Random.Range(0, poly.Count);
+                var ps = Vector3.Lerp(poly[i], poly[(i + 1) % poly.Count], UnityEngine.Random.value);
+                var outward = ps - c; outward.y = 0f;
+                if (outward.sqrMagnitude < 1e-4f) continue;
+                float outMax = battle != null && battle.Theme == Battle.ArenaTheme ? 1.3f : SpawnOutsideMax;
+                ps += outward.normalized * (SpawnOutsideMin + UnityEngine.Random.value * (outMax - SpawnOutsideMin));
+                if (canyon && battle != null && battle.Theme == Battle.CanyonTheme && canyon.InGap(ps)) continue;
+                var pw = WorldFrame.ToWorld(ps); pw.y = 0f;
+                var to = Fighter.Flat(pw - origin); if (to == Vector3.zero) continue;
+                float score = Vector3.Dot(to.normalized, want) * 4f + Mathf.Min(MinPartyDist(pw), 4f) * 0.3f + UnityEngine.Random.value * 0.2f;
+                if (MinPartyDist(pw) < 2.5f) score -= 10f;
+                if (score > bestScore) { bestScore = score; best = pw; }
+            }
+            return best;
+        }
 
         /// <summary>所有玩家（我＋隊友）的中心</summary>
         Vector3 PartyCenter()

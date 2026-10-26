@@ -130,6 +130,9 @@ namespace SpellDuel
         public float leapStart, leapEnd; public Vector3 leapFrom, leapTo;   // 黃土山道：從崖頂跳進場內（leapEnd＞0＝還在崖上／跳躍中）
         public int minionKind;                 // 0 近戰小鬼、1 火焰射手、2 岩石衝鋒獸、3 自爆小鬼、4 岩石投擲者、5 熔岩狙擊手
         public float recoverUntil;             // 小怪出手後原地不動到這個時間（1 秒）
+        public int shotCount;                  // 火焰射手：連射了幾發（兩發就繞到側面）
+        public float fuseAt;                   // 自爆小鬼：引信到時就爆（不管離玩家多遠）
+        public int strafeSign = 1;             // 熔岩小鬼：等別隻出手時往哪邊繞（±1）
         public float restUntil;                // 浮空／飛行的小怪出手後：降到場內地上休息到這個時間（近戰打得到），之後才飛回空中
         public bool repositionNext;            // 遠程小怪：出手後（站定結束）要先隨機換個位置才能再出手
         public Vector3 moveTo; public float moveUntil;   // 換位置的目的地、最晚走到什麼時候
@@ -348,6 +351,14 @@ namespace SpellDuel
                 float ang = Vector3.Angle(d, to);
                 if (ang < bestAng) { bestAng = ang; best = v; }
             }
+            return best;
+        }
+
+        /// <summary>射程內離 f 最近的敵人（沒有＝null）</summary>
+        Fighter NearestFoeInRange(Fighter f, float range)
+        {
+            Fighter best = null; float bestD = range + 1f;
+            foreach (var v in FoesOf(f)) { float d = FlatDistance(v.Feet, f.Feet); if (d < bestD) { bestD = d; best = v; } }
             return best;
         }
 
@@ -644,7 +655,9 @@ namespace SpellDuel
         /// <summary>近身小怪的出手距離：至少要打得到停下來的位置</summary>
         static float MeleeReach(int kind, float reach) => Mathf.Max(reach, MinionKeep(kind) + 0.15f);
         public static bool IsRanged(int kind) => kind == 1 || kind == 4 || kind == 5 || kind == 6 || kind == 7 || kind == 9 || kind == 12 || kind == 15 || kind == 18;
-        public const float VoidStay = 3f;   // 虛空術士出手後停留幾秒再瞬移
+        public const float VoidStay = 1f;   // 虛空術士召喚後停留幾秒再瞬移
+        public const float CrabShellMul = 0.5f;
+        public const float VoidSummonEvery = 8f, BombFuse = 4.5f, BombSpeedMul = 2.5f, SniperAim = 2f, SniperRearm = 5f, ChargerStun = 2f, ChargerDash = 6f, ImpKnock = 0.35f;
 
         public Fighter SpawnMinion(Vector3 feet, int id = 0, int kind = 0, float hpMul = 1f, float dmgMul = 1f, float speedMul = 1f)
         {
@@ -658,9 +671,10 @@ namespace SpellDuel
             m.maxHp = Mathf.RoundToInt(MinionHp[kind] * hpMul); m.hp = m.maxHp;
             m.alt = kind == 14 ? 5f : BaseAlt(kind);   // 海鳥從高空飛來
             m.head = new Vector3(feet.x, MinionHead[kind] + m.alt, feet.z);
-            if (kind == 16) m.damageTakenMul = 0.7f;   // 寄居蟹：殼很硬
+            // 寄居蟹：正面有殼，從正面打減傷 50%（Damage 裡依打擊方向判定；繞到背後打才是全額）——使用者要求不要正面無敵
             if (kind == 14) m.speedMul *= birdSpeedMul;   // 俯衝海鳥：飛行速度倍率（故事第三章 ×0.5）
             m.attackReadyAt = now + 1.2f;
+            if (kind == 3) { m.fuseAt = now + BombFuse; m.speedMul *= BombSpeedMul; }   // 自爆小鬼：直直衝過來，引信到就爆
             minions.Add(m);
             Emit("minionspawn", m.Feet, c.color, null);
             return m;
@@ -674,6 +688,29 @@ namespace SpellDuel
         public float nextMinionAt, waveStartAt, bossBaseHp = 150f;
         public const int BossEvery = 10;
         public Func<Vector3> edgePoint;          // 小怪出生點：場地邊緣外 1～2m（淡入出現，再走進來）
+        /// <summary>依方位出生：角度＝相對玩家面向（0 正前、90 右、180 後、-90 左）的邊緣外一點（SoloBattle 提供）</summary>
+        public Func<float, Vector3> edgePointAt;
+        /// <summary>出怪節奏（使用者要求）：每波三拍——前排正面 → 3 秒後後排側面 → 8 秒後特殊怪背後；場上同時最多 rhythmMaxAlive 隻（簡單 3、其他 4），
+        /// 角色不重複，倒了才補同一角色。第一章 1-1～1-3 只用前兩拍。副本地圖、陷阱迴廊、教學（kindOverride）照原本的出怪。</summary>
+        public int rhythmMaxAlive = 4;
+        /// <summary>簡單模式（使用者要求）：敵人主要只從一～兩面來——每一波挑一個主要方位（七成正面、三成一側），三拍都從那一面 ±35° 進場；
+        /// 偶爾（約 15%）一隻從別的方向偷襲</summary>
+        public bool easySides;
+        int easyBearingWave = -1; float easyBearing;
+        const float EasyAmbushChance = 0.15f;
+        public const float Beat2At = 3f, Beat3At = 8f, RoleRefillGap = 2.5f;
+        bool RhythmSpawns => endless && !FixedDungeonSpawns && !Gallery && kindOverride == null && waveSeq == null;
+        public enum MinionRole { Front, Back, Special }
+        /// <summary>小怪在一波裡的角色：前排（小鬼、食人花、孢子菇、寄居蟹）、後排（所有遠程、水母）、特殊（衝鋒獸、自爆、術士、魚、鳥、特殊敵人、菁英）</summary>
+        public static MinionRole RoleOf(int kind)
+        {
+            if (IsSpecial(kind) || EliteCatalog.IsElite(kind) || kind >= 48) return MinionRole.Special;
+            if (kind == 2 || kind == 3 || kind == 6 || kind == 8 || kind == 13 || kind == 14) return MinionRole.Special;
+            if (IsRanged(kind) || kind == 17) return MinionRole.Back;
+            return MinionRole.Front;
+        }
+        readonly float[] roleNextAt = new float[3];
+        readonly List<Vector3> pendingSummons = new List<Vector3>();   // 虛空術士這一幀要召喚的小鬼位置
         public Func<Vector3> bossPoint;          // Boss 出生點：場地邊緣外 1～2m（沒設定就用 edgePoint）
         public const float MinionSpawnDistance = 15f;
         public event Action<int> OnBossSpawn;    // 無盡模式 Boss 出現（第幾隻 Boss，0 起算）
@@ -892,6 +929,7 @@ namespace SpellDuel
             }
             bool refilling = refillDelay > 0f && batchOut;
             if (holdSpawns) nextMinionAt = Mathf.Max(nextMinionAt, now);
+            else if (RhythmSpawns) RhythmSpawn(Mathf.Min(maxAlive, rhythmMaxAlive));
             else if (waveToSpawn > 0 && (refilling ? due > 0 : now >= nextMinionAt) && minions.Count < maxAlive)
             {
                 for (int k = 0; k < (refilling ? due : 2) && waveToSpawn > 0 && minions.Count < maxAlive; k++, pendingRefill = refilling ? pendingRefill - 1 : pendingRefill)   // 補怪：到時間的那幾隻
@@ -923,9 +961,47 @@ namespace SpellDuel
             if (waveToSpawn == 0 && minions.Count == 0 && !HostileNpcAlive)
             {
                 Emit("wavecleared", player.Feet, Color.white, $"{WaveLabel}清空！");
-                if (!StageDone()) NextWave(4f);
+                if (!StageDone()) NextWave(RhythmSpawns ? 3f : 4f);
             }
         }
+        /// <summary>
+        /// 三拍出怪：每個角色有目標數（前排 2、後排 1～2、特殊 1）和開始時間（0／3／8 秒）；少於目標、到了時間、場上沒滿就補一隻，
+        /// 同一角色補完要隔 RoleRefillGap 秒。前排從正面進、後排從側面（左右隨機）、特殊怪從背後。
+        /// </summary>
+        void RhythmSpawn(int maxAlive)
+        {
+            if (waveToSpawn <= 0 || minions.Count >= maxAlive) return;
+            int front = 0, back = 0, special = 0;
+            foreach (var m in minions) if (m.Alive) { var r = RoleOf(m.minionKind); if (r == MinionRole.Front) front++; else if (r == MinionRole.Back) back++; else special++; }
+            bool threeBeats = Theme >= 1 || wave >= 4;   // 第一章 1-1～1-3：只有前兩拍
+            int wantFront = rhythmMaxAlive <= 3 ? 1 : 2, wantBack = Theme >= 2 ? 2 : 1, wantSpecial = threeBeats ? 1 : 0;
+            float t = now - waveStartAt;
+            var order = new[] { (MinionRole.Front, front, wantFront, 0f, 0f), (MinionRole.Back, back, wantBack, Beat2At, 70f), (MinionRole.Special, special, wantSpecial, Beat3At, 180f) };
+            foreach (var (role, alive, want, at, bearing) in order)
+            {
+                if (alive >= want || t < at || now < roleNextAt[(int)role]) continue;
+                float ang = role == MinionRole.Back ? (rng.NextDouble() < 0.5 ? -1f : 1f) * (60f + (float)rng.NextDouble() * 30f) : role == MinionRole.Special ? 180f + ((float)rng.NextDouble() - 0.5f) * 90f : ((float)rng.NextDouble() - 0.5f) * 80f;
+                if (easySides)
+                {
+                    if (easyBearingWave != wave) { easyBearingWave = wave; easyBearing = rng.NextDouble() < 0.7 ? 0f : (rng.NextDouble() < 0.5 ? -75f : 75f); }
+                    bool ambush = rng.NextDouble() < EasyAmbushChance && (front + back + special) >= 1;   // 場上已經有人才偷襲
+                    ang = ambush ? easyBearing + 180f + ((float)rng.NextDouble() - 0.5f) * 90f : easyBearing + ((float)rng.NextDouble() - 0.5f) * 70f;
+                }
+                var p = edgePointAt != null ? edgePointAt(ang) : edgePoint();
+                int kind = PickMinionKind(role);
+                kind = EliteSpawnKind(kind, dungeonSpawnOrdinal++, false);
+                var nm = SpawnMinion(p, 0, kind, HpMul * (IsRanged(kind) ? 1f : meleeHpMul), DmgMul, SpeedMul);
+                float fixHp = minionHpOverride != null ? minionHpOverride(kind) : 0f;
+                if (fixHp > 0f) { nm.maxHp = Mathf.Max(1, Mathf.RoundToInt(fixHp)); nm.hp = nm.maxHp; }
+                if (eliteLeft > 0 && !EliteCatalog.IsElite(kind)) { eliteLeft--; MakeElite(nm); }
+                if (Theme == CanyonTheme) StartCliffLeap(nm);
+                waveToSpawn--;
+                roleNextAt[(int)role] = now + (alive == 0 && t < at + 0.5f ? 0.8f : RoleRefillGap);   // 開場的第一拍可以連出兩隻（隔 0.8 秒）
+                lastMinionCount = minions.Count;
+                return;   // 一幀最多一隻
+            }
+        }
+
         /// <summary>特殊敵人：場上最多 1 隻；還有一般小怪要出的時候才出（不會在一波快結束時才冒出來）；上一隻在場上時計時重算</summary>
         void UpdateSpecialSpawn()
         {
@@ -972,15 +1048,18 @@ namespace SpellDuel
         // 森林小怪（7～12）在第 11～20 波的解鎖：這個主題的第幾波起（第二輪起全部解鎖）
         static readonly int[] ThemeUnlock = { 0, 0, 0, 0, 0, 0, 0, 1, 1, 3, 1, 5, 7, 1, 2, 3, 1, 5, 7 };   // 森林（7～12）、海上（13～18）
 
-        int PickMinionKind()
+        int PickMinionKind() => PickMinionKind(null);
+
+        /// <summary>role 指定：只在這個角色裡挑（三拍出怪）；null＝照遠程比例隨機</summary>
+        int PickMinionKind(MinionRole? role)
         {
             // 先決定近戰或遠程（遠程約兩成），再在這個主題已解鎖的種類裡依權重挑
-            bool ranged = rng.NextDouble() < EffectiveRangedShare;
+            bool ranged = role.HasValue ? role == MinionRole.Back : rng.NextDouble() < EffectiveRangedShare;
             int theme = Theme;
             int local = wave - (wave - 1) / 10 * 10;       // 這個主題的第幾波（1～10）
             bool firstCycle = wave <= 10 * ThemeCount;
             float[] w = { 3f, 2f, 1.2f + 0.08f * wave, 1.2f + 0.08f * wave, 1.5f, 1.0f + 0.05f * wave, 1.2f, 1.5f, 1.3f, 1.2f, 3f, 1.5f, 1.2f, 2.5f, 1.5f, 1.2f, 2f, 1.3f, 1.2f };
-            bool Ok(int k) => IsRanged(k) == ranged && (theme == 0 ? k < 7 && wave >= UnlockWave[k]
+            bool Ok(int k) => (role.HasValue ? RoleOf(k) == role.Value : IsRanged(k) == ranged) && (theme == 0 ? k < 7 && wave >= UnlockWave[k]
                 : theme >= ArenaTheme ? Array.IndexOf(theme == ArenaTheme ? ArenaKinds : CanyonKinds, k) >= 0 && (!firstCycle || local >= LateUnlock(k))
                 : (theme == 1 ? IsPlant(k) : IsSea(k)) && (!firstCycle || local >= ThemeUnlock[k]));
             float sum = 0f;
@@ -991,6 +1070,7 @@ namespace SpellDuel
                 if (!Ok(k)) continue;
                 r -= w[k]; if (r <= 0f) return k;
             }
+            if (role == MinionRole.Special) return theme == 1 ? 8 : theme == 2 ? 13 : 2;   // 這個主題還沒解鎖特殊怪：衝鋒獸／荊棘衝鋒獸／跳躍魚
             return theme == 1 ? (ranged ? 7 : 10) : theme == 2 ? (ranged ? 15 : 13) : (ranged ? 1 : 0);
         }
         // 角鬥場：各地抓來的怪物（熔岩、森林、海上的都有，不含要在海裡／空中的）；黃土山道：岩石系為主，加上荊棘衝鋒獸與孢子菇
@@ -1096,6 +1176,8 @@ namespace SpellDuel
             if (remoteEnemy) return;   // 隊友端：代理，不跑 AI
             PushMinionsFromPlayers();
             PushBossFromPlayers();
+            foreach (var at in pendingSummons) { var imp = SpawnMinion(at, 0, 0, HpMul * meleeHpMul, DmgMul, SpeedMul); imp.attackReadyAt = now + 1.5f; }
+            pendingSummons.Clear();
             var claw = Skills.All["m_claw"];
             foreach (var m in minions)
             {
@@ -1156,7 +1238,7 @@ namespace SpellDuel
                     // 出手後原地不動：一般 1 秒、虛空術士 3 秒、藤蔓術士在藤蔓消失前（3 秒）；衝鋒獸改由衝刺決定
                     m.recoverUntil = kind == 8 || kind == 13 || kind == 14 ? 0f : IsSpecial(kind) ? now + SpecialRecover : now + (kind == 6 ? VoidStay : kind == 9 ? VineStay : MinionRecover) + (IsRanged(kind) ? rangedRecoverAdd : 0f);
                     if (kind == 6) m.teleportAt = now + VoidStay;                   // 停留完就瞬移
-                    else if (IsRanged(kind)) m.repositionNext = true;              // 其他遠程：站定完先隨機走位一下，才會再出手
+                    else if (IsRanged(kind) && kind != 4) m.repositionNext = true;   // 其他遠程：站定完先隨機走位一下，才會再出手（投擲者是砲台：不動）
                     continue;
                 }
                 // 虛空術士：停留結束 → 瞬移到場內隨機位置
@@ -1188,16 +1270,23 @@ namespace SpellDuel
                     }
                     m.moveUntil = 0f;
                 }
-                // 出手條件：近戰／衝鋒獸／自爆要貼近；射手在 9m 內
-                float reach = IsRanged(kind) ? MinionReach[kind] : MeleeReach(kind, MinionReach[kind]);
+                // 自爆小鬼：引信到了就在原地爆（不管離多遠）
+                if (kind == 3 && m.fuseAt > 0f && now >= m.fuseAt) { MinionStrikeCore(m, tgt, d); continue; }
+                // 出手條件：近戰／衝鋒獸／自爆要貼近；射手在 9m 內；岩石衝鋒獸在 5.5m 內就刨地準備衝
+                float reach = IsRanged(kind) ? MinionReach[kind] : kind == 2 ? ChargerDash - 0.5f : MeleeReach(kind, MinionReach[kind]);
                 float windup = MinionWindup[kind] < 0f ? claw.charge : MinionWindup[kind];
                 if (IsRanged(kind)) windup *= rangedWindupMul;
+                if (kind == 5) windup = SniperAim;   // 狙擊手：瞄準 2 秒（紅線）
                 windup *= minionWindupMul;
                 bool outside = minionInside != null && !minionInside(m.Feet);   // 還在場地外：先走進來（不在場外放招）；海裡、空中的也一樣要進到場地才出手
                 bool outZone = !CanAttackFrom(m.Feet);   // 還沒進到中間的攻擊區（6m×6m）：先走進去才出手
-                if (!outZone && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt)
+                // 熔岩小鬼：一次只有一隻出手，其他的在旁邊繞（等那隻打完）
+                bool impWait = kind == 0 && AnotherImpWinding(m);
+                if (!outZone && !impWait && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt)
                 {
                     m.windupUntil = now + windup; m.lockFwd = Fighter.Flat(tgt.Feet - m.Feet); Emit("minionwindup", m.Feet, claw.color, null);
+                    if (kind == 2) AddLane("dash", m.Feet, m.Feet + m.lockFwd * Mathf.Min(ChargerDash, d + 1.5f), 0f, windup + 0.1f, m.bodyRadius, Skills.All["m_dash"], 0, false);   // 刨地：先畫出衝刺路線
+                    if (kind == 5) AddLane("snipe", m.Feet, tgt.Feet, 0f, windup + 0.05f, 0.08f, Skills.All["m_snipe"], 0, false);   // 瞄準：紅線指著你
                     if (IsSpecial(kind)) Emit("specialwarn", m.Feet, Skills.All[SpecialSkillId(kind)].color, SpecialNeedsJump(kind) ? "⬆ 跳起來！（或離遠一點）" : "⬇ 蹲下！（或離遠一點）");
                     continue;
                 }
@@ -1218,6 +1307,13 @@ namespace SpellDuel
                     float want = d > KeepHi(kind) ? d - KeepHi(kind) : d < KeepLo(kind) ? -(KeepLo(kind) - d) : 0f;
                     step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Clamp(want, -speed * dt, speed * dt);
                 }
+                else if (kind == 4 && !outside) step = Vector3.zero;   // 岩石投擲者：進場就定住當砲台
+                else if (impWait && d < KeepDist(m, tgt) + 1.2f)
+                {
+                    // 等別隻出手的小鬼：繞著你走（不靠近）
+                    var tan = Vector3.Cross(Vector3.up, Fighter.Flat(tgt.Feet - m.Feet)) * m.strafeSign;
+                    step = tan * speed * 0.8f * dt;
+                }
                 else step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Min(speed * dt, Mathf.Max(0f, d - KeepDist(m, tgt)));   // 停在約一個身高的距離（身體不重疊）
                 foreach (var o in minions)
                 {
@@ -1233,6 +1329,27 @@ namespace SpellDuel
             }
         }
 
+        /// <summary>熔岩小鬼：場上有別隻小鬼正在預備出手（或剛出手還沒恢復）嗎</summary>
+        bool AnotherImpWinding(Fighter me)
+        {
+            foreach (var o in minions) if (o != me && o.Alive && o.minionKind == 0 && (o.windupUntil > 0f || now < o.recoverUntil)) return true;
+            return false;
+        }
+
+        /// <summary>小怪被打中（Damage 裡）：小鬼後退半步、火焰射手跳開重新站位</summary>
+        void OnMinionHurt(Fighter m)
+        {
+            int kind = m.minionKind;
+            if (kind == 0 && m.windupUntil <= 0f)
+            {
+                var away = Fighter.Flat(m.Feet - player.Feet); if (away == Vector3.zero) away = -Fighter.Flat(m.forward);
+                var next = m.Feet + away * ImpKnock;
+                if (minionInside == null || minionInside(next)) m.head = new Vector3(next.x, m.head.y, next.z);
+                m.strafeSign = rng.NextDouble() < 0.5 ? -1 : 1;
+            }
+            else if (kind == 1 && m.windupUntil <= 0f && m.moveUntil <= 0f) { m.repositionNext = true; m.recoverUntil = now; m.shotCount = 2; }
+        }
+
         /// <summary>遠程小怪出手後的隨機走位：距離、最低速度（公尺／秒）、最多走幾秒</summary>
         public const float RepositionMin = 0.8f, RepositionMax = 1.8f, RepositionMinSpeed = 0.5f, RepositionMaxTime = 3.5f;
 
@@ -1245,6 +1362,18 @@ namespace SpellDuel
         {
             dest = m.Feet;
             int kind = m.minionKind;
+            if (kind == 1 && m.shotCount >= 2)
+            {
+                // 火焰射手：射兩發後繞到你側面 90°（逼你轉身）
+                m.shotCount = 0;
+                var rad = Fighter.Flat(m.Feet - tgt.Feet); if (rad == Vector3.zero) rad = Vector3.forward;
+                float keep = Mathf.Clamp(FlatDistance(m.Feet, tgt.Feet), KeepLo(kind), KeepHi(kind));
+                for (int sgn = rng.NextDouble() < 0.5 ? -1 : 1, i = 0; i < 2; i++, sgn = -sgn)
+                {
+                    var flank = RotateY(rad, 90f * sgn);
+                    for (float k = keep; k >= 2f; k -= 0.5f) { var p = tgt.Feet + flank * k; p.y = 0f; if (CanAttackFrom(p)) { dest = p; return true; } }
+                }
+            }
             bool Inside(Vector3 p) => CanAttackFrom(p);   // 走位一律在攻擊區內（海裡、空中的也是）
             float lo = Mathf.Max(1.5f, KeepLo(kind) - 0.5f), hi = Mathf.Max(lo + 0.5f, Mathf.Min(KeepHi(kind) + 0.5f, MinionReach[kind]));
             for (int pass = 0; pass < 2; pass++)
@@ -1378,6 +1507,16 @@ namespace SpellDuel
                     var from = m.head + Fighter.Flat(m.forward) * 0.3f;
                     Spawn(m, fb, from, (tgt.Chest - from).normalized, Mathf.RoundToInt(fb.damage * m.dmgMul), EffectKind.None, 0f, 0f, false);
                     Emit("minionattack", m.Feet, fb.color, null);
+                    m.shotCount++;   // 兩發後繞側面（PickRepositionPoint）
+                    return;
+                }
+                case 2:
+                {
+                    // 岩石衝鋒獸：刨地完直線衝過去（衝過頭一點）；沒撞到人＝撞牆暈 2 秒（EndDash）
+                    var ds = Skills.All["m_dash"];
+                    m.attackReadyAt = now + ds.cooldown + ChargerStun;
+                    StartDash(m, tgt, Mathf.Min(ChargerDash, d + 1.5f), ds);
+                    Emit("minionattack", m.Feet, ds.color, null);
                     return;
                 }
                 case 4:
@@ -1520,21 +1659,28 @@ namespace SpellDuel
                 }
                 case 6:
                 {
-                    // 虛空術士：超遠距離的虛空彈（射程 14m）；之後停留 3 秒再瞬移
+                    // 虛空術士：不攻擊，每 8 秒在身邊召喚一隻熔岩小鬼，然後瞬移走（打死牠小鬼才停）
                     var vb = Skills.All["m_void"];
-                    m.attackReadyAt = now + vb.cooldown;
-                    var from = m.head + Fighter.Flat(m.forward) * 0.3f;
-                    Spawn(m, vb, from, (tgt.Chest - from).normalized, Mathf.RoundToInt(vb.damage * m.dmgMul), EffectKind.None, 0f, 0f, false);
+                    m.attackReadyAt = now + VoidSummonEvery;
+                    if (minions.Count < MaxMinions)
+                    {
+                        var at = m.Feet + RotateY(Fighter.Flat(m.forward), 90f * (rng.NextDouble() < 0.5 ? -1 : 1)) * 0.7f;
+                        if (minionInside != null && !minionInside(at)) at = m.Feet;
+                        pendingSummons.Add(at);   // 正在走訪 minions：迴圈結束後才真的生出來
+                    }
                     Emit("minionattack", m.Feet, vb.color, null);
+                    Emit("teleport", m.Feet, new Color(0.6f, 0.3f, 1f), null);
                     return;
                 }
                 case 5:
                 {
-                    // 熔岩狙擊手：瞄準完成後高速射擊
+                    // 熔岩狙擊手：瞄準 2 秒（紅線）後沿瞄準線射一發高威力子彈，之後重新瞄準 5 秒（紅線出現就側跨）
                     var sn = Skills.All["m_snipe"];
-                    m.attackReadyAt = now + sn.cooldown;
+                    m.attackReadyAt = now + SniperRearm;
                     var from = m.head + Fighter.Flat(m.forward) * 0.3f;
-                    Spawn(m, sn, from, (tgt.Chest - from).normalized, Mathf.RoundToInt(sn.damage * m.dmgMul), EffectKind.None, 0f, 0f, false);
+                    var dir = m.lockFwd != Vector3.zero ? m.lockFwd : Fighter.Flat(tgt.Chest - from);
+                    dir.y = (tgt.Chest.y - from.y) / Mathf.Max(1f, d); dir.Normalize();
+                    Spawn(m, sn, from, dir, Mathf.RoundToInt(sn.damage * 1.5f * m.dmgMul), EffectKind.None, 0f, 0f, false);
                     Emit("minionattack", m.Feet, sn.color, null);
                     return;
                 }
@@ -2213,9 +2359,12 @@ namespace SpellDuel
                     // 隕石、審判：從敵人（施放當下的位置）正上方砸下，敵人可以趁下落時移動閃開；
                     // 沒鎖定時落在準星指的地面（最遠到射程）
                     // 鎖定時落在「準星方向最近的敵人」腳下（之前固定打 Boss：故事關只有小怪、Boss 還沒出現時，光柱落在看不到的地方，看起來像什麼都沒發生）
-                    var aimed = locked ? AimedFoe(f, aimDir, s.rangeMax) : null;
-                    var target = aimed != null ? aimed.Feet : Opponent(f).Feet;
-                    if (aimed == null && (!locked || !Opponent(f).Alive))
+                    // 使用者回報「審判放完沒東西出來」：Boss 不在畫面上（locked=false）時以前完全不找敵人，光柱落在準星指的地板（常常在場地外、看不到）。
+                    // 現在：先找準星方向的敵人；沒有就找射程內最近的敵人；再沒有才落在準星指的地面
+                    var aimed = AimedFoe(f, aimDir, s.rangeMax) ?? NearestFoeInRange(f, s.rangeMax);
+                    var opp = Opponent(f);
+                    var target = aimed != null ? aimed.Feet : opp != null ? opp.Feet : f.Feet + Fighter.Flat(f.forward) * 3f;
+                    if (aimed == null && (!locked || opp == null || !opp.Alive))
                     {
                         var off = floorPoint - f.Feet; off.y = 0f;
                         if (off.magnitude > s.rangeMax) off = off.normalized * s.rangeMax;
@@ -2836,6 +2985,7 @@ namespace SpellDuel
                 m.recoverUntil = now + 1.5f;
             }
             else if (kind == 14) LandToRest(m);   // 海鳥：俯衝完落到場內地上休息，再飛回空中
+            else if (kind == 2 && !m.dashHit) { m.recoverUntil = now + ChargerStun; Emit("minionstun", m.Feet, Skills.All["m_dash"].color, "撞牆了！"); }   // 岩石衝鋒獸衝過頭：暈 2 秒（趁現在打）
             else m.recoverUntil = now + MinionRecover;
         }
 
@@ -2877,7 +3027,7 @@ namespace SpellDuel
                 if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, ds.color, "閃避！");
                 else if (v.isAlly) { Emit("allyhit", v.Chest, ds.color, null); OnAllyHit?.Invoke(v, ds, dmg, v.Chest, 0); }
                 else { ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest); SoulVictim(m, v, dmg); }
-                if (kind == 8) { m.dashUntil = 0f; m.recoverUntil = now + MinionRecover; }   // 衝鋒獸撞到就停；魚和鳥衝完全程
+                if (kind == 8 || kind == 2) { m.dashUntil = 0f; m.recoverUntil = now + MinionRecover; }   // 衝鋒獸撞到就停；魚和鳥衝完全程
                 return;
             }
         }
@@ -3478,6 +3628,13 @@ namespace SpellDuel
             if (f.friendOwner >= 0) { if (dmg > 0f) { OnFriendHurt?.Invoke(f, dmg); Emit("hit", at ?? f.Chest, Color.red, $"-{dmg:0}"); } return; }   // 別台手機的召喚獸／影分身：傷害交給那台算
             if (dmg > 0f && kind != "dot" && kind != "burn" && kind != "oath" && kind != "thorns" && BarrierGuards(f) && TryBarrier(f, at)) return;   // 主教的聖域障壁
             if (f.invulnUntil > now && dmg > 0f) return;   // 狂戰士不死之軀的無敵
+            if (f.isMinion && dmg > 0f && kind != "dot" && kind != "burn") OnMinionHurt(f);
+            if (f.isMinion && f.minionKind == 16 && dmg > 0f)
+            {
+                // 寄居蟹的殼：打擊點（沒有就用玩家位置）在牠正面半球 → 減傷 50%
+                var from = Fighter.Flat((at ?? player.Feet) - f.Feet);
+                if (from != Vector3.zero && Vector3.Dot(from.normalized, Fighter.Flat(f.forward).normalized) > 0f) { dmg *= CrabShellMul; Emit("mitigate", f.Chest, new Color(0.7f, 0.8f, 0.9f), "殼擋住了！"); }
+            }
             // 物理／魔法減傷：持續傷害（毒、灼燒）和魔法攻擊（Skills.IsMagic）用魔法減傷，其他用物理減傷
             bool magic = kind == "dot" || kind == "burn" || (incoming != null && Skills.IsMagic(incoming));
             dmg *= f.damageTakenMul * (1f - Mathf.Min(magic ? f.magicReduce : f.gearReduce, Fighter.MaxReduce)) * f.soulTaken;
