@@ -1,0 +1,12 @@
+{
+    "unity": "2022.3.62f2",
+    "towns": 5,
+    "hotspots": 10,
+    "facilitySprites": 18,
+    "dungeonSprites": 21,
+    "supplyIcons": 21,
+    "speakers": 366,
+    "playerPlaceholdersSkipped": 2,
+    "mapEntries": true,
+    "localFallback": true
+}

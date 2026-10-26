@@ -1,0 +1,11 @@
+{
+  "commit": "dac9dca4a50f73c02db9aff78cbb2c67c6b88f0f",
+  "run": "https://github.com/paul771127/AnimeGenerate/actions/runs/40268245669",
+  "unity": "2022.3.62f2",
+  "nativeFilesDownloaded": 179,
+  "beforeFaces": {
+    "commit": "03e9233",
+    "run": "https://github.com/paul771127/AnimeGenerate/actions/runs/40259070265",
+    "note": "Before images rendered; that old run later failed on editor-only Sfx initialization, fixed in this verified run."
+  }
+}

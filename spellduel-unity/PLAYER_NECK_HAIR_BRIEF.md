@@ -141,3 +141,9 @@
 - 肩披圓扣直接取披肩網格點及其切面法線定位，取代固定胸前 Z 值，與布面保持約 1.5mm 的局部間隙。
 
 整合端新增的 `FinalHairCoverage` 檢查直接比較最終頭模與最終髮面。修復後離線場景中，16 職業各 120 個背顱取樣全部覆蓋，最小實際髮面餘量為 0.919～1.463mm；三角形數、腳底、11 掛點與總高相對修復前全部相同。已再用背面／後45°投影確認後腦露膚消失，主教前冠恢復白金，圓扣貼合披肩。這些結果仍不替代修復版的原生圖片驗收。
+
+#### 修復版原生驗收
+
+[dac9dca 的 Unity 截圖](https://github.com/paul771127/AnimeGenerate/actions/runs/40268245669) 已通過最終髮面覆蓋、下顎接合、領口間隙、快取與預算。Astra 已再看過初心者／法師背面、主教正面／側面／俯視／換裝俯視，三個原生發現的必修問題均已消除。九視角與不變形總覽已交付，見 Docs/neck_hair_preview/README.md。
+
+[整合後 5c2787f 平台流程](https://github.com/paul771127/AnimeGenerate/actions/runs/40268908768) 的 Android APK、iOS 匯出／IPA／TestFlight 全部成功。原生 JSON 的含 inactive 三角統計、六人與倒地名牌結果收錄於 Docs/pending_preview/ci_validation.json；沒有宣稱量測真機 FPS。

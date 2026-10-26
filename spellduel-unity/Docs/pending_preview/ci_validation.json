@@ -1,0 +1,63 @@
+{
+  "verified": true,
+  "nativeSnapshot": {
+    "commit": "dac9dca4a50f73c02db9aff78cbb2c67c6b88f0f",
+    "run": "https://github.com/paul771127/AnimeGenerate/actions/runs/40268245669",
+    "unity": "2022.3.62f2",
+    "nativeFilesDownloaded": 179,
+    "beforeFaces": {
+      "commit": "03e9233",
+      "run": "https://github.com/paul771127/AnimeGenerate/actions/runs/40259070265",
+      "note": "Before images rendered; that old run later failed on editor-only Sfx initialization, fixed in this verified run."
+    }
+  },
+  "platformCommit": "5c2787f915a90e9804d725dfc0ad09daeb371cb2",
+  "platformRun": "https://github.com/paul771127/AnimeGenerate/actions/runs/40268908768",
+  "platformJobs": {
+    "check-license": "success",
+    "ios-export": "success",
+    "android": "success",
+    "ios-ipa": "success",
+    "publish-apk": "success",
+    "ios-testflight": "success"
+  },
+  "art": {
+    "unity": "2022.3.62f2",
+    "towns": 5,
+    "hotspots": 10,
+    "facilitySprites": 18,
+    "dungeonSprites": 21,
+    "supplyIcons": 21,
+    "speakers": 366,
+    "playerPlaceholdersSkipped": 2,
+    "mapEntries": true,
+    "localFallback": true
+  },
+  "metrics": {
+    "triangleRatioIncludingInactive": [
+      0.9317826766186426,
+      0.9920876445526476
+    ],
+    "collarClearanceM": [
+      0.009659000672399998,
+      0.013058869168162346
+    ],
+    "finalHairCoverage": 1.0,
+    "finalHairMinMarginM": 0.0008269846439361572,
+    "standingNameplateMinClearanceM": 0.18673956394195557,
+    "downedNameplateMinClearanceM": 0.1764218509197235
+  },
+  "localChecks": [
+    "check_story2d.py",
+    "check_village2d.py",
+    "check_dungeons.py: 8 dungeons, 0 errors",
+    "21 supply + 1 marker icon deterministic at 8/32/48/128; 111 legacy skill icons pixel-identical",
+    "CharacterRig public signatures unchanged in art commit; protected gameplay files untouched"
+  ],
+  "review": "Astra inspected final native novice/mage backs, bishop front/side/overhead/equipped overhead; the three reported defects are resolved.",
+  "limits": [
+    "Native 6-rig visual fixtures are not a live six-device multiplayer or phone AR FPS measurement.",
+    "Facility/map layout JPGs and the label overlay are marked layout diagnostics, not captured OnGUI frames."
+  ],
+  "integration": "Platform commit also contains separately authored phone-avatar attack animation and story-video updates; those were preserved."
+}

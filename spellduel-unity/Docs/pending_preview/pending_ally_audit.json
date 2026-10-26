@@ -1,0 +1,211 @@
+{
+    "unity": "2022.3.62f2",
+    "allies": [
+        {
+            "id": "novice",
+            "gear": "1:flame/3:flame/2:flame/1:flame/2:flame",
+            "anchorClearance": 0.18884563446044923,
+            "downAnchorClearance": 0.18873301148414613,
+            "deathGray": 0.8500000238418579,
+            "reviveGray": 0.0,
+            "reviveLight": 0.08999999612569809,
+            "fadeOpacity": 0.5,
+            "labelScreen": {
+                "x": 1149.131591796875,
+                "y": 499.59906005859377,
+                "z": 9.717206001281739
+            },
+            "faceScreen": {
+                "x": 1150.16357421875,
+                "y": 455.89935302734377,
+                "z": 9.843708992004395
+            },
+            "labelRect": {
+                "serializedVersion": "2",
+                "x": 1053.131591796875,
+                "y": 225.20094299316407,
+                "width": 192.0,
+                "height": 43.19999694824219
+            },
+            "faceRect": {
+                "serializedVersion": "2",
+                "x": 1131.0006103515625,
+                "y": 294.32806396484377,
+                "width": 32.2486572265625,
+                "height": 36.26214599609375
+            }
+        },
+        {
+            "id": "swordsman",
+            "gear": "2:flame/3:flame/2:flame/1:flame/2:flame",
+            "anchorClearance": 0.18673956394195558,
+            "downAnchorClearance": 0.18849903345108033,
+            "deathGray": 0.8500000238418579,
+            "reviveGray": 0.0,
+            "reviveLight": 0.08999999612569809,
+            "fadeOpacity": 0.5,
+            "labelScreen": {
+                "x": 997.4972534179688,
+                "y": 498.78411865234377,
+                "z": 9.760712623596192
+            },
+            "faceScreen": {
+                "x": 997.298095703125,
+                "y": 455.89935302734377,
+                "z": 9.843708992004395
+            },
+            "labelRect": {
+                "serializedVersion": "2",
+                "x": 901.4972534179688,
+                "y": 177.20094299316407,
+                "width": 192.0,
+                "height": 43.19999694824219
+            },
+            "faceRect": {
+                "serializedVersion": "2",
+                "x": 982.1625366210938,
+                "y": 294.80047607421877,
+                "width": 27.73388671875,
+                "height": 32.94488525390625
+            }
+        },
+        {
+            "id": "mage",
+            "gear": "3:flame/3:flame/2:flame/1:flame/2:flame",
+            "anchorClearance": 0.18902218341827393,
+            "downAnchorClearance": 0.18907809257507325,
+            "deathGray": 0.8500000238418579,
+            "reviveGray": 0.0,
+            "reviveLight": 0.08999999612569809,
+            "fadeOpacity": 0.5,
+            "labelScreen": {
+                "x": 844.3804321289063,
+                "y": 501.50750732421877,
+                "z": 9.79411506652832
+            },
+            "faceScreen": {
+                "x": 844.4327392578125,
+                "y": 455.89935302734377,
+                "z": 9.843708992004395
+            },
+            "labelRect": {
+                "serializedVersion": "2",
+                "x": 748.3804321289063,
+                "y": 223.29249572753907,
+                "width": 192.0,
+                "height": 43.19999694824219
+            },
+            "faceRect": {
+                "serializedVersion": "2",
+                "x": 833.4671630859375,
+                "y": 292.44769287109377,
+                "width": 21.2923583984375,
+                "height": 33.2760009765625
+            }
+        },
+        {
+            "id": "paladin",
+            "gear": "4:flame/3:flame/2:flame/1:flame/2:flame",
+            "anchorClearance": 0.1890857219696045,
+            "downAnchorClearance": 0.18708983063697816,
+            "deathGray": 0.8500000238418579,
+            "reviveGray": 0.0,
+            "reviveLight": 0.08999999612569809,
+            "fadeOpacity": 0.5,
+            "labelScreen": {
+                "x": 691.1715087890625,
+                "y": 501.6268615722656,
+                "z": 9.814093589782715
+            },
+            "faceScreen": {
+                "x": 691.5672607421875,
+                "y": 455.89935302734377,
+                "z": 9.843708992004395
+            },
+            "labelRect": {
+                "serializedVersion": "2",
+                "x": 595.1715087890625,
+                "y": 175.29249572753907,
+                "width": 192.0,
+                "height": 43.19999694824219
+            },
+            "faceRect": {
+                "serializedVersion": "2",
+                "x": 680.8804931640625,
+                "y": 292.2493896484375,
+                "width": 21.1925048828125,
+                "height": 33.852935791015628
+            }
+        },
+        {
+            "id": "ninja",
+            "gear": "1:flame/3:flame/2:flame/1:flame/2:flame",
+            "anchorClearance": 0.18706965446472169,
+            "downAnchorClearance": 0.19224518537521363,
+            "deathGray": 0.8500000238418579,
+            "reviveGray": 0.0,
+            "reviveLight": 0.08999999612569809,
+            "fadeOpacity": 0.5,
+            "labelScreen": {
+                "x": 525.4513549804688,
+                "y": 493.95513916015627,
+                "z": 9.657011032104493
+            },
+            "faceScreen": {
+                "x": 538.701904296875,
+                "y": 455.89935302734377,
+                "z": 9.843708992004395
+            },
+            "labelRect": {
+                "serializedVersion": "2",
+                "x": 429.45135498046877,
+                "y": 230.84486389160157,
+                "width": 192.0,
+                "height": 43.19999694824219
+            },
+            "faceRect": {
+                "serializedVersion": "2",
+                "x": 511.0458984375,
+                "y": 299.594970703125,
+                "width": 33.10162353515625,
+                "height": 37.984588623046878
+            }
+        },
+        {
+            "id": "bishop",
+            "gear": "2:flame/3:flame/2:flame/1:flame/2:flame",
+            "anchorClearance": 0.29349493980407717,
+            "downAnchorClearance": 0.1764218509197235,
+            "deathGray": 0.8500000238418579,
+            "reviveGray": 0.0,
+            "reviveLight": 0.08999999612569809,
+            "fadeOpacity": 0.5,
+            "labelScreen": {
+                "x": 383.048583984375,
+                "y": 521.3004150390625,
+                "z": 9.768019676208496
+            },
+            "faceScreen": {
+                "x": 385.83642578125,
+                "y": 455.89935302734377,
+                "z": 9.843708992004395
+            },
+            "labelRect": {
+                "serializedVersion": "2",
+                "x": 287.048583984375,
+                "y": 182.84486389160157,
+                "width": 192.0,
+                "height": 43.19999694824219
+            },
+            "faceRect": {
+                "serializedVersion": "2",
+                "x": 371.204345703125,
+                "y": 288.1634216308594,
+                "width": 28.810150146484376,
+                "height": 33.193572998046878
+            }
+        }
+    ],
+    "sixVisible": true,
+    "offlineLatch": true
+}
