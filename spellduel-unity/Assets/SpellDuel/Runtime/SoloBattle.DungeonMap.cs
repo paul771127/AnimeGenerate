@@ -38,6 +38,13 @@ namespace SpellDuel
         /// <summary>進到 drun.node 之後：換場景、標題、（房主）開打或開寶箱、叫出劇情人物</summary>
         void ApplyNode()
         {
+            // 第二站以後、有通道可走：先沿著通道前進（3D 運鏡），走到了才套用（SoloBattle.DungeonTravel.cs）
+            if (CorridorOk && drun.Step > 1 && corridor && battle != null && !battle.Over) { StartTravel(); return; }
+            ApplyNodeNow();
+        }
+
+        void ApplyNodeNow()
+        {
             var r = drun.node;
             battle.themeOverride = drun.Theme;
             GalleryEnter();
@@ -46,6 +53,7 @@ namespace SpellDuel
             ChatEvent($"📍 來到「{r.title}」");
             Sfx.Play("select", 0.7f, 0.9f);
             nodeFightStarted = false;
+            BuildCorridor();   // 面前的通道（結界擋著，清完才開）
             if (!DungeonDecider) { battle.awaitingNext = r.IsChest; return; }   // 隊友：等房主的 dclr／寶箱結果
             if (r.IsChest) { HostOpenChest(); return; }
             if (drun.pendingChoice == null) StartNodeFight();   // 有抉擇：等房主選完才開打
@@ -73,6 +81,8 @@ namespace SpellDuel
         void UpdateDungeonMap()
         {
             if (drun == null || battle == null || phase != Phase.Fighting) return;
+            UpdateTravel();
+            if (Traveling) return;   // 走通道中：場景還是上一站的，不開打、不選路
             if (battle.themeOverride != drun.Theme) battle.themeOverride = drun.Theme;
             // 房主：這個地點的戰鬥打完
             if (DungeonDecider && nodeFightStarted && !nodeClearedSeen && battle.awaitingNext && !battle.Over)
@@ -89,6 +99,7 @@ namespace SpellDuel
             }
             DrainRun();
             UpdateChest();
+            if (RouteReady && corridor && !corridor.Open) CorridorCleared();   // 寶箱開完也算
         }
 
         /// <summary>可以選下一站了：這個地點打完（或寶箱開完）、沒有在等抉擇</summary>
@@ -96,6 +107,7 @@ namespace SpellDuel
 
         void OnNodeCleared()
         {
+            CorridorCleared();
             drun.Cleared();
             GalleryClearedRoom();
             drun.ThirdLeaves();

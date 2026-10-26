@@ -133,6 +133,7 @@ namespace SpellDuel
         public int shotCount;                  // 火焰射手：連射了幾發（兩發就繞到側面）
         public float fuseAt;                   // 自爆小鬼：引信到時就爆（不管離玩家多遠）
         public int strafeSign = 1;             // 熔岩小鬼：等別隻出手時往哪邊繞（±1）
+        public bool ambusher;                  // 簡單模式：從別的方向偷襲來的那隻（同時最多一隻）
         public float restUntil;                // 浮空／飛行的小怪出手後：降到場內地上休息到這個時間（近戰打得到），之後才飛回空中
         public bool repositionNext;            // 遠程小怪：出手後（站定結束）要先隨機換個位置才能再出手
         public Vector3 moveTo; public float moveUntil;   // 換位置的目的地、最晚走到什麼時候
@@ -697,7 +698,7 @@ namespace SpellDuel
         /// 偶爾（約 15%）一隻從別的方向偷襲</summary>
         public bool easySides;
         int easyBearingWave = -1; float easyBearing;
-        const float EasyAmbushChance = 0.15f;
+        const float EasyAmbushChance = 0.12f;
         public const float Beat2At = 3f, Beat3At = 8f, RoleRefillGap = 2.5f;
         bool RhythmSpawns => endless && !FixedDungeonSpawns && !Gallery && kindOverride == null && waveSeq == null;
         public enum MinionRole { Front, Back, Special }
@@ -984,13 +985,15 @@ namespace SpellDuel
                 if (easySides)
                 {
                     if (easyBearingWave != wave) { easyBearingWave = wave; easyBearing = rng.NextDouble() < 0.7 ? 0f : (rng.NextDouble() < 0.5 ? -75f : 75f); }
-                    bool ambush = rng.NextDouble() < EasyAmbushChance && (front + back + special) >= 1;   // 場上已經有人才偷襲
+                    bool ambushAlive = false; foreach (var m in minions) if (m.Alive && m.ambusher) { ambushAlive = true; break; }
+                    bool ambush = !ambushAlive && rng.NextDouble() < EasyAmbushChance && (front + back + special) >= 1;   // 場上已經有人才偷襲；同時只有一隻
                     ang = ambush ? easyBearing + 180f + ((float)rng.NextDouble() - 0.5f) * 90f : easyBearing + ((float)rng.NextDouble() - 0.5f) * 70f;
                 }
                 var p = edgePointAt != null ? edgePointAt(ang) : edgePoint();
                 int kind = PickMinionKind(role);
                 kind = EliteSpawnKind(kind, dungeonSpawnOrdinal++, false);
                 var nm = SpawnMinion(p, 0, kind, HpMul * (IsRanged(kind) ? 1f : meleeHpMul), DmgMul, SpeedMul);
+                nm.ambusher = easySides && Mathf.Abs(Mathf.DeltaAngle(ang, easyBearing)) > 90f;
                 float fixHp = minionHpOverride != null ? minionHpOverride(kind) : 0f;
                 if (fixHp > 0f) { nm.maxHp = Mathf.Max(1, Mathf.RoundToInt(fixHp)); nm.hp = nm.maxHp; }
                 if (eliteLeft > 0 && !EliteCatalog.IsElite(kind)) { eliteLeft--; MakeElite(nm); }
@@ -1662,7 +1665,8 @@ namespace SpellDuel
                     // 虛空術士：不攻擊，每 8 秒在身邊召喚一隻熔岩小鬼，然後瞬移走（打死牠小鬼才停）
                     var vb = Skills.All["m_void"];
                     m.attackReadyAt = now + VoidSummonEvery;
-                    if (minions.Count < MaxMinions)
+                    int aliveNow = 0; foreach (var o in minions) if (o.Alive) aliveNow++;
+                    if (aliveNow < (RhythmSpawns ? rhythmMaxAlive : MaxMinions))   // 召喚也算在「場上最多幾隻」裡
                     {
                         var at = m.Feet + RotateY(Fighter.Flat(m.forward), 90f * (rng.NextDouble() < 0.5 ? -1 : 1)) * 0.7f;
                         if (minionInside != null && !minionInside(at)) at = m.Feet;

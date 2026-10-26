@@ -2198,6 +2198,7 @@ namespace SpellDuel
             landGo.Clear();
             if (warnLine) Destroy(warnLine);
             if (slamGo) Destroy(slamGo);
+            ClearTravel();   // 副本的通道與運鏡（SoloBattle.DungeonTravel.cs）
             if (volcano) Destroy(volcano.gameObject);
             if (forest) Destroy(forest.gameObject);
             if (sea) Destroy(sea.gameObject);
@@ -3799,6 +3800,7 @@ namespace SpellDuel
 
             // 被打中：整個畫面閃紅
             if (hitFlash > 0.01f) { GUI.color = new Color(1f, 0f, 0.05f, hitFlash * 0.45f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
+            DrawTravelFade(W, H);   // 副本走通道：走進黑霧／到站亮起
 
             // 致盲：畫面蓋上煙霧
             if (me.blindUntil > now) { GUI.color = new Color(0.55f, 0.55f, 0.6f, 0.92f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; UiKit.Pill(H * 0.32f, $"煙霧中… {me.blindUntil - now:F1}s", fsL, Color.white, pillW); }
