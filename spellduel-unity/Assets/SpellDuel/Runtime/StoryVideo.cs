@@ -31,10 +31,10 @@ namespace SpellDuel
         {
             switch (stageId)
             {
-                case "1-1": return before ? new Clip { file = "v0_prologue_v8.mp4", title = "序章：晨鐘啞了", from = 0, to = 8, shots = 8, mb = 8 } : null;
-                case "1-4": return Split("v1_golem_v8.mp4", "熔岩巨像・守門人的拳", 4, 6, 7, before);
-                case "2-6": return Split("v2_treeking_v8.mp4", "腐化樹王・不肯入睡的心", 4, 5, 6, before);
-                case "3-6": return Split("v3_kraken_v8.mp4", "深海巨妖・黎明的三重奏", 4, 8, 10, before);
+                case "1-1": return before ? new Clip { file = "v0_prologue_v9.mp4", title = "序章：晨鐘啞了", from = 0, to = 8, shots = 8, mb = 8 } : null;
+                case "1-4": return Split("v1_golem_v9.mp4", "熔岩巨像・守門人的拳", 4, 6, 7, before);
+                case "2-6": return Split("v2_treeking_v9.mp4", "腐化樹王・不肯入睡的心", 4, 5, 6, before);
+                case "3-6": return Split("v3_kraken_v9.mp4", "深海巨妖・黎明的三重奏", 4, 8, 10, before);
             }
             return null;
         }
@@ -64,16 +64,16 @@ namespace SpellDuel
         }
 
         /// <summary>全部的影片檔（遊戲一開始全部下載）</summary>
-        public static readonly (string file, int mb)[] Files = { ("v0_prologue_v8.mp4", 6), ("v1_golem_v8.mp4", 6), ("v2_treeking_v8.mp4", 5), ("v3_kraken_v8.mp4", 8) };
+        public static readonly (string file, int mb)[] Files = { ("v0_prologue_v9.mp4", 6), ("v1_golem_v9.mp4", 6), ("v2_treeking_v9.mp4", 5), ("v3_kraken_v9.mp4", 8) };
 
         /// <summary>每句配音在影片裡實際的（開始, 結束）秒數，兩個一組。混音時（v6 起鏡頭會配合台詞拉長，鏡頭不再等長），
         /// 所以字幕和分段播放都照這個時間，不用鏡頭長度推算。由 Docs/story_video/tools/narration_mix.py 算出（narration/timing.json），換配音要一起更新。</summary>
         static readonly System.Collections.Generic.Dictionary<string, float[]> LineTimes = new System.Collections.Generic.Dictionary<string, float[]>
         {
-            ["v0_prologue_v8.mp4"] = new[] { 0.12f, 7.72f, 8.19f, 14.20f, 14.67f, 21.33f, 21.80f, 24.91f, 26.97f, 32.09f, 32.56f, 39.43f, 39.90f, 46.66f, 47.13f, 51.00f },
-            ["v1_golem_v8.mp4"] = new[] { 0.12f, 6.52f, 6.99f, 16.08f, 16.55f, 19.76f, 21.76f, 25.10f, 26.93f, 33.48f, 33.95f, 39.49f },
-            ["v2_treeking_v8.mp4"] = new[] { 0.12f, 5.48f, 5.95f, 13.78f, 14.25f, 19.89f, 20.36f, 25.41f, 25.88f, 33.16f },
-            ["v3_kraken_v8.mp4"] = new[] { 0.12f, 7.02f, 7.49f, 13.21f, 13.68f, 16.55f, 18.89f, 24.35f, 24.82f, 29.36f, 29.98f, 36.04f, 36.51f, 41.63f, 42.10f, 47.46f },
+            ["v0_prologue_v9.mp4"] = new[] { 0.12f, 7.72f, 8.19f, 14.07f, 14.54f, 21.91f, 22.38f, 25.48f, 27.54f, 32.66f, 33.13f, 40.00f, 40.47f, 47.24f, 47.71f, 51.57f },
+            ["v1_golem_v9.mp4"] = new[] { 0.12f, 6.44f, 6.91f, 16.00f, 16.47f, 19.69f, 21.68f, 25.02f, 26.85f, 34.14f, 34.61f, 40.14f },
+            ["v2_treeking_v9.mp4"] = new[] { 0.12f, 5.48f, 5.95f, 13.78f, 14.25f, 19.89f, 20.36f, 25.41f, 25.88f, 31.73f },
+            ["v3_kraken_v9.mp4"] = new[] { 0.12f, 7.02f, 7.49f, 11.85f, 12.65f, 15.53f, 17.86f, 23.32f, 23.79f, 29.49f, 29.96f, 36.02f, 36.49f, 41.61f, 42.08f, 47.43f },
         };
 
         /// <summary>第 i 句開始的秒數（沒有時間表＝照鏡頭長度）</summary>
@@ -83,10 +83,10 @@ namespace SpellDuel
             LineTimes.TryGetValue(c.file, out var t) && i > 0 && i * 2 < t.Length ? System.Math.Max(t[i * 2 - 1], t[i * 2] - 0.25) : ShotSec * i;
 
         /// <summary>字幕：每支影片每句配音一行（出現時間照 LineTimes）。影片的聲音＝旁白與角色各自的配音念這些字幕（v3：老焰是老人男聲、Boss 是怪物聲；播放時背景音樂用遊戲的）；
-        /// 旁白的句子不標「旁白：」，角色的台詞前面寫名字。影片檔是 *_v8.mp4（v8：重新配音（老焰後製減輕、取消拼音標記）；v7 起結尾定格推近淡出；v6 起畫面配合配音——每個鏡頭放慢／停格到台詞講完，每句都在自己的鏡頭開口；換了聲音，檔名不同才會重新下載）。</summary>
+        /// 旁白的句子不標「旁白：」，角色的台詞前面寫名字。影片檔是 *_v9.mp4（v9：再修 7 句讀音（哑、晶）；v8：重新配音（老焰後製減輕、取消拼音標記）；v7 起結尾定格推近淡出；v6 起畫面配合配音——每個鏡頭放慢／停格到台詞講完，每句都在自己的鏡頭開口；換了聲音，檔名不同才會重新下載）。</summary>
         static readonly System.Collections.Generic.Dictionary<string, string[]> Subs = new System.Collections.Generic.Dictionary<string, string[]>
         {
-            ["v0_prologue_v8.mp4"] = new[]
+            ["v0_prologue_v9.mp4"] = new[]
             {
                 "灰燼像雪一樣落下。炎之里的晨鐘，已經三天沒有響過。",
                 "鐘樓裡，鐘舌斷了一截，鐘身爬滿了黑色的結晶。",
@@ -97,7 +97,7 @@ namespace SpellDuel
                 "火山、森林、海港……三座鐘，一座接一座熄滅了。",
                 "艾琳：走吧，先去礦坑救採礦隊。我們把晨鐘找回來。",
             },
-            ["v1_golem_v8.mp4"] = new[]
+            ["v1_golem_v9.mp4"] = new[]
             {
                 "熔岩大廳深處，巨像守在石閘前，胸口的黑晶不停脈動。",
                 "熔岩巨像：放過一人……洪潮便會進來……封住……所有的路……",
@@ -106,7 +106,7 @@ namespace SpellDuel
                 "黑晶碎裂，巨像緩緩跪下，熔岩的光漸漸暗去。",
                 "艾琳扣回鐘舌。鐘聲響起，金色的聲波掃過整座山。",
             },
-            ["v2_treeking_v8.mp4"] = new[]
+            ["v2_treeking_v9.mp4"] = new[]
             {
                 "霧中的記名林。古樹上，掛著無數刻了名字的木牌。",
                 "腐化樹王：我若睡去……再也沒有人，等他們回來……",
@@ -114,7 +114,7 @@ namespace SpellDuel
                 "腐化樹王：別讓……最後一個名字……消失！",
                 "黑晶裂開，樹根展平。一顆發光的種子落在名冊上。",
             },
-            ["v3_kraken_v8.mp4"] = new[]
+            ["v3_kraken_v9.mp4"] = new[]
             {
                 "暴風雨的夜，港口的舊燈塔在雨中掃過一道光。",
                 "巨妖攀上礁石。胸前的黑晶上，刻滿了名字。",
