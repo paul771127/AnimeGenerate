@@ -19,7 +19,7 @@ namespace SpellDuel
             var c = new Color(0.7f, 0.5f, 1f);
             float y = r.y + gap;
             Header(r, $"⚗ 藥劑師（{Towns[town].name}）", c, prof, fs, fsS, fsL, gap, ref y);
-            NpcIntro(r, AlchemistNames[Mathf.Clamp(town, 0, AlchemistNames.Length - 1)], "藥劑師", "把這一帶的怪物材料帶來，我幫你熬成強化藥劑。喝了能撐 3 分鐘——在整備畫面喝，或戰鬥中唸藥劑的名字。", c, fs, fsS, gap, ref y);
+            NpcIntro(r, AlchemistNames[Mathf.Clamp(town, 0, AlchemistNames.Length - 1)], "藥劑師", "把這一帶的怪物材料帶來，我幫你熬成強化藥劑。喝了能撐 3 分鐘——戰鬥中點藥劑按鈕，或唸藥劑的名字就會喝。", c, fs, fsS, gap, ref y);
             var list = Crafting.Potions.FindAll(p => p.town == town);
             float bottom = r.yMax - gap - fs * 2.4f, rowH = fs * 4.2f;
             var view = new Rect(r.x + gap, y, r.width - gap * 2, bottom - y);

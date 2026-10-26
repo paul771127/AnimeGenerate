@@ -4068,6 +4068,7 @@ namespace SpellDuel
                 iy += lh * 0.25f;
                 UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.6f), storyStage != null ? "🎤 說「喝藥水／大藥水／魔力藥水」或比 🤙 就會喝（30 秒一瓶）；回城：說「回城」或點📜" : "🎤 說「喝藥水／大藥水／魔力藥水」或比 🤙 就會喝（30 秒一瓶）", fsS, new Color(0.75f, 0.9f, 1f), TextAnchor.MiddleCenter);
                 iy += lh * 0.6f;
+                iy += DrawBattlePotions(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 1.1f), gap, fsS);   // 強化藥劑：點了就喝（SoloBattle.Potions.cs）
                 if (pendingItems.Count > 0 || pendingGold > 0)
                     UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.7f), $"🎁 待領取：裝備 {pendingItems.Count} 件・💰 {pendingGold}（{(storyStage != null || dungeon != null ? "通關" : "清完這一波")}後才拿得到）", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleCenter);
             }

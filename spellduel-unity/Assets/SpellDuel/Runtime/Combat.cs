@@ -335,6 +335,21 @@ namespace SpellDuel
         }
 
         /// <summary>f 的敵人（活著的）</summary>
+        /// <summary>準星方向（35° 內、射程內）最近的活著的敵人；沒有＝null</summary>
+        Fighter AimedFoe(Fighter f, Vector3 aimDir, float range)
+        {
+            var d = Fighter.Flat(aimDir); if (d == Vector3.zero) return null; d.Normalize();
+            Fighter best = null; float bestAng = 35f;
+            foreach (var v in FoesOf(f))
+            {
+                var to = Fighter.Flat(v.Feet - f.Feet); float dist = to.magnitude;
+                if (dist > range + 1f || dist < 0.01f) continue;
+                float ang = Vector3.Angle(d, to);
+                if (ang < bestAng) { bestAng = ang; best = v; }
+            }
+            return best;
+        }
+
         List<Fighter> FoesOf(Fighter f)
         {
             var list = new List<Fighter>();
@@ -2196,8 +2211,10 @@ namespace SpellDuel
                 {
                     // 隕石、審判：從敵人（施放當下的位置）正上方砸下，敵人可以趁下落時移動閃開；
                     // 沒鎖定時落在準星指的地面（最遠到射程）
-                    var target = Opponent(f).Feet;
-                    if (!locked)
+                    // 鎖定時落在「準星方向最近的敵人」腳下（之前固定打 Boss：故事關只有小怪、Boss 還沒出現時，光柱落在看不到的地方，看起來像什麼都沒發生）
+                    var aimed = locked ? AimedFoe(f, aimDir, s.rangeMax) : null;
+                    var target = aimed != null ? aimed.Feet : Opponent(f).Feet;
+                    if (aimed == null && (!locked || !Opponent(f).Alive))
                     {
                         var off = floorPoint - f.Feet; off.y = 0f;
                         if (off.magnitude > s.rangeMax) off = off.normalized * s.rangeMax;

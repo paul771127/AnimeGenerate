@@ -5,25 +5,23 @@ namespace SpellDuel
 {
     /// <summary>
     /// 強化藥劑（藥劑師做的，Crafting.Potions）：喝了 3 分鐘有效。
-    ///   ・整備畫面先喝：開打時才開始算 3 分鐘。
-    ///   ・戰鬥中：唸藥劑的名字（「力量藥劑」）就喝（要有存貨）。同一種再喝＝重新算 3 分鐘。
+    ///   ・只在戰鬥中喝：點畫面上的藥劑按鈕，或唸藥劑的名字（「力量藥劑」）。同一種再喝＝重新算 3 分鐘。
     /// 效果直接加在自己的戰鬥數值上；角色畫面重新套用能力值時再補回來；時間到就扣掉。
     /// </summary>
     public partial class SoloBattle
     {
         class ActiveBuff { public Crafting.Potion p; public float until; public bool applied; public float delta; }
         readonly List<ActiveBuff> activeBuffs = new List<ActiveBuff>();
-        readonly List<Crafting.Potion> preDrunk = new List<Crafting.Potion>();   // 整備時喝的：開打才開始
         Battle buffBattle;
 
-        /// <summary>喝一罐（扣存貨）；不在戰鬥中＝等開打</summary>
+        /// <summary>戰鬥中喝一罐（扣存貨）</summary>
         bool DrinkBuffPotion(Crafting.Potion p)
         {
             if (Economy.Count(p.id) <= 0) { Say($"沒有{p.name}了（到{WorldUI.Towns[Mathf.Clamp(p.town, 0, WorldUI.Towns.Length - 1)].name}的藥劑師做）", 2f); return false; }
+            if (battle == null || phase != Phase.Fighting || Me == null) return false;   // 只在戰鬥中喝
             Economy.AddItem(p.id, -1);
             Sfx.Play("potion", 0.8f, 1.1f);
-            if (battle != null && phase == Phase.Fighting && Me != null) StartBuff(p);
-            else { preDrunk.RemoveAll(x => x.id == p.id); preDrunk.Add(p); }
+            StartBuff(p);
             floaters.Add(new Floater { text = $"{p.icon} {p.name}：{p.desc}", color = new Color(0.8f, 0.6f, 1f), born = Time.time, screen = true });
             return true;
         }
@@ -62,15 +60,13 @@ namespace SpellDuel
             b.applied = on;
         }
 
-        /// <summary>每幀：開打時把整備喝的開始算；時間到的扣掉</summary>
+        /// <summary>每幀：換場清掉；時間到的扣掉</summary>
         void UpdateBuffPotions()
         {
             if (battle == null || Me == null) return;
             if (buffBattle != battle)
             {
                 buffBattle = battle; activeBuffs.Clear();
-                if (phase == Phase.Fighting) { foreach (var p in preDrunk) StartBuff(p); preDrunk.Clear(); }
-                else return;
             }
             bool changed = false;
             for (int i = activeBuffs.Count - 1; i >= 0; i--)
@@ -112,26 +108,22 @@ namespace SpellDuel
             return false;
         }
 
-        /// <summary>整備畫面：持有的強化藥劑（點「喝」：開打後 3 分鐘有效）；回傳用掉的高度</summary>
-        float DrawPrepPotions(float pad, float y, float cw, float u, float gap, int fs, int fsS)
+        /// <summary>戰鬥中：持有的強化藥劑一排按鈕，點了就喝（3 分鐘）；回傳用掉的高度（沒有藥劑＝0）</summary>
+        float DrawBattlePotions(Rect row, float gap, int fsS)
         {
-            var own = Crafting.Potions.FindAll(p => Economy.Count(p.id) > 0);
-            if (own.Count == 0 && preDrunk.Count == 0) return 0f;
-            float y0 = y;
-            UiKit.Text(new Rect(pad, y, cw - pad * 2, u), "⚗ 強化藥劑（點「喝」：開打後 3 分鐘有效；戰鬥中也可以唸名字喝）", fsS, new Color(0.8f, 0.6f, 1f), TextAnchor.MiddleLeft, true);
-            y += u;
+            int k = 0; foreach (var p in Crafting.Potions) if (Economy.Count(p.id) > 0) k++;
+            if (k == 0) return 0f;
+            float bw = Mathf.Min((row.width - gap * (k - 1)) / k, row.width * 0.32f), x = row.x;
             foreach (var p in Crafting.Potions)
             {
-                int n = Economy.Count(p.id); bool queued = preDrunk.Exists(x => x.id == p.id);
-                if (n <= 0 && !queued) continue;
-                var r = new Rect(pad, y, cw - pad * 2, u * 1.15f);
-                UiKit.Card(r, 0.5f, new Color(0.7f, 0.5f, 1f), 0.5f);
-                float bw = r.height * 2.2f;
-                UiKit.Text(new Rect(r.x + gap, r.y, r.width - bw - gap * 2, r.height), $"{p.icon} {p.name}×{n}　{p.desc}" + (queued ? "　✅ 已喝" : ""), fsS, Color.white, TextAnchor.MiddleLeft, false, 0.5f);
-                if (UiKit.Button(new Rect(r.xMax - bw - gap * 0.5f, r.y + 2, bw, r.height - 4), queued ? "再喝" : "喝", fsS, false, new Color(0.7f, 0.5f, 1f), n > 0)) DrinkBuffPotion(p);
-                y += u * 1.15f + gap * 0.4f;
+                int n = Economy.Count(p.id); if (n <= 0) continue;
+                var r = new Rect(x, row.y, bw, row.height);
+                var on = activeBuffs.Find(b => b.p.id == p.id);
+                string t = $"{p.icon}{p.name.Replace("藥劑", "")}×{n}" + (on != null ? $"\n{on.until - battle.now:0}s" : "");
+                if (UiKit.Button(r, t, Mathf.RoundToInt(fsS * 0.85f), on != null, new Color(0.7f, 0.5f, 1f))) DrinkBuffPotion(p);
+                x += bw + gap;
             }
-            return y - y0;
+            return row.height + gap * 0.3f;
         }
     }
 }
