@@ -91,15 +91,17 @@ namespace SpellDuel
             for(int i=0;i<cols-1;i++)foreach(int j in new[]{0,rows-1})
             {int k=start+j*cols+i;b.T.AddRange(new[]{k,k+stride,k+1,k+1,k+stride,k+stride+1});}
         }
-        static void Clasp(OutfitArt.Builder b,Vector3 center,float radius,Color rim,Color inset)
+        static void Clasp(OutfitArt.Builder b,Vector3 center,float radius,Color rim,Color inset,Vector3 normal=default(Vector3))
         {
+            if(normal.sqrMagnitude<.01f)normal=Vector3.forward;normal=normal.normalized;
+            var right=Vector3.Cross(Vector3.up,normal).normalized;var up=Vector3.Cross(normal,right).normalized;
             const int sides=12;int start=b.V.Count;
             for(int ring=0;ring<2;ring++)for(int i=0;i<sides;i++){
                 float a=i*2*Mathf.PI/sides,r=radius*(ring==0?1:.65f);
-                b.V.Add(center+new Vector3(Mathf.Sin(a)*r,Mathf.Cos(a)*r,ring==0?0:.004f));b.C.Add(rim);
+                b.V.Add(center+right*(Mathf.Sin(a)*r)+up*(Mathf.Cos(a)*r)+normal*(ring==0?0:.004f));b.C.Add(rim);
                 if(ring==1){int k=start+i,n=start+(i+1)%sides;b.T.AddRange(new[]{k,k+sides,n,n,k+sides,n+sides});}
             }
-            int tip=b.V.Count;b.V.Add(center+Vector3.forward*.002f);b.C.Add(inset);
+            int tip=b.V.Count;b.V.Add(center+normal*.002f);b.C.Add(inset);
             for(int i=0;i<sides;i++)b.T.AddRange(new[]{start+sides+i,tip,start+sides+(i+1)%sides});
         }
         internal static Mesh MeshFor(string id,string part)
@@ -189,7 +191,13 @@ namespace SpellDuel
                     }
                     ClothGrid(b,shoulder,mantle,.005f);
                     for(int i=0;i<9;i++)b.Seam(shoulder[4,i]+Vector3.forward*.004f,shoulder[4,i+1]+Vector3.forward*.004f,id=="novice"?.004f:.008f,d.Accent);
-                    if(id!="novice"&&id!="ninja")Clasp(b,new Vector3(side*.120f,.490f,.174f),.018f,d.Accent,d.Main);
+                    if(id!="novice"&&id!="ninja"){
+                        // Seat the clasp on the actual draped mantle, using its tangent plane.
+                        // This follows the surface if shoulder width or fall changes again.
+                        int column=side>0?1:8;var seat=shoulder[3,column];
+                        var normal=Vector3.Cross(shoulder[4,column]-shoulder[2,column],shoulder[3,column+1]-shoulder[3,column-1]).normalized;
+                        Clasp(b,seat+normal*.0065f,.018f,d.Accent,d.Main,normal);
+                    }
                     if(id=="archmage"||id=="paladin"||id=="shadowdancer"||id=="bishop")
                     {
                         var overlay=new Vector3[3,7];
@@ -238,7 +246,7 @@ namespace SpellDuel
             {
                 // Purple mitre with a white front and gold ribs, seated on the unchanged short hair.
                 b.Loft(new[]{.29f,.25f,.13f,.095f},new[]{.006f,.06f,.151f,.150f},new[]{.005f,.046f,.115f,.115f},d.Sub);
-                b.Panel(new Vector3(-.115f,.11f,.117f),new Vector3(.115f,.11f,.117f),new Vector3(-.018f,.285f,.025f),new Vector3(.018f,.285f,.025f),d.Main,.005f,4,2);
+                b.Panel(new Vector3(-.018f,.285f,.025f),new Vector3(.018f,.285f,.025f),new Vector3(-.115f,.11f,.117f),new Vector3(.115f,.11f,.117f),d.Main,.005f,4,2);
                 b.Seam(new Vector3(-.135f,.11f,.12f),new Vector3(0,.30f,.025f),.012f,d.Accent);b.Seam(new Vector3(.135f,.11f,.12f),new Vector3(0,.30f,.025f),.012f,d.Accent);
                 b.Seam(new Vector3(0,.13f,.126f),new Vector3(0,.24f,.078f),.012f,d.Accent);
             }

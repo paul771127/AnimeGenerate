@@ -8,6 +8,7 @@ void FinishNeckAndCollar(){
  string id=advancedId??classId;
  // Store the accepted upper envelope in the actor frame before seating the skull.
  // Fitting uses the old reference haircut, so redesigning the silhouette cannot resize the face.
+ MeshFilter skullFilter=null;foreach(var f in head.GetComponentsInChildren<MeshFilter>())if(f.GetComponent<Renderer>().sharedMaterial.HasProperty("_HumanFace")&&f.GetComponent<Renderer>().sharedMaterial.GetFloat("_HumanFace")==1){skullFilter=f;break;}
  var crownTargets=new Dictionary<MeshFilter,float>();
  foreach(var f in head.GetComponentsInChildren<MeshFilter>()){
   bool hair=f.gameObject.name=="整體髮型",hat=f.gameObject.name.StartsWith("Headwear fitted ")||f.gameObject.name=="Player default crown";
@@ -30,6 +31,11 @@ void FinishNeckAndCollar(){
    }
    var lift=f.transform.InverseTransformVector(transform.TransformVector(Vector3.up*delta));
    for(int i=0;i<v.Length;i++)v[i]+=lift*Mathf.Clamp01((v[i].y-.040f)/Mathf.Max(.001f,top-.040f));
+   if(f.gameObject.name=="整體髮型"&&skullFilter!=null){
+    var skull=skullFilter.sharedMesh.vertices;var skullToHair=f.transform.worldToLocalMatrix*skullFilter.transform.localToWorldMatrix;
+    for(int i=0;i<skull.Length;i++)skull[i]=skullToHair.MultiplyPoint3x4(skull[i]);
+    PlayerHair.SealFinalScalp(v,skull,skullFilter.sharedMesh.triangles);
+   }
    mesh.vertices=v;mesh.RecalculateNormals();mesh.RecalculateBounds();raisedCrowns[key]=mesh;
   }f.sharedMesh=mesh;
  }

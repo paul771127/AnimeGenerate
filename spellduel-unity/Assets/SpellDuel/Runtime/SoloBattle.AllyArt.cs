@@ -3,6 +3,13 @@ using UnityEngine;
 namespace SpellDuel {
 public partial class SoloBattle {
 readonly Dictionary<int,string> allyArtGear=new Dictionary<int,string>();
+readonly HashSet<int> allyArtDeparted=new HashSet<int>();
+// A faded GameObject being destroyed must not cause the same disconnected ally to reappear.
+bool AllyArtPresent(int pid){
+ if(!allyArtDeparted.Contains(pid))return true;
+ if(!NetPeers.TryGetValue(pid,out var pose)||Time.time-pose.seen>.6f)return false;
+ allyArtDeparted.Remove(pid);return true;
+}
 void RefreshAllyArtGear(CharacterRig rig,int pid){
  string gear=peerInfo.TryGetValue(pid,out var p)?p.gear:null;
  var art=AllyPresentation.For(rig);int key=rig.GetInstanceID();

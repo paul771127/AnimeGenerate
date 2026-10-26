@@ -5,11 +5,23 @@ using System.IO;
 using UnityEngine;
 namespace SpellDuel.EditorTools {
 public static class NeckHairAudit {
-[Serializable] public class Row {public string id;public int triangles,baselineTriangles;public float neckOverlap,collarClearance,hairScalpMin;public bool cache,neckTopInsideJaw;}
+[Serializable] public class Row {public string id;public int triangles,baselineTriangles,finalHairSamples;public float neckOverlap,collarClearance,hairScalpMin,finalHairCoverage,finalHairMinMargin;public bool cache,neckTopInsideJaw;}
 [Serializable] public class Report {public string unity;public Row[] classes;}
 static bool Inside(Vector3 point,Mesh mesh,Matrix4x4 matrix){
  var dir=new Vector3(.811f,.123f,.571f).normalized;var v=mesh.vertices;var t=mesh.triangles;int crossings=0;
  for(int i=0;i<t.Length;i+=3){var a=matrix.MultiplyPoint3x4(v[t[i]]);var b=matrix.MultiplyPoint3x4(v[t[i+1]]);var c=matrix.MultiplyPoint3x4(v[t[i+2]]);var e=b-a;var f=c-a;var h=Vector3.Cross(dir,f);float det=Vector3.Dot(e,h);if(Mathf.Abs(det)<1e-8f)continue;float inv=1/det;var s=point-a;float u=inv*Vector3.Dot(s,h);if(u<0||u>1)continue;var q=Vector3.Cross(s,e);float w=inv*Vector3.Dot(dir,q);if(w<0||u+w>1)continue;if(inv*Vector3.Dot(f,q)>1e-6f)crossings++;}return crossings%2==1;
+}
+static float OuterHairDistance(Vector3 origin,Vector3 direction,Vector3[] v,int[] t){
+ float outer=-100;
+ for(int i=0;i<t.Length;i+=3){var a=v[t[i]];var e=v[t[i+1]]-a;var f=v[t[i+2]]-a;var h=Vector3.Cross(direction,f);float det=Vector3.Dot(e,h);if(Mathf.Abs(det)<1e-8f)continue;float inv=1/det;var s=origin-a;float u=inv*Vector3.Dot(s,h);if(u<-.0001f||u>1.0001f)continue;var q=Vector3.Cross(s,e);float w=inv*Vector3.Dot(direction,q);if(w<-.0001f||u+w>1.0001f)continue;float d=inv*Vector3.Dot(f,q);if(d>0)outer=Mathf.Max(outer,d);}return outer;
+}
+static void FinalHairCoverage(CharacterRig rig,MeshFilter jaw,Row row){
+ MeshFilter hair=null;foreach(var f in rig.GetComponentsInChildren<MeshFilter>())if(f.gameObject.name=="整體髮型"){hair=f;break;}
+ if(!hair)throw new Exception("Missing final hair");var inv=rig.transform.worldToLocalMatrix;var matrix=inv*hair.transform.localToWorldMatrix;var vertices=hair.sharedMesh.vertices;for(int i=0;i<vertices.Length;i++)vertices[i]=matrix.MultiplyPoint3x4(vertices[i]);var triangles=hair.sharedMesh.triangles;
+ var origin=rig.transform.InverseTransformPoint(hair.transform.parent.TransformPoint(Vector3.zero));int covered=0;row.finalHairMinMargin=100;
+ foreach(var v in jaw.sharedMesh.vertices){var world=jaw.transform.TransformPoint(v);var local=hair.transform.parent.InverseTransformPoint(world);if(local.z>=-.055f||local.y<=.035f)continue;
+  var point=inv.MultiplyPoint3x4(world);var ray=point-origin;float margin=OuterHairDistance(origin,ray.normalized,vertices,triangles)-ray.magnitude;row.finalHairSamples++;if(margin>=.0005f)covered++;row.finalHairMinMargin=Mathf.Min(row.finalHairMinMargin,margin);
+ }row.finalHairCoverage=covered/(float)Mathf.Max(1,row.finalHairSamples);
 }
 static float Distance(Vector3 p,Vector3 a,Vector3 b,Vector3 c){
  // Closest point on the triangle's interior or its three clamped edges.
@@ -28,9 +40,10 @@ public static Report Run(){
   var nv=neck.sharedMesh.vertices;var nt=neck.sharedMesh.triangles;float low=10,top=-10;foreach(var v in jaw.sharedMesh.vertices)low=Mathf.Min(low,jm.MultiplyPoint3x4(v).y);foreach(var v in nv)top=Mathf.Max(top,nm.MultiplyPoint3x4(v).y);row.neckOverlap=top-low;
   for(int i=0;i<16;i++)row.neckTopInsideJaw&=Inside(nm.MultiplyPoint3x4(nv[i]),jaw.sharedMesh,jm);
   var cv=collar.sharedMesh.vertices;for(int i=50;i<75;i++){var p=cm.MultiplyPoint3x4(cv[i]);if(Inside(p,neck.sharedMesh,nm))throw new Exception("Collar intersects skin "+id);for(int k=0;k<nt.Length;k+=3)row.collarClearance=Mathf.Min(row.collarClearance,Distance(p,nm.MultiplyPoint3x4(nv[nt[k]]),nm.MultiplyPoint3x4(nv[nt[k+1]]),nm.MultiplyPoint3x4(nv[nt[k+2]])));}
+  FinalHairCoverage(rig,jaw,row);
   foreach(var v in PlayerHairVertices(rig))row.hairScalpMin=Mathf.Min(row.hairScalpMin,v);
   foreach(var f in twin.GetComponentsInChildren<MeshFilter>())if(f.gameObject.name=="Player default neck")row.cache&=f.sharedMesh==neck.sharedMesh;else if(f.gameObject.name=="Separate garment collar")row.cache&=f.sharedMesh==collar.sharedMesh;
-  if(row.triangles>row.baselineTriangles*1.3f||row.neckOverlap<.010f||!row.neckTopInsideJaw||row.collarClearance<.003f||row.hairScalpMin<1.005f||!row.cache)throw new Exception("Neck/hair audit failed "+JsonUtility.ToJson(row));
+  if(row.triangles>row.baselineTriangles*1.3f||row.neckOverlap<.010f||!row.neckTopInsideJaw||row.collarClearance<.003f||row.hairScalpMin<1.005f||row.finalHairCoverage<.995f||row.finalHairSamples<10||!row.cache)throw new Exception("Neck/hair audit failed "+JsonUtility.ToJson(row));
   rows.Add(row);UnityEngine.Object.DestroyImmediate(rig.gameObject);UnityEngine.Object.DestroyImmediate(twin.gameObject);
  }
  var report=new Report{unity=Application.unityVersion,classes=rows.ToArray()};Directory.CreateDirectory("snapshots");File.WriteAllText("snapshots/neck_hair_audit.json",JsonUtility.ToJson(report,true));Debug.Log("[SpellDuel] Neck/hair audit passed: 16 rigs, jaw containment, collar clearance, scalp and 130% budgets.");return report;

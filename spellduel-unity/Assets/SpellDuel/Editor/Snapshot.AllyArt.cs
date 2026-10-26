@@ -8,8 +8,12 @@ namespace SpellDuel.EditorTools {
 public static partial class Snapshot {
 static readonly BindingFlags AllyInstance=BindingFlags.Instance|BindingFlags.NonPublic|BindingFlags.Public;
 [Serializable] public class AllyRow {public string id,gear;public float anchorClearance,deathGray,reviveGray,reviveLight,fadeOpacity;public Vector3 labelScreen,faceScreen;public Rect labelRect,faceRect;}
-[Serializable] public class AllyReport {public string unity;public AllyRow[] allies;public bool sixVisible;}
+[Serializable] public class AllyReport {public string unity;public AllyRow[] allies;public bool sixVisible,offlineLatch;}
 static void PendingAllyShots(Camera cam){
+ var probeGo=new GameObject("Ally visual lifecycle probe");var probe=probeGo.AddComponent<SoloBattle>();probe.enabled=false;
+ var departed=(HashSet<int>)typeof(SoloBattle).GetField("allyArtDeparted",AllyInstance).GetValue(probe);var gate=typeof(SoloBattle).GetMethod("AllyArtPresent",AllyInstance);departed.Add(5);
+ if((bool)gate.Invoke(probe,new object[]{5}))throw new Exception("Disconnected art respawns");probe.NetPeers[5]=new SoloBattle.PeerPose{seen=Time.time-1};if((bool)gate.Invoke(probe,new object[]{5}))throw new Exception("Stale pose revives art");probe.NetPeers[5].seen=Time.time;if(!(bool)gate.Invoke(probe,new object[]{5})||departed.Contains(5))throw new Exception("Reconnected art not restored");UnityEngine.Object.DestroyImmediate(probeGo);
+
  float oldAspect=cam.aspect;cam.aspect=2f;var usedLabels=new List<Rect>();var rows=new List<AllyRow>();var rigs=new List<CharacterRig>();var type=typeof(CharacterRig).Assembly.GetType("SpellDuel.AllyPresentation");var get=type.GetMethod("For",BindingFlags.Static|BindingFlags.NonPublic);var state=type.GetMethod("State",AllyInstance);var step=type.GetMethod("Step",AllyInstance);var removing=type.GetMethod("BeginRemoval",AllyInstance);var anchor=type.GetProperty("LabelAnchor",AllyInstance);var place=type.GetMethod("PlaceLabel",BindingFlags.Static|BindingFlags.NonPublic);var animate=typeof(CharacterRig).GetMethod("Animate",AllyInstance);
  string[] ids={"novice","swordsman","mage","paladin","ninja","bishop"};
  for(int i=0;i<ids.Length;i++){
@@ -27,7 +31,7 @@ static void PendingAllyShots(Camera cam){
  }foreach(var label in rows)foreach(var face in rows)if(label.labelRect.Overlaps(face.faceRect))throw new Exception("Ally label overlaps a face");shot("down");
  for(int i=0;i<rigs.Count;i++){var art=get.Invoke(null,new object[]{rigs[i]});state.Invoke(art,new object[]{true});rigs[i].SetDead(false);animate.Invoke(rigs[i],new object[]{1f});step.Invoke(art,new object[]{.05f});rows[i].reviveGray=ReadAllyFloat(rigs[i],"_ArtGray");rows[i].reviveLight=ReadAllyFloat(rigs[i],"_ArtRevive");if(rows[i].reviveGray!=0||rows[i].reviveLight<=0)throw new Exception("Revive state not restored");}shot("revive");
  for(int i=0;i<rigs.Count;i++){var art=get.Invoke(null,new object[]{rigs[i]});removing.Invoke(art,null);step.Invoke(art,new object[]{.325f});rows[i].fadeOpacity=ReadAllyFloat(rigs[i],"_ArtFade");if(Mathf.Abs(rows[i].fadeOpacity-.5f)>.001f)throw new Exception("Offline fade missing");}shot("offline");
- File.WriteAllText("snapshots/pending_ally_audit.json",JsonUtility.ToJson(new AllyReport{unity=Application.unityVersion,allies=rows.ToArray(),sixVisible=true},true));foreach(var rig in rigs)UnityEngine.Object.DestroyImmediate(rig.gameObject);cam.aspect=oldAspect;
+ File.WriteAllText("snapshots/pending_ally_audit.json",JsonUtility.ToJson(new AllyReport{unity=Application.unityVersion,allies=rows.ToArray(),sixVisible=true,offlineLatch=true},true));foreach(var rig in rigs)UnityEngine.Object.DestroyImmediate(rig.gameObject);cam.aspect=oldAspect;
  foreach(string id in new[]{"wb_furnace","wb_canopy","wb_leviathan"}){var tex=Resources.Load<Texture2D>("WorldBossNotices/"+id);if(!tex||tex.width!=768||tex.height!=1152)throw new Exception("Missing world boss poster "+id);}
  Debug.Log("[SpellDuel] Pending ally audit passed: six geared rigs, labels above faces, death/revive/fade and three posters.");
 }

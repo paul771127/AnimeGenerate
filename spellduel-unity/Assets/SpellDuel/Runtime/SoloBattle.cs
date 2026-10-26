@@ -47,6 +47,7 @@ namespace SpellDuel
             float dt = Mathf.Max(1e-3f, Time.deltaTime);
             foreach (var a in battle.allies)
             {
+                if(!AllyArtPresent(a.pid))continue;
                 string artClass=a.cls!=null?a.cls.id:"mage";var artAdvanced=Advanced.Get(a.adv);string artAdv=artAdvanced!=null&&artAdvanced.baseCls==artClass?a.adv:null;
                 allyRigs.TryGetValue(a.pid,out var rig);
                 if(rig&&AllyPresentation.For(rig).Removing){if(!NetPeers.ContainsKey(a.pid))continue;rig=null;}
@@ -123,7 +124,7 @@ namespace SpellDuel
         /// <summary>GameRoot：有人離開房間</summary>
         public void OnPeerLeft(int pid)
         {
-            peerInfo.Remove(pid); NetPeers.Remove(pid);
+            peerInfo.Remove(pid); NetPeers.Remove(pid); allyArtDeparted.Add(pid);
             if(allyRigs.TryGetValue(pid,out var departed)&&departed)AllyPresentation.For(departed).BeginRemoval();
             var a = battle?.AllyByPid(pid);
             if (a != null && a.Alive) { a.hp = 0f; Say($"⚠ {a.name} 斷線了", 3f); }
@@ -2116,7 +2117,7 @@ namespace SpellDuel
             foreach (var go in burnGo.Values) if (go) Destroy(go);
             foreach (var rig in petGo.Values) if (rig) Destroy(rig.gameObject);
             foreach (var ar in allyRigs.Values) if (ar) Destroy(ar.gameObject);
-            allyRigs.Clear(); allyLastFeet.Clear(); allyArtGear.Clear();
+            allyRigs.Clear(); allyLastFeet.Clear(); allyArtGear.Clear(); allyArtDeparted.Clear();
             ClearNpcRigs(); drun = null; chest = null;   // 副本地圖的劇情人物、寶箱
             ClearBarrierViews();
             petGo.Clear();petVisualNext.Clear();

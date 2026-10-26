@@ -6,6 +6,32 @@ internal static class PlayerHair {
 static Mesh cached;
 internal static float ScalpDistance(Vector3 p) {float z=p.z+.009f,d=z>0?.137f:.158f;return Mathf.Sqrt(p.x*p.x/(.110f*.110f)+z*z/(d*d)+(p.y-.005f)*(p.y-.005f)/(.158f*.158f));}
 static Vector3 Seat(Vector3 p){float q=ScalpDistance(p);if(q<1.012f){p=new Vector3(p.x,p.y-.005f,p.z+.009f)*(1.012f/Mathf.Max(.001f,q));p+=new Vector3(0,.005f,-.009f);}return p;}
+// Signed radial clearance from the actual final skull, in the hair's local frame.
+// Horizontal rays preserve vertex height when seating hair around the compacted head.
+internal static float FinalScalpClearance(Vector3 point,Vector3[] skull,int[] triangles){
+ var origin=new Vector3(0,point.y,-.009f);var delta=point-origin;float radius=delta.magnitude;
+ if(radius<.00001f)return 1;var direction=delta/radius;float surface=-1;
+ for(int i=0;i<triangles.Length;i+=3){
+  var a=skull[triangles[i]];var b=skull[triangles[i+1]];var c=skull[triangles[i+2]];
+  if(point.y<Mathf.Min(a.y,Mathf.Min(b.y,c.y))||point.y>Mathf.Max(a.y,Mathf.Max(b.y,c.y)))continue;
+  var e=b-a;var f=c-a;var h=Vector3.Cross(direction,f);float determinant=Vector3.Dot(e,h);
+  if(Mathf.Abs(determinant)<1e-8f)continue;float inv=1/determinant;var offset=origin-a;
+  float u=Vector3.Dot(offset,h)*inv;if(u<0||u>1)continue;
+  var q=Vector3.Cross(offset,e);float w=Vector3.Dot(direction,q)*inv;if(w<0||u+w>1)continue;
+  float hit=Vector3.Dot(f,q)*inv;if(hit>0)surface=Mathf.Max(surface,hit);
+ }
+ return surface<0?1:radius-surface;
+}
+internal static void SealFinalScalp(Vector3[] hair,Vector3[] skull,int[] triangles){
+ // Allow for interpolation across the shell's polygon faces, not just its vertices.
+ const float clearance=.006f;
+ for(int i=0;i<hair.Length;i++){
+  float gap=FinalScalpClearance(hair[i],skull,triangles);
+  if(gap>=clearance)continue;
+  var outward=hair[i]-new Vector3(0,hair[i].y,-.009f);
+  if(outward.sqrMagnitude>.00000001f)hair[i]+=outward.normalized*(clearance-gap);
+ }
+}
 static Vector3 Curve(Vector3 a,Vector3 b,Vector3 c,float t)=>a*(1-t)*(1-t)+b*2*t*(1-t)+c*t*t;
 static void Lock(List<Vector3> v,List<int> tri,List<Color> colors,Vector3 a,Vector3 b,Vector3 c,float width,float depth,float shade=1){
  int start=v.Count;const int rows=7,sides=8;
