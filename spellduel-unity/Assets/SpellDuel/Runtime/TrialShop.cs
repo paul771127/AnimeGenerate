@@ -62,6 +62,9 @@ namespace SpellDuel
             new Ware { id = "core", name = "隨機 Boss 核心", icon = "💠", price = 10, desc = "五種 Boss 核心隨機一個（工匠最好的裝備要用）", give = (p, r) => { var c = Cores[r.Next(Cores.Length)]; Crafting.Give(c, 1); return "拿到 " + Crafting.MatName("mat_" + c); } },
             new Ware { id = "potion", name = "隨機強化藥劑 ×2", icon = "⚗", price = 4, desc = "十種強化藥劑隨機一種，戰鬥中喝 3 分鐘有效", give = (p, r) => { var pt = Crafting.Potions[r.Next(Crafting.Potions.Count)]; Economy.AddItem(pt.id, 2); return $"拿到 {pt.icon}{pt.name} ×2"; } },
             new Ware { id = "hpl", name = "大治療藥水 ×3", icon = "🍷", price = 2, desc = "回復最大 HP 的 60%", give = (p, r) => { Economy.AddItem("hp_l", 3); return "拿到大治療藥水 ×3"; } },
+            new Ware { id = "scenh", name = "強化成功率提升卷 ×1", icon = "📜", price = 4, desc = "鐵匠強化時用：那一次成功率 +10%（一次只能用一張，成功失敗都用掉）", give = (p, r) => { Economy.AddItem(Economy.ScrollEnh, 1); return "拿到強化成功率提升卷 ×1"; } },
+            new Ware { id = "screroll", name = "裝備詞條洗鍊卷 ×1", icon = "🔁", price = 8, desc = "找鐵匠重洗一件裝備的所有副屬性（主屬性不變）", give = (p, r) => { Economy.AddItem(Economy.ScrollReroll, 1); return "拿到裝備詞條洗鍊卷 ×1"; } },
+            new Ware { id = "sclock", name = "裝備詞條鎖定卷 ×1", icon = "🔒", price = 12, desc = "洗鍊時指定一條副屬性不洗（和洗鍊卷一起用）", give = (p, r) => { Economy.AddItem(Economy.ScrollLock, 1); return "拿到裝備詞條鎖定卷 ×1"; } },
             new Ware { id = "box", name = "試煉寶箱", icon = "🎁", price = 15, desc = "一件史詩以上的裝備（物品等級＝你的等級，優先你的職業能用的）", give = (p, r) => Chest(p, r, 3) },
             new Ware { id = "kingbox", name = "王者寶箱", icon = "👑", price = 40, desc = "一件傳說以上的裝備（物品等級＝你的等級）", give = (p, r) => Chest(p, r, 4) },
         };

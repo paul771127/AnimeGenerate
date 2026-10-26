@@ -98,7 +98,17 @@ namespace SpellDuel
         public static float EnhanceRate(Item it) => it.plus < 5 ? 1f : it.plus switch { 5 => 0.8f, 6 => 0.65f, 7 => 0.5f, 8 => 0.4f, _ => 0.3f };
 
         /// <summary>強化：失敗只扣金幣，裝備不會壞</summary>
-        public static bool Enhance(Item it, System.Random rng, out string msg)
+        /// <summary>試煉商店的卷軸（Economy 道具）：強化成功率提升卷（一次強化只能用一張、+10%）、詞條洗鍊卷、詞條鎖定卷</summary>
+        public const string ScrollEnh = "sc_enh", ScrollReroll = "sc_reroll", ScrollLock = "sc_lock";
+        public const float ScrollEnhBonus = 0.10f;
+        public static string ScrollName(string id) => id == ScrollEnh ? "📜 強化成功率提升卷" : id == ScrollReroll ? "🔁 裝備詞條洗鍊卷" : id == ScrollLock ? "🔒 裝備詞條鎖定卷" : id;
+        /// <summary>強化成功率（用卷＝+10%，最高 100%）</summary>
+        public static float EnhanceRate(Item it, bool scroll) => Mathf.Min(1f, EnhanceRate(it) + (scroll ? ScrollEnhBonus : 0f));
+
+        public static bool Enhance(Item it, System.Random rng, out string msg) => Enhance(it, rng, false, out msg);
+
+        /// <summary>useScroll：這次用一張強化成功率提升卷（成功失敗都用掉）</summary>
+        public static bool Enhance(Item it, System.Random rng, bool useScroll, out string msg)
         {
             if (it.plus >= MaxPlus) { msg = "已經是最高等級"; return false; }
             int cost = EnhanceCost(it);
@@ -106,9 +116,11 @@ namespace SpellDuel
             // 精煉石（使用者要求）：+1～+5 每次 1 個精煉石、+6～+8 每次 1 個高級精煉石、+9～+10 每次 2 個（成功失敗都會用掉）
             var (stone, sn) = Crafting.StoneFor(it);
             if (Crafting.Have(stone) < sn) { msg = $"{Crafting.MatName(stone)}不夠（要 {sn} 個，有 {Crafting.Have(stone)} 個）：鐵匠可以用 {Crafting.OrePerStone} 個礦石合成"; return false; }
+            useScroll = useScroll && Count(ScrollEnh) > 0;
             Gold -= cost; Crafting.Give(stone, -sn);
-            if (rng.NextDouble() <= EnhanceRate(it)) { it.plus++; msg = $"✨ 強化成功！{it.FullName}"; return true; }
-            msg = "💥 強化失敗…（金幣和精煉石用掉了，裝備沒事）";
+            if (useScroll) AddItem(ScrollEnh, -1);
+            if (rng.NextDouble() <= EnhanceRate(it, useScroll)) { it.plus++; msg = $"✨ 強化成功！{it.FullName}" + (useScroll ? "（用了一張強化卷）" : ""); return true; }
+            msg = "💥 強化失敗…（金幣和精煉石" + (useScroll ? "、強化卷" : "") + "用掉了，裝備沒事）";
             return false;
         }
 

@@ -877,6 +877,25 @@ namespace SpellDuel
             return it;
         }
 
+        /// <summary>副屬性（洗鍊卷會洗的）：掉落時依稀有度隨機加上去的那幾條＝mods 最後 rarity 條（前面是主屬性、身體的減傷）</summary>
+        public static int SubStart(Item it) => Mathf.Max(1, it.mods.Count - it.rarity);
+        public static int SubCount(Item it) => Mathf.Max(0, it.mods.Count - SubStart(it));
+
+        /// <summary>詞條洗鍊卷：重洗所有副屬性（lockIndex＝鎖定卷鎖住的那一條 mods 索引，−1＝都洗）。數值照這件的物品等級與稀有度</summary>
+        public static bool RerollSubs(Item it, System.Random rng, int lockIndex = -1)
+        {
+            int start = SubStart(it); if (start >= it.mods.Count) return false;
+            float power = it.ilvl * (1f + 0.35f * Mathf.Min(it.rarity, 4));
+            for (int i = start; i < it.mods.Count; i++)
+            {
+                if (i == lockIndex) continue;
+                var a = Pool[rng.Next(Pool.Length)];
+                if (a == Affix.Lifesteal && it.rarity < 3) a = Affix.Hp;
+                it.mods[i] = new KeyValuePair<Affix, float>(a, AffixValue(a, power, rng));
+            }
+            return true;
+        }
+
         static (string name, string cls) Pick(System.Random rng, (string name, string cls)[] arr, string prefer)
         {
             var list = new List<(string name, string cls)>(arr);
