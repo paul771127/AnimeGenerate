@@ -66,7 +66,23 @@ namespace SpellDuel
         /// <summary>全部的影片檔（遊戲一開始全部下載）</summary>
         public static readonly (string file, int mb)[] Files = { ("v0_prologue_v4.mp4", 6), ("v1_golem_v4.mp4", 6), ("v2_treeking_v4.mp4", 5), ("v3_kraken_v4.mp4", 8) };
 
-        /// <summary>字幕：每支影片每個鏡頭一句（鏡頭等長，約 5.2 秒）。影片的聲音＝旁白與角色各自的配音念這些字幕（v3：老焰是老人男聲、Boss 是怪物聲；播放時背景音樂用遊戲的）；
+        /// <summary>每句配音在影片裡實際的（開始, 結束）秒數，兩個一組。混音時每句接在上一句後面，不一定在鏡頭開頭，
+        /// 所以字幕和分段播放都照這個時間，不用鏡頭長度推算。由 Docs/story_video/tools/narration_mix.py 算出（narration/timing.json），換配音要一起更新。</summary>
+        static readonly System.Collections.Generic.Dictionary<string, float[]> LineTimes = new System.Collections.Generic.Dictionary<string, float[]>
+        {
+            ["v0_prologue_v4.mp4"] = new[] { 0.12f, 6.97f, 7.17f, 11.83f, 12.03f, 18.98f, 19.18f, 23.32f, 23.52f, 28.05f, 28.25f, 34.32f, 34.52f, 41.83f, 42.03f, 45.73f },
+            ["v1_golem_v4.mp4"] = new[] { 0.12f, 6.21f, 6.41f, 14.39f, 14.59f, 17.70f, 17.90f, 20.85f, 21.05f, 26.67f, 26.87f, 32.27f },
+            ["v2_treeking_v4.mp4"] = new[] { 0.12f, 5.22f, 5.42f, 10.62f, 10.82f, 15.90f, 16.10f, 21.91f, 22.11f, 27.44f },
+            ["v3_kraken_v4.mp4"] = new[] { 0.12f, 5.64f, 5.84f, 9.73f, 10.49f, 13.52f, 15.67f, 20.92f, 21.12f, 25.66f, 26.04f, 31.39f, 31.59f, 37.43f, 37.63f, 42.61f },
+        };
+
+        /// <summary>第 i 句開始的秒數（沒有時間表＝照鏡頭長度）</summary>
+        static double LineStart(Clip c, int i) => LineTimes.TryGetValue(c.file, out var t) && i * 2 < t.Length ? t[i * 2] : ShotSec * i;
+        /// <summary>分段播放的切點：前一句講完和下一句開始的中間（不會切到台詞）</summary>
+        static double CutAt(Clip c, int i) =>
+            LineTimes.TryGetValue(c.file, out var t) && i > 0 && i * 2 < t.Length ? (t[i * 2 - 1] + t[i * 2]) * 0.5 : ShotSec * i;
+
+        /// <summary>字幕：每支影片每句配音一行（出現時間照 LineTimes）。影片的聲音＝旁白與角色各自的配音念這些字幕（v3：老焰是老人男聲、Boss 是怪物聲；播放時背景音樂用遊戲的）；
         /// 旁白的句子不標「旁白：」，角色的台詞前面寫名字。影片檔是 *_v4.mp4（v4：CosyVoice3 帶情緒的配音；換了聲音，檔名不同才會重新下載）。</summary>
         static readonly System.Collections.Generic.Dictionary<string, string[]> Subs = new System.Collections.Generic.Dictionary<string, string[]>
         {
@@ -246,8 +262,8 @@ namespace SpellDuel
             vp.prepareCompleted += p =>
             {
                 double len = p.length > 0 ? p.length : ShotSec * clip.shots;
-                double startT = ShotSec * clip.from;   // 鏡頭固定 ShotSec 秒（v3 影片最後一格會多停一下讓台詞講完，不能用總長平均）
-                endT = clip.to >= clip.shots ? len + 1 : ShotSec * clip.to;
+                double startT = clip.from > 0 ? CutAt(clip, clip.from) : 0;   // 照配音實際時間切（不是鏡頭長度），台詞不會被切掉或重播
+                endT = clip.to >= clip.shots ? len + 1 : CutAt(clip, clip.to);
                 p.time = startT;
                 p.SetDirectAudioVolume(0, 1f);
                 p.Play();
@@ -287,7 +303,9 @@ namespace SpellDuel
         string Subtitle()
         {
             if (vp == null || clip == null || !Subs.TryGetValue(clip.file, out var lines)) return null;
-            int shot = Mathf.Min(clip.shots - 1, Mathf.FloorToInt((float)(vp.time / ShotSec)));
+            // 字幕跟著配音：顯示「已經開始講」的最後一句（提早 0.15 秒出現），句子之間的空檔繼續顯示上一句
+            double now = vp.time + 0.15; int shot = -1;
+            for (int i = 0; i < lines.Length; i++) if (LineStart(clip, i) <= now) shot = i;
             return shot >= 0 && shot < lines.Length && shot >= clip.from && shot < clip.to ? lines[shot].Replace("{玩家}", "你") : null;
         }
 

@@ -1,4 +1,4 @@
-# 旁白與角色配音（v4）：用本機 ComfyUI 的 CosyVoice3（Fun-CosyVoice3-0.5B，FL_CosyVoice3_Instruct2 節點）
+# 旁白與角色配音（v5：送進模型的文字改用簡體＋多音字拼音（emotion_script.json 的 tts_text）、巨像／樹王改用普通話參考音；v4 是繁體原文）：用本機 ComfyUI 的 CosyVoice3（Fun-CosyVoice3-0.5B，FL_CosyVoice3_Instruct2 節點）
 # 依 narration/emotion_script.json 逐句生成：每個角色固定一段參考聲音（聲線），每句再用中文「指令」帶入情緒與語氣，
 # 之後用 ffmpeg 做角色後製（老人降音加顫音、巨像低沉回聲、樹王多重聲音、澪空靈殘響）與響度一致。
 # 用法（ComfyUI 先開著，port 8188）：python narration_tts_cosyvoice.py <narration 資料夾> [已跑完的 prompt_id]
@@ -24,9 +24,9 @@ CAST = {
     '艾琳':     ('zh_female_warm.wav',    '年轻女性，声音温柔、柔和、亲切', 1.0, f'{WARM},{ROOM}'),
     '老焰':     ('zh_male_calm.wav',      '苍老的老爷爷，声音低沉沙哑、说话慢、气息重、略带颤抖', 0.95,
                  f'asetrate=24000*0.9,aresample=24000,atempo=1.11,vibrato=f=4.5:d=0.06,lowpass=f=6000,{WARM},{ROOM}'),   # 降音後 atempo 補回長度
-    '熔岩巨像': ('zh_cantonese_male.wav', '巨大的石头怪物，声音极低、粗、闷', 0.95,
+    '熔岩巨像': ('zh_cn_male.wav',        '巨大的石头怪物，声音极低、粗、闷', 0.95,   # v5：原本用粤语参考音，普通话会带粤语腔、字念歪
                  'asetrate=24000*0.78,aresample=24000,atempo=1.28,lowpass=f=3000,aecho=0.8:0.6:70|140:0.4|0.25'),
-    '腐化樹王': ('en_male_friendly.wav',  '古老的树精，声音低沉、空洞', 0.95,
+    '腐化樹王': ('zh_male_calm.wav',      '古老的树精，声音低沉、空洞', 0.95,   # v5：原本用英文参考音，中文发音会怪
                  'asetrate=24000*0.86,aresample=24000,atempo=1.16,chorus=0.6:0.8:45|60:0.4|0.3:0.25|0.4:2|1.5,aecho=0.8:0.7:90|180:0.3|0.2'),
     '海斗':     ('zh_cn_male.wav',        '年轻男性，热血、有精神', 1.0, f'{WARM},{ROOM}'),
     '澪':       ('zh_female_bright.wav',  '年轻女性，空灵、温柔、带一点哀伤', 0.95,
@@ -68,15 +68,17 @@ def main():
             stem = it['file'][:-4]
             if only and stem not in only: continue
             speed = round(speed_for(CAST[who][2], it['direction']) * speed_mul, 2)
-            instruct = instruct_for(who, it['emotion'], it['direction'])
+            # v5：用 tts_text（簡體＋多音字標拼音）和簡體的情緒／語氣；字幕仍用 text
+            instruct = instruct_for(who, it.get('tts_emotion', it['emotion']), it.get('tts_direction', it['direction']))
+            text = it.get('tts_text', it['text'])
             seed = int.from_bytes(stem.encode(), 'big') % (2**31 - 1)
             wf[f'tts_{stem}'] = {'class_type': 'FL_CosyVoice3_Instruct2',
-                                 'inputs': {'model': ['M', 0], 'text': it['text'], 'instruct_text': instruct,
+                                 'inputs': {'model': ['M', 0], 'text': text, 'instruct_text': instruct,
                                             'reference_audio': [f'ref_{who}', 0], 'speed': speed, 'seed': seed,
                                             'text_frontend': True}}
             wf[f'save_{stem}'] = {'class_type': 'SaveAudio',
                                   'inputs': {'audio': [f'tts_{stem}', 0], 'filename_prefix': f'spellduel_narr/{stem}_{run}'}}
-            lines.append((stem, who, it['text'], instruct, speed))
+            lines.append((stem, who, text, instruct, speed))
             print(f'{stem}  {who}  speed={speed}  指令：{instruct}', flush=True)
     t0 = time.time()
     if len(sys.argv) > 2:
@@ -105,7 +107,7 @@ def main():
         print(f'{out.name} {d:.2f}s  {who}  {text}', flush=True)
     new = {s + '.mp3': {'file': s + '.mp3', 'speaker': w, 'reference': CAST[w][0], 'speed': sp, 'instruct': ins, 'prompt_id': pid}
            for s, w, _, ins, sp in lines}
-    log_path = narr / 'tts_v4_log.json'
+    log_path = narr / os.environ.get('LOG', 'tts_v5_log.json')
     old = json.loads(log_path.read_text(encoding='utf-8')) if (only and log_path.exists()) else {}
     merged = {e['file']: e for e in old.get('lines', [])}
     merged.update(new)   # 只重做幾句時，把它們併進原本的紀錄

@@ -3,12 +3,13 @@
 # 在 narration/ 底下執行：python ../tools/narration_mix.py [版本，預設 v4]   （v3 的配音也是用這支混的）
 import json, subprocess, sys, shutil
 from pathlib import Path
-OUT = sys.argv[1] if len(sys.argv) > 1 else 'v4'
+OUT = sys.argv[1] if len(sys.argv) > 1 else 'v5'
 V = str(Path(__file__).resolve().parent.parent / 'videos') + '/'
 FFMPEG = shutil.which('ffmpeg') or 'ffmpeg'; FFPROBE = shutil.which('ffprobe') or 'ffprobe'
 subs = json.load(open('subs.json', encoding='utf-8'))
 def dur(p): return float(subprocess.check_output([FFPROBE, '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', p]))
 GAP = 0.2
+timing = {}   # 每句在成品影片裡的（開始, 結束）秒數 → narration/timing.json；遊戲的字幕與分段播放照這個（StoryVideo.cs 的 LineTimes）
 for f, lines in subs.items():
     base = f.replace('_v2', '')[:-4]; src = V + base + '_v2.mp4'
     vd = dur(src); shot = vd / len(lines)
@@ -33,4 +34,7 @@ for f, lines in subs.items():
     out = V + f'{base}_{OUT}.mp4'
     args += ['-filter_complex', ';'.join(filt), '-map', '[v]' if pad > 0 else '0:v', '-map', '[out]'] + (['-c:v', 'libx264', '-preset', 'medium', '-crf', '21', '-pix_fmt', 'yuv420p'] if pad > 0 else ['-c:v', 'copy']) + [ '-c:a', 'aac', '-b:a', '128k', '-ac', '2', '-ar', '44100', '-movflags', '+faststart', out]
     subprocess.run(args, check=True)
+    timing[f'{base}_{OUT}.mp4'] = [[round(s, 2), round(s + d / t, 2)] for s, d in zip(st, ds)]
     print(out.split('/')[-1], f'影片 {vd:.1f}s→{total:.1f}s', f'語速 ×{t:.2f}', f'講完 {end:.1f}s', '開始 ' + ' '.join(f'{x:.1f}' for x in st))
+json.dump(timing, open('timing.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+print('timing.json 已更新：把數字貼到 StoryVideo.cs 的 LineTimes（檔名也要改成新版本）')

@@ -51,6 +51,26 @@
 - **操作**：遊戲一開始就把四支影片全部下載（畫面顯示「載入中」，不能取消）；播放時下方有字幕（`StoryVideo.cs` 的 `Subs`，每個鏡頭一句）。第一次看不能跳過，「📖 看故事」重看時可以長按畫面 1 秒跳過。
 - **重新生成影片**：換掉 `videos/` 裡的檔案就好（檔名不變）。已經下載過的手機要清除 App 資料，才會重新下載。
 
+### 配音 v5（待生成機重做）：修正念錯字、字幕對不上
+
+- **念錯字的原因**：
+  - 送進 CosyVoice 的是繁體原文；模型以簡體訓練，繁體字和多音字（還、處、便、重、種、散、給、紀）容易念錯。
+  - 「凪」是日文漢字，模型不認得。
+  - 巨像的參考音是粵語、樹王的是英文，普通話會走音。
+- **改法**：
+  - `narration/emotion_script.json` 每句多了 `tts_text`：簡體，多音字用 CosyVoice3 的發音修正格式標讀音，例如 `家[h][ái]在这里`、`[zh][ǐ]`（凪）。字幕仍用 `text`。
+  - 腳本改送 `tts_text`；巨像改用 `zh_cn_male.wav`、樹王改用 `zh_male_calm.wav`（後製不變）。
+  - 還有念錯的字：在 `tts_text` 該字的位置改成 `[聲母][帶聲調韻母]` 即可。
+- **字幕對不上的原因**：遊戲以前每 5.184 秒（一個鏡頭）換一句字幕，但混音時每句接在上一句後面，最多晚了 7 秒；分段播放的切點也會切到台詞。
+  - 遊戲已改成照每句實際時間顯示（`StoryVideo.cs` 的 `LineTimes`，v4 的數字已經算好填入）。
+  - `narration_mix.py` 現在會輸出 `narration/timing.json`。
+- **重做步驟（生成機）**：
+  1. `git pull`，開 ComfyUI。
+  2. 在 `narration/` 執行 `python ../tools/narration_tts_cosyvoice.py .`。
+  3. 再執行 `python ../tools/narration_mix.py v5`。
+  4. 聽一遍，有念錯的字就改 `tts_text` 後用 `ONLY=...` 重做那幾句。
+  5. 推上 `videos/*_v5.mp4` 和 `narration/timing.json`、`tts_v5_log.json`。遊戲端（檔名改 v5、貼上 LineTimes）由 Claude 接。
+
 ### 角色配音（v4，目前使用）：本機 CosyVoice3，帶情緒
 
 - 工具：影片生成機上 ComfyUI 的 **CosyVoice3**（`Fun-CosyVoice3-0.5B`，節點包 `ComfyUI_FL-CosyVoice3` 的 `FL_CosyVoice3_Instruct2`）。這台電腦沒有裝 IndexTTS2／GPT-SoVITS／F5-TTS，CosyVoice3 是唯一能用文字指令控制情緒的本機模型。
