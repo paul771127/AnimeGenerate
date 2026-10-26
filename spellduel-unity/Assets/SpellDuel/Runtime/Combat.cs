@@ -134,6 +134,9 @@ namespace SpellDuel
         public float fuseAt;                   // 自爆小鬼：引信到時就爆（不管離玩家多遠）
         public int strafeSign = 1;             // 熔岩小鬼：等別隻出手時往哪邊繞（±1）
         public bool ambusher;                  // 簡單模式：從別的方向偷襲來的那隻（同時最多一隻）
+        public bool hidden;                    // 食人花：埋在地下（玩家走近 1.5m 才冒出來；埋著時打不到）
+        public Vector3 homePos;                // 跳躍魚：海裡的家（咬完跳回去）
+        public Vector3 dashFrom;               // 衝刺起點（荊棘衝鋒獸衝完沿路留下荊棘帶）
         public float restUntil;                // 浮空／飛行的小怪出手後：降到場內地上休息到這個時間（近戰打得到），之後才飛回空中
         public bool repositionNext;            // 遠程小怪：出手後（站定結束）要先隨機換個位置才能再出手
         public Vector3 moveTo; public float moveUntil;   // 換位置的目的地、最晚走到什麼時候
@@ -190,6 +193,7 @@ namespace SpellDuel
         public SkillDef skill;
         public Vector3 pos, dir;
         public float traveled;
+        public float homingUntil;       // 追蹤到這個時間為止（泡泡彈：3 秒）；0＝一直追
         public int damage;
         public int pierceLeft;          // 還能穿透幾個敵人（法師「冰槍穿透」；skill.pierce＝無限）
         public EffectKind effect; public float effectDps, effectDur;
@@ -605,7 +609,7 @@ namespace SpellDuel
         float nextSpecialAt;
         /// <summary>這種小怪的預備時間（秒）：預備動作要剛好在出手時擺到位</summary>
         /// <summary>近身重擊的小怪（熔岩小鬼、岩石衝鋒獸、食人花）：預備時地上畫紅色受擊範圍（中心＝小怪腳下；玩家站在圈外就打不到）</summary>
-        public static bool HasMeleeWarnDisc(int kind) => kind == 0 || kind == 2 || kind == 10 || kind == 16 || IsSpecial(kind);
+        public static bool HasMeleeWarnDisc(int kind) => kind == 0 || kind == 2 || kind == 8 || kind == 10 || kind == 16 || IsSpecial(kind);
         /// <summary>近戰小怪的身體半徑多加 0.5m：不會貼到玩家臉上（看不清楚），玩家走過去也會把牠推開；攻擊距離照舊（從中心算）</summary>
         public const float MeleeBodyExtra = 0.5f;
         /// <summary>近戰小怪的攻擊範圍：前方扇形（左右各 60°，共 120°）</summary>
@@ -657,7 +661,9 @@ namespace SpellDuel
         static float MeleeReach(int kind, float reach) => Mathf.Max(reach, MinionKeep(kind) + 0.15f);
         public static bool IsRanged(int kind) => kind == 1 || kind == 4 || kind == 5 || kind == 6 || kind == 7 || kind == 9 || kind == 12 || kind == 15 || kind == 18;
         public const float VoidStay = 1f;   // 虛空術士召喚後停留幾秒再瞬移
-        public const float CrabShellMul = 0.5f;
+        public const float CrabShellMul = 0.5f, CrabTurn = 70f;   // 寄居蟹正面減傷、每秒最多轉幾度（轉身慢，繞到背後打）
+        public const float ChomperTrigger = 1.5f, SporeHealEvery = 6f, SporeHealFrac = 0.1f, SporeHealRadius = 3f, FishCycle = 4f, JellyEvery = 5f, PufferFuse = 2f, PufferRadius = 2f;
+        public const float BubbleHoming = 50f, BubbleHomeTime = 3f, ThornLife = 3f, VineWarn = 2f, VineSnare = 1.5f;
         public const float VoidSummonEvery = 8f, BombFuse = 4.5f, BombSpeedMul = 2.5f, SniperAim = 2f, SniperRearm = 5f, ChargerStun = 2f, ChargerDash = 6f, ImpKnock = 0.35f;
 
         public Fighter SpawnMinion(Vector3 feet, int id = 0, int kind = 0, float hpMul = 1f, float dmgMul = 1f, float speedMul = 1f)
@@ -675,6 +681,7 @@ namespace SpellDuel
             // 寄居蟹：正面有殼，從正面打減傷 50%（Damage 裡依打擊方向判定；繞到背後打才是全額）——使用者要求不要正面無敵
             if (kind == 14) m.speedMul *= birdSpeedMul;   // 俯衝海鳥：飛行速度倍率（故事第三章 ×0.5）
             m.attackReadyAt = now + 1.2f;
+            m.homePos = feet;
             if (kind == 3) { m.fuseAt = now + BombFuse; m.speedMul *= BombSpeedMul; }   // 自爆小鬼：直直衝過來，引信到就爆
             minions.Add(m);
             Emit("minionspawn", m.Feet, c.color, null);
@@ -994,6 +1001,7 @@ namespace SpellDuel
                 kind = EliteSpawnKind(kind, dungeonSpawnOrdinal++, false);
                 var nm = SpawnMinion(p, 0, kind, HpMul * (IsRanged(kind) ? 1f : meleeHpMul), DmgMul, SpeedMul);
                 nm.ambusher = easySides && Mathf.Abs(Mathf.DeltaAngle(ang, easyBearing)) > 90f;
+                if (kind == 10) BuryChomper(nm);   // 食人花：不從邊緣走進來，直接埋在場地裡
                 float fixHp = minionHpOverride != null ? minionHpOverride(kind) : 0f;
                 if (fixHp > 0f) { nm.maxHp = Mathf.Max(1, Mathf.RoundToInt(fixHp)); nm.hp = nm.maxHp; }
                 if (eliteLeft > 0 && !EliteCatalog.IsElite(kind)) { eliteLeft--; MakeElite(nm); }
@@ -1194,9 +1202,24 @@ namespace SpellDuel
                 if (tgt == null) continue;
                 if (tgt.npcSide >= 0) best = FlatDistance(m.Feet, tgt.Feet);
                 m.target = tgt;
-                m.forward = m.windupUntil > 0f && m.lockFwd != Vector3.zero ? m.lockFwd : Fighter.Flat(tgt.head - m.head);   // 預備中：面向鎖住（扇形不追著玩家轉）
+                var wantFwd = m.windupUntil > 0f && m.lockFwd != Vector3.zero ? m.lockFwd : Fighter.Flat(tgt.head - m.head);   // 預備中：面向鎖住（扇形不追著玩家轉）
+                if (m.minionKind == 16 && m.forward != Vector3.zero && wantFwd != Vector3.zero)
+                {
+                    // 寄居蟹轉身很慢（每秒 70°）：繞到背後打
+                    float delta = Mathf.DeltaAngle(Mathf.Atan2(m.forward.x, m.forward.z) * Mathf.Rad2Deg, Mathf.Atan2(wantFwd.x, wantFwd.z) * Mathf.Rad2Deg);
+                    m.forward = RotateY(m.forward, Mathf.Clamp(delta, -CrabTurn * dt, CrabTurn * dt));
+                }
+                else m.forward = wantFwd;
                 float d = best;
                 int kind = m.minionKind;
+                // 食人花埋在地下：有人走近 1.5m 才冒出來（埋著時不動、打不到）
+                if (m.hidden)
+                {
+                    if (d <= ChomperTrigger + tgt.bodyRadius) { m.hidden = false; m.attackReadyAt = now + 0.25f; Emit("emerge", m.Feet, Skills.All["m_bite"].color, "食人花冒出來了！"); }
+                    continue;
+                }
+                // 河豚鼓起來中：不動、不出手，時間到就爆
+                if (kind == 18 && m.fuseAt > 0f) { if (now >= m.fuseAt) PufferExplode(m); continue; }
                 int hold = minionHold != null ? minionHold(m) : 0;
                 if (Gallery && kind >= 48) { TickGalleryMinion(m,tgt,d,dt,hold); continue; }
                 if (EliteCatalog.IsElite(kind)) { TickElite(m, tgt, d, dt, hold); continue; }
@@ -1229,7 +1252,7 @@ namespace SpellDuel
                     m.head += fly;
                     m.forward = Fighter.Flat(fly);
                     if (now >= m.recoverUntil && m.alt >= BirdCruise - 0.3f && d <= MinionReach[kind] && now >= m.attackReadyAt && CanAttackFrom(m.Feet))   // 飛到攻擊區上空才俯衝
-                    { m.windupUntil = now + MinionWindup[kind] * minionWindupMul; Emit("minionwindup", m.Feet, Skills.All["m_dive"].color, null); }
+                    { m.windupUntil = now + MinionWindup[kind] * minionWindupMul; Emit("minionwindup", m.Feet, Skills.All["m_dive"].color, null); Emit("birdcry", tgt.Feet, Skills.All["m_dive"].color, (MinionWindup[kind] * minionWindupMul).ToString("0.00")); }   // 俯衝前叫一聲＋地上的影子（蹲）
                     continue;
                 }
                 if (m.windupUntil > 0f)
@@ -1241,13 +1264,21 @@ namespace SpellDuel
                     // 出手後原地不動：一般 1 秒、虛空術士 3 秒、藤蔓術士在藤蔓消失前（3 秒）；衝鋒獸改由衝刺決定
                     m.recoverUntil = kind == 8 || kind == 13 || kind == 14 ? 0f : IsSpecial(kind) ? now + SpecialRecover : now + (kind == 6 ? VoidStay : kind == 9 ? VineStay : MinionRecover) + (IsRanged(kind) ? rangedRecoverAdd : 0f);
                     if (kind == 6) m.teleportAt = now + VoidStay;                   // 停留完就瞬移
-                    else if (IsRanged(kind) && kind != 4) m.repositionNext = true;   // 其他遠程：站定完先隨機走位一下，才會再出手（投擲者是砲台：不動）
+                    else if (IsRanged(kind) && kind != 4 && kind != 7 && kind != 17) m.repositionNext = true;   // 其他遠程：站定完先隨機走位一下，才會再出手（投擲者、噴花、水母定住不動）
                     continue;
                 }
                 // 虛空術士：停留結束 → 瞬移到場內隨機位置
                 if (m.teleportAt > 0f && now >= m.teleportAt)
                 {
                     m.teleportAt = 0f;
+                    if (kind == 13)
+                    {
+                        // 跳躍魚：咬完跳回海裡（出生的地方），4 秒後再來
+                        Emit("splash", m.Feet, Skills.All["m_leap"].color, null);
+                        m.head = new Vector3(m.homePos.x, m.head.y, m.homePos.z);
+                        Emit("splash", m.Feet, Skills.All["m_leap"].color, null);
+                        continue;
+                    }
                     var to = RandomInsidePoint(m.Feet);
                     Emit("teleport", m.Feet, new Color(0.6f, 0.3f, 1f), null);
                     m.head = new Vector3(to.x, m.head.y, to.z);
@@ -1276,20 +1307,26 @@ namespace SpellDuel
                 // 自爆小鬼：引信到了就在原地爆（不管離多遠）
                 if (kind == 3 && m.fuseAt > 0f && now >= m.fuseAt) { MinionStrikeCore(m, tgt, d); continue; }
                 // 出手條件：近戰／衝鋒獸／自爆要貼近；射手在 9m 內；岩石衝鋒獸在 5.5m 內就刨地準備衝
-                float reach = IsRanged(kind) ? MinionReach[kind] : kind == 2 ? ChargerDash - 0.5f : MeleeReach(kind, MinionReach[kind]);
+                float reach = IsRanged(kind) ? MinionReach[kind] : kind == 2 || kind == 8 ? ChargerDash - 0.5f : MeleeReach(kind, MinionReach[kind]);
                 float windup = MinionWindup[kind] < 0f ? claw.charge : MinionWindup[kind];
                 if (IsRanged(kind)) windup *= rangedWindupMul;
                 if (kind == 5) windup = SniperAim;   // 狙擊手：瞄準 2 秒（紅線）
+                if (kind == 9) windup = VineWarn;    // 藤蔓術士：預警 2 秒（地上先畫出藤蔓的路線，蹲下躲）
+                if (kind == 11) { SporeTick(m); }    // 孢子菇：不攻擊，只治療
                 windup *= minionWindupMul;
                 bool outside = minionInside != null && !minionInside(m.Feet);   // 還在場地外：先走進來（不在場外放招）；海裡、空中的也一樣要進到場地才出手
                 bool outZone = !CanAttackFrom(m.Feet);   // 還沒進到中間的攻擊區（6m×6m）：先走進去才出手
                 // 熔岩小鬼：一次只有一隻出手，其他的在旁邊繞（等那隻打完）
                 bool impWait = kind == 0 && AnotherImpWinding(m);
-                if (!outZone && !impWait && d <= reach + tgt.bodyRadius && now >= m.attackReadyAt)
+                bool inReach = d <= reach + tgt.bodyRadius || (kind == 17 && !outside);   // 雷電水母：不追你，時間到就放電（在場內就算）
+                if (!outZone && !impWait && kind != 11 && inReach && now >= m.attackReadyAt)
                 {
                     m.windupUntil = now + windup; m.lockFwd = Fighter.Flat(tgt.Feet - m.Feet); Emit("minionwindup", m.Feet, claw.color, null);
-                    if (kind == 2) AddLane("dash", m.Feet, m.Feet + m.lockFwd * Mathf.Min(ChargerDash, d + 1.5f), 0f, windup + 0.1f, m.bodyRadius, Skills.All["m_dash"], 0, false);   // 刨地：先畫出衝刺路線
+                    if (kind == 2 || kind == 8) AddLane("dash", m.Feet, m.Feet + m.lockFwd * Mathf.Min(ChargerDash, d + 1.5f), 0f, windup + 0.1f, m.bodyRadius, Skills.All["m_dash"], 0, false);   // 刨地：先畫出衝刺路線
                     if (kind == 5) AddLane("snipe", m.Feet, tgt.Feet, 0f, windup + 0.05f, 0.08f, Skills.All["m_snipe"], 0, false);   // 瞄準：紅線指著你
+                    if (kind == 9) AddLane("vinewarn", m.Feet, tgt.Feet, 0f, windup + 0.05f, Skills.All["m_vine"].radius, Skills.All["m_vine"], 0, false);   // 藤蔓路線預警
+                    if (kind == 13) Emit("landwarn", tgt.Feet, Skills.All["m_leap"].color, windup.ToString("0.00"));   // 跳躍魚落點的水花預警
+                    if (kind == 17) Emit("landwarn", m.Feet, Skills.All["m_shock"].color, (windup + 0.05f).ToString("0.00") + "|" + Skills.All["m_shock"].areaRadius.ToString("0.00"));   // 水母放電的紅圈
                     if (IsSpecial(kind)) Emit("specialwarn", m.Feet, Skills.All[SpecialSkillId(kind)].color, SpecialNeedsJump(kind) ? "⬆ 跳起來！（或離遠一點）" : "⬇ 蹲下！（或離遠一點）");
                     continue;
                 }
@@ -1304,13 +1341,14 @@ namespace SpellDuel
                     var goal = ClampToZone(tgt.Feet); var to = goal - m.Feet; to.y = 0f;
                     step = to.magnitude > 0.05f ? to.normalized * Mathf.Min(speed * dt, to.magnitude) : Vector3.zero;
                 }
+                else if ((kind == 4 || kind == 7 || kind == 17) && !outside) step = Vector3.zero;   // 岩石投擲者、毒液噴花、雷電水母：進場就定住
                 else if (IsRanged(kind) && !outside)
                 {
                     // 遠程：保持在 KeepMin～KeepMax 之間（太近就後退）
                     float want = d > KeepHi(kind) ? d - KeepHi(kind) : d < KeepLo(kind) ? -(KeepLo(kind) - d) : 0f;
                     step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Clamp(want, -speed * dt, speed * dt);
                 }
-                else if (kind == 4 && !outside) step = Vector3.zero;   // 岩石投擲者：進場就定住當砲台
+                else if (kind == 11) step = Fighter.Flat(tgt.Feet - m.Feet) * Mathf.Min(speed * dt, Mathf.Max(0f, d - KeepDist(m, tgt) - 0.8f));   // 孢子菇：站在你前面一點擋著
                 else if (impWait && d < KeepDist(m, tgt) + 1.2f)
                 {
                     // 等別隻出手的小鬼：繞著你走（不靠近）
@@ -1332,6 +1370,50 @@ namespace SpellDuel
             }
         }
 
+        /// <summary>食人花：埋在場內離所有玩家 2.5m 以上的隨機一點（地上只有一小圈葉子）；玩家走近 1.5m 才冒出來咬</summary>
+        void BuryChomper(Fighter m)
+        {
+            var at = m.Feet;
+            for (int i = 0; i < 12; i++)
+            {
+                var q = RandomInsidePoint(player.Feet + Fighter.Flat(player.forward) * 3f);
+                bool far = true; foreach (var pl in Players()) if (pl.Alive && FlatDistance(q, pl.Feet) < 2.5f) { far = false; break; }
+                if (far && CanAttackFrom(q)) { at = q; break; }
+            }
+            m.head = new Vector3(at.x, m.head.y, at.z); m.homePos = m.Feet;
+            m.hidden = true;
+            Emit("leafring", m.Feet, Skills.All["m_bite"].color, null);
+        }
+
+        /// <summary>河豚被打中：鼓起來 2 秒後爆（範圍 2m），自己消失</summary>
+        void PufferExplode(Fighter m)
+        {
+            var sp = Skills.All["m_spine"];
+            Emit("minionexplode", m.Feet, new Color(1f, 0.6f, 0.3f), "puffer");
+            foreach (var v in new List<Fighter>(Players()))
+            {
+                if (!v.Alive || FlatDistance(v.Feet, m.Feet) > PufferRadius + v.bodyRadius) continue;
+                int dmg = Mathf.RoundToInt(sp.damage * 2f * m.dmgMul);
+                if (v.isAlly) { Emit("allyhit", v.Chest, sp.color, null); OnAllyHit?.Invoke(v, sp, dmg, v.Chest, 0); }
+                else { ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest); SoulVictim(m, v, dmg); }
+            }
+            m.fuseAt = 0f; m.hp = 0f;
+        }
+
+        /// <summary>孢子菇：每 6 秒替周圍 3m 的小怪回 10% 血（自己不打人、擋在前面吸攻擊）</summary>
+        void SporeTick(Fighter m)
+        {
+            if (now < m.attackReadyAt) return;
+            m.attackReadyAt = now + SporeHealEvery;
+            int healed = 0;
+            foreach (var o in minions)
+            {
+                if (o == m || !o.Alive || o.hp >= o.maxHp || FlatDistance(o.Feet, m.Feet) > SporeHealRadius) continue;
+                o.hp = Mathf.Min(o.maxHp, o.hp + o.maxHp * SporeHealFrac); healed++;
+            }
+            Emit("sporeheal", m.Feet, Skills.All["m_spore"].color, healed > 0 ? $"孢子治療 ×{healed}" : null);
+        }
+
         /// <summary>熔岩小鬼：場上有別隻小鬼正在預備出手（或剛出手還沒恢復）嗎</summary>
         bool AnotherImpWinding(Fighter me)
         {
@@ -1351,6 +1433,12 @@ namespace SpellDuel
                 m.strafeSign = rng.NextDouble() < 0.5 ? -1 : 1;
             }
             else if (kind == 1 && m.windupUntil <= 0f && m.moveUntil <= 0f) { m.repositionNext = true; m.recoverUntil = now; m.shotCount = 2; }
+            else if (kind == 18 && m.fuseAt <= 0f && m.Alive)
+            {
+                // 河豚：被打中就鼓起來，2 秒後爆（打完馬上退開）
+                m.fuseAt = now + PufferFuse; m.windupUntil = 0f; m.dashUntil = 0f;
+                Emit("puffwarn", m.Feet, new Color(1f, 0.6f, 0.3f), "河豚鼓起來了！退開！");
+            }
         }
 
         /// <summary>遠程小怪出手後的隨機走位：距離、最低速度（公尺／秒）、最多走幾秒</summary>
@@ -1365,6 +1453,13 @@ namespace SpellDuel
         {
             dest = m.Feet;
             int kind = m.minionKind;
+            if (kind == 12)
+            {
+                // 種子槍手：射完後退保持距離
+                var rad = Fighter.Flat(m.Feet - tgt.Feet); if (rad == Vector3.zero) rad = Vector3.forward;
+                float want = Mathf.Min(KeepHi(kind), FlatDistance(m.Feet, tgt.Feet) + 2.5f);
+                for (float k = want; k >= 2f; k -= 0.5f) { var p = tgt.Feet + rad * k; p.y = 0f; if (CanAttackFrom(p)) { dest = p; return true; } }
+            }
             if (kind == 1 && m.shotCount >= 2)
             {
                 // 火焰射手：射兩發後繞到你側面 90°（逼你轉身）
@@ -1543,10 +1638,10 @@ namespace SpellDuel
                 }
                 case 8:
                 {
-                    // 荊棘衝鋒獸：朝玩家現在的位置直線衝刺（衝過頭一點），地上畫出衝刺路線
+                    // 荊棘衝鋒獸：和岩石衝鋒獸一樣刨地後直衝；衝完沿路留下荊棘帶 3 秒（踩到會刺傷）；撞空暈 2 秒
                     var ds = Skills.All["m_dash"];
-                    m.attackReadyAt = now + ds.cooldown;
-                    StartDash(m, tgt, Mathf.Min(6f, d + 1.5f), ds);
+                    m.attackReadyAt = now + ds.cooldown + ChargerStun;
+                    StartDash(m, tgt, Mathf.Min(ChargerDash, d + 1.5f), ds);
                     Emit("minionattack", m.Feet, ds.color, null);
                     return;
                 }
@@ -1555,7 +1650,7 @@ namespace SpellDuel
                     // 藤蔓術士：從自己長到玩家當下位置的藤蔓（0.6 秒長滿，趁這時候閃開），持續 3 秒，碰到就受傷
                     var vn = Skills.All["m_vine"];
                     m.attackReadyAt = now + vn.cooldown;
-                    AddLane("vine", m.Feet, tgt.Feet, 0.6f, VineStay, vn.radius, vn, Mathf.RoundToInt(vn.damage * m.dmgMul), false);
+                    AddLane("vine", m.Feet, m.lockFwd != Vector3.zero ? m.Feet + m.lockFwd * Mathf.Min(vn.rangeMax, FlatDistance(m.Feet, tgt.Feet)) : tgt.Feet, 0.6f, VineStay, vn.radius, vn, Mathf.RoundToInt(vn.damage * m.dmgMul), false);   // 沿預警的路線長出來；碰到定身 1.5 秒（蹲下躲）
                     Emit("minionattack", m.Feet, vn.color, null);
                     return;
                 }
@@ -1563,7 +1658,7 @@ namespace SpellDuel
                 {
                     // 跳躍魚：從海裡（或礁石上）朝玩家現在的位置飛撲，拋物線跳起
                     var lp = Skills.All["m_leap"];
-                    m.attackReadyAt = now + lp.cooldown;
+                    m.attackReadyAt = now + FishCycle;
                     StartDash(m, tgt, Mathf.Min(8f, d + 1f), lp);
                     Emit("splash", m.Feet, lp.color, null);
                     return;
@@ -1608,7 +1703,7 @@ namespace SpellDuel
                 {
                     // 雷電水母：周圍放電（受傷＋麻痺）
                     var sh = Skills.All["m_shock"];
-                    m.attackReadyAt = now + sh.cooldown;
+                    m.attackReadyAt = now + JellyEvery;
                     Emit("shock", m.Feet, sh.color, null);   // 地面點（特效自己往上長成電光球）
                     foreach (var v in new List<Fighter>(Players()))
                     {
@@ -1732,7 +1827,7 @@ namespace SpellDuel
             if ((minions.Count == 0 && npcs.Count == 0) || p.owner == enemy || p.owner.isMinion || p.owner.npcSide == 1) return false;
             foreach (var m in HittableBy(p.owner))
             {
-                if (!m.Alive || m == p.owner) continue;
+                if (!m.Alive || m == p.owner || m.hidden) continue;   // 埋著的食人花打不到
                 if (!Touches(p, m)) continue;
                 if (p.pierced != null && p.pierced.Contains(m)) continue;   // 穿過的敵人不會再打一次
                 bool limited = !p.skill.pierce && p.pierceLeft > 0;   // 冰槍穿透：還能穿幾個
@@ -2669,6 +2764,7 @@ namespace SpellDuel
                 { p.damage *= 2; owner.seals = 0; Emit("buff", owner.Chest, new Color(1f, 0.9f, 0.5f), "聖印爆發！傷害 ×2"); }
             }
             if (!reflected && s.cls == "basic" && owner.basicHoming > 0f) p.homing = owner.basicHoming;
+            if (s.id == "m_bubble") { p.homing = BubbleHoming; p.homingUntil = now + BubbleHomeTime; }   // 泡泡：飛得慢但會追你 3 秒（打得破）
             if ((owner == enemy || owner.isMinion || owner.npcSide >= 0) && owner.target != null) p.target = owner.target;
             if (EnemyNpc(owner)) { p.speedMul *= EnemyShotSpeed; p.hitMul = EnemyShotHit; }   // 電腦敵人的投射物：飛慢一半、命中範圍減半
             SetCurve(p, curveAmp, pathLen);
@@ -2948,7 +3044,8 @@ namespace SpellDuel
             foreach (var ln in lanes)
             {
                 if (now > ln.until) { ln.alive = false; continue; }
-                if (ln.remote || ln.kind != "vine") continue;
+                if (ln.remote || (ln.kind != "vine" && ln.kind != "thorn")) continue;
+                bool thorn = ln.kind == "thorn";
                 var tip = ln.Tip(now);
                 foreach (var v in new List<Fighter>(Players()))
                 {
@@ -2956,8 +3053,10 @@ namespace SpellDuel
                     if (ln.next.TryGetValue(v, out var t) && now < t) continue;
                     ln.next[v] = now + 1f;
                     if (v.dodgeUntil > now && SidestepInvuln) { Emit("evade", v.Chest, ln.skill.color, "閃避！"); continue; }
+                    if (!thorn && v.crouching) { Emit("evade", v.Chest, ln.skill.color, "蹲下躲過藤蔓！"); continue; }   // 藤蔓從腰的高度掃過：蹲下躲得掉
                     if (v.isAlly) { Emit("allyhit", v.Chest, ln.skill.color, null); OnAllyHit?.Invoke(v, ln.skill, ln.damage, v.Chest, 0); }
-                    else { ApplyDamageAndEffect(v, ln.damage, EffectKind.None, 0f, 0f, v.Chest); Emit("vinehit", v.Chest, ln.skill.color, "被藤蔓刺到！"); }
+                    else if (thorn) { ApplyDamageAndEffect(v, ln.damage, EffectKind.None, 0f, 0f, v.Chest); Emit("vinehit", v.Chest, ln.skill.color, "踩到荊棘！"); }
+                    else { ApplyDamageAndEffect(v, ln.damage, EffectKind.Snare, 0f, VineSnare, v.Chest); Emit("vinehit", v.Chest, ln.skill.color, "被藤蔓纏住！"); }   // 定身 1.5 秒
                 }
             }
             lanes.RemoveAll(x => !x.alive);
@@ -2973,7 +3072,7 @@ namespace SpellDuel
         {
             var dir = Fighter.Flat(tgt.Feet - m.Feet); if (dir == Vector3.zero) dir = Fighter.Flat(m.forward);
             float sp = DashSpeed(m);
-            m.dashDir = dir; m.dashHit = false; m.dashStart = now; m.dashUntil = now + len / sp;
+            m.dashDir = dir; m.dashHit = false; m.dashStart = now; m.dashUntil = now + len / sp; m.dashFrom = m.Feet;
             AddLane("dash", m.Feet, m.Feet + dir * len, 0f, len / sp + 0.15f, m.bodyRadius, ds, 0, false);
         }
 
@@ -2981,15 +3080,17 @@ namespace SpellDuel
         {
             m.dashUntil = 0f;
             int kind = m.minionKind;
+            if (kind == 8 && FlatDistance(m.dashFrom, m.Feet) > 0.5f) AddLane("thorn", m.dashFrom, m.Feet, 0f, ThornLife, 0.35f, Skills.All["m_dash"], Mathf.RoundToInt(3f * m.dmgMul), false);   // 沿路留下荊棘帶
             if (kind == 13)
             {
                 // 跳躍魚落地（掉回海裡或摔在礁石上），停 1.5 秒
                 m.alt = 0f; m.head.y = MinionHead[kind];
                 Emit("splash", m.Feet, Skills.All["m_leap"].color, null);
-                m.recoverUntil = now + 1.5f;
+                m.recoverUntil = now + 0.8f;
+                m.teleportAt = now + 0.8f;   // 停一下就跳回海裡
             }
             else if (kind == 14) LandToRest(m);   // 海鳥：俯衝完落到場內地上休息，再飛回空中
-            else if (kind == 2 && !m.dashHit) { m.recoverUntil = now + ChargerStun; Emit("minionstun", m.Feet, Skills.All["m_dash"].color, "撞牆了！"); }   // 岩石衝鋒獸衝過頭：暈 2 秒（趁現在打）
+            else if ((kind == 2 || kind == 8) && !m.dashHit) { m.recoverUntil = now + ChargerStun; Emit("minionstun", m.Feet, Skills.All["m_dash"].color, "撞牆了！"); }   // 衝鋒獸衝過頭：暈 2 秒（趁現在打）
             else m.recoverUntil = now + MinionRecover;
         }
 
@@ -3031,7 +3132,7 @@ namespace SpellDuel
                 if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, ds.color, "閃避！");
                 else if (v.isAlly) { Emit("allyhit", v.Chest, ds.color, null); OnAllyHit?.Invoke(v, ds, dmg, v.Chest, 0); }
                 else { ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest); SoulVictim(m, v, dmg); }
-                if (kind == 8 || kind == 2) { m.dashUntil = 0f; m.recoverUntil = now + MinionRecover; }   // 衝鋒獸撞到就停；魚和鳥衝完全程
+                if (kind == 8 || kind == 2) { EndDash(m); m.recoverUntil = now + MinionRecover; }   // 衝鋒獸撞到就停（荊棘帶也留）；魚和鳥衝完全程
                 return;
             }
         }
@@ -3077,6 +3178,21 @@ namespace SpellDuel
 
         void SliceNow(Fighter f) { foreach (var p in projectiles) TrySlice(p); }   // 放招當下已經在範圍內的
 
+        /// <summary>騎魚泡泡怪的泡泡：被我方（玩家、隊友、召喚物）的法術碰到就破</summary>
+        bool PopBubbles(Projectile p)
+        {
+            if (p.owner == null || p.owner.isMinion || p.owner == enemy || p.skill.id == "m_bubble") return false;
+            bool any = false;
+            foreach (var q in projectiles)
+            {
+                if (!q.alive || q == p || q.skill.id != "m_bubble" || q.owner == null || !q.owner.isMinion) continue;
+                if (Vector3.Distance(p.pos, q.pos) > q.skill.radius + 0.15f) continue;
+                q.alive = false; any = true;
+                Emit("slice", q.pos, q.skill.color, "泡泡破了！");
+            }
+            return any;
+        }
+
         /// <summary>另一支手機斬開了法術：mine＝是我發出的那發</summary>
         public void ApplyRemoteSlice(int id, bool mine)
         {
@@ -3098,7 +3214,7 @@ namespace SpellDuel
                 if (!p.alive) continue;
                 if (p.lob) { StepLob(p, dt); continue; }
                 var target = p.target != null && p.target.Alive ? p.target : Opponent(p.owner);
-                if (p.homing > 0f && !p.Curved && !p.Fading && !p.remote)
+                if (p.homing > 0f && (p.homingUntil <= 0f || now < p.homingUntil) && !p.Curved && !p.Fading && !p.remote)
                 {
                     // 追蹤：往最近的敵人慢慢轉（每秒最多 homing 度）
                     var ht = NearestFoeOf(p.owner, p.pos);
@@ -3117,6 +3233,7 @@ namespace SpellDuel
                     Advance(p, step / sub);
                     if (p.Fading) { if (p.traveled >= p.fadeEnd || p.pos.y < 0f) p.alive = false; continue; }   // 淡出中：不再打到人
                     if (TrySlice(p)) break;
+                    if (!p.remote && PopBubbles(p)) { }     // 我方的攻擊打破泡泡（法術繼續飛）
                     if (!p.remote && TryFeedPet(p)) break;   // 召喚師：打中自己的召喚物＝餵養
                     if (!p.remote && TryHealFriend(p)) break;   // 主教：普攻打中友軍＝治療
                     // 隕石落地：留下火海（我方的才判定傷害；對手的只顯示）
@@ -3632,6 +3749,7 @@ namespace SpellDuel
             if (f.friendOwner >= 0) { if (dmg > 0f) { OnFriendHurt?.Invoke(f, dmg); Emit("hit", at ?? f.Chest, Color.red, $"-{dmg:0}"); } return; }   // 別台手機的召喚獸／影分身：傷害交給那台算
             if (dmg > 0f && kind != "dot" && kind != "burn" && kind != "oath" && kind != "thorns" && BarrierGuards(f) && TryBarrier(f, at)) return;   // 主教的聖域障壁
             if (f.invulnUntil > now && dmg > 0f) return;   // 狂戰士不死之軀的無敵
+            if (f.isMinion && f.hidden) return;   // 埋著的食人花
             if (f.isMinion && dmg > 0f && kind != "dot" && kind != "burn") OnMinionHurt(f);
             if (f.isMinion && f.minionKind == 16 && dmg > 0f)
             {

@@ -1731,6 +1731,19 @@ namespace SpellDuel
                     rig.transform.position = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);
                     SpawnFade.Play(rig.gameObject);   // 淡入出現
                 }
+                // 食人花埋在地下：模型藏起來，地上只有一小圈葉子
+                if (rig.gameObject.activeSelf == m.hidden) rig.gameObject.SetActive(!m.hidden);
+                if (m.hidden)
+                {
+                    if (!leafRings.TryGetValue(m, out var lr) || !lr)
+                    {
+                        lr = Prim(PrimitiveType.Cylinder, new Color(0.35f, 0.7f, 0.25f, 0.55f), true);
+                        lr.transform.localScale = new Vector3(0.9f, 0.01f, 0.9f);
+                        lr.transform.position = WorldFrame.FromWorld(new Vector3(m.Feet.x, 0.015f, m.Feet.z));
+                        leafRings[m] = lr;
+                    }
+                }
+                else if (leafRings.TryGetValue(m, out var lr0)) { if (lr0) Destroy(lr0); leafRings.Remove(m); }
                 var oldPos = rig.transform.position;
                 var newPos = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);   // 飛在空中／浮著／跳起來的高度
                 var f = WorldFrame.DirFromWorld(m.forward); f.y = 0f;
@@ -1778,8 +1791,33 @@ namespace SpellDuel
                     minionGo.Remove(kv.Key); minionLastHp.Remove(kv.Key); minionWinding.Remove(kv.Key);
                     if (minionWarn.TryGetValue(kv.Key, out var wgo)) { if (wgo) Destroy(wgo); minionWarn.Remove(kv.Key); }
                     if (aimLines.TryGetValue(kv.Key, out var dl)) { if (dl) Destroy(dl); aimLines.Remove(kv.Key); }
+                    if (leafRings.TryGetValue(kv.Key, out var lr1)) { if (lr1) Destroy(lr1); leafRings.Remove(kv.Key); }
                 }
+            UpdateWarnRings();
         }
+        readonly Dictionary<Fighter, GameObject> leafRings = new Dictionary<Fighter, GameObject>();
+
+        /// <summary>地上的紅圈預警（跳躍魚的落點水花、海鳥俯衝的影子、水母放電）：到時間就消失</summary>
+        class WarnRing { public GameObject go; public float until, born; }
+        readonly List<WarnRing> warnRings = new List<WarnRing>();
+        void AddWarnRing(Vector3 atW, float radius, float seconds, Color c)
+        {
+            var go = Prim(PrimitiveType.Cylinder, c, true);
+            go.transform.localScale = new Vector3(radius * 2f, 0.01f, radius * 2f);
+            go.transform.position = WorldFrame.FromWorld(new Vector3(atW.x, 0.02f, atW.z));
+            warnRings.Add(new WarnRing { go = go, until = Time.time + seconds, born = Time.time });
+        }
+        void UpdateWarnRings()
+        {
+            for (int i = warnRings.Count - 1; i >= 0; i--)
+            {
+                var w = warnRings[i];
+                if (!w.go || Time.time >= w.until) { if (w.go) Destroy(w.go); warnRings.RemoveAt(i); continue; }
+                float pr = Mathf.Clamp01((Time.time - w.born) / Mathf.Max(0.1f, w.until - w.born));
+                var mat = w.go.GetComponent<Renderer>().material; var c = mat.color; c.a = (0.2f + 0.4f * pr) * (0.7f + 0.3f * Mathf.Sin(Time.time * (6f + 10f * pr))); mat.color = c;
+            }
+        }
+        void ClearWarnRings() { foreach (var w in warnRings) if (w.go) Destroy(w.go); warnRings.Clear(); foreach (var lr in leafRings.Values) if (lr) Destroy(lr); leafRings.Clear(); }
 
         /// <summary>地裂重擊的特效：地面衝擊波、爆炸聲、離得近就震動</summary>
         void BossSlamFx(Vector3 feetW)
@@ -2199,6 +2237,7 @@ namespace SpellDuel
             if (warnLine) Destroy(warnLine);
             if (slamGo) Destroy(slamGo);
             ClearTravel();   // 副本的通道與運鏡（SoloBattle.DungeonTravel.cs）
+            ClearWarnRings();
             if (volcano) Destroy(volcano.gameObject);
             if (forest) Destroy(forest.gameObject);
             if (sea) Destroy(sea.gameObject);
@@ -2936,6 +2975,39 @@ namespace SpellDuel
                     PlantFx.SporeBurst(WorldFrame.FromWorld(at), Skills.All["m_spore"].areaRadius);
                     Sfx.Play("boom", 0.35f, 1.8f);
                     break;
+                case "sporeheal":
+                    PlantFx.SporeBurst(WorldFrame.FromWorld(at), Battle.SporeHealRadius);
+                    Sfx.Play("heal", 0.4f, 1.3f);
+                    if (!string.IsNullOrEmpty(text)) floaters.Add(new Floater { posMap = at + Vector3.up * 1.2f, text = text, color = new Color(0.75f, 0.5f, 1f), born = Time.time });
+                    break;
+                case "leafring": break;   // 埋著的食人花：葉子圈在 UpdateMinionVisuals 畫
+                case "emerge":
+                    if (battle.Theme == 1) MinionRig.SpawnFxPlant(WorldFrame.FromWorld(at)); else MinionRig.SpawnFx(WorldFrame.FromWorld(at));
+                    Sfx.Play("roar", 0.5f, 1.6f); Haptics.Play(Haptics.Kind.Medium);
+                    if (!string.IsNullOrEmpty(text)) floaters.Add(new Floater { posMap = at + Vector3.up * 1.2f, text = text, color = c, born = Time.time });
+                    break;
+                case "puffwarn":
+                    Sfx.Play("warn", 0.7f, 0.8f); Haptics.Play(Haptics.Kind.Medium);
+                    if (!string.IsNullOrEmpty(text)) { floaters.Add(new Floater { posMap = at + Vector3.up * 1.2f, text = text, color = c, born = Time.time }); Say("🐡 " + text, 1.5f); }
+                    AddWarnRing(at, Battle.PufferRadius, Battle.PufferFuse, new Color(1f, 0.45f, 0.1f, 0.3f));
+                    break;
+                case "landwarn":
+                {
+                    // text＝秒數（或 秒數|半徑）：跳躍魚落點的水花／水母放電的紅圈
+                    float secs = 0.8f, rad = 0.7f;
+                    if (!string.IsNullOrEmpty(text)) { var parts = text.Split('|'); float.TryParse(parts[0], out secs); if (parts.Length > 1) float.TryParse(parts[1], out rad); }
+                    AddWarnRing(at, rad, secs, new Color(1f, 0.15f, 0.1f, 0.3f));
+                    if (rad < 1f) SeaFx.Splash(WorldFrame.FromWorld(at), 0.5f);
+                    break;
+                }
+                case "birdcry":
+                {
+                    float secs = 0.8f; if (!string.IsNullOrEmpty(text)) float.TryParse(text, out secs);
+                    Sfx.Play("warn", 0.9f, 1.8f); Haptics.Play(Haptics.Kind.Light);
+                    AddWarnRing(at, 0.8f, secs, new Color(0.1f, 0.1f, 0.15f, 0.35f));   // 影子
+                    Say("🐦 海鳥叫了——蹲下！", 1.2f);
+                    break;
+                }
                 case "poolstep": case "vinehit":
                     if (!string.IsNullOrEmpty(text)) floaters.Add(new Floater { posMap = at + Vector3.up * 0.5f, text = text, color = c, born = Time.time });
                     break;
