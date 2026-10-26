@@ -1,0 +1,118 @@
+# Codex 總單：目前還沒交付的美術與畫面
+
+這張單把目前還沒做的 Codex 工作集中在一起，依優先順序排列。每一項做完，就在本檔最後的「Codex 實作紀錄」寫下做了什麼、檔案放在哪裡。
+
+**共通規則**
+- Unity 2022.3：Android 與 iOS 都要編譯通過。
+- 不要改戰鬥邏輯、數值、存檔格式和網路訊息。只做美術，以及把美術接到現有的入口。
+- 2D 圖的畫風、解析度、檔名規則，沿用 `Resources/Village2D/`（城鎮）和 `Resources/Story2D/chars/`（立繪）裡現有的檔案。
+- 預覽圖放在 `Docs/pending_preview/`。
+
+---
+
+## 1. 城鎮新建築：⚗ 藥劑師、🛠 工匠（最優先）
+
+功能已經做好了（`WorldUI.Craft.cs`、`Crafting.cs`）。現在的入口只是兩顆暫時的按鈕：
+- 道具店裡的「⚗ 藥劑師」：`WorldUI.Shop2D.cs`，`Design(40,1360,600,95)`
+- 鐵匠鋪裡的「🛠 工匠」：`WorldUI.Smith2D.cs`，`D(40,1520,600,100)`
+
+要把它們做成城鎮地圖上真正的建築。
+
+### 1-1 城鎮地圖（5 個城鎮都要）
+
+1. 在 `map_flame`、`map_forest`、`map_harbor`、`map_desert`、`map_snow` 的 png、`_fit.png` 和 json 各加兩棟建築。
+   - json 的 key 是 `alchemist` 和 `crafter`，格式和現有的 `smith`、`shop` 一樣（x/y/w/h/label_x/label_y）。
+   - 新建築不能壓到現有建築，標籤也不能和現有標籤重疊。
+2. 在 `WorldUI.TownMap.cs` 裡：
+   - `MapSites` 加上 `["alchemist"] = ("⚗ 藥劑師", 紫色)` 和 `["crafter"] = ("🛠 工匠", 金色)`。
+   - 點擊的 switch 加兩個 case：`alchemist` 開 `Screen.Alchemy`，`crafter` 開 `Screen.Craft`，順便清掉 `craftSel` 和 `craftScroll`。
+3. 建築外觀要配合各城鎮的主題：
+   - 藥劑師：煉藥小屋，有冒煙的大鍋、藥草和瓶罐。
+   - 工匠：工坊，有工作台、零件和設計圖。看起來要和現有的鐵匠鋪有明顯差別，不要只是另一間打鐵舖。
+
+### 1-2 室內畫面（照 Shop2D、Smith2D 的做法）
+
+1. 室內背景圖：`in_alchemist_<town>.jpg`、`in_crafter_<town>.jpg`。
+   - 至少要有 flame 版。`FacilityBg` 目前只讀 `_flame`，可以改成先讀當地城鎮的版本，找不到再用 flame。
+2. NPC 立繪：每人至少 normal、smile、serious 三種表情。
+   - 藥劑師（每個城鎮一位，名字已經寫在 `WorldUI.Craft.cs` 的 `AlchemistNames`）：
+     - 炭火鎮：藥婆婆・炭姨
+     - 森林：藥師・青蘿
+     - 港口：藥商・汐
+     - 沙漠：藥劑官・賽琳
+     - 雪原：旅藥師・駝鈴
+   - 工匠：工匠・老錘（5 個城鎮是同一人，到處跑的老工匠）。
+3. 把 `DrawAlchemy` 和 `DrawCraft` 改用 `Facility2DFrame` 呈現，也就是背景、NPC 立繪和台詞框。清單、製作按鈕和材料區沿用現有邏輯。
+   - 台詞：仿照 `lines_shop.txt` 新增 `lines_alchemist.txt` 和 `lines_crafter.txt`，分成打招呼、做好了、材料不夠、做出高品質四組，每組 3～5 句。
+4. 製作動畫（簡單即可）：
+   - 藥劑師按「製作」：大鍋冒泡約 1 秒，變色後跳出藥瓶。
+   - 工匠按「製作」：做好時發光，依稀有度變色。可以參考鐵匠的 anvil_0～5。
+5. 拿掉 Shop2D 和 Smith2D 裡那兩顆暫時按鈕。新手指引不能因此壞掉（`UiLock` 的步驟沒有指向它們）。
+
+### 1-3 圖示
+
+- 10 種強化藥劑：`bp_str` 力量、`bp_eye` 鷹眼、`bp_regen` 再生、`bp_swift` 迅捷、`bp_wise` 智慧、`bp_ward` 抗魔、`bp_blood` 嗜血、`bp_iron` 鐵壁、`bp_vigor` 活力、`bp_wind` 疾風。
+  - 戰鬥右上角的狀態圖示目前是用 `SkillIcons.Get(藥劑 id)` 程序產生的。換成真的藥瓶圖示（瓶子造型一樣，顏色不同即可）。
+- 材料：`mat_ore` 鐵礦石、`mat_ore_hi` 高級鐵礦石、`mat_refine` 精煉石、`mat_refine_hi` 高級精煉石、`mat_elite` 菁英材料、5 種 Boss 核心（`mat_core_golem/tree/sea/arena/canyon`）、`mat_soul_smith` 神匠之魂。
+- 圖示接到現有顯示文字的地方：背包、工匠和藥劑師的材料欄、掉落提示。找不到圖示時沿用現在的 emoji。
+
+---
+
+## 2. 千機迴廊的劇情立繪（測試目前失敗中）
+
+`dungeons.txt` 裡有 7 位說話者沒有立繪 id，`classtest` 的「劇本裡所有說話者都有立繪 id」因此失敗：
+
+| 說話者 | 建議 id | 說明 |
+|---|---|---|
+| 鈴音 | lingyin | 收齒輪的少女情報商 |
+| 疤面亞克 | ark | 臉上有疤的盜賊頭目 |
+| 小麥 | xiaomai | 要護送的小孩 |
+| 老匠的殘影 | oldsmith_shade | 半透明的老工匠殘影 |
+| 齒輪商人 | gearmerchant | 齒輪機械風格的商人 |
+| 千機匠魂 | clockwork | 首領，參考 boss_clockwork 的 3D 造型 |
+| 萬象之心 | heartcore | 機械中樞（非人形也可以，畫成發光核心） |
+
+1. 每位至少畫 normal、angry 或 serious、surprised，放在 `Story2D/chars/<id>_<expr>.png`。
+2. 在 `Story2D.Cast` 加上對應。
+3. `{玩家}` 是代入玩家職業的佔位字，不需要畫。把測試改成跳過它即可。
+
+---
+
+## 3. 玩家 3D 角色：脖子、頭和頭髮（PLAYER_NECK_HAIR_BRIEF.md）
+
+這張單的「Codex 實作紀錄」還是空的。MATCH_2D 那輪只做了頸部收束曲面和比較細的碎髮，使用者實際看到的仍然是「脖子跟臉沒接好」。
+
+1. 照 `PLAYER_NECK_HAIR_BRIEF.md` 的要求逐項完成：
+   - 頸部和下顎、領口無縫銜接。
+   - 頭髮依你自己的審美重新設計。16 個職業可以分成幾種髮型，但要和 2D 立繪的髮色一致。
+2. 交付時在原生 Unity 截一組圖：近距離正面、側面、45°、仰角各一張。
+3. 寫回原檔的實作紀錄。
+
+---
+
+## 4. 合作模式：隊友的 3D 角色外觀檢查
+
+合作時，每位隊友會用自己職業加裝備的 3D 角色出現。請確認在 6 人同場的情況下：
+- 3D 角色和 2D 立繪一致（沿用 MATCH_2D 的成果）。
+- 名牌和血條不會擋到臉。
+- 隊友倒地、復活、離線消失時，都有清楚的視覺表現（倒地灰化、離線淡出）。
+
+只改表現，不改同步邏輯。
+
+---
+
+## 5. 世界 Boss：只做入口美術（戰鬥之後另外開單）
+
+三隻世界 Boss（`BossRig.CreateWorld`）目前只能在預覽中看到。這一輪只做下面兩樣，不接戰鬥：
+1. 世界地圖上的「世界 Boss 出沒」標記圖示。
+2. 告示板上的一張懸賞海報（三隻各一張，2D）。
+
+---
+
+## 優先順序
+
+1 → 2 → 3 → 4 → 5。第 1、2 項請先做完、先推，我會先把它們接上去。
+
+## Codex 實作紀錄
+
+（Codex 填寫）
