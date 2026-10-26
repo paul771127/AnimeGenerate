@@ -3929,6 +3929,16 @@ namespace SpellDuel
             // 我身上的持續狀態：技能圖示＋倒數（正面綠框、負面紅框；SoloBattle.StatusIcons.cs）
             DrawStatusIcons(Me, now, W - W * 0.02f, topR.yMax + gap * 0.5f + (partyH > 0f ? partyH + gap * 0.3f : 0f), fs);
 
+            // 小 Boss（第 3 波單獨登場的特殊敵人）：頭上的名字與血條
+            foreach (var mb in battle.minions)
+            {
+                if (!mb.Alive || !mb.miniBoss) continue;
+                var ms = cam.WorldToScreenPoint(WorldFrame.FromWorld(mb.head + Vector3.up * 0.5f));
+                if (ms.z <= 0) continue;
+                var mr = new Rect(ms.x - W * 0.14f, H - ms.y, W * 0.28f, lh * 0.4f);
+                UiKit.Bar(mr, mb.hp / mb.maxHp, new Color(1f, 0.55f, 0.2f), $"{Mathf.CeilToInt(mb.hp)}", fsS);
+                UiKit.Text(new Rect(mr.x, mr.y - lh * 0.5f, mr.width, lh * 0.5f), "👹 " + mb.name, fsS, new Color(1f, 0.8f, 0.4f), TextAnchor.MiddleCenter, true);
+            }
             // 敵人頭上的血條
             var hs = cam.WorldToScreenPoint(WorldFrame.FromWorld(en.head + Vector3.up * 0.3f));
             if (hs.z > 0 && en.Alive)

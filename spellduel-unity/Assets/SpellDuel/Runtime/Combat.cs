@@ -135,6 +135,7 @@ namespace SpellDuel
         public int strafeSign = 1;             // 熔岩小鬼：等別隻出手時往哪邊繞（±1）
         public bool ambusher;                  // 簡單模式：從別的方向偷襲來的那隻（同時最多一隻）
         public bool hidden;                    // 食人花：埋在地下（玩家走近 1.5m 才冒出來；埋著時打不到）
+        public bool miniBoss;                  // 第 3 波單獨登場的特殊敵人（有名字和血條）
         public Vector3 homePos;                // 跳躍魚：海裡的家（咬完跳回去）
         public Vector3 dashFrom;               // 衝刺起點（荊棘衝鋒獸衝完沿路留下荊棘帶）
         public float restUntil;                // 浮空／飛行的小怪出手後：降到場內地上休息到這個時間（近戰打得到），之後才飛回空中
@@ -605,7 +606,10 @@ namespace SpellDuel
         /// <summary>這一關會出特殊敵人（−1＝不出）；SoloBattle 在第二～五章的 x-4、x-5 設定</summary>
         public int specialKind = -1;
         /// <summary>特殊敵人：每一波開始後多久第一次出現、上一隻還在或倒下後隔多久才會再出現</summary>
-        public const float SpecialFirstDelay = 12f, SpecialGap = 35f;
+        public const float SpecialFirstDelay = 12f, SpecialGap = 35f, MiniBossHp = 2.5f;
+        /// <summary>第四、五章 x-4／x-5 的特殊敵人（使用者要求）：改成這一關的第 3 波單獨登場、當小 Boss（血量 ×2.5，有名字和血條）</summary>
+        public bool MiniBossWave => RhythmSpawns && specialKind >= 0 && stageEnd > 0 && wave == stageStart + 2 && !IsBossWave;
+        bool miniBossSpawned;
         float nextSpecialAt;
         /// <summary>這種小怪的預備時間（秒）：預備動作要剛好在出手時擺到位</summary>
         /// <summary>近身重擊的小怪（熔岩小鬼、岩石衝鋒獸、食人花）：預備時地上畫紅色受擊範圍（中心＝小怪腳下；玩家站在圈外就打不到）</summary>
@@ -856,9 +860,11 @@ namespace SpellDuel
             }
             nextMinionAt = waveStartAt;
             nextSpecialAt = waveStartAt + SpecialFirstDelay;
+            miniBossSpawned = false;
+            if (MiniBossWave) { waveTotal = 1; waveToSpawn = 1; nextSpecialAt = waveStartAt; }
             batchOut = false; lastMinionCount = 0; refillAt.Clear(); pendingRefill = 0;
             SetupHazards();   // 角鬥場：這一波的陷阱配置；山道：落石計時（Combat.Hazards.cs）
-            Emit("wavestart", player.Feet, Color.white, IsBossWave ? (bossPending ? $"{WaveLabel}：{waveTotal} 隻小怪…（最深處有什麼在等著）" : $"{WaveLabel}：Boss 來了！") : $"{WaveLabel}：{waveTotal} 隻小怪");
+            Emit("wavestart", player.Feet, Color.white, IsBossWave ? (bossPending ? $"{WaveLabel}：{waveTotal} 隻小怪…（最深處有什麼在等著）" : $"{WaveLabel}：Boss 來了！") : MiniBossWave ? $"{WaveLabel}：小 Boss「{MinionNames[specialKind]}」單獨登場！" : $"{WaveLabel}：{waveTotal} 隻小怪");
         }
 
         // 經驗值：小怪依種類與波次、Boss 依第幾隻；合作時兩人共用同一份經驗（各自選升級）
@@ -978,6 +984,7 @@ namespace SpellDuel
         /// </summary>
         void RhythmSpawn(int maxAlive)
         {
+            if (MiniBossWave) return;   // 小 Boss 波：只有牠（UpdateSpecialSpawn）
             if (waveToSpawn <= 0 || minions.Count >= maxAlive) return;
             int front = 0, back = 0, special = 0;
             foreach (var m in minions) if (m.Alive) { var r = RoleOf(m.minionKind); if (r == MinionRole.Front) front++; else if (r == MinionRole.Back) back++; else special++; }
@@ -1017,6 +1024,17 @@ namespace SpellDuel
         void UpdateSpecialSpawn()
         {
             if (Gallery || specialKind < 0 || holdSpawns || edgePoint == null) return;
+            if (RhythmSpawns)
+            {
+                // 三拍出怪的關卡：特殊敵人只在第 3 波當小 Boss 單獨登場（不再隨機插進來）
+                if (!MiniBossWave || miniBossSpawned || now < waveStartAt) return;
+                miniBossSpawned = true; waveToSpawn = 0;
+                var mb = SpawnMinion(edgePointAt != null ? edgePointAt(0f) : edgePoint(), 0, specialKind, HpMul * meleeHpMul * MiniBossHp, DmgMul, SpeedMul);
+                mb.miniBoss = true;
+                Emit("bossarrive", mb.Feet, new Color(1f, 0.6f, 0.25f), $"⚠ 小 Boss「{mb.name}」登場！" + (SpecialNeedsJump(specialKind) ? "地面震環要跳起來躲（或離遠一點）" : "橫掃要蹲下躲（或離遠一點）"));
+                if (Theme == CanyonTheme) StartCliffLeap(mb);
+                return;
+            }
             bool alive = false; foreach (var m in minions) if (m.Alive && (IsSpecial(m.minionKind) || EliteCatalog.IsElite(m.minionKind))) { alive = true; break; }
             if (alive) { nextSpecialAt = Mathf.Max(nextSpecialAt, now + SpecialGap); return; }
             if (waveToSpawn <= 0 || now < nextSpecialAt) return;
