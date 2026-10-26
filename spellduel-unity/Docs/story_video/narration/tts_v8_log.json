@@ -1,0 +1,222 @@
+{
+ "tool": "CosyVoice3 Fun-CosyVoice3-0.5B via ComfyUI FL_CosyVoice3_Instruct2",
+ "post": "ffmpeg: 去頭尾空白、句中停頓最多 0.4 秒、角色後製、loudnorm I=-17",
+ "lines": [
+  {
+   "file": "v0_prologue_00.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 0.97,
+   "instruct": "你是沉稳自然的说书人。请用哀伤、低语的情绪说这句话，缓慢、带点寂寥，像在讲一段被遗忘的往事。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v0_prologue_01.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 1.0,
+   "instruct": "你是沉稳自然的说书人。请用凝重的情绪说这句话，低声描述，句尾放轻。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v0_prologue_02.mp3",
+   "speaker": "老焰",
+   "reference": "zh_male_calm.wav",
+   "speed": 0.92,
+   "instruct": "你是苍老的老爷爷，声音低沉沙哑、说话慢、气息重、略带颤抖。请用悲伤、怀念的情绪说这句话，苍老、微微颤抖，『……可它哑了』要停顿、叹气般说出。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v0_prologue_03.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 1.0,
+   "instruct": "你是沉稳自然的说书人。请用期待、温和的情绪说这句话，语气转亮一点，『那就是你』带笑意。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v0_prologue_04.mp3",
+   "speaker": "艾琳",
+   "reference": "zh_female_warm.wav",
+   "speed": 1.0,
+   "instruct": "你是年轻女性，声音温柔、柔和、亲切。请用温柔、带点不安的情绪说这句话，温柔地自我介绍，后半句『山里有东西在敲』压低声音、有点紧张。",
+   "prompt_id": "0cd9401e-9185-44b4-b3c6-85c0d1424a43"
+  },
+  {
+   "file": "v0_prologue_05.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 1.0,
+   "instruct": "你是沉稳自然的说书人。请用紧张、悬疑的情绪说这句话，『咚、咚、咚』一字一顿，越来越紧。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v0_prologue_06.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 0.97,
+   "instruct": "你是沉稳自然的说书人。请用沉重、遗憾的情绪说这句话，放慢，每个地名之间停顿。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v0_prologue_07.mp3",
+   "speaker": "艾琳",
+   "reference": "zh_female_warm.wav",
+   "speed": 1.0,
+   "instruct": "你是年轻女性，声音温柔、柔和、亲切。请用坚定、温柔的情绪说这句话，鼓励的口吻，温柔但有决心。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v1_golem_00.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 1.0,
+   "instruct": "你是沉稳自然的说书人。请用压迫、紧张的情绪说这句话，低沉，营造大魔王登场的压迫感。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v1_golem_01.mp3",
+   "speaker": "熔岩巨像",
+   "reference": "zh_cn_male.wav",
+   "speed": 0.95,
+   "instruct": "你是巨大的石头怪物，声音极低、粗、闷。请用痛苦、执念的情绪说这句话，断断续续、像被困住的怒吼与哀鸣。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v1_golem_02.mp3",
+   "speaker": "艾琳",
+   "reference": "zh_female_warm.wav",
+   "speed": 1.08,
+   "instruct": "你是年轻女性，声音温柔、柔和、亲切。请用急切、同情的情绪说这句话，先带同情，『拦住牠！』转为急促有力。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v1_golem_03.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 1.08,
+   "instruct": "你是沉稳自然的说书人。请用紧急、惊呼的情绪说这句话，语速加快，『小心冲击波！』要喊出来。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v1_golem_04.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 0.97,
+   "instruct": "你是沉稳自然的说书人。请用释然、平静的情绪说这句话，放慢、放轻，带一点感伤。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v1_golem_05.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 1.0,
+   "instruct": "你是沉稳自然的说书人。请用感动、希望的情绪说这句话，温暖、上扬，结尾有余韵。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v2_treeking_00.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 0.97,
+   "instruct": "你是沉稳自然的说书人。请用神秘、幽静的情绪说这句话，轻声，像在雾里说话。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v2_treeking_01.mp3",
+   "speaker": "腐化樹王",
+   "reference": "zh_male_calm.wav",
+   "speed": 0.92,
+   "instruct": "你是古老的树精，声音低沉、空洞。请用孤独、疲惫的情绪说这句话，低沉、缓慢、很累的样子。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v2_treeking_02.mp3",
+   "speaker": "艾琳",
+   "reference": "zh_female_warm.wav",
+   "speed": 1.0,
+   "instruct": "你是年轻女性，声音温柔、柔和、亲切。请用温柔、安慰的情绪说这句话，非常温柔，像在安抚一个孩子。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v2_treeking_03.mp3",
+   "speaker": "腐化樹王",
+   "reference": "zh_male_calm.wav",
+   "speed": 1.03,
+   "instruct": "你是古老的树精，声音低沉、空洞。请用绝望、嘶吼的情绪说这句话，激动、撕裂般大喊。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v2_treeking_04.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 1.0,
+   "instruct": "你是沉稳自然的说书人。请用平静、希望的情绪说这句话，轻柔，结尾带希望。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v3_kraken_00.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 1.0,
+   "instruct": "你是沉稳自然的说书人。请用紧张、阴暗的情绪说这句话，压低声音，有风雨的紧迫感。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v3_kraken_01.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 0.97,
+   "instruct": "你是沉稳自然的说书人。请用恐惧、凝重的情绪说这句话，慢、沉重，『刻满了名字』要让人发寒。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v3_kraken_02.mp3",
+   "speaker": "海斗",
+   "reference": "zh_cn_male.wav",
+   "speed": 1.08,
+   "instruct": "你是年轻男性，热血、有精神。请用热血、坚决的情绪说这句话，大声、有力，年轻男生的冲劲。",
+   "prompt_id": "5d22db75-e5c0-4e72-a164-64ce65090b84"
+  },
+  {
+   "file": "v3_kraken_03.mp3",
+   "speaker": "澪",
+   "reference": "zh_female_bright.wav",
+   "speed": 0.92,
+   "instruct": "你是年轻女性，空灵、温柔、带一点哀伤。请用哀伤、温柔的情绪说这句话，轻声、带哭腔，『听』之后停顿。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v3_kraken_04.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 0.97,
+   "instruct": "你是沉稳自然的说书人。请用释然的情绪说这句话，放慢，『雨，停了。』两段停顿。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v3_kraken_05.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 1.0,
+   "instruct": "你是沉稳自然的说书人。请用感动、壮阔的情绪说这句话，上扬、有力，像音乐高潮。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v3_kraken_06.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 0.97,
+   "instruct": "你是沉稳自然的说书人。请用温暖、怀念的情绪说这句话，温柔、缓慢。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  },
+  {
+   "file": "v3_kraken_07.mp3",
+   "speaker": "艾琳",
+   "reference": "zh_female_warm.wav",
+   "speed": 1.0,
+   "instruct": "你是年轻女性，声音温柔、柔和、亲切。请用温柔、感动的情绪说这句话，温柔带微笑，结尾轻轻的。",
+   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+  }
+ ]
+}

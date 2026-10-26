@@ -1,8 +1,10 @@
 [
  {
-  "file": "v0_prologue_04.mp3",
-  "speaker": "艾琳",
-  "heard": "我是艾琳。你也听见了吗?山里有东西在敲。",
-  "diffs": []
+  "file": "v3_kraken_02.mp3",
+  "speaker": "海斗",
+  "heard": "纸还在暗下守着灯,我们也不退。",
+  "diffs": [
+   "預期「上」(shàng) 聽到「下」(xià)"
+  ]
  }
 ]
