@@ -3172,7 +3172,8 @@ namespace SpellDuel
                 {
                     // 依技能的法術造型（箭、火球、冰錐、雷光、劍氣、飛刀…），已含光暈與拖尾
                     string fxCls = p.owner == En ? enemyClassUsed : (p.owner.isAlly ? p.owner.cls.id : myClass);
-                    go = ((bossMode || daily != null) && (p.owner == En || p.owner.isMinion || p.skill.cls == "minion" || p.skill.cls == "boss") ? BossRig.CreateProjectileVisual(p.skill.id) : null) ?? SpellFx.CreateProjectileVisual(p.skill, fxCls);
+                    go = (p.skill.cls == "minion" || p.skill.cls == "boss" || (bossMode || daily != null) && (p.owner == En || p.owner.isMinion) ? BossRig.CreateProjectileVisual(p.skill.id) : null)   // Boss／小怪的招式一律用專屬外觀（教學木頭人的橫掃＝衝擊波，不是火球）
+                         ?? SpellFx.CreateProjectileVisual(p.skill, fxCls);
                     projGo[p] = go;
                     if(p.skill.id=="pet_ice")foreach(var pair in petGo)if(pair.Key.kind=="ice"&&pair.Value&&Vector3.Distance(pair.Key.pos,p.pos)<.8f)pair.Value.ActionPulse();
                     if (p.owner == En && !bossMode)

@@ -44,6 +44,23 @@ def instruct_for(who, emotion, direction):
     voice = CAST[who][1]
     return f'你是{voice}。请用{emotion}的情绪说这句话，{direction}。'
 
+# 同一角色聲音要一致：用「已經滿意的那一句」當這個角色的參考聲音（v10：艾琳每句聽起來不一樣，序章第一句最好聽）。
+# 環境變數 VOICE_FROM=艾琳:v0_prologue_04.mp3,老焰:v0_prologue_02.mp3 可以改；那一句本身不重做。
+VOICE_FROM = dict(x.split(':', 1) for x in os.environ.get('VOICE_FROM', '艾琳:v0_prologue_04.mp3').split(',') if ':' in x)
+COMFY_INPUT = COMFY_OUTPUT.parent / 'input'
+
+def prepare_voice_refs(narr):
+    """把指定的滿意句子轉成 wav 放進 ComfyUI/input，當那個角色的參考聲音；回傳 {角色: 參考檔名}、不用重做的句子"""
+    refs, keep = {}, set()
+    for who, f in VOICE_FROM.items():
+        src = narr / f
+        if who not in CAST or not src.exists(): print(f'VOICE_FROM 略過 {who}:{f}（找不到）'); continue
+        name = f'spellduel_ref_{CAST[who][0][:-4]}_{src.stem}.wav'
+        subprocess.run([FFMPEG, '-y', '-v', 'error', '-i', str(src), '-ac', '1', '-ar', '24000', str(COMFY_INPUT / name)], check=True)
+        refs[who] = name; keep.add(src.stem)
+        print(f'{who} 的參考聲音改用 {f}（{name}）', flush=True)
+    return refs, keep
+
 def api(path, data=None):
     req = urllib.request.Request(COMFY + path, data=None if data is None else json.dumps(data).encode(),
                                  headers={'Content-Type': 'application/json'})
@@ -58,8 +75,9 @@ def main():
     wf = {'M': {'class_type': 'FL_CosyVoice3_ModelLoader',
                 'inputs': {'model_version': 'Fun-CosyVoice3-0.5B', 'download_source': 'HuggingFace', 'device': 'auto',
                            'force_redownload': False, 'force_reload': False}}}
+    voice_refs, keep = prepare_voice_refs(narr) if len(sys.argv) <= 2 else ({}, set())
     for who, (ref, _, _, _) in CAST.items():
-        wf[f'ref_{who}'] = {'class_type': 'LoadAudio', 'inputs': {'audio': ref}}
+        wf[f'ref_{who}'] = {'class_type': 'LoadAudio', 'inputs': {'audio': voice_refs.get(who, ref)}}
     only = {s for s in os.environ.get('ONLY', '').split(',') if s}
     speed_mul = float(os.environ.get('SPEED_MUL', '1'))
     seed_add = int(os.environ.get('SEED_ADD', '0'))   # 同一句想換個唸法：SEED_ADD=1 換種子重做
@@ -69,6 +87,7 @@ def main():
             who = it['speaker'] if it['speaker'] in CAST else '旁白'
             stem = it['file'][:-4]
             if only and stem not in only: continue
+            if stem in keep: continue   # 當參考聲音的那一句保留原樣
             speed = round(speed_for(CAST[who][2], it['direction']) * speed_mul, 2)
             # v5：用 tts_text（簡體＋多音字標拼音）和簡體的情緒／語氣；字幕仍用 text
             instruct = instruct_for(who, it.get('tts_emotion', it['emotion']), it.get('tts_direction', it['direction']))
