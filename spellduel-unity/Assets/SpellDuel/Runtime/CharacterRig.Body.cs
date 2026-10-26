@@ -28,9 +28,9 @@ namespace SpellDuel
         bool gesture;
 
         // 平滑（遠距對戰／合作／觀戰的分身）：網路每 0.05 秒才來一筆、手拿手機也會小晃，直接照用角色會一直抖。
-        //   手機（頭、手）：0.08 秒跟上；身體位置：0.25 秒跟上、4cm 內的晃動不動；面向：0.3 秒跟上、5° 內不轉。
+        //   手機（頭、手）：0.06 秒跟上；身體位置：0.15 秒跟上（盡量跟真人同步）、4cm 內的晃動不動；面向：0.3 秒跟上、5° 內不轉。
         //   只影響畫面，戰鬥判定仍用收到的位置。
-        public const float PhoneSmooth = 0.08f, FeetSmooth = 0.25f, FeetDeadZone = 0.04f, YawSmooth = 0.3f, YawDeadZone = 5f;
+        public const float PhoneSmooth = 0.06f, FeetSmooth = 0.15f, FeetDeadZone = 0.04f, YawSmooth = 0.3f, YawDeadZone = 5f;
         Vector3 smPhone, smGesture, smFeet, feetGoal; Quaternion smRot = Quaternion.identity; float smYaw, yawGoal, smSpeed;
 
         /// <summary>
@@ -112,6 +112,7 @@ namespace SpellDuel
             float yaw = Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg;
             spine.localRotation = Quaternion.Euler(crouchAmt * 22f * k + Mathf.Clamp(pitch, -10f, 30f) * 0.25f, Mathf.Clamp(yaw, -25f, 25f) * 0.4f, 0f);
             neck.localRotation = Quaternion.Euler(Mathf.Clamp(pitch * 0.75f - crouchAmt * 15f, -35f, 45f), Mathf.Clamp(yaw, -40f, 40f) * 0.6f, 0f);
+            if (Attacking) spine.localRotation *= atkSpine;   // 放招／揮武器：轉腰、前傾疊上去
 
             if (k <= 0.01f) return;
             var bodyFwd = transform.forward; var up = transform.up; var right = transform.right;
@@ -119,7 +120,7 @@ namespace SpellDuel
             SolveArm(shL, elL, handL, Vector3.Lerp(handL.position, phonePos + up * -0.02f * s, k), -right, bodyFwd, up);
             // ---- 右手：比手勢時伸到手勢的位置
             gestureAmt = Mathf.MoveTowards(gestureAmt, gesture ? 1f : 0f, dt * 6f);
-            if (gestureAmt > 0.001f) SolveArm(shR, elR, handR, Vector3.Lerp(handR.position, gesturePos, gestureAmt * k), right, bodyFwd, up);
+            if (gestureAmt > 0.001f && !Attacking) SolveArm(shR, elR, handR, Vector3.Lerp(handR.position, gesturePos, gestureAmt * k), right, bodyFwd, up);
         }
 
         /// <summary>蹲低 drop（公尺）需要大腿抬多少度（小腿往後 0.9 倍，腳留在原地）</summary>

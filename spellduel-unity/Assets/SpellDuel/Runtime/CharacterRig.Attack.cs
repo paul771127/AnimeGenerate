@@ -20,10 +20,14 @@ namespace SpellDuel
         /// <summary>播放攻擊動作。windup：預備秒數（＝預警時間；0＝直接出手）</summary>
         public void PlayAttack(string kind, float windup)
         {
-            if (dead || isDummy || phoneDriven) return;
+            if (dead || isDummy) return;   // 真人分身也播（隊友放招／揮武器：手臂、轉腰疊在手機姿勢上）
             atkKind = kind; atkWind = Mathf.Max(0f, windup); atkT = 0f;
             castT = -1f;   // 不要再疊一次一般的出手動作
         }
+
+        /// <summary>法術／箭從哪裡飛出：右手（拿武器的手）的位置（場景座標）</summary>
+        public Vector3 CastHandPos => handR ? handR.position + handR.forward * 0.05f : transform.position + Vector3.up * 1.2f;
+        Quaternion atkSpine = Quaternion.identity;
 
         /// <summary>正在播攻擊動作（這時候不用再播 PlayCast）</summary>
         public bool Attacking => atkT >= 0f;
@@ -59,7 +63,7 @@ namespace SpellDuel
             if (atkT < 0f) return;
             atkT += dt;
             float total = atkWind + AtkStrike + AtkHold + AtkRecover;
-            if (atkT >= total || deadE > 0.01f) { atkT = -1f; return; }
+            if (atkT >= total || deadE > 0.01f) { atkT = -1f; atkSpine = Quaternion.identity; return; }
             var w = WindPose(atkKind); var s = StrikePose(atkKind);
             AtkPose p; float k;   // k：疊上去的比例
             if (atkT < atkWind)
@@ -79,7 +83,8 @@ namespace SpellDuel
             else { p = s; k = 1f - Smooth((atkT - atkWind - AtkStrike - AtkHold) / AtkRecover); }
 
             aL = Arm.Lerp(aL, p.l, k); aR = Arm.Lerp(aR, p.r, k);
-            spine.localRotation *= Quaternion.Euler(p.lean * k, p.yaw * k, 0f);
+            atkSpine = Quaternion.Euler(p.lean * k, p.yaw * k, 0f);
+            spine.localRotation *= atkSpine;
             var bp = body.localPosition;
             body.localPosition = new Vector3(bp.x, bp.y - p.crouch * k, bp.z + p.step * k);
         }

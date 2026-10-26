@@ -88,6 +88,29 @@ namespace SpellDuel
             public float standH, crouchH, seen = -99f; public bool gesture;
         }
 
+        /// <summary>這位玩家在我畫面上的 3D 角色（合作隊友；對戰時是對手）</summary>
+        CharacterRig PeerRig(int pid) => allyRigs.TryGetValue(pid, out var r) && r ? r : (!coop && enemyRig ? enemyRig : null);
+
+        /// <summary>隊友／對手的法術起點：他角色的手（跟收到的起點差太遠＝角色還沒跟上，照原本的）</summary>
+        Vector3 PeerCastFrom(int pid, Vector3 sent)
+        {
+            var rig = PeerRig(pid); if (!rig) return sent;
+            var hand = WorldFrame.ToWorld(rig.CastHandPos);
+            return Vector3.Distance(hand, sent) < 1.5f ? hand : sent;
+        }
+
+        /// <summary>隊友放招／普攻：角色播對應動作（劍士揮砍、刺客突刺、弓箭手拉弓、法系舉杖前推），手上爆光</summary>
+        void PeerAct(int pid, string skillId, bool basic, Vector3 dirW)
+        {
+            var rig = PeerRig(pid); if (!rig || !Skills.All.TryGetValue(skillId ?? "", out var sk)) return;
+            string cls = peerInfo.TryGetValue(pid, out var pi) && pi.cls != null ? pi.cls : rig.ClassId;
+            string kind = cls == Skills.Novice ? (Skills.IsMeleeBasic(sk) ? "novice" : "novice_throw") : AttackKindOf(cls);
+            rig.PlayAttack(kind, basic ? 0.06f : 0.15f);
+            if (!Skills.IsMeleeBasic(sk))
+                SpellFx.CastBurst(cls == Skills.Novice ? SpellFx.NoviceStyle(sk.id) : cls == "swordsman" ? SpellFx.SwordStyle(sk.id) : cls, sk.color,
+                    rig.CastHandPos, dirW.sqrMagnitude > 1e-4f ? WorldFrame.DirFromWorld(dirW.normalized) : rig.transform.forward, basic ? 0.4f : 0.5f);
+        }
+
         /// <summary>讓這個角色照著那位真人的手機動（站蹲、轉向、拿手機的手、比手勢的手）</summary>
         void DriveFromPeer(CharacterRig rig, int pid)
         {
@@ -1445,12 +1468,17 @@ namespace SpellDuel
                         NetSend?.Invoke(new Msg { t = "hp2", hp = Mathf.CeilToInt(Me.hp) });
                     }
                     break;
+                case "act":
+                    // 隊友放招或揮武器：他的 3D 角色做出同樣的動作，手上爆光
+                    PeerAct(m.pid, m.k, m.ok, m.d);
+                    break;
                 case "cast2":
                     // 隊友（或主機的 Boss）的法術：只顯示
                     if (Skills.All.TryGetValue(m.k, out var cs))
                     {
                         float elapsed = (float)((SharedClock?.Invoke() ?? m.t0) - m.t0);
-                        battle.AddRemoteProjectile(RId(m.pid, m.id), cs, m.p, m.d, Mathf.Clamp(elapsed, 0f, 1f), m.ok, m.rad, m.s, m.e == 1 ? battle.enemy : ally);
+                        var from = m.e == 1 ? m.p : PeerCastFrom(m.pid, m.p);   // 隊友的法術：從他 3D 角色的手上飛出
+                        battle.AddRemoteProjectile(RId(m.pid, m.id), cs, from, m.d, Mathf.Clamp(elapsed, 0f, 1f), m.ok, m.rad, m.s, m.e == 1 ? battle.enemy : ally);
                     }
                     break;
                 case "hit2":
@@ -1923,11 +1951,12 @@ namespace SpellDuel
             if (coop) { OnNetCoop(m); return; }
             switch (m.t)
             {
+                case "act": PeerAct(m.pid, m.k, m.ok, m.d); break;   // 對手的 3D 角色做出放招／揮武器動作
                 case "cast2":
                     if (Skills.All.TryGetValue(m.k, out var cs))
                     {
                         float elapsed = (float)((SharedClock?.Invoke() ?? m.t0) - m.t0);
-                        battle.AddRemoteProjectile(m.id, cs, m.p, m.d, Mathf.Clamp(elapsed, 0f, 1f), m.ok, m.rad, m.s);
+                        battle.AddRemoteProjectile(m.id, cs, PeerCastFrom(m.pid, m.p), m.d, Mathf.Clamp(elapsed, 0f, 1f), m.ok, m.rad, m.s);
                     }
                     break;
                 case "hit2":
@@ -2473,6 +2502,7 @@ namespace SpellDuel
             if (!battle.BasicAttack(Me, s, d, floor, enemyOnScreen, from, to)) { Me.hasCastFrom = false; return; }
             if (Skills.IsSwipeBasic(s)) StartHeldSwing(Hand.SwipeFrom, Hand.SwipeTo);   // 劍仙的劍來：手上的長劍跟著揮一個扇形
             TriggerBasicFx(s);   // 出手的畫面光影（各職業顏色、動作）
+            NetSend?.Invoke(new Msg { t = "act", k = s.id, ok = true, d = d });   // 隊友畫面上的我：揮武器／出手
             if (!Skills.IsMeleeBasic(s))
                 SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(s.id):myClass, s.color, WorldFrame.FromWorld(castAt), WorldFrame.DirFromWorld(d), 0.6f);   // 手上的出手爆光（以前 0.2 太小）
         }
@@ -2499,6 +2529,7 @@ namespace SpellDuel
             else
             {
                 if (byGesture) Say("🖐️ 放招！", 0.8f);
+                NetSend?.Invoke(new Msg { t = "act", k = visualSkill.id, ok = false, d = aim });   // 隊友畫面上的我：放招動作
                 // 放招光效：在手機前方爆開，朝法術飛行方向
                 SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(visualSkill.id):myClass=="swordsman"?SpellFx.SwordStyle(visualSkill.id):myClass, myClass==Skills.Novice?visualSkill.color:Me.charging != null ? Me.charging.color : Skills.Classes[myClass].color,
                     WorldFrame.FromWorld(castAt), WorldFrame.DirFromWorld(aim), 0.35f);
