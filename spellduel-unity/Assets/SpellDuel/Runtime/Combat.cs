@@ -149,6 +149,7 @@ namespace SpellDuel
         public float armorUntil, armorReduce;
         // 角色養成（無盡模式）：裝備減傷、側跨無敵時間加長、吸血、命中回 MP、每秒回血、低血量減傷
         public float gearReduce, dodgeBonus, lifesteal, mpOnHit, hpRegen, lastStand;
+        public float leechSwingAt = -1f, leechSwingBest;   // 普攻吸血（飲血）：同一揮只算一次（取打中的最高傷害）
         public float regenTick, nextRegenAt;   // 自然回復（劍士／主教的被動）：每 10 秒一次回 regenTick（不是每秒）
         /// <summary>魔法減傷（智力）；gearReduce＝物理減傷（體質、裝備）</summary>
         public float magicReduce;
@@ -909,7 +910,9 @@ namespace SpellDuel
         /// <summary>故事關卡的敵人數量倍率：每一章都減半（使用者要求，和第一章一樣）</summary>
         public static float StoryEnemyMul(int theme) => 0.5f;
         public float hpBoost = 1f;   // 轉職試煉：敵人更硬
-        public float DmgMul => (0.75f + DmgPerWave * Tier) * enemyDmgMul * TowerMul;
+        public float DmgMul => (EnemyDmgBase + DmgPerWave * Tier) * enemyDmgMul * TowerMul;
+        /// <summary>小怪傷害的基底（使用者要求：0.75 → 0.9，玩家被圍毆時要會掉血）</summary>
+        public const float EnemyDmgBase = 0.9f;
         public const float EndlessRegen = 0.5f, EndlessRegenPct = 0.005f;   // 無盡／故事：玩家每秒自然回血（0.5 或最大 HP 的 0.5%，取大的）
         public float SpeedMul => Mathf.Min(1.5f, 1f + 0.02f * Tier);
 
@@ -3555,7 +3558,13 @@ namespace SpellDuel
             }
             bool basicHit = s.cls == "basic";
             if (basicHit && o.basicMp > 0f) o.mp = Mathf.Min(o.maxMp, o.mp + o.basicMp);
-            if (basicHit && o.basicLeech > 0f) o.hp = Mathf.Min(o.maxHp, o.hp + dmg * o.basicLeech);
+            if (basicHit && o.basicLeech > 0f)
+            {
+                // 飲血：同一揮砍到好幾隻只算一次（取最高的那一下），不是每隻都回
+                float want = dmg * o.basicLeech;
+                if (o.leechSwingAt != now) { o.leechSwingAt = now; o.leechSwingBest = 0f; }
+                if (want > o.leechSwingBest) { Leech(o, want - o.leechSwingBest); o.leechSwingBest = want; }
+            }
             // 法師「奧術回響」：普攻命中有機率追加一發小火球／小冰錐
             if (s.id == "na_mage" && o.spellEcho > 0f && t != null && rng.NextDouble() < o.spellEcho)
             {
@@ -3600,6 +3609,14 @@ namespace SpellDuel
                 foreach (var k in new List<string>(o.cooldownUntil.Keys)) if (k != "knife") o.cooldownUntil[k] -= o.knifeCdr;
         }
 
+        /// <summary>吸血的共同上限（使用者要求）：每一下最多回最大 HP 的 3%（技能樹、裝備、藥劑的吸血都一樣）</summary>
+        public const float LeechCapFrac = 0.03f;
+        void Leech(Fighter a, float amount)
+        {
+            if (amount <= 0f || !a.Alive) return;
+            a.hp = Mathf.Min(a.maxHp, a.hp + Mathf.Min(amount, a.maxHp * LeechCapFrac));
+        }
+
         /// <summary>打中別人之後：吸血、命中回 MP（角色養成的特殊能力）</summary>
         void OnDealt(Fighter a, float dmg, Fighter target = null, SkillDef s = null, Projectile p = null)
         {
@@ -3607,7 +3624,7 @@ namespace SpellDuel
             a.dealtDone += dmg;
             if (a == player && target != null) OnDealtNumber?.Invoke(target.Chest, dmg, p != null && p.crit);   // 合作：我的傷害數字也給隊友看
             PostHit(a, target, s, dmg);
-            if (a.lifesteal > 0f) a.hp = Mathf.Min(a.maxHp, a.hp + dmg * a.lifesteal);
+            if (a.lifesteal > 0f) Leech(a, dmg * a.lifesteal);
             if (a.mpOnHit > 0f) a.mp = Mathf.Min(a.maxMp, a.mp + a.mpOnHit);
             if (a.adv == "inquisitor" && a.faith < FaithMax && ++a.faith == FaithMax) Emit("buff", a.Chest, new Color(1f, 0.8f, 0.3f), "信仰已滿！下一招傷害 ×2");
             GainDmgShield(a, dmg);   // 審判者「聖盾轉化」

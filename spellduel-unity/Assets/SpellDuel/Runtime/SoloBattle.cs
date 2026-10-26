@@ -882,6 +882,8 @@ namespace SpellDuel
         /// <summary>這一場是「難度＝等級」的模式（故事關卡、副本；轉職試煉除外）</summary>
         bool LevelDifficulty => (pendingStage != null && pendingStage.id != "trial") || dungeon != null;
         static float DamageTakenFor(int d) => d == 0 ? 0.5f : d == 1 ? 0.75f : 1f;
+        /// <summary>故事關卡、副本的受傷倍率（使用者要求）：簡單 0.7、普通 0.9、困難 1.0</summary>
+        public static float StoryTakenFor(int d) => d <= 0 ? 0.7f : d == 1 ? 0.9f : 1f;
         /// <summary>故事各章的 Boss：血量（簡單難度、1 人）、攻擊倍率（第一章＝1）</summary>
         // ---------------------------------------------------------------- 無盡塔：每次 5 波、6m×6m 場地
         public const int TowerBlock = 5;
@@ -1175,7 +1177,7 @@ namespace SpellDuel
             // 故事／副本：其他設定都照簡單，難度只加等級（下面的 battle.levelBoost）；無盡塔（單人無盡）固定普通；討伐 Boss、合作照選的難度
             int diff = LevelDifficulty ? 0 : endlessMode && !coopMode ? 1 : difficulty;
             boss.maxHp = Mathf.RoundToInt(BossHpSolo * party * BossHpFor(diff) * Battle.BossHpCut); boss.hp = boss.maxHp;   // 所有 Boss 血量 ×70%
-            me.damageTakenMul = DamageTakenFor(diff);
+            me.damageTakenMul = LevelDifficulty ? StoryTakenFor(difficulty) : DamageTakenFor(diff);   // 故事／副本：受傷倍率照選的難度（以前固定簡單的 0.5）
             float dungeonRelief = 1f;
             if (dungeon != null)
             {

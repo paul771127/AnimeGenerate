@@ -261,7 +261,7 @@ namespace SpellDuel
                     FMod("sw_bspd", "疾風劍", "na_sword", ModField.Cooldown, 0.08f, 5, 1, 1, "sw_root"),
                     FPas("sw_combo", "連斬", PassiveKind.ComboStrike, 0.25f, 5, 0, 2, "sw_bspd"),
                     FMod("sw_bdmg", "劍術精通", "na_sword", ModField.Damage, 0.1f, 5, 0, 3, "sw_combo"),
-                    FPas("sw_leech", "飲血", PassiveKind.BasicLeech, 0.06f, 5, 1, 2, "sw_bspd"),
+                    FPas("sw_leech", "飲血", PassiveKind.BasicLeech, 0.02f, 5, 1, 2, "sw_bspd"),   // 每級 2%（滿級 10%）；一揮只算一次
                     FPas("sw_regen", "自然回復", PassiveKind.NaturalRegen, 0.008f, 5, 1, 3, "sw_leech"),
                     // 劍氣
                     FMod("sw_slash", "斬擊強化", "slash", ModField.Damage, 0.1f, 5, 3, 1, "sw_root"),
@@ -585,7 +585,7 @@ namespace SpellDuel
                 default:
                     return n.passive switch
                     {
-                        PassiveKind.Lifesteal => $"造成傷害的 {v * 100:0}% 回復成 HP",
+                        PassiveKind.Lifesteal => $"造成傷害的 {v * 100:0}% 回復成 HP（每一下最多回最大 HP 的 3%）",
                         PassiveKind.Crit => $"爆擊率 +{v * 100:0}%",
                         PassiveKind.Dodge => $"閃避率 +{v * DodgeToEvade * 100f:0.#}%",
                         PassiveKind.MpOnHit => $"每次命中回復 {v:0} MP",
@@ -621,7 +621,7 @@ namespace SpellDuel
                         PassiveKind.ArrowSilence => $"箭命中時 {v * 100:0}% 機率沉默 {Battle.SilenceDur:0} 秒：不能唸技能、正在唸的被打斷（Boss 減半）",
                         PassiveKind.ComboStrike => $"普攻每第 3 下是重擊：傷害 +{v * 100:0}%",
                         PassiveKind.OrbSlice => $"「斬擊」揮出後 {Battle.SliceWindow:0.#} 秒內，斬開正面 {Battle.SliceRange:0.#}m 內飛來的法球（從天而降、地裂、橫掃等範圍攻擊無效）",
-                        PassiveKind.BasicLeech => $"普攻造成傷害的 {v * 100:0}% 回復成 HP",
+                        PassiveKind.BasicLeech => $"普攻造成傷害的 {v * 100:0}% 回復成 HP（一揮砍到多隻只算一次）",
                         PassiveKind.WaveFlow => $"斬擊後 {v:0} 秒內，劍氣不花 MP",
                         PassiveKind.Riposte => $"格擋成功後 4 秒內，下一擊傷害 +{v * 100:0}%",
                         PassiveKind.Venom => $"普攻在敵人身上疊毒（毒刃一次 2 層），疊滿 {Battle.VenomMax} 層爆開造成 {v:0} 傷害",
