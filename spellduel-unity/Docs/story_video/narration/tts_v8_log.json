@@ -64,7 +64,7 @@
    "reference": "zh_female_warm.wav",
    "speed": 1.0,
    "instruct": "你是年轻女性，声音温柔、柔和、亲切。请用坚定、温柔的情绪说这句话，鼓励的口吻，温柔但有决心。",
-   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+   "prompt_id": "464e34f4-94e4-4819-9f3f-d62b063a64da"
   },
   {
    "file": "v1_golem_00.mp3",
@@ -88,7 +88,7 @@
    "reference": "zh_female_warm.wav",
    "speed": 1.08,
    "instruct": "你是年轻女性，声音温柔、柔和、亲切。请用急切、同情的情绪说这句话，先带同情，『拦住牠！』转为急促有力。",
-   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+   "prompt_id": "464e34f4-94e4-4819-9f3f-d62b063a64da"
   },
   {
    "file": "v1_golem_03.mp3",
@@ -136,7 +136,7 @@
    "reference": "zh_female_warm.wav",
    "speed": 1.0,
    "instruct": "你是年轻女性，声音温柔、柔和、亲切。请用温柔、安慰的情绪说这句话，非常温柔，像在安抚一个孩子。",
-   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+   "prompt_id": "464e34f4-94e4-4819-9f3f-d62b063a64da"
   },
   {
    "file": "v2_treeking_03.mp3",
@@ -216,7 +216,7 @@
    "reference": "zh_female_warm.wav",
    "speed": 1.0,
    "instruct": "你是年轻女性，声音温柔、柔和、亲切。请用温柔、感动的情绪说这句话，温柔带微笑，结尾轻轻的。",
-   "prompt_id": "6fda5e52-b009-425b-8c68-88f42c69b890"
+   "prompt_id": "464e34f4-94e4-4819-9f3f-d62b063a64da"
   }
  ]
 }
