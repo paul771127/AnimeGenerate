@@ -736,6 +736,14 @@ namespace SpellDuel
                 world.OnBack = () => storyMapOpen = false;
                 world.OnCharacter = () => charOpen = true;
                 world.OnStartTrial = () => OpenPrep("⚔ 轉職試煉", true, "轉職試煉不能使用道具", StartTrial);
+                world.OnAdvPick = id =>
+                {
+                    // 30 級：選進階職業 → 自己職業的專業試煉（更難）；換職業＝兩關重來
+                    var p = Progress.Char(myClass); var a = Advanced.Get(id);
+                    if (p.cls == Skills.Novice || a == null || a.baseCls != p.cls || p.adv != null) return;
+                    if (p.advPick != id) { p.advPick = id; p.advProPassed = false; p.trialPassed = false; Progress.SaveChar(p); }
+                    if (!p.advProPassed) StartAdvProTrial();
+                };
                 world.OnJobChange = JobChange;
                 world.NpcQuestLabel = NoviceQuestLabel;
                 world.OnNpcQuest = n => NoviceQuestTalk(n);

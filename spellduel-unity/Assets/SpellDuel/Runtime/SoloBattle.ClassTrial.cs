@@ -15,11 +15,25 @@ namespace SpellDuel
     public partial class SoloBattle
     {
         public const float ClassTrialTime = 30f;
-        public const int SwordHitsNeed = 5, ChantNeed = 15, ShotHitsNeed = 8, WatchCount = 7;
+        public const int SwordHitsNeed0 = 5, ChantNeed0 = 15, ShotHitsNeed0 = 8, WatchCount0 = 7;
+        // 進階轉職（30 級）的專業試煉：同一套、更難
+        public const int SwordHitsHard = 8, ChantHard = 20, ShotHitsHard = 12, WatchHard = 10;
+        bool trialHard;   // 進階轉職的試煉（難度較高）
+        int SwordHitsNeed => trialHard ? SwordHitsHard : SwordHitsNeed0;
+        int ChantNeed => trialHard ? ChantHard : ChantNeed0;
+        int ShotHitsNeed => trialHard ? ShotHitsHard : ShotHitsNeed0;
+        int WatchCount => trialHard ? WatchHard : WatchCount0;
+        float RunnerSpeed => trialHard ? RunnerSpeed0 * 1.35f : RunnerSpeed0;
+        float WatchWalk => trialHard ? WatchWalk0 * 1.4f : WatchWalk0;
+        float DodgeEvery => trialHard ? DodgeEveryHard : DodgeEvery0;
+        int[] DodgeKinds => trialHard ? DodgeKindsHard : DodgeKinds0;
+        float ShotPace => trialHard ? 1.5f : 1f;   // 靶子移動速度倍率
         public const float ChantPass = 0.8f, SwordHitRange = 2.2f, ShotTargetDist = 6f, ShotHitRadius = 0.55f;
-        public const float RunnerSpeed = 1.5f, WatchWalk = 0.9f, DodgeEvery = 5f;
+        public const float RunnerSpeed0 = 1.5f, WatchWalk0 = 0.9f, DodgeEvery0 = 5f, DodgeEveryHard = 4f;
         /// <summary>閃避訓練：第幾秒進哪一種敵人（固定）：熔岩小鬼、火焰射手、自爆小鬼、岩石投擲者、岩石衝鋒獸、熔岩狙擊手</summary>
-        static readonly int[] DodgeKinds = { 0, 1, 3, 4, 2, 5 };
+        static readonly int[] DodgeKinds0 = { 0, 1, 3, 4, 2, 5 };
+        /// <summary>進階：火焰射手、自爆小鬼、熔岩狙擊手、荊棘衝鋒獸、岩石衝鋒獸、跳躍魚、藤蔓術士、毒液噴花（每 4 秒一隻）</summary>
+        static readonly int[] DodgeKindsHard = { 1, 3, 5, 8, 2, 13, 9, 7 };
         /// <summary>念咒訓練的咒文字庫：每組 1～3 個詞接起來（2～7 個字）</summary>
         public static readonly string[] ChantWords =
         {
@@ -41,13 +55,13 @@ namespace SpellDuel
         {
             "swordsman" => "劍術訓練", "mage" => "念咒訓練", "archer" => "射擊訓練", "assassin" => "閃避訓練", "priest" => "觀察訓練", _ => "專業試煉",
         };
-        public static string ClassTrialDesc(string cls, bool daily = false) => cls switch
+        public static string ClassTrialDesc(string cls, bool daily = false, bool hard = false) => cls switch
         {
             "assassin" when daily => $"火球一次從場地的一面飛來 {FwBalls0} 顆（低的跳、高的蹲），一面接一面越來越快越多：撐過 {ClassTrialTime:0} 秒，被打中就結束",
-            "swordsman" => $"靶人會在場上快速亂跑：{ClassTrialTime:0} 秒內用木棍打中 {SwordHitsNeed} 次",
-            "mage" => $"照畫面唸出咒文（讀音像就算）：{ClassTrialTime:0} 秒內唸對 {ChantNeed} 組",
-            "archer" => $"6m 外的空中與地面會出現會動的靶子：{ClassTrialTime:0} 秒內用投石打中 {ShotHitsNeed} 個",
-            "assassin" => $"每 {DodgeEvery:0} 秒進來一隻不同的敵人：撐過 {ClassTrialTime:0} 秒，一下都不能被打中",
+            "swordsman" => $"靶人會在場上快速亂跑：{ClassTrialTime:0} 秒內{(hard ? "" : "用木棍")}打中 {(hard ? SwordHitsHard : SwordHitsNeed0)} 次",
+            "mage" => $"照畫面唸出咒文（讀音像就算）：{ClassTrialTime:0} 秒內唸對 {(hard ? ChantHard : ChantNeed0)} 組",
+            "archer" => $"6m 外的空中與地面會出現會動的靶子{(hard ? "（更快）" : "")}：{ClassTrialTime:0} 秒內{(hard ? "" : "用投石")}打中 {(hard ? ShotHitsHard : ShotHitsNeed0)} 個",
+            "assassin" => $"每 {(hard ? DodgeEveryHard : DodgeEvery0):0} 秒進來一隻不同的敵人{(hard ? "（更多、更兇）" : "")}：撐過 {ClassTrialTime:0} 秒，一下都不能被打中",
             "priest" => $"一群長得一樣的小鬼裡有一隻不一樣：{ClassTrialTime:0} 秒內找出牠、打牠一下（打錯＝失敗）",
             _ => "",
         };
@@ -58,25 +72,25 @@ namespace SpellDuel
             "swordsman" => new[]
             {
                 "想當劍士？記住：一位好的劍士，眼睛要比劍快。敵人不會站在原地等你砍。",
-                $"空地上有個靶人，牠會到處亂跑。{ClassTrialTime:0} 秒內，用木棍打中牠 {SwordHitsNeed} 次。站遠遠的丟石頭不算，劍士的距離是一步之內。",
+                $"空地上有個靶人，牠會到處亂跑。{ClassTrialTime:0} 秒內，用木棍打中牠 {SwordHitsNeed0} 次。站遠遠的丟石頭不算，劍士的距離是一步之內。",
                 "追不上就先看牠往哪跑，再堵過去。去吧。",
             },
             "mage" => new[]
             {
                 "想當法師？法師的力量來自準確的咒文。唸錯一個音，火球就會在自己手裡炸開。",
-                $"接下來畫面會一組一組給你咒文，看到就唸出來。讀音像就算，寫法不用管。{ClassTrialTime:0} 秒內唸對 {ChantNeed} 組。",
+                $"接下來畫面會一組一組給你咒文，看到就唸出來。讀音像就算，寫法不用管。{ClassTrialTime:0} 秒內唸對 {ChantNeed0} 組。",
                 "別急著快，先求準。準了，自然就快。",
             },
             "archer" => new[]
             {
                 "想當弓箭手？弓箭手的敵人在天上、在地上，而且不會停下來讓你瞄。",
-                $"離你六公尺的地方會出現靶子，空中的、地上的都有，牠們會照固定的路線移動。用投石打中一個，下一個就換地方出現。{ClassTrialTime:0} 秒內打中 {ShotHitsNeed} 個。",
+                $"離你六公尺的地方會出現靶子，空中的、地上的都有，牠們會照固定的路線移動。用投石打中一個，下一個就換地方出現。{ClassTrialTime:0} 秒內打中 {ShotHitsNeed0} 個。",
                 "別追著靶子丟，看清楚牠的路線，丟在牠要經過的地方。",
             },
             "assassin" => new[]
             {
                 "想當刺客？刺客不靠硬扛。被碰到一下，就是死。",
-                $"接下來每 {DodgeEvery:0} 秒會有一隻敵人進場，每一隻都不一樣，打不死牠們，別浪費力氣。{ClassTrialTime:0} 秒內，一下都不能被打中。",
+                $"接下來每 {DodgeEvery0:0} 秒會有一隻敵人進場，每一隻都不一樣，打不死牠們，別浪費力氣。{ClassTrialTime:0} 秒內，一下都不能被打中。",
                 "看牠們出手前的動作：橫掃就蹲，火球就側身，衝過來就走開。去吧。",
             },
             "priest" => new[]
@@ -85,6 +99,17 @@ namespace SpellDuel
                 $"空地上有一群小鬼，看起來一模一樣，但其中一隻身上多了個小東西。{ClassTrialTime:0} 秒內找出牠、打牠一下就算通過。",
                 "打錯了，就等於治錯了人。那就是失敗。看仔細再出手。",
             },
+            _ => new[] { "去完成試煉吧。" },
+        };
+
+        /// <summary>進階轉職（30 級）的專業試煉：公會長的話（同一套試煉，更難）</summary>
+        static string[] AdvTrialIntro(string cls, string advName) => cls switch
+        {
+            "swordsman" => new[] { $"想成為{advName}？你的劍比當年快了，眼睛也要跟上。靶人這次跑得更快，{ClassTrialTime:0} 秒內打中 {SwordHitsHard} 次，怎麼打都行，但要貼近牠。" },
+            "mage" => new[] { $"想成為{advName}？咒文唸得準只是基本，進階的法術一句接一句，慢一拍就斷了。{ClassTrialTime:0} 秒內唸對 {ChantHard} 組。" },
+            "archer" => new[] { $"想成為{advName}？靶子這次動得更快、更刁鑽。用你現在的任何遠程攻擊，{ClassTrialTime:0} 秒內打中 {ShotHitsHard} 個。" },
+            "assassin" => new[] { $"想成為{advName}？這次每 {DodgeEveryHard:0} 秒就進一隻，而且是會衝、會射、會放毒的那種。{ClassTrialTime:0} 秒內一下都不能被打中。" },
+            "priest" => new[] { $"想成為{advName}？小鬼變成 {WatchHard} 隻、走得更快，記號也更小。{ClassTrialTime:0} 秒內找出不一樣的那隻。打錯，一樣是誤診。" },
             _ => new[] { "去完成試煉吧。" },
         };
 
@@ -110,6 +135,19 @@ namespace SpellDuel
             ShowDialogue(lines, () => BeginClassTrial(cls));
         }
 
+        /// <summary>進階轉職（30 級，職業工會選了進階職業後）：自己職業的專業試煉、更難；通過才能挑戰實戰試煉</summary>
+        void StartAdvProTrial()
+        {
+            var p = Progress.Char(myClass);
+            var a = Advanced.Get(p.advPick);
+            if (p.cls == Skills.Novice || a == null || a.baseCls != p.cls || p.level < Advanced.Level || p.adv != null || p.advProPassed) return;
+            if (GateArea(StartAdvProTrial)) return;
+            storyMapOpen = false; villageReturn = WorldUI.Screen.Guild; jobTrialRound = -1;
+            var lines = new List<StoryLine>();
+            foreach (var t in AdvTrialIntro(p.cls, a.name)) lines.Add(new StoryLine { speaker = "公會長", tag = "guild", text = t });
+            ShowDialogue(lines, () => BeginClassTrial(p.cls, false, true));
+        }
+
         /// <summary>訓練場的每日訓練：同一套試煉，30 秒做滿算分數（一天一次）</summary>
         void StartDailyTraining(string cls)
         {
@@ -119,12 +157,12 @@ namespace SpellDuel
             BeginClassTrial(cls, true);
         }
 
-        void BeginClassTrial(string cls, bool dailyMode = false)
+        void BeginClassTrial(string cls, bool dailyMode = false, bool hard = false)
         {
             SaveChoices();
             EndBattle();
             storyStage = null; dungeon = null; daily = null;
-            classTrial = cls; classTrialWon = false; classTrialNote = null; trialDaily = dailyMode; watchFound = 0; trialReward = (0, 0);
+            classTrial = cls; classTrialWon = false; classTrialNote = null; trialDaily = dailyMode; trialHard = hard; watchFound = 0; trialReward = (0, 0);
             prof = Progress.Char(myClass);
             EnsureLoadout();
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
@@ -154,7 +192,7 @@ namespace SpellDuel
             if (cls == "assassin" && dailyMode) StartFireWall();   // 每日訓練的閃避：火球牆（SoloBattle.FireWall.cs）
             watchOdd = null; watchMarker = null; watchDirs.Clear();
             phase = Phase.Fighting; resultShown = false;
-            Say($"{(dailyMode ? "📅 每日訓練・" : "🎓 ")}{ClassTrialName(cls)}：站好、手機對著前方，倒數後開始", 3f);
+            Say($"{(dailyMode ? "📅 每日訓練・" : hard ? "⚔ 進階試煉・" : "🎓 ")}{ClassTrialName(cls)}：站好、手機對著前方，倒數後開始", 3f);
         }
 
         void ClearClassTrial()
@@ -164,7 +202,7 @@ namespace SpellDuel
             if (watchMarker) Destroy(watchMarker);
             shotGo = null; shotCore = null; watchMarker = null; watchOdd = null; watchDirs.Clear();
             runnerUp = false; shotUp = false;
-            classTrial = null; trialDaily = false;
+            classTrial = null; trialDaily = false; trialHard = false;
         }
 
         /// <summary>每幀（戰鬥中、Battle 更新之後）；試煉結束回傳 true</summary>
@@ -219,6 +257,7 @@ namespace SpellDuel
             foreach (var m in battle.minions) m.hp = 0f;
             battle.minionHold = null;
             if (trialDaily) { trialReward = TrialCoins.Record(classTrial, TrialScore()); won = trialReward.coins > 0; classTrialWon = won; }
+            else if (won && trialHard) { var pp = Progress.Char(myClass); pp.advProPassed = true; Progress.SaveChar(pp); Say("✔ 通過進階的專業試煉！回職業工會挑戰實戰試煉（海上礁石，不能用藥水）", 5f); }
             else if (won) JobTrialPassed(0);
             Sfx.Play(won ? "win" : "lose"); Haptics.Play(won ? Haptics.Kind.Success : Haptics.Kind.Warning);
             return true;
@@ -316,7 +355,7 @@ namespace SpellDuel
         /// <summary>靶子現在的位置：0 左右來回（地面）、1 上下來回（空中）、2 繞圈（空中）、3 左右來回（低空）</summary>
         Vector3 ShotTargetAt(float age)
         {
-            float ph = age * 1.6f;
+            float ph = age * 1.6f * ShotPace;
             switch (shotPattern)
             {
                 case 0: return shotCenter + shotSide * Mathf.Sin(ph) * 1.3f + Vector3.up * 0.5f;
@@ -376,7 +415,7 @@ namespace SpellDuel
             foreach (var p in battle.projectiles)
             {
                 if (!p.alive || p.owner != Me) continue;
-                if (Vector3.Distance(p.pos, shotPos) > ShotHitRadius) continue;
+                if (Vector3.Distance(p.pos, shotPos) > (trialHard ? ShotHitRadius * 0.85f : ShotHitRadius)) continue;
                 p.alive = false;
                 shotHits++;
                 SpellFx.Impact("archer", new Color(1f, 0.8f, 0.3f), sp, 0.9f);
@@ -446,7 +485,7 @@ namespace SpellDuel
                 watchMarker = Prim(PrimitiveType.Cube, new Color(0.55f, 0.1f, 0.12f), false);
                 watchMarker.transform.SetParent(rig.transform, false);
                 watchMarker.transform.localPosition = new Vector3(0.11f, 0.72f, 0.04f);
-                watchMarker.transform.localScale = Vector3.one * 0.05f;
+                watchMarker.transform.localScale = Vector3.one * (trialHard ? 0.035f : 0.05f);
             }
             // 到處走（不離開場地）
             foreach (var m in battle.minions)
@@ -572,15 +611,20 @@ namespace SpellDuel
                 if (UiKit.Button(new Rect(orr.x + (orr.width - bw0) / 2f, orr.yMax - gap - bh0, bw0, bh0), "🏘 回訓練場", fs, true, new Color(0.45f, 0.9f, 0.7f))) GoVillage();
                 return;
             }
-            UiKit.Text(new Rect(orr.x, y, orr.width, lh * 1.5f), $"🎓 {ClassTrialName(classTrial)}　{(classTrialWon ? "通過！" : "未通過")}", Mathf.RoundToInt(fs * 1.4f), col, TextAnchor.MiddleCenter, true);
+            UiKit.Text(new Rect(orr.x, y, orr.width, lh * 1.5f), $"{(trialHard ? "⚔ 進階・" : "🎓 ")}{ClassTrialName(classTrial)}　{(classTrialWon ? "通過！" : "未通過")}", Mathf.RoundToInt(fs * 1.4f), col, TextAnchor.MiddleCenter, true);
             y += lh * 1.6f;
             UiKit.Text(new Rect(orr.x, y, orr.width, lh), classTrialNote ?? "", fs, Color.white, TextAnchor.MiddleCenter, true);
             y += lh * 1.1f;
             GUI.DrawTexture(new Rect(orr.x + gap, y, lh * 2.2f, lh * 2.2f), Portraits.Get("公會長", "guild"), ScaleMode.ScaleToFit, true);
             UiKit.Text(new Rect(orr.x + gap * 2 + lh * 2.2f, y, orr.width - gap * 3 - lh * 2.2f, lh * 2.2f), $"公會長：「{ClassTrialVerdict(classTrial, classTrialWon)}」", fsS, new Color(0.9f, 0.92f, 1f), TextAnchor.MiddleLeft, false, 0.5f);
             y += lh * 2.4f;
-            UiKit.Text(new Rect(orr.x, y, orr.width, lh * 0.9f), classTrialWon ? "接下來是實戰試煉：打倒空地上的 5 隻小怪，通過就能轉職" : "回職業工會，再跟公會長對話一次就能重新挑戰", fsS, new Color(0.8f, 1f, 0.85f), TextAnchor.MiddleCenter);
+            UiKit.Text(new Rect(orr.x, y, orr.width, lh * 0.9f), classTrialWon ? (trialHard ? "接下來是實戰試煉：海上礁石的連續波次（不能用藥水），通過就能進階" : "接下來是實戰試煉：打倒空地上的 5 隻小怪，通過就能轉職") : "回職業工會，再跟公會長對話一次就能重新挑戰", fsS, new Color(0.8f, 1f, 0.85f), TextAnchor.MiddleCenter);
             float bw = (orr.width - gap * 3) / 2f, bh = lh * 1.8f, oby = orr.yMax - gap - bh;
+            if (trialHard)
+            {
+                if (UiKit.Button(new Rect(orr.x + gap, oby, orr.width - gap * 2, bh), "🏛 回職業工會", fs, true, new Color(0.85f, 0.6f, 1f))) GoGuild();
+                return;
+            }
             if (classTrialWon)
             {
                 if (UiKit.Button(new Rect(orr.x + gap, oby, bw, bh), "▶ 實戰試煉", fs, true, col)) { ClearClassTrialAndBattle(); StartJobTrial(1); }

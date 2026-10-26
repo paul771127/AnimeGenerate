@@ -20,6 +20,7 @@ namespace SpellDuel
         public Action OnBack;                    // 離開大地圖（回選擇畫面）
         public Action OnCharacter;               // 打開角色畫面
         public Action OnStartTrial;              // 出發挑戰轉職試煉
+        public Action<string> OnAdvPick;         // 30 級：選了想走的進階職業（開始那條路的專業試煉；換職業＝重來）
         public Action<string> OnJobChange;       // 初心者 10 級：選了職業（SoloBattle 換成那個職業）
         public Action<int> OnJobTrial;           // 初心者 10 級：挑戰轉職試煉的第幾輪（0 起算）
         public Action<string> OnJobTrialPick;    // 初心者 10 級：選了想走的職業（開始／繼續那個職業的試煉；換職業＝重來）
@@ -867,29 +868,40 @@ namespace SpellDuel
             string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
             bool lvOk = prof.level >= Advanced.Level;
             var cur = prof.Adv;
+            var pick = Advanced.Get(prof.advPick); if (pick != null && pick.baseCls != prof.cls) pick = null;
+            string proName = SoloBattle.ClassTrialName(prof.cls);
             string status;
             if (cur != null) status = $"公會長：「{cur.name}，願你的力量替人留燈。到「角色」的「進階」分頁修習新技能吧。」";
             else if (!lvOk) status = $"公會長：「{cn}，先聽清自己的聲音。到了 Lv{Advanced.Level}，再來接受轉職試煉。」\n目前 Lv{prof.level}（還差 {Advanced.Level - prof.level} 級）";
-            else if (!prof.trialPassed) status = $"公會長：「三鐘各有聲音，你也該選自己的路了。先過試煉；不能用藥水，倒下須重來。」";
-            else status = "公會長：「你已通過試煉。兩條路都能守護重要的人；請想清楚，選定便不能更換。」";
+            else if (pick == null) status = "公會長：「三鐘各有聲音，你也該選自己的路了。先選想走的那條，我會給你兩關試煉：先是當年那套專業試煉、更難；再來是海上礁石的實戰。」";
+            else if (!prof.advProPassed) status = $"公會長：「{pick.name}嗎？先過{proName}——這次比當年難。失敗了再來找我就好。」";
+            else if (!prof.trialPassed) status = $"公會長：「{proName}過了。接下來是實戰：海上礁石的連續波次，不能用藥水，倒下須重來。」";
+            else status = $"公會長：「兩關都過了。按下去，你就是{pick.name}了——選定便不能更換。」";
             GUI.DrawTexture(new Rect(r.x+gap,y,fs*2.6f,fs*2.6f),Portraits.Get("公會長","guild"),ScaleMode.ScaleToFit,true);
             UiKit.Text(new Rect(r.x + gap*2+fs*2.6f, y, r.width - gap * 3-fs*2.6f, fs * 2.6f), status, fsS, Color.white, TextAnchor.UpperLeft);
             y += fs * 2.8f;
 
-            // 轉職試煉
-            if (cur == null)
+            // 轉職試煉兩關（選了進階職業才出題）：1 專業試煉（更難）、2 實戰試煉（海上礁石、要報名費）
+            if (cur == null && pick != null)
             {
-                var tr = new Rect(r.x + gap, y, r.width - gap * 2, fs * 3.6f);
-                UiKit.Card(tr, 0.55f, new Color(1f, 0.55f, 0.3f), 0.8f);
-                UiKit.Text(new Rect(tr.x + gap, tr.y, tr.width * 0.62f, tr.height), $"⚔ 轉職試煉{(prof.trialPassed ? "（已通過 ✔）" : "")}\n{TrialText}", fsS, Color.white, TextAnchor.MiddleLeft);
-                bool can = lvOk && !prof.trialPassed;
-                string bt = prof.trialPassed ? "已通過" : !lvOk ? $"需要 Lv{Advanced.Level}" : $"挑戰\n💰 {Advanced.TrialGold}";
-                if (UiKit.Button(new Rect(tr.xMax - tr.width * 0.34f, tr.y + gap * 0.4f, tr.width * 0.33f - gap * 0.3f, tr.height - gap * 0.8f), bt, fsS, can, new Color(1f, 0.55f, 0.3f), can))
+                float th = fs * 3.2f;
+                for (int i = 0; i < 2; i++)
                 {
-                    if (Economy.Gold < Advanced.TrialGold) Toast($"金幣不夠（需要 {Advanced.TrialGold}）");
-                    else { Economy.Gold -= Advanced.TrialGold; OnStartTrial?.Invoke(); }
+                    bool done = i == 0 ? prof.advProPassed : prof.trialPassed, next = lvOk && !done && (i == 0 || prof.advProPassed);
+                    var tr = new Rect(r.x + gap, y, r.width - gap * 2, th);
+                    var tc = done ? new Color(0.45f, 0.9f, 0.5f) : next ? new Color(1f, 0.55f, 0.3f) : UiKit.Muted;
+                    UiKit.Card(tr, next ? 0.6f : 0.4f, tc, next ? 0.9f : 0.5f);
+                    string nm = i == 0 ? $"⚔ 進階・{proName}" : "⚔ 實戰試煉", ds = i == 0 ? SoloBattle.ClassTrialDesc(prof.cls, false, true) : TrialText;
+                    UiKit.Text(new Rect(tr.x + gap, tr.y, tr.width * 0.64f, tr.height), $"{(done ? "✔ " : "")}{nm}{(done ? "（已通過）" : "")}\n{ds}", Mathf.RoundToInt(fsS * 0.92f), done || next ? Color.white : Color.gray, TextAnchor.MiddleLeft, false, 0.5f);
+                    string bt = done ? "已通過" : !lvOk ? $"需要 Lv{Advanced.Level}" : !next ? "先過前一關" : i == 0 ? "挑戰" : $"挑戰\n💰 {Advanced.TrialGold}";
+                    if (UiKit.Button(new Rect(tr.xMax - tr.width * 0.34f, tr.y + gap * 0.4f, tr.width * 0.33f - gap * 0.3f, tr.height - gap * 0.8f), bt, fsS, next, tc, next))
+                    {
+                        if (i == 0) { OnAdvPick?.Invoke(pick.id); return; }
+                        if (Economy.Gold < Advanced.TrialGold) Toast($"金幣不夠（需要 {Advanced.TrialGold}）");
+                        else { Economy.Gold -= Advanced.TrialGold; OnStartTrial?.Invoke(); return; }
+                    }
+                    y += th + gap * 0.5f;
                 }
-                y += tr.height + gap * 0.6f;
             }
 
             // 兩個進階職業
@@ -916,19 +928,26 @@ namespace SpellDuel
                 bool hasFace = Story2D.DrawFace(new Rect(cr.x + gap * 0.6f, cr.y + gap * 0.6f, fsz, fsz), Story2D.ClassPortrait(a.baseCls, a.id), a.color);
                 float tx = hasFace ? fsz + gap * 1.2f : 0f;
                 UiKit.Text(new Rect(cr.x + gap + tx, cr.y + gap * 0.3f, cr.width * 0.7f - gap - tx, cr.height - gap * 0.6f), body, fsS, Color.white, TextAnchor.UpperLeft, false, 0.5f);
-                if (cur == null && prof.CanAdvance)
+                if (cur == null && lvOk)
                 {
-                    bool confirming = advPick == a.id && Time.time - advPickAt < 6f;
-                    if (UiKit.Button(new Rect(cr.xMax - cr.width * 0.28f, cr.y + gap * 0.5f, cr.width * 0.27f - gap * 0.3f, cr.height - gap), confirming ? $"確定轉職\n成為{a.name}？\n（不能換）" : $"選擇\n{a.name}", fsS, confirming, a.color))
+                    bool chosen = pick != null && pick.id == a.id;
+                    var br = new Rect(cr.xMax - cr.width * 0.28f, cr.y + gap * 0.5f, cr.width * 0.27f - gap * 0.3f, cr.height - gap);
+                    if (prof.CanAdvance)
                     {
-                        if (!confirming) { advPick = a.id; advPickAt = Time.time; Toast($"再按一次確定成為{a.name}（選了就不能換）"); }
-                        else if (prof.Advance(a.id))
+                        bool confirming = chosen && advPick == a.id && Time.time - advPickAt < 6f;
+                        if (UiKit.Button(br, !chosen ? "你選的\n不是這條" : confirming ? $"確定轉職\n成為{a.name}？\n（不能換）" : $"✨ 成為\n{a.name}", fsS, confirming, a.color, chosen))
                         {
-                            Progress.SaveChar(prof); advPick = null;
-                            Toast($"🎉 轉職成功！你成為了{a.name}，學會「{names[0]}」");
-                            Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
+                            if (!confirming) { advPick = a.id; advPickAt = Time.time; Toast($"再按一次確定成為{a.name}（選了就不能換）"); }
+                            else if (prof.Advance(a.id))
+                            {
+                                Progress.SaveChar(prof); advPick = null;
+                                Toast($"🎉 轉職成功！你成為了{a.name}，學會「{names[0]}」");
+                                Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
+                            }
                         }
                     }
+                    else if (UiKit.Button(br, chosen ? (prof.advProPassed ? "✔ 你選的路\n（試煉中）" : "挑戰\n專業試煉") : pick == null ? $"選這條路\n{a.name}" : "重選\n（試煉重來）", fsS, chosen, a.color, !(chosen && prof.advProPassed)))
+                    { OnAdvPick?.Invoke(a.id); return; }
                 }
             }
             if (maxScroll > 0)

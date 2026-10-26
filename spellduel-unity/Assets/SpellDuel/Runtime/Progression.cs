@@ -919,6 +919,8 @@ namespace SpellDuel
         public readonly Item[] equipped = new Item[5];
         public string adv;              // 進階職業（Advanced.All）；null＝還沒轉職
         public bool trialPassed;        // 轉職試煉通過了（可以選進階職業）
+        public string advPick;          // 30 級在職業工會選的進階職業（試煉照這個出題；null＝還沒選）
+        public bool advProPassed;       // 進階的專業試煉通過了（之後才能挑戰實戰試煉）
         public AdvDef Adv => Advanced.Get(adv);
         /// <summary>從初心者轉職來的：初心者的技能樹保留（點過的不能重置，也不能把點數拿去別的樹）</summary>
         public bool novicePast;
@@ -961,7 +963,7 @@ namespace SpellDuel
         /// <summary>重新算剩下的技能點（各棵樹剩下的加起來）</summary>
         void RecalcSkillPoints() { int v = 0; foreach (var t in Trees) v += AvailIn(t); skillPoints = v; }
         static string TreeName(string tree) => Advanced.Get(tree)?.name ?? (Skills.Classes.TryGetValue(tree, out var c) ? c.name : tree);
-        public bool CanAdvance => adv == null && level >= Advanced.Level && trialPassed;
+        public bool CanAdvance => adv == null && level >= Advanced.Level && trialPassed && advProPassed && advPick != null;
         /// <summary>轉職等級（30 級）還沒轉職：不能再升級（經驗停在滿格），要先完成轉職試煉並轉職</summary>
         public bool LevelLocked => cls == Skills.Novice ? level >= Skills.JobLevel : adv == null && level >= Advanced.Level;
         /// <summary>初心者到 10 級、轉職試煉通過：可以到職業工會選職業</summary>
@@ -994,7 +996,7 @@ namespace SpellDuel
         public bool Advance(string advId)
         {
             var a = Advanced.Get(advId);
-            if (!CanAdvance || a == null || a.baseCls != cls) return false;
+            if (!CanAdvance || a == null || a.baseCls != cls || a.id != advPick) return false;   // 只能轉成試煉時選的
             adv = a.id; RecalcSkillPoints();   // 進階職業的技能點從 31 級開始拿（基本職業剩下的點不能挪過去）
             return true;
         }
@@ -1313,6 +1315,8 @@ namespace SpellDuel
             sb.Append("alloc=").Append(string.Join(",", alloc)).Append('\n');
             if (!string.IsNullOrEmpty(adv)) sb.Append("adv=").Append(adv).Append('\n');
             if (trialPassed) sb.Append("trial=1\n");
+            if (!string.IsNullOrEmpty(advPick)) sb.Append("advpick=").Append(advPick).Append('\n');
+            if (advProPassed) sb.Append("advpro=1\n");
             if (jobTrial > 0) sb.Append("jt=").Append(jobTrial).Append('\n');
             if (!string.IsNullOrEmpty(jobTrialCls)) sb.Append("jtc=").Append(jobTrialCls).Append('\n');
             if (novicePast) sb.Append("np=1\n");
@@ -1346,6 +1350,8 @@ namespace SpellDuel
                         case "rank": { var a = v.Split(':'); if (a.Length == 2) p.ranks[a[0]] = int.Parse(a[1]); break; }
                         case "adv": if (Advanced.Get(v) != null && Advanced.Get(v).baseCls == cls) p.adv = v; break;
                         case "trial": p.trialPassed = v == "1"; break;
+                        case "advpick": if (Advanced.Get(v) != null && Advanced.Get(v).baseCls == cls) p.advPick = v; break;
+                        case "advpro": p.advProPassed = v == "1"; break;
                         case "jt": p.jobTrial = Mathf.Clamp(int.Parse(v), 0, Skills.JobTrialRounds); break;
                         case "jtc": if (Skills.Classes.ContainsKey(v) && Array.IndexOf(Skills.ClassOrder, v) >= 0) p.jobTrialCls = v; break;
                         case "nl": p.noviceLearned.Add(v); break;
@@ -1361,6 +1367,7 @@ namespace SpellDuel
             }
             p.NormalizeSkillPoints();
             if (p.jobTrialCls == null) p.jobTrial = 0;   // 舊存檔（沒選職業就過了試煉）：試煉重來
+            if (p.trialPassed && !p.advProPassed) p.advProPassed = true;   // 更新前就過了實戰試煉的角色：不用補做進階的專業試煉（新流程一定先過專業才能打實戰）
             return p;
         }
     }
