@@ -2532,7 +2532,7 @@ namespace SpellDuel
         public const float QuakeBand = 0.25f;
         /// <summary>各主題 Boss 的「跳躍招」：熔岩震波、樹根波、潮汐環</summary>
         public static string QuakeOf(int theme) => theme == 1 ? "x_rootwave" : theme == 2 ? "x_ripple" : "x_quake";   // 角鬥場、山道的 Boss 用震地波
-        public static bool IsQuake(SkillDef s) => s != null && (s.id == "x_quake" || s.id == "x_rootwave" || s.id == "x_ripple");
+        public static bool IsQuake(SkillDef s) => s != null && (s.id == "x_quake" || s.id == "x_rootwave" || s.id == "x_ripple" || s.id == "w_quake" || s.id == "w_transition");
 
         public void SpawnShockwave(Fighter owner, SkillDef s)
         {

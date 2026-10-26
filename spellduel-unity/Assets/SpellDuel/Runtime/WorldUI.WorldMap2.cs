@@ -197,6 +197,7 @@ namespace SpellDuel
             useOldMap = false;   // 「📋 關卡清單」拿掉了（使用者要求）：只用路線圖；路線圖不能用時才退回舊的清單
             if (!WorldMap2Usable) return false;
             if(worldBossNotice>=0){DrawWorldBossPoster(fs,fsS);return true;}
+            if (wbPick && DrawWorldBossPick(r, prof, fs, fsS, fsL, gap)) return true;
             LoadSeen();
             float now = Time.unscaledTime;
             float y = r.y + gap;
@@ -362,10 +363,48 @@ namespace SpellDuel
                 if (story && UiKit.Button(new Rect(dr.x + gap * 2 + bw, bby, bw, bh), "📖 看故事", fsS)) { var st = sel; OnWatchStory?.Invoke(st); return true; }
             }
             // 下方只剩「角色」「回城鎮」：無盡塔只能從地圖上 2-5 下方的岔路進去（使用者要求：打完 2-5 才能進無盡塔）
-            float bw2 = (r.width - gap * 3) / 2f;
+            float bw2 = (r.width - gap * 4) / 3f;
             int pts = prof.statPoints + prof.UsableSkillPoints;
             if (UiKit.Button(new Rect(r.x + gap, by, bw2, btnH), pts > 0 ? $"📜 角色 ×{pts}" : "📜 角色", fsS, pts > 0, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
-            if (UiKit.Button(new Rect(r.x + gap * 2 + bw2, by, bw2, btnH), $"🏘 回{Towns[Mathf.Clamp(town, 0, Towns.Length - 1)].name}", fsS)) { sel = null; OpenTown(town); }
+            if (UiKit.Button(new Rect(r.x + gap * 2 + bw2, by, bw2, btnH), "🐲 世界 Boss", fsS, false, new Color(1f, 0.5f, 0.3f))) { sel = null; wbPick = true; }
+            if (UiKit.Button(new Rect(r.x + gap * 3 + bw2 * 2, by, bw2, btnH), $"🏘 回{Towns[Mathf.Clamp(town, 0, Towns.Length - 1)].name}", fsS)) { sel = null; OpenTown(town); }
+            return true;
+        }
+
+        bool wbPick;
+        static readonly string[] WbIntro =
+        {
+            "晨鐘熔爐裡站起來的石鐵巨人。胸口的金色熔爐是弱點。",
+            "記名林的古樹化成的龍。六根樹根腳，背上開著琥珀之冠。",
+            "環抱燈塔殘骸的巨大鰭鯨。額頭的潮晶會發光。",
+        };
+        /// <summary>大地圖的世界 Boss 選單：三隻選一隻出發（單人；三個固定階段）</summary>
+        bool DrawWorldBossPick(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
+        {
+            var col = new Color(1f, 0.5f, 0.3f);
+            UiKit.Card(r, 0.92f, col, 0.8f);
+            float y = r.y + gap;
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.8f), "🐲 世界 Boss 討伐", fsL, col, TextAnchor.MiddleCenter, true);
+            y += fs * 2f;
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.6f), "三個固定階段：站樁（原地出招）→ 落地（會走動、攻擊變強）→ 狂暴（不停繞著你、連續出招）。每一招都有預警、順序固定：衝刺側步、橫掃蹲、震地環跳、雷印走開。血量是一般討伐 Boss 的 8 倍，打贏保底史詩以上裝備＋試煉幣 10。", fsS, new Color(0.92f, 0.94f, 1f), TextAnchor.UpperLeft, false, 0.5f);
+            y += fs * 2.9f;
+            float bottom = r.yMax - gap * 2 - fs * 2.1f;
+            float ch = Mathf.Min(fs * 5.2f, (bottom - y) / WorldBossArt.Ids.Length - gap * 0.4f);
+            for (int i = 0; i < WorldBossArt.Ids.Length; i++)
+            {
+                var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
+                var c = Skills.Classes.TryGetValue("boss_" + WorldBossArt.Ids[i], out var cd) ? cd.color : col;
+                UiKit.Card(cr, 0.7f, c, 0.8f);
+                var poster = WorldBossPoster(i);
+                float pw = poster != null ? ch * 0.66f : 0f;
+                if (poster != null) GUI.DrawTexture(new Rect(cr.x + gap * 0.5f, cr.y + gap * 0.3f, pw, ch - gap * 0.6f), poster, ScaleMode.ScaleToFit, true);
+                float bw = cr.width * 0.24f;
+                UiKit.Text(new Rect(cr.x + pw + gap, cr.y + gap * 0.3f, cr.width - pw - bw - gap * 2.5f, fs * 1.4f), WorldBossArt.Names[i], fs, c, TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(cr.x + pw + gap, cr.y + fs * 1.6f, cr.width - pw - bw - gap * 2.5f, ch - fs * 1.8f), WbIntro[i], Mathf.RoundToInt(fsS * 0.92f), new Color(0.9f, 0.92f, 1f), TextAnchor.UpperLeft, false, 0.5f);
+                if (UiKit.Button(new Rect(cr.xMax - bw - gap * 0.4f, cr.y + gap * 0.5f, bw, ch - gap), "⚔ 出發", fsS, true, c)) { var id = WorldBossArt.Ids[i]; wbPick = false; OnStartWorldBoss?.Invoke(id); return true; }
+                y += ch + gap * 0.4f;
+            }
+            if (UiKit.Button(new Rect(r.x + r.width * 0.25f, r.yMax - gap - fs * 2.1f, r.width * 0.5f, fs * 2.1f), "◀ 回大地圖", fs)) wbPick = false;
             return true;
         }
     }

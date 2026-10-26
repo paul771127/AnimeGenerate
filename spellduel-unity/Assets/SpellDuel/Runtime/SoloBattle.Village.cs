@@ -65,6 +65,11 @@ namespace SpellDuel
                 villageReturn = WorldUI.Screen.Training; enemyClass = "daily";
                 OpenPrep($"每日訓練・{ClassTrialName(cls)}", false, "訓練不能使用道具", () => { storyMapOpen = false; StartDailyTraining(cls); });
             };
+            world.OnStartWorldBoss = id =>
+            {
+                villageReturn = null; enemyClass = "boss"; storyStage = null;
+                OpenPrep($"🐲 討伐 {WorldBossName(id)}", false, "討伐世界 Boss 不能使用道具", () => { storyMapOpen = false; StartWorldBoss(id); });
+            };
             world.OnStartGuide = () => { world.OpenTown(world.town); StartWalk("intro"); };   // 重看：做過的步驟會自動跳過
             world.OnStartTutorial = () => { villageReturn = WorldUI.Screen.Training; enemyClass = "tutorial"; storyMapOpen = false; prologueRun = false; StartTutorial(); };
             world.OnStartBounty = () =>

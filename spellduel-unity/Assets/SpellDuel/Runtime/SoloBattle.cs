@@ -1898,9 +1898,10 @@ namespace SpellDuel
                 return;
             }
             bool win = !En.Alive; int bossXp = 0, bossUps = 0;
-            Say(win ? (bossMode ? "🏆 討伐成功！熔岩巨像倒下了" : "🏆 勝利！") : (coop ? "💀 全滅…" : "💀 敗北…"), 99f);
+            Say(win ? (bossMode ? $"🏆 討伐成功！{En.name}倒下了" : "🏆 勝利！") : (coop ? "💀 全滅…" : "💀 敗北…"), 99f);
             if (win && bossMode)
             {
+                GrantWorldBossReward();   // 世界 Boss：史詩以上＋試煉幣
                 // Boss 模式：打贏保底一件稀有以上的裝備（物品等級跟著角色等級）＋金幣
                 if (prof == null) prof = Progress.Char(myClass);
                 TryDrop(true); pendingGold += Economy.BossGold(10);
@@ -2173,6 +2174,7 @@ namespace SpellDuel
             foreach (var go in laneGo.Values) if (go) Destroy(go);
             laneGo.Clear();
             if (bossRig) Destroy(bossRig.gameObject);
+            ClearWorldBoss();
             foreach (var mr in minionGo.Values) if (mr) Destroy(mr.gameObject);
             minionGo.Clear(); minionLastHp.Clear(); minionWinding.Clear();
             foreach (var wg in minionWarn.Values) if (wg) Destroy(wg);
@@ -2239,6 +2241,7 @@ namespace SpellDuel
             {
                 if (ai != null) ai.Update(dt);
                 else if (bossAi != null && !PotLessonFreeze && !battle.Gallery) bossAi.Update(dt);   // 喝藥水教學中 Boss 也暫停
+                else if (worldAi != null) worldAi.Update(dt);   // 世界 Boss（SoloBattle.WorldBoss.cs）
                 else if (!NetMode) en_FaceMe();
                 battle.Update(dt);
                 UpdateSwordSage(dt);   // 劍仙：御劍術連射、劍來的長劍（SoloBattle.SwordSage.cs）
@@ -3087,6 +3090,7 @@ namespace SpellDuel
                 enemyRig.Charge = en.charging != null ? Mathf.Max(0.01f, battle.ChargeProgress(en)) : 0f;
                 if (RemotePlay && NetMode && !coop && PeerIds.Count > 0) DriveFromPeer(enemyRig, PeerIds[0]);   // 遠端對手：照他的手機動
             }
+            if (worldArt) UpdateWorldArt(en, feetS, fwdS, dt);   // 世界 Boss 的外觀（SoloBattle.WorldBoss.cs）
             if (bossRig)
             {
                 // Boss：位置、面向、走路；開始蓄力＝預備動作（時間＝蓄力時間）
@@ -3796,6 +3800,7 @@ namespace SpellDuel
                 : en.charging != null ? $"⚠ 詠唱 {en.charging.name}（{Mathf.FloorToInt(battle.ChargeProgress(en) * 100)}%）" : (ai?.Status ?? bossAi?.Status ?? "");
             if (bossMode && (bossAi != null ? bossAi.Enraged : bossEnragedShown)) enState = "🔥 第 3 階段・狂暴　" + enState;
             else if (bossMode && (bossAi != null ? bossAi.Phase >= 2 : bossPhase2Shown)) enState = (bossShellShown ? "🛡 第 2 階段・護盾（先打倒小怪）　" : "⚔ 第 2 階段　") + enState;
+            if (worldAi != null) enState = WorldBossState() + enState;
             if (en.snaredUntil > now) enState = "被定身";
             if (endless) enState = $"擊倒小怪 {battle.kills}・Boss {battle.bossKills}　" + (en.Alive ? enState : $"Boss 在第 {battle.NextBossWave} 波（還有 {battle.NextBossWave - battle.wave} 波）");
             if (coop && en.Alive && en.target != null && battle.allies.Count > 0) enState = (en.target == me ? "🎯 盯上你！　" : $"🎯 盯著 {en.target.name}　") + enState;   // 仇恨：Boss 現在的目標

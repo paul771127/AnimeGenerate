@@ -245,6 +245,12 @@ namespace SpellDuel
             P(new SkillDef { id = "b_bolt", cls = "boss", name = "熔岩彈", type = SkillType.Projectile, color = C("#ff6a00"), cost = 0, damage = 9, charge = 1.4f, cooldown = 4f, speed = 6f, radius = 0.18f, rangeMax = 12f, multi = 3, spreadDeg = 12f, desc = "三顆熔岩彈扇形射出（側跨閃開）" });
             // 故事 Boss 共用：震地波（地面衝擊環往外擴散，跳起來躲；由 BossAI 直接放，不走一般投射物）
             // 每隻 Boss 的版本不同：熔岩震波（頻繁、中速）、樹根波（慢、範圍小）、潮汐環（快、少見）
+            // 世界 Boss 的招式（WorldBossAI 固定順序）：衝刺（側步）、橫掃（蹲）、震地環／階段爆發（跳）、雷印落擊（走出落點）
+            P(new SkillDef { id = "w_lance", cls = "boss", name = "貫穿衝刺", type = SkillType.Projectile, color = C("#ffd166"), cost = 0, damage = 22, charge = 1.6f, cooldown = 0.3f, speed = 9f, radius = 0.45f, rangeMax = 14f, desc = "鎖定方向的長條衝擊（往旁邊走開）" });
+            P(new SkillDef { id = "w_sweep", cls = "boss", name = "巨臂橫掃", type = SkillType.Projectile, duckable = true, originHeight = 1.15f, color = C("#ff9f43"), cost = 0, damage = 24, charge = 1.8f, cooldown = 0.3f, speed = 7f, radius = 0.9f, rangeMax = 9f, desc = "胸口高度的橫向衝擊波（蹲下躲）" });
+            P(new SkillDef { id = "w_quake", cls = "boss", name = "震地環", type = SkillType.Projectile, color = C("#fbbf24"), cost = 0, damage = 20, charge = 1.8f, cooldown = 0.3f, speed = 3.4f, radius = 0.3f, rangeMax = 12f, desc = "往外擴散的衝擊環（環到腳邊時跳起來躲）" });
+            P(new SkillDef { id = "w_scatter", cls = "boss", name = "雷印落擊", type = SkillType.Projectile, fromAbove = true, dropHeight = 6f, color = C("#ff5e9c"), cost = 0, damage = 22, charge = 2.2f, cooldown = 0.3f, speed = 9f, radius = 0.9f, rangeMax = 14f, desc = "在你放招時站的位置落下雷印（走出紅圈）" });
+            P(new SkillDef { id = "w_transition", cls = "boss", name = "階段爆發", type = SkillType.Projectile, color = C("#ffffff"), cost = 0, damage = 36, charge = 3f, cooldown = 1f, speed = 4f, radius = 0.3f, rangeMax = 16f, desc = "換階段的全場衝擊環（跳起來躲）" });
             P(new SkillDef { id = "x_quake", cls = "boss", name = "熔岩震波", type = SkillType.Projectile, color = C("#fbbf24"), cost = 0, damage = 14, charge = 1.3f, cooldown = 4.5f, speed = 3.2f, radius = 0.3f, rangeMax = 12f, desc = "跺地放出往外擴散的熔岩衝擊環（環到腳邊時跳起來躲）" });
             P(new SkillDef { id = "x_rootwave", cls = "boss_forest", name = "樹根波", type = SkillType.Projectile, color = C("#86efac"), cost = 0, damage = 12, charge = 1.1f, cooldown = 6f, speed = 2.4f, radius = 0.3f, rangeMax = 7f, desc = "樹根在地底一圈圈翻起（環到腳邊時跳起來躲）" });
             P(new SkillDef { id = "x_ripple", cls = "boss_sea", name = "潮汐環", type = SkillType.Projectile, color = C("#67e8f9"), cost = 0, damage = 13, charge = 1.5f, cooldown = 9f, speed = 4.2f, radius = 0.3f, rangeMax = 12f, desc = "海水化成高速擴散的環（環到腳邊時跳起來躲）" });
@@ -301,6 +307,9 @@ namespace SpellDuel
             // 第 4 章角鬥場、第 5 章黃土山道的 Boss：用熔岩巨像的骨架與招式（外觀換色，見 BossRig）
             Classes["boss_arena"] = new ClassDef { id = "boss_arena", name = "青銅鬥魂", color = C("#d4a24c"), maxHp = 500, maxMp = 999, mpRegen = 100, skills = new[] { "b_sweep", "b_slam", "b_leap", "b_bolt", "b_summon" }, defaultLoadout = new[] { "b_sweep", "b_slam", "b_leap", "b_bolt", "b_summon" }, desc = "角鬥場 Boss" };
             Classes["boss_canyon"] = new ClassDef { id = "boss_canyon", name = "黃土岩魔", color = C("#c8a165"), maxHp = 500, maxMp = 999, mpRegen = 100, skills = new[] { "b_bolt", "b_rain", "b_slam", "b_leap", "b_summon" }, defaultLoadout = new[] { "b_bolt", "b_rain", "b_slam", "b_leap", "b_summon" }, desc = "黃土山道 Boss" };
+            // 世界 Boss（大地圖的大型討伐；WorldBossAI 三個固定階段）：三隻共用一套招式，外觀各自（BossRig.CreateWorld）
+            foreach (var wb in new[] { ("wb_furnace", "晨鐘熔爐泰坦", "#ff6420"), ("wb_canopy", "記名林冠龍", "#61cc6b"), ("wb_leviathan", "白帆淵鯨", "#2ea8e6") })
+                Classes["boss_" + wb.Item1] = new ClassDef { id = "boss_" + wb.Item1, name = wb.Item2, color = C(wb.Item3), maxHp = 4000, maxMp = 999, mpRegen = 100, skills = new[] { "w_lance", "w_sweep", "w_quake", "w_scatter", "w_transition" }, defaultLoadout = new[] { "w_lance", "w_sweep", "w_quake", "w_scatter", "w_transition" }, desc = "世界 Boss" };
             Classes["boss"] = new ClassDef { id = "boss", name = "熔岩巨像", color = C("#ff5a1f"), maxHp = 500, maxMp = 999, mpRegen = 100, skills = new[] { "b_bolt", "b_sweep", "b_slam", "b_rain", "b_leap", "b_summon" }, defaultLoadout = new[] { "b_bolt", "b_sweep", "b_slam", "b_rain", "b_leap", "b_summon" }, desc = "Boss" };
             Classes["minion"] = new ClassDef { id = "minion", name = "熔岩小鬼", color = C("#ff8c42"), maxHp = 40, maxMp = 0, mpRegen = 0, skills = new string[0], defaultLoadout = new string[0], desc = "Boss 召喚的小怪" };
 

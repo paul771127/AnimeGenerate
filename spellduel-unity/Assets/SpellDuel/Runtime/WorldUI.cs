@@ -20,6 +20,7 @@ namespace SpellDuel
         public Action OnBack;                    // 離開大地圖（回選擇畫面）
         public Action OnCharacter;               // 打開角色畫面
         public Action OnStartTrial;              // 出發挑戰轉職試煉
+        public Action<string> OnStartWorldBoss;  // 大地圖：討伐世界 Boss（WorldBossArt.Ids）
         public Action<string> OnAdvPick;         // 30 級：選了想走的進階職業（開始那條路的專業試煉；換職業＝重來）
         public Action<string> OnJobChange;       // 初心者 10 級：選了職業（SoloBattle 換成那個職業）
         public Action<int> OnJobTrial;           // 初心者 10 級：挑戰轉職試煉的第幾輪（0 起算）
