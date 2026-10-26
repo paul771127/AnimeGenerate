@@ -15,6 +15,8 @@ namespace SpellDuel
     public partial class WorldUI
     {
         public Action<int> OnStartDaily;          // 每日挑戰（種類）
+        public Action<string> OnStartTraining;    // 每日訓練（職業 id：劍術／念咒／射擊／閃避／觀察）
+        int trainTab;                             // 訓練場：0 每日挑戰、1 每日訓練
         public Action OnStartTutorial;            // 再上一次教學
         public Action OnStartGuide;               // 重看村莊新手導覽
         public Action OnStartBounty;              // 討伐 Boss（單人）
@@ -106,6 +108,11 @@ namespace SpellDuel
             float y = r.y + gap;
             Header(r, $"{f.icon} {f.title}", c, prof, fs, fsS, fsL, gap, ref y);
             NpcIntro(r, f.npc, f.role, f.hello, c, fs, fsS, gap, ref y);
+            float tw = (r.width - gap * 3) / 2f;
+            if (UiKit.Button(new Rect(r.x + gap, y, tw, fs * 1.9f), "📅 每日挑戰", fsS, trainTab == 0, c)) trainTab = 0;
+            if (UiKit.Button(new Rect(r.x + gap * 2 + tw, y, tw, fs * 1.9f), $"🎓 每日訓練（試煉幣 {TrialCoins.Coins}）", fsS, trainTab == 1, new Color(1f, 0.8f, 0.35f))) trainTab = 1;
+            y += fs * 2.2f;
+            if (trainTab == 1) { DrawDailyTraining(r, prof, fs, fsS, gap, y); return; }
             UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.2f), $"📅 今天的每日挑戰（{DateTime.Now:M/d}）：每個挑戰每天領一次獎勵", fsS, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleLeft, true);
             y += fs * 1.4f;
             float bottom = r.yMax - gap * 2 - fs * 2.1f - fs * 2.4f;
@@ -124,6 +131,61 @@ namespace SpellDuel
             float tby = r.yMax - gap * 2 - fs * 2.1f - fs * 2.2f, thw = (r.width - gap * 3) / 2f;
             if (UiKit.Button(new Rect(r.x + gap, tby, thw, fs * 2.1f), "🎓 再上一次教學", fsS, false, new Color(0.35f, 0.95f, 1f))) { OnStartTutorial?.Invoke(); return; }
             if (UiKit.Button(new Rect(r.x + gap * 2 + thw, tby, thw, fs * 2.1f), "🧭 重看村子導覽", fsS, false, new Color(0.4f, 1f, 0.75f))) { OnStartGuide?.Invoke(); return; }
+            BackToTown(r, fs, gap);
+        }
+
+        /// <summary>每日訓練：五種專業試煉（30 秒做滿算分數），每種一天一次，依分數給試煉幣；五種都完成多 5 枚</summary>
+        void DrawDailyTraining(Rect r, CharacterProfile prof, int fs, int fsS, float gap, float y)
+        {
+            var gold = new Color(1f, 0.8f, 0.35f);
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.2f), $"🎓 每日訓練（{DateTime.Now:M/d}）：每種一天一次，依分數給 1～3 枚試煉幣；五種都完成再 +{TrialCoins.AllBonus}", fsS, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleLeft, true);
+            y += fs * 1.4f;
+            float bottom = r.yMax - gap * 2 - fs * 2.1f;
+            float ch = Mathf.Min(fs * 4.2f, (bottom - y) / TrialCoins.Trainings.Length - gap * 0.4f);
+            foreach (var cls in TrialCoins.Trainings)
+            {
+                var c = Skills.Classes[cls]; int done = TrialCoins.DoneToday(cls); var tt = TrialCoins.Tiers(cls);
+                var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
+                UiKit.Card(cr, done >= 0 ? 0.4f : 0.6f, c.color, done >= 0 ? 0.5f : 0.75f);
+                float bw = cr.width * 0.26f;
+                UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width - bw - gap * 2, fs * 1.3f), $"{SoloBattle.ClassTrialName(cls)}（{c.name}）　" + (done >= 0 ? $"✔ 今天 {TrialCoins.ScoreText(cls, done)}・試煉幣 {TrialCoins.CoinsFor(cls, done)}" : "今天還沒做"), fsS, Color.white, TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(cr.x + gap, cr.y + fs * 1.3f, cr.width - bw - gap * 2, ch - fs * 1.35f), SoloBattle.ClassTrialDesc(cls) + $"\n門檻：{tt[0]}＝1 枚　{tt[1]}＝2 枚　{tt[2]}＝3 枚", Mathf.RoundToInt(fsS * 0.9f), new Color(0.85f, 0.9f, 1f), TextAnchor.UpperLeft);
+                if (UiKit.Button(new Rect(cr.xMax - bw - gap * 0.4f, cr.y + gap * 0.4f, bw, ch - gap * 0.8f), done >= 0 ? "明天再來" : "▶ 開始", fsS, done < 0, c.color, done < 0)) { OnStartTraining?.Invoke(cls); return; }
+                y += ch + gap * 0.4f;
+            }
+            UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.1f), "試煉幣在潮騷港的酒館老闆娘・凪那裡換特殊物品", Mathf.RoundToInt(fsS * 0.9f), gold, TextAnchor.MiddleLeft);
+            BackToTown(r, fs, gap);
+        }
+
+        // ---------------------------------------------------------------- 🏆 試煉商店（潮騷港・凪）：試煉幣換特殊物品
+        Vector2 trialShopScroll;
+        void DrawTrialShop(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
+        {
+            var c = new Color(1f, 0.8f, 0.35f);
+            float y = r.y + gap;
+            Header(r, $"🏆 試煉商店（試煉幣 {TrialCoins.Coins}）", c, prof, fs, fsS, fsL, gap, ref y);
+            NpcIntro(r, "酒館老闆娘・凪", "酒館老闆娘", "訓練場的教官會把試煉幣寄到我這裡。拿來換吧——這些東西，是給肯每天練的人的。", c, fs, fsS, gap, ref y);
+            float bottom = r.yMax - gap - fs * 2.4f, rowH = fs * 3.4f;
+            var view = new Rect(r.x + gap, y, r.width - gap * 2, bottom - y);
+            var content = new Rect(0, 0, view.width - 4f, Mathf.Max(view.height, TrialCoins.Wares.Count * (rowH + gap * 0.4f)));
+            trialShopScroll = UiKit.DragScroll(view, trialShopScroll, content);
+            trialShopScroll = GUI.BeginScrollView(view, trialShopScroll, content, false, false, GUIStyle.none, GUIStyle.none);
+            float yy = 0f;
+            foreach (var w in TrialCoins.Wares)
+            {
+                var rr = new Rect(0, yy, content.width, rowH);
+                bool ok = TrialCoins.Coins >= w.price;
+                UiKit.Card(rr, 0.8f, c, 0.6f);
+                UiKit.Text(new Rect(rr.x + gap, rr.y + gap * 0.2f, rr.width * 0.68f, fs * 1.4f), $"{w.icon} {w.name}", fs, Color.white, TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(rr.x + gap, rr.y + fs * 1.5f, rr.width * 0.68f, rowH - fs * 1.6f), w.desc, Mathf.RoundToInt(fsS * 0.9f), new Color(0.9f, 0.9f, 1f), TextAnchor.UpperLeft, false, 0.5f);
+                if (UiKit.Button(new Rect(rr.xMax - rr.width * 0.3f, rr.y + rr.height * 0.2f, rr.width * 0.29f - gap * 0.3f, rr.height * 0.6f), $"🏆 {w.price}", fs, ok, c, ok))
+                {
+                    var msg = TrialCoins.Buy(w, prof, rng);
+                    if (msg != null) { Progress.SaveBag(); Toast(msg); Sfx.Play("coin", 0.8f); } else Toast("試煉幣不夠");
+                }
+                yy += rowH + gap * 0.4f;
+            }
+            GUI.EndScrollView();
             BackToTown(r, fs, gap);
         }
 

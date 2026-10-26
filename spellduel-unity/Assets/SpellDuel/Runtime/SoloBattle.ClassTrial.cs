@@ -28,6 +28,8 @@ namespace SpellDuel
         };
 
         string classTrial;                               // 正在進行哪個職業的專業試煉（null＝沒有）
+        bool trialDaily;                                 // 每日訓練（訓練場）：30 秒做滿算分數換試煉幣，不是轉職
+        int watchFound; (int coins, int bonus) trialReward;
         bool classTrialWon; string classTrialNote;       // 結算：通過了嗎、原因
         System.Random trialRng;
         float trialLastMeHp;
@@ -107,12 +109,21 @@ namespace SpellDuel
             ShowDialogue(lines, () => BeginClassTrial(cls));
         }
 
-        void BeginClassTrial(string cls)
+        /// <summary>訓練場的每日訓練：同一套試煉，30 秒做滿算分數（一天一次）</summary>
+        void StartDailyTraining(string cls)
+        {
+            if (!Skills.Classes.ContainsKey(cls) || TrialCoins.DoneToday(cls) >= 0) return;
+            if (GateArea(() => StartDailyTraining(cls))) return;
+            storyMapOpen = false; villageReturn = WorldUI.Screen.Training; jobTrialRound = -1;
+            BeginClassTrial(cls, true);
+        }
+
+        void BeginClassTrial(string cls, bool dailyMode = false)
         {
             SaveChoices();
             EndBattle();
             storyStage = null; dungeon = null; daily = null;
-            classTrial = cls; classTrialWon = false; classTrialNote = null;
+            classTrial = cls; classTrialWon = false; classTrialNote = null; trialDaily = dailyMode; watchFound = 0; trialReward = (0, 0);
             prof = Progress.Char(myClass);
             EnsureLoadout();
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
@@ -141,7 +152,7 @@ namespace SpellDuel
             dodgeSpawned = 0;
             watchOdd = null; watchMarker = null; watchDirs.Clear();
             phase = Phase.Fighting; resultShown = false;
-            Say($"🎓 {ClassTrialName(cls)}：站好、手機對著前方，倒數後開始", 3f);
+            Say($"{(dailyMode ? "📅 每日訓練・" : "🎓 ")}{ClassTrialName(cls)}：站好、手機對著前方，倒數後開始", 3f);
         }
 
         void ClearClassTrial()
@@ -151,7 +162,7 @@ namespace SpellDuel
             if (watchMarker) Destroy(watchMarker);
             shotGo = null; shotCore = null; watchMarker = null; watchOdd = null; watchDirs.Clear();
             runnerUp = false; shotUp = false;
-            classTrial = null;
+            classTrial = null; trialDaily = false;
         }
 
         /// <summary>每幀（戰鬥中、Battle 更新之後）；試煉結束回傳 true</summary>
@@ -178,12 +189,19 @@ namespace SpellDuel
                 case "assassin": done = UpdateDodgeTrial(now, t); break;
                 case "priest": done = UpdateWatchTrial(t, dt); break;
             }
-            if (!done && t >= ClassTrialTime) done = FinishClassTrial(ClassTrialTimeUpWon(), "時間到");
+            if (!done && t >= ClassTrialTime) done = FinishClassTrial(ClassTrialTimeUpWon(), trialDaily ? "時間到" : "時間到，沒有達標");
             return done;
         }
 
-        /// <summary>時間到的時候算通過嗎（刺客撐到最後＝通過；其他要先達標，達標時已經結束）</summary>
-        bool ClassTrialTimeUpWon() => classTrial == "assassin";
+        /// <summary>時間到的時候算通過嗎（刺客撐到最後＝通過；其他要先達標，達標時已經結束）。每日訓練：做滿就算完成</summary>
+        bool ClassTrialTimeUpWon() => trialDaily || classTrial == "assassin";
+
+        /// <summary>每日訓練的分數</summary>
+        int TrialScore() => classTrial switch
+        {
+            "swordsman" => swordHits, "mage" => chantDone, "archer" => shotHits, "priest" => watchFound,
+            "assassin" => Mathf.Clamp(Mathf.FloorToInt(ClassTrialElapsed), 0, Mathf.RoundToInt(ClassTrialTime)), _ => 0,
+        };
 
         bool FinishClassTrial(bool won, string note)
         {
@@ -198,7 +216,8 @@ namespace SpellDuel
             shotUp = false;
             foreach (var m in battle.minions) m.hp = 0f;
             battle.minionHold = null;
-            if (won) JobTrialPassed(0);
+            if (trialDaily) { trialReward = TrialCoins.Record(classTrial, TrialScore()); won = trialReward.coins > 0; classTrialWon = won; }
+            else if (won) JobTrialPassed(0);
             Sfx.Play(won ? "win" : "lose"); Haptics.Play(won ? Haptics.Kind.Success : Haptics.Kind.Warning);
             return true;
         }
@@ -239,7 +258,7 @@ namespace SpellDuel
                     swordHits++;
                     Sfx.Play("hit", 1f, 1.1f); Haptics.Play(Haptics.Kind.Success);
                     floaters.Add(new Floater { text = $"⚔ 打中！{swordHits}/{SwordHitsNeed}", color = new Color(1f, 0.85f, 0.4f), born = Time.time, screen = true });
-                    if (swordHits >= SwordHitsNeed) return FinishClassTrial(true, $"{ClassTrialTime - t:0.#} 秒內打中 {SwordHitsNeed} 次");
+                    if (!trialDaily && swordHits >= SwordHitsNeed) return FinishClassTrial(true, $"{ClassTrialTime - t:0.#} 秒內打中 {SwordHitsNeed} 次");
                 }
                 else floaters.Add(new Floater { text = "太遠了：要用木棍打中才算", color = new Color(1f, 0.6f, 0.5f), born = Time.time, screen = true });
             }
@@ -265,7 +284,7 @@ namespace SpellDuel
         bool UpdateChantTrial(float t)
         {
             if (chantCur == null) chantCur = NextChant();
-            return chantDone >= ChantNeed && FinishClassTrial(true, $"{ClassTrialTime - t:0.#} 秒內唸對 {ChantNeed} 組");
+            return !trialDaily && chantDone >= ChantNeed && FinishClassTrial(true, $"{ClassTrialTime - t:0.#} 秒內唸對 {ChantNeed} 組");
         }
 
         /// <summary>辨識器的每段文字：和現在的咒文比讀音（SpeechMatcher：拼音相似度），八成像就算這組唸對</summary>
@@ -361,7 +380,7 @@ namespace SpellDuel
                 SpellFx.Impact("archer", new Color(1f, 0.8f, 0.3f), sp, 0.9f);
                 Sfx.Play("hit", 1f, 1.2f); Haptics.Play(Haptics.Kind.Success);
                 floaters.Add(new Floater { text = $"🎯 命中！{shotHits}/{ShotHitsNeed}", color = new Color(1f, 0.85f, 0.4f), born = Time.time, screen = true });
-                if (shotHits >= ShotHitsNeed) return FinishClassTrial(true, $"{ClassTrialTime - t:0.#} 秒內打中 {ShotHitsNeed} 個靶子");
+                if (!trialDaily && shotHits >= ShotHitsNeed) return FinishClassTrial(true, $"{ClassTrialTime - t:0.#} 秒內打中 {ShotHitsNeed} 個靶子");
                 shotUp = false;
                 SpawnShotTarget();
                 break;
@@ -447,9 +466,20 @@ namespace SpellDuel
             // 打到哪一隻
             foreach (var m in battle.minions)
             {
-                if (m.hp >= m.maxHp - 0.01f) continue;
+                if (!m.Alive || m.hp >= m.maxHp - 0.01f) continue;
                 bool right = m == watchOdd;
                 if (right) SpellFx.Impact("priest", new Color(1f, 0.9f, 0.5f), WorldFrame.FromWorld(m.Feet + Vector3.up * 0.6f), 1f);
+                if (trialDaily && right)
+                {
+                    // 每日訓練：找到了＋1，換一群再找
+                    watchFound++;
+                    Sfx.Play("charged", 0.8f); Haptics.Play(Haptics.Kind.Success);
+                    floaters.Add(new Floater { text = $"👀 找到了！{watchFound} 隻　換下一群", color = new Color(1f, 0.9f, 0.5f), born = Time.time, screen = true });
+                    foreach (var x in battle.minions) x.hp = 0f;
+                    if (watchMarker) Destroy(watchMarker);
+                    watchMarker = null; watchOdd = null; watchDirs.Clear();
+                    return false;
+                }
                 return FinishClassTrial(right, right ? $"{ClassTrialTime - t:0.#} 秒內找出不一樣的那隻" : "打錯了：那隻和別人一樣");
             }
             return false;
@@ -463,7 +493,7 @@ namespace SpellDuel
             UiKit.Card(topR, 0.92f, col, 0.8f);
             float gap = W * 0.015f, ix = topR.x + gap, iw = topR.width - gap * 2, y = topR.y + gap * 0.5f;
             float t = Mathf.Clamp(ClassTrialElapsed, 0f, ClassTrialTime);
-            UiKit.Text(new Rect(ix, y, iw * 0.55f, lh), $"🎓 {ClassTrialName(classTrial)}", fs, Color.white, TextAnchor.MiddleLeft, true);
+            UiKit.Text(new Rect(ix, y, iw * 0.55f, lh), (trialDaily ? "📅 " : "🎓 ") + ClassTrialName(classTrial), fs, Color.white, TextAnchor.MiddleLeft, true);
             UiKit.Bar(new Rect(ix + iw * 0.56f, y + lh * 0.15f, iw * 0.44f, lh * 0.7f), 1f - t / ClassTrialTime, col, $"{ClassTrialTime - t:0} 秒", fsS);
             y += lh;
             string prog = classTrial switch
@@ -477,7 +507,12 @@ namespace SpellDuel
             };
             UiKit.Text(new Rect(ix, y, iw, lh * 0.9f), prog, fsS, new Color(1f, 0.92f, 0.6f));
             y += lh * 0.9f;
-            UiKit.Text(new Rect(ix, y, iw, lh * 0.8f), ClassTrialDesc(classTrial), Mathf.RoundToInt(fsS * 0.9f), new Color(0.8f, 0.88f, 1f));
+            if (trialDaily)
+            {
+                var tt = TrialCoins.Tiers(classTrial); int sc = TrialScore();
+                UiKit.Text(new Rect(ix, y, iw, lh * 0.8f), $"目前 {TrialCoins.ScoreText(classTrial, sc)}・試煉幣 {TrialCoins.CoinsFor(classTrial, sc)}／3　（{tt[0]}＝1　{tt[1]}＝2　{tt[2]}＝3）", Mathf.RoundToInt(fsS * 0.9f), new Color(1f, 0.85f, 0.5f));
+            }
+            else UiKit.Text(new Rect(ix, y, iw, lh * 0.8f), ClassTrialDesc(classTrial), Mathf.RoundToInt(fsS * 0.9f), new Color(0.8f, 0.88f, 1f));
 
             if (battle.now < ClassTrialStart)
             {
@@ -516,6 +551,20 @@ namespace SpellDuel
             var orr = new Rect(pad, top + (botY - top) * .2f, W - pad * 2, (botY - top) * .46f);
             UiKit.Result(orr, classTrialWon);
             float y = orr.y + gap;
+            if (trialDaily)
+            {
+                int sc = TrialScore(); var tt = TrialCoins.Tiers(classTrial);
+                UiKit.Text(new Rect(orr.x, y, orr.width, lh * 1.5f), $"📅 {ClassTrialName(classTrial)}　{TrialCoins.ScoreText(classTrial, sc)}", Mathf.RoundToInt(fs * 1.4f), col, TextAnchor.MiddleCenter, true);
+                y += lh * 1.6f;
+                UiKit.Text(new Rect(orr.x, y, orr.width, lh), trialReward.coins > 0 ? $"🏆 試煉幣 +{trialReward.coins}" + (trialReward.bonus > 0 ? $"　五種都完成 +{trialReward.bonus}！" : "") : "沒有達到門檻，明天再來", fs, Color.white, TextAnchor.MiddleCenter, true);
+                y += lh * 1.1f;
+                UiKit.Text(new Rect(orr.x, y, orr.width, lh * 0.9f), $"門檻：{tt[0]}＝1 枚　{tt[1]}＝2 枚　{tt[2]}＝3 枚　（持有 {TrialCoins.Coins} 枚）", fsS, new Color(1f, 0.92f, 0.6f), TextAnchor.MiddleCenter);
+                y += lh;
+                UiKit.Text(new Rect(orr.x, y, orr.width, lh * 0.9f), "試煉幣可以在潮騷港酒館老闆娘・凪那裡換特殊物品；每種訓練一天一次", fsS, new Color(0.8f, 1f, 0.85f), TextAnchor.MiddleCenter);
+                float bw0 = orr.width * 0.6f, bh0 = lh * 1.8f;
+                if (UiKit.Button(new Rect(orr.x + (orr.width - bw0) / 2f, orr.yMax - gap - bh0, bw0, bh0), "🏘 回訓練場", fs, true, new Color(0.45f, 0.9f, 0.7f))) GoVillage();
+                return;
+            }
             UiKit.Text(new Rect(orr.x, y, orr.width, lh * 1.5f), $"🎓 {ClassTrialName(classTrial)}　{(classTrialWon ? "通過！" : "未通過")}", Mathf.RoundToInt(fs * 1.4f), col, TextAnchor.MiddleCenter, true);
             y += lh * 1.6f;
             UiKit.Text(new Rect(orr.x, y, orr.width, lh), classTrialNote ?? "", fs, Color.white, TextAnchor.MiddleCenter, true);

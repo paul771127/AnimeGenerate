@@ -240,11 +240,13 @@ namespace SpellDuel
                 GUI.DrawTexture(pr, Portraits.Get(t.npcs[npcTalk].name, "npc"), ScaleMode.ScaleToFit, true);
                 UiKit.Text(new Rect(pr.x - gap * 0.5f, pr.yMax, ps + gap, fs * 1.4f), t.npcs[npcTalk].name, fsS, t.color, TextAnchor.MiddleCenter, true);
                 string ql = NpcQuestLabel?.Invoke(t.npcs[npcTalk].name);
+                bool tshop = ql == null && IsTrialShopNpc(t.npcs[npcTalk].name);
+                if (tshop) ql = $"🏆 試煉商店（試煉幣 {TrialCoins.Coins}）";
                 float qh = ql != null ? fs * 1.6f : 0f;
                 UiKit.Text(new Rect(pr.xMax + gap, talkR.y, talkR.xMax - pr.xMax - gap * 2 - fs * 1.6f, talkR.height - qh), $"「{t.npcs[npcTalk].lines[npcLine]}」", fsS, Color.white, TextAnchor.MiddleLeft);
                 if (UiKit.Button(new Rect(talkR.xMax - fs * 1.6f, talkR.y + gap * 0.3f, fs * 1.3f, fs * 1.3f), "✕", fsS)) npcTalk = -1;
                 else if (ql != null && UiKit.Button(new Rect(pr.xMax + gap, talkR.yMax - qh - gap * 0.3f, talkR.xMax - pr.xMax - gap * 2, qh), ql, fsS, true, new Color(1f, 0.8f, 0.35f)))
-                    OnNpcQuest?.Invoke(t.npcs[npcTalk].name);
+                { if (tshop) OpenTrialShop(); else OnNpcQuest?.Invoke(t.npcs[npcTalk].name); }
             }
             float bw = (r.width - gap * 4) / 3f;
             if (UiKit.Button(new Rect(r.x + gap, by, bw, btnH), "📜 角色／裝備", fsS, false, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();

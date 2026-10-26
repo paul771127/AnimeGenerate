@@ -806,8 +806,8 @@ namespace SpellDuel
             for (int i = 0; i < k; i++) lines.Add(new StoryLine { speaker = n.name, tag = "npc", text = n.lines[(n.lineAt + i) % k] });
             n.lineAt = (n.lineAt + 1) % Mathf.Max(1, k);
             Sfx.Play("talk", 0.7f); Haptics.Play(Haptics.Kind.Light);
-            string opens = n.opens;
-            ShowDialogue(lines, () => { if (opens != null) world.OpenFacility(opens); });
+            string opens = n.opens; bool tshop = WorldUI.IsTrialShopNpc(n.name);   // 凪：聊完打開試煉商店
+            ShowDialogue(lines, () => { if (tshop) world.OpenTrialShop(); else if (opens != null) world.OpenFacility(opens); });
         }
 
         // 對話介面：SoloBattle.VnDialogue.cs（《永遠的7日之都》風格）

@@ -11,7 +11,7 @@ namespace SpellDuel
     /// </summary>
     public partial class WorldUI
     {
-        public enum Screen { Map, Town, Smith, Shop, Guild, Gate, Warp, Dungeon, Training, Bounty, Watch, Tower, Alchemy, Craft }
+        public enum Screen { Map, Town, Smith, Shop, Guild, Gate, Warp, Dungeon, Training, Bounty, Watch, Tower, Alchemy, Craft, TrialShop }
         public Screen screen = Screen.Map;
         public int town;                         // 目前所在城鎮（＝地區主題 0～2）
         public Action<StoryStage> OnStartStage;  // 出發打關卡
@@ -126,6 +126,9 @@ namespace SpellDuel
 
         public void OpenTown(int t) { town = Mathf.Clamp(t, 0, Towns.Length - 1); screen = Screen.Town; npcTalk = -1; selItem = null; townMapInit = -1; walkMode = false; }   // 每次進村子都先到 2D 城鎮圖
         public void OpenGuild() { screen = Screen.Guild; npcTalk = -1; selItem = null; }
+        public void OpenTrialShop() { screen = Screen.TrialShop; npcTalk = -1; selItem = null; }
+        /// <summary>試煉商店的老闆：潮騷港的酒館老闆娘・凪</summary>
+        public static bool IsTrialShopNpc(string name) => name != null && name.Contains("凪");
         /// <summary>新手指引用：正在聊天的居民、選中的關卡、選中的物品</summary>
         public string TalkingTo => screen == Screen.Town && !walkMode && npcTalk >= 0 && npcTalk < Towns[town].npcs.Length ? Towns[town].npcs[npcTalk].name : null;
         public string SelStageId => sel?.id;
@@ -162,6 +165,7 @@ namespace SpellDuel
                 case Screen.Watch: if (!DrawFramed("watch", "👀 觀戰席", new Color(0.55f, 0.9f, 1f), "announcer", "播報員", Facilities[3].hello, a => DrawWatchDesk(a, prof, fs, fsS, fsL, gap), fs, fsS, fsL)) DrawWatchDesk(r, prof, fs, fsS, fsL, gap); break;
                 case Screen.Tower: DrawTower(r, prof, fs, fsS, fsL, gap); break;
                 case Screen.Alchemy: DrawAlchemy(r, prof, fs, fsS, fsL, gap); break;   // 藥劑師（WorldUI.Craft.cs）
+                case Screen.TrialShop: DrawTrialShop(r, prof, fs, fsS, fsL, gap); break;   // 試煉商店（WorldUI.Village.cs）
                 case Screen.Craft: DrawCraft(r, prof, fs, fsS, fsL, gap); break;       // 工匠
             }
             if (toast != null && Time.time < toastUntil) UiKit.Pill(r.y + r.height * 0.5f, toast, fs, new Color(1f, 0.9f, 0.5f), r.width * 0.9f, 0.85f);
