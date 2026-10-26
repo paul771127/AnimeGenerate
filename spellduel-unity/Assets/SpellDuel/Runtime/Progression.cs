@@ -388,7 +388,7 @@ namespace SpellDuel
                     // ✨ 輔助
                     FLearn("sx_jz", "jianzhen", 5, 1, "sx_root"),
                     FMod("sx_jz2", "劍陣加厚", "jianzhen", ModField.BuffAmount, 10f, 5, 5, 2, "sx_jz"),
-                    FPas("sx_leech", "劍氣吸血", PassiveKind.Lifesteal, 0.02f, 5, 6, 2, "sx_jz"),
+                    FPas("sx_leech", "劍氣吸血", PassiveKind.Lifesteal, 0.01f, 5, 6, 2, "sx_jz"),   // 每級 1%（滿級 5%）：御劍、萬劍多段命中也會吸
                     FMod("sx_jzcd", "陣法回氣", "jianzhen", ModField.Cooldown, 0.08f, 5, 5, 3, "sx_jz2"),
                     FPas("sx_mp", "劍氣回流", PassiveKind.MpOnHit, 1f, 5, 6, 3, "sx_leech"),
                 };
@@ -585,7 +585,7 @@ namespace SpellDuel
                 default:
                     return n.passive switch
                     {
-                        PassiveKind.Lifesteal => $"造成傷害的 {v * 100:0}% 回復成 HP（每一下最多回最大 HP 的 3%）",
+                        PassiveKind.Lifesteal => $"造成傷害的 {v * 100:0}% 回復成 HP",
                         PassiveKind.Crit => $"爆擊率 +{v * 100:0}%",
                         PassiveKind.Dodge => $"閃避率 +{v * DodgeToEvade * 100f:0.#}%",
                         PassiveKind.MpOnHit => $"每次命中回復 {v:0} MP",

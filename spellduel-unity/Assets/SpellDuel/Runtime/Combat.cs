@@ -3609,12 +3609,11 @@ namespace SpellDuel
                 foreach (var k in new List<string>(o.cooldownUntil.Keys)) if (k != "knife") o.cooldownUntil[k] -= o.knifeCdr;
         }
 
-        /// <summary>吸血的共同上限（使用者要求）：每一下最多回最大 HP 的 3%（技能樹、裝備、藥劑的吸血都一樣）</summary>
-        public const float LeechCapFrac = 0.03f;
+        /// <summary>吸血回 HP（沒有上限；強度由技能樹倍率決定）</summary>
         void Leech(Fighter a, float amount)
         {
             if (amount <= 0f || !a.Alive) return;
-            a.hp = Mathf.Min(a.maxHp, a.hp + Mathf.Min(amount, a.maxHp * LeechCapFrac));
+            a.hp = Mathf.Min(a.maxHp, a.hp + amount);
         }
 
         /// <summary>打中別人之後：吸血、命中回 MP（角色養成的特殊能力）</summary>
