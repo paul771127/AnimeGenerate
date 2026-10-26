@@ -2,10 +2,18 @@ using UnityEngine;
 namespace SpellDuel {
 // Presentation only: never writes Fighter, peer state, equipment or HP.
 internal sealed class AllyPresentation:MonoBehaviour {
-Renderer[] renderers;Transform head;float headTop=.20f,gray,opacity=1,revive;bool wasAlive=true,dirty=true;MaterialPropertyBlock block;
+Renderer[] renderers;Transform head;Bounds headBounds;bool hasHeadBounds;float gray,opacity=1,revive;bool wasAlive=true,dirty=true;MaterialPropertyBlock block;
 internal bool Removing{get;private set;}
 internal float Opacity=>opacity;
-internal Vector3 LabelAnchor=>head?head.TransformPoint(new Vector3(0,headTop,0))+Vector3.up*.14f:transform.position+Vector3.up*2.1f;
+internal Vector3 LabelAnchor {
+ get {
+  if(!head||!hasHeadBounds)return transform.position+Vector3.up*2.1f;
+  var point=head.TransformPoint(headBounds.center);float top=float.NegativeInfinity;
+  // A head can be tilted or lying down. Project its cached local box, not just its Y tip.
+  for(int i=0;i<8;i++){var corner=headBounds.center+Vector3.Scale(headBounds.extents,new Vector3((i&1)==0?-1:1,(i&2)==0?-1:1,(i&4)==0?-1:1));top=Mathf.Max(top,head.TransformPoint(corner).y);}
+  point.y=top+.14f;return point;
+ }
+}
 internal static AllyPresentation For(CharacterRig rig){var v=rig.GetComponent<AllyPresentation>();if(!v){v=rig.gameObject.AddComponent<AllyPresentation>();v.Refresh();}return v;}
 internal static Rect PlaceLabel(Vector3 point,float width,float height,int fs,System.Collections.Generic.List<Rect> used){
  float w=Mathf.Min(width*.30f,fs*8f),h=fs*1.8f;var rect=new Rect(Mathf.Clamp(point.x-w*.5f,0,width-w),height-point.y-h,w,h);
@@ -15,7 +23,11 @@ internal static Rect PlaceLabel(Vector3 point,float width,float height,int fs,Sy
 internal void Refresh(){
  dirty=true;renderers=GetComponentsInChildren<Renderer>(true);if(block==null)block=new MaterialPropertyBlock();
  if(!head)foreach(var t in GetComponentsInChildren<Transform>())if(t.name=="Head"){head=t;break;}
- if(head){headTop=-10;foreach(var f in head.GetComponentsInChildren<MeshFilter>())foreach(var v in f.sharedMesh.vertices)headTop=Mathf.Max(headTop,head.InverseTransformPoint(f.transform.TransformPoint(v)).y);}
+ if(head){
+  var lo=new Vector3(100,100,100);var hi=new Vector3(-100,-100,-100);hasHeadBounds=false;
+  foreach(var f in head.GetComponentsInChildren<MeshFilter>())foreach(var v in f.sharedMesh.vertices){var p=head.InverseTransformPoint(f.transform.TransformPoint(v));lo=new Vector3(Mathf.Min(lo.x,p.x),Mathf.Min(lo.y,p.y),Mathf.Min(lo.z,p.z));hi=new Vector3(Mathf.Max(hi.x,p.x),Mathf.Max(hi.y,p.y),Mathf.Max(hi.z,p.z));hasHeadBounds=true;}
+  if(hasHeadBounds)headBounds=new Bounds((lo+hi)*.5f,hi-lo);
+ }
 }
 internal void State(bool alive){if(alive!=wasAlive){dirty=true;if(alive)revive=.8f;}wasAlive=alive;gray=alive?0:.85f;}
 internal void BeginRemoval(){if(Removing)return;Removing=true;var rig=GetComponent<CharacterRig>();if(rig)rig.enabled=false;}
