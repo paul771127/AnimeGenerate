@@ -315,8 +315,8 @@ namespace SpellDuel
                     at = WCtx.Result;
                     S("回村子轉職", "回村子轉職", () => "你已經 10 級了！初心者的路走完了，回村子的職業工會轉職。按「🏛 回村子轉職」。", () => storyMapOpen && phase == Phase.Setup && world.screen == WorldUI.Screen.Guild, InVillage);
                     at = WCtx.Guild;
-                    S("挑戰|工會|回炎之里|🗺 城鎮圖", "轉職試煉", () => P().CanChangeJob ? "通過試煉了！回到「🏛 職業工會」選職業。" : "按「挑戰」開始轉職試煉：打倒空地上的 5 隻小怪就通過（失敗可以再挑戰）。", () => P().CanChangeJob && storyMapOpen && phase == Phase.Setup && world.screen == WorldUI.Screen.Guild);
-                    S("選這個|再按一次", "選職業", () => "選一個職業（這一步你自己決定）：點職業卡片可以看介紹；按「選這個」，再按一次確定。選定就不能換了。", () => P().cls != Skills.Novice).block = false;
+                    S("挑戰|選這條路|繼續試煉|重選|介紹|返回|工會|回炎之里|🗺 城鎮圖", "轉職試煉", () => P().CanChangeJob ? "兩關都通過了！回到「🏛 職業工會」正式轉職。" : P().jobTrial > 0 ? "專業試煉過了！按「挑戰」進實戰試煉：打倒空地上的 5 隻小怪。" : "先選你想走的職業（點「📖 介紹」可以先看），按「選這條路」開始那個職業的專業試煉（30 秒；失敗可以再來）。", () => P().CanChangeJob && storyMapOpen && phase == Phase.Setup && world.screen == WorldUI.Screen.Guild);
+                    S("成為|再按一次", "正式轉職", () => "按「✨ 成為…」，再按一次確定，就正式轉職了。", () => P().cls != Skills.Novice).block = false;
                     break;
                 case "smith":
                 {

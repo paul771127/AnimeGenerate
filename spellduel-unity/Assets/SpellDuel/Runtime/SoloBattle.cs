@@ -739,7 +739,7 @@ namespace SpellDuel
                 world.OnJobChange = JobChange;
                 world.NpcQuestLabel = NoviceQuestLabel;
                 world.OnNpcQuest = n => NoviceQuestTalk(n);
-                world.OnJobTrial = StartJobTrial;
+                world.OnJobTrial = StartJobTrial; world.OnJobTrialPick = PickJobTrial;
                 world.JobTrialNames = JobTrialNames; world.JobTrialDesc = JobTrialDesc;
                 WireVillage();
             }
@@ -787,11 +787,11 @@ namespace SpellDuel
             world.SpeechNote = !UseSpeech ? "這支手機沒有語音辨識：走近居民，舉起手掌揮一揮就能聊天" : speech.Running ? null : $"語音：{speech.Status}";
         }
 
-        bool speechCalib;
+        bool speechCalib, speechChant;
         void OnSpeechText(string text)
         {
             if (VoiceCalib.Open) { VoiceCalib.Heard(text); return; }
-            if (phase == Phase.Fighting && battle != null) { if (scrollAsk) return; DungeonSpeech(text); if (PotionByVoice(text)) return; ItemByVoice(text); CoatByVoice(text); return; }   // 回城確認中：暫停，不聽指令
+            if (phase == Phase.Fighting && battle != null) { if (scrollAsk) return; if (ClassTrialSpeech(text)) return; DungeonSpeech(text); if (PotionByVoice(text)) return; ItemByVoice(text); CoatByVoice(text); return; }   // 回城確認中：暫停，不聽指令
             if (!TownWalking) return;
             if (Greeting.Find(text) != null) { world.Heard = text; world.HeardAt = Time.time; }
             townWalk.Heard(text);
@@ -1762,9 +1762,9 @@ namespace SpellDuel
                 if (battle.stageCleared)
                 {
                     string loot = GrantLoot("轉職試煉・實戰通過", false);
-                    JobTrialPassed(0);
+                    JobTrialPassed(1);
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
-                    Say("🎉 轉職試煉通過！回職業工會選擇你的職業" + (loot.Length > 0 ? "\n" + loot : ""), 99f);
+                    Say("🎉 轉職試煉全部通過！回職業工會正式轉職" + (loot.Length > 0 ? "\n" + loot : ""), 99f);
                 }
                 else { LoseLoot(); Say("💀 試煉沒有通過…休息一下再來挑戰（可以重複挑戰）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
@@ -2135,7 +2135,7 @@ namespace SpellDuel
         {
             ClearGallery();
             outroUntil = -1f; introUntil = -1f; btStage = 0; potStage = 0;
-            ClearDaily(); ClearTutorial(); RestoreArea(); ClearSwipeTrail(); ClearSwordSage(); ClearGuardFx();
+            ClearDaily(); ClearClassTrial(); ClearTutorial(); RestoreArea(); ClearSwipeTrail(); ClearSwordSage(); ClearGuardFx();
             ResetCarryLeft();   // 下一場能用的道具＝整備時決定帶的數量
             victory = null; hitsTaken = 0; lootLog.Clear(); lootGoldLog = 0; ResetExercise();
             if (prof != null) Progress.SaveChar(prof);
@@ -2237,6 +2237,7 @@ namespace SpellDuel
                 UpdateGuardFx();       // 格擋、反擊、護盾中：眼前的防禦光盾（SoloBattle.GuardFx.cs）
                 UpdateExercise(dt);   // 運動紀錄：蹲、跳、閃避、移動距離
                 if (daily != null && UpdateDaily()) { UpdateVisuals(); return; }   // 每日挑戰：時間到（或心用完）→ 結算
+                if (classTrial != null && UpdateClassTrial()) { UpdateVisuals(); return; }   // 轉職的專業試煉（SoloBattle.ClassTrial.cs）
                 if (tutorial && UpdateTutorial()) { UpdateVisuals(); return; }      // 教學關：最後一步完成 → 結算
                 UpdateBattleTut();   // 1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）
                 UpdatePotionLesson();   // 1-2：喝藥水教學（SoloBattle.PotionLesson.cs）
@@ -2549,11 +2550,12 @@ namespace SpellDuel
             bool wantSpeech = UseSpeech && (voiceOn && phase == Phase.Fighting || town || calib) && recordingSkill == null;
             if (calib != speechCalib && speech.Running) speech.Stop();   // 換成校正／換回來：重新開（候選名稱不同）
             speechCalib = calib;
-            if (wantSpeech && (!speech.Running || town != speechTown))
+            bool chant = classTrial == "mage" && phase == Phase.Fighting;   // 念咒訓練：不聽技能，只提示咒文字庫
+            if (wantSpeech && (!speech.Running || town != speechTown || chant != speechChant))
             {
-                speech.Candidates = calib ? VoiceCalib.Candidates : town ? NoSkills : SpeechCandidates;
-                speech.ExtraHints = town ? Greeting.Words : myClass == "mage" ? CoatWords : null;
-                speechTown = town;
+                speech.Candidates = calib ? VoiceCalib.Candidates : town || chant ? NoSkills : SpeechCandidates;
+                speech.ExtraHints = town ? Greeting.Words : chant ? ChantWords : myClass == "mage" ? CoatWords : null;
+                speechTown = town; speechChant = chant;
                 if (!speech.Running) speech.Start();
             }
             else if (!wantSpeech && speech != null && speech.Running) speech.Stop();
@@ -3793,6 +3795,7 @@ namespace SpellDuel
             y += lh * 0.9f;
             UiKit.Text(new Rect(ix, y, iw, lh * 0.8f), StatusText(en, now), fsS, new Color(0.75f, 0.85f, 1f));
             if (daily != null) DrawDailyHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 每日挑戰：計時、分數、獎牌（蓋在敵人卡片上）
+            if (classTrial != null) DrawClassTrialHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 轉職的專業試煉：計時、進度、咒文
             if (tutorial && phase == Phase.Fighting) DrawTutorialHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 教學關：第幾步、要做什麼
             DrawBattleTutHud(topR, W, H, lh, fs, fsS, pillW);   // 1-1／1-2 的戰鬥教學
             DrawPotionLesson(W, H, fs, fsS, fsL);   // 1-2：喝藥水教學
@@ -3824,7 +3827,7 @@ namespace SpellDuel
             }
 
             // 所有敵人（Boss、電腦對手、小怪）：在畫面中 → 頭上標距離（最近的寫「最近」、正在出手的紅色 ⚠）；不在畫面中 → 畫面邊緣的箭頭
-            if (phase == Phase.Fighting && !dummyMode && daily == null) DrawEnemyMarkers(W, H, lh, fsS);
+            if (phase == Phase.Fighting && !dummyMode && daily == null && classTrial == null) DrawEnemyMarkers(W, H, lh, fsS);
             if(phase==Phase.Fighting)DrawAllyLabels(cam,W,H,fsS);
 
             // 小怪頭上的小血條
@@ -4148,6 +4151,7 @@ namespace SpellDuel
             if (phase == Phase.Over && victory == null) DrawExerciseCard(W, top + (botY - top) * 0.07f, pad, lh, fsS);   // 運動紀錄（勝利窗格裡另外顯示）
             if (phase == Phase.Over && victory != null && DrawVictory(W, H, pad, top, botY, gap, lh, fs, fsS)) { }   // 勝利結算窗格（按「繼續」後才是原本的按鈕）
             else if (phase == Phase.Over && daily != null) DrawDailyResult(W, pad, top, botY, gap, lh, fs, fsS);
+            else if (phase == Phase.Over && classTrial != null) DrawClassTrialResult(W, pad, top, botY, gap, lh, fs, fsS);
             else if (phase == Phase.Over && tutorial) DrawTutorialDone(W, pad, top, botY, gap, lh, fs);
             else if (phase == Phase.Over && storyStage != null && NetMode)
             {

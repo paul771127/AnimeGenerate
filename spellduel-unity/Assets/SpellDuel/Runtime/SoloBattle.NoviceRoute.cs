@@ -124,7 +124,7 @@ namespace SpellDuel
                 list.Add(($"📈 練等：目前 Lv{p.level}，10 級才能轉職", Story.IsCleared("1-2") ? "建議重打 1-1、1-2 刷經驗（打過的關卡可以重打）" : "建議重打 1-1 刷經驗，再挑戰 1-2", new Color(0.6f, 0.9f, 1f)));
             if (p.cls == Skills.Novice && Story.IsCleared("1-3"))
             {
-                string d = p.level < Skills.JobLevel ? $"先升到 {Skills.JobLevel} 級（現在 {p.level}）" : p.CanChangeJob ? "試煉通過了：到職業工會選職業" : "到職業工會找公會長：打倒 5 隻小怪";
+                string d = p.level < Skills.JobLevel ? $"先升到 {Skills.JobLevel} 級（現在 {p.level}）" : p.CanChangeJob ? "試煉通過了：到職業工會正式轉職" : "到職業工會找公會長：選職業、通過專業與實戰試煉";
                 list.Add(("🏛 轉職（打 1-4 之前）", d, new Color(0.85f, 0.6f, 1f)));
             }
             // 主線：下一個沒打過的故事關卡

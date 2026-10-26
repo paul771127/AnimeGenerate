@@ -158,30 +158,29 @@ namespace SpellDuel
             var bg = FacilityBg("guild");
             if (bg == null || prof.cls != Skills.Novice || jobInfo != null) return false;   // 進階轉職、職業介紹頁：照舊
             bool ok = prof.CanChangeJob, lvOk = prof.level >= Skills.JobLevel;
+            string chosen = prof.jobTrialCls; var cc = chosen != null && Skills.Classes.TryGetValue(chosen, out var cd0) ? cd0 : null;
             var col = new Color(0.85f, 0.6f, 1f);
-            string line = guildLine ?? (ok ? "你通過了試煉。選一條屬於你的道路——選定便不能更換。"
-                : lvOk ? "到了 10 級，就來接受轉職試煉吧。打倒空地上的小怪就好。"
-                : $"初心者，先保護好自己。到了 Lv{Skills.JobLevel} 再來（還差 {Skills.JobLevel - prof.level} 級）。");
+            string line = guildLine ?? GuildNoviceLine(prof);
             if (Facility2DFrame(bg, "🏛 職業工會", col, "guildmaster", ok ? "smile" : "serious", "公會長", line, fs, fsS, fsL))
             { screen = Screen.Town; guildLine = null; return true; }
-            UiKit.Text(Design(45, 195, 600, 80), "選擇你的職業", fsL, Color.white, TextAnchor.MiddleLeft, true);
+            UiKit.Text(Design(45, 195, 600, 80), ok ? "正式轉職" : prof.jobTrial > 0 ? "轉職試煉進行中" : "選擇你想走的路", fsL, Color.white, TextAnchor.MiddleLeft, true);
 
-            // 右上：轉職試煉（一輪一輪：通過打勾、下一輪可以挑戰）
+            // 右上：轉職試煉（選了職業才出題：第 1 關專業試煉、第 2 關實戰；通過打勾、下一關可以挑戰）
             var tr = Design(680, 205, 360, 260);
             UiKit.Card(tr, 0.9f, new Color(1f, 0.55f, 0.2f), 0.9f);
-            UiKit.Text(new Rect(tr.x + fs * 0.5f, tr.y + fs * 0.2f, tr.width - fs, fs * 1.5f), "轉職試煉", fs, Color.white, TextAnchor.MiddleLeft, true);
+            UiKit.Text(new Rect(tr.x + fs * 0.5f, tr.y + fs * 0.2f, tr.width - fs, fs * 1.5f), cc != null ? $"轉職試煉・{cc.name}" : "轉職試煉", fs, Color.white, TextAnchor.MiddleLeft, true);
             int rounds = Mathf.Max(1, Skills.JobTrialRounds);
             float th = (tr.height - fs * 2f) / rounds;
             for (int i = 0; i < Skills.JobTrialRounds; i++)
             {
-                bool done = prof.jobTrial > i, next = lvOk && prof.jobTrial == i;
+                bool done = prof.jobTrial > i, next = lvOk && chosen != null && prof.jobTrial == i;
                 var rr = new Rect(tr.x + fs * 0.4f, tr.y + fs * 1.8f + i * th, tr.width - fs * 0.8f, th - fs * 0.2f);
-                string nm = JobTrialNames != null && i < JobTrialNames.Length ? JobTrialNames[i] : $"第 {i + 1} 輪";
-                string bt = done ? $"✔ {nm}：已通過" : next ? "挑戰" : !lvOk ? $"Lv{Skills.JobLevel} 才能挑戰" : "先過前一輪";
+                string nm = i == 0 && chosen != null ? SoloBattle.ClassTrialName(chosen) : JobTrialNames != null && i < JobTrialNames.Length ? JobTrialNames[i] : $"第 {i + 1} 關";
+                string bt = done ? $"✔ {nm}：已通過" : next ? $"挑戰{nm}" : !lvOk ? $"Lv{Skills.JobLevel} 才能挑戰" : chosen == null ? "先選職業" : "先過前一關";
                 if (UiKit.Button(rr, bt, fsS, next, new Color(1f, 0.6f, 0.3f), next)) { OnJobTrial?.Invoke(i); return true; }
             }
 
-            // 左邊：五個職業（臉部頭像、一句介紹、選這個；點卡片看介紹）
+            // 左邊：五個職業（臉部頭像、一句介紹；還沒選＝「選這條路」開始那個職業的試煉；都過了＝「成為…」正式轉職）
             var view = Design(30, 290, 610, 1190);
             UiKit.Card(view, 0.55f, null, 0.5f);
             var row = Design(45, 300, 580, 215);
@@ -194,16 +193,22 @@ namespace SpellDuel
             for (int i = 0; i < n; i++)
             {
                 var id = Skills.ClassOrder[i]; var c = Skills.Classes[id];
+                bool mine = chosen == id;
                 var rr = new Rect(pad, rowGap + i * (row.height + rowGap), content.width - pad * 2, row.height);
-                UiKit.Card(rr, 0.85f, c.color, jobArm == id ? 1f : 0.6f);
+                UiKit.Card(rr, 0.85f, c.color, mine || jobArm == id ? 1f : 0.6f);
                 float fsz = rr.height * 0.5f;
                 Story2D.DrawFace(new Rect(rr.xMax - fsz - fs * 0.5f, rr.y + fs * 0.4f, fsz, fsz), Story2D.ClassPortrait(id, null), c.color);
-                UiKit.Text(new Rect(rr.x + fs * 0.6f, rr.y + rr.height * 0.05f, rr.width - fsz - fs * 1.6f, rr.height * 0.28f), c.name, fsL, c.color, TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(rr.x + fs * 0.6f, rr.y + rr.height * 0.05f, rr.width - fsz - fs * 1.6f, rr.height * 0.28f), c.name + (mine ? "　✔ 你選的路" : ""), fsL, c.color, TextAnchor.MiddleLeft, true);
                 string intro = c.desc; int cut = intro.IndexOfAny(new[] { '：', '，', '。' }); if (cut > 0) intro = intro.Substring(0, cut);
                 UiKit.Text(new Rect(rr.x + fs * 0.6f, rr.y + rr.height * 0.33f, rr.width - fsz - fs * 1.6f, rr.height * 0.3f), intro, fsS, new Color(0.88f, 0.9f, 1f), TextAnchor.MiddleLeft, false, 0.5f);
                 bool armed = jobArm == id && Time.time < jobArmUntil;
                 var cb = new Rect(rr.x + fs * 0.6f, rr.y + rr.height * 0.66f, rr.width * 0.45f, rr.height * 0.3f);
-                if (UiKit.Button(cb, !ok ? $"Lv{Skills.JobLevel}＋試煉後" : armed ? "再按一次確定" : "選這個", fsS, armed, new Color(1f, 0.55f, 0.2f), ok)) pick = id;
+                string bt; bool can;
+                if (!lvOk) { bt = $"Lv{Skills.JobLevel} 後"; can = false; }
+                else if (ok) { bt = mine ? (armed ? "再按一次確定" : $"✨ 成為{c.name}") : "你選的不是這條"; can = mine; }
+                else if (prof.jobTrial == 0 || !mine && chosen == null) { bt = mine ? "挑戰試煉" : "選這條路"; can = true; }
+                else { bt = mine ? "繼續試煉" : "重選（試煉重來）"; can = true; }
+                if (UiKit.Button(cb, bt, fsS, armed || (mine && !ok), ok ? new Color(1f, 0.55f, 0.2f) : c.color, can)) pick = id;
                 if (UiKit.Button(new Rect(cb.xMax + fs * 0.4f, cb.y, rr.width * 0.4f, cb.height), "📖 介紹", fsS)) info = id;
             }
             GUI.EndScrollView();
@@ -211,11 +216,23 @@ namespace SpellDuel
             if (pick != null)
             {
                 var c = Skills.Classes[pick];
+                if (!ok) { guildLine = null; OnJobTrialPick?.Invoke(pick); return true; }   // 選職業／繼續或重來：開始試煉
                 if (jobArm == pick && Time.time < jobArmUntil) { jobArm = null; guildLine = null; OnJobChange?.Invoke(pick); return true; }
                 jobArm = pick; jobArmUntil = Time.time + 3f;
-                guildLine = $"「{c.name}」嗎？選了就不能換。3 秒內再按一次確定。";
+                guildLine = $"成為「{c.name}」？選定便不能更換。3 秒內再按一次確定。";
             }
             return true;
+        }
+
+        /// <summary>公會長對初心者說的話（照轉職進度）</summary>
+        static string GuildNoviceLine(CharacterProfile prof)
+        {
+            bool lvOk = prof.level >= Skills.JobLevel;
+            var cc = prof.jobTrialCls != null && Skills.Classes.TryGetValue(prof.jobTrialCls, out var c) ? c : null;
+            if (!lvOk) return $"初心者，先用木棍和石頭保護好自己。到了 Lv{Skills.JobLevel} 再來（還差 {Skills.JobLevel - prof.level} 級）。";
+            if (prof.CanChangeJob && cc != null) return $"兩關都過了。按下去，你就是{cc.name}了——選定便不能更換。";
+            if (prof.jobTrial > 0 && cc != null) return $"你通過了{cc.name}的{SoloBattle.ClassTrialName(prof.jobTrialCls)}。接下來是實戰：打倒空地上的 5 隻小怪。";
+            return "到了 10 級了。五條路各有各的試煉——先選你想走的路，我會告訴你那條路要通過什麼。失敗了再來找我就好。";
         }
     }
 }

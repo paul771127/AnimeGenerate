@@ -965,9 +965,11 @@ namespace SpellDuel
         /// <summary>轉職等級（30 級）還沒轉職：不能再升級（經驗停在滿格），要先完成轉職試煉並轉職</summary>
         public bool LevelLocked => cls == Skills.Novice ? level >= Skills.JobLevel : adv == null && level >= Advanced.Level;
         /// <summary>初心者到 10 級、轉職試煉通過：可以到職業工會選職業</summary>
-        public bool CanChangeJob => cls == Skills.Novice && level >= Skills.JobLevel && jobTrial >= Skills.JobTrialRounds;
-        /// <summary>初心者的轉職試煉通過了幾輪（0～3）</summary>
+        public bool CanChangeJob => cls == Skills.Novice && level >= Skills.JobLevel && jobTrial >= Skills.JobTrialRounds && jobTrialCls != null;
+        /// <summary>初心者的轉職試煉通過了幾輪（0＝還沒、1＝專業試煉過了、2＝實戰也過了）</summary>
         public int jobTrial;
+        /// <summary>初心者在職業工會選的職業（試煉照這個職業出題；null＝還沒選）</summary>
+        public string jobTrialCls;
         /// <summary>初心者：解任務學會的招式、接了還沒完成的任務（技能 id → 進度）</summary>
         public readonly HashSet<string> noviceLearned = new HashSet<string>();
         public readonly Dictionary<string, int> noviceQuest = new Dictionary<string, int>();
@@ -1312,6 +1314,7 @@ namespace SpellDuel
             if (!string.IsNullOrEmpty(adv)) sb.Append("adv=").Append(adv).Append('\n');
             if (trialPassed) sb.Append("trial=1\n");
             if (jobTrial > 0) sb.Append("jt=").Append(jobTrial).Append('\n');
+            if (!string.IsNullOrEmpty(jobTrialCls)) sb.Append("jtc=").Append(jobTrialCls).Append('\n');
             if (novicePast) sb.Append("np=1\n");
             if (souls.Count > 0) sb.Append("souls=").Append(Souls.SerializeBag(souls)).Append('\n');
             foreach (var id in noviceLearned) sb.Append("nl=").Append(id).Append('\n');
@@ -1344,6 +1347,7 @@ namespace SpellDuel
                         case "adv": if (Advanced.Get(v) != null && Advanced.Get(v).baseCls == cls) p.adv = v; break;
                         case "trial": p.trialPassed = v == "1"; break;
                         case "jt": p.jobTrial = Mathf.Clamp(int.Parse(v), 0, Skills.JobTrialRounds); break;
+                        case "jtc": if (Skills.Classes.ContainsKey(v) && Array.IndexOf(Skills.ClassOrder, v) >= 0) p.jobTrialCls = v; break;
                         case "nl": p.noviceLearned.Add(v); break;
                         case "np": p.novicePast = v == "1"; break;
                         case "souls": Souls.ParseBag(v, p.souls); break;
@@ -1356,6 +1360,7 @@ namespace SpellDuel
                 catch (Exception) { }
             }
             p.NormalizeSkillPoints();
+            if (p.jobTrialCls == null) p.jobTrial = 0;   // 舊存檔（沒選職業就過了試煉）：試煉重來
             return p;
         }
     }
@@ -1551,7 +1556,7 @@ namespace SpellDuel
         public static CharacterProfile ChangeJob(string cls)
         {
             var old = Char(Skills.Novice);
-            if (!old.CanChangeJob || cls == Skills.Novice || !Skills.Classes.ContainsKey(cls) || Array.IndexOf(Skills.ClassOrder, cls) < 0) return null;
+            if (!old.CanChangeJob || cls == Skills.Novice || cls != old.jobTrialCls || !Skills.Classes.ContainsKey(cls) || Array.IndexOf(Skills.ClassOrder, cls) < 0) return null;   // 只能轉成試煉時選的職業
             var np = CharacterProfile.Parse(cls, old.Serialize());
             np.novicePast = true;
             foreach (var kv in old.ranks) if (SkillTrees.Find(Skills.Novice, kv.Key) != null) np.ranks[kv.Key] = kv.Value;   // 讀新職業時初心者節點被當成不存在的清掉了：照抄回來
