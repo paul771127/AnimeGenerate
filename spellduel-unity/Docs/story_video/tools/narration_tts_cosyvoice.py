@@ -4,7 +4,8 @@
 # 用法（ComfyUI 先開著，port 8188）：python narration_tts_cosyvoice.py <narration 資料夾> [已跑完的 prompt_id]
 #   27 句放在同一個 ComfyUI prompt 裡（模型只載一次），產出會覆蓋 narration/ 裡同名的 mp3。
 #   給第二個參數時不重新合成，只從 ComfyUI 的歷史紀錄把那次的結果拿來後製。
-#   環境變數 ONLY=v1_golem_01,v0_prologue_02 只重做這幾句；SPEED_MUL=1.15 把這次的語速再乘上去（太長的句子用）。
+#   環境變數 ONLY=v1_golem_01,v0_prologue_02 只重做這幾句；SPEED_MUL=1.15 把這次的語速再乘上去（太長的句子用）；
+#   SEED_ADD=1 換種子重做（同一句唸得不好時）。念錯的字除了標拼音，也可以在 tts_text 換成同音的常用字（例：艾琳→爱琳）。
 import json, os, re, subprocess, sys, time, urllib.request, uuid, shutil
 from pathlib import Path
 
@@ -61,6 +62,7 @@ def main():
         wf[f'ref_{who}'] = {'class_type': 'LoadAudio', 'inputs': {'audio': ref}}
     only = {s for s in os.environ.get('ONLY', '').split(',') if s}
     speed_mul = float(os.environ.get('SPEED_MUL', '1'))
+    seed_add = int(os.environ.get('SEED_ADD', '0'))   # 同一句想換個唸法：SEED_ADD=1 換種子重做
     lines = []
     for video, items in script['videos'].items():
         for i, it in enumerate(items):
@@ -71,7 +73,7 @@ def main():
             # v5：用 tts_text（簡體＋多音字標拼音）和簡體的情緒／語氣；字幕仍用 text
             instruct = instruct_for(who, it.get('tts_emotion', it['emotion']), it.get('tts_direction', it['direction']))
             text = it.get('tts_text', it['text'])
-            seed = int.from_bytes(stem.encode(), 'big') % (2**31 - 1)
+            seed = (int.from_bytes(stem.encode(), 'big') + seed_add) % (2**31 - 1)
             wf[f'tts_{stem}'] = {'class_type': 'FL_CosyVoice3_Instruct2',
                                  'inputs': {'model': ['M', 0], 'text': text, 'instruct_text': instruct,
                                             'reference_audio': [f'ref_{who}', 0], 'speed': speed, 'seed': seed,
