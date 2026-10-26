@@ -709,8 +709,9 @@ namespace SpellDuel
                     int eq = entry.IndexOf('=');
                     if (eq <= 0) continue;
                     var list = new List<string>();
-                    foreach (var a in entry.Substring(eq + 1).Split('|')) if (a.Length > 0) list.Add(a);
-                    if (list.Count > 0) map[entry.Substring(0, eq)] = list;
+                    string sid = entry.Substring(0, eq);
+                    foreach (var a in entry.Substring(eq + 1).Split('|')) if (a.Length > 0 && Invalid(sid, a) == null) list.Add(a);   // 舊的別名不符合規則（字數不同、同音字）就不用
+                    if (list.Count > 0) map[sid] = list;
                 }
                 return map;
             }
@@ -734,16 +735,40 @@ namespace SpellDuel
         }
 
         /// <summary>記下一次「唸 id 時聽到 heard」；回傳正規化後記下的字（太短、空的不記，回傳 null）</summary>
-        public static string Add(string id, string heard)
+        public static string Add(string id, string heard) => Add(id, heard, out _);
+
+        /// <summary>同上；不記的時候 why＝原因（給校正畫面顯示）</summary>
+        public static string Add(string id, string heard, out string why)
         {
             string n = SpeechMatcher.Normalize(heard);
-            if (string.IsNullOrEmpty(id) || n.Length < 2 || n.Length > 12) return null;
+            why = Invalid(id, n);
+            if (why != null) return null;
             if (!Map.TryGetValue(id, out var l)) Map[id] = l = new List<string>();
             l.Remove(n); l.Add(n);
             while (l.Count > MaxPerSkill) l.RemoveAt(0);
             Save();
             return n;
         }
+
+        /// <summary>
+        /// 別名能不能用（null＝可以）：
+        ///   ・字數要跟技能名稱一樣（「火球」只能記兩個字的別名）
+        ///   ・每個字的讀音都要不一樣（「啊啊」「嗯嗯嗯」這種不算；技能名稱本身同一位置就同音的除外）
+        /// </summary>
+        public static string Invalid(string id, string alias)
+        {
+            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(alias)) return "沒聽到字";
+            string name = Skills.All.TryGetValue(id, out var sk) ? SpeechMatcher.Normalize(sk.name) : null;
+            if (string.IsNullOrEmpty(name)) return alias.Length < 2 || alias.Length > 12 ? "太短或太長" : null;
+            if (alias.Length != name.Length) return $"字數要跟「{sk.name}」一樣（{name.Length} 個字，聽到 {alias.Length} 個）";
+            for (int i = 0; i < alias.Length; i++)
+                for (int j = i + 1; j < alias.Length; j++)
+                    if (SameSound(alias[i], alias[j]) && !SameSound(name[i], name[j]))
+                        return $"每個字的讀音要不一樣（「{alias[i]}」和「{alias[j]}」同音）";
+            return null;
+        }
+
+        static bool SameSound(char a, char b) => a == b || SpeechMatcher.CharSim(a, b) >= 0.9f;
 
         public static void Remove(string id, string alias) { if (id != null && Map.TryGetValue(id, out var l) && l.Remove(alias)) Save(); }
         public static void Clear(string id) { if (id != null && Map.Remove(id)) Save(); }

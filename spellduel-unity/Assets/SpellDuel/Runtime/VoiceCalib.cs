@@ -56,8 +56,9 @@ namespace SpellDuel
         static void Tick()
         {
             if (rec == null || pending == null || Time.unscaledTime - pendingAt < TakeQuiet) return;
-            string a = VoiceAliases.Add(rec, pending);
-            got.Add(a ?? $"（太短或太長，沒記：{pending}）");
+            string a = VoiceAliases.Add(rec, pending, out var why);
+            if (a == null) { Note($"⚠ 沒記「{pending}」：{why}，請再唸一次"); pending = null; lastTake = pendingFull; Sfx.Play("fail", 0.5f); return; }   // 不算一次，重唸
+            got.Add(a);
             if (a != null)
             {
                 var all = Skills?.Invoke();
@@ -92,8 +93,8 @@ namespace SpellDuel
                 if (UiKit.Button(new Rect(r.center.x - fs * 4f, r.yMax - pad - fs * 2.2f, fs * 8f, fs * 2.2f), "關閉", fs, true, new Color(0.5f, 0.8f, 1f))) Close();
                 return;
             }
-            UiKit.Text(new Rect(x, y, w, fs * 2.6f), "總是被聽錯的技能：點它、按「🎙 開始唸」，用平常戰鬥的方式唸 3 次。程式會記住你唸的時候辨識器聽到的字，之後聽到一樣的字就知道是這個技能。", fsS, new Color(0.85f, 0.9f, 1f), TextAnchor.UpperLeft, false, 0.6f);
-            y += fs * 2.8f;
+            UiKit.Text(new Rect(x, y, w, fs * 2.6f), "總是被聽錯的技能：點它、按「🎙 開始唸」，用平常戰鬥的方式唸 3 次。程式會記住你唸的時候辨識器聽到的字，之後聽到一樣的字就知道是這個技能。（聽到的字數要跟技能名稱一樣、每個字讀音不同才會記）", fsS, new Color(0.85f, 0.9f, 1f), TextAnchor.UpperLeft, false, 0.6f);
+            y += fs * 3.4f;
 
             // 錄音中／試試看：上面一塊狀態
             float stH = fs * 4.6f;
