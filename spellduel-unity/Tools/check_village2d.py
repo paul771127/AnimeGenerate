@@ -24,7 +24,7 @@ def main():
     for town,npcs in TOWNS.items():
         picture(ART/f'map_{town}.png',(2048,3072));picture(ART/f'map_{town}_fit.png',(1080,1920));path=ART/f'map_{town}.json'
         if exists(path):
-            data=json.loads(path.read_text(encoding='utf-8'));assert all(k in data for k in KEYS+['belltower','mayorhome','npc']),path
+            data=json.loads(path.read_text(encoding='utf-8'));assert all(k in data for k in KEYS+['alchemist','crafter','belltower','mayorhome','npc']),path
             for key,v in data.items():
                 if key=='npc':continue
                 assert all(k in v for k in ['x','y','w','h','label_x','label_y']),(path,key)
@@ -39,6 +39,7 @@ def main():
                     assert overlap==0,(town,ka,kb,'ambiguous overlapping hitboxes')
         for id in npcs:picture(ART/f'npc_{id}.png',(160,240),True)
     for key in KEYS:picture(ART/f'in_{key}_flame.jpg',(1080,1920))
+    for key in ('alchemist','crafter'):picture(ART/f'in_{key}_flame.jpg',(1080,1920))
     for i in range(6):picture(ART/f'anvil_{i}.png',(512,384),True)
     for key in UI:
         path=ART/'ui'/f'{key}.png'
@@ -56,7 +57,9 @@ def main():
                 if not spec['poseVariants']:
                     if master is None:master=pixels
                     else:
-                        mask=DOC/'staff_masks'/f'{id}.png';assert mask.exists(),mask
+                        mask=DOC/'staff_masks'/f'{id}.png'
+                        if not mask.exists():mask=ROOT/'Docs/pending_preview/masks'/f'{id}.png'
+                        assert mask.exists(),mask
                         allowed=np.array(Image.open(mask).convert('L').filter(ImageFilter.MaxFilter(9)))>0
                         delta=np.any(pixels!=master,axis=2);assert not (delta&~allowed).any(),(id,expr,'outside-face pixel drift');assert delta.sum()>15,(id,expr,'identical expression')
     for key in KEYS:

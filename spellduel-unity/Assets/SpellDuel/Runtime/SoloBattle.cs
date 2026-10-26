@@ -318,7 +318,7 @@ namespace SpellDuel
             if (id == null) return false;
             pendingMats.Add(id);
             var m = Crafting.GetMat(id);
-            floaters.Add(new Floater { text = $"{(m != null ? m.icon + m.name : id)}（過關後獲得）", color = new Color(0.8f, 0.9f, 1f), born = Time.time, screen = true });
+            floaters.Add(new Floater { iconId=id, text = $"{(m != null ? (SkillIcons.IsSupply(id)?"":m.icon) + m.name : id)}（過關後獲得）", color = new Color(0.8f, 0.9f, 1f), born = Time.time, screen = true });
             Sfx.Play("coin", 0.5f, 1.4f);
             return true;
         }
@@ -896,7 +896,7 @@ namespace SpellDuel
         float standY = -1f, nextDodgeOk;
         readonly Queue<KeyValuePair<float, Vector3>> moveHist = new Queue<KeyValuePair<float, Vector3>>();
         public const float CrouchDrop = 0.32f, SidestepDist = 0.55f, SidestepWindow = 0.35f, DodgeTime = 0.35f, DodgeCooldown = 1.8f;
-        class Floater { public Vector3 posMap; public string text; public Color color; public float born; public bool screen; }
+        class Floater { public Vector3 posMap; public string text,iconId; public Color color; public float born; public bool screen; }
         readonly List<Floater> floaters = new List<Floater>();
         string message = ""; float messageUntil;
         float incomingFlash, hitFlash;
@@ -3808,7 +3808,9 @@ namespace SpellDuel
                     if (sp.z <= 0) continue;
                     p = new Vector2(sp.x, H - sp.y - age * 60f);
                 }
-                UiKit.Text(new Rect(p.x - W * 0.3f, p.y - lh, W * 0.6f, lh * 1.5f), f.text, fsL, new Color(f.color.r, f.color.g, f.color.b, 1f - age / 1.2f), TextAnchor.MiddleCenter, true);
+                float supplyOffset=0;
+                if(f.iconId!=null&&SkillIcons.IsSupply(f.iconId)){var gc=GUI.color;GUI.color=new Color(1,1,1,1-age/1.2f);SupplyArt.Draw(new Rect(p.x-W*.3f,p.y-lh,lh,lh),f.iconId);GUI.color=gc;supplyOffset=lh*1.1f;}
+                UiKit.Text(new Rect(p.x - W * 0.3f+supplyOffset, p.y - lh, W * 0.6f-supplyOffset, lh * 1.5f), f.text, fsL, new Color(f.color.r, f.color.g, f.color.b, 1f - age / 1.2f), TextAnchor.MiddleCenter, true);
             }
             floaters.RemoveAll(f => Time.time - f.born > 1.2f);
 

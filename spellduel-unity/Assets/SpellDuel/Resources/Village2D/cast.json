@@ -62,5 +62,59 @@
       "surprised"
     ],
     "poseVariants": false
+  },
+  "alchemist_tanyi": {
+    "role": "藥婆婆・炭姨",
+    "expressions": [
+      "normal",
+      "smile",
+      "serious"
+    ],
+    "poseVariants": false
+  },
+  "alchemist_qingluo": {
+    "role": "藥師・青蘿",
+    "expressions": [
+      "normal",
+      "smile",
+      "serious"
+    ],
+    "poseVariants": false
+  },
+  "alchemist_xi": {
+    "role": "藥商・汐",
+    "expressions": [
+      "normal",
+      "smile",
+      "serious"
+    ],
+    "poseVariants": false
+  },
+  "alchemist_sailin": {
+    "role": "藥劑官・賽琳",
+    "expressions": [
+      "normal",
+      "smile",
+      "serious"
+    ],
+    "poseVariants": false
+  },
+  "alchemist_tuoling": {
+    "role": "旅藥師・駝鈴",
+    "expressions": [
+      "normal",
+      "smile",
+      "serious"
+    ],
+    "poseVariants": false
+  },
+  "crafter_laochui": {
+    "role": "工匠・老錘",
+    "expressions": [
+      "normal",
+      "smile",
+      "serious"
+    ],
+    "poseVariants": false
   }
 }

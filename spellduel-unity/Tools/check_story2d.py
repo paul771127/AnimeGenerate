@@ -7,17 +7,20 @@ from PIL import Image,ImageFilter
 ROOT=Path(__file__).resolve().parents[1]
 ART=ROOT/'Assets/SpellDuel/Resources/Story2D'
 DOC=ROOT/'Docs/story2d_stage2'
+PENDING=ROOT/'Docs/pending_preview'
 EXPRS=('normal','smile','angry','sad','surprised','serious')
 BOSSES={'golem','treeking','kraken','bronze','rockfiend','overlord','lavashade','treeshade','tideshade'}
-GHOSTS={'mio','lavashade','treeshade','tideshade'}
+GHOSTS={'oldsmith_shade','mio','lavashade','treeshade','tideshade'}
 BACKGROUNDS={'village','town_forest','town_port','town_arena','town_canyon','guild','tower','dungeon'}|{p+'_'+t for p in ('stage','boss') for t in ('volcano','forest','sea','arena','canyon')}
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--partial',action='store_true',help='check complete existing batches during staged production');args=parser.parse_args()
     cs=(ROOT/'Assets/SpellDuel/Runtime/Story2D.cs').read_text(encoding='utf-8-sig').split('public static readonly string[] Exprs')[0]
     cast=dict(re.findall(r'\["([^\"]+)"\]\s*=\s*"([^\"]+)"',cs));ids=set(cast.values());pending=[];records=[];present=set()
+    additions=json.loads((PENDING/'characters.json').read_text(encoding='utf-8')) if (PENDING/'characters.json').exists() else {}
+    def exprs(identity):return tuple(additions[identity]['expressions']) if identity in additions else ('normal','angry') if identity in BOSSES else EXPRS
     for identity in sorted(ids):
-        expressions=('normal','angry') if identity in BOSSES else EXPRS
+        expressions=exprs(identity)
         files=[ART/'chars'/f'{identity}_{e}.png' for e in expressions]
         if args.partial and not any(p.exists() for p in files):pending.append(identity);continue
         assert all(p.is_file() for p in files),(identity,'missing', [p.name for p in files if not p.exists()])
@@ -25,7 +28,7 @@ def main():
             assert image.mode=='RGBA',files[0]
             size=image.size;master=np.array(image)
         assert size in ((768,1152),(640,960)),(identity,size)
-        mask=DOC/'masks'/f'{identity}.png'
+        mask=PENDING/'masks'/f'{identity}.png' if identity in additions else DOC/'masks'/f'{identity}.png'
         if not mask.exists():mask=ROOT/'Docs/story2d_stage1'/f'{identity}_face_mask.png'
         assert mask.is_file(),(identity,'missing face mask')
         im=Image.open(mask).convert('L');im=im.resize(size,Image.Resampling.LANCZOS) if im.size!=size else im
@@ -45,7 +48,7 @@ def main():
         if args.partial and not path.exists():pending.append('bg/'+identity);continue
         with Image.open(path) as image:assert image.size==(1080,1920) and image.mode=='RGB',path
         backgrounds.append(identity);assert path.with_suffix('.jpg.meta').is_file(),path
-    expected={f'{identity}_{expr}.png' for identity in ids for expr in (('normal','angry') if identity in BOSSES else EXPRS)}
+    expected={f'{identity}_{expr}.png' for identity in ids for expr in exprs(identity)}
     village_cast=ROOT/'Assets/SpellDuel/Resources/Village2D/cast.json'
     if village_cast.exists():
         for identity,spec in json.loads(village_cast.read_text(encoding='utf-8')).items():
@@ -78,21 +81,26 @@ def main():
                 annotations+=1
             elif not args.partial and '：' in line:
                 who=re.split(r'[（(]',line.split('：',1)[0])[0].split('・')[-1]
-                assert who not in cast,(name,no,'unmarked cast line',who)
+                assert who not in cast or who in additions,(name,no,'unmarked cast line',who)
+            if not args.partial and '：' in line and not line.startswith(('#','[','<','背景：')) and not re.match(r'^[a-z_]+\s*=',line):
+                speaker=re.split(r'[（(［]',line.split('：',1)[0])[0].strip().split('・')[-1]
+                if speaker and speaker not in ('{玩家}','旁白','narrator'):assert speaker in cast,(name,no,'unmapped speaker',speaker)
     size=sum(p.stat().st_size for p in ART.rglob('*') if p.suffix.lower() in ('.png','.jpg','.jpeg'))
     class_size=sum(p.stat().st_size for p in (ART/'classes').glob('*.png'))
     village_size=0
     if village_cast.exists():
         for identity,spec in json.loads(village_cast.read_text(encoding='utf-8')).items():
             village_size+=sum((ART/'chars'/f'{identity}_{e}.png').stat().st_size for e in spec['expressions'] if (ART/'chars'/f'{identity}_{e}.png').exists())
-    dialogue_size=size-class_size-village_size
+    pending_size=sum((ART/'chars'/f'{identity}_{e}.png').stat().st_size for identity in additions if identity not in json.loads(village_cast.read_text(encoding='utf-8')) for e in exprs(identity))
+    dialogue_size=size-class_size-village_size-pending_size
+    assert pending_size<=16*1024*1024,('pending dungeon portraits exceed 16 MiB',pending_size)
     if not args.partial:assert dialogue_size<=40*1024*1024,('dialogue art exceeds 40 MiB',dialogue_size)
     if not args.partial:
-        for identity in ids:assert (DOC/f'{identity}_expressions.png').is_file(),(identity,'missing expression overview')
+        for identity in ids:assert (DOC/f'{identity}_expressions.png').is_file() or (PENDING/f'{identity}_expressions.png').is_file(),(identity,'missing expression overview')
         for key in ('mine','forest','sea','arena','canyon','guild'):assert (DOC/f'dialogue_{key}.jpg').is_file(),(key,'missing dialogue mockup')
         for name in ('cast_lineup.jpg','backgrounds.jpg'):assert (DOC/name).is_file(),name
-    report={'complete':not pending,'characters':records,'backgrounds':backgrounds,'pending':pending,'totalBytes':size,'dialogueBytes':dialogue_size,'classPortraitBytes':class_size,'villageStaffBytes':village_size,'combinedExceeds40MiB':size>40*1024*1024,'annotatedLines':annotations}
+    report={'complete':not pending,'characters':records,'backgrounds':backgrounds,'pending':pending,'totalBytes':size,'dialogueBytes':dialogue_size,'pendingDungeonBytes':pending_size,'classPortraitBytes':class_size,'villageStaffBytes':village_size,'combinedExceeds40MiB':size>40*1024*1024,'annotatedLines':annotations}
     DOC.mkdir(parents=True,exist_ok=True);(DOC/'validation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
-    print(f'{len(records)} characters / {sum(len(r["changes"]) for r in records)} sprites, {len(backgrounds)} backgrounds; dialogue {dialogue_size/1024/1024:.2f} MiB + classes {class_size/1024/1024:.2f} MiB + village staff {village_size/1024/1024:.2f} MiB = {size/1024/1024:.2f} MiB; dialogue checks passed; pending {len(pending)}')
+    print(f'{len(records)} characters / {sum(len(r["changes"]) for r in records)} sprites, {len(backgrounds)} backgrounds; dialogue {dialogue_size/1024/1024:.2f} MiB + classes {class_size/1024/1024:.2f} MiB + village staff {village_size/1024/1024:.2f} MiB = {size/1024/1024:.2f} MiB; pending dungeon portraits {pending_size/1024/1024:.2f} MiB; dialogue checks passed; pending {len(pending)}')
     if size>40*1024*1024:print('Combined dialogue + class art exceeds the original 40 MiB target; see the separate class-art report.')
 if __name__=='__main__':main()

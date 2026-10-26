@@ -135,7 +135,6 @@ namespace SpellDuel
             if (UiKit.Button(D(40, 1290, 600, 88), $"🔶 合成高級精煉石（💎高級鐵礦石 {oreHi}/{Crafting.OrePerStone}）　持有 {Crafting.Have("refine_hi")}", fsS, false, new Color(1f, 0.7f, 0.3f), !anim && oreHi >= Crafting.OrePerStone))
             { Crafting.RefineStone(true, out var rm2); Toast(rm2); smithExpr = "proud"; smithLine = "好礦！這顆夠強化到 +8 了。"; Sfx.Play("anvil", 0.8f, 1.2f); }
             UiKit.Text(D(40, 1385, 600, 120), "強化 +1～+5 要精煉石、+6～+8 要高級精煉石（+9、+10 各 2 個）。\n鐵礦石：岩石、大地類的敵人；高級鐵礦石：普通以上難度。", fsS, new Color(0.9f, 0.92f, 1f), TextAnchor.UpperLeft, false, 0.5f);
-            if (UiKit.Button(D(40, 1520, 600, 100), "🛠 工匠：製作特殊裝備", fs, false, new Color(0.95f, 0.75f, 0.35f), !anim)) { screen = Screen.Craft; craftSel = null; craftScroll = Vector2.zero; return true; }
             if (UiKit.Button(D(270, 1795, 540, 92), "🏘 回城鎮", fs, false, new Color(1f, 0.55f, 0.2f), !anim)) { screen = Screen.Town; smithLine = null; smithExpr = "normal"; }
             return true;
         }

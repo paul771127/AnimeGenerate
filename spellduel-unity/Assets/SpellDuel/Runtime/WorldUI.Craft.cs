@@ -14,7 +14,7 @@ namespace SpellDuel
         static readonly string[] AlchemistNames = { "藥婆婆・炭姨", "藥師・青蘿", "藥商・汐", "藥劑官・賽琳", "旅藥師・駝鈴" };
 
         // ---------------------------------------------------------------- ⚗ 藥劑師
-        void DrawAlchemy(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
+        void DrawAlchemyBody(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
             var c = new Color(0.7f, 0.5f, 1f);
             float y = r.y + gap;
@@ -23,7 +23,7 @@ namespace SpellDuel
             var list = Crafting.Potions.FindAll(p => p.town == town);
             float bottom = r.yMax - gap - fs * 2.4f, rowH = fs * 4.2f;
             var view = new Rect(r.x + gap, y, r.width - gap * 2, bottom - y);
-            var content = new Rect(0, 0, view.width - 4f, Mathf.Max(view.height, (list.Count + 1) * (rowH + gap * 0.4f) + fs * 6f));
+            var content = new Rect(0, 0, view.width - 4f, Mathf.Max(view.height, (list.Count + 1) * (rowH + gap * 0.4f) + fs * (6f + Crafting.Mats.Count*1.1f)));
             craftScroll = UiKit.DragScroll(view, craftScroll, content);
             craftScroll = GUI.BeginScrollView(view, craftScroll, content, false, false, GUIStyle.none, GUIStyle.none);
             float yy = 0f;
@@ -32,31 +32,34 @@ namespace SpellDuel
                 var rr = new Rect(0, yy, content.width, rowH);
                 bool ok = Crafting.CanPay(p.need, p.gold, out var why);
                 UiKit.Card(rr, 0.8f, c, 0.6f);
-                UiKit.Text(new Rect(rr.x + gap, rr.y + gap * 0.2f, rr.width * 0.62f, fs * 1.4f), $"{p.icon} {p.name}　持有 {Economy.Count(p.id)}", fs, Color.white, TextAnchor.MiddleLeft, true);
+                SupplyArt.Draw(new Rect(rr.x+gap,rr.y+gap*.2f,fs*1.35f,fs*1.35f),p.id);
+                UiKit.Text(new Rect(rr.x + gap+fs*1.45f, rr.y + gap * 0.2f, rr.width * 0.62f-fs*1.45f, fs * 1.4f), $"{p.name}　持有 {Economy.Count(p.id)}", fs, Color.white, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(rr.x + gap, rr.y + fs * 1.5f, rr.width * 0.62f, fs * 1.2f), p.desc, fsS, new Color(0.9f, 0.85f, 1f), TextAnchor.MiddleLeft);
-                UiKit.Text(new Rect(rr.x + gap, rr.y + fs * 2.7f, rr.width * 0.62f, fs * 1.3f), NeedText(p.need) + $"　💰{p.gold}", Mathf.RoundToInt(fsS * 0.9f), ok ? new Color(0.6f, 1f, 0.6f) : new Color(1f, 0.6f, 0.55f), TextAnchor.MiddleLeft, false, 0.5f);
+                DrawCraftNeeds(new Rect(rr.x+gap,rr.y+fs*2.7f,rr.width*.62f,fs*1.3f),p.need,fsS);
+                UiKit.Text(new Rect(rr.xMax-rr.width*.33f,rr.y,rr.width*.32f,fs),$"💰{p.gold}",fsS,UiKit.Gold);
+                if(!ok&&Event.current.type==EventType.MouseDown&&rr.Contains(Event.current.mousePosition))CraftArtTalk("shortage");
                 if (UiKit.Button(new Rect(rr.xMax - rr.width * 0.33f, rr.y + rr.height * 0.2f, rr.width * 0.32f - gap * 0.3f, rr.height * 0.6f), "⚗ 製作", fs, ok, c, ok))
                 {
-                    if (Crafting.BrewPotion(p, out var msg)) { Toast(msg); Sfx.Play("heal", 0.7f); } else Toast(msg);
+                    if (Crafting.BrewPotion(p, out var msg)) { Toast(msg); Sfx.Play("heal", 0.7f); CraftArtDone(true,p.id,null); } else { Toast(msg); CraftArtDone(false,p.id,null); }
                 }
                 yy += rowH + gap * 0.4f;
             }
             yy += gap;
             UiKit.Text(new Rect(0, yy, content.width, fs * 1.3f), "🎒 我的材料", fsS, UiKit.Gold, TextAnchor.MiddleLeft, true);
             yy += fs * 1.4f;
-            UiKit.Text(new Rect(0, yy, content.width, fs * 5f), MatsText(), Mathf.RoundToInt(fsS * 0.9f), new Color(0.88f, 0.9f, 1f), TextAnchor.UpperLeft, false, 0.5f);
+            DrawCraftMats(new Rect(0,yy,content.width,fs*(5f+Crafting.Mats.Count*1.1f)),fsS);
             GUI.EndScrollView();
             BackToTown(r, fs, gap);
         }
 
         // ---------------------------------------------------------------- 🛠 工匠
-        void DrawCraft(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
+        void DrawCraftBody(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
             var c = new Color(0.95f, 0.75f, 0.35f);
             float y = r.y + gap;
             Header(r, "🛠 工匠：特殊裝備", c, prof, fs, fsS, fsL, gap, ref y);
             NpcIntro(r, "工匠・老錘", "工匠", $"做出來的裝備跟著你現在的等級（Lv{prof.level}），數值每次都有點不一樣。等級越高，要的材料越多；最好的東西，得從 Boss 身上拿。", c, fs, fsS, gap, ref y);
-            float detailH = craftSel != null ? fs * 7.6f : 0f;
+            float detailH = craftSel != null ? fs * 10.3f : 0f;
             float bottom = r.yMax - gap - fs * 2.4f - detailH, rowH = fs * 2.6f;
             var view = new Rect(r.x + gap, y, r.width - gap * 2, bottom - y);
             var content = new Rect(0, 0, view.width - 4f, Mathf.Max(view.height, Crafting.Recipes.Count * (rowH + gap * 0.3f)));
@@ -82,8 +85,10 @@ namespace SpellDuel
                 UiKit.Card(dr, 0.9f, Item.RarityColors[rc.rarity], 0.7f);
                 var fx = new List<string>();
                 foreach (var e in rc.effects) fx.Add(e.hi >= 1f ? $"{Item.AffixText(e.a, e.lo)}～{e.hi:0}（跟著等級變多）" : $"{Item.AffixText(e.a, e.lo)}～{e.hi * 100:0.#}%");
-                UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.3f, dr.width - gap * 2, dr.height - fs * 2.6f),
-                    $"特殊效果（數值每次隨機）：\n・{string.Join("\n・", fx)}\n物品等級 Lv{prof.level}（主屬性 ±10%）\n材料：{NeedText(need)}　💰{gold}", Mathf.RoundToInt(fsS * 0.9f), Color.white, TextAnchor.UpperLeft, false, 0.5f);
+                UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.3f, dr.width - gap * 2, dr.height - fs * 4.1f),
+                    $"特殊效果（數值每次隨機）：\n・{string.Join("\n・", fx)}\n物品等級 Lv{prof.level}（主屬性 ±10%）\n💰{gold}", Mathf.RoundToInt(fsS * 0.9f), Color.white, TextAnchor.UpperLeft, false, 0.5f);
+                DrawCraftNeeds(new Rect(dr.x+gap,dr.yMax-fs*3.7f,dr.width-gap*2,fs*1.25f),need,fsS);
+                if(!ok&&Event.current.type==EventType.MouseDown&&dr.Contains(Event.current.mousePosition))CraftArtTalk("shortage");
                 if (UiKit.Button(new Rect(dr.x + dr.width * 0.15f, dr.yMax - fs * 2.3f, dr.width * 0.7f, fs * 2f), ok ? "🛠 製作" : why, ok ? fs : fsS, ok, c, ok))
                 {
                     var it = Crafting.Craft(rc, prof, rng, out var msg);
@@ -92,9 +97,9 @@ namespace SpellDuel
                         bool inBag = Progress.AddToBagOrMail(it, "工匠的作品");
                         Progress.SaveBag();
                         Toast(msg + (inBag ? "" : "（背包滿了，寄到信箱）"));
-                        Sfx.Play("anvil", 0.8f); Sfx.Play("win", 0.6f, 1.2f);
+                        Sfx.Play("anvil", 0.8f); Sfx.Play("win", 0.6f, 1.2f); CraftArtDone(true,null,it);
                     }
-                    else Toast(msg);
+                    else { Toast(msg); CraftArtDone(false,null,null); }
                 }
             }
             BackToTown(r, fs, gap);

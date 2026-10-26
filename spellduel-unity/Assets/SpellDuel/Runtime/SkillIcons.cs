@@ -11,7 +11,7 @@ namespace SpellDuel
     /// Render() 是純 C# 計算（不呼叫任何 Unity 原生函式，不用 Mathf），可在 Unity 外做單元測試；
     /// Get() 才建立 Texture2D 並快取。像素順序同 Texture2D.SetPixels32：第 0 列是最下面。
     /// </summary>
-    public static class SkillIcons
+    public static partial class SkillIcons
     {
         public const int Size = 128;
         static readonly Dictionary<string, Texture2D> cache = new Dictionary<string, Texture2D>();
@@ -21,6 +21,7 @@ namespace SpellDuel
         {
             skillId = skillId ?? "";
             if (cache.TryGetValue(skillId, out var t) && t != null) return t;
+            if(IsSupply(skillId)){var asset=Resources.Load<Texture2D>("Village2D/icons/"+skillId);if(asset){cache[skillId]=asset;return asset;}}
             t = new Texture2D(Size, Size, TextureFormat.RGBA32, false)
             {
                 name = "SkillIcon " + skillId,
@@ -47,6 +48,7 @@ namespace SpellDuel
             }
             var cv = new Cv(size);
             Background(cv, cc, sc, skillId);
+            if(DrawSupply(cv,skillId))return cv.Output();
             switch (skillId)
             {
                 case "na_kunai": ReworkIcon(cv,0); break;

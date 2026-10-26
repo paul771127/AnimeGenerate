@@ -1,0 +1,470 @@
+{
+  "alchemist_tanyi": {
+    "expressions": [
+      "normal",
+      "smile",
+      "serious"
+    ],
+    "size": [
+      768,
+      1152
+    ],
+    "bodyPixelsLocked": true,
+    "faceBoxSource": [
+      480,
+      260,
+      700,
+      440
+    ],
+    "topShift": -14,
+    "files": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "sha256": "37fb1bf7ef259c657ab079b1a169c3201e8aabb9897b7134822c5370c3b558b2"
+      },
+      {
+        "expression": "smile",
+        "changedPixels": 18593,
+        "sha256": "183580f805cdcd464cea0f53370533e0fe4bee1af47c823953139a0c97cba849"
+      },
+      {
+        "expression": "serious",
+        "changedPixels": 17968,
+        "sha256": "0c28436b097fd8ab795d83961eb055fdb5b3ed695d99af4b26a0270801266d2f"
+      }
+    ]
+  },
+  "alchemist_qingluo": {
+    "expressions": [
+      "normal",
+      "smile",
+      "serious"
+    ],
+    "size": [
+      768,
+      1152
+    ],
+    "bodyPixelsLocked": true,
+    "faceBoxSource": [
+      480,
+      230,
+      720,
+      450
+    ],
+    "topShift": 8,
+    "files": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "sha256": "7e16a193431c3a748e6ed57614656f50a842e6b4355efa128efbafe42567b8f3"
+      },
+      {
+        "expression": "smile",
+        "changedPixels": 24573,
+        "sha256": "ac5a7b6b55d73670a29604ac4a92190aa7be94ee346564762e3e614c917c010b"
+      },
+      {
+        "expression": "serious",
+        "changedPixels": 23293,
+        "sha256": "a9bb444c6c445163a07da3ad89f27e71628cfbbc245324008f3a84a89976022f"
+      }
+    ]
+  },
+  "alchemist_xi": {
+    "expressions": [
+      "normal",
+      "smile",
+      "serious"
+    ],
+    "size": [
+      768,
+      1152
+    ],
+    "bodyPixelsLocked": true,
+    "faceBoxSource": [
+      480,
+      240,
+      730,
+      450
+    ],
+    "topShift": 2,
+    "files": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "sha256": "bd1b8af7a2159b33807116c2acdea9e5ead68513cccb17cff55f3b1d12c1cc55"
+      },
+      {
+        "expression": "smile",
+        "changedPixels": 20639,
+        "sha256": "4c5a63ea423b6ce251ce708c8ea86f5eaa5eae82256b7d873d1ef01ca66cd188"
+      },
+      {
+        "expression": "serious",
+        "changedPixels": 20403,
+        "sha256": "dcb2c070fe54dcf10410a12012ed402b82a74fb9e954c61c9db6c011c81c1bc7"
+      }
+    ]
+  },
+  "alchemist_sailin": {
+    "expressions": [
+      "normal",
+      "smile",
+      "serious"
+    ],
+    "size": [
+      768,
+      1152
+    ],
+    "bodyPixelsLocked": true,
+    "faceBoxSource": [
+      470,
+      180,
+      720,
+      410
+    ],
+    "topShift": 33,
+    "files": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "sha256": "4ab7e739f62443aad524b3e844642edaa3d3f0f029fa78455cb08d5c4ecc1a1c"
+      },
+      {
+        "expression": "smile",
+        "changedPixels": 23325,
+        "sha256": "b6fa7e433b49ef89f438e50f28ab10908048947daccce93a933ac5a9420f2e18"
+      },
+      {
+        "expression": "serious",
+        "changedPixels": 23518,
+        "sha256": "4fee78ce1db92e51caf889c80817547f8dfcd8a90a6748f875b551598540a170"
+      }
+    ]
+  },
+  "alchemist_tuoling": {
+    "expressions": [
+      "normal",
+      "smile",
+      "serious"
+    ],
+    "size": [
+      768,
+      1152
+    ],
+    "bodyPixelsLocked": true,
+    "faceBoxSource": [
+      480,
+      210,
+      750,
+      450
+    ],
+    "topShift": 13,
+    "files": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "sha256": "bfdb358431680942e2cea1021b29c017eb736e13b9d7fd6b7568f31ecd657aec"
+      },
+      {
+        "expression": "smile",
+        "changedPixels": 30348,
+        "sha256": "f50e17ae65f5bf290a6843c699ffbd43c406358487d9562fa1f7d75870ff8f0f"
+      },
+      {
+        "expression": "serious",
+        "changedPixels": 28956,
+        "sha256": "a425d696cccd51c482c8d4a0454de0c401e78081cf2e3a04685090da7679f99e"
+      }
+    ]
+  },
+  "crafter_laochui": {
+    "expressions": [
+      "normal",
+      "smile",
+      "serious"
+    ],
+    "size": [
+      768,
+      1152
+    ],
+    "bodyPixelsLocked": true,
+    "faceBoxSource": [
+      430,
+      180,
+      710,
+      495
+    ],
+    "topShift": 47,
+    "files": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "sha256": "98eae2f8211478464957f3ce8a95bf21bfd899620a2c1f2d5152427aed164a11"
+      },
+      {
+        "expression": "smile",
+        "changedPixels": 34582,
+        "sha256": "f2f09861e06686ce8760072e16826ba743bcfe322112b322c5461d3c4a75939b"
+      },
+      {
+        "expression": "serious",
+        "changedPixels": 33321,
+        "sha256": "cf33d7c4eeb5445a2ad33b532094b30de3b402a2642574b1180978ce06338d2f"
+      }
+    ]
+  },
+  "lingyin": {
+    "expressions": [
+      "normal",
+      "serious",
+      "surprised"
+    ],
+    "size": [
+      768,
+      1152
+    ],
+    "bodyPixelsLocked": true,
+    "faceBoxSource": [
+      480,
+      275,
+      735,
+      490
+    ],
+    "topShift": 2,
+    "files": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "sha256": "c6ab84c0b1656c25e77a51d272482531f8a8e50eb6e32796a723ab2569ed7bcd"
+      },
+      {
+        "expression": "serious",
+        "changedPixels": 23829,
+        "sha256": "f5a2f74fe5656bb4487894b7ca38bed4ab0fbf89e42b2649117cf9b7d70396ed"
+      },
+      {
+        "expression": "surprised",
+        "changedPixels": 24080,
+        "sha256": "029a23c187f87c17ee768181bea84614250f8dec800736721230e5dbeff76604"
+      }
+    ]
+  },
+  "ark": {
+    "expressions": [
+      "normal",
+      "angry",
+      "surprised"
+    ],
+    "size": [
+      768,
+      1152
+    ],
+    "bodyPixelsLocked": true,
+    "faceBoxSource": [
+      440,
+      180,
+      730,
+      425
+    ],
+    "topShift": 39,
+    "files": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "sha256": "cb1fbc5d29fcea3b49238060dcc07d69e8677a54c8e4111585f80951ae32652b"
+      },
+      {
+        "expression": "angry",
+        "changedPixels": 28591,
+        "sha256": "7bf573e908b649cb60275741572669fcdb553cd0b5635a0e8a3540f0e5dd9ef7"
+      },
+      {
+        "expression": "surprised",
+        "changedPixels": 28684,
+        "sha256": "b5395cd59cb62cb6b4982c9a8fe1b89632252d45f75c3190ea4c884e6795a1c7"
+      }
+    ]
+  },
+  "xiaomai": {
+    "expressions": [
+      "normal",
+      "serious",
+      "surprised"
+    ],
+    "size": [
+      768,
+      1152
+    ],
+    "bodyPixelsLocked": true,
+    "faceBoxSource": [
+      450,
+      300,
+      745,
+      550
+    ],
+    "topShift": -4,
+    "files": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "sha256": "c2fb18d962706a9fbfe46e8f14e6b9ecad0670920f251fb73e5b5a1371fc225b"
+      },
+      {
+        "expression": "serious",
+        "changedPixels": 29161,
+        "sha256": "80e6749f5a18e73c67753b55ea3452204469f0e2c4fadfbf1649552299e0c333"
+      },
+      {
+        "expression": "surprised",
+        "changedPixels": 33931,
+        "sha256": "d32cf2b583e02e975c636bcc008c4ba43ac9ac8a752b2f7ec074e02c5e55acaa"
+      }
+    ]
+  },
+  "oldsmith_shade": {
+    "expressions": [
+      "normal",
+      "serious",
+      "surprised"
+    ],
+    "size": [
+      768,
+      1152
+    ],
+    "bodyPixelsLocked": true,
+    "faceBoxSource": [
+      420,
+      220,
+      690,
+      495
+    ],
+    "topShift": 23,
+    "files": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "sha256": "7baa9cccdb87f83e0299ae544e96258b0cb3869759f205627ffd0190955b3316"
+      },
+      {
+        "expression": "serious",
+        "changedPixels": 28800,
+        "sha256": "4968f1025d14fb3c2740c57b11bb46654a66fedf8fdb19f9e6c2d9ebf212e22b"
+      },
+      {
+        "expression": "surprised",
+        "changedPixels": 32953,
+        "sha256": "a15a0b59088d498b5cfccdff9796a49f7897804cc07f8f2eb493aef620263f2f"
+      }
+    ]
+  },
+  "gearmerchant": {
+    "expressions": [
+      "normal",
+      "serious",
+      "surprised"
+    ],
+    "size": [
+      768,
+      1152
+    ],
+    "bodyPixelsLocked": true,
+    "faceBoxSource": [
+      545,
+      290,
+      765,
+      475
+    ],
+    "topShift": 59,
+    "files": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "sha256": "020c64ee6782471ceebfdfbcd89e8d4ad353c821979c4e973be8902e93f8acb5"
+      },
+      {
+        "expression": "serious",
+        "changedPixels": 15568,
+        "sha256": "d3c20427e696fbfd822995c67757b216e180b8ac4eae6c39a2df3c1efb92bc9b"
+      },
+      {
+        "expression": "surprised",
+        "changedPixels": 17621,
+        "sha256": "800837aa519b79878f7c5da6d2542e5831692aa29e15fc9cc6edb08fef96a0f9"
+      }
+    ]
+  },
+  "clockwork": {
+    "expressions": [
+      "normal",
+      "angry",
+      "surprised"
+    ],
+    "size": [
+      768,
+      1152
+    ],
+    "bodyPixelsLocked": true,
+    "faceBoxSource": [
+      555,
+      310,
+      770,
+      480
+    ],
+    "topShift": 64,
+    "files": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "sha256": "76ab9b81eff9ea479a360a384681157491c70e706542a64b2541d37d47abbe95"
+      },
+      {
+        "expression": "angry",
+        "changedPixels": 12246,
+        "sha256": "2543e36d15fc7847a3b556eb01217b386d6a2a4de95008c15b54cb1436aefe81"
+      },
+      {
+        "expression": "surprised",
+        "changedPixels": 11760,
+        "sha256": "b0b32df77b8c16b10eee24118dda7a8ef4105e6cae2ced9253bd4f081604e94f"
+      }
+    ]
+  },
+  "heartcore": {
+    "expressions": [
+      "normal",
+      "serious",
+      "surprised"
+    ],
+    "size": [
+      768,
+      1152
+    ],
+    "bodyPixelsLocked": true,
+    "faceBoxSource": [
+      550,
+      745,
+      790,
+      990
+    ],
+    "topShift": -14,
+    "files": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "sha256": "41b13bbd0839c6aea00d828748e8761641f702d2e4a0f7e8da0713f570ba7409"
+      },
+      {
+        "expression": "serious",
+        "changedPixels": 32029,
+        "sha256": "93ed940fe79fa625f4f59986a013c8be40f92d90a425c4235e3de4c107612761"
+      },
+      {
+        "expression": "surprised",
+        "changedPixels": 29834,
+        "sha256": "8b7f9da00f32e2eb75aa488587b398711bdaa6cce58671a577aab1ea46416108"
+      }
+    ]
+  }
+}

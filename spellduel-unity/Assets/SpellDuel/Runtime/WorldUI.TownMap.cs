@@ -40,6 +40,8 @@ namespace SpellDuel
         /// <summary>建築 key → 名牌文字（新手指引用文字找按鈕：保留「⚒ 鐵匠鋪」「🏛 職業工會」等）、顏色</summary>
         static readonly Dictionary<string, (string label, Color color)> MapSites = new Dictionary<string, (string, Color)>
         {
+            ["alchemist"] = ("⚗ 藥劑師", new Color(.72f,.45f,1f)),
+            ["crafter"] = ("🛠 工匠", new Color(1f,.78f,.3f)),
             ["smith"] = ("⚒ 鐵匠鋪", new Color(1f, 0.6f, 0.3f)),
             ["shop"] = ("🧪 道具店", new Color(0.5f, 0.85f, 1f)),
             ["guild"] = ("🏛 職業工會", new Color(0.85f, 0.6f, 1f)),
@@ -258,6 +260,8 @@ namespace SpellDuel
             int Npc(string who) { for (int i = 0; i < t.npcs.Length; i++) if (t.npcs[i].name.Contains(who)) return i; return -1; }
             switch (key)
             {
+                case "alchemist": screen = Screen.Alchemy; craftSel = null; craftScroll = Vector2.zero; ResetCraftArt(); break;
+                case "crafter": screen = Screen.Craft; craftSel = null; craftScroll = Vector2.zero; ResetCraftArt(); break;
                 case "smith": screen = Screen.Smith; selItem = null; page = 0; break;
                 case "shop": screen = Screen.Shop; selItem = null; page = 0; shopTab = 0; break;
                 case "guild": screen = Screen.Guild; break;

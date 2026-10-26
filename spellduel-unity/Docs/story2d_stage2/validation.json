@@ -36,6 +36,116 @@
       ]
     },
     {
+      "id": "alchemist_qingluo",
+      "size": [
+        768,
+        1152
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 24573
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 23293
+        }
+      ]
+    },
+    {
+      "id": "alchemist_sailin",
+      "size": [
+        768,
+        1152
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 23325
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 23518
+        }
+      ]
+    },
+    {
+      "id": "alchemist_tanyi",
+      "size": [
+        768,
+        1152
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 18593
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 17968
+        }
+      ]
+    },
+    {
+      "id": "alchemist_tuoling",
+      "size": [
+        768,
+        1152
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 30348
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 28956
+        }
+      ]
+    },
+    {
+      "id": "alchemist_xi",
+      "size": [
+        768,
+        1152
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 20639
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 20403
+        }
+      ]
+    },
+    {
       "id": "aling",
       "size": [
         640,
@@ -66,6 +176,28 @@
         {
           "expression": "serious",
           "changedPixels": 7874
+        }
+      ]
+    },
+    {
+      "id": "ark",
+      "size": [
+        768,
+        1152
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 28591
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 28684
         }
       ]
     },
@@ -152,6 +284,50 @@
         {
           "expression": "angry",
           "changedPixels": 16625
+        }
+      ]
+    },
+    {
+      "id": "clockwork",
+      "size": [
+        768,
+        1152
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 12246
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 11760
+        }
+      ]
+    },
+    {
+      "id": "crafter_laochui",
+      "size": [
+        768,
+        1152
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 34582
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 33321
         }
       ]
     },
@@ -292,6 +468,28 @@
       ]
     },
     {
+      "id": "gearmerchant",
+      "size": [
+        768,
+        1152
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 15568
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 17621
+        }
+      ]
+    },
+    {
       "id": "golem",
       "size": [
         640,
@@ -374,6 +572,28 @@
         {
           "expression": "serious",
           "changedPixels": 6821
+        }
+      ]
+    },
+    {
+      "id": "heartcore",
+      "size": [
+        768,
+        1152
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 32029
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 29834
         }
       ]
     },
@@ -516,6 +736,28 @@
       ]
     },
     {
+      "id": "lingyin",
+      "size": [
+        768,
+        1152
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 23829
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 24080
+        }
+      ]
+    },
+    {
       "id": "mila",
       "size": [
         640,
@@ -614,6 +856,28 @@
         {
           "expression": "serious",
           "changedPixels": 10507
+        }
+      ]
+    },
+    {
+      "id": "oldsmith_shade",
+      "size": [
+        768,
+        1152
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 28800
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 32953
         }
       ]
     },
@@ -810,6 +1074,28 @@
       ]
     },
     {
+      "id": "xiaomai",
+      "size": [
+        768,
+        1152
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 29161
+        },
+        {
+          "expression": "surprised",
+          "changedPixels": 33931
+        }
+      ]
+    },
+    {
       "id": "xiaosha",
       "size": [
         640,
@@ -933,10 +1219,11 @@
     "village"
   ],
   "pending": [],
-  "totalBytes": 68718816,
+  "totalBytes": 94345618,
   "dialogueBytes": 39273419,
+  "pendingDungeonBytes": 13711261,
   "classPortraitBytes": 10819896,
-  "villageStaffBytes": 18625501,
+  "villageStaffBytes": 30541042,
   "combinedExceeds40MiB": true,
-  "annotatedLines": 312
+  "annotatedLines": 366
 }

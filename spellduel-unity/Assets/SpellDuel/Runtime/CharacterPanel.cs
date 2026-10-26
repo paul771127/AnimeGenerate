@@ -335,6 +335,9 @@ namespace SpellDuel
                 UiKit.Text(new Rect(sr.x + gap, sr.y, sr.width * 0.24f, sr.height), Item.SlotNames[i], fsS, new Color(0.8f, 0.82f, 0.9f), TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(sr.x + sr.width * 0.24f, sr.y, sr.width * 0.74f, sr.height), it != null ? $"[{Item.RarityNames[it.rarity]}] {it.FullName}" : "（空）", fsS, it != null ? Item.RarityColors[it.rarity] : Color.gray, TextAnchor.MiddleLeft, true);
             }
+            if(UiKit.Button(new Rect(b.x+b.width*.69f,b.y+sh*4.2f,b.width*.30f,fs*1.4f),suppliesOpen?"裝備背包":"素材／藥劑",fsS,suppliesOpen,UiKit.Gold))suppliesOpen=!suppliesOpen;
+            if(FocusUid!=0||UiLock.Blocking)suppliesOpen=false;
+            if(suppliesOpen){DrawSuppliesBag(new Rect(b.x,b.y+5*(sh+gap*.3f)+gap*.5f,b.width,b.height-5*(sh+gap*.3f)-gap*.5f),fsS);return false;}
             // 背包（分頁，3×4）
             float by = b.y + 5 * (sh + gap * 0.3f) + gap * 0.5f;
             var bag = Progress.Bag;

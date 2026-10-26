@@ -15,9 +15,10 @@ namespace SpellDuel
         Vector2 shopScroll, guildScroll2;
         string shopExpr = "normal", shopLine, guildLine;
 
-        static Texture2D FacilityBg(string key)
+        Texture2D FacilityBg(string key)
         {
-            if (!facBg.TryGetValue(key, out var t)) { t = Resources.Load<Texture2D>("Village2D/in_" + key + "_flame"); facBg[key] = t; }
+            string locale=TownMapKeys[Mathf.Clamp(town,0,TownMapKeys.Length-1)],cacheKey=key+"_"+locale;
+            if(!facBg.TryGetValue(cacheKey,out var t)){t=Resources.Load<Texture2D>("Village2D/in_"+cacheKey)??Resources.Load<Texture2D>("Village2D/in_"+key+"_flame");facBg[cacheKey]=t;}
             return t;
         }
 
@@ -97,7 +98,6 @@ namespace SpellDuel
             if (UiKit.Button(Design(40, 195, 285, 85), "買道具", fs, shopTab == 0, col)) { shopTab = 0; selItem = null; shopScroll = Vector2.zero; }
             if (UiKit.Button(Design(335, 195, 285, 85), "賣裝備", fs, shopTab == 1, UiKit.Gold)) { shopTab = 1; selItem = null; shopScroll = Vector2.zero; }
             // 藥劑師：用材料做強化藥劑（WorldUI.Craft.cs）
-            if (UiKit.Button(Design(40, 1360, 600, 95), "⚗ 藥劑師：用材料做強化藥劑", fs, false, new Color(0.7f, 0.5f, 1f))) { screen = Screen.Alchemy; craftScroll = Vector2.zero; return true; }
             var view = Design(30, 290, 610, 850);
             UiKit.Card(view, 0.55f, null, 0.5f);
             var row = Design(45, 300, 580, 255);
