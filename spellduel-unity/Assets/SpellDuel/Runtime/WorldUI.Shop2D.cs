@@ -96,12 +96,15 @@ namespace SpellDuel
             { screen = Screen.Town; shopLine = null; shopExpr = "normal"; return true; }
             if (UiKit.Button(Design(40, 195, 285, 85), "買道具", fs, shopTab == 0, col)) { shopTab = 0; selItem = null; shopScroll = Vector2.zero; }
             if (UiKit.Button(Design(335, 195, 285, 85), "賣裝備", fs, shopTab == 1, UiKit.Gold)) { shopTab = 1; selItem = null; shopScroll = Vector2.zero; }
+            // 藥劑師：用材料做強化藥劑（WorldUI.Craft.cs）
+            if (UiKit.Button(Design(40, 1360, 600, 95), "⚗ 藥劑師：用材料做強化藥劑", fs, false, new Color(0.7f, 0.5f, 1f))) { screen = Screen.Alchemy; craftScroll = Vector2.zero; return true; }
             var view = Design(30, 290, 610, 850);
             UiKit.Card(view, 0.55f, null, 0.5f);
             var row = Design(45, 300, 580, 255);
             float rowH = shopTab == 0 ? row.height : row.height * 0.62f, rowGap = Design(0, 0, 0, 15).height, pad = row.x - view.x;
             var bag = new List<Item>(Progress.Bag);
-            int n = shopTab == 0 ? Economy.Consumables.Count : bag.Count;
+            var shopList = Economy.Consumables.FindAll(c => c.price > 0);   // 藥劑師做的強化藥劑不在店裡賣
+            int n = shopTab == 0 ? shopList.Count : bag.Count;
             var content = new Rect(0, 0, view.width - 4f, Mathf.Max(view.height, n * (rowH + rowGap) + rowGap));
             shopScroll = UiKit.DragScroll(view, shopScroll, content);
             shopScroll = GUI.BeginScrollView(view, shopScroll, content, false, false, GUIStyle.none, GUIStyle.none);
@@ -111,7 +114,7 @@ namespace SpellDuel
                 UiKit.Card(rr, 0.82f, shopTab == 0 ? col : (Color?)Item.RarityColors[bag[i].rarity], 0.6f);
                 if (shopTab == 0)
                 {
-                    var c = Economy.Consumables[i];
+                    var c = shopList[i];
                     UiKit.Text(new Rect(rr.x + fs * 0.6f, rr.y + rr.height * 0.06f, rr.width - fs * 1.2f, rr.height * 0.28f), $"{c.icon} {c.name}　持有 {Economy.Count(c.id)}", fs, Color.white, TextAnchor.MiddleLeft, true);
                     UiKit.Text(new Rect(rr.x + fs * 0.6f, rr.y + rr.height * 0.34f, rr.width - fs * 1.2f, rr.height * 0.26f), c.desc, fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleLeft, false, 0.5f);
                     var bb = new Rect(rr.xMax - rr.width * 0.52f, rr.y + rr.height * 0.62f, rr.width * 0.5f - fs * 0.3f, rr.height * 0.33f);

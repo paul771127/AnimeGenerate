@@ -103,9 +103,12 @@ namespace SpellDuel
             if (it.plus >= MaxPlus) { msg = "已經是最高等級"; return false; }
             int cost = EnhanceCost(it);
             if (Gold < cost) { msg = $"金幣不夠（需要 {cost}）"; return false; }
-            Gold -= cost;
+            // 精煉石（使用者要求）：+1～+5 每次 1 個精煉石、+6～+8 每次 1 個高級精煉石、+9～+10 每次 2 個（成功失敗都會用掉）
+            var (stone, sn) = Crafting.StoneFor(it);
+            if (Crafting.Have(stone) < sn) { msg = $"{Crafting.MatName(stone)}不夠（要 {sn} 個，有 {Crafting.Have(stone)} 個）：鐵匠可以用 {Crafting.OrePerStone} 個礦石合成"; return false; }
+            Gold -= cost; Crafting.Give(stone, -sn);
             if (rng.NextDouble() <= EnhanceRate(it)) { it.plus++; msg = $"✨ 強化成功！{it.FullName}"; return true; }
-            msg = "💥 強化失敗…（只扣金幣，裝備沒事）";
+            msg = "💥 強化失敗…（金幣和精煉石用掉了，裝備沒事）";
             return false;
         }
 

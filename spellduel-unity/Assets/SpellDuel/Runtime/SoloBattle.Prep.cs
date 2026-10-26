@@ -157,6 +157,7 @@ namespace SpellDuel
                     if (UiKit.Button(new Rect(r.xMax - bw - gap, r.y + 2, bw, r.height - 4), "＋", fs, false, null, n < cap && (c.scroll || CarriedPotions < PotionTotalMax))) { carry[c.id] = n + 1; SaveCarry(); }
                     y += u * 1.15f + gap * 0.4f;
                 }
+            if (prepNoItems == null) y += DrawPrepPotions(pad, y, cw, u, gap, fs, fsS);   // 強化藥劑（SoloBattle.Potions.cs）
             if (prepNoItems == null && Economy.Consumables.TrueForAll(c => Economy.Count(c.id) == 0))
             { UiKit.Text(new Rect(pad, y, cw - pad * 2, u), "背包裡沒有藥水：到城鎮的道具店買", fsS, UiKit.Muted); y += u; }
             prepContentH = y + gap;

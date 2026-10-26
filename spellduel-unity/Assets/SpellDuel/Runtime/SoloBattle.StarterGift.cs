@@ -11,7 +11,7 @@ namespace SpellDuel
     /// </summary>
     public partial class SoloBattle
     {
-        public const int GiftGold = 500;
+        public const int GiftGold = 500, GiftStones = 3;
         static bool GiftGiven { get { try { return PlayerPrefs.GetInt(CharacterSlots.Key("sd_gift_job"), 0) == 1; } catch { return true; } } }
         static void MarkGift() { try { PlayerPrefs.SetInt(CharacterSlots.Key("sd_gift_job"), 1); PlayerPrefs.Save(); } catch { } }
 
@@ -47,6 +47,7 @@ namespace SpellDuel
             giftWeapon = w; GiftUid = w.uid;
             bool inBag = Progress.AddToBagOrMail(w, "小鐵的禮物");
             Economy.Gold += GiftGold;
+            Crafting.Give("refine", GiftStones);   // 精煉石：新手指引的強化要用（之後打岩石類敵人掉鐵礦石，5 個找鐵匠合成）
             Sfx.Play("coin", 0.8f, 1.1f); Haptics.Play(Haptics.Kind.Success);
             // 重新出現裝備、鐵匠鋪的說明卡
             foreach (var id in new[] { "char", "char_gear", "smith", "new_item" }) try { PlayerPrefs.DeleteKey(CharacterSlots.Key("sd_tip_" + id)); } catch { }

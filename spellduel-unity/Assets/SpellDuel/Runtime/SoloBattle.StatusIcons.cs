@@ -40,6 +40,7 @@ namespace SpellDuel
             Add("shadowdance", f.danceUntil, true);
             Add("rollshot", f.rollUntil, true);
             Add("revive", f.blessUntil, true);
+            foreach (var pb in f.potionBuffs) Add(pb.Key, pb.Value, true);   // 強化藥劑
             // ---- 負面
             float dotUntil = 0f; foreach (var d in f.dots) dotUntil = Mathf.Max(dotUntil, d.until);
             Add("m_venom", dotUntil, false);

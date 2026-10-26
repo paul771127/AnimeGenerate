@@ -143,6 +143,8 @@ namespace SpellDuel
         public float gearReduce, dodgeBonus, lifesteal, mpOnHit, hpRegen, lastStand;
         /// <summary>魔法減傷（智力）；gearReduce＝物理減傷（體質、裝備）</summary>
         public float magicReduce;
+        /// <summary>強化藥劑（藥劑 id、到期時間 battle.now）：右上角狀態圖示用（SoloBattle.Potions.cs）</summary>
+        public readonly List<KeyValuePair<string, float>> potionBuffs = new List<KeyValuePair<string, float>>();
         /// <summary>減傷（使用者要求）：體質加到 99 點＝30%；裝備、精魄、技能樹、職業另外加；全部加起來最多 70%（超過沒有作用）</summary>
         public const float MaxReduce = 0.7f, VitMaxReduce = 0.3f;
         public const int VitFullReduce = 99;

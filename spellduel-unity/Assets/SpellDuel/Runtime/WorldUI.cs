@@ -11,7 +11,7 @@ namespace SpellDuel
     /// </summary>
     public partial class WorldUI
     {
-        public enum Screen { Map, Town, Smith, Shop, Guild, Gate, Warp, Dungeon, Training, Bounty, Watch, Tower }
+        public enum Screen { Map, Town, Smith, Shop, Guild, Gate, Warp, Dungeon, Training, Bounty, Watch, Tower, Alchemy, Craft }
         public Screen screen = Screen.Map;
         public int town;                         // 目前所在城鎮（＝地區主題 0～2）
         public Action<StoryStage> OnStartStage;  // 出發打關卡
@@ -160,6 +160,8 @@ namespace SpellDuel
                 case Screen.Bounty: if (!DrawFramed("bounty", "🔥 討伐告示板", new Color(1f, 0.45f, 0.2f), "bountyofficer", "懸賞官", Facilities[2].hello, a => DrawBounty(a, prof, fs, fsS, fsL, gap), fs, fsS, fsL)) DrawBounty(r, prof, fs, fsS, fsL, gap); break;
                 case Screen.Watch: if (!DrawFramed("watch", "👀 觀戰席", new Color(0.55f, 0.9f, 1f), "announcer", "播報員", Facilities[3].hello, a => DrawWatchDesk(a, prof, fs, fsS, fsL, gap), fs, fsS, fsL)) DrawWatchDesk(r, prof, fs, fsS, fsL, gap); break;
                 case Screen.Tower: DrawTower(r, prof, fs, fsS, fsL, gap); break;
+                case Screen.Alchemy: DrawAlchemy(r, prof, fs, fsS, fsL, gap); break;   // 藥劑師（WorldUI.Craft.cs）
+                case Screen.Craft: DrawCraft(r, prof, fs, fsS, fsL, gap); break;       // 工匠
             }
             if (toast != null && Time.time < toastUntil) UiKit.Pill(r.y + r.height * 0.5f, toast, fs, new Color(1f, 0.9f, 0.5f), r.width * 0.9f, 0.85f);
         }

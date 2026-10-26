@@ -253,12 +253,14 @@ namespace SpellDuel
             if (dk > 0 && prof != null && prof.NoviceKills(dk, dropRng)) { Progress.SaveChar(prof); NoviceQuestTick(); }   // 初心者的招式任務（打倒／收集）
             QuestKills(dk);   // 副本任務：打倒幾隻敵人、收集東西
             float goldMul = 1f + Souls.Sum(prof, SoulOp.Gold);   // 精魄：金幣加成
-            for (int i = 0; i < dk; i++) { TryDrop(false); pendingGold += Mathf.RoundToInt(Economy.MinionGold(battle.wave) * goldMul); }
-            // 精魄：打倒的每一隻怪物各自擲一次（小怪 0.1～0.5%、Boss 0.5%；幸運每點 +1%）
-            FlushSoulDrops();
+            for (int i = 0; i < dk; i++) pendingGold += Mathf.RoundToInt(Economy.MinionGold(battle.wave) * goldMul);
             if (dk > 0) { Sfx.Play("poof", 0.6f); Sfx.Play("coin", 0.35f, 1.1f); }   // 小怪倒下＋掉金幣
             int db = battle.bossKills - lastBossKillsSeen; lastBossKillsSeen = battle.bossKills;
-            for (int i = 0; i < db; i++) { TryDrop(true); pendingGold += Mathf.RoundToInt(Economy.BossGold(battle.wave) * goldMul); }   // 每個敵人最多掉一件
+            for (int i = 0; i < db; i++) pendingGold += Mathf.RoundToInt(Economy.BossGold(battle.wave) * goldMul);
+            // 掉落（使用者要求）：每個敵人最多掉一樣東西（精魄 → 裝備 → 材料）；知道是哪種怪的（擊倒紀錄）一隻一隻擲，不知道的（合作隊友端漏掉的）只擲裝備
+            var (mLogged, bLogged) = FlushKillDrops();
+            for (int i = mLogged; i < dk; i++) TryDrop(false);
+            for (int i = bLogged; i < db; i++) TryDrop(true);
             // 無盡模式（不是故事關卡、不是無盡塔）：清完一波＝過關，這一波的戰利品入袋（無盡塔：5 波打完才結算）
             if (storyStage == null && dungeon == null && !towerRun && battle.wave > lootWave)
             {
@@ -272,31 +274,70 @@ namespace SpellDuel
         readonly List<string> pendingSouls = new List<string>();   // 這場掉的精魄（過關才拿得到）
         int pendingGold, lootWave, lastKillLogSeen;
 
-        void ResetLoot() { pendingItems.Clear(); pendingSouls.Clear(); pendingGold = 0; lootWave = 0; lastKillLogSeen = 0; }
+        void ResetLoot() { pendingItems.Clear(); pendingSouls.Clear(); pendingMats.Clear(); pendingGold = 0; lootWave = 0; lastKillLogSeen = 0; }
 
         Battle killLogBattle;
-        /// <summary>還沒擲過精魄的擊殺：一隻一隻擲（換了一場戰鬥就從頭算）</summary>
-        void FlushSoulDrops()
+        /// <summary>還沒擲過的擊殺：一隻一隻擲（換了一場戰鬥就從頭算）；回傳這次處理了幾隻小怪、幾隻 Boss</summary>
+        (int minions, int bosses) FlushKillDrops()
         {
-            if (battle == null) return;
+            if (battle == null) return (0, 0);
             if (killLogBattle != battle) { killLogBattle = battle; lastKillLogSeen = 0; }
-            while (lastKillLogSeen < battle.killLog.Count) TrySoulDrop(battle.killLog[lastKillLogSeen++]);
+            int mn = 0, bs = 0;
+            while (lastKillLogSeen < battle.killLog.Count)
+            {
+                string key = battle.killLog[lastKillLogSeen++];
+                if (key.Length > 0 && key[0] == 'm') mn++; else bs++;
+                DropOne(key);
+            }
+            return (mn, bs);
         }
+        void FlushSoulDrops() => FlushKillDrops();
 
-        /// <summary>打倒一隻怪物：擲這種怪物的精魄（key＝"m"＋小怪種類，或 Boss 的職業 id）</summary>
-        void TrySoulDrop(string key)
+        /// <summary>一個敵人倒下：精魄 → 裝備 → 材料，最多掉一樣（Boss：精魄 → Boss 材料 → 一定掉的裝備）</summary>
+        void DropOne(string key)
         {
             if (prof == null || string.IsNullOrEmpty(key)) return;
+            if (TrySoulDrop(key)) return;
+            int diff = towerRun ? 1 : difficulty;
+            if (key[0] == 'm' && int.TryParse(key.Substring(1), out int kind))
+            {
+                if (TryDrop(false)) return;
+                AddMat(Crafting.RollMinion(kind, battle.Theme, diff, dropRng));
+            }
+            else
+            {
+                if (AddMat(Crafting.RollBoss(key, diff, dropRng))) return;
+                TryDrop(true);
+            }
+        }
+
+        /// <summary>這場掉的材料（過關才拿得到）</summary>
+        readonly List<string> pendingMats = new List<string>();
+        bool AddMat(string id)
+        {
+            if (id == null) return false;
+            pendingMats.Add(id);
+            var m = Crafting.GetMat(id);
+            floaters.Add(new Floater { text = $"{(m != null ? m.icon + m.name : id)}（過關後獲得）", color = new Color(0.8f, 0.9f, 1f), born = Time.time, screen = true });
+            Sfx.Play("coin", 0.5f, 1.4f);
+            return true;
+        }
+
+        /// <summary>打倒一隻怪物：擲這種怪物的精魄（key＝"m"＋小怪種類，或 Boss 的職業 id）；掉了回傳 true</summary>
+        bool TrySoulDrop(string key)
+        {
+            if (prof == null || string.IsNullOrEmpty(key)) return false;
             var d = key[0] == 'm' && int.TryParse(key.Substring(1), out int kind) ? Souls.OfMinion(kind) : Souls.OfBoss(key);
-            if (d == null) return;
+            if (d == null) return false;
             float chance = d.chance * (1f + 0.01f * prof.Total(Stat.Luk));
-            if (StoryCoop && !NetIsHost) return;   // 故事合作：精魄只由房主擲（擲骰決定歸屬）
-            if (dropRng.NextDouble() >= chance) return;
-            if (CoopRollSoul(d.id)) return;
+            if (StoryCoop && !NetIsHost) return false;   // 故事合作：精魄只由房主擲（擲骰決定歸屬）
+            if (dropRng.NextDouble() >= chance) return false;
+            if (CoopRollSoul(d.id)) return true;
             pendingSouls.Add(d.id);
             floaters.Add(new Floater { text = $"💠 {d.name}！（過關後獲得）", color = d.color, born = Time.time, screen = true });
             Say($"💠 掉落精魄「{d.name}」：{Souls.Desc(d)}", 4f);
             Sfx.Play("win", 0.8f, 1.3f); Haptics.Play(Haptics.Kind.Success);
+            return true;
         }
 
         // ---------------------------------------------------------------- 消耗道具（戰鬥中點按鈕使用）
@@ -465,8 +506,10 @@ namespace SpellDuel
         string GrantLoot(string why, bool say = true)
         {
             FlushSoulDrops();   // 最後一擊（Boss）可能還沒擲
-            if (pendingItems.Count == 0 && pendingGold == 0 && pendingSouls.Count == 0) return "";
-            int got = 0, mailed = 0, gold = pendingGold, souls = pendingSouls.Count;
+            if (pendingItems.Count == 0 && pendingGold == 0 && pendingSouls.Count == 0 && pendingMats.Count == 0) return "";
+            int got = 0, mailed = 0, gold = pendingGold, souls = pendingSouls.Count, mats = pendingMats.Count;
+            foreach (var id in pendingMats) Economy.AddItem(id, 1);   // 材料：放進道具欄
+            pendingMats.Clear();
             if (souls > 0 && prof != null)
             {
                 foreach (var id in pendingSouls) prof.souls[id] = (prof.souls.TryGetValue(id, out int n) ? n : 0) + 1;
@@ -480,7 +523,7 @@ namespace SpellDuel
             }
             Economy.Gold += gold;
             lootLog.AddRange(pendingItems); lootGoldLog += gold;   // 給勝利結算窗格
-            string msg = $"🎁 獲得裝備 {got + mailed} 件" + (mailed > 0 ? $"（背包滿了，{mailed} 件寄到 📬 信箱，⚠ {Progress.MailKeepDays} 天內沒領會被刪除）" : "") + $"、💰 {gold}" + (souls > 0 ? $"、💠 精魄 {souls} 個（到「📜 角色」→「🛡 裝備」鑲上）" : "");
+            string msg = $"🎁 獲得裝備 {got + mailed} 件" + (mailed > 0 ? $"（背包滿了，{mailed} 件寄到 📬 信箱，⚠ {Progress.MailKeepDays} 天內沒領會被刪除）" : "") + $"、💰 {gold}" + (souls > 0 ? $"、💠 精魄 {souls} 個（到「📜 角色」→「🛡 裝備」鑲上）" : "") + (mats > 0 ? $"、🪨 材料 {mats} 個（藥劑師、工匠、鐵匠用）" : "");
             if (say) { Say($"{why}！{msg}", 3f); Sfx.Play("coin", 0.8f); Sfx.Play("charged", 0.5f, 1.2f); }
             pendingItems.Clear(); pendingGold = 0;
             return msg;
@@ -489,17 +532,18 @@ namespace SpellDuel
         /// <summary>失敗：暫存的戰利品沒了</summary>
         void LoseLoot()
         {
-            if (pendingItems.Count == 0 && pendingGold == 0 && pendingSouls.Count == 0) return;
-            Say($"💨 沒有過關，這次的戰利品（裝備 {pendingItems.Count} 件、💰 {pendingGold}" + (pendingSouls.Count > 0 ? $"、💠 精魄 {pendingSouls.Count} 個" : "") + "）沒拿到", 4f);
-            pendingItems.Clear(); pendingGold = 0; pendingSouls.Clear();
+            if (pendingItems.Count == 0 && pendingGold == 0 && pendingSouls.Count == 0 && pendingMats.Count == 0) return;
+            Say($"💨 沒有過關，這次的戰利品（裝備 {pendingItems.Count} 件、💰 {pendingGold}" + (pendingSouls.Count > 0 ? $"、💠 精魄 {pendingSouls.Count} 個" : "") + (pendingMats.Count > 0 ? $"、材料 {pendingMats.Count} 個" : "") + "）沒拿到", 4f);
+            pendingItems.Clear(); pendingGold = 0; pendingSouls.Clear(); pendingMats.Clear();
         }
 
         /// <summary>掉裝備（每個敵人最多一件）：小怪約 6%（幸運越高越多），Boss 一定掉一件稀有以上</summary>
-        void TryDrop(bool boss)
+        bool TryDrop(bool boss)
         {
+            if (prof == null) return false;
             int luk = prof.Total(Stat.Luk);
             float lootMul = dungeon != null ? Dungeons.LootMul(coop ? 1 + PeerIds.Count : 1) : 1f;   // 副本：人越多掉寶率越高（最多 ×1.5）
-            if (!boss && dropRng.NextDouble() > (0.06 + 0.002 * luk) * lootMul) return;
+            if (!boss && dropRng.NextDouble() > (0.06 + 0.002 * luk) * lootMul) return false;
             int rar = ItemGen.RollRarity(dropRng, luk * 0.3f, boss ? 2 : 0);
             int ilvl = Mathf.Max(1, prof.level + dropRng.Next(-1, 3) + battle.wave / 10);   // 無盡：物品等級跟著角色等級（越後面的波次略高）
             if (dungeon != null) ilvl = dungeon.level + battle.levelBoost + dropRng.Next(-1, 2);   // 副本：物品等級＝副本等級（普通＋40、困難＋80）
@@ -510,12 +554,13 @@ namespace SpellDuel
                 ilvl = Mathf.Clamp(battle.wave + dropRng.Next(-2, 2), lo, hi) + battle.levelBoost;   // 簡單＝這一章的等級帶（第一章 1～10）；普通＋40、困難＋80
             }
             ItemGen.SetTheme = battle.Theme;   // 主題地圖掉對應的套裝
-            if (CoopRollItem(ref rar, ilvl, battle.Theme)) return;   // 故事合作：史詩以上由房主擲出來、大家擲骰（SoloBattle.StoryCoop.cs）
+            if (CoopRollItem(ref rar, ilvl, battle.Theme)) return true;   // 故事合作：史詩以上由房主擲出來、大家擲骰（SoloBattle.StoryCoop.cs）
             var it = ItemGen.Make(dropRng, ilvl, rar, myClass);
             if (storyStage != null) { var (blo, bhi) = Story.LevelBand(storyStage.theme); it.reqLevel = Mathf.Clamp(it.reqLevel, blo + battle.levelBoost, bhi + battle.levelBoost); }   // 需求等級也在這一章的等級帶裡（簡單第一章 1～10；普通、困難再加難度的等級）
             pendingItems.Add(it);   // 先暫存：過關才拿得到
             floaters.Add(new Floater { text = $"🎁 [{Item.RarityNames[rar]}] {it.name}（過關後獲得）", color = Item.RarityColors[rar], born = Time.time, screen = true });
             Sfx.Play(rar >= 3 ? "win" : "select", rar >= 3 ? 0.7f : 0.8f, 1.2f);
+            return true;
         }
 
         /// <summary>角色畫面（全螢幕）：能力值、技能樹、裝備；有改動就重新套用到戰鬥中的自己</summary>
@@ -555,6 +600,7 @@ namespace SpellDuel
             {
                 var ids = new List<string>(); foreach (var s in Me.loadout) ids.Add(s.id);
                 p.ApplyTo(Me, Skills.Classes[myClass], ids);
+                ReapplyBuffPotions();   // 數值重算了：還有效的強化藥劑加回去
             }
             if (UiKit.Button(new Rect(W * 0.25f, botY - pad - bh, W * 0.5f, bh), phase == Phase.Setup ? "完成" : (coop ? "回到戰鬥" : "回到戰鬥（暫停中）"), fs, true, new Color(0.5f, 0.8f, 1f)))
             { charOpen = false; Progress.SaveChar(p); if (phase == Phase.Setup) FixLoadout(); }
@@ -714,7 +760,7 @@ namespace SpellDuel
         void OnSpeechText(string text)
         {
             if (VoiceCalib.Open) { VoiceCalib.Heard(text); return; }
-            if (phase == Phase.Fighting && battle != null) { if (scrollAsk) return; DungeonSpeech(text); ItemByVoice(text); CoatByVoice(text); return; }   // 回城確認中：暫停，不聽指令
+            if (phase == Phase.Fighting && battle != null) { if (scrollAsk) return; DungeonSpeech(text); if (PotionByVoice(text)) return; ItemByVoice(text); CoatByVoice(text); return; }   // 回城確認中：暫停，不聽指令
             if (!TownWalking) return;
             if (Greeting.Find(text) != null) { world.Heard = text; world.HeardAt = Time.time; }
             townWalk.Heard(text);
@@ -1527,7 +1573,7 @@ namespace SpellDuel
                             if (parts.Length >= 7 && float.TryParse(parts[6], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var malt)) mf.alt = malt;   // 飛行／浮空高度
                             ReadEliteWire(mf, parts);
                         }
-                        foreach (var mf in battle.minions) if (!seen.Contains(mf.minionId)) mf.hp = 0f;
+                        foreach (var mf in battle.minions) if (!seen.Contains(mf.minionId) && mf.Alive) { mf.hp = 0f; battle.killLog.Add("m" + mf.minionKind); }   // 隊友端：主機那邊打倒了（記下種類：掉材料用）
                     }
                     break;
                 case "haz":
@@ -2141,6 +2187,7 @@ namespace SpellDuel
             UpdateReadyCheck();   // 戰鬥準備：站直 → 蹲下 → 站起來（SoloBattle.ReadyCheck.cs）
             UpdateStoryCoop();    // 故事合作：房主廣播模式、高度以房主為準、每秒傷害／治療、擲骰（SoloBattle.StoryCoop.cs）
             CheckHostAlive();
+            UpdateBuffPotions();   // 強化藥劑：開打開始算、時間到扣掉（SoloBattle.Potions.cs）
             if (InIntro) { UpdateVisuals(); return; }   // 開場：先停幾秒（敵人不動、不能出手）
             if (scrollAsk && phase == Phase.Fighting && !NetMode) { UpdateVisuals(); return; }   // 回城捲軸的確認視窗：戰鬥暫停
             if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
