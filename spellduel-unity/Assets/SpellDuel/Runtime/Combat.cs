@@ -141,6 +141,7 @@ namespace SpellDuel
         public float armorUntil, armorReduce;
         // 角色養成（無盡模式）：裝備減傷、側跨無敵時間加長、吸血、命中回 MP、每秒回血、低血量減傷
         public float gearReduce, dodgeBonus, lifesteal, mpOnHit, hpRegen, lastStand;
+        public float regenTick, nextRegenAt;   // 自然回復（劍士／主教的被動）：每 10 秒一次回 regenTick（不是每秒）
         /// <summary>魔法減傷（智力）；gearReduce＝物理減傷（體質、裝備）</summary>
         public float magicReduce;
         /// <summary>強化藥劑（藥劑 id、到期時間 battle.now）：右上角狀態圖示用（SoloBattle.Potions.cs）</summary>
@@ -2532,6 +2533,7 @@ namespace SpellDuel
         public const float QuakeBand = 0.25f;
         /// <summary>各主題 Boss 的「跳躍招」：熔岩震波、樹根波、潮汐環</summary>
         public static string QuakeOf(int theme) => theme == 1 ? "x_rootwave" : theme == 2 ? "x_ripple" : "x_quake";   // 角鬥場、山道的 Boss 用震地波
+        public const float RegenEvery = 10f;   // 自然回復：每 10 秒一次
         public static bool IsQuake(SkillDef s) => s != null && (s.id == "x_quake" || s.id == "x_rootwave" || s.id == "x_ripple" || s.id == "w_quake" || s.id == "w_transition");
 
         public void SpawnShockwave(Fighter owner, SkillDef s)
@@ -2609,6 +2611,11 @@ namespace SpellDuel
                 }
                 f.mp = Mathf.Min(f.maxMp, f.mp + f.regen * dt);
                 if (f.hpRegen > 0f && f.Alive) f.hp = Mathf.Min(f.maxHp, f.hp + f.hpRegen * dt);
+                if (f.regenTick > 0f && f.Alive && now >= f.nextRegenAt)
+                {
+                    if (f.nextRegenAt > 0f && f.hp < f.maxHp) { f.hp = Mathf.Min(f.maxHp, f.hp + f.regenTick); Emit("heal", f.Chest, new Color(0.5f, 1f, 0.6f), $"+{f.regenTick:0}"); }
+                    f.nextRegenAt = now + RegenEvery;
+                }
                 if (f.charging != null && now - f.chargeStart > f.charging.charge + chargeTimeout + (f.charging.releaseNear ? 8f : 0f))
                 { f.charging = null; Emit("timeout", f.Chest, Color.gray, "詠唱逾時"); }
                 // 刺客伏擊技能：手掌不在鏡頭前、或身邊 2m 內有敵人 → 蓄力暫停；蓄滿自動進入伏擊（不用放招動作）

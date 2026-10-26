@@ -1288,7 +1288,7 @@ namespace SpellDuel
             f.evadeChance = Mathf.Clamp(Passive(PassiveKind.Evade) + SkillTrees.DodgeToEvade * Passive(PassiveKind.Dodge) + 0.001f * Mathf.Max(0, d(Stat.Agi)), 0f, 0.5f);
             f.chargeScale = Mathf.Max(0.4f, f.chargeScale * (1f - Passive(PassiveKind.FastCast)));   // 法師：快速詠唱
             f.overcharge = Passive(PassiveKind.Overcharge) > 0f;                                   // 獵人：蓄力強化
-            f.hpRegen += f.maxHp * Passive(PassiveKind.NaturalRegen) / 10f;                         // 劍士：自然回復（每 10 秒 x%）
+            f.regenTick = f.maxHp * Passive(PassiveKind.NaturalRegen);                              // 劍士／主教：自然回復（每 10 秒一次回 x%，不是每秒慢慢回）
             f.cdMul = Mathf.Max(0.4f, f.cdMul * (1f - Passive(PassiveKind.QuickCd)));               // 牧師：快速施法
             f.rangeMul = 1f;
             // 進階技能樹的特殊能力：攻擊、減傷、HP
