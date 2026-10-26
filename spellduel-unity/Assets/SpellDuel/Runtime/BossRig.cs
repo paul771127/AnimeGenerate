@@ -3038,6 +3038,7 @@ namespace SpellDuel
                 case "m_rock": return BuildRain("m_rock", 0.58f);
                 case "m_snipe": return BuildSnipe();
                 case "m_fireball": return BuildImpFireball();
+                case "x_fire_low": case "x_fire_high": return BuildImpFireball();   // 閃避訓練的火球
                 case "p_thorn": return BuildThorn();
                 case "p_spore": return BuildGlob("p_spore", 1f);
                 case "m_venom": return BuildGlob("m_venom", 0.58f);

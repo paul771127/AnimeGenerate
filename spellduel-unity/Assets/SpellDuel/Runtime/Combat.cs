@@ -2982,7 +2982,7 @@ namespace SpellDuel
                         // 閃避：蹲下躲過橫向攻擊、側跨的無敵時間內 → 法術穿過去
                         if (Evades(target, p))
                         {
-                            if (!p.evaded) { p.evaded = true; Emit("evade", target.Chest, p.skill.color, "蹲下躲過！"); }
+                            if (!p.evaded) { p.evaded = true; Emit("evade", target.Chest, p.skill.color, p.skill.jumpable ? "跳過了！" : "蹲下躲過！"); }
                             continue;
                         }
                         p.alive = false;
@@ -3020,7 +3020,7 @@ namespace SpellDuel
         }
 
         /// <summary>這一發會不會被閃過：蹲著時橫向攻擊（duckable，Boss 的橫掃）打不到</summary>
-        public bool Evades(Fighter target, Projectile p) => (SidestepInvuln && target.dodgeUntil > now) || (target.crouching && p.skill.duckable);
+        public bool Evades(Fighter target, Projectile p) => (SidestepInvuln && target.dodgeUntil > now) || (target.crouching && p.skill.duckable) || (target.airborneUntil > now && p.skill.jumpable);
         /// <summary>側跨沒有無敵時間：要真的移開、讓法術碰不到身體才算閃過（側跨的偵測仍保留給遊俠的翻滾射擊）</summary>
         public const bool SidestepInvuln = false;
 

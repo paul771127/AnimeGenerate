@@ -17,9 +17,10 @@ namespace SpellDuel
         public const float ClassTrialTime = 30f;
         public const int SwordHitsNeed = 5, ChantNeed = 15, ShotHitsNeed = 8, WatchCount = 7;
         public const float ChantPass = 0.8f, SwordHitRange = 2.2f, ShotTargetDist = 6f, ShotHitRadius = 0.55f;
-        public const float RunnerSpeed = 1.5f, WatchWalk = 0.9f, DodgeEvery = 5f;
-        /// <summary>閃避訓練：第幾秒進哪一種敵人（固定）：熔岩小鬼、火焰射手、自爆小鬼、岩石投擲者、岩石衝鋒獸、熔岩狙擊手</summary>
-        static readonly int[] DodgeKinds = { 0, 1, 3, 4, 2, 5 };
+        public const float RunnerSpeed = 1.5f, WatchWalk = 0.9f;
+        /// <summary>閃避訓練：火球從場地的一面來，第一面 10 顆、每面多 1 顆；速度第一面 2 m/s、每面 +0.1；顆與顆之間 0.25 秒；換面先預警 1.2 秒</summary>
+        public const int DodgeBalls0 = 10; public const float DodgeSpeed0 = 2f, DodgeSpeedStep = 0.1f, DodgeGap = 0.25f, DodgeWarn = 1.2f, DodgeLowY = 0.3f, DodgeHighY = 1.45f;
+        static readonly string[] SideNames = { "前面", "右邊", "後面", "左邊" };
         /// <summary>念咒訓練的咒文字庫：每組 1～3 個詞接起來（2～7 個字）</summary>
         public static readonly string[] ChantWords =
         {
@@ -46,7 +47,7 @@ namespace SpellDuel
             "swordsman" => $"靶人會在場上快速亂跑：{ClassTrialTime:0} 秒內用木棍打中 {SwordHitsNeed} 次",
             "mage" => $"照畫面唸出咒文（讀音像就算）：{ClassTrialTime:0} 秒內唸對 {ChantNeed} 組",
             "archer" => $"6m 外的空中與地面會出現會動的靶子：{ClassTrialTime:0} 秒內用投石打中 {ShotHitsNeed} 個",
-            "assassin" => $"每 {DodgeEvery:0} 秒進來一隻不同的敵人：撐過 {ClassTrialTime:0} 秒，一下都不能被打中",
+            "assassin" => $"火球一次從場地的一面飛來 {DodgeBalls0} 顆（低的跳、高的蹲），一面接一面越來越快越多：撐過 {ClassTrialTime:0} 秒，一下都不能被打中",
             "priest" => $"一群長得一樣的小鬼裡有一隻不一樣：{ClassTrialTime:0} 秒內找出牠、打牠一下（打錯＝失敗）",
             _ => "",
         };
@@ -75,8 +76,8 @@ namespace SpellDuel
             "assassin" => new[]
             {
                 "想當刺客？刺客不靠硬扛。被碰到一下，就是死。",
-                $"接下來每 {DodgeEvery:0} 秒會有一隻敵人進場，每一隻都不一樣，打不死牠們，別浪費力氣。{ClassTrialTime:0} 秒內，一下都不能被打中。",
-                "看牠們出手前的動作：橫掃就蹲，火球就側身，衝過來就走開。去吧。",
+                $"接下來火球會從場地的一面飛過來，一次 {DodgeBalls0} 顆，前後錯開、高低左右都不一定。貼地的跳起來躲，胸口高的蹲下去。{ClassTrialTime:0} 秒內，一下都不能被打中。",
+                "一面飛完馬上換另一面，而且一面比一面快、一面比一面多。先看預警的方向，再看每一顆的高度。去吧。",
             },
             "priest" => new[]
             {
@@ -149,7 +150,7 @@ namespace SpellDuel
             swordHits = 0; swordSeenHits = 0; runnerUp = false;
             chantDone = 0; chantCur = null; chantLastFull = null; chantHeard = null; chantMsgUntil = 0f;
             shotHits = 0; shotUp = false;
-            dodgeSpawned = 0;
+            dodgeWave = -1; dodgeSide = -1; dodgeFired = 0; dodgeNextAt = 0f; dodgeFwd = Fighter.Flat(me.forward); if (dodgeFwd == Vector3.zero) dodgeFwd = Vector3.forward; dodgeCenter = me.Feet; dodgeWarnUntil = 0f;
             watchOdd = null; watchMarker = null; watchDirs.Clear();
             phase = Phase.Fighting; resultShown = false;
             Say($"{(dailyMode ? "📅 每日訓練・" : "🎓 ")}{ClassTrialName(cls)}：站好、手機對著前方，倒數後開始", 3f);
@@ -388,8 +389,54 @@ namespace SpellDuel
             return false;
         }
 
-        // ---------------------------------------------------------------- 刺客：撐 30 秒不被打中
-        int dodgeSpawned;
+        // ---------------------------------------------------------------- 刺客：撐 30 秒不被火球打中
+        int dodgeWave, dodgeSide, dodgeFired; float dodgeNextAt, dodgeWarnUntil;
+        Vector3 dodgeFwd, dodgeCenter, dodgeOrigin, dodgeDir, dodgeLat; float dodgeHalfW;
+        int DodgeBalls => DodgeBalls0 + Mathf.Max(0, dodgeWave);
+        float DodgeSpeed => DodgeSpeed0 + DodgeSpeedStep * Mathf.Max(0, dodgeWave);
+        /// <summary>場地的四面：0 前、1 右、2 後、3 左（以開始時面向的方向為準）</summary>
+        Vector3 SideDir(int side) => side == 0 ? dodgeFwd : side == 1 ? Vector3.Cross(Vector3.up, dodgeFwd).normalized : side == 2 ? -dodgeFwd : -Vector3.Cross(Vector3.up, dodgeFwd).normalized;
+        /// <summary>從 from 往 dir 走，場地內最遠到哪（最多 maxD）</summary>
+        float ReachIn(Vector3 from, Vector3 dir, float maxD)
+        {
+            float r = 0f;
+            for (float d = 0.25f; d <= maxD; d += 0.25f) { var p = WorldFrame.FromWorld(from + dir * d); if (!area.Inside(p) || area.DistanceToEdge(p) < 0.3f) break; r = d; }
+            return r;
+        }
+
+        /// <summary>換一面：發射線＝場地那一面的邊（離玩家起點最遠處），先預警</summary>
+        void NextDodgeSide(float now)
+        {
+            dodgeWave++;
+            int side; do side = trialRng.Next(4); while (side == dodgeSide && dodgeWave > 0);
+            dodgeSide = side;
+            dodgeDir = -SideDir(side);   // 火球飛的方向：從那一面往對面
+            dodgeLat = Vector3.Cross(Vector3.up, dodgeDir).normalized;
+            float reach = Mathf.Max(2.5f, ReachIn(dodgeCenter, SideDir(side), 8f));
+            dodgeOrigin = dodgeCenter + SideDir(side) * reach;
+            dodgeHalfW = Mathf.Max(0.8f, Mathf.Min(ReachIn(dodgeOrigin - SideDir(side) * 0.3f, dodgeLat, 4f), ReachIn(dodgeOrigin - SideDir(side) * 0.3f, -dodgeLat, 4f)));
+            dodgeFired = 0; dodgeNextAt = now + DodgeWarn; dodgeWarnUntil = now + DodgeWarn + 0.6f;
+            Sfx.Play("aim_warn", 0.9f); Haptics.Play(Haptics.Kind.Warning);
+            floaters.Add(new Floater { text = $"⚠ 第 {dodgeWave + 1} 面：火球從{SideNames[side]}來！{DodgeBalls} 顆・{DodgeSpeed:0.0} m/s", color = new Color(1f, 0.6f, 0.4f), born = Time.time, screen = true });
+        }
+
+        void FireDodgeBall(float now)
+        {
+            var en = En;
+            bool low = trialRng.NextDouble() < 0.5;
+            float x = ((float)trialRng.NextDouble() * 2f - 1f) * dodgeHalfW;
+            var from = dodgeOrigin + dodgeLat * x;
+            en.head = new Vector3(from.x, (low ? DodgeLowY : DodgeHighY) + 0.25f, from.z);   // 出手點＝頭的位置往下 0.25
+            en.forward = dodgeDir;
+            var sk = Skills.All[low ? "x_fire_low" : "x_fire_high"];
+            en.charging = sk; en.chargeStart = now - 100f;
+            int before = battle.projectiles.Count;
+            battle.TryRelease(en, dodgeDir, from + dodgeDir * 10f, out _);
+            for (int j = before; j < battle.projectiles.Count; j++) { battle.projectiles[j].speedMul = DodgeSpeed; battle.projectiles[j].hitMul = 1f; }
+            en.head = new Vector3(0f, 1.6f, 40f);   // 出題者回到遠處（不會被鎖定）
+            dodgeFired++;
+            Sfx.Play("shot", 0.5f, low ? 0.8f : 1.1f);
+        }
 
         bool UpdateDodgeTrial(float now, float t)
         {
@@ -398,19 +445,16 @@ namespace SpellDuel
             {
                 me.hp = me.maxHp;
                 Sfx.Play("hurt", 1f); Haptics.Play(Haptics.Kind.Heavy); Kick(14f, 0.08f);
-                return FinishClassTrial(false, $"第 {t:0.#} 秒被打中了");
+                return FinishClassTrial(false, $"第 {t:0.#} 秒被火球打中了（第 {dodgeWave + 1} 面）");
             }
             me.hp = me.maxHp; trialLastMeHp = me.hp;
-            int due = Mathf.Min(DodgeKinds.Length, Mathf.FloorToInt(t / DodgeEvery) + 1);
-            while (dodgeSpawned < due)
+            if (dodgeWave < 0) NextDodgeSide(now);
+            // 這一面：每 DodgeGap 秒一顆；最後一顆射完馬上換下一面（先預警，不停頓）
+            while (dodgeFired < DodgeBalls && now >= dodgeNextAt)
             {
-                int kind = DodgeKinds[dodgeSpawned++];
-                if (!FarSpot(out var at)) at = me.Feet + Fighter.Flat(me.forward) * 3f;
-                var m = battle.SpawnMinion(at, 0, kind);
-                m.damageTakenMul = 0f;   // 打不死：這關是閃，不是打
-                m.attackReadyAt = now + 1.5f;
-                Sfx.Play("summon", 0.8f);
-                floaters.Add(new Floater { text = $"⚠ {Battle.MinionNames[kind]} 進場！（{dodgeSpawned}/{DodgeKinds.Length}）", color = new Color(1f, 0.6f, 0.5f), born = Time.time, screen = true });
+                FireDodgeBall(now);
+                dodgeNextAt += DodgeGap;
+                if (dodgeFired >= DodgeBalls) NextDodgeSide(now);
             }
             return false;
         }
@@ -501,7 +545,7 @@ namespace SpellDuel
                 "swordsman" => $"⚔ 木棍打中 {swordHits}/{SwordHitsNeed}（靶人在場上亂跑，追上去打）",
                 "mage" => $"📖 唸對 {chantDone}/{ChantNeed}（讀音像 {ChantPass * 100:0}% 就算）",
                 "archer" => $"🎯 打中 {shotHits}/{ShotHitsNeed}（唸「投石」、握拳再張開丟出去）",
-                "assassin" => $"👣 撐住！{dodgeSpawned}/{DodgeKinds.Length} 隻進場" + (dodgeSpawned < DodgeKinds.Length ? $"・下一隻 {Mathf.Max(0f, DodgeEvery * dodgeSpawned - t):0} 秒後" : ""),
+                "assassin" => $"👣 第 {dodgeWave + 1} 面・火球從{(dodgeSide >= 0 ? SideNames[dodgeSide] : "…")}來 {dodgeFired}/{DodgeBalls} 顆・{DodgeSpeed:0.0} m/s　低的⬆跳、高的⬇蹲",
                 "priest" => $"👀 找出身上多了小東西的那隻小鬼，打牠一下（打錯＝失敗）",
                 _ => "",
             };
@@ -537,6 +581,13 @@ namespace SpellDuel
                     break;
                 case "archer":
                     if (shotUp) DrawEdgeArrow(shotPos, $"🎯 {(shotAir ? "空中" : "地面")} {Battle.FlatDistance(Me.Feet, shotPos):F1}m", new Color(1f, 0.8f, 0.3f), W, H, lh, fsS);
+                    break;
+                case "assassin":
+                    if (dodgeSide >= 0)
+                    {
+                        DrawEdgeArrow(dodgeOrigin + Vector3.up * 1f, $"🔥 火球從{SideNames[dodgeSide]}來", new Color(1f, 0.55f, 0.3f), W, H, lh, fsS);
+                        if (battle.now < dodgeWarnUntil) UiKit.Pill(H * 0.62f, $"⚠ 第 {dodgeWave + 1} 面：火球從{SideNames[dodgeSide]}來！低的跳、高的蹲", fsL, new Color(1f, 0.6f, 0.35f), pillW);
+                    }
                     break;
                 case "swordsman":
                     if (runnerUp) DrawEdgeArrow(En.Feet + Vector3.up * 1.9f, $"🎯 靶人 {Battle.FlatDistance(Me.Feet, En.Feet):F1}m", new Color(1f, 0.85f, 0.4f), W, H, lh, fsS);

@@ -38,6 +38,7 @@ namespace SpellDuel
         public bool groundZone;
         public bool releaseNear;        // 距離不在射程內時不能出手（保留蓄力，靠近再放）
         public bool duckable;           // 胸口高度的橫向衝擊波（Boss 的橫掃、藤鞭）：蹲下就躲得過
+        public bool jumpable;           // 貼地的攻擊（閃避訓練的低火球）：跳起來就躲得過
         public bool crescent;           // 新月形法球（劍氣、風刃）：碰到新月本體才算命中（不是整片橫掃）
         public bool fromAbove; public float dropHeight = 6f;   // 從目標正上方落下（隕石、審判）
         public float areaRadius;        // 範圍攻擊：放招當下目標在施放者周圍這個半徑內就命中（Boss 的地裂重擊）
@@ -253,6 +254,9 @@ namespace SpellDuel
             P(new SkillDef { areaRadius = 3.8f, id = "b_leap", cls = "boss", name = "熔岩躍擊", type = SkillType.Projectile, color = C("#dc2626"), cost = 0, damage = 20, charge = 1.4f, cooldown = 9f, speed = 1f, radius = 0f, rangeMax = 14f, desc = "離得太遠時跳到目標面前砸下，落點周圍 3.8m 受傷（蓄力時落點有紅圈，離開紅圈）" });
             P(new SkillDef { id = "b_summon", cls = "boss", name = "召喚小怪", type = SkillType.Self, self = SelfKind.Summon, color = C("#ff7b29"), cost = 0, charge = 1.8f, cooldown = 16f, multi = 4, desc = "召喚熔岩小鬼（合作時多一隻）" });
             P(new SkillDef { id = "m_fireball", cls = "minion", name = "火焰射手的火球", type = SkillType.Projectile, color = C("#67e8f9"), cost = 0, damage = 8, charge = 0.8f, cooldown = 3f, speed = 6f, radius = 0.12f, rangeMax = 9f, desc = "遠程小怪的火球" });
+            // 閃避訓練（轉職試煉／每日訓練）：從場地一面飛過來的火球——低的跳、高的蹲。速度由試煉控制（speedMul）
+            P(new SkillDef { id = "x_fire_low", cls = "minion", name = "低火球", type = SkillType.Projectile, color = C("#ff8a3d"), cost = 0, damage = 8, charge = 0f, cooldown = 0f, speed = 1f, radius = 0.18f, rangeMax = 25f, jumpable = true, desc = "貼地飛來的火球（跳起來躲）" });
+            P(new SkillDef { id = "x_fire_high", cls = "minion", name = "高火球", type = SkillType.Projectile, color = C("#ffd23d"), cost = 0, damage = 8, charge = 0f, cooldown = 0f, speed = 1f, radius = 0.18f, rangeMax = 25f, duckable = true, desc = "胸口高度飛來的火球（蹲下躲）" });
             P(new SkillDef { fromAbove = true, dropHeight = 5f, id = "m_rock", cls = "minion", name = "投石", type = SkillType.Projectile, color = C("#f59e0b"), cost = 0, damage = 12, charge = 1.2f, cooldown = 4.5f, speed = 7f, radius = 0.45f, rangeMax = 11f, desc = "岩石投擲者：石頭砸在你腳下（看紅圈閃開）" });
             P(new SkillDef { id = "m_void", cls = "minion", name = "虛空彈", type = SkillType.Projectile, color = C("#a855f7"), cost = 0, damage = 10, charge = 1.0f, cooldown = 4f, speed = 7f, radius = 0.13f, rangeMax = 14f, desc = "虛空術士：超遠距離（超過 10m）的虛空彈；出手後停留 3 秒，再瞬移到場內隨機位置" });
             P(new SkillDef { id = "m_snipe", cls = "minion", name = "熔岩狙擊", type = SkillType.Projectile, color = C("#ff4fd8"), cost = 0, damage = 15, charge = 1.6f, cooldown = 5f, speed = 16f, radius = 0.08f, rangeMax = 14f, desc = "熔岩狙擊手：瞄準 1.6 秒（有紅線）後高速射擊（側跨閃）" });
