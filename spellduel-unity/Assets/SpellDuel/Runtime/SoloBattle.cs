@@ -100,12 +100,12 @@ namespace SpellDuel
         }
 
         /// <summary>隊友放招／普攻：角色播對應動作（劍士揮砍、刺客突刺、弓箭手拉弓、法系舉杖前推），手上爆光</summary>
-        void PeerAct(int pid, string skillId, bool basic, Vector3 dirW)
+        void PeerAct(int pid, string skillId, bool basic, Vector3 dirW, bool reverse = false)
         {
             var rig = PeerRig(pid); if (!rig || !Skills.All.TryGetValue(skillId ?? "", out var sk)) return;
             string cls = peerInfo.TryGetValue(pid, out var pi) && pi.cls != null ? pi.cls : rig.ClassId;
             string kind = cls == Skills.Novice ? (Skills.IsMeleeBasic(sk) ? "novice" : "novice_throw") : AttackKindOf(cls);
-            rig.PlayAttack(kind, basic ? 0.06f : 0.15f);
+            rig.PlayAttack(kind, basic ? 0.06f : 0.15f, reverse);
             if (!Skills.IsMeleeBasic(sk))
                 SpellFx.CastBurst(cls == Skills.Novice ? SpellFx.NoviceStyle(sk.id) : cls == "swordsman" ? SpellFx.SwordStyle(sk.id) : cls, sk.color,
                     rig.CastHandPos, dirW.sqrMagnitude > 1e-4f ? WorldFrame.DirFromWorld(dirW.normalized) : rig.transform.forward, basic ? 0.4f : 0.5f);
@@ -1470,7 +1470,7 @@ namespace SpellDuel
                     break;
                 case "act":
                     // 隊友放招或揮武器：他的 3D 角色做出同樣的動作，手上爆光
-                    PeerAct(m.pid, m.k, m.ok, m.d);
+                    PeerAct(m.pid, m.k, m.ok, m.d, m.rad > 0.5f);
                     break;
                 case "cast2":
                     // 隊友（或主機的 Boss）的法術：只顯示
@@ -1951,7 +1951,7 @@ namespace SpellDuel
             if (coop) { OnNetCoop(m); return; }
             switch (m.t)
             {
-                case "act": PeerAct(m.pid, m.k, m.ok, m.d); break;   // 對手的 3D 角色做出放招／揮武器動作
+                case "act": PeerAct(m.pid, m.k, m.ok, m.d, m.rad > 0.5f); break;   // 對手的 3D 角色做出放招／揮武器動作
                 case "cast2":
                     if (Skills.All.TryGetValue(m.k, out var cs))
                     {
@@ -2502,7 +2502,8 @@ namespace SpellDuel
             if (!battle.BasicAttack(Me, s, d, floor, enemyOnScreen, from, to)) { Me.hasCastFrom = false; return; }
             if (Skills.IsSwipeBasic(s)) StartHeldSwing(Hand.SwipeFrom, Hand.SwipeTo);   // 劍仙的劍來：手上的長劍跟著揮一個扇形
             TriggerBasicFx(s);   // 出手的畫面光影（各職業顏色、動作）
-            NetSend?.Invoke(new Msg { t = "act", k = s.id, ok = true, d = d });   // 隊友畫面上的我：揮武器／出手
+            // 隊友畫面上的我：揮武器／出手（揮砍類送手劃過的方向：rad＝1 由左往右＝反手）
+            NetSend?.Invoke(new Msg { t = "act", k = s.id, ok = true, d = d, rad = Skills.IsSwipeBasic(s) && Hand.SwipeTo.x > Hand.SwipeFrom.x ? 1f : 0f });
             if (!Skills.IsMeleeBasic(s))
                 SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(s.id):myClass, s.color, WorldFrame.FromWorld(castAt), WorldFrame.DirFromWorld(d), 0.6f);   // 手上的出手爆光（以前 0.2 太小）
         }

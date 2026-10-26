@@ -18,16 +18,20 @@ namespace SpellDuel
         const float AtkStrike = 0.12f, AtkHold = 0.1f, AtkRecover = 0.3f;
 
         /// <summary>播放攻擊動作。windup：預備秒數（＝預警時間；0＝直接出手）</summary>
-        public void PlayAttack(string kind, float windup)
+        public void PlayAttack(string kind, float windup) => PlayAttack(kind, windup, false);
+
+        /// <summary>reverse：反手揮（真人的手由左往右劃：從結束姿勢掃回架勢）</summary>
+        public void PlayAttack(string kind, float windup, bool reverse)
         {
             if (dead || isDummy) return;   // 真人分身也播（隊友放招／揮武器：手臂、轉腰疊在手機姿勢上）
-            atkKind = kind; atkWind = Mathf.Max(0f, windup); atkT = 0f;
+            atkKind = kind; atkWind = Mathf.Max(0f, windup); atkT = 0f; atkReverse = reverse;
             castT = -1f;   // 不要再疊一次一般的出手動作
         }
 
         /// <summary>法術／箭從哪裡飛出：右手（拿武器的手）的位置（場景座標）</summary>
         public Vector3 CastHandPos => handR ? handR.position + handR.forward * 0.05f : transform.position + Vector3.up * 1.2f;
         Quaternion atkSpine = Quaternion.identity;
+        bool atkReverse;
 
         /// <summary>正在播攻擊動作（這時候不用再播 PlayCast）</summary>
         public bool Attacking => atkT >= 0f;
@@ -65,6 +69,7 @@ namespace SpellDuel
             float total = atkWind + AtkStrike + AtkHold + AtkRecover;
             if (atkT >= total || deadE > 0.01f) { atkT = -1f; atkSpine = Quaternion.identity; return; }
             var w = WindPose(atkKind); var s = StrikePose(atkKind);
+            if (atkReverse) { var tmp = w; w = s; s = tmp; }   // 反手：架勢和收招對調，揮的方向相反
             AtkPose p; float k;   // k：疊上去的比例
             if (atkT < atkWind)
             {
