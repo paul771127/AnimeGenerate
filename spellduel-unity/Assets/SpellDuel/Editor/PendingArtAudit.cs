@@ -12,6 +12,11 @@ public static class PendingArtAudit {
 static readonly BindingFlags Instance=BindingFlags.Instance|BindingFlags.NonPublic|BindingFlags.Public;
 static void Check(bool ok,string why){if(!ok)throw new Exception("Pending art: "+why);}
 public static Report Run(){
+ var on=typeof(Sfx).GetField("on",BindingFlags.Static|BindingFlags.NonPublic);var loaded=typeof(Sfx).GetField("loaded",BindingFlags.Static|BindingFlags.NonPublic);
+ var oldOn=on.GetValue(null);var oldLoaded=loaded.GetValue(null);on.SetValue(null,false);loaded.SetValue(null,true);
+ try{return RunSilent();}finally{on.SetValue(null,oldOn);loaded.SetValue(null,oldLoaded);}
+}
+static Report RunSilent(){
  var report=new Report{unity=Application.unityVersion};var world=new WorldUI();
  var map=typeof(WorldUI).GetMethod("MapFor",BindingFlags.Static|BindingFlags.NonPublic);
  var town=typeof(WorldUI).GetField("town",Instance);var screen=typeof(WorldUI).GetField("screen",Instance);

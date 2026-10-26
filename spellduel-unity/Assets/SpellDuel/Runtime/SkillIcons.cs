@@ -49,6 +49,7 @@ namespace SpellDuel
             var cv = new Cv(size);
             Background(cv, cc, sc, skillId);
             if(DrawSupply(cv,skillId))return cv.Output();
+            if(skillId=="worldboss_notice"){DrawWorldBossNotice(cv);return cv.Output();}
             switch (skillId)
             {
                 case "na_kunai": ReworkIcon(cv,0); break;

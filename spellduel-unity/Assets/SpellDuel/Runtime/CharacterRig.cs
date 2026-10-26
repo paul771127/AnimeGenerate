@@ -529,7 +529,9 @@ namespace SpellDuel
 
             // Measure in the relaxed stance, so a crouched assassin is not fitted as a shorter adult.
             combatAmount=0;InCombat=false;Animate(0f);
-            HumanProportions.NormalizeProjected(head,advancedId??classId,transform);AnimeFace.AlignOval(head,advancedId??classId,facePersona);if(halo!=null)haloBasePos=halo.localPosition;
+            HumanProportions.NormalizeProjected(head,advancedId??classId,transform);AnimeFace.AlignOval(head,advancedId??classId,facePersona);FinishNeckAndCollar();
+            rends=body.GetComponentsInChildren<Renderer>(true);origMats=new Material[rends.Length];for(int i=0;i<rends.Length;i++)origMats[i]=rends[i].sharedMaterial;
+            if(halo!=null)haloBasePos=halo.localPosition;
             InCombat=true;combatAmount=1;Animate(0f);
         }
 

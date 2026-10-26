@@ -6,12 +6,16 @@ Shader "SpellDuel/Toon"
     {
         _Color ("Color", Color) = (1,1,1,1)
         _MainTex ("Texture", 2D) = "white" {}
+        [HideInInspector] _ArtFade ("Visual opacity", Float) = 1
+        [HideInInspector] _ArtGray ("Downed desaturation", Float) = 0
+        [HideInInspector] _ArtRevive ("Revive light", Float) = 0
         [HideInInspector] _HumanFace ("Human face mode", Float) = 0
         [HideInInspector] _HumanHair ("Human hair", Float) = 0
         [HideInInspector] _HumanPart ("Hair part", Float) = 0
         [HideInInspector] _HumanWave ("Hair phase", Float) = 0
         [HideInInspector] _HumanFringe ("Hair shadow edge", Float) = 0.71
         [HideInInspector] _HumanOutline ("Human outline scale", Float) = 1
+        [HideInInspector] _HumanStrandLines ("Player strand ink", Float) = 0
         [HideInInspector] _HumanSkinShade ("Soft pink skin shade", Color) = (0.93,0.85,0.85,1)
     }
     SubShader
@@ -34,7 +38,7 @@ Shader "SpellDuel/Toon"
             #include "UnityLightingCommon.cginc"
 
             sampler2D _MainTex; float4 _MainTex_ST;
-            fixed4 _Color;
+            fixed4 _Color; half _ArtFade, _ArtGray, _ArtRevive;
             #ifdef SD_HUMAN
             half _HumanFace;
             half _HumanHair, _HumanPart, _HumanWave, _HumanFringe;
@@ -78,6 +82,7 @@ Shader "SpellDuel/Toon"
 
             fixed4 frag(v2f i) : SV_Target
             {
+                if (_ArtFade < 0.999) clip(_ArtFade - 0.001 - frac(dot(floor(i.pos.xy),float2(0.754877,0.56984)))*0.999);
                 fixed4 baseC = tex2D(_MainTex, i.uv) * _Color;
                 #ifdef SD_HUMAN
                 if (_HumanHair > 0.5) baseC.rgb *= i.data.rgb;
@@ -94,7 +99,8 @@ Shader "SpellDuel/Toon"
                 if (_HumanFace > 0.5)
                 {
                     shade = baseC.rgb * _HumanSkinShade.rgb;
-                    if (_HumanFace < 1.5)
+                    if (_HumanFace > 4.5) lit = 1.0 - 0.45*smoothstep(0.45,1.0,i.uv.y);
+                    else if (_HumanFace < 1.5)
                     {
                         float front = dot(normalize(i.faceFront), L);
                         float side = dot(normalize(i.faceRight), L);
@@ -128,6 +134,8 @@ Shader "SpellDuel/Toon"
                 if (_HumanHair > 0.5 && i.data.a > 0.4 && i.data.a < 0.6) c = baseC.rgb;
                 #endif
                 c *= _SD_EnvTint.rgb;   // AR 光照估計（ArLighting）：房間亮度與色溫
+                c = lerp(c,dot(c,fixed3(0.299,0.587,0.114)).xxx,_ArtGray);
+                c += fixed3(0.28,1.0,0.65)*_ArtRevive;
                 return fixed4(c, baseC.a);
             }
             ENDCG
@@ -153,9 +161,9 @@ Shader "SpellDuel/Toon"
             float _SD_OutlineFar;       // 超過這個距離（公尺）開始變細
 
             #ifdef SD_HUMAN
-            fixed4 _Color;
+            fixed4 _Color; half _ArtFade, _ArtGray, _ArtRevive;
             float _HumanOutline;
-            half _HumanFace, _HumanHair;
+            half _HumanFace, _HumanHair, _HumanStrandLines;
             #endif
             struct v2f { float4 pos : SV_POSITION; };
 
@@ -169,7 +177,7 @@ Shader "SpellDuel/Toon"
                 dir = len > 1e-5 ? dir / len : float2(0, 0);
                 float px = _SD_OutlineWidth * (_ScreenParams.y / 1000.0);
                 #ifdef SD_HUMAN
-                px *= _HumanOutline * (_HumanFace > 0.5 && _HumanFace < 1.5 ? v.color.r : 1.0);
+                px *= _HumanOutline * (_HumanFace > 0.5 && _HumanFace < 1.5 ? v.color.r : 1.0) * (_HumanStrandLines > 0.5 && v.color.a < 0.9 ? 0.55 : 1.0);
                 if (_HumanHair > 0.5 && v.color.a > 0.4 && v.color.a < 0.6) px *= 0.25;
                 #endif
                 float fade = saturate(_SD_OutlineFar / max(0.01, p.w));
@@ -180,6 +188,7 @@ Shader "SpellDuel/Toon"
 
             fixed4 frag(v2f i) : SV_Target
             {
+                if (_ArtFade < 0.999) clip(_ArtFade - 0.001 - frac(dot(floor(i.pos.xy),float2(0.754877,0.56984)))*0.999);
                 #ifdef SD_HUMAN
                 fixed3 ink = _HumanHair > 0.5 ? fixed3(0.065,0.050,0.080) : _Color.rgb * fixed3(0.25,0.20,0.25);
                 return fixed4(ink, 1);

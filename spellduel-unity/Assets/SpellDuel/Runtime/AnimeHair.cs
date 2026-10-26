@@ -62,7 +62,7 @@ namespace SpellDuel
         }
         internal static Mesh MeshFor(string id,Portraits.Persona p)
         {
-            if(PlayerClassArt.IsPlayer(id))return MeshFor("player_identity",p);
+            if(PlayerClassArt.IsPlayer(id))return PlayerHair.MeshFor(p);
             if(meshes.TryGetValue(id,out var mesh))return mesh;
             if(StoryHair.Has(id)){mesh=StoryHair.Build(id,p);meshes[id]=mesh;return mesh;}
             var look=CharacterLook.Get(id);var kind=look.Hair;
@@ -163,7 +163,11 @@ namespace SpellDuel
             KeepHairTop(v,originalTop);
             mesh=new Mesh{name="髮型 "+id};mesh.SetVertices(v);mesh.SetTriangles(tri,0);mesh.colors=colors.ToArray();mesh.RecalculateNormals();mesh.RecalculateBounds();meshes[id]=mesh;return mesh;
         }
-        internal static void Build(Transform head,string id,Portraits.Persona p)=>AnimeFace.Part(head,"整體髮型",HeadwearArt.HairFor(id,p),Vector3.zero,AnimeFace.Material(CharacterLook.Get(id).HairColor,4));
+        internal static void Build(Transform head,string id,Portraits.Persona p){
+            bool player=PlayerClassArt.IsPlayer(id);var mat=AnimeFace.Material(CharacterLook.Get(id).HairColor,4,player?"Player strand ink":null);
+            if(player&&mat.HasProperty("_HumanStrandLines"))mat.SetFloat("_HumanStrandLines",1);
+            AnimeFace.Part(head,"整體髮型",HeadwearArt.HairFor(id,p),Vector3.zero,mat);
+        }
         internal static Color32[] Portrait(string id,Portraits.Persona p,bool frontOnly)
         {
             string key=id+frontOnly;if(images.TryGetValue(key,out var image))return image;

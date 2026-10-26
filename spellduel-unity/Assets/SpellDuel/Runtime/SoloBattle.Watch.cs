@@ -244,17 +244,7 @@ namespace SpellDuel
             }
             y += ((battle.allies.Count + 1) / 2) * lineH * 0.9f;
 
-            // ---- 名牌：每位玩家頭上
-            if (view != null)
-                foreach (var a in battle.allies)
-                {
-                    var sp = view.WorldToScreenPoint(WorldFrame.FromWorld(a.Feet + Vector3.up * 2.1f));
-                    if (sp.z <= 0f) continue;
-                    float tw = fsS * 7f, th = fsS * 1.4f;
-                    var tr = new Rect(sp.x - tw / 2f, H - sp.y - th, tw, th);
-                    UiKit.Text(tr, a.name, Mathf.RoundToInt(fsS * 0.85f), a.Alive ? Color.white : Color.gray, TextAnchor.MiddleCenter, true);
-                    UiKit.Bar(new Rect(tr.x + tw * 0.2f, tr.yMax, tw * 0.6f, th * 0.35f), a.Alive ? a.hp / Mathf.Max(1f, a.maxHp) : 0f, a.cls.color, "", 1);
-                }
+            DrawAllyLabels(view,W,H,fsS);
 
             if (Time.time < messageUntil) UiKit.Pill(H * 0.62f, message, fsS, new Color(1f, 0.95f, 0.6f), W - pad * 2);
             if (!string.IsNullOrEmpty(watchResult))

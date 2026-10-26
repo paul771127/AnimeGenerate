@@ -47,7 +47,11 @@ namespace SpellDuel
             float dt = Mathf.Max(1e-3f, Time.deltaTime);
             foreach (var a in battle.allies)
             {
-                if (!allyRigs.TryGetValue(a.pid, out var rig) || !rig)
+                string artClass=a.cls!=null?a.cls.id:"mage";var artAdvanced=Advanced.Get(a.adv);string artAdv=artAdvanced!=null&&artAdvanced.baseCls==artClass?a.adv:null;
+                allyRigs.TryGetValue(a.pid,out var rig);
+                if(rig&&AllyPresentation.For(rig).Removing){if(!NetPeers.ContainsKey(a.pid))continue;rig=null;}
+                if(rig&&(rig.ClassId!=artClass||rig.AdvancedId!=artAdv)){AllyPresentation.For(rig).BeginRemoval();rig=null;}
+                if (!rig)
                 {
                     rig = CharacterRig.Create(a.cls != null ? a.cls.id : "mage", a.adv);   // 進階職業有自己的外觀
                     allyRigs[a.pid] = rig; allyLastFeet[a.pid] = a.Feet;
@@ -57,11 +61,13 @@ namespace SpellDuel
                 rig.MoveSpeed = Mathf.Lerp(rig.MoveSpeed, Fighter.Flat(a.Feet - lf).magnitude / dt, 0.2f);
                 allyLastFeet[a.pid] = a.Feet;
                 rig.SetDead(!a.Alive);
+                AllyPresentation.For(rig).State(a.Alive);
                 ApplyPeerGear(rig, a.pid);   // 一樣就不動；換了裝會跟著換
+                RefreshAllyArtGear(rig,a.pid);
                 DriveFromPeer(rig, a.pid);
             }
             foreach (var kv in new List<KeyValuePair<int, CharacterRig>>(allyRigs))
-                if (battle.AllyByPid(kv.Key) == null) { if (kv.Value) Destroy(kv.Value.gameObject); allyRigs.Remove(kv.Key); }
+                if (battle.AllyByPid(kv.Key) == null) { if (kv.Value) AllyPresentation.For(kv.Value).BeginRemoval(); allyRigs.Remove(kv.Key); }
         }
         public Action<Msg> NetSend;
         public Func<double> SharedClock;
@@ -118,6 +124,7 @@ namespace SpellDuel
         public void OnPeerLeft(int pid)
         {
             peerInfo.Remove(pid); NetPeers.Remove(pid);
+            if(allyRigs.TryGetValue(pid,out var departed)&&departed)AllyPresentation.For(departed).BeginRemoval();
             var a = battle?.AllyByPid(pid);
             if (a != null && a.Alive) { a.hp = 0f; Say($"⚠ {a.name} 斷線了", 3f); }
             // 合作的隊友：房主（跑怪物的那一台）離開了 → 這場沒辦法繼續，直接結束（不然會卡在場上，小怪停在原地打不到）
@@ -2109,7 +2116,7 @@ namespace SpellDuel
             foreach (var go in burnGo.Values) if (go) Destroy(go);
             foreach (var rig in petGo.Values) if (rig) Destroy(rig.gameObject);
             foreach (var ar in allyRigs.Values) if (ar) Destroy(ar.gameObject);
-            allyRigs.Clear(); allyLastFeet.Clear();
+            allyRigs.Clear(); allyLastFeet.Clear(); allyArtGear.Clear();
             ClearNpcRigs(); drun = null; chest = null;   // 副本地圖的劇情人物、寶箱
             ClearBarrierViews();
             petGo.Clear();petVisualNext.Clear();
@@ -3784,6 +3791,7 @@ namespace SpellDuel
 
             // 所有敵人（Boss、電腦對手、小怪）：在畫面中 → 頭上標距離（最近的寫「最近」、正在出手的紅色 ⚠）；不在畫面中 → 畫面邊緣的箭頭
             if (phase == Phase.Fighting && !dummyMode && daily == null) DrawEnemyMarkers(W, H, lh, fsS);
+            if(phase==Phase.Fighting)DrawAllyLabels(cam,W,H,fsS);
 
             // 小怪頭上的小血條
             if (battle.minions.Count > 0)

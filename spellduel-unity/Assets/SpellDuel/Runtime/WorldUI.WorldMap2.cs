@@ -196,6 +196,7 @@ namespace SpellDuel
         {
             useOldMap = false;   // 「📋 關卡清單」拿掉了（使用者要求）：只用路線圖；路線圖不能用時才退回舊的清單
             if (!WorldMap2Usable) return false;
+            if(worldBossNotice>=0){DrawWorldBossPoster(fs,fsS);return true;}
             LoadSeen();
             float now = Time.unscaledTime;
             float y = r.y + gap;
@@ -282,6 +283,8 @@ namespace SpellDuel
                         GUI.DrawTexture(new Rect(fx - fsz * 0.35f + drift + i * fs, yy + i * fsz * 0.2f, fsz, fsz), ft, ScaleMode.ScaleToFit, true);
                 }
             }
+
+            DrawWorldBossMapMarks(s,fsS);
 
             // 點：圖示、名牌、星星；點了主角走過去
             string click = null;

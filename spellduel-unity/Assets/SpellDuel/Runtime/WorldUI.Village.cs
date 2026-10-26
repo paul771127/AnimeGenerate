@@ -130,6 +130,7 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 🔥 討伐告示板：單人 Boss
         void DrawBounty(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
+            if(worldBossNotice>=0){DrawWorldBossPoster(fs,fsS);return;}
             int fi = FacilityIndex("bounty"); var f = Facilities[fi]; var c = FacilityColors[fi];
             float y = r.y + gap;
             Header(r, $"{f.icon} {f.title}", c, prof, fs, fsS, fsL, gap, ref y);
@@ -142,6 +143,7 @@ namespace SpellDuel
             DifficultyRow(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2f), fsS, false);
             y += fs * 2f + gap;
             if (UiKit.Button(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.4f), "🔥 接下懸賞，出發討伐", fs, true, c)) { OnStartBounty?.Invoke(); return; }
+            DrawWorldBossBountyCards(r,fs,fsS,gap,ref y);
             BackToTown(r, fs, gap);
         }
 

@@ -73,14 +73,16 @@ namespace SpellDuel
             }
         }
         internal static OutfitArt.Design Design(string id)=>designs[id];
-        internal static Color Inner(string id)=>CharacterLook.Hex(id=="novice"?"74604b":id=="priest"?"2c3d58":id=="paladin"?"334f84":id=="summoner"?"443735":id=="assassin"?"5f2731":id=="shadowdancer"?"702c68":id=="ninja"?"babdc7":id=="bishop"?"675087":id=="inquisitor"?"332f34":"eee4d2");
+        internal static Color Inner(string id)=>CharacterLook.Hex(id=="novice"?"3e332c":id=="priest"?"2c3d58":id=="paladin"?"334f84":id=="summoner"?"443735":id=="assassin"?"5f2731":id=="shadowdancer"?"702c68":id=="ninja"?"303b56":id=="bishop"?"675087":id=="inquisitor"?"332f34":"eee4d2");
         static readonly Dictionary<string,Mesh> meshes=new Dictionary<string,Mesh>();
         static void ClothGrid(OutfitArt.Builder b,Vector3[,] points,Color color,float thickness=.004f)
         {
             int rows=points.GetLength(0),cols=points.GetLength(1),start=b.V.Count,stride=rows*cols;
             for(int face=0;face<2;face++)for(int j=0;j<rows;j++)for(int i=0;i<cols;i++)
             {
-                b.V.Add(points[j,i]+new Vector3(0,0,face==0?thickness:-thickness));b.C.Add(color);
+                var along=points[Mathf.Min(j+1,rows-1),i]-points[Mathf.Max(0,j-1),i];var across=points[j,Mathf.Min(i+1,cols-1)]-points[j,Mathf.Max(0,i-1)];
+                var normal=Vector3.Cross(along,across).normalized;
+                b.V.Add(points[j,i]+normal*(face==0?thickness:-thickness));b.C.Add(color);
                 if(j==rows-1||i==cols-1)continue;int k=start+face*stride+j*cols+i;
                 if(face==0)b.T.AddRange(new[]{k,k+cols,k+1,k+1,k+cols,k+cols+1});else b.T.AddRange(new[]{k,k+1,k+cols,k+1,k+cols+1,k+cols});
             }
@@ -89,6 +91,17 @@ namespace SpellDuel
             for(int i=0;i<cols-1;i++)foreach(int j in new[]{0,rows-1})
             {int k=start+j*cols+i;b.T.AddRange(new[]{k,k+stride,k+1,k+1,k+stride,k+stride+1});}
         }
+        static void Clasp(OutfitArt.Builder b,Vector3 center,float radius,Color rim,Color inset)
+        {
+            const int sides=12;int start=b.V.Count;
+            for(int ring=0;ring<2;ring++)for(int i=0;i<sides;i++){
+                float a=i*2*Mathf.PI/sides,r=radius*(ring==0?1:.65f);
+                b.V.Add(center+new Vector3(Mathf.Sin(a)*r,Mathf.Cos(a)*r,ring==0?0:.004f));b.C.Add(rim);
+                if(ring==1){int k=start+i,n=start+(i+1)%sides;b.T.AddRange(new[]{k,k+sides,n,n,k+sides,n+sides});}
+            }
+            int tip=b.V.Count;b.V.Add(center+Vector3.forward*.002f);b.C.Add(inset);
+            for(int i=0;i<sides;i++)b.T.AddRange(new[]{start+sides+i,tip,start+sides+(i+1)%sides});
+        }
         internal static Mesh MeshFor(string id,string part)
         {
             string key=id+"/"+part;if(meshes.TryGetValue(key,out var cached))return cached;
@@ -96,19 +109,26 @@ namespace SpellDuel
             bool armour=id=="swordsman"||id=="paladin"||id=="marksman";
             if(part=="torso")
             {
-                b.Loft(new[]{.565f,.535f,.505f,.475f,.43f,.34f,.24f,.14f,.055f,-.01f},new[]{.067f,.095f,.144f,.180f,.191f,.178f,.151f,.147f,.161f,.174f},new[]{.066f,.075f,.091f,.102f,.120f,.115f,.103f,.098f,.110f,.115f},d.Main);
+                // The shoulder base ends below the separate collar. Its old tall cap
+                // filled the V opening and made clothing look fused to the neck.
+                b.Loft(new[]{.522f,.505f,.475f,.43f,.34f,.24f,.14f,.055f,-.01f},new[]{.081f,.144f,.180f,.191f,.178f,.151f,.147f,.161f,.174f},new[]{.080f,.091f,.102f,.120f,.115f,.103f,.098f,.110f,.115f},d.Main);
                 // White/dark undershirt is an actual inset front panel between continuous lapels.
-                var fy=new[]{.535f,.47f,.40f,.30f,.20f,.11f};var fz=new[]{.085f,.124f,.133f,.126f,.115f,.110f};
+                var fy=new[]{.515f,.47f,.40f,.30f,.20f,.11f};var fz=new[]{.092f,.124f,.133f,.126f,.115f,.110f};
                 var shirt=new Vector3[fy.Length,5];
                 for(int j=0;j<fy.Length;j++)for(int i=0;i<5;i++){float u=i/2f-1;shirt[j,i]=new Vector3(u*Mathf.Lerp(.065f,.075f,j/(float)(fy.Length-1)),fy[j],fz[j]+.003f*(1-u*u));}
                 ClothGrid(b,shirt,inner);
                 for(int side=-1;side<=1;side+=2)
                 {
-                    var a=new Vector3(side*.058f,.542f,.087f);var c=new Vector3(side*.075f,.105f,.119f);
-                    b.Seam(a,new Vector3(side*.105f,.36f,.141f),.027f,d.Main);
-                    b.Seam(new Vector3(side*.105f,.36f,.141f),c,.027f,d.Main);
-                    b.Seam(a,new Vector3(side*.092f,.36f,.150f),.007f,d.Accent);
-                    b.Seam(new Vector3(side*.092f,.36f,.150f),c,.007f,d.Accent);
+                    var lapel=new Vector3[6,3];
+                    for(int j=0;j<6;j++)for(int i=0;i<3;i++)
+                    {
+                        float t=j/5f,u=i/2f;
+                        float innerX=Mathf.Lerp(.053f,.075f,t),outerX=innerX+Mathf.Lerp(.039f,.024f,t);
+                        lapel[j,i]=new Vector3(side*Mathf.Lerp(innerX,outerX,u),Mathf.Lerp(.528f,.108f,t),Mathf.Lerp(.103f,.121f,t)+.040f*Mathf.Sin(t*Mathf.PI)+.008f*Mathf.Sin(u*Mathf.PI));
+                    }
+                    // Turned lapels have a broad face and a narrow hem, not a pair of floating rails.
+                    ClothGrid(b,lapel,id=="priest"||id=="paladin"?inner:d.Main);
+                    for(int j=0;j<5;j++)b.Seam(lapel[j,0]+Vector3.forward*.006f,lapel[j+1,0]+Vector3.forward*.006f,.006f,d.Accent);
                 }
                 // A real shoulder-to-waist carrying strap, with a buckle and belt.
                 for(int i=0;i<4;i++)
@@ -119,7 +139,7 @@ namespace SpellDuel
                     b.Seam(a,c,id=="assassin"?.034f:.027f,leather);
                     if(id=="assassin"||id=="shadowdancer"){a.x=-a.x;c.x=-c.x;a.z+=.003f;c.z+=.003f;b.Seam(a,c,.026f,leather);}
                 }
-                b.Badge(.025f,.28f,.160f,.031f,.037f,d.Accent);
+                Clasp(b,new Vector3(.025f,.28f,.164f),.014f,d.Accent,leather);
                 b.Loft(new[]{.09f,.045f,.020f},new[]{.171f,.180f,.181f},new[]{.121f,.125f,.127f},id=="berserker"?d.Accent:leather,0,-.01f);
                 b.Badge(0,.058f,.127f,.042f,.034f,d.Accent);
                 // Separate tails instead of a tight cylindrical skirt: the legs can move between them.
@@ -132,6 +152,16 @@ namespace SpellDuel
                 }
                 // Rear coat vent stays narrow below the belt; no outward triangular hip fins.
                 b.Panel(new Vector3(.16f,.02f,-.116f),new Vector3(-.16f,.02f,-.116f),new Vector3(.18f,-d.Hem+.03f,-.14f),new Vector3(-.18f,-d.Hem+.03f,-.14f),d.Main,-.008f,4,3);
+                if(id=="ninja")
+                {
+                    b.Panel(new Vector3(-.069f,.522f,.106f),new Vector3(-.116f,.491f,.128f),new Vector3(.100f,.255f,.145f),new Vector3(.142f,.287f,.138f),d.Main,.010f,5,2);
+                    b.Seam(new Vector3(-.068f,.521f,.116f),new Vector3(.100f,.255f,.155f),.006f,d.Accent);
+                }
+                if(id=="novice")for(int lace=0;lace<3;lace++){
+                    float y=.468f-lace*.028f,z=.136f;
+                    b.Seam(new Vector3(-.022f,y,z),new Vector3(.022f,y-.018f,z+.002f),.004f,leather);
+                    b.Seam(new Vector3(.022f,y,z),new Vector3(-.022f,y-.018f,z+.002f),.004f,leather);
+                }
                 if(id=="berserker")
                 {
                     b.Seam(new Vector3(-.06f,.54f,.10f),new Vector3(.10f,.30f,.150f),.028f,CharacterLook.Hex("59708f"));
@@ -142,14 +172,44 @@ namespace SpellDuel
                     b.Seam(new Vector3(0,.38f,.153f),new Vector3(0,.27f,.155f),.010f,d.Accent);
                     b.Seam(new Vector3(-.038f,.345f,.156f),new Vector3(.038f,.345f,.156f),.010f,d.Accent);
                 }
-                // A shoulder mantle, not a shoulder box. Its perimeter follows the sloping clavicle.
+                // A continuous shoulder mantle wraps from chest to back. Its curved
+                // outside edge follows the deltoid instead of forming rectangular wings.
+                bool hood=id=="novice"||id=="archer"||id=="ranger";
                 for(int side=-1;side<=1;side+=2)
                 {
                     Color mantle=armour?CharacterLook.Hex("b6c2d1"):id=="assassin"?CharacterLook.Hex("762d36"):d.Main;
-                    b.Panel(new Vector3(side*.070f,.535f,.045f),new Vector3(side*.182f,.48f,.071f),new Vector3(side*.105f,.34f,.154f),new Vector3(side*.223f,.35f,.087f),mantle,.015f,4,3);
-                    b.Seam(new Vector3(side*.105f,.34f,.165f),new Vector3(side*.223f,.35f,.098f),.011f,d.Accent);
-                    if(id=="archmage"||id=="paladin"||id=="shadowdancer")b.Panel(new Vector3(side*.07f,.51f,-.01f),new Vector3(side*.19f,.46f,.04f),new Vector3(side*.11f,.39f,.16f),new Vector3(side*.235f,.40f,.08f),d.Main,.01f,3,2);
+                    float width=hood?.287f:id=="archmage"?.292f:.278f;
+                    var shoulder=new Vector3[5,10];
+                    for(int j=0;j<5;j++)for(int i=0;i<10;i++)
+                    {
+                        float t=j/4f,u=i/9f,angle=Mathf.Lerp(.39f,2.98f,side>0?u:1-u);
+                        float f=Mathf.Cos(angle),x=Mathf.Sin(angle),hem=.395f-.060f*Mathf.Abs(f);
+                        if(id=="novice")hem-=.010f*(i%3==0?1:0);
+                        shoulder[j,i]=new Vector3(side*x*Mathf.Lerp(.073f,width,Mathf.Sin(t*Mathf.PI*.5f)),Mathf.Lerp(.548f,hem,t*t*t),f*Mathf.Lerp(.074f,.159f,Mathf.Sin(t*Mathf.PI*.5f))-.009f);
+                    }
+                    ClothGrid(b,shoulder,mantle,.005f);
+                    for(int i=0;i<9;i++)b.Seam(shoulder[4,i]+Vector3.forward*.004f,shoulder[4,i+1]+Vector3.forward*.004f,id=="novice"?.004f:.008f,d.Accent);
+                    if(id!="novice"&&id!="ninja")Clasp(b,new Vector3(side*.120f,.490f,.174f),.018f,d.Accent,d.Main);
+                    if(id=="archmage"||id=="paladin"||id=="shadowdancer"||id=="bishop")
+                    {
+                        var overlay=new Vector3[3,7];
+                        for(int j=0;j<3;j++)for(int i=0;i<7;i++){
+                            float t=j/2f,a=Mathf.Lerp(.52f,2.65f,side>0?i/6f:1-i/6f);
+                            overlay[j,i]=new Vector3(side*Mathf.Sin(a)*Mathf.Lerp(.086f,width+.009f,Mathf.Sin(t*Mathf.PI*.5f)),Mathf.Lerp(.562f,.453f-.015f*Mathf.Abs(Mathf.Cos(a)),t*t*t),Mathf.Cos(a)*Mathf.Lerp(.082f,.151f,Mathf.Sin(t*Mathf.PI*.5f))-.006f);
+                        }
+                        ClothGrid(b,overlay,d.Main,.005f);
+                        for(int i=0;i<6;i++)b.Seam(overlay[2,i]+Vector3.forward*.005f,overlay[2,i+1]+Vector3.forward*.005f,.007f,d.Accent);
+                    }
                 }
+                if(id=="bishop")
+                {
+                    // Two purple stoles continue from the shoulders down the white vestment.
+                    for(int side=-1;side<=1;side+=2){
+                        b.Panel(new Vector3(side*.080f,.43f,.164f),new Vector3(side*.132f,.43f,.150f),new Vector3(side*.070f,-.58f,.147f),new Vector3(side*.127f,-.55f,.125f),d.Sub,.006f,6,2);
+                        b.Seam(new Vector3(side*.075f,.425f,.173f),new Vector3(side*.070f,-.58f,.156f),.006f,d.Accent);
+                    }
+                }
+
             }
             else if(part=="cape")
             {

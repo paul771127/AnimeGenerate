@@ -8,6 +8,9 @@ on:
       - 'spellduel-unity/Assets/SpellDuel/Editor/PlayerMatch2DAudit.cs'
       - 'spellduel-unity/Assets/SpellDuel/Editor/Trap*.cs'
       - 'spellduel-unity/Assets/SpellDuel/Editor/PendingArtAudit.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Editor/NeckHairAudit.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/PlayerHair.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/AllyPresentation.cs'
       - 'spellduel-unity/Assets/SpellDuel/Runtime/*Trap*.cs'
       - 'spellduel-unity/Assets/SpellDuel/Runtime/MechanicalArt.cs'
       - 'spellduel-unity/Assets/SpellDuel/Editor/EliteAudit.cs'
@@ -67,4 +70,6 @@ jobs:
             spellduel-unity/snapshots/world_boss_audit.json
             spellduel-unity/snapshots/trap_dungeon_audit.json
             spellduel-unity/snapshots/pending_art_audit.json
+            spellduel-unity/snapshots/pending_ally_audit.json
+            spellduel-unity/snapshots/neck_hair_audit.json
           if-no-files-found: error
