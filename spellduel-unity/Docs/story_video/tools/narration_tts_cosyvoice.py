@@ -24,7 +24,7 @@ CAST = {
     '旁白':     ('zh_cn_female.wav',      '沉稳自然的说书人', 1.0, f'{WARM},{ROOM}'),
     '艾琳':     ('zh_female_warm.wav',    '年轻女性，声音温柔、柔和、亲切', 1.0, f'{WARM},{ROOM}'),
     '老焰':     ('zh_male_calm.wav',      '苍老的老爷爷，声音低沉沙哑、说话慢、气息重、略带颤抖', 0.95,
-                 f'asetrate=24000*0.9,aresample=24000,atempo=1.11,vibrato=f=4.5:d=0.06,lowpass=f=6000,{WARM},{ROOM}'),   # 降音後 atempo 補回長度
+                 f'asetrate=24000*0.95,aresample=24000,atempo=1.053,vibrato=f=4.5:d=0.025,lowpass=f=7000,{WARM},{ROOM}'),   # v7：降音、顫音減輕（太重會把字糊掉、聽起來念錯）；老人感主要靠指令
     '熔岩巨像': ('zh_cn_male.wav',        '巨大的石头怪物，声音极低、粗、闷', 0.95,   # v5：原本用粤语参考音，普通话会带粤语腔、字念歪
                  'asetrate=24000*0.78,aresample=24000,atempo=1.28,lowpass=f=3000,aecho=0.8:0.6:70|140:0.4|0.25'),
     '腐化樹王': ('zh_male_calm.wav',      '古老的树精，声音低沉、空洞', 0.95,   # v5：原本用英文参考音，中文发音会怪
