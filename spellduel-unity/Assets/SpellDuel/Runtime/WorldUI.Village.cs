@@ -149,7 +149,7 @@ namespace SpellDuel
                 UiKit.Card(cr, done >= 0 ? 0.4f : 0.6f, c.color, done >= 0 ? 0.5f : 0.75f);
                 float bw = cr.width * 0.26f;
                 UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width - bw - gap * 2, fs * 1.3f), $"{SoloBattle.ClassTrialName(cls)}（{c.name}）　" + (done >= 0 ? $"✔ 今天 {TrialCoins.ScoreText(cls, done)}・試煉幣 {TrialCoins.CoinsFor(cls, done)}" : "今天還沒做"), fsS, Color.white, TextAnchor.MiddleLeft, true);
-                UiKit.Text(new Rect(cr.x + gap, cr.y + fs * 1.3f, cr.width - bw - gap * 2, ch - fs * 1.35f), SoloBattle.ClassTrialDesc(cls) + $"\n門檻：{tt[0]}＝1 枚　{tt[1]}＝2 枚　{tt[2]}＝3 枚", Mathf.RoundToInt(fsS * 0.9f), new Color(0.85f, 0.9f, 1f), TextAnchor.UpperLeft);
+                UiKit.Text(new Rect(cr.x + gap, cr.y + fs * 1.3f, cr.width - bw - gap * 2, ch - fs * 1.35f), SoloBattle.ClassTrialDesc(cls, true) + $"\n門檻：{tt[0]}＝1 枚　{tt[1]}＝2 枚　{tt[2]}＝3 枚", Mathf.RoundToInt(fsS * 0.9f), new Color(0.85f, 0.9f, 1f), TextAnchor.UpperLeft);
                 if (UiKit.Button(new Rect(cr.xMax - bw - gap * 0.4f, cr.y + gap * 0.4f, bw, ch - gap * 0.8f), done >= 0 ? "明天再來" : "▶ 開始", fsS, done < 0, c.color, done < 0)) { OnStartTraining?.Invoke(cls); return; }
                 y += ch + gap * 0.4f;
             }

@@ -79,7 +79,6 @@ namespace SpellDuel
             dailyDirector = new DailyChallenge.DodgeDirector(DailyChallenge.Seed(kind), combo);
             dailyRng = new System.Random(DailyChallenge.Seed(kind));
             coinActive = false;
-            if (kind == DailyChallenge.Kind.Dodge) StartFireWall();   // 閃避：火球牆（SoloBattle.FireWall.cs）
             phase = Phase.Fighting; resultShown = false;
             Say($"{DailyChallenge.Names[(int)kind]}：站好、手機對著前方，倒數後開始", 3f);
         }
@@ -135,13 +134,6 @@ namespace SpellDuel
                 floaters.Add(new Floater { text = dailyHearts > 0 ? $"💔 還剩 {dailyHearts} 顆心" : "💔 沒有心了！", color = new Color(1f, 0.4f, 0.45f), born = Time.time, screen = true });
             }
             me.hp = me.maxHp; dailyLastMeHp = me.hp;
-            if (daily == DailyChallenge.Kind.Dodge)
-            {
-                // 閃避挑戰：火球牆——一面一面來、越來越快越多（SoloBattle.FireWall.cs）
-                dailyFired += UpdateFireWall(now);
-                dailyScore = Mathf.Max(0, dailyFired - dailyHits);
-                return;
-            }
             // 新的一波：先開光門（預備），時間到放出攻擊
             foreach (var shot in dailyDirector.Poll(t))
             {
@@ -438,8 +430,7 @@ namespace SpellDuel
             }
             else if (DailyElapsed < 1f) UiKit.Text(new Rect(0, H * 0.35f, W, H * 0.15f), "開始！", fsL * 2, col, TextAnchor.MiddleCenter, true);
 
-            if (k == DailyChallenge.Kind.Dodge) DrawFireWallHud(W, H, lh, fsS, fsL, pillW);   // 閃避：火球從哪一面來
-            // 綜合：每一個要放出的攻擊都標方向（身後的也指得到）；最快的兩種攻擊提示怎麼躲
+            // 閃避：每一個要放出的攻擊都標方向（身後的也指得到）；最快的兩種攻擊提示怎麼躲
             if ((k == DailyChallenge.Kind.Dodge || k == DailyChallenge.Kind.Combo) && dailyShots.Count > 0)
             {
                 var order = new List<DailyShot>(dailyShots); order.Sort((a, b) => a.fireAt.CompareTo(b.fireAt));
