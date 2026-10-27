@@ -801,7 +801,7 @@ namespace SpellDuel
         void OnSpeechText(string text)
         {
             if (VoiceCalib.Open) { VoiceCalib.Heard(text); return; }
-            if (phase == Phase.Fighting && battle != null) { if (scrollAsk) return; if (ClassTrialSpeech(text)) return; DungeonSpeech(text); if (PotionByVoice(text)) return; ItemByVoice(text); CoatByVoice(text); return; }   // 回城確認中：暫停，不聽指令
+            if (phase == Phase.Fighting && battle != null) { if (scrollAsk) return; if (ClassTrialSpeech(text)) return; if (RoomEventSpeech(text)) { DungeonSpeech(text); return; } DungeonSpeech(text); if (PotionByVoice(text)) return; ItemByVoice(text); CoatByVoice(text); return; }   // 回城確認中：暫停，不聽指令
             if (!TownWalking) return;
             if (Greeting.Find(text) != null) { world.Heard = text; world.HeardAt = Time.time; }
             townWalk.Heard(text);
@@ -2262,6 +2262,7 @@ namespace SpellDuel
             if (warnLine) Destroy(warnLine);
             if (slamGo) Destroy(slamGo);
             ClearTravel();   // 副本的通道與運鏡（SoloBattle.DungeonTravel.cs）
+            ClearRoomEventViews();
             ClearWarnRings();
             if (volcano) Destroy(volcano.gameObject);
             if (forest) Destroy(forest.gameObject);
@@ -2808,6 +2809,7 @@ namespace SpellDuel
 
         void OnBattleEvent(string kind, Vector3 at, Color c, string text)
         {
+            if (OnRoomEventFx(kind, at, c, text)) return;   // 副本特殊地點（SoloBattle.RoomEvents.cs）
             switch (kind)
             {
                 case "hit": case "trap": case "mitigate": case "effect": case "counter": case "buff": case "heal": case "trapSet": case "slice":
@@ -3902,6 +3904,7 @@ namespace SpellDuel
             // 被打中：整個畫面閃紅
             if (hitFlash > 0.01f) { GUI.color = new Color(1f, 0f, 0.05f, hitFlash * 0.45f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
             DrawTravelFade(W, H);   // 副本走通道：走進黑霧／到站亮起
+            DrawRoomEventHud(W, H);   // 副本特殊地點：任務說明、黑暗、道具血條
 
             // 致盲：畫面蓋上煙霧
             if (me.blindUntil > now) { GUI.color = new Color(0.55f, 0.55f, 0.6f, 0.92f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; UiKit.Pill(H * 0.32f, $"煙霧中… {me.blindUntil - now:F1}s", fsL, Color.white, pillW); }

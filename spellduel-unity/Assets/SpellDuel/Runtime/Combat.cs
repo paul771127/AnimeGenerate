@@ -136,6 +136,13 @@ namespace SpellDuel
         public bool ambusher;                  // 簡單模式：從別的方向偷襲來的那隻（同時最多一隻）
         public bool hidden;                    // 食人花：埋在地下（玩家走近 1.5m 才冒出來；埋著時打不到）
         public bool miniBoss;                  // 第 3 波單獨登場的特殊敵人（有名字和血條）
+        // 副本特殊地點（Combat.RoomEvents.cs）
+        public bool rooted;                    // 不會動、不會出手（守護物、圖騰、雕像、寶箱）
+        public float lure;                     // 小怪優先打它（多算幾公尺的優勢）
+        public List<Vector3> walkPath; public int walkIdx;   // 護送：沿著這條路走
+        public int evElement;                  // 對應元素的雕像：要的屬性（1 火、2 冰、3 雷）
+        public bool evReal;                    // 找出真身：真的寶箱
+        public bool huntTarget;                // 斬首的目標
         public Vector3 homePos;                // 跳躍魚：海裡的家（咬完跳回去）
         public Vector3 dashFrom;               // 衝刺起點（荊棘衝鋒獸衝完沿路留下荊棘帶）
         public float restUntil;                // 浮空／飛行的小怪出手後：降到場內地上休息到這個時間（近戰打得到），之後才飛回空中
@@ -797,6 +804,7 @@ namespace SpellDuel
         /// <summary>前往下一個戰鬥地點：wave 決定敵人強度，final＝最後的首領</summary>
         public void EnterNode(int nodeWave, bool final, float delay = 3f)
         {
+            CleanupRoomEvent();
             queuedWave = Mathf.Max(1, nodeWave); finalRoom = final; awaitingNext = false; bossSpawnedThisWave = false;
             enemy.hp = 0f;
             NextWave(delay);
@@ -937,6 +945,7 @@ namespace SpellDuel
             if (manualWaves && awaitingNext) return;   // 副本地圖：等房主選下一站（不能把剛打倒的首領又叫出來）
             if (!player.Alive && !AnyAllyAlive) return;
             if (now < waveStartAt) return;
+            if (roomEvent != null && UpdateRoomEvent()) return;   // 副本特殊地點（Combat.RoomEvents.cs）
             if (IsBossWave && !bossPending)
             {
                 if (!enemy.Alive && !bossSpawnedThisWave && now >= bossAt) SpawnBoss();
@@ -990,6 +999,7 @@ namespace SpellDuel
             // 這一波全部打倒：休息 4 秒進下一波（血量不會自己回：用藥水、治療技能，劍士可以點自然回復）
             if (waveToSpawn == 0 && minions.Count == 0 && !HostileNpcAlive)
             {
+                if (roomEvent != null) { FinishRoomEvent(roomEvent == "defend" ? "守住了！" : "清空了！"); return; }   // 守住目標、崩塌、黑暗房：清完這一波就過關
                 Emit("wavecleared", player.Feet, Color.white, $"{WaveLabel}清空！");
                 if (!StageDone()) NextWave(RhythmSpawns ? 3f : 4f);
             }
@@ -1294,7 +1304,7 @@ namespace SpellDuel
                 Fighter tgt = null; float best = float.MaxValue;
                 foreach (var pl in Players()) { if (!pl.Alive) continue; float d0 = FlatDistance(m.Feet, pl.Feet); if (d0 < best) { best = d0; tgt = pl; } }
                 // 副本：保護目標比玩家更容易被盯上（多算 3m 的優勢）、友軍和第三勢力也會被打
-                foreach (var n in npcs) { if (!n.Alive || n.npcSide == 1) continue; float d0 = FlatDistance(m.Feet, n.Feet) - (n.npcEscort ? 3f : 0f); if (d0 < best) { best = d0; tgt = n; } }
+                foreach (var n in npcs) { if (!n.Alive || n.npcSide == 1) continue; float d0 = FlatDistance(m.Feet, n.Feet) - (n.npcEscort ? 3f : 0f) - n.lure; if (d0 < best) { best = d0; tgt = n; } }
                 if (tgt == null) continue;
                 if (tgt.npcSide >= 0) best = FlatDistance(m.Feet, tgt.Feet);
                 m.target = tgt;
@@ -3827,6 +3837,7 @@ namespace SpellDuel
 
         void ApplyDamageAndEffect(Fighter target, int damage, EffectKind eff, float dps, float dur, Vector3 at, Fighter by = null)
         {
+            if (target.npcSide == 1 && target.npcId != null && target.npcId.StartsWith("ev_") && EvPropHit(target, by)) return;   // 副本：雕像、寶箱（Combat.RoomEvents.cs）
             if (by == null) by = FoeSide(target) ? player : enemy;   // 不知道是誰打的：對面那一方的主角
             // 閃避率（刺客技能樹）：整次攻擊（傷害＋效果）完全閃開
             // 閃避只對物理攻擊有效（使用者要求）：魔法攻擊（火球、毒液、放電、泡泡…）閃不掉，要自己躲

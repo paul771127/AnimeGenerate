@@ -66,6 +66,7 @@ namespace SpellDuel
             SyncRunNpcs();
             if(InGallery)battle.bossAfterMinions=!drun.AtEnd;
             battle.EnterNode(drun.node.wave, drun.AtEnd, drun.Step == 1 ? 3f : 4f);
+            StartRoomEventIfAny();   // 特殊地點：守住目標、護送、斬首、解謎…（SoloBattle.RoomEvents.cs）
         }
 
         /// <summary>房主：前往下一站</summary>
@@ -82,6 +83,8 @@ namespace SpellDuel
         {
             if (drun == null || battle == null || phase != Phase.Fighting) return;
             UpdateTravel();
+            UpdateRoomEventVisuals();
+            SendRoomEventState();
             if (Traveling) return;   // 走通道中：場景還是上一站的，不開打、不選路
             if (battle.themeOverride != drun.Theme) battle.themeOverride = drun.Theme;
             // 房主：這個地點的戰鬥打完
@@ -162,6 +165,7 @@ namespace SpellDuel
         void OnNpcDown(Fighter f)
         {
             if (drun == null || f.npcId == null || f.tamedKind >= 0 || f.localFriend || f.friendOwner >= 0) return;   // 收服的魔物、影分身不是劇情人物
+            if (f.npcId.StartsWith("ev_")) return;   // 特殊地點的道具（守護物、圖騰…）：由 Combat.RoomEvents 處理
             NetSend?.Invoke(new Msg { t = "ndie", k = f.npcId });
             NpcDied(f.npcId);
         }
@@ -211,6 +215,7 @@ namespace SpellDuel
             foreach (var n in battle.npcs)
             {
                 if (n.tamedKind >= 0) continue;
+                if (PropVisual(n)) continue;   // 特殊地點的道具：用道具模型
                 if (!npcRigs.TryGetValue(n.minionId, out var rig) || !rig)
                 {
                     bool shadow=n.cloneOf!=null||n.friendOwner>=0&&n.tamedKind<0;
@@ -413,6 +418,7 @@ namespace SpellDuel
         bool OnDungeonMsg(Msg m)
         {
             if(GalleryMessage(m))return true;
+            if (OnRoomEventMsg(m)) return true;   // 特殊地點（SoloBattle.RoomEvents.cs）
             if (drun == null) return false;
             switch (m.t)
             {

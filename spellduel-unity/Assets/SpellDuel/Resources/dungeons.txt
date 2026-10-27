@@ -41,9 +41,14 @@ npc = ayan
 
 [node rails] 廢棄軌道
 wave = 9
+event = escort
+name = 受傷的礦工
+look = archer
+hp = 500
 next = locker, hall
 <enter>
 背景：dungeon
+小鐵［serious］：有個礦工倒在軌道邊！把他護送到軌道盡頭的小屋！
 旁白：翻倒的礦車擋住了半條路，車裡的礦石還在發紅。
 小鐵［serious］：這條路比較近，可是……軌道上全是爪痕。
 <clear>
@@ -312,10 +317,12 @@ npc = ember_laoyan, ember_xiaotie
 
 [node ember_bridge] 爐火上的鐵橋
 wave = 7
+event = collapse
 theme = volcano
 next = ember_toolbox
 <enter>
 背景：stage_volcano
+旁白：鐵橋正在一塊塊崩落。別站在發紅的地方！
 旁白：鐵橋只剩半邊。橋下的火焰，把求救聲反覆推回耳邊。
 <clear>
 旁白：橋端露出鑄模編號，和修補鐘舌時留下的印記相同。
@@ -331,20 +338,26 @@ next = ember_sluice
 
 [node ember_sluice] 排渣水閘
 wave = 7
+event = elements
 theme = volcano
 next = ember_bellows
 <enter>
 背景：stage_volcano
+旁白：水閘上有三座屬性石像，要用對的力量才能打開閘門。
 旁白：水閘被爐渣堵住，黑晶的回音正從縫裡擠出來。
 <clear>
 旁白：爐渣崩落，水流帶走管壁上的黑晶粉。
 
 [node ember_bellows] 破風箱間
 wave = 8
+event = defend
+name = 最後一座風箱
+hp = 900
 theme = volcano
 next = ember_ramp
 <enter>
 背景：stage_volcano
+旁白：最後一座風箱撐著整條排煙道，守住它，別讓怪物把它拆了！
 旁白：風箱每鼓動一次，通往冷卻池的火就升高一截。
 <clear>
 旁白：風箱停下，露出通往運料坡的石門。
@@ -361,10 +374,15 @@ next = ember_cooling
 
 [node ember_cooling] 冷卻池
 wave = 9
+event = chant
+riddle = 鐘的心，被拿走了鐘就不響。
+answer = 鐘舌
+hint = 熔岩巨像胸口掉出來的東西
 theme = volcano
 next = ember_cast
 <enter>
 背景：stage_volcano
+旁白：冷卻池的石門刻著一句謎語，唸出答案門才會開。
 旁白：池邊石龕與山路相通，龕外卻盤踞著被黑晶吸引的魔物。
 <clear>
 旁白：水汽終於升向煙囪，爐心露出一具沒有心跳的巨像輪廓。
@@ -467,30 +485,40 @@ next = mist_stones
 
 [node mist_stones] 認字石階
 wave = 15
+event = runes
+seq = 3
 theme = forest
 next = mist_bower
 <enter>
 背景：stage_forest
+旁白：石階上的字會依序亮起。記住順序，照著踩上去。
 旁白：石階上的舊字一半藏在苔下，腐根卻把它們當成傷口護著。
 <clear>
 旁白：苔下露出清晰的筆畫。走過這裡的人，也曾停下來認字。
 
 [node mist_bower] 落葉書亭
 wave = 16
+event = chant
+riddle = 寫在碑上會被風吹淡，叫出口就會有人回頭。
+answer = 名字
+hint = 霧燈記名徑的人都在找它
 theme = forest
 next = mist_hollow
 <enter>
 背景：stage_forest
+旁白：書亭的門上寫著一句謎語，大聲唸出答案。
 旁白：書亭倒了半面牆，攤開的抄本仍壓在石頭下面。
 <clear>
 旁白：魔物散去，留下沒有被雨水沖掉的姓名。
 
 [node mist_hollow] 空心古木
 wave = 17
+event = dark
 theme = forest
 next = mist_ring
 <enter>
 背景：stage_forest
+旁白：古木裡一片漆黑，只看得到一雙雙發光的眼睛。
 旁白：古木裡傳來翻頁聲。黑晶學會了聲音，卻念不完一個名字。
 <clear>
 旁白：樹洞安靜下來，遠處的葉燈重新接成一線。
@@ -507,10 +535,13 @@ next = mist_roots
 
 [node mist_roots] 交纏的根橋
 wave = 19
+event = totems
+count = 3
 theme = forest
 next = mist_heart
 <enter>
 背景：stage_forest
+旁白：根橋上長出三根封印圖騰，不打掉它們，怪物會一直爬出來。
 旁白：根橋另一端，黑晶沿舊刻痕發亮。每一聲低語都只念到名字的一半。
 <clear>
 旁白：霧裡的字終於連起來：「澪，白帆號領唱。」橋後的黑影劇烈搖晃。
@@ -619,30 +650,38 @@ next = sail_pools
 
 [node sail_pools] 潮池石道
 wave = 24
+event = mimic
+count = 5
 theme = sea
 next = sail_anchor
 <enter>
 背景：stage_sea
+旁白：潮池裡沉著好幾個寶箱，只有一個是真的，真的會偶爾閃一下。
 旁白：潮池間的石道仍可辨認，假求救聲卻總從另一邊傳來。
 <clear>
 旁白：池面恢復平靜，石道上的燈位刻痕露出水面。
 
 [node sail_anchor] 舊錨礁脊
 wave = 25
+event = hunt
 theme = sea
 next = sail_wind
 <enter>
 背景：stage_sea
+旁白：礁脊上有一隻發號施令的海怪，先打倒牠，其他的才會散去。
 旁白：一枚舊錨卡住礁縫，繩結朝著望港高礁的方向。
 <clear>
 旁白：礁脊清出一條窄路，回頭仍能看見船具箱。
 
 [node sail_wind] 穿風岩隙
 wave = 26
+event = survive
+time = 30
 theme = sea
 next = sail_marks
 <enter>
 背景：stage_sea
+旁白：岩隙的風暴要過了！撐住 30 秒，等風停下來。
 旁白：風在岩隙裡吹成斷續的歌，黑晶把每個停頓都變成呼救。
 <clear>
 旁白：風穿過清空的岩隙，這次只剩海浪的聲音。
@@ -669,10 +708,14 @@ next = sail_beacon
 
 [node sail_beacon] 望港高礁
 wave = 29
+event = defend
+name = 望港燈火
+hp = 1000
 theme = sea
 next = sail_cavern
 <enter>
 背景：stage_sea
+旁白：高礁上的燈火是船回港的路標，守住它！
 旁白：高礁後有直通港口的石階。站在這裡，能同時看見舊塔與名碑旁的燈。
 <clear>
 旁白：潮水讓出洞口。裡面沒有船，只有一枚困著舊歌聲的黑晶。

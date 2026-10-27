@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,6 +7,8 @@ namespace SpellDuel
     /// <summary>副本的一個房間：打第幾波（決定場景主題、小怪種類與強度；10 的倍數＝Boss 波；51 波起主題重新輪一次；房間可以用 theme 指定場景），進房間時的旁白</summary>
     public class DungeonRoom
     {
+        /// <summary>特殊地點可以寫的設定</summary>
+        public static readonly string[] EventKeysAll = { "name", "hp", "time", "count", "seq", "riddle", "answer", "hint", "look", "fail" };
         /// <summary>地點 id（地圖用；[room] 沒寫就是 r1、r2…）</summary>
         public string id;
         /// <summary>事件：battle 戰鬥、chest 寶箱（不用打）、boss 首領（wave 是 10 的倍數就自動是首領）</summary>
@@ -18,6 +21,9 @@ namespace SpellDuel
         public bool IsBoss => kind == "boss" || (kind == "battle" && wave > 0 && wave % 10 == 0);
         public int wave;
         public int theme = -1;   // 指定場景主題（−1＝照波次算）：用高波次的強度、保留原本的場景
+        /// <summary>特殊地點的設定（event = defend／survive／… 用：name、hp、time、count、seq、riddle、answer、hint、look、fail）</summary>
+        public readonly Dictionary<string, string> param = new Dictionary<string, string>();
+        public bool IsEvent => Battle.IsRoomEvent(kind);
         public string title, line;
         /// <summary>進房間、清完房間、首領剩一半血時的台詞（戰鬥中以字幕卡顯示，不暫停）</summary>
         public readonly List<StoryLine> enter = new List<StoryLine>(), clear = new List<StoryLine>(), bossHalf = new List<StoryLine>();
@@ -222,7 +228,8 @@ namespace SpellDuel
                     {
                         if (k == "wave") { if (!int.TryParse(v, out room.wave) || room.wave < 1) errors.Add($"第 {ln} 行：wave 要是 1 以上的整數"); }
                         else if (k == "theme") room.theme = v == "vault" ? 3 : Story.ThemeOf(v);
-                        else if (k == "event") { room.kind = v.ToLowerInvariant(); if (room.kind != "battle" && room.kind != "chest" && room.kind != "boss") errors.Add($"第 {ln} 行：event 只能是 battle／chest／boss"); }
+                        else if (k == "event") { room.kind = v.ToLowerInvariant(); if (room.kind != "battle" && room.kind != "chest" && room.kind != "boss" && !Battle.IsRoomEvent(room.kind)) errors.Add($"第 {ln} 行：event 只能是 battle／chest／boss／" + string.Join("／", Battle.RoomEventKinds)); }
+                        else if (Array.IndexOf(DungeonRoom.EventKeysAll, k) >= 0) room.param[k] = v;
                         else if (k == "next") { foreach (var x in v.Split(',', '，', '、')) if (x.Trim().Length > 0) room.next.Add(x.Trim()); }
                         else if (k == "npc") { foreach (var x in v.Split(',', '，', '、')) if (x.Trim().Length > 0) room.npcs.Add(x.Trim()); }
                         else errors.Add($"第 {ln} 行：地點不認得的設定 {k}");

@@ -190,7 +190,8 @@ namespace SpellDuel
                     while (d.acc >= 1f && n.Alive) { d.acc -= 1f; Damage(n, d.dps, "dot", n.Chest); }
                     if (d.until <= now) n.dots.RemoveAt(i);
                 }
-                if (!n.Alive || n.snaredUntil > now) continue;
+                if (!n.Alive || n.snaredUntil > now || n.rooted) continue;   // 守護物、圖騰、雕像、寶箱：不動也不出手
+                if (n.walkPath != null) { EscortWalk(n, dt); continue; }   // 護送：沿著路走
                 Vector3 goal; float stop;
                 Fighter tgt = null; float best = float.MaxValue;
                 if (!n.npcEscort)
