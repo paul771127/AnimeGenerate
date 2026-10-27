@@ -6,7 +6,7 @@ namespace SpellDuel
  {
   Transform ship; readonly Transform[] doors=new Transform[12],barrels=new Transform[12],pirates=new Transform[3];
   readonly float[] drops={10,10,10}; readonly Vector3[] dropStart=new Vector3[3],landPoints=new Vector3[3];readonly bool[] hasLanding=new bool[3];readonly LineRenderer[] landMarks=new LineRenderer[3];
-  ParticleSystem smoke,flash; int phase=1,side=1,move=-1;float gap,warningAge=10,warningDuration=1,fireAge=10,swoop,dying=-1,clock;
+  int deathBursts; ParticleSystem smoke,flash; int phase=1,side=1,move=-1;float gap,warningAge=10,warningDuration=1,fireAge=10,swoop,dying=-1,clock;
   public static AirshipRig Create(){var r=new GameObject("Airship Zhuifeng").AddComponent<AirshipRig>();r.Build();return r;}
   void Build()
   {
@@ -49,7 +49,13 @@ namespace SpellDuel
   /// <summary>Optional exact unswayed world landing point from the gameplay scheduler; set before DropPirate.</summary>
   public void SetPirateLanding(int side,Vector3 point){int i=side<0?0:side>0?2:1;landPoints[i]=point;hasLanding[i]=true;}
   public void DropPirate(int value){int i=value<0?0:value>0?2:1;if(!hasLanding[i])landPoints[i]=CarpetScene.Active?CarpetScene.Active.transform.position+CarpetScene.Active.transform.right*(i-1)*.5f:ship.TransformPoint(new Vector3((i-1)*.8f,-2,9));drops[i]=0;pirates[i].gameObject.SetActive(true);}
-  public void SetDying(float t){dying=Mathf.Clamp01(t);Pose();if(t>0&&!smoke.isPlaying)smoke.Play();var e=smoke.emission;e.rateOverTime=40;}
+  public void SetDying(float t)
+  {
+   dying=Mathf.Clamp01(t);if(t<=0)deathBursts=0;Pose();if(t>0&&!smoke.isPlaying)smoke.Play();var e=smoke.emission;e.rateOverTime=40;
+   // Four small deck bursts, never a camera flash. Repeated calls at the same t emit nothing.
+   int count=Mathf.Clamp(Mathf.FloorToInt(dying*5),0,4);
+   while(deathBursts<count){int i=deathBursts++;var ep=new ParticleSystem.EmitParams{position=new Vector3(i%2==0?-1.6f:1.6f,1,-2+i*1.3f),startColor=new Color(1,.58f,.18f,.85f),startSize=.7f,startLifetime=.55f};flash.Emit(ep,8);smoke.Emit(5);}
+  }
   void Pose(){ship.localPosition=new Vector3(0,-2*swoop,8*swoop)+(dying>=0?new Vector3(0,-dying*9,-dying*5):Vector3.zero);ship.localRotation=Quaternion.Euler(dying>=0?dying*65:Mathf.Sin(clock)*1.5f,0,dying>=0?dying*25:Mathf.Sin(clock*.7f));ship.localScale=Vector3.one*(dying>=0?Mathf.Lerp(1,.7f,dying):1);}
   public void Sample(float dt)
   {

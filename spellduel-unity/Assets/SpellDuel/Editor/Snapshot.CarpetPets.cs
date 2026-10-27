@@ -25,7 +25,7 @@ namespace SpellDuel.EditorTools
   {
    var poly=new System.Collections.Generic.List<Vector3>{new Vector3(-2,0,-2),new Vector3(2,0,-2),new Vector3(2,0,2),new Vector3(-2,0,2)};
    var scene=CarpetScene.Create(poly,0,Vector3.forward);
-   for(int i=0;i<5;i++){scene.SetVariant(i);scene.Sample(1.2f,0);int visible=0;foreach(var r in scene.GetComponentsInChildren<MeshRenderer>())if(r.enabled)visible++;if(visible>100)throw new Exception("Scene batching budget "+visible);CarpetShot(cam,scene.gameObject,"carpet_station_"+i,new Vector3(0,3,-9),new Vector3(0,1,4),960,720);}
+   for(int i=0;i<5;i++){scene.SetVariant(i);scene.Sample(1.2f,0);int visibleTriangles=0;foreach(var f in scene.GetComponentsInChildren<MeshFilter>())visibleTriangles+=f.sharedMesh.triangles.Length/3;if(visibleTriangles>60000)throw new Exception("Visible scenery triangle budget "+visibleTriangles);int visible=0;foreach(var r in scene.GetComponentsInChildren<MeshRenderer>())if(r.enabled)visible++;FiniteBudget(scene.gameObject,300000);if(visible>100)throw new Exception("Scene batching budget "+visible);CarpetShot(cam,scene.gameObject,"carpet_station_"+i,new Vector3(0,3,-9),new Vector3(0,1,4),960,720);}
    scene.SwayScale=0;scene.Sample(2,0);if(scene.VisualRoot.localPosition.sqrMagnitude>.000001f)throw new Exception("Sway accessibility failed");
    var point=new Vector3(.3f,.025f,.3f);if((scene.SurfacePoint(point)-point).magnitude>.0001f)throw new Exception("Surface at zero sway");
    int meshes=Resources.FindObjectsOfTypeAll<Mesh>().Length;
@@ -45,7 +45,7 @@ namespace SpellDuel.EditorTools
     var vehicle=SkyVehicleView.Create(k);vehicle.Tick(.55f,new Vector3(0,1,-5),Vector3.zero);FiniteBudget(vehicle.gameObject,4000);CarpetShot(cam,vehicle.gameObject,"carpet_vehicle_"+k,new Vector3(3,3,5),new Vector3(0,1,0),800,640);vehicle.Tick(1,new Vector3(0,1,-5),Vector3.zero);UnityEngine.Object.DestroyImmediate(vehicle.gameObject);
    }
    var boss=AirshipRig.Create();FiniteBudget(boss.gameObject,18000);boss.Warn(0,1.5f);boss.Sample(1.5f);CarpetShot(cam,boss.gameObject,"carpet_boss",new Vector3(12,7,23),new Vector3(0,3,0),1000,800);
-   boss.SetPhase(2);boss.Warn(4,1.8f);boss.Sample(1.8f);boss.Fire(4);boss.Sample(.12f);boss.DropPirate(-1);boss.Sample(.4f);CarpetShot(cam,boss.gameObject,"carpet_boss_phase2",new Vector3(12,7,23),new Vector3(0,3,0),1000,800);boss.SetSwoop(1);boss.SetDying(1);boss.Sample(0);UnityEngine.Object.DestroyImmediate(boss.gameObject);
+   boss.SetPhase(2);boss.Warn(4,1.8f);boss.Sample(1.8f);boss.Fire(4);boss.Sample(.12f);boss.DropPirate(-1);boss.Sample(.4f);CarpetShot(cam,boss.gameObject,"carpet_boss_phase2",new Vector3(12,7,23),new Vector3(0,3,0),1000,800);boss.SetSwoop(1);boss.SetDying(.45f);boss.Sample(0);CarpetFit(cam,boss.gameObject,"carpet_boss_dying",new Vector3(.5f,.3f,1),1000,800);boss.SetDying(1);boss.Sample(0);UnityEngine.Object.DestroyImmediate(boss.gameObject);
    for(int i=0;i<2;i++){var shot=SkyShotView.Create(i==0);CarpetShot(cam,shot.gameObject,"carpet_shot_"+i,new Vector3(1,1,2),Vector3.zero,480,480);UnityEngine.Object.DestroyImmediate(shot.gameObject);}
    var animate=typeof(MinionRig).GetMethod("Animate",BindingFlags.Instance|BindingFlags.NonPublic);int pets=0;
    foreach(var sp in Pets.All)
