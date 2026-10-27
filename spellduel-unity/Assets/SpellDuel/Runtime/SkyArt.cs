@@ -7,7 +7,7 @@ namespace SpellDuel
     internal static class SkyArt
     {
         static readonly Dictionary<Color, Material> mats = new Dictionary<Color, Material>();
-        static Mesh oval, spindle;
+        static Mesh oval, spindle, sail;
         static Material glow;
         public static readonly Color Ink = new Color(.12f,.16f,.24f), Cream = new Color(1,.91f,.72f), Gold = new Color(1,.68f,.22f), Teal = new Color(.12f,.72f,.65f);
         public static Material Mat(Color c)
@@ -40,6 +40,11 @@ namespace SpellDuel
         { var t=Node(p,name,Vector3.zero);var l=t.gameObject.AddComponent<LineRenderer>();l.useWorldSpace=false;l.sharedMaterial=Glow;l.positionCount=points;l.startWidth=l.endWidth=width;l.startColor=l.endColor=c;l.loop=loop;l.numCornerVertices=2;l.numCapVertices=2;return l; }
         public static LineRenderer Ring(Transform p,string name,float radius,Color c,float width=.025f,int count=48)
         { var l=Line(p,name,count,width,c,true);for(int i=0;i<count;i++){float a=i*Mathf.PI*2/count;l.SetPosition(i,new Vector3(Mathf.Cos(a)*radius,0,Mathf.Sin(a)*radius));}return l; }
+        public static Transform Sail(Transform p,string name,Vector3 at,Vector3 size,Color c)
+        {
+            if(!sail){var b=new ArtKit.MB(1);var a=new Vector3(-.5f,0,0);var d=new Vector3(.5f,0,0);var top=new Vector3(0,1,0);var mid=new Vector3(0,.35f,.09f);b.Facet(0,a,mid,top);b.Facet(0,mid,d,top);b.Facet(0,top,mid,a);b.Facet(0,top,d,mid);sail=b.Build("Cambered triangular canvas");}
+            return MeshPart(p,name,sail,Mat(c),at,size);
+        }
         public static void Dispose(Object o){if(!o)return;if(Application.isPlaying)Object.Destroy(o);else Object.DestroyImmediate(o);}
     }
 }

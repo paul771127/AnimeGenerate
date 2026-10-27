@@ -427,3 +427,8 @@ Editor/RoomCoopAudit.cs 使用實際 Battle 流程模擬 1／2／3 人，離線 
 ### 第 13 項 A2-2：飛毯障礙與預警（2026-10-28）
 
 新增 CarpetObstacleView，提供指定 Create／Tick／Hit／Passed／Release；低掃橘線、胸高藍線、半邊紅斜線、缺口綠框跟隨飛毯顯示表面，不碰判定。Passed 向後掠過再停用，Release 停用供呼叫端回收。因原 Tick 沒有飛行時間參數，新增 TravelSeconds（預設6）和 WarningLeadSeconds（預設1.8、下限1.2）；Claude 必須設成判定端實際飛行秒數，避免僅用progress推測預警秒數。場景五種材質、結構肋條及命中粒子已備妥，原生預覽與平台驗證待整批CI。
+
+
+### 第 13 項 A2-3：五種天空敵人與載具（2026-10-28）
+
+新增 SkyEnemyRig／SkyVehicleView，獨立骨架、風箏／巨鷹／滑翔翼／三葉浮環／隊長艇，沒有沿用 MinionRig。指定五個動畫入口、受擊材質區塊、死亡與復原；載具按進度接近／並排／離場。起跳敵人仍由 Claude 控制；落點圈在progress .55～.80顯示，採4秒登場時間可確保1秒，若邏輯採別的時間請由Claude對齊此區間。追加 Sample(dt) 給原生預覽。模型材質與基本曲面快取，圖與編譯結果於後續原生驗收收錄。
