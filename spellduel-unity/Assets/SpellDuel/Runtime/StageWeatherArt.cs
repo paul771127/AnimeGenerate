@@ -36,9 +36,9 @@ namespace SpellDuel
                 // Concentric rings make opacity accumulate with distance, leaving combat readable.
                 for(int ring=0;ring<3;ring++)
                 {
-                    var fog=Particles("Distant mist "+ring,32,Vector3.up*(1.2f+ring*.3f),new Color(.7f,.81f,.86f,.12f+ring*.035f),3+ring,6,4);
+                    var fog=Particles("Distant mist "+ring,40,Vector3.up*(1.2f+ring*.3f),new Color(.7f,.81f,.86f,.32f+ring*.08f),6+ring*1.5f,8,5);
                     SpellFx.Disc(fog,radius+3+ring*4,.05f);fog.transform.localRotation=Quaternion.Euler(90,0,0);
-                    var noise=fog.noise;noise.enabled=true;noise.strength=.2f;noise.frequency=.1f;fog.Play();
+                    var noise=fog.noise;noise.enabled=true;noise.strength=.2f;noise.frequency=.1f;SpellFx.FadeInOut(fog);fog.Play();
                 }
             }
             else if(weather==Battle.Weather.Wind)
