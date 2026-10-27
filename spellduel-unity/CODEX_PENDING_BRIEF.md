@@ -447,3 +447,8 @@ PetDress.Apply(MinionRig,bool)可重入，綁定各物種頭／莖／傘緣，�
 ### 第 14 項 B2-3：收服特效（2026-10-28）
 
 新增PetArtFx.Capture(Vector3,bool)：成功青綠繩結收合與爪印，失敗繩結鬆開與碎光，局部粒子不閃全畫面。**介面改名原因**：Pets.cs已有技能效果enum PetFx，為避免破壞邏輯／存檔，不使用同名class；Claude請呼叫PetArtFx.Capture。底層粒子使用SpellFx工具，1.3秒清理。
+
+
+### 第 14 項 B2-4：寵物與飛毯圖示（2026-10-28）
+
+新增SkillIcons.CarpetPets.cs：48個bait_m查詢（19～22僅保留查圖，不加入可收服資料）、3飼料、印片、4素材、6精魄、5航裝、1藥劑，共68個id。精魄命名soul_sky_kite/eagle/glider/doll/captain/airship；裝備skyweave_weapon/head/body/boots/trinket；藥劑bp_tailwind。均由SkillIcons.Get取用、純程序兩階明暗；沒有新增Resources圖檔。68個id在8/32/48/128尺寸與重繪一致檢查通過，81個既有技能像素不變。實際Render輸出總覽放Docs/pending_preview/pets/icons.png。
