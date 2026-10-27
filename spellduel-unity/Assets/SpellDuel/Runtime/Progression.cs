@@ -497,7 +497,6 @@ namespace SpellDuel
                     FLearn("sd_dance", "shadowdance", 3, 1, "sd_root"),
                     FMod("sd_dance2", "影舞延長", "shadowdance", ModField.BuffDur, 1f, 5, 3, 2, "sd_dance"),
                     FPas("sd_atk", "影之刃", PassiveKind.Atk, 0.03f, 5, 3, 3, "sd_dance2"),
-                    FPas("sd_evade", "殘舞", PassiveKind.Evade, 0.05f, 5, 4, 1, "sd_dance"),   // 常駐閃避（滿級 25%）：讓影舞者點滿閃避時接近忍者
                     FPas("sd_vanish", "舞影", PassiveKind.Vanish, 1f, 5, 4, 2, "sd_dance"),
                     FLearn("sd_fog", "poisonfog", 5, 1, "sd_root"),
                     FMod("sd_fog2", "劇毒之霧", "poisonfog", ModField.EffectDps, 1.5f, 5, 5, 2, "sd_fog"),
