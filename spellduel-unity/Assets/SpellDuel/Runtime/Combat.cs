@@ -136,7 +136,7 @@ namespace SpellDuel
         public bool ambusher;                  // 簡單模式：從別的方向偷襲來的那隻（同時最多一隻）
         public bool hidden;                    // 食人花：埋在地下（玩家走近 1.5m 才冒出來；埋著時打不到）
         public bool miniBoss;                  // 第 3 波單獨登場的特殊敵人（有名字和血條）
-        public bool treasure; public float treasureLeaveAt;   // 寶箱怪（Combat.Treasure.cs）：到處逃跑、每下只扣 1、時間到就逃走
+        public bool treasure, treasureRunning; public float treasureLeaveAt;   // 寶箱怪（Combat.Treasure.cs）：到處逃跑、每下只扣 1、時間到就逃走
         // 副本特殊地點（Combat.RoomEvents.cs）
         public bool rooted;                    // 不會動、不會出手（守護物、圖騰、雕像、寶箱）
         public float lure;                     // 小怪優先打它（多算幾公尺的優勢）
@@ -783,6 +783,7 @@ namespace SpellDuel
 
         public void StartStage(int firstWave, int lastWave)
         {
+            treasureStarts++;   // 寶箱怪：新的一關重新擲
             endless = true; kills = 0; bossKills = 0; stageCleared = false;
             bossAfterMinions = true;   // 故事關卡：Boss 波先來一整波小怪，全部打倒後 Boss 才現身
             waveSeq = null;
@@ -796,6 +797,7 @@ namespace SpellDuel
         /// </summary>
         public void StartDungeonMap()
         {
+            treasureStarts++;   // 寶箱怪：新的一關重新擲
             endless = true; kills = 0; bossKills = 0; stageCleared = false; stageFailed = false;
             bossAfterMinions = true;
             waveSeq = null; stageEnd = -1; manualWaves = true; awaitingNext = true;
@@ -807,6 +809,7 @@ namespace SpellDuel
         public void EnterNode(int nodeWave, bool final, float delay = 3f)
         {
             CleanupRoomEvent();
+            treasureRooms++;   // 寶箱怪：副本每個地點算一關
             queuedWave = Mathf.Max(1, nodeWave); finalRoom = final; awaitingNext = false; bossSpawnedThisWave = false;
             enemy.hp = 0f;
             NextWave(delay);
@@ -847,6 +850,7 @@ namespace SpellDuel
 
         public void StartEndless()
         {
+            treasureStarts++;   // 寶箱怪：新的一關重新擲
             endless = true; wave = 0; kills = 0; bossKills = 0; waveSeq = null;
             enemy.hp = 0f;                        // 一開始沒有 Boss
             NextWave(3f);

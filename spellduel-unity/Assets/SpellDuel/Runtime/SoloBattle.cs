@@ -345,15 +345,16 @@ namespace SpellDuel
             }
         }
 
-        /// <summary>寶箱怪打倒的獎勵：一般小怪金幣的 TreasureGoldMul 倍＋一件裝備（照 Boss 的稀有度加成），過關才拿得到</summary>
-        public const float TreasureChance = 0.12f;   // 每一波出現寶箱怪的機率（故事、副本、無盡、無盡塔）
-        public const int TreasureGoldMul = 20;
+        /// <summary>寶箱怪打倒的獎勵：Boss 金幣 ×TreasureGoldMul＋一件稀有以上的裝備，過關才拿得到</summary>
+        public const float TreasureChance = 0.01f;   // 每一關出現寶箱怪的機率（故事、副本每個地點、無盡每 10 波、無盡塔每次挑戰）
+        public const int TreasureGoldMul = 5;        // 金幣＝Boss 金幣 ×5
+        public const int TreasureMinRarity = 2;      // 寶物至少「稀有」
         void GrantTreasure()
         {
             float goldMul = 1f + Souls.Sum(prof, SoulOp.Gold);
-            int g = Mathf.RoundToInt(Economy.MinionGold(battle.wave) * TreasureGoldMul * goldMul * WeatherLootMul);
+            int g = Mathf.RoundToInt(Economy.BossGold(battle.wave) * TreasureGoldMul * goldMul * WeatherLootMul);
             pendingGold += g;
-            TryDrop(true);
+            TryDrop(true, TreasureMinRarity);
             floaters.Add(new Floater { text = $"💰 打倒寶箱怪！金幣 +{g}（過關後獲得）", color = new Color(1f, 0.85f, 0.3f), born = Time.time, screen = true });
             Sfx.Play("win", 0.6f, 1.3f); Haptics.Play(Haptics.Kind.Success);
         }
@@ -585,13 +586,13 @@ namespace SpellDuel
         }
 
         /// <summary>掉裝備（每個敵人最多一件）：小怪約 6%（幸運越高越多），Boss 一定掉一件稀有以上</summary>
-        bool TryDrop(bool boss)
+        bool TryDrop(bool boss, int minRarity = 0)
         {
             if (prof == null) return false;
             int luk = prof.Total(Stat.Luk);
             float lootMul = (dungeon != null ? Dungeons.LootMul(coop ? 1 + PeerIds.Count : 1) : 1f) * WeatherLootMul;   // 副本：人越多掉寶率越高（最多 ×1.5）；月夜 ×1.5
             if (!boss && dropRng.NextDouble() > (0.06 + 0.002 * luk) * lootMul) return false;
-            int rar = ItemGen.RollRarity(dropRng, luk * 0.3f, boss ? 2 : 0);
+            int rar = Mathf.Max(minRarity, ItemGen.RollRarity(dropRng, luk * 0.3f, boss ? 2 : 0));
             int ilvl = Mathf.Max(1, prof.level + dropRng.Next(-1, 3) + battle.wave / 10);   // 無盡：物品等級跟著角色等級（越後面的波次略高）
             if (dungeon != null) ilvl = dungeon.level + battle.levelBoost + dropRng.Next(-1, 2);   // 副本：物品等級＝副本等級（普通＋40、困難＋80）
             else if (storyStage != null)
@@ -3110,6 +3111,10 @@ namespace SpellDuel
                     Say(text, 3f);
                     floaters.Add(new Floater { posMap = at + Vector3.up * 1.2f, text = "💰 寶箱怪！", color = c, born = Time.time });
                     Sfx.Play("coin", 0.8f, 0.8f); Haptics.Play(Haptics.Kind.Medium);
+                    break;
+                case "treasureleave":
+                    Say(text, 1.5f);
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 0.9f, text = "要逃了！", color = c, born = Time.time });
                     break;
                 case "treasurefled":
                     Say(text, 2f);

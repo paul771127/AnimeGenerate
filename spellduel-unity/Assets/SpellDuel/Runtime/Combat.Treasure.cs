@@ -2,18 +2,30 @@ using System;
 using UnityEngine;
 namespace SpellDuel
 {
-    // 寶箱怪（使用者要求）：偶爾在小怪波裡冒出來，在場上到處逃跑、不攻擊；
-    // 生命 10，玩家每次打中只扣 1（不管多痛；毒、灼燒沒用）；TreasureLife 秒內沒打倒就逃走（沒有獎勵）。
-    // 打倒：大量金幣＋一定掉一件裝備（SoloBattle.DropOne）。不算在「這一波還剩幾隻」裡，不會卡住清波。
+    // 寶箱怪（使用者要求）：每一關 1% 機率在關卡裡某一波冒出來，在場上到處逃跑、不攻擊；
+    // 生命 10，玩家每次打中只扣 1（不管多痛；毒、灼燒沒用）；出現 30 秒後跑到場外消失（不掉寶）。
+    // 30 秒內打倒：稀有以上的寶物＋大量金幣（SoloBattle.GrantTreasure）。不算在「這一波還剩幾隻」裡，不會卡住清波。
+    // 「一關」：故事關卡、無盡塔一次挑戰＝StartStage 一次；副本＝每個地點（房間）；無盡模式＝每 10 波。
     public partial class Battle
     {
         public const int TreasureKind = 53, TreasureHp = 10;
-        public const float TreasureLife = 25f;          // 出現後幾秒逃走
+        public const float TreasureLife = 30f;          // 出現後幾秒開始逃到場外
+        public const float TreasureExitCap = 6f;        // 開始逃之後最多幾秒一定消失（被卡住也一樣）
         public const float TreasureWalk = 0.7f, TreasureRun = 1.3f;   // 閒晃／被追的速度（m/s）
         public const float TreasureScare = 4.5f;        // 玩家多近牠會開始逃
-        /// <summary>每一波出現寶箱怪的機率（SoloBattle 依模式設定；0＝不出）</summary>
+        /// <summary>每一關出現寶箱怪的機率（SoloBattle 依模式設定；0＝不出）</summary>
         public float treasureChance;
-        int treasureRolledWave = -1; float treasureAt = -1f;
+        int treasureRolledWave = -1, treasureSeg = -1, treasurePlanWave = -1, treasureStarts, treasureRooms; float treasureAt = -1f;
+        /// <summary>現在是哪一「關」（換了就重新擲一次）</summary>
+        int TreasureSegment => treasureStarts * 100000 + (manualWaves ? treasureRooms : stageEnd > 0 ? 0 : (wave - 1) / BossEvery);
+        /// <summary>這一關裡最後一個會出小怪的波次（寶箱怪只排在這之間）</summary>
+        int TreasureLastWave()
+        {
+            if (manualWaves) return wave;   // 副本：一個地點就是一關
+            int end = stageEnd > 0 ? stageEnd : ((wave - 1) / BossEvery + 1) * BossEvery;
+            if (stageEnd <= 0 && end % BossEvery == 0) end--;   // 無盡：第 10、20…波只有 Boss
+            return Mathf.Max(wave, end);
+        }
 
         static T[] TreasureArray<T>(T[] old, T value) { var a = new T[TreasureKind + 1]; Array.Copy(old, a, old.Length); a[TreasureKind] = value; return a; }
         public static bool IsTreasure(int kind) => kind == TreasureKind;
@@ -29,14 +41,16 @@ namespace SpellDuel
             Emit("treasure", m.Feet, new Color(1f, 0.85f, 0.3f), "💰 寶箱怪出現了！快追！（每下只扣 1）");   // 主機、隊友端（代理生出來時）都提示
         }
 
-        /// <summary>每一波擲一次：中了就在波次開始後 3～10 秒從場邊冒出來</summary>
+        /// <summary>每一關擲一次：中了就挑這一關的某一波，在那一波開始後 3～10 秒從場邊冒出來</summary>
         void UpdateTreasureSpawn()
         {
             if (treasureChance <= 0f || edgePoint == null || manualWaves && awaitingNext) return;
             if (treasureRolledWave != wave)
             {
                 treasureRolledWave = wave;
-                treasureAt = rng.NextDouble() < treasureChance ? now + 3f + 7f * (float)rng.NextDouble() : -1f;
+                int seg = TreasureSegment;
+                if (seg != treasureSeg) { treasureSeg = seg; treasurePlanWave = rng.NextDouble() < treasureChance ? rng.Next(wave, TreasureLastWave() + 1) : -1; }
+                treasureAt = wave == treasurePlanWave ? now + 3f + 7f * (float)rng.NextDouble() : -1f;
             }
             if (treasureAt < 0f || now < treasureAt) return;
             treasureAt = -1f;
@@ -49,13 +63,24 @@ namespace SpellDuel
         public bool TreasureFled(Fighter m) => m.treasure && now >= m.treasureLeaveAt - 1.5f;
         void UpdateTreasure(Fighter m, float dt)
         {
-            if (now >= m.treasureLeaveAt || stageCleared || manualWaves && awaitingNext)
+            bool outside = minionInside != null && !minionInside(m.Feet);
+            if (stageCleared || manualWaves && awaitingNext || now >= m.treasureLeaveAt && (outside || now >= m.treasureLeaveAt + TreasureExitCap))
             {
                 m.hp = 0f;   // 逃走：沒有擊倒紀錄、沒有獎勵
                 Emit("treasurefled", m.Chest, new Color(1f, 0.85f, 0.3f), "寶箱怪逃走了……");
                 return;
             }
-            bool outside = minionInside != null && !minionInside(m.Feet);
+            if (now >= m.treasureLeaveAt)
+            {
+                // 時間到：直直往離玩家最遠的方向衝出場外（這段時間還打得到）
+                if (!m.treasureRunning) { m.treasureRunning = true; Emit("treasureleave", m.Chest, new Color(1f, 0.85f, 0.3f), "寶箱怪要逃走了！"); }
+                Vector3 off = Vector3.zero;
+                foreach (var pl in Players()) if (pl.Alive) { var v = Fighter.Flat(m.Feet - pl.Feet); off += v.sqrMagnitude > 1e-4f ? v.normalized : Vector3.zero; }
+                if (off == Vector3.zero) off = m.forward != Vector3.zero ? m.forward : Vector3.forward;
+                off = Fighter.Flat(off).normalized;
+                m.head += off * TreasureRun * 1.5f * dt; m.forward = off;
+                return;
+            }
             Vector3 away = Vector3.zero; Fighter nearest = null; float nd = float.MaxValue;
             foreach (var pl in Players())
             {
