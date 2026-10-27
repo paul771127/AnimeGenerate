@@ -408,3 +408,12 @@ Editor/RoomCoopAudit.cs 使用實際 Battle 流程模擬 1／2／3 人，離線 
 #### 副本道具補修驗收
 
 `8505e98` 的 [原生 Unity](https://github.com/paul771127/AnimeGenerate/actions/runs/40533047036) 通過 338 項房間／命中檢查；[平台建置](https://github.com/paul771127/AnimeGenerate/actions/runs/40533046929) Android APK 與 iOS Xcode 匯出成功，APK 發布成功。IPA／TestFlight 後續工作在記錄時仍排隊，不列作已完成。原生紀錄與平台結果已放在 `Docs/pending_preview/room_contact_validation.json`、`room_contact_native_audit.log`，原先兩項待確認的道具命中問題已結案。
+
+
+### 第 13 項：天穹飛毯設計提案（2026-10-28）
+
+依 CODEX_TASK_CARPET_PETS.md 的「這一輪要交的東西」，交付 [Docs/CARPET_DUNGEON_PROPOSAL.md](Docs/CARPET_DUNGEON_PROPOSAL.md)：五站時間／障礙密度／登毯波次、四種避障尺寸與預警、全新四小怪／菁英／飛艇 Boss、近戰窗口與二階彈幕、六精魄、四素材、五部位套裝與藥劑；含場地與流程文字示意、效能預算及後續接線需求。數值為待確認提案，指出現有 SetDef 尚無三件門檻、既有 dungeon theme 不直接支援天空。未新增圖檔、模型、程式或關卡資料；確認提案後才進美術輪。
+
+### 第 14 項：寵物系統設計提案（2026-10-28）
+
+交付 [Docs/PET_SYSTEM_PROPOSAL.md](Docs/PET_SYSTEM_PROPOSAL.md)：逐一對照一般0～18與正式菁英23～47共44種，列專屬誘餌、取得率／價格、初始技能與8組各4招技能池；補等級／成長／經驗、3種飼料、學滿替換、角色分頁與投餌流程示意，以及多人所有權／禁收變種／一次性消耗的邊界條件。保留1隻出戰、倒下本場不可再出規則。只交設計，未改美術資產、戰鬥、存檔、網路或程式；本輪檢查文件與名單完整性，不重跑無程式變動的Unity平台建置。
