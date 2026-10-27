@@ -1,0 +1,34 @@
+{
+  "commit": "3685a27fd7b30da5701fe4cf0e4dc45d455ff66f",
+  "nativeRun": "https://github.com/paul771127/AnimeGenerate/actions/runs/40459637926",
+  "platformRun": "https://github.com/paul771127/AnimeGenerate/actions/runs/40459637872",
+  "checks": {
+    "check-license": {
+      "job": 122041062814,
+      "result": "success"
+    },
+    "ios-export": {
+      "job": 122041092645,
+      "result": "success"
+    },
+    "android": {
+      "job": 122041092691,
+      "result": "success"
+    },
+    "ios-ipa": {
+      "job": 122045606848,
+      "result": null
+    },
+    "publish-apk": {
+      "job": 122046886341,
+      "result": null
+    }
+  },
+  "dungeonFormat": {
+    "dungeons": 8,
+    "errors": 0
+  },
+  "roomRuleNativeChecks": 146,
+  "phoneARMeasured": false,
+  "knownScopeIssue": "Combat.cs event-prop melee / peer direct-hit routing awaiting approval; see melee_scope_issue.md"
+}

@@ -287,3 +287,13 @@ Editor/RoomCoopAudit.cs 使用實際 Battle 流程模擬 1／2／3 人，離線 
 原生目視檢查後，補遠景地面銜接與森林樹冠，避免測試地板邊界之外的地形看似浮空；場景攝影機改在場內拍攝，避免穿過洞窟屋頂。天候改用林間遺跡作背景驗收，葉片採 SpellFx 程序葉片材質並加大至 0.22m，維持 48 粒上限。
 
 `c482e20` 原生截圖與 Android／iOS Xcode 匯出、IPA 均成功。目視後加強場外濃霧：每圈至多 40 粒、三圈尺寸 6／7.5／9m，不透明度 0.32／0.40／0.48，8 秒淡入淡出；中央不增霧層。更新後再以同一場景驗收。
+
+## 第 6～10 項原生與平台驗收（2026-10-27）
+
+驗證程式版本 `3685a27`。原生 Unity 2022.3.62f2 的 [Snapshot](https://github.com/paul771127/AnimeGenerate/actions/runs/40459637926) 成功，146 項 1／2／3 人房間規則、機關收起／啟動、網格預算、場景切換不配置網格等檢查通過。既有玩家、菁英、陷阱與設施測試亦通過。`Tools/check_dungeons.py`：8 個副本、0 個錯誤。
+
+同版本 [平台建置](https://github.com/paul771127/AnimeGenerate/actions/runs/40459637872) 的 Android APK 與 iOS Xcode 匯出成功，確認 UNITY_ANDROID／UNITY_IOS 編譯。此處不把尚在執行的 IPA／TestFlight 後續工作算作已完成。
+
+53 張原生 PNG、4 張總覽、來源提交／SHA-256、原生測試摘要與平台紀錄放在 [Docs/pending_preview/README_6_10.md](Docs/pending_preview/README_6_10.md)。已目視確認機關不再洋紅、漩渦收起無殘環、雙屬性像／路障、洞窟場內取景、場外霧層與雨／月／風顯示。截圖是 Unity 渲染，不是手機 AR 實拍，未量測實機 FPS。
+
+**尚待範圍確認的既有銜接問題**：`Combat.cs` 的近戰候選未包含 `ev_` 道具，部分隊友直接命中也未轉送房主，會影響圖騰與新路障。第 10 項僅明列可改兩個 RoomEvents 檔，因此尚未修改 `Combat.cs`，已向使用者詢問最小擴充範圍。重現與擬修內容見 [melee_scope_issue.md](Docs/pending_preview/melee_scope_issue.md)。146 項成功結果不代表這兩個既有入口已修復。

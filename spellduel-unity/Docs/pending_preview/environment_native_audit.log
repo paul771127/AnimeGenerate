@@ -1,0 +1,11 @@
+2026-10-27T06:20:51.9637219Z [SpellDuel] 16 player rigs: mesh budget, cache, animation and equipment audit passed
+2026-10-27T06:21:12.9625489Z [SpellDuel] Elite combat audit passed: 50 host/client skill paths, cooldowns, jump/crouch/range and soul kill keys
+2026-10-27T06:21:26.4758101Z [SpellDuel] Trap combat audit passed: 65 contact/avoidance/new enemy cases, schedule spacing, local-only damage and room epochs
+2026-10-27T06:21:26.5799881Z [SpellDuel] Gallery integration audit passed: 2 routes / 3 choices, clock, saves, 10000 loot samples
+2026-10-27T06:21:27.8193922Z [SpellDuel] Room coop audit passed: 146
+2026-10-27T06:21:28.7809568Z [SpellDuel] Nature art audit passed
+2026-10-27T06:21:29.8925936Z [SpellDuel] Room prop art audit passed
+2026-10-27T06:21:43.7145647Z [SpellDuel] Scene variant audit passed
+2026-10-27T06:22:11.1830701Z [SpellDuel] Pending art audit passed: five maps / ten entries, 39 portraits, 21 supply icons, all named speakers mapped; player placeholder skipped.
+2026-10-27T06:22:12.2006588Z [SpellDuel] Neck/hair audit passed: 16 rigs, jaw containment, collar clearance, scalp and 130% budgets.
+2026-10-27T06:25:38.4111925Z [SpellDuel] Pending ally audit passed: six geared rigs, labels above faces, death/revive/fade and three posters.
