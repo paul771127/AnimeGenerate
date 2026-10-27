@@ -899,7 +899,7 @@ namespace SpellDuel
         public const float EarlyStageMul = 0.6f;
         public static readonly float[] StoryBossHp = { 800f, 1600f, 2500f, 5000f, 8000f }, StoryBossDmg = { 1f, 1.5f, 2f, 2.5f, 3f };
         public const float LateDmgMul = 1.5f;
-        public const float LateMinionDmgMul = 1.5f;   // 第三章以後：小怪（不含 Boss）的傷害再 ×1.5（數量變少的補償）   // 第三章以後的敵人傷害倍率（使用者要求）
+        public const float LateMinionDmgMul = 1.5f;   // 第二章以後：小怪（不含 Boss）的傷害再 ×1.5（輪次出怪、數量變少的補償）
         static float BossHpFor(int d) => d == 0 ? 0.7f : d == 1 ? 0.85f : 1f;
 
         // 語音詠唱：唸出咒語就開始詠唱（本機比對自己錄的樣本）
@@ -1271,10 +1271,11 @@ namespace SpellDuel
                         if (pendingStage.theme == 1 && pendingStage.id != "trial") { battle.enemyHpMul = 2f; battle.enemyDmgMul = 2f; battle.rangedWindupMul = 1.5f; battle.rangedShotSpeedMul = 0.5f; battle.meleeHpMul = 0.7f; battle.rangedRecoverAdd = 3f; }   // 第二章：遠程小怪出手前準備 ×1.5、飛行速度 ×0.5、每次出手後多休息 3 秒；近戰小怪血量 ×0.7   // 第二章森林：小怪血量、攻擊 ×2（Boss 照上面的表）
                         if ((pendingStage.id == "1-1" || pendingStage.id == "1-2" || pendingStage.id == "1-3") && difficulty == 0) { battle.enemyHpMul *= EarlyStageMul; battle.enemyDmgMul *= EarlyStageMul; }   // 1-1～1-3 簡單：敵人血量、傷害 ×60%（新手關；普通、困難照一般設計）
                         if (pendingStage.theme >= 2 && pendingStage.id != "trial") { battle.enemyDmgMul *= LateDmgMul; battle.storyBossDmg *= LateDmgMul; }   // 第三章以後（使用者要求）：敵人（含 Boss）傷害再 ×1.5
-                        if (pendingStage.theme >= 2 && pendingStage.id != "trial")
+                        if (pendingStage.theme >= 1 && pendingStage.id != "trial")
                         {
-                            // 第三章以後（使用者要求）：小怪少一點、每隻更痛——同時在場最多 3 隻（簡單 2 隻），每波數量 ×0.3（Combat.StoryEnemyMul），小怪傷害再 ×1.5
-                            battle.rhythmMaxAlive = difficulty == 0 ? 2 : 3;
+                            // 第二章以後（使用者要求）：輪次出怪——每輪一次出齊（簡單 4、普通 5、困難 6 隻），排成不同陣形，
+                            // 全部打完停 3 秒才出下一輪，一波 2～3 輪；小怪傷害再 ×1.5（數量變少的補償）
+                            battle.groupSize = difficulty <= 0 ? 4 : difficulty == 1 ? 5 : 6;
                             battle.enemyDmgMul *= LateMinionDmgMul;
                         }
                         if (pendingStage.theme == 2 && pendingStage.id != "trial")
@@ -3074,6 +3075,10 @@ namespace SpellDuel
                         bossRig.Attack(bossWindup);
                         if (coop && NetIsHost) NetSend?.Invoke(new Msg { t = "bfx", k = bossWindup, p = En.Feet });
                     }
+                    break;
+                case "round":
+                    Say("⚔ " + text, 2f);
+                    Sfx.Play("horn", 0.5f, 1.2f);
                     break;
                 case "wavestart":
                     Say("♾ " + text, 2.5f);

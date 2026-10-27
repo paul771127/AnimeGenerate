@@ -858,7 +858,14 @@ namespace SpellDuel
                 else if (ScaleAllies > 0) waveTotal = Mathf.CeilToInt(waveTotal * (1f + 0.5f * ScaleAllies));
                 waveTotal = Mathf.Max(1, Mathf.CeilToInt(waveTotal * stageEnemyMul * CountMixMul));
                 waveToSpawn = waveTotal;
+                if (GroupMode)
+                {
+                    // 輪次出怪：一波 2～3 輪，每輪 groupSize 隻（一次出齊、全部打完才出下一輪）
+                    roundsInWave = 2 + rng.Next(2); roundNo = 0;
+                    waveTotal = roundsInWave * groupSize; waveToSpawn = waveTotal;
+                }
             }
+            groupQueue.Clear(); roundWaiting = false; nextRoundAt = waveStartAt;
             nextMinionAt = waveStartAt;
             nextSpecialAt = waveStartAt + SpecialFirstDelay;
             miniBossSpawned = false;
@@ -947,6 +954,7 @@ namespace SpellDuel
             }
             bool refilling = refillDelay > 0f && batchOut;
             if (holdSpawns) nextMinionAt = Mathf.Max(nextMinionAt, now);
+            else if (GroupMode) GroupSpawn();
             else if (RhythmSpawns) RhythmSpawn(Mathf.Min(maxAlive, rhythmMaxAlive));
             else if (waveToSpawn > 0 && (refilling ? due > 0 : now >= nextMinionAt) && minions.Count < maxAlive)
             {
@@ -986,6 +994,79 @@ namespace SpellDuel
         /// 三拍出怪：每個角色有目標數（前排 2、後排 1～2、特殊 1）和開始時間（0／3／8 秒）；少於目標、到了時間、場上沒滿就補一隻，
         /// 同一角色補完要隔 RoleRefillGap 秒。前排從正面進、後排從側面（左右隨機）、特殊怪從背後。
         /// </summary>
+        // ------------------------------------------------------------ 輪次出怪（故事第二章以後；使用者要求）
+        // 每輪一次出齊 groupSize 隻（簡單 4、普通 5、困難 6），排成一種陣形；全部打完停 3 秒才出下一輪；一波 2～3 輪。
+        public int groupSize;
+        public bool GroupMode => RhythmSpawns && groupSize > 0 && !MiniBossWave;
+        public const float RoundGap = 3f, RoundStagger = 0.3f;
+        int roundsInWave, roundNo, lastFormation = -1; bool roundWaiting; float nextRoundAt;
+        readonly List<(float at, MinionRole role, float ang, bool ambush)> groupQueue = new List<(float, MinionRole, float, bool)>();
+
+        /// <summary>陣形：名字、每一隻的（角色、方位角＝相對玩家面向）。輪到幾隻就取前幾個</summary>
+        public static readonly (string name, (MinionRole role, float ang)[] slots)[] Formations =
+        {
+            ("前壓後射", new[] { (MinionRole.Front, -20f), (MinionRole.Front, 20f), (MinionRole.Back, -55f), (MinionRole.Back, 55f), (MinionRole.Front, 0f), (MinionRole.Special, 0f) }),
+            ("左右包夾", new[] { (MinionRole.Front, -85f), (MinionRole.Front, 85f), (MinionRole.Back, -100f), (MinionRole.Back, 100f), (MinionRole.Special, 0f), (MinionRole.Front, -70f) }),
+            ("衝鋒掩護", new[] { (MinionRole.Special, 0f), (MinionRole.Back, -30f), (MinionRole.Back, 30f), (MinionRole.Front, -15f), (MinionRole.Front, 15f), (MinionRole.Special, 40f) }),
+            ("砲台陣地", new[] { (MinionRole.Back, -40f), (MinionRole.Back, 0f), (MinionRole.Back, 40f), (MinionRole.Front, 0f), (MinionRole.Front, -25f), (MinionRole.Back, 70f) }),
+            ("前後夾擊", new[] { (MinionRole.Front, 0f), (MinionRole.Front, 180f), (MinionRole.Back, 20f), (MinionRole.Special, 160f), (MinionRole.Front, 20f), (MinionRole.Back, 200f) }),
+            ("蜂擁近戰", new[] { (MinionRole.Front, -30f), (MinionRole.Front, 0f), (MinionRole.Front, 30f), (MinionRole.Special, -60f), (MinionRole.Front, 60f), (MinionRole.Back, 0f) }),
+        };
+
+        void GroupSpawn()
+        {
+            // 這一輪排隊中的：照時間一隻一隻出（錯開 0.3 秒，看得出是一隊）
+            if (groupQueue.Count > 0)
+            {
+                if (now < groupQueue[0].at) return;
+                var q = groupQueue[0]; groupQueue.RemoveAt(0);
+                SpawnRoleAt(q.role, q.ang, q.ambush);
+                return;
+            }
+            if (waveToSpawn <= 0) return;
+            bool anyAlive = false; foreach (var m in minions) if (m.Alive) { anyAlive = true; break; }
+            if (anyAlive) { roundWaiting = false; return; }
+            // 這一輪全部打完：停 3 秒（第一輪照波次開始時間）
+            if (!roundWaiting) { roundWaiting = true; if (roundNo > 0) nextRoundAt = now + RoundGap; }
+            if (now < nextRoundAt) return;
+            roundWaiting = false;
+            int f; do f = rng.Next(Formations.Length); while (f == lastFormation && Formations.Length > 1);
+            if (easySides && Formations[f].name == "前後夾擊") f = 0;   // 簡單：不從背後夾擊
+            lastFormation = f; roundNo++;
+            int n = Mathf.Min(groupSize, waveToSpawn);
+            if (easySides && (easyBearingWave != wave || roundNo == 1)) { easyBearingWave = wave; easyBearing = rng.NextDouble() < 0.7 ? 0f : (rng.NextDouble() < 0.5 ? -60f : 60f); }
+            int ambushAt = easySides && rng.NextDouble() < EasyAmbushChance * 2f ? n - 1 : -1;   // 簡單：偶爾最後一隻從背後偷襲
+            float jitter = ((float)rng.NextDouble() - 0.5f) * 30f;   // 整隊稍微轉一下，不會每次都一樣的位置
+            for (int i = 0; i < n; i++)
+            {
+                var (role, ang) = Formations[f].slots[i % Formations[f].slots.Length];
+                ang += jitter;
+                if (easySides) ang = easyBearing + Mathf.Clamp(Mathf.DeltaAngle(0f, ang), -100f, 100f) * 0.45f;   // 簡單：全部集中在一～兩面
+                bool amb = i == ambushAt;
+                if (amb) ang = easyBearing + 180f + ((float)rng.NextDouble() - 0.5f) * 60f;
+                groupQueue.Add((now + i * RoundStagger, role, ang, amb));
+            }
+            Emit("round", player.Feet, Color.white, $"第 {roundNo}/{roundsInWave} 輪：{Formations[f].name}（{n} 隻）");
+        }
+
+        /// <summary>在某個方位出一隻某角色的小怪（三拍與輪次出怪共用）</summary>
+        Fighter SpawnRoleAt(MinionRole role, float ang, bool ambush)
+        {
+            var p = edgePointAt != null ? edgePointAt(ang) : edgePoint();
+            int kind = PickMinionKind(role);
+            kind = EliteSpawnKind(kind, dungeonSpawnOrdinal++, false);
+            var nm = SpawnMinion(p, 0, kind, HpMul * (IsRanged(kind) ? 1f : meleeHpMul), DmgMul, SpeedMul);
+            nm.ambusher = ambush;
+            if (kind == 10) BuryChomper(nm);   // 食人花：不從邊緣走進來，直接埋在場地裡
+            float fixHp = minionHpOverride != null ? minionHpOverride(kind) : 0f;
+            if (fixHp > 0f) { nm.maxHp = Mathf.Max(1, Mathf.RoundToInt(fixHp)); nm.hp = nm.maxHp; }
+            if (eliteLeft > 0 && !EliteCatalog.IsElite(kind)) { eliteLeft--; MakeElite(nm); }
+            if (Theme == CanyonTheme) StartCliffLeap(nm);
+            waveToSpawn--;
+            lastMinionCount = minions.Count;
+            return nm;
+        }
+
         void RhythmSpawn(int maxAlive)
         {
             if (MiniBossWave) return;   // 小 Boss 波：只有牠（UpdateSpecialSpawn）
@@ -1007,19 +1088,8 @@ namespace SpellDuel
                     bool ambush = !ambushAlive && rng.NextDouble() < EasyAmbushChance && (front + back + special) >= 1;   // 場上已經有人才偷襲；同時只有一隻
                     ang = ambush ? easyBearing + 180f + ((float)rng.NextDouble() - 0.5f) * 90f : easyBearing + ((float)rng.NextDouble() - 0.5f) * 70f;
                 }
-                var p = edgePointAt != null ? edgePointAt(ang) : edgePoint();
-                int kind = PickMinionKind(role);
-                kind = EliteSpawnKind(kind, dungeonSpawnOrdinal++, false);
-                var nm = SpawnMinion(p, 0, kind, HpMul * (IsRanged(kind) ? 1f : meleeHpMul), DmgMul, SpeedMul);
-                nm.ambusher = easySides && Mathf.Abs(Mathf.DeltaAngle(ang, easyBearing)) > 90f;
-                if (kind == 10) BuryChomper(nm);   // 食人花：不從邊緣走進來，直接埋在場地裡
-                float fixHp = minionHpOverride != null ? minionHpOverride(kind) : 0f;
-                if (fixHp > 0f) { nm.maxHp = Mathf.Max(1, Mathf.RoundToInt(fixHp)); nm.hp = nm.maxHp; }
-                if (eliteLeft > 0 && !EliteCatalog.IsElite(kind)) { eliteLeft--; MakeElite(nm); }
-                if (Theme == CanyonTheme) StartCliffLeap(nm);
-                waveToSpawn--;
+                SpawnRoleAt(role, ang, easySides && Mathf.Abs(Mathf.DeltaAngle(ang, easyBearing)) > 90f);
                 roleNextAt[(int)role] = now + (alive == 0 && t < at + 0.5f ? 0.8f : RoleRefillGap);   // 開場的第一拍可以連出兩隻（隔 0.8 秒）
-                lastMinionCount = minions.Count;
                 return;   // 一幀最多一隻
             }
         }
@@ -1783,7 +1853,7 @@ namespace SpellDuel
                     var vb = Skills.All["m_void"];
                     m.attackReadyAt = now + VoidSummonEvery;
                     int aliveNow = 0; foreach (var o in minions) if (o.Alive) aliveNow++;
-                    if (aliveNow < (RhythmSpawns ? rhythmMaxAlive : MaxMinions))   // 召喚也算在「場上最多幾隻」裡
+                    if (aliveNow < (GroupMode ? groupSize : RhythmSpawns ? rhythmMaxAlive : MaxMinions))   // 召喚也算在「場上最多幾隻」裡
                     {
                         var at = m.Feet + RotateY(Fighter.Flat(m.forward), 90f * (rng.NextDouble() < 0.5 ? -1 : 1)) * 0.7f;
                         if (minionInside != null && !minionInside(at)) at = m.Feet;
