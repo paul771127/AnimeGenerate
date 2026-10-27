@@ -899,7 +899,9 @@ namespace SpellDuel
         public const float EarlyStageMul = 0.6f;
         public static readonly float[] StoryBossHp = { 800f, 1600f, 2500f, 5000f, 8000f }, StoryBossDmg = { 1f, 1.5f, 2f, 2.5f, 3f };
         public const float LateDmgMul = 1.5f;
-        public const float LateMinionDmgMul = 1.5f;   // 第二章以後：小怪（不含 Boss）的傷害再 ×1.5（輪次出怪、數量變少的補償）
+        public const float LateMinionDmgMul = 1.5f;
+        /// <summary>故事各章小怪的傷害倍率（第一章不用；第二章起取代疊加的倍率）：忍者簡單難度約 7 下倒</summary>
+        public static readonly float[] StoryMinionDmg = { 1f, 2.9f, 2.2f, 4f, 4.25f };   // 第二章以後：小怪（不含 Boss）的傷害再 ×1.5（輪次出怪、數量變少的補償）
         static float BossHpFor(int d) => d == 0 ? 0.7f : d == 1 ? 0.85f : 1f;
 
         // 語音詠唱：唸出咒語就開始詠唱（本機比對自己錄的樣本）
@@ -1286,6 +1288,9 @@ namespace SpellDuel
                             battle.minionWindupMul = 2f; battle.birdSpeedMul = 0.5f;
                             if (bossAi != null) { bossAi.chargeExtra = 2f; boss.chargeScale *= 2f; }
                         }   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
+                        // 小怪傷害倍率（使用者要求，取代上面疊加的倍率）：以 HP、減傷最少的職業（忍者）在簡單難度、該關的正常等級，
+                        // 被主力近戰打 6～8 下才倒來反推（第二章食人花咬、第三章巨螯、第四五章小鬼爪擊）；普通、困難照難度等級與受傷倍率再往上
+                        if (pendingStage.theme >= 1 && pendingStage.theme < StoryMinionDmg.Length && pendingStage.id != "trial") battle.enemyDmgMul = StoryMinionDmg[pendingStage.theme];
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         ApplyNoviceRoute(pendingStage);   // 1-1～1-3：4m×4m 小場地；1-1、1-2 只有近戰小怪（SoloBattle.NoviceRoute.cs）
                         SetupNoviceBattle(pendingStage);  // 新手關：小鬼／衝鋒獸的血量、1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）
