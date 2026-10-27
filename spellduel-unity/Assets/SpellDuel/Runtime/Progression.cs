@@ -1303,7 +1303,7 @@ namespace SpellDuel
             f.poisonChance = Passive(PassiveKind.Poison) + GearSum(Affix.Poison);
             f.freezeChance = Passive(PassiveKind.Freeze) + GearSum(Affix.Freeze);
             // 閃避率：技能樹＋敏捷每點 +0.1%（只閃物理攻擊；敵人的命中率會抵掉一部分）
-            f.evadeChance = Mathf.Clamp(Passive(PassiveKind.Evade) + SkillTrees.DodgeToEvade * Passive(PassiveKind.Dodge) + 0.001f * Mathf.Max(0, d(Stat.Agi)), 0f, 0.5f);   // 敏捷每點 +0.1%
+            f.evadeChance = Mathf.Max(0f, Passive(PassiveKind.Evade) + SkillTrees.DodgeToEvade * Passive(PassiveKind.Dodge) + 0.001f * Mathf.Max(0, d(Stat.Agi)));   // 不設上限（使用者要求）：靠敵人命中率平衡   // 敏捷每點 +0.1%
             f.accuracy = 0.001f * Mathf.Max(0, d(Stat.Agi)) + Passive(PassiveKind.Accuracy) + GearSum(Affix.Accuracy);   // 命中率：敏捷每點 +0.1%、技能樹、裝備、精魄（抵掉對方的閃避；法術必中，不需要命中）
             f.chargeScale = Mathf.Max(0.4f, f.chargeScale * (1f - Passive(PassiveKind.FastCast)));   // 法師：快速詠唱
             f.overcharge = Passive(PassiveKind.Overcharge) > 0f;                                   // 獵人：蓄力強化

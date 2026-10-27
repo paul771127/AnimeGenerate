@@ -245,7 +245,7 @@ namespace SpellDuel
                     case SoulOp.Mp: f.maxMp = Mathf.Max(10, f.maxMp + Mathf.RoundToInt(x.v)); break;
                     case SoulOp.Crit: f.critChance = Mathf.Clamp(f.critChance + x.v, 0f, 0.75f); break;
                     case SoulOp.CritDmg: f.critDmg += x.v; break;
-                    case SoulOp.Evade: f.evadeChance = Mathf.Clamp(f.evadeChance + x.v, 0f, 0.5f); break;
+                    case SoulOp.Evade: f.evadeChance = Mathf.Max(0f, f.evadeChance + x.v); break;   // 閃避不設上限
                     case SoulOp.Accuracy: f.accuracy += x.v; break;
                     case SoulOp.Block: f.blockChance = Mathf.Min(0.5f, f.blockChance + x.v); break;
                     case SoulOp.Lifesteal: f.lifesteal += x.v; break;
