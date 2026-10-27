@@ -10,7 +10,7 @@ namespace SpellDuel
     /// </summary>
     public partial class CharacterPanel
     {
-        public int tab;                 // 0 能力值、1 技能樹（小分頁：初心者／職業／進階）、2 裝備
+        public int tab;                 // 0 能力值、1 技能樹（小分頁：初心者／職業／進階）、2 裝備、3 背包
         public int treeTab = -1;        // 技能樹的小分頁：0 初心者、1 職業、2 進階職業（−1＝自動選目前的）
         string selNode;                 // 技能樹：選中的節點
         Item selItem;                   // 裝備：選中的物品（背包或身上）
@@ -59,7 +59,7 @@ namespace SpellDuel
             y += lh * 0.5f + gap;
             // ---- 分頁
             // 分頁：能力值、技能樹、裝備；技能樹底下再分「初心者／職業／進階職業」三個小分頁
-            string[] tabs = { "📊 能力值", "🌳 技能樹", "🛡 裝備" };
+            string[] tabs = { "📊 能力值", "🌳 技能樹", "🛡 裝備", "🎒 背包" };
             if (tab >= tabs.Length) tab = 0;
             float tw = (w - gap * (tabs.Length - 1)) / tabs.Length;
             for (int i = 0; i < tabs.Length; i++)
@@ -94,7 +94,8 @@ namespace SpellDuel
             else
             {
                 var body = new Rect(x, y, w, r.yMax - gap - y);
-                changed = tab == 0 ? DrawBodyPage(body, p, fs, fsS, gap, false) : DrawBodyPage(body, p, fs, fsS, gap, true);
+                if (tab == 3) { DrawInventory(body, p, fs, fsS, gap); changed = false; }   // 背包：身上所有的東西和數量（CharacterPanel.Inventory.cs）
+                else changed = tab == 0 ? DrawBodyPage(body, p, fs, fsS, gap, false) : DrawBodyPage(body, p, fs, fsS, gap, true);
             }
             if (Time.time < toastUntil) UiKit.Pill(r.y + r.height * 0.5f, toast, fs, new Color(1f, 0.85f, 0.5f), r.width * 0.9f, 0.9f);
             if (changed) Progress.SaveChar(p);

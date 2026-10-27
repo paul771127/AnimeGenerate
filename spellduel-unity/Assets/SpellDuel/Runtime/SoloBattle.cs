@@ -3658,7 +3658,7 @@ namespace SpellDuel
             GUI.enabled = true;
             if (talking) DrawDialogue();
             else if (charOpen) DrawCharacter();
-            else if (prepGo != null) { DrawPrep(); if (infoOpen) DrawSkillInfo(); }   // 出發前的整備（技能說明可以疊在上面）
+            else if (prepGo != null) { if (infoOpen) GUI.enabled = false; DrawPrep(); GUI.enabled = true; if (infoOpen) DrawSkillInfo(); }   // 出發前的整備（技能說明疊在上面時，底下的整備畫面不能按——說明視窗的按鈕正好疊在「出發」上，以前點換技能會直接開打）
             else if (storyMapOpen) DrawStoryMap();
             else if (infoOpen) DrawSkillInfo();
             DrawGuide();   // 村莊新手導覽（SoloBattle.Guide.cs）
