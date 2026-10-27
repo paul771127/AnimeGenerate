@@ -24,9 +24,23 @@ namespace SpellDuel
             var go = new GameObject("DungeonCorridor");
             var c = go.AddComponent<DungeonCorridor>();
             c.Build(poly, floorY, dir, theme);
+            c.variantTheme=theme;for(int v=0;v<3;v++)SceneVariantArt.Floor(theme,v);
+            c.variantRenderers=c.GetComponentsInChildren<Renderer>();
             return c;
         }
 
+        int variantTheme;
+        Renderer[] variantRenderers;
+        public void SetVariant(int variant)
+        {
+            var tint=SceneVariantArt.Palette(variantTheme,variant);
+            foreach(var r in variantRenderers)
+            {
+                if(r.gameObject.name=="CorridorFloor")r.sharedMaterial.mainTexture=SceneVariantArt.Floor(variantTheme,variant);
+                else if(r.gameObject.name=="CorridorWall"||r.gameObject.name=="CorridorPillar"||r.gameObject.name=="CorridorBeam")
+                {var b=new MaterialPropertyBlock();b.SetColor("_Color",tint);r.SetPropertyBlock(b);}
+            }
+        }
         // ---------------------------------------------------------------- 主題色
         struct Palette { public Color wall, wallDark, floorTint, glow, fog; public Texture2D floor; }
         static Palette PaletteOf(int theme)

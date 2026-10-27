@@ -38,13 +38,15 @@ namespace SpellDuel
             var go = new GameObject("SeaScene");
             var ss = go.AddComponent<SeaScene>();
             ss.Build(polygon, floorY);
+            ss.variantArt=SceneVariantArt.Install(ss.transform,polygon,floorY,2);
             return ss;
         }
 
         public void SetVisible(bool on) { if (gameObject.activeSelf != on) gameObject.SetActive(on); }
-        /// <summary>同一主題的場景變化（0～2；SoloBattle.SceneVariant 決定）。目前只記下來，各變化的美術請 Codex 做（CODEX_PENDING_BRIEF.md 第 7 項）</summary>
+        /// <summary>同一主題的場景變化（0～2；SoloBattle.SceneVariant 決定）。第一次建場預建三組，切換只改顯示</summary>
         public int Variant { get; private set; }
-        public void SetVariant(int v) { Variant = Mathf.Clamp(v, 0, 2); }
+        SceneVariantArt variantArt;
+        public void SetVariant(int v) { Variant = Mathf.Clamp(v, 0, 2); if(variantArt)variantArt.Set(Variant); }
 
         // ================================================================ 建置
         void Build(List<Vector3> poly, float floorY)
@@ -271,6 +273,7 @@ namespace SpellDuel
 
         void Update()
         {
+            if(Variant!=0)return;
             float dt = Time.deltaTime;
             clock += dt;
             // 兩層海面往不同方向流動；反光微微明暗

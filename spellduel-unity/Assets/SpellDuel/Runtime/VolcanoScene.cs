@@ -22,13 +22,15 @@ namespace SpellDuel
             var go = new GameObject("VolcanoScene");
             var vs = go.AddComponent<VolcanoScene>();
             vs.Build(polygon, floorY);
+            vs.variantArt=SceneVariantArt.Install(vs.transform,polygon,floorY,0);
             return vs;
         }
 
         public void SetVisible(bool on) { if (gameObject.activeSelf != on) gameObject.SetActive(on); }
-        /// <summary>同一主題的場景變化（0～2；SoloBattle.SceneVariant 決定）。目前只記下來，各變化的美術請 Codex 做（CODEX_PENDING_BRIEF.md 第 7 項）</summary>
+        /// <summary>同一主題的場景變化（0～2；SoloBattle.SceneVariant 決定）。第一次建場預建三組，切換只改顯示</summary>
         public int Variant { get; private set; }
-        public void SetVariant(int v) { Variant = Mathf.Clamp(v, 0, 2); }
+        SceneVariantArt variantArt;
+        public void SetVariant(int v) { Variant = Mathf.Clamp(v, 0, 2); if(variantArt)variantArt.Set(Variant); }
 
         // ================================================================ 建置
         void Build(List<Vector3> poly, float floorY)
@@ -128,6 +130,7 @@ namespace SpellDuel
 
         void Update()
         {
+            if(Variant!=0)return;
             clock += Time.deltaTime;
             // 熔岩海慢慢流動；裂縫呼吸般地脈動
             if (seaMat) seaMat.mainTextureOffset = new Vector2(clock * 0.012f, clock * 0.007f);

@@ -40,13 +40,15 @@ namespace SpellDuel
             var go = new GameObject("ArenaScene");
             var a = go.AddComponent<ArenaScene>();
             a.Build(polygon, floorY);
+            a.variantArt=SceneVariantArt.Install(a.transform,polygon,floorY,3);
             return a;
         }
 
         public void SetVisible(bool on) { if (gameObject.activeSelf != on) gameObject.SetActive(on); }
-        /// <summary>同一主題的場景變化（0～2；SoloBattle.SceneVariant 決定）。目前只記下來，各變化的美術請 Codex 做（CODEX_PENDING_BRIEF.md 第 7 項）</summary>
+        /// <summary>同一主題的場景變化（0～2；SoloBattle.SceneVariant 決定）。第一次建場預建三組，切換只改顯示</summary>
         public int Variant { get; private set; }
-        public void SetVariant(int v) { Variant = Mathf.Clamp(v, 0, 2); }
+        SceneVariantArt variantArt;
+        public void SetVariant(int v) { Variant = Mathf.Clamp(v, 0, 2); if(variantArt)variantArt.Set(Variant); }
 
         /// <summary>某個方向（相對場地中心的角度，弧度）上，石牆內面離中心的水平距離</summary>
         public float WallRadiusAt(float ang)
@@ -281,6 +283,7 @@ namespace SpellDuel
 
         void Update()
         {
+            if(Variant!=0)return;
             float dt = Time.deltaTime;
             clock += dt;
             // 觀眾：四組各自用不同的節奏輕輕起伏（像在歡呼）

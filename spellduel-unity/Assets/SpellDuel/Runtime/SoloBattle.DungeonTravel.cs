@@ -28,6 +28,7 @@ namespace SpellDuel
             var dirS = WorldFrame.DirFromWorld(Fighter.Flat(Me.forward)); dirS.y = 0f;
             if (dirS.sqrMagnitude < 1e-4f && cam) { dirS = cam.transform.forward; dirS.y = 0f; }
             corridor = DungeonCorridor.Create(poly, fy, dirS, drun.Theme);
+            corridor.SetVariant(SceneVariant);
         }
 
         void ClearCorridor()

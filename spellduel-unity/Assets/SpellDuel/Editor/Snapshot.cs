@@ -74,6 +74,7 @@ namespace SpellDuel.EditorTools
             TrapDungeonShots(cam);
             NatureShots(cam);
             RoomPropShots(cam);
+            SceneVariantShots(cam);
             PendingArtShots(cam);
             Debug.Log("[SpellDuel] snapshots saved to " + Path.GetFullPath("snapshots"));
         }

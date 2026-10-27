@@ -40,13 +40,15 @@ namespace SpellDuel
             var go = new GameObject("CanyonScene");
             var cs = go.AddComponent<CanyonScene>();
             cs.Build(polygon, floorY);
+            cs.variantArt=SceneVariantArt.Install(cs.transform,polygon,floorY,4);
             return cs;
         }
 
         public void SetVisible(bool on) { if (gameObject.activeSelf != on) gameObject.SetActive(on); }
-        /// <summary>同一主題的場景變化（0～2；SoloBattle.SceneVariant 決定）。目前只記下來，各變化的美術請 Codex 做（CODEX_PENDING_BRIEF.md 第 7 項）</summary>
+        /// <summary>同一主題的場景變化（0～2；SoloBattle.SceneVariant 決定）。第一次建場預建三組，切換只改顯示</summary>
         public int Variant { get; private set; }
-        public void SetVariant(int v) { Variant = Mathf.Clamp(v, 0, 2); }
+        SceneVariantArt variantArt;
+        public void SetVariant(int v) { Variant = Mathf.Clamp(v, 0, 2); if(variantArt)variantArt.Set(Variant); }
 
         /// <summary>某個 AR session 座標的水平位置是否落在山路缺口裡（那裡沒有崖壁，崖頂上也不該站東西）</summary>
         public bool InGap(Vector3 sessionPos) => GapK(new Vector2(sessionPos.x - center.x, sessionPos.z - center.z)) < 0.5f;
@@ -223,6 +225,7 @@ namespace SpellDuel
 
         void Update()
         {
+            if(Variant!=0)return;
             float dt = Time.deltaTime;
             clock += dt;
             // 崖頂不時被風吹起一團塵土（往同一個風向飄）
