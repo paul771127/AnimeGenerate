@@ -6,9 +6,9 @@ namespace SpellDuel.EditorTools
  {
   static void RoomPropShots(Camera cam)
   {
-   foreach(var id in new[]{"ev_core","ev_totem_0","ev_statue_0","ev_chest_0"})
+   foreach(var id in new[]{"ev_core","ev_totem_0","ev_statue_0","ev_statue_dual","ev_block_0","ev_chest_0"})
    {
-    var v=HazardArt.RoomProp(id,Battle.ElementColor(1));v.Tick(100,100,false,1);
+    var v=HazardArt.RoomProp(id,Battle.ElementColor(1));if(id=="ev_statue_dual"){v.SetElement(0);v.SetElement(4);}v.Tick(100,100,false,1);
     Shot(cam,v.gameObject,"room_"+id,new Vector3(2,2,3.5f),new Vector3(0,.7f,0),720,900);
     v.Pulse(2);v.Tick(40,100,true,2.1f);
     Shot(cam,v.gameObject,"room_"+id+"_lit",new Vector3(2,2,3.5f),new Vector3(0,.7f,0),720,900);

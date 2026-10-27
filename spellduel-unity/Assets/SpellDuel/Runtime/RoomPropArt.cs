@@ -7,7 +7,7 @@ namespace SpellDuel
         int element=-1;
         public void SetElement(int value)
         {
-            if(element==value||!Glow)return;element=value;if(value==4)return;
+            if(element==value||!Glow)return;element=value;if(value==4 || Id.EndsWith("dual"))return;
             var c=value==4?new Color(.85f,.45f,1):Battle.ElementColor(value);
             var block=new MaterialPropertyBlock();block.SetColor("_Color",c);Glow.GetComponent<Renderer>().SetPropertyBlock(block);
         }

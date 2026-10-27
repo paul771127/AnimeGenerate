@@ -45,7 +45,7 @@ namespace SpellDuel
             var root=new GameObject(Names[theme,variant]);groups[variant]=root;root.transform.SetParent(transform,false);
             var tint=Palette(theme,variant);
             Material Mat(string name,Color c,bool transparent=false){var m=new Material(transparent?Shader.Find("Sprites/Default"):ToonStyle.LitShader()){name=name,color=c};owned.Add(m);return m;}
-            var stone=Mat("Weathered stone",tint);var wood=Mat("Weathered timber",new Color(.52f,.33f,.18f));var iron=Mat("Dark iron",new Color(.28f,.3f,.36f));var cloth=Mat("Canvas",theme==4?new Color(.8f,.42f,.24f):new Color(.35f,.65f,.73f));var glow=Mat("Lamps and water",new Color(.42f,.83f,.9f,.65f),true);
+            var stone=Mat("Weathered stone",tint);var wood=Mat("Weathered timber",new Color(.52f,.33f,.18f));var iron=Mat("Dark iron",new Color(.28f,.3f,.36f));var cloth=Mat("Canvas",theme==4?new Color(.8f,.42f,.24f):new Color(.35f,.65f,.73f));var glow=Mat("Lamps and water",theme==0||theme==3?new Color(1,.64f,.22f,.7f):theme==1?new Color(.42f,.9f,.58f,.65f):theme==4?new Color(1,.8f,.45f,.65f):new Color(.42f,.83f,.9f,.65f),true);
             void Put(string name,ArtKit.MB mb,Material mat){var mesh=mb.Build(name);meshes.Add(mesh);ArtKit.MeshObj(root.transform,name,mesh,Vector3.zero,mat);}
             var floor=Mat("Quiet arena floor",Color.white,true);floor.mainTexture=Floor(theme,variant);floor.renderQueue=2910;
             if(poly!=null&&poly.Count>=3)
@@ -53,6 +53,16 @@ namespace SpellDuel
                 var mb=new ArtKit.MB(1);int c=mb.Add(center+Vector3.up*.008f,Vector3.up,new Vector2(center.x,center.z)*.5f);
                 for(int i=0;i<poly.Count;i++){var p=poly[i];p.y=center.y+.008f;mb.Add(p,Vector3.up,new Vector2(p.x,p.z)*.5f);}
                 for(int i=0;i<poly.Count;i++){int a=i+1,b=(i+1)%poly.Count+1;if(Vector3.Cross(mb.V[a]-mb.V[c],mb.V[b]-mb.V[c]).y>0)mb.Tri(0,c,a,b);else mb.Tri(0,c,b,a);}Put("Arena surface",mb,floor);
+            }
+            if((theme==1&&variant==1)||(theme==2&&variant==2))
+            {
+                var water=new ArtKit.MB(1);float inside=radius+.5f,outside=radius+8;
+                for(int i=0;i<64;i++)
+                {
+                    float a=i*Mathf.PI/32,b=(i+1)*Mathf.PI/32;Vector3 P(float angle,float r)=>center+new Vector3(Mathf.Cos(angle)*r,.012f,Mathf.Sin(angle)*r);
+                    ArtKit.QuadToward(water,0,P(a,inside),P(a,outside),P(b,outside),P(b,inside),center+Vector3.up*20,col:new Color(.3f,.65f,.7f,.3f));
+                }
+                Put("Shallow luminous water",water,glow);
             }
             var rocks=new ArtKit.MB(1);var timbers=new ArtKit.MB(1);var metal=new ArtKit.MB(1);var fabric=new ArtKit.MB(1);var lights=new ArtKit.MB(1);
             void Box(ArtKit.MB mb,Vector3 at,Vector3 size,float yaw=0)=>ArtKit.Box(mb,0,at,size,Quaternion.Euler(0,yaw,0));
@@ -121,6 +131,12 @@ namespace SpellDuel
             else if(theme==4&&variant==2)for(int i=0;i<8;i++)Pole(far,center+new Vector3(-16+i*4,-3,25),2+i%3,2.5f);
             else for(int i=0;i<10;i++)Pole(far,center+new Vector3(Mathf.Cos(i)*22,0,Mathf.Sin(i)*22),theme==2?3:5,1.5f);
             Put("Distant skyline",far,stone);
+            if(theme==0&&variant==1)
+            {
+                var smoke=SpellFx.NewPS(root.transform,"Crater plume",SpellFx.BlendMat(SpellFx.TexSoft),32,false);smoke.transform.position=center+new Vector3(0,6,edge+12);
+                var sm=smoke.main;sm.startLifetime=7;sm.startSize=3;sm.startSpeed=.1f;sm.startColor=new Color(.35f,.29f,.32f,.35f);
+                var sv=smoke.velocityOverLifetime;sv.enabled=true;sv.y=.7f;var se=smoke.emission;se.rateOverTime=3;SpellFx.Sphere(smoke,1.4f);smoke.Play();
+            }
             var dust=SpellFx.NewPS(root.transform,"Ambient motes",SpellFx.BlendMat(SpellFx.TexSoft),64,false);dust.transform.position=center+Vector3.up*2;
             var main=dust.main;main.startLifetime=5;main.startSpeed=.04f;main.startSize=(theme==1&&variant==1)||(theme==4&&variant==2)?2:.05f;main.startColor=new Color(tint.r+.2f,tint.g+.2f,tint.b+.2f,.18f);
             SpellFx.Sphere(dust,edge+3);var em=dust.emission;em.rateOverTime=8;dust.Play();
