@@ -879,6 +879,7 @@ namespace SpellDuel
             }
             groupQueue.Clear(); roundWaiting = false; nextRoundAt = waveStartAt;
             nextMinionAt = waveStartAt;
+            BonusOnWaveStart();
             nextSpecialAt = waveStartAt + SpecialFirstDelay;
             miniBossSpawned = false;
             if (MiniBossWave) { waveTotal = 1; waveToSpawn = 1; nextSpecialAt = waveStartAt; }
@@ -1000,6 +1001,7 @@ namespace SpellDuel
             if (waveToSpawn == 0 && minions.Count == 0 && !HostileNpcAlive)
             {
                 if (roomEvent != null) { FinishRoomEvent(roomEvent == "defend" ? "守住了！" : "清空了！"); return; }   // 守住目標、崩塌、黑暗房：清完這一波就過關
+                BonusOnWaveCleared();   // 小目標：幾秒清完第一波
                 Emit("wavecleared", player.Feet, Color.white, $"{WaveLabel}清空！");
                 if (!StageDone()) NextWave(RhythmSpawns ? 3f : 4f);
             }
@@ -2150,6 +2152,7 @@ namespace SpellDuel
             if (f.snaredUntil > now && s.self != SelfKind.Cleanse) { why = "被困住，暫時不能施法（牧師可以淨化）"; return false; }
             if (f.silencedUntil > now && s.self != SelfKind.Cleanse) { why = $"被沉默，{Mathf.CeilToInt(f.silencedUntil - now)} 秒內不能唸技能（普攻可以）"; return false; }
             f.charging = s; f.chargeStart = now; f.chargeFrom = f.Feet;
+            BonusOnChant(f, s);   // 小目標：施放幾種不同的技能
             if (s.releaseNear) f.hiddenTime = 0f;   // 每次開始蓄力伏擊技能，重新累計離開視線的秒數
             return true;
         }
@@ -2871,7 +2874,8 @@ namespace SpellDuel
                 { p.damage *= 2; owner.seals = 0; Emit("buff", owner.Chest, new Color(1f, 0.9f, 0.5f), "聖印爆發！傷害 ×2"); }
             }
             if (!reflected && s.cls == "basic" && owner.basicHoming > 0f) p.homing = owner.basicHoming;
-            if (s.id == "m_bubble") { p.homing = BubbleHoming; p.homingUntil = now + BubbleHomeTime; }   // 泡泡：飛得慢但會追你 3 秒（打得破）
+            if (s.id == "m_bubble") { p.homing = BubbleHoming; p.homingUntil = now + BubbleHomeTime; }
+            if (weather == Weather.Wind && !FoeSide(owner)) p.speedMul *= WindSpeed;   // 順風：我方的投射物飛快一點   // 泡泡：飛得慢但會追你 3 秒（打得破）
             if ((owner == enemy || owner.isMinion || owner.npcSide >= 0) && owner.target != null) p.target = owner.target;
             if (EnemyNpc(owner)) { p.speedMul *= EnemyShotSpeed; p.hitMul = EnemyShotHit; }   // 電腦敵人的投射物：飛慢一半、命中範圍減半
             SetCurve(p, curveAmp, pathLen);
@@ -3839,6 +3843,7 @@ namespace SpellDuel
         void ApplyDamageAndEffect(Fighter target, int damage, EffectKind eff, float dps, float dur, Vector3 at, Fighter by = null)
         {
             if (target.npcSide == 1 && target.npcId != null && target.npcId.StartsWith("ev_") && EvPropHit(target, by)) return;   // 副本：雕像、寶箱（Combat.RoomEvents.cs）
+            if (weather != Weather.None && damage > 0) damage = Mathf.Max(1, Mathf.RoundToInt(damage * WeatherMul(incoming ?? HitSkill, by ?? (FoeSide(target) ? player : enemy))));   // 故事關卡的天候（Combat.StageMods.cs）
             if (by == null) by = FoeSide(target) ? player : enemy;   // 不知道是誰打的：對面那一方的主角
             // 閃避率（刺客技能樹）：整次攻擊（傷害＋效果）完全閃開
             // 閃避只對物理攻擊有效（使用者要求）：魔法攻擊（火球、毒液、放電、泡泡…）閃不掉，要自己躲
@@ -3854,6 +3859,7 @@ namespace SpellDuel
             // 忍者：替身術（下一次攻擊完全無效）、分身術（一半的攻擊打到分身）
             if (damage > 0 && target.subUntil > now) { target.subUntil = 0f; Emit("evade", target.Chest, new Color(0.6f, 0.65f, 0.7f), "替身術！"); return; }
             if (damage > 0 && target.cloneUntil > now && rng.NextDouble() < 0.5) { Emit("evade", target.Chest, new Color(0.8f, 0.85f, 0.9f), "打中了分身！"); return; }
+            BonusOnHurt(target, damage);   // 小目標：被打中幾次（閃掉的不算）
             float dmg = damage;
             string note = null;
             if (target.blockUntil > now && dmg > 0)

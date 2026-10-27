@@ -47,6 +47,8 @@ namespace SpellDuel
         public int evCharge; public float evChargeUntil;
         Fighter evWalker, evHunt;
         int EvParty => Mathf.Max(1, dungeonParty > 0 ? dungeonParty : 1 + allies.Count);
+        /// <summary>實際上場的玩家數（多人版：撐住時間、守護物／護送的血量、圖騰數量、最後的菁英數跟著人數）</summary>
+        int PlayersN => 1 + allies.Count;
 
         public const float EvStepRadius = 0.45f, EvOrbRadius = 0.6f, EvChargeTime = 12f, EvRespawnDelay = 3f;
         public static readonly string[] ElementNames = { "", "火", "冰", "雷" };
@@ -85,12 +87,12 @@ namespace SpellDuel
             {
                 case "defend":
                 {
-                    var core = SpawnNpc("ev_core", P("name", "守護之鐘"), "priest", 0, true, PI("hp", 900), 0, c);
+                    var core = SpawnNpc("ev_core", P("name", "守護之鐘"), "priest", 0, true, PI("hp", 900) * PlayersN, 0, c);   // 多人：血量 ×人數
                     core.rooted = true; core.lure = 5f; core.bodyRadius = 0.5f;
                     break;
                 }
                 case "survive":
-                    waveToSpawn = 0; evEndAt = waveStartAt + PI("time", 30); evNextSummon = evEndAt - 10f;
+                    waveToSpawn = 0; evEndAt = waveStartAt + PI("time", 30) + 10f * (PlayersN - 1); evNextSummon = evEndAt - 10f;   // 多人：每多一人 +10 秒
                     for (int i = 0; i < EvCap(); i++) evQueue.Add(waveStartAt + i * 0.5f);
                     break;
                 case "escort":
@@ -101,7 +103,7 @@ namespace SpellDuel
                     float rr = Mathf.Max(1.2f, ArenaInner() * 0.6f);
                     var path = new List<Vector3>();
                     for (int i = 0; i <= 16; i++) path.Add(Ring(rr, start + 240f * i / 16f));
-                    evWalker = SpawnNpc("ev_walker", P("name", "受傷的旅人"), P("look", "priest"), 0, true, PI("hp", 500), 0, path[0]);
+                    evWalker = SpawnNpc("ev_walker", P("name", "受傷的旅人"), P("look", "priest"), 0, true, PI("hp", 500) * PlayersN, 0, path[0]);   // 多人：血量 ×人數
                     evWalker.walkPath = path; evWalker.walkIdx = 1; evWalker.lure = 2f;
                     evPts.Add(path[path.Count - 1]); evState.Add(0);   // 出口
                     for (int i = 0; i < EvCap(); i++) evQueue.Add(waveStartAt + 1f + i * 0.8f);
@@ -121,7 +123,7 @@ namespace SpellDuel
                 case "totems":
                 {
                     waveToSpawn = 0;
-                    int n = Mathf.Clamp(PI("count", 3), 2, 5);
+                    int n = Mathf.Clamp(PI("count", 3) + PlayersN - 1, 2, 6);   // 多人：每多一人多一根
                     float rr = Mathf.Max(1.4f, ArenaInner() * 0.85f);
                     for (int i = 0; i < n; i++)
                     {
@@ -228,7 +230,7 @@ namespace SpellDuel
                 case "collapse": TickCollapse(dt); handled = false; break;
                 case "survive":
                     RefillEv(1.2f);
-                    if (evNextSummon > 0f && now >= evNextSummon) { evNextSummon = 0f; var el = EvSpawn(); if (el != null) MakeElite(el); }
+                    if (evNextSummon > 0f && now >= evNextSummon) { evNextSummon = 0f; for (int i = 0; i < PlayersN; i++) { var el = EvSpawn(); if (el != null) MakeElite(el); } }   // 多人：最後衝刺的菁英數＝人數
                     if (now >= evEndAt) { FinishRoomEvent("撐住了！"); return true; }
                     break;
                 case "escort":

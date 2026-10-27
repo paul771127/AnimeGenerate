@@ -575,7 +575,7 @@ namespace SpellDuel
         {
             if (prof == null) return false;
             int luk = prof.Total(Stat.Luk);
-            float lootMul = dungeon != null ? Dungeons.LootMul(coop ? 1 + PeerIds.Count : 1) : 1f;   // 副本：人越多掉寶率越高（最多 ×1.5）
+            float lootMul = (dungeon != null ? Dungeons.LootMul(coop ? 1 + PeerIds.Count : 1) : 1f) * WeatherLootMul;   // 副本：人越多掉寶率越高（最多 ×1.5）；月夜 ×1.5
             if (!boss && dropRng.NextDouble() > (0.06 + 0.002 * luk) * lootMul) return false;
             int rar = ItemGen.RollRarity(dropRng, luk * 0.3f, boss ? 2 : 0);
             int ilvl = Mathf.Max(1, prof.level + dropRng.Next(-1, 3) + battle.wave / 10);   // 無盡：物品等級跟著角色等級（越後面的波次略高）
@@ -1312,6 +1312,7 @@ namespace SpellDuel
                         if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId) { battle.storyMaxAlive = StoryMaxAlive * partyN; battle.refillDelay = StoryRefillDelay; }
                         // 第二章以後的 Boss：血量、傷害 ×1.3
                         if (pendingStage.theme >= 1 && pendingStage.id != "trial") { battle.storyBossHp *= LateBossMul; battle.storyBossDmg *= LateBossMul; }
+                        SetupStageMods(pendingStage);   // 天候、小目標（SoloBattle.StageMods.cs）
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
                     }
                     else if (dungeon != null)
@@ -1944,7 +1945,8 @@ namespace SpellDuel
                     float rmul = 1f + battle.levelBoost / (2f * LevelPerDifficulty);   // 普通 ×1.5、困難 ×2
                     int stXp = Mathf.RoundToInt(st.xp * rmul);
                     pendingGold += Mathf.RoundToInt(Economy.StageGold(st) * rmul);
-                    string loot = GrantLoot($"{st.title} 通關", false);
+                    string bonusNote = GrantStageBonus(st, rmul);   // 小目標達成：額外金幣＋試煉幣
+                    string loot = GrantLoot($"{st.title} 通關", false) + bonusNote;
                     if (prof != null)
                     {
                         int ups = prof.AddXp(stXp);
@@ -3905,6 +3907,7 @@ namespace SpellDuel
             if (hitFlash > 0.01f) { GUI.color = new Color(1f, 0f, 0.05f, hitFlash * 0.45f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
             DrawTravelFade(W, H);   // 副本走通道：走進黑霧／到站亮起
             DrawRoomEventHud(W, H);   // 副本特殊地點：任務說明、黑暗、道具血條
+            DrawStageModsHud(W, H);   // 故事關卡：天候色調、天候與小目標
 
             // 致盲：畫面蓋上煙霧
             if (me.blindUntil > now) { GUI.color = new Color(0.55f, 0.55f, 0.6f, 0.92f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; UiKit.Pill(H * 0.32f, $"煙霧中… {me.blindUntil - now:F1}s", fsL, Color.white, pillW); }
