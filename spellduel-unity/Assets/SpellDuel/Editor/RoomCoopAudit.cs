@@ -77,6 +77,15 @@ namespace SpellDuel.EditorTools
    Check(forwarded==1&&prop.hp==before&&prop.dots.Count==1,"peer plague detonated locally");
    var plagueHost=Make(players,"totems");var plagueTarget=plagueHost.npcs[0];plagueTarget.dots.Add(new Fighter.Dot{dps=5,until=plagueHost.now+3});before=plagueTarget.hp;
    plagueHost.ApplyHitOnMinion(plagueTarget.minionId,10,Skills.All["plague"]);Check(plagueTarget.hp<before-10&&plagueTarget.dots.Count==0,"host plague not applied");
+   foreach(string room in new[]{"elements","mimic"})
+   {
+    var host=Make(players,room);var peer=Make(players,room);peer.remoteEnemy=true;var target=host.npcs[0];var proxy=peer.npcs[0];
+    host.npcs.RemoveAll(x=>x!=target);peer.npcs.RemoveAll(x=>x!=proxy);proxy.damageTakenMul=1;int sent=0;peer.OnMinionHit+=(i,d,k)=>sent++;
+    float hp=target.hp,proxyHp=proxy.hp;string state=string.Join(",",host.evState);
+    AttackContact(host,target,Skills.All["fire"],"burn");AttackContact(peer,proxy,Skills.All["fire"],"burn");
+    Check(target.hp==hp&&host.evFails==0&&host.roomEvent==room&&state==string.Join(",",host.evState),"host burn puzzle semantics");
+    Check(sent==0&&proxy.hp==proxyHp&&peer.evFails==0&&peer.roomEvent==room,"peer burn created puzzle answer");
+   }
    // Real peer -> mhit host entry: element validation and chest penalties only on host.
    foreach(string room in new[]{"elements","mimic"})foreach(bool correct in new[]{false,true})
    {

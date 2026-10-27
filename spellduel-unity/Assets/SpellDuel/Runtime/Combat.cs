@@ -3529,7 +3529,13 @@ namespace SpellDuel
                     {
                         acc -= 1f;
                         if (remoteEnemy && victim == enemy) { EmitHit(z.skill, victim.Chest); OnRemoteBurn?.Invoke(z.skill, z.dps, victim.Feet); }
-                        else if (remoteEnemy && (victim.isMinion || IsHostileRoomProp(victim))) { EmitHit(z.skill, victim.Chest); OnMinionHit?.Invoke(victim.minionId, Mathf.RoundToInt(z.dps), z.skill); }
+                        else if (remoteEnemy && (victim.isMinion || IsHostileRoomProp(victim)))
+                        {
+                            // Host burn ticks call Damage, not EvPropHit: puzzle props ignore
+                            // sustained damage. Do not turn a peer tick into a puzzle answer.
+                            bool puzzle = IsHostileRoomProp(victim) && (victim.npcId.StartsWith("ev_statue") || victim.npcId.StartsWith("ev_chest"));
+                            if (!puzzle) { EmitHit(z.skill, victim.Chest); OnMinionHit?.Invoke(victim.minionId, Mathf.RoundToInt(z.dps), z.skill); }
+                        }
                         else
                         {
                             if (victim == enemy) AddThreat(z.owner, z.dps);
