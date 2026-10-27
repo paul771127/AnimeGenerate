@@ -905,6 +905,8 @@ namespace SpellDuel
         /// <summary>故事各章小怪的傷害倍率（第一章不用；第二章起取代疊加的倍率）：忍者簡單難度約 7 下倒</summary>
         public static readonly float[] StoryMinionDmg = { 1f, 2.9f, 2.2f, 4f, 4.25f };
         /// <summary>故事敵人的命中率（使用者要求）：第一章 0%，之後每章 +5%；普通再 +35%、困難再 +60%</summary>
+        /// <summary>Boss 的命中率額外 +30%（使用者要求）</summary>
+        public const float BossAccuracyBonus = 0.30f;
         public static float StoryEnemyAccuracy(int theme, int difficulty) => 0.05f * Mathf.Max(0, theme) + (difficulty >= 2 ? 0.60f : difficulty == 1 ? 0.35f : 0f);   // 第二章以後：小怪（不含 Boss）的傷害再 ×1.5（輪次出怪、數量變少的補償）
         static float BossHpFor(int d) => d == 0 ? 0.7f : d == 1 ? 0.85f : 1f;
 
@@ -1195,6 +1197,7 @@ namespace SpellDuel
             }
             SyncPlayer(me);
             battle = new Battle(me, boss);
+            boss.accuracy = BossAccuracyBonus;   // Boss 的命中率：比同關小怪多 30%（故事關卡下面再加上章節、難度）
             if (LevelDifficulty) battle.levelBoost = LevelBoostFor(difficulty);   // 普通＋40 級、困難＋80 級
             else if (!endlessMode)
             {
@@ -1297,7 +1300,7 @@ namespace SpellDuel
                         // 被主力近戰打 6～8 下才倒來反推（第二章食人花咬、第三章巨螯、第四五章小鬼爪擊）；普通、困難照難度等級與受傷倍率再往上
                         if (pendingStage.theme >= 1 && pendingStage.theme < StoryMinionDmg.Length && pendingStage.id != "trial") battle.enemyDmgMul = StoryMinionDmg[pendingStage.theme];
                         // 敵人命中率（使用者要求）：刺客系點滿閃避、在對應等級的關卡裡大約一半被打中（被圍、不在伏擊後 2 秒時）
-                        if (pendingStage.theme >= 0 && pendingStage.id != "trial") { battle.enemyAccuracy = StoryEnemyAccuracy(pendingStage.theme, difficulty); boss.accuracy = battle.enemyAccuracy; }
+                        if (pendingStage.theme >= 0 && pendingStage.id != "trial") { battle.enemyAccuracy = StoryEnemyAccuracy(pendingStage.theme, difficulty); boss.accuracy = battle.enemyAccuracy + BossAccuracyBonus; }
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         ApplyNoviceRoute(pendingStage);   // 1-1～1-3：4m×4m 小場地；1-1、1-2 只有近戰小怪（SoloBattle.NoviceRoute.cs）
                         SetupNoviceBattle(pendingStage);  // 新手關：小鬼／衝鋒獸的血量、1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）

@@ -77,10 +77,10 @@ namespace SpellDuel
         // ---- 物理／魔法攻擊（使用者要求）：被打中時分別吃物理減傷（體質、裝備）或魔法減傷（智力）
         static readonly HashSet<string> MagicIds = new HashSet<string> {
             "b_bolt", "x_quake", "m_bubble", "m_fireball", "m_pool", "m_shock", "m_snipe", "m_spore", "m_venom", "m_void", "m_bomb", "m_spine",
-            "p_spore", "s_bubbles", "s_ink", "s_wave", "s_whirl", "x_ripple", "na_mage" };
+            "p_spore", "s_bubbles", "s_ink", "s_wave", "s_whirl", "x_ripple", "na_mage", "m_vine" };   // m_vine：藤蔓術士的藤蔓（使用者要求改成魔法）
         static readonly HashSet<string> PhysicalIds = new HashSet<string> {
             "b_leap", "b_rain", "b_slam", "b_sweep", "m_bite", "m_chainsweep", "m_claw", "m_dash", "m_dive", "m_leap", "m_pincer", "m_rock", "m_rootquake",
-            "m_seed", "m_tidewhip", "m_twinquake", "m_vine", "p_roots", "p_stomp", "p_thorn", "p_whip", "s_tentacle", "x_rootwave", "vault_hit" };
+            "m_seed", "m_tidewhip", "m_twinquake", "p_roots", "p_stomp", "p_thorn", "p_whip", "s_tentacle", "x_rootwave", "vault_hit" };
         /// <summary>法系職業：技能都算魔法攻擊</summary>
         static readonly HashSet<string> MagicClasses = new HashSet<string> { "mage", "archmage", "summoner", "priest", "bishop", "inquisitor" };
         const string PhysicalWords = "刃苦斬劍刀拳箭矢爪咬撞鋒鉗錘槌棍";

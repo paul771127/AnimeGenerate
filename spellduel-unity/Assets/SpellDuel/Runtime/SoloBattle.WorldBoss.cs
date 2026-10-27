@@ -41,6 +41,7 @@ namespace SpellDuel
             me.damageTakenMul = DamageTakenFor(diff);
             SyncPlayer(me);
             battle = new Battle(me, boss);
+            boss.accuracy = BossAccuracyBonus + 0.05f * 4 + (difficulty >= 2 ? 0.60f : difficulty == 1 ? 0.35f : 0f);   // 世界 Boss：照第五章的敵人命中率＋Boss 的 30%
             battle.levelBoost = Mathf.Max(0, Progress.Char(myClass).level - 1);   // 依角色等級變強（和一般討伐一樣）
             boss.maxHp = Mathf.RoundToInt(boss.maxHp * battle.BoostHpMul); boss.hp = boss.maxHp;
             battle.OnEvent += OnBattleEvent; battle.OnSlashLine += ShowSlashLine; battle.OnShotWarn += ShowShotLine;
