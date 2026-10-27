@@ -54,7 +54,7 @@ namespace SpellDuel
         public float silencedUntil;                                               // 被沉默：這段時間不能唸技能（普攻照常）
         public float comboStrike, basicLeech, waveFlow, riposte;                  // 劍士：連斬、飲血、劍意、反擊之刃
         public float orbSlice;                                                    // 劍士技能樹「斬開法球」：斬擊能斬開飛來的法球（0＝沒點）
-        public float venom, assassinate, vanish, knifeCdr;                        // 刺客：劇毒連刺、刺殺、遁影、飛刀節奏
+        public float venom, assassinate, vanish, knifeCdr;                        // 刺客：劇毒連刺、刺殺、遁影（秒數：伏擊後這段時間內下一次物理攻擊必閃）、飛刀節奏
         public float holySeal, martyr, zeal;                                      // 牧師：聖印、殉道、狂信
         public float bashGuard, sanctionCombo, critDmg, falconMark, petMp;
         public float closeInstinct;     // 刺客「近身本能」等級（0＝沒點）        // 進階職業：盾擊格擋、制裁連斬、爆擊傷害、鷹眼標記、契約魔力
@@ -3426,7 +3426,7 @@ namespace SpellDuel
                 Emit("buff", f.Chest, new Color(0.9f, 0.4f, 1f), "連殺！馬上再伏擊");
             }
             dmg = Riposte(f, PreHit(f, target, s, dmg, null));
-            if (f.vanish > 0f) { f.vanishUntil = now + 2f; Emit("buff", f.Chest, new Color(0.7f, 0.5f, 1f), $"遁影：2 秒內閃避 +{f.vanish * 100f:0}%"); }
+            if (f.vanish > 0f) { f.vanishUntil = now + f.vanish; Emit("buff", f.Chest, new Color(0.7f, 0.5f, 1f), $"遁影：{f.vanish:0} 秒內下一次物理攻擊必閃"); }
             if (target == enemy) AddThreat(f, dmg);
             if (remoteEnemy && target.isMinion) { EmitHit(s, target.Chest); OnMinionHit?.Invoke(target.minionId, dmg, s); OnDealt(f, dmg, target, s); }
             else if (remoteEnemy && target == enemy) { EmitHit(s, target.Chest); OnRemoteHit?.Invoke(s, dmg, target.Chest, 0); OnDealt(f, dmg, target, s); }
@@ -3821,7 +3821,10 @@ namespace SpellDuel
             // 閃避率（刺客技能樹）：整次攻擊（傷害＋效果）完全閃開
             // 閃避只對物理攻擊有效（使用者要求）：魔法攻擊（火球、毒液、放電、泡泡…）閃不掉，要自己躲
             // 命中率（使用者要求）：攻擊者的命中率直接抵掉目標的閃避率（命中 10%、閃避 40% → 實際 30%）
-            float evade = incoming != null && Skills.IsMagic(incoming) ? 0f : target.evadeChance + (target.vanishUntil > now ? target.vanish : 0f) + (CloseInstinct(target) ? CloseEvadePer * target.closeInstinct : 0f);
+            bool magicHit = incoming != null && Skills.IsMagic(incoming);
+            // 遁影／隱遁／舞影（使用者要求）：伏擊後一段時間內，下一次物理攻擊必定閃開（用掉就沒了；命中率抵不掉）
+            if (!magicHit && damage > 0 && target.vanishUntil > now) { target.vanishUntil = 0f; Emit("evade", target.Chest, new Color(0.7f, 0.5f, 1f), "遁影！"); return; }
+            float evade = magicHit ? 0f : target.evadeChance + (CloseInstinct(target) ? CloseEvadePer * target.closeInstinct : 0f);
             evade -= by != null ? by.accuracy : 0f;
             if (evade > 0f && damage > 0 && rng.NextDouble() < evade) { Emit("evade", target.Chest, new Color(0.7f, 0.6f, 1f), "閃避！"); return; }
             if (damage > 0 && target.invulnUntil > now) { Emit("evade", target.Chest, new Color(1f, 0.4f, 0.4f), "無敵！"); return; }
