@@ -5,7 +5,7 @@ namespace SpellDuel
     // 寶箱怪（使用者要求）：每一關 1% 機率在關卡裡某一波冒出來，在場上到處逃跑、不攻擊；
     // 生命 10，玩家每次打中只扣 1（不管多痛；毒、灼燒沒用）；出現 30 秒後跑到場外消失（不掉寶）。
     // 30 秒內打倒：稀有以上的寶物＋大量金幣（SoloBattle.GrantTreasure）。不算在「這一波還剩幾隻」裡，不會卡住清波。
-    // 「一關」：故事關卡、無盡塔一次挑戰＝StartStage 一次；副本＝每個地點（房間）；無盡模式＝每 10 波。
+    // 只有故事模式會出現（SoloBattle 只在故事關卡設 treasureChance）；「一關」＝StartStage 一次。
     public partial class Battle
     {
         public const int TreasureKind = 53, TreasureHp = 10;

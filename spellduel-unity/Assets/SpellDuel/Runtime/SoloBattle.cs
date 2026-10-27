@@ -346,7 +346,7 @@ namespace SpellDuel
         }
 
         /// <summary>寶箱怪打倒的獎勵：Boss 金幣 ×TreasureGoldMul＋一件稀有以上的裝備，過關才拿得到</summary>
-        public const float TreasureChance = 0.01f;   // 每一關出現寶箱怪的機率（故事、副本每個地點、無盡每 10 波、無盡塔每次挑戰）
+        public const float TreasureChance = 0.01f;   // 每一關出現寶箱怪的機率（只有故事模式；副本、無盡、無盡塔不出——使用者要求）
         public const int TreasureGoldMul = 5;        // 金幣＝Boss 金幣 ×5
         public const int TreasureMinRarity = 2;      // 寶物至少「稀有」
         void GrantTreasure()
@@ -1337,16 +1337,15 @@ namespace SpellDuel
                         battle.scaleAllies = battle.dungeonParty - 1;               // Boss 出招頻率、召喚數也照人數
                         battle.hpBoost = dungeonRelief;                          // 等級差修正（主機的等級決定）
                         battle.enemyHpMul = Dungeons.DungeonHp; battle.enemyDmgMul = Dungeons.DungeonDmg; battle.bossHpMul = Dungeons.DungeonHp;   // 副本：小怪與 Boss 的血量、攻擊 ×2
-                        battle.treasureChance = dungeon.id == TrapGallery.Id ? 0f : TreasureChance;   // 寶箱怪（陷阱迴廊不出）
                         battle.StartDungeonMap();   // 副本地圖：每個地點由 BeginDungeonRun／房主選路線決定（SoloBattle.DungeonMap.cs）
                     }
                     else if (towerRun)
                     {
                         // 無盡塔：每次挑戰 5 波（6m×6m 場地），第 5 波有精銳、第 10 波有大 Boss；打完 5 波就結算、回到塔外
-                        battle.eliteWaves = true; battle.treasureChance = TreasureChance;
+                        battle.eliteWaves = true;
                         battle.StartStage(towerFrom, towerFrom + TowerBlock - 1);
                     }
-                    else { battle.treasureChance = TreasureChance; battle.StartEndless(); }
+                    else battle.StartEndless();
                     if (classTrial != null || tutorial) battle.treasureChance = 0f;   // 職業試煉、教學：不出寶箱怪
                 }
                 battle.minionInside = p => area.Inside(WorldFrame.FromWorld(p)) && area.DistanceToEdge(WorldFrame.FromWorld(p)) >= 0.3f;
