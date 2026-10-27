@@ -115,6 +115,7 @@ namespace SpellDuel
                     {SkyArt.Oval(t,"Wind carved red pillar",Vector3.zero,new Vector3(3,12,6),new Color(.8f,.43f,.25f));SkyArt.Oval(t,"Sandstone cap",new Vector3(0,4,0),new Vector3(4,1,7),SkyArt.Cream);}
                     else
                     {SkyArt.Oval(t,"Thunderhead",Vector3.zero,new Vector3(6,7,6),cloud);SkyArt.Rod(t,"Storm navigation beacon",new Vector3(0,0,-2),new Vector3(0,3,-2),.13f,new Color(.7f,.85f,1));}
+                    SkyArt.MergeScenery(t);
                 }
             }
         }

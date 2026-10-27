@@ -45,6 +45,19 @@ namespace SpellDuel
             if(!sail){var b=new ArtKit.MB(1);var a=new Vector3(-.5f,0,0);var d=new Vector3(.5f,0,0);var top=new Vector3(0,1,0);var mid=new Vector3(0,.35f,.09f);b.Facet(0,a,mid,top);b.Facet(0,mid,d,top);b.Facet(0,top,mid,a);b.Facet(0,top,d,mid);sail=b.Build("Cambered triangular canvas");}
             return MeshPart(p,name,sail,Mat(c),at,size);
         }
+        public static void MergeScenery(Transform root)
+        {
+            var groups=new Dictionary<Material,List<CombineInstance>>();var old=root.GetComponentsInChildren<MeshRenderer>();
+            foreach(var r in old){if(r.name=="Wind streak")continue;var f=r.GetComponent<MeshFilter>();if(!f||!f.sharedMesh)continue;var mat=r.sharedMaterial;if(!groups.TryGetValue(mat,out var list)){list=new List<CombineInstance>();groups[mat]=list;}list.Add(new CombineInstance{mesh=f.sharedMesh,transform=root.worldToLocalMatrix*f.transform.localToWorldMatrix});}
+            var owner=root.gameObject.AddComponent<SkyMeshOwner>();
+            foreach(var pair in groups){var mesh=new Mesh{name="Pooled scenery batch"};mesh.CombineMeshes(pair.Value.ToArray(),true,true);owner.Meshes.Add(mesh);MeshPart(root,"Batched scenery",mesh,pair.Key,Vector3.zero,Vector3.one);}
+            foreach(var r in old)if(r.name!="Wind streak"){r.enabled=false;Dispose(r.gameObject);}
+        }
         public static void Dispose(Object o){if(!o)return;if(Application.isPlaying)Object.Destroy(o);else Object.DestroyImmediate(o);}
+    }
+    internal sealed class SkyMeshOwner : MonoBehaviour
+    {
+        public readonly List<Mesh> Meshes=new List<Mesh>();
+        void OnDestroy(){foreach(var mesh in Meshes)SkyArt.Dispose(mesh);}
     }
 }
