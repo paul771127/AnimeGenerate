@@ -8,7 +8,7 @@ namespace SpellDuel
     /// 每個建構函式都回傳一個「在原點」的新 GameObject，由呼叫端決定位置與方向。
     /// 材質用 ToonStyle 的賽璐珞著色器（跟小怪、Boss 一樣有黑邊＋兩階明暗）；每個模型都在 3000 頂點以內。
     /// </summary>
-    public static class HazardArt
+    public static partial class HazardArt
     {
         static Material steelMat, edgeMat, ironMat, woodMat, plateMat, rockMat, brassMat;
         static Mesh pebbleMesh;

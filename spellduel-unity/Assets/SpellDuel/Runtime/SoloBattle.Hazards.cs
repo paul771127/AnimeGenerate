@@ -16,6 +16,7 @@ namespace SpellDuel
         class HazardView
         {
             public GameObject go, warn;
+            public NatureHazardArt nature;
             public Transform part;     // 斧頭：擺動的部分；地刺：尖刺
             public float spikeY = -0.75f, lastSwing;
         }
