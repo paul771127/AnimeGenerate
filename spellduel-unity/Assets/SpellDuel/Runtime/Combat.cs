@@ -688,6 +688,7 @@ namespace SpellDuel
             if (kind == 14) m.speedMul *= birdSpeedMul;   // 俯衝海鳥：飛行速度倍率（故事第三章 ×0.5）
             m.attackReadyAt = now + 1.2f;
             m.homePos = feet;
+            m.accuracy = enemyAccuracy;   // 敵人的命中率（故事各章；抵掉玩家的閃避）
             if (kind == 3) { m.fuseAt = now + BombFuse; m.speedMul *= BombSpeedMul; }   // 自爆小鬼：直直衝過來，引信到就爆
             minions.Add(m);
             Emit("minionspawn", m.Feet, c.color, null);
@@ -707,6 +708,8 @@ namespace SpellDuel
         /// <summary>出怪節奏（使用者要求）：每波三拍——前排正面 → 3 秒後後排側面 → 8 秒後特殊怪背後；場上同時最多 rhythmMaxAlive 隻（簡單 3、其他 4），
         /// 角色不重複，倒了才補同一角色。第一章 1-1～1-3 只用前兩拍。副本地圖、陷阱迴廊、教學（kindOverride）照原本的出怪。</summary>
         public int rhythmMaxAlive = 4;
+        /// <summary>敵人（小怪、Boss）的命中率：抵掉玩家的閃避（SoloBattle 依故事章節設定）</summary>
+        public float enemyAccuracy;
         /// <summary>簡單模式（使用者要求）：敵人主要只從一～兩面來——每一波挑一個主要方位（七成正面、三成一側），三拍都從那一面 ±35° 進場；
         /// 偶爾（約 15%）一隻從別的方向偷襲</summary>
         public bool easySides;
@@ -2395,7 +2398,7 @@ namespace SpellDuel
 
         /// <summary>刺客伏擊技能（刺殺、影襲、毒刃）：身邊這個半徑內不能有敵人才能蓄力；蓄力完成後靠近到這個距離就自動出手</summary>
         /// <summary>刺客技能樹「近身本能」：2m 內有敵人時，受到的傷害 −4%／級、閃避率 +3%／級（貼臉打刺客要付出代價）</summary>
-        public const float CloseRange = 2f, CloseReducePer = 0.04f, CloseEvadePer = 0.01f;   // 近身本能：閃避每級 +1%（滿級 5%）
+        public const float CloseRange = 2f, CloseReducePer = 0.04f, CloseEvadePer = 0.03f;
         public bool CloseInstinct(Fighter f) => f != null && f.closeInstinct > 0f && NearestFoe(f, out var d) != null && d < CloseRange;
         public const float AmbushReach = 1.5f;
         /// <summary>法術飛超過技能射程後，再往前飄這麼遠（公尺）一邊淡出一邊消失</summary>

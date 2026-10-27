@@ -76,8 +76,8 @@ namespace SpellDuel
                 desc = "與火靈和石像締約，讓元素並肩作戰", core = "契約：最多同時 2 隻召喚物（火靈、石像、冰靈、治癒妖精、收服的魔物），自動作戰；有召喚物在場時自己受到的傷害 −15%。用自己的攻擊打中召喚物＝餵養：幫牠回血，並讓牠的攻擊、血量 +1%（召喚物消失後重新召喚就歸零）", weak = "本人的直接傷害 −30%",
                 skills = new[] { "firespirit", "golem", "detonate" } });
             // ---------------------------------------------------------------- 刺客
-            Add(new AdvDef { id = "ninja", baseCls = "assassin", name = "忍者", color = C("#64748b"), hpAdd = -10, regenMul = 0.75f, evade = 0.05f, stats = S(agi: 6),
-                desc = "苦無與忍術交錯，在一瞬間連續出手", core = "快速施放：普攻改成遠距射苦無（技能樹可讓苦無機率附帶火／冰／雷）；手裏劍、雷遁幾乎不用蓄力；忍術（替身、分身、火遁）要比手印；物理閃避率 +5%", weak = "HP −10、MP 回復 −25%：不擅長持久戰",
+            Add(new AdvDef { id = "ninja", baseCls = "assassin", name = "忍者", color = C("#64748b"), hpAdd = -10, regenMul = 0.75f, evade = 0.15f, stats = S(agi: 6),
+                desc = "苦無與忍術交錯，在一瞬間連續出手", core = "快速施放：普攻改成遠距射苦無（技能樹可讓苦無機率附帶火／冰／雷）；手裏劍、雷遁幾乎不用蓄力；忍術（替身、分身、火遁）要比手印；物理閃避率 +15%", weak = "HP −10、MP 回復 −25%：不擅長持久戰",
                 skills = new[] { "substitute", "clone", "fireseal" } });
             Add(new AdvDef { id = "shadowdancer", baseCls = "assassin", name = "影舞者", color = C("#c026d3"), hpAdd = -5, crit = 0.15f, stats = S(str: 6),
                 desc = "以連擊追逐破綻，在毒霧間舞出致命一瞬", core = "連殺：伏擊命中後 3 秒內，伏擊技能冷卻歸零、蓄力時間 −70%。技能樹學影分身（電腦操作、分走一半 HP）、影殺（強力伏擊）、致命劇毒與萬毒引爆（疊毒再一次引爆）", weak = "HP −5，防禦很脆",

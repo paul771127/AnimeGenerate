@@ -903,7 +903,9 @@ namespace SpellDuel
         public const float LateDmgMul = 1.5f;
         public const float LateMinionDmgMul = 1.5f;
         /// <summary>故事各章小怪的傷害倍率（第一章不用；第二章起取代疊加的倍率）：忍者簡單難度約 7 下倒</summary>
-        public static readonly float[] StoryMinionDmg = { 1f, 2.9f, 2.2f, 4f, 4.25f };   // 第二章以後：小怪（不含 Boss）的傷害再 ×1.5（輪次出怪、數量變少的補償）
+        public static readonly float[] StoryMinionDmg = { 1f, 2.9f, 2.2f, 4f, 4.25f };
+        /// <summary>故事各章敵人的命中率：第一～三章還是刺客（點滿閃避約 35%）→ 0；第四章起多半已轉職忍者（點滿約 65%）→ 10%、15%</summary>
+        public static readonly float[] StoryEnemyAccuracy = { 0f, 0f, 0f, 0.10f, 0.15f };   // 第二章以後：小怪（不含 Boss）的傷害再 ×1.5（輪次出怪、數量變少的補償）
         static float BossHpFor(int d) => d == 0 ? 0.7f : d == 1 ? 0.85f : 1f;
 
         // 語音詠唱：唸出咒語就開始詠唱（本機比對自己錄的樣本）
@@ -1294,6 +1296,8 @@ namespace SpellDuel
                         // 小怪傷害倍率（使用者要求，取代上面疊加的倍率）：以 HP、減傷最少的職業（忍者）在簡單難度、該關的正常等級，
                         // 被主力近戰打 6～8 下才倒來反推（第二章食人花咬、第三章巨螯、第四五章小鬼爪擊）；普通、困難照難度等級與受傷倍率再往上
                         if (pendingStage.theme >= 1 && pendingStage.theme < StoryMinionDmg.Length && pendingStage.id != "trial") battle.enemyDmgMul = StoryMinionDmg[pendingStage.theme];
+                        // 敵人命中率（使用者要求）：刺客系點滿閃避、在對應等級的關卡裡大約一半被打中（被圍、不在伏擊後 2 秒時）
+                        if (pendingStage.theme >= 0 && pendingStage.theme < StoryEnemyAccuracy.Length && pendingStage.id != "trial") { battle.enemyAccuracy = StoryEnemyAccuracy[pendingStage.theme]; boss.accuracy = battle.enemyAccuracy; }
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉
                         ApplyNoviceRoute(pendingStage);   // 1-1～1-3：4m×4m 小場地；1-1、1-2 只有近戰小怪（SoloBattle.NoviceRoute.cs）
                         SetupNoviceBattle(pendingStage);  // 新手關：小鬼／衝鋒獸的血量、1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）
