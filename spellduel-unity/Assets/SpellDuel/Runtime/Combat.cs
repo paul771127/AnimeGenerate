@@ -138,6 +138,8 @@ namespace SpellDuel
         public bool miniBoss;                  // 第 3 波單獨登場的特殊敵人（有名字和血條）
         public bool treasure, treasureRunning; public float treasureLeaveAt;
         public int variant;                    // 變種怪（Combat.Variants.cs）：刺客怪、天候怪的 id（0＝不是）
+        public float lureUntil; public bool lureRolled, capturedPet; public Vector3 lureAt;   // 寵物誘餌（Combat.Pets.cs）
+        public long petUid; public int petAtk, petLevel; public float petGap, petActLock; public List<string> petSkills; public readonly Dictionary<string, float> petCd = new Dictionary<string, float>();   // 出戰的寵物
         public bool assassin, healer, summoner, summoned; public int asnState; public float asnUntil; public Fighter asnTarget, healTarget, summonedBy;   // summoned＝召喚物：沒有經驗、不掉寶   // 刺客怪：0 潛伏、1 沿邊繞、2 突襲、4 退回   // 寶箱怪（Combat.Treasure.cs）：到處逃跑、每下只扣 1、時間到就逃走
         // 副本特殊地點（Combat.RoomEvents.cs）
         public bool rooted;                    // 不會動、不會出手（守護物、圖騰、雕像、寶箱）
@@ -1339,6 +1341,7 @@ namespace SpellDuel
                 if (tgt.npcSide >= 0) best = FlatDistance(m.Feet, tgt.Feet);
                 m.target = tgt;
                 if (m.treasure) { UpdateTreasure(m, dt); continue; }   // 寶箱怪：只會逃
+                if (UpdateLure(m, dt)) continue;   // 吃誘餌中：不攻擊（Combat.Pets.cs）
                 if (m.assassin) { UpdateAssassin(m, dt); continue; }
                 if (m.healer) { UpdateHealer(m, dt); continue; }   // 補師：躲在後面治療同伴（Combat.Variants.cs）
                 if (m.summoner) { UpdateSummoner(m, dt); continue; }   // 召喚師：躲在後面叫砂靈（Combat.Variants.cs）   // 刺客怪：繞到背後突襲（Combat.Variants.cs）
@@ -3993,6 +3996,7 @@ namespace SpellDuel
             // 不死之軀：致命傷害留 1 HP，無敵 3 秒
             if (f.undyingUntil > now && f.hp - dmg < 1f) { dmg = Mathf.Max(0f, f.hp - 1f); f.undyingUntil = 0f; f.invulnUntil = now + 3f; Emit("buff", f.Chest, new Color(0.8f, 0.1f, 0.1f), "不死之軀！無敵 3 秒"); }
             f.hp = Mathf.Max(0, f.hp - dmg);
+            if (f.isMinion && f.lureUntil > now && !f.lureRolled && f.Alive && f.hp < f.maxHp * Pets.CaptureHp && TryCapture(f)) return;   // 吃餌中第一次低於 30%：擲收服；成功＝離開戰場、不算擊倒
             // 主教的復活祝福：倒下時以 30% HP 站起來
             if (!f.Alive && f.blessUntil > now) { if (f == player) playerDown = false; f.blessUntil = 0f; f.hp = Mathf.Round(f.maxHp * 0.3f); Emit("heal", f.Chest, new Color(1f, 0.95f, 0.6f), "復活祝福！"); }
             if (dmg > 0 && f.prepUntil > now) { f.prepUntil = 0f; Emit("fail", f.Chest, Color.gray, "刺殺準備被打斷！"); }

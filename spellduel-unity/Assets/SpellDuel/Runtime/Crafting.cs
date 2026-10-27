@@ -50,6 +50,7 @@ namespace SpellDuel
             M("core_sea", "海妖之淚", "💧", "Boss 深海巨妖"),
             M("core_arena", "鬥魂徽記", "⚜", "Boss 青銅鬥魂"),
             M("core_canyon", "岩魔之核", "🟤", "Boss 黃土岩魔"),
+            M("tame_seal", "馴獸印片", "🔰", "各章菁英怪 20%（8 枚＋金幣調配菁英誘餌）"),
             M("soul_smith", "神匠之魂", "✨", "困難難度的 Boss（很少）"),
         };
         static Mat M(string id, string name, string icon, string from) => new Mat { id = "mat_" + id, name = name, icon = icon, from = from };

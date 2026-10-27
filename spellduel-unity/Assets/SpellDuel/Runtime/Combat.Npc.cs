@@ -95,7 +95,7 @@ namespace SpellDuel
         {
             var pet = pets.Find(x => x.alive && x.body == n);
             float pow = pet != null ? pet.power : 1f;
-            int dmg = Mathf.Max(1, Mathf.RoundToInt(9f * n.dmgMul * pow));
+            int dmg = n.petAtk > 0 ? n.petAtk : Mathf.Max(1, Mathf.RoundToInt(9f * n.dmgMul * pow));   // 出戰的寵物：照寵物的攻擊
             var s = Skills.All["pet_tamed"];
             var owner = pet != null ? pet.owner : player;
             if (NpcMelee(n))
@@ -201,7 +201,8 @@ namespace SpellDuel
                 {
                     goal = tgt.Feet; stop = NpcMelee(n) ? 1.1f : 5f;
                     n.forward = Fighter.Flat(tgt.head - n.head);
-                    if (best <= stop + 0.4f + tgt.bodyRadius && now >= n.npcNextAtk) NpcStrike(n, tgt, best);
+                    if (n.petUid != 0) PetSkillTick(n, tgt);   // 出戰的寵物：自動放技能（Combat.Pets.cs）
+                    if (best <= stop + 0.4f + tgt.bodyRadius && now >= n.npcNextAtk) { NpcStrike(n, tgt, best); if (n.petUid != 0) n.npcNextAtk = now + n.petGap; }
                 }
                 else
                 {

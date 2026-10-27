@@ -85,6 +85,17 @@ namespace SpellDuel
             Header("🪨 素材");
             Grid(rows, "沒有素材：打倒敵人有機率掉落");
 
+            // ---- 寵物用品：誘餌、飼料
+            rows = new List<InvRow>();
+            foreach (var f in Pets.Foods) { int n = Economy.Count(f.id); if (n > 0) rows.Add(new InvRow { key = "f_" + f.id, icon = f.icon, name = f.name, n = n, c = new Color(0.45f, 1f, 0.8f), body = $"寵物飼料：加 {f.xp} 經驗，{f.learn * 100f:0}% 機率學會新技能。\n・用法：「🐾 寵物」分頁選一隻寵物餵。\n・取得：{f.desc}。" }); }
+            foreach (var s in Pets.All)
+            {
+                int n = Economy.Count(s.bait); if (n <= 0) continue;
+                rows.Add(new InvRow { key = "b_" + s.bait, icon = "🍖", name = s.baitName, n = n, c = new Color(1f, 0.85f, 0.5f), body = $"「{s.Name}」的誘餌{(s.elite ? "（菁英）" : "")}。\n・用法：戰鬥中場上有{s.Name}時，畫面上會出現誘餌按鈕；丟出去後牠會吃 3 秒（不攻擊），這時把牠的血壓到 30% 以下就有機會收服。\n・取得：打倒{s.Name}有 {(s.elite ? Pets.EliteBaitDrop : Pets.BaitDrop) * 100f:0.#}% 機率掉" + (s.elite ? $"；或馴獸印片 {Pets.SealsPerEliteBait} 枚＋{s.price} 金調配。" : $"；城鎮的寵物頁也買得到（{s.price} 金）。") });
+            }
+            Header("🐾 寵物用品");
+            Grid(rows, "沒有誘餌和飼料");
+
             // ---- 精魄（還沒鑲上的）
             rows = new List<InvRow>();
             foreach (var d in Souls.All)

@@ -271,6 +271,7 @@ namespace SpellDuel
             if (dx > 0)
             {
                 lastXpSeen = battle.xp;
+                PetShareXp(dx);   // 出戰的寵物分 40%（SoloBattle.Pets.cs）
                 int ups = prof.AddXp(dx + Mathf.RoundToInt(dx * Souls.Sum(prof, SoulOp.Xp)));   // 精魄：經驗加成
                 if (prof.LevelLocked && !levelLockSaid) { levelLockSaid = true; Say(prof.cls == Skills.Novice ? $"已達 {Skills.JobLevel} 級：回村子到職業工會選擇職業，才能繼續升級" : $"已達 {Advanced.Level} 級：到職業工會完成轉職試煉並轉職，才能繼續升級", 3.5f); }
                 if (ups > 0)
@@ -330,6 +331,7 @@ namespace SpellDuel
         void DropOne(string key)
         {
             if (prof == null || string.IsNullOrEmpty(key)) return;
+            if (key[0] == 'm' && int.TryParse(key.Substring(1), out int pk)) RollPetDrops(pk);   // 寵物誘餌、馴獸印片：另外擲，不佔「一隻最多掉一樣」（SoloBattle.Pets.cs）
             if (TrySoulDrop(key)) return;
             int diff = towerRun ? 1 : difficulty;
             if (key[0] == 'm' && int.TryParse(key.Substring(1), out int kind))
@@ -627,6 +629,8 @@ namespace SpellDuel
             {
                 // 裝備分頁的技能欄（CharacterPanel.DrawSkillSlots）
                 charPanel.Loadout = () => myLoadout;
+                charPanel.PetTown = () => phase != Phase.Fighting && storyMapOpen ? Mathf.Clamp(world.town, 0, 4) : -1;   // 寵物頁：在城鎮才能買誘餌、飼料
+                charPanel.PetsEditable = () => phase != Phase.Fighting;
                 charPanel.SkillChoices = () => SetupSkills;
                 charPanel.IsAdvSkill = Advanced.IsAdvSkill;
                 charPanel.Slots = () => (BaseNeed, AdvSlot);
@@ -1924,6 +1928,7 @@ namespace SpellDuel
             GUIUtility.hotControl = 0;   // 戰鬥最後一刻手指還按在技能卡上：放掉，結算按鈕才點得到
             infoSkill = null;
             if (endless && battle != null) TrackProgress();   // 先算這一刻的擊倒（打倒最後的 Boss／小怪的同一幀就結算了，掉落要在發獎勵前擲）
+            if (endless && battle != null && PetsAllowed) { FlushPetXp(); RollFoodDrops(); }   // 寵物：經驗存檔、通關掉飼料
             SaveExercise();
             if (endless && IsJobTrial)
             {
@@ -2308,6 +2313,7 @@ namespace SpellDuel
             outroUntil = -1f; introUntil = -1f; btStage = 0; potStage = 0;
             ClearDaily(); ClearClassTrial(); ClearTutorial(); RestoreArea(); ClearSwipeTrail(); ClearSwordSage(); ClearGuardFx();
             ResetCarryLeft();   // 下一場能用的道具＝整備時決定帶的數量
+            FlushPetXp();
             victory = null; hitsTaken = 0; lootLog.Clear(); lootGoldLog = 0; ResetExercise();
             if (prof != null) Progress.SaveChar(prof);
             charOpen = false;
@@ -2384,6 +2390,7 @@ namespace SpellDuel
             float dt = Mathf.Min(Time.deltaTime, 0.1f);
             if (Time.time < hitStopUntil) dt = 0f;   // 命中停頓
             if (endless) TrackProgress();
+            UpdatePets();   // 寵物出戰、倒下提示（SoloBattle.Pets.cs）
             if (scrollRequested) { DoReturnScroll(); return; }
             if (endless && charOpen && !coop) dt = 0f;   // 單人無盡：角色畫面開著時暫停
             hitFlash = Mathf.Max(0f, hitFlash - Time.deltaTime * 2.5f);
@@ -4400,6 +4407,7 @@ namespace SpellDuel
                 UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.6f), storyStage != null ? "🎤 說「喝藥水／大藥水／魔力藥水」或比 🤙 就會喝（30 秒一瓶）；回城：說「回城」或點📜" : "🎤 說「喝藥水／大藥水／魔力藥水」或比 🤙 就會喝（30 秒一瓶）", fsS, new Color(0.75f, 0.9f, 1f), TextAnchor.MiddleCenter);
                 iy += lh * 0.6f;
                 iy += DrawBattlePotions(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 1.1f), gap, fsS);   // 強化藥劑：點了就喝（SoloBattle.Potions.cs）
+                iy += DrawBaitButtons(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 1.1f), gap, fsS);   // 寵物誘餌：場上有對象才出現（SoloBattle.Pets.cs）
                 if (pendingItems.Count > 0 || pendingGold > 0)
                     UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.7f), $"🎁 待領取：裝備 {pendingItems.Count} 件・💰 {pendingGold}（{(storyStage != null || dungeon != null ? "通關" : "清完這一波")}後才拿得到）", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleCenter);
             }
