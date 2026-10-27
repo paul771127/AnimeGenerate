@@ -17,7 +17,7 @@ namespace SpellDuel.EditorTools
    var b=new Battle(p,new Fighter("boss",Skills.Classes["boss_clockwork"],new string[0],false));
    for(int i=1;i<players;i++)b.allies.Add(new Fighter("peer"+i,Skills.Classes["mage"],new string[0],false){isAlly=true,pid=i,head=new Vector3(i*2,1.7f,0)});
    b.arenaPoly=new List<Vector3>{new Vector3(-4,0,-4),new Vector3(4,0,-4),new Vector3(4,0,4),new Vector3(-4,0,4)};
-   b.edgePoint=()=>new Vector3(3,0,3);b.StartDungeonMap();b.wave=5;b.now=10;b.waveStartAt=10;
+   b.edgePoint=()=>new Vector3(3,0,3);b.StartDungeonMap();b.awaitingNext=false;b.wave=5;b.now=10;b.waveStartAt=10;
    b.StartRoomEvent(kind,new Dictionary<string,string>{{"riddle","海邊的高塔，夜晚替船照亮回家的路。"},{"answer","燈塔"}});
    Field<List<float>>(b,"evQueue").Clear();return b;
   }
@@ -74,6 +74,16 @@ namespace SpellDuel.EditorTools
     b=Make(n,"collapse");var cell=b.evPts[0];b.evState[0]=2;b.player.head=cell+Vector3.up*1.7f;float hp=b.player.hp;b.now=11;Call(b,"TickCollapse",.1f);Check(b.player.hp<hp,"collapsed cell must damage");
     b=Make(n,"elements");var proxy=new Battle(new Fighter("peer",Skills.Classes["mage"],new string[0],true),new Fighter("boss",Skills.Classes["boss_clockwork"],new string[0],false)){remoteEnemy=true};proxy.SetRoomViewPlayers(string.Join(",",b.evPlayerIds),n>1?1:-1);proxy.evPhase=0;Check(proxy.RoomCoop==(n>1),"remote roster metadata");if(n>1){Check(!proxy.RuneVisibleFor(0)&&proxy.RuneVisibleFor(1),"remote rune owner mask");}
     b=Make(n,"runes");b.remoteEnemy=true;var states=string.Join(",",b.evState);b.now+=20;Call(b,"UpdateRoomEvent");Check(states==string.Join(",",b.evState),"peer ran authority");
+    foreach(string linked in new[]{"totems","hunt"})if(n>1)
+    {
+     b=Make(n,linked);var group=Field<List<Fighter>>(b,"evLinked");var dead=group[0];int oldId=dead.minionId;dead.hp=0;b.Update(.02f);
+     Check(!b.npcs.Contains(dead)&&!b.minions.Contains(dead),"normal frame death cleanup");b.Update(5.02f);
+     Check(group[0].Alive&&group[0].minionId!=oldId,"real frame revive after actor removal");
+    }
+    foreach(string ordinary in new[]{"defend","dark","collapse"})
+    {
+     b=Make(n,ordinary);b.waveToSpawn=0;b.minions.Clear();b.Update(.02f);Check(b.awaitingNext||b.stageCleared,"ordinary room clear "+ordinary);
+    }
     b=Make(n,"mimic");b.remoteEnemy=true;int forwarded=0;b.OnMinionHit+=(id,damage,skill)=>forwarded++;var remoteChest=b.npcs[0];Set(b,"incoming",new SkillDef{id="ice"});Call(b,"EvPropHit",remoteChest,b.player);Check(forwarded==1&&b.evFails==0&&b.roomEvent=="mimic","peer chest evaluated locally");
     b.CleanupRoomEvent();Check(!b.RoomCoop&&b.evPlayerIds.Count==0,"room cleanup retains clue owners");
    }

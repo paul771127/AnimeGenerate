@@ -273,7 +273,7 @@ Combat.RoomEvents.cs 保留單人規則，開局記錄實際玩家 pid：兩人�
 
 沒有新增 Msg 類別欄位／訊息種類。既有 rev.ks 追加 [2] 玩家 pid CSV、[3] 符文觀看 pid、[4] 雕像 id:屬性 CSV；reve.id／ok 帶指定觀看者，未指定仍全部可見。evsay 作答仍交房主；fnpc／fhurt／技能資料／存檔不變。雕像顏色資訊只用於顯示，不把客戶端變成判定端。
 
-Editor/RoomCoopAudit.cs 使用實際 Battle 流程模擬 1／2／3 人，離線 .NET 契約測試通過 129 個檢查：過關、任一護送／守護目標死亡失敗、5 秒超時復活、3 秒雙屬性、錯題懲罰、線索分配、路障、共同視野、崩塌聚集和 remoteEnemy 不執行規則。這不等於實機網路測試；同一測試亦接入原生 Unity Snapshot，待 CI 補最終驗收。
+Editor/RoomCoopAudit.cs 使用實際 Battle 流程模擬 1／2／3 人，離線 .NET 契約測試通過 146 個檢查：過關、任一護送／守護目標死亡失敗、5 秒超時復活、3 秒雙屬性、錯題懲罰、線索分配、路障、共同視野、崩塌聚集和 remoteEnemy 不執行規則。這不等於實機網路測試；同一測試亦接入原生 Unity Snapshot，待 CI 補最終驗收。
 
 格式檢查器已跟 Dungeons.EventKeysAll／RoomEventKinds 同步，8 個副本 0 錯誤；沒有修改劇本文字或關卡設定。追加崩塌傷害與遠端觀看者 metadata 檢查。
 
@@ -281,3 +281,5 @@ Editor/RoomCoopAudit.cs 使用實際 Battle 流程模擬 1／2／3 人，離線 
 #### 原生驗收修正
 
 第一批原生截圖暴露既有 Toon OUTLINE 的非人類 shader variant 引用未宣告 `_ArtFade`，造成機關岩石／樹根洋紅。將該 uniform 宣告移至 SD_HUMAN 條件之外，未改任何美術參數；Snapshot 現在遇到 Toon shader error 直接失敗。多人另補直接技能命中解謎道具的轉送：客戶端只經既有 mhit 通知房主，不在本機判錯寶箱；未修改 mhit 格式。待修正後的原生截圖重拍。
+
+追加完整 Battle.Update 的死亡清理／重生驗證及一般房間通關檢查；漩渦 state=0 完全隱藏警示，跟原本「沒有漩渦」狀態一致。

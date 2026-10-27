@@ -13,7 +13,7 @@ namespace SpellDuel
             bool on=state>=1;
             if(Smoke){bool smoking=state>0 && !on;if(smoking && !Smoke.isPlaying)Smoke.Play();if(!smoking && Smoke.isPlaying)Smoke.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);}
             Active.gameObject.SetActive(on || (Kind==Battle.HazardKind.Whirl && state>0));
-            Warning.gameObject.SetActive(Kind!=Battle.HazardKind.Tide || (state>0 && !on));
+            Warning.gameObject.SetActive(Kind==Battle.HazardKind.Whirl?state>0:Kind!=Battle.HazardKind.Tide || (state>0 && !on));
             var c=Tint;c.a=state<=0?.18f:.35f+.45f*state*(.8f+.2f*Mathf.Sin(clock*9));
             foreach(var l in WarningLines)l.startColor=l.endColor=c;
             if(Kind==Battle.HazardKind.Whirl)Active.localRotation=Quaternion.Euler(0,clock*(on?240:45),0);

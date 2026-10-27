@@ -23,6 +23,7 @@ namespace SpellDuel.EditorTools
                 {
                     art.Tick(state*.5f,1.25f);
                     if(state==0 && art.Active.gameObject.activeSelf)throw new Exception("Retracted hazard visible");
+                    if(state==0 && kinds[i]==Battle.HazardKind.Whirl && art.Warning.gameObject.activeSelf)throw new Exception("Inactive whirl warning visible");
                     if(state==2 && !art.Active.gameObject.activeSelf)throw new Exception("Active hazard hidden");
                     if(state==2)art.Motes.Simulate(.8f,true,true);
                     if(state==1 && art.Smoke)art.Smoke.Simulate(.8f,true,true);
