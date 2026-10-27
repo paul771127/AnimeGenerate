@@ -29,7 +29,7 @@ namespace SpellDuel
    float t=Mathf.Clamp01(progress);Vector3 side=(from-landPoint);side.y=0;if(side.sqrMagnitude<.1f)side=Vector3.right;side=side.normalized;
    var parallel=landPoint+side*1.3f+Vector3.up*(kind==3?.3f:1.6f);
    transform.position=t<.35f?Vector3.Lerp(from,parallel,Mathf.SmoothStep(0,1,t/.35f)):t<.8f?parallel:Vector3.Lerp(parallel,parallel+side*9+Vector3.up*4,Mathf.SmoothStep(0,1,(t-.8f)/.2f));
-   transform.rotation=Quaternion.LookRotation(t<.8f?(landPoint-from).normalized:side);
+   var facing=t<.8f?landPoint-from:side;if(facing.sqrMagnitude<.001f)facing=Vector3.forward;transform.rotation=Quaternion.LookRotation(facing);
    if(wingL)wingL.localRotation=Quaternion.Euler(0,0,Mathf.Sin(t*35)*22);if(wingR)wingR.localRotation=Quaternion.Euler(0,0,-Mathf.Sin(t*35)*22);
    // A four-second staging timeline gives the .55-.80 landing interval exactly one second.
    landing.gameObject.SetActive(t>=.55f&&t<.8f);for(int i=0;i<48;i++){float a=i*Mathf.PI*2/48;var p=landPoint+new Vector3(Mathf.Cos(a)*.35f,.055f,Mathf.Sin(a)*.35f);landing.SetPosition(i,CarpetScene.Active?CarpetScene.Active.SurfacePoint(p):p);}

@@ -10,6 +10,7 @@ namespace SpellDuel
   public static Texture2D Portrait(int kind)
   {
    if(portraits.TryGetValue(kind,out var cached)&&cached)return cached;
+   var randomState=Random.state;
    var rig=MinionRig.Create();rig.SetVariant(kind);PetDress.Apply(rig,EliteCatalog.IsElite(kind));
    var nodes=rig.GetComponentsInChildren<Transform>(true);foreach(var t in nodes)t.gameObject.layer=31;
    // Isolate the preview camera without modifying the AR camera, lights or global scene state.
@@ -19,7 +20,7 @@ namespace SpellDuel
    camera.orthographicSize=Mathf.Max(.6f,bounds.size.y*.63f,bounds.size.x*.65f);var target=bounds.center;camera.transform.position=target+new Vector3(1.8f,.7f,3);camera.transform.LookAt(target);camera.nearClipPlane=.05f;camera.farClipPlane=20;
    var rt=RenderTexture.GetTemporary(192,192,24,RenderTextureFormat.ARGB32);var old=RenderTexture.active;
    try{camera.targetTexture=rt;camera.Render();RenderTexture.active=rt;var tex=new Texture2D(192,192,TextureFormat.RGBA32,false){name="Pet preview "+kind,filterMode=FilterMode.Bilinear};tex.ReadPixels(new Rect(0,0,192,192),0,0);tex.Apply(false,true);portraits[kind]=tex;return tex;}
-   finally{camera.targetTexture=null;RenderTexture.active=old;RenderTexture.ReleaseTemporary(rt);go.SetActive(false);rig.gameObject.SetActive(false);SkyArt.Dispose(go);SkyArt.Dispose(rig.gameObject);}
+   finally{Random.state=randomState;camera.targetTexture=null;RenderTexture.active=old;RenderTexture.ReleaseTemporary(rt);go.SetActive(false);rig.gameObject.SetActive(false);SkyArt.Dispose(go);SkyArt.Dispose(rig.gameObject);}
   }
   public static void Hero(Rect r,int kind,string name,string subtitle,int fs,Color color)
   {

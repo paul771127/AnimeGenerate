@@ -21,7 +21,7 @@ namespace SpellDuel
         {
             skillId = skillId ?? "";
             if (cache.TryGetValue(skillId, out var t) && t != null) return t;
-            if(IsSupply(skillId)){var asset=Resources.Load<Texture2D>("Village2D/icons/"+skillId);if(asset){cache[skillId]=asset;return asset;}}
+            if(IsSupply(skillId)&&!IsCarpetPetArt(skillId)){var asset=Resources.Load<Texture2D>("Village2D/icons/"+skillId);if(asset){cache[skillId]=asset;return asset;}}
             t = new Texture2D(Size, Size, TextureFormat.RGBA32, false)
             {
                 name = "SkillIcon " + skillId,

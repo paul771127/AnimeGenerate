@@ -43,7 +43,7 @@ namespace SpellDuel
   bool Selected(int i,int m){float x=(i%6-2.5f)*.72f;return m==4||m==0&&i<6||m==1&&i>=6||m==2&&x*side>0||m==3&&Mathf.Abs(x-gap)>.6f;}
   public void Fire(int value)
   {move=Mathf.Clamp(value,0,4);fireAge=0;warningAge=warningDuration;
-   for(int i=0;i<12;i++)if(Selected(i,move)){flash.transform.localPosition=barrels[i].localPosition+Vector3.forward*.75f;flash.Emit(3);}
+   for(int i=0;i<12;i++)if(Selected(i,move)){var ep=new ParticleSystem.EmitParams {position=barrels[i].localPosition+Vector3.forward*.75f,startColor=i<6?new Color(1,.5f,.1f):new Color(.25f,.6f,1)};flash.Emit(ep,3);}
   }
   public void SetSwoop(float t){swoop=Mathf.Clamp01(t);Pose();}
   public void DropPirate(int value){int i=value<0?0:value>0?2:1;drops[i]=0;pirates[i].gameObject.SetActive(true);}
