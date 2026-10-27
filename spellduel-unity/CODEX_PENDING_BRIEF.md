@@ -404,3 +404,7 @@ Editor/RoomCoopAudit.cs 使用實際 Battle 流程模擬 1／2／3 人，離線 
 `RoomCoopAudit` 增加 180 項入口整合檢查，合計 326 項在實際 Battle 的 .NET 契約環境通過；`check_dungeons.py` 仍為 8 個副本、0 錯誤。原生 Unity 與 Android／iOS 結果待 CI 補記。此前記錄的兩項範圍外問題已修復，不再等待授權。
 
 補充持續傷害的房主／隊友一致性：房主燃燒直接走 Damage，不會觸發雕像／寶箱解謎；隊友亦不把這類 tick 轉成作答。再增 12 項檢查，合計 338 項通過；既有 65 項陷阱、180 組固定出怪案例亦通過。
+
+#### 副本道具補修驗收
+
+`8505e98` 的 [原生 Unity](https://github.com/paul771127/AnimeGenerate/actions/runs/40533047036) 通過 338 項房間／命中檢查；[平台建置](https://github.com/paul771127/AnimeGenerate/actions/runs/40533046929) Android APK 與 iOS Xcode 匯出成功，APK 發布成功。IPA／TestFlight 後續工作在記錄時仍排隊，不列作已完成。原生紀錄與平台結果已放在 `Docs/pending_preview/room_contact_validation.json`、`room_contact_native_audit.log`，原先兩項待確認的道具命中問題已結案。

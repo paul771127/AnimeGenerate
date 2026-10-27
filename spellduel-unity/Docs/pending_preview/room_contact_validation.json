@@ -1,0 +1,34 @@
+{
+  "commit": "8505e9862dd269dce7e6d161b23dc0ebceff9ca4",
+  "nativeRun": "https://github.com/paul771127/AnimeGenerate/actions/runs/40533047036",
+  "platformRun": "https://github.com/paul771127/AnimeGenerate/actions/runs/40533046929",
+  "nativeRoomChecks": 338,
+  "additionalLocalAudits": {
+    "trapCombat": 65,
+    "fixedSpawnCases": 180,
+    "environment": "actual Battle sources with lightweight Unity contracts on .NET 10"
+  },
+  "jobs": {
+    "check-license": {
+      "id": 122291194855,
+      "conclusion": "success"
+    },
+    "android": {
+      "id": 122291255538,
+      "conclusion": "success"
+    },
+    "ios-export": {
+      "id": 122291255927,
+      "conclusion": "success"
+    },
+    "ios-ipa": {
+      "id": 122299961628,
+      "conclusion": null
+    },
+    "publish-apk": {
+      "id": 122301801546,
+      "conclusion": "success"
+    }
+  },
+  "messageFormatChanged": false
+}
