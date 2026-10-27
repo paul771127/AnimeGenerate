@@ -43,14 +43,14 @@ namespace SpellDuel
             }
             else if(weather==Battle.Weather.Wind)
             {
-                var leaves=Particles("Wind leaves",48,new Vector3(-radius-1,1.5f,0),new Color(.53f,.86f,.3f,.8f),.09f,4,10);
+                var leaves=Particles("Wind leaves",48,new Vector3(-radius-1,1.5f,0),new Color(.53f,.86f,.3f,.8f),.22f,4,10);
                 var shape=leaves.shape;shape.shapeType=ParticleSystemShapeType.Box;shape.scale=new Vector3(.2f,2,radius*2);
                 var vel=leaves.velocityOverLifetime;vel.enabled=true;vel.x=2;vel.y=.05f;
                 var noise=leaves.noise;noise.enabled=true;noise.strength=.35f;noise.frequency=.45f;
                 var spin=leaves.rotationOverLifetime;spin.enabled=true;spin.z=2;
                 var mb=new ArtKit.MB(1);ArtKit.QuadToward(mb,0,new Vector3(-.7f,0,0),new Vector3(0,.25f,.05f),new Vector3(.7f,0,0),new Vector3(0,-.25f,.05f),Vector3.forward);
                 var mesh=mb.Build("Leaf silhouette");art.meshes.Add(mesh);
-                var lr=leaves.GetComponent<ParticleSystemRenderer>();lr.renderMode=ParticleSystemRenderMode.Mesh;lr.mesh=mesh;leaves.Play();
+                var lr=leaves.GetComponent<ParticleSystemRenderer>();lr.renderMode=ParticleSystemRenderMode.Mesh;lr.mesh=mesh;lr.sharedMaterial=SpellFx.BlendMat(SpellFx.TexLeaf);leaves.Play();
             }
             else if(weather==Battle.Weather.Moon)
             {

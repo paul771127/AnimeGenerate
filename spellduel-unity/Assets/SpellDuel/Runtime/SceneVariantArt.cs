@@ -64,6 +64,17 @@ namespace SpellDuel
                 }
                 Put("Shallow luminous water",water,glow);
             }
+            // A continuous low skirt seats the distant silhouettes instead of leaving them
+            // floating beyond the AR arena / editor ground. No collider or gameplay surface.
+            var skirt=new ArtKit.MB(1);
+            for(int i=0;i<64;i++)
+            {
+                float a=i*Mathf.PI/32,b=(i+1)*Mathf.PI/32;
+                Vector3 P(float angle,float r,float y)=>center+new Vector3(Mathf.Cos(angle)*r,y,Mathf.Sin(angle)*r);
+                ArtKit.QuadToward(skirt,0,P(a,radius+.2f,-.035f),P(a,radius+30,-.22f),P(b,radius+30,-.22f),P(b,radius+.2f,-.035f),center+Vector3.up*30);
+            }
+            var ground=Mat("Distant ground",Color.Lerp(tint,new Color(.22f,.25f,.25f),.28f));
+            Put("Outer ground skirt",skirt,ground);
             var rocks=new ArtKit.MB(1);var timbers=new ArtKit.MB(1);var metal=new ArtKit.MB(1);var fabric=new ArtKit.MB(1);var lights=new ArtKit.MB(1);
             void Box(ArtKit.MB mb,Vector3 at,Vector3 size,float yaw=0)=>ArtKit.Box(mb,0,at,size,Quaternion.Euler(0,yaw,0));
             void Pole(ArtKit.MB mb,Vector3 at,float h,float r)=>ArtKit.Lathe(mb,0,at,Quaternion.identity,new[]{0f,h*.4f,h},new[]{r,r*.9f,r*.65f},10,true,true);
@@ -127,7 +138,11 @@ namespace SpellDuel
             // Distant landform and atmosphere provide a different horizon for each variant.
             var far=new ArtKit.MB(1);
             if(theme==0&&variant==1)ArtKit.Lathe(far,0,center+new Vector3(0,0,edge+12),Quaternion.identity,new[]{0f,3f,6f,6.3f},new[]{7f,4.2f,2.3f,2.1f},32,false,false);
-            else if(theme==1)for(int i=0;i<10;i++)Pole(far,center+new Vector3(Mathf.Cos(i)*20,0,Mathf.Sin(i)*20),7,.5f);
+            else if(theme==1)for(int i=0;i<10;i++)
+            {
+                var p=center+new Vector3(Mathf.Cos(i)*20,0,Mathf.Sin(i)*20);Pole(far,p,7,.5f);
+                ArtKit.Lathe(far,0,p+Vector3.up*4,Quaternion.identity,new[]{0f,1f,3f,4.2f},new[]{1.8f,3.4f,2.7f,.3f},12,true,true);
+            }
             else if(theme==4&&variant==2)for(int i=0;i<8;i++)Pole(far,center+new Vector3(-16+i*4,-3,25),2+i%3,2.5f);
             else for(int i=0;i<10;i++)Pole(far,center+new Vector3(Mathf.Cos(i)*22,0,Mathf.Sin(i)*22),theme==2?3:5,1.5f);
             Put("Distant skyline",far,stone);

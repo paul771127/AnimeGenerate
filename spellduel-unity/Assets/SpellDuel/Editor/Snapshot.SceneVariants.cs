@@ -14,7 +14,9 @@ namespace SpellDuel.EditorTools
     for(int v=0;v<3;v++)
     {
      art.Set(v);if(root.GetComponentsInChildren<MeshFilter>(true).Length!=count)throw new Exception("Variant allocated meshes during switch");
-     Shot(cam,root,"scene_"+theme+"_"+v,new Vector3(0,5,-13),new Vector3(0,1,3),1280,800);
+     foreach(var ps in root.GetComponentsInChildren<ParticleSystem>())ps.Simulate(4,true,true);
+     // Keep the camera inside the arena: exterior overview cameras intersect cave roofs.
+     Shot(cam,root,"scene_"+theme+"_"+v,new Vector3(0,2.4f,-2.8f),new Vector3(0,1.4f,6),1280,800);
     }
     UnityEngine.Object.DestroyImmediate(root);
    }
