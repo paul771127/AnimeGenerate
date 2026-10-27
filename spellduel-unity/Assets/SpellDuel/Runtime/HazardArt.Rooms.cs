@@ -35,10 +35,21 @@ namespace SpellDuel
             else if(id.StartsWith("ev_statue"))
             {
                 Pillar(Vector3.zero,.12f,.34f,1);Pillar(new Vector3(0,.12f,0),.74f,.2f);Pillar(new Vector3(0,.86f,0),.12f,.29f,2);
-                v.Glow=Orb(body,"Orb",new Vector3(0,1.15f,0),.14f,color);
+                if(id.EndsWith("dual"))
+                {
+                    v.Glow=new GameObject("Orb").transform;v.Glow.SetParent(body,false);v.Glow.localPosition=new Vector3(0,1.15f,0);
+                    Orb(v.Glow,"Fire",new Vector3(-.1f,0,0),.12f,Battle.ElementColor(1));Orb(v.Glow,"Ice",new Vector3(.1f,0,0),.12f,Battle.ElementColor(2));
+                }
+                else v.Glow=Orb(body,"Orb",new Vector3(0,1.15f,0),.14f,Color.white);
                 v.Halo=new GameObject("Lit seal");v.Halo.transform.SetParent(v.transform,false);Ring(v.Halo.transform,"Element seal",.6f,color);v.Halo.SetActive(false);
             }
-            else if(id.StartsWith("ev_chest") || id.StartsWith("ev_block"))
+            else if(id.StartsWith("ev_block"))
+            {
+                foreach(float x in new[]{-.3f,.3f}){Pillar(new Vector3(x,0,0),.85f,.055f,1);}
+                ArtKit.Box(mb,1,new Vector3(0,.4f,0),new Vector3(.85f,.12f,.13f),Quaternion.Euler(0,0,25));
+                ArtKit.Box(mb,1,new Vector3(0,.4f,.04f),new Vector3(.85f,.12f,.13f),Quaternion.Euler(0,0,-25));
+            }
+            else if(id.StartsWith("ev_chest"))
             {
                 Box(new Vector3(0,.2f,0),new Vector3(.6f,.36f,.42f),1);
                 // Barrel-vault lid, metal straps and an actual lock distinguish it from a box.

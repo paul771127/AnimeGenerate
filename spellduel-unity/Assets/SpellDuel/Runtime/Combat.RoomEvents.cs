@@ -50,6 +50,85 @@ namespace SpellDuel
         /// <summary>實際上場的玩家數（多人版：撐住時間、守護物／護送的血量、圖騰數量、最後的菁英數跟著人數）</summary>
         int PlayersN => 1 + allies.Count;
 
+        // Multiplayer state belongs to this room, not Fighter or the save format.
+        public readonly List<int> evPlayerIds=new List<int>();
+        public int evRuneOwner=-1,evGlintOwner=-1;
+        int evGlintTurn; bool evCoop;
+        readonly List<Fighter> evLinked=new List<Fighter>();
+        readonly List<Fighter> evCores=new List<Fighter>();
+        readonly List<Fighter> evBlocks=new List<Fighter>();
+        float evLinkDeadline=-1,evDualAt=-1;int evDualFirst;
+        bool evLinkSealed;
+        public bool RoomCoop => evCoop;
+        public void SetRoomViewPlayers(string ids,int runeOwner)
+        {
+            evPlayerIds.Clear();foreach(var text in (ids??"").Split(','))if(int.TryParse(text,out int id)&&!evPlayerIds.Contains(id))evPlayerIds.Add(id);
+            evCoop=evPlayerIds.Count>1;evRuneOwner=runeOwner;
+        }
+        public bool RuneVisibleFor(int pid)=>!evCoop||evPhase!=0||evRuneOwner<0||evRuneOwner==pid;
+        public static bool IsEventOrb(int index)=>index>=3 && index<6;
+        public bool EventLitByTeam(Vector3 point,float radius)
+        {foreach(var pl in Players())if(pl.Alive && FlatDistance(point,pl.Feet)<=radius)return true;return false;}
+        public static string SplitClue(string text,int slot,int count)
+        {
+            if(string.IsNullOrEmpty(text)||count<=1)return text??"";
+            slot=Mathf.Clamp(slot,0,count-1);int from=text.Length*slot/count,to=text.Length*(slot+1)/count;
+            return text.Substring(from,to-from);
+        }
+        public string RoomTextFor(int pid)
+        {
+            if(!evCoop)return evText;
+            if(roomEvent=="chant" && evPhase==1)
+            {
+                int slot=evPlayerIds.IndexOf(pid);if(slot<0)return "等待隊友分享線索";
+                return $"🗣 線索 {slot+1}/{evPlayerIds.Count}：{SplitClue(evRiddle,slot,evPlayerIds.Count)}"+(evFails>0?$"（提示片段：{SplitClue(evHint,slot,evPlayerIds.Count)}）":"")+"　請互相說出線索，任何人都能作答";
+            }
+            if(roomEvent=="runes" && evPhase==0)return "👁 輪流看自己的符文，請把亮起順序告訴隊友";
+            return evText;
+        }
+        void ResetRoomCoop()
+        {
+            evPlayerIds.Clear();evLinked.Clear();evCores.Clear();evBlocks.Clear();
+            evLinkDeadline=-1;evLinkSealed=false;evDualAt=-1;evDualFirst=0;evGlintTurn=0;evRuneOwner=evGlintOwner=-1;evCoop=false;
+        }
+        void BeginRoomCoop()
+        {
+            ResetRoomCoop();evPlayerIds.Add(player.pid>=0?player.pid:0);
+            foreach(var pl in allies)if(pl.pid>=0 && !evPlayerIds.Contains(pl.pid))evPlayerIds.Add(pl.pid);
+            evPlayerIds.Sort();evCoop=evPlayerIds.Count>1;
+        }
+        // Retain references even after the ordinary death cleanup removes them from collections.
+        // A failed window creates fresh actors/IDs through the existing spawn/sync path.
+        bool LinkedGroupReady()
+        {
+            if(!evCoop)return true;
+            if(evLinkSealed)return true;
+            int dead=0;foreach(var f in evLinked)if(!f.Alive)dead++;
+            if(dead==0)return false;
+            if(evLinkDeadline<0)evLinkDeadline=now+5;
+            if(now>evLinkDeadline)
+            {
+                for(int i=0;i<evLinked.Count;i++)
+                {
+                    var old=evLinked[i];if(old.Alive)continue;
+                    Fighter fresh;
+                    if(roomEvent=="totems")
+                    {
+                        fresh=SpawnNpc(old.npcId,old.name,"priest",1,false,PI("hp",260),0,old.Feet);fresh.rooted=true;fresh.bodyRadius=old.bodyRadius;
+                    }
+                    else
+                    {
+                        fresh=SpawnMinion(old.Feet,0,old.minionKind,HpMul*1.5f,DmgMul,SpeedMul);MakeElite(fresh);fresh.huntTarget=true;fresh.name=old.name;
+                    }
+                    evLinked[i]=fresh;
+                }
+                evHunt=roomEvent=="hunt"?evLinked[0]:evHunt;evLinkDeadline=-1;evFails++;
+                Emit("evinfo",player.Feet,new Color(1,.65f,.25f),"超過 5 秒，倒下的連結目標復活了！");return false;
+            }
+            if(dead==evLinked.Count){evLinkSealed=true;return true;}
+            return false;
+        }
+
         public const float EvStepRadius = 0.45f, EvOrbRadius = 0.6f, EvChargeTime = 12f, EvRespawnDelay = 3f;
         public static readonly string[] ElementNames = { "", "火", "冰", "雷" };
 
@@ -78,6 +157,7 @@ namespace SpellDuel
         {
             CleanupRoomEvent();
             if (!IsRoomEvent(kind)) return;
+            BeginRoomCoop();
             roomEvent = kind; evParam = param; evPhase = 1; evFails = 0; evPenaltyMul = 1f;
             evPts.Clear(); evState.Clear(); evQueue.Clear(); evRespawn.Clear(); evOnPoint.Clear();
             evText = ""; evRiddle = evHint = null; evCharge = 0; evWalker = evHunt = null;
@@ -88,7 +168,13 @@ namespace SpellDuel
                 case "defend":
                 {
                     var core = SpawnNpc("ev_core", P("name", "守護之鐘"), "priest", 0, true, PI("hp", 900) * PlayersN, 0, c);   // 多人：血量 ×人數
-                    core.rooted = true; core.lure = 5f; core.bodyRadius = 0.5f;
+                    core.rooted = true; core.lure = 5f; core.bodyRadius = 0.5f;evCores.Add(core);
+                    if(evCoop)
+                    {
+                        core.head=Ring(r,90)+Vector3.up*1.6f;
+                        var other=SpawnNpc("ev_core_1",P("name","守護之鐘")+"・西", "priest",0,true,PI("hp",900)*PlayersN,0,Ring(r,270));
+                        other.rooted=true;other.lure=5;other.bodyRadius=.5f;evCores.Add(other);
+                    }
                     break;
                 }
                 case "survive":
@@ -105,6 +191,15 @@ namespace SpellDuel
                     for (int i = 0; i <= 16; i++) path.Add(Ring(rr, start + 240f * i / 16f));
                     evWalker = SpawnNpc("ev_walker", P("name", "受傷的旅人"), P("look", "priest"), 0, true, PI("hp", 500) * PlayersN, 0, path[0]);   // 多人：血量 ×人數
                     evWalker.walkPath = path; evWalker.walkIdx = 1; evWalker.lure = 2f;
+                    if(evCoop)
+                    {
+                        for(int bi=0;bi<2;bi++)
+                        {
+                            int step=4+bi*6+rng.Next(2);
+                            var block=SpawnNpc("ev_block_"+bi,"路障","priest",1,false,PI("barrier_hp",180)*PlayersN,0,path[step]);
+                            block.rooted=true;block.bodyRadius=.45f;evBlocks.Add(block);
+                        }
+                    }
                     evPts.Add(path[path.Count - 1]); evState.Add(0);   // 出口
                     for (int i = 0; i < EvCap(); i++) evQueue.Add(waveStartAt + 1f + i * 0.8f);
                     break;
@@ -116,6 +211,12 @@ namespace SpellDuel
                     var at = edgePointAt != null ? edgePointAt(180f) : RandomInsidePoint(Ring(ArenaInner(), 180f));
                     evHunt = SpawnMinion(at, 0, k, HpMul * 1.5f, DmgMul, SpeedMul);
                     MakeElite(evHunt); evHunt.huntTarget = true; evHunt.name = "目標・" + evHunt.name;
+                    evLinked.Add(evHunt);
+                    if(evCoop)for(int i=1;i<PlayersN;i++)
+                    {
+                        var target=SpawnMinion(Ring(ArenaInner()*.7f,180+360f*i/PlayersN),0,k,HpMul*1.5f,DmgMul,SpeedMul);
+                        MakeElite(target);target.huntTarget=true;target.name="目標・"+target.name;evLinked.Add(target);
+                    }
                     for (int i = 0; i < EvCap(); i++) evQueue.Add(waveStartAt + 0.5f + i * 0.4f);
                     evNextSummon = waveStartAt + 45f;
                     break;
@@ -128,7 +229,7 @@ namespace SpellDuel
                     for (int i = 0; i < n; i++)
                     {
                         var t = SpawnNpc("ev_totem_" + i, "封印圖騰", "priest", 1, false, PI("hp", 260), 0, Ring(rr, 360f * i / n + 30f));
-                        t.rooted = true; t.bodyRadius = 0.45f;
+                        t.rooted = true; t.bodyRadius = 0.45f;evLinked.Add(t);
                     }
                     evNextTick = waveStartAt + 2f;
                     break;
@@ -162,6 +263,12 @@ namespace SpellDuel
                         evPts.Add(st.Feet); evState.Add(0);
                     }
                     for (int i = 0; i < 3; i++) { evPts.Add(Ring(r * 0.8f, 120f * i + 60f)); evState.Add(i + 1); }   // 屬性球：1 火、2 冰、3 雷
+                    if(evCoop)
+                    {
+                        var dual=SpawnNpc("ev_statue_dual","火冰雙屬性之像","priest",1,false,999999,0,c);
+                        dual.rooted=true;dual.damageTakenMul=0;dual.evElement=4;dual.bodyRadius=.45f;
+                        evPts.Add(dual.Feet);evState.Add(0);
+                    }
                     break;
                 }
                 case "mimic":
@@ -194,7 +301,7 @@ namespace SpellDuel
             if (roomEvent == null && evPts.Count == 0) return;
             npcs.RemoveAll(n => n.npcId != null && n.npcId.StartsWith("ev_"));
             roomEvent = null; evPts.Clear(); evState.Clear(); evQueue.Clear(); evRespawn.Clear(); evText = ""; evPhase = 0;
-            evWalker = evHunt = null; evCharge = 0;
+            evWalker = evHunt = null; evCharge = 0;ResetRoomCoop();
         }
 
         /// <summary>過關：剩下的怪消失、拿掉道具、照一般地點的流程結束</summary>
@@ -222,7 +329,8 @@ namespace SpellDuel
                 case "defend":
                 {
                     var core = npcs.Find(n => n.npcId == "ev_core");
-                    if (core == null || !core.Alive) { FailStage(P("fail", "守護目標被打壞了…")); return true; }
+                    bool lost=core==null||!core.Alive;foreach(var guard in evCores)if(!guard.Alive)lost=true;
+                    if (lost) { FailStage(P("fail", "守護目標被打壞了…")); return true; }
                     handled = false;   // 出怪、過關照一般流程（清完這一波）
                     break;
                 }
@@ -239,12 +347,13 @@ namespace SpellDuel
                     if (evWalker.walkPath == null) { FinishRoomEvent($"{evWalker.name}平安抵達了！"); return true; }
                     break;
                 case "hunt":
-                    if (evHunt == null || !evHunt.Alive) { FinishRoomEvent("目標倒下了！"); return true; }
+                    if (evCoop ? LinkedGroupReady() : evHunt == null || !evHunt.Alive) { FinishRoomEvent("目標倒下了！"); return true; }
                     RefillEv(EvRespawnDelay);
                     if (now >= evNextSummon) { evNextSummon = now + 30f; for (int i = 0; i < 3; i++) evQueue.Add(now + i * 0.3f); Emit("evinfo", evHunt.Feet, new Color(1f, 0.5f, 0.3f), $"{evHunt.name}叫來了援軍！"); }
                     break;
                 case "totems":
                 {
+                    bool linkedReady=!evCoop || LinkedGroupReady();
                     int alive = 0;
                     foreach (var n in npcs) if (n.Alive && n.npcId != null && n.npcId.StartsWith("ev_totem")) alive++;
                     if (alive > 0 && now >= evNextTick)
@@ -255,7 +364,7 @@ namespace SpellDuel
                             if (n.Alive && n.npcId != null && n.npcId.StartsWith("ev_totem") && cnt < EvCap() + 1)
                             { var nm = EvSpawn(n.Feet + Fighter.Flat(ArenaCenter() - n.Feet) * 0.8f); if (nm != null) { cnt++; Emit("evinfo", n.Feet, new Color(0.7f, 0.4f, 1f), null); } }
                     }
-                    if (alive == 0 && !AnyMinionAlive() && evQueue.Count == 0) { FinishRoomEvent("封印解除了！"); return true; }
+                    if (linkedReady && alive == 0 && !AnyMinionAlive() && evQueue.Count == 0) { FinishRoomEvent("封印解除了！"); return true; }
                     break;
                 }
                 case "runes": TickRunes(); break;
@@ -314,6 +423,7 @@ namespace SpellDuel
             int len = Mathf.Clamp(PI("seq", 3) + (evFails >= 2 ? 0 : 0), 2, 7);
             evSeq = new int[len];
             for (int i = 0; i < len; i++) { int k; do k = rng.Next(evPts.Count); while (i > 0 && k == evSeq[i - 1]); evSeq[i] = k; }
+            evRuneOwner=-1;
             evSeqPos = 0; evPhase = 0; evPhaseAt = now + 1.2f;
             for (int i = 0; i < evState.Count; i++) evState[i] = 0;
             evOnPoint.Clear();
@@ -329,6 +439,7 @@ namespace SpellDuel
                 int step = Mathf.FloorToInt((now - evPhaseAt) / Show);
                 for (int i = 0; i < evState.Count; i++) evState[i] = 0;
                 if (now < evPhaseAt) return;
+                evRuneOwner=evCoop&&step>=0&&step<evSeq.Length?evPlayerIds[step%evPlayerIds.Count]:-1;
                 if (step < evSeq.Length) { if ((now - evPhaseAt) % Show < Show * 0.75f) evState[evSeq[step]] = 1; return; }
                 evPhase = 1; evSeqPos = 0;
                 foreach (var pl in Players()) evOnPoint[pl] = PointUnder(pl);   // 開始時本來就站在符文上的不算
@@ -397,12 +508,13 @@ namespace SpellDuel
         void TickElements()
         {
             if (evCharge != 0 && now > evChargeUntil) { evCharge = 0; Emit("evinfo", player.Feet, Color.white, "屬性加持消失了"); }
+            if(evDualFirst!=0 && now-evDualAt>3){evDualFirst=0;evDualAt=-1;}
             if (evPhase == 2) { TickPenaltyOnly(); return; }
             // 屬性球：有人碰到 → 全隊下一擊帶那個屬性（12 秒）
             foreach (var pl in Players())
             {
                 if (!pl.Alive) continue;
-                for (int i = 3; i < evPts.Count; i++)
+                for (int i = 3; i < Mathf.Min(6,evPts.Count); i++)
                     if (FlatDistance(pl.Feet, evPts[i]) <= EvOrbRadius && (evCharge != evState[i] || now > evChargeUntil - EvChargeTime + 1f))
                     { evCharge = evState[i]; evChargeUntil = now + EvChargeTime; Emit("evcharge", evPts[i], ElementColor(evCharge), $"{ElementNames[evCharge]}之力！下一擊帶{ElementNames[evCharge]}屬性"); }
             }
@@ -418,6 +530,7 @@ namespace SpellDuel
             {
                 evNextTick = now + 3.5f + (float)rng.NextDouble() * 2f;
                 var real = npcs.Find(n => n.evReal && n.Alive);
+                evGlintOwner=evCoop?evPlayerIds[evGlintTurn++%evPlayerIds.Count]:-1;
                 if (real != null) Emit("evglint", real.Feet, new Color(1f, 0.9f, 0.5f), null);
             }
         }
@@ -435,13 +548,22 @@ namespace SpellDuel
                 int idx = evPts.FindIndex(p => FlatDistance(p, target.Feet) < 0.1f);
                 if (idx >= 0 && evState[idx] == 1) return true;   // 已經點亮
                 if (e == 0) { Emit("evinfo", target.Chest, Color.white, "沒有屬性：先碰場邊的屬性球，或用火、冰、雷的招式"); return true; }
+                if(target.evElement==4)
+                {
+                    if(e!=1 && e!=2){evCharge=0;EvPenalty("雙屬性之像需要火與冰！");return true;}
+                    evCharge=0;
+                    if(evDualFirst==0 || now-evDualAt>3){evDualFirst=e;evDualAt=now;Emit("evinfo",target.Feet,ElementColor(e),"第一屬性已就位，3 秒內補上另一屬性！");return true;}
+                    if(evDualFirst==e)return true;
+                    evDualFirst=0;evDualAt=-1;if(idx>=0)evState[idx]=1;
+                    Emit("evok",target.Feet,Color.white,"火與冰共鳴了！");
+                    if(AllStatuesLit())FinishRoomEvent("所有雕像都亮了！");return true;
+                }
                 if (e == target.evElement)
                 {
                     if (idx >= 0) evState[idx] = 1;
                     evCharge = 0;
                     Emit("evok", target.Feet, ElementColor(e), $"{target.name}亮起來了！");
-                    bool all = true; for (int i = 0; i < 3 && i < evState.Count; i++) if (evState[i] != 1) all = false;
-                    if (all) FinishRoomEvent("三座雕像都亮了！");
+                    if (AllStatuesLit()) FinishRoomEvent("三座雕像都亮了！");
                 }
                 else { evCharge = 0; EvPenalty($"{ElementNames[e]}屬性打錯了！{target.name}要的是{ElementNames[target.evElement]}"); }
                 return true;
@@ -459,6 +581,9 @@ namespace SpellDuel
             }
             return false;
         }
+
+        bool AllStatuesLit()
+        {for(int i=0;i<evState.Count;i++)if(!IsEventOrb(i)&&evState[i]!=1)return false;return true;}
 
         // ------------------------------------------------------------ 崩塌
         void BuildCollapseCells()
@@ -494,6 +619,17 @@ namespace SpellDuel
                         if (evState[k] != 0 || FlatDistance(evPts[k], c) < 1.3f) continue;
                         float d = FlatDistance(evPts[k], c); if (d > bestD) { bestD = d; best = k; }
                     }
+                    if(evCoop)
+                    {
+                        int clustered=-1,maxPlayers=1;float near=float.MaxValue;
+                        for(int k=0;k<evPts.Count;k++)
+                        {
+                            if(evState[k]!=0)continue;int n=0;float d=0;
+                            foreach(var pl in Players())if(pl.Alive){float dist=FlatDistance(evPts[k],pl.Feet);if(dist<1.3f){n++;d+=dist;}}
+                            if(n>maxPlayers || (n==maxPlayers && n>=2 && d<near)){clustered=k;maxPlayers=n;near=d;}
+                        }
+                        if(clustered>=0)best=clustered;
+                    }
                     if (best >= 0) { evState[best] = 1; evPhaseAt = now + 2f; Emit("evinfo", evPts[best], new Color(1f, 0.4f, 0.2f), null); }
                 }
             }
@@ -519,6 +655,7 @@ namespace SpellDuel
         void EscortWalk(Fighter n, float dt)
         {
             if (n.walkPath == null || n.walkIdx >= n.walkPath.Count) { n.walkPath = null; return; }
+            if(evCoop)foreach(var block in evBlocks)if(block.Alive && FlatDistance(n.Feet,block.Feet)<.75f)return;
             // 有怪貼近（1.3m 內）就停下來
             foreach (var m in minions) if (m.Alive && FlatDistance(m.Feet, n.Feet) < 1.3f) return;
             var goal = n.walkPath[n.walkIdx];
@@ -534,7 +671,7 @@ namespace SpellDuel
         {
             switch (roomEvent)
             {
-                case "defend": { var core = npcs.Find(n => n.npcId == "ev_core"); evText = core != null ? $"🛡 守住{core.name}！（{Mathf.CeilToInt(core.hp)}/{core.maxHp}）清完這一波就過關" : ""; break; }
+                case "defend": { if(evCoop){evText="🛡 分頭守住兩座鐘！任一座破壞都會失敗";break;} var core = npcs.Find(n => n.npcId == "ev_core"); evText = core != null ? $"🛡 守住{core.name}！（{Mathf.CeilToInt(core.hp)}/{core.maxHp}）清完這一波就過關" : ""; break; }
                 case "survive": evText = $"⏳ 撐住！剩 {Mathf.Max(0f, evEndAt - now):0} 秒"; break;
                 case "escort": evText = evWalker != null ? $"🚶 護送{evWalker.name}走到出口（{Mathf.CeilToInt(evWalker.hp)}/{evWalker.maxHp}）：有怪貼近他就會停下來" : ""; break;
                 case "hunt": evText = evHunt != null ? $"🎯 斬首：打倒「{evHunt.name}」！其他怪會不斷湧出" : ""; break;
@@ -547,6 +684,9 @@ namespace SpellDuel
                 case "dark": evText = "🌑 一片漆黑…只看得到發光的眼睛，清完這一波就過關"; break;
                 default: evText = ""; break;
             }
+            if(evCoop && (roomEvent=="totems"||roomEvent=="hunt"))evText+="　連結目標須在 5 秒內全部擊倒"+(evLinkDeadline>=0&&!evLinkSealed?$"（剩 {Mathf.Max(0,evLinkDeadline-now):0.0} 秒）":"");
+            if(evCoop && roomEvent=="elements")evText+="　中央雙屬性像：火＋冰須在 3 秒內命中";
+            if(evCoop && roomEvent=="escort")evText+="　前方路障需要隊友破壞";
         }
     }
 }

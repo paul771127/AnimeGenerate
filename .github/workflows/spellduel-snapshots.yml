@@ -13,6 +13,8 @@ on:
       - 'spellduel-unity/Assets/SpellDuel/Runtime/AllyPresentation.cs'
       - 'spellduel-unity/Assets/SpellDuel/Runtime/*Trap*.cs'
       - 'spellduel-unity/Assets/SpellDuel/Runtime/*Nature*.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/*Room*.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Editor/RoomCoopAudit.cs'
       - 'spellduel-unity/Assets/SpellDuel/Runtime/MechanicalArt.cs'
       - 'spellduel-unity/Assets/SpellDuel/Editor/EliteAudit.cs'
       - 'spellduel-unity/Assets/SpellDuel/Editor/EliteCombatAudit.cs'
@@ -74,4 +76,5 @@ jobs:
             spellduel-unity/snapshots/pending_ally_audit.json
             spellduel-unity/snapshots/neck_hair_audit.json
             spellduel-unity/snapshots/nature_audit.json
+            spellduel-unity/snapshots/room_coop_audit.json
           if-no-files-found: error

@@ -18,6 +18,7 @@ namespace SpellDuel
         readonly Dictionary<Fighter, GameObject> darkEyes = new Dictionary<Fighter, GameObject>();
         string evViewKind; int evViewCount = -1;
         float nextRevSend;
+        readonly Dictionary<string,int> roomElementLooks=new Dictionary<string,int>();
 
         /// <summary>房主：開打這個地點時，特殊地點要開始</summary>
         void StartRoomEventIfAny()
@@ -41,14 +42,18 @@ namespace SpellDuel
             go.transform.position = WorldFrame.FromWorld(n.Feet);
             int idx=battle.evPts.FindIndex(p=>Battle.FlatDistance(p,n.Feet)<.1f);
             bool lit=idx>=0 && idx<battle.evState.Count && battle.evState[idx]==1;
-            go.GetComponent<RoomPropArt>().Tick(n.hp,n.maxHp,lit,Time.time);
+            var prop=go.GetComponent<RoomPropArt>();
+            if(n.npcId.StartsWith("ev_statue"))prop.SetElement(RoomElementLook(n.npcId));
+            prop.Tick(n.hp,n.maxHp,lit,Time.time);
             return true;
         }
 
+        int RoomElementLook(string id)
+        {if(roomElementLooks.TryGetValue(id,out var element))return element;return battle.npcs.Find(n=>n.npcId==id)?.evElement??0;}
         GameObject MakeProp(string id)
         {
             var n=battle.npcs.Find(x=>x.npcId==id);
-            return HazardArt.RoomProp(id,Battle.ElementColor(n!=null?n.evElement:0)).gameObject;
+            var prop=HazardArt.RoomProp(id,Color.white);if(id.StartsWith("ev_statue"))prop.SetElement(RoomElementLook(id));return prop.gameObject;
         }
 
         void CleanupProps()
@@ -73,11 +78,12 @@ namespace SpellDuel
                 var go = evPointGo[i]; if (!go) continue;
                 int st = i < battle.evState.Count ? battle.evState[i] : 0;
                 var art=go.GetComponent<RoomPointArt>();
+                if(kind=="runes" && st==1 && !battle.RuneVisibleFor(MyPid))st=0;
                 if(art)art.Tick(st,Time.time);
                 switch(kind)
                 {
                     case "elements":
-                        if(i>=3)go.transform.position=WorldFrame.FromWorld(battle.evPts[i]+Vector3.up*(.9f+.08f*Mathf.Sin(Time.time*2.5f+i)));
+                        if(Battle.IsEventOrb(i))go.transform.position=WorldFrame.FromWorld(battle.evPts[i]+Vector3.up*(.9f+.08f*Mathf.Sin(Time.time*2.5f+i)));
                         else go.SetActive(st==1);
                         break;
                     case "collapse":go.SetActive(st>0);break;
@@ -96,7 +102,7 @@ namespace SpellDuel
             {
                 var p = battle.evPts[i]; GameObject go;
                 string type=evViewKind;
-                if(type=="elements")type=i<3?"seal":"orb";
+                if(type=="elements")type=Battle.IsEventOrb(i)?"orb":"seal";
                 if(type=="runes"||type=="orb"||type=="seal"||type=="collapse"||type=="chant"||type=="escort")
                 {
                     Color color=type=="orb"?Battle.ElementColor(battle.evState[i]):type=="escort"?new Color(.3f,1,.5f):new Color(.65f,.4f,1,.8f);
@@ -116,7 +122,7 @@ namespace SpellDuel
             foreach (var kv in minionGo)
             {
                 var m = kv.Key; var rig = kv.Value; if (!rig) continue;
-                bool far = on && m.Alive && Battle.FlatDistance(m.Feet, Me.Feet) > DarkSight;
+                bool far = on && m.Alive && (battle.RoomCoop?!battle.EventLitByTeam(m.Feet,DarkSight):Battle.FlatDistance(m.Feet, Me.Feet)>DarkSight);
                 foreach (var r in rig.GetComponentsInChildren<Renderer>()) r.enabled = !far;
                 if (far)
                 {
@@ -141,7 +147,7 @@ namespace SpellDuel
             foreach (var g in evPointGo) if (g) Destroy(g);
             evPointGo.Clear(); evViewKind = null; evViewCount = -1;
             foreach (var g in propGo.Values) if (g) Destroy(g);
-            propGo.Clear();
+            propGo.Clear();roomElementLooks.Clear();
             foreach (var g in darkEyes.Values) if (g) Destroy(g);
             darkEyes.Clear();
         }
@@ -152,7 +158,7 @@ namespace SpellDuel
             if (battle == null || phase != Phase.Fighting || string.IsNullOrEmpty(battle.roomEvent)) return;
             if (battle.roomEvent == "dark") { GUI.color = new Color(0f, 0f, 0.02f, 0.45f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
             int fs = Mathf.RoundToInt(H * 0.022f);
-            if (!string.IsNullOrEmpty(battle.evText)) UiKit.Pill(H * 0.2f, battle.evText, fs, new Color(1f, 0.93f, 0.7f), W * 0.92f, 0.6f);
+            if (!string.IsNullOrEmpty(battle.evText)) UiKit.Pill(H * 0.2f, battle.RoomTextFor(MyPid), fs, new Color(1f, 0.93f, 0.7f), W * 0.92f, 0.6f);
             // 圖騰、守護物、護送的人：頭上的血條
             foreach (var n in battle.npcs)
             {
@@ -166,10 +172,12 @@ namespace SpellDuel
 
         // ---------------------------------------------------------------- 事件（Battle.Emit）
         /// <summary>OnBattleEvent 叫：ev 開頭的事件；房主順便送給隊友</summary>
-        bool OnRoomEventFx(string kind, Vector3 at, Color c, string text)
+        bool OnRoomEventFx(string kind, Vector3 at, Color c, string text, int viewer=-1)
         {
             if (!kind.StartsWith("ev")) return false;
-            if (coop && NetIsHost) NetSend?.Invoke(new Msg { t = "reve", k = kind, a = text ?? "", p = at, d = new Vector3(c.r, c.g, c.b) });
+            if(kind=="evglint" && (!coop||NetIsHost))viewer=battle!=null?battle.evGlintOwner:-1;
+            if (coop && NetIsHost) NetSend?.Invoke(new Msg { t = "reve", k = kind, a = text ?? "", p = at, d = new Vector3(c.r, c.g, c.b),id=viewer,ok=viewer>=0 });
+            if(viewer>=0 && viewer!=MyPid)return true;
             if(kind=="evinfo" || kind=="evglint")
                 foreach(var g in propGo.Values)if(g && Vector3.Distance(g.transform.position,WorldFrame.FromWorld(at))<.8f)g.GetComponent<RoomPropArt>().Pulse(Time.time);
             if(kind=="evwrong" && battle!=null && battle.roomEvent=="mimic")MinionRig.SpawnFx(WorldFrame.FromWorld(at));
@@ -216,7 +224,8 @@ namespace SpellDuel
             nextRevSend = Time.time + 0.25f;
             var sb = new System.Text.StringBuilder();
             for (int i = 0; i < battle.evState.Count; i++) { if (i > 0) sb.Append(','); sb.Append(battle.evState[i]); }
-            NetSend?.Invoke(new Msg { t = "rev", k = battle.roomEvent ?? "", e = battle.evPhase, id = battle.evFails, a = battle.evText ?? "", g = sb.ToString(), pts = battle.evPts.ToArray(), ks = new[] { battle.evRiddle ?? "", battle.evHint ?? "" }, dmg = battle.evCharge });
+            var looks=new List<string>();foreach(var n in battle.npcs)if(n.evElement>0)looks.Add(n.npcId+":"+n.evElement);
+            NetSend?.Invoke(new Msg { t = "rev", k = battle.roomEvent ?? "", e = battle.evPhase, id = battle.evFails, a = battle.roomEvent=="chant" && battle.RoomCoop?"請分享各自的線索":battle.evText ?? "", g = sb.ToString(), pts = battle.evPts.ToArray(), ks = new[] { battle.evRiddle ?? "", battle.evHint ?? "", string.Join(",",battle.evPlayerIds),battle.evRuneOwner.ToString(),string.Join(",",looks) }, dmg = battle.evCharge });
         }
         bool revWasActive;
 
@@ -232,10 +241,13 @@ namespace SpellDuel
                     battle.evState.Clear();
                     if (!string.IsNullOrEmpty(m.g)) foreach (var x in m.g.Split(',')) battle.evState.Add(int.TryParse(x, out var v) ? v : 0);
                     if (m.ks != null && m.ks.Length >= 2) { battle.evRiddle = m.ks[0]; battle.evHint = m.ks[1]; }
+                    battle.SetRoomViewPlayers(m.ks!=null && m.ks.Length>2?m.ks[2]:"",m.ks!=null && m.ks.Length>3 && int.TryParse(m.ks[3],out int owner)?owner:-1);
+                    roomElementLooks.Clear();
+                    if(m.ks!=null && m.ks.Length>4)foreach(var pair in m.ks[4].Split(',')){var bits=pair.Split(':');if(bits.Length==2 && int.TryParse(bits[1],out int element))roomElementLooks[bits[0]]=element;}
                     return true;
                 case "reve":
                     if (NetIsHost) return true;
-                    OnRoomEventFx(m.k ?? "", m.p, new Color(m.d.x, m.d.y, m.d.z), string.IsNullOrEmpty(m.a) ? null : m.a);
+                    OnRoomEventFx(m.k ?? "", m.p, new Color(m.d.x, m.d.y, m.d.z), string.IsNullOrEmpty(m.a) ? null : m.a,m.ok?m.id:-1);
                     return true;
                 case "evsay":
                     if (NetIsHost && battle != null) battle.EvChant(m.k);
