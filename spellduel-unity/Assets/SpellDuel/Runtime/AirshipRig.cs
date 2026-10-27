@@ -12,11 +12,11 @@ namespace SpellDuel
   {
    ship=SkyArt.Node(transform,"Flying ship visual",Vector3.zero);
    var red=new Color(.79f,.18f,.29f);var wood=new Color(.53f,.3f,.2f);
-   SkyArt.Oval(ship,"Aerodynamic hull",new Vector3(0,0,0),new Vector3(5.8f,2.2f,9),wood,true).localRotation=Quaternion.Euler(90,0,0);
+   SkyArt.Oval(ship,"Aerodynamic hull",new Vector3(0,0,0),new Vector3(5.8f,9,2.2f),wood,true).localRotation=Quaternion.Euler(90,0,0);
    SkyArt.Oval(ship,"Ivory deck",new Vector3(0,.8f,0),new Vector3(5.4f,.3f,8.2f),SkyArt.Cream);
    SkyArt.Oval(ship,"Red white air envelope",new Vector3(0,5,-1),new Vector3(6.4f,4.4f,10),red);
    for(int i=0;i<7;i++)
-   {var ring=SkyArt.Ring(ship,"Balloon reinforcement",1,SkyArt.Cream,.08f);ring.transform.localPosition=new Vector3(0,5,-4+i);ring.transform.localRotation=Quaternion.Euler(90,0,0);ring.transform.localScale=new Vector3(2.8f,1,2.05f);}
+   {var ring=SkyArt.Ring(ship,"Balloon reinforcement",1,SkyArt.Cream,.08f);ring.transform.localPosition=new Vector3(0,5,-4+i);ring.transform.localRotation=Quaternion.Euler(90,0,0);float section=Mathf.Sqrt(1-Mathf.Pow((-3+i)/5f,2));ring.transform.localScale=new Vector3(3.22f*section,1,2.22f*section);}
    for(int s=-1;s<=1;s+=2)
    {for(int j=0;j<3;j++)SkyArt.Rod(ship,"Suspension cable",new Vector3(s*2.1f,.8f,-3+j*2.8f),new Vector3(s*2.2f,4,-3+j*2.8f),.06f,SkyArt.Gold);
     SkyArt.Rod(ship,"Deck safety rail",new Vector3(s*2.45f,1.5f,-3),new Vector3(s*2.45f,1.5f,3),.075f,SkyArt.Gold);
