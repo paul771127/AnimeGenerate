@@ -5,7 +5,7 @@ namespace SpellDuel
  public sealed class AirshipRig : MonoBehaviour
  {
   Transform ship; readonly Transform[] doors=new Transform[12],barrels=new Transform[12],pirates=new Transform[3];
-  readonly float[] drops={10,10,10}; readonly Vector3[] dropStart=new Vector3[3];
+  readonly float[] drops={10,10,10}; readonly Vector3[] dropStart=new Vector3[3],landPoints=new Vector3[3];readonly bool[] hasLanding=new bool[3];readonly LineRenderer[] landMarks=new LineRenderer[3];
   ParticleSystem smoke,flash; int phase=1,side=1,move=-1;float gap,warningAge=10,warningDuration=1,fireAge=10,swoop,dying=-1,clock;
   public static AirshipRig Create(){var r=new GameObject("Airship Zhuifeng").AddComponent<AirshipRig>();r.Build();return r;}
   void Build()
@@ -31,7 +31,7 @@ namespace SpellDuel
     barrels[i]=SkyArt.Node(ship,"Recoil barrel "+i,new Vector3(x,y,3.7f));SkyArt.Rod(barrels[i],"Brass cannon",Vector3.zero,Vector3.forward*.7f,.32f,SkyArt.Gold);SkyArt.Oval(barrels[i],"Dark bore",new Vector3(0,0,.71f),new Vector3(.22f,.22f,.03f),SkyArt.Ink);
     doors[i]=SkyArt.Node(ship,"Hinged gun port "+i,new Vector3(x,y+.28f,4.05f));SkyArt.Oval(doors[i],"Port shield",new Vector3(0,-.22f,0),new Vector3(.58f,.48f,.10f),red);}
    for(int i=0;i<3;i++)
-   {pirates[i]=SkyArt.Node(ship,"Deck pirate "+i,new Vector3((i-1)*1.4f,1.2f,1.8f));dropStart[i]=pirates[i].localPosition;SkyArt.Oval(pirates[i],"Coat",Vector3.zero,new Vector3(.35f,.55f,.3f),red);SkyArt.Oval(pirates[i],"Head",Vector3.up*.42f,Vector3.one*.25f,SkyArt.Cream);SkyArt.Oval(pirates[i],"Hat",Vector3.up*.54f,new Vector3(.4f,.1f,.3f),SkyArt.Ink);}
+   {pirates[i]=SkyArt.Node(ship,"Deck pirate "+i,new Vector3((i-1)*1.4f,1.2f,1.8f));dropStart[i]=pirates[i].localPosition;landMarks[i]=SkyArt.Ring(ship,"Pirate landing warning",.35f,new Color(1,.65f,.2f,.85f));landMarks[i].useWorldSpace=true;landMarks[i].gameObject.SetActive(false);SkyArt.Oval(pirates[i],"Coat",Vector3.zero,new Vector3(.35f,.55f,.3f),red);SkyArt.Oval(pirates[i],"Head",Vector3.up*.42f,Vector3.one*.25f,SkyArt.Cream);SkyArt.Oval(pirates[i],"Hat",Vector3.up*.54f,new Vector3(.4f,.1f,.3f),SkyArt.Ink);}
    smoke=SpellFx.NewPS(ship,"Phase two stack smoke",SpellFx.BlendMat(SpellFx.TexSoft),60,false);smoke.transform.localPosition=new Vector3(0,2,-2);var sm=smoke.main;sm.startColor=new Color(.2f,.2f,.27f,.4f);sm.startSize=1.2f;sm.startLifetime=2;sm.startSpeed=.6f;var se=smoke.emission;se.rateOverTime=0;
    flash=SpellFx.NewPS(ship,"Cannon sparks",SpellFx.BlendMat(SpellFx.TexSoft),48,false);var fm=flash.main;fm.startLifetime=.25f;fm.startSize=.16f;fm.startSpeed=1.3f;var fe=flash.emission;fe.enabled=false;
   }
@@ -46,14 +46,16 @@ namespace SpellDuel
    for(int i=0;i<12;i++)if(Selected(i,move)){var ep=new ParticleSystem.EmitParams {position=barrels[i].localPosition+Vector3.forward*.75f,startColor=i<6?new Color(1,.5f,.1f):new Color(.25f,.6f,1)};flash.Emit(ep,3);}
   }
   public void SetSwoop(float t){swoop=Mathf.Clamp01(t);Pose();}
-  public void DropPirate(int value){int i=value<0?0:value>0?2:1;drops[i]=0;pirates[i].gameObject.SetActive(true);}
+  /// <summary>Optional exact unswayed world landing point from the gameplay scheduler; set before DropPirate.</summary>
+  public void SetPirateLanding(int side,Vector3 point){int i=side<0?0:side>0?2:1;landPoints[i]=point;hasLanding[i]=true;}
+  public void DropPirate(int value){int i=value<0?0:value>0?2:1;if(!hasLanding[i])landPoints[i]=CarpetScene.Active?CarpetScene.Active.transform.position+CarpetScene.Active.transform.right*(i-1)*.5f:ship.TransformPoint(new Vector3((i-1)*.8f,-2,9));drops[i]=0;pirates[i].gameObject.SetActive(true);}
   public void SetDying(float t){dying=Mathf.Clamp01(t);Pose();if(t>0&&!smoke.isPlaying)smoke.Play();var e=smoke.emission;e.rateOverTime=40;}
   void Pose(){ship.localPosition=new Vector3(0,-2*swoop,8*swoop)+(dying>=0?new Vector3(0,-dying*9,-dying*5):Vector3.zero);ship.localRotation=Quaternion.Euler(dying>=0?dying*65:Mathf.Sin(clock)*1.5f,0,dying>=0?dying*25:Mathf.Sin(clock*.7f));ship.localScale=Vector3.one*(dying>=0?Mathf.Lerp(1,.7f,dying):1);}
   public void Sample(float dt)
   {
    clock+=dt;warningAge+=dt;fireAge+=dt;Pose();float w=Mathf.Clamp01(warningAge/warningDuration);
    for(int i=0;i<12;i++){bool selected=move>=0&&Selected(i,move);float open=phase==2?1:selected?w:0;doors[i].localRotation=Quaternion.Euler(-105*open,0,0);var p=barrels[i].localPosition;p.z=3.7f-(selected&&fireAge<.3f?.22f*Mathf.Sin(fireAge/.3f*Mathf.PI):0);barrels[i].localPosition=p;}
-   for(int i=0;i<3;i++){drops[i]+=dt;if(drops[i]<1){float t=drops[i];pirates[i].localPosition=Vector3.Lerp(dropStart[i],new Vector3((i-1)*.8f,-2,9),t)+Vector3.up*Mathf.Sin(t*Mathf.PI)*2;pirates[i].localRotation=Quaternion.Euler(t*25,0,0);}else{pirates[i].localPosition=dropStart[i];pirates[i].localRotation=Quaternion.identity;}}
+   for(int i=0;i<3;i++){drops[i]+=dt;landMarks[i].gameObject.SetActive(drops[i]<1&&dying<0);if(drops[i]<1){float t=drops[i];var dest=CarpetScene.Active?CarpetScene.Active.SurfacePoint(landPoints[i]):landPoints[i];pirates[i].position=Vector3.Lerp(ship.TransformPoint(dropStart[i]),dest+Vector3.up*.35f,t)+Vector3.up*Mathf.Sin(t*Mathf.PI)*2;pirates[i].localRotation=Quaternion.Euler(t*25,0,0);for(int j=0;j<48;j++){float a=j*Mathf.PI*2/48;var pt=landPoints[i]+new Vector3(Mathf.Cos(a)*.35f,.055f,Mathf.Sin(a)*.35f);landMarks[i].SetPosition(j,CarpetScene.Active?CarpetScene.Active.SurfacePoint(pt):pt);}}else{pirates[i].localPosition=dropStart[i];pirates[i].localRotation=Quaternion.identity;}}
   }
   void Update(){Sample(Time.deltaTime);}
  }
