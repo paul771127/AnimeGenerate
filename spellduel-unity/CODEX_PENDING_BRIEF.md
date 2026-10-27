@@ -442,3 +442,8 @@ Editor/RoomCoopAudit.cs 使用實際 Battle 流程模擬 1／2／3 人，離線 
 ### 第 14 項 B2-1、2：寵物配件與吃餌（2026-10-28）
 
 PetDress.Apply(MinionRig,bool)可重入，綁定各物種頭／莖／傘緣，加織帶、身份扣、雙友方環；菁英雙羽扣與斷續金環，換kind會重綁。MinionRig.Pets.cs新增SetEating(bool)，在原Animate之後疊加前傾／咀嚼，下一幀先還原，避免角度累積；死亡與攻擊姿勢優先。不改Combat.Pets、資料或原動作判定。預覽與44種套用檢查接後續原生驗收。
+
+
+### 第 14 項 B2-3：收服特效（2026-10-28）
+
+新增PetArtFx.Capture(Vector3,bool)：成功青綠繩結收合與爪印，失敗繩結鬆開與碎光，局部粒子不閃全畫面。**介面改名原因**：Pets.cs已有技能效果enum PetFx，為避免破壞邏輯／存檔，不使用同名class；Claude請呼叫PetArtFx.Capture。底層粒子使用SpellFx工具，1.3秒清理。
