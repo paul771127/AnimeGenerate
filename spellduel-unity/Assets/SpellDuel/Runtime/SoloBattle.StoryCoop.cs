@@ -107,7 +107,7 @@ namespace SpellDuel
             var st = Story.Find(netStoryId ?? "");
             if (st == null) { Say("找不到這一關", 2f); return; }
             SaveChoices();
-            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "", g = MyGearCode, hp = MyMaxHp });
+            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "", g = MyGearCode, hp = MyMaxHp, s = MyAccuracy });
             NetSend?.Invoke(new Msg { t = "sstart", k = st.id, e = difficulty, s = StandH });
             localReady = remoteReady = false;
             foreach (var pi in peerInfo.Values) pi.ready = false;

@@ -51,7 +51,7 @@ namespace SpellDuel
             Stat.Str => atk ? "攻擊傷害 +2%／點" : "（不是這個職業的攻擊能力值）HP +1／點",
             Stat.Int => atk ? "攻擊傷害 +2%／點、治療量 +2%／點、MP 上限 +2／點、魔法減傷：加到 99 點 30%" : "MP 上限 +2／點、治療量 +2%／點、魔法減傷：加到 99 點 30%（照比例）",
             Stat.Vit => "HP 上限 +5／點、物理減傷：加到 99 點 30%（照比例）",
-            Stat.Agi => "蓄力時間 -1%／點（最多 -40%）、普攻速度：冷卻 -0.8%／點（最多 -50%）",
+            Stat.Agi => "蓄力時間 -1%／點（最多 -40%）、普攻速度：冷卻 -0.8%／點（最多 -50%）、閃避率 +0.1%／點（只閃物理攻擊）",
             Stat.Spi => "MP 回復（基礎只有 30%，精神 99 點回到 100%）、冷卻時間 -0.8%／點（最多 -35%）",
             _ => "爆擊率 +0.6%／點（爆擊＝傷害 ×2）、掉寶機率與稀有度提升",
         };
@@ -1285,8 +1285,9 @@ namespace SpellDuel
             f.burnChance = Passive(PassiveKind.Burn) + GearSum(Affix.Burn);
             f.poisonChance = Passive(PassiveKind.Poison) + GearSum(Affix.Poison);
             f.freezeChance = Passive(PassiveKind.Freeze) + GearSum(Affix.Freeze);
-            // 閃避率（使用者要求：刺客系全部疊滿約 40%；敏捷不再加閃避）
-            f.evadeChance = Mathf.Clamp(Passive(PassiveKind.Evade) + SkillTrees.DodgeToEvade * Passive(PassiveKind.Dodge), 0f, 0.5f);
+            // 閃避率（使用者要求：刺客系技能樹全部疊滿約 40%，另外敏捷每點 +0.1%）
+            f.evadeChance = Mathf.Clamp(Passive(PassiveKind.Evade) + SkillTrees.DodgeToEvade * Passive(PassiveKind.Dodge) + 0.001f * Mathf.Max(0, d(Stat.Agi)), 0f, 0.5f);   // 敏捷每點 +0.1%
+            f.accuracy = 0f;   // 命中率（抵掉對方的閃避）：由哪個能力值提供還沒決定
             f.chargeScale = Mathf.Max(0.4f, f.chargeScale * (1f - Passive(PassiveKind.FastCast)));   // 法師：快速詠唱
             f.overcharge = Passive(PassiveKind.Overcharge) > 0f;                                   // 獵人：蓄力強化
             f.regenTick = f.maxHp * Passive(PassiveKind.NaturalRegen);                              // 劍士／主教：自然回復（每 10 秒一次回 x%，不是每秒慢慢回）

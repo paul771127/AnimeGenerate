@@ -145,6 +145,7 @@ namespace SpellDuel
         // 無盡模式的玩家升級：攻擊力、冷卻、爆擊率、攻擊距離、命中時附加灼燒／中毒／冰凍的機率
         public float basicCdMul = 1f;   // 普攻冷卻倍率（敏捷越高越快；角色養成設定）
         public float atkMul = 1f, cdMul = 1f, critChance, rangeMul = 1f, burnChance, poisonChance, freezeChance, evadeChance;
+        public float accuracy;          // 命中率（幸運每點 +0.1%）：打人時抵掉對方的閃避率
         // 牧師的守護：時限內受到的直接傷害按比例減少
         public float armorUntil, armorReduce;
         // 角色養成（無盡模式）：裝備減傷、側跨無敵時間加長、吸血、命中回 MP、每秒回血、低血量減傷
@@ -541,7 +542,7 @@ namespace SpellDuel
         {
             if (isTrap) Emit("trap", at, s.color, $"{s.name}！");
             AddThreat(by, damage);
-            incoming = s; ApplyDamageAndEffect(enemy, damage, s.effect, s.effectDps, s.effectDur, at); incoming = null;
+            incoming = s; ApplyDamageAndEffect(enemy, damage, s.effect, s.effectDps, s.effectDur, at, by); incoming = null;
         }
         public void ApplyBurnOnEnemy(float dmg, Vector3 at, Fighter by = null) { AddThreat(by, dmg); Damage(enemy, dmg, "burn", at); }
 
@@ -1487,7 +1488,7 @@ namespace SpellDuel
                 if (!v.Alive || FlatDistance(v.Feet, m.Feet) > PufferRadius + v.bodyRadius) continue;
                 int dmg = Mathf.RoundToInt(sp.damage * 2f * m.dmgMul);
                 if (v.isAlly) { Emit("allyhit", v.Chest, sp.color, null); OnAllyHit?.Invoke(v, sp, dmg, v.Chest, 0); }
-                else { ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest); SoulVictim(m, v, dmg); }
+                else { ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest, m); SoulVictim(m, v, dmg); }
             }
             m.fuseAt = 0f; m.hp = 0f;
         }
@@ -1787,7 +1788,7 @@ namespace SpellDuel
                         int dmg = Mathf.RoundToInt(pc.damage * m.dmgMul);
                         if (tgt.dodgeUntil > now && SidestepInvuln) Emit("evade", tgt.Chest, pc.color, "閃避！");
                         else if (tgt.isAlly) { Emit("allyhit", tgt.Chest, pc.color, null); OnAllyHit?.Invoke(tgt, pc, dmg, tgt.Chest, 0); }
-                        else { ApplyDamageAndEffect(tgt, dmg, EffectKind.None, 0f, 0f, tgt.Chest); SoulVictim(m, tgt, dmg); }
+                        else { ApplyDamageAndEffect(tgt, dmg, EffectKind.None, 0f, 0f, tgt.Chest, m); SoulVictim(m, tgt, dmg); }
                     }
                     return;
                 }
@@ -1803,7 +1804,7 @@ namespace SpellDuel
                         int dmg = Mathf.RoundToInt(sh.damage * m.dmgMul);
                         if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, sh.color, "閃避！");
                         else if (v.isAlly) { Emit("allyhit", v.Chest, sh.color, null); OnAllyHit?.Invoke(v, sh, dmg, v.Chest, 0); }
-                        else { incoming = sh; ApplyDamageAndEffect(v, dmg, sh.effect, sh.effectDps, sh.effectDur, v.Chest); incoming = null; SoulVictim(m, v, dmg); }
+                        else { incoming = sh; ApplyDamageAndEffect(v, dmg, sh.effect, sh.effectDps, sh.effectDur, v.Chest, m); incoming = null; SoulVictim(m, v, dmg); }
                     }
                     return;
                 }
@@ -1831,7 +1832,7 @@ namespace SpellDuel
                         int dmg = Mathf.RoundToInt(sp.damage * m.dmgMul);
                         if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, sp.color, "閃避！");
                         else if (v.isAlly) { Emit("allyhit", v.Chest, sp.color, null); OnAllyHit?.Invoke(v, sp, dmg, v.Chest, 0); }
-                        else { incoming = sp; ApplyDamageAndEffect(v, dmg, sp.effect, sp.effectDps, sp.effectDur, v.Chest); incoming = null; SoulVictim(m, v, dmg); }
+                        else { incoming = sp; ApplyDamageAndEffect(v, dmg, sp.effect, sp.effectDps, sp.effectDur, v.Chest, m); incoming = null; SoulVictim(m, v, dmg); }
                     }
                     return;
                 }
@@ -1886,7 +1887,7 @@ namespace SpellDuel
                         int dmg = Mathf.RoundToInt(bomb.damage * m.dmgMul);
                         if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, bomb.color, "閃避！");
                         else if (v.isAlly) { Emit("allyhit", v.Chest, bomb.color, null); OnAllyHit?.Invoke(v, bomb, dmg, v.Chest, 0); }
-                        else { ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest); SoulVictim(m, v, dmg); }
+                        else { ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest, m); SoulVictim(m, v, dmg); }
                     }
                     m.hp = 0f;
                     return;
@@ -1904,7 +1905,7 @@ namespace SpellDuel
                     {
                         if (tgt.dodgeUntil > now && SidestepInvuln) Emit("evade", tgt.Chest, claw.color, "閃避！");
                         else if (tgt.isAlly) { Emit("allyhit", tgt.Chest, claw.color, null); OnAllyHit?.Invoke(tgt, claw, dmg, tgt.Chest, 0); }
-                        else { ApplyDamageAndEffect(tgt, dmg, EffectKind.None, 0f, 0f, tgt.Chest); SoulVictim(m, tgt, dmg); }
+                        else { ApplyDamageAndEffect(tgt, dmg, EffectKind.None, 0f, 0f, tgt.Chest, m); SoulVictim(m, tgt, dmg); }
                     }
                     return;
                 }
@@ -1940,7 +1941,7 @@ namespace SpellDuel
                 LastProcs = RollProcs(p.owner, p.skill);
                 int pd = PreHit(p.owner, m, p.skill, p.damage, p);
                 if (remoteEnemy) { EmitHit(p.skill, p.pos); OnMinionHit?.Invoke(m.minionId, pd, p.skill); }
-                else { HitSkill = p.skill; HitCrit = p.crit; ApplyDamageAndEffect(m, pd, p.effect, p.effectDps, p.effectDur, p.pos); HitSkill = null; HitCrit = false; ApplyProcs(m, LastProcs, p.pos); }
+                else { HitSkill = p.skill; HitCrit = p.crit; ApplyDamageAndEffect(m, pd, p.effect, p.effectDps, p.effectDur, p.pos, p.owner); HitSkill = null; HitCrit = false; ApplyProcs(m, LastProcs, p.pos); }
                 OnDealt(p.owner, pd, m, p.skill, p);
                 OnProjectileHit?.Invoke(p);
                 if (p.skill.groundZone) AddBurn(p, m.Feet);   // 審判砸中小怪：一樣留下審判之地
@@ -2528,7 +2529,7 @@ namespace SpellDuel
                         if (v.dodgeUntil > now && SidestepInvuln) { Emit("evade", v.Chest, s.color, "閃避！"); continue; }
                         int ad = Mathf.RoundToInt(s.damage * f.atkMul);   // Boss 攻擊力（人多時更痛）
                         if (v.isAlly) { Emit("allyhit", v.Chest, s.color, null); OnAllyHit?.Invoke(v, s, ad, v.Chest, 0); }
-                        else { incoming = s; ApplyDamageAndEffect(v, ad, s.effect, s.effectDps, s.effectDur, v.Chest); incoming = null; }
+                        else { incoming = s; ApplyDamageAndEffect(v, ad, s.effect, s.effectDps, s.effectDur, v.Chest, f); incoming = null; }
                     }
                     break;
                 }
@@ -3048,7 +3049,7 @@ namespace SpellDuel
                     if (!v.Alive || FlatDistance(at, v.Feet) > p.skill.radius + v.bodyRadius) continue;
                     if (v.dodgeUntil > now && SidestepInvuln) { Emit("evade", v.Chest, p.skill.color, "閃避！"); continue; }
                     if (v.isAlly) { Emit("allyhit", v.Chest, p.skill.color, null); OnAllyHit?.Invoke(v, p.skill, p.damage, v.Chest, 0); }
-                    else { incoming = p.skill; ApplyDamageAndEffect(v, p.damage, p.effect, p.effectDps, p.effectDur, v.Chest); incoming = null; }
+                    else { incoming = p.skill; ApplyDamageAndEffect(v, p.damage, p.effect, p.effectDps, p.effectDur, v.Chest, p.owner); incoming = null; }
                 }
             if (p.skill.lobPool) AddPool(at, p.remote);
         }
@@ -3223,7 +3224,7 @@ namespace SpellDuel
                 int dmg = Mathf.RoundToInt(ds.damage * m.dmgMul);
                 if (v.dodgeUntil > now && SidestepInvuln) Emit("evade", v.Chest, ds.color, "閃避！");
                 else if (v.isAlly) { Emit("allyhit", v.Chest, ds.color, null); OnAllyHit?.Invoke(v, ds, dmg, v.Chest, 0); }
-                else { ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest); SoulVictim(m, v, dmg); }
+                else { ApplyDamageAndEffect(v, dmg, EffectKind.None, 0f, 0f, v.Chest, m); SoulVictim(m, v, dmg); }
                 if (kind == 8 || kind == 2) { EndDash(m); m.recoverUntil = now + MinionRecover; }   // 衝鋒獸撞到就停（荊棘帶也留）；魚和鳥衝完全程
                 return;
             }
@@ -3499,7 +3500,7 @@ namespace SpellDuel
                     {
                         if (victim == enemy) AddThreat(t.owner, t.skill.damage);
                         HitSkill = t.skill; incoming = t.skill;
-                        ApplyDamageAndEffect(victim, t.skill.damage, t.skill.effect, t.skill.effectDps, t.skill.effectDur, t.pos);
+                        ApplyDamageAndEffect(victim, t.skill.damage, t.skill.effect, t.skill.effectDps, t.skill.effectDur, t.pos, t.owner);
                         HitSkill = null; incoming = null;
                         if (allies.Count > 0) OnTrapGone?.Invoke(t.id);   // 合作模式：告訴隊友陷阱沒了
                     }
@@ -3523,7 +3524,7 @@ namespace SpellDuel
             }
             if (target == enemy) AddThreat(p.owner, p.damage);
             HitSkill = p.skill; HitCrit = p.crit; incoming = p.skill;
-            ApplyDamageAndEffect(target, p.damage, p.effect, p.effectDps, p.effectDur, p.pos);
+            ApplyDamageAndEffect(target, p.damage, p.effect, p.effectDps, p.effectDur, p.pos, p.owner);
             HitSkill = null; HitCrit = false; incoming = null;
             ApplyProcs(target, LastProcs, p.pos);
             OnDealt(p.owner, p.damage, target, p.skill, p);
@@ -3811,11 +3812,14 @@ namespace SpellDuel
             }
         }
 
-        void ApplyDamageAndEffect(Fighter target, int damage, EffectKind eff, float dps, float dur, Vector3 at)
+        void ApplyDamageAndEffect(Fighter target, int damage, EffectKind eff, float dps, float dur, Vector3 at, Fighter by = null)
         {
+            if (by == null) by = FoeSide(target) ? player : enemy;   // 不知道是誰打的：對面那一方的主角
             // 閃避率（刺客技能樹）：整次攻擊（傷害＋效果）完全閃開
             // 閃避只對物理攻擊有效（使用者要求）：魔法攻擊（火球、毒液、放電、泡泡…）閃不掉，要自己躲
+            // 命中率（使用者要求）：攻擊者的命中率直接抵掉目標的閃避率（命中 10%、閃避 40% → 實際 30%）
             float evade = incoming != null && Skills.IsMagic(incoming) ? 0f : target.evadeChance + (target.vanishUntil > now ? target.vanish : 0f) + (CloseInstinct(target) ? CloseEvadePer * target.closeInstinct : 0f);
+            evade -= by != null ? by.accuracy : 0f;
             if (evade > 0f && damage > 0 && rng.NextDouble() < evade) { Emit("evade", target.Chest, new Color(0.7f, 0.6f, 1f), "閃避！"); return; }
             if (damage > 0 && target.invulnUntil > now) { Emit("evade", target.Chest, new Color(1f, 0.4f, 0.4f), "無敵！"); return; }
             // 忍者：替身術（下一次攻擊完全無效）、分身術（一半的攻擊打到分身）

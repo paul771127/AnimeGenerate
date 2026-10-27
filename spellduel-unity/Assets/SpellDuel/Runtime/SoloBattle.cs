@@ -119,9 +119,11 @@ namespace SpellDuel
                 pp.gesture, WorldFrame.FromWorld(pp.gestureAt));
         }
         public readonly Dictionary<int, PeerPose> NetPeers = new Dictionary<int, PeerPose>();
-        class PeerInfo { public string cls, adv, gear; public string[] loadout; public bool ready; public int mode, maxHp; }
+        class PeerInfo { public string cls, adv, gear; public string[] loadout; public bool ready; public int mode, maxHp; public float acc; }
         /// <summary>我（故事模式角色）的最大血量：ready 時送給對手／隊友</summary>
         int MyMaxHp { get { var f = new Fighter("我", Skills.Classes[myClass], myLoadout, true); ApplyProfile(f); return f.maxHp; } }
+        /// <summary>我的命中率：ready 時送給對手（對戰時抵掉他的閃避）</summary>
+        float MyAccuracy { get { var f = new Fighter("我", Skills.Classes[myClass], myLoadout, true); ApplyProfile(f); return f.accuracy; } }
         /// <summary>我身上裝備的外觀（送給隊友／對手／觀眾，他們畫面上的我才會穿著）</summary>
         string MyGearCode => GearLook.Of(Progress.Char(myClass).equipped).Encode();
         /// <summary>把某位玩家的裝備穿到他的角色上（沒收到＝不穿）</summary>
@@ -1064,7 +1066,7 @@ namespace SpellDuel
         {
             SaveChoices();
             localReady = true;
-            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "", g = MyGearCode, hp = MyMaxHp });
+            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "", g = MyGearCode, hp = MyMaxHp, s = MyAccuracy });
             Say("已準備，等待對手…", 3f);
             TryStartNet();
         }
@@ -1092,7 +1094,7 @@ namespace SpellDuel
             var d = Dungeons.Get(netDungeonId);
             if (d == null) return;
             SaveChoices();
-            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "", g = MyGearCode, hp = MyMaxHp });
+            NetSend?.Invoke(new Msg { t = "ready", k = myClass, ks = myLoadout.ToArray(), e = NetModeCode, a = Progress.Char(myClass).adv ?? "", g = MyGearCode, hp = MyMaxHp, s = MyAccuracy });
             NetSend?.Invoke(new Msg { t = "dstart", k = d.id, e = difficulty });
             localReady = remoteReady = false;
             foreach (var pi in peerInfo.Values) pi.ready = false;
@@ -1111,7 +1113,8 @@ namespace SpellDuel
             var radv = peerInfo.TryGetValue(PeerIds.Count > 0 ? PeerIds[0] : 0, out var rpi0) ? Advanced.Get(rpi0.adv) : null;
             var en = new Fighter($"對手{(radv != null ? radv.name : ec.name)}", ec, remoteLoadout ?? new string[0], false);
             Advanced.ApplyStats(en, radv);
-            if (rpi0 != null && rpi0.maxHp > 0) { en.maxHp = rpi0.maxHp; en.hp = en.maxHp; }   // 對手的最大血量（他的等級與裝備，ready 送來）
+            if (rpi0 != null && rpi0.maxHp > 0) { en.maxHp = rpi0.maxHp; en.hp = en.maxHp; }
+            if (rpi0 != null) en.accuracy = rpi0.acc;   // 對手的命中率（抵掉我的閃避）   // 對手的最大血量（他的等級與裝備，ready 送來）
             en.head = NetEnemyHeadW;
             SyncPlayer(me);
             battle = new Battle(me, en) { remoteEnemy = true };
@@ -2032,7 +2035,7 @@ namespace SpellDuel
                 case "ready":
                     remoteClass = m.k; remoteLoadout = m.ks; remoteReady = true; remoteCoop = m.e >= 1; remoteEndless = m.e == 2;
                     if (!peerInfo.TryGetValue(m.pid, out var rpi)) peerInfo[m.pid] = rpi = new PeerInfo();
-                    rpi.cls = m.k; rpi.loadout = m.ks; rpi.ready = true; rpi.mode = m.e; rpi.adv = string.IsNullOrEmpty(m.a) ? null : m.a; rpi.gear = m.g; rpi.maxHp = m.hp;
+                    rpi.cls = m.k; rpi.loadout = m.ks; rpi.ready = true; rpi.mode = m.e; rpi.adv = string.IsNullOrEmpty(m.a) ? null : m.a; rpi.gear = m.g; rpi.maxHp = m.hp; rpi.acc = m.s;   // s：對手的命中率
                     if (phase != Phase.Fighting) Say(PeerIds.Count > 1 ? $"{PeerName(m.pid)}已準備好（{ReadyCount()}/{PeerIds.Count}）" : "對手已準備好", 2f);
                     TryStartNet();
                     return;
