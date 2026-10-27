@@ -25,7 +25,7 @@ namespace SpellDuel.EditorTools
    var concave=CarpetScene.Create(new System.Collections.Generic.List<Vector3>{new Vector3(-2,0,-2),new Vector3(2,0,-2),new Vector3(2,0,0),new Vector3(0,0,0),new Vector3(0,0,2),new Vector3(-2,0,2)},0,Vector3.right);
    concave.Sample(.5f,0);FiniteBudget(concave.gameObject,300000);UnityEngine.Object.DestroyImmediate(concave.gameObject);
    for(int k=0;k<4;k++)
-   {var obstacle=CarpetObstacleView.Create(k,k);obstacle.Tick(.8f,Vector3.zero,Vector3.forward,4,1.3f,1,.6f,.8f);FiniteBudget(obstacle.gameObject,5000);Shot(cam,obstacle.gameObject,"carpet_obstacle_"+k,new Vector3(4,4,-5),new Vector3(0,1,4),960,720);obstacle.Release();if(obstacle.gameObject.activeSelf)throw new Exception("Obstacle release");obstacle.gameObject.SetActive(true);obstacle.Tick(1,Vector3.zero,Vector3.forward,4,1.3f,-1,0,1);UnityEngine.Object.DestroyImmediate(obstacle.gameObject);}
+   {var obstacle=CarpetObstacleView.Create(k,k);obstacle.Tick(.8f,Vector3.zero,Vector3.forward,4,1.3f,1,.6f,.8f);FiniteBudget(obstacle.gameObject,7000);Shot(cam,obstacle.gameObject,"carpet_obstacle_"+k,new Vector3(4,4,-5),new Vector3(0,1,4),960,720);obstacle.Release();if(obstacle.gameObject.activeSelf)throw new Exception("Obstacle release");obstacle.gameObject.SetActive(true);obstacle.Tick(1,Vector3.zero,Vector3.forward,4,1.3f,-1,0,1);UnityEngine.Object.DestroyImmediate(obstacle.gameObject);}
    for(int k=0;k<5;k++)
    {
     var enemy=SkyEnemyRig.Create(k);FiniteBudget(enemy.gameObject,6000);enemy.Sample(.1f);Shot(cam,enemy.gameObject,"carpet_enemy_"+k,new Vector3(1.8f,1.4f,3.4f),new Vector3(0,.75f,0),640,800);

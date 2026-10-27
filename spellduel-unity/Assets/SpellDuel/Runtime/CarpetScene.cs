@@ -17,6 +17,7 @@ namespace SpellDuel
         readonly List<Transform> windStreaks=new List<Transform>();
         readonly List<LineRenderer> trims=new List<LineRenderer>();
         readonly List<Vector3[]> trimPoints=new List<Vector3[]>();
+        static Material fabric;
         Mesh cloth; Vector3[] rest,vertices,normals; float clock; Vector3 impactPoint; float impactAge=10,impactStrength;
         ParticleSystem dust; LineRenderer ripple; float halfWidth=2;
         static readonly Color[] Skies={new Color(.64f,.83f,.98f),new Color(.3f,.75f,.88f),new Color(.8f,.63f,.45f),new Color(.21f,.24f,.48f),new Color(.98f,.73f,.45f)};
@@ -53,7 +54,8 @@ namespace SpellDuel
                 if(!cut)throw new ArgumentException("Arena polygon must be simple and nondegenerate");
             }
             cloth=mb.Build("Subdivided calibrated carpet");cloth.MarkDynamic();rest=cloth.vertices;vertices=new Vector3[rest.Length];normals=new Vector3[rest.Length];
-            SkyArt.MeshPart(VisualRoot,"Wine woven cloth",cloth,SkyArt.Mat(new Color(.65f,.15f,.31f)),Vector3.zero,Vector3.one);
+            var uv=new Vector2[rest.Length];var bounds=cloth.bounds;for(int i=0;i<uv.Length;i++)uv[i]=new Vector2((rest[i].x-bounds.min.x)/Mathf.Max(.01f,bounds.size.x),(rest[i].z-bounds.min.z)/Mathf.Max(.01f,bounds.size.z));cloth.uv=uv;
+            SkyArt.MeshPart(VisualRoot,"Wine woven cloth",cloth,Fabric(),Vector3.zero,Vector3.one);
             for(int edge=0;edge<p.Count;edge++)
             {
                 Vector3 a=p[edge],b=p[(edge+1)%p.Count];int n=Mathf.Max(3,Mathf.CeilToInt((b-a).magnitude/.15f));
@@ -74,6 +76,20 @@ namespace SpellDuel
             int k=b.Add(a,Vector3.up,new Vector2(a.x,a.z));b.Add(c,Vector3.up,new Vector2(c.x,c.z));b.Add(d,Vector3.up,new Vector2(d.x,d.z));b.Tri(0,k,k+1,k+2);
         }
         void AddTrim(string name,Vector3[] pts,float width,Color c){var l=SkyArt.Line(VisualRoot,name,pts.Length,width,c);l.SetPositions(pts);trims.Add(l);trimPoints.Add(pts);}
+        static Material Fabric()
+        {
+            if(fabric)return fabric;const int n=256;var tex=new Texture2D(n,n,TextureFormat.RGBA32,false){name="Procedural navigation brocade",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Bilinear};var px=new Color32[n*n];
+            for(int y=0;y<n;y++)for(int x=0;x<n;x++)
+            {float u=(x+.5f)/n*2-1,v=(y+.5f)/n*2-1,edge=Mathf.Max(Mathf.Abs(u),Mathf.Abs(v)),diamond=Mathf.Abs(u)+Mathf.Abs(v);
+             Color c=new Color(.65f,.15f,.31f);if(edge>.83f&&edge<.91f)c=SkyArt.Teal;
+             if(Mathf.Abs(diamond-.68f)<.015f||Mathf.Abs(diamond-.57f)<.008f||Mathf.Abs(edge-.79f)<.008f)c=SkyArt.Gold;
+             if(diamond<.22f){c=SkyArt.Cream;if(u*v>0)c=SkyArt.Gold;}
+             float tileX=Mathf.Repeat(u*3+.5f,1)-.5f,tileY=Mathf.Repeat(v*3+.5f,1)-.5f;
+             if(edge<.76f&&diamond>.75f&&Mathf.Abs(Mathf.Abs(tileX)+Mathf.Abs(tileY)-.28f)<.025f)c=SkyArt.Cream;
+             if((x+y)%4==0)c*=.94f;c.a=1;px[y*n+x]=c;
+            }
+            tex.SetPixels32(px);tex.Apply(false,true);fabric=new Material(ToonStyle.LitShader()){name="Wine and gold brocade",color=Color.white,mainTexture=tex};return fabric;
+        }
         void BuildScenery()
         {
             for(int s=0;s<5;s++)
@@ -88,9 +104,13 @@ namespace SpellDuel
                     scenery.Add(t);rates.Add(layer==0?1:layer==1?.35f:.02f);
                     Color cloud=s==3?new Color(.38f,.4f,.61f):new Color(.88f,.94f,1);
                     if(layer!=1||s==0||s==4)
-                    {SkyArt.Oval(t,"Wind shaped cloud",Vector3.zero,new Vector3(3+layer*2,.7f+layer*.3f,5+layer*3),cloud);if(layer==0)windStreaks.Add(SkyArt.Rod(t,"Wind streak",new Vector3(0,.5f,-2),new Vector3(0,.5f,2),.025f,SkyArt.Cream));}
+                    {SkyArt.Oval(t,"Wind shaped cloud",Vector3.zero,new Vector3(3+layer*2,.7f+layer*.3f,5+layer*3),cloud);
+                     for(int puff=0;puff<3;puff++)SkyArt.Oval(t,"Rounded cloud puff",new Vector3((puff-1)*.75f,.25f+(.2f*(puff%2)),(puff-1)*.5f),new Vector3(1.8f+layer,.95f+layer*.35f,2.3f+layer),cloud);if(layer==0)windStreaks.Add(SkyArt.Rod(t,"Wind streak",new Vector3(0,.5f,-2),new Vector3(0,.5f,2),.025f,SkyArt.Cream));}
                     else if(s==1)
-                    {SkyArt.Oval(t,"Floating island keel",new Vector3(0,-1,0),new Vector3(3,4,4),new Color(.5f,.43f,.55f),true);SkyArt.Oval(t,"Grass crown",Vector3.zero,new Vector3(3.4f,.55f,4.2f),new Color(.3f,.77f,.49f));for(int j=0;j<3;j++)SkyArt.Rod(t,"Hanging mooring",new Vector3(j*.4f,0,0),new Vector3(j*.4f,-3,0),.08f,SkyArt.Gold);}
+                    {SkyArt.Oval(t,"Floating island keel",new Vector3(0,-2,0),new Vector3(3,4,4),new Color(.5f,.43f,.55f),true);SkyArt.Oval(t,"Grass crown",Vector3.zero,new Vector3(3.4f,.55f,4.2f),new Color(.3f,.77f,.49f));
+                     SkyArt.Rod(t,"Wind tree trunk",new Vector3(.5f,.1f,0),new Vector3(.7f,1.9f,-.3f),.13f,new Color(.56f,.35f,.23f));
+                     for(int leaf=0;leaf<3;leaf++)SkyArt.Oval(t,"Wind tree canopy",new Vector3(.3f+leaf*.4f,1.7f-leaf*.15f,-.4f),new Vector3(1.3f,.8f,1.4f),new Color(.35f,.8f,.52f));
+                     SkyArt.Rod(t,"Beacon flagstaff",new Vector3(-.7f,.1f,0),new Vector3(-.7f,2.2f,0),.055f,SkyArt.Gold);SkyArt.Sail(t,"Island pennant",new Vector3(-.7f,1.2f,0),new Vector3(.8f,.9f,1),SkyArt.Cream);for(int j=0;j<3;j++)SkyArt.Rod(t,"Hanging mooring",new Vector3(j*.4f,0,0),new Vector3(j*.4f,-3,0),.08f,SkyArt.Gold);}
                     else if(s==2)
                     {SkyArt.Oval(t,"Wind carved red pillar",Vector3.zero,new Vector3(3,12,6),new Color(.8f,.43f,.25f));SkyArt.Oval(t,"Sandstone cap",new Vector3(0,4,0),new Vector3(4,1,7),SkyArt.Cream);}
                     else

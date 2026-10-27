@@ -13,10 +13,29 @@ namespace SpellDuel
    v.visual=SkyArt.Node(v.transform,"Approaching obstacle",Vector3.zero);
    Color c=station==0?SkyArt.Cream:station==1?new Color(.43f,.72f,.54f):station==2?new Color(.83f,.46f,.28f):station==3?new Color(.43f,.46f,.75f):SkyArt.Gold;
    v.left=SkyArt.Oval(v.visual,"Left span",Vector3.zero,Vector3.one,c);v.right=SkyArt.Oval(v.visual,"Right span",Vector3.zero,Vector3.one,c);v.lintel=SkyArt.Oval(v.visual,"Arch lintel",Vector3.zero,Vector3.one,c);
-   for(int i=0;i<7;i++)
-   {float x=(i-3)*.13f;var rib=SkyArt.Oval(v.left,station==3?"Lightning conductor":"Structural rib",new Vector3(x,0,.4f),new Vector3(.045f,1.1f,.2f),station==2?SkyArt.Cream:SkyArt.Gold);}
+   // Station-specific construction, not a palette swap: fins, chain links, layered rock, lightning and gunports.
+   v.Decorate(v.left,station);v.Decorate(v.right,station);v.Decorate(v.lintel,station);
    v.marks=new LineRenderer[12];for(int i=0;i<v.marks.Length;i++)v.marks[i]=SkyArt.Line(v.transform,"Warning "+i,2,.045f,i==11?new Color(.3f,1,.58f,.9f):new Color(1,.24f,.18f,.65f));
    return v;
+  }
+  void Decorate(Transform span,int station)
+  {
+   if(station==0)
+   {
+    if(kind==0){for(int side=-1;side<=1;side+=2){var f=SkyArt.Sail(span,"Cloud whale fluke",new Vector3(side*.2f,-.2f,0),new Vector3(.6f,.8f,1),new Color(.47f,.7f,.9f));f.localRotation=Quaternion.Euler(0,0,side*-35);}}
+    else{for(int side=-1;side<=1;side+=2)SkyArt.Oval(span,"Bell tower brass bracket",new Vector3(side*.34f,0,0),new Vector3(.09f,1.15f,1.15f),SkyArt.Gold);}
+   }
+   else if(station==1)
+   {
+    if(kind==0){for(int i=0;i<6;i++){var l=SkyArt.Ring(span,"Suspended chain link",.10f,SkyArt.Gold,.022f,16);l.transform.localPosition=new Vector3((i-2.5f)*.16f,0,0);l.transform.localRotation=Quaternion.Euler(i%2==0?90:0,0,0);}}
+    else{SkyArt.Oval(span,"Island turf",new Vector3(0,.34f,0),new Vector3(1.05f,.23f,1.05f),new Color(.37f,.8f,.48f));for(int i=0;i<3;i++)SkyArt.Oval(span,"Hanging root",new Vector3((i-1)*.25f,-.32f,0),new Vector3(.06f,.5f,.14f),SkyArt.Gold,true);}
+   }
+   else if(station==2)
+   {for(int i=0;i<4;i++)SkyArt.Oval(span,"Wind eroded sandstone stratum",new Vector3(0,(i-1.5f)*.18f,0),new Vector3(1.05f,.07f,1.05f),i%2==0?SkyArt.Cream:new Color(.64f,.33f,.22f));}
+   else if(station==3)
+   {var l=SkyArt.Line(span,"Lightning running through cloud",7,.025f,new Color(.7f,.85f,1,.95f));for(int i=0;i<7;i++)l.SetPosition(i,new Vector3((i-3)*.15f,i%2==0?.15f:-.15f,.5f));for(int i=0;i<3;i++)SkyArt.Oval(span,"Dense thunder cloud",new Vector3((i-1)*.25f,.15f,0),new Vector3(.4f,.7f,1.15f),new Color(.34f,.36f,.58f));}
+   else
+   {for(int i=0;i<4;i++){float x=(i-1.5f)*.21f;SkyArt.Oval(span,"Armored projectile cell",new Vector3(x,0,.3f),new Vector3(.17f,.8f,.7f),SkyArt.Ink);SkyArt.Oval(span,"Cannon fire core",new Vector3(x,0,.6f),new Vector3(.1f,.5f,.12f),kind==0?new Color(1,.5f,.1f):new Color(.3f,.65f,1));}}
   }
   public void Tick(float progress,Vector3 frontCenter,Vector3 forward,float carpetWidth,float chestHeight,int side,float gapCenter,float gapWidth)
   {
