@@ -334,6 +334,7 @@ namespace SpellDuel
             int diff = towerRun ? 1 : difficulty;
             if (key[0] == 'm' && int.TryParse(key.Substring(1), out int kind))
             {
+                if (kind == Battle.TreasureKind) { GrantTreasure(); return; }   // 寶箱怪：大把金幣＋一定掉一件裝備
                 if (TryDrop(false)) return;
                 AddMat(Crafting.RollMinion(kind, battle.Theme, diff, dropRng));
             }
@@ -342,6 +343,19 @@ namespace SpellDuel
                 if (AddMat(Crafting.RollBoss(key, diff, dropRng))) return;
                 TryDrop(true);
             }
+        }
+
+        /// <summary>寶箱怪打倒的獎勵：一般小怪金幣的 TreasureGoldMul 倍＋一件裝備（照 Boss 的稀有度加成），過關才拿得到</summary>
+        public const float TreasureChance = 0.12f;   // 每一波出現寶箱怪的機率（故事、副本、無盡、無盡塔）
+        public const int TreasureGoldMul = 20;
+        void GrantTreasure()
+        {
+            float goldMul = 1f + Souls.Sum(prof, SoulOp.Gold);
+            int g = Mathf.RoundToInt(Economy.MinionGold(battle.wave) * TreasureGoldMul * goldMul * WeatherLootMul);
+            pendingGold += g;
+            TryDrop(true);
+            floaters.Add(new Floater { text = $"💰 打倒寶箱怪！金幣 +{g}（過關後獲得）", color = new Color(1f, 0.85f, 0.3f), born = Time.time, screen = true });
+            Sfx.Play("win", 0.6f, 1.3f); Haptics.Play(Haptics.Kind.Success);
         }
 
         /// <summary>這場掉的材料（過關才拿得到）</summary>
@@ -1313,6 +1327,7 @@ namespace SpellDuel
                         // 第二章以後的 Boss：血量、傷害 ×1.3
                         if (pendingStage.theme >= 1 && pendingStage.id != "trial") { battle.storyBossHp *= LateBossMul; battle.storyBossDmg *= LateBossMul; }
                         SetupStageMods(pendingStage);   // 天候、小目標（SoloBattle.StageMods.cs）
+                        if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.id != "1-1" && pendingStage.id != "1-2" && pendingStage.id != "1-3") battle.treasureChance = TreasureChance;   // 寶箱怪：新手關、試煉不出（Combat.Treasure.cs）
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
                     }
                     else if (dungeon != null)
@@ -1321,15 +1336,17 @@ namespace SpellDuel
                         battle.scaleAllies = battle.dungeonParty - 1;               // Boss 出招頻率、召喚數也照人數
                         battle.hpBoost = dungeonRelief;                          // 等級差修正（主機的等級決定）
                         battle.enemyHpMul = Dungeons.DungeonHp; battle.enemyDmgMul = Dungeons.DungeonDmg; battle.bossHpMul = Dungeons.DungeonHp;   // 副本：小怪與 Boss 的血量、攻擊 ×2
+                        battle.treasureChance = dungeon.id == TrapGallery.Id ? 0f : TreasureChance;   // 寶箱怪（陷阱迴廊不出）
                         battle.StartDungeonMap();   // 副本地圖：每個地點由 BeginDungeonRun／房主選路線決定（SoloBattle.DungeonMap.cs）
                     }
                     else if (towerRun)
                     {
                         // 無盡塔：每次挑戰 5 波（6m×6m 場地），第 5 波有精銳、第 10 波有大 Boss；打完 5 波就結算、回到塔外
-                        battle.eliteWaves = true;
+                        battle.eliteWaves = true; battle.treasureChance = TreasureChance;
                         battle.StartStage(towerFrom, towerFrom + TowerBlock - 1);
                     }
-                    else battle.StartEndless();
+                    else { battle.treasureChance = TreasureChance; battle.StartEndless(); }
+                    if (classTrial != null || tutorial) battle.treasureChance = 0f;   // 職業試煉、教學：不出寶箱怪
                 }
                 battle.minionInside = p => area.Inside(WorldFrame.FromWorld(p)) && area.DistanceToEdge(WorldFrame.FromWorld(p)) >= 0.3f;
                 battle.attackHalf = Battle.AttackZoneHalf;   // 小怪進到中間 6m×6m 才出手（場地本身 10m×10m）
@@ -1678,7 +1695,12 @@ namespace SpellDuel
                             if (parts.Length >= 7 && float.TryParse(parts[6], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var malt)) mf.alt = malt;   // 飛行／浮空高度
                             ReadEliteWire(mf, parts);
                         }
-                        foreach (var mf in battle.minions) if (!seen.Contains(mf.minionId) && mf.Alive) { mf.hp = 0f; battle.killLog.Add("m" + mf.minionKind); }   // 隊友端：主機那邊打倒了（記下種類：掉材料用）
+                        foreach (var mf in battle.minions) if (!seen.Contains(mf.minionId) && mf.Alive)
+                        {
+                            mf.hp = 0f;
+                            if (battle.TreasureFled(mf)) { OnBattleEvent("treasurefled", mf.Chest, new Color(1f, 0.85f, 0.3f), "寶箱怪逃走了……"); continue; }   // 寶箱怪時間到逃走：沒有獎勵
+                            battle.killLog.Add("m" + mf.minionKind);
+                        }   // 隊友端：主機那邊打倒了（記下種類：掉材料用）
                     }
                     break;
                 case "haz":
@@ -1759,6 +1781,15 @@ namespace SpellDuel
             if (canyon) canyon.SetVisible(theme == Battle.CanyonTheme);
         }
 
+        /// <summary>寶箱怪的外觀：小怪骨架藏起來（動作、受擊、倒下照用），換上副本寶箱的模型（小一號）</summary>
+        static void DressTreasure(MinionRig rig)
+        {
+            foreach (var r in rig.GetComponentsInChildren<Renderer>(true)) r.enabled = false;
+            var chest = HazardArt.RoomProp("ev_chest_mimic", Color.white);
+            chest.transform.SetParent(rig.transform, false);
+            chest.transform.localScale = Vector3.one * 0.75f;
+        }
+
         /// <summary>小怪的外觀：新的就生出來、跟著位置走、預備動作／出手／被打／倒下</summary>
         void UpdateMinionVisuals(float dt)
         {
@@ -1773,6 +1804,7 @@ namespace SpellDuel
                     rig = MinionRig.Create();
                     rig.SetVariant(m.minionKind);
                     rig.SetDress(battle.Theme);   // 角鬥場：黑晶項圈；山道：沙塵與頭巾（美術第十一輪）
+                    if (m.treasure) DressTreasure(rig);   // 寶箱怪：換成會跑的寶箱
                     if (m.isElite && !EliteCatalog.IsElite(m.minionKind)) rig.transform.localScale = Vector3.one * 1.5f;   // 無盡塔的精銳：大一號
                     minionGo[m] = rig; minionLastHp[m] = m.hp;
                     rig.transform.position = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);
@@ -1796,6 +1828,7 @@ namespace SpellDuel
                 var f = WorldFrame.DirFromWorld(m.forward); f.y = 0f;
                 rig.transform.SetPositionAndRotation(newPos, f.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(f.normalized, Vector3.up) : rig.transform.rotation);
                 UpdateEliteVisual(m, rig);
+                if (m.treasure) { var cp = rig.GetComponentInChildren<RoomPropArt>(); if (cp) cp.Tick(m.hp, m.maxHp, false, Time.time); }   // 寶箱怪：被打中會晃
                 bool jumped = (newPos - oldPos).magnitude > 2f;   // 虛空術士瞬移（隊友端也看得到）：兩邊都冒出傳送光
                 if (jumped) { MinionRig.SpawnFx(oldPos); MinionRig.SpawnFx(newPos); Sfx.Play("dodge", 0.5f, 0.6f); }
                 rig.MoveSpeed = jumped ? 0f : Mathf.Lerp(rig.MoveSpeed, (newPos - oldPos).magnitude / dt, 0.25f);
@@ -3072,6 +3105,16 @@ namespace SpellDuel
                     else if (battle.Theme == 2) MinionRig.SpawnFxSea(WorldFrame.FromWorld(at));
                     else MinionRig.SpawnFx(WorldFrame.FromWorld(at));
                     Sfx.Play("boom", 0.4f, 1.6f);
+                    break;
+                case "treasure":
+                    Say(text, 3f);
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 1.2f, text = "💰 寶箱怪！", color = c, born = Time.time });
+                    Sfx.Play("coin", 0.8f, 0.8f); Haptics.Play(Haptics.Kind.Medium);
+                    break;
+                case "treasurefled":
+                    Say(text, 2f);
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 0.9f, text = "逃走了…", color = c, born = Time.time });
+                    Sfx.Play("dodge", 0.6f, 1.4f);
                     break;
                 case "miniondie":
                     floaters.Add(new Floater { posMap = at + Vector3.up * 0.9f, text = "擊倒小怪", color = new Color(1f, 0.7f, 0.3f), born = Time.time });

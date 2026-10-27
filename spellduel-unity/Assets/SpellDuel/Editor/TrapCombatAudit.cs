@@ -10,7 +10,7 @@ static object Call(Battle b,string name,params object[] args)=>typeof(Battle).Ge
 static void Check(bool ok,string message){if(!ok)throw new Exception("Trap audit: "+message);}
 static Battle Make(bool remote=false){var p=new Fighter("p",Skills.Classes["mage"],new string[0],true);p.head=new Vector3(0,1.7f,0);p.hp=p.maxHp=10000;var e=new Fighter("e",Skills.Classes["boss_clockwork"],new string[0],false);var b=new Battle(p,e){remoteEnemy=remote};b.ConfigureGallery("furnace",1,1);return b;}
 public static int Run(){int tests=0;
-Check(Battle.MinionKinds==53&&Battle.MinionNames.Length==53,"kind table");
+Check(Battle.MinionKinds==54&&Battle.MinionNames.Length==54,"kind table");
 foreach(Battle.TrapKind kind in new[]{Battle.TrapKind.Rock,Battle.TrapKind.Flame,Battle.TrapKind.Arrows,Battle.TrapKind.Log,Battle.TrapKind.Bolt,Battle.TrapKind.Smash,Battle.TrapKind.Low,Battle.TrapKind.High,Battle.TrapKind.Dive,Battle.TrapKind.Volley})
 for(int mode=0;mode<4;mode++){
 var b=Make(mode%2==1);b.now=10;var c=new Battle.TrapCue{id=1,epoch=1,kind=kind,hit=10,duration=1,radius=3,halfX=2,halfZ=2,mask=15,forward=Vector3.forward,power=.22f};

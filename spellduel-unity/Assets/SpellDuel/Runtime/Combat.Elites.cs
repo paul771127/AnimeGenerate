@@ -22,6 +22,10 @@ namespace SpellDuel
             MinionSpeed=GalleryArray(MinionSpeed,k=>.8f);MinionRadius=GalleryArray(MinionRadius,k=>k==52?.3f:.42f);
             MinionHead=GalleryArray(MinionHead,k=>k==52?1.2f:1.7f);KeepMin=GalleryArray(KeepMin,k=>0f);KeepMax=GalleryArray(KeepMax,k=>0f);
             MinionReach=GalleryArray(MinionReach,k=>3f);MinionWindup=GalleryArray(MinionWindup,k=>3.5f);MinionXp=GalleryArray(MinionXp,k=>35);
+            // 53 寶箱怪（Combat.Treasure.cs）
+            MinionNames=TreasureArray(MinionNames,"寶箱怪");MinionHp=TreasureArray(MinionHp,TreasureHp);MinionSpeed=TreasureArray(MinionSpeed,1f);
+            MinionRadius=TreasureArray(MinionRadius,.32f);MinionHead=TreasureArray(MinionHead,.6f);KeepMin=TreasureArray(KeepMin,0f);KeepMax=TreasureArray(KeepMax,0f);
+            MinionReach=TreasureArray(MinionReach,0f);MinionWindup=TreasureArray(MinionWindup,1f);MinionXp=TreasureArray(MinionXp,60);
         }
         static T[] EliteArray<T>(T[] old,Func<EliteDef,T> value)
         {var a=new T[48];Array.Copy(old,a,old.Length);foreach(var d in EliteCatalog.All)a[d.kind]=value(d);return a;}

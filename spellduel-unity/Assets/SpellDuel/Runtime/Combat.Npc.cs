@@ -67,7 +67,7 @@ namespace SpellDuel
             var fw = Fighter.Flat(f.forward);
             foreach (var m in minions)
             {
-                if (!m.Alive || m.tamedKind >= 0) continue;
+                if (!m.Alive || m.tamedKind >= 0 || m.treasure) continue;   // 寶箱怪抓不了
                 var to = m.Feet - f.Feet; to.y = 0f;
                 float d = to.magnitude;
                 if (d > CaptureRange + m.bodyRadius) continue;

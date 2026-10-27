@@ -136,6 +136,7 @@ namespace SpellDuel
         public bool ambusher;                  // 簡單模式：從別的方向偷襲來的那隻（同時最多一隻）
         public bool hidden;                    // 食人花：埋在地下（玩家走近 1.5m 才冒出來；埋著時打不到）
         public bool miniBoss;                  // 第 3 波單獨登場的特殊敵人（有名字和血條）
+        public bool treasure; public float treasureLeaveAt;   // 寶箱怪（Combat.Treasure.cs）：到處逃跑、每下只扣 1、時間到就逃走
         // 副本特殊地點（Combat.RoomEvents.cs）
         public bool rooted;                    // 不會動、不會出手（守護物、圖騰、雕像、寶箱）
         public float lure;                     // 小怪優先打它（多算幾公尺的優勢）
@@ -596,7 +597,7 @@ namespace SpellDuel
         public static bool IsRangedMinion(int kind) => kind >= 0 && kind < MinionReach.Length && MinionReach[kind] >= 5f;
         static readonly float[] MinionReach = { 0.95f, 9f, 1.2f, 1.3f, 11f, 14f, 13f, 8f, 5f, 6f, 1.0f, 1.3f, 9f, 7f, 9f, 11f, 1.3f, 1.4f, 5f, 1.8f, 1.8f, 1.8f, 1.8f };
         static readonly float[] MinionWindup = { 1.5f, 0.8f, 1.5f, 0.5f, 1.2f, 1.6f, 1.0f, 1.0f, 0.8f, 1.0f, 0.7f, 0.8f, 0.9f, 0.6f, 0.6f, 1.2f, 0.8f, 0.6f, 1.0f, SpecialWindup, SpecialWindup, SpecialWindup, SpecialWindup };
-        public const int MinionKinds = 53;
+        public const int MinionKinds = 54;   // 53＝寶箱怪（Combat.Treasure.cs）
         // ---- 第二～五章 x-4、x-5 的特殊敵人（19 古根撼地獸、20 潮鞭鰻、21 鏈錘鬥奴、22 裂岩甲蜥）：
         //      場上同時最多 1 隻、出現頻率低；大範圍招式（比 Boss 小），要跳起來（地面震環）或蹲下（胸口高度橫掃）才躲得掉，走出範圍也打不到
         public const float SpecialWindup = 1.5f;
@@ -697,6 +698,7 @@ namespace SpellDuel
             m.homePos = feet;
             m.accuracy = enemyAccuracy;   // 敵人的命中率（故事各章；抵掉玩家的閃避）
             if (kind == 3) { m.fuseAt = now + BombFuse; m.speedMul *= BombSpeedMul; }   // 自爆小鬼：直直衝過來，引信到就爆
+            if (kind == TreasureKind) SetupTreasure(m);
             minions.Add(m);
             Emit("minionspawn", m.Feet, c.color, null);
             return m;
@@ -743,7 +745,7 @@ namespace SpellDuel
         /// <summary>下一個 Boss 波</summary>
         public int NextBossWave => (wave / BossEvery + (IsBossWave ? 0 : 1)) * BossEvery;
         /// <summary>這一波還剩幾隻（還沒出現的＋場上活著的）</summary>
-        public int WaveRemaining => IsBossWave && !bossPending ? (enemy.Alive ? 1 : 0) : waveToSpawn + minions.Count;
+        public int WaveRemaining => IsBossWave && !bossPending ? (enemy.Alive ? 1 : 0) : waveToSpawn + BlockingMinions;
 
         // 故事模式的關卡：打第 firstWave～lastWave 波（同一套無盡模式的波次、主題、Boss），打完就通關
         public int stageEnd = -1, stageStart = 1;
@@ -990,15 +992,16 @@ namespace SpellDuel
                 lastMinionCount = minions.Count;
             }
             UpdateSpecialSpawn();
+            UpdateTreasureSpawn();   // 寶箱怪（Combat.Treasure.cs）
             // 故事關卡的 Boss 波：小怪全部打倒 → 地面震動，Boss 現身
-            if (bossPending && waveToSpawn == 0 && minions.Count == 0 && !HostileNpcAlive)
+            if (bossPending && waveToSpawn == 0 && BlockingMinions == 0 && !HostileNpcAlive)
             {
                 bossPending = false; bossAt = now + BossEntranceDelay;
                 Emit("bossincoming", player.Feet, new Color(1f, 0.5f, 0.3f), "大地在震動……");
                 return;
             }
             // 這一波全部打倒：休息 4 秒進下一波（血量不會自己回：用藥水、治療技能，劍士可以點自然回復）
-            if (waveToSpawn == 0 && minions.Count == 0 && !HostileNpcAlive)
+            if (waveToSpawn == 0 && BlockingMinions == 0 && !HostileNpcAlive)
             {
                 if (roomEvent != null) { FinishRoomEvent(roomEvent == "defend" ? "守住了！" : "清空了！"); return; }   // 守住目標、崩塌、黑暗房：清完這一波就過關
                 BonusOnWaveCleared();   // 小目標：幾秒清完第一波
@@ -1040,7 +1043,7 @@ namespace SpellDuel
                 return;
             }
             if (waveToSpawn <= 0) return;
-            bool anyAlive = false; foreach (var m in minions) if (m.Alive) { anyAlive = true; break; }
+            bool anyAlive = false; foreach (var m in minions) if (m.Alive && !m.treasure) { anyAlive = true; break; }
             if (anyAlive) { roundWaiting = false; return; }
             // 這一輪全部打完：停 3 秒（第一輪照波次開始時間）
             if (!roundWaiting) { roundWaiting = true; if (roundNo > 0) nextRoundAt = now + RoundGap; }
@@ -1088,7 +1091,7 @@ namespace SpellDuel
             if (MiniBossWave) return;   // 小 Boss 波：只有牠（UpdateSpecialSpawn）
             if (waveToSpawn <= 0 || minions.Count >= maxAlive) return;
             int front = 0, back = 0, special = 0;
-            foreach (var m in minions) if (m.Alive) { var r = RoleOf(m.minionKind); if (r == MinionRole.Front) front++; else if (r == MinionRole.Back) back++; else special++; }
+            foreach (var m in minions) if (m.Alive && !m.treasure) { var r = RoleOf(m.minionKind); if (r == MinionRole.Front) front++; else if (r == MinionRole.Back) back++; else special++; }
             bool threeBeats = Theme >= 1 || wave >= 4;   // 第一章 1-1～1-3：只有前兩拍
             int wantFront = rhythmMaxAlive <= 3 ? 1 : 2, wantBack = 1, wantSpecial = threeBeats && rhythmMaxAlive >= 3 ? 1 : 0;
             float t = now - waveStartAt;
@@ -1311,6 +1314,7 @@ namespace SpellDuel
                 if (tgt == null) continue;
                 if (tgt.npcSide >= 0) best = FlatDistance(m.Feet, tgt.Feet);
                 m.target = tgt;
+                if (m.treasure) { UpdateTreasure(m, dt); continue; }   // 寶箱怪：只會逃
                 var wantFwd = m.windupUntil > 0f && m.lockFwd != Vector3.zero ? m.lockFwd : Fighter.Flat(tgt.head - m.head);   // 預備中：面向鎖住（扇形不追著玩家轉）
                 if (m.minionKind == 16 && m.forward != Vector3.zero && wantFwd != Vector3.zero)
                 {
@@ -3578,7 +3582,9 @@ namespace SpellDuel
             return Mathf.RoundToInt(dmg * (1f + f.riposte));
         }
         /// <summary>命中前的傷害加成：融化、遠射、刺殺</summary>
-        int PreHit(Fighter o, Fighter t, SkillDef s, int dmg, Projectile p)
+        /// <summary>寶箱怪：打中的傷害一律算 1（吸血、傷害統計、隊友端送主機的數字也是 1）</summary>
+        int PreHit(Fighter o, Fighter t, SkillDef s, int dmg, Projectile p) { int d = PreHitRaw(o, t, s, dmg, p); return t != null && t.treasure && d > 0 ? 1 : d; }
+        int PreHitRaw(Fighter o, Fighter t, SkillDef s, int dmg, Projectile p)
         {
             if (o == null || t == null || s == null || dmg <= 0) return dmg;
             float m = 1f;
@@ -3895,6 +3901,7 @@ namespace SpellDuel
             if (dmg > 0f && kind != "dot" && kind != "burn" && kind != "oath" && kind != "thorns" && BarrierGuards(f) && TryBarrier(f, at)) return;   // 主教的聖域障壁
             if (f.invulnUntil > now && dmg > 0f) return;   // 狂戰士不死之軀的無敵
             if (f.isMinion && f.hidden) return;   // 埋著的食人花
+            if (f.treasure && (kind == "dot" || kind == "burn")) return;   // 寶箱怪：毒、灼燒沒用（每一下攻擊只扣 1）
             if (f.isMinion && dmg > 0f && kind != "dot" && kind != "burn") OnMinionHurt(f);
             if (f.isMinion && f.minionKind == 16 && dmg > 0f)
             {
@@ -3934,6 +3941,7 @@ namespace SpellDuel
                     if (absorb > 0f) Emit("mitigate", at ?? f.Chest, new Color(0.5f, 0.55f, 1f), $"{(f.manaCoat ? "魔力盾" : "魔力護盾")} -{absorb:0} MP");
                 }
             }
+            if (f.treasure && dmg > 0f) dmg = 1f;   // 寶箱怪：不管多痛，每下只扣 1
             dmg = Mathf.Round(Mathf.Max(0f, dmg));
             // 不死之軀：致命傷害留 1 HP，無敵 3 秒
             if (f.undyingUntil > now && f.hp - dmg < 1f) { dmg = Mathf.Max(0f, f.hp - 1f); f.undyingUntil = 0f; f.invulnUntil = now + 3f; Emit("buff", f.Chest, new Color(0.8f, 0.1f, 0.1f), "不死之軀！無敵 3 秒"); }
