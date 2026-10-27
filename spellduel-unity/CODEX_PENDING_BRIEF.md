@@ -239,3 +239,10 @@ Astra 已目視確認最終原生後腦覆髮、主教白金前冠、胸扣貼�
 [平台建置 5c2787f](https://github.com/paul771127/AnimeGenerate/actions/runs/40268908768)：Android APK、iOS Xcode 匯出、未簽署 IPA、TestFlight 上傳均成功。此後續提交包含另行合入的真人分身出手動畫與影片更新，已保留；本次美術提交未改 Combat、Fighter、技能數值、存檔或訊息格式。
 
 原生個別 PNG、來源提交與 hash 清單、2D/3D 對照及各視角在 Docs/neck_hair_preview/、Docs/pending_preview/。版面示意有明確標示，未冒充原生 OnGUI 截圖；未量測手機 AR FPS。
+
+
+### 第 6 項：自然機關（2026-10-27）
+
+五種機關改用 HazardArt.Nature.cs 的程序模型：玄武岩裂口、熔岩柱與煙／火星、七根彎曲樹根、紫色孢子、9m 浪脊與泡沫、四臂漩渦。外圈沿用實際半徑，實體用 Toon，發光／透明效果用 SpellFx 和 Sprites。預警跟隨原狀態函式，不改 Combat 或 haz 訊息。收起時停粒子並隱藏立體部分，避免 AR 地板下穿透。共用材質，不逐幀建立網格。
+
+Snapshot.Nature.cs 新增五種 × 收起／預警／啟動原生截圖，以及有限頂點、3000 三角上限、收起隱藏檢查。Android／iOS 與原生結果待 CI 完成後補記。
