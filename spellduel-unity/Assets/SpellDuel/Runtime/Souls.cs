@@ -73,6 +73,8 @@ namespace SpellDuel
         static readonly Dictionary<string, SoulDef> byId = new Dictionary<string, SoulDef>();
 
         static void M(int kind, float chance, string color, params SoulFx[] fx) => Add(new SoulDef { id = "soul_m" + kind, kind = kind, source = Battle.MinionNames[kind], name = Battle.MinionNames[kind] + "精魄", chance = chance, color = Skills.C(color), fx = fx });
+        /// <summary>變種怪（刺客怪、天候怪；Combat.Variants.cs）的精魄</summary>
+        static void V(int id, float chance, string color, params SoulFx[] fx) { var v = MonsterVariants.Get(id); Add(new SoulDef { id = "soul_m" + id, kind = id, source = v.name, name = v.name + "精魄", chance = chance, color = Skills.C(color), fx = fx }); }
         static void B(string boss, string color, params SoulFx[] fx)
         {
             string n = Skills.Classes.TryGetValue(boss, out var cd) ? cd.name : boss;
@@ -127,12 +129,25 @@ namespace SpellDuel
             M(50,.005f,"#38dddd",F(SoulOp.DodgePower,.15f));
             M(51,.005f,"#a5b0b9",F(SoulOp.Block,.06f));
             M(52,.005f,"#91c9e2",F(SoulOp.Evade,.05f));
+            // ---- 刺客怪（只在夜晚的副本出現；0.8%）：刺客風格的效果
+            V(101, 0.008f, "#ff5a6e", F(SoulOp.Crit, 0.05f));                                   // 灰燼匕影：爆擊率
+            V(102, 0.008f, "#ff7b54", F(SoulOp.CritDmg, 0.30f));                                // 鑄爐潛刃：爆擊傷害
+            V(103, 0.008f, "#9be15d", F(SoulOp.Poison, 0.08f));                                 // 腐根割喉者：機率附加中毒
+            V(104, 0.008f, "#b9a3ff", F(SoulOp.Evade, 0.04f));                                  // 霧徑暗菇：閃避率
+            V(105, 0.008f, "#4fc3f7", F(SoulOp.Atk, 0.10f), F(SoulOp.Taken, 0.06f));            // 沉淵刺客：好處＋副作用（攻擊高、更怕痛）
+            V(106, 0.008f, "#90a4ae", F(SoulOp.HurtInvuln, 0, 0.05f, 1f));                      // 黑礁剪影：被打時機率 1 秒無敵
+            V(107, 0.008f, "#ffd166", F(SoulOp.BasicSpeed, 0.08f));                             // 破曉獵影：普攻集氣變快
+            // ---- 天候怪（只在那種天候出現；0.8%）
+            V(111, 0.008f, "#ffe45c", F(SoulOp.HitCast, 0, 0.05f, skill: "thunder"));           // 雷雨精：機率發動雷擊
+            V(112, 0.008f, "#cfd8dc", F(SoulOp.Evade, 0.05f), F(SoulOp.Hp, -20));               // 霧行者：好處＋副作用（閃避高、HP 少一點）
+            V(113, 0.008f, "#7cf2b0", F(SoulOp.ChargeSpeed, 0.10f));                            // 風刃鳶：技能蓄力變快
+            V(114, 0.008f, "#b8c7ff", F(SoulOp.KillHeal, 0.10f, 0.30f));                        // 月牙狼：打倒敵人時機率回血
             AssignParts();
         }
 
         /// <summary>武器類（傷害）、飾品類（技能、輔助、特殊）；其他都是防具類（防禦）</summary>
-        static readonly string[] WeaponSouls = { "soul_m0", "soul_m3", "soul_m5", "soul_m7", "soul_m9", "soul_m10", "soul_m21", "soul_boss_canyon" };
-        static readonly string[] TrinketSouls = { "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_m20", "soul_boss", "soul_boss_forest" };
+        static readonly string[] WeaponSouls = { "soul_m101", "soul_m102", "soul_m103", "soul_m105", "soul_m0", "soul_m3", "soul_m5", "soul_m7", "soul_m9", "soul_m10", "soul_m21", "soul_boss_canyon" };
+        static readonly string[] TrinketSouls = { "soul_m107", "soul_m111", "soul_m113", "soul_m114", "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_m20", "soul_boss", "soul_boss_forest" };
         static void AssignParts()
         {
             foreach (var d in All)

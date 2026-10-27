@@ -286,7 +286,6 @@ namespace SpellDuel
             if (dk > 0 && prof != null && prof.NoviceKills(dk, dropRng)) { Progress.SaveChar(prof); NoviceQuestTick(); }   // 初心者的招式任務（打倒／收集）
             QuestKills(dk);   // 副本任務：打倒幾隻敵人、收集東西
             float goldMul = 1f + Souls.Sum(prof, SoulOp.Gold);   // 精魄：金幣加成
-            goldMul *= NightGold;   // 副本夜晚：金幣 +20%
             for (int i = 0; i < dk; i++) pendingGold += Mathf.RoundToInt(Economy.MinionGold(battle.wave) * goldMul);
             if (dk > 0) { Sfx.Play("poof", 0.6f); Sfx.Play("coin", 0.35f, 1.1f); }   // 小怪倒下＋掉金幣
             int db = battle.bossKills - lastBossKillsSeen; lastBossKillsSeen = battle.bossKills;
@@ -337,7 +336,7 @@ namespace SpellDuel
             {
                 if (kind == Battle.TreasureKind) { GrantTreasure(); return; }   // 寶箱怪：大把金幣＋一定掉一件裝備
                 if (TryDrop(false)) return;
-                AddMat(Crafting.RollMinion(kind, battle.Theme, diff, dropRng));
+                AddMat(Crafting.RollMinion(MonsterVariants.BaseOf(kind), battle.Theme, diff, dropRng));   // 變種怪：照原本的怪掉材料
             }
             else
             {
@@ -1510,7 +1509,7 @@ namespace SpellDuel
             // 小怪：位置與「編號,血量,最大血量,預備中」
             var ms = battle.minions;
             var pts = new Vector3[ms.Count]; var ks = new string[ms.Count];
-            for (int i = 0; i < ms.Count; i++) { pts[i] = ms[i].head; ks[i] = $"{ms[i].minionId},{Mathf.CeilToInt(ms[i].hp)},{ms[i].maxHp},{(ms[i].windupUntil > 0f ? 1 : 0)},{ms[i].minionKind},{TargetCode(ms[i].target)},{ms[i].alt.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}" + EliteWire(ms[i]); }
+            for (int i = 0; i < ms.Count; i++) { pts[i] = ms[i].head; ks[i] = $"{ms[i].minionId},{Mathf.CeilToInt(ms[i].hp)},{ms[i].maxHp},{(ms[i].windupUntil > 0f ? 1 : 0)},{(ms[i].variant > 0 ? ms[i].variant * 1000 + ms[i].minionKind : ms[i].minionKind)},{TargetCode(ms[i].target)},{ms[i].alt.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}" + EliteWire(ms[i]); }
             NetSend?.Invoke(new Msg { t = "mins", pts = pts, ks = ks });
             SendNpcState();   // 副本的劇情人物
         }
@@ -1685,10 +1684,12 @@ namespace SpellDuel
                             if (parts.Length < 4 || !int.TryParse(parts[0], out var mid)) continue;
                             seen.Add(mid);
                             int mkind = parts.Length >= 5 && int.TryParse(parts[4], out var mk2) ? mk2 : 0;
+                            int mvar = mkind >= 1000 ? mkind / 1000 : 0; mkind %= 1000;   // 變種怪：種類欄＝變種 id×1000＋原本的種類
                             if (battle.captured.Contains(mid)) continue;   // 我剛收服的（主機還沒拿掉）
                             var mf = battle.minions.Find(x => x.minionId == mid) ?? battle.SpawnMinion(new Vector3(m.pts[i].x, 0f, m.pts[i].z), mid, mkind);
                             mf.forward = Fighter.Flat(m.pts[i] - mf.head) != Vector3.zero ? Fighter.Flat(m.pts[i] - mf.head) : mf.forward;
                             mf.head = m.pts[i];
+                            if (mvar > 0) battle.ApplyVariant(mf, mvar);
                             if (float.TryParse(parts[1], out var mhp)) mf.hp = mhp;
                             if (int.TryParse(parts[2], out var mmax)) mf.maxHp = mmax;
                             mf.windupUntil = parts[3] == "1" ? battle.now + 1f : 0f;
@@ -1700,7 +1701,7 @@ namespace SpellDuel
                         {
                             mf.hp = 0f;
                             if (battle.TreasureFled(mf)) { OnBattleEvent("treasurefled", mf.Chest, new Color(1f, 0.85f, 0.3f), "寶箱怪逃走了……"); continue; }   // 寶箱怪時間到逃走：沒有獎勵
-                            battle.killLog.Add("m" + mf.minionKind);
+                            battle.killLog.Add("m" + Battle.LogKind(mf));
                         }   // 隊友端：主機那邊打倒了（記下種類：掉材料用）
                     }
                     break;
@@ -1806,6 +1807,7 @@ namespace SpellDuel
                     rig.SetVariant(m.minionKind);
                     rig.SetDress(battle.Theme);   // 角鬥場：黑晶項圈；山道：沙塵與頭巾（美術第十一輪）
                     if (m.treasure) DressTreasure(rig);   // 寶箱怪：換成會跑的寶箱
+                    if (m.variant > 0 && MonsterVariants.Get(m.variant) != null) MinionLook.Apply(rig, MonsterVariants.Get(m.variant));   // 刺客怪、天候怪：換配色、武器（MinionLook.cs）
                     if (m.isElite && !EliteCatalog.IsElite(m.minionKind)) rig.transform.localScale = Vector3.one * 1.5f;   // 無盡塔的精銳：大一號
                     minionGo[m] = rig; minionLastHp[m] = m.hp;
                     rig.transform.position = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);
@@ -1833,9 +1835,11 @@ namespace SpellDuel
                 bool jumped = (newPos - oldPos).magnitude > 2f;   // 虛空術士瞬移（隊友端也看得到）：兩邊都冒出傳送光
                 if (jumped) { MinionRig.SpawnFx(oldPos); MinionRig.SpawnFx(newPos); Sfx.Play("dodge", 0.5f, 0.6f); }
                 rig.MoveSpeed = jumped ? 0f : Mathf.Lerp(rig.MoveSpeed, (newPos - oldPos).magnitude / dt, 0.25f);
+                if (m.variant > 0) { var look = rig.GetComponent<MinionLook>(); if (look) look.Sneak = Battle.AssassinSneaking(m, Me) || (m.variant == 112 && Me != null && Battle.FlatDistance(m.Feet, Me.Feet) > 3f); }   // 刺客繞路中、霧行者離遠了：只看得到眼睛
                 bool winding = m.windupUntil > 0f;
                 if (winding && !minionWinding.Contains(m))
                 {
+                    if (battle.remoteEnemy && m.assassin && m.target == Me) OnBattleEvent("assassinwarn", Me.Feet, new Color(0.9f, 0.2f, 0.35f), "1");   // 合作（隊友）：刺客要從背後砍我
                     minionWinding.Add(m); rig.Windup(EliteCatalog.IsElite(m.minionKind) && battle.EliteView(m) != null ? battle.EliteView(m).duration : battle.WindupOf(m.minionKind));
                     if (battle.remoteEnemy && Battle.IsSpecial(m.minionKind))   // 合作（隊友）：稀有怪預備大招 → 一樣跳出「跳起來／蹲下」
                         OnBattleEvent("specialwarn", m.Feet, Skills.All[Battle.SpecialSkillId(m.minionKind)].color, Battle.SpecialNeedsJump(m.minionKind) ? "⬆ 跳起來！（或離遠一點）" : "⬇ 蹲下！（或離遠一點）");
@@ -3107,6 +3111,18 @@ namespace SpellDuel
                     else MinionRig.SpawnFx(WorldFrame.FromWorld(at));
                     Sfx.Play("boom", 0.4f, 1.6f);
                     break;
+                case "assassin":
+                case "weathermonster":
+                    Say(text, 3f);
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 1.4f, text = kind == "assassin" ? "🗡" : "⚡", color = c, born = Time.time });
+                    Sfx.Play(kind == "assassin" ? "dodge" : "warn", 0.6f, kind == "assassin" ? 0.6f : 1.1f);
+                    break;
+                case "assassinwarn":
+                    if (text != "1") break;   // 只提醒被盯上的人
+                    Say("⚠ 背後！刺客要突襲了——轉身或閃開！", 1.2f);
+                    floaters.Add(new Floater { text = "⚠ 背後！", color = c, born = Time.time, screen = true });
+                    Sfx.Play("warn", 1f, 0.7f); Haptics.Play(Haptics.Kind.Heavy);
+                    break;
                 case "treasure":
                     Say(text, 3f);
                     floaters.Add(new Floater { posMap = at + Vector3.up * 1.2f, text = "💰 寶箱怪！", color = c, born = Time.time });
@@ -4203,7 +4219,7 @@ namespace SpellDuel
                 Fighter aimer = null; float aimerLeft = 99f; int aimers = 0;
                 foreach (var m in battle.minions)
                 {
-                    if (!m.Alive || m.windupUntil <= 0f || !Battle.IsRangedMinion(m.minionKind)) continue;
+                    if (!m.Alive || m.windupUntil <= 0f || !Battle.IsRangedMinion(m.minionKind) || m.assassin) continue;   // 刺客（原本是遠程怪的骨架）用近身突襲，有自己的「背後！」提示
                     if (m.target != null && m.target != me) continue;   // 合作：瞄準隊友的不提示
                     aimers++;
                     float left = Mathf.Max(0f, m.windupUntil - now);

@@ -43,9 +43,6 @@ namespace SpellDuel
             }
         }
         public const float NightLightMul = 0.45f;
-        /// <summary>副本夜晚的獎勵：金幣 +20%、掉寶率 ×1.25</summary>
-        public const float NightGoldMul = 1.2f, NightLootMul = 1.25f;
-        float NightGold => battle != null && battle.night ? NightGoldMul : 1f;
 
         /// <summary>
         /// 副本的白天／夜晚與天候（使用者要求）：
@@ -57,16 +54,18 @@ namespace SpellDuel
         {
             if (battle == null || drun == null || dungeon == null) return;
             battle.SetBonus(Battle.Bonus.None);
-            if (dungeon.id == TrapGallery.Id) { battle.night = false; battle.SetWeather(Battle.Weather.None); return; }
+            if (dungeon.id == TrapGallery.Id) { battle.night = false; battle.assassinDef = null; battle.SetWeather(Battle.Weather.None); return; }
             string slot = System.DateTime.Now.ToString("yyyyMMdd") + "_" + (System.DateTime.Now.Hour / 3);
             bool wasNight = battle.night;
             battle.night = new System.Random((dungeon.id + slot).GetHashCode() & 0x7fffffff).NextDouble() < DungeonNightChance;
+            battle.assassinDef = battle.night ? MonsterVariants.AssassinFor(dungeon.id) : null;   // 夜晚：這個副本的刺客怪（使用者要求：白天晚上數值沒差，只差刺客）
             var r = new System.Random((dungeon.id + "/" + drun.node.id + slot).GetHashCode() & 0x7fffffff);
             var w = DungeonWeather(drun.Theme, battle.night, r);
             bool changed = w != battle.weather;
             battle.SetWeather(w);
-            if (drun.Step == 1) Say((battle.night ? "🌙 夜晚的副本：敵人的攻擊 +10%，金幣 +20%、掉寶率 ×1.25" : "☀ 白天的副本") + (w != Battle.Weather.None ? $"\n天候：{Battle.WeatherName(w)}——{Battle.WeatherDesc(w)}" : ""), 4.5f);
-            else if (changed) Say(w != Battle.Weather.None ? $"天候變了：{Battle.WeatherName(w)}——{Battle.WeatherDesc(w)}" : "天氣放晴了", 3.5f);
+            string wl = w != Battle.Weather.None ? $"{Battle.WeatherName(w)}——{Battle.WeatherDesc(w)}；{Battle.WeatherTraitText(w)}" : "";
+            if (drun.Step == 1) Say((battle.night ? $"🌙 夜晚的副本：小心從背後突襲的刺客「{battle.assassinDef?.name}」" : "☀ 白天的副本") + (wl.Length > 0 ? "\n天候：" + wl : ""), 5f);
+            else if (changed) Say(wl.Length > 0 ? "天候變了：" + wl : "天氣放晴了", 4f);
         }
         public const double DungeonNightChance = 0.4;
         /// <summary>副本地點的天候（份數）：晴／雨／霧／風；夜晚另外有 1 份月夜</summary>
@@ -96,7 +95,7 @@ namespace SpellDuel
                 battle.SetWeather(k < 3 ? Battle.Weather.Rain : k < 6 ? Battle.Weather.Fog : k < 9 ? Battle.Weather.Wind : Battle.Weather.Moon);
             }
             battle.SetBonus((Battle.Bonus)(1 + r.Next(3)));
-            if (battle.weather != Battle.Weather.None) Say($"今天的天候：{Battle.WeatherName(battle.weather)}——{Battle.WeatherDesc(battle.weather)}", 4f);
+            if (battle.weather != Battle.Weather.None) Say($"今天的天候：{Battle.WeatherName(battle.weather)}——{Battle.WeatherDesc(battle.weather)}；{Battle.WeatherTraitText(battle.weather)}", 5f);
         }
 
         /// <summary>通關：小目標達成 → 額外金幣＋試煉幣</summary>
@@ -109,7 +108,7 @@ namespace SpellDuel
         }
 
         /// <summary>月夜：掉寶率 ×1.5</summary>
-        float WeatherLootMul => (battle != null && battle.weather == Battle.Weather.Moon ? 1.5f : 1f) * (battle != null && battle.night ? NightLootMul : 1f);   // 月夜 ×1.5；副本夜晚 ×1.25
+        float WeatherLootMul => battle != null && battle.weather == Battle.Weather.Moon ? 1.5f : 1f;
 
         /// <summary>HUD：天候的畫面色調＋右上的天候、小目標</summary>
         void DrawStageModsHud(float W, float H)

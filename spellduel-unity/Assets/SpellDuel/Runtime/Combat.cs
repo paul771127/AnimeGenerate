@@ -136,7 +136,9 @@ namespace SpellDuel
         public bool ambusher;                  // 簡單模式：從別的方向偷襲來的那隻（同時最多一隻）
         public bool hidden;                    // 食人花：埋在地下（玩家走近 1.5m 才冒出來；埋著時打不到）
         public bool miniBoss;                  // 第 3 波單獨登場的特殊敵人（有名字和血條）
-        public bool treasure, treasureRunning; public float treasureLeaveAt;   // 寶箱怪（Combat.Treasure.cs）：到處逃跑、每下只扣 1、時間到就逃走
+        public bool treasure, treasureRunning; public float treasureLeaveAt;
+        public int variant;                    // 變種怪（Combat.Variants.cs）：刺客怪、天候怪的 id（0＝不是）
+        public bool assassin; public int asnState; public float asnUntil; public Fighter asnTarget;   // 刺客怪：0 潛伏、1 沿邊繞、2 突襲、4 退回   // 寶箱怪（Combat.Treasure.cs）：到處逃跑、每下只扣 1、時間到就逃走
         // 副本特殊地點（Combat.RoomEvents.cs）
         public bool rooted;                    // 不會動、不會出手（守護物、圖騰、雕像、寶箱）
         public float lure;                     // 小怪優先打它（多算幾公尺的優勢）
@@ -699,6 +701,7 @@ namespace SpellDuel
             m.accuracy = enemyAccuracy;   // 敵人的命中率（故事各章；抵掉玩家的閃避）
             if (kind == 3) { m.fuseAt = now + BombFuse; m.speedMul *= BombSpeedMul; }   // 自爆小鬼：直直衝過來，引信到就爆
             if (kind == TreasureKind) SetupTreasure(m);
+            ApplyWeatherTraits(m);   // 天候讓怪物表現不同（Combat.Variants.cs）
             minions.Add(m);
             Emit("minionspawn", m.Feet, c.color, null);
             return m;
@@ -997,6 +1000,7 @@ namespace SpellDuel
             }
             UpdateSpecialSpawn();
             UpdateTreasureSpawn();   // 寶箱怪（Combat.Treasure.cs）
+            UpdateVariantSpawns();   // 夜晚的刺客怪、天候怪（Combat.Variants.cs）
             // 故事關卡的 Boss 波：小怪全部打倒 → 地面震動，Boss 現身
             if (bossPending && waveToSpawn == 0 && BlockingMinions == 0 && !HostileNpcAlive)
             {
@@ -1319,6 +1323,7 @@ namespace SpellDuel
                 if (tgt.npcSide >= 0) best = FlatDistance(m.Feet, tgt.Feet);
                 m.target = tgt;
                 if (m.treasure) { UpdateTreasure(m, dt); continue; }   // 寶箱怪：只會逃
+                if (m.assassin) { UpdateAssassin(m, dt); continue; }   // 刺客怪：繞到背後突襲（Combat.Variants.cs）
                 var wantFwd = m.windupUntil > 0f && m.lockFwd != Vector3.zero ? m.lockFwd : Fighter.Flat(tgt.head - m.head);   // 預備中：面向鎖住（扇形不追著玩家轉）
                 if (m.minionKind == 16 && m.forward != Vector3.zero && wantFwd != Vector3.zero)
                 {
@@ -3853,7 +3858,7 @@ namespace SpellDuel
         void ApplyDamageAndEffect(Fighter target, int damage, EffectKind eff, float dps, float dur, Vector3 at, Fighter by = null)
         {
             if (target.npcSide == 1 && target.npcId != null && target.npcId.StartsWith("ev_") && EvPropHit(target, by)) return;   // 副本：雕像、寶箱（Combat.RoomEvents.cs）
-            if ((weather != Weather.None || night) && damage > 0) damage = Mathf.Max(1, Mathf.RoundToInt(damage * WeatherMul(incoming ?? HitSkill, by ?? (FoeSide(target) ? player : enemy))));   // 故事關卡的天候（Combat.StageMods.cs）
+            if (weather != Weather.None && damage > 0) damage = Mathf.Max(1, Mathf.RoundToInt(damage * WeatherMul(incoming ?? HitSkill, by ?? (FoeSide(target) ? player : enemy))));   // 故事關卡的天候（Combat.StageMods.cs）
             if (by == null) by = FoeSide(target) ? player : enemy;   // 不知道是誰打的：對面那一方的主角
             // 閃避率（刺客技能樹）：整次攻擊（傷害＋效果）完全閃開
             // 閃避只對物理攻擊有效（使用者要求）：魔法攻擊（火球、毒液、放電、泡泡…）閃不掉，要自己躲
@@ -3958,7 +3963,7 @@ namespace SpellDuel
             if (f.Alive && dmg > 0f && f.soulProcs.Count > 0 && kind != "dot" && kind != "burn" && kind != "thorns") SoulOnHurt(f);
             if (!f.Alive)
             {
-                if (f.isMinion) killLog.Add("m" + f.minionKind);
+                if (f.isMinion) killLog.Add("m" + LogKind(f));
                 else if (!f.isPlayer && f.npcSide < 0 && f == enemy && f.cls != null) killLog.Add(f.cls.id);
                 if (f.isMinion) { kills++; if (endless) xp += Mathf.RoundToInt(MinionXp[f.minionKind] * (1f + 0.03f * wave)); Emit("miniondie", f.Chest, Color.white, null); }
                 else if (f.npcSide >= 0) Emit("npcdown", f.Chest, Color.white, $"{f.name}倒下了");
