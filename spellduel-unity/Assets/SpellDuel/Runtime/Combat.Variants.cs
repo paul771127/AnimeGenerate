@@ -13,7 +13,8 @@ namespace SpellDuel
     {
         public int id, baseKind;
         public string name, dungeon, desc;
-        public bool assassin, claws;
+        public bool assassin, claws, healer;
+        public int theme = -1;   // 補師：哪一章（3 角鬥場、4 黃土山道）
         public Battle.Weather weather;
         public float hp = 1f, dmg = 1f, speed = 1f;
         public Color tint;
@@ -35,6 +36,9 @@ namespace SpellDuel
             new VariantDef { id = 111, baseKind = 17, name = "雷雨精",   weather = Battle.Weather.Rain, hp = 1.5f, dmg = 1.3f, speed = 1.3f, tint = new Color(1f, 0.9f, 0.36f), desc = "暴雨裡才會出現的雷水母，放電更痛" },
             new VariantDef { id = 112, baseKind = 6,  name = "霧行者",   weather = Battle.Weather.Fog,  hp = 1.3f, dmg = 1.2f, tint = new Color(0.82f, 0.86f, 0.9f), desc = "濃霧裡的灰白術士，離遠了只看得到眼睛" },
             new VariantDef { id = 113, baseKind = 14, name = "風刃鳶",   weather = Battle.Weather.Wind, hp = 1.2f, dmg = 1.3f, speed = 1.6f, tint = new Color(0.49f, 0.95f, 0.69f), desc = "順風時乘風俯衝的鳶，飛得很快" },
+            // ---- 補師（第四、五章；使用者要求）：站在敵陣後方，讀條治療受傷的同伴（被打中會打斷讀條），自己不攻擊
+            new VariantDef { id = 121, baseKind = 9, name = "鬥場祭司", healer = true, theme = 3, tint = new Color(1f, 0.85f, 0.45f), desc = "角鬥場的金袍祭司，替受傷的鬥士念治療咒" },
+            new VariantDef { id = 122, baseKind = 6, name = "砂谷藥師", healer = true, theme = 4, tint = new Color(0.45f, 0.95f, 0.8f), desc = "黃土山道的藥師，背著藥壺替同伴療傷" },
             new VariantDef { id = 114, baseKind = 8,  name = "月牙狼",   weather = Battle.Weather.Moon, hp = 1.6f, dmg = 1.3f, speed = 1.4f, tint = new Color(0.72f, 0.78f, 1f), desc = "月夜才現身的銀色衝鋒獸" },
         };
         static readonly Dictionary<int, VariantDef> byId = new Dictionary<int, VariantDef>();
@@ -42,6 +46,7 @@ namespace SpellDuel
         public static VariantDef Get(int id) => byId.TryGetValue(id, out var v) ? v : null;
         public static bool IsVariant(int id) => id >= 100 && byId.ContainsKey(id);
         public static VariantDef AssassinFor(string dungeonId) { foreach (var v in All) if (v.assassin && v.dungeon == dungeonId) return v; return null; }
+        public static VariantDef HealerFor(int theme) { foreach (var v in All) if (v.healer && v.theme == theme) return v; return null; }
         public static VariantDef ForWeather(Battle.Weather w) { foreach (var v in All) if (!v.assassin && v.weather == w && w != Battle.Weather.None) return v; return null; }
         /// <summary>擊倒紀錄的種類換回原本的怪（掉材料用）</summary>
         public static int BaseOf(int kind) => byId.TryGetValue(kind, out var v) ? v.baseKind : kind;
@@ -76,6 +81,7 @@ namespace SpellDuel
             var v = MonsterVariants.Get(id);
             if (v == null || m.variant == id) return;
             m.variant = id; m.name = v.name;
+            if (v.healer) { m.healer = true; m.attackReadyAt = now + HealerFirst; Emit("healer", m.Feet, v.tint, null); return; }
             if (v.assassin)
             {
                 m.assassin = true; m.asnState = 0; m.asnUntil = now + AssassinLurk;
@@ -236,5 +242,73 @@ namespace SpellDuel
                 }
             }
         }
-    }
+    
+        // ------------------------------------------------------------ 補師的 AI（第四、五章）
+        public const float HealerEvery = 5f, HealerFirst = 2.5f, HealerCast = 1.2f, HealerRange = 7f, HealerFrac = 0.25f, HealerKeep = 5f;
+        /// <summary>出一隻這一章的補師（輪次出怪的陣形裡）；額外多的，不算在這一波的數量裡</summary>
+        Fighter SpawnHealerAt(float ang)
+        {
+            var def = MonsterVariants.HealerFor(Theme);
+            if (def == null) return SpawnRoleAt(MinionRole.Back, ang, false);
+            var m = SpawnVariant(edgePointAt != null ? edgePointAt(ang) : edgePoint(), def);
+            lastMinionCount = minions.Count;
+            return m;
+        }
+
+        void UpdateHealer(Fighter m, float dt)
+        {
+            Fighter near = null; float nd = float.MaxValue;
+            foreach (var p in Players()) { if (!p.Alive) continue; float d = FlatDistance(m.Feet, p.Feet); if (d < nd) { nd = d; near = p; } }
+            if (near == null) return;
+            m.target = near;
+            // 讀條中：時間到就補（被打中會在 Damage 裡打斷）
+            if (m.windupUntil > 0f)
+            {
+                m.forward = m.lockFwd;
+                if (now < m.windupUntil) return;
+                m.windupUntil = 0f; m.attackReadyAt = now + HealerEvery;
+                var t = m.healTarget;
+                if (t != null && t.Alive && FlatDistance(t.Feet, m.Feet) <= HealerRange + 2f && t.hp < t.maxHp)
+                {
+                    float amt = Mathf.Min(t.maxHp - t.hp, t.maxHp * HealerFrac);
+                    t.hp += amt;
+                    Emit("enemyheal", t.Chest, new Color(0.45f, 1f, 0.55f), $"+{amt:0}");
+                }
+                return;
+            }
+            // 找最需要補的同伴（血量比例最低、低於九成、在範圍內；不補自己、寶箱怪）
+            Fighter best = null; float bestK = 0.9f;
+            foreach (var o in minions)
+            {
+                if (o == m || !o.Alive || o.treasure || o.hp >= o.maxHp) continue;
+                float k = o.hp / Mathf.Max(1f, o.maxHp);
+                if (k < bestK && FlatDistance(o.Feet, m.Feet) <= HealerRange) { bestK = k; best = o; }
+            }
+            bool inside = minionInside == null || minionInside(m.Feet);
+            if (best != null && inside && now >= m.attackReadyAt)
+            {
+                m.healTarget = best; m.windupUntil = now + HealerCast; m.lockFwd = Fighter.Flat(best.Feet - m.Feet);
+                Emit("healcast", m.Feet, new Color(0.45f, 1f, 0.55f), $"⚕ {m.name}在替{best.name}治療！打斷牠");
+                return;
+            }
+            // 走位：站在同伴的後面（從最近的玩家看過去），跟玩家保持 5m 以上；玩家靠近就退
+            Vector3 mid = Vector3.zero; int n = 0;
+            foreach (var o in minions) if (o != m && o.Alive && !o.treasure && !o.healer) { mid += o.Feet; n++; }
+            Vector3 goal = n > 0 ? mid / n : m.Feet;
+            var away = Fighter.Flat(goal - near.Feet); if (away == Vector3.zero) away = Fighter.Flat(m.Feet - near.Feet);
+            goal += away * 2f;
+            if (FlatDistance(goal, near.Feet) < HealerKeep) goal = near.Feet + away * HealerKeep;
+            if (minionInside != null && !minionInside(goal)) goal = Vector3.Lerp(goal, m.Feet, 0.5f);
+            var to = XZ(goal - m.Feet);
+            float speed = minionSpeed * MinionSpeed[m.minionKind] * m.speedMul * EnemySpeedScale * (nd < 3f ? 1.8f : 1f) * (inside ? 1f : 2f);
+            if (to.magnitude > 0.15f)
+            {
+                var step = to.normalized * Mathf.Min(speed * dt, to.magnitude);
+                var next = m.Feet + step;
+                if (!inside || minionInside == null || minionInside(next)) m.head += step;
+                m.forward = Fighter.Flat(near.Feet - m.Feet);
+            }
+            else m.forward = Fighter.Flat(near.Feet - m.Feet);
+        }
+}
 }

@@ -142,6 +142,9 @@ namespace SpellDuel
             V(112, 0.008f, "#cfd8dc", F(SoulOp.Cdr, 0.06f));                                    // 霧行者：技能冷卻
             V(113, 0.008f, "#7cf2b0", F(SoulOp.ChargeSpeed, 0.10f));                            // 風刃鳶：技能蓄力變快
             V(114, 0.008f, "#b8c7ff", F(SoulOp.KillHeal, 0.10f, 0.30f));                        // 月牙狼：打倒敵人時機率回血
+            // ---- 補師（第四、五章；0.8%）
+            V(121, 0.008f, "#ffd873", F(SoulOp.HurtHeal, 0.05f, 0.08f));                        // 鬥場祭司：被打時 8% 機率回 5% HP
+            V(122, 0.008f, "#72f2cc", F(SoulOp.Regen, 0.0005f));                                // 砂谷藥師：每 10 秒回 0.5% HP
             AssignParts();
         }
 

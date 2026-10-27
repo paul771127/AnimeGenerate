@@ -980,6 +980,7 @@ namespace SpellDuel
         GUIStyle label, small, button, big, center, iconButton;
 
         Fighter Me => battle?.player;
+        float healSayUntil;   // 補師治療的大字提示：6 秒內只說一次
         Fighter En => battle?.enemy;
 
         public void Init(Camera camera, PlayArea playArea, Material baseMat)
@@ -3124,6 +3125,22 @@ namespace SpellDuel
                     floaters.Add(new Floater { text = "⚠ 背後！", color = c, born = Time.time, screen = true });
                     Sfx.Play("warn", 1f, 0.7f); Haptics.Play(Haptics.Kind.Heavy);
                     break;
+                case "healer":
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 1.4f, text = "⚕ 補師", color = c, born = Time.time });
+                    break;
+                case "healcast":
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 1.6f, text = "⚕ 治療中…", color = c, born = Time.time });
+                    if (Time.time > healSayUntil) { Say(text, 1.8f); healSayUntil = Time.time + 6f; }   // 大字提示不要一直洗版
+                    Sfx.Play("charged", 0.4f, 1.4f);
+                    break;
+                case "enemyheal":
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 0.4f, text = text, color = c, born = Time.time });
+                    MinionRig.SpawnFx(WorldFrame.FromWorld(at)); Sfx.Play("heal", 0.45f, 0.9f);
+                    break;
+                case "healbreak":
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 0.9f, text = text, color = c, born = Time.time });
+                    Sfx.Play("block", 0.5f, 1.4f);
+                    break;
                 case "treasure":
                     Say(text, 3f);
                     floaters.Add(new Floater { posMap = at + Vector3.up * 1.2f, text = "💰 寶箱怪！", color = c, born = Time.time });
@@ -4220,7 +4237,7 @@ namespace SpellDuel
                 Fighter aimer = null; float aimerLeft = 99f; int aimers = 0;
                 foreach (var m in battle.minions)
                 {
-                    if (!m.Alive || m.windupUntil <= 0f || !Battle.IsRangedMinion(m.minionKind) || m.assassin) continue;   // 刺客（原本是遠程怪的骨架）用近身突襲，有自己的「背後！」提示
+                    if (!m.Alive || m.windupUntil <= 0f || !Battle.IsRangedMinion(m.minionKind) || m.assassin || m.healer) continue;   // 刺客（原本是遠程怪的骨架）用近身突襲，有自己的「背後！」提示
                     if (m.target != null && m.target != me) continue;   // 合作：瞄準隊友的不提示
                     aimers++;
                     float left = Mathf.Max(0f, m.windupUntil - now);

@@ -138,7 +138,7 @@ namespace SpellDuel
         public bool miniBoss;                  // 第 3 波單獨登場的特殊敵人（有名字和血條）
         public bool treasure, treasureRunning; public float treasureLeaveAt;
         public int variant;                    // 變種怪（Combat.Variants.cs）：刺客怪、天候怪的 id（0＝不是）
-        public bool assassin; public int asnState; public float asnUntil; public Fighter asnTarget;   // 刺客怪：0 潛伏、1 沿邊繞、2 突襲、4 退回   // 寶箱怪（Combat.Treasure.cs）：到處逃跑、每下只扣 1、時間到就逃走
+        public bool assassin, healer; public int asnState; public float asnUntil; public Fighter asnTarget, healTarget;   // 刺客怪：0 潛伏、1 沿邊繞、2 突襲、4 退回   // 寶箱怪（Combat.Treasure.cs）：到處逃跑、每下只扣 1、時間到就逃走
         // 副本特殊地點（Combat.RoomEvents.cs）
         public bool rooted;                    // 不會動、不會出手（守護物、圖騰、雕像、寶箱）
         public float lure;                     // 小怪優先打它（多算幾公尺的優勢）
@@ -1030,7 +1030,7 @@ namespace SpellDuel
         public bool GroupMode => RhythmSpawns && groupSize > 0 && !MiniBossWave;
         public const float RoundGap = 3f, RoundStagger = 0.3f;
         int roundsInWave, roundNo, lastFormation = -1; bool roundWaiting; float nextRoundAt;
-        readonly List<(float at, MinionRole role, float ang, bool ambush)> groupQueue = new List<(float, MinionRole, float, bool)>();
+        readonly List<(float at, MinionRole role, float ang, bool ambush, bool healer)> groupQueue = new List<(float, MinionRole, float, bool, bool)>();
 
         /// <summary>陣形：名字、每一隻的（角色、方位角＝相對玩家面向）。輪到幾隻就取前幾個</summary>
         public static readonly (string name, (MinionRole role, float ang)[] slots)[] Formations =
@@ -1040,9 +1040,15 @@ namespace SpellDuel
             ("衝鋒掩護", new[] { (MinionRole.Special, 0f), (MinionRole.Back, -30f), (MinionRole.Back, 30f), (MinionRole.Front, -15f), (MinionRole.Front, 15f), (MinionRole.Special, 40f) }),
             ("砲台陣地", new[] { (MinionRole.Back, -40f), (MinionRole.Back, 0f), (MinionRole.Back, 40f), (MinionRole.Front, 0f), (MinionRole.Front, -25f), (MinionRole.Back, 70f) }),
             ("前後夾擊", new[] { (MinionRole.Front, 0f), (MinionRole.Front, 180f), (MinionRole.Back, 20f), (MinionRole.Special, 160f), (MinionRole.Front, 20f), (MinionRole.Back, 200f) }),
+            ("鐵壁護衛", new[] { (MinionRole.Front, -15f), (MinionRole.Front, 0f), (MinionRole.Front, 15f), (MinionRole.Back, -35f), (MinionRole.Back, 35f), (MinionRole.Special, 0f) }),
+            ("獵殺小隊", new[] { (MinionRole.Special, -20f), (MinionRole.Special, 20f), (MinionRole.Back, -40f), (MinionRole.Back, 40f), (MinionRole.Front, 0f), (MinionRole.Front, 25f) }),
             ("蜂擁近戰", new[] { (MinionRole.Front, -30f), (MinionRole.Front, 0f), (MinionRole.Front, 30f), (MinionRole.Special, -60f), (MinionRole.Front, 60f), (MinionRole.Back, 0f) }),
         };
 
+        /// <summary>第四、五章才有的陣形（前排三面盾牆／兩隻特殊怪帶隊）</summary>
+        static readonly string[] LateFormations = { "鐵壁護衛", "獵殺小隊" };
+        /// <summary>第四、五章每一輪的補師數：6 隻以上的一輪（困難）2 隻，其他 1 隻</summary>
+        static int HealersPerRound(int n) => n >= 6 ? 2 : n >= 3 ? 1 : 0;
         void GroupSpawn()
         {
             // 這一輪排隊中的：照時間一隻一隻出（錯開 0.3 秒，看得出是一隊）
@@ -1050,7 +1056,7 @@ namespace SpellDuel
             {
                 if (now < groupQueue[0].at) return;
                 var q = groupQueue[0]; groupQueue.RemoveAt(0);
-                SpawnRoleAt(q.role, q.ang, q.ambush);
+                if (q.healer) SpawnHealerAt(q.ang); else SpawnRoleAt(q.role, q.ang, q.ambush);
                 return;
             }
             if (waveToSpawn <= 0) return;
@@ -1060,7 +1066,8 @@ namespace SpellDuel
             if (!roundWaiting) { roundWaiting = true; if (roundNo > 0) nextRoundAt = now + RoundGap; }
             if (now < nextRoundAt) return;
             roundWaiting = false;
-            int f; do f = rng.Next(Formations.Length); while (f == lastFormation && Formations.Length > 1);
+            bool late = Theme >= ArenaTheme;   // 第四、五章：多兩種比較硬的陣形，每一輪帶補師
+            int f; do f = rng.Next(Formations.Length); while ((f == lastFormation && Formations.Length > 1) || (!late && Array.IndexOf(LateFormations, Formations[f].name) >= 0));
             if (easySides && Formations[f].name == "前後夾擊") f = 0;   // 簡單：不從背後夾擊
             lastFormation = f; roundNo++;
             int n = Mathf.Min(groupSize, waveToSpawn);
@@ -1075,9 +1082,11 @@ namespace SpellDuel
                 if (easySides) ang = easyBearing + Mathf.Clamp(Mathf.DeltaAngle(0f, ang), -100f, 100f) * 0.3f;   // 全部從同一面來（陣形壓扁在 ±30° 裡）
                 bool amb = i == ambushAt;
                 if (amb) ang = easyBearing + 180f + ((float)rng.NextDouble() - 0.5f) * 60f;
-                groupQueue.Add((now + i * RoundStagger, role, ang, amb));
+                groupQueue.Add((now + i * RoundStagger, role, ang, amb, false));
             }
-            Emit("round", player.Feet, Color.white, $"第 {roundNo}/{roundsInWave} 輪：{Formations[f].name}（{n} 隻）");
+            // 第四、五章：每一輪額外帶一～兩隻補師（最後出來，躲在隊伍後面；不佔這一波的數量）
+            if (late) for (int h = 0; h < HealersPerRound(n); h++) groupQueue.Add((now + (n + h) * RoundStagger, MinionRole.Back, easySides ? easyBearing + (h - 0.5f) * 20f : (h - 0.5f) * 30f, false, true));
+            Emit("round", player.Feet, Color.white, $"第 {roundNo}/{roundsInWave} 輪：{Formations[f].name}（{n} 隻" + (late && HealersPerRound(n) > 0 ? $"＋補師 {HealersPerRound(n)}" : "") + "）");
         }
 
         /// <summary>在某個方位出一隻某角色的小怪（三拍與輪次出怪共用）</summary>
@@ -1328,7 +1337,8 @@ namespace SpellDuel
                 if (tgt.npcSide >= 0) best = FlatDistance(m.Feet, tgt.Feet);
                 m.target = tgt;
                 if (m.treasure) { UpdateTreasure(m, dt); continue; }   // 寶箱怪：只會逃
-                if (m.assassin) { UpdateAssassin(m, dt); continue; }   // 刺客怪：繞到背後突襲（Combat.Variants.cs）
+                if (m.assassin) { UpdateAssassin(m, dt); continue; }
+                if (m.healer) { UpdateHealer(m, dt); continue; }   // 補師：躲在後面治療同伴（Combat.Variants.cs）   // 刺客怪：繞到背後突襲（Combat.Variants.cs）
                 var wantFwd = m.windupUntil > 0f && m.lockFwd != Vector3.zero ? m.lockFwd : Fighter.Flat(tgt.head - m.head);   // 預備中：面向鎖住（扇形不追著玩家轉）
                 if (m.minionKind == 16 && m.forward != Vector3.zero && wantFwd != Vector3.zero)
                 {
@@ -3915,6 +3925,7 @@ namespace SpellDuel
             if (dmg > 0f && kind != "dot" && kind != "burn" && kind != "oath" && kind != "thorns" && BarrierGuards(f) && TryBarrier(f, at)) return;   // 主教的聖域障壁
             if (f.invulnUntil > now && dmg > 0f) return;   // 狂戰士不死之軀的無敵
             if (f.isMinion && f.hidden) return;   // 埋著的食人花
+            if (f.healer && f.windupUntil > 0f && dmg > 0f && kind != "dot" && kind != "burn") { f.windupUntil = 0f; f.attackReadyAt = now + 2f; Emit("healbreak", f.Chest, new Color(1f, 0.85f, 0.4f), "治療被打斷！"); }   // 補師讀條被打中：打斷
             if (f.treasure && (kind == "dot" || kind == "burn")) return;   // 寶箱怪：毒、灼燒沒用（每一下攻擊只扣 1）
             if (f.isMinion && dmg > 0f && kind != "dot" && kind != "burn") OnMinionHurt(f);
             if (f.isMinion && f.minionKind == 16 && dmg > 0f)
