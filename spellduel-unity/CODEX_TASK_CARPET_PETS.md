@@ -18,6 +18,15 @@
    - `void SetVariant(int station)`：station 0～4，對應五站的天空、景物、光線。
    - `float Speed { get; set; }`：視覺速度（m/s），控制三層景物後退與風線密度。常態 12、衝刺 18、Boss 壓低時 6。
    - 物件池循環，不能一直新建。
+   - **飛行晃動**（使用者要求：要有真實的飛行感）：
+     - 飛毯本體要一直微微晃動：上下浮動約 2～4 公分、前後左右傾斜約 1～2 度，週期 2～4 秒、不規則。布面跟著起伏，流蘇甩動。
+     - 速度越快晃得稍微越大；Boss 壓低時、轉場衝刺時可以更明顯。
+     - 只晃畫面上的飛毯和四周景物，不要動玩家的 AR 相機、不要讓預警標示和判定位置跑掉。預警線、落點圈要貼著飛毯一起晃。
+     - 提供 `float SwayScale { get; set; }`（0～1，預設 1），讓設定裡可以「降低晃動」（避免暈眩）。
+   - **敵人跳上飛毯的震動**：
+     - 提供 `void Impact(Vector3 at, float strength)`：strength 0～1。敵人落地時由 Claude 呼叫。
+     - 效果：飛毯在落點附近往下一沉再彈回（約 0.3 秒）；布面從落點往外一圈波紋；落點有塵土；整張飛毯輕微一抖。
+     - 菁英、Boss 的空賊跳下來 strength 較大。手機震動和輕微畫面震動由 Claude 呼叫，不用你做。
 2. **`CarpetObstacleView.cs`**：
    - `static CarpetObstacleView Create(int kind, int station)`：kind 0＝低掃、1＝高掃、2＝半邊、3＝缺口牆。
    - `void Tick(float progress, Vector3 frontCenter, Vector3 forward, float carpetWidth, float chestHeight, int side, float gapCenter, float gapWidth)`
