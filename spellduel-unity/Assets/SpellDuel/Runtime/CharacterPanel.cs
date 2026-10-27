@@ -63,7 +63,7 @@ namespace SpellDuel
             if (tab >= tabs.Length) tab = 0;
             float tw = (w - gap * (tabs.Length - 1)) / tabs.Length;
             for (int i = 0; i < tabs.Length; i++)
-                if (UiKit.Button(new Rect(x + i * (tw + gap), y, tw, lh * 1.1f), tabs[i], fsS, tab == i, cd.color)) { tab = i; selNode = null; selItem = null; soulOpen = false; }
+                if (UiKit.Button(new Rect(x + i * (tw + gap), y, tw, lh * 1.1f), tabs[i], fsS, tab == i, cd.color)) { tab = i; selNode = null; selItem = null; soulOpen = false; invSel = null; }
             for(int i=0;i<tabs.Length;i++) UiKit.Tab(new Rect(x+i*(tw+gap),y,tw,lh*1.1f),tab==i,cd.color);
             y += lh * 1.1f + gap;
             bool changed;
