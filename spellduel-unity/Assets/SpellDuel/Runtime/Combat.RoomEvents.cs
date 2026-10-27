@@ -196,7 +196,7 @@ namespace SpellDuel
                         for(int bi=0;bi<2;bi++)
                         {
                             int step=4+bi*6+rng.Next(2);
-                            var block=SpawnNpc("ev_block_"+bi,"路障","priest",1,false,PI("barrier_hp",180)*PlayersN,0,path[step]);
+                            var block=SpawnNpc("ev_block_"+bi,"路障","priest",1,false,180*PlayersN,0,path[step]);
                             block.rooted=true;block.bodyRadius=.45f;evBlocks.Add(block);
                         }
                     }

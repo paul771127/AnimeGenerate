@@ -71,6 +71,8 @@ namespace SpellDuel.EditorTools
     b=Make(n,"escort");Field<Fighter>(b,"evWalker").hp=0;Call(b,"UpdateRoomEvent");Check(b.stageFailed,"escort death failure");
     b=Make(n,"dark");Check(!b.EventLitByTeam(new Vector3(20,0,20),2.5f),"unlit remote monster");if(n>1)Check(b.EventLitByTeam(b.allies[0].Feet+Vector3.right*2,2.5f),"ally light not shared");
     b=Make(n,"collapse");if(n>1){var point=b.evPts[b.evPts.Count/2];foreach(var pl in b.AllPlayers)pl.head=point+Vector3.up*1.7f;b.now=30;Call(b,"TickCollapse",.016f);int warned=b.evState.IndexOf(1);Check(warned>=0&&Battle.FlatDistance(b.evPts[warned],point)<1.3f,"collapse ignores cluster");}
+    b=Make(n,"collapse");var cell=b.evPts[0];b.evState[0]=2;b.player.head=cell+Vector3.up*1.7f;float hp=b.player.hp;b.now=11;Call(b,"TickCollapse",.1f);Check(b.player.hp<hp,"collapsed cell must damage");
+    b=Make(n,"elements");var proxy=new Battle(new Fighter("peer",Skills.Classes["mage"],new string[0],true),new Fighter("boss",Skills.Classes["boss_clockwork"],new string[0],false)){remoteEnemy=true};proxy.SetRoomViewPlayers(string.Join(",",b.evPlayerIds),n>1?1:-1);proxy.evPhase=0;Check(proxy.RoomCoop==(n>1),"remote roster metadata");if(n>1){Check(!proxy.RuneVisibleFor(0)&&proxy.RuneVisibleFor(1),"remote rune owner mask");}
     b=Make(n,"runes");b.remoteEnemy=true;var states=string.Join(",",b.evState);b.now+=20;Call(b,"UpdateRoomEvent");Check(states==string.Join(",",b.evState),"peer ran authority");
     b.CleanupRoomEvent();Check(!b.RoomCoop&&b.evPlayerIds.Count==0,"room cleanup retains clue owners");
    }

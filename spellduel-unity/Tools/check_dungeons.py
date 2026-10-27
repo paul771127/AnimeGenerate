@@ -11,6 +11,8 @@ DEFAULT = os.path.join(HERE, "..", "Assets", "SpellDuel", "Resources", "dungeons
 STORY = os.path.join(HERE, "..", "Assets", "SpellDuel", "Resources", "story.txt")
 THEMES = {"vault","volcano", "熔岩", "0", "forest", "森林", "1", "sea", "海", "海上", "2", "arena", "角鬥場", "3", "canyon", "山道", "黃土山道", "4"}
 LOOKS = {"mage", "archer", "swordsman", "priest", "assassin"}
+ROOM_EVENTS = {"defend", "survive", "escort", "hunt", "totems", "runes", "chant", "elements", "mimic", "collapse", "dark"}
+EVENT_KEYS = {"name", "hp", "time", "count", "seq", "riddle", "answer", "hint", "look", "fail"}
 MAX_LINE = 60
 ROOM_TAGS = ("enter", "clear", "boss_half")
 NPC_TAGS = ("meet", "die", "done", "safe", "ally", "enemy", "third")
@@ -124,8 +126,11 @@ def check(path):
                 elif k == "theme":
                     if v.lower() not in THEMES: errors.append(f"第 {ln} 行：theme 只能是 volcano／forest／sea／arena／canyon")
                 elif k == "event":
-                    if v.lower() not in ("battle", "chest", "boss"): errors.append(f"第 {ln} 行：event 只能是 battle／chest／boss")
+                    if v.lower() not in {"battle", "chest", "boss"} | ROOM_EVENTS: errors.append(f"第 {ln} 行：不認得的 event {v}")
                     room["kind"] = v.lower()
+                elif k in EVENT_KEYS:
+                    if k in {"hp", "time", "count", "seq"} and (not v.isdigit() or int(v) < 1): errors.append(f"第 {ln} 行：{k} 要是正整數")
+                    if k == "look" and v not in LOOKS: errors.append(f"第 {ln} 行：look 不認得 {v}")
                 elif k == "next": room["next"] += split_list(v)
                 elif k == "npc": room["npcs"] += split_list(v)
                 else: errors.append(f"第 {ln} 行：地點不認得的設定 {k}")

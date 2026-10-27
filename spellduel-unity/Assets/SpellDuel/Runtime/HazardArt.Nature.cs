@@ -89,7 +89,8 @@ namespace SpellDuel
             v.Motes=SpellFx.NewPS(v.Active,"Local motes",SpellFx.BlendMat(SpellFx.TexSoft),48,false);
             var main=v.Motes.main;main.startColor=new Color(tint.r,tint.g,tint.b,.5f);main.startLifetime=1.2f;main.startSize=kind==Battle.HazardKind.Spore?.3f:.055f;main.startSpeed=.18f;
             SpellFx.Sphere(v.Motes,kind==Battle.HazardKind.Spore?radius*.75f:.25f);
-            v.Motes.transform.localPosition=Vector3.up*(kind==Battle.HazardKind.Spore?.6f:.25f);
+            v.Motes.transform.localPosition=Vector3.up*(kind==Battle.HazardKind.Spore?.5f:.25f);
+            if(kind==Battle.HazardKind.Spore){var cloud=v.Motes.shape;cloud.scale=new Vector3(1,.5f,1);}
             if(kind==Battle.HazardKind.Tide){var shape=v.Motes.shape;shape.shapeType=ParticleSystemShapeType.Box;shape.scale=new Vector3(9,.1f,.4f);}
             var fade=v.Motes.colorOverLifetime;fade.enabled=true;
             var gradient=new Gradient();gradient.SetKeys(new[]{new GradientColorKey(Color.white,0),new GradientColorKey(Color.white,1)},new[]{new GradientAlphaKey(0,0),new GradientAlphaKey(1,.2f),new GradientAlphaKey(0,1)});fade.color=gradient;

@@ -225,7 +225,7 @@ namespace SpellDuel
             var sb = new System.Text.StringBuilder();
             for (int i = 0; i < battle.evState.Count; i++) { if (i > 0) sb.Append(','); sb.Append(battle.evState[i]); }
             var looks=new List<string>();foreach(var n in battle.npcs)if(n.evElement>0)looks.Add(n.npcId+":"+n.evElement);
-            NetSend?.Invoke(new Msg { t = "rev", k = battle.roomEvent ?? "", e = battle.evPhase, id = battle.evFails, a = battle.roomEvent=="chant" && battle.RoomCoop?"請分享各自的線索":battle.evText ?? "", g = sb.ToString(), pts = battle.evPts.ToArray(), ks = new[] { battle.evRiddle ?? "", battle.evHint ?? "", string.Join(",",battle.evPlayerIds),battle.evRuneOwner.ToString(),string.Join(",",looks) }, dmg = battle.evCharge });
+            NetSend?.Invoke(new Msg { t = "rev", k = battle.roomEvent ?? "", e = battle.evPhase, id = battle.evFails, a = battle.roomEvent=="chant" && battle.RoomCoop && battle.evPhase==1?"請分享各自的線索":battle.evText ?? "", g = sb.ToString(), pts = battle.evPts.ToArray(), ks = new[] { battle.evRiddle ?? "", battle.evHint ?? "", string.Join(",",battle.evPlayerIds),battle.evRuneOwner.ToString(),string.Join(",",looks) }, dmg = battle.evCharge });
         }
         bool revWasActive;
 
