@@ -1716,6 +1716,24 @@ namespace SpellDuel
             if (Battle.FlatDistance(ln.a, Me.Feet) < 7f) Sfx.Play("warn", 0.5f, 0.9f);
         }
 
+        /// <summary>
+        /// 同一主題的場景變化 0～2（使用者要求：同一關多幾個不同場景）：
+        ///   故事：x-1、x-2＝0，x-3、x-4＝1，x-5、x-6＝2；副本：地點 id 的雜湊；無盡：每 3 波換一次
+        /// </summary>
+        int SceneVariant
+        {
+            get
+            {
+                if (pendingStage != null)
+                {
+                    var parts = (pendingStage.id ?? "").Split('-');   // 「章-關」：第 1、2 關＝0，3、4 關＝1，5、6 關＝2
+                    return parts.Length == 2 && int.TryParse(parts[1], out var no) ? Mathf.Clamp((no - 1) / 2, 0, 2) : 0;
+                }
+                if (drun != null && drun.node != null) return ((drun.node.id ?? "").GetHashCode() & 0x7fffffff) % 3;
+                return battle != null ? ((battle.wave - 1) / 3) % 3 : 0;
+            }
+        }
+
         /// <summary>場景：無盡模式第 1～10 波是熔岩火山（地板＋遠方背景＋火星）</summary>
         void UpdateScene()
         {
@@ -1731,6 +1749,9 @@ namespace SpellDuel
             if (early && sea == null) sea = SeaScene.Create(poly, fy);
             if (theme == Battle.ArenaTheme && arenaScene == null) arenaScene = ArenaScene.Create(poly, fy);
             if (theme == Battle.CanyonTheme && canyon == null) canyon = CanyonScene.Create(poly, fy);
+            int sv = SceneVariant;   // 同一主題的場景變化（Codex 做美術）
+            if (volcano) volcano.SetVariant(sv); if (forest) forest.SetVariant(sv); if (sea) sea.SetVariant(sv);
+            if (arenaScene) arenaScene.SetVariant(sv); if (canyon) canyon.SetVariant(sv);
             if (volcano) volcano.SetVisible(theme == 0);
             if (forest) forest.SetVisible(theme == 1);
             if (sea) sea.SetVisible(theme == 2);

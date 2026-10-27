@@ -61,6 +61,7 @@ namespace SpellDuel
 
         HazardView MakeHazardView(Battle.Hazard h)
         {
+            if (h.kind >= Battle.HazardKind.Lava) return MakeNatureView(h);   // 第 1～3 章的場景機關（SoloBattle.NatureHazards.cs）
             var v = new HazardView();
             switch (h.kind)
             {
@@ -101,6 +102,7 @@ namespace SpellDuel
                 if (h.kind == Battle.HazardKind.Rock && h.landed) continue;   // 落地了：特效由 rockland 事件播
                 live.Add(h.id);
                 if (!hazGo.TryGetValue(h.id, out var v) || !v.go) { v = MakeHazardView(h); hazGo[h.id] = v; }
+                if (h.kind >= Battle.HazardKind.Lava) { UpdateNatureView(h, v, now); continue; }
                 switch (h.kind)
                 {
                     case Battle.HazardKind.Axe:

@@ -1195,7 +1195,7 @@ namespace SpellDuel
         // 角鬥場：各地抓來的怪物（熔岩、森林、海上的都有，不含要在海裡／空中的）；黃土山道：岩石系為主，加上荊棘衝鋒獸與孢子菇
         // 第四、五章多加魔法小怪（使用者要求）：角鬥場加毒液噴花、雷電水母（籠子裡放出來的魔物）；山道加毒液噴花、藤蔓術士
         static readonly int[] ArenaKinds = { 0, 1, 2, 3, 5, 7, 8, 9, 11, 12, 16, 17 };
-        static readonly int[] CanyonKinds = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11 };
+        static readonly int[] CanyonKinds = { 0, 1, 2, 3, 4, 5, 7, 8, 9, 11 };   // 虛空術士（6）不在山道出現：牠只會叫物理小鬼
         /// <summary>角鬥場／山道第一輪：自爆小鬼、虛空術士第 4 波起，其他一開始就有</summary>
         static int LateUnlock(int k) => k == 3 || k == 6 ? 4 : 1;
 

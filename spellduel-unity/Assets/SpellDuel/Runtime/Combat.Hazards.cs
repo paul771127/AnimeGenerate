@@ -16,7 +16,7 @@ namespace SpellDuel
     /// </summary>
     public partial class Battle
     {
-        public enum HazardKind { Axe = 0, Spikes = 1, Rock = 2 }
+        public enum HazardKind { Axe = 0, Spikes = 1, Rock = 2, Lava = 3, Spore = 4, Roots = 5, Tide = 6, Whirl = 7 }   // 3～7：第 1～3 章的場景機關（Combat.NatureHazards.cs）
 
         public class Hazard
         {
@@ -96,6 +96,7 @@ namespace SpellDuel
             if (remoteEnemy || !endless) return;
             if (hazards.Exists(h => h.kind != HazardKind.Rock)) ClearHazards();
             nextRockAt = Theme == CanyonTheme ? waveStartAt + 3f : -1f;
+            if (Theme <= 2) { SetupNatureHazards(); return; }   // 第 1～3 章：熔岩噴口、孢子雲、樹根、潮浪、漩渦（Combat.NatureHazards.cs）
             if (Theme != ArenaTheme) return;
             ArenaFrame(out var c, out float R);
             int local = (wave - 1) % 10 + 1;
@@ -323,6 +324,7 @@ namespace SpellDuel
                     continue;
                 }
                 if (now < h.start) continue;
+                if (h.kind >= HazardKind.Lava) { NatureHazardHits(h, victims); continue; }
                 foreach (var f in victims)
                 {
                     if (!f.Alive) continue;
@@ -335,12 +337,12 @@ namespace SpellDuel
             }
         }
 
-        void HazardDamage(Fighter f, int dmg, Vector3 at, string label)
+        void HazardDamage(Fighter f, int dmg, Vector3 at, string label, EffectKind eff = EffectKind.None, float dps = 0f, float dur = 0f)
         {
             dmg=Mathf.RoundToInt(dmg*(1-Mathf.Clamp(f.trapReduce,0,.7f)));
             Emit("hazard", at, new Color(1f, 0.55f, 0.3f), f.isPlayer ? $"{label}！" : null);
             HazardHit = true;   // 這一下的 hit／hurt 事件是陷阱造成的（畫面不要當成我打中了而震動）
-            ApplyDamageAndEffect(f, dmg, EffectKind.None, 0f, 0f, at);
+            ApplyDamageAndEffect(f, dmg, eff, dps, dur, at);
             HazardHit = false;
         }
     }
