@@ -78,7 +78,9 @@ namespace SpellDuel.EditorTools
             SceneVariantShots(cam);
             WeatherShots(cam);
             PendingArtShots(cam);
+            floor.SetActive(false);
             CarpetPetsShots(cam);
+            floor.SetActive(true);
             foreach(var message in ShaderUtil.GetShaderMessages(Shader.Find("SpellDuel/Toon")))
                 if(message.severity.ToString()=="Error")throw new System.Exception("Toon shader: "+message.message);
             Debug.Log("[SpellDuel] snapshots saved to " + Path.GetFullPath("snapshots"));

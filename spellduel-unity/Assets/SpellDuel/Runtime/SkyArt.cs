@@ -20,7 +20,7 @@ namespace SpellDuel
         { var t=new GameObject(name).transform;t.SetParent(p,false);t.localPosition=at;return t; }
         static Mesh Round(bool pointed)
         {
-            var b=new ArtKit.MB(1); const int n=12,rings=8;
+            var b=new ArtKit.MB(1); const int n=12,rings=7;
             for(int j=0;j<=rings;j++)for(int i=0;i<=n;i++)
             { float v=j/(float)rings,a=i*Mathf.PI*2/n,y=Mathf.Cos(v*Mathf.PI)*.5f,r=Mathf.Sin(v*Mathf.PI)*.5f;if(pointed)r*=1-v*.7f;
               var p=new Vector3(Mathf.Cos(a)*r,y,Mathf.Sin(a)*r); b.Add(p,p.normalized,new Vector2(i/(float)n,v)); }

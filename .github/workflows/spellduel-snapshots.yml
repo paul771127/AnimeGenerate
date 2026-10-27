@@ -75,6 +75,7 @@ jobs:
             spellduel-unity/snapshots/pending_art_audit.json
             spellduel-unity/snapshots/pending_ally_audit.json
             spellduel-unity/snapshots/neck_hair_audit.json
+            spellduel-unity/snapshots/carpet_pets_audit.json
             spellduel-unity/snapshots/nature_audit.json
             spellduel-unity/snapshots/room_coop_audit.json
           if-no-files-found: error
