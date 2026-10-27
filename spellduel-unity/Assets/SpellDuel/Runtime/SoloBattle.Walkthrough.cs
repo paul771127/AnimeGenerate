@@ -46,6 +46,9 @@ namespace SpellDuel
             walkLoaded = true;
             string f = WalkGet("sd_walk", "");
             if (string.IsNullOrEmpty(f)) { walkFlow = null; walkSteps = null; return; }
+            // 老角色被誤送了轉職禮物、卡在「穿武器→強化」的新手指引裡：直接結束（不再鎖按鈕）
+            var wp = Progress.Char(myClass);
+            if (f == "smith" && wp != null && wp.level > RetroGiftMaxLevel) { walkFlow = f; EndWalk(false); return; }
             int.TryParse(WalkGet("sd_walk_step", "0"), out var st);
             walkFlow = f; walkSteps = BuildWalk(f); walkStep = Mathf.Clamp(st, 0, walkSteps != null ? walkSteps.Count : 0);
             if (walkSteps == null || walkStep >= walkSteps.Count) EndWalk(false);

@@ -36,11 +36,15 @@ namespace SpellDuel
         /// <summary>這一次送的武器（指引玩家穿上、強化它）</summary>
         Item giftWeapon;
 
-        /// <summary>送禮（還沒送過、而且已經轉職）；then：禮物對話結束後</summary>
-        bool TryStarterGift(Action then)
+        /// <summary>回村子補送的上限：剛轉職沒多久（不超過轉職等級＋5）的角色才補；已經玩很久的角色只默默記成送過，不再跳新手指引</summary>
+        public const int RetroGiftMaxLevel = Skills.JobLevel + 5;
+
+        /// <summary>送禮（還沒送過、而且已經轉職）；then：禮物對話結束後。retro＝回村子時的補送</summary>
+        bool TryStarterGift(Action then, bool retro = false)
         {
             var p = Progress.Char(myClass);
             if (GiftGiven || p == null || p.cls == Skills.Novice) return false;
+            if (retro && p.level > RetroGiftMaxLevel) { MarkGift(); return false; }   // 老角色（例如已經到赤砂城）：不送、不跳新手指引
             var w = StarterWeapon(p, new System.Random());
             if (w == null) return false;   // 產生不出來（不應該發生）：下次回村子再試，不要白白標記送過
             MarkGift();
