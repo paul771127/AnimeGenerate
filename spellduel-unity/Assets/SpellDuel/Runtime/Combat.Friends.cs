@@ -262,5 +262,62 @@ namespace SpellDuel
                 if (n.cloneOf != null && (!n.cloneOf.Alive || (n.friendUntil > 0f && now > n.friendUntil))) EndClone(n, n.cloneOf.Alive ? "影分身時間到" : "影分身消失了");
             }
         }
-    }
+    
+        // ------------------------------------------------------------ 牧師的治療術：補自己＋放出治療光球給隊友（使用者要求）
+        public const string HealOrbId = "x_healorb";
+        public const float HealOrbRange = 10f, HealOrbAim = 30f;
+
+        void CastPrayHeal(Fighter f, SkillDef s)
+        {
+            if (f.healMul != 1f) { s = s.Clone(); s.heal = Mathf.RoundToInt(s.heal * f.healMul); }
+            ApplySupport(f, s, null);   // 自己
+            var t = HealOrbTarget(f);
+            AddThreat(f, s.heal * (t != null ? 2 : 1));
+            if (t == null) return;
+            var orb = Skills.All[HealOrbId];
+            var from = f.Chest + Fighter.Flat(f.forward) * 0.3f;
+            // 直接建立（不走 Spawn：那裡會套攻擊加成、爆擊、吃掉聖印／信仰）
+            projectiles.Add(new Projectile { owner = f, skill = orb, pos = from, basePos = from, dir = (t.Chest - from).normalized, damage = s.heal, target = t, id = nextId++ });
+            Emit("heal", f.Chest, s.color, $"治療光球 → {t.name}");
+        }
+
+        /// <summary>治療光球要飛給誰：準星（面向）30° 內最近的隊友／友軍；沒有就挑 10m 內血量比例最低（沒滿血）的</summary>
+        Fighter HealOrbTarget(Fighter f)
+        {
+            var cands = new List<Fighter>();
+            foreach (var a in allies) if (a != f && a.Alive) cands.Add(a);
+            foreach (var n in npcs) if (n.npcSide == 0 && n.Alive && n.hp > 0f) cands.Add(n);
+            Fighter aimed = null, hurt = null; float bestD = float.MaxValue, bestK = 1f;
+            var fw = Fighter.Flat(f.forward);
+            foreach (var c in cands)
+            {
+                float d = FlatDistance(f.Feet, c.Feet);
+                if (d > HealOrbRange) continue;
+                var to = Fighter.Flat(c.Feet - f.Feet);
+                if (fw != Vector3.zero && to != Vector3.zero && Vector3.Angle(fw, to) <= HealOrbAim && d < bestD) { bestD = d; aimed = c; }
+                float k = c.hp / Mathf.Max(1f, c.maxHp);
+                if (k < bestK) { bestK = k; hurt = c; }
+            }
+            return aimed ?? hurt;
+        }
+
+        /// <summary>治療光球：追著目標飛，碰到就治療（不會打到敵人）</summary>
+        void StepHealOrb(Projectile p, float dt)
+        {
+            var t = p.target;
+            if (t == null || !t.Alive) { p.alive = false; return; }
+            var to = t.Chest - p.pos; float d = to.magnitude, step = p.skill.speed * p.speedMul * dt;
+            if (d <= step + t.bodyRadius + 0.1f || p.traveled > p.skill.rangeMax + 4f)
+            {
+                p.alive = false;
+                int amt = Mathf.Max(1, p.damage);
+                if (t.isAlly) { p.owner.healDone += amt; Emit("heal", t.Chest, p.skill.color, $"+{amt}"); OnAllyHeal?.Invoke(t, amt); return; }   // 合作隊友：送給他的手機補
+                if (t.friendOwner >= 0) { OnFriendHeal?.Invoke(t, amt); Emit("heal", t.Chest, p.skill.color, $"+{amt}"); return; }
+                float got = Mathf.Min(amt, t.maxHp - t.hp); t.hp += got; p.owner.healDone += got;
+                Emit("heal", t.Chest, p.skill.color, $"+{amt}");
+                return;
+            }
+            p.dir = to / d; p.pos += p.dir * step; p.traveled += step;
+        }
+}
 }

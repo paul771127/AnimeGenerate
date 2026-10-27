@@ -1462,9 +1462,9 @@ namespace SpellDuel
                 if (!outZone && !impWait && kind != 11 && inReach && now >= m.attackReadyAt)
                 {
                     m.windupUntil = now + windup; m.lockFwd = Fighter.Flat(tgt.Feet - m.Feet); Emit("minionwindup", m.Feet, claw.color, null);
-                    if (kind == 2 || kind == 8) AddLane("dash", m.Feet, m.Feet + m.lockFwd * Mathf.Min(ChargerDash, d + 1.5f), 0f, windup + 0.1f, m.bodyRadius, Skills.All["m_dash"], 0, false);   // 刨地：先畫出衝刺路線
-                    if (kind == 5) AddLane("snipe", m.Feet, tgt.Feet, 0f, windup + 0.05f, 0.08f, Skills.All["m_snipe"], 0, false);   // 瞄準：紅線指著你
-                    if (kind == 9) AddLane("vinewarn", m.Feet, tgt.Feet, 0f, windup + 0.05f, Skills.All["m_vine"].radius, Skills.All["m_vine"], 0, false);   // 藤蔓路線預警
+                    if (kind == 2 || kind == 8) AddLane("dash", m.Feet, m.Feet + m.lockFwd * Mathf.Min(ChargerDash, d + 1.5f), 0f, windup + 0.1f, m.bodyRadius, Skills.All["m_dash"], 0, false, m);   // 刨地：先畫出衝刺路線
+                    if (kind == 5) AddLane("snipe", m.Feet, tgt.Feet, 0f, windup + 0.05f, 0.08f, Skills.All["m_snipe"], 0, false, m);   // 瞄準：紅線指著你
+                    if (kind == 9) AddLane("vinewarn", m.Feet, tgt.Feet, 0f, windup + 0.05f, Skills.All["m_vine"].radius, Skills.All["m_vine"], 0, false, m);   // 藤蔓路線預警
                     if (kind == 13) Emit("landwarn", tgt.Feet, Skills.All["m_leap"].color, windup.ToString("0.00"));   // 跳躍魚落點的水花預警
                     if (kind == 17) Emit("landwarn", m.Feet, Skills.All["m_shock"].color, (windup + 0.05f).ToString("0.00") + "|" + Skills.All["m_shock"].areaRadius.ToString("0.00"));   // 水母放電的紅圈
                     if (IsSpecial(kind)) Emit("specialwarn", m.Feet, Skills.All[SpecialSkillId(kind)].color, SpecialNeedsJump(kind) ? "⬆ 跳起來！（或離遠一點）" : "⬇ 蹲下！（或離遠一點）");
@@ -1790,7 +1790,7 @@ namespace SpellDuel
                     // 藤蔓術士：從自己長到玩家當下位置的藤蔓（0.6 秒長滿，趁這時候閃開），持續 3 秒，碰到就受傷
                     var vn = Skills.All["m_vine"];
                     m.attackReadyAt = now + vn.cooldown;
-                    AddLane("vine", m.Feet, m.lockFwd != Vector3.zero ? m.Feet + m.lockFwd * Mathf.Min(vn.rangeMax, FlatDistance(m.Feet, tgt.Feet)) : tgt.Feet, 0.6f, VineStay, vn.radius, vn, Mathf.RoundToInt(vn.damage * m.dmgMul), false);   // 沿預警的路線長出來；碰到定身 1.5 秒（蹲下躲）
+                    AddLane("vine", m.Feet, m.lockFwd != Vector3.zero ? m.Feet + m.lockFwd * Mathf.Min(vn.rangeMax, FlatDistance(m.Feet, tgt.Feet)) : tgt.Feet, 0.6f, VineStay, vn.radius, vn, Mathf.RoundToInt(vn.damage * m.dmgMul), false, m);   // 沿預警的路線長出來；碰到定身 1.5 秒（蹲下躲）
                     Emit("minionattack", m.Feet, vn.color, null);
                     return;
                 }
@@ -2670,6 +2670,7 @@ namespace SpellDuel
         void CastSelf(Fighter f, SkillDef s)
         {
             // 牧師的輔助技能：作用在所有己方單位（自己＋合作隊友）
+            if (s.id == "prayheal" && f.isPlayer) { CastPrayHeal(f, s); return; }   // 治療術：補自己＋放出治療光球給隊友（Combat.Friends.cs）
             if ((s.cls == "priest" && s.self != SelfKind.Barrier) || s.team)
             {
                 if (f.healMul != 1f && (s.heal > 0 || s.self == SelfKind.HealPct))
@@ -3158,16 +3159,17 @@ namespace SpellDuel
         {
             public string kind; public Vector3 a, b; public float start, grow, until, width; public int damage;
             public SkillDef skill; public bool remote, alive = true;
+            public Fighter owner;   // 放的小怪（死了這條就消失）
             public readonly Dictionary<Fighter, float> next = new Dictionary<Fighter, float>();
             public Vector3 Tip(float now) => grow <= 0f ? b : Vector3.Lerp(a, b, Mathf.Clamp01((now - start) / grow));
         }
         public readonly List<Lane> lanes = new List<Lane>();
         public event Action<Lane> OnLane;   // 新的長條（畫面用；主機也拿來送給隊友）
 
-        Lane AddLane(string kind, Vector3 a, Vector3 b, float grow, float life, float width, SkillDef s, int dmg, bool remote)
+        Lane AddLane(string kind, Vector3 a, Vector3 b, float grow, float life, float width, SkillDef s, int dmg, bool remote, Fighter owner = null)
         {
             a.y = 0f; b.y = 0f;
-            var ln = new Lane { kind = kind, a = a, b = b, start = now, grow = grow, until = now + life, width = width, skill = s, damage = dmg, remote = remote };
+            var ln = new Lane { kind = kind, a = a, b = b, start = now, grow = grow, until = now + life, width = width, skill = s, damage = dmg, remote = remote, owner = owner };
             lanes.Add(ln);
             OnLane?.Invoke(ln);
             return ln;
@@ -3185,7 +3187,7 @@ namespace SpellDuel
             if (lanes.Count == 0) return;
             foreach (var ln in lanes)
             {
-                if (now > ln.until) { ln.alive = false; continue; }
+                if (now > ln.until || (ln.owner != null && !ln.owner.Alive)) { ln.alive = false; continue; }   // 放的小怪死了：藤蔓、荊棘、預警線一起消失
                 if (ln.remote || (ln.kind != "vine" && ln.kind != "thorn")) continue;
                 bool thorn = ln.kind == "thorn";
                 var tip = ln.Tip(now);
@@ -3215,14 +3217,14 @@ namespace SpellDuel
             var dir = Fighter.Flat(tgt.Feet - m.Feet); if (dir == Vector3.zero) dir = Fighter.Flat(m.forward);
             float sp = DashSpeed(m);
             m.dashDir = dir; m.dashHit = false; m.dashStart = now; m.dashUntil = now + len / sp; m.dashFrom = m.Feet;
-            AddLane("dash", m.Feet, m.Feet + dir * len, 0f, len / sp + 0.15f, m.bodyRadius, ds, 0, false);
+            AddLane("dash", m.Feet, m.Feet + dir * len, 0f, len / sp + 0.15f, m.bodyRadius, ds, 0, false, m);
         }
 
         void EndDash(Fighter m)
         {
             m.dashUntil = 0f;
             int kind = m.minionKind;
-            if (kind == 8 && FlatDistance(m.dashFrom, m.Feet) > 0.5f) AddLane("thorn", m.dashFrom, m.Feet, 0f, ThornLife, 0.35f, Skills.All["m_dash"], Mathf.RoundToInt(3f * m.dmgMul), false);   // 沿路留下荊棘帶
+            if (kind == 8 && FlatDistance(m.dashFrom, m.Feet) > 0.5f) AddLane("thorn", m.dashFrom, m.Feet, 0f, ThornLife, 0.35f, Skills.All["m_dash"], Mathf.RoundToInt(3f * m.dmgMul), false, m);   // 沿路留下荊棘帶
             if (kind == 13)
             {
                 // 跳躍魚落地（掉回海裡或摔在礁石上），停 1.5 秒
@@ -3354,6 +3356,8 @@ namespace SpellDuel
             {
                 var p = projectiles[i];
                 if (!p.alive) continue;
+                if (p.owner != null && p.owner.isMinion && !p.owner.Alive) { p.alive = false; continue; }   // 小怪死了：牠放出去還在飛的招式一起消失（使用者要求：死前放的不會造成傷害）
+                if (p.skill != null && p.skill.id == HealOrbId) { StepHealOrb(p, dt); continue; }   // 治療光球：只追隊友、只治療
                 if (p.lob) { StepLob(p, dt); continue; }
                 var target = p.target != null && p.target.Alive ? p.target : Opponent(p.owner);
                 if (p.homing > 0f && (p.homingUntil <= 0f || now < p.homingUntil) && !p.Curved && !p.Fading && !p.remote)
