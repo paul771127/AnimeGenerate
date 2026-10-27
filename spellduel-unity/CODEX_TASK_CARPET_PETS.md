@@ -1,6 +1,74 @@
-# Codex 任務：天穹飛毯副本＋寵物系統（這一輪只交設計提案）
+# Codex 任務：天穹飛毯副本＋寵物系統
 
 這份檔案把總單 `CODEX_PENDING_BRIEF.md` 的第 13、14 項合在一起，讀這一份就夠了。
+
+## 第二輪（現在要做）：美術與畫面介面
+
+兩份提案已經確認：`Docs/CARPET_DUNGEON_PROPOSAL.md`、`Docs/PET_SYSTEM_PROPOSAL.md`。檔案開頭的「使用者定案修改」優先於內文。
+
+**分工**：
+- **Claude**：戰鬥邏輯、數值、存檔、網路、`dungeons.txt`、寵物分頁的功能。
+- **Codex**：場景、模型、動畫、特效、圖示，以及下面列的**畫面介面**，讓 Claude 呼叫。
+- 介面的名字、參數請照這份；需要改就在實作紀錄寫清楚。
+- 不要改戰鬥邏輯。
+
+### A2. 飛毯副本美術（照提案的造型、配色、預算）
+1. **`CarpetScene.cs`**（新檔）：
+   - `static CarpetScene Create(List<Vector3> arenaPolygon, float floorY, Vector3 forward)`：飛毯鋪滿校準場地；景物沿 `-forward` 往後退。
+   - `void SetVariant(int station)`：station 0～4，對應五站的天空、景物、光線。
+   - `float Speed { get; set; }`：視覺速度（m/s），控制三層景物後退與風線密度。常態 12、衝刺 18、Boss 壓低時 6。
+   - 物件池循環，不能一直新建。
+2. **`CarpetObstacleView.cs`**：
+   - `static CarpetObstacleView Create(int kind, int station)`：kind 0＝低掃、1＝高掃、2＝半邊、3＝缺口牆。
+   - `void Tick(float progress, Vector3 frontCenter, Vector3 forward, float carpetWidth, float chestHeight, int side, float gapCenter, float gapWidth)`
+     - progress：0＝最遠處出現，1＝抵達飛毯前緣。
+     - side：半邊用，-1 左、+1 右。
+     - gapCenter：缺口用，相對中心的左右偏移（公尺）。
+     - 預警標示（橘線、藍線、紅斜紋、綠框）也由這個 view 在 progress 到預警區間時畫出來。
+   - `void Hit()`、`void Passed()`、`void Release()`
+3. **新敵人 5 種與載具**：
+   - 骨架、模型全新，不沿用 MinionRig。
+   - **`SkyEnemyRig.cs`**：
+     - `static SkyEnemyRig Create(int kind)`：kind 0 風箏盜賊、1 雲鷹騎兵、2 滑翔翼兵、3 浮游魔偶、4 空賊隊長。
+     - 方法：`MoveSpeed`、`Windup(float dur)`、`Attack()`、`PlayHit()`、`SetDead(bool)`。介面和 MinionRig 一樣，Claude 才能直接替換。
+   - **`SkyVehicleView.cs`**：
+     - `static SkyVehicleView Create(int kind)`
+     - `void Tick(float progress, Vector3 from, Vector3 landPoint)`：progress 照提案的 0～1 分段（接近、並排、起跳、落地、離場）。
+     - 敵人本體在 0.55～0.80 由 Claude 放到起跳弧線上；載具在 0.80 之後自己飛走。
+4. **Boss「逐風號」**：
+   - **`AirshipRig.cs`**：
+     - `Create()`
+     - `SetPhase(int)`：1 或 2，2 是冒煙、全砲門展開。
+     - `Warn(int move, float dur)`：move 0 低砲列、1 雷索、2 舷側（左右另用 `SetSide(int)`）、3 封門（`SetGap(float)`）、4 彈幕。
+     - `Fire(int move)`
+     - `SetSwoop(float t)`：0＝常態距離，1＝壓低到前緣。
+     - `DropPirate(int side)`：甲板跳下的動作。
+     - `SetDying(float t)`：0～1 墜落演出。
+   - **彈幕子彈**：`SkyShotView.Create(bool low)`，低的拖橘尾、高的拖藍尾；位置由 Claude 每幀設定。
+5. 預覽圖放在 `Docs/pending_preview/carpet/`（每站一張、敵人與 Boss 各一張）。
+
+### B2. 寵物美術
+1. **`PetDress.Apply(MinionRig rig, bool elite)`**：
+   - 加上青綠織帶、身份扣、腳下友方雙線環；菁英加金屬雙羽扣、斷續金環。
+   - 花、水母這類沒有脖子的，用莖環或傘緣緞結。
+   - 菁英寵物用 `MinionRig.Elite` 的骨架，也要能套。
+2. **吃誘餌的動作**：`rig.SetEating(bool)`。
+3. **收服特效**：`PetFx.Capture(Vector3 pos, bool success)`。成功是繩結閉合加爪印，失敗是繩結鬆開加碎光；不要全螢幕閃。
+4. **圖示**（照 `SkillIcons.Supplies.cs` 的畫風，接法跟現有素材圖示一樣，用 id 取圖）：
+   - **誘餌**：8 種底形（火、岩、影、植、翼、潮、雷、甲），菁英版加雙金封蠟；id `bait_m0`～`bait_m47`，可以依種族共用底形。
+   - **飼料 3 種**：`food_basic`、`food_fine`、`food_star`。
+   - **馴獸印片**：`mat_tame_seal`。
+   - **飛毯副本的素材**：`mat_cloud_silk`、`mat_wind_crystal`、`mat_sky_badge`、`mat_airship_compass`。
+   - **精魄 6 顆**：照提案的設計。
+   - **天穹航裝 5 部位**、**順風護露藥劑**。
+5. **寵物分頁的版面**：照提案的手機直式示意，用 UiKit 的元件做出畫面骨架。按鈕的動作 Claude 會接；你可以先放空的 callback。
+6. 預覽圖放在 `Docs/pending_preview/pets/`。
+
+每做完一項就先推，並在 `CODEX_PENDING_BRIEF.md` 最後的「Codex 實作紀錄」記一筆。Android、iOS 都要編譯通過。
+
+---
+
+# 第一輪（已完成）
 
 ## 這一輪要交的東西
 **只交兩份設計提案，先不要做模型和程式。**
