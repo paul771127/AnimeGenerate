@@ -914,11 +914,12 @@ namespace SpellDuel
         }
         /// <summary>故事 1-1～1-3 的敵人血量、傷害倍率（新手關調低）</summary>
         public const float EarlyStageMul = 0.6f;
-        public static readonly float[] StoryBossHp = { 800f, 1600f, 2500f, 5000f, 8000f }, StoryBossDmg = { 1f, 1.5f, 2f, 2.5f, 3f };
+        public static readonly float[] StoryBossHp = { 800f, 1600f, 2500f, 5000f, 8000f }, StoryBossDmg = { 1f, 1.5f, 2f, 5f, 3f };   // 第四章 ×2（使用者要求：劍仙打起來太輕鬆）
         public const float LateDmgMul = 1.5f;
         public const float LateMinionDmgMul = 1.5f;
         /// <summary>故事各章小怪的傷害倍率（第一章不用；第二章起取代疊加的倍率）：忍者簡單難度約 7 下倒</summary>
-        public static readonly float[] StoryMinionDmg = { 1f, 2.9f, 2.2f, 4f, 4.25f };
+        public const int StoryExtraPerWave = 3;
+        public static readonly float[] StoryMinionDmg = { 1f, 2.9f, 2.2f, 8f, 4.25f };   // 第四章 4 → 8（使用者要求：再 ×2）
         /// <summary>故事敵人的命中率（使用者要求）：第一章 0%，之後每章 +5%；普通再 +35%、困難再 +60%</summary>
         /// <summary>Boss 的命中率額外 +30%（使用者要求）</summary>
         public const float BossAccuracyBonus = 0.30f;
@@ -1328,7 +1329,7 @@ namespace SpellDuel
                         // 第二章以後的 Boss：血量、傷害 ×1.3
                         if (pendingStage.theme >= 1 && pendingStage.id != "trial") { battle.storyBossHp *= LateBossMul; battle.storyBossDmg *= LateBossMul; }
                         SetupStageMods(pendingStage);   // 天候、小目標（SoloBattle.StageMods.cs）
-                        if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.id != "1-1" && pendingStage.id != "1-2" && pendingStage.id != "1-3") battle.treasureChance = TreasureChance;   // 寶箱怪：新手關、試煉不出（Combat.Treasure.cs）
+                        if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.id != "1-1" && pendingStage.id != "1-2" && pendingStage.id != "1-3") { battle.treasureChance = TreasureChance; battle.extraPerWave = StoryExtraPerWave; }   // 每波多 3 隻（新手關、試煉不加）   // 寶箱怪：新手關、試煉不出（Combat.Treasure.cs）
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
                     }
                     else if (dungeon != null)

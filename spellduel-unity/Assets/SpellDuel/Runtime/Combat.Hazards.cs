@@ -305,10 +305,9 @@ namespace SpellDuel
             }
             if (hazards.Count == 0) return;
             if (stageCleared && !remoteEnemy) { hazards.Clear(); OnHazardsClear?.Invoke(); return; }
-            // 會被陷阱打到的：我自己（每位玩家自己判定），主機／單人再加上小怪（Boss 不怕陷阱、隊友由他自己判定）
+            // 會被陷阱打到的：只有我自己（每位玩家自己判定；隊友由他自己判定）。機關不傷怪物（使用者要求：小怪、Boss 都不會被打到）
             var victims = new List<Fighter>();
             if (player.Alive) victims.Add(player);
-            if (!remoteEnemy) foreach (var m in minions) if (m.Alive && m.alt < 0.6f && m.leapEnd <= 0f) victims.Add(m);
             for (int i = hazards.Count - 1; i >= 0; i--)
             {
                 var h = hazards[i];

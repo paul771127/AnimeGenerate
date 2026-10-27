@@ -712,6 +712,8 @@ namespace SpellDuel
         // 每第 10、20、30… 波是 Boss 波（只有 Boss，沒有小怪）。波次越後面敵人越強，也會解鎖新的小怪種類。
         public bool endless;
         public int wave, kills, bossKills, waveToSpawn, waveTotal;
+        /// <summary>故事關卡每一波額外多出的小怪數（使用者要求：每波 +3；SoloBattle 設定）</summary>
+        public int extraPerWave;
         public float nextMinionAt, waveStartAt, bossBaseHp = 150f;
         public const int BossEvery = 10;
         public Func<Vector3> edgePoint;          // 小怪出生點：場地邊緣外 1～2m（淡入出現，再走進來）
@@ -885,6 +887,7 @@ namespace SpellDuel
                     roundsInWave = 2 + rng.Next(2); roundNo = 0;
                     waveTotal = roundsInWave * groupSize; waveToSpawn = waveTotal;
                 }
+                if (extraPerWave > 0) { waveTotal += extraPerWave; waveToSpawn = waveTotal; if (GroupMode && groupSize > 0) roundsInWave = Mathf.CeilToInt(waveTotal / (float)groupSize); }   // 故事：每波多幾隻（輪次出怪：多出來的再排一輪）
             }
             groupQueue.Clear(); roundWaiting = false; nextRoundAt = waveStartAt;
             nextMinionAt = waveStartAt;
