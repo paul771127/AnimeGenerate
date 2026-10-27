@@ -10,6 +10,15 @@ namespace SpellDuel
     /// </summary>
     public partial class SoloBattle
     {
+        StageWeatherArt weatherArt;
+        void UpdateWeatherArt()
+        {
+            var wanted=battle!=null && phase==Phase.Fighting && pendingStage!=null?battle.weather:Battle.Weather.None;
+            if(weatherArt && weatherArt.Weather!=wanted){Destroy(weatherArt.gameObject);weatherArt=null;}
+            if(!weatherArt && wanted!=Battle.Weather.None){var poly=area.Polygon;weatherArt=StageWeatherArt.Create(wanted,poly,poly.Count>0?poly[0].y:area.FloorY);}
+        }
+        void ClearWeatherArt(){if(weatherArt)Destroy(weatherArt.gameObject);weatherArt=null;}
+
         public const float BonusGoldMul = 0.3f; public const int BonusCoins = 1;
 
         void SetupStageMods(StoryStage st)
@@ -45,19 +54,8 @@ namespace SpellDuel
         {
             if (battle == null || phase != Phase.Fighting || pendingStage == null) return;
             var w = battle.weather;
-            Color tint = w == Battle.Weather.Fog ? new Color(0.85f, 0.88f, 0.92f, 0.28f) : w == Battle.Weather.Moon ? new Color(0.1f, 0.15f, 0.4f, 0.2f) : w == Battle.Weather.Rain ? new Color(0.25f, 0.3f, 0.4f, 0.15f) : Color.clear;
+            Color tint = w == Battle.Weather.Fog ? new Color(0.85f, 0.88f, 0.92f, 0.08f) : w == Battle.Weather.Moon ? new Color(0.1f, 0.15f, 0.4f, 0.1f) : w == Battle.Weather.Rain ? new Color(0.25f, 0.3f, 0.4f, 0.05f) : Color.clear;
             if (tint.a > 0f) { GUI.color = tint; GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
-            if (w == Battle.Weather.Rain)
-            {
-                // 雨絲：幾條斜線往下掉
-                GUI.color = new Color(0.8f, 0.85f, 1f, 0.35f);
-                for (int i = 0; i < 40; i++)
-                {
-                    float x = (i * 97.3f + Time.time * 260f) % W, y = (i * 53.1f + Time.time * 900f) % H;
-                    GUI.DrawTexture(new Rect(x, y, 2f, H * 0.03f), Texture2D.whiteTexture);
-                }
-                GUI.color = Color.white;
-            }
             int fs = Mathf.RoundToInt(H * 0.018f);
             string line = (w != Battle.Weather.None ? Battle.WeatherName(w) + "　" : "") + battle.BonusText;
             if (line.Length > 0) UiKit.Text(new Rect(W * 0.04f, H * 0.165f, W * 0.92f, fs * 1.6f), line, fs, new Color(1f, 0.92f, 0.6f), TextAnchor.MiddleCenter, true);

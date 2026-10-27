@@ -2286,6 +2286,7 @@ namespace SpellDuel
             if (slamGo) Destroy(slamGo);
             ClearTravel();   // 副本的通道與運鏡（SoloBattle.DungeonTravel.cs）
             ClearRoomEventViews();
+            ClearWeatherArt();
             ClearWarnRings();
             if (volcano) Destroy(volcano.gameObject);
             if (forest) Destroy(forest.gameObject);
@@ -2328,6 +2329,7 @@ namespace SpellDuel
 
         void Update()
         {
+            UpdateWeatherArt();
             GalleryTick();
             if (Watching) { UpdateWatchBattle(); return; }   // 觀戰：只跑顯示
             if (phase == Phase.Fighting && lastPhase != Phase.Fighting && !NetMode) { introUntil = Time.time + IntroTime; BeginReadyCheck(); }   // 先做戰鬥準備（身高校正），完成才倒數開打
