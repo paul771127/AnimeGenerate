@@ -14,6 +14,9 @@ namespace SpellDuel
     {
         public enum Weather { None, Rain, Fog, Moon, Wind }
         public Weather weather;
+        /// <summary>副本的夜晚（SoloBattle.StageMods.cs 決定）：敵人的攻擊 +10%（獎勵在 SoloBattle：金幣 +20%、掉寶率 ×1.25）</summary>
+        public bool night;
+        public const float NightDmg = 1.1f;
         public static string WeatherName(Weather w) => w switch { Weather.Rain => "🌧 暴雨", Weather.Fog => "🌫 濃霧", Weather.Moon => "🌕 月夜", Weather.Wind => "🍃 順風", _ => "" };
         public static string WeatherDesc(Weather w) => w switch
         {
@@ -28,6 +31,7 @@ namespace SpellDuel
         /// <summary>開打時套用天候（濃霧：遠程小怪的預備時間）</summary>
         public void SetWeather(Weather w)
         {
+            if (weather == Weather.Fog) rangedWindupMul /= FogWindup;   // 副本每個地點換天候：先把上一個濃霧拿掉
             weather = w;
             if (w == Weather.Fog) rangedWindupMul *= FogWindup;
         }
@@ -38,6 +42,7 @@ namespace SpellDuel
             float k = 1f;
             if (weather == Weather.Rain) { int e = ElementOf(s); if (e == 1) k *= RainFire; else if (e == 3) k *= RainThunder; }
             if (weather == Weather.Moon && by != null && FoeSide(by)) k *= MoonDmg;
+            if (night && by != null && FoeSide(by)) k *= NightDmg;
             return k;
         }
 

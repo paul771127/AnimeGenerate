@@ -3853,7 +3853,7 @@ namespace SpellDuel
         void ApplyDamageAndEffect(Fighter target, int damage, EffectKind eff, float dps, float dur, Vector3 at, Fighter by = null)
         {
             if (target.npcSide == 1 && target.npcId != null && target.npcId.StartsWith("ev_") && EvPropHit(target, by)) return;   // 副本：雕像、寶箱（Combat.RoomEvents.cs）
-            if (weather != Weather.None && damage > 0) damage = Mathf.Max(1, Mathf.RoundToInt(damage * WeatherMul(incoming ?? HitSkill, by ?? (FoeSide(target) ? player : enemy))));   // 故事關卡的天候（Combat.StageMods.cs）
+            if ((weather != Weather.None || night) && damage > 0) damage = Mathf.Max(1, Mathf.RoundToInt(damage * WeatherMul(incoming ?? HitSkill, by ?? (FoeSide(target) ? player : enemy))));   // 故事關卡的天候（Combat.StageMods.cs）
             if (by == null) by = FoeSide(target) ? player : enemy;   // 不知道是誰打的：對面那一方的主角
             // 閃避率（刺客技能樹）：整次攻擊（傷害＋效果）完全閃開
             // 閃避只對物理攻擊有效（使用者要求）：魔法攻擊（火球、毒液、放電、泡泡…）閃不掉，要自己躲

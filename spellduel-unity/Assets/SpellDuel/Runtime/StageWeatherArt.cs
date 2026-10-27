@@ -61,6 +61,19 @@ namespace SpellDuel
             }
             return art;
         }
+        /// <summary>副本的夜晚：場地上空的星點、場邊飄的螢光（不擋戰鬥畫面）</summary>
+        public static StageWeatherArt CreateNight(List<Vector3> polygon,float y)
+        {
+            var art=new GameObject("DungeonNight").AddComponent<StageWeatherArt>();art.Weather=Battle.Weather.None;
+            ArtKit.CenterAndRadius(polygon,y,out var center,out float radius);art.transform.position=center;
+            var stars=SpellFx.NewPS(art.transform,"Night stars",SpellFx.BlendMat(SpellFx.TexSoft),160,false);stars.transform.localPosition=Vector3.up*9;
+            var m=stars.main;m.startColor=new Color(.8f,.88f,1,.75f);m.startSize=.06f;m.startLifetime=6;m.startSpeed=0;var e=stars.emission;e.rateOverTime=25;
+            SpellFx.Sphere(stars,radius+10);SpellFx.FadeInOut(stars);stars.Play();
+            var flies=SpellFx.NewPS(art.transform,"Night glowflies",SpellFx.AddMat(SpellFx.TexSoft),40,false);flies.transform.localPosition=Vector3.up*.8f;
+            m=flies.main;m.startColor=new Color(1,.9f,.5f,.8f);m.startSize=.05f;m.startLifetime=5;m.startSpeed=0;e=flies.emission;e.rateOverTime=7;
+            SpellFx.Disc(flies,radius+1.5f,.4f);var noise=flies.noise;noise.enabled=true;noise.strength=.3f;noise.frequency=.4f;SpellFx.FadeInOut(flies);flies.Play();
+            return art;
+        }
         void OnDestroy(){foreach(var m in meshes)if(m){if(Application.isPlaying)Destroy(m);else DestroyImmediate(m);}if(moonMat){if(Application.isPlaying)Destroy(moonMat);else DestroyImmediate(moonMat);}}
     }
 }

@@ -10,14 +10,76 @@ namespace SpellDuel
     /// </summary>
     public partial class SoloBattle
     {
-        StageWeatherArt weatherArt;
+        StageWeatherArt weatherArt, nightArt;
+        bool ModsShown => battle != null && phase == Phase.Fighting && (pendingStage != null || drun != null);
         void UpdateWeatherArt()
         {
-            var wanted=battle!=null && phase==Phase.Fighting && pendingStage!=null?battle.weather:Battle.Weather.None;
+            var wanted=ModsShown?battle.weather:Battle.Weather.None;
             if(weatherArt && weatherArt.Weather!=wanted){Destroy(weatherArt.gameObject);weatherArt=null;}
             if(!weatherArt && wanted!=Battle.Weather.None){var poly=area.Polygon;weatherArt=StageWeatherArt.Create(wanted,poly,poly.Count>0?poly[0].y:area.FloorY);}
+            // 副本的夜晚：星空、螢光，場景的平行光調暗偏藍
+            bool nightWanted=ModsShown&&battle.night;
+            if(nightArt && !nightWanted){Destroy(nightArt.gameObject);nightArt=null;}
+            if(!nightArt && nightWanted){var poly=area.Polygon;nightArt=StageWeatherArt.CreateNight(poly,poly.Count>0?poly[0].y:area.FloorY);}
+            SetNightLight(nightWanted);
         }
-        void ClearWeatherArt(){if(weatherArt)Destroy(weatherArt.gameObject);weatherArt=null;}
+        void ClearWeatherArt(){if(weatherArt)Destroy(weatherArt.gameObject);weatherArt=null;if(nightArt)Destroy(nightArt.gameObject);nightArt=null;SetNightLight(false);}
+
+        // 夜晚的燈光：平行光強度 ×0.45、偏藍；環境光調暗（離開就還原）
+        bool nightLit; readonly System.Collections.Generic.Dictionary<Light,(float,Color)> dayLights=new System.Collections.Generic.Dictionary<Light,(float,Color)>(); Color dayAmbient;
+        void SetNightLight(bool on)
+        {
+            if(on==nightLit)return;nightLit=on;
+            if(on)
+            {
+                dayLights.Clear();dayAmbient=RenderSettings.ambientLight;
+                foreach(var l in FindObjectsOfType<Light>())if(l.type==LightType.Directional){dayLights[l]=(l.intensity,l.color);l.intensity*=NightLightMul;l.color=new Color(.62f,.7f,1f);}
+                RenderSettings.ambientLight=dayAmbient*NightLightMul;
+            }
+            else
+            {
+                foreach(var kv in dayLights)if(kv.Key){kv.Key.intensity=kv.Value.Item1;kv.Key.color=kv.Value.Item2;}
+                dayLights.Clear();RenderSettings.ambientLight=dayAmbient;
+            }
+        }
+        public const float NightLightMul = 0.45f;
+        /// <summary>副本夜晚的獎勵：金幣 +20%、掉寶率 ×1.25</summary>
+        public const float NightGoldMul = 1.2f, NightLootMul = 1.25f;
+        float NightGold => battle != null && battle.night ? NightGoldMul : 1f;
+
+        /// <summary>
+        /// 副本的白天／夜晚與天候（使用者要求）：
+        ///   白天／夜晚：整趟副本一樣，每 3 小時輪替一次（副本 id＋日期＋時段決定，約四成是夜晚）
+        ///   天候：每個地點各擲一次，照主題有不同的機率（熔岩多濃煙、森林多霧雨、海上多風雨）；月夜只在夜晚出現
+        ///   千機迴廊（室內）沒有天候、沒有夜晚。用固定的種子算 → 合作的隊友不用同步也一樣。
+        /// </summary>
+        void SetupDungeonMods()
+        {
+            if (battle == null || drun == null || dungeon == null) return;
+            battle.SetBonus(Battle.Bonus.None);
+            if (dungeon.id == TrapGallery.Id) { battle.night = false; battle.SetWeather(Battle.Weather.None); return; }
+            string slot = System.DateTime.Now.ToString("yyyyMMdd") + "_" + (System.DateTime.Now.Hour / 3);
+            bool wasNight = battle.night;
+            battle.night = new System.Random((dungeon.id + slot).GetHashCode() & 0x7fffffff).NextDouble() < DungeonNightChance;
+            var r = new System.Random((dungeon.id + "/" + drun.node.id + slot).GetHashCode() & 0x7fffffff);
+            var w = DungeonWeather(drun.Theme, battle.night, r);
+            bool changed = w != battle.weather;
+            battle.SetWeather(w);
+            if (drun.Step == 1) Say((battle.night ? "🌙 夜晚的副本：敵人的攻擊 +10%，金幣 +20%、掉寶率 ×1.25" : "☀ 白天的副本") + (w != Battle.Weather.None ? $"\n天候：{Battle.WeatherName(w)}——{Battle.WeatherDesc(w)}" : ""), 4.5f);
+            else if (changed) Say(w != Battle.Weather.None ? $"天候變了：{Battle.WeatherName(w)}——{Battle.WeatherDesc(w)}" : "天氣放晴了", 3.5f);
+        }
+        public const double DungeonNightChance = 0.4;
+        /// <summary>副本地點的天候（份數）：晴／雨／霧／風；夜晚另外有 1 份月夜</summary>
+        static Battle.Weather DungeonWeather(int theme, bool night, System.Random r)
+        {
+            int[] w = theme == 0 ? new[] { 45, 10, 25, 20 } : theme == 1 ? new[] { 40, 20, 30, 10 } : theme == 2 ? new[] { 40, 25, 10, 25 } : new[] { 50, 15, 15, 20 };
+            int moon = night ? 8 : 0, total = w[0] + w[1] + w[2] + w[3] + moon, k = r.Next(total);
+            if (k < w[0]) return Battle.Weather.None; k -= w[0];
+            if (k < w[1]) return Battle.Weather.Rain; k -= w[1];
+            if (k < w[2]) return Battle.Weather.Fog; k -= w[2];
+            if (k < w[3]) return Battle.Weather.Wind;
+            return Battle.Weather.Moon;
+        }
 
         public const float BonusGoldMul = 0.3f; public const int BonusCoins = 1;
 
@@ -47,17 +109,18 @@ namespace SpellDuel
         }
 
         /// <summary>月夜：掉寶率 ×1.5</summary>
-        float WeatherLootMul => battle != null && battle.weather == Battle.Weather.Moon ? 1.5f : 1f;
+        float WeatherLootMul => (battle != null && battle.weather == Battle.Weather.Moon ? 1.5f : 1f) * (battle != null && battle.night ? NightLootMul : 1f);   // 月夜 ×1.5；副本夜晚 ×1.25
 
         /// <summary>HUD：天候的畫面色調＋右上的天候、小目標</summary>
         void DrawStageModsHud(float W, float H)
         {
-            if (battle == null || phase != Phase.Fighting || pendingStage == null) return;
+            if (!ModsShown) return;
             var w = battle.weather;
+            if (battle.night) { GUI.color = new Color(0.04f, 0.07f, 0.22f, 0.22f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }   // 夜晚：畫面整個暗一點、偏藍
             Color tint = w == Battle.Weather.Fog ? new Color(0.85f, 0.88f, 0.92f, 0.08f) : w == Battle.Weather.Moon ? new Color(0.1f, 0.15f, 0.4f, 0.1f) : w == Battle.Weather.Rain ? new Color(0.25f, 0.3f, 0.4f, 0.05f) : Color.clear;
             if (tint.a > 0f) { GUI.color = tint; GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
             int fs = Mathf.RoundToInt(H * 0.018f);
-            string line = (w != Battle.Weather.None ? Battle.WeatherName(w) + "　" : "") + battle.BonusText;
+            string line = (drun != null && dungeon != null && dungeon.id != TrapGallery.Id ? (battle.night ? "🌙 夜晚　" : "☀ 白天　") : "") + (w != Battle.Weather.None ? Battle.WeatherName(w) + "　" : "") + battle.BonusText;
             if (line.Length > 0) UiKit.Text(new Rect(W * 0.04f, H * 0.165f, W * 0.92f, fs * 1.6f), line, fs, new Color(1f, 0.92f, 0.6f), TextAnchor.MiddleCenter, true);
         }
     }

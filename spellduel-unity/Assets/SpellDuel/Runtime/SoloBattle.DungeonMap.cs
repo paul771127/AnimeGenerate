@@ -47,6 +47,7 @@ namespace SpellDuel
         {
             var r = drun.node;
             battle.themeOverride = drun.Theme;
+            SetupDungeonMods();   // 白天／夜晚、這個地點的天候（SoloBattle.StageMods.cs）
             GalleryEnter();
             dungeonHalfSaid = -1; nodeClearedSeen = false; routeAutoAt = 0f;
             Say($"🏰 {dungeon.name}・{r.title}（第 {drun.Step} 站）", 3.5f);

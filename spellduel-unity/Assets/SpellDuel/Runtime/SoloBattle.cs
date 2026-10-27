@@ -286,6 +286,7 @@ namespace SpellDuel
             if (dk > 0 && prof != null && prof.NoviceKills(dk, dropRng)) { Progress.SaveChar(prof); NoviceQuestTick(); }   // 初心者的招式任務（打倒／收集）
             QuestKills(dk);   // 副本任務：打倒幾隻敵人、收集東西
             float goldMul = 1f + Souls.Sum(prof, SoulOp.Gold);   // 精魄：金幣加成
+            goldMul *= NightGold;   // 副本夜晚：金幣 +20%
             for (int i = 0; i < dk; i++) pendingGold += Mathf.RoundToInt(Economy.MinionGold(battle.wave) * goldMul);
             if (dk > 0) { Sfx.Play("poof", 0.6f); Sfx.Play("coin", 0.35f, 1.1f); }   // 小怪倒下＋掉金幣
             int db = battle.bossKills - lastBossKillsSeen; lastBossKillsSeen = battle.bossKills;
