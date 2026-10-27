@@ -36,6 +36,7 @@ namespace SpellDuel
         Retaliate,     // 被打到時 chance 機率讓攻擊者中毒（v 每秒、dur 秒）
         Undying,       // 每場戰鬥一次：受到致命傷害時留 1 HP、無敵 3 秒
         TrapReduce, DodgePower,
+        Accuracy,      // 命中率 +v（抵掉對方的閃避）
     }
 
     /// <summary>精魄能鑲在哪一類裝備：武器（傷害）、防具（頭、身體、鞋子；防禦）、飾品（技能、輔助、特殊）</summary>
@@ -91,7 +92,7 @@ namespace SpellDuel
             M(2, 0.002f, "#b08968", F(SoulOp.Hp, 40), F(SoulOp.BasicSpeed, -0.10f));        // 岩石衝鋒獸：好處＋副作用（普攻變慢）
             M(3, 0.002f, "#ff4d4d", F(SoulOp.Atk, 0.12f), F(SoulOp.Taken, 0.08f));           // 自爆小鬼：好處＋副作用（更怕痛）
             M(4, 0.003f, "#a8a29e", F(SoulOp.Block, 0.06f));                                  // 岩石投擲者：格擋率
-            M(5, 0.004f, "#f97316", F(SoulOp.CritDmg, 0.20f));                                // 熔岩狙擊手：爆擊傷害
+            M(5, 0.004f, "#f97316", F(SoulOp.Accuracy, 0.05f));                               // 熔岩狙擊手：命中率（使用者要求，原本爆擊傷害）
             M(6, 0.005f, "#9d6bff", F(SoulOp.HurtInvuln, 0, 0.06f, 1f));                     // 虛空術士：機率好處（虛空閃現）
             M(7, 0.002f, "#84cc16", F(SoulOp.Poison, 0.05f));                                 // 毒液噴花：機率附加中毒
             M(8, 0.003f, "#65a30d", F(SoulOp.Thorns, 0.15f));                                 // 荊棘衝鋒獸：反彈
@@ -167,6 +168,7 @@ namespace SpellDuel
                 case SoulOp.Crit: return $"爆擊率 +{Pct(x.v)}";
                 case SoulOp.CritDmg: return $"爆擊傷害 +{Pct(x.v)}";
                 case SoulOp.Evade: return $"閃避率 +{Pct(x.v)}";
+                case SoulOp.Accuracy: return $"命中率 +{Pct(x.v)}（抵掉對方的閃避）";
                 case SoulOp.Block: return $"格擋率 +{Pct(x.v)}（格擋＝這一下傷害減半）";
                 case SoulOp.Lifesteal: return $"吸血 +{Pct(x.v)}";
                 case SoulOp.Cdr: return $"技能冷卻 −{Pct(x.v)}";
@@ -244,6 +246,7 @@ namespace SpellDuel
                     case SoulOp.Crit: f.critChance = Mathf.Clamp(f.critChance + x.v, 0f, 0.75f); break;
                     case SoulOp.CritDmg: f.critDmg += x.v; break;
                     case SoulOp.Evade: f.evadeChance = Mathf.Clamp(f.evadeChance + x.v, 0f, 0.5f); break;
+                    case SoulOp.Accuracy: f.accuracy += x.v; break;
                     case SoulOp.Block: f.blockChance = Mathf.Min(0.5f, f.blockChance + x.v); break;
                     case SoulOp.Lifesteal: f.lifesteal += x.v; break;
                     case SoulOp.Cdr: f.cdMul = Mathf.Max(0.4f, f.cdMul * (1f - x.v)); break;

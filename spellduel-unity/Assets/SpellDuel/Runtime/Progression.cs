@@ -73,6 +73,7 @@ namespace SpellDuel
         BashGuard, SanctionCombo, CritDmg, FalconMark, PetMp,
         CloseInstinct,
         KunaiFire, KunaiIce, KunaiBolt, DmgShield,   // 忍者：苦無附帶屬性；審判者：傷害轉護盾
+        Accuracy,                                    // 命中率（抵掉對方的閃避）
     }
 
     public class TreeNode
@@ -232,6 +233,7 @@ namespace SpellDuel
                     FMod("ar_bspd", "連弓", "na_arrow", ModField.Cooldown, 0.08f, 5, 1, 1, "ar_root"),
                     FMod("ar_bmulti", "分裂箭", "na_arrow", ModField.Multi, 1f, 2, 0, 2, "ar_bspd"),
                     FMod("ar_bdmg", "精製箭頭", "na_arrow", ModField.Damage, 0.12f, 5, 0, 3, "ar_bmulti"),
+                    FPas("ar_acc", "準心", PassiveKind.Accuracy, 0.01f, 5, 0, 4, "ar_bdmg"),
                     FMod("ar_bpierce", "穿透箭", "na_arrow", ModField.Pierce, 1f, 1, 1, 2, "ar_bspd"),
                     // 箭的附加效果（機率）
                     FPas("ar_bleed", "撕裂箭", PassiveKind.ArrowBleed, 0.06f, 5, 1, 3, "ar_bpierce"),
@@ -261,6 +263,7 @@ namespace SpellDuel
                     FMod("sw_bspd", "疾風劍", "na_sword", ModField.Cooldown, 0.08f, 5, 1, 1, "sw_root"),
                     FPas("sw_combo", "連斬", PassiveKind.ComboStrike, 0.25f, 5, 0, 2, "sw_bspd"),
                     FMod("sw_bdmg", "劍術精通", "na_sword", ModField.Damage, 0.1f, 5, 0, 3, "sw_combo"),
+                    FPas("sw_acc", "看破", PassiveKind.Accuracy, 0.01f, 5, 0, 4, "sw_bdmg"),
                     FPas("sw_leech", "飲血", PassiveKind.BasicLeech, 0.02f, 5, 1, 2, "sw_bspd"),   // 每級 2%（滿級 10%）；一揮只算一次
                     FPas("sw_regen", "自然回復", PassiveKind.NaturalRegen, 0.008f, 5, 1, 3, "sw_leech"),
                     // 劍氣
@@ -287,6 +290,7 @@ namespace SpellDuel
                     // 劇毒連刺（普攻）
                     FMod("as_bspd", "疾刺", "na_dagger", ModField.Cooldown, 0.08f, 5, 1, 1, "as_root"),
                     FMod("as_bdmg", "淬毒匕首", "na_dagger", ModField.Damage, 0.12f, 5, 0, 2, "as_bspd"),
+                    FPas("as_acc", "要害", PassiveKind.Accuracy, 0.01f, 5, 0, 3, "as_bdmg"),
                     FPas("as_venom", "劇毒連刺", PassiveKind.Venom, 8f, 5, 1, 2, "as_bspd"),
                     FLearn("as_poison", "poison", 1, 3, "as_venom"),
                     FMod("as_poison2", "劇毒", "poison", ModField.EffectDps, 1.5f, 5, 1, 4, "as_poison"),
@@ -397,6 +401,7 @@ namespace SpellDuel
                     FStat("mk_root", "神射", Stat.Luk, 5, 3, 0, null),
                     FMod("mk_pierce", "貫穿強化", "pierce", ModField.Damage, 0.12f, 5, 1, 1, "mk_root"),
                     FMod("mk_pierce2", "快速上弦", "pierce", ModField.Charge, 0.08f, 5, 0, 2, "mk_pierce"),
+                    FPas("mk_acc", "百步穿楊", PassiveKind.Accuracy, 0.02f, 5, 0, 3, "mk_pierce2"),
                     FPas("mk_long", "超遠射", PassiveKind.LongShot, 0.08f, 5, 1, 2, "mk_pierce"),
                     FPas("mk_critd", "要害一擊", PassiveKind.CritDmg, 0.2f, 5, 2, 2, "mk_pierce"),
                     FPas("mk_crit", "要害瞄準", PassiveKind.Crit, 0.03f, 5, 2, 3, "mk_critd"),
@@ -597,6 +602,7 @@ namespace SpellDuel
                         PassiveKind.Overcharge => "蓄滿後繼續拉弓可以蓄到 200%：蓄力越多傷害越高，200% 時傷害 +150%",
                         PassiveKind.NaturalRegen => $"每 10 秒回復最大 HP 的 {v * 100:0}%",
                         PassiveKind.QuickCd => $"所有技能冷卻時間 -{v * 100:0}%",
+                        PassiveKind.Accuracy => $"命中率 +{v * 100:0}%（抵掉對方的閃避；法術必中，不受影響）",
                         PassiveKind.Evade => $"閃避率 +{v * 100:0}%（被物理攻擊時有機率完全閃開；魔法閃不掉）",
                         PassiveKind.Atk => $"攻擊傷害 +{v * 100:0}%",
                         PassiveKind.Armor => $"受到的傷害 -{v * 100:0}%",
@@ -650,7 +656,7 @@ namespace SpellDuel
 
     // ---------------------------------------------------------------- 裝備
     public enum Slot { Weapon, Head, Body, Feet, Trinket }
-    public enum Affix { Str, Int, Vit, Agi, Spi, Luk, Hp, Mp, Crit, Cdr, Lifesteal, Burn, Poison, Freeze, Atk, Armor, TrapReduce, DodgePower, MagicArmor }   // 存檔用數字：新的只能加在最後面
+    public enum Affix { Str, Int, Vit, Agi, Spi, Luk, Hp, Mp, Crit, Cdr, Lifesteal, Burn, Poison, Freeze, Atk, Armor, TrapReduce, DodgePower, MagicArmor, Accuracy }   // 存檔用數字：新的只能加在最後面
 
     public class Item
     {
@@ -698,7 +704,7 @@ namespace SpellDuel
             Affix.Str => $"力量 +{v:0}", Affix.Int => $"智力 +{v:0}", Affix.Vit => $"體質 +{v:0}",
             Affix.Agi => $"敏捷 +{v:0}", Affix.Spi => $"精神 +{v:0}", Affix.Luk => $"幸運 +{v:0}",
             Affix.Hp => $"HP +{v:0}", Affix.Mp => $"MP +{v:0}",
-            Affix.Crit => $"爆擊率 +{v * 100:0.#}%", Affix.Cdr => $"冷卻 -{v * 100:0.#}%",
+            Affix.Crit => $"爆擊率 +{v * 100:0.#}%", Affix.Cdr => $"冷卻 -{v * 100:0.#}%", Affix.Accuracy => $"命中率 +{v * 100:0.#}%",
             Affix.Lifesteal => $"吸血 {v * 100:0.#}%",
             Affix.Burn => $"灼燒機率 +{v * 100:0}%", Affix.Poison => $"中毒機率 +{v * 100:0}%", Affix.Freeze => $"冰凍機率 +{v * 100:0}%",
             Affix.TrapReduce => $"陷阱傷害 -{v*100:0}%", Affix.DodgePower => $"身體閃避後3秒傷害 +{v*100:0}%",
@@ -803,7 +809,7 @@ namespace SpellDuel
             new[] { "傳說・烈焰王", "傳說・世界樹", "傳說・海神", "傳說・天命" },
             new[] { "神話・萬象", "神話・千機" },
         };
-        static readonly Affix[] Pool = { Affix.Str, Affix.Int, Affix.Vit, Affix.Agi, Affix.Spi, Affix.Luk, Affix.Hp, Affix.Mp, Affix.Crit, Affix.Cdr, Affix.Burn, Affix.Poison, Affix.Freeze, Affix.Lifesteal };
+        static readonly Affix[] Pool = { Affix.Str, Affix.Int, Affix.Vit, Affix.Agi, Affix.Spi, Affix.Luk, Affix.Hp, Affix.Mp, Affix.Crit, Affix.Cdr, Affix.Burn, Affix.Poison, Affix.Freeze, Affix.Lifesteal, Affix.Accuracy };
 
         /// <summary>擲稀有度：基本 普通 55%、優良 28%、稀有 12%、史詩 4%、傳說 1%；幸運與加成會往上推</summary>
         public static int RollRarity(System.Random rng, float luckBonus, int minRarity = 0)
@@ -852,6 +858,7 @@ namespace SpellDuel
             {
                 var a = Pool[rng.Next(Pool.Length)];
                 if (a == Affix.Lifesteal && rarity < 3) a = Affix.Hp;
+                if (a == Affix.Accuracy && CasterOnly(it.classes)) a = Affix.Crit;   // 法師、牧師的法術必中：不出命中
                 it.mods.Add(new KeyValuePair<Affix, float>(a, AffixValue(a, power, rng)));
             }
             if (rarity >= 4 && it.classes != null && it.classes.Contains(","))
@@ -877,6 +884,14 @@ namespace SpellDuel
             return it;
         }
 
+        /// <summary>只有法師、牧師能裝備（法術必中，命中沒用）</summary>
+        static bool CasterOnly(string classes)
+        {
+            if (string.IsNullOrEmpty(classes)) return false;
+            foreach (var c in classes.Split(',')) if (c != "mage" && c != "priest") return false;
+            return true;
+        }
+
         /// <summary>副屬性（洗鍊卷會洗的）：掉落時依稀有度隨機加上去的那幾條＝mods 最後 rarity 條（前面是主屬性、身體的減傷）</summary>
         public static int SubStart(Item it) => Mathf.Max(1, it.mods.Count - it.rarity);
         public static int SubCount(Item it) => Mathf.Max(0, it.mods.Count - SubStart(it));
@@ -891,6 +906,7 @@ namespace SpellDuel
                 if (i == lockIndex) continue;
                 var a = Pool[rng.Next(Pool.Length)];
                 if (a == Affix.Lifesteal && it.rarity < 3) a = Affix.Hp;
+                if (a == Affix.Accuracy && CasterOnly(it.classes)) a = Affix.Crit;
                 it.mods[i] = new KeyValuePair<Affix, float>(a, AffixValue(a, power, rng));
             }
             return true;
@@ -920,6 +936,7 @@ namespace SpellDuel
                 Affix.Hp => Mathf.Round((5f + 2f * power) * k),
                 Affix.Mp => Mathf.Round((3f + 1.2f * power) * k),
                 Affix.Crit => Mathf.Min(0.15f, (0.01f + 0.003f * power) * k),
+                Affix.Accuracy => Mathf.Min(0.08f, (0.01f + 0.0015f * power) * k),   // 命中率：每一條 1～8%
                 Affix.Cdr => Mathf.Min(0.12f, (0.01f + 0.0025f * power) * k),
                 Affix.Lifesteal => Mathf.Min(0.08f, (0.01f + 0.0015f * power) * k),
                 Affix.Burn or Affix.Poison or Affix.Freeze => Mathf.Clamp(Mathf.Round((StatusChanceMin + (StatusChanceMax - StatusChanceMin) * Mathf.Clamp01(power / 50f)) * k * 100f) / 100f, StatusChanceMin, StatusChanceMax),   // 附加狀態：每一條 2～5%
@@ -1287,7 +1304,7 @@ namespace SpellDuel
             f.freezeChance = Passive(PassiveKind.Freeze) + GearSum(Affix.Freeze);
             // 閃避率（使用者要求：刺客系技能樹全部疊滿約 40%，另外敏捷每點 +0.1%）
             f.evadeChance = Mathf.Clamp(Passive(PassiveKind.Evade) + SkillTrees.DodgeToEvade * Passive(PassiveKind.Dodge) + 0.001f * Mathf.Max(0, d(Stat.Agi)), 0f, 0.5f);   // 敏捷每點 +0.1%
-            f.accuracy = 0.001f * Mathf.Max(0, d(Stat.Agi));   // 命中率：敏捷每點 +0.1%（抵掉對方的閃避；法術必中，不需要命中）
+            f.accuracy = 0.001f * Mathf.Max(0, d(Stat.Agi)) + Passive(PassiveKind.Accuracy) + GearSum(Affix.Accuracy);   // 命中率：敏捷每點 +0.1%、技能樹、裝備、精魄（抵掉對方的閃避；法術必中，不需要命中）
             f.chargeScale = Mathf.Max(0.4f, f.chargeScale * (1f - Passive(PassiveKind.FastCast)));   // 法師：快速詠唱
             f.overcharge = Passive(PassiveKind.Overcharge) > 0f;                                   // 獵人：蓄力強化
             f.regenTick = f.maxHp * Passive(PassiveKind.NaturalRegen);                              // 劍士／主教：自然回復（每 10 秒一次回 x%，不是每秒慢慢回）
