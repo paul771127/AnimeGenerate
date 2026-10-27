@@ -74,6 +74,7 @@ namespace SpellDuel.EditorTools
     b=Make(n,"collapse");var cell=b.evPts[0];b.evState[0]=2;b.player.head=cell+Vector3.up*1.7f;float hp=b.player.hp;b.now=11;Call(b,"TickCollapse",.1f);Check(b.player.hp<hp,"collapsed cell must damage");
     b=Make(n,"elements");var proxy=new Battle(new Fighter("peer",Skills.Classes["mage"],new string[0],true),new Fighter("boss",Skills.Classes["boss_clockwork"],new string[0],false)){remoteEnemy=true};proxy.SetRoomViewPlayers(string.Join(",",b.evPlayerIds),n>1?1:-1);proxy.evPhase=0;Check(proxy.RoomCoop==(n>1),"remote roster metadata");if(n>1){Check(!proxy.RuneVisibleFor(0)&&proxy.RuneVisibleFor(1),"remote rune owner mask");}
     b=Make(n,"runes");b.remoteEnemy=true;var states=string.Join(",",b.evState);b.now+=20;Call(b,"UpdateRoomEvent");Check(states==string.Join(",",b.evState),"peer ran authority");
+    b=Make(n,"mimic");b.remoteEnemy=true;int forwarded=0;b.OnMinionHit+=(id,damage,skill)=>forwarded++;var remoteChest=b.npcs[0];Set(b,"incoming",new SkillDef{id="ice"});Call(b,"EvPropHit",remoteChest,b.player);Check(forwarded==1&&b.evFails==0&&b.roomEvent=="mimic","peer chest evaluated locally");
     b.CleanupRoomEvent();Check(!b.RoomCoop&&b.evPlayerIds.Count==0,"room cleanup retains clue owners");
    }
    Directory.CreateDirectory("snapshots");File.WriteAllText("snapshots/room_coop_audit.json","{\"checks\":"+checks+",\"partySizes\":[1,2,3],\"passed\":true}");

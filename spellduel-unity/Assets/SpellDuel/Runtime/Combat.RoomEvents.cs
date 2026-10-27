@@ -484,7 +484,7 @@ namespace SpellDuel
         /// <summary>咒語之門：有人唸出一句話（房主判定；隊友的話用 evsay 送來）。回傳是不是唸對</summary>
         public bool EvChant(string text)
         {
-            if (roomEvent != "chant" || evPhase != 1 || string.IsNullOrEmpty(text) || string.IsNullOrEmpty(evAnswer)) return false;
+            if (remoteEnemy || roomEvent != "chant" || evPhase != 1 || string.IsNullOrEmpty(text) || string.IsNullOrEmpty(evAnswer)) return false;
             var t = SpeechMatcher.Normalize(text); var a = SpeechMatcher.Normalize(evAnswer);
             if (t.Length == 0) return false;
             if (SpeechMatcher.Score(t, a) >= 0.75f) { FinishRoomEvent($"「{evAnswer}」——門開了！"); return true; }
@@ -539,6 +539,14 @@ namespace SpellDuel
         bool EvPropHit(Fighter target, Fighter by)
         {
             if (roomEvent == null) return false;
+            if(remoteEnemy)
+            {
+                // Projectile contacts already use OnMinionHit; direct skill contacts must
+                // also forward puzzle interactions rather than solving on the peer.
+                if(target.npcId!=null && (target.npcId.StartsWith("ev_statue")||target.npcId.StartsWith("ev_chest")))
+                {var contact=incoming??HitSkill;if(contact!=null)OnMinionHit?.Invoke(target.minionId,0,contact);return true;}
+                return false;
+            }
             if (by != null && !(by.isPlayer || by.isAlly || by == player)) return target.damageTakenMul <= 0f;   // 只有玩家打的才算
             var skill = incoming ?? HitSkill;
             if (target.evElement > 0)

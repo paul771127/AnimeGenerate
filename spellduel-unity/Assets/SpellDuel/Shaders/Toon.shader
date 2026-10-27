@@ -160,8 +160,9 @@ Shader "SpellDuel/Toon"
             float _SD_OutlineWidth;     // 以 1000 像素高的畫面為準的寬度（像素），實際依螢幕高度等比放大
             float _SD_OutlineFar;       // 超過這個距離（公尺）開始變細
 
+            half _ArtFade;
             #ifdef SD_HUMAN
-            fixed4 _Color; half _ArtFade, _ArtGray, _ArtRevive;
+            fixed4 _Color;
             float _HumanOutline;
             half _HumanFace, _HumanHair, _HumanStrandLines;
             #endif
