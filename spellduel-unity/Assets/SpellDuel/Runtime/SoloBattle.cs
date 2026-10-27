@@ -904,8 +904,8 @@ namespace SpellDuel
         public const float LateMinionDmgMul = 1.5f;
         /// <summary>故事各章小怪的傷害倍率（第一章不用；第二章起取代疊加的倍率）：忍者簡單難度約 7 下倒</summary>
         public static readonly float[] StoryMinionDmg = { 1f, 2.9f, 2.2f, 4f, 4.25f };
-        /// <summary>故事敵人的命中率（使用者要求）：第一章 0%，之後每章 +10%；普通再 +40%、困難再 +80%</summary>
-        public static float StoryEnemyAccuracy(int theme, int difficulty) => 0.10f * Mathf.Max(0, theme) + (difficulty >= 2 ? 0.80f : difficulty == 1 ? 0.40f : 0f);   // 第二章以後：小怪（不含 Boss）的傷害再 ×1.5（輪次出怪、數量變少的補償）
+        /// <summary>故事敵人的命中率（使用者要求）：第一章 0%，之後每章 +5%；每高一個難度再 +25%（普通 +25%、困難 +50%）</summary>
+        public static float StoryEnemyAccuracy(int theme, int difficulty) => 0.05f * Mathf.Max(0, theme) + 0.25f * Mathf.Clamp(difficulty, 0, 2);   // 第二章以後：小怪（不含 Boss）的傷害再 ×1.5（輪次出怪、數量變少的補償）
         static float BossHpFor(int d) => d == 0 ? 0.7f : d == 1 ? 0.85f : 1f;
 
         // 語音詠唱：唸出咒語就開始詠唱（本機比對自己錄的樣本）
