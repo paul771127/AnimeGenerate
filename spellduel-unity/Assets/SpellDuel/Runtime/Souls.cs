@@ -145,6 +145,7 @@ namespace SpellDuel
             // ---- 補師（第四、五章；0.8%）
             V(121, 0.008f, "#ffd873", F(SoulOp.HurtHeal, 0.05f, 0.08f));                        // 鬥場祭司：被打時 8% 機率回 5% HP
             V(122, 0.008f, "#72f2cc", F(SoulOp.Regen, 0.0005f));                                // 砂谷藥師：每 10 秒回 0.5% HP
+            V(123, 0.008f, "#c78cff", F(SoulOp.KillMp, 15f, 0.25f));                             // 砂谷召喚師：打倒敵人時 25% 機率回 15 MP（召喚物砂靈不掉精魄）
             AssignParts();
         }
 

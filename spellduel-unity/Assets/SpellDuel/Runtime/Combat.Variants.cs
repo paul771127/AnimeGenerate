@@ -13,7 +13,7 @@ namespace SpellDuel
     {
         public int id, baseKind;
         public string name, dungeon, desc;
-        public bool assassin, claws, healer;
+        public bool assassin, claws, healer, summoner, summon;   // summon＝召喚物（沒有經驗、不掉寶）
         public int theme = -1;   // 補師：哪一章（3 角鬥場、4 黃土山道）
         public Battle.Weather weather;
         public float hp = 1f, dmg = 1f, speed = 1f;
@@ -39,6 +39,9 @@ namespace SpellDuel
             // ---- 補師（第四、五章；使用者要求）：站在敵陣後方，讀條治療受傷的同伴（被打中會打斷讀條），自己不攻擊
             new VariantDef { id = 121, baseKind = 9, name = "鬥場祭司", healer = true, theme = 3, tint = new Color(1f, 0.85f, 0.45f), desc = "角鬥場的金袍祭司，替受傷的鬥士念治療咒" },
             new VariantDef { id = 122, baseKind = 6, name = "砂谷藥師", healer = true, theme = 4, tint = new Color(0.45f, 0.95f, 0.8f), desc = "黃土山道的藥師，背著藥壺替同伴療傷" },
+            // ---- 召喚師（第五章；使用者要求）：躲在後面，讀條召喚兩隻砂靈（血少、攻擊強、沒有經驗也不掉寶）；讀條被打中會打斷
+            new VariantDef { id = 123, baseKind = 4, name = "砂谷召喚師", summoner = true, theme = 4, tint = new Color(0.78f, 0.55f, 1f), desc = "背著法陣石板的召喚師，從砂裡喚出砂靈" },
+            new VariantDef { id = 124, baseKind = 0, name = "砂靈", summon = true, theme = 4, hp = 0.35f, dmg = 2f, speed = 1.3f, tint = new Color(1f, 0.72f, 0.38f), desc = "砂子聚成的小鬼：一碰就散，但打人很痛" },
             new VariantDef { id = 114, baseKind = 8,  name = "月牙狼",   weather = Battle.Weather.Moon, hp = 1.6f, dmg = 1.3f, speed = 1.4f, tint = new Color(0.72f, 0.78f, 1f), desc = "月夜才現身的銀色衝鋒獸" },
         };
         static readonly Dictionary<int, VariantDef> byId = new Dictionary<int, VariantDef>();
@@ -47,6 +50,10 @@ namespace SpellDuel
         public static bool IsVariant(int id) => id >= 100 && byId.ContainsKey(id);
         public static VariantDef AssassinFor(string dungeonId) { foreach (var v in All) if (v.assassin && v.dungeon == dungeonId) return v; return null; }
         public static VariantDef HealerFor(int theme) { foreach (var v in All) if (v.healer && v.theme == theme) return v; return null; }
+        public static VariantDef SummonerFor(int theme) { foreach (var v in All) if (v.summoner && v.theme == theme) return v; return null; }
+        public static VariantDef SummonFor(int theme) { foreach (var v in All) if (v.summon && v.theme == theme) return v; return null; }
+        /// <summary>召喚物（擊倒紀錄的種類）：沒有經驗、不掉寶</summary>
+        public static bool IsSummon(int id) => byId.TryGetValue(id, out var v) && v.summon;
         public static VariantDef ForWeather(Battle.Weather w) { foreach (var v in All) if (!v.assassin && v.weather == w && w != Battle.Weather.None) return v; return null; }
         /// <summary>擊倒紀錄的種類換回原本的怪（掉材料用）</summary>
         public static int BaseOf(int kind) => byId.TryGetValue(kind, out var v) ? v.baseKind : kind;
@@ -82,6 +89,8 @@ namespace SpellDuel
             if (v == null || m.variant == id) return;
             m.variant = id; m.name = v.name;
             if (v.healer) { m.healer = true; m.attackReadyAt = now + HealerFirst; Emit("healer", m.Feet, v.tint, null); return; }
+            if (v.summoner) { m.summoner = true; m.attackReadyAt = now + SummonerFirst; Emit("summoner", m.Feet, v.tint, null); return; }
+            if (v.summon) { m.summoned = true; return; }
             if (v.assassin)
             {
                 m.assassin = true; m.asnState = 0; m.asnUntil = now + AssassinLurk;
@@ -291,9 +300,14 @@ namespace SpellDuel
                 Emit("healcast", m.Feet, new Color(0.45f, 1f, 0.55f), $"⚕ {m.name}在替{best.name}治療！打斷牠");
                 return;
             }
-            // 走位：站在同伴的後面（從最近的玩家看過去），跟玩家保持 5m 以上；玩家靠近就退
+            KeepBehind(m, near, nd, inside, dt);
+        }
+
+        /// <summary>後排（補師、召喚師）的走位：站在同伴的後面（從最近的玩家看過去），跟玩家保持 5m 以上；玩家靠近就退</summary>
+        void KeepBehind(Fighter m, Fighter near, float nd, bool inside, float dt)
+        {
             Vector3 mid = Vector3.zero; int n = 0;
-            foreach (var o in minions) if (o != m && o.Alive && !o.treasure && !o.healer) { mid += o.Feet; n++; }
+            foreach (var o in minions) if (o != m && o.Alive && !o.treasure && !o.healer && !o.summoner) { mid += o.Feet; n++; }
             Vector3 goal = n > 0 ? mid / n : m.Feet;
             var away = Fighter.Flat(goal - near.Feet); if (away == Vector3.zero) away = Fighter.Flat(m.Feet - near.Feet);
             goal += away * 2f;
@@ -309,6 +323,65 @@ namespace SpellDuel
                 m.forward = Fighter.Flat(near.Feet - m.Feet);
             }
             else m.forward = Fighter.Flat(near.Feet - m.Feet);
+        }
+
+        // ------------------------------------------------------------ 召喚師的 AI（第五章）
+        public const float SummonerEvery = 9f, SummonerFirst = 3f, SummonerCast = 1.5f;
+        public const int SummonPerCast = 2, SummonMaxAlive = 4;
+        Fighter SpawnSummonerAt(float ang)
+        {
+            var def = MonsterVariants.SummonerFor(Theme);
+            if (def == null) return null;
+            var m = SpawnVariant(edgePointAt != null ? edgePointAt(ang) : edgePoint(), def);
+            lastMinionCount = minions.Count;
+            return m;
+        }
+
+        readonly List<(Vector3 at, VariantDef def, Fighter owner)> pendingVariantSpawns = new List<(Vector3, VariantDef, Fighter)>();
+        /// <summary>UpdateMinions 開頭：把上一幀召喚師叫的砂靈生出來</summary>
+        void FlushVariantSpawns()
+        {
+            foreach (var (at, def, owner) in pendingVariantSpawns)
+            {
+                var s = SpawnVariant(at, def);
+                s.summonedBy = owner; s.attackReadyAt = now + 1.0f;
+                Emit("summonpop", s.Feet, def.tint, null);
+            }
+            pendingVariantSpawns.Clear();
+        }
+
+        void UpdateSummoner(Fighter m, float dt)
+        {
+            Fighter near = null; float nd = float.MaxValue;
+            foreach (var p in Players()) { if (!p.Alive) continue; float d = FlatDistance(m.Feet, p.Feet); if (d < nd) { nd = d; near = p; } }
+            if (near == null) return;
+            m.target = near;
+            bool inside = minionInside == null || minionInside(m.Feet);
+            if (m.windupUntil > 0f)
+            {
+                m.forward = m.lockFwd;
+                if (now < m.windupUntil) return;
+                m.windupUntil = 0f; m.attackReadyAt = now + SummonerEvery;
+                var def = MonsterVariants.SummonFor(Theme) ?? MonsterVariants.SummonFor(4);
+                int alive = 0; foreach (var o in minions) if (o.Alive && o.summonedBy == m) alive++;
+                foreach (var q in pendingVariantSpawns) if (q.owner == m) alive++;
+                for (int i = 0; i < SummonPerCast && alive < SummonMaxAlive && def != null && minions.Count < MaxMinions * 3; i++, alive++)
+                {
+                    var side = RotateY(Fighter.Flat(near.Feet - m.Feet), i == 0 ? 60f : -60f);
+                    var at = m.Feet + side * 0.9f;
+                    if (minionInside != null && !minionInside(at)) at = m.Feet;
+                    pendingVariantSpawns.Add((at, def, m));   // 下一幀才生（現在正在走訪 minions）
+                }
+                return;
+            }
+            int mine = 0; foreach (var o in minions) if (o.Alive && o.summonedBy == m) mine++;
+            if (inside && now >= m.attackReadyAt && mine < SummonMaxAlive)
+            {
+                m.windupUntil = now + SummonerCast; m.lockFwd = Fighter.Flat(near.Feet - m.Feet);
+                Emit("summoncast", m.Feet, new Color(0.78f, 0.55f, 1f), $"🔮 {m.name}在召喚！打斷牠");
+                return;
+            }
+            KeepBehind(m, near, nd, inside, dt);
         }
 }
 }

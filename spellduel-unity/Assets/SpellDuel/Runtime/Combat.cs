@@ -138,7 +138,7 @@ namespace SpellDuel
         public bool miniBoss;                  // 第 3 波單獨登場的特殊敵人（有名字和血條）
         public bool treasure, treasureRunning; public float treasureLeaveAt;
         public int variant;                    // 變種怪（Combat.Variants.cs）：刺客怪、天候怪的 id（0＝不是）
-        public bool assassin, healer; public int asnState; public float asnUntil; public Fighter asnTarget, healTarget;   // 刺客怪：0 潛伏、1 沿邊繞、2 突襲、4 退回   // 寶箱怪（Combat.Treasure.cs）：到處逃跑、每下只扣 1、時間到就逃走
+        public bool assassin, healer, summoner, summoned; public int asnState; public float asnUntil; public Fighter asnTarget, healTarget, summonedBy;   // summoned＝召喚物：沒有經驗、不掉寶   // 刺客怪：0 潛伏、1 沿邊繞、2 突襲、4 退回   // 寶箱怪（Combat.Treasure.cs）：到處逃跑、每下只扣 1、時間到就逃走
         // 副本特殊地點（Combat.RoomEvents.cs）
         public bool rooted;                    // 不會動、不會出手（守護物、圖騰、雕像、寶箱）
         public float lure;                     // 小怪優先打它（多算幾公尺的優勢）
@@ -1056,7 +1056,7 @@ namespace SpellDuel
             {
                 if (now < groupQueue[0].at) return;
                 var q = groupQueue[0]; groupQueue.RemoveAt(0);
-                if (q.healer) SpawnHealerAt(q.ang); else SpawnRoleAt(q.role, q.ang, q.ambush);
+                if (q.healer && q.role == MinionRole.Special) SpawnSummonerAt(q.ang); else if (q.healer) SpawnHealerAt(q.ang); else SpawnRoleAt(q.role, q.ang, q.ambush);
                 return;
             }
             if (waveToSpawn <= 0) return;
@@ -1084,9 +1084,10 @@ namespace SpellDuel
                 if (amb) ang = easyBearing + 180f + ((float)rng.NextDouble() - 0.5f) * 60f;
                 groupQueue.Add((now + i * RoundStagger, role, ang, amb, false));
             }
-            // 第四、五章：每一輪額外帶一～兩隻補師（最後出來，躲在隊伍後面；不佔這一波的數量）
+            // 第四、五章：每一輪額外帶一～兩隻補師（最後出來，躲在隊伍後面；不佔這一波的數量）；第五章再加一隻召喚師（role＝Special 當記號）
             if (late) for (int h = 0; h < HealersPerRound(n); h++) groupQueue.Add((now + (n + h) * RoundStagger, MinionRole.Back, easySides ? easyBearing + (h - 0.5f) * 20f : (h - 0.5f) * 30f, false, true));
-            Emit("round", player.Feet, Color.white, $"第 {roundNo}/{roundsInWave} 輪：{Formations[f].name}（{n} 隻" + (late && HealersPerRound(n) > 0 ? $"＋補師 {HealersPerRound(n)}" : "") + "）");
+            if (late && MonsterVariants.SummonerFor(Theme) != null) groupQueue.Add((now + (n + HealersPerRound(n)) * RoundStagger, MinionRole.Special, easySides ? easyBearing + 15f : 15f, false, true));
+            Emit("round", player.Feet, Color.white, $"第 {roundNo}/{roundsInWave} 輪：{Formations[f].name}（{n} 隻" + (late && HealersPerRound(n) > 0 ? $"＋補師 {HealersPerRound(n)}" : "") + (late && MonsterVariants.SummonerFor(Theme) != null ? "＋召喚師 1" : "") + "）");
         }
 
         /// <summary>在某個方位出一隻某角色的小怪（三拍與輪次出怪共用）</summary>
@@ -1323,6 +1324,7 @@ namespace SpellDuel
             PushBossFromPlayers();
             foreach (var at in pendingSummons) { var imp = SpawnMinion(at, 0, 0, HpMul * meleeHpMul, DmgMul, SpeedMul); imp.attackReadyAt = now + 1.5f; }
             pendingSummons.Clear();
+            FlushVariantSpawns();   // 召喚師上一幀叫的砂靈（Combat.Variants.cs）
             var claw = Skills.All["m_claw"];
             foreach (var m in minions)
             {
@@ -1338,7 +1340,8 @@ namespace SpellDuel
                 m.target = tgt;
                 if (m.treasure) { UpdateTreasure(m, dt); continue; }   // 寶箱怪：只會逃
                 if (m.assassin) { UpdateAssassin(m, dt); continue; }
-                if (m.healer) { UpdateHealer(m, dt); continue; }   // 補師：躲在後面治療同伴（Combat.Variants.cs）   // 刺客怪：繞到背後突襲（Combat.Variants.cs）
+                if (m.healer) { UpdateHealer(m, dt); continue; }   // 補師：躲在後面治療同伴（Combat.Variants.cs）
+                if (m.summoner) { UpdateSummoner(m, dt); continue; }   // 召喚師：躲在後面叫砂靈（Combat.Variants.cs）   // 刺客怪：繞到背後突襲（Combat.Variants.cs）
                 var wantFwd = m.windupUntil > 0f && m.lockFwd != Vector3.zero ? m.lockFwd : Fighter.Flat(tgt.head - m.head);   // 預備中：面向鎖住（扇形不追著玩家轉）
                 if (m.minionKind == 16 && m.forward != Vector3.zero && wantFwd != Vector3.zero)
                 {
@@ -3925,7 +3928,7 @@ namespace SpellDuel
             if (dmg > 0f && kind != "dot" && kind != "burn" && kind != "oath" && kind != "thorns" && BarrierGuards(f) && TryBarrier(f, at)) return;   // 主教的聖域障壁
             if (f.invulnUntil > now && dmg > 0f) return;   // 狂戰士不死之軀的無敵
             if (f.isMinion && f.hidden) return;   // 埋著的食人花
-            if (f.healer && f.windupUntil > 0f && dmg > 0f && kind != "dot" && kind != "burn") { f.windupUntil = 0f; f.attackReadyAt = now + 2f; Emit("healbreak", f.Chest, new Color(1f, 0.85f, 0.4f), "治療被打斷！"); }   // 補師讀條被打中：打斷
+            if ((f.healer || f.summoner) && f.windupUntil > 0f && dmg > 0f && kind != "dot" && kind != "burn") { f.windupUntil = 0f; f.attackReadyAt = now + 2f; Emit("healbreak", f.Chest, new Color(1f, 0.85f, 0.4f), f.healer ? "治療被打斷！" : "召喚被打斷！"); }   // 補師、召喚師讀條被打中：打斷
             if (f.treasure && (kind == "dot" || kind == "burn")) return;   // 寶箱怪：毒、灼燒沒用（每一下攻擊只扣 1）
             if (f.isMinion && dmg > 0f && kind != "dot" && kind != "burn") OnMinionHurt(f);
             if (f.isMinion && f.minionKind == 16 && dmg > 0f)
@@ -3979,9 +3982,10 @@ namespace SpellDuel
             if (f.Alive && dmg > 0f && f.soulProcs.Count > 0 && kind != "dot" && kind != "burn" && kind != "thorns") SoulOnHurt(f);
             if (!f.Alive)
             {
-                if (f.isMinion) killLog.Add("m" + LogKind(f));
+                if (f.isMinion && !f.summoned) killLog.Add("m" + LogKind(f));   // 召喚物：不掉寶
                 else if (!f.isPlayer && f.npcSide < 0 && f == enemy && f.cls != null) killLog.Add(f.cls.id);
-                if (f.isMinion) { kills++; if (endless) xp += Mathf.RoundToInt(MinionXp[f.minionKind] * (1f + 0.03f * wave)); Emit("miniondie", f.Chest, Color.white, null); }
+                if (f.isMinion && f.summoned) Emit("miniondie", f.Chest, Color.white, null);   // 召喚物：沒有經驗、不算擊倒（也就沒有金幣）
+                else if (f.isMinion) { kills++; if (endless) xp += Mathf.RoundToInt(MinionXp[f.minionKind] * (1f + 0.03f * wave)); Emit("miniondie", f.Chest, Color.white, null); }
                 else if (f.npcSide >= 0) Emit("npcdown", f.Chest, Color.white, $"{f.name}倒下了");
                 else if (f.isPlayer) Emit(AnyAllyAlive ? "down" : "lose", f.Chest, Color.white, null);
                 else if (endless && f == enemy) OnBossDown();

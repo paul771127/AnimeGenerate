@@ -334,6 +334,7 @@ namespace SpellDuel
             int diff = towerRun ? 1 : difficulty;
             if (key[0] == 'm' && int.TryParse(key.Substring(1), out int kind))
             {
+                if (MonsterVariants.IsSummon(kind)) return;   // 召喚物：不掉寶（保險：正常不會記進擊倒紀錄）
                 if (kind == Battle.TreasureKind) { GrantTreasure(); return; }   // 寶箱怪：大把金幣＋一定掉一件裝備
                 if (TryDrop(false)) return;
                 AddMat(Crafting.RollMinion(MonsterVariants.BaseOf(kind), battle.Theme, diff, dropRng));   // 變種怪：照原本的怪掉材料
@@ -1703,7 +1704,7 @@ namespace SpellDuel
                         {
                             mf.hp = 0f;
                             if (battle.TreasureFled(mf)) { OnBattleEvent("treasurefled", mf.Chest, new Color(1f, 0.85f, 0.3f), "寶箱怪逃走了……"); continue; }   // 寶箱怪時間到逃走：沒有獎勵
-                            battle.killLog.Add("m" + Battle.LogKind(mf));
+                            if (!mf.summoned) battle.killLog.Add("m" + Battle.LogKind(mf));   // 召喚物：不掉寶
                         }   // 隊友端：主機那邊打倒了（記下種類：掉材料用）
                     }
                     break;
@@ -3125,6 +3126,17 @@ namespace SpellDuel
                     floaters.Add(new Floater { text = "⚠ 背後！", color = c, born = Time.time, screen = true });
                     Sfx.Play("warn", 1f, 0.7f); Haptics.Play(Haptics.Kind.Heavy);
                     break;
+                case "summoner":
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 1.4f, text = "🔮 召喚師", color = c, born = Time.time });
+                    break;
+                case "summoncast":
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 1.6f, text = "🔮 召喚中…", color = c, born = Time.time });
+                    if (Time.time > healSayUntil) { Say(text, 1.8f); healSayUntil = Time.time + 6f; }
+                    Sfx.Play("charged", 0.45f, 0.8f);
+                    break;
+                case "summonpop":
+                    MinionRig.SpawnFx(WorldFrame.FromWorld(at)); Sfx.Play("summon", 0.5f, 1.2f);
+                    break;
                 case "healer":
                     floaters.Add(new Floater { posMap = at + Vector3.up * 1.4f, text = "⚕ 補師", color = c, born = Time.time });
                     break;
@@ -4237,7 +4249,7 @@ namespace SpellDuel
                 Fighter aimer = null; float aimerLeft = 99f; int aimers = 0;
                 foreach (var m in battle.minions)
                 {
-                    if (!m.Alive || m.windupUntil <= 0f || !Battle.IsRangedMinion(m.minionKind) || m.assassin || m.healer) continue;   // 刺客（原本是遠程怪的骨架）用近身突襲，有自己的「背後！」提示
+                    if (!m.Alive || m.windupUntil <= 0f || !Battle.IsRangedMinion(m.minionKind) || m.assassin || m.healer || m.summoner) continue;   // 刺客（原本是遠程怪的骨架）用近身突襲，有自己的「背後！」提示
                     if (m.target != null && m.target != me) continue;   // 合作：瞄準隊友的不提示
                     aimers++;
                     float left = Mathf.Max(0f, m.windupUntil - now);
