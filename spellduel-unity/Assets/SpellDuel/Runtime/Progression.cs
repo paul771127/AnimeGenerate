@@ -51,7 +51,7 @@ namespace SpellDuel
             Stat.Str => atk ? "攻擊傷害 +2%／點" : "（不是這個職業的攻擊能力值）HP +1／點",
             Stat.Int => atk ? "攻擊傷害 +2%／點、治療量 +2%／點、MP 上限 +2／點、魔法減傷：加到 99 點 30%" : "MP 上限 +2／點、治療量 +2%／點、魔法減傷：加到 99 點 30%（照比例）",
             Stat.Vit => "HP 上限 +5／點、物理減傷：加到 99 點 30%（照比例）",
-            Stat.Agi => "蓄力時間 -1%／點（最多 -40%）、普攻速度：冷卻 -0.8%／點（最多 -50%）、閃避率 +0.1%／點",
+            Stat.Agi => "蓄力時間 -1%／點（最多 -40%）、普攻速度：冷卻 -0.8%／點（最多 -50%）",
             Stat.Spi => "MP 回復（基礎只有 30%，精神 99 點回到 100%）、冷卻時間 -0.8%／點（最多 -35%）",
             _ => "爆擊率 +0.6%／點（爆擊＝傷害 ×2）、掉寶機率與稀有度提升",
         };
@@ -296,14 +296,14 @@ namespace SpellDuel
                     FPas("as_close", "近身本能", PassiveKind.CloseInstinct, 1f, 5, 2, 2, "as_shadow"),
                     FPas("as_assn", "暗殺術", PassiveKind.Assassinate, 0.15f, 5, 3, 3, "as_backstab"),
                     FMod("as_backstab2", "刺殺強化", "backstab", ModField.Damage, 0.12f, 5, 2, 4, "as_assn"),
-                    FPas("as_vanish", "遁影", PassiveKind.Vanish, 0.15f, 5, 3, 4, "as_assn"),
+                    FPas("as_vanish", "遁影", PassiveKind.Vanish, 0.02f, 5, 3, 4, "as_assn"),
                     FLearn("as_prep", "prep", 4, 3, "as_backstab"),
                     // 飛刀
                     FMod("as_knife", "飛刀連發", "knife", ModField.Multi, 1f, 1, 5, 1, "as_root"),
                     FPas("as_rhythm", "飛刀節奏", PassiveKind.KnifeCdr, 0.3f, 5, 5, 2, "as_knife"),
                     FPas("as_crit", "致命一擊", PassiveKind.Crit, 0.03f, 5, 5, 3, "as_rhythm"),
                     FMod("as_smoke", "濃煙", "smoke", ModField.EffectDur, 0.6f, 5, 6, 2, "as_knife"),
-                    FPas("as_evade", "殘影", PassiveKind.Evade, 0.03f, 5, 6, 3, "as_smoke"),
+                    FPas("as_evade", "殘影", PassiveKind.Evade, 0.01f, 5, 6, 3, "as_smoke"),
                 };
                 case "priest": return new List<TreeNode>
                 {
@@ -464,9 +464,9 @@ namespace SpellDuel
                 {
                     FStat("nj_root", "忍者身手", Stat.Agi, 5, 3, 0, null),
                     FMod("nj_sub", "替身熟練", "substitute", ModField.Cooldown, 0.08f, 5, 1, 1, "nj_root"),
-                    FPas("nj_vanish", "隱遁", PassiveKind.Vanish, 0.1f, 5, 0, 2, "nj_sub"),
-                    FPas("nj_evade", "殘像", PassiveKind.Evade, 0.03f, 5, 1, 2, "nj_sub"),
-                    FPas("nj_dodge", "瞬身", PassiveKind.Dodge, 0.1f, 5, 2, 2, "nj_sub"),
+                    FPas("nj_vanish", "隱遁", PassiveKind.Vanish, 0.01f, 5, 0, 2, "nj_sub"),
+                    FPas("nj_evade", "殘像", PassiveKind.Evade, 0.01f, 5, 1, 2, "nj_sub"),
+                    FPas("nj_dodge", "瞬身", PassiveKind.Dodge, 0.0334f, 5, 2, 2, "nj_sub"),
                     FLearn("nj_clone", "clone", 3, 1, "nj_root"),
                     FMod("nj_clone2", "分身延長", "clone", ModField.BuffDur, 1f, 5, 3, 2, "nj_clone"),
                     FPas("nj_crit", "影分身・要害", PassiveKind.Crit, 0.03f, 5, 3, 3, "nj_clone2"),
@@ -492,7 +492,7 @@ namespace SpellDuel
                     FLearn("sd_dance", "shadowdance", 3, 1, "sd_root"),
                     FMod("sd_dance2", "影舞延長", "shadowdance", ModField.BuffDur, 1f, 5, 3, 2, "sd_dance"),
                     FPas("sd_atk", "影之刃", PassiveKind.Atk, 0.03f, 5, 3, 3, "sd_dance2"),
-                    FPas("sd_vanish", "舞影", PassiveKind.Vanish, 0.1f, 5, 4, 2, "sd_dance"),
+                    FPas("sd_vanish", "舞影", PassiveKind.Vanish, 0.02f, 5, 4, 2, "sd_dance"),
                     FLearn("sd_fog", "poisonfog", 5, 1, "sd_root"),
                     FMod("sd_fog2", "劇毒之霧", "poisonfog", ModField.EffectDps, 1.5f, 5, 5, 2, "sd_fog"),
                     FPas("sd_venom", "毒霧疊毒", PassiveKind.Venom, 6f, 5, 6, 2, "sd_fog"),
@@ -597,7 +597,7 @@ namespace SpellDuel
                         PassiveKind.Overcharge => "蓄滿後繼續拉弓可以蓄到 200%：蓄力越多傷害越高，200% 時傷害 +150%",
                         PassiveKind.NaturalRegen => $"每 10 秒回復最大 HP 的 {v * 100:0}%",
                         PassiveKind.QuickCd => $"所有技能冷卻時間 -{v * 100:0}%",
-                        PassiveKind.Evade => $"閃避率 +{v * 100:0}%（被攻擊時有機率完全閃開）",
+                        PassiveKind.Evade => $"閃避率 +{v * 100:0}%（被物理攻擊時有機率完全閃開；魔法閃不掉）",
                         PassiveKind.Atk => $"攻擊傷害 +{v * 100:0}%",
                         PassiveKind.Armor => $"受到的傷害 -{v * 100:0}%",
                         PassiveKind.Hp => $"HP 上限 +{v:0}",
@@ -1285,7 +1285,8 @@ namespace SpellDuel
             f.burnChance = Passive(PassiveKind.Burn) + GearSum(Affix.Burn);
             f.poisonChance = Passive(PassiveKind.Poison) + GearSum(Affix.Poison);
             f.freezeChance = Passive(PassiveKind.Freeze) + GearSum(Affix.Freeze);
-            f.evadeChance = Mathf.Clamp(Passive(PassiveKind.Evade) + SkillTrees.DodgeToEvade * Passive(PassiveKind.Dodge) + 0.001f * Mathf.Max(0, d(Stat.Agi)), 0f, 0.5f);
+            // 閃避率（使用者要求：刺客系全部疊滿約 40%；敏捷不再加閃避）
+            f.evadeChance = Mathf.Clamp(Passive(PassiveKind.Evade) + SkillTrees.DodgeToEvade * Passive(PassiveKind.Dodge), 0f, 0.5f);
             f.chargeScale = Mathf.Max(0.4f, f.chargeScale * (1f - Passive(PassiveKind.FastCast)));   // 法師：快速詠唱
             f.overcharge = Passive(PassiveKind.Overcharge) > 0f;                                   // 獵人：蓄力強化
             f.regenTick = f.maxHp * Passive(PassiveKind.NaturalRegen);                              // 劍士／主教：自然回復（每 10 秒一次回 x%，不是每秒慢慢回）

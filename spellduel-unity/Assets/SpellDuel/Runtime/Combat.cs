@@ -2394,7 +2394,7 @@ namespace SpellDuel
 
         /// <summary>刺客伏擊技能（刺殺、影襲、毒刃）：身邊這個半徑內不能有敵人才能蓄力；蓄力完成後靠近到這個距離就自動出手</summary>
         /// <summary>刺客技能樹「近身本能」：2m 內有敵人時，受到的傷害 −4%／級、閃避率 +3%／級（貼臉打刺客要付出代價）</summary>
-        public const float CloseRange = 2f, CloseReducePer = 0.04f, CloseEvadePer = 0.03f;
+        public const float CloseRange = 2f, CloseReducePer = 0.04f, CloseEvadePer = 0.01f;   // 近身本能：閃避每級 +1%（滿級 5%）
         public bool CloseInstinct(Fighter f) => f != null && f.closeInstinct > 0f && NearestFoe(f, out var d) != null && d < CloseRange;
         public const float AmbushReach = 1.5f;
         /// <summary>法術飛超過技能射程後，再往前飄這麼遠（公尺）一邊淡出一邊消失</summary>
@@ -3814,7 +3814,8 @@ namespace SpellDuel
         void ApplyDamageAndEffect(Fighter target, int damage, EffectKind eff, float dps, float dur, Vector3 at)
         {
             // 閃避率（刺客技能樹）：整次攻擊（傷害＋效果）完全閃開
-            float evade = target.evadeChance + (target.vanishUntil > now ? target.vanish : 0f) + (CloseInstinct(target) ? CloseEvadePer * target.closeInstinct : 0f);
+            // 閃避只對物理攻擊有效（使用者要求）：魔法攻擊（火球、毒液、放電、泡泡…）閃不掉，要自己躲
+            float evade = incoming != null && Skills.IsMagic(incoming) ? 0f : target.evadeChance + (target.vanishUntil > now ? target.vanish : 0f) + (CloseInstinct(target) ? CloseEvadePer * target.closeInstinct : 0f);
             if (evade > 0f && damage > 0 && rng.NextDouble() < evade) { Emit("evade", target.Chest, new Color(0.7f, 0.6f, 1f), "閃避！"); return; }
             if (damage > 0 && target.invulnUntil > now) { Emit("evade", target.Chest, new Color(1f, 0.4f, 0.4f), "無敵！"); return; }
             // 忍者：替身術（下一次攻擊完全無效）、分身術（一半的攻擊打到分身）
