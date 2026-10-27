@@ -3684,7 +3684,7 @@ namespace SpellDuel
                 foreach (var k in new List<string>(o.cooldownUntil.Keys)) if (k != "knife") o.cooldownUntil[k] -= o.knifeCdr;
         }
 
-        /// <summary>被包圍：1.5m 內有兩個以上敵人時，閃避率 −10%</summary>
+        /// <summary>被包圍：1.5m 內第一個敵人不扣，之後每多一個敵人閃避率 −10%（3 個 −20%、4 個 −30%…）</summary>
         public const float CrowdRange = 1.5f, CrowdEvadeLoss = 0.10f;
         /// <summary>target 身邊 1.5m 內有幾個活著的敵人</summary>
         int CrowdedBy(Fighter target)
@@ -3836,7 +3836,7 @@ namespace SpellDuel
             if (!magicHit && damage > 0 && target.vanishUntil > now) { target.vanishUntil = 0f; Emit("evade", target.Chest, new Color(0.7f, 0.5f, 1f), "遁影！"); return; }
             float evade = magicHit ? 0f : target.evadeChance + (CloseInstinct(target) ? CloseEvadePer * target.closeInstinct : 0f);
             evade -= by != null ? by.accuracy : 0f;
-            if (evade > 0f && CrowdedBy(target) >= 2) evade -= CrowdEvadeLoss;   // 被兩隻以上敵人貼近（1.5m 內）：閃避再 −10%（使用者要求）
+            if (evade > 0f) evade -= CrowdEvadeLoss * Mathf.Max(0, CrowdedBy(target) - 1);   // 1.5m 內第二個敵人起，每多一個閃避 −10%（使用者要求）
             if (evade > 0f && damage > 0 && rng.NextDouble() < evade) { Emit("evade", target.Chest, new Color(0.7f, 0.6f, 1f), "閃避！"); return; }
             if (damage > 0 && target.invulnUntil > now) { Emit("evade", target.Chest, new Color(1f, 0.4f, 0.4f), "無敵！"); return; }
             // 忍者：替身術（下一次攻擊完全無效）、分身術（一半的攻擊打到分身）
