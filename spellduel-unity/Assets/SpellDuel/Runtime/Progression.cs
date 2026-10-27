@@ -51,7 +51,7 @@ namespace SpellDuel
             Stat.Str => atk ? "攻擊傷害 +2%／點" : "（不是這個職業的攻擊能力值）HP +1／點",
             Stat.Int => atk ? "攻擊傷害 +2%／點、治療量 +2%／點、MP 上限 +2／點、魔法減傷：加到 99 點 30%" : "MP 上限 +2／點、治療量 +2%／點、魔法減傷：加到 99 點 30%（照比例）",
             Stat.Vit => "HP 上限 +5／點、物理減傷：加到 99 點 30%（照比例）",
-            Stat.Agi => "蓄力時間 -1%／點（最多 -40%）、普攻速度：冷卻 -0.8%／點（最多 -50%）、閃避率 +0.1%／點（只閃物理攻擊）、命中率 +0.1%／點（抵掉對方的閃避）；上限 99 點（含裝備，超過不加效果）",
+            Stat.Agi => "蓄力時間 -1%／點（最多 -40%）、普攻速度：冷卻 -0.8%／點（最多 -50%）、閃避率 +0.1%／點（只閃物理攻擊）、命中率 +0.1%／點（抵掉對方的閃避）；自己配點最多到 99（裝備另外加）",
             Stat.Spi => "MP 回復（基礎只有 30%，精神 99 點回到 100%）、冷卻時間 -0.8%／點（最多 -35%）",
             _ => "爆擊率 +0.6%／點（爆擊＝傷害 ×2）、掉寶機率與稀有度提升",
         };
@@ -1113,13 +1113,14 @@ namespace SpellDuel
         /// <summary>自己的能力值（初始＋自己加的）：決定加點的花費</summary>
         public int OwnStat(Stat s) => BaseStat(s) + alloc[(int)s];
         public int Total(Stat s) => OwnStat(s) + TreeStat(s) + GearStat(s);
-        /// <summary>敏捷上限 99 點（使用者要求）：配點＋技能樹＋裝備加起來超過 99 的部分沒有效果（裝備需求仍看 Total）</summary>
+        /// <summary>敏捷自己配點最多到 99（使用者要求；初始值＋配點，不含技能樹與裝備，裝備的敏捷照算）</summary>
         public const int AgiCap = 99;
-        public int EffectiveStat(Stat s) => s == Stat.Agi ? Mathf.Min(Total(s), AgiCap) : Total(s);
+        public bool AtCap(Stat s) => s == Stat.Agi && OwnStat(s) >= AgiCap;
 
-        public bool CanRaise(Stat s) => statPoints >= StatInfo.Cost(OwnStat(s));
+        public bool CanRaise(Stat s) => !AtCap(s) && statPoints >= StatInfo.Cost(OwnStat(s));
         public bool Raise(Stat s)
         {
+            if (AtCap(s)) return false;
             int c = StatInfo.Cost(OwnStat(s));
             if (statPoints < c) return false;
             statPoints -= c; alloc[(int)s]++;
@@ -1271,7 +1272,7 @@ namespace SpellDuel
         public void ApplyTo(Fighter f, ClassDef cd, IList<string> loadoutIds)
         {
             float hpRatio = f.maxHp > 0 ? f.hp / f.maxHp : 1f, mpRatio = f.maxMp > 0 ? f.mp / f.maxMp : 1f;
-            int d(Stat s) => EffectiveStat(s) - BaseStat(s);
+            int d(Stat s) => Total(s) - BaseStat(s);
             var atkStat = StatInfo.AttackStat(cls);
             // 攻擊：攻擊能力值每點 +2%，裝備的攻擊加成
             f.atkMul = Mathf.Max(0.3f, 1f + 0.02f * d(atkStat)) * (1f + GearSum(Affix.Atk));

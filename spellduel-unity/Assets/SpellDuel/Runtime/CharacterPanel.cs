@@ -186,7 +186,7 @@ namespace SpellDuel
                 UiKit.Divider(new Rect(rr.x+4,rr.y+8,3,rr.height-16),StatInfo.Colors[i]);
                 int own = p.OwnStat(s), tree = p.TreeStat(s), gear = p.GearStat(s), cost = StatInfo.Cost(own);
                 string extra = (tree > 0 ? $" +{tree}樹" : "") + (gear > 0 ? $" +{gear}裝" : "");
-                UiKit.Text(new Rect(rr.x + gap, rr.y, rr.width * 0.42f, rr.height * 0.55f), $"{StatInfo.Icons[i]} {StatInfo.Names[i]}　{p.Total(s)}{(s == Stat.Agi && p.Total(s) > CharacterProfile.AgiCap ? $"（上限 {CharacterProfile.AgiCap}）" : "")}", fs, StatInfo.Colors[i], TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(rr.x + gap, rr.y, rr.width * 0.42f, rr.height * 0.55f), $"{StatInfo.Icons[i]} {StatInfo.Names[i]}　{p.Total(s)}{(p.AtCap(s) ? "（配點已滿 99）" : "")}", fs, StatInfo.Colors[i], TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(rr.x + rr.width * 0.42f, rr.y, rr.width * 0.36f, rr.height * 0.55f), $"初始{p.BaseStat(s)} +加{p.alloc[i]}{extra}", fsS, new Color(0.8f, 0.82f, 0.9f), TextAnchor.MiddleLeft);
                 UiKit.Text(new Rect(rr.x + gap, rr.y + rr.height * 0.5f, rr.width * 0.78f, rr.height * 0.5f), StatInfo.Effect(s, s == atk), fsS, new Color(0.85f, 0.9f, 1f), TextAnchor.MiddleLeft, false, 0.6f);
                 var br = new Rect(rr.xMax - rr.width * 0.2f, rr.y + rr.height * 0.12f, rr.width * 0.19f, rr.height * 0.76f);
