@@ -603,7 +603,7 @@ namespace SpellDuel
                         PassiveKind.NaturalRegen => $"每 10 秒回復最大 HP 的 {v * 100:0}%",
                         PassiveKind.QuickCd => $"所有技能冷卻時間 -{v * 100:0}%",
                         PassiveKind.Accuracy => $"命中率 +{v * 100:0}%（抵掉對方的閃避；法術必中，不受影響）",
-                        PassiveKind.Evade => $"閃避率 +{v * 100:0}%（被物理攻擊時有機率完全閃開；魔法閃不掉）",
+                        PassiveKind.Evade => $"閃避率 +{v * 100:0}%（被物理攻擊時有機率完全閃開；魔法閃不掉；1.5m 內有兩個以上敵人時 −10%）",
                         PassiveKind.Atk => $"攻擊傷害 +{v * 100:0}%",
                         PassiveKind.Armor => $"受到的傷害 -{v * 100:0}%",
                         PassiveKind.Hp => $"HP 上限 +{v:0}",
