@@ -39,55 +39,16 @@ namespace SpellDuel
                 SpawnFade.Play(go);
             }
             go.transform.position = WorldFrame.FromWorld(n.Feet);
-            // 雕像：點亮了就發光；寶箱：真的那個偶爾閃（看 reve 的 evglint）
-            if (n.npcId.StartsWith("ev_statue"))
-            {
-                int idx = battle.evPts.FindIndex(p => Battle.FlatDistance(p, n.Feet) < 0.1f);
-                bool lit = idx >= 0 && idx < battle.evState.Count && battle.evState[idx] == 1;
-                var orb = go.transform.Find("Orb");
-                if (orb) orb.localScale = Vector3.one * (lit ? 0.42f : 0.28f) * (1f + 0.08f * Mathf.Sin(Time.time * 4f));
-            }
-            if (n.npcId == "ev_core" || n.npcId.StartsWith("ev_totem"))
-            {
-                var top = go.transform.Find("Glow");
-                if (top) top.localScale = Vector3.one * (0.35f + 0.05f * Mathf.Sin(Time.time * 3f));
-            }
+            int idx=battle.evPts.FindIndex(p=>Battle.FlatDistance(p,n.Feet)<.1f);
+            bool lit=idx>=0 && idx<battle.evState.Count && battle.evState[idx]==1;
+            go.GetComponent<RoomPropArt>().Tick(n.hp,n.maxHp,lit,Time.time);
             return true;
         }
 
         GameObject MakeProp(string id)
         {
-            var root = new GameObject("EventProp_" + id);
-            GameObject Part(PrimitiveType t, Color c, Vector3 pos, Vector3 scale, string name = null)
-            {
-                var p = Prim(t, c); p.transform.SetParent(root.transform, false); p.transform.localPosition = pos; p.transform.localScale = scale; if (name != null) p.name = name; return p;
-            }
-            if (id == "ev_core")
-            {
-                Part(PrimitiveType.Cylinder, new Color(0.35f, 0.3f, 0.25f), new Vector3(0f, 0.15f, 0f), new Vector3(0.7f, 0.15f, 0.7f));
-                Part(PrimitiveType.Cylinder, new Color(0.85f, 0.65f, 0.25f), new Vector3(0f, 0.65f, 0f), new Vector3(0.45f, 0.35f, 0.45f));   // 鐘身
-                Part(PrimitiveType.Sphere, new Color(1f, 0.9f, 0.5f, 0.8f), new Vector3(0f, 1.15f, 0f), Vector3.one * 0.35f, "Glow");
-            }
-            else if (id.StartsWith("ev_totem"))
-            {
-                Part(PrimitiveType.Cylinder, new Color(0.2f, 0.12f, 0.25f), new Vector3(0f, 0.7f, 0f), new Vector3(0.35f, 0.7f, 0.35f));
-                Part(PrimitiveType.Cube, new Color(0.3f, 0.18f, 0.35f), new Vector3(0f, 1.1f, 0f), new Vector3(0.55f, 0.12f, 0.2f));
-                Part(PrimitiveType.Sphere, new Color(0.75f, 0.4f, 1f, 0.85f), new Vector3(0f, 1.55f, 0f), Vector3.one * 0.35f, "Glow");
-            }
-            else if (id.StartsWith("ev_statue"))
-            {
-                int idx = id[id.Length - 1] - '0';
-                var me = battle.npcs.Find(x => x.npcId == id);
-                var col = Battle.ElementColor(me != null ? me.evElement : 0);
-                Part(PrimitiveType.Cube, new Color(0.45f, 0.45f, 0.5f), new Vector3(0f, 0.45f, 0f), new Vector3(0.5f, 0.9f, 0.5f));
-                Part(PrimitiveType.Sphere, new Color(col.r, col.g, col.b, 0.9f), new Vector3(0f, 1.15f, 0f), Vector3.one * 0.28f, "Orb");
-            }
-            else if (id.StartsWith("ev_chest"))
-            {
-                Part(PrimitiveType.Cube, new Color(0.45f, 0.28f, 0.12f), new Vector3(0f, 0.22f, 0f), new Vector3(0.6f, 0.4f, 0.42f));
-                Part(PrimitiveType.Cube, new Color(0.85f, 0.7f, 0.25f), new Vector3(0f, 0.44f, 0f), new Vector3(0.62f, 0.08f, 0.44f));
-            }
-            return root;
+            var n=battle.npcs.Find(x=>x.npcId==id);
+            return HazardArt.RoomProp(id,Battle.ElementColor(n!=null?n.evElement:0)).gameObject;
         }
 
         void CleanupProps()
@@ -111,25 +72,15 @@ namespace SpellDuel
             {
                 var go = evPointGo[i]; if (!go) continue;
                 int st = i < battle.evState.Count ? battle.evState[i] : 0;
-                var r = go.GetComponent<Renderer>();
-                switch (kind)
+                var art=go.GetComponent<RoomPointArt>();
+                if(art)art.Tick(st,Time.time);
+                switch(kind)
                 {
-                    case "runes":
-                        r.material.color = st == 1 ? new Color(1f, 0.95f, 0.4f, 0.95f) : st == 2 ? new Color(0.4f, 1f, 0.6f, 0.9f) : st == 3 ? new Color(1f, 0.25f, 0.2f, 0.9f) : new Color(0.55f, 0.4f, 1f, 0.45f);
-                        go.transform.localScale = new Vector3(0.8f, 0.01f, 0.8f) * (st == 1 ? 1.15f : 1f);
-                        break;
                     case "elements":
-                        if (i >= 3) go.transform.position = WorldFrame.FromWorld(battle.evPts[i] + Vector3.up * (0.9f + 0.08f * Mathf.Sin(Time.time * 2.5f + i)));
-                        else go.SetActive(st == 1);   // 雕像點亮：腳下的光圈
+                        if(i>=3)go.transform.position=WorldFrame.FromWorld(battle.evPts[i]+Vector3.up*(.9f+.08f*Mathf.Sin(Time.time*2.5f+i)));
+                        else go.SetActive(st==1);
                         break;
-                    case "collapse":
-                        go.SetActive(st > 0);
-                        if (st == 1) r.material.color = new Color(1f, 0.15f, 0.05f, 0.25f + 0.25f * Mathf.Abs(Mathf.Sin(Time.time * 8f)));
-                        else if (st == 2) r.material.color = new Color(0.05f, 0.02f, 0.02f, 0.85f);
-                        break;
-                    case "chant":
-                        r.material.color = new Color(0.6f, 0.5f, 1f, 0.55f + 0.2f * Mathf.Sin(Time.time * 2f));
-                        break;
+                    case "collapse":go.SetActive(st>0);break;
                 }
             }
             UpdateDarkness(kind == "dark");
@@ -144,37 +95,17 @@ namespace SpellDuel
             for (int i = 0; i < battle.evPts.Count; i++)
             {
                 var p = battle.evPts[i]; GameObject go;
-                switch (evViewKind)
+                string type=evViewKind;
+                if(type=="elements")type=i<3?"seal":"orb";
+                if(type=="runes"||type=="orb"||type=="seal"||type=="collapse"||type=="chant"||type=="escort")
                 {
-                    case "runes":
-                        go = Prim(PrimitiveType.Cylinder, new Color(0.55f, 0.4f, 1f, 0.45f), true);
-                        go.transform.localScale = new Vector3(0.8f, 0.01f, 0.8f);
-                        go.transform.position = WorldFrame.FromWorld(p + Vector3.up * 0.02f);
-                        break;
-                    case "elements":
-                        if (i < 3) { go = Prim(PrimitiveType.Cylinder, new Color(1f, 1f, 0.7f, 0.5f), true); go.transform.localScale = new Vector3(1.2f, 0.01f, 1.2f); go.transform.position = WorldFrame.FromWorld(p + Vector3.up * 0.02f); go.SetActive(false); }
-                        else { var c = Battle.ElementColor(battle.evState[i]); go = Prim(PrimitiveType.Sphere, new Color(c.r, c.g, c.b, 0.85f)); go.transform.localScale = Vector3.one * 0.3f; go.transform.position = WorldFrame.FromWorld(p + Vector3.up * 0.9f); }
-                        break;
-                    case "collapse":
-                        go = Prim(PrimitiveType.Cube, new Color(1f, 0.15f, 0.05f, 0.3f), true);
-                        go.transform.localScale = new Vector3(0.96f, 0.01f, 0.96f);
-                        go.transform.position = WorldFrame.FromWorld(p + Vector3.up * 0.015f);
-                        go.SetActive(false);
-                        break;
-                    case "chant":
-                        // 咒語之門：兩根門柱＋中間發光的符文面
-                        go = Prim(PrimitiveType.Cube, new Color(0.6f, 0.5f, 1f, 0.6f), true);
-                        go.transform.localScale = new Vector3(1.4f, 2f, 0.05f);
-                        go.transform.position = WorldFrame.FromWorld(p + Vector3.up * 1f);
-                        var face = Fighter.Flat(Me.Feet - p); if (face != Vector3.zero) go.transform.rotation = Quaternion.LookRotation(WorldFrame.DirFromWorld(face), Vector3.up);
-                        break;
-                    case "escort":
-                        go = Prim(PrimitiveType.Cylinder, new Color(0.4f, 1f, 0.5f, 0.45f), true);
-                        go.transform.localScale = new Vector3(1.1f, 0.01f, 1.1f);
-                        go.transform.position = WorldFrame.FromWorld(p + Vector3.up * 0.02f);
-                        break;
-                    default: go = null; break;
+                    Color color=type=="orb"?Battle.ElementColor(battle.evState[i]):type=="escort"?new Color(.3f,1,.5f):new Color(.65f,.4f,1,.8f);
+                    go=HazardArt.RoomPoint(type,type=="orb"?battle.evState[i]:i,color).gameObject;
+                    go.transform.position=WorldFrame.FromWorld(p+Vector3.up*(type=="orb"?.9f:0));
+                    if(type=="seal"||type=="collapse")go.SetActive(false);
+                    if(type=="chant"){var face=Fighter.Flat(Me.Feet-p);if(face!=Vector3.zero)go.transform.rotation=Quaternion.LookRotation(WorldFrame.DirFromWorld(face),Vector3.up);}
                 }
+                else go=null;
                 evPointGo.Add(go);
             }
         }
@@ -191,8 +122,7 @@ namespace SpellDuel
                 {
                     if (!darkEyes.TryGetValue(m, out var eye) || !eye)
                     {
-                        eye = new GameObject("DarkEyes");
-                        for (int s = -1; s <= 1; s += 2) { var e = Prim(PrimitiveType.Sphere, new Color(1f, 0.15f, 0.1f, 1f), true); e.transform.SetParent(eye.transform, false); e.transform.localPosition = new Vector3(0.07f * s, 0f, 0f); e.transform.localScale = Vector3.one * 0.06f; }
+                        eye=HazardArt.RoomPoint("eyes",0,Color.red).gameObject;
                         darkEyes[m] = eye;
                     }
                     eye.SetActive(true);
@@ -240,6 +170,9 @@ namespace SpellDuel
         {
             if (!kind.StartsWith("ev")) return false;
             if (coop && NetIsHost) NetSend?.Invoke(new Msg { t = "reve", k = kind, a = text ?? "", p = at, d = new Vector3(c.r, c.g, c.b) });
+            if(kind=="evinfo" || kind=="evglint")
+                foreach(var g in propGo.Values)if(g && Vector3.Distance(g.transform.position,WorldFrame.FromWorld(at))<.8f)g.GetComponent<RoomPropArt>().Pulse(Time.time);
+            if(kind=="evwrong" && battle!=null && battle.roomEvent=="mimic")MinionRig.SpawnFx(WorldFrame.FromWorld(at));
             switch (kind)
             {
                 case "evstart":
@@ -253,6 +186,7 @@ namespace SpellDuel
                     if (!string.IsNullOrEmpty(text)) Say("❌ " + text, 2.5f);
                     break;
                 case "evdone":
+                    foreach(var point in evPointGo)if(point){MinionRig.SpawnFx(point.transform.position);point.SetActive(false);}
                     Sfx.Play("charged", 0.9f, 1f); Haptics.Play(Haptics.Kind.Medium);
                     if (!string.IsNullOrEmpty(text)) { Say("✅ " + text, 3f); ChatEvent("✅ " + text); }
                     break;
