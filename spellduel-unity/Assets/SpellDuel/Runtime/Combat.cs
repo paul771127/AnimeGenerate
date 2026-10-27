@@ -352,7 +352,7 @@ namespace SpellDuel
             LastProcs = RollProcs(f, s);
             dmg = PreHit(f, v, s, dmg, null);
             if (remoteEnemy && v == enemy) { EmitHit(s, v.Chest); OnRemoteHit?.Invoke(s, dmg, v.Chest, 0); OnDealt(f, dmg, v, s); return; }
-            if (remoteEnemy && v.isMinion) { EmitHit(s, v.Chest); OnMinionHit?.Invoke(v.minionId, dmg, s); OnDealt(f, dmg, v, s); return; }
+            if (remoteEnemy && (v.isMinion || IsHostileRoomProp(v))) { EmitHit(s, v.Chest); OnMinionHit?.Invoke(v.minionId, dmg, s); OnDealt(f, dmg, v, s); return; }
             Hit(v, new Projectile { owner = f, skill = s, pos = v.Chest, dir = Fighter.Flat(v.head - f.head), damage = dmg, effect = eff, effectDps = dps, effectDur = dur });
         }
 
@@ -2414,11 +2414,20 @@ namespace SpellDuel
             return ((p1 + d1 * s) - (p2 + d2 * t)).magnitude;
         }
 
+        // Room props share the NPC ID / mhit authority path; ordinary NPC targeting is unchanged.
+        static bool IsHostileRoomProp(Fighter f) => f != null && f.npcSide == 1 &&
+            f.npcId != null && f.npcId.StartsWith("ev_", StringComparison.Ordinal);
+
         List<Fighter> MeleeFoes(Fighter f)
         {
             var foes = new List<Fighter>();
             if (f == enemy || f.isMinion) { foreach (var pl in Players()) foes.Add(pl); }
-            else { if (enemy != null) foes.Add(enemy); foes.AddRange(minions); }
+            else
+            {
+                if (enemy != null) foes.Add(enemy); foes.AddRange(minions);
+                if (f.npcSide != 1) foreach (var n in npcs)
+                    if (n.Alive && IsHostileRoomProp(n)) foes.Add(n);
+            }
             return foes;
         }
 
@@ -2426,7 +2435,7 @@ namespace SpellDuel
         {
             int dv = PreHit(f, v, s, dmg, null);
             if (remoteEnemy && v == enemy) { EmitHit(s, v.Chest); OnRemoteHit?.Invoke(s, dv, v.Chest, 0); OnDealt(f, dv, v, s); return; }
-            if (remoteEnemy && v.isMinion) { EmitHit(s, v.Chest); OnMinionHit?.Invoke(v.minionId, dv, s); OnDealt(f, dv, v, s); return; }
+            if (remoteEnemy && (v.isMinion || IsHostileRoomProp(v))) { EmitHit(s, v.Chest); OnMinionHit?.Invoke(v.minionId, dv, s); OnDealt(f, dv, v, s); return; }
             Hit(v, new Projectile { owner = f, skill = s, pos = v.Chest, dir = Fighter.Flat(v.head - f.head), damage = dv });
         }
 
@@ -3478,7 +3487,7 @@ namespace SpellDuel
             dmg = Riposte(f, PreHit(f, target, s, dmg, null));
             if (f.vanish > 0f) { f.vanishUntil = now + f.vanish; Emit("buff", f.Chest, new Color(0.7f, 0.5f, 1f), $"遁影：{f.vanish:0} 秒內下一次物理攻擊必閃"); }
             if (target == enemy) AddThreat(f, dmg);
-            if (remoteEnemy && target.isMinion) { EmitHit(s, target.Chest); OnMinionHit?.Invoke(target.minionId, dmg, s); OnDealt(f, dmg, target, s); }
+            if (remoteEnemy && (target.isMinion || IsHostileRoomProp(target))) { EmitHit(s, target.Chest); OnMinionHit?.Invoke(target.minionId, dmg, s); OnDealt(f, dmg, target, s); }
             else if (remoteEnemy && target == enemy) { EmitHit(s, target.Chest); OnRemoteHit?.Invoke(s, dmg, target.Chest, 0); OnDealt(f, dmg, target, s); }
             else Hit(target, new Projectile { owner = f, skill = s, pos = target.Chest, dir = Fighter.Flat(target.head - f.head), damage = dmg, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur });
         }
@@ -3520,7 +3529,7 @@ namespace SpellDuel
                     {
                         acc -= 1f;
                         if (remoteEnemy && victim == enemy) { EmitHit(z.skill, victim.Chest); OnRemoteBurn?.Invoke(z.skill, z.dps, victim.Feet); }
-                        else if (remoteEnemy && victim.isMinion) { EmitHit(z.skill, victim.Chest); OnMinionHit?.Invoke(victim.minionId, Mathf.RoundToInt(z.dps), z.skill); }
+                        else if (remoteEnemy && (victim.isMinion || IsHostileRoomProp(victim))) { EmitHit(z.skill, victim.Chest); OnMinionHit?.Invoke(victim.minionId, Mathf.RoundToInt(z.dps), z.skill); }
                         else
                         {
                             if (victim == enemy) AddThreat(z.owner, z.dps);
@@ -3764,7 +3773,7 @@ namespace SpellDuel
             if (a.mpOnHit > 0f) a.mp = Mathf.Min(a.maxMp, a.mp + a.mpOnHit);
             if (a.adv == "inquisitor" && a.faith < FaithMax && ++a.faith == FaithMax) Emit("buff", a.Chest, new Color(1f, 0.8f, 0.3f), "信仰已滿！下一招傷害 ×2");
             GainDmgShield(a, dmg);   // 審判者「聖盾轉化」
-            if (s != null && s.id == "plague" && target != null && !(remoteEnemy && (target.isMinion || target == enemy))) Plague(target);   // 影舞者：毒爆（隊友端交給主機）
+            if (s != null && s.id == "plague" && target != null && !(remoteEnemy && (target.isMinion || IsHostileRoomProp(target) || target == enemy))) Plague(target);   // 影舞者：毒爆（隊友端交給主機）
             SoulOnHit(a, target, dmg, s);
         }
 

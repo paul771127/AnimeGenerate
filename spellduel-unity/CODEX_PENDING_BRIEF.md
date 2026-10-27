@@ -396,3 +396,9 @@ Editor/RoomCoopAudit.cs 使用實際 Battle 流程模擬 1／2／3 人，離線 
 53 張原生 PNG、4 張總覽、來源提交／SHA-256、原生測試摘要與平台紀錄放在 [Docs/pending_preview/README_6_10.md](Docs/pending_preview/README_6_10.md)。已目視確認機關不再洋紅、漩渦收起無殘環、雙屬性像／路障、洞窟場內取景、場外霧層與雨／月／風顯示。截圖是 Unity 渲染，不是手機 AR 實拍，未量測實機 FPS。
 
 **尚待範圍確認的既有銜接問題**：`Combat.cs` 的近戰候選未包含 `ev_` 道具，部分隊友直接命中也未轉送房主，會影響圖騰與新路障。第 10 項僅明列可改兩個 RoomEvents 檔，因此尚未修改 `Combat.cs`，已向使用者詢問最小擴充範圍。重現與擬修內容見 [melee_scope_issue.md](Docs/pending_preview/melee_scope_issue.md)。146 項成功結果不代表這兩個既有入口已修復。
+
+### 已授權追加：副本道具近戰與隊友轉送
+
+使用者確認允許最小修改 `Combat.cs`。先同步 `4d02f5b`，保留最新背包、敵人變化與天候更新。近戰名單只補入活著的敵對 `ev_` 道具；直接命中、近戰、伏擊、燃燒與毒爆的遠端處理沿用 `OnMinionHit`／`mhit` 由房主執行。沒有新增連線欄位、技能數值或 Fighter 成員。
+
+`RoomCoopAudit` 增加 180 項入口整合檢查，合計 326 項在實際 Battle 的 .NET 契約環境通過；`check_dungeons.py` 仍為 8 個副本、0 錯誤。原生 Unity 與 Android／iOS 結果待 CI 補記。此前記錄的兩項範圍外問題已修復，不再等待授權。
