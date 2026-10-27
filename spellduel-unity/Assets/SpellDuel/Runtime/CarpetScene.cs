@@ -14,6 +14,7 @@ namespace SpellDuel
         readonly Transform[] scenes=new Transform[5];
         readonly List<Transform> scenery=new List<Transform>();
         readonly List<float> rates=new List<float>();
+        readonly List<Transform> windStreaks=new List<Transform>();
         readonly List<LineRenderer> trims=new List<LineRenderer>();
         readonly List<Vector3[]> trimPoints=new List<Vector3[]>();
         Mesh cloth; Vector3[] rest,vertices,normals; float clock; Vector3 impactPoint; float impactAge=10,impactStrength;
@@ -87,7 +88,7 @@ namespace SpellDuel
                     scenery.Add(t);rates.Add(layer==0?1:layer==1?.35f:.02f);
                     Color cloud=s==3?new Color(.38f,.4f,.61f):new Color(.88f,.94f,1);
                     if(layer!=1||s==0||s==4)
-                    {SkyArt.Oval(t,"Wind shaped cloud",Vector3.zero,new Vector3(3+layer*2,.7f+layer*.3f,5+layer*3),cloud);if(layer==0)SkyArt.Rod(t,"Wind streak",new Vector3(0,.5f,-2),new Vector3(0,.5f,2),.025f,SkyArt.Cream);}
+                    {SkyArt.Oval(t,"Wind shaped cloud",Vector3.zero,new Vector3(3+layer*2,.7f+layer*.3f,5+layer*3),cloud);if(layer==0)windStreaks.Add(SkyArt.Rod(t,"Wind streak",new Vector3(0,.5f,-2),new Vector3(0,.5f,2),.025f,SkyArt.Cream));}
                     else if(s==1)
                     {SkyArt.Oval(t,"Floating island keel",new Vector3(0,-1,0),new Vector3(3,4,4),new Color(.5f,.43f,.55f),true);SkyArt.Oval(t,"Grass crown",Vector3.zero,new Vector3(3.4f,.55f,4.2f),new Color(.3f,.77f,.49f));for(int j=0;j<3;j++)SkyArt.Rod(t,"Hanging mooring",new Vector3(j*.4f,0,0),new Vector3(j*.4f,-3,0),.08f,SkyArt.Gold);}
                     else if(s==2)
@@ -107,7 +108,10 @@ namespace SpellDuel
         {
             clock=time;impactAge+=Mathf.Max(0,dt);float sway=Mathf.Clamp01(SwayScale),v=Mathf.Clamp(Speed/12,.3f,1.5f);
             VisualRoot.localPosition=Vector3.up*(.03f*Mathf.Sin(time*2.1f)*v*sway);
-            VisualRoot.localRotation=Quaternion.Euler(Mathf.Sin(time*1.7f)*1.2f*v*sway,0,Mathf.Sin(time*2.3f+.7f)*v*sway);
+            float shake=impactAge<.3f?Mathf.Sin(impactAge*65)*(1-impactAge/.3f)*impactStrength*sway:.0f;
+            VisualRoot.localRotation=Quaternion.Euler(Mathf.Sin(time*1.7f)*1.2f*v*sway+shake*.6f,0,Mathf.Sin(time*2.3f+.7f)*v*sway+shake*.4f);
+            scenes[Station].localRotation=Quaternion.Euler(Mathf.Sin(time*1.7f)*.25f*v*sway,0,Mathf.Sin(time*2.3f)*.2f*v*sway);
+            for(int i=0;i<10;i++)windStreaks[Station*10+i].gameObject.SetActive(i<Mathf.CeilToInt(Mathf.Max(0,Speed)/1.8f));
             for(int i=0;i<rest.Length;i++){var p=rest[i];vertices[i]=p+Vector3.up*HeightAt(p);float dx=(HeightAt(p+Vector3.right*.01f)-HeightAt(p-Vector3.right*.01f))/.02f,dz=(HeightAt(p+Vector3.forward*.01f)-HeightAt(p-Vector3.forward*.01f))/.02f;normals[i]=new Vector3(-dx,1,-dz).normalized;}
             cloth.vertices=vertices;cloth.normals=normals;cloth.RecalculateBounds();
             for(int i=0;i<trims.Count;i++)for(int j=0;j<trimPoints[i].Length;j++){var p=trimPoints[i][j];trims[i].SetPosition(j,p+Vector3.up*HeightAt(p));}

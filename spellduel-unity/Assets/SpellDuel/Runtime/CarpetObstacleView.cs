@@ -46,6 +46,7 @@ namespace SpellDuel
   public void Hit(){if(released)return;SpellFx.Impact("golem",SkyArt.Gold,front+Vector3.up*.3f,.45f);Passed();}
   public void Passed(){if(released||passing)return;passing=true;passedAt=Time.time;foreach(var m in marks)m.gameObject.SetActive(false);}
   public void Release(){released=true;gameObject.SetActive(false);}
+  void OnEnable(){released=false;passing=false;}
   void Update(){if(passing&&!released){visual.localPosition-=Vector3.forward*12*Time.deltaTime;if(Time.time-passedAt>1.1f)Release();}}
  }
 }

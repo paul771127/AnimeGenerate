@@ -465,3 +465,6 @@ Snapshot.CarpetPets擴充五站、落地、四障礙、五敵人待機／預備�
 
 
 整合檢查補修：新圖示已接入IsSupply／SupplyArt通用取圖路徑，無新素材資料；逐風號開火改用各砲口的EmitParams位置，避免全部粒子被最後一個砲口拖走；載具原點重合時給安全朝向；寵物UI預覽保留Unity Random狀態，不影響遊戲亂數。
+
+
+原生前置驗收：7ef78cb的五站場景Snapshot成功。追加障礙停用後可重新啟用、Speed連動風線數量、周邊微晃及落地整毯微抖；漂浮寵物的友方環沿WorldFrame投到地板。完整批次的原生圖與Android／iOS仍待最新CI，尚不列作通過。
