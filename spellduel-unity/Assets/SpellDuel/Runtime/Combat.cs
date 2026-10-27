@@ -722,10 +722,10 @@ namespace SpellDuel
         public int rhythmMaxAlive = 4;
         /// <summary>敵人（小怪、Boss）的命中率：抵掉玩家的閃避（SoloBattle 依故事章節設定）</summary>
         public float enemyAccuracy;
-        /// <summary>簡單模式（使用者要求）：敵人主要只從一～兩面來——每一波挑一個主要方位（七成正面、三成一側），三拍都從那一面 ±35° 進場；
-        /// 偶爾（約 15%）一隻從別的方向偷襲</summary>
+        /// <summary>單面進場（使用者要求：所有難度）：每一波挑一面（七成正面、三成左或右），這一波的敵人都從那一面進場（三拍 ±25°、輪次陣形 ±30°）；
+        /// 偶爾一隻從別的方向偷襲（同時最多一隻）</summary>
         public bool easySides;
-        int easyBearingWave = -1; float easyBearing;
+        int easyBearingWave = -1, ambushWave = -1; float easyBearing;   // ambushWave：這一波已經有一隻從別面偷襲過（一波最多一隻）
         const float EasyAmbushChance = 0.12f;
         public const float Beat2At = 3f, Beat3At = 8f, RoleRefillGap = 2.5f;
         bool RhythmSpawns => endless && !FixedDungeonSpawns && !Gallery && kindOverride == null && waveSeq == null;
@@ -1062,13 +1062,14 @@ namespace SpellDuel
             lastFormation = f; roundNo++;
             int n = Mathf.Min(groupSize, waveToSpawn);
             if (easySides && (easyBearingWave != wave || roundNo == 1)) { easyBearingWave = wave; easyBearing = rng.NextDouble() < 0.7 ? 0f : (rng.NextDouble() < 0.5 ? -60f : 60f); }
-            int ambushAt = easySides && rng.NextDouble() < EasyAmbushChance * 2f ? n - 1 : -1;   // 簡單：偶爾最後一隻從背後偷襲
+            int ambushAt = easySides && ambushWave != wave && rng.NextDouble() < EasyAmbushChance * 2f ? n - 1 : -1;   // 偶爾最後一隻從背後偷襲（一波最多一隻）
+            if (ambushAt >= 0) ambushWave = wave;
             float jitter = ((float)rng.NextDouble() - 0.5f) * 30f;   // 整隊稍微轉一下，不會每次都一樣的位置
             for (int i = 0; i < n; i++)
             {
                 var (role, ang) = Formations[f].slots[i % Formations[f].slots.Length];
                 ang += jitter;
-                if (easySides) ang = easyBearing + Mathf.Clamp(Mathf.DeltaAngle(0f, ang), -100f, 100f) * 0.45f;   // 簡單：全部集中在一～兩面
+                if (easySides) ang = easyBearing + Mathf.Clamp(Mathf.DeltaAngle(0f, ang), -100f, 100f) * 0.3f;   // 全部從同一面來（陣形壓扁在 ±30° 裡）
                 bool amb = i == ambushAt;
                 if (amb) ang = easyBearing + 180f + ((float)rng.NextDouble() - 0.5f) * 60f;
                 groupQueue.Add((now + i * RoundStagger, role, ang, amb));
@@ -1112,8 +1113,9 @@ namespace SpellDuel
                 {
                     if (easyBearingWave != wave) { easyBearingWave = wave; easyBearing = rng.NextDouble() < 0.7 ? 0f : (rng.NextDouble() < 0.5 ? -75f : 75f); }
                     bool ambushAlive = false; foreach (var m in minions) if (m.Alive && m.ambusher) { ambushAlive = true; break; }
-                    bool ambush = !ambushAlive && rng.NextDouble() < EasyAmbushChance && (front + back + special) >= 1;   // 場上已經有人才偷襲；同時只有一隻
-                    ang = ambush ? easyBearing + 180f + ((float)rng.NextDouble() - 0.5f) * 90f : easyBearing + ((float)rng.NextDouble() - 0.5f) * 70f;
+                    bool ambush = !ambushAlive && ambushWave != wave && rng.NextDouble() < EasyAmbushChance && (front + back + special) >= 1;   // 場上已經有人才偷襲；一波最多一隻
+                    if (ambush) ambushWave = wave;
+                    ang = ambush ? easyBearing + 180f + ((float)rng.NextDouble() - 0.5f) * 90f : easyBearing + ((float)rng.NextDouble() - 0.5f) * 50f;
                 }
                 SpawnRoleAt(role, ang, easySides && Mathf.Abs(Mathf.DeltaAngle(ang, easyBearing)) > 90f);
                 roleNextAt[(int)role] = now + (alive == 0 && t < at + 0.5f ? 0.8f : RoleRefillGap);   // 開場的第一拍可以連出兩隻（隔 0.8 秒）

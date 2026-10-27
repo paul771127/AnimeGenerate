@@ -57,7 +57,7 @@ namespace SpellDuel
         };
         public static string ClassTrialDesc(string cls, bool daily = false, bool hard = false) => cls switch
         {
-            "assassin" when daily => $"火球一次從場地的一面飛來 {FwBalls0} 顆（低的跳、高的蹲），一面接一面越來越快越多：撐過 {ClassTrialTime:0} 秒，被打中就結束",
+            "assassin" when daily => $"火球一波 {FwBalls0} 顆，從場地的一面一起飛來（有高有低、前後錯開；低的跳、高的蹲）；每 {FwEvery:0} 秒一波，每波快 {FwSpeedStep:0.0} m/s、多 1 顆：撐過 {ClassTrialTime:0} 秒，被打中就結束",
             "swordsman" => $"靶人會在場上快速亂跑：{ClassTrialTime:0} 秒內{(hard ? "" : "用木棍")}打中 {(hard ? SwordHitsHard : SwordHitsNeed0)} 次",
             "mage" => $"照畫面唸出咒文（讀音像就算）：{ClassTrialTime:0} 秒內唸對 {(hard ? ChantHard : ChantNeed0)} 組",
             "archer" => $"6m 外的空中與地面會出現會動的靶子{(hard ? "（更快）" : "")}：{ClassTrialTime:0} 秒內{(hard ? "" : "用投石")}打中 {(hard ? ShotHitsHard : ShotHitsNeed0)} 個",
@@ -439,7 +439,7 @@ namespace SpellDuel
             {
                 me.hp = me.maxHp;
                 Sfx.Play("hurt", 1f); Haptics.Play(Haptics.Kind.Heavy); Kick(14f, 0.08f);
-                return FinishClassTrial(false, trialDaily ? $"第 {t:0.#} 秒被火球打中（撐到第 {fwWave + 1} 面）" : $"第 {t:0.#} 秒被打中了");
+                return FinishClassTrial(false, trialDaily ? $"第 {t:0.#} 秒被火球打中（第 {Mathf.Max(1, fwWave)} 波）" : $"第 {t:0.#} 秒被打中了");
             }
             me.hp = me.maxHp; trialLastMeHp = me.hp;
             if (trialDaily) { UpdateFireWall(now); return false; }   // 每日訓練：火球牆
@@ -543,7 +543,7 @@ namespace SpellDuel
                 "swordsman" => $"⚔ 木棍打中 {swordHits}/{SwordHitsNeed}（靶人在場上亂跑，追上去打）",
                 "mage" => $"📖 唸對 {chantDone}/{ChantNeed}（讀音像 {ChantPass * 100:0}% 就算）",
                 "archer" => $"🎯 打中 {shotHits}/{ShotHitsNeed}（唸「投石」、握拳再張開丟出去）",
-                "assassin" when trialDaily => $"👣 第 {fwWave + 1} 面・火球從{(fwSide >= 0 ? FwSideNames[fwSide] : "…")}來 {fwFired}/{FwBalls} 顆・{FwSpeed:0.0} m/s　低的⬆跳、高的⬇蹲",
+                "assassin" when trialDaily => $"👣 第 {fwWave + 1} 波・火球從{(fwSide >= 0 ? FwSideNames[fwSide] : "…")}來 {FwBalls} 顆・{FwSpeed:0.0} m/s・{Mathf.Max(0f, fwFireAt - battle.now):0.0} 秒後　低的⬆跳、高的⬇蹲",
                 "assassin" => $"👣 撐住！{dodgeSpawned}/{DodgeKinds.Length} 隻進場" + (dodgeSpawned < DodgeKinds.Length ? $"・下一隻 {Mathf.Max(0f, DodgeEvery * dodgeSpawned - t):0} 秒後" : ""),
                 "priest" => $"👀 找出身上多了小東西的那隻小鬼，打牠一下（打錯＝失敗）",
                 _ => "",

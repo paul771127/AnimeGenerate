@@ -22,6 +22,7 @@ namespace SpellDuel
         Item discardArm; float discardArmUntil, resetArmUntil;   // 丟掉／重新分配：要按兩次確認
         int page;
         Vector2 statsScroll, gearScroll;
+        float gearNeedH;   // 裝備頁實際需要的高度（技能欄＋裝備欄＋背包＋說明框）：捲動範圍跟著它，說明框才不會被切掉
         string toast; float toastUntil;
 
         static string TreeLabel(string t) => t == Skills.Novice ? "初心者" : Advanced.Get(t)?.name ?? (Skills.Classes.TryGetValue(t, out var c) ? c.name : t);
@@ -105,7 +106,7 @@ namespace SpellDuel
         // Keep row targets readable on shorter phones; scrolling is presentation state only.
         bool DrawBodyPage(Rect viewport,CharacterProfile p,int fs,int fsS,float gap,bool equipment)
         {
-            var content=new Rect(0,0,viewport.width-fs*.85f,Mathf.Max(viewport.height,fs*(equipment?40:30)));
+            var content=new Rect(0,0,viewport.width-fs*.85f,Mathf.Max(viewport.height,equipment?Mathf.Max(fs*40,gearNeedH):fs*30));
             var offset=equipment?gearScroll:statsScroll;
             offset=UiKit.DragScroll(viewport,offset,content);   // 手指拖曳捲動
             offset=GUI.BeginScrollView(viewport,offset,content,false,true);
@@ -391,7 +392,11 @@ namespace SpellDuel
                 UiKit.Text(new Rect(b.x + pbw, dy, b.width - pbw * 2, pbh), $"{dots}\n第 {page + 1}/{pages} 頁", Mathf.RoundToInt(fsS * 0.85f), new Color(0.75f, 0.82f, 0.95f), TextAnchor.MiddleCenter);
                 dy += pbh + gap * 0.3f;
             }
-            var dr = new Rect(b.x, dy, b.width, soulOpen ? b.yMax - dy : Mathf.Min(b.yMax - dy, fs * 13f));   // 說明框不要拉到內容最底下（「裝備」按鈕才不會跑到畫面外）
+            // 說明框的高度照內容算（裝備多、屬性多時不會被切掉）；捲動範圍跟著 gearNeedH 加長
+            int detailLines = selItem == null ? 6 : 3 + selItem.ModLines().Count + (selItem.soulSlots > 0 ? 1 + selItem.souls.Count : 0) + (Economy.SetOf(selItem.setId) != null ? 4 : 0);
+            float detailH = soulOpen ? Mathf.Max(b.yMax - dy, fs * 24f) : Mathf.Max(fs * 13f, fs * (4.2f + 1.25f * detailLines));
+            var dr = new Rect(b.x, dy, b.width, detailH);
+            gearNeedH = dr.yMax + gap;
             // 精魄視窗（CharacterPanel.Souls.cs）：換了選中的裝備就關掉
             if (soulOpen && soulFor != null && soulFor != selItem) soulOpen = false;
             if (soulOpen)

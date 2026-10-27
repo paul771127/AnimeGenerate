@@ -1284,7 +1284,7 @@ namespace SpellDuel
                     battle.edgePoint = () => OutsideEdgePoint();          // 小怪：場地邊緣外 1～2m 出現（淡入），再走進來
                     battle.edgePointAt = a => OutsideEdgeAt(a);           // 三拍出怪：依相對我面向的方位出現
                     battle.rhythmMaxAlive = difficulty == 0 ? 3 : 4;      // 簡單 3 隻、其他 4 隻同時在場（故事關的 diff 固定 0，這裡看選的難度）
-                    battle.easySides = difficulty == 0;                   // 簡單：主要只從一～兩面來
+                    battle.easySides = true;                              // 敵人一次只從一面來、偶爾一隻從別面偷襲（使用者要求：所有難度）
                     battle.bossPoint = () => OutsideEdgePoint(true);      // Boss 也一樣（優先在我面前）
                     battle.OnBossSpawn += w => bossAi.Respawn(Mathf.Max(0.7f, 1f - 0.06f * w));
                     if (pendingStage != null)
