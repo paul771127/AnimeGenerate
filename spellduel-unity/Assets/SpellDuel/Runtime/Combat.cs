@@ -908,7 +908,8 @@ namespace SpellDuel
         // 每過一波敵人變強多少（2026-10 重調：原本 HP 8%、攻擊 5%，第二章起比玩家成長快太多，Lv18 撐不過一波；現在 HP 3.5%、攻擊 2%）
         public const float HpPerWave = 0.035f, DmgPerWave = 0.02f;
         /// <summary>故事關卡的敵人數量倍率：每一章都減半（使用者要求，和第一章一樣）</summary>
-        public static float StoryEnemyMul(int theme) => 0.5f;
+        /// <summary>故事關卡每波的小怪數量倍率：第一、二章 0.5；第三章以後 0.3（使用者要求：少一點、但每隻更痛，靠技術躲）</summary>
+        public static float StoryEnemyMul(int theme) => theme >= 2 ? 0.3f : 0.5f;
         public float hpBoost = 1f;   // 轉職試煉：敵人更硬
         public float DmgMul => (EnemyDmgBase + DmgPerWave * Tier) * enemyDmgMul * TowerMul;
         /// <summary>小怪傷害的基底（使用者要求：0.75 → 0.9，玩家被圍毆時要會掉血）</summary>
@@ -992,7 +993,7 @@ namespace SpellDuel
             int front = 0, back = 0, special = 0;
             foreach (var m in minions) if (m.Alive) { var r = RoleOf(m.minionKind); if (r == MinionRole.Front) front++; else if (r == MinionRole.Back) back++; else special++; }
             bool threeBeats = Theme >= 1 || wave >= 4;   // 第一章 1-1～1-3：只有前兩拍
-            int wantFront = rhythmMaxAlive <= 3 ? 1 : 2, wantBack = Theme >= 2 ? 2 : 1, wantSpecial = threeBeats ? 1 : 0;
+            int wantFront = rhythmMaxAlive <= 3 ? 1 : 2, wantBack = 1, wantSpecial = threeBeats && rhythmMaxAlive >= 3 ? 1 : 0;
             float t = now - waveStartAt;
             var order = new[] { (MinionRole.Front, front, wantFront, 0f, 0f), (MinionRole.Back, back, wantBack, Beat2At, 70f), (MinionRole.Special, special, wantSpecial, Beat3At, 180f) };
             foreach (var (role, alive, want, at, bearing) in order)
