@@ -27,12 +27,17 @@ namespace SpellDuel
             bool edit = PetsEditable == null || PetsEditable();
             int town = PetTown != null ? PetTown() : -1;
             long act = Pets.ActiveUid;
-            float lh = fs * 1.6f, cw = view.width - fs * 0.85f;
+            float lh = fs * 1.85f, cw = view.width - fs * 0.85f;
             var content = new Rect(0, 0, cw, Mathf.Max(view.height, petContentH));
             petScroll = UiKit.DragScroll(view, petScroll, content);
             petScroll = GUI.BeginScrollView(view, petScroll, content, false, true);
             float y = 0f;
-            void Line(string t, Color c, bool bold = false, float h = 1f) { UiKit.Text(new Rect(0, y, cw, lh * h), t, fsS, c, TextAnchor.MiddleLeft, bold); y += lh * h; }
+            void Line(string t, Color c, bool bold = false, float h = 1f)
+            {
+                float pad=bold?gap:gap*.35f, height=Mathf.Max(lh*h,PetPanelArt.TextHeight(t,fsS,cw-pad*2)+gap*.6f);
+                if(bold){y+=gap*.5f;UiKit.Card(new Rect(0,y,cw,height),.55f,c,.35f);}
+                UiKit.Text(new Rect(pad,y,cw-pad*2,height),t,fsS,c,TextAnchor.MiddleLeft,bold);y+=height+gap*.2f;
+            }
             bool changed = false;
 
             // ---- 收藏
@@ -42,7 +47,7 @@ namespace SpellDuel
                 Line("還沒有寵物。戰鬥中丟出對應的誘餌，趁怪物吃餌的 3 秒把牠的血壓到 30% 以下，就有機會收服。", UiKit.Muted, false, 2f);
                 Line("誘餌：打倒那種怪有機率掉，城鎮的這一頁也買得到（只賣那一章的）。", UiKit.Muted, false, 1.2f);
             }
-            float w = (cw - gap) / 2f, h = lh * 1.35f;
+            float w = (cw - gap) / 2f, h = lh * 1.8f;
             for (int i = 0; i < list.Count; i++)
             {
                 var d = list[i]; var sp = d.Species;
@@ -61,6 +66,8 @@ namespace SpellDuel
             {
                 var sp = cur.Species;
                 int lvNow = Pets.EffectiveLevel(cur, p.level);
+                PetPanelArt.Hero(new Rect(0,y,cw,lh*3.6f),cur.kind,cur.Name,$"{(sp.elite ? "菁英旅伴" : "冒險旅伴")} · {Pets.PoolName(sp.pool)}\n{(act==cur.uid ? "已設為出戰" : "休息中")} · Lv{cur.level}",fs,sp.elite?UiKit.Gold:new Color(.45f,1,.8f));
+                y+=lh*3.6f+gap;
                 Line($"{(sp.elite ? "🌟 菁英　" : "")}{cur.Name}（{sp.Name}・{Pets.PoolName(sp.pool)}系）", sp.elite ? new Color(1f, 0.82f, 0.4f) : new Color(0.45f, 1f, 0.8f), true);
                 Line($"Lv{cur.level}" + (lvNow < cur.level ? $"（出戰時 Lv{lvNow}：不超過主人等級）" : "") + $"　HP {Pets.MaxHp(sp, lvNow)}　攻擊 {Pets.Atk(sp, lvNow)}　普攻每 {Pets.AttackGap(sp):0.#} 秒", Color.white);
                 if (cur.level < Pets.MaxLevel) { UiKit.Bar(new Rect(0, y, cw, lh * 0.5f), cur.xp / (float)Pets.XpToNext(cur.level), new Color(0.45f, 1f, 0.8f), $"經驗 {cur.xp}/{Pets.XpToNext(cur.level)}（出戰時分到主人經驗的 40%）", fsS); y += lh * 0.6f; }
@@ -94,7 +101,7 @@ namespace SpellDuel
                 {
                     var f = Pets.Foods[i]; int n = Economy.Count(f.id);
                     bool can = edit && n > 0 && cur.pendingLearn == null;
-                    if (UiKit.Button(new Rect(i * (fw + gap), y, fw, lh * 1.5f), $"{f.icon}{f.name}×{n}\n+{f.xp}經驗・學招 {f.learn * 100f:0}%", Mathf.RoundToInt(fsS * 0.85f), false, new Color(0.45f, 1f, 0.8f), can))
+                    if (PetPanelArt.ItemButton(new Rect(i * (fw + gap), y, fw, lh * 2.5f), f.id, $"{f.name}×{n}\n+{f.xp}經驗\n學招 {f.learn * 100f:0}%", Mathf.RoundToInt(fsS * 0.85f), new Color(0.45f, 1f, 0.8f), can))
                     {
                         Economy.AddItem(f.id, -1);
                         var (ups, got, pend) = Pets.Feed(cur, f, petRng);
@@ -103,7 +110,7 @@ namespace SpellDuel
                         Sfx.Play(got != null ? "levelup" : "heal", 0.6f, 1.2f);
                     }
                 }
-                y += lh * 1.6f;
+                y += lh * 2.6f;
                 if (cur.pendingLearn != null) Line("先決定要不要學新招，才能再餵", UiKit.Muted);
 
                 // 出戰、放生
@@ -137,11 +144,11 @@ namespace SpellDuel
                 for (int i = 0; i < shop.Count; i++)
                 {
                     var s = shop[i];
-                    var r = new Rect((i % 2) * (bw2 + gap), y + (i / 2) * (lh * 1.4f + gap * 0.3f), bw2, lh * 1.4f);
-                    if (UiKit.Button(r, $"🍖 {s.baitName}\n{s.Name}的誘餌・{s.price} 金", Mathf.RoundToInt(fsS * 0.85f), false, new Color(1f, 0.8f, 0.45f), Economy.Gold >= s.price))
+                    var r = new Rect((i % 2) * (bw2 + gap), y + (i / 2) * (lh * 2.1f + gap * 0.3f), bw2, lh * 2.1f);
+                    if (PetPanelArt.ItemButton(r, s.bait, $"{s.baitName}\n{s.Name}\n{s.price} 金", Mathf.RoundToInt(fsS * 0.85f), new Color(1f, 0.8f, 0.45f), Economy.Gold >= s.price))
                     { Economy.Gold -= s.price; Economy.AddItem(s.bait, 1); Toast($"買了 {s.baitName}"); Sfx.Play("coin", 0.6f); }
                 }
-                y += ((shop.Count + 1) / 2) * (lh * 1.4f + gap * 0.3f) + gap * 0.5f;
+                y += ((shop.Count + 1) / 2) * (lh * 2.1f + gap * 0.3f) + gap * 0.5f;
                 var basic = Pets.Food("food_basic"); var fine = Pets.Food("food_fine"); var star = Pets.Food("food_star");
                 float tw = (cw - gap * 2) / 3f;
                 if (UiKit.Button(new Rect(0, y, tw, lh * 1.5f), $"{basic.icon}買{basic.name}\n{basic.price} 金", Mathf.RoundToInt(fsS * 0.85f), false, new Color(0.45f, 1f, 0.8f), Economy.Gold >= basic.price))
@@ -161,12 +168,12 @@ namespace SpellDuel
                     for (int i = 0; i < elites.Count; i++)
                     {
                         var s = elites[i];
-                        var r = new Rect((i % 2) * (bw2 + gap), y + (i / 2) * (lh * 1.4f + gap * 0.3f), bw2, lh * 1.4f);
+                        var r = new Rect((i % 2) * (bw2 + gap), y + (i / 2) * (lh * 2.1f + gap * 0.3f), bw2, lh * 2.1f);
                         bool can = Economy.Count(Pets.SealId) >= Pets.SealsPerEliteBait && Economy.Gold >= s.price;
-                        if (UiKit.Button(r, $"🍖 {s.baitName}\n{s.Name}・{s.price} 金", Mathf.RoundToInt(fsS * 0.85f), false, new Color(1f, 0.82f, 0.4f), can))
+                        if (PetPanelArt.ItemButton(r, s.bait, $"{s.baitName}\n{s.Name}\n{s.price} 金", Mathf.RoundToInt(fsS * 0.85f), new Color(1f, 0.82f, 0.4f), can))
                         { Economy.AddItem(Pets.SealId, -Pets.SealsPerEliteBait); Economy.Gold -= s.price; Economy.AddItem(s.bait, 1); Toast($"調配了 {s.baitName}"); Sfx.Play("heal", 0.6f); }
                     }
-                    y += ((elites.Count + 1) / 2) * (lh * 1.4f + gap * 0.3f);
+                    y += ((elites.Count + 1) / 2) * (lh * 2.1f + gap * 0.3f);
                 }
             }
             else if (edit) Line("（在城鎮裡打開這一頁，可以買誘餌、飼料）", UiKit.Muted);

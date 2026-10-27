@@ -452,3 +452,8 @@ PetDress.Apply(MinionRig,bool)可重入，綁定各物種頭／莖／傘緣，�
 ### 第 14 項 B2-4：寵物與飛毯圖示（2026-10-28）
 
 新增SkillIcons.CarpetPets.cs：48個bait_m查詢（19～22僅保留查圖，不加入可收服資料）、3飼料、印片、4素材、6精魄、5航裝、1藥劑，共68個id。精魄命名soul_sky_kite/eagle/glider/doll/captain/airship；裝備skyweave_weapon/head/body/boots/trinket；藥劑bp_tailwind。均由SkillIcons.Get取用、純程序兩階明暗；沒有新增Resources圖檔。68個id在8/32/48/128尺寸與重繪一致檢查通過，81個既有技能像素不變。實際Render輸出總覽放Docs/pending_preview/pets/icons.png。
+
+
+### 第 14 項 B2-5：已接線寵物分頁美術（2026-10-28）
+
+CharacterPanel.Pets.cs保留所有原按鈕條件、扣料／購買／餵食／技能替換／放生動作，沒有用空callback取代；僅加大收藏卡、分段標題、文字自動高度及圖示按鈕。PetPanelArt提供選中寵物的192px真實模型預覽，第一次選種族渲染並快取，不新增圖片資產、不碰AR相機；預覽相機／臨時rig立即停用後清除。飼料與商店按鈕依窄寬使用上下或左右圖文排列；沿用40%經驗、菁英1.5/1.3與每城誘餌名單等已定案功能。原生與雙平台結果待CI。
