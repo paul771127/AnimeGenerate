@@ -48,7 +48,8 @@ namespace SpellDuel
         public readonly HashSet<string> bonusSkills = new HashSet<string>();
         public float bonusFirstWave = -1f;   // 清完第一波花了幾秒（−1＝還沒清完）
         float bonusStart = -1f;
-        public const int BonusMaxHits = 5, BonusSkillCount = 3;   // 沒轉職只帶 3 個技能 public const float BonusWaveTime = 30f;
+        public const int BonusMaxHits = 5, BonusSkillCount = 3;   // 沒轉職只帶 3 個技能
+        public const float BonusWaveTime = 30f;
 
         public void SetBonus(Bonus b) { bonus = b; bonusHits = 0; bonusSkills.Clear(); bonusFirstWave = -1f; bonusStart = -1f; }
 
