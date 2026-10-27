@@ -422,3 +422,8 @@ Editor/RoomCoopAudit.cs 使用實際 Battle 流程模擬 1／2／3 人，離線 
 ### 第 13 項 A2-1：飛毯場景（2026-10-28）
 
 新增 CarpetScene.cs／SkyArt.cs：依實際多邊形細分的織毯、三層池化景物與五站配色、Speed／SwayScale、Impact局部下沉及波紋塵土；不動AR相機或碰撞。額外提供 SurfacePoint(world) 給預警／落點取顯示座標、Sample(time,dt) 供可重播預覽。Snapshot.CarpetPets.cs 產生五站與落地原生預覽並檢查降低晃動、切站不增網格。原生與雙平台結果待CI，後續批次完成後收錄圖片。未更動戰鬥／資料。
+
+
+### 第 13 項 A2-2：飛毯障礙與預警（2026-10-28）
+
+新增 CarpetObstacleView，提供指定 Create／Tick／Hit／Passed／Release；低掃橘線、胸高藍線、半邊紅斜線、缺口綠框跟隨飛毯顯示表面，不碰判定。Passed 向後掠過再停用，Release 停用供呼叫端回收。因原 Tick 沒有飛行時間參數，新增 TravelSeconds（預設6）和 WarningLeadSeconds（預設1.8、下限1.2）；Claude 必須設成判定端實際飛行秒數，避免僅用progress推測預警秒數。場景五種材質、結構肋條及命中粒子已備妥，原生預覽與平台驗證待整批CI。
