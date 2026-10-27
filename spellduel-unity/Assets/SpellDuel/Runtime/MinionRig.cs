@@ -665,7 +665,7 @@ namespace SpellDuel
         // ================================================================ 動作
         void Update() { Animate(Time.deltaTime); }
 
-        void Animate(float dt)
+        void AnimateCore(float dt)
         {
             if (body == null) return;
             if (variantId >= 48) { AnimateTrapEnemy(dt); return; }
