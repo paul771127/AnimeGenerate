@@ -21,34 +21,39 @@ namespace SpellDuel
    if(skillId.EndsWith("sunmend")||skillId.EndsWith("herbmend")||skillId.EndsWith("rainchorus")||skillId.EndsWith("seedmend")||skillId.EndsWith("sanctuarymend")){EnemySupportFx.Heal(from,to);return;}
    if(skillId.EndsWith("twinseals")){EnemySupportFx.Summon(to);return;}
    if(skillId.EndsWith("royalstandard")){EnemySupportFx.Rally(from,size);return;}
-   var def=EnemySkills.Find(skillId);bool ground=def!=null&&def.shape==EsShape.Circle;
+   var def=EnemySkills.Find(skillId);if(def!=null&&def.shape==EsShape.HealAlly){EnemySupportFx.Heal(from,to);return;}bool ground=def!=null&&def.shape==EsShape.Circle;
    var v=new GameObject("Enemy cast "+skillId).AddComponent<EnemySkillView>();v.Init(skillId,ground?to:from,to-from,def!=null&&def.shape==EsShape.JumpRing?EnemySkills.RingTime:.5f,size,false,0);
   }
  }
- public sealed class EnemySkillView:MonoBehaviour
+ public sealed partial class EnemySkillView:MonoBehaviour
  {
   string skill;int handle;bool warning,released;float age,life,radius;EsShape shape;float angle;
   readonly List<LineRenderer> lines=new List<LineRenderer>();readonly List<Color> colors=new List<Color>();
   static readonly Color Red=new Color(1,.16f,.12f,.8f),Orange=new Color(1,.60f,.10f,.9f),Blue=new Color(.22f,.62f,1,.85f);
-  Color color;
+  Color color;readonly List<int> stages=new List<int>();
+  int Stage(string name)=>name.StartsWith("Loaded ")?(name.EndsWith("0")?0:name.EndsWith("1")?1:2):-1;
   void Line(string name,Vector3[] points,bool loop=false,float width=.034f)
   {
-   if(warning){var ink=new Color(.075f,.025f,.10f,.95f);var edge=SpellFx.Line(transform,name+" contrast edge",points,loop,width*2.2f,ink,false,false);edge.sortingOrder=31;lines.Add(edge);colors.Add(ink);}
-   var l=SpellFx.Line(transform,name,points,loop,width,color,false,false);l.sortingOrder=32;lines.Add(l);colors.Add(color);
+   if(warning){var ink=new Color(.075f,.025f,.10f,.95f);var edge=SpellFx.Line(transform,name+" contrast edge",points,loop,width*2.2f,ink,false,false);edge.sortingOrder=31;lines.Add(edge);colors.Add(ink);stages.Add(Stage(name));}
+   var l=SpellFx.Line(transform,name,points,loop,width,color,false,false);l.sortingOrder=32;lines.Add(l);colors.Add(color);stages.Add(Stage(name));
   }
   Vector3[] Arc(float r,float span,float y,int count=40){var p=new Vector3[count];for(int i=0;i<count;i++){float a=(-span*.5f+span*i/(count-1))*Mathf.Deg2Rad;p[i]=new Vector3(Mathf.Sin(a)*r,y,Mathf.Cos(a)*r);}return p;}
   internal void Init(string id,Vector3 at,Vector3 dir,float seconds,float size,bool cue,int h)
   {
    skill=id;handle=h;life=Mathf.Max(.05f,seconds);radius=size;warning=cue;var def=EnemySkills.Find(id);shape=def!=null?def.shape:EsShape.SelfGuard;angle=def!=null?def.angle:90;
    dir.y=0;if(dir.sqrMagnitude<.000001f)dir=Vector3.forward;transform.SetPositionAndRotation(at,Quaternion.LookRotation(dir,Vector3.up));
-   color=shape==EsShape.JumpRing?Orange:shape==EsShape.DuckArc?Blue:Red;
-   if(!cue){BuildCast();Tick(0);return;}
-   if(shape==EsShape.Circle||shape==EsShape.JumpRing){Line("Locked danger boundary",Arc(radius,360,.018f),true);if(shape==EsShape.Circle){for(int i=-1;i<=1;i++){float z=i*radius*.45f;float x=Mathf.Sqrt(Mathf.Max(0,radius*radius-z*z));Line("Danger hatch",new[]{new Vector3(-x,.025f,z),new Vector3(x,.025f,z)},false,.013f);}}else Arrow(true);}
+   color=shape==EsShape.JumpRing||(def!=null&&def.pose==1)?Orange:shape==EsShape.DuckArc||(def!=null&&def.pose==2)?Blue:Red;
+   if(!cue){BuildCast();BuildKindSignature(id);Tick(0);return;}
+   if(shape==EsShape.HealAlly){color=new Color(.4f,1,.55f,.85f);Line("Interrupt healing",new[]{new Vector3(-.1f,.65f,0),new Vector3(.1f,.65f,0)},false,.04f);Line("Healing cross",new[]{new Vector3(0,.55f,0),new Vector3(0,.75f,0)},false,.04f);}
+   else if(shape==EsShape.Circle||shape==EsShape.JumpRing){Line("Locked danger boundary",Arc(radius,360,.018f),true);if(shape==EsShape.Circle){for(int i=-1;i<=1;i++){float z=i*radius*.45f;float x=Mathf.Sqrt(Mathf.Max(0,radius*radius-z*z));Line("Danger hatch",new[]{new Vector3(-x,.025f,z),new Vector3(x,.025f,z)},false,.013f);}}else Arrow(true);}
    else if(shape==EsShape.Fan||shape==EsShape.DuckArc){float y=shape==EsShape.DuckArc?1.1f:.025f;var arc=Arc(radius,angle,y);Line("Locked sweep arc",arc);Line("Sweep edges",new[]{arc[0],Vector3.up*y,arc[arc.Length-1]});if(shape==EsShape.DuckArc){Arrow(false);Line("Ground projection",Arc(radius,angle,.02f),false,.012f);}}
    else if(shape==EsShape.SelfShield||shape==EsShape.SelfGuard){Line("Interruptible channel sigil",new[]{new Vector3(-.14f,.8f,0),new Vector3(0,1.05f,0),new Vector3(.14f,.8f,0),new Vector3(0,.55f,0)},true);}
    else{float half=def!=null?def.width*.5f:.125f;Line("Locked lane",new[]{new Vector3(-half,.025f,0),new Vector3(-half,.025f,radius),new Vector3(half,.025f,radius),new Vector3(half,.025f,0)},true);for(int i=0;i<6;i++){float z=radius*(i+.5f)/6;Line("Lane hatch",new[]{new Vector3(-half,.03f,z-.06f),new Vector3(half,.03f,z+.06f)},false,.014f);}}
-   Tick(0);
+   if(def!=null&&def.pose==1){Arrow(true);ArrowSecond();}
+   if(def!=null&&def.pose==2){Arrow(false);float half=def.width*.5f;Line("Crouch chest lane",new[]{new Vector3(-half,1.1f,0),new Vector3(-half,1.1f,radius),new Vector3(half,1.1f,radius),new Vector3(half,1.1f,0)},true,.025f);}
+   BuildKindSignature(id);Tick(0);
   }
+  void ArrowSecond(){Line("Jump second chevron",new[]{new Vector3(-.10f,.39f,radius*.7f),new Vector3(0,.53f,radius*.7f),new Vector3(.10f,.39f,radius*.7f)},false,.034f);}
   void Arrow(bool up){float y=up?.23f:.85f,d=up?.14f:-.14f;Line(up?"Jump chevron":"Crouch chevron",new[]{new Vector3(-.10f,y, radius*.7f),new Vector3(0,y+d,radius*.7f),new Vector3(.10f,y,radius*.7f)},false,.034f);}
   void BuildCast()
   {
@@ -66,7 +71,7 @@ namespace SpellDuel
   {
    if(released)return;age+=Mathf.Max(0,dt);if(age>=life){Release();return;}float p=Mathf.Clamp01(age/life),alpha=warning?.45f+.55f*p:1-p;
    if(!warning&&shape==EsShape.JumpRing)transform.localScale=new Vector3(Mathf.Max(.001f,radius*p),1,Mathf.Max(.001f,radius*p));
-   for(int i=0;i<lines.Count;i++){var c=colors[i];c.a*=alpha;lines[i].startColor=lines[i].endColor=c;}
+   for(int i=0;i<lines.Count;i++){var c=colors[i];c.a*=alpha;if(warning&&stages[i]>=0)c.a*=.2f+.8f*Mathf.Clamp01(p*3-stages[i]);lines[i].startColor=lines[i].endColor=c;}
   }
   internal void Release(){if(released)return;released=true;EnemySkillFx.Forget(handle,this);gameObject.SetActive(false);VariantGeometry.Dispose(gameObject);}
   void Update(){Tick(Time.deltaTime);}void OnDestroy(){EnemySkillFx.Forget(handle,this);}

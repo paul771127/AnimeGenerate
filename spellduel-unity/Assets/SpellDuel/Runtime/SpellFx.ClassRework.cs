@@ -73,12 +73,9 @@ namespace SpellDuel
         }
         internal static void HolyLanding(Vector3 at,bool heaven)
         {
-            var a=NewAnim("Holy descent",at,ReworkFacing(at,true),.8f);float s=heaven?1.7f:1f;
-            var line=new[]{Vector3.up*7,Vector3.up*.08f};
-            a.AddSlash(a.transform,line,.42f*s,new Color(1f,.81f,.30f,.4f),0,.38f,1,1,0);
-            a.AddSlash(a.transform,line,.10f*s,new Color(1f,.98f,.82f,.85f),0,.25f,1,1,0);
-            var floor=NewChild(a.transform,"Landing ring");floor.localRotation=Quaternion.Euler(90,0,0);
-            a.AddRing(floor,Circle(36,1),true,.035f,HolyGold,0,.55f,.1f,s,false);
+            var burst=new GameObject(heaven?"Heaven perimeter descent":"Judgement perimeter descent").AddComponent<HolySelfBurst>();
+            burst.transform.position=at;burst.Build(heaven);
+            var cam=Camera.main;if(cam && SelfFxEdge.NearOwner(cam,at))SelfFxEdge.Pulse(cam,HolyGold,heaven?.65f:.42f);
         }
         internal static void HolyNeedle(Vector3 at)
         {
@@ -89,8 +86,8 @@ namespace SpellDuel
         {
             var go=new GameObject(heaven?"Heaven punishment seal":"Judgement cross seal");
             var seal=NewChild(go.transform,"Holy seal");seal.localScale=Vector3.one*radius;
-            var disk=NewChild(seal,"Ground rings");disk.localRotation=Quaternion.Euler(90,0,0);
-            Line(disk,"Edge",Circle(48,1),true,.012f,HolyGold,false,true);
+            var disk=NewChild(seal,"Ground rings");disk.localRotation=Quaternion.Euler(90,0,0);disk.localPosition=Vector3.up*.018f;
+            Line(disk,"Edge",Circle(48,1),true,.022f,HolyGold,false,true);
             Line(disk,"Inner",Circle(40,.74f),true,.008f,new Color(1f,.94f,.6f,.7f),false,true);
             GlowPart(seal,"holy.cross.runes.v1",m=>{
                 var c=new Color(1f,.88f,.46f,.55f);
@@ -109,10 +106,10 @@ namespace SpellDuel
             });
             if(heaven)
             {
-                var feathers=NewPS(go.transform,"Heaven feathers",BlendMat(TexLeaf),18,true);var f=feathers.main;
+                var feathers=NewPS(go.transform,"Heaven perimeter feathers",BlendMat(TexLeaf),18,true);var f=feathers.main;
                 f.startColor=new Color(1f,.97f,.82f,.65f);f.startSize=new ParticleSystem.MinMaxCurve(.08f,.16f);f.startLifetime=1.8f;
                 f.startSpeed=.05f;f.gravityModifier=.09f;feathers.transform.localPosition=Vector3.up*1.4f;
-                Disc(feathers,radius,.15f);FadeOut(feathers);Rate(feathers,7);feathers.Play();
+                Disc(feathers,radius,.15f);var shape=feathers.shape;shape.radiusThickness=.08f;FadeOut(feathers);Rate(feathers,7);feathers.Play();
             }
             var view=go.AddComponent<HolyGroundView>();view.seal=seal;view.heaven=heaven;view.Init();return go;
         }

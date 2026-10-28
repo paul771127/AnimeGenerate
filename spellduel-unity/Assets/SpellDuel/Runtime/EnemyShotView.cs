@@ -10,6 +10,7 @@ namespace SpellDuel
   }
   void Build(string id)
   {
+   if(EnemyShotKindArt.Build(transform,id))return;
    bool arrow=id.Contains("bolt")||id.Contains("arrow")||id.Contains("shortbow")||id.Contains("crossstep")||id.Contains("retreatshot");bool spear=id.Contains("javelin")||id.Contains("highcast");
    if((arrow&&!id.Contains("sandbolt"))||spear)
    {
