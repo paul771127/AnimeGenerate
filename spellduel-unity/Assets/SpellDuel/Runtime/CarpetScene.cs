@@ -17,6 +17,7 @@ namespace SpellDuel
         readonly List<Transform> windStreaks=new List<Transform>();
         readonly List<LineRenderer> trims=new List<LineRenderer>();
         readonly List<Vector3[]> trimPoints=new List<Vector3[]>();
+        readonly List<bool> fringeTrim=new List<bool>();
         static Material fabric;
         Mesh cloth; Vector3[] rest,vertices,normals; float clock; Vector3 impactPoint; float impactAge=10,impactStrength;
         ParticleSystem dust; LineRenderer ripple; float halfWidth=2;
@@ -75,7 +76,7 @@ namespace SpellDuel
             if(level>0){var ac=(a+c)*.5f;var cd=(c+d)*.5f;var da=(d+a)*.5f;Subdivide(b,a,ac,da,level-1);Subdivide(b,ac,c,cd,level-1);Subdivide(b,da,cd,d,level-1);Subdivide(b,ac,cd,da,level-1);return;}
             int k=b.Add(a,Vector3.up,new Vector2(a.x,a.z));b.Add(c,Vector3.up,new Vector2(c.x,c.z));b.Add(d,Vector3.up,new Vector2(d.x,d.z));b.Tri(0,k,k+1,k+2);
         }
-        void AddTrim(string name,Vector3[] pts,float width,Color c){var l=SkyArt.Line(VisualRoot,name,pts.Length,width,c);l.SetPositions(pts);trims.Add(l);trimPoints.Add(pts);}
+        void AddTrim(string name,Vector3[] pts,float width,Color c){var l=SkyArt.Line(VisualRoot,name,pts.Length,width,c);l.SetPositions(pts);trims.Add(l);trimPoints.Add(pts);fringeTrim.Add(name=="Gold fringe");}
         static Material Fabric()
         {
             if(fabric)return fabric;const int n=256;var tex=new Texture2D(n,n,TextureFormat.RGBA32,false){name="Procedural navigation brocade",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Bilinear};var px=new Color32[n*n];
@@ -108,7 +109,7 @@ namespace SpellDuel
             for(int i=0;i<rest.Length;i++){var p=rest[i];vertices[i]=p+Vector3.up*HeightAt(p);float dx=(HeightAt(p+Vector3.right*.01f)-HeightAt(p-Vector3.right*.01f))/.02f,dz=(HeightAt(p+Vector3.forward*.01f)-HeightAt(p-Vector3.forward*.01f))/.02f;normals[i]=new Vector3(-dx,1,-dz).normalized;}
             SampleHem();
             cloth.vertices=vertices;cloth.normals=normals;cloth.RecalculateBounds();
-            for(int i=0;i<trims.Count;i++)for(int j=0;j<trimPoints[i].Length;j++){var p=trimPoints[i][j];float fringe=trims[i].name=="Gold fringe"?j*.012f*Mathf.Sin(time*6+p.x*5+p.z*4)*sway:0;trims[i].SetPosition(j,p+Vector3.up*(HeightAt(p)+fringe));}
+            for(int i=0;i<trims.Count;i++)for(int j=0;j<trimPoints[i].Length;j++){var p=trimPoints[i][j];float fringe=fringeTrim[i]?j*.012f*Mathf.Sin(time*6+p.x*5+p.z*4)*sway:0;trims[i].SetPosition(j,p+Vector3.up*(HeightAt(p)+fringe));}
             for(int i=Station*30;i<(Station+1)*30;i++){var t=scenery[i];var p=t.localPosition;p.z-=Mathf.Max(0,Speed)*rates[i]*dt;if(p.z< -24)p.z+=90;t.localPosition=p; if(i%3==0)t.localScale=new Vector3(1,1,Mathf.Clamp(Speed/12,.5f,1.6f));}
             ripple.gameObject.SetActive(impactAge<.6f);if(impactAge<.6f){ripple.transform.localPosition=new Vector3(impactPoint.x,.05f,impactPoint.z);ripple.transform.localScale=Vector3.one*(.15f+impactAge*3);var c=new Color(1,.85f,.5f,(1-impactAge/.6f)*.65f);ripple.startColor=ripple.endColor=c;}
         }

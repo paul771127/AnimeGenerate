@@ -74,7 +74,7 @@ namespace SpellDuel
     case "bp_mushroom":
      Band(b,new Vector3(0,.13f,0),.17f,.15f,.13f,BCream);
      b.Loft(new[]{.39f,.33f,.18f,.15f},new[]{.04f,.25f,.39f,.31f},new[]{.04f,.23f,.35f,.30f},BRed,0,0,12);
-     for(int i=0;i<7;i++){float a=i*Mathf.PI*2/7;Blob(b,new Vector3(Mathf.Cos(a)*.24f,.29f,Mathf.Sin(a)*.21f),new Vector3(.075f,.025f,.075f),BCream,6);}break;
+     for(int i=0;i<7;i++){float a=i*Mathf.PI*2/7;Blob(b,new Vector3(Mathf.Cos(a)*.19f,.355f,Mathf.Sin(a)*.17f),new Vector3(.085f,.028f,.085f),BCream,6);}break;
     case "bp_bamboo":
      for(int i=0;i<6;i++){float y=-.42f+i*.23f,x=.22f*Mathf.Sin((y+.42f)/1.38f*Mathf.PI);LineB(b,new Vector3(x,y,0),new Vector3(.22f*Mathf.Sin((y+.65f)/1.38f*Mathf.PI),y+.23f,0),.045f,BGreen);Blob(b,new Vector3(x,y+.05f,.047f),new Vector3(.03f,.035f,.015f),BInk,6);}
      Blob(b,new Vector3(.24f,.24f,0),new Vector3(.14f,.32f,.13f),new Color(.70f,.78f,.30f));break;
