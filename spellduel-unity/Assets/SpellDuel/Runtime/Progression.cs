@@ -331,7 +331,7 @@ namespace SpellDuel
                     FMod("pr_holy", "聖光強化", "holy", ModField.Damage, 0.1f, 5, 5, 1, "pr_root"),
                     FPas("pr_martyr", "殉道", PassiveKind.Martyr, 1f, 1, 5, 2, "pr_holy"),
                     FPas("pr_zeal", "狂信", PassiveKind.Zeal, 0.2f, 5, 5, 3, "pr_martyr"),
-                    FPas("pr_leech", "聖血", PassiveKind.Lifesteal, 0.03f, 5, 6, 3, "pr_martyr"),
+                    FPas("pr_leech", "聖血護盾", PassiveKind.HitShield, 0.03f, 5, 6, 3, "pr_martyr"),   // 使用者要求：所有職業的技能樹都不要吸血 → 傷害的 3%／級轉護盾。id 沿用，點數保留
                     FPas("pr_quick", "快速施法", PassiveKind.QuickCd, 0.06f, 5, 6, 2, "pr_holy"),
                     // 全隊輔助：學會後再點「效果」「時間」
                     FLearn("pr_bless", "bless", 0, 5, "pr_guard"),
@@ -541,7 +541,7 @@ namespace SpellDuel
                     FLearn("iq_heaven", "heavenpunish", 5, 1, "iq_root"),
                     FMod("iq_heaven2", "天罰強化", "heavenpunish", ModField.Damage, 0.12f, 5, 5, 2, "iq_heaven"),
                     FPas("iq_zeal", "殉教之怒", PassiveKind.Zeal, 0.15f, 5, 6, 2, "iq_heaven"),
-                    FPas("iq_leech", "聖血契約", PassiveKind.Lifesteal, 0.02f, 5, 6, 3, "iq_zeal"),
+                    FMod("iq_leech", "天罰連禱", "heavenpunish", ModField.Cooldown, 0.06f, 5, 6, 3, "iq_zeal"),   // 使用者要求：取代吸血 → 天罰冷卻 −6%／級（審判者已經有「聖盾轉化」護盾）。id 沿用
                     FMod("iq_judcd", "審判連禱", "judgement", ModField.Cooldown, 0.08f, 5, 0, 3, "iq_lance2"),
                     FMod("iq_juddmg", "審判之火", "judgement", ModField.EffectDps, 1.5f, 5, 1, 3, "iq_critd"),
                     FMod("iq_juddmg2", "審判強化", "judgement", ModField.Damage, 0.12f, 5, 2, 3, "iq_crit"),
