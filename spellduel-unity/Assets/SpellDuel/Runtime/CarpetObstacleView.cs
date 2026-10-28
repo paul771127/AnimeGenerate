@@ -18,6 +18,7 @@ namespace SpellDuel
    // Station-specific construction, not a palette swap: fins, chain links, layered rock, lightning and gunports.
    v.Decorate(v.left,station);v.Decorate(v.right,station);v.Decorate(v.lintel,station);
    v.marks=new LineRenderer[12];for(int i=0;i<v.marks.Length;i++)v.marks[i]=SkyArt.Line(v.transform,"Warning "+i,2,.045f,i==11?new Color(.3f,1,.58f,.9f):new Color(1,.24f,.18f,.65f));
+   NearFade.Attach(v.gameObject);   // 使用者要求：人貼近障礙物時變半透明，免得看不到
    return v;
   }
   void Decorate(Transform span,int station)
