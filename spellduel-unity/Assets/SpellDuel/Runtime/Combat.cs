@@ -137,7 +137,7 @@ namespace SpellDuel
         public int strafeSign = 1;             // 熔岩小鬼：等別隻出手時往哪邊繞（±1）
         public bool ambusher;                  // 簡單模式：從別的方向偷襲來的那隻（同時最多一隻）
         public Battle.MarchGroup march; public Vector3 marchSpawn; public float marchHp;
-        public float outsideSince;   // 在場外待了多久（保險：太久就拉回場內，免得打不到、關卡卡住）   // 軍陣行進中（Combat.cs LayoutFormation）：照隊伍一起往前推，到定點才散開打
+        public float outsideSince, buriedAt;   // 在場外待了多久（保險：太久就拉回場內，免得打不到、關卡卡住）   // 軍陣行進中（Combat.cs LayoutFormation）：照隊伍一起往前推，到定點才散開打
         public bool hidden;                    // 食人花：埋在地下（玩家走近 1.5m 才冒出來；埋著時打不到）
         public bool miniBoss;                  // 第 3 波單獨登場的特殊敵人（有名字和血條）
         public bool treasure, treasureRunning; public float treasureLeaveAt;
@@ -1506,7 +1506,7 @@ namespace SpellDuel
                 // 食人花埋在地下：有人走近 1.5m 才冒出來（埋著時不動、打不到）
                 if (m.hidden)
                 {
-                    if (d <= ChomperTrigger + tgt.bodyRadius) { m.hidden = false; m.attackReadyAt = now + 0.25f; Emit("emerge", m.Feet, Skills.All["m_bite"].color, "食人花冒出來了！"); }
+                    if (d <= ChomperTrigger + tgt.bodyRadius || now - m.buriedAt >= ChomperAutoEmerge) { m.hidden = false; m.attackReadyAt = now + 0.25f; Emit("emerge", m.Feet, Skills.All["m_bite"].color, "食人花冒出來了！"); }
                     continue;
                 }
                 // 河豚鼓起來中：不動、不出手，時間到就爆
@@ -1670,19 +1670,24 @@ namespace SpellDuel
         }
 
         /// <summary>食人花：埋在場內離所有玩家 2.5m 以上的隨機一點（地上只有一小圈葉子）；玩家走近 1.5m 才冒出來咬</summary>
+        /// <summary>
+        /// 食人花：埋在場地中間直徑 ChomperZone 公尺內（使用者要求：等人靠近才出來的怪不要埋在邊邊，找不到、走不到）；
+        /// 玩家走近 1.5m 就冒出來；ChomperAutoEmerge 秒都沒人靠近，自己冒出來
+        /// </summary>
+        public const float ChomperZone = 3f, ChomperAutoEmerge = 15f;
         void BuryChomper(Fighter m)
         {
-            // 使用者回報「第二章一開始有敵人在場外、只看到橘色血條、沒有模型、打也沒傷害」：以前 12 次都找不到點時，
-            // 食人花就埋在出生點（場外）→ 玩家走不到 1.5m 內，永遠不冒出來、也打不到 → 關卡卡住。
-            // 現在：多試幾次、找不到就放寬和玩家的距離，最後一定埋在場內（攻擊區）
-            var at = PullInside(m.Feet, player.Feet); bool found = false;
-            for (int i = 0; i < 40 && !found; i++)
+            ArenaFrame(out var c, out _); c.y = 0f;
+            var at = c;
+            for (int i = 0; i < 20; i++)
             {
-                var q = RandomInsidePoint(player.Feet + Fighter.Flat(player.forward) * 3f);
-                float need = i < 20 ? 2.5f : i < 30 ? 1.8f : 0f;
-                bool far = true; foreach (var pl in Players()) if (pl.Alive && FlatDistance(q, pl.Feet) < need) { far = false; break; }
-                if (far && CanAttackFrom(q)) { at = q; found = true; }
+                float a = (float)rng.NextDouble() * Mathf.PI * 2f, r = Mathf.Sqrt((float)rng.NextDouble()) * ChomperZone * 0.5f;
+                var q = c + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
+                bool clear = true; foreach (var pl in Players()) if (pl.Alive && FlatDistance(q, pl.Feet) < ChomperTrigger + 0.3f) { clear = false; break; }   // 不要一埋下去就踩到
+                if (minionInside != null && !minionInside(q)) clear = false;
+                if (clear) { at = q; break; }
             }
+            m.buriedAt = now;
             m.head = new Vector3(at.x, m.head.y, at.z); m.homePos = m.Feet;
             m.hidden = true;
             Emit("leafring", m.Feet, Skills.All["m_bite"].color, null);
