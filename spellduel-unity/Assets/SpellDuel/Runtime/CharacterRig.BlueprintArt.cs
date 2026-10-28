@@ -13,7 +13,12 @@ namespace SpellDuel
    if(slot=="trinket")parent=piece.special=="bp_neonhalo"?head:spine;
    if(!blueprintMeshes.TryGetValue(piece.special,out var mesh)){mesh=MakeBlueprint(piece.special);blueprintMeshes[piece.special]=mesh;}
    var root=AnimeFace.Part(parent,"Blueprint "+piece.special,mesh,Vector3.zero,AnimeFace.Material(Color.white,4));GearPart(root);
-   if(slot=="weapon")root.transform.localRotation=Quaternion.Euler(parent.name=="Bow"?0:90,0,0);
+   if(slot=="weapon")
+   {
+    // All existing weapon joints use local Z as the long axis, including BowPoint.
+    root.transform.localRotation=parent.name=="Bow"&&piece.special=="bp_bamboo"?Quaternion.LookRotation(Vector3.left,Vector3.forward):Quaternion.Euler(90,0,0);
+    if(piece.special=="bp_bamboo")root.transform.localPosition=-(root.transform.localRotation*new Vector3(.22f,.25f,0));
+   }
    var motion=root.AddComponent<BlueprintGearMotion>();motion.id=piece.special;motion.rig=this;
    if(piece.rarity==5)
    {
