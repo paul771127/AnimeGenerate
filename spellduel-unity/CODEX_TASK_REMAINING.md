@@ -1,24 +1,10 @@
-# Codex 任務：還沒做完的項目（合併單）
+# Codex 任務：第二輪合併單（還沒做的全部在這裡）
 
-使用者要求：「沒做的一起開單請 Codex」。這份把目前所有還沒交的 Codex 工作放在一起，讀這一份就夠了；細節在各自的任務單。
+上一份合併單的第 1 項（空賊船長立繪）、第 2 項（16 職業動作）、第 4 項（新精魄圖示）都已交付並驗證，謝謝。這份只列**現在還要做的**；讀這一份就夠了，細節在各自的任務單。
 
-**分工照舊**：Codex 做模型、動畫、特效、2D 圖、設計提案；不要改戰鬥邏輯（`Combat*.cs`）、網路、存檔。每做完一項就先推到 `claude/mobile-camera-mic-battle-game-v5nhfr`，在 `CODEX_PENDING_BRIEF.md` 最後的「Codex 實作紀錄」寫下做了什麼。Android、iOS 都要編譯通過。
+**分工照舊**：Codex 做模型、動畫、特效、2D 圖；不要改戰鬥邏輯（`Combat*.cs`）、網路、存檔、`Blueprints.cs`、`Crafting.cs`。需要新介面就加在美術檔，寫在 `CODEX_PENDING_BRIEF.md` 最後的「Codex 實作紀錄」，Claude 再接線。每做完一項先推到 `claude/mobile-camera-mic-battle-game-v5nhfr`；Android、iOS 都要編譯通過。
 
-## 1. 「空賊船長」的劇情立繪（修好全站 Snapshot 檢查）—— 最優先
-
-- 現況：天穹飛毯副本（`Resources/dungeons.txt` 的 `sky_carpet`）首領房的台詞說話人是「空賊船長（boss）」，但 `Story2D.IdOf` 沒有這個人，`PendingArtAudit` 報「speaker has no portrait id: 空賊船長」，整個共用 Snapshot 失敗。
-- 要做：
-  - 新角色立繪：空賊飛艇「逐風號」的船長。造型配合飛艇（紅白氣囊、黃銅、葡萄紫＋黃銅的空賊配色），敵方、豪邁、狡猾。
-  - 照現有立繪規格（`Resources/Story2D/chars/<id>_<表情>`，768×1152），至少 normal、angry、smile、serious 四種表情。
-  - 在 `Story2D.cs` 的對照表加上「空賊船長」→ 新 id；3D 對話頭像（`Portraits.cs`）如果需要也補上。
-  - 修好後全站 Snapshot 要能通過，不要刪掉或跳過原本的檢查。
-- 順便檢查：`dungeons.txt`、`story.txt` 裡所有說話人都有立繪（同一個檢查會列出）。
-
-## 2. 我方 3D 角色的動作 —— 詳見 `CODEX_TASK_PLAYER_POSES.md`
-
-6 個基本職業＋10 個進階職業，每一種的站姿、戰鬥架勢、蹲、跳、蓄力、施放技能、防禦。介面、規則、預覽要求都在那份任務單。
-
-## 3. 一般小怪、特殊敵人、菁英的第二招：特效（提案已確認、邏輯已做好）
+## 1. 一般小怪、特殊敵人、菁英的第二招：特效（提案已確認、邏輯已做好）
 
 - 你交的 `Docs/ENEMY_MOVES_PROPOSAL.md` 已由使用者確認（開頭「使用者定案」：菁英是**另外加的第三招**；裂岩甲蜥雙環改隔 2 秒）。
 - Claude 已實作 48 招，表在 `Combat.EnemySkills.cs` 的 `EnemySkills.ByKind`，技能 id 是 `ek_<kind>_<名稱>`（例如 `ek_0_emberclaw`、`ek_22_platevolley`、`ek_26_kilnmend`）。
@@ -30,14 +16,31 @@
   4. 小怪本身的預備動作：目前用 `MinionRig.Windup(秒數)`（原本那一招的預備）；如果要每招不同的姿勢，請在 `MinionRig`／菁英的模型加 `Windup(string move, float seconds)`，寫在實作紀錄，Claude 再接。
 - 規則同前：不改 `Combat*.cs`；Android、iOS 都要編譯通過；預覽放 `Docs/pending_preview/enemy_moves/`。
 
-## 4. 新精魄的圖示（選做）
+## 2. 特殊裝備（配方製作）的外型與圖示 —— 詳見 `CODEX_TASK_BLUEPRINT_GEAR.md`
 
-- 天穹飛毯的 6 顆精魄已經有圖示（`soul_sky_*`）。還沒有圖示的新精魄：輔助型 141～144、人形敵人 151～165（`Souls.cs` 的 `soul_m141`… `soul_m165`）。
-- 照現有精魄圖示的畫風，用 `SkillIcons.Get` 能取到的 id（例如 `soul_m141`）。目前精魄介面只有文字；圖示畫好後，Claude 會把精魄圖鑑、鑲嵌介面改成顯示圖示。
+- 15 件人形敵人配方做出來的裝備（燒肉串串大劍、咕咕警報頭盔、行動暖爐鎧、香菇大頭帽、竹筍風笛弓、會走路的盆栽靴、蘭姆酒桶鎧、水母果凍法杖、鯊魚咬咬鞋、冠軍獎盃頭盔、巨型烤玉米標槍、霓虹天使光環、招財沙漠貓護符、倒轉沙漏護符、駱駝雙峰重甲）。
+- 使用者要求：**外型要夠搶眼或 kuso**。`GearLook.Piece.special` 是配方 id，在 `CharacterRig.GearArt.cs` 依它換專屬造型（可以有小動畫）；神話級加常駐光效。
+- 圖示：配方卷軸 `rcp_bp_xxx`、裝備 `bp_xxx`、新材料 `mat_band_crest`、`mat_storm_gem`、`mat_night_edge`、`mat_aid_sigil`。
 
-## 5. 特殊裝備（配方製作）的外型與圖示 —— 詳見 `CODEX_TASK_BLUEPRINT_GEAR.md`
+## 3. 牧師「審判」、審判者「天罰」：改成以自己為中心後的特效
 
-15 件人形敵人配方做出來的裝備：要搶眼或 kuso 的 3D 外型、配方卷軸與裝備圖示、4 種新材料圖示。
+- 使用者回報「審判放了看不到東西」。原因是邏輯 bug（已修）；同時使用者要求兩招都**改成以自己為中心**：光柱落在施法者自己腳下，周圍（審判 1.5m、天罰 3m）的敵人立刻受傷，腳下留下審判之地／天罰之地（5／6 秒）。
+- 現在用的是原本的 `SpellFx.HolyLanding(at, heaven)`（`at`＝自己腳下）和 `SpellFx.HolyGround(radius, heaven)`。問題：AR 裡鏡頭就是玩家的眼睛，光柱從頭頂正上方落下會**擋住整個畫面**或根本看不到。
+- 要做：重新設計成以自己為中心、第一人稱看得清楚的樣子，例如：
+  - 從腳下往外擴散的金色光環＋地面聖紋（審判 1.5m、天罰 3m，範圍要一眼看得出來）；
+  - 光柱改成在範圍邊緣一圈落下的多道細光，或從地面往上噴的光，不要正對鏡頭；
+  - 畫面邊緣短暫的金色光暈，讓玩家知道放出去了；天罰更大、更震撼（現在有輕微震動）。
+  - 被打中的敵人身上有聖光命中效果。
+- 介面不變（`HolyLanding`、`HolyGround` 參數一樣），隊友看到的位置是施法者腳下。預覽放 `Docs/pending_preview/holy_self/`（第一人稱視角＋旁觀視角）。
+
+## 4. 劍士系列的新被動：傷害轉護盾的特效
+
+- 使用者要求：劍士系列移除吸血，改成護盾。劍士「劍氣護體」（普攻傷害轉護盾）、劍仙「劍氣凝盾」（所有傷害轉護盾）。護盾 6 秒、最多最大 HP 的 40%，一直打就一直續。
+- 要做（新介面，Claude 接線）：
+  - `SpellFx.SwordShieldGain(Transform owner, float fill)`：護盾增加的瞬間，劍氣碎片往身上聚攏成一層淡藍劍氣（fill＝目前護盾／最大 HP×0.4，0～1；越滿越亮）。打得很快時會一直呼叫，請自己節流（例如 0.3 秒內只播一次）。
+  - `SpellFx.SwordShieldAura(Transform owner, float fill)`：護盾存在時的常駐外觀（淡淡的劍氣環繞），fill＝0 時消失；Claude 每幀更新。
+  - 第一人稱：畫面邊緣淡藍劍氣框，跟 fill 一起變化，不要擋住中間。
+- 和審判者的「傷害轉護盾」、一般護盾的外觀要分得出來（劍氣感、藍白色）。
 
 ## 交付順序
-1 → 2 → 3（特效）→ 5 → 4。
+3 → 4 → 1 → 2（審判看不到是使用者實際遇到的問題，最優先）。
