@@ -575,3 +575,7 @@ VariantRig.cs提供任務單全部入口：Create／MoveSpeed／Windup／Strike�
 ### 第 11、15、16 項 A：EnemySupportFx（2026-10-28）
 
 EnemySupportFx.cs完成Heal綠色拋物線光絲、Shield泡泡與ShieldBreak碎片、Haste紅色鼓點風紋、Rally插旗脈衝、RallyAura金色向上紋、Summon雙層砂印；全部以SpellFx程序線材質和快取程序網格生成。入口原名／參數不變，座標為場景座標。Shield／Haste／RallyAura同目標重施只刷新、不疊加；秒數到期、目標停用或銷毀都清除，破盾會移除追蹤表。新增EnemySupportView.Tick供預覽測試，遊戲自動Update。Snapshot測重施數量、破盾與停用後清理並出圖。沒有讀取HP、盾量、速度數值或網路訊息，仍由Claude呼叫接線；原生與雙平台結果待最後CI彙整。
+
+### 第 11、15、16 項 B：已確認技能的預警／出手／投射物（2026-10-28）
+
+依最新第二輪第4項新增EnemySkillFx.cs／EnemyShotView.cs。Telegraph(skillId,at,dir,seconds,size)回傳獨立handle；Cancel(handle)只取消指定一次讀條，正常到期與銷毀會除名。鎖線／扇形／地圈依EnemySkills唯讀資料的shape、angle、width畫，不追蹤玩家重瞄；跳為橘地環＋上箭、蹲為藍胸口弧＋下箭，保留真實地板。Cast有原三參數入口，另加四參數size覆載供實際cue半徑不同時使用，避免特效與判定尺寸不同。七種投射物皆+Z前進且不自行移動或判定；回收由Claude控制。Snapshot逐一測45id、同技不同handle取消隔離、到期清理、代表預警與七種投射物出圖。不改Combat／網路，HUD後方楔標仍由Claude處理；接線時讀條取消必須傳回同一handle。

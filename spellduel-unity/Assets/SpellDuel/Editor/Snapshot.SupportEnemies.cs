@@ -11,6 +11,29 @@ namespace SpellDuel.EditorTools
   static readonly int[] SupportIds={121,122,123,124,141,142,143,144,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165};
   [Serializable] class EnemyAuditEntry{public int id,triangles,renderers;}
   [Serializable] class EnemyAuditReport{public List<EnemyAuditEntry> entries=new List<EnemyAuditEntry>();public string checks="23 distinct rigs, finite geometry, <=6000 triangles, front/side/channel renders";}
+  static void SkillEffectAudit(Camera cam)
+  {
+   string[] ids={"eh_121_sunmend","eh_121_sunward","eh_122_herbmend","eh_122_dustmantle","eh_123_twinseals","eh_123_sandseal","eh_124_sandlunge","eh_141_rainchorus","eh_141_rootlash","eh_142_pearlguard","eh_142_burstbubble","eh_143_marchdrum","eh_143_groundbeat","eh_144_royalstandard","eh_144_polecleave","eh_151_swordcut","eh_151_flankrush","eh_152_bolt","eh_152_triplebolt","eh_153_emberorb","eh_153_kilncircle","eh_154_dagger","eh_154_mistbackstab","eh_155_arrow","eh_155_retreatshot","eh_156_thornstaff","eh_156_seedmend","eh_157_sabercut","eh_157_decksweep","eh_158_waterlance","eh_158_tidalring","eh_159_dagger","eh_159_smokepierce","eh_160_swordthrust","eh_160_guardcounter","eh_161_javelin","eh_161_highcast","eh_162_staffjab","eh_162_sanctuarymend","eh_163_dagger","eh_163_sandtrailstrike","eh_164_sandbolt","eh_164_hourglass","eh_165_shortbow","eh_165_crossstep"};
+   var known=new HashSet<string>(ids);foreach(var pair in EnemySkills.ByVariant)foreach(var def in pair.Value)if(!known.Contains(def.id))throw new Exception("Missing approved skill visual: "+def.id);
+   foreach(var id in ids)
+   {
+    var def=EnemySkills.Find(id);float size=def!=null?def.size:.5f;
+    int a=EnemySkillFx.Telegraph(id,new Vector3(.1f,0,0),Vector3.forward,1.5f,size);
+    int b=EnemySkillFx.Telegraph(id,Vector3.left,Vector3.forward,1.5f,size);
+    if(a==0||a==b)throw new Exception("Nonunique telegraph handle");EnemySkillFx.Cancel(a);EnemySkillFx.Cancel(a);
+    if(UnityEngine.Object.FindObjectsOfType<EnemySkillView>().Length!=1)throw new Exception("Cancel affected another caster");
+    foreach(var v in UnityEngine.Object.FindObjectsOfType<EnemySkillView>())v.Tick(.9f);
+    if(id.EndsWith("groundbeat")||id.EndsWith("decksweep")||id.EndsWith("kilncircle")||id.EndsWith("mistbackstab"))
+    {var subject=UnityEngine.Object.FindObjectOfType<EnemySkillView>();CarpetFit(cam,subject.gameObject,"enemy_cue_"+id,new Vector3(.3f,.9f,1),720,640);}
+    EnemySkillFx.Cancel(b);EnemySkillFx.Cast(id,Vector3.zero,Vector3.forward*.5f,size);
+    foreach(var v in UnityEngine.Object.FindObjectsOfType<EnemySkillView>())v.Tick(.15f);
+    foreach(var v in UnityEngine.Object.FindObjectsOfType<EnemySkillView>())v.Tick(2);
+    foreach(var v in UnityEngine.Object.FindObjectsOfType<EnemySupportView>())v.Tick(2);
+    if(UnityEngine.Object.FindObjectsOfType<EnemySkillView>().Length!=0)throw new Exception("Skill effect lifetime leak");
+   }
+   foreach(var id in new[]{"eh_152_bolt","eh_155_arrow","eh_161_javelin","eh_153_emberorb","eh_158_waterlance","eh_142_burstbubble","eh_164_sandbolt"})
+   {var shot=EnemyShotView.Create(id);FiniteBudget(shot.gameObject,1000);CarpetFit(cam,shot.gameObject,"enemy_shot_"+id,new Vector3(1,.4f,.4f),480,480);UnityEngine.Object.DestroyImmediate(shot.gameObject);}
+  }
   static void SupportEffectAudit(Camera cam)
   {
    var target=VariantRig.Create(151);EnemySupportFx.Shield(target.transform,2);EnemySupportFx.Shield(target.transform,3);
@@ -53,6 +76,7 @@ namespace SpellDuel.EditorTools
    }
    ContactSheet(fronts,"support_enemies_all",6);
    SupportEffectAudit(cam);
+   SkillEffectAudit(cam);
    File.WriteAllText("snapshots/support_enemies_audit.json",JsonUtility.ToJson(report,true));
    Debug.Log("[SpellDuel] Support enemy model audit passed");
   }
