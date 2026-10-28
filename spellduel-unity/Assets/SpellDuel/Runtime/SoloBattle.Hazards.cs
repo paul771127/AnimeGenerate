@@ -70,6 +70,8 @@ namespace SpellDuel
                 {
                     v.go = HazardArt.Axe(Battle.AxePivotH, Battle.AxeLength, out var swing);
                     v.part = swing;
+                    // 使用者要求：第四章的柱子（斧頭龍門架）貼近時變半透明，免得擋住視線；擺動的斧刃不變淡（要看得到才躲得開）
+                    var gantry = v.go.transform.Find("Gantry"); NearFade.Attach(gantry ? gantry.gameObject : v.go);
                     // 地上的危險帶：斧刃會掃過的那條線
                     v.warn = Prim(PrimitiveType.Cube, new Color(1f, 0.15f, 0.1f, 0.18f), true);
                     var mid = h.a; mid.y = 0.015f;
