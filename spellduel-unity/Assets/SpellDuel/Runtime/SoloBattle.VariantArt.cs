@@ -94,7 +94,16 @@ namespace SpellDuel
             Vector3 P(Fighter f) => f != null ? WorldFrame.FromWorld(f.Chest) : Vector3.zero;
             switch (a[0])
             {
-                case "heal": if (caster != null && target != null) EnemySupportFx.Heal(P(caster), P(target)); break;
+                case "heal":
+                    if (caster != null && target != null) EnemySupportFx.Heal(P(caster), P(target));
+                    // 使用者回報「看不出敵方補師有幫敵人補血」：補到的那一下（第 5 段＝補了多少）在被補的敵人身上爆一圈綠光；隊友端也跳大字
+                    if (a.Length >= 5 && target != null && float.TryParse(a[4], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var amt) && amt > 0f)
+                    {
+                        SpellFx.Impact("priest", new Color(0.35f, 1f, 0.45f), P(target), 1.6f);
+                        if (caster != null) SpellFx.Impact("priest", new Color(0.35f, 1f, 0.45f), P(caster), 0.8f);
+                        if (!relay) floaters.Add(new Floater { posMap = target.Chest + Vector3.up * 0.4f, text = $"💚 補血 +{amt:0}", color = new Color(0.4f, 1f, 0.5f), born = Time.time });
+                    }
+                    break;
                 case "shield": { var t = T(target); if (t) EnemySupportFx.Shield(t, secs); break; }
                 case "haste": { var t = T(target); if (t) EnemySupportFx.Haste(t, secs); break; }
                 case "aura": { var t = T(target); if (t) EnemySupportFx.RallyAura(t, secs); break; }

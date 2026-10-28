@@ -44,14 +44,14 @@ namespace SpellDuel
         static EnemySkillDef S(string id, string name, EsShape shape, float minD, float maxD, float cd, float warn, float size, float mul, bool breakable = false, bool basic = false, float angle = 90f, float hpBelow = 1.01f)
             => new EnemySkillDef { id = id, name = name, shape = shape, minD = minD, maxD = maxD, cd = cd, warn = warn, size = size, mul = mul, breakable = breakable, basic = basic, angle = angle, hpBelow = hpBelow };
 
-        /// <summary>每一種敵人的招式（不含治療、護盾、加速、戰旗、召喚這些原本就有的讀條）</summary>
+        /// <summary>每一種敵人的招式（不含治療、護盾、加速、戰旗、召喚這些原本就有的讀條）。補師類（121、122、141、156、162）另有遠距光彈（使用者要求：補師也要能遠距攻擊）</summary>
         public static readonly Dictionary<int, EnemySkillDef[]> ByVariant = new Dictionary<int, EnemySkillDef[]>
         {
-            [121] = new[] { S("eh_121_sunward", "折光護身", EsShape.SelfShield, 0f, 2f, 12f, 1.4f, 0.15f, 0f, breakable: true) },
-            [122] = new[] { S("eh_122_dustmantle", "藥霧披身", EsShape.SelfGuard, 0f, 2f, 12f, 1.4f, 0.25f, 0f, breakable: true, hpBelow: 0.5f) },
+            [121] = new[] { S("eh_121_sunward", "折光護身", EsShape.SelfShield, 0f, 2f, 12f, 1.4f, 0.15f, 0f, breakable: true), S("eh_121_sunbolt", "日輪光彈", EsShape.Shot, 2f, 6.5f, 4f, 1.2f, 6.5f, 0.7f, basic: true) },
+            [122] = new[] { S("eh_122_dustmantle", "藥霧披身", EsShape.SelfGuard, 0f, 2f, 12f, 1.4f, 0.25f, 0f, breakable: true, hpBelow: 0.5f), S("eh_122_vialtoss", "藥瓶擲擊", EsShape.Shot, 2f, 6.5f, 4f, 1.2f, 6.5f, 0.7f, basic: true) },
             [123] = new[] { S("eh_123_sandseal", "落砂封印", EsShape.Circle, 1f, 4f, 10f, 1.6f, 0.35f, 0.6f, breakable: true) },
             [124] = new[] { S("eh_124_sandlunge", "砂爪撲咬", EsShape.Line, 0f, 1.4f, 3f, 1.2f, 1.4f, 1f, basic: true) },
-            [141] = new[] { S("eh_141_rootlash", "垂枝掃線", EsShape.Line, 0f, 2f, 10f, 1.4f, 1.8f, 0.5f, breakable: true) },
+            [141] = new[] { S("eh_141_rootlash", "垂枝掃線", EsShape.Line, 0f, 2f, 10f, 1.4f, 1.8f, 0.5f, breakable: true), S("eh_141_raindrop", "雨珠彈", EsShape.Shot, 2f, 6.5f, 4f, 1.2f, 6.5f, 0.6f, basic: true) },
             [142] = new[] { S("eh_142_burstbubble", "逆潮泡彈", EsShape.Shot, 2f, 5f, 8f, 1.4f, 5.5f, 0.6f, breakable: true) },
             [143] = new[] { S("eh_143_groundbeat", "震地重拍", EsShape.JumpRing, 0f, 2f, 11f, 1.8f, 2f, 0.8f, breakable: true) },
             [144] = new[] { S("eh_144_polecleave", "旗桿橫拒", EsShape.DuckArc, 0f, 1.6f, 11f, 1.6f, 1.6f, 0.8f, breakable: true, angle: 90f) },
@@ -60,13 +60,13 @@ namespace SpellDuel
             [153] = new[] { S("eh_153_emberorb", "爐芯火珠", EsShape.Shot, 2f, 6f, 3f, 1.3f, 6.5f, 0.85f, basic: true), S("eh_153_kilncircle", "灰燼爐印", EsShape.Circle, 1f, 4f, 10f, 1.8f, 0.4f, 1.4f, breakable: true) },
             [154] = new[] { S("eh_154_dagger", "斥候試刃", EsShape.Fan, 0f, 1f, 2.7f, 1.2f, 1f, 0.9f, basic: true), S("eh_154_mistbackstab", "霧葉背襲", EsShape.Back, 0f, 2f, 11f, 1.8f, 1.4f, 1.4f, breakable: true) },
             [155] = new[] { S("eh_155_arrow", "林間直矢", EsShape.Shot, 2f, 6f, 3f, 1.2f, 6.5f, 1f, basic: true), S("eh_155_retreatshot", "退葉返射", EsShape.Retreat, 0f, 2.5f, 9f, 1.6f, 6.5f, 1.1f) },
-            [156] = new[] { S("eh_156_thornstaff", "藤杖輕拒", EsShape.Fan, 0f, 1.1f, 3f, 1.2f, 1.1f, 0.6f, basic: true) },
+            [156] = new[] { S("eh_156_thornstaff", "藤杖輕拒", EsShape.Fan, 0f, 1.1f, 3f, 1.2f, 1.1f, 0.6f, basic: true), S("eh_156_seedshot", "荊種彈", EsShape.Shot, 2f, 6.5f, 4f, 1.2f, 6.5f, 0.7f, basic: true) },
             [157] = new[] { S("eh_157_sabercut", "浪口單斬", EsShape.Fan, 0f, 1.1f, 2.6f, 1.2f, 1.1f, 1f, basic: true), S("eh_157_decksweep", "甲板平掃", EsShape.DuckArc, 0f, 1.5f, 10f, 1.6f, 1.5f, 1.25f, breakable: true, angle: 180f) },
             [158] = new[] { S("eh_158_waterlance", "貝音水槍", EsShape.Shot, 2f, 6f, 3f, 1.3f, 6.5f, 0.9f, basic: true), S("eh_158_tidalring", "退潮地輪", EsShape.JumpRing, 0f, 2f, 11f, 1.8f, 2f, 1.2f, breakable: true) },
             [159] = new[] { S("eh_159_dagger", "索鉤試刺", EsShape.Line, 0f, 1f, 2.7f, 1.2f, 1.1f, 0.9f, basic: true), S("eh_159_smokepierce", "雨幕穿刺", EsShape.Back, 0f, 2f, 11f, 1.8f, 1.4f, 1.3f, breakable: true) },
             [160] = new[] { S("eh_160_swordthrust", "冠軍直劍", EsShape.Line, 0f, 1.2f, 2.8f, 1.2f, 1.3f, 1f, basic: true), S("eh_160_guardcounter", "桂冠應戰", EsShape.Counter, 0f, 1.8f, 11f, 1.4f, 1.8f, 1.4f) },
             [161] = new[] { S("eh_161_javelin", "順風標槍", EsShape.Shot, 2f, 6f, 3.2f, 1.3f, 6.5f, 1f, basic: true), S("eh_161_highcast", "越盾高投", EsShape.Circle, 2f, 4f, 10f, 1.8f, 0.35f, 1.3f, breakable: true) },
-            [162] = new[] { S("eh_162_staffjab", "聖徽杖擊", EsShape.Fan, 0f, 1.1f, 3f, 1.2f, 1.1f, 0.6f, basic: true) },
+            [162] = new[] { S("eh_162_staffjab", "聖徽杖擊", EsShape.Fan, 0f, 1.1f, 3f, 1.2f, 1.1f, 0.6f, basic: true), S("eh_162_holyshot", "聖徽光彈", EsShape.Shot, 2f, 6.5f, 4f, 1.2f, 6.5f, 0.7f, basic: true) },
             [163] = new[] { S("eh_163_dagger", "沙匪短刃", EsShape.Line, 0f, 1f, 2.7f, 1.2f, 1.1f, 0.9f, basic: true), S("eh_163_sandtrailstrike", "沙痕越襲", EsShape.Back, 0f, 2f, 11f, 1.8f, 1.4f, 1.3f, breakable: true) },
             [164] = new[] { S("eh_164_sandbolt", "漏砂咒矢", EsShape.Shot, 2f, 6f, 3f, 1.3f, 6.5f, 0.9f, basic: true), S("eh_164_hourglass", "倒砂刻印", EsShape.Circle, 1f, 4f, 10f, 1.8f, 0.4f, 1.25f, breakable: true) },
             [165] = new[] { S("eh_165_shortbow", "砂原平射", EsShape.Shot, 2f, 6f, 3f, 1.2f, 6.5f, 1f, basic: true), S("eh_165_crossstep", "換位雙矢", EsShape.Cross, 2f, 5f, 10f, 1.6f, 6.5f, 0.5f) },
@@ -227,6 +227,14 @@ namespace SpellDuel
 
         int EsDamage(Fighter m, EnemySkillDef s) => Mathf.Max(1, Mathf.RoundToInt((s.aKind >= 0 ? EnemySkills.KindBaseDamage(s.aKind) : Skills.All["m_claw"].damage) * m.dmgMul * s.mul));
 
+        /// <summary>補師類（補師、薩滿、德魯伊、神官）：治療快好了（1.5 秒內）而且附近有受傷的同伴</summary>
+        bool HealSoon(Fighter m)
+        {
+            if (!(m.healer || m.support == 1 || m.human == 5) || now < m.attackReadyAt - 1.5f) return false;
+            foreach (var o in minions) if (o != m && o.Alive && !o.treasure && o.hp < o.maxHp * 0.95f && FlatDistance(o.Feet, m.Feet) <= 6f) return true;
+            return false;
+        }
+
         /// <summary>HealAlly：範圍內 HP 低於門檻的同伴（不含自己），最傷的排前面</summary>
         List<Fighter> HealTargets(Fighter m, EnemySkillDef s)
         {
@@ -263,6 +271,7 @@ namespace SpellDuel
                     if (!m.esCd.TryGetValue(s.id, out var ready)) { if (s.aKind >= 0) { m.esCd[s.id] = now + 2f + (float)rng.NextDouble() * s.cd * 0.5f; continue; } }   // 第二招：剛看到時先等一下（不會一進場就放）
                     else if (now < ready) continue;
                     if (s.hpAbove > 0f && m.hp < m.maxHp * s.hpAbove) continue;
+                    if (s.basic && s.shape == EsShape.Shot && HealSoon(m)) continue;   // 補師：快要補血、又有同伴受傷 → 先補，不放光彈
                     if (s.shape == EsShape.HealAlly) { if (HealTargets(m, s).Count < s.healMin) continue; pick = s; break; }
                     if (dist < s.minD || dist > s.maxD) continue;
                     if (m.hp > m.maxHp * s.hpBelow) continue;
@@ -386,7 +395,7 @@ namespace SpellDuel
                         if (healed >= s.healN) break;
                         float amt = Mathf.Min(o.maxHp - o.hp, o.maxHp * s.healPct); o.hp += amt; healed++;
                         Emit("enemyheal", o.Chest, new Color(0.45f, 1f, 0.55f), $"+{amt:0}");
-                        Emit("esfx", o.Chest, new Color(0.55f, 1f, 0.5f), $"heal|{m.minionId}|{o.minionId}|0");
+                        Emit("esfx", o.Chest, new Color(0.55f, 1f, 0.5f), $"heal|{m.minionId}|{o.minionId}|0|{amt:0}");
                     }
                     break;
                 }

@@ -3212,7 +3212,7 @@ namespace SpellDuel
                     Sfx.Play("charged", 0.4f, 1.4f);
                     break;
                 case "enemyheal":
-                    floaters.Add(new Floater { posMap = at + Vector3.up * 0.4f, text = text, color = c, born = Time.time });
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 0.4f, text = text != null && text.StartsWith("+") ? "💚 補血 " + text : text, color = c, born = Time.time });   // 敵方補血：寫清楚是補血
                     MinionRig.SpawnFx(WorldFrame.FromWorld(at)); Sfx.Play("heal", 0.45f, 0.9f);
                     break;
                 case "healbreak":

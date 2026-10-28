@@ -747,10 +747,17 @@ namespace SpellDuel
                 {
                     // 一劍開天：橫放的巨大劍氣（比萬劍歸宗大一倍，拖一條寬寬的光痕）
                     var sword=CreateSwordSageBlade();sword.transform.SetParent(body,false);
-                    sword.transform.localScale=Vector3.one*(id=="yijian"?.8f:id=="wanjian"?.62f:1f);
-                    if(id=="yijian")sword.transform.localRotation=Quaternion.Euler(0,0,90);
+                    // 使用者要求：一劍開天的劍要更大把、有氣勢（原本 0.8 倍，比飛劍還小）→ 3.2 倍＋劍身光暈、劍尖星芒、更寬更長的光痕
+                    sword.transform.localScale=Vector3.one*(id=="yijian"?3.2f:id=="wanjian"?.62f:1f);
+                    if(id=="yijian")
+                    {
+                        sword.transform.localRotation=Quaternion.Euler(0,0,90);
+                        CoreGlow(root.transform,new Color(.55f,.9f,1f,.85f),2.2f,Vector3.zero);
+                        CoreGlow(root.transform,new Color(1f,1f,1f,.6f),1.1f,Vector3.zero);
+                        StarGlint(root.transform,Color.white,1.6f,new Vector3(0f,0f,1.2f));
+                    }
                     var trail=root.AddComponent<TrailRenderer>();trail.sharedMaterial=BlendMat(TexSoft);
-                    trail.time=id=="yijian"?.35f:id=="wanjian"?.20f:.16f;trail.widthMultiplier=id=="yijian"?1.2f:id=="wanjian"?.08f:.025f;
+                    trail.time=id=="yijian"?.6f:id=="wanjian"?.20f:.16f;trail.widthMultiplier=id=="yijian"?3.2f:id=="wanjian"?.08f:.025f;
                     trail.startColor=new Color(.50f,.87f,1f,.55f);trail.endColor=new Color(.50f,.87f,1f,0);
                     break;
                 }

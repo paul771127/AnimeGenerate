@@ -136,6 +136,7 @@ namespace SpellDuel
         public float fuseAt;                   // 自爆小鬼：引信到時就爆（不管離玩家多遠）
         public int strafeSign = 1;             // 熔岩小鬼：等別隻出手時往哪邊繞（±1）
         public bool ambusher;                  // 簡單模式：從別的方向偷襲來的那隻（同時最多一隻）
+        public Battle.MarchGroup march; public Vector3 marchSpawn; public float marchHp;   // 軍陣行進中（Combat.cs LayoutFormation）：照隊伍一起往前推，到定點才散開打
         public bool hidden;                    // 食人花：埋在地下（玩家走近 1.5m 才冒出來；埋著時打不到）
         public bool miniBoss;                  // 第 3 波單獨登場的特殊敵人（有名字和血條）
         public bool treasure, treasureRunning; public float treasureLeaveAt;
@@ -1041,7 +1042,7 @@ namespace SpellDuel
         public bool GroupMode => RhythmSpawns && groupSize > 0 && !MiniBossWave;
         public const float RoundGap = 3f, RoundStagger = 0.3f;
         int roundsInWave, roundNo, lastFormation = -1; bool roundWaiting; float nextRoundAt;
-        readonly List<(float at, MinionRole role, float ang, bool ambush, bool healer, Vector3 pos)> groupQueue = new List<(float, MinionRole, float, bool, bool, Vector3)>();
+        readonly List<(float at, MinionRole role, float ang, bool ambush, bool healer, Vector3 pos, MarchGroup march)> groupQueue = new List<(float, MinionRole, float, bool, bool, Vector3, MarchGroup)>();
         /// <summary>陣形排好的出生點（pos.x 是 NaN＝沒有，照方位找場邊）</summary>
         static readonly Vector3 NoPos = new Vector3(float.NaN, 0f, 0f);
         Vector3 formationPos = NoPos;
@@ -1052,16 +1053,41 @@ namespace SpellDuel
             return edgePointAt != null ? edgePointAt(ang) : edgePoint();
         }
         /// <summary>陣形的間距：同一排左右隔 FormationGap 公尺；後排比前排再往外 FormationDepth、特殊怪 FormationDepth×0.5</summary>
-        public const float FormationGap = 0.9f, FormationDepth = 1.1f;
+        public const float FormationGap = 1.2f, FormationDepth = 1.4f;
+        /// <summary>軍陣：一面的一隊。整隊等全部出齊才一起往玩家推進（同一速度，隊形不變），前排推到離玩家 MarchStop 公尺停住、再散開開打</summary>
+        public sealed class MarchGroup { public Vector3 inward; public float startAt = float.MaxValue, maxAdvance, released, createdAt; public int members, spawned; public bool broken; }
+        public const float MarchSpeed = 0.8f, MarchStop = 2.6f, MarchHold = 0.6f, MarchMaxTime = 14f;
+        readonly List<MarchGroup> marchGroups = new List<MarchGroup>();
+        MarchGroup pendingMarch;
+
+        /// <summary>軍陣行進：回傳 true＝這一幀由行進處理（不出手）</summary>
+        bool UpdateMarch(Fighter m, float dt)
+        {
+            var g = m.march;
+            if (g == null) return false;
+            if (m.hp < m.marchHp - 0.01f) g.broken = true;   // 隊伍裡有人被打 → 整隊散開迎戰
+            float adv = now < g.startAt ? 0f : Mathf.Min(g.maxAdvance, (now - g.startAt) * MarchSpeed);
+            bool arrived = now >= g.startAt && adv >= g.maxAdvance;
+            if (arrived && g.released <= 0f) g.released = now + MarchHold;
+            if (g.broken || (g.released > 0f && now >= g.released) || now - g.createdAt > MarchMaxTime + 4f) { m.march = null; m.attackReadyAt = Mathf.Max(m.attackReadyAt, now + 0.3f); return false; }
+            var want = m.marchSpawn + g.inward * adv;
+            var to = want - m.Feet; to.y = 0f;
+            float step = Mathf.Min(to.magnitude, (MarchSpeed * 1.6f) * dt);
+            if (to.sqrMagnitude > 1e-6f) m.head += to.normalized * step;
+            var face = Fighter.Flat(player.Feet - m.Feet); if (face != Vector3.zero) m.forward = face;
+            m.windupUntil = 0f;
+            return true;
+        }
 
         /// <summary>
         /// 把這一輪排成真的陣形（使用者回報「敵方陣形看起來很差」：以前每一隻各自在場邊隨機找點，又被壓到同一面，看起來像一團）：
         ///   依方位分成幾隊（正面、左、右、背後；簡單難度全部在同一面），每隊在場邊找一個中心點，
         ///   前排一字排開、後排在前排後面錯開半格、特殊怪在中間偏後；出場順序也是前排先、後排再、特殊怪最後。
         /// </summary>
-        void LayoutFormation(List<(MinionRole role, float ang, bool amb)> slots, out List<Vector3> pos, out List<int> order)
+        void LayoutFormation(List<(MinionRole role, float ang, bool amb)> slots, out List<Vector3> pos, out List<int> order, out List<MarchGroup> grp)
         {
-            pos = new List<Vector3>(); order = new List<int>();
+            pos = new List<Vector3>(); order = new List<int>(); grp = new List<MarchGroup>();
+            for (int i = 0; i < slots.Count; i++) grp.Add(null);
             for (int i = 0; i < slots.Count; i++) pos.Add(NoPos);
             var groups = new Dictionary<int, List<int>>();
             for (int i = 0; i < slots.Count; i++)
@@ -1079,6 +1105,9 @@ namespace SpellDuel
                 var anchor = edgePointAt != null ? edgePointAt(center) : edgePoint(); anchor.y = 0f;
                 var outward = anchor - origin; outward.y = 0f; if (outward.sqrMagnitude < 1e-4f) outward = Vector3.forward; outward.Normalize();
                 var right = new Vector3(outward.z, 0f, -outward.x);
+                var mg = new MarchGroup { inward = -outward, members = kv.Value.Count, createdAt = now };
+                mg.maxAdvance = Mathf.Max(0f, FlatDistance(anchor, origin) - MarchStop);
+                marchGroups.Add(mg);
                 int[] rowN = new int[3];
                 foreach (var i in kv.Value)
                 {
@@ -1087,6 +1116,7 @@ namespace SpellDuel
                     float lat = (k % 2 == 0 ? 1f : -1f) * ((k + 1) / 2) * FormationGap + (row == 1 ? FormationGap * 0.5f : 0f);   // 0、+1、−1、+2…；後排錯開半格
                     float depth = row == 0 ? 0f : row == 1 ? FormationDepth : FormationDepth * 0.5f;
                     pos[i] = anchor + right * lat + outward * depth * depthK;
+                    grp[i] = mg;
                 }
             }
             // 出場順序：前排 → 後排 → 特殊怪（偷襲的最後）
@@ -1123,8 +1153,15 @@ namespace SpellDuel
                 if (now < groupQueue[0].at) return;
                 var q = groupQueue[0]; groupQueue.RemoveAt(0);
                 formationPos = q.pos;
-                if (q.healer && q.role == MinionRole.Special) SpawnSummonerAt(q.ang); else if (q.healer) SpawnHealerAt(q.ang); else SpawnRoleAt(q.role, q.ang, q.ambush);
+                Fighter sp;
+                if (q.healer && q.role == MinionRole.Special) sp = SpawnSummonerAt(q.ang); else if (q.healer) sp = SpawnHealerAt(q.ang); else sp = SpawnRoleAt(q.role, q.ang, q.ambush);
                 formationPos = NoPos;
+                if (q.march != null)
+                {
+                    q.march.spawned++;
+                    if (sp != null && sp.Alive && sp.leapEnd <= 0f && !sp.hidden) { sp.march = q.march; sp.marchSpawn = sp.Feet; sp.marchHp = sp.hp; }
+                    if (q.march.spawned >= q.march.members) q.march.startAt = now + 0.4f;   // 全部出齊 → 一起往前推
+                }
                 return;
             }
             if (waveToSpawn <= 0) return;
@@ -1154,16 +1191,17 @@ namespace SpellDuel
                 slots.Add((role, ang, amb));
             }
             bool layout = Theme != CanyonTheme;   // 黃土山道：小怪從崖頂跳下來，不排陣形
-            List<Vector3> fpos = null; List<int> forder = null;
-            if (layout) LayoutFormation(slots, out fpos, out forder);
+            List<Vector3> fpos = null; List<int> forder = null; List<MarchGroup> fgrp = null;
+            marchGroups.RemoveAll(g => g.createdAt < now - MarchMaxTime - 4f);
+            if (layout) LayoutFormation(slots, out fpos, out forder, out fgrp);
             for (int j = 0; j < n; j++)
             {
                 int i = layout ? forder[j] : j;
-                groupQueue.Add((now + j * RoundStagger, slots[i].role, slots[i].ang, slots[i].amb, false, layout ? fpos[i] : NoPos));
+                groupQueue.Add((now + j * RoundStagger, slots[i].role, slots[i].ang, slots[i].amb, false, layout ? fpos[i] : NoPos, layout ? fgrp[i] : null));
             }
             // 第四、五章：每一輪額外帶一～兩隻補師（最後出來，躲在隊伍後面；不佔這一波的數量）；第五章再加一隻召喚師（role＝Special 當記號）
-            if (late) for (int h = 0; h < HealersPerRound(n); h++) groupQueue.Add((now + (n + h) * RoundStagger, MinionRole.Back, easySides ? easyBearing + (h - 0.5f) * 20f : (h - 0.5f) * 30f, false, true, NoPos));
-            if (late && MonsterVariants.SummonerFor(Theme) != null) groupQueue.Add((now + (n + HealersPerRound(n)) * RoundStagger, MinionRole.Special, easySides ? easyBearing + 15f : 15f, false, true, NoPos));
+            if (late) for (int h = 0; h < HealersPerRound(n); h++) groupQueue.Add((now + (n + h) * RoundStagger, MinionRole.Back, easySides ? easyBearing + (h - 0.5f) * 20f : (h - 0.5f) * 30f, false, true, NoPos, null));
+            if (late && MonsterVariants.SummonerFor(Theme) != null) groupQueue.Add((now + (n + HealersPerRound(n)) * RoundStagger, MinionRole.Special, easySides ? easyBearing + 15f : 15f, false, true, NoPos, null));
             Emit("round", player.Feet, Color.white, $"第 {roundNo}/{roundsInWave} 輪：{Formations[f].name}（{n} 隻" + (late && HealersPerRound(n) > 0 ? $"＋補師 {HealersPerRound(n)}" : "") + (late && MonsterVariants.SummonerFor(Theme) != null ? "＋召喚師 1" : "") + "）");
         }
 
@@ -1417,6 +1455,7 @@ namespace SpellDuel
                 if (tgt.npcSide >= 0) best = FlatDistance(m.Feet, tgt.Feet);
                 m.target = tgt;
                 if (m.treasure) { UpdateTreasure(m, dt); continue; }   // 寶箱怪：只會逃
+                if (m.march != null && UpdateMarch(m, dt)) continue;   // 軍陣行進中：整隊一起推進，到定點才散開
                 if (UpdateLure(m, dt)) continue;   // 吃誘餌中：不攻擊（Combat.Pets.cs）
                 bool esUser = m.variant > 0 && EnemySkills.Has(m.variant);   // 補師、輔助型、人形、砂靈：新招式（Combat.EnemySkills.cs）
                 if (esUser) TickEnemySkillState(m);
