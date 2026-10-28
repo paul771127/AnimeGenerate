@@ -6,7 +6,7 @@ namespace SpellDuel
  {
   static readonly Material[] cloudMats=new Material[5];
   static readonly Mesh[] skyMeshes=new Mesh[5];
-  static Mesh cliffMesh;static Material cliffMaterial;
+  static Mesh cliffMesh;static Material cliffMaterial;static Texture2D cloudNoise;
   readonly List<LineRenderer> lightning=new List<LineRenderer>();
   readonly List<Renderer> stormClouds=new List<Renderer>();
   readonly List<Transform> waterfallSheets=new List<Transform>();
@@ -17,7 +17,26 @@ namespace SpellDuel
    var m=new Material(Resources.Load<Shader>("Shaders/CarpetCloud")){name="Shared layered cloud "+s};
    m.SetColor("_Color",s==3?new Color(.36f,.42f,.56f):new Color(.96f,.97f,1));
    m.SetColor("_Shade",s==3?new Color(.09f,.12f,.23f):s==0||s==4?new Color(.50f,.43f,.58f):new Color(.49f,.63f,.75f));
-   m.SetColor("_Rim",s==0||s==4?new Color(1,.77f,.38f):new Color(.78f,.88f,1));return cloudMats[s]=m;
+   m.SetColor("_Rim",s==0||s==4?new Color(1,.77f,.38f):new Color(.78f,.88f,1));m.SetTexture("_NoiseTex",CloudNoise());return cloudMats[s]=m;
+  }
+  static Texture2D CloudNoise()
+  {
+   if(cloudNoise)return cloudNoise;
+   const int size=128;var pixels=new Color32[size*size];
+   for(int y=0;y<size;y++)for(int x=0;x<size;x++)
+   {
+    float u=x/(float)size,v=y/(float)size,n=0;
+    // Tileable two-octave cloud density. Generated once; all five stations share 64 KB.
+    for(int octave=0;octave<2;octave++)
+    {
+     float f=octave==0?6:18,weight=octave==0?.74f:.26f;
+     float a=Mathf.Lerp(Mathf.PerlinNoise(u*f+11,v*f+17),Mathf.PerlinNoise((u-1)*f+11,v*f+17),u);
+     float b=Mathf.Lerp(Mathf.PerlinNoise(u*f+11,(v-1)*f+17),Mathf.PerlinNoise((u-1)*f+11,(v-1)*f+17),u);
+     n+=Mathf.Lerp(a,b,v)*weight;
+    }
+    byte c=(byte)Mathf.RoundToInt(Mathf.Clamp01((n-.5f)*2+.5f)*255);pixels[y*size+x]=new Color32(c,c,c,255);
+   }
+   cloudNoise=new Texture2D(size,size,TextureFormat.RGBA32,false){name="Shared procedural cloud density",wrapMode=TextureWrapMode.Repeat,filterMode=FilterMode.Bilinear};cloudNoise.SetPixels32(pixels);cloudNoise.Apply(false,true);return cloudNoise;
   }
   void BuildSky(Transform root,int s)
   {
@@ -44,9 +63,9 @@ namespace SpellDuel
     v.Add(new Vector3(Mathf.Sin(a)*r,-7+wave,Mathf.Cos(a)*r));
     colors.Add(Color.Lerp(station==3?new Color(.14f,.19f,.30f):new Color(.65f,.70f,.80f),station==3?new Color(.35f,.41f,.52f):new Color(.91f,.94f,1),.5f+wave*.4f));
    }
-   for(int j=0;j<5;j++)for(int i=0;i<48;i++){int k=j*49+i;tr.AddRange(new[]{k,k+1,k+49,k+1,k+50,k+49});}
-   var mesh=new Mesh{name="Unbroken distant cloud deck"};mesh.SetVertices(v);mesh.SetColors(colors);mesh.SetTriangles(tr,0);mesh.RecalculateBounds();
-   var part=SkyArt.MeshPart(root,"Low cloud sea outside arena",mesh,SkyArt.Glow,Vector3.zero,Vector3.one);part.GetComponent<Renderer>().sortingOrder=-95;part.gameObject.AddComponent<SkyMeshOwner>().Meshes.Add(mesh);
+   for(int j=0;j<5;j++)for(int i=0;i<48;i++){int k=j*49+i;tr.AddRange(new[]{k,k+49,k+1,k+1,k+49,k+50});}
+   var mesh=new Mesh{name="Unbroken distant cloud deck"};mesh.SetVertices(v);mesh.SetColors(colors);mesh.SetTriangles(tr,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
+   var part=SkyArt.MeshPart(root,"Low cloud sea outside arena",mesh,CloudMaterial(station),Vector3.zero,Vector3.one);var density=new MaterialPropertyBlock();density.SetFloat("_Detail",1.35f);density.SetFloat("_RimStrength",.12f);part.GetComponent<Renderer>().SetPropertyBlock(density);part.gameObject.AddComponent<SkyMeshOwner>().Meshes.Add(mesh);
   }
   void Cloud(Transform root,int station,int layer)
   {
