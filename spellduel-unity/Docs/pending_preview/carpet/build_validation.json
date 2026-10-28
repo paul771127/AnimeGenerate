@@ -1,0 +1,21 @@
+{
+  "sourceCommit": "6a9762828f0e8f3b77a44cf97218e3726340759d",
+  "nativeSnapshot": "https://github.com/paul771127/AnimeGenerate/actions/runs/40606007416",
+  "mobileBuild": "https://github.com/paul771127/AnimeGenerate/actions/runs/40606007420",
+  "passedJobs": {
+    "android": {
+      "id": 122545958943,
+      "conclusion": "success"
+    },
+    "ios-export": {
+      "id": 122545959011,
+      "conclusion": "success"
+    },
+    "ios-ipa": {
+      "id": 122551172018,
+      "conclusion": "success"
+    }
+  },
+  "deviceARPerformance": "Not measured; no claim of 60 FPS",
+  "multiplayerDeviceTest": "Not performed; gameplay/network code unchanged"
+}

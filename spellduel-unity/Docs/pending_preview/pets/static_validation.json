@@ -1,0 +1,11 @@
+{
+  "base": "0351e9c",
+  "unchangedUiActionStatements": 24,
+  "baitPoolsMatchRuntime": 44,
+  "deterministicIcons": 68,
+  "legacyPixelComparisons": 81,
+  "gameplayDataUnchanged": true,
+  "unityBuild": "Android APK, iOS Xcode export and unsigned IPA passed",
+  "sourceCommit": "6a9762828f0e8f3b77a44cf97218e3726340759d",
+  "buildEvidence": "../carpet/build_validation.json"
+}

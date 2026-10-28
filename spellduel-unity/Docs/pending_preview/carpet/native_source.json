@@ -1,0 +1,392 @@
+{
+  "sourceCommit": "6a9762828f0e8f3b77a44cf97218e3726340759d",
+  "snapshotRun": "https://github.com/paul771127/AnimeGenerate/actions/runs/40606007416",
+  "artifactId": 12781227330,
+  "files": [
+    {
+      "file": "carpet/carpet_boss.png",
+      "sha256": "e1c4d0b5d7254951850f7f52212b6a1ecabb94eec31730949f752bf620e70c06",
+      "bytes": 68905
+    },
+    {
+      "file": "carpet/carpet_boss_dying.png",
+      "sha256": "f1fae34b9078510c3fe27de0b51bca102016c87e428bc91b32a32412ca4462b9",
+      "bytes": 55210
+    },
+    {
+      "file": "carpet/carpet_boss_phase2.png",
+      "sha256": "30dab9408b167b087a2a088a0f46494cf449e3ebcbc646293bf86bc6583ddee4",
+      "bytes": 69001
+    },
+    {
+      "file": "carpet/carpet_enemy_0.png",
+      "sha256": "bee4c56bb46b187282e1a701901fc63f0acdbda595dd2688bfa5f9176c3d2a51",
+      "bytes": 53598
+    },
+    {
+      "file": "carpet/carpet_enemy_0_windup.png",
+      "sha256": "584be10f2deb03f0746e567d6488235ecfe2cf3ce9f52078a51b3d13264eda3b",
+      "bytes": 47533
+    },
+    {
+      "file": "carpet/carpet_enemy_1.png",
+      "sha256": "d24667cf94efd3ed1bd48ebd6ad484e8c4826f7ba9e3bab5d7c4ef7ee476a05a",
+      "bytes": 49383
+    },
+    {
+      "file": "carpet/carpet_enemy_1_windup.png",
+      "sha256": "25c3d947044fe2dedda44937ec2e7e6e81f2fd39837e1b35b997ae084dd94c7a",
+      "bytes": 48143
+    },
+    {
+      "file": "carpet/carpet_enemy_2.png",
+      "sha256": "16fc40796e45764bf727fde7b410510f50e9ee318f20839e078e28ff48ce2c46",
+      "bytes": 48284
+    },
+    {
+      "file": "carpet/carpet_enemy_2_windup.png",
+      "sha256": "b1c8b140be01e2117f2cc47b1be62d07b3eb43815249dacb5a57340b81fbc05b",
+      "bytes": 49162
+    },
+    {
+      "file": "carpet/carpet_enemy_3.png",
+      "sha256": "e48f0952219a7d66018a79ee62c77866b0cc2e3b05f274b4ef98160f4ddc0a63",
+      "bytes": 22745
+    },
+    {
+      "file": "carpet/carpet_enemy_3_windup.png",
+      "sha256": "06df9bca3346f1c68d33a20c0438c2f97ff3977893bd7997ac619544b1f81a6d",
+      "bytes": 21607
+    },
+    {
+      "file": "carpet/carpet_enemy_4.png",
+      "sha256": "7d927ca073135b85788048887bb35f10e05b9abec2a535461dfc66610d804e28",
+      "bytes": 37294
+    },
+    {
+      "file": "carpet/carpet_enemy_4_windup.png",
+      "sha256": "19ec3cdf24fd92760495e15db449d38448dabecfb2dc10f5ecf85b58a73959b1",
+      "bytes": 28447
+    },
+    {
+      "file": "carpet/carpet_impact.png",
+      "sha256": "becf25f1d5de29af5653b94f9f1f0c7d5a6b876ed912fbef0ca802630e39d5da",
+      "bytes": 380764
+    },
+    {
+      "file": "carpet/carpet_obstacle_0.png",
+      "sha256": "4c28eba75583087875671511be67e21a42e6433615c3f04fbf51cd4c4dc7e3b4",
+      "bytes": 15755
+    },
+    {
+      "file": "carpet/carpet_obstacle_1.png",
+      "sha256": "703ca67fbcdd547bfdccb50c314d9075abd72e6b358dcc8945bc68ded5ce0c7c",
+      "bytes": 17722
+    },
+    {
+      "file": "carpet/carpet_obstacle_2.png",
+      "sha256": "c7e25f78f1ca77f02f74b42206e47e9f98649383e472487c7d3ec282d9b098ee",
+      "bytes": 21504
+    },
+    {
+      "file": "carpet/carpet_obstacle_3.png",
+      "sha256": "74ca10d813c5ced23cd6f3351d3f86cad576c321865d27f4df6c5c412718d466",
+      "bytes": 28264
+    },
+    {
+      "file": "carpet/carpet_pets_audit.json",
+      "sha256": "5ceb607686f7974230765c54c7cd9d45f9431b48e08cbbf6ae98423c5f9aa31f",
+      "bytes": 157
+    },
+    {
+      "file": "carpet/carpet_shot_0.png",
+      "sha256": "10e69e5551d6c0d18a3b8843545cd261e0acc997917b9bd5759ed362f0e11b8d",
+      "bytes": 11716
+    },
+    {
+      "file": "carpet/carpet_shot_1.png",
+      "sha256": "3dc9118f64ec2fb18d98846a7f6b28b19e23d11bfee4b95581326422d082ec86",
+      "bytes": 12984
+    },
+    {
+      "file": "carpet/carpet_station_0.png",
+      "sha256": "3ad694d84350726b2752a76215c648fa8789521876b1ebe9ceba14402787e30f",
+      "bytes": 180351
+    },
+    {
+      "file": "carpet/carpet_station_1.png",
+      "sha256": "95de5e6ba5e600ad99429461e4330e7d7eadca7ed7d868262159b86dfd07aff9",
+      "bytes": 195747
+    },
+    {
+      "file": "carpet/carpet_station_2.png",
+      "sha256": "641459d83306924fb047ef4ae3b8a568e2a3b0f62e2c97a2777595a96806f591",
+      "bytes": 195627
+    },
+    {
+      "file": "carpet/carpet_station_3.png",
+      "sha256": "b08765cfc1a71222666ca5c2c3487cff582b213989c853c78df7cd4658211b81",
+      "bytes": 189218
+    },
+    {
+      "file": "carpet/carpet_station_4.png",
+      "sha256": "04fcf6c4f5163f0ab8742a485779cfda50406d9d8a33e5d38708abb2736c99cb",
+      "bytes": 181258
+    },
+    {
+      "file": "carpet/carpet_vehicle_0.png",
+      "sha256": "da77845011b104e048ef47ca51fc281821c41cabc4ea58c94df3b05753ced7b4",
+      "bytes": 19801
+    },
+    {
+      "file": "carpet/carpet_vehicle_1.png",
+      "sha256": "29d748d10a3c6eb88cb2ac0dbdb41cbf693d10bbac5a9e1f860fbe15a1196cf5",
+      "bytes": 23026
+    },
+    {
+      "file": "carpet/carpet_vehicle_2.png",
+      "sha256": "39ff91f2d7ba0861d455de42b0cbe3f29ed082ef8a06b29161d91ebee5d7ee6c",
+      "bytes": 16681
+    },
+    {
+      "file": "carpet/carpet_vehicle_3.png",
+      "sha256": "ae13057276fabeb103d8a750b06a370817d92d43fa89872baed263dcc8c5e741",
+      "bytes": 16074
+    },
+    {
+      "file": "carpet/carpet_vehicle_4.png",
+      "sha256": "21d7a913a67b56d19ae80e701a79d0b6a1538d765604dc05c19f7c44aae26400",
+      "bytes": 22274
+    },
+    {
+      "file": "pets/pet_capture_0.png",
+      "sha256": "83cd05f85a890bf814fefc7a6cd88c0f0b6af5aa287b3d2988046e61575d8444",
+      "bytes": 11766
+    },
+    {
+      "file": "pets/pet_capture_1.png",
+      "sha256": "97b3b9e63e23d894c866788afb7c5691714289d65cab43943fd8d8d8d9a4ffc3",
+      "bytes": 9117
+    },
+    {
+      "file": "pets/petdress_0.png",
+      "sha256": "d351eac7f7cc7ed15430c7865d35703029c4edfd00aadb3791c7820faeea0da8",
+      "bytes": 23470
+    },
+    {
+      "file": "pets/petdress_1.png",
+      "sha256": "4373b1a0cf08c422e661766d97149fbe9cbad12cb995fa28468640a189601fac",
+      "bytes": 23059
+    },
+    {
+      "file": "pets/petdress_10.png",
+      "sha256": "4a464f5565a7ac530427ca02832d1905d4d8e6135833a1738030c188a22087cf",
+      "bytes": 26113
+    },
+    {
+      "file": "pets/petdress_11.png",
+      "sha256": "1478253130247972fc7c908e51353c03085ddaf79d175c2e31e21a650a13938b",
+      "bytes": 21901
+    },
+    {
+      "file": "pets/petdress_12.png",
+      "sha256": "0d0172ececcfb1352dedb884b3a4fb74862459afc6b11c7aa743a8d559775904",
+      "bytes": 24758
+    },
+    {
+      "file": "pets/petdress_13.png",
+      "sha256": "c2d378be2a9a5c7c170dbcdb7bb4048612024370e34395d322140111530569b8",
+      "bytes": 18733
+    },
+    {
+      "file": "pets/petdress_14.png",
+      "sha256": "4611006c9dc53b10e46d9d5f9882f561e3255f916e332e717df845c68ee43bdb",
+      "bytes": 18708
+    },
+    {
+      "file": "pets/petdress_15.png",
+      "sha256": "983cfe33650023e55368990e83275f2050e36e67729b7941c71a96de48c4d88a",
+      "bytes": 24791
+    },
+    {
+      "file": "pets/petdress_16.png",
+      "sha256": "325b809662fcd1b7135f763eb653c17c59cbdc4ec73a359b94eb0ecd9f1fc435",
+      "bytes": 30816
+    },
+    {
+      "file": "pets/petdress_17.png",
+      "sha256": "7dd986e06575678f9cbca68b4418bed48c7bf183cf6215640cfb3511293b9741",
+      "bytes": 36810
+    },
+    {
+      "file": "pets/petdress_18.png",
+      "sha256": "a3443babb47889fd7c505fc59aa03be9c6768bcd849c75b8074bddddb91621e7",
+      "bytes": 23334
+    },
+    {
+      "file": "pets/petdress_2.png",
+      "sha256": "7217539dd9d6caf81a15de64200a2e4d57743fce29c4ba25c0ad609ae7a1b208",
+      "bytes": 26609
+    },
+    {
+      "file": "pets/petdress_23.png",
+      "sha256": "a72149d14ab6b11f60d47b44fe99df5a711fb6887c8c6bb3ca77641ca027c138",
+      "bytes": 40847
+    },
+    {
+      "file": "pets/petdress_25.png",
+      "sha256": "3390c5a560010b3200d3ed2e93aed2e2f1adcb0630f8580c5b1271aed85483f1",
+      "bytes": 41781
+    },
+    {
+      "file": "pets/petdress_24.png",
+      "sha256": "e3fce0c6e1f2623795b080514abea650e7bc57f6b706f2839375042e17f1e76a",
+      "bytes": 39292
+    },
+    {
+      "file": "pets/petdress_26.png",
+      "sha256": "601e5c773b6165142b9298636df79299ca508a606873246afbd868023fd702c6",
+      "bytes": 39352
+    },
+    {
+      "file": "pets/petdress_27.png",
+      "sha256": "4077e56d814201ee25d701206d1694701d6253a5d5aaa40c57654a94dab0710e",
+      "bytes": 38880
+    },
+    {
+      "file": "pets/petdress_28.png",
+      "sha256": "e61cbbb2e4d44669795259a9eb338b81dbe0ad90fb6d482fe177e69c5c7260c1",
+      "bytes": 42417
+    },
+    {
+      "file": "pets/petdress_29.png",
+      "sha256": "9142ba97b985fe97c11b20fa8d53587d19a5d9db417a6c86922e7e08fe68ed06",
+      "bytes": 40937
+    },
+    {
+      "file": "pets/petdress_3.png",
+      "sha256": "8ee52fe0727ce40b60b8b4696662c671f2967dc1314f85f8fcf136cda3fe574a",
+      "bytes": 22624
+    },
+    {
+      "file": "pets/petdress_30.png",
+      "sha256": "41e2f93682fd645be06ae3343900d234a77d0f026d97c198be11c5736e7ce06f",
+      "bytes": 42630
+    },
+    {
+      "file": "pets/petdress_31.png",
+      "sha256": "d3cb7ae4593380427ee42d3697475c36be3aae2249fab1e410e3eb41b5c98135",
+      "bytes": 39806
+    },
+    {
+      "file": "pets/petdress_32.png",
+      "sha256": "be0ee53e55cd57ab32be36ac7c676d32a2e6833c402940e5a50a29c655ff827b",
+      "bytes": 40529
+    },
+    {
+      "file": "pets/petdress_33.png",
+      "sha256": "0212fd299526908388a75c12e14aa402d3d8c8567f940be1e117deaea8bea035",
+      "bytes": 42041
+    },
+    {
+      "file": "pets/petdress_34.png",
+      "sha256": "e3a666ebe213ca2b8f5df1eb7ca9800b38e96d60aaffb262b40aacb39123997d",
+      "bytes": 40419
+    },
+    {
+      "file": "pets/petdress_35.png",
+      "sha256": "6cda226dfdf980c506a99bb8dd4fce392435825537af37b5476429d6c5cb2d93",
+      "bytes": 42371
+    },
+    {
+      "file": "pets/petdress_36.png",
+      "sha256": "cd37a2be3aca17fbe7ea36817773b628c15d4aefe047d364b7b89db8cc03d392",
+      "bytes": 39808
+    },
+    {
+      "file": "pets/petdress_37.png",
+      "sha256": "3a88b6dbcb6c158cd49b38715462a214fcdcd8d033e49e20cbab7d1c596f3ade",
+      "bytes": 40362
+    },
+    {
+      "file": "pets/petdress_38.png",
+      "sha256": "8ebe0b4686fe509e26cd1e108f7ea83045e066ad0b36f22f36d32e9545739ec3",
+      "bytes": 39892
+    },
+    {
+      "file": "pets/petdress_39.png",
+      "sha256": "051f4dd55f25d98328f7068645b9852039095c509474e196c666b26f77682f83",
+      "bytes": 38364
+    },
+    {
+      "file": "pets/petdress_4.png",
+      "sha256": "f2ca445ecb39d4c5517fb021e053c2fe8a06861d5ddf9c2d7ae6f2257a9ba8de",
+      "bytes": 24470
+    },
+    {
+      "file": "pets/petdress_40.png",
+      "sha256": "02ccb3bc5b70c013db3a8f3c89a3063a8a1f6c54a18fbcc9091bb4e5160183a5",
+      "bytes": 40658
+    },
+    {
+      "file": "pets/petdress_41.png",
+      "sha256": "147f03bfe85c0da442097af73e6a066c162bab896d8ff49234e399f057f8f453",
+      "bytes": 38101
+    },
+    {
+      "file": "pets/petdress_42.png",
+      "sha256": "4d40d027433717720c3990139ea006ea88c0908d9bf37e99ab6195d0eeee3907",
+      "bytes": 38107
+    },
+    {
+      "file": "pets/petdress_43.png",
+      "sha256": "07959e2e2526e48fac8fbec2f641b966c144abf1b5ff17e18f1a97bde7bbe631",
+      "bytes": 41768
+    },
+    {
+      "file": "pets/petdress_44.png",
+      "sha256": "699077fc0a6544556121ba190c353f21d78a554626f9af31ad86186c6ffb7a46",
+      "bytes": 40153
+    },
+    {
+      "file": "pets/petdress_45.png",
+      "sha256": "33cab7ff1cb094951756e90fd66285b28627e8b4c843e5f76ae81b9e4966ea52",
+      "bytes": 42009
+    },
+    {
+      "file": "pets/petdress_46.png",
+      "sha256": "4ae8766c34ace48d2e9f0b8048e9ed62e7a50452632c7cae40ac0fd8364fe30f",
+      "bytes": 39148
+    },
+    {
+      "file": "pets/petdress_47.png",
+      "sha256": "9f7b5299553ea2347c4bfff8f84f1ba56f08b80f5803f52418826177e3baf098",
+      "bytes": 39873
+    },
+    {
+      "file": "pets/petdress_5.png",
+      "sha256": "4764619eb03dabcbcf4dd570289d032b30f55c350d5c763cdc5049b6563789e8",
+      "bytes": 21830
+    },
+    {
+      "file": "pets/petdress_6.png",
+      "sha256": "655b2624b06de5fc2312eeb857e96476d4790a1fe10efbae23bede2d8c7806a3",
+      "bytes": 22714
+    },
+    {
+      "file": "pets/petdress_7.png",
+      "sha256": "8a9efead6c5f56b831201df0b5e4b30fc8725b18b9c9f7c8c5599cf1808cf48f",
+      "bytes": 22636
+    },
+    {
+      "file": "pets/petdress_9.png",
+      "sha256": "cf16d4717e84208060d8b07a92944ab7b027f3b9e92f6afbef5f42be8d9fb94a",
+      "bytes": 27644
+    },
+    {
+      "file": "pets/petdress_8.png",
+      "sha256": "742e7852be8a5f59a56510d4b7d7019b053dc850fc036ee399df1544a4c4863e",
+      "bytes": 25682
+    }
+  ]
+}
