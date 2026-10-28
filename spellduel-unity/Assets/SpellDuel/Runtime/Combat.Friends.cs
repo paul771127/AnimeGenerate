@@ -81,10 +81,12 @@ namespace SpellDuel
 
         // ------------------------------------------------------------ 審判者：傷害轉護盾
         public const float DmgShieldCap = 0.4f, DmgShieldLife = 6f;
-        void GainDmgShield(Fighter a, float dmg)
+        void GainDmgShield(Fighter a, float dmg) { if (a != null && a.dmgShield > 0f) AddShieldFrom(a, dmg * a.dmgShield); }
+        /// <summary>傷害轉成護盾（審判者、劍士系列）：累積到整數才加；6 秒、最多最大 HP 的 40%</summary>
+        void AddShieldFrom(Fighter a, float amount)
         {
-            if (a == null || a.dmgShield <= 0f || dmg <= 0f || !a.Alive) return;
-            a.dmgShieldAcc += dmg * a.dmgShield;
+            if (a == null || amount <= 0f || !a.Alive) return;
+            a.dmgShieldAcc += amount;
             int whole = Mathf.FloorToInt(a.dmgShieldAcc);
             if (whole <= 0) return;
             a.dmgShieldAcc -= whole;

@@ -106,6 +106,7 @@ namespace SpellDuel
         /// <summary>友方人物：localFriend＝這台手機在跑 AI（影分身、收服的魔物）；friendOwner＝別台手機的代理（−1＝不是）、在那台的編號；影分身的時限</summary>
         public bool localFriend; public int friendOwner = -1, friendLocalId; public float friendUntil;
         public float dmgShieldAcc;
+        public float basicShield, hitShield;   // 劍士系列（取代吸血）：普攻傷害轉護盾、所有傷害轉護盾
         public readonly List<SoulFx> soulProcs = new List<SoulFx>();
         // 刺客的近身技能：放招後進入「伏擊」，時限內靠近到射程內就自動出手
         public SkillDef armed; public float armedUntil;
@@ -170,6 +171,7 @@ namespace SpellDuel
         // 角色養成（無盡模式）：裝備減傷、側跨無敵時間加長、吸血、命中回 MP、每秒回血、低血量減傷
         public float gearReduce, dodgeBonus, lifesteal, mpOnHit, hpRegen, lastStand;
         public float leechSwingAt = -1f, leechSwingBest;   // 普攻吸血（飲血）：同一揮只算一次（取打中的最高傷害）
+        public float shieldSwingAt = -1f, shieldSwingBest; // 劍氣護體（普攻轉護盾）：同一揮只算一次
         public float regenTick, nextRegenAt;   // 自然回復（劍士／主教的被動）：每 10 秒一次回 regenTick（不是每秒）
         /// <summary>魔法減傷（智力）；gearReduce＝物理減傷（體質、裝備）</summary>
         public float magicReduce;
@@ -3756,6 +3758,13 @@ namespace SpellDuel
             }
             bool basicHit = s.cls == "basic";
             if (basicHit && o.basicMp > 0f) o.mp = Mathf.Min(o.maxMp, o.mp + o.basicMp);
+            if (basicHit && o.basicShield > 0f)
+            {
+                // 劍氣護體：同一揮砍到好幾隻只算一次（取最高的那一下）
+                float want = dmg * o.basicShield;
+                if (o.shieldSwingAt != now) { o.shieldSwingAt = now; o.shieldSwingBest = 0f; }
+                if (want > o.shieldSwingBest) { AddShieldFrom(o, want - o.shieldSwingBest); o.shieldSwingBest = want; }
+            }
             if (basicHit && o.basicLeech > 0f)
             {
                 // 飲血：同一揮砍到好幾隻只算一次（取最高的那一下），不是每隻都回
@@ -3832,6 +3841,7 @@ namespace SpellDuel
             if (a == player && target != null) OnDealtNumber?.Invoke(target.Chest, dmg, p != null && p.crit);   // 合作：我的傷害數字也給隊友看
             PostHit(a, target, s, dmg);
             if (a.lifesteal > 0f) Leech(a, dmg * a.lifesteal);
+            if (a.hitShield > 0f) AddShieldFrom(a, dmg * a.hitShield);   // 劍氣凝盾
             if (a.mpOnHit > 0f) a.mp = Mathf.Min(a.maxMp, a.mp + a.mpOnHit);
             if (a.adv == "inquisitor" && a.faith < FaithMax && ++a.faith == FaithMax) Emit("buff", a.Chest, new Color(1f, 0.8f, 0.3f), "信仰已滿！下一招傷害 ×2");
             GainDmgShield(a, dmg);   // 審判者「聖盾轉化」

@@ -74,6 +74,7 @@ namespace SpellDuel
         CloseInstinct,
         KunaiFire, KunaiIce, KunaiBolt, DmgShield,   // 忍者：苦無附帶屬性；審判者：傷害轉護盾
         Accuracy,                                    // 命中率（抵掉對方的閃避）
+        BasicShield, HitShield,                      // 劍士系列（取代吸血）：普攻傷害轉護盾、所有傷害轉護盾
     }
 
     public class TreeNode
@@ -264,7 +265,7 @@ namespace SpellDuel
                     FPas("sw_combo", "連斬", PassiveKind.ComboStrike, 0.25f, 5, 0, 2, "sw_bspd"),
                     FMod("sw_bdmg", "劍術精通", "na_sword", ModField.Damage, 0.1f, 5, 0, 3, "sw_combo"),
                     FPas("sw_acc", "看破", PassiveKind.Accuracy, 0.01f, 5, 0, 4, "sw_bdmg"),
-                    FPas("sw_leech", "飲血", PassiveKind.BasicLeech, 0.02f, 5, 1, 2, "sw_bspd"),   // 每級 2%（滿級 10%）；一揮只算一次
+                    FPas("sw_leech", "劍氣護體", PassiveKind.BasicShield, 0.04f, 5, 1, 2, "sw_bspd"),   // 使用者要求：劍士系列不要吸血 → 普攻傷害轉護盾（每級 4%，滿級 20%；一揮只算一次）。id 沿用，點過的點數不變
                     FPas("sw_regen", "自然回復", PassiveKind.NaturalRegen, 0.008f, 5, 1, 3, "sw_leech"),
                     // 劍氣
                     FMod("sw_slash", "斬擊強化", "slash", ModField.Damage, 0.1f, 5, 3, 1, "sw_root"),
@@ -392,7 +393,7 @@ namespace SpellDuel
                     // ✨ 輔助
                     FLearn("sx_jz", "jianzhen", 5, 1, "sx_root"),
                     FMod("sx_jz2", "劍陣加厚", "jianzhen", ModField.BuffAmount, 10f, 5, 5, 2, "sx_jz"),
-                    FPas("sx_leech", "劍氣吸血", PassiveKind.Lifesteal, 0.01f, 5, 6, 2, "sx_jz"),   // 每級 1%（滿級 5%）：御劍、萬劍多段命中也會吸
+                    FPas("sx_leech", "劍氣凝盾", PassiveKind.HitShield, 0.02f, 5, 6, 2, "sx_jz"),   // 使用者要求：取代劍氣吸血 → 造成的傷害每級 2%（滿級 10%）轉成護盾；御劍、萬劍多段命中也算。id 沿用
                     FMod("sx_jzcd", "陣法回氣", "jianzhen", ModField.Cooldown, 0.08f, 5, 5, 3, "sx_jz2"),
                     FPas("sx_mp", "劍氣回流", PassiveKind.MpOnHit, 1f, 5, 6, 3, "sx_leech"),
                 };
@@ -647,6 +648,8 @@ namespace SpellDuel
                         PassiveKind.KunaiIce => $"苦無普攻 {v * 100:0}% 機率同時射出冰凍的苦無（定身 1.2 秒）",
                         PassiveKind.KunaiBolt => $"苦無普攻 {v * 100:0}% 機率同時射出帶電的苦無（3 秒內受到的傷害 +20%）",
                         PassiveKind.DmgShield => $"造成傷害的 {v * 100:0}% 轉成自己的護盾（6 秒，最多最大 HP 的 40%）",
+                        PassiveKind.BasicShield => $"普攻造成傷害的 {v * 100:0}% 轉成自己的護盾（6 秒，最多最大 HP 的 40%；一揮砍到多隻只算一次）",
+                        PassiveKind.HitShield => $"所有攻擊造成傷害的 {v * 100:0}% 轉成自己的護盾（6 秒，最多最大 HP 的 40%）",
                         PassiveKind.CloseInstinct => $"2m 內有敵人時：受到的傷害 −{v * Battle.CloseReducePer * 100:0}%、閃避率 +{v * Battle.CloseEvadePer * 100:0}%（持續傷害不減）",
                         _ => $"HP 低於 30% 時受到的傷害 -{v * 100:0}%",
                     };
@@ -1343,7 +1346,7 @@ namespace SpellDuel
             f.bashGuard = Passive(PassiveKind.BashGuard); f.sanctionCombo = Passive(PassiveKind.SanctionCombo); f.critDmg = Passive(PassiveKind.CritDmg);
             f.falconMark = Passive(PassiveKind.FalconMark); f.petMp = Passive(PassiveKind.PetMp); f.closeInstinct = Passive(PassiveKind.CloseInstinct);
             var bs = adv == "ninja" ? Skills.All["na_kunai"] : Skills.BasicOf(cls); f.basic = bs != null ? ModdedSkill(bs.id) : null;   // 普攻也吃技能樹（忍者：苦無）
-            f.kunaiFire = Passive(PassiveKind.KunaiFire); f.kunaiIce = Passive(PassiveKind.KunaiIce); f.kunaiBolt = Passive(PassiveKind.KunaiBolt); f.dmgShield = Passive(PassiveKind.DmgShield);
+            f.kunaiFire = Passive(PassiveKind.KunaiFire); f.kunaiIce = Passive(PassiveKind.KunaiIce); f.kunaiBolt = Passive(PassiveKind.KunaiBolt); f.dmgShield = Passive(PassiveKind.DmgShield); f.basicShield = Passive(PassiveKind.BasicShield); f.hitShield = Passive(PassiveKind.HitShield);
             // 技能：只帶會的技能，數值換成技能樹強化後的版本
             f.loadout.Clear();
             var known = KnownSkills();
