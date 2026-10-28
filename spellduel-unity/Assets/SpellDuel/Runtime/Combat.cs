@@ -1506,7 +1506,7 @@ namespace SpellDuel
                 // 食人花埋在地下：有人走近 1.5m 才冒出來（埋著時不動、打不到）
                 if (m.hidden)
                 {
-                    if (d <= ChomperTrigger + tgt.bodyRadius || now - m.buriedAt >= ChomperAutoEmerge) { m.hidden = false; m.attackReadyAt = now + 0.25f; Emit("emerge", m.Feet, Skills.All["m_bite"].color, "食人花冒出來了！"); }
+                    if (d <= ChomperTrigger + tgt.bodyRadius || now - m.buriedAt >= ChomperAutoEmerge || OnlyBuriedLeft()) { m.hidden = false; m.attackReadyAt = now + 0.25f; Emit("emerge", m.Feet, Skills.All["m_bite"].color, "食人花冒出來了！"); }   // 有人靠近、埋了 15 秒、或其他敵人都死光了（使用者要求）
                     continue;
                 }
                 // 河豚鼓起來中：不動、不出手，時間到就爆
@@ -1669,12 +1669,18 @@ namespace SpellDuel
             }
         }
 
-        /// <summary>食人花：埋在場內離所有玩家 2.5m 以上的隨機一點（地上只有一小圈葉子）；玩家走近 1.5m 才冒出來咬</summary>
         /// <summary>
         /// 食人花：埋在場地中間直徑 ChomperZone 公尺內（使用者要求：等人靠近才出來的怪不要埋在邊邊，找不到、走不到）；
         /// 玩家走近 1.5m 就冒出來；ChomperAutoEmerge 秒都沒人靠近，自己冒出來
         /// </summary>
         public const float ChomperZone = 3f, ChomperAutoEmerge = 15f;
+        /// <summary>場上活著的敵人只剩埋著的食人花（Boss 也不在）</summary>
+        bool OnlyBuriedLeft()
+        {
+            if (enemy != null && enemy.Alive) return false;
+            foreach (var o in minions) if (o.Alive && !o.hidden && !o.treasure) return false;
+            return true;
+        }
         void BuryChomper(Fighter m)
         {
             ArenaFrame(out var c, out _); c.y = 0f;
