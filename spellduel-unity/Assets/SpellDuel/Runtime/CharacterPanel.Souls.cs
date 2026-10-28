@@ -28,6 +28,21 @@ namespace SpellDuel
             foreach (var id in it.souls) { var d = Souls.Get(id); if (d != null) lines.Add($"　◆ {d.name}：{Souls.Desc(d)}"); }
         }
 
+        /// <summary>精魄的圖示（SkillIcons 的 id；沒有專屬圖示＝null）：天穹飛毯 6 顆、輔助型與人形敵人 19 顆</summary>
+        static string SoulIconId(SoulDef d)
+        {
+            if (d == null) return null;
+            switch (d.id)
+            {
+                case "soul_m131": return "soul_sky_kite";
+                case "soul_m132": return "soul_sky_eagle";
+                case "soul_m133": return "soul_sky_glider";
+                case "soul_m134": return "soul_sky_doll";
+                case "soul_m135": return "soul_sky_captain";
+                case "soul_boss_airship": return "soul_sky_airship";
+            }
+            return System.Array.IndexOf(SkillIcons.SupportSoulArtIds, d.id) >= 0 ? d.id : null;
+        }
         /// <summary>精魄視窗（畫在裝備說明那一塊）；有改動回傳 true</summary>
         bool DrawSouls(Rect dr, CharacterProfile p, int fs, int fsS, float gap)
         {
@@ -54,7 +69,9 @@ namespace SpellDuel
                         {
                             var d = Souls.Get(it.souls[i]);
                             UiKit.Card(sr, 0.9f, d != null ? d.color : UiKit.Muted, 1f);
-                            UiKit.Text(sr, "◆ " + (d != null ? d.name : "?"), fsS, Color.white, TextAnchor.MiddleCenter, true);
+                            var ic = SoulIconId(d);
+                            if (ic != null) GUI.DrawTexture(new Rect(sr.x + sr.height * 0.1f, sr.y + sr.height * 0.1f, sr.height * 0.8f, sr.height * 0.8f), SkillIcons.Get(ic));
+                            UiKit.Text(ic != null ? new Rect(sr.x + sr.height, sr.y, sr.width - sr.height, sr.height) : sr, (ic != null ? "" : "◆ ") + (d != null ? d.name : "?"), fsS, Color.white, TextAnchor.MiddleCenter, true);
                         }
                         else { UiKit.Card(sr, 0.4f, UiKit.Muted, 0.4f); UiKit.Text(sr, "◇ 空", fsS, Color.gray, TextAnchor.MiddleCenter); }
                     }
@@ -94,6 +111,10 @@ namespace SpellDuel
                     }
                 }
                 else UiKit.Card(rr, have > 0 ? 0.75f : 0.4f, d.color, have > 0 ? 0.8f : 0.3f);
+                // 有專屬圖示的精魄：左邊畫圖示，文字往右移
+                string icon = SoulIconId(d);
+                float ix = 0f;
+                if (icon != null) { float isz = rowH * 0.8f; GUI.DrawTexture(new Rect(rr.x + gap * 0.4f, rr.y + (rowH - isz) * 0.5f, isz, isz), SkillIcons.Get(icon)); ix = isz + gap * 0.5f; rr.x += ix; rr.width -= ix; }
                 string title = (d.IsBoss ? "👑 " : "") + d.name + (have > 0 ? $" ×{have}" : "") + (partOk ? "" : $"　（只能鑲{Souls.PartNames[(int)d.part]}）") + (it != null && soulArm == d.id && Time.time < soulArmUntil ? "　← 再按一次確定" : "");
                 UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y, rr.width - gap, fs * 1.2f), title, fsS, (have > 0 && partOk) || it == null ? d.color : Color.gray, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y + fs * 1.1f, rr.width - gap, rowH - fs * 1.15f), Souls.Desc(d) + "　（" + Souls.DropText(d) + "）", Mathf.RoundToInt(fsS * 0.9f), new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft, false, 0.5f);
