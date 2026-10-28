@@ -141,6 +141,7 @@ namespace SpellDuel
         public int variant;                    // 變種怪（Combat.Variants.cs）：刺客怪、天候怪的 id（0＝不是）
         public float lureUntil; public bool lureRolled, capturedPet; public Vector3 lureAt;   // 寵物誘餌（Combat.Pets.cs）
         public long petUid; public int petAtk, petLevel; public float petGap, petActLock; public List<string> petSkills; public readonly Dictionary<string, float> petCd = new Dictionary<string, float>();   // 出戰的寵物
+        public int human, humState, humSide = 1; public float humUntil, humCdAt, humSwitchAt, humHealed;   // 人形敵人（Combat.Variants.cs）：職業、0 交戰／1 跑開回血
         public int support; public float hasteUntil, rallyUntil;   // 輔助型敵人（Combat.Variants.cs）：1 薩滿、2 仙女、3 戰鼓手、4 旗手；被加速、被舉旗增益到什麼時候
         public bool assassin, healer, summoner, summoned; public int asnState; public float asnUntil; public Fighter asnTarget, healTarget, summonedBy;   // summoned＝召喚物：沒有經驗、不掉寶   // 刺客怪：0 潛伏、1 沿邊繞、2 突襲、4 退回   // 寶箱怪（Combat.Treasure.cs）：到處逃跑、每下只扣 1、時間到就逃走
         // 副本特殊地點（Combat.RoomEvents.cs）
@@ -1345,6 +1346,7 @@ namespace SpellDuel
                 m.target = tgt;
                 if (m.treasure) { UpdateTreasure(m, dt); continue; }   // 寶箱怪：只會逃
                 if (UpdateLure(m, dt)) continue;   // 吃誘餌中：不攻擊（Combat.Pets.cs）
+                if (m.human > 0 && UpdateHuman(m, tgt, best, dt)) continue;   // 人形敵人：繞側、拉開距離、躲進怪群、沒血跑開回血（Combat.Variants.cs）
                 if (m.assassin) { UpdateAssassin(m, dt); continue; }
                 if (m.healer) { UpdateHealer(m, dt); continue; }   // 補師：躲在後面治療同伴（Combat.Variants.cs）
                 if (m.support > 0) { UpdateSupport(m, dt); continue; }   // 輔助型：治療、護盾、加速、戰旗（Combat.Variants.cs）

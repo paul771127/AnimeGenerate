@@ -154,6 +154,22 @@ namespace SpellDuel
             V(142, 0.008f, "#ffb3f2", F(SoulOp.HurtShield, 40f, 0.10f, 4f));                    // 霧海仙女：被打時機率得到護盾
             V(143, 0.008f, "#ff8050", F(SoulOp.MpRegen, 0.15f));                                // 鬥場戰鼓手：MP 回復 +15%
             V(144, 0.008f, "#ffd84d", F(SoulOp.Reduce, 0.06f));                                 // 砂王旗手：受到的傷害 −6%
+            // ---- 人形敵人（稀有，特定章節＋天候；1%）
+            V(151, 0.01f, "#ff7350", F(SoulOp.Lifesteal, 0.03f));                             // 傭兵劍士：吸血
+            V(152, 0.01f, "#ff9a50", F(SoulOp.Accuracy, 0.05f));                              // 傭兵弩手：命中率
+            V(153, 0.01f, "#ff5a33", F(SoulOp.Burn, 0.06f));                                  // 爐火術士：機率灼燒
+            V(154, 0.01f, "#73d980", F(SoulOp.Poison, 0.06f));                                // 霧林斥候：機率中毒
+            V(155, 0.01f, "#8ce666", F(SoulOp.ChargeSpeed, 0.06f));                           // 林間弓手：技能蓄力變快
+            V(156, 0.01f, "#66ff99", F(SoulOp.HurtHeal, 0.04f, 0.08f));                       // 森林德魯伊：被打時機率回血
+            V(157, 0.01f, "#598ce6", F(SoulOp.Gold, 0.10f));                                  // 黑潮刀客：金幣
+            V(158, 0.01f, "#4dccff", F(SoulOp.Freeze, 0.05f));                                // 潮汐術士：機率冰凍
+            V(159, 0.01f, "#4059a0", F(SoulOp.CritDmg, 0.20f));                               // 甲板刺客：爆擊傷害
+            V(160, 0.01f, "#ffcc59", F(SoulOp.Block, 0.05f));                                 // 冠軍劍鬥士：格擋
+            V(161, 0.01f, "#e6b366", F(SoulOp.HitSnare, 0f, 0.05f, 1f));                      // 標槍手：命中時機率定身
+            V(162, 0.01f, "#fff299", F(SoulOp.KillHeal, 0.06f, 0.25f));                       // 鬥場神官：打倒敵人時機率回血
+            V(163, 0.01f, "#bf8c59", F(SoulOp.DodgePower, 0.08f));                            // 沙匪刺客：跳蹲閃避後傷害提高
+            V(164, 0.01f, "#f2bf66", F(SoulOp.Cdr, 0.05f));                                   // 砂咒術士：技能冷卻
+            V(165, 0.01f, "#d9a659", F(SoulOp.Xp, 0.10f));                                    // 沙漠獵手：經驗
             // ---- 天穹飛毯（副本 sky_carpet）：天空、風、飛行、空賊（不用普攻集氣、閃避率、爆擊率）
             V(131, 0.005f, "#e8434a", F(SoulOp.DodgeCdr, 1f));                                  // 風箏盜賊・逐風結：閃過障礙後技能冷卻 −1 秒
             V(132, 0.004f, "#4f7fe0", F(SoulOp.AirReduce, 0.12f));                              // 雲鷹騎兵・翔羽心：跳躍中減傷
@@ -165,8 +181,8 @@ namespace SpellDuel
         }
 
         /// <summary>武器類（傷害）、飾品類（技能、輔助、特殊）；其他都是防具類（防禦）</summary>
-        static readonly string[] WeaponSouls = { "soul_m133", "soul_m135", "soul_m101", "soul_m102", "soul_m103", "soul_m105", "soul_m0", "soul_m3", "soul_m5", "soul_m7", "soul_m9", "soul_m10", "soul_m21", "soul_boss_canyon" };
-        static readonly string[] TrinketSouls = { "soul_m143", "soul_m131", "soul_boss_airship", "soul_m107", "soul_m111", "soul_m112", "soul_m113", "soul_m114", "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_m20", "soul_boss", "soul_boss_forest" };
+        static readonly string[] WeaponSouls = { "soul_m151", "soul_m153", "soul_m154", "soul_m158", "soul_m159", "soul_m161", "soul_m163", "soul_m133", "soul_m135", "soul_m101", "soul_m102", "soul_m103", "soul_m105", "soul_m0", "soul_m3", "soul_m5", "soul_m7", "soul_m9", "soul_m10", "soul_m21", "soul_boss_canyon" };
+        static readonly string[] TrinketSouls = { "soul_m152", "soul_m155", "soul_m157", "soul_m162", "soul_m164", "soul_m165", "soul_m143", "soul_m131", "soul_boss_airship", "soul_m107", "soul_m111", "soul_m112", "soul_m113", "soul_m114", "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_m20", "soul_boss", "soul_boss_forest" };
         static void AssignParts()
         {
             foreach (var d in All)

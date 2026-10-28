@@ -1818,7 +1818,8 @@ namespace SpellDuel
                     rig.SetVariant(m.minionKind);
                     rig.SetDress(battle.Theme);   // 角鬥場：黑晶項圈；山道：沙塵與頭巾（美術第十一輪）
                     if (m.treasure) DressTreasure(rig);   // 寶箱怪：換成會跑的寶箱
-                    if (MonsterVariants.IsSky(m.variant)) DressSky(m, rig);   // 天穹飛毯的敵人：Codex 的全新骨架（SoloBattle.Carpet.cs）
+                    if (MonsterVariants.IsSky(m.variant)) DressSky(m, rig);
+                    else if (MonsterVariants.IsHuman(m.variant)) DressHuman(m, rig);   // 人形敵人：玩家職業的模型（SoloBattle.Humans.cs）   // 天穹飛毯的敵人：Codex 的全新骨架（SoloBattle.Carpet.cs）
                     else if (m.variant > 0 && MonsterVariants.Get(m.variant) != null) MinionLook.Apply(rig, MonsterVariants.Get(m.variant));   // 刺客怪、天候怪：換配色、武器（MinionLook.cs）
                     if (m.isElite && !EliteCatalog.IsElite(m.minionKind)) rig.transform.localScale = Vector3.one * 1.5f;   // 無盡塔的精銳：大一號
                     minionGo[m] = rig; minionLastHp[m] = m.hp;
@@ -1849,6 +1850,7 @@ namespace SpellDuel
                 if (jumped) { MinionRig.SpawnFx(oldPos); MinionRig.SpawnFx(newPos); Sfx.Play("dodge", 0.5f, 0.6f); }
                 rig.MoveSpeed = jumped ? 0f : Mathf.Lerp(rig.MoveSpeed, (newPos - oldPos).magnitude / dt, 0.25f);
                 var skyBody = SkyBody(m); if (skyBody) skyBody.MoveSpeed = rig.MoveSpeed;
+                if (m.human > 0) HumanMove(m, rig.MoveSpeed);
                 if (m.variant > 0) { var look = rig.GetComponent<MinionLook>(); if (look) look.Sneak = Battle.AssassinSneaking(m, Me) || (m.variant == 112 && Me != null && Battle.FlatDistance(m.Feet, Me.Feet) > 3f); }   // 刺客繞路中、霧行者離遠了：只看得到眼睛
                 bool winding = m.windupUntil > 0f;
                 if (winding && !minionWinding.Contains(m))
@@ -1856,6 +1858,7 @@ namespace SpellDuel
                     if (battle.remoteEnemy && m.assassin && m.target == Me) OnBattleEvent("assassinwarn", Me.Feet, new Color(0.9f, 0.2f, 0.35f), "1");   // 合作（隊友）：刺客要從背後砍我
                     minionWinding.Add(m); rig.Windup(EliteCatalog.IsElite(m.minionKind) && battle.EliteView(m) != null ? battle.EliteView(m).duration : battle.WindupOf(m.minionKind));
                     if (skyBody) skyBody.Windup(battle.WindupOf(m.minionKind));
+                    if (m.human > 0) HumanWindup(m, m.windupUntil - battle.now);
                     if (battle.remoteEnemy && Battle.IsSpecial(m.minionKind))   // 合作（隊友）：稀有怪預備大招 → 一樣跳出「跳起來／蹲下」
                         OnBattleEvent("specialwarn", m.Feet, Skills.All[Battle.SpecialSkillId(m.minionKind)].color, Battle.SpecialNeedsJump(m.minionKind) ? "⬆ 跳起來！（或離遠一點）" : "⬇ 蹲下！（或離遠一點）");
                 }   // 預備時間＝這種小怪真正的預備時間（出手時剛好擺到位）
@@ -1881,7 +1884,7 @@ namespace SpellDuel
                     wg.GetComponent<Renderer>().material.color = new Color(1f, 0.12f, 0.05f, (0.18f + 0.35f * pr) * (0.6f + 0.4f * pk));
                 }
                 else if (minionWarn.TryGetValue(m, out var wg0) && wg0) wg0.SetActive(false);
-                if (minionLastHp.TryGetValue(m, out var lh) && m.hp < lh - 0.01f) { rig.PlayHit(); if (skyBody) skyBody.PlayHit(); }
+                if (minionLastHp.TryGetValue(m, out var lh) && m.hp < lh - 0.01f) { rig.PlayHit(); if (skyBody) skyBody.PlayHit(); if (m.human > 0) HumanHit(m); }
                 minionLastHp[m] = m.hp;
             }
             foreach (var kv in new List<KeyValuePair<Fighter, MinionRig>>(minionGo))
@@ -1889,6 +1892,7 @@ namespace SpellDuel
                 {
                     if (kv.Value) { kv.Value.SetDead(true); Destroy(kv.Value.gameObject, 1.2f); }
                     if (skyBodies.TryGetValue(kv.Key, out var deadSky)) { if (deadSky) deadSky.SetDead(true); skyBodies.Remove(kv.Key); }
+                    HumanDead(kv.Key);
                     minionGo.Remove(kv.Key); minionLastHp.Remove(kv.Key); minionWinding.Remove(kv.Key);
                     if (minionWarn.TryGetValue(kv.Key, out var wgo)) { if (wgo) Destroy(wgo); minionWarn.Remove(kv.Key); }
                     if (aimLines.TryGetValue(kv.Key, out var dl)) { if (dl) Destroy(dl); aimLines.Remove(kv.Key); }
@@ -3138,6 +3142,10 @@ namespace SpellDuel
                     Say(text, 3f);
                     floaters.Add(new Floater { posMap = at + Vector3.up * 1.4f, text = kind == "assassin" ? "🗡" : "⚡", color = c, born = Time.time });
                     Sfx.Play(kind == "assassin" ? "dodge" : "warn", 0.6f, kind == "assassin" ? 0.6f : 1.1f);
+                    break;
+                case "humanflee":   // 人形敵人沒血跑去回血（Combat.Variants.cs）
+                    if (!string.IsNullOrEmpty(text)) Say("🏃 " + text, 2.5f);
+                    floaters.Add(new Floater { posMap = at + Vector3.up * 0.6f, text = "🧪", color = c, born = Time.time });
                     break;
                 case "assassinwarn":
                     if (text != "1") break;   // 只提醒被盯上的人

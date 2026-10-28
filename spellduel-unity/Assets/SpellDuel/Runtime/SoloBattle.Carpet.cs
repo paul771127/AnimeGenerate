@@ -276,6 +276,7 @@ namespace SpellDuel
         void ClearSky()
         {
             ClearSkyViews();
+            humanBodies.Clear();   // 人形敵人的模型（跟著小怪的骨架一起刪掉）
             skyWired = false;
             if (battle != null) battle.SetCarpetStation(-1, battle.carpetFwd);
             ItemGen.ExclusiveSet = null;

@@ -16,6 +16,8 @@ namespace SpellDuel
         public bool assassin, claws, healer, summoner, summon;   // summon＝召喚物（沒有經驗、不掉寶）
         public int theme = -1;   // 補師：哪一章（3 角鬥場、4 黃土山道）
         public int sky = -1;
+        public int human;        // 人形敵人（稀有、特定章節＋天候）：1 劍士（繞側）、2 弓手（拉開距離）、3 術士（躲進怪群）、4 刺客（繞背）、5 神官（治療同伴）；0＝不是
+        public string band;      // 人形敵人的隊伍名（同一隊一起出現）
         public int support;      // 輔助型（只在那一章、那種天候出現）：1 群體治療、2 護盾、3 加速、4 強力增益；0＝不是     // 天穹飛毯的敵人：SkyEnemyRig／SkyVehicleView 的種類（0 風箏盜賊～4 空賊隊長）；−1＝不是
         public Battle.Weather weather;
         public float hp = 1f, dmg = 1f, speed = 1f;
@@ -49,6 +51,22 @@ namespace SpellDuel
             new VariantDef { id = 142, baseKind = 17, name = "霧海仙女", support = 2, theme = 2, weather = Battle.Weather.Fog, hp = 1.6f, tint = new Color(1f, 0.7f, 0.95f), desc = "濃霧裡的海上仙女：替同伴套上泡泡護盾" },
             new VariantDef { id = 143, baseKind = 21, name = "鬥場戰鼓手", support = 3, theme = 3, weather = Battle.Weather.Rain, hp = 0.3f, tint = new Color(1f, 0.5f, 0.3f), desc = "雷雨中擂鼓的鬥奴：鼓聲讓同伴跑得更快、出手更快" },
             new VariantDef { id = 144, baseKind = 22, name = "砂王旗手", support = 4, theme = 4, weather = Battle.Weather.Wind, hp = 0.3f, tint = new Color(1f, 0.85f, 0.3f), desc = "順風時舉起砂王戰旗：周圍的同伴攻擊大增、受到的傷害大減" },
+            // ---- 人形敵人（使用者要求：各章一隊，像玩家一樣有職業；移動快、會用戰術：沒血就跑開回血／躲進怪群、繞側、繞背；稀有，只在特定天候出現）
+            new VariantDef { id = 151, baseKind = 0,  name = "傭兵劍士",   human = 1, band = "赤爐傭兵團", theme = 0, weather = Battle.Weather.Wind, hp = 3f,   dmg = 1.3f, speed = 1.5f, tint = new Color(1f, 0.45f, 0.3f), desc = "繞到側面揮劍；沒血就跑到場邊喝藥水" },
+            new VariantDef { id = 152, baseKind = 1,  name = "傭兵弩手",   human = 2, band = "赤爐傭兵團", theme = 0, weather = Battle.Weather.Wind, hp = 4f,   dmg = 1.3f, speed = 1.5f, tint = new Color(1f, 0.6f, 0.3f), desc = "被靠近就後退橫移，保持距離射擊" },
+            new VariantDef { id = 153, baseKind = 9,  name = "爐火術士",   human = 3, band = "赤爐傭兵團", theme = 0, weather = Battle.Weather.Wind, hp = 3.3f, dmg = 1.3f, speed = 2f, tint = new Color(1f, 0.35f, 0.2f), desc = "躲在怪物群後面施法；沒血就躲進怪群" },
+            new VariantDef { id = 154, baseKind = 0,  name = "霧林斥候",   human = 4, band = "霧林遊俠",   theme = 1, weather = Battle.Weather.Fog,  hp = 3f,   dmg = 1.3f, speed = 1.3f, tint = new Color(0.45f, 0.85f, 0.5f), desc = "藏在霧裡繞到背後偷襲" },
+            new VariantDef { id = 155, baseKind = 1,  name = "林間弓手",   human = 2, band = "霧林遊俠",   theme = 1, weather = Battle.Weather.Fog,  hp = 4f,   dmg = 1.3f, speed = 1.5f, tint = new Color(0.55f, 0.9f, 0.4f), desc = "邊退邊射，被追就翻滾拉開" },
+            new VariantDef { id = 156, baseKind = 6,  name = "森林德魯伊", human = 5, band = "霧林遊俠",   theme = 1, weather = Battle.Weather.Fog,  hp = 3.3f, dmg = 1f,   speed = 2f, tint = new Color(0.4f, 1f, 0.6f), desc = "替隊友治療；被打就躲進怪群" },
+            new VariantDef { id = 157, baseKind = 0,  name = "黑潮刀客",   human = 1, band = "黑潮海盜",   theme = 2, weather = Battle.Weather.Rain, hp = 3f,   dmg = 1.3f, speed = 1.5f, tint = new Color(0.35f, 0.55f, 0.9f), desc = "雙彎刀從側面砍；沒血就退到船邊喝蘭姆" },
+            new VariantDef { id = 158, baseKind = 9,  name = "潮汐術士",   human = 3, band = "黑潮海盜",   theme = 2, weather = Battle.Weather.Rain, hp = 3.3f, dmg = 1.3f, speed = 2f, tint = new Color(0.3f, 0.8f, 1f), desc = "躲在怪群後面唸潮汐咒" },
+            new VariantDef { id = 159, baseKind = 0,  name = "甲板刺客",   human = 4, band = "黑潮海盜",   theme = 2, weather = Battle.Weather.Rain, hp = 3f,   dmg = 1.3f, speed = 1.3f, tint = new Color(0.25f, 0.35f, 0.6f), desc = "趁雨繞到背後捅刀" },
+            new VariantDef { id = 160, baseKind = 0,  name = "冠軍劍鬥士", human = 1, band = "冠軍鬥士隊", theme = 3, weather = Battle.Weather.Wind, hp = 3.5f, dmg = 1.4f, speed = 1.5f, tint = new Color(1f, 0.8f, 0.35f), desc = "從側面包抄的老練鬥士" },
+            new VariantDef { id = 161, baseKind = 1,  name = "標槍手",     human = 2, band = "冠軍鬥士隊", theme = 3, weather = Battle.Weather.Wind, hp = 4f,   dmg = 1.3f, speed = 1.5f, tint = new Color(0.9f, 0.7f, 0.4f), desc = "順風擲標槍，被靠近就後撤" },
+            new VariantDef { id = 162, baseKind = 6,  name = "鬥場神官",   human = 5, band = "冠軍鬥士隊", theme = 3, weather = Battle.Weather.Wind, hp = 3.3f, dmg = 1f,   speed = 2f, tint = new Color(1f, 0.95f, 0.6f), desc = "替冠軍們治療；被打就躲到怪群後面" },
+            new VariantDef { id = 163, baseKind = 0,  name = "沙匪刺客",   human = 4, band = "沙漠盜匪",   theme = 4, weather = Battle.Weather.Fog,  hp = 3f,   dmg = 1.4f, speed = 1.3f, tint = new Color(0.75f, 0.55f, 0.35f), desc = "藏在沙霧裡繞背突襲" },
+            new VariantDef { id = 164, baseKind = 9,  name = "砂咒術士",   human = 3, band = "沙漠盜匪",   theme = 4, weather = Battle.Weather.Fog,  hp = 3.3f, dmg = 1.3f, speed = 2f, tint = new Color(0.95f, 0.75f, 0.4f), desc = "躲在怪群後面放砂咒" },
+            new VariantDef { id = 165, baseKind = 1,  name = "沙漠獵手",   human = 2, band = "沙漠盜匪",   theme = 4, weather = Battle.Weather.Fog,  hp = 4f,   dmg = 1.3f, speed = 1.5f, tint = new Color(0.85f, 0.65f, 0.35f), desc = "保持距離射擊，被追就橫移" },
             // ---- 天穹飛毯（副本 sky_carpet；Codex 的全新骨架 SkyEnemyRig，戰鬥照原本的怪）：搭載具跳上飛毯
             new VariantDef { id = 131, baseKind = 0,  name = "風箏盜賊", sky = 0, hp = 0.9f, desc = "抓著大風箏從側面滑過來，放手跳上飛毯的短刀盜賊" },
             new VariantDef { id = 132, baseKind = 2,  name = "雲鷹騎兵", sky = 1, hp = 0.45f, dmg = 1.1f, desc = "騎巨鷹從正前方俯衝，在飛毯上方鬆開鞍的長槍兵" },
@@ -69,7 +87,12 @@ namespace SpellDuel
         public static VariantDef SummonFor(int theme) { foreach (var v in All) if (v.summon && v.theme == theme) return v; return null; }
         /// <summary>召喚物（擊倒紀錄的種類）：沒有經驗、不掉寶</summary>
         public static bool IsSummon(int id) => byId.TryGetValue(id, out var v) && v.summon;
-        public static VariantDef ForWeather(Battle.Weather w) { foreach (var v in All) if (!v.assassin && v.support == 0 && v.weather == w && w != Battle.Weather.None) return v; return null; }
+        /// <summary>這一章、這種天候的人形敵人隊伍（沒有＝空的）</summary>
+        public static List<VariantDef> HumansFor(int theme, Battle.Weather w) { var l = new List<VariantDef>(); foreach (var v in All) if (v.human > 0 && v.theme == theme && v.weather == w && w != Battle.Weather.None) l.Add(v); return l; }
+        public static bool IsHuman(int id) => byId.TryGetValue(id, out var v) && v.human > 0;
+        /// <summary>人形敵人的外觀（玩家職業的模型）</summary>
+        public static string HumanLook(int human) => human == 1 ? "swordsman" : human == 2 ? "archer" : human == 3 ? "mage" : human == 4 ? "assassin" : "priest";
+        public static VariantDef ForWeather(Battle.Weather w) { foreach (var v in All) if (!v.assassin && v.support == 0 && v.human == 0 && v.weather == w && w != Battle.Weather.None) return v; return null; }
         /// <summary>這一章、這種天候的輔助型敵人（沒有＝null）</summary>
         public static VariantDef SupportFor(int theme, Battle.Weather w) { foreach (var v in All) if (v.support > 0 && v.theme == theme && v.weather == w && w != Battle.Weather.None) return v; return null; }
         /// <summary>擊倒紀錄的種類換回原本的怪（掉材料用）</summary>
@@ -84,7 +107,7 @@ namespace SpellDuel
         public const float WeatherMonsterChance = 0.5f;                 // 有天候的時候，每一波出一隻天候怪的機率
         /// <summary>這一關的刺客怪（夜晚的副本：SoloBattle 設定；null＝不出）</summary>
         public VariantDef assassinDef;
-        int assassinWave = -1, weatherWave = -1, supportWave = -1; float assassinAt = -1f, weatherAt = -1f, supportAt = -1f;
+        int assassinWave = -1, weatherWave = -1, supportWave = -1, humanWave = -1; float assassinAt = -1f, weatherAt = -1f, supportAt = -1f, humanAt = -1f;
 
         /// <summary>擊倒紀錄、精魄用的種類：變種用變種 id</summary>
         public static int LogKind(Fighter m) => m.variant > 0 ? m.variant : m.minionKind;
@@ -108,6 +131,14 @@ namespace SpellDuel
             if (v.healer) { m.healer = true; m.attackReadyAt = now + HealerFirst; Emit("healer", m.Feet, v.tint, null); return; }
             if (v.summoner) { m.summoner = true; m.attackReadyAt = now + SummonerFirst; Emit("summoner", m.Feet, v.tint, null); return; }
             if (v.summon) { m.summoned = true; return; }
+            if (v.human > 0)
+            {
+                m.human = v.human; m.humSide = rng.Next(2) == 0 ? -1 : 1; m.humSwitchAt = now + 4f;
+                m.head = new Vector3(m.head.x, HumanHead, m.head.z); m.bodyRadius = 0.3f;
+                if (v.human == 4) { m.assassin = true; m.asnState = 0; m.asnUntil = now + AssassinLurk; }
+                if (v.human == 5) { m.healer = true; m.attackReadyAt = now + HealerFirst; }
+                return;
+            }
             if (v.support > 0)
             {
                 m.support = v.support; m.attackReadyAt = now + SupportFirst;
@@ -174,6 +205,18 @@ namespace SpellDuel
             {
                 if (weatherWave != wave) { weatherWave = wave; weatherAt = rng.NextDouble() < WeatherMonsterChance ? now + 4f + 5f * (float)rng.NextDouble() : -1f; }
                 if (weatherAt > 0f && now >= weatherAt) { weatherAt = -1f; SpawnVariant(edgePoint(), wv); }
+            }
+            // 人形敵人：這一章、這種天候才出現（稀有：每一波 35%）；整隊一起從敵陣後方出來
+            var hv = carpetStation < 0 && !Gallery ? MonsterVariants.HumansFor(Theme, weather) : null;
+            if (hv != null && hv.Count > 0)
+            {
+                if (humanWave != wave) { humanWave = wave; humanAt = rng.NextDouble() < HumanChance ? now + HumanSpawnDelay : -1f; }
+                if (humanAt > 0f && now >= humanAt)
+                {
+                    humanAt = -1f;
+                    for (int i = 0; i < hv.Count; i++) { SpawnVariant(RearPoint(i), hv[i]); lastMinionCount = minions.Count; }
+                    Emit("weathermonster", player.Feet, hv[0].tint, $"⚔ {WeatherName(weather)}裡出現了稀有的人形敵人「{hv[0].band}」！他們會繞側、繞背，沒血就跑去回血——別讓他們逃掉！");
+                }
             }
             // 輔助型：這一章、這種天候才出現；每一波開始 3 秒後從敵陣後方出來（副本 3 人以上兩隻）
             var sv = carpetStation < 0 && !Gallery ? MonsterVariants.SupportFor(Theme, weather) : null;
@@ -359,6 +402,99 @@ namespace SpellDuel
                 m.forward = Fighter.Flat(near.Feet - m.Feet);
             }
             else m.forward = Fighter.Flat(near.Feet - m.Feet);
+        }
+
+        // ------------------------------------------------------------ 人形敵人的 AI（戰術；出手照原本的怪）
+        public const float HumanChance = 0.35f, HumanSpawnDelay = 5f, HumanHead = 1.55f;
+        public const float HumanFlee = 0.35f, HumanFleeBack = 0.7f, HumanFleeTime = 5f, HumanRegen = 0.08f, HumanFleeCd = 15f, HumanFleeSpeed = 1.8f;
+
+        public const float HumanAgile = 2.2f;   // 人形敵人走位比一般小怪敏捷得多（繞側、後撤、逃跑）
+        float HumanSpeed(Fighter m) => minionSpeed * MinionSpeed[m.minionKind] * m.speedMul * EnemySpeedScale * HumanAgile;
+        bool HumanStep(Fighter m, Vector3 goal, float speed, float dt, Fighter face)
+        {
+            var to = XZ(goal - m.Feet);
+            if (to.magnitude < 0.12f) { if (face != null) m.forward = Fighter.Flat(face.Feet - m.Feet); return false; }
+            var next = m.Feet + to.normalized * Mathf.Min(speed * dt, to.magnitude);
+            if (minionInside != null && !minionInside(next) && minionInside(m.Feet)) return false;
+            m.head = new Vector3(next.x, m.head.y, next.z);
+            m.forward = face != null ? Fighter.Flat(face.Feet - m.Feet) : to.normalized;
+            return true;
+        }
+        /// <summary>怪群的中心（不算自己、人形、輔助）：沒有＝null</summary>
+        Vector3? MobCenter(Fighter m)
+        {
+            Vector3 mid = Vector3.zero; int n = 0;
+            foreach (var o in minions) if (o != m && o.Alive && !o.treasure && o.human == 0 && o.support == 0) { mid += o.Feet; n++; }
+            return n >= 2 ? mid / n : (Vector3?)null;
+        }
+
+        /// <summary>
+        /// 人形敵人每幀（UpdateMinions，在刺客、補師之前）：回傳 true＝這一幀的移動由這裡處理。
+        ///   沒血（35% 以下）：劍士、弓手跑到場邊喝藥水，術士、神官躲進怪群後面，刺客隱身逃開；每秒回 8%，回到 70% 或 5 秒後再上（15 秒一次）。
+        ///   劍士：繞到目標的側面再砍；弓手：被靠近就後退、平常橫移；術士：躲在怪群後面，準備好才出手；刺客、神官：照刺客、補師的 AI。
+        /// </summary>
+        bool UpdateHuman(Fighter m, Fighter tgt, float dist, float dt)
+        {
+            ArenaFrame(out var c, out float R);
+            float sp = HumanSpeed(m);
+            if (m.humState == 1)
+            {
+                if (now >= m.humUntil || m.hp >= m.maxHp * HumanFleeBack) { m.humState = 0; m.humCdAt = now + HumanFleeCd; if (m.human == 4) m.asnState = 1; return false; }
+                Vector3 goal;
+                var mob = MobCenter(m);
+                var away = Fighter.Flat(m.Feet - tgt.Feet); if (away == Vector3.zero) away = Fighter.Flat(m.Feet - c); if (away == Vector3.zero) away = Vector3.forward;
+                if ((m.human == 3 || m.human == 5) && mob.HasValue) { var a2 = Fighter.Flat(mob.Value - tgt.Feet); goal = mob.Value + (a2 == Vector3.zero ? away : a2) * 1.5f; }
+                else goal = c + away * Mathf.Max(1f, R - 0.4f);
+                if (minionInside != null && !minionInside(goal)) goal = Vector3.Lerp(c, goal, 0.8f);
+                bool moving = HumanStep(m, goal, sp * HumanFleeSpeed, dt, null);
+                if (!moving || FlatDistance(m.Feet, goal) < 0.6f)
+                {
+                    float amt = Mathf.Min(m.maxHp - m.hp, m.maxHp * HumanRegen * dt);
+                    if (amt > 0f) { m.hp += amt; m.humHealed += amt; }
+                    if (m.humHealed >= m.maxHp * 0.1f) { Emit("enemyheal", m.Chest, new Color(0.45f, 1f, 0.55f), $"+{m.humHealed:0}"); m.humHealed = 0f; }
+                }
+                return true;
+            }
+            if (m.hp < m.maxHp * HumanFlee && now >= m.humCdAt && m.windupUntil <= 0f)
+            {
+                m.humState = 1; m.humUntil = now + HumanFleeTime; m.humHealed = 0f;
+                Emit("humanflee", m.Chest, new Color(1f, 0.85f, 0.4f), m.human == 3 || m.human == 5 ? $"{m.name}躲進怪群後面回血了！" : $"{m.name}跑開去喝藥水了！追上去！");
+                return true;
+            }
+            if (m.windupUntil > 0f) return false;   // 出手中：照原本的 AI
+            if (now >= m.humSwitchAt) { m.humSwitchAt = now + 4f + (float)rng.NextDouble() * 3f; if (rng.NextDouble() < 0.5) m.humSide = -m.humSide; }
+            var tf = Fighter.Flat(tgt.forward); if (tf == Vector3.zero) tf = Fighter.Flat(m.Feet - tgt.Feet);
+            var tr = new Vector3(tf.z, 0f, -tf.x);
+            switch (m.human)
+            {
+                case 1:   // 劍士：繞到側面（目標右手或左手邊 1.1m）再近身
+                {
+                    var flank = tgt.Feet + tr * m.humSide * 1.1f;
+                    if (FlatDistance(m.Feet, flank) > 0.5f && dist > 0.9f) { if (!HumanStep(m, flank, sp * 1.3f, dt, tgt)) m.humSide = -m.humSide; return true; }
+                    return false;
+                }
+                case 2:   // 弓手：太近就後撤＋橫移；平常一邊橫移一邊射
+                {
+                    var away = Fighter.Flat(m.Feet - tgt.Feet); if (away == Vector3.zero) away = -tf;
+                    var side = new Vector3(away.z, 0f, -away.x) * m.humSide;
+                    if (dist < 3.2f) { if (!HumanStep(m, m.Feet + (away + side * 0.6f).normalized, sp * 1.7f, dt, tgt)) m.humSide = -m.humSide; return true; }
+                    if (dist < 7f && !HumanStep(m, m.Feet + side * 0.5f, sp * 0.5f, dt, tgt)) m.humSide = -m.humSide;
+                    return false;
+                }
+                case 3:   // 術士：躲在怪群後面；準備好才出手
+                {
+                    var mob = MobCenter(m);
+                    if (mob.HasValue && now < m.attackReadyAt)
+                    {
+                        var a2 = Fighter.Flat(mob.Value - tgt.Feet); if (a2 == Vector3.zero) a2 = -tf;
+                        HumanStep(m, mob.Value + a2 * 1.5f, sp * 1.3f, dt, tgt);
+                        return true;
+                    }
+                    if (dist < 2.5f) { var away = Fighter.Flat(m.Feet - tgt.Feet); if (away == Vector3.zero) away = -tf; HumanStep(m, m.Feet + away, sp * 1.5f, dt, tgt); return true; }
+                    return false;
+                }
+                default: return false;   // 刺客（繞背）、神官（治療）：照原本的 AI
+            }
         }
 
         // ------------------------------------------------------------ 輔助型的 AI（第二～五章、特定天候）
