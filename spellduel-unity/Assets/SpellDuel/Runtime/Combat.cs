@@ -1467,7 +1467,7 @@ namespace SpellDuel
                 if (m.treasure) { UpdateTreasure(m, dt); continue; }   // 寶箱怪：只會逃
                 if (m.march != null && UpdateMarch(m, dt)) continue;   // 軍陣行進中：整隊一起推進，到定點才散開
                 // 保險（使用者回報「有的敵人有顯示但打不到，關卡無法進行」）：在場外待超過 OutsideRescue 秒（不是正在跳崖、出場中），就拉回場內
-                if (minionInside != null && !minionInside(m.Feet) && m.leapEnd <= 0f && !m.hidden && carpetStation < 0)
+                if (minionInside != null && !minionInside(m.Feet) && m.leapEnd <= 0f && carpetStation < 0)   // 埋著的食人花也算（埋在場外會永遠打不到）
                 {
                     if (m.outsideSince <= 0f) m.outsideSince = now;
                     else if (now - m.outsideSince > OutsideRescue)
@@ -1672,12 +1672,16 @@ namespace SpellDuel
         /// <summary>食人花：埋在場內離所有玩家 2.5m 以上的隨機一點（地上只有一小圈葉子）；玩家走近 1.5m 才冒出來咬</summary>
         void BuryChomper(Fighter m)
         {
-            var at = m.Feet;
-            for (int i = 0; i < 12; i++)
+            // 使用者回報「第二章一開始有敵人在場外、只看到橘色血條、沒有模型、打也沒傷害」：以前 12 次都找不到點時，
+            // 食人花就埋在出生點（場外）→ 玩家走不到 1.5m 內，永遠不冒出來、也打不到 → 關卡卡住。
+            // 現在：多試幾次、找不到就放寬和玩家的距離，最後一定埋在場內（攻擊區）
+            var at = PullInside(m.Feet, player.Feet); bool found = false;
+            for (int i = 0; i < 40 && !found; i++)
             {
                 var q = RandomInsidePoint(player.Feet + Fighter.Flat(player.forward) * 3f);
-                bool far = true; foreach (var pl in Players()) if (pl.Alive && FlatDistance(q, pl.Feet) < 2.5f) { far = false; break; }
-                if (far && CanAttackFrom(q)) { at = q; break; }
+                float need = i < 20 ? 2.5f : i < 30 ? 1.8f : 0f;
+                bool far = true; foreach (var pl in Players()) if (pl.Alive && FlatDistance(q, pl.Feet) < need) { far = false; break; }
+                if (far && CanAttackFrom(q)) { at = q; found = true; }
             }
             m.head = new Vector3(at.x, m.head.y, at.z); m.homePos = m.Feet;
             m.hidden = true;

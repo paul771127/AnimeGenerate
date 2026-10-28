@@ -1859,9 +1859,9 @@ namespace SpellDuel
                     {
                         lr = Prim(PrimitiveType.Cylinder, new Color(0.35f, 0.7f, 0.25f, 0.55f), true);
                         lr.transform.localScale = new Vector3(0.9f, 0.01f, 0.9f);
-                        lr.transform.position = WorldFrame.FromWorld(new Vector3(m.Feet.x, 0.015f, m.Feet.z));
                         leafRings[m] = lr;
                     }
+                    lr.transform.position = WorldFrame.FromWorld(new Vector3(m.Feet.x, 0.015f, m.Feet.z));   // 跟著（被拉回場內時葉子圈一起過去）
                 }
                 else if (leafRings.TryGetValue(m, out var lr0)) { if (lr0) Destroy(lr0); leafRings.Remove(m); }
                 var oldPos = rig.transform.position;
@@ -4186,7 +4186,7 @@ namespace SpellDuel
             if (battle.minions.Count > 0)
                 foreach (var mn in battle.minions)
                 {
-                    if (!mn.Alive) continue;
+                    if (!mn.Alive || mn.hidden) continue;   // 埋著的食人花：只有地上一圈葉子，不畫血條
                     var ms = cam.WorldToScreenPoint(WorldFrame.FromWorld(mn.Feet + Vector3.up * (MinionRig.Height + 0.2f)));
                     if (ms.z <= 0) continue;
                     UiKit.Bar(new Rect(ms.x - W * 0.06f, H - ms.y, W * 0.12f, lh * 0.22f), mn.hp / mn.maxHp, mn.windupUntil > 0f ? new Color(1f, 0.2f, 0.1f) : new Color(1f, 0.55f, 0.2f), "", fsS);
