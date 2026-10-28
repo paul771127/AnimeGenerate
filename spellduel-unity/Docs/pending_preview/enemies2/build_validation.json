@@ -1,0 +1,78 @@
+{
+  "source_commit": "266054ebc563dab35e6c28a20ebd15473a406005",
+  "status": "required_checks_passed",
+  "native_run": {
+    "id": 40645892936,
+    "workflow": "spellduel-enemy-art.yml",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40645892936",
+    "jobs": [
+      {
+        "name": "enemy-art",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "platform_run": {
+    "id": 40645892948,
+    "workflow": "spellduel-unity.yml",
+    "status": "in_progress",
+    "conclusion": null,
+    "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40645892948",
+    "jobs": [
+      {
+        "name": "check-license",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "ios-export",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "android",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "publish-apk",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "ios-ipa",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "ios-testflight",
+        "status": "in_progress",
+        "conclusion": null
+      }
+    ]
+  },
+  "models": 23,
+  "validated_skills": 45,
+  "triangle_range": [
+    1088,
+    4712
+  ],
+  "limitations": [
+    "AR device frame timing not measured.",
+    "Gameplay and network wiring remain with Claude; no Combat or SoloBattle changes.",
+    "Shared full-gallery Snapshot has a pre-existing missing portrait ID for 空賊船長; isolated enemy art validation passed."
+  ],
+  "shared_gallery_failure_url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40644431110",
+  "required_jobs": {
+    "android": "success",
+    "ios-export": "success",
+    "ios-ipa": "success"
+  },
+  "verified_at_utc": "2026-10-28T07:13:19.567142+00:00",
+  "gallery_commit": "db01195",
+  "assets_unchanged_since_validated_commit": true,
+  "optional_testflight": "Existing workflow still running at verification time; not claimed as delivered."
+}

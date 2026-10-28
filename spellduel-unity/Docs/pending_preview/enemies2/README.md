@@ -90,4 +90,11 @@
 - [原生測試報告](native/support_enemies_audit.json)：23種皆1088～4712三角，45招取消／清理與收招恢復測試通過。
 - [Unity原生驗證作業](https://github.com/paul771127/AnimeGenerate/actions/runs/40645892936)成功。
 
-所有native圖片由Unity渲染，總覽只是原生圖的排列與標註，不是生成式插畫。雙平台建置與最終來源證據見稍後補入的build_validation.json；此段不把仍在進行的建置列為成功。既有共用全站Snapshot另有「空賊船長」缺頭像ID的錯誤（本輪不改對話人物資料），本批採獨立RenderSupportEnemies完整驗證，不移除原檢查。
+所有native圖片由Unity渲染，總覽只是原生圖的排列與標註，不是生成式插畫。Android APK、Unity iOS匯出與未簽署IPA均已成功（程式來源266054e）；[來源與建置證據](build_validation.json)。原有TestFlight流程在紀錄時仍進行中，本交付不宣稱Apple處理完成。既有共用全站Snapshot另有「空賊船長」缺頭像ID的錯誤（本輪不改對話人物資料），本批採獨立RenderSupportEnemies完整驗證，不移除原檢查。
+
+### 最終驗證
+
+- 原生：40645892936成功，23種／45招／七種投射物。
+- [雙平台作業40645892948](https://github.com/paul771127/AnimeGenerate/actions/runs/40645892948)：Android、ios-export、ios-ipa三個必要job皆success。
+- 後續提交只有文件與原生PNG，Assets與已驗證程式266054e完全一致。
+- 模型替換、讀條狀態與事件觸發的接線依分工由Claude處理；本批沒有修改Combat或SoloBattle。

@@ -589,3 +589,7 @@ EnemySupportFx.cs完成Heal綠色拋物線光絲、Shield泡泡與ShieldBreak碎
 ### 第 11、15、16 項：原生圖與功能驗證交付（2026-10-28）
 
 程式來源266054e的獨立Unity作業40645892936成功，Docs/pending_preview/enemies2/native/收錄23種正面、側面、讀條、預備、出手、恢復與總覽，另含四類預警、七種投射物、支援效果。模型實測1088～4712三角；45id預警handle隔離、重施去重、目標消失清理、收招回待機、動畫快取檢查均通過。概念／原生圖分開標示，手機AR幀時未量測。既有共用全站Snapshot因空賊船長缺頭像ID失敗，未改對話資料或移除該檢查；本批獨立驗證已全數成功。Android／iOS作業40645892948仍在執行，完成後另補結果。
+
+### 第 11、15、16 項：第二輪最終驗證（2026-10-28）
+
+程式266054e：獨立原生作業40645892936成功；雙平台作業40645892948的Android APK、Unity iOS匯出及未簽署IPA三個必要job全部成功。原生圖已以db01195推送，Docs/pending_preview/enemies2/build_validation.json保存提交、job與實測證據；後續文件提交的Assets與驗證來源相同。完整交付包含23種程序模型與動作、VariantRig、EnemySupportFx、45招的預警／出手類型與七種投射物；每隻1088～4712三角。已按使用者定案同步提案／文件索引中的鼓手攻速描述，不改戰鬥資料。原有TestFlight流程在記錄時仍在執行，不列作完成；手機AR幀時未量測，共用全站Snapshot的空賊船長頭像ID錯誤另列於README。Claude可照README接入模型與事件，本輪沒有改Combat、SoloBattle或網路。
