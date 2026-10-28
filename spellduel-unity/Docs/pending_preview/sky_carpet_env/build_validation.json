@@ -1,0 +1,86 @@
+{
+  "source": "c2277044645038378888466889aeff84f75984f4",
+  "requiredPlatformJobs": [
+    "android",
+    "ios-export",
+    "ios-ipa"
+  ],
+  "requiredPlatformJobsPassed": true,
+  "nativePreview": {
+    "id": 40702216395,
+    "head": "c2277044645038378888466889aeff84f75984f4",
+    "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40702216395",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "sky-gear",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40702216395/job/122864747028"
+      }
+    ]
+  },
+  "platform": {
+    "id": 40702216262,
+    "head": "c2277044645038378888466889aeff84f75984f4",
+    "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40702216262",
+    "status": "in_progress",
+    "conclusion": null,
+    "jobs": [
+      {
+        "name": "check-license",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40702216262/job/122865519078"
+      },
+      {
+        "name": "ios-export",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40702216262/job/122865576479"
+      },
+      {
+        "name": "android",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40702216262/job/122865576897"
+      },
+      {
+        "name": "ios-ipa",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40702216262/job/122873582910"
+      },
+      {
+        "name": "publish-apk",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40702216262/job/122876124898"
+      },
+      {
+        "name": "ios-testflight",
+        "conclusion": null,
+        "status": "in_progress",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40702216262/job/122879497722"
+      }
+    ]
+  },
+  "fullSnapshot": {
+    "id": 40697249304,
+    "head": "55862f904f5b94c022df31388a44f003c823b56a",
+    "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40697249304",
+    "status": "completed",
+    "conclusion": "failure",
+    "jobs": [
+      {
+        "name": "snapshots",
+        "conclusion": "failure",
+        "status": "completed",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40697249304/job/122847591892"
+      }
+    ]
+  },
+  "fullSnapshotLimitation": "DungeonSpawnAudit.Roster reports Incorrect enemy count at line 44. Existing combat check retained; no Combat changes. Independent sky/gear audit passes.",
+  "testFlight": "Automatic publishing after compilation is not a required validation for this art delivery."
+}
