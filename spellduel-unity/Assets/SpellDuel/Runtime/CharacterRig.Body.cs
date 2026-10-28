@@ -108,7 +108,7 @@ namespace SpellDuel
             if (k <= 0.01f) return;
             var bodyFwd = transform.forward; var up = transform.up; var right = transform.right;
             // ---- 左手拿手機（伸到眼前）
-            SolveArm(shL, elL, handL, Vector3.Lerp(handL.position, phonePos + up * -0.02f * s, k * (1f - Mathf.Max(Mathf.Max(guardAmt, chargeAmt), Attacking ? 1f : 0f))), -right, bodyFwd, up);
+            if(!heldHandL)SolveArm(shL, elL, handL, Vector3.Lerp(handL.position, phonePos + up * -0.02f * s, k * (1f - Mathf.Max(Mathf.Max(guardAmt, chargeAmt), Attacking ? 1f : 0f))), -right, bodyFwd, up);
             // ---- 右手：比手勢時伸到手勢的位置
             gestureAmt = Mathf.MoveTowards(gestureAmt, gesture ? 1f : 0f, dt * 6f);
             if (gestureAmt > 0.001f && !Attacking) SolveArm(shR, elR, handR, Vector3.Lerp(handR.position, gesturePos, gestureAmt * k), right, bodyFwd, up);

@@ -8,12 +8,26 @@ namespace SpellDuel
         float poseCrouchLean, poseJumpTuck, poseJumpAsym, poseChargeLean, poseChargeTwist;
         float poseLanding, poseLastLift;
         bool poseLongCoat;
-        Transform poseStick;
+        Transform poseStick, poseBow;
+        LineRenderer poseString;
 
         void SetupPlayerPoses()
         {
             string id = advancedId ?? classId;
             if(id=="novice")poseStick=handR.Find("Sword");
+            if(classId=="archer")
+            {
+                poseBow=handL.Find("Bow");
+                if(poseBow!=null)
+                {
+                    foreach(var renderer in poseBow.GetComponentsInChildren<MeshRenderer>())
+                        if(renderer.sharedMaterial.shader==glowShader)RemoveVisual(renderer.gameObject);
+                    var stringRoot=new GameObject("Animated bowstring");stringRoot.transform.SetParent(poseBow,false);
+                    poseString=stringRoot.AddComponent<LineRenderer>();poseString.useWorldSpace=true;poseString.positionCount=3;
+                    poseString.widthMultiplier=.004f;poseString.sharedMaterial=Glow(new Color(.95f,.93f,.78f));
+                    poseString.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
+                }
+            }
             poseLongCoat = OutfitArt.Get(id).AnimationHem > .15f;
             poseCrouchLean = 19; poseJumpTuck = 28; poseJumpAsym = 8;
             poseChargeLean = 2; poseChargeTwist = -8;
@@ -79,6 +93,21 @@ namespace SpellDuel
 
         void ApplyPlayerGrip(float deadE)
         {
+            // Cant a long blade/staff out of the face without moving it out of the gripping hand.
+            if(!Attacking && deadE<.01f && (classId=="swordsman"||classId=="mage"||classId=="priest"))
+                handR.localRotation*=Quaternion.Euler(0,classId=="swordsman"?18:15,0);
+            if(poseBow!=null && poseString!=null)
+            {
+                float pull=Mathf.Lerp(.25f,1,ChargePoseWeight(Mathf.Clamp01(Charge)))*combatAmount*(1-guardAmt)*(1-deadE);
+                if(Attacking)pull=atkT<atkWind?Smooth(atkT/Mathf.Max(.01f,atkWind)):1-Smooth((atkT-atkWind)/AtkStrike);
+                if(castT>=0)pull*=1-Smooth(castT/CastDur);
+                var middle=poseBow.TransformPoint(new Vector3(0,.16f+.20f*pull,0));
+                if(pull>.05f && !gesture)
+                    SolveArm(shR,elR,handR,Vector3.Lerp(handR.position,middle,Mathf.Clamp01(pull*4)),transform.right,transform.forward,transform.up);
+                poseString.SetPosition(0,poseBow.TransformPoint(BowPoint(-1,.57f,.16f)));
+                poseString.SetPosition(1,middle);
+                poseString.SetPosition(2,poseBow.TransformPoint(BowPoint(1,.57f,.16f)));
+            }
             if(poseStick==null || deadE>.01f || (phoneDriven && !Attacking && Charge<=0 && !Guarding))return;
             if(castT>=0 || (Attacking && atkKind=="novice_throw"))return;
             float k=Mathf.Max(combatAmount,Mathf.Max(chargeAmt,guardAmt));
@@ -110,10 +139,10 @@ namespace SpellDuel
             hipL.localPosition=new Vector3(-halfWidth,.85f,0);
             hipR.localPosition=new Vector3(halfWidth,.85f,0);
             float legs=Mathf.Clamp01(compression/.07f+tuck);
-            hipL.localRotation=Quaternion.Slerp(hipL.localRotation,Quaternion.Euler(-angle-poseJumpTuck*tuck,0,-spread),legs);
-            hipR.localRotation=Quaternion.Slerp(hipR.localRotation,Quaternion.Euler(-angle-(poseJumpTuck-poseJumpAsym)*tuck,0,spread),legs);
-            knL.localRotation=Quaternion.Slerp(knL.localRotation,Quaternion.Euler(angle+back+poseJumpTuck*1.65f*tuck,0,0),legs);
-            knR.localRotation=Quaternion.Slerp(knR.localRotation,Quaternion.Euler(angle+back+(poseJumpTuck-poseJumpAsym)*1.65f*tuck,0,0),legs);
+            hipL.localRotation=Quaternion.Slerp(hipL.localRotation,Quaternion.Euler(-angle-poseJumpTuck*1.35f*tuck,0,-spread),legs);
+            hipR.localRotation=Quaternion.Slerp(hipR.localRotation,Quaternion.Euler(-angle-(poseJumpTuck-poseJumpAsym)*1.35f*tuck,0,spread),legs);
+            knL.localRotation=Quaternion.Slerp(knL.localRotation,Quaternion.Euler(angle+back+poseJumpTuck*2.3f*tuck,0,0),legs);
+            knR.localRotation=Quaternion.Slerp(knR.localRotation,Quaternion.Euler(angle+back+(poseJumpTuck-poseJumpAsym)*2.3f*tuck,0,0),legs);
             float footZ=ThighLen*Mathf.Sin(angle*Mathf.Deg2Rad)-ShinLen*Mathf.Sin(back*Mathf.Deg2Rad);
             var bp=body.localPosition;
             body.localPosition=new Vector3(bp.x,-compression+lift,bp.z-footZ);

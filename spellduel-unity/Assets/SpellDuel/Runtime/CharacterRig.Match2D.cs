@@ -104,7 +104,7 @@ namespace SpellDuel
                 for(int i=0;i<hand.childCount;i++)
                 {
                     var prop=hand.GetChild(i);string type=prop.gameObject.name;
-                    if(type=="Sword"&&id=="berserker")continue; // Actual jian/qi components used by 劍來 remain intact.
+                    if(type=="Sword"&&(id=="berserker"||id=="novice"))continue; // Actual jian/qi components used by 劍來 remain intact.
                     if(type=="Sword"||type=="Dagger"||type=="CrescentBlade"||type=="Bow"||type=="Staff"||type=="HolyLance")ReplaceReferenceProp(prop,id,type);
                 }
             if(orb!=null)
