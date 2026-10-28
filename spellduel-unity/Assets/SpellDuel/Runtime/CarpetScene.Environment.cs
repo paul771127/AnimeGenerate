@@ -6,6 +6,7 @@ namespace SpellDuel
  {
   static readonly Material[] cloudMats=new Material[5];
   static readonly Mesh[] skyMeshes=new Mesh[5];
+  static Mesh cliffMesh;static Material cliffMaterial;
   readonly List<LineRenderer> lightning=new List<LineRenderer>();
   readonly List<Renderer> stormClouds=new List<Renderer>();
   readonly List<Transform> waterfallSheets=new List<Transform>();
@@ -53,6 +54,7 @@ namespace SpellDuel
    for(int p=0;p<4;p++)
    {
     var at=new Vector3((p-1.5f)*1.12f,(p%2)*.35f,Mathf.Sin(p*2.2f)*.6f)*scale;
+    if(station==1&&layer==1)at.y-=3.4f; // Keep the grass, bridge and waterfall lip above their cloud skirt.
     var part=SkyArt.Oval(root,"Cloud volume",at,new Vector3(3.7f,1.35f+(p%2)*.9f,4.7f)*scale,Color.white);
     part.GetComponent<Renderer>().sharedMaterial=CloudMaterial(station);
    }
@@ -99,12 +101,33 @@ namespace SpellDuel
    }
    for(int k=0;k<9;k++){float z=k*.45f;var plank=SkyArt.Line(t,"Bridge plank",2,.18f,new Color(.42f,.27f,.15f));plank.SetPositions(new[]{new Vector3(-.62f,.5f-Mathf.Sin(k/8f*Mathf.PI)*.65f,z+2),new Vector3(.62f,.5f-Mathf.Sin(k/8f*Mathf.PI)*.65f,z+2)});}
   }
+  static void EnsureCliff()
+  {
+   if(cliffMesh)return;
+   var v=new List<Vector3>();var tr=new List<int>();
+   float[] widths={.60f,.98f,.87f,1,.79f,.48f};
+   for(int j=0;j<6;j++)for(int i=0;i<12;i++)
+   {
+    float a=i*Mathf.PI*2/12,r=widths[j]*(1+.10f*Mathf.Sin(a*3+j*.8f));
+    v.Add(new Vector3(Mathf.Cos(a)*r*.5f,j/5f-.5f+.025f*Mathf.Sin(a*2+j),Mathf.Sin(a)*r*.5f));
+   }
+   for(int j=0;j<5;j++)for(int i=0;i<12;i++){int a=j*12+i,b=j*12+(i+1)%12;tr.AddRange(new[]{a,a+12,b,b,a+12,b+12});}
+   for(int i=1;i<11;i++){tr.AddRange(new[]{0,i,(i+1)%12});tr.AddRange(new[]{60,60+i+1,60+i});}
+   cliffMesh=new Mesh{name="Shared rounded stratified cliff"};cliffMesh.SetVertices(v);cliffMesh.SetTriangles(tr,0);cliffMesh.RecalculateNormals();cliffMesh.RecalculateBounds();
+   cliffMaterial=new Material(Resources.Load<Shader>("Shaders/CarpetCloud")){name="Shared sunlit sandstone"};
+   cliffMaterial.SetColor("_Color",new Color(.81f,.57f,.34f));cliffMaterial.SetColor("_Shade",new Color(.39f,.27f,.25f));cliffMaterial.SetColor("_Rim",new Color(.83f,.65f,.44f));
+  }
   void Ravine(Transform t,int i)
   {
+   EnsureCliff();
    for(int k=0;k<3;k++)
    {
-    SkyArt.Oval(t,"Eroded sandstone wall",new Vector3(k*.5f,k*2-2,0),new Vector3(5-k*.4f,9,8),new Color(.62f+k*.05f,.34f+k*.035f,.20f));
-    var seam=SkyArt.Line(t,"Horizontal erosion strata",5,.12f,new Color(.87f,.65f,.40f));for(int j=0;j<5;j++)seam.SetPosition(j,new Vector3(-2+j,k*2+.3f*Mathf.Sin(j),3.2f));
+    var at=new Vector3(k*.5f,k*1.6f-2,0);var size=new Vector3(5-k*.4f,14-k,20);
+    SkyArt.MeshPart(t,"Rounded wind carved canyon wall",cliffMesh,cliffMaterial,at,size);
+    // The strata wrap around the exposed inward face, instead of floating in front of the cliff.
+    var seam=SkyArt.Line(t,"Horizontal erosion strata",9,.10f,new Color(.73f,.51f,.33f));
+    float facing=t.localPosition.x>0?Mathf.PI:0;
+    for(int j=0;j<9;j++){float a=facing-Mathf.PI*.45f+j*Mathf.PI*.9f/8;seam.SetPosition(j,at+new Vector3(Mathf.Cos(a)*size.x*.49f,k*.18f+.08f*Mathf.Sin(j),Mathf.Sin(a)*size.z*.49f));}
    }
   }
   void Beacon(Transform t,int i)
