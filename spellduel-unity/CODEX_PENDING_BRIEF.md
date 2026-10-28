@@ -643,3 +643,7 @@ HolyLanding改為1.5m／3m擴散光環、8／12道外緣細光，移除施法者
 ### 第二輪合併單第 4 項：傷害轉護盾的劍氣美術（2026-10-28）
 
 新增SpellFx.SwordShieldGain(owner,fill)及SwordShieldAura(owner,fill)，fill限定0～1；8片藍白劍形光片環繞，增加時向內聚攏，0.3秒節流，fill=0立即隱藏。骨架與材質只建一次，Aura每幀不建網格／材質；owner停用／銷毀清理，近身主鏡頭四角淡藍劍框不遮中央。新增SwordShieldView.Tick僅供可重現預覽，遊戲自動Update，不可雙重呼叫；Claude只需接兩個SpellFx入口。檢查含連續12次Gain只播1次、節流恢復、快取、fill=0及停用清理，原生第一人稱／旁觀圖待CI。沒有讀取HP或改判定／連線。
+
+### 第二輪合併單第 1 項：48招專屬預警與8種投射物（2026-10-28）
+
+EnemySkillFx.KindArt為ek_0～47逐招加入爪痕火星、角、火藥袋、岩紋、雙栓、裂晶、葉根、舌、傘、釘莢、鰭翼、水泡、雷觸點、鏈錘、三背板、冠爐、鼓、沙漏等具體辨識；Loaded背板／弩栓依預警進度逐一亮起。保留既有鎖定邊界、width／angle／size；pose=1橘色雙上箭、pose=2藍胸帶與下箭，沒有移動落點。HealAlly預警改綠色可打斷符印，出手沿用EnemySupportFx.Heal，不畫成傷害通道。EnemyShotKindArt提供火輪、滾石、校射箭、釘莢、裂板、熔栓、鎖弩、砂晶八種程序造型；飛行根座標不動，無碰撞或傷害。沿用MinionRig既有Windup，不新增接線需求。新增48招預警／出手、8投射物原生圖與pose提示／取消清理檢查；檔案待CI出圖。使用者定案菁英新增第三招及甲蜥雙環2秒以現有Claude邏輯為準，本項不改戰鬥。

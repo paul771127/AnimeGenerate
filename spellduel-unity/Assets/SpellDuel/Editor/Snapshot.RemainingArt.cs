@@ -16,6 +16,25 @@ namespace SpellDuel.EditorTools
    var floor=GameObject.CreatePrimitive(PrimitiveType.Plane);floor.transform.localScale=Vector3.one*3;floor.GetComponent<Renderer>().sharedMaterial=new Material(Shader.Find("Standard")){color=new Color(.32f,.36f,.30f)};
    RemainingArtShots(cam);
   }
+  static void KindMoveShots(Camera cam)
+  {
+   int count=0;
+   foreach(var pair in EnemySkills.ByKind)foreach(var def in pair.Value)
+   {
+    count++;int h=EnemySkillFx.Telegraph(def.id,Vector3.zero,Vector3.forward,def.warn,def.size);
+    var view=UnityEngine.Object.FindObjectOfType<EnemySkillView>();if(!view)throw new Exception("Missing cue "+def.id);view.Tick(def.warn*.72f);
+    bool arrow=false,chest=false;foreach(var line in view.GetComponentsInChildren<LineRenderer>()){if(line.name=="Jump second chevron")arrow=true;if(line.name=="Crouch chest lane")chest=true;}
+    if(def.pose==1&&!arrow || def.pose==2&&!chest)throw new Exception("Missing physical hint "+def.id);
+    CarpetFit(cam,view.gameObject,"remaining_cue_"+def.id,new Vector3(.7f,.8f,1),720,720);
+    EnemySkillFx.Cancel(h);if(UnityEngine.Object.FindObjectOfType<EnemySkillView>())throw new Exception("Cue cancel leak");
+    EnemySkillFx.Cast(def.id,Vector3.zero,Vector3.forward,def.size);
+    foreach(var effect in UnityEngine.Object.FindObjectsOfType<EnemySkillView>()){effect.Tick(.12f);CarpetFit(cam,effect.gameObject,"remaining_cast_"+def.id,new Vector3(.7f,.8f,1),720,720);effect.Tick(2);}
+    foreach(var effect in UnityEngine.Object.FindObjectsOfType<EnemySupportView>())effect.Tick(5);
+   }
+   if(count!=48)throw new Exception("Expected 48 kind skills");
+   foreach(var id in new[]{"ek_1_lowring","ek_4_rollstone","ek_5_twinmark","ek_12_podburst","ek_22_platevolley","ek_24_twinbolt","ek_39_tripleshot","ek_44_crystalline"})
+   {var shot=EnemyShotView.Create(id);FiniteBudget(shot.gameObject,1000);CarpetFit(cam,shot.gameObject,"remaining_shot_"+id,new Vector3(.4f,.3f,1),480,480);UnityEngine.Object.DestroyImmediate(shot.gameObject);}
+  }
   static void SwordShieldShots(Camera cam)
   {
    var owner=CharacterRig.Create("swordsman");cam.transform.position=new Vector3(0,1.6f,0);
@@ -51,7 +70,8 @@ namespace SpellDuel.EditorTools
     burst.Tick(1);if(burst && burst.gameObject.activeSelf)throw new Exception("Holy burst cleanup");UnityEngine.Object.DestroyImmediate(ground);
    }
    SwordShieldShots(cam);
-   cam.fieldOfView=fov;File.WriteAllText("snapshots/remaining_art_audit.json","{\"holyCentreClear\":true,\"holyRadii\":[1.5,3],\"holyCleanup\":true,\"shieldThrottleCacheCleanup\":true}");
+   KindMoveShots(cam);
+   cam.fieldOfView=fov;File.WriteAllText("snapshots/remaining_art_audit.json","{\"holyCentreClear\":true,\"holyRadii\":[1.5,3],\"holyCleanup\":true,\"shieldThrottleCacheCleanup\":true,\"kindSkills\":48,\"kindShots\":8}");
   }
  }
 }
