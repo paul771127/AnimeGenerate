@@ -72,6 +72,7 @@ jobs:
             spellduel-unity/snapshots/elite_audit.json
             spellduel-unity/snapshots/world_boss_audit.json
             spellduel-unity/snapshots/trap_dungeon_audit.json
+            spellduel-unity/snapshots/player_pose_audit.json
             spellduel-unity/snapshots/pending_art_audit.json
             spellduel-unity/snapshots/pending_ally_audit.json
             spellduel-unity/snapshots/neck_hair_audit.json

@@ -83,9 +83,10 @@ namespace SpellDuel
         /// <summary>Animate 最後呼叫：有手機資料時覆寫腿、身體、頭、手臂</summary>
         void ApplyPhoneBody(float dt, float deadE)
         {
-            if (!phoneDriven) return;
+            if (!phoneDriven) { poseLastLift=poseLanding=0; return; }
             if (Time.time - phoneLast > 0.5f) { phoneDriven = false; transform.localScale = Vector3.one; return; }
             float k = 1f - deadE;
+            if(k<=.01f)return;
             float s = transform.lossyScale.y > 1e-3f ? transform.lossyScale.y : 1f;
 
             // ---- 站／蹲：手機比站姿低多少 → 蹲多深；比站姿高＝跳起來
@@ -94,30 +95,20 @@ namespace SpellDuel
             crouchAmt = Mathf.Lerp(crouchAmt, Mathf.Clamp01((standLocal - y) / Mathf.Max(0.1f, standLocal - crouchLocal)), 1f - Mathf.Exp(-dt * 12f));
             float drop = Mathf.Clamp(RigEyeHeight - y, 0f, 0.75f) * k;
             float lift = Mathf.Clamp(y - RigEyeHeight, 0f, 0.4f) * k;
-            float a = SquatAngle(drop);                                  // 大腿往前抬的角度（度）
-            float b = a * 0.9f;                                          // 小腿往後的角度
-            float footZ = ThighLen * Mathf.Sin(a * Mathf.Deg2Rad) - ShinLen * Mathf.Sin(b * Mathf.Deg2Rad);
-            float hx = 0.085f * (classId == "assassin" ? 0.85f : 1f);   // 不套預設站姿：髖回到原位
-            hipL.localPosition = new Vector3(-hx, 0.85f, 0f); hipR.localPosition = new Vector3(hx, 0.85f, 0f);
-            var bp = body.localPosition;
-            body.localPosition = new Vector3(bp.x, bp.y - drop + lift, bp.z - footZ);
-            float walkLegs = Mathf.Clamp01(1f - crouchAmt * 2f);           // 蹲下時不擺腿
-            hipL.localRotation = Quaternion.Slerp(Quaternion.Euler(-a, 0f, -3f), hipL.localRotation, walkLegs * (1f - Mathf.Clamp01(a / 15f)));
-            hipR.localRotation = Quaternion.Slerp(Quaternion.Euler(-a, 0f, 3f), hipR.localRotation, walkLegs * (1f - Mathf.Clamp01(a / 15f)));
-            if (a > 1f) { knL.localRotation = Quaternion.Euler(a + b, 0f, 0f); knR.localRotation = Quaternion.Euler(a + b, 0f, 0f); }
+            PhoneLegPose(dt, drop, lift, k);
 
             // ---- 身體轉向、頭：手機往下看＝低頭（蹲下時上身前傾保持平衡）
             var f = Quaternion.Inverse(transform.rotation) * (phoneRot * Vector3.forward);
             float pitch = Mathf.Asin(Mathf.Clamp(-f.y, -1f, 1f)) * Mathf.Rad2Deg;   // 往下看為正
             float yaw = Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg;
-            spine.localRotation = Quaternion.Euler(crouchAmt * 22f * k + Mathf.Clamp(pitch, -10f, 30f) * 0.25f, Mathf.Clamp(yaw, -25f, 25f) * 0.4f, 0f);
+            spine.localRotation = Quaternion.Euler(crouchAmt * poseCrouchLean * k + Mathf.Clamp(pitch, -10f, 30f) * 0.25f, Mathf.Clamp(yaw, -25f, 25f) * 0.4f, 0f);
             neck.localRotation = Quaternion.Euler(Mathf.Clamp(pitch * 0.75f - crouchAmt * 15f, -35f, 45f), Mathf.Clamp(yaw, -40f, 40f) * 0.6f, 0f);
             if (Attacking) spine.localRotation *= atkSpine;   // 放招／揮武器：轉腰、前傾疊上去
 
             if (k <= 0.01f) return;
             var bodyFwd = transform.forward; var up = transform.up; var right = transform.right;
             // ---- 左手拿手機（伸到眼前）
-            SolveArm(shL, elL, handL, Vector3.Lerp(handL.position, phonePos + up * -0.02f * s, k), -right, bodyFwd, up);
+            SolveArm(shL, elL, handL, Vector3.Lerp(handL.position, phonePos + up * -0.02f * s, k * (1f - Mathf.Max(Mathf.Max(guardAmt, chargeAmt), Attacking ? 1f : 0f))), -right, bodyFwd, up);
             // ---- 右手：比手勢時伸到手勢的位置
             gestureAmt = Mathf.MoveTowards(gestureAmt, gesture ? 1f : 0f, dt * 6f);
             if (gestureAmt > 0.001f && !Attacking) SolveArm(shR, elR, handR, Vector3.Lerp(handR.position, gesturePos, gestureAmt * k), right, bodyFwd, up);

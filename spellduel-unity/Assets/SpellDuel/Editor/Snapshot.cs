@@ -78,6 +78,7 @@ namespace SpellDuel.EditorTools
             SceneVariantShots(cam);
             WeatherShots(cam);
             PendingArtShots(cam);
+            PlayerPoseShots(cam);
             floor.SetActive(false);
             CarpetPetsShots(cam);
             SupportEnemyShots(cam);

@@ -69,6 +69,8 @@ namespace SpellDuel
             float total = atkWind + AtkStrike + AtkHold + AtkRecover;
             if (atkT >= total || deadE > 0.01f) { atkT = -1f; atkSpine = Quaternion.identity; return; }
             var w = WindPose(atkKind); var s = StrikePose(atkKind);
+            w.yaw += poseChargeTwist*.25f; s.yaw -= poseChargeTwist*.2f;
+            w.lean += poseChargeLean*.3f; s.lean += poseChargeLean*.2f;
             if (atkReverse) { var tmp = w; w = s; s = tmp; }   // 反手：架勢和收招對調，揮的方向相反
             AtkPose p; float k;   // k：疊上去的比例
             if (atkT < atkWind)
@@ -91,7 +93,8 @@ namespace SpellDuel
             atkSpine = Quaternion.Euler(p.lean * k, p.yaw * k, 0f);
             spine.localRotation *= atkSpine;
             var bp = body.localPosition;
-            body.localPosition = new Vector3(bp.x, bp.y - p.crouch * k, bp.z + p.step * k);
+            // Phone height/feet have priority; a cast may turn the torso but never move the tracked body.
+            if(!phoneDriven)body.localPosition = new Vector3(bp.x, bp.y - p.crouch * k, bp.z + p.step * k);
         }
 
         static AtkPose Blend(AtkPose a, AtkPose b, float t) => new AtkPose

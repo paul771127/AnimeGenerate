@@ -856,7 +856,9 @@ namespace SpellDuel
             var aR = PresentationArm(false); aR.x += armSwing * swingR;
             aL.zOut += breath * 1.5f; aR.zOut += breath * 1.5f;
             aL = Arm.Lerp(aL, guardL, guardAmt); aR = Arm.Lerp(aR, guardR, guardAmt);
-            aL = Arm.Lerp(aL, chargeL, chargeAmt); aR = Arm.Lerp(aR, chargeR, chargeAmt);
+            float chargePose = ChargePoseWeight(ch) * (1f - guardAmt);
+            PlayerChargeBody(chargePose, deadE);
+            aL = Arm.Lerp(aL, chargeL, chargePose); aR = Arm.Lerp(aR, chargeR, chargePose);
             if (chargeAmt > 0f)
             {
                 // 蓄力時手微微顫動
@@ -917,6 +919,7 @@ namespace SpellDuel
             }
             ApplyPhoneBody(dt, deadE);   // 真人分身：照手機的位置、朝向覆寫姿勢（CharacterRig.Body.cs）
             AnimateDetails(castK, hitLean);
+            ApplyPlayerGrip(deadE);
         }
 
         // ================================================================ 木頭人（練習靶）

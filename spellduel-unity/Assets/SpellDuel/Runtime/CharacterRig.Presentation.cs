@@ -10,8 +10,7 @@ namespace SpellDuel
         void SetupPresentation()
         {
             string id=advancedId??classId;idlePresentation=HumanPersonality.Stance(id,false);battlePresentation=HumanPersonality.Stance(id,true);
-            float variation=(CharacterLook.Get(id).Seed%3)-1;
-            idlePresentation.L=new Vector3(-4-variation,6,-10);idlePresentation.R=new Vector3(-5+variation,7,-11);
+            SetupPlayerPoses();
             expressionMotion=head.GetComponent<HumanExpressionMotion>();expressionMotion.External=true;
             HumanProportions.Fit(head,id,1.75f);Vector3 keep=head.position;
             // Lengthen the rib-cage/neck region into the space freed by the smaller head.
@@ -28,7 +27,6 @@ namespace SpellDuel
         }
         Arm PresentationArm(bool left)
         {
-            if(phoneDriven)return left?baseL:baseR;   // 真人分身：姿勢照手機（CharacterRig.Body.cs），不套預設站姿
 
             float t=combatAmount*combatAmount*(3-2*combatAmount);
             var v=Vector3.Lerp(left?idlePresentation.L:idlePresentation.R,left?battlePresentation.L:battlePresentation.R,t);
@@ -43,7 +41,7 @@ namespace SpellDuel
             float roll=Mathf.Lerp(idlePresentation.Roll,battlePresentation.Roll,t);
             float twist=Mathf.Lerp(idlePresentation.Twist,battlePresentation.Twist,t);
             float lean=Mathf.Lerp(idlePresentation.Lean,battlePresentation.Lean,t);
-            bool coat=OutfitArt.Get(advancedId??classId).AnimationHem>.15f;
+            bool coat=poseLongCoat;
             // Long garments use a compact stance so the unchanged cloth never intersects the thighs.
             shift*=coat?.4f:.65f;if(coat){roll*=.3f;twist*=.3f;lean*=.5f;}
             // A seeded 6..12 second cycle, with a short smooth adjustment once per cycle.
