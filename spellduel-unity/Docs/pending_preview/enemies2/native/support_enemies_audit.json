@@ -1,0 +1,144 @@
+{
+    "entries": [
+        {
+            "id": 121,
+            "triangles": 4584,
+            "renderers": 31,
+            "materials": 9
+        },
+        {
+            "id": 122,
+            "triangles": 4340,
+            "renderers": 34,
+            "materials": 12
+        },
+        {
+            "id": 123,
+            "triangles": 4712,
+            "renderers": 33,
+            "materials": 10
+        },
+        {
+            "id": 124,
+            "triangles": 1088,
+            "renderers": 7,
+            "materials": 5
+        },
+        {
+            "id": 141,
+            "triangles": 4520,
+            "renderers": 33,
+            "materials": 9
+        },
+        {
+            "id": 142,
+            "triangles": 4536,
+            "renderers": 35,
+            "materials": 12
+        },
+        {
+            "id": 143,
+            "triangles": 4364,
+            "renderers": 35,
+            "materials": 9
+        },
+        {
+            "id": 144,
+            "triangles": 4040,
+            "renderers": 33,
+            "materials": 9
+        },
+        {
+            "id": 151,
+            "triangles": 4356,
+            "renderers": 35,
+            "materials": 10
+        },
+        {
+            "id": 152,
+            "triangles": 4172,
+            "renderers": 32,
+            "materials": 9
+        },
+        {
+            "id": 153,
+            "triangles": 4424,
+            "renderers": 32,
+            "materials": 9
+        },
+        {
+            "id": 154,
+            "triangles": 4236,
+            "renderers": 36,
+            "materials": 10
+        },
+        {
+            "id": 155,
+            "triangles": 4480,
+            "renderers": 34,
+            "materials": 11
+        },
+        {
+            "id": 156,
+            "triangles": 4264,
+            "renderers": 33,
+            "materials": 10
+        },
+        {
+            "id": 157,
+            "triangles": 4044,
+            "renderers": 36,
+            "materials": 10
+        },
+        {
+            "id": 158,
+            "triangles": 4136,
+            "renderers": 33,
+            "materials": 11
+        },
+        {
+            "id": 159,
+            "triangles": 4044,
+            "renderers": 36,
+            "materials": 10
+        },
+        {
+            "id": 160,
+            "triangles": 4356,
+            "renderers": 36,
+            "materials": 10
+        },
+        {
+            "id": 161,
+            "triangles": 3972,
+            "renderers": 32,
+            "materials": 10
+        },
+        {
+            "id": 162,
+            "triangles": 4296,
+            "renderers": 32,
+            "materials": 10
+        },
+        {
+            "id": 163,
+            "triangles": 4236,
+            "renderers": 36,
+            "materials": 10
+        },
+        {
+            "id": 164,
+            "triangles": 4336,
+            "renderers": 33,
+            "materials": 10
+        },
+        {
+            "id": 165,
+            "triangles": 4448,
+            "renderers": 34,
+            "materials": 10
+        }
+    ],
+    "validatedSkills": 45,
+    "checks": "23 rigs, finite geometry, <=6000 triangles, animation root stable, idle recovery, no update mesh allocation, stealth material reuse, support refresh/cleanup, 45 independent cue handles/cancellation/lifetime, seven projectile renders"
+}

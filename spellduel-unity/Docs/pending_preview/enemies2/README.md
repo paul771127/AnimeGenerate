@@ -81,3 +81,13 @@
 ### 原生驗證
 
 `Snapshot.SupportEnemies.cs`驗證23種模型的有限頂點／6000三角上限，根座標保持、重複潛行不配置材質、動畫不配置網格；支援效果重施去重、破盾、目標停用清理；45招handle唯一／取消隔離／到期清理與七種投射物預覽。CI結果與原生圖片完成後補入本目錄；概念PNG不可冒充Unity截圖。手機AR幀時仍需裝置量測。
+
+## 原生交付圖（程式來源266054e）
+
+- [23種全員總覽](native/all_enemies_labeled.png)
+- [逐角色尺寸與六個狀態索引](native/README.md)
+- [支援角色動作](native/motion_support.png)／[五隊代表動作](native/motion_squads.png)
+- [原生測試報告](native/support_enemies_audit.json)：23種皆1088～4712三角，45招取消／清理與收招恢復測試通過。
+- [Unity原生驗證作業](https://github.com/paul771127/AnimeGenerate/actions/runs/40645892936)成功。
+
+所有native圖片由Unity渲染，總覽只是原生圖的排列與標註，不是生成式插畫。雙平台建置與最終來源證據見稍後補入的build_validation.json；此段不把仍在進行的建置列為成功。既有共用全站Snapshot另有「空賊船長」缺頭像ID的錯誤（本輪不改對話人物資料），本批採獨立RenderSupportEnemies完整驗證，不移除原檢查。
