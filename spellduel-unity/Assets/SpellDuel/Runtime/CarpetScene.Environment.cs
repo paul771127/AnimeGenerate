@@ -29,9 +29,23 @@ namespace SpellDuel
     for(int j=0;j<10;j++)for(int i=0;i<64;i++){int k=j*65+i;tris.AddRange(new[]{k,k+65,k+1,k+1,k+65,k+66});}
     var mesh=new Mesh{name="Procedural gradient sky "+s};mesh.SetVertices(verts);mesh.SetColors(colors);mesh.SetTriangles(tris,0);mesh.RecalculateBounds();skyMeshes[s]=mesh;
    }
-   SkyArt.MeshPart(root,"Distant sky gradient",skyMeshes[s],SkyArt.Glow,Vector3.zero,Vector3.one);
-   var sun=SkyArt.Oval(root,s==3?"Moon through storm":"Directional dawn sun",new Vector3(-14,s==4?8:12,65),Vector3.one*(s==3?3:5),SkyArt.Cream);sun.GetComponent<Renderer>().sharedMaterial=SkyArt.Glow;
+   SkyArt.MeshPart(root,"Distant sky gradient",skyMeshes[s],SkyArt.Glow,Vector3.zero,Vector3.one).GetComponent<Renderer>().sortingOrder=-100;
+   CloudDeck(root,s);
+   var sun=SkyArt.Oval(root,s==3?"Moon through storm":"Directional dawn sun",new Vector3(-14,s==4?8:12,65),Vector3.one*(s==3?3:5),SkyArt.Cream);sun.GetComponent<Renderer>().sharedMaterial=SkyArt.Glow;sun.GetComponent<Renderer>().sortingOrder=-90;
    var props=new MaterialPropertyBlock();props.SetColor("_Color",s==3?new Color(.7f,.8f,1):new Color(1,.88f,.56f));sun.GetComponent<Renderer>().SetPropertyBlock(props);
+  }
+  void CloudDeck(Transform root,int station)
+  {
+   var v=new List<Vector3>();var colors=new List<Color>();var tr=new List<int>();
+   for(int j=0;j<=5;j++)for(int i=0;i<=48;i++)
+   {
+    float a=i*Mathf.PI*2/48,r=Mathf.Lerp(halfWidth+.1f,115,j/5f),wave=Mathf.Sin(a*7+j*2)*Mathf.Sin(a*3-j)*.7f;
+    v.Add(new Vector3(Mathf.Sin(a)*r,-7+wave,Mathf.Cos(a)*r));
+    colors.Add(Color.Lerp(station==3?new Color(.14f,.19f,.30f):new Color(.65f,.70f,.80f),station==3?new Color(.35f,.41f,.52f):new Color(.91f,.94f,1),.5f+wave*.4f));
+   }
+   for(int j=0;j<5;j++)for(int i=0;i<48;i++){int k=j*49+i;tr.AddRange(new[]{k,k+1,k+49,k+1,k+50,k+49});}
+   var mesh=new Mesh{name="Unbroken distant cloud deck"};mesh.SetVertices(v);mesh.SetColors(colors);mesh.SetTriangles(tr,0);mesh.RecalculateBounds();
+   var part=SkyArt.MeshPart(root,"Low cloud sea outside arena",mesh,SkyArt.Glow,Vector3.zero,Vector3.one);part.GetComponent<Renderer>().sortingOrder=-95;part.gameObject.AddComponent<SkyMeshOwner>().Meshes.Add(mesh);
   }
   void Cloud(Transform root,int station,int layer)
   {
@@ -59,7 +73,7 @@ namespace SpellDuel
      {
       windStreaks.Add(SkyArt.Rod(t,"Wind streak",new Vector3(0,.5f,-3),new Vector3(0,.5f,3),.023f,SkyArt.Cream));
       // Wisps skim the outside of the cloth, never a screen-wide fog plane.
-      var mist=SpellFx.NewPS(t,"Passing edge mist",SpellFx.BlendMat(SpellFx.TexSoft),5,true);var m=mist.main;m.startLifetime=2.2f;m.startSpeed=.12f;m.startSize=1.8f;m.startColor=new Color(.85f,.91f,1,.085f);SpellFx.Sphere(mist,.7f);SpellFx.Rate(mist,1);SpellFx.FadeOut(mist);mist.Play();
+      var mist=SpellFx.NewPS(t,"Passing edge mist",SpellFx.BlendMat(SpellFx.TexSoft),5,true);mist.transform.localPosition=Vector3.up*1.35f;var m=mist.main;m.startLifetime=2.2f;m.startSpeed=.12f;m.startSize=1.8f;m.startColor=new Color(.85f,.91f,1,.085f);SpellFx.Sphere(mist,.7f);SpellFx.Rate(mist,1);SpellFx.FadeOut(mist);mist.Play();
      }
      if(layer==1)
      {

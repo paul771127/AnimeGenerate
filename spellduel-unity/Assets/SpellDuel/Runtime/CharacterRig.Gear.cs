@@ -24,7 +24,7 @@ namespace SpellDuel
             string code = g == null || g.Empty ? "" : g.Encode();
             if (code == gearCode) return;
             gearCode = code; gear = g;
-            foreach (var go in gearParts) if (go) RemoveVisual(go);
+            foreach (var go in gearParts) if (go) { var lease=go.GetComponent<GearVisualLease>();if(lease)lease.Release();RemoveVisual(go); }
             gearParts.Clear();
             if (code.Length == 0 || classId == DummyId) return;
             BuildGearArt(g);

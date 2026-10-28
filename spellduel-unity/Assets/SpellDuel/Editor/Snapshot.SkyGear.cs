@@ -28,7 +28,7 @@ namespace SpellDuel.EditorTools
     {
      var rig=CharacterRig.Create(cls);rig.InCombat=false;PoseStep(rig,.6f);
      var originals=rig.GetComponentsInChildren<Renderer>();var hidden=new bool[originals.Length];for(int k=0;k<originals.Length;k++)hidden[k]=originals[k].forceRenderingOff;
-     var look=new GearLook();look.pieces[(int)bp.slot]=new GearLook.Piece{rarity=bp.rarity,special=bp.id,set=""};rig.SetGear(look);PoseStep(rig,.1f);
+     var look=new GearLook();look.pieces[(int)bp.slot]=new GearLook.Piece{rarity=bp.rarity,special=bp.id,set=""};rig.SetGear(look);rig.InCombat=true;PoseStep(rig,.6f);
      int triangles=0;foreach(var motion in rig.GetComponentsInChildren<BlueprintGearMotion>()){motion.Sample(.3f);foreach(var mesh in motion.GetComponentsInChildren<MeshFilter>())triangles+=mesh.sharedMesh.triangles.Length/3;foreach(var line in motion.GetComponentsInChildren<LineRenderer>())triangles+=line.positionCount*6;}
      if(triangles<=0||triangles>1500)throw new Exception(bp.id+" gear budget "+triangles);
      CarpetFit(cam,rig.gameObject,"blueprint_"+bp.id+"_"+cls,new Vector3(.35f,.08f,1),640,900);
