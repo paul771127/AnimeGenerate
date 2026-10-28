@@ -1,0 +1,27 @@
+{
+  "sourceCommit": "0e31e3b1205d0852894447c39a2cbc9c9d082a37",
+  "fullSnapshot": {
+    "run": 40655000999,
+    "conclusion": "success",
+    "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40655000999"
+  },
+  "nativeAudit": {
+    "unity": "2022.3.62f2",
+    "towns": 5,
+    "hotspots": 10,
+    "facilitySprites": 18,
+    "dungeonSprites": 25,
+    "supplyIcons": 21,
+    "speakers": 373,
+    "playerPlaceholdersSkipped": 2,
+    "mapEntries": true,
+    "localFallback": true
+  },
+  "story2d": {
+    "characters": 45,
+    "sprites": 193,
+    "pending": 0
+  },
+  "dungeonsErrors": 0,
+  "platformBuild": "Superseded by player-pose code push; final combined Android/iOS run tracked separately."
+}

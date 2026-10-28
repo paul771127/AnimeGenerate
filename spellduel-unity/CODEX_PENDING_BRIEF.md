@@ -609,3 +609,7 @@ EnemySupportFx.cs完成Heal綠色拋物線光絲、Shield泡泡與ShieldBreak碎
 ### 剩餘任務第 2 項：16 職業動作首批（2026-10-28）
 
 恢復 HumanPersonality 各職業站姿手臂，新增 CharacterRig.PlayerPoses 的 16 職業蓄力／防禦／跳躍調校；Charge 依 0～1 漸進，初心者戰鬥雙手握木棍，法系前推釋放。手機蹲跳優先，不被攻擊位移覆蓋；加收腿、左右腿差異與短落地壓縮，倒地優先。沿用既有公開 API，無新增成員；不改戰鬥、網路、存檔、模型或服裝。新增全站 Snapshot 的 112 狀態圖、手機高度優先／落地／收招／快取檢查；原生圖與雙平台結果待 CI 後補。
+
+### 剩餘任務第 1 項：全站 Snapshot 驗證（2026-10-28）
+
+原生 Unity 全站 Snapshot 40655000999（0e31e3b）成功；PendingArtAudit 保留舊檢查並通過船長四圖及全部劇本說話人載入檢查。Python 立繪45人／193張與18背景完整，副本9個、0錯誤。證據在 Docs/pending_preview/aircaptain_validation.json；雙平台會以後續我方動作的合併版本完成最終驗證。

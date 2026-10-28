@@ -7,3 +7,5 @@
 Story2D.Cast 新增對照。PendingArtAudit 保留全部既有檢查，額外檢查四張船長立繪尺寸，以及所有劇本說話人實際可載入立繪。既有對話頁直接使用 Story2D；不改對話流程。
 
 Python 劇本保真基準更新到先前已提交的飛毯副本 6697a27，保留舊基準，台詞與關卡設定不變，船長兩句僅加 smile／angry 表情標記。原生全站 Snapshot 與雙平台結果待 CI 回傳後補記。
+
+全站 Unity Snapshot **40655000999 成功**（程式0e31e3b）；45位劇本角色映射與資源完整性檢查通過，四張船長資源已由Unity實際載入。見 aircaptain_validation.json。
