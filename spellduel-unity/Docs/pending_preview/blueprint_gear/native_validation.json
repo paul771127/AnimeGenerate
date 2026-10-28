@@ -1,0 +1,210 @@
+{
+    "gear": [
+        {
+            "id": "bp_skewer",
+            "cls": "swordsman",
+            "triangles": 440,
+            "restored": true
+        },
+        {
+            "id": "bp_skewer",
+            "cls": "archer",
+            "triangles": 440,
+            "restored": true
+        },
+        {
+            "id": "bp_skewer",
+            "cls": "mage",
+            "triangles": 440,
+            "restored": true
+        },
+        {
+            "id": "bp_chicken",
+            "cls": "novice",
+            "triangles": 628,
+            "restored": true
+        },
+        {
+            "id": "bp_chicken",
+            "cls": "priest",
+            "triangles": 628,
+            "restored": true
+        },
+        {
+            "id": "bp_furnace",
+            "cls": "novice",
+            "triangles": 384,
+            "restored": true
+        },
+        {
+            "id": "bp_furnace",
+            "cls": "priest",
+            "triangles": 384,
+            "restored": true
+        },
+        {
+            "id": "bp_mushroom",
+            "cls": "novice",
+            "triangles": 436,
+            "restored": true
+        },
+        {
+            "id": "bp_mushroom",
+            "cls": "priest",
+            "triangles": 436,
+            "restored": true
+        },
+        {
+            "id": "bp_bamboo",
+            "cls": "swordsman",
+            "triangles": 438,
+            "restored": true
+        },
+        {
+            "id": "bp_bamboo",
+            "cls": "archer",
+            "triangles": 438,
+            "restored": true
+        },
+        {
+            "id": "bp_bamboo",
+            "cls": "mage",
+            "triangles": 438,
+            "restored": true
+        },
+        {
+            "id": "bp_planter",
+            "cls": "novice",
+            "triangles": 712,
+            "restored": true
+        },
+        {
+            "id": "bp_planter",
+            "cls": "priest",
+            "triangles": 712,
+            "restored": true
+        },
+        {
+            "id": "bp_rumbarrel",
+            "cls": "novice",
+            "triangles": 256,
+            "restored": true
+        },
+        {
+            "id": "bp_rumbarrel",
+            "cls": "priest",
+            "triangles": 256,
+            "restored": true
+        },
+        {
+            "id": "bp_jelly",
+            "cls": "swordsman",
+            "triangles": 432,
+            "restored": true
+        },
+        {
+            "id": "bp_jelly",
+            "cls": "archer",
+            "triangles": 432,
+            "restored": true
+        },
+        {
+            "id": "bp_jelly",
+            "cls": "mage",
+            "triangles": 432,
+            "restored": true
+        },
+        {
+            "id": "bp_shark",
+            "cls": "novice",
+            "triangles": 752,
+            "restored": true
+        },
+        {
+            "id": "bp_shark",
+            "cls": "priest",
+            "triangles": 752,
+            "restored": true
+        },
+        {
+            "id": "bp_trophy",
+            "cls": "novice",
+            "triangles": 656,
+            "restored": true
+        },
+        {
+            "id": "bp_trophy",
+            "cls": "priest",
+            "triangles": 656,
+            "restored": true
+        },
+        {
+            "id": "bp_corn",
+            "cls": "swordsman",
+            "triangles": 860,
+            "restored": true
+        },
+        {
+            "id": "bp_corn",
+            "cls": "archer",
+            "triangles": 860,
+            "restored": true
+        },
+        {
+            "id": "bp_corn",
+            "cls": "mage",
+            "triangles": 860,
+            "restored": true
+        },
+        {
+            "id": "bp_neonhalo",
+            "cls": "novice",
+            "triangles": 512,
+            "restored": true
+        },
+        {
+            "id": "bp_neonhalo",
+            "cls": "priest",
+            "triangles": 512,
+            "restored": true
+        },
+        {
+            "id": "bp_luckycat",
+            "cls": "novice",
+            "triangles": 480,
+            "restored": true
+        },
+        {
+            "id": "bp_luckycat",
+            "cls": "priest",
+            "triangles": 480,
+            "restored": true
+        },
+        {
+            "id": "bp_hourglass",
+            "cls": "novice",
+            "triangles": 148,
+            "restored": true
+        },
+        {
+            "id": "bp_hourglass",
+            "cls": "priest",
+            "triangles": 148,
+            "restored": true
+        },
+        {
+            "id": "bp_camel",
+            "cls": "novice",
+            "triangles": 620,
+            "restored": true
+        },
+        {
+            "id": "bp_camel",
+            "cls": "priest",
+            "triangles": 620,
+            "restored": true
+        }
+    ],
+    "icons": 34,
+    "iconCache": true
+}

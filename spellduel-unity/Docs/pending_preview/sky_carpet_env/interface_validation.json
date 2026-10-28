@@ -1,0 +1,13 @@
+{
+  "baseline": "e881ff7",
+  "source": "c2277044645038378888466889aeff84f75984f4",
+  "unchanged_source_blocks": {
+    "public float Speed": true,
+    "public float SwayScale": true,
+    "public void SetVariant": true,
+    "public void Impact": true,
+    "public Vector3 SurfacePoint": true,
+    "float HeightAt": true
+  },
+  "note": "Visual scenery, fringe and thickness are added around the unchanged calibrated surface."
+}

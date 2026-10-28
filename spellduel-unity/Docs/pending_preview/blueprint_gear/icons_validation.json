@@ -1,0 +1,14 @@
+{
+  "newIcons": 34,
+  "deterministic": true,
+  "unique": 34,
+  "legacyPixelComparisons": 149,
+  "sizes": [
+    8,
+    32,
+    48,
+    64,
+    128
+  ],
+  "method": "Actual SkillIcons.Render in .NET harness; Unity texture shell stubbed. Native platform results recorded separately."
+}
