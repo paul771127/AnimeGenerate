@@ -39,6 +39,8 @@ namespace SpellDuel
         public bool RemotePlay;
         readonly Dictionary<int, CharacterRig> allyRigs = new Dictionary<int, CharacterRig>();
         readonly Dictionary<int, Vector3> allyLastFeet = new Dictionary<int, Vector3>();
+        readonly Dictionary<int, float> peerCharge = new Dictionary<int, float>();   // 隊友蓄力進度（state 訊息）：角色擺蓄力姿勢
+        readonly Dictionary<int, bool> peerGuard = new Dictionary<int, bool>();      // 隊友格擋／護盾中：防禦架勢
 
         /// <summary>合作（遠端、近距離都一樣）：每位隊友用他自己的角色造型（職業、進階職業、裝備）出現，跟著他回報的位置走</summary>
         void UpdateAllyRigs()
@@ -66,6 +68,8 @@ namespace SpellDuel
                 ApplyPeerGear(rig, a.pid);   // 一樣就不動；換了裝會跟著換
                 RefreshAllyArtGear(rig,a.pid);
                 DriveFromPeer(rig, a.pid);
+                rig.Charge = a.Alive && peerCharge.TryGetValue(a.pid, out var pc) ? pc : 0f;   // 蓄力姿勢（劍收在身後、拉弓、法杖聚光）
+                rig.Guarding = a.Alive && peerGuard.TryGetValue(a.pid, out var pg) && pg;
             }
             foreach (var kv in new List<KeyValuePair<int, CharacterRig>>(allyRigs))
                 if (battle.AllyByPid(kv.Key) == null) { if (kv.Value) AllyPresentation.For(kv.Value).BeginRemoval(); allyRigs.Remove(kv.Key); }
@@ -1629,6 +1633,9 @@ namespace SpellDuel
                     ally.crouching = (m.e & 16) != 0;
                     if ((m.e & 32) != 0) ally.dodgeUntil = battle.now + 0.15f;
                     ally.armorUntil = (m.e & 64) != 0 ? battle.now + 0.4f : 0f;
+                    // 隊友角色的姿勢：蓄力中（蓄力進度）、格擋／護盾中＝防禦架勢
+                    peerCharge[m.pid] = string.IsNullOrEmpty(m.k) ? 0f : Mathf.Max(0.01f, m.s);
+                    peerGuard[m.pid] = (m.e & 3) != 0;
                     break;
                 case "boss":
                     if (NetIsHost) break;

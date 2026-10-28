@@ -38,11 +38,25 @@ namespace SpellDuel
                 rig.InCombat = false;
             }
             if (!rig.gameObject.activeSelf) rig.gameObject.SetActive(true);
+            DemoPoses();
             rig.SetGear(GearLook.Of(p.equipped));
             rig.SetPose(Spot, Quaternion.Euler(0f, yaw, 0f) * Vector3.forward);
             if (!cam.enabled) cam.enabled = true;
             GUI.DrawTexture(r, rt, ScaleMode.ScaleToFit, true);
         }
+
+        /// <summary>預覽輪流展示：站姿 → 戰鬥架勢 → 蓄力 → 出招 → 防禦（每段約 2 秒；蹲、跳在戰鬥中照真人的手機）</summary>
+        int demoStep = -1;
+        void DemoPoses()
+        {
+            float demoT = Time.unscaledTime;   // 一幀可能畫好幾次：用時間算，不要累加
+            int step = Mathf.FloorToInt(demoT / 2.2f) % 5;
+            if (step == demoStep) { if (step == 2) rig.Charge = Mathf.Clamp01((demoT % 2.2f) / 2f); return; }
+            demoStep = step;
+            rig.InCombat = step != 0; rig.Charge = 0f; rig.Guarding = step == 4;
+            if (step == 3) rig.PlayAttack(AttackKind(cls), 0.15f);
+        }
+        static string AttackKind(string c) => c == "swordsman" ? "slash" : c == "assassin" ? "stab" : c == "archer" ? "shoot" : c == Skills.Novice ? "novice" : "magic";
 
         void EnsureCamera()
         {
