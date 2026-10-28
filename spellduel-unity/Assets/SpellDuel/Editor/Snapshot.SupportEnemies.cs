@@ -18,13 +18,23 @@ namespace SpellDuel.EditorTools
    var sample=typeof(VariantRig).GetMethod("AnimateModel",BindingFlags.Instance|BindingFlags.NonPublic);
    foreach(int id in SupportIds)
    {
-    var rig=new GameObject("Enemy audit "+id).AddComponent<VariantRig>();build.Invoke(rig,new object[]{id});sample.Invoke(rig,new object[]{.1f});FiniteBudget(rig.gameObject,6000);
+    var rig=VariantRig.Create(id);rig.Sample(.1f);FiniteBudget(rig.gameObject,6000);
     int triangles=0;foreach(var f in rig.GetComponentsInChildren<MeshFilter>(true))triangles+=f.sharedMesh.triangles.Length/3;
     report.entries.Add(new EnemyAuditEntry{id=id,triangles=triangles,renderers=rig.GetComponentsInChildren<Renderer>(true).Length});
     CarpetFit(cam,rig.gameObject,"enemy_"+id+"_front",new Vector3(0,.1f,1),480,640);fronts.Add("enemy_"+id+"_front");
     CarpetFit(cam,rig.gameObject,"enemy_"+id+"_side",new Vector3(1,.1f,.03f),480,640);
-    typeof(VariantRig).GetField("channel",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(rig,true);
-    sample.Invoke(rig,new object[]{.5f});CarpetFit(cam,rig.gameObject,"enemy_"+id+"_channel",new Vector3(.35f,.1f,1),480,640);
+    rig.SetChannel(true);
+    rig.Sample(.5f);CarpetFit(cam,rig.gameObject,"enemy_"+id+"_channel",new Vector3(.35f,.1f,1),480,640);
+    int meshes=Resources.FindObjectsOfTypeAll<Mesh>().Length, materials=Resources.FindObjectsOfTypeAll<Material>().Length;
+    rig.SetChannel(false);rig.MoveSpeed=2;for(int n=0;n<10;n++)rig.Sample(.05f);
+    rig.Windup("eh_"+id+"_basic",1.5f);rig.Sample(1.5f);rig.Strike("basic");rig.Sample(.2f);rig.PlayHit();rig.Sample(.1f);
+    rig.SetFleeing(true);rig.MoveSpeed=0;rig.Sample(.5f);CarpetFit(cam,rig.gameObject,"enemy_"+id+"_recover",new Vector3(.35f,.1f,1),480,640);
+    rig.SetSneak(true);rig.Sample(.5f);rig.SetSneak(false);rig.Sample(.5f);rig.SetDead(true);rig.Sample(1);rig.SetDead(false);rig.Sample(0);
+    if(rig.transform.position!=Vector3.zero)throw new Exception("Animation moved authoritative root");
+    if(Resources.FindObjectsOfTypeAll<Mesh>().Length!=meshes)throw new Exception("Enemy per-frame mesh allocation");
+    // First ghost material may be created lazily; a second cycle must allocate nothing.
+    materials=Resources.FindObjectsOfTypeAll<Material>().Length;rig.SetSneak(true);rig.Sample(.5f);rig.SetSneak(false);rig.Sample(.5f);
+    if(Resources.FindObjectsOfTypeAll<Material>().Length!=materials)throw new Exception("Enemy repeated stealth material allocation");
     UnityEngine.Object.DestroyImmediate(rig.gameObject);
    }
    ContactSheet(fronts,"support_enemies_all",6);
