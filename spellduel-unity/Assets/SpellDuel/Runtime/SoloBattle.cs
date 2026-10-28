@@ -2365,7 +2365,7 @@ namespace SpellDuel
             if (slamGo) Destroy(slamGo);
             ClearTravel();   // 副本的通道與運鏡（SoloBattle.DungeonTravel.cs）
             ClearRoomEventViews();
-            ClearWeatherArt();
+            ClearWeatherArt(); ClearSwordShieldVisuals();
             ClearWarnRings();
             if (volcano) Destroy(volcano.gameObject);
             if (forest) Destroy(forest.gameObject);
