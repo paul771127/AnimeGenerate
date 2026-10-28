@@ -25,7 +25,7 @@ namespace SpellDuel
    O(torso,"Waist belt",0,-.035f,0,width*.88f,.08f,.29f,VariantGeometry.Ink);
    O(torso,"Enemy red clasp",.045f,-.035f,.152f,.075f,.055f,.025f,VariantGeometry.Red);
    R(torso,"Functional weapon baldric",new Vector3(-.14f,-.03f,.15f),new Vector3(.16f,.4f,.13f),.042f,trim);
-   head=Joint(torso,"Head and hostile face",new Vector3(0,.58f,.015f));
+   head=Joint(torso,"Head and hostile face",new Vector3(0,.58f,.015f));head.localScale=Vector3.one*.88f;
    VariantGeometry.Part(head,"Face",VariantGeometry.Head,Vector3.zero,new Vector3(id==157||id==160?.35f:id==155||id==158?.29f:.32f,id==156||id==164?.39f:.36f,.32f),VariantGeometry.Skin);
    Color hair=id==151||id==156||id==162||id==164?new Color(.48f,.49f,.50f):id==158?new Color(.12f,.30f,.33f):id==155?new Color(.40f,.25f,.13f):VariantGeometry.Ink;
    O(head,"Hair cap",0,.087f,-.028f,.32f,.23f,.29f,hair);
@@ -36,14 +36,20 @@ namespace SpellDuel
     R(head,"Angry sloping brow",new Vector3(side*.025f,.039f,.12f),new Vector3(side*.1f,.065f,.105f),.017f,VariantGeometry.Ink);}
    O(head,"Nose bridge",0,-.032f,.119f,.028f,.047f,.03f,VariantGeometry.Skin);
    R(head,"Crooked smirk",new Vector3(-.035f,-.082f,.103f),new Vector3(.033f,-.072f,.11f),.009f,VariantGeometry.Ink);
-   for(int s=-1;s<=1;s+=2){var upper=Joint(torso,s<0?"Left shoulder":"Right shoulder",new Vector3(s*width*.46f,.35f,0));R(upper,"Sloping deltoid",Vector3.zero,new Vector3(s*.035f,-.16f,0),.17f,uniform);
+   for(int s=-1;s<=1;s+=2){var upper=Joint(torso,s<0?"Left shoulder":"Right shoulder",new Vector3(s*width*.46f,.35f,0));R(upper,"Sloping deltoid",Vector3.zero,new Vector3(s*.035f,-.23f,0),archer?.14f:.17f,uniform);
     var fore=Joint(upper,s<0?"Left elbow":"Right elbow",new Vector3(s*.035f,-.22f,0));R(fore,"Tapered vambrace",Vector3.zero,new Vector3(0,-.19f,.01f),.11f,VariantGeometry.Ink);O(fore,"Bracer edge",0,-.04f,.01f,.12f,.045f,.12f,trim);
     var hand=Joint(fore,s<0?"Left grip":"Right grip",new Vector3(0,-.22f,.01f));O(hand,"Knuckled glove",0,0,0,.09f,.11f,.085f,VariantGeometry.Skin);O(hand,"Thumb grip",-s*.035f,.018f,.035f,.035f,.06f,.04f,VariantGeometry.Skin);
     var hip=Joint(torso,s<0?"Left hip":"Right hip",new Vector3(s*.105f,-.07f,0));R(hip,"Thigh",Vector3.zero,new Vector3(0,-.31f,0),.17f,uniform);
-    var knee=Joint(hip,s<0?"Left knee":"Right knee",new Vector3(0,-.34f,0));R(knee,"Boot shaft",Vector3.zero,new Vector3(0,-.29f,0),.14f,VariantGeometry.Ink);O(knee,"Rounded boot",0,-.36f,.045f,.17f,.14f,.28f,VariantGeometry.Ink);O(knee,"Metal toe cap",0,-.36f,.13f,.16f,.11f,.1f,trim);
+    var knee=Joint(hip,s<0?"Left knee":"Right knee",new Vector3(0,-.34f,0));O(knee,"Cloth knee joint",0,.01f,0,.13f,.09f,.13f,uniform);R(knee,"Boot shaft",Vector3.zero,new Vector3(0,-.29f,0),.14f,VariantGeometry.Ink);O(knee,"Rounded boot",0,-.36f,.045f,.17f,.14f,.28f,VariantGeometry.Ink);O(knee,"Metal toe cap",0,-.36f,.13f,.16f,.11f,.1f,trim);
     if(s<0){upperL=upper;foreL=fore;handL=hand;hipL=hip;kneeL=knee;}else{upperR=upper;foreR=fore;handR=hand;hipR=hip;kneeR=knee;}}
    tail=Joint(torso,"Coat tails",new Vector3(-.15f,.1f,-.13f));VariantGeometry.ClothPanel(tail,"Red inner coat",Vector3.zero,new Vector3(.30f,caster?.63f:.36f,1),VariantGeometry.Red);
    potion=Joint(handL,"Recovery vial",new Vector3(0,.065f,.02f));O(potion,"Flask",0,0,0,.075f,.12f,.075f,new Color(.36f,.53f,.22f));O(potion,"Stopper",0,.07f,0,.045f,.04f,.045f,trim);
+   if(caster){for(int side=-1;side<=1;side+=2){R(torso,"Bound stole",new Vector3(side*.12f,.35f,.16f),new Vector3(side*.09f,-.11f,.18f),.045f,trim);}O(torso,"Shoulder mantle",0,.36f,-.065f,width*1.12f,.15f,.31f,uniform);}
+   if(id==122)VariantGeometry.ClothPanel(torso,"Medic apron",new Vector3(-.17f,.15f,.183f),new Vector3(.34f,.34f,.25f),new Color(.69f,.63f,.40f));
+   if(id==153)O(torso,"Belt brazier",-.19f,-.04f,.10f,.16f,.19f,.14f,trim);
+   if(id==152)O(torso,"Bolt case",.17f,-.08f,.08f,.12f,.25f,.12f,VariantGeometry.Ink);
+   if(id==151)O(torso,"Single steel pauldron",-.24f,.35f,0,.25f,.14f,.28f,VariantGeometry.Metal);
+   if(id==142){for(int side=-1;side<=1;side+=2){var lockHair=VariantGeometry.Blade(head,"Pearl fairy side hair",new Vector3(side*.14f,.07f,-.04f),.30f,.09f,new Color(.30f,.23f,.45f));lockHair.localRotation=Quaternion.Euler(0,0,180-side*8);}for(int side=-1;side<=1;side+=2)R(head,"Outer eyelash",new Vector3(side*.083f,.025f,.119f),new Vector3(side*.11f,.043f,.10f),.01f,VariantGeometry.Ink);}
    switch(id)
    {
     case 121: Mitre(); Staff("Split sun",0);Sun(head,new Vector3(0,.18f,.06f),.1f);break;
@@ -85,7 +91,7 @@ namespace SpellDuel
    for(int i=1;i<v.Length;i++)R(p,"Enemy team emblem",at+v[i-1],at+v[i],.009f,trim);
   }
   void Hood(){O(head,"Low forehead hood",0,.12f,-.025f,.40f,.21f,.34f,uniform);for(int s=-1;s<=1;s+=2)O(head,"Hood cheek border",s*.154f,-.015f,-.025f,.065f,.28f,.20f,uniform);}
-  void Mitre(){for(int s=-1;s<=1;s+=2){var t=VariantGeometry.Blade(head,"Split mitre",new Vector3(s*.08f,.1f,0),.31f,.22f,trim);t.localRotation=Quaternion.Euler(0,0,-s*12);}O(head,"Red mitre band",0,.14f,0,.34f,.06f,.27f,VariantGeometry.Red);}
+  void Mitre(){for(int s=-1;s<=1;s+=2){var t=VariantGeometry.Blade(head,"Split mitre",new Vector3(s*.08f,.1f,0),variantId==162?.20f:.31f,.22f,trim);t.localRotation=Quaternion.Euler(0,0,-s*12);}O(head,"Red mitre band",0,.14f,0,.34f,.06f,.27f,VariantGeometry.Red);}
   void Helmet(){O(head,"Iron helmet crown",0,.13f,-.02f,.37f,.18f,.34f,VariantGeometry.Metal);for(int s=-1;s<=1;s+=2)O(head,"Cheek armor",s*.15f,-.025f,0,.065f,.22f,.20f,trim);VariantGeometry.Blade(head,"Red crest",new Vector3(0,.2f,-.04f),.22f,.18f,VariantGeometry.Red);}
   void PirateHat(){O(head,"Low tricorne",0,.16f,-.015f,.54f,.13f,.36f,uniform);O(head,"Hat red clasp",0,.18f,.15f,.09f,.09f,.025f,VariantGeometry.Red);}
   void Scarf(){O(head,"Lower face scarf",0,-.095f,.04f,.29f,.12f,.23f,uniform);}
@@ -103,8 +109,8 @@ namespace SpellDuel
    else if(style==7){for(int s=-1;s<=1;s+=2){O(handR,"Hourglass rim",0,.72f+s*.13f,0,.22f,.045f,.15f,trim);R(handR,"Hourglass support",new Vector3(s*.09f,.6f,0),new Vector3(s*.09f,.84f,0),.025f,trim);}O(handR,"Hourglass sand",0,.72f,0,.09f,.18f,.09f,VariantGeometry.Red);}
    else{O(handR,name+" core",0,.73f,0,.21f,.24f,.18f,style==4?new Color(.41f,.55f,.58f):VariantGeometry.Red);for(int i=-1;i<=1;i++){var b=VariantGeometry.Blade(handR,name+" prong",new Vector3(i*.095f,.64f,0),.28f,.07f,style==6?uniform:trim);b.localRotation=Quaternion.Euler(0,0,-i*18);}}
   }
-  void Drum(){accessory=Joint(torso,"Back drum",new Vector3(0,.18f,-.3f));O(accessory,"Bronze drum shell",0,0,0,.68f,.44f,.45f,trim);for(int side=-1;side<=1;side+=2)O(accessory,"Side-facing taut hide",side*.34f,0,0,.025f,.40f,.41f,VariantGeometry.Red);for(int i=-1;i<=1;i+=2)R(torso,"Drum harness",new Vector3(i*.14f,.42f,.13f),new Vector3(i*.12f,-.04f,.14f),.055f,VariantGeometry.Ink);}
-  void Mallet(Transform hand){R(hand,"Drumstick",new Vector3(0,-.05f,0),new Vector3(0,.32f,0),.035f,trim);O(hand,"Padded drum beater",0,.32f,0,.13f,.14f,.13f,VariantGeometry.Red);}
+  void Drum(){accessory=Joint(torso,"Back drum",new Vector3(0,.25f,-.3f));O(accessory,"Bronze drum shell",0,0,0,.68f,.44f,.45f,trim);for(int side=-1;side<=1;side+=2)O(accessory,"Side-facing taut hide",side*.34f,0,0,.025f,.40f,.41f,VariantGeometry.Red);for(int i=-1;i<=1;i+=2)R(torso,"Drum harness",new Vector3(i*.14f,.42f,.13f),new Vector3(i*.12f,-.04f,.14f),.055f,VariantGeometry.Ink);}
+  void Mallet(Transform hand){R(hand,"Drumstick",new Vector3(0,-.05f,0),new Vector3(0,.22f,0),.035f,trim);O(hand,"Padded drum beater",0,.22f,0,.13f,.14f,.13f,VariantGeometry.Red);}
   void Flag(){R(handR,"War standard pole",new Vector3(0,-.5f,0),new Vector3(0,1.05f,0),.045f,trim);accessory=Joint(handR,"Flag cloth joint",new Vector3(0,1,0));VariantGeometry.ClothPanel(accessory,"Broad enemy standard",Vector3.zero,new Vector3(.58f,.69f,1),uniform);VariantGeometry.ClothPanel(accessory,"Crimson standard stripe",new Vector3(.25f,-.035f,.012f),new Vector3(.085f,.60f,1),VariantGeometry.Red);}
   void BuildWings(){accessory=Joint(torso,"Wings",new Vector3(0,.30f,-.12f));for(int s=-1;s<=1;s+=2){var w=VariantGeometry.Oval(accessory,"Veined fairy wing",new Vector3(s*.29f,.08f,-.08f),new Vector3(.38f,.64f,.035f),new Color(.39f,.38f,.66f,.38f));w.localRotation=Quaternion.Euler(0,s*15,-s*35);R(accessory,"Wing vein",new Vector3(0,0,0),new Vector3(s*.43f,.29f,-.09f),.015f,VariantGeometry.Red);}}
   void BuildSpirit(){torsoRest=new Vector3(0,.30f,0);torso.localPosition=torsoRest;O(torso,"Sand vortex",0,0,0,.39f,.45f,.33f,trim);head=Joint(torso,"Spirit mask",new Vector3(0,.28f,.02f));O(head,"Fox sand mask",0,0,0,.30f,.24f,.23f,trim);for(int s=-1;s<=1;s+=2){VariantGeometry.Blade(head,"Sand ear",new Vector3(s*.10f,.06f,0),.19f,.12f,uniform);O(head,"Red spirit eye",s*.066f,.01f,.11f,.065f,.024f,.018f,VariantGeometry.Red);}for(int side=-1;side<=1;side+=2){var claw=VariantGeometry.Blade(torso,"Tapered sand claw",new Vector3(side*.17f,.12f,.05f),.25f,.10f,trim);claw.localRotation=Quaternion.Euler(85,0,-side*25);}

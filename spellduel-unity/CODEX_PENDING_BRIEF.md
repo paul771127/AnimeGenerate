@@ -581,3 +581,5 @@ EnemySupportFx.cs完成Heal綠色拋物線光絲、Shield泡泡與ShieldBreak碎
 依最新第二輪第4項新增EnemySkillFx.cs／EnemyShotView.cs。Telegraph(skillId,at,dir,seconds,size)回傳獨立handle；Cancel(handle)只取消指定一次讀條，正常到期與銷毀會除名。鎖線／扇形／地圈依EnemySkills唯讀資料的shape、angle、width畫，不追蹤玩家重瞄；跳為橘地環＋上箭、蹲為藍胸口弧＋下箭，保留真實地板。Cast有原三參數入口，另加四參數size覆載供實際cue半徑不同時使用，避免特效與判定尺寸不同。七種投射物皆+Z前進且不自行移動或判定；回收由Claude控制。Snapshot逐一測45id、同技不同handle取消隔離、到期清理、代表預警與七種投射物出圖。不改Combat／網路，HUD後方楔標仍由Claude處理；接線時讀條取消必須傳回同一handle。
 
 敵人原生驗證補強：初次共用Snapshot已編譯，但被既有PendingArtAudit劇情說話人缺頭像ID阻擋；未刪除／跳過原檢查，另增RenderSupportEnemies與獨立enemy-art工作流程驗證本批。補齊沙爪、五隊幾何徽章、成員頭髮／鬍鬚／帽型／肩寬差異、透明翅，背鼓改側鼓面與向後雙槌動作。此為原生出圖前修正，報告仍以最後CI實測為準。
+
+原生目視複驗：914b056的獨立Unity驗證已通過23種模型、45招取消／清理；修正預覽中的旗布雙面共用頂點造成法線互相抵銷黑斑，補肩肘／膝接縫，成人頭略縮、收肩領口，增加職能披肩／藥師圍裙／弩匣。背鼓雙槌重新對準側鼓皮，旗手左手用純視覺兩節手臂握桿；補搖鈴、舀藥動作。修掉橫掃／架盾／高投結束後保持招式姿勢的問題，追加23種windup／strike圖與收招回待機測試。泡泡護盾依目標高度作橢球，避免只罩到腰。最終結果待這次修正版原生及雙平台重跑。

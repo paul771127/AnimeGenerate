@@ -26,21 +26,34 @@ namespace SpellDuel
    if(caster){Pose(upperR,-cast*105+a*35,0,12+cast*12);Pose(foreR,-15-cast*12);Pose(upperL,-cast*62,0,-12-cast*18);Pose(foreL,-20-cast*30);}
    else if(archer){float aim=Mathf.Max(w,a);Pose(upperL,-aim*80,aim*15,-12);Pose(foreL,-12);Pose(upperR,-aim*68,-aim*36,15);Pose(foreR,-20-aim*65);}
    else {Pose(upperR,-stride*gait*26-w*112+a*55,-w*25+a*55,12);Pose(foreR,-18-w*22);Pose(upperL,stride*gait*26-w*45+a*20,0,-12);}
-   if(variantId==143){float drum=Mathf.Max(cast,a);Pose(upperL,drum*(55+Mathf.Sin(age*13)*20),-drum*35,-35);Pose(upperR,drum*(55-Mathf.Sin(age*13)*20),drum*35,35);Pose(foreL,-20-drum*20);Pose(foreR,-20-drum*20);}
-   if(variantId==144){Pose(upperR,-25-cast*55+a*35,cast*20,15);Pose(foreR,-10-cast*15);Pose(accessory,0,Mathf.Sin(age*5)*12,Mathf.Sin(age*3)*5);}
+   if(variantId==141&&cast>0)Pose(handR,0,0,Mathf.Sin(age*10)*cast*16);
+   if(variantId==122&&cast>0){Pose(foreR,-25-cast*35,Mathf.Sin(age*4)*cast*18);Pose(handR,cast*25);}
+   if(variantId==123&&cast>0)Pose(handL,-30,0,-cast*45);
+   if(variantId==143){float drum=Mathf.Max(cast,a);Pose(upperL,drum*(100+Mathf.Sin(age*13)*18),0,-20);Pose(upperR,drum*(100-Mathf.Sin(age*13)*18),0,20);Pose(foreL,-18*(1-drum)-drum*(100+Mathf.Sin(age*13)*18));Pose(foreR,-18*(1-drum)-drum*(100-Mathf.Sin(age*13)*18));}
+   if(variantId==144){Pose(upperR,-25-cast*55+a*35,cast*20,-12);Pose(foreR,-10-cast*15);Pose(accessory,0,Mathf.Sin(age*5)*12,Mathf.Sin(age*3)*5);}
    if(variantId==142){torso.localPosition+=Vector3.up*(.11f+Mathf.Sin(age*3)*.035f);Pose(accessory,0,Mathf.Sin(age*8)*14);Pose(hipL,12);Pose(hipR,20);Pose(kneeL,24);Pose(kneeR,32);}
+   bool action=winding||attackAge<.65f;
    // Skill-specific body mechanics. Root position is never animated: authority owns displacement.
-   if(move.EndsWith("flankrush")||move.EndsWith("sandlunge"))Pose(torso,hostile+w*10+a*24,0,0);
-   if(move.EndsWith("decksweep")||move.EndsWith("polecleave")){Pose(torso,hostile,-w*35+a*80,0);Pose(upperR,-65, -w*45+a*80,15);}
-   if(move.EndsWith("guardcounter")){Pose(upperL,-60-w*20,20,-10);Pose(foreL,-65);}
-   if(move.EndsWith("highcast")){Pose(upperR,-w*160+a*70,0,15);Pose(foreR,-25-w*30);}
+   if(action&&(move.EndsWith("flankrush")||move.EndsWith("sandlunge")))Pose(torso,hostile+w*10+a*24,0,0);
+   if(action&&(move.EndsWith("decksweep")||move.EndsWith("polecleave"))){Pose(torso,hostile,-w*35+a*80,0);Pose(upperR,-65, -w*45+a*80,15);}
+   if(action&&move.EndsWith("guardcounter")){Pose(upperL,-60-w*20,20,-10);Pose(foreL,-65);}
+   if(action&&move.EndsWith("highcast")){Pose(upperR,-w*160+a*70,0,15);Pose(foreR,-25-w*30);}
    if(move.EndsWith("retreatshot")&&attackAge<.65f){float roll=Mathf.Clamp01(attackAge/.65f);Pose(torso,hostile-360*roll,0,0);torso.localPosition=torsoRest+Vector3.up*(-.20f*Mathf.Sin(roll*Mathf.PI));Pose(hipL,55);Pose(hipR,55);Pose(kneeL,80);Pose(kneeR,80);}
    if(backwards>.1f&&stride>.1f&&!winding&&attackAge>.65f){Pose(hipL,-gait*stride*25);Pose(hipR,gait*stride*25);}
    bool recover=fleeing&&!dead&&speed<.1f;
    if(potion)potion.gameObject.SetActive(recover&&!caster);
    if(recover){if(caster){Pose(upperL,-60,0,-20);Pose(upperR,-65,0,20);Pose(foreL,-55);Pose(foreR,-55);}else{Pose(upperL,-98,0,-8);Pose(foreL,-100);Pose(handL,25);}}
+   if(!dead&&variantId==144&&!recover)Reach(upperL,foreL,handL,handR.TransformPoint(new Vector3(0,.17f,0)));
    if(dead){if(potion)potion.gameObject.SetActive(false);Pose(upperL,20*fall,0,-25*fall);Pose(upperR,15*fall,0,35*fall);Pose(foreL,-15);Pose(foreR,-15);Pose(hipL,5);Pose(hipR,-12);Pose(kneeL,10);Pose(kneeR,22);}
    ApplyTint(flinch,fall);
+  }
+  static void Reach(Transform upper,Transform lower,Transform hand,Vector3 target)
+  {
+   Vector3 origin=upper.position,delta=target-origin;float l1=Vector3.Distance(upper.position,lower.position),l2=Vector3.Distance(lower.position,hand.position);
+   float distance=Mathf.Clamp(delta.magnitude,.015f,l1+l2-.001f);Vector3 direction=delta.sqrMagnitude>.000001f?delta.normalized:Vector3.down;
+   Vector3 bend=Vector3.ProjectOnPlane(upper.parent.forward,direction).normalized;if(bend.sqrMagnitude<.001f)bend=Vector3.Cross(direction,Vector3.right).normalized;
+   float along=(l1*l1-l2*l2+distance*distance)/(2*distance);float height=Mathf.Sqrt(Mathf.Max(0,l1*l1-along*along));Vector3 elbow=origin+direction*along+bend*height;
+   upper.rotation=Quaternion.FromToRotation(lower.localPosition,elbow-origin);lower.rotation=Quaternion.FromToRotation(hand.localPosition,origin+direction*distance-elbow);
   }
   void ApplyTint(float flinch,float fall)
   {

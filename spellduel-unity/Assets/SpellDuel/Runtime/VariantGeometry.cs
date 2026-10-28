@@ -28,14 +28,14 @@ namespace SpellDuel
   internal static Transform Oval(Transform p,string name,Vector3 at,Vector3 scale,Color c){return Part(p,name,Round,at,scale,c);}
   internal static Transform Rod(Transform p,string name,Vector3 a,Vector3 b,float width,Color c)
   {var mesh=Loft("rounded strut",new[]{-.5f,0f,.5f},new[]{.3f,.5f,.3f},new[]{.3f,.5f,.3f},6);var t=Part(p,name,mesh,(a+b)*.5f,new Vector3(width,(b-a).magnitude,width),c);t.localRotation=Quaternion.FromToRotation(Vector3.up,b-a);return t;}
-  internal static Mesh Cloth{get{return Loft("tailored coat",new[]{-.5f,-.28f,0,.28f,.5f},new[]{.46f,.43f,.33f,.42f,.36f},new[]{.28f,.27f,.24f,.28f,.22f},12);}}
+  internal static Mesh Cloth{get{return Loft("tailored coat",new[]{-.5f,-.28f,0,.28f,.4f,.5f},new[]{.43f,.40f,.34f,.46f,.39f,.23f},new[]{.28f,.27f,.24f,.28f,.24f,.18f},12);}}
   internal static Mesh Head{get{return Loft("sculpted enemy face",new[]{-.5f,-.42f,-.24f,.02f,.26f,.43f,.5f},new[]{.08f,.2f,.34f,.43f,.40f,.28f,.02f},new[]{.1f,.23f,.33f,.38f,.37f,.28f,.02f},12);}}
   internal static Transform Blade(Transform p,string name,Vector3 at,float length,float width,Color c)
   {var m=Loft("bevel blade",new[]{0f,.12f,.72f,1f},new[]{.1f,.5f,.36f,0f},new[]{.05f,.12f,.08f,0f},4);return Part(p,name,m,at,new Vector3(width,length,width),c);}
   internal static Transform ClothPanel(Transform p,string name,Vector3 at,Vector3 scale,Color c)
   {
    if(!meshes.TryGetValue("banner",out var m)||!m){m=new Mesh{name="Enemy curved banner"};var v=new List<Vector3>();var t=new List<int>();for(int y=0;y<4;y++)for(int x=0;x<4;x++)v.Add(new Vector3(x/3f,-y/3f,.08f*Mathf.Sin(x/3f*5+y)));
-    for(int y=0;y<3;y++)for(int x=0;x<3;x++){int a=y*4+x;foreach(int n in new[]{a,a+4,a+1,a+1,a+4,a+5,a+1,a+4,a,a+5,a+4,a+1})t.Add(n);}m.SetVertices(v);m.SetTriangles(t,0);m.RecalculateNormals();meshes["banner"]=m;}
+    v.AddRange(v.ToArray());for(int y=0;y<3;y++)for(int x=0;x<3;x++){int a=y*4+x;foreach(int n in new[]{a,a+4,a+1,a+1,a+4,a+5,16+a+1,16+a+4,16+a,16+a+5,16+a+4,16+a+1})t.Add(n);}m.SetVertices(v);m.SetTriangles(t,0);m.RecalculateNormals();meshes["banner"]=m;}
    return Part(p,name,m,at,scale,c);
   }
   internal static void Dispose(Object o){if(!o)return;if(Application.isPlaying)Object.Destroy(o);else Object.DestroyImmediate(o);}

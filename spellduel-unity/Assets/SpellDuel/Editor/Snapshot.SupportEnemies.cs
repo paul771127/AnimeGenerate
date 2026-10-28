@@ -19,8 +19,8 @@ namespace SpellDuel.EditorTools
    foreach(var message in ShaderUtil.GetShaderMessages(Shader.Find("SpellDuel/Toon")))if(message.severity.ToString()=="Error")throw new Exception(message.message);
   }
   static readonly int[] SupportIds={121,122,123,124,141,142,143,144,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165};
-  [Serializable] class EnemyAuditEntry{public int id,triangles,renderers;}
-  [Serializable] class EnemyAuditReport{public List<EnemyAuditEntry> entries=new List<EnemyAuditEntry>();public string checks="23 distinct rigs, finite geometry, <=6000 triangles, front/side/channel renders";}
+  [Serializable] class EnemyAuditEntry{public int id,triangles,renderers,materials;}
+  [Serializable] class EnemyAuditReport{public List<EnemyAuditEntry> entries=new List<EnemyAuditEntry>();public int validatedSkills=45;public string checks="23 rigs, finite geometry, <=6000 triangles, animation root stable, idle recovery, no update mesh allocation, stealth material reuse, support refresh/cleanup, 45 independent cue handles/cancellation/lifetime, seven projectile renders";}
   static void SkillEffectAudit(Camera cam)
   {
    string[] ids={"eh_121_sunmend","eh_121_sunward","eh_122_herbmend","eh_122_dustmantle","eh_123_twinseals","eh_123_sandseal","eh_124_sandlunge","eh_141_rainchorus","eh_141_rootlash","eh_142_pearlguard","eh_142_burstbubble","eh_143_marchdrum","eh_143_groundbeat","eh_144_royalstandard","eh_144_polecleave","eh_151_swordcut","eh_151_flankrush","eh_152_bolt","eh_152_triplebolt","eh_153_emberorb","eh_153_kilncircle","eh_154_dagger","eh_154_mistbackstab","eh_155_arrow","eh_155_retreatshot","eh_156_thornstaff","eh_156_seedmend","eh_157_sabercut","eh_157_decksweep","eh_158_waterlance","eh_158_tidalring","eh_159_dagger","eh_159_smokepierce","eh_160_swordthrust","eh_160_guardcounter","eh_161_javelin","eh_161_highcast","eh_162_staffjab","eh_162_sanctuarymend","eh_163_dagger","eh_163_sandtrailstrike","eh_164_sandbolt","eh_164_hourglass","eh_165_shortbow","eh_165_crossstep"};
@@ -67,14 +67,21 @@ namespace SpellDuel.EditorTools
    {
     var rig=VariantRig.Create(id);rig.Sample(.1f);FiniteBudget(rig.gameObject,6000);
     int triangles=0;foreach(var f in rig.GetComponentsInChildren<MeshFilter>(true))triangles+=f.sharedMesh.triangles.Length/3;
-    report.entries.Add(new EnemyAuditEntry{id=id,triangles=triangles,renderers=rig.GetComponentsInChildren<Renderer>(true).Length});
+    var materialSet=new HashSet<Material>();foreach(var r in rig.GetComponentsInChildren<Renderer>(true))materialSet.Add(r.sharedMaterial);
+    report.entries.Add(new EnemyAuditEntry{id=id,triangles=triangles,renderers=rig.GetComponentsInChildren<Renderer>(true).Length,materials=materialSet.Count});
     CarpetFit(cam,rig.gameObject,"enemy_"+id+"_front",new Vector3(0,.1f,1),480,640);fronts.Add("enemy_"+id+"_front");
     CarpetFit(cam,rig.gameObject,"enemy_"+id+"_side",new Vector3(1,.1f,.03f),480,640);
     rig.SetChannel(true);
     rig.Sample(.5f);CarpetFit(cam,rig.gameObject,"enemy_"+id+"_channel",new Vector3(.35f,.1f,1),480,640);
     int meshes=Resources.FindObjectsOfTypeAll<Mesh>().Length, materials=Resources.FindObjectsOfTypeAll<Material>().Length;
     rig.SetChannel(false);rig.MoveSpeed=2;for(int n=0;n<10;n++)rig.Sample(.05f);
-    rig.Windup("eh_"+id+"_basic",1.5f);rig.Sample(1.5f);rig.Strike("basic");rig.Sample(.2f);rig.PlayHit();rig.Sample(.1f);
+    rig.MoveSpeed=0;rig.Sample(.5f);
+    var shoulder=rig.transform.Find("Pelvis and spine/Right shoulder");var idleRotation=shoulder?shoulder.localRotation:Quaternion.identity;
+    string skill=id==157?"eh_157_decksweep":id==144?"eh_144_polecleave":id==160?"eh_160_guardcounter":id==161?"eh_161_highcast":id==155?"eh_155_retreatshot":"basic";
+    rig.Windup(skill,1.5f);rig.Sample(1.5f);CarpetFit(cam,rig.gameObject,"enemy_"+id+"_windup",new Vector3(.35f,.1f,1),480,640);
+    rig.Strike(skill);rig.Sample(.2f);CarpetFit(cam,rig.gameObject,"enemy_"+id+"_strike",new Vector3(.35f,.1f,1),480,640);
+    rig.Sample(1);if(shoulder&&Quaternion.Angle(idleRotation,shoulder.localRotation)>.1f)throw new Exception("Attack did not restore idle shoulder: "+id);
+    rig.PlayHit();rig.Sample(.1f);
     rig.SetFleeing(true);rig.MoveSpeed=0;rig.Sample(.5f);CarpetFit(cam,rig.gameObject,"enemy_"+id+"_recover",new Vector3(.35f,.1f,1),480,640);
     rig.SetSneak(true);rig.Sample(.5f);rig.SetSneak(false);rig.Sample(.5f);rig.SetDead(true);rig.Sample(1);rig.SetDead(false);rig.Sample(0);
     if(rig.transform.position!=Vector3.zero)throw new Exception("Animation moved authoritative root");
