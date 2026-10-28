@@ -15,7 +15,8 @@ namespace SpellDuel
         public string name, dungeon, desc;
         public bool assassin, claws, healer, summoner, summon;   // summon＝召喚物（沒有經驗、不掉寶）
         public int theme = -1;   // 補師：哪一章（3 角鬥場、4 黃土山道）
-        public int sky = -1;     // 天穹飛毯的敵人：SkyEnemyRig／SkyVehicleView 的種類（0 風箏盜賊～4 空賊隊長）；−1＝不是
+        public int sky = -1;
+        public int support;      // 輔助型（只在那一章、那種天候出現）：1 群體治療、2 護盾、3 加速、4 強力增益；0＝不是     // 天穹飛毯的敵人：SkyEnemyRig／SkyVehicleView 的種類（0 風箏盜賊～4 空賊隊長）；−1＝不是
         public Battle.Weather weather;
         public float hp = 1f, dmg = 1f, speed = 1f;
         public Color tint;
@@ -43,6 +44,11 @@ namespace SpellDuel
             // ---- 召喚師（第五章；使用者要求）：躲在後面，讀條召喚兩隻砂靈（血少、攻擊強、沒有經驗也不掉寶）；讀條被打中會打斷
             new VariantDef { id = 123, baseKind = 4, name = "砂谷召喚師", summoner = true, theme = 4, tint = new Color(0.78f, 0.55f, 1f), desc = "背著法陣石板的召喚師，從砂裡喚出砂靈" },
             new VariantDef { id = 124, baseKind = 0, name = "砂靈", summon = true, theme = 4, hp = 0.35f, dmg = 2f, speed = 1.3f, tint = new Color(1f, 0.72f, 0.38f), desc = "砂子聚成的小鬼：一碰就散，但打人很痛" },
+            // ---- 輔助型（使用者要求：第二～五章各一種，只在特定天候出現；躲在後面讀條幫同伴，被打中會打斷，自己不攻擊）
+            new VariantDef { id = 141, baseKind = 9,  name = "林語薩滿", support = 1, theme = 1, weather = Battle.Weather.Rain, hp = 1.4f, tint = new Color(0.55f, 1f, 0.45f), desc = "暴雨裡的森林薩滿：搖著雨鈴，替身邊所有同伴回血" },
+            new VariantDef { id = 142, baseKind = 17, name = "霧海仙女", support = 2, theme = 2, weather = Battle.Weather.Fog, hp = 1.6f, tint = new Color(1f, 0.7f, 0.95f), desc = "濃霧裡的海上仙女：替同伴套上泡泡護盾" },
+            new VariantDef { id = 143, baseKind = 21, name = "鬥場戰鼓手", support = 3, theme = 3, weather = Battle.Weather.Rain, hp = 0.3f, tint = new Color(1f, 0.5f, 0.3f), desc = "雷雨中擂鼓的鬥奴：鼓聲讓同伴跑得更快、出手更快" },
+            new VariantDef { id = 144, baseKind = 22, name = "砂王旗手", support = 4, theme = 4, weather = Battle.Weather.Wind, hp = 0.3f, tint = new Color(1f, 0.85f, 0.3f), desc = "順風時舉起砂王戰旗：周圍的同伴攻擊大增、受到的傷害大減" },
             // ---- 天穹飛毯（副本 sky_carpet；Codex 的全新骨架 SkyEnemyRig，戰鬥照原本的怪）：搭載具跳上飛毯
             new VariantDef { id = 131, baseKind = 0,  name = "風箏盜賊", sky = 0, hp = 0.9f, desc = "抓著大風箏從側面滑過來，放手跳上飛毯的短刀盜賊" },
             new VariantDef { id = 132, baseKind = 2,  name = "雲鷹騎兵", sky = 1, hp = 0.45f, dmg = 1.1f, desc = "騎巨鷹從正前方俯衝，在飛毯上方鬆開鞍的長槍兵" },
@@ -63,7 +69,9 @@ namespace SpellDuel
         public static VariantDef SummonFor(int theme) { foreach (var v in All) if (v.summon && v.theme == theme) return v; return null; }
         /// <summary>召喚物（擊倒紀錄的種類）：沒有經驗、不掉寶</summary>
         public static bool IsSummon(int id) => byId.TryGetValue(id, out var v) && v.summon;
-        public static VariantDef ForWeather(Battle.Weather w) { foreach (var v in All) if (!v.assassin && v.weather == w && w != Battle.Weather.None) return v; return null; }
+        public static VariantDef ForWeather(Battle.Weather w) { foreach (var v in All) if (!v.assassin && v.support == 0 && v.weather == w && w != Battle.Weather.None) return v; return null; }
+        /// <summary>這一章、這種天候的輔助型敵人（沒有＝null）</summary>
+        public static VariantDef SupportFor(int theme, Battle.Weather w) { foreach (var v in All) if (v.support > 0 && v.theme == theme && v.weather == w && w != Battle.Weather.None) return v; return null; }
         /// <summary>擊倒紀錄的種類換回原本的怪（掉材料用）</summary>
         public static int BaseOf(int kind) => byId.TryGetValue(kind, out var v) ? v.baseKind : kind;
     }
@@ -76,7 +84,7 @@ namespace SpellDuel
         public const float WeatherMonsterChance = 0.5f;                 // 有天候的時候，每一波出一隻天候怪的機率
         /// <summary>這一關的刺客怪（夜晚的副本：SoloBattle 設定；null＝不出）</summary>
         public VariantDef assassinDef;
-        int assassinWave = -1, weatherWave = -1; float assassinAt = -1f, weatherAt = -1f;
+        int assassinWave = -1, weatherWave = -1, supportWave = -1; float assassinAt = -1f, weatherAt = -1f, supportAt = -1f;
 
         /// <summary>擊倒紀錄、精魄用的種類：變種用變種 id</summary>
         public static int LogKind(Fighter m) => m.variant > 0 ? m.variant : m.minionKind;
@@ -100,6 +108,12 @@ namespace SpellDuel
             if (v.healer) { m.healer = true; m.attackReadyAt = now + HealerFirst; Emit("healer", m.Feet, v.tint, null); return; }
             if (v.summoner) { m.summoner = true; m.attackReadyAt = now + SummonerFirst; Emit("summoner", m.Feet, v.tint, null); return; }
             if (v.summon) { m.summoned = true; return; }
+            if (v.support > 0)
+            {
+                m.support = v.support; m.attackReadyAt = now + SupportFirst;
+                Emit("weathermonster", m.Feet, v.tint, $"{WeatherName(v.weather)}裡出現了輔助型敵人「{v.name}」：{SupportText(v.support)}——先打倒牠！");
+                return;
+            }
             if (v.sky >= 0) return;   // 天穹飛毯：登場由載具演出（Combat.Carpet.cs），不另外喊話
             if (v.assassin)
             {
@@ -160,6 +174,18 @@ namespace SpellDuel
             {
                 if (weatherWave != wave) { weatherWave = wave; weatherAt = rng.NextDouble() < WeatherMonsterChance ? now + 4f + 5f * (float)rng.NextDouble() : -1f; }
                 if (weatherAt > 0f && now >= weatherAt) { weatherAt = -1f; SpawnVariant(edgePoint(), wv); }
+            }
+            // 輔助型：這一章、這種天候才出現；每一波開始 3 秒後從敵陣後方出來（副本 3 人以上兩隻）
+            var sv = carpetStation < 0 && !Gallery ? MonsterVariants.SupportFor(Theme, weather) : null;
+            if (sv != null)
+            {
+                if (supportWave != wave) { supportWave = wave; supportAt = now + SupportSpawnDelay; }
+                if (supportAt > 0f && now >= supportAt)
+                {
+                    supportAt = -1f;
+                    int n = dungeonParty >= 3 ? 2 : 1;
+                    for (int i = 0; i < n; i++) { SpawnVariant(RearPoint(i), sv); lastMinionCount = minions.Count; }
+                }
             }
         }
 
@@ -317,7 +343,7 @@ namespace SpellDuel
         void KeepBehind(Fighter m, Fighter near, float nd, bool inside, float dt)
         {
             Vector3 mid = Vector3.zero; int n = 0;
-            foreach (var o in minions) if (o != m && o.Alive && !o.treasure && !o.healer && !o.summoner) { mid += o.Feet; n++; }
+            foreach (var o in minions) if (o != m && o.Alive && !o.treasure && !o.healer && !o.summoner && o.support == 0) { mid += o.Feet; n++; }
             Vector3 goal = n > 0 ? mid / n : m.Feet;
             var away = Fighter.Flat(goal - near.Feet); if (away == Vector3.zero) away = Fighter.Flat(m.Feet - near.Feet);
             goal += away * 2f;
@@ -333,6 +359,87 @@ namespace SpellDuel
                 m.forward = Fighter.Flat(near.Feet - m.Feet);
             }
             else m.forward = Fighter.Flat(near.Feet - m.Feet);
+        }
+
+        // ------------------------------------------------------------ 輔助型的 AI（第二～五章、特定天候）
+        public const float SupportFirst = 2.5f, SupportSpawnDelay = 3f;
+        public const float ShamanFrac = 0.15f, FairyShield = 0.2f, FairyDur = 6f, HasteSpeed = 1.35f, HasteAtk = 0.5f, HasteDur = 6f, RallyDmg = 1.3f, RallyTaken = 0.7f, RallyDur = 8f;
+        public const int FairyTargets = 3;
+        /// <summary>每一種：多久放一次、讀條幾秒、範圍</summary>
+        static float SupportEvery(int k) => k == 1 ? 7f : k == 2 ? 8f : k == 3 ? 9f : 12f;
+        static float SupportCast(int k) => k == 4 ? 2f : k == 1 ? 1.5f : 1.2f;
+        static float SupportRange(int k) => k == 1 ? 4.5f : k == 4 ? 6f : 5f;
+        public static string SupportText(int k) => k == 1 ? $"讀條 1.5 秒，替周圍 4.5m 的同伴各回 {ShamanFrac * 100f:0}% HP"
+            : k == 2 ? $"讀條 1.2 秒，替最近的 {FairyTargets} 個同伴套上 {FairyShield * 100f:0}% HP 的護盾（{FairyDur:0} 秒）"
+            : k == 3 ? $"讀條 1.2 秒，周圍同伴移動 +{(HasteSpeed - 1f) * 100f:0}%、出手更快（{HasteDur:0} 秒）"
+            : $"讀條 2 秒，周圍 6m 的同伴攻擊 +{(RallyDmg - 1f) * 100f:0}%、受到的傷害 −{(1f - RallyTaken) * 100f:0}%（{RallyDur:0} 秒）";
+        static string SupportVerb(int k) => k == 1 ? "治療" : k == 2 ? "套護盾" : k == 3 ? "擂鼓加速" : "舉旗增益";
+
+        bool SupportWants(Fighter m, Fighter o)
+        {
+            if (o == m || !o.Alive || o.treasure || o.support > 0 || o.capturedPet) return false;
+            if (FlatDistance(o.Feet, m.Feet) > SupportRange(m.support)) return false;
+            switch (m.support)
+            {
+                case 1: return o.hp < o.maxHp * 0.9f;
+                case 2: return o.shieldUntil <= now || o.shieldLeft <= 0;
+                case 3: return o.hasteUntil <= now + 1f;
+                default: return o.rallyUntil <= now + 1f;
+            }
+        }
+
+        void UpdateSupport(Fighter m, float dt)
+        {
+            Fighter near = null; float nd = float.MaxValue;
+            foreach (var p in Players()) { if (!p.Alive) continue; float d = FlatDistance(m.Feet, p.Feet); if (d < nd) { nd = d; near = p; } }
+            if (near == null) return;
+            m.target = near;
+            if (m.windupUntil > 0f)
+            {
+                m.forward = m.lockFwd;
+                if (now < m.windupUntil) return;
+                m.windupUntil = 0f; m.attackReadyAt = now + SupportEvery(m.support);
+                CastSupport(m);
+                return;
+            }
+            bool inside = minionInside == null || minionInside(m.Feet);
+            int want = 0; foreach (var o in minions) if (SupportWants(m, o)) want++;
+            if (want > 0 && inside && now >= m.attackReadyAt)
+            {
+                m.windupUntil = now + SupportCast(m.support); m.lockFwd = Fighter.Flat(near.Feet - m.Feet);
+                Emit("healcast", m.Feet, MonsterVariants.Get(m.variant)?.tint ?? Color.green, $"✨ {m.name}在{SupportVerb(m.support)}！打斷牠");
+                return;
+            }
+            KeepBehind(m, near, nd, inside, dt);
+        }
+
+        void CastSupport(Fighter m)
+        {
+            var targets = new List<Fighter>();
+            foreach (var o in minions) if (SupportWants(m, o)) targets.Add(o);
+            if (m.support == 2) { targets.Sort((a, b) => FlatDistance(a.Feet, m.Feet).CompareTo(FlatDistance(b.Feet, m.Feet))); if (targets.Count > FairyTargets) targets.RemoveRange(FairyTargets, targets.Count - FairyTargets); }
+            var col = MonsterVariants.Get(m.variant)?.tint ?? Color.green;
+            foreach (var o in targets)
+            {
+                switch (m.support)
+                {
+                    case 1: { float amt = Mathf.Min(o.maxHp - o.hp, o.maxHp * ShamanFrac); o.hp += amt; Emit("enemyheal", o.Chest, new Color(0.45f, 1f, 0.55f), $"+{amt:0}"); break; }
+                    case 2: o.shieldUntil = now + FairyDur; o.shieldLeft = Mathf.Max(o.shieldLeft, Mathf.RoundToInt(o.maxHp * FairyShield)); Emit("enemyheal", o.Chest, col, $"🫧 護盾 {o.shieldLeft}"); break;
+                    case 3: if (o.hasteUntil <= now) o.speedMul *= HasteSpeed; o.hasteUntil = now + HasteDur; Emit("enemyheal", o.Chest, col, "🥁 加速"); break;
+                    default: if (o.rallyUntil <= now) { o.dmgMul *= RallyDmg; o.damageTakenMul *= RallyTaken; } o.rallyUntil = now + RallyDur; Emit("enemyheal", o.Chest, col, "🚩 戰旗增益"); break;
+                }
+            }
+        }
+
+        /// <summary>每隻小怪每幀（UpdateMinions 開頭）：加速、戰旗的效果到期就拿掉；加速中出手的冷卻跑得比較快</summary>
+        void TickSupportBuffs(Fighter m, float dt)
+        {
+            if (m.hasteUntil > 0f)
+            {
+                if (now >= m.hasteUntil || !m.Alive) { m.speedMul /= HasteSpeed; m.hasteUntil = 0f; }
+                else if (m.windupUntil <= 0f && m.attackReadyAt > now) m.attackReadyAt -= dt * HasteAtk;
+            }
+            if (m.rallyUntil > 0f && (now >= m.rallyUntil || !m.Alive)) { m.dmgMul /= RallyDmg; m.damageTakenMul /= RallyTaken; m.rallyUntil = 0f; }
         }
 
         // ------------------------------------------------------------ 召喚師的 AI（第五章）

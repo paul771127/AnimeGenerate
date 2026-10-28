@@ -149,6 +149,11 @@ namespace SpellDuel
             V(121, 0.008f, "#ffd873", F(SoulOp.HurtHeal, 0.05f, 0.08f));                        // 鬥場祭司：被打時 8% 機率回 5% HP
             V(122, 0.008f, "#72f2cc", F(SoulOp.Regen, 0.0005f));                                // 砂谷藥師：每 10 秒回 0.5% HP
             V(123, 0.008f, "#c78cff", F(SoulOp.KillMp, 15f, 0.25f));                             // 砂谷召喚師：打倒敵人時 25% 機率回 15 MP（召喚物砂靈不掉精魄）
+            // ---- 輔助型（第二～五章、特定天候；0.8%）
+            V(141, 0.008f, "#8cff73", F(SoulOp.Regen, 0.0008f));                               // 林語薩滿：每 10 秒回 0.8% HP
+            V(142, 0.008f, "#ffb3f2", F(SoulOp.HurtShield, 40f, 0.10f, 4f));                    // 霧海仙女：被打時機率得到護盾
+            V(143, 0.008f, "#ff8050", F(SoulOp.MpRegen, 0.15f));                                // 鬥場戰鼓手：MP 回復 +15%
+            V(144, 0.008f, "#ffd84d", F(SoulOp.Reduce, 0.06f));                                 // 砂王旗手：受到的傷害 −6%
             // ---- 天穹飛毯（副本 sky_carpet）：天空、風、飛行、空賊（不用普攻集氣、閃避率、爆擊率）
             V(131, 0.005f, "#e8434a", F(SoulOp.DodgeCdr, 1f));                                  // 風箏盜賊・逐風結：閃過障礙後技能冷卻 −1 秒
             V(132, 0.004f, "#4f7fe0", F(SoulOp.AirReduce, 0.12f));                              // 雲鷹騎兵・翔羽心：跳躍中減傷
@@ -161,7 +166,7 @@ namespace SpellDuel
 
         /// <summary>武器類（傷害）、飾品類（技能、輔助、特殊）；其他都是防具類（防禦）</summary>
         static readonly string[] WeaponSouls = { "soul_m133", "soul_m135", "soul_m101", "soul_m102", "soul_m103", "soul_m105", "soul_m0", "soul_m3", "soul_m5", "soul_m7", "soul_m9", "soul_m10", "soul_m21", "soul_boss_canyon" };
-        static readonly string[] TrinketSouls = { "soul_m131", "soul_boss_airship", "soul_m107", "soul_m111", "soul_m112", "soul_m113", "soul_m114", "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_m20", "soul_boss", "soul_boss_forest" };
+        static readonly string[] TrinketSouls = { "soul_m143", "soul_m131", "soul_boss_airship", "soul_m107", "soul_m111", "soul_m112", "soul_m113", "soul_m114", "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_m20", "soul_boss", "soul_boss_forest" };
         static void AssignParts()
         {
             foreach (var d in All)

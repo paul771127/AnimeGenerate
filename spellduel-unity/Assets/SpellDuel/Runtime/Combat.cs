@@ -141,6 +141,7 @@ namespace SpellDuel
         public int variant;                    // 變種怪（Combat.Variants.cs）：刺客怪、天候怪的 id（0＝不是）
         public float lureUntil; public bool lureRolled, capturedPet; public Vector3 lureAt;   // 寵物誘餌（Combat.Pets.cs）
         public long petUid; public int petAtk, petLevel; public float petGap, petActLock; public List<string> petSkills; public readonly Dictionary<string, float> petCd = new Dictionary<string, float>();   // 出戰的寵物
+        public int support; public float hasteUntil, rallyUntil;   // 輔助型敵人（Combat.Variants.cs）：1 薩滿、2 仙女、3 戰鼓手、4 旗手；被加速、被舉旗增益到什麼時候
         public bool assassin, healer, summoner, summoned; public int asnState; public float asnUntil; public Fighter asnTarget, healTarget, summonedBy;   // summoned＝召喚物：沒有經驗、不掉寶   // 刺客怪：0 潛伏、1 沿邊繞、2 突襲、4 退回   // 寶箱怪（Combat.Treasure.cs）：到處逃跑、每下只扣 1、時間到就逃走
         // 副本特殊地點（Combat.RoomEvents.cs）
         public bool rooted;                    // 不會動、不會出手（守護物、圖騰、雕像、寶箱）
@@ -1332,6 +1333,7 @@ namespace SpellDuel
             foreach (var m in minions)
             {
                 if (!m.Alive) continue;
+                if (m.hasteUntil > 0f || m.rallyUntil > 0f) TickSupportBuffs(m, dt);   // 戰鼓加速、戰旗增益：到期拿掉（Combat.Variants.cs）
                 if (m.leapEnd > 0f) { UpdateCliffLeap(m); continue; }   // 黃土山道：還在崖上／跳下來中
                 // 目標：最近的活著的玩家
                 Fighter tgt = null; float best = float.MaxValue;
@@ -1345,6 +1347,7 @@ namespace SpellDuel
                 if (UpdateLure(m, dt)) continue;   // 吃誘餌中：不攻擊（Combat.Pets.cs）
                 if (m.assassin) { UpdateAssassin(m, dt); continue; }
                 if (m.healer) { UpdateHealer(m, dt); continue; }   // 補師：躲在後面治療同伴（Combat.Variants.cs）
+                if (m.support > 0) { UpdateSupport(m, dt); continue; }   // 輔助型：治療、護盾、加速、戰旗（Combat.Variants.cs）
                 if (m.summoner) { UpdateSummoner(m, dt); continue; }   // 召喚師：躲在後面叫砂靈（Combat.Variants.cs）   // 刺客怪：繞到背後突襲（Combat.Variants.cs）
                 var wantFwd = m.windupUntil > 0f && m.lockFwd != Vector3.zero ? m.lockFwd : Fighter.Flat(tgt.head - m.head);   // 預備中：面向鎖住（扇形不追著玩家轉）
                 if (m.minionKind == 16 && m.forward != Vector3.zero && wantFwd != Vector3.zero)
@@ -3953,7 +3956,7 @@ namespace SpellDuel
             if (dmg > 0f && kind != "dot" && kind != "burn" && kind != "oath" && kind != "thorns" && BarrierGuards(f) && TryBarrier(f, at)) return;   // 主教的聖域障壁
             if (f.invulnUntil > now && dmg > 0f) return;   // 狂戰士不死之軀的無敵
             if (f.isMinion && f.hidden) return;   // 埋著的食人花
-            if ((f.healer || f.summoner) && f.windupUntil > 0f && dmg > 0f && kind != "dot" && kind != "burn") { f.windupUntil = 0f; f.attackReadyAt = now + 2f; Emit("healbreak", f.Chest, new Color(1f, 0.85f, 0.4f), f.healer ? "治療被打斷！" : "召喚被打斷！"); }   // 補師、召喚師讀條被打中：打斷
+            if ((f.healer || f.summoner || f.support > 0) && f.windupUntil > 0f && dmg > 0f && kind != "dot" && kind != "burn") { f.windupUntil = 0f; f.attackReadyAt = now + 2f; Emit("healbreak", f.Chest, new Color(1f, 0.85f, 0.4f), f.healer ? "治療被打斷！" : f.support > 0 ? "讀條被打斷！" : "召喚被打斷！"); }   // 補師、召喚師讀條被打中：打斷
             if (f.treasure && (kind == "dot" || kind == "burn")) return;   // 寶箱怪：毒、灼燒沒用（每一下攻擊只扣 1）
             if (f.isMinion && dmg > 0f && kind != "dot" && kind != "burn") OnMinionHurt(f);
             if (f.isMinion && f.minionKind == 16 && dmg > 0f)
