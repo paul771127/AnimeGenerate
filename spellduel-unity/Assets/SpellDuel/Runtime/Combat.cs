@@ -92,6 +92,7 @@ namespace SpellDuel
         /// <summary>精魄（Souls.cs）：格擋率、受到的傷害倍率（副作用）、反彈、觸發型效果</summary>
         public float blockChance, soulTaken = 1f, thorns;
         public float trapReduce,evadeBoost,evadeBoostUntil;
+        public float dodgeCdr, airReduce, duckShield, dodgeCdrAt, duckShieldAt;   // 天穹飛毯：閃過障礙減冷卻、跳躍中減傷、蹲避護盾（Combat.Carpet.cs）
         /// <summary>無盡塔每 5 波出現的精銳敵人（血量 ×6、攻擊 ×1.6、體型 ×1.5）</summary>
         public bool isElite;
         /// <summary>召喚師收服的魔物（小怪種類；−1＝不是）</summary>
@@ -1238,7 +1239,7 @@ namespace SpellDuel
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
             enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f; enemy.silencedUntil = 0f;
             // 依主題換 Boss：熔岩巨像／腐化樹王（招式不同）
-            var bc = Skills.Classes[Gallery ? "boss_clockwork" : BossClassOf(Theme)];
+            var bc = Skills.Classes[Gallery ? "boss_clockwork" : CarpetBoss ? Carpet.BossClass : BossClassOf(Theme)];   // 天穹飛毯：空賊飛艇（Combat.Carpet.cs）
             if (enemy.cls != bc)
             {
                 enemy.cls = bc; enemy.name = bc.name;
@@ -1702,7 +1703,7 @@ namespace SpellDuel
             var to = v.Feet - center; to.y = 0f;
             if (to.magnitude > R) return;
             if (half < 180f && to.sqrMagnitude > 1e-4f && fwd != Vector3.zero && Vector3.Angle(fwd, to) > half) return;
-            if (v.crouching) { v.evadeBoostUntil=now+3; Emit("evade", v.Chest, new Color(0.6f, 0.9f, 1f), "蹲下閃過！"); return; }
+            if (v.crouching) { BodyDodge(v, true); Emit("evade", v.Chest, new Color(0.6f, 0.9f, 1f), "蹲下閃過！"); return; }
             HitFoe(m, v, s, dmg);
         }
 
@@ -1729,7 +1730,7 @@ namespace SpellDuel
                 var to = v.Feet - m.Feet; to.y = 0f;
                 if (to.magnitude > R) continue;
                 if (half < 180f && to.sqrMagnitude > 1e-4f && fw != Vector3.zero && Vector3.Angle(fw, to) > half) continue;
-                if (v.crouching) { v.evadeBoostUntil=now+3; Emit("evade", v.Chest, new Color(0.6f, 0.9f, 1f), "蹲下閃過！"); continue; }
+                if (v.crouching) { BodyDodge(v, true); Emit("evade", v.Chest, new Color(0.6f, 0.9f, 1f), "蹲下閃過！"); continue; }
                 HitFoe(m, v, s, dmg);
             }
             Emit("minionattack", m.Feet, s.color, null);
@@ -2371,7 +2372,7 @@ namespace SpellDuel
             foreach (var v in MeleeFoes(f))
             {
                 if (v == null || !v.Alive || !InSlash(o, a, b, reach, v)) continue;
-                if (duckable && v.crouching) { v.evadeBoostUntil=now+3; Emit("evade", v.Chest, s.color, "蹲下閃過！"); continue; }
+                if (duckable && v.crouching) { BodyDodge(v, true); Emit("evade", v.Chest, s.color, "蹲下閃過！"); continue; }
                 if (duckable && SidestepInvuln && v.dodgeUntil > now) { Emit("evade", v.Chest, s.color, "閃避！"); continue; }
                 MeleeHit(f, s, v, dmg); landed++;
             }
@@ -2965,7 +2966,7 @@ namespace SpellDuel
                     if (EliteCatalog.IsElite(w.owner.minionKind) && w.owner.isMinion && d > w.maxR) continue;
                     if (d < w.lastR - QuakeBand || d > r + QuakeBand) continue;   // 環還沒到／已經過去
                     w.done.Add(v);
-                    if (v.airborneUntil > now) { v.evadeBoostUntil=now+3; Emit("evade", v.Chest, new Color(0.6f, 1f, 0.8f), "跳過了！"); continue; }
+                    if (v.airborneUntil > now) { BodyDodge(v, false); Emit("evade", v.Chest, new Color(0.6f, 1f, 0.8f), "跳過了！"); continue; }
                     HitFoe(w.owner, v, w.skill, w.dmg);
                 }
                 w.lastR = r;
@@ -3070,6 +3071,7 @@ namespace SpellDuel
             UpdateLanes();
             UpdatePets(dt);
             UpdateGalleryTraps();
+            UpdateCarpet(dt);   // 天穹飛毯：判定自己有沒有躲過障礙（Combat.Carpet.cs）
             UpdateHazards();   // 角鬥場的斧頭與地刺、山道的落石（Combat.Hazards.cs）
         }
 
@@ -3418,7 +3420,7 @@ namespace SpellDuel
                         // 閃避：蹲下躲過橫向攻擊、側跨的無敵時間內 → 法術穿過去
                         if (Evades(target, p))
                         {
-                            if (!p.evaded) { p.evaded = true; Emit("evade", target.Chest, p.skill.color, p.skill.jumpable ? "跳過了！" : "蹲下躲過！"); }
+                            if (!p.evaded) { p.evaded = true; Emit("evade", target.Chest, p.skill.color, p.skill.jumpable ? "跳過了！" : "蹲下躲過！"); if (p.skill.jumpable || p.skill.duckable) BodyDodge(target, p.skill.duckable); }
                             continue;
                         }
                         p.alive = false;
@@ -3916,6 +3918,7 @@ namespace SpellDuel
             if (damage > 0 && target.cloneUntil > now && rng.NextDouble() < 0.5) { Emit("evade", target.Chest, new Color(0.8f, 0.85f, 0.9f), "打中了分身！"); return; }
             BonusOnHurt(target, damage);   // 小目標：被打中幾次（閃掉的不算）
             float dmg = damage;
+            if (target.airReduce > 0f && target.airborneUntil > now && dmg > 0) dmg *= 1f - target.airReduce;   // 翔羽心：跳起來時減傷
             string note = null;
             if (target.blockUntil > now && dmg > 0)
             {

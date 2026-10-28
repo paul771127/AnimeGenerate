@@ -50,6 +50,11 @@ namespace SpellDuel
             M("core_sea", "海妖之淚", "💧", "Boss 深海巨妖"),
             M("core_arena", "鬥魂徽記", "⚜", "Boss 青銅鬥魂"),
             M("core_canyon", "岩魔之核", "🟤", "Boss 黃土岩魔"),
+            // 天穹飛毯（副本 sky_carpet）
+            M("cloud_silk", "雲織絲", "🧵", "風箏盜賊、滑翔翼兵（25%）"),
+            M("wind_crystal", "凝風晶", "💠", "雲鷹騎兵、浮游魔偶（20%）"),
+            M("sky_badge", "空賊航徽", "🏴", "空賊隊長（50%）、其他飛毯敵人（4%）"),
+            M("airship_compass", "飛艇羅盤", "🧭", "Boss 空賊飛艇・逐風號（必掉）"),
             M("tame_seal", "馴獸印片", "🔰", "各章菁英怪 20%（8 枚＋金幣調配菁英誘餌）"),
             M("soul_smith", "神匠之魂", "✨", "困難難度的 Boss（很少）"),
         };
@@ -112,6 +117,19 @@ namespace SpellDuel
             return "mat_" + list[rng.Next(list.Count)];
         }
 
+        /// <summary>天穹飛毯的敵人（變種 131～135）：各自的素材，獨立擲（不佔「一隻最多掉一樣」）；沒掉＝null</summary>
+        public static string RollSky(int variant, System.Random rng)
+        {
+            double r = rng.NextDouble();
+            switch (variant)
+            {
+                case 131: case 133: return r < 0.25 ? "mat_cloud_silk" : r < 0.29 ? "mat_sky_badge" : null;
+                case 132: case 134: return r < 0.20 ? "mat_wind_crystal" : r < 0.24 ? "mat_sky_badge" : null;
+                case 135: return r < 0.5 ? "mat_sky_badge" : null;
+                default: return null;
+            }
+        }
+
         /// <summary>Boss 倒下：擲 Boss 材料（沒掉＝null，照常掉裝備）</summary>
         public static string RollBoss(string bossCls, int difficulty, System.Random rng)
         {
@@ -124,6 +142,7 @@ namespace SpellDuel
                 "boss_sea" => "mat_core_sea",
                 "boss_arena" => "mat_core_arena",
                 "boss_canyon" => "mat_core_canyon",
+                "boss_airship" => null,   // 飛艇羅盤另外必掉（SoloBattle.DropOne）
                 _ => null,
             };
         }
@@ -146,7 +165,7 @@ namespace SpellDuel
         }
 
         // ================================================================ 強化藥劑（每個城鎮的藥劑師）
-        public enum BuffKind { Atk, Crit, Regen, Charge, Cdr, MagicRed, Lifesteal, PhysRed, MaxHp, Evade }
+        public enum BuffKind { Atk, Crit, Regen, Charge, Cdr, MagicRed, Lifesteal, PhysRed, MaxHp, Evade, TrapRed }
         public class Potion
         {
             public string id, name, icon, desc; public int town; public BuffKind kind; public float amount;
@@ -164,6 +183,7 @@ namespace SpellDuel
             P("bp_blood", "嗜血藥劑", "🩸", 3, BuffKind.Lifesteal, 0.05f, "吸血 +5%", 120, ("badge", 3), ("gland", 2)),
             P("bp_iron", "鐵壁藥劑", "🛡", 3, BuffKind.PhysRed, 0.10f, "物理減傷 +10%", 120, ("badge", 2), ("shell", 3)),
             P("bp_vigor", "活力藥劑", "❤", 4, BuffKind.MaxHp, 0.15f, "最大 HP +15%", 150, ("crystal", 3), ("ore", 2)),
+            P("bp_tailwind", "順風護露", "🪶", 2, BuffKind.TrapRed, 0.08f, "障礙、陷阱傷害 −8%", 100, ("cloud_silk", 3), ("wind_crystal", 2)),
             P("bp_wind", "疾風藥劑", "🌪", 4, BuffKind.Evade, 0.08f, "閃避率 +8%", 150, ("crystal", 2), ("feather", 3)),
         };
         static Potion P(string id, string name, string icon, int town, BuffKind k, float amt, string desc, int gold, params (string, int)[] need)

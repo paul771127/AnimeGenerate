@@ -30,6 +30,7 @@ namespace SpellDuel
         {
             drun = new DungeonRun(dungeon);
             BeginGallery();
+            BeginSky();   // 天穹飛毯（SoloBattle.Carpet.cs）
             chest = null; chatLog.Clear(); ClearNpcRigs();
             if (DungeonDecider) battle.OnNpcDown += OnNpcDown;
             ApplyNode();
@@ -47,6 +48,7 @@ namespace SpellDuel
         {
             var r = drun.node;
             battle.themeOverride = drun.Theme;
+            SkyEnterNode();   // 天穹飛毯：這一站的站別（SoloBattle.Carpet.cs）
             SetupDungeonMods();   // 白天／夜晚、這個地點的天候（SoloBattle.StageMods.cs）
             GalleryEnter();
             dungeonHalfSaid = -1; nodeClearedSeen = false; routeAutoAt = 0f;
@@ -85,6 +87,7 @@ namespace SpellDuel
             if (drun == null || battle == null || phase != Phase.Fighting) return;
             UpdateTravel();
             UpdateRoomEventVisuals();
+            UpdateSkyArt(Time.deltaTime);   // 天穹飛毯（SoloBattle.Carpet.cs）
             SendRoomEventState();
             if (Traveling) return;   // 走通道中：場景還是上一站的，不開打、不選路
             if (battle.themeOverride != drun.Theme) battle.themeOverride = drun.Theme;
@@ -112,6 +115,7 @@ namespace SpellDuel
         void OnNodeCleared()
         {
             CorridorCleared();
+            if (battle != null) battle.ClearSky();   // 天穹飛毯：這一站打完，還在飛的障礙不算了（房主、隊友一樣）
             drun.Cleared();
             GalleryClearedRoom();
             drun.ThirdLeaves();
@@ -135,7 +139,7 @@ namespace SpellDuel
                 if (n.rewardGold > 0) { pendingGold += n.rewardGold; got += $"💰 {n.rewardGold}"; }
                 if (n.rewardRarity > 0)
                 {
-                    ItemGen.SetTheme = drun.Theme;
+                    ItemGen.SetTheme = drun.Theme; ItemGen.ExclusiveSet = SkyDungeon ? "skyweave" : null; ItemGen.ExclusiveSet = SkyDungeon ? "skyweave" : null;
                     var it = ItemGen.Make(dropRng, dungeon.level + battle.levelBoost, n.rewardRarity, myClass);
                     pendingItems.Add(it);
                     got += (got.Length > 0 ? "、" : "") + $"[{Item.RarityNames[n.rewardRarity]}] {it.name}";
@@ -393,7 +397,7 @@ namespace SpellDuel
 
         void GrantChestPrize()
         {
-            ItemGen.SetTheme = chest.theme;
+            ItemGen.SetTheme = chest.theme; ItemGen.ExclusiveSet = SkyDungeon ? "skyweave" : null;
             var it = ItemGen.Make(new System.Random(chest.seed), chest.ilvl, chest.rarity, myClass);
             pendingItems.Add(it);
             Say($"🏆 擲骰勝利！獲得 [{Item.RarityNames[chest.rarity]}] {it.name}（通關後獲得）", 3.5f);
@@ -421,6 +425,7 @@ namespace SpellDuel
         bool OnDungeonMsg(Msg m)
         {
             if(GalleryMessage(m))return true;
+            if (SkyMessage(m)) return true;   // 天穹飛毯（SoloBattle.Carpet.cs）
             if (OnRoomEventMsg(m)) return true;   // 特殊地點（SoloBattle.RoomEvents.cs）
             if (drun == null) return false;
             switch (m.t)

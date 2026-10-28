@@ -12,7 +12,7 @@ STORY = os.path.join(HERE, "..", "Assets", "SpellDuel", "Resources", "story.txt"
 THEMES = {"vault","volcano", "熔岩", "0", "forest", "森林", "1", "sea", "海", "海上", "2", "arena", "角鬥場", "3", "canyon", "山道", "黃土山道", "4"}
 LOOKS = {"mage", "archer", "swordsman", "priest", "assassin"}
 ROOM_EVENTS = {"defend", "survive", "escort", "hunt", "totems", "runes", "chant", "elements", "mimic", "collapse", "dark"}
-EVENT_KEYS = {"name", "hp", "time", "count", "seq", "riddle", "answer", "hint", "look", "fail"}
+EVENT_KEYS = {"name", "hp", "time", "count", "seq", "riddle", "answer", "hint", "look", "fail", "carpet"}
 MAX_LINE = 60
 ROOM_TAGS = ("enter", "clear", "boss_half")
 NPC_TAGS = ("meet", "die", "done", "safe", "ally", "enemy", "third")
@@ -130,6 +130,7 @@ def check(path):
                     room["kind"] = v.lower()
                 elif k in EVENT_KEYS:
                     if k in {"hp", "time", "count", "seq"} and (not v.isdigit() or int(v) < 1): errors.append(f"第 {ln} 行：{k} 要是正整數")
+                    if k == "carpet" and (not v.isdigit() or int(v) > 4): errors.append(f"第 {ln} 行：carpet（飛毯站別）只能是 0～4")
                     if k == "look" and v not in LOOKS: errors.append(f"第 {ln} 行：look 不認得 {v}")
                 elif k == "next": room["next"] += split_list(v)
                 elif k == "npc": room["npcs"] += split_list(v)

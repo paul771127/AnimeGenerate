@@ -52,6 +52,7 @@ namespace SpellDuel
                 case Crafting.BuffKind.PhysRed: f.gearReduce += on ? a : -a; break;
                 case Crafting.BuffKind.Lifesteal: f.lifesteal += on ? a : -a; break;
                 case Crafting.BuffKind.Evade: f.evadeChance += on ? a : -a; break;
+                case Crafting.BuffKind.TrapRed: f.trapReduce += on ? a : -a; break;
                 case Crafting.BuffKind.MaxHp:
                     if (on) { b.delta = Mathf.Round(f.maxHp * a); f.maxHp += Mathf.RoundToInt(b.delta); if (f.Alive) f.hp += b.delta; }
                     else { f.maxHp -= Mathf.RoundToInt(b.delta); f.hp = Mathf.Min(f.hp, f.maxHp); }

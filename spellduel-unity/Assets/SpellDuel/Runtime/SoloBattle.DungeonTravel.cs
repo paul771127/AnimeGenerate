@@ -16,7 +16,7 @@ namespace SpellDuel
         GameObject sceneRoot;
         float travelStart = -1f, travelFadeK; Vector3 travelDirS; float nextStepAt;
         bool Traveling => travelStart >= 0f;
-        bool CorridorOk => dungeon != null && !InGallery && drun != null;
+        bool CorridorOk => dungeon != null && !InGallery && !SkyDungeon && drun != null;   // 天穹飛毯：一直在飛毯上，不走通道
 
         /// <summary>地點開打：在我面前建一條通道（最後一站＝首領房沒有出口，不建）</summary>
         void BuildCorridor()

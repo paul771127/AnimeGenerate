@@ -958,3 +958,71 @@ look = swordsman
 齒輪商人（swordsman）［smile］：交易完成。珍惜時間。時間、時間。
 <die>
 齒輪商人（swordsman）［sad］：營業中止。下次、下次。
+
+[dungeon sky_carpet] 天穹航路・逐風奪舵
+空賊截走了港口的航路羅盤。乘上飛毯，穿過浮島與雷雲，把羅盤追回來！
+level = 30
+players = 1-4
+unlock = 3-6
+<before>
+背景：town_port
+旁白：天亮前，一艘紅白氣囊的飛艇掠過港口，航路羅盤跟著不見了。
+海斗［serious］：那是空賊的逐風號。羅盤落在他們手上，整片海都會迷航。
+阿潮［smile］：{玩家}，祖母的飛毯借你！站穩了，它飛起來可不等人。
+旁白：飛毯只會往前飛。障礙從正前方來：低的跳、高的蹲、半邊的往旁邊閃。
+<after>
+背景：town_port
+旁白：逐風號拖著黑煙墜進雲海，飛毯從煙幕裡穿了出來。
+海斗［smile］：羅盤回來了！指針還在轉，像是也鬆了一口氣。
+阿潮［smile］：下次換我坐前面。……真的啦，我不怕高。
+
+[node sky_dawn] 起飛・晨曦雲海
+wave = 22
+theme = sea
+carpet = 0
+next = sky_islands
+<enter>
+旁白：飛毯升上雲海。前方的橫木：低的跳起來，高的蹲下去！
+<clear>
+旁白：雲海散開，前方浮著一串用鎖鏈連起來的島。
+
+[node sky_islands] 懸鏈浮島
+wave = 24
+theme = sea
+carpet = 1
+next = sky_canyon
+<enter>
+旁白：斷掉的浮島會從左右撞過來。看地上哪半邊變紅，就往另一邊閃！
+<clear>
+旁白：浮島後面是一道又窄又長的峽谷。
+
+[node sky_canyon] 風蝕天隘
+wave = 26
+theme = sea
+carpet = 2
+next = sky_storm
+<enter>
+旁白：峽谷的岩壁只留一個缺口。站到綠框裡，就能穿過去！
+<clear>
+旁白：峽谷盡頭，雷雲正在聚集。
+
+[node sky_storm] 雷雲航標
+wave = 28
+theme = sea
+carpet = 3
+next = sky_airship
+<enter>
+旁白：雷雲帶的閃電會先在飛毯前緣亮起來。空賊隊長也追上來了！
+<clear>
+旁白：雲層裂開，逐風號的船首就擋在正前方。
+
+[node sky_airship] 首領：空賊飛艇・逐風號
+wave = 30
+theme = sea
+carpet = 4
+<enter>
+空賊船長（boss）：羅盤是我們的了！想要？就從砲火裡穿過來！
+旁白：飛艇壓低到飛毯前緣時，就是近戰的機會！
+<boss_half>
+空賊船長（boss）：全砲門打開！讓他們嘗嘗彈幕的滋味！
+旁白：一波接一波的砲彈：橘色的跳，藍色的蹲！

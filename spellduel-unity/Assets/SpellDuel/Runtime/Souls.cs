@@ -37,6 +37,9 @@ namespace SpellDuel
         Undying,       // 每場戰鬥一次：受到致命傷害時留 1 HP、無敵 3 秒
         TrapReduce, DodgePower,
         Accuracy,      // 命中率 +v（抵掉對方的閃避）
+        DodgeCdr,      // 閃過障礙／跳蹲躲過攻擊：所有技能冷卻 −v 秒（8 秒一次）
+        AirReduce,     // 跳起來的時候受到的傷害 −v
+        DuckShield,    // 蹲下躲過攻擊：得到 v×最大 HP 的護盾 4 秒（12 秒一次）
     }
 
     /// <summary>精魄能鑲在哪一類裝備：武器（傷害）、防具（頭、身體、鞋子；防禦）、飾品（技能、輔助、特殊）</summary>
@@ -146,12 +149,19 @@ namespace SpellDuel
             V(121, 0.008f, "#ffd873", F(SoulOp.HurtHeal, 0.05f, 0.08f));                        // 鬥場祭司：被打時 8% 機率回 5% HP
             V(122, 0.008f, "#72f2cc", F(SoulOp.Regen, 0.0005f));                                // 砂谷藥師：每 10 秒回 0.5% HP
             V(123, 0.008f, "#c78cff", F(SoulOp.KillMp, 15f, 0.25f));                             // 砂谷召喚師：打倒敵人時 25% 機率回 15 MP（召喚物砂靈不掉精魄）
+            // ---- 天穹飛毯（副本 sky_carpet）：天空、風、飛行、空賊（不用普攻集氣、閃避率、爆擊率）
+            V(131, 0.005f, "#e8434a", F(SoulOp.DodgeCdr, 1f));                                  // 風箏盜賊・逐風結：閃過障礙後技能冷卻 −1 秒
+            V(132, 0.004f, "#4f7fe0", F(SoulOp.AirReduce, 0.12f));                              // 雲鷹騎兵・翔羽心：跳躍中減傷
+            V(133, 0.005f, "#ffa733", F(SoulOp.KillMp, 3f, 0.15f));                              // 滑翔翼兵・回航翼：打倒敵人回 MP
+            V(134, 0.003f, "#33c0aa", F(SoulOp.TrapReduce, 0.10f));                             // 浮游魔偶・浮衡核：障礙／陷阱傷害 −10%
+            V(135, 0.01f, "#a246cc", F(SoulOp.DodgePower, 0.10f));                              // 空賊隊長・領航印：閃過後下一擊更痛
+            B("boss_airship", "#f2c14e", F(SoulOp.DuckShield, 0.06f));                          // 逐風號・天穹舵魂：蹲避得到護盾
             AssignParts();
         }
 
         /// <summary>武器類（傷害）、飾品類（技能、輔助、特殊）；其他都是防具類（防禦）</summary>
-        static readonly string[] WeaponSouls = { "soul_m101", "soul_m102", "soul_m103", "soul_m105", "soul_m0", "soul_m3", "soul_m5", "soul_m7", "soul_m9", "soul_m10", "soul_m21", "soul_boss_canyon" };
-        static readonly string[] TrinketSouls = { "soul_m107", "soul_m111", "soul_m112", "soul_m113", "soul_m114", "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_m20", "soul_boss", "soul_boss_forest" };
+        static readonly string[] WeaponSouls = { "soul_m133", "soul_m135", "soul_m101", "soul_m102", "soul_m103", "soul_m105", "soul_m0", "soul_m3", "soul_m5", "soul_m7", "soul_m9", "soul_m10", "soul_m21", "soul_boss_canyon" };
+        static readonly string[] TrinketSouls = { "soul_m131", "soul_boss_airship", "soul_m107", "soul_m111", "soul_m112", "soul_m113", "soul_m114", "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_m20", "soul_boss", "soul_boss_forest" };
         static void AssignParts()
         {
             foreach (var d in All)
@@ -180,6 +190,9 @@ namespace SpellDuel
             {
                 case SoulOp.TrapReduce: return $"陷阱傷害 -{x.v*100:0}%";
                 case SoulOp.DodgePower: return $"跳／蹲閃避後3秒傷害 +{x.v*100:0}%";
+                case SoulOp.DodgeCdr: return $"跳／蹲／側步閃過障礙後，所有技能冷卻 −{x.v:0.#} 秒（8 秒一次）";
+                case SoulOp.AirReduce: return $"跳起來時受到的傷害 −{Pct(x.v)}";
+                case SoulOp.DuckShield: return $"蹲下躲過攻擊後，得到最大 HP {Pct(x.v)} 的護盾 4 秒（12 秒一次）";
                 case SoulOp.Stat: return $"{StatInfo.Names[(int)x.stat]} {sg(x.v)}{Mathf.Abs(x.v):0}";
                 case SoulOp.Atk: return $"攻擊傷害 {sg(x.v)}{Pct(Mathf.Abs(x.v))}";
                 case SoulOp.Hp: return $"HP 上限 {sg(x.v)}{Mathf.Abs(x.v):0}";
@@ -259,6 +272,9 @@ namespace SpellDuel
                 {
                     case SoulOp.TrapReduce: f.trapReduce=Mathf.Clamp01(f.trapReduce+x.v);break;
                     case SoulOp.DodgePower: f.evadeBoost+=x.v;break;
+                    case SoulOp.DodgeCdr: f.dodgeCdr += x.v; break;
+                    case SoulOp.AirReduce: f.airReduce = Mathf.Min(0.5f, f.airReduce + x.v); break;
+                    case SoulOp.DuckShield: f.duckShield += x.v; break;
                     case SoulOp.Atk: f.atkMul *= Mathf.Max(0.2f, 1f + x.v); break;
                     case SoulOp.Hp: f.maxHp = Mathf.Max(10, f.maxHp + Mathf.RoundToInt(x.v)); break;
                     case SoulOp.Mp: f.maxMp = Mathf.Max(10, f.maxMp + Mathf.RoundToInt(x.v)); break;

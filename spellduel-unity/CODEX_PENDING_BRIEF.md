@@ -495,3 +495,15 @@ Boss登毯接線補充：DropPirate加1秒落點圈，與飛毯表面同步；�
 ### 第 14 項 B2 最終交付：寵物美術與既有分頁（2026-10-28）
 
 44種可收服寵物織帶／身份扣／友方環、菁英金羽與金環、SetEating、成功／失敗收服演出、68個圖示及已接功能的寵物分頁美術完成。PetFx已是遊戲enum，特效入口改為PetArtFx.Capture，不更動enum或存檔。Docs/pending_preview/pets/含44種原生照、圖示總覽、特效與明確標示的介面排版示意。68新圖示確定性、81舊圖示像素、44誘餌池與24筆UI資料操作比對通過。雙平台結果同上；戰鬥事件接線由Claude按README接入，沒有用空callback覆蓋既有功能。
+
+### Claude 接線紀錄：第 13、14 項（2026-10-28）
+
+- 寵物：出戰寵物（自己的、隊友的）套 `PetDress.Apply`；吃誘餌中的小怪 `SetEating(true)`；收服成功／掙脫用 `PetArtFx.Capture`。
+- 天穹飛毯：副本 `sky_carpet`（Resources/dungeons.txt，5 站，`carpet = 0～4`）。邏輯在 `Carpet.cs`、`Combat.Carpet.cs`，畫面與連線在 `SoloBattle.Carpet.cs`：
+  - `CarpetScene`：取代主題場景；平常 `Speed` 12、俯衝時 6、清完一站 18；`SwayScale` 接設定的「🪂 飛毯晃動」（關＝0.3）；登毯落地呼叫 `Impact`，同時手機震動。
+  - `CarpetObstacleView`：`TravelSeconds`／`WarningLeadSeconds` 設成判定端的實際秒數（預警 1.8／2.0／2.2 秒，第一站前兩個 3 秒）；飛艇的招式從船首飛出（progress 0.7→1）。
+  - `SkyVehicleView` 4 秒時間表、0.8 落地生成真正的小怪；騎乘中的敵人用暫時的 `SkyEnemyRig`，0.55～0.8 弧線跳下。
+  - 小怪（變種 131～135）：`MinionRig` 藏起來，掛 `SkyEnemyRig`，Windup／Attack／PlayHit／SetDead／MoveSpeed 照轉。
+  - `AirshipRig`：根＝前緣前 9.1m、上 2.7m，船首朝玩家；`SetSwoop` 最多 0.6（錨台貼到前緣）；半邊 `SetSide(−玩家那側)`、缺口 `SetGap`（換成船身座標）；空賊先 `SetPirateLanding` 再 `DropPirate`；倒下 `SetDying` 5 秒。
+  - `SkyShotView`：彈幕子波 4 枚起、每輪 +2、最多 12，一個子波全低或全高。
+- 素材 4 種、精魄 6 顆（soul_m131～135、soul_boss_airship）、天穹航裝（2／3／4 件）、順風護露已接進 Crafting／Souls／Economy；圖示照 Codex 的 id 自動取用。

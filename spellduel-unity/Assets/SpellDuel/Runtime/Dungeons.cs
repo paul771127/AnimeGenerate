@@ -8,7 +8,7 @@ namespace SpellDuel
     public class DungeonRoom
     {
         /// <summary>特殊地點可以寫的設定</summary>
-        public static readonly string[] EventKeysAll = { "name", "hp", "time", "count", "seq", "riddle", "answer", "hint", "look", "fail" };
+        public static readonly string[] EventKeysAll = { "name", "hp", "time", "count", "seq", "riddle", "answer", "hint", "look", "fail", "carpet" };
         /// <summary>地點 id（地圖用；[room] 沒寫就是 r1、r2…）</summary>
         public string id;
         /// <summary>事件：battle 戰鬥、chest 寶箱（不用打）、boss 首領（wave 是 10 的倍數就自動是首領）</summary>
@@ -24,6 +24,8 @@ namespace SpellDuel
         /// <summary>特殊地點的設定（event = defend／survive／… 用：name、hp、time、count、seq、riddle、answer、hint、look、fail）</summary>
         public readonly Dictionary<string, string> param = new Dictionary<string, string>();
         public bool IsEvent => Battle.IsRoomEvent(kind);
+        /// <summary>飛毯副本的站別（carpet = 0～4；−1＝不是飛毯）：Combat.Carpet.cs</summary>
+        public int CarpetStation => param.TryGetValue("carpet", out var c) && int.TryParse(c, out var n) ? Mathf.Clamp(n, 0, 4) : -1;
         public string title, line;
         /// <summary>進房間、清完房間、首領剩一半血時的台詞（戰鬥中以字幕卡顯示，不暫停）</summary>
         public readonly List<StoryLine> enter = new List<StoryLine>(), clear = new List<StoryLine>(), bossHalf = new List<StoryLine>();

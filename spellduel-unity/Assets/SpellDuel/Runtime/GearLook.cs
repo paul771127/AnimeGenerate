@@ -61,6 +61,7 @@ namespace SpellDuel
             switch (setId)
             {
                 case "clockwork": main=new Color(.45f,.31f,.16f);accent=new Color(.2f,.95f,.9f);return;
+                case "skyweave": main = new Color(0.16f, 0.62f, 0.6f); accent = new Color(0.95f, 0.78f, 0.35f); return;   // 天穹航裝：青綠＋金扣
                 case "flame": main = new Color(0.78f, 0.18f, 0.1f); accent = new Color(1f, 0.62f, 0.15f); return;       // 炎龍：赤紅＋熔金
                 case "grove": main = new Color(0.2f, 0.52f, 0.25f); accent = new Color(0.72f, 0.9f, 0.35f); return;      // 森羅：深綠＋嫩葉
                 case "tide": main = new Color(0.12f, 0.38f, 0.62f); accent = new Color(0.45f, 0.9f, 0.9f); return;       // 海神：深海藍＋青

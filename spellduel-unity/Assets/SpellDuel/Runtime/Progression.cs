@@ -656,7 +656,7 @@ namespace SpellDuel
 
     // ---------------------------------------------------------------- 裝備
     public enum Slot { Weapon, Head, Body, Feet, Trinket }
-    public enum Affix { Str, Int, Vit, Agi, Spi, Luk, Hp, Mp, Crit, Cdr, Lifesteal, Burn, Poison, Freeze, Atk, Armor, TrapReduce, DodgePower, MagicArmor, Accuracy }   // 存檔用數字：新的只能加在最後面
+    public enum Affix { Str, Int, Vit, Agi, Spi, Luk, Hp, Mp, Crit, Cdr, Lifesteal, Burn, Poison, Freeze, Atk, Armor, TrapReduce, DodgePower, MagicArmor, Accuracy, DodgeCdr }   // 存檔用數字：新的只能加在最後面
 
     public class Item
     {
@@ -707,7 +707,7 @@ namespace SpellDuel
             Affix.Crit => $"爆擊率 +{v * 100:0.#}%", Affix.Cdr => $"冷卻 -{v * 100:0.#}%", Affix.Accuracy => $"命中率 +{v * 100:0.#}%",
             Affix.Lifesteal => $"吸血 {v * 100:0.#}%",
             Affix.Burn => $"灼燒機率 +{v * 100:0}%", Affix.Poison => $"中毒機率 +{v * 100:0}%", Affix.Freeze => $"冰凍機率 +{v * 100:0}%",
-            Affix.TrapReduce => $"陷阱傷害 -{v*100:0}%", Affix.DodgePower => $"身體閃避後3秒傷害 +{v*100:0}%",
+            Affix.TrapReduce => $"陷阱傷害 -{v*100:0}%", Affix.DodgePower => $"身體閃避後3秒傷害 +{v*100:0}%", Affix.DodgeCdr => $"閃過障礙後技能冷卻 −{v:0.#} 秒（10 秒一次）",
             Affix.Atk => $"攻擊傷害 +{v * 100:0}%", Affix.Armor => $"物理減傷 +{v * 100:0.#}%", Affix.MagicArmor => $"魔法減傷 +{v * 100:0.#}%", _ => $"受到的傷害 -{v * 100:0.#}%",
         };
 
@@ -823,6 +823,8 @@ namespace SpellDuel
 
         /// <summary>目前地圖的主題（0 熔岩、1 森林、2 海上；−1＝不限），決定掉哪一套套裝</summary>
         public static int SetTheme = -1;
+        /// <summary>副本專屬套裝（天穹飛毯：skyweave）：稀有以上的裝備有 ExclusiveSetChance 是這一套；null＝沒有</summary>
+        public static string ExclusiveSet; public const double ExclusiveSetChance = 0.25;
 
         /// <summary>產生一件裝備（ilvl＝物品等級；prefer＝優先掉落這個職業能用的）</summary>
         public static Item Make(System.Random rng, int ilvl, int rarity, string prefer)
@@ -875,7 +877,12 @@ namespace SpellDuel
             it.reqValue = rarity == 0 ? 0 : baseV + Mathf.RoundToInt(ilvl * (0.4f + 0.25f * rarity));
             var pre = Prefix[rarity];
             it.name = pre[rng.Next(pre.Length)] + baseName;
-            // 稀有以上有機會是套裝（主題地圖掉對應的套裝）
+            // 稀有以上有機會是套裝（主題地圖掉對應的套裝）；副本專屬套裝（天穹航裝）另外擲
+            if (rarity >= 2 && ExclusiveSet != null && rng.NextDouble() < ExclusiveSetChance)
+            {
+                var ex = Economy.SetOf(ExclusiveSet);
+                if (ex != null) { it.setId = ex.id; it.name = ex.name + "・" + baseName; return it; }
+            }
             if (rarity >= 2 && rng.NextDouble() < Economy.SetChance)
             {
                 var set = Economy.RollSet(rng, SetTheme);
@@ -1341,6 +1348,7 @@ namespace SpellDuel
             f.hp = Mathf.Max(1f, f.maxHp * hpRatio); f.mp = f.maxMp * mpRatio;
             Advanced.ApplyStats(f, Adv);   // 進階職業：HP、MP、攻擊、減傷、爆擊、閃避、治療量
             f.trapReduce = GearSum(Affix.TrapReduce); f.evadeBoost = GearSum(Affix.DodgePower);
+            f.dodgeCdr = GearSum(Affix.DodgeCdr); f.airReduce = 0f; f.duckShield = 0f;   // 天穹飛毯：閃過障礙減冷卻（套裝）、跳躍中減傷、蹲避護盾（精魄）
             Souls.ApplyTo(f, this);        // 裝備上的精魄
             if (f.cloneLent > 0) { f.maxHp = Mathf.Max(1, f.maxHp - f.cloneLent); f.hp = Mathf.Min(f.hp, f.maxHp); }   // 影分身借走的 HP 上限
         }

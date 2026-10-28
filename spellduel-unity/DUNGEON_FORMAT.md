@@ -87,6 +87,8 @@ wave = 10                 # 沒有 next 的地點＝終點，一定要是首領
 | `collapse` | 地面一格一格塌陷（先紅框 2 秒），站在裂縫上每秒扣 8% HP | 清完這一波 | — | — |
 | `dark` | 一片漆黑，2.5m 外的怪只看得到發光的眼睛 | 清完這一波 | — | — |
 
+- **飛毯地點**（`carpet = 0～4`，只給天穹飛毯副本 `sky_carpet` 用；`event` 照舊寫 battle／boss）：整場站在飛毯上，障礙從正前方飛來（低的跳、高的蹲、半邊側步、缺口站進綠框），敵人搭載具跳上飛毯；`carpet = 4` 是空賊飛艇首領。站別決定節奏與登毯的敵人（`Carpet.cs`），不看主題的小怪。
+
   - 特殊地點的 `<enter>` 請用一句話說明玩法（例如「守住它！」「照順序踩上去」）。
   - 不要和劇情人物（`npc =`）放在同一個地點。
   - 範例：灰燼礦坑的廢棄軌道（escort）、餘燼鑄鐘坊（collapse／elements／defend／chant）、霧燈記名徑（runes／chant／dark／totems）、白帆回聲礁（mimic／hunt／survive／defend）。

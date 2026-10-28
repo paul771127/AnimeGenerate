@@ -92,7 +92,7 @@ namespace SpellDuel
         // ------------------------------------------------------------ 每波的配置（主機／單人）
         void SetupHazards()
         {
-            if (Gallery) { ClearHazards(); nextRockAt=-1; return; }
+            if (Gallery || carpetStation >= 0) { ClearHazards(); nextRockAt=-1; return; }   // 千機迴廊、天穹飛毯：沒有主題的機關
             if (remoteEnemy || !endless) return;
             if (hazards.Exists(h => h.kind != HazardKind.Rock)) ClearHazards();
             nextRockAt = Theme == CanyonTheme ? waveStartAt + 3f : -1f;

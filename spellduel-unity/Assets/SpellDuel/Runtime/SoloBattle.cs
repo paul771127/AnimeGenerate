@@ -337,12 +337,14 @@ namespace SpellDuel
             if (key[0] == 'm' && int.TryParse(key.Substring(1), out int kind))
             {
                 if (MonsterVariants.IsSummon(kind)) return;   // 召喚物：不掉寶（保險：正常不會記進擊倒紀錄）
+                AddMat(Crafting.RollSky(kind, dropRng));   // 天穹飛毯的敵人：雲織絲、凝風晶、空賊航徽（獨立擲）
                 if (kind == Battle.TreasureKind) { GrantTreasure(); return; }   // 寶箱怪：大把金幣＋一定掉一件裝備
                 if (TryDrop(false)) return;
                 AddMat(Crafting.RollMinion(MonsterVariants.BaseOf(kind), battle.Theme, diff, dropRng));   // 變種怪：照原本的怪掉材料
             }
             else
             {
+                if (key == Carpet.BossClass) AddMat("mat_airship_compass");   // 逐風號：飛艇羅盤必掉
                 if (AddMat(Crafting.RollBoss(key, diff, dropRng))) return;
                 TryDrop(true);
             }
@@ -605,6 +607,7 @@ namespace SpellDuel
                 ilvl = Mathf.Clamp(battle.wave + dropRng.Next(-2, 2), lo, hi) + battle.levelBoost;   // 簡單＝這一章的等級帶（第一章 1～10）；普通＋40、困難＋80
             }
             ItemGen.SetTheme = battle.Theme;   // 主題地圖掉對應的套裝
+            ItemGen.ExclusiveSet = SkyDungeon ? "skyweave" : null;   // 天穹航裝：只有天穹飛毯副本掉
             if (CoopRollItem(ref rar, ilvl, battle.Theme)) return true;   // 故事合作：史詩以上由房主擲出來、大家擲骰（SoloBattle.StoryCoop.cs）
             var it = ItemGen.Make(dropRng, ilvl, rar, myClass);
             if (storyStage != null) { var (blo, bhi) = Story.LevelBand(storyStage.theme); it.reqLevel = Mathf.Clamp(it.reqLevel, blo + battle.levelBoost, bhi + battle.levelBoost); }   // 需求等級也在這一章的等級帶裡（簡單第一章 1～10；普通、困難再加難度的等級）
@@ -1648,7 +1651,7 @@ namespace SpellDuel
                         if (battle.endless)
                         {
                             // 隊友端：依波次主題換 Boss 名稱（熔岩巨像／腐化樹王）
-                            var bcls = Skills.Classes[Battle.BossClassOf(battle.Theme)];
+                            var bcls = Skills.Classes[battle.CarpetBoss ? Carpet.BossClass : Battle.BossClassOf(battle.Theme)];
                             if (b.cls != bcls) { b.cls = bcls; b.name = bcls.name; }
                         }
                         if (!string.IsNullOrEmpty(m.k) && Skills.All.TryGetValue(m.k, out var bs))
@@ -1770,6 +1773,7 @@ namespace SpellDuel
         {
             // 主題：第 1～10 波熔岩火山、11～20 波森林、21～30 波海上礁石，之後輪流
             int theme = endless && battle.wave >= 1 ? battle.Theme : -1;   // 副本的房間可以指定主題
+            if (SkyStationNow >= 0) theme = -1;   // 天穹飛毯：不顯示主題場景（CarpetScene 取代）
             var poly = area.Polygon;
             float fy = poly.Count > 0 ? poly[0].y : area.FloorY;
             // 前三個場景在一開始（第 1 波倒數時）就全部建好：貼圖產生要花一點時間，避免換主題時卡頓
@@ -1814,7 +1818,8 @@ namespace SpellDuel
                     rig.SetVariant(m.minionKind);
                     rig.SetDress(battle.Theme);   // 角鬥場：黑晶項圈；山道：沙塵與頭巾（美術第十一輪）
                     if (m.treasure) DressTreasure(rig);   // 寶箱怪：換成會跑的寶箱
-                    if (m.variant > 0 && MonsterVariants.Get(m.variant) != null) MinionLook.Apply(rig, MonsterVariants.Get(m.variant));   // 刺客怪、天候怪：換配色、武器（MinionLook.cs）
+                    if (MonsterVariants.IsSky(m.variant)) DressSky(m, rig);   // 天穹飛毯的敵人：Codex 的全新骨架（SoloBattle.Carpet.cs）
+                    else if (m.variant > 0 && MonsterVariants.Get(m.variant) != null) MinionLook.Apply(rig, MonsterVariants.Get(m.variant));   // 刺客怪、天候怪：換配色、武器（MinionLook.cs）
                     if (m.isElite && !EliteCatalog.IsElite(m.minionKind)) rig.transform.localScale = Vector3.one * 1.5f;   // 無盡塔的精銳：大一號
                     minionGo[m] = rig; minionLastHp[m] = m.hp;
                     rig.transform.position = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);
@@ -1843,18 +1848,20 @@ namespace SpellDuel
                 bool jumped = (newPos - oldPos).magnitude > 2f;   // 虛空術士瞬移（隊友端也看得到）：兩邊都冒出傳送光
                 if (jumped) { MinionRig.SpawnFx(oldPos); MinionRig.SpawnFx(newPos); Sfx.Play("dodge", 0.5f, 0.6f); }
                 rig.MoveSpeed = jumped ? 0f : Mathf.Lerp(rig.MoveSpeed, (newPos - oldPos).magnitude / dt, 0.25f);
+                var skyBody = SkyBody(m); if (skyBody) skyBody.MoveSpeed = rig.MoveSpeed;
                 if (m.variant > 0) { var look = rig.GetComponent<MinionLook>(); if (look) look.Sneak = Battle.AssassinSneaking(m, Me) || (m.variant == 112 && Me != null && Battle.FlatDistance(m.Feet, Me.Feet) > 3f); }   // 刺客繞路中、霧行者離遠了：只看得到眼睛
                 bool winding = m.windupUntil > 0f;
                 if (winding && !minionWinding.Contains(m))
                 {
                     if (battle.remoteEnemy && m.assassin && m.target == Me) OnBattleEvent("assassinwarn", Me.Feet, new Color(0.9f, 0.2f, 0.35f), "1");   // 合作（隊友）：刺客要從背後砍我
                     minionWinding.Add(m); rig.Windup(EliteCatalog.IsElite(m.minionKind) && battle.EliteView(m) != null ? battle.EliteView(m).duration : battle.WindupOf(m.minionKind));
+                    if (skyBody) skyBody.Windup(battle.WindupOf(m.minionKind));
                     if (battle.remoteEnemy && Battle.IsSpecial(m.minionKind))   // 合作（隊友）：稀有怪預備大招 → 一樣跳出「跳起來／蹲下」
                         OnBattleEvent("specialwarn", m.Feet, Skills.All[Battle.SpecialSkillId(m.minionKind)].color, Battle.SpecialNeedsJump(m.minionKind) ? "⬆ 跳起來！（或離遠一點）" : "⬇ 蹲下！（或離遠一點）");
                 }   // 預備時間＝這種小怪真正的預備時間（出手時剛好擺到位）
                 else if (!winding && minionWinding.Contains(m))
                 {
-                    minionWinding.Remove(m); rig.Attack();
+                    minionWinding.Remove(m); rig.Attack(); if (skyBody) skyBody.Attack();
                     // 特殊敵人的橫掃：胸口高度的弧光（Codex 的特效；震環在 UpdateQuakeVisuals 接）
                     if (m.Alive && Battle.IsSpecial(m.minionKind) && !Battle.SpecialNeedsJump(m.minionKind))
                         MinionRig.SweepArcFx(WorldFrame.FromWorld(new Vector3(m.Feet.x, 0f, m.Feet.z)), WorldFrame.DirFromWorld(m.lockFwd != Vector3.zero ? m.lockFwd : m.forward),
@@ -1874,13 +1881,14 @@ namespace SpellDuel
                     wg.GetComponent<Renderer>().material.color = new Color(1f, 0.12f, 0.05f, (0.18f + 0.35f * pr) * (0.6f + 0.4f * pk));
                 }
                 else if (minionWarn.TryGetValue(m, out var wg0) && wg0) wg0.SetActive(false);
-                if (minionLastHp.TryGetValue(m, out var lh) && m.hp < lh - 0.01f) rig.PlayHit();
+                if (minionLastHp.TryGetValue(m, out var lh) && m.hp < lh - 0.01f) { rig.PlayHit(); if (skyBody) skyBody.PlayHit(); }
                 minionLastHp[m] = m.hp;
             }
             foreach (var kv in new List<KeyValuePair<Fighter, MinionRig>>(minionGo))
                 if (!live.Contains(kv.Key))
                 {
                     if (kv.Value) { kv.Value.SetDead(true); Destroy(kv.Value.gameObject, 1.2f); }
+                    if (skyBodies.TryGetValue(kv.Key, out var deadSky)) { if (deadSky) deadSky.SetDead(true); skyBodies.Remove(kv.Key); }
                     minionGo.Remove(kv.Key); minionLastHp.Remove(kv.Key); minionWinding.Remove(kv.Key);
                     if (minionWarn.TryGetValue(kv.Key, out var wgo)) { if (wgo) Destroy(wgo); minionWarn.Remove(kv.Key); }
                     if (aimLines.TryGetValue(kv.Key, out var dl)) { if (dl) Destroy(dl); aimLines.Remove(kv.Key); }
@@ -2311,6 +2319,7 @@ namespace SpellDuel
         void EndBattle()
         {
             ClearGallery();
+            ClearSky();   // 天穹飛毯（SoloBattle.Carpet.cs）
             outroUntil = -1f; introUntil = -1f; btStage = 0; potStage = 0;
             ClearDaily(); ClearClassTrial(); ClearTutorial(); RestoreArea(); ClearSwipeTrail(); ClearSwordSage(); ClearGuardFx();
             ResetCarryLeft();   // 下一場能用的道具＝整備時決定帶的數量
@@ -2415,7 +2424,7 @@ namespace SpellDuel
             if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
             {
                 if (ai != null) ai.Update(dt);
-                else if (bossAi != null && !PotLessonFreeze && !battle.Gallery) bossAi.Update(dt);   // 喝藥水教學中 Boss 也暫停
+                else if (bossAi != null && !PotLessonFreeze && !battle.Gallery && !battle.CarpetBoss) bossAi.Update(dt);   // 天穹飛毯的飛艇：Combat.Carpet.cs 自己控制   // 喝藥水教學中 Boss 也暫停
                 else if (worldAi != null) worldAi.Update(dt);   // 世界 Boss（SoloBattle.WorldBoss.cs）
                 else if (!NetMode) en_FaceMe();
                 battle.Update(dt);
@@ -3680,6 +3689,7 @@ namespace SpellDuel
         public void DrawGUI()
         {
             DrawGalleryHud();
+            DrawSkyHud();   // 天穹飛毯：跳／蹲／往哪邊閃（SoloBattle.Carpet.cs）
             Styles();
             TickWalk();   // 新手指引：這一步要按哪一顆按鈕（SoloBattle.Walkthrough.cs）
             if (!NetMode && phase != Phase.Fighting && !Story.DifficultyOpen(difficulty)) difficulty = Story.MaxOpenDifficulty;   // 還沒解鎖的難度不能用（以前預設普通的存檔：退回簡單）

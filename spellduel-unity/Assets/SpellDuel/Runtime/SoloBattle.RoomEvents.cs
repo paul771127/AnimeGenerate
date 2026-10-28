@@ -24,7 +24,9 @@ namespace SpellDuel
         void StartRoomEventIfAny()
         {
             var r = drun != null ? drun.node : null;
-            if (r == null || !r.IsEvent || !DungeonDecider) return;
+            if (r == null || !DungeonDecider) return;
+            if (r.CarpetStation >= 0 && SkyDungeon) { battle.StartRoomEvent("carpet", r.param); return; }   // 天穹飛毯（Combat.Carpet.cs）
+            if (!r.IsEvent) return;
             battle.StartRoomEvent(r.kind, r.param);
         }
 
@@ -185,6 +187,10 @@ namespace SpellDuel
             {
                 case "evstart":
                     Sfx.Play("horn", 0.6f, 1.1f); break;
+                case "evsky":   // 天穹飛毯：飛艇俯衝（近戰的機會）、第二階段彈幕
+                    Sfx.Play("horn", 0.8f, 0.9f); Haptics.Play(Haptics.Kind.Warning);
+                    if (!string.IsNullOrEmpty(text)) Say(text, 3f);
+                    break;
                 case "evok":
                     Sfx.Play("charged", 0.7f, 1.3f); Haptics.Play(Haptics.Kind.Light);
                     if (!string.IsNullOrEmpty(text)) floaters.Add(new Floater { posMap = at + Vector3.up * 1f, text = text, color = c, born = Time.time });

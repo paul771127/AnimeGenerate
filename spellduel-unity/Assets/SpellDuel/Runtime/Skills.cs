@@ -427,6 +427,7 @@ namespace SpellDuel
             foreach (var kv in ClassSpeeds) if (All.TryGetValue(kv.Key, out var cs)) cs.speed = kv.Value;
             EliteCatalog.RegisterSkills();
             TrapGallery.Register();
+            Carpet.Register();   // 天穹飛毯的 Boss（空賊飛艇）
         }
     }
 }

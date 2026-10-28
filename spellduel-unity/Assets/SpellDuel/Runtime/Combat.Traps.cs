@@ -207,7 +207,7 @@ namespace SpellDuel
             if(target==null||!target.Alive||c.struck.Contains(target)||!TrapContains(c,target.Feet,now))return;
             c.struck.Add(target);
             bool evade=(c.kind==TrapKind.Flame||c.kind==TrapKind.Low)&&target.airborneUntil>now||(c.kind==TrapKind.Log||c.kind==TrapKind.High)&&target.crouching;
-            if(evade){target.evadeBoostUntil=now+3;Emit("evade",target.Chest,Color.cyan,"閃過機關！");return;}
+            if(evade){BodyDodge(target,c.kind==TrapKind.Log||c.kind==TrapKind.High);Emit("evade",target.Chest,Color.cyan,"閃過機關！");return;}
             if(owner==null)
             {
                 // Environment checks only the local physical player, never proxies, NPCs or pets.

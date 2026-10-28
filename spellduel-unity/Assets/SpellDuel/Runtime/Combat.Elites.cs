@@ -162,7 +162,7 @@ namespace SpellDuel
             foreach(var v in foes)
             {
                 if(v==null||!v.Alive||(!remote&&coopHost&&v.isAlly)||!EliteInside(move,center,forward,v))continue;
-                if(move==EliteMove.Sweep&&v.crouching){v.evadeBoostUntil=now+3;Emit("evade",v.Chest,def.color,"蹲下閃過！");continue;}
+                if(move==EliteMove.Sweep&&v.crouching){BodyDodge(v,true);Emit("evade",v.Chest,def.color,"蹲下閃過！");continue;}
                 HitFoe(m,v,skill,damage,skill.effect,skill.effectDps,skill.effectDur);
             }
         }

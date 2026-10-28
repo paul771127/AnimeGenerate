@@ -129,13 +129,15 @@ namespace SpellDuel
         {
             public string id, name, desc;
             public int theme = -1; public bool exclusive;                       // 哪個主題的地圖掉（−1＝到處都會掉）
-            public KeyValuePair<Affix, float>[] two, four;
+            public KeyValuePair<Affix, float>[] two, three, four;
         }
 
         static KeyValuePair<Affix, float> A(Affix a, float v) => new KeyValuePair<Affix, float>(a, v);
 
         public static readonly List<SetDef> Sets = new List<SetDef>
         {
+            new SetDef { id = "skyweave", name = "天穹航裝", theme = 2, exclusive = true, desc = "天穹航路專屬",
+                two = new[] { A(Affix.TrapReduce, 0.08f) }, three = new[] { A(Affix.DodgeCdr, 0.5f) }, four = new[] { A(Affix.DodgePower, 0.12f) } },
             new SetDef {id="clockwork",name="千機",theme=3,exclusive=true,desc="千機迴廊專屬",two=new[]{A(Affix.TrapReduce,.12f)},four=new[]{A(Affix.DodgePower,.15f)}},
             new SetDef { id = "flame", name = "炎龍", theme = 0, desc = "熔岩地帶掉落",
                 two = new[] { A(Affix.Atk, 0.08f) }, four = new[] { A(Affix.Burn, Economy.SetStatusChance), A(Affix.Crit, 0.08f) } },
@@ -181,6 +183,7 @@ namespace SpellDuel
             {
                 int n = SetCount(equipped, s.id);
                 if (n >= 2) foreach (var kv in s.two) if (kv.Key == a) v += kv.Value;
+                if (n >= 3 && s.three != null) foreach (var kv in s.three) if (kv.Key == a) v += kv.Value;
                 if (n >= 4) foreach (var kv in s.four) if (kv.Key == a) v += kv.Value;
             }
             return v;
@@ -197,7 +200,7 @@ namespace SpellDuel
         public static string SetText(SetDef s, Item[] equipped)
         {
             int n = equipped != null ? SetCount(equipped, s.id) : 0;
-            return $"【{s.name}套裝】{n}/4　2 件：{BonusText(s.two)}{(n >= 2 ? " ✔" : "")}　4 件：{BonusText(s.four)}{(n >= 4 ? " ✔" : "")}";
+            return $"【{s.name}套裝】{n}/4　2 件：{BonusText(s.two)}{(n >= 2 ? " ✔" : "")}" + (s.three != null ? $"　3 件：{BonusText(s.three)}{(n >= 3 ? " ✔" : "")}" : "") + $"　4 件：{BonusText(s.four)}{(n >= 4 ? " ✔" : "")}";
         }
     }
 }

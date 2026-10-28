@@ -15,6 +15,7 @@ namespace SpellDuel
         public string name, dungeon, desc;
         public bool assassin, claws, healer, summoner, summon;   // summon＝召喚物（沒有經驗、不掉寶）
         public int theme = -1;   // 補師：哪一章（3 角鬥場、4 黃土山道）
+        public int sky = -1;     // 天穹飛毯的敵人：SkyEnemyRig／SkyVehicleView 的種類（0 風箏盜賊～4 空賊隊長）；−1＝不是
         public Battle.Weather weather;
         public float hp = 1f, dmg = 1f, speed = 1f;
         public Color tint;
@@ -42,6 +43,12 @@ namespace SpellDuel
             // ---- 召喚師（第五章；使用者要求）：躲在後面，讀條召喚兩隻砂靈（血少、攻擊強、沒有經驗也不掉寶）；讀條被打中會打斷
             new VariantDef { id = 123, baseKind = 4, name = "砂谷召喚師", summoner = true, theme = 4, tint = new Color(0.78f, 0.55f, 1f), desc = "背著法陣石板的召喚師，從砂裡喚出砂靈" },
             new VariantDef { id = 124, baseKind = 0, name = "砂靈", summon = true, theme = 4, hp = 0.35f, dmg = 2f, speed = 1.3f, tint = new Color(1f, 0.72f, 0.38f), desc = "砂子聚成的小鬼：一碰就散，但打人很痛" },
+            // ---- 天穹飛毯（副本 sky_carpet；Codex 的全新骨架 SkyEnemyRig，戰鬥照原本的怪）：搭載具跳上飛毯
+            new VariantDef { id = 131, baseKind = 0,  name = "風箏盜賊", sky = 0, hp = 0.9f, desc = "抓著大風箏從側面滑過來，放手跳上飛毯的短刀盜賊" },
+            new VariantDef { id = 132, baseKind = 2,  name = "雲鷹騎兵", sky = 1, hp = 0.45f, dmg = 1.1f, desc = "騎巨鷹從正前方俯衝，在飛毯上方鬆開鞍的長槍兵" },
+            new VariantDef { id = 133, baseKind = 1,  name = "滑翔翼兵", sky = 2, hp = 1.05f, dmg = 0.8f, desc = "兩三隻一起滑翔降落，用吹箭遠遠射人" },
+            new VariantDef { id = 134, baseKind = 16, name = "浮游魔偶", sky = 3, hp = 0.9f, speed = 0.6f, desc = "三葉轉子讓它從飛毯下方浮上來；很硬、很慢" },
+            new VariantDef { id = 135, baseKind = 21, name = "空賊隊長", sky = 4, hp = 0.8f, dmg = 1.2f, desc = "空賊的菁英：小飛艇放下繩索，順著繩子滑下來" },
             new VariantDef { id = 114, baseKind = 8,  name = "月牙狼",   weather = Battle.Weather.Moon, hp = 1.6f, dmg = 1.3f, speed = 1.4f, tint = new Color(0.72f, 0.78f, 1f), desc = "月夜才現身的銀色衝鋒獸" },
         };
         static readonly Dictionary<int, VariantDef> byId = new Dictionary<int, VariantDef>();
@@ -51,6 +58,8 @@ namespace SpellDuel
         public static VariantDef AssassinFor(string dungeonId) { foreach (var v in All) if (v.assassin && v.dungeon == dungeonId) return v; return null; }
         public static VariantDef HealerFor(int theme) { foreach (var v in All) if (v.healer && v.theme == theme) return v; return null; }
         public static VariantDef SummonerFor(int theme) { foreach (var v in All) if (v.summoner && v.theme == theme) return v; return null; }
+        public static VariantDef Sky(int skyKind) { foreach (var v in All) if (v.sky == skyKind) return v; return null; }
+        public static bool IsSky(int id) => byId.TryGetValue(id, out var v) && v.sky >= 0;
         public static VariantDef SummonFor(int theme) { foreach (var v in All) if (v.summon && v.theme == theme) return v; return null; }
         /// <summary>召喚物（擊倒紀錄的種類）：沒有經驗、不掉寶</summary>
         public static bool IsSummon(int id) => byId.TryGetValue(id, out var v) && v.summon;
@@ -91,6 +100,7 @@ namespace SpellDuel
             if (v.healer) { m.healer = true; m.attackReadyAt = now + HealerFirst; Emit("healer", m.Feet, v.tint, null); return; }
             if (v.summoner) { m.summoner = true; m.attackReadyAt = now + SummonerFirst; Emit("summoner", m.Feet, v.tint, null); return; }
             if (v.summon) { m.summoned = true; return; }
+            if (v.sky >= 0) return;   // 天穹飛毯：登場由載具演出（Combat.Carpet.cs），不另外喊話
             if (v.assassin)
             {
                 m.assassin = true; m.asnState = 0; m.asnUntil = now + AssassinLurk;

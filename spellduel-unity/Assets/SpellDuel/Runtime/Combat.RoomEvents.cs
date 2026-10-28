@@ -20,7 +20,7 @@ namespace SpellDuel
     /// </summary>
     public partial class Battle
     {
-        public static readonly string[] RoomEventKinds = { "defend", "survive", "escort", "hunt", "totems", "runes", "chant", "elements", "mimic", "collapse", "dark" };
+        public static readonly string[] RoomEventKinds = { "defend", "survive", "escort", "hunt", "totems", "runes", "chant", "elements", "mimic", "collapse", "dark", "carpet" };
         public static bool IsRoomEvent(string kind) => Array.IndexOf(RoomEventKinds, kind) >= 0;
 
         /// <summary>目前地點的特殊玩法（null＝一般戰鬥）；隊友端由 rev 訊息設定，只用來顯示</summary>
@@ -284,6 +284,7 @@ namespace SpellDuel
                     evNextTick = waveStartAt + 3f;
                     break;
                 }
+                case "carpet": StartCarpet(); break;   // 天穹飛毯（Combat.Carpet.cs）
                 case "collapse":
                     BuildCollapseCells();
                     evNextTick = waveStartAt + 4f;
@@ -300,6 +301,7 @@ namespace SpellDuel
         {
             if (roomEvent == null && evPts.Count == 0) return;
             npcs.RemoveAll(n => n.npcId != null && n.npcId.StartsWith("ev_"));
+            if (roomEvent == "carpet") ClearSky();
             roomEvent = null; evPts.Clear(); evState.Clear(); evQueue.Clear(); evRespawn.Clear(); evText = ""; evPhase = 0;
             evWalker = evHunt = null; evCharge = 0;ResetRoomCoop();
         }
@@ -371,6 +373,7 @@ namespace SpellDuel
                 case "chant": TickPenaltyOnly(); break;
                 case "elements": TickElements(); break;
                 case "mimic": TickMimic(); break;
+                case "carpet": TickCarpet(); return true;   // 說明文字在 TickCarpet 裡更新
             }
             RefreshEvText();
             return handled;

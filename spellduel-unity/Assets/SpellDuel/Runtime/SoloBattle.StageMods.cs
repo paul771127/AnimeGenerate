@@ -54,7 +54,7 @@ namespace SpellDuel
         {
             if (battle == null || drun == null || dungeon == null) return;
             battle.SetBonus(Battle.Bonus.None);
-            if (dungeon.id == TrapGallery.Id) { battle.night = false; battle.assassinDef = null; battle.SetWeather(Battle.Weather.None); return; }
+            if (dungeon.id == TrapGallery.Id || dungeon.id == Carpet.DungeonId) { battle.night = false; battle.assassinDef = null; battle.SetWeather(Battle.Weather.None); return; }
             string slot = System.DateTime.Now.ToString("yyyyMMdd") + "_" + (System.DateTime.Now.Hour / 3);
             bool wasNight = battle.night;
             battle.night = new System.Random((dungeon.id + slot).GetHashCode() & 0x7fffffff).NextDouble() < DungeonNightChance;
