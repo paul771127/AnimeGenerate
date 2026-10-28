@@ -48,6 +48,7 @@ namespace SpellDuel
             }
             var cv = new Cv(size);
             Background(cv, cc, sc, skillId);
+            if(DrawBlueprint(cv,skillId))return cv.Output();
             if(DrawSupply(cv,skillId))return cv.Output();
             if(DrawSupportSoul(cv,skillId))return cv.Output();
             if(DrawCarpetPet(cv,skillId))return cv.Output();

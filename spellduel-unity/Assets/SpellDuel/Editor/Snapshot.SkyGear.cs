@@ -14,6 +14,41 @@ namespace SpellDuel.EditorTools
    var cam=new GameObject("Sky gear preview").AddComponent<Camera>();cam.nearClipPlane=.05f;cam.fieldOfView=65;cam.backgroundColor=new Color(.55f,.65f,.75f);
    var light=new GameObject("Preview key").AddComponent<Light>();light.type=LightType.Directional;light.transform.rotation=Quaternion.Euler(40,150,0);RenderSettings.ambientLight=new Color(.6f,.6f,.65f);
    SkyEnvironmentShots(cam);
+   BlueprintGearShots(cam);
+  }
+  [Serializable] public class BlueprintAuditRow {public string id,cls;public int triangles;public bool restored;}
+  [Serializable] public class BlueprintAudit {public BlueprintAuditRow[] gear;public int icons;public bool iconCache;}
+  static void BlueprintGearShots(Camera cam)
+  {
+   var rows=new List<BlueprintAuditRow>();var iconNames=new List<string>();float fov=cam.fieldOfView;cam.fieldOfView=30;
+   foreach(var bp in Blueprints.All)
+   {
+    string[] classes=bp.slot==Slot.Weapon?new[]{"swordsman","archer","mage"}:new[]{"novice","priest"};
+    foreach(string cls in classes)
+    {
+     var rig=CharacterRig.Create(cls);rig.InCombat=false;PoseStep(rig,.6f);
+     var originals=rig.GetComponentsInChildren<Renderer>();var hidden=new bool[originals.Length];for(int k=0;k<originals.Length;k++)hidden[k]=originals[k].forceRenderingOff;
+     var look=new GearLook();look.pieces[(int)bp.slot]=new GearLook.Piece{rarity=bp.rarity,special=bp.id,set=""};rig.SetGear(look);PoseStep(rig,.1f);
+     int triangles=0;foreach(var motion in rig.GetComponentsInChildren<BlueprintGearMotion>()){motion.Sample(.3f);foreach(var mesh in motion.GetComponentsInChildren<MeshFilter>())triangles+=mesh.sharedMesh.triangles.Length/3;foreach(var line in motion.GetComponentsInChildren<LineRenderer>())triangles+=line.positionCount*6;}
+     if(triangles<=0||triangles>1500)throw new Exception(bp.id+" gear budget "+triangles);
+     CarpetFit(cam,rig.gameObject,"blueprint_"+bp.id+"_"+cls,new Vector3(.35f,.08f,1),640,900);
+     rig.SetGear(null);bool restored=true;for(int k=0;k<originals.Length;k++)if(originals[k] && originals[k].forceRenderingOff!=hidden[k])restored=false;
+     if(!restored)throw new Exception("Blueprint unequip did not restore "+bp.id);
+     rows.Add(new BlueprintAuditRow{id=bp.id,cls=cls,triangles=triangles,restored=restored});UnityEngine.Object.DestroyImmediate(rig.gameObject);
+    }
+    iconNames.Add(bp.id);iconNames.Add(bp.ScrollId);
+   }
+   iconNames.AddRange(new[]{"mat_band_crest","mat_storm_gem","mat_night_edge","mat_aid_sigil"});
+   var hashes=new System.Collections.Generic.HashSet<string>();bool cache=true;
+   foreach(string id in iconNames)
+   {
+    var tex=SkillIcons.Get(id);cache&=tex==SkillIcons.Get(id);
+    var pixels=SkillIcons.Render(id,128);var png=new Texture2D(128,128,TextureFormat.RGBA32,false);png.SetPixels32(pixels);png.Apply();var bytes=png.EncodeToPNG();
+    string hash=Convert.ToBase64String(System.Security.Cryptography.SHA256.Create().ComputeHash(bytes));if(!hashes.Add(hash))throw new Exception("Duplicate blueprint icon "+id);
+    File.WriteAllBytes("snapshots/blueprint_icon_"+id+".png",bytes);UnityEngine.Object.DestroyImmediate(png);
+   }
+   if(iconNames.Count!=34||!cache)throw new Exception("Blueprint icon count/cache");
+   File.WriteAllText("snapshots/blueprint_audit.json",JsonUtility.ToJson(new BlueprintAudit{gear=rows.ToArray(),icons=iconNames.Count,iconCache=cache},true));cam.fieldOfView=fov;
   }
   [Serializable] public class SkyEnvironmentAudit{public int[] triangles;public bool surfaceUnchanged,cacheStable;public float highBar;}
   static void SkyEnvironmentShots(Camera cam)

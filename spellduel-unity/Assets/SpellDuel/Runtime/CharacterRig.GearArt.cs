@@ -13,6 +13,7 @@ namespace SpellDuel
             // An inactive owner may defer OnDestroy until after the replacement has been built.
             foreach(var pending in body.GetComponentsInChildren<GearVisualLease>(true))if(!pending.gameObject.activeSelf)pending.Release();
             var previousRenderers=rends;var previousMaterials=origMats;
+            var hiddenOriginals=new Dictionary<Renderer,bool>();
             var weaponOriginals=new Dictionary<Renderer,Material>();var equipmentOverrides=new Dictionary<Renderer,Material>();
             var lease=GearPart(new GameObject("Equipment material lease"));lease.transform.SetParent(body,false);
             var lifetime=lease.AddComponent<GearVisualLease>();
@@ -20,9 +21,11 @@ namespace SpellDuel
             {
                 if(this==null)return;
                 rends=previousRenderers;origMats=previousMaterials;
+                foreach(var pair in hiddenOriginals)if(pair.Key)pair.Key.forceRenderingOff=pair.Value;
                 if(!flashing)foreach(var pair in weaponOriginals)if(pair.Key)pair.Key.sharedMaterial=pair.Value;
             };
             string id=advancedId??classId;
+            if(Blueprints.Get(g[Slot.Head].special)!=null)foreach(var r in head.GetComponentsInChildren<Renderer>())if(r.name.StartsWith("Headwear fitted ")||r.name=="Player default crown"){hiddenOriginals[r]=r.forceRenderingOff;r.forceRenderingOff=true;}
             if(g[Slot.Head].Has)AddGear(head,id,"head",g[Slot.Head],null);
             if(g[Slot.Body].Has||g.FullSet!=null)AddGear(spine,id,"body",g[Slot.Body],g.FullSet);
             if(g[Slot.Feet].Has){AddGear(knL,id,"feet",g[Slot.Feet],null);AddGear(knR,id,"feet",g[Slot.Feet],null);}
@@ -38,6 +41,7 @@ namespace SpellDuel
                     if(decorated==null)decorated=weapon;
                     foreach(var renderer in weapon.GetComponentsInChildren<Renderer>())
                     {
+                        if(Blueprints.Get(g[Slot.Weapon].special)!=null){hiddenOriginals[renderer]=renderer.forceRenderingOff;renderer.forceRenderingOff=true;continue;}
                         var source=renderer.sharedMaterial;
                         int previous=Array.IndexOf(previousRenderers,renderer);if(flashing&&previous>=0)source=previousMaterials[previous];
                         // Keep luminous orbs, strings and translucent effects on their existing materials.
@@ -67,6 +71,7 @@ namespace SpellDuel
             lifetime.Apply=()=>
             {
                 if(this==null)return;rends=equippedRenderers;origMats=equippedMaterials;
+                foreach(var pair in hiddenOriginals)if(pair.Key)pair.Key.forceRenderingOff=true;
                 // Eyes and expressions may have changed material since equipping. Restore only owned overrides.
                 foreach(var pair in equipmentOverrides)if(pair.Key)pair.Key.sharedMaterial=pair.Value;
                 foreach(var go in gearParts)if(go)foreach(var renderer in go.GetComponentsInChildren<Renderer>(true))renderer.enabled=visible;
@@ -76,6 +81,7 @@ namespace SpellDuel
         }
         void AddGear(Transform parent,string id,string slot,GearLook.Piece piece,string full)
         {
+            if(AddBlueprint(parent,slot,piece))return;
             string key=id+"/"+slot+"/"+piece.rarity+"/"+piece.set+"/"+full;
             if(!gearArtMeshes.TryGetValue(key,out var mesh)){mesh=MakeGearMesh(id,slot,piece,full);gearArtMeshes[key]=mesh;}
             if(slot=="head")mesh=AnimeFace.CompactPresentationMesh(mesh,id,Portraits.PersonaFor(id),2);

@@ -83,6 +83,7 @@ namespace SpellDuel.EditorTools
             floor.SetActive(false);
             CarpetPetsShots(cam);
             SkyEnvironmentShots(cam);
+            BlueprintGearShots(cam);
             SupportEnemyShots(cam);
             floor.SetActive(true);
             foreach(var message in ShaderUtil.GetShaderMessages(Shader.Find("SpellDuel/Toon")))
