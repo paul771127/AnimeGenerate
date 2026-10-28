@@ -547,3 +547,7 @@ Boss登毯接線補充：DropPirate加1秒落點圈，與飛毯表面同步；�
   - `AirshipRig`：根＝前緣前 9.1m、上 2.7m，船首朝玩家；`SetSwoop` 最多 0.6（錨台貼到前緣）；半邊 `SetSide(−玩家那側)`、缺口 `SetGap`（換成船身座標）；空賊先 `SetPirateLanding` 再 `DropPirate`；倒下 `SetDying` 5 秒。
   - `SkyShotView`：彈幕子波 4 枚起、每輪 +2、最多 12，一個子波全低或全高。
 - 素材 4 種、精魄 6 顆（soul_m131～135、soul_boss_airship）、天穹航裝（2／3／4 件）、順風護露已接進 Crafting／Souls／Economy；圖示照 Codex 的 id 自動取用。
+
+### 第 11、15、16 項 B：支援／人形敵人技能提案（2026-10-28，待使用者確認）
+
+新增 Docs/SUPPORT_HUMAN_SKILLS_PROPOSAL.md，涵蓋23種敵人、45招（15種人形各普攻＋招牌技）；每招列觸發、預警、躲法、倍率與動作。Docs/pending_preview/enemies2/skills/含動作分鏡說明與45招資料索引，已查核編號、數量及文件連結。143戰鼓手建議只保留移速增益，取消出手加速；另列AR合法側步、跳蹲互斥、刺客現形與同時預警限制，均為待確認設計，尚未改戰鬥邏輯。VariantRig／EnemySupportFx簽名維持需求；B技能預警取消handle僅提出建議，沒有實作或新增公開介面。本輪只有文件，不宣稱雙平台編譯或AR驗收通過；收到使用者確認後才開始模型與特效。
