@@ -128,6 +128,7 @@ namespace SpellDuel
             var v = MonsterVariants.Get(id);
             if (v == null || m.variant == id) return;
             m.variant = id; m.name = v.name;
+            if (EnemySkills.Has(id)) m.esBornAt = now;   // 新招式：進場 2 秒後才出第一招
             if (v.healer) { m.healer = true; m.attackReadyAt = now + HealerFirst; Emit("healer", m.Feet, v.tint, null); return; }
             if (v.summoner) { m.summoner = true; m.attackReadyAt = now + SummonerFirst; Emit("summoner", m.Feet, v.tint, null); return; }
             if (v.summon) { m.summoned = true; return; }
@@ -135,7 +136,7 @@ namespace SpellDuel
             {
                 m.human = v.human; m.humSide = rng.Next(2) == 0 ? -1 : 1; m.humSwitchAt = now + 4f;
                 m.head = new Vector3(m.head.x, HumanHead, m.head.z); m.bodyRadius = 0.3f;
-                if (v.human == 4) { m.assassin = true; m.asnState = 0; m.asnUntil = now + AssassinLurk; }
+
                 if (v.human == 5) { m.healer = true; m.attackReadyAt = now + HealerFirst; }
                 return;
             }
@@ -361,6 +362,8 @@ namespace SpellDuel
                     float amt = Mathf.Min(t.maxHp - t.hp, t.maxHp * HealerFrac);
                     t.hp += amt;
                     Emit("enemyheal", t.Chest, new Color(0.45f, 1f, 0.55f), $"+{amt:0}");
+                    if (m.variant == 156) { float self = Mathf.Min(m.maxHp - m.hp, m.maxHp * 0.05f); m.hp += self; }   // 共生返青：自己也回 5%
+                    if (m.variant == 162) { m.shieldUntil = now + 2.5f; m.shieldLeft = Mathf.Max(m.shieldLeft, Mathf.RoundToInt(m.maxHp * 0.15f)); }   // 護禱續戰：自己 15% 護盾 2.5 秒
                 }
                 return;
             }
@@ -462,6 +465,18 @@ namespace SpellDuel
                 return true;
             }
             if (m.windupUntil > 0f) return false;   // 出手中：照原本的 AI
+            // 有招可放：先放招（Combat.EnemySkills.cs）。劍士要先繞到側面、術士要先躲到怪群後面才出手（繞不過去 3 秒就直接打）
+            bool ready = true;
+            if (m.human == 1 || m.human == 3)
+            {
+                var tf0 = Fighter.Flat(tgt.forward); var to0 = Fighter.Flat(m.Feet - tgt.Feet);
+                var mob0 = MobCenter(m);
+                ready = m.human == 1 ? tf0 == Vector3.zero || to0 == Vector3.zero || Vector3.Angle(tf0, to0) >= 50f
+                                     : !mob0.HasValue || dist > FlatDistance(mob0.Value, tgt.Feet) + 0.8f;
+                if (ready || m.humWaitFrom <= 0f) m.humWaitFrom = ready ? 0f : now;
+                if (!ready && now - m.humWaitFrom > 3f) ready = true;
+            }
+            if (ready && EnemySkills.Has(m.variant) && UpdateEnemySkill(m, tgt, dist, dt)) { m.humWaitFrom = 0f; return true; }
             if (now >= m.humSwitchAt) { m.humSwitchAt = now + 4f + (float)rng.NextDouble() * 3f; if (rng.NextDouble() < 0.5) m.humSide = -m.humSide; }
             var tf = Fighter.Flat(tgt.forward); if (tf == Vector3.zero) tf = Fighter.Flat(m.Feet - tgt.Feet);
             var tr = new Vector3(tf.z, 0f, -tf.x);
@@ -493,7 +508,17 @@ namespace SpellDuel
                     if (dist < 2.5f) { var away = Fighter.Flat(m.Feet - tgt.Feet); if (away == Vector3.zero) away = -tf; HumanStep(m, m.Feet + away, sp * 1.5f, dt, tgt); return true; }
                     return false;
                 }
-                default: return false;   // 刺客（繞背）、神官（治療）：照原本的 AI
+                case 4:   // 刺客：繞到目標背後 1.2m（背襲要在背側才放）
+                {
+                    var back = tgt.Feet - tf * 1.2f;
+                    if (minionInside != null && !minionInside(back)) back = tgt.Feet + tr * m.humSide * 1.2f;
+                    // 還在目標前半邊：先繞到側面（不要從正面穿過去）
+                    var rel = Fighter.Flat(m.Feet - tgt.Feet);
+                    if (rel != Vector3.zero && Vector3.Angle(tf, rel) < 80f) back = tgt.Feet + tr * m.humSide * 1.4f;
+                    if (FlatDistance(m.Feet, back) > 0.4f) { if (!HumanStep(m, back, sp * 1.6f, dt, tgt)) m.humSide = -m.humSide; return true; }
+                    return false;
+                }
+                default: return false;   // 神官：照補師的 AI
             }
         }
 

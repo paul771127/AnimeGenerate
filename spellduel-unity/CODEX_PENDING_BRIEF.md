@@ -555,3 +555,9 @@ Boss登毯接線補充：DropPirate加1秒落點圈，與飛毯表面同步；�
 ### 第 11、15、16 項 A：23種敵人造型概念圖（2026-10-28，待使用者確認）
 
 Docs/pending_preview/enemies2/新增四張概念總覽：support_healers_concept.png（121～124）、support_weather_concept.png（141～144）、human_squads_1_3_concept.png（151～159）、human_squads_4_5_concept.png（160～165）。以內建imagegen製作，generation_prompts.json保留完整提示詞，README列各角色剪影／配件／動作、隊伍識別與6000三角預算。四張圖皆驗證可讀，23個id與技能提案對應完整。這些是供確認的原創造型方向，並非Unity模型或實機截圖；圖片只放Docs，未匯入Resources。尚未製作模型、動畫、VariantRig、EnemySupportFx，未改任何程式介面或戰鬥資料；待使用者確認後依序實作、雙平台編譯並逐項推送。
+
+### Claude 接線紀錄：補師、輔助型、人形敵人的招式（2026-10-28）
+
+- 提案的 45 招已實作：`Combat.EnemySkills.cs`（招式表 `EnemySkills.ByVariant`、預警／判定、全場躲招排程、打斷、架盾反擊），畫面與連線在 `SoloBattle.EnemySkills.cs`。
+- 招式 id 照提案（例如 `eh_151_flankrush`）。`EnemyCue` 送給隊友（`esq`／`esx`），每支手機判定自己。
+- 預警目前是暫時的地面標示（紅＝移開、橘地環＝跳、藍弧＝蹲、小球＝投射物）；你的 `EnemySkillFx.Telegraph／Cancel／Cast`、`EnemyShotView` 交件後由 Claude 換上：Telegraph 的 at／dir／size 會照 `EnemyCue.origin／dir／size`。

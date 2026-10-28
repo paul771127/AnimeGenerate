@@ -1265,6 +1265,7 @@ namespace SpellDuel
                 battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = theirs ? id : RId(MyPid, id) });
                 WireAdvNet();
                 WireFriendNet();   // 影分身、收服的魔物、主教治療、障壁（SoloBattle.Friends.cs）
+                WireEnemySkillNet();   // 補師、輔助型、人形敵人的招式（SoloBattle.EnemySkills.cs）
                 battle.OnMinionHit += (id, dmg, sk) => SendTo(0, new Msg { t = "mhit", id = id, dmg = dmg, k = sk.id, e = battle.LastProcs });
                 // 觀眾：只有被打的人收得到的命中（Boss／小怪打到玩家、打到小怪、房主打到 Boss）另外廣播一則，讓那一發在觀眾畫面上爆開消失
                 battle.OnProjectileHit += p => NetSend?.Invoke(new Msg { t = "whit", id = p.id, k = p.skill.id, p = p.pos, ok = p.alive });
@@ -1530,6 +1531,7 @@ namespace SpellDuel
             var ally = battle.AllyByPid(m.pid);   // 送這則訊息的隊友
             if (OnDungeonMsg(m)) return;          // 副本地圖：下一站、寶箱、抉擇、人物、對話（SoloBattle.DungeonMap.cs）
             if (OnFriendMsg(m)) return;           // 友方人物、治療、障壁（SoloBattle.Friends.cs）
+            if (EnemySkillMessage(m)) return;     // 敵人招式的預警（SoloBattle.EnemySkills.cs）
             switch (m.t)
             {
                 case "lane":
@@ -1871,7 +1873,7 @@ namespace SpellDuel
                             Battle.SpecialRadius(m.minionKind), Battle.SpecialArcHalf(m.minionKind) * 2f, 1.2f, m.minionKind == 20 ? new Color(0.35f, 0.9f, 1f, 0.7f) : new Color(1f, 0.68f, 0.28f, 0.7f));
                 }
                 // 近身重擊預備中：地上的紅色受擊範圍（越接近出手越亮；走出紅圈就打不到）
-                if (winding && Battle.HasMeleeWarnDisc(m.minionKind) && m.Alive)
+                if (winding && Battle.HasMeleeWarnDisc(m.minionKind) && m.Alive && !Battle.HasEnemySkills(m.variant))
                 {
                     if (!minionWarn.TryGetValue(m, out var wg) || !wg) { wg = Prim(PrimitiveType.Quad, new Color(1f, 0.1f, 0.05f, 0.3f), true); wg.GetComponent<MeshFilter>().sharedMesh = FanMesh(Battle.WarnArcHalf(m.minionKind)); minionWarn[m] = wg; }   // 前方扇形（特殊敵人：半圓／整圈）
                     float rr = Battle.MeleeStrikeRadius(m.minionKind), wu = battle.WindupOf(m.minionKind);
@@ -1899,6 +1901,7 @@ namespace SpellDuel
                     if (leafRings.TryGetValue(kv.Key, out var lr1)) { if (lr1) Destroy(lr1); leafRings.Remove(kv.Key); }
                 }
             UpdateWarnRings();
+            UpdateEnemyCueViews();   // 敵人招式的預警（SoloBattle.EnemySkills.cs）
         }
         readonly Dictionary<Fighter, GameObject> leafRings = new Dictionary<Fighter, GameObject>();
 
@@ -2324,6 +2327,7 @@ namespace SpellDuel
         {
             ClearGallery();
             ClearSky();   // 天穹飛毯（SoloBattle.Carpet.cs）
+            ClearEnemyCueViews();
             outroUntil = -1f; introUntil = -1f; btStage = 0; potStage = 0;
             ClearDaily(); ClearClassTrial(); ClearTutorial(); RestoreArea(); ClearSwipeTrail(); ClearSwordSage(); ClearGuardFx();
             ResetCarryLeft();   // 下一場能用的道具＝整備時決定帶的數量
@@ -3697,7 +3701,8 @@ namespace SpellDuel
         public void DrawGUI()
         {
             DrawGalleryHud();
-            DrawSkyHud();   // 天穹飛毯：跳／蹲／往哪邊閃（SoloBattle.Carpet.cs）
+            DrawSkyHud();   // 天穹飛毯
+            DrawEnemySkillHud();   // 敵人招式：後方突襲、跳、蹲（SoloBattle.EnemySkills.cs）：跳／蹲／往哪邊閃（SoloBattle.Carpet.cs）
             Styles();
             TickWalk();   // 新手指引：這一步要按哪一顆按鈕（SoloBattle.Walkthrough.cs）
             if (!NetMode && phase != Phase.Fighting && !Story.DifficultyOpen(difficulty)) difficulty = Story.MaxOpenDifficulty;   // 還沒解鎖的難度不能用（以前預設普通的存檔：退回簡單）
