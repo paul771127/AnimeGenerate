@@ -43,7 +43,7 @@ namespace SpellDuel
             float lean=Mathf.Lerp(idlePresentation.Lean,battlePresentation.Lean,t);
             bool coat=poseLongCoat;
             // Long garments use a compact stance so the unchanged cloth never intersects the thighs.
-            shift*=coat?.4f:.65f;if(coat){roll*=.3f;twist*=.3f;lean*=.5f;}
+            shift*=.65f;if(coat){roll*=.65f;twist*=.75f;lean*=.85f;}
             // A seeded 6..12 second cycle, with a short smooth adjustment once per cycle.
             float period=6+CharacterLook.Get(advancedId??classId).Seed%7,phase=clock%period;
             float gesture=phase<1.6f?Mathf.Sin(phase/1.6f*Mathf.PI):0;
@@ -51,12 +51,13 @@ namespace SpellDuel
             body.localPosition+=new Vector3(shift*still,-drop*still,0);
             spine.localRotation=spine.localRotation*Quaternion.Euler(lean*still,twist*still,(roll+gesture*(1-t))*still);
             neck.localRotation=neck.localRotation*Quaternion.Euler(0,-twist*.40f*still,-roll*.5f*still);
-            float bend=Mathf.Lerp(4, classId=="assassin"?22:12,t)*still*(coat?.35f:1);
+            float bend=Mathf.Lerp(4,classId=="assassin"?32:classId=="swordsman"?22:classId=="archer"?18:12,t)*still*(coat?.8f:1);
+            float spread=(classId=="assassin"?.035f:classId=="swordsman"?.030f:classId=="archer"?.025f:.015f)*t*still;
             hipL.localRotation=hipL.localRotation*Quaternion.Euler(-bend*.5f,0,0);
             hipR.localRotation=hipR.localRotation*Quaternion.Euler(-bend*.5f,0,0);
             knL.localRotation=knL.localRotation*Quaternion.Euler(bend,0,0);knR.localRotation=knR.localRotation*Quaternion.Euler(bend,0,0);
-            hipL.localPosition=new Vector3(-.085f*(classId=="assassin"?.85f:1)-shift*still,.85f,Mathf.Lerp(idlePresentation.Step,battlePresentation.Step,t)*still*(coat?.15f:1));
-            hipR.localPosition=new Vector3(.085f*(classId=="assassin"?.85f:1)-shift*still,.85f,-Mathf.Lerp(idlePresentation.Step,battlePresentation.Step,t)*still*(coat?.15f:1));
+            hipL.localPosition=new Vector3(-.085f*(classId=="assassin"?.85f:1)-spread-shift*still,.85f,Mathf.Lerp(idlePresentation.Step,battlePresentation.Step,t)*still*(coat?.65f:1));
+            hipR.localPosition=new Vector3(.085f*(classId=="assassin"?.85f:1)+spread-shift*still,.85f,-Mathf.Lerp(idlePresentation.Step,battlePresentation.Step,t)*still*(coat?.65f:1));
             if(deadE<.001f){PlantSole(hipL,knL,leftSole);PlantSole(hipR,knR,rightSole);}
         }
         void PlantSole(Transform hip,Transform knee,Vector3[] verts)
