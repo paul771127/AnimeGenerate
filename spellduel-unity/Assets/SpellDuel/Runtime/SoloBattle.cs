@@ -929,12 +929,21 @@ namespace SpellDuel
         }
         /// <summary>故事 1-1～1-3 的敵人血量、傷害倍率（新手關調低）</summary>
         public const float EarlyStageMul = 0.6f;
-        public static readonly float[] StoryBossHp = { 800f, 1600f, 2500f, 5000f, 8000f }, StoryBossDmg = { 1f, 1.5f, 2f, 5f, 6f };   // 第四、五章 ×2（使用者要求：劍仙打起來太輕鬆）
+        public static readonly float[] StoryBossHp = { 800f, 1600f, 2500f, 7000f, 11000f }, StoryBossDmg = { 1f, 1.5f, 2f, 5f, 6f };   // 第四、五章 Boss 血量 5000／8000 → 7000／11000（使用者回報成長太弱：原本第四章 Boss 和第三章一樣硬）   // 第四、五章 ×2（使用者要求：劍仙打起來太輕鬆）
         public const float LateDmgMul = 1.5f;
         public const float LateMinionDmgMul = 1.5f;
         /// <summary>故事各章小怪的傷害倍率（第一章不用；第二章起取代疊加的倍率）：忍者簡單難度約 7 下倒</summary>
         public const int StoryExtraPerWave = 3;
-        public static readonly float[] StoryMinionDmg = { 1f, 2.9f, 2.2f, 8f, 8.5f };   // 第四章 4 → 8、第五章 4.25 → 8.5（使用者要求：再 ×2）
+        public static readonly float[] StoryMinionDmg = { 1f, 2.9f, 3.4f, 8f, 8.5f };   // 第三章 2.2 → 3.4（原本比第二章還不痛）
+        /// <summary>
+        /// 故事各章小怪的血量倍率（使用者回報「從第二章開始敵人的成長曲線太弱」）：
+        ///   以前第二、三章 ×2，第四、五章 ×1 → 第四章的小怪反而比第三章好打。現在每章往上，
+        ///   同一章裡每往後一波再 +StageHpGrowth（第 9 波約 +32%），章與章之間接得起來。
+        ///   以推薦等級的玩家算「打倒一隻要花的力氣」（第一章≈1）：第二章 2.0→2.7、第三章 2.8→3.7、第四章 3.9→5.2、第五章 5.2→7.0。
+        /// </summary>
+        public static readonly float[] StoryMinionHp = { 1f, 2f, 2.5f, 3.2f, 4f };
+        public const float StageHpGrowth = 0.04f;
+        public static float StoryMinionHpOf(int theme, int fromWave) => StoryMinionHp[Mathf.Clamp(theme, 0, StoryMinionHp.Length - 1)] * (1f + StageHpGrowth * Mathf.Clamp(fromWave - 1, 0, 9));   // 第四章 4 → 8、第五章 4.25 → 8.5（使用者要求：再 ×2）
         /// <summary>故事敵人的命中率（使用者要求）：第一章 0%，之後每章 +5%；普通再 +35%、困難再 +60%</summary>
         /// <summary>Boss 的命中率額外 +30%（使用者要求）</summary>
         public const float BossAccuracyBonus = 0.30f;
@@ -1311,7 +1320,7 @@ namespace SpellDuel
                         // 各章 Boss（使用者要求）：血量 800／1600／2500／5000／8000，攻擊為第一章的 ×1／1.5／2／2.5／3（普通、困難再照等級加成）
                         if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.theme >= 0 && pendingStage.theme < StoryBossHp.Length)
                         { battle.storyBossHp = StoryBossHp[pendingStage.theme]; battle.storyBossDmg = StoryBossDmg[pendingStage.theme]; }
-                        if (pendingStage.theme == 1 && pendingStage.id != "trial") { battle.enemyHpMul = 2f; battle.enemyDmgMul = 2f; battle.rangedWindupMul = 1.5f; battle.rangedShotSpeedMul = 0.5f; battle.meleeHpMul = 0.7f; battle.rangedRecoverAdd = 3f; }   // 第二章：遠程小怪出手前準備 ×1.5、飛行速度 ×0.5、每次出手後多休息 3 秒；近戰小怪血量 ×0.7   // 第二章森林：小怪血量、攻擊 ×2（Boss 照上面的表）
+                        if (pendingStage.theme == 1 && pendingStage.id != "trial") { battle.enemyDmgMul = 2f; battle.rangedWindupMul = 1.5f; battle.rangedShotSpeedMul = 0.5f; battle.meleeHpMul = 0.7f; battle.rangedRecoverAdd = 3f; }   // 第二章：遠程小怪出手前準備 ×1.5、飛行速度 ×0.5、每次出手後多休息 3 秒；近戰小怪血量 ×0.7   // 第二章森林：小怪血量、攻擊 ×2（Boss 照上面的表）
                         battle.secondMovesOff = pendingStage.id == "1-1" || pendingStage.id == "1-2" || pendingStage.id == "1-3";   // 新手關：小怪只用原本那一招
                         if ((pendingStage.id == "1-1" || pendingStage.id == "1-2" || pendingStage.id == "1-3") && difficulty == 0) { battle.enemyHpMul *= EarlyStageMul; battle.enemyDmgMul *= EarlyStageMul; }   // 1-1～1-3 簡單：敵人血量、傷害 ×60%（新手關；普通、困難照一般設計）
                         if (pendingStage.theme >= 2 && pendingStage.id != "trial") { battle.enemyDmgMul *= LateDmgMul; battle.storyBossDmg *= LateDmgMul; }   // 第三章以後（使用者要求）：敵人（含 Boss）傷害再 ×1.5
@@ -1326,13 +1335,16 @@ namespace SpellDuel
                         {
                             battle.rangedCountMul = 0.5f; battle.meleeCountMul = 1.5f; battle.spawnGapAdd = 5f;   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
                             // 第三章潮騷港（使用者要求）：敵人血量、傷害 ×2（Boss 也是）；出手前的預備時間（紅圈閃爍）×2；海鳥移動速度 ×0.5；一批出齊後打倒一隻要等 20 秒才補下一隻
-                            battle.enemyHpMul *= 2f; battle.enemyDmgMul *= 2f; battle.storyBossHp *= 2f; battle.storyBossDmg *= 2f;
+                            battle.enemyDmgMul *= 2f; battle.storyBossHp *= 2f; battle.storyBossDmg *= 2f;   // 小怪血量改由 StoryMinionHp
                             battle.minionWindupMul = 2f; battle.birdSpeedMul = 0.5f;
                             if (bossAi != null) { bossAi.chargeExtra = 2f; boss.chargeScale *= 2f; }
                         }   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
                         // 小怪傷害倍率（使用者要求，取代上面疊加的倍率）：以 HP、減傷最少的職業（忍者）在簡單難度、該關的正常等級，
                         // 被主力近戰打 6～8 下才倒來反推（第二章食人花咬、第三章巨螯、第四五章小鬼爪擊）；普通、困難照難度等級與受傷倍率再往上
                         if (pendingStage.theme >= 1 && pendingStage.theme < StoryMinionDmg.Length && pendingStage.id != "trial") battle.enemyDmgMul = StoryMinionDmg[pendingStage.theme];
+                        // 小怪血量（使用者回報「從第二章開始敵人成長曲線太弱」）：每章一個倍率，同一章裡越後面的關卡越硬（每往後一波 +StageHpGrowth）
+                        if (pendingStage.theme >= 1 && pendingStage.theme < StoryMinionHp.Length && pendingStage.id != "trial" && pendingStage.id != JobTrialStageId)
+                            battle.enemyHpMul = StoryMinionHpOf(pendingStage.theme, pendingStage.fromWave);
                         // 敵人命中率（使用者要求）：刺客系點滿閃避、在對應等級的關卡裡大約一半被打中（被圍、不在伏擊後 2 秒時）
                         if (pendingStage.theme >= 0 && pendingStage.id != "trial") { battle.enemyAccuracy = StoryEnemyAccuracy(pendingStage.theme, difficulty); boss.accuracy = battle.enemyAccuracy + BossAccuracyBonus; }
                         if (pendingStage.id == "trial") { battle.hpBoost = Advanced.TrialHpMul; me.damageTakenMul *= Advanced.TrialDmgMul; }   // 轉職試煉

@@ -1041,7 +1041,62 @@ namespace SpellDuel
         public bool GroupMode => RhythmSpawns && groupSize > 0 && !MiniBossWave;
         public const float RoundGap = 3f, RoundStagger = 0.3f;
         int roundsInWave, roundNo, lastFormation = -1; bool roundWaiting; float nextRoundAt;
-        readonly List<(float at, MinionRole role, float ang, bool ambush, bool healer)> groupQueue = new List<(float, MinionRole, float, bool, bool)>();
+        readonly List<(float at, MinionRole role, float ang, bool ambush, bool healer, Vector3 pos)> groupQueue = new List<(float, MinionRole, float, bool, bool, Vector3)>();
+        /// <summary>陣形排好的出生點（pos.x 是 NaN＝沒有，照方位找場邊）</summary>
+        static readonly Vector3 NoPos = new Vector3(float.NaN, 0f, 0f);
+        Vector3 formationPos = NoPos;
+        /// <summary>場邊的出生點：陣形排好的位置優先（用一次就清掉），否則照方位找</summary>
+        Vector3 EdgeAt(float ang)
+        {
+            if (!float.IsNaN(formationPos.x)) { var p = formationPos; formationPos = NoPos; return p; }
+            return edgePointAt != null ? edgePointAt(ang) : edgePoint();
+        }
+        /// <summary>陣形的間距：同一排左右隔 FormationGap 公尺；後排比前排再往外 FormationDepth、特殊怪 FormationDepth×0.5</summary>
+        public const float FormationGap = 0.9f, FormationDepth = 1.1f;
+
+        /// <summary>
+        /// 把這一輪排成真的陣形（使用者回報「敵方陣形看起來很差」：以前每一隻各自在場邊隨機找點，又被壓到同一面，看起來像一團）：
+        ///   依方位分成幾隊（正面、左、右、背後；簡單難度全部在同一面），每隊在場邊找一個中心點，
+        ///   前排一字排開、後排在前排後面錯開半格、特殊怪在中間偏後；出場順序也是前排先、後排再、特殊怪最後。
+        /// </summary>
+        void LayoutFormation(List<(MinionRole role, float ang, bool amb)> slots, out List<Vector3> pos, out List<int> order)
+        {
+            pos = new List<Vector3>(); order = new List<int>();
+            for (int i = 0; i < slots.Count; i++) pos.Add(NoPos);
+            var groups = new Dictionary<int, List<int>>();
+            for (int i = 0; i < slots.Count; i++)
+            {
+                if (slots[i].amb) continue;   // 偷襲的那一隻照舊從別面
+                int key = Mathf.RoundToInt(Mathf.DeltaAngle(easySides ? easyBearing : 0f, slots[i].ang) / 70f);
+                if (!groups.TryGetValue(key, out var g)) groups[key] = g = new List<int>();
+                g.Add(i);
+            }
+            var origin = player.Feet; origin.y = 0f;
+            float depthK = Theme == ArenaTheme ? 0.6f : 1f;   // 角鬥場：場邊外面是看台牆，不要排太遠
+            foreach (var kv in groups)
+            {
+                float center = 0f; foreach (var i in kv.Value) center += Mathf.DeltaAngle(0f, slots[i].ang); center /= kv.Value.Count;
+                var anchor = edgePointAt != null ? edgePointAt(center) : edgePoint(); anchor.y = 0f;
+                var outward = anchor - origin; outward.y = 0f; if (outward.sqrMagnitude < 1e-4f) outward = Vector3.forward; outward.Normalize();
+                var right = new Vector3(outward.z, 0f, -outward.x);
+                int[] rowN = new int[3];
+                foreach (var i in kv.Value)
+                {
+                    int row = slots[i].role == MinionRole.Front ? 0 : slots[i].role == MinionRole.Back ? 1 : 2;
+                    int k = rowN[row]++;
+                    float lat = (k % 2 == 0 ? 1f : -1f) * ((k + 1) / 2) * FormationGap + (row == 1 ? FormationGap * 0.5f : 0f);   // 0、+1、−1、+2…；後排錯開半格
+                    float depth = row == 0 ? 0f : row == 1 ? FormationDepth : FormationDepth * 0.5f;
+                    pos[i] = anchor + right * lat + outward * depth * depthK;
+                }
+            }
+            // 出場順序：前排 → 後排 → 特殊怪（偷襲的最後）
+            for (int pass = 0; pass < 4; pass++)
+                for (int i = 0; i < slots.Count; i++)
+                {
+                    int r = slots[i].amb ? 3 : slots[i].role == MinionRole.Front ? 0 : slots[i].role == MinionRole.Back ? 1 : 2;
+                    if (r == pass) order.Add(i);
+                }
+        }
 
         /// <summary>陣形：名字、每一隻的（角色、方位角＝相對玩家面向）。輪到幾隻就取前幾個</summary>
         public static readonly (string name, (MinionRole role, float ang)[] slots)[] Formations =
@@ -1067,7 +1122,9 @@ namespace SpellDuel
             {
                 if (now < groupQueue[0].at) return;
                 var q = groupQueue[0]; groupQueue.RemoveAt(0);
+                formationPos = q.pos;
                 if (q.healer && q.role == MinionRole.Special) SpawnSummonerAt(q.ang); else if (q.healer) SpawnHealerAt(q.ang); else SpawnRoleAt(q.role, q.ang, q.ambush);
+                formationPos = NoPos;
                 return;
             }
             if (waveToSpawn <= 0) return;
@@ -1086,25 +1143,34 @@ namespace SpellDuel
             int ambushAt = easySides && ambushWave != wave && rng.NextDouble() < EasyAmbushChance * 2f ? n - 1 : -1;   // 偶爾最後一隻從背後偷襲（一波最多一隻）
             if (ambushAt >= 0) ambushWave = wave;
             float jitter = ((float)rng.NextDouble() - 0.5f) * 30f;   // 整隊稍微轉一下，不會每次都一樣的位置
+            var slots = new List<(MinionRole role, float ang, bool amb)>();
             for (int i = 0; i < n; i++)
             {
                 var (role, ang) = Formations[f].slots[i % Formations[f].slots.Length];
                 ang += jitter;
-                if (easySides) ang = easyBearing + Mathf.Clamp(Mathf.DeltaAngle(0f, ang), -100f, 100f) * 0.3f;   // 全部從同一面來（陣形壓扁在 ±30° 裡）
+                if (easySides) ang = easyBearing + Mathf.Clamp(Mathf.DeltaAngle(0f, ang), -100f, 100f) * 0.3f;   // 全部從同一面來
                 bool amb = i == ambushAt;
                 if (amb) ang = easyBearing + 180f + ((float)rng.NextDouble() - 0.5f) * 60f;
-                groupQueue.Add((now + i * RoundStagger, role, ang, amb, false));
+                slots.Add((role, ang, amb));
+            }
+            bool layout = Theme != CanyonTheme;   // 黃土山道：小怪從崖頂跳下來，不排陣形
+            List<Vector3> fpos = null; List<int> forder = null;
+            if (layout) LayoutFormation(slots, out fpos, out forder);
+            for (int j = 0; j < n; j++)
+            {
+                int i = layout ? forder[j] : j;
+                groupQueue.Add((now + j * RoundStagger, slots[i].role, slots[i].ang, slots[i].amb, false, layout ? fpos[i] : NoPos));
             }
             // 第四、五章：每一輪額外帶一～兩隻補師（最後出來，躲在隊伍後面；不佔這一波的數量）；第五章再加一隻召喚師（role＝Special 當記號）
-            if (late) for (int h = 0; h < HealersPerRound(n); h++) groupQueue.Add((now + (n + h) * RoundStagger, MinionRole.Back, easySides ? easyBearing + (h - 0.5f) * 20f : (h - 0.5f) * 30f, false, true));
-            if (late && MonsterVariants.SummonerFor(Theme) != null) groupQueue.Add((now + (n + HealersPerRound(n)) * RoundStagger, MinionRole.Special, easySides ? easyBearing + 15f : 15f, false, true));
+            if (late) for (int h = 0; h < HealersPerRound(n); h++) groupQueue.Add((now + (n + h) * RoundStagger, MinionRole.Back, easySides ? easyBearing + (h - 0.5f) * 20f : (h - 0.5f) * 30f, false, true, NoPos));
+            if (late && MonsterVariants.SummonerFor(Theme) != null) groupQueue.Add((now + (n + HealersPerRound(n)) * RoundStagger, MinionRole.Special, easySides ? easyBearing + 15f : 15f, false, true, NoPos));
             Emit("round", player.Feet, Color.white, $"第 {roundNo}/{roundsInWave} 輪：{Formations[f].name}（{n} 隻" + (late && HealersPerRound(n) > 0 ? $"＋補師 {HealersPerRound(n)}" : "") + (late && MonsterVariants.SummonerFor(Theme) != null ? "＋召喚師 1" : "") + "）");
         }
 
         /// <summary>在某個方位出一隻某角色的小怪（三拍與輪次出怪共用）</summary>
         Fighter SpawnRoleAt(MinionRole role, float ang, bool ambush)
         {
-            var p = edgePointAt != null ? edgePointAt(ang) : edgePoint();
+            var p = EdgeAt(ang);
             int kind = PickMinionKind(role);
             kind = EliteSpawnKind(kind, dungeonSpawnOrdinal++, false);
             var nm = SpawnMinion(p, 0, kind, HpMul * (IsRanged(kind) ? 1f : meleeHpMul), DmgMul, SpeedMul);

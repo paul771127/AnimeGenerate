@@ -350,7 +350,7 @@ namespace SpellDuel
         {
             var def = MonsterVariants.HealerFor(Theme);
             if (def == null) return SpawnRoleAt(MinionRole.Back, ang, false);
-            var m = SpawnVariant(edgePointAt != null ? edgePointAt(ang) : edgePoint(), def);
+            var m = SpawnVariant(EdgeAt(ang), def);
             lastMinionCount = minions.Count;
             return m;
         }
@@ -623,7 +623,7 @@ namespace SpellDuel
         {
             var def = MonsterVariants.SummonerFor(Theme);
             if (def == null) return null;
-            var m = SpawnVariant(edgePointAt != null ? edgePointAt(ang) : edgePoint(), def);
+            var m = SpawnVariant(EdgeAt(ang), def);
             lastMinionCount = minions.Count;
             return m;
         }
