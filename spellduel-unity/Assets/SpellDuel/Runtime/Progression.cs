@@ -265,6 +265,7 @@ namespace SpellDuel
                     FPas("sw_combo", "連斬", PassiveKind.ComboStrike, 0.25f, 5, 0, 2, "sw_bspd"),
                     FMod("sw_bdmg", "劍術精通", "na_sword", ModField.Damage, 0.1f, 5, 0, 3, "sw_combo"),
                     FPas("sw_acc", "看破", PassiveKind.Accuracy, 0.01f, 5, 0, 4, "sw_bdmg"),
+                    FPas("sw_vamp", "飲血斬", PassiveKind.BasicLeech, 0.02f, 5, 0, 5, "sw_acc"),   // 使用者要求：劍士系列還是要有一個吸血技能（普攻傷害 2%／級回成 HP，滿級 10%；一揮只算一次）
                     FPas("sw_leech", "劍氣護體", PassiveKind.BasicShield, 0.04f, 5, 1, 2, "sw_bspd"),   // 使用者要求：劍士系列不要吸血 → 普攻傷害轉護盾（每級 4%，滿級 20%；一揮只算一次）。id 沿用，點過的點數不變
                     FPas("sw_regen", "自然回復", PassiveKind.NaturalRegen, 0.008f, 5, 1, 3, "sw_leech"),
                     FPas("sw_armor", "鋼筋鐵骨", PassiveKind.Armor, 0.02f, 5, 1, 4, "sw_regen"),   // 使用者要求：劍士系列少了吸血 → 補防禦（物理減傷 2%／級）

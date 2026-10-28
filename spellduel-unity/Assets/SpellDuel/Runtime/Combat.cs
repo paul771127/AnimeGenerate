@@ -136,7 +136,8 @@ namespace SpellDuel
         public float fuseAt;                   // 自爆小鬼：引信到時就爆（不管離玩家多遠）
         public int strafeSign = 1;             // 熔岩小鬼：等別隻出手時往哪邊繞（±1）
         public bool ambusher;                  // 簡單模式：從別的方向偷襲來的那隻（同時最多一隻）
-        public Battle.MarchGroup march; public Vector3 marchSpawn; public float marchHp;   // 軍陣行進中（Combat.cs LayoutFormation）：照隊伍一起往前推，到定點才散開打
+        public Battle.MarchGroup march; public Vector3 marchSpawn; public float marchHp;
+        public float outsideSince;   // 在場外待了多久（保險：太久就拉回場內，免得打不到、關卡卡住）   // 軍陣行進中（Combat.cs LayoutFormation）：照隊伍一起往前推，到定點才散開打
         public bool hidden;                    // 食人花：埋在地下（玩家走近 1.5m 才冒出來；埋著時打不到）
         public bool miniBoss;                  // 第 3 波單獨登場的特殊敵人（有名字和血條）
         public bool treasure, treasureRunning; public float treasureLeaveAt;
@@ -939,6 +940,13 @@ namespace SpellDuel
         public float attackHalf;
         public const float AttackZoneHalf = 3f;
         bool InAttackZone(Vector3 p) => attackHalf <= 0f || (Mathf.Abs(p.x) <= attackHalf && Mathf.Abs(p.z) <= attackHalf);
+        /// <summary>把一點拉回場內（攻擊區）：往 toward 一步步靠過去，直到在場內</summary>
+        Vector3 PullInside(Vector3 p, Vector3 toward)
+        {
+            p = ClampToZone(p);
+            for (int i = 0; i < 20 && minionInside != null && !minionInside(p); i++) p = Vector3.Lerp(p, toward, 0.2f);
+            return p;
+        }
         bool CanAttackFrom(Vector3 p) => (minionInside == null || minionInside(p)) && InAttackZone(p);
         /// <summary>攻擊區裡離 p 最近的一點（邊界往內 0.3m）</summary>
         Vector3 ClampToZone(Vector3 p) { if (attackHalf <= 0f) return p; float h = attackHalf - 0.3f; return new Vector3(Mathf.Clamp(p.x, -h, h), 0f, Mathf.Clamp(p.z, -h, h)); }
@@ -1054,6 +1062,7 @@ namespace SpellDuel
         }
         /// <summary>陣形的間距：同一排左右隔 FormationGap 公尺；後排比前排再往外 FormationDepth、特殊怪 FormationDepth×0.5</summary>
         public const float FormationGap = 1.2f, FormationDepth = 1.4f;
+        public const float OutsideRescue = 12f;
         /// <summary>軍陣：一面的一隊。整隊等全部出齊才一起往玩家推進（同一速度，隊形不變），前排推到離玩家 MarchStop 公尺停住、再散開開打</summary>
         public sealed class MarchGroup { public Vector3 inward; public float startAt = float.MaxValue, maxAdvance, released, createdAt; public int members, spawned; public bool broken; }
         public const float MarchSpeed = 0.8f, MarchStop = 2.6f, MarchHold = 0.6f, MarchMaxTime = 14f;
@@ -1457,6 +1466,19 @@ namespace SpellDuel
                 m.target = tgt;
                 if (m.treasure) { UpdateTreasure(m, dt); continue; }   // 寶箱怪：只會逃
                 if (m.march != null && UpdateMarch(m, dt)) continue;   // 軍陣行進中：整隊一起推進，到定點才散開
+                // 保險（使用者回報「有的敵人有顯示但打不到，關卡無法進行」）：在場外待超過 OutsideRescue 秒（不是正在跳崖、出場中），就拉回場內
+                if (minionInside != null && !minionInside(m.Feet) && m.leapEnd <= 0f && !m.hidden && carpetStation < 0)
+                {
+                    if (m.outsideSince <= 0f) m.outsideSince = now;
+                    else if (now - m.outsideSince > OutsideRescue)
+                    {
+                        var back = PullInside(m.Feet, tgt.Feet);
+                        Emit("teleport", m.Feet, new Color(0.6f, 0.3f, 1f), null);
+                        m.head = new Vector3(back.x, m.head.y, back.z); m.outsideSince = 0f;
+                        Emit("teleport", m.Feet, new Color(0.6f, 0.3f, 1f), null);
+                    }
+                }
+                else m.outsideSince = 0f;
                 if (UpdateLure(m, dt)) continue;   // 吃誘餌中：不攻擊（Combat.Pets.cs）
                 bool esUser = m.variant > 0 && EnemySkills.Has(m.variant);   // 補師、輔助型、人形、砂靈：新招式（Combat.EnemySkills.cs）
                 if (esUser) TickEnemySkillState(m);

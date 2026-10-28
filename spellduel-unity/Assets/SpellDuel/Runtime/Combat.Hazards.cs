@@ -90,6 +90,7 @@ namespace SpellDuel
         }
 
         // ------------------------------------------------------------ 每波的配置（主機／單人）
+        public const float SpikeSpread = 2.6f;
         void SetupHazards()
         {
             if (Gallery || carpetStation >= 0) { ClearHazards(); nextRockAt=-1; return; }   // 千機迴廊、天穹飛毯：沒有主題的機關
@@ -109,21 +110,22 @@ namespace SpellDuel
             int axes, spikes; bool ring = false;
             switch (local)
             {
+                // 使用者要求：第四章陷阱少一點、分散一點（原本最多 3 把斧頭、6 個地刺）
                 case 1: axes = 1; spikes = 0; break;
-                case 2: axes = 0; spikes = 4; break;
-                case 3: axes = 1; spikes = 3; break;
-                case 4: axes = 2; spikes = 0; break;
-                case 5: axes = 0; spikes = 6; ring = true; break;
-                case 6: axes = 2; spikes = 2; break;
-                case 7: axes = 1; spikes = 6; break;
-                case 8: axes = 3; spikes = 0; break;
-                case 9: axes = 2; spikes = 4; break;
-                default: axes = 2; spikes = 3; break;   // Boss 波：兩側各一把，中間留給 Boss
+                case 2: axes = 0; spikes = 2; break;
+                case 3: axes = 1; spikes = 1; break;
+                case 4: axes = 1; spikes = 2; break;
+                case 5: axes = 0; spikes = 3; ring = true; break;
+                case 6: axes = 2; spikes = 0; break;
+                case 7: axes = 1; spikes = 2; break;
+                case 8: axes = 2; spikes = 1; break;
+                case 9: axes = 1; spikes = 3; break;
+                default: axes = 2; spikes = 0; break;   // Boss 波：兩側各一把，中間留給 Boss
             }
             float start = waveStartAt + 1f;
             for (int i = 0; i < axes; i++)
             {
-                float off = axes == 1 ? (local == 10 ? lane : 0f) : (i - (axes - 1) * 0.5f) * (local == 10 ? lane * 2f : lane);
+                float off = axes == 1 ? (local == 10 ? lane : 0f) : (i - (axes - 1) * 0.5f) * (local == 10 ? lane * 2f : lane * 1.6f);   // 兩把斧頭的線拉開一點
                 AddHazard(new Hazard
                 {
                     kind = HazardKind.Axe, a = c + v * off, b = u, amp = amp,
@@ -143,8 +145,8 @@ namespace SpellDuel
                         float ang = (float)rng.NextDouble() * Mathf.PI * 2f, r = Mathf.Sqrt((float)rng.NextDouble()) * R * 0.8f;
                         p = c + new Vector3(Mathf.Cos(ang) * r, 0f, Mathf.Sin(ang) * r);
                         bool ok = true;
-                        foreach (var q in placed) if (FlatDistance(p, q) < 1.8f) ok = false;
-                        foreach (var h in hazards) if (h.kind == HazardKind.Axe && Mathf.Abs(Vector3.Dot(p - h.a, v)) < 0.9f) ok = false;   // 不要擺在斧頭的線上
+                        foreach (var q in placed) if (FlatDistance(p, q) < SpikeSpread) ok = false;   // 地刺彼此至少隔 SpikeSpread
+                        foreach (var h in hazards) if (h.kind == HazardKind.Axe && Mathf.Abs(Vector3.Dot(p - h.a, v)) < 1.4f) ok = false;   // 不要擺在斧頭的線上（左右留 1.4m）
                         if (ok) break;
                     }
                 }

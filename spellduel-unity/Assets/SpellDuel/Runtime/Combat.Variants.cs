@@ -403,10 +403,12 @@ namespace SpellDuel
             Vector3 mid = Vector3.zero; int n = 0;
             foreach (var o in minions) if (o != m && o.Alive && !o.treasure && !o.healer && !o.summoner && o.support == 0) { mid += o.Feet; n++; }
             Vector3 goal = n > 0 ? mid / n : m.Feet;
-            var away = Fighter.Flat(goal - near.Feet); if (away == Vector3.zero) away = Fighter.Flat(m.Feet - near.Feet);
-            goal += away * 2f;
+            var away = Fighter.Flat(goal - near.Feet); if (away == Vector3.zero) away = Fighter.Flat(m.Feet - near.Feet); if (away == Vector3.zero) away = Vector3.forward;
+            // 使用者回報「有的敵人有顯示但打不到、關卡卡住」：以前同伴都死光時，目標＝「自己的位置再往外 2m」→ 一直退、退出場地後越跑越遠
+            // 現在：沒有同伴就站在離玩家 HealerKeep 的地方；目標一律拉回場內（攻擊區）
+            goal = n > 0 ? goal + away * 2f : near.Feet + away * HealerKeep;
             if (FlatDistance(goal, near.Feet) < HealerKeep) goal = near.Feet + away * HealerKeep;
-            if (minionInside != null && !minionInside(goal)) goal = Vector3.Lerp(goal, m.Feet, 0.5f);
+            goal = PullInside(goal, near.Feet);
             var to = XZ(goal - m.Feet);
             float speed = minionSpeed * MinionSpeed[m.minionKind] * m.speedMul * EnemySpeedScale * (nd < 3f ? 1.8f : 1f) * (inside ? 1f : 2f);
             if (to.magnitude > 0.15f)
