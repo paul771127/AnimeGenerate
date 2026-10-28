@@ -705,7 +705,7 @@ namespace SpellDuel
             m.head = new Vector3(feet.x, MinionHead[kind] + m.alt, feet.z);
             // 寄居蟹：正面有殼，從正面打減傷 50%（Damage 裡依打擊方向判定；繞到背後打才是全額）——使用者要求不要正面無敵
             if (kind == 14) m.speedMul *= birdSpeedMul;   // 俯衝海鳥：飛行速度倍率（故事第三章 ×0.5）
-            m.attackReadyAt = now + 1.2f;
+            m.attackReadyAt = now + 1.2f; m.esBornAt = now;   // 第二招：進場 2 秒後才可能出
             m.homePos = feet;
             m.accuracy = enemyAccuracy;   // 敵人的命中率（故事各章；抵掉玩家的閃避）
             if (kind == 3) { m.fuseAt = now + BombFuse; m.speedMul *= BombSpeedMul; }   // 自爆小鬼：直直衝過來，引信到就爆
@@ -1359,7 +1359,10 @@ namespace SpellDuel
                 if (m.healer) { UpdateHealer(m, dt); continue; }   // 補師：躲在後面治療同伴（Combat.Variants.cs）
                 if (m.support > 0) { UpdateSupport(m, dt); continue; }   // 輔助型：治療、護盾、加速、戰旗（Combat.Variants.cs）
                 if (m.summoner) { UpdateSummoner(m, dt); continue; }
-                if (esUser) { EnemySkillMove(m, tgt, best, dt); continue; }   // 人形、砂靈：不用原本小怪的攻擊   // 召喚師：躲在後面叫砂靈（Combat.Variants.cs）   // 刺客怪：繞到背後突襲（Combat.Variants.cs）
+                if (esUser) { EnemySkillMove(m, tgt, best, dt); continue; }
+                // 一般小怪、特殊敵人、菁英的第二招（Docs/ENEMY_MOVES_PROPOSAL.md）：讀條中就只處理讀條
+                bool esKind = !esUser && !secondMovesOff && EnemySkills.For(m) != null;
+                if (esKind && m.esCast != null) { TickEnemyCast(m, tgt); continue; }   // 人形、砂靈：不用原本小怪的攻擊   // 召喚師：躲在後面叫砂靈（Combat.Variants.cs）   // 刺客怪：繞到背後突襲（Combat.Variants.cs）
                 var wantFwd = m.windupUntil > 0f && m.lockFwd != Vector3.zero ? m.lockFwd : Fighter.Flat(tgt.head - m.head);   // 預備中：面向鎖住（扇形不追著玩家轉）
                 if (m.minionKind == 16 && m.forward != Vector3.zero && wantFwd != Vector3.zero)
                 {
@@ -1380,7 +1383,12 @@ namespace SpellDuel
                 if (kind == 18 && m.fuseAt > 0f) { if (now >= m.fuseAt) PufferExplode(m); continue; }
                 int hold = minionHold != null ? minionHold(m) : 0;
                 if (Gallery && kind >= 48) { TickGalleryMinion(m,tgt,d,dt,hold); continue; }
-                if (EliteCatalog.IsElite(kind)) { TickElite(m, tgt, d, dt, hold); continue; }
+                if (EliteCatalog.IsElite(kind))
+                {
+                    // 菁英的第三招：原本兩招都沒在預備、出手空檔到了才放
+                    if (esKind && hold == 0 && m.windupUntil <= 0f && now >= m.attackReadyAt && m.snaredUntil <= now && CanAttackFrom(m.Feet) && UpdateEnemySkill(m, tgt, d, dt)) continue;
+                    TickElite(m, tgt, d, dt, hold); continue;
+                }
                 if (hold == 1) { m.windupUntil = 0f; m.attackReadyAt = Mathf.Max(m.attackReadyAt, now + 0.6f); continue; }   // 教學：定住
                 if (hold == 2) { m.windupUntil = 0f; m.attackReadyAt = Mathf.Max(m.attackReadyAt, now + 0.6f); }          // 教學：只走位
                 // 衝刺中（荊棘衝鋒獸、跳躍魚的飛撲、海鳥的俯衝）：直線往前衝，撞到玩家就停
@@ -1409,6 +1417,7 @@ namespace SpellDuel
                     var fly = (tan + rad * corr).normalized * 1.5f * m.speedMul * dt;
                     m.head += fly;
                     m.forward = Fighter.Flat(fly);
+                    if (esKind && hold == 0 && now >= m.recoverUntil && m.alt >= BirdCruise - 0.3f && now >= m.attackReadyAt && CanAttackFrom(m.Feet) && UpdateEnemySkill(m, tgt, d, dt)) continue;   // 第二招：平翼掠肩
                     if (now >= m.recoverUntil && m.alt >= BirdCruise - 0.3f && d <= MinionReach[kind] && now >= m.attackReadyAt && CanAttackFrom(m.Feet))   // 飛到攻擊區上空才俯衝
                     { m.windupUntil = now + MinionWindup[kind] * minionWindupMul; Emit("minionwindup", m.Feet, Skills.All["m_dive"].color, null); Emit("birdcry", tgt.Feet, Skills.All["m_dive"].color, (MinionWindup[kind] * minionWindupMul).ToString("0.00")); }   // 俯衝前叫一聲＋地上的影子（蹲）
                     continue;
@@ -1462,6 +1471,8 @@ namespace SpellDuel
                     }
                     m.moveUntil = 0f;
                 }
+                // 第二招：原本那一招沒在預備、出手空檔到了；還在場外、還沒進攻擊區不放
+                if (esKind && hold == 0 && now >= m.attackReadyAt && !(kind == 3 && m.fuseAt > 0f && m.fuseAt - now < 2.6f) && CanAttackFrom(m.Feet) && UpdateEnemySkill(m, tgt, d, dt)) continue;
                 // 自爆小鬼：引信到了就在原地爆（不管離多遠）
                 if (kind == 3 && m.fuseAt > 0f && now >= m.fuseAt) { MinionStrikeCore(m, tgt, d); continue; }
                 // 出手條件：近戰／衝鋒獸／自爆要貼近；射手在 9m 內；岩石衝鋒獸在 5.5m 內就刨地準備衝
@@ -1681,7 +1692,7 @@ namespace SpellDuel
         /// <summary>特殊敵人出手後站著喘氣的秒數（趁這時候打牠）</summary>
         public const float SpecialRecover = 1.8f;
         /// <summary>裂岩甲蜥的第二道震環在第一道之後幾秒</summary>
-        public const float TwinQuakeGap = 0.6f;
+        public const float TwinQuakeGap = 2f;   // 使用者確認：全場躲招排程（兩次跳至少隔 2 秒），原本 0.6 秒改 2 秒
 
         void SpawnMinionQuake(Fighter m, SkillDef s)
         {

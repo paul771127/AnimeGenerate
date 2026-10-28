@@ -5,7 +5,8 @@ namespace SpellDuel
     /// <summary>
     /// 故事關卡的天候與小目標（邏輯在 Combat.StageMods.cs）：
     ///   每一關「今天」的天候與小目標固定（用關卡 id＋日期決定 → 故事合作的隊友不用另外同步，也會一樣）；
-    ///   新手關（1-1～1-3）、試煉沒有；約四成的關卡是晴天，月夜最少（約 6%）。
+    ///   新手關（1-1～1-3）、試煉沒有；約四成的關卡是晴天，月夜最少（約 6%，只在夜晚）。
+    ///   白天／夜晚：每 3 小時輪替，約四成是夜晚（使用者要求）。
     ///   小目標達成：通關時多拿這一關 30% 的金幣＋試煉幣 1 枚。
     /// </summary>
     public partial class SoloBattle
@@ -80,22 +81,29 @@ namespace SpellDuel
             return Battle.Weather.Moon;
         }
 
+        /// <summary>故事關卡這個時段是不是夜晚（關卡 id＋日期＋3 小時時段決定 → 合作的隊友算出來一樣）</summary>
+        public static bool StoryNight(string stageId, System.DateTime t)
+            => new System.Random((stageId + "/story/" + t.ToString("yyyyMMdd") + "_" + (t.Hour / 3)).GetHashCode() & 0x7fffffff).NextDouble() < DungeonNightChance;
+
         public const float BonusGoldMul = 0.3f; public const int BonusCoins = 1;
 
         void SetupStageMods(StoryStage st)
         {
-            battle.SetWeather(Battle.Weather.None); battle.SetBonus(Battle.Bonus.None);
+            battle.SetWeather(Battle.Weather.None); battle.SetBonus(Battle.Bonus.None); battle.night = false;
             if (st == null || st.id == "trial" || st.id == JobTrialStageId || st.id == "1-1" || st.id == "1-2" || st.id == "1-3") return;
+            // 白天／夜晚（使用者要求：故事關卡也有夜晚）：和副本一樣每 3 小時輪替，約四成是夜晚；夜晚只是場景變暗＋夜晚限定的人形敵人
+            battle.night = StoryNight(st.id, System.DateTime.Now);
             int seed = (st.id + System.DateTime.Now.ToString("yyyyMMdd")).GetHashCode() & 0x7fffffff;
             var r = new System.Random(seed);
             if (r.NextDouble() >= 0.4)
             {
-                // 有天候時：暴雨、濃霧、順風各 3 份，月夜只有 1 份（使用者要求：月夜少一點）→ 月夜整體約 6%
-                int k = r.Next(10);
-                battle.SetWeather(k < 3 ? Battle.Weather.Rain : k < 6 ? Battle.Weather.Fog : k < 9 ? Battle.Weather.Wind : Battle.Weather.Moon);
+                // 有天候時：白天暴雨、濃霧、順風各 1/3；夜晚再加月夜（月夜只在夜晚，整體約 6%）
+                int k = r.Next(12);
+                battle.SetWeather(k < 3 ? Battle.Weather.Rain : k < 6 ? Battle.Weather.Fog : k < 9 ? Battle.Weather.Wind : battle.night ? Battle.Weather.Moon : new[] { Battle.Weather.Rain, Battle.Weather.Fog, Battle.Weather.Wind }[k % 3]);
             }
             battle.SetBonus((Battle.Bonus)(1 + r.Next(3)));
-            if (battle.weather != Battle.Weather.None) Say($"今天的天候：{Battle.WeatherName(battle.weather)}——{Battle.WeatherDesc(battle.weather)}；{Battle.WeatherTraitText(battle.weather)}", 5f);
+            string wl = battle.weather != Battle.Weather.None ? $"\n今天的天候：{Battle.WeatherName(battle.weather)}——{Battle.WeatherDesc(battle.weather)}；{Battle.WeatherTraitText(battle.weather)}" : "";
+            Say((battle.night ? "🌙 夜晚的關卡" : "☀ 白天的關卡") + wl, 5f);
         }
 
         /// <summary>通關：小目標達成 → 額外金幣＋試煉幣</summary>
@@ -119,7 +127,8 @@ namespace SpellDuel
             Color tint = w == Battle.Weather.Fog ? new Color(0.85f, 0.88f, 0.92f, 0.08f) : w == Battle.Weather.Moon ? new Color(0.1f, 0.15f, 0.4f, 0.1f) : w == Battle.Weather.Rain ? new Color(0.25f, 0.3f, 0.4f, 0.05f) : Color.clear;
             if (tint.a > 0f) { GUI.color = tint; GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
             int fs = Mathf.RoundToInt(H * 0.018f);
-            string line = (drun != null && dungeon != null && dungeon.id != TrapGallery.Id ? (battle.night ? "🌙 夜晚　" : "☀ 白天　") : "") + (w != Battle.Weather.None ? Battle.WeatherName(w) + "　" : "") + battle.BonusText;
+            bool dayShown = drun != null && dungeon != null && dungeon.id != TrapGallery.Id && dungeon.id != Carpet.DungeonId || pendingStage != null && pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.id != "1-1" && pendingStage.id != "1-2" && pendingStage.id != "1-3";
+            string line = (dayShown ? (battle.night ? "🌙 夜晚　" : "☀ 白天　") : "") + (w != Battle.Weather.None ? Battle.WeatherName(w) + "　" : "") + battle.BonusText;
             if (line.Length > 0) UiKit.Text(new Rect(W * 0.04f, H * 0.165f, W * 0.92f, fs * 1.6f), line, fs, new Color(1f, 0.92f, 0.6f), TextAnchor.MiddleCenter, true);
         }
     }

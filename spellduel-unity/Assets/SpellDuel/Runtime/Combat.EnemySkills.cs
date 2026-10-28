@@ -5,7 +5,7 @@ using UnityEngine;
 namespace SpellDuel
 {
     /// <summary>敵人招式的判定形狀</summary>
-    public enum EsShape { Fan, Line, Circle, JumpRing, DuckArc, Shot, Volley, Dash, Back, Retreat, Cross, Counter, SelfShield, SelfGuard }
+    public enum EsShape { Fan, Line, Circle, JumpRing, DuckArc, Shot, Volley, Dash, Back, Retreat, Cross, Counter, SelfShield, SelfGuard, HealAlly }
 
     /// <summary>補師、輔助型、人形敵人的招式（Docs/SUPPORT_HUMAN_SKILLS_PROPOSAL.md，使用者已確認）</summary>
     public sealed class EnemySkillDef
@@ -16,7 +16,12 @@ namespace SpellDuel
         public float hpBelow = 1.01f;   // 自己的 HP 低於這個比例才放（保命技）
         public bool breakable;          // 讀條被打中會中斷（招牌技、保命技）；一般攻擊不會
         public bool basic;              // 一般攻擊
-        public int React => shape == EsShape.JumpRing ? 1 : shape == EsShape.DuckArc ? 2 : shape == EsShape.SelfShield || shape == EsShape.SelfGuard ? -1 : 0;   // 要玩家做什麼：0 移動、1 跳、2 蹲、−1 不用
+        // 一般小怪、菁英的第二招（Docs/ENEMY_MOVES_PROPOSAL.md）
+        public int pose;                // 直線／投射物也可以用跳（1）或蹲（2）躲
+        public int count, aKind = -1;   // 連射幾發（0＝預設 3）；aKind≥0：傷害以這種小怪原本那一招為基準
+        public float gap, speed, hpAbove; // 連射間隔、投射物速度（0＝預設）、自己 HP 高於這個比例才放
+        public float healPct, healBelow = 1f, healRange = 4f; public int healN = 1, healMin = 1;   // HealAlly：回幾成、同伴 HP 低於多少、範圍、最多幾隻、至少幾隻受傷才放
+        public int React => shape == EsShape.JumpRing || pose == 1 ? 1 : shape == EsShape.DuckArc || pose == 2 ? 2 : shape == EsShape.SelfShield || shape == EsShape.SelfGuard || shape == EsShape.Counter || shape == EsShape.HealAlly ? -1 : 0;   // 要玩家做什麼：0 移動、1 跳、2 蹲、−1 不用
     }
 
     /// <summary>一次招式的命中（房主排好，連線時送給隊友；每支手機判定自己的玩家）</summary>
@@ -27,7 +32,7 @@ namespace SpellDuel
         public string skill;
         public Vector3 origin, dir;
         public float size, width, angle, hit, warnStart, speed;   // speed＞0：投射物（hit＝發射時間，碰到的時間看玩家站在線上哪裡）
-        public int dmg;
+        public int dmg, pose;   // pose：1 跳、2 蹲也能躲（直線、投射物）
         public bool back;   // 背後突襲：被盯上的人畫面上有方向提示
         [NonSerialized] public bool judged, sawPose, cancelled;
         [NonSerialized] public float contact = -1f;
@@ -67,7 +72,90 @@ namespace SpellDuel
             [165] = new[] { S("eh_165_shortbow", "砂原平射", EsShape.Shot, 2f, 6f, 3f, 1.2f, 6.5f, 1f, basic: true), S("eh_165_crossstep", "換位雙矢", EsShape.Cross, 2f, 5f, 10f, 1.6f, 6.5f, 0.5f) },
         };
         public static bool Has(int variant) => ByVariant.ContainsKey(variant);
-        public static EnemySkillDef Find(string id) { foreach (var l in ByVariant.Values) foreach (var s in l) if (s.id == id) return s; return null; }
+        public static EnemySkillDef Find(string id)
+        {
+            foreach (var l in ByVariant.Values) foreach (var s in l) if (s.id == id) return s;
+            foreach (var l in ByKind.Values) foreach (var s in l) if (s.id == id) return s;
+            return null;
+        }
+
+        // ------------------------------------------------------------ 一般小怪、特殊敵人、菁英的第二招（使用者確認：菁英是另外加的第三招）
+        static EnemySkillDef K(int kind, string slug, string name, EsShape shape, float minD, float maxD, float cd, float warn, float size, float mul,
+            float angle = 120f, int pose = 0, int count = 0, float gap = 0f, float speed = 0f, bool breakable = false, float hpAbove = 0f)
+            => new EnemySkillDef { id = $"ek_{kind}_{slug}", name = name, shape = shape, minD = minD, maxD = maxD, cd = cd, warn = warn, size = size, mul = mul, width = 0.24f,
+                angle = angle, pose = pose, count = count, gap = gap, speed = speed, breakable = breakable, hpAbove = hpAbove, aKind = kind };
+        static EnemySkillDef H(int kind, string slug, string name, float cd, float warn, float pct, float below, float range, int n = 1, int min = 1)
+            => new EnemySkillDef { id = $"ek_{kind}_{slug}", name = name, shape = EsShape.HealAlly, maxD = 99f, cd = cd, warn = warn, breakable = true, healPct = pct, healBelow = below, healRange = range, healN = n, healMin = min, aKind = kind };
+
+        /// <summary>依小怪種類（Battle.MinionNames 0～22、EliteCatalog 23～47）的第二招；數值照提案（A＝這種怪原本那一招的傷害）</summary>
+        public static readonly Dictionary<int, EnemySkillDef[]> ByKind = new Dictionary<int, EnemySkillDef[]>
+        {
+            [0] = new[] { K(0, "emberclaw", "熾爪掠火", EsShape.Line, 0f, 1.6f, 9f, 1.5f, 1.8f, 0.85f) },
+            [1] = new[] { K(1, "lowring", "低空火輪", EsShape.Shot, 1.5f, 5f, 11f, 1.8f, 5f, 0.9f, pose: 1) },
+            [2] = new[] { K(2, "hornrake", "側角挑地", EsShape.Line, 0f, 2f, 12f, 1.6f, 2f, 1f) },
+            [3] = new[] { K(3, "powdertoss", "火藥試拋", EsShape.Circle, 1f, 4f, 12f, 1.7f, 0.3f, 0.6f, hpAbove: 0.4f) },
+            [4] = new[] { K(4, "rollstone", "滾石碾線", EsShape.Shot, 2f, 5f, 11f, 1.7f, 5f, 1f, pose: 1, speed: 2.5f) },
+            [5] = new[] { K(5, "twinmark", "雙點校射", EsShape.Volley, 2f, 5f, 13f, 1.9f, 5f, 0.6f, count: 2, gap: 0.35f) },
+            [6] = new[] { K(6, "riftseal", "裂隙落印", EsShape.Circle, 1f, 4f, 13f, 1.8f, 0.3f, 1.05f, breakable: true) },
+            [7] = new[] { K(7, "leafsweep", "橫葉掃露", EsShape.DuckArc, 0f, 2.2f, 12f, 1.7f, 2.2f, 0.85f) },
+            [8] = new[] { K(8, "rootwave", "挑根波", EsShape.JumpRing, 0f, 2.8f, 13f, 1.8f, 2.8f, 1f) },
+            [9] = new[] { K(9, "sproutseal", "纏足芽印", EsShape.Circle, 1f, 4f, 12f, 1.8f, 0.3f, 0.9f, breakable: true) },
+            [10] = new[] { K(10, "tonguepin", "探舌釘線", EsShape.Line, 1.2f, 3f, 10f, 1.6f, 3f, 1f) },
+            [11] = new[] { K(11, "capgust", "冠蓋掀風", EsShape.DuckArc, 0f, 2.4f, 13f, 1.8f, 2.4f, 0.8f, angle: 360f) },
+            [12] = new[] { K(12, "podburst", "釘莢連珠", EsShape.Volley, 2f, 5f, 12f, 1.7f, 5f, 0.575f, count: 2, gap: 0.3f) },
+            [13] = new[] { K(13, "finslide", "背鰭滑切", EsShape.Dash, 1f, 2.5f, 10f, 1.6f, 2.5f, 0.95f, pose: 1) },
+            [14] = new[] { K(14, "wingskim", "平翼掠肩", EsShape.Line, 1.5f, 4f, 12f, 1.8f, 4f, 1f, pose: 2) },
+            [15] = new[] { K(15, "bubbledrop", "破泡落潮", EsShape.Circle, 1.5f, 4f, 13f, 1.8f, 0.3f, 1.05f) },
+            [16] = new[] { K(16, "shellclamp", "橫鉗護殼", EsShape.DuckArc, 0f, 2f, 11f, 1.7f, 2f, 1f) },
+            [17] = new[] { K(17, "boltpoint", "落雷觸點", EsShape.Circle, 1f, 4f, 13f, 1.8f, 0.3f, 1.1f, breakable: true) },
+            [18] = new[] { K(18, "spinering", "低潮刺輪", EsShape.JumpRing, 0f, 2.6f, 13f, 1.8f, 2.6f, 0.95f) },
+            [19] = new[] { K(19, "rootspear", "根脈穿刺", EsShape.Line, 1f, 3.5f, 14f, 2f, 3.5f, 1.1f, breakable: true) },
+            [20] = new[] { K(20, "tidelance", "潮槍吐息", EsShape.Line, 1.5f, 5f, 14f, 1.9f, 5f, 1.15f) },
+            [21] = new[] { K(21, "chainpin", "鎖錘釘地", EsShape.Circle, 1.5f, 3f, 12f, 1.7f, 0.35f, 1.2f) },
+            [22] = new[] { K(22, "platevolley", "裂板直射", EsShape.Volley, 1.5f, 5f, 12f, 1.8f, 5f, 0.4167f, count: 3, gap: 0.25f) },
+            [23] = new[] { K(23, "crownstomp", "冠爐震步", EsShape.JumpRing, 0f, 2.8f, 12f, 1.9f, 2.8f, 1.05f) },
+            [24] = new[] { K(24, "twinbolt", "熔栓雙發", EsShape.Volley, 2f, 5f, 12f, 1.8f, 5f, 0.6f, count: 2, gap: 0.35f) },
+            [25] = new[] { K(25, "shardseal", "黑晶碎印", EsShape.Circle, 1f, 4f, 13f, 1.9f, 0.3f, 1.1f, breakable: true) },
+            [26] = new[] { H(26, "kilnmend", "餘火回爐", 16f, 2f, 0.18f, 0.65f, 4f) },
+            [27] = new[] { K(27, "ashshoulder", "灰刃探肩", EsShape.DuckArc, 0f, 2.2f, 12f, 1.7f, 2.2f, 1.05f) },
+            [28] = new[] { K(28, "mossroot", "苔甲落根", EsShape.JumpRing, 0f, 3f, 13f, 1.9f, 3f, 1.1f) },
+            [29] = new[] { K(29, "thornpoint", "棘釘釘點", EsShape.Circle, 2f, 5f, 12f, 1.8f, 0.3f, 1.15f) },
+            [30] = new[] { K(30, "dreamsweep", "夢傘平掃", EsShape.DuckArc, 0f, 2.5f, 13f, 1.9f, 2.5f, 1f, breakable: true) },
+            [31] = new[] { H(31, "mycelmend", "菌絲接生", 16f, 2f, 0.2f, 0.6f, 4f) },
+            [32] = new[] { K(32, "wingcut", "翼下切風", EsShape.Line, 1.5f, 4f, 12f, 1.8f, 4f, 1.1f, pose: 2) },
+            [33] = new[] { K(33, "reefknock", "礁鉗叩浪", EsShape.JumpRing, 0f, 3f, 13f, 1.9f, 3f, 1.1f) },
+            [34] = new[] { K(34, "sailspear", "帆壓水矛", EsShape.Line, 2f, 5f, 12f, 1.8f, 5f, 1.2f) },
+            [35] = new[] { K(35, "tideorb", "潮電落珠", EsShape.Circle, 1f, 4f, 13f, 1.9f, 0.3f, 1.1f, breakable: true) },
+            [36] = new[] { H(36, "tidechorus", "回潮合音", 17f, 2.1f, 0.12f, 0.7f, 3f, n: 2, min: 2) },
+            [37] = new[] { K(37, "tideslash", "潮刃平斬", EsShape.DuckArc, 0f, 2.4f, 11f, 1.8f, 2.4f, 1.15f, angle: 180f) },
+            [38] = new[] { K(38, "shieldstomp", "盾足擂場", EsShape.JumpRing, 0f, 3f, 11f, 1.8f, 3f, 1.2f) },
+            [39] = new[] { K(39, "tripleshot", "鎖弩三拍", EsShape.Volley, 2f, 5f, 11f, 1.8f, 5f, 0.4333f, count: 3, gap: 0.25f) },
+            [40] = new[] { K(40, "sanddrop", "砂鐘墜印", EsShape.Circle, 1f, 4f, 12f, 1.8f, 0.35f, 1.2f, breakable: true) },
+            [41] = new[] { H(41, "drumheal", "穩陣鼓療", 16f, 2f, 0.14f, 0.65f, 3f, n: 2, min: 2) },
+            [42] = new[] { K(42, "redshoulder", "赤刃抹肩", EsShape.DuckArc, 0f, 2.5f, 10f, 1.7f, 2.5f, 1.2f, angle: 180f) },
+            [43] = new[] { K(43, "crystalstomp", "晶脊踏裂", EsShape.JumpRing, 0f, 3f, 11f, 1.8f, 3f, 1.25f) },
+            [44] = new[] { K(44, "crystalline", "砂晶穿線", EsShape.Volley, 2f, 5f, 11f, 1.8f, 5f, 0.65f, count: 2, gap: 0.3f) },
+            [45] = new[] { K(45, "sandseal", "砂漏埋印", EsShape.Circle, 1f, 4f, 12f, 1.8f, 0.35f, 1.2f, breakable: true) },
+            [46] = new[] { H(46, "stonemend", "石巢縫補", 16f, 2f, 0.22f, 0.55f, 4f) },
+            [47] = new[] { K(47, "galetail", "裂風尾刀", EsShape.DuckArc, 0f, 2.6f, 10f, 1.7f, 2.6f, 1.25f, angle: 180f) },
+        };
+
+        /// <summary>這隻敵人用哪一組新招式：補師／輔助／人形看種類 id；其他（含天候怪換色版）看小怪種類；刺客、寶箱怪、天空敵人不用</summary>
+        public static EnemySkillDef[] For(Fighter m)
+        {
+            if (m == null) return null;
+            if (m.variant > 0 && ByVariant.TryGetValue(m.variant, out var l)) return l;
+            if (m.assassin || m.treasure || m.variant > 0 && MonsterVariants.IsSky(m.variant)) return null;
+            return ByKind.TryGetValue(m.minionKind, out var k) ? k : null;
+        }
+        /// <summary>A：這種小怪原本那一招的傷害（菁英用原型的傷害，再乘菁英自己的傷害倍率＝m.dmgMul）</summary>
+        public static int KindBaseDamage(int kind)
+        {
+            if (EliteCatalog.IsElite(kind)) return EliteCatalog.BaseDamage(EliteCatalog.Get(kind).baseKind);
+            if (Battle.IsSpecial(kind)) return Skills.All[Battle.SpecialSkillId(kind)].damage;
+            string id = kind == 1 ? "m_fireball" : kind == 3 ? "m_bomb" : kind == 7 ? "m_venom" : kind == 14 ? "m_dive" : null;
+            return id != null && Skills.All.TryGetValue(id, out var sd) ? sd.damage : EliteCatalog.BaseDamage(kind);
+        }
 
         public const float ShotSpeed = 3f, RingTime = 0.9f, BodyR = 0.25f, PoseBefore = 0.3f, PoseAfter = 0.15f;
         public const float SameReactGap = 2f, OppositeGap = 1f, Recover = 0.6f, MinFirst = 2f;
@@ -99,8 +187,8 @@ namespace SpellDuel
             if (c.shape == (int)EsShape.JumpRing) return c.hit + RingTime * Mathf.Clamp01(d.magnitude / Mathf.Max(0.1f, c.size));
             return c.hit;
         }
-        public static bool NeedsJump(EnemyCue c) => c.shape == (int)EsShape.JumpRing;
-        public static bool NeedsDuck(EnemyCue c) => c.shape == (int)EsShape.DuckArc;
+        public static bool NeedsJump(EnemyCue c) => c.shape == (int)EsShape.JumpRing || c.pose == 1;
+        public static bool NeedsDuck(EnemyCue c) => c.shape == (int)EsShape.DuckArc || c.pose == 2;
     }
 
     public partial class Battle
@@ -109,6 +197,16 @@ namespace SpellDuel
         public event Action<EnemyCue> OnEnemyCue, OnEnemyCueCancel;
         int enemyCueIds;
         public static bool HasEnemySkills(int variant) => EnemySkills.Has(variant);
+        /// <summary>新手關（1-1～1-3）：一般小怪不放第二招</summary>
+        public bool secondMovesOff;
+        /// <summary>這隻正在放新招式（房主看讀條；隊友看還沒出手的預警）</summary>
+        public bool EsCasting(Fighter m)
+        {
+            if (m == null) return false;
+            if (m.esCast != null) return true;
+            foreach (var c in enemyCues) if (c.owner == m.minionId && !c.judged && !c.cancelled && now < c.hit + 0.05f) return true;
+            return false;
+        }
 
         // ------------------------------------------------------------ 房主：選招、讀條、出手
         /// <summary>這個人還能不能排一個要身體反應的招式（全場統一：同時只有一個；兩次跳／兩次蹲隔 2 秒；相反動作隔 1 秒）</summary>
@@ -127,7 +225,17 @@ namespace SpellDuel
             if (react == 1) t.esLastJump = hitAt; else if (react == 2) t.esLastDuck = hitAt;
         }
 
-        int EsDamage(Fighter m, EnemySkillDef s) => Mathf.Max(1, Mathf.RoundToInt(Skills.All["m_claw"].damage * m.dmgMul * s.mul));
+        int EsDamage(Fighter m, EnemySkillDef s) => Mathf.Max(1, Mathf.RoundToInt((s.aKind >= 0 ? EnemySkills.KindBaseDamage(s.aKind) : Skills.All["m_claw"].damage) * m.dmgMul * s.mul));
+
+        /// <summary>HealAlly：範圍內 HP 低於門檻的同伴（不含自己），最傷的排前面</summary>
+        List<Fighter> HealTargets(Fighter m, EnemySkillDef s)
+        {
+            var l = new List<Fighter>();
+            foreach (var o in minions)
+                if (o != m && o.Alive && !o.treasure && o.hp < o.maxHp * s.healBelow && FlatDistance(o.Feet, m.Feet) <= s.healRange) l.Add(o);
+            l.Sort((a, b) => (a.hp / Mathf.Max(1f, a.maxHp)).CompareTo(b.hp / Mathf.Max(1f, b.maxHp)));
+            return l;
+        }
 
         /// <summary>目標在施法者的背側（目標面向的反方向 ±70°）</summary>
         static bool BehindOf(Fighter m, Fighter tgt)
@@ -143,7 +251,7 @@ namespace SpellDuel
             if (m.esCast != null) { TickEnemyCast(m, tgt); return true; }
             if (m.windupUntil > 0f || tgt == null || m.humState == 1) return false;
             if (now - m.esBornAt < EnemySkills.MinFirst) return false;
-            if (!EnemySkills.ByVariant.TryGetValue(m.variant, out var list)) return false;
+            var list = EnemySkills.For(m); if (list == null) return false;
             bool inside = minionInside == null || minionInside(m.Feet);
             if (!inside) return false;
             EnemySkillDef pick = null;
@@ -152,7 +260,10 @@ namespace SpellDuel
                 foreach (var s in list)
                 {
                     if (s.basic != (pass == 1)) continue;
-                    if (m.esCd.TryGetValue(s.id, out var ready) && now < ready) continue;
+                    if (!m.esCd.TryGetValue(s.id, out var ready)) { if (s.aKind >= 0) { m.esCd[s.id] = now + 2f + (float)rng.NextDouble() * s.cd * 0.5f; continue; } }   // 第二招：剛看到時先等一下（不會一進場就放）
+                    else if (now < ready) continue;
+                    if (s.hpAbove > 0f && m.hp < m.maxHp * s.hpAbove) continue;
+                    if (s.shape == EsShape.HealAlly) { if (HealTargets(m, s).Count < s.healMin) continue; pick = s; break; }
                     if (dist < s.minD || dist > s.maxD) continue;
                     if (m.hp > m.maxHp * s.hpBelow) continue;
                     if (s.shape == EsShape.Back && !BehindOf(m, tgt)) continue;
@@ -187,8 +298,15 @@ namespace SpellDuel
                 case EsShape.JumpRing: AddCue(m, s, m.Feet, dir, hit, dmg, tgt); break;
                 case EsShape.Fan: case EsShape.DuckArc: case EsShape.Line: case EsShape.Dash: case EsShape.Back:
                     AddCue(m, s, m.Feet, dir, hit, dmg, tgt); break;
-                case EsShape.Shot: case EsShape.Retreat: AddCue(m, s, m.Feet, dir, hit, dmg, tgt, EnemySkills.ShotSpeed); break;
-                case EsShape.Volley: for (int i = 0; i < 3; i++) AddCue(m, s, m.Feet, dir, hit + 0.35f * i, dmg, tgt, EnemySkills.ShotSpeed); break;
+                case EsShape.Shot: case EsShape.Retreat: AddCue(m, s, m.Feet, dir, hit, dmg, tgt, s.speed > 0f ? s.speed : EnemySkills.ShotSpeed); break;
+                case EsShape.Volley: for (int i = 0, n = s.count > 0 ? s.count : 3; i < n; i++) AddCue(m, s, m.Feet, dir, hit + (s.gap > 0f ? s.gap : 0.35f) * i, dmg, tgt, s.speed > 0f ? s.speed : EnemySkills.ShotSpeed); break;
+                case EsShape.HealAlly:
+                {
+                    var hs = HealTargets(m, s);
+                    if (hs.Count > 0) Emit("esfx", hs[0].Chest, new Color(0.55f, 1f, 0.5f), $"heal|{m.minionId}|{hs[0].minionId}|0");
+                    Emit("eskill", m.Chest, new Color(0.6f, 1f, 0.6f), $"✨ {m.name}：{s.name}！打斷牠");
+                    return;
+                }
                 case EsShape.Cross:
                 {
                     // 敵人橫移 0.8m 邊換位邊射：兩條箭都瞄準同一個舊位置（一次側步躲兩條）
@@ -212,7 +330,7 @@ namespace SpellDuel
             {
                 id = ++enemyCueIds, owner = m.minionId, skill = s.id, shape = (int)s.shape, origin = new Vector3(origin.x, 0f, origin.z), dir = dir,
                 size = s.size, width = s.width, angle = s.angle, hit = hit, warnStart = now, speed = speed, dmg = dmg,
-                back = s.shape == EsShape.Back, targetPid = tgt != null ? (tgt == player ? (player.pid >= 0 ? player.pid : 0) : tgt.pid) : -1,
+                back = s.shape == EsShape.Back, pose = s.pose, targetPid = tgt != null ? (tgt == player ? (player.pid >= 0 ? player.pid : 0) : tgt.pid) : -1,
             };
             if (c.shape == (int)EsShape.Retreat || c.shape == (int)EsShape.Cross || c.shape == (int)EsShape.Volley) c.shape = (int)EsShape.Shot;
             if (c.shape == (int)EsShape.Dash || c.shape == (int)EsShape.Back) c.shape = (int)EsShape.Line;
@@ -260,6 +378,18 @@ namespace SpellDuel
                     m.esGuardBuffUntil = now + 3f;
                     Emit("enemyheal", m.Chest, new Color(0.7f, 1f, 0.8f), "🌫 減傷");
                     break;
+                case EsShape.HealAlly:
+                {
+                    int healed = 0;
+                    foreach (var o in HealTargets(m, s))
+                    {
+                        if (healed >= s.healN) break;
+                        float amt = Mathf.Min(o.maxHp - o.hp, o.maxHp * s.healPct); o.hp += amt; healed++;
+                        Emit("enemyheal", o.Chest, new Color(0.45f, 1f, 0.55f), $"+{amt:0}");
+                        Emit("esfx", o.Chest, new Color(0.55f, 1f, 0.5f), $"heal|{m.minionId}|{o.minionId}|0");
+                    }
+                    break;
+                }
                 case EsShape.Dash:
                 {
                     // 短衝到線的盡頭（不穿過目標）

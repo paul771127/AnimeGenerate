@@ -860,7 +860,7 @@ namespace SpellDuel
         CanyonScene canyon;     // 第 41～50 波的黃土山道（第 5 章）
         readonly Dictionary<Fighter, MinionRig> minionGo = new Dictionary<Fighter, MinionRig>();
         readonly Dictionary<Fighter, float> minionLastHp = new Dictionary<Fighter, float>();
-        readonly HashSet<Fighter> minionWinding = new HashSet<Fighter>();
+        readonly HashSet<Fighter> minionWinding = new HashSet<Fighter>(), esWinding = new HashSet<Fighter>();
         readonly Dictionary<Fighter, GameObject> minionWarn = new Dictionary<Fighter, GameObject>();   // 近身重擊預備的紅色扇形
         /// <summary>第二～五章的 x-4、x-5（不是 Boss 關）：這一章的特殊敵人；其他關卡 −1</summary>
         public static int SpecialKindOfStage(StoryStage st)
@@ -1309,6 +1309,7 @@ namespace SpellDuel
                         if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.theme >= 0 && pendingStage.theme < StoryBossHp.Length)
                         { battle.storyBossHp = StoryBossHp[pendingStage.theme]; battle.storyBossDmg = StoryBossDmg[pendingStage.theme]; }
                         if (pendingStage.theme == 1 && pendingStage.id != "trial") { battle.enemyHpMul = 2f; battle.enemyDmgMul = 2f; battle.rangedWindupMul = 1.5f; battle.rangedShotSpeedMul = 0.5f; battle.meleeHpMul = 0.7f; battle.rangedRecoverAdd = 3f; }   // 第二章：遠程小怪出手前準備 ×1.5、飛行速度 ×0.5、每次出手後多休息 3 秒；近戰小怪血量 ×0.7   // 第二章森林：小怪血量、攻擊 ×2（Boss 照上面的表）
+                        battle.secondMovesOff = pendingStage.id == "1-1" || pendingStage.id == "1-2" || pendingStage.id == "1-3";   // 新手關：小怪只用原本那一招
                         if ((pendingStage.id == "1-1" || pendingStage.id == "1-2" || pendingStage.id == "1-3") && difficulty == 0) { battle.enemyHpMul *= EarlyStageMul; battle.enemyDmgMul *= EarlyStageMul; }   // 1-1～1-3 簡單：敵人血量、傷害 ×60%（新手關；普通、困難照一般設計）
                         if (pendingStage.theme >= 2 && pendingStage.id != "trial") { battle.enemyDmgMul *= LateDmgMul; battle.storyBossDmg *= LateDmgMul; }   // 第三章以後（使用者要求）：敵人（含 Boss）傷害再 ×1.5
                         if (pendingStage.theme >= 1 && pendingStage.id != "trial")
@@ -1865,22 +1866,25 @@ namespace SpellDuel
                 if (winding && !minionWinding.Contains(m))
                 {
                     if (battle.remoteEnemy && m.assassin && m.target == Me) OnBattleEvent("assassinwarn", Me.Feet, new Color(0.9f, 0.2f, 0.35f), "1");   // 合作（隊友）：刺客要從背後砍我
-                    minionWinding.Add(m); rig.Windup(EliteCatalog.IsElite(m.minionKind) && battle.EliteView(m) != null ? battle.EliteView(m).duration : battle.WindupOf(m.minionKind));
+                    bool esw = m.variant <= 0 && battle.EsCasting(m);   // 一般小怪、菁英的第二招（預警由 EnemySkillFx 畫）
+                    if (esw) esWinding.Add(m); else esWinding.Remove(m);
+                    minionWinding.Add(m); rig.Windup(esw ? Mathf.Max(0.3f, m.windupUntil - battle.now) : EliteCatalog.IsElite(m.minionKind) && battle.EliteView(m) != null ? battle.EliteView(m).duration : battle.WindupOf(m.minionKind));
                     if (skyBody) skyBody.Windup(battle.WindupOf(m.minionKind));
                     VariantWindupStart(m, m.windupUntil - battle.now);
-                    if (battle.remoteEnemy && Battle.IsSpecial(m.minionKind))   // 合作（隊友）：稀有怪預備大招 → 一樣跳出「跳起來／蹲下」
+                    if (battle.remoteEnemy && Battle.IsSpecial(m.minionKind) && !esw)   // 合作（隊友）：稀有怪預備大招 → 一樣跳出「跳起來／蹲下」
                         OnBattleEvent("specialwarn", m.Feet, Skills.All[Battle.SpecialSkillId(m.minionKind)].color, Battle.SpecialNeedsJump(m.minionKind) ? "⬆ 跳起來！（或離遠一點）" : "⬇ 蹲下！（或離遠一點）");
                 }   // 預備時間＝這種小怪真正的預備時間（出手時剛好擺到位）
                 else if (!winding && minionWinding.Contains(m))
                 {
+                    bool wasEs = esWinding.Remove(m);
                     minionWinding.Remove(m); rig.Attack(); if (skyBody) skyBody.Attack(); VariantWindupEnd(m);
                     // 特殊敵人的橫掃：胸口高度的弧光（Codex 的特效；震環在 UpdateQuakeVisuals 接）
-                    if (m.Alive && Battle.IsSpecial(m.minionKind) && !Battle.SpecialNeedsJump(m.minionKind))
+                    if (m.Alive && Battle.IsSpecial(m.minionKind) && !Battle.SpecialNeedsJump(m.minionKind) && !wasEs)
                         MinionRig.SweepArcFx(WorldFrame.FromWorld(new Vector3(m.Feet.x, 0f, m.Feet.z)), WorldFrame.DirFromWorld(m.lockFwd != Vector3.zero ? m.lockFwd : m.forward),
                             Battle.SpecialRadius(m.minionKind), Battle.SpecialArcHalf(m.minionKind) * 2f, 1.2f, m.minionKind == 20 ? new Color(0.35f, 0.9f, 1f, 0.7f) : new Color(1f, 0.68f, 0.28f, 0.7f));
                 }
                 // 近身重擊預備中：地上的紅色受擊範圍（越接近出手越亮；走出紅圈就打不到）
-                if (winding && Battle.HasMeleeWarnDisc(m.minionKind) && m.Alive && !Battle.HasEnemySkills(m.variant))
+                if (winding && Battle.HasMeleeWarnDisc(m.minionKind) && m.Alive && !Battle.HasEnemySkills(m.variant) && !esWinding.Contains(m))
                 {
                     if (!minionWarn.TryGetValue(m, out var wg) || !wg) { wg = Prim(PrimitiveType.Quad, new Color(1f, 0.1f, 0.05f, 0.3f), true); wg.GetComponent<MeshFilter>().sharedMesh = FanMesh(Battle.WarnArcHalf(m.minionKind)); minionWarn[m] = wg; }   // 前方扇形（特殊敵人：半圓／整圈）
                     float rr = Battle.MeleeStrikeRadius(m.minionKind), wu = battle.WindupOf(m.minionKind);
@@ -1902,7 +1906,7 @@ namespace SpellDuel
                     if (kv.Value) { kv.Value.SetDead(true); Destroy(kv.Value.gameObject, 1.2f); }
                     if (skyBodies.TryGetValue(kv.Key, out var deadSky)) { if (deadSky) deadSky.SetDead(true); skyBodies.Remove(kv.Key); }
                     VariantDead(kv.Key);
-                    minionGo.Remove(kv.Key); minionLastHp.Remove(kv.Key); minionWinding.Remove(kv.Key);
+                    minionGo.Remove(kv.Key); minionLastHp.Remove(kv.Key); minionWinding.Remove(kv.Key); esWinding.Remove(kv.Key);
                     if (minionWarn.TryGetValue(kv.Key, out var wgo)) { if (wgo) Destroy(wgo); minionWarn.Remove(kv.Key); }
                     if (aimLines.TryGetValue(kv.Key, out var dl)) { if (dl) Destroy(dl); aimLines.Remove(kv.Key); }
                     if (leafRings.TryGetValue(kv.Key, out var lr1)) { if (lr1) Destroy(lr1); leafRings.Remove(kv.Key); }
@@ -2373,7 +2377,7 @@ namespace SpellDuel
             if (bossRig) Destroy(bossRig.gameObject);
             ClearWorldBoss();
             foreach (var mr in minionGo.Values) if (mr) Destroy(mr.gameObject);
-            minionGo.Clear(); minionLastHp.Clear(); minionWinding.Clear();
+            minionGo.Clear(); minionLastHp.Clear(); minionWinding.Clear(); esWinding.Clear();
             foreach (var wg in minionWarn.Values) if (wg) Destroy(wg);
             minionWarn.Clear();
             foreach (var al in aimLines.Values) if (al) Destroy(al);

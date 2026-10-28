@@ -84,7 +84,7 @@ namespace SpellDuel
                 {
                     v.warned = true;
                     if (c.back) { Haptics.Play(Haptics.Kind.Heavy); Sfx.Play("warn", 1f, 0.7f); }
-                    else if (c.shape == (int)EsShape.JumpRing || c.shape == (int)EsShape.DuckArc) Sfx.Play("aim_warn", 0.8f);
+                    else if (c.shape == (int)EsShape.JumpRing || c.shape == (int)EsShape.DuckArc || c.pose > 0) Sfx.Play("aim_warn", 0.8f);
                 }
             }
             List<int> gone = null;
@@ -106,10 +106,11 @@ namespace SpellDuel
             if (battle == null || phase != Phase.Fighting || Me == null || !Me.Alive) return;
             EnemyCue next = null;
             foreach (var c in battle.enemyCues)
-                if (!c.judged && !c.cancelled && CueMine(c) && (c.back || c.shape == (int)EsShape.JumpRing || c.shape == (int)EsShape.DuckArc) && (next == null || c.hit < next.hit)) next = c;
+                if (!c.judged && !c.cancelled && CueMine(c) && (c.back || c.shape == (int)EsShape.JumpRing || c.shape == (int)EsShape.DuckArc || c.pose > 0) && (next == null || c.hit < next.hit)) next = c;
             if (next == null) return;
-            string text = next.back ? "⚠ 後方突襲・側步！" : next.shape == (int)EsShape.JumpRing ? "⬆ 地波：到腳下時跳！" : "⬇ 橫掃：蹲下！";
-            var col = next.back ? new Color(0.95f, 0.25f, 0.35f) : next.shape == (int)EsShape.JumpRing ? new Color(1f, 0.55f, 0.15f) : new Color(0.35f, 0.7f, 1f);
+            bool jump = EnemySkills.NeedsJump(next);
+            string text = next.back ? "⚠ 後方突襲・側步！" : next.pose == 1 ? "⬆ 貼地直線：跳過去或側步！" : next.pose == 2 ? "⬇ 低空掠過：蹲下或側步！" : jump ? "⬆ 地波：到腳下時跳！" : "⬇ 橫掃：蹲下！";
+            var col = next.back ? new Color(0.95f, 0.25f, 0.35f) : jump ? new Color(1f, 0.55f, 0.15f) : new Color(0.35f, 0.7f, 1f);
             UiKit.Pill(Screen.height * 0.55f, text, Mathf.RoundToInt(UiKit.BaseFont * 1.4f), col, Screen.width * 0.9f, 0.6f);
         }
     }
