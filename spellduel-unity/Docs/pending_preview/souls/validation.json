@@ -1,0 +1,34 @@
+{
+  "newIds": [
+    "soul_m141",
+    "soul_m142",
+    "soul_m143",
+    "soul_m144",
+    "soul_m151",
+    "soul_m152",
+    "soul_m153",
+    "soul_m154",
+    "soul_m155",
+    "soul_m156",
+    "soul_m157",
+    "soul_m158",
+    "soul_m159",
+    "soul_m160",
+    "soul_m161",
+    "soul_m162",
+    "soul_m163",
+    "soul_m164",
+    "soul_m165"
+  ],
+  "unique": 19,
+  "deterministic": true,
+  "legacyPixelComparisons": 149,
+  "sizes": [
+    8,
+    32,
+    48,
+    64,
+    128
+  ],
+  "method": "Actual SkillIcons.Render in .NET harness; Unity texture shell stubbed, no renderer logic stubbed. Native platform results recorded separately."
+}
