@@ -362,8 +362,9 @@ namespace SpellDuel
                     float amt = Mathf.Min(t.maxHp - t.hp, t.maxHp * HealerFrac);
                     t.hp += amt;
                     Emit("enemyheal", t.Chest, new Color(0.45f, 1f, 0.55f), $"+{amt:0}");
+                    Emit("esfx", t.Chest, Color.green, $"heal|{m.minionId}|{t.minionId}|0");
                     if (m.variant == 156) { float self = Mathf.Min(m.maxHp - m.hp, m.maxHp * 0.05f); m.hp += self; }   // 共生返青：自己也回 5%
-                    if (m.variant == 162) { m.shieldUntil = now + 2.5f; m.shieldLeft = Mathf.Max(m.shieldLeft, Mathf.RoundToInt(m.maxHp * 0.15f)); }   // 護禱續戰：自己 15% 護盾 2.5 秒
+                    if (m.variant == 162) { m.shieldUntil = now + 2.5f; m.shieldLeft = Mathf.Max(m.shieldLeft, Mathf.RoundToInt(m.maxHp * 0.15f)); Emit("esfx", m.Chest, Color.yellow, $"shield|{m.minionId}|{m.minionId}|2.5"); }   // 護禱續戰：自己 15% 護盾 2.5 秒
                 }
                 return;
             }
@@ -580,14 +581,15 @@ namespace SpellDuel
             foreach (var o in minions) if (SupportWants(m, o)) targets.Add(o);
             if (m.support == 2) { targets.Sort((a, b) => FlatDistance(a.Feet, m.Feet).CompareTo(FlatDistance(b.Feet, m.Feet))); if (targets.Count > FairyTargets) targets.RemoveRange(FairyTargets, targets.Count - FairyTargets); }
             var col = MonsterVariants.Get(m.variant)?.tint ?? Color.green;
+            if (m.support == 4) Emit("esfx", m.Chest, col, System.FormattableString.Invariant($"rally|{m.minionId}|0|{SupportRange(4)}"));   // 旗手插旗：一圈光（範圍）
             foreach (var o in targets)
             {
                 switch (m.support)
                 {
-                    case 1: { float amt = Mathf.Min(o.maxHp - o.hp, o.maxHp * ShamanFrac); o.hp += amt; Emit("enemyheal", o.Chest, new Color(0.45f, 1f, 0.55f), $"+{amt:0}"); break; }
-                    case 2: o.shieldUntil = now + FairyDur; o.shieldLeft = Mathf.Max(o.shieldLeft, Mathf.RoundToInt(o.maxHp * FairyShield)); Emit("enemyheal", o.Chest, col, $"🫧 護盾 {o.shieldLeft}"); break;
-                    case 3: if (o.hasteUntil <= now) o.speedMul *= HasteSpeed; o.hasteUntil = now + HasteDur; Emit("enemyheal", o.Chest, col, "🥁 加速"); break;
-                    default: if (o.rallyUntil <= now) { o.dmgMul *= RallyDmg; o.damageTakenMul *= RallyTaken; } o.rallyUntil = now + RallyDur; Emit("enemyheal", o.Chest, col, "🚩 戰旗增益"); break;
+                    case 1: { float amt = Mathf.Min(o.maxHp - o.hp, o.maxHp * ShamanFrac); o.hp += amt; Emit("enemyheal", o.Chest, new Color(0.45f, 1f, 0.55f), $"+{amt:0}"); Emit("esfx", o.Chest, col, $"heal|{m.minionId}|{o.minionId}|0"); break; }
+                    case 2: o.shieldUntil = now + FairyDur; o.shieldLeft = Mathf.Max(o.shieldLeft, Mathf.RoundToInt(o.maxHp * FairyShield)); Emit("enemyheal", o.Chest, col, $"🫧 護盾 {o.shieldLeft}"); Emit("esfx", o.Chest, col, System.FormattableString.Invariant($"shield|{m.minionId}|{o.minionId}|{FairyDur}")); break;
+                    case 3: if (o.hasteUntil <= now) o.speedMul *= HasteSpeed; o.hasteUntil = now + HasteDur; Emit("enemyheal", o.Chest, col, "🥁 加速"); Emit("esfx", o.Chest, col, System.FormattableString.Invariant($"haste|{m.minionId}|{o.minionId}|{HasteDur}")); break;
+                    default: if (o.rallyUntil <= now) { o.dmgMul *= RallyDmg; o.damageTakenMul *= RallyTaken; } o.rallyUntil = now + RallyDur; Emit("enemyheal", o.Chest, col, "🚩 戰旗增益"); Emit("esfx", o.Chest, col, System.FormattableString.Invariant($"aura|{m.minionId}|{o.minionId}|{RallyDur}")); break;
                 }
             }
         }

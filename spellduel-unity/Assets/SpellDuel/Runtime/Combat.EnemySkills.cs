@@ -253,6 +253,7 @@ namespace SpellDuel
                 case EsShape.SelfShield:
                     m.shieldUntil = now + 4f; m.shieldLeft = Mathf.Max(m.shieldLeft, Mathf.RoundToInt(m.maxHp * s.size));
                     Emit("enemyheal", m.Chest, new Color(1f, 0.9f, 0.5f), $"🛡 護盾 {m.shieldLeft}");
+                    Emit("esfx", m.Chest, new Color(1f, 0.9f, 0.5f), $"shield|{m.minionId}|{m.minionId}|4");
                     break;
                 case EsShape.SelfGuard:
                     if (m.esGuardBuffUntil <= now) m.damageTakenMul *= 1f - s.size;

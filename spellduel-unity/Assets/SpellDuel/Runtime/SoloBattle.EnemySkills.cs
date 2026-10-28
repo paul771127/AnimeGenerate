@@ -11,7 +11,7 @@ namespace SpellDuel
     /// </summary>
     public partial class SoloBattle
     {
-        sealed class CueView { public GameObject ground, shot; public bool warned; }
+        sealed class CueView { public int handle; public bool cast, warned; public EnemyShotView shot; }
         readonly Dictionary<int, CueView> cueViews = new Dictionary<int, CueView>();
 
         void WireEnemySkillNet()
@@ -28,6 +28,10 @@ namespace SpellDuel
                     if (NetIsHost || battle == null) return true;
                     { var c = JsonUtility.FromJson<EnemyCue>(m.k); if (c != null) battle.AddRemoteEnemyCue(c, battle.now + (float)(m.t0 - (SharedClock?.Invoke() ?? 0))); }
                     return true;
+                case "esf":   // 房主的輔助效果（治療、護盾、加速、戰旗、召喚）
+                    if (NetIsHost || battle == null) return true;
+                    if (m.k != null && m.k.StartsWith("summon")) EnemySupportFx.Summon(WorldFrame.FromWorld(m.p)); else OnSupportFx(m.k, false);
+                    return true;
                 case "esx":
                     if (!NetIsHost && battle != null) battle.CancelRemoteEnemyCue(m.id);
                     return true;
@@ -37,6 +41,10 @@ namespace SpellDuel
 
         bool CueMine(EnemyCue c) => c.targetPid < 0 || c.targetPid == (coop ? MyPid : 0) || (!coop && c.targetPid == 0);
 
+        /// <summary>
+        /// 每一招的畫面（Codex 的 EnemySkillFx／EnemyShotView）：預警（鎖定的位置與方向，到命中前）→ 出手特效；
+        /// 投射物發射後沿線飛；讀條被打斷、施法者倒下 → 取消那一次的預警（handle）。
+        /// </summary>
         void UpdateEnemyCueViews()
         {
             if (battle == null) return;
@@ -44,64 +52,53 @@ namespace SpellDuel
             float now = battle.now;
             foreach (var c in battle.enemyCues)
             {
-                if (c.judged || c.cancelled) continue;
+                if (c.cancelled) continue;
                 keep.Add(c.id);
-                if (!cueViews.TryGetValue(c.id, out var v)) { v = new CueView(); cueViews[c.id] = v; }
-                var shape = (EsShape)c.shape;
-                var dir = WorldFrame.DirFromWorld(c.dir); dir.y = 0f; if (dir.sqrMagnitude < 1e-6f) dir = Vector3.forward; dir.Normalize();
-                var at = WorldFrame.FromWorld(new Vector3(c.origin.x, 0.02f, c.origin.z));
-                bool jump = shape == EsShape.JumpRing, duck = shape == EsShape.DuckArc;
-                var col = jump ? new Color(1f, 0.55f, 0.15f) : duck ? new Color(0.3f, 0.65f, 1f) : new Color(1f, 0.15f, 0.1f);
-                float pr = Mathf.Clamp01((now - c.warnStart) / Mathf.Max(0.1f, c.hit - c.warnStart));
-                if (!v.ground)
+                if (!cueViews.TryGetValue(c.id, out var v))
                 {
-                    if (shape == EsShape.Fan || shape == EsShape.DuckArc) { v.ground = Prim(PrimitiveType.Quad, col, true); v.ground.GetComponent<MeshFilter>().sharedMesh = FanMesh(c.angle * 0.5f); }
-                    else if (shape == EsShape.Circle || shape == EsShape.JumpRing) v.ground = Prim(PrimitiveType.Cylinder, col, true);
-                    else v.ground = Prim(PrimitiveType.Cube, col, true);
+                    v = new CueView(); cueViews[c.id] = v;
+                    if (now < c.hit) v.handle = EnemySkillFx.Telegraph(c.skill, WorldFrame.FromWorld(c.origin), WorldFrame.DirFromWorld(c.dir), c.hit - now, c.size);
                 }
-                var g = v.ground;
-                bool launched = c.speed > 0f && now >= c.hit;
-                g.SetActive(!launched || now < c.contact);
-                if (shape == EsShape.Fan || shape == EsShape.DuckArc)
+                var dirW = c.dir; dirW.y = 0f; if (dirW.sqrMagnitude < 1e-6f) dirW = Vector3.forward; dirW.Normalize();
+                if (!v.cast && now >= c.hit)
                 {
-                    g.transform.SetPositionAndRotation(at, Quaternion.LookRotation(dir, Vector3.up));
-                    g.transform.localScale = new Vector3(c.size, 1f, c.size);
-                    if (duck) g.transform.position += Vector3.up * 1.1f;   // 蹲：胸口高度的藍弧
+                    v.cast = true; v.handle = 0;   // 預警到期自己收掉
+                    var owner = battle.MinionById(c.owner);
+                    var from = owner != null ? WorldFrame.FromWorld(owner.Chest) : WorldFrame.FromWorld(c.origin + Vector3.up);
+                    if (c.speed > 0f) v.shot = EnemyShotView.Create(c.skill);
+                    else
+                    {
+                        var shape = (EsShape)c.shape;
+                        var to = shape == EsShape.Circle || shape == EsShape.JumpRing ? c.origin : c.origin + dirW * c.size;
+                        EnemySkillFx.Cast(c.skill, shape == EsShape.Circle ? WorldFrame.FromWorld(c.origin) : from, WorldFrame.FromWorld(to), c.size);
+                    }
                 }
-                else if (shape == EsShape.Circle) { g.transform.position = at; g.transform.localScale = new Vector3(c.size * 2f, 0.01f, c.size * 2f); }
-                else if (shape == EsShape.JumpRing)
+                if (v.shot)
                 {
-                    // 預警中：整圈淡淡的範圍；出手後：地環從中心往外擴（到腳下時跳）
-                    float r = now < c.hit ? c.size : c.size * Mathf.Clamp01((now - c.hit) / EnemySkills.RingTime);
-                    g.transform.position = at; g.transform.localScale = new Vector3(Mathf.Max(0.05f, r) * 2f, 0.01f, Mathf.Max(0.05f, r) * 2f);
-                }
-                else
-                {
-                    g.transform.SetPositionAndRotation(at + dir * c.size * 0.5f, Quaternion.LookRotation(dir, Vector3.up));
-                    g.transform.localScale = new Vector3(c.width, 0.01f, c.size);
-                }
-                var mat = g.GetComponent<Renderer>().material; col.a = (0.18f + 0.4f * pr) * (0.7f + 0.3f * Mathf.Sin(Time.time * (6f + 10f * pr))); mat.color = col;
-                // 投射物：發射後沿線飛
-                if (launched)
-                {
-                    if (!v.shot) { v.shot = Prim(PrimitiveType.Sphere, new Color(1f, 0.85f, 0.6f)); v.shot.transform.localScale = Vector3.one * 0.14f; }
-                    float d = Mathf.Min(c.size, (now - c.hit) * c.speed);
-                    v.shot.transform.position = WorldFrame.FromWorld(c.origin + Vector3.up * 1.2f + c.dir.normalized * d);
+                    float d = (now - c.hit) * c.speed;
+                    if (d > c.size + 0.5f) { Destroy(v.shot.gameObject); v.shot = null; }
+                    else v.shot.transform.SetPositionAndRotation(WorldFrame.FromWorld(c.origin + Vector3.up * 1.2f + dirW * d), Quaternion.LookRotation(WorldFrame.DirFromWorld(dirW)));
                 }
                 // 給被盯上的人：提示＋震動（一次）
                 if (!v.warned && CueMine(c))
                 {
                     v.warned = true;
                     if (c.back) { Haptics.Play(Haptics.Kind.Heavy); Sfx.Play("warn", 1f, 0.7f); }
-                    else if (jump || duck) Sfx.Play("aim_warn", 0.8f);
+                    else if (c.shape == (int)EsShape.JumpRing || c.shape == (int)EsShape.DuckArc) Sfx.Play("aim_warn", 0.8f);
                 }
             }
             List<int> gone = null;
-            foreach (var kv in cueViews) if (!keep.Contains(kv.Key)) { (gone ??= new List<int>()).Add(kv.Key); if (kv.Value.ground) Destroy(kv.Value.ground); if (kv.Value.shot) Destroy(kv.Value.shot); }
+            foreach (var kv in cueViews)
+                if (!keep.Contains(kv.Key))
+                {
+                    (gone ??= new List<int>()).Add(kv.Key);
+                    if (!kv.Value.cast && kv.Value.handle != 0) EnemySkillFx.Cancel(kv.Value.handle);   // 讀條被打斷、施法者倒下
+                    if (kv.Value.shot) Destroy(kv.Value.shot.gameObject);
+                }
             if (gone != null) foreach (var id in gone) cueViews.Remove(id);
         }
 
-        void ClearEnemyCueViews() { foreach (var v in cueViews.Values) { if (v.ground) Destroy(v.ground); if (v.shot) Destroy(v.shot); } cueViews.Clear(); }
+        void ClearEnemyCueViews() { foreach (var v in cueViews.Values) { if (!v.cast && v.handle != 0) EnemySkillFx.Cancel(v.handle); if (v.shot) Destroy(v.shot.gameObject); } cueViews.Clear(); }
 
         /// <summary>畫面中央：盯上我的招式要我做什麼（後方突襲、跳、蹲）</summary>
         void DrawEnemySkillHud()

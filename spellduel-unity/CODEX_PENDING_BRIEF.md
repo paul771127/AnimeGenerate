@@ -593,3 +593,9 @@ EnemySupportFx.cs完成Heal綠色拋物線光絲、Shield泡泡與ShieldBreak碎
 ### 第 11、15、16 項：第二輪最終驗證（2026-10-28）
 
 程式266054e：獨立原生作業40645892936成功；雙平台作業40645892948的Android APK、Unity iOS匯出及未簽署IPA三個必要job全部成功。原生圖已以db01195推送，Docs/pending_preview/enemies2/build_validation.json保存提交、job與實測證據；後續文件提交的Assets與驗證來源相同。完整交付包含23種程序模型與動作、VariantRig、EnemySupportFx、45招的預警／出手類型與七種投射物；每隻1088～4712三角。已按使用者定案同步提案／文件索引中的鼓手攻速描述，不改戰鬥資料。原有TestFlight流程在記錄時仍在執行，不列作完成；手機AR幀時未量測，共用全站Snapshot的空賊船長頭像ID錯誤另列於README。Claude可照README接入模型與事件，本輪沒有改Combat、SoloBattle或網路。
+
+### Claude 接線紀錄：23 種敵人的 VariantRig 與特效（2026-10-28）
+
+- `SoloBattle.VariantArt.cs`（取代借用玩家模型的 `SoloBattle.Humans.cs`）：121～124、141～144、151～165 改用 `VariantRig`；Windup 傳招式 id（房主用讀條中的招、隊友端從預警找、補師輔助用原本讀條的 id），提前結束＝`ChannelBroken`，否則 `Strike`；`SetFleeing`、`SetSneak`（刺客繞背中、離玩家 2.2m 以上）、`SetDead`、`PlayHit`、`MoveSpeed`。
+- `EnemySkillFx.Telegraph／Cancel／Cast`、`EnemyShotView` 取代暫時的地面標示；讀條被打斷或施法者倒下會用同一個 handle 取消。
+- `EnemySupportFx`：房主的 `esfx` 事件（治療、護盾、加速、戰旗、戰旗光環）＋護盾被打破時 `ShieldBreak`、召喚時 `Summon`；合作時用 `esf` 訊息送給隊友。
