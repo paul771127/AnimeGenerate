@@ -1,0 +1,90 @@
+{
+  "sourceCommit": "f8b7e96ed08bcc889d6e26246ca5bacea6033d84",
+  "requiredPlatformJobs": [
+    "android",
+    "ios-export",
+    "ios-ipa"
+  ],
+  "requiredPlatformJobsPassed": true,
+  "fullSnapshot": {
+    "id": 40660751770,
+    "head": "f8b7e96ed08bcc889d6e26246ca5bacea6033d84",
+    "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40660751770",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "snapshots",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40660751770/job/122722886114"
+      }
+    ]
+  },
+  "playerPoses": {
+    "id": 40660751663,
+    "head": "f8b7e96ed08bcc889d6e26246ca5bacea6033d84",
+    "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40660751663",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "player-poses",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40660751663/job/122723284117"
+      }
+    ]
+  },
+  "platforms": {
+    "id": 40660751701,
+    "head": "f8b7e96ed08bcc889d6e26246ca5bacea6033d84",
+    "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40660751701",
+    "status": "in_progress",
+    "conclusion": null,
+    "jobs": [
+      {
+        "name": "check-license",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40660751701/job/122723275203"
+      },
+      {
+        "name": "ios-export",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40660751701/job/122723324850"
+      },
+      {
+        "name": "android",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40660751701/job/122723324986"
+      },
+      {
+        "name": "ios-ipa",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40660751701/job/122729280858"
+      },
+      {
+        "name": "publish-apk",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40660751701/job/122730464501"
+      },
+      {
+        "name": "ios-testflight",
+        "conclusion": null,
+        "status": "in_progress",
+        "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/40660751701/job/122733018002"
+      }
+    ]
+  },
+  "note": "All required jobs passed. Optional TestFlight distribution is not counted as completed. Final documentation commit does not change tested Assets.",
+  "localChecks": {
+    "story2d": "45 characters / 193 sprites / 18 backgrounds; pending 0",
+    "dungeons": "9 dungeons / 0 errors",
+    "souls": "19 unique deterministic icons; 149 legacy images unchanged; 8/32/48/64/128 px"
+  }
+}
