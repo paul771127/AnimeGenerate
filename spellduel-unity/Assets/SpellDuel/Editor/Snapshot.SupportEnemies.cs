@@ -11,6 +11,20 @@ namespace SpellDuel.EditorTools
   static readonly int[] SupportIds={121,122,123,124,141,142,143,144,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165};
   [Serializable] class EnemyAuditEntry{public int id,triangles,renderers;}
   [Serializable] class EnemyAuditReport{public List<EnemyAuditEntry> entries=new List<EnemyAuditEntry>();public string checks="23 distinct rigs, finite geometry, <=6000 triangles, front/side/channel renders";}
+  static void SupportEffectAudit(Camera cam)
+  {
+   var target=VariantRig.Create(151);EnemySupportFx.Shield(target.transform,2);EnemySupportFx.Shield(target.transform,3);
+   if(UnityEngine.Object.FindObjectsOfType<EnemySupportView>().Length!=1)throw new Exception("Duplicate shield on refresh");
+   EnemySupportFx.Haste(target.transform,3);EnemySupportFx.RallyAura(target.transform,3);
+   foreach(var fx in UnityEngine.Object.FindObjectsOfType<EnemySupportView>())fx.Tick(.4f);
+   CarpetShot(cam,target.gameObject,"enemy_support_shield_haste",new Vector3(2,1.8f,3),new Vector3(0,.8f,0),800,800);
+   EnemySupportFx.ShieldBreak(target.transform);
+   EnemySupportFx.Heal(new Vector3(-.8f,1,0),new Vector3(.5f,.8f,0));EnemySupportFx.Rally(Vector3.zero,1.1f);EnemySupportFx.Summon(new Vector3(.7f,0,0));
+   foreach(var fx in UnityEngine.Object.FindObjectsOfType<EnemySupportView>())fx.Tick(.15f);
+   CarpetShot(cam,target.gameObject,"enemy_support_heal_rally_summon",new Vector3(2,2.2f,3),new Vector3(0,.6f,0),800,800);
+   target.gameObject.SetActive(false);foreach(var fx in UnityEngine.Object.FindObjectsOfType<EnemySupportView>())fx.Tick(5);
+   if(UnityEngine.Object.FindObjectsOfType<EnemySupportView>().Length!=0)throw new Exception("Support effect lifecycle leak");UnityEngine.Object.DestroyImmediate(target.gameObject);
+  }
   static void SupportEnemyShots(Camera cam)
   {
    var report=new EnemyAuditReport();var fronts=new List<string>();
@@ -38,6 +52,7 @@ namespace SpellDuel.EditorTools
     UnityEngine.Object.DestroyImmediate(rig.gameObject);
    }
    ContactSheet(fronts,"support_enemies_all",6);
+   SupportEffectAudit(cam);
    File.WriteAllText("snapshots/support_enemies_audit.json",JsonUtility.ToJson(report,true));
    Debug.Log("[SpellDuel] Support enemy model audit passed");
   }

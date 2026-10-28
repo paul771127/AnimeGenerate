@@ -571,3 +571,7 @@ VariantGeometry.cs、VariantRig.Model.cs、VariantRig.Animation.cs新增23種程
 ### 第 11、15、16 項 A：VariantRig公開介面（2026-10-28）
 
 VariantRig.cs提供任務單全部入口：Create／MoveSpeed／Windup／Strike／PlayHit／SetDead／SetChannel／ChannelBroken／SetFleeing／SetSneak。新增Sample(float)只供可重現動畫取樣，Update會自動呼叫；接線方勿再逐幀重複Sample。支援45招id與basic後備、敵方紅環、讀條符印、中斷碎光、死亡／復活狀態清理；模型面向+Z、原點為腳底，不改邏輯座標。Snapshot補狀態切換、根座標不變、重複潛行無材質配置與動畫無網格配置檢查。接線由Claude替換舊借用模型；本項不改SoloBattle或Combat。雙平台與原生截圖仍由CI驗證中。
+
+### 第 11、15、16 項 A：EnemySupportFx（2026-10-28）
+
+EnemySupportFx.cs完成Heal綠色拋物線光絲、Shield泡泡與ShieldBreak碎片、Haste紅色鼓點風紋、Rally插旗脈衝、RallyAura金色向上紋、Summon雙層砂印；全部以SpellFx程序線材質和快取程序網格生成。入口原名／參數不變，座標為場景座標。Shield／Haste／RallyAura同目標重施只刷新、不疊加；秒數到期、目標停用或銷毀都清除，破盾會移除追蹤表。新增EnemySupportView.Tick供預覽測試，遊戲自動Update。Snapshot測重施數量、破盾與停用後清理並出圖。沒有讀取HP、盾量、速度數值或網路訊息，仍由Claude呼叫接線；原生與雙平台結果待最後CI彙整。
