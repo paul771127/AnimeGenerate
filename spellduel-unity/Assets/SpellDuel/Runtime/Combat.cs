@@ -2603,7 +2603,7 @@ namespace SpellDuel
                     if (s.id == "sanction") { if (remoteEnemy) OnTaunt?.Invoke(s); else Taunt(f, s.buffAmount); }
                     break;
                 }
-                case SkillType.Projectile when s.areaRadius > 0f:
+                case SkillType.Projectile when s.areaRadius > 0f && !s.groundZone:   // 審判、天罰（groundZone）不是這種：以前被當成 Boss 的範圍重擊，光柱根本沒出來
                 {
                     // 範圍重擊（Boss 地裂／踐踏；樹根爆發打在目標位置）：放招當下站在半徑內的玩家都受傷；側跨的無敵時間內閃得掉
                     var ac = s.atTarget ? new Vector3(f.aimPoint.x, 0f, f.aimPoint.z) : f.Feet;
@@ -2639,6 +2639,14 @@ namespace SpellDuel
                     // 鎖定時落在「準星方向最近的敵人」腳下（之前固定打 Boss：故事關只有小怪、Boss 還沒出現時，光柱落在看不到的地方，看起來像什麼都沒發生）
                     // 使用者回報「審判放完沒東西出來」：Boss 不在畫面上（locked=false）時以前完全不找敵人，光柱落在準星指的地板（常常在場地外、看不到）。
                     // 現在：先找準星方向的敵人；沒有就找射程內最近的敵人；再沒有才落在準星指的地面
+                    if (s.selfCenter)
+                    {
+                        // 使用者要求：審判改成以自己為中心（以前落在準星指的地方，常常看不到）——光柱落在自己腳下
+                        var me = f.Feet; me.y = 0f;
+                        Spawn(f, s, me + Vector3.up * 0.2f, Vector3.down, s.damage, s.effect, s.effectDps, s.effectDur, false);
+                        Emit("cast", f.head, s.color, null);
+                        break;
+                    }
                     var aimed = AimedFoe(f, aimDir, s.rangeMax) ?? NearestFoeInRange(f, s.rangeMax);
                     var opp = Opponent(f);
                     var target = aimed != null ? aimed.Feet : opp != null ? opp.Feet : f.Feet + Fighter.Flat(f.forward) * 3f;
@@ -3427,8 +3435,10 @@ namespace SpellDuel
                     {
                         p.alive = false;
                         AddBurn(p, p.pos);
+                        if (p.skill.selfCenter && !p.remote) SelfCenterBurst(p);   // 審判：周圍的敵人立刻受傷
                         break;
                     }
+                    if (p.skill.selfCenter) continue;   // 審判：落到自己腳下前不撞人（不會被旁邊的小怪擋掉、偏離中心）
                     target.BodySegment(out var a, out var b);
                     if (!p.remote && HitMinions(p)) break;   // 先擋在前面的小怪會吃到這一發
                     if (!target.Alive)
@@ -3521,6 +3531,21 @@ namespace SpellDuel
             if (remoteEnemy && (target.isMinion || IsHostileRoomProp(target))) { EmitHit(s, target.Chest); OnMinionHit?.Invoke(target.minionId, dmg, s); OnDealt(f, dmg, target, s); }
             else if (remoteEnemy && target == enemy) { EmitHit(s, target.Chest); OnRemoteHit?.Invoke(s, dmg, target.Chest, 0); OnDealt(f, dmg, target, s); }
             else Hit(target, new Projectile { owner = f, skill = s, pos = target.Chest, dir = Fighter.Flat(target.head - f.head), damage = dmg, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur });
+        }
+
+        /// <summary>以自己為中心的招式（審判）落地：範圍內的敵人各吃一次傷害</summary>
+        void SelfCenterBurst(Projectile p)
+        {
+            var s = p.skill; var f = p.owner; if (f == null) return;
+            var c = new Vector3(p.pos.x, 0f, p.pos.z);
+            foreach (var t in new List<Fighter>(FoesOf(f)))
+            {
+                if (t == null || !t.Alive || FlatDistance(t.Feet, c) > s.areaRadius + t.bodyRadius) continue;
+                int dmg = p.damage;
+                if (remoteEnemy && (t.isMinion || IsHostileRoomProp(t))) { EmitHit(s, t.Chest); OnMinionHit?.Invoke(t.minionId, dmg, s); OnDealt(f, dmg, t, s); }
+                else if (remoteEnemy && t == enemy) { EmitHit(s, t.Chest); OnRemoteHit?.Invoke(s, dmg, t.Chest, 0); OnDealt(f, dmg, t, s); }
+                else Hit(t, new Projectile { owner = f, skill = s, pos = t.Chest, dir = Fighter.Flat(t.head - f.head), damage = dmg, crit = p.crit, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur });
+            }
         }
 
         void AddBurn(Projectile p, Vector3 at)

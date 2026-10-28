@@ -89,7 +89,8 @@ namespace SpellDuel
                     if (s.hits > 1) Line($"連續 {s.hits} 段，每段間隔 {s.hitGap:0.##} 秒");
                     break;
                 case SkillType.Projectile when s.fromAbove:
-                    Line($"從目標正上方落下（射程 {s.rangeMax:0.#}m）；沒鎖定時落在準星指的地面");
+                    if (s.selfCenter) Line($"以自己為中心：光柱落在自己腳下，半徑 {s.areaRadius:0.#}m 內的敵人立刻受傷");
+                    else Line($"從目標正上方落下（射程 {s.rangeMax:0.#}m）；沒鎖定時落在準星指的地面");
                     break;
                 case SkillType.Projectile when s.releaseNear:
                     Line($"出手距離 {s.rangeMax:0.#}m 以內（伏擊：靠近就自動命中）");

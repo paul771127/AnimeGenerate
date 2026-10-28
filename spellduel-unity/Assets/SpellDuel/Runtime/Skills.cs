@@ -36,6 +36,7 @@ namespace SpellDuel
         public bool team;
         /// <summary>落地（或命中）後留下地面範圍：半徑 areaRadius、持續 buffDur 秒、每秒 effectDps 傷害（審判、天罰）</summary>
         public bool groundZone;
+        public bool selfCenter;   // 以自己為中心施放（審判）：光柱落在自己腳下，周圍的敵人立刻受傷，留下審判之地
         public bool releaseNear;        // 距離不在射程內時不能出手（保留蓄力，靠近再放）
         public bool duckable;           // 胸口高度的橫向衝擊波（Boss 的橫掃、藤鞭）：蹲下就躲得過
         public bool jumpable;           // 貼地的攻擊（閃避訓練的低火球）：跳起來就躲得過
@@ -224,7 +225,7 @@ namespace SpellDuel
             P(new SkillDef { id = "ironwall", cls = "swordsman", name = "鐵壁", type = SkillType.Self, self = SelfKind.Shield, color = C("#94a3b8"), cost = 30, charge = 0.6f, cooldown = 12f, buffDur = 8f, buffAmount = 35, desc = "8 秒護盾，吸收 35 傷害" });
             // ---------------------------------------------------------- 牧師：回復、淨化、守護、減冷卻；也有聖光攻擊
             P(new SkillDef { id = "holy", cls = "priest", name = "聖光彈", type = SkillType.Projectile, color = C("#fff3b0"), cost = 15, damage = 18, charge = 1.0f, cooldown = 1.0f, speed = 9f, radius = 0.12f, rangeMax = 9f, desc = "聖光球，射程 9m" });
-            P(new SkillDef { fromAbove = true, dropHeight = 4f, groundZone = true, areaRadius = 1.5f, buffDur = 5f, effectDps = 8f, id = "judgement", cls = "priest", name = "審判", type = SkillType.Projectile, color = C("#fbbf24"), cost = 30, damage = 12, charge = 2.0f, cooldown = 6f, speed = 9f, radius = 0.45f, rangeMax = 10f, desc = "光柱從準星對準的地方落下，在地面留下半徑 1.5m 的審判之地 5 秒：經過的敵人每秒受到 8 傷害" });
+            P(new SkillDef { fromAbove = true, selfCenter = true, dropHeight = 4f, groundZone = true, areaRadius = 1.5f, buffDur = 5f, effectDps = 8f, id = "judgement", cls = "priest", name = "審判", type = SkillType.Projectile, color = C("#fbbf24"), cost = 30, damage = 12, charge = 2.0f, cooldown = 6f, speed = 9f, radius = 0.45f, rangeMax = 10f, desc = "以自己為中心降下光柱：周圍 1.5m 的敵人立刻受到傷害，並在腳下留下半徑 1.5m 的審判之地 5 秒（經過的敵人每秒受到 8 傷害）" });
             P(new SkillDef { id = "prayheal", cls = "priest", name = "治療術", type = SkillType.Self, self = SelfKind.Heal, color = C("#86efac"), cost = 30, heal = 35, charge = 1.5f, cooldown = 6f, desc = "自己回復 35 HP，同時放出一顆治療光球：飛向準星對準的隊友（沒有對準就飛向 10m 內傷最重的隊友、友軍），回復 35 HP" });
             P(new SkillDef { id = "cleanse", cls = "priest", name = "淨化", type = SkillType.Self, self = SelfKind.Cleanse, color = C("#a5f3fc"), cost = 15, heal = 8, charge = 0.6f, cooldown = 6f, desc = "自己與隊友：解除中毒、定身、致盲，並回復 8 HP" });
             P(new SkillDef { id = "guard", cls = "priest", name = "守護", type = SkillType.Self, self = SelfKind.Armor, color = C("#fcd34d"), cost = 25, charge = 1.0f, cooldown = 10f, buffDur = 6f, buffReduce = 0.4f, desc = "自己與隊友 6 秒內受到的傷害 -40%" });
