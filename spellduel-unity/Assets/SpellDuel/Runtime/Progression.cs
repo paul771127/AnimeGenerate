@@ -267,6 +267,7 @@ namespace SpellDuel
                     FPas("sw_acc", "看破", PassiveKind.Accuracy, 0.01f, 5, 0, 4, "sw_bdmg"),
                     FPas("sw_leech", "劍氣護體", PassiveKind.BasicShield, 0.04f, 5, 1, 2, "sw_bspd"),   // 使用者要求：劍士系列不要吸血 → 普攻傷害轉護盾（每級 4%，滿級 20%；一揮只算一次）。id 沿用，點過的點數不變
                     FPas("sw_regen", "自然回復", PassiveKind.NaturalRegen, 0.008f, 5, 1, 3, "sw_leech"),
+                    FPas("sw_armor", "鋼筋鐵骨", PassiveKind.Armor, 0.02f, 5, 1, 4, "sw_regen"),   // 使用者要求：劍士系列少了吸血 → 補防禦（物理減傷 2%／級）
                     // 劍氣
                     FMod("sw_slash", "斬擊強化", "slash", ModField.Damage, 0.1f, 5, 3, 1, "sw_root"),
                     FPas("sw_orb", "斬開法球", PassiveKind.OrbSlice, 1f, 1, 4, 2, "sw_slash"),   // 點了才會：斬擊斬開飛來的法球
@@ -279,6 +280,7 @@ namespace SpellDuel
                     FMod("sw_block", "格擋精通", "block", ModField.BuffReduce, 0.04f, 5, 5, 1, "sw_root"),
                     FPas("sw_rip", "反擊之刃", PassiveKind.Riposte, 0.3f, 5, 5, 2, "sw_block"),
                     FLearn("sw_counter", "counter", 5, 3, "sw_rip"),
+                    FPas("sw_hp", "鐵血之軀", PassiveKind.Hp, 15f, 5, 5, 4, "sw_counter"),   // 防禦：HP +15／級
                     FLearn("sw_iron", "ironwall", 6, 2, "sw_block"),
                     FMod("sw_iron2", "鐵壁強化", "ironwall", ModField.BuffAmount, 10f, 5, 6, 3, "sw_iron"),
                     FStat("sw_vit", "體魄訓練", Stat.Vit, 5, 6, 4, "sw_iron2"),
@@ -390,6 +392,8 @@ namespace SpellDuel
                     FPas("sx_armor", "劍骨", PassiveKind.Armor, 0.03f, 5, 4, 2, "sx_jg"),
                     FPas("sx_hp", "養氣", PassiveKind.Hp, 10f, 5, 3, 3, "sx_jg2"),
                     FPas("sx_last", "劍心不滅", PassiveKind.LastStand, 0.05f, 5, 4, 3, "sx_armor"),
+                    FMod("sx_jgcd", "劍罡迴轉", "jiangang", ModField.Cooldown, 0.08f, 5, 3, 4, "sx_hp"),   // 使用者要求：補防禦——劍罡護體冷卻 −8%／級
+                    FPas("sx_breath", "吐納", PassiveKind.NaturalRegen, 0.008f, 5, 4, 4, "sx_last"),       // 防禦：自然回復
                     // ✨ 輔助
                     FLearn("sx_jz", "jianzhen", 5, 1, "sx_root"),
                     FMod("sx_jz2", "劍陣加厚", "jianzhen", ModField.BuffAmount, 10f, 5, 5, 2, "sx_jz"),

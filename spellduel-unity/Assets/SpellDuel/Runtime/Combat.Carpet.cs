@@ -239,7 +239,7 @@ namespace SpellDuel
                 carpetPhase = 2; skyRound = 0; skyNextBarrage = now + 2.5f;
                 Emit("evsky", enemy.Chest, new Color(1f, 0.55f, 0.2f), "逐風號：全砲門打開！彈幕來了——橘色⬆跳、藍色⬇蹲！");
             }
-            // 俯衝窗口：每 24 秒壓低到飛毯前緣停 3.5 秒（近戰的輸出時間）；空中還有障礙、彈幕就等它們過去
+            // 俯衝窗口：遠處 9 秒 → 壓低到飛毯前緣停 8 秒（近戰的輸出時間，約一半時間）；空中還有障礙、彈幕就等它們過去
             float t = now - skySwoopStart;
             bool swooping = t >= 0f && t < Carpet.SwoopLength;
             bool swoopDue = !swooping && now >= skyNextSwoop;   // 該俯衝了：不再出新招，等空中的障礙、彈幕過去
@@ -251,7 +251,7 @@ namespace SpellDuel
             }
             carpetSwoop = swooping ? Carpet.SwoopAt(t) : 0f;
             PlaceAirship();
-            if (swoopDue && !swooping) return;
+            bool hold = swoopDue && !swooping;   // 等著俯衝：不出新招，但已經排好的彈幕子波照樣打完（以前這裡直接 return，第二階段的彈幕排程卡住、永遠等不到「空中清空」→ 再也不俯衝）
             if (swooping)
             {
                 // 窗口結束後再開火（延後，不補射）
@@ -263,6 +263,7 @@ namespace SpellDuel
             int cap = Carpet.BossMaxFoes + PlayersN - 1;
             if (carpetPhase == 1)
             {
+                if (hold) return;
                 if (now >= skyNextCue)
                 {
                     int[] order = { Carpet.Low, Carpet.High, Carpet.Half, Carpet.Gap };
@@ -278,7 +279,7 @@ namespace SpellDuel
                 return;
             }
             // 第二階段：每 6 秒一組彈幕（0、1.8、3.6 秒三個子波，每個子波只要一種動作），之後最多一名空賊跳下來
-            if (skySubQueue.Count == 0 && now >= skyNextBarrage)
+            if (!hold && skySubQueue.Count == 0 && now >= skyNextBarrage)
             {
                 int first = rng.Next(2);
                 for (int i = 0; i < 3; i++) skySubQueue.Add((now + i * Carpet.BarrageSub, (first + i) % 2 == 0 ? Carpet.ShotLow : Carpet.ShotHigh));
@@ -294,7 +295,7 @@ namespace SpellDuel
                 skySubQueue.RemoveAt(i--);
                 if (skySubQueue.Count == 0) skyRound++;   // 一組打完：下一組更多、更快
             }
-            if (skyGroupPirateAt > 0f && now >= skyGroupPirateAt)
+            if (!hold && skyGroupPirateAt > 0f && now >= skyGroupPirateAt)
             {
                 skyGroupPirateAt = -1f;
                 if (AliveMinions() < cap) QueueBoard(rng.Next(2) == 0 ? 131 : 133, now, true, rng.Next(2) == 0 ? -1 : 1);

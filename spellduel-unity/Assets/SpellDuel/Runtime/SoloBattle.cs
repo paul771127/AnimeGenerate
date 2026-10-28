@@ -2463,7 +2463,7 @@ namespace SpellDuel
             if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
             {
                 if (ai != null) ai.Update(dt);
-                else if (bossAi != null && !PotLessonFreeze && !battle.Gallery && !battle.CarpetBoss) bossAi.Update(dt);   // 天穹飛毯的飛艇：Combat.Carpet.cs 自己控制   // 喝藥水教學中 Boss 也暫停
+                else if (bossAi != null) { if (!PotLessonFreeze && !battle.Gallery && !battle.CarpetBoss) bossAi.Update(dt); }   // 使用者回報「空艇打到還會自己血回滿」：以前飛艇／千機迴廊會掉到下面木頭人的分支（血量過半就補滿）   // 天穹飛毯的飛艇：Combat.Carpet.cs 自己控制   // 喝藥水教學中 Boss 也暫停
                 else if (worldAi != null) worldAi.Update(dt);   // 世界 Boss（SoloBattle.WorldBoss.cs）
                 else if (!NetMode) en_FaceMe();
                 battle.Update(dt);

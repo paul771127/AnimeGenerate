@@ -52,7 +52,7 @@ namespace SpellDuel
         public const float FirstObstacle = 2.5f, FirstBoard = 4f, NextBoardGap = 5f;
 
         // ---------------------------------------------------------------- 飛艇
-        public const float BossEvery = 5f, SwoopEvery = 24f, SwoopIn = 1.5f, SwoopHold = 3.5f, SwoopOut = 1.5f, SwoopMax = 0.6f;
+        public const float BossEvery = 5f, SwoopEvery = 9f, SwoopIn = 1.5f, SwoopHold = 8f, SwoopOut = 1.5f, SwoopMax = 0.6f;   // 使用者要求：飛艇約一半時間貼在飛毯旁（近戰要打得到）：每輪遠處 9 秒 → 壓低 1.5 秒＋貼近 8 秒＋拉起 1.5 秒
         public const float PirateEvery = 18f, BarrageEvery = 6f, BarrageSub = 1.8f, ShotTravel = 2f;
         public const float ShipAhead = 9.1f, ShipUp = 2.7f;     // 飛艇的根：飛毯前緣往前 9.1m、上 2.7m（船首朝玩家）
         public static int BarrageCount(int round) => Mathf.Min(12, 4 + 2 * Mathf.Max(0, round));   // 定案：4 枚起、每輪 +2、最多 12

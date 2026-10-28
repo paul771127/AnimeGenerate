@@ -1113,7 +1113,8 @@ namespace SpellDuel
                 {
                     int row = slots[i].role == MinionRole.Front ? 0 : slots[i].role == MinionRole.Back ? 1 : 2;
                     int k = rowN[row]++;
-                    float lat = (k % 2 == 0 ? 1f : -1f) * ((k + 1) / 2) * FormationGap + (row == 1 ? FormationGap * 0.5f : 0f);   // 0、+1、−1、+2…；後排錯開半格
+                    float lat = row == 2 ? (k % 2 == 0 ? -1f : 1f) * (1.5f + k / 2) * FormationGap   // 特殊怪：在兩翼（不擋在前排正後面）
+                        : (k % 2 == 0 ? 1f : -1f) * ((k + 1) / 2) * FormationGap + (row == 1 ? FormationGap * 0.5f : 0f);   // 0、+1、−1、+2…；後排錯開半格
                     float depth = row == 0 ? 0f : row == 1 ? FormationDepth : FormationDepth * 0.5f;
                     pos[i] = anchor + right * lat + outward * depth * depthK;
                     grp[i] = mg;
