@@ -19,6 +19,11 @@ namespace SpellDuel
             var body = CharacterRig.Create(MonsterVariants.HumanLook(v.human), rig.transform);
             body.transform.localPosition = Vector3.zero; body.transform.localRotation = Quaternion.identity;
             body.InCombat = true;
+            // 是敵人：腳下一圈紅環（和隊友、寵物的綠環區分）；Codex 的專屬造型做好後一樣保留
+            var ring = Prim(PrimitiveType.Cylinder, new Color(1f, 0.15f, 0.12f, 0.55f), true);
+            ring.name = "Enemy human ring";
+            ring.transform.SetParent(rig.transform, false);
+            ring.transform.localPosition = new Vector3(0f, 0.02f, 0f); ring.transform.localScale = new Vector3(0.9f, 0.005f, 0.9f);
             humanBodies[m] = body;
             return body;
         }
