@@ -17,7 +17,8 @@ namespace SpellDuel
         public int theme = -1;   // 補師：哪一章（3 角鬥場、4 黃土山道）
         public int sky = -1;
         public int human;        // 人形敵人（稀有、特定章節＋天候）：1 劍士（繞側）、2 弓手（拉開距離）、3 術士（躲進怪群）、4 刺客（繞背）、5 神官（治療同伴）；0＝不是
-        public string band;      // 人形敵人的隊伍名（同一隊一起出現）
+        public string band;      // 人形敵人的所屬（外觀的隊伍配色；出現是各自獨立的）
+        public int dayNight;     // 人形敵人出現的時段：0 不限、1 白天、2 夜晚（夜晚只有副本有）
         public int support;      // 輔助型（只在那一章、那種天候出現）：1 群體治療、2 護盾、3 加速、4 強力增益；0＝不是     // 天穹飛毯的敵人：SkyEnemyRig／SkyVehicleView 的種類（0 風箏盜賊～4 空賊隊長）；−1＝不是
         public Battle.Weather weather;
         public float hp = 1f, dmg = 1f, speed = 1f;
@@ -52,21 +53,21 @@ namespace SpellDuel
             new VariantDef { id = 143, baseKind = 21, name = "鬥場戰鼓手", support = 3, theme = 3, weather = Battle.Weather.Rain, hp = 0.3f, tint = new Color(1f, 0.5f, 0.3f), desc = "雷雨中擂鼓的鬥奴：鼓聲讓同伴跑得更快、出手更快" },
             new VariantDef { id = 144, baseKind = 22, name = "砂王旗手", support = 4, theme = 4, weather = Battle.Weather.Wind, hp = 0.3f, tint = new Color(1f, 0.85f, 0.3f), desc = "順風時舉起砂王戰旗：周圍的同伴攻擊大增、受到的傷害大減" },
             // ---- 人形敵人（使用者要求：各章一隊，像玩家一樣有職業；移動快、會用戰術：沒血就跑開回血／躲進怪群、繞側、繞背；稀有，只在特定天候出現）
-            new VariantDef { id = 151, baseKind = 0,  name = "傭兵劍士",   human = 1, band = "赤爐傭兵團", theme = 0, weather = Battle.Weather.Wind, hp = 3f,   dmg = 1.3f, speed = 1.5f, tint = new Color(1f, 0.45f, 0.3f), desc = "繞到側面揮劍；沒血就跑到場邊喝藥水" },
-            new VariantDef { id = 152, baseKind = 1,  name = "傭兵弩手",   human = 2, band = "赤爐傭兵團", theme = 0, weather = Battle.Weather.Wind, hp = 4f,   dmg = 1.3f, speed = 1.5f, tint = new Color(1f, 0.6f, 0.3f), desc = "被靠近就後退橫移，保持距離射擊" },
-            new VariantDef { id = 153, baseKind = 9,  name = "爐火術士",   human = 3, band = "赤爐傭兵團", theme = 0, weather = Battle.Weather.Wind, hp = 3.3f, dmg = 1.3f, speed = 2f, tint = new Color(1f, 0.35f, 0.2f), desc = "躲在怪物群後面施法；沒血就躲進怪群" },
-            new VariantDef { id = 154, baseKind = 0,  name = "霧林斥候",   human = 4, band = "霧林遊俠",   theme = 1, weather = Battle.Weather.Fog,  hp = 3f,   dmg = 1.3f, speed = 1.3f, tint = new Color(0.45f, 0.85f, 0.5f), desc = "藏在霧裡繞到背後偷襲" },
-            new VariantDef { id = 155, baseKind = 1,  name = "林間弓手",   human = 2, band = "霧林遊俠",   theme = 1, weather = Battle.Weather.Fog,  hp = 4f,   dmg = 1.3f, speed = 1.5f, tint = new Color(0.55f, 0.9f, 0.4f), desc = "邊退邊射，被追就翻滾拉開" },
-            new VariantDef { id = 156, baseKind = 6,  name = "森林德魯伊", human = 5, band = "霧林遊俠",   theme = 1, weather = Battle.Weather.Fog,  hp = 3.3f, dmg = 1f,   speed = 2f, tint = new Color(0.4f, 1f, 0.6f), desc = "替隊友治療；被打就躲進怪群" },
-            new VariantDef { id = 157, baseKind = 0,  name = "黑潮刀客",   human = 1, band = "黑潮海盜",   theme = 2, weather = Battle.Weather.Rain, hp = 3f,   dmg = 1.3f, speed = 1.5f, tint = new Color(0.35f, 0.55f, 0.9f), desc = "雙彎刀從側面砍；沒血就退到船邊喝蘭姆" },
-            new VariantDef { id = 158, baseKind = 9,  name = "潮汐術士",   human = 3, band = "黑潮海盜",   theme = 2, weather = Battle.Weather.Rain, hp = 3.3f, dmg = 1.3f, speed = 2f, tint = new Color(0.3f, 0.8f, 1f), desc = "躲在怪群後面唸潮汐咒" },
-            new VariantDef { id = 159, baseKind = 0,  name = "甲板刺客",   human = 4, band = "黑潮海盜",   theme = 2, weather = Battle.Weather.Rain, hp = 3f,   dmg = 1.3f, speed = 1.3f, tint = new Color(0.25f, 0.35f, 0.6f), desc = "趁雨繞到背後捅刀" },
-            new VariantDef { id = 160, baseKind = 0,  name = "冠軍劍鬥士", human = 1, band = "冠軍鬥士隊", theme = 3, weather = Battle.Weather.Wind, hp = 3.5f, dmg = 1.4f, speed = 1.5f, tint = new Color(1f, 0.8f, 0.35f), desc = "從側面包抄的老練鬥士" },
-            new VariantDef { id = 161, baseKind = 1,  name = "標槍手",     human = 2, band = "冠軍鬥士隊", theme = 3, weather = Battle.Weather.Wind, hp = 4f,   dmg = 1.3f, speed = 1.5f, tint = new Color(0.9f, 0.7f, 0.4f), desc = "順風擲標槍，被靠近就後撤" },
-            new VariantDef { id = 162, baseKind = 6,  name = "鬥場神官",   human = 5, band = "冠軍鬥士隊", theme = 3, weather = Battle.Weather.Wind, hp = 3.3f, dmg = 1f,   speed = 2f, tint = new Color(1f, 0.95f, 0.6f), desc = "替冠軍們治療；被打就躲到怪群後面" },
-            new VariantDef { id = 163, baseKind = 0,  name = "沙匪刺客",   human = 4, band = "沙漠盜匪",   theme = 4, weather = Battle.Weather.Fog,  hp = 3f,   dmg = 1.4f, speed = 1.3f, tint = new Color(0.75f, 0.55f, 0.35f), desc = "藏在沙霧裡繞背突襲" },
-            new VariantDef { id = 164, baseKind = 9,  name = "砂咒術士",   human = 3, band = "沙漠盜匪",   theme = 4, weather = Battle.Weather.Fog,  hp = 3.3f, dmg = 1.3f, speed = 2f, tint = new Color(0.95f, 0.75f, 0.4f), desc = "躲在怪群後面放砂咒" },
-            new VariantDef { id = 165, baseKind = 1,  name = "沙漠獵手",   human = 2, band = "沙漠盜匪",   theme = 4, weather = Battle.Weather.Fog,  hp = 4f,   dmg = 1.3f, speed = 1.5f, tint = new Color(0.85f, 0.65f, 0.35f), desc = "保持距離射擊，被追就橫移" },
+            new VariantDef { id = 151, baseKind = 0,  name = "傭兵劍士",   human = 1, band = "赤爐傭兵團", theme = 0, weather = Battle.Weather.Wind, dayNight = 1, hp = 3f,   dmg = 1.3f, speed = 1.5f, tint = new Color(1f, 0.45f, 0.3f), desc = "繞到側面揮劍；沒血就跑到場邊喝藥水" },
+            new VariantDef { id = 152, baseKind = 1,  name = "傭兵弩手",   human = 2, band = "赤爐傭兵團", theme = 0, weather = Battle.Weather.Fog, dayNight = 0, hp = 4f,   dmg = 1.3f, speed = 1.5f, tint = new Color(1f, 0.6f, 0.3f), desc = "被靠近就後退橫移，保持距離射擊" },
+            new VariantDef { id = 153, baseKind = 9,  name = "爐火術士",   human = 3, band = "赤爐傭兵團", theme = 0, weather = Battle.Weather.None, dayNight = 2, hp = 3.3f, dmg = 1.3f, speed = 2f, tint = new Color(1f, 0.35f, 0.2f), desc = "躲在怪物群後面施法；沒血就躲進怪群" },
+            new VariantDef { id = 154, baseKind = 0,  name = "霧林斥候",   human = 4, band = "霧林遊俠",   theme = 1, weather = Battle.Weather.Fog, dayNight = 2,  hp = 3f,   dmg = 1.3f, speed = 1.3f, tint = new Color(0.45f, 0.85f, 0.5f), desc = "藏在霧裡繞到背後偷襲" },
+            new VariantDef { id = 155, baseKind = 1,  name = "林間弓手",   human = 2, band = "霧林遊俠",   theme = 1, weather = Battle.Weather.Wind, dayNight = 0,  hp = 4f,   dmg = 1.3f, speed = 1.5f, tint = new Color(0.55f, 0.9f, 0.4f), desc = "邊退邊射，被追就翻滾拉開" },
+            new VariantDef { id = 156, baseKind = 6,  name = "森林德魯伊", human = 5, band = "霧林遊俠",   theme = 1, weather = Battle.Weather.Rain, dayNight = 1,  hp = 3.3f, dmg = 1f,   speed = 2f, tint = new Color(0.4f, 1f, 0.6f), desc = "替隊友治療；被打就躲進怪群" },
+            new VariantDef { id = 157, baseKind = 0,  name = "黑潮刀客",   human = 1, band = "黑潮海盜",   theme = 2, weather = Battle.Weather.Rain, dayNight = 0, hp = 3f,   dmg = 1.3f, speed = 1.5f, tint = new Color(0.35f, 0.55f, 0.9f), desc = "雙彎刀從側面砍；沒血就退到船邊喝蘭姆" },
+            new VariantDef { id = 158, baseKind = 9,  name = "潮汐術士",   human = 3, band = "黑潮海盜",   theme = 2, weather = Battle.Weather.Moon, dayNight = 2, hp = 3.3f, dmg = 1.3f, speed = 2f, tint = new Color(0.3f, 0.8f, 1f), desc = "躲在怪群後面唸潮汐咒" },
+            new VariantDef { id = 159, baseKind = 0,  name = "甲板刺客",   human = 4, band = "黑潮海盜",   theme = 2, weather = Battle.Weather.Fog, dayNight = 1, hp = 3f,   dmg = 1.3f, speed = 1.3f, tint = new Color(0.25f, 0.35f, 0.6f), desc = "趁雨繞到背後捅刀" },
+            new VariantDef { id = 160, baseKind = 0,  name = "冠軍劍鬥士", human = 1, band = "冠軍鬥士隊", theme = 3, weather = Battle.Weather.None, dayNight = 1, hp = 3.5f, dmg = 1.4f, speed = 1.5f, tint = new Color(1f, 0.8f, 0.35f), desc = "從側面包抄的老練鬥士" },
+            new VariantDef { id = 161, baseKind = 1,  name = "標槍手",     human = 2, band = "冠軍鬥士隊", theme = 3, weather = Battle.Weather.Wind, dayNight = 2, hp = 4f,   dmg = 1.3f, speed = 1.5f, tint = new Color(0.9f, 0.7f, 0.4f), desc = "順風擲標槍，被靠近就後撤" },
+            new VariantDef { id = 162, baseKind = 6,  name = "鬥場神官",   human = 5, band = "冠軍鬥士隊", theme = 3, weather = Battle.Weather.Moon, dayNight = 2, hp = 3.3f, dmg = 1f,   speed = 2f, tint = new Color(1f, 0.95f, 0.6f), desc = "替冠軍們治療；被打就躲到怪群後面" },
+            new VariantDef { id = 163, baseKind = 0,  name = "沙匪刺客",   human = 4, band = "沙漠盜匪",   theme = 4, weather = Battle.Weather.Fog, dayNight = 2,  hp = 3f,   dmg = 1.4f, speed = 1.3f, tint = new Color(0.75f, 0.55f, 0.35f), desc = "藏在沙霧裡繞背突襲" },
+            new VariantDef { id = 164, baseKind = 9,  name = "砂咒術士",   human = 3, band = "沙漠盜匪",   theme = 4, weather = Battle.Weather.Wind, dayNight = 1,  hp = 3.3f, dmg = 1.3f, speed = 2f, tint = new Color(0.95f, 0.75f, 0.4f), desc = "躲在怪群後面放砂咒" },
+            new VariantDef { id = 165, baseKind = 1,  name = "沙漠獵手",   human = 2, band = "沙漠盜匪",   theme = 4, weather = Battle.Weather.Rain, dayNight = 0,  hp = 4f,   dmg = 1.3f, speed = 1.5f, tint = new Color(0.85f, 0.65f, 0.35f), desc = "保持距離射擊，被追就橫移" },
             // ---- 天穹飛毯（副本 sky_carpet；Codex 的全新骨架 SkyEnemyRig，戰鬥照原本的怪）：搭載具跳上飛毯
             new VariantDef { id = 131, baseKind = 0,  name = "風箏盜賊", sky = 0, hp = 0.9f, desc = "抓著大風箏從側面滑過來，放手跳上飛毯的短刀盜賊" },
             new VariantDef { id = 132, baseKind = 2,  name = "雲鷹騎兵", sky = 1, hp = 0.45f, dmg = 1.1f, desc = "騎巨鷹從正前方俯衝，在飛毯上方鬆開鞍的長槍兵" },
@@ -87,8 +88,13 @@ namespace SpellDuel
         public static VariantDef SummonFor(int theme) { foreach (var v in All) if (v.summon && v.theme == theme) return v; return null; }
         /// <summary>召喚物（擊倒紀錄的種類）：沒有經驗、不掉寶</summary>
         public static bool IsSummon(int id) => byId.TryGetValue(id, out var v) && v.summon;
-        /// <summary>這一章、這種天候的人形敵人隊伍（沒有＝空的）</summary>
-        public static List<VariantDef> HumansFor(int theme, Battle.Weather w) { var l = new List<VariantDef>(); foreach (var v in All) if (v.human > 0 && v.theme == theme && v.weather == w && w != Battle.Weather.None) l.Add(v); return l; }
+        /// <summary>這一章、這種天候、這個時段會出現的人形敵人（每一隻各自的條件；晴天＝Weather.None）</summary>
+        public static List<VariantDef> HumansFor(int theme, Battle.Weather w, bool night)
+        {
+            var l = new List<VariantDef>();
+            foreach (var v in All) if (v.human > 0 && v.theme == theme && v.weather == w && (v.dayNight == 0 || v.dayNight == (night ? 2 : 1))) l.Add(v);
+            return l;
+        }
         public static bool IsHuman(int id) => byId.TryGetValue(id, out var v) && v.human > 0;
         /// <summary>人形敵人的外觀（玩家職業的模型）</summary>
         public static string HumanLook(int human) => human == 1 ? "swordsman" : human == 2 ? "archer" : human == 3 ? "mage" : human == 4 ? "assassin" : "priest";
@@ -107,7 +113,7 @@ namespace SpellDuel
         public const float WeatherMonsterChance = 0.5f;                 // 有天候的時候，每一波出一隻天候怪的機率
         /// <summary>這一關的刺客怪（夜晚的副本：SoloBattle 設定；null＝不出）</summary>
         public VariantDef assassinDef;
-        int assassinWave = -1, weatherWave = -1, supportWave = -1, humanWave = -1; float assassinAt = -1f, weatherAt = -1f, supportAt = -1f, humanAt = -1f;
+        VariantDef humanPick; int assassinWave = -1, weatherWave = -1, supportWave = -1, humanWave = -1; float assassinAt = -1f, weatherAt = -1f, supportAt = -1f, humanAt = -1f;
 
         /// <summary>擊倒紀錄、精魄用的種類：變種用變種 id</summary>
         public static int LogKind(Fighter m) => m.variant > 0 ? m.variant : m.minionKind;
@@ -207,16 +213,21 @@ namespace SpellDuel
                 if (weatherWave != wave) { weatherWave = wave; weatherAt = rng.NextDouble() < WeatherMonsterChance ? now + 4f + 5f * (float)rng.NextDouble() : -1f; }
                 if (weatherAt > 0f && now >= weatherAt) { weatherAt = -1f; SpawnVariant(edgePoint(), wv); }
             }
-            // 人形敵人：這一章、這種天候才出現（稀有：每一波 35%）；整隊一起從敵陣後方出來
-            var hv = carpetStation < 0 && !Gallery ? MonsterVariants.HumansFor(Theme, weather) : null;
+            // 人形敵人（使用者要求：拆散，每一隻各自的天候＋白天／夜晚條件）：條件符合時每一波 10% 出現那一隻（一波最多一隻）
+            var hv = carpetStation < 0 && !Gallery ? MonsterVariants.HumansFor(Theme, weather, night) : null;
             if (hv != null && hv.Count > 0)
             {
-                if (humanWave != wave) { humanWave = wave; humanAt = rng.NextDouble() < HumanChance ? now + HumanSpawnDelay : -1f; }
-                if (humanAt > 0f && now >= humanAt)
+                if (humanWave != wave)
+                {
+                    humanWave = wave; humanAt = -1f; humanPick = null;
+                    foreach (var v in hv) if (rng.NextDouble() < HumanChance) { humanPick = v; humanAt = now + HumanSpawnDelay; break; }
+                }
+                if (humanAt > 0f && now >= humanAt && humanPick != null)
                 {
                     humanAt = -1f;
-                    for (int i = 0; i < hv.Count; i++) { SpawnVariant(RearPoint(i), hv[i]); lastMinionCount = minions.Count; }
-                    Emit("weathermonster", player.Feet, hv[0].tint, $"⚔ {WeatherName(weather)}裡出現了稀有的人形敵人「{hv[0].band}」！他們會繞側、繞背，沒血就跑去回血——別讓他們逃掉！");
+                    SpawnVariant(RearPoint(0), humanPick); lastMinionCount = minions.Count;
+                    string when = (humanPick.weather == Weather.None ? "晴朗" : WeatherName(humanPick.weather)) + (humanPick.dayNight == 2 ? "的夜裡" : humanPick.dayNight == 1 ? "的白天" : "裡");
+                    Emit("weathermonster", player.Feet, humanPick.tint, $"⚔ {when}出現了稀有的人形敵人「{humanPick.name}」！會繞側、繞背，沒血就跑去回血——別讓牠逃掉！");
                 }
             }
             // 輔助型：這一章、這種天候才出現；每一波開始 3 秒後從敵陣後方出來（副本 3 人以上兩隻）
@@ -409,7 +420,7 @@ namespace SpellDuel
         }
 
         // ------------------------------------------------------------ 人形敵人的 AI（戰術；出手照原本的怪）
-        public const float HumanChance = 0.35f, HumanSpawnDelay = 5f, HumanHead = 1.55f;
+        public const float HumanChance = 0.10f, HumanSpawnDelay = 5f, HumanHead = 1.55f;
         public const float HumanFlee = 0.35f, HumanFleeBack = 0.7f, HumanFleeTime = 5f, HumanRegen = 0.08f, HumanFleeCd = 15f, HumanFleeSpeed = 1.8f;
 
         public const float HumanAgile = 2.2f;   // 人形敵人走位比一般小怪敏捷得多（繞側、後撤、逃跑）
