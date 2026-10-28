@@ -7,6 +7,7 @@ namespace SpellDuel
   static readonly Material[] cloudMats=new Material[5];
   static readonly Mesh[] skyMeshes=new Mesh[5];
   static Mesh cliffMesh;static Material cliffMaterial;static Texture2D cloudNoise;
+  static readonly Mesh[] bridgeDecks=new Mesh[3];
   readonly List<LineRenderer> lightning=new List<LineRenderer>();
   readonly List<Renderer> stormClouds=new List<Renderer>();
   readonly List<Transform> waterfallSheets=new List<Transform>();
@@ -128,13 +129,26 @@ namespace SpellDuel
    SkyArt.Oval(t,"Weathered island root",new Vector3(0,-2,0),new Vector3(5,6,6),new Color(.38f,.37f,.40f),true);
    SkyArt.Oval(t,"Grass shelf",Vector3.up*.4f,new Vector3(5.6f,.65f,6.3f),new Color(.25f,.55f,.30f));
    for(int k=0;k<3;k++)SkyArt.Oval(t,"Exposed rock shelf",new Vector3(.6f*Mathf.Sin(k),-k*.8f,0),new Vector3(5-k*.8f,.6f,5.8f-k),new Color(.52f,.48f,.42f));
-   var fall=SkyArt.Line(t,"Waterfall ribbons",4,.27f,new Color(.63f,.89f,1,.6f));fall.SetPositions(new[]{new Vector3(1.6f,.6f,.7f),new Vector3(2.1f,-.1f,.7f),new Vector3(2.2f,-2,.7f),new Vector3(2.5f,-6,.7f)});waterfallSheets.Add(fall.transform);
+   var fall=SkyArt.Line(t,"Waterfall ribbons",4,.27f,new Color(.63f,.89f,1,.6f));fall.SetPositions(new[]{new Vector3(2.55f,.78f,.7f),new Vector3(3.10f,-.1f,.7f),new Vector3(3.15f,-2,.7f),new Vector3(3.5f,-6,.7f)});waterfallSheets.Add(fall.transform);
+   // The next island on the same side is 18 m ahead and may sit 3 m sideways.
+   float dx=Mathf.Sign(t.localPosition.x)*(((i+6)%30)%4-i%4)*1.5f;
    for(int side=-1;side<=1;side+=2)
    {
     var chain=SkyArt.Line(t,"Suspended iron chain",12,.07f,new Color(.24f,.27f,.32f));
-    for(int k=0;k<12;k++){float z=k*.37f;chain.SetPosition(k,new Vector3(side*.55f,.9f-Mathf.Sin(k/11f*Mathf.PI)*.65f,z+2));}
+    for(int k=0;k<12;k++){float u=k/11f;chain.SetPosition(k,new Vector3(dx*u+side*.55f,.9f-Mathf.Sin(u*Mathf.PI)*.65f,2+u*14));}
    }
-   for(int k=0;k<9;k++){float z=k*.45f;var plank=SkyArt.Line(t,"Bridge plank",2,.18f,new Color(.42f,.27f,.15f));plank.SetPositions(new[]{new Vector3(-.62f,.5f-Mathf.Sin(k/8f*Mathf.PI)*.65f,z+2),new Vector3(.62f,.5f-Mathf.Sin(k/8f*Mathf.PI)*.65f,z+2)});}
+   int key=Mathf.RoundToInt(dx/3)+1;
+   if(!bridgeDecks[key])
+   {
+    var v=new List<Vector3>();var tris=new List<int>();
+    for(int j=0;j<32;j++)
+    {
+     float u=(j+.5f)/32;var p=new Vector3(dx*u,.5f-Mathf.Sin(u*Mathf.PI)*.65f,2+u*14);int k=v.Count;
+     v.Add(p+new Vector3(-.62f,0,-.16f));v.Add(p+new Vector3(-.62f,0,.16f));v.Add(p+new Vector3(.62f,0,-.16f));v.Add(p+new Vector3(.62f,0,.16f));tris.AddRange(new[]{k,k+1,k+2,k+2,k+1,k+3});
+    }
+    var mesh=new Mesh{name="Shared suspended bridge treads "+key};mesh.SetVertices(v);mesh.SetTriangles(tris,0);mesh.RecalculateNormals();mesh.RecalculateBounds();bridgeDecks[key]=mesh;
+   }
+   SkyArt.MeshPart(t,"Bridge deck connected to next island",bridgeDecks[key],SkyArt.Mat(new Color(.42f,.27f,.15f)),Vector3.zero,Vector3.one);
   }
   static void EnsureCliff()
   {
