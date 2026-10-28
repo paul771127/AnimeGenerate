@@ -14,13 +14,14 @@ namespace SpellDuel
         {
             public int rarity;      // −1＝空欄位；0 普通 … 4 傳說
             public string set;      // 套裝 id（Economy.Sets）；空＝不是套裝
+            public string special;  // 特殊裝備配方 id（Blueprints.cs）；空＝不是（外型另外畫：搶眼、kuso）
             public bool Has => rarity >= 0;
         }
 
         public const int Slots = 5;
         public readonly Piece[] pieces = new Piece[Slots];
 
-        public GearLook() { for (int i = 0; i < Slots; i++) pieces[i] = new Piece { rarity = -1, set = "" }; }
+        public GearLook() { for (int i = 0; i < Slots; i++) pieces[i] = new Piece { rarity = -1, set = "", special = "" }; }
 
         public Piece this[Slot s] => pieces[(int)s];
 
@@ -29,7 +30,7 @@ namespace SpellDuel
             var g = new GearLook();
             if (equipped == null) return g;
             for (int i = 0; i < Slots && i < equipped.Length; i++)
-                if (equipped[i] != null) g.pieces[i] = new Piece { rarity = Mathf.Clamp(equipped[i].rarity, 0, 5), set = equipped[i].setId ?? "" };
+                if (equipped[i] != null) g.pieces[i] = new Piece { rarity = Mathf.Clamp(equipped[i].rarity, 0, 5), set = equipped[i].setId ?? "", special = equipped[i].special ?? "" };
             return g;
         }
 
@@ -76,6 +77,7 @@ namespace SpellDuel
         /// <summary>一件裝備的顏色：套裝用套裝色；非套裝依稀有度（皮革→鐵→鋼藍→紫→金）</summary>
         public static void PieceColors(Piece p, out Color main, out Color accent)
         {
+            var bp = Blueprints.Get(p.special); if (bp != null) { main = bp.main; accent = bp.accent; return; }   // 特殊裝備：自己的配色
             if (!string.IsNullOrEmpty(p.set)) { SetColors(p.set, out main, out accent); return; }
             switch (p.rarity)
             {
@@ -93,7 +95,7 @@ namespace SpellDuel
         public string Encode()
         {
             var parts = new string[Slots];
-            for (int i = 0; i < Slots; i++) parts[i] = pieces[i].Has ? pieces[i].rarity + ":" + pieces[i].set : "";
+            for (int i = 0; i < Slots; i++) parts[i] = pieces[i].Has ? pieces[i].rarity + ":" + pieces[i].set + (string.IsNullOrEmpty(pieces[i].special) ? "" : ":" + pieces[i].special) : "";
             return string.Join("/", parts);
         }
 
@@ -108,9 +110,11 @@ namespace SpellDuel
                 int c = parts[i].IndexOf(':');
                 string r = c >= 0 ? parts[i].Substring(0, c) : parts[i];
                 if (!int.TryParse(r, out var rarity) || rarity < 0) continue;
-                string set = c >= 0 ? parts[i].Substring(c + 1) : "";
+                string set = c >= 0 ? parts[i].Substring(c + 1) : "", special = "";
+                int c2 = set.IndexOf(':'); if (c2 >= 0) { special = set.Substring(c2 + 1); set = set.Substring(0, c2); }   // 第三段：特殊裝備
                 if (Economy.SetOf(set) == null) set = "";
-                g.pieces[i] = new Piece { rarity = Mathf.Clamp(rarity, 0, 5), set = set };
+                if (Blueprints.Get(special) == null) special = "";
+                g.pieces[i] = new Piece { rarity = Mathf.Clamp(rarity, 0, 5), set = set, special = special };
             }
             return g;
         }

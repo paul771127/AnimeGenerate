@@ -667,6 +667,7 @@ namespace SpellDuel
         public long uid;
         public int plus;                // 鐵匠鋪強化等級（+1～+10；每級主屬性 +8%，其他屬性不變）
         public string setId = "";       // 套裝（Economy.Sets）；空＝不是套裝
+        public string special = "";     // 特殊裝備配方（Blueprints.cs）的 id；空＝不是
         /// <summary>精魄孔數（0～4，掉落時隨機，越稀有上限越高）與鑲上去的精魄（Souls.cs）</summary>
         public int soulSlots;
         public readonly List<string> souls = new List<string>();
@@ -730,6 +731,7 @@ namespace SpellDuel
                 float v = i == 0 ? mods[0].Value * (1f + Economy.EnhancePerLevel * (plusOverride >= 0 ? plusOverride : plus)) : ModValue(i);
                 l.Add((i == 0 ? "【主】" : "") + AffixText(mods[i].Key, v));
             }
+            l.AddRange(Blueprints.SpecialLines(this));
             return l;
         }
 
@@ -746,6 +748,7 @@ namespace SpellDuel
             }
             sb.Append('|').Append(plus).Append('|').Append(setId ?? "");
             sb.Append('|').Append(soulSlots).Append('|').Append(string.Join(",", souls));
+            sb.Append('|').Append(special ?? "");
             return sb.ToString();
         }
 
@@ -776,6 +779,7 @@ namespace SpellDuel
                     if (p[13].Length > 0) foreach (var id in p[13].Split(',')) if (Souls.Get(id) != null && it.souls.Count < it.soulSlots) it.souls.Add(id);
                 }
                 else it.soulSlots = Souls.SlotsFromUid(it.uid, it.rarity);   // 精魄之前的舊裝備：照 uid 固定給孔數
+                if (p.Length >= 15 && Blueprints.Get(p[14]) != null) it.special = p[14];   // 特殊裝備配方做的
                 return it;
             }
             catch (Exception) { return null; }

@@ -57,6 +57,11 @@ namespace SpellDuel
             M("airship_compass", "飛艇羅盤", "🧭", "Boss 空賊飛艇・逐風號（必掉）"),
             M("tame_seal", "馴獸印片", "🔰", "各章菁英怪 20%（8 枚＋金幣調配菁英誘餌）"),
             M("soul_smith", "神匠之魂", "✨", "困難難度的 Boss（很少）"),
+            // 稀有怪（特殊裝備配方用；獨立擲，不佔「一隻最多掉一樣」）
+            M("band_crest", "人形團徽", "🎴", "人形敵人（40%）"),
+            M("storm_gem", "天候結晶", "🌦", "天候怪（25%）"),
+            M("night_edge", "夜影刃片", "🗡", "副本夜晚的刺客（25%）"),
+            M("aid_sigil", "援護聖印", "📿", "輔助型敵人、補師、召喚師（25%）"),
         };
         static Mat M(string id, string name, string icon, string from) => new Mat { id = "mat_" + id, name = name, icon = icon, from = from };
         public static Mat GetMat(string id) => Mats.Find(m => m.id == id || m.id == "mat_" + id);
@@ -128,6 +133,18 @@ namespace SpellDuel
                 case 135: return r < 0.5 ? "mat_sky_badge" : null;
                 default: return null;
             }
+        }
+
+        /// <summary>稀有怪（人形、天候怪、夜晚刺客、輔助型、補師）：特殊裝備的材料，獨立擲；沒掉＝null</summary>
+        public static string RollRare(int variant, System.Random rng)
+        {
+            var v = MonsterVariants.Get(variant);
+            if (v == null || v.summon) return null;
+            if (v.human > 0) return rng.NextDouble() < 0.40 ? "mat_band_crest" : null;
+            if (v.assassin) return rng.NextDouble() < 0.25 ? "mat_night_edge" : null;
+            if (v.support > 0 || v.healer || v.summoner) return rng.NextDouble() < 0.25 ? "mat_aid_sigil" : null;
+            if (variant >= 111 && variant <= 119) return rng.NextDouble() < 0.25 ? "mat_storm_gem" : null;
+            return null;
         }
 
         /// <summary>Boss 倒下：擲 Boss 材料（沒掉＝null，照常掉裝備）</summary>

@@ -10,6 +10,7 @@ namespace SpellDuel
     public partial class WorldUI
     {
         Crafting.Recipe craftSel;
+        Blueprints.Blueprint bpSel;
         Vector2 craftScroll;
         static readonly string[] AlchemistNames = { "藥婆婆・炭姨", "藥師・青蘿", "藥商・汐", "藥劑官・賽琳", "旅藥師・駝鈴" };
 
@@ -59,23 +60,40 @@ namespace SpellDuel
             float y = r.y + gap;
             Header(r, "🛠 工匠：特殊裝備", c, prof, fs, fsS, fsL, gap, ref y);
             NpcIntro(r, "工匠・老錘", "工匠", $"做出來的裝備跟著你現在的等級（Lv{prof.level}），數值每次都有點不一樣。等級越高，要的材料越多；最好的東西，得從 Boss 身上拿。", c, fs, fsS, gap, ref y);
-            float detailH = craftSel != null ? fs * 10.3f : 0f;
+            // 特殊裝備配方（人形敵人掉的）：身上有配方、或已經學會的才列出來，排在最前面
+            var bps = Blueprints.All.FindAll(b => b.Learned || b.Held);
+            if (bpSel != null && !bps.Contains(bpSel)) bpSel = null;
+            float detailH = bpSel != null ? fs * 13.2f : craftSel != null ? fs * 10.3f : 0f;
             float bottom = r.yMax - gap - fs * 2.4f - detailH, rowH = fs * 2.6f;
             var view = new Rect(r.x + gap, y, r.width - gap * 2, bottom - y);
-            var content = new Rect(0, 0, view.width - 4f, Mathf.Max(view.height, Crafting.Recipes.Count * (rowH + gap * 0.3f)));
+            int rows = bps.Count + Crafting.Recipes.Count + 1;
+            var content = new Rect(0, 0, view.width - 4f, Mathf.Max(view.height, rows * (rowH + gap * 0.3f)));
             craftScroll = UiKit.DragScroll(view, craftScroll, content);
             craftScroll = GUI.BeginScrollView(view, craftScroll, content, false, false, GUIStyle.none, GUIStyle.none);
+            for (int i = 0; i < bps.Count; i++)
+            {
+                var b = bps[i];
+                var rr = new Rect(0, i * (rowH + gap * 0.3f), content.width, rowH);
+                bool ok = b.Learned && Crafting.CanPay(b.need, b.gold, out _);
+                if (UiKit.Button(rr, "", fsS, bpSel == b, Item.RarityColors[b.rarity])) { bpSel = bpSel == b ? null : b; craftSel = null; }
+                string state = !b.Learned ? "📜 新配方：交給工匠" : ok ? "✅" : "⬜";
+                UiKit.Text(new Rect(rr.x + gap, rr.y, rr.width - gap * 2, rowH * 0.55f), $"{state} [{Item.RarityNames[b.rarity]}] {b.name}・{Item.SlotNames[(int)b.slot]}・Lv{b.level}", fsS, Item.RarityColors[b.rarity], TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(rr.x + gap, rr.y + rowH * 0.5f, rr.width - gap * 2, rowH * 0.48f), b.look, Mathf.RoundToInt(fsS * 0.85f), new Color(1f, 0.92f, 0.75f), TextAnchor.MiddleLeft);
+            }
+            float y0 = bps.Count * (rowH + gap * 0.3f);
+            if (bps.Count == 0) { UiKit.Text(new Rect(0, 0, content.width, rowH), "📜 特殊裝備配方：打倒稀有的人形敵人有機會掉（Lv50～90）", fsS, new Color(1f, 0.85f, 0.5f), TextAnchor.MiddleLeft, true); y0 = rowH + gap * 0.3f; }
             for (int i = 0; i < Crafting.Recipes.Count; i++)
             {
                 var rc = Crafting.Recipes[i];
-                var rr = new Rect(0, i * (rowH + gap * 0.3f), content.width, rowH);
+                var rr = new Rect(0, y0 + i * (rowH + gap * 0.3f), content.width, rowH);
                 bool ok = Crafting.CanPay(Crafting.NeedFor(rc, prof.level), Crafting.GoldFor(rc, prof.level), out _);
-                if (UiKit.Button(rr, "", fsS, craftSel == rc, Item.RarityColors[rc.rarity])) craftSel = craftSel == rc ? null : rc;
+                if (UiKit.Button(rr, "", fsS, craftSel == rc, Item.RarityColors[rc.rarity])) { craftSel = craftSel == rc ? null : rc; bpSel = null; }
                 string diff = rc.minDifficulty >= 2 ? "　（困難才有的材料）" : rc.minDifficulty >= 1 ? "　（普通以上的材料）" : "";
                 UiKit.Text(new Rect(rr.x + gap, rr.y, rr.width - gap * 2, rowH * 0.55f), $"{(ok ? "✅" : "⬜")} [{Item.RarityNames[rc.rarity]}] {rc.name}・{Item.SlotNames[(int)rc.slot]}", fsS, Item.RarityColors[rc.rarity], TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(rr.x + gap, rr.y + rowH * 0.5f, rr.width - gap * 2, rowH * 0.48f), rc.note + diff, Mathf.RoundToInt(fsS * 0.9f), new Color(0.88f, 0.9f, 1f), TextAnchor.MiddleLeft);
             }
             GUI.EndScrollView();
+            if (bpSel != null) DrawBlueprintDetail(new Rect(r.x + gap, bottom + gap * 0.3f, r.width - gap * 2, detailH - gap * 0.5f), bpSel, prof, c, fs, fsS, gap);
             if (craftSel != null)
             {
                 var rc = craftSel;
@@ -103,6 +121,46 @@ namespace SpellDuel
                 }
             }
             BackToTown(r, fs, gap);
+        }
+
+        void DrawBlueprintDetail(Rect dr, Blueprints.Blueprint b, CharacterProfile prof, Color c, int fs, int fsS, float gap)
+        {
+            UiKit.Card(dr, 0.9f, Item.RarityColors[b.rarity], 0.7f);
+            var fx = new List<string>();
+            foreach (var e in b.affixes) fx.Add(e.hi >= 1f ? $"{Item.AffixText(e.a, e.lo)}～{e.hi:0}" : $"{Item.AffixText(e.a, e.lo)}～{e.hi * 100:0.#}%");
+            foreach (var x in b.specials) fx.Add("✨ " + Souls.FxText(x));
+            string lvNote = prof.level < b.level ? $"（你現在 Lv{prof.level}，要 Lv{b.level} 才能穿）" : "";
+            UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.3f, dr.width - gap * 2, dr.height - fs * 5.6f),
+                $"外型：{b.look}\n・{string.Join("\n・", fx)}\n物品等級固定 Lv{b.level}{lvNote}　💰{b.gold}", Mathf.RoundToInt(fsS * 0.85f), Color.white, TextAnchor.UpperLeft, false, 0.5f);
+            // 材料最多 7 種：分兩行
+            int half = (b.need.Length + 1) / 2;
+            var n1 = new (string, int)[half]; var n2 = new (string, int)[b.need.Length - half];
+            for (int i = 0; i < b.need.Length; i++) { if (i < half) n1[i] = b.need[i]; else n2[i - half] = b.need[i]; }
+            DrawCraftNeeds(new Rect(dr.x + gap, dr.yMax - fs * 5.2f, dr.width - gap * 2, fs * 1.25f), n1, fsS);
+            if (n2.Length > 0) DrawCraftNeeds(new Rect(dr.x + gap, dr.yMax - fs * 3.8f, dr.width * (n2.Length / (float)half) - gap * 2, fs * 1.25f), n2, fsS);
+            var btn = new Rect(dr.x + dr.width * 0.15f, dr.yMax - fs * 2.3f, dr.width * 0.7f, fs * 2f);
+            if (!b.Learned)
+            {
+                if (UiKit.Button(btn, "📜 把配方交給工匠", fs, true, c, true))
+                {
+                    if (Blueprints.Learn(b, out var lm)) { Toast(lm); Sfx.Play("win", 0.7f, 1.1f); } else Toast(lm);
+                }
+                return;
+            }
+            bool ok = Crafting.CanPay(b.need, b.gold, out var why);
+            if (!ok && Event.current.type == EventType.MouseDown && dr.Contains(Event.current.mousePosition)) CraftArtTalk("shortage");
+            if (UiKit.Button(btn, ok ? "🛠 製作" : why, ok ? fs : fsS, ok, c, ok))
+            {
+                var it = Blueprints.Craft(b, prof, rng, out var msg);
+                if (it != null)
+                {
+                    bool inBag = Progress.AddToBagOrMail(it, "工匠的作品");
+                    Progress.SaveBag();
+                    Toast(msg + (inBag ? "" : "（背包滿了，寄到信箱）"));
+                    Sfx.Play("anvil", 0.8f); Sfx.Play("win", 0.6f, 1.2f); CraftArtDone(true, null, it);
+                }
+                else { Toast(msg); CraftArtDone(false, null, null); }
+            }
         }
 
         static string NeedText((string mat, int n)[] need)

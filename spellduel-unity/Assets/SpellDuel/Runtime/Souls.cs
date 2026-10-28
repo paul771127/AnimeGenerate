@@ -274,7 +274,10 @@ namespace SpellDuel
         {
             foreach (var it in p.equipped)
                 if (it != null)
+                {
                     foreach (var id in it.souls) { var d = Get(id); if (d != null) foreach (var x in d.fx) yield return x; }
+                    var bp = Blueprints.Get(it.special); if (bp != null) foreach (var x in bp.specials) yield return x;   // 特殊裝備的固定效果
+                }
         }
         /// <summary>身上所有精魄的某一種效果加總</summary>
         public static float Sum(CharacterProfile p, SoulOp op) { float v = 0f; foreach (var x in Equipped(p)) if (x.op == op) v += x.v; return v; }

@@ -342,6 +342,9 @@ namespace SpellDuel
             {
                 if (MonsterVariants.IsSummon(kind)) return;   // 召喚物：不掉寶（保險：正常不會記進擊倒紀錄）
                 AddMat(Crafting.RollSky(kind, dropRng));   // 天穹飛毯的敵人：雲織絲、凝風晶、空賊航徽（獨立擲）
+                AddMat(Crafting.RollRare(kind, dropRng));   // 稀有怪：特殊裝備的材料（獨立擲）
+                if (AddMat(Blueprints.RollRecipe(kind, dropRng, pendingMats)))   // 人形敵人：特殊裝備配方（獨立擲）
+                { var bp = Blueprints.OfHuman(kind); Say($"📜 掉落配方「{bp.name}」（Lv{bp.level}）！過關後交給鐵匠鋪的工匠就能學會", 5f); Sfx.Play("win", 0.8f, 1.2f); Haptics.Play(Haptics.Kind.Success); }
                 if (kind == Battle.TreasureKind) { GrantTreasure(); return; }   // 寶箱怪：大把金幣＋一定掉一件裝備
                 if (TryDrop(false)) return;
                 AddMat(Crafting.RollMinion(MonsterVariants.BaseOf(kind), battle.Theme, diff, dropRng));   // 變種怪：照原本的怪掉材料
@@ -374,8 +377,8 @@ namespace SpellDuel
         {
             if (id == null) return false;
             pendingMats.Add(id);
-            var m = Crafting.GetMat(id);
-            floaters.Add(new Floater { iconId=id, text = $"{(m != null ? (SkillIcons.IsSupply(id)?"":m.icon) + m.name : id)}（過關後獲得）", color = new Color(0.8f, 0.9f, 1f), born = Time.time, screen = true });
+            var m = Crafting.GetMat(id); var bpd = Blueprints.Get(id);
+            floaters.Add(new Floater { iconId=id, text = $"{(m != null ? (SkillIcons.IsSupply(id)?"":m.icon) + m.name : bpd != null ? "📜 配方：" + bpd.name : id)}（過關後獲得）", color = bpd != null ? new Color(1f, 0.85f, 0.4f) : new Color(0.8f, 0.9f, 1f), born = Time.time, screen = true });
             Sfx.Play("coin", 0.5f, 1.4f);
             return true;
         }
