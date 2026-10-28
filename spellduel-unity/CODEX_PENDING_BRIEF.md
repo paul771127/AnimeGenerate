@@ -551,3 +551,7 @@ Boss登毯接線補充：DropPirate加1秒落點圈，與飛毯表面同步；�
 ### 第 11、15、16 項 B：支援／人形敵人技能提案（2026-10-28，待使用者確認）
 
 新增 Docs/SUPPORT_HUMAN_SKILLS_PROPOSAL.md，涵蓋23種敵人、45招（15種人形各普攻＋招牌技）；每招列觸發、預警、躲法、倍率與動作。Docs/pending_preview/enemies2/skills/含動作分鏡說明與45招資料索引，已查核編號、數量及文件連結。143戰鼓手建議只保留移速增益，取消出手加速；另列AR合法側步、跳蹲互斥、刺客現形與同時預警限制，均為待確認設計，尚未改戰鬥邏輯。VariantRig／EnemySupportFx簽名維持需求；B技能預警取消handle僅提出建議，沒有實作或新增公開介面。本輪只有文件，不宣稱雙平台編譯或AR驗收通過；收到使用者確認後才開始模型與特效。
+
+### 第 11、15、16 項 A：23種敵人造型概念圖（2026-10-28，待使用者確認）
+
+Docs/pending_preview/enemies2/新增四張概念總覽：support_healers_concept.png（121～124）、support_weather_concept.png（141～144）、human_squads_1_3_concept.png（151～159）、human_squads_4_5_concept.png（160～165）。以內建imagegen製作，generation_prompts.json保留完整提示詞，README列各角色剪影／配件／動作、隊伍識別與6000三角預算。四張圖皆驗證可讀，23個id與技能提案對應完整。這些是供確認的原創造型方向，並非Unity模型或實機截圖；圖片只放Docs，未匯入Resources。尚未製作模型、動畫、VariantRig、EnemySupportFx，未改任何程式介面或戰鬥資料；待使用者確認後依序實作、雙平台編譯並逐項推送。
