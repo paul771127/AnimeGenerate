@@ -13,7 +13,7 @@ namespace SpellDuel
   static Material CloudMaterial(int s)
   {
    if(cloudMats[s])return cloudMats[s];
-   var m=new Material(Shader.Find("SpellDuel/CarpetCloud")){name="Shared layered cloud "+s};
+   var m=new Material(Resources.Load<Shader>("Shaders/CarpetCloud")){name="Shared layered cloud "+s};
    m.SetColor("_Color",s==3?new Color(.36f,.42f,.56f):new Color(.96f,.97f,1));
    m.SetColor("_Shade",s==3?new Color(.09f,.12f,.23f):s==0||s==4?new Color(.50f,.43f,.58f):new Color(.49f,.63f,.75f));
    m.SetColor("_Rim",s==0||s==4?new Color(1,.77f,.38f):new Color(.78f,.88f,1));return cloudMats[s]=m;

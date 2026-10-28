@@ -60,7 +60,8 @@ namespace SpellDuel.EditorTools
    {
     bool strong=i==1;float radius=strong?3:1.5f;string id=strong?"heaven":"judgement";
     cam.transform.SetPositionAndRotation(new Vector3(0,1.6f,0),Quaternion.Euler(18,0,0));
-    var ground=SpellFx.HolyGround(radius,strong);SpellFx.HolyLanding(Vector3.zero,strong);
+    var flags=System.Reflection.BindingFlags.Static|System.Reflection.BindingFlags.NonPublic;
+    var ground=(GameObject)typeof(SpellFx).GetMethod("HolyGround",flags).Invoke(null,new object[]{radius,strong});typeof(SpellFx).GetMethod("HolyLanding",flags).Invoke(null,new object[]{Vector3.zero,strong});
     var burst=UnityEngine.Object.FindObjectOfType<HolySelfBurst>();if(!burst)throw new Exception("Missing holy landing");burst.Tick(.15f);
     int rays=0;foreach(var l in burst.GetComponentsInChildren<LineRenderer>())if(l.name.StartsWith("Perimeter light")){var p=l.GetPosition(0);if(new Vector2(p.x,p.z).magnitude<radius*.9f)throw new Exception("Holy beam obstructs centre");rays++;}
     if(rays!=(strong?12:8))throw new Exception("Holy perimeter count");

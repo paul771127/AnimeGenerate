@@ -6,6 +6,7 @@ namespace SpellDuel
  {
   static readonly Dictionary<string,Mesh> blueprintMeshes=new Dictionary<string,Mesh>();
   static readonly Color BGold=new Color(1,.68f,.17f),BInk=new Color(.13f,.16f,.22f),BCream=new Color(1,.93f,.72f),BRed=new Color(.84f,.16f,.10f),BGreen=new Color(.29f,.66f,.15f);
+  internal float BlueprintHitAmount=>hitT/HitDur;
   bool AddBlueprint(Transform parent,string slot,GearLook.Piece piece)
   {
    var def=Blueprints.Get(piece.special);if(def==null)return false;
@@ -26,6 +27,13 @@ namespace SpellDuel
    }
    if(piece.special=="bp_bamboo")
    {var line=SpellFx.Line(root.transform,"Bamboo bowstring",new[]{new Vector3(0,-.43f,0),new Vector3(-.1f,.25f,0),new Vector3(0,.93f,0)},false,.008f,BCream,false,false);motion.bowString=line;}
+   if(piece.special=="bp_jelly")
+   {
+    var bell=SkyArt.Oval(root.transform,"Translucent jelly bell",new Vector3(0,1.07f,0),new Vector3(.35f,.25f,.32f),Color.white);bell.GetComponent<Renderer>().sharedMaterial=SkyArt.Glow;
+    var tint=new MaterialPropertyBlock();tint.SetColor("_Color",new Color(.43f,.84f,1,.48f));bell.GetComponent<Renderer>().SetPropertyBlock(tint);motion.moving=bell;motion.baseScale=bell.localScale;
+   }
+   if(piece.special=="bp_luckycat")motion.moving=SkyArt.Oval(root.transform,"Waving lucky paw",new Vector3(.12f,.34f,.25f),new Vector3(.065f,.15f,.07f),BCream);
+   if(piece.special=="bp_chicken")motion.moving=SkyArt.Oval(root.transform,"Clucking beak",new Vector3(0,.26f,.29f),new Vector3(.11f,.08f,.16f),BGold);
    return true;
   }
   static void Blob(OutfitArt.Builder b,Vector3 p,Vector3 size,Color c,int sides=8)
@@ -38,6 +46,12 @@ namespace SpellDuel
   {for(int side=-1;side<=1;side+=2)Blob(b,p+Vector3.right*spread*side,new Vector3(.025f,.032f,.018f),BInk,6);}
   static void RingB(OutfitArt.Builder b,Vector3 p,float radius,float width,Color c,bool vertical=false)
   {for(int i=0;i<16;i++){float a=i*Mathf.PI/8,d=(i+1)*Mathf.PI/8;var x=vertical?new Vector3(Mathf.Cos(a),Mathf.Sin(a),0):new Vector3(Mathf.Cos(a),0,Mathf.Sin(a));var y=vertical?new Vector3(Mathf.Cos(d),Mathf.Sin(d),0):new Vector3(Mathf.Cos(d),0,Mathf.Sin(d));LineB(b,p+x*radius,p+y*radius,width,c);}}
+  static void LabelSaint(OutfitArt.Builder b)
+  {
+   string[] glyphs={"111101110001111","010101111101101","111010010010111","101111111111101","111010010010010"};
+   for(int letter=0;letter<5;letter++)for(int y=0;y<5;y++)for(int x=0;x<3;x++)if(glyphs[letter][y*3+x]=='1')
+   {float px=.205f+letter*.041f+x*.010f,py=.325f-y*.010f;int k=b.V.Count;b.V.AddRange(new[]{new Vector3(px,py,.026f),new Vector3(px+.008f,py,.026f),new Vector3(px,py-.008f,.026f),new Vector3(px+.008f,py-.008f,.026f)});for(int q=0;q<4;q++)b.C.Add(BCream);b.T.AddRange(new[]{k,k+2,k+1,k+1,k+2,k+3});}
+  }
   static Mesh MakeBlueprint(string id)
   {
    var b=new OutfitArt.Builder();b.Skin=new Color(.123f,.456f,.789f);
@@ -50,7 +64,7 @@ namespace SpellDuel
     case "bp_chicken":
      Blob(b,new Vector3(0,.16f,0),new Vector3(.45f,.23f,.40f),BCream);Blob(b,new Vector3(0,.29f,.16f),new Vector3(.21f,.24f,.22f),BCream);
      for(int i=0;i<3;i++)Blob(b,new Vector3(0,.40f,.09f+i*.055f),new Vector3(.045f,.09f,.065f),BRed,6);
-     Blob(b,new Vector3(0,.26f,.29f),new Vector3(.11f,.08f,.16f),BGold,6);EyesB(b,new Vector3(0,.32f,.247f),.065f);
+     EyesB(b,new Vector3(0,.32f,.247f),.065f);
      for(int side=-1;side<=1;side+=2)Blob(b,new Vector3(side*.22f,.17f,0),new Vector3(.12f,.14f,.25f),BGold);break;
     case "bp_furnace":
      Blob(b,new Vector3(0,.26f,0),new Vector3(.59f,.54f,.44f),BInk);Band(b,new Vector3(0,.04f,0),.31f,.23f,.05f,BGold);
@@ -74,7 +88,7 @@ namespace SpellDuel
      LineB(b,new Vector3(.16f,.48f,.15f),new Vector3(.16f,.66f,.15f),.018f,BCream);LineB(b,new Vector3(.16f,.66f,.15f),new Vector3(.26f,.69f,.15f),.018f,BCream);break;
     case "bp_jelly":
      LineB(b,new Vector3(0,-.20f,0),new Vector3(0,1.1f,0),.025f,new Color(.24f,.64f,.79f));
-     Blob(b,new Vector3(0,1.07f,0),new Vector3(.35f,.25f,.32f),new Color(.47f,.83f,1));EyesB(b,new Vector3(0,1.05f,.155f),.065f);
+     EyesB(b,new Vector3(0,1.05f,.155f),.065f);
      for(int i=0;i<5;i++){float x=(i-2)*.055f;LineB(b,new Vector3(x,.99f,0),new Vector3(x+.03f,.82f,.02f),.009f,new Color(.68f,.53f,1));LineB(b,new Vector3(x+.03f,.82f,.02f),new Vector3(x-.02f,.72f,.03f),.008f,BCream);}break;
     case "bp_shark":
      Blob(b,new Vector3(0,-.35f,.10f),new Vector3(.24f,.16f,.40f),new Color(.30f,.56f,.73f));
@@ -90,11 +104,11 @@ namespace SpellDuel
      break;
     case "bp_neonhalo":
      RingB(b,new Vector3(0,.34f,0),.25f,.014f,new Color(.32f,1,.89f));b.Badge(.31f,.30f,.02f,.12f,.05f,new Color(.18f,.13f,.32f));
-     for(int i=0;i<5;i++)LineB(b,new Vector3(.23f+i*.04f,.28f,.03f),new Vector3(.23f+i*.04f,.32f,.03f),.007f,new Color(1,.38f,.78f));break;
+     LabelSaint(b);break;
     case "bp_luckycat":
      Blob(b,new Vector3(0,.25f,.23f),new Vector3(.17f,.20f,.12f),BCream);Blob(b,new Vector3(0,.37f,.24f),new Vector3(.17f,.14f,.13f),BCream);
      for(int side=-1;side<=1;side+=2)Blob(b,new Vector3(side*.065f,.44f,.24f),new Vector3(.065f,.085f,.06f),BGold,4);
-     Band(b,new Vector3(0,.405f,.24f),.09f,.07f,.035f,new Color(.28f,.65f,.76f));EyesB(b,new Vector3(0,.37f,.307f),.04f);Blob(b,new Vector3(.12f,.34f,.25f),new Vector3(.065f,.15f,.07f),BCream,6);b.Badge(0,.25f,.299f,.055f,.065f,BGold);break;
+     Band(b,new Vector3(0,.405f,.24f),.09f,.07f,.035f,new Color(.28f,.65f,.76f));EyesB(b,new Vector3(0,.37f,.307f),.04f);b.Badge(0,.25f,.299f,.055f,.065f,BGold);break;
     case "bp_hourglass":
      for(int side=-1;side<=1;side+=2)LineB(b,new Vector3(side*.095f,.15f,.23f),new Vector3(side*.095f,.43f,.23f),.012f,BGold);
      foreach(float y in new[]{.15f,.43f})Band(b,new Vector3(0,y,.23f),.115f,.075f,.025f,BGold,8);
@@ -109,11 +123,12 @@ namespace SpellDuel
  }
  public sealed class BlueprintGearMotion:MonoBehaviour
  {
-  internal string id;internal CharacterRig rig;internal LineRenderer glow,bowString;float time;
+  internal string id;internal CharacterRig rig;internal LineRenderer glow,bowString;internal Transform moving;internal Vector3 baseScale;float time;
   public void Sample(float dt)
   {
    time+=Mathf.Max(0,dt);
    if(glow){var c=Color.HSVToRGB(Mathf.Repeat(time*.08f+.45f,1),.45f,1);c.a=.40f+.15f*Mathf.Sin(time*2);glow.startColor=glow.endColor=c;}
+   if(moving){if(id=="bp_jelly")moving.localScale=Vector3.Scale(baseScale,new Vector3(1+.04f*Mathf.Sin(time*4),1-.05f*Mathf.Sin(time*4),1+.04f*Mathf.Sin(time*4)));else if(id=="bp_luckycat")moving.localRotation=Quaternion.Euler(0,0,20*Mathf.Sin(time*3));else if(rig)moving.localRotation=Quaternion.Euler(rig.BlueprintHitAmount*32,0,0);}
    if(bowString&&rig)bowString.SetPosition(1,new Vector3(-.10f-.18f*rig.Charge,.25f,0));
   }
   void Update(){Sample(Time.deltaTime);}

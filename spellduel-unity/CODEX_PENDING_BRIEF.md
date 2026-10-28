@@ -662,3 +662,5 @@ CarpetScene.Environment新增程序漸層天幕、方向日光、三層體積雲
 ### 特殊裝備第 2 項：15件程序造型、34個圖示（2026-10-28）
 
 CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥串、公雞、暖爐與煙囪、紅菇、竹笛孔弓、盆栽雙靴、酒桶、水母杖、鯊魚雙鞋、獎盃、玉米槍、霓虹環、頭巾招財貓、逆流沙漏、駝峰水袋甲。模型與材質快取，神話常駐光環、爐火／孢子微粒、竹弓弦隨Charge變化；不改傷害／特殊效果或配方。換武器隱藏舊武器Renderer，租約在卸裝／停用恢復，保留關節與既有持法。SkillIcons新增15裝備、15卷軸、4材料純程序圖示。Snapshot沿用GearPreview的CharacterRig.SetGear路徑，武器三職業、其餘兩職業，檢查每件1500三角（含線段估算）、卸裝還原、34圖唯一與快取；原生圖與Android／iOS結果待CI。
+
+本批驗證補修：上一輪Snapshot.RemainingArt跨Editor組件直接存取internal聖光方法，造成編譯失敗；改用編輯器反射呼叫原方法，不改特效或戰鬥。雲shader放Resources確保手機建置不剔除。水母加透明抖動鐘罩、招財貓揮手、公雞鳥喙依既有hitT受擊動作，霓虹燈牌用程序字塊拼SAINT，模型快取與公開接線介面不變。
