@@ -1,5 +1,23 @@
 # Codex 任務：補師／召喚師、輔助型敵人、人形敵人 —— 全部重畫外型＋重新設計技能
 
+## 第二輪（現在要做）：提案已確認
+
+`Docs/SUPPORT_HUMAN_SKILLS_PROPOSAL.md` 已經由使用者確認，開頭的「使用者定案」優先於內文（143 戰鼓手保留「出手更快」）。請依序做：
+
+1. **A 造型與動作**：照概念圖做 23 種模型（全新骨架，不沿用 MinionRig／CharacterRig 換皮），每隻 ≤6000 三角形、共用材質。
+2. **`VariantRig.cs`**：照下面 A-3 的介面；`Windup(move, duration)`／`Strike(move)` 的 move 就是提案表的招式 id（例如 `eh_151_flankrush`），一般攻擊用該怪的第一招 id。
+3. **`EnemySupportFx.cs`**：照 A-4 的介面。
+4. **技能特效（`EnemySkillFx.cs`、`EnemyShotView.cs`）**：照提案每一招的預警與出手外觀。介面採用你建議的「每次預警一個 handle」：
+   - `int EnemySkillFx.Telegraph(string skillId, Vector3 at, Vector3 dir, float seconds, float size)`：畫預警（紅線、扇形、圈、橘地環、藍胸口弧帶），回傳 handle；at／dir 由 Claude 給（鎖定時的位置與方向），size＝長度或半徑（公尺）。
+   - `void EnemySkillFx.Cancel(int handle)`：讀條被打斷、施法者死亡時取消。
+   - `void EnemySkillFx.Cast(string skillId, Vector3 from, Vector3 to)`：出手瞬間（揮砍弧光、地波、沙柱、治療綠線以外的效果）。
+   - `EnemyShotView EnemyShotView.Create(string skillId)`：投射物外型（弩矢、木箭、標槍、火珠、水梭、泡彈、砂矢）；位置、方向、回收由 Claude 控制。
+   - 背後突襲的螢幕方向楔標由 Claude 用 HUD 畫，不用你做。
+5. 每做完一項先推，在 `CODEX_PENDING_BRIEF.md` 的「Codex 實作紀錄」寫下做了什麼、介面有沒有改。程式輪要跑 Android、iOS 編譯。
+
+---
+
+
 這份把總單 `CODEX_PENDING_BRIEF.md` 的第 11、15、16 項合在一起，並加上**技能**。讀這一份就夠了。
 
 使用者要求：「這些全部讓 Codex 重畫外型與技能」。
