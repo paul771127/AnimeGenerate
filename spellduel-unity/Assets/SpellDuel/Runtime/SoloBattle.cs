@@ -1839,6 +1839,7 @@ namespace SpellDuel
                 rig.transform.SetPositionAndRotation(newPos, f.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(f.normalized, Vector3.up) : rig.transform.rotation);
                 UpdateEliteVisual(m, rig);
                 if (m.treasure) { var cp = rig.GetComponentInChildren<RoomPropArt>(); if (cp) cp.Tick(m.hp, m.maxHp, false, Time.time); }   // 寶箱怪：被打中會晃
+                rig.SetEating(m.lureUntil > 0f);   // 吃誘餌中：低頭咀嚼（MinionRig.Pets.cs）
                 bool jumped = (newPos - oldPos).magnitude > 2f;   // 虛空術士瞬移（隊友端也看得到）：兩邊都冒出傳送光
                 if (jumped) { MinionRig.SpawnFx(oldPos); MinionRig.SpawnFx(newPos); Sfx.Play("dodge", 0.5f, 0.6f); }
                 rig.MoveSpeed = jumped ? 0f : Mathf.Lerp(rig.MoveSpeed, (newPos - oldPos).magnitude / dt, 0.25f);
@@ -2883,6 +2884,8 @@ namespace SpellDuel
         void OnBattleEvent(string kind, Vector3 at, Color c, string text)
         {
             if (OnRoomEventFx(kind, at, c, text)) return;   // 副本特殊地點（SoloBattle.RoomEvents.cs）
+            if (kind == "petcaught") PetArtFx.Capture(WorldFrame.FromWorld(at), true);   // 收服成功：繩結收合＋爪印（PetArtFx.cs）
+            else if (kind == "lurefail" && text != null && text.Contains("掙脫")) PetArtFx.Capture(WorldFrame.FromWorld(new Vector3(at.x, 0f, at.z)), false);   // 收服失敗：繩結鬆開
             switch (kind)
             {
                 case "hit": case "trap": case "mitigate": case "effect": case "counter": case "buff": case "heal": case "trapSet": case "slice":

@@ -249,7 +249,9 @@ namespace SpellDuel
                 {
                     rig = MinionRig.Create();
                     rig.SetVariant(n.tamedKind); rig.SetDress(battle.Theme);
-                    SpellFx.ContractSeal(rig.transform,Mathf.Max(.6f,n.head.y-n.Feet.y)+.22f);
+                    bool pet = n.petUid != 0 || (n.name != null && n.name.StartsWith("🐾"));   // 寵物（自己的或隊友的）：織帶、身份扣、友方雙環（PetDress.cs）
+                    if (pet) PetDress.Apply(rig, EliteCatalog.IsElite(n.tamedKind));
+                    else SpellFx.ContractSeal(rig.transform,Mathf.Max(.6f,n.head.y-n.Feet.y)+.22f);
                     tamedRigs[n.minionId] = rig; npcLastFeet[n.minionId] = n.Feet;
                     SpellFx.ContractSigned(WorldFrame.FromWorld(n.Feet));
                 }
