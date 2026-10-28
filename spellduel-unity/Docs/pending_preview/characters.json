@@ -466,5 +466,46 @@
         "sha256": "8b7f9da00f32e2eb75aa488587b398711bdaa6cce58671a577aab1ea46416108"
       }
     ]
+  },
+  "aircaptain": {
+    "expressions": [
+      "normal",
+      "angry",
+      "smile",
+      "serious"
+    ],
+    "size": [
+      768,
+      1152
+    ],
+    "bodyPixelsLocked": true,
+    "faceBoxSource": [
+      480,
+      224,
+      659,
+      433
+    ],
+    "files": [
+      {
+        "expression": "normal",
+        "changedPixels": 0,
+        "sha256": "efcb33e75d38769b0a0199d756bc49513fd3139f454a65e1155a5b32836d1a23"
+      },
+      {
+        "expression": "angry",
+        "changedPixels": 13030,
+        "sha256": "7410c1ea4581c1557f6925ef65bf2d32093fc905a25ec175f6b2d975be62fb0d"
+      },
+      {
+        "expression": "smile",
+        "changedPixels": 13333,
+        "sha256": "f4be674a6512075d607fbfcd58bc35448564566317bb046732cd5b5069718d31"
+      },
+      {
+        "expression": "serious",
+        "changedPixels": 13841,
+        "sha256": "8472804c82027bf52c8f532690dd57c0d36705b6eef180bfca226333ff10c415"
+      }
+    ]
   }
 }

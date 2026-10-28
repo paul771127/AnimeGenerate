@@ -11,14 +11,20 @@
     "authorizedChange": "Chapters 2-5 add stages 4/5; move unchanged boss dialogue to stage 6; sequence prerequisites."
   },
   "dungeons.txt": {
-    "baseline": "99901f5",
+    "baseline": "6697a27",
     "previousBaseline": {
-      "baseline": "188fb99",
-      "canonicalSha256": "7bccd859b461493a1f5cf98eaadd2da1d0b61083abc426e067d9b5e0faae7bc2",
-      "originalTextAndSettingsPreserved": true
+      "baseline": "99901f5",
+      "previousBaseline": {
+        "baseline": "188fb99",
+        "canonicalSha256": "7bccd859b461493a1f5cf98eaadd2da1d0b61083abc426e067d9b5e0faae7bc2",
+        "originalTextAndSettingsPreserved": true
+      },
+      "canonicalSha256": "3442b227997ed7eee8fd316d8df0c2bd877f031043b6f65b440c91d175027b47",
+      "originalTextAndSettingsPreserved": true,
+      "authorizedPreviousChange": "Previous trap-gallery task appended the eighth dungeon; pending-art task does not alter script text or settings."
     },
-    "canonicalSha256": "3442b227997ed7eee8fd316d8df0c2bd877f031043b6f65b440c91d175027b47",
+    "canonicalSha256": "3742457967f8f1b637d4a4488a932be7642207caa7342a7537065ad11dadfd3e",
     "originalTextAndSettingsPreserved": true,
-    "authorizedPreviousChange": "Previous trap-gallery task appended the eighth dungeon; pending-art task does not alter script text or settings."
+    "authorizedPreviousChange": "Sky Carpet dungeon added in 6697a27 before this task. Current text byte-equivalent after newline normalization to HEAD 128ee1a. Captain art does not edit script."
   }
 }

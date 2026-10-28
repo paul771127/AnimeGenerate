@@ -601,3 +601,7 @@ EnemySupportFx.cs完成Heal綠色拋物線光絲、Shield泡泡與ShieldBreak碎
 - `SoloBattle.VariantArt.cs`（取代借用玩家模型的 `SoloBattle.Humans.cs`）：121～124、141～144、151～165 改用 `VariantRig`；Windup 傳招式 id（房主用讀條中的招、隊友端從預警找、補師輔助用原本讀條的 id），提前結束＝`ChannelBroken`，否則 `Strike`；`SetFleeing`、`SetSneak`（刺客繞背中、離玩家 2.2m 以上）、`SetDead`、`PlayHit`、`MoveSpeed`。
 - `EnemySkillFx.Telegraph／Cancel／Cast`、`EnemyShotView` 取代暫時的地面標示；讀條被打斷或施法者倒下會用同一個 handle 取消。
 - `EnemySupportFx`：房主的 `esfx` 事件（治療、護盾、加速、戰旗、戰旗光環）＋護盾被打破時 `ShieldBreak`、召喚時 `Summon`；合作時用 `esf` 訊息送給隊友。
+
+### 剩餘任務第 1 項：空賊船長立繪（2026-10-28）
+
+新增空賊船長 aircaptain 四種表情與 Story2D 對照、768×1152 透明立繪及臉部遮罩／總覽；非臉部像素一致。加強 PendingArtAudit 的實際立繪載入與船長尺寸檢查，保留所有舊檢查。校驗基準補入既有飛毯副本 6697a27，僅船長兩句加表情標記，台詞、關卡與遊戲邏輯不變；全站 Snapshot 與 Android／iOS 原生結果另補。

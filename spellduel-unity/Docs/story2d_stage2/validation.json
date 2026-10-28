@@ -36,6 +36,32 @@
       ]
     },
     {
+      "id": "aircaptain",
+      "size": [
+        768,
+        1152
+      ],
+      "outsideFacePixelsIdentical": true,
+      "changes": [
+        {
+          "expression": "normal",
+          "changedPixels": 0
+        },
+        {
+          "expression": "angry",
+          "changedPixels": 13030
+        },
+        {
+          "expression": "smile",
+          "changedPixels": 13333
+        },
+        {
+          "expression": "serious",
+          "changedPixels": 13841
+        }
+      ]
+    },
+    {
       "id": "alchemist_qingluo",
       "size": [
         768,
@@ -1219,11 +1245,11 @@
     "village"
   ],
   "pending": [],
-  "totalBytes": 94345618,
+  "totalBytes": 95923239,
   "dialogueBytes": 39273419,
-  "pendingDungeonBytes": 13711261,
+  "pendingDungeonBytes": 15288882,
   "classPortraitBytes": 10819896,
   "villageStaffBytes": 30541042,
   "combinedExceeds40MiB": true,
-  "annotatedLines": 366
+  "annotatedLines": 373
 }

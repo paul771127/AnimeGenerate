@@ -22,6 +22,7 @@ namespace SpellDuel
             ["公會長"] = "guildmaster", ["塔守"] = "towerkeeper",
             ["熔岩巨像"] = "golem", ["腐化樹王"] = "treeking", ["深海巨妖"] = "kraken",
             ["青銅鬥魂"] = "bronze", ["黃土岩魔"] = "rockfiend", ["霸主"] = "overlord",
+            ["空賊船長"] = "aircaptain",
             ["炭姨"] = "alchemist_tanyi", ["青蘿"] = "alchemist_qingluo", ["汐"] = "alchemist_xi",
             ["賽琳"] = "alchemist_sailin", ["駝鈴"] = "alchemist_tuoling", ["老錘"] = "crafter_laochui",
             ["鈴音"] = "lingyin", ["疤面亞克"] = "ark", ["小麥"] = "xiaomai",

@@ -1,0 +1,11 @@
+{
+  "mode": "built-in image_gen",
+  "normal": "Create a NEW Japanese anime visual novel character sprite matching the attached reference's clean black outlines, restrained two-step cel shading, elegant anime anatomy and saturated colors. Reference image is STYLE ONLY, not same character. Subject: hostile air pirate captain of a red-and-white balloon brass airship, a bold cunning adult man about 40 with tousled dark auburn hair, short pointed goatee, expressive amber eyes, a small healed eyebrow scar. Grape-purple captain coat with brass buttons and epaulettes, cream open collar shirt, burgundy sash, brass aviation goggles resting on a compact tricorn hat. One hand rests on a sheathed curved cutlass at waist, other hand on hip. Neutral self-assured closed mouth with cunning look. Single character facing screen right in gentle three-quarter view, crop at mid-thigh, entire hat and elbows visible, portrait 2:3 composition, head near top center with ~6% empty margin. Transparent background with real alpha. No words, scenery, frame, ground, glow or checkerboard. Clothing details clearly functional, no decorative random panels. Output 768x1152 if supported.",
+  "alphaRefinement": "Remove all background; preserve character, pose and framing. Output true transparent RGBA.",
+  "edits": {
+    "angry": "Edit ONLY facial expression: knitted brows, intense narrow amber eyes, open shouting mouth with upper teeth. Preserve everything outside face.",
+    "smile": "Edit ONLY facial expression: cunning lopsided toothy grin, one lifted eyebrow, amused amber eyes. Preserve everything outside face.",
+    "serious": "Edit ONLY facial expression: focused commanding rightward stare, level slightly lowered brows, taut closed lips. Preserve everything outside face."
+  },
+  "packaging": "Existing Story2D face-mask compositing for exact body-pixel invariance, resize 768x1152, preserve alpha; no generated art used as native render evidence."
+}

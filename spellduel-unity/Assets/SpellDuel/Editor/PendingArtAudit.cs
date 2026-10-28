@@ -29,15 +29,16 @@ static Report RunSilent(){
  report.mapEntries=report.localFallback=true;
  foreach(string id in new[]{"alchemist_tanyi","alchemist_qingluo","alchemist_xi","alchemist_sailin","alchemist_tuoling","crafter_laochui"})foreach(string e in new[]{"normal","smile","serious"}){CheckSprite(id,e);report.facilitySprites++;}
  foreach(string id in new[]{"lingyin","ark","xiaomai","oldsmith_shade","gearmerchant","clockwork","heartcore"})foreach(string e in new[]{"normal",id=="ark"||id=="clockwork"?"angry":"serious","surprised"}){CheckSprite(id,e);report.dungeonSprites++;}
+ foreach(string e in new[]{"normal","angry","smile","serious"}){CheckSprite("aircaptain",e);report.dungeonSprites++;}
  var ids=new List<string>(SkillIcons.PotionArtIds);ids.AddRange(SkillIcons.MaterialArtIds);var hashes=new HashSet<string>();
  foreach(string id in ids){var file=Resources.Load<Texture2D>("Village2D/icons/"+id);Check(file&&file.width==128&&file.height==128,"supply resource "+id);var pixels=SkillIcons.Render(id,128);var bytes=new byte[pixels.Length*4];for(int i=0;i<pixels.Length;i++){bytes[i*4]=pixels[i].r;bytes[i*4+1]=pixels[i].g;bytes[i*4+2]=pixels[i].b;bytes[i*4+3]=pixels[i].a;}using(var sha=SHA256.Create())Check(hashes.Add(Convert.ToBase64String(sha.ComputeHash(bytes))),"duplicate supply icon "+id);var tex=new Texture2D(128,128,TextureFormat.RGBA32,false);tex.SetPixels32(pixels);tex.Apply();File.WriteAllBytes("snapshots/pending_icon_"+id+".png",tex.EncodeToPNG());UnityEngine.Object.DestroyImmediate(tex);report.supplyIcons++;}
  foreach(string file in new[]{"story","dungeons"})foreach(var raw in Resources.Load<TextAsset>(file).text.Split('\n')){
   string line=raw.Trim();if(line.Length==0||line.StartsWith("#")||line.StartsWith("[")||line.StartsWith("<")||line.StartsWith("背景：")||Regex.IsMatch(line,@"^[a-z_]+\s*=")||!line.Contains("："))continue;
   var entry=Story.ParseLine(line);if(string.IsNullOrEmpty(entry.speaker))continue;
   if(entry.speaker=="{玩家}"){report.playerPlaceholdersSkipped++;continue;}
-  Check(Story2D.IdOf(entry.speaker)!=null,"speaker has no portrait id: "+entry.speaker);report.speakers++;
+  Check(Story2D.IdOf(entry.speaker)!=null,"speaker has no portrait id: "+entry.speaker);Check(Story2D.Portrait(Story2D.IdOf(entry.speaker),entry.expr)!=null,"speaker portrait missing: "+entry.speaker);report.speakers++;
  }
- File.WriteAllText("snapshots/pending_art_audit.json",JsonUtility.ToJson(report,true));Debug.Log("[SpellDuel] Pending art audit passed: five maps / ten entries, 39 portraits, 21 supply icons, all named speakers mapped; player placeholder skipped.");return report;
+ File.WriteAllText("snapshots/pending_art_audit.json",JsonUtility.ToJson(report,true));Debug.Log("[SpellDuel] Pending art audit passed: five maps / ten entries, 43 portraits, 21 supply icons, all named speakers mapped; player placeholder skipped.");return report;
 }
 static void CheckSprite(string id,string expr){var tex=Resources.Load<Texture2D>("Story2D/chars/"+id+"_"+expr);Check(tex&&tex.width==768&&tex.height==1152,"portrait "+id+"/"+expr);}
 }
