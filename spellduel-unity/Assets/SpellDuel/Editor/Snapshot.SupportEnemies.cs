@@ -4,10 +4,20 @@ using System.IO;
 using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
+using UnityEditor.SceneManagement;
 namespace SpellDuel.EditorTools
 {
  public static partial class Snapshot
  {
+  public static void RenderSupportEnemies()
+  {
+   Directory.CreateDirectory("snapshots");EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);ToonStyle.Apply();
+   var light=new GameObject("Enemy preview key").AddComponent<Light>();light.type=LightType.Directional;light.transform.rotation=Quaternion.Euler(35,155,0);light.intensity=1.1f;
+   RenderSettings.ambientLight=new Color(.55f,.58f,.66f);var cam=new GameObject("Enemy preview camera").AddComponent<Camera>();cam.clearFlags=CameraClearFlags.SolidColor;cam.backgroundColor=new Color(.78f,.81f,.86f);cam.fieldOfView=30;cam.nearClipPlane=.03f;
+   SupportEnemyShots(cam);
+   foreach(var message in ShaderUtil.GetShaderMessages(Shader.Find("SpellDuel/Toon")))if(message.severity.ToString()=="Error")throw new Exception(message.message);
+  }
   static readonly int[] SupportIds={121,122,123,124,141,142,143,144,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165};
   [Serializable] class EnemyAuditEntry{public int id,triangles,renderers;}
   [Serializable] class EnemyAuditReport{public List<EnemyAuditEntry> entries=new List<EnemyAuditEntry>();public string checks="23 distinct rigs, finite geometry, <=6000 triangles, front/side/channel renders";}

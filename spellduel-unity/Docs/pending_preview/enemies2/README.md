@@ -1,8 +1,8 @@
-# 23種敵人造型概念圖 · 待確認
+# 23種敵人：概念與程序美術交付
 
 這批是**生成式概念插畫，不是Unity模型、不是遊戲截圖**。使用內建image_gen依ART_STYLE.md的日式賽璐珞方向製作；完整原始提示詞見 [generation_prompts.json](generation_prompts.json)。只放Docs供審閱，不匯入Resources、不當遊戲貼圖。
 
-先確認 [技能提案](../../SUPPORT_HUMAN_SKILLS_PROPOSAL.md) 與本頁造型方向；使用者確認前不做模型、VariantRig或EnemySupportFx。全員是新敵人設計，不拿MinionRig或玩家CharacterRig換色換武器。
+[技能提案](../../SUPPORT_HUMAN_SKILLS_PROPOSAL.md) 與概念已於2026-10-28確認；最新定案要求人形明確呈現敵方、戰鼓手保留敵方攻速增益。以下概念保留作設計來源，正式程序版本以交接說明為準。全員是新敵人設計，不拿MinionRig或玩家CharacterRig換色換武器。
 
 ## 四張概念圖
 
@@ -47,7 +47,7 @@
 
 同隊共用3～4個主色、徽章和一件衣裝語彙，但不用同一個人換武器：頭型、髮型、肩寬、衣襬、重心、持武方式必須分別做。膚色沿用角色自然暖色，不以膚色表示陣營或職能。
 
-## 程序模型落地計畫（未建模、未量測）
+## 原始程序模型預算計畫（實測另見原生報告）
 
 - 上限每隻6000三角，包含持有道具、雙面翅／旗幟與面部；Toon外框的額外渲染Pass另計GPU成本，不能把低三角當作手機效能已通過。
 - 成人初配：身體／四肢2200、臉700、髮600、衣裝800、道具1100＝5400，留600修輪廓；大鼓／石板／旗手從衣裝細節讓預算給主道具。砂靈目標2400以內。
@@ -62,3 +62,22 @@
 所有23種：idle、walk、run、windup、strike、hit、die。124的walk/run改為貼地漂移，142改為振翅漂移。15種人形另有繞側疾步、後撤、逃跑回血；三名刺客有潛行與現形。支援／召喚角色有各自channel及channelBroken。
 
 預計優先：死亡→有效受擊／中斷→指定技能動作→逃跑回血→移動／待機；細節由Claude的狀態訊號決定。SetFleeing不替程式算回血，SetSneak不讓角色自動免傷。攻擊後武器仍握在手裡，死亡姿勢不影響已決定的判定。
+
+## 第二輪實作交接
+
+- `VariantRig` 已建23種新骨架：肩／肘／手、髖／膝分開，可擺讀條、持武、倒地與恢復姿勢；沒有借玩家／小怪模型。`VariantGeometry`快取基本網格，按variant與關節合併並共用材質。
+- 程序版本依最新定案加敵意眉眼、暗彩制服、紅色徽章與紅地環。五隊徽記是斷砧／裂葉／斷浪／缺口桂冠／裂蠍，不用友方綠環。不同成員有肩寬、頭寬、灰髮／束髮／鬍子／帽型與服裝層次差別。
+- `Create(int)`僅接受121～124、141～144、151～165，其餘拋ArgumentOutOfRangeException。模型原點是腳底、+Z是前方、初始scale為1；位置／朝向／移動仍交由Claude。
+- `MoveSpeed`是動畫步頻輸入。`Windup(move,duration)`開始預備，`Strike(move)`結束預備並出手；`SetChannel(false)`正常收束，`ChannelBroken()`額外碎光；受擊不自行取消邏輯技能。
+- `SetFleeing(true)`取消畫面預備，移動中撤離，MoveSpeed小於0.1時喝藥／唸咒；不判定HP、不回血。`SetSneak`只變透明，不改碰撞或可選取性。
+- `SetDead(true)`清理動作與紅環；false重置外觀。死亡優先；根節點完全不由動畫移動。`Sample(float dt)`只供原生測試，正常遊戲有Update，不要額外每幀呼叫。
+- `EnemySupportFx`原簽名全部保留；跟隨效果以同一target去重、重施刷新秒數，target停用／銷毀或到期即清除。target應是敵人的腳底根節點。盾量與破盾時機仍由Claude呼叫。
+- `EnemySkillFx.Telegraph(id,at,dir,seconds,size)`回傳獨立handle，鎖定場景位置／方向；中斷、死亡、離場要Cancel(handle)。同一id的不同施法者不共用handle。自然到期也會清除。
+- 對JumpRing預警只畫固定外圈及上箭，出手Cast才依EnemySkills.RingTime擴散；DuckArc在1.1m畫藍弧與下箭。線／圈／扇形從EnemySkills唯讀的shape／width／angle畫出，size由接線方傳入。沒有自動追蹤相機、沒有自動推算玩家的安全位置。
+- `Cast(id,from,to)`使用技能預設size；若實際cue半徑／長度不同，新增的`Cast(id,from,to,size)`覆載可避免尺寸差異。Circle的to是落地點，其餘from是出手／地波中心。治療from/to需傳實際治療端點。
+- `EnemyShotView.Create(id)`只建立箭矢／標槍／火珠／水梭／泡彈／砂矢的外觀；局部+Z前進。移動、擊中與Destroy／池化由Claude控制，不含Collider或傷害程式。
+- 這批不修改SoloBattle、Combat、技能數值或連線訊息；目前遊戲仍需Claude將舊模型與暫代特效換成上述入口。
+
+### 原生驗證
+
+`Snapshot.SupportEnemies.cs`驗證23種模型的有限頂點／6000三角上限，根座標保持、重複潛行不配置材質、動畫不配置網格；支援效果重施去重、破盾、目標停用清理；45招handle唯一／取消隔離／到期清理與七種投射物預覽。CI結果與原生圖片完成後補入本目錄；概念PNG不可冒充Unity截圖。手機AR幀時仍需裝置量測。

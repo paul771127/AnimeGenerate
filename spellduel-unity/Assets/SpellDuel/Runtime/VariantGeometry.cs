@@ -9,7 +9,7 @@ namespace SpellDuel
   static readonly Dictionary<Color,Material> materials=new Dictionary<Color,Material>();
   static Material ghost;
   internal static readonly Color Ink=new Color(.15f,.12f,.19f), Red=new Color(.83f,.075f,.14f), Metal=new Color(.58f,.64f,.69f), Gold=new Color(.75f,.46f,.16f), Skin=new Color(.91f,.69f,.53f);
-  internal static Material Mat(Color c){if(!materials.TryGetValue(c,out var m)||!m){m=new Material(ToonStyle.LitShader()){name="Enemy cel",color=c};materials[c]=m;}return m;}
+  internal static Material Mat(Color c){if(!materials.TryGetValue(c,out var m)||!m){m=new Material(c.a<.99f?Shader.Find("Sprites/Default"):ToonStyle.LitShader()){name="Enemy cel",color=c};materials[c]=m;}return m;}
   internal static Material Ghost{get{if(!ghost)ghost=new Material(Shader.Find("Sprites/Default")){name="Enemy translucent silhouette"};return ghost;}}
   internal static Transform Node(Transform p,string name,Vector3 at){var t=new GameObject(name).transform;t.SetParent(p,false);t.localPosition=at;return t;}
   internal static Transform Part(Transform p,string name,Mesh mesh,Vector3 at,Vector3 scale,Color color)

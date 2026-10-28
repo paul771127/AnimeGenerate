@@ -18,7 +18,7 @@ namespace SpellDuel
    torso.localPosition=torsoRest+Vector3.up*(dead?-.42f*fall:breath+stride*Mathf.Abs(gait)*.018f);
    Pose(torso,dead?82*fall:hostile+stride*8-w*8+a*13-flinch*15,dead?0:Mathf.Sin(age*1.3f)*2,dead?12*fall:gait*stride*2);
    Pose(head,dead?18*fall:-hostile*.6f-w*6,Mathf.Sin(age*.8f+variantId)*4);
-   if(variantId==124){torso.localPosition+=Vector3.up*Mathf.Sin(age*5)*.035f;Pose(torso,dead?80*fall:w*-25+a*40,age*12);return;}
+   if(variantId==124){torso.localPosition+=Vector3.up*Mathf.Sin(age*5)*.035f;Pose(torso,dead?80*fall:w*-25+a*40-flinch*15,age*12);ApplyTint(flinch,fall);return;}
    Pose(upperL,gait*stride*26,0,-12);Pose(upperR,-gait*stride*26,0,12);Pose(foreL,-18-stride*15);Pose(foreR,-18-stride*15);
    Pose(hipL,gait*stride*30,0,-3);Pose(hipR,-gait*stride*30,0,3);Pose(kneeL,Mathf.Max(0,-gait)*stride*32);Pose(kneeR,Mathf.Max(0,gait)*stride*32);
    Pose(handL,0);Pose(handR,0);Pose(tail,Mathf.Sin(age*4)*7+stride*18,0,Mathf.Sin(age*2)*4);
@@ -26,7 +26,7 @@ namespace SpellDuel
    if(caster){Pose(upperR,-cast*105+a*35,0,12+cast*12);Pose(foreR,-15-cast*12);Pose(upperL,-cast*62,0,-12-cast*18);Pose(foreL,-20-cast*30);}
    else if(archer){float aim=Mathf.Max(w,a);Pose(upperL,-aim*80,aim*15,-12);Pose(foreL,-12);Pose(upperR,-aim*68,-aim*36,15);Pose(foreR,-20-aim*65);}
    else {Pose(upperR,-stride*gait*26-w*112+a*55,-w*25+a*55,12);Pose(foreR,-18-w*22);Pose(upperL,stride*gait*26-w*45+a*20,0,-12);}
-   if(variantId==143){float drum=Mathf.Max(cast,a);Pose(upperL,-20-drum*(85+Mathf.Sin(age*13)*25),-drum*25,-15);Pose(upperR,-20-drum*(85-Mathf.Sin(age*13)*25),drum*25,15);Pose(foreL,-35-drum*55);Pose(foreR,-35-drum*55);}
+   if(variantId==143){float drum=Mathf.Max(cast,a);Pose(upperL,drum*(55+Mathf.Sin(age*13)*20),-drum*35,-35);Pose(upperR,drum*(55-Mathf.Sin(age*13)*20),drum*35,35);Pose(foreL,-20-drum*20);Pose(foreR,-20-drum*20);}
    if(variantId==144){Pose(upperR,-25-cast*55+a*35,cast*20,15);Pose(foreR,-10-cast*15);Pose(accessory,0,Mathf.Sin(age*5)*12,Mathf.Sin(age*3)*5);}
    if(variantId==142){torso.localPosition+=Vector3.up*(.11f+Mathf.Sin(age*3)*.035f);Pose(accessory,0,Mathf.Sin(age*8)*14);Pose(hipL,12);Pose(hipR,20);Pose(kneeL,24);Pose(kneeR,32);}
    // Skill-specific body mechanics. Root position is never animated: authority owns displacement.
@@ -40,7 +40,11 @@ namespace SpellDuel
    if(potion)potion.gameObject.SetActive(recover&&!caster);
    if(recover){if(caster){Pose(upperL,-60,0,-20);Pose(upperR,-65,0,20);Pose(foreL,-55);Pose(foreR,-55);}else{Pose(upperL,-98,0,-8);Pose(foreL,-100);Pose(handL,25);}}
    if(dead){if(potion)potion.gameObject.SetActive(false);Pose(upperL,20*fall,0,-25*fall);Pose(upperR,15*fall,0,35*fall);Pose(foreL,-15);Pose(foreR,-15);Pose(hipL,5);Pose(hipR,-12);Pose(kneeL,10);Pose(kneeR,22);}
-   for(int i=0;i<surfaces.Length;i++){var r=surfaces[i];if(!r)continue;bool ghost=sneakBlend>.01f;var wanted=ghost?VariantGeometry.Ghost:originalMaterials[i];if(r.sharedMaterial!=wanted)r.sharedMaterial=wanted;tint.Clear();var c=originalMaterials[i].color;c=Color.Lerp(c,Color.white,flinch*.75f);if(dead)c=Color.Lerp(c,c*.5f,fall);c.a=Mathf.Lerp(1,.26f,sneakBlend);tint.SetColor("_Color",c);r.SetPropertyBlock(tint);}
+   ApplyTint(flinch,fall);
+  }
+  void ApplyTint(float flinch,float fall)
+  {
+   for(int i=0;i<surfaces.Length;i++){var r=surfaces[i];if(!r)continue;bool ghost=sneakBlend>.01f;var wanted=ghost?VariantGeometry.Ghost:originalMaterials[i];if(r.sharedMaterial!=wanted)r.sharedMaterial=wanted;tint.Clear();var c=originalMaterials[i].color;c=Color.Lerp(c,Color.white,flinch*.75f);if(dead)c=Color.Lerp(c,c*.5f,fall);c.a*=Mathf.Lerp(1,.26f,sneakBlend);tint.SetColor("_Color",c);r.SetPropertyBlock(tint);}
   }
  }
 }
