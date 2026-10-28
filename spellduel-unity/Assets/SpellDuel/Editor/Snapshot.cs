@@ -80,6 +80,7 @@ namespace SpellDuel.EditorTools
             PendingArtShots(cam);
             floor.SetActive(false);
             CarpetPetsShots(cam);
+            SupportEnemyShots(cam);
             floor.SetActive(true);
             foreach(var message in ShaderUtil.GetShaderMessages(Shader.Find("SpellDuel/Toon")))
                 if(message.severity.ToString()=="Error")throw new System.Exception("Toon shader: "+message.message);

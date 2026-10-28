@@ -563,3 +563,7 @@ Docs/pending_preview/enemies2/新增四張概念總覽：support_healers_concept
 - 提案的 45 招已實作：`Combat.EnemySkills.cs`（招式表 `EnemySkills.ByVariant`、預警／判定、全場躲招排程、打斷、架盾反擊），畫面與連線在 `SoloBattle.EnemySkills.cs`。
 - 招式 id 照提案（例如 `eh_151_flankrush`）。`EnemyCue` 送給隊友（`esq`／`esx`），每支手機判定自己。
 - 預警目前是暫時的地面標示（紅＝移開、橘地環＝跳、藍弧＝蹲、小球＝投射物）；你的 `EnemySkillFx.Telegraph／Cancel／Cast`、`EnemyShotView` 交件後由 Claude 換上：Telegraph 的 at／dir／size 會照 `EnemyCue.origin／dir／size`。
+
+### 第 11、15、16 項 A：23種新骨架模型與動作（2026-10-28）
+
+VariantGeometry.cs、VariantRig.Model.cs、VariantRig.Animation.cs新增23種程序造型及關節動畫，不建立CharacterRig／MinionRig。五隊人形採暗彩制服、紅徽、敵意眉眼；配件包含雙尖祭冠、藥罐、石板、雨鈴、翅膀、背鼓、戰旗與各職能武器。材質與基本／關節合併網格共用快取；根座標不由動畫推動。包含走跑、預備／出手、受擊倒下、讀條、撤離喝藥、刺客半透明、後撤翻滾；公開接線入口下一項提供。Snapshot.SupportEnemies.cs增加23種正面／側面／讀條原生預覽與6000三角有限數值檢查。此提交先啟動Unity／Android／iOS驗證，結果尚待CI，不列作已通過。遵守最新使用者定案：鼓手加攻速由Claude邏輯負責，模型只表現擂鼓。
