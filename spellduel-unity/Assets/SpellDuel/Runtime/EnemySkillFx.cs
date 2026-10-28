@@ -31,7 +31,11 @@ namespace SpellDuel
   readonly List<LineRenderer> lines=new List<LineRenderer>();readonly List<Color> colors=new List<Color>();
   static readonly Color Red=new Color(1,.16f,.12f,.8f),Orange=new Color(1,.60f,.10f,.9f),Blue=new Color(.22f,.62f,1,.85f);
   Color color;
-  void Line(string name,Vector3[] points,bool loop=false,float width=.022f){var l=SpellFx.Line(transform,name,points,loop,width,color,false,false);lines.Add(l);colors.Add(color);}
+  void Line(string name,Vector3[] points,bool loop=false,float width=.034f)
+  {
+   if(warning){var ink=new Color(.075f,.025f,.10f,.95f);var edge=SpellFx.Line(transform,name+" contrast edge",points,loop,width*2.2f,ink,false,false);edge.sortingOrder=31;lines.Add(edge);colors.Add(ink);}
+   var l=SpellFx.Line(transform,name,points,loop,width,color,false,false);l.sortingOrder=32;lines.Add(l);colors.Add(color);
+  }
   Vector3[] Arc(float r,float span,float y,int count=40){var p=new Vector3[count];for(int i=0;i<count;i++){float a=(-span*.5f+span*i/(count-1))*Mathf.Deg2Rad;p[i]=new Vector3(Mathf.Sin(a)*r,y,Mathf.Cos(a)*r);}return p;}
   internal void Init(string id,Vector3 at,Vector3 dir,float seconds,float size,bool cue,int h)
   {
