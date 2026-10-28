@@ -55,7 +55,7 @@ namespace SpellDuel.EditorTools
     CarpetFit(cam,rig.gameObject,"petdress_"+sp.kind,new Vector3(.4f,.2f,1),640,800);
     rig.SetEating(false);animate.Invoke(rig,new object[]{.3f});rig.SetDead(true);animate.Invoke(rig,new object[]{.8f});UnityEngine.Object.DestroyImmediate(rig.gameObject);pets++;
    }
-   for(int i=0;i<2;i++){var fx=new GameObject("Capture test").AddComponent<PetCaptureView>();fx.Build(i==0);fx.Sample(.65f);CarpetShot(cam,fx.gameObject,"pet_capture_"+i,new Vector3(1,1.4f,2.4f),new Vector3(0,.4f,0),640,640);UnityEngine.Object.DestroyImmediate(fx.gameObject);}
+   for(int i=0;i<2;i++){var fx=new GameObject("Capture test").AddComponent<PetCaptureView>();fx.Build(i==0);fx.Sample(.65f);CarpetFit(cam,fx.gameObject,"pet_capture_"+i,new Vector3(.35f,.4f,1),640,640);UnityEngine.Object.DestroyImmediate(fx.gameObject);}
    foreach(string id in SkillIcons.CarpetPetArtIds){var px=SkillIcons.Render(id,128);if(!SkillIcons.IsSupply(id)||px.Length!=128*128)throw new Exception("Icon size "+id);}
    File.WriteAllText("snapshots/carpet_pets_audit.json","{\"stations\":5,\"obstacles\":4,\"skyEnemies\":5,\"vehicles\":5,\"bosses\":1,\"petKinds\":"+pets+",\"icons\":68,\"finiteMeshes\":true,\"pooledScene\":true,\"petDressIdempotent\":true}");
    Debug.Log("[SpellDuel] Carpet and pet art audit passed: five stations, four obstacles, five enemies and vehicles, airship, 44 pets, 68 icons");

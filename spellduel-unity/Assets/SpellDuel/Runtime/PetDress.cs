@@ -22,7 +22,12 @@ namespace SpellDuel
    SkyArt.Oval(adorn,"Ivory identity clasp",new Vector3(radius*.8f,y,radius*.6f),new Vector3(.09f,.09f,.035f),SkyArt.Cream);
    for(int i=-1;i<=1;i+=2){var bow=SkyArt.Oval(adorn,"Ribbon loop",new Vector3(radius+i*.055f,y,0),new Vector3(.11f,.06f,.04f),SkyArt.Teal);bow.localRotation=Quaternion.Euler(0,0,i*25);SkyArt.Sail(adorn,"Ribbon tail",new Vector3(radius+i*.025f,y-.02f,0),new Vector3(.055f,.15f,1),SkyArt.Teal).localRotation=Quaternion.Euler(0,0,180);}
    if(elite)for(int side=-1;side<=1;side+=2)SkyArt.Oval(adorn,"Golden feather clasp",new Vector3(side*.05f,y,.25f),new Vector3(.06f,.16f,.04f),SkyArt.Gold,true).localRotation=Quaternion.Euler(0,0,side*30);
-   ground=SkyArt.Node(rig.transform,"Friendly floor rings",new Vector3(0,.025f,0));SkyArt.Ring(ground,"Inner friend line",.34f,new Color(.2f,.85f,.72f,.6f),.018f);SkyArt.Ring(ground,"Outer friend line",.39f,new Color(.6f,1,.87f,.45f),.012f);
+   // Fish and jellyfish have a floating root; before the first LateUpdate (including UI
+   // camera renders), place the display floor below their geometry rather than through the face.
+   float floor=0;
+   foreach(var mesh in rig.GetComponentsInChildren<MeshFilter>())
+   {if(!mesh.sharedMesh)continue;var b=mesh.sharedMesh.bounds;for(int i=0;i<8;i++){var p=b.center+new Vector3((i&1)==0?-b.extents.x:b.extents.x,(i&2)==0?-b.extents.y:b.extents.y,(i&4)==0?-b.extents.z:b.extents.z);floor=Mathf.Min(floor,rig.transform.InverseTransformPoint(mesh.transform.TransformPoint(p)).y);}}
+   ground=SkyArt.Node(rig.transform,"Friendly floor rings",new Vector3(0,floor+.025f,0));SkyArt.Ring(ground,"Inner friend line",.34f,new Color(.2f,.85f,.72f,.6f),.018f);SkyArt.Ring(ground,"Outer friend line",.39f,new Color(.6f,1,.87f,.45f),.012f);
    if(elite)for(int j=0;j<8;j++){var line=SkyArt.Line(ground,"Broken gold arc",5,.018f,SkyArt.Gold);for(int i=0;i<5;i++){float a=(j*45+i*6)*Mathf.Deg2Rad;line.SetPosition(i,new Vector3(Mathf.Cos(a)*.47f,0,Mathf.Sin(a)*.47f));}}
   }
   void LateUpdate(){if(!rig)return;if(kind!=rig.PetArtKind||!adorn){Apply(rig,elite);return;}if(ground){ground.gameObject.SetActive(!rig.PetArtDead);if(Application.isPlaying){var p=WorldFrame.ToWorld(rig.transform.position);p.y=.025f;ground.position=WorldFrame.FromWorld(p);ground.rotation=WorldFrame.Marker.rotation;}}}
