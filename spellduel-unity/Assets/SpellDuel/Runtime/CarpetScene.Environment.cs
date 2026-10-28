@@ -32,7 +32,7 @@ namespace SpellDuel
    }
    SkyArt.MeshPart(root,"Distant sky gradient",skyMeshes[s],SkyArt.Glow,Vector3.zero,Vector3.one).GetComponent<Renderer>().sortingOrder=-100;
    CloudDeck(root,s);
-   var sun=SkyArt.Oval(root,s==3?"Moon through storm":"Directional dawn sun",new Vector3(-14,s==4?8:12,65),Vector3.one*(s==3?3:5),SkyArt.Cream);sun.GetComponent<Renderer>().sharedMaterial=SkyArt.Glow;sun.GetComponent<Renderer>().sortingOrder=-90;
+   var sun=SkyArt.Oval(root,s==3?"Moon through storm":"Directional dawn sun",new Vector3(s==4?0:-14,s==4?10:12,65),Vector3.one*(s==3?3:5),SkyArt.Cream);sun.GetComponent<Renderer>().sharedMaterial=SkyArt.Glow;sun.GetComponent<Renderer>().sortingOrder=-90;
    var props=new MaterialPropertyBlock();props.SetColor("_Color",s==3?new Color(.7f,.8f,1):new Color(1,.88f,.56f));sun.GetComponent<Renderer>().SetPropertyBlock(props);
   }
   void CloudDeck(Transform root,int station)
@@ -65,6 +65,7 @@ namespace SpellDuel
    for(int s=0;s<5;s++)
    {
     var root=scenes[s]=SkyArt.Node(transform,"Station "+s,Vector3.zero);BuildSky(root,s);
+    if(s==4)Airship(root);
     for(int i=0;i<30;i++)
     {
      int layer=i%3;float side=i%2==0?-1:1;
@@ -87,6 +88,21 @@ namespace SpellDuel
      if(s==3)foreach(var r in t.GetComponentsInChildren<MeshRenderer>())if(r.sharedMaterial==CloudMaterial(s))stormClouds.Add(r);
     }
    }
+  }
+  void Airship(Transform root)
+  {
+   // Distant scenery only: above and beyond the arena, with dawn directly behind its envelope.
+   var ship=SkyArt.Node(root,"Intercept airship silhouette",new Vector3(0,5,44));
+   SkyArt.Oval(ship,"Gold edged airship envelope",new Vector3(0,2.5f,0),new Vector3(10,3.8f,5.4f),new Color(.70f,.33f,.20f));
+   SkyArt.Oval(ship,"Suspended timber gondola",Vector3.zero,new Vector3(6,1.4f,2.8f),new Color(.28f,.20f,.18f),true);
+   SkyArt.Oval(ship,"Gondola upper deck",new Vector3(0,.48f,0),new Vector3(5.8f,.25f,2.7f),new Color(.56f,.37f,.21f));
+   for(int side=-1;side<=1;side+=2)
+   {
+    for(int j=-1;j<=1;j++)SkyArt.Rod(ship,"Suspension rope",new Vector3(j*2,.5f,side*1.2f),new Vector3(j*2,2.5f,side*2.55f),.045f,SkyArt.Gold);
+    SkyArt.Rod(ship,"Deck side rail",new Vector3(-2.7f,.85f,side*1.15f),new Vector3(2.7f,.85f,side*1.15f),.07f,SkyArt.Gold);
+    var fin=SkyArt.Sail(ship,"Steering canvas",new Vector3(side*4.2f,1.5f,.2f),new Vector3(2,2.2f,1),SkyArt.Teal);fin.localRotation=Quaternion.Euler(0,0,-side*50);
+   }
+   SkyArt.MergeScenery(ship);
   }
   void Island(Transform t,int i)
   {
