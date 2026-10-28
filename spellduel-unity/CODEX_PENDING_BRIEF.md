@@ -639,3 +639,7 @@ Docs/ENEMY_MOVES_PROPOSAL.md 完整涵蓋0～22小怪與23～47菁英，共48種
 ### 第二輪合併單第 3 項：第一人稱審判／天罰（2026-10-28）
 
 HolyLanding改為1.5m／3m擴散光環、8／12道外緣細光，移除施法者正上方中央粗光柱。HolyGround邊界增強，天罰羽光限外緣；原有HolyNeedle命中效果保留。新增快取相機四角SelfFxEdge，只在鏡頭靠近施法原點時短暫金光，中央76%保持空白，不依血量或傷害判定。公開原介面不變；原生預覽增加第一人稱／旁觀視角、外緣半徑及清理檢查，雙平台與圖片待CI結果。
+
+### 第二輪合併單第 4 項：傷害轉護盾的劍氣美術（2026-10-28）
+
+新增SpellFx.SwordShieldGain(owner,fill)及SwordShieldAura(owner,fill)，fill限定0～1；8片藍白劍形光片環繞，增加時向內聚攏，0.3秒節流，fill=0立即隱藏。骨架與材質只建一次，Aura每幀不建網格／材質；owner停用／銷毀清理，近身主鏡頭四角淡藍劍框不遮中央。新增SwordShieldView.Tick僅供可重現預覽，遊戲自動Update，不可雙重呼叫；Claude只需接兩個SpellFx入口。檢查含連續12次Gain只播1次、節流恢復、快取、fill=0及停用清理，原生第一人稱／旁觀圖待CI。沒有讀取HP或改判定／連線。
