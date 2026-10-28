@@ -210,7 +210,8 @@ namespace SpellDuel
                         if (bv.rider)
                         {
                             var ride = bv.veh.transform.position + Vector3.down * (b.sky == 1 ? -0.3f : 0.6f);
-                            var pos = t < Carpet.BoardRing ? ride : Vector3.Lerp(ride, landU, (t - Carpet.BoardRing) / (Carpet.BoardLand - Carpet.BoardRing)) + Vector3.up * Mathf.Sin((t - Carpet.BoardRing) / (Carpet.BoardLand - Carpet.BoardRing) * Mathf.PI) * 0.8f;
+                            var landFeet = SkyFeetOnCloth(landU);
+                            var pos = t < Carpet.BoardRing ? ride : Vector3.Lerp(ride, landFeet, (t - Carpet.BoardRing) / (Carpet.BoardLand - Carpet.BoardRing)) + Vector3.up * Mathf.Sin((t - Carpet.BoardRing) / (Carpet.BoardLand - Carpet.BoardRing) * Mathf.PI) * 0.8f;
                             var look = landU - pos; look.y = 0f;
                             bv.rider.transform.SetPositionAndRotation(pos, look.sqrMagnitude > 1e-4f ? Quaternion.LookRotation(look) : bv.rider.transform.rotation);
                         }
@@ -271,6 +272,9 @@ namespace SpellDuel
             skyBodies[m] = sky;
             return sky;
         }
+        /// <summary>飛毯上的腳底位置：布面（含晃動、落地下陷）再往上一點，靴底不會穿進布裡</summary>
+        public const float SkyFootLift = 0.05f;
+        static Vector3 SkyFeetOnCloth(Vector3 feetU) => (CarpetScene.Active ? CarpetScene.Active.SurfacePoint(feetU) : feetU) + Vector3.up * SkyFootLift;
         SkyEnemyRig SkyBody(Fighter m) => skyBodies.TryGetValue(m, out var s) && s ? s : null;
 
         void ClearSky()

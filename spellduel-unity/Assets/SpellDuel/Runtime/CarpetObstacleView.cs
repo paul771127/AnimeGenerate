@@ -6,6 +6,8 @@ namespace SpellDuel
   // Tick has no duration argument. Set this to the logic's actual flight duration before Tick.
   public float TravelSeconds { get; set; } = 6;
   public float WarningLeadSeconds { get; set; } = 1.8f;
+  // 使用者回報「上面橫桿位置很低」：要蹲過的橫桿放在頭頸的高度（chestHeight＝站姿手機高×0.85 → ×1.1＝站姿手機高的 94%）
+  public const float HighBar=1.1f;
   Transform visual,left,right,lintel; LineRenderer[] marks; int kind; bool released,passing; float passedAt; Vector3 direction,front; float width,height,gap,gapW; int side;
   public static CarpetObstacleView Create(int kind,int station)
   {
@@ -43,7 +45,7 @@ namespace SpellDuel
    gapW=Mathf.Clamp(gapWidth,.3f,width);gap=Mathf.Clamp(gapCenter,-width*.5f+gapW*.5f,width*.5f-gapW*.5f);
    transform.SetPositionAndRotation(front,Quaternion.LookRotation(direction));visual.localPosition=Vector3.forward*(1-Mathf.Clamp01(progress))*30;
    left.gameObject.SetActive(true);right.gameObject.SetActive(kind==3);lintel.gameObject.SetActive(kind==3);
-   if(kind<2){left.localPosition=new Vector3(0,kind==0?.15f:height*.85f,0);left.localScale=new Vector3(width+1,.22f,.3f);}
+   if(kind<2){left.localPosition=new Vector3(0,kind==0?.15f:height*HighBar,0);left.localScale=new Vector3(width+1,.22f,.3f);}
    else if(kind==2){left.localPosition=new Vector3(this.side*width*.25f,height*.6f,0);left.localScale=new Vector3(width*.5f,height*1.5f,.8f);}
    else
    {float lo=gap-gapW*.5f,hi=gap+gapW*.5f,wl=lo+width*.5f,wr=width*.5f-hi;
@@ -54,7 +56,7 @@ namespace SpellDuel
    foreach(var m in marks)m.gameObject.SetActive(false);
    if(!warning)return;
    if(kind<2)
-   {Color c=kind==0?new Color(1,.5f,.12f,.95f):new Color(.25f,.65f,1,.95f);float y=kind==0?.15f:height*.85f;Segment(0,new Vector3(-width*.5f,y,0),new Vector3(width*.5f,y,0),c);
+   {Color c=kind==0?new Color(1,.5f,.12f,.95f):new Color(.25f,.65f,1,.95f);float y=kind==0?.15f:height*HighBar;Segment(0,new Vector3(-width*.5f,y,0),new Vector3(width*.5f,y,0),c);
     float d=kind==0?1:-1;for(int i=0;i<2;i++){Segment(1+i*2,new Vector3(-.17f,.07f,-.55f-i*.23f),new Vector3(0,.07f,-.55f-i*.23f+d*.16f),c);Segment(2+i*2,new Vector3(.17f,.07f,-.55f-i*.23f),new Vector3(0,.07f,-.55f-i*.23f+d*.16f),c);}}
    else
    {for(int i=0;i<10;i++){float x=Mathf.Lerp(-width*.5f,width*.5f,i/9f);if(kind==2&&x*this.side<0||kind==3&&Mathf.Abs(x-gap)<gapW*.5f)continue;Segment(i,new Vector3(x,.065f,0),new Vector3(x,.065f,-1.3f),new Color(1,.25f,.2f,.65f));}

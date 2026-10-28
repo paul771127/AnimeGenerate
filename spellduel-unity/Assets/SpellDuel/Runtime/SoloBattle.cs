@@ -1862,7 +1862,12 @@ namespace SpellDuel
                 bool jumped = (newPos - oldPos).magnitude > 2f;   // 虛空術士瞬移（隊友端也看得到）：兩邊都冒出傳送光
                 if (jumped) { MinionRig.SpawnFx(oldPos); MinionRig.SpawnFx(newPos); Sfx.Play("dodge", 0.5f, 0.6f); }
                 rig.MoveSpeed = jumped ? 0f : Mathf.Lerp(rig.MoveSpeed, (newPos - oldPos).magnitude / dt, 0.25f);
-                var skyBody = SkyBody(m); if (skyBody) skyBody.MoveSpeed = rig.MoveSpeed;
+                var skyBody = SkyBody(m);
+                if (skyBody)
+                {
+                    skyBody.MoveSpeed = rig.MoveSpeed;
+                    skyBody.transform.position = SkyFeetOnCloth(newPos);   // 使用者回報：腳沉到飛毯下 → 貼著會晃動、會被踩凹的布面
+                }
                 TickVariantBody(m, rig);
                 if (m.variant > 0) { var look = rig.GetComponent<MinionLook>(); if (look) look.Sneak = Battle.AssassinSneaking(m, Me) || (m.variant == 112 && Me != null && Battle.FlatDistance(m.Feet, Me.Feet) > 3f); }   // 刺客繞路中、霧行者離遠了：只看得到眼睛
                 bool winding = m.windupUntil > 0f;
