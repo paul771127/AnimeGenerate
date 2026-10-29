@@ -229,6 +229,7 @@ namespace SpellDuel
         public float rangeMul = 1f;     // 飛行距離倍率（無盡模式升級）
         public float speedMul = 1f;     // 飛行速度倍率（每日閃避挑戰：每一發快慢不同）
         public Projectile clashedWith;  // 已經和這一發對撞過（不重複判定）
+        public bool sliceClashed;       // 已經和劍士的斬擊對撞過（撐住了就不再判定）
         public float hitMul = 1f;       // 命中判定範圍倍率（電腦敵人的投射物 0.5：不用跑很遠才躲得掉）
         public int id;
         public bool remote;          // 雙人：對手的法術（只顯示，命中由對手判定）
@@ -3505,6 +3506,18 @@ namespace SpellDuel
             {
                 if (f == null || !f.Alive || f.sliceUntil <= now || !Hostile(f, p.owner)) continue;
                 if (!InSliceArc(f, p.pos)) continue;
+                if (p.sliceClashed) continue;
+                // 使用者要求：斬開法球改成「對撞」——斬擊和法術撞上就爆炸；劍士維持手勢＝斬碎法術，放掉＝法術突破、加速衝過來
+                p.sliceClashed = true;
+                Emit("clash", p.pos, p.skill.color, "💥 劍氣與法術對撞！");
+                bool hold = f == player ? (playerSpellHold?.Invoke() ?? false) : (remoteEnemy || rng.NextDouble() < 0.5);   // 對手手機上的斬擊：由對手那支手機決定（會送 slice 過來）
+                if (!hold)
+                {
+                    p.speedMul *= ClashBoost;
+                    if (f == player) Emit("clashbreak", f.Chest, p.skill.color, "斬擊被突破了！");
+                    if (f == player && p.remote) OnClash?.Invoke(-1, p.id);   // 告訴對手：他那一發突破了，加速
+                    continue;
+                }
                 p.alive = false;
                 Emit("slice", p.pos, p.skill.color, $"斬開 {p.skill.name}！");
                 if (p.remote) { slicedRemote.Add(p.id); OnSlice?.Invoke(p.id, true); }

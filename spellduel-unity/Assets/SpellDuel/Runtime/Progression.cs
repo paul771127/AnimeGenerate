@@ -271,7 +271,7 @@ namespace SpellDuel
                     FPas("sw_armor", "鋼筋鐵骨", PassiveKind.Armor, 0.02f, 5, 1, 4, "sw_regen"),   // 使用者要求：劍士系列少了吸血 → 補防禦（物理減傷 2%／級）
                     // 劍氣
                     FMod("sw_slash", "斬擊強化", "slash", ModField.Damage, 0.1f, 5, 3, 1, "sw_root"),
-                    FPas("sw_orb", "斬開法球", PassiveKind.OrbSlice, 1f, 1, 4, 2, "sw_slash"),   // 點了才會：斬擊斬開飛來的法球
+                    FPas("sw_orb", "斬開法球", PassiveKind.OrbSlice, 1f, 1, 4, 2, "sw_slash"),   // 點了才會：斬擊和飛來的法術對撞（維持手勢＝斬碎、放掉＝被突破）
                     FLearn("sw_wave", "wave", 3, 2, "sw_slash"),
                     FMod("sw_wave2", "劍氣分裂", "wave", ModField.Multi, 1f, 2, 2, 3, "sw_wave"),
                     FMod("sw_wavep", "劍氣穿透", "wave", ModField.Pierce, 1f, 1, 3, 3, "sw_wave"),
@@ -632,7 +632,7 @@ namespace SpellDuel
                         PassiveKind.ArrowPoison => $"箭命中時 {v * 100:0}% 機率中毒：每秒 3 傷害、6 秒（可疊加）",
                         PassiveKind.ArrowSilence => $"箭命中時 {v * 100:0}% 機率沉默 {Battle.SilenceDur:0} 秒：不能唸技能、正在唸的被打斷（Boss 減半）",
                         PassiveKind.ComboStrike => $"普攻每第 3 下是重擊：傷害 +{v * 100:0}%",
-                        PassiveKind.OrbSlice => $"「斬擊」揮出後 {Battle.SliceWindow:0.#} 秒內，斬開正面 {Battle.SliceRange:0.#}m 內飛來的法球（從天而降、地裂、橫掃等範圍攻擊無效）",
+                        PassiveKind.OrbSlice => $"「斬擊」揮出後 {Battle.SliceWindow:0.#} 秒內，和正面 {Battle.SliceRange:0.#}m 內飛來的法球對撞：維持手勢＝斬碎法球；放掉手勢＝法球突破、加速衝過來（從天而降、地裂、橫掃等範圍攻擊無效）",
                         PassiveKind.BasicLeech => $"普攻造成傷害的 {v * 100:0}% 回復成 HP（一揮砍到多隻只算一次）",
                         PassiveKind.WaveFlow => $"斬擊後 {v:0} 秒內，劍氣不花 MP",
                         PassiveKind.Riposte => $"格擋成功後 4 秒內，下一擊傷害 +{v * 100:0}%",
