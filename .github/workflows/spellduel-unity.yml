@@ -286,7 +286,8 @@ jobs:
           KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
           KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
         run: |
-          if [ "$RELEASE" = "true" ]; then PROFILE="$PROFILE_REL"; WHO="正式版（朋友）"; else PROFILE="$PROFILE_DEV"; WHO="開發版（自己）"; fi
+          # 開發版的描述檔由下面的簽章步驟用 API 金鑰向 Apple 拿（沒有就建），不一定要設 IOS_APPSTORE_PROFILE_DEV_BASE64
+          if [ "$RELEASE" = "true" ]; then PROFILE="$PROFILE_REL"; WHO="正式版（朋友）"; else PROFILE="api"; WHO="開發版（自己）"; fi
           if [ -n "$P12" ] && [ -n "$P12_PASS" ] && [ -n "$PROFILE" ] && [ -n "$ISSUER" ] && [ -n "$KEY_ID" ] && [ -n "$KEY" ]; then
             echo "ok=true" >> "$GITHUB_OUTPUT"
             echo "::notice::這次上傳到 TestFlight：$WHO"
@@ -320,6 +321,9 @@ jobs:
           P12_PASS: ${{ secrets.IOS_DIST_P12_PASSWORD }}
           PROFILE_REL: ${{ secrets.IOS_APPSTORE_PROFILE_BASE64 }}
           PROFILE_DEV: ${{ secrets.IOS_APPSTORE_PROFILE_DEV_BASE64 }}
+          ISSUER: ${{ secrets.APPSTORE_ISSUER_ID }}
+          KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
         run: |
           set -eo pipefail
           S="$RUNNER_TEMP/sign"; mkdir -p "$S/x"
@@ -331,11 +335,94 @@ jobs:
             if [ "$bad" -gt 0 ] || ! printf '%s' "$v" | base64 -d > /dev/null 2>&1; then echo "::error::$1 不是有效的 base64，請重新產生後貼上"; return 1; fi
           }
           check_b64 IOS_DIST_P12_BASE64 "$P12"
-          if [ "$RELEASE" = "true" ]; then check_b64 IOS_APPSTORE_PROFILE_BASE64 "$PROFILE_REL"; else check_b64 IOS_APPSTORE_PROFILE_DEV_BASE64 "$PROFILE_DEV"; fi
           echo "$P12" | base64 -d > "$S/dist.p12"
-          # 描述檔 secret 貼上時常混進空白或換行（base64 -d 會報 invalid input）：先去掉再解碼
-          if [ "$RELEASE" = "true" ]; then printf '%s' "$PROFILE_REL" | tr -d ' \t\r\n' | base64 -d > "$S/appstore.mobileprovision"
-          else printf '%s' "$PROFILE_DEV" | tr -d ' \t\r\n' | base64 -d > "$S/appstore.mobileprovision"; fi
+          if [ "$RELEASE" = "true" ]; then
+            check_b64 IOS_APPSTORE_PROFILE_BASE64 "$PROFILE_REL"
+            # 描述檔 secret 貼上時常混進空白或換行（base64 -d 會報 invalid input）：先去掉再解碼
+            printf '%s' "$PROFILE_REL" | tr -d ' \t\r\n' | base64 -d > "$S/appstore.mobileprovision"
+          # 開發版：用 App Store Connect API 金鑰向 Apple 拿 com.paul771127.spellduel.dev 的 App Store 描述檔
+          # （有效、包含這張 Distribution 憑證；沒有就建一個），不用再手動貼描述檔；API 失敗才退回 IOS_APPSTORE_PROFILE_DEV_BASE64
+          elif S="$S" python3 -I - "com.paul771127.spellduel.dev" "$S/dist.p12" "$S/appstore.mobileprovision" <<'ASC'
+          import base64, json, os, subprocess, sys, time, urllib.error, urllib.request
+          bundle, p12, out = sys.argv[1:4]
+          iss, kid, key, S = os.environ["ISSUER"], os.environ["KEY_ID"], os.environ["KEY"], os.environ["S"]
+          BASE = os.environ.get("ASC_BASE", "https://api.appstoreconnect.apple.com")
+
+          def b64u(b): return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+
+          def der_to_raw(der):   # ECDSA 簽章 DER（SEQUENCE{r,s}）→ JWT 要的 r‖s 各 32 bytes
+              i = 2 if der[1] < 0x80 else 2 + (der[1] & 0x7F)
+              raw = b""
+              for _ in range(2):
+                  n = der[i + 1]; raw += der[i + 2:i + 2 + n].lstrip(b"\0").rjust(32, b"\0"); i += 2 + n
+              return raw
+
+          def token():
+              kp = os.path.join(S, "asc.p8")
+              pem = key.replace("\\n", "\n").strip()
+              if not pem.startswith("-----"): pem = "-----BEGIN PRIVATE KEY-----\n" + pem + "\n-----END PRIVATE KEY-----"
+              with open(os.open(kp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f: f.write(pem + "\n")
+              now = int(time.time())
+              msg = (b64u(json.dumps({"alg": "ES256", "kid": kid, "typ": "JWT"}).encode()) + "." +
+                     b64u(json.dumps({"iss": iss, "iat": now, "exp": now + 1100, "aud": "appstoreconnect-v1"}).encode()))
+              der = subprocess.run(["openssl", "dgst", "-sha256", "-sign", kp], input=msg.encode(), capture_output=True, check=True).stdout
+              os.remove(kp)
+              return msg + "." + b64u(der_to_raw(der))
+
+          TOKEN = token()
+
+          def api(method, path, body=None):
+              req = urllib.request.Request(BASE + path, method=method, data=json.dumps(body).encode() if body else None,
+                                           headers={"Authorization": "Bearer " + TOKEN, "Content-Type": "application/json"})
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as r: return json.load(r)
+              except urllib.error.HTTPError as e:
+                  print(f"App Store Connect API {method} {path.split('?')[0]} → {e.code}：{e.read().decode(errors='replace')[:600]}")
+                  raise
+
+          def serial_of_p12():
+              for extra in (["-legacy"], []):   # OpenSSL 3 讀舊格式 p12 要 -legacy
+                  r = subprocess.run(["openssl", "pkcs12", "-in", p12, "-nokeys", "-clcerts", "-passin", "env:P12_PASS"] + extra, capture_output=True)
+                  if r.returncode == 0 and b"BEGIN CERTIFICATE" in r.stdout:
+                      s = subprocess.run(["openssl", "x509", "-noout", "-serial"], input=r.stdout, capture_output=True, check=True).stdout.decode()
+                      return s.strip().split("=", 1)[1]
+              raise SystemExit("讀不到 p12 裡的憑證（密碼錯？）")
+
+          norm = lambda x: (x or "").upper().lstrip("0")
+          serial = serial_of_p12()
+          cert = next((c for c in api("GET", "/v1/certificates?limit=200")["data"] if norm(c["attributes"].get("serialNumber")) == norm(serial)), None)
+          if not cert: raise SystemExit(f"App Store Connect 找不到序號 {serial} 的憑證（p12 和帳號裡的 Distribution 憑證不是同一張）")
+          print(f"Distribution 憑證：{cert['attributes'].get('name')}（{cert['attributes'].get('certificateType')}，到期 {cert['attributes'].get('expirationDate')}）")
+
+          bid = next((b for b in api("GET", f"/v1/bundleIds?filter[identifier]={bundle}&limit=200")["data"] if b["attributes"]["identifier"] == bundle), None)
+          if not bid:
+              bid = api("POST", "/v1/bundleIds", {"data": {"type": "bundleIds", "attributes": {"identifier": bundle, "name": "SpellDuel Dev", "platform": "IOS"}}})["data"]
+              print(f"已註冊 App ID {bundle}")
+
+          content = None
+          for p in api("GET", f"/v1/bundleIds/{bid['id']}/profiles?limit=200")["data"]:
+              a = p["attributes"]
+              if a.get("profileType") != "IOS_APP_STORE" or a.get("profileState") != "ACTIVE": continue
+              if cert["id"] not in [c["id"] for c in api("GET", f"/v1/profiles/{p['id']}/certificates?limit=200")["data"]]: continue
+              content = a.get("profileContent") or api("GET", f"/v1/profiles/{p['id']}")["data"]["attributes"]["profileContent"]
+              print(f"使用現有的描述檔：{a.get('name')}（到期 {a.get('expirationDate')}）")
+              break
+          if content is None:
+              r = api("POST", "/v1/profiles", {"data": {"type": "profiles",
+                  "attributes": {"name": f"SpellDuel Dev App Store {time.strftime('%Y%m%d%H%M')}", "profileType": "IOS_APP_STORE"},
+                  "relationships": {"bundleId": {"data": {"type": "bundleIds", "id": bid["id"]}},
+                                    "certificates": {"data": [{"type": "certificates", "id": cert["id"]}]}}}})["data"]
+              content = r["attributes"]["profileContent"]
+              print(f"已建立新的描述檔：{r['attributes'].get('name')}")
+          with open(out, "wb") as f: f.write(base64.b64decode(content))
+          ASC
+          then echo "開發版描述檔：由 App Store Connect API 取得"
+          elif [ -n "$PROFILE_DEV" ]; then
+            echo "::warning::App Store Connect API 拿不到描述檔（原因見上面），改用 IOS_APPSTORE_PROFILE_DEV_BASE64"
+            check_b64 IOS_APPSTORE_PROFILE_DEV_BASE64 "$PROFILE_DEV"
+            printf '%s' "$PROFILE_DEV" | tr -d ' \t\r\n' | base64 -d > "$S/appstore.mobileprovision"
+          else echo "::error::App Store Connect API 拿不到開發版描述檔（原因見上面），也沒有設 IOS_APPSTORE_PROFILE_DEV_BASE64"; exit 1
+          fi
           unzip -q unsigned/SpellDuel-unsigned.ipa -d "$S/x"
           PLIST=$(ls -d "$S"/x/Payload/*.app)/Info.plist
           # Build 號：Unity 寫入的 yyMMddHH 加上流程編號，同一小時內多次建置也不會撞號
