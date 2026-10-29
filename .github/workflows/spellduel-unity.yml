@@ -323,6 +323,15 @@ jobs:
         run: |
           set -eo pipefail
           S="$RUNNER_TEMP/sign"; mkdir -p "$S/x"
+          # 先檢查每個 secret 是不是有效的 base64：印出長度、指紋（sha256 前 12 碼）、不合法字元數（不會洩漏內容），
+          # 可以和自己電腦上 `base64 -i 檔案 | tr -d '\n' | shasum -a 256` 的前 12 碼比對是不是同一份
+          check_b64() {
+            local v bad; v=$(printf '%s' "$2" | tr -d ' \t\r\n'); bad=$(printf '%s' "$v" | tr -d 'A-Za-z0-9+/=' | wc -c)
+            echo "$1：長度 ${#v}、指紋 $(printf '%s' "$v" | sha256sum | cut -c1-12)、不合法字元 ${bad} 個"
+            if [ "$bad" -gt 0 ] || ! printf '%s' "$v" | base64 -d > /dev/null 2>&1; then echo "::error::$1 不是有效的 base64，請重新產生後貼上"; return 1; fi
+          }
+          check_b64 IOS_DIST_P12_BASE64 "$P12"
+          if [ "$RELEASE" = "true" ]; then check_b64 IOS_APPSTORE_PROFILE_BASE64 "$PROFILE_REL"; else check_b64 IOS_APPSTORE_PROFILE_DEV_BASE64 "$PROFILE_DEV"; fi
           echo "$P12" | base64 -d > "$S/dist.p12"
           # 描述檔 secret 貼上時常混進空白或換行（base64 -d 會報 invalid input）：先去掉再解碼
           if [ "$RELEASE" = "true" ]; then printf '%s' "$PROFILE_REL" | tr -d ' \t\r\n' | base64 -d > "$S/appstore.mobileprovision"
