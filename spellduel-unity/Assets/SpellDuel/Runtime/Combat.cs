@@ -3550,10 +3550,25 @@ namespace SpellDuel
         public const float BossOrbSlow = 0.6f, BossOrbMinSpeed = 0.3f;
         bool IsBossOrb(Projectile q) => q.alive && !q.Fading && q.owner == enemy && enemy.cls != null && enemy.cls.id.StartsWith("boss") && q.damage > 0 && Sliceable(q.skill);
 
+        /// <summary>多顆小法球（御劍術的飛劍、連射、普攻…）：攻擊力不到對方 ChipRatio 倍就不角力，改成「削」——小的那一發消失，大的那一發的攻擊力扣掉它的攻擊力，扣到 0 就碎掉</summary>
+        public const float ChipRatio = 0.4f;
+        static bool IsChip(Projectile small, Projectile big) => small.damage < big.damage * ChipRatio;
+        /// <summary>連線：我的小法球削了對手的法術（對手那一發的編號、削掉多少）</summary>
+        public event Action<int, int> OnChip;
+
         bool TryClash(Projectile p)
         {
-            if (p.remote || !Clashable(p) || p.owner != player && !ClashOwner(p.owner)) return false;
+            if (!Clashable(p) || p.owner != player && !ClashOwner(p.owner)) return false;
+            // 角力中：雙方之後的法術（御劍術的飛劍、普攻…）飛到撞擊點 → 被吸進去、幫自己那邊推
+            if (clash != null && p != clash.mine && p != clash.theirs && (p.owner == player || p.owner == clash.foe) && Vector3.Distance(p.pos, ClashPoint(clash.t)) <= p.skill.radius + 0.35f)
+            {
+                p.alive = false;
+                if (!p.remote) ClashFeed(p.owner == player, p.damage);   // 對手的：他那邊會送 clp（帶攻擊力）過來
+                return true;
+            }
+            if (p.remote) return false;
             if (p.owner == player)
+            {
                 foreach (var q in projectiles)
                 {
                     if (!IsBossOrb(q) || Vector3.Distance(p.pos, q.pos) > p.skill.radius + q.skill.radius + ClashPad) continue;
@@ -3564,17 +3579,78 @@ namespace SpellDuel
                     Emit("clashbreak", q.pos, q.skill.color, q.speedMul < before ? "法球減速！" : "法球已經最慢了");
                     return true;
                 }
-            if (!ClashOwner(p.owner) || clash != null) return false;
+                // 一般小怪的投射物：直接打碎，我的法術繼續飛（使用者要求）
+                foreach (var q in projectiles)
+                {
+                    if (!q.alive || q.Fading || q.locked || q.owner == null || !q.owner.isMinion || q.damage <= 0 || !Sliceable(q.skill)) continue;
+                    if (Vector3.Distance(p.pos, q.pos) > p.skill.radius + q.skill.radius + ClashPad) continue;
+                    q.alive = false;
+                    Emit("clashbreak", q.pos, q.skill.color, "擊碎！");
+                }
+                if (TryCueClash(p)) return !p.alive;
+            }
+            if (!ClashOwner(p.owner)) return false;
             foreach (var q in projectiles)
             {
                 if (q == p || q.locked || !Clashable(q) || !ClashOwner(q.owner) || q.owner == p.owner) continue;
                 if (p.clashedWith == q || q.clashedWith == p) continue;
                 if (Vector3.Distance(p.pos, q.pos) > p.skill.radius + q.skill.radius + ClashPad) continue;
+                // 多顆小法球：削，不角力（小的那一發的手機負責：對手的小法球由對手那邊算，這裡只把它收掉）
+                if (IsChip(p, q) || IsChip(q, p))
+                {
+                    var small = IsChip(p, q) ? p : q; var big = small == p ? q : p;
+                    small.alive = false; small.clashedWith = big;
+                    Emit("clashpush", small.pos, small.skill.color, null);
+                    if (small.remote) return !p.alive;   // 對手的小法球：他的手機會送 chip 過來
+                    big.damage -= small.damage;
+                    if (big.remote) OnChip?.Invoke(big.id, small.damage);
+                    if (big.damage <= 0) { big.alive = false; Emit("clashbreak", big.pos, big.skill.color, big.owner == player ? "法術被削碎了！" : "削碎了對手的法術！"); }
+                    return !p.alive;
+                }
+                if (clash != null) continue;
                 if (!clashAuthority && (q.remote || p.remote)) return false;   // 連線：角力由房主開始（房主送 cls 過來）
                 var mine = p.owner == player ? p : q; var theirs = mine == p ? q : p;
-                StartClash(mine, theirs, ClashT((p.pos + q.pos) * 0.5f));
+                StartClash(mine, theirs, enemy, ClashT((p.pos + q.pos) * 0.5f, enemy), false);
                 if (theirs.remote) OnClashStart?.Invoke(mine.id, theirs.id, clash.t);
                 return false;
+            }
+            return false;
+        }
+
+        /// <summary>連線：對手的小法球削了我的法術</summary>
+        public void ApplyRemoteChip(int myId, int dmg)
+        {
+            foreach (var p in projectiles)
+                if (p.alive && !p.remote && p.id == myId)
+                {
+                    p.damage -= dmg;
+                    if (p.damage <= 0) { p.alive = false; Emit("clashbreak", p.pos, p.skill.color, "法術被削碎了！"); }
+                }
+        }
+
+        /// <summary>
+        /// 我的法術撞上小怪的遠程招（EnemyCue 的投射物：菁英、人形、第二招）：
+        ///   菁英、人形 → 角力（電腦會推），輸了那一發照它的傷害往我衝；一般小怪 → 直接打碎
+        /// </summary>
+        bool TryCueClash(Projectile p)
+        {
+            foreach (var c in enemyCues)
+            {
+                if (c.speed <= 0f || c.judged || c.cancelled || now < c.hit) continue;
+                var dir = c.dir; dir.y = 0f; if (dir.sqrMagnitude < 1e-6f) continue; dir.Normalize();
+                float d = (now - c.hit) * c.speed; if (d > c.size) continue;
+                var at = c.origin + Vector3.up * 1.2f + dir * d;
+                if (Vector3.Distance(p.pos, at) > p.skill.radius + 0.3f + ClashPad) continue;
+                var owner = MinionById(c.owner);
+                c.cancelled = true; OnEnemyCueCancel?.Invoke(c);
+                bool strong = owner != null && owner.Alive && (owner.human > 0 || EliteCatalog.IsElite(owner.minionKind)) && clash == null;
+                if (!strong) { Emit("clashbreak", at, p.skill.color, "擊碎！"); return true; }
+                // 用一發本機的替身投射物和我的法術角力（輸了它就照原本的傷害往我衝）
+                var proxySkill = Skills.All.TryGetValue("m_fireball", out var fb) ? fb : p.skill;
+                var proxy = Spawn(owner, proxySkill, at, dir, c.dmg, EffectKind.None, 0f, 0f, false);
+                proxy.damage = c.dmg; proxy.target = player;
+                StartClash(p, proxy, owner, ClashT(at, owner), true);
+                return true;
             }
             return false;
         }
@@ -3582,9 +3658,10 @@ namespace SpellDuel
         // ------------------------------------------------------------ 法術角力（使用者要求）
         // 兩發法術撞上 → 卡在半空互推：每做一次手勢（手舉到鏡頭前／點一下螢幕）就往對方推一段，
         // 推的距離看「自己那一發的攻擊力 ÷ 兩發平均」：攻擊力高的推一下走很多、低的只推一點點。
-        // 推到對方面前 → 贏的那一發加速衝過去、輸的那一發碎掉；ClashTime 秒內沒分出勝負 → 兩發在原地一起炸掉。
-        // 連線：房主算（clashAuthority），隊友的手勢送過去（OnClashPulse），房主把位置、結果送回來。
-        public sealed class SpellClash { public Projectile mine, theirs; public float t, t0, until, nextSync, nextAi; }
+        // 被壓過 ClashBreakDist 公尺（或推到對方面前）→ 贏的那一發穿破、加速衝過去；ClashTime 秒內沒分出勝負 → 兩發一起炸掉。
+        // 角力中雙方再打過來的法術（御劍術的飛劍、普攻…）飛到撞擊點會被吸進去，照它的攻擊力幫自己那邊推。
+        // 對手：真人（房主算，隊友的手勢送過去）、電腦對手；菁英、人形敵人的遠程招（本機算，電腦會推）。
+        public sealed class SpellClash { public Projectile mine, theirs; public Fighter foe; public bool local; public float t, t0, until, nextSync, nextAi; }
         public SpellClash clash;
         public bool clashAuthority = true;
         public const float ClashTime = 5f, ClashWin = 0.9f, ClashPushMeters = 0.5f, ClashSync = 0.1f;
@@ -3593,67 +3670,76 @@ namespace SpellDuel
         public event Action<int, int, float> OnClashStart;   // 我那一發、對方那一發、位置（0＝我、1＝對方）
         public event Action<float> OnClashState;
         public event Action<int> OnClashEnd;                 // 1＝房主那邊贏、−1＝對方贏、0＝平手
-        public event Action OnClashPulse;
+        public event Action<int> OnClashPulse;               // 隊友推了一下（推的攻擊力；0＝用角力中那一發的）
 
-        float ClashT(Vector3 at)
+        float ClashT(Vector3 at, Fighter foe)
         {
-            var a = player.Chest; var b = enemy.Chest; var ab = b - a;
+            var a = player.Chest; var b = foe.Chest; var ab = b - a;
             return Mathf.Clamp(Vector3.Dot(at - a, ab) / Mathf.Max(0.01f, ab.sqrMagnitude), 0.15f, 0.85f);
         }
-        Vector3 ClashPoint(float t) => Vector3.Lerp(player.Chest, enemy.Chest, t);
+        Fighter ClashFoe => clash != null && clash.foe != null ? clash.foe : enemy;
+        Vector3 ClashPoint(float t) => Vector3.Lerp(player.Chest, ClashFoe.Chest, t);
+        float ClashLen => Mathf.Max(1f, FlatDistance(player.Feet, ClashFoe.Feet));
 
-        void StartClash(Projectile mine, Projectile theirs, float t)
+        void StartClash(Projectile mine, Projectile theirs, Fighter foe, float t, bool local)
         {
             mine.locked = theirs.locked = true; mine.clashedWith = theirs; theirs.clashedWith = mine;
-            clash = new SpellClash { mine = mine, theirs = theirs, t = t, t0 = t, until = now + ClashTime, nextAi = now + 0.5f };
+            clash = new SpellClash { mine = mine, theirs = theirs, foe = foe, local = local, t = t, t0 = t, until = now + ClashTime, nextAi = now + 0.5f };
             Emit("clash", ClashPoint(t), Color.Lerp(mine.skill.color, theirs.skill.color, 0.5f), "💥 法術角力！快做手勢往前推！");
         }
 
-        /// <summary>這一推走多遠（0～1 的比例）：攻擊力 ÷ 兩發平均 × ClashPushMeters ÷ 兩人距離</summary>
-        float ClashPush(Projectile by, Projectile other)
+        /// <summary>攻擊力 dmg 推一下走多遠（0～1 的比例）：dmg ÷ 兩發平均 × ClashPushMeters ÷ 兩人距離</summary>
+        float ClashPushBy(int dmg)
         {
-            float avg = Mathf.Max(1f, (by.damage + other.damage) * 0.5f);
-            float ratio = Mathf.Clamp(by.damage / avg, 0.3f, 3f);
-            return ClashPushMeters * ratio / Mathf.Max(1f, FlatDistance(player.Feet, enemy.Feet));
+            float avg = Mathf.Max(1f, (clash.mine.damage + clash.theirs.damage) * 0.5f);
+            return ClashPushMeters * Mathf.Clamp(dmg / avg, 0.1f, 3f) / ClashLen;
         }
+        bool ClashSolo => clash != null && (clash.local || clashAuthority);
 
         /// <summary>本機玩家做了一次手勢</summary>
         public void ClashPulse()
         {
             if (clash == null) return;
-            if (!clashAuthority) { OnClashPulse?.Invoke(); Emit("clashpush", ClashPoint(clash.t), clash.mine.skill.color, null); return; }
-            clash.t += ClashPush(clash.mine, clash.theirs);
             Emit("clashpush", ClashPoint(clash.t), clash.mine.skill.color, null);
+            if (!ClashSolo) { OnClashPulse?.Invoke(0); return; }
+            clash.t += ClashPushBy(clash.mine.damage);
         }
-        /// <summary>對手做了一次手勢（房主收到）</summary>
-        public void RemoteClashPulse()
+        /// <summary>角力中又有法術飛進撞擊點：照它的攻擊力幫那一邊推一下</summary>
+        void ClashFeed(bool mineSide, int dmg)
         {
-            if (clash == null || !clashAuthority) return;
-            clash.t -= ClashPush(clash.theirs, clash.mine);
+            Emit("clashpush", ClashPoint(clash.t), mineSide ? clash.mine.skill.color : clash.theirs.skill.color, null);
+            if (!ClashSolo) { if (mineSide) OnClashPulse?.Invoke(Mathf.Max(1, dmg)); return; }
+            clash.t += (mineSide ? 1f : -1f) * ClashPushBy(dmg);
+        }
+        /// <summary>對手推了一下（房主收到；dmg＝0：用他那一發的攻擊力）</summary>
+        public void RemoteClashPulse(int dmg = 0)
+        {
+            if (clash == null || !clashAuthority || clash.local) return;
+            clash.t -= ClashPushBy(dmg > 0 ? dmg : clash.theirs.damage);
         }
 
         void UpdateClash()
         {
             var c = clash; if (c == null) return;
-            if (!c.mine.alive || !c.theirs.alive && !c.theirs.remote) { EndClashLocal(c.mine.alive ? 1 : -1); return; }
-            var axis = (enemy.Chest - player.Chest).normalized;
+            if (!c.mine.alive || !c.theirs.alive && !c.theirs.remote || c.foe == null || !c.foe.Alive) { EndClashLocal(c.mine.alive ? 1 : -1); return; }
+            var axis = (c.foe.Chest - player.Chest).normalized;
             var pt = ClashPoint(c.t);
             c.mine.pos = pt - axis * 0.12f; c.theirs.pos = pt + axis * 0.12f;
-            if (!clashAuthority) return;
-            if (!remoteEnemy && now >= c.nextAi) { c.nextAi = now + 0.35f + (float)rng.NextDouble() * 0.4f; c.t -= ClashPush(c.theirs, c.mine); }   // 電腦對手也會推
-            if (now >= c.nextSync) { c.nextSync = now + ClashSync; OnClashState?.Invoke(c.t); }
-            float moved = (c.t - c.t0) * Mathf.Max(1f, FlatDistance(player.Feet, enemy.Feet));   // 從撞上的地方被推了幾公尺（正＝往對手）
+            if (!ClashSolo) return;
+            if ((c.local || !remoteEnemy) && now >= c.nextAi) { c.nextAi = now + 0.35f + (float)rng.NextDouble() * 0.4f; c.t -= ClashPushBy(c.theirs.damage); }   // 電腦對手、菁英、人形也會推
+            if (!c.local && now >= c.nextSync) { c.nextSync = now + ClashSync; OnClashState?.Invoke(c.t); }
+            float moved = (c.t - c.t0) * ClashLen;   // 從撞上的地方被推了幾公尺（正＝往對手）
             int r = c.t >= ClashWin || moved >= ClashBreakDist ? 1 : c.t <= 1f - ClashWin || moved <= -ClashBreakDist ? -1 : now >= c.until ? 0 : 2;
-            if (r != 2) { OnClashEnd?.Invoke(r); EndClashLocal(r); }
+            if (r != 2) { if (!c.local) OnClashEnd?.Invoke(r); EndClashLocal(r); }
         }
 
         /// <summary>結束角力（r：以這支手機來看，1＝我贏、−1＝我輸、0＝平手）</summary>
         void EndClashLocal(int r)
         {
             var c = clash; if (c == null) return;
-            clash = null;
-            var axis = (enemy.Chest - player.Chest).normalized;
+            var axis = (ClashFoe.Chest - player.Chest).normalized;
             var pt = ClashPoint(Mathf.Clamp01(c.t));
+            clash = null;
             c.mine.locked = c.theirs.locked = false;
             if (r == 1)
             {
@@ -3681,10 +3767,10 @@ namespace SpellDuel
             Projectile mine = null, theirs = null;
             foreach (var p in projectiles) { if (!p.alive) continue; if (!p.remote && p.id == mySpellId) mine = p; else if (p.remote && p.id == hostSpellId) theirs = p; }
             if (mine == null || theirs == null) return;
-            StartClash(mine, theirs, 1f - hostT);
+            StartClash(mine, theirs, enemy, 1f - hostT, false);
         }
-        public void ApplyRemoteClashState(float hostT) { if (clash != null) clash.t = 1f - hostT; }
-        public void ApplyRemoteClashEnd(int hostResult) => EndClashLocal(-hostResult);
+        public void ApplyRemoteClashState(float hostT) { if (clash != null && !clash.local) clash.t = 1f - hostT; }
+        public void ApplyRemoteClashEnd(int hostResult) { if (clash != null && !clash.local) EndClashLocal(-hostResult); }
 
         /// <summary>對手說他那一發被我的法術擊破了：移除他那一發，我這一發加速</summary>
         public void ApplyRemoteClash(int theirId, int myId)

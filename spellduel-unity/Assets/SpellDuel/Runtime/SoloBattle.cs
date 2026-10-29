@@ -1185,7 +1185,8 @@ namespace SpellDuel
             battle.OnClashStart += (mine, theirs, t) => NetSend?.Invoke(new Msg { t = "cls", id = mine, e = theirs, s = t });
             battle.OnClashState += t => NetSend?.Invoke(new Msg { t = "clss", s = t });
             battle.OnClashEnd += r => NetSend?.Invoke(new Msg { t = "cle", e = r });
-            battle.OnClashPulse += () => NetSend?.Invoke(new Msg { t = "clp" });
+            battle.OnClashPulse += dmg => NetSend?.Invoke(new Msg { t = "clp", e = dmg });
+            battle.OnChip += (big, dmg) => NetSend?.Invoke(new Msg { t = "chip", id = big, e = dmg });   // 我的小法球削了對手的法術
             WireAdvNet();
             ai = null;
             if (RemotePlay) { enemyRig = CharacterRig.Create(ec.id, en.adv); if (PeerIds.Count > 0) ApplyPeerGear(enemyRig, PeerIds[0]); }   // 遠端對戰：對手是虛擬角色（進階職業、身上裝備都看得到）
@@ -2186,7 +2187,8 @@ namespace SpellDuel
                     case "cls": battle.ApplyRemoteClashStart(m.id, m.e, m.s); return;  // 法術角力開始（房主）
                     case "clss": battle.ApplyRemoteClashState(m.s); return;
                     case "cle": battle.ApplyRemoteClashEnd(m.e); return;
-                    case "clp": battle.RemoteClashPulse(); return;                     // 對手推了一下
+                    case "clp": battle.RemoteClashPulse(m.e); return;                  // 對手推了一下（e：飛進去的法術攻擊力，0＝手勢）
+                    case "chip": battle.ApplyRemoteChip(m.id, m.e); return;            // 對手的小法球削了我的法術
                 }
             if (m.t == "slice")
             {
