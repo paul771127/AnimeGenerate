@@ -1,12 +1,19 @@
 name: SpellDuel Unity build (Android APK + iOS unsigned IPA)
 
 # 推送 spellduel-unity/ 的變更時自動編譯；也可以在 Actions 頁面手動執行
+# iOS：平常上傳到「開發版」SpellDuel Dev（只有自己的測試群組）；
+#      要發布給朋友（正式版 SpellDuel）＝手動執行時勾「release」，或 commit 訊息寫 [release]
 on:
   push:
     paths:
       - 'spellduel-unity/**'
       - '.github/workflows/spellduel-unity.yml'
   workflow_dispatch:
+    inputs:
+      release:
+        description: '發布給朋友：上傳到正式版 SpellDuel（不勾＝上傳到開發版 SpellDuel Dev）'
+        type: boolean
+        default: false
 
 concurrency:
   group: spellduel-unity-${{ github.ref }}
@@ -256,29 +263,36 @@ jobs:
           gh release edit spellduel-latest --notes "$NOTES"
 
   # 用 Apple Distribution 憑證重簽 IPA，上傳到 App Store Connect（TestFlight）。
+  #   平常：開發版 com.paul771127.spellduel.dev（App 名稱 SpellDuel Dev，只給自己測）
+  #   發布：正式版 com.paul771127.spellduel（朋友的群組）＝手動執行勾 release，或 commit 訊息有 [release]
   # 需要的 secrets（缺任何一個就自動略過，不會讓流程變紅）：
-  #   IOS_DIST_P12_BASE64 / IOS_DIST_P12_PASSWORD / IOS_APPSTORE_PROFILE_BASE64
-  #   APPSTORE_ISSUER_ID / APPSTORE_API_KEY_ID / APPSTORE_API_PRIVATE_KEY
+  #   IOS_DIST_P12_BASE64 / IOS_DIST_P12_PASSWORD / APPSTORE_ISSUER_ID / APPSTORE_API_KEY_ID / APPSTORE_API_PRIVATE_KEY
+  #   正式版 profile：IOS_APPSTORE_PROFILE_BASE64；開發版 profile：IOS_APPSTORE_PROFILE_DEV_BASE64（沒設就不上傳，不會誤發給朋友）
   ios-testflight:
     needs: ios-ipa
     runs-on: ubuntu-latest
     timeout-minutes: 75  # 上傳後會等 Apple 處理完 build（可能 30 分鐘以上）
+    env:
+      RELEASE: ${{ (github.event_name == 'workflow_dispatch' && inputs.release) || contains(github.event.head_commit.message, '[release]') }}
     steps:
       - name: 檢查簽章與上傳設定
         id: check
         env:
           P12: ${{ secrets.IOS_DIST_P12_BASE64 }}
           P12_PASS: ${{ secrets.IOS_DIST_P12_PASSWORD }}
-          PROFILE: ${{ secrets.IOS_APPSTORE_PROFILE_BASE64 }}
+          PROFILE_REL: ${{ secrets.IOS_APPSTORE_PROFILE_BASE64 }}
+          PROFILE_DEV: ${{ secrets.IOS_APPSTORE_PROFILE_DEV_BASE64 }}
           ISSUER: ${{ secrets.APPSTORE_ISSUER_ID }}
           KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
           KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
         run: |
+          if [ "$RELEASE" = "true" ]; then PROFILE="$PROFILE_REL"; WHO="正式版（朋友）"; else PROFILE="$PROFILE_DEV"; WHO="開發版（自己）"; fi
           if [ -n "$P12" ] && [ -n "$P12_PASS" ] && [ -n "$PROFILE" ] && [ -n "$ISSUER" ] && [ -n "$KEY_ID" ] && [ -n "$KEY" ]; then
             echo "ok=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::這次上傳到 TestFlight：$WHO"
           else
             echo "ok=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::尚未設定 iOS 簽章 / App Store Connect secrets，略過 TestFlight 上傳。"
+            echo "::warning::$WHO 的 iOS 簽章 / App Store Connect secrets 沒設齊，略過 TestFlight 上傳。"
           fi
 
       - uses: actions/download-artifact@v4
@@ -304,19 +318,25 @@ jobs:
         env:
           P12: ${{ secrets.IOS_DIST_P12_BASE64 }}
           P12_PASS: ${{ secrets.IOS_DIST_P12_PASSWORD }}
-          PROFILE: ${{ secrets.IOS_APPSTORE_PROFILE_BASE64 }}
+          PROFILE_REL: ${{ secrets.IOS_APPSTORE_PROFILE_BASE64 }}
+          PROFILE_DEV: ${{ secrets.IOS_APPSTORE_PROFILE_DEV_BASE64 }}
         run: |
           set -eo pipefail
           S="$RUNNER_TEMP/sign"; mkdir -p "$S/x"
           echo "$P12" | base64 -d > "$S/dist.p12"
-          echo "$PROFILE" | base64 -d > "$S/appstore.mobileprovision"
+          if [ "$RELEASE" = "true" ]; then echo "$PROFILE_REL" | base64 -d > "$S/appstore.mobileprovision"
+          else echo "$PROFILE_DEV" | base64 -d > "$S/appstore.mobileprovision"; fi
           unzip -q unsigned/SpellDuel-unsigned.ipa -d "$S/x"
           PLIST=$(ls -d "$S"/x/Payload/*.app)/Info.plist
           # Build 號：Unity 寫入的 yyMMddHH 加上流程編號，同一小時內多次建置也不會撞號
-          python3 -I - "$PLIST" "${{ github.run_number }}" <<'PY'
+          # 開發版：Bundle ID 加 .dev、桌面名稱「SpellDuel Dev」（和正式版分開，可以同時裝）
+          python3 -I - "$PLIST" "${{ github.run_number }}" "$RELEASE" <<'PY'
           import plistlib, sys
-          path, run = sys.argv[1], sys.argv[2]
+          path, run, rel = sys.argv[1], sys.argv[2], sys.argv[3] == "true"
           with open(path, 'rb') as f: p = plistlib.load(f)
+          if not rel:
+              p['CFBundleIdentifier'] = "com.paul771127.spellduel.dev"
+              p['CFBundleDisplayName'] = "SpellDuel Dev"
           base = str(p.get('CFBundleVersion', '0')).split('.')[0]
           p['CFBundleVersion'] = f"{base}.{run}"
           p['ITSAppUsesNonExemptEncryption'] = False
