@@ -229,6 +229,7 @@ namespace SpellDuel
         public float rangeMul = 1f;     // 飛行距離倍率（無盡模式升級）
         public float speedMul = 1f;     // 飛行速度倍率（每日閃避挑戰：每一發快慢不同）
         public Projectile clashedWith;  // 已經和這一發對撞過（不重複判定）
+        public float slowBase = -1f;    // Boss 法球第一次被減速前的速度倍率（最慢＝這個的 30%）
         public bool sliceClashed;       // 已經和劍士的斬擊對撞過（撐住了就不再判定）
         public float hitMul = 1f;       // 命中判定範圍倍率（電腦敵人的投射物 0.5：不用跑很遠才躲得掉）
         public int id;
@@ -3543,9 +3544,25 @@ namespace SpellDuel
         static bool Clashable(Projectile p) => p.alive && !p.Fading && !p.reflected && p.damage > 0 && Sliceable(p.skill) && p.skill.cls != "minion";
         bool HoldsSpell(Projectile p) => p.owner == player ? (playerSpellHold?.Invoke() ?? false) : rng.NextDouble() < 0.5;   // 電腦對手：一半機率撐住
 
+        /// <summary>Boss 的法球（使用者要求）：玩家的法術抵銷不了，但打中會讓它變慢（×BossOrbSlow，最慢 BossOrbMinSpeed 倍）；我的法術被吃掉</summary>
+        public const float BossOrbSlow = 0.6f, BossOrbMinSpeed = 0.3f;
+        bool IsBossOrb(Projectile q) => q.alive && !q.Fading && q.owner == enemy && enemy.cls != null && enemy.cls.id.StartsWith("boss") && q.damage > 0 && Sliceable(q.skill);
+
         bool TryClash(Projectile p)
         {
-            if (p.remote || !Clashable(p) || !ClashOwner(p.owner)) return false;
+            if (p.remote || !Clashable(p) || p.owner != player && !ClashOwner(p.owner)) return false;
+            if (p.owner == player)
+                foreach (var q in projectiles)
+                {
+                    if (!IsBossOrb(q) || Vector3.Distance(p.pos, q.pos) > p.skill.radius + q.skill.radius + ClashPad) continue;
+                    p.alive = false;
+                    float before = q.speedMul;
+                    if (q.slowBase < 0f) q.slowBase = q.speedMul;
+                    q.speedMul = Mathf.Max(q.slowBase * BossOrbMinSpeed, q.speedMul * BossOrbSlow);
+                    Emit("clashbreak", q.pos, q.skill.color, q.speedMul < before ? "法球減速！" : "法球已經最慢了");
+                    return true;
+                }
+            if (!ClashOwner(p.owner)) return false;
             foreach (var q in projectiles)
             {
                 if (q == p || !Clashable(q) || !ClashOwner(q.owner) || q.owner == p.owner) continue;
