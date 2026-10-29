@@ -22,7 +22,8 @@ namespace SpellDuel
         const float DashFoeGap = 0.9f;         // 衝到敵人面前這麼近就停（不穿過去）
         const float RoomWarnDist = 0.5f;       // 離真實房間邊緣這麼近就提醒
         float dashOpenAt = -99f, dashLostAt = -1f, dashStepAt, nextRoomWarn;
-        bool dashing;
+        bool dashing, dashStuck;
+        float dashMovedAt = -99f;
         float dashDistance;   // 這一場總共衝了幾公尺（新手教學用）
         Vector3 dashTotalS;   // 到目前為止世界總共被平移多少（session 座標）
         readonly List<GameObject> dashRoots = new List<GameObject>();
@@ -49,14 +50,46 @@ namespace SpellDuel
             var dir = Fighter.Flat(Me.forward);
             if (dir.sqrMagnitude < 1e-4f || dt <= 0f) return;
             dir.Normalize();
-            var next = Me.Feet + dir * (DashSpeed * dt);
-            var ns = WorldFrame.FromWorld(next);
-            if (!area.Inside(ns) || area.DistanceToEdge(ns) < DashEdge) { DashBlocked("前面是場地邊界"); return; }
-            foreach (var f in DashFoes())
-                if (f.Alive && Battle.FlatDistance(next, f.Feet) < DashFoeGap && Battle.FlatDistance(next, f.Feet) < Battle.FlatDistance(Me.Feet, f.Feet)) { DashBlocked(null); return; }
-            ShiftWorld(-WorldFrame.DirFromWorld(dir * (DashSpeed * dt)));
-            Me.head += dir * (DashSpeed * dt); dashDistance += DashSpeed * dt;   // 這一幀就生效（下一幀 SyncPlayer 會用新的原點重算，結果一樣）
+            // 這一步實際能走多遠：碰到場地邊界或敵人就只走到那裡（可能是 0＝卡住）。
+            // 世界只照「實際走的距離」平移：卡住時場地、景物、敵人都不會動。
+            float want = DashSpeed * dt;
+            float step = DashStepAllowed(dir, want, out string why);
+            if (step < 1e-4f) { dashStuck = true; DashBlocked(why); return; }
+            dashStuck = false;
+            var move = dir * step;
+            ShiftWorld(-WorldFrame.DirFromWorld(move));
+            Me.head += move; dashDistance += step; dashMovedAt = Time.time;   // 這一幀就生效（下一幀 SyncPlayer 會用新的原點重算，結果一樣）
             if (Time.time >= dashStepAt) { dashStepAt = Time.time + 0.32f; Sfx.Play("select", 0.2f, 0.7f); shake = Mathf.Max(shake, 1.5f); }
+        }
+
+        /// <summary>
+        /// 往 dir 最多能衝多遠（≤ want）：分小段檢查，停在第一個不行的位置前。
+        /// 不行＝出了場地、或離邊界不到 DashEdge 而且越來越近（貼著邊界時往場內衝可以）、或離敵人不到 DashFoeGap 而且越來越近。
+        /// </summary>
+        float DashStepAllowed(Vector3 dir, float want, out string why)
+        {
+            why = null;
+            const int N = 4;
+            float ok = 0f;
+            var from = Me.Feet;
+            float edge0 = area.DistanceToEdge(WorldFrame.FromWorld(from));
+            for (int i = 1; i <= N; i++)
+            {
+                float d = want * i / N;
+                var p = from + dir * d; var ps = WorldFrame.FromWorld(p);
+                float edge = area.DistanceToEdge(ps);
+                if (!area.Inside(ps) || edge < DashEdge && edge < edge0) { why = "前面是場地邊界"; break; }
+                bool foe = false;
+                foreach (var f in DashFoes())
+                {
+                    if (!f.Alive) continue;
+                    float fd = Battle.FlatDistance(p, f.Feet);
+                    if (fd < DashFoeGap && fd < Battle.FlatDistance(from, f.Feet)) { foe = true; break; }
+                }
+                if (foe) break;
+                ok = d;
+            }
+            return ok;
         }
 
         IEnumerable<Fighter> DashFoes()
@@ -65,15 +98,13 @@ namespace SpellDuel
             foreach (var m in battle.minions) yield return m;
         }
 
-        void DashBlocked(string why)
-        {
-            if (why != null && Time.time >= nextRoomWarn) { nextRoomWarn = Time.time + 2f; Say($"🛑 {why}，衝不過去", 1.2f); }
-        }
+        string dashWhy;
+        void DashBlocked(string why) => dashWhy = why ?? "敵人擋在前面";
 
         /// <summary>衝刺的手勢做到哪：0 還沒、1 比了 5（等握拳）、2 衝刺中</summary>
         int DashGestureStage => dashing && dashLostAt < 0f ? 2 : Time.time - dashOpenAt <= DashArm ? 1 : 0;
 
-        void StopDash() { dashing = false; dashLostAt = -1f; }
+        void StopDash() { dashing = false; dashStuck = false; dashLostAt = -1f; }
 
         /// <summary>整個世界平移 s（session 座標）：世界原點、場地框、場景物件（AR 相機、AR Session 不動）</summary>
         void ShiftWorld(Vector3 s)
@@ -146,6 +177,8 @@ namespace SpellDuel
         void DrawDashHud(float W, float H)
         {
             if (!dashing || dashLostAt >= 0f) return;
+            // 卡住（邊界、敵人擋著）：不畫速度線，只提示衝不過去
+            if (dashStuck || Time.time - dashMovedAt > 0.15f) { UiKit.Pill(H * 0.62f, $"🛑 {dashWhy ?? "前面"}，衝不過去（鬆開拳頭）", Mathf.RoundToInt(H * 0.022f), new Color(1f, 0.6f, 0.45f), W * 0.5f); return; }
             // 畫面兩側的速度線
             GUI.color = new Color(1f, 1f, 1f, 0.35f);
             for (int i = 0; i < 10; i++)
