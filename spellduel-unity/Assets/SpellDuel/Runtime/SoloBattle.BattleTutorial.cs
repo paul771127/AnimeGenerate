@@ -5,7 +5,7 @@ namespace SpellDuel
     /// <summary>
     /// 新手關的戰鬥中教學（只有第一次打、單人）：
     ///   1-1：第一批熔岩小鬼出現 → 進到攻擊區就全部定住 → 走到第一隻旁邊 → 照 3 步驟用普攻（木棍敲擊）打倒
-    ///        → 第二隻一樣 → 第三隻放開讓牠攻擊：教「紅色預警範圍」→ 走出紅圈閃過一次 → 自由戰鬥。
+    ///        → 第二隻：用衝刺（比 5 → 握拳）衝過去，再一樣用普攻打倒 → 第三隻放開讓牠攻擊：教「紅色預警範圍」→ 走出紅圈閃過一次 → 自由戰鬥。
     ///   1-2：自由戰鬥；第一隻岩石（熔岩）衝鋒獸進場 → 所有敵人定住 → 走到牠旁邊 → 照 3 步驟放「木棍揮擊」打倒 → 自由戰鬥。
     /// 1-1～1-3（初心者）：熔岩小鬼的血量＝普攻一下就倒；1-2 的衝鋒獸＝木棍揮擊一發就倒（普攻要兩下）。
     /// </summary>
@@ -14,7 +14,9 @@ namespace SpellDuel
         /// <summary>0＝沒有；11＝1-1 教學；12＝1-2 衝鋒獸教學</summary>
         int btStage, btStep, btHitsAt, btSpawned, btDodged;
         Fighter btTarget;
-        float btStepAt, btPrevWindup, btMsgUntil;
+        float btStepAt, btPrevWindup, btMsgUntil, btDashFrom; bool btDashNeed;
+        /// <summary>衝刺教學：一直不用衝刺、走過去也行（這麼久之後）</summary>
+        const float BtDashWalkOk = 25f;
         string btMsg;
 
         static bool BtFlag(string id) { try { return PlayerPrefs.GetInt(CharacterSlots.Key("sd_bt" + id), 0) == 1; } catch { return true; } }
@@ -43,6 +45,8 @@ namespace SpellDuel
             btStage = 0; btStep = 0; btTarget = null; btSpawned = 0; btDodged = 0;
             if (battle == null || st == null) return;
             SetupPotionLesson(st);   // 1-2：血量第一次低於 1/3 時教喝藥水
+            // 衝刺（SoloBattle.Dash.cs）：還沒衝過的玩家（1-1 教學以外）開打時提示一次
+            if (!NetMode && !coop && dungeon == null && st.id != "1-1" && !BtFlag("dash")) Say("💨 新動作：手掌比 5 → 馬上握拳＝往前衝刺（握著一直衝，鬆開就停；唸技能時不能衝）", 7f);
             var p = Progress.Char(myClass);
             bool early = (st.id == "1-1" || st.id == "1-2" || st.id == "1-3") && difficulty == 0;   // 只有簡單難度是新手設計
             if (early && p.cls == Skills.Novice)
@@ -69,7 +73,8 @@ namespace SpellDuel
 
         void BeginBt(int step)
         {
-            btStep = step; btStepAt = battle != null ? battle.now : 0f; btHitsAt = hitsTaken; btPrevWindup = 0f;
+            btStep = step; btStepAt = battle != null ? battle.now : 0f; btHitsAt = hitsTaken; btPrevWindup = 0f; btDashFrom = dashDistance;
+            btDashNeed = btTarget == null || Me == null || Battle.FlatDistance(Me.Feet, btTarget.Feet) > 2f;   // 第二隻本來就在旁邊：不用衝
             if (step == BtFree && battle != null)
             {
                 battle.minionHold = null; battle.holdSpawns = false; battle.kindOverride = null;
@@ -127,7 +132,12 @@ namespace SpellDuel
                     case Bt11Approach1: case Bt11Approach2:
                         if (btTarget == null || !btTarget.Alive) { btTarget = BtNextTarget(); break; }
                         if (battle.MinionInZone(btTarget) && Battle.FlatDistance(Me.Feet, btTarget.Feet) <= BtNearBasic)
-                        { BtPass("進入攻擊範圍！"); BeginBt(btStep + 1); }
+                        {
+                            // 第二隻教衝刺：要衝過去才算（一直不衝、走過去，等久了也放行）
+                            bool dashed = dashDistance - btDashFrom >= 0.3f;
+                            if (btStep == Bt11Approach2 && btDashNeed && !dashed && now - btStepAt < BtDashWalkOk && !dashing) break;
+                            BtPass(btStep == Bt11Approach2 && dashed ? "衝刺成功！" : "進入攻擊範圍！"); StopDash(); BeginBt(btStep + 1);
+                        }
                         break;
                     case Bt11Hit1: case Bt11Hit2:
                         if (btTarget == null || !btTarget.Alive)
@@ -196,9 +206,18 @@ namespace SpellDuel
                 switch (btStep)
                 {
                     case Bt11Wait: title = "⏳ 敵人要來了"; text = "小怪會從場地外面走進來，注意四周。"; break;
-                    case Bt11Approach1: case Bt11Approach2:
-                        title = $"🚶 靠近敵人（{(btStep == Bt11Approach1 ? 1 : 2)}/2）";
+                    case Bt11Approach1:
+                        title = "🚶 靠近敵人（1/2）";
                         text = $"敵人暫停中。初心者的普攻是近戰：走到熔岩小鬼旁邊 {BtNearBasic:0.#} 公尺內（現在 {dist:F1}m）。"; break;
+                    case Bt11Approach2:
+                    {
+                        title = "💨 衝刺靠近（2/2）";
+                        int ds = DashGestureStage; bool moved = dashDistance - btDashFrom >= 0.3f;
+                        steps = new[] { "① 面向小鬼，手掌張開比 5，伸到鏡頭前", "② 馬上握拳 → 角色往前衝（拳頭握著就一直衝）", "③ 衝到小鬼旁邊，拳頭鬆開或移開就停下" };
+                        done = new[] { ds >= 1 || moved, ds == 2 || moved, false };
+                        text = $"房間小也不用走過去：用衝刺一口氣衝到牠旁邊（現在 {dist:F1}m）。正在唸技能時不能衝。";
+                        break;
+                    }
                     case Bt11Hit1: case Bt11Hit2:
                     {
                         title = $"🪵 普攻：木棍敲擊（{(btStep == Bt11Hit1 ? 1 : 2)}/2）";

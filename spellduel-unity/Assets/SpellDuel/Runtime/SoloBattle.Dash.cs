@@ -23,6 +23,7 @@ namespace SpellDuel
         const float RoomWarnDist = 0.5f;       // 離真實房間邊緣這麼近就提醒
         float dashOpenAt = -99f, dashLostAt = -1f, dashStepAt, nextRoomWarn;
         bool dashing;
+        float dashDistance;   // 這一場總共衝了幾公尺（新手教學用）
         Vector3 dashTotalS;   // 到目前為止世界總共被平移多少（session 座標）
         readonly List<GameObject> dashRoots = new List<GameObject>();
 
@@ -37,7 +38,7 @@ namespace SpellDuel
             if (!DashAllowed) { StopDash(); return; }
             if (!dashing)
             {
-                if (fist && Time.time - dashOpenAt <= DashArm) { dashing = true; dashLostAt = -1f; dashStepAt = Time.time; Haptics.Play(Haptics.Kind.Light); }
+                if (fist && Time.time - dashOpenAt <= DashArm) { dashing = true; dashLostAt = -1f; dashStepAt = Time.time; Haptics.Play(Haptics.Kind.Light); if (!BtFlag("dash")) BtMark("dash"); }
                 else return;
             }
             if (fist) dashLostAt = -1f;
@@ -54,7 +55,7 @@ namespace SpellDuel
             foreach (var f in DashFoes())
                 if (f.Alive && Battle.FlatDistance(next, f.Feet) < DashFoeGap && Battle.FlatDistance(next, f.Feet) < Battle.FlatDistance(Me.Feet, f.Feet)) { DashBlocked(null); return; }
             ShiftWorld(-WorldFrame.DirFromWorld(dir * (DashSpeed * dt)));
-            Me.head += dir * (DashSpeed * dt);   // 這一幀就生效（下一幀 SyncPlayer 會用新的原點重算，結果一樣）
+            Me.head += dir * (DashSpeed * dt); dashDistance += DashSpeed * dt;   // 這一幀就生效（下一幀 SyncPlayer 會用新的原點重算，結果一樣）
             if (Time.time >= dashStepAt) { dashStepAt = Time.time + 0.32f; Sfx.Play("select", 0.2f, 0.7f); shake = Mathf.Max(shake, 1.5f); }
         }
 
@@ -68,6 +69,9 @@ namespace SpellDuel
         {
             if (why != null && Time.time >= nextRoomWarn) { nextRoomWarn = Time.time + 2f; Say($"🛑 {why}，衝不過去", 1.2f); }
         }
+
+        /// <summary>衝刺的手勢做到哪：0 還沒、1 比了 5（等握拳）、2 衝刺中</summary>
+        int DashGestureStage => dashing && dashLostAt < 0f ? 2 : Time.time - dashOpenAt <= DashArm ? 1 : 0;
 
         void StopDash() { dashing = false; dashLostAt = -1f; }
 
@@ -86,12 +90,44 @@ namespace SpellDuel
                 if (go == null || go.GetComponent<PlayArea>() || go.GetComponent<ARSession>() || go.GetComponentInChildren<Camera>(true)) continue;
                 go.transform.position += s;
             }
+            // 平移 transform 搬不動的東西：世界座標的線（刀光、射擊預警線…）、拖尾、世界空間的粒子（已經噴出去的）
+            // 每幀重算位置的線會被它自己蓋掉，結果一樣正確
+            foreach (var lr in FindObjectsOfType<LineRenderer>())
+            {
+                if (!lr.useWorldSpace || DashSkip(lr.transform)) continue;
+                int n = lr.positionCount; if (n == 0) continue;
+                if (dashPts.Length < n) dashPts = new Vector3[n * 2];
+                lr.GetPositions(dashPts);
+                for (int i = 0; i < n; i++) dashPts[i] += s;
+                lr.SetPositions(dashPts);
+            }
+            foreach (var tr in FindObjectsOfType<TrailRenderer>())
+            {
+                if (DashSkip(tr.transform)) continue;
+                int n = tr.positionCount; if (n == 0) continue;
+                if (dashPts.Length < n) dashPts = new Vector3[n * 2];
+                tr.GetPositions(dashPts);
+                for (int i = 0; i < n; i++) dashPts[i] += s;
+                tr.SetPositions(dashPts);
+            }
+            foreach (var ps in FindObjectsOfType<ParticleSystem>())
+            {
+                if (ps.main.simulationSpace != ParticleSystemSimulationSpace.World || DashSkip(ps.transform)) continue;
+                if (dashParts.Length < ps.main.maxParticles) dashParts = new ParticleSystem.Particle[ps.main.maxParticles];
+                int n = ps.GetParticles(dashParts); if (n == 0) continue;
+                for (int i = 0; i < n; i++) dashParts[i].position += s;
+                ps.SetParticles(dashParts, n);
+            }
         }
+        Vector3[] dashPts = new Vector3[64];
+        ParticleSystem.Particle[] dashParts = new ParticleSystem.Particle[256];
+        /// <summary>不跟著世界走的：場地框（PlayArea.Shift 自己搬）、掛在相機上的</summary>
+        static bool DashSkip(Transform t) => t.GetComponentInParent<PlayArea>() || t.GetComponentInParent<Camera>();
 
         /// <summary>這一場打完：世界移回原位（實體房間和場地重新對上）</summary>
         void ResetDash()
         {
-            StopDash(); dashOpenAt = -99f;
+            StopDash(); dashOpenAt = -99f; dashDistance = 0f;
             if (dashTotalS.sqrMagnitude > 1e-8f && area != null) ShiftWorld(-dashTotalS);
             dashTotalS = Vector3.zero;
         }

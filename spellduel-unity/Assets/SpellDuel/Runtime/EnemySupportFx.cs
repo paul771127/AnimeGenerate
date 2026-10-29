@@ -33,7 +33,7 @@ namespace SpellDuel
  public sealed class EnemySupportView : MonoBehaviour
  {
   internal float Radius{get;private set;}
-  int kind;float age,life,heightRatio=1;Transform target;Vector3 start,end,offset;bool following,released;
+  int kind;float age,life,heightRatio=1;Transform target;Vector3 start,end,offset;bool following,released;float sunk;
   readonly List<LineRenderer> lines=new List<LineRenderer>();readonly List<Color> colors=new List<Color>();
   Vector3[] healPoints;Renderer bubble;MaterialPropertyBlock block;
   static readonly Color Green=new Color(.30f,.60f,.34f,.8f),Purple=new Color(.61f,.26f,.65f,.6f),Crimson=new Color(.94f,.15f,.25f,.8f),Gold=new Color(.85f,.49f,.16f,.75f);
@@ -42,7 +42,7 @@ namespace SpellDuel
   {var pts=new Vector3[n];for(int i=0;i<n;i++){float a=(span==360?i/(float)n:i/(float)(n-1))*span*Mathf.Deg2Rad;pts[i]=new Vector3(Mathf.Sin(a)*radius,y,Mathf.Cos(a)*radius);}return pts;}
   internal void Init(int effect,Vector3 at,float seconds,float radius,Transform follow,Vector3 to)
   {
-   kind=effect;start=at;end=to;life=Mathf.Max(.05f,seconds);Radius=radius;target=follow;following=follow;transform.position=at;
+   kind=effect;start=at;end=to;sunk=0;life=Mathf.Max(.05f,seconds);Radius=radius;target=follow;following=follow;transform.position=at;
    if(follow){bool found=false;var b=new Bounds(follow.position,Vector3.zero);foreach(var r in follow.GetComponentsInChildren<MeshRenderer>()){if(!r.enabled)continue;if(!found){b=r.bounds;found=true;}else b.Encapsulate(r.bounds);}Radius=found?Mathf.Clamp(Mathf.Max(b.extents.x,b.extents.z)*1.1f,.25f,.85f):.45f;heightRatio=found?Mathf.Clamp(b.extents.y*1.08f/Radius,1,3):1.7f;offset=kind==1?Vector3.up*(found?Mathf.Max(.25f,b.center.y-follow.position.y):.8f):Vector3.up*.025f;transform.position=follow.position+offset;}
    if(kind==0){healPoints=new Vector3[25];Line("Healing filament",healPoints,false,.026f,Green);Line("Travelling remedy",new[]{Vector3.zero,Vector3.up*.035f},false,.08f,Green);}
    else if(kind==1){for(int i=0;i<3;i++){var l=Line("Bubble meridian",Ring(40,Radius),true,.014f,Purple);l.transform.localRotation=Quaternion.Euler(i==0?0:90,0,i*60);}var shell=VariantGeometry.Oval(transform,"Translucent pearl shell",Vector3.zero,Vector3.one*Radius*2,Purple);bubble=shell.GetComponent<Renderer>();bubble.sharedMaterial=VariantGeometry.Ghost;block=new MaterialPropertyBlock();}
@@ -62,7 +62,7 @@ namespace SpellDuel
    if(kind==2)transform.rotation=Quaternion.Euler(0,age*150,0);
    if(kind==3||kind==5)transform.localScale=Vector3.one*Mathf.Lerp(.65f,1,Mathf.SmoothStep(0,1,p));
    if(kind==4)transform.localPosition+=Vector3.up*(Mathf.Repeat(age*.4f,.45f));
-   if(kind==6){transform.localScale=Vector3.one*(1+p*.65f);transform.position=start+Vector3.down*(p*p*.2f);}
+   if(kind==6){transform.localScale=Vector3.one*(1+p*.65f);transform.position+=Vector3.down*(p*p*.2f-sunk);sunk=p*p*.2f;}
    for(int i=0;i<lines.Count;i++){var c=colors[i];c.a*=fade;lines[i].startColor=lines[i].endColor=c;}
   }
   internal void Release(){if(released)return;released=true;EnemySupportFx.Forget(target,kind,this);gameObject.SetActive(false);VariantGeometry.Dispose(gameObject);}

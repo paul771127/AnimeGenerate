@@ -176,7 +176,7 @@ namespace SpellDuel
                 Lathe(mb, 0, new Vector3(0f, 1.03f, 0f), Quaternion.identity, new[] { 0f, 0.14f }, new[] { 0.11f, 0.11f }, 10, true, false, Color.white);
                 Lathe(mb, 2, new Vector3(0f, 1.17f, 0f), Quaternion.identity, new[] { 0f, 0.07f, 0.12f }, new[] { 0.06f, 0.065f, 0.02f }, 8, true, false, Color.white);
                 var go = MeshObjDiffuse("Buoy", mb.Build("SeaBuoy"), buoyPos, new[] { red, white, lampMat });
-                buoy = go.transform; buoyRot = Quaternion.Euler(0f, (float)rng.NextDouble() * 360f, 0f); buoy.rotation = buoyRot;
+                buoy = go.transform; buoyPos = buoy.localPosition; buoyRot = Quaternion.Euler(0f, (float)rng.NextDouble() * 360f, 0f); buoy.rotation = buoyRot;
             }
 
             // ---- 沉船：斜插在海裡的斷桅杆＋橫桁＋露出水面的船肋
@@ -201,7 +201,7 @@ namespace SpellDuel
                     LatheCore(mb, 0, ribPos, Quaternion.Euler(0f, 0f, -8f + k * 3f), hs, rs, cols, 6, true, false, bend);
                 }
                 var go = MeshObjDiffuse("WreckMast", mb.Build("SeaWreck"), mastPos, new[] { wood });
-                mast = go.transform; mastRot = Quaternion.Euler(0f, a * Mathf.Rad2Deg + 70f, 0f); mast.rotation = mastRot;
+                mast = go.transform; mastPos = mast.localPosition; mastRot = Quaternion.Euler(0f, a * Mathf.Rad2Deg + 70f, 0f); mast.rotation = mastRot;
             }
 
             // ---- 海鷗（遠遠地在高處盤旋）
@@ -309,15 +309,15 @@ namespace SpellDuel
                 }
                 waterMesh.vertices = waterVerts;
             }
-            // 浮標與桅杆隨波搖晃
+            // 浮標與桅杆隨波搖晃（用相對場景根物件的位置：衝刺平移世界時才會跟著走）
             if (buoy)
             {
-                buoy.position = buoyPos + Vector3.up * (0.05f * Mathf.Sin(clock * 1.3f));
+                buoy.localPosition = buoyPos + Vector3.up * (0.05f * Mathf.Sin(clock * 1.3f));
                 buoy.rotation = buoyRot * Quaternion.Euler(6f * Mathf.Sin(clock * 1.1f), 0f, 5f * Mathf.Sin(clock * 0.9f + 1f));
             }
             if (mast)
             {
-                mast.position = mastPos + Vector3.up * (0.03f * Mathf.Sin(clock * 0.7f + 2f));
+                mast.localPosition = mastPos + Vector3.up * (0.03f * Mathf.Sin(clock * 0.7f + 2f));
                 mast.rotation = mastRot * Quaternion.Euler(1.2f * Mathf.Sin(clock * 0.6f), 0f, 1f * Mathf.Sin(clock * 0.5f + 0.7f));
             }
             // 浮標燈：每 2 秒閃一下
