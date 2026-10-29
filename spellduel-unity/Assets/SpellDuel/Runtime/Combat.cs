@@ -228,6 +228,7 @@ namespace SpellDuel
         public bool lob; public Vector3 vel, landAt;   // 拋物線投擲（毒液彈）：速度向量、預定落點
         public float rangeMul = 1f;     // 飛行距離倍率（無盡模式升級）
         public float speedMul = 1f;     // 飛行速度倍率（每日閃避挑戰：每一發快慢不同）
+        public Projectile clashedWith;  // 已經和這一發對撞過（不重複判定）
         public float hitMul = 1f;       // 命中判定範圍倍率（電腦敵人的投射物 0.5：不用跑很遠才躲得掉）
         public int id;
         public bool remote;          // 雙人：對手的法術（只顯示，命中由對手判定）
@@ -3513,7 +3514,63 @@ namespace SpellDuel
             return false;
         }
 
-        void SliceNow(Fighter f) { foreach (var p in projectiles) TrySlice(p); }   // 放招當下已經在範圍內的
+        void SliceNow(Fighter f) { foreach (var p in projectiles) TrySlice(p); }
+
+        // ------------------------------------------------------------ 法術對撞（使用者要求：真人法術對轟）
+        // 我的法術和對手的法術在半空撞上 → 爆炸；
+        //   施法的人「維持手勢」（手還留在鏡頭前、沒有握拳；或手指按著螢幕）→ 這一發撐住、繼續往前飛
+        //   放掉手勢 → 這一發被擊破，對方那一發加速（×ClashBoost）衝過來
+        // 每支手機只決定「自己那一發」的命運，結果用 OnClash 告訴對方（被擊破的編號、要加速的對方那一發）
+        public const float ClashBoost = 1.8f, ClashPad = 0.25f;
+        /// <summary>本機玩家現在有沒有維持手勢（SoloBattle 設定）</summary>
+        public Func<bool> playerSpellHold;
+        /// <summary>我的法術被擊破了：（我那一發的編號、對方要加速的那一發的編號）</summary>
+        public event Action<int, int> OnClash;
+        bool ClashOwner(Fighter f) => f != null && (f == player || f == enemy && !enemy.isMinion && enemy.cls != null && !enemy.cls.id.StartsWith("boss"));
+        static bool Clashable(Projectile p) => p.alive && !p.Fading && !p.reflected && p.damage > 0 && Sliceable(p.skill) && p.skill.cls != "minion";
+        bool HoldsSpell(Projectile p) => p.owner == player ? (playerSpellHold?.Invoke() ?? false) : rng.NextDouble() < 0.5;   // 電腦對手：一半機率撐住
+
+        bool TryClash(Projectile p)
+        {
+            if (p.remote || !Clashable(p) || !ClashOwner(p.owner)) return false;
+            foreach (var q in projectiles)
+            {
+                if (q == p || !Clashable(q) || !ClashOwner(q.owner) || q.owner == p.owner) continue;
+                if (p.clashedWith == q || q.clashedWith == p) continue;
+                if (Vector3.Distance(p.pos, q.pos) > p.skill.radius + q.skill.radius + ClashPad) continue;
+                p.clashedWith = q; q.clashedWith = p;
+                var mid = (p.pos + q.pos) * 0.5f;
+                Emit("clash", mid, Color.Lerp(p.skill.color, q.skill.color, 0.5f), "💥 法術對撞！");
+                bool pHold = HoldsSpell(p);
+                bool qHold = q.remote || HoldsSpell(q);   // 對手手機上的那一發：由對手自己決定（OnClash 傳過來）
+                if (!pHold)
+                {
+                    p.alive = false;
+                    Emit("clashbreak", p.pos, p.skill.color, p.owner == player ? "法術被擊破了！" : null);
+                    if (q.alive) q.speedMul *= ClashBoost;
+                    if (q.remote) OnClash?.Invoke(p.id, q.id);
+                }
+                else if (p.owner == player) Emit("buff", player.Chest, p.skill.color, "撐住了！法術繼續往前");
+                if (!q.remote && !qHold)
+                {
+                    q.alive = false;
+                    Emit("clashbreak", q.pos, q.skill.color, q.owner == player ? "法術被擊破了！" : null);
+                    if (p.alive) p.speedMul *= ClashBoost;
+                }
+                return !p.alive;
+            }
+            return false;
+        }
+
+        /// <summary>對手說他那一發被我的法術擊破了：移除他那一發，我這一發加速</summary>
+        public void ApplyRemoteClash(int theirId, int myId)
+        {
+            foreach (var p in projectiles)
+            {
+                if (p.alive && p.remote && p.id == theirId) { p.alive = false; Emit("clashbreak", p.pos, p.skill.color, "擊破對手的法術！"); }
+                else if (p.alive && !p.remote && p.id == myId) p.speedMul *= ClashBoost;
+            }
+        }   // 放招當下已經在範圍內的
 
         /// <summary>騎魚泡泡怪的泡泡：被我方（玩家、隊友、召喚物）的法術碰到就破</summary>
         bool PopBubbles(Projectile p)
@@ -3572,6 +3629,7 @@ namespace SpellDuel
                     Advance(p, step / sub);
                     if (p.Fading) { if (p.traveled >= p.fadeEnd || p.pos.y < 0f) p.alive = false; continue; }   // 淡出中：不再打到人
                     if (TrySlice(p)) break;
+                    if (TryClash(p)) break;   // 法術對撞（使用者要求）：撞到就爆；維持手勢撐住、放掉就被擊破
                     if (!p.remote && PopBubbles(p)) { }     // 我方的攻擊打破泡泡（法術繼續飛）
                     if (!p.remote && TryFeedPet(p)) break;   // 召喚師：打中自己的召喚物＝餵養
                     if (!p.remote && TryHealFriend(p)) break;   // 主教：普攻打中友軍＝治療

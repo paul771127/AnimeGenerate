@@ -469,6 +469,13 @@ namespace SpellDuel
         }
 
         /// <summary>喝水手勢：比「🤙」（拇指＋小指，像拿瓶子喝）維持一下 → 依血量／MP 自動選一瓶</summary>
+        /// <summary>法術對撞時有沒有「維持手勢」：手還留在鏡頭前（沒有握拳），或手指按著螢幕</summary>
+        bool SpellHoldNow()
+        {
+            if (Input.touchCount > 0 || Input.GetMouseButton(0)) return true;
+            return Hand != null && Hand.HandVisible && Hand.Current != HandGesture.Shape.None && Hand.Current != HandGesture.Shape.Fist;
+        }
+
         void ItemByGesture(HandGesture.Shape selected)
         {
             if (selected != HandGesture.Shape.Call || !ItemsUsable || Me.charging != null) return;
@@ -1171,6 +1178,7 @@ namespace SpellDuel
             battle.OnTrapGone += id => NetSend?.Invoke(new Msg { t = "trapgone", id = id });
             battle.OnDispel += (c, r) => NetSend?.Invoke(new Msg { t = "dispel", p = c, rad = r });
             battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = id, ok = theirs });
+            battle.OnClash += (mine, theirs) => NetSend?.Invoke(new Msg { t = "clash", id = mine, e = theirs });   // 法術對撞：我的被擊破了
             WireAdvNet();
             ai = null;
             if (RemotePlay) { enemyRig = CharacterRig.Create(ec.id, en.adv); if (PeerIds.Count > 0) ApplyPeerGear(enemyRig, PeerIds[0]); }   // 遠端對戰：對手是虛擬角色（進階職業、身上裝備都看得到）
@@ -2164,6 +2172,7 @@ namespace SpellDuel
                     return;
             }
             if (battle == null || !NetMode) return;
+            if (m.t == "clash" && !coop) { battle.ApplyRemoteClash(m.id, m.e); return; }   // 對手的法術被我擊破
             if (m.t == "slice")
             {
                 // 劍士斬開了法術。合作：id＝發射者 pid 空間的編號；是我的就移除我自己的那發，否則移除遠端的那發
@@ -2596,6 +2605,7 @@ namespace SpellDuel
             // 選技能只能用唸的：每次放技能前都要先唸出技能名稱（手勢只負責放招）
             if (Hand.ConsumeSelect(out var selShape)) ItemByGesture(selShape);   // 🤙＝喝藥水（選技能還是只能用唸的）
             // 放招動作依詠唱中的技能（陷阱往下壓、治癒收回、格擋舉盾…；其餘依職業）；沒在詠唱就不偵測
+            if (battle != null && battle.playerSpellHold == null) battle.playerSpellHold = SpellHoldNow;   // 法術對撞：維持手勢＝撐住
             Hand.ReleaseStyle = Me.charging != null ? HandGesture.ReleaseOf(Me.charging) : HandGesture.Style.None;
             Hand.RuneName = Me.charging != null && Hand.ReleaseStyle == HandGesture.Style.Rune ? RuneRecognizer.RuneOf(Me.charging.id) : null;
             Hand.RequiredNumber = Me.charging != null ? HandGesture.NumberOf(Me.charging.id) : 0;
@@ -2936,7 +2946,7 @@ namespace SpellDuel
             else if (kind == "lurefail" && text != null && text.Contains("掙脫")) PetArtFx.Capture(WorldFrame.FromWorld(new Vector3(at.x, 0f, at.z)), false);   // 收服失敗：繩結鬆開
             switch (kind)
             {
-                case "hit": case "trap": case "mitigate": case "effect": case "counter": case "buff": case "heal": case "trapSet": case "slice":
+                case "hit": case "trap": case "mitigate": case "effect": case "counter": case "buff": case "heal": case "trapSet": case "slice": case "clash": case "clashbreak":
                     if (!string.IsNullOrEmpty(text)) floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time });
                     if (battle.HazardHit) break;   // 陷阱打到小怪：只顯示數字（音效在 hazard 事件），不當成我的命中
                     if (kind == "hit" || kind == "trap")
@@ -2967,6 +2977,8 @@ namespace SpellDuel
                             break;
                         }
                         case "slice": Burst(at, c); Sfx.Play("block", 1f, 1.3f); Sfx.Play("cast_swordsman", 0.6f); Haptics.Play(Haptics.Kind.Medium); Kick(4f, 0.04f); break;
+                        case "clash": Burst(at, c); Burst(at, Color.white); Sfx.Play("boom", 1f, 1.2f); Haptics.Play(Haptics.Kind.Heavy); Kick(8f, 0.06f); break;   // 法術對撞
+                        case "clashbreak": Burst(at, c); Sfx.Play("fail", 0.6f, 1.3f); break;
                         case "mitigate": case "counter": if(kind=="mitigate"&&(text??"").Contains("障壁抵擋"))BarrierHitArt(at); Sfx.Play("block"); Haptics.Play(Haptics.Kind.Medium); Kick(5f, 0.05f); if (Me != null && Vector3.Distance(at, Me.Chest) < 0.8f) guardFlashAt = Time.time; break;   // 擋下：眼前的光盾亮一下
                         case "heal": Sfx.Play("heal"); break;
                         case "buff": Sfx.Play("cast_priest", 0.6f); break;
