@@ -271,7 +271,7 @@ namespace SpellDuel
                     FPas("sw_armor", "鋼筋鐵骨", PassiveKind.Armor, 0.02f, 5, 1, 4, "sw_regen"),   // 使用者要求：劍士系列少了吸血 → 補防禦（物理減傷 2%／級）
                     // 劍氣
                     FMod("sw_slash", "斬擊強化", "slash", ModField.Damage, 0.1f, 5, 3, 1, "sw_root"),
-                    FPas("sw_orb", "斬開法球", PassiveKind.OrbSlice, 1f, 1, 4, 2, "sw_slash"),   // 點了才會：斬擊和飛來的法術對撞（維持手勢＝斬碎、放掉＝被突破）
+                    FPas("sw_orb", "劍氣護甲", PassiveKind.Armor, 0.02f, 5, 4, 2, "sw_slash"),   // 使用者要求：拿掉「斬開法球」（改成對撞後劍士太弱）→ 減傷 2%／級。id 沿用（點過的點數保留）
                     FLearn("sw_wave", "wave", 3, 2, "sw_slash"),
                     FMod("sw_wave2", "劍氣分裂", "wave", ModField.Multi, 1f, 2, 2, 3, "sw_wave"),
                     FMod("sw_wavep", "劍氣穿透", "wave", ModField.Pierce, 1f, 1, 3, 3, "sw_wave"),
@@ -282,11 +282,12 @@ namespace SpellDuel
                     FPas("sw_rip", "反擊之刃", PassiveKind.Riposte, 0.3f, 5, 5, 2, "sw_block"),
                     FLearn("sw_counter", "counter", 5, 3, "sw_rip"),
                     FPas("sw_hp", "鐵血之軀", PassiveKind.Hp, 15f, 5, 5, 4, "sw_counter"),   // 防禦：HP +15／級
+                    FLearn("sw_taunt", "taunt", 6, 1, "sw_block"),   // 使用者要求：挑釁移到技能樹上方（格擋旁邊）
                     FLearn("sw_iron", "ironwall", 6, 2, "sw_block"),
                     FMod("sw_iron2", "鐵壁強化", "ironwall", ModField.BuffAmount, 10f, 5, 6, 3, "sw_iron"),
                     FStat("sw_vit", "體魄訓練", Stat.Vit, 5, 6, 4, "sw_iron2"),
                     FPas("sw_last", "不屈", PassiveKind.LastStand, 0.06f, 5, 6, 5, "sw_vit"),
-                    FLearn("sw_taunt", "taunt", 6, 6, "sw_last"),
+                    FPas("sw_wall", "不動如山", PassiveKind.Armor, 0.02f, 5, 6, 6, "sw_last"),   // 補減傷：受到的傷害 −2%／級
                 };
                 case "assassin": return new List<TreeNode>
                 {
