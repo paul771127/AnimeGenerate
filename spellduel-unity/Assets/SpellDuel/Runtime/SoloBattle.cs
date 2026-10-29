@@ -2382,6 +2382,7 @@ namespace SpellDuel
 
         void EndBattle()
         {
+            ResetDash();   // 衝刺過：世界移回原位（要在清場景、還原場地之前）
             ClearGallery();
             ClearSky();   // 天穹飛毯（SoloBattle.Carpet.cs）
             ClearEnemyCueViews(); ClearVariantBodies();
@@ -2502,6 +2503,7 @@ namespace SpellDuel
                 UpdateBattleTut();   // 1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）
                 UpdatePotionLesson();   // 1-2：喝藥水教學（SoloBattle.PotionLesson.cs）
                 if (!frozen) HandleInput();
+                UpdateDash(dt); CheckRealRoom();   // 衝刺：比 5 再握拳（只有單人故事模式，SoloBattle.Dash.cs）
                 UpdateCoatGesture();  // 法師的魔力盾：說完「魔力盾 開／關」比 3
                 UpdateCastGuide();   // 放招的分步驟提示（SoloBattle.CastGuide.cs）
                 SendState();
@@ -4121,6 +4123,7 @@ namespace SpellDuel
 
             // 被打中：整個畫面閃紅
             if (hitFlash > 0.01f) { GUI.color = new Color(1f, 0f, 0.05f, hitFlash * 0.45f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
+            DrawDashHud(W, H);      // 衝刺中：畫面兩側的速度線
             DrawTravelFade(W, H);   // 副本走通道：走進黑霧／到站亮起
             DrawRoomEventHud(W, H);   // 副本特殊地點：任務說明、黑暗、道具血條
             DrawStageModsHud(W, H);   // 故事關卡：天候色調、天候與小目標

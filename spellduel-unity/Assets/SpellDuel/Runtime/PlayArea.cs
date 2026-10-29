@@ -299,6 +299,15 @@ namespace SpellDuel
             ShowPolygon();
         }
 
+        /// <summary>衝刺（SoloBattle.Dash.cs）：整個場地跟著世界平移 d（session 座標）——場地是遊戲世界的一部分，不跟著實體房間</summary>
+        public void Shift(Vector3 d)
+        {
+            for (int i = 0; i < Polygon.Count; i++) Polygon[i] += d;
+            Origin = new Pose(Origin.position + d, Origin.rotation);
+            for (int i = 0; i < outline.positionCount; i++) outline.SetPosition(i, outline.GetPosition(i) + d);
+            foreach (var w in walls) if (w != null) w.transform.position += d;
+        }
+
         void ShowPolygon()
         {
             var loop = new List<Vector3>(Polygon);
