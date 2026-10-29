@@ -26,7 +26,9 @@ namespace SpellDuel
         float dashMovedAt = -99f;
         float dashDistance;   // 這一場總共衝了幾公尺（新手教學用）
         Vector3 dashTotalS;   // 到目前為止世界總共被平移多少（session 座標）
+        int dashAreaRev = -1; // 開始平移時場地的版本：之後場地重畫／重新放置（新場地就是實體房間）→ 累積的平移作廢
         readonly List<GameObject> dashRoots = new List<GameObject>();
+        readonly Dictionary<GameObject, bool> dashRootMove = new Dictionary<GameObject, bool>();
 
         bool DashAllowed => storyStage != null && !NetMode && dungeon == null && battle != null && !battle.Over
             && phase == Phase.Fighting && !InIntro && !frozen && Me != null && Me.Alive && Me.charging == null && chantPending == null
@@ -95,7 +97,7 @@ namespace SpellDuel
         IEnumerable<Fighter> DashFoes()
         {
             if (En != null) yield return En;
-            foreach (var m in battle.minions) yield return m;
+            foreach (var m in battle.minions) if (!m.hidden) yield return m;   // 埋在地下的食人花看不到，不擋路
         }
 
         string dashWhy;
@@ -110,6 +112,8 @@ namespace SpellDuel
         void ShiftWorld(Vector3 s)
         {
             if (s.sqrMagnitude < 1e-12f) return;
+            DashCheckArea();
+            if (dashTotalS == Vector3.zero) dashAreaRev = area.Revision;
             var mk = WorldFrame.Marker;
             WorldFrame.SetMarker(new Pose(mk.position + s, mk.rotation));
             area.Shift(s);
@@ -118,8 +122,10 @@ namespace SpellDuel
             SceneManager.GetActiveScene().GetRootGameObjects(dashRoots);
             foreach (var go in dashRoots)
             {
-                if (go == null || go.GetComponent<PlayArea>() || go.GetComponent<ARSession>() || go.GetComponentInChildren<Camera>(true)) continue;
-                go.transform.position += s;
+                if (go == null) continue;
+                // 要不要跟著移（場地框、AR Session、裝著相機的 XR Origin 不動）：每個根物件只判斷一次（整棵找相機很慢）
+                if (!dashRootMove.TryGetValue(go, out bool mv)) dashRootMove[go] = mv = !go.GetComponent<PlayArea>() && !go.GetComponent<ARSession>() && !go.GetComponentInChildren<Camera>(true);
+                if (mv) go.transform.position += s;
             }
             // 平移 transform 搬不動的東西：世界座標的線（刀光、射擊預警線…）、拖尾、世界空間的粒子（已經噴出去的）
             // 每幀重算位置的線會被它自己蓋掉，結果一樣正確
@@ -155,19 +161,28 @@ namespace SpellDuel
         /// <summary>不跟著世界走的：場地框（PlayArea.Shift 自己搬）、掛在相機上的</summary>
         static bool DashSkip(Transform t) => t.GetComponentInParent<PlayArea>() || t.GetComponentInParent<Camera>();
 
+        /// <summary>場地在衝刺後被重畫／重新放置：新的場地就是實體房間，之前累積的平移不用再移回去</summary>
+        void DashCheckArea()
+        {
+            if (dashTotalS != Vector3.zero && area.Revision != dashAreaRev) dashTotalS = Vector3.zero;
+        }
+
         /// <summary>這一場打完：世界移回原位（實體房間和場地重新對上）</summary>
         void ResetDash()
         {
             StopDash(); dashOpenAt = -99f; dashDistance = 0f;
+            if (area != null) DashCheckArea();
             if (dashTotalS.sqrMagnitude > 1e-8f && area != null) ShiftWorld(-dashTotalS);
-            dashTotalS = Vector3.zero;
+            dashTotalS = Vector3.zero; dashRootMove.Clear();
         }
 
         /// <summary>衝過之後場地和實體房間對不上：手機走到真實房間邊緣（衝刺前的場地框）就提醒</summary>
         void CheckRealRoom()
         {
+            if (area != null) DashCheckArea();
             if (dashTotalS.sqrMagnitude < 0.01f || area == null || area.Polygon.Count < 3 || !cam || Time.time < nextRoomWarn) return;
-            var p = cam.transform.position - dashTotalS;   // 換到衝刺前的座標，和原本的場地框比
+            // 場地框被平移了 dashTotalS：原本的房間＝現在的框 − dashTotalS → 手機在原本的房間裡 ⇔ 手機＋dashTotalS 在現在的框裡
+            var p = cam.transform.position + dashTotalS;
             if (area.Inside(p) && area.DistanceToEdge(p) >= RoomWarnDist) return;
             nextRoomWarn = Time.time + 2.5f;
             Haptics.Play(Haptics.Kind.Heavy);
@@ -176,7 +191,7 @@ namespace SpellDuel
 
         void DrawDashHud(float W, float H)
         {
-            if (!dashing || dashLostAt >= 0f) return;
+            if (!dashing || dashLostAt >= 0f || !DashAllowed) return;   // 暫停、追蹤中斷、打完：不顯示
             // 卡住（邊界、敵人擋著）：不畫速度線，只提示衝不過去
             if (dashStuck || Time.time - dashMovedAt > 0.15f) { UiKit.Pill(H * 0.62f, $"🛑 {dashWhy ?? "前面"}，衝不過去（鬆開拳頭）", Mathf.RoundToInt(H * 0.022f), new Color(1f, 0.6f, 0.45f), W * 0.5f); return; }
             // 畫面兩側的速度線

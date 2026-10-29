@@ -30,6 +30,8 @@ namespace SpellDuel
         public Vector3? Reticle { get; private set; }     // 準星在地板上的點
         public readonly List<Vector3> Polygon = new List<Vector3>();   // 場地邊界（地板高度）
         public Pose Origin { get; private set; } = Pose.identity;
+        /// <summary>場地重畫／重新放置就 +1（Shift 平移不算）：衝刺用來知道累積的平移還算不算數</summary>
+        public int Revision { get; private set; }
         public string Hint { get; private set; } = "";
         public bool PenDown { get; set; }           // 手繪時：手指是否按著螢幕（由 GameRoot 設定）
         public int DrawnPoints => drawPts.Count;
@@ -109,6 +111,7 @@ namespace SpellDuel
 
         public void Clear()
         {
+            Revision++;
             Polygon.Clear();
             drawPts.Clear();
             outline.positionCount = 0;
@@ -185,7 +188,7 @@ namespace SpellDuel
             float d = floorY - Origin.position.y;
             for (int i = 0; i < Polygon.Count; i++) Polygon[i] += Vector3.up * d;
             Origin = new Pose(Origin.position + Vector3.up * d, Origin.rotation);
-            ShowPolygon();
+            ShowPolygon(false);   // 只是地板高度：同一個場地
             HeightBad = false; heightOffSince = -1f;
         }
 
@@ -308,8 +311,9 @@ namespace SpellDuel
             foreach (var w in walls) if (w != null) w.transform.position += d;
         }
 
-        void ShowPolygon()
+        void ShowPolygon(bool newArea = true)
         {
+            if (newArea) Revision++;
             var loop = new List<Vector3>(Polygon);
             for (int i = 0; i < loop.Count; i++) loop[i] += Vector3.up * 0.01f;
             SetLine(outline, loop);
