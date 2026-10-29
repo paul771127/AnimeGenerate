@@ -101,8 +101,24 @@ namespace SpellDuel
         void ClearEnemyCueViews() { foreach (var v in cueViews.Values) { if (!v.cast && v.handle != 0) EnemySkillFx.Cancel(v.handle); if (v.shot) Destroy(v.shot.gameObject); } cueViews.Clear(); }
 
         /// <summary>畫面中央：盯上我的招式要我做什麼（後方突襲、跳、蹲）</summary>
+        /// <summary>法術角力：畫面上方的拉鋸條（左＝我、右＝對手，白點＝現在的位置）＋提示</summary>
+        void DrawClashHud()
+        {
+            var c = battle?.clash; if (c == null) return;
+            float W = Screen.width, H = Screen.height, w = W * 0.7f, h = H * 0.022f, x = (W - w) * 0.5f, y = H * 0.26f;
+            float t = Mathf.Clamp01((c.t - (1f - Battle.ClashWin)) / (2f * Battle.ClashWin - 1f));
+            GUI.color = new Color(0f, 0f, 0f, 0.55f); GUI.DrawTexture(new Rect(x - 4, y - 4, w + 8, h + 8), Texture2D.whiteTexture);
+            GUI.color = c.mine.skill.color; GUI.DrawTexture(new Rect(x, y, w * t, h), Texture2D.whiteTexture);
+            GUI.color = c.theirs.skill.color; GUI.DrawTexture(new Rect(x + w * t, y, w * (1f - t), h), Texture2D.whiteTexture);
+            GUI.color = Color.white; GUI.DrawTexture(new Rect(x + w * t - h * 0.5f, y - h * 0.6f, h, h * 2.2f), Texture2D.whiteTexture);
+            int fs = Mathf.RoundToInt(UiKit.BaseFont * 1.2f);
+            float left = Mathf.Max(0f, c.until - battle.now);
+            UiKit.Text(new Rect(0, y + h * 1.6f, W, fs * 1.5f), $"💥 法術角力！手一直舉起放下（或連點螢幕）往前推　{left:0.0} 秒", fs, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleCenter, true);
+        }
+
         void DrawEnemySkillHud()
         {
+            DrawClashHud();
             if (battle == null || phase != Phase.Fighting || Me == null || !Me.Alive) return;
             EnemyCue next = null;
             foreach (var c in battle.enemyCues)

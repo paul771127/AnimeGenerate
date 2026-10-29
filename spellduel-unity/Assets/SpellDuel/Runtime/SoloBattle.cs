@@ -470,6 +470,7 @@ namespace SpellDuel
 
         /// <summary>喝水手勢：比「🤙」（拇指＋小指，像拿瓶子喝）維持一下 → 依血量／MP 自動選一瓶</summary>
         /// <summary>法術對撞時有沒有「維持手勢」：手還留在鏡頭前（沒有握拳），或手指按著螢幕</summary>
+        bool clashPrevHold;
         bool SpellHoldNow()
         {
             if (Input.touchCount > 0 || Input.GetMouseButton(0)) return true;
@@ -1178,7 +1179,13 @@ namespace SpellDuel
             battle.OnTrapGone += id => NetSend?.Invoke(new Msg { t = "trapgone", id = id });
             battle.OnDispel += (c, r) => NetSend?.Invoke(new Msg { t = "dispel", p = c, rad = r });
             battle.OnSlice += (id, theirs) => NetSend?.Invoke(new Msg { t = "slice", id = id, ok = theirs });
-            battle.OnClash += (mine, theirs) => NetSend?.Invoke(new Msg { t = "clash", id = mine, e = theirs });   // 法術對撞：我的被擊破了
+            battle.OnClash += (mine, theirs) => NetSend?.Invoke(new Msg { t = "clash", id = mine, e = theirs });   // 斬擊對撞：法術突破
+            // 法術角力：房主算位置與結果，對手送手勢過來
+            battle.clashAuthority = NetIsHost;
+            battle.OnClashStart += (mine, theirs, t) => NetSend?.Invoke(new Msg { t = "cls", id = mine, e = theirs, s = t });
+            battle.OnClashState += t => NetSend?.Invoke(new Msg { t = "clss", s = t });
+            battle.OnClashEnd += r => NetSend?.Invoke(new Msg { t = "cle", e = r });
+            battle.OnClashPulse += () => NetSend?.Invoke(new Msg { t = "clp" });
             WireAdvNet();
             ai = null;
             if (RemotePlay) { enemyRig = CharacterRig.Create(ec.id, en.adv); if (PeerIds.Count > 0) ApplyPeerGear(enemyRig, PeerIds[0]); }   // 遠端對戰：對手是虛擬角色（進階職業、身上裝備都看得到）
@@ -2172,7 +2179,15 @@ namespace SpellDuel
                     return;
             }
             if (battle == null || !NetMode) return;
-            if (m.t == "clash" && !coop) { battle.ApplyRemoteClash(m.id, m.e); return; }   // 對手的法術被我擊破
+            if (!coop)
+                switch (m.t)
+                {
+                    case "clash": battle.ApplyRemoteClash(m.id, m.e); return;          // 斬擊被我的法術突破
+                    case "cls": battle.ApplyRemoteClashStart(m.id, m.e, m.s); return;  // 法術角力開始（房主）
+                    case "clss": battle.ApplyRemoteClashState(m.s); return;
+                    case "cle": battle.ApplyRemoteClashEnd(m.e); return;
+                    case "clp": battle.RemoteClashPulse(); return;                     // 對手推了一下
+                }
             if (m.t == "slice")
             {
                 // 劍士斬開了法術。合作：id＝發射者 pid 空間的編號；是我的就移除我自己的那發，否則移除遠端的那發
@@ -2605,7 +2620,8 @@ namespace SpellDuel
             // 選技能只能用唸的：每次放技能前都要先唸出技能名稱（手勢只負責放招）
             if (Hand.ConsumeSelect(out var selShape)) ItemByGesture(selShape);   // 🤙＝喝藥水（選技能還是只能用唸的）
             // 放招動作依詠唱中的技能（陷阱往下壓、治癒收回、格擋舉盾…；其餘依職業）；沒在詠唱就不偵測
-            if (battle != null && battle.playerSpellHold == null) battle.playerSpellHold = SpellHoldNow;   // 法術對撞：維持手勢＝撐住
+            if (battle != null && battle.playerSpellHold == null) battle.playerSpellHold = SpellHoldNow;   // 斬擊對撞：維持手勢＝撐住
+            { bool hold = SpellHoldNow(); if (hold && !clashPrevHold && battle != null) battle.ClashPulse(); clashPrevHold = hold; }   // 法術角力：每做一次手勢（手舉到鏡頭前／點一下）＝推一下
             Hand.ReleaseStyle = Me.charging != null ? HandGesture.ReleaseOf(Me.charging) : HandGesture.Style.None;
             Hand.RuneName = Me.charging != null && Hand.ReleaseStyle == HandGesture.Style.Rune ? RuneRecognizer.RuneOf(Me.charging.id) : null;
             Hand.RequiredNumber = Me.charging != null ? HandGesture.NumberOf(Me.charging.id) : 0;
@@ -2946,7 +2962,7 @@ namespace SpellDuel
             else if (kind == "lurefail" && text != null && text.Contains("掙脫")) PetArtFx.Capture(WorldFrame.FromWorld(new Vector3(at.x, 0f, at.z)), false);   // 收服失敗：繩結鬆開
             switch (kind)
             {
-                case "hit": case "trap": case "mitigate": case "effect": case "counter": case "buff": case "heal": case "trapSet": case "slice": case "clash": case "clashbreak":
+                case "hit": case "trap": case "mitigate": case "effect": case "counter": case "buff": case "heal": case "trapSet": case "slice": case "clash": case "clashbreak": case "clashpush":
                     if (!string.IsNullOrEmpty(text)) floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time });
                     if (battle.HazardHit) break;   // 陷阱打到小怪：只顯示數字（音效在 hazard 事件），不當成我的命中
                     if (kind == "hit" || kind == "trap")
@@ -2979,6 +2995,7 @@ namespace SpellDuel
                         case "slice": Burst(at, c); Sfx.Play("block", 1f, 1.3f); Sfx.Play("cast_swordsman", 0.6f); Haptics.Play(Haptics.Kind.Medium); Kick(4f, 0.04f); break;
                         case "clash": Burst(at, c); Burst(at, Color.white); Sfx.Play("boom", 1f, 1.2f); Haptics.Play(Haptics.Kind.Heavy); Kick(8f, 0.06f); break;   // 法術對撞
                         case "clashbreak": Burst(at, c); Sfx.Play("fail", 0.6f, 1.3f); break;
+                        case "clashpush": Burst(at, c); Sfx.Play("block", 0.5f, 1.6f); Haptics.Play(Haptics.Kind.Light); break;
                         case "mitigate": case "counter": if(kind=="mitigate"&&(text??"").Contains("障壁抵擋"))BarrierHitArt(at); Sfx.Play("block"); Haptics.Play(Haptics.Kind.Medium); Kick(5f, 0.05f); if (Me != null && Vector3.Distance(at, Me.Chest) < 0.8f) guardFlashAt = Time.time; break;   // 擋下：眼前的光盾亮一下
                         case "heal": Sfx.Play("heal"); break;
                         case "buff": Sfx.Play("cast_priest", 0.6f); break;
