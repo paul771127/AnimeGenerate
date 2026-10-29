@@ -324,8 +324,9 @@ jobs:
           set -eo pipefail
           S="$RUNNER_TEMP/sign"; mkdir -p "$S/x"
           echo "$P12" | base64 -d > "$S/dist.p12"
-          if [ "$RELEASE" = "true" ]; then echo "$PROFILE_REL" | base64 -d > "$S/appstore.mobileprovision"
-          else echo "$PROFILE_DEV" | base64 -d > "$S/appstore.mobileprovision"; fi
+          # 描述檔 secret 貼上時常混進空白或換行（base64 -d 會報 invalid input）：先去掉再解碼
+          if [ "$RELEASE" = "true" ]; then printf '%s' "$PROFILE_REL" | tr -d ' \t\r\n' | base64 -d > "$S/appstore.mobileprovision"
+          else printf '%s' "$PROFILE_DEV" | tr -d ' \t\r\n' | base64 -d > "$S/appstore.mobileprovision"; fi
           unzip -q unsigned/SpellDuel-unsigned.ipa -d "$S/x"
           PLIST=$(ls -d "$S"/x/Payload/*.app)/Info.plist
           # Build 號：Unity 寫入的 yyMMddHH 加上流程編號，同一小時內多次建置也不會撞號
