@@ -35,7 +35,7 @@ namespace SpellDuel
             bool air = me.airborneUntil > battle.now;
             if (air && !exWasAir) exJumps++;
             exWasAir = air;
-            var f = me.Feet;
+            var f = PhysFeet(me);   // 衝刺不算走路
             if (exHasFeet)
             {
                 float d = Battle.FlatDistance(f, exLastFeet);

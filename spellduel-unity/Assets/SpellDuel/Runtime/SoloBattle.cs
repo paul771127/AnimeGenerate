@@ -2579,9 +2579,9 @@ namespace SpellDuel
 
             float now = battle.now;
             UpdateJump(me, y, dt);
-            moveHist.Enqueue(new KeyValuePair<float, Vector3>(now, me.Feet));
+            moveHist.Enqueue(new KeyValuePair<float, Vector3>(now, PhysFeet(me)));   // 扣掉衝刺（SoloBattle.Dash.cs）：衝刺不算側跨
             while (moveHist.Count > 0 && now - moveHist.Peek().Key > SidestepWindow) moveHist.Dequeue();
-            if (moveHist.Count > 2 && now >= nextDodgeOk && Battle.FlatDistance(moveHist.Peek().Value, me.Feet) > SidestepDist)
+            if (moveHist.Count > 2 && now >= nextDodgeOk && Battle.FlatDistance(moveHist.Peek().Value, PhysFeet(me)) > SidestepDist)
             {
                 me.dodgeUntil = now + DodgeTime; nextDodgeOk = now + DodgeCooldown;
                 floaters.Add(new Floater { text = "💨 閃避", color = new Color(0.6f, 0.9f, 1f), born = Time.time, screen = true });

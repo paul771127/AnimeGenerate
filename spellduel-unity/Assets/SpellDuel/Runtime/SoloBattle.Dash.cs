@@ -15,7 +15,7 @@ namespace SpellDuel
     /// </summary>
     public partial class SoloBattle
     {
-        public const float DashSpeed = 0.8f;   // 公尺／秒
+        public const float DashSpeed = 2.5f;   // 公尺／秒
         const float DashArm = 0.8f;            // 比 5 之後這麼久內握拳才算
         const float DashGrace = 0.15f;         // 手勢偵測偶爾漏一兩張不算放開
         const float DashEdge = 0.4f;           // 離場地邊界這麼近就停
@@ -26,6 +26,9 @@ namespace SpellDuel
         float dashMovedAt = -99f;
         float dashDistance;   // 這一場總共衝了幾公尺（新手教學用）
         Vector3 dashTotalS;   // 到目前為止世界總共被平移多少（session 座標）
+        Vector3 dashMoveW;    // 衝刺讓角色在場地上前進了多少（場地座標）
+        /// <summary>扣掉衝刺之後「人真的走動」的位置：側跨閃避、運動紀錄用（衝刺不算側跨，也不算走路）</summary>
+        Vector3 PhysFeet(Fighter f) => f == Me ? f.Feet - dashMoveW : f.Feet;
         int dashAreaRev = -1; // 開始平移時場地的版本：之後場地重畫／重新放置（新場地就是實體房間）→ 累積的平移作廢
         readonly List<GameObject> dashRoots = new List<GameObject>();
         readonly Dictionary<GameObject, bool> dashRootMove = new Dictionary<GameObject, bool>();
@@ -60,7 +63,7 @@ namespace SpellDuel
             dashStuck = false;
             var move = dir * step;
             ShiftWorld(-WorldFrame.DirFromWorld(move));
-            Me.head += move; dashDistance += step; dashMovedAt = Time.time;   // 這一幀就生效（下一幀 SyncPlayer 會用新的原點重算，結果一樣）
+            Me.head += move; dashMoveW += move; dashDistance += step; dashMovedAt = Time.time;   // 這一幀就生效（下一幀 SyncPlayer 會用新的原點重算，結果一樣）
             if (Time.time >= dashStepAt) { dashStepAt = Time.time + 0.32f; Sfx.Play("select", 0.2f, 0.7f); shake = Mathf.Max(shake, 1.5f); }
         }
 
@@ -164,7 +167,7 @@ namespace SpellDuel
         /// <summary>場地在衝刺後被重畫／重新放置：新的場地就是實體房間，之前累積的平移不用再移回去</summary>
         void DashCheckArea()
         {
-            if (dashTotalS != Vector3.zero && area.Revision != dashAreaRev) dashTotalS = Vector3.zero;
+            if (dashTotalS != Vector3.zero && area.Revision != dashAreaRev) { dashTotalS = Vector3.zero; dashMoveW = Vector3.zero; moveHist.Clear(); exHasFeet = false; }
         }
 
         /// <summary>這一場打完：世界移回原位（實體房間和場地重新對上）</summary>
@@ -173,7 +176,7 @@ namespace SpellDuel
             StopDash(); dashOpenAt = -99f; dashDistance = 0f;
             if (area != null) DashCheckArea();
             if (dashTotalS.sqrMagnitude > 1e-8f && area != null) ShiftWorld(-dashTotalS);
-            dashTotalS = Vector3.zero; dashRootMove.Clear();
+            dashTotalS = Vector3.zero; dashMoveW = Vector3.zero; dashRootMove.Clear();
         }
 
         /// <summary>衝過之後場地和實體房間對不上：手機走到真實房間邊緣（衝刺前的場地框）就提醒</summary>
