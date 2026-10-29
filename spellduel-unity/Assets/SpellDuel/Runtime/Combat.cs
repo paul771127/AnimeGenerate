@@ -3584,10 +3584,12 @@ namespace SpellDuel
         // 推的距離看「自己那一發的攻擊力 ÷ 兩發平均」：攻擊力高的推一下走很多、低的只推一點點。
         // 推到對方面前 → 贏的那一發加速衝過去、輸的那一發碎掉；ClashTime 秒內沒分出勝負 → 兩發在原地一起炸掉。
         // 連線：房主算（clashAuthority），隊友的手勢送過去（OnClashPulse），房主把位置、結果送回來。
-        public sealed class SpellClash { public Projectile mine, theirs; public float t, until, nextSync, nextAi; }
+        public sealed class SpellClash { public Projectile mine, theirs; public float t, t0, until, nextSync, nextAi; }
         public SpellClash clash;
         public bool clashAuthority = true;
         public const float ClashTime = 5f, ClashWin = 0.9f, ClashPushMeters = 0.5f, ClashSync = 0.1f;
+        /// <summary>使用者要求：被壓過去 ClashBreakDist 公尺（從撞上的地方算）就穿破被壓倒的那一發，以 ×ClashBoost 飛出去</summary>
+        public const float ClashBreakDist = 1.2f;
         public event Action<int, int, float> OnClashStart;   // 我那一發、對方那一發、位置（0＝我、1＝對方）
         public event Action<float> OnClashState;
         public event Action<int> OnClashEnd;                 // 1＝房主那邊贏、−1＝對方贏、0＝平手
@@ -3603,7 +3605,7 @@ namespace SpellDuel
         void StartClash(Projectile mine, Projectile theirs, float t)
         {
             mine.locked = theirs.locked = true; mine.clashedWith = theirs; theirs.clashedWith = mine;
-            clash = new SpellClash { mine = mine, theirs = theirs, t = t, until = now + ClashTime, nextAi = now + 0.5f };
+            clash = new SpellClash { mine = mine, theirs = theirs, t = t, t0 = t, until = now + ClashTime, nextAi = now + 0.5f };
             Emit("clash", ClashPoint(t), Color.Lerp(mine.skill.color, theirs.skill.color, 0.5f), "💥 法術角力！快做手勢往前推！");
         }
 
@@ -3640,7 +3642,8 @@ namespace SpellDuel
             if (!clashAuthority) return;
             if (!remoteEnemy && now >= c.nextAi) { c.nextAi = now + 0.35f + (float)rng.NextDouble() * 0.4f; c.t -= ClashPush(c.theirs, c.mine); }   // 電腦對手也會推
             if (now >= c.nextSync) { c.nextSync = now + ClashSync; OnClashState?.Invoke(c.t); }
-            int r = c.t >= ClashWin ? 1 : c.t <= 1f - ClashWin ? -1 : now >= c.until ? 0 : 2;
+            float moved = (c.t - c.t0) * Mathf.Max(1f, FlatDistance(player.Feet, enemy.Feet));   // 從撞上的地方被推了幾公尺（正＝往對手）
+            int r = c.t >= ClashWin || moved >= ClashBreakDist ? 1 : c.t <= 1f - ClashWin || moved <= -ClashBreakDist ? -1 : now >= c.until ? 0 : 2;
             if (r != 2) { OnClashEnd?.Invoke(r); EndClashLocal(r); }
         }
 
@@ -3656,13 +3659,13 @@ namespace SpellDuel
             {
                 c.theirs.alive = false;
                 c.mine.pos = pt; c.mine.dir = axis; c.mine.speedMul *= ClashBoost;
-                Emit("clashbreak", pt, c.mine.skill.color, "💥 角力勝利！法術衝過去了");
+                Emit("clashbreak", pt, c.mine.skill.color, "💥 穿破了！法術加速衝過去");
             }
             else if (r == -1)
             {
                 c.mine.alive = false;
                 c.theirs.pos = pt; c.theirs.dir = -axis; c.theirs.speedMul *= ClashBoost;
-                Emit("clashbreak", pt, c.theirs.skill.color, "角力輸了！快閃開");
+                Emit("clashbreak", pt, c.theirs.skill.color, "被穿破了！快閃開");
             }
             else
             {

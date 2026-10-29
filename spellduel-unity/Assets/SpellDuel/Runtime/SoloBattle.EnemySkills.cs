@@ -104,9 +104,10 @@ namespace SpellDuel
         /// <summary>法術角力：畫面上方的拉鋸條（左＝我、右＝對手，白點＝現在的位置）＋提示</summary>
         void DrawClashHud()
         {
-            var c = battle?.clash; if (c == null) return;
+            var c = battle?.clash; if (c == null || Me == null) return;
             float W = Screen.width, H = Screen.height, w = W * 0.7f, h = H * 0.022f, x = (W - w) * 0.5f, y = H * 0.26f;
-            float t = Mathf.Clamp01((c.t - (1f - Battle.ClashWin)) / (2f * Battle.ClashWin - 1f));
+            float span = Battle.ClashBreakDist / Mathf.Max(1f, Battle.FlatDistance(Me.Feet, battle.enemy.Feet));   // 拉鋸條：中間＝撞上的地方，兩端＝穿破的距離
+            float t = Mathf.Clamp01(0.5f + (c.t - c.t0) / Mathf.Max(0.01f, 2f * span));
             GUI.color = new Color(0f, 0f, 0f, 0.55f); GUI.DrawTexture(new Rect(x - 4, y - 4, w + 8, h + 8), Texture2D.whiteTexture);
             GUI.color = c.mine.skill.color; GUI.DrawTexture(new Rect(x, y, w * t, h), Texture2D.whiteTexture);
             GUI.color = c.theirs.skill.color; GUI.DrawTexture(new Rect(x + w * t, y, w * (1f - t), h), Texture2D.whiteTexture);
