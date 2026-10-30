@@ -12,7 +12,8 @@ namespace SpellDuel
    {
     if(!map.InGrid(x,z)||map.At(x,z)!=ExCell.Wall)continue;var terrain=map.TerrainAt(x,z);var at=map.World(x,z)-center;
     if(l.kind=="lake"&&terrain==ExTerrain.Water)
-    {if(Variant(x,z,3)==0){Part(root.transform,"landmark/moon",b=>{b.Ring(V(0,.025f,0),.65f,.08f,new Color(.65f,.9f,1,.17f),20);b.Ring(V(0,.027f,0),.40f,.06f,new Color(.8f,.94f,1,.14f),16);},at,true).name="MoonReflection_"+x+"_"+z;Part(root.transform,"landmark/fireflies",b=>{for(int i=0;i<5;i++)b.Gem(V(Mathf.Sin(i*2.3f)*.7f,.35f+i*.09f,Mathf.Cos(i*2.3f)*.7f),V(.035f,.035f,.035f),Glow(Bone),4);},at).name="Fireflies_"+x+"_"+z;}continue;}
+    {foreach(var direction in ExploreMap.Dirs)if(map.InGrid(x+direction.x,z+direction.y)&&map.TerrainAt(x+direction.x,z+direction.y)!=ExTerrain.Water){var shore=Part(root.transform,"water/shore",b=>ShoreStrip(b),at,true);shore.name="Shore_"+x+"_"+z+"_"+direction.x+"_"+direction.y;shore.localRotation=Quaternion.Euler(0,Mathf.Atan2(direction.x,direction.y)*Mathf.Rad2Deg,0);}
+     if(Variant(x,z,3)==0){Part(root.transform,"landmark/moon",b=>{b.Ring(V(0,.025f,0),.65f,.08f,new Color(.65f,.9f,1,.055f),20);b.Ring(V(0,.027f,0),.40f,.06f,new Color(.8f,.94f,1,.035f),16);},at,true).name="MoonReflection_"+x+"_"+z;Part(root.transform,"landmark/fireflies",b=>{for(int i=0;i<5;i++)b.Gem(V(Mathf.Sin(i*2.3f)*.7f,.35f+i*.09f,Mathf.Cos(i*2.3f)*.7f),V(.035f,.035f,.035f),Glow(Bone),4);},at).name="Fireflies_"+x+"_"+z;}continue;}
     if(terrain==ExTerrain.Water||placed>=8||Variant(x,z,3)!=0)continue;
     bool edge=false;foreach(var d in ExploreMap.Dirs)if(map.Open(x+d.x,z+d.y))edge=true;if(!edge)continue;
     if(l.kind=="fort"||l.kind=="start")Part(root.transform,"landmark/flag",b=>{b.Rod(V(1,2.5f,0),V(1,4.4f,0),.04f,Bark);b.Quad(V(1,4.3f,0),V(.2f,4.3f,0),V(.4f,3.6f,0),V(1,3.8f,0),Leaf,true);},at).name="Banner_"+x+"_"+z;

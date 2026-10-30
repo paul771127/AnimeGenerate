@@ -11,7 +11,7 @@ namespace SpellDuel.EditorTools
   [MenuItem("SpellDuel/Explore/Export jungle scene and keyframes")]
   public static void Render()
   {
-   ExploreFxKeyframes.Render();var cam=UnityEngine.Object.FindObjectOfType<Camera>();cam.orthographic=false;cam.fieldOfView=72;cam.farClipPlane=300;cam.backgroundColor=new Color(.19f,.27f,.26f);
+   ExploreFxKeyframes.Render();var cam=UnityEngine.Object.FindObjectOfType<Camera>();cam.orthographic=false;cam.fieldOfView=72;cam.farClipPlane=500;cam.backgroundColor=new Color(.19f,.27f,.26f);
    var map=JungleMaze.Build();var root=new GameObject("Explore scene preview");Directory.CreateDirectory("snapshots");
    for(int x=0;x<map.W;x++)for(int z=0;z<map.H;z++)
    {
@@ -27,13 +27,14 @@ namespace SpellDuel.EditorTools
    foreach(var sw in map.switches){var g=ExploreArt.CreateSwitch(sw);g.transform.SetParent(root.transform,false);g.transform.localPosition=sw.pos;}
    if(root.GetComponentInChildren<Collider>())throw new Exception("Explore art introduced a collider");
    foreach(var n in map.npcs){var rig=CharacterRig.Create(n.look);rig.InCombat=false;ExploreArt.DressNpc(rig,n.id);rig.transform.SetParent(root.transform,false);rig.transform.localPosition=n.pos;}
+   var backdrop=ExploreArt.CreateBackdrop(map);backdrop.transform.SetParent(root.transform,false);
    foreach(var l in map.landmarks)
    {
     var center=map.World((l.rect.xMin+l.rect.xMax)/2,(l.rect.yMin+l.rect.yMax)/2);Vector3 desired=map.World((l.rect.xMin+l.rect.xMax)/2,l.rect.yMin);Vector3 at=desired;float best=float.MaxValue;
     for(int x=l.rect.xMin;x<=l.rect.xMax;x++)for(int z=l.rect.yMin;z<=l.rect.yMax;z++){var p=map.World(x,z);if(!map.Walkable(p))continue;float score=(p-desired).sqrMagnitude;if((p-center).sqrMagnitude<9)score+=100;if(score<best){best=score;at=p;}}
     var target=center+Vector3.up*(l.kind=="lake"?.35f:1.8f);ChooseView(map,l,root.transform,ref at,ref target);cam.transform.position=at+Vector3.up*1.65f;if((target-cam.transform.position).sqrMagnitude<.5f)target+=Vector3.forward*3;cam.transform.LookAt(target);Save(cam,"explore_"+l.id+"_first",960,1280);
    }
-   var middle=(map.World(0,0)+map.World(map.W-1,map.H-1))*.5f;cam.orthographic=true;cam.orthographicSize=map.W*3*.54f;cam.transform.position=middle+Vector3.up*160;cam.transform.rotation=Quaternion.Euler(90,0,0);Save(cam,"explore_map_top",1800,1800);
+   backdrop.SetActive(false);var middle=(map.World(0,0)+map.World(map.W-1,map.H-1))*.5f;cam.orthographic=true;cam.orthographicSize=map.W*3*.54f;cam.transform.position=middle+Vector3.up*160;cam.transform.rotation=Quaternion.Euler(90,0,0);Save(cam,"explore_map_top",1800,1800);
    root.SetActive(false);cam.orthographic=false;cam.fieldOfView=35;cam.backgroundColor=new Color(.13f,.17f,.20f);Catalogue(cam);
    File.WriteAllText("snapshots/explore_scene_audit.json","{\"landmarks\":"+map.landmarks.Count+",\"props\":"+map.props.Count+",\"noColliders\":true,\"staticStates\":true,\"cachedFactories\":true,\"keyframes\":16}");
   }

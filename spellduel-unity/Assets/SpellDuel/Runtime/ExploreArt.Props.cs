@@ -8,8 +8,8 @@ namespace SpellDuel
    if(p==null)return null;var root=Root(p.kind);int n=((p.variant%3)+3)%3;
    if(p.kind=="tree")n=((p.variant%5)+5)%5;
    int seed=Variant(Mathf.RoundToInt(p.pos.x*10),Mathf.RoundToInt(p.pos.z*10));
-   Part(root.transform,"prop/"+p.kind+"/"+n+"/"+(p.kind=="tree"||p.kind=="boulder"?seed:0),b=>{if(p.kind=="tree")NaturalTree(b,n,seed);else if(p.kind=="boulder")NaturalBoulder(b,n,seed);else Prop(b,p.kind,n);PropVariant(b,p.kind,n);});float radius=Mathf.Max(.05f,p.radius);float height=p.kind=="tent"?1f:p.kind=="tree"?.85f:p.kind=="mushroom"?1.3f:p.kind=="totem"||p.kind=="pillar"||p.kind=="statue"?.65f:radius;root.transform.localScale=V(radius,Mathf.Max(radius,height),radius);
-   if(p.kind=="campfire")Part(root.transform,"Fire",b=>{b.Gem(V(0,.7f,0),V(.65f,1.1f,.65f),Glow(new Color(1,.53f,.12f)),7);b.Gem(V(0,.52f,.1f),V(.35f,.6f,.35f),Glow(Bone));});
+   Part(root.transform,"prop/"+p.kind+"/"+n+"/"+(p.kind=="tree"||p.kind=="boulder"?seed:0),b=>{if(p.kind=="tree")NaturalTree(b,n,seed);else if(p.kind=="boulder")NaturalBoulder(b,n,seed);else Prop(b,p.kind,n);PropVariant(b,p.kind,n);});float radius=Mathf.Max(.05f,p.radius);float height=p.kind=="tent"?1f:p.kind=="tree"?1.25f:p.kind=="mushroom"?1.3f:p.kind=="totem"||p.kind=="pillar"||p.kind=="statue"?.65f:radius;root.transform.localScale=V(radius,Mathf.Max(radius,height),radius);
+   if(p.kind=="campfire")Part(root.transform,"Fire",b=>CampFlames(b),Vector3.zero,true);
    return root;
   }
   static void PropVariant(Geo b,string kind,int n)
@@ -42,8 +42,7 @@ namespace SpellDuel
    else if(kind=="tent")HabitableTent(b,n);
    else if(kind=="crate")
    {b.Box(V(0,.65f,0),V(1.4f,1.3f,1.4f),Bark);for(int j=0;j<4;j++){float y=.14f+j*.32f;b.Box(V(0,y,.707f),V(1.4f,.025f,.015f),Dark);b.Box(V(.707f,y,0),V(.015f,.025f,1.4f),Dark);}for(int s=-1;s<=1;s+=2)b.Rod(V(s*.60f,.10f,.73f),V(-s*.60f,1.2f,.73f),.06f,Bone,4);}
-   else if(kind=="campfire")
-   {for(int i=0;i<9;i++){float a=i*2*Mathf.PI/9;b.Gem(V(Mathf.Cos(a)*.78f,.17f,Mathf.Sin(a)*.78f),V(.4f,.35f,.4f),Rock);}for(int i=-1;i<=1;i++)b.Rod(V(-.55f,.18f,i*.25f),V(.55f,.28f,-i*.25f),.13f,Bark,6);}
+   else if(kind=="campfire")CampFuel(b,n);
    else if(kind=="totem")
    {b.Rod(V(0,0,0),V(0,4.2f,0),.85f,Bark,7,.55f);for(int j=0;j<3;j++){Skull(b,V(0,1+j, .57f),.85f);b.Ring(V(0,.7f+j,0),.81f-j*.065f,.07f,Jade);}b.Rod(V(-.95f,3.5f,0),V(.95f,3.5f,0),.08f,Bark);Leaves(b,V(0,4.2f,0),.85f,Moss,5);}
    else if(kind=="pillar")
