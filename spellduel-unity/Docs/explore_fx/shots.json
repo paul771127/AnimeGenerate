@@ -1,0 +1,220 @@
+{
+  "style": "Japanese anime cel-shaded style, two-tone toon shading, crisp clean shapes, saturated colors, game VFX asset, static camera, no camera movement",
+  "negative": "text, letters, words, watermark, logo, subtitles, camera shake, camera movement, people, hands, realistic photo, blurry",
+  "backgrounds": {
+    "black": "centered in frame, isolated on a pure solid black background, nothing else in the scene, no ground, no floor",
+    "green": "centered in frame, isolated on a pure solid flat chroma-key green (#00FF00) background, nothing else in the scene, no ground, no shadows on the background",
+    "full": ""
+  },
+  "spec": {
+    "size": [
+      960,
+      544
+    ],
+    "fps": 24,
+    "codec": "H.264 mp4, no audio track",
+    "note": "seconds = length used in game; generate the model's normal length, Claude trims/loops"
+  },
+  "clips": [
+    {
+      "id": "fx_A_unseal_burst",
+      "background": "black",
+      "mode": "once",
+      "seconds": 1.5,
+      "zh": "A1–A5 封印/門打開時疊在門上",
+      "prompt": "a dark black-purple corrupted glow flickers and goes out, then bursts into a wide spray of bright green light sparks and small green leaves scattering outward and drifting down"
+    },
+    {
+      "id": "fx_A5_socket_pulse",
+      "background": "black",
+      "mode": "once",
+      "seconds": 0.8,
+      "zh": "A5 每放進一片翠玉碎片",
+      "prompt": "a glowing jade-green crystal shard snaps into place with a bright green pulse of light, a small ring of green light expanding and fading"
+    },
+    {
+      "id": "fx_B1_rune_idle",
+      "background": "black",
+      "mode": "loop",
+      "seconds": 2,
+      "zh": "B1 機關待機",
+      "prompt": "a single carved green rune symbol glowing softly, slowly brightening and dimming like breathing"
+    },
+    {
+      "id": "fx_B1_activate",
+      "background": "black",
+      "mode": "once",
+      "seconds": 1,
+      "zh": "B1 機關啟動",
+      "prompt": "a green rune flashes bright, a flat ring of green light spreads outward along the ground, then a beam of green light shoots off to the right"
+    },
+    {
+      "id": "fx_B2_key_idle",
+      "background": "green",
+      "mode": "loop",
+      "seconds": 3,
+      "zh": "B2 古銅鑰匙待機",
+      "prompt": "an ornate ancient bronze key floating in mid-air, slowly rotating and bobbing up and down, tiny warm light motes drifting upward"
+    },
+    {
+      "id": "fx_B2_shard_idle",
+      "background": "black",
+      "mode": "loop",
+      "seconds": 3,
+      "zh": "B2 翠玉碎片待機",
+      "prompt": "a sharp crystal shard of glowing jade floating in mid-air, slowly rotating and bobbing, soft green glow, tiny light motes drifting upward"
+    },
+    {
+      "id": "fx_B2_pickup",
+      "background": "black",
+      "mode": "once",
+      "seconds": 0.6,
+      "zh": "B2 撿起鑰匙/碎片",
+      "prompt": "a small glowing object spins fast, shrinks into a bright white star and flies toward the camera"
+    },
+    {
+      "id": "fx_C1_glint_gold",
+      "background": "black",
+      "mode": "loop",
+      "seconds": 3,
+      "zh": "C1 閃光點（鬆土）",
+      "prompt": "darkness, then a tiny four-pointed golden star glint briefly flashes once and fades, very subtle"
+    },
+    {
+      "id": "fx_C1_glint_green",
+      "background": "black",
+      "mode": "loop",
+      "seconds": 3,
+      "zh": "C1 閃光點（樹洞）",
+      "prompt": "darkness, then a faint green glow briefly pulses once inside darkness and fades, very subtle"
+    },
+    {
+      "id": "fx_C1_glint_eyes",
+      "background": "black",
+      "mode": "loop",
+      "seconds": 3,
+      "zh": "C1 閃光點（草叢動物眼睛）",
+      "prompt": "darkness, then a pair of small animal eyes reflect light, blink once and disappear"
+    },
+    {
+      "id": "fx_C1_glint_white",
+      "background": "black",
+      "mode": "loop",
+      "seconds": 3,
+      "zh": "C1 閃光點（藤牆縫隙）",
+      "prompt": "darkness, then a thin vertical sliver of white light briefly shines through and fades"
+    },
+    {
+      "id": "fx_C2_discover",
+      "background": "black",
+      "mode": "once",
+      "seconds": 1,
+      "zh": "C2 點到閃光點",
+      "prompt": "a tiny glint bursts into a ring of soft white-gold light and a shower of sparkles rising upward"
+    },
+    {
+      "id": "fx_C3_herb",
+      "background": "green",
+      "mode": "loop",
+      "seconds": 4,
+      "zh": "C3 月光草",
+      "prompt": "a small cluster of slender herbs with pale blue bioluminescent leaf tips glowing brighter and dimmer like slow breathing, a few firefly-like motes floating around"
+    },
+    {
+      "id": "fx_C4_heart_rise",
+      "background": "black",
+      "mode": "once",
+      "seconds": 2,
+      "zh": "C4 Boss 倒下後古樹之心浮出",
+      "prompt": "a heart-shaped seed of living wood wrapped in green light rises upward from below, small new leaves sprouting around it"
+    },
+    {
+      "id": "fx_C4_heart_idle",
+      "background": "black",
+      "mode": "loop",
+      "seconds": 3,
+      "zh": "C4 古樹之心待機",
+      "prompt": "a heart-shaped seed of living wood wrapped in green light floating in place, pulsing like a heartbeat, leaves slowly orbiting"
+    },
+    {
+      "id": "fx_C4_heart_take",
+      "background": "black",
+      "mode": "once",
+      "seconds": 1,
+      "zh": "C4 拿走古樹之心",
+      "prompt": "a green glowing heart-shaped seed dissolves into a stream of green light that flows toward the camera and vanishes"
+    },
+    {
+      "id": "fx_D2_lake",
+      "background": "full",
+      "mode": "loop",
+      "seconds": 5,
+      "zh": "D2 月影湖湖面（貼在湖面上）",
+      "prompt": "top-down view straight down onto a calm dark jungle lake surface at dusk, moonlight reflections shimmering, a few lily pads drifting slightly, fills the whole frame, no shore, no horizon"
+    },
+    {
+      "id": "fx_D3_fire",
+      "background": "black",
+      "mode": "loop",
+      "seconds": 1,
+      "zh": "D3 篝火的火焰（柴堆是模型）",
+      "prompt": "flickering orange cartoon campfire flames, rising sparks and thin smoke, flames only, no logs"
+    },
+    {
+      "id": "fx_D4_spores",
+      "background": "black",
+      "mode": "loop",
+      "seconds": 4,
+      "zh": "D4 巨菇林孢子（疊在菇上）",
+      "prompt": "many small luminous pink and teal spores drifting slowly upward and fading"
+    },
+    {
+      "id": "fx_E1_spirit",
+      "background": "black",
+      "mode": "loop",
+      "seconds": 3,
+      "zh": "E1 森林之靈",
+      "prompt": "a small translucent forest spirit made of soft green light, shaped like a child with leaf-like hair and a long wispy tail instead of legs, floating and slowly bobbing, leaves orbiting around it, gentle smile"
+    },
+    {
+      "id": "fx_E2_alert",
+      "background": "black",
+      "mode": "once",
+      "seconds": 0.8,
+      "zh": "E2 怪物發現玩家「！」",
+      "prompt": "a bold red exclamation mark pops up with a quick squash-and-stretch bounce, then fades out"
+    },
+    {
+      "id": "fx_E2_roar_wave",
+      "background": "black",
+      "mode": "once",
+      "seconds": 1,
+      "zh": "E2 會叫同伴的怪物吼叫",
+      "prompt": "two red sound-wave rings expanding outward from the center and fading"
+    },
+    {
+      "id": "fx_E3_exclaim",
+      "background": "black",
+      "mode": "loop",
+      "seconds": 1.5,
+      "zh": "E3 NPC 有任務",
+      "prompt": "a golden exclamation mark floating, gently bobbing and slowly spinning with a soft glow"
+    },
+    {
+      "id": "fx_E3_question",
+      "background": "black",
+      "mode": "loop",
+      "seconds": 1.5,
+      "zh": "E3 NPC 可回報",
+      "prompt": "a golden question mark floating, gently bobbing and slowly spinning with a soft glow"
+    },
+    {
+      "id": "fx_E4_banner",
+      "background": "black",
+      "mode": "once",
+      "seconds": 2.5,
+      "zh": "E4 地名橫幅（只要框，字遊戲自己放）",
+      "prompt": "a thin ornamental vine-and-leaf frame unfurls horizontally from the center, an empty soft dark-green ribbon with gold edges fades in, holds, then dissolves into drifting leaves, the ribbon is empty with no letters"
+    }
+  ]
+}
