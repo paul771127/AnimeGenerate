@@ -65,6 +65,10 @@ Claude 已經把地圖改成有**地形種類、地面種類、景物障礙、�
 10. **怪物發現玩家** `void ExploreArt.AlertMark(Transform monster, bool callsHelp)`：頭上的紅色「！」（叫同伴的再加往外擴散的聲波）。
 11. **發現地標** `void ExploreArt.LandmarkFound(ExLandmark l)`（選做）：第一人稱畫面上方一行漂亮的地名橫幅（像開放世界遊戲進入新區域那樣）。
 
+12. **岔路解謎（使用者追加）**：`map.seals`（封印：苔根封印、寨主之鎖、雙獵封印、翠玉封印，`cells` 是被封住的入口格）和 `map.switches`（`kind`：lever 機關、key 鑰匙、shard 翠玉碎片，放在岔路死路底）。
+   - `GameObject ExploreArt.CreateSeal(ExSeal s, int x, int z, float cell)` ＋ `void ExploreArt.SetSealOpen(GameObject g, bool open)`：四種封印外觀不同（苔根盤結、掛著古銅大鎖的木柵、兩道藤蔓結、刻著三個凹槽的翠玉石門；凹槽依 `s.have` 亮起），解開時的動畫。現在是紫色方塊。
+   - `GameObject ExploreArt.CreateSwitch(ExSwitch sw)` ＋ `void ExploreArt.SetSwitchDone(GameObject g)`：石雕機關（拉桿或可以踩的石盤，啟動後下沉發光）、古銅鑰匙、翠玉碎片（浮在空中慢慢轉、發綠光）。在死路底要遠遠就隱約看得到一點光，引導玩家走進岔路。
+
 ## 預算與注意
 
 - **景物和牆都是障礙物**：碰撞已經由 Claude 用格子和半徑算好，你只要讓外型和碰撞對得上（不要加 Collider）。
@@ -74,4 +78,4 @@ Claude 已經把地圖改成有**地形種類、地面種類、景物障礙、�
 - 主題色：深綠、苔綠、樹皮棕、岩灰、湖藍；腐化的東西用黑紫；任務相關（月光草、祭壇、閃光點）用暖白或藍白光，讓它在綠色裡跳出來。
 
 ## 交付順序
-**1 牆（六種地形）→ 3 景物 → 5 藤蔓門 → 4 地標佈置 → 6 競技場與王座 → 2 地面 → 7 → 8 → 9 → 10 → 11**。每做完一項就推，Claude 會接線。
+**1 牆（六種地形）→ 3 景物 → 5 藤蔓門 → 4 地標佈置 → 6 競技場與王座 → 2 地面 → 12 → 7 → 8 → 9 → 10 → 11**。每做完一項就推，Claude 會接線。
