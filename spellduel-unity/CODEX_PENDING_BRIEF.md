@@ -809,3 +809,7 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 原生 Unity run 41083564537（201215e）通過。Docs/pending_preview/explore_jungle/ 收錄 73 張場景圖、各類總覽、介面／動畫掛點交接表；Docs/explore_fx/keyframes/ 更新 16 張 960×544 靜態圖。
 - 牆 24 組變體均符合每格 ≤300 三角形及格子範圍；無新增 Collider，狀態切換與快取檢查通過。圖片尺寸、黑／綠背景、四周留白通過。
 - 本輪 1～12 項靜態介面全部提供（含選做地面／地名橫幅）；動畫與正式探索模式接線由各自 session 處理，沒有改玩法或碰撞。Android／iOS 建置仍在跑，結果另記。
+
+### 2026-10-31 翠蔭迷林雙平台驗收完成
+- GitHub Actions 41083564529，程式碼 201215e：Android APK、iOS Unity 匯出、Xcode 未簽署 IPA 全部成功。原生場景 run 41083564537 亦成功；證據收錄 Docs/pending_preview/explore_jungle/native_ci.json 與 platform_ci.json。
+- 靜態交付共 19 個介面、73 張場景 PNG、16 張動畫用靜態 PNG。完整說明／掛點／預覽在該目錄 README.md；本批沒有製作動畫影片或修改探索玩法，正式接線及手機 AR 驗收仍由整合端負責。

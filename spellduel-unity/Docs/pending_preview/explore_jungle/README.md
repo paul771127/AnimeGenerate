@@ -58,4 +58,4 @@
 
 原生 Unity run 41083564537（201215e）成功，輸出 73 張場景 PNG 與 16 張靜態首尾圖。24 組牆變體均通過 ≤300 三角形、格子邊界與無 Collider 檢查；封印切換與 mesh／material 快取檢查通過。16 張圖均通過 960×544、四角純黑／綠幕與四周留白檢查。詳見 native_ci.json、explore_*_audit.json、keyframe_validation.json。
 
-已目視複查木牆四面、岩壁、地標視角、植物、NPC 與首尾圖。Android／iOS 的建置結果另補；AR 實機視野與動畫影片接線需整合端驗收。
+已目視複查木牆四面、岩壁、地標視角、植物、NPC 與首尾圖。雙平台 run 41083564529（201215e）中 Android APK、iOS Unity 匯出及 Xcode 未簽署 IPA 均成功，詳見 platform_ci.json。後續僅提交 Docs 與紀錄，Assets 程式碼未變；TestFlight 發布不是本輪美術驗收項目。AR 實機視野與動畫影片接線仍需整合端驗收。
