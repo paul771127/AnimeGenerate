@@ -94,6 +94,8 @@ namespace SpellDuel
         float nextThink = 3f, nextRetarget;
         // 出場：先走到場地中間（被玩家擋住就停在保持距離的地方）再開始攻擊；最多走 CenterMaxTime 秒
         bool centerDone; float centerSince = -1f;
+        /// <summary>場地中心（Boss 走位的基準）：一般是原點；故事探索是王座中央</summary>
+        public Vector3 center;
         public const float CenterMaxTime = 10f, CenterPull = 0.4f;
         /// <summary>Boss 平常只在場地中心這個半徑內走動（房間的邊角常常走不到；玩家要能繞到 Boss 身邊）</summary>
         public const float LeashRadius = 1.2f;
@@ -309,7 +311,7 @@ namespace SpellDuel
         /// <summary>場地中間（被目標擋住時：目標旁邊保持距離的那一點）</summary>
         Vector3 CenterSpot(Fighter tgt)
         {
-            var c = Vector3.zero; float keep = CenterKeep;
+            var c = center; float keep = CenterKeep;
             var fromT = Fighter.Flat(me.Feet - tgt.Feet);
             if (Battle.FlatDistance(c, tgt.Feet) < keep) c = tgt.Feet + (fromT == Vector3.zero ? Vector3.forward : fromT.normalized) * keep;
             c.y = 0f; return c;
@@ -329,7 +331,7 @@ namespace SpellDuel
         void Move(float dt, Fighter tgt)
         {
             // 從場地外淡入出現：先走進場地（往場地中心，走到離邊界夠遠才開始正常走位）
-            if (!inside(me.Feet) || edgeDistance(me.Feet) < 0.6f) { var home = -me.Feet; home.y = 0; me.head += (home.sqrMagnitude > 1e-4f ? home.normalized : Vector3.zero) * walkSpeed * 1.5f * dt; return; }
+            if (!inside(me.Feet) || edgeDistance(me.Feet) < 0.6f) { var home = center - me.Feet; home.y = 0; me.head += (home.sqrMagnitude > 1e-4f ? home.normalized : Vector3.zero) * walkSpeed * 1.5f * dt; return; }
             var c = me.charging;
             if (c != null && c.areaRadius > 0f) return;   // 地裂蓄力時站著不動（紅圈固定）
             float keep = Keep;
@@ -339,19 +341,20 @@ namespace SpellDuel
             var toBoss = Fighter.Flat(feet - tgt.Feet);
             if (toBoss == Vector3.zero) toBoss = Vector3.forward;
             float cur = Battle.FlatDistance(feet, tgt.Feet);
-            float fromCenter = new Vector3(feet.x, 0f, feet.z).magnitude;   // 離場地中心多遠（Fighter.Flat 會正規化，不能用）
+            float fromCenter = new Vector3(feet.x - center.x, 0f, feet.z - center.z).magnitude;   // 離場地中心多遠（Fighter.Flat 會正規化，不能用）
             if (cur >= keep && cur <= want + 0.6f && cur >= want - 1.2f && fromCenter <= LeashRadius + 0.3f) return;   // 在想要的距離附近、又在中間：不動
             float goal = Mathf.Max(keep, want);   // 太近：往後退；太遠：靠過去
             var dest = tgt.Feet + toBoss * goal;
             // 一律待在場地中間附近（中心 LeashRadius 內）：想退遠也不會退到邊角
             dest.y = 0f;
-            if (dest.magnitude > LeashRadius) dest = dest.normalized * LeashRadius;
+            var rel = dest - center; rel.y = 0f;
+            if (rel.magnitude > LeashRadius) dest = center + rel.normalized * LeashRadius;
             if (Battle.FlatDistance(dest, tgt.Feet) < CenterKeep)
             {
                 // 玩家就站在中間：在中心圈上找離玩家最遠的那一點（還是太近就照原地，不往邊角跑）
-                var away = Fighter.Flat(-tgt.Feet);
+                var away = Fighter.Flat(center - tgt.Feet);
                 if (away == Vector3.zero) away = toBoss;
-                var alt = away.normalized * LeashRadius;
+                var alt = center + away.normalized * LeashRadius;
                 dest = Battle.FlatDistance(alt, tgt.Feet) > Battle.FlatDistance(feet, tgt.Feet) || fromCenter > LeashRadius + 0.3f ? alt : feet;
             }
             var delta = dest - feet; delta.y = 0;
@@ -361,7 +364,7 @@ namespace SpellDuel
             if (inside(next) && edgeDistance(next) >= 0.5f) me.head = new Vector3(next.x, me.head.y, next.z);
             else if (!inside(feet))
             {
-                var home = -feet; home.y = 0;
+                var home = center - feet; home.y = 0;
                 me.head += (home.sqrMagnitude > 1e-4f ? home.normalized : Vector3.zero) * walkSpeed * (b.endless ? 2f : 1f) * dt;   // 無盡／故事：場地外 2 倍速走進來
             }
         }

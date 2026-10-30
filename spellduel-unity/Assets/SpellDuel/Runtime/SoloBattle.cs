@@ -772,6 +772,7 @@ namespace SpellDuel
                 world.OnStartStage = st => { OpenPrep(st.title, true, null, () => { storyMapOpen = false; StartStory(st); }); prepStage = IsGuideStage(st) ? null : st; };   // 先整備再出發（可以邀請隊友一起打）
                 world.OnWatchStory = WatchStory;
                 world.OnStartDungeon = d => OpenPrep("🏰 " + d.name, true, null, () => StartDungeonRun(d, false));
+                world.OnStartExplore = () => OpenPrep("🌿 故事探索：翠蔭迷林", true, null, StartExplore);
                 world.OnWatchDungeon = WatchDungeonStory;
                 world.OnBack = () => storyMapOpen = false;
                 world.OnCharacter = () => charOpen = true;
@@ -921,7 +922,7 @@ namespace SpellDuel
         /// <summary>難度的獎勵倍率（經驗、金幣）：普通 ×1.5、困難 ×2</summary>
         public static float RewardMulFor(int d) => 1f + 0.5f * Mathf.Clamp(d, 0, 2);
         /// <summary>這一場是「難度＝等級」的模式（故事關卡、副本；轉職試煉除外）</summary>
-        bool LevelDifficulty => (pendingStage != null && pendingStage.id != "trial") || dungeon != null;
+        bool LevelDifficulty => (pendingStage != null && pendingStage.id != "trial") || dungeon != null || exploreRun != null;
         static float DamageTakenFor(int d) => d == 0 ? 0.5f : d == 1 ? 0.75f : 1f;
         /// <summary>故事關卡、副本的受傷倍率（使用者要求）：簡單 0.7、普通 0.9、困難 1.0</summary>
         public static float StoryTakenFor(int d) => d <= 0 ? 0.7f : d == 1 ? 0.9f : 1f;
@@ -1226,6 +1227,7 @@ namespace SpellDuel
             EndBattle();
             bossMode = true; coop = coopMode; endless = endlessMode; dummyMode = false; enemyClassUsed = "boss";
             dungeon = pendingDungeon; pendingDungeon = null; dungeonRoomSaid = -1; ClearTicker();
+            exploreRun = pendingExplore; pendingExplore = null;   // 故事探索（SoloBattle.Explore.cs）
             dummyDamage = 0f; dummyHits = 0; lastWaveSeen = 0; bossHideAt = -1f; bossAliveShown = false;
             ResetLoot(); potionReadyAt = 0f;
             EnsureLoadout();
@@ -1320,7 +1322,9 @@ namespace SpellDuel
             bossSeen = host;
             if (host)
             {
-                bossAi = new BossAI(battle, boss, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
+                var exr = exploreRun;   // 故事探索：Boss 待在王座（迷宮走道），不受實體場地限制
+                bossAi = exr != null ? new BossAI(battle, boss, p => exr.map.Walkable(p, 1f), p => 5f, Environment.TickCount) { center = exr.map.arenas.Find(a => a.n == 4).center }
+                    : new BossAI(battle, boss, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)), Environment.TickCount);
                 bossAi.OnEnrage += OnBossEnrage;
                 bossAi.OnPhase += p => { if (p == 2) OnBossPhase2(); };
                 bossAi.OnShellBroken += OnBossShellBroken;
@@ -1383,6 +1387,7 @@ namespace SpellDuel
                         if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.id != "1-1" && pendingStage.id != "1-2" && pendingStage.id != "1-3") { battle.treasureChance = TreasureChance; battle.extraPerWave = StoryExtraPerWave; }   // 每波多 3 隻（新手關、試煉不加）   // 寶箱怪：新手關、試煉不出（Combat.Treasure.cs）
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
                     }
+                    else if (exploreRun != null) SetupExploreBattle();   // 故事探索：大迷宮（SoloBattle.Explore.cs）
                     else if (dungeon != null)
                     {
                         battle.dungeonParty = Dungeons.PartyScale(partyN);          // 副本：浮動難度（最少 2 人；敵人數量、Boss 血量 ×人數）
@@ -1402,6 +1407,7 @@ namespace SpellDuel
                 }
                 battle.minionInside = p => area.Inside(WorldFrame.FromWorld(p)) && area.DistanceToEdge(WorldFrame.FromWorld(p)) >= 0.3f;
                 battle.attackHalf = Battle.AttackZoneHalf;   // 小怪進到中間 6m×6m 才出手（場地本身 10m×10m）
+                if (exploreRun != null) { var exm = exploreRun.map; battle.minionInside = p => exm.Walkable(p, 0.45f); battle.attackHalf = 0f; }   // 故事探索：怪物走迷宮走道、沒有攻擊區
                 battle.minionSpeed = diff == 0 ? 0.75f : diff == 1 ? 0.95f : 1.15f;
             }
             ai = null;
@@ -2040,6 +2046,7 @@ namespace SpellDuel
                 else { LoseLoot(); Say("💀 試煉失敗…準備好再來挑戰（可以直接再挑戰，不用再付報名費）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
             }
+            if (endless && exploreRun != null) { ExploreResult(); return; }   // 故事探索（SoloBattle.Explore.cs）
             if (endless && dungeon != null)
             {
                 // 副本：通關 → 每個房間保底一件稀有以上、最後的首領保底一件史詩套裝（物品等級＝副本等級）
@@ -2400,6 +2407,7 @@ namespace SpellDuel
         void EndBattle()
         {
             ResetDash();   // 衝刺過：世界移回原位（要在清場景、還原場地之前）
+            ClearExplore();
             ClearGallery();
             ClearSky();   // 天穹飛毯（SoloBattle.Carpet.cs）
             ClearEnemyCueViews(); ClearVariantBodies();
@@ -2520,7 +2528,8 @@ namespace SpellDuel
                 UpdateBattleTut();   // 1-1／1-2 的戰鬥教學（SoloBattle.BattleTutorial.cs）
                 UpdatePotionLesson();   // 1-2：喝藥水教學（SoloBattle.PotionLesson.cs）
                 if (!frozen) HandleInput();
-                UpdateDash(dt); CheckRealRoom();   // 衝刺：比 5 再握拳（只有單人故事模式，SoloBattle.Dash.cs）
+                UpdateDash(dt); CheckRealRoom();
+                UpdateExplore(dt);   // 故事探索：迷宮、NPC、任務（SoloBattle.Explore.cs）   // 衝刺：比 5 再握拳（只有單人故事模式，SoloBattle.Dash.cs）
                 UpdateCoatGesture();  // 法師的魔力盾：說完「魔力盾 開／關」比 3
                 UpdateCastGuide();   // 放招的分步驟提示（SoloBattle.CastGuide.cs）
                 SendState();
@@ -4163,7 +4172,8 @@ namespace SpellDuel
 
             // 被打中：整個畫面閃紅
             if (hitFlash > 0.01f) { GUI.color = new Color(1f, 0f, 0.05f, hitFlash * 0.45f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; }
-            DrawDashHud(W, H);      // 衝刺中：畫面兩側的速度線
+            DrawDashHud(W, H);
+            DrawExploreHud(W, H);   // 故事探索：目標、任務、小地圖、對話框      // 衝刺中：畫面兩側的速度線
             DrawTravelFade(W, H);   // 副本走通道：走進黑霧／到站亮起
             DrawRoomEventHud(W, H);   // 副本特殊地點：任務說明、黑暗、道具血條
             DrawStageModsHud(W, H);   // 故事關卡：天候色調、天候與小目標

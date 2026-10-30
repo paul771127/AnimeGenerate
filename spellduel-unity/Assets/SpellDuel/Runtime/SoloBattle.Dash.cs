@@ -33,7 +33,7 @@ namespace SpellDuel
         readonly List<GameObject> dashRoots = new List<GameObject>();
         readonly Dictionary<GameObject, bool> dashRootMove = new Dictionary<GameObject, bool>();
 
-        bool DashAllowed => storyStage != null && !NetMode && dungeon == null && battle != null && !battle.Over
+        bool DashAllowed => (storyStage != null || exploreRun != null) && !NetMode && dungeon == null && battle != null && !battle.Over
             && phase == Phase.Fighting && !InIntro && !frozen && Me != null && Me.Alive && Me.charging == null && chantPending == null
             && !battle.Gallery && !battle.CarpetBoss && battle.clash == null && area != null && area.state == PlayArea.State.Done;
 
@@ -82,8 +82,16 @@ namespace SpellDuel
             {
                 float d = want * i / N;
                 var p = from + dir * d; var ps = WorldFrame.FromWorld(p);
-                float edge = area.DistanceToEdge(ps);
-                if (!area.Inside(ps) || edge < DashEdge && edge < edge0) { why = "前面是場地邊界"; break; }
+                if (exploreRun != null)
+                {
+                    // 故事探索：沒有場地邊界，碰到迷宮的牆（或還沒打開的藤蔓門）才停
+                    if (!exploreRun.map.Walkable(p, 0.35f)) { why = exploreRun.map.ClosedGateAt(from + dir * (d + 0.6f)) != null ? "藤蔓門還沒打開" : "前面是樹叢"; break; }
+                }
+                else
+                {
+                    float edge = area.DistanceToEdge(ps);
+                    if (!area.Inside(ps) || edge < DashEdge && edge < edge0) { why = "前面是場地邊界"; break; }
+                }
                 bool foe = false;
                 foreach (var f in DashFoes())
                 {

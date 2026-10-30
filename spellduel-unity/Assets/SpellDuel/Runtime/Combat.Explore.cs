@@ -11,6 +11,7 @@ namespace SpellDuel
         public bool exAware;
         public int exPatrolIdx, exPatrolDir = 1;
         public float exLastHp = -1f;
+        public float exPathAt; public Vector3 exNext; public bool exHasNext;
     }
 
     /// <summary>
@@ -26,11 +27,15 @@ namespace SpellDuel
         public ExploreRun explore;
         /// <summary>被擊中或被擊殺時，這個範圍內的其他怪也會發現玩家（使用者要求）</summary>
         public const float ExNoiseRange = 4f;
-        public const float ExActivate = 16f, ExDespawn = 24f, ExDetect = 2.5f, ExCallRange = 9f, ExLeash = 20f, ExPatrolSpeed = 0.55f;
+        public const float ExActivate = 16f, ExDespawn = 24f, ExDetect = 2.5f, ExCallRange = 9f, ExPatrolSpeed = 0.55f;
+        /// <summary>追擊：離玩家超過 ExChaseNear（或中間隔著牆）就沿迷宮走道追，速度 ExChaseSpeed（比衝刺慢，玩家停下來就會被追上）</summary>
+        public const float ExChaseSpeed = 1.6f, ExChaseNear = 4f, ExRangedNear = 6.5f;
         /// <summary>每一區的敵人強度（波次）：越深越強</summary>
         public int exBaseWave = 8;
         public const int ExWavePerZone = 3;
-        public const float GuardianHpMul = 2.5f, RareHpMul = 2f, ExBossHp = 900f;
+        public const float GuardianHpMul = 2.5f, RareHpMul = 2f;
+        /// <summary>最終 Boss 的血量（SoloBattle 照第二章 Boss 設定）</summary>
+        public float exBossHp = 900f;
         readonly Dictionary<ExMonster, Fighter> exActive = new Dictionary<ExMonster, Fighter>();
         public Fighter exEscort;
         bool exBossSpawned;
@@ -104,6 +109,57 @@ namespace SpellDuel
             }
         }
 
+        /// <summary>a 到 b 之間有沒有牆擋著（每 0.5m 取樣）</summary>
+        bool ExLineClear(Vector3 a, Vector3 b)
+        {
+            var map = explore.map; float d = FlatDistance(a, b);
+            for (float t = 0.5f; t < d; t += 0.5f) if (!map.Walkable(Vector3.Lerp(a, b, t / d), 0.2f)) return false;
+            return true;
+        }
+
+        /// <summary>迷宮格子上從 from 走到 to 的下一格（BFS；走不到＝false）</summary>
+        bool ExNextStep(Vector2Int from, Vector2Int to, out Vector2Int next)
+        {
+            var map = explore.map; next = from;
+            if (from == to) return true;
+            var prev = new Dictionary<Vector2Int, Vector2Int>(); var q = new Queue<Vector2Int>();
+            q.Enqueue(to); prev[to] = to;   // 從目標往回找：找到 from 時，prev[from] 就是下一步
+            while (q.Count > 0)
+            {
+                var c = q.Dequeue();
+                if (c == from) { next = prev[c]; return true; }
+                foreach (var d in ExploreMap.Dirs) { var n = c + d; if (prev.ContainsKey(n) || !(map.Open(n.x, n.y) || n == from)) continue; prev[n] = c; q.Enqueue(n); }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 發現玩家的怪：離得遠或中間隔著牆時，沿著迷宮走道追過來（回傳 true＝這一幀由這裡移動，不跑原本的 AI）；
+        /// 夠近而且看得到玩家就交給原本的 AI（走位、出手）。
+        /// </summary>
+        bool ExChase(Fighter m, Fighter tgt, float dt)
+        {
+            if (tgt == null || m.leapEnd > 0f) return false;
+            float d = FlatDistance(m.Feet, tgt.Feet);
+            float near = IsRanged(m.minionKind) ? ExRangedNear : ExChaseNear;
+            if (d <= near && ExLineClear(m.Feet, tgt.Feet)) return false;
+            if (now >= m.exPathAt || !m.exHasNext)
+            {
+                m.exPathAt = now + 0.4f;
+                var map = explore.map;
+                m.exHasNext = ExNextStep(map.Cell(m.Feet), map.Cell(tgt.Feet), out var nc);
+                m.exNext = m.exHasNext ? (nc == map.Cell(m.Feet) ? tgt.Feet : map.World(nc.x, nc.y)) : tgt.Feet;
+            }
+            var to = Fighter.Flat(m.exNext - m.Feet);
+            if (to.magnitude < 0.25f) { m.exPathAt = 0f; return true; }   // 到了這一格的中心：下一幀重算
+            m.windupUntil = 0f;
+            m.forward = to.normalized;
+            var step = m.Feet + to.normalized * Mathf.Min(to.magnitude, ExChaseSpeed * Mathf.Max(0.5f, m.speedMul) * dt);
+            if (minionInside == null || minionInside(step) || !minionInside(m.Feet)) m.head = new Vector3(step.x, m.head.y, step.z);
+            else m.head = new Vector3(m.head.x + (m.exNext.x - m.Feet.x) * 0.2f, m.head.y, m.head.z + (m.exNext.z - m.Feet.z) * 0.2f);   // 貼著牆角：往格子中心滑過去
+            return true;
+        }
+
         /// <summary>沒發現玩家：照巡邏路線來回走（營地守衛站著不動，只會轉頭）</summary>
         void ExPatrol(Fighter m, float dt)
         {
@@ -148,11 +204,7 @@ namespace SpellDuel
                     if (mon.guardian > 0) { var a = run.map.arenas.Find(x => x.n == mon.guardian); if (a.entered || hurt) ExAlert(m); }
                     else if (md <= ExDetect + m.bodyRadius || hurt) ExAlert(m);
                 }
-                else if (md > ExLeash && mon.guardian == 0)
-                {
-                    // 玩家跑遠了：放棄追，回去巡邏（血量保留）
-                    m.exAware = false; m.exPatrolIdx = 0; m.windupUntil = 0f;
-                }
+                // 發現玩家之後就一直追，直到追上為止（使用者要求）：不會放棄、也不會收起來
             }
             // 護送：接了任務就叫探險家出來跟著；送到或倒下就收起來
             if (run.escortFollowing && (exEscort == null || !exEscort.Alive))
@@ -169,7 +221,7 @@ namespace SpellDuel
                 wave = BossEvery * (1 + exBaseWave / BossEvery + 3);
                 bossPoint = () => throne.center + Vector3.forward * 3f;
                 bossAfterMinions = true;
-                storyBossHp = ExBossHp;   // 最終 Boss：指定血量（難度再照等級加成）
+                storyBossHp = exBossHp;   // 最終 Boss：指定血量（難度再照等級加成）
                 SpawnBoss();
             }
             if (exBossSpawned && !enemy.Alive && !run.bossDead) run.OnBossKilled();

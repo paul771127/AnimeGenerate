@@ -17,6 +17,7 @@ namespace SpellDuel
         public Action<StoryStage> OnStartStage;  // 出發打關卡
         public Action<StoryStage> OnWatchStory;  // 重看這一關的故事（開場＋已通關的結尾）
         public Action<DungeonDef> OnStartDungeon, OnWatchDungeon;   // 副本：進入／看故事
+        public Action OnStartExplore;   // 故事探索：翠蔭迷林（大迷宮）
         public Action OnBack;                    // 離開大地圖（回選擇畫面）
         public Action OnCharacter;               // 打開角色畫面
         public Action OnStartTrial;              // 出發挑戰轉職試煉
@@ -374,6 +375,10 @@ namespace SpellDuel
             y += gh + gap * 0.5f;
             DifficultyRow(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.9f), fsS, true);   // 單人進入的難度（組隊時由房主在隊伍畫面選）
             y += fs * 2.2f;
+            // 故事探索（使用者要求）：一整張大迷宮，單人
+            if (UiKit.Button(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.3f), $"🌿 故事探索：翠蔭迷林（叢林大迷宮・約 10～20 分鐘）{(Story.IsSeen("ex!jungle") ? "　✔ 已通關" : "")}", fsS, false, new Color(0.45f, 0.9f, 0.5f)))
+            { OnStartExplore?.Invoke(); return; }
+            y += fs * 2.5f;
             float bottom = r.yMax - gap * 2 - fs * 2.1f;
             // 副本很多時分頁（每頁 PerPage 個）
             const int PerPage = 4;

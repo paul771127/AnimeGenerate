@@ -1505,6 +1505,7 @@ namespace SpellDuel
                 if (UpdateLure(m, dt)) continue;   // 吃誘餌中：不攻擊（Combat.Pets.cs）
                 if (m.staggerUntil > now) { m.windupUntil = 0f; continue; }   // 受擊硬直中：不動、不出手
                 if (m.exMon != null && !m.exAware) { ExPatrol(m, dt); continue; }   // 故事探索：還沒發現玩家，照路線巡邏（Combat.Explore.cs）
+                if (m.exMon != null && ExChase(m, player, dt)) continue;              // 故事探索：發現了就沿著走道一直追
                 bool esUser = m.variant > 0 && EnemySkills.Has(m.variant);   // 補師、輔助型、人形、砂靈：新招式（Combat.EnemySkills.cs）
                 if (esUser) TickEnemySkillState(m);
                 if (esUser && m.esCast != null) { TickEnemyCast(m, tgt); continue; }
