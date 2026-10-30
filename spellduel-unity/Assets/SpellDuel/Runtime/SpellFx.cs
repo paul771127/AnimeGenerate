@@ -492,6 +492,8 @@ namespace SpellDuel
 
             switch (id)
             {
+                case "starfall": case "arcanebreak":
+                    NewSkillProjectile(root,id,sc);break;
                 case "arcanewyrm":
                     BuildArcaneWyrm(root,sc);break;
                 case "quickshot":

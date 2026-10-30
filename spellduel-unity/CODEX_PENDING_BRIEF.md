@@ -708,3 +708,8 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 ### 2026-10-30 新技能特效 C：四種隊伍增益
 - `TeamBuffCast(string,Transform)` 與 `TeamBuffAura(Transform,string,float)`：奧術加速時鐘、元素結界四色薄片、疾風箭意風線、鷹眼凝神羽紋。每位持有者／技能獨立快取；remain01=0 關閉，重啟重用。
 - 自己的特效四角顯示，中央至少 76% 空白，旁觀者看身上符紋。新增可選 `TeamBuffHit(Transform,Vector3)` 讓元素護殼受擊方向亮起，Claude 接線。
+
+### 2026-10-30 新技能特效 A2／A3：隕星與奧術崩滅
+- 隕星投射物由七枚各有熱尾的小流星組成；`StarfallZone(Vector3,float,float)` 畫精確範圍星陣，時長由呼叫者提供。
+- 奧術崩滅改為深紫壓縮核心、三重旋轉封環與向內吸收光絲；`ArcaneBreakHit(Vector3)` 先內縮 .18 秒後擴散碎光與空間透鏡環，不加全螢幕扭曲以保留 AR 視野。Claude 接落地／命中事件。
+- 修正增益色彩直接讀 SkillDef.color（Color），保留資料原值。

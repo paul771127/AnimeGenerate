@@ -4,7 +4,7 @@ namespace SpellDuel
 {
  public static partial class SpellFx
  {
-  internal static Color SkillTint(string id){SkillDef s;Color c;if(Skills.All.TryGetValue(id,out s)&&ColorUtility.TryParseHtmlString(s.color,out c))return c;return new Color(.7f,.85f,1);}
+  internal static Color SkillTint(string id){SkillDef s;if(Skills.All.TryGetValue(id,out s))return s.color;return new Color(.7f,.85f,1);}
   public static void TeamBuffCast(string skillId,Transform owner)
   {
    if(!owner)return;var go=new GameObject("SpellFx buff cast "+skillId);go.transform.SetParent(owner,false);go.AddComponent<TeamBuffArt>().Build(skillId,true);
