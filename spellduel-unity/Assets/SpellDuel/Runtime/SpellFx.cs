@@ -492,6 +492,13 @@ namespace SpellDuel
 
             switch (id)
             {
+                case "rollarrow": case "echo_fire": case "echo_ice":
+                case "holyblade": case "headshot": case "scattershot": case "blastarrow": case "spiritbolt": case "earthspike": case "suiton": case "futon": case "poisondart": case "lightpillar": case "holyfire": case "verdict":
+                    AdvancedProjectile(root,id,sc);break;
+                case "starfall": case "arcanebreak":
+                    NewSkillProjectile(root,id,sc);break;
+                case "arcanewyrm":
+                    BuildArcaneWyrm(root,sc);break;
                 case "quickshot":
                 case "triple":
                 case "snipe":
@@ -791,7 +798,7 @@ namespace SpellDuel
             }
             if (anim.flick != null) anim.flickBase = anim.flick.localScale;
             if (anim.spin == null && anim.flick == null && anim.jitter == null) anim.enabled = false;
-            if(id!="na_kunai"&&id!="kunai_fire"&&id!="kunai_ice"&&id!="kunai_bolt"&&id!="shuriken"&&id!="na_pebble"&&id!="nv_stone"&&id!="yj_blade"&&id!="wanjian"&&id!="yijian")DecorateProjectile(root, string.IsNullOrEmpty(classId) ? (s != null ? s.cls : "mage") : classId, sc, Mathf.Max(0.03f, radius));
+            if(!IsDedicatedSkillProjectile(id)&&id!="na_kunai"&&id!="kunai_fire"&&id!="kunai_ice"&&id!="kunai_bolt"&&id!="shuriken"&&id!="na_pebble"&&id!="nv_stone"&&id!="yj_blade"&&id!="wanjian"&&id!="yijian")DecorateProjectile(root, string.IsNullOrEmpty(classId) ? (s != null ? s.cls : "mage") : classId, sc, Mathf.Max(0.03f, radius));
             return root;
         }
 

@@ -1,0 +1,152 @@
+using System.Collections.Generic;
+using UnityEngine;
+namespace SpellDuel
+{
+ public static partial class SpellFx
+ {
+  internal static Color SkillTint(string id){SkillDef s;if(Skills.All.TryGetValue(id,out s))return s.color;return new Color(.7f,.85f,1);}
+  public static void TeamBuffCast(string skillId,Transform owner)
+  {
+   if(!owner)return;var go=new GameObject("SpellFx buff cast "+skillId);go.transform.SetParent(owner,false);go.AddComponent<TeamBuffArt>().Build(skillId,true);
+  }
+  public static void TeamBuffAura(Transform owner,string skillId,float remain01)
+  {
+   if(!owner||string.IsNullOrEmpty(skillId))return;var set=owner.GetComponent<TeamBuffArtSet>();if(!set){if(remain01<=0)return;set=owner.gameObject.AddComponent<TeamBuffArtSet>();}set.Set(skillId,remain01);
+  }
+  // Cosmetic hit direction only; damage and ward duration remain owned by combat.
+  public static void TeamBuffHit(Transform owner,Vector3 hitWorld)
+  {if(owner){var set=owner.GetComponent<TeamBuffArtSet>();if(set)set.Hit(hitWorld);}}
+ }
+ public sealed class TeamBuffArtSet:MonoBehaviour
+ {
+  readonly Dictionary<string,TeamBuffArt> views=new Dictionary<string,TeamBuffArt>();
+  public void Set(string id,float level)
+  {
+   TeamBuffArt view;if(!views.TryGetValue(id,out view)||!view){if(level<=0)return;var go=new GameObject("SpellFx aura "+id);go.transform.SetParent(transform,false);view=go.AddComponent<TeamBuffArt>();view.Build(id,false);views[id]=view;}
+   view.SetLevel(level);
+  }
+  void OnDestroy(){foreach(var view in views.Values)if(view)view.ReleaseEdges();}
+  public void Hit(Vector3 p){TeamBuffArt view;if(views.TryGetValue("elementward",out view)&&view&&view.gameObject.activeSelf)view.Hit(p);}
+ }
+ public sealed class TeamBuffArt:MonoBehaviour
+ {
+  string id;bool burst;float age,level=1,hit;int hitPiece;Color tint;Transform art;LineRenderer[] lines,edge;Color[] colors;Camera edgeCamera;
+  public void Build(string skill,bool casting)
+  {
+   id=skill;burst=casting;tint=SpellFx.SkillTint(id);art=SkyArt.Node(transform,"World buff motif",Vector3.zero);var list=new List<LineRenderer>();var shades=new List<Color>();
+   if(id=="arcanehaste")
+   {
+    Add(list,shades,Orbit(.42f,.02f,48),true,tint,.018f);
+    for(int i=0;i<12;i++){float a=i*Mathf.PI/6;Add(list,shades,new[]{P(a,.35f,.02f),P(a,.40f,.02f)},false,tint,.015f);}
+    Add(list,shades,new[]{Vector3.up*.02f,new Vector3(.23f,.02f,0)},false,Color.white,.018f);Add(list,shades,new[]{Vector3.up*.02f,new Vector3(0,.02f,.30f)},false,tint,.012f);
+   }
+   else if(id=="elementward")
+   {
+    var four=new[]{new Color(1,.35f,.22f,.45f),new Color(.25f,.7f,1,.45f),new Color(.4f,1,.67f,.45f),new Color(1,.79f,.35f,.45f)};
+    for(int i=0;i<4;i++){var p=new Vector3[17];float a=i*Mathf.PI/2;for(int k=0;k<17;k++){float u=k/16f*Mathf.PI*2;p[k]=new Vector3(Mathf.Cos(a)*(.4f+.12f*Mathf.Cos(u)),.85f+.6f*Mathf.Sin(u),Mathf.Sin(a)*(.4f+.12f*Mathf.Cos(u)));}Add(list,shades,p,true,four[i],.045f);}
+   }
+   else if(id=="rangerhaste")
+   {
+    for(int j=0;j<3;j++){var p=new Vector3[28];for(int i=0;i<p.Length;i++){float u=i/27f;float a=u*Mathf.PI*1.5f+j*2.1f;p[i]=P(a,.43f,.06f+u*(burst?1.5f:.2f));}Add(list,shades,p,false,tint,.018f);}
+    Add(list,shades,new[]{new Vector3(.35f,.7f,0),new Vector3(.46f,.9f,.03f),new Vector3(.35f,1.1f,0)},false,tint,.014f);
+   }
+   else if(id=="retribution"||id=="swordfervor"||id=="killinstinct"||id=="huntfrenzy"||id=="chainstorm"||id=="soulharvest"||id=="renjutsu"||id=="reaperdance"||id=="graceflow"||id=="martyrflame")
+   {
+    for(int j=0;j<5;j++)
+    {
+     var at=P(j*Mathf.PI*2/5,.42f,.75f);Vector3[] glyph;
+     if(id=="swordfervor")glyph=new[]{new Vector3(0,-.22f,0),new Vector3(0,.22f,0),new Vector3(-.04f,.14f,0),new Vector3(0,.22f,0),new Vector3(.04f,.14f,0)};
+     else if(id=="chainstorm")glyph=new[]{new Vector3(.07f,.2f,0),new Vector3(-.03f,.03f,0),new Vector3(.04f,.03f,0),new Vector3(-.08f,-.2f,0)};
+     else if(id=="killinstinct")glyph=new[]{new Vector3(-.16f,.08f,0),new Vector3(0,.14f,0),new Vector3(.16f,.08f,0),Vector3.zero,new Vector3(-.16f,.08f,0)};
+     else if(id=="huntfrenzy")glyph=new[]{new Vector3(-.1f,-.2f,0),new Vector3(-.06f,.16f,0),new Vector3(0,-.12f,0),new Vector3(.06f,.2f,0),new Vector3(.1f,-.15f,0)};
+     else if(id=="renjutsu")glyph=new[]{new Vector3(0,.17f,0),new Vector3(.15f,0,0),new Vector3(0,-.17f,0),new Vector3(-.15f,0,0),new Vector3(0,.17f,0),new Vector3(0,-.17f,0)};
+     else if(id=="reaperdance")glyph=new[]{new Vector3(0,-.23f,0),new Vector3(0,.17f,0),new Vector3(.14f,.12f,0),new Vector3(.19f,0,0),new Vector3(.1f,.06f,0)};
+     else if(id=="soulharvest")glyph=new[]{new Vector3(0,-.2f,0),new Vector3(-.12f,.05f,0),new Vector3(-.07f,.17f,0),new Vector3(.07f,.17f,0),new Vector3(.12f,.05f,0),new Vector3(0,-.2f,0)};
+     else if(id=="martyrflame")glyph=new[]{new Vector3(0,.23f,0),new Vector3(.12f,-.05f,0),new Vector3(.05f,-.17f,0),new Vector3(-.07f,-.14f,0),new Vector3(-.12f,0,0),new Vector3(0,.23f,0)};
+     else if(id=="graceflow")glyph=new[]{new Vector3(0,.2f,0),new Vector3(0,-.2f,0),Vector3.zero,new Vector3(-.15f,0,0),new Vector3(.15f,0,0),Vector3.zero,new Vector3(0,.2f,0)};
+     else glyph=new[]{new Vector3(-.14f,.16f,0),new Vector3(.14f,.16f,0),new Vector3(.12f,-.07f,0),new Vector3(0,-.2f,0),new Vector3(-.12f,-.07f,0),new Vector3(-.14f,.16f,0)};
+     for(int i=0;i<glyph.Length;i++)glyph[i]+=at;Add(list,shades,glyph,false,tint,.018f);
+    }
+   }
+   else if(id=="mindfocus"||id=="meditate")
+   {
+    for(int j=0;j<8;j++){var p=new Vector3[14];for(int i=0;i<14;i++){float u=i/13f;float a=j*Mathf.PI/4+u;p[i]=P(a,.5f*(1-u)+.06f,.6f+u*.3f);}Add(list,shades,p,false,tint,.016f);}
+    if(id=="mindfocus")Add(list,shades,Orbit(.18f,1.35f,32),true,tint,.014f);
+   }
+   else if(id=="bless"||id=="haste"||id=="spring"||id=="focus")
+   {
+    for(int j=0;j<4;j++)
+    {
+     var center=P(j*Mathf.PI/2,.4f,.8f);
+     if(id=="bless"){Add(list,shades,new[]{center-Vector3.up*.16f,center+Vector3.up*.16f},false,tint,.025f);Add(list,shades,new[]{center-Vector3.right*.1f,center+Vector3.right*.1f},false,tint,.02f);}
+     else if(id=="haste"){for(int k=0;k<3;k++)Add(list,shades,new[]{center+new Vector3(-.1f,k*.07f,0),center+new Vector3(0,k*.07f+.05f,0),center+new Vector3(.1f,k*.07f,0)},false,tint,.015f);}
+     else if(id=="spring"){var p=new Vector3[16];for(int i=0;i<16;i++){float u=i/15f;p[i]=center+new Vector3(u*.15f,Mathf.Sin(u*Mathf.PI)*.55f-.3f,0);}Add(list,shades,p,false,tint,.02f);}
+     else{var p=new Vector3[32];for(int i=0;i<32;i++){float a=i*Mathf.PI/16;p[i]=center+new Vector3(Mathf.Cos(a)*.12f,Mathf.Sin(a)*.12f,0);}Add(list,shades,p,true,tint,.012f);Add(list,shades,new[]{center-Vector3.up*.18f,center+Vector3.up*.18f},false,tint,.009f);}
+    }
+   }
+   else if(id=="layhands")
+   {
+    for(int side=-1;side<=1;side+=2){var p=new Vector3[13];for(int i=0;i<5;i++){p[i*2]=new Vector3(side*.3f+(i-2)*.035f,.88f,.22f);p[i*2+1]=new Vector3(side*.3f+(i-2)*.035f,1.03f-Mathf.Abs(i-2)*.025f,.22f);}p[10]=new Vector3(side*.3f+.09f,.8f,.22f);p[11]=new Vector3(side*.3f-.09f,.8f,.22f);p[12]=p[0];Add(list,shades,p,false,tint,.018f);}
+   }
+   else if(id=="pactcheer")
+   {
+    for(int j=0;j<3;j++){float a=j*Mathf.PI*2/3;var p=new Vector3[7];for(int i=0;i<7;i++)p[i]=P(a+i*Mathf.PI*2/3,.45f,.12f+j*.15f);Add(list,shades,p,false,tint,.018f);}
+   }
+   else if(id=="nightveil")
+   {
+    for(int j=0;j<9;j++){var p=new Vector3[16];for(int i=0;i<16;i++){float u=i/15f;float a=j*Mathf.PI/8+Mathf.PI*.1f;p[i]=P(a,.25f+u*.18f,1.35f-u*1.2f);}Add(list,shades,p,false,new Color(.29f,.10f,.46f,.45f),.065f);}
+   }
+   else if(id=="divinegrace")
+   {
+    for(int j=0;j<12;j++){float a=j*2.4f;float r=.15f+j%3*.15f;Add(list,shades,new[]{P(a,r,1.65f),P(a,r,1.35f)},false,j%2==0?tint:Color.white,.018f);}
+   }
+   else // Hawk eye and orbiting feather sigils.
+   {
+    for(int j=0;j<4;j++){float a=j*Mathf.PI/2;var center=P(a,.43f,.8f);var p=new[]{center+Vector3.up*.16f,center+new Vector3(.07f,0,0),center-Vector3.up*.16f,center-new Vector3(.07f,0,0),center+Vector3.up*.16f};Add(list,shades,p,false,tint,.016f);Add(list,shades,new[]{p[0],p[2]},false,tint,.008f);}
+    if(burst){Add(list,shades,new[]{new Vector3(-.3f,1.1f,.28f),new Vector3(0,1.22f,.28f),new Vector3(.3f,1.1f,.28f),new Vector3(0,1.03f,.28f),new Vector3(-.3f,1.1f,.28f)},false,tint,.022f);}
+   }
+   lines=list.ToArray();colors=shades.ToArray();Sample(0);
+  }
+  static Vector3 P(float a,float r,float y)=>new Vector3(Mathf.Cos(a)*r,y,Mathf.Sin(a)*r);
+  static Vector3[] Orbit(float r,float y,int n){var p=new Vector3[n];for(int i=0;i<n;i++)p[i]=P(i*Mathf.PI*2/n,r,y);return p;}
+  void Add(List<LineRenderer> list,List<Color> shades,Vector3[] pts,bool loop,Color c,float w){list.Add(SpellFx.Line(art,id+" motif",pts,loop,w,c,true,false));shades.Add(c);}
+  public void SetLevel(float value){level=Mathf.Clamp01(value);gameObject.SetActive(level>0);}
+  public void Hit(Vector3 at){var p=transform.InverseTransformPoint(at);hitPiece=((Mathf.RoundToInt(Mathf.Atan2(p.z,p.x)/(Mathf.PI/2))%4)+4)%4;hit=.22f;}
+  void DrawEdge(Camera cam,float alpha)
+  {
+   if(edgeCamera!=cam){ClearEdge();edgeCamera=cam;edge=new LineRenderer[4];for(int i=0;i<4;i++){edge[i]=SpellFx.Line(cam.transform,"Self "+id+" corner",new Vector3[24],false,.002f,tint,true,false);edge[i].sortingOrder=70;}}
+   float z=cam.nearClipPlane+.04f,y=Mathf.Tan(cam.fieldOfView*.5f*Mathf.Deg2Rad)*z,x=y*cam.aspect;
+   for(int i=0;i<4;i++)
+   {
+    float sx=(i%2==0?-1:1),sy=(i<2?-1:1);float inset=id=="arcanehaste"?.82f:id=="elementward"?.90f:id=="rangerhaste"?.86f:.94f;var lr=edge[i];
+    for(int k=0;k<24;k++)
+    {
+     float u=k/23f;float xx=inset-.12f*u,yy=inset-.035f*Mathf.Sin(u*Mathf.PI);
+     if(id=="arcanehaste")
+     {float a=Mathf.Min(k,16)/16f*Mathf.PI*2;xx=.84f+Mathf.Cos(a)*.055f*y/x;yy=.84f+Mathf.Sin(a)*.055f;if(k>=17){xx=.84f;yy=.84f;if(k<20)yy+=.035f*(k-17)/2;else xx+=.032f*(k-20)/3*y/x;}}
+     else if(id=="elementward"){float a=u*Mathf.PI*2;xx=.86f+Mathf.Cos(a)*.045f*y/x;yy=.86f+Mathf.Sin(a)*.065f;}
+     else if(id=="rangerhaste"){xx=.75f+u*.18f;yy=.88f+Mathf.Sin(u*Mathf.PI*3+age*4)*.018f;}
+     else if(id=="hawkeye"){xx=u<.5f?inset-.12f+u*.24f:inset;yy=u<.5f?inset:inset-(u-.5f)*.24f;}
+     lr.SetPosition(k,new Vector3(sx*x*xx,sy*y*yy,z));
+    }
+    var c=id=="elementward"?colors[i]:tint;c.a=.8f*alpha;lr.startColor=lr.endColor=c;lr.widthMultiplier=y*.014f;lr.enabled=alpha>.001f;
+   }
+  }
+  public void Sample(float dt)
+  {
+   age+=Mathf.Max(0,dt);hit=Mathf.Max(0,hit-dt);float alpha=burst?Mathf.Sin(Mathf.Clamp01(age/1.1f)*Mathf.PI):Mathf.Min(1,level*5)*.9f;
+   var cam=Camera.main;bool self=cam&&transform.parent&&SelfFxEdge.NearOwner(cam,transform.parent.position);art.gameObject.SetActive(!self);if(self)DrawEdge(cam,alpha);else if(edge!=null)foreach(var e in edge)if(e)e.enabled=false;
+   art.localRotation=Quaternion.Euler(0,age*(id=="arcanehaste"?75:35),0);
+   art.localPosition=id=="arcanehaste"?Vector3.up*(burst?Mathf.Clamp01(age/.8f)*1.6f:.75f):Vector3.zero;
+   if(burst&&(id=="meditate"||id=="mindfocus"))art.localScale=Vector3.one*Mathf.Lerp(1,.2f,Mathf.Clamp01(age/.85f));
+   if(!burst&&id=="arcanehaste")art.localScale=Vector3.one*.45f;
+   for(int i=0;i<lines.Length;i++){if(id=="divinegrace")lines[i].transform.localPosition=Vector3.down*Mathf.Repeat(age*1.3f+i*.13f,1.5f);var c=colors[i];c.a*=alpha;if(id=="elementward"&&hit>0&&i==hitPiece)c=Color.Lerp(c,Color.white,hit/.22f);lines[i].startColor=lines[i].endColor=c;if(id=="arcanehaste"&&i>=13)lines[i].transform.localRotation=Quaternion.Euler(0,age*(i==13?170:32),0);}
+   if(burst&&age>1.1f&&Application.isPlaying)Destroy(gameObject);
+  }
+  void LateUpdate(){Sample(Time.deltaTime);}
+  internal void ReleaseEdges(){ClearEdge();}
+  void ClearEdge(){if(edge!=null)foreach(var e in edge)if(e)SkyArt.Dispose(e.gameObject);edge=null;edgeCamera=null;}
+  void OnDisable(){if(edge!=null)foreach(var e in edge)if(e)e.enabled=false;}
+  void OnDestroy(){ClearEdge();}
+ }
+}
