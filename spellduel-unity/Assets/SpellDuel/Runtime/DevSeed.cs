@@ -23,6 +23,25 @@ namespace SpellDuel
         /// <summary>開發版：所有 Boss 體積減半（外觀、身高、判定半徑；使用者要求）。正式版＝1</summary>
         public static float BossScale => bossScale ??= IsDevApp(Application.identifier) ? 0.5f : 1f;
         static float? bossScale;
+        static bool bossRangesScaled;
+
+        /// <summary>
+        /// 開發版：Boss 招式的範圍也跟著體積縮（使用者要求）。GameRoot.Start 呼叫一次。
+        /// 縮：範圍攻擊半徑（areaRadius：地裂重擊、跳躍落點…）、法球／拋投落點半徑（radius）、震波類招式的擴散半徑（rangeMax）。
+        /// 不縮：其他招式的射程（縮了遠程攻擊會打不到人）、橫掃的高度（縮了蹲下就躲不掉）。
+        /// </summary>
+        public static void ScaleBossRanges() => ScaleBossRanges(BossScale);
+        public static void ScaleBossRanges(float k)
+        {
+            if (bossRangesScaled || Mathf.Approximately(k, 1f)) return;
+            bossRangesScaled = true;
+            foreach (var sk in Skills.All.Values)
+            {
+                if (sk.cls == null || !sk.cls.StartsWith("boss")) continue;
+                sk.areaRadius *= k; sk.radius *= k;
+                if (Battle.IsQuake(sk)) sk.rangeMax *= k;
+            }
+        }
         public static readonly (string cls, string adv, string name)[] Chars =
         {
             ("archer", "ranger", "遊俠50"), ("assassin", "ninja", "忍者50"), ("mage", "archmage", "大魔導50"),

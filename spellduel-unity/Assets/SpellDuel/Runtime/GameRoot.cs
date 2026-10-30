@@ -216,6 +216,7 @@ namespace SpellDuel
         {
             SaveReset.RunOnce();   // 改成初心者制度：第一次開這個版本時清掉舊存檔（設定保留），一定要最先執行
             DevSeed.RunOnce();     // 開發版（SpellDuel Dev）第一次開：建 50 級測試角色（正式版不會執行）
+            DevSeed.ScaleBossRanges();   // 開發版：Boss 體積減半，招式範圍也跟著縮（正式版不變）
             StoryVideo.PreloadAll();   // 劇情影片一開始就全部下載（畫面顯示「載入中」）
             Application.targetFrameRate = 60;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
