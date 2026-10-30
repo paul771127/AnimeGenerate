@@ -35,7 +35,7 @@ jobs:
           projectPath: spellduel-unity
           targetPlatform: Android
           buildName: SpellDuel
-          buildMethod: SpellDuel.EditorTools.ExploreFxKeyframes.Render
+          buildMethod: SpellDuel.EditorTools.ExploreScenePreview.Render
           allowDirtyBuild: true
       - uses: actions/upload-artifact@v4
         if: always()
@@ -44,4 +44,5 @@ jobs:
           path: |
             spellduel-unity/Docs/explore_fx/keyframes/*.png
             spellduel-unity/snapshots/explore*_audit.json
+            spellduel-unity/snapshots/explore_*.png
           if-no-files-found: error

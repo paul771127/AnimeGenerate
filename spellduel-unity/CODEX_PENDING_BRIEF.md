@@ -781,3 +781,9 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 古樹之心 AncientHeart、月光草 MoonLeaves、微弱 Glint、7 位 NPC 配件／森林之靈、任務與發現標記、地名橫幅靜態畫面完成。SparkleFound 依新單保留空函式。沒有定時更新或動畫。
 - DressNpc 可重複呼叫且可換型；NPC 配件掛 Spine／Head，森林之靈有 SpiritBody／OrbitLeaf_*。QuestMark 子物件 Exclaim／Question、AlertMark 的 Glyph／CallerAccent。
 - Editor 選單 SpellDuel/Explore/Export 16 animation keyframes 從實際模型輸出 960×544，黑底／綠幕、無地板與粒子。獨立 CI 先產生 16 張供另一個 session 用，場景其他項目接續製作。
+
+### 2026-10-30 故事探索 4／6／2：地標、競技場與地面
+- CreateLandmark 依真正牆格佈置營屋、瞭望台、湖燈、岩柱、洞窟拱飾、古殿屋頂；不跨越走道。回傳 root.localPosition 為地標中心的 map.World，請 SetParent(exRoot,false) 保留位置，不要再次套中心偏移。MoonReflection／Fireflies／Banner_* 可獨立掛動畫。
+- CreateArena 有四種遠端輪廓與貼地半透明邊界；RimSet 位於半徑外，中央留空。CreateGround 五型透明地面＋透明漸淡邊緣。
+- 牆補上 LooseVine_*、WarBanner、BoneCharm，仍共用網格／材質；原生驗證逐型檢查 ≤300 三角形與牆格範圍。地名橫幅使用和靜態動畫圖相同的 RibbonFrame。
+- 新增 SpellDuel/Explore/Export jungle scene and keyframes 原生總覽輸出：每個地標第一人稱、整圖俯視、景物變體、四競技場、封印狀態。最終將附 cache／Collider／狀態與雙平台結果。

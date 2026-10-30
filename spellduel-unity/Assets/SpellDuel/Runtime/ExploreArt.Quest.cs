@@ -52,7 +52,7 @@ namespace SpellDuel
   internal static GameObject BannerModel()
   {var root=Root("Banner");Part(root.transform,"ui/banner",b=>{b.Box(Vector3.zero,V(3,.42f,.025f),new Color(.09f,.25f,.18f));for(int s=-1;s<=1;s+=2){b.Rod(V(-1.5f,s*.21f,.02f),V(1.5f,s*.21f,.02f),.018f,Bone,4);b.Frond(V(s*1.4f,0,.02f),V(s*1.8f,.16f,.02f),.13f,Moss);b.Frond(V(s*1.4f,0,.02f),V(s*1.8f,-.16f,.02f),.13f,Leaf);}}).name="RibbonFrame";return root;}
   static ExploreLocationBanner banner;
-  public static void LandmarkFound(ExLandmark l){if(!banner)banner=new GameObject("Explore location banner").AddComponent<ExploreLocationBanner>();banner.Title=l==null?"":l.name;banner.gameObject.SetActive(l!=null);}
+  public static void LandmarkFound(ExLandmark l){if(!banner)banner=new GameObject("Explore location banner").AddComponent<ExploreLocationBanner>();banner.Title=l==null?"":l.name;banner.gameObject.SetActive(l!=null);if(banner.Frame)banner.Frame.gameObject.SetActive(l!=null);}
  }
  public sealed class ExploreNpcDress:MonoBehaviour
  {
@@ -61,7 +61,8 @@ namespace SpellDuel
  }
  public sealed class ExploreLocationBanner:MonoBehaviour
  {
-  public string Title;
-  void OnGUI(){if(string.IsNullOrEmpty(Title))return;float w=Screen.width*.72f,h=Screen.height*.055f;var r=new Rect((Screen.width-w)*.5f,Screen.height*.10f,w,h);UiKit.Card(r,.9f,ExploreArt.Jade,.9f);UiKit.Text(r,Title,Mathf.RoundToInt(h*.47f),ExploreArt.Bone,TextAnchor.MiddleCenter);}
+  public string Title;public Transform Frame;
+  void OnDestroy(){if(Frame)SkyArt.Dispose(Frame.gameObject);}
+  void OnGUI(){if(string.IsNullOrEmpty(Title))return;float w=Screen.width*.72f,h=Screen.height*.055f;var r=new Rect((Screen.width-w)*.5f,Screen.height*.10f,w,h);var cam=Camera.main;if(cam){if(!Frame){Frame=ExploreArt.BannerModel().transform;}Frame.SetParent(cam.transform,false);float half=Mathf.Tan(cam.fieldOfView*.5f*Mathf.Deg2Rad);Frame.localPosition=new Vector3(0,half*.745f,1);Frame.localRotation=Quaternion.Euler(0,180,0);Frame.localScale=Vector3.one*(half*2*cam.aspect*.72f/3.6f);}else UiKit.Card(r,.9f,ExploreArt.Jade,.9f);UiKit.Text(r,Title,Mathf.RoundToInt(h*.47f),ExploreArt.Bone,TextAnchor.MiddleCenter);}
  }
 }
