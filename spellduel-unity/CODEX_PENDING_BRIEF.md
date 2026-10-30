@@ -755,3 +755,11 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 ### 2026-10-30 裝備文字正面方向修正
 - 原生近拍發現獎盃「第一名」與 SAINT 燈牌左右反向；改為從角色正前方可正常閱讀，並保持霓虹字片正面法線。沒有增加三角形或修改裝備位置。
 - 40beb40 的新技能與 B5 原生檢查已全數通過；裝備原生 Build succeeded 且上傳完整 34 組預覽，該流程後續因遠端新提交取消。最終版本再驗證。
+
+### 2026-10-30 專屬裝備＋新技能特效（含 B5）最終驗收
+- 最終程式包含 1eb787c 的刻字方向修正，與 Claude 的 96d8e42 整合版本共同驗證。Android APK、iOS 匯出及未簽署 IPA 均成功：Actions 41066988646；後續 TestFlight 發布由既有流程執行。
+- 裝備原生檢查 Actions 41066988558 成功：34 組穿戴、34 枚圖示，最高 1272 三角形，低於每件 1500 上限；換裝還原／動畫快取通過。15 件細節近拍與總覽已更新到 Docs/pending_preview/blueprint_gear/，獎盃「第一名」與 SAINT 已改正面方向。
+- 新技能原生檢查 41057693326 與最新整合 41066988571 均成功：24 段光龍的 AR 平移／密集軌跡／快取、獵鷹 .35 秒抵達、51 圖示唯一性、多增益獨立清除與快取；本機圖示檢查另驗證 157 枚既有圖示不變及五種尺寸。
+- B5 81 個模型通過零時間不累積、回復、死亡取消、根位置不變、重複播放快取與 Boss 排除；Claude 已在 02b5b63 接上 PlayStagger。355 張原生 PNG、全員受擊總覽與九種體型三階段圖在 Docs/pending_preview/new_skill_fx/。
+- 尚待整合：BlueprintImpact（玉米命中爆米花）與選用 TeamBuffHit（元素護殼受擊亮片）只有美術介面，未自行增加命中／網路事件。
+- 全站其他舊檢查的失敗另存 full_site_checks.json：支援技能清單缺 eh_121_sunbolt、DungeonSpawnAudit 敵人數量、SwordShield 停用清除；未竄改或略過其斷言。這批美術未改 Combat、SoloBattle、連線、存檔、Blueprints、Crafting、SpeechInput。

@@ -67,3 +67,7 @@
 ### 全站檢查的另外三項失敗
 
 `full_site_checks.json` 保留 40beb40 全站檢查結果：支援敵人固定清單缺少 eh_121_sunbolt、DungeonSpawnAudit 的敵人總數不符、既有劍氣盾停用清除檢查失敗。對應檢查程式與 SpellFx.SwordShield.cs 均未由這批美術修改；本批沒有略過或移除斷言。新技能原生驗證成功不代表這三項已修復。
+
+最新整合驗證：`96d8e42` 的 Actions `41066988571` 亦成功（包含 Claude 的 B5 事件接線與探索模式更新）；見 `integration_ci.json`。
+
+雙平台結果：Actions `41066988646` 的 Android APK、iOS Unity 匯出及未簽署 IPA 均成功；`platform_ci.json` 保存結果。其後 TestFlight 發布不屬於本批美術編譯檢查。
