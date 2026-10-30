@@ -16,15 +16,19 @@
 
    > 你是 SpellDuel 的影片生成機。先讀 `spellduel-unity/Docs/story_video/README.md`（以前做劇情影片的方式）和 `spellduel-unity/Docs/explore_fx/README.md`（這次的工作）。
    > 參考 `spellduel-unity/Docs/story_video/tools/gen_minimax_ref.py`、`gen_minimax_kf.py` 呼叫 ComfyUI 的方式（MiniMax H3 模型檔名、`/free`、輸出路徑都在裡面），寫一個 `spellduel-unity/Docs/explore_fx/tools/gen_fx.py`，把 `explore_fx/shots.json` 的每個 clip 生成成 mp4。
-   > 先只做 `fx_E3_exclaim`、`fx_D3_fire` 兩支給我看，背景確定是純黑/純綠再全部做。做完照 README 的「交貨」推上去。
+   > 先只做 `fx_C2_discover`、`fx_D4_spores` 兩支給我看（不用圖），背景確定是純黑再做其他不用圖的；要圖的等 Codex 的 `keyframes/` 推上來再做。做完照 README 的「交貨」推上去。
 
 ## 這次要做什麼
 
 `shots.json` 裡 25 支短特效，用在故事探索「翠蔭迷林」。提示詞的來源與遊戲裡的用途在 `spellduel-unity/EXPLORE_ANIMATION_PROMPTS.md`。
 
 - 提示詞＝`style` ＋ `clip.prompt` ＋ `backgrounds[clip.background]`；負面提示詞用 `negative`。
-- 文字生影片就好（沒有角色要對臉）。如果 H3 只有圖生影片：先用參考圖節點生一張起始圖，再生影片。
-- `mode: "loop"` 的要能循環：最好用圖生影片，**第一格和最後一格用同一張圖**（`gen_minimax_kf.py` 有設最後一格的寫法）。做不到也沒關係，Claude 會做淡入淡出接起來。
+- **有 `keyframe` 欄位的 16 支用圖生影片**：圖是 Codex 從遊戲模型算出來的（`keyframes/`，單子是 `CODEX_TASK_EXPLORE_FX_KEYFRAMES.md`），影片裡的東西才會跟遊戲一樣。
+  - `keyframe: "start"`：`keyframes/<id>.png` 當第一格；`loop` 的同一張也當最後一格。
+  - `keyframe: "end"`：`keyframes/<id>_end.png` 當最後一格。
+  - 圖還沒出來就先跳過那支（或先文字生影片當試做，之後重做）。
+- 其他 9 支只有光和粒子，文字生影片就好。
+- 設第一格／最後一格的寫法參考 `gen_minimax_kf.py`（MiniMaxH3ImageToVideo）。`loop` 的文字生影片做不到首尾相同也沒關係，Claude 會做淡入淡出接起來。
 - `seconds` 是遊戲裡用的長度。照模型平常的長度生成（約 5 秒）就好，裁切、加速由 Claude 處理。
 
 ## 規格（重要）
