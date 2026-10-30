@@ -18,15 +18,30 @@
     "CreateSeal",
     "SetSealOpen",
     "CreateSwitch",
-    "SetSwitchDone"
+    "SetSwitchDone",
+    "CreateBackdrop"
   ],
   "runtimeFiles": [
+    "ExploreArt.Atmosphere.cs",
     "ExploreArt.cs",
+    "ExploreArt.Foliage.cs",
     "ExploreArt.Gates.cs",
     "ExploreArt.Landmarks.cs",
+    "ExploreArt.Nature.cs",
     "ExploreArt.Props.cs",
     "ExploreArt.Quest.cs"
   ],
   "noNewTimeDrivenAnimation": true,
-  "forbiddenPathEditsByThisArtBatch": []
+  "forbiddenPathEditsByThisArtBatch": [],
+  "shaders": [
+    "ExploreLake.shader",
+    "ExploreFoliage.shader",
+    "ExploreBackdrop.shader"
+  ],
+  "generatedFoliageTextures": {
+    "count": 4,
+    "width": 256,
+    "height": 256,
+    "mipmaps": true
+  }
 }

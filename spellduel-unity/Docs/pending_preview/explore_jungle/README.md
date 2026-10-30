@@ -1,6 +1,6 @@
 # 翠蔭迷林：靜態場景交付
 
-只新增 ExploreArt*.cs、原生預覽與文件。Explore.cs、Combat*.cs、SoloBattle.Explore.cs 的玩法／碰撞未由本批修改。動畫及影片由另一個 session 製作；本批沒有 Update 動畫、計時器或播放影片。
+只新增／調整 ExploreArt*.cs、探索專用 shader、原生預覽與文件。Explore.cs、Combat*.cs、SoloBattle.Explore.cs 的玩法／碰撞未由本批修改。動畫及影片由另一個 session 製作；本批沒有 Update 動畫、計時器或播放影片。
 
 ## 需求對照
 
@@ -56,6 +56,22 @@
 
 網格依類型與有限變體鍵共用；材質共用。Factory 不增加 Collider。牆驗證逐一斷言三角形 ≤300、頂點限制在 3m 格子內。狀態可反覆切換，重新生成後共用既有 mesh／material。全圖只為預覽，遊戲仍由既有程式限制 24m 附近生成。
 
-原生 Unity run 41083564537（201215e）成功，輸出 73 張場景 PNG 與 16 張靜態首尾圖。24 組牆變體均通過 ≤300 三角形、格子邊界與無 Collider 檢查；封印切換與 mesh／material 快取檢查通過。16 張圖均通過 960×544、四角純黑／綠幕與四周留白檢查。詳見 native_ci.json、explore_*_audit.json、keyframe_validation.json。
+最新原生 Unity run 41140438468（a596434，包含 c840328 的美術）成功，輸出 76 張場景 PNG 與 16 張靜態首尾圖。24 組牆變體通過 ≤300 三角形、格子邊界與無 Collider 檢查；封印切換與 mesh／material 快取檢查通過。16 張圖通過 960×544、四角純黑／綠幕與四周留白檢查。詳見 native_ci.json、explore_*_audit.json、keyframe_validation.json。
 
-已目視複查木牆四面、岩壁、地標視角、植物、NPC 與首尾圖。雙平台 run 41083564529（201215e）中 Android APK、iOS Unity 匯出及 Xcode 未簽署 IPA 均成功，詳見 platform_ci.json。後續僅提交 Docs 與紀錄，Assets 程式碼未變；TestFlight 發布不是本輪美術驗收項目。AR 實機視野與動畫影片接線仍需整合端驗收。
+已目視複查新葉片群、加高樹木、三類岩石、帳篷與角色等比例圖、水材質／岸邊、篝火及 60m 視距下的天空／雲／遠林。當前雙平台 run 41140438464 的 iOS 匯出已成功，Android 與 IPA 仍執行中，結果另補。舊 platform_ci.json 是前一批證據，不能代替本批結果。AR 實機視野與動畫影片接線仍需整合端驗收。
+
+## 2026-10-31 造型重修
+
+- 樹叢、榕樹與發光藤樹取消大塊實心葉團，改程序葉片群：4 張 256×256 Texture2D 在建立時生成葉片尖端、深邊、葉脈與色差，共用並產生 mipmap，不新增圖片資源檔。CanopyLeaves 是獨立子物件。棕櫚／蕨類使用彎曲葉軸與細小葉片。
+- Thicket 垂直比例增加 40%，獨立 tree 最小垂直比例改為 1.25，水平碰撞範圍不變。獨立樹五種植物，各有依座標決定的有限快取輪廓。
+- 岩壁使用不規則九邊截面與收底斜頂；獨立石頭分矮圓、裂縫雙岩、層疊三型，各有四個快取種子。
+- 帳篷檐高 1.70m、屋脊 2.25m，入口寬 1.12×radius、入口高約 1.65m。現有 radius 0.9～1m 時高度不再跟著縮小。仍保持原碰撞圓範圍，不改玩法或碰撞數值。
+- 湖水改專用靜態水材質，依視角顯示深淺與天空反射色、細小高光；移除白色直線，增加細弧波紋與岸邊 Shore_* 過渡／蘆葦。沒有讀取時間或製作水流動畫。
+- 篝火改不規則石圈、木柴切面、炭塊與多層彎曲火舌；Fire 掛點與 fx_D3_fire.png 檔名不變，動畫 session 請使用更新的靜態圖。
+- 新圖：explore_tree_variation_lineup.png、explore_thicket_variation_lineup.png、explore_tent_scale.png、refinement_before_after.jpg、water_fire_before_after.jpg。帳篷對照使用真正的 MinionRig 9 與 CharacterRig 劍士，沒有放大／縮小比較角色。前後單件總覽各自取景，只比較輪廓；實際比例請看 explore_tent_scale.png。
+
+### 天空整合（Claude 接線）
+
+進入探索時呼叫一次 `ExploreArt.CreateBackdrop(map)`，以 `SetParent(exRoot,false)` 保留已設定的地圖中心 localPosition；退出探索時跟世界根物件一同移除。不要放進 24m 格子串流。子物件包含 SkyDome、Sun、Cloud_*、DistantForest_*。本批不改 SoloBattle.Explore.cs。
+
+遠景 shader 將場地外的天空／雲／林帶沿原視線顯示在遠平面內；不寫深度、不投影，保持在近處敵人後方。相容目前遊戲相機 60m 遠裁切，不需更改 GameRoot。原生第一人稱圖使用同樣 60m 視距，俯視圖另加長視距並隱藏天空。新 shader 都在 Resources/Shaders，避免手機建置剔除。

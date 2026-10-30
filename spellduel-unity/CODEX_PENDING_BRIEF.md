@@ -840,3 +840,9 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 ### 2026-10-31 遠景相機相容
 - 檢查到遊戲相機遠裁切為 60m，新增 ExploreBackdrop.shader 將遠景沿原視線投影到遠平面內，維持深度背景層；不修改 GameRoot 或遊戲相機設定。遠景 bounds 避免 CPU 過早裁掉地圖外雲層，所有背景都不寫深度、不投影，不會遮住近處敵人。
 - 第一人稱原生預覽改以同樣 60m 遠裁切驗證；只有地圖俯視圖使用較長距離。
+
+### 2026-10-31 森林細修原生預覽交付
+- 原生 run 41140438468（a596434，包含 c840328 美術）成功，76 張場景圖與 16 張靜態圖已更新。葉片群近景、加高樹木、岩石變體、帳篷同尺度圖、天空雲遠林、水岸與篝火均已目視複查；60m 相機視距仍能顯示天空。
+- Docs/pending_preview/explore_jungle/refinement_before_after.jpg、water_fire_before_after.jpg 為前後對照；explore_tent_scale.png 使用原尺寸小怪／玩家。更新 fx_D3_fire.png，動畫 session 請重新取用。
+- 牆預算／格子範圍、無新增 Collider、切換狀態、mesh／material 快取與靜態圖像素規格通過。最新雙平台 41140438464 尚在執行，結果另補。
+- 美術預覽 workflow 改為完成目前執行的批次後才處理新批次，避免多 session 同時推送使原生圖片反覆取消；正式手機建置流程不變。
