@@ -1,0 +1,15 @@
+{
+  "id": 41057693218,
+  "head": "40beb4022f42395358db99fa7237a58a805dab69",
+  "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41057693218",
+  "status": "completed",
+  "conclusion": "cancelled",
+  "jobs": [
+    {
+      "name": "sky-gear",
+      "conclusion": "cancelled",
+      "status": "completed",
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41057693218/job/124069428517"
+    }
+  ]
+}

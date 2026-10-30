@@ -1,0 +1,25 @@
+{
+  "head": "40beb4022f42395358db99fa7237a58a805dab69",
+  "scope": "Additional repository-wide checks, separate from the new art validation",
+  "checks": [
+    {
+      "run": 41057693624,
+      "result": "failure",
+      "error": "Missing approved skill visual: eh_121_sunbolt",
+      "source": "Snapshot.SupportEnemies.SkillEffectAudit: fixed approved list differs from EnemySkills"
+    },
+    {
+      "run": 41057693491,
+      "result": "failure",
+      "error": "Incorrect enemy count",
+      "source": "DungeonSpawnAudit.Roster: result.Count != b.waveTotal"
+    },
+    {
+      "run": 41057693280,
+      "result": "failure",
+      "error": "Shield disable cleanup",
+      "source": "Snapshot.RemainingArt: existing SwordShieldAura disable check"
+    }
+  ],
+  "note": "The listed validation code and SpellFx.SwordShield.cs are unchanged by this art batch. These failures are not reported as successful or suppressed."
+}
