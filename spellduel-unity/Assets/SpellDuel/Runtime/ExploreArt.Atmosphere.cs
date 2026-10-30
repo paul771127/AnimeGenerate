@@ -3,7 +3,10 @@ namespace SpellDuel
 {
  public static partial class ExploreArt
  {
-  static Material lakeMaterial,skyMaterial;
+  static Material lakeMaterial;
+  static readonly System.Collections.Generic.Dictionary<int,Material> backdropMaterials=new System.Collections.Generic.Dictionary<int,Material>();
+  static void BackdropLayer(Transform root,int queue)
+  {if(!backdropMaterials.TryGetValue(queue,out var mat)||!mat){mat=new Material(Resources.Load<Shader>("Shaders/ExploreBackdrop")??SkyArt.Glow.shader){name="Explore shared backdrop "+queue,renderQueue=queue};backdropMaterials[queue]=mat;}root.GetComponent<Renderer>().sharedMaterial=mat;root.GetComponent<Renderer>().shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;root.GetComponent<MeshFilter>().sharedMesh.bounds=new Bounds(Vector3.zero,Vector3.one*1000f);}
   static Material LakeMaterial { get { if(!lakeMaterial)lakeMaterial=new Material(Resources.Load<Shader>("Shaders/ExploreLake")??SkyArt.Glow.shader){name="Explore shared still lake"};return lakeMaterial; } }
   static void WaterDetails(Geo b,int n)
   {
@@ -49,10 +52,11 @@ namespace SpellDuel
     const int sectors=40,bands=8;for(int j=0;j<bands;j++)for(int i=0;i<sectors;i++)
     {float a=i*Mathf.PI*2/sectors,z=(i+1)*Mathf.PI*2/sectors,lo=j*Mathf.PI*.5f/bands,hi=(j+1)*Mathf.PI*.5f/bands;var c=Color.Lerp(new Color(.64f,.84f,.83f),new Color(.16f,.47f,.72f),j/(float)bands);b.Quad(V(Mathf.Cos(a)*Mathf.Cos(lo),Mathf.Sin(lo),Mathf.Sin(a)*Mathf.Cos(lo)),V(Mathf.Cos(z)*Mathf.Cos(lo),Mathf.Sin(lo),Mathf.Sin(z)*Mathf.Cos(lo)),V(Mathf.Cos(z)*Mathf.Cos(hi),Mathf.Sin(hi),Mathf.Sin(z)*Mathf.Cos(hi)),V(Mathf.Cos(a)*Mathf.Cos(hi),Mathf.Sin(hi),Mathf.Sin(a)*Mathf.Cos(hi)),c);}
    b.HeightTint(0,0,1,new Color(.64f,.84f,.83f),new Color(.16f,.47f,.72f));
-   },V(0,3,0),true);if(!skyMaterial)skyMaterial=new Material(SkyArt.Glow){name="Explore shared sky",renderQueue=1000};dome.GetComponent<Renderer>().sharedMaterial=skyMaterial;dome.name="SkyDome";dome.localScale=Vector3.one*(radius*1.7f);
-   var sun=Part(root.transform,"sky/sun",b=>{b.Crown(Vector3.zero,V(8,8,8),new Color(1,.96f,.75f,1),0,16,4);},V(-radius*.6f,radius*.65f,radius*.8f),true);sun.name="Sun";
+   },V(0,3,0),true);BackdropLayer(dome,1000);dome.name="SkyDome";dome.localScale=Vector3.one*(radius*1.7f);
+   var sun=Part(root.transform,"sky/sun",b=>{b.Crown(Vector3.zero,V(8,8,8),new Color(1,.96f,.75f,1),0,16,4);},V(-radius*.6f,radius*.65f,radius*.8f),true);sun.name="Sun";BackdropLayer(sun,1100);
    for(int i=0;i<12;i++){int key=i%4;float a=i*Mathf.PI/6;Part(root.transform,"sky/cloud/"+key,b=>{for(int l=0;l<6;l++){var at=V((l-2.5f)*4,1.5f*Mathf.Sin(l+key),Mathf.Sin(l*2+key)*3);b.Crown(at,V(11,5+(l%3)*2,8),new Color(.90f,.96f,.95f,.94f),l+key,10,4);b.Crown(at-V(0,1.9f,0),V(10,2,7),new Color(.69f,.82f,.86f,.6f),l+key,8,3);}b.HeightTint(0,-3,8,new Color(.68f,.81f,.85f,.9f),Color.white);},V(Mathf.Cos(a)*radius,26+(i%3)*13,Mathf.Sin(a)*radius),true).name="Cloud_"+i;}
    for(int i=0;i<40;i++){int key=i%4;float a=i*Mathf.PI/20;var t=Part(root.transform,"sky/forest/"+key,b=>{for(int j=0;j<3;j++){float x=(j-1)*5;b.Rod(V(x,0,0),V(x+.7f,15+j*2,0),.48f,new Color(.22f,.40f,.37f),5,.15f);b.Crown(V(x,16+j*2,0),V(10,12,8),Color.Lerp(new Color(.26f,.48f,.42f),new Color(.37f,.59f,.49f),j*.2f),key+j,7,3);}},V(Mathf.Cos(a)*radius,0,Mathf.Sin(a)*radius),true);t.name="DistantForest_"+i;t.localRotation=Quaternion.Euler(0,-a*Mathf.Rad2Deg,0);}
+   foreach(Transform child in root.transform){if(child.name.StartsWith("Cloud_"))BackdropLayer(child,1200);else if(child.name.StartsWith("DistantForest_"))BackdropLayer(child,1500);}
    return root;
   }
  }
