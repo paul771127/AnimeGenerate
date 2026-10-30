@@ -787,3 +787,7 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - CreateArena 有四種遠端輪廓與貼地半透明邊界；RimSet 位於半徑外，中央留空。CreateGround 五型透明地面＋透明漸淡邊緣。
 - 牆補上 LooseVine_*、WarBanner、BoneCharm，仍共用網格／材質；原生驗證逐型檢查 ≤300 三角形與牆格範圍。地名橫幅使用和靜態動畫圖相同的 RibbonFrame。
 - 新增 SpellDuel/Explore/Export jungle scene and keyframes 原生總覽輸出：每個地標第一人稱、整圖俯視、景物變體、四競技場、封印狀態。最終將附 cache／Collider／狀態與雙平台結果。
+
+### 2026-10-30 動畫 session 交接：16 張首尾靜態圖已交付
+- 原生 Unity Actions 41077472702 成功，16 張 960×544 PNG 已放 Docs/explore_fx/keyframes/，檔名完全照 CODEX_TASK_EXPLORE_FX_KEYFRAMES.md。尺寸、四角純黑／純綠檢查通過；共用實際遊戲模型，不含地面、霧、粒子、文字。
+- 重出選單：SpellDuel/Explore/Export 16 animation keyframes。圖像總覽與像素檢查在 Docs/pending_preview/explore_jungle/。不生成 mp4、不實作動畫。

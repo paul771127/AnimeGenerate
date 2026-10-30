@@ -1,0 +1,290 @@
+[
+  {
+    "file": "fx_A5_socket_pulse.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      437,
+      150,
+      523,
+      394
+    ]
+  },
+  {
+    "file": "fx_B1_activate.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      358,
+      150,
+      602,
+      394
+    ]
+  },
+  {
+    "file": "fx_B1_rune_idle.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      358,
+      150,
+      602,
+      394
+    ]
+  },
+  {
+    "file": "fx_B2_key_idle.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      255,
+      0
+    ],
+    "bounds": [
+      432,
+      155,
+      523,
+      389
+    ]
+  },
+  {
+    "file": "fx_B2_pickup.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      456,
+      190,
+      514,
+      353
+    ]
+  },
+  {
+    "file": "fx_B2_shard_idle.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      447,
+      160,
+      527,
+      383
+    ]
+  },
+  {
+    "file": "fx_C3_herb.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      255,
+      0
+    ],
+    "bounds": [
+      391,
+      156,
+      569,
+      385
+    ]
+  },
+  {
+    "file": "fx_C4_heart_idle.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      369,
+      105,
+      591,
+      351
+    ]
+  },
+  {
+    "file": "fx_C4_heart_rise_end.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      369,
+      105,
+      591,
+      351
+    ]
+  },
+  {
+    "file": "fx_C4_heart_take.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      369,
+      105,
+      591,
+      351
+    ]
+  },
+  {
+    "file": "fx_D3_fire.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      415,
+      154,
+      551,
+      390
+    ]
+  },
+  {
+    "file": "fx_E1_spirit.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      408,
+      148,
+      553,
+      395
+    ]
+  },
+  {
+    "file": "fx_E2_alert_end.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      448,
+      150,
+      512,
+      394
+    ]
+  },
+  {
+    "file": "fx_E3_exclaim.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      448,
+      150,
+      512,
+      394
+    ]
+  },
+  {
+    "file": "fx_E3_question.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      408,
+      149,
+      552,
+      394
+    ]
+  },
+  {
+    "file": "fx_E4_banner_end.png",
+    "size": [
+      960,
+      544
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      168,
+      84,
+      792,
+      166
+    ]
+  }
+]
