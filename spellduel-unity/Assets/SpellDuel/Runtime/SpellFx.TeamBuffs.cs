@@ -25,6 +25,7 @@ namespace SpellDuel
    TeamBuffArt view;if(!views.TryGetValue(id,out view)||!view){if(level<=0)return;var go=new GameObject("SpellFx aura "+id);go.transform.SetParent(transform,false);view=go.AddComponent<TeamBuffArt>();view.Build(id,false);views[id]=view;}
    view.SetLevel(level);
   }
+  void OnDestroy(){foreach(var view in views.Values)if(view)view.ReleaseEdges();}
   public void Hit(Vector3 p){TeamBuffArt view;if(views.TryGetValue("elementward",out view)&&view&&view.gameObject.activeSelf)view.Hit(p);}
  }
  public sealed class TeamBuffArt:MonoBehaviour
@@ -113,18 +114,27 @@ namespace SpellDuel
   public void Hit(Vector3 at){var p=transform.InverseTransformPoint(at);hitPiece=((Mathf.RoundToInt(Mathf.Atan2(p.z,p.x)/(Mathf.PI/2))%4)+4)%4;hit=.22f;}
   void DrawEdge(Camera cam,float alpha)
   {
-   if(edgeCamera!=cam){ClearEdge();edgeCamera=cam;edge=new LineRenderer[4];for(int i=0;i<4;i++){edge[i]=SpellFx.Line(cam.transform,"Self "+id+" corner",new Vector3[5],false,.002f,tint,true,false);edge[i].sortingOrder=70;}}
+   if(edgeCamera!=cam){ClearEdge();edgeCamera=cam;edge=new LineRenderer[4];for(int i=0;i<4;i++){edge[i]=SpellFx.Line(cam.transform,"Self "+id+" corner",new Vector3[24],false,.002f,tint,true,false);edge[i].sortingOrder=70;}}
    float z=cam.nearClipPlane+.04f,y=Mathf.Tan(cam.fieldOfView*.5f*Mathf.Deg2Rad)*z,x=y*cam.aspect;
    for(int i=0;i<4;i++)
    {
     float sx=(i%2==0?-1:1),sy=(i<2?-1:1);float inset=id=="arcanehaste"?.82f:id=="elementward"?.90f:id=="rangerhaste"?.86f:.94f;var lr=edge[i];
-    for(int k=0;k<5;k++){float u=k/4f;float xx=inset-.12f*u,yy=inset-.035f*Mathf.Sin(u*Mathf.PI);if(id=="hawkeye"){xx=k<2?inset-.12f+k*.12f:inset;yy=k<2?inset:inset-(k-1)*.04f;}lr.SetPosition(k,new Vector3(sx*x*xx,sy*y*yy,z));}
-    var c=id=="elementward"?colors[i]:tint;c.a=.45f*alpha;lr.startColor=lr.endColor=c;lr.widthMultiplier=y*.012f;lr.enabled=alpha>.001f;
+    for(int k=0;k<24;k++)
+    {
+     float u=k/23f;float xx=inset-.12f*u,yy=inset-.035f*Mathf.Sin(u*Mathf.PI);
+     if(id=="arcanehaste")
+     {float a=Mathf.Min(k,16)/16f*Mathf.PI*2;xx=.84f+Mathf.Cos(a)*.055f*y/x;yy=.84f+Mathf.Sin(a)*.055f;if(k>=17){xx=.84f;yy=.84f;if(k<20)yy+=.035f*(k-17)/2;else xx+=.032f*(k-20)/3*y/x;}}
+     else if(id=="elementward"){float a=u*Mathf.PI*2;xx=.86f+Mathf.Cos(a)*.045f*y/x;yy=.86f+Mathf.Sin(a)*.065f;}
+     else if(id=="rangerhaste"){xx=.75f+u*.18f;yy=.88f+Mathf.Sin(u*Mathf.PI*3+age*4)*.018f;}
+     else if(id=="hawkeye"){xx=u<.5f?inset-.12f+u*.24f:inset;yy=u<.5f?inset:inset-(u-.5f)*.24f;}
+     lr.SetPosition(k,new Vector3(sx*x*xx,sy*y*yy,z));
+    }
+    var c=id=="elementward"?colors[i]:tint;c.a=.8f*alpha;lr.startColor=lr.endColor=c;lr.widthMultiplier=y*.014f;lr.enabled=alpha>.001f;
    }
   }
   public void Sample(float dt)
   {
-   age+=Mathf.Max(0,dt);hit=Mathf.Max(0,hit-dt);float alpha=burst?Mathf.Sin(Mathf.Clamp01(age/1.1f)*Mathf.PI):Mathf.Min(1,level*5)*.6f;
+   age+=Mathf.Max(0,dt);hit=Mathf.Max(0,hit-dt);float alpha=burst?Mathf.Sin(Mathf.Clamp01(age/1.1f)*Mathf.PI):Mathf.Min(1,level*5)*.9f;
    var cam=Camera.main;bool self=cam&&transform.parent&&SelfFxEdge.NearOwner(cam,transform.parent.position);art.gameObject.SetActive(!self);if(self)DrawEdge(cam,alpha);else if(edge!=null)foreach(var e in edge)if(e)e.enabled=false;
    art.localRotation=Quaternion.Euler(0,age*(id=="arcanehaste"?75:35),0);
    art.localPosition=id=="arcanehaste"?Vector3.up*(burst?Mathf.Clamp01(age/.8f)*1.6f:.75f):Vector3.zero;
@@ -134,6 +144,7 @@ namespace SpellDuel
    if(burst&&age>1.1f&&Application.isPlaying)Destroy(gameObject);
   }
   void LateUpdate(){Sample(Time.deltaTime);}
+  internal void ReleaseEdges(){ClearEdge();}
   void ClearEdge(){if(edge!=null)foreach(var e in edge)if(e)SkyArt.Dispose(e.gameObject);edge=null;edgeCamera=null;}
   void OnDisable(){if(edge!=null)foreach(var e in edge)if(e)e.enabled=false;}
   void OnDestroy(){ClearEdge();}

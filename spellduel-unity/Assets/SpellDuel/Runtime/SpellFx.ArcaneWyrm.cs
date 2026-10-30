@@ -11,8 +11,8 @@ namespace SpellDuel
  {
   const int Rings=25,Sides=8,History=128;const float Length=2.4f;
   readonly Vector3[] trail=new Vector3[History],centers=new Vector3[Rings];
-  readonly Vector3[] vertices=new Vector3[Rings*Sides+(Rings-1)*3];
-  readonly Color[] colors=new Color[Rings*Sides+(Rings-1)*3];
+  readonly Vector3[] vertices=new Vector3[Rings*Sides+(Rings-1)*4];
+  readonly Color[] colors=new Color[Rings*Sides+(Rings-1)*4];
   Mesh mesh;Transform head;LineRenderer spine;LineRenderer[] scales;LineRenderer[] whiskers;ParticleSystem motes;int newest,count;float time,fade=-1;Vector3 previous,frozen;Color tint;bool initialized;
   public int VisibleSections{get;private set;}
   public Vector3 SectionWorld(int index)=>WorldFrame.FromWorld(centers[Mathf.Clamp(index,0,Rings-1)]);
@@ -31,9 +31,9 @@ namespace SpellDuel
     SpellFx.Line(head,"Horn fork",new[]{new Vector3(side*.12f,.18f,-.11f),new Vector3(side*.22f,.21f,-.08f)},false,.015f,new Color(1,.87f,.48f),false,false);
     whiskers[(side+1)/2]=SpellFx.Line(head,"Flowing whisker",new Vector3[9],false,.011f,c,true,false);
    }
-   mesh=new Mesh{name="Arcane wyrm dynamic swept body"};mesh.MarkDynamic();var tris=new int[(Rings-1)*Sides*6+(Rings-1)*6];int at=0;
+   mesh=new Mesh{name="Arcane wyrm dynamic swept body"};mesh.MarkDynamic();var tris=new int[(Rings-1)*Sides*6+(Rings-1)*12];int at=0;
    for(int j=0;j<Rings-1;j++)for(int i=0;i<Sides;i++){int a=j*Sides+i,b=j*Sides+(i+1)%Sides;tris[at++]=a;tris[at++]=a+Sides;tris[at++]=b;tris[at++]=b;tris[at++]=a+Sides;tris[at++]=b+Sides;}
-   for(int j=0;j<Rings-1;j++){int a=Rings*Sides+j*3;tris[at++]=a;tris[at++]=a+1;tris[at++]=a+2;tris[at++]=a+2;tris[at++]=a+1;tris[at++]=a;}
+   for(int j=0;j<Rings-1;j++){int a=Rings*Sides+j*4;int[] face={0,1,2,3,2,1,0,3,1,0,2,3};for(int i=0;i<face.Length;i++)tris[at++]=a+face[i];}
    for(int j=0;j<Rings;j++)for(int i=0;i<Sides;i++)colors[j*Sides+i]=Color.Lerp(c,Color.white,i<4?.45f:.05f);
    for(int i=Rings*Sides;i<colors.Length;i++)colors[i]=new Color(1,.86f,.5f);
    mesh.vertices=vertices;mesh.colors=colors;mesh.triangles=tris;
@@ -71,7 +71,7 @@ namespace SpellDuel
     for(int i=0;i<Sides;i++){float a=i*Mathf.PI*2/Sides;vertices[j*Sides+i]=transform.InverseTransformPoint(WorldFrame.FromWorld(p+(right*Mathf.Cos(a)+up*Mathf.Sin(a))*radius));}
     for(int side=0;side<2;side++)scales[side].SetPosition(j,transform.InverseTransformPoint(WorldFrame.FromWorld(p+right*((side==0?-1:1)*radius*.8f)+up*(radius*(j%2==0?.58f:.2f)))));
     spine.SetPosition(j,transform.InverseTransformPoint(WorldFrame.FromWorld(p+up*radius)));
-    if(j<Rings-1){int k=Rings*Sides+j*3;vertices[k]=vertices[j*Sides+2];vertices[k+1]=transform.InverseTransformPoint(WorldFrame.FromWorld(p+up*(radius+.065f*disappear)*(available?1:0)));vertices[k+2]=transform.InverseTransformPoint(WorldFrame.FromWorld(p-forward*.085f+up*radius));}
+    if(j<Rings-1){int k=Rings*Sides+j*4;float fin=available?disappear:0;vertices[k]=transform.InverseTransformPoint(WorldFrame.FromWorld(p+up*radius-right*.012f*fin));vertices[k+1]=transform.InverseTransformPoint(WorldFrame.FromWorld(p+up*(radius+.05f*fin)));vertices[k+2]=transform.InverseTransformPoint(WorldFrame.FromWorld(p-forward*.085f*fin+up*radius));vertices[k+3]=transform.InverseTransformPoint(WorldFrame.FromWorld(p+up*radius+right*.012f*fin));}
    }
    mesh.vertices=vertices;mesh.RecalculateNormals();mesh.RecalculateBounds();head.localScale=Vector3.one*(fade<0?1:1-Mathf.Clamp01(fade/.18f));
    for(int w=0;w<2;w++)for(int i=0;i<9;i++){float u=i/8f;whiskers[w].SetPosition(i,new Vector3((w==0?-1:1)*(.06f+u*.24f),-.025f+Mathf.Sin(time*7-u*5)*.035f*u,.15f-u*.38f));}

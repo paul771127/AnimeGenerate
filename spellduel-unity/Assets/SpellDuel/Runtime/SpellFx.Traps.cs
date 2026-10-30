@@ -21,7 +21,7 @@ namespace SpellDuel
  }
  public sealed class TrapArtView:MonoBehaviour
  {
-  Transform lamp,left,right;Renderer lampRenderer;Material unlit,lit;LineRenderer charge;bool armed;float time;string id;
+  Transform lamp,left,right;Vector3 lampSize;Renderer lampRenderer;Material unlit,lit;LineRenderer charge;bool armed;float time;string id;
   public void Build(string kind)
   {
    id=kind;var steel=new Color(.32f,.40f,.48f);var rim=new Color(.66f,.74f,.8f);
@@ -40,20 +40,20 @@ namespace SpellDuel
     charge=SkyArt.Ring(transform,"Armed trigger",.09f,new Color(1,.7f,.15f),.012f,20);charge.transform.localPosition=Vector3.up*.1f;
     if(kind=="trapchain")for(int i=0;i<9;i++){var link=SkyArt.Ring(transform,"Interlocking chain link",.045f,rim,.012f,10);link.transform.localPosition=new Vector3(.34f+i*.065f,.02f,Mathf.Sin(i*.6f)*.08f);link.transform.localRotation=Quaternion.Euler(i%2==0?0:65,0,0);}
    }
-   lampRenderer=lamp.GetComponent<Renderer>();lit=lampRenderer.sharedMaterial;unlit=SkyArt.Mat(new Color(.17f,.10f,.08f));SetArmed(false);
+   lampSize=lamp.localScale;lampRenderer=lamp.GetComponent<Renderer>();lit=lampRenderer.sharedMaterial;unlit=SkyArt.Mat(new Color(.17f,.10f,.08f));SetArmed(false);
   }
   Transform Jaw(int side,Color c)
   {
    var p=SkyArt.Node(transform,"Hinged toothed jaw",new Vector3(side*.25f,.03f,0));
    for(int i=0;i<7;i++){float a=(i/6f-.5f)*Mathf.PI;var v=new Vector3(side*(Mathf.Cos(a)*.22f-.25f),.03f,Mathf.Sin(a)*.22f);SkyArt.Oval(p,"Steel jaw tooth",v,new Vector3(.045f,.11f,.04f),c,true);if(i>0){float b=((i-1)/6f-.5f)*Mathf.PI;SkyArt.Rod(p,"Jaw arch",new Vector3(side*(Mathf.Cos(b)*.22f-.25f),0,Mathf.Sin(b)*.22f),new Vector3(v.x,0,v.z),.025f,c);}}
-   return p;
+   SkyArt.MergeScenery(p);return p;
   }
   public void SetArmed(bool value){armed=value;if(lampRenderer)lampRenderer.sharedMaterial=value?lit:unlit;Sample(0);}
   public void Sample(float dt)
   {
    time+=Mathf.Max(0,dt);if(charge){var c=id=="landmine"?new Color(1,.12f,.02f):new Color(1,.65f,.1f);c.a=armed?.35f+.65f*Mathf.Pow(Mathf.Max(0,Mathf.Sin(time*8)),4):.06f;charge.startColor=charge.endColor=c;}
-   if(lamp)lamp.localScale=Vector3.one*(armed?1:.6f);
-   if(left){left.localRotation=Quaternion.Euler(0,0,armed?-16:-65);right.localRotation=Quaternion.Euler(0,0,armed?16:65);}
+   if(lamp)lamp.localScale=lampSize*(armed?1:.6f);
+   if(left){left.localRotation=Quaternion.Euler(0,0,armed?16:65);right.localRotation=Quaternion.Euler(0,0,armed?-16:-65);}
   }
   void Update(){Sample(Time.deltaTime);}
  }

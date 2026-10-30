@@ -29,7 +29,7 @@ namespace SpellDuel.EditorTools
    UnityEngine.Object.DestroyImmediate(go);
    foreach(string id in new[]{"landmine","snaretrap","trapchain"})
    {
-    var trap=SpellFx.CreateTrapVisual(Skills.All[id]);SpellFx.SetTrapArmed(trap,true);trap.GetComponent<TrapArtView>().Sample(.2f);
+    var trap=SpellFx.CreateTrapVisual(Skills.All[id]);SpellFx.SetTrapArmed(trap,true);trap.GetComponent<TrapArtView>().Sample(.2f);if(id=="landmine")foreach(var r in trap.GetComponentsInChildren<MeshRenderer>())if(r.bounds.size.x>.8f)throw new Exception("Mine indicator scale regression");
     CarpetShot(cam,trap,"newfx_"+id+"_spectator",new Vector3(.8f,.8f,1),Vector3.zero,720,720);
     CarpetShot(cam,trap,"newfx_"+id+"_firstperson",new Vector3(0,1.6f,-.8f),Vector3.zero,720,960);UnityEngine.Object.DestroyImmediate(trap);
    }
@@ -51,15 +51,16 @@ namespace SpellDuel.EditorTools
     var type=b.GetType();var method=type.GetMethod("Sample",new[]{typeof(float)});if(method!=null)method.Invoke(b,new object[]{dt});
     if(type.Name=="FxAnim"){type.GetField("time",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).SetValue(b,dt);type.GetMethod("Update",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).Invoke(b,null);}
    }
-   foreach(var ps in UnityEngine.Object.FindObjectsOfType<ParticleSystem>()){ps.useAutoRandomSeed=false;ps.randomSeed=78;ps.Simulate(dt,true,true);}
+   foreach(var ps in UnityEngine.Object.FindObjectsOfType<ParticleSystem>()){ps.useAutoRandomSeed=false;ps.randomSeed=78;ps.Simulate(dt,true,false);}
   }
   static void NewFxClean()
   {
+   foreach(var camera in UnityEngine.Object.FindObjectsOfType<Camera>()){var oldEdge=camera.GetComponent<SelfFxEdge>();if(oldEdge)UnityEngine.Object.DestroyImmediate(oldEdge);foreach(var line in camera.GetComponentsInChildren<LineRenderer>())UnityEngine.Object.DestroyImmediate(line.gameObject);}
    foreach(var go in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())if(!go.GetComponent<Camera>()&&!go.GetComponent<Light>())UnityEngine.Object.DestroyImmediate(go);
   }
   static void NewFxPair(Camera cam,string id,GameObject subject,Vector3 center,bool close=false)
   {
-   cam.aspect=960f/720;var spectator=close?center+new Vector3(.8f,.4f,1.1f):center+((id.Contains("area")||id=="mineblast"||id=="starfall_zone")?new Vector3(4.5f,3.5f,5.5f):new Vector3(2,1.4f,3));cam.transform.position=spectator;NewFxSample(.12f);CarpetShot(cam,subject,"newfx_"+id+"_spectator",spectator,center,960,720);
+   cam.aspect=960f/720;var spectator=close?center+new Vector3(.8f,.4f,1.1f):center+((id.Contains("area")||id=="mineblast"||id=="starfall_zone")?new Vector3(4.5f,3.5f,5.5f):new Vector3(2,1.4f,3));cam.transform.position=spectator;NewFxSample(id=="chainarc"?.04f:.16f);CarpetShot(cam,subject,"newfx_"+id+"_spectator",spectator,center,960,720);
    cam.aspect=720f/960;cam.transform.position=new Vector3(0,1.6f,-.1f);cam.transform.LookAt(center+Vector3.forward*2);if(subject.GetComponent<CharacterRig>())foreach(var r in subject.GetComponentsInChildren<MeshRenderer>())r.enabled=false;NewFxSample(0);CarpetShot(cam,subject,"newfx_"+id+"_firstperson",new Vector3(0,1.6f,-.1f),center+Vector3.forward*2,720,960);
   }
   static void NewFxCatalogShots(Camera cam)

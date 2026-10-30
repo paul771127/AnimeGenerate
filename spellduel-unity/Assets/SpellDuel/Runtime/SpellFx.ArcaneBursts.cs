@@ -13,7 +13,7 @@ namespace SpellDuel
    var a=NewAnim("SpellFx ArcaneBreak implosion",atWorld,Quaternion.identity,.9f);var c=SkillTint("arcanebreak");
    for(int i=0;i<3;i++){var p=SkyArt.Node(a.transform,"Unstable spatial lens",Vector3.zero);p.localRotation=Quaternion.Euler(i*58,i*35,15);a.AddRing(p,Circle(48,1),true,.035f,c,0,.18f,.7f,.03f);a.AddRing(p,Circle(48,1),true,.018f,new Color(1,.8f,1),.18f,.5f,.05f,1.1f);}
    for(int i=0;i<12;i++){float angle=i*Mathf.PI/6;var p=new Vector3(Mathf.Cos(angle),Mathf.Sin(angle),0);a.AddSlash(a.transform,new[]{p*.12f,p*.7f},.04f,c,.18f,.4f,.1f,1.5f,i*11);}
-   Sparks(a.transform,c,.9f,24,1.4f,3.2f);
+   var dust=NewPS(a.transform,"Delayed arcane fragments",AddMat(TexStar),24,false);var main=dust.main;main.loop=false;main.startLifetime=.45f;main.startSpeed=new ParticleSystem.MinMaxCurve(1.4f,3.2f);main.startSize=.045f;main.startColor=c;Sphere(dust,.08f);FadeOut(dust);var emission=dust.emission;emission.SetBursts(new[]{new ParticleSystem.Burst(.18f,(short)24)});dust.Play();
   }
  }
  public sealed class NewSkillProjectileArt:MonoBehaviour
