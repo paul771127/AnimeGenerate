@@ -13,6 +13,8 @@ namespace SpellDuel
         ExploreRun exploreRun, pendingExplore;
         Transform exRoot;
         GameObject exWallTpl, exGateTpl, exHerbTpl, exSparkTpl, exAltarTpl;
+        readonly Dictionary<ExTerrain, GameObject> exTerrainTpl = new Dictionary<ExTerrain, GameObject>();
+        readonly Dictionary<string, GameObject> exPropTpl = new Dictionary<string, GameObject>();
         readonly Dictionary<Vector2Int, GameObject> exWalls = new Dictionary<Vector2Int, GameObject>();
         readonly Dictionary<object, GameObject> exProps = new Dictionary<object, GameObject>();
         readonly Dictionary<string, CharacterRig> exNpcRigs = new Dictionary<string, CharacterRig>();
@@ -131,6 +133,26 @@ namespace SpellDuel
             exHerbTpl = Prim(PrimitiveType.Sphere, new Color(0.6f, 1f, 0.75f), true); exHerbTpl.transform.SetParent(exRoot, false); exHerbTpl.SetActive(false);
             exSparkTpl = Prim(PrimitiveType.Sphere, new Color(1f, 1f, 0.75f), true); exSparkTpl.transform.SetParent(exRoot, false); exSparkTpl.SetActive(false);
             exAltarTpl = Prim(PrimitiveType.Cylinder, new Color(0.5f, 1f, 0.6f, 0.8f), true); exAltarTpl.transform.SetParent(exRoot, false); exAltarTpl.SetActive(false);
+            // 地形（暫代外觀；Codex 的叢林美術做好後換掉）：樹叢、岩壁、湖水、城寨木牆、古殿石牆、洞窟岩壁
+            GameObject T(PrimitiveType t, Color c, bool see = false) { var g = Prim(t, c, see); g.transform.SetParent(exRoot, false); g.SetActive(false); return g; }
+            exTerrainTpl[ExTerrain.Thicket] = exWallTpl;
+            exTerrainTpl[ExTerrain.Rock] = T(PrimitiveType.Cube, new Color(0.42f, 0.4f, 0.37f));
+            exTerrainTpl[ExTerrain.Water] = T(PrimitiveType.Cube, new Color(0.2f, 0.45f, 0.75f, 0.75f), true);
+            exTerrainTpl[ExTerrain.Palisade] = T(PrimitiveType.Cube, new Color(0.45f, 0.3f, 0.16f));
+            exTerrainTpl[ExTerrain.Ruin] = T(PrimitiveType.Cube, new Color(0.62f, 0.66f, 0.58f));
+            exTerrainTpl[ExTerrain.Cave] = T(PrimitiveType.Cube, new Color(0.24f, 0.21f, 0.2f));
+            // 景物障礙
+            exPropTpl["tree"] = T(PrimitiveType.Cylinder, new Color(0.3f, 0.22f, 0.12f));
+            exPropTpl["stump"] = T(PrimitiveType.Cylinder, new Color(0.4f, 0.28f, 0.15f));
+            exPropTpl["boulder"] = T(PrimitiveType.Sphere, new Color(0.5f, 0.48f, 0.44f));
+            exPropTpl["mushroom"] = T(PrimitiveType.Sphere, new Color(0.85f, 0.45f, 0.55f));
+            exPropTpl["tent"] = T(PrimitiveType.Cube, new Color(0.6f, 0.5f, 0.32f));
+            exPropTpl["crate"] = T(PrimitiveType.Cube, new Color(0.55f, 0.38f, 0.2f));
+            exPropTpl["totem"] = T(PrimitiveType.Cylinder, new Color(0.5f, 0.25f, 0.2f));
+            exPropTpl["pillar"] = T(PrimitiveType.Cylinder, new Color(0.7f, 0.74f, 0.66f));
+            exPropTpl["statue"] = T(PrimitiveType.Capsule, new Color(0.6f, 0.68f, 0.6f));
+            exPropTpl["campfire"] = T(PrimitiveType.Cylinder, new Color(1f, 0.55f, 0.2f), true);
+            exPropTpl["altar"] = T(PrimitiveType.Cube, new Color(0.55f, 0.6f, 0.5f));
         }
 
         /// <summary>只畫玩家附近 ExViewCells 格內、旁邊是走道的牆（整塊牆的內部不用畫）</summary>
@@ -149,9 +171,10 @@ namespace SpellDuel
                     if (!edge && !gate) continue;
                     keep.Add(k);
                     if (exWalls.ContainsKey(k)) continue;
-                    var go = Instantiate(gate ? exGateTpl : exWallTpl, exRoot);
+                    var t = map.TerrainAt(x, z);
+                    var go = Instantiate(gate ? exGateTpl : exTerrainTpl.TryGetValue(t, out var tt) ? tt : exWallTpl, exRoot);
                     go.SetActive(true);
-                    float h = gate ? 2.2f : 2.4f + ((x * 7 + z * 13) % 5) * 0.12f;   // 樹叢高低有一點變化
+                    float h = gate ? 2.2f : t == ExTerrain.Water ? 0.06f : t == ExTerrain.Palisade ? 2.6f : t == ExTerrain.Ruin ? 2.2f : t == ExTerrain.Cave ? 3f : 2.4f + ((x * 7 + z * 13) % 5) * 0.12f;   // 高低有一點變化；湖水是平的
                     go.transform.localPosition = map.World(x, z) + Vector3.up * h * 0.5f;
                     go.transform.localScale = new Vector3(ExploreMap.CellSize * (gate ? 0.9f : 1f), h, ExploreMap.CellSize * (gate ? 0.9f : 1f));
                     exWalls[k] = go;
@@ -179,6 +202,16 @@ namespace SpellDuel
             {
                 float twinkle = Mathf.Max(0f, Mathf.Sin(Time.time * 3f + s.pos.x)) ;   // 偶爾閃一下（不是一直亮）
                 ExProp(s, exSparkTpl, !s.found && Battle.FlatDistance(s.pos, me) <= ExSparkleShow, s.pos + Vector3.up * 0.5f, Vector3.one * (0.04f + 0.14f * twinkle * twinkle * twinkle));
+            }
+            // 景物障礙（樹、巨石、巨菇、帳篷、城寨的木箱、古殿石柱…；碰撞在 ExploreMap.Walkable）
+            foreach (var p in run.map.props)
+            {
+                if (!exPropTpl.TryGetValue(p.kind, out var tpl)) continue;
+                float hh = p.kind == "tree" ? 3.2f : p.kind == "pillar" ? 2.6f : p.kind == "statue" ? 1.8f : p.kind == "tent" ? 1.6f : p.kind == "totem" ? 2.2f : p.kind == "mushroom" ? 1.4f : p.kind == "boulder" ? p.radius * 1.6f : p.kind == "campfire" ? 0.3f : p.kind == "altar" ? 1f : 0.8f;
+                float d = p.radius * 2f;
+                bool halfY = p.kind == "tree" || p.kind == "stump" || p.kind == "totem" || p.kind == "pillar" || p.kind == "campfire" || p.kind == "statue";   // 圓柱、膠囊的原始高度是 2
+                var scale = halfY ? new Vector3(d, hh * 0.5f, d) : new Vector3(d, hh, d);
+                ExProp(p, tpl, Battle.FlatDistance(p.pos, me) <= view, p.pos + Vector3.up * hh * 0.5f, scale);
             }
             ExProp(run, exAltarTpl, run.bossDead && !run.hasHeart, run.map.altar + Vector3.up * 1.2f, new Vector3(0.5f, 1.2f, 0.5f));
         }
@@ -275,7 +308,7 @@ namespace SpellDuel
                     if (!map.InGrid(x, z) || !run.explored.Contains(new Vector2Int(x, z))) continue;
                     var cell = map.At(x, z);
                     Color c = cell == ExCell.Gate ? (map.GateOpen(x, z) ? new Color(0.55f, 0.8f, 0.5f, 0.9f) : new Color(0.9f, 0.35f, 0.25f, 0.95f))
-                        : cell == ExCell.Wall ? new Color(0.1f, 0.25f, 0.12f, 0.9f) : new Color(0.75f, 0.85f, 0.7f, 0.85f);
+                        : cell == ExCell.Wall ? MiniTerrainColor(map.TerrainAt(x, z)) : map.GroundAt(x, z) == ExGround.Stone ? new Color(0.85f, 0.85f, 0.8f, 0.85f) : map.GroundAt(x, z) == ExGround.Cave ? new Color(0.55f, 0.5f, 0.48f, 0.85f) : new Color(0.75f, 0.85f, 0.7f, 0.85f);
                     GUI.color = c;
                     GUI.DrawTexture(new Rect(box.x + (x - x0) * cs, box.y + (span - 1 - (z - z0)) * cs, cs + 0.5f, cs + 0.5f), Texture2D.whiteTexture);
                 }
@@ -293,8 +326,22 @@ namespace SpellDuel
             Dot(Me.Feet, Color.white, 1.6f);
             Dot(Me.Feet + Fighter.Flat(Me.forward) * ExploreMap.CellSize, new Color(1f, 1f, 1f, 0.6f), 0.9f);
             GUI.color = Color.white;
+            // 放大時：發現過的地標名字
+            if (exMapBig)
+                foreach (var l in map.landmarks)
+                {
+                    if (!l.found || l.kind == "arena") continue;
+                    float lx = box.x + ((l.rect.xMin + l.rect.xMax) * 0.5f - x0 + 0.5f) * cs, ly = box.y + (span - 1 - ((l.rect.yMin + l.rect.yMax) * 0.5f - z0) + 0.5f) * cs;
+                    UiKit.Text(new Rect(lx - size * 0.15f, ly - cs, size * 0.3f, cs * 2f), l.name, Mathf.RoundToInt(H * 0.016f), new Color(1f, 0.95f, 0.7f), TextAnchor.MiddleCenter);
+                }
             if (GUI.Button(box, GUIContent.none, GUIStyle.none)) exMapBig = !exMapBig;
         }
+
+        static Color MiniTerrainColor(ExTerrain t) => t switch
+        {
+            ExTerrain.Water => new Color(0.25f, 0.5f, 0.85f, 0.9f), ExTerrain.Rock => new Color(0.35f, 0.33f, 0.3f, 0.9f), ExTerrain.Palisade => new Color(0.45f, 0.3f, 0.15f, 0.95f),
+            ExTerrain.Ruin => new Color(0.4f, 0.45f, 0.38f, 0.9f), ExTerrain.Cave => new Color(0.18f, 0.15f, 0.14f, 0.9f), _ => new Color(0.1f, 0.25f, 0.12f, 0.9f),
+        };
 
         // ---------------------------------------------------------------- 結算
         void ExploreResult()
