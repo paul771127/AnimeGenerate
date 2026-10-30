@@ -9,6 +9,7 @@ namespace SpellDuel
    if(p.kind=="tree")n=((p.variant%5)+5)%5;
    int seed=Variant(Mathf.RoundToInt(p.pos.x*10),Mathf.RoundToInt(p.pos.z*10));
    Part(root.transform,"prop/"+p.kind+"/"+n+"/"+(p.kind=="tree"||p.kind=="boulder"?seed:0),b=>{if(p.kind=="tree")NaturalTree(b,n,seed);else if(p.kind=="boulder")NaturalBoulder(b,n,seed);else Prop(b,p.kind,n);PropVariant(b,p.kind,n);});float radius=Mathf.Max(.05f,p.radius);float height=p.kind=="tent"?1f:p.kind=="tree"?1.25f:p.kind=="mushroom"?1.3f:p.kind=="totem"||p.kind=="pillar"||p.kind=="statue"?.65f:radius;root.transform.localScale=V(radius,Mathf.Max(radius,height),radius);
+   if(p.kind=="tree")TreeFoliage(root.transform,n,seed);
    if(p.kind=="campfire")Part(root.transform,"Fire",b=>CampFlames(b),Vector3.zero,true);
    return root;
   }

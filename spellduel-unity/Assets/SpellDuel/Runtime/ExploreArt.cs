@@ -55,6 +55,7 @@ namespace SpellDuel
   public static GameObject CreateWall(ExTerrain terrain,int x,int z,float cell)
   {
    int n=Variant(x,z);var root=Root(terrain+" wall");var body=Part(root.transform,"wall/"+terrain+"/"+n,b=>Wall(b,terrain,n));body.name="WallBody";
+   if(terrain==ExTerrain.Thicket)ThicketFoliage(root.transform,n);
    if(terrain==ExTerrain.Water){body.GetComponent<Renderer>().sharedMaterial=LakeMaterial;Part(root.transform,"water/details/"+n,b=>WaterDetails(b,n),Vector3.zero,true).name="WaterDetails";}
    if(terrain==ExTerrain.Thicket||terrain==ExTerrain.Cave)for(int i=0;i<2;i++){int k=i;Part(root.transform,"wall/looseVine/"+i,b=>b.Rod(V(k==0?-.7f:.7f,2.4f,1.43f),V(k==0?-.6f:.6f,1.1f,1.43f),.028f,Moss,4)).name="LooseVine_"+i;}
    if(terrain==ExTerrain.Palisade){Part(root.transform,"wall/flag",b=>b.Quad(V(-.4f,2.3f,1.48f),V(.4f,2.3f,1.48f),V(.3f,1.6f,1.48f),V(-.3f,1.7f,1.48f),Leaf,true)).name="WarBanner";Part(root.transform,"wall/boneCharm",b=>{b.Gem(V(0,2.06f,1.43f),V(.22f,.28f,.12f),Bone,4);for(int side=-1;side<=1;side+=2)b.Gem(V(side*.05f,2.08f,1.497f),V(.035f,.04f,.005f),Dark,4);}).name="BoneCharm";}
@@ -68,7 +69,8 @@ namespace SpellDuel
     // Four genuinely different arrangements, kept below 300 triangles including loose vines.
     for(int i=0;i<2;i++){float x=(i==0?-.6f:.55f);b.Rod(V(x,0,.1f),V(x+shift,2.3f-(n%2)*.25f,-.12f),.20f,Bark,4,.10f);}
     for(int i=0;i<2;i++){float a=i*3.1416f+n*.6f;b.Rod(V(0,.7f,0),V(Mathf.Cos(a)*1.35f,.04f,Mathf.Sin(a)*1.35f),.13f,Bark,4,.05f);}
-    for(int i=0;i<5;i++){float a=i*2.399f+n*.65f;float r=i<2?.55f:.70f;float y=i<2?.7f+i*.16f:1.95f+(i%3)*.13f;var at=V(Mathf.Cos(a)*r,y,Mathf.Sin(a)*r);b.Crown(at,V(1.8f+(i%2)*.15f,1.38f,1.8f),Color.Lerp(Leaf,Moss,i<2?.48f:.12f*(i%3)),n*7+i,6,3);}
+    for(int i=0;i<5;i++){float a=i*2.399f+n*.65f;b.Rod(V(0,1.2f,0),V(Mathf.Cos(a)*.7f,1.8f+(i%3)*.15f,Mathf.Sin(a)*.7f),.065f,Bark,4,.025f);}
+
     for(int i=0;i<4;i++){float a=i*Mathf.PI/2+n*.3f;b.Frond(V(Mathf.Cos(a),.2f,Mathf.Sin(a)),V(Mathf.Cos(a)*1.35f,.85f,Mathf.Sin(a)*1.35f),.17f,Moss);}
 
    }

@@ -29,11 +29,11 @@ namespace SpellDuel
    {
     for(int arm=0;arm<5;arm++)
     {float a=arm*2.399f+seed*.55f;var tip=V(Mathf.Cos(a)*.56f,h-.48f+(arm%3)*.24f,Mathf.Sin(a)*.56f);b.Rod(fork,tip,.12f,Bark,6,.04f);
-     b.Crown(tip,V(.95f,.9f+arm%2*.18f,.95f),Color.Lerp(Leaf,Moss,arm*.08f),seed+arm,9,3);
-     b.Crown(tip+V(-Mathf.Sin(a)*.22f,.33f,Mathf.Cos(a)*.22f),V(.65f,.7f,.65f),Color.Lerp(Leaf,Moss,.28f),seed+arm+3,8,3);
+
+
      if(arm<3){var foot=V(Mathf.Cos(a)*.76f,.13f,Mathf.Sin(a)*.76f);b.Vine(tip,foot,.08f,.025f,species==1?Bark:Leaf,7);if(species==4)b.Gem(foot+V(0,.35f,0),V(.12f,.22f,.12f),Glow(Light),5);}
     }
-    b.Crown(top,V(.85f,.95f,.85f),Leaf,seed+9,9,3);
+
    }
    // Props have circular collision footprints; keep foliage and roots inside those footprints.
    for(int i=0;i<b.v.Count;i++){var v=b.v[i];float r=new Vector2(v.x,v.z).magnitude;if(r>.98f){v.x*=.98f/r;v.z*=.98f/r;}b.v[i]=v;}
