@@ -1944,8 +1944,9 @@ namespace SpellDuel
                     // 每掉 1/3 血：受擊硬直動作（往後仰、退一步；這次攻擊被取消）。用血量判斷，隊友的手機也看得到
                     if (m.Alive && Battle.StaggerTierOf(m.hp, m.maxHp) > Battle.StaggerTierOf(lh, m.maxHp))
                     {
-                        var away = WorldFrame.DirFromWorld(Fighter.Flat(m.Feet - Me.Feet));
-                        StaggerJolt.Play(rig.gameObject, away);
+                        // Codex 的各模型專屬受擊動作（小怪、支援／人形／稀有、天空敵人）；StaggerJolt 留給沒有專屬動作的模型
+                        rig.PlayStagger(Battle.StaggerTime); if (skyBody) skyBody.PlayStagger(Battle.StaggerTime);
+                        var vb = VariantBody(m); if (vb) vb.PlayStagger(Battle.StaggerTime);
                         floaters.Add(new Floater { posMap = m.Chest + Vector3.up * 0.3f, text = "受擊！", color = new Color(1f, 0.85f, 0.45f), born = Time.time });
                         Sfx.Play("hit", 0.8f, 0.7f);
                     }
