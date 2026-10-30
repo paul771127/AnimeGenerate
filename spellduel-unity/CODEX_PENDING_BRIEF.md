@@ -723,3 +723,7 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 翻滾箭加入繞軸綠色殘影；回響火球／冰錐縮小並加紫色奧術環。
 - 增益介面支援獵人 mindfocus、法師 meditate 與牧師 bless／haste／spring／focus，各有聚能、十字、加速箭紋、湧泉、準心符紋；不更動技能 id。AreaBurst 也支援 arcaneburst／venom_burst。
 - 裝備細節近拍原先停在 PlayHit 的閃白影格，805c13f 已修正預覽清除閃白後再拍（該提交標題包含本批尚未寫入的基本職業項目，本批補齊）。不改遊戲受擊效果。原生預算與快取檢查已通過（41048924038）。
+
+### 2026-10-30 新技能特效 B4：被動與十種爆發
+- 新視覺介面 `ChainArc`、`Thorns`、`StackAura`、`ExecuteHit`、`FirstStrikeHit`、`KillRush`、`SoulDrain` 均依需求簽名。連鎖 .15 秒，吸魂 .6 秒；連擊 0～10 點獨立快取，自己看到畫面下緣。無傷害／目標選取／狀態運算。
+- 十種爆發沿用 TeamBuffCast／TeamBuffAura，但改為盾、劍、獵眼、爪、雷、魂、印、鐮刀、十字、火焰等各自可辨識的符紋。Claude 接觸發事件。

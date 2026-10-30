@@ -49,6 +49,24 @@ namespace SpellDuel
     for(int j=0;j<3;j++){var p=new Vector3[28];for(int i=0;i<p.Length;i++){float u=i/27f;float a=u*Mathf.PI*1.5f+j*2.1f;p[i]=P(a,.43f,.06f+u*(burst?1.5f:.2f));}Add(list,shades,p,false,tint,.018f);}
     Add(list,shades,new[]{new Vector3(.35f,.7f,0),new Vector3(.46f,.9f,.03f),new Vector3(.35f,1.1f,0)},false,tint,.014f);
    }
+   else if(id=="retribution"||id=="swordfervor"||id=="killinstinct"||id=="huntfrenzy"||id=="chainstorm"||id=="soulharvest"||id=="renjutsu"||id=="reaperdance"||id=="graceflow"||id=="martyrflame")
+   {
+    for(int j=0;j<5;j++)
+    {
+     var at=P(j*Mathf.PI*2/5,.42f,.75f);Vector3[] glyph;
+     if(id=="swordfervor")glyph=new[]{new Vector3(0,-.22f,0),new Vector3(0,.22f,0),new Vector3(-.04f,.14f,0),new Vector3(0,.22f,0),new Vector3(.04f,.14f,0)};
+     else if(id=="chainstorm")glyph=new[]{new Vector3(.07f,.2f,0),new Vector3(-.03f,.03f,0),new Vector3(.04f,.03f,0),new Vector3(-.08f,-.2f,0)};
+     else if(id=="killinstinct")glyph=new[]{new Vector3(-.16f,.08f,0),new Vector3(0,.14f,0),new Vector3(.16f,.08f,0),Vector3.zero,new Vector3(-.16f,.08f,0)};
+     else if(id=="huntfrenzy")glyph=new[]{new Vector3(-.1f,-.2f,0),new Vector3(-.06f,.16f,0),new Vector3(0,-.12f,0),new Vector3(.06f,.2f,0),new Vector3(.1f,-.15f,0)};
+     else if(id=="renjutsu")glyph=new[]{new Vector3(0,.17f,0),new Vector3(.15f,0,0),new Vector3(0,-.17f,0),new Vector3(-.15f,0,0),new Vector3(0,.17f,0),new Vector3(0,-.17f,0)};
+     else if(id=="reaperdance")glyph=new[]{new Vector3(0,-.23f,0),new Vector3(0,.17f,0),new Vector3(.14f,.12f,0),new Vector3(.19f,0,0),new Vector3(.1f,.06f,0)};
+     else if(id=="soulharvest")glyph=new[]{new Vector3(0,-.2f,0),new Vector3(-.12f,.05f,0),new Vector3(-.07f,.17f,0),new Vector3(.07f,.17f,0),new Vector3(.12f,.05f,0),new Vector3(0,-.2f,0)};
+     else if(id=="martyrflame")glyph=new[]{new Vector3(0,.23f,0),new Vector3(.12f,-.05f,0),new Vector3(.05f,-.17f,0),new Vector3(-.07f,-.14f,0),new Vector3(-.12f,0,0),new Vector3(0,.23f,0)};
+     else if(id=="graceflow")glyph=new[]{new Vector3(0,.2f,0),new Vector3(0,-.2f,0),Vector3.zero,new Vector3(-.15f,0,0),new Vector3(.15f,0,0),Vector3.zero,new Vector3(0,.2f,0)};
+     else glyph=new[]{new Vector3(-.14f,.16f,0),new Vector3(.14f,.16f,0),new Vector3(.12f,-.07f,0),new Vector3(0,-.2f,0),new Vector3(-.12f,-.07f,0),new Vector3(-.14f,.16f,0)};
+     for(int i=0;i<glyph.Length;i++)glyph[i]+=at;Add(list,shades,glyph,false,tint,.018f);
+    }
+   }
    else if(id=="mindfocus"||id=="meditate")
    {
     for(int j=0;j<8;j++){var p=new Vector3[14];for(int i=0;i<14;i++){float u=i/13f;float a=j*Mathf.PI/4+u;p[i]=P(a,.5f*(1-u)+.06f,.6f+u*.3f);}Add(list,shades,p,false,tint,.016f);}
