@@ -69,6 +69,10 @@ Claude 已經把地圖改成有**地形種類、地面種類、景物障礙、�
    - `GameObject ExploreArt.CreateSeal(ExSeal s, int x, int z, float cell)` ＋ `void ExploreArt.SetSealOpen(GameObject g, bool open)`：四種封印外觀不同（苔根盤結、掛著古銅大鎖的木柵、兩道藤蔓結、刻著三個凹槽的翠玉石門；凹槽依 `s.have` 亮起），解開時的動畫。現在是紫色方塊。
    - `GameObject ExploreArt.CreateSwitch(ExSwitch sw)` ＋ `void ExploreArt.SetSwitchDone(GameObject g)`：石雕機關（拉桿或可以踩的石盤，啟動後下沉發光）、古銅鑰匙、翠玉碎片（浮在空中慢慢轉、發綠光）。在死路底要遠遠就隱約看得到一點光，引導玩家走進岔路。
 
+## 動畫：先等使用者確認提示詞
+
+使用者要求「要做動畫的先給我提示詞」：所有動畫（門與封印打開、機關啟動、閃光點、月光草、祭壇、湖面、篝火、孢子、洞窟、城寨旗子、森林之靈、「！」、任務標記、地名橫幅）的長度與動作順序寫在 `EXPLORE_ANIMATION_PROMPTS.md`。**動畫部分等使用者確認那份提示詞後再做**；靜態模型（牆、地形、景物）可以先做。
+
 ## 預算與注意
 
 - **景物和牆都是障礙物**：碰撞已經由 Claude 用格子和半徑算好，你只要讓外型和碰撞對得上（不要加 Collider）。

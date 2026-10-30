@@ -15,7 +15,7 @@ namespace SpellDuel
     /// </summary>
     public partial class SoloBattle
     {
-        public const float DashSpeed = 3.5f;   // 公尺／秒（使用者要求加快：2.5 → 3.5）
+        public const float DashSpeed = 2.5f;   // 公尺／秒（試過 3.5，使用者覺得太快，改回 2.5）
         const float DashArm = 0.8f;            // 比 5 之後這麼久內握拳才算
         const float DashGrace = 0.15f;         // 手勢偵測偶爾漏一兩張不算放開
         const float DashEdge = 0.4f;           // 離場地邊界這麼近就停
