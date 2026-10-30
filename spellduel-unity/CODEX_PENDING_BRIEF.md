@@ -704,3 +704,7 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 ### 2026-10-30 新技能特效 B9：獵鷹俯衝
 - `SpellFx.FalconDive(Vector3 fromWorld,Vector3 toWorld,float seconds)`：金橘獵鷹有鉤喙、眼、六片飛羽／翼、分尾、三趾爪。收翅抵達指定胸口座標，抓痕／羽片後拉升淡出。軌跡端點存戰場座標，隨 AR 重定位。
 - 原生測試斷言 .35 秒精確抵達；沒有目標查詢或傷害操作。Claude 呼叫新介面即可。
+
+### 2026-10-30 新技能特效 C：四種隊伍增益
+- `TeamBuffCast(string,Transform)` 與 `TeamBuffAura(Transform,string,float)`：奧術加速時鐘、元素結界四色薄片、疾風箭意風線、鷹眼凝神羽紋。每位持有者／技能獨立快取；remain01=0 關閉，重啟重用。
+- 自己的特效四角顯示，中央至少 76% 空白，旁觀者看身上符紋。新增可選 `TeamBuffHit(Transform,Vector3)` 讓元素護殼受擊方向亮起，Claude 接線。
