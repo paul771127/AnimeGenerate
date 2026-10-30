@@ -4,7 +4,7 @@ Shader "SpellDuel/ExploreLake"
  SubShader
  {
   Tags { "Queue"="Transparent-10" "RenderType"="Transparent" }
-  Cull Off ZWrite Off Blend SrcAlpha OneMinusSrcAlpha
+  Cull Off ZWrite On Blend SrcAlpha OneMinusSrcAlpha
   Pass
   {
    CGPROGRAM
@@ -26,7 +26,7 @@ Shader "SpellDuel/ExploreLake"
     fixed3 col=lerp(_DeepColor.rgb,_SkyColor.rgb,.13+fres*.67);col+=fixed3(.10,.15,.13)*(a*.04+b*.025)+reflectedCloud*fres*.055;
     float glint=pow(saturate(dot(reflect(-normalize(float3(-.4,.8,.25)),n),view)),64);
     col+=fixed3(.48,.53,.40)*glint*.5;
-    return fixed4(col,.96);
+    return fixed4(col,1);
    }
    ENDCG
   }

@@ -18,11 +18,11 @@ namespace SpellDuel.EditorTools
     var cell=map.At(x,z);GameObject g=null;
     if(cell==ExCell.Floor)g=ExploreArt.CreateGround(map.GroundAt(x,z),x,z,ExploreMap.CellSize);
     else if(cell==ExCell.Gate){var seal=map.SealOf(x,z);g=seal==null?ExploreArt.CreateGate(1,3):ExploreArt.CreateSeal(seal,x,z,3);}
-    else {bool edge=map.TerrainAt(x,z)==ExTerrain.Water;foreach(var d in ExploreMap.Dirs)if(map.At(x+d.x,z+d.y)!=ExCell.Wall)edge=true;if(edge)g=ExploreArt.CreateWall(map.TerrainAt(x,z),x,z,3);}
+    else {bool edge=false;foreach(var d in ExploreMap.Dirs)if(map.At(x+d.x,z+d.y)!=ExCell.Wall)edge=true;if(edge)g=ExploreArt.CreateWall(map.TerrainAt(x,z),x,z,3);}
     if(g){g.transform.SetParent(root.transform,false);g.transform.localPosition=map.World(x,z);}
    }
    foreach(var p in map.props){var g=ExploreArt.CreateProp(p);g.transform.SetParent(root.transform,false);g.transform.localPosition=p.pos;}
-   foreach(var l in map.landmarks){var g=ExploreArt.CreateLandmark(l,map);g.transform.SetParent(root.transform,false);}
+   foreach(var l in map.landmarks){var g=ExploreArt.CreateLandmark(l,map);g.transform.SetParent(root.transform,false);if(l.kind=="lake"){int water=0;for(int x=l.rect.xMin-1;x<=l.rect.xMax+1;x++)for(int z=l.rect.yMin-1;z<=l.rect.yMax+1;z++)if(map.InGrid(x,z)&&map.TerrainAt(x,z)==ExTerrain.Water)water++;var lake=g.transform.Find("LakeSurface");if(!lake||lake.GetComponent<MeshFilter>().sharedMesh.triangles.Length!=water*6)throw new Exception("Lake surface does not cover all water cells");}}
    foreach(var a in map.arenas){var g=ExploreArt.CreateArena(a.n,a.radius);g.transform.SetParent(root.transform,false);g.transform.localPosition=a.center;var rc=map.Cell(a.center+g.transform.Find("RimSet").localPosition);if(map.At(rc.x,rc.y)!=ExCell.Wall)throw new Exception("Arena scenery on open path "+a.n);}
    foreach(var sw in map.switches){var g=ExploreArt.CreateSwitch(sw);g.transform.SetParent(root.transform,false);g.transform.localPosition=sw.pos;}
    if(root.GetComponentInChildren<Collider>())throw new Exception("Explore art introduced a collider");
@@ -36,7 +36,7 @@ namespace SpellDuel.EditorTools
    }
    backdrop.SetActive(false);cam.farClipPlane=500;var middle=(map.World(0,0)+map.World(map.W-1,map.H-1))*.5f;cam.orthographic=true;cam.orthographicSize=map.W*3*.54f;cam.transform.position=middle+Vector3.up*160;cam.transform.rotation=Quaternion.Euler(90,0,0);Save(cam,"explore_map_top",1800,1800);
    root.SetActive(false);cam.orthographic=false;cam.fieldOfView=35;cam.backgroundColor=new Color(.13f,.17f,.20f);Catalogue(cam);
-   File.WriteAllText("snapshots/explore_scene_audit.json","{\"landmarks\":"+map.landmarks.Count+",\"props\":"+map.props.Count+",\"noColliders\":true,\"staticStates\":true,\"cachedFactories\":true,\"keyframes\":16}");
+   File.WriteAllText("snapshots/explore_scene_audit.json","{\"landmarks\":"+map.landmarks.Count+",\"props\":"+map.props.Count+",\"noColliders\":true,\"staticStates\":true,\"cachedFactories\":true,\"fullLakeWithEdgeOnlyStreaming\":true,\"keyframes\":16}");
   }
   static void ChooseView(ExploreMap map,ExLandmark l,Transform root,ref Vector3 at,ref Vector3 target)
   {

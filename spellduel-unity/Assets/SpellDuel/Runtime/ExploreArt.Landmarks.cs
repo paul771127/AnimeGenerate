@@ -6,6 +6,12 @@ namespace SpellDuel
   public static GameObject CreateLandmark(ExLandmark l,ExploreMap map)
   {
    if(l==null||map==null)return null;var root=Root("Landmark "+l.id);var center=map.World((l.rect.xMin+l.rect.xMax)/2,(l.rect.yMin+l.rect.yMax)/2);root.transform.localPosition=center;
+   // The cell streamer may omit enclosed wall cells. A lake must still have a continuous surface.
+   if(l.kind=="lake")
+   {
+    var water=Part(root.transform,"landmark/lakeSurface/"+l.id,b=>{for(int x=l.rect.xMin-1;x<=l.rect.xMax+1;x++)for(int z=l.rect.yMin-1;z<=l.rect.yMax+1;z++)if(map.InGrid(x,z)&&map.TerrainAt(x,z)==ExTerrain.Water){var at=map.World(x,z)-center;b.Quad(at+V(-1.5f,.012f,-1.5f),at+V(-1.5f,.012f,1.5f),at+V(1.5f,.012f,1.5f),at+V(1.5f,.012f,-1.5f),Color.white);}});
+    water.name="LakeSurface";water.GetComponent<Renderer>().sharedMaterial=LakeMaterial;
+   }
    // Only solid wall cells carry tall scenery. Never span a path with roofs or tree crowns.
    int placed=0;
    for(int x=l.rect.xMin-1;x<=l.rect.xMax+1;x++)for(int z=l.rect.yMin-1;z<=l.rect.yMax+1;z++)

@@ -846,3 +846,8 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - Docs/pending_preview/explore_jungle/refinement_before_after.jpg、water_fire_before_after.jpg 為前後對照；explore_tent_scale.png 使用原尺寸小怪／玩家。更新 fx_D3_fire.png，動畫 session 請重新取用。
 - 牆預算／格子範圍、無新增 Collider、切換狀態、mesh／material 快取與靜態圖像素規格通過。最新雙平台 41140438464 尚在執行，結果另補。
 - 美術預覽 workflow 改為完成目前執行的批次後才處理新批次，避免多 session 同時推送使原生圖片反覆取消；正式手機建置流程不變。
+
+### 2026-10-31 整合後湖心完整性
+- Claude 的 a5a4627 已接上美術與天空。讀取整合程式時發現牆格只顯示邊緣，湖心水格可能省略，因此 CreateLandmark(lake) 新增獨立 LakeSurface，依真正 Water 格補完整水面。沒有修改 SoloBattle.Explore.cs、地圖或碰撞。
+- 水面寫入深度並使用不透明表面色，避免和串流水格重疊時產生深淺格紋；波紋、睡蓮與岸邊依然在水面上。固定地圖水面網格共用快取。
+- 前一版 41140438464 的 Android 與 iOS 匯出成功；iOS IPA 編譯與上傳步驟均成功且產物存在，但整體工作在收尾因 a5a4627 新推送被標成取消。詳細證據保留在 platform_ci.json；湖心修正會再跑新的驗收。
