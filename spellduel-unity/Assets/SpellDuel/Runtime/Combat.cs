@@ -35,7 +35,7 @@ namespace SpellDuel
         public Vector3 chargeFrom;      // 開始詠唱時腳的位置（刺殺準備要站著不動）
         // 牧師的全隊輔助：攻擊 +、加速（集氣／蓄力）、持續回復、爆擊率 +（到期就失效）
         public float teamAtkUntil, teamAtk, teamHasteUntil, teamHaste, teamRegenUntil, teamRegen, teamCritUntil, teamCrit;
-        public float HasteMul(float now) => teamHasteUntil > now ? Mathf.Max(0.4f, 1f - teamHaste) : 1f;
+        public float HasteMul(float now) => Mathf.Max(0.4f, 1f - (teamHasteUntil > now ? teamHaste : 0f) - (killRushUntil > now ? Battle.KillRushHaste : 0f));   // 隊伍加速＋追獵（擊倒後加快）
         public float TeamCritAt(float now) => teamCritUntil > now ? teamCrit : 0f;
         public float OutMul(float now) => (evadeBoostUntil > now ? 1f + evadeBoost : 1f) * (prepUntil > now ? 1f + prepBonus : 1f) * (1f + chargeBonus) * RageMul * (teamAtkUntil > now ? 1f + teamAtk : 1f)
             * (lowMpBonus > 0f && maxMp > 0f && mp < maxMp * 0.3f ? 1f + lowMpBonus : 1f)       // 法師「孤注一擲」：MP 低於 30%
@@ -57,6 +57,11 @@ namespace SpellDuel
         public float venom, assassinate, vanish, knifeCdr;                        // 刺客：劇毒連刺、刺殺、遁影（秒數：伏擊後這段時間內下一次物理攻擊必閃）、飛刀節奏
         public float holySeal, martyr, zeal;                                      // 牧師：聖印、殉道、狂信
         public float bashGuard, sanctionCombo, critDmg, falconMark, petMp, falconAssault, falconPatrol, falconDiveReady, falconPatrolAt;
+        // 流派被動（Combat.Styles 區段）
+        public float styleThorns, executeDmg, firstStrike, statusAmp, hitStack, chainHit, killRush, killSoul, castShield, overhealShield;
+        public int stackCount; public float stackUntil, killRushUntil;
+        /// <summary>流派爆發技能的暫時加成（PassiveKind → 數值、到期時間）</summary>
+        public readonly Dictionary<PassiveKind, KeyValuePair<float, float>> styleBuffs = new Dictionary<PassiveKind, KeyValuePair<float, float>>();
         public float closeInstinct;     // 刺客「近身本能」等級（0＝沒點）        // 進階職業：盾擊格擋、制裁連斬、爆擊傷害、鷹眼標記、契約魔力
         public int basicHits, venomStacks, seals;
         // 刺殺流派：有沒有被敵人看見（SoloBattle 每幀設定：對戰＝對手的鏡頭有沒有拍到我；電腦／Boss／小怪＝我在不在它的視野內）、這次蓄力累計躲開視線幾秒
@@ -2740,6 +2745,7 @@ namespace SpellDuel
             f.mp -= mpCost;
             if (hpCost > 0) { f.hp = Mathf.Max(1f, f.hp - hpCost); Emit("buff", f.Chest, new Color(1f, 0.4f, 0.4f), $"殉道 -{hpCost} HP"); }
             f.cooldownUntil[s.id] = now + s.cooldown * (s.cls == "basic" ? f.basicCdMul : f.cdMul * (f.focusUntil > now ? 0.5f : 1f)) * CdFactor(f);   // 普攻看敏捷、技能看精神
+            { float cs = Sty(f, PassiveKind.CastShield); if (cs > 0f && s.cls != "basic") GrantShield(f, f.maxHp * cs, CastShieldDur, "施法護盾"); }   // 流派被動：每放一個技能得到護盾
             f.charging = null;
             if (s.id == "slash" || s.id == "nv_swing")   // 初心者的木棍揮擊和斬擊一樣砍前方半球
             {
@@ -2899,6 +2905,7 @@ namespace SpellDuel
 
         void CastSelf(Fighter f, SkillDef s)
         {
+            if (s.self == SelfKind.StyleBuff) { CastStyleBuff(f, s); return; }   // 流派爆發（只作用在自己）
             // 牧師的輔助技能：作用在所有己方單位（自己＋合作隊友）
             if (s.id == "prayheal" && f.isPlayer) { CastPrayHeal(f, s); return; }   // 治療術：補自己＋放出治療光球給隊友（Combat.Friends.cs）
             if ((s.cls == "priest" && s.self != SelfKind.Barrier) || s.team)
@@ -3030,7 +3037,7 @@ namespace SpellDuel
             string by = from != null ? $"{from}的" : "";
             switch (s.self)
             {
-                case SelfKind.Heal: if (!t.Alive) return; if (from == null) player.healDone += Mathf.Min(s.heal, t.maxHp - t.hp); t.hp = Mathf.Min(t.maxHp, t.hp + s.heal); Emit("heal", t.Chest, s.color, $"{by}{s.name} +{s.heal}"); return;
+                case SelfKind.Heal: if (!t.Alive) return; if (from == null) { player.healDone += Mathf.Min(s.heal, t.maxHp - t.hp); Overheal(t, t.hp + s.heal - t.maxHp); } t.hp = Mathf.Min(t.maxHp, t.hp + s.heal); Emit("heal", t.Chest, s.color, $"{by}{s.name} +{s.heal}"); return;
                 case SelfKind.Armor: t.armorUntil = now + s.buffDur; t.armorReduce = s.buffReduce; Emit("buff", t.Chest, s.color, by + s.name); return;
                 case SelfKind.Cleanse:
                     t.dots.Clear(); t.snaredUntil = 0f; t.blindUntil = 0f; t.silencedUntil = 0f;
@@ -3054,7 +3061,7 @@ namespace SpellDuel
                 {
                     if (!t.Alive) return;   // 倒下的人只有復活術能救起來
                     float amt = Mathf.Round(t.maxHp * s.buffAmount / 100f);
-                    if (from == null) player.healDone += Mathf.Min(amt, t.maxHp - t.hp);
+                    if (from == null) { player.healDone += Mathf.Min(amt, t.maxHp - t.hp); Overheal(t, t.hp + amt - t.maxHp); }
                     t.hp = Mathf.Min(t.maxHp, t.hp + amt);
                     Emit("heal", t.Chest, s.color, $"{by}{s.name} +{amt:0}");
                     return;
@@ -4210,7 +4217,89 @@ namespace SpellDuel
                 m *= 1f + o.assassinate;
                 if (t.maxHp > 0f && t.hp < t.maxHp * 0.4f) { m *= 1f + o.assassinate; Emit("crit", t.Chest, s.color, "斬殺！"); }
             }
+            m *= StyleMul(o, t);
             return Mathf.RoundToInt(dmg * m);
+        }
+
+        // ------------------------------------------------------------ 流派被動（使用者要求：進階職業要有不同流派的玩法）
+        public const int HitStackMax = 10; public const float HitStackWindow = 3f;
+        public const float ChainRange = 4f, ChainShare = 0.6f, KillRushHaste = 0.3f, KillSoulMp = 3f, KillSoulHp = 0.01f, CastShieldDur = 4f, ShieldCapPct = 0.4f;
+        /// <summary>流派被動的目前數值：技能樹＋流派爆發技能的暫時加成</summary>
+        float Sty(Fighter f, PassiveKind k)
+        {
+            float v = k switch
+            {
+                PassiveKind.Thorns => f.styleThorns, PassiveKind.Execute => f.executeDmg, PassiveKind.FirstStrike => f.firstStrike, PassiveKind.StatusAmp => f.statusAmp,
+                PassiveKind.HitStack => f.hitStack, PassiveKind.ChainHit => f.chainHit, PassiveKind.KillRush => f.killRush, PassiveKind.KillSoul => f.killSoul,
+                PassiveKind.CastShield => f.castShield, PassiveKind.OverhealShield => f.overhealShield, _ => 0f,
+            };
+            if (f.styleBuffs.TryGetValue(k, out var b) && b.Value > now) v += b.Key;
+            return v;
+        }
+        void CastStyleBuff(Fighter f, SkillDef s)
+        {
+            f.styleBuffs[s.styleKind] = new KeyValuePair<float, float>(s.styleAmt, now + s.buffDur);
+            Emit("buff", f.Chest, s.color, $"{s.name}（{s.buffDur:0} 秒）");
+        }
+        float StyleMul(Fighter o, Fighter t)
+        {
+            float m = 1f;
+            if (t.maxHp > 0f)
+            {
+                { float ex = Sty(o, PassiveKind.Execute); if (ex > 0f && t.hp < t.maxHp * 0.3f) m *= 1f + ex; }      // 斬殺
+                { float fs = Sty(o, PassiveKind.FirstStrike); if (fs > 0f && t.hp >= t.maxHp * 0.9f) m *= 1f + fs; }   // 先發制人
+            }
+            float sa = Sty(o, PassiveKind.StatusAmp); if (sa > 0f && (t.snaredUntil > now || t.dots.Count > 0 || t.blindUntil > now || t.markedUntil > now)) m *= 1f + sa;   // 趁虛而入
+            float hs = Sty(o, PassiveKind.HitStack); if (hs > 0f && o.stackUntil > now) m *= 1f + hs * o.stackCount;   // 連擊疊層
+            return m;
+        }
+        /// <summary>命中後：疊層、連鎖（PostHit 呼叫）</summary>
+        void StyleOnHit(Fighter o, Fighter t, SkillDef s, float dmg)
+        {
+            if (Sty(o, PassiveKind.HitStack) > 0f)
+            {
+                if (o.stackUntil <= now) o.stackCount = 0;
+                o.stackCount = Mathf.Min(HitStackMax, o.stackCount + 1); o.stackUntil = now + HitStackWindow;
+            }
+            if (s.id != "chainhit" && s.cls != "basic" && s.cls != "pet" && dmg > 0f && t != null && rng.NextDouble() < Sty(o, PassiveKind.ChainHit))
+            {
+                Fighter next = null; float bd = ChainRange;
+                foreach (var v in FoesOf(o)) { if (v == t) continue; float d = FlatDistance(v.Feet, t.Feet); if (d < bd) { bd = d; next = v; } }
+                if (next != null)
+                {
+                    var cs = Skills.All["chainhit"]; int cd = Mathf.Max(1, Mathf.RoundToInt(dmg * ChainShare)); var nn = next;
+                    Emit("buff", t.Chest, s.color, "連鎖！");
+                    After(0.12f, () => { if (nn.Alive && o.Alive) HitFoe(o, nn, cs, cd); });
+                }
+            }
+        }
+        /// <summary>護盾：取比較大的那個（不疊加），最多最大 HP 的 40%</summary>
+        void GrantShield(Fighter f, float amount, float dur, string label)
+        {
+            int a = Mathf.RoundToInt(Mathf.Min(amount, f.maxHp * ShieldCapPct)); if (a <= 0) return;
+            if (f.shieldUntil > now && f.shieldLeft >= a) { f.shieldUntil = Mathf.Max(f.shieldUntil, now + dur); return; }
+            f.shieldLeft = a; f.shieldUntil = Mathf.Max(f.shieldUntil, now + dur);
+            if (label != null) Emit("buff", f.Chest, new Color(0.6f, 0.85f, 1f), $"{label}（護盾 {a}）");
+        }
+        /// <summary>我擊倒敵人：追獵、吸魂</summary>
+        void StyleOnKill(Fighter o)
+        {
+            if (o == null || !o.Alive) return;
+            float kr = Sty(o, PassiveKind.KillRush), ks = Sty(o, PassiveKind.KillSoul);
+            if (kr > 0f) { o.killRushUntil = now + kr; Emit("buff", o.Chest, new Color(0.5f, 1f, 0.7f), $"追獵！{kr:0.#} 秒加快"); }
+            if (ks > 0f)
+            {
+                o.mp = Mathf.Min(o.maxMp, o.mp + ks * KillSoulMp);
+                float h = Mathf.Min(o.maxHp - o.hp, o.maxHp * ks * KillSoulHp); o.hp += h;
+                Emit("heal", o.Chest, new Color(0.7f, 0.6f, 1f), $"吸魂 +{ks * KillSoulMp:0} MP");
+            }
+        }
+        /// <summary>溢療護盾：我放的治療補超過上限的部分</summary>
+        void Overheal(Fighter t, float overflow)
+        {
+            float ov = Sty(player, PassiveKind.OverhealShield);
+            if (ov <= 0f || overflow <= 0f || !t.Alive) return;
+            GrantShield(t, overflow * ov, 6f, "溢光聖盾");
         }
         // ------------------------------------------------------------ 法師「風刃迴旋」：放風刃時，另一把風刃在身邊轉圈，碰到的敵人受傷
         public class WindOrbit { public Fighter owner; public SkillDef skill; public float until, angle; public int dmg; public readonly Dictionary<Fighter, float> lastHit = new Dictionary<Fighter, float>(); public Vector3 pos; }
@@ -4253,6 +4342,7 @@ namespace SpellDuel
         /// <summary>命中後：奧術回響、奧術迴路、飲血、劇毒、聖印、飛刀節奏、寒冰</summary>
         void PostHit(Fighter o, Fighter t, SkillDef s, float dmg)
         {
+            if (o != null && s != null) StyleOnHit(o, t, s, dmg);   // 流派被動：疊層、連鎖
             if (s == null) return;
             // 法師「奧術爆裂」「火球爆裂」：奧術飛彈／火球命中爆炸，周圍的其他敵人受到一部分傷害
             float burstK = s.id == "na_mage" ? o.arcaneBurst : s.id == "fire" ? o.fireBurst : 0f;
@@ -4514,7 +4604,14 @@ namespace SpellDuel
                 case EffectKind.Mark: target.markedUntil = now + dur; Emit("effect", at, new Color(1f, 0.6f, 0.2f), "懲戒：受到傷害 +20%"); break;
                 case EffectKind.Burn: AddDot(target, dps, dur); Emit("effect", at, new Color(1f, 0.5f, 0.15f), "灼燒"); break;
             }
+            bool wasAlive = target.Alive; float hp0 = target.hp;
             if (dmg > 0 || note == null) Damage(target, dmg, "hit", at);
+            // 流派被動：反傷（被打中，把扣掉的 HP 一部分反彈給攻擊者）、擊倒（追獵、吸魂）
+            float lost = hp0 - target.hp;
+            float th = Sty(target, PassiveKind.Thorns);
+            if (th > 0f && lost > 0f && by != null && by != target && by.Alive && !(remoteEnemy && by == enemy) && FoeSide(by) != FoeSide(target))
+            { Damage(by, Mathf.Max(1f, Mathf.Round(lost * th)), "thorns", by.Chest); }
+            if (wasAlive && !target.Alive && by == player) StyleOnKill(player);
         }
 
         void Damage(Fighter f, float dmg, string kind, Vector3? at = null)

@@ -75,6 +75,8 @@ namespace SpellDuel
         KunaiFire, KunaiIce, KunaiBolt, DmgShield,   // 忍者：苦無附帶屬性；審判者：傷害轉護盾
         Accuracy,                                    // 命中率（抵掉對方的閃避）
         BasicShield, HitShield,                      // 劍士系列（取代吸血）：普攻傷害轉護盾、所有傷害轉護盾
+        // 流派被動（使用者要求：進階職業要有不同流派的玩法）：反傷、斬殺、先發、趁虛、連擊疊層、連鎖、追獵、吸魂、施法護盾、溢療護盾
+        Thorns, Execute, FirstStrike, StatusAmp, HitStack, ChainHit, KillRush, KillSoul, CastShield, OverhealShield,
     }
 
     public class TreeNode
@@ -380,6 +382,12 @@ namespace SpellDuel
                     FLearn("pa_lay", "layhands", 6, 4, "pa_atk"),
                     FMod("pa_lay2", "聖療強化", "layhands", ModField.BuffAmount, 2f, 5, 6, 5, "pa_lay"),
                     FMod("pa_lay3", "聖療熟練", "layhands", ModField.Cooldown, 0.06f, 5, 5, 4, "pa_lay"),
+                    // 流派被動（使用者要求：不同流派的玩法）
+                    FPas("pa_thorns", "聖光荊棘", PassiveKind.Thorns, 0.08f, 5, 1, 6, "pa_blade3"),
+                    FLearn("pa_burst", "retribution", 1, 7, "pa_thorns"),
+                    FMod("pa_burst2", "爆發延長", "retribution", ModField.BuffDur, 1f, 5, 1, 8, "pa_burst"),
+                    FPas("pa_cshield", "信仰之盾", PassiveKind.CastShield, 0.02f, 5, 3, 6, "pa_cons2"),
+                    FPas("pa_exec", "神聖裁決", PassiveKind.Execute, 0.08f, 5, 5, 6, "pa_sanc3"),
                 };
                 // 劍仙：三個流派——輸出（劍來、御劍術、萬劍歸宗）／防禦（劍罡護體）／輔助（劍陣）
                 case "berserker": return new List<TreeNode>
@@ -412,6 +420,11 @@ namespace SpellDuel
                     FPas("sx_leech", "劍氣凝盾", PassiveKind.HitShield, 0.02f, 5, 6, 2, "sx_jz"),   // 使用者要求：取代劍氣吸血 → 造成的傷害每級 2%（滿級 10%）轉成護盾；御劍、萬劍多段命中也算。id 沿用
                     FMod("sx_jzcd", "陣法回氣", "jianzhen", ModField.Cooldown, 0.08f, 5, 5, 3, "sx_jz2"),
                     FPas("sx_mp", "劍氣回流", PassiveKind.MpOnHit, 1f, 5, 6, 3, "sx_leech"),
+                    // 流派被動（使用者要求：不同流派的玩法）
+                    FPas("sx_stack", "劍勢", PassiveKind.HitStack, 0.006f, 5, 1, 6, "sx_yjkt3"),
+                    FPas("sx_chain", "劍氣連鎖", PassiveKind.ChainHit, 0.06f, 5, 5, 6, "sx_jzcd"),
+                    FLearn("sx_burst", "swordfervor", 5, 7, "sx_chain"),
+                    FMod("sx_burst2", "爆發延長", "swordfervor", ModField.BuffDur, 1f, 5, 5, 8, "sx_burst"),
                 };
                 case "marksman": return new List<TreeNode>
                 {
@@ -441,6 +454,12 @@ namespace SpellDuel
                     FLearn("mk_blast", "blastarrow", 6, 4, "mk_bspd"),
                     FMod("mk_blast2", "高爆箭頭", "blastarrow", ModField.Damage, 0.1f, 5, 6, 5, "mk_blast"),
                     FMod("mk_blast3", "裝填熟練", "blastarrow", ModField.Cooldown, 0.06f, 5, 5, 4, "mk_blast"),
+                    // 流派被動（使用者要求：不同流派的玩法）
+                    FPas("mk_first", "先發制人", PassiveKind.FirstStrike, 0.12f, 5, 1, 6, "mk_head3"),
+                    FPas("mk_amp", "趁虛而入", PassiveKind.StatusAmp, 0.05f, 5, 3, 6, "mk_scat2"),
+                    FPas("mk_exec", "終結射擊", PassiveKind.Execute, 0.08f, 5, 5, 6, "mk_blast3"),
+                    FLearn("mk_burst", "killinstinct", 5, 7, "mk_exec"),
+                    FMod("mk_burst2", "爆發延長", "killinstinct", ModField.BuffDur, 1f, 5, 5, 8, "mk_burst"),
                 };
                 case "ranger": return new List<TreeNode>
                 {
@@ -471,6 +490,12 @@ namespace SpellDuel
                     FMod("rg_mine4", "快速佈雷", "landmine", ModField.Cooldown, 0.06f, 5, 5, 5, "rg_mine2"),
                     FMod("rg_haste3", "疾風連起", "rangerhaste", ModField.Cooldown, 0.06f, 4, 4, 5, "rg_haste2"),
                     FMod("rg_hawk3", "鷹眼持久", "hawkeye", ModField.BuffDur, 1f, 4, 2, 5, "rg_hawk2"),
+                    // 流派被動（使用者要求：不同流派的玩法）
+                    FPas("rg_chainshot", "跳彈", PassiveKind.ChainHit, 0.06f, 5, 1, 6, "rg_patrol"),
+                    FPas("rg_rush", "追獵", PassiveKind.KillRush, 1f, 5, 3, 6, "rg_bspd"),
+                    FLearn("rg_burst", "huntfrenzy", 3, 7, "rg_rush"),
+                    FMod("rg_burst2", "爆發延長", "huntfrenzy", ModField.BuffDur, 1f, 5, 3, 8, "rg_burst"),
+                    FPas("rg_amp", "獵物陷阱", PassiveKind.StatusAmp, 0.05f, 5, 5, 6, "rg_mine4"),
                 };
                 case "archmage": return new List<TreeNode>
                 {
@@ -503,6 +528,12 @@ namespace SpellDuel
                     // 追加（使用者要求：技能多樣、各進階職業點滿總點數約 100）
                     FMod("am_break3", "崩滅連發", "arcanebreak", ModField.Cooldown, 0.06f, 5, 0, 5, "am_break2"),
                     FMod("am_haste3", "時流延續", "arcanehaste", ModField.BuffDur, 1f, 5, 5, 5, "am_haste2"),
+                    // 流派被動（使用者要求：不同流派的玩法）
+                    FPas("am_chain", "連鎖閃電", PassiveKind.ChainHit, 0.06f, 5, 1, 6, "am_star2"),
+                    FLearn("am_burst", "chainstorm", 1, 7, "am_chain"),
+                    FMod("am_burst2", "爆發延長", "chainstorm", ModField.BuffDur, 1f, 5, 1, 8, "am_burst"),
+                    FPas("am_amp", "元素崩解", PassiveKind.StatusAmp, 0.05f, 5, 3, 6, "am_wyrm3"),
+                    FPas("am_soul", "魔力汲取", PassiveKind.KillSoul, 1f, 5, 5, 6, "am_haste3"),
                 };
                 case "summoner": return new List<TreeNode>
                 {
@@ -534,6 +565,12 @@ namespace SpellDuel
                     FMod("su_cheer3", "鼓舞延續", "pactcheer", ModField.BuffDur, 1f, 5, 5, 4, "su_cheer"),
                     FMod("su_ice2", "冰靈強化", "icespirit", ModField.Damage, 0.1f, 5, 1, 4, "su_ice"),
                     FMod("su_fairy2", "妖精祝福", "fairy", ModField.Heal, 0.1f, 5, 4, 4, "su_fairy"),
+                    // 流派被動（使用者要求：不同流派的玩法）
+                    FPas("su_soul", "靈魂收割", PassiveKind.KillSoul, 1f, 5, 0, 6, "su_bolt3"),
+                    FLearn("su_burst", "soulharvest", 0, 7, "su_soul"),
+                    FMod("su_burst2", "爆發延長", "soulharvest", ModField.BuffDur, 1f, 5, 0, 8, "su_burst"),
+                    FPas("su_cshield", "契約屏障", PassiveKind.CastShield, 0.02f, 5, 3, 6, "su_spike2"),
+                    FPas("su_chain", "靈魂連鎖", PassiveKind.ChainHit, 0.06f, 5, 6, 6, "su_cheer2"),
                 };
                 case "ninja": return new List<TreeNode>
                 {
@@ -564,6 +601,12 @@ namespace SpellDuel
                     FMod("nj_fu2", "真空刃強化", "futon", ModField.Damage, 0.1f, 5, 5, 4, "nj_fu"),
                     FMod("nj_fu3", "疾風印", "futon", ModField.Cooldown, 0.06f, 5, 6, 4, "nj_fu"),
                     FMod("nj_rai2", "雷遁強化", "raiton", ModField.Damage, 0.1f, 2, 2, 4, "nj_rai"),
+                    // 流派被動（使用者要求：不同流派的玩法）
+                    FPas("nj_rush", "瞬身連殺", PassiveKind.KillRush, 1f, 5, 1, 6, "nj_sui3"),
+                    FPas("nj_stack", "連環忍術", PassiveKind.HitStack, 0.006f, 5, 3, 6, "nj_crit"),
+                    FLearn("nj_burst", "renjutsu", 3, 7, "nj_stack"),
+                    FMod("nj_burst2", "爆發延長", "renjutsu", ModField.BuffDur, 1f, 5, 3, 8, "nj_burst"),
+                    FPas("nj_first", "暗襲", PassiveKind.FirstStrike, 0.12f, 5, 5, 6, "nj_fu2"),
                 };
                 case "shadowdancer": return new List<TreeNode>
                 {
@@ -595,6 +638,12 @@ namespace SpellDuel
                     FMod("sd_veil2", "濃影", "nightveil", ModField.BuffReduce, 0.03f, 5, 4, 5, "sd_veil"),
                     FMod("sd_veil3", "長夜", "nightveil", ModField.BuffDur, 0.6f, 5, 5, 4, "sd_veil"),
                     FMod("sd_kill2", "影殺強化", "shadowkill", ModField.Damage, 0.1f, 5, 0, 4, "sd_kill"),
+                    // 流派被動（使用者要求：不同流派的玩法）
+                    FPas("sd_exec", "致命一擊", PassiveKind.Execute, 0.08f, 5, 0, 6, "sd_kill2"),
+                    FLearn("sd_burst", "reaperdance", 0, 7, "sd_exec"),
+                    FMod("sd_burst2", "爆發延長", "reaperdance", ModField.BuffDur, 1f, 5, 0, 8, "sd_burst"),
+                    FPas("sd_amp", "毒蝕", PassiveKind.StatusAmp, 0.05f, 5, 3, 6, "sd_dart3"),
+                    FPas("sd_rush", "影步", PassiveKind.KillRush, 1f, 5, 5, 6, "sd_veil3"),
                 };
                 case "bishop": return new List<TreeNode>
                 {
@@ -625,6 +674,12 @@ namespace SpellDuel
                     FMod("bi_pillar2", "光柱強化", "lightpillar", ModField.Damage, 0.1f, 5, 6, 5, "bi_pillar"),
                     FMod("bi_pillar3", "速禱光柱", "lightpillar", ModField.Charge, 0.08f, 5, 5, 4, "bi_pillar"),
                     FMod("bi_bar3", "障壁延長", "holybarrier", ModField.BuffDur, 2f, 2, 4, 4, "bi_bar"),
+                    // 流派被動（使用者要求：不同流派的玩法）
+                    FPas("bi_over", "溢光聖盾", PassiveKind.OverhealShield, 0.15f, 5, 2, 6, "bi_grace2"),
+                    FLearn("bi_burst", "graceflow", 2, 7, "bi_over"),
+                    FMod("bi_burst2", "爆發延長", "graceflow", ModField.BuffDur, 1f, 5, 2, 8, "bi_burst"),
+                    FPas("bi_cshield", "禱告庇護", PassiveKind.CastShield, 0.02f, 5, 4, 6, "bi_bar3"),
+                    FPas("bi_soul", "聖光收割", PassiveKind.KillSoul, 1f, 5, 6, 6, "bi_pillar2"),
                 };
                 case "inquisitor": return new List<TreeNode>
                 {
@@ -653,6 +708,12 @@ namespace SpellDuel
                     FLearn("iq_verdict", "verdict", 4, 4, "iq_shield"),
                     FMod("iq_verdict2", "裁決強化", "verdict", ModField.Damage, 0.1f, 5, 4, 5, "iq_verdict"),
                     FMod("iq_verdict3", "速審", "verdict", ModField.Cooldown, 0.06f, 5, 5, 4, "iq_verdict"),
+                    // 流派被動（使用者要求：不同流派的玩法）
+                    FPas("iq_exec", "異端裁決", PassiveKind.Execute, 0.08f, 5, 1, 6, "iq_fire2"),
+                    FPas("iq_stack", "狂信連擊", PassiveKind.HitStack, 0.006f, 5, 3, 6, "iq_atk"),
+                    FPas("iq_thorns", "殉道之火", PassiveKind.Thorns, 0.08f, 5, 5, 6, "iq_verdict3"),
+                    FLearn("iq_burst", "martyrflame", 5, 7, "iq_thorns"),
+                    FMod("iq_burst2", "爆發延長", "martyrflame", ModField.BuffDur, 1f, 5, 5, 8, "iq_burst"),
                 };
             }
             return new List<TreeNode>();
@@ -759,6 +820,16 @@ namespace SpellDuel
                         PassiveKind.BasicShield => $"普攻造成傷害的 {v * 100:0}% 轉成自己的護盾（6 秒，最多最大 HP 的 40%；一揮砍到多隻只算一次）",
                         PassiveKind.HitShield => $"所有攻擊造成傷害的 {v * 100:0}% 轉成自己的護盾（6 秒，最多最大 HP 的 40%）",
                         PassiveKind.CloseInstinct => $"2m 內有敵人時：受到的傷害 −{v * Battle.CloseReducePer * 100:0}%、閃避率 +{v * Battle.CloseEvadePer * 100:0}%（持續傷害不減）",
+                        PassiveKind.Thorns => $"被打中時，把受到傷害的 {v * 100:0}% 反彈給攻擊你的敵人（越扛越痛）",
+                        PassiveKind.Execute => $"打 HP 低於 30% 的敵人：傷害 +{v * 100:0}%",
+                        PassiveKind.FirstStrike => $"打 HP 還有 90% 以上的敵人：傷害 +{v * 100:0}%（開場爆發）",
+                        PassiveKind.StatusAmp => $"打身上有異常狀態（定身、中毒／灼燒、致盲、懲戒）的敵人：傷害 +{v * 100:0}%",
+                        PassiveKind.HitStack => $"連續命中疊層（3 秒內沒打中就歸零）：每層傷害 +{v * 100:0.#}%，最多 {Battle.HitStackMax} 層（+{v * Battle.HitStackMax * 100:0}%）",
+                        PassiveKind.ChainHit => $"技能命中時 {v * 100:0}% 機率連鎖：彈到 {Battle.ChainRange:0}m 內另一個敵人，造成 {Battle.ChainShare * 100:0}% 傷害",
+                        PassiveKind.KillRush => $"擊倒敵人後 {v:0.#} 秒內加快 {Battle.KillRushHaste * 100:0}%（蓄力、冷卻）：越殺越快",
+                        PassiveKind.KillSoul => $"擊倒敵人時回復 {v * Battle.KillSoulMp:0} MP、最大 HP 的 {v * Battle.KillSoulHp * 100:0}%",
+                        PassiveKind.CastShield => $"每放一個技能，得到最大 HP {v * 100:0}% 的護盾（{Battle.CastShieldDur:0} 秒）",
+                        PassiveKind.OverhealShield => $"自己放的治療溢出（補超過 HP 上限）的 {v * 100:0}% 變成護盾（最多最大 HP 的 40%）",
                         _ => $"HP 低於 30% 時受到的傷害 -{v * 100:0}%",
                     };
             }
@@ -1514,6 +1585,8 @@ namespace SpellDuel
             f.bashGuard = Passive(PassiveKind.BashGuard); f.sanctionCombo = Passive(PassiveKind.SanctionCombo); f.critDmg = Passive(PassiveKind.CritDmg);
             f.falconMark = Passive(PassiveKind.FalconMark); f.falconAssault = Passive(PassiveKind.FalconAssault); f.falconPatrol = Passive(PassiveKind.FalconPatrol); f.petMp = Passive(PassiveKind.PetMp); f.closeInstinct = Passive(PassiveKind.CloseInstinct);
             var bs = adv == "ninja" ? Skills.All["na_kunai"] : Skills.BasicOf(cls); f.basic = bs != null ? ModdedSkill(bs.id) : null;   // 普攻也吃技能樹（忍者：苦無）
+            f.styleThorns = Passive(PassiveKind.Thorns); f.executeDmg = Passive(PassiveKind.Execute); f.firstStrike = Passive(PassiveKind.FirstStrike); f.statusAmp = Passive(PassiveKind.StatusAmp); f.hitStack = Passive(PassiveKind.HitStack);
+            f.chainHit = Passive(PassiveKind.ChainHit); f.killRush = Passive(PassiveKind.KillRush); f.killSoul = Passive(PassiveKind.KillSoul); f.castShield = Passive(PassiveKind.CastShield); f.overhealShield = Passive(PassiveKind.OverhealShield);
             f.kunaiFire = Passive(PassiveKind.KunaiFire); f.kunaiIce = Passive(PassiveKind.KunaiIce); f.kunaiBolt = Passive(PassiveKind.KunaiBolt); f.dmgShield = Passive(PassiveKind.DmgShield); f.basicShield = Passive(PassiveKind.BasicShield); f.hitShield = Passive(PassiveKind.HitShield);
             // 衍生技能（連環陷阱、回響火球、翻滾箭…）：跟著原本那招的強化等級
             f.derived.Clear(); foreach (var did in InheritFrom.Keys) { var ds = ModdedSkill(did); if (ds != null) f.derived[did] = ds; }

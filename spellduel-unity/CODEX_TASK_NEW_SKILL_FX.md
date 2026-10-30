@@ -114,6 +114,22 @@ Claude 盤點了所有玩家技能，下面這些**沒有圖示**（`SkillIcons.
 
 **注意**：獵人的「精神集中」和牧師的「精準聖歌」程式裡用了同一個 id `focus`（既有 bug，Claude 另外處理；處理完 id 可能會變，請以 `Skills.cs` 為準）。圖示請先依 `SkillDef.cls` 分開畫（`archer`／`priest`）。
 
+## B4. 流派被動與流派爆發技能（使用者要求「進階職業要有不同流派的玩法、技能越多樣越好」）
+
+Claude 新增了 10 種流派被動（各進階職業技能樹最下面一排），以及每個進階職業 1 招「流派爆發」（短時間大幅強化其中一種）。現在只有浮動文字，請做特效（新介面，Claude 接線）：
+
+| 機制 | 觸發 | 要做的介面／特效 |
+|---|---|---|
+| 連鎖（ChainHit） | 技能命中後彈到 4m 內另一個敵人 | `SpellFx.ChainArc(Vector3 fromWorld, Vector3 toWorld, Color c)`：0.15 秒的電弧／光線（劍仙偏劍氣、大魔導士偏閃電、召喚師偏靈魂、遊俠偏跳彈，用顏色或 skillId 區分即可） |
+| 反傷（Thorns） | 被打中時反彈 | `SpellFx.Thorns(Transform victim, Vector3 attackerWorld)`：從自己身上射回攻擊者的短刺光 |
+| 連擊疊層（HitStack） | 每次命中 +1 層（最多 10） | `SpellFx.StackAura(Transform owner, int stacks)`：身邊的層數光點／火焰，0 層消失；第一人稱放畫面邊角 |
+| 斬殺（Execute） | 打 HP < 30% 的敵人 | 命中時目標身上紅色斬痕（`SpellFx.ExecuteHit(Vector3 atWorld)`） |
+| 先發制人（FirstStrike） | 打 HP ≥ 90% 的敵人 | 命中時白色衝擊環（`SpellFx.FirstStrikeHit(Vector3 atWorld)`） |
+| 追獵（KillRush）／吸魂（KillSoul） | 擊倒敵人 | `SpellFx.KillRush(Transform owner)` 綠色疾風、`SpellFx.SoulDrain(Vector3 fromWorld, Transform owner)` 紫色靈魂飛回身上 |
+| 施法護盾、溢療護盾 | 放技能／治療溢出 | 沿用一般護盾外觀即可；溢療護盾請帶金色 |
+
+流派爆發技能（圖示＋施放特效，持續中用 **C** 的 `TeamBuffAura` 介面顯示）：`retribution` 制裁之怒（聖騎士）、`swordfervor` 劍意沸騰（劍仙）、`killinstinct` 獵殺本能（神射手）、`huntfrenzy` 狩獵狂熱（遊俠）、`chainstorm` 雷鏈風暴（大魔導士）、`soulharvest` 靈魂豐收（召喚師）、`renjutsu` 連環印（忍者）、`reaperdance` 死神之舞（影舞者）、`graceflow` 恩典滿溢（主教）、`martyrflame` 殉道烈焰（審判者）。
+
 ## C. 隊伍增益共用介面（4、5、7、8 用）
 
 - `void SpellFx.TeamBuffCast(string skillId, Transform owner)`：施放瞬間的特效（自己和每個吃到增益的隊友都會各呼叫一次）。
@@ -123,8 +139,8 @@ Claude 盤點了所有玩家技能，下面這些**沒有圖示**（`SkillIcons.
 
 ## D. 技能圖示
 
-`SkillIcons.cs` 加這 9 個 id，以及 B2、B3 表格裡的 id 的圖示（照現有 `case "rollshot": RollShot(cv, sc)` 的寫法）：`starfall`、`arcanebreak`、`arcanewyrm`（龍頭）、`arcanehaste`、`elementward`、`landmine`、`rangerhaste`、`hawkeye`、`falcondive`。
+`SkillIcons.cs` 加這 9 個 id，以及 B2、B3、B4 裡的 id 的圖示（照現有 `case "rollshot": RollShot(cv, sc)` 的寫法）：`starfall`、`arcanebreak`、`arcanewyrm`（龍頭）、`arcanehaste`、`elementward`、`landmine`、`rangerhaste`、`hawkeye`、`falcondive`。
 
 ## 交付順序
 
-**1（光龍）→ 6（地雷）→ 9（獵鷹俯衝）→ C（4、5、7、8）→ 2、3 → B2 → B3 → D**。每做完一項就推，Claude 會接線。
+**1（光龍）→ 6（地雷）→ 9（獵鷹俯衝）→ C（4、5、7、8）→ 2、3 → B2 → B3 → B4 → D**。每做完一項就推，Claude 會接線。

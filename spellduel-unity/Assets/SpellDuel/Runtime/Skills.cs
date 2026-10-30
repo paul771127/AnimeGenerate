@@ -8,7 +8,9 @@ namespace SpellDuel
         // 進階職業
         Oath, Frenzy, Undying, DeadMark, SwordCome, FlyingSwords, RollShot, ManaShield, Pet, Detonate, Substitute, Clone, Dance, Fog, Revive, HealPct, TeamShield, Capture, ShadowClone, Barrier,
         // 牧師的全隊輔助（時間、數值看技能樹）
-        TeamAtk, TeamHaste, TeamRegen, TeamCrit }
+        TeamAtk, TeamHaste, TeamRegen, TeamCrit,
+        // 流派爆發：短時間強化一種流派被動（styleKind、styleAmt；SkillDef.buffDur 秒）
+        StyleBuff }
     public enum EffectKind { None, Dot, Blind, Snare, Mark, Burn }
 
     /// <summary>
@@ -58,6 +60,7 @@ namespace SpellDuel
         public bool pierce;             // 穿透：打中小怪不會消失（貫穿狙擊）
         public bool steer;              // 操控：飛行中跟著施放者的準心轉向（大魔導士「操魔光龍」）
         public bool execute;            // 處決：目標 HP 低於 25% 時傷害 ×3
+        public PassiveKind styleKind; public float styleAmt;   // SelfKind.StyleBuff：buffDur 秒內這個流派被動 +styleAmt
         public string petKind; public float petLife, petInterval = 1.5f, petRange = 6f; public int petHp;   // 召喚物
 
         public float MaxTravel => rangeMax + 1f;
@@ -378,6 +381,17 @@ namespace SpellDuel
             // 審判者
             P(new SkillDef { adv = "inquisitor", id = "holyfire", cls = "priest", name = "聖火", type = SkillType.Projectile, color = C("#f97316"), cost = 25, damage = 20, charge = 0.8f, cooldown = 5f, speed = 11f, radius = 0.1f, rangeMax = 10f, effect = EffectKind.Burn, effectDps = 5f, effectDur = 4f, desc = "射出聖火：命中灼燒 4 秒" });
             P(new SkillDef { adv = "inquisitor", fromAbove = true, dropHeight = 6f, id = "verdict", cls = "priest", name = "裁決之錘", type = SkillType.Projectile, color = C("#fbbf24"), cost = 40, damage = 55, charge = 1.6f, cooldown = 12f, speed = 10f, radius = 0.7f, rangeMax = 10f, effect = EffectKind.Snare, effectDur = 1.5f, desc = "巨大的光之錘從目標上方砸下：重創並暈眩 1.5 秒" });
+            // ---------------------------------------------------------- 流派爆發（使用者要求：技能越多樣越好）：短時間強化一種流派
+            P(new SkillDef { adv = "paladin", id = "retribution", cls = "swordsman", name = "制裁之怒", type = SkillType.Self, self = SelfKind.StyleBuff, styleKind = PassiveKind.Thorns, styleAmt = 0.6f, buffDur = 8f, color = C("#eab308"), cost = 30, charge = 0.4f, cooldown = 25f, desc = "握拳→張開：8 秒內被打中時，把受到傷害的 60% 反彈給攻擊者" });
+            P(new SkillDef { adv = "berserker", id = "swordfervor", cls = "swordsman", name = "劍意沸騰", type = SkillType.Self, self = SelfKind.StyleBuff, styleKind = PassiveKind.ChainHit, styleAmt = 0.5f, buffDur = 8f, color = C("#38bdf8"), cost = 30, charge = 0.4f, cooldown = 25f, desc = "握拳→張開：8 秒內技能命中有 50% 機率連鎖到附近另一個敵人" });
+            P(new SkillDef { adv = "marksman", id = "killinstinct", cls = "archer", name = "獵殺本能", type = SkillType.Self, self = SelfKind.StyleBuff, styleKind = PassiveKind.Execute, styleAmt = 0.6f, buffDur = 8f, color = C("#dc2626"), cost = 25, charge = 0.4f, cooldown = 25f, desc = "8 秒內打 HP 低於 30% 的敵人傷害 +60%" });
+            P(new SkillDef { adv = "ranger", id = "huntfrenzy", cls = "archer", name = "狩獵狂熱", type = SkillType.Self, self = SelfKind.StyleBuff, styleKind = PassiveKind.KillRush, styleAmt = 4f, buffDur = 15f, color = C("#22c55e"), cost = 25, charge = 0.4f, cooldown = 28f, desc = "15 秒內每擊倒一個敵人就加快 30%（4 秒）：清小怪越清越快" });
+            P(new SkillDef { adv = "archmage", id = "chainstorm", cls = "mage", name = "雷鏈風暴", type = SkillType.Self, self = SelfKind.StyleBuff, styleKind = PassiveKind.ChainHit, styleAmt = 0.6f, buffDur = 8f, color = C("#a5b4fc"), cost = 50, charge = 1.0f, cooldown = 25f, chant = "奔騰的雷光啊在敵陣間連鎖吧", desc = "8 秒內技能命中有 60% 機率連鎖到附近另一個敵人" });
+            P(new SkillDef { adv = "summoner", id = "soulharvest", cls = "mage", name = "靈魂豐收", type = SkillType.Self, self = SelfKind.StyleBuff, styleKind = PassiveKind.KillSoul, styleAmt = 6f, buffDur = 15f, color = C("#a78bfa"), cost = 30, charge = 1.0f, cooldown = 28f, chant = "逝去的靈魂啊化為吾之力量吧", desc = "15 秒內擊倒敵人回復 18 MP 與 6% HP" });
+            P(new SkillDef { adv = "ninja", id = "renjutsu", cls = "assassin", name = "連環印", type = SkillType.Self, self = SelfKind.StyleBuff, styleKind = PassiveKind.HitStack, styleAmt = 0.04f, buffDur = 8f, color = C("#94a3b8"), cost = 20, charge = 0f, cooldown = 22f, desc = "手印 3→4→5：8 秒內連續命中疊層，每層傷害 +4%（最多 10 層）" });
+            P(new SkillDef { adv = "shadowdancer", id = "reaperdance", cls = "assassin", name = "死神之舞", type = SkillType.Self, self = SelfKind.StyleBuff, styleKind = PassiveKind.Execute, styleAmt = 0.8f, buffDur = 8f, color = C("#7e22ce"), cost = 25, charge = 0.3f, cooldown = 25f, desc = "握拳→張開：8 秒內打 HP 低於 30% 的敵人傷害 +80%" });
+            P(new SkillDef { adv = "bishop", id = "graceflow", cls = "priest", name = "恩典滿溢", type = SkillType.Self, self = SelfKind.StyleBuff, styleKind = PassiveKind.OverhealShield, styleAmt = 1f, buffDur = 15f, color = C("#fde68a"), cost = 30, charge = 1.0f, cooldown = 30f, desc = "15 秒內你放的治療溢出的部分全部變成護盾" });
+            P(new SkillDef { adv = "inquisitor", id = "martyrflame", cls = "priest", name = "殉道烈焰", type = SkillType.Self, self = SelfKind.StyleBuff, styleKind = PassiveKind.Thorns, styleAmt = 0.6f, buffDur = 8f, color = C("#ea580c"), cost = 30, charge = 0.8f, cooldown = 25f, desc = "8 秒內被打中時，把受到傷害的 60% 反彈給攻擊者" });
             // 獵人・神射手
             P(new SkillDef { adv = "marksman", id = "pierce", cls = "archer", stillRadius = 0.5f, pierce = true, name = "貫穿狙擊", type = SkillType.Projectile, color = C("#fef08a"), cost = 35, damage = 40, charge = 1.6f, cooldown = 2.5f, speed = 18f, radius = 0.06f, rangeMin = 2f, rangeMax = 16f, desc = "一直線穿透所有小怪的重箭（穿透第一個敵人後，之後的傷害 −50%）；2m 內打不到" });
             P(new SkillDef { adv = "marksman", id = "deadmark", cls = "archer", stillRadius = 0.5f, name = "致命標記", type = SkillType.Self, self = SelfKind.DeadMark, color = C("#f43f5e"), cost = 20, charge = 0.6f, cooldown = 12f, buffDur = 10f, desc = "10 秒內射出的下一箭必定爆擊" });
@@ -389,6 +403,7 @@ namespace SpellDuel
             P(new SkillDef { adv = "ranger", id = "landmine", cls = "archer", name = "爆裂地雷", type = SkillType.Trap, trapMax = 3, trapLife = 40f, color = C("#f97316"), cost = 35, damage = 40, charge = 0.8f, cooldown = 9f, radius = 0.4f, areaRadius = 2.5f, trapArm = 1.5f, desc = "在地上埋一顆地雷（1.5 秒後啟動、最多 3 顆）：敵人踩到就大爆炸，半徑 2.5m 內的敵人全部受傷" });
             P(new SkillDef { adv = "ranger", team = true, id = "rangerhaste", cls = "archer", name = "疾風箭意", type = SkillType.Self, self = SelfKind.TeamHaste, color = C("#5eead4"), cost = 25, charge = 0.5f, cooldown = 28f, buffDur = 10f, buffAmount = 30, desc = "自己與隊友 10 秒內加快 30%：蓄力、普攻冷卻都變快" });
             P(new SkillDef { adv = "ranger", team = true, id = "hawkeye", cls = "archer", name = "鷹眼凝神", type = SkillType.Self, self = SelfKind.TeamCrit, color = C("#fbbf24"), cost = 25, charge = 0.5f, cooldown = 30f, buffDur = 10f, buffAmount = 25, desc = "自己與隊友 10 秒內爆擊率 +25%" });
+            P(new SkillDef { id = "chainhit", cls = "chain", name = "連鎖", type = SkillType.Projectile, color = C("#e0e7ff"), damage = 0, speed = 20f, radius = 0.1f, rangeMax = 5f, desc = "流派被動「連鎖」：技能命中後彈到附近的另一個敵人" });
             P(new SkillDef { id = "falcondive", cls = "pet", name = "獵鷹突襲", type = SkillType.Projectile, color = C("#d97706"), damage = 16, speed = 12f, radius = 0.1f, rangeMax = 9f, desc = "遊俠的獵鷹俯衝（技能樹「獵鷹突襲」「獵鷹巡獵」觸發）" });
             P(new SkillDef { adv = "ranger", id = "trapchain", cls = "archer", name = "連環陷阱", type = SkillType.Trap, multi = 3, trapMax = 6, color = C("#fdba74"), cost = 30, damage = 8, charge = 0.8f, cooldown = 8f, radius = 0.35f, trapArm = 1.2f, effect = EffectKind.Snare, effectDur = 2f, desc = "一次在地上設 3 個捕獸夾（間隔 0.8m）：每個都和你的捕獸夾同等級（技能樹點了幾級，傷害、定身時間就照幾級），踩到受傷並定身" });
             P(new SkillDef { id = "rollarrow", cls = "archer", name = "翻滾箭", type = SkillType.Projectile, color = C("#6ee7b7"), cost = 0, damage = 14, charge = 0f, cooldown = 0f, speed = 14f, radius = 0.06f, rangeMax = 12f, desc = "翻滾射擊自動射出的箭" });
