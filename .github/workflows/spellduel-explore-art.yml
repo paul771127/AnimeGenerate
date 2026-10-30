@@ -7,7 +7,8 @@ on:
       - '.github/workflows/spellduel-explore-art.yml'
 concurrency:
   group: explore-art-${{ github.ref }}
-  cancel-in-progress: true
+  # Finish the current visual proof even when another session pushes gameplay updates.
+  cancel-in-progress: false
 jobs:
   explore-art:
     runs-on: ubuntu-latest
