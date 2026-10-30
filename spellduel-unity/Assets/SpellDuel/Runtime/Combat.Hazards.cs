@@ -319,7 +319,7 @@ namespace SpellDuel
                     {
                         h.landed = true;
                         Emit("rockland", h.b, new Color(0.8f, 0.62f, 0.35f), null);
-                        foreach (var f in victims) if (f.Alive && FlatDistance(f.Feet, h.b) < h.radius + f.bodyRadius) HazardDamage(f, h.damage, f.Chest, "落石");
+                        foreach (var f in victims) if (f.Alive && FlatDistance(f.Feet, h.b) < h.radius + f.bodyRadius) HazardDamage(f, HazardDmg(h, f), f.Chest, "落石");
                     }
                     if (h.landed && now > h.land + 0.3f) hazards.RemoveAt(i);
                     continue;
@@ -333,10 +333,21 @@ namespace SpellDuel
                     if (!hit) continue;
                     if (h.nextHit.TryGetValue(f, out var nt) && now < nt) continue;
                     h.nextHit[f] = now + HazardHitCooldown;
-                    HazardDamage(f, h.damage, f.Chest, h.kind == HazardKind.Axe ? "大斧頭" : "地刺");
+                    HazardDamage(f, HazardDmg(h, f), f.Chest, h.kind == HazardKind.Axe ? "大斧頭" : "地刺");
                 }
             }
         }
+
+        /// <summary>
+        /// 陷阱打到玩家方（玩家、隊友、寵物等友方單位）：照最大 HP 的百分比（使用者要求：陷阱傷害都看血量百分比，
+        /// 各章、各職業一樣痛）；打到小怪照舊用固定傷害（×這一波的攻擊倍率）。
+        /// </summary>
+        static readonly float[] HazardPct = { 0.10f, 0.08f, 0.12f, 0.08f, 0.03f, 0.05f, 0.10f, 0.04f };   // 依 HazardKind：斧、地刺、落石、熔岩、孢子、樹根、浪、漩渦
+        /// <summary>持續傷害（每秒）：熔岩灼燒、孢子中毒，同樣看最大 HP</summary>
+        public const float LavaBurnPct = 0.015f, SporeDotPct = 0.01f;
+        bool PlayerSide(Fighter f) => f != null && f != enemy && !f.isMinion;
+        int HazardDmg(Hazard h, Fighter f) => PlayerSide(f) ? Mathf.Max(1, Mathf.RoundToInt(f.maxHp * HazardPct[(int)h.kind])) : h.damage;
+        public static float HazardPctOf(HazardKind k) => HazardPct[(int)k];
 
         void HazardDamage(Fighter f, int dmg, Vector3 at, string label, EffectKind eff = EffectKind.None, float dps = 0f, float dur = 0f)
         {

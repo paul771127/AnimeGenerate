@@ -117,7 +117,8 @@ namespace SpellDuel
                 if (!hit) continue;
                 if (h.nextHit.TryGetValue(f, out var nt) && now < nt) continue;
                 h.nextHit[f] = now + cd;
-                HazardDamage(f, h.damage, f.Chest, label, eff, dps, dur);
+                if (PlayerSide(f)) { if (h.kind == HazardKind.Lava) dps = f.maxHp * LavaBurnPct; else if (h.kind == HazardKind.Spore) dps = f.maxHp * SporeDotPct; }   // 持續傷害也看最大 HP
+                HazardDamage(f, HazardDmg(h, f), f.Chest, label, eff, dps, dur);
             }
         }
     }
