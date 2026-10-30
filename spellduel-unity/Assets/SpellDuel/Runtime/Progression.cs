@@ -370,6 +370,16 @@ namespace SpellDuel
                     FMod("pa_sanc3", "制裁熟練", "sanction", ModField.Cooldown, 0.08f, 5, 5, 3, "pa_sanc2"),
                     FPas("pa_scombo", "制裁連斬", PassiveKind.SanctionCombo, 1f, 1, 6, 2, "pa_sanc"),
                     FPas("pa_atk", "聖戰之力", PassiveKind.Atk, 0.03f, 5, 6, 3, "pa_scombo"),
+                    // 追加（使用者要求：技能多樣、各進階職業點滿總點數約 100）
+                    FLearn("pa_blade", "holyblade", 0, 4, "pa_bash3"),
+                    FMod("pa_blade2", "聖光劍氣", "holyblade", ModField.Damage, 0.1f, 5, 0, 5, "pa_blade"),
+                    FMod("pa_blade3", "連揮", "holyblade", ModField.Cooldown, 0.06f, 5, 1, 4, "pa_blade"),
+                    FLearn("pa_cons", "consecrate", 3, 4, "pa_last"),
+                    FMod("pa_cons2", "聖地迴響", "consecrate", ModField.Cooldown, 0.06f, 5, 3, 5, "pa_cons"),
+                    FMod("pa_cons3", "聖地灼光", "consecrate", ModField.Damage, 0.1f, 5, 4, 4, "pa_cons"),
+                    FLearn("pa_lay", "layhands", 6, 4, "pa_atk"),
+                    FMod("pa_lay2", "聖療強化", "layhands", ModField.BuffAmount, 2f, 5, 6, 5, "pa_lay"),
+                    FMod("pa_lay3", "聖療熟練", "layhands", ModField.Cooldown, 0.06f, 5, 5, 4, "pa_lay"),
                 };
                 // 劍仙：三個流派——輸出（劍來、御劍術、萬劍歸宗）／防禦（劍罡護體）／輔助（劍陣）
                 case "berserker": return new List<TreeNode>
@@ -420,6 +430,17 @@ namespace SpellDuel
                     FMod("mk_rain2", "密集箭雨", "arrowrain", ModField.Multi, 1f, 3, 5, 2, "mk_rain"),
                     FMod("mk_rain3", "箭雨強化", "arrowrain", ModField.Damage, 0.12f, 5, 6, 2, "mk_rain"),
                     FMod("mk_bspd", "連珠箭", "na_arrow", ModField.Cooldown, 0.06f, 5, 6, 3, "mk_rain3"),
+                    // 追加（使用者要求：技能多樣、各進階職業點滿總點數約 100）
+                    FLearn("mk_head", "headshot", 0, 4, "mk_acc"),
+                    FMod("mk_head2", "致命瞄準", "headshot", ModField.Damage, 0.1f, 5, 0, 5, "mk_head"),
+                    FMod("mk_head3", "屏息", "headshot", ModField.Charge, 0.08f, 5, 1, 4, "mk_head"),
+                    FLearn("mk_scat", "scattershot", 3, 4, "mk_atk"),
+                    FMod("mk_scat2", "散射增矢", "scattershot", ModField.Multi, 1f, 2, 3, 5, "mk_scat"),
+                    FMod("mk_scat3", "散射強化", "scattershot", ModField.Damage, 0.1f, 5, 2, 4, "mk_scat"),
+                    FMod("mk_scat4", "連續散射", "scattershot", ModField.Cooldown, 0.06f, 5, 4, 4, "mk_scat"),
+                    FLearn("mk_blast", "blastarrow", 6, 4, "mk_bspd"),
+                    FMod("mk_blast2", "高爆箭頭", "blastarrow", ModField.Damage, 0.1f, 5, 6, 5, "mk_blast"),
+                    FMod("mk_blast3", "裝填熟練", "blastarrow", ModField.Cooldown, 0.06f, 5, 5, 4, "mk_blast"),
                 };
                 case "ranger": return new List<TreeNode>
                 {
@@ -446,6 +467,10 @@ namespace SpellDuel
                     FLearn("rg_mine", "landmine", 5, 3, "rg_chain2"),
                     FMod("rg_mine2", "高爆炸藥", "landmine", ModField.Damage, 0.15f, 5, 5, 4, "rg_mine"),
                     FMod("rg_mine3", "集束地雷", "landmine", ModField.Multi, 1f, 2, 6, 4, "rg_mine"),
+                    // 追加（使用者要求：技能多樣、各進階職業點滿總點數約 100）
+                    FMod("rg_mine4", "快速佈雷", "landmine", ModField.Cooldown, 0.06f, 5, 5, 5, "rg_mine2"),
+                    FMod("rg_haste3", "疾風連起", "rangerhaste", ModField.Cooldown, 0.06f, 4, 4, 5, "rg_haste2"),
+                    FMod("rg_hawk3", "鷹眼持久", "hawkeye", ModField.BuffDur, 1f, 4, 2, 5, "rg_hawk2"),
                 };
                 case "archmage": return new List<TreeNode>
                 {
@@ -475,6 +500,9 @@ namespace SpellDuel
                     FMod("am_haste2", "時流增幅", "arcanehaste", ModField.BuffAmount, 3f, 5, 5, 4, "am_haste"),
                     FLearn("am_ward", "elementward", 6, 4, "am_mp"),
                     FMod("am_ward2", "結界延長", "elementward", ModField.BuffDur, 1f, 5, 6, 5, "am_ward"),
+                    // 追加（使用者要求：技能多樣、各進階職業點滿總點數約 100）
+                    FMod("am_break3", "崩滅連發", "arcanebreak", ModField.Cooldown, 0.06f, 5, 0, 5, "am_break2"),
+                    FMod("am_haste3", "時流延續", "arcanehaste", ModField.BuffDur, 1f, 5, 5, 5, "am_haste2"),
                 };
                 case "summoner": return new List<TreeNode>
                 {
@@ -494,6 +522,18 @@ namespace SpellDuel
                     FLearn("su_ice", "icespirit", 1, 3, "su_petmp"),
                     FLearn("su_cap", "capture", 2, 3, "su_burn"),
                     FLearn("su_fairy", "fairy", 4, 3, "su_armor"),
+                    // 追加（使用者要求：技能多樣、各進階職業點滿總點數約 100）
+                    FLearn("su_bolt", "spiritbolt", 0, 3, "su_fire2"),
+                    FMod("su_bolt2", "靈魂強化", "spiritbolt", ModField.Damage, 0.1f, 5, 0, 4, "su_bolt"),
+                    FMod("su_bolt3", "靈魂增殖", "spiritbolt", ModField.Multi, 1f, 2, 0, 5, "su_bolt"),
+                    FLearn("su_spike", "earthspike", 3, 4, "su_hp"),
+                    FMod("su_spike2", "岩棘強化", "earthspike", ModField.Damage, 0.1f, 5, 3, 5, "su_spike"),
+                    FMod("su_spike3", "大地脈動", "earthspike", ModField.Cooldown, 0.06f, 5, 2, 4, "su_spike"),
+                    FLearn("su_cheer", "pactcheer", 6, 4, "su_echo"),
+                    FMod("su_cheer2", "鼓舞強化", "pactcheer", ModField.BuffAmount, 2f, 5, 6, 5, "su_cheer"),
+                    FMod("su_cheer3", "鼓舞延續", "pactcheer", ModField.BuffDur, 1f, 5, 5, 4, "su_cheer"),
+                    FMod("su_ice2", "冰靈強化", "icespirit", ModField.Damage, 0.1f, 5, 1, 4, "su_ice"),
+                    FMod("su_fairy2", "妖精祝福", "fairy", ModField.Heal, 0.1f, 5, 4, 4, "su_fairy"),
                 };
                 case "ninja": return new List<TreeNode>
                 {
@@ -516,6 +556,14 @@ namespace SpellDuel
                     FPas("nj_kice", "冰遁苦無", PassiveKind.KunaiIce, 0.04f, 5, 1, 3, "nj_evade"),
                     FPas("nj_kbolt", "雷遁苦無", PassiveKind.KunaiBolt, 0.04f, 5, 2, 3, "nj_dodge"),
                     FMod("nj_kspd", "苦無連射", "na_kunai", ModField.Cooldown, 0.06f, 5, 4, 3, "nj_knife"),
+                    // 追加（使用者要求：技能多樣、各進階職業點滿總點數約 100）
+                    FLearn("nj_sui", "suiton", 0, 4, "nj_kfire"),
+                    FMod("nj_sui2", "水牢強化", "suiton", ModField.Damage, 0.1f, 5, 0, 5, "nj_sui"),
+                    FMod("nj_sui3", "深水牢", "suiton", ModField.EffectDur, 0.2f, 5, 1, 4, "nj_sui"),
+                    FLearn("nj_fu", "futon", 5, 3, "nj_fire2"),
+                    FMod("nj_fu2", "真空刃強化", "futon", ModField.Damage, 0.1f, 5, 5, 4, "nj_fu"),
+                    FMod("nj_fu3", "疾風印", "futon", ModField.Cooldown, 0.06f, 5, 6, 4, "nj_fu"),
+                    FMod("nj_rai2", "雷遁強化", "raiton", ModField.Damage, 0.1f, 2, 2, 4, "nj_rai"),
                 };
                 case "shadowdancer": return new List<TreeNode>
                 {
@@ -536,6 +584,17 @@ namespace SpellDuel
                     FLearn("sd_kill", "shadowkill", 0, 3, "sd_exe2"),
                     FLearn("sd_dpoison", "deadlypoison", 5, 3, "sd_fog2"),
                     FLearn("sd_plague", "plague", 4, 3, "sd_vanish"),
+                    // 追加（使用者要求：技能多樣、各進階職業點滿總點數約 100）
+                    FLearn("sd_storm", "bladestorm", 1, 3, "sd_assn"),
+                    FMod("sd_storm2", "影刃強化", "bladestorm", ModField.Damage, 0.1f, 5, 1, 4, "sd_storm"),
+                    FMod("sd_storm3", "迴旋不止", "bladestorm", ModField.Cooldown, 0.06f, 5, 1, 5, "sd_storm"),
+                    FLearn("sd_dart", "poisondart", 2, 3, "sd_crit"),
+                    FMod("sd_dart2", "毒鏢強化", "poisondart", ModField.Damage, 0.1f, 5, 2, 4, "sd_dart"),
+                    FMod("sd_dart3", "淬毒", "poisondart", ModField.EffectDps, 1f, 5, 3, 4, "sd_dart"),
+                    FLearn("sd_veil", "nightveil", 4, 4, "sd_plague"),
+                    FMod("sd_veil2", "濃影", "nightveil", ModField.BuffReduce, 0.03f, 5, 4, 5, "sd_veil"),
+                    FMod("sd_veil3", "長夜", "nightveil", ModField.BuffDur, 0.6f, 5, 5, 4, "sd_veil"),
+                    FMod("sd_kill2", "影殺強化", "shadowkill", ModField.Damage, 0.1f, 5, 0, 4, "sd_kill"),
                 };
                 case "bishop": return new List<TreeNode>
                 {
@@ -555,6 +614,17 @@ namespace SpellDuel
                     FMod("bi_phcd", "快速治療", "prayheal", ModField.Cooldown, 0.1f, 5, 0, 3, "bi_hp"),
                     FLearn("bi_bar", "holybarrier", 4, 3, "bi_quick"),
                     FMod("bi_bar2", "障壁加厚", "holybarrier", ModField.BuffAmount, 1f, 2, 5, 3, "bi_sanc2"),
+                    // 追加（使用者要求：技能多樣、各進階職業點滿總點數約 100）
+                    FLearn("bi_nova", "holynova", 1, 3, "bi_regen"),
+                    FMod("bi_nova2", "新星強化", "holynova", ModField.Damage, 0.1f, 5, 1, 4, "bi_nova"),
+                    FMod("bi_nova3", "新星連禱", "holynova", ModField.Cooldown, 0.06f, 5, 0, 4, "bi_nova"),
+                    FLearn("bi_grace", "divinegrace", 2, 3, "bi_nat"),
+                    FMod("bi_grace2", "神蹟之光", "divinegrace", ModField.Heal, 0.1f, 5, 2, 4, "bi_grace"),
+                    FMod("bi_grace3", "神蹟頻現", "divinegrace", ModField.Cooldown, 0.06f, 5, 3, 4, "bi_grace"),
+                    FLearn("bi_pillar", "lightpillar", 6, 4, "bi_armor"),
+                    FMod("bi_pillar2", "光柱強化", "lightpillar", ModField.Damage, 0.1f, 5, 6, 5, "bi_pillar"),
+                    FMod("bi_pillar3", "速禱光柱", "lightpillar", ModField.Charge, 0.08f, 5, 5, 4, "bi_pillar"),
+                    FMod("bi_bar3", "障壁延長", "holybarrier", ModField.BuffDur, 2f, 2, 4, 4, "bi_bar"),
                 };
                 case "inquisitor": return new List<TreeNode>
                 {
@@ -576,6 +646,13 @@ namespace SpellDuel
                     FMod("iq_juddmg2", "審判強化", "judgement", ModField.Damage, 0.12f, 5, 2, 3, "iq_crit"),
                     FPas("iq_shield", "聖盾轉化", PassiveKind.DmgShield, 0.04f, 5, 4, 3, "iq_seal"),
                     FMod("iq_heaven3", "天罰延長", "heavenpunish", ModField.BuffDur, 1f, 4, 5, 3, "iq_heaven2"),
+                    // 追加（使用者要求：技能多樣、各進階職業點滿總點數約 100）
+                    FLearn("iq_fire", "holyfire", 1, 4, "iq_juddmg"),
+                    FMod("iq_fire2", "聖火強化", "holyfire", ModField.Damage, 0.1f, 5, 1, 5, "iq_fire"),
+                    FMod("iq_fire3", "烈焰淨化", "holyfire", ModField.EffectDps, 1f, 5, 0, 4, "iq_fire"),
+                    FLearn("iq_verdict", "verdict", 4, 4, "iq_shield"),
+                    FMod("iq_verdict2", "裁決強化", "verdict", ModField.Damage, 0.1f, 5, 4, 5, "iq_verdict"),
+                    FMod("iq_verdict3", "速審", "verdict", ModField.Cooldown, 0.06f, 5, 5, 4, "iq_verdict"),
                 };
             }
             return new List<TreeNode>();

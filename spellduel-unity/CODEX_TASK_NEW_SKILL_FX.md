@@ -67,6 +67,32 @@
 
 ---
 
+## B2. 其他進階職業的新技能（使用者要求「其他進階職業的技能也多樣點」，Claude 已實作邏輯，19 招）
+
+這些招都走現有的投射物／範圍／增益流程，**現在看得到但都是通用外觀**。請在 `CreateProjectileVisual` 依 id 加專屬外型、命中特效，增益類用下面 **C** 的介面（`TeamBuffCast`／`TeamBuffAura`，對自己的增益也用它）。範圍類（`areaFoes`）目前只有震地效果，請加 `SpellFx.AreaBurst(string skillId, Vector3 centerWorld, float radius)`，Claude 在每段傷害時呼叫。
+
+| 職業 | id | 名稱 | 玩法（數值見 `Skills.cs`） | 特效方向 |
+|---|---|---|---|---|
+| 聖騎士 | `holyblade` | 聖光斬 | 新月劍氣直線 6m | 金色新月劍氣、拖光 |
+| 聖騎士 | `consecrate` | 聖光震地 | 自己周圍 2.5m、每 0.8 秒 1 段共 4 段 | 腳下聖紋一圈一圈往外擴 |
+| 聖騎士 | `layhands` | 聖療之手 | 自己與隊友回 25% HP | 手掌金光、身上光羽 |
+| 神射手 | `headshot` | 爆頭狙擊 | 單體重擊、斬殺 | 細長紅色彈道、命中爆頭火花 |
+| 神射手 | `scattershot` | 扇形散射 | 5 箭扇形 | 5 支黃色光箭 |
+| 神射手 | `blastarrow` | 爆裂箭 | 準星位置 2m 爆炸＋灼燒 | 箭插地→火焰爆炸 |
+| 召喚師 | `spiritbolt` | 靈魂飛彈 | 3 顆扇形 | 淡紫色小靈魂（有臉／尾巴的小鬼火） |
+| 召喚師 | `earthspike` | 大地之棘 | 準星位置 1.8m 石刺＋定身 | 地面竄出一圈石刺 |
+| 召喚師 | `pactcheer` | 契約鼓舞 | 隊伍攻擊 +20% | 橘色契約符文、召喚物也亮起來 |
+| 忍者 | `suiton` | 水遁・水牢 | 準星位置 1.8m 水牢＋定身 | 水柱升起包住敵人 |
+| 忍者 | `futon` | 風遁・真空刃 | 新月風刃、穿透 | 透明綠色真空刃、空氣扭曲 |
+| 影舞者 | `bladestorm` | 影刃旋舞 | 周圍 2m 連斬 4 段 | 紫色刀光旋風 |
+| 影舞者 | `poisondart` | 毒鏢扇 | 3 枚毒鏢、中毒 | 綠色毒鏢、命中毒霧 |
+| 影舞者 | `nightveil` | 暗影斗篷 | 自己減傷 30% 6 秒 | 黑紫斗篷煙霧 |
+| 主教 | `holynova` | 聖光新星 | 自己周圍 3m | 從身上爆開的白金光環 |
+| 主教 | `divinegrace` | 神蹟 | 全隊淨化＋回血 | 綠白光雨落在每個人身上 |
+| 主教 | `lightpillar` | 裁光之柱 | 單體從上方落下 | 細長白金光柱（旁觀者看；第一人稱別擋畫面） |
+| 審判者 | `holyfire` | 聖火 | 單體＋灼燒 | 金橘色聖火球 |
+| 審判者 | `verdict` | 裁決之錘 | 從上方落下的重擊＋暈眩 | 巨大的光之戰錘砸下、地面裂紋 |
+
 ## C. 隊伍增益共用介面（4、5、7、8 用）
 
 - `void SpellFx.TeamBuffCast(string skillId, Transform owner)`：施放瞬間的特效（自己和每個吃到增益的隊友都會各呼叫一次）。
@@ -76,8 +102,8 @@
 
 ## D. 技能圖示
 
-`SkillIcons.cs` 加這 9 個 id 的圖示（照現有 `case "rollshot": RollShot(cv, sc)` 的寫法）：`starfall`、`arcanebreak`、`arcanewyrm`（龍頭）、`arcanehaste`、`elementward`、`landmine`、`rangerhaste`、`hawkeye`、`falcondive`。
+`SkillIcons.cs` 加這 9 個 id，以及 B2 表格裡 19 個 id 的圖示（照現有 `case "rollshot": RollShot(cv, sc)` 的寫法）：`starfall`、`arcanebreak`、`arcanewyrm`（龍頭）、`arcanehaste`、`elementward`、`landmine`、`rangerhaste`、`hawkeye`、`falcondive`。
 
 ## 交付順序
 
-**1（光龍）→ 6（地雷）→ 9（獵鷹俯衝）→ C（4、5、7、8）→ 2、3 → D**。每做完一項就推，Claude 會接線。
+**1（光龍）→ 6（地雷）→ 9（獵鷹俯衝）→ C（4、5、7、8）→ 2、3 → B2 → D**。每做完一項就推，Claude 會接線。

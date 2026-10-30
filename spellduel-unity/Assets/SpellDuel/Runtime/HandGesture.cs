@@ -51,6 +51,7 @@ namespace SpellDuel
             // 進階職業：大魔導士、召喚師（沒有語音辨識時比數字）、主教、審判者
             "tjudge" => 5, "frostfield" => 4, "manashield" => 3, "starfall" => 5, "arcanebreak" => 4, "arcanewyrm" => 2, "arcanehaste" => 3, "elementward" => 4, "firespirit" => 2, "golem" => 4, "detonate" => 5,
             "revive" => 5, "massheal" => 4, "sanctuary" => 3, "holylance" => 2, "chastise" => 3, "heavenpunish" => 5,
+            "spiritbolt" => 2, "earthspike" => 3, "pactcheer" => 4, "holynova" => 2, "divinegrace" => 3, "lightpillar" => 5, "holyfire" => 4, "verdict" => 5,
             _ => 0,
         };
 
@@ -123,7 +124,8 @@ namespace SpellDuel
                 case "yujian": return Style.Thrust;
                 case "jiangang": case "jianzhen": return Style.Burst;                                // 劍罡護體、劍陣：握拳→張開                                                   // 御劍術：手往前推（飛劍射出）
                 case "wanjian": case "yijian": return Style.Press;                                    // 萬劍歸宗、一劍開天：往下壓（往下劈）                                                   // 萬劍歸宗：往下壓（劍從天而降）
-                case "sanction": case "poisonfog": return Style.Press;                               // 往下壓
+                case "sanction": case "poisonfog": case "consecrate": return Style.Press;
+                case "layhands": case "nightveil": return Style.Burst;                               // 往下壓
             }
             if (s.type == SkillType.Trap) return Style.Press;
             return StyleOf(s.cls);
