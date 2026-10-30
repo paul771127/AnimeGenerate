@@ -12,7 +12,7 @@ namespace SpellDuel
     {
         ExploreRun exploreRun, pendingExplore;
         Transform exRoot;
-        GameObject exWallTpl, exGateTpl, exHerbTpl, exSparkTpl, exAltarTpl;
+        GameObject exWallTpl, exGateTpl, exSealTpl, exHerbTpl, exSparkTpl, exAltarTpl, exLeverTpl, exKeyTpl, exShardTpl;
         readonly Dictionary<ExTerrain, GameObject> exTerrainTpl = new Dictionary<ExTerrain, GameObject>();
         readonly Dictionary<string, GameObject> exPropTpl = new Dictionary<string, GameObject>();
         readonly Dictionary<Vector2Int, GameObject> exWalls = new Dictionary<Vector2Int, GameObject>();
@@ -118,8 +118,8 @@ namespace SpellDuel
             if (Time.time - exPushSaidAt > 2.5f)
             {
                 exPushSaidAt = Time.time;
-                var gate = map.ClosedGateAt(p);
-                Say(gate != null ? $"🌿 藤蔓擋住了去路——先打倒「{gate.name}」的守衛" : "🌳 樹叢太密，過不去", 2f);
+                var gate = map.ClosedGateAt(p); var seal = map.ClosedSealAt(p);
+                Say(seal != null ? $"🔒 {seal.name}：{seal.hint}（{seal.have}/{seal.need}）" : gate != null ? $"🌿 藤蔓擋住了去路——先打倒「{gate.name}」的守衛" : "🌳 過不去", seal != null ? 4f : 2f);
                 Haptics.Play(Haptics.Kind.Light);
             }
         }
@@ -130,6 +130,10 @@ namespace SpellDuel
             exRoot = new GameObject("Explore maze").transform;
             exWallTpl = Prim(PrimitiveType.Cube, new Color(0.13f, 0.32f, 0.16f)); exWallTpl.transform.SetParent(exRoot, false); exWallTpl.SetActive(false);
             exGateTpl = Prim(PrimitiveType.Cube, new Color(0.45f, 0.3f, 0.12f, 0.85f), true); exGateTpl.transform.SetParent(exRoot, false); exGateTpl.SetActive(false);
+            exSealTpl = Prim(PrimitiveType.Cube, new Color(0.55f, 0.3f, 0.75f, 0.85f), true); exSealTpl.transform.SetParent(exRoot, false); exSealTpl.SetActive(false);
+            exLeverTpl = Prim(PrimitiveType.Cylinder, new Color(0.85f, 0.7f, 0.3f)); exLeverTpl.transform.SetParent(exRoot, false); exLeverTpl.SetActive(false);
+            exKeyTpl = Prim(PrimitiveType.Cube, new Color(0.95f, 0.75f, 0.3f), true); exKeyTpl.transform.SetParent(exRoot, false); exKeyTpl.SetActive(false);
+            exShardTpl = Prim(PrimitiveType.Sphere, new Color(0.3f, 1f, 0.7f), true); exShardTpl.transform.SetParent(exRoot, false); exShardTpl.SetActive(false);
             exHerbTpl = Prim(PrimitiveType.Sphere, new Color(0.6f, 1f, 0.75f), true); exHerbTpl.transform.SetParent(exRoot, false); exHerbTpl.SetActive(false);
             exSparkTpl = Prim(PrimitiveType.Sphere, new Color(1f, 1f, 0.75f), true); exSparkTpl.transform.SetParent(exRoot, false); exSparkTpl.SetActive(false);
             exAltarTpl = Prim(PrimitiveType.Cylinder, new Color(0.5f, 1f, 0.6f, 0.8f), true); exAltarTpl.transform.SetParent(exRoot, false); exAltarTpl.SetActive(false);
@@ -172,7 +176,7 @@ namespace SpellDuel
                     keep.Add(k);
                     if (exWalls.ContainsKey(k)) continue;
                     var t = map.TerrainAt(x, z);
-                    var go = Instantiate(gate ? exGateTpl : exTerrainTpl.TryGetValue(t, out var tt) ? tt : exWallTpl, exRoot);
+                    var go = Instantiate(gate ? (map.SealOf(x, z) != null ? exSealTpl : exGateTpl) : exTerrainTpl.TryGetValue(t, out var tt) ? tt : exWallTpl, exRoot);
                     go.SetActive(true);
                     float h = gate ? 2.2f : t == ExTerrain.Water ? 0.06f : t == ExTerrain.Palisade ? 2.6f : t == ExTerrain.Ruin ? 2.2f : t == ExTerrain.Cave ? 3f : 2.4f + ((x * 7 + z * 13) % 5) * 0.12f;   // 高低有一點變化；湖水是平的
                     go.transform.localPosition = map.World(x, z) + Vector3.up * h * 0.5f;
@@ -202,6 +206,14 @@ namespace SpellDuel
             {
                 float twinkle = Mathf.Max(0f, Mathf.Sin(Time.time * 3f + s.pos.x)) ;   // 偶爾閃一下（不是一直亮）
                 ExProp(s, exSparkTpl, !s.found && Battle.FlatDistance(s.pos, me) <= ExSparkleShow, s.pos + Vector3.up * 0.5f, Vector3.one * (0.04f + 0.14f * twinkle * twinkle * twinkle));
+            }
+            // 岔路的機關（石柱）、鑰匙、翠玉碎片（浮在空中、慢慢轉）
+            foreach (var sw in run.map.switches)
+            {
+                var tpl = sw.kind == "lever" ? exLeverTpl : sw.kind == "key" ? exKeyTpl : exShardTpl;
+                bool show = !sw.done && Battle.FlatDistance(sw.pos, me) <= view;
+                ExProp(sw, tpl, show, sw.pos + Vector3.up * (sw.kind == "lever" ? 0.6f : 1f + 0.08f * Mathf.Sin(Time.time * 2f)), sw.kind == "lever" ? new Vector3(0.35f, 0.6f, 0.35f) : Vector3.one * 0.28f);
+                if (show && sw.kind != "lever" && exProps.TryGetValue(sw, out var sg) && sg) sg.transform.localRotation = Quaternion.Euler(0f, Time.time * 90f, 45f);
             }
             // 景物障礙（樹、巨石、巨菇、帳篷、城寨的木箱、古殿石柱…；碰撞在 ExploreMap.Walkable）
             foreach (var p in run.map.props)
@@ -320,6 +332,7 @@ namespace SpellDuel
             }
             foreach (var n in map.npcs) if (!n.hidden) { var q = map.Quest(n.quest); Dot(n.pos, q != null && (q.state == ExQuestState.Offered || q.state == ExQuestState.Ready) ? new Color(1f, 0.85f, 0.2f) : new Color(0.4f, 0.8f, 1f), 1.4f); }
             foreach (var it in map.items) if (!it.taken) Dot(it.pos, new Color(0.5f, 1f, 0.7f), 1f);
+            foreach (var sw in map.switches) if (!sw.done) Dot(sw.pos, sw.kind == "shard" ? new Color(0.3f, 1f, 0.75f) : new Color(1f, 0.8f, 0.3f), 1.3f);   // 走過看到才會標
             foreach (var a in map.arenas) if (!a.cleared) Dot(a.center, new Color(1f, 0.3f, 0.3f), 1.8f);
             if (run.bossDead && !run.hasHeart) Dot(map.altar, new Color(0.4f, 1f, 0.5f), 1.6f);
             // 自己：白點＋面向

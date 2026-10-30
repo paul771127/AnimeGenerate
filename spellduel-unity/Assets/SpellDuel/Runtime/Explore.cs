@@ -64,11 +64,28 @@ namespace SpellDuel
         public int[] opens;                    // 密道：打開的牆（格子 x,z 成對）
     }
 
+    /// <summary>
+    /// 封印（使用者要求：岔路解謎）：把一個房間（小 Boss 競技場、王座）的入口封起來，要在岔路深處找到機關／鑰匙／碎片才會打開。
+    /// cells 是房間邊上通往外面的格子（變成 Gate），need 是要幾個開關。
+    /// </summary>
+    public class ExSeal
+    {
+        public string id, name, hint;
+        public RectInt rect;
+        public readonly List<Vector2Int> cells = new List<Vector2Int>();
+        public int need = 1, have;
+        public bool open;
+    }
+
+    /// <summary>岔路裡的機關／鑰匙／碎片：走到旁邊就啟動／撿起來</summary>
+    public class ExSwitch { public string id, kind, name, seal; public Vector3 pos; public bool done; public int zone; }
+
     public enum ExQuestState { Hidden, Offered, Active, Ready, Done, Failed }
 
     public class ExQuest
     {
-        public string id, title, giver, kind;  // kind：main 主線、escort 護送、collect 收集、camp 清營地、hidden 隱藏
+        public string id, title, giver, kind;  // kind：main 主線、escort 護送、collect 收集、camp 清營地、deliver 送東西、hidden 隱藏
+        public string target;                  // deliver：送給哪個 NPC
         public string desc, offer, thanks;
         public int need, have;
         public ExQuestState state;
@@ -105,6 +122,8 @@ namespace SpellDuel
         public readonly ExGround[,] ground;
         public readonly List<ExProp> props = new List<ExProp>();
         public readonly List<ExLandmark> landmarks = new List<ExLandmark>();
+        public readonly List<ExSeal> seals = new List<ExSeal>();
+        public readonly List<ExSwitch> switches = new List<ExSwitch>();
         readonly Dictionary<Vector2Int, List<ExProp>> propCells = new Dictionary<Vector2Int, List<ExProp>>();
 
         public ExploreMap(int w, int h) { W = w; H = h; cells = new ExCell[w, h]; terrain = new ExTerrain[w, h]; ground = new ExGround[w, h]; }
@@ -139,7 +158,16 @@ namespace SpellDuel
         public bool InGrid(int x, int z) => x >= 0 && z >= 0 && x < W && z < H;
         public ExCell At(int x, int z) => InGrid(x, z) ? cells[x, z] : ExCell.Wall;
         public bool Open(int x, int z) { var c = At(x, z); return c == ExCell.Floor || c == ExCell.Gate && GateOpen(x, z); }
-        public bool GateOpen(int x, int z) { foreach (var a in arenas) if (a.gate.Contains(new Vector2Int(x, z))) return a.cleared; return true; }
+        public bool GateOpen(int x, int z)
+        {
+            var c = new Vector2Int(x, z);
+            foreach (var a in arenas) if (a.gate.Contains(c)) return a.cleared;
+            foreach (var s in seals) if (s.cells.Contains(c)) return s.open;
+            return true;
+        }
+        /// <summary>這一點在哪個還沒打開的封印上；沒有＝null</summary>
+        public ExSeal ClosedSealAt(Vector3 p) { var c = Cell(p); foreach (var s in seals) if (!s.open && s.cells.Contains(c)) return s; return null; }
+        public ExSeal SealOf(int x, int z) { var c = new Vector2Int(x, z); foreach (var s in seals) if (s.cells.Contains(c)) return s; return null; }
 
         /// <summary>
         /// 這一點能不能站（離牆 margin 公尺以內也算不行）：玩家用 0.35m、怪物用 0.45m。
@@ -268,6 +296,9 @@ namespace SpellDuel
             m.quests.Add(new ExQuest { id = "herbs", kind = "collect", giver = "herbalist", title = "月光草", need = 3, state = ExQuestState.Offered,
                 desc = "在東南區找到 3 株月光草，帶回給草藥師", offer = "月光草只在這片林子裡長，我需要 3 株來做解毒藥。你在路上看到發光的草就幫我摘吧！",
                 thanks = "就是這個！這瓶藥水送你，危急時喝下吧。", gold = 300, xp = 400 });
+            m.quests.Add(new ExQuest { id = "antidote", kind = "deliver", giver = "herbalist", target = "hunter", title = "送解毒藥", state = ExQuestState.Hidden,
+                desc = "把解毒藥送回西南區給獵人巴克", offer = "對了——獵人巴克前幾天被毒液噴花傷到，一直沒好。這瓶解毒藥麻煩你送回去給他，他在西邊的營地附近。",
+                thanks = "（獵人巴克）這是……莉亞的解毒藥！得救了。這把我年輕時用的弓弦送你。", gold = 250, xp = 500 });
             // 隱藏任務（閃光點觸發）
             m.quests.Add(new ExQuest { id = "h_chest", kind = "hidden", hiddenQuest = true, title = "埋藏的寶箱", desc = "發現埋起來的寶箱", state = ExQuestState.Hidden, gold = 400, xp = 200 });
             m.quests.Add(new ExQuest { id = "h_rare", kind = "hidden", hiddenQuest = true, title = "沉睡的古根", desc = "打倒被吵醒的古根撼地獸", need = 1, state = ExQuestState.Hidden, gold = 600, xp = 800 });
@@ -326,7 +357,68 @@ namespace SpellDuel
                     placed++;
                 }
             }
+            BuildSeals(m);
             return m;
+        }
+
+        /// <summary>
+        /// 岔路解謎（使用者要求）：三個競技場、王座的入口加封印；機關／鑰匙／翠玉碎片放在各區「離入口最遠的死路」，
+        /// 要探索岔路才找得到。翠玉碎片前三區各一片，湊齊才能進王座（漏掉就要回頭找）。
+        /// </summary>
+        static void BuildSeals(ExploreMap m)
+        {
+            ExSeal Seal(string id, string name, string hint, int x0, int z0, int x1, int z1, int need)
+            {
+                var s = new ExSeal { id = id, name = name, hint = hint, need = need, rect = new RectInt(x0, z0, x1 - x0, z1 - z0) };
+                for (int x = x0; x <= x1; x++) for (int z = z0; z <= z1; z++)
+                {
+                    if (x != x0 && x != x1 && z != z0 && z != z1) continue;   // 房間的邊
+                    bool door = false;
+                    foreach (var d in ExploreMap.Dirs) { int nx = x + d.x, nz = z + d.y; bool outside = nx < x0 || nx > x1 || nz < z0 || nz > z1; if (outside && m.At(nx, nz) == ExCell.Floor) door = true; }
+                    if (!door || m.cells[x, z] != ExCell.Floor) continue;
+                    m.cells[x, z] = ExCell.Gate; s.cells.Add(new Vector2Int(x, z));
+                }
+                m.seals.Add(s); return s;
+            }
+            Seal("seal1", "苔根封印", "巢穴入口被粗大的苔根封住了，根連著一條石槽……岔路深處應該有機關。", 13, 7, 19, 11, 1);
+            Seal("seal2", "寨主之鎖", "祭壇的入口掛著一把古銅大鎖。鑰匙應該被藏在這一區的岔路裡。", 27, 13, 35, 19, 1);
+            Seal("seal3", "雙獵封印", "獵場被兩道藤蔓結封住，要找到兩個機關才打得開。", 21, 27, 27, 35, 2);
+            Seal("seal4", "翠玉封印", "王座的大門刻著三個凹槽——要放進三片翠玉碎片。前面三個區域各藏著一片。", 1, 31, 9, 39, 3);
+
+            // 各區離入口最遠的死路（避開 NPC、道具、閃光點、景物、房間）
+            List<Vector2Int> DeadEnds(Vector2Int entry, int x0, int z0, int x1, int z1)
+            {
+                var dist = new Dictionary<Vector2Int, int>(); var q = new Queue<Vector2Int>(); q.Enqueue(entry); dist[entry] = 0;
+                while (q.Count > 0) { var c = q.Dequeue(); foreach (var d in ExploreMap.Dirs) { var n = c + d; if (n.x < x0 || n.y < z0 || n.x > x1 || n.y > z1 || dist.ContainsKey(n) || m.At(n.x, n.y) != ExCell.Floor) continue; dist[n] = dist[c] + 1; q.Enqueue(n); } }
+                var list = new List<Vector2Int>();
+                foreach (var kv in dist)
+                {
+                    var c = kv.Key; int open = 0; bool nearGate = false;
+                    foreach (var d in ExploreMap.Dirs) { if (m.Open(c.x + d.x, c.y + d.y)) open++; if (m.At(c.x + d.x, c.y + d.y) == ExCell.Gate) nearGate = true; }
+                    if (open != 1 || nearGate) continue;   // 真正的死路（不是被封印擋住的入口）
+                    var p = m.World(c.x, c.y); bool busy = m.PropAt(p, 1.5f) != null;
+                    foreach (var n in m.npcs) if (Battle.FlatDistance(n.pos, p) < 4f) busy = true;
+                    foreach (var it in m.items) if (Battle.FlatDistance(it.pos, p) < 4f) busy = true;
+                    foreach (var sp in m.sparkles) if (Battle.FlatDistance(sp.pos, p) < 4f) busy = true;
+                    foreach (var l in m.landmarks) if (l.Contains(c)) busy = true;
+                    foreach (var sw in m.switches) if (Battle.FlatDistance(sw.pos, p) < 12f) busy = true;
+                    if (!busy) list.Add(c);
+                }
+                list.Sort((a, b) => dist[b].CompareTo(dist[a]));
+                return list;
+            }
+            void Switch(string id, string kind, string name, string seal, int zone, Vector2Int c) => m.switches.Add(new ExSwitch { id = id, kind = kind, name = name, seal = seal, zone = zone, pos = m.World(c.x, c.y) });
+            Vector2Int Next(List<Vector2Int> l) { foreach (var c in l) { var p = m.World(c.x, c.y); bool used = false; foreach (var sw in m.switches) if (Battle.FlatDistance(sw.pos, p) < 12f) used = true; if (!used) return c; } return l[0]; }
+            var z1 = DeadEnds(m.start, 1, 1, 19, 19);
+            Switch("lever1", "lever", "石雕機關", "seal1", 0, Next(z1));
+            Switch("shard1", "shard", "翠玉碎片", "seal4", 0, Next(z1));
+            var z2 = DeadEnds(new Vector2Int(21, 9), 21, 1, 39, 19);
+            Switch("key2", "key", "古銅鑰匙", "seal2", 1, Next(z2));
+            Switch("shard2", "shard", "翠玉碎片", "seal4", 1, Next(z2));
+            var z3 = DeadEnds(new Vector2Int(31, 21), 21, 21, 39, 39);
+            Switch("lever3a", "lever", "左獵石機關", "seal3", 2, Next(z3));
+            Switch("lever3b", "lever", "右獵石機關", "seal3", 2, Next(z3));
+            Switch("shard3", "shard", "翠玉碎片", "seal4", 2, Next(z3));
         }
 
         /// <summary>某個區域（19×19 格，左下角 ox,oz）用回溯法挖迷宮，再多打通一些牆做成環路（不會只有死路）</summary>
@@ -493,6 +585,16 @@ namespace SpellDuel
             var esc = map.Quest("escort");
             if (esc.state == ExQuestState.Active && escortPos.HasValue && Battle.FlatDistance(escortPos.Value, map.Npc("outpost").pos) <= EscortArrive)
             { escortFollowing = false; Complete(esc); map.Npc("lost").pos = map.Npc("outpost").pos + new Vector3(1.2f, 0f, 0f); }
+            // 岔路的機關、鑰匙、翠玉碎片：走到旁邊就啟動／撿起來
+            foreach (var sw in map.switches)
+            {
+                if (sw.done || Battle.FlatDistance(player, sw.pos) > PickRange + 0.3f) continue;
+                sw.done = true;
+                var seal = map.seals.Find(s => s.id == sw.seal);
+                seal.have++;
+                Say(sw.kind == "lever" ? $"⚙ 拉動了「{sw.name}」！（{seal.name} {seal.have}/{seal.need}）" : $"🔑 拿到「{sw.name}」！（{seal.name} {seal.have}/{seal.need}）");
+                if (seal.have >= seal.need && !seal.open) { seal.open = true; Say($"🔓 {seal.name}解開了！"); }
+            }
             // 地標：走進去＝發現（小地圖標名字）
             foreach (var l in map.landmarks) if (!l.found && l.Contains(pc)) { l.found = true; if (l.kind != "start" && l.kind != "arena") Say($"📍 發現：{l.name}"); }
             // 競技場：走進去
@@ -512,6 +614,9 @@ namespace SpellDuel
                 talkText = bossDead ? "古樹之心就在王座後面的祭壇上，快去拿！" : GuardiansDown < 3 ? "前面的藤蔓門被守衛的力量封住了，先打倒三個守衛。" : "腐化樹王就在前面的王座。打倒牠，把古樹之心帶給我。";
                 return;
             }
+            // 送東西：送到的人
+            foreach (var dq in map.quests)
+                if (dq.kind == "deliver" && dq.state == ExQuestState.Active && dq.target == n.id) { talkText = dq.thanks; Complete(dq); return; }
             var qq = map.Quest(n.quest);
             if (qq == null) return;
             switch (qq.state)
@@ -537,6 +642,8 @@ namespace SpellDuel
             q.state = ExQuestState.Done; gold += q.gold; xp += q.xp;
             rewards.Add($"{q.title}：{q.gold} 金幣、{q.xp} 經驗");
             Say($"✅ 完成「{q.title}」（+{q.gold} 金幣、+{q.xp} 經驗）");
+            // 草藥做好了：接著請你把解毒藥送回西南區（跨區送東西）
+            if (q.id == "herbs") { var a = map.Quest("antidote"); if (a != null && a.state == ExQuestState.Hidden) { a.state = ExQuestState.Active; Say($"📜 接受任務「{a.title}」：{a.desc}"); if (talkText != null) talkText += "\n\n" + a.offer; } }
         }
 
         /// <summary>戰鬥：這隻怪被打倒</summary>
@@ -607,7 +714,14 @@ namespace SpellDuel
                 var m = Main;
                 if (m.state == ExQuestState.Offered) return "和林語長老說話";
                 if (m.state == ExQuestState.Done) return "探索完成！";
-                if (GuardiansDown < 3) return $"打倒守衛，打開藤蔓門（{GuardiansDown}/3）";
+                if (GuardiansDown < 3)
+                {
+                    var next = map.seals.Find(s => s.id == "seal" + (GuardiansDown + 1));
+                    if (next != null && !next.open) return $"找到打開「{next.name}」的{(next.need > 1 ? $"機關（{next.have}/{next.need}）" : next.id == "seal2" ? "鑰匙" : "機關")}——在這一區的岔路深處";
+                    return $"打倒守衛，打開藤蔓門（{GuardiansDown}/3）";
+                }
+                var jade = map.seals.Find(s => s.id == "seal4");
+                if (jade != null && !jade.open) return $"湊齊翠玉碎片，解開王座的封印（{jade.have}/3）——前面三個區域的岔路各藏一片";
                 if (!bossDead) return "前往王座，打倒腐化樹王";
                 if (!hasHeart) return "到王座後面的祭壇取得古樹之心";
                 return "把古樹之心交給守林人";

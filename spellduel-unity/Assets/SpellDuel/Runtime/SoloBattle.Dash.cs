@@ -15,7 +15,7 @@ namespace SpellDuel
     /// </summary>
     public partial class SoloBattle
     {
-        public const float DashSpeed = 2.5f;   // 公尺／秒
+        public const float DashSpeed = 3.5f;   // 公尺／秒（使用者要求加快：2.5 → 3.5）
         const float DashArm = 0.8f;            // 比 5 之後這麼久內握拳才算
         const float DashGrace = 0.15f;         // 手勢偵測偶爾漏一兩張不算放開
         const float DashEdge = 0.4f;           // 離場地邊界這麼近就停
@@ -85,7 +85,7 @@ namespace SpellDuel
                 if (exploreRun != null)
                 {
                     // 故事探索：沒有場地邊界，碰到迷宮的牆（或還沒打開的藤蔓門）才停
-                    if (!exploreRun.map.Walkable(p, 0.35f)) { why = exploreRun.map.ClosedGateAt(from + dir * (d + 0.6f)) != null ? "藤蔓門還沒打開" : "前面是樹叢"; break; }
+                    if (!exploreRun.map.Walkable(p, 0.35f)) { var ahead = from + dir * (d + 0.6f); why = exploreRun.map.ClosedSealAt(ahead) != null ? "封印還沒解開" : exploreRun.map.ClosedGateAt(ahead) != null ? "藤蔓門還沒打開" : "前面過不去"; break; }
                 }
                 else
                 {
