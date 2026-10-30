@@ -51,7 +51,7 @@ namespace SpellDuel
             giftWeapon = w; GiftUid = w.uid;
             bool inBag = Progress.AddToBagOrMail(w, "小鐵的禮物");
             Economy.Gold += GiftGold;
-            Crafting.Give("refine", GiftStones);   // 精煉石：新手指引的強化要用（之後打岩石類敵人掉鐵礦石，5 個找鐵匠合成）
+            Crafting.Give("refine", GiftStones);   // 精煉石：強化 +4～+7 要用（+1～+3 不用；之後打岩石類敵人掉鐵礦石，5 個找鐵匠合成）
             Sfx.Play("coin", 0.8f, 1.1f); Haptics.Play(Haptics.Kind.Success);
             // 重新出現裝備、鐵匠鋪的說明卡
             foreach (var id in new[] { "char", "char_gear", "smith", "new_item" }) try { PlayerPrefs.DeleteKey(CharacterSlots.Key("sd_tip_" + id)); } catch { }

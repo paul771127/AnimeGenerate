@@ -93,7 +93,11 @@ namespace SpellDuel
 
         // ---------------------------------------------------------------- 鐵匠鋪：強化
         public const int MaxPlus = 10;
-        public const float EnhancePerLevel = 0.08f;   // 每強化 1 級，主屬性 +8%（其他屬性、機率不變）
+        /// <summary>強化到第 level 級加的主屬性（使用者要求：+1～+3 最少、+4～+7 中等、+8～+10 最多；滿 +10 合計 +80%）</summary>
+        public static float EnhanceStep(int level) => level <= 3 ? 0.04f : level <= 7 ? 0.08f : 0.12f;
+        /// <summary>強化 +plus 的主屬性倍率（其他屬性、機率不變）</summary>
+        public static float EnhanceMul(int plus) { float m = 1f; for (int l = 1; l <= Mathf.Min(plus, MaxPlus); l++) m += EnhanceStep(l); return m; }
+        public const string EnhanceRule = "+1～+3 每級主屬性 +4%（不用礦石）、+4～+7 每級 +8%（精煉石）、+8～+10 每級 +12%（高級精煉石）";
         public static int EnhanceCost(Item it) => (it.plus + 1) * 50 + it.ilvl * 5 + it.rarity * 30;
         /// <summary>成功率：+1～+5 一定成功，之後越來越難</summary>
         public static float EnhanceRate(Item it) => it.plus < 5 ? 1f : it.plus switch { 5 => 0.8f, 6 => 0.65f, 7 => 0.5f, 8 => 0.4f, _ => 0.3f };
@@ -114,14 +118,14 @@ namespace SpellDuel
             if (it.plus >= MaxPlus) { msg = "已經是最高等級"; return false; }
             int cost = EnhanceCost(it);
             if (Gold < cost) { msg = $"金幣不夠（需要 {cost}）"; return false; }
-            // 精煉石（使用者要求）：+1～+5 每次 1 個精煉石、+6～+8 每次 1 個高級精煉石、+9～+10 每次 2 個（成功失敗都會用掉）
+            // 精煉石（使用者要求）：+1～+3 不用、+4～+7 精煉石 1 個、+8～+9 高級精煉石 1 個、+10 高級精煉石 2 個（成功失敗都會用掉）
             var (stone, sn) = Crafting.StoneFor(it);
-            if (Crafting.Have(stone) < sn) { msg = $"{Crafting.MatName(stone)}不夠（要 {sn} 個，有 {Crafting.Have(stone)} 個）：鐵匠可以用 {Crafting.OrePerStone} 個礦石合成"; return false; }
+            if (sn > 0 && Crafting.Have(stone) < sn) { msg = $"{Crafting.MatName(stone)}不夠（要 {sn} 個，有 {Crafting.Have(stone)} 個）：鐵匠可以用 {Crafting.OrePerStone} 個礦石合成"; return false; }
             useScroll = useScroll && Count(ScrollEnh) > 0;
-            Gold -= cost; Crafting.Give(stone, -sn);
+            Gold -= cost; if (sn > 0) Crafting.Give(stone, -sn);
             if (useScroll) AddItem(ScrollEnh, -1);
             if (rng.NextDouble() <= EnhanceRate(it, useScroll)) { it.plus++; msg = $"✨ 強化成功！{it.FullName}" + (useScroll ? "（用了一張強化卷）" : ""); return true; }
-            msg = "💥 強化失敗…（金幣和精煉石" + (useScroll ? "、強化卷" : "") + "用掉了，裝備沒事）";
+            msg = "💥 強化失敗…（金幣" + (sn > 0 ? "和" + Crafting.MatName(stone) : "") + (useScroll ? "、強化卷" : "") + "用掉了，裝備沒事）";
             return false;
         }
 

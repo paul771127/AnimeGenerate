@@ -56,7 +56,7 @@ namespace SpellDuel
         static readonly string[] Cores = { "core_golem", "core_tree", "core_sea", "core_arena", "core_canyon" };
         public static readonly List<Ware> Wares = new List<Ware>
         {
-            new Ware { id = "refine3", name = "精煉石 ×3", icon = "🔷", price = 3, desc = "強化 +1～+5 用", give = (p, r) => { Crafting.Give("refine", 3); return "拿到精煉石 ×3"; } },
+            new Ware { id = "refine3", name = "精煉石 ×3", icon = "🔷", price = 3, desc = "強化 +4～+7 用", give = (p, r) => { Crafting.Give("refine", 3); return "拿到精煉石 ×3"; } },
             new Ware { id = "refinehi", name = "高級精煉石 ×1", icon = "🔶", price = 6, desc = "強化 +6 以上用", give = (p, r) => { Crafting.Give("refine_hi", 1); return "拿到高級精煉石 ×1"; } },
             new Ware { id = "elite", name = "菁英徽記 ×1", icon = "🏅", price = 5, desc = "工匠做特殊裝備的材料", give = (p, r) => { Crafting.Give("elite", 1); return "拿到菁英徽記 ×1"; } },
             new Ware { id = "core", name = "隨機 Boss 核心", icon = "💠", price = 10, desc = "五種 Boss 核心隨機一個（工匠最好的裝備要用）", give = (p, r) => { var c = Cores[r.Next(Cores.Length)]; Crafting.Give(c, 1); return "拿到 " + Crafting.MatName("mat_" + c); } },

@@ -90,11 +90,11 @@ namespace SpellDuel
             var er = D(680, 205, 360, 185);
             int cost = sel != null ? Economy.EnhanceCost(sel) : 0;
             var (stone, sn) = sel != null ? Crafting.StoneFor(sel) : ("mat_refine", 1);
-            bool maxed = sel != null && sel.plus >= Economy.MaxPlus, poor = sel != null && Economy.Gold < cost, noStone = sel != null && Crafting.Have(stone) < sn;
+            bool maxed = sel != null && sel.plus >= Economy.MaxPlus, poor = sel != null && Economy.Gold < cost, noStone = sel != null && sn > 0 && Crafting.Have(stone) < sn;
             int enhScrolls = Economy.Count(Economy.ScrollEnh);
             bool useEnh = useEnhScroll && enhScrolls > 0 && sel != null && Economy.EnhanceRate(sel) < 1f;
             string el = sel == null ? "先選裝備" : maxed ? "已經是 +10" : poor ? $"金幣不夠\n（要 💰 {cost}）" : noStone ? $"{Crafting.MatName(stone)}不夠\n（要 {sn} 個，有 {Crafting.Have(stone)}）"
-                : $"⚒ 強化（💰 {cost}＋{Crafting.MatName(stone)}×{sn}・成功率 {Economy.EnhanceRate(sel, useEnh) * 100:0}%{(useEnh ? "📜" : "")}）";
+                : $"⚒ 強化（💰 {cost}{(sn > 0 ? "＋" + Crafting.MatName(stone) + "×" + sn : "・不用礦石")}・成功率 {Economy.EnhanceRate(sel, useEnh) * 100:0}%{(useEnh ? "📜" : "")}）";
             poor |= noStone;
             if (UiKit.Button(er, el, fs, sel != null && !maxed && !poor, new Color(1f, 0.55f, 0.2f), sel != null && !maxed && !poor && !anim))
             {
@@ -113,7 +113,7 @@ namespace SpellDuel
             {
                 var m0 = sel.mods[0];
                 string now = Item.AffixText(m0.Key, m0.Value * sel.PlusMul);
-                string nxt = maxed ? "（已滿級）" : Item.AffixText(m0.Key, m0.Value * (1f + Economy.EnhancePerLevel * (sel.plus + 1)));
+                string nxt = maxed ? "（已滿級）" : Item.AffixText(m0.Key, m0.Value * Economy.EnhanceMul(sel.plus + 1));
                 st = $"強化前 → 強化後\n{now}\n→ {nxt}\n（只加主屬性，其他屬性不變）";
             }
             UiKit.Text(new Rect(sr.x + fs * 0.5f, sr.y + fs * 0.3f, sr.width - fs, sr.height - fs * 0.6f), st, fsS, Color.white, TextAnchor.UpperLeft, false, 0.5f);
@@ -142,8 +142,8 @@ namespace SpellDuel
             if (UiKit.Button(D(40, 1190, 600, 88), $"🔷 合成精煉石（🪨鐵礦石 {ore}/{Crafting.OrePerStone}）　持有 {Crafting.Have("refine")}", fsS, false, new Color(0.45f, 0.75f, 1f), !anim && ore >= Crafting.OrePerStone))
             { Crafting.RefineStone(false, out var rm); Toast(rm); smithExpr = "proud"; smithLine = "礦石敲一敲、燒一燒——精煉石來了！"; Sfx.Play("anvil", 0.7f); }
             if (UiKit.Button(D(40, 1290, 600, 88), $"🔶 合成高級精煉石（💎高級鐵礦石 {oreHi}/{Crafting.OrePerStone}）　持有 {Crafting.Have("refine_hi")}", fsS, false, new Color(1f, 0.7f, 0.3f), !anim && oreHi >= Crafting.OrePerStone))
-            { Crafting.RefineStone(true, out var rm2); Toast(rm2); smithExpr = "proud"; smithLine = "好礦！這顆夠強化到 +8 了。"; Sfx.Play("anvil", 0.8f, 1.2f); }
-            UiKit.Text(D(40, 1385, 600, 120), "強化 +1～+5 要精煉石、+6～+8 要高級精煉石（+9、+10 各 2 個）。\n鐵礦石：岩石、大地類的敵人；高級鐵礦石：普通以上難度。", fsS, new Color(0.9f, 0.92f, 1f), TextAnchor.UpperLeft, false, 0.5f);
+            { Crafting.RefineStone(true, out var rm2); Toast(rm2); smithExpr = "proud"; smithLine = "好礦！+8 以上就靠它了。"; Sfx.Play("anvil", 0.8f, 1.2f); }
+            UiKit.Text(D(40, 1385, 600, 120), "+1～+3 不用礦石（每級 +4%）；+4～+7 精煉石（每級 +8%）；+8～+10 高級精煉石（每級 +12%，+10 要 2 個）。\n鐵礦石：岩石、大地類的敵人；高級鐵礦石：普通以上難度。", fsS, new Color(0.9f, 0.92f, 1f), TextAnchor.UpperLeft, false, 0.5f);
             if (UiKit.Button(D(270, 1795, 540, 92), "🏘 回城鎮", fs, false, new Color(1f, 0.55f, 0.2f), !anim)) { screen = Screen.Town; smithLine = null; smithExpr = "normal"; }
             return true;
         }

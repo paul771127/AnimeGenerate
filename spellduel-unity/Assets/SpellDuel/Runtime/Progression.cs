@@ -903,14 +903,14 @@ namespace SpellDuel
         public float ModValue(int i) => i < 0 || i >= mods.Count ? 0f : IsStatusAffix(mods[i].Key) ? Mathf.Min(ItemGen.StatusChanceMax, mods[i].Value) : (mods[i].Key == Affix.Armor || mods[i].Key == Affix.MagicArmor) ? Mathf.Min(ItemGen.ArmorMax, mods[i].Value) : mods[i].Value * (i == 0 ? PlusMul : 1f);   // 減傷：每件最多 3%（舊存檔的也一樣）   // 附加狀態機率：最多 5%（舊存檔的也一樣）、不吃強化
         public static bool IsStatusAffix(Affix a) => a == Affix.Burn || a == Affix.Poison || a == Affix.Freeze;
         public float Sum(Affix a) { float s = 0f; for (int i = 0; i < mods.Count; i++) if (mods[i].Key == a) s += ModValue(i); return s; }
-        public float PlusMul => 1f + Economy.EnhancePerLevel * plus;
+        public float PlusMul => Economy.EnhanceMul(plus);
         /// <summary>屬性一覽（主屬性標「主」；強化只加主屬性）</summary>
         public List<string> ModLines(int plusOverride = -1)
         {
             var l = new List<string>();
             for (int i = 0; i < mods.Count; i++)
             {
-                float v = i == 0 ? mods[0].Value * (1f + Economy.EnhancePerLevel * (plusOverride >= 0 ? plusOverride : plus)) : ModValue(i);
+                float v = i == 0 ? mods[0].Value * Economy.EnhanceMul(plusOverride >= 0 ? plusOverride : plus) : ModValue(i);
                 l.Add((i == 0 ? "【主】" : "") + AffixText(mods[i].Key, v));
             }
             l.AddRange(Blueprints.SpecialLines(this));

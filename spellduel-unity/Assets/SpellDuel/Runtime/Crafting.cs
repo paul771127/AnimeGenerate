@@ -6,8 +6,8 @@ namespace SpellDuel
     /// <summary>
     /// 材料、精煉石、特殊藥劑、特殊裝備（使用者要求）。
     ///   ・材料放在道具欄（Economy.Items，id 開頭 mat_）。敵人倒下時：精魄 → 裝備 → 材料，最多只掉一樣（SoloBattle.DropOne）。
-    ///   ・岩石／大地類敵人 10% 掉鐵礦石；普通以上難度另有機率掉高級鐵礦石。5 個鐵礦石 → 精煉石（強化 +1～+5 每次 1 個）；
-    ///     5 個高級鐵礦石 → 高級精煉石（+6～+8 每次 1 個；+9、+10 每次 2 個）。
+    ///   ・岩石／大地類敵人 10% 掉鐵礦石；普通以上難度另有機率掉高級鐵礦石。強化 +1～+3 不用礦石；5 個鐵礦石 → 精煉石（+4～+7 每次 1 個）；
+    ///     5 個高級鐵礦石 → 高級精煉石（+8、+9 每次 1 個；+10 2 個）。
     ///   ・每個城鎮的藥劑師用當地敵人掉的材料做強化藥劑（每罐 3 分鐘）；材料一樣 10% 從對應的敵人身上掉。
     ///   ・工匠做特殊裝備：固定的特殊效果（數值有點隨機）、物品等級＝自己的等級（數值 ±10%）；等級越高要的材料越多；
     ///     強的配方要普通／困難才掉的材料，最強的要 Boss 才掉的核心。
@@ -166,11 +166,11 @@ namespace SpellDuel
 
         // ================================================================ 精煉石（鐵匠）
         public const int OrePerStone = 5;
-        /// <summary>強化到下一級要的精煉石（id、數量）：+1～+5 精煉石 1 個；+6～+8 高級精煉石 1 個；+9、+10 高級精煉石 2 個</summary>
+        /// <summary>強化到下一級要的精煉石（id、數量）：+1～+3 不用（null, 0）；+4～+7 精煉石 1 個（鐵礦石合成）；+8、+9 高級精煉石 1 個、+10 2 個（高級鐵礦石合成）</summary>
         public static (string id, int n) StoneFor(Item it)
         {
             int next = it.plus + 1;
-            return next <= 5 ? ("mat_refine", 1) : next <= 8 ? ("mat_refine_hi", 1) : ("mat_refine_hi", 2);
+            return next <= 3 ? (null, 0) : next <= 7 ? ("mat_refine", 1) : next <= 9 ? ("mat_refine_hi", 1) : ("mat_refine_hi", 2);
         }
         public static bool RefineStone(bool hi, out string msg)
         {
