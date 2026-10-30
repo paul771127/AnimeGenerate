@@ -181,6 +181,8 @@ namespace SpellDuel
         public readonly List<KeyValuePair<string, float>> potionBuffs = new List<KeyValuePair<string, float>>();
         /// <summary>減傷（使用者要求）：體質加到 99 點＝30%；裝備、精魄、技能樹、職業另外加；全部加起來最多 70%（超過沒有作用）</summary>
         public const float MaxReduce = 0.7f, VitMaxReduce = 0.3f;
+        /// <summary>精神從初始值加到 99 點：魔法減傷 +15%（使用者要求，和智力的 30% 疊加）</summary>
+        public const float SpiMaxMagicReduce = 0.15f;
         public const int VitFullReduce = 99;
         public readonly List<Dot> dots = new List<Dot>();
 

@@ -239,11 +239,13 @@ namespace SpellDuel
             R("rc_ember", "炎心護符", Slot.Trinket, 2, 0, "灼燒機率、攻擊", 300, new[] { E(Affix.Burn, 0.03f, 0.05f), E(Affix.Atk, 0.03f, 0.06f) }, ("fire", 5), ("horn", 5), ("ore", 3)),
             R("rc_vine", "藤編長靴", Slot.Feet, 2, 0, "中毒機率、敏捷", 300, new[] { E(Affix.Poison, 0.03f, 0.05f), E(Affix.Agi, 4f, 8f) }, ("fiber", 5), ("gland", 3), ("ore", 3)),
             R("rc_tide", "潮紋法袍", Slot.Body, 2, 0, "魔法減傷、MP", 350, new[] { E(Affix.MagicArmor, 0.02f, 0.03f), E(Affix.Mp, 20f, 40f) }, ("shell", 5), ("scale", 5), ("ore", 5)),
+            R("rc_calm", "靜心頭環", Slot.Head, 2, 0, "魔法減傷、精神", 350, new[] { E(Affix.MagicArmor, 0.02f, 0.03f), E(Affix.Spi, 4f, 8f) }, ("scale", 5), ("fiber", 5), ("ore", 3)),   // 使用者要求：多一些魔法減傷的裝備
             R("rc_shell", "蟹殼重甲", Slot.Body, 2, 0, "物理減傷、HP", 350, new[] { E(Affix.Armor, 0.02f, 0.03f), E(Affix.Hp, 40f, 80f) }, ("shell", 6), ("ore", 6)),
             // ---- 進階（普通以上的材料：高級鐵礦石、菁英徽記）：史詩
             R("rc_glad", "鬥魂戰刃", Slot.Weapon, 3, 1, "攻擊、吸血", 900, new[] { E(Affix.Atk, 0.06f, 0.10f), E(Affix.Lifesteal, 0.02f, 0.04f) }, ("badge", 8), ("elite", 3), ("ore_hi", 5)),
             R("rc_hawk", "鷹眼指環", Slot.Trinket, 3, 1, "爆擊率、冷卻", 900, new[] { E(Affix.Crit, 0.05f, 0.08f), E(Affix.Cdr, 0.03f, 0.05f) }, ("feather", 8), ("elite", 3), ("ore_hi", 3)),
             R("rc_sand", "砂晶頭盔", Slot.Head, 3, 1, "物理與魔法減傷", 900, new[] { E(Affix.Armor, 0.02f, 0.03f), E(Affix.MagicArmor, 0.02f, 0.03f) }, ("crystal", 8), ("elite", 3), ("ore_hi", 5)),
+            R("rc_ward", "破魔護符", Slot.Trinket, 3, 1, "魔法減傷、精神、MP", 900, new[] { E(Affix.MagicArmor, 0.025f, 0.03f), E(Affix.Spi, 8f, 12f), E(Affix.Mp, 30f, 50f) }, ("crystal", 6), ("elite", 3), ("ore_hi", 3)),
             // ---- 傳奇（Boss 核心；困難的神匠之魂）：傳說
             R("rc_lava", "熔岩之心鎧", Slot.Body, 4, 1, "雙減傷、HP、灼燒", 2500, new[] { E(Affix.Armor, 0.025f, 0.03f), E(Affix.MagicArmor, 0.025f, 0.03f), E(Affix.Hp, 90f, 150f), E(Affix.Burn, 0.04f, 0.05f) }, ("core_golem", 2), ("core_canyon", 1), ("elite", 5), ("ore_hi", 10)),
             R("rc_tear", "海妖淚墜", Slot.Trinket, 4, 1, "冷卻、MP、冰凍", 2500, new[] { E(Affix.Cdr, 0.06f, 0.10f), E(Affix.Mp, 50f, 90f), E(Affix.Freeze, 0.04f, 0.05f) }, ("core_sea", 2), ("core_tree", 1), ("elite", 5), ("ore_hi", 8)),

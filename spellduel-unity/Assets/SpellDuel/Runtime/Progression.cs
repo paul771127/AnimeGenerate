@@ -52,7 +52,7 @@ namespace SpellDuel
             Stat.Int => atk ? "攻擊傷害 +2%／點、治療量 +2%／點、MP 上限 +2／點、魔法減傷：加到 99 點 30%" : "MP 上限 +2／點、治療量 +2%／點、魔法減傷：加到 99 點 30%（照比例）",
             Stat.Vit => "HP 上限 +5／點、物理減傷：加到 99 點 30%（照比例）",
             Stat.Agi => "蓄力時間 -1%／點（最多 -40%）、普攻速度：冷卻 -0.8%／點（最多 -50%）、閃避率 +0.1%／點（只閃物理攻擊）、命中率 +0.1%／點（抵掉對方的閃避）；自己配點最多到 99（裝備另外加）",
-            Stat.Spi => "MP 回復（基礎只有 30%，精神 99 點回到 100%）、冷卻時間 -0.8%／點（最多 -35%）",
+            Stat.Spi => "MP 回復（基礎只有 30%，精神 99 點回到 100%）、冷卻時間 -0.8%／點（最多 -35%）、魔法減傷：加到 99 點 +15%（照比例，和智力的疊加）",
             _ => "爆擊率 +0.6%／點（爆擊＝傷害 ×2）、掉寶機率與稀有度提升",
         };
     }
@@ -847,7 +847,7 @@ namespace SpellDuel
             new[] { "傳說・烈焰王", "傳說・世界樹", "傳說・海神", "傳說・天命" },
             new[] { "神話・萬象", "神話・千機" },
         };
-        static readonly Affix[] Pool = { Affix.Str, Affix.Int, Affix.Vit, Affix.Agi, Affix.Spi, Affix.Luk, Affix.Hp, Affix.Mp, Affix.Crit, Affix.Cdr, Affix.Burn, Affix.Poison, Affix.Freeze, Affix.Lifesteal, Affix.Accuracy };
+        static readonly Affix[] Pool = { Affix.Str, Affix.Int, Affix.Vit, Affix.Agi, Affix.Spi, Affix.Luk, Affix.Hp, Affix.Mp, Affix.Crit, Affix.Cdr, Affix.Burn, Affix.Poison, Affix.Freeze, Affix.Lifesteal, Affix.Accuracy, Affix.MagicArmor };   // 魔法減傷：使用者要求多一些裝備有
 
         /// <summary>擲稀有度：基本 普通 55%、優良 28%、稀有 12%、史詩 4%、傳說 1%；幸運與加成會往上推</summary>
         public static int RollRarity(System.Random rng, float luckBonus, int minRarity = 0)
@@ -886,10 +886,18 @@ namespace SpellDuel
                     it.mods.Add(new KeyValuePair<Affix, float>(Affix.Atk, 0.04f + 0.012f * power));
                     break;
                 }
-                case Slot.Head: { var h = Pick(rng, Heads, prefer); baseName = h.name; it.classes = h.cls; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Mp, Mathf.Round(4f + 1.6f * power))); break; }
+                case Slot.Head:
+                {
+                    var h = Pick(rng, Heads, prefer); baseName = h.name; it.classes = h.cls; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Mp, Mathf.Round(4f + 1.6f * power)));
+                    if (h.name == "兜帽" || h.name == "頭環") it.mods.Add(new KeyValuePair<Affix, float>(Affix.MagicArmor, ArmorRoll(power, rng)));   // 使用者要求：多一些魔法減傷的裝備
+                    break;
+                }
                 case Slot.Body: { var b = Pick(rng, Bodies, prefer); baseName = b.name; it.classes = b.cls; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Hp, Mathf.Round(8f + 3f * power))); it.mods.Add(new KeyValuePair<Affix, float>(b.name == "法袍" ? Affix.MagicArmor : Affix.Armor, Mathf.Round(Mathf.Lerp(ArmorMin, ArmorMax, Mathf.Clamp01(power / 100f)) * 1000f) / 1000f)); break; }
                 case Slot.Feet: { var f = Pick(rng, Feets, prefer); baseName = f.name; it.classes = f.cls; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Agi, Mathf.Round(1f + 0.35f * power))); break; }
-                default: baseName = Trinkets[rng.Next(Trinkets.Length)]; it.classes = ""; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Luk, Mathf.Round(1f + 0.3f * power))); break;
+                default:
+                    baseName = Trinkets[rng.Next(Trinkets.Length)]; it.classes = ""; it.mods.Add(new KeyValuePair<Affix, float>(Affix.Luk, Mathf.Round(1f + 0.3f * power)));
+                    if (baseName == "護符") it.mods.Add(new KeyValuePair<Affix, float>(Affix.MagicArmor, ArmorRoll(power, rng)));   // 護符：固定帶魔法減傷
+                    break;
             }
             if (rarity == 5 && it.mods.Count > 0) { var main = it.mods[0]; it.mods[0] = new KeyValuePair<Affix,float>(main.Key,main.Value*1.2f); }
             // 稀有度越高：附加屬性越多、限制越嚴（傳說只能單一職業）
@@ -973,6 +981,9 @@ namespace SpellDuel
         /// <summary>裝備的減傷：每一件 1～3%（使用者要求）；體質最多 30%，裝備、精魄等另外加，全部加起來最多 70%（Fighter.MaxReduce）</summary>
         public const float ArmorMin = 0.01f, ArmorMax = 0.03f;
 
+        /// <summary>部位固定附帶的減傷：1～3%，等級／稀有度越高越接近 3%（稍微浮動）</summary>
+        static float ArmorRoll(float power, System.Random rng) => Mathf.Round(Mathf.Clamp(Mathf.Lerp(ArmorMin, ArmorMax, Mathf.Clamp01(power / 100f)) * (0.9f + 0.2f * (float)rng.NextDouble()), ArmorMin, ArmorMax) * 1000f) / 1000f;
+
         static float AffixValue(Affix a, float power, System.Random rng)
         {
             float k = 0.8f + 0.4f * (float)rng.NextDouble();
@@ -983,6 +994,7 @@ namespace SpellDuel
                 Affix.Crit => Mathf.Min(0.15f, (0.01f + 0.003f * power) * k),
                 Affix.Accuracy => Mathf.Min(0.08f, (0.01f + 0.0015f * power) * k),   // 命中率：每一條 1～8%
                 Affix.Cdr => Mathf.Min(0.12f, (0.01f + 0.0025f * power) * k),
+                Affix.MagicArmor => Mathf.Round(Mathf.Clamp(Mathf.Lerp(ArmorMin, ArmorMax, Mathf.Clamp01(power / 100f)) * k, ArmorMin, ArmorMax) * 1000f) / 1000f,   // 每一條 1～3%
                 Affix.Lifesteal => Mathf.Min(0.08f, (0.01f + 0.0015f * power) * k),
                 Affix.Burn or Affix.Poison or Affix.Freeze => Mathf.Clamp(Mathf.Round((StatusChanceMin + (StatusChanceMax - StatusChanceMin) * Mathf.Clamp01(power / 50f)) * k * 100f) / 100f, StatusChanceMin, StatusChanceMax),   // 附加狀態：每一條 2～5%
                 _ => Mathf.Max(1f, Mathf.Round((1f + 0.3f * power) * k)),
@@ -1332,12 +1344,13 @@ namespace SpellDuel
             f.maxHp = Mathf.Max(10, LevelBase(cd.maxHp, HpPerLevel) + 5 * d(Stat.Vit) + (atkStat != Stat.Str ? d(Stat.Str) : 0) + Mathf.RoundToInt(GearSum(Affix.Hp)));
             // 減傷（使用者要求）分物理、魔法：
             //   物理減傷＝體質從初始值加到 99 點 30%（線性）＋裝備的物理減傷（每件 1～3%、套裝）
-            //   魔法減傷＝智力從初始值加到 99 點 30%（線性）＋裝備的魔法減傷（法袍、海神套裝）
+            //   魔法減傷＝智力從初始值加到 99 點 30%（線性）＋精神加到 99 點 15%（使用者要求）＋裝備的魔法減傷（法袍、兜帽、頭環、護符、副屬性、套裝）
             //   精魄、技能樹、進階職業的減傷兩種都加；各自最多 70%（Fighter.MaxReduce）
             float vitFrac = Mathf.Clamp01(d(Stat.Vit) / (float)Mathf.Max(1, Fighter.VitFullReduce - BaseStat(Stat.Vit)));
             float intFrac = Mathf.Clamp01(d(Stat.Int) / (float)Mathf.Max(1, Fighter.VitFullReduce - BaseStat(Stat.Int)));
             f.gearReduce = Mathf.Min(Fighter.MaxReduce, Fighter.VitMaxReduce * vitFrac + GearSum(Affix.Armor));
-            f.magicReduce = Mathf.Min(Fighter.MaxReduce, Fighter.VitMaxReduce * intFrac + GearSum(Affix.MagicArmor));
+            float spiResFrac = Mathf.Clamp01(d(Stat.Spi) / (float)Mathf.Max(1, Fighter.VitFullReduce - BaseStat(Stat.Spi)));
+            f.magicReduce = Mathf.Min(Fighter.MaxReduce, Fighter.VitMaxReduce * intFrac + Fighter.SpiMaxMagicReduce * spiResFrac + GearSum(Affix.MagicArmor));
             // MP：智力每點 +2、裝備；MP 回復：基礎 30%，精神加到 99 點才回到 100%（線性；裝備把精神加超過 99 會再更快）
             f.maxMp = Mathf.Max(10, LevelBase(cd.maxMp, MpPerLevel) + 2 * d(Stat.Int) + Mathf.RoundToInt(GearSum(Affix.Mp)));   // MP 也隨等級：每級＋職業基礎 MP 的 MpPerLevel
             float spiFrac = Mathf.Max(0f, d(Stat.Spi) / (float)Mathf.Max(1, Fighter.MpRegenFullSpi - BaseStat(Stat.Spi)));
