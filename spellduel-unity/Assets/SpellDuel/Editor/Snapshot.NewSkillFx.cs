@@ -32,6 +32,10 @@ namespace SpellDuel.EditorTools
     Shot(cam,trap,"newfx_"+id+"_spectator",new Vector3(.8f,.8f,1),Vector3.zero,720,720);
     Shot(cam,trap,"newfx_"+id+"_firstperson",new Vector3(0,1.6f,-.8f),Vector3.zero,720,960);UnityEngine.Object.DestroyImmediate(trap);
    }
+   SpellFx.FalconDive(new Vector3(0,2,0),new Vector3(0,1,3),.35f);var falcon=UnityEngine.Object.FindObjectOfType<FalconDiveArt>();falcon.Sample(.2f);
+   Shot(cam,falcon.gameObject,"newfx_falcondive_spectator",new Vector3(2,2,3),falcon.transform.position,720,720);
+   Shot(cam,falcon.gameObject,"newfx_falcondive_firstperson",new Vector3(0,1.6f,-.5f),new Vector3(0,1.4f,3),720,960);
+   falcon.Sample(.15f);if(Vector3.Distance(falcon.transform.position,new Vector3(0,1,3))>.001f)throw new Exception("Falcon contact timing drift");UnityEngine.Object.DestroyImmediate(falcon.gameObject);
    File.WriteAllText("snapshots/newfx_audit.json","{\"wyrmSegments\":24,\"arShiftContinuous\":true}");
   }
  }

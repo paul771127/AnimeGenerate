@@ -700,3 +700,7 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 ### 2026-10-30 新技能特效 B6：陷阱
 - 爆裂地雷：半埋金屬壓盤、六顆鉚釘、引信、啟動紅燈；捕獸夾：鉸鏈弧形鋼齒；連環陷阱：額外互扣鐵鏈。
 - 新介面 `CreateTrapVisual(SkillDef)`／`SetTrapArmed(GameObject,bool)`／`MineBlast(Vector3,float,Color)`，未知陷阱回 null。爆炸範圍環精確依 radius，火球、碎石、煙柱各有限量粒子。Claude 接陷阱生命週期與爆炸事件；未動判定。
+
+### 2026-10-30 新技能特效 B9：獵鷹俯衝
+- `SpellFx.FalconDive(Vector3 fromWorld,Vector3 toWorld,float seconds)`：金橘獵鷹有鉤喙、眼、六片飛羽／翼、分尾、三趾爪。收翅抵達指定胸口座標，抓痕／羽片後拉升淡出。軌跡端點存戰場座標，隨 AR 重定位。
+- 原生測試斷言 .35 秒精確抵達；沒有目標查詢或傷害操作。Claude 呼叫新介面即可。
