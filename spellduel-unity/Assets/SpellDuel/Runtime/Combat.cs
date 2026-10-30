@@ -1569,7 +1569,8 @@ namespace SpellDuel
                     // 出手後原地不動：一般 1 秒、虛空術士 3 秒、藤蔓術士在藤蔓消失前（3 秒）；衝鋒獸改由衝刺決定
                     m.recoverUntil = kind == 8 || kind == 13 || kind == 14 ? 0f : IsSpecial(kind) ? now + SpecialRecover : now + (kind == 6 ? VoidStay : kind == 9 ? VineStay : MinionRecover) + (IsRanged(kind) ? rangedRecoverAdd : 0f);
                     if (kind == 6) m.teleportAt = now + VoidStay;                   // 停留完就瞬移
-                    else if (IsRanged(kind) && kind != 4 && kind != 7 && kind != 17) m.repositionNext = true;   // 其他遠程：站定完先隨機走位一下，才會再出手（投擲者、噴花、水母定住不動）
+                    else if (IsRanged(kind) && kind != 4 && kind != 7 && kind != 17) m.repositionNext = true;
+                    else if (MeleeShuffles(kind)) m.repositionNext = true;   // 近戰（使用者要求）：休息完先繞著你走一段，才會再打   // 其他遠程：站定完先隨機走位一下，才會再出手（投擲者、噴花、水母定住不動）
                     continue;
                 }
                 // 虛空術士：停留結束 → 瞬移到場內隨機位置
@@ -1595,7 +1596,7 @@ namespace SpellDuel
                 if (m.repositionNext)
                 {
                     m.repositionNext = false;
-                    if (PickRepositionPoint(m, tgt, out var dest)) { m.moveTo = dest; m.moveUntil = now + RepositionMaxTime; }
+                    if (PickRepositionPoint(m, tgt, out var dest)) { m.moveTo = dest; m.moveUntil = now + (IsRanged(kind) ? RepositionMaxTime : MeleeShuffleTime); }
                 }
                 if (m.moveUntil > 0f)
                 {
@@ -1771,10 +1772,32 @@ namespace SpellDuel
         /// （家具、牆邊），一直站著射就打不到它。先找「和目標保持射擊距離、在場地內」的點；找不到就放寬距離；
         /// 再找不到就往玩家那一側（場地裡面）走 1m。
         /// </summary>
+        /// <summary>
+        /// 近戰小怪出手後會先走一段再打（使用者要求）：熔岩小鬼、寄居蟹、大型特殊敵人。
+        /// 衝鋒獸（靠衝刺）、自爆、孢子菇（不打人）、食人花（埋著）、跳躍魚／海鳥／水母（自己的飛跳節奏）照舊。
+        /// </summary>
+        public static bool MeleeShuffles(int kind) => kind == 0 || kind == 16 || IsSpecial(kind);
+        /// <summary>近戰繞行：繞著目標轉 MeleeShuffleDeg 度左右（隨機左右）、退到 MeleeShuffleDist 的距離；最多走這麼久</summary>
+        public const float MeleeShuffleTime = 1.6f, MeleeShuffleDist = 1.7f, MeleeShuffleDegLo = 40f, MeleeShuffleDegHi = 80f;
+
         bool PickRepositionPoint(Fighter m, Fighter tgt, out Vector3 dest)
         {
             dest = m.Feet;
             int kind = m.minionKind;
+            if (!IsRanged(kind))
+            {
+                // 近戰：繞到你側邊一點、稍微拉開距離（像在找破綻），走到了再衝上來打
+                var rad = Fighter.Flat(m.Feet - tgt.Feet); if (rad == Vector3.zero) rad = Fighter.Flat(m.forward); if (rad == Vector3.zero) rad = Vector3.forward;
+                rad.Normalize();
+                float ang = MeleeShuffleDegLo + (float)rng.NextDouble() * (MeleeShuffleDegHi - MeleeShuffleDegLo);
+                float r = Mathf.Max(MeleeShuffleDist, tgt.bodyRadius + m.bodyRadius + 0.6f);
+                for (int sgn = rng.NextDouble() < 0.5 ? -1 : 1, i = 0; i < 2; i++, sgn = -sgn)
+                {
+                    var p = tgt.Feet + RotateY(rad, ang * sgn) * r; p.y = 0f;
+                    if (CanAttackFrom(p) && (minionInside == null || minionInside(p))) { dest = p; return true; }
+                }
+                return false;
+            }
             if (kind == 12)
             {
                 // 種子槍手：射完後退保持距離
