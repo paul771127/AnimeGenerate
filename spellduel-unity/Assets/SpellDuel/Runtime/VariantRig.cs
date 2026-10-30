@@ -22,7 +22,7 @@ namespace SpellDuel
   public void Windup(string skillId,float duration){if(dead)return;move=string.IsNullOrEmpty(skillId)?"basic":skillId;windDuration=float.IsNaN(duration)||float.IsInfinity(duration)?1:Mathf.Max(.05f,duration);windAge=0;winding=true;attackAge=20;}
   public void Strike(string skillId){if(dead)return;move=string.IsNullOrEmpty(skillId)?"basic":skillId;winding=false;channel=false;attackAge=0;}
   public void PlayHit(){if(!dead)hitAge=0;}
-  public void SetDead(bool value){if(dead==value)return;dead=value;deathAge=0;winding=channel=fleeing=sneaking=false;move="basic";attackAge=20;hitAge=1;moveSpeed=0;if(!value){channelBlend=sneakBlend=fleeBlend=0;}Sample(0);}
+  public void SetDead(bool value){if(dead==value)return;if(staggerArt!=null)staggerArt.Cancel();dead=value;deathAge=0;winding=channel=fleeing=sneaking=false;move="basic";attackAge=20;hitAge=1;moveSpeed=0;if(!value){channelBlend=sneakBlend=fleeBlend=0;}Sample(0);}
   public void SetChannel(bool on){if(dead)return;channel=on;if(on)attackAge=20;}
   public void ChannelBroken(){if(dead)return;channel=winding=false;channelBlend=0;attackAge=20;hitAge=0;if(channelHalo)SpellFx.Impact("assassin",new Color(.70f,.12f,.3f),channelHalo.position,.28f);}
   public void SetFleeing(bool on){if(dead)return;fleeing=on;if(on){channel=winding=false;attackAge=20;move="basic";}}
@@ -30,9 +30,10 @@ namespace SpellDuel
   /// <summary>Explicit animation sampling for editor previews; runtime calls this automatically.</summary>
   public void Sample(float deltaTime)
   {
-   if(!torso)return;AnimateModel(Mathf.Max(0,deltaTime));
+   if(!torso)return;if(staggerArt!=null)staggerArt.Restore();AnimateModel(Mathf.Max(0,deltaTime));
    if(enemyRing){enemyRing.gameObject.SetActive(!dead);var c=new Color(.85f,.08f,.13f,Mathf.Lerp(.65f,.25f,sneakBlend));enemyLine.startColor=enemyLine.endColor=c;}
    if(channelHalo){channelHalo.gameObject.SetActive(!dead&&(winding||channelBlend>.01f));channelHalo.localRotation=Quaternion.Euler(0,0,age*75);channelHalo.localScale=Vector3.one*(.8f+.2f*Mathf.Sin(age*8));}
+   if(staggerArt!=null)staggerArt.Apply(Mathf.Max(0,deltaTime),dead);
   }
   void Update(){Sample(Time.deltaTime);}
  }

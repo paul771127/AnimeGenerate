@@ -41,6 +41,7 @@ namespace SpellDuel.EditorTools
    for(int i=1;i<=1000;i++){slowGo.transform.position=Vector3.forward*(i*.003f);slow.Sample(.001f);}if(slow.VisibleSections!=25)throw new Exception("Dense wyrm history lost body length");
    if(meshCount!=Resources.FindObjectsOfTypeAll<Mesh>().Length||materialCount!=Resources.FindObjectsOfTypeAll<Material>().Length)throw new Exception("Wyrm per-frame mesh or material allocation");UnityEngine.Object.DestroyImmediate(slowGo);
    NewFxCatalogShots(cam);
+   StaggerShots(cam);
    File.WriteAllText("snapshots/newfx_audit.json","{\"wyrmSegments\":24,\"arShiftContinuous\":true,\"denseHistoryLength\":true,\"wyrmCacheStable\":true,\"falconContactTime\":0.35,\"iconsUnique\":51,\"independentAuraClear\":true,\"auraCacheStable\":true}");
   }
   static void NewFxSample(float dt)

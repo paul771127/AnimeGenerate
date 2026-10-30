@@ -43,5 +43,5 @@ jobs:
           name: SpellDuel-new-skill-fx
           path: |
             spellduel-unity/snapshots/newfx_*.png
-            spellduel-unity/snapshots/newfx_audit.json
+            spellduel-unity/snapshots/newfx*_audit.json
           if-no-files-found: error

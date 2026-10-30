@@ -9,7 +9,7 @@ namespace SpellDuel
   internal bool PetArtDead => dead;
   public void SetEating(bool eating){petEating=eating;}
   void RestoreEatingPose(){if(!eatApplied)return;if(eatHead)eatHead.localRotation=eatHeadBase;if(eatSpine)eatSpine.localRotation=eatSpineBase;eatApplied=false;}
-  void Animate(float dt){RestoreEatingPose();AnimateCore(dt);EatingPose(dt);}
+  void Animate(float dt){if(staggerArt!=null)staggerArt.Restore();RestoreEatingPose();AnimateCore(dt);EatingPose(dt);if(staggerArt!=null)staggerArt.Apply(dt,dead);}
   void EatingPose(float dt)
   {
    eatClock+=dt;eatBlend=Mathf.MoveTowards(eatBlend,petEating&&!dead?1:0,dt*6);if(eatBlend<=0||dead||phase!=PhaseNone)return;
