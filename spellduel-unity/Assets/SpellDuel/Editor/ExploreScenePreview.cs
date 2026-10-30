@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 namespace SpellDuel.EditorTools
@@ -30,11 +31,20 @@ namespace SpellDuel.EditorTools
    {
     var center=map.World((l.rect.xMin+l.rect.xMax)/2,(l.rect.yMin+l.rect.yMax)/2);Vector3 desired=map.World((l.rect.xMin+l.rect.xMax)/2,l.rect.yMin);Vector3 at=desired;float best=float.MaxValue;
     for(int x=l.rect.xMin;x<=l.rect.xMax;x++)for(int z=l.rect.yMin;z<=l.rect.yMax;z++){var p=map.World(x,z);if(!map.Walkable(p))continue;float score=(p-desired).sqrMagnitude;if((p-center).sqrMagnitude<9)score+=100;if(score<best){best=score;at=p;}}
-    var target=center+Vector3.up*(l.kind=="lake"?.35f:1.8f);cam.transform.position=at+Vector3.up*1.65f;if((target-cam.transform.position).sqrMagnitude<.5f)target+=Vector3.forward*3;cam.transform.LookAt(target);Save(cam,"explore_"+l.id+"_first",960,1280);
+    var target=center+Vector3.up*(l.kind=="lake"?.35f:1.8f);ChooseView(map,l,root.transform,ref at,ref target);cam.transform.position=at+Vector3.up*1.65f;if((target-cam.transform.position).sqrMagnitude<.5f)target+=Vector3.forward*3;cam.transform.LookAt(target);Save(cam,"explore_"+l.id+"_first",960,1280);
    }
    var middle=(map.World(0,0)+map.World(map.W-1,map.H-1))*.5f;cam.orthographic=true;cam.orthographicSize=map.W*3*.54f;cam.transform.position=middle+Vector3.up*160;cam.transform.rotation=Quaternion.Euler(90,0,0);Save(cam,"explore_map_top",1800,1800);
    root.SetActive(false);cam.orthographic=false;cam.fieldOfView=35;cam.backgroundColor=new Color(.13f,.17f,.20f);Catalogue(cam);
    File.WriteAllText("snapshots/explore_scene_audit.json","{\"landmarks\":"+map.landmarks.Count+",\"props\":"+map.props.Count+",\"noColliders\":true,\"staticStates\":true,\"cachedFactories\":true,\"keyframes\":16}");
+  }
+  static void ChooseView(ExploreMap map,ExLandmark l,Transform root,ref Vector3 at,ref Vector3 target)
+  {
+   if(l.kind=="lake"||l.kind=="arena")return;var targets=new List<Vector3>();
+   if(l.kind=="fort"||l.kind=="cave"||l.kind=="palace"||l.kind=="rocks")
+   {var decor=root.Find("Explore Landmark "+l.id);if(decor)foreach(Transform t in decor)if(t.name.StartsWith("WallScenery_"))targets.Add(t.position+Vector3.up*3.3f);}
+   else foreach(var p in map.props){var c=map.Cell(p.pos);if(l.Contains(c)&&(p.kind=="tent"||p.kind=="mushroom"))targets.Add(p.pos+Vector3.up*1.4f);}
+   float best=float.MaxValue;foreach(var aim in targets)for(int x=l.rect.xMin;x<=l.rect.xMax;x++)for(int z=l.rect.yMin;z<=l.rect.yMax;z++)
+   {var p=map.World(x,z);if(!map.Walkable(p))continue;var flat=aim-p;flat.y=0;float d=flat.magnitude;if(d<4||d>15)continue;bool clear=true;for(float travel=.5f;travel<d-1.6f;travel+=.5f){var c=map.Cell(p+flat*(travel/d));if(map.At(c.x,c.y)!=ExCell.Floor){clear=false;break;}}if(!clear)continue;float score=Mathf.Abs(d-7)+.1f*Mathf.Abs(x-(l.rect.xMin+l.rect.xMax)*.5f);if(score<best){best=score;at=p;target=aim;}}
   }
   static void Catalogue(Camera cam)
   {

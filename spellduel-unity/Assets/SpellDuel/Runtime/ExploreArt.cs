@@ -28,6 +28,13 @@ namespace SpellDuel
    internal void Frond(Vector3 a,Vector3 tip,float width,Color col){var side=Vector3.Cross((tip-a).normalized,Vector3.up).normalized*width;var mid=Vector3.Lerp(a,tip,.48f)+Vector3.up*.12f;Quad(a,mid-side,tip,mid+side,col,true);}
    internal void Vine(Vector3 a,Vector3 b,float bend,float radius,Color col,int steps=5){var prev=a;for(int i=1;i<=steps;i++){float u=i/(float)steps;var p=Vector3.Lerp(a,b,u)+V(Mathf.Sin(u*Mathf.PI)*bend,0,Mathf.Sin(u*Mathf.PI*2)*bend*.3f);Rod(prev,p,radius,col,4,radius*.94f);prev=p;}}
    internal void Ring(Vector3 p,float radius,float width,Color col,int sides=20){for(int i=0;i<sides;i++){float a=i*2*Mathf.PI/sides,b=(i+1)*2*Mathf.PI/sides;Quad(p+V(Mathf.Cos(a)*(radius-width),0,Mathf.Sin(a)*(radius-width)),p+V(Mathf.Cos(b)*(radius-width),0,Mathf.Sin(b)*(radius-width)),p+V(Mathf.Cos(b)*radius,0,Mathf.Sin(b)*radius),p+V(Mathf.Cos(a)*radius,0,Mathf.Sin(a)*radius),col);}}
+   internal void Crag(Vector3 center,Vector3 size,Color col,int seed=0)
+   {
+    Vector2[] rim={new Vector2(-1,-.65f),new Vector2(-.65f,-1),new Vector2(.65f,-1),new Vector2(1,-.65f),new Vector2(1,.65f),new Vector2(.65f,1),new Vector2(-.65f,1),new Vector2(-1,.65f)};
+    var rings=new Vector3[4,8];for(int j=0;j<4;j++)for(int i=0;i<8;i++){float f=j==0?1:j==1?.98f:j==2?.93f:.84f;float y=j==0?0:j==3?size.y*(.91f+.08f*Mathf.Sin(i*2.1f+seed)):size.y*(j==1?.34f:.69f)+.07f*Mathf.Sin(i+seed);rings[j,i]=center+V(rim[i].x*size.x*.5f*f,y,rim[i].y*size.z*.5f*f);}
+    for(int j=0;j<3;j++)for(int i=0;i<8;i++){int k=(i+1)%8;Color c=col;c.r*=1+(i%3-1)*.045f;c.g*=1+(j-1)*.04f;Quad(rings[j,i],rings[j+1,i],rings[j+1,k],rings[j,k],c);}
+    for(int i=0;i<8;i++){int k=(i+1)%8;Tri(center,rings[0,i],rings[0,k],col);Tri(center+V(0,size.y*.96f,0),rings[3,k],rings[3,i],col);}
+   }
    internal void FadeTile(float radius,Color col)
    {Vector3[] a={V(-radius,.002f,-radius),V(-radius,.002f,radius),V(radius,.002f,radius),V(radius,.002f,-radius)};Color clear=col;clear.a=0;Quad(a[0]*.85f,a[1]*.85f,a[2]*.85f,a[3]*.85f,col);for(int i=0;i<4;i++){int j=(i+1)%4;int k=v.Count;v.Add(a[i]*.85f);v.Add(a[j]*.85f);v.Add(a[j]);v.Add(a[i]);c.Add(col);c.Add(col);c.Add(clear);c.Add(clear);t.AddRange(new[]{k,k+1,k+2,k,k+2,k+3});}}
    internal void ClampCell(float half){for(int i=0;i<v.Count;i++){var p=v[i];p.x=Mathf.Clamp(p.x,-half,half);p.z=Mathf.Clamp(p.z,-half,half);p.y=Mathf.Max(0,p.y);v[i]=p;}}
@@ -45,13 +52,14 @@ namespace SpellDuel
    float shift=(n-1.5f)*.09f;
    if(t==ExTerrain.Thicket)
    {
-    b.Box(V(0,.45f,0),V(3,.9f,3),Leaf);for(int i=0;i<3;i++){float x=(i-1)*.96f;b.Rod(V(x,0,.2f),V(x+shift,2.65f,-.1f),.20f,Bark,5,.13f);b.Gem(V(x,1.6f,-.6f),V(1.7f,1.6f,1.8f),i%2==0?Leaf:Moss);b.Gem(V(x,2.4f,.55f),V(1.7f,1,1.8f),Leaf);b.Frond(V(x,.7f,1.3f),V(x+.4f,1.4f,1.42f),.36f,Moss);b.Rod(V(x,2.3f,1.2f),V(x+shift,.6f,1.3f),.035f,Moss,4);}
+    for(int i=0;i<4;i++){float x=(i%2==0?-.68f:.68f),z=(i<2?-.68f:.68f);b.Gem(V(x,.75f,z),V(2.2f,1.5f,2.2f),i%2==0?Leaf:Moss);b.Gem(V(x,2.35f+(i%2)*.1f,z),V(2.05f,1,2.05f),Leaf);b.Rod(V(x*.6f,1,0),V(x*1.9f,.08f,z*1.9f),.12f,Bark,4,.06f);}
+    for(int i=0;i<3;i++){float x=(i-1)*.82f;b.Rod(V(x,0,.2f),V(x+shift,2.5f,-.1f),.18f,Bark,5,.12f);}
+    for(int i=0;i<8;i++){float a=i*Mathf.PI/4;var at=V(Mathf.Cos(a)*1.08f,1.15f,Mathf.Sin(a)*1.08f);b.Frond(at,at+V(Mathf.Cos(a)*.3f,.65f,Mathf.Sin(a)*.3f),.24f,Moss);}
    }
    else if(t==ExTerrain.Rock||t==ExTerrain.Cave)
    {
-    var col=t==ExTerrain.Cave?new Color(.27f,.32f,.37f):Rock;
-    for(int j=0;j<3;j++){b.Box(V(shift*(j-1),.48f+j*.85f,0),V(3,.96f,3),col*(1-j*.06f));for(int i=0;i<2;i++)b.Gem(V((i-.5f)*1.5f,.7f+j*.85f,1.3f),V(1.4f,1, .5f),col);}
-    for(int i=0;i<3;i++){float x=i-1;b.Frond(V(x,.8f,1.48f),V(x+.4f,1.25f,1.45f),.18f,t==ExTerrain.Cave?Glow(Jade):Moss);if(t==ExTerrain.Cave)b.Rod(V(x,3,0),V(x+.12f,2.2f,0),.19f,col,4,0);}
+    var col=t==ExTerrain.Cave?new Color(.27f,.32f,.37f):Rock;b.Crag(Vector3.zero,V(3,2.8f,3),col,n);
+    for(int i=0;i<4;i++){float a=i*Mathf.PI/2;var at=V(Mathf.Cos(a)*1.4f,.8f,Mathf.Sin(a)*1.4f);b.Frond(at,at+V(-Mathf.Sin(a)*.4f,.45f,Mathf.Cos(a)*.4f),.14f,t==ExTerrain.Cave?Glow(Jade):Moss);b.Gem(V(Mathf.Cos(a)*1.2f,.32f,Mathf.Sin(a)*1.2f),V(.65f,.64f,.65f),col);if(t==ExTerrain.Cave)b.Rod(V(Mathf.Cos(a)*.7f,2.8f,Mathf.Sin(a)*.7f),V(Mathf.Cos(a)*.7f,2.1f,Mathf.Sin(a)*.7f),.14f,col,4,0);}
    }
    else if(t==ExTerrain.Water)
    {
@@ -59,7 +67,10 @@ namespace SpellDuel
    }
    else if(t==ExTerrain.Palisade)
    {
-    b.Box(V(0,1,0),V(3,2,2.7f),Bark*.8f);for(int i=0;i<6;i++){float x=-1.25f+i*.5f;b.Rod(V(x,0,1.18f),V(x,2.2f+(i+n)%3*.16f,1.18f),.27f,Bark,5,.20f);b.Rod(V(x,2.2f+(i+n)%3*.16f,1.18f),V(x,2.65f+(i+n)%3*.16f,1.18f),.20f,Bone,4,0);}for(int i=0;i<2;i++)b.Rod(V(-1.5f,.7f+i*.85f,1.43f),V(1.5f,.7f+i*.85f,1.43f),.05f,Bone,4);
+    for(int face=0;face<4;face++){var q=Quaternion.Euler(0,face*90,0);int start=b.v.Count;
+     for(int i=0;i<4;i++){float x=-1.125f+i*.75f,h=2.05f+((i+n)%3)*.12f;b.Box(V(x,h*.5f,1.28f),V(.74f,h,.42f),Bark);var peak=V(x,h+.42f,1.28f);var c=V(x,h,1.28f);Vector3[] v={c+V(-.37f,0,-.21f),c+V(-.37f,0,.21f),c+V(.37f,0,.21f),c+V(.37f,0,-.21f)};for(int k=0;k<4;k++)b.Tri(v[k],v[(k+1)%4],peak,Bone);}
+     for(int i=0;i<2;i++){float y=.65f+i*.85f;b.Quad(V(-1.5f,y,1.495f),V(1.5f,y,1.495f),V(1.5f,y+.045f,1.495f),V(-1.5f,y+.045f,1.495f),Bone);}for(int i=start;i<b.v.Count;i++)b.v[i]=q*b.v[i];
+    }
    }
    else
    {
