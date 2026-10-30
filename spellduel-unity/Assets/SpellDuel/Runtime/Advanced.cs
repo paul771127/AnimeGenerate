@@ -67,7 +67,7 @@ namespace SpellDuel
                 skills = new[] { "pierce", "deadmark", "arrowrain" } });
             Add(new AdvDef { id = "ranger", baseCls = "archer", name = "遊俠", color = C("#34d399"), hpAdd = 15, atkMul = 0.9f, stats = S(agi: 5, vit: 2),
                 desc = "與獵鷹追風而行，用箭與陷阱掌握獵場", core = "游擊：蓄力時可以自由移動（不受直徑 1m 限制）；陷阱上限加倍", weak = "攻擊 −10%",
-                skills = new[] { "falcon", "rollshot", "trapchain" } });
+                skills = new[] { "falcon", "rollshot", "trapchain", "landmine", "rangerhaste", "hawkeye" } });
             // ---------------------------------------------------------------- 法師
             Add(new AdvDef { id = "archmage", baseCls = "mage", name = "大魔導士", color = C("#a855f7"), hpAdd = -5, mpAdd = 50, atkMul = 1.1f, stats = S(intl: 8),
                 desc = "延長古老咒文：雷霆、冰封、流星雨、奧術崩滅、可操控的光龍，還有加速與結界", core = "咒文延長：唸完咒語後再唸增幅咒「" + AmpChant + "」→ 這一招傷害 +50%", weak = "HP −5；念錯咒語就放不出來",

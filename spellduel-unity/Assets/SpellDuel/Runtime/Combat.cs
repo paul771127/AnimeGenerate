@@ -56,7 +56,7 @@ namespace SpellDuel
         public float orbSlice;                                                    // 劍士技能樹「斬開法球」：斬擊能斬開飛來的法球（0＝沒點）
         public float venom, assassinate, vanish, knifeCdr;                        // 刺客：劇毒連刺、刺殺、遁影（秒數：伏擊後這段時間內下一次物理攻擊必閃）、飛刀節奏
         public float holySeal, martyr, zeal;                                      // 牧師：聖印、殉道、狂信
-        public float bashGuard, sanctionCombo, critDmg, falconMark, petMp;
+        public float bashGuard, sanctionCombo, critDmg, falconMark, petMp, falconAssault, falconPatrol, falconDiveReady, falconPatrolAt;
         public float closeInstinct;     // 刺客「近身本能」等級（0＝沒點）        // 進階職業：盾擊格擋、制裁連斬、爆擊傷害、鷹眼標記、契約魔力
         public int basicHits, venomStacks, seals;
         // 刺殺流派：有沒有被敵人看見（SoloBattle 每幀設定：對戰＝對手的鏡頭有沒有拍到我；電腦／Boss／小怪＝我在不在它的視野內）、這次蓄力累計躲開視線幾秒
@@ -2760,7 +2760,8 @@ namespace SpellDuel
                     // 連環陷阱：一次設好幾個，左右排開
                     var side = Vector3.Cross(Vector3.up, Fighter.Flat(floorPoint - f.Feet) == Vector3.zero ? Fighter.Flat(f.forward) : Fighter.Flat(floorPoint - f.Feet)).normalized;
                     int n = Mathf.Max(1, s.multi);
-                    for (int i = 0; i < n; i++) PlaceTrap(f, s, floorPoint + side * ((i - (n - 1) / 2f) * 0.8f));
+                    float gap = s.areaRadius > 0f ? 1.6f : 0.8f;   // 地雷爆炸範圍大：一次放好幾顆時排開一點
+                    for (int i = 0; i < n; i++) PlaceTrap(f, s, floorPoint + side * ((i - (n - 1) / 2f) * gap));
                     break;
                 }
                 case SkillType.Projectile when s.areaFoes:
@@ -3276,6 +3277,7 @@ namespace SpellDuel
             Time_dt = dt;
             UpdateEndless();
             UpdateTraps();
+            UpdateFalconPatrol();
             UpdateBurns(dt);
             UpdateBarriers();   // 主教的聖域障壁（Combat.Friends.cs）
             UpdatePools();
@@ -4056,24 +4058,60 @@ namespace SpellDuel
                 if (!t.alive) continue;
                 if (now > t.until) { t.alive = false; if (!t.remote && (remoteEnemy || allies.Count > 0)) OnTrapGone?.Invoke(t.id); continue; }
                 if (t.remote || !t.Armed(now)) continue;   // 對手的陷阱由對手判定
-                var victim = Opponent(t.owner);
-                if (OnGround(victim) && FlatDistance(victim.Feet, t.pos) < t.skill.radius + 0.15f)   // 陷阱在地上：飛行怪踩不到
+                // 踩到的人：陷阱主人的任何敵人（Boss、小怪、對手；使用者要求地雷，原本只有主要對手會踩到）；飛行怪踩不到
+                Fighter victim = null; float best = float.MaxValue;
+                foreach (var v in FoesOf(t.owner))
                 {
-                    t.alive = false;
-                    Emit("trap", t.pos, t.skill.color, $"{t.skill.name}！");
-                    if (t.owner != null && t.owner.trapCrit > 0f) { t.owner.markNextUntil = now + t.owner.trapCrit; Emit("buff", t.owner.Chest, t.skill.color, $"獵殺時刻：{t.owner.trapCrit:0} 秒內下一箭必定爆擊"); }
-                    if (remoteEnemy && victim == enemy) { OnRemoteHit?.Invoke(t.skill, t.skill.damage, t.pos, -t.id); OnTrapGone?.Invoke(t.id); }
-                    else
-                    {
-                        if (victim == enemy) AddThreat(t.owner, t.skill.damage);
-                        HitSkill = t.skill; incoming = t.skill;
-                        ApplyDamageAndEffect(victim, t.skill.damage, t.skill.effect, t.skill.effectDps, t.skill.effectDur, t.pos, t.owner);
-                        HitSkill = null; incoming = null;
-                        if (allies.Count > 0) OnTrapGone?.Invoke(t.id);   // 合作模式：告訴隊友陷阱沒了
-                    }
+                    if (!OnGround(v)) continue;
+                    float d = FlatDistance(v.Feet, t.pos);
+                    if (d < t.skill.radius + 0.15f + (v.isMinion ? v.bodyRadius * 0.5f : 0f) && d < best) { best = d; victim = v; }
                 }
+                if (victim == null) continue;
+                t.alive = false;
+                bool area = t.skill.areaRadius > 0f;
+                Emit("trap", t.pos, t.skill.color, $"{t.skill.name}！");
+                if (area) Emit("quake", t.pos, t.skill.color, null);
+                if (t.owner != null && t.owner.trapCrit > 0f) { t.owner.markNextUntil = now + t.owner.trapCrit; Emit("buff", t.owner.Chest, t.skill.color, $"獵殺時刻：{t.owner.trapCrit:0} 秒內下一箭必定爆擊"); }
+                if (!area && remoteEnemy && victim == enemy) { OnRemoteHit?.Invoke(t.skill, t.skill.damage, t.pos, -t.id); OnTrapGone?.Invoke(t.id); continue; }
+                // 地雷：爆炸範圍內所有敵人；一般陷阱：踩到的那一個
+                var hits = new List<Fighter>();
+                if (area) { foreach (var v in FoesOf(t.owner)) if (FlatDistance(v.Feet, t.pos) <= t.skill.areaRadius + v.bodyRadius) hits.Add(v); }
+                else hits.Add(victim);
+                foreach (var v in hits)
+                {
+                    if (v == enemy) AddThreat(t.owner, t.skill.damage);
+                    if (t.owner != null && t.owner.Alive) HitFoe(t.owner, v, t.skill, t.skill.damage, t.skill.effect, t.skill.effectDps, t.skill.effectDur);
+                    else { HitSkill = t.skill; incoming = t.skill; ApplyDamageAndEffect(v, t.skill.damage, t.skill.effect, t.skill.effectDps, t.skill.effectDur, t.pos, t.owner); HitSkill = null; incoming = null; }
+                }
+                if (remoteEnemy || allies.Count > 0) OnTrapGone?.Invoke(t.id);   // 連線：告訴對方陷阱沒了
             }
             traps.RemoveAll(x => !x.alive);
+        }
+
+        // ------------------------------------------------------------ 遊俠的獵鷹主動出擊（技能樹「獵鷹突襲」「獵鷹巡獵」）
+        /// <summary>獵鷹巡獵的間隔：基本 14 秒，每一級 −1.8 秒（5 級＝5 秒）</summary>
+        public static float FalconPatrolEvery(float ranks) => Mathf.Max(4f, 14f - 1.8f * ranks);
+        public const float FalconPatrolRange = 9f;
+        /// <summary>獵鷹俯衝：0.35 秒後打中目標（傷害＝獵鷹突襲的基礎傷害 × 攻擊加成，經過一般的命中流程）</summary>
+        void FalconDive(Fighter o, Fighter t, string label)
+        {
+            o.falconDiveReady = now + 0.8f;
+            var s = Skills.All["falcondive"];
+            Emit("buff", t.Chest + Vector3.up * 0.4f, s.color, "🦅 " + label);
+            var tt = t;
+            After(0.35f, () => { if (tt.Alive && o.Alive) HitFoe(o, tt, s, s.damage); });
+        }
+        void UpdateFalconPatrol()
+        {
+            var o = player;
+            if (o == null || !o.Alive || o.falconPatrol <= 0f) return;
+            if (o.falconPatrolAt <= 0f) { o.falconPatrolAt = now + FalconPatrolEvery(o.falconPatrol); return; }
+            if (now < o.falconPatrolAt) return;
+            Fighter best = null; float bd = FalconPatrolRange;
+            foreach (var v in FoesOf(o)) { float d = FlatDistance(v.Feet, o.Feet); if (d < bd) { bd = d; best = v; } }
+            if (best == null) { o.falconPatrolAt = now + 1f; return; }   // 附近沒人：1 秒後再看
+            o.falconPatrolAt = now + FalconPatrolEvery(o.falconPatrol);
+            FalconDive(o, best, "獵鷹巡獵！");
         }
 
         // ------------------------------------------------------------ 命中：反擊 → 格擋 → 護盾 → 傷害 → 附加效果
@@ -4270,6 +4308,9 @@ namespace SpellDuel
             if (s.id == "sanction" && o.sanctionCombo > 0f && o.basicHits % 3 != 2) { o.basicHits = 2; Emit("buff", o.Chest, s.color, "制裁連斬：下一下普攻是重擊"); }
             // 遊俠「鷹眼標記」：獵鷹攻擊時機率標記，下一個弓箭技能必定爆擊
             if (s.id == "pet_falcon" && o.falconMark > 0f && o.markNextUntil <= now && rng.NextDouble() < o.falconMark) { o.markNextUntil = now + 4f; Emit("buff", o.Chest, s.color, "鷹眼標記：下一箭必定爆擊"); }
+            // 遊俠「獵鷹突襲」：弓箭命中時機率叫獵鷹俯衝追擊（不用召喚獵鷹；同一隻 0.8 秒內最多一次）
+            if (o.falconAssault > 0f && t != null && t.Alive && (s.cls == "archer" || s.cls == "basic" && o.cls != null && o.cls.id == "archer") && now >= o.falconDiveReady && rng.NextDouble() < o.falconAssault)
+                FalconDive(o, t, "獵鷹突襲！");
             // 召喚師「契約魔力」：召喚物命中回 MP
             if (s.cls == "pet" && s.id != "fogtick" && o.petMp > 0f) o.mp = Mathf.Min(o.maxMp, o.mp + o.petMp);
             // 牧師「聖印」：普攻累積聖印

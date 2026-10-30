@@ -70,7 +70,7 @@ namespace SpellDuel
         Venom, Assassinate, Vanish, KnifeCdr,                          // 刺客
         HolySeal, Homing, Martyr, Zeal,                                // 牧師
         // 進階職業（技能樹 v3）
-        BashGuard, SanctionCombo, CritDmg, FalconMark, PetMp,
+        BashGuard, SanctionCombo, CritDmg, FalconMark, PetMp, FalconAssault, FalconPatrol,
         CloseInstinct,
         KunaiFire, KunaiIce, KunaiBolt, DmgShield,   // 忍者：苦無附帶屬性；審判者：傷害轉護盾
         Accuracy,                                    // 命中率（抵掉對方的閃避）
@@ -108,7 +108,7 @@ namespace SpellDuel
             "paladin" => new[] { "🛡 聖盾", "🤝 守護", "⚖ 制裁" },
             "berserker" => new[] { "⚔ 輸出", "🛡 防禦", "✨ 輔助" },
             "marksman" => new[] { "🎯 貫穿", "☠ 標記", "🌧 箭雨" },
-            "ranger" => new[] { "🦅 獵鷹", "🤸 翻滾", "🪤 連環陷阱" },
+            "ranger" => new[] { "🦅 獵鷹・鷹眼", "🤸 翻滾・疾風", "💣 陷阱・地雷" },
             "archmage" => new[] { "⚡ 雷霆・破壞", "❄ 冰封・操控", "🔷 護盾・輔助" },
             "summoner" => new[] { "🔥 元素召喚", "🗿 守衛・捕捉", "💥 爆裂" },
             "ninja" => new[] { "🍃 替身", "👥 分身", "🔥 火遁" },
@@ -436,6 +436,16 @@ namespace SpellDuel
                     FMod("rg_chain2", "陷阱專家", "trapchain", ModField.Damage, 0.15f, 5, 5, 2, "rg_chain"),
                     FPas("rg_hunt", "圍獵", PassiveKind.TrapCrit, 0.6f, 5, 6, 2, "rg_chain"),
                     FMod("rg_snare", "捕獸夾改良", "snaretrap", ModField.EffectDur, 0.3f, 5, 6, 3, "rg_hunt"),
+                    // 追加（使用者要求）：獵鷹主動出擊、攻速／爆擊輔助、地雷
+                    FPas("rg_assault", "獵鷹突襲", PassiveKind.FalconAssault, 0.06f, 5, 0, 3, "rg_falcon2"),
+                    FPas("rg_patrol", "獵鷹巡獵", PassiveKind.FalconPatrol, 1f, 5, 1, 3, "rg_fmark"),
+                    FLearn("rg_hawk", "hawkeye", 2, 3, "rg_fhp"),
+                    FMod("rg_hawk2", "鷹眼專注", "hawkeye", ModField.BuffAmount, 3f, 5, 2, 4, "rg_hawk"),
+                    FLearn("rg_haste", "rangerhaste", 4, 3, "rg_evade"),
+                    FMod("rg_haste2", "疾風延續", "rangerhaste", ModField.BuffDur, 1f, 5, 4, 4, "rg_haste"),
+                    FLearn("rg_mine", "landmine", 5, 3, "rg_chain2"),
+                    FMod("rg_mine2", "高爆炸藥", "landmine", ModField.Damage, 0.15f, 5, 5, 4, "rg_mine"),
+                    FMod("rg_mine3", "集束地雷", "landmine", ModField.Multi, 1f, 2, 6, 4, "rg_mine"),
                 };
                 case "archmage": return new List<TreeNode>
                 {
@@ -662,6 +672,8 @@ namespace SpellDuel
                         PassiveKind.SanctionCombo => "神聖制裁命中後，下一下普攻直接是重擊（搭配連斬）",
                         PassiveKind.CritDmg => $"爆擊傷害 +{v * 100:0}%（原本 ×2）",
                         PassiveKind.FalconMark => $"獵鷹攻擊時 {v * 100:0}% 機率標記：4 秒內下一個弓箭技能必定爆擊",
+                        PassiveKind.FalconAssault => $"弓箭命中時 {v * 100:0}% 機率叫獵鷹俯衝追擊那個敵人（不用召喚獵鷹）",
+                        PassiveKind.FalconPatrol => $"獵鷹每 {Battle.FalconPatrolEvery(v):0.#} 秒自動俯衝攻擊 9m 內最近的敵人（不用召喚獵鷹）",
                         PassiveKind.PetMp => $"召喚物命中時回復 {v:0.#} MP",
                         PassiveKind.KunaiFire => $"苦無普攻 {v * 100:0}% 機率同時射出燃燒的苦無（灼燒 3 秒）",
                         PassiveKind.KunaiIce => $"苦無普攻 {v * 100:0}% 機率同時射出冰凍的苦無（定身 1.2 秒）",
@@ -1370,7 +1382,7 @@ namespace SpellDuel
             f.venom = Passive(PassiveKind.Venom); f.assassinate = Passive(PassiveKind.Assassinate); f.vanish = Passive(PassiveKind.Vanish); f.knifeCdr = Passive(PassiveKind.KnifeCdr);
             f.holySeal = Passive(PassiveKind.HolySeal); f.basicHoming = Passive(PassiveKind.Homing); f.martyr = Passive(PassiveKind.Martyr); f.zeal = Passive(PassiveKind.Zeal);
             f.bashGuard = Passive(PassiveKind.BashGuard); f.sanctionCombo = Passive(PassiveKind.SanctionCombo); f.critDmg = Passive(PassiveKind.CritDmg);
-            f.falconMark = Passive(PassiveKind.FalconMark); f.petMp = Passive(PassiveKind.PetMp); f.closeInstinct = Passive(PassiveKind.CloseInstinct);
+            f.falconMark = Passive(PassiveKind.FalconMark); f.falconAssault = Passive(PassiveKind.FalconAssault); f.falconPatrol = Passive(PassiveKind.FalconPatrol); f.petMp = Passive(PassiveKind.PetMp); f.closeInstinct = Passive(PassiveKind.CloseInstinct);
             var bs = adv == "ninja" ? Skills.All["na_kunai"] : Skills.BasicOf(cls); f.basic = bs != null ? ModdedSkill(bs.id) : null;   // 普攻也吃技能樹（忍者：苦無）
             f.kunaiFire = Passive(PassiveKind.KunaiFire); f.kunaiIce = Passive(PassiveKind.KunaiIce); f.kunaiBolt = Passive(PassiveKind.KunaiBolt); f.dmgShield = Passive(PassiveKind.DmgShield); f.basicShield = Passive(PassiveKind.BasicShield); f.hitShield = Passive(PassiveKind.HitShield);
             // 技能：只帶會的技能，數值換成技能樹強化後的版本
