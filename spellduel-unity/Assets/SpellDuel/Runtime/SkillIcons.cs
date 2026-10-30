@@ -55,6 +55,58 @@ namespace SpellDuel
             if(skillId=="worldboss_notice"){DrawWorldBossNotice(cv);return cv.Output();}
             switch (skillId)
             {
+                case "arcanewyrm":
+                case "starfall":
+                case "arcanebreak":
+                case "arcanehaste":
+                case "elementward":
+                case "landmine":
+                case "rangerhaste":
+                case "hawkeye":
+                case "falcondive":
+                case "holyblade":
+                case "consecrate":
+                case "layhands":
+                case "headshot":
+                case "scattershot":
+                case "blastarrow":
+                case "spiritbolt":
+                case "earthspike":
+                case "pactcheer":
+                case "suiton":
+                case "futon":
+                case "bladestorm":
+                case "poisondart":
+                case "nightveil":
+                case "holynova":
+                case "divinegrace":
+                case "lightpillar":
+                case "holyfire":
+                case "verdict":
+                case "mindfocus":
+                case "meditate":
+                case "prep":
+                case "taunt":
+                case "bless":
+                case "haste":
+                case "spring":
+                case "focus":
+                case "rollarrow":
+                case "echo_fire":
+                case "echo_ice":
+                case "arcaneburst":
+                case "venom_burst":
+                case "retribution":
+                case "swordfervor":
+                case "killinstinct":
+                case "huntfrenzy":
+                case "chainstorm":
+                case "soulharvest":
+                case "renjutsu":
+                case "reaperdance":
+                case "graceflow":
+                case "martyrflame":
+                    NewSkillIcon(cv,skillId,sc);break;
                 case "na_kunai": ReworkIcon(cv,0); break;
                 case "shuriken": ReworkIcon(cv,1); break;
                 case "raiton": ReworkIcon(cv,2); break;

@@ -727,3 +727,7 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 ### 2026-10-30 新技能特效 B4：被動與十種爆發
 - 新視覺介面 `ChainArc`、`Thorns`、`StackAura`、`ExecuteHit`、`FirstStrikeHit`、`KillRush`、`SoulDrain` 均依需求簽名。連鎖 .15 秒，吸魂 .6 秒；連擊 0～10 點獨立快取，自己看到畫面下緣。無傷害／目標選取／狀態運算。
 - 十種爆發沿用 TeamBuffCast／TeamBuffAura，但改為盾、劍、獵眼、爪、雷、魂、印、鐮刀、十字、火焰等各自可辨識的符紋。Claude 接觸發事件。
+
+### 2026-10-30 新技能特效 D：51 枚圖示與全清單預覽
+- 新增 51 個明確 Render case，涵蓋 A／B2／B3／B4 全部指定技能；純程式圖形、沿用技能色與快取，不用匯入圖片。
+- 原生 NewSkillFx 預覽擴充投射物、範圍、增益、被動第一人稱與旁觀雙視角；檢查圖示不重複、增益並存／清除／快取。平台編譯和原生圖片驗收後再補最終結果。
