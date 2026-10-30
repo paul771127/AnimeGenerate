@@ -73,6 +73,7 @@ namespace SpellDuel
         {
             kind = Mathf.Clamp(kind, 0, 52);
             if (kind == variantId && body != null) return;
+            ResetStaggerArt();
             if (body != null)
             {
                 body.gameObject.SetActive(false);
@@ -116,6 +117,7 @@ namespace SpellDuel
         public void SetDead(bool d)
         {
             if (d == dead) return;
+            if(staggerArt!=null)staggerArt.Cancel();
             dead = d;
             deadT = 0f;
             if (d) { phase = PhaseNone; hitT = 0f; }

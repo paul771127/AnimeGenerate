@@ -1,7 +1,7 @@
 using UnityEngine;
 namespace SpellDuel
 {
- public sealed class SkyEnemyRig : MonoBehaviour
+ public sealed partial class SkyEnemyRig : MonoBehaviour
  {
   public float MoveSpeed {get;set;}
   public int Kind {get;private set;}
@@ -43,9 +43,10 @@ namespace SpellDuel
   public void Windup(float dur){if(dead)return;wind=0;windDuration=Mathf.Max(.05f,dur);winding=true;strike=10;}
   public void Attack(){if(dead)return;winding=false;strike=0;}
   public void PlayHit(){if(!dead)hit=.2f;}
-  public void SetDead(bool value){dead=value;death=0;winding=false;strike=10;}
+  public void SetDead(bool value){if(staggerArt!=null)staggerArt.Cancel();dead=value;death=0;winding=false;strike=10;}
   public void Sample(float dt)
   {
+   if(staggerArt!=null)staggerArt.Restore();
    age+=dt;wind+=dt;strike+=dt;hit=Mathf.Max(0,hit-dt);if(dead)death+=dt;
    float gait=Mathf.Sin(age*(3+Mathf.Abs(MoveSpeed)*5))*Mathf.Clamp01(Mathf.Abs(MoveSpeed)),w=winding?Mathf.Clamp01(wind/windDuration):0,a=strike<.4f?Mathf.Sin(strike/.4f*Mathf.PI):0;
    body.localPosition=baseBody+Vector3.up*(dead?-.3f*Mathf.Clamp01(death):Kind==3?.05f*Mathf.Sin(age*2):.015f*Mathf.Sin(age*3));
@@ -55,6 +56,7 @@ namespace SpellDuel
    if(legL)legL.localRotation=Quaternion.Euler(gait*25,0,-3);if(legR)legR.localRotation=Quaternion.Euler(-gait*25,0,3);
    if(cloth)cloth.localRotation=Quaternion.Euler(165+Mathf.Sin(age*5)*7,0,Mathf.Sin(age*3)*5);
    foreach(var r in renderers){block.Clear();var c=r.sharedMaterial.color;block.SetColor("_Color",Color.Lerp(dead?c*.45f:c,Color.white,hit/.2f));r.SetPropertyBlock(block);}
+   if(staggerArt!=null)staggerArt.Apply(Mathf.Max(0,dt),dead);
   }
   void Update(){Sample(Time.deltaTime);}
  }
