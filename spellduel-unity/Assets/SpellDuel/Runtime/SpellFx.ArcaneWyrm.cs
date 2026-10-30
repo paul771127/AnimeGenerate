@@ -31,9 +31,9 @@ namespace SpellDuel
     SpellFx.Line(head,"Horn fork",new[]{new Vector3(side*.12f,.18f,-.11f),new Vector3(side*.22f,.21f,-.08f)},false,.015f,new Color(1,.87f,.48f),false,false);
     whiskers[(side+1)/2]=SpellFx.Line(head,"Flowing whisker",new Vector3[9],false,.011f,c,true,false);
    }
-   mesh=new Mesh{name="Arcane wyrm dynamic swept body"};mesh.MarkDynamic();var tris=new int[(Rings-1)*Sides*6+(Rings-1)*3];int at=0;
+   mesh=new Mesh{name="Arcane wyrm dynamic swept body"};mesh.MarkDynamic();var tris=new int[(Rings-1)*Sides*6+(Rings-1)*6];int at=0;
    for(int j=0;j<Rings-1;j++)for(int i=0;i<Sides;i++){int a=j*Sides+i,b=j*Sides+(i+1)%Sides;tris[at++]=a;tris[at++]=a+Sides;tris[at++]=b;tris[at++]=b;tris[at++]=a+Sides;tris[at++]=b+Sides;}
-   for(int j=0;j<Rings-1;j++){int a=Rings*Sides+j*3;tris[at++]=a;tris[at++]=a+1;tris[at++]=a+2;}
+   for(int j=0;j<Rings-1;j++){int a=Rings*Sides+j*3;tris[at++]=a;tris[at++]=a+1;tris[at++]=a+2;tris[at++]=a+2;tris[at++]=a+1;tris[at++]=a;}
    for(int j=0;j<Rings;j++)for(int i=0;i<Sides;i++)colors[j*Sides+i]=Color.Lerp(c,Color.white,i<4?.45f:.05f);
    for(int i=Rings*Sides;i<colors.Length;i++)colors[i]=new Color(1,.86f,.5f);
    mesh.vertices=vertices;mesh.colors=colors;mesh.triangles=tris;

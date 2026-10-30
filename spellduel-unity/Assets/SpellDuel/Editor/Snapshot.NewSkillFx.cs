@@ -10,7 +10,7 @@ namespace SpellDuel.EditorTools
   public static void RenderNewSkillFx()
   {
    Directory.CreateDirectory("snapshots");EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);ToonStyle.Apply();WorldFrame.Reset();
-   var cam=new GameObject("FX preview").AddComponent<Camera>();cam.tag="MainCamera";cam.nearClipPlane=.05f;cam.fieldOfView=55;cam.backgroundColor=new Color(.12f,.16f,.22f);
+   var cam=new GameObject("FX preview").AddComponent<Camera>();cam.tag="MainCamera";cam.clearFlags=CameraClearFlags.SolidColor;cam.nearClipPlane=.05f;cam.fieldOfView=55;cam.backgroundColor=new Color(.12f,.16f,.22f);
    var light=new GameObject("Key").AddComponent<Light>();light.type=LightType.Directional;light.transform.rotation=Quaternion.Euler(35,150,0);RenderSettings.ambientLight=new Color(.65f,.65f,.7f);
    var go=SpellFx.CreateProjectileVisual(Skills.All["arcanewyrm"],"mage");var wyrm=go.GetComponent<ArcaneWyrmView>();
    for(int i=0;i<=120;i++)
@@ -24,6 +24,7 @@ namespace SpellDuel.EditorTools
    WorldFrame.Reset();go.transform.position-=shift;wyrm.Sample(0);
    CarpetShot(cam,go,"newfx_arcanewyrm_spectator",new Vector3(5,3,6),new Vector3(1,1.2f,2),960,720);
    CarpetShot(cam,go,"newfx_arcanewyrm_firstperson",new Vector3(0,1.6f,-1),new Vector3(1,1.3f,3),720,960);
+   CarpetShot(cam,go,"newfx_arcanewyrm_head",go.transform.position+new Vector3(.6f,.3f,.8f),go.transform.position,720,720);
    wyrm.BeginFade();wyrm.Sample(.4f);CarpetShot(cam,go,"newfx_arcanewyrm_fade",new Vector3(5,3,6),new Vector3(1,1.2f,2),960,720);
    UnityEngine.Object.DestroyImmediate(go);
    foreach(string id in new[]{"landmine","snaretrap","trapchain"})
@@ -56,10 +57,10 @@ namespace SpellDuel.EditorTools
   {
    foreach(var go in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())if(!go.GetComponent<Camera>()&&!go.GetComponent<Light>())UnityEngine.Object.DestroyImmediate(go);
   }
-  static void NewFxPair(Camera cam,string id,GameObject subject,Vector3 center)
+  static void NewFxPair(Camera cam,string id,GameObject subject,Vector3 center,bool close=false)
   {
-   cam.aspect=960f/720;cam.transform.position=new Vector3(3,2.4f,5);NewFxSample(.12f);CarpetShot(cam,subject,"newfx_"+id+"_spectator",new Vector3(3,2.4f,5),center,960,720);
-   cam.aspect=720f/960;cam.transform.position=new Vector3(0,1.6f,-.1f);cam.transform.LookAt(center+Vector3.forward*2);NewFxSample(0);CarpetShot(cam,subject,"newfx_"+id+"_firstperson",new Vector3(0,1.6f,-.1f),center+Vector3.forward*2,720,960);
+   cam.aspect=960f/720;var spectator=close?center+new Vector3(.8f,.4f,1.1f):center+((id.Contains("area")||id=="mineblast"||id=="starfall_zone")?new Vector3(4.5f,3.5f,5.5f):new Vector3(2,1.4f,3));cam.transform.position=spectator;NewFxSample(.12f);CarpetShot(cam,subject,"newfx_"+id+"_spectator",spectator,center,960,720);
+   cam.aspect=720f/960;cam.transform.position=new Vector3(0,1.6f,-.1f);cam.transform.LookAt(center+Vector3.forward*2);if(subject.GetComponent<CharacterRig>())foreach(var r in subject.GetComponentsInChildren<MeshRenderer>())r.enabled=false;NewFxSample(0);CarpetShot(cam,subject,"newfx_"+id+"_firstperson",new Vector3(0,1.6f,-.1f),center+Vector3.forward*2,720,960);
   }
   static void NewFxCatalogShots(Camera cam)
   {
@@ -69,7 +70,7 @@ namespace SpellDuel.EditorTools
     var pixels=SkillIcons.Render(id,128);var t=new Texture2D(128,128,TextureFormat.RGBA32,false);t.SetPixels32(pixels);t.Apply();var data=t.EncodeToPNG();var hash=Convert.ToBase64String(System.Security.Cryptography.SHA256.Create().ComputeHash(data));if(!hashes.Add(hash))throw new Exception("Duplicate new skill icon "+id);File.WriteAllBytes("snapshots/newfx_icon_"+id+".png",data);UnityEngine.Object.DestroyImmediate(t);if(SkillIcons.Get(id)!=SkillIcons.Get(id))throw new Exception("Icon cache "+id);
    }
    foreach(string id in new[]{"starfall","arcanebreak","holyblade","headshot","scattershot","blastarrow","spiritbolt","earthspike","suiton","futon","poisondart","lightpillar","holyfire","verdict","rollarrow","echo_fire","echo_ice"})
-   {var go=SpellFx.CreateProjectileVisual(Skills.All[id],Skills.All[id].cls);go.transform.position=new Vector3(0,1.2f,2);NewFxPair(cam,id,go,new Vector3(0,1.2f,2));NewFxClean();}
+   {var go=SpellFx.CreateProjectileVisual(Skills.All[id],Skills.All[id].cls);go.transform.position=new Vector3(0,1.2f,2);NewFxPair(cam,id,go,new Vector3(0,1.2f,2),true);NewFxClean();}
    foreach(string id in new[]{"consecrate","blastarrow","earthspike","suiton","bladestorm","holynova","arcaneburst","venom_burst","starfall"})
    {SpellFx.AreaBurst(id,new Vector3(0,0,2),id=="starfall"?3.5f:2);var go=UnityEngine.Object.FindObjectOfType<AreaSkillArt>();NewFxPair(cam,id+"_area",go.gameObject,new Vector3(0,.25f,2));NewFxClean();}
    foreach(string id in new[]{"arcanehaste","elementward","rangerhaste","hawkeye","layhands","pactcheer","nightveil","divinegrace","mindfocus","meditate","bless","haste","spring","focus","retribution","swordfervor","killinstinct","huntfrenzy","chainstorm","soulharvest","renjutsu","reaperdance","graceflow","martyrflame"})

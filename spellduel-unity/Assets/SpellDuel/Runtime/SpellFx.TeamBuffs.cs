@@ -128,6 +128,7 @@ namespace SpellDuel
    var cam=Camera.main;bool self=cam&&transform.parent&&SelfFxEdge.NearOwner(cam,transform.parent.position);art.gameObject.SetActive(!self);if(self)DrawEdge(cam,alpha);else if(edge!=null)foreach(var e in edge)if(e)e.enabled=false;
    art.localRotation=Quaternion.Euler(0,age*(id=="arcanehaste"?75:35),0);
    art.localPosition=id=="arcanehaste"?Vector3.up*(burst?Mathf.Clamp01(age/.8f)*1.6f:.75f):Vector3.zero;
+   if(burst&&(id=="meditate"||id=="mindfocus"))art.localScale=Vector3.one*Mathf.Lerp(1,.2f,Mathf.Clamp01(age/.85f));
    if(!burst&&id=="arcanehaste")art.localScale=Vector3.one*.45f;
    for(int i=0;i<lines.Length;i++){if(id=="divinegrace")lines[i].transform.localPosition=Vector3.down*Mathf.Repeat(age*1.3f+i*.13f,1.5f);var c=colors[i];c.a*=alpha;if(id=="elementward"&&hit>0&&i==hitPiece)c=Color.Lerp(c,Color.white,hit/.22f);lines[i].startColor=lines[i].endColor=c;if(id=="arcanehaste"&&i>=13)lines[i].transform.localRotation=Quaternion.Euler(0,age*(i==13?170:32),0);}
    if(burst&&age>1.1f&&Application.isPlaying)Destroy(gameObject);
