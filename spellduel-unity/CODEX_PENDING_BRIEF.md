@@ -763,3 +763,7 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - B5 81 個模型通過零時間不累積、回復、死亡取消、根位置不變、重複播放快取與 Boss 排除；Claude 已在 02b5b63 接上 PlayStagger。355 張原生 PNG、全員受擊總覽與九種體型三階段圖在 Docs/pending_preview/new_skill_fx/。
 - 尚待整合：BlueprintImpact（玉米命中爆米花）與選用 TeamBuffHit（元素護殼受擊亮片）只有美術介面，未自行增加命中／網路事件。
 - 全站其他舊檢查的失敗另存 full_site_checks.json：支援技能清單缺 eh_121_sunbolt、DungeonSpawnAudit 敵人數量、SwordShield 停用清除；未竄改或略過其斷言。這批美術未改 Combat、SoloBattle、連線、存檔、Blueprints、Crafting、SpeechInput。
+
+### 2026-10-30 故事探索 1：六種地形牆
+- 新增 ExploreArt.CreateWall(ExTerrain,int,int,float)：樹叢、層岩、湖水、尖樁城寨、翠玉遺跡、鐘乳洞壁。地面中心 pivot、依 cell 縮放，四種座標決定的快取變體；單一共用頂點色 Toon 材質與一個 Renderer，沒有 Collider。所有頂點限制在格子水平範圍內。
+- 不更動 Explore／Combat／SoloBattle；由 Claude 接替暫代牆。動畫提示詞已由使用者於本對話確認，後續依 EXPLORE_ANIMATION_PROMPTS.md 實作。最終原生預覽與三角形檢查將於整體驗收提供。
