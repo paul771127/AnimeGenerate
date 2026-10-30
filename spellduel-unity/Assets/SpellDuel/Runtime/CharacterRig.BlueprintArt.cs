@@ -57,7 +57,7 @@ namespace SpellDuel
   {
    string[] glyphs={"111101110001111","010101111101101","111010010010111","101111111111101","111010010010010"};
    for(int letter=0;letter<5;letter++)for(int y=0;y<5;y++)for(int x=0;x<3;x++)if(glyphs[letter][y*3+x]=='1')
-   {float px=.205f+letter*.041f+x*.010f,py=.325f-y*.010f;int k=b.V.Count;b.V.AddRange(new[]{new Vector3(px,py,.026f),new Vector3(px+.008f,py,.026f),new Vector3(px,py-.008f,.026f),new Vector3(px+.008f,py-.008f,.026f)});for(int q=0;q<4;q++)b.C.Add(BCream);b.T.AddRange(new[]{k,k+2,k+1,k+1,k+2,k+3});}
+   {float px=.397f-letter*.041f-x*.010f,py=.325f-y*.010f;int k=b.V.Count;b.V.AddRange(new[]{new Vector3(px,py,.026f),new Vector3(px-.008f,py,.026f),new Vector3(px,py-.008f,.026f),new Vector3(px-.008f,py-.008f,.026f)});for(int q=0;q<4;q++)b.C.Add(BCream);b.T.AddRange(new[]{k,k+1,k+2,k+1,k+3,k+2});}
   }
   static Mesh MakeBlueprint(string id)
   {

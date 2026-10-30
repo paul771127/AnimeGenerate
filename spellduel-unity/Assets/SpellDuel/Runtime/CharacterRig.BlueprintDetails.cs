@@ -15,7 +15,7 @@ namespace SpellDuel
     new[]{2.13f,-.15f,2.36f,.12f},new[]{2.28f,0f,2.82f,0f},new[]{2.82f,0f,2.13f,-.48f},new[]{2.28f,-.13f,2.51f,-.30f},
     new[]{2.28f,-.48f,2.87f,-.48f},new[]{2.87f,-.48f,2.87f,-.86f},new[]{2.87f,-.86f,2.28f,-.86f},new[]{2.28f,-.86f,2.28f,-.48f}
    };
-   foreach(var t in strokes)LineB(b,new Vector3((t[0]-1.5f)*.09f,.31f+t[1]*.09f,.215f),new Vector3((t[2]-1.5f)*.09f,.31f+t[3]*.09f,.215f),.0038f,BInk);
+   foreach(var t in strokes)LineB(b,new Vector3((1.5f-t[0])*.09f,.31f+t[1]*.09f,.215f),new Vector3((1.5f-t[2])*.09f,.31f+t[3]*.09f,.215f),.0038f,BInk);
   }
   static Transform BlueprintDetailPart(Transform parent,string key)
   {
