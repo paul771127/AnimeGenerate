@@ -14,7 +14,7 @@ namespace SpellDuel
  }
  public sealed class FalconDiveArt:MonoBehaviour
  {
-  Vector3 start,end,direction;float duration,age;bool struck;Transform[] wings=new Transform[2];Renderer[] renderers;MaterialPropertyBlock block;LineRenderer[] streaks;readonly Vector3[] points=new Vector3[6];
+  Vector3 start,end,direction;float duration,age;bool struck;Transform[] wings=new Transform[2];LineRenderer[] streaks;readonly Vector3[] points=new Vector3[6];
   public void Build(Vector3 from,Vector3 to,float seconds)
   {
    start=WorldFrame.ToWorld(from);end=WorldFrame.ToWorld(to);duration=Mathf.Max(.01f,seconds);direction=(end-start).normalized;if(direction.sqrMagnitude<.01f)direction=Vector3.forward;
@@ -32,7 +32,7 @@ namespace SpellDuel
    }
    for(int i=-1;i<=1;i++){var tail=SkyArt.Oval(transform,"Split tail feather",new Vector3(i*.045f,-.015f,-.29f),new Vector3(.055f,.025f,.24f),cream,true);tail.localRotation=Quaternion.Euler(0,i*-14,0);}
    streaks=new LineRenderer[2];for(int i=0;i<2;i++)streaks[i]=SpellFx.Line(transform,"Golden wing wake",new Vector3[6],false,.012f,new Color(1,.7f,.2f,.65f),true,false);
-   renderers=GetComponentsInChildren<Renderer>();block=new MaterialPropertyBlock();Sample(0);
+   Sample(0);
   }
   public void Sample(float dt)
   {

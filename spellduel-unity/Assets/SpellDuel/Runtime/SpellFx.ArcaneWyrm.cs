@@ -13,7 +13,7 @@ namespace SpellDuel
   readonly Vector3[] trail=new Vector3[History],centers=new Vector3[Rings];
   readonly Vector3[] vertices=new Vector3[Rings*Sides+(Rings-1)*3];
   readonly Color[] colors=new Color[Rings*Sides+(Rings-1)*3];
-  Mesh mesh;Transform head;LineRenderer spine;LineRenderer[] whiskers;ParticleSystem motes;int newest,count;float time,fade=-1;Vector3 previous,frozen;Color tint;bool initialized;
+  Mesh mesh;Transform head;LineRenderer spine;LineRenderer[] scales;LineRenderer[] whiskers;ParticleSystem motes;int newest,count;float time,fade=-1;Vector3 previous,frozen;Color tint;bool initialized;
   public int VisibleSections{get;private set;}
   public Vector3 SectionWorld(int index)=>WorldFrame.FromWorld(centers[Mathf.Clamp(index,0,Rings-1)]);
   public void Build(Color c)
@@ -39,6 +39,7 @@ namespace SpellDuel
    mesh.vertices=vertices;mesh.colors=colors;mesh.triangles=tris;
    SkyArt.MeshPart(transform,"Flexible tapered dragon",mesh,AnimeFace.Material(Color.white,4),Vector3.zero,Vector3.one);
    spine=SpellFx.Line(transform,"Dorsal scale light",new Vector3[Rings],false,.012f,Color.white,true,false);
+   scales=new LineRenderer[2];for(int i=0;i<2;i++)scales[i]=SpellFx.Line(transform,"Chevron scale highlights",new Vector3[Rings],false,.007f,new Color(.85f,1,1,.45f),true,false);
    motes=BlueprintGearDetail.Particles(transform,"Tail and whisker light dust",Vector3.zero,c,.018f,32,.1f,.4f,0);
   }
   void Push(Vector3 p){if(count>1&&Vector3.Distance(trail[(newest-1+History)%History],p)<.04f){trail[newest]=p;return;}newest=(newest+1)%History;trail[newest]=p;count=Mathf.Min(History,count+1);}
@@ -68,12 +69,13 @@ namespace SpellDuel
     if(available)p+=right*(Mathf.Sin(time*8-u*9)*.045f*u)+up*(Mathf.Sin(time*6-u*7)*.027f*u);
     centers[j]=p;float disappear=fade<0?1:1-Mathf.Clamp01((fade-u*.65f)/.22f);float radius=available?(.105f*(1-u)+.008f)*disappear:0;
     for(int i=0;i<Sides;i++){float a=i*Mathf.PI*2/Sides;vertices[j*Sides+i]=transform.InverseTransformPoint(WorldFrame.FromWorld(p+(right*Mathf.Cos(a)+up*Mathf.Sin(a))*radius));}
+    for(int side=0;side<2;side++)scales[side].SetPosition(j,transform.InverseTransformPoint(WorldFrame.FromWorld(p+right*((side==0?-1:1)*radius*.8f)+up*(radius*(j%2==0?.58f:.2f)))));
     spine.SetPosition(j,transform.InverseTransformPoint(WorldFrame.FromWorld(p+up*radius)));
     if(j<Rings-1){int k=Rings*Sides+j*3;vertices[k]=vertices[j*Sides+2];vertices[k+1]=transform.InverseTransformPoint(WorldFrame.FromWorld(p+up*(radius+.065f*disappear)*(available?1:0)));vertices[k+2]=transform.InverseTransformPoint(WorldFrame.FromWorld(p-forward*.085f+up*radius));}
    }
    mesh.vertices=vertices;mesh.RecalculateNormals();mesh.RecalculateBounds();head.localScale=Vector3.one*(fade<0?1:1-Mathf.Clamp01(fade/.18f));
    for(int w=0;w<2;w++)for(int i=0;i<9;i++){float u=i/8f;whiskers[w].SetPosition(i,new Vector3((w==0?-1:1)*(.06f+u*.24f),-.025f+Mathf.Sin(time*7-u*5)*.035f*u,.15f-u*.38f));}
-   var color=tint;color.a=fade<0?.65f:Mathf.Clamp01(1-fade);spine.startColor=spine.endColor=color;
+   var color=tint;color.a=fade<0?.65f:Mathf.Clamp01(1-fade);spine.startColor=spine.endColor=color;foreach(var scale in scales)scale.startColor=scale.endColor=color;
    if(dt>0&&count>2){var emit=new ParticleSystem.EmitParams{position=transform.InverseTransformPoint(SectionWorld(fade<0?Mathf.Max(0,VisibleSections-1):Mathf.Clamp(Mathf.RoundToInt(fade/.65f*24),0,24)))};motes.Emit(emit,1);}
   }
   void LateUpdate(){Sample(Time.deltaTime);}

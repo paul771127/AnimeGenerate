@@ -47,14 +47,15 @@ namespace SpellDuel
  }
  public sealed class StarfallZoneArt:MonoBehaviour
  {
-  float age,life,radius;LineRenderer ring,star;LineRenderer[] ticks;
+  float age,life,radius;LineRenderer ring,star,pulse;LineRenderer[] ticks;
   public void Build(float r,float seconds)
   {
    radius=r;life=seconds;var c=SpellFx.SkillTint("starfall");ring=SkyArt.Ring(transform,"Seven metre perimeter",r,c,.025f,64);ring.transform.localPosition=Vector3.up*.025f;
    var p=new Vector3[6];for(int i=0;i<6;i++){float a=i*Mathf.PI*4/5;p[i]=new Vector3(Mathf.Cos(a)*r*.88f,.03f,Mathf.Sin(a)*r*.88f);}star=SpellFx.Line(transform,"Five point star warning",p,false,.018f,c,true,false);
+   pulse=SkyArt.Ring(transform,"Three successive impact waves",1,c,.035f,64);pulse.transform.localPosition=Vector3.up*.04f;
    ticks=new LineRenderer[12];for(int i=0;i<12;i++){float a=i*Mathf.PI/6;var v=new Vector3(Mathf.Cos(a),0,Mathf.Sin(a));ticks[i]=SpellFx.Line(transform,"Astral range notch",new[]{v*r*.94f+Vector3.up*.03f,v*r+Vector3.up*.03f},false,.025f,c,true,false);}
   }
-  public void Sample(float dt){age+=Mathf.Max(0,dt);float alpha=Mathf.Min(1,(life-age)*4);var c=SpellFx.SkillTint("starfall");c.a=Mathf.Max(0,alpha)*(.4f+.2f*Mathf.Sin(age*10));ring.startColor=ring.endColor=star.startColor=star.endColor=c;foreach(var t in ticks)t.startColor=t.endColor=c;if(age>=life&&Application.isPlaying)Destroy(gameObject);}
+  public void Sample(float dt){age+=Mathf.Max(0,dt);float alpha=Mathf.Min(1,(life-age)*4);var c=SpellFx.SkillTint("starfall");c.a=Mathf.Max(0,alpha)*(.4f+.2f*Mathf.Sin(age*10));ring.startColor=ring.endColor=star.startColor=star.endColor=c;int wave=Mathf.FloorToInt(age/.6f);float phase=Mathf.Repeat(age,.6f)/.6f;pulse.enabled=wave<3;pulse.transform.localScale=Vector3.one*radius*(1-Mathf.Pow(1-phase,3));var flash=c;flash.a=(1-phase)*(wave==2?.95f:.55f);pulse.startColor=pulse.endColor=flash;pulse.widthMultiplier=wave==2?.07f:.035f;foreach(var t in ticks)t.startColor=t.endColor=c;if(age>=life&&Application.isPlaying)Destroy(gameObject);}
   void Update(){Sample(Time.deltaTime);}
  }
 }

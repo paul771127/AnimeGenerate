@@ -16,34 +16,37 @@ namespace SpellDuel.EditorTools
    for(int i=0;i<=120;i++)
    {
     float t=i/120f;go.transform.position=new Vector3(Mathf.Sin(t*2.1f)*2,1.3f,t*4);go.transform.rotation=Quaternion.LookRotation(new Vector3(4.2f*Mathf.Cos(t*2.1f),0,4));wyrm.Sample(1/120f);
-    if(i==15||i==40||i==80||i==120)Shot(cam,go,"newfx_arcanewyrm_frame_"+i,new Vector3(5,3,6),new Vector3(1,1.2f,2),960,720);
+    if(i==15||i==40||i==80||i==120)CarpetShot(cam,go,"newfx_arcanewyrm_frame_"+i,new Vector3(5,3,6),new Vector3(1,1.2f,2),960,720);
    }
    if(wyrm.VisibleSections!=25)throw new Exception("Wyrm path failed to grow to 24 body segments");
    var before=wyrm.SectionWorld(12);var shift=new Vector3(8,0,-3);WorldFrame.SetMarker(new Pose(shift,Quaternion.identity));go.transform.position+=shift;wyrm.Sample(0);
    if(Vector3.Distance(wyrm.SectionWorld(12),before+shift)>.001f)throw new Exception("Wyrm AR shift discontinuity");
    WorldFrame.Reset();go.transform.position-=shift;wyrm.Sample(0);
-   Shot(cam,go,"newfx_arcanewyrm_spectator",new Vector3(5,3,6),new Vector3(1,1.2f,2),960,720);
-   Shot(cam,go,"newfx_arcanewyrm_firstperson",new Vector3(0,1.6f,-1),new Vector3(1,1.3f,3),720,960);
-   wyrm.BeginFade();wyrm.Sample(.4f);Shot(cam,go,"newfx_arcanewyrm_fade",new Vector3(5,3,6),new Vector3(1,1.2f,2),960,720);
+   CarpetShot(cam,go,"newfx_arcanewyrm_spectator",new Vector3(5,3,6),new Vector3(1,1.2f,2),960,720);
+   CarpetShot(cam,go,"newfx_arcanewyrm_firstperson",new Vector3(0,1.6f,-1),new Vector3(1,1.3f,3),720,960);
+   wyrm.BeginFade();wyrm.Sample(.4f);CarpetShot(cam,go,"newfx_arcanewyrm_fade",new Vector3(5,3,6),new Vector3(1,1.2f,2),960,720);
    UnityEngine.Object.DestroyImmediate(go);
    foreach(string id in new[]{"landmine","snaretrap","trapchain"})
    {
     var trap=SpellFx.CreateTrapVisual(Skills.All[id]);SpellFx.SetTrapArmed(trap,true);trap.GetComponent<TrapArtView>().Sample(.2f);
-    Shot(cam,trap,"newfx_"+id+"_spectator",new Vector3(.8f,.8f,1),Vector3.zero,720,720);
-    Shot(cam,trap,"newfx_"+id+"_firstperson",new Vector3(0,1.6f,-.8f),Vector3.zero,720,960);UnityEngine.Object.DestroyImmediate(trap);
+    CarpetShot(cam,trap,"newfx_"+id+"_spectator",new Vector3(.8f,.8f,1),Vector3.zero,720,720);
+    CarpetShot(cam,trap,"newfx_"+id+"_firstperson",new Vector3(0,1.6f,-.8f),Vector3.zero,720,960);UnityEngine.Object.DestroyImmediate(trap);
    }
    SpellFx.FalconDive(new Vector3(0,2,0),new Vector3(0,1,3),.35f);var falcon=UnityEngine.Object.FindObjectOfType<FalconDiveArt>();falcon.Sample(.2f);
-   Shot(cam,falcon.gameObject,"newfx_falcondive_spectator",new Vector3(2,2,3),falcon.transform.position,720,720);
-   Shot(cam,falcon.gameObject,"newfx_falcondive_firstperson",new Vector3(0,1.6f,-.5f),new Vector3(0,1.4f,3),720,960);
+   CarpetShot(cam,falcon.gameObject,"newfx_falcondive_spectator",new Vector3(2,2,3),falcon.transform.position,720,720);
+   CarpetShot(cam,falcon.gameObject,"newfx_falcondive_firstperson",new Vector3(0,1.6f,-.5f),new Vector3(0,1.4f,3),720,960);
    falcon.Sample(.15f);if(Vector3.Distance(falcon.transform.position,new Vector3(0,1,3))>.001f)throw new Exception("Falcon contact timing drift");UnityEngine.Object.DestroyImmediate(falcon.gameObject);
+   var slowGo=SpellFx.CreateProjectileVisual(Skills.All["arcanewyrm"],"mage");var slow=slowGo.GetComponent<ArcaneWyrmView>();slow.Sample(0);int meshCount=Resources.FindObjectsOfTypeAll<Mesh>().Length,materialCount=Resources.FindObjectsOfTypeAll<Material>().Length;
+   for(int i=1;i<=1000;i++){slowGo.transform.position=Vector3.forward*(i*.003f);slow.Sample(.001f);}if(slow.VisibleSections!=25)throw new Exception("Dense wyrm history lost body length");
+   if(meshCount!=Resources.FindObjectsOfTypeAll<Mesh>().Length||materialCount!=Resources.FindObjectsOfTypeAll<Material>().Length)throw new Exception("Wyrm per-frame mesh or material allocation");UnityEngine.Object.DestroyImmediate(slowGo);
    NewFxCatalogShots(cam);
-   File.WriteAllText("snapshots/newfx_audit.json","{\"wyrmSegments\":24,\"arShiftContinuous\":true}");
+   File.WriteAllText("snapshots/newfx_audit.json","{\"wyrmSegments\":24,\"arShiftContinuous\":true,\"denseHistoryLength\":true,\"wyrmCacheStable\":true,\"falconContactTime\":0.35,\"iconsUnique\":51,\"independentAuraClear\":true,\"auraCacheStable\":true}");
   }
   static void NewFxSample(float dt)
   {
    foreach(var b in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>())
    {
-    if(b is CharacterRig)continue;
+    if(b is CharacterRig)continue;if(b is HitStackArt stack)stack.Sample();
     var type=b.GetType();var method=type.GetMethod("Sample",new[]{typeof(float)});if(method!=null)method.Invoke(b,new object[]{dt});
     if(type.Name=="FxAnim"){type.GetField("time",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).SetValue(b,dt);type.GetMethod("Update",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).Invoke(b,null);}
    }
@@ -55,8 +58,8 @@ namespace SpellDuel.EditorTools
   }
   static void NewFxPair(Camera cam,string id,GameObject subject,Vector3 center)
   {
-   cam.transform.position=new Vector3(3,2.4f,5);NewFxSample(.12f);Shot(cam,subject,"newfx_"+id+"_spectator",new Vector3(3,2.4f,5),center,960,720);
-   cam.transform.position=new Vector3(0,1.6f,-.1f);cam.transform.LookAt(center+Vector3.forward*2);NewFxSample(0);Shot(cam,subject,"newfx_"+id+"_firstperson",new Vector3(0,1.6f,-.1f),center+Vector3.forward*2,720,960);
+   cam.aspect=960f/720;cam.transform.position=new Vector3(3,2.4f,5);NewFxSample(.12f);CarpetShot(cam,subject,"newfx_"+id+"_spectator",new Vector3(3,2.4f,5),center,960,720);
+   cam.aspect=720f/960;cam.transform.position=new Vector3(0,1.6f,-.1f);cam.transform.LookAt(center+Vector3.forward*2);NewFxSample(0);CarpetShot(cam,subject,"newfx_"+id+"_firstperson",new Vector3(0,1.6f,-.1f),center+Vector3.forward*2,720,960);
   }
   static void NewFxCatalogShots(Camera cam)
   {

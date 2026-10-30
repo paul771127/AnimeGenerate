@@ -29,7 +29,7 @@ namespace SpellDuel
  }
  public sealed class TeamBuffArt:MonoBehaviour
  {
-  string id;bool burst;float age,level=1,hit;int hitPiece;Color tint;Transform art;LineRenderer[] lines,edge;Vector3[][] basis;Color[] colors;Camera edgeCamera;
+  string id;bool burst;float age,level=1,hit;int hitPiece;Color tint;Transform art;LineRenderer[] lines,edge;Color[] colors;Camera edgeCamera;
   public void Build(string skill,bool casting)
   {
    id=skill;burst=casting;tint=SpellFx.SkillTint(id);art=SkyArt.Node(transform,"World buff motif",Vector3.zero);var list=new List<LineRenderer>();var shades=new List<Color>();
@@ -104,7 +104,7 @@ namespace SpellDuel
     for(int j=0;j<4;j++){float a=j*Mathf.PI/2;var center=P(a,.43f,.8f);var p=new[]{center+Vector3.up*.16f,center+new Vector3(.07f,0,0),center-Vector3.up*.16f,center-new Vector3(.07f,0,0),center+Vector3.up*.16f};Add(list,shades,p,false,tint,.016f);Add(list,shades,new[]{p[0],p[2]},false,tint,.008f);}
     if(burst){Add(list,shades,new[]{new Vector3(-.3f,1.1f,.28f),new Vector3(0,1.22f,.28f),new Vector3(.3f,1.1f,.28f),new Vector3(0,1.03f,.28f),new Vector3(-.3f,1.1f,.28f)},false,tint,.022f);}
    }
-   lines=list.ToArray();colors=shades.ToArray();basis=new Vector3[lines.Length][];for(int i=0;i<lines.Length;i++){basis[i]=new Vector3[lines[i].positionCount];lines[i].GetPositions(basis[i]);}Sample(0);
+   lines=list.ToArray();colors=shades.ToArray();Sample(0);
   }
   static Vector3 P(float a,float r,float y)=>new Vector3(Mathf.Cos(a)*r,y,Mathf.Sin(a)*r);
   static Vector3[] Orbit(float r,float y,int n){var p=new Vector3[n];for(int i=0;i<n;i++)p[i]=P(i*Mathf.PI*2/n,r,y);return p;}

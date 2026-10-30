@@ -4,6 +4,7 @@ namespace SpellDuel
 {
  public static partial class SpellFx
  {
+  static bool IsDedicatedSkillProjectile(string id){switch(id){case "arcanewyrm":case "starfall":case "arcanebreak":case "holyblade":case "headshot":case "scattershot":case "blastarrow":case "spiritbolt":case "earthspike":case "suiton":case "futon":case "poisondart":case "lightpillar":case "holyfire":case "verdict":case "rollarrow":case "echo_fire":case "echo_ice":return true;default:return false;}}
   static void AdvancedProjectile(GameObject root,string id,Color c){root.AddComponent<AdvancedProjectileArt>().Build(id,c);}
   public static void AreaBurst(string skillId,Vector3 centerWorld,float radius)
   {
@@ -22,7 +23,7 @@ namespace SpellDuel
  }
  public sealed class AdvancedProjectileArt:MonoBehaviour
  {
-  string id;float age;Transform motif;LineRenderer[] lines;Vector3[] basePoints;Color tint;
+  string id;float age;Transform motif;LineRenderer[] lines;Color tint;
   public void Build(string skill,Color c)
   {
    id=skill;tint=c;motif=SkyArt.Node(transform,"Dedicated "+id,Vector3.zero);var ls=new List<LineRenderer>();
@@ -88,7 +89,7 @@ namespace SpellDuel
   {
    id=skill;radius=r;tint=SpellFx.SkillTint(id);rings=new LineRenderer[2];for(int i=0;i<2;i++){rings[i]=SkyArt.Ring(transform,"Expanding damage boundary",1,tint,i==0?.035f:.015f,64);rings[i].transform.localPosition=Vector3.up*(.025f+i*.01f);}
    var list=new List<Transform>();
-   if(id=="earthspike")for(int i=0;i<10;i++){float a=i*Mathf.PI/5;var p=SkyArt.Oval(transform,"Rising stone fang",new Vector3(Mathf.Cos(a)*r*.7f,0,Mathf.Sin(a)*r*.7f),new Vector3(.22f,.8f+i%3*.15f,.24f),new Color(.52f,.42f,.27f),true);p.localRotation=Quaternion.Euler(Mathf.Cos(a)*18,0,-Mathf.Sin(a)*18);list.Add(p);}
+   if(id=="earthspike")for(int i=0;i<10;i++){float a=i*Mathf.PI/5;var p=SkyArt.Oval(transform,"Rising stone fang",new Vector3(Mathf.Cos(a)*r*.7f,0,Mathf.Sin(a)*r*.7f),new Vector3(.22f,.8f+i%3*.15f,.24f),new Color(.52f,.42f,.27f),true);p.localRotation=Quaternion.Euler(Mathf.Cos(a)*18,0,180-Mathf.Sin(a)*18);list.Add(p);}
    if(id=="suiton")
    {cage=new LineRenderer[10];for(int j=0;j<10;j++){var p=new Vector3[18];float a=j*Mathf.PI/5;for(int i=0;i<18;i++){float u=i/17f;p[i]=new Vector3(Mathf.Cos(a)*r*Mathf.Sin(u*Mathf.PI),u*1.9f,Mathf.Sin(a)*r*Mathf.Sin(u*Mathf.PI));}cage[j]=SpellFx.Line(transform,"Water prison rib",p,false,.045f,new Color(.3f,.85f,1,.6f),true,false);}}
    if(id=="bladestorm")
