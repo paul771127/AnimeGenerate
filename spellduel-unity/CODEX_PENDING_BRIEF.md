@@ -851,3 +851,9 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - Claude 的 a5a4627 已接上美術與天空。讀取整合程式時發現牆格只顯示邊緣，湖心水格可能省略，因此 CreateLandmark(lake) 新增獨立 LakeSurface，依真正 Water 格補完整水面。沒有修改 SoloBattle.Explore.cs、地圖或碰撞。
 - 水面寫入深度並使用不透明表面色，避免和串流水格重疊時產生深淺格紋；波紋、睡蓮與岸邊依然在水面上。固定地圖水面網格共用快取。
 - 前一版 41140438464 的 Android 與 iOS 匯出成功；iOS IPA 編譯與上傳步驟均成功且產物存在，但整體工作在收尾因 a5a4627 新推送被標成取消。詳細證據保留在 platform_ci.json；湖心修正會再跑新的驗收。
+
+### 2026-10-31 森林細修最終驗證與預覽
+- 6049a45 的原生 run 41143467122 成功；更新 76 張場景預覽與 16 張靜態首尾圖。fullLakeWithEdgeOnlyStreaming 通過，湖心在只生成邊緣水格時仍完整。
+- 雙平台 run 41143467000 的 Android 建置、iOS 匯出及 IPA 編譯成功；Android APK 發布成功。詳見 Docs/pending_preview/explore_jungle/platform_ci.json。
+- refinement_all_before_after.jpg 彙整樹叢、榕樹、岩石、帳篷、水、篝火六項前後比較；最新水岸、天空／雲／遠林原生圖已目視複查。README 更新為 a5a4627 已完成正式探索接線。
+- 本輪僅修美術與原生預覽，不製作時間驅動動畫、不修改玩法／碰撞。更新後 fx_D3_fire.png 可交動畫 session 使用；尚未完成手機 AR 實機驗收。

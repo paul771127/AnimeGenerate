@@ -17,7 +17,7 @@
 | 9 NPC | 長老、獵人、探險家、守衛、草藥師、守林人、森林之靈 | npc_overview.jpg |
 | 10～11 提示 | 驚嘆號、問號、求援標記、地名橫幅 | animation_keyframes.jpg |
 
-這是美術工廠與原生測試場景的交付；正式探索模式的接線仍由 Claude 負責。不可把這些圖片當成已完成手機 AR 整合實測的證明。
+Claude 已於 a5a4627 將整套美術及天空接入正式探索模式。本目錄是 Unity 原生模型預覽，仍不可當成已完成手機 AR 實機測試的證明。
 
 ## 放置契約
 
@@ -56,9 +56,9 @@
 
 網格依類型與有限變體鍵共用；材質共用。Factory 不增加 Collider。牆驗證逐一斷言三角形 ≤300、頂點限制在 3m 格子內。狀態可反覆切換，重新生成後共用既有 mesh／material。全圖只為預覽，遊戲仍由既有程式限制 24m 附近生成。
 
-最新原生 Unity run 41140438468（a596434，包含 c840328 的美術）成功，輸出 76 張場景 PNG 與 16 張靜態首尾圖。24 組牆變體通過 ≤300 三角形、格子邊界與無 Collider 檢查；封印切換與 mesh／material 快取檢查通過。16 張圖通過 960×544、四角純黑／綠幕與四周留白檢查。詳見 native_ci.json、explore_*_audit.json、keyframe_validation.json。
+最新原生 Unity run 41143467122（6049a45）成功，輸出 76 張場景 PNG 與 16 張靜態首尾圖。24 組牆變體通過 ≤300 三角形、格子邊界與無 Collider 檢查；封印切換與 mesh／material 快取檢查通過。16 張圖通過 960×544、四角純黑／綠幕與四周留白檢查。另通過 fullLakeWithEdgeOnlyStreaming，確認只建立邊緣水格時湖心仍完整。詳見 native_ci.json、explore_*_audit.json、keyframe_validation.json。
 
-已目視複查新葉片群、加高樹木、三類岩石、帳篷與角色等比例圖、水材質／岸邊、篝火及 60m 視距下的天空／雲／遠林。當前雙平台 run 41140438464 的 iOS 匯出已成功，Android 與 IPA 仍執行中，結果另補。舊 platform_ci.json 是前一批證據，不能代替本批結果。AR 實機視野與動畫影片接線仍需整合端驗收。
+已目視複查新葉片群、加高樹木、三類岩石、帳篷與角色等比例圖、水材質／岸邊、篝火及 60m 視距下的天空／雲／遠林。雙平台 run 41143467000（6049a45）的 Android 建置、iOS 匯出與 IPA 編譯均成功，證據見 platform_ci.json。Android APK 已發布。AR 實機視野與動畫影片接線仍需整合端驗收。
 
 ## 2026-10-31 造型重修
 
@@ -70,8 +70,14 @@
 - 篝火改不規則石圈、木柴切面、炭塊與多層彎曲火舌；Fire 掛點與 fx_D3_fire.png 檔名不變，動畫 session 請使用更新的靜態圖。
 - 新圖：explore_tree_variation_lineup.png、explore_thicket_variation_lineup.png、explore_tent_scale.png、refinement_before_after.jpg、water_fire_before_after.jpg。帳篷對照使用真正的 MinionRig 9 與 CharacterRig 劍士，沒有放大／縮小比較角色。前後單件總覽各自取景，只比較輪廓；實際比例請看 explore_tent_scale.png。
 
-### 天空整合（Claude 接線）
+### 天空整合（a5a4627 已接線）
 
-進入探索時呼叫一次 `ExploreArt.CreateBackdrop(map)`，以 `SetParent(exRoot,false)` 保留已設定的地圖中心 localPosition；退出探索時跟世界根物件一同移除。不要放進 24m 格子串流。子物件包含 SkyDome、Sun、Cloud_*、DistantForest_*。本批不改 SoloBattle.Explore.cs。
+進入探索時呼叫一次 `ExploreArt.CreateBackdrop(map)`，以 `SetParent(exRoot,false)` 保留已設定的地圖中心 localPosition；退出探索時跟世界根物件一同移除。不要放進 24m 格子串流。子物件包含 SkyDome、Sun、Cloud_*、DistantForest_*。上述呼叫已由 Claude 接入 SoloBattle.Explore.cs；本批美術修正沒有修改該檔案。
 
 遠景 shader 將場地外的天空／雲／林帶沿原視線顯示在遠平面內；不寫深度、不投影，保持在近處敵人後方。相容目前遊戲相機 60m 遠裁切，不需更改 GameRoot。原生第一人稱圖使用同樣 60m 視距，俯視圖另加長視距並隱藏天空。新 shader 都在 Resources/Shaders，避免手機建置剔除。
+
+### 整合後湖面完整性
+
+CreateLandmark(lake) 的 LakeSurface 依實際 Water 格建立完整共用水面；即使遊戲只串流岸邊水格，湖心仍完整覆蓋。水面寫入深度，避免與串流格重疊產生色差。原生預覽按相同的邊緣格規則建立場景，並斷言水面覆蓋所有水格。
+
+六項前後比較見 `refinement_all_before_after.jpg`；水面及篝火近景見 `water_fire_before_after.jpg`。

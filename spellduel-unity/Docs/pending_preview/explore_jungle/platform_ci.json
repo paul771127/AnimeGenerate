@@ -1,7 +1,7 @@
 {
-  "id": 41083564529,
-  "head": "201215e6b3333a83c5241bb475137d468ecc676f",
-  "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41083564529",
+  "id": 41143467000,
+  "head": "6049a455f7282bbe21a3207b02e5936503c2bb79",
+  "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41143467000",
   "status": "in_progress",
   "conclusion": null,
   "jobs": [
@@ -9,37 +9,85 @@
       "name": "check-license",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41083564529/job/124158961929"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41143467000/job/124363129003"
     },
     {
       "name": "android",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41083564529/job/124159029077"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41143467000/job/124363158150"
     },
     {
       "name": "ios-export",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41083564529/job/124159029333"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41143467000/job/124363158191"
     },
     {
       "name": "ios-ipa",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41083564529/job/124166108682"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41143467000/job/124367665878"
     },
     {
       "name": "publish-apk",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41083564529/job/124168575712"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41143467000/job/124368817129"
     },
     {
       "name": "ios-testflight",
       "conclusion": null,
       "status": "in_progress",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41083564529/job/124171596694"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41143467000/job/124371144674"
+    }
+  ],
+  "iosSteps": [
+    {
+      "name": "Set up job",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/checkout@v4",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/download-artifact@v4",
+      "conclusion": "success"
+    },
+    {
+      "name": "放入 App 圖示（1024×1024，App Store 必要）",
+      "conclusion": "success"
+    },
+    {
+      "name": "編譯未簽署 IPA",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/upload-artifact@v4",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run actions/checkout@v4",
+      "conclusion": "success"
+    },
+    {
+      "name": "Complete job",
+      "conclusion": "success"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "SpellDuel-Android-APK",
+      "bytes": 356842893
+    },
+    {
+      "name": "SpellDuel-iOS-unsigned-IPA",
+      "bytes": 134908076
+    },
+    {
+      "name": "SpellDuel-iOS-XcodeProject",
+      "bytes": 365380905
     }
   ]
 }
