@@ -49,6 +49,22 @@ namespace SpellDuel
     for(int j=0;j<3;j++){var p=new Vector3[28];for(int i=0;i<p.Length;i++){float u=i/27f;float a=u*Mathf.PI*1.5f+j*2.1f;p[i]=P(a,.43f,.06f+u*(burst?1.5f:.2f));}Add(list,shades,p,false,tint,.018f);}
     Add(list,shades,new[]{new Vector3(.35f,.7f,0),new Vector3(.46f,.9f,.03f),new Vector3(.35f,1.1f,0)},false,tint,.014f);
    }
+   else if(id=="mindfocus"||id=="meditate")
+   {
+    for(int j=0;j<8;j++){var p=new Vector3[14];for(int i=0;i<14;i++){float u=i/13f;float a=j*Mathf.PI/4+u;p[i]=P(a,.5f*(1-u)+.06f,.6f+u*.3f);}Add(list,shades,p,false,tint,.016f);}
+    if(id=="mindfocus")Add(list,shades,Orbit(.18f,1.35f,32),true,tint,.014f);
+   }
+   else if(id=="bless"||id=="haste"||id=="spring"||id=="focus")
+   {
+    for(int j=0;j<4;j++)
+    {
+     var center=P(j*Mathf.PI/2,.4f,.8f);
+     if(id=="bless"){Add(list,shades,new[]{center-Vector3.up*.16f,center+Vector3.up*.16f},false,tint,.025f);Add(list,shades,new[]{center-Vector3.right*.1f,center+Vector3.right*.1f},false,tint,.02f);}
+     else if(id=="haste"){for(int k=0;k<3;k++)Add(list,shades,new[]{center+new Vector3(-.1f,k*.07f,0),center+new Vector3(0,k*.07f+.05f,0),center+new Vector3(.1f,k*.07f,0)},false,tint,.015f);}
+     else if(id=="spring"){var p=new Vector3[16];for(int i=0;i<16;i++){float u=i/15f;p[i]=center+new Vector3(u*.15f,Mathf.Sin(u*Mathf.PI)*.55f-.3f,0);}Add(list,shades,p,false,tint,.02f);}
+     else{var p=new Vector3[32];for(int i=0;i<32;i++){float a=i*Mathf.PI/16;p[i]=center+new Vector3(Mathf.Cos(a)*.12f,Mathf.Sin(a)*.12f,0);}Add(list,shades,p,true,tint,.012f);Add(list,shades,new[]{center-Vector3.up*.18f,center+Vector3.up*.18f},false,tint,.009f);}
+    }
+   }
    else if(id=="layhands")
    {
     for(int side=-1;side<=1;side+=2){var p=new Vector3[13];for(int i=0;i<5;i++){p[i*2]=new Vector3(side*.3f+(i-2)*.035f,.88f,.22f);p[i*2+1]=new Vector3(side*.3f+(i-2)*.035f,1.03f-Mathf.Abs(i-2)*.025f,.22f);}p[10]=new Vector3(side*.3f+.09f,.8f,.22f);p[11]=new Vector3(side*.3f-.09f,.8f,.22f);p[12]=p[0];Add(list,shades,p,false,tint,.018f);}

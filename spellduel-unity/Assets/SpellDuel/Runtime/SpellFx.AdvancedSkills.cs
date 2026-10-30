@@ -48,6 +48,11 @@ namespace SpellDuel
    {
     for(int j=-1;j<=1;j++)ls.Add(SpellFx.Line(motif,"Narrow descending holy ray",new[]{new Vector3(j*.045f,0,-1.3f),new Vector3(j*.045f,0,.15f)},false,j==0?.055f:.012f,j==0?Color.white:c,true,false));
    }
+   else if(id=="echo_ice")
+   {
+    var ice=SkyArt.Oval(motif,"Small echoed ice lance",Vector3.zero,new Vector3(.13f,.52f,.13f),new Color(.55f,.9f,1),true);ice.localRotation=Quaternion.Euler(90,0,0);
+    ls.Add(SpellFx.Line(motif,"Ice crystalline seam",new[]{Vector3.back*.22f,Vector3.forward*.25f},false,.014f,Color.white,true,false));
+   }
    else if(id=="holyfire"||id=="echo_fire")
    {
     for(int j=0;j<5;j++){var flame=SkyArt.Oval(motif,"Sacred flame tongue",new Vector3(Mathf.Sin(j*2.4f)*.07f,Mathf.Cos(j*2.4f)*.07f,-j*.035f),new Vector3(.12f,.12f,.33f-j*.02f),j%2==0?c:new Color(1,.92f,.55f),true);flame.localRotation=Quaternion.Euler(90,0,0);}
@@ -62,6 +67,7 @@ namespace SpellDuel
     if(id!="headshot")for(int s=-1;s<=1;s+=2)ls.Add(SpellFx.Line(motif,"Fletching",new[]{new Vector3(s*.09f,0,-length+.08f),new Vector3(0,0,-length+.2f)},false,.025f,c,true,false));
     if(id=="blastarrow")for(int j=0;j<3;j++)ls.Add(SpellFx.Line(motif,"Burning arrow fuse",new[]{new Vector3(0,j*.02f,-.12f),new Vector3(.06f,j*.02f,-.3f),new Vector3(0,j*.02f,-.5f)},false,.025f,new Color(1,.65f,.1f,.7f),true,false));
    }
+   if(id=="rollarrow")for(int j=0;j<2;j++){var p=new Vector3[20];for(int i=0;i<20;i++){float a=i/19f*Mathf.PI*1.5f+j*Mathf.PI;p[i]=new Vector3(Mathf.Cos(a)*.13f,Mathf.Sin(a)*.13f,-i*.03f);}ls.Add(SpellFx.Line(motif,"Rolling green afterimage",p,false,.012f,new Color(.35f,1,.6f,.4f),true,false));}
    lines=ls.ToArray();if(id=="echo_fire"||id=="echo_ice")motif.localScale=Vector3.one*.65f;
    if(id.StartsWith("echo_")){var ring=SpellFx.Line(motif,"Arcane echo orbit",SpellFx.Circle(32,.18f),true,.012f,new Color(.8f,.4f,1),true,false);ring.transform.localRotation=Quaternion.Euler(35,50,0);}
   }

@@ -492,6 +492,7 @@ namespace SpellDuel
 
             switch (id)
             {
+                case "rollarrow": case "echo_fire": case "echo_ice":
                 case "holyblade": case "headshot": case "scattershot": case "blastarrow": case "spiritbolt": case "earthspike": case "suiton": case "futon": case "poisondart": case "lightpillar": case "holyfire": case "verdict":
                     AdvancedProjectile(root,id,sc);break;
                 case "starfall": case "arcanebreak":
