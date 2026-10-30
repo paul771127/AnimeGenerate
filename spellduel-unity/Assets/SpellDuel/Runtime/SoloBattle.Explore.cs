@@ -12,9 +12,10 @@ namespace SpellDuel
     {
         ExploreRun exploreRun, pendingExplore;
         Transform exRoot;
-        GameObject exWallTpl, exGateTpl, exSealTpl, exHerbTpl, exSparkTpl, exAltarTpl, exLeverTpl, exKeyTpl, exShardTpl;
-        readonly Dictionary<ExTerrain, GameObject> exTerrainTpl = new Dictionary<ExTerrain, GameObject>();
-        readonly Dictionary<string, GameObject> exPropTpl = new Dictionary<string, GameObject>();
+        readonly HashSet<ExSwitch> exSwitchShownDone = new HashSet<ExSwitch>();
+        readonly List<(Transform mark, float until)> exAlertMarks = new List<(Transform, float)>();
+        readonly HashSet<ExLandmark> exBannerSeen = new HashSet<ExLandmark>();
+        float exBannerUntil = -1f;
         readonly Dictionary<Vector2Int, GameObject> exWalls = new Dictionary<Vector2Int, GameObject>();
         readonly Dictionary<object, GameObject> exProps = new Dictionary<object, GameObject>();
         readonly Dictionary<string, CharacterRig> exNpcRigs = new Dictionary<string, CharacterRig>();
@@ -66,7 +67,12 @@ namespace SpellDuel
             battle.exBossHp = (StoryBossHp.Length > 1 ? StoryBossHp[1] : 1600f) * LateBossMul;
             battle.enemyAccuracy = StoryEnemyAccuracy(1, difficulty);
             battle.StartExplore(run);
-            battle.OnExAlert += (m, call) => { if (call) { Sfx.Play("roar", 0.5f, 1.3f); Say($"❗ {m.name}在呼叫同伴！", 2f); } else Sfx.Play("select", 0.4f, 0.6f); };
+            battle.OnExAlert += (m, call) =>
+            {
+                if (call) { Sfx.Play("roar", 0.5f, 1.3f); Say($"❗ {m.name}在呼叫同伴！", 2f); } else Sfx.Play("select", 0.4f, 0.6f);
+                // 頭上的「！」（Codex 的 AlertMark；會叫同伴的多一圈聲波）：顯示一下就收起來（動畫影片之後接）
+                if (minionGo.TryGetValue(m, out var mr) && mr) { ExploreArt.AlertMark(mr.transform, call); var t = mr.transform.Find("AlertMark"); if (t) exAlertMarks.Add((t, Time.time + (call ? 1.8f : 1.1f))); }
+            };
             exHasValid = false; exLastCell = new Vector2Int(-999, -999);
             Ticker(ExLines("📜 和林語長老說話，接下主線任務"));
         }
@@ -96,6 +102,7 @@ namespace SpellDuel
         {
             int h = 0; foreach (var a in run.map.arenas) h = h * 2 + (a.cleared ? 1 : 0);
             foreach (var s in run.map.sparkles) h = h * 2 + (s.found ? 1 : 0);
+            foreach (var se in run.map.seals) h = h * 7 + se.have + (se.open ? 5 : 0);
             if (h == exGateHash) return false;
             exGateHash = h; foreach (var w in exWalls.Values) if (w) Destroy(w); exWalls.Clear();
             return true;
@@ -124,72 +131,54 @@ namespace SpellDuel
             }
         }
 
-        // ---------------------------------------------------------------- 畫面：迷宮、NPC、道具、閃光點
+        // ---------------------------------------------------------------- 畫面：迷宮、NPC、道具、閃光點（Codex 的 ExploreArt）
         void BuildExploreTemplates()
         {
             exRoot = new GameObject("Explore maze").transform;
-            exWallTpl = Prim(PrimitiveType.Cube, new Color(0.13f, 0.32f, 0.16f)); exWallTpl.transform.SetParent(exRoot, false); exWallTpl.SetActive(false);
-            exGateTpl = Prim(PrimitiveType.Cube, new Color(0.45f, 0.3f, 0.12f, 0.85f), true); exGateTpl.transform.SetParent(exRoot, false); exGateTpl.SetActive(false);
-            exSealTpl = Prim(PrimitiveType.Cube, new Color(0.55f, 0.3f, 0.75f, 0.85f), true); exSealTpl.transform.SetParent(exRoot, false); exSealTpl.SetActive(false);
-            exLeverTpl = Prim(PrimitiveType.Cylinder, new Color(0.85f, 0.7f, 0.3f)); exLeverTpl.transform.SetParent(exRoot, false); exLeverTpl.SetActive(false);
-            exKeyTpl = Prim(PrimitiveType.Cube, new Color(0.95f, 0.75f, 0.3f), true); exKeyTpl.transform.SetParent(exRoot, false); exKeyTpl.SetActive(false);
-            exShardTpl = Prim(PrimitiveType.Sphere, new Color(0.3f, 1f, 0.7f), true); exShardTpl.transform.SetParent(exRoot, false); exShardTpl.SetActive(false);
-            exHerbTpl = Prim(PrimitiveType.Sphere, new Color(0.6f, 1f, 0.75f), true); exHerbTpl.transform.SetParent(exRoot, false); exHerbTpl.SetActive(false);
-            exSparkTpl = Prim(PrimitiveType.Sphere, new Color(1f, 1f, 0.75f), true); exSparkTpl.transform.SetParent(exRoot, false); exSparkTpl.SetActive(false);
-            exAltarTpl = Prim(PrimitiveType.Cylinder, new Color(0.5f, 1f, 0.6f, 0.8f), true); exAltarTpl.transform.SetParent(exRoot, false); exAltarTpl.SetActive(false);
-            // 地形（暫代外觀；Codex 的叢林美術做好後換掉）：樹叢、岩壁、湖水、城寨木牆、古殿石牆、洞窟岩壁
-            GameObject T(PrimitiveType t, Color c, bool see = false) { var g = Prim(t, c, see); g.transform.SetParent(exRoot, false); g.SetActive(false); return g; }
-            exTerrainTpl[ExTerrain.Thicket] = exWallTpl;
-            exTerrainTpl[ExTerrain.Rock] = T(PrimitiveType.Cube, new Color(0.42f, 0.4f, 0.37f));
-            exTerrainTpl[ExTerrain.Water] = T(PrimitiveType.Cube, new Color(0.2f, 0.45f, 0.75f, 0.75f), true);
-            exTerrainTpl[ExTerrain.Palisade] = T(PrimitiveType.Cube, new Color(0.45f, 0.3f, 0.16f));
-            exTerrainTpl[ExTerrain.Ruin] = T(PrimitiveType.Cube, new Color(0.62f, 0.66f, 0.58f));
-            exTerrainTpl[ExTerrain.Cave] = T(PrimitiveType.Cube, new Color(0.24f, 0.21f, 0.2f));
-            // 景物障礙
-            exPropTpl["tree"] = T(PrimitiveType.Cylinder, new Color(0.3f, 0.22f, 0.12f));
-            exPropTpl["stump"] = T(PrimitiveType.Cylinder, new Color(0.4f, 0.28f, 0.15f));
-            exPropTpl["boulder"] = T(PrimitiveType.Sphere, new Color(0.5f, 0.48f, 0.44f));
-            exPropTpl["mushroom"] = T(PrimitiveType.Sphere, new Color(0.85f, 0.45f, 0.55f));
-            exPropTpl["tent"] = T(PrimitiveType.Cube, new Color(0.6f, 0.5f, 0.32f));
-            exPropTpl["crate"] = T(PrimitiveType.Cube, new Color(0.55f, 0.38f, 0.2f));
-            exPropTpl["totem"] = T(PrimitiveType.Cylinder, new Color(0.5f, 0.25f, 0.2f));
-            exPropTpl["pillar"] = T(PrimitiveType.Cylinder, new Color(0.7f, 0.74f, 0.66f));
-            exPropTpl["statue"] = T(PrimitiveType.Capsule, new Color(0.6f, 0.68f, 0.6f));
-            exPropTpl["campfire"] = T(PrimitiveType.Cylinder, new Color(1f, 0.55f, 0.2f), true);
-            exPropTpl["altar"] = T(PrimitiveType.Cube, new Color(0.55f, 0.6f, 0.5f));
+            // 天空、太陽、雲、遠方的森林：只建一次（不跟著 24m 串流）
+            var sky = ExploreArt.CreateBackdrop(exploreRun.map);
+            if (sky) sky.transform.SetParent(exRoot, false);
         }
 
-        /// <summary>只畫玩家附近 ExViewCells 格內、旁邊是走道的牆（整塊牆的內部不用畫）</summary>
+        /// <summary>藤蔓門、封印要橫跨走道：走道是南北向就不轉，東西向轉 90°</summary>
+        static Quaternion ExGateRot(ExploreMap map, int x, int z) => map.Open(x, z + 1) || map.Open(x, z - 1) ? Quaternion.identity : Quaternion.Euler(0f, 90f, 0f);
+
+        /// <summary>只畫玩家附近 ExViewCells 格內：地面、旁邊是走道的牆（整塊牆的內部不用畫）、藤蔓門與封印</summary>
         void RefreshExploreCells(ExploreRun run, Vector2Int c)
         {
-            var map = run.map;
+            var map = run.map; float cs = ExploreMap.CellSize;
             var keep = new HashSet<Vector2Int>();
             for (int x = c.x - ExViewCells; x <= c.x + ExViewCells; x++)
                 for (int z = c.y - ExViewCells; z <= c.y + ExViewCells; z++)
                 {
                     var k = new Vector2Int(x, z);
                     var cell = map.At(x, z);
-                    bool gate = cell == ExCell.Gate && !map.GateOpen(x, z);
-                    if (cell == ExCell.Floor || cell == ExCell.Gate && !gate) continue;
-                    bool edge = false; foreach (var d in ExploreMap.Dirs) if (map.Open(x + d.x, z + d.y)) edge = true;
-                    if (!edge && !gate) continue;
+                    if (cell == ExCell.Wall)
+                    {
+                        bool edge = false; foreach (var d in ExploreMap.Dirs) if (map.Open(x + d.x, z + d.y)) edge = true;
+                        if (!edge) continue;
+                    }
                     keep.Add(k);
                     if (exWalls.ContainsKey(k)) continue;
-                    var t = map.TerrainAt(x, z);
-                    if (!gate)
+                    GameObject go;
+                    if (cell == ExCell.Floor) go = ExploreArt.CreateGround(map.GroundAt(x, z), x, z, cs);   // 淡淡的地貼
+                    else if (cell == ExCell.Gate)
                     {
-                        // Codex 的地形牆：地面中心、自己依格子大小縮放
-                        var w = ExploreArt.CreateWall(t, x, z, ExploreMap.CellSize);
-                        w.transform.SetParent(exRoot, false);
-                        w.transform.localPosition = map.World(x, z);
-                        exWalls[k] = w;
-                        continue;
+                        var seal = map.SealOf(x, z);
+                        if (seal != null) go = ExploreArt.CreateSeal(seal, x, z, cs);   // 會依 seal.have 亮凹槽、open 時只剩框
+                        else
+                        {
+                            int an = 1; foreach (var a in map.arenas) if (a.gate.Contains(k)) an = a.n;
+                            go = ExploreArt.CreateGate(an, cs);
+                            ExploreArt.SetGateOpen(go, map.GateOpen(x, z));
+                        }
+                        if (go) go.transform.localRotation = ExGateRot(map, x, z);
                     }
-                    var go = Instantiate(gate ? (map.SealOf(x, z) != null ? exSealTpl : exGateTpl) : exTerrainTpl.TryGetValue(t, out var tt) ? tt : exWallTpl, exRoot);
-                    go.SetActive(true);
-                    float h = gate ? 2.2f : t == ExTerrain.Water ? 0.06f : t == ExTerrain.Palisade ? 2.6f : t == ExTerrain.Ruin ? 2.2f : t == ExTerrain.Cave ? 3f : 2.4f + ((x * 7 + z * 13) % 5) * 0.12f;   // 高低有一點變化；湖水是平的
-                    go.transform.localPosition = map.World(x, z) + Vector3.up * h * 0.5f;
-                    go.transform.localScale = new Vector3(ExploreMap.CellSize * (gate ? 0.9f : 1f), h, ExploreMap.CellSize * (gate ? 0.9f : 1f));
+                    else go = ExploreArt.CreateWall(map.TerrainAt(x, z), x, z, cs);
+                    if (!go) continue;
+                    var rot = go.transform.localRotation;
+                    go.transform.SetParent(exRoot, false);
+                    go.transform.localPosition = map.World(x, z); go.transform.localRotation = rot;
                     exWalls[k] = go;
                 }
             foreach (var kv in new List<KeyValuePair<Vector2Int, GameObject>>(exWalls))
@@ -198,51 +187,83 @@ namespace SpellDuel
 
         void UpdateExploreProps(ExploreRun run)
         {
-            var me = Me.Feet; float view = ExViewCells * ExploreMap.CellSize;
-            // NPC：用角色模型，面向玩家
-            foreach (var n in run.map.npcs)
+            var me = Me.Feet; float view = ExViewCells * ExploreMap.CellSize; var map = run.map;
+            // NPC：用角色模型＋Codex 的服裝，面向玩家；頭上的任務標記（1 ❗ 有任務、2 ❓ 可以回報）
+            foreach (var n in map.npcs)
             {
                 bool show = !n.hidden && Battle.FlatDistance(n.pos, me) <= view && !(n.id == "lost" && (run.escortFollowing || battle.exEscort != null));
                 exNpcRigs.TryGetValue(n.id, out var rig);
                 if (!show) { if (rig) { Destroy(rig.gameObject); exNpcRigs.Remove(n.id); } continue; }
-                if (!rig) { rig = CharacterRig.Create(n.look); exNpcRigs[n.id] = rig; SpawnFade.Play(rig.gameObject); }
+                if (!rig) { rig = CharacterRig.Create(n.look); rig.InCombat = false; ExploreArt.DressNpc(rig, n.id); exNpcRigs[n.id] = rig; SpawnFade.Play(rig.gameObject); }
                 var fwd = Fighter.Flat(me - n.pos); if (fwd == Vector3.zero) fwd = Vector3.back;
                 rig.SetPose(WorldFrame.FromWorld(n.pos), WorldFrame.DirFromWorld(fwd));
+                ExploreArt.QuestMark(rig.transform, ExNpcMark(run, n));
             }
-            // 月光草、閃光點、祭壇
-            foreach (var it in run.map.items) ExProp(it, exHerbTpl, !it.taken && !it.hidden && Battle.FlatDistance(it.pos, me) <= view, it.pos + Vector3.up * 0.35f, Vector3.one * (0.22f + 0.03f * Mathf.Sin(Time.time * 4f)));
-            foreach (var s in run.map.sparkles)
+            // 月光草、閃光點
+            foreach (var it in map.items) ExArt(it, () => ExploreArt.CreateHerb(), !it.taken && !it.hidden && Battle.FlatDistance(it.pos, me) <= view, it.pos);
+            foreach (var sp in map.sparkles)
             {
-                float twinkle = Mathf.Max(0f, Mathf.Sin(Time.time * 3f + s.pos.x)) ;   // 偶爾閃一下（不是一直亮）
-                ExProp(s, exSparkTpl, !s.found && Battle.FlatDistance(s.pos, me) <= ExSparkleShow, s.pos + Vector3.up * 0.5f, Vector3.one * (0.04f + 0.14f * twinkle * twinkle * twinkle));
+                var g = ExArt(sp, () => ExploreArt.CreateSparkle(sp.kind), !sp.found && Battle.FlatDistance(sp.pos, me) <= ExSparkleShow, sp.pos);
+                if (g) { float tw = Mathf.Max(0f, Mathf.Sin(Time.time * 3f + sp.pos.x)); g.transform.localScale = Vector3.one * (0.5f + 2f * tw * tw * tw); }   // 偶爾閃一下（不是一直亮）
             }
-            // 岔路的機關（石柱）、鑰匙、翠玉碎片（浮在空中、慢慢轉）
-            foreach (var sw in run.map.switches)
+            // 岔路的石雕機關、古銅鑰匙、翠玉碎片（拿走／啟動後切狀態；機關留在原地）
+            foreach (var sw in map.switches)
             {
-                var tpl = sw.kind == "lever" ? exLeverTpl : sw.kind == "key" ? exKeyTpl : exShardTpl;
-                bool show = !sw.done && Battle.FlatDistance(sw.pos, me) <= view;
-                ExProp(sw, tpl, show, sw.pos + Vector3.up * (sw.kind == "lever" ? 0.6f : 1f + 0.08f * Mathf.Sin(Time.time * 2f)), sw.kind == "lever" ? new Vector3(0.35f, 0.6f, 0.35f) : Vector3.one * 0.28f);
-                if (show && sw.kind != "lever" && exProps.TryGetValue(sw, out var sg) && sg) sg.transform.localRotation = Quaternion.Euler(0f, Time.time * 90f, 45f);
+                var g = ExArt(sw, () => ExploreArt.CreateSwitch(sw), Battle.FlatDistance(sw.pos, me) <= view, sw.pos);
+                if (!g) { exSwitchShownDone.Remove(sw); continue; }
+                if (sw.done && exSwitchShownDone.Add(sw)) ExploreArt.SetSwitchDone(g);
+                if (!sw.done && sw.kind != "lever")
+                {
+                    var t = g.transform.Find(sw.kind == "key" ? "BronzeKey" : "JadeShard");   // 浮著慢慢轉（正式動畫之後接）
+                    if (t) t.localRotation = Quaternion.Euler(0f, Time.time * 90f, 0f);
+                }
             }
-            // 景物障礙（樹、巨石、巨菇、帳篷、城寨的木箱、古殿石柱…；碰撞在 ExploreMap.Walkable）
-            foreach (var p in run.map.props)
+            // 景物障礙（樹、巨石、巨菇、帳篷、木箱、圖騰、石柱、雕像、篝火、祭壇；碰撞在 ExploreMap.Walkable）
+            foreach (var p in map.props)
             {
-                if (!exPropTpl.TryGetValue(p.kind, out var tpl)) continue;
-                float hh = p.kind == "tree" ? 3.2f : p.kind == "pillar" ? 2.6f : p.kind == "statue" ? 1.8f : p.kind == "tent" ? 1.6f : p.kind == "totem" ? 2.2f : p.kind == "mushroom" ? 1.4f : p.kind == "boulder" ? p.radius * 1.6f : p.kind == "campfire" ? 0.3f : p.kind == "altar" ? 1f : 0.8f;
-                float d = p.radius * 2f;
-                bool halfY = p.kind == "tree" || p.kind == "stump" || p.kind == "totem" || p.kind == "pillar" || p.kind == "campfire" || p.kind == "statue";   // 圓柱、膠囊的原始高度是 2
-                var scale = halfY ? new Vector3(d, hh * 0.5f, d) : new Vector3(d, hh, d);
-                ExProp(p, tpl, Battle.FlatDistance(p.pos, me) <= view, p.pos + Vector3.up * hh * 0.5f, scale);
+                var g = ExArt(p, () => ExploreArt.CreateProp(p), Battle.FlatDistance(p.pos, me) <= view, p.pos);
+                if (g && p.kind == "altar") ExploreArt.SetAltarGlow(g, run.bossDead && !run.hasHeart);   // Boss 倒下後浮出古樹之心，拿走就熄
             }
-            ExProp(run, exAltarTpl, run.bossDead && !run.hasHeart, run.map.altar + Vector3.up * 1.2f, new Vector3(0.5f, 1.2f, 0.5f));
+            // 地標（營地、湖、城寨、洞窟、古殿…）與競技場：整塊在附近才建
+            foreach (var l in map.landmarks)
+            {
+                var ctr = map.World(l.rect.x, l.rect.y) + (map.World(l.rect.xMax, l.rect.yMax) - map.World(l.rect.x, l.rect.y)) * 0.5f;
+                float r = Mathf.Max(l.rect.width, l.rect.height) * ExploreMap.CellSize * 0.5f;
+                ExArt(l, () => ExploreArt.CreateLandmark(l, map), Battle.FlatDistance(ctr, me) <= view + r, null);
+                if (l.found && l.kind != "start" && l.kind != "arena" && exBannerSeen.Add(l)) { ExploreArt.LandmarkFound(l); exBannerUntil = Time.time + 2.5f; }
+            }
+            foreach (var a in map.arenas) ExArt(a, () => ExploreArt.CreateArena(a.n, a.radius), Battle.FlatDistance(a.center, me) <= view + a.radius, a.center);
+            // 地名橫幅、怪物頭上的「！」：顯示一下就收
+            if (exBannerUntil > 0f && Time.time > exBannerUntil) { exBannerUntil = -1f; ExploreArt.LandmarkFound(null); }
+            for (int i = exAlertMarks.Count - 1; i >= 0; i--)
+                if (!exAlertMarks[i].mark || Time.time > exAlertMarks[i].until) { if (exAlertMarks[i].mark) exAlertMarks[i].mark.gameObject.SetActive(false); exAlertMarks.RemoveAt(i); }
         }
 
-        void ExProp(object key, GameObject tpl, bool show, Vector3 at, Vector3 scale)
+        /// <summary>NPC 頭上的標記：0 沒有、1 ❗ 有任務可以接、2 ❓ 可以回報</summary>
+        static int ExNpcMark(ExploreRun run, ExNpc n)
+        {
+            if (n.id == "guardian" && run.hasHeart) return 2;
+            var q = run.map.Quest(n.quest);
+            if (q != null && q.state == ExQuestState.Offered) return 1;
+            if (q != null && q.state == ExQuestState.Ready) return 2;
+            foreach (var dq in run.map.quests) if (dq.kind == "deliver" && dq.state == ExQuestState.Active && dq.target == n.id) return 2;   // 送東西的對象
+            return 0;
+        }
+
+        /// <summary>附近才建、離開就拆（at＝null：模型自己已經放在正確位置）</summary>
+        GameObject ExArt(object key, System.Func<GameObject> make, bool show, Vector3? at)
         {
             exProps.TryGetValue(key, out var go);
-            if (!show) { if (go) { Destroy(go); exProps.Remove(key); } return; }
-            if (!go) { go = Instantiate(tpl, exRoot); go.SetActive(true); exProps[key] = go; }
-            go.transform.localPosition = at; go.transform.localScale = scale;
+            if (!show) { if (go) { Destroy(go); exProps.Remove(key); } return null; }
+            if (!go)
+            {
+                go = make(); if (!go) return null;
+                var lp = go.transform.localPosition;
+                go.transform.SetParent(exRoot, false);
+                go.transform.localPosition = at ?? lp;
+                exProps[key] = go;
+            }
+            return go;
         }
 
         /// <summary>點畫面上的閃光點（手指離它的螢幕位置 12% 畫面寬以內、人在 6m 內）</summary>
@@ -265,7 +286,9 @@ namespace SpellDuel
         void ClearExplore()
         {
             if (exRoot) Destroy(exRoot.gameObject);
-            exRoot = null; exWalls.Clear(); exProps.Clear();
+            exRoot = null; exWalls.Clear(); exProps.Clear(); exSwitchShownDone.Clear(); exAlertMarks.Clear(); exBannerSeen.Clear();
+            if (exBannerUntil > 0f || exploreRun != null) ExploreArt.LandmarkFound(null);
+            exBannerUntil = -1f;
             foreach (var r in exNpcRigs.Values) if (r) Destroy(r.gameObject);
             exNpcRigs.Clear(); exGateHash = -1; exLastCell = new Vector2Int(-999, -999);
             exploreRun = null;
@@ -296,9 +319,7 @@ namespace SpellDuel
                     if (n.hidden || Battle.FlatDistance(n.pos, Me.Feet) > 14f) continue;
                     var sp = cam.WorldToScreenPoint(WorldFrame.FromWorld(n.pos + Vector3.up * 2.1f));
                     if (sp.z <= 0f) continue;
-                    var q = run.map.Quest(n.quest);
-                    string mk = n.id == "guardian" && run.hasHeart ? " ❓" : q != null && q.state == ExQuestState.Offered ? " ❗" : q != null && q.state == ExQuestState.Ready ? " ❓" : "";
-                    UiKit.Text(new Rect(sp.x - W * 0.15f, H - sp.y - fsS, W * 0.3f, fsS * 1.4f), n.name + mk, fsS, new Color(1f, 0.95f, 0.7f), TextAnchor.MiddleCenter);
+                    UiKit.Text(new Rect(sp.x - W * 0.15f, H - sp.y - fsS, W * 0.3f, fsS * 1.4f), n.name, fsS, new Color(1f, 0.95f, 0.7f), TextAnchor.MiddleCenter);
                 }
             DrawExploreMinimap(run, W, H);
             // 對話框（走近 NPC 自動跳出；按「好」關掉）
