@@ -109,7 +109,7 @@ namespace SpellDuel
             "berserker" => new[] { "⚔ 輸出", "🛡 防禦", "✨ 輔助" },
             "marksman" => new[] { "🎯 貫穿", "☠ 標記", "🌧 箭雨" },
             "ranger" => new[] { "🦅 獵鷹", "🤸 翻滾", "🪤 連環陷阱" },
-            "archmage" => new[] { "⚡ 雷霆", "❄ 冰封", "🔷 魔力護盾" },
+            "archmage" => new[] { "⚡ 雷霆・破壞", "❄ 冰封・操控", "🔷 護盾・輔助" },
             "summoner" => new[] { "🔥 元素召喚", "🗿 守衛・捕捉", "💥 爆裂" },
             "ninja" => new[] { "🍃 替身", "👥 分身", "🔥 火遁" },
             "shadowdancer" => new[] { "🗡 處決", "💃 影舞", "☁ 毒霧" },
@@ -452,6 +452,19 @@ namespace SpellDuel
                     FMod("am_shield2", "護盾延長", "manashield", ModField.BuffDur, 1.5f, 5, 5, 2, "am_shield"),
                     FPas("am_low", "背水之陣", PassiveKind.LowMp, 0.08f, 5, 6, 2, "am_shield"),
                     FPas("am_mp", "魔力虹吸", PassiveKind.MpOnHit, 1f, 5, 6, 3, "am_low"),
+                    // 追加（使用者要求）：破壞系＝單體強力、大範圍；冰封系＝可操控的光龍；護盾系＝輔助
+                    FLearn("am_break", "arcanebreak", 0, 3, "am_tj2"),
+                    FMod("am_break2", "崩滅強化", "arcanebreak", ModField.Damage, 0.12f, 5, 0, 4, "am_break"),
+                    FLearn("am_star", "starfall", 1, 3, "am_over"),
+                    FMod("am_star2", "星雨強化", "starfall", ModField.Damage, 0.12f, 5, 1, 4, "am_star"),
+                    FMod("am_star3", "流星加速", "starfall", ModField.Cooldown, 0.08f, 3, 2, 4, "am_star"),
+                    FLearn("am_wyrm", "arcanewyrm", 4, 3, "am_melt"),
+                    FMod("am_wyrm2", "光龍強化", "arcanewyrm", ModField.Damage, 0.12f, 5, 4, 4, "am_wyrm"),
+                    FMod("am_wyrm3", "光龍連召", "arcanewyrm", ModField.Cooldown, 0.08f, 3, 3, 4, "am_wyrm"),
+                    FLearn("am_haste", "arcanehaste", 5, 3, "am_shield2"),
+                    FMod("am_haste2", "時流增幅", "arcanehaste", ModField.BuffAmount, 3f, 5, 5, 4, "am_haste"),
+                    FLearn("am_ward", "elementward", 6, 4, "am_mp"),
+                    FMod("am_ward2", "結界延長", "elementward", ModField.BuffDur, 1f, 5, 6, 5, "am_ward"),
                 };
                 case "summoner": return new List<TreeNode>
                 {

@@ -3832,6 +3832,7 @@ namespace SpellDuel
                         if (ang > 1e-4f) { float k = Mathf.Min(1f, p.homing * Mathf.Deg2Rad * dt / ang); p.dir = (p.dir * (1f - k) + want * k).normalized; p.basePos = p.pos; }
                     }
                 }
+                if (p.skill.steer && p.owner != null && p.owner.Alive && !p.Fading && p.traveled > SteerAfter) SteerToAim(p, dt);   // 操魔光龍：跟著準心轉向
                 float step = p.skill.speed * p.speedMul * dt;
                 // 分小段前進，快的箭也不會穿過身體
                 int sub = Mathf.Max(1, Mathf.CeilToInt(step / 0.08f));
@@ -4083,6 +4084,28 @@ namespace SpellDuel
         public float SteadyAimTime(Fighter f) => SteadyAimHold;
         public const float SteadyAimHold = 2f, EagleCrit = 0.05f;   // 穩定瞄準要站穩幾秒；鷹眼每層爆擊率
         public int SealNeed(Fighter f) => Mathf.Max(2, 6 - Mathf.RoundToInt(f.holySeal));
+        /// <summary>
+        /// 可操控的法術（SkillDef.steer）：飛行中往施放者準心指的方向轉（每秒最多 SteerTurn 度）。
+        /// 準心方向＝施放者的 forward（玩家＝手機鏡頭方向，隊友／對手＝他們回報的面向），
+        /// 目標點取「施放者頭部沿準心方向、比法術目前距離再遠 SteerLead」的位置，所以轉頭就能帶著它繞。
+        /// 隊友、對手放的在這台手機也照他們的面向轉（不另外同步）。
+        /// </summary>
+        public const float SteerTurn = 220f, SteerLead = 1.5f, SteerAfter = 0.3f;
+        void SteerToAim(Projectile p, float dt)
+        {
+            var o = p.owner; var aimDir = o.forward;
+            if (aimDir.sqrMagnitude < 1e-6f) return;
+            aimDir.Normalize();
+            float dist = Vector3.Distance(p.pos, o.head);
+            var aim = o.head + aimDir * (dist + SteerLead);
+            var want = aim - p.pos; if (want.sqrMagnitude < 1e-6f) return;
+            want.Normalize();
+            float ang = Mathf.Acos(Mathf.Clamp(Vector3.Dot(p.dir, want), -1f, 1f));
+            if (ang < 1e-4f) return;
+            float k = Mathf.Min(1f, SteerTurn * Mathf.Deg2Rad * dt / ang);
+            p.dir = (p.dir * (1f - k) + want * k).normalized; p.basePos = p.pos;
+        }
+
         Fighter NearestFoeOf(Fighter f, Vector3 at)
         {
             Fighter best = null; float bd = float.MaxValue;

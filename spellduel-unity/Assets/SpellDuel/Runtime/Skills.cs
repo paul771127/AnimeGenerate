@@ -56,6 +56,7 @@ namespace SpellDuel
         public bool areaFoes;           // 玩家方的範圍攻擊：打 areaRadius 內的所有敵人（atTarget＝打在準星／目標位置）
         public int hits = 1; public float hitGap = 0.25f;   // 範圍攻擊連續打幾段（旋風斬）
         public bool pierce;             // 穿透：打中小怪不會消失（貫穿狙擊）
+        public bool steer;              // 操控：飛行中跟著施放者的準心轉向（大魔導士「操魔光龍」）
         public bool execute;            // 處決：目標 HP 低於 25% 時傷害 ×3
         public string petKind; public float petLife, petInterval = 1.5f, petRange = 6f; public int petHp;   // 召喚物
 
@@ -173,7 +174,7 @@ namespace SpellDuel
             ["na_arrow"] = 3f, ["quickshot"] = 3f, ["snipe"] = 3f, ["triple"] = 3f, ["pierce"] = 3f, ["rollarrow"] = 3f, ["arrowrain"] = 3f, ["pet_falcon"] = 3f,
             // 法師：奧術飛彈、火球 1.4；風刃 2.2；冰槍 1.8；雷擊 2.2；隕石落下 2.0
             ["na_mage"] = 1.4f, ["fire"] = 1.4f, ["echo_fire"] = 2f, ["echo_ice"] = 2f, ["wind"] = 2.2f, ["ice"] = 1.8f, ["thunder"] = 2.2f, ["meteor"] = 2.0f,
-            ["tjudge"] = 2.2f, ["frostfield"] = 1.4f, ["pet_fire"] = 1.4f, ["na_kunai"] = 2.6f, ["shuriken"] = 2.4f, ["raiton"] = 3f, ["kunai_fire"] = 2.6f, ["kunai_ice"] = 2.6f, ["kunai_bolt"] = 2.8f, ["deadlypoison"] = 2.2f, ["plague"] = 2.2f, ["pet_ice"] = 1.6f, ["pet_tamed"] = 1.4f,
+            ["tjudge"] = 2.2f, ["frostfield"] = 1.4f, ["arcanebreak"] = 2.6f, ["arcanewyrm"] = 1.8f, ["pet_fire"] = 1.4f, ["na_kunai"] = 2.6f, ["shuriken"] = 2.4f, ["raiton"] = 3f, ["kunai_fire"] = 2.6f, ["kunai_ice"] = 2.6f, ["kunai_bolt"] = 2.8f, ["deadlypoison"] = 2.2f, ["plague"] = 2.2f, ["pet_ice"] = 1.6f, ["pet_tamed"] = 1.4f,
             // 牧師：約 1.4
             ["na_holy"] = 1.4f, ["holy"] = 1.4f, ["judgement"] = 1.4f, ["chastise"] = 1.4f, ["heavenpunish"] = 1.4f, ["holylance"] = 1.6f,
             // 劍士、刺客的飛行技能
@@ -362,6 +363,12 @@ namespace SpellDuel
             // 法師・大魔導士
             P(new SkillDef { adv = "archmage", fromAbove = true, dropHeight = 7f, multi = 3, id = "tjudge", cls = "mage", name = "雷霆審判", type = SkillType.Projectile, color = C("#c4b5fd"), cost = 110, damage = 40, charge = 3.5f, cooldown = 6f, speed = 9f, radius = 0.6f, rangeMin = 3f, rangeMax = 10f, chant = "九天之上的雷霆啊聽從吾之號令降下審判吧", desc = "三道巨雷從目標上方劈下（可閃）；遊戲裡咒語最長的魔法" });
             P(new SkillDef { adv = "archmage", areaFoes = true, atTarget = true, areaRadius = 2f, id = "frostfield", cls = "mage", name = "冰封領域", type = SkillType.Projectile, color = C("#7dd3fc"), cost = 60, damage = 20, charge = 2.2f, cooldown = 10f, radius = 0f, rangeMax = 8f, effect = EffectKind.Snare, effectDur = 3f, chant = "凜冽的寒風啊將大地化為冰封之境", desc = "準星指的位置直徑 4m 結冰：範圍內的敵人受傷並凍住 3 秒" });
+            // 大魔導士・追加（使用者要求：大範圍、單體強力、可操控方向、輔助）
+            P(new SkillDef { adv = "archmage", areaFoes = true, atTarget = true, areaRadius = 3.5f, hits = 3, hitGap = 0.6f, id = "starfall", cls = "mage", name = "隕星天降", type = SkillType.Projectile, color = C("#fb7185"), cost = 120, damage = 26, charge = 3.2f, cooldown = 14f, radius = 0f, rangeMax = 10f, effect = EffectKind.Burn, effectDps = 4f, effectDur = 3f, chant = "墜落吧天外的星辰將眼前的一切化為焦土", desc = "準星指的位置直徑 7m 降下流星雨：範圍內所有敵人連續受傷 3 次，並灼燒 3 秒" });
+            P(new SkillDef { adv = "archmage", id = "arcanebreak", cls = "mage", name = "奧術崩滅", type = SkillType.Projectile, color = C("#e879f9"), cost = 90, damage = 130, charge = 3.0f, cooldown = 9f, speed = 9f, radius = 0.12f, rangeMin = 2f, rangeMax = 12f, chant = "凝聚萬千奧術之力貫穿吾敵", desc = "壓縮到極限的奧術球：單體超高傷害（2m 內打不到）" });
+            P(new SkillDef { adv = "archmage", steer = true, pierce = true, id = "arcanewyrm", cls = "mage", name = "操魔光龍", type = SkillType.Projectile, color = C("#a5f3fc"), cost = 55, damage = 30, charge = 1.8f, cooldown = 7f, speed = 6f, radius = 0.2f, rangeMax = 16f, chant = "光之龍啊隨吾意志翱翔", desc = "放出一條光龍：飛行中跟著你的準心轉向（轉頭就能帶著它繞），穿過小怪繼續飛" });
+            P(new SkillDef { adv = "archmage", team = true, id = "arcanehaste", cls = "mage", name = "奧術加速", type = SkillType.Self, self = SelfKind.TeamHaste, color = C("#67e8f9"), cost = 40, charge = 1.0f, cooldown = 30f, buffDur = 12f, buffAmount = 25, chant = "時之流啊為吾等加速", desc = "自己與隊友 12 秒內詠唱、普攻冷卻加快 25%" });
+            P(new SkillDef { adv = "archmage", team = true, id = "elementward", cls = "mage", name = "元素結界", type = SkillType.Self, self = SelfKind.Armor, color = C("#fcd34d"), cost = 45, charge = 1.2f, cooldown = 25f, buffDur = 8f, buffReduce = 0.25f, chant = "四大元素啊化作守護之壁", desc = "自己與隊友 8 秒內受到的傷害 −25%" });
             P(new SkillDef { adv = "archmage", id = "manashield", cls = "mage", name = "魔力護盾", type = SkillType.Self, self = SelfKind.ManaShield, color = C("#818cf8"), cost = 10, charge = 1.0f, cooldown = 20f, buffDur = 10f, chant = "魔力啊化作守護之盾", desc = "10 秒內受到的傷害先扣 MP（1 MP 擋 1 點傷害）" });
             // 法師・召喚師
             P(new SkillDef { adv = "summoner", id = "firespirit", cls = "mage", name = "火靈", type = SkillType.Self, self = SelfKind.Pet, petKind = "fire", petLife = 15f, petInterval = 2f, petRange = 7f, color = C("#fb923c"), cost = 45, damage = 12, charge = 1.5f, cooldown = 12f, chant = "火之精靈啊回應契約現身吧", desc = "召喚火靈 15 秒：浮在身邊，每 2 秒朝 7m 內最近的敵人丟火球" });

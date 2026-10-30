@@ -49,7 +49,7 @@ namespace SpellDuel
             // 牧師
             "holy" => 2, "prayheal" => 3, "cleanse" => 3, "guard" => 4, "prayer" => 4, "judgement" => 5,
             // 進階職業：大魔導士、召喚師（沒有語音辨識時比數字）、主教、審判者
-            "tjudge" => 5, "frostfield" => 4, "manashield" => 3, "firespirit" => 2, "golem" => 4, "detonate" => 5,
+            "tjudge" => 5, "frostfield" => 4, "manashield" => 3, "starfall" => 5, "arcanebreak" => 4, "arcanewyrm" => 2, "arcanehaste" => 3, "elementward" => 4, "firespirit" => 2, "golem" => 4, "detonate" => 5,
             "revive" => 5, "massheal" => 4, "sanctuary" => 3, "holylance" => 2, "chastise" => 3, "heavenpunish" => 5,
             _ => 0,
         };
