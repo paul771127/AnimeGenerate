@@ -29,7 +29,7 @@ namespace SpellDuel
             bossMode = true; coop = false; endless = false; dummyMode = false; enemyClassUsed = "boss"; worldBossId = id;
             storyStage = null; dungeon = null; pendingStage = null; pendingDungeon = null; ClearTicker();
             dummyDamage = 0f; dummyHits = 0; bossHideAt = -1f; bossAliveShown = false;
-            ResetLoot(); potionReadyAt = 0f;
+            ResetLoot(); potionReady.Clear();
             EnsureLoadout();
             var me = new Fighter("我", Skills.Classes[myClass], myLoadout, true);
             prof = null; charOpen = false;

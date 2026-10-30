@@ -40,19 +40,20 @@ namespace SpellDuel
             public string id, name, icon, desc;
             public int price;
             public float hpFrac, mpFlat;       // 回復：最大 HP 的比例、MP
+            public float cooldown;             // 喝完這一種要等幾秒才能再喝同一種（各種藥水分開算）
             public bool scroll;                // 回城捲軸
         }
 
         public static readonly List<Consumable> Consumables = new List<Consumable>
         {
-            new Consumable { id = "hp_s", name = "小治療藥水", icon = "🧪", price = 30, hpFrac = 0.25f, desc = "回復最大 HP 的 25%" },
-            new Consumable { id = "hp_l", name = "大治療藥水", icon = "🍷", price = 90, hpFrac = 0.6f, desc = "回復最大 HP 的 60%" },
-            new Consumable { id = "mp_s", name = "魔力藥水", icon = "💧", price = 40, mpFlat = 50f, desc = "回復 50 MP" },
+            new Consumable { id = "hp_s", name = "小治療藥水", icon = "🧪", price = 30, hpFrac = 0.25f, cooldown = 5f, desc = "回復最大 HP 的 25%" },
+            new Consumable { id = "hp_l", name = "大治療藥水", icon = "🍷", price = 90, hpFrac = 0.6f, cooldown = 10f, desc = "回復最大 HP 的 60%" },
+            new Consumable { id = "mp_s", name = "魔力藥水", icon = "💧", price = 40, mpFlat = 50f, cooldown = 5f, desc = "回復 50 MP" },
             new Consumable { id = "scroll", name = "回城捲軸", icon = "📜", price = 120, scroll = true, desc = "故事關卡中使用：帶著這關已經拿到的戰利品回到城鎮（不用打完）" },
         };
         public static Consumable Find(string id) => Consumables.Find(c => c.id == id);
-        /// <summary>藥水共用冷卻：30 秒只能喝一瓶（治療、魔力都算）</summary>
-        public const float PotionCooldown = 30f;
+        /// <summary>藥水冷卻（使用者要求）：一場戰鬥不限瓶數，大藥水 10 秒、小藥水 5 秒、魔力藥水 5 秒；各種分開算</summary>
+        public static string CooldownText => "小藥水 5 秒、大藥水 10 秒、魔力藥水 5 秒";
 
         static Dictionary<string, int> items;
         public static void ResetCache() => items = null;   // 換角色：道具重新讀

@@ -146,7 +146,7 @@ namespace SpellDuel
             if (shopTab == 1 && n == 0) UiKit.Text(new Rect(0, 0, content.width, rowH), "背包是空的\n（身上穿的要先卸下才能賣）", fsS, Color.gray, TextAnchor.MiddleCenter);
             GUI.EndScrollView();
             if (shopTab == 0)
-                UiKit.Text(Design(40, 1150, 600, 200), "藥水在戰鬥中用唸的（「喝藥水」「大藥水」「魔力藥水」）或比 🤙 使用，30 秒只能喝一瓶；回城捲軸說「回城」。", fsS, new Color(0.95f, 0.95f, 1f), TextAnchor.UpperLeft);
+                UiKit.Text(Design(40, 1150, 600, 200), "藥水在戰鬥中用唸的（「喝藥水」「大藥水」「魔力藥水」）或比 🤙 使用，不限瓶數，小藥水 5 秒、大藥水 10 秒冷卻；回城捲軸說「回城」。", fsS, new Color(0.95f, 0.95f, 1f), TextAnchor.UpperLeft);
             else
                 UiKit.Bar(Design(40, 1150, 600, 50), bag.Count / (float)Progress.BagSize, bag.Count >= Progress.BagSize ? new Color(1f, 0.35f, 0.3f) : new Color(0.45f, 0.85f, 0.5f), $"背包 {bag.Count}/{Progress.BagSize}", fsS);
             return true;

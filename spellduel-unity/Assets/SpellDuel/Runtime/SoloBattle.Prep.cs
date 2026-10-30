@@ -8,7 +8,7 @@ namespace SpellDuel
     /// 出發前的整備畫面（故事關卡、副本、轉職試煉、選技能畫面按「開始」時）：
     ///   ・技能：點技能卡換上／移除（基本 3 格＋轉職後進階 1 格）。
     ///   ・裝備：目前穿的 5 件，點「更換裝備」打開角色畫面。
-    ///   ・道具：每種藥水決定要帶幾瓶（最多 5 瓶；回城捲軸 1 張）。戰鬥中只能用帶出來的，用掉的才從背包扣。
+    ///   ・道具：藥水不限瓶數（背包裡的都能喝，各自冷卻：大 10 秒、小 5 秒）；回城捲軸帶 1 張。
     /// 按「⚔ 出發」才開打；「取消」回到原本的畫面。結算後的「再挑戰／再來一場」不再經過整備（沿用上次的選擇）。
     /// </summary>
     public partial class SoloBattle
@@ -25,21 +25,12 @@ namespace SpellDuel
         readonly Dictionary<string, int> carryLeft = new Dictionary<string, int>();
         bool carryLoaded;
         static int CarryCap(Economy.Consumable c) => c.scroll ? 1 : CarryMax;
-        /// <summary>以前存的帶出數量超過合計上限：從帶最多的那種開始減</summary>
+        /// <summary>以前存的帶出數量：回城捲軸最多 1 張</summary>
         void TrimCarry()
         {
-            for (int guard = 0; guard < 50 && CarriedPotions > PotionTotalMax; guard++)
-            {
-                Economy.Consumable most = null; int mn = 0;
-                foreach (var c in Economy.Consumables) { if (c.scroll) continue; int n = Mathf.Min(CarryOf(c.id), Economy.Count(c.id)); if (n > mn) { mn = n; most = c; } }
-                if (most == null) break;
-                carry[most.id] = mn - 1;
-            }
-            SaveCarry();
+            // 藥水已經不限瓶數（直接用背包裡的），只剩回城捲軸要帶
+            if (CarryOf("scroll") > 1) { carry["scroll"] = 1; SaveCarry(); }
         }
-        /// <summary>每一關帶的藥水合計最多幾瓶（回城捲軸另外算）</summary>
-        public const int PotionTotalMax = 5;
-        int CarriedPotions { get { int t = 0; foreach (var c in Economy.Consumables) if (!c.scroll) t += Mathf.Min(CarryOf(c.id), Economy.Count(c.id)); return t; } }
 
         void LoadCarry()
         {
@@ -70,7 +61,7 @@ namespace SpellDuel
             foreach (var c in Economy.Consumables) carryLeft[c.id] = Mathf.Min(CarryOf(c.id), Economy.Count(c.id));
         }
         /// <summary>這一場還能用幾個</summary>
-        int CarryLeftOf(string id) => Mathf.Min(carryLeft.TryGetValue(id, out var n) ? n : 0, Economy.Count(id));
+        int CarryLeftOf(string id) => Economy.Find(id) is var c && c != null && !c.scroll ? Economy.Count(id) : Mathf.Min(carryLeft.TryGetValue(id, out var n) ? n : 0, Economy.Count(id));   // 藥水不限瓶數（使用者要求）：背包裡的都能喝
         void SpendCarry(string id) { if (carryLeft.TryGetValue(id, out var n)) carryLeft[id] = Mathf.Max(0, n - 1); }
 
         /// <summary>打開整備畫面；go＝按「出發」後要做的事</summary>
@@ -142,7 +133,7 @@ namespace SpellDuel
             if (iv > 0f) y += iv + gap * 1.5f;
 
             // ---- 道具
-            UiKit.Text(new Rect(pad, y, cw - pad * 2, u), prepNoItems != null ? "🧪 道具：" + prepNoItems : $"🧪 帶出去的道具（藥水合計最多 {PotionTotalMax} 瓶，現在 {CarriedPotions} 瓶；回城捲軸 1 張；戰鬥中只能用帶出來的）", fsS, UiKit.Gold, TextAnchor.MiddleLeft, true);
+            UiKit.Text(new Rect(pad, y, cw - pad * 2, u), prepNoItems != null ? "🧪 道具：" + prepNoItems : $"🧪 道具（藥水不限瓶數，背包裡的都能喝：{Economy.CooldownText}冷卻；回城捲軸帶 1 張）", fsS, UiKit.Gold, TextAnchor.MiddleLeft, true);
             y += u;
             if (prepNoItems == null)
                 foreach (var c in Economy.Consumables)
@@ -152,9 +143,16 @@ namespace SpellDuel
                     UiKit.Card(r, 0.5f, new Color(0.5f, 0.85f, 1f), own > 0 ? 0.5f : 0.15f);
                     float bw = r.height * 1.1f;
                     UiKit.Text(new Rect(r.x + gap, r.y, r.width - bw * 3 - gap * 3, r.height), $"{c.icon} {c.name}　（背包 {own}）", fsS, own > 0 ? Color.white : Color.gray, TextAnchor.MiddleLeft);
+                    if (!c.scroll)
+                    {
+                        // 藥水不用選帶幾瓶（不限瓶數）：只顯示冷卻
+                        UiKit.Text(new Rect(r.xMax - bw * 3 - gap, r.y, bw * 3, r.height), own > 0 ? $"全部可用・冷卻 {c.cooldown:0} 秒" : "—", fsS, own > 0 ? new Color(0.7f, 0.95f, 0.75f) : Color.gray, TextAnchor.MiddleRight);
+                        y += u * 1.15f + gap * 0.4f;
+                        continue;
+                    }
                     if (UiKit.Button(new Rect(r.xMax - bw * 3 - gap, r.y + 2, bw, r.height - 4), "−", fs, false, null, n > 0)) { carry[c.id] = n - 1; SaveCarry(); }
                     UiKit.Text(new Rect(r.xMax - bw * 2 - gap, r.y, bw, r.height), $"{n}", fs, n > 0 ? Color.white : Color.gray, TextAnchor.MiddleCenter, true);
-                    if (UiKit.Button(new Rect(r.xMax - bw - gap, r.y + 2, bw, r.height - 4), "＋", fs, false, null, n < cap && (c.scroll || CarriedPotions < PotionTotalMax))) { carry[c.id] = n + 1; SaveCarry(); }
+                    if (UiKit.Button(new Rect(r.xMax - bw - gap, r.y + 2, bw, r.height - 4), "＋", fs, false, null, n < cap)) { carry[c.id] = n + 1; SaveCarry(); }
                     y += u * 1.15f + gap * 0.4f;
                 }
             if (prepNoItems == null && Economy.Consumables.TrueForAll(c => Economy.Count(c.id) == 0))

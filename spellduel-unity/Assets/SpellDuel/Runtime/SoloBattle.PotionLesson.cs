@@ -42,7 +42,7 @@ namespace SpellDuel
                     carryLeft["hp_s"] = Mathf.Max(1, carryLeft.TryGetValue("hp_s", out var n) ? n : 0);
                 }
                 potStage = 2; potCountAt = HealPotionsLeft;
-                potionReadyAt = 0f;   // 不用等冷卻
+                potionReady.Clear();   // 不用等冷卻
                 Me.charging = null;
                 battle.projectiles.RemoveAll(p => p.owner != null && !p.owner.isPlayer && !p.owner.isAlly);   // 飛過來的攻擊消失
                 battle.minionHold = BtHold; battle.holdSpawns = true;
@@ -67,7 +67,7 @@ namespace SpellDuel
                 bool tutHold = btStage == 12 && btStep != BtFree;   // 衝鋒獸教學還沒結束：照它的規則
                 battle.minionHold = tutHold ? BtHold : null;
                 battle.holdSpawns = tutHold && btStep != Bt12Wait;
-                Say("⚔ 繼續戰鬥！之後血少了就說「喝藥水」或比 🤙（藥水每 30 秒能喝一瓶）", 4f);
+                Say("⚔ 繼續戰鬥！之後血少了就說「喝藥水」或比 🤙（不限瓶數；小藥水 5 秒、大藥水 10 秒冷卻）", 4f);
                 Sfx.Play("roar", 0.5f, 1.3f);
             }
         }

@@ -712,7 +712,7 @@ namespace SpellDuel
                     }
                     y += cr.height + gap * 0.4f;
                 }
-                UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.2f), "藥水在戰鬥中用唸的（「喝藥水」「大藥水」「魔力藥水」）或比 🤙 使用，30 秒只能喝一瓶；回城捲軸說「回城」，只能在故事關卡用。", fsS, new Color(0.8f, 0.84f, 0.95f), TextAnchor.UpperLeft);
+                UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.2f), "藥水在戰鬥中用唸的（「喝藥水」「大藥水」「魔力藥水」）或比 🤙 使用，不限瓶數，小藥水 5 秒、大藥水 10 秒冷卻；回城捲軸說「回城」，只能在故事關卡用。", fsS, new Color(0.8f, 0.84f, 0.95f), TextAnchor.UpperLeft);
             }
             else
             {

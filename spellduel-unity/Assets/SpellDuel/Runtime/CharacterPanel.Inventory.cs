@@ -55,7 +55,7 @@ namespace SpellDuel
             foreach (var c in Economy.Consumables)
             {
                 int n = Economy.Count(c.id); if (n <= 0) continue;
-                string use = c.scroll ? "・用法：故事關卡戰鬥中使用，出發前在整備畫面帶 1 張。" : $"・用法：戰鬥中按畫面上的藥水使用（藥水共用冷卻 {Economy.PotionCooldown:0} 秒）。出發前在整備畫面決定帶幾瓶，用掉的才從背包扣。";
+                string use = c.scroll ? "・用法：故事關卡戰鬥中使用，出發前在整備畫面帶 1 張。" : $"・用法：戰鬥中按畫面上的藥水使用（冷卻 {c.cooldown:0} 秒；一場戰鬥不限瓶數，背包裡的都能喝）。";
                 rows.Add(new InvRow { key = "c_" + c.id, icon = c.icon, name = c.name, n = n, c = new Color(0.6f, 0.88f, 1f), body = $"{c.desc}。\n{use}\n・取得：城鎮的道具店（{c.price} 金幣）。" });
             }
             Header("🧪 道具");
