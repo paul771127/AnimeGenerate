@@ -49,6 +49,22 @@ namespace SpellDuel
     for(int j=0;j<3;j++){var p=new Vector3[28];for(int i=0;i<p.Length;i++){float u=i/27f;float a=u*Mathf.PI*1.5f+j*2.1f;p[i]=P(a,.43f,.06f+u*(burst?1.5f:.2f));}Add(list,shades,p,false,tint,.018f);}
     Add(list,shades,new[]{new Vector3(.35f,.7f,0),new Vector3(.46f,.9f,.03f),new Vector3(.35f,1.1f,0)},false,tint,.014f);
    }
+   else if(id=="layhands")
+   {
+    for(int side=-1;side<=1;side+=2){var p=new Vector3[13];for(int i=0;i<5;i++){p[i*2]=new Vector3(side*.3f+(i-2)*.035f,.88f,.22f);p[i*2+1]=new Vector3(side*.3f+(i-2)*.035f,1.03f-Mathf.Abs(i-2)*.025f,.22f);}p[10]=new Vector3(side*.3f+.09f,.8f,.22f);p[11]=new Vector3(side*.3f-.09f,.8f,.22f);p[12]=p[0];Add(list,shades,p,false,tint,.018f);}
+   }
+   else if(id=="pactcheer")
+   {
+    for(int j=0;j<3;j++){float a=j*Mathf.PI*2/3;var p=new Vector3[7];for(int i=0;i<7;i++)p[i]=P(a+i*Mathf.PI*2/3,.45f,.12f+j*.15f);Add(list,shades,p,false,tint,.018f);}
+   }
+   else if(id=="nightveil")
+   {
+    for(int j=0;j<9;j++){var p=new Vector3[16];for(int i=0;i<16;i++){float u=i/15f;float a=j*Mathf.PI/8+Mathf.PI*.1f;p[i]=P(a,.25f+u*.18f,1.35f-u*1.2f);}Add(list,shades,p,false,new Color(.29f,.10f,.46f,.45f),.065f);}
+   }
+   else if(id=="divinegrace")
+   {
+    for(int j=0;j<12;j++){float a=j*2.4f;float r=.15f+j%3*.15f;Add(list,shades,new[]{P(a,r,1.65f),P(a,r,1.35f)},false,j%2==0?tint:Color.white,.018f);}
+   }
    else // Hawk eye and orbiting feather sigils.
    {
     for(int j=0;j<4;j++){float a=j*Mathf.PI/2;var center=P(a,.43f,.8f);var p=new[]{center+Vector3.up*.16f,center+new Vector3(.07f,0,0),center-Vector3.up*.16f,center-new Vector3(.07f,0,0),center+Vector3.up*.16f};Add(list,shades,p,false,tint,.016f);Add(list,shades,new[]{p[0],p[2]},false,tint,.008f);}
@@ -79,7 +95,7 @@ namespace SpellDuel
    art.localRotation=Quaternion.Euler(0,age*(id=="arcanehaste"?75:35),0);
    art.localPosition=id=="arcanehaste"?Vector3.up*(burst?Mathf.Clamp01(age/.8f)*1.6f:.75f):Vector3.zero;
    if(!burst&&id=="arcanehaste")art.localScale=Vector3.one*.45f;
-   for(int i=0;i<lines.Length;i++){var c=colors[i];c.a*=alpha;if(id=="elementward"&&hit>0&&i==hitPiece)c=Color.Lerp(c,Color.white,hit/.22f);lines[i].startColor=lines[i].endColor=c;if(id=="arcanehaste"&&i>=13)lines[i].transform.localRotation=Quaternion.Euler(0,age*(i==13?170:32),0);}
+   for(int i=0;i<lines.Length;i++){if(id=="divinegrace")lines[i].transform.localPosition=Vector3.down*Mathf.Repeat(age*1.3f+i*.13f,1.5f);var c=colors[i];c.a*=alpha;if(id=="elementward"&&hit>0&&i==hitPiece)c=Color.Lerp(c,Color.white,hit/.22f);lines[i].startColor=lines[i].endColor=c;if(id=="arcanehaste"&&i>=13)lines[i].transform.localRotation=Quaternion.Euler(0,age*(i==13?170:32),0);}
    if(burst&&age>1.1f&&Application.isPlaying)Destroy(gameObject);
   }
   void LateUpdate(){Sample(Time.deltaTime);}

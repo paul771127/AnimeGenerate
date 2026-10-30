@@ -713,3 +713,8 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 隕星投射物由七枚各有熱尾的小流星組成；`StarfallZone(Vector3,float,float)` 畫精確範圍星陣，時長由呼叫者提供。
 - 奧術崩滅改為深紫壓縮核心、三重旋轉封環與向內吸收光絲；`ArcaneBreakHit(Vector3)` 先內縮 .18 秒後擴散碎光與空間透鏡環，不加全螢幕扭曲以保留 AR 視野。Claude 接落地／命中事件。
 - 修正增益色彩直接讀 SkillDef.color（Color），保留資料原值。
+
+### 2026-10-30 新技能特效 B2：19 招進階職業
+- 專屬投射物：聖光／真空新月、狙擊細線、光箭、燃箭、鬼火臉與尾、水牢／石棘落點、毒鏢、窄光柱、聖火與戰錘。散射只畫單一真實投射物，不捏造額外命中。
+- `AreaBurst(string,Vector3,float)`：聖紋擴散、爆裂箭、石刺圈、水牢、刀光旋風、聖光新星；範圍完全讀傳入半徑。
+- `SkillImpact(string,Vector3)`：狙擊火花、毒霧、錘擊裂痕等，Claude 接命中事件。增益介面新增聖療手掌、契約鼓舞、暗影斗篷與神蹟光雨。
