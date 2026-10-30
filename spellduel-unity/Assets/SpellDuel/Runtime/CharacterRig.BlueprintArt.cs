@@ -6,7 +6,8 @@ namespace SpellDuel
  {
   static readonly Dictionary<string,Mesh> blueprintMeshes=new Dictionary<string,Mesh>();
   static readonly Color BGold=new Color(1,.68f,.17f),BInk=new Color(.13f,.16f,.22f),BCream=new Color(1,.93f,.72f),BRed=new Color(.84f,.16f,.10f),BGreen=new Color(.29f,.66f,.15f);
-  internal float BlueprintHitAmount=>hitT/HitDur;
+  internal float BlueprintHitAmount=>Mathf.Clamp01(hitT/HitDur);
+  internal float BlueprintLift=>poseLastLift;
   bool AddBlueprint(Transform parent,string slot,GearLook.Piece piece)
   {
    var def=Blueprints.Get(piece.special);if(def==null)return false;
@@ -39,6 +40,7 @@ namespace SpellDuel
    }
    if(piece.special=="bp_luckycat")motion.moving=SkyArt.Oval(root.transform,"Waving lucky paw",new Vector3(.12f,.34f,.25f),new Vector3(.065f,.15f,.07f),BCream);
    if(piece.special=="bp_chicken")motion.moving=SkyArt.Oval(root.transform,"Clucking beak",new Vector3(0,.26f,.29f),new Vector3(.11f,.08f,.16f),BGold);
+   motion.details=BuildBlueprintDetails(root.transform,piece.special);
    return true;
   }
   static void Blob(OutfitArt.Builder b,Vector3 p,Vector3 size,Color c,int sides=8)
@@ -68,7 +70,7 @@ namespace SpellDuel
      break;
     case "bp_chicken":
      Blob(b,new Vector3(0,.16f,0),new Vector3(.45f,.23f,.40f),BCream);Blob(b,new Vector3(0,.29f,.16f),new Vector3(.21f,.24f,.22f),BCream);
-     for(int i=0;i<3;i++)Blob(b,new Vector3(0,.40f,.09f+i*.055f),new Vector3(.045f,.09f,.065f),BRed,6);
+     // The crest is a separate animated part (BlueprintDetails).
      EyesB(b,new Vector3(0,.32f,.247f),.065f);
      for(int side=-1;side<=1;side+=2)Blob(b,new Vector3(side*.22f,.17f,0),new Vector3(.12f,.14f,.25f),BGold);break;
     case "bp_furnace":
@@ -86,7 +88,7 @@ namespace SpellDuel
     case "bp_planter":
      b.Loft(new[]{-.22f,-.25f,-.42f},new[]{.14f,.13f,.095f},new[]{.17f,.17f,.13f},new Color(.70f,.31f,.15f),0,.035f,10);
      Band(b,new Vector3(0,-.235f,.035f),.15f,.18f,.035f,BGold);
-     for(int side=-1;side<=1;side+=2){LineB(b,new Vector3(side*.10f,-.24f,.03f),new Vector3(side*.17f,-.08f,.02f),.014f,new Color(.39f,.23f,.11f));Blob(b,new Vector3(side*.17f,-.07f,.02f),new Vector3(.15f,.15f,.15f),BGreen,6);}break;
+     break; // Trees and flowers are animated children.
     case "bp_rumbarrel":
      b.Loft(new[]{.51f,.42f,.10f,.01f},new[]{.22f,.31f,.31f,.22f},new[]{.20f,.27f,.27f,.20f},new Color(.56f,.29f,.12f),0,0,12);
      foreach(float y in new[]{.07f,.26f,.46f})Band(b,new Vector3(0,y,0),y==.26f?.319f:.275f,y==.26f?.279f:.24f,.035f,BInk,12);
@@ -102,7 +104,7 @@ namespace SpellDuel
     case "bp_trophy":
      b.Loft(new[]{.47f,.42f,.17f,.12f},new[]{.11f,.11f,.24f,.25f},new[]{.10f,.1f,.20f,.21f},BGold,0,0,12);Band(b,new Vector3(0,.48f,0),.15f,.12f,.035f,BGold);
      for(int side=-1;side<=1;side+=2)RingB(b,new Vector3(side*.24f,.24f,0),.105f,.018f,BGold,true);
-     LineB(b,new Vector3(0,.20f,.222f),new Vector3(0,.33f,.19f),.014f,BInk);break;
+     b.Badge(0,.275f,.211f,.15f,.065f,BGold);TrophyInscription(b);break;
     case "bp_corn":
      LineB(b,new Vector3(0,-.25f,0),new Vector3(0,1.62f,0),.025f,new Color(.56f,.36f,.13f));Blob(b,new Vector3(0,1.13f,0),new Vector3(.25f,.70f,.25f),BGold);
      for(int row=0;row<7;row++)for(int col=0;col<4;col++){float a=col*Mathf.PI*.5f;Blob(b,new Vector3(Mathf.Cos(a)*.12f,.84f+row*.085f,Mathf.Sin(a)*.12f),new Vector3(.065f,.065f,.065f),row%3==0?new Color(.56f,.31f,.07f):BCream,4);}
@@ -121,17 +123,20 @@ namespace SpellDuel
     case "bp_camel":
      Blob(b,new Vector3(0,.25f,0),new Vector3(.54f,.50f,.40f),new Color(.65f,.42f,.20f));
      for(int side=-1;side<=1;side+=2){Blob(b,new Vector3(side*.14f,.35f,-.22f),new Vector3(.24f,.39f,.26f),new Color(.76f,.54f,.29f));Band(b,new Vector3(side*.14f,.29f,-.24f),.13f,.14f,.035f,BInk);}
-     Blob(b,new Vector3(0,.35f,.26f),new Vector3(.21f,.20f,.21f),new Color(.84f,.63f,.36f));Blob(b,new Vector3(0,.28f,.35f),new Vector3(.22f,.12f,.19f),BCream);EyesB(b,new Vector3(0,.37f,.36f),.07f);LineB(b,new Vector3(0,.25f,.43f),new Vector3(.13f,.26f,.45f),.012f,BGreen);break;
+     for(int side=-1;side<=1;side+=2)Blob(b,new Vector3(side*.09f,.46f,.25f),new Vector3(.05f,.10f,.04f),BCream,6);
+     for(int j=0;j<8;j++){float x=(j%4-1.5f)*.07f;float y=.32f+(j/4)*.11f;b.Panel(new Vector3(x-.015f,y,-.355f),new Vector3(x+.015f,y,-.355f),new Vector3(x,y-.05f,-.36f),new Vector3(x,y-.05f,-.36f),new Color(.56f,.35f,.17f),0,1,1);}
+     Blob(b,new Vector3(0,.35f,.26f),new Vector3(.21f,.20f,.21f),new Color(.84f,.63f,.36f));EyesB(b,new Vector3(0,.37f,.36f),.07f);break; // Chewing muzzle and grass live in the animated child.
    }
    return b.Finish("Blueprint "+id);
   }
  }
  public sealed class BlueprintGearMotion:MonoBehaviour
  {
-  internal string id;internal CharacterRig rig;internal LineRenderer glow,bowString;internal Transform moving;internal Vector3 baseScale;float time;
+  internal string id;internal CharacterRig rig;internal LineRenderer glow,bowString;internal Transform moving;internal Vector3 baseScale;internal BlueprintGearDetail details;float time;
   public void Sample(float dt)
   {
    time+=Mathf.Max(0,dt);
+   if(details)details.Sample(dt,rig);
    if(glow){var c=Color.HSVToRGB(Mathf.Repeat(time*.08f+.45f,1),.45f,1);c.a=.40f+.15f*Mathf.Sin(time*2);glow.startColor=glow.endColor=c;}
    if(moving){if(id=="bp_jelly")moving.localScale=Vector3.Scale(baseScale,new Vector3(1+.04f*Mathf.Sin(time*4),1-.05f*Mathf.Sin(time*4),1+.04f*Mathf.Sin(time*4)));else if(id=="bp_luckycat")moving.localRotation=Quaternion.Euler(0,0,20*Mathf.Sin(time*3));else if(rig)moving.localRotation=Quaternion.Euler(rig.BlueprintHitAmount*32,0,0);}
    if(bowString&&rig)bowString.SetPosition(1,new Vector3(-.10f-.18f*rig.Charge,.25f,0));

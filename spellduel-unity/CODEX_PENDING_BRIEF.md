@@ -684,3 +684,9 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 天穹五站：27,616／38,336／33,436／38,236／29,472三角（含線段保守估算），均低於40k；SurfacePoint逐頂點一致、HighBar=1.1、動畫網格與材質數量穩定。最終10張第一人稱／俯視圖、總覽與證據放 `Docs/pending_preview/sky_carpet_env/`。雲海共用程序密度貼圖、鏈橋實際跨接浮島、瀑布外露、終站背光飛艇已目視檢查。AR實機幀時間仍需裝置量測，沒有以編譯代替效能數據。
 - 特殊裝備：15件、34組跨職業穿戴原生圖，148～860三角（雙鞋合計、含光環線段），卸裝全數還原。15裝備＋15卷軸＋4材料圖示唯一且快取穩定；149個舊圖示像素比對不變。預覽、總覽及證據放 `Docs/pending_preview/blueprint_gear/`。修正獵人長軸與竹弓握把，不改既有持法動畫或戰鬥接線。
 - 全站Snapshot另在 [40697249304](https://github.com/paul771127/AnimeGenerate/actions/runs/40697249304) 的 `DungeonSpawnAudit.Roster`（44行）回報 `Incorrect enemy count`；此既有出怪檢查未刪除／略過，Combat等限制檔案未修改，留給Claude處理。本項不宣稱全站Snapshot通過。
+
+### 特殊配方裝備逐項補細節（2026-10-30）
+
+依CODEX_TASK_BLUEPRINT_GEAR補上程序筆畫「第一名」刻牌、公雞受擊豎冠／鳥喙與合成咕咕聲、暖爐煙柱與原有火星、烤肉油滴、竹笛走音／出手葉片、盆栽隨步搖擺與週期開花、水母觸鬚電弧、跳躍時鯊魚下顎咬合／發光背鰭、霓虹光環跑馬燈、招財貓五枚金幣、沙漏上流砂／漂浮指針、駱駝耳朵／駝峰絨毛刻紋／嚼草與吐水。所有模型與音波快取，音效遵守既有Sfx音量／開關；不寫存檔、不改Combat／Blueprints／Crafting。
+
+新增純美術介面 `CharacterRig.BlueprintImpact(Vector3 atWorld)`：只有當前武器為bp_corn時在指定Unity場景座標噴出爆米花，無傷害。**Claude需在實際武器命中通知時呼叫**；模型本身不猜測命中，不更動戰鬥接線。其餘動作讀既有Charge、Attacking、MoveSpeed、hitT與手機跳躍呈現資料，不新增連線資料。增加15件細節特寫與動畫快取檢查；雙平台／原生圖待CI確認。
