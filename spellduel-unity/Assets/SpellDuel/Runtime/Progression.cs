@@ -256,7 +256,7 @@ namespace SpellDuel
                     FLearn("ar_blast", "blasttrap", 5, 2, "ar_snare"),
                     FMod("ar_blast2", "陷阱大師", "blasttrap", ModField.Damage, 0.12f, 5, 5, 3, "ar_blast"),
                     FPas("ar_hunt", "獵殺時刻", PassiveKind.TrapCrit, 1f, 5, 6, 2, "ar_snare"),
-                    FLearn("ar_focus", "focus", 6, 3, "ar_hunt"),
+                    FLearn("ar_focus", "mindfocus", 6, 3, "ar_hunt"),   // 精神集中（舊版 id "focus" 和牧師的精準聖歌撞名，被蓋掉）
                     FPas("ar_dodge", "獵人直覺", PassiveKind.Dodge, 0.1f, 5, 6, 4, "ar_focus"),
                 };
                 case "swordsman": return new List<TreeNode>

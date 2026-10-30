@@ -1100,7 +1100,11 @@ namespace SpellDuel
             var saved = PlayerPrefs.GetString(CharacterSlots.Key("sd_loadout_" + myClass), "");
             var cls = Skills.Classes[myClass];
             var allowed = AllowedSkills;
-            foreach (var id in saved.Split(',')) if (Array.IndexOf(allowed, id) >= 0 && !myLoadout.Contains(id)) myLoadout.Add(id);
+            foreach (var raw in saved.Split(','))
+            {
+                var id = myClass == "archer" && raw == "focus" ? "mindfocus" : raw;   // 舊存檔：獵人的精神集中原本 id 是 "focus"（和牧師的精準聖歌撞名）
+                if (Array.IndexOf(allowed, id) >= 0 && !myLoadout.Contains(id)) myLoadout.Add(id);
+            }
             if (BaseCount == 0) myLoadout.AddRange(cls.defaultLoadout);   // 沒有存檔：預設技能
             FixLoadout(true);
         }
