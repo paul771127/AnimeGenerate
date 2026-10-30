@@ -1330,12 +1330,58 @@ namespace SpellDuel
         }
         public float GearSum(Affix a) { float v = 0f; foreach (var it in equipped) if (it != null) v += it.Sum(a); return v + Economy.SetBonus(equipped, a); }
 
-        /// <summary>技能樹強化後的技能（複製一份改數值；id 不變）</summary>
-        public SkillDef ModdedSkill(string id)
+        /// <summary>
+        /// 衍生技能（使用者要求）：連發／一次放好幾個的招，跟著原本那招在技能樹上的等級。
+        ///   連環陷阱＝一次放好幾個「點到幾級就是幾級」的捕獸夾；回響火球／冰錐＝火球／冰槍點了幾級傷害就加幾級；
+        ///   翻滾箭＝普攻箭、屬性苦無＝苦無、獵鷹俯衝＝獵鷹。只繼承傷害與效果（時間、每秒傷害、回復量），冷卻、蓄力、發數照自己的。
+        /// </summary>
+        public static readonly Dictionary<string, string> InheritFrom = new Dictionary<string, string>
+        {
+            ["trapchain"] = "snaretrap", ["echo_fire"] = "fire", ["echo_ice"] = "ice", ["rollarrow"] = "na_arrow",
+            ["kunai_fire"] = "na_kunai", ["kunai_ice"] = "na_kunai", ["kunai_bolt"] = "na_kunai", ["falcondive"] = "falcon",
+        };
+        /// <summary>整招複製原本那招（點滿的捕獸夾）的傷害與效果，再疊自己的強化</summary>
+        static readonly HashSet<string> CopyParent = new HashSet<string> { "trapchain" };
+
+        /// <summary>只套技能樹節點的強化（不含被動、智力）</summary>
+        SkillDef TreeModded(string id)
         {
             if (!Skills.All.TryGetValue(id, out var b)) return null;
             var s = b.Clone();
+            if (InheritFrom.TryGetValue(id, out var pid) && Skills.All.TryGetValue(pid, out var pb))
+            {
+                var p = TreeModded(pid);
+                if (CopyParent.Contains(id))
+                {
+                    s.damage = p.damage; s.effect = p.effect; s.effectDur = p.effectDur; s.effectDps = p.effectDps; s.radius = Mathf.Max(s.radius, p.radius);
+                }
+                else
+                {
+                    if (pb.damage > 0) s.damage = Mathf.RoundToInt(s.damage * (float)p.damage / pb.damage);
+                    if (pb.heal > 0) s.heal = Mathf.RoundToInt(s.heal * (float)p.heal / pb.heal);
+                    if (s.effect != EffectKind.None) { s.effectDur += p.effectDur - pb.effectDur; s.effectDps += p.effectDps - pb.effectDps; }
+                }
+            }
+            ApplyNodes(s, id);
+            return s;
+        }
+
+        /// <summary>技能樹強化後的技能（複製一份改數值；id 不變）</summary>
+        public SkillDef ModdedSkill(string id)
+        {
+            var s = TreeModded(id);
+            if (s == null) return null;
             float heal = 1f + 0.02f * (Total(Stat.Int) - BaseStat(Stat.Int));
+            // 法師「過載」：法師技能傷害 +15%／級，MP 消耗 +20%／級
+            float ov = Passive(PassiveKind.Overload);
+            if (ov > 0f && s.cls == cls && s.damage > 0) { s.damage = Mathf.RoundToInt(s.damage * (1f + 0.15f * ov)); s.cost = Mathf.CeilToInt(s.cost * (1f + 0.2f * ov)); }
+            if (s.heal > 0) s.heal = Mathf.RoundToInt(s.heal * heal);   // 智力：治療量
+            if (id == "nv_aid") s.heal = Mathf.Min(s.heal, SkillTrees.AidMaxHeal);   // 急救最多回復 30 HP（加了智力也一樣）
+            return s;
+        }
+
+        void ApplyNodes(SkillDef s, string id)
+        {
             foreach (var n in Nodes)
             {
                 if (n.kind != NodeKind.Mod || n.skill != id) continue;
@@ -1361,12 +1407,6 @@ namespace SpellDuel
                     case ModField.Pierce: s.pierce = true; break;
                 }
             }
-            // 法師「過載」：法師技能傷害 +15%／級，MP 消耗 +20%／級
-            float ov = Passive(PassiveKind.Overload);
-            if (ov > 0f && s.cls == cls && s.damage > 0) { s.damage = Mathf.RoundToInt(s.damage * (1f + 0.15f * ov)); s.cost = Mathf.CeilToInt(s.cost * (1f + 0.2f * ov)); }
-            if (s.heal > 0) s.heal = Mathf.RoundToInt(s.heal * heal);   // 智力：治療量
-            if (id == "nv_aid") s.heal = Mathf.Min(s.heal, SkillTrees.AidMaxHeal);   // 急救最多回復 30 HP（加了智力也一樣）
-            return s;
         }
 
         // ---- 裝備
@@ -1475,6 +1515,8 @@ namespace SpellDuel
             f.falconMark = Passive(PassiveKind.FalconMark); f.falconAssault = Passive(PassiveKind.FalconAssault); f.falconPatrol = Passive(PassiveKind.FalconPatrol); f.petMp = Passive(PassiveKind.PetMp); f.closeInstinct = Passive(PassiveKind.CloseInstinct);
             var bs = adv == "ninja" ? Skills.All["na_kunai"] : Skills.BasicOf(cls); f.basic = bs != null ? ModdedSkill(bs.id) : null;   // 普攻也吃技能樹（忍者：苦無）
             f.kunaiFire = Passive(PassiveKind.KunaiFire); f.kunaiIce = Passive(PassiveKind.KunaiIce); f.kunaiBolt = Passive(PassiveKind.KunaiBolt); f.dmgShield = Passive(PassiveKind.DmgShield); f.basicShield = Passive(PassiveKind.BasicShield); f.hitShield = Passive(PassiveKind.HitShield);
+            // 衍生技能（連環陷阱、回響火球、翻滾箭…）：跟著原本那招的強化等級
+            f.derived.Clear(); foreach (var did in InheritFrom.Keys) { var ds = ModdedSkill(did); if (ds != null) f.derived[did] = ds; }
             // 技能：只帶會的技能，數值換成技能樹強化後的版本
             f.loadout.Clear();
             var known = KnownSkills();

@@ -71,6 +71,9 @@ namespace SpellDuel
         public float RageMul => 1f;   // 原本狂戰士的怒氣（劍仙取代後不再使用）
         /// <summary>劍仙：劍來（普攻強化到這個時間）、御劍術（飛劍連射到這個時間、用哪個技能的數值）</summary>
         public float swordUntil, yujianUntil; public SkillDef yujianSkill;
+        /// <summary>衍生技能（連環陷阱、回響火球、翻滾箭、屬性苦無、獵鷹俯衝）跟著原本那招強化後的版本（CharacterProfile.ApplyTo 填）</summary>
+        public readonly Dictionary<string, SkillDef> derived = new Dictionary<string, SkillDef>();
+        public SkillDef Derived(string id) => derived.TryGetValue(id, out var s) ? s : Skills.All.TryGetValue(id, out var b) ? b : null;
         /// <summary>劍來期間普攻的集氣多幾秒（0.5～2 秒，依「劍來延長」的等級）</summary>
         public float jianlaiSlow;
         public float oathUntil, oathShare; public Fighter oathBy;   // 聖騎士的守護誓言：我受到的傷害有 oathShare 轉給 oathBy
@@ -2491,7 +2494,8 @@ namespace SpellDuel
             int n = 0;
             void Try(float chance, string id)
             {
-                if (chance <= 0f || rng.NextDouble() >= chance || !Skills.All.TryGetValue(id, out var k)) return;
+                if (chance <= 0f || rng.NextDouble() >= chance) return;
+                var k = f.Derived(id); if (k == null) return;
                 float ang = (n % 2 == 0 ? 1f : -1f) * (2f + 1.5f * (n / 2)); n++;   // 幾乎同一條線（偏太多會打不到）
                 Spawn(f, k, from, RotateY(dir, ang), k.damage, k.effect, k.effectDps, k.effectDur, false);
             }
@@ -3221,7 +3225,7 @@ namespace SpellDuel
                     var tgt = NearestFoe(f, out _);
                     if (tgt != null)
                     {
-                        var ra = Skills.All["rollarrow"];
+                        var ra = f.Derived("rollarrow");
                         var from = f.Chest + Fighter.Flat(f.forward) * 0.3f;
                         Spawn(f, ra, from, (tgt.Chest - from).normalized, ra.damage, EffectKind.None, 0f, 0f, false);
                         Emit("cast", from, ra.color, null);
@@ -4098,7 +4102,7 @@ namespace SpellDuel
         void FalconDive(Fighter o, Fighter t, string label)
         {
             o.falconDiveReady = now + 0.8f;
-            var s = Skills.All["falcondive"];
+            var s = o.Derived("falcondive");
             Emit("buff", t.Chest + Vector3.up * 0.4f, s.color, "🦅 " + label);
             var tt = t;
             After(0.35f, () => { if (tt.Alive && o.Alive) HitFoe(o, tt, s, s.damage); });
@@ -4278,7 +4282,7 @@ namespace SpellDuel
             // 法師「奧術回響」：普攻命中有機率追加一發小火球／小冰錐
             if (s.id == "na_mage" && o.spellEcho > 0f && t != null && rng.NextDouble() < o.spellEcho)
             {
-                var echo = Skills.All[rng.Next(2) == 0 ? "echo_fire" : "echo_ice"];
+                var echo = o.Derived(rng.Next(2) == 0 ? "echo_fire" : "echo_ice");   // 跟著火球／冰槍的強化等級
                 var tgt = t;
                 After(0.08f, () =>
                 {

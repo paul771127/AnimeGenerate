@@ -93,6 +93,27 @@
 | 審判者 | `holyfire` | 聖火 | 單體＋灼燒 | 金橘色聖火球 |
 | 審判者 | `verdict` | 裁決之錘 | 從上方落下的重擊＋暈眩 | 巨大的光之戰錘砸下、地面裂紋 |
 
+## B3. 基本職業還沒有專屬特效／圖示的技能（使用者要求「其他職業有新增的技能也一併加入」）
+
+Claude 盤點了所有玩家技能，下面這些**沒有圖示**（`SkillIcons.cs` 沒有對應的 case），或是**只有通用外觀**：
+
+| 職業 | id | 名稱 | 類型 | 要做 |
+|---|---|---|---|---|
+| 獵人 | `focus`（見下方注意） | 精神集中 | 自身：20 秒冷卻減半 | 圖示＋施放／持續特效（用 C 的介面） |
+| 法師 | `meditate` | 冥想 | 自身：回 30 MP | 圖示＋藍色魔力往身上聚集 |
+| 刺客 | `prep` | 刺殺準備 | 自身：蓄力伏擊 | 圖示 |
+| 劍士 | `taunt` | 嘲諷 | 自身：減傷＋拉仇恨 | 圖示（特效已有 `sword_taunt`） |
+| 牧師 | `bless` | 聖光祝福 | 隊伍攻擊 +% | 圖示＋ C 介面的施放／持續特效 |
+| 牧師 | `haste` | 迅捷禱言 | 隊伍加速 | 同上 |
+| 牧師 | `spring` | 生命湧泉 | 隊伍每秒回血 | 同上 |
+| 牧師 | `focus`（見下方注意） | 精準聖歌 | 隊伍爆擊 +% | 同上 |
+| 獵人（遊俠） | `rollarrow` | 翻滾箭 | 翻滾射擊自動射出的箭 | 投射物外觀（綠色、帶翻滾殘影） |
+| 法師 | `echo_fire`、`echo_ice` | 回響火球、回響冰錐 | 奧術回響追加的小火球／冰錐 | 投射物外觀（比火球／冰槍小一號、帶紫色奧術光） |
+| 法師 | `arcaneburst` | 奧術爆裂 | 奧術飛彈命中爆炸 1.5m | 用 `AreaBurst` 介面做紫色爆開 |
+| 刺客 | `venom_burst` | 毒爆 | 毒疊滿爆開 | 用 `AreaBurst` 介面做綠色毒爆 |
+
+**注意**：獵人的「精神集中」和牧師的「精準聖歌」程式裡用了同一個 id `focus`（既有 bug，Claude 另外處理；處理完 id 可能會變，請以 `Skills.cs` 為準）。圖示請先依 `SkillDef.cls` 分開畫（`archer`／`priest`）。
+
 ## C. 隊伍增益共用介面（4、5、7、8 用）
 
 - `void SpellFx.TeamBuffCast(string skillId, Transform owner)`：施放瞬間的特效（自己和每個吃到增益的隊友都會各呼叫一次）。
@@ -102,8 +123,8 @@
 
 ## D. 技能圖示
 
-`SkillIcons.cs` 加這 9 個 id，以及 B2 表格裡 19 個 id 的圖示（照現有 `case "rollshot": RollShot(cv, sc)` 的寫法）：`starfall`、`arcanebreak`、`arcanewyrm`（龍頭）、`arcanehaste`、`elementward`、`landmine`、`rangerhaste`、`hawkeye`、`falcondive`。
+`SkillIcons.cs` 加這 9 個 id，以及 B2、B3 表格裡的 id 的圖示（照現有 `case "rollshot": RollShot(cv, sc)` 的寫法）：`starfall`、`arcanebreak`、`arcanewyrm`（龍頭）、`arcanehaste`、`elementward`、`landmine`、`rangerhaste`、`hawkeye`、`falcondive`。
 
 ## 交付順序
 
-**1（光龍）→ 6（地雷）→ 9（獵鷹俯衝）→ C（4、5、7、8）→ 2、3 → B2 → D**。每做完一項就推，Claude 會接線。
+**1（光龍）→ 6（地雷）→ 9（獵鷹俯衝）→ C（4、5、7、8）→ 2、3 → B2 → B3 → D**。每做完一項就推，Claude 會接線。
