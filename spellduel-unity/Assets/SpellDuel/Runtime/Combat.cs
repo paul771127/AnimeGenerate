@@ -967,9 +967,13 @@ namespace SpellDuel
         /// <summary>故事關卡每波的小怪數量倍率：第一、二章 0.5；第三章以後 0.3（使用者要求：少一點、但每隻更痛，靠技術躲）</summary>
         public static float StoryEnemyMul(int theme) => theme >= 2 ? 0.3f : 0.5f;
         public float hpBoost = 1f;   // 轉職試煉：敵人更硬
-        public float DmgMul => (EnemyDmgBase + DmgPerWave * Tier) * enemyDmgMul * TowerMul;
-        /// <summary>小怪傷害的基底（使用者要求：0.75 → 0.9，玩家被圍毆時要會掉血）</summary>
-        public const float EnemyDmgBase = 0.9f;
+        public float DmgMul => (EnemyDmgBase + MinionDmgPerTier * Tier) * enemyDmgMul * TowerMul;
+        /// <summary>小怪每一級（波次＋等級加成）多多少攻擊（使用者要求調降：0.02 → 0.012；Boss 照舊用 DmgPerWave）</summary>
+        public const float MinionDmgPerTier = 0.012f;
+        /// <summary>小怪出手的間隔倍率（使用者要求：攻擊頻率調慢一些）：普攻、第二招的冷卻都 ×這個</summary>
+        public const float MinionAttackGapMul = 1.2f;
+        /// <summary>小怪傷害的基底（0.75 → 0.9 → 0.8：使用者回報第 4 章被打兩下就死）</summary>
+        public const float EnemyDmgBase = 0.8f;
         public const float EndlessRegen = 0.5f, EndlessRegenPct = 0.005f;   // 無盡／故事：玩家每秒自然回血（0.5 或最大 HP 的 0.5%，取大的）
         public float SpeedMul => Mathf.Min(1.5f, 1f + 0.02f * Tier);
 
@@ -1833,6 +1837,7 @@ namespace SpellDuel
         {
             int before = projectiles.Count;
             MinionStrikeCore(m, tgt, d);
+            if (m.attackReadyAt > now) m.attackReadyAt = now + (m.attackReadyAt - now) * MinionAttackGapMul;   // 攻擊頻率調慢
             // 遠程小怪射出去的東西：飛行速度倍率
             if (rangedShotSpeedMul != 1f && IsRanged(m.minionKind))
                 for (int j = before; j < projectiles.Count; j++) if (projectiles[j].owner == m) projectiles[j].speedMul *= rangedShotSpeedMul;

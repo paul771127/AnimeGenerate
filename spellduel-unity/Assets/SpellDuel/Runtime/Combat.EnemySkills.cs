@@ -413,7 +413,7 @@ namespace SpellDuel
 
         void EndEnemyCast(Fighter m, EnemySkillDef s)
         {
-            m.esCd[s.id] = now + s.cd;
+            m.esCd[s.id] = now + s.cd * MinionAttackGapMul;   // 第二招也一起放慢
             m.esCast = null; m.esTarget = null; m.esMoved = false; m.esGuardUntil = 0f; m.esCountered = false;
             m.windupUntil = 0f; m.attackReadyAt = Mathf.Max(m.attackReadyAt, now + 0.6f);
             m.esCues.Clear();
