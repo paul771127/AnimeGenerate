@@ -1301,6 +1301,13 @@ namespace SpellDuel
             return Mathf.RoundToInt(v);
         }
 
+        /// <summary>
+        /// 單純升級的 HP／MP 成長（使用者要求：法師到第 4、5 章幾乎被秒殺）：每升 1 級加職業基礎值的 2%（HP）、1%（MP），
+        /// 和敵人每一級／每一波 +2% 傷害同步；50 級的 HP 約是 1 級的 2 倍。
+        /// </summary>
+        public const float HpPerLevel = 0.02f, MpPerLevel = 0.01f;
+        public int LevelBase(int classBase, float perLevel) => Mathf.RoundToInt(classBase * (1f + perLevel * Mathf.Max(0, level - 1)));
+
         /// <summary>把角色的能力值、技能樹、裝備套用到戰鬥中的角色身上（保留目前 HP 比例）</summary>
         public void ApplyTo(Fighter f, ClassDef cd, IList<string> loadoutIds)
         {
@@ -1309,8 +1316,8 @@ namespace SpellDuel
             var atkStat = StatInfo.AttackStat(cls);
             // 攻擊：攻擊能力值每點 +2%，裝備的攻擊加成
             f.atkMul = Mathf.Max(0.3f, 1f + 0.02f * d(atkStat)) * (1f + GearSum(Affix.Atk));
-            // HP：體質每點 +5、非攻擊用的力量每點 +1、裝備
-            f.maxHp = Mathf.Max(10, cd.maxHp + 5 * d(Stat.Vit) + (atkStat != Stat.Str ? d(Stat.Str) : 0) + Mathf.RoundToInt(GearSum(Affix.Hp)));
+            // HP：等級（使用者要求：單純升級也會些微增加，每級＋職業基礎 HP 的 HpPerLevel）、體質每點 +5、非攻擊用的力量每點 +1、裝備
+            f.maxHp = Mathf.Max(10, LevelBase(cd.maxHp, HpPerLevel) + 5 * d(Stat.Vit) + (atkStat != Stat.Str ? d(Stat.Str) : 0) + Mathf.RoundToInt(GearSum(Affix.Hp)));
             // 減傷（使用者要求）分物理、魔法：
             //   物理減傷＝體質從初始值加到 99 點 30%（線性）＋裝備的物理減傷（每件 1～3%、套裝）
             //   魔法減傷＝智力從初始值加到 99 點 30%（線性）＋裝備的魔法減傷（法袍、海神套裝）
@@ -1320,7 +1327,7 @@ namespace SpellDuel
             f.gearReduce = Mathf.Min(Fighter.MaxReduce, Fighter.VitMaxReduce * vitFrac + GearSum(Affix.Armor));
             f.magicReduce = Mathf.Min(Fighter.MaxReduce, Fighter.VitMaxReduce * intFrac + GearSum(Affix.MagicArmor));
             // MP：智力每點 +2、裝備；MP 回復：基礎 30%，精神加到 99 點才回到 100%（線性；裝備把精神加超過 99 會再更快）
-            f.maxMp = Mathf.Max(10, cd.maxMp + 2 * d(Stat.Int) + Mathf.RoundToInt(GearSum(Affix.Mp)));
+            f.maxMp = Mathf.Max(10, LevelBase(cd.maxMp, MpPerLevel) + 2 * d(Stat.Int) + Mathf.RoundToInt(GearSum(Affix.Mp)));   // MP 也隨等級：每級＋職業基礎 MP 的 MpPerLevel
             float spiFrac = Mathf.Max(0f, d(Stat.Spi) / (float)Mathf.Max(1, Fighter.MpRegenFullSpi - BaseStat(Stat.Spi)));
             f.regen = cd.mpRegen * (Fighter.MpRegenBase + (1f - Fighter.MpRegenBase) * spiFrac);
             // 冷卻：精神每點 -0.8%（最多 -35%）、裝備
