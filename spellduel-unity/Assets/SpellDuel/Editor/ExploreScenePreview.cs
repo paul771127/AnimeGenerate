@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 namespace SpellDuel.EditorTools
@@ -10,7 +11,7 @@ namespace SpellDuel.EditorTools
   [MenuItem("SpellDuel/Explore/Export jungle scene and keyframes")]
   public static void Render()
   {
-   ExploreFxKeyframes.Render();var cam=UnityEngine.Object.FindObjectOfType<Camera>();cam.orthographic=false;cam.fieldOfView=72;cam.farClipPlane=300;cam.backgroundColor=new Color(.19f,.27f,.26f);
+   ExploreFxKeyframes.Render();var cam=UnityEngine.Object.FindObjectOfType<Camera>();cam.orthographic=false;cam.fieldOfView=72;cam.farClipPlane=500;cam.backgroundColor=new Color(.19f,.27f,.26f);
    var map=JungleMaze.Build();var root=new GameObject("Explore scene preview");Directory.CreateDirectory("snapshots");
    for(int x=0;x<map.W;x++)for(int z=0;z<map.H;z++)
    {
@@ -22,19 +23,29 @@ namespace SpellDuel.EditorTools
    }
    foreach(var p in map.props){var g=ExploreArt.CreateProp(p);g.transform.SetParent(root.transform,false);g.transform.localPosition=p.pos;}
    foreach(var l in map.landmarks){var g=ExploreArt.CreateLandmark(l,map);g.transform.SetParent(root.transform,false);}
-   foreach(var a in map.arenas){var g=ExploreArt.CreateArena(a.n,a.radius);g.transform.SetParent(root.transform,false);g.transform.localPosition=a.center;}
+   foreach(var a in map.arenas){var g=ExploreArt.CreateArena(a.n,a.radius);g.transform.SetParent(root.transform,false);g.transform.localPosition=a.center;var rc=map.Cell(a.center+g.transform.Find("RimSet").localPosition);if(map.At(rc.x,rc.y)!=ExCell.Wall)throw new Exception("Arena scenery on open path "+a.n);}
    foreach(var sw in map.switches){var g=ExploreArt.CreateSwitch(sw);g.transform.SetParent(root.transform,false);g.transform.localPosition=sw.pos;}
    if(root.GetComponentInChildren<Collider>())throw new Exception("Explore art introduced a collider");
    foreach(var n in map.npcs){var rig=CharacterRig.Create(n.look);rig.InCombat=false;ExploreArt.DressNpc(rig,n.id);rig.transform.SetParent(root.transform,false);rig.transform.localPosition=n.pos;}
+   var backdrop=ExploreArt.CreateBackdrop(map);backdrop.transform.SetParent(root.transform,false);
    foreach(var l in map.landmarks)
    {
     var center=map.World((l.rect.xMin+l.rect.xMax)/2,(l.rect.yMin+l.rect.yMax)/2);Vector3 desired=map.World((l.rect.xMin+l.rect.xMax)/2,l.rect.yMin);Vector3 at=desired;float best=float.MaxValue;
     for(int x=l.rect.xMin;x<=l.rect.xMax;x++)for(int z=l.rect.yMin;z<=l.rect.yMax;z++){var p=map.World(x,z);if(!map.Walkable(p))continue;float score=(p-desired).sqrMagnitude;if((p-center).sqrMagnitude<9)score+=100;if(score<best){best=score;at=p;}}
-    var target=center+Vector3.up*(l.kind=="lake"?.35f:1.8f);cam.transform.position=at+Vector3.up*1.65f;if((target-cam.transform.position).sqrMagnitude<.5f)target+=Vector3.forward*3;cam.transform.LookAt(target);Save(cam,"explore_"+l.id+"_first",960,1280);
+    var target=center+Vector3.up*(l.kind=="lake"?.35f:1.8f);ChooseView(map,l,root.transform,ref at,ref target);cam.transform.position=at+Vector3.up*1.65f;if((target-cam.transform.position).sqrMagnitude<.5f)target+=Vector3.forward*3;cam.transform.LookAt(target);Save(cam,"explore_"+l.id+"_first",960,1280);
    }
-   var middle=(map.World(0,0)+map.World(map.W-1,map.H-1))*.5f;cam.orthographic=true;cam.orthographicSize=map.W*3*.54f;cam.transform.position=middle+Vector3.up*160;cam.transform.rotation=Quaternion.Euler(90,0,0);Save(cam,"explore_map_top",1800,1800);
+   backdrop.SetActive(false);var middle=(map.World(0,0)+map.World(map.W-1,map.H-1))*.5f;cam.orthographic=true;cam.orthographicSize=map.W*3*.54f;cam.transform.position=middle+Vector3.up*160;cam.transform.rotation=Quaternion.Euler(90,0,0);Save(cam,"explore_map_top",1800,1800);
    root.SetActive(false);cam.orthographic=false;cam.fieldOfView=35;cam.backgroundColor=new Color(.13f,.17f,.20f);Catalogue(cam);
    File.WriteAllText("snapshots/explore_scene_audit.json","{\"landmarks\":"+map.landmarks.Count+",\"props\":"+map.props.Count+",\"noColliders\":true,\"staticStates\":true,\"cachedFactories\":true,\"keyframes\":16}");
+  }
+  static void ChooseView(ExploreMap map,ExLandmark l,Transform root,ref Vector3 at,ref Vector3 target)
+  {
+   if(l.kind=="lake"||l.kind=="arena")return;var targets=new List<Vector3>();
+   if(l.kind=="fort"||l.kind=="cave"||l.kind=="palace"||l.kind=="rocks")
+   {var decor=root.Find("Explore Landmark "+l.id);if(decor)foreach(Transform t in decor)if(t.name.StartsWith("WallScenery_"))targets.Add(t.position+Vector3.up*3.3f);}
+   else foreach(var p in map.props){var c=map.Cell(p.pos);if(l.Contains(c)&&(p.kind=="tent"||p.kind=="mushroom"))targets.Add(p.pos+Vector3.up*1.4f);}
+   float best=float.MaxValue;foreach(var aim in targets)for(int x=l.rect.xMin;x<=l.rect.xMax;x++)for(int z=l.rect.yMin;z<=l.rect.yMax;z++)
+   {var p=map.World(x,z);if(!map.Walkable(p))continue;var flat=aim-p;flat.y=0;float d=flat.magnitude;if(d<4||d>15)continue;bool clear=true;for(float travel=.5f;travel<d-1.6f;travel+=.5f){var c=map.Cell(p+flat*(travel/d));if(map.At(c.x,c.y)!=ExCell.Floor){clear=false;break;}}if(!clear)continue;float score=Mathf.Abs(d-7)+.1f*Mathf.Abs(x-(l.rect.xMin+l.rect.xMax)*.5f);if(score<best){best=score;at=p;target=aim;}}
   }
   static void Catalogue(Camera cam)
   {
@@ -42,12 +53,22 @@ namespace SpellDuel.EditorTools
    {var g=ExploreArt.CreateProp(new ExProp{kind=kind,variant=i,radius=1});Fit(cam,g,"explore_prop_"+kind+"_"+i);UnityEngine.Object.DestroyImmediate(g);}
    foreach(ExTerrain t in Enum.GetValues(typeof(ExTerrain))){var g=ExploreArt.CreateWall(t,1,2,3);Fit(cam,g,"explore_wall_"+t);UnityEngine.Object.DestroyImmediate(g);}
    for(int n=1;n<=4;n++){var g=ExploreArt.CreateArena(n,4);Fit(cam,g,"explore_arena_"+n);UnityEngine.Object.DestroyImmediate(g);}
+   // Equal-camera comparison: repeated species must differ in silhouette, not only colour.
+   var lineup=new GameObject("Tree variation lineup");
+   for(int i=0;i<4;i++){var g=ExploreArt.CreateProp(new ExProp{kind="tree",variant=1,radius=1,pos=new Vector3(i*.1f,0,0)});g.transform.SetParent(lineup.transform,false);g.transform.localPosition=new Vector3(i*2.25f,0,0);}
+   Fit(cam,lineup,"explore_tree_variation_lineup");UnityEngine.Object.DestroyImmediate(lineup);
+   lineup=new GameObject("Wall variation lineup");for(int i=0;i<4;i++){var g=ExploreArt.CreateWall(ExTerrain.Thicket,i,0,3);g.transform.SetParent(lineup.transform,false);g.transform.localPosition=new Vector3(i*3.3f,0,0);}Fit(cam,lineup,"explore_thicket_variation_lineup");UnityEngine.Object.DestroyImmediate(lineup);
+   lineup=new GameObject("Tent true scale comparison");var tent=ExploreArt.CreateProp(new ExProp{kind="tent",radius=.9f});tent.transform.SetParent(lineup.transform,false);
+   var monster=MinionRig.Create();monster.SetVariant(9);monster.transform.SetParent(lineup.transform,false);monster.transform.localPosition=new Vector3(1.3f,0,.3f);
+   var human=CharacterRig.Create("swordsman");human.transform.SetParent(lineup.transform,false);human.transform.localPosition=new Vector3(-1.45f,0,0);
+   Fit(cam,lineup,"explore_tent_scale");UnityEngine.Object.DestroyImmediate(lineup);
    var map=JungleMaze.Build();foreach(var seal in map.seals){var g=ExploreArt.CreateSeal(seal,0,0,3);Fit(cam,g,"explore_"+seal.id+"_closed");seal.have=seal.need;ExploreArt.SetSealOpen(g,false);Fit(cam,g,"explore_"+seal.id+"_ready");ExploreArt.SetSealOpen(g,true);if(g.transform.Find("Closed").gameObject.activeSelf)throw new Exception("Seal did not hide");ExploreArt.SetSealOpen(g,false);if(!g.transform.Find("Closed").gameObject.activeSelf)throw new Exception("Seal did not close");UnityEngine.Object.DestroyImmediate(g);}
+   foreach(var npc in map.npcs){var rig=CharacterRig.Create(npc.look);rig.InCombat=false;ExploreArt.DressNpc(rig,npc.id);Fit(cam,rig.gameObject,"explore_npc_"+npc.id);UnityEngine.Object.DestroyImmediate(rig.gameObject);}
    // Warm factories twice: the second cycle must reuse every mesh and material.
    int mesh=0,mat=0;for(int pass=0;pass<2;pass++){foreach(ExTerrain t in Enum.GetValues(typeof(ExTerrain)))for(int i=0;i<4;i++)UnityEngine.Object.DestroyImmediate(ExploreArt.CreateWall(t,i,0,3));for(int i=0;i<5;i++)UnityEngine.Object.DestroyImmediate(ExploreArt.CreateProp(new ExProp{kind="tree",variant=i,radius=.6f}));int m=Resources.FindObjectsOfTypeAll<Mesh>().Length,mt=Resources.FindObjectsOfTypeAll<Material>().Length;if(pass==1&&(m!=mesh||mt!=mat))throw new Exception("Explore factory failed cache check");mesh=m;mat=mt;}
   }
   static void Fit(Camera cam,GameObject g,string name)
-  {var bounds=new Bounds(g.transform.position,Vector3.zero);foreach(var r in g.GetComponentsInChildren<Renderer>())bounds.Encapsulate(r.bounds);var size=Mathf.Max(bounds.size.y,bounds.size.x,bounds.size.z);cam.transform.position=bounds.center+new Vector3(.7f,.35f,1).normalized*Mathf.Max(2,size*2.3f);cam.transform.LookAt(bounds.center);Save(cam,name,800,800);}
+  {var bounds=new Bounds(g.transform.position,Vector3.zero);foreach(var mf in g.GetComponentsInChildren<MeshFilter>()){var renderer=mf.GetComponent<Renderer>();if(!mf.sharedMesh||!renderer||!renderer.enabled||renderer.forceRenderingOff)continue;var b=mf.sharedMesh.bounds;for(int i=0;i<8;i++){var corner=b.center+new Vector3((i&1)==0?-b.extents.x:b.extents.x,(i&2)==0?-b.extents.y:b.extents.y,(i&4)==0?-b.extents.z:b.extents.z);bounds.Encapsulate(mf.transform.TransformPoint(corner));}}var size=Mathf.Max(bounds.size.y,bounds.size.x,bounds.size.z);cam.transform.position=bounds.center+new Vector3(.7f,.35f,1).normalized*Mathf.Max(2,size*2.3f);cam.transform.LookAt(bounds.center);Save(cam,name,800,800);}
   static void Save(Camera cam,string name,int w,int h)
   {cam.aspect=w/(float)h;var rt=new RenderTexture(w,h,24);var old=RenderTexture.active;cam.targetTexture=rt;RenderTexture.active=rt;cam.Render();var tex=new Texture2D(w,h,TextureFormat.RGB24,false);tex.ReadPixels(new Rect(0,0,w,h),0,0);tex.Apply();File.WriteAllBytes("snapshots/"+name+".png",tex.EncodeToPNG());cam.targetTexture=null;RenderTexture.active=old;UnityEngine.Object.DestroyImmediate(tex);UnityEngine.Object.DestroyImmediate(rt);}
  }

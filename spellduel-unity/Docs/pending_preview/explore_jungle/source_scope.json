@@ -1,0 +1,32 @@
+{
+  "api": [
+    "CreateWall",
+    "CreateGround",
+    "CreateProp",
+    "CreateLandmark",
+    "CreateGate",
+    "SetGateOpen",
+    "CreateArena",
+    "SetAltarGlow",
+    "CreateHerb",
+    "CreateSparkle",
+    "SparkleFound",
+    "DressNpc",
+    "QuestMark",
+    "AlertMark",
+    "LandmarkFound",
+    "CreateSeal",
+    "SetSealOpen",
+    "CreateSwitch",
+    "SetSwitchDone"
+  ],
+  "runtimeFiles": [
+    "ExploreArt.cs",
+    "ExploreArt.Gates.cs",
+    "ExploreArt.Landmarks.cs",
+    "ExploreArt.Props.cs",
+    "ExploreArt.Quest.cs"
+  ],
+  "noNewTimeDrivenAnimation": true,
+  "forbiddenPathEditsByThisArtBatch": []
+}
