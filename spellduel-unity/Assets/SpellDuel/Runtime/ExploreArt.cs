@@ -55,7 +55,7 @@ namespace SpellDuel
    }
    else if(t==ExTerrain.Water)
    {
-    b.Box(V(0,.006f,0),V(3,.012f,3),Water);for(int i=0;i<4;i++){float z=-1.1f+i*.7f;b.Quad(V(-1.2f,.019f,z),V(-.2f,.019f,z+.07f),V(.8f,.019f,z+.035f),V(-.1f,.019f,z-.015f),Glow(Light));}b.Gem(V(.65f,.035f,.55f),V(.65f,.04f,.55f),Leaf,7);b.Gem(V(.7f,.15f,.57f),V(.16f,.22f,.16f),Bone,5);
+    b.Box(V(0,.006f,0),V(3,.012f,3),Water);for(int i=0;i<4;i++){float z=-1.1f+i*.7f;b.Quad(V(-1.2f,.019f,z),V(-.2f,.019f,z+.07f),V(.8f,.019f,z+.035f),V(-.1f,.019f,z-.015f),Glow(Light));}b.Gem(V(.65f,.035f,.55f),V(.65f,.04f,.55f),Leaf,7);b.Gem(V(.7f,.15f,.57f),V(.16f,.22f,.16f),Bone,5);for(int i=0;i<3;i++){var tip=V(-1.35f+i*.11f,.36f+i*.09f,1.35f);b.Rod(V(tip.x,.02f,tip.z),tip,.012f,Moss,4);b.Frond(tip*.7f,tip+V(.12f,.02f,0),.035f,Leaf);}
    }
    else if(t==ExTerrain.Palisade)
    {

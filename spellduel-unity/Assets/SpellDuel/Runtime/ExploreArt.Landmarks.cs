@@ -16,6 +16,9 @@ namespace SpellDuel
     if(terrain==ExTerrain.Water||placed>=8||Variant(x,z,3)!=0)continue;
     bool edge=false;foreach(var d in ExploreMap.Dirs)if(map.Open(x+d.x,z+d.y))edge=true;if(!edge)continue;
     if(l.kind=="fort"||l.kind=="start")Part(root.transform,"landmark/flag",b=>{b.Rod(V(1,2.5f,0),V(1,4.4f,0),.04f,Bark);b.Quad(V(1,4.3f,0),V(.2f,4.3f,0),V(.4f,3.6f,0),V(1,3.8f,0),Leaf,true);},at).name="Banner_"+x+"_"+z;
+    if(l.kind=="fort"||l.kind=="start")Part(root.transform,"landmark/torch",b=>{b.Rod(V(1,2.7f,1),V(1,3.3f,1),.05f,Bark);b.Gem(V(1,3.43f,1),V(.24f,.42f,.24f),Glow(new Color(1,.61f,.2f)),6);},at).name="Torch_"+x+"_"+z;
+    if(l.kind=="cave")Part(root.transform,"landmark/drops",b=>{for(int i=0;i<3;i++)b.Gem(V(-.5f+i*.5f,2.7f+i*.15f,.8f),V(.035f,.10f,.035f),Glow(Light),4);},at).name="WaterDrops_"+x+"_"+z;
+    if(l.kind=="grove")Part(root.transform,"landmark/spores",b=>{for(int i=0;i<6;i++)b.Gem(V(Mathf.Sin(i*2f),2.5f+i*.23f,Mathf.Cos(i*2f)),V(.045f,.045f,.045f),Glow(Light),4);},at).name="Spores_"+x+"_"+z;
     int n=placed++%3;Part(root.transform,"landmark/"+l.kind+"/"+n,b=>LandmarkPiece(b,l.kind,n),at).name="WallScenery_"+x+"_"+z;
    }
    return root;
@@ -33,7 +36,7 @@ namespace SpellDuel
    else if(kind=="palace")
    {for(int s=-1;s<=1;s+=2){b.Rod(V(s*.9f,0,0),V(s*.9f,3.6f,0),.28f,Rock,8);b.Vine(V(s*.9f,.2f,.32f),V(s*.9f,3.5f,.32f),.16f,.06f,Leaf,6);}b.Box(V(0,3.65f,0),V(2.4f,.35f,1.4f),Jade);b.Gem(V(.2f,4.03f,0),V(2.4f,.55f,2),Jade*.8f,4);b.Gem(V(0,3.55f,.78f),V(.4f,.5f,.08f),Bone,6);}
    else if(kind=="grove")
-   {Mushroom(b,V(0,2.25f,0),1.2f,n);for(int i=0;i<6;i++)b.Gem(V(Mathf.Sin(i*2f),2.5f+i*.23f,Mathf.Cos(i*2f)),V(.045f,.045f,.045f),Glow(Light),4);}
+   {Mushroom(b,V(0,2.25f,0),1.2f,n);}
    else if(kind=="start")
    {b.Box(V(0,1.65f,0),V(2.4f,3.3f,2.4f),Bark);b.Gem(V(0,3.55f,0),V(2.8f,1,2.8f),Moss,4);b.Box(V(0,2,1.21f),V(.65f,.8f,.04f),Dark);b.Rod(V(0,1.6f,1.25f),V(0,2.4f,1.25f),.035f,Bone);b.Rod(V(-.32f,2,1.25f),V(.32f,2,1.25f),.035f,Bone);}
    else
