@@ -138,7 +138,7 @@ namespace SpellDuel
         public void Leave()
         {
             if (root != null) UnityEngine.Object.Destroy(root);
-            root = null; Town = -1; npcs.Clear(); walls.Clear(); exits.Clear(); Near = null;
+            root = null; Town = -1; npcs.Clear(); walls.Clear(); exits.Clear(); Near = null; petRig = null; petRigKind = -1;
         }
 
         static bool HasStages(int theme) { foreach (var st in Story.AllStages()) if (st.theme == theme) return true; return false; }
@@ -317,6 +317,60 @@ namespace SpellDuel
                 float score = dist + ang * 0.02f;
                 if (score < best) { best = score; Near = n; }
             }
+            UpdatePet(meXZ, camF2, dt);
+        }
+
+        // ---------------------------------------------------------------- 出戰的寵物跟著走（使用者要求：平時也要跟著）
+        /// <summary>出戰的寵物種類（−1＝沒有）、是不是菁英：SoloBattle 每幀設定</summary>
+        public int PetKind = -1; public bool PetElite;
+        MinionRig petRig; int petRigKind = -1; bool petRigElite; Vector2 petAt;
+        /// <summary>寵物待在玩家前方偏左（AR 第一人稱，跟在背後就看不到了）；離太遠跑起來追，太遠（傳送、轉場）直接出現在旁邊</summary>
+        public const float PetAhead = 1.5f, PetSide = 0.9f, PetWalk = 1.6f, PetRun = 3.2f, PetSnap = 8f;
+        void UpdatePet(Vector2 me, Vector2 fwd, float dt)
+        {
+            if (PetKind < 0 || root == null)
+            {
+                if (petRig) UnityEngine.Object.Destroy(petRig.gameObject);
+                petRig = null; petRigKind = -1; return;
+            }
+            fwd = fwd.sqrMagnitude > 1e-4f ? fwd.normalized : Vector2.up;
+            var left = new Vector2(-fwd.y, fwd.x);
+            var target = ResolvePet(me + fwd * PetAhead + left * PetSide);
+            if (!petRig || petRigKind != PetKind || petRigElite != PetElite)
+            {
+                if (petRig) UnityEngine.Object.Destroy(petRig.gameObject);
+                petRig = MinionRig.Create();
+                petRig.SetVariant(PetKind); petRig.SetDress(Town);
+                PetDress.Apply(petRig, PetElite);
+                petRig.transform.SetParent(root.transform, false);
+                petRigKind = PetKind; petRigElite = PetElite; petAt = target;
+                MinionRig.SpawnFx(root.transform.TransformPoint(new Vector3(petAt.x, 0f, petAt.y)));
+            }
+            var d = target - petAt; float dist = d.magnitude, moved = 0f;
+            if (dist > PetSnap) petAt = target;
+            else if (dist > 0.35f)
+            {
+                float v = dist > 2.5f ? PetRun : PetWalk;
+                moved = Mathf.Min(dist, v * dt);
+                petAt = ResolvePet(petAt + d / dist * moved);
+            }
+            petRig.MoveSpeed = Mathf.Lerp(petRig.MoveSpeed, dt > 0f ? moved / dt : 0f, 0.25f);
+            // 走路時面向前進方向；停下來看玩家
+            var face = moved > 1e-4f ? d : me - petAt;
+            var rot = Quaternion.Euler(0f, Yaw(face.sqrMagnitude > 1e-6f ? face : fwd), 0f);
+            petRig.transform.localPosition = new Vector3(petAt.x, 0f, petAt.y);
+            petRig.transform.localRotation = Quaternion.Slerp(petRig.transform.localRotation, rot, dt * 6f);
+        }
+
+        /// <summary>寵物的位置：不穿過建築、不出柵欄（居民身邊可以靠近）</summary>
+        Vector2 ResolvePet(Vector2 p)
+        {
+            foreach (var (c, r) in walls)
+            {
+                var v = p - c; float rr = r + 0.3f;
+                if (v.sqrMagnitude < rr * rr) p = c + (v.sqrMagnitude > 1e-6f ? v.normalized : Vector2.down) * rr;
+            }
+            return Fence(p, PlazaC, TownRadius, exits.ConvertAll(e => e.dir), GateHalf, ExitDepth + 0.5f);
         }
 
         /// <summary>把玩家（在城鎮座標）移到 to：移動整個城鎮</summary>

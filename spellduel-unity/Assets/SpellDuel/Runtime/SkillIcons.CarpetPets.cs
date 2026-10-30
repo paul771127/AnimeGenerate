@@ -5,7 +5,7 @@ namespace SpellDuel
  public static partial class SkillIcons
  {
   public static readonly string[] CarpetPetArtIds=BuildCarpetPetIds();
-  static string[] BuildCarpetPetIds(){var a=new List<string>();for(int i=0;i<48;i++)a.Add("bait_m"+i);a.AddRange(new[]{"food_basic","food_fine","food_star","mat_tame_seal","mat_cloud_silk","mat_wind_crystal","mat_sky_badge","mat_airship_compass","soul_sky_kite","soul_sky_eagle","soul_sky_glider","soul_sky_doll","soul_sky_captain","soul_sky_airship","skyweave_weapon","skyweave_head","skyweave_body","skyweave_boots","skyweave_trinket","bp_tailwind"});return a.ToArray();}
+  static string[] BuildCarpetPetIds(){var a=new List<string>();for(int i=0;i<48;i++)a.Add("bait_m"+i);foreach(var k in new[]{"fire","rock","shadow","plant","wing","tide","thunder","shell"})a.Add("food_star_"+k);a.AddRange(new[]{"food_basic","food_fine","food_star","mat_tame_seal","mat_cloud_silk","mat_wind_crystal","mat_sky_badge","mat_airship_compass","soul_sky_kite","soul_sky_eagle","soul_sky_glider","soul_sky_doll","soul_sky_captain","soul_sky_airship","skyweave_weapon","skyweave_head","skyweave_body","skyweave_boots","skyweave_trinket","bp_tailwind"});return a.ToArray();}
   public static bool IsCarpetPetArt(string id)=>id!=null&&Array.IndexOf(CarpetPetArtIds,id)>=0;
   static readonly int[] BaitPools={0,0,1,0,1,0,2,3,1,3,3,3,3,5,4,5,7,6,7,1,5,1,1,1,0,2,0,2,1,3,3,3,4,7,5,6,5,5,1,4,2,7,2,1,1,2,3,4};
   static readonly string[] PetInkColors={"#ed7543","#aaaac6","#ac76dd","#73bf72","#e9cb7d","#56bdd9","#b390f1","#de9172"};
@@ -32,7 +32,7 @@ namespace SpellDuel
     return true;
    }
    if(id.StartsWith("food_"))
-   {V col=id=="food_basic"?V.Hex("#bc885a"):id=="food_fine"?teal:V.Hex("#717bc8");PetShape(c,(x,y)=>Box(x,y,0,-.05f,.38f,.46f,0,.13f),col);PetShape(c,(x,y)=>Box(x,y,0,.4f,.40f,.07f,0,.035f),gold);if(id=="food_star"){c.Solid((x,y)=>Box(x,y,0,.04f,.21f,.07f,.785f),cream);c.Solid((x,y)=>Box(x,y,0,.04f,.07f,.21f,.785f),cream);}else PetPaw(c,0,-.07f,.8f,cream);return true;}
+   {int sp=Array.IndexOf(new[]{"food_star_fire","food_star_rock","food_star_shadow","food_star_plant","food_star_wing","food_star_tide","food_star_thunder","food_star_shell"},id);V col=sp>=0?V.Hex(PetInkColors[sp]):id=="food_basic"?V.Hex("#bc885a"):id=="food_fine"?teal:V.Hex("#717bc8");PetShape(c,(x,y)=>Box(x,y,0,-.05f,.38f,.46f,0,.13f),col);PetShape(c,(x,y)=>Box(x,y,0,.4f,.40f,.07f,0,.035f),gold);if(id.StartsWith("food_star")){c.Solid((x,y)=>Box(x,y,0,.04f,.21f,.07f,.785f),cream);c.Solid((x,y)=>Box(x,y,0,.04f,.07f,.21f,.785f),cream);}else PetPaw(c,0,-.07f,.8f,cream);return true;}
    if(id=="mat_cloud_silk"){PetShape(c,(x,y)=>Box(x,y,0,0,.3f,.4f,0,.08f),cream);for(int i=0;i<6;i++){float y=-.28f+i*.11f;c.Solid((x,b)=>Box(x,b,0,y,.34f,.025f,-.08f),teal);}return true;}
    if(id=="mat_wind_crystal"){PetShape(c,(x,y)=>Poly(x,y,new[]{0f,.62f,.38f,.1f,0f,-.55f,-.38f,.1f}),teal);c.Solid((x,y)=>Tri(x,y,0,.62f,0,-.55f,-.38f,.1f),cream,.65f);return true;}
    if(id=="bp_tailwind")

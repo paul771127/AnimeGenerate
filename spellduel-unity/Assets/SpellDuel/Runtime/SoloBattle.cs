@@ -827,6 +827,7 @@ namespace SpellDuel
             if (want && (!townWalk.Active || townWalk.Town != world.town)) townWalk.Enter(world.town, cam, cam.transform.position.y - 1.4f);
             else if (!want && townWalk.Active) townWalk.Leave();
             if (!townWalk.Active) return;
+            UpdateTownPet();   // 出戰的寵物在城鎮裡跟著走（SoloBattle.Pets.cs）
             if (TownWalking) townWalk.Update(cam, Mathf.Min(Time.deltaTime, 0.1f), false, world.PadLive ? world.PadMove : Vector2.zero, world.PadLive ? world.PadTurn : 0f);
             // 揮手打招呼：居民在面前時，張開手掌舉在鏡頭前 0.5 秒
             bool palm = TownWalking && Hand != null && Hand.HandVisible && Hand.Current == HandGesture.Shape.Open;

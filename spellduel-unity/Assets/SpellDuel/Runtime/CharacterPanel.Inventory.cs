@@ -87,7 +87,7 @@ namespace SpellDuel
 
             // ---- 寵物用品：誘餌、飼料
             rows = new List<InvRow>();
-            foreach (var f in Pets.Foods) { int n = Economy.Count(f.id); if (n > 0) rows.Add(new InvRow { key = "f_" + f.id, icon = f.icon, name = f.name, n = n, c = new Color(0.45f, 1f, 0.8f), body = $"寵物飼料：加 {f.xp} 經驗，{f.learn * 100f:0}% 機率學會新技能。\n・用法：「🐾 寵物」分頁選一隻寵物餵。\n・取得：{f.desc}。" }); }
+            foreach (var f in Pets.Foods) { int n = Economy.Count(f.id); if (n > 0) rows.Add(new InvRow { key = "f_" + f.id, icon = f.icon, name = f.name, n = n, c = new Color(0.45f, 1f, 0.8f), body = $"寵物飼料：加 {f.xp} 經驗" + (f.star ? $"，有機率學會{(f.pool.HasValue ? Pets.PoolName(f.pool.Value) + "系" : "寵物自己那一系")}的招（同系 {Pets.StarLearnSame * 100f:0}%、不同系 {Pets.StarLearnOther * 100f:0}%）" : "（只加經驗）") + $"。\n・用法：「🐾 寵物」分頁選一隻寵物餵。\n・說明：{f.desc}。" }); }
             foreach (var s in Pets.All)
             {
                 int n = Economy.Count(s.bait); if (n <= 0) continue;

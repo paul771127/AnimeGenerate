@@ -55,7 +55,8 @@ namespace SpellDuel
         } + $"・冷卻 {cd:0} 秒";
     }
 
-    public sealed class PetFood { public string id, name, icon, desc; public int xp, price; public float learn; }
+    /// <summary>飼料：旅伴糧、精養糧只加經驗；星露糧分 8 種屬性（pool），吃了有機率學會那一系的招（同系 20%、不同系 10%）</summary>
+    public sealed class PetFood { public string id, name, icon, desc; public int xp, price; public bool star; public PetPool? pool; }
 
     /// <summary>一隻養的寵物（存檔）</summary>
     public sealed class PetData
@@ -94,12 +95,33 @@ namespace SpellDuel
         public static PetSkill Skill(string id) => id != null && Skills.TryGetValue(id, out var s) ? s : null;
 
         // ---------------------------------------------------------------- 飼料
-        public static readonly PetFood[] Foods =
+        public const int StarXp = 1000, StarPrice = 800;
+        public const float StarLearnSame = 0.20f, StarLearnOther = 0.10f;
+        static readonly string[] PoolIcons = { "🔥", "🪨", "🌑", "🌿", "🪶", "🌊", "⚡", "🛡" };
+        public static string PoolIcon(PetPool p) => PoolIcons[(int)p];
+        /// <summary>某個屬性的星露糧</summary>
+        public static PetFood StarFood(PetPool p) => Food("food_star_" + p.ToString().ToLowerInvariant());
+        public static readonly PetFood[] Foods = BuildFoods();
+        static PetFood[] BuildFoods()
         {
-            new PetFood { id = "food_basic", name = "旅伴糧", icon = "🥣", xp = 80, learn = 0.08f, price = 120, desc = "城鎮買得到；故事關卡過關有 20% 機率掉 1 份" },
-            new PetFood { id = "food_fine", name = "精養糧", icon = "🍯", xp = 320, learn = 0.25f, price = 300, desc = "副本通關 25% 機率掉；或旅伴糧 3 份＋300 金調配" },
-            new PetFood { id = "food_star", name = "星露糧", icon = "✨", xp = 1000, learn = 0.55f, price = 800, desc = "副本通關 8% 機率掉；或精養糧 4 份＋馴獸印片 2＋800 金調配" },
-        };
+            var l = new List<PetFood>
+            {
+                new PetFood { id = "food_basic", name = "旅伴糧", icon = "🥣", xp = 80, price = 120, desc = "只加經驗。城鎮買得到；故事關卡過關有 20% 機率掉 1 份" },
+                new PetFood { id = "food_fine", name = "精養糧", icon = "🍯", xp = 320, price = 300, desc = "只加經驗。副本通關 25% 機率掉；或旅伴糧 3 份＋300 金調配" },
+            };
+            foreach (PetPool p in Enum.GetValues(typeof(PetPool)))
+                l.Add(new PetFood { id = "food_star_" + p.ToString().ToLowerInvariant(), name = $"{PoolName(p)}之星露糧", icon = PoolIcons[(int)p], xp = StarXp, price = StarPrice, star = true, pool = p,
+                    desc = $"加經驗，並有機率學會{PoolName(p)}系的招（{PoolName(p)}系寵物 {StarLearnSame * 100:0}%、其他寵物 {StarLearnOther * 100:0}%）。副本通關 8% 機率掉（屬性隨機）；或精養糧 4 份＋馴獸印片 2＋800 金調配" });
+            // 舊版的星露糧（還沒分屬性）：當成寵物自己那一系的
+            l.Add(new PetFood { id = "food_star", name = "星露糧（未分屬性）", icon = "✨", xp = StarXp, price = StarPrice, star = true, pool = null, desc = "舊版的星露糧：當成寵物自己那一系的星露糧" });
+            return l.ToArray();
+        }
+        /// <summary>吃這份飼料學新招的機率（旅伴糧、精養糧＝0）</summary>
+        public static float LearnChance(PetFood f, PetData p)
+        {
+            if (f == null || !f.star || p?.Species == null) return 0f;
+            return (f.pool ?? p.Species.pool) == p.Species.pool ? StarLearnSame : StarLearnOther;
+        }
         public static PetFood Food(string id) => Array.Find(Foods, f => f.id == id);
 
         // 每一系的基礎能力：HP1、每級 HP、ATK1、每級 ATK、普攻間隔、普攻射程
@@ -116,6 +138,16 @@ namespace SpellDuel
         };
         public static string PoolName(PetPool p) => p switch { PetPool.Fire => "火", PetPool.Rock => "岩", PetPool.Shadow => "影", PetPool.Plant => "植", PetPool.Wing => "翼", PetPool.Tide => "潮", PetPool.Thunder => "雷", _ => "甲" };
 
+        /// <summary>個體資質（使用者要求）：HP、攻擊各自 ±QualitySpread，由寵物編號決定（抓到就固定、每次讀檔都一樣）</summary>
+        public const float QualitySpread = 0.20f;
+        public static (float hp, float atk) Quality(long uid)
+        {
+            ulong z = (ulong)uid + 0x9E3779B97F4A7C15UL;   // splitmix64：不依賴 System.Random 的實作
+            float Next() { z += 0x9E3779B97F4A7C15UL; ulong x = z; x = (x ^ (x >> 30)) * 0xBF58476D1CE4E5B9UL; x = (x ^ (x >> 27)) * 0x94D049BB133111EBUL; x ^= x >> 31; return (x >> 11) / (float)(1UL << 53); }
+            return (1f + (Next() * 2f - 1f) * QualitySpread, 1f + (Next() * 2f - 1f) * QualitySpread);
+        }
+        public static int MaxHp(PetData p, int lv) => Mathf.Max(1, Mathf.RoundToInt(MaxHp(p.Species, lv) * Quality(p.uid).hp));
+        public static int Atk(PetData p, int lv) => Mathf.Max(1, Mathf.RoundToInt(Atk(p.Species, lv) * Quality(p.uid).atk));
         public static int MaxHp(PetSpecies s, int lv) => Mathf.RoundToInt((PoolStats[(int)s.pool, 0] + PoolStats[(int)s.pool, 1] * (lv - 1)) * (s.elite ? EliteHp : 1f));
         public static int Atk(PetSpecies s, int lv) => Mathf.RoundToInt((PoolStats[(int)s.pool, 2] + PoolStats[(int)s.pool, 3] * (lv - 1)) * (s.elite ? EliteAtk : 1f));
         public static float AttackGap(PetSpecies s) => PoolStats[(int)s.pool, 4];
@@ -151,14 +183,18 @@ namespace SpellDuel
             return ups;
         }
 
-        /// <summary>餵食：加經驗，再擲學新招（從同池還沒學的抽）；學滿 3 招就先放進 pendingLearn 等玩家選</summary>
+        /// <summary>
+        /// 餵食：加經驗；星露糧再擲學新招：學的是那個屬性（舊版未分屬性＝寵物自己那一系）還沒學的招，
+        /// 同系 StarLearnSame、不同系 StarLearnOther；學滿 3 招就先放進 pendingLearn 等玩家選要捨棄哪一招
+        /// </summary>
         public static (int ups, string learned, bool pending) Feed(PetData p, PetFood f, System.Random rng)
         {
             int ups = AddXp(p, f.xp);
-            var s = p.Species; if (s == null) return (ups, null, false);
+            var s = p.Species; if (s == null || !f.star) return (ups, null, false);
+            var pool = f.pool ?? s.pool;
             var cand = new List<string>();
-            foreach (var k in PoolOf(s.pool)) if (!p.skills.Contains(k.id) && k.id != p.pendingLearn) cand.Add(k.id);
-            if (cand.Count == 0 || rng.NextDouble() >= f.learn) return (ups, null, false);
+            foreach (var k in PoolOf(pool)) if (!p.skills.Contains(k.id) && k.id != p.pendingLearn) cand.Add(k.id);
+            if (cand.Count == 0 || rng.NextDouble() >= LearnChance(f, p)) return (ups, null, false);
             string got = cand[rng.Next(cand.Count)];
             if (p.skills.Count < MaxSkills) { p.skills.Add(got); return (ups, got, false); }
             p.pendingLearn = got; return (ups, got, true);
@@ -195,13 +231,14 @@ namespace SpellDuel
             Progress.Set("sd_pets", sb.ToString());
         }
         public static long ActiveUid { get { long.TryParse(Progress.Get("sd_pet_active") ?? "0", out var u); return u; } set => Progress.Set("sd_pet_active", value.ToString(CultureInfo.InvariantCulture)); }
-        /// <summary>新收服的寵物（Lv1、會一開始的那招）；收藏滿了回傳 null</summary>
-        public static PetData AddNew(int kind)
+        /// <summary>新收服的寵物（Lv1、從自己那一系的招裡隨機會一招；資質由編號決定）；收藏滿了回傳 null</summary>
+        public static PetData AddNew(int kind, System.Random rng = null)
         {
             var s = Get(kind); if (s == null) return null;
             var list = Load(); if (list.Count >= MaxRoster) return null;
             var d = new PetData { uid = DateTime.UtcNow.Ticks, kind = kind };
-            d.skills.Add(s.start);
+            var pool = PoolOf(s.pool);
+            d.skills.Add(pool.Count > 0 ? pool[(rng ?? new System.Random()).Next(pool.Count)].id : s.start);
             list.Add(d); Save(list);
             if (ActiveUid == 0) ActiveUid = d.uid;   // 第一隻：自動設為出戰
             return d;

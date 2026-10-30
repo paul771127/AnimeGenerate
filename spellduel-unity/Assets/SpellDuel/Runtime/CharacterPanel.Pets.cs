@@ -21,6 +21,11 @@ namespace SpellDuel
         long petSel; long releaseArm; float releaseArmUntil;
         readonly System.Random petRng = new System.Random();
 
+        static readonly Color[] PoolColors = { new Color(0.93f, 0.46f, 0.26f), new Color(0.67f, 0.67f, 0.78f), new Color(0.67f, 0.46f, 0.87f), new Color(0.45f, 0.75f, 0.45f), new Color(0.91f, 0.8f, 0.49f), new Color(0.34f, 0.74f, 0.85f), new Color(0.7f, 0.56f, 0.95f), new Color(0.87f, 0.57f, 0.45f) };
+        static Color PoolColor(PetPool p) => PoolColors[(int)p];
+        /// <summary>資質顏色：越好越金</summary>
+        static Color QualityColor(float q) => q >= 1.12f ? UiKit.Gold : q >= 1.0f ? new Color(0.6f, 1f, 0.7f) : q >= 0.9f ? Color.white : UiKit.Muted;
+
         void DrawPets(Rect view, CharacterProfile p, int fs, int fsS, float gap)
         {
             var list = Pets.Load();
@@ -69,20 +74,20 @@ namespace SpellDuel
                 PetPanelArt.Hero(new Rect(0,y,cw,lh*3.6f),cur.kind,cur.Name,$"{(sp.elite ? "菁英旅伴" : "冒險旅伴")} · {Pets.PoolName(sp.pool)}\n{(act==cur.uid ? "已設為出戰" : "休息中")} · Lv{cur.level}",fs,sp.elite?UiKit.Gold:new Color(.45f,1,.8f));
                 y+=lh*3.6f+gap;
                 Line($"{(sp.elite ? "🌟 菁英　" : "")}{cur.Name}（{sp.Name}・{Pets.PoolName(sp.pool)}系）", sp.elite ? new Color(1f, 0.82f, 0.4f) : new Color(0.45f, 1f, 0.8f), true);
-                Line($"Lv{cur.level}" + (lvNow < cur.level ? $"（出戰時 Lv{lvNow}：不超過主人等級）" : "") + $"　HP {Pets.MaxHp(sp, lvNow)}　攻擊 {Pets.Atk(sp, lvNow)}　普攻每 {Pets.AttackGap(sp):0.#} 秒", Color.white);
+                Line($"Lv{cur.level}" + (lvNow < cur.level ? $"（出戰時 Lv{lvNow}：不超過主人等級）" : "") + $"　HP {Pets.MaxHp(cur, lvNow)}　攻擊 {Pets.Atk(cur, lvNow)}　普攻每 {Pets.AttackGap(sp):0.#} 秒", Color.white);
+                { var (qh, qa) = Pets.Quality(cur.uid); Line($"資質　HP {qh * 100f:0}%　攻擊 {qa * 100f:0}%（同種寵物 ±{Pets.QualitySpread * 100f:0}% 的個體差異）", QualityColor((qh + qa) * 0.5f)); }
                 if (cur.level < Pets.MaxLevel) { UiKit.Bar(new Rect(0, y, cw, lh * 0.5f), cur.xp / (float)Pets.XpToNext(cur.level), new Color(0.45f, 1f, 0.8f), $"經驗 {cur.xp}/{Pets.XpToNext(cur.level)}（出戰時分到主人經驗的 40%）", fsS); y += lh * 0.6f; }
                 else Line("已經最高等級（餵食只會學技能）", UiKit.Muted);
                 Line($"技能 {cur.skills.Count}/{Pets.MaxSkills}（自動施放）", UiKit.Gold, true);
                 foreach (var id in cur.skills) { var k = Pets.Skill(id); if (k != null) Line($"・{k.name}：{k.Desc}", new Color(0.88f, 0.92f, 1f), false, 1.1f); }
-                var unlearned = Pets.PoolOf(sp.pool).FindAll(k => !cur.skills.Contains(k.id));
-                if (unlearned.Count > 0) Line("還能學：" + string.Join("、", unlearned.ConvertAll(k => k.name)), UiKit.Muted);
+                Line($"學新招：吃星露糧（{Pets.PoolName(sp.pool)}系的 {Pets.StarLearnSame * 100f:0}%、其他屬性 {Pets.StarLearnOther * 100f:0}% 學會該屬性的招）", UiKit.Muted);
 
                 // 學滿又抽到新招：替換哪一招或放棄
                 var nk = Pets.Skill(cur.pendingLearn);
                 if (nk != null)
                 {
                     Line($"✨ 想學「{nk.name}」：{nk.Desc}", new Color(1f, 0.9f, 0.5f), true, 1.2f);
-                    Line("技能已經 3 招：選一招換掉，或放棄這一招", new Color(1f, 0.9f, 0.5f));
+                    Line("技能已經 3 招：選一招捨棄換成新招，或放棄學這一招", new Color(1f, 0.9f, 0.5f));
                     float bw = (cw - gap * cur.skills.Count) / (cur.skills.Count + 1);
                     for (int i = 0; i < cur.skills.Count; i++)
                     {
@@ -94,23 +99,28 @@ namespace SpellDuel
                     y += lh * 1.3f;
                 }
 
-                // 餵食
-                Line("餵食（加經驗，有機率學新招）", UiKit.Gold, true);
+                // 餵食：旅伴糧、精養糧只加經驗；身上有的星露糧（各屬性）有機率學會該屬性的招
+                Line("餵食（旅伴糧、精養糧只加經驗；星露糧有機率學新招）", UiKit.Gold, true);
+                var feeds = new List<PetFood>();
+                foreach (var f in Pets.Foods) if (!f.star || Economy.Count(f.id) > 0) feeds.Add(f);
                 float fw = (cw - gap * 2) / 3f;
-                for (int i = 0; i < Pets.Foods.Length; i++)
+                for (int i = 0; i < feeds.Count; i++)
                 {
-                    var f = Pets.Foods[i]; int n = Economy.Count(f.id);
+                    var f = feeds[i]; int n = Economy.Count(f.id);
                     bool can = edit && n > 0 && cur.pendingLearn == null;
-                    if (PetPanelArt.ItemButton(new Rect(i * (fw + gap), y, fw, lh * 2.5f), f.id, $"{f.name}×{n}\n+{f.xp}經驗\n學招 {f.learn * 100f:0}%", Mathf.RoundToInt(fsS * 0.85f), new Color(0.45f, 1f, 0.8f), can))
+                    float lc = Pets.LearnChance(f, cur);
+                    var r = new Rect((i % 3) * (fw + gap), y + (i / 3) * (lh * 2.5f + gap * 0.3f), fw, lh * 2.5f);
+                    if (PetPanelArt.ItemButton(r, f.id, $"{f.name}×{n}\n+{f.xp}經驗\n{(lc > 0f ? $"學招 {lc * 100f:0}%" : "只加經驗")}", Mathf.RoundToInt(fsS * 0.85f), f.pool.HasValue ? PoolColor(f.pool.Value) : new Color(0.45f, 1f, 0.8f), can))
                     {
                         Economy.AddItem(f.id, -1);
                         var (ups, got, pend) = Pets.Feed(cur, f, petRng);
                         changed = true;
-                        Toast($"{cur.Name} 吃了{f.name}" + (ups > 0 ? $"，升到 Lv{cur.level}！" : "") + (got != null ? (pend ? $"　✨ 想學「{Pets.Skill(got).name}」（選要換掉哪一招）" : $"　✨ 學會了「{Pets.Skill(got).name}」！") : ""));
+                        Toast($"{cur.Name} 吃了{f.name}" + (ups > 0 ? $"，升到 Lv{cur.level}！" : "") + (got != null ? (pend ? $"　✨ 想學「{Pets.Skill(got).name}」（選要捨棄哪一招）" : $"　✨ 學會了「{Pets.Skill(got).name}」！") : ""));
                         Sfx.Play(got != null ? "levelup" : "heal", 0.6f, 1.2f);
                     }
                 }
-                y += lh * 2.6f;
+                y += ((feeds.Count + 2) / 3) * (lh * 2.5f + gap * 0.3f);
+                if (!feeds.Exists(f => f.star)) Line("沒有星露糧（副本通關會掉，或在城鎮調配；分 8 種屬性）", UiKit.Muted);
                 if (cur.pendingLearn != null) Line("先決定要不要學新招，才能再餵", UiKit.Muted);
 
                 // 出戰、放生
@@ -149,17 +159,28 @@ namespace SpellDuel
                     { Economy.Gold -= s.price; Economy.AddItem(s.bait, 1); Toast($"買了 {s.baitName}"); Sfx.Play("coin", 0.6f); }
                 }
                 y += ((shop.Count + 1) / 2) * (lh * 2.1f + gap * 0.3f) + gap * 0.5f;
-                var basic = Pets.Food("food_basic"); var fine = Pets.Food("food_fine"); var star = Pets.Food("food_star");
+                var basic = Pets.Food("food_basic"); var fine = Pets.Food("food_fine");
                 float tw = (cw - gap * 2) / 3f;
                 if (UiKit.Button(new Rect(0, y, tw, lh * 1.5f), $"{basic.icon}買{basic.name}\n{basic.price} 金", Mathf.RoundToInt(fsS * 0.85f), false, new Color(0.45f, 1f, 0.8f), Economy.Gold >= basic.price))
                 { Economy.Gold -= basic.price; Economy.AddItem(basic.id, 1); Toast($"買了 {basic.name}"); Sfx.Play("coin", 0.6f); }
                 bool canFine = Economy.Count(basic.id) >= 3 && Economy.Gold >= 300;
                 if (UiKit.Button(new Rect(tw + gap, y, tw, lh * 1.5f), $"⚗調配{fine.name}\n旅伴糧3＋300金", Mathf.RoundToInt(fsS * 0.85f), false, new Color(0.45f, 1f, 0.8f), canFine))
                 { Economy.AddItem(basic.id, -3); Economy.Gold -= 300; Economy.AddItem(fine.id, 1); Toast($"調配了 {fine.name}"); Sfx.Play("heal", 0.6f); }
-                bool canStar = Economy.Count(fine.id) >= 4 && Economy.Count(Pets.SealId) >= 2 && Economy.Gold >= 800;
-                if (UiKit.Button(new Rect((tw + gap) * 2, y, tw, lh * 1.5f), $"⚗調配{star.name}\n精養糧4＋印片2＋800金", Mathf.RoundToInt(fsS * 0.85f), false, new Color(0.45f, 1f, 0.8f), canStar))
-                { Economy.AddItem(fine.id, -4); Economy.AddItem(Pets.SealId, -2); Economy.Gold -= 800; Economy.AddItem(star.id, 1); Toast($"調配了 {star.name}"); Sfx.Play("heal", 0.6f); }
                 y += lh * 1.6f;
+                // 星露糧：選要哪一種屬性
+                bool canStar = Economy.Count(fine.id) >= 4 && Economy.Count(Pets.SealId) >= 2 && Economy.Gold >= Pets.StarPrice;
+                Line($"⚗ 調配星露糧（精養糧 4＋馴獸印片 2＋{Pets.StarPrice} 金；選屬性）", UiKit.Gold, true);
+                float sw = (cw - gap * 3) / 4f;
+                int si = 0;
+                foreach (PetPool pp in System.Enum.GetValues(typeof(PetPool)))
+                {
+                    var sf = Pets.StarFood(pp);
+                    var r = new Rect((si % 4) * (sw + gap), y + (si / 4) * (lh * 1.4f + gap * 0.3f), sw, lh * 1.4f);
+                    if (UiKit.Button(r, $"{sf.icon}{Pets.PoolName(pp)}", Mathf.RoundToInt(fsS * 0.85f), false, PoolColor(pp), canStar))
+                    { Economy.AddItem(fine.id, -4); Economy.AddItem(Pets.SealId, -2); Economy.Gold -= Pets.StarPrice; Economy.AddItem(sf.id, 1); Toast($"調配了 {sf.name}"); Sfx.Play("heal", 0.6f); }
+                    si++;
+                }
+                y += 2 * (lh * 1.4f + gap * 0.3f);
                 // 菁英誘餌：這一章的菁英，馴獸印片 8 枚＋金幣
                 var elites = Pets.All.FindAll(s => s.elite && s.chapter == town);
                 if (elites.Count > 0)

@@ -82,13 +82,13 @@ namespace SpellDuel
         {
             var s = d.Species; if (s == null || petBody != null) return null;
             int lv = Pets.EffectiveLevel(d, ownerLevel);
-            int hp = Pets.MaxHp(s, lv);
+            int hp = Pets.MaxHp(d, lv);   // 含個體資質
             var r = Fighter.Flat(player.forward); if (r == Vector3.zero) r = Vector3.forward;
             var at = player.Feet + new Vector3(r.z, 0f, -r.x) * 0.9f - r * 0.3f;
             var n = SpawnNpc("pet_" + d.uid, $"🐾 {d.Name}", "priest", 0, false, hp, 0, at);
             n.maxHp = hp; n.hp = hp; n.dmgMul = 1f;
             n.tamedKind = s.kind; n.localFriend = true;
-            n.petUid = d.uid; n.petAtk = Pets.Atk(s, lv); n.petGap = Pets.AttackGap(s); n.petLevel = lv;
+            n.petUid = d.uid; n.petAtk = Pets.Atk(d, lv); n.petGap = Pets.AttackGap(s); n.petLevel = lv;
             n.petSkills = new List<string>(d.skills);
             n.bodyRadius = MinionRadius[Mathf.Clamp(s.kind, 0, MinionRadius.Length - 1)];
             n.head = new Vector3(at.x, MinionHead[Mathf.Clamp(s.kind, 0, MinionHead.Length - 1)] + Mathf.Min(BaseAlt(s.kind), 1.2f), at.z);

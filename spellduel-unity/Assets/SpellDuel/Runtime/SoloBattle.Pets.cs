@@ -18,6 +18,20 @@ namespace SpellDuel
         /// <summary>這個模式可以帶寵物（故事、副本、無盡、無盡塔；試煉、教學、每日挑戰不行）</summary>
         bool PetsAllowed => prof != null && endless && classTrial == null && !tutorial && !IsTrial && !IsJobTrial && !Watching;
 
+        /// <summary>城鎮裡跟著走的寵物＝出戰中的那一隻（每秒重讀一次寵物收藏，換出戰、放生後會跟著變）</summary>
+        float townPetNext; int townPetKind = -1; bool townPetElite;
+        void UpdateTownPet()
+        {
+            if (Time.time >= townPetNext)
+            {
+                townPetNext = Time.time + 1f;
+                townPetKind = -1; townPetElite = false;
+                long act = prof != null ? Pets.ActiveUid : 0;
+                if (act != 0) { var d = Pets.Load().Find(x => x.uid == act); if (d?.Species != null) { townPetKind = d.kind; townPetElite = d.Species.elite; } }
+            }
+            townWalk.PetKind = townPetKind; townWalk.PetElite = townPetElite;
+        }
+
         /// <summary>每幀（戰鬥中）：新的一場就叫出寵物；寵物倒下提示一次</summary>
         void UpdatePets()
         {
@@ -68,7 +82,7 @@ namespace SpellDuel
 
         void OnPetCaught(int kind, Vector3 at)
         {
-            var d = Pets.AddNew(kind);
+            var d = Pets.AddNew(kind, dropRng);
             if (d == null) { Say($"🐾 寵物收藏滿了（{Pets.MaxRoster} 隻）：先到「📜 角色」→「🐾 寵物」放生一些", 3f); return; }
             Say($"🐾 收服了{d.Name}！到「📜 角色」→「🐾 寵物」設為出戰（下一場起）", 3.5f);
             Sfx.Play("levelup", 0.7f, 1.2f); Haptics.Play(Haptics.Kind.Success);
@@ -93,7 +107,7 @@ namespace SpellDuel
         {
             if (battle == null || !battle.stageCleared || prof == null) return;
             void Give(string id) { var f = Pets.Food(id); Economy.AddItem(id, 1); floaters.Add(new Floater { text = $"{f.icon} 得到 {f.name}（寵物飼料）", color = new Color(0.45f, 1f, 0.8f), born = Time.time, screen = true }); }
-            if (dungeon != null) { if (dropRng.NextDouble() < 0.25) Give("food_fine"); if (dropRng.NextDouble() < 0.08) Give("food_star"); }
+            if (dungeon != null) { if (dropRng.NextDouble() < 0.25) Give("food_fine"); if (dropRng.NextDouble() < 0.08) Give(Pets.StarFood((PetPool)dropRng.Next(8)).id); }   // 星露糧：屬性隨機
             else if (storyStage != null && dropRng.NextDouble() < 0.2) Give("food_basic");
         }
 
