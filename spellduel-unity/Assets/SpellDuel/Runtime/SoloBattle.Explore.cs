@@ -176,6 +176,15 @@ namespace SpellDuel
                     keep.Add(k);
                     if (exWalls.ContainsKey(k)) continue;
                     var t = map.TerrainAt(x, z);
+                    if (!gate)
+                    {
+                        // Codex 的地形牆：地面中心、自己依格子大小縮放
+                        var w = ExploreArt.CreateWall(t, x, z, ExploreMap.CellSize);
+                        w.transform.SetParent(exRoot, false);
+                        w.transform.localPosition = map.World(x, z);
+                        exWalls[k] = w;
+                        continue;
+                    }
                     var go = Instantiate(gate ? (map.SealOf(x, z) != null ? exSealTpl : exGateTpl) : exTerrainTpl.TryGetValue(t, out var tt) ? tt : exWallTpl, exRoot);
                     go.SetActive(true);
                     float h = gate ? 2.2f : t == ExTerrain.Water ? 0.06f : t == ExTerrain.Palisade ? 2.6f : t == ExTerrain.Ruin ? 2.2f : t == ExTerrain.Cave ? 3f : 2.4f + ((x * 7 + z * 13) % 5) * 0.12f;   // 高低有一點變化；湖水是平的
