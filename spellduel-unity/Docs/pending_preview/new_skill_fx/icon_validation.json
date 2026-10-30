@@ -1,0 +1,15 @@
+{
+  "newIcons": 51,
+  "unique": true,
+  "deterministic": true,
+  "legacyUnchanged": 157,
+  "sizes": [
+    8,
+    32,
+    48,
+    64,
+    128
+  ],
+  "baseline": "00c036a",
+  "type": "pure C# icon raster validation, not Unity compilation"
+}

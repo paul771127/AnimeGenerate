@@ -75,13 +75,13 @@
         {
             "id": "bp_planter",
             "cls": "novice",
-            "triangles": 712,
+            "triangles": 1272,
             "restored": true
         },
         {
             "id": "bp_planter",
             "cls": "priest",
-            "triangles": 712,
+            "triangles": 1272,
             "restored": true
         },
         {
@@ -99,43 +99,43 @@
         {
             "id": "bp_jelly",
             "cls": "swordsman",
-            "triangles": 432,
+            "triangles": 468,
             "restored": true
         },
         {
             "id": "bp_jelly",
             "cls": "archer",
-            "triangles": 432,
+            "triangles": 468,
             "restored": true
         },
         {
             "id": "bp_jelly",
             "cls": "mage",
-            "triangles": 432,
+            "triangles": 468,
             "restored": true
         },
         {
             "id": "bp_shark",
             "cls": "novice",
-            "triangles": 752,
+            "triangles": 996,
             "restored": true
         },
         {
             "id": "bp_shark",
             "cls": "priest",
-            "triangles": 752,
+            "triangles": 996,
             "restored": true
         },
         {
             "id": "bp_trophy",
             "cls": "novice",
-            "triangles": 656,
+            "triangles": 1020,
             "restored": true
         },
         {
             "id": "bp_trophy",
             "cls": "priest",
-            "triangles": 656,
+            "triangles": 1020,
             "restored": true
         },
         {
@@ -159,49 +159,49 @@
         {
             "id": "bp_neonhalo",
             "cls": "novice",
-            "triangles": 512,
+            "triangles": 554,
             "restored": true
         },
         {
             "id": "bp_neonhalo",
             "cls": "priest",
-            "triangles": 512,
+            "triangles": 554,
             "restored": true
         },
         {
             "id": "bp_luckycat",
             "cls": "novice",
-            "triangles": 480,
+            "triangles": 700,
             "restored": true
         },
         {
             "id": "bp_luckycat",
             "cls": "priest",
-            "triangles": 480,
+            "triangles": 700,
             "restored": true
         },
         {
             "id": "bp_hourglass",
             "cls": "novice",
-            "triangles": 148,
+            "triangles": 244,
             "restored": true
         },
         {
             "id": "bp_hourglass",
             "cls": "priest",
-            "triangles": 148,
+            "triangles": 244,
             "restored": true
         },
         {
             "id": "bp_camel",
             "cls": "novice",
-            "triangles": 620,
+            "triangles": 804,
             "restored": true
         },
         {
             "id": "bp_camel",
             "cls": "priest",
-            "triangles": 620,
+            "triangles": 804,
             "restored": true
         }
     ],
