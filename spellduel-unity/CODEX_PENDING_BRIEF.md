@@ -771,3 +771,8 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 ### 2026-10-30 故事探索 3：景物靜態模型
 - CreateProp 完成 11 種景物；依 radius 縮放，tree 具有棕櫚、榕樹、蕨類、食人花、發光藤五型，其他景物提供三個變體鍵。篝火火焰為獨立 Fire 子物件。
 - 更新分工：使用者指定動畫由另一個 session 製作，本批只做靜態模型與狀態切換；將依新增 CODEX_TASK_EXPLORE_FX_KEYFRAMES.md 輸出 16 張實際模型靜態首尾圖。
+
+### 2026-10-30 故事探索 5／12：藤蔓門、封印與岔路物件
+- CreateGate／SetGateOpen、CreateSeal／SetSealOpen、CreateSwitch／SetSwitchDone 已提供。只即時切換靜態狀態，不含 Update、時間軸或粒子。
+- 動畫子物件：Closed/Vine_0～5、RootKnot_*、DoorLeft／DoorRight、BronzeLock、StoneDoor、Socket_0～2/Lit、PressurePlate/Rune、BronzeKey、JadeShard。SetSealOpen 每次也讀取原 ExSeal.have 更新凹槽，進度變動時可重複呼叫，不修改資料。
+- 為優先提供動畫首尾圖，鑰匙、碎片與壓板與門同批先做；其餘地標／競技場繼續完成。
