@@ -9,7 +9,7 @@ namespace SpellDuel
     /// 所有座標都是「場地座標」（公尺）：原點＝場地中心，地板 y = 0，Y 朝上。
     /// 因為不依賴 Unity 的原生功能，可以在編輯器外直接模擬測試。
     /// </summary>
-    public class Fighter
+    public partial class Fighter
     {
         public const float BodyRadius = 0.28f;
 
@@ -1504,6 +1504,7 @@ namespace SpellDuel
                 else m.outsideSince = 0f;
                 if (UpdateLure(m, dt)) continue;   // 吃誘餌中：不攻擊（Combat.Pets.cs）
                 if (m.staggerUntil > now) { m.windupUntil = 0f; continue; }   // 受擊硬直中：不動、不出手
+                if (m.exMon != null && !m.exAware) { ExPatrol(m, dt); continue; }   // 故事探索：還沒發現玩家，照路線巡邏（Combat.Explore.cs）
                 bool esUser = m.variant > 0 && EnemySkills.Has(m.variant);   // 補師、輔助型、人形、砂靈：新招式（Combat.EnemySkills.cs）
                 if (esUser) TickEnemySkillState(m);
                 if (esUser && m.esCast != null) { TickEnemyCast(m, tgt); continue; }
@@ -3294,6 +3295,7 @@ namespace SpellDuel
                         if (d.until <= now) m.dots.RemoveAt(i);
                     }
             UpdateMinions(dt);
+            if (explore != null) UpdateExplore(dt);   // 故事探索（Combat.Explore.cs）
             UpdateNpcs(dt);   // 副本的劇情人物（Combat.Npc.cs）
             Time_dt = dt;
             UpdateEndless();
