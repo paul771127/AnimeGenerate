@@ -22,7 +22,7 @@ namespace SpellDuel.EditorTools
    }
    foreach(var p in map.props){var g=ExploreArt.CreateProp(p);g.transform.SetParent(root.transform,false);g.transform.localPosition=p.pos;}
    foreach(var l in map.landmarks){var g=ExploreArt.CreateLandmark(l,map);g.transform.SetParent(root.transform,false);}
-   foreach(var a in map.arenas){var g=ExploreArt.CreateArena(a.n,a.radius);g.transform.SetParent(root.transform,false);g.transform.localPosition=a.center;}
+   foreach(var a in map.arenas){var g=ExploreArt.CreateArena(a.n,a.radius);g.transform.SetParent(root.transform,false);g.transform.localPosition=a.center;var rc=map.Cell(a.center+g.transform.Find("RimSet").localPosition);if(map.At(rc.x,rc.y)!=ExCell.Wall)throw new Exception("Arena scenery on open path "+a.n);}
    foreach(var sw in map.switches){var g=ExploreArt.CreateSwitch(sw);g.transform.SetParent(root.transform,false);g.transform.localPosition=sw.pos;}
    if(root.GetComponentInChildren<Collider>())throw new Exception("Explore art introduced a collider");
    foreach(var n in map.npcs){var rig=CharacterRig.Create(n.look);rig.InCombat=false;ExploreArt.DressNpc(rig,n.id);rig.transform.SetParent(root.transform,false);rig.transform.localPosition=n.pos;}

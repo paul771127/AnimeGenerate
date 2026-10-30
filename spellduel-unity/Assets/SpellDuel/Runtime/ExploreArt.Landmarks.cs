@@ -45,12 +45,14 @@ namespace SpellDuel
    var root=Root("Arena "+n);float r=Mathf.Max(1,radius);
    Part(root.transform,"arena/boundary/"+n,b=>{b.Ring(V(0,.012f,0),1,.013f,new Color(.48f,.75f,.53f,.33f),48);for(int i=0;i<12;i++){float a=i*Mathf.PI/6;var p=V(Mathf.Cos(a)*.97f,.014f,Mathf.Sin(a)*.97f);b.Gem(p,V(.025f,.002f,.025f),new Color(.7f,.9f,.6f,.4f),4);}},Vector3.zero,true).localScale=V(r,1,r);
    // Dress only the far rim, not the fighting area. The raised silhouette is outside the supplied radius.
-   var rim=SkyArt.Node(root.transform,"RimSet",V(0,0,r+.7f));
+   // Fixed JungleMaze wall anchors; the second arena's north centre is a gate, so offset one cell east.
+   var rim=SkyArt.Node(root.transform,"RimSet",V(n==2?3:0,0,r+(n==1?2:n==2?3:n==3?6:7)));
    Part(rim,"arena/set/"+n,b=>{
     if(n==1){for(int i=-2;i<=2;i++)b.Vine(V(i*.7f,0,0),V(i*.55f,2.2f,0),.4f,.2f,Bark,6);Leaves(b,V(0,1.5f,0),1.2f,Moss);}
     else if(n==2){for(int i=-1;i<=1;i++)Mushroom(b,V(i*.9f,0,0),.6f+(i==0?.3f:0),i+1);}
     else if(n==3){for(int s=-1;s<=1;s+=2){b.Rod(V(s,0,0),V(s,2.6f,0),.08f,Bark);Skull(b,V(s,2.3f,0),.5f);for(int i=0;i<3;i++)b.Frond(V(s,2.2f,0),V(s+.15f,1.6f-i*.13f,0),.09f,i%2==0?Jade:Bone);}}
     else {b.Rod(Vector3.zero,V(0,.5f,0),1.1f,Bark,8);for(int i=-2;i<=2;i++)b.Vine(V(i*.45f,0,.3f),V(i*.4f,2.8f-Mathf.Abs(i)*.4f,0),i*.12f,.20f,Dark,6);b.Box(V(0,.65f,.35f),V(1.3f,.25f,.75f),Bark);for(int s=-1;s<=1;s+=2)b.Vine(V(s*1.4f,0,0),V(s*.6f,1,.4f),s*.3f,.10f,Glow(new Color(.43f,.15f,.52f)),6);}
+    b.ClampCell(1.42f);
    });return root;
   }
   public static GameObject CreateGround(ExGround g,int x,int z,float cell)
