@@ -1938,7 +1938,18 @@ namespace SpellDuel
                     wg.GetComponent<Renderer>().material.color = new Color(1f, 0.12f, 0.05f, (0.18f + 0.35f * pr) * (0.6f + 0.4f * pk));
                 }
                 else if (minionWarn.TryGetValue(m, out var wg0) && wg0) wg0.SetActive(false);
-                if (minionLastHp.TryGetValue(m, out var lh) && m.hp < lh - 0.01f) { rig.PlayHit(); if (skyBody) skyBody.PlayHit(); VariantHit(m); }
+                if (minionLastHp.TryGetValue(m, out var lh) && m.hp < lh - 0.01f)
+                {
+                    rig.PlayHit(); if (skyBody) skyBody.PlayHit(); VariantHit(m);
+                    // 每掉 1/3 血：受擊硬直動作（往後仰、退一步；這次攻擊被取消）。用血量判斷，隊友的手機也看得到
+                    if (m.Alive && Battle.StaggerTierOf(m.hp, m.maxHp) > Battle.StaggerTierOf(lh, m.maxHp))
+                    {
+                        var away = WorldFrame.DirFromWorld(Fighter.Flat(m.Feet - Me.Feet));
+                        StaggerJolt.Play(rig.gameObject, away);
+                        floaters.Add(new Floater { posMap = m.Chest + Vector3.up * 0.3f, text = "受擊！", color = new Color(1f, 0.85f, 0.45f), born = Time.time });
+                        Sfx.Play("hit", 0.8f, 0.7f);
+                    }
+                }
                 minionLastHp[m] = m.hp;
             }
             foreach (var kv in new List<KeyValuePair<Fighter, MinionRig>>(minionGo))

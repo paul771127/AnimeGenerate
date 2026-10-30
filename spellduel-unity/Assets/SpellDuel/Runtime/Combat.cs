@@ -134,6 +134,8 @@ namespace SpellDuel
         /// <summary>副本的劇情人物：0 我方（保護目標、友軍）、1 敵方、2 第三勢力（誰都打）；-1＝不是劇情人物</summary>
         public int npcSide = -1; public string npcId; public bool npcEscort; public float npcNextAtk;
         public Vector3 aimPoint;        // Boss 熔岩躍擊／樹根爆發的落點（蓄力時畫紅圈）
+        /// <summary>受擊硬直（使用者要求）：小怪、菁英、稀有怪每掉 1/3 血（剩 2/3、1/3）硬直一次，正在準備的攻擊取消</summary>
+        public int staggerTier; public float staggerUntil;
         public float dashUntil; public Vector3 dashDir; public bool dashHit;   // 荊棘衝鋒獸／跳躍魚／俯衝海鳥：衝刺中
         public float dashStart, dashFromAlt;   // 衝刺開始時間、俯衝開始的高度
         public float alt;               // 離地高度（海鳥飛在空中、水母和河豚浮著、跳躍魚跳起來）；0＝在地上
@@ -1498,6 +1500,7 @@ namespace SpellDuel
                 }
                 else m.outsideSince = 0f;
                 if (UpdateLure(m, dt)) continue;   // 吃誘餌中：不攻擊（Combat.Pets.cs）
+                if (m.staggerUntil > now) { m.windupUntil = 0f; continue; }   // 受擊硬直中：不動、不出手
                 bool esUser = m.variant > 0 && EnemySkills.Has(m.variant);   // 補師、輔助型、人形、砂靈：新招式（Combat.EnemySkills.cs）
                 if (esUser) TickEnemySkillState(m);
                 if (esUser && m.esCast != null) { TickEnemyCast(m, tgt); continue; }
@@ -4669,6 +4672,7 @@ namespace SpellDuel
             // 不死之軀：致命傷害留 1 HP，無敵 3 秒
             if (f.undyingUntil > now && f.hp - dmg < 1f) { dmg = Mathf.Max(0f, f.hp - 1f); f.undyingUntil = 0f; f.invulnUntil = now + 3f; Emit("buff", f.Chest, new Color(0.8f, 0.1f, 0.1f), "不死之軀！無敵 3 秒"); }
             f.hp = Mathf.Max(0, f.hp - dmg);
+            if (f.isMinion && f.Alive && dmg > 0f) CheckStagger(f);   // 每掉 1/3 血：受擊硬直、取消這次攻擊
             if (f.isMinion && f.lureUntil > now && !f.lureRolled && f.Alive && f.hp < f.maxHp * Pets.CaptureHp && TryCapture(f)) return;   // 吃餌中第一次低於 30%：擲收服；成功＝離開戰場、不算擊倒
             // 主教的復活祝福：倒下時以 30% HP 站起來
             if (!f.Alive && f.blessUntil > now) { if (f == player) playerDown = false; f.blessUntil = 0f; f.hp = Mathf.Round(f.maxHp * 0.3f); Emit("heal", f.Chest, new Color(1f, 0.95f, 0.6f), "復活祝福！"); }
@@ -4687,6 +4691,22 @@ namespace SpellDuel
                 else if (endless && f == enemy) OnBossDown();
                 else Emit("win", f.Chest, Color.white, null);
             }
+        }
+
+        // ------------------------------------------------------------ 受擊硬直（使用者要求：小怪、菁英、稀有怪；Boss 不算）
+        public const float StaggerTime = 0.9f;
+        /// <summary>目前掉到第幾個 1/3（0＝還在 2/3 以上、1＝2/3～1/3、2＝1/3 以下）</summary>
+        public static int StaggerTierOf(float hp, float maxHp) => maxHp <= 0f ? 0 : Mathf.Clamp(Mathf.FloorToInt((1f - hp / maxHp) * 3f + 1e-4f), 0, 2);
+        void CheckStagger(Fighter m)
+        {
+            int tier = StaggerTierOf(m.hp, m.maxHp);
+            if (tier <= m.staggerTier) return;
+            m.staggerTier = tier;   // 一下打掉超過 1/3：只硬直一次
+            if (m.esCast != null) CancelEnemyCast(m, null);                 // 招式讀條：預警一起取消（也通知隊友）
+            if (eliteStates.TryGetValue(m, out var es)) es.until = 0f;      // 菁英的招式預備
+            m.windupUntil = 0f; m.dashUntil = 0f; m.fuseAt = 0f; m.charging = null; m.armed = null;
+            m.staggerUntil = now + StaggerTime;
+            m.attackReadyAt = Mathf.Max(m.attackReadyAt, now + StaggerTime + 0.3f);
         }
 
         // ------------------------------------------------------------ 小工具

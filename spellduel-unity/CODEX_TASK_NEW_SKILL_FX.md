@@ -130,6 +130,11 @@ Claude 新增了 10 種流派被動（各進階職業技能樹最下面一排）
 
 流派爆發技能（圖示＋施放特效，持續中用 **C** 的 `TeamBuffAura` 介面顯示）：`retribution` 制裁之怒（聖騎士）、`swordfervor` 劍意沸騰（劍仙）、`killinstinct` 獵殺本能（神射手）、`huntfrenzy` 狩獵狂熱（遊俠）、`chainstorm` 雷鏈風暴（大魔導士）、`soulharvest` 靈魂豐收（召喚師）、`renjutsu` 連環印（忍者）、`reaperdance` 死神之舞（影舞者）、`graceflow` 恩典滿溢（主教）、`martyrflame` 殉道烈焰（審判者）。
 
+## B5. 小怪、菁英、稀有怪的受擊硬直動作（使用者要求）
+
+敵人（Boss 除外）每掉 1/3 血（剩 2/3、剩 1/3 各一次）會硬直 0.9 秒，正在準備的攻擊取消。現在用通用的 `StaggerJolt`（整個模型往後仰 28°、退 0.15m 再站回來）＋ `PlayHit` 閃白。
+請在 `MinionRig`（含海洋、植物、菁英）、`VariantRig`、`SkyEnemyRig` 加 `PlayStagger(float seconds)`：各模型專屬的大受擊動作（被打退、身體大幅後仰或縮起來、武器／爪子垂下、頭暈星星之類），seconds＝0.9。做好後寫在實作紀錄，Claude 改呼叫它（`StaggerJolt` 留給沒有專屬動作的模型）。
+
 ## C. 隊伍增益共用介面（4、5、7、8 用）
 
 - `void SpellFx.TeamBuffCast(string skillId, Transform owner)`：施放瞬間的特效（自己和每個吃到增益的隊友都會各呼叫一次）。
@@ -143,4 +148,4 @@ Claude 新增了 10 種流派被動（各進階職業技能樹最下面一排）
 
 ## 交付順序
 
-**1（光龍）→ 6（地雷）→ 9（獵鷹俯衝）→ C（4、5、7、8）→ 2、3 → B2 → B3 → B4 → D**。每做完一項就推，Claude 會接線。
+**1（光龍）→ 6（地雷）→ 9（獵鷹俯衝）→ C（4、5、7、8）→ 2、3 → B2 → B3 → B4 → B5 → D**。每做完一項就推，Claude 會接線。
