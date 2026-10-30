@@ -49,6 +49,7 @@ namespace SpellDuel.EditorTools
   }
   static void Catalogue(Camera cam)
   {
+   GroundCatalogue(cam);
    foreach(string kind in new[]{"tree","stump","boulder","mushroom","tent","crate","totem","pillar","statue","campfire","altar"})for(int i=0;i<(kind=="tree"?5:3);i++)
    {var g=ExploreArt.CreateProp(new ExProp{kind=kind,variant=i,radius=1});Fit(cam,g,"explore_prop_"+kind+"_"+i);UnityEngine.Object.DestroyImmediate(g);}
    foreach(ExTerrain t in Enum.GetValues(typeof(ExTerrain))){var g=ExploreArt.CreateWall(t,1,2,3);Fit(cam,g,"explore_wall_"+t);UnityEngine.Object.DestroyImmediate(g);}
@@ -65,7 +66,27 @@ namespace SpellDuel.EditorTools
    var map=JungleMaze.Build();foreach(var seal in map.seals){var g=ExploreArt.CreateSeal(seal,0,0,3);Fit(cam,g,"explore_"+seal.id+"_closed");seal.have=seal.need;ExploreArt.SetSealOpen(g,false);Fit(cam,g,"explore_"+seal.id+"_ready");ExploreArt.SetSealOpen(g,true);if(g.transform.Find("Closed").gameObject.activeSelf)throw new Exception("Seal did not hide");ExploreArt.SetSealOpen(g,false);if(!g.transform.Find("Closed").gameObject.activeSelf)throw new Exception("Seal did not close");UnityEngine.Object.DestroyImmediate(g);}
    foreach(var npc in map.npcs){var rig=CharacterRig.Create(npc.look);rig.InCombat=false;ExploreArt.DressNpc(rig,npc.id);Fit(cam,rig.gameObject,"explore_npc_"+npc.id);UnityEngine.Object.DestroyImmediate(rig.gameObject);}
    // Warm factories twice: the second cycle must reuse every mesh and material.
-   int mesh=0,mat=0;for(int pass=0;pass<2;pass++){foreach(ExTerrain t in Enum.GetValues(typeof(ExTerrain)))for(int i=0;i<4;i++)UnityEngine.Object.DestroyImmediate(ExploreArt.CreateWall(t,i,0,3));for(int i=0;i<5;i++)UnityEngine.Object.DestroyImmediate(ExploreArt.CreateProp(new ExProp{kind="tree",variant=i,radius=.6f}));int m=Resources.FindObjectsOfTypeAll<Mesh>().Length,mt=Resources.FindObjectsOfTypeAll<Material>().Length;if(pass==1&&(m!=mesh||mt!=mat))throw new Exception("Explore factory failed cache check");mesh=m;mat=mt;}
+   int mesh=0,mat=0,tex=0;for(int pass=0;pass<2;pass++){foreach(ExTerrain t in Enum.GetValues(typeof(ExTerrain)))for(int i=0;i<4;i++)UnityEngine.Object.DestroyImmediate(ExploreArt.CreateWall(t,i,0,3));foreach(ExGround g in Enum.GetValues(typeof(ExGround)))UnityEngine.Object.DestroyImmediate(ExploreArt.CreateGround(g,17,23,3));for(int i=0;i<5;i++)UnityEngine.Object.DestroyImmediate(ExploreArt.CreateProp(new ExProp{kind="tree",variant=i,radius=.6f}));int m=Resources.FindObjectsOfTypeAll<Mesh>().Length,mt=Resources.FindObjectsOfTypeAll<Material>().Length,tx=Resources.FindObjectsOfTypeAll<Texture2D>().Length;if(pass==1&&(m!=mesh||mt!=mat||tx!=tex))throw new Exception("Explore factory failed cache check");mesh=m;mat=mt;tex=tx;}
+  }
+  static void GroundCatalogue(Camera cam)
+  {
+   var backing=GameObject.CreatePrimitive(PrimitiveType.Plane);backing.name="Preview only neutral AR floor";backing.transform.position=Vector3.down*.02f;backing.transform.localScale=Vector3.one*1.2f;
+   UnityEngine.Object.DestroyImmediate(backing.GetComponent<Collider>());var mat=new Material(Shader.Find("Unlit/Color"));mat.color=new Color(.48f,.47f,.43f);backing.GetComponent<Renderer>().sharedMaterial=mat;
+   foreach(ExGround type in Enum.GetValues(typeof(ExGround)))
+   {
+    var grid=new GameObject("Ground nine cell seam check");
+    for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)
+    {
+     var g=ExploreArt.CreateGround(type,x,z,3);g.transform.SetParent(grid.transform,false);g.transform.localPosition=new Vector3(x*3,0,z*3);
+     var r=g.GetComponentInChildren<Renderer>();var texture=r.sharedMaterial.mainTexture as Texture2D;
+     if(g.GetComponentInChildren<Collider>()||!texture||texture.mipmapCount<2||texture.wrapMode!=TextureWrapMode.Repeat||r.sharedMaterial.shader.name!="SpellDuel/ExploreGround"||!r.sharedMaterial.shader.isSupported)throw new Exception("Ground material audit failed: "+type);
+     if(g.GetComponentInChildren<MeshFilter>().sharedMesh.triangles.Length!=6)throw new Exception("Ground tile exceeds two triangles");
+    }
+    cam.orthographic=true;cam.orthographicSize=4.7f;cam.transform.position=Vector3.up*9;cam.transform.rotation=Quaternion.Euler(90,0,0);Save(cam,"explore_ground_"+type+"_top",960,960);
+    cam.orthographic=false;cam.fieldOfView=65;cam.transform.position=new Vector3(.4f,1.65f,-3.6f);cam.transform.LookAt(new Vector3(0,0,.5f));Save(cam,"explore_ground_"+type+"_eye",960,960);UnityEngine.Object.DestroyImmediate(grid);
+   }
+   UnityEngine.Object.DestroyImmediate(backing);UnityEngine.Object.DestroyImmediate(mat);cam.orthographic=false;cam.fieldOfView=35;
+   File.WriteAllText("snapshots/explore_ground_audit.json","{\"types\":5,\"trianglesPerTile\":2,\"generatedTextures\":true,\"mipmaps\":true,\"repeatingTextures\":true,\"noColliders\":true,\"neutralFloorPreviewOnly\":true}");
   }
   static void Fit(Camera cam,GameObject g,string name)
   {var bounds=new Bounds(g.transform.position,Vector3.zero);foreach(var mf in g.GetComponentsInChildren<MeshFilter>()){var renderer=mf.GetComponent<Renderer>();if(!mf.sharedMesh||!renderer||!renderer.enabled||renderer.forceRenderingOff)continue;var b=mf.sharedMesh.bounds;for(int i=0;i<8;i++){var corner=b.center+new Vector3((i&1)==0?-b.extents.x:b.extents.x,(i&2)==0?-b.extents.y:b.extents.y,(i&4)==0?-b.extents.z:b.extents.z);bounds.Encapsulate(mf.transform.TransformPoint(corner));}}var size=Mathf.Max(bounds.size.y,bounds.size.x,bounds.size.z);cam.transform.position=bounds.center+new Vector3(.7f,.35f,1).normalized*Mathf.Max(2,size*2.3f);cam.transform.LookAt(bounds.center);Save(cam,name,800,800);}

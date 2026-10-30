@@ -67,12 +67,12 @@ namespace SpellDuel
   }
   public static GameObject CreateGround(ExGround g,int x,int z,float cell)
   {
-   var root=Root("Ground "+g);int n=Variant(x,z);Part(root.transform,"ground/"+g+"/"+n,b=>{
-    var col=g==ExGround.Grass?Leaf:g==ExGround.Dirt?Bark:g==ExGround.Shore?Bone:g==ExGround.Cave?Rock:Jade;col.a=.16f;
-    b.FadeTile(1.5f,col);
-    // Subtle edge details; the middle remains readable through the alpha floor.
-    col.a=.25f;for(int i=0;i<7;i++){float a=i*Mathf.PI*2/7;var p=V(Mathf.Cos(a)*1.25f,.004f,Mathf.Sin(a)*1.25f);if(g==ExGround.Grass)b.Frond(p,p+V(.09f,.003f,.18f),.045f,col);else b.Gem(p,V(.17f,.005f,.12f),col,5);}
-   },Vector3.zero,true);root.transform.localScale=V(cell/3,1,cell/3);return root;
+   var root=Root("Ground "+g);
+   // A narrow overlapping feather replaces the old broad square border and oversized leaves.
+   var surface=Part(root.transform,"ground/fine/surface",b=>b.Quad(V(-1.53f,.002f,-1.53f),V(-1.53f,.002f,1.53f),V(1.53f,.002f,1.53f),V(1.53f,.002f,-1.53f),Color.white));
+   surface.name="GroundSurface";var renderer=surface.GetComponent<Renderer>();renderer.sharedMaterial=GroundMaterial(g);
+   renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;renderer.receiveShadows=false;
+   root.transform.localScale=V(cell/3,1,cell/3);return root;
   }
  }
 }

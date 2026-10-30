@@ -857,3 +857,8 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 雙平台 run 41143467000 的 Android 建置、iOS 匯出及 IPA 編譯成功；Android APK 發布成功。詳見 Docs/pending_preview/explore_jungle/platform_ci.json。
 - refinement_all_before_after.jpg 彙整樹叢、榕樹、岩石、帳篷、水、篝火六項前後比較；最新水岸、天空／雲／遠林原生圖已目視複查。README 更新為 a5a4627 已完成正式探索接線。
 - 本輪僅修美術與原生預覽，不製作時間驅動動畫、不修改玩法／碰撞。更新後 fx_D3_fire.png 可交動畫 session 使用；尚未完成手機 AR 實機驗收。
+
+### 2026-10-31 草皮與地面細緻化
+- CreateGround 取消每格固定七片大草葉與寬方框，改細草、苔土、細沙／碎石和磨損石板的程序紋理。草皮 512²、其餘四型 256²，全部只生成一次、共用材質／網格，mipmap、trilinear 與 4x anisotropic；約 2.67 MiB RGBA 含 mipmap，無圖片資源檔。
+- 地貼每格兩個三角形，邊緣 6cm 交疊羽化以消除方格接縫，半透明／不寫深度，排序在戰鬥提示之前。紋理固定在模型座標，不隨衝刺位移滑動；不製作動畫、不改玩法或碰撞。
+- 新原生驗證：五種地面各輸出九格俯視與 1.65m 視角圖，採中性地板作 AR 合成參考；檢查 shader、mipmap、兩三角形與重建快取。正在重新跑原生預覽和雙平台編譯，結果另補。
