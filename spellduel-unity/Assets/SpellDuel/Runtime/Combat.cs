@@ -60,6 +60,9 @@ namespace SpellDuel
         // 流派被動（Combat.Styles 區段）
         public float styleThorns, executeDmg, firstStrike, statusAmp, hitStack, chainHit, killRush, killSoul, castShield, overhealShield;
         public int stackCount; public float stackUntil, killRushUntil;
+        /// <summary>畫面用：自己身上的增益（施放／持續特效；SoloBattle.NewSkillFx.cs 讀）</summary>
+        public class BuffFx { public string id; public float start, until; public bool shown; }
+        public readonly List<BuffFx> buffFx = new List<BuffFx>();
         /// <summary>流派爆發技能的暫時加成（PassiveKind → 數值、到期時間）</summary>
         public readonly Dictionary<PassiveKind, KeyValuePair<float, float>> styleBuffs = new Dictionary<PassiveKind, KeyValuePair<float, float>>();
         public float closeInstinct;     // 刺客「近身本能」等級（0＝沒點）        // 進階職業：盾擊格擋、制裁連斬、爆擊傷害、鷹眼標記、契約魔力
@@ -430,7 +433,7 @@ namespace SpellDuel
                     foreach (var v in FoesOf(f))
                         if (InAreaShape(s, v, c, r)) HitFoe(f, v, s, dmg, s.effect, s.effectDps, s.effectDur);
                 };
-                if (k == 0) strike(); else After(k * s.hitGap, strike);
+                if (k == 0) strike(); else After(k * s.hitGap, () => { if (f.Alive) Emit("aoetick", s.atTarget ? center : f.Feet, s.color, s.id); strike(); });   // 第二段起：範圍特效再播一次
             }
         }
 
@@ -2908,6 +2911,7 @@ namespace SpellDuel
 
         void CastSelf(Fighter f, SkillDef s)
         {
+            if (f == player) NoteBuff(f, s);   // 畫面：自己的增益特效
             if (s.self == SelfKind.StyleBuff) { CastStyleBuff(f, s); return; }   // 流派爆發（只作用在自己）
             // 牧師的輔助技能：作用在所有己方單位（自己＋合作隊友）
             if (s.id == "prayheal" && f.isPlayer) { CastPrayHeal(f, s); return; }   // 治療術：補自己＋放出治療光球給隊友（Combat.Friends.cs）
@@ -3094,6 +3098,7 @@ namespace SpellDuel
         public void ApplyTeamBuff(SkillDef s, string from = "隊友", Fighter by = null)
         {
             if (Over || (!player.Alive && s.self != SelfKind.Revive)) return;
+            NoteBuff(player, s);   // 畫面：隊友給我的增益
             if (s.self == SelfKind.Oath)
             {
                 // 聖騎士的守護誓言：之後 8 秒，我在他 3m 內受到的傷害有 40% 轉給他
@@ -4086,7 +4091,6 @@ namespace SpellDuel
                 t.alive = false;
                 bool area = t.skill.areaRadius > 0f;
                 Emit("trap", t.pos, t.skill.color, $"{t.skill.name}！");
-                if (area) Emit("quake", t.pos, t.skill.color, null);
                 if (t.owner != null && t.owner.trapCrit > 0f) { t.owner.markNextUntil = now + t.owner.trapCrit; Emit("buff", t.owner.Chest, t.skill.color, $"獵殺時刻：{t.owner.trapCrit:0} 秒內下一箭必定爆擊"); }
                 if (!area && remoteEnemy && victim == enemy) { OnRemoteHit?.Invoke(t.skill, t.skill.damage, t.pos, -t.id); OnTrapGone?.Invoke(t.id); continue; }
                 // 地雷：爆炸範圍內所有敵人；一般陷阱：踩到的那一個
@@ -4114,6 +4118,7 @@ namespace SpellDuel
             o.falconDiveReady = now + 0.8f;
             var s = o.Derived("falcondive");
             Emit("buff", t.Chest + Vector3.up * 0.4f, s.color, "🦅 " + label);
+            OnFalconDive?.Invoke(o, t, 0.35f);
             var tt = t;
             After(0.35f, () => { if (tt.Alive && o.Alive) HitFoe(o, tt, s, s.damage); });
         }
@@ -4244,13 +4249,24 @@ namespace SpellDuel
             f.styleBuffs[s.styleKind] = new KeyValuePair<float, float>(s.styleAmt, now + s.buffDur);
             Emit("buff", f.Chest, s.color, $"{s.name}（{s.buffDur:0} 秒）");
         }
+        /// <summary>畫面：流派被動的觸發（kind＝chain／thorns／execute／first／killrush／soul；a＝觸發的人、b＝另一方、at＝位置）</summary>
+        public event Action<string, Fighter, Fighter, Vector3> OnStyleFx;
+        /// <summary>畫面：獵鷹俯衝（遊俠、目標、秒數）</summary>
+        public event Action<Fighter, Fighter, float> OnFalconDive;
+        void NoteBuff(Fighter f, SkillDef s)
+        {
+            if (s == null || s.type != SkillType.Self) return;
+            float dur = s.buffDur > 0f ? s.buffDur : 1.5f;   // 瞬間的（回血、冥想、淨化）：短短亮一下
+            f.buffFx.RemoveAll(x => x.id == s.id);
+            f.buffFx.Add(new Fighter.BuffFx { id = s.id, start = now, until = now + Mathf.Max(0.5f, dur) });
+        }
         float StyleMul(Fighter o, Fighter t)
         {
             float m = 1f;
             if (t.maxHp > 0f)
             {
-                { float ex = Sty(o, PassiveKind.Execute); if (ex > 0f && t.hp < t.maxHp * 0.3f) m *= 1f + ex; }      // 斬殺
-                { float fs = Sty(o, PassiveKind.FirstStrike); if (fs > 0f && t.hp >= t.maxHp * 0.9f) m *= 1f + fs; }   // 先發制人
+                { float ex = Sty(o, PassiveKind.Execute); if (ex > 0f && t.hp < t.maxHp * 0.3f) { m *= 1f + ex; OnStyleFx?.Invoke("execute", o, t, t.Chest); } }      // 斬殺
+                { float fs = Sty(o, PassiveKind.FirstStrike); if (fs > 0f && t.hp >= t.maxHp * 0.9f) { m *= 1f + fs; OnStyleFx?.Invoke("first", o, t, t.Chest); } }   // 先發制人
             }
             float sa = Sty(o, PassiveKind.StatusAmp); if (sa > 0f && (t.snaredUntil > now || t.dots.Count > 0 || t.blindUntil > now || t.markedUntil > now)) m *= 1f + sa;   // 趁虛而入
             float hs = Sty(o, PassiveKind.HitStack); if (hs > 0f && o.stackUntil > now) m *= 1f + hs * o.stackCount;   // 連擊疊層
@@ -4271,7 +4287,7 @@ namespace SpellDuel
                 if (next != null)
                 {
                     var cs = Skills.All["chainhit"]; int cd = Mathf.Max(1, Mathf.RoundToInt(dmg * ChainShare)); var nn = next;
-                    Emit("buff", t.Chest, s.color, "連鎖！");
+                    Emit("buff", t.Chest, s.color, "連鎖！"); OnStyleFx?.Invoke("chain", t, next, t.Chest);
                     After(0.12f, () => { if (nn.Alive && o.Alive) HitFoe(o, nn, cs, cd); });
                 }
             }
@@ -4284,17 +4300,18 @@ namespace SpellDuel
             f.shieldLeft = a; f.shieldUntil = Mathf.Max(f.shieldUntil, now + dur);
             if (label != null) Emit("buff", f.Chest, new Color(0.6f, 0.85f, 1f), $"{label}（護盾 {a}）");
         }
+        Vector3 lastKillAt;
         /// <summary>我擊倒敵人：追獵、吸魂</summary>
         void StyleOnKill(Fighter o)
         {
             if (o == null || !o.Alive) return;
             float kr = Sty(o, PassiveKind.KillRush), ks = Sty(o, PassiveKind.KillSoul);
-            if (kr > 0f) { o.killRushUntil = now + kr; Emit("buff", o.Chest, new Color(0.5f, 1f, 0.7f), $"追獵！{kr:0.#} 秒加快"); }
+            if (kr > 0f) { o.killRushUntil = now + kr; Emit("buff", o.Chest, new Color(0.5f, 1f, 0.7f), $"追獵！{kr:0.#} 秒加快"); OnStyleFx?.Invoke("killrush", o, null, o.Chest); }
             if (ks > 0f)
             {
                 o.mp = Mathf.Min(o.maxMp, o.mp + ks * KillSoulMp);
                 float h = Mathf.Min(o.maxHp - o.hp, o.maxHp * ks * KillSoulHp); o.hp += h;
-                Emit("heal", o.Chest, new Color(0.7f, 0.6f, 1f), $"吸魂 +{ks * KillSoulMp:0} MP");
+                Emit("heal", o.Chest, new Color(0.7f, 0.6f, 1f), $"吸魂 +{ks * KillSoulMp:0} MP"); OnStyleFx?.Invoke("soul", o, null, lastKillAt);
             }
         }
         /// <summary>溢療護盾：我放的治療補超過上限的部分</summary>
@@ -4397,6 +4414,7 @@ namespace SpellDuel
                     t.venomStacks = 0;
                     Emit("crit", t.Chest, new Color(0.4f, 1f, 0.4f), "毒爆！");
                     var burst = Skills.All["venom_burst"]; var vt = t;
+                    Emit("aoetick", t.Feet, burst.color, "venom_burst");
                     After(0.05f, () => HitFoe(o, vt, burst, Mathf.RoundToInt(o.venom * o.atkMul)));
                 }
                 else Emit("effect", t.Chest, new Color(0.4f, 1f, 0.4f), $"毒 {t.venomStacks}/{VenomMax}");
@@ -4613,8 +4631,8 @@ namespace SpellDuel
             float lost = hp0 - target.hp;
             float th = Sty(target, PassiveKind.Thorns);
             if (th > 0f && lost > 0f && by != null && by != target && by.Alive && !(remoteEnemy && by == enemy) && FoeSide(by) != FoeSide(target))
-            { Damage(by, Mathf.Max(1f, Mathf.Round(lost * th)), "thorns", by.Chest); }
-            if (wasAlive && !target.Alive && by == player) StyleOnKill(player);
+            { Damage(by, Mathf.Max(1f, Mathf.Round(lost * th)), "thorns", by.Chest); OnStyleFx?.Invoke("thorns", target, by, by.Chest); }
+            if (wasAlive && !target.Alive && by == player) { lastKillAt = target.Chest; StyleOnKill(player); }
         }
 
         void Damage(Fighter f, float dmg, string kind, Vector3? at = null)

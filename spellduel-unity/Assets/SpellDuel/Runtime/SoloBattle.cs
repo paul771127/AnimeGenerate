@@ -2425,7 +2425,7 @@ namespace SpellDuel
             if (slamGo) Destroy(slamGo);
             ClearTravel();   // 副本的通道與運鏡（SoloBattle.DungeonTravel.cs）
             ClearRoomEventViews();
-            ClearWeatherArt(); ClearSwordShieldVisuals();
+            ClearWeatherArt(); ClearSwordShieldVisuals(); ClearNewSkillFx();
             ClearWarnRings();
             if (volcano) Destroy(volcano.gameObject);
             if (forest) Destroy(forest.gameObject);
@@ -2990,6 +2990,7 @@ namespace SpellDuel
                         // 命中特效：依打中的技能挑職業（普攻、召喚物也算；不認得就用自己的職業），傷害越高越大
                         var hs = battle.HitSkill;
                         if(hs!=null&&hs.groundZone)SpellFx.HolyNeedle(WorldFrame.FromWorld(at));
+                        NewSkillHitFx(hs, at);   // Codex 的新技能命中特效（SoloBattle.NewSkillFx.cs）
                         string fxCls = SpellFx.HitClassOf(hs) ?? (kind == "trap" ? "archer" : myClass);
                         lastHitCls = fxCls;
                         float hd = DmgOf(text); if (hd <= 0f && hs != null) hd = hs.damage;
@@ -3353,11 +3354,14 @@ namespace SpellDuel
                 {
                     // Presentation only: skill-specific shapes use the existing event center and radius.
                     float rad = Skills.All.TryGetValue(text ?? "", out var asd) ? asd.areaRadius : 1.5f;
-                    AdvancedFx.Area(text, WorldFrame.FromWorld(at), rad, c);
+                    if (!NewSkillAreaFx(text, at, rad, true)) AdvancedFx.Area(text, WorldFrame.FromWorld(at), rad, c);   // 新技能：Codex 的專屬範圍特效
                     Sfx.Play(text == "frostfield" ? "cast_mage" : text == "detonate" ? "boom" : "cast_swordsman", 0.8f, 0.8f);
                     Haptics.Play(Haptics.Kind.Medium); Kick(6f, 0.04f);
                     break;
                 }
+                case "aoetick":   // 範圍攻擊的第二段起、毒爆：只播範圍特效
+                    NewSkillAreaFx(text, at, Skills.All.TryGetValue(text ?? "", out var tsd) && tsd.areaRadius > 0f ? tsd.areaRadius : 1.2f, false);
+                    break;
                 case "holyzone":
                     SpellFx.HolyLanding(WorldFrame.FromWorld(at),text=="heavenpunish");   // 光柱落地
                     Sfx.Play("boom", Mathf.Clamp01(1f - Battle.FlatDistance(at, Me.Feet) / 15f), 1.4f);
@@ -3590,7 +3594,9 @@ namespace SpellDuel
                         BossRig.SlamShockwave(WorldFrame.FromWorld(new Vector3(kv.Key.pos.x, 0f, kv.Key.pos.z)), 0.9f, kv.Key.skill.color);
                         Sfx.Play("boom", Mathf.Clamp01(0.9f - Battle.FlatDistance(kv.Key.pos, Me.Feet) / 12f), 1.3f);
                     }
-                    Destroy(kv.Value, 0.25f); projGo.Remove(kv.Key);
+                    if (kv.Key.skill.id == "arcanewyrm") SpellFx.WyrmFade(kv.Value);   // 光龍：從頭到尾散成光粒（美術自己銷毀）
+                    else Destroy(kv.Value, 0.25f);
+                    projGo.Remove(kv.Key);
                 }
 
             // 火海：地上的燃燒圓盤（閃爍）＋不時冒出火焰
@@ -3686,15 +3692,32 @@ namespace SpellDuel
             {
                 if (!trapGo.TryGetValue(t, out var go))
                 {
-                    go = Prim(PrimitiveType.Cylinder, Color.gray, true);
-                    go.transform.localScale = new Vector3(t.skill.radius * 2f, 0.005f, t.skill.radius * 2f);
+                    go = SpellFx.CreateTrapVisual(t.skill);   // Codex 的陷阱外觀（捕獸夾、連環陷阱、地雷）；不認得的回 null
+                    if (go == null)
+                    {
+                        go = Prim(PrimitiveType.Cylinder, Color.gray, true);
+                        go.transform.localScale = new Vector3(t.skill.radius * 2f, 0.005f, t.skill.radius * 2f);
+                    }
                     trapGo[t] = go;
                 }
                 go.transform.position = WorldFrame.FromWorld(t.pos + Vector3.up * 0.01f);
-                go.GetComponent<Renderer>().material.color = t.Armed(battle.now) ? WithAlpha(t.skill.color, 0.6f) : new Color(0.6f, 0.6f, 0.6f, 0.4f);
+                var tr0 = go.GetComponent<Renderer>();
+                if (tr0 != null && go.GetComponent<TrapArtView>() == null) tr0.material.color = t.Armed(battle.now) ? WithAlpha(t.skill.color, 0.6f) : new Color(0.6f, 0.6f, 0.6f, 0.4f);
+                else SpellFx.SetTrapArmed(go, t.Armed(battle.now));
             }
             foreach (var kv in new List<KeyValuePair<Trap, GameObject>>(trapGo))
-                if (!liveTraps.Contains(kv.Key)) { Burst(kv.Key.pos, kv.Key.skill.color); Destroy(kv.Value); trapGo.Remove(kv.Key); }
+                if (!liveTraps.Contains(kv.Key))
+                {
+                    var tk = kv.Key;
+                    if (tk.skill.areaRadius > 0f && battle.now < tk.until)
+                    {
+                        // 地雷被踩到：大爆炸（範圍＝爆炸半徑）
+                        SpellFx.MineBlast(WorldFrame.FromWorld(new Vector3(tk.pos.x, 0f, tk.pos.z)), tk.skill.areaRadius, tk.skill.color);
+                        Sfx.Play("boom", Mathf.Clamp01(1.1f - Battle.FlatDistance(tk.pos, Me.Feet) / 12f), 0.9f); Haptics.Play(Haptics.Kind.Medium); Kick(8f, 0.04f);
+                    }
+                    else Burst(tk.pos, tk.skill.color);
+                    Destroy(kv.Value); trapGo.Remove(kv.Key);
+                }
 
             incomingFlash = Mathf.Max(0f, incomingFlash - Time.deltaTime * 2f);
         }

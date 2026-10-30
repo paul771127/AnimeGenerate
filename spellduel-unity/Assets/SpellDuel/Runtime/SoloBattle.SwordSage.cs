@@ -19,6 +19,7 @@ namespace SpellDuel
             if (battle == null || Me == null) return;
             UpdateSwordSageBuffVisuals();
             UpdateSwordShieldVisuals();   // 劍氣護體／劍氣凝盾（SoloBattle.SwordShield.cs）
+            UpdateNewSkillFx();           // 新技能的增益、流派被動、獵鷹（SoloBattle.NewSkillFx.cs）
             // 御劍術：照準星方向連射飛劍
             if (Me.yujianUntil > battle.now && Me.yujianSkill != null && Me.Alive)
             {
