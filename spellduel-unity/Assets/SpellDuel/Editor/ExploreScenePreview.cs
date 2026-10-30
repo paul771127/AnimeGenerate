@@ -1,0 +1,55 @@
+#if UNITY_EDITOR
+using System;
+using System.IO;
+using UnityEditor;
+using UnityEngine;
+namespace SpellDuel.EditorTools
+{
+ public static class ExploreScenePreview
+ {
+  [MenuItem("SpellDuel/Explore/Export jungle scene and keyframes")]
+  public static void Render()
+  {
+   ExploreFxKeyframes.Render();var cam=UnityEngine.Object.FindObjectOfType<Camera>();cam.orthographic=false;cam.fieldOfView=72;cam.farClipPlane=300;cam.backgroundColor=new Color(.19f,.27f,.26f);
+   var map=JungleMaze.Build();var root=new GameObject("Explore scene preview");Directory.CreateDirectory("snapshots");
+   for(int x=0;x<map.W;x++)for(int z=0;z<map.H;z++)
+   {
+    var cell=map.At(x,z);GameObject g=null;
+    if(cell==ExCell.Floor)g=ExploreArt.CreateGround(map.GroundAt(x,z),x,z,ExploreMap.CellSize);
+    else if(cell==ExCell.Gate){var seal=map.SealOf(x,z);g=seal==null?ExploreArt.CreateGate(1,3):ExploreArt.CreateSeal(seal,x,z,3);}
+    else {bool edge=map.TerrainAt(x,z)==ExTerrain.Water;foreach(var d in ExploreMap.Dirs)if(map.At(x+d.x,z+d.y)!=ExCell.Wall)edge=true;if(edge)g=ExploreArt.CreateWall(map.TerrainAt(x,z),x,z,3);}
+    if(g){g.transform.SetParent(root.transform,false);g.transform.localPosition=map.World(x,z);}
+   }
+   foreach(var p in map.props){var g=ExploreArt.CreateProp(p);g.transform.SetParent(root.transform,false);g.transform.localPosition=p.pos;}
+   foreach(var l in map.landmarks){var g=ExploreArt.CreateLandmark(l,map);g.transform.SetParent(root.transform,false);}
+   foreach(var a in map.arenas){var g=ExploreArt.CreateArena(a.n,a.radius);g.transform.SetParent(root.transform,false);g.transform.localPosition=a.center;}
+   foreach(var sw in map.switches){var g=ExploreArt.CreateSwitch(sw);g.transform.SetParent(root.transform,false);g.transform.localPosition=sw.pos;}
+   if(root.GetComponentInChildren<Collider>())throw new Exception("Explore art introduced a collider");
+   foreach(var n in map.npcs){var rig=CharacterRig.Create(n.look);rig.InCombat=false;ExploreArt.DressNpc(rig,n.id);rig.transform.SetParent(root.transform,false);rig.transform.localPosition=n.pos;}
+   foreach(var l in map.landmarks)
+   {
+    var center=map.World((l.rect.xMin+l.rect.xMax)/2,(l.rect.yMin+l.rect.yMax)/2);Vector3 desired=map.World((l.rect.xMin+l.rect.xMax)/2,l.rect.yMin);Vector3 at=desired;float best=float.MaxValue;
+    for(int x=l.rect.xMin;x<=l.rect.xMax;x++)for(int z=l.rect.yMin;z<=l.rect.yMax;z++){var p=map.World(x,z);if(!map.Walkable(p))continue;float score=(p-desired).sqrMagnitude;if((p-center).sqrMagnitude<9)score+=100;if(score<best){best=score;at=p;}}
+    var target=center+Vector3.up*(l.kind=="lake"?.35f:1.8f);cam.transform.position=at+Vector3.up*1.65f;if((target-cam.transform.position).sqrMagnitude<.5f)target+=Vector3.forward*3;cam.transform.LookAt(target);Save(cam,"explore_"+l.id+"_first",960,1280);
+   }
+   var middle=(map.World(0,0)+map.World(map.W-1,map.H-1))*.5f;cam.orthographic=true;cam.orthographicSize=map.W*3*.54f;cam.transform.position=middle+Vector3.up*160;cam.transform.rotation=Quaternion.Euler(90,0,0);Save(cam,"explore_map_top",1800,1800);
+   root.SetActive(false);cam.orthographic=false;cam.fieldOfView=35;cam.backgroundColor=new Color(.13f,.17f,.20f);Catalogue(cam);
+   File.WriteAllText("snapshots/explore_scene_audit.json","{\"landmarks\":"+map.landmarks.Count+",\"props\":"+map.props.Count+",\"noColliders\":true,\"staticStates\":true,\"cachedFactories\":true,\"keyframes\":16}");
+  }
+  static void Catalogue(Camera cam)
+  {
+   foreach(string kind in new[]{"tree","stump","boulder","mushroom","tent","crate","totem","pillar","statue","campfire","altar"})for(int i=0;i<(kind=="tree"?5:3);i++)
+   {var g=ExploreArt.CreateProp(new ExProp{kind=kind,variant=i,radius=1});Fit(cam,g,"explore_prop_"+kind+"_"+i);UnityEngine.Object.DestroyImmediate(g);}
+   foreach(ExTerrain t in Enum.GetValues(typeof(ExTerrain))){var g=ExploreArt.CreateWall(t,1,2,3);Fit(cam,g,"explore_wall_"+t);UnityEngine.Object.DestroyImmediate(g);}
+   for(int n=1;n<=4;n++){var g=ExploreArt.CreateArena(n,4);Fit(cam,g,"explore_arena_"+n);UnityEngine.Object.DestroyImmediate(g);}
+   var map=JungleMaze.Build();foreach(var seal in map.seals){var g=ExploreArt.CreateSeal(seal,0,0,3);Fit(cam,g,"explore_"+seal.id+"_closed");seal.have=seal.need;ExploreArt.SetSealOpen(g,false);Fit(cam,g,"explore_"+seal.id+"_ready");ExploreArt.SetSealOpen(g,true);if(g.transform.Find("Closed").gameObject.activeSelf)throw new Exception("Seal did not hide");ExploreArt.SetSealOpen(g,false);if(!g.transform.Find("Closed").gameObject.activeSelf)throw new Exception("Seal did not close");UnityEngine.Object.DestroyImmediate(g);}
+   // Warm factories twice: the second cycle must reuse every mesh and material.
+   int mesh=0,mat=0;for(int pass=0;pass<2;pass++){foreach(ExTerrain t in Enum.GetValues(typeof(ExTerrain)))for(int i=0;i<4;i++)UnityEngine.Object.DestroyImmediate(ExploreArt.CreateWall(t,i,0,3));for(int i=0;i<5;i++)UnityEngine.Object.DestroyImmediate(ExploreArt.CreateProp(new ExProp{kind="tree",variant=i,radius=.6f}));int m=Resources.FindObjectsOfTypeAll<Mesh>().Length,mt=Resources.FindObjectsOfTypeAll<Material>().Length;if(pass==1&&(m!=mesh||mt!=mat))throw new Exception("Explore factory failed cache check");mesh=m;mat=mt;}
+  }
+  static void Fit(Camera cam,GameObject g,string name)
+  {var bounds=new Bounds(g.transform.position,Vector3.zero);foreach(var r in g.GetComponentsInChildren<Renderer>())bounds.Encapsulate(r.bounds);var size=Mathf.Max(bounds.size.y,bounds.size.x,bounds.size.z);cam.transform.position=bounds.center+new Vector3(.7f,.35f,1).normalized*Mathf.Max(2,size*2.3f);cam.transform.LookAt(bounds.center);Save(cam,name,800,800);}
+  static void Save(Camera cam,string name,int w,int h)
+  {cam.aspect=w/(float)h;var rt=new RenderTexture(w,h,24);var old=RenderTexture.active;cam.targetTexture=rt;RenderTexture.active=rt;cam.Render();var tex=new Texture2D(w,h,TextureFormat.RGB24,false);tex.ReadPixels(new Rect(0,0,w,h),0,0);tex.Apply();File.WriteAllBytes("snapshots/"+name+".png",tex.EncodeToPNG());cam.targetTexture=null;RenderTexture.active=old;UnityEngine.Object.DestroyImmediate(tex);UnityEngine.Object.DestroyImmediate(rt);}
+ }
+}
+#endif

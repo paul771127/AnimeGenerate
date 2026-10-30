@@ -23,17 +23,22 @@ namespace SpellDuel
    internal void Tri(Vector3 a,Vector3 b,Vector3 d,Color col){int n=v.Count;v.Add(a);v.Add(b);v.Add(d);c.Add(col);c.Add(col);c.Add(col);t.Add(n);t.Add(n+1);t.Add(n+2);}
    internal void Quad(Vector3 a,Vector3 b,Vector3 d,Vector3 e,Color col,bool both=false){Tri(a,b,d,col);Tri(a,d,e,col);if(both){Tri(d,b,a,col);Tri(e,d,a,col);}}
    internal void Box(Vector3 p,Vector3 s,Color col){var a=p-s*.5f;var b=p+s*.5f;Quad(V(a.x,a.y,b.z),V(b.x,a.y,b.z),V(b.x,b.y,b.z),V(a.x,b.y,b.z),col);Quad(V(b.x,a.y,a.z),V(a.x,a.y,a.z),V(a.x,b.y,a.z),V(b.x,b.y,a.z),col);Quad(V(a.x,a.y,a.z),V(a.x,a.y,b.z),V(a.x,b.y,b.z),V(a.x,b.y,a.z),col);Quad(V(b.x,a.y,b.z),V(b.x,a.y,a.z),V(b.x,b.y,a.z),V(b.x,b.y,b.z),col);Quad(V(a.x,b.y,b.z),V(b.x,b.y,b.z),V(b.x,b.y,a.z),V(a.x,b.y,a.z),col);Quad(V(a.x,a.y,a.z),V(b.x,a.y,a.z),V(b.x,a.y,b.z),V(a.x,a.y,b.z),col);}
-   internal void Rod(Vector3 a,Vector3 b,float r,Color col,int sides=5,float end=-1){if(end<0)end=r;var q=Quaternion.FromToRotation(Vector3.up,(b-a).normalized);for(int i=0;i<sides;i++){float u=i*2*Mathf.PI/sides,w=(i+1)*2*Mathf.PI/sides;var p=q*V(Mathf.Cos(u),0,Mathf.Sin(u));var n=q*V(Mathf.Cos(w),0,Mathf.Sin(w));Quad(a+p*r,b+p*end,b+n*end,a+n*r,col);Tri(a,a+n*r,a+p*r,col);Tri(b,b+p*end,b+n*end,col);}}
+   internal void Rod(Vector3 a,Vector3 b,float r,Color col,int sides=5,float end=-1){if(end<0)end=r;var q=Quaternion.FromToRotation(Vector3.up,(b-a).normalized);for(int i=0;i<sides;i++){float u=i*2*Mathf.PI/sides,w=(i+1)*2*Mathf.PI/sides;var p=q*V(Mathf.Cos(u),0,Mathf.Sin(u));var n=q*V(Mathf.Cos(w),0,Mathf.Sin(w));Quad(a+p*r,b+p*end,b+n*end,a+n*r,col);Tri(a,a+p*r,a+n*r,col);Tri(b,b+n*end,b+p*end,col);}}
    internal void Gem(Vector3 p,Vector3 size,Color col,int sides=6){var top=p+V(0,size.y*.5f,0);var bot=p-V(0,size.y*.5f,0);for(int i=0;i<sides;i++){float a=i*2*Mathf.PI/sides,b=(i+1)*2*Mathf.PI/sides;var u=p+V(Mathf.Cos(a)*size.x*.5f,0,Mathf.Sin(a)*size.z*.5f);var w=p+V(Mathf.Cos(b)*size.x*.5f,0,Mathf.Sin(b)*size.z*.5f);Tri(top,w,u,col);Tri(bot,u,w,col);}}
    internal void Frond(Vector3 a,Vector3 tip,float width,Color col){var side=Vector3.Cross((tip-a).normalized,Vector3.up).normalized*width;var mid=Vector3.Lerp(a,tip,.48f)+Vector3.up*.12f;Quad(a,mid-side,tip,mid+side,col,true);}
    internal void Vine(Vector3 a,Vector3 b,float bend,float radius,Color col,int steps=5){var prev=a;for(int i=1;i<=steps;i++){float u=i/(float)steps;var p=Vector3.Lerp(a,b,u)+V(Mathf.Sin(u*Mathf.PI)*bend,0,Mathf.Sin(u*Mathf.PI*2)*bend*.3f);Rod(prev,p,radius,col,4,radius*.94f);prev=p;}}
    internal void Ring(Vector3 p,float radius,float width,Color col,int sides=20){for(int i=0;i<sides;i++){float a=i*2*Mathf.PI/sides,b=(i+1)*2*Mathf.PI/sides;Quad(p+V(Mathf.Cos(a)*(radius-width),0,Mathf.Sin(a)*(radius-width)),p+V(Mathf.Cos(b)*(radius-width),0,Mathf.Sin(b)*(radius-width)),p+V(Mathf.Cos(b)*radius,0,Mathf.Sin(b)*radius),p+V(Mathf.Cos(a)*radius,0,Mathf.Sin(a)*radius),col);}}
+   internal void FadeTile(float radius,Color col)
+   {Vector3[] a={V(-radius,.002f,-radius),V(-radius,.002f,radius),V(radius,.002f,radius),V(radius,.002f,-radius)};Color clear=col;clear.a=0;Quad(a[0]*.85f,a[1]*.85f,a[2]*.85f,a[3]*.85f,col);for(int i=0;i<4;i++){int j=(i+1)%4;int k=v.Count;v.Add(a[i]*.85f);v.Add(a[j]*.85f);v.Add(a[j]);v.Add(a[i]);c.Add(col);c.Add(col);c.Add(clear);c.Add(clear);t.AddRange(new[]{k,k+1,k+2,k,k+2,k+3});}}
    internal void ClampCell(float half){for(int i=0;i<v.Count;i++){var p=v[i];p.x=Mathf.Clamp(p.x,-half,half);p.z=Mathf.Clamp(p.z,-half,half);p.y=Mathf.Max(0,p.y);v[i]=p;}}
    internal Mesh Finish(string name){var m=new Mesh{name="Explore cached "+name};if(v.Count>65535)m.indexFormat=UnityEngine.Rendering.IndexFormat.UInt32;m.SetVertices(v);m.SetTriangles(t,0);m.SetColors(c);m.RecalculateNormals();m.RecalculateBounds();return m;}
   }
   public static GameObject CreateWall(ExTerrain terrain,int x,int z,float cell)
   {
-   int n=Variant(x,z);var root=Root(terrain+" wall");Part(root.transform,"wall/"+terrain+"/"+n,b=>Wall(b,terrain,n));root.transform.localScale=Vector3.one*(cell/3f);return root;
+   int n=Variant(x,z);var root=Root(terrain+" wall");Part(root.transform,"wall/"+terrain+"/"+n,b=>Wall(b,terrain,n)).name="WallBody";
+   if(terrain==ExTerrain.Thicket||terrain==ExTerrain.Cave)for(int i=0;i<2;i++){int k=i;Part(root.transform,"wall/looseVine/"+i,b=>b.Rod(V(k==0?-.7f:.7f,2.4f,1.43f),V(k==0?-.6f:.6f,1.1f,1.43f),.028f,Moss,4)).name="LooseVine_"+i;}
+   if(terrain==ExTerrain.Palisade){Part(root.transform,"wall/flag",b=>b.Quad(V(-.4f,2.3f,1.48f),V(.4f,2.3f,1.48f),V(.3f,1.6f,1.48f),V(-.3f,1.7f,1.48f),Leaf,true)).name="WarBanner";Part(root.transform,"wall/boneCharm",b=>{b.Gem(V(0,2.06f,1.43f),V(.22f,.28f,.12f),Bone,4);for(int side=-1;side<=1;side+=2)b.Gem(V(side*.05f,2.08f,1.497f),V(.035f,.04f,.005f),Dark,4);}).name="BoneCharm";}
+   root.transform.localScale=Vector3.one*(cell/3f);return root;
   }
   static void Wall(Geo b,ExTerrain t,int n)
   {

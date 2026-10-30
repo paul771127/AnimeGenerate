@@ -767,3 +767,30 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 ### 2026-10-30 故事探索 1：六種地形牆
 - 新增 ExploreArt.CreateWall(ExTerrain,int,int,float)：樹叢、層岩、湖水、尖樁城寨、翠玉遺跡、鐘乳洞壁。地面中心 pivot、依 cell 縮放，四種座標決定的快取變體；單一共用頂點色 Toon 材質與一個 Renderer，沒有 Collider。所有頂點限制在格子水平範圍內。
 - 不更動 Explore／Combat／SoloBattle；由 Claude 接替暫代牆。動畫提示詞已由使用者於本對話確認，後續依 EXPLORE_ANIMATION_PROMPTS.md 實作。最終原生預覽與三角形檢查將於整體驗收提供。
+
+### 2026-10-30 故事探索 3：景物靜態模型
+- CreateProp 完成 11 種景物；依 radius 縮放，tree 具有棕櫚、榕樹、蕨類、食人花、發光藤五型，其他景物提供三個變體鍵。篝火火焰為獨立 Fire 子物件。
+- 更新分工：使用者指定動畫由另一個 session 製作，本批只做靜態模型與狀態切換；將依新增 CODEX_TASK_EXPLORE_FX_KEYFRAMES.md 輸出 16 張實際模型靜態首尾圖。
+
+### 2026-10-30 故事探索 5／12：藤蔓門、封印與岔路物件
+- CreateGate／SetGateOpen、CreateSeal／SetSealOpen、CreateSwitch／SetSwitchDone 已提供。只即時切換靜態狀態，不含 Update、時間軸或粒子。
+- 動畫子物件：Closed/Vine_0～5、RootKnot_*、DoorLeft／DoorRight、BronzeLock、StoneDoor、Socket_0～2/Lit、PressurePlate/Rune、BronzeKey、JadeShard。SetSealOpen 每次也讀取原 ExSeal.have 更新凹槽，進度變動時可重複呼叫，不修改資料。
+- 為優先提供動畫首尾圖，鑰匙、碎片與壓板與門同批先做；其餘地標／競技場繼續完成。
+
+### 2026-10-30 故事探索 7～11：任務模型、NPC 與動畫靜態圖輸出器
+- 古樹之心 AncientHeart、月光草 MoonLeaves、微弱 Glint、7 位 NPC 配件／森林之靈、任務與發現標記、地名橫幅靜態畫面完成。SparkleFound 依新單保留空函式。沒有定時更新或動畫。
+- DressNpc 可重複呼叫且可換型；NPC 配件掛 Spine／Head，森林之靈有 SpiritBody／OrbitLeaf_*。QuestMark 子物件 Exclaim／Question、AlertMark 的 Glyph／CallerAccent。
+- Editor 選單 SpellDuel/Explore/Export 16 animation keyframes 從實際模型輸出 960×544，黑底／綠幕、無地板與粒子。獨立 CI 先產生 16 張供另一個 session 用，場景其他項目接續製作。
+
+### 2026-10-30 故事探索 4／6／2：地標、競技場與地面
+- CreateLandmark 依真正牆格佈置營屋、瞭望台、湖燈、岩柱、洞窟拱飾、古殿屋頂；不跨越走道。回傳 root.localPosition 為地標中心的 map.World，請 SetParent(exRoot,false) 保留位置，不要再次套中心偏移。MoonReflection／Fireflies／Banner_* 可獨立掛動畫。
+- CreateArena 有四種遠端輪廓與貼地半透明邊界；RimSet 位於半徑外，中央留空。CreateGround 五型透明地面＋透明漸淡邊緣。
+- 牆補上 LooseVine_*、WarBanner、BoneCharm，仍共用網格／材質；原生驗證逐型檢查 ≤300 三角形與牆格範圍。地名橫幅使用和靜態動畫圖相同的 RibbonFrame。
+- 新增 SpellDuel/Explore/Export jungle scene and keyframes 原生總覽輸出：每個地標第一人稱、整圖俯視、景物變體、四競技場、封印狀態。最終將附 cache／Collider／狀態與雙平台結果。
+
+### 2026-10-30 動畫 session 交接：16 張首尾靜態圖已交付
+- 原生 Unity Actions 41077472702 成功，16 張 960×544 PNG 已放 Docs/explore_fx/keyframes/，檔名完全照 CODEX_TASK_EXPLORE_FX_KEYFRAMES.md。尺寸、四角純黑／純綠檢查通過；共用實際遊戲模型，不含地面、霧、粒子、文字。
+- 重出選單：SpellDuel/Explore/Export 16 animation keyframes。圖像總覽與像素檢查在 Docs/pending_preview/explore_jungle/。不生成 mp4、不實作動畫。
+
+### 2026-10-30 靜態模型細修
+- 修正程序圓桿上下封口的面朝向，避免俯視時看到空洞；木箱束帶、圖騰羽飾、石像冠飾、祭壇刻紋與紫色菇傘增加實際變體差異。重跑原生全景與靜態圖，無動畫或遊戲邏輯變更。
