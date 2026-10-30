@@ -767,3 +767,7 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 ### 2026-10-30 故事探索 1：六種地形牆
 - 新增 ExploreArt.CreateWall(ExTerrain,int,int,float)：樹叢、層岩、湖水、尖樁城寨、翠玉遺跡、鐘乳洞壁。地面中心 pivot、依 cell 縮放，四種座標決定的快取變體；單一共用頂點色 Toon 材質與一個 Renderer，沒有 Collider。所有頂點限制在格子水平範圍內。
 - 不更動 Explore／Combat／SoloBattle；由 Claude 接替暫代牆。動畫提示詞已由使用者於本對話確認，後續依 EXPLORE_ANIMATION_PROMPTS.md 實作。最終原生預覽與三角形檢查將於整體驗收提供。
+
+### 2026-10-30 故事探索 3：景物靜態模型
+- CreateProp 完成 11 種景物；依 radius 縮放，tree 具有棕櫚、榕樹、蕨類、食人花、發光藤五型，其他景物提供三個變體鍵。篝火火焰為獨立 Fire 子物件。
+- 更新分工：使用者指定動畫由另一個 session 製作，本批只做靜態模型與狀態切換；將依新增 CODEX_TASK_EXPLORE_FX_KEYFRAMES.md 輸出 16 張實際模型靜態首尾圖。
