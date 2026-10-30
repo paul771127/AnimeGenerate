@@ -19,7 +19,7 @@ namespace SpellDuel
   internal static Vector3 V(float x,float y,float z)=>new Vector3(x,y,z);
   internal sealed class Geo
   {
-   internal readonly List<Vector3> v=new List<Vector3>();readonly List<int> t=new List<int>();readonly List<Color> c=new List<Color>();
+   internal readonly List<Vector3> v=new List<Vector3>();readonly List<int> t=new List<int>();readonly List<Color> c=new List<Color>();readonly Dictionary<int,Vector3> foliageNormals=new Dictionary<int,Vector3>();
    internal void Tri(Vector3 a,Vector3 b,Vector3 d,Color col){int n=v.Count;v.Add(a);v.Add(b);v.Add(d);c.Add(col);c.Add(col);c.Add(col);t.Add(n);t.Add(n+1);t.Add(n+2);}
    internal void Quad(Vector3 a,Vector3 b,Vector3 d,Vector3 e,Color col,bool both=false){Tri(a,b,d,col);Tri(a,d,e,col);if(both){Tri(d,b,a,col);Tri(e,d,a,col);}}
    internal void Box(Vector3 p,Vector3 s,Color col){var a=p-s*.5f;var b=p+s*.5f;Quad(V(a.x,a.y,b.z),V(b.x,a.y,b.z),V(b.x,b.y,b.z),V(a.x,b.y,b.z),col);Quad(V(b.x,a.y,a.z),V(a.x,a.y,a.z),V(a.x,b.y,a.z),V(b.x,b.y,a.z),col);Quad(V(a.x,a.y,a.z),V(a.x,a.y,b.z),V(a.x,b.y,b.z),V(a.x,b.y,a.z),col);Quad(V(b.x,a.y,b.z),V(b.x,a.y,a.z),V(b.x,b.y,a.z),V(b.x,b.y,b.z),col);Quad(V(a.x,b.y,b.z),V(b.x,b.y,b.z),V(b.x,b.y,a.z),V(a.x,b.y,a.z),col);Quad(V(a.x,a.y,a.z),V(b.x,a.y,a.z),V(b.x,a.y,b.z),V(a.x,a.y,b.z),col);}
@@ -39,16 +39,17 @@ namespace SpellDuel
    // Rounded, scalloped foliage: two latitude rings plus poles, no diamond-shaped equator.
    internal void Crown(Vector3 center,Vector3 size,Color col,int seed,int sides=6,int bands=2)
    {
-    var rings=new Vector3[bands,sides];
+    int first=v.Count;var rings=new Vector3[bands,sides];
     for(int j=0;j<bands;j++)for(int i=0;i<sides;i++)
     {float lat=Mathf.PI*(j+1)/(bands+1),a=i*Mathf.PI*2/sides;float r=Mathf.Sin(lat)*(1+.12f*Mathf.Sin(i*2.3f+seed));rings[j,i]=center+V(Mathf.Cos(a)*size.x*.5f*r,Mathf.Cos(lat)*size.y*.5f,Mathf.Sin(a)*size.z*.5f*r);}
     for(int i=0;i<sides;i++){int k=(i+1)%sides;Tri(center+V(.04f*size.x,size.y*.5f,0),rings[0,k],rings[0,i],col);Tri(center-V(0,size.y*.5f,0),rings[bands-1,i],rings[bands-1,k],col);
      for(int j=0;j<bands-1;j++)Quad(rings[j,i],rings[j,k],rings[j+1,k],rings[j+1,i],col);}
+    for(int i=first;i<v.Count;i++){var delta=v[i]-center;foliageNormals[i]=V(delta.x/(size.x*size.x),delta.y/(size.y*size.y),delta.z/(size.z*size.z)).normalized;}
    }
    internal void FadeTile(float radius,Color col)
    {Vector3[] a={V(-radius,.002f,-radius),V(-radius,.002f,radius),V(radius,.002f,radius),V(radius,.002f,-radius)};Color clear=col;clear.a=0;Quad(a[0]*.85f,a[1]*.85f,a[2]*.85f,a[3]*.85f,col);for(int i=0;i<4;i++){int j=(i+1)%4;int k=v.Count;v.Add(a[i]*.85f);v.Add(a[j]*.85f);v.Add(a[j]);v.Add(a[i]);c.Add(col);c.Add(col);c.Add(clear);c.Add(clear);t.AddRange(new[]{k,k+1,k+2,k,k+2,k+3});}}
    internal void ClampCell(float half){for(int i=0;i<v.Count;i++){var p=v[i];p.x=Mathf.Clamp(p.x,-half,half);p.z=Mathf.Clamp(p.z,-half,half);p.y=Mathf.Max(0,p.y);v[i]=p;}}
-   internal Mesh Finish(string name){var m=new Mesh{name="Explore cached "+name};if(v.Count>65535)m.indexFormat=UnityEngine.Rendering.IndexFormat.UInt32;m.SetVertices(v);m.SetTriangles(t,0);m.SetColors(c);m.RecalculateNormals();m.RecalculateBounds();return m;}
+   internal Mesh Finish(string name){var m=new Mesh{name="Explore cached "+name};if(v.Count>65535)m.indexFormat=UnityEngine.Rendering.IndexFormat.UInt32;m.SetVertices(v);m.SetTriangles(t,0);m.SetColors(c);m.RecalculateNormals();if(foliageNormals.Count>0){var normals=m.normals;foreach(var pair in foliageNormals)normals[pair.Key]=pair.Value;m.normals=normals;}m.RecalculateBounds();return m;}
   }
   public static GameObject CreateWall(ExTerrain terrain,int x,int z,float cell)
   {
@@ -64,8 +65,8 @@ namespace SpellDuel
    {
     // Four genuinely different arrangements, kept below 300 triangles including loose vines.
     for(int i=0;i<2;i++){float x=(i==0?-.6f:.55f);b.Rod(V(x,0,.1f),V(x+shift,2.3f-(n%2)*.25f,-.12f),.20f,Bark,4,.10f);}
-    for(int i=0;i<3;i++){float a=i*2.094f+n*.6f;b.Rod(V(0,.7f,0),V(Mathf.Cos(a)*1.35f,.04f,Mathf.Sin(a)*1.35f),.13f,Bark,4,.05f);}
-    for(int i=0;i<7;i++){float a=i*2.399f+n*.65f;float r=i<3?.65f:.78f;float y=i<3?.65f+i*.12f:1.85f+(i%3)*.23f+(n%2)*.12f;var at=V(Mathf.Cos(a)*r,y,Mathf.Sin(a)*r);b.Crown(at,V(1.55f+(i%2)*.25f,1.05f,1.5f),i<3?Moss:Color.Lerp(Leaf,Moss,(i%3)*.15f),n*7+i);}
+    for(int i=0;i<2;i++){float a=i*3.1416f+n*.6f;b.Rod(V(0,.7f,0),V(Mathf.Cos(a)*1.35f,.04f,Mathf.Sin(a)*1.35f),.13f,Bark,4,.05f);}
+    for(int i=0;i<5;i++){float a=i*2.399f+n*.65f;float r=i<2?.55f:.70f;float y=i<2?.7f+i*.16f:1.95f+(i%3)*.13f;var at=V(Mathf.Cos(a)*r,y,Mathf.Sin(a)*r);b.Crown(at,V(1.8f+(i%2)*.15f,1.38f,1.8f),Color.Lerp(Leaf,Moss,i<2?.48f:.12f*(i%3)),n*7+i,6,3);}
     for(int i=0;i<4;i++){float a=i*Mathf.PI/2+n*.3f;b.Frond(V(Mathf.Cos(a),.2f,Mathf.Sin(a)),V(Mathf.Cos(a)*1.35f,.85f,Mathf.Sin(a)*1.35f),.17f,Moss);}
 
    }

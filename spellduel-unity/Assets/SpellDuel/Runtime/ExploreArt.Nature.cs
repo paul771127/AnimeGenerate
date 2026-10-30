@@ -49,14 +49,14 @@ namespace SpellDuel
   static void HabitableTent(Geo b,int n)
   {
    var cloth=n==0?new Color(.67f,.49f,.25f):n==1?Leaf:new Color(.48f,.35f,.31f);
-   const float w=.72f,d=.68f,eave=2.05f,ridge=2.65f;
+   const float w=.72f,d=.68f,eave=1.70f,ridge=2.25f;
    // Upright walls give useful headroom across the entrance, unlike a miniature A-frame.
    for(int side=-1;side<=1;side+=2){float x=side*w;
     b.Quad(V(x,0,-d),V(x,eave,-d),V(x,eave,d),V(x,0,d),cloth,true);
     b.Quad(V(x,eave,-d),V(0,ridge,-d),V(0,ridge-.10f,d),V(x,eave,d),Color.Lerp(cloth,Bone,.1f),true);
     b.Rod(V(x,0,d),V(x,eave+.04f,d),.035f,Bark,6);b.Rod(V(x,0,-d),V(x,eave+.04f,-d),.035f,Bark,6);
-    b.Quad(V(side*.56f,0,d+.005f),V(side*.56f,1.98f,d+.005f),V(x,eave,d+.005f),V(x,0,d+.005f),cloth,true);
-    b.Rod(V(side*.62f,.35f,d+.025f),V(side*.62f,1.98f,d+.025f),.06f,Color.Lerp(cloth,Bone,.2f),7,.08f);
+    b.Quad(V(side*.56f,0,d+.005f),V(side*.56f,1.65f,d+.005f),V(x,eave,d+.005f),V(x,0,d+.005f),cloth,true);
+    b.Rod(V(side*.62f,.35f,d+.025f),V(side*.62f,1.65f,d+.025f),.06f,Color.Lerp(cloth,Bone,.2f),7,.08f);
     for(int i=0;i<5;i++)b.Rod(V(x,eave-i*.33f,d+.015f),V(x-side*.07f,eave-i*.33f-.08f,d+.015f),.009f,Bone,4);
    }
    b.Quad(V(-w,0,-d),V(w,0,-d),V(w,eave,-d),V(-w,eave,-d),cloth,true);
