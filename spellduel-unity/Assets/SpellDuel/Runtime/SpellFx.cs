@@ -492,6 +492,8 @@ namespace SpellDuel
 
             switch (id)
             {
+                case "arcanewyrm":
+                    BuildArcaneWyrm(root,sc);break;
                 case "quickshot":
                 case "triple":
                 case "snipe":

@@ -690,3 +690,9 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 依CODEX_TASK_BLUEPRINT_GEAR補上程序筆畫「第一名」刻牌、公雞受擊豎冠／鳥喙與合成咕咕聲、暖爐煙柱與原有火星、烤肉油滴、竹笛走音／出手葉片、盆栽隨步搖擺與週期開花、水母觸鬚電弧、跳躍時鯊魚下顎咬合／發光背鰭、霓虹光環跑馬燈、招財貓五枚金幣、沙漏上流砂／漂浮指針、駱駝耳朵／駝峰絨毛刻紋／嚼草與吐水。所有模型與音波快取，音效遵守既有Sfx音量／開關；不寫存檔、不改Combat／Blueprints／Crafting。
 
 新增純美術介面 `CharacterRig.BlueprintImpact(Vector3 atWorld)`：只有當前武器為bp_corn時在指定Unity場景座標噴出爆米花，無傷害。**Claude需在實際武器命中通知時呼叫**；模型本身不猜測命中，不更動戰鬥接線。其餘動作讀既有Charge、Attacking、MoveSpeed、hitT與手機跳躍呈現資料，不新增連線資料。增加15件細節特寫與動畫快取檢查；雙平台／原生圖待CI確認。
+
+
+### 2026-10-30 新技能特效 A1：操魔光龍
+- 新增東方龍頭、分叉龍角、龍鬚、張口、漸細龍身與背鰭。單一動態網格、24 段，沿戰場座標路徑取樣，出生漸長、轉彎跟隨，避免 AR 平移斷裂。
+- 接線介面：`SpellFx.WyrmFade(GameObject)` 取代直接 Destroy，頭到尾散光；穿透命中呼叫 `SpellFx.WyrmPierce(Vector3)`。不改傷害與網路。
+- 新增獨立原生預覽 RenderNewSkillFx，檢查長度、AR 平移與四張連續畫面。編譯／預覽結果待 CI 驗證後補記。
