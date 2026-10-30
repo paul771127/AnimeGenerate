@@ -23,7 +23,7 @@ namespace SpellDuel
         const float RoomWarnDist = 0.5f;       // 離真實房間邊緣這麼近就提醒
         float dashOpenAt = -99f, dashLostAt = -1f, dashStepAt, nextRoomWarn;
         bool dashing, dashStuck;
-        float dashMovedAt = -99f;
+        float dashMovedAt = -99f, dashStartAt = -99f;
         float dashDistance;   // 這一場總共衝了幾公尺（新手教學用）
         Vector3 dashTotalS;   // 到目前為止世界總共被平移多少（session 座標）
         Vector3 dashMoveW;    // 衝刺讓角色在場地上前進了多少（場地座標）
@@ -44,7 +44,7 @@ namespace SpellDuel
             if (!DashAllowed) { StopDash(); return; }
             if (!dashing)
             {
-                if (fist && Time.time - dashOpenAt <= DashArm) { dashing = true; dashLostAt = -1f; dashStepAt = Time.time; Haptics.Play(Haptics.Kind.Light); if (!BtFlag("dash")) BtMark("dash"); }
+                if (fist && Time.time - dashOpenAt <= DashArm) { dashing = true; dashLostAt = -1f; dashStepAt = Time.time; dashStartAt = Time.time; Haptics.Play(Haptics.Kind.Light); if (!BtFlag("dash")) BtMark("dash"); }
                 else return;
             }
             if (fist) dashLostAt = -1f;
@@ -205,16 +205,61 @@ namespace SpellDuel
             if (!dashing || dashLostAt >= 0f || !DashAllowed) return;   // 暫停、追蹤中斷、打完：不顯示
             // 卡住（邊界、敵人擋著）：不畫速度線，只提示衝不過去
             if (dashStuck || Time.time - dashMovedAt > 0.15f) { UiKit.Pill(H * 0.62f, $"🛑 {dashWhy ?? "前面"}，衝不過去（鬆開拳頭）", Mathf.RoundToInt(H * 0.022f), new Color(1f, 0.6f, 0.45f), W * 0.5f); return; }
-            // 畫面兩側的速度線
-            GUI.color = new Color(1f, 1f, 1f, 0.35f);
-            for (int i = 0; i < 10; i++)
+            // 第一人稱的速度線（使用者要求更明顯）：從畫面四周往中心收的放射線，往外流動；四周加暗角；中間留空不擋視線
+            float k = Mathf.Clamp01((Time.time - dashStartAt) / 0.2f);   // 剛開始衝的 0.2 秒淡入
+            var c = new Vector2(W * 0.5f, H * 0.5f);
+            GUI.color = new Color(0f, 0f, 0f, 0.5f * k);
+            GUI.DrawTexture(new Rect(0, 0, W, H), DashVignette);
+            var keep = GUI.matrix;
+            const int N = 48;
+            for (int i = 0; i < N; i++)
             {
-                float y = H * (0.1f + 0.08f * i) + Mathf.Repeat(Time.time * 900f + i * 137f, H * 0.08f);
-                float len = W * (0.08f + 0.05f * ((i * 7) % 3));
-                GUI.DrawTexture(new Rect(0, y, len, 3), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(W - len, H - y, len, 3), Texture2D.whiteTexture);
+                float h = Mathf.Repeat(i * 0.6180339f, 1f);                      // 每條線固定的隨機值
+                float ang = (i + h * 0.6f) * 360f / N, rad = ang * Mathf.Deg2Rad;
+                // 這個方向從中心到螢幕邊緣的距離：直向、橫向畫面都一樣看得到四周的線
+                float edge = Mathf.Min(c.x / Mathf.Max(0.001f, Mathf.Abs(Mathf.Cos(rad))), c.y / Mathf.Max(0.001f, Mathf.Abs(Mathf.Sin(rad))));
+                float t = Mathf.Repeat(Time.time * (2.4f + h * 1.6f) + h * 7f, 1f);   // 0→1：從內往外流
+                float r0 = edge * (0.4f + 0.45f * t), len = edge * (0.3f + 0.3f * h);
+                float thick = Mathf.Min(W, H) * (0.008f + 0.012f * Mathf.Repeat(h * 3.7f, 1f));
+                float a = k * (0.65f + 0.35f * h) * Mathf.Clamp01(t * 5f);          // 剛冒出來時淡入
+                GUI.matrix = keep; GUIUtility.RotateAroundPivot(ang, c);
+                GUI.color = new Color(1f, 1f, 1f, a);
+                GUI.DrawTexture(new Rect(c.x + r0, c.y - thick * 0.5f, len, thick), DashStreak);
             }
+            GUI.matrix = keep;
             GUI.color = Color.white;
+        }
+
+        static Texture2D dashStreak, dashVignette;
+        /// <summary>速度線：靠中心那端細、透明，往外變粗變亮（左→右）</summary>
+        static Texture2D DashStreak
+        {
+            get
+            {
+                if (dashStreak) return dashStreak;
+                const int w = 64, h = 8; dashStreak = new Texture2D(w, h, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+                for (int x = 0; x < w; x++) for (int y = 0; y < h; y++)
+                {
+                    float u = x / (w - 1f), half = 0.15f + 0.85f * u, v = Mathf.Abs((y + 0.5f) / h - 0.5f) * 2f;
+                    dashStreak.SetPixel(x, y, new Color(1f, 1f, 1f, u * u * Mathf.Clamp01((half - v) * 4f)));
+                }
+                dashStreak.Apply(); return dashStreak;
+            }
+        }
+        /// <summary>暗角：中間透明、四周變暗</summary>
+        static Texture2D DashVignette
+        {
+            get
+            {
+                if (dashVignette) return dashVignette;
+                const int n = 64; dashVignette = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+                for (int x = 0; x < n; x++) for (int y = 0; y < n; y++)
+                {
+                    float d = new Vector2(x / (n - 1f) - 0.5f, y / (n - 1f) - 0.5f).magnitude * 2f;
+                    dashVignette.SetPixel(x, y, new Color(1f, 1f, 1f, Mathf.Clamp01((d - 0.55f) / 0.6f)));
+                }
+                dashVignette.Apply(); return dashVignette;
+            }
         }
     }
 }
