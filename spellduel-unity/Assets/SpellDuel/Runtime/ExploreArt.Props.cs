@@ -7,16 +7,23 @@ namespace SpellDuel
   {
    if(p==null)return null;var root=Root(p.kind);int n=((p.variant%3)+3)%3;
    if(p.kind=="tree")n=((p.variant%5)+5)%5;
-   Part(root.transform,"prop/"+p.kind+"/"+n,b=>Prop(b,p.kind,n));root.transform.localScale=Vector3.one*Mathf.Max(.05f,p.radius);
+   Part(root.transform,"prop/"+p.kind+"/"+n,b=>{Prop(b,p.kind,n);PropVariant(b,p.kind,n);});root.transform.localScale=Vector3.one*Mathf.Max(.05f,p.radius);
    if(p.kind=="campfire")Part(root.transform,"Fire",b=>{b.Gem(V(0,.7f,0),V(.65f,1.1f,.65f),Glow(new Color(1,.53f,.12f)),7);b.Gem(V(0,.52f,.1f),V(.35f,.6f,.35f),Glow(Bone));});
    return root;
+  }
+  static void PropVariant(Geo b,string kind,int n)
+  {
+   if(kind=="crate"&&n>0)for(int side=-1;side<=1;side+=2)b.Box(V(side*.45f,.66f,.72f),V(n==1?.07f:.13f,1.35f,.035f),n==1?Rock:Bone);
+   if(kind=="totem")for(int i=0;i<=n;i++)b.Frond(V(-.7f+i*.5f,3.6f,.1f),V(-.5f+i*.5f,2.9f,.2f),.13f,n==1?Jade:Bone);
+   if(kind=="statue"&&n>0)for(int side=-1;side<=1;side+=2)b.Gem(V(side*.3f,3.14f,0),V(.18f,.6f+n*.1f,.18f),n==1?Jade:Bone,5);
+   if(kind=="altar")for(int i=0;i<3+n;i++){float a=i*Mathf.PI*2/(3+n);b.Gem(V(Mathf.Cos(a)*.7f,.9f,Mathf.Sin(a)*.7f),V(.12f,.25f,.12f),n==1?Bone:Jade,4);}
   }
   static void RootFoot(Geo b,Color color){for(int i=0;i<8;i++){float a=i*Mathf.PI/4;b.Rod(V(0,.65f,0),V(Mathf.Cos(a)*.91f,.06f,Mathf.Sin(a)*.91f),.17f,color,5,.10f);}}
   static void Leaves(Geo b,Vector3 at,float length,Color color,int count=8){for(int i=0;i<count;i++){float a=i*2*Mathf.PI/count;b.Frond(at,at+V(Mathf.Cos(a)*length,-length*.16f,Mathf.Sin(a)*length),length*.22f,color);}}
   static void Mushroom(Geo b,Vector3 at,float scale,int n)
   {
    b.Rod(at,at+V(.10f,1.7f*scale,0),.32f*scale,Bone,7,.20f*scale);
-   var top=at+V(.10f,1.65f*scale,0);var col=n%2==0?new Color(.69f,.27f,.49f):Jade;
+   var top=at+V(.10f,1.65f*scale,0);var col=n==2?new Color(.42f,.39f,.8f):n%2==0?new Color(.69f,.27f,.49f):Jade;
    b.Gem(top,V(1.95f,.85f,1.95f)*scale,col,10);b.Ring(top-V(0,.04f,0),.82f*scale,.10f*scale,Glow(Light),10);
    for(int i=0;i<5;i++){float a=i*1.256f;b.Gem(top+V(Mathf.Cos(a)*.45f,.20f,Mathf.Sin(a)*.45f)*scale,V(.18f,.07f,.18f)*scale,Glow(Bone),5);}
   }

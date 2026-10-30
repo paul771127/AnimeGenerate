@@ -791,3 +791,6 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 ### 2026-10-30 動畫 session 交接：16 張首尾靜態圖已交付
 - 原生 Unity Actions 41077472702 成功，16 張 960×544 PNG 已放 Docs/explore_fx/keyframes/，檔名完全照 CODEX_TASK_EXPLORE_FX_KEYFRAMES.md。尺寸、四角純黑／純綠檢查通過；共用實際遊戲模型，不含地面、霧、粒子、文字。
 - 重出選單：SpellDuel/Explore/Export 16 animation keyframes。圖像總覽與像素檢查在 Docs/pending_preview/explore_jungle/。不生成 mp4、不實作動畫。
+
+### 2026-10-30 靜態模型細修
+- 修正程序圓桿上下封口的面朝向，避免俯視時看到空洞；木箱束帶、圖騰羽飾、石像冠飾、祭壇刻紋與紫色菇傘增加實際變體差異。重跑原生全景與靜態圖，無動畫或遊戲邏輯變更。
