@@ -40,6 +40,7 @@ namespace SpellDuel.EditorTools
       for(int frame=0;frame<60;frame++)foreach(var effect in effects)effect.Sample(.016f);
       if(meshCount!=Resources.FindObjectsOfTypeAll<Mesh>().Length||matCount!=Resources.FindObjectsOfTypeAll<Material>().Length)throw new Exception("Blueprint detail cache allocation "+bp.id);
       foreach(var ps in rig.GetComponentsInChildren<ParticleSystem>())ps.Simulate(.8f,true,true);
+      typeof(CharacterRig).GetMethod("SetFlash",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).Invoke(rig,new object[]{false});
       CarpetFit(cam,effects[0].gameObject,"blueprint_detail_"+bp.id,new Vector3(.15f,.15f,1),720,720);
      }
      rig.SetGear(null);bool restored=true;for(int k=0;k<originals.Length;k++)if(originals[k] && originals[k].forceRenderingOff!=hidden[k])restored=false;
