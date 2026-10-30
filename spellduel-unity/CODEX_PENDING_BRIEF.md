@@ -776,3 +776,8 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - CreateGate／SetGateOpen、CreateSeal／SetSealOpen、CreateSwitch／SetSwitchDone 已提供。只即時切換靜態狀態，不含 Update、時間軸或粒子。
 - 動畫子物件：Closed/Vine_0～5、RootKnot_*、DoorLeft／DoorRight、BronzeLock、StoneDoor、Socket_0～2/Lit、PressurePlate/Rune、BronzeKey、JadeShard。SetSealOpen 每次也讀取原 ExSeal.have 更新凹槽，進度變動時可重複呼叫，不修改資料。
 - 為優先提供動畫首尾圖，鑰匙、碎片與壓板與門同批先做；其餘地標／競技場繼續完成。
+
+### 2026-10-30 故事探索 7～11：任務模型、NPC 與動畫靜態圖輸出器
+- 古樹之心 AncientHeart、月光草 MoonLeaves、微弱 Glint、7 位 NPC 配件／森林之靈、任務與發現標記、地名橫幅靜態畫面完成。SparkleFound 依新單保留空函式。沒有定時更新或動畫。
+- DressNpc 可重複呼叫且可換型；NPC 配件掛 Spine／Head，森林之靈有 SpiritBody／OrbitLeaf_*。QuestMark 子物件 Exclaim／Question、AlertMark 的 Glyph／CallerAccent。
+- Editor 選單 SpellDuel/Explore/Export 16 animation keyframes 從實際模型輸出 960×544，黑底／綠幕、無地板與粒子。獨立 CI 先產生 16 張供另一個 session 用，場景其他項目接續製作。
