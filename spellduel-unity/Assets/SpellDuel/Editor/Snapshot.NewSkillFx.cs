@@ -26,6 +26,12 @@ namespace SpellDuel.EditorTools
    Shot(cam,go,"newfx_arcanewyrm_firstperson",new Vector3(0,1.6f,-1),new Vector3(1,1.3f,3),720,960);
    wyrm.BeginFade();wyrm.Sample(.4f);Shot(cam,go,"newfx_arcanewyrm_fade",new Vector3(5,3,6),new Vector3(1,1.2f,2),960,720);
    UnityEngine.Object.DestroyImmediate(go);
+   foreach(string id in new[]{"landmine","snaretrap","trapchain"})
+   {
+    var trap=SpellFx.CreateTrapVisual(Skills.All[id]);SpellFx.SetTrapArmed(trap,true);trap.GetComponent<TrapArtView>().Sample(.2f);
+    Shot(cam,trap,"newfx_"+id+"_spectator",new Vector3(.8f,.8f,1),Vector3.zero,720,720);
+    Shot(cam,trap,"newfx_"+id+"_firstperson",new Vector3(0,1.6f,-.8f),Vector3.zero,720,960);UnityEngine.Object.DestroyImmediate(trap);
+   }
    File.WriteAllText("snapshots/newfx_audit.json","{\"wyrmSegments\":24,\"arShiftContinuous\":true}");
   }
  }

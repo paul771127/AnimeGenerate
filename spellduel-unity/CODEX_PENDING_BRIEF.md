@@ -696,3 +696,7 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 新增東方龍頭、分叉龍角、龍鬚、張口、漸細龍身與背鰭。單一動態網格、24 段，沿戰場座標路徑取樣，出生漸長、轉彎跟隨，避免 AR 平移斷裂。
 - 接線介面：`SpellFx.WyrmFade(GameObject)` 取代直接 Destroy，頭到尾散光；穿透命中呼叫 `SpellFx.WyrmPierce(Vector3)`。不改傷害與網路。
 - 新增獨立原生預覽 RenderNewSkillFx，檢查長度、AR 平移與四張連續畫面。編譯／預覽結果待 CI 驗證後補記。
+
+### 2026-10-30 新技能特效 B6：陷阱
+- 爆裂地雷：半埋金屬壓盤、六顆鉚釘、引信、啟動紅燈；捕獸夾：鉸鏈弧形鋼齒；連環陷阱：額外互扣鐵鏈。
+- 新介面 `CreateTrapVisual(SkillDef)`／`SetTrapArmed(GameObject,bool)`／`MineBlast(Vector3,float,Color)`，未知陷阱回 null。爆炸範圍環精確依 radius，火球、碎石、煙柱各有限量粒子。Claude 接陷阱生命週期與爆炸事件；未動判定。
