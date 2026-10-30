@@ -248,7 +248,7 @@ namespace SpellDuel
             var en = battle.enemy;
             bool show = bossStation && (en.Alive || skyShipDeadAt > 0f && Time.time - skyShipDeadAt < 5.5f);
             if (!show) { if (skyShip) { Destroy(skyShip.gameObject); skyShip = null; } if (!bossStation) skyShipDeadAt = -1f; return; }
-            if (!skyShip) { skyShip = AirshipRig.Create(); skyShipPhase = 1; skyShip.SetPhase(1); SpawnFade.Play(skyShip.gameObject); }
+            if (!skyShip) { skyShip = AirshipRig.Create(); skyShip.transform.localScale = Vector3.one * DevSeed.BossScale; skyShipPhase = 1; skyShip.SetPhase(1); SpawnFade.Play(skyShip.gameObject); }
             var fwdU = WorldFrame.DirFromWorld(battle.carpetFwd); fwdU.y = 0f;
             skyShip.transform.SetPositionAndRotation(SkyU(battle.ShipRoot), Quaternion.LookRotation(fwdU.sqrMagnitude > 1e-4f ? -fwdU.normalized : Vector3.back));
             skyShip.SetSwoop(battle.carpetSwoop);

@@ -35,7 +35,7 @@ namespace SpellDuel
             prof = null; charOpen = false;
             ApplyProfile(me);
             var bc = Skills.Classes["boss_" + id];
-            var boss = new Fighter(bc.name, bc, new List<string>(bc.defaultLoadout), false) { bodyRadius = WorldBossRadius };
+            var boss = new Fighter(bc.name, bc, new List<string>(bc.defaultLoadout), false) { bodyRadius = WorldBossRadius * DevSeed.BossScale };
             int diff = difficulty;
             boss.maxHp = Mathf.RoundToInt(BossHpSolo * BossHpFor(diff) * Battle.BossHpCut * WorldBossHpMul); boss.hp = boss.maxHp;
             me.damageTakenMul = DamageTakenFor(diff);
@@ -50,8 +50,8 @@ namespace SpellDuel
             // 第 1 階段站樁：直接站在場地中間（你站在中間就往你對面退一點）
             var at = Vector3.zero;
             if (Battle.FlatDistance(at, me.Feet) < 3f) { var away = Fighter.Flat(-me.Feet); if (away == Vector3.zero) away = Fighter.Flat(me.forward); at = me.Feet + away * 3f; }
-            worldArt = BossRig.CreateWorld(id);
-            boss.head = new Vector3(at.x, worldArt.Height * 0.75f, at.z);
+            worldArt = BossRig.CreateWorld(id); worldArt.transform.localScale = Vector3.one * DevSeed.BossScale;   // 開發版 Boss 體積減半
+            boss.head = new Vector3(at.x, worldArt.Height * 0.75f * DevSeed.BossScale, at.z);
             boss.forward = Fighter.Flat(me.head - boss.head);
             bossSeen = true;
             worldAi = new WorldBossAI(battle, boss, p => area.Inside(WorldFrame.FromWorld(p)), p => area.DistanceToEdge(WorldFrame.FromWorld(p)));

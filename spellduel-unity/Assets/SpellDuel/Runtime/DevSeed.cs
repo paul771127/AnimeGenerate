@@ -20,6 +20,9 @@ namespace SpellDuel
         public const int Level = 50, Gold = 100000, BaitEach = 3;
         public const string WeaponBlueprint = "bp_skewer";   // 燒肉串串大劍（Lv50）
         public static bool IsDevApp(string bundleId) => bundleId != null && bundleId.EndsWith(".dev");
+        /// <summary>開發版：所有 Boss 體積減半（外觀、身高、判定半徑；使用者要求）。正式版＝1</summary>
+        public static float BossScale => bossScale ??= IsDevApp(Application.identifier) ? 0.5f : 1f;
+        static float? bossScale;
         public static readonly (string cls, string adv, string name)[] Chars =
         {
             ("archer", "ranger", "遊俠50"), ("assassin", "ninja", "忍者50"), ("mage", "archmage", "大魔導50"),

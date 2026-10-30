@@ -1239,7 +1239,7 @@ namespace SpellDuel
             // 無盡模式的 Boss 不召喚小怪（小怪由場地邊緣陸續冒出）
             var bossSkills = new List<string>(bc.defaultLoadout);
             if (endlessMode) bossSkills.Remove("b_summon");
-            var boss = new Fighter(bc.name, bc, bossSkills, false) { bodyRadius = Battle.BossModelRadius + Battle.BossBodyExtra };   // 判定半徑：模型 0.75m＋1m（玩家碰到就靠不過去）
+            var boss = new Fighter(bc.name, bc, bossSkills, false) { bodyRadius = (Battle.BossModelRadius + Battle.BossBodyExtra) * DevSeed.BossScale };   // 判定半徑：模型 0.75m＋1m（玩家碰到就靠不過去）
             int partyN = coopMode ? 1 + PeerIds.Count : 1;
             float party = 1f + 0.5f * (partyN - 1);   // 參與人數倍率：每多一人，Boss 血量 +50%（攻擊力 +20%、施法頻率 +25% 在 BossAI）
             // 故事／副本：其他設定都照簡單，難度只加等級（下面的 battle.levelBoost）；無盡塔（單人無盡）固定普通；討伐 Boss、合作照選的難度
@@ -1310,8 +1310,8 @@ namespace SpellDuel
             WireHazards();   // 角鬥場的陷阱、山道的落石（SoloBattle.Hazards.cs）
             // Boss 出生點：場地內、離玩家們夠遠的地方（隊友端先放在遠處，等主機的位置）
             battle_MeForSpawn = me;
-            boss.head = host && !RemotePlay ? BossStartPoint(me) : new Vector3(0f, BossRig.Height, 0f);   // 遠端：Boss 在大家圍成的圓中間（開戰時才定座位）
-            boss.head.y = BossRig.Height;
+            boss.head = host && !RemotePlay ? BossStartPoint(me) : new Vector3(0f, BossRig.Height * DevSeed.BossScale, 0f);   // 遠端：Boss 在大家圍成的圓中間（開戰時才定座位）
+            boss.head.y = BossRig.Height * DevSeed.BossScale;   // 開發版 Boss 體積減半（DevSeed.BossScale）
             boss.forward = Fighter.Flat(me.head - boss.head);
             bossSeen = host;
             if (host)
@@ -1401,7 +1401,7 @@ namespace SpellDuel
                 battle.minionSpeed = diff == 0 ? 0.75f : diff == 1 ? 0.95f : 1.15f;
             }
             ai = null;
-            bossRig = BossRig.Create();
+            bossRig = BossRig.Create(); bossRig.transform.localScale = Vector3.one * DevSeed.BossScale;
             bossRig.SetVisible(bossSeen);
             if (bossSeen && !endlessMode) SpawnFade.Play(bossRig.gameObject);   // 淡入出現
             lastEnemyFeet = boss.Feet; lastEnemyHp = boss.hp; lastBossHp = boss.hp; enemyDeadShown = false;
@@ -1507,7 +1507,7 @@ namespace SpellDuel
         Vector3 BossStartPoint(Fighter me)
         {
             var p = OutsideEdgePoint(true);
-            return new Vector3(p.x, BossRig.Height, p.z);
+            return new Vector3(p.x, BossRig.Height * DevSeed.BossScale, p.z);
         }
 
         void OnBossEnrage()
@@ -3473,7 +3473,7 @@ namespace SpellDuel
                     {
                         // 換主題的 Boss（熔岩巨像 ↔ 腐化樹王）：重建外觀
                         Destroy(bossRig.gameObject);
-                        bossRig = BossRig.Create(battle.Theme);
+                        bossRig = BossRig.Create(battle.Theme); bossRig.transform.localScale = Vector3.one * DevSeed.BossScale;
                         bossRig.transform.SetPositionAndRotation(feetS, rot);
                     }
                     if (en.Alive && !bossAliveShown)
