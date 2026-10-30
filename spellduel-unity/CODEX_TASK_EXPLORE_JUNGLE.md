@@ -8,7 +8,7 @@
 
 Claude 已經把地圖改成有**地形種類、地面種類、景物障礙、地標**（碰撞都做好了：牆、湖水、城寨木牆和每一個景物，玩家和怪物都走不過去）。現在畫面全是暫代的色塊（綠方塊、灰方塊、藍色平板、圓柱、圓球），請做成真的森林場景。
 
-**分工照舊**：Codex 做模型、動畫、特效；不要改 `Explore.cs`、`Combat*.cs`、`SoloBattle.Explore.cs` 的邏輯與碰撞。新介面請加在新的美術檔（例如 `ExploreArt.cs`），寫在 `CODEX_PENDING_BRIEF.md` 最後的「Codex 實作紀錄」，Claude 再接線。完成後推到 `claude/mobile-camera-mic-battle-game-v5nhfr`；Android、iOS 都要編譯通過。預覽放 `Docs/pending_preview/explore_jungle/`（每個地標第一人稱一張、整張地圖俯視一張）。
+**分工**：Codex 只做**靜態**模型、材質與介面；**動畫不是 Codex 做**（見下面「動畫」一節）。不要改 `Explore.cs`、`Combat*.cs`、`SoloBattle.Explore.cs` 的邏輯與碰撞。新介面請加在新的美術檔（例如 `ExploreArt.cs`），寫在 `CODEX_PENDING_BRIEF.md` 最後的「Codex 實作紀錄」，Claude 再接線。完成後推到 `claude/mobile-camera-mic-battle-game-v5nhfr`；Android、iOS 都要編譯通過。預覽放 `Docs/pending_preview/explore_jungle/`（每個地標第一人稱一張、整張地圖俯視一張）。
 
 ## 地圖資料（唯讀）
 
@@ -53,25 +53,29 @@ Claude 已經把地圖改成有**地形種類、地面種類、景物障礙、�
    - 藤牙寨：寨門的拱門（上面掛骷髏與藤蔓旗）、瞭望台（放在木牆格上）、火把
    - 碎岩谷：高聳的岩柱、從岩壁長出的扭曲樹
    - 回音洞窟：洞口的岩石拱門、發光水晶、水滴落下的特效
-   - 巨菇林：飄浮的孢子光點
+   - 巨菇林：孢子光點（靜態；飄動是地端 AI 的動畫 D4）
    - 翠玉古殿：入口的大石門框、殘破的翠綠屋頂（放在牆格上方）、藤蔓纏繞的石像
    - 營地：晾掛的獸皮、柵欄
    - 林語營地：長老的小屋、旗子
-5. **藤蔓門** `GameObject ExploreArt.CreateGate(int arena, float cell)` ＋ `void ExploreArt.SetGateOpen(GameObject gate, bool open)`：關著時是糾纏的粗藤蔓（帶黑紫色腐化光），打開時縮回地面（約 1.5 秒）。
+5. **藤蔓門** `GameObject ExploreArt.CreateGate(int arena, float cell)` ＋ `void ExploreArt.SetGateOpen(GameObject gate, bool open)`：關著時是糾纏的粗藤蔓（帶黑紫色腐化光）；SetGateOpen 只切換顯示／隱藏（縮回地面的動畫是地端 AI 做，A1）。每一束藤蔓分成獨立子物件。
 6. **競技場與王座** `GameObject ExploreArt.CreateArena(int n, float radius)`：1 苔甲守根者的巢穴（苔蘚、巨根）、2 夢孢司祭的祭壇（發光菇、孢子霧）、3 翠翼巡獵者的獵場（羽毛、掛著的獵物骨）、4 腐化樹王的王座（巨大的枯樹王座、黑紫腐化根脈，在古殿最深處）。地上要看得出範圍邊界。
-7. **祭壇與古樹之心** `void ExploreArt.SetAltarGlow(GameObject altarProp, bool heartThere)`：`altar` 這個景物在 Boss 倒下後浮出發綠光的「古樹之心」，被拿走後光熄滅。
-8. **月光草** `GameObject ExploreArt.CreateHerb()`、**閃光點** `GameObject ExploreArt.CreateSparkle(string kind)`（平常幾乎看不到，每 2～4 秒閃一下）＋ `void ExploreArt.SparkleFound(Vector3 atWorld, string kind)`（發現的特效）。
+7. **祭壇與古樹之心** `void ExploreArt.SetAltarGlow(GameObject altarProp, bool heartThere)`：`altar` 這個景物上的「古樹之心」（獨立子物件）在 heartThere 時顯示並發綠光、否則隱藏（浮出與熄滅的動畫是地端 AI 做，C4）。
+8. **月光草** `GameObject ExploreArt.CreateHerb()`、**閃光點** `GameObject ExploreArt.CreateSparkle(string kind)`（很小、很淡的光點；閃爍的動畫是地端 AI 做，C1）＋ `void ExploreArt.SparkleFound(Vector3 atWorld, string kind)`（先留空函式，C2 由地端 AI 做）。
 9. **NPC 外型** `void ExploreArt.DressNpc(CharacterRig rig, string npcId)`（elder 長老、hunter 獵人、lost 探險家、outpost 前哨站守衛、herbalist 草藥師、guardian 守林人、spirit 森林之靈）＋ `void ExploreArt.QuestMark(Transform npc, int state)`（0 無、1 ❗、2 ❓）。
-10. **怪物發現玩家** `void ExploreArt.AlertMark(Transform monster, bool callsHelp)`：頭上的紅色「！」（叫同伴的再加往外擴散的聲波）。
-11. **發現地標** `void ExploreArt.LandmarkFound(ExLandmark l)`（選做）：第一人稱畫面上方一行漂亮的地名橫幅（像開放世界遊戲進入新區域那樣）。
+10. **怪物發現玩家** `void ExploreArt.AlertMark(Transform monster, bool callsHelp)`：頭上的紅色「！」靜態圖示（彈出、聲波的動畫是地端 AI 做，E2）。
+11. **發現地標** `void ExploreArt.LandmarkFound(ExLandmark l)`（選做）：地名橫幅的靜態外框與字樣（展開、消散的動畫是地端 AI 做，E4）。
 
 12. **岔路解謎（使用者追加）**：`map.seals`（封印：苔根封印、寨主之鎖、雙獵封印、翠玉封印，`cells` 是被封住的入口格）和 `map.switches`（`kind`：lever 機關、key 鑰匙、shard 翠玉碎片，放在岔路死路底）。
-   - `GameObject ExploreArt.CreateSeal(ExSeal s, int x, int z, float cell)` ＋ `void ExploreArt.SetSealOpen(GameObject g, bool open)`：四種封印外觀不同（苔根盤結、掛著古銅大鎖的木柵、兩道藤蔓結、刻著三個凹槽的翠玉石門；凹槽依 `s.have` 亮起），解開時的動畫。現在是紫色方塊。
-   - `GameObject ExploreArt.CreateSwitch(ExSwitch sw)` ＋ `void ExploreArt.SetSwitchDone(GameObject g)`：石雕機關（拉桿或可以踩的石盤，啟動後下沉發光）、古銅鑰匙、翠玉碎片（浮在空中慢慢轉、發綠光）。在死路底要遠遠就隱約看得到一點光，引導玩家走進岔路。
+   - `GameObject ExploreArt.CreateSeal(ExSeal s, int x, int z, float cell)` ＋ `void ExploreArt.SetSealOpen(GameObject g, bool open)`：四種封印外觀不同（苔根盤結、掛著古銅大鎖的木柵、兩道藤蔓結、刻著三個凹槽的翠玉石門；凹槽依 `s.have` 亮起），SetSealOpen 只切換狀態（解開的動畫是地端 AI 做，A2～A5）。現在是紫色方塊。
+   - `GameObject ExploreArt.CreateSwitch(ExSwitch sw)` ＋ `void ExploreArt.SetSwitchDone(GameObject g)`：石雕機關（可以踩的石盤，壓板分成獨立子物件；SetSwitchDone 切成「已下沉、亮著」的狀態）、古銅鑰匙、翠玉碎片（浮在空中、發綠光；旋轉漂浮是地端 AI 的動畫 B2）。在死路底要遠遠就隱約看得到一點光，引導玩家走進岔路。
 
-## 動畫：先等使用者確認提示詞
+## 動畫：不是 Codex 做
 
-使用者要求「要做動畫的先給我提示詞」：所有動畫（門與封印打開、機關啟動、閃光點、月光草、祭壇、湖面、篝火、孢子、洞窟、城寨旗子、森林之靈、「！」、任務標記、地名橫幅）的長度與動作順序寫在 `EXPLORE_ANIMATION_PROMPTS.md`。**動畫部分等使用者確認那份提示詞後再做**；靜態模型（牆、地形、景物）可以先做。
+使用者要求：所有動畫（門與封印打開、機關啟動、閃光點、月光草、祭壇、湖面、篝火、孢子、洞窟、城寨旗子、森林之靈、「！」、任務標記、地名橫幅）由**使用者另一個 session 的地端 AI** 製作，提示詞在 `EXPLORE_ANIMATION_PROMPTS.md`。
+
+Codex 這邊：
+- 只做靜態的樣子；上面列的 `SetGateOpen`、`SetSealOpen`、`SetSwitchDone`、`SetAltarGlow`、`SparkleFound`、`QuestMark`、`AlertMark`、`LandmarkFound` 等介面**只要切換狀態**（例如門：關＝顯示、開＝隱藏；閃光點：顯示／隱藏），不要自己做動畫。
+- 請把會動的部位**分成獨立的子物件並命名**（例如門的每一束藤蔓、祭壇上的古樹之心、石雕機關的壓板、封印的凹槽），之後地端 AI 做動畫時可以直接掛上去。命名寫在實作紀錄。
 
 ## 預算與注意
 

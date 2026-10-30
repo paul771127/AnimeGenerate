@@ -1,6 +1,6 @@
 # 故事探索「翠蔭迷林」動畫提示詞
 
-這份是 `CODEX_TASK_EXPLORE_JUNGLE.md` 裡**需要做動畫**的項目，先給使用者看、生成參考影片或確認方向後，再交給 Codex 照著做進遊戲。
+這份是故事探索場景裡**需要做動畫**的項目，給使用者另一個 session 的**地端 AI** 製作（不是 Codex）。Codex 只做靜態模型，並把會動的部位分成獨立、有命名的子物件（見 `CODEX_TASK_EXPLORE_JUNGLE.md`「動畫」一節與 `CODEX_PENDING_BRIEF.md` 的實作紀錄），地端 AI 的動畫做好後由 Claude 接到遊戲的觸發點。
 
 **共同風格（每一則都可以接在提示詞後面）**
 > Japanese anime cel-shaded style, two-tone toon shading with crisp black outlines, saturated jungle greens, moss green and bark brown, corrupted parts in black-purple glow, quest objects in warm white / pale blue light, game asset animation, clean loop, isolated on plain dark background, 3/4 front view, no text, no watermark
@@ -137,6 +137,19 @@
 
 ---
 
-## 交給 Codex 時
+## 做好之後
 
-使用者確認（或生成參考影片）後，Codex 依這份的**長度與動作順序**做程序動畫。介面名稱照 `CODEX_TASK_EXPLORE_JUNGLE.md`：A1 `SetGateOpen`、A2～A5 `SetSealOpen`、B1／B2 `SetSwitchDone`、C1／C2 `CreateSparkle`／`SparkleFound`、C3 `CreateHerb`、C4 `SetAltarGlow`、D 系列 `CreateWall`／`CreateLandmark`／`CreateProp`、E1 `DressNpc`、E2 `AlertMark`、E3 `QuestMark`、E4 `LandmarkFound`。
+地端 AI 的動畫做好後，Claude 依下面的觸發點接進遊戲（遊戲裡什麼時候播）：
+
+| 動畫 | 什麼時候播 |
+|---|---|
+| A1 藤蔓門打開 | 小 Boss 被打倒 |
+| A2～A5 封印解開 | 機關、鑰匙、碎片湊齊（A5 每放進一片碎片播一次凹槽亮起） |
+| B1 機關待機／啟動、B2 鑰匙與碎片待機／撿起 | 平常循環；玩家走到旁邊時啟動／撿起 |
+| C1 閃光點、C2 發現 | 平常循環；玩家點到時 |
+| C3 月光草、C4 祭壇 | 平常循環；Boss 倒下時浮出古樹之心、拿走時熄滅 |
+| D 系列環境 | 玩家附近時循環 |
+| E1 森林之靈 | 點到「發光的樹洞」閃光點、森林之靈出現後循環 |
+| E2「！」 | 怪物發現玩家（會叫同伴的加聲波） |
+| E3 任務標記 | NPC 有任務（❗）、可以回報（❓）時循環 |
+| E4 地名橫幅 | 第一次走進地標 |
