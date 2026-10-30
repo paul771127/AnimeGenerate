@@ -336,6 +336,7 @@ namespace SpellDuel
         {
             if (prof == null || string.IsNullOrEmpty(key)) return;
             if (key[0] == 'm' && int.TryParse(key.Substring(1), out int pk)) RollPetDrops(pk);   // 寵物誘餌、馴獸印片：另外擲，不佔「一隻最多掉一樣」（SoloBattle.Pets.cs）
+            if (key == "m" + Battle.TreasureKind) { TrySoulDrop(key); GrantTreasure(); return; }   // 寶箱怪：精魄另外擲，寶物一定給
             if (TrySoulDrop(key)) return;
             int diff = towerRun ? 1 : difficulty;
             if (key[0] == 'm' && int.TryParse(key.Substring(1), out int kind))

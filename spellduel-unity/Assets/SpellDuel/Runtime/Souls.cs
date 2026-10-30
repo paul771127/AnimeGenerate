@@ -90,6 +90,7 @@ namespace SpellDuel
 
         static Souls()
         {
+            // 使用者要求：新增的敵人（小怪、菁英、變種、Boss）都要有自己的精魄；只有召喚物（砂靈）不掉寶所以沒有
             // 每一顆精魄只有一種效果（使用者要求）：加能力值／特殊能力值、或機率附加狀態、或機率發動技能、或機率好處、或「好處＋副作用」其中一種
             // ---- 小怪（0.1%～0.5%）：越常見的越難掉
             M(0, 0.001f, "#ff7a3d", S(Stat.Str, 3));                                         // 熔岩小鬼：能力值
@@ -127,6 +128,7 @@ namespace SpellDuel
                 SoulFx fx = e.role == 0 ? F(SoulOp.Block,.08f) : e.role == 1 ? F(SoulOp.CritDmg,.25f) : e.role == 2 ? F(SoulOp.HitSnare,0,.06f,.8f) : e.role == 3 ? F(SoulOp.KillHeal,.08f,.30f) : F(SoulOp.BasicSpeed,.10f);
                 M(e.kind,.01f,ColorUtility.ToHtmlStringRGB(e.color).Insert(0,"#"),fx);
             }
+            M(Battle.TreasureKind, 0.05f, "#ffd166", F(SoulOp.Gold, 0.20f));                     // 寶箱怪（很少出現、要 30 秒內打 10 下）：金幣 +20%
             M(48,.005f,"#d6ae67",F(SoulOp.CritDmg,.15f));
             M(49,.005f,"#aa8854",F(SoulOp.TrapReduce,.20f));
             M(50,.005f,"#38dddd",F(SoulOp.DodgePower,.15f));
@@ -177,12 +179,13 @@ namespace SpellDuel
             V(134, 0.003f, "#33c0aa", F(SoulOp.TrapReduce, 0.10f));                             // 浮游魔偶・浮衡核：障礙／陷阱傷害 −10%
             V(135, 0.01f, "#a246cc", F(SoulOp.DodgePower, 0.10f));                              // 空賊隊長・領航印：閃過後下一擊更痛
             B("boss_airship", "#f2c14e", F(SoulOp.DuckShield, 0.06f));                          // 逐風號・天穹舵魂：蹲避得到護盾
+            Add(new SoulDef { id = "soul_boss_clockwork", boss = "boss_clockwork", source = "千機匠魂", name = "千機匠魂之魂", chance = BossChance, color = Skills.C("#d8ac62"), fx = new[] { F(SoulOp.DodgePower, 0.25f) } });   // 千機迴廊的 Boss（Skills.Classes 在 TrapGallery.Register 才登記，名字直接寫）：跳蹲閃避後傷害提高
             AssignParts();
         }
 
         /// <summary>武器類（傷害）、飾品類（技能、輔助、特殊）；其他都是防具類（防禦）</summary>
-        static readonly string[] WeaponSouls = { "soul_m151", "soul_m153", "soul_m154", "soul_m158", "soul_m159", "soul_m161", "soul_m163", "soul_m133", "soul_m135", "soul_m101", "soul_m102", "soul_m103", "soul_m105", "soul_m0", "soul_m3", "soul_m5", "soul_m7", "soul_m9", "soul_m10", "soul_m21", "soul_boss_canyon" };
-        static readonly string[] TrinketSouls = { "soul_m152", "soul_m155", "soul_m157", "soul_m162", "soul_m164", "soul_m165", "soul_m143", "soul_m131", "soul_boss_airship", "soul_m107", "soul_m111", "soul_m112", "soul_m113", "soul_m114", "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_m20", "soul_boss", "soul_boss_forest" };
+        static readonly string[] WeaponSouls = { "soul_boss_clockwork", "soul_m151", "soul_m153", "soul_m154", "soul_m158", "soul_m159", "soul_m161", "soul_m163", "soul_m133", "soul_m135", "soul_m101", "soul_m102", "soul_m103", "soul_m105", "soul_m0", "soul_m3", "soul_m5", "soul_m7", "soul_m9", "soul_m10", "soul_m21", "soul_boss_canyon" };
+        static readonly string[] TrinketSouls = { "soul_m152", "soul_m155", "soul_m157", "soul_m53", "soul_m162", "soul_m164", "soul_m165", "soul_m143", "soul_m131", "soul_boss_airship", "soul_m107", "soul_m111", "soul_m112", "soul_m113", "soul_m114", "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_m20", "soul_boss", "soul_boss_forest" };
         static void AssignParts()
         {
             foreach (var d in All)
