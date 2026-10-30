@@ -52,6 +52,15 @@ namespace SpellDuel.EditorTools
    {var g=ExploreArt.CreateProp(new ExProp{kind=kind,variant=i,radius=1});Fit(cam,g,"explore_prop_"+kind+"_"+i);UnityEngine.Object.DestroyImmediate(g);}
    foreach(ExTerrain t in Enum.GetValues(typeof(ExTerrain))){var g=ExploreArt.CreateWall(t,1,2,3);Fit(cam,g,"explore_wall_"+t);UnityEngine.Object.DestroyImmediate(g);}
    for(int n=1;n<=4;n++){var g=ExploreArt.CreateArena(n,4);Fit(cam,g,"explore_arena_"+n);UnityEngine.Object.DestroyImmediate(g);}
+   // Equal-camera comparison: repeated species must differ in silhouette, not only colour.
+   var lineup=new GameObject("Tree variation lineup");
+   for(int i=0;i<4;i++){var g=ExploreArt.CreateProp(new ExProp{kind="tree",variant=1,radius=1,pos=new Vector3(i*.1f,0,0)});g.transform.SetParent(lineup.transform,false);g.transform.localPosition=new Vector3(i*2.25f,0,0);}
+   Fit(cam,lineup,"explore_tree_variation_lineup");UnityEngine.Object.DestroyImmediate(lineup);
+   lineup=new GameObject("Wall variation lineup");for(int i=0;i<4;i++){var g=ExploreArt.CreateWall(ExTerrain.Thicket,i,0,3);g.transform.SetParent(lineup.transform,false);g.transform.localPosition=new Vector3(i*3.3f,0,0);}Fit(cam,lineup,"explore_thicket_variation_lineup");UnityEngine.Object.DestroyImmediate(lineup);
+   lineup=new GameObject("Tent true scale comparison");var tent=ExploreArt.CreateProp(new ExProp{kind="tent",radius=.9f});tent.transform.SetParent(lineup.transform,false);
+   var monster=MinionRig.Create();monster.SetVariant(9);monster.transform.SetParent(lineup.transform,false);monster.transform.localPosition=new Vector3(1.3f,0,.3f);
+   var human=CharacterRig.Create("swordsman");human.transform.SetParent(lineup.transform,false);human.transform.localPosition=new Vector3(-1.45f,0,0);
+   Fit(cam,lineup,"explore_tent_scale");UnityEngine.Object.DestroyImmediate(lineup);
    var map=JungleMaze.Build();foreach(var seal in map.seals){var g=ExploreArt.CreateSeal(seal,0,0,3);Fit(cam,g,"explore_"+seal.id+"_closed");seal.have=seal.need;ExploreArt.SetSealOpen(g,false);Fit(cam,g,"explore_"+seal.id+"_ready");ExploreArt.SetSealOpen(g,true);if(g.transform.Find("Closed").gameObject.activeSelf)throw new Exception("Seal did not hide");ExploreArt.SetSealOpen(g,false);if(!g.transform.Find("Closed").gameObject.activeSelf)throw new Exception("Seal did not close");UnityEngine.Object.DestroyImmediate(g);}
    foreach(var npc in map.npcs){var rig=CharacterRig.Create(npc.look);rig.InCombat=false;ExploreArt.DressNpc(rig,npc.id);Fit(cam,rig.gameObject,"explore_npc_"+npc.id);UnityEngine.Object.DestroyImmediate(rig.gameObject);}
    // Warm factories twice: the second cycle must reuse every mesh and material.
