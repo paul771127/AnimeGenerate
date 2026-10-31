@@ -50,6 +50,9 @@ namespace SpellDuel.EditorTools
    for(int k=0;k<names.Length;k++){
     var tex=new Texture2D(64,64,TextureFormat.RGB24,true);var pixels=new Color[4096];for(int y=0;y<64;y++)for(int x=0;x<64;x++){float shade=k==1?.90f+.1f*Mathf.Sin(y*.7f+x*.04f):k==2?(x%32<1||y%32<1?.75f:1):k==3?.94f+.06f*Mathf.Sin(x*2.7f+y*4):1;pixels[y*64+x]=colours[k]*shade;}tex.SetPixels(pixels);tex.Apply(true);mat.mainTexture=tex;mat.mainTextureScale=Vector2.one*8;
     cam.orthographic=true;cam.orthographicSize=18;cam.transform.position=Vector3.up*30;cam.transform.rotation=Quaternion.Euler(90,0,0);Save(cam,"explore_path_ar_"+names[k]+"_top",1080,1080);
+    var check=new Texture2D(2,2);check.LoadImage(File.ReadAllBytes("snapshots/explore_path_ar_"+names[k]+"_top.png"));var background=check.GetPixel(5,5);
+    for(int n=0;n<coords.Length;n+=2){var screen=cam.WorldToViewportPoint(map.World(coords[n],coords[n+1]));var c=check.GetPixel(Mathf.RoundToInt(screen.x*1079),Mathf.RoundToInt(screen.y*1079));if(c.r-c.g<.07f||c.r-c.b<.15f||Mathf.Abs(c.r-background.r)+Mathf.Abs(c.g-background.g)+Mathf.Abs(c.b-background.b)<.25f)throw new Exception("Path not visible on "+names[k]);}
+    UnityEngine.Object.DestroyImmediate(check);
     cam.orthographic=false;cam.fieldOfView=72;cam.transform.position=map.World(1,1)+Vector3.up*1.65f;cam.transform.LookAt(map.World(3,2)+Vector3.up*.1f);Save(cam,"explore_path_ar_"+names[k]+"_eye",960,1280);UnityEngine.Object.DestroyImmediate(tex);
    }
    UnityEngine.Object.DestroyImmediate(root);UnityEngine.Object.DestroyImmediate(plane);UnityEngine.Object.DestroyImmediate(mat);cam.orthographic=false;cam.fieldOfView=35;

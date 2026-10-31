@@ -44,7 +44,7 @@ namespace SpellDuel
    }
    var surface=AnimeFace.Part(root.transform,"PathSurface",mesh,Vector3.zero,material);var block=new MaterialPropertyBlock();var holes=new Vector4[16];int count=0;var centre=map.World(x,z);
    foreach(var p in map.props){var at=p.pos-centre;float reach=p.radius+.35f;if(Mathf.Abs(at.x)>half+reach||Mathf.Abs(at.z)>half+reach)continue;if(count<holes.Length)holes[count++]=new Vector4(at.x,at.z,reach,0);}
-   block.SetVectorArray("_Props",holes);block.SetInt("_PropCount",count);surface.GetComponent<Renderer>().SetPropertyBlock(block);
+   block.SetVector("_TexOffset",new Vector4(centre.x,centre.z,0,0));block.SetVectorArray("_Props",holes);block.SetInt("_PropCount",count);surface.GetComponent<Renderer>().SetPropertyBlock(block);
    // Small low stones trace the blocked shoulder, never extending into the bright safe lane.
    if(mask!=15)Part(root.transform,"path/shoulder/"+mask+"/"+half,b=>{
     for(int side=0;side<4;side++)if((mask&(1<<side))==0)for(int i=0;i<3;i++){

@@ -9,7 +9,7 @@ Shader "SpellDuel/ExplorePath"
  #pragma fragment frag
  #pragma target 3.0
  #include "UnityCG.cginc"
- sampler2D _MainTex;float4 _PathColor,_VergeColor,_Props[16];int _PropCount;
+ sampler2D _MainTex;float4 _PathColor,_VergeColor,_TexOffset,_Props[16];int _PropCount;
  struct appdata {float4 vertex:POSITION;float2 uv:TEXCOORD0;float4 links:TEXCOORD1;};
  struct v2f {float4 pos:SV_POSITION;float2 p:TEXCOORD0;float4 links:TEXCOORD1;};
  v2f vert(appdata v){v2f o;o.pos=UnityObjectToClipPos(v.vertex);o.p=v.uv;o.links=v.links;return o;}
@@ -24,7 +24,7 @@ Shader "SpellDuel/ExplorePath"
  }
  for(int n=0;n<16;n++){if(n>=_PropCount)break;d=min(d,length(i.p-_Props[n].xy)-_Props[n].z);}
  float aa=max(fwidth(d),.008),lane=smoothstep(-aa,aa,d);float edge=smoothstep(0,.28,d);
- fixed3 tex=tex2D(_MainTex,i.p/3).rgb;float grain=dot(tex,float3(.3,.59,.11));
+ fixed3 tex=tex2D(_MainTex,(i.p+_TexOffset.xy)/3).rgb;float grain=dot(tex,float3(.3,.59,.11));
  fixed3 road=_PathColor.rgb*(.85+grain*.32)*lerp(.73,1,edge);
  fixed3 verge=_VergeColor.rgb*(.85+grain*.3);return fixed4(lerp(verge,road,lane),lerp(.85,.97,lane));
  }
