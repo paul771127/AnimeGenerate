@@ -181,6 +181,7 @@ namespace SpellDuel
             townMapScroll.y = Mathf.Clamp(townMapScroll.y, 0f, Mathf.Max(0f, ch - view.height));
             townMapScroll = GUI.BeginScrollView(view, townMapScroll, content, false, false, GUIStyle.none, GUIStyle.none);
             GUI.DrawTexture(content, d.tex, ScaleMode.StretchToFill);
+            DrawTownAmbient(town, d, s, content, new Rect(townMapScroll, view.size));   // 雲影、火星／落葉／海鷗／飄沙、鐵匠鋪冒煙（WorldUI.TownAmbient.cs）
             string open = null;
             var mp = Event.current.mousePosition;
             bool blocking = UiLock.Blocking;
@@ -203,7 +204,7 @@ namespace SpellDuel
             {
                 int i = n.i;
                 var spr = NpcSprite(Story2D.IdOf(t.npcs[i].name));
-                if (spr != null) GUI.DrawTexture(n.body, spr, ScaleMode.ScaleToFit, true);
+                if (spr != null) DrawTownNpc(n.body, spr, i);   // 呼吸、晃動、偶爾轉頭（WorldUI.TownAmbient.cs）
                 // 新手指引要點這位居民：整個人（身體、❗、名字）都算可以點的範圍
                 var whole = Rect.MinMaxRect(Mathf.Min(n.body.x, n.tag.x), n.quest ? Mathf.Min(n.body.y, n.mark.y) : n.body.y, Mathf.Max(n.body.xMax, n.tag.xMax), n.tag.yMax);
                 bool target = UiKit.LockTarget(whole, Portraits.Key(t.npcs[i].name), "npc:" + t.npcs[i].name);
