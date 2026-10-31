@@ -431,12 +431,8 @@ namespace SpellDuel
                 var size = new Vector2(Mathf.Min(oneLine, maxW), lines * fsS * 1.35f);
                 float bw = size.x + fsS * 1.2f, bh = size.y + fsS * 0.8f;
                 var r = new Rect(Mathf.Clamp(sp.x - bw * 0.5f, 4f, W - bw - 4f), Mathf.Clamp(H - sp.y - bh - fsS * 0.6f, 4f, H - bh - 4f), bw, bh);
-                GUI.color = new Color(0f, 0f, 0f, 0.35f * fade); GUI.DrawTexture(new Rect(r.x + 2, r.y + 3, r.width, r.height), Texture2D.whiteTexture);   // 影子
-                GUI.color = new Color(1f, 0.98f, 0.92f, 0.95f * fade); GUI.DrawTexture(r, Texture2D.whiteTexture);
-                float tx = Mathf.Clamp(sp.x, r.x + fsS, r.xMax - fsS);
-                for (int i = 0; i < 4; i++) GUI.DrawTexture(new Rect(tx - (4 - i) * 2f, r.yMax + i * 2f, (4 - i) * 4f, 2f), Texture2D.whiteTexture);   // 小尖角
-                GUI.color = Color.white;
-                UiKit.Text(new Rect(r.x + fsS * 0.6f, r.y + fsS * 0.4f, size.x, size.y), text, fsS, new Color(0.15f, 0.12f, 0.1f, fade), TextAnchor.MiddleCenter, false);
+                UiKit.SpeechBubble(r,sp.x,fade);
+                UiKit.Text(new Rect(r.x + fsS * 0.6f, r.y + fsS * 0.4f, size.x, size.y), text, fsS, new Color(.97f,.94f,.85f,fade), TextAnchor.MiddleCenter, false);
             }
             if (gone != null) foreach (var g in gone) exBubbles.Remove(g);
         }
@@ -540,7 +536,9 @@ namespace SpellDuel
             GUI.DrawTexture(new Rect(card.x, card.y, card.width, b), Texture2D.whiteTexture); GUI.DrawTexture(new Rect(card.x, card.yMax - b, card.width, b), Texture2D.whiteTexture);
             GUI.DrawTexture(new Rect(card.x, card.y, b, card.height), Texture2D.whiteTexture); GUI.DrawTexture(new Rect(card.xMax - b, card.y, b, card.height), Texture2D.whiteTexture);
             GUI.color = Color.white;
-            UiKit.Text(new Rect(card.x + fs, card.y + fs * 0.5f, card.width - fs * 2, fs * 1.5f), "💬 " + run.talking.name, fs, new Color(1f, 0.9f, 0.55f), TextAnchor.MiddleLeft, true);
+            var portrait = new Rect(card.x+fs*.35f,card.y+fs*.25f,fs*1.7f,fs*1.7f);
+            UiKit.StatusFrame(portrait,Portraits.Get(run.talking.name,"npc"),true);
+            UiKit.Title(new Rect(card.x+fs*2.3f,card.y+fs*.5f,card.width-fs*3.3f,fs*1.5f),run.talking.name,UiKit.Theme.Positive,fs);
             var body = new Rect(card.x + fs, card.y + fs * 2.2f, card.width - fs * 2, yes.y - card.y - fs * 2.6f);
             if (!run.asking)
             {
@@ -563,7 +561,7 @@ namespace SpellDuel
             float size = exMapBig ? Mathf.Min(W, H) * 0.8f : Mathf.Min(W, H) * 0.3f;
             int span = exMapBig ? map.W : 25;
             var box = exMapBig ? new Rect((W - size) / 2f, (H - size) / 2f, size, size) : new Rect(W - size - W * 0.02f, H * 0.16f, size, size);
-            GUI.color = new Color(0f, 0f, 0f, 0.55f); GUI.DrawTexture(box, Texture2D.whiteTexture);
+            UiKit.Card(box,.96f,UiKit.Gold,1f);
             var pc = map.Cell(Me.Feet);
             int x0 = exMapBig ? 0 : pc.x - span / 2, z0 = exMapBig ? 0 : pc.y - span / 2;
             float cs = size / span;
@@ -600,6 +598,7 @@ namespace SpellDuel
                     float lx = box.x + ((l.rect.xMin + l.rect.xMax) * 0.5f - x0 + 0.5f) * cs, ly = box.y + (span - 1 - ((l.rect.yMin + l.rect.yMax) * 0.5f - z0) + 0.5f) * cs;
                     UiKit.Text(new Rect(lx - size * 0.15f, ly - cs, size * 0.3f, cs * 2f), l.name, Mathf.RoundToInt(H * 0.016f), new Color(1f, 0.95f, 0.7f), TextAnchor.MiddleCenter);
                 }
+            UiKit.MapFrame(box,Mathf.RoundToInt(UiKit.BaseFont*.8f));
             if (GUI.Button(box, GUIContent.none, GUIStyle.none)) exMapBig = !exMapBig;
         }
 

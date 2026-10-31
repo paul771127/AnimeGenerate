@@ -939,3 +939,11 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 最終原生驗證：41190310880（疾風）及 41190310884（原四隻稀有怪）皆於 8e8aab6 通過。疾風怪含最大特效／陰影為 1014～2320 三角形；古根／甲蜥新腿型本體為 3472／3348。65＋42 張原生圖已更新，另交四足腿部側面前後對照；快取、Pivot、顏色狀態、拖尾啟停、原稀有怪腳底檢查通過。平台編譯仍在執行，結果另補。
 
 - 最終雙平台 run 41190310949（8e8aab6）Android、iOS Unity 匯出與 Xcode IPA 編譯全部成功；兩份平台證據已更新，check_swift_monsters.py --require-mobile 與 check_rare_monsters.py --require-mobile 都通過。所有交付位於 Docs/pending_preview/rare_monsters/；本次自有提交只修改美術、原生預覽與驗證／文件。TestFlight 由原發布流程處理，尚未量測手機實機 AR 幀率。
+
+
+### 2026-11-01 UI_SKILL_POLISH A1：戰鬥與探索介面（驗證中）
+- 共用 `UiKit.BattleArt`：職業色技能卡、由下而上的冷卻遮罩與秒數、MP 不足提示、血魔條白色延遲殘條／綠色恢復框、正負狀態形狀提示、蓄力進度條。狀態只存在畫面物件，不寫入 Fighter。
+- 戰鬥文字加四向深色描邊；隊伍與擲骰面板增加不透明度；探索地圖加北向與邊框、NPC 對話加頭像與名牌、氣泡加尾角。保留壓縮底欄、不恢復頂部波數／角色／待領取按鈕。
+- 點擊矩形與 Button／NextTag 呼叫保持原樣，UiLock／Walkthrough／Dash 未改；`Tools/check_ui_skill_polish.py` 已通過。新增繪圖工具不建立 Texture2D／Material，血條每幀只更新一次。
+- 新增獨立 Linux 原生 IMGUI 截圖驗證工作流程：1080×2340、同資料比較 5a4a0bf 舊版與本版；測試場景排除於 Android／iOS，停用 AR／連線啟動。
+- 此次推送用於啟動原生預覽與 Android／iOS 建置，尚未宣稱驗收通過；後續補入原生圖及建置結果。B、A2、C、A3 尚未實作。手機 60fps 需實機量測。

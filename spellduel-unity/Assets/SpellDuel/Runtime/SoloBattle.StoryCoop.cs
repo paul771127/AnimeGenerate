@@ -74,7 +74,7 @@ namespace SpellDuel
             var col = new Color(0.4f, 0.85f, 0.75f);
             float rowH = u * 0.95f;
             var card = new Rect(pad, y, W - pad * 2, u * 1.1f + rowH * Mathf.Max(n, 2) + u * 2.6f);
-            UiKit.Card(card, 0.7f, col, 0.8f);
+            UiKit.Card(card, 0.96f, col, 0.95f);
             float x = card.x + gap, w = card.width - gap * 2, cy = card.y + gap * 0.4f;
             UiKit.Text(new Rect(x, cy, w, u), $"📖 {(st != null ? st.id + " " + st.title : "故事關卡")}（{n} 人）・{DiffNames[Mathf.Clamp(difficulty, 0, 2)]}", fs, Color.white, TextAnchor.MiddleLeft, true);
             cy += u * 1.05f;
@@ -387,7 +387,8 @@ namespace SpellDuel
             float w = W * 0.9f, h = fs * 6.4f, pad = fs * 0.5f;
             var r = new Rect((W - w) / 2f, H * 0.52f, w, h);
             var col = lr.soul != null ? (Souls.Get(lr.soul)?.color ?? Color.cyan) : Item.RarityColors[Mathf.Clamp(lr.rarity, 0, Item.RarityColors.Length - 1)];
-            UiKit.Card(r, 0.92f, col, 1f);
+            UiKit.Card(r, 0.98f, col, 1f);
+            UiKit.Divider(new Rect(r.x+pad,r.y+fs*1.75f,r.width-pad*2,2),col);
             UiKit.Text(new Rect(r.x + pad, r.y + pad * 0.5f, r.width - pad * 2, fs * 1.4f), $"✨ 掉落 {lr.Label}" + (lootRolls.Count > 1 ? $"（還有 {lootRolls.Count - 1} 件）" : ""), fs, col, TextAnchor.MiddleCenter, true);
             if (lr.done)
             {

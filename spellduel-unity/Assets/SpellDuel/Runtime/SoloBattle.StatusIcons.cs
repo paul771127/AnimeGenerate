@@ -62,12 +62,7 @@ namespace SpellDuel
             {
                 if (x - sz < minX) { x = right; y += sz + gap + small; }   // 換行
                 var r = new Rect(x - sz, y, sz, sz);
-                var col = st.good ? new Color(0.35f, 0.95f, 0.45f) : new Color(1f, 0.3f, 0.3f);
-                // 外框＋圖示
-                var keep = GUI.color;
-                GUI.color = col; GUI.DrawTexture(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Texture2D.whiteTexture); GUI.color = keep;
-                var tex = SkillIcons.Get(st.icon);
-                if (tex != null) GUI.DrawTexture(r, tex, ScaleMode.StretchToFill, true);
+                UiKit.StatusFrame(r, SkillIcons.Get(st.icon), st.good);
                 // 倒數（或標籤）
                 string t = st.left >= 0f ? (st.left >= 10f ? $"{st.left:0}" : $"{st.left:0.0}") : (st.label ?? "");
                 if (st.left >= 0f && st.label != null) t = st.label + " " + t;

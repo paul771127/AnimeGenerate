@@ -4174,6 +4174,9 @@ namespace SpellDuel
             }
         }
 
+        readonly UiKit.ResourceTrail hudHealthTrail = new UiKit.ResourceTrail();
+        readonly UiKit.ResourceTrail hudManaTrail = new UiKit.ResourceTrail();
+
         void DrawHud()
         {
             float W = Screen.width, H = Screen.height, pad = W * 0.03f, gap = pad * 0.5f;
@@ -4453,8 +4456,8 @@ namespace SpellDuel
                 float lv = Mathf.Clamp01(mic.Spotter.Level / Mathf.Max(0.001f, mic.Spotter.StartThreshold * 3f));
                 UiKit.Bar(new Rect(mx, hintY + lh * 0.72f, micW, lh * 0.22f), lv, mic.Spotter.InSpeech ? new Color(0.3f, 1f, 0.4f) : Color.gray, "", fsS);
             }
-            UiKit.Bar(new Rect(pad, hpY, W - pad * 2, lh * 0.6f), me.hp / me.maxHp, new Color(1f, 0.3f, 0.35f), $"HP {Mathf.CeilToInt(me.hp)} / {Mathf.CeilToInt(me.maxHp)}", fsS);
-            UiKit.Bar(new Rect(pad, mpY, W - pad * 2, lh * 0.52f), me.mp / me.maxMp, new Color(0.3f, 0.6f, 1f), $"MP {Mathf.FloorToInt(me.mp)} / {Mathf.FloorToInt(me.maxMp)}", fsS);
+            hudHealthTrail.Draw(new Rect(pad, hpY, W - pad * 2, lh * 0.6f), me.hp / me.maxHp, UiKit.Theme.Health, $"HP {Mathf.CeilToInt(me.hp)} / {Mathf.CeilToInt(me.maxHp)}", fsS);
+            hudManaTrail.Draw(new Rect(pad, mpY, W - pad * 2, lh * 0.52f), me.mp / me.maxMp, UiKit.Theme.Mana, $"MP {Mathf.FloorToInt(me.mp)} / {Mathf.FloorToInt(me.maxMp)}", fsS);
             // 普攻小卡拿掉（使用者要求）；狀態文字佔整行
             if (statH > 0f) UiKit.Text(new Rect(pad, statY, W - pad * 2, statH), myStatus, fsS, new Color(0.75f, 0.9f, 1f));
 
@@ -4466,7 +4469,7 @@ namespace SpellDuel
                 bool charging = me.charging == s;
                 bool usable = me.mp >= s.cost && cd <= 0;
                 // 技能卡（點了看詳細說明）：上面圖示、下面名稱／手勢→放招／MP 或冷卻；手正比著這個手勢時亮起來
-                UiKit.Card(r, charging ? 0.8f : 0.5f, charging ? s.color : (Color?)null, charging ? 1f : 0.6f);
+                UiKit.SkillCard(r, s.color, usable, charging);
                 if (charging || (me.armed == s && phase == Phase.Fighting)) DrawCastingTile(r, s.color, fsS);   // 正在放的這一招：一直閃
                 var ir = new Rect(r.center.x - isz / 2, r.y + gap * 0.6f, isz, isz);
                 // 技能圖示（發光徽章）：詠唱中外圈脈動發光；冷卻中由上往下蓋暗；MP 不足變灰
@@ -4482,8 +4485,8 @@ namespace SpellDuel
                 if (cd > 0)
                 {
                     float frac = Mathf.Clamp01(cd / Mathf.Max(0.01f, s.cooldown));
-                    GUI.color = new Color(0f, 0f, 0f, 0.55f);
-                    GUI.DrawTexture(new Rect(ir.x, ir.y, ir.width, ir.height * frac), Texture2D.whiteTexture);
+                    GUI.color = Color.white;
+                    UiKit.Cooldown(ir, frac, cd, fsS);
                 }
                 GUI.color = Color.white;
                 float tx = r.x + gap * 0.4f, tw = r.width - gap * 0.8f, ty = ir.yMax + gap * 0.2f;
@@ -4491,7 +4494,7 @@ namespace SpellDuel
                 string vtag = UseSpeech || voice.Ready(s.id) ? "" : " 🎤未錄";
                 UiKit.Text(new Rect(tx, ty, tw, rowH), s.name + vtag, fs, tc, TextAnchor.MiddleCenter, true);
                 UiKit.Text(new Rect(tx, ty + rowH, tw, rowH), $"🎤→{HandGesture.ReleaseLabel(s)}", fsS, usable ? new Color(1f, 0.85f, 0.5f) : tc, TextAnchor.MiddleCenter);
-                UiKit.Text(new Rect(tx, ty + rowH * 2, tw, rowH), cd > 0 ? $"冷卻 {cd:F1}s" : $"MP {s.cost}", fsS, cd > 0 ? new Color(0.7f, 0.7f, 0.7f) : new Color(0.6f, 0.8f, 1f), TextAnchor.MiddleCenter);
+                UiKit.Text(new Rect(tx, ty + rowH * 2, tw, rowH), cd > 0 ? $"冷卻 {cd:F1}s" : me.mp < s.cost ? $"MP 不足・{s.cost}" : $"MP {s.cost}", fsS, cd > 0 ? new Color(0.7f, 0.7f, 0.7f) : new Color(0.6f, 0.8f, 1f), TextAnchor.MiddleCenter);
                 if (phase == Phase.Fighting && GUI.Button(r, GUIContent.none, GUIStyle.none)) infoSkill = s.id;   // 點技能卡：看詳細說明（戰鬥不會暫停）；結算時不收點擊，免得擋住結算按鈕
             }
 
