@@ -847,6 +847,8 @@ namespace SpellDuel
             enemy.hp = 0f;
         }
         public bool manualWaves, awaitingNext, finalRoom, stageFailed;
+        /// <summary>副本進入一個戰鬥地點（波次）：SoloBattle 依波次設定敵人倍率</summary>
+        public Action<int> OnDungeonNode;
         int queuedWave;
         /// <summary>前往下一個戰鬥地點：wave 決定敵人強度，final＝最後的首領</summary>
         public void EnterNode(int nodeWave, bool final, float delay = 3f)
@@ -855,6 +857,7 @@ namespace SpellDuel
             treasureRooms++;   // 寶箱怪：副本每個地點算一關
             queuedWave = Mathf.Max(1, nodeWave); finalRoom = final; awaitingNext = false; bossSpawnedThisWave = false;
             enemy.hp = 0f;
+            OnDungeonNode?.Invoke(queuedWave);   // 副本強度：照這個地點的波次比照故事關卡（SoloBattle 設定）
             NextWave(delay);
         }
         /// <summary>保護目標倒下：副本失敗</summary>

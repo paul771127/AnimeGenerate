@@ -965,6 +965,20 @@ namespace SpellDuel
         ///   同一章裡每往後一波再 +StageHpGrowth（第 9 波約 +32%），章與章之間接得起來。
         ///   以推薦等級的玩家算「打倒一隻要花的力氣」（第一章≈1）：第二章 2.0→2.7、第三章 2.8→3.7、第四章 3.9→5.2、第五章 5.2→7.0。
         /// </summary>
+        /// <summary>副本比同等級的故事關卡強多少（使用者要求 30%）</summary>
+        public const float DungeonVsStory = 1.3f;
+        /// <summary>副本的一個地點（波次 w）：小怪、Boss 的血量與攻擊倍率＝故事關卡同一章同一位置 × DungeonVsStory（難度等級、人數倍率照舊另外乘）</summary>
+        void ApplyDungeonStrength(int w)
+        {
+            if (battle == null) return;
+            int ch = Mathf.Clamp((Mathf.Max(1, w) - 1) / 10, 0, StoryMinionHp.Length - 1), pos = (Mathf.Max(1, w) - 1) % 10 + 1;
+            battle.enemyHpMul = (ch >= 1 ? StoryMinionHpOf(ch, pos) : 1f) * DungeonVsStory;
+            battle.enemyDmgMul = (ch >= 1 ? StoryMinionDmg[ch] : 1f) * DungeonVsStory;
+            // Boss：照故事關卡那一章的 Boss（第二章起 ×1.3、第三章起傷害 ×1.5、第三章 ×2）
+            battle.storyBossHp = StoryBossHp[ch] * (ch >= 1 ? LateBossMul : 1f) * (ch == 2 ? 2f : 1f) * DungeonVsStory;
+            battle.storyBossDmg = StoryBossDmg[ch] * (ch >= 2 ? LateDmgMul : 1f) * (ch == 2 ? 2f : 1f) * (ch >= 1 ? LateBossMul : 1f) * DungeonVsStory;
+            battle.bossHpMul = 1f;
+        }
         public static readonly float[] StoryMinionHp = { 1f, 2f, 2.5f, 3.2f, 4f };   // 照舊（使用者回報血少的職業打同級敵人幾乎秒殺：血量不再降）
         public const float StageHpGrowth = 0.04f;
         public static float StoryMinionHpOf(int theme, int fromWave) => StoryMinionHp[Mathf.Clamp(theme, 0, StoryMinionHp.Length - 1)] * (1f + StageHpGrowth * Mathf.Clamp(fromWave - 1, 0, 9));   // 第四章 4 → 8、第五章 4.25 → 8.5（使用者要求：再 ×2）
@@ -1407,7 +1421,8 @@ namespace SpellDuel
                         battle.dungeonParty = Dungeons.PartyScale(partyN);          // 副本：浮動難度（最少 2 人；敵人數量、Boss 血量 ×人數）
                         battle.scaleAllies = battle.dungeonParty - 1;               // Boss 出招頻率、召喚數也照人數
                         battle.hpBoost = dungeonRelief;                          // 等級差修正（主機的等級決定）
-                        battle.enemyHpMul = Dungeons.DungeonHp; battle.enemyDmgMul = Dungeons.DungeonDmg; battle.bossHpMul = Dungeons.DungeonHp;   // 副本：小怪與 Boss 的血量、攻擊 ×2
+                        // 副本強度（使用者要求）：比照同等級的故事關卡（同一章、同一個位置的倍率），再強 30%；小怪與 Boss 都是。每個地點照它的波次設定
+                        battle.OnDungeonNode = ApplyDungeonStrength; ApplyDungeonStrength(1);
                         battle.StartDungeonMap();   // 副本地圖：每個地點由 BeginDungeonRun／房主選路線決定（SoloBattle.DungeonMap.cs）
                     }
                     else if (towerRun)

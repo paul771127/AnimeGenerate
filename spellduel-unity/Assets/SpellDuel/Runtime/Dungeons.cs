@@ -130,7 +130,7 @@ namespace SpellDuel
         public static float LootMul(int players) => 1f + 0.25f * Mathf.Clamp(players - 2, 0, 2);
         public const int DesignAllies = 2;
         /// <summary>副本的敵人（小怪與 Boss）血量、攻擊是一般關卡的 2 倍（使用者要求；再乘上人數倍率）</summary>
-        public const float DungeonHp = 2f, DungeonDmg = 2f;
+        public const float DungeonHp = 2f, DungeonDmg = 2f;   // 舊的固定 ×2（已不用）：副本強度改成比照同等級故事關卡 ×1.3（SoloBattle.ApplyDungeonStrength）
 
         /// <summary>
         /// 等級差的修正：角色比副本高 3 級以上，每多 1 級敵人弱 4.5%（最低 30%）；比副本低，每低 1 級強 5%（最高 150%）。
