@@ -93,7 +93,8 @@ namespace SpellDuel
                 else if (id == 180)
                 {
                     SwiftPart(id, head, "Desert wind goggles", new Color(.22f, .55f, .64f), b => {
-                        for (int s = -1; s <= 1; s += 2) RareTube(b, new[] { R(s * .12f, .12f, .20f), R(s * .10f, .15f, .20f), R(s * .04f, .15f, .20f), R(s * .025f, .10f, .20f) }, new[] { .014f, .014f }, 5, 5);
+                        for (int s = -1; s <= 1; s += 2) { var ring = new Vector3[9]; for (int i = 0; i < 9; i++) { float a = i * Mathf.PI / 4; ring[i] = R(s * .065f + Mathf.Cos(a) * .047f, .08f + Mathf.Sin(a) * .028f, .225f); } RareTube(b, ring, new[] { .009f, .009f }, 8, 4, caps: false); }
+                        RareRod(b, R(-.02f, .08f, .225f), R(.02f, .08f, .225f), .009f, .009f, 4);
                     });
                     SwiftPart(id, spine, "Split sand mantle", new Color(.89f, .65f, .29f), b => {
                         for (int s = -1; s <= 1; s += 2) SwiftRibbon(b, R(s * .10f, .36f, -.16f), R(s * .14f, .23f, -.34f), R(s * .20f, .28f, -.56f), .075f);
@@ -180,16 +181,22 @@ namespace SpellDuel
             }
             else if (id == 176)
             {
-                SwiftScale(spine, R(.76f, .78f, 1f), f => f.sharedMesh == sShell);
+                Transform shell = null;
+                foreach (Transform t in spine) { var f = t.GetComponent<MeshFilter>(); if (f && f.sharedMesh == sShell) {
+                    shell = t; t.localScale = Vector3.Scale(t.localScale, R(.76f, .78f, .80f));
+                    f.sharedMesh = SwiftMesh("176/light conch", b => b.Lathe(new[] { .12f, 0f, .12f, .38f, .25f, .43f, .42f, .35f, .58f, .23f, .74f, .10f, .82f, 0f }, 12, null, rot: Quaternion.Euler(-90, 0, 0)));
+                } }
+                if (shell) SwiftPart(id, shell, "Pearl conch spiral", cream, b => {
+                    var path = new Vector3[25]; for (int i = 0; i < path.Length; i++) { float t = i / 24f, a = t * Mathf.PI * 4; float y = .25f + .49f * t; float radius = y < .42f ? Mathf.Lerp(.43f, .35f, (y - .25f) / .17f) : y < .58f ? Mathf.Lerp(.35f, .23f, (y - .42f) / .16f) : Mathf.Lerp(.23f, .10f, (y - .58f) / .16f); path[i] = R(Mathf.Cos(a) * (radius + .008f), y, Mathf.Sin(a) * (radius + .008f)); }
+                    RareTube(b, path, new[] { .012f, .009f }, 24, 4);
+                });
                 foreach (var leg in new[] { hipL, hipR, hipBL, hipBR })
                 {
                     SwiftScale(leg, R(1.2f, 1, .63f));
                     float s = leg == hipL || leg == hipBL ? -1 : 1;
                     SwiftPart(id, leg, "Runner leg strut " + leg.name, cream, b => RareTube(b, new[] { R(0, 0, 0), R(s * .20f, .015f, -.04f), R(s * .29f, -.17f, -.08f) }, new[] { .022f, .018f, .006f }, 3, 5));
                 }
-                SwiftPart(id, spine, "Pearl shell keel", new Color(1f, .74f, .56f), b => {
-                    for (int i = 0; i < 5; i++) RareTube(b, new[] { R(-.15f, .09f, -.16f + i * .04f), R(0, .24f + i * .008f, -.23f + i * .04f), R(.15f, .09f, -.16f + i * .04f) }, new[] { .009f, .009f }, 4, 4);
-                });
+
             }
             rockR = rockList.ToArray(); rockC = rockCols.ToArray(); rockG = rockGlows.ToArray();
             var added = new Renderer[rockList.Count - first]; rockList.CopyTo(first, added, 0, added.Length);
