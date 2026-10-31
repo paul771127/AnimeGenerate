@@ -19,7 +19,7 @@ namespace SpellDuel
         public static readonly List<Mat> Mats = new List<Mat>
         {
             M("ore", "鐵礦石", "🪨", "各章的岩石、金屬類敵人與峽谷所有敵人（20%）"),
-            M("ore_hi", "高級鐵礦石", "💎", "普通以上難度，掉鐵礦石的敵人（5%）"),
+            M("ore_hi", "高級鐵礦石", "💎", "普通以上難度，掉鐵礦石的敵人（15%）"),
             M("refine", "精煉石", "🔷", "鐵匠：5 個鐵礦石合成"),
             M("refine_hi", "高級精煉石", "🔶", "鐵匠：5 個高級鐵礦石合成"),
             // 第一章：熔岩
@@ -76,7 +76,7 @@ namespace SpellDuel
         public static int Have(string id) => Economy.Count(id.StartsWith("mat_") ? id : "mat_" + id);
         public static void Give(string id, int n) => Economy.AddItem(id.StartsWith("mat_") ? id : "mat_" + id, n);
 
-        public const float MatChance = 0.10f, OreChance = 0.20f, HiOreChance = 0.05f, EliteMatChance = 0.25f, BossCoreChance = 0.25f, SmithSoulChance = 0.05f;
+        public const float MatChance = 0.10f, OreChance = 0.20f, HiOreChance = 0.15f, EliteMatChance = 0.25f, BossCoreChance = 0.25f, SmithSoulChance = 0.05f;
         /// <summary>
         /// 會掉鐵礦石的敵人（使用者要求：來源太少、增多）：每一章都有。
         ///   熔岩：熔岩小鬼、岩石衝鋒獸、自爆小鬼、岩石投擲者、熔岩狙擊手、熔冠衛士、黑曜縛咒師、爐心喚靈者
