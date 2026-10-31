@@ -4,6 +4,19 @@ namespace SpellDuel
  public static partial class ExploreArt
  {
   static readonly System.Collections.Generic.Dictionary<ExGround,Material> groundMaterials=new System.Collections.Generic.Dictionary<ExGround,Material>();
+  static Transform GroundSurface(Transform parent)
+  {
+   const string key="ground/fine/surface";
+   if(!meshes.TryGetValue(key,out var mesh)||!mesh)
+   {
+    // UVs survive Unity's dynamic batching; object-space POSITION does not.
+    mesh=new Mesh{name="Explore cached fine ground"};
+    mesh.vertices=new[]{V(-1.53f,.002f,-1.53f),V(-1.53f,.002f,1.53f),V(1.53f,.002f,1.53f),V(1.53f,.002f,-1.53f)};
+    mesh.uv=new[]{new Vector2(-1.53f,-1.53f),new Vector2(-1.53f,1.53f),new Vector2(1.53f,1.53f),new Vector2(1.53f,-1.53f)};
+    mesh.triangles=new[]{0,1,2,0,2,3};mesh.RecalculateNormals();mesh.RecalculateBounds();meshes[key]=mesh;
+   }
+   return AnimeFace.Part(parent,key,mesh,Vector3.zero,SkyArt.Glow).transform;
+  }
   static Material GroundMaterial(ExGround ground)
   {
    if(groundMaterials.TryGetValue(ground,out var cached)&&cached)return cached;
