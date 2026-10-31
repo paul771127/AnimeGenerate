@@ -59,8 +59,8 @@ namespace SpellDuel
   {var tangent=(loop[(i+1)%loop.Count]-loop[(i+loop.Count-1)%loop.Count]).normalized;return new Vector2(tangent.y,-tangent.x);}
   static void SmoothLakeEdge(List<Vector2> output,Vector2 a,Vector2 b)
   {
-   int steps=Mathf.CeilToInt((b-a).magnitude/.35f);var dir=(b-a).normalized;var inward=new Vector2(-dir.y,dir.x);
-   for(int i=1;i<steps;i++){float t=i/(float)steps;output.Add(Vector2.Lerp(a,b,t)+inward*(.34f*Mathf.Pow(Mathf.Sin(t*Mathf.PI),2)*(.65f+.35f*Mathf.Sin(t*Mathf.PI*4))));}
+   float amplitude=.34f*Mathf.Clamp01((b-a).sqrMagnitude/64f);int steps=Mathf.CeilToInt((b-a).magnitude/.35f);var dir=(b-a).normalized;var inward=new Vector2(-dir.y,dir.x);
+   for(int i=1;i<steps;i++){float t=i/(float)steps;output.Add(Vector2.Lerp(a,b,t)+inward*(amplitude*Mathf.Pow(Mathf.Sin(t*Mathf.PI),2)*(.65f+.35f*Mathf.Sin(t*Mathf.PI*4))));}
   }
   static void FillLake(Geo b,List<Vector2> loop)
   {
