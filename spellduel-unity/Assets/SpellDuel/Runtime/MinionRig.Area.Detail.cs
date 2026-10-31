@@ -46,7 +46,11 @@ namespace SpellDuel
    if(caps)for(int i=0;i<sides;i++){int n=(i+1)%sides;b.Tri(path[0],rings[0,n],rings[0,i],Color.white);b.Tri(path[path.Length-1],rings[steps,i],rings[steps,n],Color.white);}
   }
   static void RareRod(PMesh b,Vector3 a,Vector3 c,float radius,float end=0,int sides=5)
-  {RareTube(b,new[]{a,c},new[]{radius,Mathf.Max(.001f,end)},1,sides);}
+  {
+   if(end>.002f){RareTube(b,new[]{a,c},new[]{radius,end},1,sides);return;}
+   var axis=(c-a).normalized;var side=Vector3.Cross(Mathf.Abs(axis.y)>.9f?Vector3.forward:Vector3.up,axis).normalized;var normal=Vector3.Cross(axis,side);
+   for(int i=0;i<sides;i++){float u=i*Mathf.PI*2/sides,v=(i+1)*Mathf.PI*2/sides;var p=a+radius*(side*Mathf.Cos(u)+normal*Mathf.Sin(u));var q=a+radius*(side*Mathf.Cos(v)+normal*Mathf.Sin(v));b.Tri(p,q,c,Color.white);b.Tri(a,q,p,Color.white);}
+  }
   static void RareForm(PMesh b,Vector3 at,Vector3 size,int sides=8)
   {b.Lathe(new[]{-.5f,0f,-.36f,.68f,-.12f,1f,.18f,.94f,.38f,.60f,.5f,0f},sides,null,size.x*.5f,size.y*.5f,off:at,warp:p=>R(p.x,p.y,p.z*size.z));}
   static void RarePlate(PMesh b,Vector3 at,Vector3 size,float tilt=0)
@@ -128,7 +132,7 @@ namespace SpellDuel
    spine.localPosition=R(0,.86f,0);var skin=new Color(.76f,.48f,.32f);var iron=new Color(.42f,.51f,.62f);var trim=new Color(.73f,.70f,.53f);var leather=new Color(.35f,.22f,.15f);var red=new Color(.69f,.17f,.19f);
    RarePart(spine,"Tapered muscular torso",skin,b=>{
     RareTube(b,new[]{R(0,-.15f,0),R(0,.03f,0),R(0,.27f,0),R(0,.48f,0),R(0,.61f,0)},new[]{.29f,.28f,.40f,.40f,.19f},5,12,.65f);
-    for(int s=-1;s<=1;s+=2){RareForm(b,R(s*.20f,.40f,.19f),R(.42f,.29f,.19f),8);for(int i=0;i<3;i++)RareForm(b,R(s*.095f,.04f+i*.09f,.20f),R(.19f,.13f,.09f),6);}
+    for(int s=-1;s<=1;s+=2){RareForm(b,R(s*.20f,.40f,.19f),R(.42f,.29f,.19f),8);for(int i=0;i<3;i++)RareForm(b,R(s*.095f,.04f+i*.09f,.20f),R(.19f,.13f,.09f),5);}
    });
    RarePart(spine,"Healed chest scars",new Color(.57f,.29f,.24f),b=>{RareTube(b,new[]{R(-.31f,.47f,.26f),R(-.19f,.37f,.293f),R(-.10f,.29f,.27f)},new[]{.007f,.011f,.005f},3,4);for(int i=0;i<3;i++)RareRod(b,R(-.27f+i*.055f,.43f-i*.055f,.291f),R(-.22f+i*.055f,.45f-i*.055f,.291f),.004f,.004f,4);});
    RarePart(spine,"Leather belt and shoulder harness",leather,b=>{RareTube(b,new[]{R(0,-.16f,0),R(0,-.04f,0)},new[]{.34f,.33f},1,12,.73f);RareTube(b,new[]{R(-.34f,.54f,.04f),R(-.27f,.45f,.25f),R(-.16f,.23f,.26f),R(-.05f,-.02f,.22f)},new[]{.035f,.035f,.035f,.035f},5,4,.4f);});
@@ -137,13 +141,13 @@ namespace SpellDuel
    for(int s=-1;s<=1;s+=2){int side=s;var leg=areaLegs[s<0?0:1]=Pivot("Gladiator leg",body,R(s*.24f,.77f,0));
     RarePart(leg,"Muscle leg "+s,skin,b=>RareTube(b,new[]{R(0,0,0),R(0,-.19f,0),R(0,-.36f,.03f),R(0,-.51f,0),R(0,-.63f,.02f)},new[]{.15f,.17f,.12f,.14f,.09f},6,8,.94f));
     RarePart(leg,"Boot and shin plate "+s,iron,b=>{RareForm(b,R(0,-.65f,.07f),R(.33f,.23f,.46f),8);RareTube(b,new[]{R(0,-.33f,.12f),R(0,-.44f,.15f),R(0,-.59f,.12f)},new[]{.10f,.12f,.08f},3,6,.28f);});
-    RarePart(leg,"Leg wraps "+s,leather,b=>{for(int i=0;i<2;i++)RareRing(b,R(0,-.37f-i*.15f,0),new Vector2(.126f,.13f),.018f,Quaternion.Euler(90,0,0),8);});
+    RarePart(leg,"Leg wraps "+s,leather,b=>{for(int i=0;i<2;i++)RareRing(b,R(0,-.37f-i*.15f,0),new Vector2(.126f,.13f),.018f,Quaternion.Euler(90,0,0),8,3);});
     var arm=Pivot("Sloping deltoid",spine,R(s*.47f,.52f,0));if(s>0)areaFrontR=arm;else areaFrontL=arm;
     RarePart(arm,"Defined shoulder biceps forearm "+s,skin,b=>{
      RareTube(b,new[]{R(0,.01f,0),R(s*.06f,-.13f,0),R(s*.07f,-.29f,0),R(s*.08f,-.40f,.03f),R(s*.08f,-.55f,.06f)},new[]{.16f,.19f,.12f,.14f,.09f},6,9,.92f);
      RareForm(b,R(s*.07f,-.18f,.10f),R(.23f,.30f,.16f),6);RareForm(b,R(s*.08f,-.55f,.06f),R(.21f,.18f,.19f),6);
     });
-    RarePart(arm,"Bracer and broken manacle "+s,iron,b=>{RareTube(b,new[]{R(s*.08f,-.37f,.04f),R(s*.08f,-.48f,.05f)},new[]{.145f,.115f},1,8);RareRing(b,R(s*.08f,-.51f,.06f),new Vector2(.122f,.115f),.022f,Quaternion.Euler(90,0,0),8);for(int j=0;j<2;j++)RareRing(b,R(s*.20f,-.51f-j*.075f,.06f),new Vector2(.029f,.043f),.009f,Quaternion.Euler(0,j*90,0),8);});
+    RarePart(arm,"Bracer and broken manacle "+s,iron,b=>{RareTube(b,new[]{R(s*.08f,-.37f,.04f),R(s*.08f,-.48f,.05f)},new[]{.145f,.115f},1,8);RareRing(b,R(s*.08f,-.51f,.06f),new Vector2(.122f,.115f),.022f,Quaternion.Euler(90,0,0),8);for(int j=0;j<2;j++)RareRing(b,R(s*.20f,-.51f-j*.075f,.06f),new Vector2(.029f,.043f),.009f,Quaternion.Euler(0,j*90,0),6,3);});
     if(s<0){RarePart(arm,"Single riveted shoulder armour",iron,b=>{RarePlate(b,R(-.035f,.09f,0),R(.43f,.12f,.41f),-18);RarePlate(b,R(-.16f,-.04f,.01f),R(.25f,.075f,.39f),-35);});
      RarePart(arm,"Shoulder rivets",trim,b=>{for(int j=0;j<4;j++){float a=j*Mathf.PI/2;RareRod(b,R(-.04f+Mathf.Cos(a)*.15f,.17f,Mathf.Sin(a)*.13f),R(-.04f+Mathf.Cos(a)*.15f,.20f,Mathf.Sin(a)*.13f),.018f,.009f,4);}});}
    }
