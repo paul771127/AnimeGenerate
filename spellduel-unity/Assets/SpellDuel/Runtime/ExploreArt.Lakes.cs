@@ -16,12 +16,18 @@ namespace SpellDuel
    var mesh=surface.GetComponent<MeshFilter>().sharedMesh;if(mesh.uv.Length==0){var v=mesh.vertices;var uv=new Vector2[v.Length];for(int i=0;i<v.Length;i++)uv[i]=new Vector2(v[i].x,v[i].z);mesh.uv=uv;}
    surface.GetComponent<Renderer>().sharedMaterial=LakeMaterial;
    Part(root,key+"/shore",b=>{
-    foreach(var loop in contours)for(int i=0;i<loop.Count;i++){
-     var a=loop[i];var c=loop[(i+1)%loop.Count];var tangent=(c-a).normalized;var normal=new Vector2(tangent.y,-tangent.x);
-     b.Quad(V(a.x,.023f,a.y),V(c.x,.023f,c.y),V(c.x+normal.x*.28f,.024f,c.y+normal.y*.28f),V(a.x+normal.x*.28f,.024f,a.y+normal.y*.28f),new Color(.31f,.43f,.25f));
-     // Sparse reeds and pebbles follow the actual curved edge, not water cell rows.
-     if(i%5==0){var at=V(a.x-normal.x*.05f,.03f,a.y-normal.y*.05f);b.Crown(at,V(.22f,.13f,.19f),Rock,i,6,2);if(i%10==0)for(int n=0;n<3;n++){var foot=at+V(n*.045f,0,0);b.Rod(foot,foot+V(.04f,.35f+n*.08f,.03f),.009f,Moss,4);b.Frond(foot+Vector3.up*.12f,foot+V(.12f,.36f,.02f),.022f,Leaf);}}
-    }
+    foreach(var loop in contours){float accumulated=0;int plant=0;for(int i=0;i<loop.Count;i++){
+     var a=loop[i];var c=loop[(i+1)%loop.Count];var na=LakeOutward(loop,i);var nc=LakeOutward(loop,(i+1)%loop.Count);
+     float wa=.24f+.05f*Mathf.Sin(i*.73f),wc=.24f+.05f*Mathf.Sin((i+1)%loop.Count*.73f);
+     b.Quad(V(a.x,.023f,a.y),V(c.x,.023f,c.y),V(c.x+nc.x*wc,.024f,c.y+nc.y*wc),V(a.x+na.x*wa,.024f,a.y+na.y*wa),new Color(.31f,.43f,.25f));
+     accumulated+=(c-a).magnitude;
+     if(accumulated>.75f+.25f*Mathf.Sin(plant*1.7f)){
+      accumulated=0;var at=V(a.x-na.x*.12f,.03f,a.y-na.y*.12f);float size=.35f+.18f*(.5f+.5f*Mathf.Sin(plant*2.3f));
+      if(plant%3!=0)b.Crown(at,V(size,.18f+(plant%3)*.06f,size*.8f),Color.Lerp(Rock,Moss,.25f),plant,7,2);
+      if(plant%2==0)for(int n=0;n<4;n++){var foot=at+V((n-1.5f)*.045f,0,.04f*Mathf.Sin(n));b.Rod(foot,foot+V(.04f,.45f+n*.08f,.03f),.009f,Moss,4);b.Frond(foot+Vector3.up*.12f,foot+V(.18f,.40f,.06f),.028f,Leaf);}
+      plant++;
+     }
+    }}
    }).name="Shore_CurvedContour";
   }
   static List<List<Vector2>> LakeContours(HashSet<Vector2Int> cells,ExploreMap map,Vector3 centre)
@@ -49,10 +55,12 @@ namespace SpellDuel
    }
    return result;
   }
+  static Vector2 LakeOutward(List<Vector2> loop,int i)
+  {var tangent=(loop[(i+1)%loop.Count]-loop[(i+loop.Count-1)%loop.Count]).normalized;return new Vector2(tangent.y,-tangent.x);}
   static void SmoothLakeEdge(List<Vector2> output,Vector2 a,Vector2 b)
   {
    int steps=Mathf.CeilToInt((b-a).magnitude/.35f);var dir=(b-a).normalized;var inward=new Vector2(-dir.y,dir.x);
-   for(int i=1;i<steps;i++){float t=i/(float)steps;output.Add(Vector2.Lerp(a,b,t)+inward*(.10f*Mathf.Pow(Mathf.Sin(t*Mathf.PI),2)));}
+   for(int i=1;i<steps;i++){float t=i/(float)steps;output.Add(Vector2.Lerp(a,b,t)+inward*(.34f*Mathf.Pow(Mathf.Sin(t*Mathf.PI),2)*(.65f+.35f*Mathf.Sin(t*Mathf.PI*4))));}
   }
   static void FillLake(Geo b,List<Vector2> loop)
   {

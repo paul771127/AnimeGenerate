@@ -877,9 +877,13 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 原生預覽 41150829358 通過，九格實際顯示及近景／遠景已目視複查。Docs/pending_preview/explore_jungle/ 收錄全部圖片與材質總覽。尚未做手機 AR 實機測試。
 
 ### 2026-10-31 可辨識道路、圓弧湖岸與 4m 格子（接線契約）
-- 新 `ExploreArt.CreatePath(ExploreMap map, int x, int z)`：取代 Floor 的 CreateGround 呼叫。回傳 root 位於零點，SetParent(exRoot,false) 後設 localPosition=map.World(x,z)。讀四向及斜角 Open 狀態，依 CellSize、PathFillet=1.4、margin=.35 畫出亮色踩實路；兩側是深色草／石肩。道路中心 alpha .97，不寫深度，預警圈仍畫在上方。Gate 開關或密道改變時，請重建該格和周圍八格的路面；本批沒有改 SoloBattle 接線。
+- 新 `ExploreArt.CreatePath(ExploreMap map, int x, int z)`：取代 Floor 的 CreateGround 呼叫。回傳 root 位於零點，SetParent(exRoot,false) 後設 localPosition=map.World(x,z)。讀四向及斜角 Open 狀態，依 CellSize、PathFillet=1.4、margin=.35 畫出亮色踩實路；兩側是深色草／石肩。道路中心 alpha .97，不寫深度，預警圈仍畫在上方。Gate 開關或密道改變時，請重建該格和周圍八格的路面／牆景；本批沒有改 SoloBattle 接線。
 - 新 `ExploreArt.CreateWall(ExploreMap map,int x,int z)`：取代舊地形版呼叫以圓化兩面臨路的凸牆角。原介面保留。使用原有 3m 母網格乘 CellSize/3，而非把實際格子仍當 3m；樹冠與實心部位皆不出 4m 格子。
 - CreateLandmark(lake) 的 LakeSurface 改為整片 Water 外框、二次曲線圓角、微彎直岸及耳切三角化；湖岸／石頭／蘆葦沿輪廓。凸角切線長 1.5m，最大朝任一原格邊內縮 .375m；凹角切線長 1.25m，填順範圍 .3125m。直岸內縮最多 .1m。沒有改 Water 碰撞。逐格 CreateWall(Water) 不再畫方形水面，以免在圓角外露出方塊；必須保留整片 CreateLandmark(lake)，現有接線已具備。
 - 湖面 UV 固定在網格上，合批／場景位移不會改變波紋座標；水材質配色保持。新 Shore_CurvedContour 子物件；不新增動畫。
 - 景物所有主網格收在 .98×radius，葉片與火焰也驗證半徑；地標 WallScenery 與競技場 RimSet 的網格水平隨 CellSize/3 放大，中心偏移仍用 map.World，不雙重縮放。ClampCell(1.42) 是母網格限制，實際 4m 時為 1.893m。
 - 原生預覽改用真實 4m：各地標第一人稱、全圖俯視、湖俯視特寫，另有中性／木地板／磁磚／地毯的 AR 道路合成參考。新增世界座標牆界與景物 radius 檢查、凹形湖泊測試、湖面格中心覆蓋及邊界轉角檢查。手機編譯與預覽結果待回填。
+
+### 2026-10-31 道路與湖岸原生複查修正
+- 首輪原生檢查全通過，但第一人稱圖顯示 shader 的整數連通遮罩經透視內插後有浮點誤差，產生條紋。取位元前先四捨五入，保持整條路穩定。
+- 湖岸外側改共用相鄰切線方向，消除岸帶楔形裂縫；直岸增加最多 .34m 的低幅曲線變化（仍小於 .4m）。石頭與蘆葦依沿岸距離及固定變化配置，睡蓮轉向並減量，降低規則水池感。水色不變。

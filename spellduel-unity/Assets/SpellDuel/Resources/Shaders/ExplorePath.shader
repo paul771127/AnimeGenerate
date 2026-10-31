@@ -13,7 +13,7 @@ Shader "SpellDuel/ExplorePath"
  struct appdata {float4 vertex:POSITION;float2 uv:TEXCOORD0;float4 links:TEXCOORD1;};
  struct v2f {float4 pos:SV_POSITION;float2 p:TEXCOORD0;float4 links:TEXCOORD1;};
  v2f vert(appdata v){v2f o;o.pos=UnityObjectToClipPos(v.vertex);o.p=v.uv;o.links=v.links;return o;}
- float bit(float mask,float place){return fmod(floor(mask/place),2);}
+ float bit(float mask,float place){return fmod(floor(floor(mask+.5)/place),2);}
  fixed4 frag(v2f i):SV_Target {
  float h=i.links.z,f=i.links.w,d=100;float4 open=float4(bit(i.links.x,1),bit(i.links.x,2),bit(i.links.x,4),bit(i.links.x,8));
  if(open.x<.5)d=min(d,h-.35-i.p.x);if(open.y<.5)d=min(d,h-.35+i.p.x);

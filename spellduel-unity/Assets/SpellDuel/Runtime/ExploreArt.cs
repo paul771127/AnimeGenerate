@@ -56,7 +56,7 @@ namespace SpellDuel
   {
    int n=Variant(x,z);var root=Root(terrain+" wall");var body=Part(root.transform,"wall/"+terrain+"/"+n,b=>Wall(b,terrain,n));body.name="WallBody";
    if(terrain==ExTerrain.Thicket)ThicketFoliage(root.transform,n);
-   if(terrain==ExTerrain.Water){body.GetComponent<Renderer>().sharedMaterial=LakeMaterial;Part(root.transform,"water/details/"+n,b=>WaterDetails(b,n),Vector3.zero,true).name="WaterDetails";}
+   if(terrain==ExTerrain.Water){body.GetComponent<Renderer>().sharedMaterial=LakeMaterial;if(n!=0)Part(root.transform,"water/details/"+n,b=>WaterDetails(b,n),Vector3.zero,true).name="WaterDetails";}
    if(terrain==ExTerrain.Thicket||terrain==ExTerrain.Cave)for(int i=0;i<2;i++){int k=i;Part(root.transform,"wall/looseVine/"+i,b=>b.Rod(V(k==0?-.7f:.7f,2.4f,1.43f),V(k==0?-.6f:.6f,1.1f,1.43f),.028f,Moss,4)).name="LooseVine_"+i;}
    if(terrain==ExTerrain.Palisade){Part(root.transform,"wall/flag",b=>b.Quad(V(-.4f,2.3f,1.48f),V(.4f,2.3f,1.48f),V(.3f,1.6f,1.48f),V(-.3f,1.7f,1.48f),Leaf,true)).name="WarBanner";Part(root.transform,"wall/boneCharm",b=>{b.Gem(V(0,2.06f,1.43f),V(.22f,.28f,.12f),Bone,4);for(int side=-1;side<=1;side+=2)b.Gem(V(side*.05f,2.08f,1.497f),V(.035f,.04f,.005f),Dark,4);}).name="BoneCharm";}
    root.transform.localScale=V(cell/3f,cell/3f*(terrain==ExTerrain.Thicket?1.4f:1),cell/3f);return root;

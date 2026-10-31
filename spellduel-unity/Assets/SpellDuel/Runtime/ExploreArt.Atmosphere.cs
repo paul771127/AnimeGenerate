@@ -10,6 +10,7 @@ namespace SpellDuel
   static Material LakeMaterial { get { if(!lakeMaterial)lakeMaterial=new Material(Resources.Load<Shader>("Shaders/ExploreLake")??SkyArt.Glow.shader){name="Explore shared still lake"};return lakeMaterial; } }
   static void WaterDetails(Geo b,int n)
   {
+   int start=b.v.Count;
    // Discontinuous arcs, not the old straight white floor stripes. Kept inside the cell.
    for(int arc=0;arc<3;arc++)for(int i=0;i<8;i++)
    {float a=(i/8f*1.7f+arc*2.2f+n*.4f),a2=a+.16f,r=.35f+arc*.28f;var c=new Color(.65f,.88f,.78f,.18f);b.Quad(V(Mathf.Cos(a)*r,.017f,Mathf.Sin(a)*r),V(Mathf.Cos(a2)*r,.017f,Mathf.Sin(a2)*r),V(Mathf.Cos(a2)*(r+.014f),.017f,Mathf.Sin(a2)*(r+.014f)),V(Mathf.Cos(a)*(r+.014f),.017f,Mathf.Sin(a)*(r+.014f)),c);}
@@ -17,11 +18,8 @@ namespace SpellDuel
    for(int i=0;i<10;i++){float a=i*.53f,a2=(i+1)*.53f;var at=V(.62f,.027f,.54f);b.Tri(at,at+V(Mathf.Cos(a2)*.23f,0,Mathf.Sin(a2)*.19f),at+V(Mathf.Cos(a)*.23f,0,Mathf.Sin(a)*.19f),Leaf);}
    for(int i=0;i<5;i++){float a=i*1.256f;b.Frond(V(.62f,.04f,.54f),V(.62f+Mathf.Cos(a)*.10f,.11f,.54f+Mathf.Sin(a)*.10f),.04f,Bone);}
 
-  }
-  static void ShoreStrip(Geo b)
-  {
-   for(int i=0;i<10;i++){float x=-1.5f+i*.3f,z=1.29f+.055f*Mathf.Sin(i*2.3f);b.Quad(V(x,.022f,1.49f),V(x+.3f,.022f,1.49f),V(x+.3f,.022f,z),V(x,.022f,z),new Color(.48f,.69f,.50f,.26f));if(i%3==0)b.Quad(V(x,.026f,z),V(x+.2f,.026f,z+.02f),V(x+.2f,.026f,z+.04f),V(x,.026f,z+.016f),new Color(.77f,.88f,.76f,.3f));}
-   for(int i=0;i<4;i++){var p=V(-.7f+i*.37f,.02f,1.38f);b.Rod(p,p+V(.02f,.45f+i%2*.17f,0),.01f,Moss,4);b.Frond(p+V(0,.12f,0),p+V(.11f,.4f,0),.03f,Leaf);}
+   var rotation=Quaternion.Euler(0,n*97,0);for(int i=start;i<b.v.Count;i++)b.v[i]=rotation*b.v[i]+V(.08f*Mathf.Sin(n*2),0,.08f*Mathf.Cos(n*3));
+
   }
   static void CampFuel(Geo b,int n)
   {
