@@ -21,7 +21,7 @@ namespace SpellDuel.EditorTools
             PlayerSettings.defaultScreenWidth=1080;PlayerSettings.defaultScreenHeight=2340;
             PlayerSettings.fullScreenMode=FullScreenMode.Windowed;
             PlayerSettings.SetScriptingBackend(BuildTargetGroup.Standalone,ScriptingImplementation.Mono2x);
-            var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{path},locationPathName="build/ui-preview/preview.x86_64",target=BuildTarget.StandaloneLinux64,extraScriptingDefines=new[]{"UI_POLISH_PREVIEW"},options=BuildOptions.Development});
+            var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{path},locationPathName="build/ui-preview/preview.x86_64",target=BuildTarget.StandaloneLinux64,extraScriptingDefines=new[]{"UI_POLISH_PREVIEW"},options=BuildOptions.None});
             if(report.summary.result!=BuildResult.Succeeded)throw new Exception("Native UI fixture build failed");
         }
     }
