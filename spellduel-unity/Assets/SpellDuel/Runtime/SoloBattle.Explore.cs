@@ -17,6 +17,7 @@ namespace SpellDuel
         readonly HashSet<ExLandmark> exBannerSeen = new HashSet<ExLandmark>();
         float exBannerUntil = -1f;
         readonly Dictionary<Vector2Int, GameObject> exWalls = new Dictionary<Vector2Int, GameObject>();
+        readonly Dictionary<Vector2Int, GameObject> exUnder = new Dictionary<Vector2Int, GameObject>();   // 牆格底下的森林地面（樹底下不要透出真實地板）
         readonly Dictionary<object, GameObject> exProps = new Dictionary<object, GameObject>();
         readonly Dictionary<string, CharacterRig> exNpcRigs = new Dictionary<string, CharacterRig>();
         Vector2Int exLastCell = new Vector2Int(-999, -999);
@@ -162,7 +163,7 @@ namespace SpellDuel
             foreach (var s in run.map.sparkles) h = h * 2 + (s.found ? 1 : 0);
             foreach (var se in run.map.seals) h = h * 7 + se.have + (se.open ? 5 : 0);
             if (h == exGateHash) return false;
-            exGateHash = h; foreach (var w in exWalls.Values) if (w) Destroy(w); exWalls.Clear();
+            exGateHash = h; foreach (var w in exWalls.Values) if (w) Destroy(w); exWalls.Clear(); foreach (var w in exUnder.Values) if (w) Destroy(w); exUnder.Clear();
             return true;
         }
 
@@ -205,12 +206,23 @@ namespace SpellDuel
         void RefreshExploreCells(ExploreRun run, Vector2Int c)
         {
             var map = run.map; float cs = ExploreMap.CellSize;
-            var keep = new HashSet<Vector2Int>();
+            var keep = new HashSet<Vector2Int>(); var keepUnder = new HashSet<Vector2Int>();
             for (int x = c.x - ExViewCells; x <= c.x + ExViewCells; x++)
                 for (int z = c.y - ExViewCells; z <= c.y + ExViewCells; z++)
                 {
                     var k = new Vector2Int(x, z);
                     var cell = map.At(x, z);
+                    // 牆格底下鋪森林地面（使用者回報樹底下會透出地板）；湖水格不用（整片湖面在地標裡）
+                    if (cell == ExCell.Wall && map.InGrid(x, z) && map.TerrainAt(x, z) != ExTerrain.Water)
+                    {
+                        keepUnder.Add(k);
+                        if (!exUnder.ContainsKey(k))
+                        {
+                            var t = map.TerrainAt(x, z);
+                            var g = ExploreArt.CreateGround(t == ExTerrain.Cave || t == ExTerrain.Rock ? ExGround.Cave : t == ExTerrain.Ruin ? ExGround.Stone : t == ExTerrain.Palisade ? ExGround.Dirt : ExGround.Grass, x, z, cs);
+                            if (g) { g.transform.SetParent(exRoot, false); g.transform.localPosition = map.World(x, z) + Vector3.down * 0.004f; exUnder[k] = g; }
+                        }
+                    }
                     if (cell == ExCell.Wall)
                     {
                         bool edge = false; foreach (var d in ExploreMap.Dirs) if (map.Open(x + d.x, z + d.y)) edge = true;
@@ -241,6 +253,8 @@ namespace SpellDuel
                 }
             foreach (var kv in new List<KeyValuePair<Vector2Int, GameObject>>(exWalls))
                 if (!keep.Contains(kv.Key)) { if (kv.Value) Destroy(kv.Value); exWalls.Remove(kv.Key); }
+            foreach (var kv in new List<KeyValuePair<Vector2Int, GameObject>>(exUnder))
+                if (!keepUnder.Contains(kv.Key)) { if (kv.Value) Destroy(kv.Value); exUnder.Remove(kv.Key); }
         }
 
         void UpdateExploreProps(ExploreRun run)
@@ -346,7 +360,7 @@ namespace SpellDuel
             if (exRoot) Destroy(exRoot.gameObject);
             if (area != null) area.BoundsOff = false;
             ExploreFx.Clear(); exFxSeen.Clear(); exFxSealHave.Clear(); exFxInit = false;
-            exRoot = null; exWalls.Clear(); exProps.Clear(); exSwitchShownDone.Clear(); exAlertMarks.Clear(); exBannerSeen.Clear();
+            exRoot = null; exWalls.Clear(); exUnder.Clear(); exProps.Clear(); exSwitchShownDone.Clear(); exAlertMarks.Clear(); exBannerSeen.Clear();
             if (exBannerUntil > 0f || exploreRun != null) ExploreArt.LandmarkFound(null);
             exBannerUntil = -1f;
             foreach (var r in exNpcRigs.Values) if (r) Destroy(r.gameObject);
