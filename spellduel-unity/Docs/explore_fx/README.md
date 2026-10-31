@@ -62,7 +62,7 @@ mp4 **沒有透明**，所以背景要能讓遊戲去掉：
 
 ## 已接進遊戲（ExploreFx.cs）
 
-- 進故事探索時在背景下載（第一次約 5MB），存在手機的 `explore_fx/`；還沒下載好的特效就先不播。
+- App 一開就在背景下載（第一次約 5MB），存在手機的 `explore_fx/`；還沒下載好的特效就先不播。
 - 播法：面向鏡頭的方片，黑底用加法混色、綠幕去綠（`Resources/Shaders/ExploreFxVideo.shader`）。一次性的會加速到 `seconds` 的長度；同時最多 6 支。
 - 用到的 16 支：A_unseal_burst（藤蔓門／封印打開）、A5_socket_pulse（翠玉碎片放進凹槽）、B1_rune_idle／B1_activate（石雕機關）、B2_pickup（鑰匙／碎片撿起）、C1_glint_*（閃光點）、C2_discover（點到閃光點）、C4_heart_rise／take（古樹之心）、D3_fire（篝火）、D4_spores（巨菇）、E2_alert／roar_wave（怪物發現玩家）。
 - 先沒用的 9 支：B2_key_idle、B2_shard_idle、C3_herb、C4_heart_idle、D2_lake、E1_spirit、E3_exclaim、E3_question、E4_banner。這些在場景裡已經有 Codex 的立體模型，影片是平面的，疊上去會重複。

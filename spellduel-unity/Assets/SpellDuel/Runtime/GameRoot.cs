@@ -227,6 +227,7 @@ namespace SpellDuel
             ipInput = PlayerPrefs.GetString("sd_last_ip", ipInput);
             codeInput = PlayerPrefs.GetString("sd_last_code", "");
             Sfx.Ensure(); Music.Ensure(); SettingsMenu.Ensure();
+            ExploreFx.Prefetch();   // 故事探索的特效影片：App 一開就在背景下載（使用者要求；約 5MB，只有第一次）
             SettingsMenu.Hide = () => areaPreview || StoryVideo.Active;   // 場地預覽、劇情影片時不畫 ⚙（畫面要給確定／取消、跳過）
             SettingsMenu.GoHome = GoHome;
             SettingsMenu.InBattle = () => solo.phase == SoloBattle.Phase.Fighting;

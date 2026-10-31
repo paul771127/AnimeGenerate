@@ -10,7 +10,7 @@ namespace SpellDuel
 {
     /// <summary>
     /// 故事探索的特效影片（影片生成機用 MiniMax H3 做的 mp4，960×544、約 5 秒；Docs/explore_fx/）。
-    /// 跟劇情影片一樣不打包進 App：進探索時在背景從 GitHub 下載（約 5MB，只有第一次），還沒下載好的就先不播。
+    /// 跟劇情影片一樣不打包進 App：App 一開就在背景從 GitHub 下載（約 5MB，只有第一次），還沒下載好的就先不播。
     /// 播法：場景裡一片面向鏡頭的方形（billboard），黑底的用加法混色、綠幕的去綠（Resources/Shaders/ExploreFxVideo）。
     /// 手機同時能解的影片有限：最多 MaxPlayers 支同時播，一次性的優先，循環的只播最近的幾個。
     /// </summary>
@@ -41,7 +41,7 @@ namespace SpellDuel
         public static void Prefetch()
         {
             if (downloading) return;
-            if (!inst) inst = new GameObject("Explore fx videos").AddComponent<ExploreFx>();
+            if (!inst) { inst = new GameObject("Explore fx videos").AddComponent<ExploreFx>(); DontDestroyOnLoad(inst.gameObject); }
             inst.StartCoroutine(inst.Download());
         }
         IEnumerator Download()
