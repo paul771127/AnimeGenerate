@@ -965,11 +965,20 @@ namespace SpellDuel
         ///   同一章裡每往後一波再 +StageHpGrowth（第 9 波約 +32%），章與章之間接得起來。
         ///   以推薦等級的玩家算「打倒一隻要花的力氣」（第一章≈1）：第二章 2.0→2.7、第三章 2.8→3.7、第四章 3.9→5.2、第五章 5.2→7.0。
         /// </summary>
+        /// <summary>副本比同等級的故事關卡強多少（使用者要求 ×2；小怪與 Boss 都是）</summary>
+        public const float DungeonVsStory = 2f;
+        /// <summary>副本的一個地點（波次 w）：小怪、Boss＝同等級的故事關卡 × DungeonVsStory（人數倍率照舊另外乘）</summary>
+        void ApplyDungeonStrength(int w)
+        {
+            if (battle == null) return;
+            ApplyEquivalentStrength(Mathf.Max(1, w), Mathf.Clamp((Mathf.Max(1, w) - 1) / 10, 0, StoryMinionHp.Length - 1), DungeonVsStory);
+        }
+
         /// <summary>
         /// 照「同等級」設定敵人強度：w＝這一關在簡單難度的波次，加上難度的等級（普通 +40、困難 +80）就是等效波次，
         /// 用等效波次那一章、那個位置的小怪與 Boss 倍率（第五章以後停在第五章，等級照樣往上長）。
         /// 例：普通第一章（等效 41～50 波）＝簡單第五章。Boss 已經跳過的等級不再重複加（bossBoostOverride）。
-        /// sceneCh＝場景的章節（算 Boss 跳過了幾級用）；mul＝額外倍率
+        /// sceneCh＝場景的章節（算 Boss 跳過了幾級用）；mul＝額外倍率（副本 ×2）
         /// </summary>
         void ApplyEquivalentStrength(int w, int sceneCh, float mul)
         {
@@ -1429,7 +1438,8 @@ namespace SpellDuel
                         battle.dungeonParty = Dungeons.PartyScale(partyN);          // 副本：浮動難度（最少 2 人；敵人數量、Boss 血量 ×人數）
                         battle.scaleAllies = battle.dungeonParty - 1;               // Boss 出招頻率、召喚數也照人數
                         battle.hpBoost = dungeonRelief;                          // 等級差修正（主機的等級決定）
-                        battle.enemyHpMul = Dungeons.DungeonHp; battle.enemyDmgMul = Dungeons.DungeonDmg; battle.bossHpMul = Dungeons.DungeonHp;   // 副本：小怪與 Boss 的血量、攻擊 ×2（使用者要求改回；比照故事 ×1.3 的版本不用了）
+                        // 副本強度（使用者要求）：比照同等級的故事關卡（同一章、同一個位置的倍率），再 ×2；小怪與 Boss 都是。每個地點照它的波次設定
+                        battle.OnDungeonNode = ApplyDungeonStrength; ApplyDungeonStrength(1);
                         battle.StartDungeonMap();   // 副本地圖：每個地點由 BeginDungeonRun／房主選路線決定（SoloBattle.DungeonMap.cs）
                     }
                     else if (towerRun)
