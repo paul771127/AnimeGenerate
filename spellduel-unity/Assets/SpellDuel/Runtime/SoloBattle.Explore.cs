@@ -162,7 +162,7 @@ namespace SpellDuel
                     keep.Add(k);
                     if (exWalls.ContainsKey(k)) continue;
                     GameObject go;
-                    if (cell == ExCell.Floor) go = ExploreArt.CreateGround(map.GroundAt(x, z), x, z, cs);   // 淡淡的地貼
+                    if (cell == ExCell.Floor) go = ExploreArt.CreatePath(map, x, z);   // 明顯的踩實小徑，轉角照 PathFillet 導圓角（會看四周哪邊通）
                     else if (cell == ExCell.Gate)
                     {
                         var seal = map.SealOf(x, z);
@@ -175,7 +175,7 @@ namespace SpellDuel
                         }
                         if (go) go.transform.localRotation = ExGateRot(map, x, z);
                     }
-                    else go = ExploreArt.CreateWall(map.TerrainAt(x, z), x, z, cs);
+                    else go = ExploreArt.CreateWall(map, x, z);   // 兩面臨路的凸牆角會導圓；湖水格不畫方塊（整片圓弧湖面在地標裡）
                     if (!go) continue;
                     var rot = go.transform.localRotation;
                     go.transform.SetParent(exRoot, false);
