@@ -9,6 +9,12 @@ namespace SpellDuel
   public static GameObject CreateWall(ExploreMap map,int x,int z)
   {
    if(map==null)return null;var root=CreateWall(map.TerrainAt(x,z),x,z,ExploreMap.CellSize);int corners=0;
+   if(map.TerrainAt(x,z)==ExTerrain.Water){
+    bool edgeX=map.TerrainAt(x-1,z)!=ExTerrain.Water||map.TerrainAt(x+1,z)!=ExTerrain.Water;
+    bool edgeZ=map.TerrainAt(x,z-1)!=ExTerrain.Water||map.TerrainAt(x,z+1)!=ExTerrain.Water;
+    // Wide lake corners retreat past these cell-local lilies and ripple arcs.
+    var details=root.transform.Find("WaterDetails");if(edgeX&&edgeZ&&details)details.gameObject.SetActive(false);
+   }
    for(int i=0;i<4;i++){int sx=i%2==0?1:-1,sz=i<2?1:-1;if(map.Open(x+sx,z)&&map.Open(x,z+sz))corners|=1<<i;}
    if(corners==0)return root;
    foreach(var f in root.GetComponentsInChildren<MeshFilter>())
