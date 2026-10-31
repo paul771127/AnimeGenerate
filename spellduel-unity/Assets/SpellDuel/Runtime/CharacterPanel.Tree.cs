@@ -56,7 +56,7 @@ namespace SpellDuel
                 var iconRect=new Rect(c.x-side*.5f,c.y-side*.5f,side,side);
                 bool pulse=block==null;float glow=pulse?.75f+.2f*Mathf.Sin(Time.time*3):1;
                 if(rankFlash.TryGetValue(n.id,out var at)&&Time.time-at<.3f)glow=1;
-                Texture2D icon=null;if((n.kind==NodeKind.Learn||n.kind==NodeKind.Mod)&&!string.IsNullOrEmpty(n.skill))icon=SkillIcons.Get(n.skill);
+                Texture2D icon=n.kind==NodeKind.Passive?SkillIcons.GetPassive(n.passive,p.cls):null;if((n.kind==NodeKind.Learn||n.kind==NodeKind.Mod)&&!string.IsNullOrEmpty(n.skill))icon=SkillIcons.Get(n.skill);
                 if(n.kind==NodeKind.Mod)
                 {
                     var oldColor=GUI.color;
@@ -182,7 +182,7 @@ namespace SpellDuel
             string nxt = rk < sel.max ? SkillTrees.Describe(sel, rk + 1) : "（已滿級）";
             string extra = sel.kind == NodeKind.Learn && Skills.All.TryGetValue(sel.skill, out var sk) ? $"\n{sk.desc}" : "";
             var detailIcon=new Rect(dr.x+gap,dr.y+gap*.5f,fs*1.5f,fs*1.5f);
-            UiKit.Badge(detailIcon,(sel.kind==NodeKind.Learn||sel.kind==NodeKind.Mod)&&!string.IsNullOrEmpty(sel.skill)?SkillIcons.Get(sel.skill):null,UiKit.Gold,sel.kind==NodeKind.Passive?1:0);
+            UiKit.Badge(detailIcon,(sel.kind==NodeKind.Learn||sel.kind==NodeKind.Mod)&&!string.IsNullOrEmpty(sel.skill)?SkillIcons.Get(sel.skill):sel.kind==NodeKind.Passive?SkillIcons.GetPassive(sel.passive,p.cls):null,UiKit.Gold,sel.kind==NodeKind.Passive?1:0);
             UiKit.Text(new Rect(detailIcon.xMax+gap,dr.y+gap*.5f,dr.xMax-detailIcon.xMax-gap*2,fs*1.5f),$"{sel.name}（{rk}/{sel.max}）",fs,UiKit.Paper,TextAnchor.MiddleLeft,true);
             UiKit.Divider(new Rect(dr.x+gap,dr.y+fs*1.9f,dr.width-gap*2,1),UiKit.Gold);
             DrawTreeParagraph(new Rect(dr.x+gap,dr.y+fs*2.1f,dr.width-gap*2,Mathf.Max(fs,dr.height-fs*4.8f)),sel.id,$"{req}\n現在：{now}\n下一級：{nxt}{extra}",fsS,new Color(.85f,.9f,1f));

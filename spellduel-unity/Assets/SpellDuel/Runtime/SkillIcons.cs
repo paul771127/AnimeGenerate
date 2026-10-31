@@ -51,7 +51,7 @@ namespace SpellDuel
             if(DrawBlueprint(cv,skillId))return cv.Output();
             if(DrawSupply(cv,skillId))return cv.Output();
             if(DrawSupportSoul(cv,skillId))return cv.Output();
-            if(DrawCarpetPet(cv,skillId))return cv.Output();
+            if(DrawCarpetPet(cv,skillId)){Rim(cv,cc,sc);return cv.Output();}
             if(skillId=="worldboss_notice"){DrawWorldBossNotice(cv);return cv.Output();}
             switch (skillId)
             {
@@ -189,10 +189,80 @@ namespace SpellDuel
                 case "holylance": HolyLance(cv, sc); break;
                 case "chastise": Chastise(cv, sc); break;
                 case "heavenpunish": HeavenPunish(cv, sc); break;
-                default: Orb(cv, sc); break;
+                default: HintIcon(cv, skillId, sc); break;
             }
             Rim(cv, cc, sc);
             return cv.Output();
+        }
+
+        // Unlisted enemy cues show their actual effect family instead of the same orb.
+        static void HintIcon(Cv cv,string id,V colour)
+        {
+            switch(id)
+            {
+                case "na_arrow": QuickShot(cv,colour);return;
+                case "na_sword": Slash(cv,colour);return;
+                case "na_dagger": Knife(cv,colour);return;
+                case "na_holy": Holy(cv,colour);return;
+                case "na_mage": Glyph(cv,(x,y)=>Diamond(x,y,0,0,.27f,.45f,0),colour);return;
+                case "na_stick": NoviceClub(cv);return;
+                case "kunai_fire":case "kunai_ice":case "kunai_bolt":
+                    Glyph(cv,(x,y)=>Diamond(x,y,0,.08f,.19f,.4f,0),colour);
+                    cv.Solid((x,y)=>Math.Abs(Len(x,y+.43f)-.1f)-.035f,colour);return;
+                case "pet_fire": FireSpirit(cv,colour);return;
+                case "pet_ice": ReworkIcon(cv,8);return;
+                case "pet_golem": Golem(cv,colour);return;
+                case "pet_falcon": Falcon(cv,colour);return;
+                case "pet_tamed": ReworkIcon(cv,10);return;
+            }
+            if(id.Contains("quake")||id.Contains("stomp")||id.Contains("rootwave")||id.Contains("ripple"))
+            {
+                for(int i=0;i<2;i++){float radius=.25f+i*.22f;Glyph(cv,(x,y)=>Math.Abs(Len(x,y*1.5f)-radius)-.045f,colour);}
+                Glyph(cv,(x,y)=>Box(x,y,0,.28f,.09f,.23f,0,.03f),colour);return;
+            }
+            if(id.Contains("sweep")||id.Contains("whip")||id.Contains("tentacle")||id.Contains("whirl"))
+            {
+                Glyph(cv,(x,y)=>Math.Max(Math.Abs(Len(x,y)-.43f)-.075f,y-.15f),colour);
+                Glyph(cv,(x,y)=>Diamond(x,y,.42f,.12f,.12f,.22f,-.6f),colour);return;
+            }
+            if(id.Contains("leap")||id.Contains("dash")||id.Contains("dive")||id.Contains("transition"))
+            {
+                Glyph(cv,(x,y)=>Math.Min(Seg(x,y,-.35f,-.28f,0,.35f),Seg(x,y,0,.35f,.35f,-.28f))-.075f,colour);
+                cv.Solid((x,y)=>Box(x,y,0,-.43f,.34f,.045f),colour);return;
+            }
+            if(id.Contains("claw")||id.Contains("bite")||id.Contains("pincer"))
+            {
+                for(int i=-1;i<=1;i++){float dx=i*.22f;Glyph(cv,(x,y)=>Seg(x,y,dx-.12f,-.32f,dx+.12f,.32f)-.055f,colour);}return;
+            }
+            if(id.Contains("rock")){NoviceStone(cv,false);return;}
+            if(id.Contains("fire")||id.Contains("bolt")){Fire(cv);return;}
+            if(id.Contains("snipe")||id.Contains("lance")){QuickShot(cv,colour);return;}
+            if(id.Contains("rain")||id.Contains("scatter")){Triple(cv,colour);return;}
+            if(id.Contains("root")||id.Contains("thorn")){SnareTrap(cv,colour);return;}
+            if(id.Contains("spore")||id.Contains("poison")||id.Contains("fog")||id.Contains("pool")){Poison(cv,colour);return;}
+            if(id.Contains("summon")){Golem(cv,colour);return;}
+            if(id.Contains("heal")){Heal(cv,colour);return;}
+            if(id.Contains("shock")){Thunder(cv,colour);return;}
+            if(id.Contains("bubble")||id.Contains("wave")){Wave(cv,colour);return;}
+            if(id.Contains("seed")){Glyph(cv,(x,y)=>Diamond(x,y,0,0,.28f,.4f,-.3f),colour);return;}
+            if(id.Contains("bomb")||id.Contains("blast")){BlastTrap(cv,colour);return;}
+            if(id=="m_venom"){Poison(cv,colour);return;}
+            if(id=="m_vine"){SnareTrap(cv,colour);return;}
+            if(id=="s_ink"){Smoke(cv,colour);return;}
+            if(Skills.All.TryGetValue(id,out var skill))
+            {
+                switch(skill.effect)
+                {
+                    case EffectKind.Burn: Fire(cv);return;
+                    case EffectKind.Dot: Poison(cv,colour);return;
+                    case EffectKind.Blind: Smoke(cv,colour);return;
+                    case EffectKind.Snare: SnareTrap(cv,colour);return;
+                    case EffectKind.Mark: DeadMark(cv,colour);return;
+                }
+                if(skill.type==SkillType.Trap){SnareTrap(cv,colour);return;}
+                if(skill.areaRadius>0){cv.Solid((x,y)=>Math.Abs(Len(x,y)-.43f)-.065f,colour);Glyph(cv,(x,y)=>Diamond(x,y,0,0,.16f,.28f,0),colour);return;}
+            }
+            Orb(cv,colour);
         }
 
         // Advanced glyphs: bold ink silhouettes and two cel-tone fills, readable at 48px.
@@ -624,9 +694,9 @@ namespace SpellDuel
                     float rays = 0.5f + 0.5f * (float)Math.Sin(ang * 14f + seed % 7);
                     c = c + sc * (0.035f * rays * (1f - t));
                     float nz = ValueNoise(x * 6f + seed % 13, y * 6f) - 0.5f;
-                    c = c * (1f + 0.22f * nz);
+                    c = c * (1f + 0.06f * nz);
                     // 上方微光
-                    c = c + cls * (0.05f * Clamp01(y) * (1f - t));
+                    c = c + cls * (0.10f * Clamp01(y-x*.35f) * (1f - t));
                     cv.r[k] = c.r; cv.g[k] = c.g; cv.b[k] = c.b;
                 }
             // 主圖背後的柔光
@@ -635,38 +705,13 @@ namespace SpellDuel
 
         static void Rim(Cv cv, V cls, V sc)
         {
-            var dark = cls * 0.22f;
-            var light = V.Lerp(cls, V.White, 0.65f);
-            // 內側亮線（技能色）
-            cv.Glow((x, y) => Math.Abs(Len(x, y) - 0.84f) - 0.004f, sc, 0.02f, 0.45f);
-            cv.Solid((x, y) => Math.Abs(Len(x, y) - 0.84f) - 0.006f, V.Lerp(sc, V.White, 0.35f), 0.9f);
-            // 金屬外框：深色描邊＋上亮下暗的漸層＋高光帶
-            cv.Solid((x, y) => Math.Abs(Len(x, y) - 0.895f) - 0.058f, new V(0.01f, 0.01f, 0.02f), 0.95f);
-            cv.Fill((x, y) => Math.Abs(Len(x, y) - 0.895f) - 0.042f, (x, y, d) =>
-            {
-                float t = Clamp01(0.5f + 0.55f * (y * 0.85f - x * 0.25f));
-                var c = V.Lerp(dark, light, t * t);
-                float ring = Len(x, y) - 0.895f;          // -0.042..0.042
-                float bevel = 1f - Math.Abs(ring) / 0.042f;
-                c = c * (0.65f + 0.55f * bevel);
-                c = c + V.White * (0.35f * Gauss(ring - 0.018f, 0.008f) * Clamp01(y + 0.3f));
-                return c;
-            });
-            // 細的刻紋（外框中間的暗線）
-            cv.Solid((x, y) => Math.Abs(Len(x, y) - 0.895f) - 0.004f, dark * 0.6f, 0.55f);
-            // 四顆寶石（上下左右）＋斜角的小鉚釘
-            for (int q = 0; q < 4; q++)
-            {
-                float a = (float)(Math.PI * 0.5 * q + Math.PI * 0.5);
-                float gx = 0.895f * (float)Math.Cos(a), gy = 0.895f * (float)Math.Sin(a);
-                float rot = a;
-                cv.Solid((x, y) => Diamond(x, y, gx, gy, 0.085f, 0.06f, rot) - 0.012f, new V(0.01f, 0.01f, 0.02f));
-                cv.Glow((x, y) => Diamond(x, y, gx, gy, 0.07f, 0.048f, rot), sc, 0.04f, 0.5f);
-                cv.Fill((x, y) => Diamond(x, y, gx, gy, 0.07f, 0.048f, rot), Hot(sc * 0.75f, V.Lerp(sc, V.White, 0.85f), 0.035f));
-                float ha = a + 0.785f;
-                float hx = 0.895f * (float)Math.Cos(ha), hy = 0.895f * (float)Math.Sin(ha);
-                cv.Fill((x, y) => Circle(x, y, hx, hy, 0.022f), (x, y, d) => V.Lerp(light, dark, Clamp01(0.5f + (y - hy - (x - hx)) * 18f)));
-            }
+            // One silhouette at 56px: black rim, two metal tones, upper-left light.
+            var ink=new V(.012f,.018f,.035f);
+            cv.Solid((x,y)=>Math.Abs(Len(x,y)-.889f)-.065f,ink);
+            cv.Fill((x,y)=>Math.Abs(Len(x,y)-.889f)-.041f,(x,y,d)=>
+                y-x*.35f>-.12f?V.Lerp(cls,V.White,.72f):cls*.48f);
+            cv.Solid((x,y)=>Math.Abs(Len(x,y)-.831f)-.012f,sc*.7f);
+            cv.Solid((x,y)=>Diamond(x,y,0,.89f,.047f,.047f,0),V.Lerp(sc,V.White,.8f));
         }
 
         // ================================================================ 獵人
