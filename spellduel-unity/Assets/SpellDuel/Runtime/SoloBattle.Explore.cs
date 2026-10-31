@@ -324,14 +324,90 @@ namespace SpellDuel
                     UiKit.Text(new Rect(sp.x - W * 0.15f, H - sp.y - fsS, W * 0.3f, fsS * 1.4f), n.name, fsS, new Color(1f, 0.95f, 0.7f), TextAnchor.MiddleCenter);
                 }
             DrawExploreMinimap(run, W, H);
-            // 對話框（走近 NPC 自動跳出；按「好」關掉）
-            if (run.talking != null && !string.IsNullOrEmpty(run.talkText))
+        }
+
+        // ---------------------------------------------------------------- NPC 對話框（使用者要求：不透明、最上層；說「好／繼續」或點畫面跳下一段；
+        //                                                                    要接任務時問「要接受嗎？」，說「是／要」「否／不要」或點按鈕）
+        bool ExDialogOpen => exploreRun != null && exploreRun.talking != null && phase == Phase.Fighting;
+        float exDialogLock;
+
+        void ExDialogRects(float W, float H, out Rect card, out Rect yes, out Rect no)
+        {
+            card = new Rect(W * 0.05f, H * 0.52f, W * 0.9f, H * 0.3f);
+            float bw = card.width * 0.4f, bh = H * 0.06f, by = card.yMax - bh - H * 0.02f;
+            yes = new Rect(card.x + card.width * 0.07f, by, bw, bh);
+            no = new Rect(card.xMax - card.width * 0.07f - bw, by, bw, bh);
+        }
+
+        /// <summary>DrawHud 之前：對話框開著時先吃掉點擊（不會點到後面的技能卡），點了就跳下一段／選是否</summary>
+        void ExDialogInput()
+        {
+            if (!ExDialogOpen) return;
+            var e = Event.current;
+            if (e.type != EventType.MouseDown && e.type != EventType.MouseUp) return;
+            if (e.type == EventType.MouseUp && Time.time >= exDialogLock)
             {
-                var r = new Rect(W * 0.06f, H * 0.6f, W * 0.88f, H * 0.2f);
-                UiKit.Card(r, 0.85f, new Color(0.35f, 0.7f, 0.45f), 0.95f);
-                UiKit.Text(new Rect(r.x + fs, r.y + fs * 0.4f, r.width - fs * 2, fs * 1.4f), "💬 " + run.talking.name, fs, new Color(1f, 0.9f, 0.55f), TextAnchor.MiddleLeft);
-                UiKit.Text(new Rect(r.x + fs, r.y + fs * 1.9f, r.width - fs * 2, r.height - fs * 4.2f), run.talkText, fsS, Color.white, TextAnchor.UpperLeft);
-                if (UiKit.Button(new Rect(r.xMax - W * 0.22f - fs * 0.5f, r.yMax - fs * 2.2f, W * 0.22f, fs * 1.8f), "好", fs)) run.CloseTalk();
+                var run = exploreRun;
+                ExDialogRects(Screen.width, Screen.height, out _, out var yes, out var no);
+                if (!run.asking) { run.NextTalk(); Sfx.Play("click", 0.5f); exDialogLock = Time.time + 0.25f; }
+                else if (yes.Contains(e.mousePosition)) ExAnswer(true);
+                else if (no.Contains(e.mousePosition)) ExAnswer(false);
+            }
+            e.Use();
+        }
+
+        /// <summary>語音：「好／繼續」下一段；問任務時「是／要／接受」或「否／不要／算了」。有用到回傳 true</summary>
+        bool ExDialogSpeech(string text)
+        {
+            if (!ExDialogOpen || string.IsNullOrEmpty(text) || Time.time < exDialogLock) return false;
+            var run = exploreRun;
+            if (run.asking)
+            {
+                foreach (var w in new[] { "不要", "不用", "不接", "不好", "不是", "否", "拒絕", "拒绝", "算了", "下次" }) if (text.Contains(w)) { ExAnswer(false); return true; }
+                foreach (var w in new[] { "是", "要", "接受", "好", "可以", "沒問題", "没问题", "OK", "ok" }) if (text.Contains(w)) { ExAnswer(true); return true; }
+                return true;   // 問問題時其他的話不當指令
+            }
+            foreach (var w in new[] { "好", "繼續", "继续", "下一", "嗯", "知道", "OK", "ok" })
+                if (text.Contains(w)) { run.NextTalk(); Sfx.Play("click", 0.5f); exDialogLock = Time.time + 0.8f; return true; }
+            return true;   // 對話中：不放招、不喝藥
+        }
+
+        void ExAnswer(bool yes)
+        {
+            exploreRun.Accept(yes);
+            exDialogLock = Time.time + 0.8f;
+            Sfx.Play(yes ? "charged" : "click", 0.6f);
+            if (yes) Haptics.Play(Haptics.Kind.Success);
+        }
+
+        /// <summary>DrawHud 之後畫（最上層）：不透明的對話框</summary>
+        void DrawExploreDialog()
+        {
+            if (!ExDialogOpen) return;
+            var run = exploreRun;
+            if (string.IsNullOrEmpty(run.talkText) && !run.asking) { run.CloseTalk(); return; }
+            float W = Screen.width, H = Screen.height;
+            int fs = Mathf.RoundToInt(H * 0.024f), fsS = Mathf.RoundToInt(H * 0.02f);
+            ExDialogRects(W, H, out var card, out var yes, out var no);
+            GUI.color = new Color(0.08f, 0.14f, 0.1f, 1f); GUI.DrawTexture(card, Texture2D.whiteTexture);   // 不透明底
+            GUI.color = new Color(0.45f, 0.8f, 0.5f, 1f);
+            float b = Mathf.Max(2f, H * 0.003f);
+            GUI.DrawTexture(new Rect(card.x, card.y, card.width, b), Texture2D.whiteTexture); GUI.DrawTexture(new Rect(card.x, card.yMax - b, card.width, b), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(card.x, card.y, b, card.height), Texture2D.whiteTexture); GUI.DrawTexture(new Rect(card.xMax - b, card.y, b, card.height), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            UiKit.Text(new Rect(card.x + fs, card.y + fs * 0.5f, card.width - fs * 2, fs * 1.5f), "💬 " + run.talking.name, fs, new Color(1f, 0.9f, 0.55f), TextAnchor.MiddleLeft, true);
+            var body = new Rect(card.x + fs, card.y + fs * 2.2f, card.width - fs * 2, yes.y - card.y - fs * 2.6f);
+            if (!run.asking)
+            {
+                UiKit.Text(body, run.talkText, fsS, Color.white, TextAnchor.UpperLeft);
+                UiKit.Text(new Rect(card.x, yes.y, card.width - fs, yes.height), "🎤 說「好」「繼續」或點畫面 ▶", fsS, new Color(0.75f, 0.95f, 0.8f), TextAnchor.MiddleRight);
+            }
+            else
+            {
+                var q = run.offering;
+                UiKit.Text(body, $"要接受任務「{q.title}」嗎？\n{q.desc}" + (q.gold > 0 || q.xp > 0 ? $"\n獎勵：💰{q.gold}・經驗 {q.xp}" : ""), fs, Color.white, TextAnchor.MiddleCenter, true);
+                UiKit.Card(yes, 1f, new Color(0.35f, 0.85f, 0.45f), 1f); UiKit.Text(yes, "✔ 接受（是／要）", fs, Color.white, TextAnchor.MiddleCenter, true);
+                UiKit.Card(no, 1f, new Color(0.85f, 0.45f, 0.4f), 1f); UiKit.Text(no, "✖ 不要（否）", fs, Color.white, TextAnchor.MiddleCenter, true);
             }
         }
 

@@ -847,7 +847,7 @@ namespace SpellDuel
         void OnSpeechText(string text)
         {
             if (VoiceCalib.Open) { VoiceCalib.Heard(text); return; }
-            if (phase == Phase.Fighting && battle != null) { if (scrollAsk) return; if (ClassTrialSpeech(text)) return; if (RoomEventSpeech(text)) { DungeonSpeech(text); return; } DungeonSpeech(text); if (PotionByVoice(text)) return; ItemByVoice(text); CoatByVoice(text); return; }   // 回城確認中：暫停，不聽指令
+            if (phase == Phase.Fighting && battle != null) { if (scrollAsk) return; if (ExDialogSpeech(text)) return; if (ClassTrialSpeech(text)) return; if (RoomEventSpeech(text)) { DungeonSpeech(text); return; } DungeonSpeech(text); if (PotionByVoice(text)) return; ItemByVoice(text); CoatByVoice(text); return; }   // 回城確認中：暫停，不聽指令
             if (!TownWalking) return;
             if (Greeting.Find(text) != null) { world.Heard = text; world.HeardAt = Time.time; }
             townWalk.Heard(text);
@@ -3922,8 +3922,10 @@ namespace SpellDuel
                 // 自己的手：骨架畫在最底層（場景背景會蓋住相機畫面裡真正的手）
                 if (phase == Phase.Fighting && Hand != null && Hand.HandVisible)
                     Hand.DrawSkeleton(Skills.Classes[myClass].color, Hand.CurrentNumber > 0 ? $"✋ {Hand.CurrentNumber}" : null);
+                ExDialogInput();       // 故事探索的 NPC 對話框：先吃掉點擊（SoloBattle.Explore.cs）
                 DrawHud();
                 GUI.matrix = keep;
+                DrawExploreDialog();   // 對話框畫在最上層、不跟著畫面震動
             }
         }
 
@@ -4196,36 +4198,11 @@ namespace SpellDuel
                 GUI.color = Color.white;
             }
 
-            // 上方：敵人資訊卡
-            var enColor = en.cls != null ? en.cls.color : new Color(1f, 0.4f, 0.4f);
+            // 上方：以前的敵人資訊卡（第幾波、敵人名稱與血量、狀態）整欄拿掉（使用者要求：畫面乾淨）；
+            // topR 留著給每日挑戰、轉職試煉、教學的提示卡當位置。敵人血量看頭上的血條；敵人詠唱時才浮出一行提醒
             var topR = new Rect(pad, top, SettingsMenu.RightEdge(top, top + lh * 2.9f, W - pad) - pad, lh * 2.9f);   // 右上角讓給 ⚙
-            UiKit.Card(topR, 0.6f, enColor, 0.5f);
-            float ix = topR.x + gap, iw = topR.width - gap * 2, y = topR.y + gap * 0.5f;
-            if (endless && !en.Alive)
-            {
-                // 無盡模式、Boss 還沒來：顯示倒數
-                // 無盡模式：這一波的進度（剩幾隻）
-                int remain = WaveRemainingShown, total = Mathf.Max(1, battle.waveTotal);
-                UiKit.Text(new Rect(ix, y, iw * 0.6f, lh), $"♾ 第 {battle.wave} 波", fs, Color.white, TextAnchor.MiddleLeft, true);
-                UiKit.Bar(new Rect(ix + iw * 0.54f, y + lh * 0.15f, iw * 0.46f, lh * 0.7f), 1f - remain / (float)total, new Color(1f, 0.5f, 0.15f), $"剩 {remain} 隻", fsS);
-            }
-            else
-            {
-                UiKit.Text(new Rect(ix, y, iw * 0.52f, lh), (endless ? $"第 {battle.wave} 波 " : "") + $"{en.name}　{battle.Distance:F1}m", fs, Color.white, TextAnchor.MiddleLeft, true);
-                UiKit.Bar(new Rect(ix + iw * 0.54f, y + lh * 0.15f, iw * 0.46f, lh * 0.7f), en.hp / en.maxHp, new Color(1f, 0.25f, 0.35f), $"{Mathf.CeilToInt(en.hp)}", fsS);
-            }
-            y += lh;
-            string enState = dummyMode ? $"命中 {dummyHits} 次・累計傷害 {Mathf.RoundToInt(dummyDamage)}"
-                : en.charging != null ? $"⚠ 詠唱 {en.charging.name}（{Mathf.FloorToInt(battle.ChargeProgress(en) * 100)}%）" : (ai?.Status ?? bossAi?.Status ?? "");
-            if (bossMode && (bossAi != null ? bossAi.Enraged : bossEnragedShown)) enState = "🔥 第 3 階段・狂暴　" + enState;
-            else if (bossMode && (bossAi != null ? bossAi.Phase >= 2 : bossPhase2Shown)) enState = (bossShellShown ? "🛡 第 2 階段・護盾（先打倒小怪）　" : "⚔ 第 2 階段　") + enState;
-            if (worldAi != null) enState = WorldBossState() + enState;
-            if (en.snaredUntil > now) enState = "被定身";
-            if (endless) enState = $"擊倒小怪 {battle.kills}・Boss {battle.bossKills}　" + (en.Alive ? enState : $"Boss 在第 {battle.NextBossWave} 波（還有 {battle.NextBossWave - battle.wave} 波）");
-            if (coop && en.Alive && en.target != null && battle.allies.Count > 0) enState = (en.target == me ? "🎯 盯上你！　" : $"🎯 盯著 {en.target.name}　") + enState;   // 仇恨：Boss 現在的目標
-            UiKit.Text(new Rect(ix, y, iw, lh * 0.9f), enState, fsS, en.charging != null ? new Color(1f, 0.75f, 0.4f) : new Color(0.9f, 0.92f, 1f));
-            y += lh * 0.9f;
-            UiKit.Text(new Rect(ix, y, iw, lh * 0.8f), StatusText(en, now), fsS, new Color(0.75f, 0.85f, 1f));
+            if (en.Alive && en.charging != null && phase == Phase.Fighting && !dummyMode)
+                UiKit.Pill(top + lh * 0.5f, $"⚠ {en.name} 詠唱 {en.charging.name}（{Mathf.FloorToInt(battle.ChargeProgress(en) * 100)}%）", fsS, new Color(1f, 0.75f, 0.4f), pillW);
             if (daily != null) DrawDailyHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 每日挑戰：計時、分數、獎牌（蓋在敵人卡片上）
             if (classTrial != null) DrawClassTrialHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 轉職的專業試煉：計時、進度、咒文
             if (tutorial && phase == Phase.Fighting) DrawTutorialHud(topR, W, H, lh, fs, fsS, fsL, pillW);   // 教學關：第幾步、要做什麼
@@ -4235,9 +4212,9 @@ namespace SpellDuel
             DrawLootRoll(W, H, fs, fsS);            // 故事合作：擲骰（史詩以上、精魄）
             if (phase == Phase.Fighting) DrawPalmCharge(fs);   // 初心者普攻：手掌集氣指示（SoloBattle.SwipeTrail.cs）
             // 合作：右上角的隊伍（頭像、名字、血量、每秒傷害、每秒治療；SoloBattle.StoryCoop.cs）
-            float partyH = coop && battle.allies.Count > 0 ? DrawPartyFrame(topR.yMax + gap * 0.5f, W, lh, fsS, en) : 0f;
+            float partyH = coop && battle.allies.Count > 0 ? DrawPartyFrame(top + gap * 0.5f, W, lh, fsS, en) : 0f;   // 頂部欄拿掉了：隊伍框往上移
             // 我身上的持續狀態：技能圖示＋倒數（正面綠框、負面紅框；SoloBattle.StatusIcons.cs）
-            DrawStatusIcons(Me, now, W - W * 0.02f, topR.yMax + gap * 0.5f + (partyH > 0f ? partyH + gap * 0.3f : 0f), fs);
+            DrawStatusIcons(Me, now, W - W * 0.02f, top + lh * 1.6f + gap * 0.5f + (partyH > 0f ? partyH + gap * 0.3f : 0f), fs);
 
             // 小 Boss（第 3 波單獨登場的特殊敵人）：頭上的名字與血條
             foreach (var mb in battle.minions)
@@ -4527,40 +4504,32 @@ namespace SpellDuel
                 var pf = prof ?? Progress.Char(myClass);
                 int lv = pf.level;
                 int cur = CharacterProfile.XpForLevel(lv), next = CharacterProfile.XpForLevel(lv + 1);
-                float xy = top + lh * 2.9f + gap + (coop && battle.allies.Count > 0 ? PartyFrameH(lh) + gap * 0.2f : 0f);
+                float xy = top + lh * 1.6f + gap + (coop && battle.allies.Count > 0 ? PartyFrameH(lh) + gap * 0.2f : 0f);
                 UiKit.Bar(new Rect(pad, xy, W - pad * 2, lh * 0.45f), (pf.xp - cur) / (float)Mathf.Max(1, next - cur), new Color(0.75f, 0.45f, 1f), pf.LevelLocked ? $"Lv {lv}　要轉職才能繼續升級" : $"Lv {lv}　{pf.xp - cur}/{next - cur}", fsS);
-                float bw2 = W * 0.5f;
-                if (UiKit.Button(new Rect((W - bw2) / 2f, xy + lh * 0.55f, bw2, lh * 1.1f), PendingUpgrades > 0 ? $"📜 角色（可加點 ×{PendingUpgrades}）" : "📜 角色／裝備", fsS, PendingUpgrades > 0, new Color(0.75f, 0.45f, 1f)))
-                    charOpen = true;
-                // 道具快捷欄（只顯示，不能點）：說名稱（「喝藥水」「大藥水」「魔力藥水」「回城」）或比🤙（自動選一瓶）；不限瓶數，各自冷卻（大 10 秒、小 5 秒）
-                float iy = xy + lh * 1.75f, ibw = (W - pad * 2 - gap * 3) / 4f;
+                // 「📜 角色」按鈕拿掉（使用者要求；角色在戰鬥前的整備畫面開）
+                // 道具（使用者要求：小圖示＋數量就好，不寫全名）：說「喝藥水／大藥水／魔力藥水」或比 🤙；回城捲軸可以點；冷卻中蓋暗
+                float iy = xy + lh * 0.6f, psz = lh * 1.0f;
                 int ci = 0;
                 foreach (var c in Economy.Consumables)
                 {
                     if (c.scroll && storyStage == null) continue;
-                    int n = CarryLeftOf(c.id);   // 藥水：背包裡的數量；回城捲軸：這一場帶出來的
+                    int n = CarryLeftOf(c.id);
                     bool cdOk = c.scroll || PotionReady(c.id);
-                    var sr = new Rect(pad + ci * (ibw + gap), iy, ibw, lh * 1.25f);
-                    string nm = c.id == "hp_s" ? "小藥水" : c.id == "hp_l" ? "大藥水" : c.id == "mp_s" ? "魔力藥水" : "回城";
-                    // 藥水只顯示（不能點）：用唸的或喝水手勢；回城捲軸可以點（會先暫停問要不要回城）
+                    var sr = new Rect(pad + ci * (psz * 1.9f + gap * 0.5f), iy, psz * 1.9f, psz);
                     if (c.scroll && n > 0 && !scrollAsk && UiKit.Button(sr, "", fsS, false, new Color(1f, 0.8f, 0.4f))) UseConsumable(c);
-                    UiKit.Card(sr, n > 0 && cdOk ? 0.55f : 0.3f, n > 0 && cdOk ? new Color(0.5f, 0.85f, 1f) : new Color(0.45f, 0.45f, 0.5f), 0.7f);
-                    UiKit.Text(sr, $"{c.icon}{nm} ×{n}" + (!cdOk && n > 0 ? $"\n冷卻 {PotionReadyAt(c.id) - Time.time:0.0}s" : ""), fsS, n > 0 ? Color.white : Color.gray, TextAnchor.MiddleCenter);
+                    GUI.color = new Color(0f, 0f, 0f, 0.35f); GUI.DrawTexture(sr, Texture2D.whiteTexture); GUI.color = Color.white;
+                    UiKit.Text(sr, $"{c.icon}{n}", fsS, n > 0 ? Color.white : Color.gray, TextAnchor.MiddleCenter, true);
                     if (!cdOk && n > 0)
                     {
-                        // 冷卻遮罩：由上往下退
                         float k = Mathf.Clamp01((PotionReadyAt(c.id) - Time.time) / Mathf.Max(0.1f, c.cooldown));
-                        GUI.color = new Color(0f, 0f, 0f, 0.35f); GUI.DrawTexture(new Rect(sr.x, sr.y, sr.width, sr.height * k), Texture2D.whiteTexture); GUI.color = Color.white;
+                        GUI.color = new Color(0f, 0f, 0f, 0.5f); GUI.DrawTexture(new Rect(sr.x, sr.y, sr.width, sr.height * k), Texture2D.whiteTexture); GUI.color = Color.white;
                     }
                     ci++;
                 }
-                iy += lh * 0.25f;
-                UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.6f), storyStage != null ? "🎤 說「喝藥水／大藥水／魔力藥水」或比 🤙 就會喝（不限瓶數；小藥水 5 秒、大藥水 10 秒冷卻）；回城：說「回城」或點📜" : "🎤 說「喝藥水／大藥水／魔力藥水」或比 🤙 就會喝（不限瓶數；小藥水 5 秒、大藥水 10 秒冷卻）", fsS, new Color(0.75f, 0.9f, 1f), TextAnchor.MiddleCenter);
-                iy += lh * 0.6f;
+                iy -= lh * 0.45f;
                 iy += DrawBattlePotions(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 1.1f), gap, fsS);   // 強化藥劑：點了就喝（SoloBattle.Potions.cs）
                 iy += DrawBaitButtons(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 1.1f), gap, fsS);   // 寵物誘餌：場上有對象才出現（SoloBattle.Pets.cs）
-                if (pendingItems.Count > 0 || pendingGold > 0)
-                    UiKit.Text(new Rect(pad, iy + lh * 1.05f, W - pad * 2, lh * 0.7f), $"🎁 待領取：裝備 {pendingItems.Count} 件・💰 {pendingGold}（{(storyStage != null || dungeon != null ? "通關" : "清完這一波")}後才拿得到）", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleCenter);
+                // 「🎁 待領取」那一欄拿掉（使用者要求；過關結算時一樣會列出拿到的東西）
             }
 
             // 蓄力／怎麼施法的提示：放在下方面板正上方（不在畫面中央，敵人靠近也不會被敵人和鎖定框擋住），底色較不透明、最後才畫

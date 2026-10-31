@@ -544,6 +544,10 @@ namespace SpellDuel
         public int gold, xp;
         public ExNpc talking;                // 現在正在說話的 NPC（畫面跳對話框）
         public string talkText;
+        /// <summary>這段對話最後要問「接不接受任務」（使用者要求：先看完 NPC 的話，說「好／繼續」或點畫面，再問是否接受）</summary>
+        public ExQuest offering;
+        /// <summary>true＝正在問「要接受嗎？」（說「是／要」接受、「否／不要」拒絕，或點按鈕）</summary>
+        public bool asking;
         public bool spiritBlessing;          // 森林之靈的祝福（戰鬥那邊補血、加攻擊）
         public readonly HashSet<Vector2Int> explored = new HashSet<Vector2Int>();   // 小地圖：走過的格子附近
         public const float TalkRange = 2.2f, PickRange = 1.4f, SparkleTapRange = 6f, EscortArrive = 3f;
@@ -604,7 +608,7 @@ namespace SpellDuel
         /// <summary>和 NPC 說話：接任務、回報任務</summary>
         public void Talk(ExNpc n)
         {
-            talking = n; talkText = null;
+            talking = n; talkText = null; offering = null; asking = false;
             if (n.id == "outpost") { var e = map.Quest("escort"); talkText = e.state == ExQuestState.Done ? e.thanks : "這裡是前哨站。林子裡很危險，迷路的人常常回不來……"; return; }
             if (n.id == "spirit") { var q = map.Quest("h_spirit"); if (q.state != ExQuestState.Done) { talkText = q.offer; spiritBlessing = true; Complete(q); } else talkText = q.thanks; return; }
             if (n.id == "guardian")
@@ -621,20 +625,40 @@ namespace SpellDuel
             if (qq == null) return;
             switch (qq.state)
             {
-                case ExQuestState.Offered:
-                    qq.state = ExQuestState.Active; talkText = qq.offer;
-                    Say($"📜 接受任務「{qq.title}」：{qq.desc}");
-                    if (qq.kind == "escort") escortFollowing = true;
-                    if (qq.kind == "collect" && qq.have >= qq.need) qq.state = ExQuestState.Ready;   // 先撿好了
-                    break;
+                case ExQuestState.Offered: talkText = qq.offer; offering = qq; break;   // 看完再問要不要接（Accept）
                 case ExQuestState.Active: talkText = $"「{qq.title}」：{qq.desc}（{qq.Progress}）"; break;
                 case ExQuestState.Ready: talkText = qq.thanks; Complete(qq); break;
-                case ExQuestState.Failed: qq.state = ExQuestState.Active; qq.have = 0; talkText = qq.offer; if (qq.kind == "escort") escortFollowing = true; break;
+                case ExQuestState.Failed: talkText = qq.offer; offering = qq; break;   // 失敗過：再問一次要不要重新接
                 case ExQuestState.Done: talkText = qq.thanks; break;
             }
         }
 
-        public void CloseTalk() { talking = null; talkText = null; }
+        public void CloseTalk() { talking = null; talkText = null; offering = null; asking = false; }
+
+        /// <summary>對話的下一步（說「好／繼續」或點畫面）：有任務可以接就改問「要接受嗎？」，不然關掉</summary>
+        public void NextTalk()
+        {
+            if (talking == null || asking) return;
+            if (offering != null) { asking = true; return; }
+            CloseTalk();
+        }
+
+        /// <summary>回答「要接受任務嗎？」</summary>
+        public void Accept(bool yes)
+        {
+            var q = offering;
+            if (talking == null || q == null) { CloseTalk(); return; }
+            if (yes)
+            {
+                if (q.state == ExQuestState.Failed) q.have = 0;
+                q.state = ExQuestState.Active;
+                Say($"📜 接受任務「{q.title}」：{q.desc}");
+                if (q.kind == "escort") escortFollowing = true;
+                if (q.kind == "collect" && q.have >= q.need) q.state = ExQuestState.Ready;   // 先撿好了
+            }
+            else Say($"沒有接受「{q.title}」（之後再來找{talking.name}就可以接）");
+            CloseTalk();
+        }
 
         void Complete(ExQuest q)
         {
