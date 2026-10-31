@@ -19,7 +19,7 @@ namespace SpellDuel.EditorTools
   static MinionRig RareCreate(int kind,bool legacy=false)
   {
    typeof(MinionRig).GetField("rarePreviewLegacy",BindingFlags.Static|BindingFlags.NonPublic).SetValue(null,legacy);
-   UnityEngine.Random.InitState(1900+kind);var r=MinionRig.Create();r.SetVariant(kind);typeof(MinionRig).GetField("clock",RareFlags).SetValue(r,0f);RareTick(r,0);
+   UnityEngine.Random.InitState(1900+kind);var r=MinionRig.Create();r.SetVariant(kind);r.SetDress(kind==21?3:kind==22?4:kind==19?1:2);typeof(MinionRig).GetField("clock",RareFlags).SetValue(r,0f);RareTick(r,0);
    typeof(MinionRig).GetField("rarePreviewLegacy",BindingFlags.Static|BindingFlags.NonPublic).SetValue(null,false);return r;
   }
   static string RarePath(Transform t,Transform root){if(!t)return "null";if(t==root)return "root";return RarePath(t.parent,root)+"/"+t.name;}

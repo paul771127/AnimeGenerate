@@ -10,6 +10,13 @@ namespace SpellDuel
         void ApplyDress(int theme)
         {
             if(dressRoot!=null){dressRoot.gameObject.SetActive(false);Destroy(dressRoot.gameObject);dressRoot=null;}
+            // These four species already include their chapter costume in registered joint meshes.
+            // Do not add the old generic collar/scarf over the detailed jaw or exceed the 4k budget.
+            bool bespoke=variantId>=19&&variantId<=22;
+#if UNITY_EDITOR
+            bespoke&=!rarePreviewLegacy;
+#endif
+            if(bespoke)return;
             if(theme!=3&&theme!=4||body==null)return;
             var anchor=head!=null?head:spine!=null?spine:body;
             dressRoot=Pivot("Regional dress",anchor,(variantId >= 19 ? new Vector3(0,-.10f,0) : DressAt[variantId]));float r=(variantId >= 19 ? .24f : DressRadius[variantId]);
