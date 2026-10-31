@@ -1,0 +1,15 @@
+{
+  "id": 41241105571,
+  "head": "8121b87ba42c88a925293c232c12e1641d9d4312",
+  "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41241105571",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "ui-fx",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41241105571/job/124655016641"
+    }
+  ]
+}

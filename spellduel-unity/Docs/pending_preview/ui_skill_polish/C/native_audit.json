@@ -1,0 +1,2523 @@
+{
+    "unity": "2022.3.62f2",
+    "auditedSkills": [
+        "quickshot | archer | Projectile | radius=0.05 area=0 range=12",
+        "snipe | archer | Projectile | radius=0.04 area=0 range=15",
+        "triple | archer | Projectile | radius=0.05 area=0 range=10",
+        "mindfocus | archer | Self | radius=0.1 area=0 range=8",
+        "snaretrap | archer | Trap | radius=0.35 area=0 range=8",
+        "blasttrap | archer | Trap | radius=0.45 area=0 range=8",
+        "fire | mage | Projectile | radius=0.15 area=0 range=6",
+        "ice | mage | Projectile | radius=0.09 area=0 range=7",
+        "thunder | mage | Projectile | radius=0.07 area=0 range=10",
+        "wind | mage | Projectile | radius=0.25 area=0 range=2.5",
+        "meteor | mage | Projectile | radius=0.3 area=0 range=8",
+        "dispel | mage | Self | radius=0.1 area=1.5 range=8",
+        "meditate | mage | Self | radius=0.1 area=0 range=8",
+        "heal | mage | Self | radius=0.1 area=0 range=8",
+        "backstab | assassin | Projectile | radius=0.08 area=0 range=1.5",
+        "shadow | assassin | Projectile | radius=0.08 area=0 range=1.5",
+        "poison | assassin | Projectile | radius=0.08 area=0 range=1.5",
+        "knife | assassin | Projectile | radius=0.05 area=0 range=5",
+        "prep | assassin | Self | radius=0.1 area=0 range=8",
+        "smoke | assassin | Projectile | radius=0.25 area=0 range=6",
+        "slash | swordsman | Projectile | radius=0.3 area=0 range=2",
+        "thrust | swordsman | Projectile | radius=0.08 area=0 range=3",
+        "wave | swordsman | Projectile | radius=0.2 area=0 range=7",
+        "block | swordsman | Self | radius=0.1 area=0 range=8",
+        "ironwall | swordsman | Self | radius=0.1 area=0 range=8",
+        "holy | priest | Projectile | radius=0.12 area=0 range=9",
+        "judgement | priest | Projectile | radius=0.45 area=1.5 range=10",
+        "prayheal | priest | Self | radius=0.1 area=0 range=8",
+        "cleanse | priest | Self | radius=0.1 area=0 range=8",
+        "guard | priest | Self | radius=0.1 area=0 range=8",
+        "bless | priest | Self | radius=0.1 area=0 range=8",
+        "haste | priest | Self | radius=0.1 area=0 range=8",
+        "spring | priest | Self | radius=0.1 area=0 range=8",
+        "focus | priest | Self | radius=0.1 area=0 range=8",
+        "prayer | priest | Self | radius=0.1 area=0 range=8",
+        "counter | swordsman | Self | radius=0.1 area=0 range=8",
+        "taunt | swordsman | Self | radius=0.1 area=0 range=8",
+        "m_fireball | minion | Projectile | radius=0.12 area=0 range=9",
+        "x_healorb | priest | Projectile | radius=0.2 area=0 range=12",
+        "x_fire_low | minion | Projectile | radius=0.18 area=0 range=25",
+        "x_fire_high | minion | Projectile | radius=0.18 area=0 range=25",
+        "m_rock | minion | Projectile | radius=0.45 area=0 range=11",
+        "m_void | minion | Projectile | radius=0.13 area=0 range=14",
+        "m_snipe | minion | Projectile | radius=0.08 area=0 range=14",
+        "m_bomb | minion | Projectile | radius=0 area=1.8 range=1.3",
+        "m_venom | minion | Projectile | radius=0.5 area=0 range=8",
+        "m_pool | minion | Projectile | radius=0.5 area=0 range=8",
+        "m_dash | minion | Projectile | radius=0.35 area=0 range=5",
+        "m_vine | minion | Projectile | radius=0.18 area=0 range=6",
+        "m_bite | minion | Projectile | radius=0 area=0 range=1.1",
+        "m_spore | minion | Projectile | radius=0 area=1.5 range=1.3",
+        "m_seed | minion | Projectile | radius=0.06 area=0 range=9",
+        "m_leap | minion | Projectile | radius=0.3 area=0 range=7",
+        "m_dive | minion | Projectile | radius=0.3 area=0 range=9",
+        "m_bubble | minion | Projectile | radius=0.4 area=0 range=12",
+        "m_rootquake | minion | Projectile | radius=0.3 area=0 range=3.5",
+        "m_tidewhip | minion | Projectile | radius=0 area=0 range=3",
+        "m_chainsweep | minion | Projectile | radius=0 area=0 range=3",
+        "m_twinquake | minion | Projectile | radius=0.3 area=0 range=3",
+        "m_pincer | minion | Projectile | radius=0 area=0 range=1.3",
+        "m_shock | minion | Projectile | radius=0 area=1.4 range=1.4",
+        "m_spine | minion | Projectile | radius=0.08 area=0 range=6",
+        "m_claw | minion | Projectile | radius=0 area=0 range=1.3",
+        "nv_swing | novice | Projectile | radius=0.3 area=0 range=1.8",
+        "nv_stone | novice | Projectile | radius=0.14 area=0 range=11",
+        "nv_aid | novice | Self | radius=0.1 area=0 range=8",
+        "shieldbash | swordsman | Projectile | radius=0.3 area=0 range=2.5",
+        "oath | swordsman | Self | radius=0.1 area=0 range=8",
+        "sanction | swordsman | Projectile | radius=0 area=2.5 range=2.5",
+        "jianlai | swordsman | Self | radius=0.1 area=0 range=8",
+        "yujian | swordsman | Self | radius=0.12 area=0 range=12",
+        "wanjian | swordsman | Projectile | radius=0.45 area=0 range=12",
+        "jiangang | swordsman | Self | radius=0.1 area=0 range=8",
+        "jianzhen | swordsman | Self | radius=0.1 area=0 range=8",
+        "yijian | swordsman | Projectile | radius=0.6 area=0 range=14",
+        "yj_blade | swordsman | Projectile | radius=0.12 area=0 range=12",
+        "whirlwind | swordsman | Projectile | radius=0 area=2 range=2",
+        "bloodrage | swordsman | Self | radius=0.1 area=0 range=8",
+        "undying | swordsman | Self | radius=0.1 area=0 range=8",
+        "holyblade | swordsman | Projectile | radius=0.5 area=0 range=6",
+        "consecrate | swordsman | Projectile | radius=0 area=2.5 range=2.5",
+        "layhands | swordsman | Self | radius=0.1 area=0 range=8",
+        "headshot | archer | Projectile | radius=0.05 area=0 range=18",
+        "scattershot | archer | Projectile | radius=0.07 area=0 range=9",
+        "blastarrow | archer | Projectile | radius=0 area=2 range=12",
+        "spiritbolt | mage | Projectile | radius=0.1 area=0 range=10",
+        "earthspike | mage | Projectile | radius=0 area=1.8 range=9",
+        "pactcheer | mage | Self | radius=0.1 area=0 range=8",
+        "suiton | assassin | Projectile | radius=0 area=1.8 range=8",
+        "futon | assassin | Projectile | radius=0.5 area=0 range=10",
+        "bladestorm | assassin | Projectile | radius=0 area=2 range=2",
+        "poisondart | assassin | Projectile | radius=0.07 area=0 range=8",
+        "nightveil | assassin | Self | radius=0.1 area=0 range=8",
+        "holynova | priest | Projectile | radius=0 area=3 range=3",
+        "divinegrace | priest | Self | radius=0.1 area=0 range=8",
+        "lightpillar | priest | Projectile | radius=0.6 area=0 range=10",
+        "holyfire | priest | Projectile | radius=0.1 area=0 range=10",
+        "verdict | priest | Projectile | radius=0.7 area=0 range=10",
+        "retribution | swordsman | Self | radius=0.1 area=0 range=8",
+        "swordfervor | swordsman | Self | radius=0.1 area=0 range=8",
+        "killinstinct | archer | Self | radius=0.1 area=0 range=8",
+        "huntfrenzy | archer | Self | radius=0.1 area=0 range=8",
+        "chainstorm | mage | Self | radius=0.1 area=0 range=8",
+        "soulharvest | mage | Self | radius=0.1 area=0 range=8",
+        "renjutsu | assassin | Self | radius=0.1 area=0 range=8",
+        "reaperdance | assassin | Self | radius=0.1 area=0 range=8",
+        "graceflow | priest | Self | radius=0.1 area=0 range=8",
+        "martyrflame | priest | Self | radius=0.1 area=0 range=8",
+        "pierce | archer | Projectile | radius=0.06 area=0 range=16",
+        "deadmark | archer | Self | radius=0.1 area=0 range=8",
+        "arrowrain | archer | Projectile | radius=0.45 area=0 range=12",
+        "falcon | archer | Self | radius=0.1 area=0 range=8",
+        "rollshot | archer | Self | radius=0.1 area=0 range=8",
+        "landmine | archer | Trap | radius=0.4 area=2.5 range=8",
+        "rangerhaste | archer | Self | radius=0.1 area=0 range=8",
+        "hawkeye | archer | Self | radius=0.1 area=0 range=8",
+        "trapchain | archer | Trap | radius=0.35 area=0 range=8",
+        "rollarrow | archer | Projectile | radius=0.06 area=0 range=12",
+        "tjudge | mage | Projectile | radius=0.6 area=0 range=10",
+        "frostfield | mage | Projectile | radius=0 area=2 range=8",
+        "starfall | mage | Projectile | radius=0 area=3.5 range=10",
+        "arcanebreak | mage | Projectile | radius=0.12 area=0 range=12",
+        "arcanewyrm | mage | Projectile | radius=0.2 area=0 range=16",
+        "arcanehaste | mage | Self | radius=0.1 area=0 range=8",
+        "elementward | mage | Self | radius=0.1 area=0 range=8",
+        "manashield | mage | Self | radius=0.1 area=0 range=8",
+        "firespirit | mage | Self | radius=0.1 area=0 range=8",
+        "golem | mage | Self | radius=0.1 area=0 range=8",
+        "icespirit | mage | Self | radius=0.1 area=0 range=8",
+        "fairy | mage | Self | radius=0.1 area=0 range=8",
+        "capture | mage | Self | radius=0.1 area=0 range=8",
+        "detonate | mage | Self | radius=0.1 area=2 range=8",
+        "substitute | assassin | Self | radius=0.1 area=0 range=8",
+        "clone | assassin | Self | radius=0.1 area=0 range=8",
+        "fireseal | assassin | Projectile | radius=0.15 area=0 range=4",
+        "shuriken | assassin | Projectile | radius=0.08 area=0 range=8",
+        "raiton | assassin | Projectile | radius=0.1 area=0 range=9",
+        "kunai_fire | assassin | Projectile | radius=0.09 area=0 range=9",
+        "kunai_ice | assassin | Projectile | radius=0.09 area=0 range=9",
+        "kunai_bolt | assassin | Projectile | radius=0.09 area=0 range=9",
+        "shadowclone | assassin | Self | radius=0.1 area=0 range=8",
+        "shadowkill | assassin | Projectile | radius=0.08 area=0 range=1.5",
+        "deadlypoison | assassin | Projectile | radius=0.1 area=0 range=7",
+        "plague | assassin | Projectile | radius=0.12 area=0 range=7",
+        "holybarrier | priest | Self | radius=0.1 area=2.5 range=8",
+        "execute | assassin | Projectile | radius=0.08 area=0 range=1.5",
+        "shadowdance | assassin | Self | radius=0.1 area=0 range=8",
+        "poisonfog | assassin | Self | radius=0.1 area=2 range=8",
+        "revive | priest | Self | radius=0.1 area=0 range=8",
+        "massheal | priest | Self | radius=0.1 area=0 range=8",
+        "sanctuary | priest | Self | radius=0.1 area=0 range=8",
+        "holylance | priest | Projectile | radius=0.07 area=0 range=11",
+        "chastise | priest | Projectile | radius=0.12 area=0 range=9",
+        "heavenpunish | priest | Projectile | radius=0.9 area=3 range=10",
+        "arcaneburst | mage | Projectile | radius=0 area=1.5 range=1",
+        "echo_fire | mage | Projectile | radius=0.1 area=0 range=10",
+        "echo_ice | mage | Projectile | radius=0.08 area=0 range=10",
+        "venom_burst | assassin | Projectile | radius=0 area=0 range=1",
+        "elite_23_0 | minion | Projectile | radius=0.28 area=0 range=2.4",
+        "elite_23_1 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_24_0 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_24_1 | minion | Projectile | radius=0.28 area=0 range=0.75",
+        "elite_25_0 | minion | Projectile | radius=0.28 area=0 range=0.75",
+        "elite_25_1 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_26_0 | minion | Projectile | radius=0.28 area=0 range=2",
+        "elite_26_1 | minion | Projectile | radius=0.28 area=0 range=2",
+        "elite_27_0 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_27_1 | minion | Projectile | radius=0.28 area=0 range=2.4",
+        "elite_28_0 | minion | Projectile | radius=0.28 area=0 range=2.4",
+        "elite_28_1 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_29_0 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_29_1 | minion | Projectile | radius=0.28 area=0 range=0.75",
+        "elite_30_0 | minion | Projectile | radius=0.28 area=0 range=0.75",
+        "elite_30_1 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_31_0 | minion | Projectile | radius=0.28 area=0 range=2",
+        "elite_31_1 | minion | Projectile | radius=0.28 area=0 range=2",
+        "elite_32_0 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_32_1 | minion | Projectile | radius=0.28 area=0 range=2.4",
+        "elite_33_0 | minion | Projectile | radius=0.28 area=0 range=2.4",
+        "elite_33_1 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_34_0 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_34_1 | minion | Projectile | radius=0.28 area=0 range=0.75",
+        "elite_35_0 | minion | Projectile | radius=0.28 area=0 range=0.75",
+        "elite_35_1 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_36_0 | minion | Projectile | radius=0.28 area=0 range=2",
+        "elite_36_1 | minion | Projectile | radius=0.28 area=0 range=2",
+        "elite_37_0 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_37_1 | minion | Projectile | radius=0.28 area=0 range=2.4",
+        "elite_38_0 | minion | Projectile | radius=0.28 area=0 range=2.4",
+        "elite_38_1 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_39_0 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_39_1 | minion | Projectile | radius=0.28 area=0 range=0.75",
+        "elite_40_0 | minion | Projectile | radius=0.28 area=0 range=0.75",
+        "elite_40_1 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_41_0 | minion | Projectile | radius=0.28 area=0 range=2",
+        "elite_41_1 | minion | Projectile | radius=0.28 area=0 range=2",
+        "elite_42_0 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_42_1 | minion | Projectile | radius=0.28 area=0 range=2.4",
+        "elite_43_0 | minion | Projectile | radius=0.28 area=0 range=2.4",
+        "elite_43_1 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_44_0 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_44_1 | minion | Projectile | radius=0.28 area=0 range=0.75",
+        "elite_45_0 | minion | Projectile | radius=0.28 area=0 range=0.75",
+        "elite_45_1 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_46_0 | minion | Projectile | radius=0.28 area=0 range=2",
+        "elite_46_1 | minion | Projectile | radius=0.28 area=0 range=2",
+        "elite_47_0 | minion | Projectile | radius=0.28 area=0 range=2.6",
+        "elite_47_1 | minion | Projectile | radius=0.28 area=0 range=2.4",
+        "vault_hit | minion | Projectile | radius=0.1 area=0 range=8"
+    ],
+    "samples": [
+        {
+            "id": "nv_swing",
+            "phase": "charge",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 56
+        },
+        {
+            "id": "nv_swing",
+            "phase": "release",
+            "view": "self",
+            "particles": 49,
+            "meshTriangles": 200,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "nv_swing",
+            "phase": "impact",
+            "view": "self",
+            "particles": 30,
+            "meshTriangles": 0,
+            "lineTriangleBound": 192
+        },
+        {
+            "id": "nv_swing",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 56
+        },
+        {
+            "id": "nv_swing",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 49,
+            "meshTriangles": 200,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "nv_swing",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 30,
+            "meshTriangles": 0,
+            "lineTriangleBound": 192
+        },
+        {
+            "id": "nv_stone",
+            "phase": "charge",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 56
+        },
+        {
+            "id": "nv_stone",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 58,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "nv_stone",
+            "phase": "impact",
+            "view": "self",
+            "particles": 30,
+            "meshTriangles": 0,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "nv_stone",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 56
+        },
+        {
+            "id": "nv_stone",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 58,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "nv_stone",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 30,
+            "meshTriangles": 0,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "nv_aid",
+            "phase": "charge",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 56
+        },
+        {
+            "id": "nv_aid",
+            "phase": "release",
+            "view": "self",
+            "particles": 84,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2464
+        },
+        {
+            "id": "nv_aid",
+            "phase": "impact",
+            "view": "self",
+            "particles": 14,
+            "meshTriangles": 0,
+            "lineTriangleBound": 416
+        },
+        {
+            "id": "nv_aid",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 56
+        },
+        {
+            "id": "nv_aid",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 84,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2464
+        },
+        {
+            "id": "nv_aid",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 14,
+            "meshTriangles": 0,
+            "lineTriangleBound": 416
+        },
+        {
+            "id": "slash",
+            "phase": "charge",
+            "view": "self",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "slash",
+            "phase": "release",
+            "view": "self",
+            "particles": 19,
+            "meshTriangles": 128,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "slash",
+            "phase": "impact",
+            "view": "self",
+            "particles": 77,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1264
+        },
+        {
+            "id": "slash",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "slash",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 19,
+            "meshTriangles": 128,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "slash",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 77,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1264
+        },
+        {
+            "id": "thrust",
+            "phase": "charge",
+            "view": "self",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "thrust",
+            "phase": "release",
+            "view": "self",
+            "particles": 19,
+            "meshTriangles": 124,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "thrust",
+            "phase": "impact",
+            "view": "self",
+            "particles": 54,
+            "meshTriangles": 0,
+            "lineTriangleBound": 992
+        },
+        {
+            "id": "thrust",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "thrust",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 19,
+            "meshTriangles": 124,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "thrust",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 54,
+            "meshTriangles": 0,
+            "lineTriangleBound": 992
+        },
+        {
+            "id": "wave",
+            "phase": "charge",
+            "view": "self",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "wave",
+            "phase": "release",
+            "view": "self",
+            "particles": 19,
+            "meshTriangles": 256,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "wave",
+            "phase": "impact",
+            "view": "self",
+            "particles": 66,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1488
+        },
+        {
+            "id": "wave",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "wave",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 19,
+            "meshTriangles": 256,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "wave",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 66,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1488
+        },
+        {
+            "id": "quickshot",
+            "phase": "charge",
+            "view": "self",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "quickshot",
+            "phase": "release",
+            "view": "self",
+            "particles": 23,
+            "meshTriangles": 58,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "quickshot",
+            "phase": "impact",
+            "view": "self",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "quickshot",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "quickshot",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 23,
+            "meshTriangles": 58,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "quickshot",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "snipe",
+            "phase": "charge",
+            "view": "self",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "snipe",
+            "phase": "release",
+            "view": "self",
+            "particles": 23,
+            "meshTriangles": 98,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "snipe",
+            "phase": "impact",
+            "view": "self",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "snipe",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "snipe",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 23,
+            "meshTriangles": 98,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "snipe",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "triple",
+            "phase": "charge",
+            "view": "self",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "triple",
+            "phase": "release",
+            "view": "self",
+            "particles": 23,
+            "meshTriangles": 58,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "triple",
+            "phase": "impact",
+            "view": "self",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "triple",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "triple",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 23,
+            "meshTriangles": 58,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "triple",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "fire",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "fire",
+            "phase": "release",
+            "view": "self",
+            "particles": 49,
+            "meshTriangles": 260,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "fire",
+            "phase": "impact",
+            "view": "self",
+            "particles": 69,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "fire",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "fire",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 49,
+            "meshTriangles": 260,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "fire",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 69,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "ice",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "ice",
+            "phase": "release",
+            "view": "self",
+            "particles": 49,
+            "meshTriangles": 108,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "ice",
+            "phase": "impact",
+            "view": "self",
+            "particles": 69,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "ice",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "ice",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 49,
+            "meshTriangles": 108,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "ice",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 69,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "meteor",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "meteor",
+            "phase": "release",
+            "view": "self",
+            "particles": 49,
+            "meshTriangles": 324,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "meteor",
+            "phase": "impact",
+            "view": "self",
+            "particles": 69,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "meteor",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "meteor",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 49,
+            "meshTriangles": 324,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "meteor",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 69,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "knife",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "knife",
+            "phase": "release",
+            "view": "self",
+            "particles": 53,
+            "meshTriangles": 88,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "knife",
+            "phase": "impact",
+            "view": "self",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "knife",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "knife",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 53,
+            "meshTriangles": 88,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "knife",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "poison",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "poison",
+            "phase": "release",
+            "view": "self",
+            "particles": 53,
+            "meshTriangles": 252,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "poison",
+            "phase": "impact",
+            "view": "self",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "poison",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "poison",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 53,
+            "meshTriangles": 252,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "poison",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "smoke",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "smoke",
+            "phase": "release",
+            "view": "self",
+            "particles": 61,
+            "meshTriangles": 64,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "smoke",
+            "phase": "impact",
+            "view": "self",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "smoke",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "smoke",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 61,
+            "meshTriangles": 64,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "smoke",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "holy",
+            "phase": "charge",
+            "view": "self",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "holy",
+            "phase": "release",
+            "view": "self",
+            "particles": 52,
+            "meshTriangles": 412,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "holy",
+            "phase": "impact",
+            "view": "self",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "holy",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "holy",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 52,
+            "meshTriangles": 412,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "holy",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "prayheal",
+            "phase": "charge",
+            "view": "self",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "prayheal",
+            "phase": "release",
+            "view": "self",
+            "particles": 144,
+            "meshTriangles": 0,
+            "lineTriangleBound": 3536
+        },
+        {
+            "id": "prayheal",
+            "phase": "impact",
+            "view": "self",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "prayheal",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "prayheal",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 144,
+            "meshTriangles": 0,
+            "lineTriangleBound": 3536
+        },
+        {
+            "id": "prayheal",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "cleanse",
+            "phase": "charge",
+            "view": "self",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "cleanse",
+            "phase": "release",
+            "view": "self",
+            "particles": 144,
+            "meshTriangles": 0,
+            "lineTriangleBound": 3536
+        },
+        {
+            "id": "cleanse",
+            "phase": "impact",
+            "view": "self",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "cleanse",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "cleanse",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 144,
+            "meshTriangles": 0,
+            "lineTriangleBound": 3536
+        },
+        {
+            "id": "cleanse",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "shieldbash",
+            "phase": "charge",
+            "view": "self",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "shieldbash",
+            "phase": "release",
+            "view": "self",
+            "particles": 19,
+            "meshTriangles": 200,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "shieldbash",
+            "phase": "impact",
+            "view": "self",
+            "particles": 68,
+            "meshTriangles": 0,
+            "lineTriangleBound": 688
+        },
+        {
+            "id": "shieldbash",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "shieldbash",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 19,
+            "meshTriangles": 200,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "shieldbash",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 68,
+            "meshTriangles": 0,
+            "lineTriangleBound": 688
+        },
+        {
+            "id": "holyblade",
+            "phase": "charge",
+            "view": "self",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "holyblade",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 648
+        },
+        {
+            "id": "holyblade",
+            "phase": "impact",
+            "view": "self",
+            "particles": 68,
+            "meshTriangles": 0,
+            "lineTriangleBound": 688
+        },
+        {
+            "id": "holyblade",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "holyblade",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 648
+        },
+        {
+            "id": "holyblade",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 68,
+            "meshTriangles": 0,
+            "lineTriangleBound": 688
+        },
+        {
+            "id": "sanction",
+            "phase": "charge",
+            "view": "self",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "sanction",
+            "phase": "release",
+            "view": "self",
+            "particles": 19,
+            "meshTriangles": 200,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "sanction",
+            "phase": "impact",
+            "view": "self",
+            "particles": 68,
+            "meshTriangles": 0,
+            "lineTriangleBound": 688
+        },
+        {
+            "id": "sanction",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "sanction",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 19,
+            "meshTriangles": 200,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "sanction",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 68,
+            "meshTriangles": 0,
+            "lineTriangleBound": 688
+        },
+        {
+            "id": "jianlai",
+            "phase": "charge",
+            "view": "self",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "jianlai",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 114,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "jianlai",
+            "phase": "impact",
+            "view": "self",
+            "particles": 24,
+            "meshTriangles": 0,
+            "lineTriangleBound": 400
+        },
+        {
+            "id": "jianlai",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "jianlai",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 114,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "jianlai",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 24,
+            "meshTriangles": 0,
+            "lineTriangleBound": 400
+        },
+        {
+            "id": "yujian",
+            "phase": "charge",
+            "view": "self",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "yujian",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 114,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "yujian",
+            "phase": "impact",
+            "view": "self",
+            "particles": 68,
+            "meshTriangles": 0,
+            "lineTriangleBound": 688
+        },
+        {
+            "id": "yujian",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "yujian",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 114,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "yujian",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 68,
+            "meshTriangles": 0,
+            "lineTriangleBound": 688
+        },
+        {
+            "id": "wanjian",
+            "phase": "charge",
+            "view": "self",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "wanjian",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 114,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "wanjian",
+            "phase": "impact",
+            "view": "self",
+            "particles": 24,
+            "meshTriangles": 0,
+            "lineTriangleBound": 400
+        },
+        {
+            "id": "wanjian",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 105,
+            "meshTriangles": 0,
+            "lineTriangleBound": 496
+        },
+        {
+            "id": "wanjian",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 114,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "wanjian",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 24,
+            "meshTriangles": 0,
+            "lineTriangleBound": 400
+        },
+        {
+            "id": "headshot",
+            "phase": "charge",
+            "view": "self",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "headshot",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 4,
+            "lineTriangleBound": 32
+        },
+        {
+            "id": "headshot",
+            "phase": "impact",
+            "view": "self",
+            "particles": 54,
+            "meshTriangles": 0,
+            "lineTriangleBound": 992
+        },
+        {
+            "id": "headshot",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "headshot",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 4,
+            "lineTriangleBound": 32
+        },
+        {
+            "id": "headshot",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 54,
+            "meshTriangles": 0,
+            "lineTriangleBound": 992
+        },
+        {
+            "id": "scattershot",
+            "phase": "charge",
+            "view": "self",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "scattershot",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 4,
+            "lineTriangleBound": 96
+        },
+        {
+            "id": "scattershot",
+            "phase": "impact",
+            "view": "self",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "scattershot",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "scattershot",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 4,
+            "lineTriangleBound": 96
+        },
+        {
+            "id": "scattershot",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "arrowrain",
+            "phase": "charge",
+            "view": "self",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "arrowrain",
+            "phase": "release",
+            "view": "self",
+            "particles": 23,
+            "meshTriangles": 200,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "arrowrain",
+            "phase": "impact",
+            "view": "self",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "arrowrain",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "arrowrain",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 23,
+            "meshTriangles": 200,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "arrowrain",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "falcon",
+            "phase": "charge",
+            "view": "self",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "falcon",
+            "phase": "release",
+            "view": "self",
+            "particles": 12,
+            "meshTriangles": 72,
+            "lineTriangleBound": 400
+        },
+        {
+            "id": "falcon",
+            "phase": "impact",
+            "view": "self",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "falcon",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "falcon",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 12,
+            "meshTriangles": 72,
+            "lineTriangleBound": 400
+        },
+        {
+            "id": "falcon",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "rangerhaste",
+            "phase": "charge",
+            "view": "self",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "rangerhaste",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 760
+        },
+        {
+            "id": "rangerhaste",
+            "phase": "impact",
+            "view": "self",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "rangerhaste",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "rangerhaste",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 760
+        },
+        {
+            "id": "rangerhaste",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "landmine",
+            "phase": "charge",
+            "view": "self",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "landmine",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 1512,
+            "lineTriangleBound": 1200
+        },
+        {
+            "id": "landmine",
+            "phase": "impact",
+            "view": "self",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "landmine",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 832
+        },
+        {
+            "id": "landmine",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 1512,
+            "lineTriangleBound": 1200
+        },
+        {
+            "id": "landmine",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 52,
+            "meshTriangles": 0,
+            "lineTriangleBound": 864
+        },
+        {
+            "id": "arcanewyrm",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "arcanewyrm",
+            "phase": "release",
+            "view": "self",
+            "particles": 32,
+            "meshTriangles": 1488,
+            "lineTriangleBound": 968
+        },
+        {
+            "id": "arcanewyrm",
+            "phase": "impact",
+            "view": "self",
+            "particles": 68,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "arcanewyrm",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "arcanewyrm",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 32,
+            "meshTriangles": 1488,
+            "lineTriangleBound": 968
+        },
+        {
+            "id": "arcanewyrm",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 68,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "starfall",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "starfall",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 1176,
+            "lineTriangleBound": 224
+        },
+        {
+            "id": "starfall",
+            "phase": "impact",
+            "view": "self",
+            "particles": 69,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "starfall",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "starfall",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 1176,
+            "lineTriangleBound": 224
+        },
+        {
+            "id": "starfall",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 69,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "arcanebreak",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "arcanebreak",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 168,
+            "lineTriangleBound": 1584
+        },
+        {
+            "id": "arcanebreak",
+            "phase": "impact",
+            "view": "self",
+            "particles": 79,
+            "meshTriangles": 0,
+            "lineTriangleBound": 3536
+        },
+        {
+            "id": "arcanebreak",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "arcanebreak",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 168,
+            "lineTriangleBound": 1584
+        },
+        {
+            "id": "arcanebreak",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 79,
+            "meshTriangles": 0,
+            "lineTriangleBound": 3536
+        },
+        {
+            "id": "firespirit",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "firespirit",
+            "phase": "release",
+            "view": "self",
+            "particles": 12,
+            "meshTriangles": 72,
+            "lineTriangleBound": 400
+        },
+        {
+            "id": "firespirit",
+            "phase": "impact",
+            "view": "self",
+            "particles": 69,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "firespirit",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "firespirit",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 12,
+            "meshTriangles": 72,
+            "lineTriangleBound": 400
+        },
+        {
+            "id": "firespirit",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 69,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "spiritbolt",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "spiritbolt",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 672,
+            "lineTriangleBound": 112
+        },
+        {
+            "id": "spiritbolt",
+            "phase": "impact",
+            "view": "self",
+            "particles": 69,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "spiritbolt",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "spiritbolt",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 672,
+            "lineTriangleBound": 112
+        },
+        {
+            "id": "spiritbolt",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 69,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "earthspike",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "earthspike",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 680
+        },
+        {
+            "id": "earthspike",
+            "phase": "impact",
+            "view": "self",
+            "particles": 69,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "earthspike",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 1920
+        },
+        {
+            "id": "earthspike",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 680
+        },
+        {
+            "id": "earthspike",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 69,
+            "meshTriangles": 0,
+            "lineTriangleBound": 752
+        },
+        {
+            "id": "shuriken",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "shuriken",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 32,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "shuriken",
+            "phase": "impact",
+            "view": "self",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "shuriken",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "shuriken",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 32,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "shuriken",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "suiton",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "suiton",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 680
+        },
+        {
+            "id": "suiton",
+            "phase": "impact",
+            "view": "self",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "suiton",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "suiton",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 680
+        },
+        {
+            "id": "suiton",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "futon",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "futon",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 648
+        },
+        {
+            "id": "futon",
+            "phase": "impact",
+            "view": "self",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "futon",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "futon",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 0,
+            "lineTriangleBound": 648
+        },
+        {
+            "id": "futon",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "poisondart",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "poisondart",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 4,
+            "lineTriangleBound": 96
+        },
+        {
+            "id": "poisondart",
+            "phase": "impact",
+            "view": "self",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "poisondart",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "poisondart",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 4,
+            "lineTriangleBound": 96
+        },
+        {
+            "id": "poisondart",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 62,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "execute",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "execute",
+            "phase": "release",
+            "view": "self",
+            "particles": 53,
+            "meshTriangles": 200,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "execute",
+            "phase": "impact",
+            "view": "self",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "execute",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "execute",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 53,
+            "meshTriangles": 200,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "execute",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "poisonfog",
+            "phase": "charge",
+            "view": "self",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "poisonfog",
+            "phase": "release",
+            "view": "self",
+            "particles": 130,
+            "meshTriangles": 0,
+            "lineTriangleBound": 3072
+        },
+        {
+            "id": "poisonfog",
+            "phase": "impact",
+            "view": "self",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "poisonfog",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 70,
+            "meshTriangles": 0,
+            "lineTriangleBound": 800
+        },
+        {
+            "id": "poisonfog",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 130,
+            "meshTriangles": 0,
+            "lineTriangleBound": 3072
+        },
+        {
+            "id": "poisonfog",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 64,
+            "meshTriangles": 0,
+            "lineTriangleBound": 576
+        },
+        {
+            "id": "revive",
+            "phase": "charge",
+            "view": "self",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "revive",
+            "phase": "release",
+            "view": "self",
+            "particles": 144,
+            "meshTriangles": 0,
+            "lineTriangleBound": 3536
+        },
+        {
+            "id": "revive",
+            "phase": "impact",
+            "view": "self",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "revive",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "revive",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 144,
+            "meshTriangles": 0,
+            "lineTriangleBound": 3536
+        },
+        {
+            "id": "revive",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "massheal",
+            "phase": "charge",
+            "view": "self",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "massheal",
+            "phase": "release",
+            "view": "self",
+            "particles": 144,
+            "meshTriangles": 0,
+            "lineTriangleBound": 3536
+        },
+        {
+            "id": "massheal",
+            "phase": "impact",
+            "view": "self",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "massheal",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "massheal",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 144,
+            "meshTriangles": 0,
+            "lineTriangleBound": 3536
+        },
+        {
+            "id": "massheal",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "sanctuary",
+            "phase": "charge",
+            "view": "self",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "sanctuary",
+            "phase": "release",
+            "view": "self",
+            "particles": 144,
+            "meshTriangles": 0,
+            "lineTriangleBound": 3536
+        },
+        {
+            "id": "sanctuary",
+            "phase": "impact",
+            "view": "self",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "sanctuary",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "sanctuary",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 144,
+            "meshTriangles": 0,
+            "lineTriangleBound": 3536
+        },
+        {
+            "id": "sanctuary",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "holylance",
+            "phase": "charge",
+            "view": "self",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "holylance",
+            "phase": "release",
+            "view": "self",
+            "particles": 51,
+            "meshTriangles": 200,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "holylance",
+            "phase": "impact",
+            "view": "self",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "holylance",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "holylance",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 51,
+            "meshTriangles": 200,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "holylance",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "holyfire",
+            "phase": "charge",
+            "view": "self",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "holyfire",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 840,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "holyfire",
+            "phase": "impact",
+            "view": "self",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "holyfire",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "holyfire",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 840,
+            "lineTriangleBound": 0
+        },
+        {
+            "id": "holyfire",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 46,
+            "meshTriangles": 0,
+            "lineTriangleBound": 384
+        },
+        {
+            "id": "verdict",
+            "phase": "charge",
+            "view": "self",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "verdict",
+            "phase": "release",
+            "view": "self",
+            "particles": 0,
+            "meshTriangles": 336,
+            "lineTriangleBound": 480
+        },
+        {
+            "id": "verdict",
+            "phase": "impact",
+            "view": "self",
+            "particles": 32,
+            "meshTriangles": 0,
+            "lineTriangleBound": 776
+        },
+        {
+            "id": "verdict",
+            "phase": "charge",
+            "view": "spectator",
+            "particles": 76,
+            "meshTriangles": 0,
+            "lineTriangleBound": 2032
+        },
+        {
+            "id": "verdict",
+            "phase": "release",
+            "view": "spectator",
+            "particles": 0,
+            "meshTriangles": 336,
+            "lineTriangleBound": 480
+        },
+        {
+            "id": "verdict",
+            "phase": "impact",
+            "view": "spectator",
+            "particles": 32,
+            "meshTriangles": 0,
+            "lineTriangleBound": 776
+        }
+    ],
+    "mobileFpsMeasured": false,
+    "sixSpellParticles": 81,
+    "sixSpellTriangleBound": 6862
+}
