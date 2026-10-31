@@ -39,6 +39,8 @@ namespace SpellDuel
         public const float ExActivate = 16f, ExDespawn = 24f, ExDetect = 2.5f, ExCallRange = 9f, ExPatrolSpeed = 0.55f;
         /// <summary>追擊：離玩家超過 ExChaseNear（或中間隔著牆）就沿迷宮走道追，速度 ExChaseSpeed（比衝刺慢，玩家停下來就會被追上）</summary>
         public const float ExChaseSpeed = 1.6f, ExChaseNear = 4f, ExRangedNear = 6.5f;
+        /// <summary>疾風稀有怪的追擊速度（m/s）：比探索衝刺（2.5×1.5＝3.75）快一點，甩不掉</summary>
+        public const float ExSwiftChase = 4.1f;
         /// <summary>每一區的敵人強度（波次）：越深越強</summary>
         public int exBaseWave = 8;
         public const int ExWavePerZone = 3;
@@ -70,7 +72,9 @@ namespace SpellDuel
         {
             wave = exBaseWave + mon.zone * ExWavePerZone;
             float hp = HpMul * (mon.guardian > 0 ? GuardianHpMul : mon.rare ? RareHpMul : 1f) * mon.hpFrac;
-            var m = SpawnMinion(mon.home, 0, mon.kind, hp, DmgMul, SpeedMul);
+            var sv = mon.variant > 0 ? MonsterVariants.Get(mon.variant) : null;
+            var m = sv != null ? SpawnMinion(mon.home, 0, sv.baseKind, hp * sv.hp, DmgMul * sv.dmg, SpeedMul * sv.speed) : SpawnMinion(mon.home, 0, mon.kind, hp, DmgMul, SpeedMul);
+            if (sv != null) ApplyVariant(m, sv.id);
             if (mon.hpFrac < 1f) { m.maxHp = Mathf.RoundToInt(m.maxHp / mon.hpFrac); m.hp = m.maxHp * mon.hpFrac; }
             m.exMon = mon; m.exAware = false; m.exPatrolIdx = 0; m.exPatrolDir = 1;
             m.exIdleKind = 0; m.exIdleUntil = 0f; m.exIdleCd = now + 1f + (float)rng.NextDouble() * 3f; m.exTalkTo = null;
@@ -189,7 +193,7 @@ namespace SpellDuel
             if (to.magnitude < 0.25f) { m.exPathAt = 0f; return true; }   // 到了這一格的中心：下一幀重算
             m.windupUntil = 0f;
             m.forward = to.normalized;
-            var step = m.Feet + to.normalized * Mathf.Min(to.magnitude, ExChaseSpeed * Mathf.Max(0.5f, m.speedMul) * dt);
+            var step = m.Feet + to.normalized * Mathf.Min(to.magnitude, (m.swift ? ExSwiftChase * Mathf.Min(1f, m.speedMul / 1.5f + 0.34f) : ExChaseSpeed * Mathf.Max(0.5f, m.speedMul)) * dt);
             if (minionInside == null || minionInside(step) || !minionInside(m.Feet)) m.head = new Vector3(step.x, m.head.y, step.z);
             else m.head = new Vector3(m.head.x + (m.exNext.x - m.Feet.x) * 0.2f, m.head.y, m.head.z + (m.exNext.z - m.Feet.z) * 0.2f);   // 貼著牆角：往格子中心滑過去
             return true;

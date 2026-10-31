@@ -172,6 +172,17 @@ namespace SpellDuel
             V(163, 0.01f, "#bf8c59", F(SoulOp.DodgePower, 0.08f));                            // 沙匪刺客：跳蹲閃避後傷害提高
             V(164, 0.01f, "#f2bf66", F(SoulOp.Cdr, 0.05f));                                   // 砂咒術士：技能冷卻
             V(165, 0.01f, "#d9a659", F(SoulOp.Xp, 0.10f));                                    // 沙漠獵手：經驗
+            // ---- 疾風稀有怪（每章兩種；追得上衝刺的玩家；1.2%）：速度、反應類
+            V(171, 0.012f, "#ff8c26", F(SoulOp.Burn, 0.05f));                                  // 焰蹄疾奔獸：機率灼燒
+            V(172, 0.012f, "#ffe64d", F(SoulOp.BasicSpeed, 0.06f));                            // 火花竄影：普攻集氣變快
+            V(173, 0.012f, "#59ff8c", F(SoulOp.Evade, 0.03f));                                 // 疾風翠豹：閃避率
+            V(174, 0.012f, "#f280ff", F(SoulOp.DodgeCdr, 0.6f));                               // 竄林孢子菇：閃過攻擊後技能冷卻 −0.6 秒
+            V(175, 0.012f, "#4df2ff", F(SoulOp.ChargeSpeed, 0.07f));                           // 浪尖飛鰭：技能蓄力變快
+            V(176, 0.012f, "#ff7366", F(SoulOp.HurtInvuln, 0, 0.04f, 1f));                     // 疾行寄居蟹：被打時機率 1 秒無敵
+            V(177, 0.012f, "#ffd14d", F(SoulOp.Gold, 0.12f));                                  // 金蹄戰獸：金幣
+            V(178, 0.012f, "#9980e6", F(SoulOp.CritDmg, 0.15f));                               // 影步鬥犬：爆擊傷害
+            V(179, 0.012f, "#ffbf73", F(SoulOp.Xp, 0.12f));                                    // 砂暴狐魅：經驗
+            V(180, 0.012f, "#e6a659", F(SoulOp.Reduce, 0.05f));                                // 砂塵疾奔獸：受到的傷害 −5%
             // ---- 天穹飛毯（副本 sky_carpet）：天空、風、飛行、空賊（不用普攻集氣、閃避率、爆擊率）
             V(131, 0.005f, "#e8434a", F(SoulOp.DodgeCdr, 1f));                                  // 風箏盜賊・逐風結：閃過障礙後技能冷卻 −1 秒
             V(132, 0.004f, "#4f7fe0", F(SoulOp.AirReduce, 0.12f));                              // 雲鷹騎兵・翔羽心：跳躍中減傷
@@ -184,8 +195,8 @@ namespace SpellDuel
         }
 
         /// <summary>武器類（傷害）、飾品類（技能、輔助、特殊）；其他都是防具類（防禦）</summary>
-        static readonly string[] WeaponSouls = { "soul_boss_clockwork", "soul_m151", "soul_m153", "soul_m154", "soul_m158", "soul_m159", "soul_m161", "soul_m163", "soul_m133", "soul_m135", "soul_m101", "soul_m102", "soul_m103", "soul_m105", "soul_m0", "soul_m3", "soul_m5", "soul_m7", "soul_m9", "soul_m10", "soul_m21", "soul_boss_canyon" };
-        static readonly string[] TrinketSouls = { "soul_m152", "soul_m155", "soul_m157", "soul_m53", "soul_m162", "soul_m164", "soul_m165", "soul_m143", "soul_m131", "soul_boss_airship", "soul_m107", "soul_m111", "soul_m112", "soul_m113", "soul_m114", "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_m20", "soul_boss", "soul_boss_forest" };
+        static readonly string[] WeaponSouls = { "soul_m171", "soul_m172", "soul_m175", "soul_m178", "soul_boss_clockwork", "soul_m151", "soul_m153", "soul_m154", "soul_m158", "soul_m159", "soul_m161", "soul_m163", "soul_m133", "soul_m135", "soul_m101", "soul_m102", "soul_m103", "soul_m105", "soul_m0", "soul_m3", "soul_m5", "soul_m7", "soul_m9", "soul_m10", "soul_m21", "soul_boss_canyon" };
+        static readonly string[] TrinketSouls = { "soul_m174", "soul_m177", "soul_m179", "soul_m152", "soul_m155", "soul_m157", "soul_m53", "soul_m162", "soul_m164", "soul_m165", "soul_m143", "soul_m131", "soul_boss_airship", "soul_m107", "soul_m111", "soul_m112", "soul_m113", "soul_m114", "soul_m1", "soul_m11", "soul_m12", "soul_m14", "soul_m16", "soul_m17", "soul_m20", "soul_boss", "soul_boss_forest" };
         static void AssignParts()
         {
             foreach (var d in All)

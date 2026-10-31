@@ -42,7 +42,9 @@ namespace SpellDuel
         public bool caller;               // 發現玩家時呼朋引伴（附近的怪都叫過來）
         public int guardian;              // 1～3：小 Boss（打倒後打開對應的藤蔓門）；0＝一般
         public bool rare;                 // 稀有怪（閃光點叫出來的）
+        public int variant;               // 變種（疾風稀有怪 173／174）；kind 是原本的種類
         public bool hidden;               // 還沒被叫出來（稀有怪）
+        public bool Swift => variant > 0;
         public bool dead;
         public float hpFrac = 1f;         // 收起來時剩的血量比例
     }
@@ -241,6 +243,7 @@ namespace SpellDuel
         public const int N = 41, Mid = 20;
         public const int Seed = 20261030;
 
+        public const int SwiftPerZone = 2;   // 疾風稀有怪：每區兩隻
         public static ExploreMap Build()
         {
             var m = new ExploreMap(N, N) { name = "翠蔭迷林", theme = "jungle", start = new Vector2Int(3, 3) };
@@ -379,6 +382,34 @@ namespace SpellDuel
                         m.monsters.Add(new ExMonster { id = ++id, kind = zoneKinds[z][(placed + 2) % zoneKinds[z].Length], zone = z, home = p2, patrol = path.ToArray() });
                         placed++;
                     }
+                }
+            }
+            // 疾風稀有怪（使用者要求：追得上衝刺的玩家）：每區兩隻，沿著長一點的走道巡邏（不跟一般怪擠在一起）
+            for (int z = 0; z < 4; z++)
+            {
+                int placed = 0, guard = 0;
+                while (placed < SwiftPerZone && guard++ < 2000)
+                {
+                    int x = zoneOrigin[z].x + rng.Next(19), y = zoneOrigin[z].y + rng.Next(19);
+                    if (m.At(x, y) != ExCell.Floor) continue;
+                    var p = m.World(x, y);
+                    if (p.magnitude < 20f || m.PropAt(p, 1f) != null) continue;
+                    bool near = false;
+                    foreach (var n in m.npcs) if (Vector3.Distance(n.pos, p) < 8f) near = true;
+                    foreach (var o in m.monsters) if (Vector3.Distance(o.home, p) < (o.variant > 0 ? 16f : 4f)) near = true;
+                    foreach (var a in m.arenas) if (Vector3.Distance(a.center, p) < a.radius + 4f) near = true;
+                    if (near) continue;
+                    var path = new List<Vector3> { p }; var cur = new Vector2Int(x, y);
+                    for (int s = 0; s < 8; s++)
+                    {
+                        var opts = new List<Vector2Int>();
+                        foreach (var d in ExploreMap.Dirs) { var nx = cur + d; if (m.At(nx.x, nx.y) == ExCell.Floor && !path.Contains(m.World(nx.x, nx.y)) && m.PropAt(m.World(nx.x, nx.y), 0.6f) == null) opts.Add(nx); }
+                        if (opts.Count == 0) break;
+                        cur = opts[rng.Next(opts.Count)]; path.Add(m.World(cur.x, cur.y));
+                    }
+                    int vid = placed % 2 == 0 ? 173 : 174;
+                    m.monsters.Add(new ExMonster { id = ++id, kind = vid == 173 ? 8 : 11, variant = vid, zone = z, home = p, patrol = path.ToArray() });
+                    placed++;
                 }
             }
             BuildSeals(m);
@@ -534,7 +565,14 @@ namespace SpellDuel
             // 翠玉古殿：森林宮殿的廢墟（石牆、石板地、石柱），最裡面是王座與祭壇
             Mark("palace", "翠玉古殿", "palace", 1, 29, 13, 39);
             Terrain(0, 28, 13, 40, ExTerrain.Ruin, ExGround.Stone);
-            Prop("pillar", 2, 32, 0.45f); Prop("pillar", 8, 32, 0.45f); Prop("pillar", 2, 37, 0.45f); Prop("pillar", 8, 37, 0.45f);
+            // 石柱靠在格子的牆角（放在正中央會擋住十字路口，玩家、怪都繞不過去）
+            void CornerProp(string kind, int x, int z, float r)
+            {
+                foreach (var d in new[] { new Vector2Int(1, 1), new Vector2Int(-1, 1), new Vector2Int(1, -1), new Vector2Int(-1, -1) })
+                    if (m.At(x + d.x, z + d.y) != ExCell.Floor) { Prop(kind, x, z, r, 1.15f * d.x, 1.15f * d.y); return; }
+                Prop(kind, x, z, r, 1.15f, 1.15f);
+            }
+            CornerProp("pillar", 2, 32, 0.45f); CornerProp("pillar", 8, 32, 0.45f); CornerProp("pillar", 2, 37, 0.45f); CornerProp("pillar", 8, 37, 0.45f);
             Prop("statue", 1, 39, 0.5f, -0.4f, 0.4f); Prop("statue", 9, 39, 0.5f, 0.4f, 0.4f);
             Prop("altar", 5, 39, 0.6f, 0f, 0.4f);
             // 小 Boss 競技場：四個角落的大樹

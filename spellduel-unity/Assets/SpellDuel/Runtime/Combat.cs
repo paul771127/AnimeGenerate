@@ -163,6 +163,7 @@ namespace SpellDuel
         public float esBusyUntil, esLastJump = -99f, esLastDuck = -99f;
         public int human, humState, humSide = 1; public float humUntil, humCdAt, humSwitchAt, humHealed, humWaitFrom;   // 人形敵人（Combat.Variants.cs）：職業、0 交戰／1 跑開回血
         public int support; public float hasteUntil, rallyUntil;   // 輔助型敵人（Combat.Variants.cs）：1 薩滿、2 仙女、3 戰鼓手、4 旗手；被加速、被舉旗增益到什麼時候
+        public bool swift;   // 疾風稀有怪（Combat.Variants.cs）
         public bool assassin, healer, summoner, summoned; public int asnState; public float asnUntil; public Fighter asnTarget, healTarget, summonedBy;   // summoned＝召喚物：沒有經驗、不掉寶   // 刺客怪：0 潛伏、1 沿邊繞、2 突襲、4 退回   // 寶箱怪（Combat.Treasure.cs）：到處逃跑、每下只扣 1、時間到就逃走
         // 副本特殊地點（Combat.RoomEvents.cs）
         public bool rooted;                    // 不會動、不會出手（守護物、圖騰、雕像、寶箱）
@@ -1658,6 +1659,7 @@ namespace SpellDuel
                 }
                 // 走位：射手保持 3.5～6m，其他走向目標（停在 0.8m）；小怪之間互相推開
                 float speed = minionSpeed * MinionSpeed[kind] * m.speedMul * EnemySpeedScale;
+                if (m.swift && d > SwiftNear) speed = Mathf.Max(speed, SwiftRun * Mathf.Min(1f, m.speedMul / 1.5f + 0.34f));   // 疾風稀有怪：遠了就用跑的（被減速時跟著慢）
                 if (kind == 13 && minionInside != null && !minionInside(m.Feet)) speed *= 3f;   // 跳躍魚在海裡游得很快
                 if (outside && endless) speed *= 2f;   // 無盡／故事：還在場地外的小怪移動速度 2 倍（快點進場）
                 Vector3 step;

@@ -14,6 +14,7 @@ namespace SpellDuel
         public int id, baseKind;
         public string name, dungeon, desc;
         public bool assassin, claws, healer, summoner, summon;   // summon＝召喚物（沒有經驗、不掉寶）
+        public bool swift;       // 疾風稀有怪（使用者要求：跑得跟衝刺的玩家一樣快）：離玩家遠時用 SwiftRun 衝過來，探索裡追擊 ExSwiftChase
         public int theme = -1;   // 補師：哪一章（3 角鬥場、4 黃土山道）
         public int sky = -1;
         public int human;        // 人形敵人（稀有、特定章節＋天候）：1 劍士（繞側）、2 弓手（拉開距離）、3 術士（躲進怪群）、4 刺客（繞背）、5 神官（治療同伴）；0＝不是
@@ -74,6 +75,17 @@ namespace SpellDuel
             new VariantDef { id = 133, baseKind = 1,  name = "滑翔翼兵", sky = 2, hp = 1.05f, dmg = 0.8f, desc = "兩三隻一起滑翔降落，用吹箭遠遠射人" },
             new VariantDef { id = 134, baseKind = 16, name = "浮游魔偶", sky = 3, hp = 0.9f, speed = 0.6f, desc = "三葉轉子讓它從飛毯下方浮上來；很硬、很慢" },
             new VariantDef { id = 135, baseKind = 21, name = "空賊隊長", sky = 4, hp = 0.8f, dmg = 1.2f, desc = "空賊的菁英：小飛艇放下繩索，順著繩子滑下來" },
+            // ---- 疾風稀有怪（使用者要求：移動快、追得上跑步／衝刺的玩家；每章兩種，故事每一波小機率出現，故事探索的迷林裡也有）
+            new VariantDef { id = 171, baseKind = 2,  name = "焰蹄疾奔獸", swift = true, theme = 0, hp = 2.5f, dmg = 1.2f, speed = 1.5f, tint = new Color(1f, 0.55f, 0.15f), desc = "蹄子踏過的地方會冒火星的衝鋒獸，逃不掉" },
+            new VariantDef { id = 172, baseKind = 0,  name = "火花竄影",   swift = true, theme = 0, hp = 2.2f, dmg = 1.2f, speed = 1.5f, tint = new Color(1f, 0.9f, 0.3f), desc = "像火花一樣到處亂竄的小鬼，一眨眼就到你背後" },
+            new VariantDef { id = 173, baseKind = 8,  name = "疾風翠豹",   swift = true, theme = 1, hp = 2.5f, dmg = 1.2f, speed = 1.5f, tint = new Color(0.35f, 1f, 0.55f), desc = "迷林裡最快的獵手，荊棘背上帶著風" },
+            new VariantDef { id = 174, baseKind = 11, name = "竄林孢子菇", swift = true, theme = 1, hp = 2.2f, dmg = 1.2f, speed = 1.5f, tint = new Color(0.95f, 0.5f, 1f), desc = "傘蓋一縮就像陀螺一樣滾過來的孢子菇" },
+            new VariantDef { id = 175, baseKind = 13, name = "浪尖飛鰭",   swift = true, theme = 2, hp = 2.2f, dmg = 1.2f, speed = 1.5f, tint = new Color(0.3f, 0.95f, 1f), desc = "在浪尖上連續跳躍的飛魚，陸上也追得很緊" },
+            new VariantDef { id = 176, baseKind = 16, name = "疾行寄居蟹", swift = true, theme = 2, hp = 2.5f, dmg = 1.2f, speed = 1.5f, tint = new Color(1f, 0.45f, 0.4f), desc = "揹著輕殼橫著衝的寄居蟹，快得看不清腳" },
+            new VariantDef { id = 177, baseKind = 2,  name = "金蹄戰獸",   swift = true, theme = 3, hp = 2.6f, dmg = 1.3f, speed = 1.5f, tint = new Color(1f, 0.82f, 0.3f), desc = "鬥技場的追擊獸，觀眾最愛看牠追人" },
+            new VariantDef { id = 178, baseKind = 8,  name = "影步鬥犬",   swift = true, theme = 3, hp = 2.4f, dmg = 1.3f, speed = 1.5f, tint = new Color(0.6f, 0.5f, 0.9f), desc = "沒有聲音的鬥犬，影子比身體先到" },
+            new VariantDef { id = 179, baseKind = 0,  name = "砂暴狐魅",   swift = true, theme = 4, hp = 2.4f, dmg = 1.3f, speed = 1.5f, tint = new Color(1f, 0.75f, 0.45f), desc = "捲著砂暴奔跑的小妖，跑過的地方留下一道砂塵" },
+            new VariantDef { id = 180, baseKind = 2,  name = "砂塵疾奔獸", swift = true, theme = 4, hp = 2.6f, dmg = 1.3f, speed = 1.5f, tint = new Color(0.9f, 0.65f, 0.35f), desc = "峽谷裡追著商隊跑的衝鋒獸，從來沒跟丟過" },
             new VariantDef { id = 114, baseKind = 8,  name = "月牙狼",   weather = Battle.Weather.Moon, hp = 1.6f, dmg = 1.3f, speed = 1.4f, tint = new Color(0.72f, 0.78f, 1f), desc = "月夜才現身的銀色衝鋒獸" },
         };
         static readonly Dictionary<int, VariantDef> byId = new Dictionary<int, VariantDef>();
@@ -85,6 +97,8 @@ namespace SpellDuel
         public static VariantDef SummonerFor(int theme) { foreach (var v in All) if (v.summoner && v.theme == theme) return v; return null; }
         public static VariantDef Sky(int skyKind) { foreach (var v in All) if (v.sky == skyKind) return v; return null; }
         public static bool IsSky(int id) => byId.TryGetValue(id, out var v) && v.sky >= 0;
+        /// <summary>這一章的疾風稀有怪（兩種）</summary>
+        public static List<VariantDef> SwiftFor(int theme) { var l = new List<VariantDef>(); foreach (var v in All) if (v.swift && v.theme == theme) l.Add(v); return l; }
         public static VariantDef SummonFor(int theme) { foreach (var v in All) if (v.summon && v.theme == theme) return v; return null; }
         /// <summary>召喚物（擊倒紀錄的種類）：沒有經驗、不掉寶</summary>
         public static bool IsSummon(int id) => byId.TryGetValue(id, out var v) && v.summon;
@@ -110,10 +124,12 @@ namespace SpellDuel
         public const float AssassinSpeed = 2f, AssassinDmg = 2f;      // 使用者要求：移動速度、傷害 ×2
         public const float AssassinSprint = 2f;                         // 沿著邊緣繞、衝進來突襲時再快一倍（繞場一圈不用半分鐘）
         public const float AssassinLurk = 1.5f, AssassinWindup = 0.5f, AssassinReach = 0.9f, AssassinRecover = 1.2f, AssassinApproachMax = 6f;
-        public const float WeatherMonsterChance = 0.5f;                 // 有天候的時候，每一波出一隻天候怪的機率
+        public const float WeatherMonsterChance = 0.5f;
+        /// <summary>疾風稀有怪：每一波出現的機率；離目標超過 SwiftNear 就用 SwiftRun（m/s，比衝刺 2.5 快）衝過來，近了照原本速度打</summary>
+        public const float SwiftChance = 0.08f, SwiftRun = 2.8f, SwiftNear = 2.2f, SwiftSpawnDelay = 6f;                 // 有天候的時候，每一波出一隻天候怪的機率
         /// <summary>這一關的刺客怪（夜晚的副本：SoloBattle 設定；null＝不出）</summary>
         public VariantDef assassinDef;
-        VariantDef humanPick; int assassinWave = -1, weatherWave = -1, supportWave = -1, humanWave = -1; float assassinAt = -1f, weatherAt = -1f, supportAt = -1f, humanAt = -1f;
+        VariantDef humanPick, swiftPick; int swiftWave = -1; float swiftAt = -1f; int assassinWave = -1, weatherWave = -1, supportWave = -1, humanWave = -1; float assassinAt = -1f, weatherAt = -1f, supportAt = -1f, humanAt = -1f;
 
         /// <summary>擊倒紀錄、精魄用的種類：變種用變種 id</summary>
         public static int LogKind(Fighter m) => m.variant > 0 ? m.variant : m.minionKind;
@@ -138,6 +154,7 @@ namespace SpellDuel
             if (v.healer) { m.healer = true; m.attackReadyAt = now + HealerFirst; Emit("healer", m.Feet, v.tint, null); return; }
             if (v.summoner) { m.summoner = true; m.attackReadyAt = now + SummonerFirst; Emit("summoner", m.Feet, v.tint, null); return; }
             if (v.summon) { m.summoned = true; return; }
+            if (v.swift) { m.swift = true; return; }   // 登場的提示由出現的地方喊（故事一波一隻；探索不喊）
             if (v.human > 0)
             {
                 m.human = v.human; m.humSide = rng.Next(2) == 0 ? -1 : 1; m.humSwitchAt = now + 4f;
@@ -228,6 +245,18 @@ namespace SpellDuel
                     SpawnVariant(RearPoint(0), humanPick); lastMinionCount = minions.Count;
                     string when = (humanPick.weather == Weather.None ? "晴朗" : WeatherName(humanPick.weather)) + (humanPick.dayNight == 2 ? "的夜裡" : humanPick.dayNight == 1 ? "的白天" : "裡");
                     Emit("weathermonster", player.Feet, humanPick.tint, $"⚔ {when}出現了稀有的人形敵人「{humanPick.name}」！會繞側、繞背，沒血就跑去回血——別讓牠逃掉！");
+                }
+            }
+            // 疾風稀有怪：這一章的兩種，每一波 8% 出一隻（波次開始 6 秒後從場邊衝進來）
+            var fv = carpetStation < 0 && !Gallery && explore == null ? MonsterVariants.SwiftFor(Theme) : null;
+            if (fv != null && fv.Count > 0)
+            {
+                if (swiftWave != wave) { swiftWave = wave; swiftAt = -1f; swiftPick = null; if (rng.NextDouble() < SwiftChance) { swiftPick = fv[rng.Next(fv.Count)]; swiftAt = now + SwiftSpawnDelay; } }
+                if (swiftAt > 0f && now >= swiftAt && swiftPick != null)
+                {
+                    swiftAt = -1f;
+                    SpawnVariant(edgePoint(), swiftPick); lastMinionCount = minions.Count;
+                    Emit("weathermonster", player.Feet, swiftPick.tint, $"⚡ 稀有怪「{swiftPick.name}」衝進來了！跑得跟衝刺一樣快——甩不掉，正面打倒牠！");
                 }
             }
             // 輔助型：這一章、這種天候才出現；每一波開始 3 秒後從敵陣後方出來（副本 3 人以上兩隻）
