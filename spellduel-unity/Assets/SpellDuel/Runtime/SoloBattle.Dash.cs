@@ -191,6 +191,7 @@ namespace SpellDuel
         void CheckRealRoom()
         {
             if (area != null) DashCheckArea();
+            if (exploreRun != null) return;   // 故事探索：沒有場地框，不提醒（使用者要求；高度檢查在 PlayArea 照常）
             if (dashTotalS.sqrMagnitude < 0.01f || area == null || area.Polygon.Count < 3 || !cam || Time.time < nextRoomWarn) return;
             // 場地框被平移了 dashTotalS：原本的房間＝現在的框 − dashTotalS → 手機在原本的房間裡 ⇔ 手機＋dashTotalS 在現在的框裡
             var p = cam.transform.position + dashTotalS;

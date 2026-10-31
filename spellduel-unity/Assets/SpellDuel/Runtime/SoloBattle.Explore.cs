@@ -67,6 +67,7 @@ namespace SpellDuel
             battle.exBossHp = (StoryBossHp.Length > 1 ? StoryBossHp[1] : 1600f) * LateBossMul;
             battle.enemyAccuracy = StoryEnemyAccuracy(1, difficulty);
             battle.StartExplore(run);
+            if (area != null) area.BoundsOff = true;   // 不要 10m×10m 的場地框、不提示場地外（高度照樣檢查）
             battle.OnExAlert += (m, call) =>
             {
                 if (call) { Sfx.Play("roar", 0.5f, 1.3f); Say($"❗ {m.name}在呼叫同伴！", 2f); } else Sfx.Play("select", 0.4f, 0.6f);
@@ -286,6 +287,7 @@ namespace SpellDuel
         void ClearExplore()
         {
             if (exRoot) Destroy(exRoot.gameObject);
+            if (area != null) area.BoundsOff = false;
             exRoot = null; exWalls.Clear(); exProps.Clear(); exSwitchShownDone.Clear(); exAlertMarks.Clear(); exBannerSeen.Clear();
             if (exBannerUntil > 0f || exploreRun != null) ExploreArt.LandmarkFound(null);
             exBannerUntil = -1f;

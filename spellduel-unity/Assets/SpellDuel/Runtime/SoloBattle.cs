@@ -2742,7 +2742,7 @@ namespace SpellDuel
 
         /// <summary>人在場地外：只能移動，不能攻擊、詠唱、放招（回到場地內才可以）</summary>
         /// 高度異常（在場地地板底下或飛在空中）也算在場地外。
-        bool OutOfArea => area != null && area.state == PlayArea.State.Done && !InTown && (area.HeightBad || !area.Inside(cam.transform.position));
+        bool OutOfArea => area != null && area.state == PlayArea.State.Done && !InTown && (area.HeightBad || area.Outside(cam.transform.position));
         float outWarnAt = -9f;
         /// <summary>場地外：提示一下（1.5 秒內不重複）並回傳 true＝不能出手</summary>
         bool BlockedOutside()

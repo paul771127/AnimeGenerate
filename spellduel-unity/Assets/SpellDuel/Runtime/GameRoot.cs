@@ -543,7 +543,7 @@ namespace SpellDuel
             var red = new Color(1f, 0.4f, 0.4f);
             if (!playArea.HeightBad)
             {
-                if (solo.phase == SoloBattle.Phase.Fighting && !playArea.Inside(cam.transform.position)) UiKit.Pill(H * 0.68f, "⚠ 回到場地內（場地外只能移動，不能攻擊）", fs, red, W - pad * 2);   // 只有戰鬥中才提醒
+                if (solo.phase == SoloBattle.Phase.Fighting && playArea.Outside(cam.transform.position)) UiKit.Pill(H * 0.68f, "⚠ 回到場地內（場地外只能移動，不能攻擊）", fs, red, W - pad * 2);   // 只有戰鬥中才提醒
                 return;
             }
             UiKit.Pill(H * 0.6f, playArea.HeightHint, fsS, red, W - pad * 2);
@@ -669,7 +669,7 @@ namespace SpellDuel
                 }
             }
             // 走出場地：每秒震動一次
-            if (playArea.state == PlayArea.State.Done && !solo.InTown && (playArea.HeightBad || !playArea.Inside(cam.transform.position)) && Time.time - lastBoundaryBuzz > 1f)
+            if (playArea.state == PlayArea.State.Done && !solo.InTown && (playArea.HeightBad || playArea.Outside(cam.transform.position)) && Time.time - lastBoundaryBuzz > 1f)
             {
                 lastBoundaryBuzz = Time.time;
                 Handheld.Vibrate();
@@ -1494,7 +1494,7 @@ namespace SpellDuel
             foreach (var s in log) { UiKit.Text(new Rect(pad, ly, W - pad * 2, lineH), s, fsS, new Color(0.9f, 0.93f, 1f)); ly += lineH; }
             if (hp <= 0) GUI.Label(new Rect(0, H * 0.4f, W, H * 0.1f), "💀 敗北", big);
             else if (net.Connected && remoteHp <= 0) GUI.Label(new Rect(0, H * 0.4f, W, H * 0.1f), "🏆 勝利", big);
-            if (mode == Mode.Solo && playArea.state == PlayArea.State.Done && !solo.InTown && !playArea.Inside(cam.transform.position))
+            if (mode == Mode.Solo && playArea.state == PlayArea.State.Done && !solo.InTown && playArea.Outside(cam.transform.position))
                 UiKit.Pill(H * 0.6f, "⚠ 回到場地內", fs * 2, new Color(1f, 0.4f, 0.4f), W - pad * 2);
         }
     }

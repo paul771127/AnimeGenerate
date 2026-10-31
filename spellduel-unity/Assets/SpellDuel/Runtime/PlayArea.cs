@@ -64,11 +64,30 @@ namespace SpellDuel
             {
                 if (hidden == value) return;
                 hidden = value;
-                outline.enabled = !value;
+                outline.enabled = !value && !boundsOff;
                 foreach (var w in walls) if (w != null) w.enabled = false;
             }
         }
         bool hidden;
+
+        /// <summary>
+        /// 沒有場地邊界（故事探索，使用者要求）：不畫 10m×10m 的框和格子牆，也不算「在場地外」；
+        /// 高度檢查照常（手機在地板底下／飛在空中還是要提醒）。
+        /// </summary>
+        public bool BoundsOff
+        {
+            get => boundsOff;
+            set
+            {
+                if (boundsOff == value) return;
+                boundsOff = value;
+                if (outline) outline.enabled = !value && !hidden;
+                foreach (var w in walls) if (w != null) w.enabled = false;
+            }
+        }
+        bool boundsOff;
+        /// <summary>這個位置算不算在場地外（沒有場地邊界時一律不算）</summary>
+        public bool Outside(Vector3 p) => !boundsOff && !Inside(p);
 
         // ---------------------------------------------------------------- 重新放置前的預覽
         /// <summary>「重新放置」預覽：照目前站的位置與面向，畫出新場地會在哪裡（黃色框＋中心往前的箭頭）；還沒找到地板回傳 false</summary>
@@ -144,10 +163,10 @@ namespace SpellDuel
             else if (state == State.Done && hidden) Hint = "";
             else if (state == State.Done)
             {
-                UpdateWalls();
+                if (!boundsOff) UpdateWalls();
                 UpdateHeight(Time.time);
                 var me = Flat(cam.transform.position);
-                Hint = HeightBad ? HeightHint : Inside(me) ? "" : "⚠ 你在場地外面！請回到場地內";
+                Hint = HeightBad ? HeightHint : !Outside(me) ? "" : "⚠ 你在場地外面！請回到場地內";
             }
             if (state != State.Done || hidden) { HeightBad = false; heightOffSince = -1f; }
         }
