@@ -13,7 +13,7 @@ namespace SpellDuel
         const BindingFlags Flags=BindingFlags.Instance|BindingFlags.Static|BindingFlags.NonPublic|BindingFlags.Public;
         SoloBattle solo;Camera view;Font font;int page;bool failed;string output;
         CharacterProfile profile;CharacterPanel panel;WorldUI world;GameRoot home;
-        readonly string[] pages={"battle_light","battle_dark","status_light","status_dark","explore_dialog","dungeon_party","story_party","charge_cards","home","characters","prep","stats","tree","equipment","inventory","pets","map","town","smith","shop","guild","craft","alchemy","trialshop","dungeons","tower","settings","victory","defeat","tip","guide","loading","rewards"};
+        readonly string[] pages={"battle_light","battle_dark","status_light","status_dark","explore_dialog","dungeon_party","story_party","charge_cards","home","characters","prep","stats","tree","equipment","inventory","pets","map","town","smith","shop","guild","craft","alchemy","trialshop","dungeons","tower","settings","victory","defeat","tip","guide","loading","rewards","town_flame","town_forest","town_harbor","town_desert","town_snow"};
         void Set(string name,object value)=>typeof(SoloBattle).GetField(name,Flags).SetValue(solo,value);
         object Call(string name,params object[] args)=>typeof(SoloBattle).GetMethod(name,Flags).Invoke(solo,args);
         IEnumerator Start()
@@ -61,6 +61,8 @@ namespace SpellDuel
         void DrawMenu(string name)
         {
             const float w=1080,h=2340;const int fs=48,small=38;
+            if(name.StartsWith("town_"))
+            {world.town=Array.IndexOf(new[]{"town_flame","town_forest","town_harbor","town_desert","town_snow"},name);world.screen=WorldUI.Screen.Town;world.Draw(profile);return;}
             if(name=="victory")
             {
                 Set("dlg",null);var type=typeof(SoloBattle).GetNestedType("VictoryInfo",Flags);var v=Activator.CreateInstance(type,true);
@@ -125,7 +127,9 @@ namespace SpellDuel
                 if(page==4)
                 {
                     // The production dialog drawer, with an explicit static fixture.
-                    var map=new ExploreMap(9,9);var run=new ExploreRun(map);
+                    var map=new ExploreMap(25,25){start=new Vector2Int(12,12)};var run=new ExploreRun(map);
+                    for(int x=0;x<25;x++)for(int z=0;z<25;z++){map.cells[x,z]=(x%5==0&&z%5>1)?ExCell.Wall:ExCell.Floor;run.explored.Add(new Vector2Int(x,z));}
+                    map.npcs.Add(new ExNpc{id="preview_erin",name="艾琳",pos=map.World(15,15)});
                     run.talking=new ExNpc{name="艾琳"};run.talkText="晨鐘還沒有沉默。沿著發光的小徑走，我們會找到森林的出口。";
                     Set("exploreRun",run);
                     // Draw the production minimap and opaque NPC dialogue.
@@ -141,8 +145,12 @@ namespace SpellDuel
                 for(int i=0;i<6;i++)
                 {
                     var r=new Rect(60+(i%2)*490,180+(i/2)*620,450,550);
-                    UiKit.Card(r,.95f,Skills.Classes["mage"].color);
-                    Call("DrawCastingTile",r,Skills.Classes["mage"].color,38);
+                    string[] methods={"DrawSwordCharge","DrawBowCharge","DrawMageCharge","DrawHolyCharge","DrawDaggerCharge","DrawKunaiCharge"};
+                    string[] classes={"swordsman","archer","mage","priest","assassin","assassin"};var tint=Skills.Classes[classes[i]].color;
+                    UiKit.Card(r,.95f,tint);Call("DrawCastingTile",r,tint,38);
+                    var center=r.center;Func<float,Rect> square=radius=>new Rect(center.x-radius,center.y-radius,radius*2,radius*2);
+                    Call(methods[i],center,100f,.78f,false,1f,32,square);
+                    if(Environment.GetEnvironmentVariable("UI_PREVIEW_BASELINE")!="before")UiKit.ChargeRail(new Rect(center.x-120,center.y+145,240,20),.78f,false,tint);
                 }
             }
             catch(Exception e){failed=true;Debug.LogException(e);}

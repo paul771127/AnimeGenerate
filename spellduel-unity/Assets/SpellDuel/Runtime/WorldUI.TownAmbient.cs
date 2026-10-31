@@ -50,18 +50,6 @@ namespace SpellDuel
                 UiKit.Disc(new Rect(cr.x + cw * 0.2f, cr.y - ch * 0.15f, cw * 0.55f, ch * 0.8f), new Color(0.05f, 0.08f, 0.15f, 0.05f));
             }
             float u = Mathf.Max(6f, visible.width * 0.012f);   // 粒子的基本大小
-            // ---- 鐵匠鋪冒煙（每個城鎮都有）
-            if (d.hit.TryGetValue("smith", out var smith))
-            {
-                var top = new Vector2((smith.x + smith.width * 0.65f) * s, smith.y * s + smith.height * s * 0.12f);
-                for (int k = 0; k < 7; k++)
-                {
-                    float life = 4f, a = Mathf.Repeat(t / life + k / 7f, 1f);
-                    var p = top + new Vector2(Mathf.Sin(a * 5f + k) * u * 1.2f + a * u * 3f, -a * u * 14f);
-                    float sz = u * (1.2f + a * 3.5f);
-                    UiKit.Disc(new Rect(p.x - sz / 2f, p.y - sz / 2f, sz, sz), new Color(0.55f, 0.55f, 0.58f, 0.32f * (1f - a)));
-                }
-            }
             switch (town)
             {
                 case 0:   // 炎之里：鍛爐飄出的火星（往上飄、一閃一閃）
@@ -120,6 +108,7 @@ namespace SpellDuel
                     }
                     break;
             }
+            GUI.color=Color.white;DrawTownLife(town,d,s,visible,t);
             GUI.color = prev;
         }
 

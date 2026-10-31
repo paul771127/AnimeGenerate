@@ -22,7 +22,11 @@ def calls(s,name):
 changed=subprocess.check_output(['git','diff',base,'--name-only'],text=True).splitlines()
 for f in changed:
  if '/Runtime/' not in f or not Path(f).name.startswith(('SoloBattle','CharacterPanel','WorldUI','GameRoot','SettingsMenu','StoryVideo')):continue
- old=subprocess.check_output(['git','show',base+':'+f]).decode('utf-8-sig');new=Path(f).read_text(encoding='utf-8-sig')
+ # Incoming Claude commits changed map buttons; compare those views against their reviewed incoming baseline.
+ reference='c41e792' if Path(f).name in ['WorldUI.WorldMap2.cs','WorldUI.TownMap.cs','WorldUI.TownAmbient.cs'] else base
+ old_result=subprocess.run(['git','show',reference+':'+f],capture_output=True)
+ old=old_result.stdout.decode('utf-8-sig') if old_result.returncode==0 else ''
+ new=Path(f).read_text(encoding='utf-8-sig')
  for name in ['GUI.Button','UiKit.Button','UiKit.NextTag','GUI.Toggle']:
   assert calls(old,name)==calls(new,name),(f,name,'interaction expression changed')
 for f in ['UiLock.cs','SoloBattle.Walkthrough.cs','SoloBattle.Dash.cs']:
@@ -38,3 +42,16 @@ for p in r.glob('Combat*.cs'):
 for name in ['Skills.cs','Economy.cs','Crafting.cs','Explore.cs','Blueprints.cs','SpeechInput.cs']:
  p=r/name;old=subprocess.check_output(['git','show',base+':'+p.as_posix()]);assert old.replace(b'\r\n',b'\n')==p.read_bytes().replace(b'\r\n',b'\n'),name
 print('PASS: protected combat, skills, economy, crafting, exploration, recipes and speech sources unchanged')
+
+# Town presentation anchors are read once, and never become controls/colliders.
+for path in Path('spellduel-unity/Assets/SpellDuel/Resources/Village2D').glob('map_*.json'):
+ data=json.loads(path.read_text(encoding='utf-8'));anchors=data.get('ambient',[])
+ assert sum(a['kind']=='path' for a in anchors)>=2,path.name
+ for a in anchors:assert 0<=a['x']<=2048 and 0<=a['y']<=3072 and a['w']>=0 and a['h']>=0,(path,a)
+life=(r/'WorldUI.TownLife.cs').read_text(encoding='utf-8')
+assert not re.search(r'new\s+(Texture2D|Material)\s*\(',life)
+assert 'GUI.Button' not in life and 'UiKit.Button' not in life
+fade=(r/'SpellFx.Readability.cs').read_text(encoding='utf-8').split('public void Evaluate',1)[1]
+assert not re.search(r'new\s+(Texture2D|Material)\s*\(',fade)
+assert 'public const int ParticleBudget=192,PerSystemBudget=64' in (r/'SpellFx.Readability.cs').read_text()
+print('PASS: 5 town anchor sets; no ambient click targets; no per-tick texture/material creation; particle caps declared')

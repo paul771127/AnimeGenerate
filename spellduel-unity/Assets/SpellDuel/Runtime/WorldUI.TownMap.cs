@@ -72,6 +72,7 @@ namespace SpellDuel
         /// <summary>讀 map_{town}.json（只有一層：建築 key → x,y,w,h,label_x,label_y；npc → id → x,y）</summary>
         static void ParseTownMap(string json, TownMapData d)
         {
+            ReadTownLife(json,d);
             float Num(string body, string k) { var m = Regex.Match(body, "\"" + k + "\"\\s*:\\s*(-?[0-9.]+)"); return m.Success ? float.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) : 0f; }
             int npcAt = json.IndexOf("\"npc\"");
             string sites = npcAt >= 0 ? json.Substring(0, npcAt) : json, npcs = npcAt >= 0 ? json.Substring(npcAt + 5) : "";
