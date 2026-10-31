@@ -6,7 +6,7 @@ using UnityEngine.XR.ARFoundation;
 namespace SpellDuel
 {
     /// <summary>
-    /// 衝刺（使用者要求，只有單人故事模式）：比讚 👍（大拇指朝上）→ 角色以 DashSpeed 往面向的方向一直衝；
+    /// 衝刺（使用者要求，只有單人故事模式）：按住畫面中間（沒有按鈕的地方）→ 角色以 DashSpeed 往面向的方向衝，放開就停；
     /// 拳頭移開、或換成其他手勢 → 停下。正在詠唱技能時不能衝。
     /// AR 裡手機的位置就是角色的位置，所以「往前衝」是把整個世界（場地、場景、敵人、法術）往身後推：
     ///   世界原點（WorldFrame.Marker）往後挪；建好後就不再每幀擺位置的場景物件、場地框也一起平移。
@@ -19,9 +19,19 @@ namespace SpellDuel
         /// <summary>故事探索的衝刺：1.5 倍（使用者要求；地圖一格改 4m、路線變長）</summary>
         public const float ExploreDashMul = 1.5f;
         float DashSpeedNow => exploreRun != null ? DashSpeed * ExploreDashMul : DashSpeed;
-        const float DashGrace = 0.15f;         // 手勢偵測偶爾漏一兩張不算放開
         // 和普攻分開（使用者回報以前的「比 5→握拳」很容易干涉：獵人握拳→張開放箭、劍士手掌橫劃；現在改比讚）：
-        const float DashThumbHold = 0.15f;     // 讚要比著這麼久才開始衝（手勢一閃而過不算）
+        bool dashHold;                         // 手指按在畫面中間（按住就衝）
+        /// <summary>可以按住衝刺的範圍：畫面中間（上面的目標、小地圖和下面的技能欄不算）</summary>
+        static bool DashTapZone(Vector2 guiPos) => guiPos.y > Screen.height * 0.17f && guiPos.y < Screen.height * 0.62f;
+
+        /// <summary>OnGUI（DrawHud 之後）：手指按下的地方沒有按鈕、在畫面中間 → 開始按住衝刺（放開在 UpdateDash 判斷）</summary>
+        void DashTapInput()
+        {
+            var e = Event.current;
+            if (e.type != EventType.MouseDown || !DashAllowed || !DashTapZone(e.mousePosition)) return;
+            if (Time.time - exSparkleTapAt < 0.6f) return;   // 剛點了閃光點：不算衝刺
+            dashHold = true; e.Use();
+        }
         const float DashAfterBasic = 0.8f;     // 剛出過普攻（或做了普攻動作）這麼久內不會開始衝刺
         const float BasicAfterDash = 0.5f;     // 衝刺中、剛停下這麼久內不會打普攻
         float dashOpenSince = -99f, lastBasicAt = -99f, dashEndedAt = -99f; bool dashWasOpen;
@@ -48,21 +58,11 @@ namespace SpellDuel
 
         void UpdateDash(float dt)
         {
-            // 比讚 👍 就衝、放下就停（使用者選的：以前的「比 5→握拳」和普攻的手掌／握拳容易互相干涉）
-            bool thumb = Hand != null && Hand.HandVisible && Hand.ThumbUp;
-            if (thumb) { if (!dashWasOpen) dashOpenSince = Time.time; dashOpenAt = Time.time; }
-            dashWasOpen = thumb;
-            if (!DashAllowed) { StopDash(); return; }
-            if (!dashing)
-            {
-                bool armed = thumb && Time.time - dashOpenSince >= DashThumbHold && Time.time - lastBasicAt > DashAfterBasic;
-                if (armed) { dashing = true; dashLostAt = -1f; dashStepAt = Time.time; dashStartAt = Time.time; Haptics.Play(Haptics.Kind.Light); if (!BtFlag("dash")) BtMark("dash"); }
-                else return;
-            }
-            if (thumb) dashLostAt = -1f;
-            else if (dashLostAt < 0f) dashLostAt = Time.time;
-            else if (Time.time - dashLostAt > DashGrace) { StopDash(); return; }
-            if (!thumb) return;
+            // 按住畫面中間（沒有按鈕的地方）就衝、放開就停（使用者要求：手一直舉著太酸。以前是比 5→握拳、後來比讚）
+            if (dashHold && !(Input.touchCount > 0 || Input.GetMouseButton(0))) dashHold = false;   // 手指放開
+            if (!DashAllowed) { StopDash(); dashHold = false; return; }
+            if (!dashHold) { if (dashing) StopDash(); return; }
+            if (!dashing) { dashing = true; dashLostAt = -1f; dashStepAt = Time.time; dashStartAt = Time.time; Haptics.Play(Haptics.Kind.Light); if (!BtFlag("dash")) BtMark("dash"); }
 
             var dir = Fighter.Flat(Me.forward);
             if (dir.sqrMagnitude < 1e-4f || dt <= 0f) return;
@@ -79,9 +79,9 @@ namespace SpellDuel
                 dashStuck = true; DashBlocked(why);
                 if (Time.time - dashStuckAt > 0.25f)
                 {
-                    StopDash(); dashOpenAt = -99f; dashOpenSince = Time.time + 999f;   // 要放下手再比一次讚
+                    StopDash(); dashOpenAt = -99f; dashHold = false;   // 要放開再按一次才會衝
                     Haptics.Play(Haptics.Kind.Light);
-                    Say($"🛑 {dashWhy ?? "前面過不去"}：衝刺停下來了。放下手、轉向能走的方向，再比讚 👍", 2.5f);
+                    Say($"🛑 {dashWhy ?? "前面過不去"}：衝刺停下來了。放開手指、轉向能走的方向，再按住畫面", 2.5f);
                 }
                 return;
             }
@@ -156,8 +156,8 @@ namespace SpellDuel
         string dashWhy;
         void DashBlocked(string why) => dashWhy = why ?? "敵人擋在前面";
 
-        /// <summary>衝刺的手勢做到哪：0 還沒、1 比了讚（等一下就衝）、2 衝刺中</summary>
-        int DashGestureStage => dashing && dashLostAt < 0f ? 2 : dashWasOpen ? 1 : 0;
+        /// <summary>衝刺到哪：0 還沒、2 衝刺中</summary>
+        int DashGestureStage => dashing ? 2 : 0;
 
         void StopDash() { if (dashing) dashEndedAt = Time.time; dashing = false; dashStuck = false; dashLostAt = -1f; }
 

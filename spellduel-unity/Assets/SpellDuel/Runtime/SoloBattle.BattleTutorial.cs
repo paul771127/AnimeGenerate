@@ -5,7 +5,7 @@ namespace SpellDuel
     /// <summary>
     /// 新手關的戰鬥中教學（只有第一次打、單人）：
     ///   1-1：第一批熔岩小鬼出現 → 進到攻擊區就全部定住 → 走到第一隻旁邊 → 照 3 步驟用普攻（木棍敲擊）打倒
-    ///        → 第二隻：用衝刺（比讚 👍）衝過去，再一樣用普攻打倒 → 第三隻放開讓牠攻擊：教「紅色預警範圍」→ 走出紅圈閃過一次 → 自由戰鬥。
+    ///        → 第二隻：用衝刺（按住畫面中間）衝過去，再一樣用普攻打倒 → 第三隻放開讓牠攻擊：教「紅色預警範圍」→ 走出紅圈閃過一次 → 自由戰鬥。
     ///   1-2：自由戰鬥；第一隻岩石（熔岩）衝鋒獸進場 → 所有敵人定住 → 走到牠旁邊 → 照 3 步驟放「木棍揮擊」打倒 → 自由戰鬥。
     /// 1-1～1-3（初心者）：熔岩小鬼的血量＝普攻一下就倒；1-2 的衝鋒獸＝木棍揮擊一發就倒（普攻要兩下）。
     /// </summary>
@@ -46,7 +46,7 @@ namespace SpellDuel
             if (battle == null || st == null) return;
             SetupPotionLesson(st);   // 1-2：血量第一次低於 1/3 時教喝藥水
             // 衝刺（SoloBattle.Dash.cs）：還沒衝過的玩家（1-1 教學以外）開打時提示一次
-            if (!NetMode && !coop && dungeon == null && st.id != "1-1" && !BtFlag("dash")) Say("💨 新動作：比讚 👍（大拇指朝上）＝往前衝刺（比著一直衝，放下就停；唸技能時不能衝）", 7f);
+            if (!NetMode && !coop && dungeon == null && st.id != "1-1" && !BtFlag("dash")) Say("💨 新動作：按住畫面中間＝往面向的方向衝刺，放開就停（唸技能時不能衝）", 7f);
             var p = Progress.Char(myClass);
             bool early = (st.id == "1-1" || st.id == "1-2" || st.id == "1-3") && difficulty == 0;   // 只有簡單難度是新手設計
             if (early && p.cls == Skills.Novice)
@@ -213,7 +213,7 @@ namespace SpellDuel
                     {
                         title = "💨 衝刺靠近（2/2）";
                         int ds = DashGestureStage; bool moved = dashDistance - btDashFrom >= 0.3f;
-                        steps = new[] { "① 面向小鬼，手伸到鏡頭前", "② 比讚 👍（大拇指朝上）→ 角色往前衝（比著就一直衝）", "③ 衝到小鬼旁邊，手放下就停" };
+                        steps = new[] { "① 面向小鬼", "② 按住畫面中間（沒有按鈕的地方）→ 角色往前衝", "③ 衝到小鬼旁邊，手指放開就停" };
                         done = new[] { ds >= 1 || moved, ds == 2 || moved, false };
                         text = $"房間小也不用走過去：用衝刺一口氣衝到牠旁邊（現在 {dist:F1}m）。正在唸技能時不能衝。";
                         break;

@@ -6,7 +6,7 @@ namespace SpellDuel
     /// <summary>
     /// 故事探索（使用者要求）的畫面：大迷宮（只畫玩家附近）、走動限制（牆、還沒打開的藤蔓門 → 拉回來）、NPC、道具、閃光點、
     /// 對話框、目標與任務清單、小地圖、結算。地圖與任務邏輯在 Explore.cs，戰鬥在 Combat.Explore.cs。
-    /// 移動：用衝刺（比讚 👍），沒有 10m×10m 場地限制，碰到牆才停（SoloBattle.Dash.cs）。
+    /// 移動：用衝刺（按住畫面中間），沒有 10m×10m 場地限制，碰到牆才停（SoloBattle.Dash.cs）。
     /// </summary>
     public partial class SoloBattle
     {
@@ -23,7 +23,7 @@ namespace SpellDuel
         readonly Dictionary<string, CharacterRig> exNpcRigs = new Dictionary<string, CharacterRig>();
         Vector2Int exLastCell = new Vector2Int(-999, -999);
         Vector3 exLastValid; bool exHasValid;
-        float exPushSaidAt = -99f;
+        float exPushSaidAt = -99f, exSparkleTapAt = -99f;
         bool exMapBig;
         const int ExViewCells = 6;           // 畫玩家附近幾格（一格 4m，約 24m）
         const float ExSparkleShow = 8f;      // 閃光點在這個距離內才看得到
@@ -47,7 +47,7 @@ namespace SpellDuel
         {
             "林語長老：旅人，你終於來了。",
             "林語長老：翠蔭迷林深處的腐化樹王奪走了「古樹之心」，整片叢林都在枯萎。",
-            "林語長老：迷林很大，比讚 👍（大拇指朝上）就能往前衝，放下就停；牆擋住也會停。小地圖在右上角，點一下可以放大。",
+            "林語長老：迷林很大，按住畫面中間就會往你面向的方向衝，放開就停；牆擋住也會停。小地圖在右上角，點一下可以放大。",
             "林語長老：林子裡的怪一開始不會注意你，走太近、打牠、或打到牠旁邊的同伴，牠們就會撲過來。",
             "林語長老：留意地上偶爾閃一下的光點——走近點一下，也許會有意外的發現。",
         };
@@ -352,7 +352,7 @@ namespace SpellDuel
                 if (s.found || Battle.FlatDistance(s.pos, Me.Feet) > ExploreRun.SparkleTapRange) continue;
                 var sp = cam.WorldToScreenPoint(WorldFrame.FromWorld(s.pos + Vector3.up * 0.5f));
                 if (sp.z <= 0f || Vector2.Distance(new Vector2(sp.x, sp.y), tp) > Screen.width * 0.12f) continue;
-                if (exploreRun.TapSparkle(s.id, Me.Feet) != null) { Sfx.Play("coin", 0.8f); Haptics.Play(Haptics.Kind.Success); Burst(s.pos + Vector3.up * 0.5f, new Color(1f, 0.95f, 0.6f)); var sat = s.pos; ExploreFx.Once(exRoot, "fx_C2_discover", () => sat + Vector3.up * 0.6f, 1.8f); }
+                if (exploreRun.TapSparkle(s.id, Me.Feet) != null) { exSparkleTapAt = Time.time; Sfx.Play("coin", 0.8f); Haptics.Play(Haptics.Kind.Success); Burst(s.pos + Vector3.up * 0.5f, new Color(1f, 0.95f, 0.6f)); var sat = s.pos; ExploreFx.Once(exRoot, "fx_C2_discover", () => sat + Vector3.up * 0.6f, 1.8f); }
                 break;
             }
         }

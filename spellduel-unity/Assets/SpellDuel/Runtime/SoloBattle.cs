@@ -2535,7 +2535,7 @@ namespace SpellDuel
                 UpdatePotionLesson();   // 1-2：喝藥水教學（SoloBattle.PotionLesson.cs）
                 if (!frozen) HandleInput();
                 UpdateDash(dt); CheckRealRoom();
-                UpdateExplore(dt);   // 故事探索：迷宮、NPC、任務（SoloBattle.Explore.cs）   // 衝刺：比讚 👍（只有單人故事模式，SoloBattle.Dash.cs）
+                UpdateExplore(dt);   // 故事探索：迷宮、NPC、任務（SoloBattle.Explore.cs）   // 衝刺：按住畫面中間（只有單人故事模式，SoloBattle.Dash.cs）
                 UpdateCoatGesture();  // 法師的魔力盾：說完「魔力盾 開／關」比 3
                 UpdateCastGuide();   // 放招的分步驟提示（SoloBattle.CastGuide.cs）
                 SendState();
@@ -3929,6 +3929,7 @@ namespace SpellDuel
                 DrawHud();
                 GUI.matrix = keep;
                 DrawExploreDialog();   // 對話框畫在最上層、不跟著畫面震動
+                DashTapInput();        // 沒被按鈕吃掉的按下：按住畫面中間＝衝刺（SoloBattle.Dash.cs）
             }
         }
 
