@@ -12,6 +12,12 @@ namespace SpellDuel
         public int exPatrolIdx, exPatrolDir = 1;
         public float exLastHp = -1f;
         public float exPathAt; public Vector3 exNext; public bool exHasNext;
+        // 沒發現玩家時的日常（使用者要求：自己做些事、互相互動，自然一點）
+        public int exIdleKind;            // 0 沒事、1 張望、2 覓食（低頭咀嚼）、3 和同伴聊天、4 打盹
+        public float exIdleUntil, exIdleCd, exEmoteAt;
+        public Vector3 exLookBase; public Fighter exTalkTo;
+        public bool exSleep;              // 營地裡打盹的：警戒範圍減半，被吵醒或打到就醒
+        public bool exForage => exIdleKind == 2;
     }
 
     /// <summary>
@@ -61,6 +67,9 @@ namespace SpellDuel
             var m = SpawnMinion(mon.home, 0, mon.kind, hp, DmgMul, SpeedMul);
             if (mon.hpFrac < 1f) { m.maxHp = Mathf.RoundToInt(m.maxHp / mon.hpFrac); m.hp = m.maxHp * mon.hpFrac; }
             m.exMon = mon; m.exAware = false; m.exPatrolIdx = 0; m.exPatrolDir = 1;
+            m.exIdleKind = 0; m.exIdleUntil = 0f; m.exIdleCd = now + 1f + (float)rng.NextDouble() * 3f; m.exTalkTo = null;
+            m.exSleep = mon.camp >= 0 && !mon.caller && mon.patrol == null && rng.Next(4) == 0;   // 營地四隻裡大約一隻在打盹（叫同伴的那隻不睡）
+            if (m.exSleep) { m.exIdleKind = 4; m.exIdleUntil = float.MaxValue; }
             m.attackReadyAt = now + 1f;
             if (mon.guardian > 0) m.name = (EliteCatalog.Get(mon.kind)?.name ?? m.name) + "（守衛）";
             exActive[mon] = m;
@@ -78,6 +87,8 @@ namespace SpellDuel
         {
             if (m.exAware) return;
             m.exAware = true; m.attackReadyAt = Mathf.Max(m.attackReadyAt, now + 0.6f);
+            if (m.exSleep) Emit("exemote", m.head + Vector3.up * 0.5f, new Color(1f, 0.9f, 0.5f), "！？");   // 睡夢中被吵醒
+            m.exSleep = false; m.exIdleKind = 0; m.exIdleUntil = 0f; m.exTalkTo = null;
             var mon = m.exMon;
             bool call = spread && mon != null && mon.caller;
             Emit("exalert", m.Chest + Vector3.up * 0.3f, new Color(1f, 0.4f, 0.3f), call ? "❗ 呼叫同伴！" : "❗");
@@ -177,21 +188,107 @@ namespace SpellDuel
         }
 
         /// <summary>沒發現玩家：照巡邏路線來回走（營地守衛站著不動，只會轉頭）</summary>
+        // ---------------------------------------------------------------- 沒發現玩家時的日常
+        static readonly string[] ExChat = { "嘰嘰？", "咕嚕咕嚕", "嘿嘿", "♪", "……", "嘎！", "哼哼", "呼～", "唔？", "嘻嘻" };
+        static readonly string[] ExMutter = { "……", "♪", "呼～", "嗯？", "哈啊～" };
+        const float ExChatRange = 2.8f, ExEmoteShow = 14f;
+
+        /// <summary>頭上冒一句（只在玩家附近冒，免得滿地都是字）</summary>
+        void ExEmote(Fighter m, string text)
+        {
+            if (player == null || FlatDistance(m.Feet, player.Feet) > ExEmoteShow) return;
+            m.exEmoteAt = now;
+            Emit("exemote", m.head + Vector3.up * 0.45f, new Color(0.95f, 0.95f, 0.85f), text);
+        }
+        string Pick(string[] a) => a[rng.Next(a.Length)];
+        static Vector3 TurnToward(Vector3 from, Vector3 to, float k) { var v = Vector3.Lerp(from, to, Mathf.Clamp01(k)); v.y = 0f; return v.sqrMagnitude > 1e-6f ? v.normalized : to; }
+        float Rand(float a, float b) => a + (float)rng.NextDouble() * (b - a);
+
+        void ExIdle(Fighter m, int kind, float dur)
+        {
+            m.exIdleKind = kind; m.exIdleUntil = now + dur; m.exLookBase = m.forward;
+            if (kind == 2 && rng.Next(2) == 0) ExEmote(m, "嚼嚼");
+            else if (kind == 1 && rng.Next(3) == 0) ExEmote(m, Pick(ExMutter));
+        }
+
+        /// <summary>還沒發現玩家：日常（張望、覓食、和同伴聊天、打盹）＋照路線巡邏</summary>
         void ExPatrol(Fighter m, float dt)
         {
             m.windupUntil = 0f;
+            // 正在做某件事
+            if (now < m.exIdleUntil)
+            {
+                switch (m.exIdleKind)
+                {
+                    case 1:   // 張望：左右慢慢轉頭
+                    {
+                        float a = Mathf.Sin(now * 1.3f + m.minionId) * 70f * Mathf.Deg2Rad, ca = Mathf.Cos(a), sa = Mathf.Sin(a);
+                        var b = m.exLookBase.sqrMagnitude > 1e-4f ? m.exLookBase : Vector3.forward;
+                        m.forward = new Vector3(b.x * ca + b.z * sa, 0f, -b.x * sa + b.z * ca);   // 繞 Y 軸轉（純 C#，測試跑得動）
+                        break;
+                    }
+                    case 3:   // 聊天：面對面，輪流冒一句
+                        if (m.exTalkTo == null || !m.exTalkTo.Alive || m.exTalkTo.exAware) { m.exIdleUntil = 0f; break; }
+                        { var d = Fighter.Flat(m.exTalkTo.Feet - m.Feet); if (d.sqrMagnitude > 1e-4f) m.forward = TurnToward(m.forward, d.normalized, dt * 6f); }
+                        if (now - m.exEmoteAt > Rand(1.4f, 2.6f) && now - m.exTalkTo.exEmoteAt > 0.7f) ExEmote(m, Pick(ExChat));
+                        break;
+                    case 4:   // 打盹
+                        if (now - m.exEmoteAt > 3f) ExEmote(m, "💤");
+                        break;
+                }
+                return;
+            }
+            if (m.exIdleKind != 0) { m.exIdleKind = 0; m.exTalkTo = null; m.exIdleCd = now + Rand(4f, 9f); }
+            // 碰到同伴：停下來聊一下（兩隻一起；隔著牆不算）
+            if (now >= m.exIdleCd)
+            {
+                foreach (var o in exActive.Values)
+                {
+                    if (o == m || !o.Alive || o.exAware || o.exIdleKind != 0 || now < o.exIdleCd || o.exMon == null || o.exMon.guardian > 0) continue;
+                    bool mate = m.exMon.camp >= 0 && o.exMon.camp == m.exMon.camp;   // 同一個營地的隔著篝火也能聊
+                    if (FlatDistance(o.Feet, m.Feet) > (mate ? 6.5f : ExChatRange) || !ExSight(o.Feet, m.Feet)) continue;
+                    float dur = Rand(2.5f, 4.5f);
+                    m.exTalkTo = o; o.exTalkTo = m;
+                    m.exIdleKind = o.exIdleKind = 3; m.exIdleUntil = o.exIdleUntil = now + dur;
+                    ExEmote(m, Pick(ExChat)); o.exEmoteAt = now;   // 對方晚一點才回話
+                    return;
+                }
+            }
             var p = m.exMon.patrol;
-            if (p == null || p.Length < 2) return;
+            if (p == null || p.Length < 2)
+            {
+                // 不巡邏的（營地）：轉向營地中間（圍著篝火）、偶爾覓食或張望
+                if (m.exMon.camp >= 0)
+                {
+                    Vector3 c = Vector3.zero; int n = 0;
+                    foreach (var o in explore.map.monsters) if (o.camp == m.exMon.camp) { c += o.home; n++; }
+                    var toC = Fighter.Flat(c / Mathf.Max(1, n) - m.Feet);
+                    if (toC.sqrMagnitude > 0.04f) m.forward = TurnToward(m.forward, toC.normalized, dt * 2f);
+                }
+                if (now >= m.exIdleCd)
+                {
+                    int r = rng.Next(3);
+                    if (r == 0) ExIdle(m, 2, Rand(3f, 5f)); else if (r == 1) ExIdle(m, 1, Rand(2f, 3.5f)); else { ExEmote(m, Pick(ExMutter)); m.exIdleCd = now + Rand(4f, 8f); }
+                }
+                return;
+            }
+            // 兩隻一起巡邏的：同伴停下來（張望、覓食）就等牠，不要自己走掉
+            foreach (var o in exActive.Values)
+                if (o != m && o.Alive && !o.exAware && o.exMon != null && o.exMon.patrol == p && o.exIdleKind != 0 && o.exIdleKind != 3 && FlatDistance(o.Feet, m.Feet) < 6f)
+                { ExIdle(m, 1, Mathf.Max(0.5f, o.exIdleUntil - now)); return; }
             var to = p[Mathf.Clamp(m.exPatrolIdx, 0, p.Length - 1)];
-            var d = Fighter.Flat(to - m.Feet);
-            if (d.magnitude < 0.3f)
+            var dd = Fighter.Flat(to - m.Feet);
+            if (dd.magnitude < 0.3f)
             {
                 if (m.exPatrolIdx + m.exPatrolDir >= p.Length || m.exPatrolIdx + m.exPatrolDir < 0) m.exPatrolDir = -m.exPatrolDir;   // 走到底就往回走
                 m.exPatrolIdx += m.exPatrolDir;
+                // 走到一個點：有時候停下來張望或低頭找東西吃
+                int r = rng.Next(10);
+                if (r < 3) ExIdle(m, 1, Rand(1.5f, 3f)); else if (r < 5) ExIdle(m, 2, Rand(2.5f, 4f));
                 return;
             }
-            m.forward = d.normalized;
-            var next = m.Feet + d.normalized * Mathf.Min(d.magnitude, ExPatrolSpeed * m.speedMul * dt);
+            m.forward = dd.normalized;
+            var next = m.Feet + dd.normalized * Mathf.Min(dd.magnitude, ExPatrolSpeed * m.speedMul * dt);
             if (minionInside == null || minionInside(next)) m.head = new Vector3(next.x, m.head.y, next.z);
         }
 
@@ -218,7 +315,7 @@ namespace SpellDuel
                     if (md > ExDespawn && d > ExDespawn) { ExStow(mon, m); continue; }
                     bool hurt = m.hp < m.maxHp - 0.01f;
                     if (mon.guardian > 0) { var a = run.map.arenas.Find(x => x.n == mon.guardian); if (a.entered || hurt) ExAlert(m); }
-                    else if (md <= ExDetect + m.bodyRadius && ExSight(m.Feet, pf) || hurt) ExAlert(m);   // 警戒範圍不穿牆
+                    else if (md <= ExDetect * (m.exSleep ? 0.5f : 1f) + m.bodyRadius && ExSight(m.Feet, pf) || hurt) ExAlert(m);   // 打盹的：要走得更近才會發現   // 警戒範圍不穿牆
                 }
                 // 發現玩家之後就一直追，直到追上為止（使用者要求）：不會放棄、也不會收起來
             }
