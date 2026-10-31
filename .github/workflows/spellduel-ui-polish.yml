@@ -1,0 +1,71 @@
+name: SpellDuel native UI polish previews
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/UiKit*.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/UiPolishPreview.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Editor/UiPolishBuild.cs'
+      - '.github/workflows/spellduel-ui-polish.yml'
+concurrency:
+  group: ui-polish-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [before, after]
+    steps:
+      - uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore baseline appearance for before images
+        if: matrix.version == 'before'
+        run: |
+          for f in UiKit.cs SoloBattle.cs SoloBattle.CastGuide.cs SoloBattle.EnemySkills.cs SoloBattle.Explore.cs SoloBattle.Party.cs SoloBattle.StatusIcons.cs SoloBattle.StoryCoop.cs SoloBattle.SwipeTrail.cs; do
+            git show 5a4a0bf:spellduel-unity/Assets/SpellDuel/Runtime/$f > spellduel-unity/Assets/SpellDuel/Runtime/$f
+          done
+      - uses: actions/cache@v4
+        with:
+          path: spellduel-unity/Library
+          key: Library-UiPolish-Linux-${{ matrix.version }}-${{ hashFiles('spellduel-unity/Packages/manifest.json') }}
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: spellduel-unity
+          targetPlatform: StandaloneLinux64
+          buildMethod: SpellDuel.EditorTools.UiPolishBuild.Build
+          allowDirtyBuild: true
+      - uses: actions/cache/save@v4
+        with:
+          path: spellduel-unity/Library
+          key: Library-UiPolish-Linux-${{ matrix.version }}-${{ hashFiles('spellduel-unity/Packages/manifest.json') }}
+      - name: Capture actual IMGUI at phone resolution
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb libgl1-mesa-dri fonts-noto-cjk
+          mkdir -p ui-preview
+          export UI_PREVIEW_OUTPUT="$PWD/ui-preview"
+          player=$(find . -path '*/ui-preview/preview.x86_64' -print -quit)
+          test -n "$player"
+          sudo chmod +x "$player"
+          timeout 180 xvfb-run -a -s '-screen 0 1080x2340x24' "$player" -noaudio -screen-width 1080 -screen-height 2340 -screen-fullscreen 0 -force-glcore -logFile "$PWD/ui-preview/player.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SpellDuel-ui-polish-${{ matrix.version }}
+          path: ui-preview/
+          if-no-files-found: error

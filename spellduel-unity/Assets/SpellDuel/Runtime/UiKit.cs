@@ -108,6 +108,11 @@ namespace SpellDuel
             {
                 float u=x+.5f,v=y+.5f;
                 float edge=Mathf.Min(u,v,n-u,n-v,(u+v-10f)*.7071f,(n-u+v-10f)*.7071f,(u+n-v-10f)*.7071f,(2*n-u-v-10f)*.7071f);
+                if(kind==3)
+                {
+                    float qx=Mathf.Abs(u-n*.5f)-(n*.5f-18),qy=Mathf.Abs(v-n*.5f)-(n*.5f-18);
+                    edge=18-Mathf.Sqrt(Mathf.Max(qx,0)*Mathf.Max(qx,0)+Mathf.Max(qy,0)*Mathf.Max(qy,0))-Mathf.Min(Mathf.Max(qx,qy),0);
+                }
                 float a=Mathf.Clamp01(edge+.5f);float light=.70f+.30f*v/n;
                 if(kind==1){a*=Mathf.Clamp01(2.2f-edge)+Mathf.Clamp01(1f-Mathf.Abs(edge-6f));light=1f;}
                 if(kind==2){a*=Mathf.Clamp01(4f-edge);light=v>n*.5f?1f:.32f;}
@@ -152,7 +157,10 @@ namespace SpellDuel
             while(fs>min&&textStyle.CalcHeight(content,r.width)>r.height+1){fs--;textStyle.fontSize=fs;}
             var keep=GUI.color;var prior=textStyle.normal.textColor;textStyle.normal.textColor=Color.white;
             float o=Mathf.Max(1,fs*.055f);GUI.color=new Color(.015f,.025f,.06f,color.a*.9f);
-            GUI.Label(new Rect(r.x+o,r.y+o,r.width,r.height),content,textStyle);
+            GUI.Label(new Rect(r.x-o,r.y,r.width,r.height),content,textStyle);
+            GUI.Label(new Rect(r.x+o,r.y,r.width,r.height),content,textStyle);
+            GUI.Label(new Rect(r.x,r.y-o,r.width,r.height),content,textStyle);
+            GUI.Label(new Rect(r.x,r.y+o,r.width,r.height),content,textStyle);
             GUI.color=color;GUI.Label(r,content,textStyle);GUI.color=keep;textStyle.normal.textColor=prior;
         }
         // ---- 教學鎖（新手指引，SoloBattle.Walkthrough.cs）：LockKey 不是 null 時，只有標籤（或 NextTag 給的標記）符合的按鈕能按，
@@ -247,7 +255,9 @@ namespace SpellDuel
             Init();Paint(r,panelStyle,new Color(.025f,.035f,.07f,.94f));
             var inside=Inset(r,3);float width=inside.width*Mathf.Clamp01(v);
             if(width>0){var fill=new Rect(inside.x,inside.y,width,inside.height);Paint(fill,panelStyle,c);Paint(fill,bevelStyle,new Color(1,1,1,.45f));}
-            Paint(r,frameStyle,new Color(.85f,.81f,.64f,.8f));
+            Paint(r,frameStyle,Color.Lerp(c,Paper,.6f));
+            if(r.width>r.height*5 && r.height>=8)
+                for(int i=1;i<5;i++)Divider(new Rect(inside.x+inside.width*i/5f,inside.y,1,inside.height),new Color(.02f,.03f,.05f,.25f));
             if(!string.IsNullOrEmpty(text))Text(Inset(r,2),text,size,Paper,TextAnchor.MiddleCenter,true,.5f);
         }
         public static void Pill(float centerY,string text,int size,Color color,float maxWidth,float alpha=.55f)

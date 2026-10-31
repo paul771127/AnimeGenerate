@@ -156,15 +156,8 @@ namespace SpellDuel
         static void DrawCastingTile(Rect r, Color c, int fsS)
         {
             float blink = 0.5f + 0.5f * Mathf.Sin(Time.time * 10f);
-            float t = Mathf.Max(3f, r.width * 0.05f);
-            GUI.color = new Color(c.r, c.g, c.b, 0.15f + 0.3f * blink);
-            GUI.DrawTexture(r, Texture2D.whiteTexture);
-            GUI.color = new Color(Mathf.Lerp(c.r, 1f, 0.5f), Mathf.Lerp(c.g, 1f, 0.5f), Mathf.Lerp(c.b, 1f, 0.5f), 0.55f + 0.45f * blink);
-            GUI.DrawTexture(new Rect(r.x - t, r.y - t, r.width + t * 2, t), Texture2D.whiteTexture);
-            GUI.DrawTexture(new Rect(r.x - t, r.yMax, r.width + t * 2, t), Texture2D.whiteTexture);
-            GUI.DrawTexture(new Rect(r.x - t, r.y, t, r.height), Texture2D.whiteTexture);
-            GUI.DrawTexture(new Rect(r.xMax, r.y, t, r.height), Texture2D.whiteTexture);
-            GUI.color = Color.white;
+            UiKit.Halo(r, c, .65f + .3f * blink);
+            UiKit.Divider(new Rect(r.x + 8, r.yMax - 4, r.width - 16, 3), c);
             UiKit.Text(new Rect(r.x - r.width * 0.25f, r.y - fsS * 1.9f, r.width * 1.5f, fsS * 1.6f), "▼ 施放中", fsS, new Color(1f, 1f, 1f, 0.6f + 0.4f * blink), TextAnchor.MiddleCenter, true);
         }
     }

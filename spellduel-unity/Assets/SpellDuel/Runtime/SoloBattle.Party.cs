@@ -17,7 +17,7 @@ namespace SpellDuel
             float rowH = u * 0.95f;
             int slots = Mathf.Max(max, n);
             var card = new Rect(pad, y, W - pad * 2, u * 1.1f + rowH * slots + u * 1.9f);
-            UiKit.Card(card, 0.7f, col, 0.8f);
+            UiKit.Card(card, 0.96f, col, 0.95f);
             float x = card.x + gap, w = card.width - gap * 2, cy = card.y + gap * 0.4f;
             UiKit.Text(new Rect(x, cy, w, u), $"🏰 {(d != null ? d.name : "副本")} 隊伍（{n}/{max} 人）", fs, Color.white, TextAnchor.MiddleLeft, true);
             cy += u * 1.05f;

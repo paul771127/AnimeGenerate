@@ -128,7 +128,7 @@ namespace SpellDuel
             bool jump = EnemySkills.NeedsJump(next);
             string text = next.back ? "⚠ 後方突襲・側步！" : next.pose == 1 ? "⬆ 貼地直線：跳過去或側步！" : next.pose == 2 ? "⬇ 低空掠過：蹲下或側步！" : jump ? "⬆ 地波：到腳下時跳！" : "⬇ 橫掃：蹲下！";
             var col = next.back ? new Color(0.95f, 0.25f, 0.35f) : jump ? new Color(1f, 0.55f, 0.15f) : new Color(0.35f, 0.7f, 1f);
-            UiKit.Pill(Screen.height * 0.55f, text, Mathf.RoundToInt(UiKit.BaseFont * 1.4f), col, Screen.width * 0.9f, 0.6f);
+            UiKit.Pill(Screen.height * 0.55f, text, Mathf.RoundToInt(UiKit.BaseFont * 1.4f), col, Screen.width * 0.9f, 0.94f);
         }
     }
 }

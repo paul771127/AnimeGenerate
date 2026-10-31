@@ -110,6 +110,7 @@ namespace SpellDuel
             Rect Sq(float rad) => new Rect(c.x - rad, c.y - rad, rad * 2, rad * 2);
             if (ready) ReadyRipples(c, r, col, since, fs, Sq, ReadyHint(basic.id));   // 可以出手：一圈一圈往外擴散的光環＋「集氣完成」字樣
             if (basic.id != "na_sword") DrawChargeAura(basic.id, c, r, k, ready, since, fs);   // 集氣光絲、完成的光芒（各職業顏色）
+            UiKit.ChargeRail(new Rect(c.x-r*.75f,c.y+r*1.18f,r*1.5f,fs*.55f),k,ready,col);
             switch (basic.id)
             {
                 case "na_sword": DrawSwordCharge(c, r, k, ready, since, fs, Sq); break;
