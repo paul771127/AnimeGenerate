@@ -49,6 +49,10 @@ jobs:
           targetPlatform: StandaloneLinux64
           buildMethod: SpellDuel.EditorTools.UiPolishBuild.Build
           allowDirtyBuild: true
+      - uses: actions/cache/save@v4
+        with:
+          path: spellduel-unity/Library
+          key: Library-UiPolish-Linux-${{ matrix.version }}-${{ hashFiles('spellduel-unity/Packages/manifest.json') }}
       - name: Capture actual IMGUI at phone resolution
         run: |
           sudo apt-get update -qq
@@ -57,7 +61,7 @@ jobs:
           export UI_PREVIEW_OUTPUT="$PWD/ui-preview"
           player=$(find . -path '*/ui-preview/preview.x86_64' -print -quit)
           test -n "$player"
-          chmod +x "$player"
+          sudo chmod +x "$player"
           timeout 180 xvfb-run -a -s '-screen 0 1080x2340x24' "$player" -noaudio -screen-width 1080 -screen-height 2340 -screen-fullscreen 0 -force-glcore -logFile "$PWD/ui-preview/player.log"
       - uses: actions/upload-artifact@v4
         if: always()
