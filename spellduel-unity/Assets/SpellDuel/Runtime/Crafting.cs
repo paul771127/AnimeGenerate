@@ -57,7 +57,7 @@ namespace SpellDuel
             M("airship_compass", "飛艇羅盤", "🧭", "Boss 空賊飛艇・逐風號（必掉）"),
             M("tame_seal", "馴獸印片", "🔰", "各章菁英怪 20%（8 枚＋金幣調配菁英誘餌）"),
             M("soul_smith", "神匠之魂", "✨", "困難難度的 Boss（很少）"),
-            // 稀有怪（特殊裝備配方用；獨立擲，不佔「一隻最多掉一樣」）
+            // 稀有怪（特殊裝備配方用；獨立擲）
             M("band_crest", "人形團徽", "🎴", "人形敵人（40%）"),
             M("storm_gem", "天候結晶", "🌦", "天候怪（25%）"),
             M("night_edge", "夜影刃片", "🗡", "副本夜晚的刺客（25%）"),
@@ -123,20 +123,22 @@ namespace SpellDuel
             return l.ToArray();
         }
 
-        /// <summary>小怪倒下：擲材料（沒掉＝null）。difficulty：0 簡單、1 普通、2 困難</summary>
-        public static string RollMinion(int kind, int theme, int difficulty, System.Random rng)
+        /// <summary>小怪倒下：擲材料。每一樣都分開擲（使用者要求：一隻怪可以同時掉好幾樣）。difficulty：0 簡單、1 普通、2 困難</summary>
+        public static List<string> RollMinion(int kind, int theme, int difficulty, System.Random rng)
         {
-            if (EliteCatalog.IsElite(kind) && difficulty >= 1 && rng.NextDouble() < EliteMatChance) return "mat_elite";   // 菁英徽記：普通以上
-            bool rocky = DropsOre(kind, theme);
-            if (rocky && difficulty >= 1 && rng.NextDouble() < HiOreChance) return "mat_ore_hi";
-            if (rocky && rng.NextDouble() < OreChance) return "mat_ore";   // 鐵礦石獨立擲（不跟這種怪的其他材料搶機率）
-            if (rng.NextDouble() >= MatChance) return null;
-            var list = new List<string>(KindMats(kind, theme));
-            if (list.Count == 0) return null;
-            return "mat_" + list[rng.Next(list.Count)];
+            var got = new List<string>();
+            if (EliteCatalog.IsElite(kind) && difficulty >= 1 && rng.NextDouble() < EliteMatChance) got.Add("mat_elite");   // 菁英徽記：普通以上
+            if (DropsOre(kind, theme))
+            {
+                if (difficulty >= 1 && rng.NextDouble() < HiOreChance) got.Add("mat_ore_hi");   // 高級鐵礦石：普通以上
+                if (rng.NextDouble() < OreChance) got.Add("mat_ore");
+            }
+            var list = KindMats(kind, theme);
+            if (list.Length > 0 && rng.NextDouble() < MatChance) got.Add("mat_" + list[rng.Next(list.Length)]);   // 這種怪自己的材料：擲中再挑一樣
+            return got;
         }
 
-        /// <summary>天穹飛毯的敵人（變種 131～135）：各自的素材，獨立擲（不佔「一隻最多掉一樣」）；沒掉＝null</summary>
+        /// <summary>天穹飛毯的敵人（變種 131～135）：各自的素材，獨立擲；沒掉＝null</summary>
         public static string RollSky(int variant, System.Random rng)
         {
             double r = rng.NextDouble();
@@ -174,20 +176,21 @@ namespace SpellDuel
         public static string RollExplore(bool guardian, System.Random rng) => rng.NextDouble() < (guardian ? JadeGuardChance : JadeChance) ? "mat_jade_chip" : null;
 
         /// <summary>Boss 倒下：擲 Boss 材料（沒掉＝null，照常掉裝備）</summary>
-        public static string RollBoss(string bossCls, int difficulty, System.Random rng)
+        public static List<string> RollBoss(string bossCls, int difficulty, System.Random rng)
         {
-            if (difficulty >= 2 && rng.NextDouble() < SmithSoulChance) return "mat_soul_smith";
-            if (rng.NextDouble() >= BossCoreChance) return null;
-            return bossCls switch
+            var got = new List<string>();
+            if (difficulty >= 2 && rng.NextDouble() < SmithSoulChance) got.Add("mat_soul_smith");
+            string core = bossCls switch
             {
                 "boss" => "mat_core_golem",
                 "boss_forest" => "mat_core_tree",
                 "boss_sea" => "mat_core_sea",
                 "boss_arena" => "mat_core_arena",
                 "boss_canyon" => "mat_core_canyon",
-                "boss_airship" => null,   // 飛艇羅盤另外必掉（SoloBattle.DropOne）
-                _ => null,
+                _ => null,   // 飛艇羅盤另外必掉（SoloBattle.DropOne）
             };
+            if (core != null && rng.NextDouble() < BossCoreChance) got.Add(core);
+            return got;
         }
 
         // ================================================================ 精煉石（鐵匠）

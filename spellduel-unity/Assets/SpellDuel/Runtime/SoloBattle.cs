@@ -295,7 +295,7 @@ namespace SpellDuel
             if (dk > 0) { Sfx.Play("poof", 0.6f); Sfx.Play("coin", 0.35f, 1.1f); }   // 小怪倒下＋掉金幣
             int db = battle.bossKills - lastBossKillsSeen; lastBossKillsSeen = battle.bossKills;
             for (int i = 0; i < db; i++) pendingGold += Mathf.RoundToInt(Economy.BossGold(battle.wave) * goldMul);
-            // 掉落（使用者要求）：每個敵人最多掉一樣東西（精魄 → 裝備 → 材料）；知道是哪種怪的（擊倒紀錄）一隻一隻擲，不知道的（合作隊友端漏掉的）只擲裝備
+            // 掉落（使用者要求）：精魄、裝備、各種材料都分開擲，一隻可以掉好幾樣；知道是哪種怪的（擊倒紀錄）一隻一隻擲，不知道的（合作隊友端漏掉的）只擲裝備
             var (mLogged, bLogged) = FlushKillDrops();
             for (int i = mLogged; i < dk; i++) TryDrop(false);
             for (int i = bLogged; i < db; i++) TryDrop(true);
@@ -331,13 +331,13 @@ namespace SpellDuel
         }
         void FlushSoulDrops() => FlushKillDrops();
 
-        /// <summary>一個敵人倒下：精魄 → 裝備 → 材料，最多掉一樣（Boss：精魄 → Boss 材料 → 一定掉的裝備）</summary>
+        /// <summary>一個敵人倒下：精魄、裝備、每種材料都分開擲（使用者要求：一隻可以掉好幾樣）。Boss：精魄、Boss 材料分開擲，裝備一定掉</summary>
         void DropOne(string key)
         {
             if (prof == null || string.IsNullOrEmpty(key)) return;
-            if (key[0] == 'm' && int.TryParse(key.Substring(1), out int pk)) RollPetDrops(pk);   // 寵物誘餌、馴獸印片：另外擲，不佔「一隻最多掉一樣」（SoloBattle.Pets.cs）
+            if (key[0] == 'm' && int.TryParse(key.Substring(1), out int pk)) RollPetDrops(pk);   // 寵物誘餌、馴獸印片：另外擲（SoloBattle.Pets.cs）
             if (key == "m" + Battle.TreasureKind) { TrySoulDrop(key); GrantTreasure(); return; }   // 寶箱怪：精魄另外擲，寶物一定給
-            if (TrySoulDrop(key)) return;
+            TrySoulDrop(key);
             int diff = towerRun ? 1 : difficulty;
             if (key[0] == 'm' && int.TryParse(key.Substring(1), out int kind))
             {
@@ -348,13 +348,13 @@ namespace SpellDuel
                 if ((battle.explore != null || kind != 28 && kind != 30 && kind != 32) && AddMat(Blueprints.RollRecipe(kind, dropRng, pendingMats)))   // 翠玉樹精耳環：只有探索的守衛掉   // 人形敵人：特殊裝備配方（獨立擲）
                 { var bp = Blueprints.OfSource(kind); Say($"📜 掉落配方「{bp.name}」（Lv{bp.level}）！過關後交給鐵匠鋪的工匠就能學會", 5f); Sfx.Play("win", 0.8f, 1.2f); Haptics.Play(Haptics.Kind.Success); }
                 if (kind == Battle.TreasureKind) { GrantTreasure(); return; }   // 寶箱怪：大把金幣＋一定掉一件裝備
-                if (TryDrop(false)) return;
-                AddMat(Crafting.RollMinion(MonsterVariants.BaseOf(kind), battle.Theme, diff, dropRng));   // 變種怪：照原本的怪掉材料
+                TryDrop(false);
+                foreach (var mat in Crafting.RollMinion(MonsterVariants.BaseOf(kind), battle.Theme, diff, dropRng)) AddMat(mat);   // 變種怪：照原本的怪掉材料
             }
             else
             {
                 if (key == Carpet.BossClass) AddMat("mat_airship_compass");   // 逐風號：飛艇羅盤必掉
-                if (AddMat(Crafting.RollBoss(key, diff, dropRng))) return;
+                foreach (var mat in Crafting.RollBoss(key, diff, dropRng)) AddMat(mat);
                 TryDrop(true);
             }
         }

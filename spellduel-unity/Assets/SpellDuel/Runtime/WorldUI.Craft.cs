@@ -176,7 +176,7 @@ namespace SpellDuel
         {
             var l = new List<string>();
             foreach (var m in Crafting.Mats) { int n = Economy.Count(m.id); if (n > 0) l.Add($"{m.icon}{m.name}×{n}"); }
-            return l.Count > 0 ? string.Join("　", l) : "還沒有材料：打倒敵人有 10% 機率掉（每隻敵人最多掉一樣東西）";
+            return l.Count > 0 ? string.Join("　", l) : "還沒有材料：打倒敵人有機率掉（每樣分開擲，一隻可以掉好幾樣）";
         }
     }
 }
