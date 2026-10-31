@@ -4513,7 +4513,10 @@ namespace SpellDuel
                     var sr = new Rect(pad + ci * (psz * 1.9f + gap * 0.5f), iy, psz * 1.9f, psz);
                     if (c.scroll && n > 0 && !scrollAsk && UiKit.Button(sr, "", fsS, false, new Color(1f, 0.8f, 0.4f))) UseConsumable(c);
                     GUI.color = new Color(0f, 0f, 0f, 0.35f); GUI.DrawTexture(sr, Texture2D.whiteTexture); GUI.color = Color.white;
-                    UiKit.Text(sr, $"{c.icon}{n}", fsS, n > 0 ? Color.white : Color.gray, TextAnchor.MiddleCenter, true);
+                    // 圖示（程式畫的藥瓶／捲軸；emoji 在手機上常顯示不出來）＋數量
+                    var ir = new Rect(sr.x + sr.height * 0.08f, sr.y + sr.height * 0.06f, sr.height * 0.88f, sr.height * 0.88f);
+                    GUI.color = n > 0 ? Color.white : new Color(1f, 1f, 1f, 0.35f); GUI.DrawTexture(ir, ConsumableIcons.Get(c.id), ScaleMode.ScaleToFit); GUI.color = Color.white;
+                    UiKit.Text(new Rect(ir.xMax, sr.y, sr.xMax - ir.xMax, sr.height), n.ToString(), fsS, n > 0 ? Color.white : Color.gray, TextAnchor.MiddleCenter, true);
                     if (!cdOk && n > 0)
                     {
                         float k = Mathf.Clamp01((PotionReadyAt(c.id) - Time.time) / Mathf.Max(0.1f, c.cooldown));
