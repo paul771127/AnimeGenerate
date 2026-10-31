@@ -25,6 +25,8 @@ namespace SpellDuel
    var mat=new Material(GroundMaterial(ground)){name="Explore solid ground "+ground};mat.SetFloat("_Opacity",1f);
    solidGroundMaterials[ground]=mat;return mat;
   }
+  /// <summary>地面貼圖（無縫重複；故事探索的底層地面用）</summary>
+  public static Texture GroundTexture(ExGround ground)=>GroundMaterial(ground).mainTexture;
   static Material GroundMaterial(ExGround ground)
   {
    if(groundMaterials.TryGetValue(ground,out var cached)&&cached)return cached;

@@ -199,6 +199,33 @@ namespace SpellDuel
             // 天空、太陽、雲、遠方的森林：只建一次（不跟著 24m 串流）
             var sky = ExploreArt.CreateBackdrop(exploreRun.map);
             if (sky) sky.transform.SetParent(exRoot, false);
+            var baseGround = CreateExploreBaseGround(exploreRun.map);
+            if (baseGround) baseGround.transform.SetParent(exRoot, false);
+        }
+
+        /// <summary>
+        /// 整張地圖底下一片連續、不透明的森林地面（使用者回報：樹、石頭底下透出真實地板；改成每格一塊之後又變成一格一格不同顏色的方塊）。
+        /// 一個網格蓋滿整張地圖，UV 照位置算（每格約 1 張貼圖），沒有格子邊；路、牆、景物、湖面都畫在上面。
+        /// </summary>
+        static GameObject CreateExploreBaseGround(ExploreMap map)
+        {
+            var shader = Resources.Load<Shader>("Shaders/ExploreBaseGround") ?? Shader.Find("SpellDuel/ExploreBaseGround");
+            if (!shader) return null;
+            float cs = ExploreMap.CellSize, k = 1.02f / cs;   // 和原本每格的地貼同樣的貼圖密度
+            Vector3 a = map.World(0, 0) - new Vector3(cs, 0f, cs) * 0.5f, b = map.World(map.W - 1, map.H - 1) + new Vector3(cs, 0f, cs) * 0.5f;
+            const float y = -0.006f;
+            var mesh = new Mesh { name = "Explore base ground" };
+            mesh.vertices = new[] { new Vector3(a.x, y, a.z), new Vector3(a.x, y, b.z), new Vector3(b.x, y, b.z), new Vector3(b.x, y, a.z) };
+            mesh.uv = new[] { new Vector2(a.x * k, a.z * k), new Vector2(a.x * k, b.z * k), new Vector2(b.x * k, b.z * k), new Vector2(b.x * k, a.z * k) };
+            mesh.triangles = new[] { 0, 1, 2, 0, 2, 3 }; mesh.RecalculateNormals(); mesh.RecalculateBounds();
+            var go = new GameObject("Explore base ground");
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var mr = go.AddComponent<MeshRenderer>();
+            var mat = new Material(shader) { name = "Explore base ground" };
+            mat.mainTexture = ExploreArt.GroundTexture(ExGround.Grass);
+            mat.SetColor("_Tint", new Color(0.92f, 0.95f, 0.9f));
+            mr.sharedMaterial = mat; mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; mr.receiveShadows = false;
+            return go;
         }
 
         /// <summary>藤蔓門、封印要橫跨走道：走道是南北向就不轉，東西向轉 90°</summary>
@@ -214,19 +241,7 @@ namespace SpellDuel
                 {
                     var k = new Vector2Int(x, z);
                     var cell = map.At(x, z);
-                    // 每一格底下都鋪一層不透明的地面（使用者回報樹、石頭底下會透出真實地板）：牆格用地形的地面、走道格用那一格的地面；
-                    // 湖水格不用（整片湖面在地標裡）。走道、景物畫在這層上面
-                    if (map.InGrid(x, z) && map.TerrainAt(x, z) != ExTerrain.Water)
-                    {
-                        keepUnder.Add(k);
-                        if (!exUnder.ContainsKey(k))
-                        {
-                            var t = map.TerrainAt(x, z);
-                            var gt = cell != ExCell.Wall ? map.GroundAt(x, z) : t == ExTerrain.Cave || t == ExTerrain.Rock ? ExGround.Cave : t == ExTerrain.Ruin ? ExGround.Stone : t == ExTerrain.Palisade ? ExGround.Dirt : ExGround.Grass;
-                            var g = ExploreArt.CreateGround(gt, x, z, cs, true);
-                            if (g) { g.transform.SetParent(exRoot, false); g.transform.localPosition = map.World(x, z) + Vector3.down * 0.004f; exUnder[k] = g; }
-                        }
-                    }
+                    // 底層地面改成整張地圖一片（CreateExploreBaseGround）：每格一塊會變成一格一格不同顏色的方塊
                     if (cell == ExCell.Wall)
                     {
                         bool edge = false; foreach (var d in ExploreMap.Dirs) if (map.Open(x + d.x, z + d.y)) edge = true;
