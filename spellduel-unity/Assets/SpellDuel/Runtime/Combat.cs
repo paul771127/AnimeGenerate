@@ -991,7 +991,7 @@ namespace SpellDuel
         /// <summary>小怪傷害的基底（0.75 → 0.9 → 0.8：使用者回報第 4 章被打兩下就死）</summary>
         public const float EnemyDmgBase = 0.8f;
         public const float EndlessRegen = 0.5f, EndlessRegenPct = 0.005f;
-        /// <summary>副本（使用者要求）：沒有每秒自然回血；技能、被動（劍士、主教的自然回復）、精魄、藥劑、藥水照常</summary>
+        /// <summary>副本、故事（使用者要求）：沒有每秒自然回血；技能、被動（劍士、主教的自然回復）、精魄、藥劑、藥水照常</summary>
         public bool noNaturalRegen;   // 無盡／故事：玩家每秒自然回血（0.5 或最大 HP 的 0.5%，取大的）
         public float SpeedMul => Mathf.Min(1.5f, 1f + 0.02f * Tier);
 
