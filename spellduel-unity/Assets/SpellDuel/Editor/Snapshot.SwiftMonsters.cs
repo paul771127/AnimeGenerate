@@ -21,7 +21,7 @@ namespace SpellDuel.EditorTools
             typeof(MinionRig).GetMethod("Animate", RareFlags).Invoke(rig, new object[] { dt });
             var look = rig.GetComponent<MinionLook>();
             typeof(MinionLook).GetMethod("TickSwift", RareFlags).Invoke(look, new object[] { dt });
-            typeof(MinionLook).GetMethod("LateUpdate", RareFlags).Invoke(look, null);
+            typeof(MinionLook).GetMethod("ApplyLookColours", RareFlags).Invoke(look, null);
         }
         static MinionRig SwiftCreate(int id, bool before = false)
         {
@@ -64,10 +64,6 @@ namespace SpellDuel.EditorTools
             r.SetDead(true); for (int i = 0; i < 40; i++) { r.transform.position += Vector3.forward * .05f; SwiftTick(r, .025f); }
             a.death = RareColour(colourPart) != c; a.deadTrail = true; foreach (var l in lines) a.deadTrail &= !l.enabled;
             Debug.Log("Swift audit " + JsonUtility.ToJson(a));
-            RareRequire(a.totalTriangles <= 2500, "swift triangle budget " + id + "=" + a.totalTriangles);
-            RareRequire(a.cached && a.pivotsUnchanged, "swift cache / pivot mismatch " + id);
-            RareRequire(a.hit && a.charge && a.death && a.colourCount > 0 && a.eyeCount > 0, "swift colour state " + id);
-            RareRequire(a.movingTrail && a.stoppedTrail && a.deadTrail, "swift motion trail " + id);
             UnityEngine.Object.DestroyImmediate(r.gameObject); UnityEngine.Object.DestroyImmediate(old.gameObject); UnityEngine.Object.DestroyImmediate(clone.gameObject);
             return a;
         }
@@ -107,6 +103,14 @@ namespace SpellDuel.EditorTools
                 cam.orthographicSize = 1.8f; Shot(cam, root, "swift_lineup_" + chapter, new Vector3(.8f, 2.3f, 10), new Vector3(.8f, .75f, 0), 1800, 900); UnityEngine.Object.DestroyImmediate(root);
             }
             File.WriteAllText("snapshots/swift_audit.json", JsonUtility.ToJson(new SwiftAuditReport { unity = Application.unityVersion, enemies = rows.ToArray() }, true));
+            foreach (var a in rows)
+            {
+                int id = a.id;
+            RareRequire(a.totalTriangles <= 2500, "swift triangle budget " + id + "=" + a.totalTriangles);
+            RareRequire(a.cached && a.pivotsUnchanged, "swift cache / pivot mismatch " + id);
+            RareRequire(a.hit && a.charge && a.death && a.colourCount > 0 && a.eyeCount > 0, "swift colour state " + id);
+            RareRequire(a.movingTrail && a.stoppedTrail && a.deadTrail, "swift motion trail " + id);
+            }
         }
     }
 }

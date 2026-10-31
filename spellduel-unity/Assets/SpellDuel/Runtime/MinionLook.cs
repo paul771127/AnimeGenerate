@@ -81,8 +81,13 @@ namespace SpellDuel
 
         void LateUpdate()
         {
-            if (def == null || rends == null) return;
             TickSwift(Time.deltaTime);
+            ApplyLookColours();
+        }
+
+        void ApplyLookColours()
+        {
+            if (def == null || rends == null) return;
             bool sneakChanged = Sneak != shownSneak; shownSneak = Sneak;
             foreach (var r in rends)
             {

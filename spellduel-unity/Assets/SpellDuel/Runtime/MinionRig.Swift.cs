@@ -51,6 +51,9 @@ namespace SpellDuel
         internal Renderer[] AddSwiftArt(int id)
         {
             int first = rockList.Count;
+            // The bespoke harness / scarf replaces the generic chapter collar. Keep its
+            // original transform for callers, but avoid drawing duplicate accessories.
+            if (dressRoot) dressRoot.gameObject.SetActive(false);
             // Some old eye/core parts used Unity's 768-triangle sphere. Same silhouette,
             // shared 80-triangle replacement frees the budget for identifiable equipment.
             foreach (var f in GetComponentsInChildren<MeshFilter>())
