@@ -1,33 +1,37 @@
 {
   "api": [
-    "CreateWall",
-    "CreateGround",
-    "CreateProp",
-    "CreateLandmark",
-    "CreateGate",
-    "SetGateOpen",
-    "CreateArena",
-    "SetAltarGlow",
-    "CreateHerb",
-    "CreateSparkle",
-    "SparkleFound",
-    "DressNpc",
-    "QuestMark",
     "AlertMark",
-    "LandmarkFound",
+    "CreateArena",
+    "CreateBackdrop",
+    "CreateGate",
+    "CreateGround",
+    "CreateHerb",
+    "CreateLandmark",
+    "CreatePath",
+    "CreateProp",
     "CreateSeal",
-    "SetSealOpen",
+    "CreateSparkle",
     "CreateSwitch",
+    "CreateWall",
+    "CreateWall(map,x,z)",
+    "DressNpc",
+    "LandmarkFound",
+    "QuestMark",
+    "SetAltarGlow",
+    "SetGateOpen",
+    "SetSealOpen",
     "SetSwitchDone",
-    "CreateBackdrop"
+    "SparkleFound"
   ],
   "runtimeFiles": [
     "ExploreArt.Atmosphere.cs",
     "ExploreArt.Foliage.cs",
     "ExploreArt.Gates.cs",
     "ExploreArt.Ground.cs",
+    "ExploreArt.Lakes.cs",
     "ExploreArt.Landmarks.cs",
     "ExploreArt.Nature.cs",
+    "ExploreArt.Paths.cs",
     "ExploreArt.Props.cs",
     "ExploreArt.Quest.cs",
     "ExploreArt.cs"
@@ -38,7 +42,8 @@
     "ExploreBackdrop.shader",
     "ExploreFoliage.shader",
     "ExploreGround.shader",
-    "ExploreLake.shader"
+    "ExploreLake.shader",
+    "ExplorePath.shader"
   ],
   "generatedFoliageTextures": {
     "count": 4,
@@ -64,5 +69,10 @@
       "others": 0.34
     },
     "edgeFeatherMetres": 0.06
-  }
+  },
+  "cellSize": 4,
+  "pathFillet": 1.4,
+  "pathMargin": 0.35,
+  "pathOpacity": 0.97,
+  "lakeContour": "Water union boundary + quadratic fillets + smooth shore + ear clipping"
 }

@@ -56,9 +56,9 @@ Claude 已於 a5a4627 將整套美術及天空接入正式探索模式。本目�
 
 網格依類型與有限變體鍵共用；材質共用。Factory 不增加 Collider。牆驗證逐一斷言三角形 ≤300、頂點限制在 3m 格子內。狀態可反覆切換，重新生成後共用既有 mesh／material。全圖只為預覽，遊戲仍由既有程式限制 24m 附近生成。
 
-最新原生 Unity run 41150829358（416fd39）成功，輸出 86 張場景 PNG 與 16 張靜態首尾圖。24 組牆變體通過 ≤300 三角形、格子邊界與無 Collider 檢查；封印切換與 mesh／material 快取檢查通過。16 張圖通過 960×544、四角純黑／綠幕與四周留白檢查。另通過 fullLakeWithEdgeOnlyStreaming，確認只建立邊緣水格時湖心仍完整。詳見 native_ci.json、explore_*_audit.json、keyframe_validation.json。
+最新原生 Unity run 41159619094（73854ee）成功，輸出 95 張場景 PNG 與 16 張靜態首尾圖。24 組牆變體通過 ≤300 三角形、格子邊界與無 Collider 檢查；封印切換與 mesh／material 快取檢查通過。16 張圖通過 960×544、四角純黑／綠幕與四周留白檢查。另通過 roundedLakeCoverage、凹形湖岸平滑檢查與 4m 世界座標邊界檢查；湖心水格中心都有覆蓋。詳見 native_ci.json、explore_*_audit.json、keyframe_validation.json。
 
-已目視複查新葉片群、加高樹木、三類岩石、帳篷與角色等比例圖、水材質／岸邊、篝火及 60m 視距下的天空／雲／遠林。最新地面修正的雙平台 run 41151953354（ed11f4c，包含相同的 416fd39 地面程式）Android、iOS 匯出、IPA 編譯皆成功，Android APK 已發布；詳見 platform_ci.json。AR 實機視野與動畫影片接線仍需整合端驗收。
+已目視複查新葉片群、加高樹木、三類岩石、帳篷與角色等比例圖、水材質／岸邊、篝火及 60m 視距下的天空／雲／遠林。上一批細緻地面的雙平台 run 41151953354 成功；本次道路與湖岸正在 run 41159619031（73854ee）驗證，不能以舊結果代替。AR 實機視野與動畫影片接線仍需整合端驗收。
 
 ## 2026-10-31 造型重修
 
@@ -91,3 +91,17 @@ CreateGround 取消固定七片大草葉、凸起多角石塊與寬方形淡出�
 `explore_ground_*_top.png` 與 `explore_ground_*_eye.png` 各五張是九格連續地面的俯視與 1.65m 視角。底下的灰褐平面僅為預覽中的中性 AR 合成參考，不會加入正式場景；它不是實機拍攝。
 
 地面最終原生 run 41150829358（416fd39）已通過；`explore_ground_audit.json` 包含九格實際像素覆蓋檢查。總覽見 `ground_materials_overview.jpg`，草皮九格與局部放大見 `grass_detail.jpg`。
+
+## 4m 連續路徑與圓弧湖岸（2026-10-31）
+
+目前地圖 CellSize=4。**新接線請以本節為準**：
+
+- Floor 用 `ExploreArt.CreatePath(map,x,z)`，以 SetParent(exRoot,false) 保留局部零點，再放到 map.World(x,z)。它取代原來很淡的 CreateGround；四向、斜向、1.4m 圓角、.35m 邊距與景物清空區都畫入材質。路中心 alpha .97、兩側深色草／石肩，預警圈仍畫在上方。
+- Wall 改用 `ExploreArt.CreateWall(map,x,z)`，依鄰接路格圓化外露凸牆角；所有子網格都留在格子內。舊版地形參數介面仍保留。
+- Gate／密道狀態變動後，重建改變格及周圍八格的路面／牆景。只讀地圖，沒有修改碰撞或玩法。**Claude 尚需接上述兩處新介面**。
+- 湖仍使用既有 CreateLandmark(lake)，但 LakeSurface 是整片 Water 格外框的平滑網格。逐格水牆只留下睡蓮／波紋裝飾，不再畫方形水面，因此不可省略整片湖地標。Shore_CurvedContour 是新岸邊子物件，沿平滑輪廓排列石頭、蘆葦。
+- 凸角二次曲線切線長 1.5m，最大向原格邊內退 .375m；凹角切線長 1.25m，填順 .3125m；直岸微彎最大內退 .34m，短岸段按長度平方降低彎幅。沒有更改 Water 碰撞。
+- 留下的 3m、ClampCell(1.42) 是母網格作者座標：牆／地標／競技場景物皆按 CellSize/3 水平縮放，4m 格子內實際上限為 1.893m；map.World 位移不重複縮放。驗證依真實世界座標量測，而非只看原始 mesh。
+- `explore_path_ar_{neutral,wood,tile,carpet}_{top,eye}.png` 是程序模擬室內地板上的原生合成參考，不是 AR 實機截圖。`explore_lake_top_close.png` 顯示整片湖岸，另保留各地標第一人稱和全圖俯視。
+
+最新目視修正：路口連通遮罩取位元前四捨五入，避免透視插值造成細條紋；岸帶採連續外法線消除裂縫，岸邊石頭／蘆葦沿曲線依距離配置，睡蓮減量並改變方向。最終原生 run 41159619094（73854ee）成功；105 組景物半徑、4m 牆界、凹形湖及四種背景道路像素檢查通過。第一人稱條紋已目視確認消失，湖岸無楔形裂縫。手機驗證尚在執行。
