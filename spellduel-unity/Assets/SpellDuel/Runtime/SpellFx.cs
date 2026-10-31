@@ -1803,7 +1803,7 @@ namespace SpellDuel
             for (int i = 0; i < c.Count; i++) c[i] = c[i] * k;
         }
 
-        public Mesh Build(string name, bool normals)
+        public Mesh Build(string name, bool normals, bool keepReadable = false)
         {
             var m = new Mesh { name = "SpellFx " + name };
             m.SetVertices(v);
@@ -1812,7 +1812,7 @@ namespace SpellDuel
             for (int i = 0; i < t.Length; i++) m.SetTriangles(t[i], i, true);
             if (normals) m.RecalculateNormals();
             m.RecalculateBounds();
-            m.UploadMeshData(true);
+            m.UploadMeshData(!keepReadable);
             return m;
         }
     }
