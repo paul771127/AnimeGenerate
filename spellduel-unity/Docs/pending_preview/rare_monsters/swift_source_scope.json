@@ -1,0 +1,55 @@
+{
+  "source": "8e8aab6",
+  "commits": [
+    {
+      "commit": "d3e1e3b",
+      "files": [
+        ".github/workflows/spellduel-swift-monsters.yml",
+        "spellduel-unity/Assets/SpellDuel/Editor/Snapshot.SwiftMonsters.cs",
+        "spellduel-unity/Assets/SpellDuel/Editor/Snapshot.SwiftMonsters.cs.meta",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionLook.Swift.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionLook.Swift.cs.meta",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionLook.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Swift.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Swift.cs.meta",
+        "spellduel-unity/CODEX_PENDING_BRIEF.md"
+      ]
+    },
+    {
+      "commit": "d1869c2",
+      "files": [
+        "spellduel-unity/Assets/SpellDuel/Editor/Snapshot.SwiftMonsters.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionLook.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Swift.cs"
+      ]
+    },
+    {
+      "commit": "9dee870",
+      "files": [
+        "spellduel-unity/Assets/SpellDuel/Editor/Snapshot.SwiftMonsters.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionLook.Swift.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Swift.cs",
+        "spellduel-unity/CODEX_PENDING_BRIEF.md"
+      ]
+    },
+    {
+      "commit": "584f9f2",
+      "files": [
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Swift.cs"
+      ]
+    },
+    {
+      "commit": "8e8aab6",
+      "files": [
+        ".github/workflows/spellduel-swift-monsters.yml",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Area.Detail.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Quadruped.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Quadruped.cs.meta",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Swift.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.cs",
+        "spellduel-unity/CODEX_PENDING_BRIEF.md"
+      ]
+    }
+  ],
+  "external_merge": "dbd765a includes e9f2d0f hunter bow change; pulled unchanged, not authored in this task"
+}

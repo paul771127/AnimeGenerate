@@ -3,7 +3,7 @@
     "enemies": [
         {
             "kind": 19,
-            "triangles": 3232,
+            "triangles": 3472,
             "renderers": 22,
             "registeredColours": 20,
             "registeredEyes": 1,
@@ -14,11 +14,11 @@
                 "z": 2.083348274230957
             },
             "newSize": {
-                "x": 1.1943161487579346,
-                "y": 1.5078020095825196,
+                "x": 1.1943762302398682,
+                "y": 1.5077455043792725,
                 "z": 1.842468023300171
             },
-            "sole": 0.0028076171875,
+            "sole": 0.0028641223907470705,
             "sharedMeshes": true,
             "pivotsUnchanged": true,
             "hitChangesColour": true,
@@ -75,7 +75,7 @@
         },
         {
             "kind": 22,
-            "triangles": 3124,
+            "triangles": 3348,
             "renderers": 22,
             "registeredColours": 19,
             "registeredEyes": 1,
@@ -86,11 +86,11 @@
                 "z": 3.463615655899048
             },
             "newSize": {
-                "x": 1.2048511505126954,
-                "y": 1.048546314239502,
+                "x": 1.329178810119629,
+                "y": 1.0448213815689088,
                 "z": 3.440488338470459
             },
-            "sole": -0.03760284185409546,
+            "sole": -0.03387796878814697,
             "sharedMeshes": true,
             "pivotsUnchanged": true,
             "hitChangesColour": true,

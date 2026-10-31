@@ -1,7 +1,7 @@
 {
-  "id": 41186286286,
-  "head": "74b2663b553f37d00acc35122c6a292266b70487",
-  "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41186286286",
+  "id": 41190310884,
+  "head": "8e8aab6f155dfa8f99887583e04c58e7dc80dc93",
+  "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41190310884",
   "status": "completed",
   "conclusion": "success",
   "jobs": [
@@ -9,7 +9,7 @@
       "name": "rare-monsters",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41186286286/job/124493776093"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41190310884/job/124505580510"
     }
   ]
 }
