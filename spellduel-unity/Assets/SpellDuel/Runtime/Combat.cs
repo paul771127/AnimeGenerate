@@ -990,13 +990,15 @@ namespace SpellDuel
         public const float MinionAttackGapMul = 1.2f;
         /// <summary>小怪傷害的基底（0.75 → 0.9 → 0.8：使用者回報第 4 章被打兩下就死）</summary>
         public const float EnemyDmgBase = 0.8f;
-        public const float EndlessRegen = 0.5f, EndlessRegenPct = 0.005f;   // 無盡／故事：玩家每秒自然回血（0.5 或最大 HP 的 0.5%，取大的）
+        public const float EndlessRegen = 0.5f, EndlessRegenPct = 0.005f;
+        /// <summary>副本（使用者要求）：沒有每秒自然回血；技能、被動（劍士、主教的自然回復）、精魄、藥劑、藥水照常</summary>
+        public bool noNaturalRegen;   // 無盡／故事：玩家每秒自然回血（0.5 或最大 HP 的 0.5%，取大的）
         public float SpeedMul => Mathf.Min(1.5f, 1f + 0.02f * Tier);
 
         float Time_dt;
         void UpdateEndless()
         {
-            if (endless && player.Alive) player.hp = Mathf.Min(player.maxHp, player.hp + Mathf.Max(EndlessRegen, player.maxHp * EndlessRegenPct) * Time_dt);
+            if (endless && player.Alive && !noNaturalRegen) player.hp = Mathf.Min(player.maxHp, player.hp + Mathf.Max(EndlessRegen, player.maxHp * EndlessRegenPct) * Time_dt);
             if (!endless || remoteEnemy || edgePoint == null) return;
             if (stageCleared) return;   // 故事關卡已經通關
             if (manualWaves && awaitingNext) return;   // 副本地圖：等房主選下一站（不能把剛打倒的首領又叫出來）

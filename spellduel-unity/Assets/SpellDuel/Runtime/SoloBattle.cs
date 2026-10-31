@@ -2486,6 +2486,7 @@ namespace SpellDuel
         {
             UpdateWeatherArt();
             GalleryTick();
+            if (battle != null) battle.noNaturalRegen = dungeon != null || NetMode && netDungeon;   // 副本：不會自然回血（隊友端也一樣）
             if (Watching) { UpdateWatchBattle(); return; }   // 觀戰：只跑顯示
             if (phase == Phase.Fighting && lastPhase != Phase.Fighting && !NetMode) { introUntil = Time.time + IntroTime; BeginReadyCheck(); }   // 先做戰鬥準備（身高校正），完成才倒數開打
             if (phase != Phase.Fighting) readyStep = -1;
