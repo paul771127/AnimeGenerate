@@ -17,6 +17,7 @@ namespace SpellDuel
         // ---------------------------------------------------------------- ⚗ 藥劑師
         void DrawAlchemyBody(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
+            if (craftNeedTip != null) { Toast(craftNeedTip, 4f); craftNeedTip = null; }   // 點了材料：跳出在哪裡拿得到
             var c = new Color(0.7f, 0.5f, 1f);
             float y = r.y + gap;
             Header(r, $"⚗ 藥劑師（{Towns[town].name}）", c, prof, fs, fsS, fsL, gap, ref y);
@@ -56,6 +57,7 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 🛠 工匠
         void DrawCraftBody(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
+            if (craftNeedTip != null) { Toast(craftNeedTip, 4f); craftNeedTip = null; }   // 點了材料：跳出在哪裡拿得到
             var c = new Color(0.95f, 0.75f, 0.35f);
             float y = r.y + gap;
             Header(r, "🛠 工匠：特殊裝備", c, prof, fs, fsS, fsL, gap, ref y);

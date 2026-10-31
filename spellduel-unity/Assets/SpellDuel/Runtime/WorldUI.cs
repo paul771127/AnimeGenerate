@@ -46,7 +46,7 @@ namespace SpellDuel
         string toast; float toastUntil;
         readonly System.Random rng = new System.Random();
 
-        void Toast(string s) { toast = s; toastUntil = Time.time + 2.5f; }
+        void Toast(string s, float sec = 2.5f) { toast = s; toastUntil = Time.time + sec; }
 
         // ---------------------------------------------------------------- 地區與城鎮資料
         public class Town

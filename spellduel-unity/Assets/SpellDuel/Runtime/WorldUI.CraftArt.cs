@@ -37,6 +37,12 @@ void DrawCraftAnimation(){
  if(!potion||elapsed>=.95f){float p=Mathf.Clamp01((elapsed-.95f)/.35f);var icon=new Rect(a.center.x-a.width*.21f,a.y+a.height*(.5f-(potion?p*.38f:0)),a.width*.42f,a.width*.42f);GUI.color=new Color(1,1,1,Mathf.Clamp01((1.65f-elapsed)*3));SupplyArt.Draw(icon,craftArtProduct);}
  GUI.color=old;
 }
-static void DrawCraftNeeds(Rect r,(string mat,int n)[] need,int fs){float w=r.width/Mathf.Max(1,need.Length);for(int i=0;i<need.Length;i++){var n=need[i];string id=n.mat.StartsWith("mat_")?n.mat:"mat_"+n.mat;float size=Mathf.Min(r.height,fs*1.3f);bool drawn=SupplyArt.Draw(new Rect(r.x+w*i,r.y,size,size),id);var m=Crafting.GetMat(id);string label=(drawn?"":m?.icon??"")+(m?.name??n.mat)+" "+Crafting.Have(n.mat)+"/"+n.n;UiKit.Text(new Rect(r.x+w*i+size,r.y,w-size,r.height),label,fs,Crafting.Have(n.mat)>=n.n?new Color(.6f,1,.65f):new Color(1,.6f,.55f),TextAnchor.MiddleLeft,false,.5f);}}
+static void DrawCraftNeeds(Rect r,(string mat,int n)[] need,int fs){float w=r.width/Mathf.Max(1,need.Length);for(int i=0;i<need.Length;i++){var n=need[i];string id=n.mat.StartsWith("mat_")?n.mat:"mat_"+n.mat;float size=Mathf.Min(r.height,fs*1.3f);bool drawn=SupplyArt.Draw(new Rect(r.x+w*i,r.y,size,size),id);var m=Crafting.GetMat(id);string label=(drawn?"":m?.icon??"")+(m?.name??n.mat)+" "+Crafting.Have(n.mat)+"/"+n.n;UiKit.Text(new Rect(r.x+w*i+size,r.y,w-size,r.height),label,fs,Crafting.Have(n.mat)>=n.n?new Color(.6f,1,.65f):new Color(1,.6f,.55f),TextAnchor.MiddleLeft,false,.5f);
+ // 點材料：說明在哪裡拿得到（使用者要求；缺的材料特別有用）
+ if(GUI.Button(new Rect(r.x+w*i,r.y-r.height*.2f,w,r.height*1.4f),GUIContent.none,GUIStyle.none))craftNeedTip=MatSourceText(id,n.n);}}
+/// <summary>點了哪個材料（DrawCraftNeeds 是 static，由畫面那邊拿去跳提示）</summary>
+static string craftNeedTip;
+/// <summary>材料的取得方式：「🪵古根年輪（還差 3）：古根撼地獸（30%）」</summary>
+static string MatSourceText(string id,int need){var m=Crafting.GetMat(id);int have=Crafting.Have(id);string name=m!=null?m.icon+m.name:id;string lack=have>=need?$"（有 {have}，夠了）":$"（還差 {need-have}）";return $"{name}{lack}：{(m!=null&&!string.IsNullOrEmpty(m.from)?m.from:"打倒敵人掉落")}";}
 static void DrawCraftMats(Rect r,int fs){int i=0;float row=fs*2.2f,w=r.width/2;foreach(var m in Crafting.Mats){int count=Economy.Count(m.id);if(count<=0)continue;var cell=new Rect(r.x+(i%2)*w,r.y+(i/2)*row,w,row);bool drawn=SupplyArt.Draw(new Rect(cell.x,cell.y,fs*1.7f,fs*1.7f),m.id);UiKit.Text(new Rect(cell.x+fs*1.8f,cell.y,w-fs*1.8f,row),(drawn?"":m.icon)+m.name+" ×"+count,fs,Color.white);i++;}if(i==0)UiKit.Text(r,"還沒有材料：從冒險中收集，再帶來製作。",fs,UiKit.Muted,TextAnchor.UpperLeft);}
 }}
