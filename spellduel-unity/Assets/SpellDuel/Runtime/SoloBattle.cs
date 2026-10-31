@@ -816,10 +816,17 @@ namespace SpellDuel
         /// <summary>有視窗蓋在畫面上（整備、角色、地圖／村子、對話、技能說明、劇情影片、勝利結算）：GameRoot 的場地警告不要再疊上去</summary>
         public bool OverlayOpen => charOpen || storyMapOpen || dlg != null || prepGo != null || infoSkill != null || StoryVideo.Active || phase == Phase.Over;
         /// <summary>現在該播的背景音樂：戰鬥中＝依地圖主題（Boss 在場＝Boss 曲）；結算＝安靜；其他（城鎮、選單）＝城鎮曲</summary>
-        public string MusicTrack => StoryVideo.Playing ? "town"   // 播劇情影片：整支用同一首城鎮曲（壓低音量，旁白聽得清楚）
-            : phase == Phase.Over ? null
-            : phase == Phase.Fighting && battle != null ? Music.TrackFor(dungeon != null ? dungeon.id : NetMode && netDungeon ? netDungeonId : null, exploreRun != null, battle.Theme, bossMode && En.Alive)   // 每章、每個副本、故事探索各一首；Boss 戰是同一首的 Boss 版
-            : "town";
+        public string MusicTrack => StoryVideo.Playing ? TownTrack   // 播劇情影片：整支用同一首城鎮曲（壓低音量，旁白聽得清楚）
+            : phase == Phase.Over ? null   // 結算：勝利／失敗短曲另外播（Music.Jingle）
+            : phase == Phase.Fighting && battle != null ? FightTrack
+            : world != null && world.screen == WorldUI.Screen.Map ? "worldmap" : TownTrack;
+        /// <summary>城鎮曲：炎之里、森之里、潮騷港、赤砂城、風沙驛各一首</summary>
+        string TownTrack => "town_" + Mathf.Clamp(world != null ? world.town : 0, 0, 4);
+        /// <summary>戰鬥曲：無盡塔、世界王、練習類各一首；其他每章、每個副本、故事探索各一首，Boss 戰是同一首的 Boss 版</summary>
+        string FightTrack => towerRun ? "tower"
+            : worldBossId != null ? "worldboss"
+            : daily != null || dummyMode || classTrial != null || tutorial || IsTrial || IsJobTrial ? "practice"
+            : Music.TrackFor(dungeon != null ? dungeon.id : NetMode && netDungeon ? netDungeonId : null, exploreRun != null, battle.Theme, bossMode && En.Alive);
 
         void UpdateTownWalk()
         {
@@ -2490,6 +2497,7 @@ namespace SpellDuel
             if (Watching) { UpdateWatchBattle(); return; }   // 觀戰：只跑顯示
             if (phase == Phase.Fighting && lastPhase != Phase.Fighting && !NetMode) { introUntil = Time.time + IntroTime; BeginReadyCheck(); }   // 先做戰鬥準備（身高校正），完成才倒數開打
             if (phase != Phase.Fighting) readyStep = -1;
+            if (phase == Phase.Over && lastPhase == Phase.Fighting && !Watching) Music.Jingle(Me != null && Me.Alive ? "victory" : "defeat");   // 結算：勝利／失敗短曲（下載好才播）
             lastPhase = phase;
             UpdateMic();
             UpdateTownWalk();

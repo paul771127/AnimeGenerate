@@ -12,7 +12,7 @@ namespace SpellDuel
     /// 第一次要播時才在背景執行緒算波形（不卡畫面），算好後淡入；換曲時兩首交叉淡入淡出。
     /// 開關與音量在設定選單（PlayerPrefs 記住）。
     /// </summary>
-    public class Music : MonoBehaviour
+    public partial class Music : MonoBehaviour
     {
         public static Music I { get; private set; }
         /// <summary>壓低音量（播劇情影片時讓旁白聽得清楚）：1＝正常</summary>
@@ -50,13 +50,14 @@ namespace SpellDuel
         void Awake()
         {
             I = this;
-            a = gameObject.AddComponent<AudioSource>(); b = gameObject.AddComponent<AudioSource>();
+            a = gameObject.AddComponent<AudioSource>(); b = gameObject.AddComponent<AudioSource>(); jingleSrc = gameObject.AddComponent<AudioSource>();
+            jingleSrc.loop = false; jingleSrc.playOnAwake = false; jingleSrc.spatialBlend = 0f;
             foreach (var s in new[] { a, b }) { s.loop = true; s.playOnAwake = false; s.spatialBlend = 0f; s.volume = 0f; }
         }
 
         void Update()
         {
-            string target = On ? want : null;
+            string target = On ? Resolve(want) : null;   // 有下載好的配樂就用（Music.Files.cs），沒有就用合成的頂著
             if (target != null && !clips.ContainsKey(target))
             {
                 // 還沒算好：背景執行緒算，好了再建 AudioClip（AudioClip 只能在主執行緒建）
@@ -91,7 +92,7 @@ namespace SpellDuel
                 else a.Stop();
             }
             float dt = Time.unscaledDeltaTime;
-            a.volume = Mathf.MoveTowards(a.volume, playing != null ? Volume * Duck : 0f, dt * 0.6f);
+            a.volume = Mathf.MoveTowards(a.volume, playing != null ? Volume * Duck * JingleDuck : 0f, dt * 0.6f);
             b.volume = Mathf.MoveTowards(b.volume, 0f, dt * 0.8f);
             if (b.isPlaying && b.volume <= 0f) b.Stop();
         }
