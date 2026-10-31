@@ -925,3 +925,9 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 新 Tools/check_rare_monsters.py 可複查原生交付；--require-mobile 同時要求兩平台證據來自同一程式提交。雙平台 41186286295 尚在執行，結果另補。
 
 - 最終雙平台 run 41186286295（74b2663）Android、iOS Unity 匯出與 Xcode IPA 編譯全部成功；platform_ci.json 已保存，check_rare_monsters.py --require-mobile 通過。TestFlight 另由原流程發布，未列為本次編譯驗收；手機實機效能尚未量測。
+
+
+### 2026-10-31 疾風稀有怪 171–180 外觀
+- 以 MinionLook 加掛專屬配件：焰蹄與後掠角、火花彗尾、翠豹斑紋與倒伏荊棘、收傘菌褶與孢子尖、飛魚胸鰭與鰭條、薄殼與奔跑腳支架、金色馬具與紅鬃、半透明影犬、狐耳砂尾、防砂護目鏡與披巾。只調渲染子物件，不改骨架支點或玩法。
+- 三條各 12 點的世界座標風帶依實際位移顯示，停止／死亡消退，瞬移重置；每隻風帶上限 66 三角形。網格按變種／配件名稱快取；舊高面數發光球在這十隻上換成快取低面數圓球。
+- 新增原生預覽與稽核流程 RenderSwiftMonsters：三角形含最大粒子／拖尾／陰影、快取、原支點、顏色狀態、移動／停止／死亡拖尾。原生預覽與 Android／iOS 結果待補。

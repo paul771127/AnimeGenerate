@@ -8,7 +8,7 @@ namespace SpellDuel
     ///   天候怪：整隻偏向天候的顏色。
     ///   Sneak＝只看得到發光的部分（刺客繞路中、霧行者離遠了）。
     /// </summary>
-    public sealed class MinionLook : MonoBehaviour
+    public sealed partial class MinionLook : MonoBehaviour
     {
         static readonly int ColorId = Shader.PropertyToID("_Color");
         static readonly Color AssassinGlow = new Color(1f, 0.16f, 0.32f), BladeCol = new Color(0.78f, 0.8f, 0.86f), HiltCol = new Color(0.12f, 0.08f, 0.1f);
@@ -25,6 +25,7 @@ namespace SpellDuel
             var look = rig.gameObject.AddComponent<MinionLook>();
             look.def = v; look.blk = new MaterialPropertyBlock();
             if (v.assassin) look.AddWeapons(rig.transform, v.claws);
+            if (v.swift && v.id >= 171 && v.id <= 180) look.AddSwift(rig);
             look.rends = rig.GetComponentsInChildren<Renderer>(true);
             return look;
         }
@@ -81,6 +82,7 @@ namespace SpellDuel
         void LateUpdate()
         {
             if (def == null || rends == null) return;
+            TickSwift(Time.deltaTime);
             bool sneakChanged = Sneak != shownSneak; shownSneak = Sneak;
             foreach (var r in rends)
             {
@@ -90,7 +92,9 @@ namespace SpellDuel
                 if (lastOut.TryGetValue(r, out var was) && was == c) { if (sneakChanged) r.enabled = !Sneak || glow.Contains(r); continue; }   // MinionRig 這幀沒重新上色：保持
                 bool g = IsGlow(c); if (g) glow.Add(r); else glow.Remove(r);
                 var o = Recolor(c, g);
-                blk.SetColor(ColorId, o); r.SetPropertyBlock(blk);
+                blk.SetColor(ColorId, o);
+                if (def.id == 178 && def.swift) blk.SetFloat("_ArtFade", g ? 1f : .67f);
+                r.SetPropertyBlock(blk);
                 lastOut[r] = o;
                 r.enabled = !Sneak || g;   // 繞路中：只剩發光的眼睛
             }
