@@ -9,7 +9,7 @@ namespace SpellDuel
    // The cell streamer may omit enclosed wall cells. A lake must still have a continuous surface.
    if(l.kind=="lake")
    {
-    var water=Part(root.transform,"landmark/lakeSurface/"+l.id,b=>{for(int x=l.rect.xMin-1;x<=l.rect.xMax+1;x++)for(int z=l.rect.yMin-1;z<=l.rect.yMax+1;z++)if(map.InGrid(x,z)&&map.TerrainAt(x,z)==ExTerrain.Water){var at=map.World(x,z)-center;b.Quad(at+V(-1.5f,.012f,-1.5f),at+V(-1.5f,.012f,1.5f),at+V(1.5f,.012f,1.5f),at+V(1.5f,.012f,-1.5f),Color.white);}});
+    var water=Part(root.transform,"landmark/lakeSurface/"+l.id,b=>{for(int x=l.rect.xMin-1;x<=l.rect.xMax+1;x++)for(int z=l.rect.yMin-1;z<=l.rect.yMax+1;z++)if(map.InGrid(x,z)&&map.TerrainAt(x,z)==ExTerrain.Water){var at=map.World(x,z)-center;float h=ExploreMap.CellSize*.5f;b.Quad(at+V(-h,.012f,-h),at+V(-h,.012f,h),at+V(h,.012f,h),at+V(h,.012f,-h),Color.white);}});
     water.name="LakeSurface";water.GetComponent<Renderer>().sharedMaterial=LakeMaterial;
    }
    // Only solid wall cells carry tall scenery. Never span a path with roofs or tree crowns.
@@ -56,7 +56,7 @@ namespace SpellDuel
    Part(root.transform,"arena/boundary/"+n,b=>{b.Ring(V(0,.012f,0),1,.013f,new Color(.48f,.75f,.53f,.33f),48);for(int i=0;i<12;i++){float a=i*Mathf.PI/6;var p=V(Mathf.Cos(a)*.97f,.014f,Mathf.Sin(a)*.97f);b.Gem(p,V(.025f,.002f,.025f),new Color(.7f,.9f,.6f,.4f),4);}},Vector3.zero,true).localScale=V(r,1,r);
    // Dress only the far rim, not the fighting area. The raised silhouette is outside the supplied radius.
    // Fixed JungleMaze wall anchors; the second arena's north centre is a gate, so offset one cell east.
-   var rim=SkyArt.Node(root.transform,"RimSet",V(n==2?3:0,0,r+(n==1?2:n==2?3:n==3?6:7)));
+   float ck=ExploreMap.CellSize/3f;var rim=SkyArt.Node(root.transform,"RimSet",V(n==2?ExploreMap.CellSize:0,0,r+(n==1?2:n==2?3:n==3?6:7)*ck));   // Claude：格子改 4m，跟著格子大小
    Part(rim,"arena/set/"+n,b=>{
     if(n==1){for(int i=-2;i<=2;i++)b.Vine(V(i*.7f,0,0),V(i*.55f,2.2f,0),.4f,.2f,Bark,6);Leaves(b,V(0,1.5f,0),1.2f,Moss);}
     else if(n==2){for(int i=-1;i<=1;i++)Mushroom(b,V(i*.9f,0,0),.6f+(i==0?.3f:0),i+1);}

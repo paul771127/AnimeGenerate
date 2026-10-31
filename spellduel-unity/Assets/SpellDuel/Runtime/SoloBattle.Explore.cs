@@ -23,7 +23,7 @@ namespace SpellDuel
         Vector3 exLastValid; bool exHasValid;
         float exPushSaidAt = -99f;
         bool exMapBig;
-        const int ExViewCells = 8;           // 畫玩家附近幾格（約 24m）
+        const int ExViewCells = 6;           // 畫玩家附近幾格（一格 4m，約 24m）
         const float ExSparkleShow = 8f;      // 閃光點在這個距離內才看得到
 
         /// <summary>從副本入口進來：先放好場地，再開打</summary>

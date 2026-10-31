@@ -59,6 +59,7 @@ namespace SpellDuel
             // 世界只照「實際走的距離」平移：卡住時場地、景物、敵人都不會動。
             float want = DashSpeed * dt;
             float step = DashStepAllowed(dir, want, out string why);
+            if (exploreRun != null && step < want * 0.6f) ExSlide(ref dir, ref step, want);   // 故事探索：擦到牆角、樹就沿著邊滑過去，不要整個停住
             if (step < 1e-4f) { dashStuck = true; DashBlocked(why); return; }
             dashStuck = false;
             var move = dir * step;
@@ -103,6 +104,23 @@ namespace SpellDuel
                 ok = d;
             }
             return ok;
+        }
+
+        /// <summary>
+        /// 故事探索（使用者回報經過樹或障礙物就卡住）：正前方過不去時，試著往左右偏 25°～80° 滑過去（速度照偏的角度打折），
+        /// 挑走得最遠的方向；真的是死路（正面撞牆）才停。
+        /// </summary>
+        void ExSlide(ref Vector3 dir, ref float step, float want)
+        {
+            var bestDir = dir; float best = step;
+            foreach (float ang in new[] { 25f, -25f, 45f, -45f, 65f, -65f, 80f, -80f })
+            {
+                var d = Quaternion.Euler(0f, ang, 0f) * dir;
+                float s = DashStepAllowed(d, want, out _) * Mathf.Cos(ang * Mathf.Deg2Rad);
+                if (s > best + 1e-4f) { best = s; bestDir = d; }
+            }
+            if (best <= step) return;
+            dir = bestDir; step = best;
         }
 
         IEnumerable<Fighter> DashFoes()

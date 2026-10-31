@@ -4419,13 +4419,15 @@ namespace SpellDuel
             // 下方：我的狀態與技能（由下往上排）
             int ncol = Mathf.Max(3, me.loadout.Count);
             float sw = (W - pad * 2 - gap * (ncol - 1)) / ncol;
-            float isz = Mathf.Min(sw * 0.5f, lh * 2.2f);
-            float rowH = lh * 0.72f;
+            float isz = Mathf.Min(sw * 0.42f, lh * 1.7f);   // 使用者要求：下方欄壓縮，避免蓋住畫面
+            float rowH = lh * 0.62f;
             float tileH = gap * 0.6f + isz + rowH * 3 + gap * 0.4f;
             float sy = botY - pad * 0.5f - tileH;
-            float statY = sy - gap * 0.5f - lh * 0.75f;
-            float mpY = statY - lh * 0.72f, hpY = mpY - lh * 0.8f;
-            float hintY = hpY - gap * 0.5f - lh * 1.4f;
+            string myStatus = StatusText(me, now);
+            float statH = string.IsNullOrEmpty(myStatus) ? 0f : lh * 0.7f;   // 沒有狀態就不佔一行
+            float statY = sy - gap * 0.4f - statH;
+            float mpY = statY - lh * 0.6f, hpY = mpY - lh * 0.68f;
+            float hintY = hpY - gap * 0.4f - lh * 1.0f;
             bool hasHeard = UseSpeech && voiceOn && !string.IsNullOrEmpty(speech.LastHeard);
             float panelY = hintY - (hasHeard ? lh * 0.8f : 0f) - gap;
             UiKit.Card(new Rect(gap * 0.5f, panelY, W - gap, botY - panelY + H), 0.55f);
@@ -4433,7 +4435,7 @@ namespace SpellDuel
             bool voiceActive = voiceOn && (UseSpeech || VoiceReady);
             string voiceHint = !voiceOn || voiceActive ? "" : "（語音：咒語還沒錄完，到選技能畫面錄）";
             float micW = W * 0.24f;
-            UiKit.Text(new Rect(pad, hintY, W - pad * 2 - micW - gap, lh * 1.4f),
+            UiKit.Text(new Rect(pad, hintY, W - pad * 2 - micW - gap, lh * 1.0f),
                 (UseSpeech ? "🎤 先唸技能名稱＝詠唱" : "🎤 先唸咒語＝詠唱") + "，蓄滿後做該技能的放招動作" + voiceHint, fsS, new Color(1f, 0.92f, 0.65f));
             if (hasHeard) UiKit.Text(new Rect(pad, hintY - lh * 0.8f, W - pad * 2, lh * 0.8f), $"聽到：{speech.LastHeard}", fsS, new Color(0.8f, 0.9f, 1f));
             float mx = W - pad - micW;
@@ -4443,23 +4445,12 @@ namespace SpellDuel
             if (mic.Running)
             {
                 float lv = Mathf.Clamp01(mic.Spotter.Level / Mathf.Max(0.001f, mic.Spotter.StartThreshold * 3f));
-                UiKit.Bar(new Rect(mx, hintY + lh * 0.85f, micW, lh * 0.3f), lv, mic.Spotter.InSpeech ? new Color(0.3f, 1f, 0.4f) : Color.gray, "", fsS);
+                UiKit.Bar(new Rect(mx, hintY + lh * 0.72f, micW, lh * 0.22f), lv, mic.Spotter.InSpeech ? new Color(0.3f, 1f, 0.4f) : Color.gray, "", fsS);
             }
-            UiKit.Bar(new Rect(pad, hpY, W - pad * 2, lh * 0.68f), me.hp / me.maxHp, new Color(1f, 0.3f, 0.35f), $"HP {Mathf.CeilToInt(me.hp)} / {Mathf.CeilToInt(me.maxHp)}", fsS);
-            UiKit.Bar(new Rect(pad, mpY, W - pad * 2, lh * 0.6f), me.mp / me.maxMp, new Color(0.3f, 0.6f, 1f), $"MP {Mathf.FloorToInt(me.mp)} / {Mathf.FloorToInt(me.maxMp)}", fsS);
-            // 普攻小卡（右邊）：手勢＋冷卻；點了看說明。狀態文字在左邊
-            var nb = me.basic ?? Skills.BasicOf(myClass);
-            float nbw = nb != null ? (W - pad * 2) * 0.36f : 0f;
-            UiKit.Text(new Rect(pad, statY, W - pad * 2 - nbw - (nb != null ? gap : 0f), lh * 0.75f), StatusText(me, now), fsS, new Color(0.75f, 0.9f, 1f));
-            if (nb != null)
-            {
-                var nr = new Rect(W - pad - nbw, statY, nbw, lh * 0.75f);
-                float ncd = me.cooldownUntil.TryGetValue(nb.id, out var nu) ? Mathf.Max(0, nu - now) : 0;
-                UiKit.Card(nr, 0.55f, nb.color, 0.6f);
-                if (ncd > 0) { GUI.color = new Color(0f, 0f, 0f, 0.45f); GUI.DrawTexture(new Rect(nr.x, nr.y, nr.width * Mathf.Clamp01(ncd / Mathf.Max(0.01f, nb.cooldown)), nr.height), Texture2D.whiteTexture); GUI.color = Color.white; }
-                UiKit.Text(nr, $"🗡 普攻：{SkillInfo.BasicGesture(nb)}", Mathf.RoundToInt(fsS * 0.85f), Color.white, TextAnchor.MiddleCenter);
-                if (phase == Phase.Fighting && GUI.Button(nr, GUIContent.none, GUIStyle.none)) infoSkill = nb.id;   // 結算時不收點擊（下面的隱形按鈕會搶走結算窗格按鈕的點擊）
-            }
+            UiKit.Bar(new Rect(pad, hpY, W - pad * 2, lh * 0.6f), me.hp / me.maxHp, new Color(1f, 0.3f, 0.35f), $"HP {Mathf.CeilToInt(me.hp)} / {Mathf.CeilToInt(me.maxHp)}", fsS);
+            UiKit.Bar(new Rect(pad, mpY, W - pad * 2, lh * 0.52f), me.mp / me.maxMp, new Color(0.3f, 0.6f, 1f), $"MP {Mathf.FloorToInt(me.mp)} / {Mathf.FloorToInt(me.maxMp)}", fsS);
+            // 普攻小卡拿掉（使用者要求）；狀態文字佔整行
+            if (statH > 0f) UiKit.Text(new Rect(pad, statY, W - pad * 2, statH), myStatus, fsS, new Color(0.75f, 0.9f, 1f));
 
             for (int i = 0; i < me.loadout.Count; i++)
             {

@@ -106,7 +106,7 @@ namespace SpellDuel
 
     public class ExploreMap
     {
-        public const float CellSize = 3f;
+        public const float CellSize = 4f;   // 一格 4m（使用者回報走道太窄、容易卡住：原本 3m）
         public readonly int W, H;
         public readonly ExCell[,] cells;
         public Vector2Int start;
@@ -250,10 +250,10 @@ namespace SpellDuel
             m.cells[20, 9] = ExCell.Gate; m.cells[21, 9] = ExCell.Floor;
             m.cells[31, 20] = ExCell.Gate; m.cells[31, 21] = ExCell.Floor;
             m.cells[20, 31] = ExCell.Gate; m.cells[19, 31] = ExCell.Floor;
-            m.arenas.Add(new ExArena { n = 1, center = m.World(16, 9), radius = 7f, name = "苔甲守根者的巢穴", gate = { new Vector2Int(20, 9) } });
-            m.arenas.Add(new ExArena { n = 2, center = m.World(31, 16), radius = 9f, name = "夢孢司祭的祭壇", gate = { new Vector2Int(31, 20) } });
-            m.arenas.Add(new ExArena { n = 3, center = m.World(24, 31), radius = 9f, name = "翠翼巡獵者的獵場", gate = { new Vector2Int(20, 31) } });
-            m.arenas.Add(new ExArena { n = 4, center = m.World(5, 34), radius = 11f, name = "腐化樹王的王座" });
+            m.arenas.Add(new ExArena { n = 1, center = m.World(16, 9), radius = 7f * ExploreMap.CellSize / 3f, name = "苔甲守根者的巢穴", gate = { new Vector2Int(20, 9) } });
+            m.arenas.Add(new ExArena { n = 2, center = m.World(31, 16), radius = 9f * ExploreMap.CellSize / 3f, name = "夢孢司祭的祭壇", gate = { new Vector2Int(31, 20) } });
+            m.arenas.Add(new ExArena { n = 3, center = m.World(24, 31), radius = 9f * ExploreMap.CellSize / 3f, name = "翠翼巡獵者的獵場", gate = { new Vector2Int(20, 31) } });
+            m.arenas.Add(new ExArena { n = 4, center = m.World(5, 34), radius = 11f * ExploreMap.CellSize / 3f, name = "腐化樹王的王座" });
             m.altar = m.World(5, 39);
             BuildLandmarks(m);
 
