@@ -24,6 +24,7 @@ for f in changed:
  if '/Runtime/' not in f or not Path(f).name.startswith(('SoloBattle','CharacterPanel','WorldUI','GameRoot','SettingsMenu','StoryVideo')):continue
  # Incoming Claude commits changed map buttons; compare those views against their reviewed incoming baseline.
  reference='c41e792' if Path(f).name in ['WorldUI.WorldMap2.cs','WorldUI.TownMap.cs','WorldUI.TownAmbient.cs'] else base
+ if Path(f).name in ['WorldUI.Craft.cs','WorldUI.CraftArt.cs','WorldUI.cs']:reference='0199549' # Incoming material-source tips, not this art task.
  old_result=subprocess.run(['git','show',reference+':'+f],capture_output=True)
  old=old_result.stdout.decode('utf-8-sig') if old_result.returncode==0 else ''
  new=Path(f).read_text(encoding='utf-8-sig')
@@ -91,5 +92,8 @@ if '--native' in sys.argv:
   jobs={j['name']:j['conclusion'] for j in evidence['jobs']}
   assert all(jobs.get(name)=='success' for name in ['android','ios-export','ios-ipa']),jobs
   fx_evidence=json.loads((preview/'fx_ci.json').read_text())
-  assert evidence['head']==fx_evidence['head'],'Mobile and final FX sources differ'
+  subprocess.run(['git','merge-base','--is-ancestor',fx_evidence['head'],evidence['head']],check=True)
+  # A later merge may add unrelated UI while retaining the validated FX sources.
+  native_paths=['spellduel-unity/Assets/SpellDuel/Runtime/SpellFx*.cs','spellduel-unity/Assets/SpellDuel/Runtime/AdvancedFx.cs','spellduel-unity/Assets/SpellDuel/Resources/SpellReadableSolid.shader']
+  assert not subprocess.check_output(['git','diff',fx_evidence['head'],evidence['head'],'--']+native_paths).strip(),'FX changed after native validation'
  print('PASS: 76 native UI screens; 253 cached icons; 288 FX frames/96 strips; CI evidence and budgets')
