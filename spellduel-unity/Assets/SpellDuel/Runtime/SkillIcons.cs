@@ -198,8 +198,26 @@ namespace SpellDuel
         // Unlisted enemy cues show their actual effect family instead of the same orb.
         static void HintIcon(Cv cv,string id,V colour)
         {
+            if(id.StartsWith("elite_")&&EliteCatalog.TrySkill(id,out var elite,out int slot))
+            {
+                switch(elite.moves[slot])
+                {
+                    case EliteMove.Sweep: Whirlwind(cv,colour);break;
+                    case EliteMove.Quake: HintIcon(cv,"m_rootquake",colour);break;
+                    case EliteMove.Line: QuickShot(cv,colour);break;
+                    case EliteMove.Burst: BlastTrap(cv,colour);break;
+                    case EliteMove.Heal: Heal(cv,colour);break;
+                    case EliteMove.Shield: Block(cv,colour);break;
+                    default: Golem(cv,colour);break;
+                }
+                return;
+            }
+
             switch(id)
             {
+                case "vault_hit": NoviceClub(cv);return;
+                case "amp": Glyph(cv,(x,y)=>Diamond(x,y,0,0,.32f,.46f,0),colour);return;
+                case "chainhit": Triple(cv,colour);return;
                 case "na_arrow": QuickShot(cv,colour);return;
                 case "na_sword": Slash(cv,colour);return;
                 case "na_dagger": Knife(cv,colour);return;

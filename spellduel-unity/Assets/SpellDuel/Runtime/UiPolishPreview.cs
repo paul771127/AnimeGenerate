@@ -13,7 +13,7 @@ namespace SpellDuel
         const BindingFlags Flags=BindingFlags.Instance|BindingFlags.Static|BindingFlags.NonPublic|BindingFlags.Public;
         SoloBattle solo;Camera view;Font font;int page;bool failed;string output;
         CharacterProfile profile;CharacterPanel panel;WorldUI world;GameRoot home;
-        readonly string[] pages={"battle_light","battle_dark","status_light","status_dark","explore_dialog","dungeon_party","story_party","charge_cards","home","characters","prep","stats","tree","equipment","inventory","pets","map","town","smith","shop","guild","craft","alchemy","trialshop","dungeons","tower","settings","victory","defeat","tip","guide","loading","rewards"};
+        readonly string[] pages={"battle_light","battle_dark","status_light","status_dark","explore_dialog","dungeon_party","story_party","charge_cards","home","characters","prep","stats","tree","equipment","inventory","pets","map","town","smith","shop","guild","craft","alchemy","trialshop","dungeons","tower","settings","victory","defeat","tip","guide","loading","rewards","town_flame","town_forest","town_harbor","town_desert","town_snow"};
         void Set(string name,object value)=>typeof(SoloBattle).GetField(name,Flags).SetValue(solo,value);
         object Call(string name,params object[] args)=>typeof(SoloBattle).GetMethod(name,Flags).Invoke(solo,args);
         IEnumerator Start()
@@ -61,6 +61,8 @@ namespace SpellDuel
         void DrawMenu(string name)
         {
             const float w=1080,h=2340;const int fs=48,small=38;
+            if(name.StartsWith("town_"))
+            {world.town=Array.IndexOf(new[]{"town_flame","town_forest","town_harbor","town_desert","town_snow"},name);world.screen=WorldUI.Screen.Town;world.Draw(profile);return;}
             if(name=="victory")
             {
                 Set("dlg",null);var type=typeof(SoloBattle).GetNestedType("VictoryInfo",Flags);var v=Activator.CreateInstance(type,true);
