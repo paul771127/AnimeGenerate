@@ -55,3 +55,41 @@ fade=(r/'SpellFx.Readability.cs').read_text(encoding='utf-8').split('public void
 assert not re.search(r'new\s+(Texture2D|Material)\s*\(',fade)
 assert 'public const int ParticleBudget=192,PerSystemBudget=64' in (r/'SpellFx.Readability.cs').read_text()
 print('PASS: 5 town anchor sets; no ambient click targets; no per-tick texture/material creation; particle caps declared')
+
+# Optional native delivery checks; source-only mode also works before CI has finished.
+import sys
+if '--native' in sys.argv:
+ from PIL import Image
+ preview=Path('spellduel-unity/Docs/pending_preview/ui_skill_polish')
+ for version in ['before','after']:
+  files=list((preview/'A'/version).glob('*.png'))
+  assert len(files)==38,(version,len(files))
+  assert all(Image.open(p).size==(1080,2340) for p in files)
+  ui=json.loads((preview/'A'/(version+'_native.json')).read_text())
+  assert ui['nativeIMGUI'] and not ui['failed']
+  icons=json.loads((preview/'B'/(version+'_audit.json')).read_text())
+  assert icons['icons']==253 and icons['cacheHits']==253 and icons['deterministic']
+  assert icons['sizes']==[56,128]
+  for size in [56,128]:assert (preview/'B'/(version+'_'+str(size)+'.png')).is_file()
+ fx=json.loads((preview/'C/native_audit.json').read_text())
+ assert len(fx['samples'])==288
+ pairs={(r['id'],r['view']) for r in fx['samples']}
+ assert len(pairs)==96
+ for skill,view in pairs:
+  phases={r['phase'] for r in fx['samples'] if r['id']==skill and r['view']==view}
+  assert phases=={'charge','release','impact'}
+  assert Image.open(preview/'C'/(skill+'_'+view+'.png')).size==(2160,988)
+ for row in fx['samples']:
+  assert row['particles']<=576 and row['meshTriangles']+row['lineTriangleBound']<=24000
+ assert fx['sixSpellParticles']<=3456 and fx['sixSpellTriangleBound']<=144000
+ assert fx['mobileFpsMeasured'] is False
+ for name in ['ui','icons','fx']:
+  evidence=json.loads((preview/(name+'_ci.json')).read_text())
+  assert evidence['conclusion']=='success',(name,evidence)
+ if '--require-mobile' in sys.argv:
+  evidence=json.loads((preview/'platform_ci.json').read_text())
+  jobs={j['name']:j['conclusion'] for j in evidence['jobs']}
+  assert all(jobs.get(name)=='success' for name in ['android','ios-export','ios-ipa']),jobs
+  fx_evidence=json.loads((preview/'fx_ci.json').read_text())
+  assert evidence['head']==fx_evidence['head'],'Mobile and final FX sources differ'
+ print('PASS: 76 native UI screens; 253 cached icons; 288 FX frames/96 strips; CI evidence and budgets')

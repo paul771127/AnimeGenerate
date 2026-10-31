@@ -1,0 +1,21 @@
+{
+  "id": 41240872939,
+  "head": "cc994446b8312ec610148baca7f4932c2953f7c9",
+  "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41240872939",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "native-ui (after)",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41240872939/job/124654315820"
+    },
+    {
+      "name": "native-ui (before)",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41240872939/job/124654315986"
+    }
+  ]
+}
