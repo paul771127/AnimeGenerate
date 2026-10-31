@@ -54,6 +54,13 @@ namespace SpellDuel.EditorTools
    r.SetDead(true);RareTick(r,.9f);a.deathChangesColour=RareColour(renderer)!=baseC;RareRequire(a.hitChangesColour&&a.chargeChangesColour&&a.deathChangesColour,"colour animation failed "+kind);
    return a;
   }
+  static void RareShot(Camera cam,GameObject subject,string name,Bounds bounds,Vector3 direction)
+  {
+   cam.transform.position=bounds.center+direction.normalized*7;cam.transform.LookAt(bounds.center);float halfX=0,halfY=0;
+   for(int i=0;i<8;i++){var p=bounds.center+Vector3.Scale(bounds.extents,new Vector3((i&1)==0?-1:1,(i&2)==0?-1:1,(i&4)==0?-1:1));var v=cam.transform.InverseTransformPoint(p);halfX=Mathf.Max(halfX,Mathf.Abs(v.x));halfY=Mathf.Max(halfY,Mathf.Abs(v.y));}
+   cam.orthographicSize=Mathf.Max(halfX,halfY)*1.14f;
+   Shot(cam,subject,name,cam.transform.position,bounds.center,960,960);
+  }
   public static void RenderRareMonsters()
   {
    Directory.CreateDirectory("snapshots");EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);ToonStyle.Apply();
@@ -64,15 +71,22 @@ namespace SpellDuel.EditorTools
    var floor=GameObject.CreatePrimitive(PrimitiveType.Plane);floor.transform.localScale=Vector3.one*4;floor.GetComponent<Renderer>().sharedMaterial=new Material(Shader.Find("Standard")){color=new Color(.48f,.53f,.47f)};
    var rows=new List<RareAuditRow>();
    for(int k=19;k<=22;k++){
-    var old=RareCreate(k,true);var legacyBounds=RareBounds(old);old.gameObject.SetActive(false);var current=RareCreate(k);rows.Add(RareAudit(current,old,k));UnityEngine.Object.DestroyImmediate(current.gameObject);UnityEngine.Object.DestroyImmediate(old.gameObject);
+    var old=RareCreate(k,true);old.gameObject.SetActive(false);var current=RareCreate(k);rows.Add(RareAudit(current,old,k));UnityEngine.Object.DestroyImmediate(current.gameObject);UnityEngine.Object.DestroyImmediate(old.gameObject);
+    var frameBounds=new Bounds[3];
     for(int pass=0;pass<2;pass++){
-     var r=RareCreate(k,pass==0);var at=new Vector3(0,k==21?1f:.85f,0);string prefix="rare_"+k+"_"+(pass==0?"before":"after");
-     cam.orthographicSize=1.43f;
-     Shot(cam,r.gameObject,prefix+"_front",at+new Vector3(0,.25f,5),at,960,960);
-     Shot(cam,r.gameObject,prefix+"_side",at+new Vector3(5,.3f,0),at,960,960);
-     Shot(cam,r.gameObject,prefix+"_rear45",at+new Vector3(3.5f,.75f,-4),at,960,960);
-     r.Windup(1.5f);RareTick(r,1.5f);Shot(cam,r.gameObject,prefix+"_windup",at+new Vector3(3,.9f,4),at,960,960);
-     r.Attack();RareTick(r,.20f);cam.orthographicSize=1.65f;Shot(cam,r.gameObject,prefix+"_attack",at+new Vector3(3,1.1f,4),at,960,960);
+     var r=RareCreate(k,pass==0);
+     for(int state=0;state<3;state++){
+      if(state==1){r.Windup(1.5f);RareTick(r,1.5f);}if(state==2){r.Attack();RareTick(r,.20f);}
+      if(pass==0)frameBounds[state]=RareBounds(r);else frameBounds[state].Encapsulate(RareBounds(r));
+     }UnityEngine.Object.DestroyImmediate(r.gameObject);
+    }
+    for(int pass=0;pass<2;pass++){
+     var r=RareCreate(k,pass==0);string prefix="rare_"+k+"_"+(pass==0?"before":"after");
+     RareShot(cam,r.gameObject,prefix+"_front",frameBounds[0],new Vector3(0,.05f,1));
+     RareShot(cam,r.gameObject,prefix+"_side",frameBounds[0],new Vector3(1,.06f,0));
+     RareShot(cam,r.gameObject,prefix+"_rear45",frameBounds[0],new Vector3(.7f,.15f,-1));
+     r.Windup(1.5f);RareTick(r,1.5f);RareShot(cam,r.gameObject,prefix+"_windup",frameBounds[1],new Vector3(.6f,.2f,.8f));
+     r.Attack();RareTick(r,.20f);RareShot(cam,r.gameObject,prefix+"_attack",frameBounds[2],new Vector3(.6f,.2f,.8f));
      UnityEngine.Object.DestroyImmediate(r.gameObject);
     }
    }
