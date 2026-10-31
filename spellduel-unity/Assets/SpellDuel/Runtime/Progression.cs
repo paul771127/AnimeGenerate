@@ -273,7 +273,7 @@ namespace SpellDuel
                     FPas("sw_armor", "鋼筋鐵骨", PassiveKind.Armor, 0.02f, 5, 1, 4, "sw_regen"),   // 使用者要求：劍士系列少了吸血 → 補防禦（物理減傷 2%／級）
                     // 劍氣
                     FMod("sw_slash", "斬擊強化", "slash", ModField.Damage, 0.1f, 5, 3, 1, "sw_root"),
-                    FPas("sw_orb", "劍氣護甲", PassiveKind.Armor, 0.02f, 5, 4, 2, "sw_slash"),   // 使用者要求：拿掉「斬開法球」（改成對撞後劍士太弱）→ 減傷 2%／級。id 沿用（點過的點數保留）
+                    FPas("sw_orb", "劍氣護甲", PassiveKind.Armor, 0.01f, 5, 4, 2, "sw_slash"),   // 2% → 1%（劍士系減傷疊太高）   // 使用者要求：拿掉「斬開法球」（改成對撞後劍士太弱）→ 減傷 2%／級。id 沿用（點過的點數保留）
                     FLearn("sw_wave", "wave", 3, 2, "sw_slash"),
                     FMod("sw_wave2", "劍氣分裂", "wave", ModField.Multi, 1f, 2, 2, 3, "sw_wave"),
                     FMod("sw_wavep", "劍氣穿透", "wave", ModField.Pierce, 1f, 1, 3, 3, "sw_wave"),
@@ -289,7 +289,7 @@ namespace SpellDuel
                     FMod("sw_iron2", "鐵壁強化", "ironwall", ModField.BuffAmount, 10f, 5, 6, 3, "sw_iron"),
                     FStat("sw_vit", "體魄訓練", Stat.Vit, 5, 6, 4, "sw_iron2"),
                     FPas("sw_last", "不屈", PassiveKind.LastStand, 0.06f, 5, 6, 5, "sw_vit"),
-                    FPas("sw_wall", "不動如山", PassiveKind.Armor, 0.02f, 5, 6, 6, "sw_last"),   // 補減傷：受到的傷害 −2%／級
+                    FPas("sw_wall", "不動如山", PassiveKind.Armor, 0.01f, 5, 6, 6, "sw_last"),   // 2% → 1%（劍士系減傷疊太高）   // 補減傷：受到的傷害 −2%／級
                 };
                 case "assassin": return new List<TreeNode>
                 {
@@ -409,7 +409,7 @@ namespace SpellDuel
                     // 🛡 防禦
                     FLearn("sx_jg", "jiangang", 3, 1, "sx_root"),
                     FMod("sx_jg2", "劍罡加厚", "jiangang", ModField.BuffAmount, 15f, 5, 3, 2, "sx_jg"),
-                    FPas("sx_armor", "劍骨", PassiveKind.Armor, 0.03f, 5, 4, 2, "sx_jg"),
+                    FPas("sx_armor", "劍骨", PassiveKind.Armor, 0.015f, 5, 4, 2, "sx_jg"),   // 3% → 1.5%（劍仙被打幾乎不扣血）
                     FPas("sx_hp", "養氣", PassiveKind.Hp, 10f, 5, 3, 3, "sx_jg2"),
                     FPas("sx_last", "劍心不滅", PassiveKind.LastStand, 0.05f, 5, 4, 3, "sx_armor"),
                     FMod("sx_jgcd", "劍罡迴轉", "jiangang", ModField.Cooldown, 0.08f, 5, 3, 4, "sx_hp"),   // 使用者要求：補防禦——劍罡護體冷卻 −8%／級

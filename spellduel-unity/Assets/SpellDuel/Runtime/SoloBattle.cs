@@ -946,7 +946,7 @@ namespace SpellDuel
         }
         /// <summary>故事 1-1～1-3 的敵人血量、傷害倍率（新手關調低）</summary>
         public const float EarlyStageMul = 0.6f;
-        public static readonly float[] StoryBossHp = { 800f, 1600f, 2600f, 3900f, 5400f }, StoryBossDmg = { 1f, 1.5f, 1.6f, 2.2f, 2.7f };   // 2026-10 攤平（使用者：之前為了壓劍仙調太陡；劍仙的續航另外削弱）   // 第四、五章 Boss 血量 5000／8000 → 7000／11000（使用者回報成長太弱：原本第四章 Boss 和第三章一樣硬）   // 第四、五章 ×2（使用者要求：劍仙打起來太輕鬆）
+        public static readonly float[] StoryBossHp = { 800f, 1600f, 2500f, 7000f, 11000f }, StoryBossDmg = { 1f, 1.5f, 2f, 5f, 6f };   // Boss 照舊（使用者：Boss 先不用調整）   // 第四、五章 Boss 血量 5000／8000 → 7000／11000（使用者回報成長太弱：原本第四章 Boss 和第三章一樣硬）   // 第四、五章 ×2（使用者要求：劍仙打起來太輕鬆）
         public const float LateDmgMul = 1.5f;
         public const float LateMinionDmgMul = 1.5f;
         /// <summary>故事各章小怪的傷害倍率（第一章不用；第二章起取代疊加的倍率）：忍者簡單難度約 7 下倒</summary>
@@ -958,7 +958,7 @@ namespace SpellDuel
         ///   同一章裡每往後一波再 +StageHpGrowth（第 9 波約 +32%），章與章之間接得起來。
         ///   以推薦等級的玩家算「打倒一隻要花的力氣」（第一章≈1）：第二章 2.0→2.7、第三章 2.8→3.7、第四章 3.9→5.2、第五章 5.2→7.0。
         /// </summary>
-        public static readonly float[] StoryMinionHp = { 1f, 1.6f, 2.3f, 3.0f, 3.8f };   // 攤平：原本 1／2／2.5／3.2／4
+        public static readonly float[] StoryMinionHp = { 1f, 2f, 2.5f, 3.2f, 4f };   // 照舊（使用者回報血少的職業打同級敵人幾乎秒殺：血量不再降）
         public const float StageHpGrowth = 0.04f;
         public static float StoryMinionHpOf(int theme, int fromWave) => StoryMinionHp[Mathf.Clamp(theme, 0, StoryMinionHp.Length - 1)] * (1f + StageHpGrowth * Mathf.Clamp(fromWave - 1, 0, 9));   // 第四章 4 → 8、第五章 4.25 → 8.5（使用者要求：再 ×2）
         /// <summary>故事敵人的命中率（使用者要求）：第一章 0%，之後每章 +5%；普通再 +35%、困難再 +60%</summary>
@@ -1367,7 +1367,7 @@ namespace SpellDuel
                         {
                             battle.rangedCountMul = 0.5f; battle.meleeCountMul = 1.5f; battle.spawnGapAdd = 5f;   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）
                             // 第三章潮騷港（使用者要求）：敵人血量、傷害 ×2（Boss 也是）；出手前的預備時間（紅圈閃爍）×2；海鳥移動速度 ×0.5；一批出齊後打倒一隻要等 20 秒才補下一隻
-                            battle.enemyDmgMul *= 2f;   // 小怪血量改由 StoryMinionHp；Boss 的 ×2 拿掉了（2026-10 攤平難度曲線，Boss 改由 StoryBossHp／Dmg 平滑成長）
+                            battle.enemyDmgMul *= 2f; battle.storyBossHp *= 2f; battle.storyBossDmg *= 2f;   // 小怪血量改由 StoryMinionHp
                             battle.minionWindupMul = 2f; battle.birdSpeedMul = 0.5f;
                             if (bossAi != null) { bossAi.chargeExtra = 2f; boss.chargeScale *= 2f; }
                         }   // 第三章海上：遠程小怪減半、近戰與飛鳥 ×1.5、同一波每批小怪多等 5 秒（使用者要求）

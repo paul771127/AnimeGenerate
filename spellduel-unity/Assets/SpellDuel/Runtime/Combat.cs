@@ -195,7 +195,7 @@ namespace SpellDuel
         /// <summary>強化藥劑（藥劑 id、到期時間 battle.now）：右上角狀態圖示用（SoloBattle.Potions.cs）</summary>
         public readonly List<KeyValuePair<string, float>> potionBuffs = new List<KeyValuePair<string, float>>();
         /// <summary>減傷（使用者要求）：體質加到 99 點＝30%；裝備、精魄、技能樹、職業另外加；全部加起來最多 70%（超過沒有作用）</summary>
-        public const float MaxReduce = 0.7f, VitMaxReduce = 0.3f;
+        public const float MaxReduce = 0.5f, VitMaxReduce = 0.3f;   // 減傷上限 70% → 50%（使用者回報劍仙被打幾乎不扣血）
         /// <summary>精神從初始值加到 99 點：魔法減傷 +15%（使用者要求，和智力的 30% 疊加）</summary>
         public const float SpiMaxMagicReduce = 0.15f;
         public const int VitFullReduce = 99;
@@ -991,6 +991,8 @@ namespace SpellDuel
         public const float MinionAttackGapMul = 1.2f;
         /// <summary>小怪傷害的基底（0.75 → 0.9 → 0.8：使用者回報第 4 章被打兩下就死）</summary>
         public const float EnemyDmgBase = 0.8f;
+        /// <summary>一般小怪一下最多扣我方最大 HP 的比例（不含 Boss、菁英、稀有怪）</summary>
+        public const float MinionHitCap = 0.35f;
         public const float EndlessRegen = 0.5f, EndlessRegenPct = 0.005f;
         /// <summary>副本、故事（使用者要求）：沒有每秒自然回血；技能、被動（劍士、主教的自然回復）、精魄、藥劑、藥水照常</summary>
         public bool noNaturalRegen;   // 無盡／故事：玩家每秒自然回血（0.5 或最大 HP 的 0.5%，取大的）
@@ -4603,6 +4605,9 @@ namespace SpellDuel
             if (target.npcSide == 1 && target.npcId != null && target.npcId.StartsWith("ev_") && EvPropHit(target, by)) return;   // 副本：雕像、寶箱（Combat.RoomEvents.cs）
             if (weather != Weather.None && damage > 0) damage = Mathf.Max(1, Mathf.RoundToInt(damage * WeatherMul(incoming ?? HitSkill, by ?? (FoeSide(target) ? player : enemy))));   // 故事關卡的天候（Combat.StageMods.cs）
             if (by == null) by = FoeSide(target) ? player : enemy;   // 不知道是誰打的：對面那一方的主角
+            // 小怪單次攻擊的上限（使用者回報血少的職業被打一下就扣大半）：一般小怪打我方，一下最多扣最大 HP 的 MinionHitCap；Boss、菁英、稀有怪不算
+            if (damage > 0 && !FoeSide(target) && by != null && by.isMinion && !by.miniBoss && !EliteCatalog.IsElite(by.minionKind) && !IsSpecial(by.minionKind) && target.maxHp > 0)
+                damage = Mathf.Min(damage, Mathf.CeilToInt(target.maxHp * MinionHitCap));
             // 閃避率（刺客技能樹）：整次攻擊（傷害＋效果）完全閃開
             // 閃避只對物理攻擊有效（使用者要求）：魔法攻擊（火球、毒液、放電、泡泡…）閃不掉，要自己躲
             // 命中率（使用者要求）：攻擊者的命中率直接抵掉目標的閃避率（命中 10%、閃避 40% → 實際 30%）
