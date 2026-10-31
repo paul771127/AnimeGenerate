@@ -130,8 +130,6 @@ namespace SpellDuel
                 foreach (Transform t in head) { var f = t.GetComponent<MeshFilter>(); if (f && f.sharedMesh == pCone) t.gameObject.SetActive(false); }
                 foreach (var leg in new[] { hipL, hipR, hipBL, hipBR })
                 {
-                    foreach (Transform t in leg) { var f = t.GetComponent<MeshFilter>(); if (f && f.sharedMesh == pStem)
-                        f.sharedMesh = SwiftMesh("Lean digitigrade limb", b => b.Lathe(new[] { 0f, 0f, 0f, .48f, .16f, .48f, .38f, .29f, .66f, .34f, 1f, .45f, 1f, 0f }, 8, null, rot: Quaternion.Euler(-90, 0, 0))); }
                     SwiftPart(id, leg, "Runner toes " + leg.name, id == 173 ? new Color(.63f, .86f, .49f) : new Color(.52f, .48f, .71f), b => {
                         for (int toe = -1; toe <= 1; toe++) RareTube(b, new[] { R(toe * .035f, -.255f, .015f), R(toe * .04f, -.26f, .07f), R(toe * .04f, -.265f, .105f) }, new[] { .022f, .024f, .003f }, 2, 5);
                     });

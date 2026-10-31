@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'spellduel-unity/Assets/SpellDuel/Runtime/MinionLook*.cs'
-      - 'spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Swift.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/MinionRig*.cs'
       - 'spellduel-unity/Assets/SpellDuel/Editor/Snapshot.SwiftMonsters.cs'
       - '.github/workflows/spellduel-swift-monsters.yml'
 concurrency:

@@ -1364,7 +1364,7 @@ namespace SpellDuel
             hipBL = Pivot("LegBL", body, new Vector3(-lx, 0.28f, -0.24f));
             hipBR = Pivot("LegBR", body, new Vector3(lx, 0.28f, -0.24f));
             foreach (var h in new[] { hipL, hipR, hipBL, hipBR })
-                Part(h, pStem, new Vector3(0f, -0.29f, 0f), new Vector3(0.17f, 0.31f, 0.17f), Vector3.zero, v.rockB);
+                Part(h, QuadrupedLegMesh(h == hipBL || h == hipBR), Vector3.zero, Vector3.one, Vector3.zero, v.rockB);
         }
 
         /// <summary>9 藤蔓術士：三股扭曲藤蔓編成的瘦長人形，背後一片葉披風、葉子兜帽、綠色發光眼睛、手上的藤爪與引導光球。</summary>
