@@ -1126,7 +1126,7 @@ namespace SpellDuel
 
         /// <summary>裝備的附加狀態（灼燒、中毒、冰凍）機率：每一條 2～5%（使用者要求，不要更高）</summary>
         public const float StatusChanceMin = 0.02f, StatusChanceMax = 0.05f;
-        /// <summary>裝備的減傷：每一件 1～3%（使用者要求）；體質最多 30%，裝備、精魄等另外加，全部加起來最多 70%（Fighter.MaxReduce）</summary>
+        /// <summary>裝備的減傷：每一件 1～3%（使用者要求）；體質最多 30%，裝備、精魄等另外加，全部加起來是護甲值，實際減傷越疊越少、沒有上限（Fighter.ReduceOf）</summary>
         public const float ArmorMin = 0.01f, ArmorMax = 0.03f;
 
         /// <summary>部位固定附帶的減傷：1～3%，等級／稀有度越高越接近 3%（稍微浮動）</summary>
@@ -1533,12 +1533,12 @@ namespace SpellDuel
             // 減傷（使用者要求）分物理、魔法：
             //   物理減傷＝體質從初始值加到 99 點 30%（線性）＋裝備的物理減傷（每件 1～3%、套裝）
             //   魔法減傷＝智力從初始值加到 99 點 30%（線性）＋精神加到 99 點 15%（使用者要求）＋裝備的魔法減傷（法袍、兜帽、頭環、護符、副屬性、套裝）
-            //   精魄、技能樹、進階職業的減傷兩種都加；各自最多 70%（Fighter.MaxReduce）
+            //   精魄、技能樹、進階職業的減傷兩種都加；全部相加成「護甲值」，實際減傷收益遞減、沒有上限（Fighter.ReduceOf）
             float vitFrac = Mathf.Clamp01(d(Stat.Vit) / (float)Mathf.Max(1, Fighter.VitFullReduce - BaseStat(Stat.Vit)));
             float intFrac = Mathf.Clamp01(d(Stat.Int) / (float)Mathf.Max(1, Fighter.VitFullReduce - BaseStat(Stat.Int)));
-            f.gearReduce = Mathf.Min(Fighter.MaxReduce, Fighter.VitMaxReduce * vitFrac + GearSum(Affix.Armor));
+            f.gearReduce = Fighter.VitMaxReduce * vitFrac + GearSum(Affix.Armor);   // 護甲值（沒有上限；實際減傷見 Fighter.ReduceOf）
             float spiResFrac = Mathf.Clamp01(d(Stat.Spi) / (float)Mathf.Max(1, Fighter.VitFullReduce - BaseStat(Stat.Spi)));
-            f.magicReduce = Mathf.Min(Fighter.MaxReduce, Fighter.VitMaxReduce * intFrac + Fighter.SpiMaxMagicReduce * spiResFrac + GearSum(Affix.MagicArmor));
+            f.magicReduce = Fighter.VitMaxReduce * intFrac + Fighter.SpiMaxMagicReduce * spiResFrac + GearSum(Affix.MagicArmor);
             // MP：智力每點 +2、裝備；MP 回復：基礎 30%，精神加到 99 點才回到 100%（線性；裝備把精神加超過 99 會再更快）
             f.maxMp = Mathf.Max(10, LevelBase(cd.maxMp, MpPerLevel) + 2 * d(Stat.Int) + Mathf.RoundToInt(GearSum(Affix.Mp)));   // MP 也隨等級：每級＋職業基礎 MP 的 MpPerLevel
             float spiFrac = Mathf.Max(0f, d(Stat.Spi) / (float)Mathf.Max(1, Fighter.MpRegenFullSpi - BaseStat(Stat.Spi)));
@@ -1569,8 +1569,8 @@ namespace SpellDuel
             f.rangeMul = 1f;
             // 進階技能樹的特殊能力：攻擊、減傷、HP
             f.atkMul *= 1f + Passive(PassiveKind.Atk);
-            f.gearReduce = Mathf.Min(Fighter.MaxReduce, f.gearReduce + Passive(PassiveKind.Armor));
-            f.magicReduce = Mathf.Min(Fighter.MaxReduce, f.magicReduce + Passive(PassiveKind.Armor));
+            f.gearReduce += Passive(PassiveKind.Armor);
+            f.magicReduce += Passive(PassiveKind.Armor);
             f.maxHp += Mathf.RoundToInt(Passive(PassiveKind.Hp));
             // 技能樹 v2 的流派效果
             f.arcaneBurst = Passive(PassiveKind.ArcaneBurst); f.arcaneTwin = Passive(PassiveKind.ArcaneTwin);

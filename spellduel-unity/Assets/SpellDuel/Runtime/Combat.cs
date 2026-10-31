@@ -193,8 +193,13 @@ namespace SpellDuel
         public float magicReduce;
         /// <summary>強化藥劑（藥劑 id、到期時間 battle.now）：右上角狀態圖示用（SoloBattle.Potions.cs）</summary>
         public readonly List<KeyValuePair<string, float>> potionBuffs = new List<KeyValuePair<string, float>>();
-        /// <summary>減傷（使用者要求）：體質加到 99 點＝30%；裝備、精魄、技能樹、職業另外加；全部加起來最多 70%（超過沒有作用）</summary>
-        public const float MaxReduce = 0.7f, VitMaxReduce = 0.3f;
+        /// <summary>減傷（使用者要求）：體質加到 99 點＝30%；裝備、精魄、技能樹、職業另外加；全部相加是護甲值，實際減傷越疊越少、沒有上限（ReduceOf）</summary>
+        public const float MaxReduce = 0.7f, VitMaxReduce = 0.3f;   // MaxReduce 只留給舊程式參考；減傷已經沒有上限（見 ReduceOf）
+        /// <summary>
+        /// 減傷收益遞減（使用者同意：不設上限，越疊越少）：gearReduce／magicReduce 是各來源相加的「護甲值」（體質、裝備、技能樹、精魄、藥劑…），
+        /// 實際減傷＝護甲 ÷（護甲＋1）：0.3→23%、0.5→33%、1→50%、2→67%、4→80%，永遠不會到 100%。負的（例如劍仙 −10%）照原本直接增加受到的傷害。
+        /// </summary>
+        public static float ReduceOf(float rating) => rating >= 0f ? rating / (rating + 1f) : rating;
         /// <summary>精神從初始值加到 99 點：魔法減傷 +15%（使用者要求，和智力的 30% 疊加）</summary>
         public const float SpiMaxMagicReduce = 0.15f;
         public const int VitFullReduce = 99;
@@ -4665,7 +4670,7 @@ namespace SpellDuel
             }
             // 物理／魔法減傷：持續傷害（毒、灼燒）和魔法攻擊（Skills.IsMagic）用魔法減傷，其他用物理減傷
             bool magic = kind == "dot" || kind == "burn" || (incoming != null && Skills.IsMagic(incoming));
-            dmg *= f.damageTakenMul * (1f - Mathf.Min(magic ? f.magicReduce : f.gearReduce, Fighter.MaxReduce)) * f.soulTaken;
+            dmg *= f.damageTakenMul * (1f - Fighter.ReduceOf(magic ? f.magicReduce : f.gearReduce)) * f.soulTaken;   // 減傷收益遞減，沒有上限
             // 精魄：格擋（這一下傷害減半；持續傷害不算）
             if (f.blockChance > 0f && dmg > 0f && kind != "dot" && kind != "burn" && kind != "thorns" && rng.NextDouble() < f.blockChance) { dmg *= 0.5f; Emit("mitigate", at ?? f.Chest, new Color(0.8f, 0.8f, 0.7f), "格擋！"); }
             if (f.lastStand > 0f && f.hp < f.maxHp * 0.3f) dmg *= 1f - f.lastStand;   // 不屈：低血量減傷
