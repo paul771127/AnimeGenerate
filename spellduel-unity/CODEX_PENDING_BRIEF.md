@@ -866,3 +866,12 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 ### 2026-10-31 地面合批座標修正
 - 首批原生預覽抓到 Unity dynamic batching 會把 POSITION 轉成合批座標，導致以 vertex.xz 計算羽化的地貼只有原點附近可見。改用共用網格的 UV 保存局部座標，保留合批與場景移動相容性。
 - 原生檢查增加九格草地的實際像素覆蓋斷言，不只檢查物件存在；首批預覽不作為最終交付，修正後重跑。
+
+### 2026-10-31 細緻地面原生預覽交付
+- 416fd39 的原生 run 41150829358 成功，86 張場景預覽與 16 張靜態圖更新。五種地面的九格俯視／站立視角已目視複查；草皮九格實際像素覆蓋、材質／網格／貼圖快取、mipmap、每格兩三角形與無 Collider 均通過。
+- 新增 ground_materials_overview.jpg、grass_detail.jpg 與 explore_ground_audit.json，底下中性平面僅為 AR 合成參考。
+- 416fd39 的雙平台工作被遠端 ed11f4c 新推送取消；新的 41151953354 包含相同地面程式，尚在執行。最後結果另補，不將取消工作記為成功。
+
+### 2026-10-31 細緻地面雙平台驗證完成
+- 最新 run 41151953354（ed11f4c，含 416fd39 同版地面美術）Android、iOS 匯出與 IPA 編譯均成功；Android APK 發布成功。證據已更新 platform_ci.json，未將前一次取消工作當作成功。
+- 原生預覽 41150829358 通過，九格實際顯示及近景／遠景已目視複查。Docs/pending_preview/explore_jungle/ 收錄全部圖片與材質總覽。尚未做手機 AR 實機測試。

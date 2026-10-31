@@ -23,25 +23,46 @@
   ],
   "runtimeFiles": [
     "ExploreArt.Atmosphere.cs",
-    "ExploreArt.cs",
     "ExploreArt.Foliage.cs",
     "ExploreArt.Gates.cs",
+    "ExploreArt.Ground.cs",
     "ExploreArt.Landmarks.cs",
     "ExploreArt.Nature.cs",
     "ExploreArt.Props.cs",
-    "ExploreArt.Quest.cs"
+    "ExploreArt.Quest.cs",
+    "ExploreArt.cs"
   ],
   "noNewTimeDrivenAnimation": true,
   "forbiddenPathEditsByThisArtBatch": [],
   "shaders": [
-    "ExploreLake.shader",
+    "ExploreBackdrop.shader",
     "ExploreFoliage.shader",
-    "ExploreBackdrop.shader"
+    "ExploreGround.shader",
+    "ExploreLake.shader"
   ],
   "generatedFoliageTextures": {
     "count": 4,
     "width": 256,
     "height": 256,
     "mipmaps": true
+  },
+  "generatedGroundTextures": {
+    "grass": [
+      512,
+      512
+    ],
+    "otherFourTypes": [
+      256,
+      256
+    ],
+    "mipmaps": true,
+    "filter": "Trilinear",
+    "anisotropy": 4,
+    "sharedMeshTriangles": 2,
+    "opacity": {
+      "grass": 0.42,
+      "others": 0.34
+    },
+    "edgeFeatherMetres": 0.06
   }
 }

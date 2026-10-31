@@ -56,9 +56,9 @@ Claude 已於 a5a4627 將整套美術及天空接入正式探索模式。本目�
 
 網格依類型與有限變體鍵共用；材質共用。Factory 不增加 Collider。牆驗證逐一斷言三角形 ≤300、頂點限制在 3m 格子內。狀態可反覆切換，重新生成後共用既有 mesh／material。全圖只為預覽，遊戲仍由既有程式限制 24m 附近生成。
 
-最新原生 Unity run 41143467122（6049a45）成功，輸出 76 張場景 PNG 與 16 張靜態首尾圖。24 組牆變體通過 ≤300 三角形、格子邊界與無 Collider 檢查；封印切換與 mesh／material 快取檢查通過。16 張圖通過 960×544、四角純黑／綠幕與四周留白檢查。另通過 fullLakeWithEdgeOnlyStreaming，確認只建立邊緣水格時湖心仍完整。詳見 native_ci.json、explore_*_audit.json、keyframe_validation.json。
+最新原生 Unity run 41150829358（416fd39）成功，輸出 86 張場景 PNG 與 16 張靜態首尾圖。24 組牆變體通過 ≤300 三角形、格子邊界與無 Collider 檢查；封印切換與 mesh／material 快取檢查通過。16 張圖通過 960×544、四角純黑／綠幕與四周留白檢查。另通過 fullLakeWithEdgeOnlyStreaming，確認只建立邊緣水格時湖心仍完整。詳見 native_ci.json、explore_*_audit.json、keyframe_validation.json。
 
-已目視複查新葉片群、加高樹木、三類岩石、帳篷與角色等比例圖、水材質／岸邊、篝火及 60m 視距下的天空／雲／遠林。雙平台 run 41143467000（6049a45）的 Android 建置、iOS 匯出與 IPA 編譯均成功，證據見 platform_ci.json。Android APK 已發布。AR 實機視野與動畫影片接線仍需整合端驗收。
+已目視複查新葉片群、加高樹木、三類岩石、帳篷與角色等比例圖、水材質／岸邊、篝火及 60m 視距下的天空／雲／遠林。最新地面修正的雙平台 run 41151953354（ed11f4c，包含相同的 416fd39 地面程式）Android、iOS 匯出、IPA 編譯皆成功，Android APK 已發布；詳見 platform_ci.json。AR 實機視野與動畫影片接線仍需整合端驗收。
 
 ## 2026-10-31 造型重修
 
@@ -81,3 +81,13 @@ Claude 已於 a5a4627 將整套美術及天空接入正式探索模式。本目�
 CreateLandmark(lake) 的 LakeSurface 依實際 Water 格建立完整共用水面；即使遊戲只串流岸邊水格，湖心仍完整覆蓋。水面寫入深度，避免與串流格重疊產生色差。原生預覽按相同的邊緣格規則建立場景，並斷言水面覆蓋所有水格。
 
 六項前後比較見 `refinement_all_before_after.jpg`；水面及篝火近景見 `water_fire_before_after.jpg`。
+
+### 2026-10-31 地面與草皮細修
+
+CreateGround 取消固定七片大草葉、凸起多角石塊與寬方形淡出，改為低對比的細草／苔土、泥土、岸沙、洞窟碎石與磨損石板。紋理完全由程式建立：草皮 512×512，其餘四種 256×256，重建時共用，含 mipmap 約 2.67 MiB；trilinear 與 4x anisotropic 控制遠處閃爍。
+
+每格僅兩個三角形，6cm 羽化裙邊互相重疊，以光學透明度互補消除接縫；不增加碰撞、不擋視線、不寫深度，排序在戰鬥地面提示之前。草皮不透明度 .42，其餘 .34，仍保留真實地板。紋理與羽化座標存入共用網格 UV，可合批且不會在衝刺時滑動。九格預覽會檢查九個位置的實際像素，避免 Unity 合批後只剩原點附近可見。
+
+`explore_ground_*_top.png` 與 `explore_ground_*_eye.png` 各五張是九格連續地面的俯視與 1.65m 視角。底下的灰褐平面僅為預覽中的中性 AR 合成參考，不會加入正式場景；它不是實機拍攝。
+
+地面最終原生 run 41150829358（416fd39）已通過；`explore_ground_audit.json` 包含九格實際像素覆蓋檢查。總覽見 `ground_materials_overview.jpg`，草皮九格與局部放大見 `grass_detail.jpg`。
