@@ -16,6 +16,9 @@ namespace SpellDuel
     public partial class SoloBattle
     {
         public const float DashSpeed = 2.5f;   // 公尺／秒（試過 3.5，使用者覺得太快，改回 2.5）
+        /// <summary>故事探索的衝刺：1.5 倍（使用者要求；地圖一格改 4m、路線變長）</summary>
+        public const float ExploreDashMul = 1.5f;
+        float DashSpeedNow => exploreRun != null ? DashSpeed * ExploreDashMul : DashSpeed;
         const float DashArm = 0.8f;            // 比 5 之後這麼久內握拳才算
         const float DashGrace = 0.15f;         // 手勢偵測偶爾漏一兩張不算放開
         const float DashEdge = 0.4f;           // 離場地邊界這麼近就停
@@ -57,7 +60,7 @@ namespace SpellDuel
             dir.Normalize();
             // 這一步實際能走多遠：碰到場地邊界或敵人就只走到那裡（可能是 0＝卡住）。
             // 世界只照「實際走的距離」平移：卡住時場地、景物、敵人都不會動。
-            float want = DashSpeed * dt;
+            float want = DashSpeedNow * dt;
             float step = DashStepAllowed(dir, want, out string why);
             if (exploreRun != null && step < want * 0.6f) ExSlide(ref dir, ref step, want);   // 故事探索：擦到牆角、樹就沿著邊滑過去，不要整個停住
             if (step < 1e-4f) { dashStuck = true; DashBlocked(why); return; }
