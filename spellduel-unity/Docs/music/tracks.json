@@ -1,0 +1,426 @@
+{
+ "style": "fantasy JRPG game soundtrack, anime adventure, high quality orchestral hybrid production, instrumental only, no vocals, no singing, no spoken words, clean stereo mix, steady tempo, seamless loopable structure",
+ "negative": "vocals, singing, lyrics, choir words, speech, narration, crowd noise, applause, sound effects, abrupt ending, fade out, tempo change, distortion, lo-fi tape hiss, low quality",
+ "tracks": [
+  {
+   "id": "title",
+   "zh": "主畫面",
+   "use": "開 App、主選單、角色選擇",
+   "bpm": 88,
+   "key": "D major",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "main theme of a hopeful magical adventure, gentle piano and harp opening into warm strings and soft horns, sense of wonder and beginning a journey, memorable lyrical melody, medium-slow"
+  },
+  {
+   "id": "worldmap",
+   "zh": "世界地圖",
+   "use": "世界地圖、選關",
+   "bpm": 100,
+   "key": "G major",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "world map travelling theme, light marching pizzicato strings, flute melody, acoustic guitar strums, bright and curious, wandering feeling"
+  },
+  {
+   "id": "town_0",
+   "zh": "炎之里",
+   "use": "第一章城鎮（晨鐘與鍛爐的山村）",
+   "bpm": 92,
+   "key": "F major",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "cozy mountain village with blacksmith forges, warm acoustic guitar and accordion, soft anvil-like metal percussion in rhythm, morning bell chimes, friendly and nostalgic, hint of hidden sadness"
+  },
+  {
+   "id": "town_1",
+   "zh": "森之里",
+   "use": "第二章城鎮（葉燈與古樹的聚落）",
+   "bpm": 84,
+   "key": "A major",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "peaceful forest village under ancient trees, celtic harp, wooden flute, soft hand drums, gentle bird-like ornaments, lanterns glowing among leaves, calm and mystical"
+  },
+  {
+   "id": "town_2",
+   "zh": "潮騷港",
+   "use": "第三章城鎮（等待歸航的港口）",
+   "bpm": 104,
+   "key": "D mixolydian",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "seaside harbor town with a tavern, sea shanty feel in 6/8, fiddle, accordion, bouzouki, light tambourine, waves and lighthouse nostalgia, cheerful but slightly melancholic"
+  },
+  {
+   "id": "town_3",
+   "zh": "赤砂城",
+   "use": "第四章城鎮（圍著角鬥場的城）",
+   "bpm": 108,
+   "key": "C mixolydian",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "bustling desert colosseum city, Roman festival brass fanfares softened, frame drums, plucked lute, lively market energy, proud and grand"
+  },
+  {
+   "id": "town_4",
+   "zh": "風沙驛",
+   "use": "第五章城鎮（黃土山道的驛站）",
+   "bpm": 90,
+   "key": "E phrygian dominant",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "last caravan station on a dusty canyon road, oud and duduk melody, camel bells, slow swinging darbuka rhythm, storyteller atmosphere, warm sunset, exotic and wistful"
+  },
+  {
+   "id": "ch0",
+   "zh": "第一章 熔岩戰鬥",
+   "use": "第一章關卡戰鬥（熔岩礦坑、火焰小鬼）",
+   "bpm": 140,
+   "key": "D minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "intense battle theme in a volcanic lava cave, driving taiko and orchestral percussion, staccato low strings, heavy brass hits, electric guitar power chords layered with orchestra, fiery and aggressive"
+  },
+  {
+   "id": "ch1",
+   "zh": "第二章 森林戰鬥",
+   "use": "第二章關卡戰鬥（迷霧森林、藤蔓與孢子菇）",
+   "bpm": 128,
+   "key": "E dorian",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "energetic battle theme in an enchanted jungle, fast tin whistle and fiddle melody, tribal hand drums, plucked strings, wild and agile, celtic action"
+  },
+  {
+   "id": "ch2",
+   "zh": "第三章 海港戰鬥",
+   "use": "第三章關卡戰鬥（海岸、跳躍魚與水母）",
+   "bpm": 132,
+   "key": "A minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "swashbuckling sea battle theme, 6/8 galloping rhythm, sweeping strings like waves, pirate brass, snare rolls, glockenspiel sparkles, adventurous"
+  },
+  {
+   "id": "ch3",
+   "zh": "第四章 角鬥場戰鬥",
+   "use": "第四章關卡戰鬥（角鬥場、鬥士與猛獸）",
+   "bpm": 136,
+   "key": "C harmonic minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "epic gladiator arena battle, war drums and marching snares, bold brass and low choir pads without words, roaring crowd energy implied by orchestra only, heroic and brutal"
+  },
+  {
+   "id": "ch4",
+   "zh": "第五章 峽谷戰鬥",
+   "use": "第五章關卡戰鬥（黃土峽谷、砂晶與岩魔）",
+   "bpm": 120,
+   "key": "A phrygian dominant",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "desert canyon battle theme, middle eastern scale, oud and ney flute lead, heavy taiko and darbuka groove, deep strings ostinato, dust storm intensity"
+  },
+  {
+   "id": "ch0_boss",
+   "zh": "第一章 Boss：熔岩巨像",
+   "use": "第一章 Boss 戰",
+   "bpm": 150,
+   "key": "C minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "colossal lava golem boss battle, massive orchestral brass, pounding timpani and taiko, dark choir pads without words, organ, extreme intensity"
+  },
+  {
+   "id": "ch1_boss",
+   "zh": "第二章 Boss：腐化樹王",
+   "use": "第二章 Boss 戰",
+   "bpm": 152,
+   "key": "B minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "corrupted ancient tree king boss battle, dark celtic orchestral, distorted cellos, ominous low whistles, relentless tribal drums, sinister and epic"
+  },
+  {
+   "id": "ch2_boss",
+   "zh": "第三章 Boss：深海巨妖",
+   "use": "第三章 Boss 戰",
+   "bpm": 154,
+   "key": "F# minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "giant deep sea kraken boss battle, crashing orchestra like tidal waves, fast strings, roaring horns, thunder timpani, desperate and grand"
+  },
+  {
+   "id": "ch3_boss",
+   "zh": "第四章 Boss：青銅鬥魂",
+   "use": "第四章 Boss 戰",
+   "bpm": 156,
+   "key": "C minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "bronze gladiator spirit boss battle, ancient war march, brass fanfares turned menacing, war drums, dramatic string runs, final duel energy"
+  },
+  {
+   "id": "ch4_boss",
+   "zh": "第五章 Boss：黃土岩魔",
+   "use": "第五章 Boss 戰",
+   "bpm": 158,
+   "key": "E phrygian dominant",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "sand rock demon boss battle, heavy middle eastern percussion, distorted guitars with orchestra, duduk wail, sandstorm chaos, apocalyptic"
+  },
+  {
+   "id": "explore",
+   "zh": "故事探索 翠蔭迷林",
+   "use": "故事探索的迷宮（走路、解謎、巡邏的怪）",
+   "bpm": 100,
+   "key": "G minor pentatonic",
+   "seconds": 120,
+   "loop": true,
+   "prompt": "exploration theme in a vast mysterious jungle maze, light percussion, marimba and kalimba patterns, airy flute melody, soft strings, curious and slightly tense, not too busy so it can play for a long time"
+  },
+  {
+   "id": "explore_boss",
+   "zh": "故事探索 Boss",
+   "use": "迷林王座的 Boss 戰",
+   "bpm": 148,
+   "key": "E minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "jungle throne boss battle, tribal drums and full orchestra, wild flute shrieks, intense strings, ancient forest guardian awakens"
+  },
+  {
+   "id": "dg_ash_mine",
+   "zh": "副本 灰燼礦坑",
+   "use": "副本「灰燼礦坑」",
+   "bpm": 126,
+   "key": "B minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "dark abandoned ash mine dungeon, industrial percussion like hammers and minecart rails, low brass, smoky atmosphere, steady marching tension"
+  },
+  {
+   "id": "dg_ash_mine_boss",
+   "zh": "副本 灰燼礦坑 首領",
+   "use": "副本「灰燼礦坑」的首領戰",
+   "bpm": 140,
+   "key": "B minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "dark abandoned ash mine final boss battle, same instruments and motif but heavier, faster, full orchestra and pounding drums, climactic"
+  },
+  {
+   "id": "dg_rot_temple",
+   "zh": "副本 腐根神殿",
+   "use": "副本「腐根神殿」",
+   "bpm": 92,
+   "key": "D phrygian",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "rotting root temple dungeon, eerie and creepy, bowed metal, low drones, sparse bells, creaking wood percussion, slow dread"
+  },
+  {
+   "id": "dg_rot_temple_boss",
+   "zh": "副本 腐根神殿 首領",
+   "use": "副本「腐根神殿」的首領戰",
+   "bpm": 106,
+   "key": "D phrygian",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "rotting root temple final boss battle, same instruments and motif but heavier, faster, full orchestra and pounding drums, climactic"
+  },
+  {
+   "id": "dg_sunken_throne",
+   "zh": "副本 沉沒王座",
+   "use": "副本「沉沒王座」",
+   "bpm": 100,
+   "key": "F dorian",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "sunken underwater throne dungeon, muffled ethereal pads, slow harp arpeggios, deep bass pulses, bubbles of celesta, melancholic royal grandeur"
+  },
+  {
+   "id": "dg_sunken_throne_boss",
+   "zh": "副本 沉沒王座 首領",
+   "use": "副本「沉沒王座」的首領戰",
+   "bpm": 114,
+   "key": "F dorian",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "sunken underwater throne final boss battle, same instruments and motif but heavier, faster, full orchestra and pounding drums, climactic"
+  },
+  {
+   "id": "dg_dawn_gate",
+   "zh": "副本 黎明之門",
+   "use": "副本「黎明之門」",
+   "bpm": 134,
+   "key": "G major",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "gate of dawn dungeon, heroic sunrise orchestral, bright brass fanfare, soaring strings, triumphant yet tense march"
+  },
+  {
+   "id": "dg_dawn_gate_boss",
+   "zh": "副本 黎明之門 首領",
+   "use": "副本「黎明之門」的首領戰",
+   "bpm": 148,
+   "key": "G major",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "gate of dawn final boss battle, same instruments and motif but heavier, faster, full orchestra and pounding drums, climactic"
+  },
+  {
+   "id": "dg_ember_bell_foundry",
+   "zh": "副本 餘燼鑄鐘坊",
+   "use": "副本「餘燼鑄鐘坊」",
+   "bpm": 118,
+   "key": "C# harmonic minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "ember bell foundry dungeon, huge bronze bells tolling in rhythm, anvil percussion, molten heat, dark orchestral pulse"
+  },
+  {
+   "id": "dg_ember_bell_foundry_boss",
+   "zh": "副本 餘燼鑄鐘坊 首領",
+   "use": "副本「餘燼鑄鐘坊」的首領戰",
+   "bpm": 132,
+   "key": "C# harmonic minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "ember bell foundry final boss battle, same instruments and motif but heavier, faster, full orchestra and pounding drums, climactic"
+  },
+  {
+   "id": "dg_mist_name_grove",
+   "zh": "副本 霧燈記名徑",
+   "use": "副本「霧燈記名徑」",
+   "bpm": 96,
+   "key": "E minor pentatonic",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "misty lantern path where names are remembered, shakuhachi-like flute, soft koto plucks, distant chimes, fog and memory, haunting and gentle"
+  },
+  {
+   "id": "dg_mist_name_grove_boss",
+   "zh": "副本 霧燈記名徑 首領",
+   "use": "副本「霧燈記名徑」的首領戰",
+   "bpm": 110,
+   "key": "E minor pentatonic",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "misty lantern path where names are remembered, shakuhachi-like flute, soft koto plucks, distant chimes, fog and memory, haunting and gentle final boss battle, same instruments and motif but heavier, faster, full orchestra and pounding drums, climactic"
+  },
+  {
+   "id": "dg_white_sail_echo_reef",
+   "zh": "副本 白帆回聲礁",
+   "use": "副本「白帆回聲礁」",
+   "bpm": 132,
+   "key": "A mixolydian",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "white sail echo reef dungeon, nautical adventure, swinging 6/8, fiddle and accordion, echoing marimba, wind and spray energy"
+  },
+  {
+   "id": "dg_white_sail_echo_reef_boss",
+   "zh": "副本 白帆回聲礁 首領",
+   "use": "副本「白帆回聲礁」的首領戰",
+   "bpm": 146,
+   "key": "A mixolydian",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "white sail echo reef final boss battle, same instruments and motif but heavier, faster, full orchestra and pounding drums, climactic"
+  },
+  {
+   "id": "dg_thousand_trap_gallery",
+   "zh": "副本 千機迴廊",
+   "use": "副本「千機迴廊」",
+   "bpm": 144,
+   "key": "D harmonic minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "thousand trap clockwork gallery dungeon, ticking clockwork percussion, music box and harpsichord arpeggios, tense pizzicato, mechanical precision, danger around every corner"
+  },
+  {
+   "id": "dg_thousand_trap_gallery_boss",
+   "zh": "副本 千機迴廊 首領",
+   "use": "副本「千機迴廊」的首領戰",
+   "bpm": 158,
+   "key": "D harmonic minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "thousand trap clockwork gallery final boss battle, same instruments and motif but heavier, faster, full orchestra and pounding drums, climactic"
+  },
+  {
+   "id": "dg_sky_carpet",
+   "zh": "副本 天穹航路",
+   "use": "副本「天穹航路」",
+   "bpm": 150,
+   "key": "F lydian",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "flying carpet sky route chase, soaring strings, fast arabian-flavored flute, wind swooshes in orchestration, airship pirates, exhilarating speed"
+  },
+  {
+   "id": "dg_sky_carpet_boss",
+   "zh": "副本 天穹航路 首領",
+   "use": "副本「天穹航路」的首領戰",
+   "bpm": 164,
+   "key": "F lydian",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "flying carpet sky route chase, soaring strings, fast arabian-flavored flute, wind swooshes in orchestration, airship pirates, exhilarating speed final boss battle, same instruments and motif but heavier, faster, full orchestra and pounding drums, climactic"
+  },
+  {
+   "id": "tower",
+   "zh": "無盡塔",
+   "use": "無盡塔、無盡模式",
+   "bpm": 138,
+   "key": "E minor",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "endless tower climb battle, relentless driving rhythm, synth arpeggios layered with orchestra, rising tension that never resolves, determined"
+  },
+  {
+   "id": "worldboss",
+   "zh": "世界王",
+   "use": "世界王（多人一起打的巨型 Boss）",
+   "bpm": 156,
+   "key": "C minor",
+   "seconds": 120,
+   "loop": true,
+   "prompt": "raid world boss battle, colossal epic orchestral with heavy drums and electric guitars, wordless choir pads, multiple players fighting together, maximum hype"
+  },
+  {
+   "id": "practice",
+   "zh": "練習／每日／懸賞",
+   "use": "練習、每日任務、懸賞、職業試煉",
+   "bpm": 120,
+   "key": "F major",
+   "seconds": 90,
+   "loop": true,
+   "prompt": "light training battle theme, upbeat orchestral pop, snappy drums, playful brass and strings, motivating but not too serious"
+  },
+  {
+   "id": "victory",
+   "zh": "勝利",
+   "use": "過關結算（播一次）",
+   "bpm": 120,
+   "key": "C major",
+   "seconds": 8,
+   "loop": false,
+   "prompt": "short victory fanfare jingle, bright brass and strings, triumphant ending chord, 6 to 8 seconds, clean ending"
+  },
+  {
+   "id": "defeat",
+   "zh": "失敗",
+   "use": "戰敗（播一次）",
+   "bpm": 70,
+   "key": "A minor",
+   "seconds": 6,
+   "loop": false,
+   "prompt": "short defeat jingle, sad descending strings and soft piano, gentle ending chord, 5 to 6 seconds, clean ending"
+  }
+ ]
+}
