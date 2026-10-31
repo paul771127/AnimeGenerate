@@ -51,6 +51,7 @@ namespace SpellDuel
         {
             I = this;
             a = gameObject.AddComponent<AudioSource>(); b = gameObject.AddComponent<AudioSource>(); jingleSrc = gameObject.AddComponent<AudioSource>();
+            StartCoroutine(Download());   // 一開始就在背景下載全部配樂（Music.Files.cs）
             jingleSrc.loop = false; jingleSrc.playOnAwake = false; jingleSrc.spatialBlend = 0f;
             foreach (var s in new[] { a, b }) { s.loop = true; s.playOnAwake = false; s.spatialBlend = 0f; s.volume = 0f; }
         }

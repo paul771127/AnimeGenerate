@@ -8,7 +8,7 @@ namespace SpellDuel
 {
     /// <summary>
     /// 生成的配樂（地端音樂生成機做的 mp3，Docs/music/tracks/；曲目與用途見 Docs/music/tracks.json）。
-    ///   ・跟劇情影片、探索特效一樣不打包進 App：要播的那首優先下載；其他的只在 Wi-Fi 下慢慢在背景下載（全部約 60MB）。
+    ///   ・跟劇情影片、探索特效一樣不打包進 App：App 一開就在背景把全部曲子下載下來（約 60MB，只有第一次；要播的那首優先）。
     ///   ・下載好的用壓縮格式留在記憶體（一首約 1.4MB；解壓的話 90 秒立體聲約 30MB）。
     ///   ・還沒下載好的：用程式合成的配樂頂著（SynthOf）。
     ///   ・勝利／失敗短曲：Jingle 播一次，播的時候背景音樂壓低。
@@ -88,7 +88,12 @@ namespace SpellDuel
             }
         }
 
-        /// <summary>下載：先下載現在要播的那首；其他的只在 Wi-Fi 下慢慢下載</summary>
+        /// <summary>下載：App 一開就開始把全部曲子下載下來（現在要播的那首優先）</summary>
+        public static void PrefetchAll()
+        {
+            if (I == null) Ensure();
+            if (!I.downloading) I.StartCoroutine(I.Download());
+        }
         IEnumerator Download()
         {
             downloading = true;
@@ -97,8 +102,7 @@ namespace SpellDuel
             {
                 string next = null;
                 if (priority != null && !FileReady(priority)) next = priority;
-                else if (Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork)
-                    foreach (var t in Tracks) if (!FileReady(t)) { next = t; break; }
+                else foreach (var t in Tracks) if (!FileReady(t)) { next = t; break; }   // 使用者要求：一開始就全部下載（不限 Wi-Fi）
                 priority = null;
                 if (next == null) break;
                 string tmp = FileOf(next) + ".part";
