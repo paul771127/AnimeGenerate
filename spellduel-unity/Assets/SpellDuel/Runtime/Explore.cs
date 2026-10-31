@@ -106,7 +106,9 @@ namespace SpellDuel
 
     public class ExploreMap
     {
-        public const float CellSize = 4f;   // 一格 4m（使用者回報走道太窄、容易卡住：原本 3m）
+        public const float CellSize = 4f;
+        /// <summary>路的轉角（相鄰兩邊是牆）導圓角的半徑（m）；美術的路面與牆角也照這個圓弧</summary>
+        public const float PathFillet = 1.4f;   // 一格 4m（使用者回報走道太窄、容易卡住：原本 3m）
         public readonly int W, H;
         public readonly ExCell[,] cells;
         public Vector2Int start;
@@ -183,11 +185,24 @@ namespace SpellDuel
             if (dx < -half + margin && !Open(c.x - 1, c.y)) return false;
             if (dz > half - margin && !Open(c.x, c.y + 1)) return false;
             if (dz < -half + margin && !Open(c.x, c.y - 1)) return false;
-            // 角落（斜對角是牆）
-            if (dx > half - margin && dz > half - margin && !Open(c.x + 1, c.y + 1)) return false;
-            if (dx > half - margin && dz < -half + margin && !Open(c.x + 1, c.y - 1)) return false;
-            if (dx < -half + margin && dz > half - margin && !Open(c.x - 1, c.y + 1)) return false;
-            if (dx < -half + margin && dz < -half + margin && !Open(c.x - 1, c.y - 1)) return false;
+            // 角落都導圓角（使用者要求）：
+            //   凸出來的牆角（上下左右是路、斜對角是牆）＝圓形，離牆角那一點 margin 以內才算撞到，擦過去會順著弧線滑開；
+            //   轉彎的外角（相鄰兩邊都是牆）＝半徑 PathFillet 的圓弧，角落那一塊不能走。
+            for (int sx = -1; sx <= 1; sx += 2)
+                for (int sz = -1; sz <= 1; sz += 2)
+                {
+                    float ax = dx * sx, az = dz * sz;   // 轉到這個角落的象限（正＝往角落）
+                    bool wallX = !Open(c.x + sx, c.y), wallZ = !Open(c.x, c.y + sz);
+                    if (wallX && wallZ)
+                    {
+                        float f = PathFillet, cx = half - f, cz = half - f;
+                        if (ax > cx && az > cz && new Vector2(ax - cx, az - cz).magnitude > f - margin) return false;
+                    }
+                    else if (!wallX && !wallZ && !Open(c.x + sx, c.y + sz))
+                    {
+                        if (new Vector2(half - ax, half - az).magnitude < margin) return false;
+                    }
+                }
             if (PropAt(p, margin) != null) return false;   // 景物障礙
             return true;
         }
