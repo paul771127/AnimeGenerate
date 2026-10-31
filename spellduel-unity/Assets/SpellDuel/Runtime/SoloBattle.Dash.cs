@@ -26,7 +26,7 @@ namespace SpellDuel
         const float RoomWarnDist = 0.5f;       // 離真實房間邊緣這麼近就提醒
         float dashOpenAt = -99f, dashLostAt = -1f, dashStepAt, nextRoomWarn;
         bool dashing, dashStuck;
-        float dashMovedAt = -99f, dashStartAt = -99f;
+        float dashMovedAt = -99f, dashStartAt = -99f, dashStuckAt = -99f;
         float dashDistance;   // 這一場總共衝了幾公尺（新手教學用）
         Vector3 dashTotalS;   // 到目前為止世界總共被平移多少（session 座標）
         Vector3 dashMoveW;    // 衝刺讓角色在場地上前進了多少（場地座標）
@@ -63,7 +63,19 @@ namespace SpellDuel
             float want = DashSpeedNow * dt;
             float step = DashStepAllowed(dir, want, out string why);
             if (exploreRun != null && step < want * 0.6f) ExSlide(ref dir, ref step, want);   // 故事探索：擦到牆角、樹就沿著邊滑過去，不要整個停住
-            if (step < 1e-4f) { dashStuck = true; DashBlocked(why); return; }
+            if (step < 1e-4f)
+            {
+                // 撞到邊界／牆（使用者要求）：衝刺真的停下來，不要維持衝刺動作卻不動。轉個方向再比 5→握拳就能再衝
+                if (!dashStuck) dashStuckAt = Time.time;
+                dashStuck = true; DashBlocked(why);
+                if (Time.time - dashStuckAt > 0.25f)
+                {
+                    StopDash(); dashOpenAt = -99f;
+                    Haptics.Play(Haptics.Kind.Light);
+                    Say($"🛑 {dashWhy ?? "前面過不去"}：衝刺停下來了。轉向能走的方向，再比 5→握拳", 2.5f);
+                }
+                return;
+            }
             dashStuck = false;
             var move = dir * step;
             ShiftWorld(-WorldFrame.DirFromWorld(move));
