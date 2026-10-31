@@ -6,7 +6,7 @@ namespace SpellDuel
     /// <summary>
     /// 材料、精煉石、特殊藥劑、特殊裝備（使用者要求）。
     ///   ・材料放在道具欄（Economy.Items，id 開頭 mat_）。敵人倒下時：精魄 → 裝備 → 材料，最多只掉一樣（SoloBattle.DropOne）。
-    ///   ・岩石／大地類敵人 10% 掉鐵礦石；普通以上難度另有機率掉高級鐵礦石。強化 +1～+3 不用礦石；5 個鐵礦石 → 精煉石（+4～+7 每次 1 個）；
+    ///   ・各章的岩石、金屬類敵人與峽谷所有敵人 10% 掉鐵礦石；普通以上難度另有機率掉高級鐵礦石。強化 +1～+3 不用礦石；5 個鐵礦石 → 精煉石（+4～+7 每次 1 個）；
     ///     5 個高級鐵礦石 → 高級精煉石（+8、+9 每次 1 個；+10 2 個）。
     ///   ・每個城鎮的藥劑師用當地敵人掉的材料做強化藥劑（每罐 3 分鐘）；材料一樣 10% 從對應的敵人身上掉。
     ///   ・工匠做特殊裝備：固定的特殊效果（數值有點隨機）、物品等級＝自己的等級（數值 ±10%）；等級越高要的材料越多；
@@ -18,8 +18,8 @@ namespace SpellDuel
         public class Mat { public string id, name, icon, from; }
         public static readonly List<Mat> Mats = new List<Mat>
         {
-            M("ore", "鐵礦石", "🪨", "岩石、大地類的敵人（10%）"),
-            M("ore_hi", "高級鐵礦石", "💎", "普通以上難度的岩石、大地類敵人"),
+            M("ore", "鐵礦石", "🪨", "各章的岩石、金屬類敵人與峽谷所有敵人（10%）"),
+            M("ore_hi", "高級鐵礦石", "💎", "普通以上難度，掉鐵礦石的敵人（5%）"),
             M("refine", "精煉石", "🔷", "鐵匠：5 個鐵礦石合成"),
             M("refine_hi", "高級精煉石", "🔶", "鐵匠：5 個高級鐵礦石合成"),
             // 第一章：熔岩
@@ -76,9 +76,16 @@ namespace SpellDuel
         public static int Have(string id) => Economy.Count(id.StartsWith("mat_") ? id : "mat_" + id);
         public static void Give(string id, int n) => Economy.AddItem(id.StartsWith("mat_") ? id : "mat_" + id, n);
 
-        public const float MatChance = 0.10f, HiOreChance = 0.05f, EliteMatChance = 0.25f, BossCoreChance = 0.25f, SmithSoulChance = 0.05f;
-        /// <summary>岩石、大地類的敵人（掉鐵礦石）：岩石衝鋒獸、岩石投擲者、古根撼地獸、裂岩甲蜥、晶甲守隘獸、砂晶砲蜥、石巢牧者</summary>
-        public static bool IsRocky(int kind) => kind == 2 || kind == 4 || kind == 19 || kind == 22 || kind == 43 || kind == 44 || kind == 46;
+        public const float MatChance = 0.10f, OreChance = 0.10f, HiOreChance = 0.05f, EliteMatChance = 0.25f, BossCoreChance = 0.25f, SmithSoulChance = 0.05f;
+        /// <summary>
+        /// 會掉鐵礦石的敵人（使用者要求：來源太少、增多）：每一章都有。
+        ///   熔岩：熔岩小鬼、岩石衝鋒獸、自爆小鬼、岩石投擲者、熔岩狙擊手、熔冠衛士、黑曜縛咒師、爐心喚靈者
+        ///   森林：古根撼地獸、苔甲守根者　　海港：寄居蟹、珊瑚重鉗
+        ///   角鬥場：鏈錘鬥奴、銅盾百夫長、鎖弩監軍、赤刃角鬥士　　峽谷：所有敵人（含裂岩甲蜥與峽谷菁英）
+        /// </summary>
+        static readonly HashSet<int> OreKinds = new HashSet<int> { 0, 2, 3, 4, 5, 19, 22, 16, 21, 23, 25, 26, 28, 33, 38, 39, 42, 43, 44, 45, 46, 47 };
+        public static bool IsRocky(int kind) => OreKinds.Contains(kind);
+        public static bool DropsOre(int kind, int theme) => IsRocky(kind) || theme == 4;
 
         /// <summary>這種小怪可能掉的材料（不含鐵礦石）</summary>
         static string[] KindMats(int kind, int theme)
@@ -120,11 +127,11 @@ namespace SpellDuel
         public static string RollMinion(int kind, int theme, int difficulty, System.Random rng)
         {
             if (EliteCatalog.IsElite(kind) && difficulty >= 1 && rng.NextDouble() < EliteMatChance) return "mat_elite";   // 菁英徽記：普通以上
-            bool rocky = IsRocky(kind);
+            bool rocky = DropsOre(kind, theme);
             if (rocky && difficulty >= 1 && rng.NextDouble() < HiOreChance) return "mat_ore_hi";
+            if (rocky && rng.NextDouble() < OreChance) return "mat_ore";   // 鐵礦石獨立擲（不跟這種怪的其他材料搶機率）
             if (rng.NextDouble() >= MatChance) return null;
             var list = new List<string>(KindMats(kind, theme));
-            if (rocky) list.Add("ore");
             if (list.Count == 0) return null;
             return "mat_" + list[rng.Next(list.Count)];
         }

@@ -143,7 +143,7 @@ namespace SpellDuel
             { Crafting.RefineStone(false, out var rm); Toast(rm); smithExpr = "proud"; smithLine = "礦石敲一敲、燒一燒——精煉石來了！"; Sfx.Play("anvil", 0.7f); }
             if (UiKit.Button(D(40, 1290, 600, 88), $"🔶 合成高級精煉石（💎高級鐵礦石 {oreHi}/{Crafting.OrePerStone}）　持有 {Crafting.Have("refine_hi")}", fsS, false, new Color(1f, 0.7f, 0.3f), !anim && oreHi >= Crafting.OrePerStone))
             { Crafting.RefineStone(true, out var rm2); Toast(rm2); smithExpr = "proud"; smithLine = "好礦！+8 以上就靠它了。"; Sfx.Play("anvil", 0.8f, 1.2f); }
-            UiKit.Text(D(40, 1385, 600, 120), "+1～+3 不用礦石（每級 +4%）；+4～+7 精煉石（每級 +8%）；+8～+10 高級精煉石（每級 +12%，+10 要 2 個）。\n鐵礦石：岩石、大地類的敵人；高級鐵礦石：普通以上難度。", fsS, new Color(0.9f, 0.92f, 1f), TextAnchor.UpperLeft, false, 0.5f);
+            UiKit.Text(D(40, 1385, 600, 120), "+1～+3 不用礦石（每級 +4%）；+4～+7 精煉石（每級 +8%）；+8～+10 高級精煉石（每級 +12%，+10 要 2 個）。\n鐵礦石：各章的岩石、金屬類敵人與峽谷所有敵人；高級鐵礦石：同一批敵人，普通以上難度。", fsS, new Color(0.9f, 0.92f, 1f), TextAnchor.UpperLeft, false, 0.5f);
             if (UiKit.Button(D(270, 1795, 540, 92), "🏘 回城鎮", fs, false, new Color(1f, 0.55f, 0.2f), !anim)) { screen = Screen.Town; smithLine = null; smithExpr = "normal"; }
             return true;
         }
