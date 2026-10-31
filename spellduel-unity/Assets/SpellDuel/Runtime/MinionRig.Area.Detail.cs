@@ -85,8 +85,8 @@ namespace SpellDuel
    RarePart(spine,"Bark ridges and fissures",pale,b=>{for(int i=0;i<7;i++){float a=i*Mathf.PI*2/7;RareTube(b,new[]{R(Mathf.Cos(a)*.47f,Mathf.Sin(a)*.28f,-.55f),R(Mathf.Cos(a+.13f)*.47f,Mathf.Sin(a+.13f)*.30f,0),R(Mathf.Cos(a)*.44f,Mathf.Sin(a)*.27f,.56f)},new[]{.008f,.018f,.003f},5,4);}});
    for(int i=0;i<4;i++){
     int n=i;var leg=areaLegs[i]=Pivot("Articulated leg",spine,R((i%2==0?-1:1)*.43f,-.04f,i<2?.49f:-.48f));
-    RarePart(leg,"Root claw "+i,bark,b=>{for(int j=-1;j<=1;j++)RareTube(b,new[]{R(j*.07f,.02f,0),R(j*.10f,-.22f,.025f),R(j*.12f,-.44f,.08f),R(j*.16f,-.49f,.23f)},new[]{.065f,.065f,.045f,.008f},4,5);});
-    RarePart(leg,"Claw bark "+i,pale,b=>{for(int j=-1;j<=1;j++)RareRod(b,R(j*.11f,-.40f,.12f),R(j*.16f,-.49f,.24f),.022f,.003f);});
+    RarePart(leg,"Root claw "+i,bark,b=>{for(int j=-1;j<=1;j++)RareTube(b,new[]{R(j*.07f,.02f,0),R(j*.10f,-.22f,.025f),R(j*.12f,-.53f,.08f),R(j*.16f,-.59f,.23f)},new[]{.065f,.065f,.045f,.008f},4,5);});
+    RarePart(leg,"Claw bark "+i,pale,b=>{for(int j=-1;j<=1;j++)RareRod(b,R(j*.11f,-.49f,.12f),R(j*.16f,-.59f,.24f),.022f,.003f);});
    }
    areaFrontL=areaLegs[0];areaFrontR=areaLegs[1];
    RarePart(spine,"Moss garden",moss,b=>{for(int i=0;i<4;i++)RarePlate(b,R((i%2==0?-.18f:.19f),.31f,-.51f+i*.32f),R(.45f,.09f,.44f));});
@@ -173,8 +173,8 @@ namespace SpellDuel
    RarePart(spine,"Low tapered reptile torso",hide,b=>RareTube(b,new[]{R(0,-.03f,-.79f),R(0,0,-.42f),R(0,0,.13f),R(0,-.03f,.72f)},new[]{.17f,.47f,.46f,.21f},8,10,.65f));
    for(int i=0;i<4;i++){
     var leg=areaLegs[i]=Pivot("Articulated leg",spine,R((i%2==0?-1:1)*.43f,-.04f,i<2?.49f:-.48f));
-    RarePart(leg,"Reptile haunch and toes "+i,hide,b=>{RareTube(b,new[]{R(0,0,0),R(.035f,-.19f,-.03f),R(0,-.38f,.03f),R(0,-.45f,.14f)},new[]{.17f,.15f,.09f,.12f},4,7,.88f);for(int j=-1;j<=1;j++)RareTube(b,new[]{R(j*.07f,-.43f,.09f),R(j*.10f,-.46f,.19f),R(j*.13f,-.46f,.28f)},new[]{.043f,.034f,.015f},2,4);});
-    RarePart(leg,"Stone claws "+i,pale,b=>{for(int j=-1;j<=1;j++)RareRod(b,R(j*.13f,-.46f,.24f),R(j*.14f,-.46f,.34f),.03f,.002f,4);RarePlate(b,R(0,-.19f,.11f),R(.22f,.06f,.24f));});
+    RarePart(leg,"Reptile haunch and toes "+i,hide,b=>{RareTube(b,new[]{R(0,0,0),R(.035f,-.19f,-.03f),R(0,-.43f,.03f),R(0,-.50f,.14f)},new[]{.17f,.15f,.09f,.12f},4,7,.88f);for(int j=-1;j<=1;j++)RareTube(b,new[]{R(j*.07f,-.49f,.09f),R(j*.10f,-.53f,.19f),R(j*.13f,-.53f,.28f)},new[]{.043f,.034f,.015f},2,4);});
+    RarePart(leg,"Stone claws "+i,pale,b=>{for(int j=-1;j<=1;j++)RareRod(b,R(j*.13f,-.53f,.24f),R(j*.14f,-.53f,.34f),.03f,.002f,4);RarePlate(b,R(0,-.19f,.11f),R(.22f,.06f,.24f));});
    }
    areaFrontL=areaLegs[0];areaFrontR=areaLegs[1];
    RarePart(spine,"Overlapping fractured back plates",stone,b=>{for(int i=0;i<5;i++)for(int s=-1;s<=1;s+=2){float z=-.60f+i*.27f;RarePlate(b,R(s*.24f,.25f,z),R(.49f,.15f,.41f),s*20);}});

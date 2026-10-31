@@ -12,7 +12,7 @@ namespace SpellDuel.EditorTools
  {
   const BindingFlags RareFlags=BindingFlags.NonPublic|BindingFlags.Instance|BindingFlags.Public;
   static readonly string[] RareIds={"ancient_root_beast","tidewhip_eel","chain_gladiator","riftplate_lizard"};
-  [Serializable] public class RareAuditRow {public int kind,triangles,renderers,registeredColours,registeredEyes,chargedSurfaces;public Vector3 oldSize,newSize;public bool sharedMeshes,pivotsUnchanged,hitChangesColour,deathChangesColour,chargeChangesColour;}
+  [Serializable] public class RareAuditRow {public int kind,triangles,renderers,registeredColours,registeredEyes,chargedSurfaces;public Vector3 oldSize,newSize;public float sole;public bool sharedMeshes,pivotsUnchanged,hitChangesColour,deathChangesColour,chargeChangesColour;}
   [Serializable] public class RareAuditReport {public string unity;public RareAuditRow[] enemies;}
   static object RareField(MinionRig r,string name)=>typeof(MinionRig).GetField(name,RareFlags).GetValue(r);
   static void RareTick(MinionRig r,float dt)=>typeof(MinionRig).GetMethod("AnimateAreaEnemy",RareFlags).Invoke(r,new object[]{dt});
@@ -41,6 +41,7 @@ namespace SpellDuel.EditorTools
   {
    var a=new RareAuditRow{kind=kind,oldSize=RareBounds(old).size,newSize=RareBounds(r).size};var meshes=r.GetComponentsInChildren<MeshFilter>();a.renderers=r.GetComponentsInChildren<Renderer>().Length;
    foreach(var f in meshes)for(int sub=0;sub<f.sharedMesh.subMeshCount;sub++)a.triangles+=(int)f.sharedMesh.GetIndexCount(sub)/3;
+   a.sole=RareBounds(r).min.y;RareRequire(a.sole>=-.05f&&a.sole<=.05f,"feet do not meet ground "+kind+" "+a.sole);
    RareRequire(a.triangles<=4000,kind+" has "+a.triangles+" triangles");RareRequire(!r.GetComponentInChildren<Collider>(),"art adds collider");
    a.pivotsUnchanged=string.Join("\n",RarePivots(r))==string.Join("\n",RarePivots(old));RareRequire(a.pivotsUnchanged,"pivot hierarchy changed "+kind);
    var clone=RareCreate(kind);var other=clone.GetComponentsInChildren<MeshFilter>();a.sharedMeshes=meshes.Length==other.Length;for(int i=0;i<Math.Min(meshes.Length,other.Length);i++)a.sharedMeshes&=meshes[i].sharedMesh==other[i].sharedMesh;UnityEngine.Object.DestroyImmediate(clone.gameObject);RareRequire(a.sharedMeshes,"cache miss "+kind);
