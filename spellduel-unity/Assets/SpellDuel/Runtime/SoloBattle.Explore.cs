@@ -34,6 +34,7 @@ namespace SpellDuel
             {
                 if (GateArea(Go)) return;
                 pendingExplore = new ExploreRun(JungleMaze.Build());
+                ExploreFx.Prefetch();   // 特效影片：背景下載（第一次約 5MB）
                 StartBossBattle(false, true);
             }
             if (!Story.IsSeen("ex:jungle")) { Story.MarkSeen("ex:jungle"); ShowDialogue(ExLines(ExploreIntro), Go); }
@@ -72,6 +73,7 @@ namespace SpellDuel
             {
                 if (call) { Sfx.Play("roar", 0.5f, 1.3f); Say($"❗ {m.name}在呼叫同伴！", 2f); } else Sfx.Play("select", 0.4f, 0.6f);
                 // 頭上的「！」（Codex 的 AlertMark；會叫同伴的多一圈聲波）：顯示一下就收起來（動畫影片之後接）
+                if (exRoot) { var mm = m; ExploreFx.Once(exRoot, call ? "fx_E2_roar_wave" : "fx_E2_alert", () => mm.head + Vector3.up * (call ? 0.2f : 0.7f), call ? 2f : 0.9f); }   // 影片版的「！」／聲波
                 if (minionGo.TryGetValue(m, out var mr) && mr) { ExploreArt.AlertMark(mr.transform, call); var t = mr.transform.Find("AlertMark"); if (t) exAlertMarks.Add((t, Time.time + (call ? 1.8f : 1.1f))); }
             };
             exHasValid = false; exLastCell = new Vector2Int(-999, -999);
@@ -96,6 +98,61 @@ namespace SpellDuel
             var cell = run.map.Cell(Me.Feet);
             if (cell != exLastCell || exGatesDirty(run)) { exLastCell = cell; RefreshExploreCells(run, cell); }
             UpdateExploreProps(run);
+            UpdateExploreFx(run);
+        }
+
+        // ---------------------------------------------------------------- 特效影片（影片生成機做的 mp4；ExploreFx.cs）
+        readonly HashSet<object> exFxSeen = new HashSet<object>();
+        readonly Dictionary<ExSeal, int> exFxSealHave = new Dictionary<ExSeal, int>();
+        bool exFxInit, exFxBoss, exFxHeart;
+        const float ExFxLoopRange = 12f;   // 循環的特效（火、孢子、閃光點、符文）只在這個距離內播
+
+        void UpdateExploreFx(ExploreRun run)
+        {
+            var map = run.map; var me = Me.Feet;
+            if (!exFxInit)
+            {
+                // 剛進來：已經發生過的事不補播
+                exFxInit = true; exFxBoss = run.bossDead; exFxHeart = run.hasHeart;
+                foreach (var a in map.arenas) if (a.cleared) exFxSeen.Add(a);
+                foreach (var se in map.seals) { exFxSealHave[se] = se.have; if (se.open) exFxSeen.Add(se); }
+                foreach (var sw in map.switches) if (sw.done) exFxSeen.Add(sw);
+            }
+            // 藤蔓門、封印打開：腐化的紫光熄滅、綠色光點與葉子爆開
+            foreach (var a in map.arenas)
+                if (a.cleared && exFxSeen.Add(a)) foreach (var c in a.gate) { var at = map.World(c.x, c.y) + Vector3.up * 1.3f; ExploreFx.Once(exRoot, "fx_A_unseal_burst", () => at, 3f); }
+            foreach (var se in map.seals)
+            {
+                var ctr = Vector3.zero; foreach (var c in se.cells) ctr += map.World(c.x, c.y); if (se.cells.Count > 0) ctr /= se.cells.Count;
+                var at = ctr + Vector3.up * 1.3f;
+                if (exFxSealHave.TryGetValue(se, out int had) && se.have > had && se.id == "seal4") ExploreFx.Once(exRoot, "fx_A5_socket_pulse", () => at + Vector3.up * 0.3f, 1.4f);   // 翠玉碎片放進凹槽
+                exFxSealHave[se] = se.have;
+                if (se.open && exFxSeen.Add(se)) ExploreFx.Once(exRoot, "fx_A_unseal_burst", () => at, 3.2f);
+            }
+            // 岔路：石雕機關的符文（平常呼吸亮暗、啟動時光環＋光束）、鑰匙／碎片撿起來
+            foreach (var sw in map.switches)
+            {
+                var at = sw.pos;
+                if (sw.kind == "lever") ExploreFx.Loop(exRoot, sw, "fx_B1_rune_idle", !sw.done && Battle.FlatDistance(at, me) <= ExFxLoopRange, () => at + Vector3.up * 0.55f, 0.7f);
+                if (sw.done && exFxSeen.Add(sw)) ExploreFx.Once(exRoot, sw.kind == "lever" ? "fx_B1_activate" : "fx_B2_pickup", () => at + Vector3.up * (sw.kind == "lever" ? 0.5f : 1f), sw.kind == "lever" ? 2.2f : 1.3f);
+            }
+            // 隱藏閃光點：偶爾閃一下（依種類：寶藏金光、樹洞綠光、小動物的眼睛、藤牆縫隙的細白光）
+            foreach (var sp in map.sparkles)
+            {
+                string id = sp.kind == "spirit" ? "fx_C1_glint_green" : sp.kind == "beast" ? "fx_C1_glint_eyes" : sp.kind == "passage" ? "fx_C1_glint_white" : "fx_C1_glint_gold";
+                var at = sp.pos;
+                ExploreFx.Loop(exRoot, sp, id, !sp.found && Battle.FlatDistance(at, me) <= ExSparkleShow, () => at + Vector3.up * (sp.kind == "passage" ? 0.9f : 0.45f), sp.kind == "passage" ? 1.4f : 0.9f);
+            }
+            // 篝火的火焰、巨菇的孢子
+            foreach (var p in map.props)
+            {
+                if (p.kind != "campfire" && p.kind != "mushroom") continue;
+                var at = p.pos; bool fire = p.kind == "campfire";
+                ExploreFx.Loop(exRoot, p, fire ? "fx_D3_fire" : "fx_D4_spores", Battle.FlatDistance(at, me) <= ExFxLoopRange, () => at + Vector3.up * (fire ? 0.45f : 1.4f), fire ? 1.0f : 2.2f);
+            }
+            // 古樹之心：Boss 倒下時從祭壇浮出、拿走時化成光
+            if (run.bossDead && !exFxBoss) { exFxBoss = true; var at = map.altar; ExploreFx.Once(exRoot, "fx_C4_heart_rise", () => at + Vector3.up * 1.1f, 2.4f); }
+            if (run.hasHeart && !exFxHeart) { exFxHeart = true; var at = map.altar; ExploreFx.Once(exRoot, "fx_C4_heart_take", () => at + Vector3.up * 1.2f, 1.6f); }
         }
 
         int exGateHash = -1;
@@ -279,7 +336,7 @@ namespace SpellDuel
                 if (s.found || Battle.FlatDistance(s.pos, Me.Feet) > ExploreRun.SparkleTapRange) continue;
                 var sp = cam.WorldToScreenPoint(WorldFrame.FromWorld(s.pos + Vector3.up * 0.5f));
                 if (sp.z <= 0f || Vector2.Distance(new Vector2(sp.x, sp.y), tp) > Screen.width * 0.12f) continue;
-                if (exploreRun.TapSparkle(s.id, Me.Feet) != null) { Sfx.Play("coin", 0.8f); Haptics.Play(Haptics.Kind.Success); Burst(s.pos + Vector3.up * 0.5f, new Color(1f, 0.95f, 0.6f)); }
+                if (exploreRun.TapSparkle(s.id, Me.Feet) != null) { Sfx.Play("coin", 0.8f); Haptics.Play(Haptics.Kind.Success); Burst(s.pos + Vector3.up * 0.5f, new Color(1f, 0.95f, 0.6f)); var sat = s.pos; ExploreFx.Once(exRoot, "fx_C2_discover", () => sat + Vector3.up * 0.6f, 1.8f); }
                 break;
             }
         }
@@ -288,6 +345,7 @@ namespace SpellDuel
         {
             if (exRoot) Destroy(exRoot.gameObject);
             if (area != null) area.BoundsOff = false;
+            ExploreFx.Clear(); exFxSeen.Clear(); exFxSealHave.Clear(); exFxInit = false;
             exRoot = null; exWalls.Clear(); exProps.Clear(); exSwitchShownDone.Clear(); exAlertMarks.Clear(); exBannerSeen.Clear();
             if (exBannerUntil > 0f || exploreRun != null) ExploreArt.LandmarkFound(null);
             exBannerUntil = -1f;

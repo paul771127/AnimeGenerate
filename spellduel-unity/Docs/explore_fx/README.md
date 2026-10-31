@@ -59,3 +59,11 @@ mp4 **沒有透明**，所以背景要能讓遊戲去掉：
 ## 哪些不用做成影片
 
 門打開、機關下沉、木門旋開、樹叢搖擺、旗子飄、洞窟水滴這類**立體的動作**，做成平面影片在 AR 裡角度會對不上，改由 Claude 用程式直接動 Codex 模型上有命名的子物件；影片只做疊在上面的光和粒子（例如 `fx_A_unseal_burst`）。
+
+## 已接進遊戲（ExploreFx.cs）
+
+- 進故事探索時在背景下載（第一次約 5MB），存在手機的 `explore_fx/`；還沒下載好的特效就先不播。
+- 播法：面向鏡頭的方片，黑底用加法混色、綠幕去綠（`Resources/Shaders/ExploreFxVideo.shader`）。一次性的會加速到 `seconds` 的長度；同時最多 6 支。
+- 用到的 16 支：A_unseal_burst（藤蔓門／封印打開）、A5_socket_pulse（翠玉碎片放進凹槽）、B1_rune_idle／B1_activate（石雕機關）、B2_pickup（鑰匙／碎片撿起）、C1_glint_*（閃光點）、C2_discover（點到閃光點）、C4_heart_rise／take（古樹之心）、D3_fire（篝火）、D4_spores（巨菇）、E2_alert／roar_wave（怪物發現玩家）。
+- 先沒用的 9 支：B2_key_idle、B2_shard_idle、C3_herb、C4_heart_idle、D2_lake、E1_spirit、E3_exclaim、E3_question、E4_banner。這些在場景裡已經有 Codex 的立體模型，影片是平面的，疊上去會重複。
+- 重做某支：覆蓋 `videos/` 裡同檔名的檔案。已經下載過的手機要清除 App 資料才會重新下載。
