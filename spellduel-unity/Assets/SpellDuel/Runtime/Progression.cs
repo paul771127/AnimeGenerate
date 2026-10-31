@@ -417,7 +417,7 @@ namespace SpellDuel
                     // ✨ 輔助
                     FLearn("sx_jz", "jianzhen", 5, 1, "sx_root"),
                     FMod("sx_jz2", "劍陣加厚", "jianzhen", ModField.BuffAmount, 10f, 5, 5, 2, "sx_jz"),
-                    FPas("sx_leech", "劍氣凝盾", PassiveKind.HitShield, 0.02f, 5, 6, 2, "sx_jz"),   // 使用者要求：取代劍氣吸血 → 造成的傷害每級 2%（滿級 10%）轉成護盾；御劍、萬劍多段命中也算。id 沿用
+                    FPas("sx_leech", "劍氣凝盾", PassiveKind.HitShield, 0.01f, 5, 6, 2, "sx_jz"),   // 2% → 1%／級（使用者回報劍仙打不動）   // 使用者要求：取代劍氣吸血 → 造成的傷害每級 2%（滿級 10%）轉成護盾；御劍、萬劍多段命中也算。id 沿用
                     FMod("sx_jzcd", "陣法回氣", "jianzhen", ModField.Cooldown, 0.08f, 5, 5, 3, "sx_jz2"),
                     FPas("sx_mp", "劍氣回流", PassiveKind.MpOnHit, 1f, 5, 6, 3, "sx_leech"),
                     // 流派被動（使用者要求：不同流派的玩法）

@@ -186,7 +186,8 @@ namespace SpellDuel
         public float armorUntil, armorReduce;
         // 角色養成（無盡模式）：裝備減傷、側跨無敵時間加長、吸血、命中回 MP、每秒回血、低血量減傷
         public float gearReduce, dodgeBonus, lifesteal, mpOnHit, hpRegen, lastStand;
-        public float leechSwingAt = -1f, leechSwingBest;   // 普攻吸血（飲血）：同一揮只算一次（取打中的最高傷害）
+        public float leechSwingAt = -1f, leechSwingBest;
+        public float leechBudget = -1f, leechBudgetAt;   // 吸血每秒上限（LeechPerSec）用的額度   // 普攻吸血（飲血）：同一揮只算一次（取打中的最高傷害）
         public float shieldSwingAt = -1f, shieldSwingBest; // 劍氣護體（普攻轉護盾）：同一揮只算一次
         public float regenTick, nextRegenAt;   // 自然回復（劍士／主教的被動）：每 10 秒一次回 regenTick（不是每秒）
         /// <summary>魔法減傷（智力）；gearReduce＝物理減傷（體質、裝備）</summary>
@@ -4458,9 +4459,17 @@ namespace SpellDuel
         }
 
         /// <summary>吸血回 HP（沒有上限；強度由技能樹倍率決定）</summary>
+        /// <summary>吸血每秒最多回最大 HP 的這個比例（使用者回報劍仙一下就回滿；裝備、精魄、飲血斬都算），最多存 LeechBurst 秒的額度</summary>
+        public const float LeechPerSec = 0.04f, LeechBurst = 1.5f;
         void Leech(Fighter a, float amount)
         {
             if (amount <= 0f || !a.Alive) return;
+            float cap = a.maxHp * LeechPerSec;
+            if (a.leechBudget < 0f) { a.leechBudget = cap * LeechBurst; a.leechBudgetAt = now; }
+            a.leechBudget = Mathf.Min(cap * LeechBurst, a.leechBudget + (now - a.leechBudgetAt) * cap); a.leechBudgetAt = now;
+            amount = Mathf.Min(amount, a.leechBudget);
+            if (amount <= 0f) return;
+            a.leechBudget -= amount;
             a.hp = Mathf.Min(a.maxHp, a.hp + amount);
         }
 

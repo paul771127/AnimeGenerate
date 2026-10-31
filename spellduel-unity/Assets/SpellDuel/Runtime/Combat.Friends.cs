@@ -80,7 +80,7 @@ namespace SpellDuel
         }
 
         // ------------------------------------------------------------ 審判者：傷害轉護盾
-        public const float DmgShieldCap = 0.4f, DmgShieldLife = 6f;
+        public const float DmgShieldCap = 0.25f, DmgShieldLife = 6f;   // 使用者回報劍仙打不動：上限 40% → 25%（每次命中都會補，等於一直掛著）
         void GainDmgShield(Fighter a, float dmg) { if (a != null && a.dmgShield > 0f) AddShieldFrom(a, dmg * a.dmgShield); }
         /// <summary>傷害轉成護盾（審判者、劍士系列）：累積到整數才加；6 秒、最多最大 HP 的 40%</summary>
         void AddShieldFrom(Fighter a, float amount)
