@@ -67,9 +67,13 @@ namespace SpellDuel
             Bar(r,progress,colour,ready?"READY":"",Mathf.Max(10,Mathf.RoundToInt(r.height*.72f)));
             if(ready)Halo(r,colour,.65f+.3f*Mathf.Sin(Time.unscaledTime*6f));
         }
+        static GUIStyle bubbleStyle;
         public static void SpeechBubble(Rect r,float tailX,float alpha)
         {
-            Card(r,alpha,Paper,.9f*alpha);
+            Init();
+            if(bubbleStyle==null)bubbleStyle=new GUIStyle{normal={background=MakePanel(96,3)},border=new RectOffset(18,18,18,18)};
+            Paint(new Rect(r.x,r.y+3,r.width,r.height),bubbleStyle,new Color(.01f,.02f,.04f,alpha*.75f));
+            Paint(r,bubbleStyle,new Color(.19f,.25f,.37f,alpha));
             Gem(new Rect(Mathf.Clamp(tailX-6,r.x+8,r.xMax-20),r.yMax-5,12,12),new Color(.18f,.24f,.35f,alpha));
         }
         public static void MapFrame(Rect r,int font)

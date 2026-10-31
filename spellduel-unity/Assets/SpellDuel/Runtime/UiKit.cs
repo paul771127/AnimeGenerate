@@ -108,6 +108,11 @@ namespace SpellDuel
             {
                 float u=x+.5f,v=y+.5f;
                 float edge=Mathf.Min(u,v,n-u,n-v,(u+v-10f)*.7071f,(n-u+v-10f)*.7071f,(u+n-v-10f)*.7071f,(2*n-u-v-10f)*.7071f);
+                if(kind==3)
+                {
+                    float qx=Mathf.Abs(u-n*.5f)-(n*.5f-18),qy=Mathf.Abs(v-n*.5f)-(n*.5f-18);
+                    edge=18-Mathf.Sqrt(Mathf.Max(qx,0)*Mathf.Max(qx,0)+Mathf.Max(qy,0)*Mathf.Max(qy,0))-Mathf.Min(Mathf.Max(qx,qy),0);
+                }
                 float a=Mathf.Clamp01(edge+.5f);float light=.70f+.30f*v/n;
                 if(kind==1){a*=Mathf.Clamp01(2.2f-edge)+Mathf.Clamp01(1f-Mathf.Abs(edge-6f));light=1f;}
                 if(kind==2){a*=Mathf.Clamp01(4f-edge);light=v>n*.5f?1f:.32f;}

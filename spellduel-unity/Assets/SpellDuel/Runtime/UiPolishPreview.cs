@@ -39,7 +39,8 @@ namespace SpellDuel
             {
                 view.backgroundColor=page==1||page==3?new Color(.035f,.04f,.05f):new Color(.88f,.87f,.83f);
                 yield return null;yield return new WaitForEndOfFrame();
-                var t=ScreenCapture.CaptureScreenshotAsTexture();
+                var t=new Texture2D(Screen.width,Screen.height,TextureFormat.RGBA32,false);
+                t.ReadPixels(new Rect(0,0,Screen.width,Screen.height),0,0);t.Apply();
                 if(t.width!=1080||t.height!=2340)throw new Exception("Wrong screenshot size: "+t.width+"x"+t.height);
                 File.WriteAllBytes(Path.Combine(output,pages[page]+".png"),t.EncodeToPNG());Destroy(t);
                 if(failed)break;
