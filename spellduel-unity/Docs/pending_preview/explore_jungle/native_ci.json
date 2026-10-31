@@ -1,7 +1,7 @@
 {
-  "id": 41143467122,
-  "head": "6049a455f7282bbe21a3207b02e5936503c2bb79",
-  "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41143467122",
+  "id": 41150829358,
+  "head": "416fd39c166dcd2a0689ed631e88d0b4adb5fd25",
+  "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41150829358",
   "status": "completed",
   "conclusion": "success",
   "jobs": [
@@ -9,7 +9,7 @@
       "name": "explore-art",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41143467122/job/124363693226"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41150829358/job/124386676107"
     }
   ]
 }
