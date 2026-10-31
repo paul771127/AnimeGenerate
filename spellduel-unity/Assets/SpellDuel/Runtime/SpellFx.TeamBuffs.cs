@@ -7,7 +7,7 @@ namespace SpellDuel
   internal static Color SkillTint(string id){SkillDef s;if(Skills.All.TryGetValue(id,out s))return s.color;return new Color(.7f,.85f,1);}
   public static void TeamBuffCast(string skillId,Transform owner)
   {
-   if(!owner)return;var go=new GameObject("SpellFx buff cast "+skillId);go.transform.SetParent(owner,false);go.AddComponent<TeamBuffArt>().Build(skillId,true);
+   if(!owner)return;var go=new GameObject("SpellFx buff cast "+skillId);SpellReadability.Attach(go);go.transform.SetParent(owner,false);go.AddComponent<TeamBuffArt>().Build(skillId,true);
   }
   public static void TeamBuffAura(Transform owner,string skillId,float remain01)
   {
@@ -22,7 +22,7 @@ namespace SpellDuel
   readonly Dictionary<string,TeamBuffArt> views=new Dictionary<string,TeamBuffArt>();
   public void Set(string id,float level)
   {
-   TeamBuffArt view;if(!views.TryGetValue(id,out view)||!view){if(level<=0)return;var go=new GameObject("SpellFx aura "+id);go.transform.SetParent(transform,false);view=go.AddComponent<TeamBuffArt>();view.Build(id,false);views[id]=view;}
+   TeamBuffArt view;if(!views.TryGetValue(id,out view)||!view){if(level<=0)return;var go=new GameObject("SpellFx aura "+id);SpellReadability.Attach(go);go.transform.SetParent(transform,false);view=go.AddComponent<TeamBuffArt>();view.Build(id,false);views[id]=view;}
    view.SetLevel(level);
   }
   void OnDestroy(){foreach(var view in views.Values)if(view)view.ReleaseEdges();}

@@ -21,6 +21,7 @@ namespace SpellDuel
             if (!guardFx)
             {
                 guardFx = new GameObject("Guard FX");
+                SpellReadability.Attach(guardFx);
                 guardFx.transform.SetParent(cam.transform, false);
                 guardFx.transform.localPosition = new Vector3(0f, -0.05f, 0.6f);
                 guardHex = SpellFx.Line(guardFx.transform, "Hex", SpellFx.Polygon(6, 0.17f, 90f), true, 0.007f, Color.white, true, true);

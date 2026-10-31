@@ -6,7 +6,7 @@ namespace SpellDuel
   public static GameObject CreateTrapVisual(SkillDef s)
   {
    if(s==null||(s.id!="landmine"&&s.id!="snaretrap"&&s.id!="trapchain"))return null;
-   var go=new GameObject("SpellFx trap "+s.id);go.AddComponent<TrapArtView>().Build(s.id);return go;
+   var go=new GameObject("SpellFx trap "+s.id);SpellReadability.Attach(go);go.AddComponent<TrapArtView>().Build(s.id);return go;
   }
   public static void SetTrapArmed(GameObject trap,bool armed){if(trap){var v=trap.GetComponent<TrapArtView>();if(v)v.SetArmed(armed);}}
   public static void MineBlast(Vector3 atWorld,float radius,Color c)

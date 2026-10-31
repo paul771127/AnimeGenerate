@@ -22,6 +22,7 @@ namespace SpellDuel
             var go = new GameObject("SpellFx Charge " + classId);
             var fx = go.AddComponent<ChargeFx>();
             fx.Init(classId, skillColor, anchor, localOffset, scale);
+            SpellReadability.Attach(go);
             return fx;
         }
 
@@ -75,7 +76,7 @@ namespace SpellDuel
                     // 暗影煙霧爆散（一般混色，才能是「暗」的）
                     var smoke = NewPS(root, "ShadowSmoke", BlendMat(TexSoft), 16, true);
                     var m = smoke.main;
-                    m.startLifetime = new ParticleSystem.MinMaxCurve(0.45f, 0.75f);
+                    m.startLifetime = new ParticleSystem.MinMaxCurve(0.2f, 0.45f);
                     m.startSpeed = new ParticleSystem.MinMaxCurve(0.6f * s, 1.4f * s);
                     m.startSize = new ParticleSystem.MinMaxCurve(0.14f * s, 0.26f * s);
                     m.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
@@ -415,7 +416,7 @@ namespace SpellDuel
                 {
                     var smoke = NewPS(root, "Smoke", BlendMat(TexSoft), 12, true);
                     var m = smoke.main;
-                    m.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 0.8f);
+                    m.startLifetime = new ParticleSystem.MinMaxCurve(0.2f, 0.45f);
                     m.startSpeed = new ParticleSystem.MinMaxCurve(0.3f * s, 0.9f * s);
                     m.startSize = new ParticleSystem.MinMaxCurve(0.15f * s, 0.28f * s);
                     m.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
@@ -485,6 +486,7 @@ namespace SpellDuel
             float radius = s != null ? s.radius : 0.1f;
             float D = Mathf.Max(0.06f, radius * 2f);
             var root = new GameObject("Projectile " + id);
+            SpellReadability.Attach(root);
             var body = NewChild(root.transform, "Body");
             body.localScale = Vector3.one * D;
             var anim = root.AddComponent<ProjectileAnim>();
@@ -1569,6 +1571,7 @@ namespace SpellDuel
             go.transform.SetPositionAndRotation(pos, rot);
             var a = go.AddComponent<FxAnim>();
             a.killAt = life;
+            SpellReadability.Attach(go,SpellReadability.IsImpact(name));
             return a;
         }
     }
@@ -2318,7 +2321,7 @@ namespace SpellDuel
             }
             else fade = Mathf.Clamp01(clock / 0.15f);
 
-            float inten = Mathf.Lerp(0.4f, 0.85f, ease) + readyAmt * (0.15f + 0.25f * pulse);
+            float inten = Mathf.Lerp(0.28f, 0.9f, ease) + readyAmt * (0.15f + 0.18f * pulse);
             float whiten = readyAmt * 0.45f * pulse;
             float wMul = 0.85f + 0.15f * ease + readyAmt * 0.35f * pulse;
             for (int i = 0; i < lines.Count; i++)

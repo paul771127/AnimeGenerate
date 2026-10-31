@@ -4,7 +4,7 @@ namespace SpellDuel
  public static partial class SpellFx
  {
   public static void FalconDive(Vector3 fromWorld,Vector3 toWorld,float seconds)
-  {var go=new GameObject("SpellFx Falcon dive");go.AddComponent<FalconDiveArt>().Build(fromWorld,toWorld,seconds);}
+  {var go=new GameObject("SpellFx Falcon dive");SpellReadability.Attach(go);go.AddComponent<FalconDiveArt>().Build(fromWorld,toWorld,seconds);}
   internal static void FalconClaw(Vector3 at)
   {
    var a=NewAnim("SpellFx Falcon claw",at,Quaternion.identity,.65f);var c=new Color(1,.72f,.24f);

@@ -123,11 +123,7 @@ namespace SpellDuel
             }
         }
 
-        static Color ChargeColor(string id) => id switch
-        {
-            "na_sword" => new Color(0.6f, 0.85f, 1f), "na_dagger" => new Color(1f, 0.15f, 0.2f), "na_kunai" => new Color(0.85f, 0.88f, 0.95f), "na_mage" => new Color(0.7f, 0.5f, 1f),
-            "na_arrow" => new Color(0.6f, 1f, 0.45f), "na_holy" => new Color(1f, 0.9f, 0.45f), _ => new Color(1f, 0.3f, 0.2f),
-        };
+        static Color ChargeColor(string id) => Skills.All.TryGetValue(id,out var skill) ? skill.color : UiKit.Gold;
         /// <summary>出手動作的提示（集氣完成時寫在手掌下面）</summary>
         static string ReadyHint(string id) => id switch
         {
