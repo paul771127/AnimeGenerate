@@ -1242,7 +1242,7 @@ namespace SpellDuel
             return true;
         }
 
-        public const int MaxLevel = 90, StatPerLevel = 8, SkillPerLevel = 1;   // 使用者回報 60 級就拿不到經驗：故事困難難度推薦到 Lv90、特殊配方到 Lv90，上限跟著內容拉到 90
+        public const int MaxLevel = 99, StatPerLevel = 8, SkillPerLevel = 1;   // 等級上限（使用者要求 99；原本 60 級就拿不到經驗）
         /// <summary>
         /// 職業（基本）技能樹：樹上總共 40 點；轉職前最多只能點其中 30 點（＝30 級拿到的點數），要取捨。
         /// 轉職後可以回來繼續點職業樹（最多到 40 點），也可以點進階職業的技能樹。
