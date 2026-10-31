@@ -89,7 +89,7 @@ namespace SpellDuel
             MinionRig.SpawnFx(WorldFrame.FromWorld(at));
         }
 
-        /// <summary>打倒一隻怪：對應的誘餌（一般 8%、菁英 1.5%）、菁英掉馴獸印片（20%）；跟其他掉落分開擲</summary>
+        /// <summary>打倒一隻怪：對應的誘餌（一般 2.7%、菁英 0.5%）、菁英掉馴獸印片（20%）；跟其他掉落分開擲</summary>
         void RollPetDrops(int kind)
         {
             var sp = Pets.Get(kind);

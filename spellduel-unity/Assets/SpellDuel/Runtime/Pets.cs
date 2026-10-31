@@ -72,7 +72,7 @@ namespace SpellDuel
     {
         public const int MaxLevel = 50, MaxSkills = 3, MaxRoster = 30;
         public const float XpShare = 0.4f, EliteHp = 1.5f, EliteAtk = 1.3f, CaptureHp = 0.3f, LureTime = 3f;
-        public const float BaitDrop = 0.08f, EliteBaitDrop = 0.015f, SealDrop = 0.2f;
+        public const float BaitDrop = 0.027f, EliteBaitDrop = 0.005f, SealDrop = 0.2f;   // 誘餌：使用者要求降到原本的 1/3（8% → 2.7%、菁英 1.5% → 0.5%）
         public const int SealsPerEliteBait = 8;
         public const string SealId = "mat_tame_seal";
 
