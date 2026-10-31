@@ -17,7 +17,9 @@ namespace SpellDuel
         public float exIdleUntil, exIdleCd, exEmoteAt;
         public Vector3 exLookBase; public Fighter exTalkTo;
         public bool exSleep;              // 營地裡打盹的：警戒範圍減半，被吵醒或打到就醒
-        public bool exWaiting;            // 在等同伴（兩隻一起巡邏的）：同伴不會反過來等牠（避免互等卡死）
+        public bool exWaiting;
+        public string[] exConvo; public int exConvoLine; public bool exConvoLead;   // 聊天的台詞（帶頭的那隻負責輪流念）
+        public float exAlertAt = -99f;     // 發現玩家的時間：先冒驚嘆號、愣一下才開始追和攻擊            // 在等同伴（兩隻一起巡邏的）：同伴不會反過來等牠（避免互等卡死）
         public bool exForage => exIdleKind == 2;
     }
 
@@ -48,6 +50,9 @@ namespace SpellDuel
         bool exBossSpawned;
         /// <summary>畫面：怪物發現玩家（呼朋引伴時 true）</summary>
         public event System.Action<Fighter, bool> OnExAlert;
+        /// <summary>探索的怪說話（對話框）：說話的怪、內容</summary>
+        public event System.Action<Fighter, string> OnExSay;
+        public const float ExSurprise = 0.8f;   // 發現玩家後愣住幾秒才開始追／攻擊
 
         /// <summary>開始一次探索：不自動出怪（手動模式），怪物只能走走道，主題＝叢林</summary>
         public void StartExplore(ExploreRun run)
@@ -87,9 +92,10 @@ namespace SpellDuel
         void ExAlert(Fighter m, bool spread = true)
         {
             if (m.exAware) return;
-            m.exAware = true; m.attackReadyAt = Mathf.Max(m.attackReadyAt, now + 0.6f);
+            m.exAware = true; m.exAlertAt = now; m.attackReadyAt = Mathf.Max(m.attackReadyAt, now + ExSurprise + 0.4f);   // 先冒驚嘆號、愣一下才攻擊
             if (m.exSleep) Emit("exemote", m.head + Vector3.up * 0.5f, new Color(1f, 0.9f, 0.5f), "！？");   // 睡夢中被吵醒
-            m.exSleep = false; m.exIdleKind = 0; m.exIdleUntil = 0f; m.exTalkTo = null;
+            m.exSleep = false; m.exIdleKind = 0; m.exIdleUntil = 0f; m.exTalkTo = null; m.exConvo = null;
+            if (rng.Next(3) == 0) OnExSay?.Invoke(m, Pick(ExSpotLines));   // 有時候喊一句
             var mon = m.exMon;
             bool call = spread && mon != null && mon.caller;
             Emit("exalert", m.Chest + Vector3.up * 0.3f, new Color(1f, 0.4f, 0.3f), call ? "❗ 呼叫同伴！" : "❗");
@@ -168,6 +174,7 @@ namespace SpellDuel
         bool ExChase(Fighter m, Fighter tgt, float dt)
         {
             if (tgt == null || m.leapEnd > 0f) return false;
+            if (now - m.exAlertAt < ExSurprise) { var f = Fighter.Flat(tgt.Feet - m.Feet); if (f.sqrMagnitude > 1e-4f) m.forward = f.normalized; m.windupUntil = 0f; return true; }   // 剛發現：轉向玩家愣一下
             float d = FlatDistance(m.Feet, tgt.Feet);
             float near = IsRanged(m.minionKind) ? ExRangedNear : ExChaseNear;
             if (d <= near && ExLineClear(m.Feet, tgt.Feet)) return false;
@@ -193,6 +200,44 @@ namespace SpellDuel
         static readonly string[] ExChat = { "嘰嘰？", "咕嚕咕嚕", "嘿嘿", "♪", "……", "嘎！", "哼哼", "呼～", "唔？", "嘻嘻" };
         static readonly string[] ExMutter = { "……", "♪", "呼～", "嗯？", "哈啊～" };
         const float ExChatRange = 2.8f, ExEmoteShow = 14f;
+
+        const float ExLineTime = 2.3f;   // 對話框每句停留的時間
+        void ExSay(Fighter m, string text)
+        {
+            if (player == null || FlatDistance(m.Feet, player.Feet) > ExEmoteShow) return;
+            OnExSay?.Invoke(m, text);
+        }
+
+        // 對話（兩隻輪流說：第 0、2、4… 句是帶頭的那隻）。大多是閒聊；ExStoryTalk 會聊到劇情（樹王、古樹之心、守衛、森林之靈…）
+        static readonly string[][] ExSmallTalk =
+        {
+            new[] { "今天的露水好甜。", "你又偷舔葉子了？", "才沒有！……只有一點點。" },
+            new[] { "我的刺是不是變長了？", "沒有，跟昨天一樣短。", "哼，明天一定會長。" },
+            new[] { "肚子好餓……", "前面的蘑菇不要吃，上次你吃完吐了三天。", "那次是蘑菇的錯！" },
+            new[] { "你聽，有鳥在叫。", "那是我肚子在叫。", "……" },
+            new[] { "輪到你巡邏東邊了。", "東邊有蚊子。", "我們就是蚊子的天敵啊！", "……說的也是。" },
+            new[] { "昨天下雨我的葉子都濕了。", "曬一下就好了。", "這裡哪有太陽，樹那麼密。" },
+            new[] { "你覺得湖裡有沒有大魚？", "有，比你還大。", "騙人。", "去看看啊，膽小鬼。" },
+            new[] { "我學會一個新招式！", "什麼招？", "原地轉三圈。", "……那叫頭暈。" },
+            new[] { "好想睡午覺。", "隊長會罵人的。", "隊長自己也在睡啊。" },
+            new[] { "我的孢子好像飛到你頭上了。", "怪不得一直癢！", "嘿嘿，對不起啦。" },
+            new[] { "你有看到我的種子嗎？", "你嘴裡那顆？", "啊，在這裡。" },
+            new[] { "最近好安靜喔。", "噓——不要說出來，會被聽到。", "被誰聽到？", "……我也不知道。" },
+            new[] { "這條路我已經走了一百遍了。", "我數過，是九十七遍。", "你好閒。" },
+            new[] { "營火那邊好溫暖。", "那是我們的地盤，不准你偷溜過去。", "小氣鬼！" },
+        };
+        static readonly string[][] ExStoryTalk =
+        {
+            new[] { "聽說樹王大人又在發脾氣了。", "因為古樹之心被他拿走之後，整片林子都不聽話了。", "噓，被巡邏的聽到會被抓去王座！" },
+            new[] { "藤蔓門後面住著很可怕的守衛。", "苔甲守根者嗎？我遠遠看過一次。", "他一生氣，整個巢穴都在震。" },
+            new[] { "有人說翠玉碎片散在岔路深處。", "三片都湊齊的話，王座的封印就會打開。", "那樣樹王大人就危險了……" },
+            new[] { "你相信森林之靈還在嗎？", "以前樹洞裡會發綠光。", "現在只剩下黑黑的洞了。" },
+            new[] { "林語營地那個老頭又在找人幫忙了。", "不就是想要回古樹之心嗎。", "哼，誰打得過樹王大人。" },
+            new[] { "藤牙寨的大鎖只有古銅鑰匙打得開。", "鑰匙不是被寨主丟到東邊的死路了嗎？", "對，誰會去那種地方找。" },
+            new[] { "最近林子裡多了一個奇怪的旅人。", "聽說比個讚就會衝過來。", "好可怕……我們躲遠一點。" },
+            new[] { "月影湖的水以前是會發光的。", "古樹之心不在，月光也照不進來了。", "好懷念以前的晚上。" },
+        };
+        static readonly string[] ExSpotLines = { "是誰！", "有入侵者！", "抓住他！", "哇！嚇我一跳！", "樹王大人說不能放過任何人！", "就是你吧，那個旅人！" };
 
         /// <summary>頭上冒一句（只在玩家附近冒，免得滿地都是字）</summary>
         void ExEmote(Fighter m, string text)
@@ -231,7 +276,14 @@ namespace SpellDuel
                     case 3:   // 聊天：面對面，輪流冒一句
                         if (m.exTalkTo == null || !m.exTalkTo.Alive || m.exTalkTo.exAware) { m.exIdleUntil = 0f; break; }
                         { var d = Fighter.Flat(m.exTalkTo.Feet - m.Feet); if (d.sqrMagnitude > 1e-4f) m.forward = TurnToward(m.forward, d.normalized, dt * 6f); }
-                        if (now - m.exEmoteAt > Rand(1.4f, 2.6f) && now - m.exTalkTo.exEmoteAt > 0.7f) ExEmote(m, Pick(ExChat));
+                        if (m.exConvoLead && m.exConvo != null && now >= m.exEmoteAt)
+                        {
+                            // 帶頭的那隻照台詞輪流說：偶數句自己說、奇數句對方說
+                            if (m.exConvoLine >= m.exConvo.Length) { m.exIdleUntil = 0f; m.exTalkTo.exIdleUntil = 0f; break; }
+                            var who = m.exConvoLine % 2 == 0 ? m : m.exTalkTo;
+                            ExSay(who, m.exConvo[m.exConvoLine]);
+                            m.exConvoLine++; m.exEmoteAt = now + ExLineTime;
+                        }
                         break;
                     case 4:   // 打盹
                         if (now - m.exEmoteAt > 3f) ExEmote(m, "💤");
@@ -249,10 +301,13 @@ namespace SpellDuel
                     bool mate = m.exMon.camp >= 0 && o.exMon.camp == m.exMon.camp;   // 同一個營地的隔著篝火也能聊
                     bool pair = m.exMon.patrol != null && o.exMon.patrol == m.exMon.patrol;   // 一起巡邏的夥伴
                     if (FlatDistance(o.Feet, m.Feet) > (mate ? 6.5f : pair ? 4.5f : ExChatRange) || !ExSight(o.Feet, m.Feet)) continue;
-                    float dur = Rand(2.5f, 4.5f);
+                    // 挑一段對話：大多是閒聊，有時候聊到劇情
+                    var convo = rng.Next(5) == 0 ? ExStoryTalk[rng.Next(ExStoryTalk.Length)] : ExSmallTalk[rng.Next(ExSmallTalk.Length)];
+                    float dur = convo.Length * ExLineTime + 0.6f;
                     m.exTalkTo = o; o.exTalkTo = m;
                     m.exIdleKind = o.exIdleKind = 3; m.exIdleUntil = o.exIdleUntil = now + dur;
-                    ExEmote(m, Pick(ExChat)); o.exEmoteAt = now;   // 對方晚一點才回話
+                    m.exConvo = convo; m.exConvoLine = 0; m.exConvoLead = true; o.exConvoLead = false; o.exConvo = null;
+                    m.exEmoteAt = now + 0.3f; o.exEmoteAt = now;
                     return;
                 }
             }

@@ -13,6 +13,7 @@ namespace SpellDuel
         ExploreRun exploreRun, pendingExplore;
         Transform exRoot;
         readonly HashSet<ExSwitch> exSwitchShownDone = new HashSet<ExSwitch>();
+        readonly Dictionary<Fighter, (string text, float until)> exBubbles = new Dictionary<Fighter, (string, float)>();
         readonly List<(Transform mark, float until)> exAlertMarks = new List<(Transform, float)>();
         readonly HashSet<ExLandmark> exBannerSeen = new HashSet<ExLandmark>();
         float exBannerUntil = -1f;
@@ -70,6 +71,7 @@ namespace SpellDuel
             battle.enemyAccuracy = StoryEnemyAccuracy(1, difficulty);
             battle.StartExplore(run);
             if (area != null) area.BoundsOff = true;   // 不要 10m×10m 的場地框、不提示場地外（高度照樣檢查）
+            battle.OnExSay += (m, text) => { exBubbles[m] = (text, Time.time + 2.2f); };   // 怪物的對話框（聊天、發現玩家時喊一句）
             battle.OnExAlert += (m, call) =>
             {
                 if (call) { Sfx.Play("roar", 0.5f, 1.3f); Say($"❗ {m.name}在呼叫同伴！", 2f); } else Sfx.Play("select", 0.4f, 0.6f);
@@ -360,7 +362,7 @@ namespace SpellDuel
             if (exRoot) Destroy(exRoot.gameObject);
             if (area != null) area.BoundsOff = false;
             ExploreFx.Clear(); exFxSeen.Clear(); exFxSealHave.Clear(); exFxInit = false;
-            exRoot = null; exWalls.Clear(); exUnder.Clear(); exProps.Clear(); exSwitchShownDone.Clear(); exAlertMarks.Clear(); exBannerSeen.Clear();
+            exRoot = null; exWalls.Clear(); exUnder.Clear(); exBubbles.Clear(); exProps.Clear(); exSwitchShownDone.Clear(); exAlertMarks.Clear(); exBannerSeen.Clear();
             if (exBannerUntil > 0f || exploreRun != null) ExploreArt.LandmarkFound(null);
             exBannerUntil = -1f;
             foreach (var r in exNpcRigs.Values) if (r) Destroy(r.gameObject);
@@ -395,7 +397,36 @@ namespace SpellDuel
                     if (sp.z <= 0f) continue;
                     UiKit.Text(new Rect(sp.x - W * 0.15f, H - sp.y - fsS, W * 0.3f, fsS * 1.4f), n.name, fsS, new Color(1f, 0.95f, 0.7f), TextAnchor.MiddleCenter);
                 }
+            DrawExploreBubbles(W, H, fsS);
             DrawExploreMinimap(run, W, H);
+        }
+
+        /// <summary>怪物頭上的對話框：白底圓角框＋下面的小尖角，跟著怪物移動</summary>
+        void DrawExploreBubbles(float W, float H, int fsS)
+        {
+            if (!cam || exBubbles.Count == 0) return;
+            List<Fighter> gone = null;
+            foreach (var kv in exBubbles)
+            {
+                var m = kv.Key; var (text, until) = kv.Value;
+                if (m == null || !m.Alive || Time.time > until) { (gone ??= new List<Fighter>()).Add(m); continue; }
+                var sp = cam.WorldToScreenPoint(WorldFrame.FromWorld(m.head + Vector3.up * 0.55f));
+                if (sp.z <= 0f) continue;
+                float fade = Mathf.Clamp01((until - Time.time) / 0.3f) * Mathf.Clamp01((Time.time - (until - 2.2f)) / 0.15f);
+                // 大小：中文字約 1 個字寬，超過 W*0.42 就換行
+                float maxW = W * 0.42f, oneLine = text.Length * fsS * 1.02f;
+                int lines = Mathf.Max(1, Mathf.CeilToInt(oneLine / maxW));
+                var size = new Vector2(Mathf.Min(oneLine, maxW), lines * fsS * 1.35f);
+                float bw = size.x + fsS * 1.2f, bh = size.y + fsS * 0.8f;
+                var r = new Rect(Mathf.Clamp(sp.x - bw * 0.5f, 4f, W - bw - 4f), Mathf.Clamp(H - sp.y - bh - fsS * 0.6f, 4f, H - bh - 4f), bw, bh);
+                GUI.color = new Color(0f, 0f, 0f, 0.35f * fade); GUI.DrawTexture(new Rect(r.x + 2, r.y + 3, r.width, r.height), Texture2D.whiteTexture);   // 影子
+                GUI.color = new Color(1f, 0.98f, 0.92f, 0.95f * fade); GUI.DrawTexture(r, Texture2D.whiteTexture);
+                float tx = Mathf.Clamp(sp.x, r.x + fsS, r.xMax - fsS);
+                for (int i = 0; i < 4; i++) GUI.DrawTexture(new Rect(tx - (4 - i) * 2f, r.yMax + i * 2f, (4 - i) * 4f, 2f), Texture2D.whiteTexture);   // 小尖角
+                GUI.color = Color.white;
+                UiKit.Text(new Rect(r.x + fsS * 0.6f, r.y + fsS * 0.4f, size.x, size.y), text, fsS, new Color(0.15f, 0.12f, 0.1f, fade), TextAnchor.MiddleCenter, false);
+            }
+            if (gone != null) foreach (var g in gone) exBubbles.Remove(g);
         }
 
         // ---------------------------------------------------------------- NPC 對話框（使用者要求：不透明、最上層；說「好／繼續」或點畫面跳下一段；
