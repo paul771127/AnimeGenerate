@@ -17,6 +17,7 @@ namespace SpellDuel.EditorTools
             new GameObject("Native IMGUI preview").AddComponent<UiPolishPreview>();
             Directory.CreateDirectory("Assets/UiPolishFixture");
             const string path="Assets/UiPolishFixture/Preview.unity";EditorSceneManager.SaveScene(scene,path);
+            PlayerSettings.runInBackground=true;
             PlayerSettings.defaultScreenWidth=1080;PlayerSettings.defaultScreenHeight=2340;
             PlayerSettings.fullScreenMode=FullScreenMode.Windowed;
             PlayerSettings.SetScriptingBackend(BuildTargetGroup.Standalone,ScriptingImplementation.Mono2x);

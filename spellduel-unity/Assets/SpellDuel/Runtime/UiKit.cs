@@ -380,7 +380,8 @@ namespace SpellDuel
         }
         public static void Result(Rect r,bool won)
         {
-            Card(r,.98f,won?Gold:Muted,.95f);
+            MenuCard(r,.98f,won?Gold:Theme.Negative,.95f);
+            Divider(new Rect(r.x+12,r.yMax-5,r.width-24,2),won?Gold:Theme.Negative);
             if(won)
             {
                 for(int i=0;i<5;i++)Gem(new Rect(r.x+r.width*(.20f+i*.15f)-5,r.y+8,10,10),Gold);

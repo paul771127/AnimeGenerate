@@ -4283,6 +4283,7 @@ namespace SpellDuel
                 }
                 float supplyOffset=0;
                 if(f.iconId!=null&&SkillIcons.IsSupply(f.iconId)){var gc=GUI.color;GUI.color=new Color(1,1,1,1-age/1.2f);SupplyArt.Draw(new Rect(p.x-W*.3f,p.y-lh,lh,lh),f.iconId);GUI.color=gc;supplyOffset=lh*1.1f;}
+                if(supplyOffset==0 && UiKit.RewardIcon(new Rect(p.x-W*.3f,p.y-lh,lh,lh),f.iconId,f.text,new Color(f.color.r,f.color.g,f.color.b,1-age/1.2f)))supplyOffset=lh*1.1f;
                 UiKit.Text(new Rect(p.x - W * 0.3f+supplyOffset, p.y - lh, W * 0.6f-supplyOffset, lh * 1.5f), f.text, fsL, new Color(f.color.r, f.color.g, f.color.b, 1f - age / 1.2f), TextAnchor.MiddleCenter, true);
             }
             floaters.RemoveAll(f => Time.time - f.born > 1.2f);
