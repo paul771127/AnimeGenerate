@@ -37,6 +37,7 @@ namespace SpellDuel
             }
             for(int i=0;i<renderers.Length;i++)
             {
+                if(renderers[i] is ParticleSystemRenderer billboard)billboard.maxParticleSize=Mathf.Min(billboard.maxParticleSize,.12f);
                 var materials=renderers[i].sharedMaterials;bool allSolid=materials.Length>0;
                 foreach(var candidate in materials)if(!candidate||candidate.renderQueue>=2500)allSolid=false;
                 if(allSolid)
@@ -61,6 +62,9 @@ namespace SpellDuel
                 if(lastColour[i]!=Color.clear)colour[i]=lastColour[i];if(lastTint[i]!=Color.clear)tint[i]=lastTint[i];
             }
         }
+        // A ring's AABB contains its empty centre: using ClosestPoint would erase the whole
+        // distant perimeter around the player. Limit extent compensation to small flash cores.
+        public static float ViewDistance(Bounds bounds,Vector3 eye)=>Mathf.Max(0,Vector3.Distance(eye,bounds.center)-Mathf.Min(.25f,bounds.extents.magnitude));
         public static float NearFade(float distance)=>Mathf.SmoothStep(.08f,1f,Mathf.InverseLerp(.2f,1f,distance));
         public void Evaluate(Camera camera,float elapsed)
         {
@@ -71,7 +75,7 @@ namespace SpellDuel
             {
                 var renderer=renderers[i];if(!renderer)continue;
                 float fade=impact;
-                if(camera)fade*=NearFade(Vector3.Distance(camera.transform.position,renderer.bounds.ClosestPoint(camera.transform.position)));
+                if(camera)fade*=NearFade(ViewDistance(renderer.bounds,camera.transform.position));
                 renderer.GetPropertyBlock(block);
                 if(solid[i])
                 {

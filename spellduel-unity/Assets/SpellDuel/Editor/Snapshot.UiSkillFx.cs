@@ -20,6 +20,7 @@ namespace SpellDuel.EditorTools
                 if(Skills.Classes.ContainsKey(definition.cls)&&!definition.cls.StartsWith("boss"))
                     report.auditedSkills.Add(definition.id+" | "+definition.cls+" | "+definition.type+" | radius="+definition.radius+" area="+definition.areaRadius+" range="+definition.rangeMax);
             if(SpellReadability.NearFade(.2f)>.1f||SpellReadability.NearFade(1f)<.99f)throw new Exception("Near-camera attenuation invalid");
+            if(SpellReadability.ViewDistance(new Bounds(Vector3.zero,new Vector3(6,.05f,6)),new Vector3(0,1.6f,0))<1)throw new Exception("Ground perimeter incorrectly faded around camera");
             var ids="nv_swing nv_stone nv_aid slash thrust wave quickshot snipe triple fire ice meteor knife poison smoke holy prayheal cleanse shieldbash holyblade sanction jianlai yujian wanjian headshot scattershot arrowrain falcon rangerhaste landmine arcanewyrm starfall arcanebreak firespirit spiritbolt earthspike shuriken suiton futon poisondart execute poisonfog revive massheal sanctuary holylance holyfire verdict".Split(' ');
             foreach(string id in ids)
             {
