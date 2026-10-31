@@ -83,10 +83,16 @@ namespace SpellDuel.EditorTools
      if(g.GetComponentInChildren<MeshFilter>().sharedMesh.triangles.Length!=6)throw new Exception("Ground tile exceeds two triangles");
     }
     cam.orthographic=true;cam.orthographicSize=4.7f;cam.transform.position=Vector3.up*9;cam.transform.rotation=Quaternion.Euler(90,0,0);Save(cam,"explore_ground_"+type+"_top",960,960);
+    if(type==ExGround.Grass)
+    {
+     var image=new Texture2D(2,2);image.LoadImage(File.ReadAllBytes("snapshots/explore_ground_Grass_top.png"));
+     for(int x=0;x<3;x++)for(int y=0;y<3;y++){var c=image.GetPixel(174+x*306,174+y*306);if(c.g-c.r<.012f)throw new Exception("Grass tile missing in native render: "+x+","+y);}
+     UnityEngine.Object.DestroyImmediate(image);
+    }
     cam.orthographic=false;cam.fieldOfView=65;cam.transform.position=new Vector3(.4f,1.65f,-3.6f);cam.transform.LookAt(new Vector3(0,0,.5f));Save(cam,"explore_ground_"+type+"_eye",960,960);UnityEngine.Object.DestroyImmediate(grid);
    }
    UnityEngine.Object.DestroyImmediate(backing);UnityEngine.Object.DestroyImmediate(mat);cam.orthographic=false;cam.fieldOfView=35;
-   File.WriteAllText("snapshots/explore_ground_audit.json","{\"types\":5,\"trianglesPerTile\":2,\"generatedTextures\":true,\"mipmaps\":true,\"repeatingTextures\":true,\"noColliders\":true,\"neutralFloorPreviewOnly\":true}");
+   File.WriteAllText("snapshots/explore_ground_audit.json","{\"types\":5,\"trianglesPerTile\":2,\"generatedTextures\":true,\"mipmaps\":true,\"repeatingTextures\":true,\"noColliders\":true,\"nineTilesVisibleInNativePixels\":true,\"neutralFloorPreviewOnly\":true}");
   }
   static void Fit(Camera cam,GameObject g,string name)
   {var bounds=new Bounds(g.transform.position,Vector3.zero);foreach(var mf in g.GetComponentsInChildren<MeshFilter>()){var renderer=mf.GetComponent<Renderer>();if(!mf.sharedMesh||!renderer||!renderer.enabled||renderer.forceRenderingOff)continue;var b=mf.sharedMesh.bounds;for(int i=0;i<8;i++){var corner=b.center+new Vector3((i&1)==0?-b.extents.x:b.extents.x,(i&2)==0?-b.extents.y:b.extents.y,(i&4)==0?-b.extents.z:b.extents.z);bounds.Encapsulate(mf.transform.TransformPoint(corner));}}var size=Mathf.Max(bounds.size.y,bounds.size.x,bounds.size.z);cam.transform.position=bounds.center+new Vector3(.7f,.35f,1).normalized*Mathf.Max(2,size*2.3f);cam.transform.LookAt(bounds.center);Save(cam,name,800,800);}
