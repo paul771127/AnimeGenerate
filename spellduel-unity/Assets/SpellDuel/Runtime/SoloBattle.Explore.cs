@@ -410,6 +410,7 @@ namespace SpellDuel
             {
                 var m = kv.Key; var (text, until) = kv.Value;
                 if (m == null || !m.Alive || Time.time > until) { (gone ??= new List<Fighter>()).Add(m); continue; }
+                if (Battle.FlatDistance(m.Feet, Me.Feet) > Battle.ExSayShow) continue;   // 走遠了（8m 外）就看不到
                 var sp = cam.WorldToScreenPoint(WorldFrame.FromWorld(m.head + Vector3.up * 0.55f));
                 if (sp.z <= 0f) continue;
                 float fade = Mathf.Clamp01((until - Time.time) / 0.3f) * Mathf.Clamp01((Time.time - (until - 2.2f)) / 0.15f);
