@@ -343,20 +343,20 @@ namespace SpellDuel
             Camp(4, 3, 13, 25, new[] { 9, 12, 8, 11, 7 });
             // 巡邏的怪：每區固定數量，從迷宮走道挑（離起點、NPC、房間遠一點），在附近兩三格之間來回走
             int[][] zoneKinds = { new[] { 8, 10, 11, 12 }, new[] { 7, 9, 12, 8 }, new[] { 8, 9, 11, 12, 7 }, new[] { 7, 9, 10, 12, 8 } };
-            int[] perZone = { 7, 8, 9, 8 };
+            int[] perZone = { 13, 15, 16, 15 };   // 使用者要求密度高一點（原本 7／8／9／8）；有些是兩隻一起巡邏
             var zoneOrigin = new[] { new Vector2Int(1, 1), new Vector2Int(21, 1), new Vector2Int(21, 21), new Vector2Int(1, 21) };
             for (int z = 0; z < 4; z++)
             {
                 int placed = 0, guard = 0;
                 while (placed < perZone[z] && guard++ < 2000)
                 {
-                    int x = zoneOrigin[z].x + rng.Next(10) * 2, y = zoneOrigin[z].y + rng.Next(10) * 2;
+                    int x = zoneOrigin[z].x + rng.Next(19), y = zoneOrigin[z].y + rng.Next(19);
                     if (m.At(x, y) != ExCell.Floor) continue;
                     var p = m.World(x, y);
                     if (p.magnitude < 15f || m.PropAt(p, 1f) != null) continue;
                     bool near = false;
                     foreach (var n in m.npcs) if (Vector3.Distance(n.pos, p) < 7f) near = true;
-                    foreach (var o in m.monsters) if (Vector3.Distance(o.home, p) < 8f) near = true;
+                    foreach (var o in m.monsters) if (Vector3.Distance(o.home, p) < 9f) near = true;
                     foreach (var a in m.arenas) if (Vector3.Distance(a.center, p) < a.radius + 4f) near = true;
                     if (near) continue;
                     var path = new List<Vector3> { p };
@@ -370,6 +370,13 @@ namespace SpellDuel
                     }
                     m.monsters.Add(new ExMonster { id = ++id, kind = zoneKinds[z][placed % zoneKinds[z].Length], zone = z, home = p, patrol = path.ToArray() });
                     placed++;
+                    // 三分之一是兩隻一起巡邏（同一條路線，第二隻晚一步跟著）
+                    if (placed < perZone[z] && rng.Next(3) == 0 && path.Count > 1)
+                    {
+                        var p2 = Vector3.Lerp(path[0], path[1], 0.35f);
+                        m.monsters.Add(new ExMonster { id = ++id, kind = zoneKinds[z][(placed + 2) % zoneKinds[z].Length], zone = z, home = p2, patrol = path.ToArray() });
+                        placed++;
+                    }
                 }
             }
             BuildSeals(m);

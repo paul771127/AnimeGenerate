@@ -87,7 +87,7 @@ namespace SpellDuel
             {
                 if (o == mon || o.dead || o.hidden || o.guardian > 0) continue;
                 bool same = mon.camp >= 0 && o.camp == mon.camp;
-                bool near = call && FlatDistance(o.home, m.Feet) <= ExCallRange;
+                bool near = call && FlatDistance(o.home, m.Feet) <= ExCallRange && ExSight(exActive.TryGetValue(o, out var oa) ? oa.Feet : o.home, m.Feet);   // 叫同伴：隔著牆聽不到
                 if (!same && !near) continue;
                 if (!exActive.TryGetValue(o, out var om)) om = ExSpawn(o);
                 ExAlert(om, false);
@@ -103,10 +103,26 @@ namespace SpellDuel
                 if (o == m.exMon || o.dead || o.hidden || o.guardian > 0) continue;
                 exActive.TryGetValue(o, out var om);
                 var p = om != null ? om.Feet : o.home;
-                if (FlatDistance(p, at) > ExNoiseRange) continue;
+                if (FlatDistance(p, at) > ExNoiseRange || !ExSight(p, at)) continue;   // 隔著牆不會被吵醒
                 if (om == null) om = ExSpawn(o);
                 if (!om.exAware) ExAlert(om, true);   // 被吵醒的如果是會叫同伴的，一樣會叫
             }
+        }
+
+        /// <summary>
+        /// 視線：a 看不看得到 b（警戒、叫同伴、被吵醒、攻擊打不打得到都用這個；使用者要求不能穿牆）。
+        /// 只看牆格、還關著的門／封印、景物本體（不算走路用的離牆緩衝，貼著牆打旁邊的怪照樣打得到）；頭尾 0.4m 是身體不算。
+        /// </summary>
+        public bool ExSight(Vector3 a, Vector3 b)
+        {
+            if (explore == null) return true;
+            var map = explore.map; float d = FlatDistance(a, b);
+            for (float t = 0.4f; t < d - 0.4f; t += 0.25f)
+            {
+                var p = Vector3.Lerp(a, b, t / d); p.y = 0f; var c = map.Cell(p);
+                if (!map.Open(c.x, c.y) || map.PropAt(p, 0f) != null) return false;
+            }
+            return true;
         }
 
         /// <summary>a 到 b 之間有沒有牆擋著（每 0.5m 取樣）</summary>
@@ -202,7 +218,7 @@ namespace SpellDuel
                     if (md > ExDespawn && d > ExDespawn) { ExStow(mon, m); continue; }
                     bool hurt = m.hp < m.maxHp - 0.01f;
                     if (mon.guardian > 0) { var a = run.map.arenas.Find(x => x.n == mon.guardian); if (a.entered || hurt) ExAlert(m); }
-                    else if (md <= ExDetect + m.bodyRadius || hurt) ExAlert(m);
+                    else if (md <= ExDetect + m.bodyRadius && ExSight(m.Feet, pf) || hurt) ExAlert(m);   // 警戒範圍不穿牆
                 }
                 // 發現玩家之後就一直追，直到追上為止（使用者要求）：不會放棄、也不會收起來
             }

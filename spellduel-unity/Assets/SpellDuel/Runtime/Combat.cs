@@ -3893,6 +3893,7 @@ namespace SpellDuel
                 for (int k = 0; k < sub && p.alive; k++)
                 {
                     Advance(p, step / sub);
+                    if (explore != null) { var wc = explore.map.Cell(p.pos); if (!explore.map.Open(wc.x, wc.y)) { p.alive = false; break; } }   // 故事探索：飛行的招式飛進牆裡就消失
                     if (p.Fading) { if (p.traveled >= p.fadeEnd || p.pos.y < 0f) p.alive = false; continue; }   // 淡出中：不再打到人
                     if (TrySlice(p)) break;
                     if (TryClash(p)) break;   // 法術對撞（使用者要求）：撞到就爆；維持手勢撐住、放掉就被擊破
@@ -4141,6 +4142,8 @@ namespace SpellDuel
         // ------------------------------------------------------------ 命中：反擊 → 格擋 → 護盾 → 傷害 → 附加效果
         void Hit(Fighter target, Projectile p)
         {
+            // 故事探索：打不穿牆（使用者要求）——攻擊的人和目標之間有牆、樹叢、岩壁擋著就不算打到
+            if (explore != null && p.owner != null && target != null && p.owner != target && !ExSight(p.owner.Feet, target.Feet)) return;
             if (target.counterUntil > now)
             {
                 target.counterUntil = 0;
