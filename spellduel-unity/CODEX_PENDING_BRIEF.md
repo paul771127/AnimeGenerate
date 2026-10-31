@@ -892,3 +892,9 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 73854ee 的原生 run 41159619094 成功：95 張場景 PNG（含各地標第一人稱、全圖俯視、湖岸特寫、四種 AR 地板合成參考）及 16 張靜態圖已更新。道路第一人稱條紋已消除，曲線岸帶無楔形裂縫。
 - explore_4m_audit.json：4m 牆界、105 組景物尺寸／radius、凹形湖皆通過；湖面中心覆蓋、平滑邊界、材質快取與四種 AR 背景道路可見性亦通過。
 - 新圖 paths_ar_overview.jpg、explore_lake_top_close.png。新 API 接線仍依上方契約由 Claude 處理；本批沒有修改 Explore.cs、Combat*.cs 或 SoloBattle*.cs。雙平台 41159619031 尚在執行，結果另補。
+
+
+### 2026-10-31 道路與圓弧湖岸雙平台驗證完成
+- run 41159619031（73854ee）Android、iOS Unity 匯出、IPA 編譯均成功；Android APK 發布成功。platform_ci.json 已更新為本次版本證據，TestFlight 發布不計入編譯驗收。
+- 原生 run 41159619094 已通過，預覽與 4m 邊界檢查已交付。沒有修改玩法、碰撞或移動；CreatePath(map,x,z)、CreateWall(map,x,z) 與開門後鄰格重建仍依上述契約由 Claude 接線。
+- AR 圖為原生合成參考，尚未完成手機 AR 實機驗收。湖岸曲線保留原水格碰撞及最多 .4m 內縮限制，整體占地仍接近原矩形，並非把碰撞範圍改成橢圓湖。

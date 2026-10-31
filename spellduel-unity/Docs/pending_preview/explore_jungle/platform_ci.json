@@ -1,7 +1,7 @@
 {
-  "id": 41151953354,
-  "head": "ed11f4cb5c1b724d3be48273fb103bf9947c8e73",
-  "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41151953354",
+  "id": 41159619031,
+  "head": "73854eed0eb4b6e2e730b07082f811fcd35b0070",
+  "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41159619031",
   "status": "in_progress",
   "conclusion": null,
   "jobs": [
@@ -9,39 +9,37 @@
       "name": "check-license",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41151953354/job/124390365364"
-    },
-    {
-      "name": "ios-export",
-      "conclusion": "success",
-      "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41151953354/job/124390394650"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41159619031/job/124414333185"
     },
     {
       "name": "android",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41151953354/job/124390394732"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41159619031/job/124414353614"
+    },
+    {
+      "name": "ios-export",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41159619031/job/124414353672"
     },
     {
       "name": "ios-ipa",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41151953354/job/124394058799"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41159619031/job/124417965622"
     },
     {
       "name": "publish-apk",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41151953354/job/124395047782"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41159619031/job/124418351001"
     },
     {
       "name": "ios-testflight",
       "conclusion": null,
       "status": "in_progress",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41151953354/job/124395724771"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41159619031/job/124420007735"
     }
-  ],
-  "artSource": "416fd39",
-  "note": "ed11f4c contains the same ExploreArt ground and shader source; Android, iOS export and IPA build succeeded. TestFlight publishing is separate from compile validation."
+  ]
 }
