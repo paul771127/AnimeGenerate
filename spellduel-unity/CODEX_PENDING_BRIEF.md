@@ -923,3 +923,5 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 最終原生 run 41186286286（74b2663）成功，42 張正面／側面／斜後方／蓄力／攻擊與新舊比例尺圖已更新至 Docs/pending_preview/rare_monsters/，五視角、新舊與等比例合照已目視確認。
 - 模型三角形：19=3232、20=2986、21=3924、22=3124；各自獨立接觸陰影另加 2，皆 ≤4000。快取、原支點路徑、新舊尺寸、腳底高度、顏色登記及三種變色測試全通過。
 - 新 Tools/check_rare_monsters.py 可複查原生交付；--require-mobile 同時要求兩平台證據來自同一程式提交。雙平台 41186286295 尚在執行，結果另補。
+
+- 最終雙平台 run 41186286295（74b2663）Android、iOS Unity 匯出與 Xcode IPA 編譯全部成功；platform_ci.json 已保存，check_rare_monsters.py --require-mobile 通過。TestFlight 另由原流程發布，未列為本次編譯驗收；手機實機效能尚未量測。
