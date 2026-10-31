@@ -214,14 +214,16 @@ namespace SpellDuel
                 {
                     var k = new Vector2Int(x, z);
                     var cell = map.At(x, z);
-                    // 牆格底下鋪森林地面（使用者回報樹底下會透出地板）；湖水格不用（整片湖面在地標裡）
-                    if (cell == ExCell.Wall && map.InGrid(x, z) && map.TerrainAt(x, z) != ExTerrain.Water)
+                    // 每一格底下都鋪一層不透明的地面（使用者回報樹、石頭底下會透出真實地板）：牆格用地形的地面、走道格用那一格的地面；
+                    // 湖水格不用（整片湖面在地標裡）。走道、景物畫在這層上面
+                    if (map.InGrid(x, z) && map.TerrainAt(x, z) != ExTerrain.Water)
                     {
                         keepUnder.Add(k);
                         if (!exUnder.ContainsKey(k))
                         {
                             var t = map.TerrainAt(x, z);
-                            var g = ExploreArt.CreateGround(t == ExTerrain.Cave || t == ExTerrain.Rock ? ExGround.Cave : t == ExTerrain.Ruin ? ExGround.Stone : t == ExTerrain.Palisade ? ExGround.Dirt : ExGround.Grass, x, z, cs);
+                            var gt = cell != ExCell.Wall ? map.GroundAt(x, z) : t == ExTerrain.Cave || t == ExTerrain.Rock ? ExGround.Cave : t == ExTerrain.Ruin ? ExGround.Stone : t == ExTerrain.Palisade ? ExGround.Dirt : ExGround.Grass;
+                            var g = ExploreArt.CreateGround(gt, x, z, cs, true);
                             if (g) { g.transform.SetParent(exRoot, false); g.transform.localPosition = map.World(x, z) + Vector3.down * 0.004f; exUnder[k] = g; }
                         }
                     }

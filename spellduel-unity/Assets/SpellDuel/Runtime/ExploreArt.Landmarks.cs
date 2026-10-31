@@ -60,12 +60,14 @@ namespace SpellDuel
     b.ClampCell(1.42f);
    }).localScale=V(ExploreMap.CellSize/3f,1,ExploreMap.CellSize/3f);return root;
   }
-  public static GameObject CreateGround(ExGround g,int x,int z,float cell)
+  public static GameObject CreateGround(ExGround g,int x,int z,float cell)=>CreateGround(g,x,z,cell,false);
+  /// <summary>solid＝完全不透明（使用者回報樹、石頭底下會透出真實地板：故事探索每一格底下都鋪一層不透明的地面）</summary>
+  public static GameObject CreateGround(ExGround g,int x,int z,float cell,bool solid)
   {
    var root=Root("Ground "+g);
    // A narrow overlapping feather replaces the old broad square border and oversized leaves.
    var surface=GroundSurface(root.transform);
-   surface.name="GroundSurface";var renderer=surface.GetComponent<Renderer>();renderer.sharedMaterial=GroundMaterial(g);
+   surface.name="GroundSurface";var renderer=surface.GetComponent<Renderer>();renderer.sharedMaterial=solid?SolidGroundMaterial(g):GroundMaterial(g);
    renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;renderer.receiveShadows=false;
    root.transform.localScale=V(cell/3,1,cell/3);return root;
   }

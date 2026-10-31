@@ -17,6 +17,14 @@ namespace SpellDuel
    }
    return AnimeFace.Part(parent,key,mesh,Vector3.zero,SkyArt.Glow).transform;
   }
+  static readonly System.Collections.Generic.Dictionary<ExGround,Material> solidGroundMaterials=new System.Collections.Generic.Dictionary<ExGround,Material>();
+  /// <summary>同一張地面貼圖，但完全不透明（故事探索的底層地面）</summary>
+  static Material SolidGroundMaterial(ExGround ground)
+  {
+   if(solidGroundMaterials.TryGetValue(ground,out var cached)&&cached)return cached;
+   var mat=new Material(GroundMaterial(ground)){name="Explore solid ground "+ground};mat.SetFloat("_Opacity",1f);
+   solidGroundMaterials[ground]=mat;return mat;
+  }
   static Material GroundMaterial(ExGround ground)
   {
    if(groundMaterials.TryGetValue(ground,out var cached)&&cached)return cached;
