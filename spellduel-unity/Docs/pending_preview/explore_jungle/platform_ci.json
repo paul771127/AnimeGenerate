@@ -1,7 +1,7 @@
 {
-  "id": 41159619031,
-  "head": "73854eed0eb4b6e2e730b07082f811fcd35b0070",
-  "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41159619031",
+  "id": 41163938050,
+  "head": "95c8d029959add1ba0273a2fba5a8d1c6b46f309",
+  "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41163938050",
   "status": "in_progress",
   "conclusion": null,
   "jobs": [
@@ -9,37 +9,37 @@
       "name": "check-license",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41159619031/job/124414333185"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41163938050/job/124427399419"
     },
     {
       "name": "android",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41159619031/job/124414353614"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41163938050/job/124427418748"
     },
     {
       "name": "ios-export",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41159619031/job/124414353672"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41163938050/job/124427418749"
     },
     {
       "name": "ios-ipa",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41159619031/job/124417965622"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41163938050/job/124430300598"
     },
     {
       "name": "publish-apk",
       "conclusion": "success",
       "status": "completed",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41159619031/job/124418351001"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41163938050/job/124431464869"
     },
     {
       "name": "ios-testflight",
       "conclusion": null,
       "status": "in_progress",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41159619031/job/124420007735"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41163938050/job/124432694213"
     }
   ]
 }
