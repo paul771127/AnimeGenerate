@@ -108,6 +108,7 @@ namespace SpellDuel
                 SwiftScale(spine, R(.86f, 1f, 1f));
                 if (id == 179)
                 {
+                    if (flame) flame.gameObject.SetActive(false);
                     SwiftPart(id, head, "Fennec ears", cream, b => { for (int s = -1; s <= 1; s += 2) SwiftEar(b, s, R(s * .11f, .14f, .025f), .23f); });
                     SwiftPart(id, head, "Fennec inner ears", new Color(.78f, .38f, .21f), b => { for (int s = -1; s <= 1; s += 2) { var a = R(s * .11f, .17f, .028f); b.Tri(a + R(-.035f, 0, .003f), a + R(.035f, 0, .003f), a + R(s * .034f, .15f, -.026f), Color.white); } });
                     SwiftPart(id, spine, "Curling desert fox tail", new Color(.98f, .64f, .28f), b => RareTube(b, new[] { R(0, .02f, -.12f), R(.12f, .04f, -.32f), R(.20f, .24f, -.46f), R(.12f, .40f, -.41f), R(.015f, .43f, -.32f) }, new[] { .05f, .095f, .085f, .001f }, 10, 7));
@@ -124,23 +125,41 @@ namespace SpellDuel
             {
                 SwiftScale(spine, R(.83f, .88f, 1.08f));
                 SwiftScale(head, R(.82f, .92f, 1.02f));
+                // Replace the boar's tusks with feline/canine muzzle details, without touching Head.
+                foreach (Transform t in head) { var f = t.GetComponent<MeshFilter>(); if (f && f.sharedMesh == pCone) t.gameObject.SetActive(false); }
+                foreach (var leg in new[] { hipL, hipR, hipBL, hipBR })
+                {
+                    foreach (Transform t in leg) { var f = t.GetComponent<MeshFilter>(); if (f && f.sharedMesh == pStem)
+                        f.sharedMesh = SwiftMesh("Lean digitigrade limb", b => b.Lathe(new[] { 0f, 0f, 0f, .48f, .16f, .48f, .38f, .29f, .66f, .34f, 1f, .45f, 1f, 0f }, 8, null, rot: Quaternion.Euler(-90, 0, 0))); }
+                    SwiftPart(id, leg, "Runner toes " + leg.name, id == 173 ? new Color(.63f, .86f, .49f) : new Color(.52f, .48f, .71f), b => {
+                        for (int toe = -1; toe <= 1; toe++) RareTube(b, new[] { R(toe * .035f, -.255f, .015f), R(toe * .04f, -.26f, .07f), R(toe * .04f, -.265f, .105f) }, new[] { .022f, .024f, .003f }, 2, 5);
+                    });
+                }
+                SwiftPart(id, head, "Ivory muzzle pads", id == 173 ? new Color(.77f, .92f, .62f) : new Color(.67f, .63f, .81f), b => {
+                    for (int side = -1; side <= 1; side += 2) RareTube(b, new[] { R(side * .047f, -.045f, .18f), R(side * .047f, -.035f, .24f), R(side * .025f, -.035f, .275f) }, new[] { .035f, .045f, .008f }, 3, 6);
+                });
+                SwiftPart(id, head, "Animal nose", new Color(.13f, .17f, .23f), b => RarePlate(b, R(0, -.005f, .265f), R(.065f, .025f, .045f)));
                 foreach (var f in spine.GetComponentsInChildren<MeshFilter>())
                     if (f.sharedMesh == pThorns) f.sharedMesh = SwiftMesh(id + "/Swept thorns", b => {
-                        for (int i = 0; i < 7; i++) RareRod(b, R((i % 2 == 0 ? -.13f : .13f), .22f, .25f - i * .085f), R((i % 2 == 0 ? -.17f : .17f), .34f, .04f - i * .085f), .04f);
+                        for (int i = 0; i < (id == 173 ? 7 : 4); i++) RareRod(b, R((i % 2 == 0 ? -.13f : .13f), .22f, .25f - i * .085f), R((i % 2 == 0 ? -.17f : .17f), id == 173 ? .31f : .26f, -.01f - i * .085f), id == 173 ? .04f : .055f);
                     });
                 // Replacement thorn mesh is in local metres, not the old unit blob coordinates.
                 foreach (Transform t in spine) { var f = t.GetComponent<MeshFilter>(); if (f && f.sharedMesh.name.EndsWith("Swept thorns")) { t.localPosition = Vector3.zero; t.localScale = Vector3.one; } }
                 SwiftPart(id, head, id == 173 ? "Leopard ears" : "Hound ears", id == 173 ? teal : new Color(.42f, .36f, .68f), b => { for (int s = -1; s <= 1; s += 2) SwiftEar(b, s, R(s * .095f, .11f, .035f), id == 173 ? .10f : .17f); });
                 SwiftPart(id, spine, "Long balancing tail", id == 173 ? teal : new Color(.32f, .27f, .52f), b => RareTube(b, new[] { R(0, .04f, -.41f), R(.07f, .06f, -.57f), R(.15f, .16f, -.68f), R(.10f, .24f, -.71f) }, new[] { .04f, .027f, .017f, .003f }, 7, 6));
                 SwiftPart(id, spine, id == 173 ? "Jade leopard rosettes" : "Moonlit flank marks", id == 173 ? new Color(.12f, .34f, .23f) : new Color(.70f, .78f, 1f), b => {
-                    for (int s = -1; s <= 1; s += 2) for (int i = 0; i < 5; i++) RareTube(b, new[] { R(s * .22f, .075f, .20f - i * .105f), R(s * .235f, .035f, .18f - i * .105f), R(s * .22f, -.005f, .20f - i * .105f) }, new[] { .012f, .012f }, 2, 4);
+                    for (int s = -1; s <= 1; s += 2) for (int i = 0; i < 4; i++)
+                    {
+                        if (id == 173) { var ring = new Vector3[7]; for (int n = 0; n < 7; n++) { float a = n * Mathf.PI / 3; ring[n] = R(s * (.229f - .009f * Mathf.Abs(Mathf.Sin(a))), .025f + Mathf.Sin(a) * .035f, .18f - i * .12f + Mathf.Cos(a) * .024f); } RareTube(b, ring, new[] { .009f, .009f }, 6, 4, caps: false); }
+                        else RareTube(b, new[] { R(s * .22f, .075f, .20f - i * .12f), R(s * .235f, .035f, .18f - i * .12f), R(s * .22f, -.005f, .20f - i * .12f) }, new[] { .012f, .012f }, 2, 4);
+                    }
                 });
             }
             else if (id == 174)
             {
                 SwiftScale(head, R(.69f, 1.05f, .69f));
                 SwiftPart(id, head, "Folded cap ribs", cream, b => {
-                    for (int i = 0; i < 8; i++) { float a = i * Mathf.PI / 4; var d = R(Mathf.Cos(a), 0, Mathf.Sin(a)); RareTube(b, new[] { R(0, .30f, 0) + d * .03f, R(0, .20f, 0) + d * .12f, R(0, .065f, 0) + d * .25f }, new[] { .009f, .012f, .007f }, 3, 4); }
+                    for (int i = 0; i < 8; i++) { float a = i * Mathf.PI / 4; var d = R(Mathf.Cos(a), 0, Mathf.Sin(a)); var path = new Vector3[6]; for (int j = 0; j < 6; j++) { int n = 7 - j; path[j] = R(0, .02f + CapProf[n * 2] * .735f, 0) + d * (CapProf[n * 2 + 1] * .5244f + .007f); } RareTube(b, path, new[] { .007f, .009f, .006f }, 6, 4); }
                 });
                 SwiftPart(id, head, "Spore spindle jewel", new Color(.5f, 1f, .78f), b => RareTube(b, new[] { R(0, .24f, 0), R(0, .34f, 0), R(0, .42f, 0) }, new[] { .04f, .027f, .001f }, 3, 6), true);
                 SwiftPart(id, spine, "Trailing leaf skirt", teal, b => { for (int i = -1; i <= 1; i++) SwiftRibbon(b, R(i * .08f, .22f, -.08f), R(i * .11f, .14f, -.20f), R(i * .15f, .19f, -.37f), .045f); });
@@ -154,8 +173,8 @@ namespace SpellDuel
                         var a = R(0, 0, .035f); var c = R(s * .43f, .055f, -.21f); var d = R(s * .17f, -.025f, -.30f);
                         b.Tri(a, c, d, Color.white); b.Tri(a, d, c, Color.white);
                         b.Tri(a, d, R(0, 0, -.12f), Color.white); b.Tri(a, R(0, 0, -.12f), d, Color.white);
-                    });
-                    SwiftPart(id, fin, "Pectoral rays " + s, cream, b => { for (int i = 0; i < 4; i++) RareRod(b, R(0, .004f, .03f), R(s * (.43f - i * .09f), .06f - i * .023f, -.21f - i * .03f), .006f, .002f, 4); });
+                    }).localRotation = Quaternion.Euler(0, 0, s * 108f);
+                    SwiftPart(id, fin, "Pectoral rays " + s, cream, b => { for (int i = 0; i < 4; i++) RareRod(b, R(0, .004f, .03f), R(s * (.43f - i * .09f), .06f - i * .023f, -.21f - i * .03f), .006f, .002f, 4); }).localRotation = Quaternion.Euler(0, 0, s * 108f);
                 }
                 SwiftPart(id, spine, "Ocean brow streamers", cream, b => { for (int s = -1; s <= 1; s += 2) RareTube(b, new[] { R(s * .06f, .07f, .25f), R(s * .10f, .13f, .08f), R(s * .14f, .11f, -.12f) }, new[] { .012f, .009f, .001f }, 4, 4); });
             }

@@ -54,8 +54,10 @@ namespace SpellDuel.EditorTools
             a.totalTriangles = a.meshTriangles + a.maximumFxTriangles + 2; // independent contact shadow
             a.colourCount = ((IList)RareField(r, "rockList")).Count; a.eyeCount = ((IList)RareField(r, "eyeList")).Count;
             var colourPart = (Renderer)((IList)RareField(r, "rockList"))[0]; var c = RareColour(colourPart);
+            var chargePart = (Renderer)((IList)RareField(r, "eyeList"))[0]; var eyeColour = RareColour(chargePart);
             r.PlayHit(); SwiftTick(r, .01f); a.hit = RareColour(colourPart) != c; SwiftTick(r, 1);
-            r.Windup(1); SwiftTick(r, 1); a.charge = RareColour(colourPart) != c;
+            // Legacy humanoids charge their eyes/core, not their unlit stone skin.
+            r.Windup(1); SwiftTick(r, 1); a.charge = RareColour(chargePart) != eyeColour;
             r.MoveSpeed = 3; for (int i = 0; i < 20; i++) { r.transform.position += Vector3.forward * .075f; SwiftTick(r, .025f); }
             var lines = r.GetComponentsInChildren<LineRenderer>(); a.movingTrail = lines.Length == 3;
             foreach (var l in lines) a.movingTrail &= l.enabled && Vector3.Distance(l.GetPosition(0), l.GetPosition(l.positionCount - 1)) > .2f;

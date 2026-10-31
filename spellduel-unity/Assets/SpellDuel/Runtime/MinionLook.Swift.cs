@@ -27,8 +27,8 @@ namespace SpellDuel
                 line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; line.receiveShadows = false;
                 line.widthCurve = AnimationCurve.Linear(0, 1, 1, 0);
                 var gradient = new Gradient();
-                gradient.SetKeys(new[] { new GradientColorKey(Color.Lerp(c, Color.white, .55f), 0), new GradientColorKey(c, 1) },
-                    new[] { new GradientAlphaKey(def.id == 178 ? .32f : .65f, 0), new GradientAlphaKey(0, 1) });
+                gradient.SetKeys(new[] { new GradientColorKey(Color.Lerp(c, Color.white, .2f), 0), new GradientColorKey(c, 1) },
+                    new[] { new GradientAlphaKey(def.id == 178 ? .5f : .85f, 0), new GradientAlphaKey(0, 1) });
                 line.colorGradient = gradient; line.enabled = false;
                 swiftWind[i] = line; swiftHistory[i] = new Vector3[SwiftSamples]; weapon.Add(line);
             }
@@ -51,7 +51,7 @@ namespace SpellDuel
                 if (!swiftStarted || delta.magnitude >= 3f) for (int n = 0; n < SwiftSamples; n++) points[n] = pos;
                 else if (swiftSample >= .025f) for (int n = SwiftSamples - 1; n > 0; n--) points[n] = points[n - 1];
                 points[0] = pos;
-                var line = swiftWind[i]; line.SetPositions(points); line.widthMultiplier = (i == 1 ? .075f : .035f) * swiftVisibility;
+                var line = swiftWind[i]; line.SetPositions(points); line.widthMultiplier = (i == 1 ? .10f : .055f) * swiftVisibility;
                 line.enabled = swiftVisibility > .01f && !Sneak;
             }
             if (swiftSample >= .025f) swiftSample = 0;
