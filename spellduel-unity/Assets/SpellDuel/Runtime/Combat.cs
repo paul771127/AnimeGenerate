@@ -955,8 +955,11 @@ namespace SpellDuel
         /// <summary>難度加的等級（故事關卡、副本：簡單 0、普通 +40、困難 +80）：敵人的血量、攻擊、速度照「波次＋這個數」成長</summary>
         public int levelBoost;
         /// <summary>難度加的等級對 Boss 的倍率（Boss 的血量不跟波次走，另外乘）</summary>
-        public float BoostHpMul => 1f + HpPerWave * levelBoost;
-        public float BoostDmgMul => (0.75f + DmgPerWave * levelBoost) / 0.75f * enemyDmgMul;
+        public float BoostHpMul => 1f + HpPerWave * BossBoost;
+        public float BoostDmgMul => (0.75f + DmgPerWave * BossBoost) / 0.75f * enemyDmgMul;
+        /// <summary>Boss 吃的難度等級：普通／困難的故事關卡、副本已經「跳到同等級的章節」算過倍率了，只吃跳不過去的部分（SoloBattle 設定；−1＝照 levelBoost）</summary>
+        public int bossBoostOverride = -1;
+        int BossBoost => bossBoostOverride >= 0 ? bossBoostOverride : levelBoost;
         /// <summary>故事關卡的 Boss：指定的血量（簡單難度、1 人；普通／困難再照等級加成）與攻擊倍率（不吃小怪的 enemyDmgMul）；0＝照舊</summary>
         public float storyBossHp, storyBossDmg;
         /// <summary>所有 Boss 的血量再 ×70%（使用者要求；故事、無盡、無盡塔、副本、討伐 Boss、合作都算）</summary>
@@ -978,7 +981,7 @@ namespace SpellDuel
         bool CanAttackFrom(Vector3 p) => (minionInside == null || minionInside(p)) && InAttackZone(p);
         /// <summary>攻擊區裡離 p 最近的一點（邊界往內 0.3m）</summary>
         Vector3 ClampToZone(Vector3 p) { if (attackHalf <= 0f) return p; float h = attackHalf - 0.3f; return new Vector3(Mathf.Clamp(p.x, -h, h), 0f, Mathf.Clamp(p.z, -h, h)); }
-        public float BossDmgMul => (storyBossDmg > 0f ? (0.75f + DmgPerWave * levelBoost) / 0.75f * storyBossDmg : BoostDmgMul) * TowerMul;
+        public float BossDmgMul => (storyBossDmg > 0f ? (0.75f + DmgPerWave * BossBoost) / 0.75f * storyBossDmg : BoostDmgMul) * TowerMul;
         public float HpMul => (1f + HpPerWave * Tier) * PartyMul * hpBoost * enemyHpMul * TowerMul;
         /// <summary>無盡塔第 11 波（層）以上：敵人血量、傷害 ×1.5（Boss 也是）</summary>
         public const int TowerHardWave = 11; public const float TowerHardMul = 1.5f;

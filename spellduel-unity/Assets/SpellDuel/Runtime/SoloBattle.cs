@@ -967,17 +967,31 @@ namespace SpellDuel
         /// </summary>
         /// <summary>副本比同等級的故事關卡強多少（使用者要求 30%）</summary>
         public const float DungeonVsStory = 1.3f;
-        /// <summary>副本的一個地點（波次 w）：小怪、Boss 的血量與攻擊倍率＝故事關卡同一章同一位置 × DungeonVsStory（難度等級、人數倍率照舊另外乘）</summary>
+        /// <summary>副本的一個地點（波次 w）：小怪、Boss＝同等級的故事關卡 × DungeonVsStory（人數倍率照舊另外乘）</summary>
         void ApplyDungeonStrength(int w)
         {
             if (battle == null) return;
-            int ch = Mathf.Clamp((Mathf.Max(1, w) - 1) / 10, 0, StoryMinionHp.Length - 1), pos = (Mathf.Max(1, w) - 1) % 10 + 1;
-            battle.enemyHpMul = (ch >= 1 ? StoryMinionHpOf(ch, pos) : 1f) * DungeonVsStory;
-            battle.enemyDmgMul = (ch >= 1 ? StoryMinionDmg[ch] : 1f) * DungeonVsStory;
-            // Boss：照故事關卡那一章的 Boss（第二章起 ×1.3、第三章起傷害 ×1.5、第三章 ×2）
-            battle.storyBossHp = StoryBossHp[ch] * (ch >= 1 ? LateBossMul : 1f) * (ch == 2 ? 2f : 1f) * DungeonVsStory;
-            battle.storyBossDmg = StoryBossDmg[ch] * (ch >= 2 ? LateDmgMul : 1f) * (ch == 2 ? 2f : 1f) * (ch >= 1 ? LateBossMul : 1f) * DungeonVsStory;
+            ApplyEquivalentStrength(Mathf.Max(1, w), Mathf.Clamp((Mathf.Max(1, w) - 1) / 10, 0, StoryMinionHp.Length - 1), DungeonVsStory);
+        }
+
+        /// <summary>
+        /// 照「同等級」設定敵人強度：w＝這一關在簡單難度的波次，加上難度的等級（普通 +40、困難 +80）就是等效波次，
+        /// 用等效波次那一章、那個位置的小怪與 Boss 倍率（第五章以後停在第五章，等級照樣往上長）。
+        /// 例：普通第一章（等效 41～50 波）＝簡單第五章。Boss 已經跳過的等級不再重複加（bossBoostOverride）。
+        /// sceneCh＝場景的章節（算 Boss 跳過了幾級用）；mul＝額外倍率（副本 1.3）
+        /// </summary>
+        void ApplyEquivalentStrength(int w, int sceneCh, float mul)
+        {
+            int last = StoryMinionHp.Length - 1;
+            int weq = Mathf.Max(1, w + battle.levelBoost);
+            int sc = Mathf.Clamp((weq - 1) / 10, 0, last), pos = weq > (last + 1) * 10 ? 10 : (weq - 1) % 10 + 1;
+            battle.enemyHpMul = (sc >= 1 ? StoryMinionHpOf(sc, pos) : 1f) * mul;
+            battle.enemyDmgMul = (sc >= 1 ? StoryMinionDmg[sc] : 1f) * mul;
+            // Boss：照那一章的故事 Boss（第二章起 ×1.3、第三章起傷害 ×1.5、第三章 ×2）
+            battle.storyBossHp = StoryBossHp[sc] * (sc >= 1 ? LateBossMul : 1f) * (sc == 2 ? 2f : 1f) * mul;
+            battle.storyBossDmg = StoryBossDmg[sc] * (sc >= 2 ? LateDmgMul : 1f) * (sc == 2 ? 2f : 1f) * (sc >= 1 ? LateBossMul : 1f) * mul;
             battle.bossHpMul = 1f;
+            battle.bossBoostOverride = Mathf.Max(0, battle.levelBoost - 10 * Mathf.Max(0, sc - Mathf.Clamp(sceneCh, 0, last)));
         }
         public static readonly float[] StoryMinionHp = { 1f, 2f, 2.5f, 3.2f, 4f };   // 照舊（使用者回報血少的職業打同級敵人幾乎秒殺：血量不再降）
         public const float StageHpGrowth = 0.04f;
@@ -1411,6 +1425,9 @@ namespace SpellDuel
                         if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId) { battle.storyMaxAlive = StoryMaxAlive * partyN; battle.refillDelay = StoryRefillDelay; }
                         // 第二章以後的 Boss：血量、傷害 ×1.3
                         if (pendingStage.theme >= 1 && pendingStage.id != "trial") { battle.storyBossHp *= LateBossMul; battle.storyBossDmg *= LateBossMul; }
+                        // 普通、困難（使用者要求）：只有簡單難度的第一章特別簡單；其他照「同等級」的章節算強度（普通第一章＝簡單第五章）
+                        if (difficulty >= 1 && pendingStage.id != "trial" && pendingStage.id != JobTrialStageId)
+                            ApplyEquivalentStrength(pendingStage.theme * 10 + Mathf.Clamp(pendingStage.fromWave, 1, 10), pendingStage.theme, 1f);
                         SetupStageMods(pendingStage);   // 天候、小目標（SoloBattle.StageMods.cs）
                         if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.id != "1-1" && pendingStage.id != "1-2" && pendingStage.id != "1-3") { battle.treasureChance = TreasureChance; battle.extraPerWave = StoryExtraPerWave; }   // 每波多 3 隻（新手關、試煉不加）   // 寶箱怪：新手關、試煉不出（Combat.Treasure.cs）
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
