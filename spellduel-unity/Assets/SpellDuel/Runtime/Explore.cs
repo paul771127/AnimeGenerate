@@ -240,70 +240,69 @@ namespace SpellDuel
     /// </summary>
     public static class JungleMaze
     {
-        public const int N = 41, Mid = 20;
+        public const int N = 25, Mid = 12;   // 使用者要求：地圖縮成約 1/3 面積（41×41 → 25×25 格，每邊約 100m）；走道寬度不變
         public const int Seed = 20261030;
 
-        public const int SwiftPerZone = 2;   // 疾風稀有怪：每區兩隻
+        public const int SwiftPerZone = 1;   // 疾風稀有怪：每區一隻（地圖縮小後）
+        public const int Zone = 11;          // 每一區的迷宮 11×11 格
         public static ExploreMap Build()
         {
             var m = new ExploreMap(N, N) { name = "翠蔭迷林", theme = "jungle", start = new Vector2Int(3, 3) };
             var rng = new System.Random(Seed);
             // 四個區域各自是一個迷宮（區域之間是整排的牆）
             Carve(m, rng, 1, 1);     // 西南
-            Carve(m, rng, 21, 1);    // 東南
-            Carve(m, rng, 21, 21);   // 東北
-            Carve(m, rng, 1, 21);    // 西北
+            Carve(m, rng, 13, 1);    // 東南
+            Carve(m, rng, 13, 13);   // 東北
+            Carve(m, rng, 1, 13);    // 西北
             // 房間：起點、營地、競技場、最終 Boss
-            Room(m, 1, 1, 5, 5);                 // 起點
-            Room(m, 3, 13, 7, 17);               // 西南營地
-            Room(m, 31, 3, 35, 7);               // 東南營地
-            Room(m, 33, 23, 37, 27);             // 東北營地 1
-            Room(m, 33, 31, 37, 35);             // 東北營地 2
-            Room(m, 11, 23, 15, 27);             // 西北營地
-            Room(m, 13, 7, 19, 11);              // 競技場 1（西南 → 東南）
-            Room(m, 27, 13, 35, 19);             // 競技場 2（東南 → 東北）
-            Room(m, 21, 27, 27, 35);             // 競技場 3（東北 → 西北）
-            Room(m, 1, 31, 9, 39);               // 最終 Boss
+            Room(m, 1, 1, 3, 3);                 // 起點
+            // 營地的房間在 BuildLandmarks（藤蔓營地、藤牙寨、回音洞窟）；使用者要求縮小地圖：拿掉碎岩谷、巨菇林、枯骨營地
+            Room(m, 1, 7, 5, 11);                // 藤蔓營地（獵人的任務）
+            Room(m, 7, 7, 11, 11);               // 競技場 1（西南 → 東南）
+            Room(m, 17, 7, 23, 11);              // 競技場 2（東南 → 東北）
+            Room(m, 13, 15, 17, 21);             // 競技場 3（東北 → 西北）
+            Room(m, 1, 17, 7, 23);               // 最終 Boss
+            // 房間都放在迷宮的奇數格線上、彼此隔一格牆（貼在一起的話，封印會把整條邊都變成門）
             // 藤蔓門：競技場後面那一格牆打通成「門」（打贏才開）
-            m.cells[20, 9] = ExCell.Gate; m.cells[21, 9] = ExCell.Floor;
-            m.cells[31, 20] = ExCell.Gate; m.cells[31, 21] = ExCell.Floor;
-            m.cells[20, 31] = ExCell.Gate; m.cells[19, 31] = ExCell.Floor;
-            m.arenas.Add(new ExArena { n = 1, center = m.World(16, 9), radius = 7f * ExploreMap.CellSize / 3f, name = "苔甲守根者的巢穴", gate = { new Vector2Int(20, 9) } });
-            m.arenas.Add(new ExArena { n = 2, center = m.World(31, 16), radius = 9f * ExploreMap.CellSize / 3f, name = "夢孢司祭的祭壇", gate = { new Vector2Int(31, 20) } });
-            m.arenas.Add(new ExArena { n = 3, center = m.World(24, 31), radius = 9f * ExploreMap.CellSize / 3f, name = "翠翼巡獵者的獵場", gate = { new Vector2Int(20, 31) } });
-            m.arenas.Add(new ExArena { n = 4, center = m.World(5, 34), radius = 11f * ExploreMap.CellSize / 3f, name = "腐化樹王的王座" });
-            m.altar = m.World(5, 39);
+            m.cells[12, 9] = ExCell.Gate; m.cells[13, 9] = ExCell.Floor;
+            m.cells[20, 12] = ExCell.Gate; m.cells[20, 13] = ExCell.Floor;
+            m.cells[12, 19] = ExCell.Gate; m.cells[11, 19] = ExCell.Floor;
+            m.arenas.Add(new ExArena { n = 1, center = m.World(9, 9), radius = 2.2f * ExploreMap.CellSize, name = "苔甲守根者的巢穴", gate = { new Vector2Int(12, 9) } });
+            m.arenas.Add(new ExArena { n = 2, center = m.World(20, 9), radius = 2.2f * ExploreMap.CellSize, name = "夢孢司祭的祭壇", gate = { new Vector2Int(20, 12) } });
+            m.arenas.Add(new ExArena { n = 3, center = m.World(15, 18), radius = 2.2f * ExploreMap.CellSize, name = "翠翼巡獵者的獵場", gate = { new Vector2Int(12, 19) } });
+            m.arenas.Add(new ExArena { n = 4, center = m.World(4, 20), radius = 2.8f * ExploreMap.CellSize, name = "腐化樹王的王座" });
+            m.altar = m.World(4, 23);
             BuildLandmarks(m);
 
             // ---- NPC
-            m.npcs.Add(new ExNpc { id = "elder", name = "林語長老", look = "priest", pos = m.World(4, 5), quest = "main" });
-            m.npcs.Add(new ExNpc { id = "hunter", name = "獵人巴克", look = "archer", pos = m.World(9, 17), quest = "camp" });
-            m.npcs.Add(new ExNpc { id = "lost", name = "迷路的探險家", look = "mage", pos = m.World(17, 17), quest = "escort" });
-            m.npcs.Add(new ExNpc { id = "outpost", name = "前哨站守衛", look = "swordsman", pos = m.World(11, 9) });
-            m.npcs.Add(new ExNpc { id = "herbalist", name = "草藥師莉亞", look = "priest", pos = m.World(23, 3), quest = "herbs" });
-            m.npcs.Add(new ExNpc { id = "guardian", name = "守林人", look = "swordsman", pos = m.World(17, 33), quest = "main" });
-            m.npcs.Add(new ExNpc { id = "spirit", name = "森林之靈", look = "priest", pos = m.World(39, 39), hidden = true });
+            m.npcs.Add(new ExNpc { id = "elder", name = "林語長老", look = "priest", pos = m.World(5, 5), quest = "main" });
+            m.npcs.Add(new ExNpc { id = "hunter", name = "獵人巴克", look = "archer", pos = m.World(1, 5), quest = "camp" });
+            m.npcs.Add(new ExNpc { id = "lost", name = "迷路的探險家", look = "mage", pos = m.World(10, 5), quest = "escort" });
+            m.npcs.Add(new ExNpc { id = "outpost", name = "前哨站守衛", look = "swordsman", pos = m.World(3, 5) });
+            m.npcs.Add(new ExNpc { id = "herbalist", name = "草藥師莉亞", look = "priest", pos = m.World(15, 3), quest = "herbs" });
+            m.npcs.Add(new ExNpc { id = "guardian", name = "守林人", look = "swordsman", pos = m.World(9, 19), quest = "main" });
+            m.npcs.Add(new ExNpc { id = "spirit", name = "森林之靈", look = "priest", pos = m.World(23, 13), hidden = true });
             foreach (var n in m.npcs) Ensure(m, n.pos);
 
             // ---- 道具：月光草
             int hi = 0;
-            foreach (var c in new[] { new Vector2Int(37, 11), new Vector2Int(23, 17), new Vector2Int(39, 3) })
+            foreach (var c in new[] { new Vector2Int(15, 5), new Vector2Int(23, 2), new Vector2Int(13, 3) })
                 { m.items.Add(new ExItem { id = "herb" + (++hi), name = "月光草", quest = "herbs", pos = m.World(c.x, c.y) }); Ensure(m, m.items[m.items.Count - 1].pos); }
 
             // ---- 隱藏的閃光點
-            m.sparkles.Add(new ExSparkle { id = "sp_chest", kind = "chest", pos = m.World(19, 1), title = "埋起來的寶箱", text = "土裡有東西在發光……挖出了一個古老的寶箱！" });
-            m.sparkles.Add(new ExSparkle { id = "sp_rare", kind = "rare", pos = m.World(39, 19), title = "沉睡的古根", text = "地面在震動……古根撼地獸被吵醒了！" });
-            m.sparkles.Add(new ExSparkle { id = "sp_spirit", kind = "spirit", pos = m.World(39, 37), title = "發光的樹洞", text = "樹洞裡飄出一團綠光——是森林之靈！" });
-            m.sparkles.Add(new ExSparkle { id = "sp_beast", kind = "beast", pos = m.World(21, 39), title = "受傷的小獸", text = "一隻受傷的小獸縮在草叢裡，你替牠包紮了傷口。" });
-            m.sparkles.Add(new ExSparkle { id = "sp_passage", kind = "passage", pos = m.World(17, 21), title = "奇怪的藤牆", text = "撥開藤蔓——後面是一條密道！" });
+            m.sparkles.Add(new ExSparkle { id = "sp_chest", kind = "chest", pos = m.World(11, 1), title = "埋起來的寶箱", text = "土裡有東西在發光……挖出了一個古老的寶箱！" });
+            m.sparkles.Add(new ExSparkle { id = "sp_rare", kind = "rare", pos = m.World(15, 9), title = "沉睡的古根", text = "地面在震動……古根撼地獸被吵醒了！" });
+            m.sparkles.Add(new ExSparkle { id = "sp_spirit", kind = "spirit", pos = m.World(23, 15), title = "發光的樹洞", text = "樹洞裡飄出一團綠光——是森林之靈！" });
+            m.sparkles.Add(new ExSparkle { id = "sp_beast", kind = "beast", pos = m.World(13, 23), title = "受傷的小獸", text = "一隻受傷的小獸縮在草叢裡，你替牠包紮了傷口。" });
+            m.sparkles.Add(new ExSparkle { id = "sp_passage", kind = "passage", pos = m.World(9, 13), title = "奇怪的藤牆", text = "撥開藤蔓——後面是一條密道！" });
             foreach (var s in m.sparkles) Ensure(m, s.pos);
             // 密道：西北區通往起點附近的捷徑（打開兩格牆；打過第三個小 Boss 才找得到，回程用）
-            var sp = m.sparkles.Find(s => s.id == "sp_passage"); sp.opens = new[] { 17, 20 };
+            var sp = m.sparkles.Find(s => s.id == "sp_passage"); sp.opens = new[] { 9, 12 };
 
             // ---- 任務
             m.quests.Add(new ExQuest { id = "main", kind = "main", giver = "elder", title = "古樹之心", state = ExQuestState.Offered,
                 desc = "打倒三個守衛（打開藤蔓門）→ 打倒腐化樹王 → 取得古樹之心 → 交給守林人",
-                offer = "旅人啊，迷林深處的腐化樹王奪走了「古樹之心」，整片叢林正在枯萎。三個被腐化的守衛擋住了去路，打倒牠們藤蔓就會退開。拿回古樹之心，交給在王座前守候的守林人吧。",
+                offer = "旅人啊，迷林深處的腐化樹王奪走了「古樹之心」，整片叢林正在枯萎。三個被腐化的守衛擋住了去路，打倒牠們藤蔓就會退開。打倒腐化樹王後，守林人會到祭壇旁等你，把古樹之心交給他吧。",
                 thanks = "古樹之心回來了……叢林會重新長出綠意。謝謝你，勇者。", gold = 1500, xp = 3000 });
             m.quests.Add(new ExQuest { id = "camp", kind = "camp", giver = "hunter", title = "清除藤蔓營地", need = 4, state = ExQuestState.Offered,
                 desc = "打倒西邊營地的 4 隻怪物", offer = "西邊那個營地的怪物一直襲擊獵人小屋。幫我把牠們全部打倒！小心，裡面的藤蔓術士會叫同伴。",
@@ -331,7 +330,7 @@ namespace SpellDuel
             int[] guardKinds = { 28, 30, 32 };
             for (int g = 0; g < 3; g++) m.monsters.Add(new ExMonster { id = ++id, kind = guardKinds[g], zone = g, home = m.arenas[g].center, guardian = g + 1 });
             // 稀有怪（閃光點叫出來）
-            m.monsters.Add(new ExMonster { id = ++id, kind = 19, zone = 1, home = m.World(37, 19), rare = true, hidden = true });
+            m.monsters.Add(new ExMonster { id = ++id, kind = 19, zone = 1, home = m.World(13, 11), rare = true, hidden = true });
             // 營地（第一隻會叫同伴）
             void Camp(int camp, int zone, int cx, int cz, int[] kinds)
             {
@@ -339,24 +338,23 @@ namespace SpellDuel
                 for (int i = 0; i < kinds.Length; i++)
                     m.monsters.Add(new ExMonster { id = ++id, kind = kinds[i], zone = zone, camp = camp, caller = i == 0, home = m.World(cx + offs[i].x, cz + offs[i].y) });
             }
-            Camp(0, 0, 5, 15, new[] { 9, 8, 10, 11 });       // 西南營地（獵人的任務：4 隻）
-            Camp(1, 1, 33, 5, new[] { 9, 12, 7, 8 });
-            Camp(2, 2, 35, 25, new[] { 9, 8, 12, 11, 10 });
-            Camp(3, 2, 35, 33, new[] { 9, 7, 8, 12 });
-            Camp(4, 3, 13, 25, new[] { 9, 12, 8, 11, 7 });
+            Camp(0, 0, 3, 9, new[] { 9, 8, 10, 11 });        // 西南營地（獵人的任務：4 隻）
+            Camp(1, 1, 20, 3, new[] { 9, 12, 7, 8 });
+            Camp(3, 2, 21, 20, new[] { 9, 7, 8, 12 });
             // 巡邏的怪：每區固定數量，從迷宮走道挑（離起點、NPC、房間遠一點），在附近兩三格之間來回走
             int[][] zoneKinds = { new[] { 8, 10, 11, 12 }, new[] { 7, 9, 12, 8 }, new[] { 8, 9, 11, 12, 7 }, new[] { 7, 9, 10, 12, 8 } };
-            int[] perZone = { 26, 30, 32, 30 };   // 使用者要求密度再高（原本 7／8／9／8 → 13／15／16／15 → 現在）；有些是兩三隻一起巡邏
-            var zoneOrigin = new[] { new Vector2Int(1, 1), new Vector2Int(21, 1), new Vector2Int(21, 21), new Vector2Int(1, 21) };
+            int[] perZone = { 9, 10, 14, 13 };   // 巨菇林、枯骨營地拿掉了：那兩區的怪併進巡邏
+            // 地圖縮成約 1/3（使用者要求），數量跟著縮、密度不變；有些是兩三隻一起巡邏
+            var zoneOrigin = new[] { new Vector2Int(1, 1), new Vector2Int(13, 1), new Vector2Int(13, 13), new Vector2Int(1, 13) };
             for (int z = 0; z < 4; z++)
             {
                 int placed = 0, guard = 0;
                 while (placed < perZone[z] && guard++ < 2000)
                 {
-                    int x = zoneOrigin[z].x + rng.Next(19), y = zoneOrigin[z].y + rng.Next(19);
+                    int x = zoneOrigin[z].x + rng.Next(Zone), y = zoneOrigin[z].y + rng.Next(Zone);
                     if (m.At(x, y) != ExCell.Floor) continue;
                     var p = m.World(x, y);
-                    if (p.magnitude < 15f || m.PropAt(p, 1f) != null) continue;
+                    if (p.magnitude < 10f || m.PropAt(p, 1f) != null) continue;
                     bool near = false;
                     foreach (var n in m.npcs) if (Vector3.Distance(n.pos, p) < 7f) near = true;
                     foreach (var o in m.monsters) if (Vector3.Distance(o.home, p) < 6.5f) near = true;
@@ -390,13 +388,13 @@ namespace SpellDuel
                 int placed = 0, guard = 0;
                 while (placed < SwiftPerZone && guard++ < 2000)
                 {
-                    int x = zoneOrigin[z].x + rng.Next(19), y = zoneOrigin[z].y + rng.Next(19);
+                    int x = zoneOrigin[z].x + rng.Next(Zone), y = zoneOrigin[z].y + rng.Next(Zone);
                     if (m.At(x, y) != ExCell.Floor) continue;
                     var p = m.World(x, y);
-                    if (p.magnitude < 20f || m.PropAt(p, 1f) != null) continue;
+                    if (p.magnitude < 14f || m.PropAt(p, 1f) != null) continue;
                     bool near = false;
                     foreach (var n in m.npcs) if (Vector3.Distance(n.pos, p) < 8f) near = true;
-                    foreach (var o in m.monsters) if (Vector3.Distance(o.home, p) < (o.variant > 0 ? 16f : 4f)) near = true;
+                    foreach (var o in m.monsters) if (Vector3.Distance(o.home, p) < (o.variant > 0 ? 12f : 4f)) near = true;
                     foreach (var a in m.arenas) if (Vector3.Distance(a.center, p) < a.radius + 4f) near = true;
                     if (near) continue;
                     var path = new List<Vector3> { p }; var cur = new Vector2Int(x, y);
@@ -435,10 +433,10 @@ namespace SpellDuel
                 }
                 m.seals.Add(s); return s;
             }
-            Seal("seal1", "苔根封印", "巢穴入口被粗大的苔根封住了，根連著一條石槽……岔路深處應該有機關。", 13, 7, 19, 11, 1);
-            Seal("seal2", "寨主之鎖", "祭壇的入口掛著一把古銅大鎖。鑰匙應該被藏在這一區的岔路裡。", 27, 13, 35, 19, 1);
-            Seal("seal3", "雙獵封印", "獵場被兩道藤蔓結封住，要找到兩個機關才打得開。", 21, 27, 27, 35, 2);
-            Seal("seal4", "翠玉封印", "王座的大門刻著三個凹槽——要放進三片翠玉碎片。前面三個區域各藏著一片。", 1, 31, 9, 39, 3);
+            Seal("seal1", "苔根封印", "巢穴入口被粗大的苔根封住了，根連著一條石槽……岔路深處應該有機關。", 7, 7, 11, 11, 1);
+            Seal("seal2", "寨主之鎖", "祭壇的入口掛著一把古銅大鎖。鑰匙應該被藏在這一區的岔路裡。", 17, 7, 23, 11, 1);
+            Seal("seal3", "雙獵封印", "獵場被兩道藤蔓結封住，要找到兩個機關才打得開。", 13, 15, 17, 21, 2);
+            Seal("seal4", "翠玉封印", "王座的大門刻著三個凹槽——要放進三片翠玉碎片。前面三個區域各藏著一片。", 1, 17, 7, 23, 3);
 
             // 各區離入口最遠的死路（避開 NPC、道具、閃光點、景物、房間）
             List<Vector2Int> DeadEnds(Vector2Int entry, int x0, int z0, int x1, int z1)
@@ -446,40 +444,42 @@ namespace SpellDuel
                 var dist = new Dictionary<Vector2Int, int>(); var q = new Queue<Vector2Int>(); q.Enqueue(entry); dist[entry] = 0;
                 while (q.Count > 0) { var c = q.Dequeue(); foreach (var d in ExploreMap.Dirs) { var n = c + d; if (n.x < x0 || n.y < z0 || n.x > x1 || n.y > z1 || dist.ContainsKey(n) || m.At(n.x, n.y) != ExCell.Floor) continue; dist[n] = dist[c] + 1; q.Enqueue(n); } }
                 var list = new List<Vector2Int>();
+                // 先找真正的死路；地圖小、不夠用時（少於 3 個）放寬成一般走道（不在房間、路口）
+                for (int pass = 0; pass < 2 && list.Count < 3; pass++)
                 foreach (var kv in dist)
                 {
                     var c = kv.Key; int open = 0; bool nearGate = false;
                     foreach (var d in ExploreMap.Dirs) { if (m.Open(c.x + d.x, c.y + d.y)) open++; if (m.At(c.x + d.x, c.y + d.y) == ExCell.Gate) nearGate = true; }
-                    if (open != 1 || nearGate) continue;   // 真正的死路（不是被封印擋住的入口）
+                    if (nearGate || (pass == 0 ? open != 1 : open > 2) || list.Contains(c)) continue;   // 真正的死路（不是被封印擋住的入口）
                     var p = m.World(c.x, c.y); bool busy = m.PropAt(p, 1.5f) != null;
                     foreach (var n in m.npcs) if (Battle.FlatDistance(n.pos, p) < 4f) busy = true;
                     foreach (var it in m.items) if (Battle.FlatDistance(it.pos, p) < 4f) busy = true;
                     foreach (var sp in m.sparkles) if (Battle.FlatDistance(sp.pos, p) < 4f) busy = true;
                     foreach (var l in m.landmarks) if (l.Contains(c)) busy = true;
-                    foreach (var sw in m.switches) if (Battle.FlatDistance(sw.pos, p) < 12f) busy = true;
+                    foreach (var sw in m.switches) if (Battle.FlatDistance(sw.pos, p) < 8f) busy = true;
                     if (!busy) list.Add(c);
                 }
                 list.Sort((a, b) => dist[b].CompareTo(dist[a]));
                 return list;
             }
             void Switch(string id, string kind, string name, string seal, int zone, Vector2Int c) => m.switches.Add(new ExSwitch { id = id, kind = kind, name = name, seal = seal, zone = zone, pos = m.World(c.x, c.y) });
-            Vector2Int Next(List<Vector2Int> l) { foreach (var c in l) { var p = m.World(c.x, c.y); bool used = false; foreach (var sw in m.switches) if (Battle.FlatDistance(sw.pos, p) < 12f) used = true; if (!used) return c; } return l[0]; }
-            var z1 = DeadEnds(m.start, 1, 1, 19, 19);
+            Vector2Int Next(List<Vector2Int> l) { foreach (var c in l) { var p = m.World(c.x, c.y); bool used = false; foreach (var sw in m.switches) if (Battle.FlatDistance(sw.pos, p) < 8f) used = true; if (!used) return c; } return l[0]; }
+            var z1 = DeadEnds(m.start, 1, 1, 11, 11);
             Switch("lever1", "lever", "石雕機關", "seal1", 0, Next(z1));
             Switch("shard1", "shard", "翠玉碎片", "seal4", 0, Next(z1));
-            var z2 = DeadEnds(new Vector2Int(21, 9), 21, 1, 39, 19);
+            var z2 = DeadEnds(new Vector2Int(13, 9), 13, 1, 23, 11);
             Switch("key2", "key", "古銅鑰匙", "seal2", 1, Next(z2));
             Switch("shard2", "shard", "翠玉碎片", "seal4", 1, Next(z2));
-            var z3 = DeadEnds(new Vector2Int(31, 21), 21, 21, 39, 39);
+            var z3 = DeadEnds(new Vector2Int(20, 13), 13, 13, 23, 23);
             Switch("lever3a", "lever", "左獵石機關", "seal3", 2, Next(z3));
             Switch("lever3b", "lever", "右獵石機關", "seal3", 2, Next(z3));
             Switch("shard3", "shard", "翠玉碎片", "seal4", 2, Next(z3));
         }
 
-        /// <summary>某個區域（19×19 格，左下角 ox,oz）用回溯法挖迷宮，再多打通一些牆做成環路（不會只有死路）</summary>
+        /// <summary>某個區域（Zone×Zone 格，左下角 ox,oz）用回溯法挖迷宮，再多打通一些牆做成環路（不會只有死路）</summary>
         static void Carve(ExploreMap m, System.Random rng, int ox, int oz)
         {
-            const int Cells = 10;
+            const int Cells = (Zone + 1) / 2;
             var seen = new bool[Cells, Cells];
             var stack = new Stack<Vector2Int>();
             stack.Push(new Vector2Int(0, 0)); seen[0, 0] = true; m.cells[ox, oz] = ExCell.Floor;
@@ -494,10 +494,10 @@ namespace SpellDuel
                 m.cells[ox + c.x * 2 + (nx.x - c.x), oz + c.y * 2 + (nx.y - c.y)] = ExCell.Floor;
                 stack.Push(nx);
             }
-            // 環路：每區多打通 14 面牆
-            for (int k = 0, tries = 0; k < 14 && tries < 500; tries++)
+            // 環路：每區多打通 6 面牆
+            for (int k = 0, tries = 0; k < 6 && tries < 500; tries++)
             {
-                int x = ox + rng.Next(19), z = oz + rng.Next(19);
+                int x = ox + rng.Next(Zone), z = oz + rng.Next(Zone);
                 if (m.cells[x, z] != ExCell.Wall) continue;
                 bool h = (x - ox) % 2 == 1 && (z - oz) % 2 == 0, v = (x - ox) % 2 == 0 && (z - oz) % 2 == 1;
                 if (!h && !v) continue;
@@ -524,47 +524,35 @@ namespace SpellDuel
             void Prop(string kind, int x, int z, float r, float ox = 0f, float oz = 0f, int v = 0) => m.AddProp(kind, m.World(x, z) + new Vector3(ox, 0f, oz), r, v);
 
             // 起點：林語營地（篝火、木箱）
-            Mark("start", "林語營地", "start", 1, 1, 5, 5);
-            Terrain(1, 1, 5, 5, ExTerrain.Thicket, ExGround.Dirt);
-            Prop("campfire", 2, 2, 0.45f); Prop("crate", 1, 1, 0.45f, -0.3f, -0.3f); Prop("crate", 5, 1, 0.45f, 0.3f, -0.3f); Prop("tent", 1, 5, 1f, -0.2f, 0.2f);
+            Mark("start", "林語營地", "start", 1, 1, 3, 3);
+            Terrain(1, 1, 3, 3, ExTerrain.Thicket, ExGround.Dirt);
+            Prop("campfire", 2, 2, 0.45f); Prop("crate", 1, 1, 0.45f, -0.3f, -0.3f); Prop("crate", 3, 1, 0.45f, 0.3f, -0.3f); Prop("tent", 1, 3, 1f, -0.2f, 0.2f);
             // 月影湖：湖面（走不過去）＋一圈湖岸
-            Room(m, 9, 1, 17, 5);
-            Mark("lake", "月影湖", "lake", 9, 1, 17, 5);
-            Terrain(9, 1, 17, 5, ExTerrain.Thicket, ExGround.Shore);
-            for (int x = 11; x <= 15; x++) for (int z = 2; z <= 4; z++) Block(x, z, ExTerrain.Water);
-            Prop("tree", 9, 1, 0.6f, -0.4f, -0.4f, 1); Prop("tree", 17, 5, 0.6f, 0.4f, 0.4f, 2); Prop("stump", 17, 1, 0.4f, 0.4f, -0.4f);
+            Room(m, 5, 1, 11, 5);
+            Mark("lake", "月影湖", "lake", 5, 1, 11, 5);
+            Terrain(5, 1, 11, 5, ExTerrain.Thicket, ExGround.Shore);
+            for (int x = 6; x <= 10; x++) for (int z = 2; z <= 4; z++) Block(x, z, ExTerrain.Water);
+            Prop("tree", 11, 5, 0.6f, 0.4f, 0.4f, 2);   // 西南角是從起點進來的入口，不放樹 Prop("stump", 11, 1, 0.4f, 0.4f, -0.4f);
             // 藤蔓營地（獵人的任務）
-            Mark("camp0", "藤蔓營地", "camp", 3, 13, 7, 17);
-            Terrain(3, 13, 7, 17, ExTerrain.Thicket, ExGround.Dirt);
-            Prop("tent", 3, 17, 1f, -0.3f, 0.3f); Prop("tent", 7, 17, 1f, 0.3f, 0.3f); Prop("totem", 3, 13, 0.3f, -0.6f, -0.6f); Prop("campfire", 7, 13, 0.4f, 0.4f, -0.4f);
-            // 碎岩谷：岩石地形（四周是岩壁、地上散落巨石）
-            Room(m, 21, 10, 25, 15);
-            Mark("rocks", "碎岩谷", "rocks", 21, 9, 25, 15);
-            Terrain(20, 8, 26, 16, ExTerrain.Rock, ExGround.Dirt);
-            Prop("boulder", 22, 11, 0.7f, 0.2f, 0f, 0); Prop("boulder", 24, 13, 0.8f, 0f, 0.3f, 1); Prop("boulder", 22, 15, 0.6f, -0.3f, 0.3f, 2); Prop("boulder", 25, 10, 0.5f, 0.6f, -0.2f, 1);
+            Mark("camp0", "藤蔓營地", "camp", 1, 7, 5, 11);
+            Terrain(1, 7, 5, 11, ExTerrain.Thicket, ExGround.Dirt);
+            Prop("tent", 1, 11, 1f, -0.3f, 0.3f); Prop("tent", 5, 11, 1f, 0.3f, 0.3f); Prop("totem", 1, 7, 0.3f, -0.6f, -0.6f); Prop("campfire", 5, 7, 0.4f, 0.4f, -0.4f);
             // 藤牙寨：敵人的城寨（木樁圍牆，西、北兩個寨門）
-            Room(m, 29, 1, 37, 9);
-            Mark("fort", "藤牙寨", "fort", 29, 1, 37, 9);
-            Terrain(29, 1, 37, 9, ExTerrain.Palisade, ExGround.Dirt);
-            for (int x = 30; x <= 36; x++) { Block(x, 2, ExTerrain.Palisade); Block(x, 8, ExTerrain.Palisade); }
-            for (int z = 2; z <= 8; z++) { Block(30, z, ExTerrain.Palisade); Block(36, z, ExTerrain.Palisade); }
-            m.cells[30, 5] = ExCell.Floor; m.cells[33, 8] = ExCell.Floor;   // 寨門
-            Prop("tent", 31, 7, 0.9f, -0.2f, 0.2f); Prop("crate", 35, 3, 0.45f, 0.3f, -0.3f); Prop("totem", 35, 7, 0.3f, 0.5f, 0.5f);
-            // 巨菇林（東北營地）
-            Mark("grove", "巨菇林", "grove", 33, 23, 37, 27);
-            Terrain(33, 23, 37, 27, ExTerrain.Thicket, ExGround.Grass);
-            Prop("mushroom", 33, 23, 0.6f, -0.4f, -0.4f, 0); Prop("mushroom", 37, 23, 0.7f, 0.4f, -0.4f, 1); Prop("mushroom", 33, 27, 0.5f, -0.4f, 0.4f, 2); Prop("mushroom", 37, 27, 0.6f, 0.4f, 0.4f, 0);
+            Room(m, 17, 1, 23, 5);
+            Mark("fort", "藤牙寨", "fort", 17, 1, 23, 5);
+            Terrain(17, 1, 23, 5, ExTerrain.Palisade, ExGround.Dirt);
+            for (int x = 18; x <= 22; x++) { Block(x, 1, ExTerrain.Palisade); Block(x, 5, ExTerrain.Palisade); }
+            for (int z = 1; z <= 5; z++) { Block(18, z, ExTerrain.Palisade); Block(22, z, ExTerrain.Palisade); }
+            m.cells[18, 3] = ExCell.Floor; m.cells[20, 5] = ExCell.Floor; m.cells[22, 3] = ExCell.Floor;   // 寨門（西、北、東）
+            Prop("tent", 17, 1, 0.9f, -0.3f, -0.3f); Prop("crate", 23, 3, 0.45f, 0.3f, 0f); Prop("totem", 17, 5, 0.3f, -0.5f, 0.5f);
             // 回音洞窟：一整片岩壁圍成的洞窟（走道就是洞窟通道，營地是洞窟大廳）
-            Mark("cave", "回音洞窟", "cave", 29, 29, 39, 39);
-            Terrain(28, 28, 40, 40, ExTerrain.Cave, ExGround.Cave);
-            Prop("boulder", 33, 35, 0.5f, -0.5f, 0.5f, 2); Prop("boulder", 37, 31, 0.5f, 0.5f, -0.5f, 0);
-            // 枯骨營地（西北）
-            Mark("camp4", "枯骨營地", "camp", 11, 23, 15, 27);
-            Terrain(11, 23, 15, 27, ExTerrain.Thicket, ExGround.Dirt);
-            Prop("totem", 11, 27, 0.3f, -0.6f, 0.6f); Prop("totem", 15, 27, 0.3f, 0.6f, 0.6f); Prop("tent", 11, 23, 0.9f, -0.3f, -0.3f);
+            Room(m, 19, 17, 23, 23);
+            Mark("cave", "回音洞窟", "cave", 19, 17, 23, 23);
+            Terrain(18, 16, 24, 24, ExTerrain.Cave, ExGround.Cave);
+            Prop("boulder", 19, 23, 0.5f, -0.5f, 0.5f, 2); Prop("boulder", 23, 17, 0.5f, 0.5f, -0.5f, 0);
             // 翠玉古殿：森林宮殿的廢墟（石牆、石板地、石柱），最裡面是王座與祭壇
-            Mark("palace", "翠玉古殿", "palace", 1, 29, 13, 39);
-            Terrain(0, 28, 13, 40, ExTerrain.Ruin, ExGround.Stone);
+            Mark("palace", "翠玉古殿", "palace", 1, 17, 11, 23);
+            Terrain(0, 16, 11, 24, ExTerrain.Ruin, ExGround.Stone);
             // 石柱靠在格子的牆角（放在正中央會擋住十字路口，玩家、怪都繞不過去）
             void CornerProp(string kind, int x, int z, float r)
             {
@@ -572,18 +560,18 @@ namespace SpellDuel
                     if (m.At(x + d.x, z + d.y) != ExCell.Floor) { Prop(kind, x, z, r, 1.15f * d.x, 1.15f * d.y); return; }
                 Prop(kind, x, z, r, 1.15f, 1.15f);
             }
-            CornerProp("pillar", 2, 32, 0.45f); CornerProp("pillar", 8, 32, 0.45f); CornerProp("pillar", 2, 37, 0.45f); CornerProp("pillar", 8, 37, 0.45f);
-            Prop("statue", 1, 39, 0.5f, -0.4f, 0.4f); Prop("statue", 9, 39, 0.5f, 0.4f, 0.4f);
-            Prop("altar", 5, 39, 0.6f, 0f, 0.4f);
+            CornerProp("pillar", 1, 17, 0.45f); CornerProp("pillar", 7, 17, 0.45f); CornerProp("pillar", 1, 21, 0.45f); CornerProp("pillar", 7, 21, 0.45f);
+            Prop("statue", 1, 23, 0.5f, -0.4f, 0.4f); Prop("statue", 7, 23, 0.5f, 0.4f, 0.4f);
+            Prop("altar", 4, 23, 0.6f, 0f, 0.4f);
             // 小 Boss 競技場：四個角落的大樹
-            foreach (var r in new[] { new RectInt(13, 7, 6, 4), new RectInt(27, 13, 8, 6), new RectInt(21, 27, 6, 8) })
+            foreach (var r in new[] { new RectInt(7, 7, 4, 4), new RectInt(17, 7, 6, 4), new RectInt(13, 15, 4, 6) })
             {
                 Prop("tree", r.xMin, r.yMin, 0.6f, -0.4f, -0.4f, 1); Prop("tree", r.xMax, r.yMin, 0.6f, 0.4f, -0.4f, 2);
                 Prop("tree", r.xMin, r.yMax, 0.6f, -0.4f, 0.4f, 0); Prop("tree", r.xMax, r.yMax, 0.6f, 0.4f, 0.4f, 1);
             }
-            Mark("arena1", "苔甲守根者的巢穴", "arena", 13, 7, 19, 11);
-            Mark("arena2", "夢孢司祭的祭壇", "arena", 27, 13, 35, 19);
-            Mark("arena3", "翠翼巡獵者的獵場", "arena", 21, 27, 27, 35);
+            Mark("arena1", "苔甲守根者的巢穴", "arena", 7, 7, 11, 11);
+            Mark("arena2", "夢孢司祭的祭壇", "arena", 17, 7, 23, 11);
+            Mark("arena3", "翠翼巡獵者的獵場", "arena", 13, 15, 17, 21);
         }
 
         static void Room(ExploreMap m, int x0, int z0, int x1, int z1)
@@ -613,6 +601,8 @@ namespace SpellDuel
         public bool spiritBlessing;          // 森林之靈的祝福（戰鬥那邊補血、加攻擊）
         public readonly HashSet<Vector2Int> explored = new HashSet<Vector2Int>();   // 小地圖：走過的格子附近
         public const float TalkRange = 2.2f, PickRange = 1.4f, SparkleTapRange = 6f, EscortArrive = 3f;
+        /// <summary>Boss 倒下後守林人站的位置（祭壇的右前方）</summary>
+        public static readonly Vector3 GuardianAtAltar = new Vector3(1.8f, 0f, -1.6f);
         readonly HashSet<string> talkedAway = new HashSet<string>();   // 離開說話範圍後才會再跳一次
 
         public ExploreRun(ExploreMap m) { map = m; }
@@ -677,7 +667,7 @@ namespace SpellDuel
             {
                 var m = Main;
                 if (hasHeart && m.state != ExQuestState.Done) { talkText = m.thanks; Complete(m); finished = true; Say("🏆 探索完成！"); return; }
-                talkText = bossDead ? "古樹之心就在王座後面的祭壇上，快去拿！" : GuardiansDown < 3 ? "前面的藤蔓門被守衛的力量封住了，先打倒三個守衛。" : "腐化樹王就在前面的王座。打倒牠，把古樹之心帶給我。";
+                talkText = bossDead ? "古樹之心就在祭壇上，拿起來交給我吧！" : GuardiansDown < 3 ? "前面的藤蔓門被守衛的力量封住了，先打倒三個守衛。" : "腐化樹王就在前面的王座。打倒牠，把古樹之心帶給我。";
                 return;
             }
             // 送東西：送到的人
@@ -753,6 +743,9 @@ namespace SpellDuel
             if (bossDead) return;
             bossDead = true; map.arenas.Find(x => x.n == 4).cleared = true;
             Say("👑 腐化樹王倒下了！王座後面的祭壇在發光……");
+            // 守林人到祭壇旁邊等（使用者要求：拿到古樹之心不用再走回去）
+            var g = map.Npc("guardian");
+            if (g != null) { g.pos = map.altar + GuardianAtAltar; talkedAway.Remove(g.id); Say("🛡 守林人趕到祭壇旁等你了"); }
         }
 
         /// <summary>護送對象倒下：任務失敗，回去找他重新開始</summary>

@@ -267,6 +267,7 @@ namespace SpellDuel
             {
                 bool show = !n.hidden && Battle.FlatDistance(n.pos, me) <= view && !(n.id == "lost" && (run.escortFollowing || battle.exEscort != null));
                 exNpcRigs.TryGetValue(n.id, out var rig);
+                if (rig && Battle.FlatDistance(WorldFrame.ToWorld(rig.transform.position), n.pos) > 3f) { Destroy(rig.gameObject); exNpcRigs.Remove(n.id); rig = null; }   // 換位置了（守林人到祭壇旁）：在新位置淡入
                 if (!show) { if (rig) { Destroy(rig.gameObject); exNpcRigs.Remove(n.id); } continue; }
                 if (!rig) { rig = CharacterRig.Create(n.look); rig.InCombat = false; ExploreArt.DressNpc(rig, n.id); if (n.look == "archer") SlingBow(rig); exNpcRigs[n.id] = rig; SpawnFade.Play(rig.gameObject); }
                 var fwd = Fighter.Flat(me - n.pos); if (fwd == Vector3.zero) fwd = Vector3.back;
