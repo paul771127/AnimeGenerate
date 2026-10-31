@@ -1,0 +1,49 @@
+name: SpellDuel swift monster validation
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/MinionLook*.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Swift.cs'
+      - 'spellduel-unity/Assets/SpellDuel/Editor/Snapshot.SwiftMonsters.cs'
+      - '.github/workflows/spellduel-swift-monsters.yml'
+concurrency:
+  group: swift-monster-art-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  swift-monsters:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: spellduel-unity/Library
+          key: Library-Android-${{ hashFiles('spellduel-unity/Packages/manifest.json', 'spellduel-unity/ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: Library-Android-
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: spellduel-unity
+          targetPlatform: Android
+          buildName: SpellDuel
+          buildMethod: SpellDuel.EditorTools.Snapshot.RenderSwiftMonsters
+          allowDirtyBuild: true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SpellDuel-swift-monsters
+          path: |
+            spellduel-unity/snapshots/swift_*.png
+            spellduel-unity/snapshots/swift_audit.json
+          if-no-files-found: error
