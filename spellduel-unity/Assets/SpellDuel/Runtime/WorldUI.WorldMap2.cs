@@ -362,12 +362,10 @@ namespace SpellDuel
                 { var st = sel; WMZoom(wmNodes.TryGetValue(st.id, out var zn) ? zn.pos : heroPos, () => { sel = null; OnStartStage?.Invoke(st); }); }
                 if (story && UiKit.Button(new Rect(dr.x + gap * 2 + bw, bby, bw, bh), "📖 看故事", fsS)) { var st = sel; OnWatchStory?.Invoke(st); return true; }
             }
-            // 下方只剩「角色」「世界 Boss」：無盡塔只能從地圖上 2-5 下方的岔路進去（使用者要求：打完 2-5 才能進無盡塔）
-            // 「回炎之里」拿掉了（使用者要求）：點地圖上的城鎮就能進城
-            float bw2 = (r.width - gap * 3) / 2f;
-            int pts = prof.statPoints + prof.UsableSkillPoints;
-            if (UiKit.Button(new Rect(r.x + gap, by, bw2, btnH), pts > 0 ? $"📜 角色 ×{pts}" : "📜 角色", fsS, pts > 0, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
-            if (UiKit.Button(new Rect(r.x + gap * 2 + bw2, by, bw2, btnH), "🐲 世界 Boss", fsS, false, new Color(1f, 0.5f, 0.3f))) { sel = null; wbPick = true; }
+            // 下方只剩「世界 Boss」：無盡塔只能從地圖上 2-5 下方的岔路進去（使用者要求：打完 2-5 才能進無盡塔）
+            // 「回炎之里」「角色」拿掉了（使用者要求）：點地圖上的城鎮進城；角色／裝備在城鎮畫面
+            float bw2 = (r.width - gap * 2) * 0.5f;
+            if (UiKit.Button(new Rect(r.x + (r.width - bw2) / 2f, by, bw2, btnH), "🐲 世界 Boss", fsS, false, new Color(1f, 0.5f, 0.3f))) { sel = null; wbPick = true; }
             return true;
         }
 

@@ -250,7 +250,8 @@ namespace SpellDuel
                 { if (tshop) OpenTrialShop(); else OnNpcQuest?.Invoke(t.npcs[npcTalk].name); }
             }
             float bw = (r.width - gap * 4) / 3f;
-            if (UiKit.Button(new Rect(r.x + gap, by, bw, btnH), "📜 角色／裝備", fsS, false, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
+            int cpts = prof != null ? prof.statPoints + prof.UsableSkillPoints : 0;   // 大地圖的「角色」拿掉了：可加點數改顯示在這裡
+            if (UiKit.Button(new Rect(r.x + gap, by, bw, btnH), cpts > 0 ? $"📜 角色／裝備 ×{cpts}" : "📜 角色／裝備", fsS, cpts > 0, new Color(0.75f, 0.45f, 1f))) OnCharacter?.Invoke();
             if (UiKit.Button(new Rect(r.x + gap * 2 + bw, by, bw, btnH), "🚶 逛街", fsS, false, t.color)) walkMode = true;   // 3D 逛村子
             if (UiKit.Button(new Rect(r.x + gap * 3 + bw * 2, by, bw, btnH), "🗺 回大地圖", fsS)) screen = Screen.Map;
             return true;
