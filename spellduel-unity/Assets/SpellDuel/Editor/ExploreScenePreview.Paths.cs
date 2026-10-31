@@ -24,6 +24,17 @@ namespace SpellDuel.EditorTools
    // A concave L-shaped shore must triangulate as well as the shipped rectangular lake.
    var lakeMap=new ExploreMap(6,6);foreach(var p in new[]{new Vector2Int(1,1),new Vector2Int(2,1),new Vector2Int(3,1),new Vector2Int(1,2),new Vector2Int(1,3)})lakeMap.terrain[p.x,p.y]=ExTerrain.Water;
    var l=new ExLandmark{id="audit_concave_lake",kind="lake",rect=new RectInt(1,1,2,2)};var lake=ExploreArt.CreateLandmark(l,lakeMap);AuditLake(lake,l,lakeMap);UnityEngine.Object.DestroyImmediate(lake);
+   // Regression: shipped proportions must have broad corners, not a rounded box.
+   var wideMap=new ExploreMap(9,7);
+   for(int x=2;x<=6;x++)for(int z=2;z<=4;z++)wideMap.terrain[x,z]=ExTerrain.Water;
+   var wideLandmark=new ExLandmark{id="audit_broad_lake",kind="lake",rect=new RectInt(2,2,5,3)};
+   var wideLake=ExploreArt.CreateLandmark(wideLandmark,wideMap);AuditLake(wideLake,wideLandmark,wideMap);
+   var bounds=wideLake.transform.Find("LakeSurface").GetComponent<MeshFilter>().sharedMesh.bounds;
+   float nearest=float.MaxValue;
+   foreach(var v in wideLake.transform.Find("LakeSurface").GetComponent<MeshFilter>().sharedMesh.vertices)
+    nearest=Mathf.Min(nearest,new Vector2(v.x-bounds.min.x,v.z-bounds.min.z).magnitude);
+   if(nearest<2f)throw new Exception("Lake corners are still too square");
+   UnityEngine.Object.DestroyImmediate(wideLake);
    File.WriteAllText("snapshots/explore_4m_audit.json","{\"cellSize\":4,\"wallVerticesInsideCell\":true,\"propVariantsChecked\":"+props+",\"propVerticesInsideRadius\":true,\"concaveLake\":true,\"noGameplayEdits\":true}");
   }
   static float Cross2(Vector2 a,Vector2 b)=>a.x*b.y-a.y*b.x;

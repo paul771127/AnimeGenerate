@@ -45,11 +45,22 @@ namespace SpellDuel
     var curve=new List<Vector2>();
     for(int i=0;i<raw.Count;i++){
      var before=raw[(i+raw.Count-1)%raw.Count];var corner=raw[i];var after=raw[(i+1)%raw.Count];var incoming=(corner-before).normalized;var outgoing=(after-corner).normalized;
-     float span=Cross(incoming,outgoing)>0?1.5f:1.25f;span=Mathf.Min(span,Mathf.Min((corner-before).magnitude,(after-corner).magnitude)*.4f);
+     bool convex=Cross(incoming,outgoing)>0;
+     // Broad circular bends replace tiny fillets: the 20x12m lake uses a 5.5m radius.
+     // Keep narrow/concave shapes safe by limiting to 46% of either adjoining edge.
+     float span=convex?ExploreMap.CellSize*1.375f:1.25f;
+     span=Mathf.Min(span,Mathf.Min((corner-before).magnitude,(after-corner).magnitude)*.46f);
      var a=corner-incoming*span;var b=corner+outgoing*span;
      if(curve.Count>0)SmoothLakeEdge(curve,curve[curve.Count-1],a);
-     // Quadratic fillet: convex retreat from either grid boundary <= span/4 = .375m.
-     for(int j=0;j<=12;j++){float t=j/12f;curve.Add((1-t)*(1-t)*a+2*(1-t)*t*corner+t*t*b);}
+     // Circular convex corners have continuous tangents at both banks. Concave
+     // corners retain the smaller quadratic blend within the blocked margin.
+     int samples=Mathf.Max(12,Mathf.CeilToInt(span*Mathf.PI*.5f/.28f));
+     var arcCentre=a+outgoing*span;
+     for(int j=0;j<=samples;j++){
+      float t=j/(float)samples;
+      curve.Add(convex?arcCentre-outgoing*(span*Mathf.Cos(t*Mathf.PI*.5f))+incoming*(span*Mathf.Sin(t*Mathf.PI*.5f))
+       :(1-t)*(1-t)*a+2*(1-t)*t*corner+t*t*b);
+     }
     }
     SmoothLakeEdge(curve,curve[curve.Count-1],curve[0]);result.Add(curve);
    }
