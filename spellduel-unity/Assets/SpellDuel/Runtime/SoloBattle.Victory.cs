@@ -68,7 +68,7 @@ namespace SpellDuel
             if (v == null || dlg != null) return v != null;   // 結尾對話先播完再顯示
             UiKit.Backdrop(new Rect(0, 0, W, H), RankColor(v.rank), 0.55f);
             var r = new Rect(pad, top + (botY - top) * 0.06f, W - pad * 2, (botY - top) * 0.86f);
-            UiKit.Card(r, 0.96f, RankColor(v.rank), 0.9f);
+            UiKit.MenuCard(r, 0.98f, RankColor(v.rank), 1f);
             float x = r.x + gap * 1.5f, w = r.width - gap * 3, y = r.y + gap;
             UiKit.Text(new Rect(x, y, w, lh * 1.6f), "🏆 " + v.title, Mathf.RoundToInt(fs * 1.35f), Color.white, TextAnchor.MiddleCenter, true);
             y += lh * 1.7f;
@@ -77,8 +77,7 @@ namespace SpellDuel
             float rk = lh * 3.2f;
             float pulse = 1f + 0.04f * Mathf.Sin(Time.time * 3f);
             var rr = new Rect(x, y, rk, rk);
-            UiKit.Halo(rr, RankColor(v.rank), 0.8f);
-            UiKit.Text(rr, v.rank, Mathf.RoundToInt(fs * 3.2f * pulse), RankColor(v.rank), TextAnchor.MiddleCenter, true);
+            UiKit.RankMedallion(rr,v.rank,RankColor(v.rank),Mathf.RoundToInt(fs*3.2f));
             float sx = x + rk + gap, sw = w - rk - gap;
             string best = v.newRecord ? "　🎉 新紀錄！" : v.bestBefore > 0 ? $"（最佳 {Clock(v.bestBefore)}）" : "（首次通關）";
             UiKit.Text(new Rect(sx, y, sw, lh), $"⏱ 通關時間　{Clock(v.time)}{best}", fs, Color.white, TextAnchor.MiddleLeft, true);
@@ -103,6 +102,7 @@ namespace SpellDuel
             {
                 if (y + lh > listBottom - lh) { UiKit.Text(new Rect(x, y, w, lh), $"…還有 {v.items.Count - shown} 件（在背包裡）", fsS, UiKit.Muted); break; }
                 var c = Item.RarityColors[it.rarity];
+                UiKit.RarityCard(new Rect(x,y,w,lh-2),it.rarity);
                 UiKit.Gem(new Rect(x, y + lh * 0.3f, lh * 0.4f, lh * 0.4f), c);
                 UiKit.Text(new Rect(x + lh * 0.6f, y, w - lh * 0.6f, lh), $"[{Item.RarityNames[it.rarity]}] {it.FullName}　Lv{it.ilvl}", fsS, c, TextAnchor.MiddleLeft, it.rarity >= 3);
                 y += lh; shown++;

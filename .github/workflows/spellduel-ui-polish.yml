@@ -32,9 +32,9 @@ jobs:
       - name: Restore baseline appearance for before images
         if: matrix.version == 'before'
         run: |
-          git diff --name-only --diff-filter=M 586450d HEAD -- spellduel-unity/Assets/SpellDuel/Runtime/ | while read f; do
+          git diff --name-only --diff-filter=M 5a4a0bf HEAD -- spellduel-unity/Assets/SpellDuel/Runtime/ | while read f; do
             case "$f" in *UiPolishPreview.cs) continue ;; esac
-            git show "586450d:$f" > "$f"
+            git show "5a4a0bf:$f" > "$f"
           done
       - uses: actions/cache@v4
         with:
@@ -63,7 +63,7 @@ jobs:
           player=$(find . -path '*/ui-preview/preview.x86_64' -print -quit)
           test -n "$player"
           sudo chmod +x "$player"
-          timeout 180 xvfb-run -a -s '-screen 0 1080x2340x24' "$player" -noaudio -screen-width 1080 -screen-height 2340 -screen-fullscreen 0 -force-glcore -logFile "$PWD/ui-preview/player.log"
+          timeout 600 xvfb-run -a -s '-screen 0 1080x2340x24' "$player" -noaudio -screen-width 1080 -screen-height 2340 -screen-fullscreen 0 -force-glcore -logFile "$PWD/ui-preview/player.log"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -13,11 +13,12 @@ namespace SpellDuel
         const BindingFlags Flags=BindingFlags.Instance|BindingFlags.Static|BindingFlags.NonPublic|BindingFlags.Public;
         SoloBattle solo;Camera view;Font font;int page;bool failed;string output;
         CharacterProfile profile;CharacterPanel panel;WorldUI world;GameRoot home;
-        readonly string[] pages={"battle_light","battle_dark","status_light","status_dark","explore_dialog","dungeon_party","story_party","charge_cards","home","characters","prep","stats","tree","equipment","inventory","pets","map","town","smith","shop","guild","craft","alchemy","trialshop","dungeons","tower","settings"};
+        readonly string[] pages={"battle_light","battle_dark","status_light","status_dark","explore_dialog","dungeon_party","story_party","charge_cards","home","characters","prep","stats","tree","equipment","inventory","pets","map","town","smith","shop","guild","craft","alchemy","trialshop","dungeons","tower","settings","victory","defeat","tip","guide","loading","rewards"};
         void Set(string name,object value)=>typeof(SoloBattle).GetField(name,Flags).SetValue(solo,value);
         object Call(string name,params object[] args)=>typeof(SoloBattle).GetMethod(name,Flags).Invoke(solo,args);
         IEnumerator Start()
         {
+            Application.runInBackground=true;Debug.Log("PREVIEW start");
             output=Environment.GetEnvironmentVariable("UI_PREVIEW_OUTPUT")??"ui-preview";Directory.CreateDirectory(output);
             Application.logMessageReceived+=(message,stack,type)=>{if(type==LogType.Exception||type==LogType.Error){failed=true;Debug.LogWarning("PREVIEW FAILURE: "+message);}};
             Screen.SetResolution(1080,2340,false);QualitySettings.vSyncCount=0;Application.targetFrameRate=30;
@@ -34,6 +35,7 @@ namespace SpellDuel
             profile.equipped[0]=Progress.Bag[Progress.Bag.Count-1];
             home=FindObjectOfType<GameRoot>();typeof(GameRoot).GetField("solo",Flags).SetValue(home,solo);
             var loadout=(List<string>)typeof(SoloBattle).GetField("myLoadout",Flags).GetValue(solo);loadout.AddRange(new[]{"fire","ice","wind"});
+            Debug.Log("PREVIEW fixture configured");
             var ids=new List<string>();foreach(var s in Skills.All.Values)if(s.cls=="mage"&&s.cost>0&&ids.Count<3)ids.Add(s.id);
             var me=new Fighter("預覽玩家",Skills.Classes["mage"],ids,true);
             var enemy=new Fighter("測試敵人",Skills.Classes["swordsman"],new string[0],false);
@@ -45,6 +47,7 @@ namespace SpellDuel
             for(page=0;page<pages.Length;page++)
             {
                 view.backgroundColor=page==1||page==3?new Color(.035f,.04f,.05f):new Color(.88f,.87f,.83f);
+                Debug.Log("PREVIEW page "+pages[page]);
                 yield return null;yield return new WaitForEndOfFrame();
                 var t=new Texture2D(Screen.width,Screen.height,TextureFormat.RGBA32,false);
                 t.ReadPixels(new Rect(0,0,Screen.width,Screen.height),0,0);t.Apply();
@@ -58,6 +61,41 @@ namespace SpellDuel
         void DrawMenu(string name)
         {
             const float w=1080,h=2340;const int fs=48,small=38;
+            if(name=="victory")
+            {
+                Set("dlg",null);var type=typeof(SoloBattle).GetNestedType("VictoryInfo",Flags);var v=Activator.CreateInstance(type,true);
+                void V(string key,object value)=>type.GetField(key,Flags).SetValue(v,value);
+                V("title","迷霧森林・通關");V("rank","S");V("time",142f);V("par",180f);V("hpFrac",.82f);V("gold",280);V("xp",900);V("ups",2);V("note","升級！可以分配能力點與技能點。");
+                ((List<Item>)type.GetField("items",Flags).GetValue(v)).AddRange(Progress.Bag);Set("victory",v);
+                Call("DrawVictory",w,h,32f,40f,2300f,16f,72f,fs,small);return;
+            }
+            if(name=="defeat")
+            {
+                Set("victory",null);typeof(SoloBattle).GetProperty("phase",Flags).SetValue(solo,SoloBattle.Phase.Over);Call("DrawHud");return;
+            }
+            if(name=="tip")
+            {Set("tipId","preview");Set("tipTitle","整理裝備與技能");Set("tipText","選擇裝備後查看能力比較，再確認穿上。\n學會新技能後，記得把它放進技能欄。");Call("DrawTip");return;}
+            if(name=="guide")
+            {typeof(SoloBattle).GetProperty("phase",Flags).SetValue(solo,SoloBattle.Phase.Setup);typeof(SoloBattle).GetProperty("GuideStep",Flags).SetValue(solo,0);Set("storyMapOpen",true);Call("DrawGuide");return;}
+            if(name=="loading")
+            {
+                var video=GetComponent<StoryVideo>();if(!video){video=gameObject.AddComponent<StoryVideo>();video.enabled=false;}
+                var field=typeof(StoryVideo).GetField("state",Flags);field.SetValue(video,Enum.Parse(field.FieldType,"Preloading"));typeof(StoryVideo).GetMethod("Draw",Flags).Invoke(video,null);return;
+            }
+            if(name=="rewards")
+            {
+                string[] labels={"金幣 +280","材料：風暴寶石","🎁 [神話] 星紋法杖","💠 古根精魄","配方：天穹護符","⬆ Lv 36"};
+                var list=(System.Collections.IList)typeof(SoloBattle).GetField("floaters",Flags).GetValue(solo);list.Clear();
+                var type=typeof(SoloBattle).GetNestedType("Floater",Flags);
+                for(int i=0;i<labels.Length;i++)
+                {
+                    var f=Activator.CreateInstance(type,true);type.GetField("text",Flags).SetValue(f,labels[i]);type.GetField("born",Flags).SetValue(f,Time.time);
+                    type.GetField("color",Flags).SetValue(f,i==2?Item.RarityColors[5]:i==1?new Color(.5f,.85f,1):i==3?new Color(.8f,.6f,1):UiKit.Gold);
+                    type.GetField("posMap",Flags).SetValue(f,view.ScreenToWorldPoint(new Vector3(540,1900-i*220,3)));list.Add(f);
+                }
+                typeof(SoloBattle).GetProperty("phase",Flags).SetValue(solo,SoloBattle.Phase.Fighting);Call("DrawHud");
+                return;
+            }
             if(name=="home"||name=="characters")
             {typeof(GameRoot).GetMethod(name=="home"?"DrawHome":"DrawCharacterSelect",Flags).Invoke(home,new object[]{w,h,32f,32f,77f,fs,small});return;}
             if(name=="prep"){Call("DrawPrep");return;}

@@ -137,14 +137,14 @@ namespace SpellDuel
             {
                 // 只畫一條提示（最上面），不放按鈕
                 var sr = new Rect(pad, topY + 2f, SettingsMenu.RightEdge(topY, topY + fs * 2.2f, W - pad) - pad, fs * 2.2f);
-                UiKit.Card(sr, 0.9f, col, 0.9f);
+                UiKit.MenuCard(sr, 0.9f, col, 0.9f);
                 UiKit.Text(new Rect(sr.x + gap, sr.y, sr.width - gap * 2, sr.height), $"🧭 {title}：" + text.Split('\n')[0], fsS, Color.white, TextAnchor.MiddleLeft, false, 0.6f);
                 return;
             }
             float h = fs * 6.6f, y = topY + fs * 4.4f;
             var r = new Rect(pad, y, W - pad * 2, h);
             guideBottom = r.yMax;
-            UiKit.Card(r, 0.88f, col, 1f);
+            UiKit.MenuCard(r, 0.88f, col, 1f);
             UiKit.Text(new Rect(r.x + gap, r.y + gap * 0.5f, r.width * 0.7f, fs * 1.4f), $"🧭 新手導覽・{title}", fs, col, TextAnchor.MiddleLeft, true);
             float bw = r.width * 0.24f, bh = fs * 1.5f;
             if (UiKit.Button(new Rect(r.xMax - gap - bw, r.y + gap * 0.5f, bw, fs * 1.3f), "略過導覽", Mathf.RoundToInt(fs * 0.7f))) { GuideNext(GuideDone); return; }

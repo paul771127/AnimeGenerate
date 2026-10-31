@@ -204,13 +204,13 @@ namespace SpellDuel
             int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.8f);
             float gap = fs * 0.5f;
             var col = new Color(1f, 0.85f, 0.35f);
-            UiKit.Card(tipRect, 0.95f, col, 1f);
+            UiKit.MenuCard(tipRect, 0.95f, col, 1f);
             UiKit.Text(new Rect(tipRect.x + gap, tipRect.y + gap * 0.5f, tipRect.width - gap * 2, fs * 1.6f), "💡 " + tipTitle, fs, col, TextAnchor.MiddleLeft, true);
             UiKit.Text(new Rect(tipRect.x + gap, tipRect.y + fs * 2f, tipRect.width - gap * 2, tipOkRect.y - tipRect.y - fs * 2.2f), tipText, fsS, Color.white, TextAnchor.UpperLeft, false, 0.55f);
             // 按鈕只畫外觀（點擊在 TipInput 處理）
-            UiKit.Card(tipOffRect, tipPress == 1 ? 0.9f : 0.6f, UiKit.Muted, 0.6f);
+            UiKit.MenuCard(tipOffRect, tipPress == 1 ? 0.9f : 0.6f, UiKit.Muted, 0.6f);
             UiKit.Text(tipOffRect, "不再顯示提示", fsS, new Color(0.8f, 0.82f, 0.9f), TextAnchor.MiddleCenter);
-            UiKit.Card(tipOkRect, tipPress == 0 ? 1f : 0.85f, col, 1f);
+            UiKit.MenuCard(tipOkRect, tipPress == 0 ? 1f : 0.85f, col, 1f);
             UiKit.Text(tipOkRect, "知道了 ✔", fs, Color.white, TextAnchor.MiddleCenter, true);
         }
     }

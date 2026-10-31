@@ -116,7 +116,7 @@ namespace SpellDuel
             float lh = fs * 1.6f, h = lh * 3.4f, w = pillW;
             var r = new Rect((W - w) / 2f, bottomY - h, w, h);
             float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 6f);
-            UiKit.Card(r, flashing && since < 0.3f ? 0.95f : 0.85f, col, 0.6f + 0.4f * pulse);
+            UiKit.MenuCard(r, flashing && since < 0.3f ? 0.95f : 0.85f, col, 0.6f + 0.4f * pulse);
             if (s == null)
             {
                 // 剛放完：只顯示「施放成功」

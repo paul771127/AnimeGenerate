@@ -355,7 +355,7 @@ namespace SpellDuel
             {
                 float p = req != null ? req.downloadProgress : 0f;
                 string what = pre ? $"準備中 {preIdx + 1}/{Files.Length}" : "準備中";
-                UiKit.Bar(new Rect(x, y, w2, fs * 1.2f), p, UiKit.Gold, $"{what}　{p * 100f:0}%", fsS);
+                UiKit.LoadingRail(new Rect(x, y, w2, fs * 1.2f), p, $"{what}　{p * 100f:0}%", fsS);
                 y += fs * 2f;
                 UiKit.Text(new Rect(x, y, w2, fs * 2.4f), pre ? "第一次開遊戲要多準備一下（之後就不用了），建議連 Wi-Fi。" : "馬上就好（只有第一次）", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperCenter);
             }
