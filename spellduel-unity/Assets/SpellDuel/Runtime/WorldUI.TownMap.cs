@@ -234,7 +234,7 @@ namespace SpellDuel
             if (npcTalk >= 0 && npcTalk < t.npcs.Length)
             {
                 var talkR = new Rect(r.x + gap, by - gap * 0.5f - talkH, r.width - gap * 2, talkH);
-                UiKit.Card(talkR, 0.9f, t.color, 0.8f);
+                UiKit.MenuCard(talkR, 0.9f, t.color, 0.8f);
                 float ps = talkR.height - fs * 1.5f - gap;
                 var pr = new Rect(talkR.x + gap, talkR.y + gap * 0.5f, ps, ps);
                 GUI.DrawTexture(pr, Portraits.Get(t.npcs[npcTalk].name, "npc"), ScaleMode.ScaleToFit, true);

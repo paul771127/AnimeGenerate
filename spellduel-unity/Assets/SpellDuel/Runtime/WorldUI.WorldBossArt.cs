@@ -29,7 +29,7 @@ void DrawWorldBossBountyCards(Rect r,int fs,int fsS,float gap,ref float y){
 }
 void DrawWorldBossPoster(int fs,int fsS){
  float w=UnityEngine.Screen.width,h=UnityEngine.Screen.height;var safe=UnityEngine.Screen.safeArea;float top=h-safe.yMax,bottom=h-safe.y;
- UiKit.Card(new Rect(0,0,w,h),1,new Color(.10f,.14f,.23f));float pad=w*.045f;
+ UiKit.MenuCard(new Rect(0,0,w,h),1,new Color(.10f,.14f,.23f));float pad=w*.045f;
  UiKit.Text(new Rect(pad,top+pad,w-pad*2,fs*1.6f),"世界 Boss 出沒",fs,UiKit.Gold,TextAnchor.MiddleCenter,true);
  float ph=Mathf.Min((bottom-top)*.74f,(w-pad*2)*1.5f),pw=ph*2/3;var art=new Rect((w-pw)*.5f,top+pad+fs*1.8f,pw,ph);var tex=WorldBossPoster(worldBossNotice);if(tex)GUI.DrawTexture(art,tex,ScaleMode.ScaleToFit);
  UiKit.Text(new Rect(art.x+pw*.12f,art.y+ph*.075f,pw*.76f,ph*.065f),worldBossArtNames[worldBossNotice],fs, new Color(.15f,.19f,.25f),TextAnchor.MiddleCenter,true);

@@ -534,7 +534,7 @@ namespace SpellDuel
             foreach (var st in drun.Quests)
             {
                 var r = new Rect(W * 0.6f, qy, W * 0.4f - pad, fsS * 2.6f);
-                UiKit.Card(r, 0.45f, st.done ? new Color(0.4f, 1f, 0.5f) : new Color(1f, 0.85f, 0.4f), 0.6f);
+                UiKit.MenuCard(r, 0.45f, st.done ? new Color(0.4f, 1f, 0.5f) : new Color(1f, 0.85f, 0.4f), 0.6f);
                 UiKit.Text(new Rect(r.x + fsS * 0.4f, r.y, r.width - fsS * 0.8f, r.height * 0.5f), (st.done ? "✅ " : "📜 ") + st.def.name, fsS, Color.white, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(r.x + fsS * 0.4f, r.y + r.height * 0.45f, r.width - fsS * 0.8f, r.height * 0.5f), st.GoalText, fsS, new Color(1f, 0.9f, 0.6f), TextAnchor.MiddleLeft, false, 0.6f);
                 qy += r.height + pad * 0.3f;
@@ -547,7 +547,7 @@ namespace SpellDuel
                 int k = st.def.options.Count;
                 float bh = fs * 2.1f, ch = fs * 3.2f + (bh + pad * 0.4f) * k;
                 var r = new Rect(pad, H * 0.5f - ch * 0.5f, W - pad * 2, ch);
-                UiKit.Card(r, 0.85f, new Color(0.75f, 0.45f, 1f), 0.9f);
+                UiKit.MenuCard(r, 0.85f, new Color(0.75f, 0.45f, 1f), 0.9f);
                 UiKit.Text(new Rect(r.x + pad, r.y + fs * 0.3f, r.width - pad * 2, fs * 1.4f), $"⚖ {st.def.name}", fs, Color.white, TextAnchor.MiddleCenter, true);
                 UiKit.Text(new Rect(r.x + pad, r.y + fs * 1.6f, r.width - pad * 2, fs * 1.2f), DungeonDecider ? "你決定怎麼做？" : "等房主決定…", fsS, new Color(0.9f, 0.85f, 1f), TextAnchor.MiddleCenter);
                 float y = r.y + fs * 3f;
@@ -573,7 +573,7 @@ namespace SpellDuel
                 float ch = fs * 7.5f;
                 var r = new Rect(pad, H * 0.42f - ch * 0.5f, W - pad * 2, ch);
                 var rc = Item.RarityColors[chest.rarity];
-                UiKit.Card(r, 0.85f, rc, 0.95f);
+                UiKit.MenuCard(r, 0.85f, rc, 0.95f);
                 UiKit.Text(new Rect(r.x + pad, r.y + fs * 0.3f, r.width - pad * 2, fs * 1.4f), $"🧰 寶箱的大獎：[{Item.RarityNames[chest.rarity]}] Lv{chest.ilvl} 裝備", fs, rc, TextAnchor.MiddleCenter, true);
                 if (!chest.done)
                 {
@@ -601,7 +601,7 @@ namespace SpellDuel
                 var ex = drun.Exits;
                 float bh = fs * 2.6f, ch = fs * 2.2f + (bh + pad * 0.4f) * (DungeonDecider ? ex.Count : 0) + (DungeonDecider ? 0f : fs * 1.4f);
                 var r = new Rect(pad, H * 0.58f - ch * 0.5f, W - pad * 2, ch);
-                UiKit.Card(r, 0.7f, new Color(0.5f, 0.8f, 1f), 0.8f);
+                UiKit.MenuCard(r, 0.7f, new Color(0.5f, 0.8f, 1f), 0.8f);
                 string head = DungeonDecider ? (ex.Count > 1 ? "🧭 選擇下一站" : $"🧭 {Mathf.Max(0f, routeAutoAt - Time.time):0} 秒後前進") : "🧭 等房主選擇下一站…";
                 UiKit.Text(new Rect(r.x + pad, r.y + fs * 0.3f, r.width - pad * 2, fs * 1.5f), head, fs, Color.white, TextAnchor.MiddleCenter, true);
                 if (!DungeonDecider) return;

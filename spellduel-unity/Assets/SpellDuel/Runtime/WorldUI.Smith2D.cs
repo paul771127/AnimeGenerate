@@ -53,7 +53,7 @@ namespace SpellDuel
 
             // 標題列：鐵匠鋪、金幣
             var hr = D(30, 45, 1020, 115);
-            UiKit.Card(hr, 0.92f, new Color(1f, 0.6f, 0.3f), 0.8f);
+            UiKit.MenuCard(hr, 0.92f, new Color(1f, 0.6f, 0.3f), 0.8f);
             UiKit.Text(new Rect(hr.x + fs * 0.6f, hr.y, hr.width * 0.5f, hr.height), $"⚒ 鐵匠鋪・{Towns[town].name}", fsL, Color.white, TextAnchor.MiddleLeft, true);
             float rx = SettingsMenu.RightEdge(hr.y, hr.yMax, hr.xMax - fs * 0.6f);
             UiKit.Text(new Rect(hr.x + hr.width * 0.5f, hr.y, rx - hr.x - hr.width * 0.5f, hr.height), $"💰 {Economy.Gold}", fs, new Color(1f, 0.88f, 0.4f), TextAnchor.MiddleRight, true);
@@ -62,7 +62,7 @@ namespace SpellDuel
             UiKit.Text(D(45, 195, 600, 80), rerollMode ? "🔁 洗鍊副屬性" : "要強化的裝備", fsL, Color.white, TextAnchor.MiddleLeft, true);
             var items = AllItems(prof);
             var view = D(30, 290, 610, 880);
-            UiKit.Card(view, 0.55f, null, 0.5f);
+            UiKit.MenuCard(view, 0.55f, null, 0.5f);
             if (rerollMode && selItem != null && items.Contains(selItem)) { DrawRerollPanel(view, selItem, prof, fs, fsS); return true; }
             rerollMode = false;
             float rowH = 195f * sy, rowGap = 15f * sy;
@@ -107,7 +107,7 @@ namespace SpellDuel
             if (UiKit.Button(D(865, 400, 175, 70), $"🔁 洗鍊卷 {rerolls}", Mathf.RoundToInt(fsS * 0.85f), false, new Color(0.6f, 0.85f, 1f), rerolls > 0 && sel != null && ItemGen.SubCount(sel) > 0 && !anim)) { rerollMode = true; rerollLock = -1; smithExpr = "focus"; smithLine = "要洗哪一件？想留的那條先鎖起來。"; }
             // 強化前 → 強化後（只加主屬性）
             var sr = D(680, 480, 360, 230);
-            UiKit.Card(sr, 0.85f, null, 0.5f);
+            UiKit.MenuCard(sr, 0.85f, null, 0.5f);
             string st = "點左邊的裝備\n看強化後的數值";
             if (sel != null && sel.mods.Count > 0)
             {
@@ -122,7 +122,7 @@ namespace SpellDuel
             var tex = Story2D.Portrait(npcId, smithExpr) ?? Story2D.Portrait(npcId, "normal");
             if (tex != null) GUI.DrawTexture(D(660, 990, 390, 730), tex, ScaleMode.ScaleToFit, true);
             var br = D(675, 730, 365, 190);
-            UiKit.Card(br, 0.9f, new Color(1f, 0.75f, 0.4f), 0.7f);
+            UiKit.MenuCard(br, 0.9f, new Color(1f, 0.75f, 0.4f), 0.7f);
             UiKit.Text(new Rect(br.x + fs * 0.5f, br.y + fs * 0.3f, br.width - fs, br.height - fs * 0.6f), $"{npcName}：\n{smithLine ?? "火候到了，交給我吧！"}", fsS, Color.white, TextAnchor.UpperLeft, false, 0.5f);
             if (anvilFrames.Length > 0)
             {
@@ -164,7 +164,7 @@ namespace SpellDuel
             {
                 var rr = new Rect(view.x + gap, y, view.width - gap * 2, fs * 1.9f);
                 bool locked = rerollLock == i;
-                UiKit.Card(rr, locked ? 0.8f : 0.5f, locked ? new Color(1f, 0.8f, 0.35f) : null, locked ? 0.9f : 0.4f);
+                UiKit.MenuCard(rr, locked ? 0.8f : 0.5f, locked ? new Color(1f, 0.8f, 0.35f) : null, locked ? 0.9f : 0.4f);
                 UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y, rr.width * 0.62f, rr.height), $"{(locked ? "🔒 " : "◇ ")}{Item.AffixText(it.mods[i].Key, it.ModValue(i))}", fsS, Color.white, TextAnchor.MiddleLeft, locked);
                 if (UiKit.Button(new Rect(rr.xMax - rr.width * 0.34f, rr.y + fs * 0.2f, rr.width * 0.33f, rr.height - fs * 0.4f), locked ? "取消鎖定" : "🔒 鎖定", Mathf.RoundToInt(fsS * 0.85f), locked, new Color(1f, 0.8f, 0.35f), locked || locks > 0)) rerollLock = locked ? -1 : i;
                 y += fs * 2.1f;

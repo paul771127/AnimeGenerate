@@ -32,7 +32,7 @@ void CraftArtDone(bool ok,string potion,Item item){
 void DrawCraftAnimation(){
  float elapsed=Time.unscaledTime-craftArtStart;if(elapsed<0||elapsed>1.65f)return;
  var a=Design(710,1435,290,255);var old=GUI.color;float u=Mathf.Clamp01(elapsed);bool potion=craftArtProduct!=null&&craftArtProduct.StartsWith("bp_");
- if(potion){UiKit.Card(new Rect(a.x,a.y+a.height*.48f,a.width,a.height*.45f),.9f,Color.Lerp(new Color(.2f,.3f,.4f),craftArtColor,u));for(int i=0;i<7;i++){float p=Mathf.Repeat(elapsed*.9f+i*.14f,1);var col=craftArtColor;col.a=(1-p)*(elapsed<1?1:Mathf.Clamp01((1.4f-elapsed)*2));SupplyArt.Disc(new Rect(a.x+a.width*(.12f+(i%4)*.2f),a.y+a.height*(.55f-p*.5f),a.width*.1f,a.width*.1f),col);}}
+ if(potion){UiKit.MenuCard(new Rect(a.x,a.y+a.height*.48f,a.width,a.height*.45f),.9f,Color.Lerp(new Color(.2f,.3f,.4f),craftArtColor,u));for(int i=0;i<7;i++){float p=Mathf.Repeat(elapsed*.9f+i*.14f,1);var col=craftArtColor;col.a=(1-p)*(elapsed<1?1:Mathf.Clamp01((1.4f-elapsed)*2));SupplyArt.Disc(new Rect(a.x+a.width*(.12f+(i%4)*.2f),a.y+a.height*(.55f-p*.5f),a.width*.1f,a.width*.1f),col);}}
  else{float pulse=Mathf.Sin(Mathf.Clamp01(elapsed/1.5f)*Mathf.PI);SupplyArt.Disc(new Rect(a.x-a.width*pulse*.2f,a.y,a.width*(1+pulse*.4f),a.width*(1+pulse*.4f)),new Color(craftArtColor.r,craftArtColor.g,craftArtColor.b,pulse*.3f));}
  if(!potion||elapsed>=.95f){float p=Mathf.Clamp01((elapsed-.95f)/.35f);var icon=new Rect(a.center.x-a.width*.21f,a.y+a.height*(.5f-(potion?p*.38f:0)),a.width*.42f,a.width*.42f);GUI.color=new Color(1,1,1,Mathf.Clamp01((1.65f-elapsed)*3));SupplyArt.Draw(icon,craftArtProduct);}
  GUI.color=old;

@@ -40,7 +40,7 @@ namespace SpellDuel
             void Line(string t, Color c, bool bold = false, float h = 1f)
             {
                 float pad=bold?gap:gap*.35f, height=Mathf.Max(lh*h,PetPanelArt.TextHeight(t,fsS,cw-pad*2)+gap*.6f);
-                if(bold){y+=gap*.5f;UiKit.Card(new Rect(0,y,cw,height),.55f,c,.35f);}
+                if(bold){y+=gap*.5f;UiKit.MenuCard(new Rect(0,y,cw,height),.55f,c,.35f);}
                 UiKit.Text(new Rect(pad,y,cw-pad*2,height),t,fsS,c,TextAnchor.MiddleLeft,bold);y+=height+gap*.2f;
             }
             bool changed = false;
@@ -59,7 +59,7 @@ namespace SpellDuel
                 var r = new Rect((i % 2) * (w + gap), y + (i / 2) * (h + gap * 0.4f), w, h);
                 bool sel = petSel == d.uid, on = act == d.uid;
                 var col = sp.elite ? new Color(1f, 0.82f, 0.4f) : new Color(0.45f, 1f, 0.8f);
-                UiKit.Card(r, sel ? 0.85f : 0.5f, col, sel ? 0.9f : 0.35f);
+                UiKit.MenuCard(r, sel ? 0.85f : 0.5f, col, sel ? 0.9f : 0.35f);
                 UiKit.Text(new Rect(r.x + gap * 0.5f, r.y, r.width - gap, r.height), $"{(on ? "⚔ " : "")}{d.Name}　Lv{d.level}\n{(sp.elite ? "菁英・" : "")}{Pets.PoolName(sp.pool)}系" + (d.pendingLearn != null ? "　✨有新招" : ""), fsS, col, TextAnchor.MiddleLeft, on);
                 if (GUI.Button(r, GUIContent.none, GUIStyle.none)) petSel = d.uid;
             }

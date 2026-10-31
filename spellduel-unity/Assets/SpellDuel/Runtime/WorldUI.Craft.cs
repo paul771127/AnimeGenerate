@@ -32,7 +32,7 @@ namespace SpellDuel
             {
                 var rr = new Rect(0, yy, content.width, rowH);
                 bool ok = Crafting.CanPay(p.need, p.gold, out var why);
-                UiKit.Card(rr, 0.8f, c, 0.6f);
+                UiKit.MenuCard(rr, 0.8f, c, 0.6f);
                 SupplyArt.Draw(new Rect(rr.x+gap,rr.y+gap*.2f,fs*1.35f,fs*1.35f),p.id);
                 UiKit.Text(new Rect(rr.x + gap+fs*1.45f, rr.y + gap * 0.2f, rr.width * 0.62f-fs*1.45f, fs * 1.4f), $"{p.name}　持有 {Economy.Count(p.id)}", fs, Color.white, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(rr.x + gap, rr.y + fs * 1.5f, rr.width * 0.62f, fs * 1.2f), p.desc, fsS, new Color(0.9f, 0.85f, 1f), TextAnchor.MiddleLeft);
@@ -100,7 +100,7 @@ namespace SpellDuel
                 var need = Crafting.NeedFor(rc, prof.level); int gold = Crafting.GoldFor(rc, prof.level);
                 bool ok = Crafting.CanPay(need, gold, out var why);
                 var dr = new Rect(r.x + gap, bottom + gap * 0.3f, r.width - gap * 2, detailH - gap * 0.5f);
-                UiKit.Card(dr, 0.9f, Item.RarityColors[rc.rarity], 0.7f);
+                UiKit.RarityCard(dr,rc.rarity);
                 var fx = new List<string>();
                 foreach (var e in rc.effects) fx.Add(e.hi >= 1f ? $"{Item.AffixText(e.a, e.lo)}～{e.hi:0}（跟著等級變多）" : $"{Item.AffixText(e.a, e.lo)}～{e.hi * 100:0.#}%");
                 UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.3f, dr.width - gap * 2, dr.height - fs * 4.1f),
@@ -125,7 +125,7 @@ namespace SpellDuel
 
         void DrawBlueprintDetail(Rect dr, Blueprints.Blueprint b, CharacterProfile prof, Color c, int fs, int fsS, float gap)
         {
-            UiKit.Card(dr, 0.9f, Item.RarityColors[b.rarity], 0.7f);
+            UiKit.RarityCard(dr,b.rarity);
             var fx = new List<string>();
             foreach (var e in b.affixes) fx.Add(e.hi >= 1f ? $"{Item.AffixText(e.a, e.lo)}～{e.hi:0}" : $"{Item.AffixText(e.a, e.lo)}～{e.hi * 100:0.#}%");
             foreach (var x in b.specials) fx.Add("✨ " + Souls.FxText(x));

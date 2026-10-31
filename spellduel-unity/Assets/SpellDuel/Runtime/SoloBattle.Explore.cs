@@ -575,13 +575,14 @@ namespace SpellDuel
                     GUI.color = c;
                     GUI.DrawTexture(new Rect(box.x + (x - x0) * cs, box.y + (span - 1 - (z - z0)) * cs, cs + 0.5f, cs + 0.5f), Texture2D.whiteTexture);
                 }
-            void Dot(Vector3 p, Color c, float k)
+            void Dot(Vector3 p, Color c, float k, int symbol=0)
             {
                 var cc = map.Cell(p); if (cc.x < x0 || cc.y < z0 || cc.x >= x0 + span || cc.y >= z0 + span || !run.explored.Contains(cc)) return;
                 float px = box.x + (p.x / ExploreMap.CellSize + map.start.x - x0 + 0.5f) * cs, py = box.y + (span - 1 - (p.z / ExploreMap.CellSize + map.start.y - z0) + 0.5f) * cs;
-                GUI.color = c; GUI.DrawTexture(new Rect(px - cs * k / 2f, py - cs * k / 2f, cs * k, cs * k), Texture2D.whiteTexture);
+                if(symbol!=0){float size=Mathf.Max(14,cs*k);GUI.color=Color.white;UiKit.MapToken(new Rect(px-size/2,py-size/2,size,size),c,symbol==2);}
+                else {GUI.color = c; GUI.DrawTexture(new Rect(px - cs * k / 2f, py - cs * k / 2f, cs * k, cs * k), Texture2D.whiteTexture);}
             }
-            foreach (var n in map.npcs) if (!n.hidden) { var q = map.Quest(n.quest); Dot(n.pos, q != null && (q.state == ExQuestState.Offered || q.state == ExQuestState.Ready) ? new Color(1f, 0.85f, 0.2f) : new Color(0.4f, 0.8f, 1f), 1.4f); }
+            foreach (var n in map.npcs) if (!n.hidden) { var q = map.Quest(n.quest); Dot(n.pos, q != null && (q.state == ExQuestState.Offered || q.state == ExQuestState.Ready) ? new Color(1f, 0.85f, 0.2f) : new Color(0.4f, 0.8f, 1f), 1.4f, q != null && (q.state == ExQuestState.Offered || q.state == ExQuestState.Ready) ? 2 : 1); }
             foreach (var it in map.items) if (!it.taken) Dot(it.pos, new Color(0.5f, 1f, 0.7f), 1f);
             foreach (var sw in map.switches) if (!sw.done) Dot(sw.pos, sw.kind == "shard" ? new Color(0.3f, 1f, 0.75f) : new Color(1f, 0.8f, 0.3f), 1.3f);   // 走過看到才會標
             foreach (var a in map.arenas) if (!a.cleared) Dot(a.center, new Color(1f, 0.3f, 0.3f), 1.8f);

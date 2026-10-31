@@ -34,7 +34,7 @@ namespace SpellDuel
                     var a = rows[i];
                     var r = new Rect((i % 2) * (w + gap), y + (i / 2) * (h + gap * 0.4f), w, h);
                     bool sel = invSel == a.key;
-                    UiKit.Card(r, sel ? 0.85f : 0.5f, a.c, sel ? 0.9f : 0.35f);
+                    UiKit.MenuCard(r, sel ? 0.85f : 0.5f, a.c, sel ? 0.9f : 0.35f);
                     UiKit.Text(new Rect(r.x + gap * 0.6f, r.y, r.width - fs * 4.8f, r.height), $"{a.icon} {a.name}", fsS, a.c, TextAnchor.MiddleLeft);
                     if (a.n >= 0) UiKit.Text(new Rect(r.xMax - fs * 4.4f, r.y, fs * 4f, r.height), $"×{a.n}", fsS, Color.white, TextAnchor.MiddleRight, true);   // n＜0＝不疊放（裝備）
                     if (GUI.Button(r, GUIContent.none, GUIStyle.none)) { invSel = a.key; invTitle = $"{a.icon} {a.name}" + (a.n >= 0 ? $"　×{a.n}" : ""); invBody = a.body; invColor = a.c; Sfx.Play("click", 0.4f, 1.1f); }
@@ -135,7 +135,7 @@ namespace SpellDuel
             if (invSel != null)
             {
                 var dr = new Rect(view.x, view.y + view.height * 0.42f, view.width, view.height * 0.58f);
-                UiKit.Card(dr, 0.96f, invColor, 0.9f);
+                UiKit.MenuCard(dr, 0.96f, invColor, 0.9f);
                 float bh = fs * 1.8f;
                 UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.5f, dr.width - gap * 2 - fs * 4.5f, fs * 1.5f), invTitle, fs, invColor, TextAnchor.MiddleLeft, true);
                 if (UiKit.Button(new Rect(dr.xMax - gap - fs * 4.2f, dr.y + gap * 0.4f, fs * 4.2f, fs * 1.5f), "關閉", fsS)) invSel = null;

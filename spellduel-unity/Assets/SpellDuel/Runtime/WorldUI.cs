@@ -176,8 +176,8 @@ namespace SpellDuel
 
         void Header(Rect r, string title, Color c, CharacterProfile prof, int fs, int fsS, int fsL, float gap, ref float y)
         {
-            if (frame2D) { UiKit.Card(r, 0.72f, c, 0.7f); y += gap * 0.5f; return; }   // 2D 設施框架裡：標題、金幣已經畫在上方
-            UiKit.Card(r, 0.95f, c, 0.9f);
+            if (frame2D) { UiKit.MenuCard(r, 0.72f, c, 0.7f); y += gap * 0.5f; return; }   // 2D 設施框架裡：標題、金幣已經畫在上方
+            UiKit.MenuCard(r, 0.95f, c, 0.9f);
             bool facility=screen==Screen.Smith||screen==Screen.Shop||screen==Screen.Guild;
             float hr = SettingsMenu.RightEdge(y, y + fs * 1.8f, r.xMax - gap);   // 右上角讓給 ⚙
             UiKit.Title(new Rect(r.x+gap,y,hr-r.x-gap-(facility?fs*1.9f:0),fs*1.8f),title,c,fsL);
@@ -254,7 +254,7 @@ namespace SpellDuel
             bottom += towerH + gap * 0.4f;
             // 選中的關卡
             var dr = new Rect(r.x + gap, bottom + gap * 0.3f, r.width - gap * 2, detailH - gap * 0.3f);
-            UiKit.Card(dr, 0.6f);
+            UiKit.MenuCard(dr, 0.6f);
             if (sel == null)
                 UiKit.Text(new Rect(dr.x + gap, dr.y, dr.width - gap * 2, dr.height), "點城鎮進去補給；點關卡看說明。打過的關卡可以重打刷裝備（戰利品要過關才拿得到）。", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleLeft);
             else
@@ -318,7 +318,7 @@ namespace SpellDuel
             }
             y += nh + gap * 0.5f;
             var talkR = new Rect(r.x + gap, y, r.width - gap * 2, fs * 4.6f);
-            UiKit.Card(talkR, 0.55f, npcTalk >= 0 ? t.color : (Color?)null, 0.7f);
+            UiKit.MenuCard(talkR, 0.55f, npcTalk >= 0 ? t.color : (Color?)null, 0.7f);
             if (npcTalk >= 0)
             {
                 // 說話者的頭像＋名字（左邊），台詞（右邊）
@@ -401,14 +401,14 @@ namespace SpellDuel
                 if (!d.Unlocked)
                 {
                     var lr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
-                    UiKit.Card(lr, 0.35f, new Color(0.4f, 0.4f, 0.45f), 0.6f);
+                    UiKit.MenuCard(lr, 0.35f, new Color(0.4f, 0.4f, 0.45f), 0.6f);
                     var us = Story.Find(d.unlock);
                     UiKit.Text(new Rect(lr.x + gap, lr.y, lr.width - gap * 2, lr.height), $"🔒 {d.name}　Lv{d.level + Boost}\n先通關故事「{d.unlock}{(us != null ? " " + us.title : "")}」才會開放", fsS, Color.gray, TextAnchor.MiddleLeft);
                     y += ch + gap * 0.4f;
                     continue;
                 }
                 var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
-                UiKit.Card(cr, 0.6f, clear ? new Color(1f, 0.85f, 0.3f) : DungeonColor, 0.8f);
+                UiKit.MenuCard(cr, 0.6f, clear ? new Color(1f, 0.85f, 0.3f) : DungeonColor, 0.8f);
                 float relief = Dungeons.LevelRelief(prof.level, d.level);
                 string diff = prof.level < d.level + Boost ? "⚠ 等級不足" : relief >= 0.95f ? "單人：非常困難" : relief >= 0.7f ? "單人：困難" : "單人：可以挑戰";
                 UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.62f, cr.height), $"{(clear ? "✔ " : "")}{d.name}　Lv{d.level + Boost}・{d.minPlayers}～{d.maxPlayers} 人・{d.SizeText}\n{d.desc}\n{diff}{(d.id==TrapGallery.Id ? (TrapGallery.BestSeconds>0 ? $"・最快 {TrapGallery.BestSeconds:0.0} 秒" : "・限時25分鐘") : "")}", fsS, Color.white, TextAnchor.MiddleLeft);
@@ -453,7 +453,7 @@ namespace SpellDuel
             var col = new Color(0.55f, 0.9f, 1f);
             void Key(Rect k, string label, bool on)
             {
-                UiKit.Card(k, on ? 0.85f : 0.5f, col, on ? 1f : 0.5f);
+                UiKit.MenuCard(k, on ? 0.85f : 0.5f, col, on ? 1f : 0.5f);
                 UiKit.Text(k, label, Mathf.RoundToInt(fs * 1.1f), on ? Color.white : new Color(1f, 1f, 1f, 0.85f), TextAnchor.MiddleCenter, true);
                 if (Event.current.type == EventType.MouseDown && k.Contains(Event.current.mousePosition)) Event.current.Use();   // 按方向鍵不要穿透到底下
             }
@@ -480,7 +480,7 @@ namespace SpellDuel
                     int lf = Mathf.RoundToInt(fsS * k);
                     float lw = lf * 9f, lh = lf * (isNear ? 3.6f : 2.4f);
                     var lr = new Rect(g.x - lw / 2f, g.y - lh, lw, lh);
-                    UiKit.Card(lr, isNear ? 0.8f : 0.45f, n.opens != null ? new Color(1f, 0.85f, 0.4f) : t.color, isNear ? 1f : 0.5f);
+                    UiKit.MenuCard(lr, isNear ? 0.8f : 0.45f, n.opens != null ? new Color(1f, 0.85f, 0.4f) : t.color, isNear ? 1f : 0.5f);
                     string icon = n.opens == "smith" ? "⚒ " : n.opens == "shop" ? "🧪 " : n.opens == "guild" ? "🏛 " : FacilityIcon(n.opens);
                     string qmark = NpcQuestLabel?.Invoke(n.name) != null ? "❗" : "";   // 初心者：有任務的居民
                     UiKit.Text(lr, $"{qmark}{icon}{n.name}\n{n.role}" + (isNear ? "\n💬 說「你好」" : ""), lf, isNear ? new Color(1f, 0.95f, 0.6f) : Color.white, TextAnchor.MiddleCenter, true);
@@ -496,7 +496,7 @@ namespace SpellDuel
                     int sf = Mathf.RoundToInt(fsS * k);
                     float sw = sf * 13f, sh = sf * (close ? 3.9f : 2.6f);
                     var sr = new Rect(sg.x - sw / 2f, sg.y - sh, sw, sh);
-                    UiKit.Card(sr, close ? 0.85f : 0.55f, info.color, close ? 1f : 0.6f);
+                    UiKit.MenuCard(sr, close ? 0.85f : 0.55f, info.color, close ? 1f : 0.6f);
                     UiKit.Text(sr, $"{info.title}\n{info.what}" + (close ? $"\n💬 找門口的{info.who}說「你好」" : ""), sf, close ? Color.white : new Color(0.92f, 0.94f, 1f), TextAnchor.MiddleCenter, true);
                 }
             // 出口與傳送陣的標示
@@ -507,14 +507,14 @@ namespace SpellDuel
                     {
                         float lw = fsS * 10f, lh = fsS * 2.6f;
                         var lr = new Rect(g.x - lw / 2f, g.y - lh, lw, lh);
-                        UiKit.Card(lr, 0.65f, RegionColors[e.theme], 0.9f);
+                        UiKit.MenuCard(lr, 0.65f, RegionColors[e.theme], 0.9f);
                         UiKit.Text(lr, $"🚪 第 {e.theme + 1} 章 {RegionNames[e.theme]}\n{Story.BandText(e.theme)}・走出去選關卡", fsS, Color.white, TextAnchor.MiddleCenter, true);
                     }
                 if (Walk.ScreenPos(Cam, Walk.WarpPos + Vector3.up * 0.6f, out var wg, out float wd) && wd < 20f)
                 {
                     float lw = fsS * 8f, lh = fsS * 2.4f;
                     var lr = new Rect(wg.x - lw / 2f, wg.y - lh, lw, lh);
-                    UiKit.Card(lr, 0.55f, new Color(0.6f, 0.5f, 1f), 0.8f);
+                    UiKit.MenuCard(lr, 0.55f, new Color(0.6f, 0.5f, 1f), 0.8f);
                     float wp = Walk.WarpProgress;
                     UiKit.Text(lr, wp > 0f ? $"🌀 傳送中… {Mathf.RoundToInt(wp * 100)}%" : "🌀 傳送陣\n站上去 0.5 秒傳送到其他城鎮", fsS, Color.white, TextAnchor.MiddleCenter, true);
                     if (wp > 0f) UiKit.Bar(new Rect(lr.x, lr.yMax + 2f, lr.width, lh * 0.25f), wp, new Color(0.6f, 0.5f, 1f), "", fsS);
@@ -528,7 +528,7 @@ namespace SpellDuel
             GUI.color = Color.white;
             // 上方：城鎮名稱＋說明
             var top = new Rect(r.x, r.y, r.width, fs * 3.6f);
-            UiKit.Card(top, 0.7f, t.color, 0.9f);
+            UiKit.MenuCard(top, 0.7f, t.color, 0.9f);
             UiKit.Text(new Rect(top.x + gap, top.y, top.width*.46f-gap, fs * 1.8f), $"🏘 {t.name}", fsL, Color.white, TextAnchor.MiddleLeft, true);
             string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
             UiKit.Text(new Rect(top.x + top.width*.46f, top.y, SettingsMenu.RightEdge(top.y, top.y + fs * 1.8f, top.xMax - gap) - (top.x + top.width*.46f), fs * 1.8f), $"{cn} Lv{prof.level}　💰 {Economy.Gold}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
@@ -570,7 +570,7 @@ namespace SpellDuel
             {
                 bool clear = Story.IsCleared(st.id), ok = Story.IsUnlocked(st);
                 var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
-                UiKit.Card(cr, ok ? 0.6f : 0.35f, clear ? new Color(1f, 0.85f, 0.3f) : ok ? RegionColors[th] : new Color(0.4f, 0.4f, 0.45f), 0.8f);
+                UiKit.MenuCard(cr, ok ? 0.6f : 0.35f, clear ? new Color(1f, 0.85f, 0.3f) : ok ? RegionColors[th] : new Color(0.4f, 0.4f, 0.45f), 0.8f);
                 string waves = st.HasBoss && st.fromWave >= 10 ? "Boss 戰" : $"{st.toWave - st.fromWave + 1} 波" + (st.HasBoss ? "＋Boss" : "");
                 UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.68f, cr.height), $"{(clear ? "✔" : ok ? "▶" : "🔒")} {st.id}　{st.title}　{(ok ? Story.StarText(st.id) : "")}\n{waves}・推薦 Lv{Mathf.Max(1, st.FirstWave - 1) + Boost}+・經驗 {Mathf.RoundToInt(st.xp * SoloBattle.RewardMulFor(Difficulty))}・💰 {Mathf.RoundToInt(Economy.StageGold(st) * SoloBattle.RewardMulFor(Difficulty))}",
                     fsS, ok ? Color.white : Color.gray, TextAnchor.MiddleLeft, true);
@@ -598,7 +598,7 @@ namespace SpellDuel
             {
                 bool open = TownOpen(t), here = t == town;
                 var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
-                UiKit.Card(cr, open ? 0.6f : 0.35f, open ? Towns[t].color : new Color(0.4f, 0.4f, 0.45f), 0.8f);
+                UiKit.MenuCard(cr, open ? 0.6f : 0.35f, open ? Towns[t].color : new Color(0.4f, 0.4f, 0.45f), 0.8f);
                 UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.66f, cr.height), $"🏘 {Towns[t].name}　{RegionNames[t]}\n" + (open ? Towns[t].desc : $"🔒 打通第 {t} 章後抵達"), fsS, open ? Color.white : Color.gray, TextAnchor.MiddleLeft, true);
                 var br = new Rect(cr.xMax - cr.width * 0.3f, cr.y + gap * 0.4f, cr.width * 0.3f - gap * 0.4f, cr.height - gap * 0.8f);
                 if (UiKit.Button(br, here ? "📍 目前位置" : open ? "🌀 傳送" : "🔒", fsS, open && !here, Towns[t].color, open && !here))
@@ -670,7 +670,7 @@ namespace SpellDuel
             if (selItem != null && items.Contains(selItem))
             {
                 var dr = new Rect(r.x + gap, y, r.width - gap * 2, fs * 4.2f);
-                UiKit.Card(dr, 0.6f, Item.RarityColors[selItem.rarity], 0.8f);
+                UiKit.RarityCard(dr,selItem.rarity);
                 var mods = new List<string>();
                 mods.AddRange(selItem.ModLines());
                 if (selItem.plus < Economy.MaxPlus && selItem.mods.Count > 0) mods.Add($"強化後 {Item.AffixText(selItem.mods[0].Key, selItem.mods[0].Value * Economy.EnhanceMul(selItem.plus + 1))}（只加主屬性）");
@@ -703,7 +703,7 @@ namespace SpellDuel
                 foreach (var c in Economy.Consumables)
                 {
                     var cr = new Rect(r.x + gap, y, r.width - gap * 2, fs * 2.6f);
-                    UiKit.Card(cr, 0.8f, new Color(.5f,.85f,1));
+                    UiKit.MenuCard(cr, 0.8f, new Color(.5f,.85f,1));
                     UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width * 0.62f, cr.height), $"{c.icon} {c.name}（持有 {Economy.Count(c.id)}）\n{c.desc}", fsS, Color.white, TextAnchor.MiddleLeft, true);
                     UiKit.NextTag("buy:" + c.id);
                     if (UiKit.Button(new Rect(cr.xMax - cr.width * 0.33f, cr.y + gap * 0.3f, cr.width * 0.32f - gap * 0.3f, cr.height - gap * 0.6f), $"💰 {c.price}", fsS, false, new Color(1f, 0.85f, 0.3f), Economy.Gold >= c.price))
@@ -773,7 +773,7 @@ namespace SpellDuel
             var c = Skills.Classes[jobInfo];
             bool ok = prof.CanChangeJob;
             var cr = new Rect(r.x + gap, y, r.width - gap * 2, r.yMax - gap * 3 - fs * 2.2f - y);
-            UiKit.Card(cr, 0.9f, c.color, 0.9f);
+            UiKit.MenuCard(cr, 0.9f, c.color, 0.9f);
             UiKit.Text(new Rect(cr.x + gap, cr.y + gap * 0.5f, cr.width - gap * 2, fs * 1.6f), $"{c.name}的介紹", Mathf.RoundToInt(fs * 1.15f), c.color, TextAnchor.MiddleLeft, true);
             string text = JobIntro(jobInfo);
             // 職業 2D 立繪（Codex）：放在右邊，介紹文字在左邊
@@ -824,7 +824,7 @@ namespace SpellDuel
                     bool done = prof.jobTrial > i, next = lvOk && prof.jobTrial == i;
                     var tr = new Rect(r.x + gap, y, r.width - gap * 2, th);
                     var tc = done ? new Color(0.45f, 0.9f, 0.5f) : next ? new Color(1f, 0.6f, 0.3f) : UiKit.Muted;
-                    UiKit.Card(tr, next ? 0.65f : 0.4f, tc, next ? 0.9f : 0.5f);
+                    UiKit.MenuCard(tr, next ? 0.65f : 0.4f, tc, next ? 0.9f : 0.5f);
                     float bw2 = tr.width * 0.28f;
                     string nm = i == 0 ? SoloBattle.ClassTrialName(chosen) : JobTrialNames != null && i < JobTrialNames.Length ? JobTrialNames[i] : $"第 {i + 1} 關";
                     UiKit.Text(new Rect(tr.x + gap, tr.y, tr.width - bw2 - gap * 2.5f, th), $"{(done ? "✔ " : "🎓 ")}{nm}", fsS, done || next ? Color.white : Color.gray, TextAnchor.MiddleLeft, false, 0.55f);
@@ -839,7 +839,7 @@ namespace SpellDuel
                 var id = Skills.ClassOrder[i]; var c = Skills.Classes[id];
                 bool mine = chosen == id;
                 var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
-                UiKit.Card(cr, mine ? 0.75f : 0.5f, c.color, mine ? 1f : 0.6f);
+                UiKit.MenuCard(cr, mine ? 0.75f : 0.5f, c.color, mine ? 1f : 0.6f);
                 float bw = cr.width * 0.28f;
                 var basic = Skills.BasicOf(id);
                 float bs = ch * 0.62f;
@@ -896,7 +896,7 @@ namespace SpellDuel
                     bool done = i == 0 ? prof.advProPassed : prof.trialPassed, next = lvOk && !done && (i == 0 || prof.advProPassed);
                     var tr = new Rect(r.x + gap, y, r.width - gap * 2, th);
                     var tc = done ? new Color(0.45f, 0.9f, 0.5f) : next ? new Color(1f, 0.55f, 0.3f) : UiKit.Muted;
-                    UiKit.Card(tr, next ? 0.6f : 0.4f, tc, next ? 0.9f : 0.5f);
+                    UiKit.MenuCard(tr, next ? 0.6f : 0.4f, tc, next ? 0.9f : 0.5f);
                     string nm = i == 0 ? $"⚔ 進階・{proName}" : "⚔ 實戰試煉", ds = i == 0 ? SoloBattle.ClassTrialDesc(prof.cls, false, true) : TrialText;
                     UiKit.Text(new Rect(tr.x + gap, tr.y, tr.width * 0.64f, tr.height), $"{(done ? "✔ " : "")}{nm}{(done ? "（已通過）" : "")}\n{ds}", Mathf.RoundToInt(fsS * 0.92f), done || next ? Color.white : Color.gray, TextAnchor.MiddleLeft, false, 0.5f);
                     string bt = done ? "已通過" : !lvOk ? $"需要 Lv{Advanced.Level}" : !next ? "先過前一關" : i == 0 ? "挑戰" : $"挑戰\n💰 {Advanced.TrialGold}";
@@ -923,7 +923,7 @@ namespace SpellDuel
                 y += cardH + gap * 0.5f;
                 if (cr.yMax < listTop || cr.y > listBot) continue;
                 bool mine = cur != null && cur.id == a.id;
-                UiKit.Card(cr, mine ? 0.8f : 0.5f, a.color, mine ? 1f : 0.7f);
+                UiKit.MenuCard(cr, mine ? 0.8f : 0.5f, a.color, mine ? 1f : 0.7f);
                 var names = System.Array.ConvertAll(a.skills, id => Skills.All.TryGetValue(id, out var sd) ? sd.name : id);
                 string body = $"✨ {a.name}　{a.desc}{(mine ? "（目前職業）" : "")}\n" +
                               $"{StatLine(a)}\n" +

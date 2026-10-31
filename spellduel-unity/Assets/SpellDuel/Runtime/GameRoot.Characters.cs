@@ -50,7 +50,7 @@ namespace SpellDuel
             float pvH = h * (art != null ? 0.46f : 0.38f);
             var pv = new Rect(W * 0.2f, y, W * 0.6f, pvH);
             var cardR = new Rect(pad, y, W - pad * 2, pvH);
-            UiKit.Card(cardR, 0.55f, p != null ? Skills.Classes[p.cls].color : UiKit.Muted, 0.6f);
+            UiKit.MenuCard(cardR, 0.55f, p != null ? Skills.Classes[p.cls].color : UiKit.Muted, 0.6f);
             if (art != null)
             {
                 var artR = DrawClassArt(cardR, art, Skills.Classes[p.cls].color);
@@ -59,7 +59,7 @@ namespace SpellDuel
                 float mh = artR.height / 3f, mw = mh * 2f / 3f;   // 預覽貼圖是 2:3
                 float mb = cardR.yMax - (named ? lineH * 1.25f : pad * 0.4f);
                 var mr = new Rect(Mathf.Min(artR.xMax, cardR.xMax - pad * 0.4f) - mw, mb - mh, mw, mh);
-                UiKit.Card(mr, 0.55f, Skills.Classes[p.cls].color, 0.6f);
+                UiKit.MenuCard(mr, 0.55f, Skills.Classes[p.cls].color, 0.6f);
                 GearPreview.Draw(mr, p);
             }
             else if (p != null) GearPreview.Draw(pv, p);
@@ -77,7 +77,7 @@ namespace SpellDuel
                 UiKit.Text(new Rect(pad, y, W - pad * 2, lineH), $"角色名字（最多 {CharacterSlots.NameMax} 個字）", fsS, new Color(0.9f, 0.9f, 1f));
                 y += lineH;
                 float bh = fs * 2.3f;
-                UiKit.Card(new Rect(pad, y, W - pad * 2, bh), 0.95f, UiKit.Gold, 0.8f);
+                UiKit.MenuCard(new Rect(pad, y, W - pad * 2, bh), 0.95f, UiKit.Gold, 0.8f);
                 charName = GUI.TextField(new Rect(pad + 4, y + 3, W - pad * 2 - 8, bh - 6), charName ?? "", CharacterSlots.NameMax, LobbyInput(fs));
                 y += bh + pad * 0.5f;
                 UiKit.Text(new Rect(pad, y, W - pad * 2, lineH * 2.2f), "新角色從「初心者」1 級開始，普攻是木棍敲擊（手掌劃一下）；到炎之里找居民解任務學木棍揮擊、投石、急救。\n10 級到村子的職業工會挑戰轉職試煉，選擇自己的職業。", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperCenter);

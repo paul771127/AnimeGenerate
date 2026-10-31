@@ -44,7 +44,7 @@ namespace SpellDuel
             int fs = UiKit.BaseFont, fsS = Mathf.RoundToInt(fs * 0.82f), fsL = Mathf.RoundToInt(fs * 1.2f);
             float gap = fs * 0.5f, lh = fs * 1.6f;
             var cd = Skills.Classes[p.cls];
-            UiKit.Card(r, 0.95f, cd.color, 0.9f);
+            UiKit.MenuCard(r, 0.95f, cd.color, 0.9f);
             float x = r.x + gap, w = r.width - gap * 2, y = r.y + gap;
 
             // ---- 標題：職業、等級、經驗、點數
@@ -185,7 +185,7 @@ namespace SpellDuel
             {
                 var s = (Stat)i;
                 var rr = new Rect(b.x, b.y + i * rowH, b.width, rowH - gap * 0.4f);
-                UiKit.Card(rr, 0.78f, StatInfo.Colors[i], 0.65f);
+                UiKit.MenuCard(rr, 0.78f, StatInfo.Colors[i], 0.65f);
                 UiKit.Divider(new Rect(rr.x+4,rr.y+8,3,rr.height-16),StatInfo.Colors[i]);
                 int own = p.OwnStat(s), tree = p.TreeStat(s), gear = p.GearStat(s), cost = StatInfo.Cost(own);
                 string extra = (tree > 0 ? $" +{tree}樹" : "") + (gear > 0 ? $" +{gear}裝" : "");
@@ -230,7 +230,7 @@ namespace SpellDuel
         bool DrawStash(Rect r, CharacterProfile p, int fs, int fsS, float gap)
         {
             var st = Progress.Stash;
-            UiKit.Card(r, 0.85f, new Color(0.55f, 0.8f, 1f), 0.6f);
+            UiKit.MenuCard(r, 0.85f, new Color(0.55f, 0.8f, 1f), 0.6f);
             float x = r.x + gap, w = r.width - gap * 2, y = r.y + gap * 0.5f;
             UiKit.Text(new Rect(x, y, w, fs * 1.6f), $"🏦 倉庫 {st.Count}/{Progress.StashSize}：三個角色共用。在背包選裝備按「存倉庫」放進來，任何角色都能取出。", fsS, new Color(0.8f, 0.9f, 1f), TextAnchor.UpperLeft, false, 0.6f);
             y += fs * 1.8f;
@@ -247,7 +247,7 @@ namespace SpellDuel
                 var it = st[i];
                 var rr = new Rect(x, y, w, rh);
                 bool ok = p.CanEquip(it, out var whyNot);
-                UiKit.Card(rr, 0.6f, Item.RarityColors[it.rarity], 0.6f);
+                UiKit.RarityCard(rr,it.rarity);
                 UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y, rr.width - bw - gap * 1.5f, rh * 0.55f), $"[{Item.RarityNames[it.rarity]}] {it.FullName}", fsS, Item.RarityColors[it.rarity], TextAnchor.MiddleLeft, true, 0.6f);
                 UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y + rh * 0.5f, rr.width - bw - gap * 1.5f, rh * 0.48f), $"{Item.SlotNames[(int)it.slot]}・Lv{it.ilvl}・限定 {it.ClassText()}{(ok ? "" : $"（不能用：{whyNot}）")}", fsS, ok ? new Color(0.8f, 0.85f, 0.95f) : new Color(1f, 0.55f, 0.5f), TextAnchor.MiddleLeft, false, 0.6f);
                 if (UiKit.Button(new Rect(rr.xMax - bw - gap * 0.3f, rr.y + rh * 0.12f, bw, rh * 0.76f), full ? "背包滿" : "取出", fsS, !full, Item.RarityColors[it.rarity], !full))
@@ -272,7 +272,7 @@ namespace SpellDuel
         bool DrawMailbox(Rect r, CharacterProfile p, int fs, int fsS, float gap)
         {
             var mails = Progress.Mailbox;
-            UiKit.Card(r, 0.85f, new Color(1f, 0.75f, 0.3f), 0.6f);
+            UiKit.MenuCard(r, 0.85f, new Color(1f, 0.75f, 0.3f), 0.6f);
             float x = r.x + gap, w = r.width - gap * 2, y = r.y + gap * 0.5f;
             UiKit.Text(new Rect(x, y, w, fs * 2.4f), $"⚠ 背包滿了時拿到的裝備會寄到這裡。信件只保留 {Progress.MailKeepDays} 天，過期會自動刪除，請盡快空出背包領取。", fsS, new Color(1f, 0.8f, 0.5f), TextAnchor.UpperLeft, true, 0.6f);
             y += fs * 2.5f;
@@ -293,7 +293,7 @@ namespace SpellDuel
                 var m = mails[i]; var it = m.item;
                 var rr = new Rect(x, y, w, rh);
                 int left = Progress.MailDaysLeft(m);
-                UiKit.Card(rr, 0.6f, Item.RarityColors[it.rarity], 0.6f);
+                UiKit.RarityCard(rr,it.rarity);
                 UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y, rr.width - bw - gap * 1.5f, rh * 0.55f), $"[{Item.RarityNames[it.rarity]}] {it.FullName}（{Item.SlotNames[(int)it.slot]}・Lv{it.ilvl}）", fsS, Item.RarityColors[it.rarity], TextAnchor.MiddleLeft, true, 0.6f);
                 UiKit.Text(new Rect(rr.x + gap * 0.5f, rr.y + rh * 0.5f, rr.width - bw - gap * 1.5f, rh * 0.48f), (left <= 0 ? "⚠ 今天到期" : left <= 2 ? $"⚠ 剩 {left} 天" : $"剩 {left} 天") + (string.IsNullOrEmpty(m.from) ? "" : $"・{m.from}"), fsS, left <= 2 ? new Color(1f, 0.45f, 0.4f) : new Color(0.8f, 0.85f, 0.95f), TextAnchor.MiddleLeft, false, 0.6f);
                 if (UiKit.Button(new Rect(rr.xMax - bw - gap * 0.3f, rr.y + rh * 0.12f, bw, rh * 0.76f), full ? "背包滿" : "領取", fsS, !full, Item.RarityColors[it.rarity], !full))
@@ -405,7 +405,7 @@ namespace SpellDuel
                 if (DrawSouls(dr, p, fs, fsS, gap)) { Progress.SaveBag(); changed = true; }
                 return changed;
             }
-            UiKit.Card(dr, 0.9f, selItem != null ? Item.RarityColors[selItem.rarity] : (Color?)null, 0.5f);
+            UiKit.MenuCard(dr, 0.9f, selItem != null ? Item.RarityColors[selItem.rarity] : (Color?)null, 0.5f);
             if (selItem == null)
             {
                 UiKit.Text(new Rect(dr.x + gap, dr.y + gap, dr.width - gap * 2, dr.height - gap * 2 - fs * 2f), "點裝備看說明。無盡模式打倒小怪有機會掉裝備，Boss 一定掉稀有以上。稀有度：普通→優良→稀有→史詩→傳說，越高越強、限制越嚴。\n💠 裝備有 0～4 個精魄孔（越稀有上限越高），可以鑲上打倒怪物掉的精魄。", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft);

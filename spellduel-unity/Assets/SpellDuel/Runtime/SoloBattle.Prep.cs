@@ -104,7 +104,7 @@ namespace SpellDuel
                 var sk = Skills.All[skills[i]];
                 bool on = myLoadout.Contains(sk.id);
                 var r = new Rect(pad + (i % 2) * (sw + gap), y + (i / 2) * (sh + gap * 0.6f), sw, sh);
-                UiKit.Card(r, on ? 0.9f : 0.55f, sk.color, on ? 1f : 0.35f);
+                UiKit.MenuCard(r, on ? 0.9f : 0.55f, sk.color, on ? 1f : 0.35f);
                 float isz = sh * 0.78f;
                 GUI.color = on ? Color.white : new Color(0.55f, 0.55f, 0.55f);
                 GUI.DrawTexture(new Rect(r.x + sh * 0.11f, r.y + sh * 0.11f, isz, isz), SkillIcons.Get(sk.id));
@@ -122,7 +122,7 @@ namespace SpellDuel
             {
                 var it = pf.equipped[i];
                 var r = new Rect(pad, y, cw - pad * 2, u * 0.95f);
-                UiKit.Card(r, 0.5f, it != null ? Item.RarityColors[it.rarity] : UiKit.Muted, 0.4f);
+                UiKit.MenuCard(r, 0.5f, it != null ? Item.RarityColors[it.rarity] : UiKit.Muted, 0.4f);
                 UiKit.Text(new Rect(r.x + gap, r.y, r.width - gap * 2, r.height), $"{Item.SlotNames[i]}：" + (it != null ? $"[{Item.RarityNames[it.rarity]}] {it.FullName}" : "（空）"), fsS, it != null ? Item.RarityColors[it.rarity] : Color.gray, TextAnchor.MiddleLeft, it != null && it.rarity >= 3);
                 y += u * 0.95f + gap * 0.4f;
             }
@@ -140,7 +140,7 @@ namespace SpellDuel
                 {
                     int own = Economy.Count(c.id), cap = Mathf.Min(CarryCap(c), own), n = Mathf.Min(CarryOf(c.id), cap);
                     var r = new Rect(pad, y, cw - pad * 2, u * 1.15f);
-                    UiKit.Card(r, 0.5f, new Color(0.5f, 0.85f, 1f), own > 0 ? 0.5f : 0.15f);
+                    UiKit.MenuCard(r, 0.5f, new Color(0.5f, 0.85f, 1f), own > 0 ? 0.5f : 0.15f);
                     float bw = r.height * 1.1f;
                     UiKit.Text(new Rect(r.x + gap, r.y, r.width - bw * 3 - gap * 3, r.height), $"{c.icon} {c.name}　（背包 {own}）", fsS, own > 0 ? Color.white : Color.gray, TextAnchor.MiddleLeft);
                     if (!c.scroll)

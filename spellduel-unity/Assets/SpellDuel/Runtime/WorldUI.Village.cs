@@ -87,7 +87,7 @@ namespace SpellDuel
             if (frame2D) { frameLine = text; return; }   // 2D 設施框架：NPC 已經畫在右邊，這句話放進對話泡泡
             float h = fs * 4.4f;
             var cr = new Rect(r.x + gap, y, r.width - gap * 2, h);
-            UiKit.Card(cr, 0.6f, c, 0.75f);
+            UiKit.MenuCard(cr, 0.6f, c, 0.75f);
             float ps = h - gap * 0.8f;
             var pr = new Rect(cr.x + gap * 0.4f, cr.y + gap * 0.4f, ps, ps);
             GUI.DrawTexture(pr, Portraits.Get(npc, "npc"), ScaleMode.ScaleToFit, true);
@@ -121,7 +121,7 @@ namespace SpellDuel
             {
                 var k = (DailyChallenge.Kind)i; int m = DailyChallenge.MedalToday(k);
                 var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
-                UiKit.Card(cr, 0.6f, DailyChallenge.Colors[i], 0.75f);
+                UiKit.MenuCard(cr, 0.6f, DailyChallenge.Colors[i], 0.75f);
                 float bw = cr.width * 0.24f;
                 UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width - bw - gap * 2, fs * 1.3f), $"{DailyChallenge.Names[i]}　{(m > 0 ? DailyChallenge.MedalNames[m] : "今天還沒拿獎牌")}", fsS, Color.white, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(cr.x + gap, cr.y + fs * 1.3f, cr.width - bw - gap * 2, ch - fs * 1.35f), DailyChallenge.Descs[i], Mathf.RoundToInt(fsS * 0.92f), new Color(0.85f, 0.9f, 1f), TextAnchor.UpperLeft);
@@ -146,7 +146,7 @@ namespace SpellDuel
             {
                 var c = Skills.Classes[cls]; int done = TrialCoins.DoneToday(cls); var tt = TrialCoins.Tiers(cls);
                 var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
-                UiKit.Card(cr, done >= 0 ? 0.4f : 0.6f, c.color, done >= 0 ? 0.5f : 0.75f);
+                UiKit.MenuCard(cr, done >= 0 ? 0.4f : 0.6f, c.color, done >= 0 ? 0.5f : 0.75f);
                 float bw = cr.width * 0.26f;
                 UiKit.Text(new Rect(cr.x + gap, cr.y, cr.width - bw - gap * 2, fs * 1.3f), $"{SoloBattle.ClassTrialName(cls)}（{c.name}）　" + (done >= 0 ? $"✔ 今天 {TrialCoins.ScoreText(cls, done)}・試煉幣 {TrialCoins.CoinsFor(cls, done)}" : "今天還沒做"), fsS, Color.white, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(cr.x + gap, cr.y + fs * 1.3f, cr.width - bw - gap * 2, ch - fs * 1.35f), SoloBattle.ClassTrialDesc(cls, true) + $"\n門檻：{tt[0]}＝1 枚　{tt[1]}＝2 枚　{tt[2]}＝3 枚", Mathf.RoundToInt(fsS * 0.9f), new Color(0.85f, 0.9f, 1f), TextAnchor.UpperLeft);
@@ -175,7 +175,7 @@ namespace SpellDuel
             {
                 var rr = new Rect(0, yy, content.width, rowH);
                 bool ok = TrialCoins.Coins >= w.price;
-                UiKit.Card(rr, 0.8f, c, 0.6f);
+                UiKit.MenuCard(rr, 0.8f, c, 0.6f);
                 UiKit.Text(new Rect(rr.x + gap, rr.y + gap * 0.2f, rr.width * 0.68f, fs * 1.4f), $"{w.icon} {w.name}", fs, Color.white, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(rr.x + gap, rr.y + fs * 1.5f, rr.width * 0.68f, rowH - fs * 1.6f), w.desc, Mathf.RoundToInt(fsS * 0.9f), new Color(0.9f, 0.9f, 1f), TextAnchor.UpperLeft, false, 0.5f);
                 if (UiKit.Button(new Rect(rr.xMax - rr.width * 0.3f, rr.y + rr.height * 0.2f, rr.width * 0.29f - gap * 0.3f, rr.height * 0.6f), $"🏆 {w.price}", fs, ok, c, ok))
