@@ -48,7 +48,7 @@ namespace SpellDuel
         {
             bool changed = false;
             var it = soulFor;
-            UiKit.Card(dr, 0.95f, new Color(0.55f, 0.75f, 1f), 0.8f);
+            UiKit.MenuCard(dr, 0.95f, new Color(0.55f, 0.75f, 1f), 0.8f);
             float bh = fs * 1.6f;
             if (UiKit.Button(new Rect(dr.xMax - gap - fs * 5f, dr.y + gap * 0.4f, fs * 5f, fs * 1.3f), "◀ 返回", fsS)) { soulOpen = false; return false; }
             UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.4f, dr.width - fs * 6f, fs * 1.3f),
@@ -68,12 +68,12 @@ namespace SpellDuel
                         if (i < it.souls.Count)
                         {
                             var d = Souls.Get(it.souls[i]);
-                            UiKit.Card(sr, 0.9f, d != null ? d.color : UiKit.Muted, 1f);
+                            UiKit.MenuCard(sr, 0.9f, d != null ? d.color : UiKit.Muted, 1f);
                             var ic = SoulIconId(d);
                             if (ic != null) GUI.DrawTexture(new Rect(sr.x + sr.height * 0.1f, sr.y + sr.height * 0.1f, sr.height * 0.8f, sr.height * 0.8f), SkillIcons.Get(ic));
                             UiKit.Text(ic != null ? new Rect(sr.x + sr.height, sr.y, sr.width - sr.height, sr.height) : sr, (ic != null ? "" : "◆ ") + (d != null ? d.name : "?"), fsS, Color.white, TextAnchor.MiddleCenter, true);
                         }
-                        else { UiKit.Card(sr, 0.4f, UiKit.Muted, 0.4f); UiKit.Text(sr, "◇ 空", fsS, Color.gray, TextAnchor.MiddleCenter); }
+                        else { UiKit.MenuCard(sr, 0.4f, UiKit.Muted, 0.4f); UiKit.Text(sr, "◇ 空", fsS, Color.gray, TextAnchor.MiddleCenter); }
                     }
                     y += bh + gap * 0.5f;
                 }
@@ -110,7 +110,7 @@ namespace SpellDuel
                         else Toast(why);
                     }
                 }
-                else UiKit.Card(rr, have > 0 ? 0.75f : 0.4f, d.color, have > 0 ? 0.8f : 0.3f);
+                else UiKit.MenuCard(rr, have > 0 ? 0.75f : 0.4f, d.color, have > 0 ? 0.8f : 0.3f);
                 // 有專屬圖示的精魄：左邊畫圖示，文字往右移
                 string icon = SoulIconId(d);
                 float ix = 0f;

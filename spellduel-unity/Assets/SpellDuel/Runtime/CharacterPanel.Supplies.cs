@@ -3,7 +3,7 @@ namespace SpellDuel {
 public partial class CharacterPanel {
 bool suppliesOpen;Vector2 suppliesScroll;
 void DrawSuppliesBag(Rect r,int fs){
- UiKit.Card(r,.9f,UiKit.Gold);var list=new System.Collections.Generic.List<(string id,string name,int count)>();
+ UiKit.MenuCard(r,.9f,UiKit.Gold);var list=new System.Collections.Generic.List<(string id,string name,int count)>();
  foreach(var p in Crafting.Potions){int n=Economy.Count(p.id);if(n>0)list.Add((p.id,p.name,n));}
  foreach(var m in Crafting.Mats){int n=Economy.Count(m.id);if(n>0)list.Add((m.id,(SkillIcons.IsSupply(m.id)?"":m.icon)+m.name,n));}
  var view=new Rect(r.x+fs*.3f,r.y+fs*.4f,r.width-fs*.6f,r.height-fs*.8f);float row=fs*3,w=view.width/2;

@@ -307,7 +307,7 @@ namespace SpellDuel
                 float pw = Mathf.Max(fs * 6.2f, 320f * s * 1.1f), ph = fs * 2.1f;
                 var lr = new Rect(n.label.x * s - pw / 2f, n.label.y * s - ph / 2f, pw, ph);
                 var plate = WMTex("ui/label_plate");
-                if (plate != null) GUI.DrawTexture(lr, plate, ScaleMode.StretchToFill, true); else UiKit.Card(lr, 0.85f, null, 0.6f);
+                if (plate != null) GUI.DrawTexture(lr, plate, ScaleMode.StretchToFill, true); else UiKit.MenuCard(lr, 0.85f, null, 0.6f);
                 string nm = st != null ? $"{st.id}\n{st.title}" : n.id.StartsWith("town:") ? n.name : "🗼 無盡塔";
                 UiKit.Text(new Rect(lr.x + fs * 0.4f, lr.y, lr.width - fs * 0.8f, lr.height), nm, Mathf.RoundToInt(fsS * 0.85f), new Color(0.25f, 0.15f, 0.08f), TextAnchor.MiddleCenter, true, 0.5f);
                 // 星星
@@ -350,7 +350,7 @@ namespace SpellDuel
             if (sel != null)
             {
                 var dr = new Rect(r.x + gap, by - gap * 0.5f - detH, r.width - gap * 2, detH);
-                UiKit.Card(dr, 0.93f, null, 0.8f);
+                UiKit.MenuCard(dr, 0.93f, null, 0.8f);
                 bool ok = Story.IsUnlocked(sel), story = Story.HasStory(sel) && Story.IsSeen(sel.id);
                 string waves = sel.HasBoss && sel.fromWave >= 10 ? "Boss 戰" : $"{sel.toWave - sel.fromWave + 1} 波" + (sel.HasBoss ? "＋Boss" : "");
                 UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.3f, dr.width - gap * 2, fs * 1.5f), $"{sel.id}　{sel.title}　{Story.StarText(sel.id)}", fs, Color.white, TextAnchor.MiddleLeft, true);
@@ -382,7 +382,7 @@ namespace SpellDuel
         bool DrawWorldBossPick(Rect r, CharacterProfile prof, int fs, int fsS, int fsL, float gap)
         {
             var col = new Color(1f, 0.5f, 0.3f);
-            UiKit.Card(r, 0.92f, col, 0.8f);
+            UiKit.MenuCard(r, 0.92f, col, 0.8f);
             float y = r.y + gap;
             UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.8f), "🐲 世界 Boss 討伐", fsL, col, TextAnchor.MiddleCenter, true);
             y += fs * 2f;
@@ -394,7 +394,7 @@ namespace SpellDuel
             {
                 var cr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
                 var c = Skills.Classes.TryGetValue("boss_" + WorldBossArt.Ids[i], out var cd) ? cd.color : col;
-                UiKit.Card(cr, 0.7f, c, 0.8f);
+                UiKit.MenuCard(cr, 0.7f, c, 0.8f);
                 var poster = WorldBossPoster(i);
                 float pw = poster != null ? ch * 0.66f : 0f;
                 if (poster != null) GUI.DrawTexture(new Rect(cr.x + gap * 0.5f, cr.y + gap * 0.3f, pw, ch - gap * 0.6f), poster, ScaleMode.ScaleToFit, true);

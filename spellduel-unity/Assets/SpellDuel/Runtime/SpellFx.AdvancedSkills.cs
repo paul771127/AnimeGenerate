@@ -8,7 +8,7 @@ namespace SpellDuel
   static void AdvancedProjectile(GameObject root,string id,Color c){root.AddComponent<AdvancedProjectileArt>().Build(id,c);}
   public static void AreaBurst(string skillId,Vector3 centerWorld,float radius)
   {
-   if(!AreaSkillArt.Known(skillId))return;var go=new GameObject("SpellFx area "+skillId);go.transform.position=centerWorld;go.AddComponent<AreaSkillArt>().Build(skillId,Mathf.Max(.05f,radius));
+   if(!AreaSkillArt.Known(skillId))return;var go=new GameObject("SpellFx area "+skillId);SpellReadability.Attach(go);go.transform.position=centerWorld;go.AddComponent<AreaSkillArt>().Build(skillId,Mathf.Max(.05f,radius));
   }
   public static void SkillImpact(string skillId,Vector3 atWorld)
   {

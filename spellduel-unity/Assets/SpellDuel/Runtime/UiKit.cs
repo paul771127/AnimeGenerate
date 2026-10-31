@@ -151,7 +151,7 @@ namespace SpellDuel
         }
         public static void Text(Rect r,string text,int size,Color color,TextAnchor anchor=TextAnchor.MiddleLeft,bool bold=false,float minScale=.55f)
         {
-            if(string.IsNullOrEmpty(text)||r.width<=0||r.height<=0)return;Init();content.text=text;
+            if(string.IsNullOrEmpty(text)||r.width<=0||r.height<=0)return;if(TrySymbol(r,text,size,color))return;Init();content.text=text;
             textStyle.alignment=anchor;textStyle.fontStyle=bold?FontStyle.Bold:FontStyle.Normal;
             int fs=Mathf.Max(10,size),min=Mathf.Max(10,Mathf.RoundToInt(size*minScale));textStyle.fontSize=fs;
             while(fs>min&&textStyle.CalcHeight(content,r.width)>r.height+1){fs--;textStyle.fontSize=fs;}

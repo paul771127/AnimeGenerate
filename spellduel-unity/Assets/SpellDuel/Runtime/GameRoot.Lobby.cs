@@ -86,7 +86,7 @@ namespace SpellDuel
             float bh = fs*2.25f, full = W - pad * 2, half = (full - pad) / 2f;
             float cardTop=top-pad*.45f;
             var card=new Rect(pad*.5f,cardTop,W-pad,Mathf.Max(lineH*3,lobbyMeasuredBottom-cardTop));
-            UiKit.Card(card,.86f,ModeColor,.95f);
+            UiKit.MenuCard(card,.86f,ModeColor,.95f);
 
             // ---- 標題
             UiKit.Title(new Rect(pad, y, full, lineH * 1.12f), LobbyCaption(ModeTitle), ModeColor, Mathf.RoundToInt(fs * 1.15f));
@@ -136,7 +136,7 @@ namespace SpellDuel
             if(st==StepState.Now)
             {
                 float pulse=.65f+.25f*Mathf.Sin(Time.time*2.7f);
-                UiKit.Card(new Rect(pad+diameter+fs*.2f,y,full-diameter-fs*.2f,rowH),.7f,c,pulse);
+                UiKit.MenuCard(new Rect(pad+diameter+fs*.2f,y,full-diameter-fs*.2f,rowH),.7f,c,pulse);
                 UiKit.Halo(new Rect(medal.x-4,medal.y-4,medal.width+8,medal.height+8),c,pulse);
             }
             UiKit.Badge(medal,null,c,1);
@@ -182,7 +182,7 @@ namespace SpellDuel
             if (rl.IsHost && !string.IsNullOrEmpty(rl.JoinCode))
             {
                 float codeH=bh*1.35f;
-                UiKit.Card(new Rect(pad,y,full,codeH),.95f,UiKit.Gold,.85f);
+                UiKit.MenuCard(new Rect(pad,y,full,codeH),.95f,UiKit.Gold,.85f);
                 UiKit.Text(new Rect(pad+fs*.4f,y+fs*.12f,full*.6f-fs*.6f,fs*.75f),LobbyCaption("房間代碼"),Mathf.RoundToInt(fsS*.82f),UiKit.Muted,TextAnchor.MiddleLeft,true);
                 UiKit.Text(new Rect(pad+fs*.3f,y+fs*.8f,full*.6f-fs*.5f,codeH-fs*.85f),LobbyCaption(rl.JoinCode),Mathf.RoundToInt(fs*1.85f),UiKit.Gold,TextAnchor.MiddleCenter,true,.8f);
                 if (UiKit.Button(new Rect(pad+full*.64f,y+fs*.2f,full*.34f,codeH-fs*.4f), LobbyCaption("📋 複製代碼"), fsS, true, new Color(1f, 0.85f, 0.4f)))
@@ -198,7 +198,7 @@ namespace SpellDuel
                 y += bh + pad * 0.4f;
                 UiKit.Text(new Rect(pad, y, full, lineH), LobbyCaption("或加入朋友的房間："), fsS, new Color(0.85f, 0.88f, 1f));
                 y += lineH;
-                UiKit.Card(new Rect(pad,y,half,bh),.95f,ModeColor,.8f);
+                UiKit.MenuCard(new Rect(pad,y,half,bh),.95f,ModeColor,.8f);
                 codeInput = GUI.TextField(new Rect(pad+4,y+3,half-8,bh-6), codeInput, 8, LobbyInput(fs)).ToUpperInvariant();
                 if (UiKit.Button(new Rect(pad * 2 + half, y, half, bh), LobbyCaption("加入"), fs, true, new Color(0.4f, 0.85f, 1f), codeInput.Trim().Length >= 4))
                 {
@@ -274,7 +274,7 @@ namespace SpellDuel
             {
                 if (UiKit.Button(new Rect(pad, y, full, bh), LobbyCaption("🏠 建立房間"), fs, true, ModeColor)) ((NetLink)net).Host();
                 y += bh + pad * 0.4f;
-                UiKit.Card(new Rect(pad,y,half,bh),.95f,ModeColor,.8f);
+                UiKit.MenuCard(new Rect(pad,y,half,bh),.95f,ModeColor,.8f);
                 ipInput = GUI.TextField(new Rect(pad+4,y+3,half-8,bh-6), ipInput, LobbyInput(fsS));
                 if (UiKit.Button(new Rect(pad * 2 + half, y, half, bh), LobbyCaption("加入"), fs, true, new Color(0.4f, 0.85f, 1f)))
                 {
@@ -542,7 +542,7 @@ namespace SpellDuel
         }
         static void LobbyPhone(Rect r,Color c)
         {
-            UiKit.Card(r,.94f,c,.95f);
+            UiKit.MenuCard(r,.94f,c,.95f);
             UiKit.Divider(new Rect(r.x+r.width*.18f,r.y+r.height*.20f,r.width*.64f,r.height*.54f),new Color(c.r*.4f,c.g*.4f,c.b*.4f,.85f));
             UiKit.Gem(new Rect(r.center.x-r.width*.08f,r.y+r.height*.83f,r.width*.16f,r.width*.16f),UiKit.Gold);
         }

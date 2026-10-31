@@ -24,7 +24,7 @@ namespace SpellDuel
   {var a=NewAnim("SpellFx first strike",atWorld,Quaternion.identity,.4f);a.AddRing(a.transform,Circle(40,1),true,.03f,Color.white,0,.3f,.03f,.55f);Sparks(a.transform,Color.white,.4f,8,1,2);}
   public static void KillRush(Transform owner){if(owner)TeamBuffCast("rangerhaste",owner);}
   public static void SoulDrain(Vector3 fromWorld,Transform owner)
-  {if(!owner)return;var go=new GameObject("SpellFx soul drain");go.AddComponent<SoulDrainArt>().Build(fromWorld,owner);}
+  {if(!owner)return;var go=new GameObject("SpellFx soul drain");SpellReadability.Attach(go);go.AddComponent<SoulDrainArt>().Build(fromWorld,owner);}
  }
  public sealed class HitStackArt:MonoBehaviour
  {

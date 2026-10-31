@@ -55,14 +55,14 @@ namespace SpellDuel
             float W = UnityEngine.Screen.width, H = UnityEngine.Screen.height;
             GUI.DrawTexture(new Rect(0, 0, W, H), bg, ScaleMode.ScaleAndCrop);
             var hr = Design(30, 45, 1020, 115);
-            UiKit.Card(hr, 0.92f, col, 0.8f);
+            UiKit.MenuCard(hr, 0.92f, col, 0.8f);
             UiKit.Text(new Rect(hr.x + fs * 0.6f, hr.y, hr.width * 0.55f, hr.height), title, fsL, Color.white, TextAnchor.MiddleLeft, true);
             float rx = SettingsMenu.RightEdge(hr.y, hr.yMax, hr.xMax - fs * 0.6f);
             UiKit.Text(new Rect(hr.x + hr.width * 0.55f, hr.y, rx - hr.x - hr.width * 0.55f, hr.height), $"💰 {Economy.Gold}", fs, new Color(1f, 0.88f, 0.4f), TextAnchor.MiddleRight, true);
             var tex = Story2D.Portrait(npcId, expr);
             if (tex != null) GUI.DrawTexture(Design(660, 990, 390, 730), tex, ScaleMode.ScaleToFit, true);
             var br = Design(675, 730, 365, 190);
-            UiKit.Card(br, 0.9f, col, 0.7f);
+            UiKit.MenuCard(br, 0.9f, col, 0.7f);
             UiKit.Text(new Rect(br.x + fs * 0.5f, br.y + fs * 0.3f, br.width - fs, br.height - fs * 0.6f), $"{npcName}：\n{line}", fsS, Color.white, TextAnchor.UpperLeft, false, 0.5f);
             return drawReturn && UiKit.Button(Design(270, 1795, 540, 92), "🏘 回城鎮", fs, false, new Color(1f, 0.55f, 0.2f));
         }
@@ -99,7 +99,7 @@ namespace SpellDuel
             if (UiKit.Button(Design(335, 195, 285, 85), "賣裝備", fs, shopTab == 1, UiKit.Gold)) { shopTab = 1; selItem = null; shopScroll = Vector2.zero; }
             // 藥劑師：用材料做強化藥劑（WorldUI.Craft.cs）
             var view = Design(30, 290, 610, 850);
-            UiKit.Card(view, 0.55f, null, 0.5f);
+            UiKit.MenuCard(view, 0.55f, null, 0.5f);
             var row = Design(45, 300, 580, 255);
             float rowH = shopTab == 0 ? row.height : row.height * 0.62f, rowGap = Design(0, 0, 0, 15).height, pad = row.x - view.x;
             var bag = new List<Item>(Progress.Bag);
@@ -111,7 +111,7 @@ namespace SpellDuel
             for (int i = 0; i < n; i++)
             {
                 var rr = new Rect(pad, rowGap + i * (rowH + rowGap), content.width - pad * 2, rowH);
-                UiKit.Card(rr, 0.82f, shopTab == 0 ? col : (Color?)Item.RarityColors[bag[i].rarity], 0.6f);
+                UiKit.MenuCard(rr, 0.82f, shopTab == 0 ? col : (Color?)Item.RarityColors[bag[i].rarity], 0.6f);
                 if (shopTab == 0)
                 {
                     var c = shopList[i];
@@ -167,7 +167,7 @@ namespace SpellDuel
 
             // 右上：轉職試煉（選了職業才出題：第 1 關專業試煉、第 2 關實戰；通過打勾、下一關可以挑戰）
             var tr = Design(680, 205, 360, 260);
-            UiKit.Card(tr, 0.9f, new Color(1f, 0.55f, 0.2f), 0.9f);
+            UiKit.MenuCard(tr, 0.9f, new Color(1f, 0.55f, 0.2f), 0.9f);
             UiKit.Text(new Rect(tr.x + fs * 0.5f, tr.y + fs * 0.2f, tr.width - fs, fs * 1.5f), cc != null ? $"轉職試煉・{cc.name}" : "轉職試煉", fs, Color.white, TextAnchor.MiddleLeft, true);
             int rounds = Mathf.Max(1, Skills.JobTrialRounds);
             float th = (tr.height - fs * 2f) / rounds;
@@ -182,7 +182,7 @@ namespace SpellDuel
 
             // 左邊：五個職業（臉部頭像、一句介紹；還沒選＝「選這條路」開始那個職業的試煉；都過了＝「成為…」正式轉職）
             var view = Design(30, 290, 610, 1190);
-            UiKit.Card(view, 0.55f, null, 0.5f);
+            UiKit.MenuCard(view, 0.55f, null, 0.5f);
             var row = Design(45, 300, 580, 215);
             float rowGap = Design(0, 0, 0, 15).height, pad = row.x - view.x;
             int n = Skills.ClassOrder.Length;
@@ -195,7 +195,7 @@ namespace SpellDuel
                 var id = Skills.ClassOrder[i]; var c = Skills.Classes[id];
                 bool mine = chosen == id;
                 var rr = new Rect(pad, rowGap + i * (row.height + rowGap), content.width - pad * 2, row.height);
-                UiKit.Card(rr, 0.85f, c.color, mine || jobArm == id ? 1f : 0.6f);
+                UiKit.MenuCard(rr, 0.85f, c.color, mine || jobArm == id ? 1f : 0.6f);
                 float fsz = rr.height * 0.5f;
                 Story2D.DrawFace(new Rect(rr.xMax - fsz - fs * 0.5f, rr.y + fs * 0.4f, fsz, fsz), Story2D.ClassPortrait(id, null), c.color);
                 UiKit.Text(new Rect(rr.x + fs * 0.6f, rr.y + rr.height * 0.05f, rr.width - fsz - fs * 1.6f, rr.height * 0.28f), c.name + (mine ? "　✔ 你選的路" : ""), fsL, c.color, TextAnchor.MiddleLeft, true);

@@ -6,7 +6,7 @@ namespace SpellDuel
   static void NewSkillProjectile(GameObject root,string id,Color c){root.AddComponent<NewSkillProjectileArt>().Build(id,c);}
   public static void StarfallZone(Vector3 centerWorld,float radius,float seconds)
   {
-   var go=new GameObject("SpellFx Starfall zone");go.transform.position=centerWorld;go.AddComponent<StarfallZoneArt>().Build(Mathf.Max(.05f,radius),Mathf.Max(.05f,seconds));
+   var go=new GameObject("SpellFx Starfall zone");SpellReadability.Attach(go);go.transform.position=centerWorld;go.AddComponent<StarfallZoneArt>().Build(Mathf.Max(.05f,radius),Mathf.Max(.05f,seconds));
   }
   public static void ArcaneBreakHit(Vector3 atWorld)
   {

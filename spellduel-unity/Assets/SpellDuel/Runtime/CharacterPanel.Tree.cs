@@ -30,7 +30,7 @@ namespace SpellDuel
             treeScroll.y=Mathf.Clamp(treeScroll.y,0,Mathf.Max(0,bounds.height-viewport.height));
             treeScroll=UiKit.DragScroll(viewport,treeScroll,bounds);   // 手指拖曳捲動
             treeScroll=GUI.BeginScrollView(viewport,treeScroll,bounds,false,true);
-            UiKit.Card(new Rect(0,0,contentW,bounds.height),.38f,tcol,.25f);
+            UiKit.MenuCard(new Rect(0,0,contentW,bounds.height),.38f,tcol,.25f);
             Vector2 Center(TreeNode n)=>new Vector2((n.col+.5f)*colW,(n.row+.5f)*rowH);
             foreach(var n in nodes)
             {
@@ -165,7 +165,7 @@ namespace SpellDuel
             bool changed = false;
             float dy = b.y + b.height * 0.64f;
             var dr = new Rect(b.x, dy, b.width, b.yMax - dy);
-            UiKit.Card(dr,.94f,advT!=null?advT.color:Skills.Classes[p.cls].color,.75f);
+            UiKit.MenuCard(dr,.94f,advT!=null?advT.color:Skills.Classes[p.cls].color,.75f);
             var sel = selNode != null ? SkillTrees.Find(treeId, selNode) : null;
             if (sel == null)
             {

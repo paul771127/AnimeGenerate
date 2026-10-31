@@ -76,7 +76,7 @@ namespace SpellDuel
             float pw = Mathf.Min(W * 0.9f, fs * 22f), rowH = fs * 2.4f, pad = fs * 0.8f;
             float ph = pad * 2 + fs * 2f + rowH * 7 + fs * 2.6f + (GoHome != null ? fs * 3.6f : 0f) + fs * 2.8f;
             var r = new Rect((W - pw) / 2f, (H - ph) / 2f, pw, ph);
-            UiKit.Card(r, 0.95f, UiKit.Gold, 0.8f);
+            UiKit.MenuCard(r, 0.95f, UiKit.Gold, 0.8f);
             UiKit.Text(new Rect(r.x + pad, r.y + pad * 0.6f, r.width - pad * 2, fs * 1.8f), "⚙ 設定", Mathf.RoundToInt(fs * 1.15f), UiKit.Gold, TextAnchor.MiddleCenter, true);
             float y = r.y + pad + fs * 2f;
 

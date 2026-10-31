@@ -32,8 +32,9 @@ jobs:
       - name: Restore baseline appearance for before images
         if: matrix.version == 'before'
         run: |
-          for f in UiKit.cs SoloBattle.cs SoloBattle.CastGuide.cs SoloBattle.EnemySkills.cs SoloBattle.Explore.cs SoloBattle.Party.cs SoloBattle.StatusIcons.cs SoloBattle.StoryCoop.cs SoloBattle.SwipeTrail.cs; do
-            git show 5a4a0bf:spellduel-unity/Assets/SpellDuel/Runtime/$f > spellduel-unity/Assets/SpellDuel/Runtime/$f
+          git diff --name-only --diff-filter=M 586450d HEAD -- spellduel-unity/Assets/SpellDuel/Runtime/ | while read f; do
+            case "$f" in *UiPolishPreview.cs) continue ;; esac
+            git show "586450d:$f" > "$f"
           done
       - uses: actions/cache@v4
         with:

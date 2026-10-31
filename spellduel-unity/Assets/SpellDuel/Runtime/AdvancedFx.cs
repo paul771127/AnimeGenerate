@@ -14,6 +14,7 @@ namespace SpellDuel
             var go = new GameObject(name);
             go.transform.SetPositionAndRotation(at, WorldFrame.RotFromWorld(Quaternion.identity));
             var fx = go.AddComponent<AdvancedFxMotion>(); fx.life = lifetime;
+            SpellReadability.Attach(go);
             Object.Destroy(go, lifetime + 0.1f);
             return fx;
         }
