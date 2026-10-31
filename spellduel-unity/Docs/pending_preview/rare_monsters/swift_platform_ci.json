@@ -13,15 +13,33 @@
     },
     {
       "name": "android",
-      "conclusion": null,
-      "status": "in_progress",
+      "conclusion": "success",
+      "status": "completed",
       "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41190310949/job/124505620227"
     },
     {
       "name": "ios-export",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41190310949/job/124505620270"
+    },
+    {
+      "name": "ios-ipa",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41190310949/job/124508125214"
+    },
+    {
+      "name": "publish-apk",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41190310949/job/124508422386"
+    },
+    {
+      "name": "ios-testflight",
       "conclusion": null,
       "status": "in_progress",
-      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41190310949/job/124505620270"
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41190310949/job/124509412148"
     }
   ]
 }

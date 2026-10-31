@@ -55,7 +55,7 @@ namespace SpellDuel
             // original transform for callers, but avoid drawing duplicate accessories.
             if (dressRoot) dressRoot.gameObject.SetActive(false);
             // Some old eye/core parts used Unity's 768-triangle sphere. Same silhouette,
-            // shared 80-triangle replacement frees the budget for identifiable equipment.
+            // shared low-poly replacement frees the budget for identifiable equipment.
             foreach (var f in GetComponentsInChildren<MeshFilter>())
                 if (f.sharedMesh && f.sharedMesh.name == "Sphere")
                     f.sharedMesh = SwiftMesh("small rounded glow", b => b.Lathe(new[] { -.5f, 0f, -.35f, .35f, 0f, .5f, .35f, .35f, .5f, 0f }, 8, null));

@@ -43,3 +43,5 @@ Unity 2022.3.62f2，原生 run 41186286286（74b2663）成功。42 張 PNG 完�
 ## 疾風稀有怪與四足腿部追加
 
 171–180 見 [疾風怪交付](SWIFT_README.md)。依本輪使用者要求，古根與甲蜥也補上分段腿型；最新原生 run 41190310884（8e8aab6）通過，更新本目錄全部 rare 預覽與 audit。最新模型三角形為 19=3472、20=2986、21=3924、22=3348，各加 2 個接觸陰影仍低於 4000。以上舊版數值保留作歷史紀錄。
+
+追加版平台 run 41190310949（8e8aab6）Android、iOS 匯出與 IPA 編譯全部成功，platform_ci.json 已更新。check_rare_monsters.py --require-mobile 及 check_swift_monsters.py --require-mobile 皆通過。
