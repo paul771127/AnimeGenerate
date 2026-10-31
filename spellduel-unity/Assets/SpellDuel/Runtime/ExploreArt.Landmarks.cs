@@ -6,19 +6,14 @@ namespace SpellDuel
   public static GameObject CreateLandmark(ExLandmark l,ExploreMap map)
   {
    if(l==null||map==null)return null;var root=Root("Landmark "+l.id);var center=map.World((l.rect.xMin+l.rect.xMax)/2,(l.rect.yMin+l.rect.yMax)/2);root.transform.localPosition=center;
-   // The cell streamer may omit enclosed wall cells. A lake must still have a continuous surface.
-   if(l.kind=="lake")
-   {
-    var water=Part(root.transform,"landmark/lakeSurface/"+l.id,b=>{for(int x=l.rect.xMin-1;x<=l.rect.xMax+1;x++)for(int z=l.rect.yMin-1;z<=l.rect.yMax+1;z++)if(map.InGrid(x,z)&&map.TerrainAt(x,z)==ExTerrain.Water){var at=map.World(x,z)-center;float h=ExploreMap.CellSize*.5f;b.Quad(at+V(-h,.012f,-h),at+V(-h,.012f,h),at+V(h,.012f,h),at+V(h,.012f,-h),Color.white);}});
-    water.name="LakeSurface";water.GetComponent<Renderer>().sharedMaterial=LakeMaterial;
-   }
+   if(l.kind=="lake")RoundedLake(root.transform,l,map,center);
    // Only solid wall cells carry tall scenery. Never span a path with roofs or tree crowns.
    int placed=0;
    for(int x=l.rect.xMin-1;x<=l.rect.xMax+1;x++)for(int z=l.rect.yMin-1;z<=l.rect.yMax+1;z++)
    {
     if(!map.InGrid(x,z)||map.At(x,z)!=ExCell.Wall)continue;var terrain=map.TerrainAt(x,z);var at=map.World(x,z)-center;
     if(l.kind=="lake"&&terrain==ExTerrain.Water)
-    {foreach(var direction in ExploreMap.Dirs)if(map.InGrid(x+direction.x,z+direction.y)&&map.TerrainAt(x+direction.x,z+direction.y)!=ExTerrain.Water){var shore=Part(root.transform,"water/shore",b=>ShoreStrip(b),at,true);shore.name="Shore_"+x+"_"+z+"_"+direction.x+"_"+direction.y;shore.localRotation=Quaternion.Euler(0,Mathf.Atan2(direction.x,direction.y)*Mathf.Rad2Deg,0);}
+    {
      if(Variant(x,z,3)==0){Part(root.transform,"landmark/moon",b=>{b.Ring(V(0,.025f,0),.65f,.08f,new Color(.65f,.9f,1,.055f),20);b.Ring(V(0,.027f,0),.40f,.06f,new Color(.8f,.94f,1,.035f),16);},at,true).name="MoonReflection_"+x+"_"+z;Part(root.transform,"landmark/fireflies",b=>{for(int i=0;i<5;i++)b.Gem(V(Mathf.Sin(i*2.3f)*.7f,.35f+i*.09f,Mathf.Cos(i*2.3f)*.7f),V(.035f,.035f,.035f),Glow(Bone),4);},at).name="Fireflies_"+x+"_"+z;}continue;}
     if(terrain==ExTerrain.Water||placed>=8||Variant(x,z,3)!=0)continue;
     bool edge=false;foreach(var d in ExploreMap.Dirs)if(map.Open(x+d.x,z+d.y))edge=true;if(!edge)continue;
@@ -26,7 +21,7 @@ namespace SpellDuel
     if(l.kind=="fort"||l.kind=="start")Part(root.transform,"landmark/torch",b=>{b.Rod(V(1,2.7f,1),V(1,3.3f,1),.05f,Bark);b.Gem(V(1,3.43f,1),V(.24f,.42f,.24f),Glow(new Color(1,.61f,.2f)),6);},at).name="Torch_"+x+"_"+z;
     if(l.kind=="cave")Part(root.transform,"landmark/drops",b=>{for(int i=0;i<3;i++)b.Gem(V(-.5f+i*.5f,2.7f+i*.15f,.8f),V(.035f,.10f,.035f),Glow(Light),4);},at).name="WaterDrops_"+x+"_"+z;
     if(l.kind=="grove")Part(root.transform,"landmark/spores",b=>{for(int i=0;i<6;i++)b.Gem(V(Mathf.Sin(i*2f),2.5f+i*.23f,Mathf.Cos(i*2f)),V(.045f,.045f,.045f),Glow(Light),4);},at).name="Spores_"+x+"_"+z;
-    int n=placed++%3;Part(root.transform,"landmark/"+l.kind+"/"+n,b=>LandmarkPiece(b,l.kind,n),at).name="WallScenery_"+x+"_"+z;
+    int n=placed++%3;var scenery=Part(root.transform,"landmark/"+l.kind+"/"+n,b=>LandmarkPiece(b,l.kind,n),at);scenery.name="WallScenery_"+x+"_"+z;scenery.localScale=V(ExploreMap.CellSize/3f,1,ExploreMap.CellSize/3f);
    }
    return root;
   }
@@ -63,7 +58,7 @@ namespace SpellDuel
     else if(n==3){for(int s=-1;s<=1;s+=2){b.Rod(V(s,0,0),V(s,2.6f,0),.08f,Bark);Skull(b,V(s,2.3f,0),.5f);for(int i=0;i<3;i++)b.Frond(V(s,2.2f,0),V(s+.15f,1.6f-i*.13f,0),.09f,i%2==0?Jade:Bone);}}
     else {b.Rod(Vector3.zero,V(0,.5f,0),1.1f,Bark,8);for(int i=-2;i<=2;i++)b.Vine(V(i*.45f,0,.3f),V(i*.4f,2.8f-Mathf.Abs(i)*.4f,0),i*.12f,.20f,Dark,6);b.Box(V(0,.65f,.35f),V(1.3f,.25f,.75f),Bark);for(int s=-1;s<=1;s+=2)b.Vine(V(s*1.4f,0,0),V(s*.6f,1,.4f),s*.3f,.10f,Glow(new Color(.43f,.15f,.52f)),6);}
     b.ClampCell(1.42f);
-   });return root;
+   }).localScale=V(ExploreMap.CellSize/3f,1,ExploreMap.CellSize/3f);return root;
   }
   public static GameObject CreateGround(ExGround g,int x,int z,float cell)
   {

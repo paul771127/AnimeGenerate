@@ -45,7 +45,7 @@ namespace SpellDuel.EditorTools
   static void WallAudit()
   {
    foreach(ExTerrain terrain in Enum.GetValues(typeof(ExTerrain)))for(int i=0;i<4;i++)
-   {var g=ExploreArt.CreateWall(terrain,i,0,3);int tris=0;foreach(var f in g.GetComponentsInChildren<MeshFilter>()){tris+=f.sharedMesh.triangles.Length/3;foreach(var v in f.sharedMesh.vertices)if(Mathf.Abs(v.x)>1.501f||Mathf.Abs(v.z)>1.501f||v.y<-.001f)throw new Exception("Wall outside cell "+terrain);}if(tris>300)throw new Exception("Wall budget "+terrain+" "+tris);if(g.GetComponentInChildren<Collider>())throw new Exception("Art added collision");UnityEngine.Object.DestroyImmediate(g);}
+   {var g=ExploreArt.CreateWall(terrain,i,0,ExploreMap.CellSize);int tris=0;foreach(var f in g.GetComponentsInChildren<MeshFilter>()){tris+=f.sharedMesh.triangles.Length/3;foreach(var vertex in f.sharedMesh.vertices){var v=g.transform.InverseTransformPoint(f.transform.TransformPoint(vertex));v=Vector3.Scale(v,g.transform.localScale);if(Mathf.Abs(v.x)>ExploreMap.CellSize*.5f+.001f||Mathf.Abs(v.z)>ExploreMap.CellSize*.5f+.001f||v.y<-.001f)throw new Exception("Wall outside 4m cell "+terrain);}}if(tris>300)throw new Exception("Wall budget "+terrain+" "+tris);if(g.GetComponentInChildren<Collider>())throw new Exception("Art added collision");UnityEngine.Object.DestroyImmediate(g);}
   }
  }
 }

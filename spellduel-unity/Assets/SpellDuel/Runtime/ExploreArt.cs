@@ -81,7 +81,7 @@ namespace SpellDuel
    }
    else if(t==ExTerrain.Water)
    {
-    b.Quad(V(-1.5f,.008f,-1.5f),V(-1.5f,.008f,1.5f),V(1.5f,.008f,1.5f),V(1.5f,.008f,-1.5f),Color.white);
+    // The continuous rounded LakeSurface owns water. Streamed cells only add lily pads.
 
    }
    else if(t==ExTerrain.Palisade)
