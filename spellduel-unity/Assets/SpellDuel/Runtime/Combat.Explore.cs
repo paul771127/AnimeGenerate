@@ -17,6 +17,7 @@ namespace SpellDuel
         public float exIdleUntil, exIdleCd, exEmoteAt;
         public Vector3 exLookBase; public Fighter exTalkTo;
         public bool exSleep;              // 營地裡打盹的：警戒範圍減半，被吵醒或打到就醒
+        public bool exWaiting;            // 在等同伴（兩隻一起巡邏的）：同伴不會反過來等牠（避免互等卡死）
         public bool exForage => exIdleKind == 2;
     }
 
@@ -206,7 +207,7 @@ namespace SpellDuel
 
         void ExIdle(Fighter m, int kind, float dur)
         {
-            m.exIdleKind = kind; m.exIdleUntil = now + dur; m.exLookBase = m.forward;
+            m.exIdleKind = kind; m.exIdleUntil = now + dur; m.exLookBase = m.forward; m.exWaiting = false;
             if (kind == 2 && rng.Next(2) == 0) ExEmote(m, "嚼嚼");
             else if (kind == 1 && rng.Next(3) == 0) ExEmote(m, Pick(ExMutter));
         }
@@ -244,9 +245,10 @@ namespace SpellDuel
             {
                 foreach (var o in exActive.Values)
                 {
-                    if (o == m || !o.Alive || o.exAware || o.exIdleKind != 0 || now < o.exIdleCd || o.exMon == null || o.exMon.guardian > 0) continue;
+                    if (o == m || !o.Alive || o.exAware || o.exIdleKind == 3 || o.exIdleKind == 4 || now < o.exIdleCd - 3f || o.exMon == null || o.exMon.guardian > 0) continue;   // 對方在張望、覓食也會被叫過來聊；剛聊完的不會馬上又聊
                     bool mate = m.exMon.camp >= 0 && o.exMon.camp == m.exMon.camp;   // 同一個營地的隔著篝火也能聊
-                    if (FlatDistance(o.Feet, m.Feet) > (mate ? 6.5f : ExChatRange) || !ExSight(o.Feet, m.Feet)) continue;
+                    bool pair = m.exMon.patrol != null && o.exMon.patrol == m.exMon.patrol;   // 一起巡邏的夥伴
+                    if (FlatDistance(o.Feet, m.Feet) > (mate ? 6.5f : pair ? 4.5f : ExChatRange) || !ExSight(o.Feet, m.Feet)) continue;
                     float dur = Rand(2.5f, 4.5f);
                     m.exTalkTo = o; o.exTalkTo = m;
                     m.exIdleKind = o.exIdleKind = 3; m.exIdleUntil = o.exIdleUntil = now + dur;
@@ -274,8 +276,8 @@ namespace SpellDuel
             }
             // 兩隻一起巡邏的：同伴停下來（張望、覓食）就等牠，不要自己走掉
             foreach (var o in exActive.Values)
-                if (o != m && o.Alive && !o.exAware && o.exMon != null && o.exMon.patrol == p && o.exIdleKind != 0 && o.exIdleKind != 3 && FlatDistance(o.Feet, m.Feet) < 6f)
-                { ExIdle(m, 1, Mathf.Max(0.5f, o.exIdleUntil - now)); return; }
+                if (o != m && o.Alive && !o.exAware && o.exMon != null && o.exMon.patrol == p && (o.exIdleKind == 1 || o.exIdleKind == 2) && !o.exWaiting && FlatDistance(o.Feet, m.Feet) < 6f)
+                { ExIdle(m, 1, Mathf.Clamp(o.exIdleUntil - now, 0.5f, 5f)); m.exWaiting = true; return; }
             var to = p[Mathf.Clamp(m.exPatrolIdx, 0, p.Length - 1)];
             var dd = Fighter.Flat(to - m.Feet);
             if (dd.magnitude < 0.3f)
