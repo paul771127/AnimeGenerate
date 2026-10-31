@@ -268,7 +268,7 @@ namespace SpellDuel
                 bool show = !n.hidden && Battle.FlatDistance(n.pos, me) <= view && !(n.id == "lost" && (run.escortFollowing || battle.exEscort != null));
                 exNpcRigs.TryGetValue(n.id, out var rig);
                 if (!show) { if (rig) { Destroy(rig.gameObject); exNpcRigs.Remove(n.id); } continue; }
-                if (!rig) { rig = CharacterRig.Create(n.look); rig.InCombat = false; ExploreArt.DressNpc(rig, n.id); exNpcRigs[n.id] = rig; SpawnFade.Play(rig.gameObject); }
+                if (!rig) { rig = CharacterRig.Create(n.look); rig.InCombat = false; ExploreArt.DressNpc(rig, n.id); if (n.look == "archer") SlingBow(rig); exNpcRigs[n.id] = rig; SpawnFade.Play(rig.gameObject); }
                 var fwd = Fighter.Flat(me - n.pos); if (fwd == Vector3.zero) fwd = Vector3.back;
                 rig.SetPose(WorldFrame.FromWorld(n.pos), WorldFrame.DirFromWorld(fwd));
                 ExploreArt.QuestMark(rig.transform, ExNpcMark(run, n));
@@ -485,6 +485,19 @@ namespace SpellDuel
         }
 
         /// <summary>DrawHud 之後畫（最上層）：不透明的對話框</summary>
+        /// <summary>NPC 不打架：弓從左手拿下來斜揹在背上（使用者回饋：獵人拿弓的位置怪怪的）</summary>
+        static void SlingBow(CharacterRig rig)
+        {
+            Transform hand = null, spine = null;
+            foreach (var t in rig.GetComponentsInChildren<Transform>(true)) { if (t.name == "HandL") hand = t; else if (t.name == "Spine") spine = t; }
+            var bow = hand ? hand.Find("Bow") : null;
+            if (!bow || !spine) return;
+            bow.SetParent(spine, false);
+            bow.localPosition = new Vector3(0.02f, 0.3f, -0.26f);
+            bow.localRotation = Quaternion.LookRotation(new Vector3(-0.45f, 0.9f, 0f), Vector3.back);   // 弓身從右下斜到左上，弓背貼著背、弦朝外
+            bow.localScale = new Vector3(0.85f, 0.85f / 1.1f, 0.85f);   // Spine 有拉長 1.1 倍
+        }
+
         void DrawExploreDialog()
         {
             if (!ExDialogOpen) return;
