@@ -203,6 +203,8 @@ namespace SpellDuel
 
         public bool HandVisible { get; private set; }
         public Shape Current { get; private set; } = Shape.None;
+        /// <summary>比讚、而且大拇指朝上（衝刺用；握拳時拇指橫在旁邊不算）</summary>
+        public bool ThumbUp { get; private set; }
         public Vector2 Aim { get; private set; }        // 準星（螢幕像素，左下為原點，和 Input.mousePosition 相同）
         public Vector2 Palm { get; private set; }       // 手掌中心（螢幕像素）
         public Vector2[] Points { get; } = new Vector2[PoseDetector.HandCount];   // 螢幕像素
@@ -225,9 +227,9 @@ namespace SpellDuel
             {
                 lastResultTime = r.time;
                 if (r.handFound && IsOwnHand(r, screenW, screenH)) Consume(r, screenW, screenH);
-                else if (now - lastHandTime > 0.4f) { HandVisible = false; Current = Shape.None; pendingCount = 0; }
+                else if (now - lastHandTime > 0.4f) { HandVisible = false; ThumbUp = false; Current = Shape.None; pendingCount = 0; }
             }
-            if (now - lastHandTime > 0.6f) { HandVisible = false; Current = Shape.None; }
+            if (now - lastHandTime > 0.6f) { HandVisible = false; ThumbUp = false; Current = Shape.None; }
             FlushSwipe(now);
             // 獵人：握拳的手離開畫面（一段時間沒偵測到手）＝拉滿弓
             if (ReleaseStyle != Style.Bow) BowStage = 0;
@@ -259,6 +261,8 @@ namespace SpellDuel
             float palmSize = Mathf.Max(1f, Vector2.Distance(wrist, Points[9]));
 
             var shape = Classify(Points, palm, palmSize);
+            // 螢幕座標 y 往上變大：拇指尖要明顯高過拇指根和其他指尖
+            ThumbUp = Current == Shape.Thumb && Points[4].y - Points[2].y > palmSize * 0.45f && Points[4].y > Mathf.Max(Points[8].y, Points[12].y) + palmSize * 0.2f;
 
             // 連續兩次相同才算（避免偵測抖動）
             if (shape == pending) pendingCount++; else { pending = shape; pendingCount = 1; }
