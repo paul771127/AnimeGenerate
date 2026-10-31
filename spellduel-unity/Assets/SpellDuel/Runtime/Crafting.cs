@@ -6,7 +6,7 @@ namespace SpellDuel
     /// <summary>
     /// 材料、精煉石、特殊藥劑、特殊裝備（使用者要求）。
     ///   ・材料放在道具欄（Economy.Items，id 開頭 mat_）。敵人倒下時：精魄 → 裝備 → 材料，最多只掉一樣（SoloBattle.DropOne）。
-    ///   ・各章的岩石、金屬類敵人與峽谷所有敵人 10% 掉鐵礦石；普通以上難度另有機率掉高級鐵礦石。強化 +1～+3 不用礦石；5 個鐵礦石 → 精煉石（+4～+7 每次 1 個）；
+    ///   ・各章的岩石、金屬類敵人與峽谷所有敵人 20% 掉鐵礦石；普通以上難度另有機率掉高級鐵礦石。強化 +1～+3 不用礦石；5 個鐵礦石 → 精煉石（+4～+7 每次 1 個）；
     ///     5 個高級鐵礦石 → 高級精煉石（+8、+9 每次 1 個；+10 2 個）。
     ///   ・每個城鎮的藥劑師用當地敵人掉的材料做強化藥劑（每罐 3 分鐘）；材料一樣 10% 從對應的敵人身上掉。
     ///   ・工匠做特殊裝備：固定的特殊效果（數值有點隨機）、物品等級＝自己的等級（數值 ±10%）；等級越高要的材料越多；
@@ -18,7 +18,7 @@ namespace SpellDuel
         public class Mat { public string id, name, icon, from; }
         public static readonly List<Mat> Mats = new List<Mat>
         {
-            M("ore", "鐵礦石", "🪨", "各章的岩石、金屬類敵人與峽谷所有敵人（10%）"),
+            M("ore", "鐵礦石", "🪨", "各章的岩石、金屬類敵人與峽谷所有敵人（20%）"),
             M("ore_hi", "高級鐵礦石", "💎", "普通以上難度，掉鐵礦石的敵人（5%）"),
             M("refine", "精煉石", "🔷", "鐵匠：5 個鐵礦石合成"),
             M("refine_hi", "高級精煉石", "🔶", "鐵匠：5 個高級鐵礦石合成"),
@@ -76,7 +76,7 @@ namespace SpellDuel
         public static int Have(string id) => Economy.Count(id.StartsWith("mat_") ? id : "mat_" + id);
         public static void Give(string id, int n) => Economy.AddItem(id.StartsWith("mat_") ? id : "mat_" + id, n);
 
-        public const float MatChance = 0.10f, OreChance = 0.10f, HiOreChance = 0.05f, EliteMatChance = 0.25f, BossCoreChance = 0.25f, SmithSoulChance = 0.05f;
+        public const float MatChance = 0.10f, OreChance = 0.20f, HiOreChance = 0.05f, EliteMatChance = 0.25f, BossCoreChance = 0.25f, SmithSoulChance = 0.05f;
         /// <summary>
         /// 會掉鐵礦石的敵人（使用者要求：來源太少、增多）：每一章都有。
         ///   熔岩：熔岩小鬼、岩石衝鋒獸、自爆小鬼、岩石投擲者、熔岩狙擊手、熔冠衛士、黑曜縛咒師、爐心喚靈者
