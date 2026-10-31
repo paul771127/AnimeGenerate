@@ -52,7 +52,7 @@ namespace SpellDuel
         readonly List<GameObject> dashRoots = new List<GameObject>();
         readonly Dictionary<GameObject, bool> dashRootMove = new Dictionary<GameObject, bool>();
 
-        bool DashAllowed => (storyStage != null || exploreRun != null) && !NetMode && dungeon == null && battle != null && !battle.Over
+        bool DashAllowed => (storyStage != null || exploreRun != null) && !NetMode && dungeon == null && battle != null && !battle.Over && !ExDialogOpen   // 跟 NPC 說話時不衝刺
             && phase == Phase.Fighting && !InIntro && !frozen && Me != null && Me.Alive && Me.charging == null && chantPending == null
             && !battle.Gallery && !battle.CarpetBoss && battle.clash == null && area != null && area.state == PlayArea.State.Done;
 

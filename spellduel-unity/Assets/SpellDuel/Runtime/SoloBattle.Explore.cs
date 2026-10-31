@@ -350,6 +350,14 @@ namespace SpellDuel
             bool tap = Input.GetMouseButtonDown(0); Vector2 tp = Input.mousePosition;
             if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) { tap = true; tp = Input.GetTouch(0).position; }
             if (!tap) return;
+            // 點 NPC：走近（ExploreRun.NpcTapRange 內）點他就再說一次話（使用者要求）
+            foreach (var n in exploreRun.map.npcs)
+            {
+                if (n.hidden || Battle.FlatDistance(n.pos, Me.Feet) > ExploreRun.NpcTapRange) continue;
+                var np = cam.WorldToScreenPoint(WorldFrame.FromWorld(n.pos + Vector3.up * 1.1f));
+                if (np.z <= 0f || Vector2.Distance(new Vector2(np.x, np.y), tp) > Screen.width * 0.15f) continue;
+                if (exploreRun.TalkTo(n.id, Me.Feet)) { exSparkleTapAt = Time.time; dashHold = false; StopDash(); Sfx.Play("click", 0.6f); return; }
+            }
             foreach (var s in exploreRun.map.sparkles)
             {
                 if (s.found || Battle.FlatDistance(s.pos, Me.Feet) > ExploreRun.SparkleTapRange) continue;
@@ -437,6 +445,18 @@ namespace SpellDuel
         //                                                                    要接任務時問「要接受嗎？」，說「是／要」「否／不要」或點按鈕）
         bool ExDialogOpen => exploreRun != null && exploreRun.talking != null && phase == Phase.Fighting;
         float exDialogLock;
+        // 使用者回報對話閃一下就消失：按住畫面衝刺到 NPC 旁邊，放開手指的那一下被當成「點畫面」。
+        // 改成：每一段話出現後，要「新的一次按下」再放開才算點擊；每段至少顯示 ExDialogMinShow 秒；語音要等 ExDialogVoiceWait 秒
+        const float ExDialogMinShow = 0.6f, ExDialogVoiceWait = 1.2f;
+        float exDialogShownAt; bool exDialogDown; object exDialogKey;
+        /// <summary>每幀：對話框換了一段（或剛打開）就重新計時</summary>
+        void ExDialogTrack()
+        {
+            var run = exploreRun;
+            object key = run != null && run.talking != null ? (object)(run.talking.id + "|" + run.talkText + "|" + run.asking) : null;
+            if (Equals(key, exDialogKey)) return;
+            exDialogKey = key; exDialogShownAt = Time.time; exDialogDown = false;
+        }
 
         void ExDialogRects(float W, float H, out Rect card, out Rect yes, out Rect no)
         {
@@ -450,10 +470,13 @@ namespace SpellDuel
         void ExDialogInput()
         {
             if (!ExDialogOpen) return;
+            ExDialogTrack();
             var e = Event.current;
             if (e.type != EventType.MouseDown && e.type != EventType.MouseUp) return;
-            if (e.type == EventType.MouseUp && Time.time >= exDialogLock)
+            if (e.type == EventType.MouseDown) { if (Time.time > exDialogShownAt + 0.05f) exDialogDown = true; }   // 這段話出現之後才按下去的（點 NPC 打開對話的那一下不算）
+            else if (exDialogDown && Time.time >= exDialogLock && Time.time - exDialogShownAt >= ExDialogMinShow)
             {
+                exDialogDown = false;
                 var run = exploreRun;
                 ExDialogRects(Screen.width, Screen.height, out _, out var yes, out var no);
                 if (!run.asking) { run.NextTalk(); Sfx.Play("click", 0.5f); exDialogLock = Time.time + 0.25f; }
@@ -466,7 +489,9 @@ namespace SpellDuel
         /// <summary>語音：「好／繼續」下一段；問任務時「是／要／接受」或「否／不要／算了」。有用到回傳 true</summary>
         bool ExDialogSpeech(string text)
         {
-            if (!ExDialogOpen || string.IsNullOrEmpty(text) || Time.time < exDialogLock) return false;
+            if (!ExDialogOpen || string.IsNullOrEmpty(text)) return false;
+            ExDialogTrack();
+            if (Time.time < exDialogLock || Time.time - exDialogShownAt < ExDialogVoiceWait) return true;   // 剛跳出來：麥克風還沒說完的話不算（也不放招）
             var run = exploreRun;
             if (run.asking)
             {

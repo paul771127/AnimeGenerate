@@ -600,7 +600,7 @@ namespace SpellDuel
         public bool asking;
         public bool spiritBlessing;          // 森林之靈的祝福（戰鬥那邊補血、加攻擊）
         public readonly HashSet<Vector2Int> explored = new HashSet<Vector2Int>();   // 小地圖：走過的格子附近
-        public const float TalkRange = 2.2f, PickRange = 1.4f, SparkleTapRange = 6f, EscortArrive = 3f;
+        public const float TalkRange = 2.2f, PickRange = 1.4f, SparkleTapRange = 6f, EscortArrive = 3f, NpcTapRange = 4.5f;
         /// <summary>Boss 倒下後守林人站的位置（祭壇的右前方）</summary>
         public static readonly Vector3 GuardianAtAltar = new Vector3(1.8f, 0f, -1.6f);
         readonly HashSet<string> talkedAway = new HashSet<string>();   // 離開說話範圍後才會再跳一次
@@ -657,6 +657,16 @@ namespace SpellDuel
             foreach (var a in map.arenas) if (!a.entered && Battle.FlatDistance(player, a.center) <= a.radius - 1f) { a.entered = true; Say(a.n <= 3 ? $"⚔ {a.name}——守衛發現你了！" : $"👑 {a.name}——腐化樹王醒來了！"); }
         }
 
+        /// <summary>點 NPC（使用者要求：走近點他就再說一次話）：在 NpcTapRange 內才有用；有說話＝true</summary>
+        public bool TalkTo(string id, Vector3 player)
+        {
+            var n = map.Npc(id);
+            if (n == null || n.hidden || talking != null || Battle.FlatDistance(player, n.pos) > NpcTapRange) return false;
+            if (n.id == "lost" && escortFollowing) return false;
+            talkedAway.Add(n.id); Talk(n);
+            return talking != null;
+        }
+
         /// <summary>和 NPC 說話：接任務、回報任務</summary>
         public void Talk(ExNpc n)
         {
@@ -678,7 +688,7 @@ namespace SpellDuel
             switch (qq.state)
             {
                 case ExQuestState.Offered: talkText = qq.offer; offering = qq; break;   // 看完再問要不要接（Accept）
-                case ExQuestState.Active: talkText = $"「{qq.title}」：{qq.desc}（{qq.Progress}）"; break;
+                case ExQuestState.Active: talkText = $"「{qq.title}」：{qq.desc}" + (string.IsNullOrEmpty(qq.Progress) ? "" : $"（{qq.Progress}）"); break;
                 case ExQuestState.Ready: talkText = qq.thanks; Complete(qq); break;
                 case ExQuestState.Failed: talkText = qq.offer; offering = qq; break;   // 失敗過：再問一次要不要重新接
                 case ExQuestState.Done: talkText = qq.thanks; break;
