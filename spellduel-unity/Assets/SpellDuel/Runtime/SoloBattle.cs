@@ -2695,6 +2695,8 @@ namespace SpellDuel
                 };
                 Me.cooldownUntil.TryGetValue(basic.id, out var cdBefore);
                 bool acted = (Skills.IsSwipeBasic(basic) && swiped) || (Hand.BasicMove != HandGesture.Move.None && moved);
+                if (acted) lastBasicAt = Time.time;   // 做了普攻動作：接下來一下子不會被當成衝刺（SoloBattle.Dash.cs）
+                if (BasicBlockedByDash) { pose = false; acted = false; }   // 衝刺中、剛停下：握拳／手掌不當普攻
                 if (pose || acted) DoBasic(basic);
                 if (acted && Skills.IsChargedBasic(basic) && Me.cooldownUntil.TryGetValue(basic.id, out var bcd) && bcd == cdBefore && bcd > battle.now + 0.05f)
                     floaters.Add(new Floater { text = $"⏳ 集氣中：{ChargeReadyHint(basic)}（還要 {bcd - battle.now:0.0} 秒）", color = new Color(0.8f, 0.8f, 0.85f), born = Time.time, screen = true });   // 還在冷卻：告訴玩家為什麼沒反應

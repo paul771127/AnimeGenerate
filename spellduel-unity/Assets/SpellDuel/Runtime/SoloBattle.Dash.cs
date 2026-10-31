@@ -21,6 +21,13 @@ namespace SpellDuel
         float DashSpeedNow => exploreRun != null ? DashSpeed * ExploreDashMul : DashSpeed;
         const float DashArm = 0.8f;            // 比 5 之後這麼久內握拳才算
         const float DashGrace = 0.15f;         // 手勢偵測偶爾漏一兩張不算放開
+        // 和普攻分開（使用者回報很容易干涉：獵人握拳→張開放箭、劍士手掌橫劃）：
+        const float DashOpenHold = 0.3f;       // 手掌要「穩穩張開」這麼久才算準備衝刺（劃一下、放箭時手掌一閃而過不算）
+        const float DashAfterBasic = 0.8f;     // 剛出過普攻（或做了普攻動作）這麼久內不會開始衝刺
+        const float BasicAfterDash = 0.5f;     // 衝刺中、剛停下這麼久內不會打普攻
+        float dashOpenSince = -99f, lastBasicAt = -99f, dashEndedAt = -99f; bool dashWasOpen;
+        /// <summary>現在不打普攻（衝刺中、剛停下）</summary>
+        bool BasicBlockedByDash => dashing || Time.time - dashEndedAt < BasicAfterDash;
         const float DashEdge = 0.4f;           // 離場地邊界這麼近就停
         const float DashFoeGap = 0.9f;         // 衝到敵人面前這麼近就停（不穿過去）
         const float RoomWarnDist = 0.5f;       // 離真實房間邊緣這麼近就提醒
@@ -43,11 +50,14 @@ namespace SpellDuel
         void UpdateDash(float dt)
         {
             bool fist = Hand != null && Hand.HandVisible && Hand.Current == HandGesture.Shape.Fist;
-            if (Hand != null && Hand.HandVisible && Hand.Current == HandGesture.Shape.Open) dashOpenAt = Time.time;
+            bool open = Hand != null && Hand.HandVisible && Hand.Current == HandGesture.Shape.Open;
+            if (open) { if (!dashWasOpen) dashOpenSince = Time.time; dashOpenAt = Time.time; }
+            dashWasOpen = open;
             if (!DashAllowed) { StopDash(); return; }
             if (!dashing)
             {
-                if (fist && Time.time - dashOpenAt <= DashArm) { dashing = true; dashLostAt = -1f; dashStepAt = Time.time; dashStartAt = Time.time; Haptics.Play(Haptics.Kind.Light); if (!BtFlag("dash")) BtMark("dash"); }
+                bool armed = Time.time - dashOpenAt <= DashArm && dashOpenAt - dashOpenSince >= DashOpenHold && dashOpenSince > lastBasicAt && Time.time - lastBasicAt > DashAfterBasic;
+                if (fist && armed) { dashing = true; dashLostAt = -1f; dashStepAt = Time.time; dashStartAt = Time.time; Haptics.Play(Haptics.Kind.Light); if (!BtFlag("dash")) BtMark("dash"); }
                 else return;
             }
             if (fist) dashLostAt = -1f;
@@ -72,7 +82,7 @@ namespace SpellDuel
                 {
                     StopDash(); dashOpenAt = -99f;
                     Haptics.Play(Haptics.Kind.Light);
-                    Say($"🛑 {dashWhy ?? "前面過不去"}：衝刺停下來了。轉向能走的方向，再比 5→握拳", 2.5f);
+                    Say($"🛑 {dashWhy ?? "前面過不去"}：衝刺停下來了。轉向能走的方向，手掌張開停一下再握拳", 2.5f);
                 }
                 return;
             }
@@ -148,9 +158,9 @@ namespace SpellDuel
         void DashBlocked(string why) => dashWhy = why ?? "敵人擋在前面";
 
         /// <summary>衝刺的手勢做到哪：0 還沒、1 比了 5（等握拳）、2 衝刺中</summary>
-        int DashGestureStage => dashing && dashLostAt < 0f ? 2 : Time.time - dashOpenAt <= DashArm ? 1 : 0;
+        int DashGestureStage => dashing && dashLostAt < 0f ? 2 : Time.time - dashOpenAt <= DashArm && dashOpenAt - dashOpenSince >= DashOpenHold ? 1 : 0;
 
-        void StopDash() { dashing = false; dashStuck = false; dashLostAt = -1f; }
+        void StopDash() { if (dashing) dashEndedAt = Time.time; dashing = false; dashStuck = false; dashLostAt = -1f; }
 
         /// <summary>整個世界平移 s（session 座標）：世界原點、場地框、場景物件（AR 相機、AR Session 不動）</summary>
         void ShiftWorld(Vector3 s)
