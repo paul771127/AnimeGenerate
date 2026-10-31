@@ -58,7 +58,7 @@ jobs:
           player=$(find . -path '*/ui-preview/preview.x86_64' -print -quit)
           test -n "$player"
           chmod +x "$player"
-          timeout 180 xvfb-run -a -s '-screen 0 1080x2340x24' "$player" -screen-width 1080 -screen-height 2340 -screen-fullscreen 0 -force-glcore -logFile "$PWD/ui-preview/player.log"
+          timeout 180 xvfb-run -a -s '-screen 0 1080x2340x24' "$player" -noaudio -screen-width 1080 -screen-height 2340 -screen-fullscreen 0 -force-glcore -logFile "$PWD/ui-preview/player.log"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

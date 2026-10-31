@@ -83,3 +83,8 @@ namespace SpellDuel
     }
 }
 #endif
+
+#if UI_POLISH_PREVIEW && !UNITY_EDITOR && !UNITY_ANDROID && !UNITY_IOS
+// Linux screenshot fixtures have no phone vibrator. Mobile builds use UnityEngine.Handheld unchanged.
+namespace SpellDuel { internal static class Handheld { public static void Vibrate() {} } }
+#endif
