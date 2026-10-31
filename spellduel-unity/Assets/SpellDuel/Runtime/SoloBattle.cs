@@ -344,8 +344,9 @@ namespace SpellDuel
                 if (MonsterVariants.IsSummon(kind)) return;   // 召喚物：不掉寶（保險：正常不會記進擊倒紀錄）
                 AddMat(Crafting.RollSky(kind, dropRng));   // 天穹飛毯的敵人：雲織絲、凝風晶、空賊航徽（獨立擲）
                 AddMat(Crafting.RollRare(kind, dropRng));   // 稀有怪：特殊裝備的材料（獨立擲）
-                if (AddMat(Blueprints.RollRecipe(kind, dropRng, pendingMats)))   // 人形敵人：特殊裝備配方（獨立擲）
-                { var bp = Blueprints.OfHuman(kind); Say($"📜 掉落配方「{bp.name}」（Lv{bp.level}）！過關後交給鐵匠鋪的工匠就能學會", 5f); Sfx.Play("win", 0.8f, 1.2f); Haptics.Play(Haptics.Kind.Success); }
+                if (battle.explore != null) AddMat(Crafting.RollExplore(kind == 28 || kind == 30 || kind == 32, dropRng));   // 故事探索：翠玉碎屑
+                if ((battle.explore != null || kind != 28 && kind != 30 && kind != 32) && AddMat(Blueprints.RollRecipe(kind, dropRng, pendingMats)))   // 翠玉樹精耳環：只有探索的守衛掉   // 人形敵人：特殊裝備配方（獨立擲）
+                { var bp = Blueprints.OfSource(kind); Say($"📜 掉落配方「{bp.name}」（Lv{bp.level}）！過關後交給鐵匠鋪的工匠就能學會", 5f); Sfx.Play("win", 0.8f, 1.2f); Haptics.Play(Haptics.Kind.Success); }
                 if (kind == Battle.TreasureKind) { GrantTreasure(); return; }   // 寶箱怪：大把金幣＋一定掉一件裝備
                 if (TryDrop(false)) return;
                 AddMat(Crafting.RollMinion(MonsterVariants.BaseOf(kind), battle.Theme, diff, dropRng));   // 變種怪：照原本的怪掉材料

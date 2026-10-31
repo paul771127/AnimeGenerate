@@ -25,7 +25,7 @@ namespace SpellDuel
                 if(!flashing)foreach(var pair in weaponOriginals)if(pair.Key)pair.Key.sharedMaterial=pair.Value;
             };
             string id=advancedId??classId;
-            if(Blueprints.Get(g[Slot.Head].special)!=null)foreach(var r in head.GetComponentsInChildren<Renderer>())if(r.name.StartsWith("Headwear fitted ")||r.name=="Player default crown"){hiddenOriginals[r]=r.forceRenderingOff;r.forceRenderingOff=true;}
+            if(HasBlueprintArt(g[Slot.Head].special))foreach(var r in head.GetComponentsInChildren<Renderer>())if(r.name.StartsWith("Headwear fitted ")||r.name=="Player default crown"){hiddenOriginals[r]=r.forceRenderingOff;r.forceRenderingOff=true;}
             if(g[Slot.Head].Has)AddGear(head,id,"head",g[Slot.Head],null);
             if(g[Slot.Body].Has||g.FullSet!=null)AddGear(spine,id,"body",g[Slot.Body],g.FullSet);
             if(g[Slot.Feet].Has){AddGear(knL,id,"feet",g[Slot.Feet],null);AddGear(knR,id,"feet",g[Slot.Feet],null);}
@@ -41,7 +41,7 @@ namespace SpellDuel
                     if(decorated==null)decorated=weapon;
                     foreach(var renderer in weapon.GetComponentsInChildren<Renderer>())
                     {
-                        if(Blueprints.Get(g[Slot.Weapon].special)!=null){hiddenOriginals[renderer]=renderer.forceRenderingOff;renderer.forceRenderingOff=true;continue;}
+                        if(HasBlueprintArt(g[Slot.Weapon].special)){hiddenOriginals[renderer]=renderer.forceRenderingOff;renderer.forceRenderingOff=true;continue;}
                         var source=renderer.sharedMaterial;
                         int previous=Array.IndexOf(previousRenderers,renderer);if(flashing&&previous>=0)source=previousMaterials[previous];
                         // Keep luminous orbs, strings and translucent effects on their existing materials.

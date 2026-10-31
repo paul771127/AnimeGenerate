@@ -19,6 +19,9 @@ namespace SpellDuel
         {
             public string id, name, look;          // look：外型描述（給 Codex 與說明）
             public int human, level, rarity; public Slot slot;
+            public int[] from;                     // 第二批：掉這張配方的怪（小怪種類或變種 id）；人形敵人用 human
+            public float chance = RecipeChance;
+            public string source;                  // 說明：誰會掉
             public Crafting.Effect[] affixes;      // 能力值（數值在範圍內隨機）
             public SoulFx[] specials;              // 固定的特殊效果
             public (string mat, int n)[] need; public int gold;
@@ -38,6 +41,13 @@ namespace SpellDuel
             => new Blueprint { id = "bp_" + id, name = name, human = human, level = 50 + 10 * ((human - 151) / 3), slot = slot, rarity = rarity, look = look,
                 main = main, accent = accent, gold = gold, affixes = affixes, specials = specials, need = need };
         static Color C(string hex) { int v = System.Convert.ToInt32(hex.TrimStart('#'), 16); return new Color(((v >> 16) & 255) / 255f, ((v >> 8) & 255) / 255f, (v & 255) / 255f); }   // 不用 ColorUtility（邏輯測試在 Unity 外跑）
+
+        /// <summary>第二批特殊配方（使用者要求）：稀有怪、疾風稀有怪、故事探索的守衛掉；等級另外指定</summary>
+        static Blueprint X(string id, string name, int level, string source, float chance, int[] from, Slot slot, int rarity, string look, Color main, Color accent, int gold,
+            Crafting.Effect[] affixes, SoulFx[] specials, params (string, int)[] need)
+            => new Blueprint { id = "bp_" + id, name = name, level = level, source = source, chance = chance, from = from, slot = slot, rarity = rarity, look = look,
+                main = main, accent = accent, gold = gold, affixes = affixes, specials = specials, need = need };
+        static readonly int[] SwiftIds = { 171, 172, 173, 174, 175, 176, 177, 178, 179, 180 };
 
         public static readonly List<Blueprint> All = new List<Blueprint>
         {
@@ -106,25 +116,53 @@ namespace SpellDuel
                 new[] { E(Affix.Armor, 0.025f, 0.03f), E(Affix.MagicArmor, 0.025f, 0.03f), E(Affix.Vit, 20f, 28f) },
                 new[] { F(SoulOp.Reduce, 0.06f), F(SoulOp.HurtShield, 250f, 0.15f, 4f), F(SoulOp.KillMp, 10f, 0.30f) },
                 ("crystal", 20), ("ore_hi", 16), ("band_crest", 4), ("aid_sigil", 3), ("storm_gem", 3), ("core_canyon", 2), ("soul_smith", 1)),
+            // ---- 第二批：稀有怪、疾風稀有怪、故事探索
+            X("bonsai", "盆景森林頭盔", 60, "古根撼地獸", 0.15f, new[] { 19 }, Slot.Head, 4, "頭上頂著一整座小盆景：一棵歪脖子松、苔蘚、小石燈籠，下雨時會自己澆水", C("#6b4a2b"), C("#7fd36b"), 7200,
+                new[] { E(Affix.Spi, 14f, 20f), E(Affix.MagicArmor, 0.02f, 0.03f) },
+                new[] { F(SoulOp.Regen, 0.0008f), F(SoulOp.HurtHeal, 0.05f, 0.08f) },
+                ("root_ring", 6), ("fiber", 12), ("core_tree", 1), ("ore_hi", 8)),
+            X("eelwhip", "電鰻跳繩鞭", 70, "潮鞭鰻", 0.15f, new[] { 20 }, Slot.Weapon, 4, "一條活的電鰻當鞭子，揮動時像跳繩一樣甩圈，尾巴劈啪放電，偶爾回頭瞪主人", C("#2a6fb0"), C("#7ff6ff"), 8400,
+                new[] { E(Affix.Atk, 0.11f, 0.15f), E(Affix.Freeze, 0.03f, 0.05f) },
+                new[] { F(SoulOp.HitCast, 0, 0.10f, skill: "thunder"), F(SoulOp.HitSnare, 0, 0.05f, 1f) },
+                ("whip_fin", 6), ("tendril", 10), ("core_sea", 1), ("ore_hi", 10)),
+            X("dumbbell", "啞鈴流星錘護符", 80, "鏈錘鬥奴", 0.15f, new[] { 21 }, Slot.Trinket, 4, "腰上掛著一顆用鐵鏈拴住的大啞鈴，走路時會晃來晃去，被打的時候自己甩出去", C("#55606b"), C("#ff5a3c"), 9600,
+                new[] { E(Affix.Str, 16f, 22f), E(Affix.Lifesteal, 0.02f, 0.03f) },
+                new[] { F(SoulOp.Thorns, 0.12f), F(SoulOp.Block, 0.05f) },
+                ("shackle", 6), ("badge", 14), ("core_arena", 1), ("ore_hi", 12)),
+            X("griddle", "熔岩烤盤胸甲", 90, "裂岩甲蜥", 0.15f, new[] { 22 }, Slot.Body, 5, "胸前是一塊滾燙的鐵烤盤，上面一直煎著荷包蛋和香腸，背後岩板縫隙冒橘光", C("#3b2b24"), C("#ff7a1f"), 21600,
+                new[] { E(Affix.Armor, 0.025f, 0.03f), E(Affix.MagicArmor, 0.025f, 0.03f), E(Affix.Vit, 20f, 28f) },
+                new[] { F(SoulOp.Thorns, 0.15f), F(SoulOp.HurtShield, 250f, 0.12f, 4f), F(SoulOp.Reduce, 0.05f) },
+                ("rift_shard", 8), ("crystal", 18), ("core_canyon", 2), ("soul_smith", 1)),
+            X("rocketskate", "火箭溜冰鞋", 60, "疾風稀有怪", 0.10f, SwiftIds, Slot.Feet, 4, "鞋底是溜冰輪，鞋跟綁著兩支小火箭，衝刺時噴火、停下來冒煙", C("#e63946"), C("#ffd23f"), 7200,
+                new[] { E(Affix.Agi, 16f, 22f), E(Affix.DodgeCdr, 1f, 1f) },
+                new[] { F(SoulOp.DodgeCdr, 1f), F(SoulOp.AirReduce, 0.10f) },
+                ("swift_mane", 8), ("feather", 8), ("elite", 3), ("ore_hi", 8)),
+            X("jadesprite", "翠玉樹精耳環", 60, "翠蔭迷林的守衛", 0.20f, new[] { 28, 30, 32 }, Slot.Trinket, 4, "耳邊坐著一隻翠玉做的小樹精，會晃腳、打哈欠，戰鬥時幫你吹口哨加油", C("#2fbf71"), C("#e8fff0"), 7200,
+                new[] { E(Affix.Cdr, 0.05f, 0.08f), E(Affix.Int, 14f, 20f) },
+                new[] { F(SoulOp.KillMp, 10f, 0.25f), F(SoulOp.Regen, 0.0006f) },
+                ("jade_chip", 10), ("core_tree", 1), ("elite", 3), ("ore_hi", 6)),
         };
 
         public static Blueprint Get(string id) => string.IsNullOrEmpty(id) ? null : All.Find(b => b.id == id || b.ScrollId == id);
         public static Blueprint OfHuman(int variant) => All.Find(b => b.human == variant);
+        /// <summary>這種怪會掉的配方（人形敵人、稀有怪、疾風稀有怪、探索守衛）</summary>
+        public static Blueprint OfSource(int kind) => All.Find(b => b.human == kind || b.from != null && System.Array.IndexOf(b.from, kind) >= 0);
+        public static string SourceText(Blueprint b) => b.source ?? "人形敵人";
         public static bool IsScroll(string itemId) => itemId != null && itemId.StartsWith("rcp_");
 
         /// <summary>人形敵人倒下：擲這一隻的配方（已經學會、身上已經有、這場已經掉過就不掉）；沒掉＝null</summary>
         public static string RollRecipe(int variant, System.Random rng, ICollection<string> pending = null)
         {
-            var b = OfHuman(variant);
+            var b = OfSource(variant);
             if (b == null || b.Learned || b.Held || pending != null && pending.Contains(b.ScrollId)) return null;
-            return rng.NextDouble() < RecipeChance ? b.ScrollId : null;
+            return rng.NextDouble() < b.chance ? b.ScrollId : null;
         }
 
         /// <summary>把配方交給工匠：學會（配方用掉）</summary>
         public static bool Learn(Blueprint b, out string msg)
         {
             if (b.Learned) { msg = $"已經會做「{b.name}」了"; return false; }
-            if (!b.Held) { msg = $"還沒有「{b.name}」的配方（人形敵人才會掉）"; return false; }
+            if (!b.Held) { msg = $"還沒有「{b.name}」的配方（{SourceText(b)}才會掉）"; return false; }
             Economy.AddItem(b.ScrollId, -1); Economy.AddItem(b.LearnedId, 1);
             msg = $"📜 工匠學會了「{b.name}」的做法！";
             return true;

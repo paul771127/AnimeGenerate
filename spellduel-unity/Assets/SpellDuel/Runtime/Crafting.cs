@@ -62,6 +62,13 @@ namespace SpellDuel
             M("storm_gem", "天候結晶", "🌦", "天候怪（25%）"),
             M("night_edge", "夜影刃片", "🗡", "副本夜晚的刺客（25%）"),
             M("aid_sigil", "援護聖印", "📿", "輔助型敵人、補師、召喚師（25%）"),
+            // 第二批（使用者要求：多一些配方與掉落材料）：四隻稀有怪、疾風稀有怪、故事探索
+            M("root_ring", "古根年輪", "🪵", "古根撼地獸（30%）"),
+            M("whip_fin", "潮鞭鰭骨", "🦴", "潮鞭鰻（30%）"),
+            M("shackle", "斷鐐鐵環", "⛓", "鏈錘鬥奴（30%）"),
+            M("rift_shard", "裂岩熔片", "🌋", "裂岩甲蜥（30%）"),
+            M("swift_mane", "疾風鬃毛", "🌬", "疾風稀有怪（35%）"),
+            M("jade_chip", "翠玉碎屑", "🟢", "故事探索・翠蔭迷林的怪（8%）、守衛（50%）"),
         };
         static Mat M(string id, string name, string icon, string from) => new Mat { id = "mat_" + id, name = name, icon = icon, from = from };
         public static Mat GetMat(string id) => Mats.Find(m => m.id == id || m.id == "mat_" + id);
@@ -138,14 +145,26 @@ namespace SpellDuel
         /// <summary>稀有怪（人形、天候怪、夜晚刺客、輔助型、補師）：特殊裝備的材料，獨立擲；沒掉＝null</summary>
         public static string RollRare(int variant, System.Random rng)
         {
+            switch (variant)   // 四隻稀有怪（不是變種，用小怪種類）
+            {
+                case 19: return rng.NextDouble() < RareBeastMatChance ? "mat_root_ring" : null;
+                case 20: return rng.NextDouble() < RareBeastMatChance ? "mat_whip_fin" : null;
+                case 21: return rng.NextDouble() < RareBeastMatChance ? "mat_shackle" : null;
+                case 22: return rng.NextDouble() < RareBeastMatChance ? "mat_rift_shard" : null;
+            }
             var v = MonsterVariants.Get(variant);
             if (v == null || v.summon) return null;
+            if (v.swift) return rng.NextDouble() < SwiftMatChance ? "mat_swift_mane" : null;
             if (v.human > 0) return rng.NextDouble() < 0.40 ? "mat_band_crest" : null;
             if (v.assassin) return rng.NextDouble() < 0.25 ? "mat_night_edge" : null;
             if (v.support > 0 || v.healer || v.summoner) return rng.NextDouble() < 0.25 ? "mat_aid_sigil" : null;
             if (variant >= 111 && variant <= 119) return rng.NextDouble() < 0.25 ? "mat_storm_gem" : null;
             return null;
         }
+
+        public const float RareBeastMatChance = 0.30f, SwiftMatChance = 0.35f, JadeChance = 0.08f, JadeGuardChance = 0.5f;
+        /// <summary>故事探索（翠蔭迷林）的怪：翠玉碎屑，獨立擲；guardian＝競技場的守衛</summary>
+        public static string RollExplore(bool guardian, System.Random rng) => rng.NextDouble() < (guardian ? JadeGuardChance : JadeChance) ? "mat_jade_chip" : null;
 
         /// <summary>Boss 倒下：擲 Boss 材料（沒掉＝null，照常掉裝備）</summary>
         public static string RollBoss(string bossCls, int difficulty, System.Random rng)
@@ -250,6 +269,21 @@ namespace SpellDuel
             R("rc_lava", "熔岩之心鎧", Slot.Body, 4, 1, "雙減傷、HP、灼燒", 2500, new[] { E(Affix.Armor, 0.025f, 0.03f), E(Affix.MagicArmor, 0.025f, 0.03f), E(Affix.Hp, 90f, 150f), E(Affix.Burn, 0.04f, 0.05f) }, ("core_golem", 2), ("core_canyon", 1), ("elite", 5), ("ore_hi", 10)),
             R("rc_tear", "海妖淚墜", Slot.Trinket, 4, 1, "冷卻、MP、冰凍", 2500, new[] { E(Affix.Cdr, 0.06f, 0.10f), E(Affix.Mp, 50f, 90f), E(Affix.Freeze, 0.04f, 0.05f) }, ("core_sea", 2), ("core_tree", 1), ("elite", 5), ("ore_hi", 8)),
             R("rc_god", "神匠之刃", Slot.Weapon, 4, 2, "攻擊、爆擊、閃避後增傷", 5000, new[] { E(Affix.Atk, 0.10f, 0.15f), E(Affix.Crit, 0.06f, 0.10f), E(Affix.DodgePower, 0.08f, 0.12f) }, ("soul_smith", 1), ("core_arena", 2), ("elite", 8), ("ore_hi", 12)),
+            // ---- 第二批（使用者要求）：一般小怪材料（稀有）、稀有怪材料（史詩）、稀有怪＋Boss 核心（傳說）
+            R("rc_wing", "海鳥羽冠", Slot.Head, 2, 0, "敏捷、命中", 320, new[] { E(Affix.Agi, 4f, 8f), E(Affix.Accuracy, 0.03f, 0.05f) }, ("feather", 6), ("scale", 3), ("ore", 3)),
+            R("rc_spore", "孢子香囊", Slot.Trinket, 2, 0, "中毒機率、精神", 300, new[] { E(Affix.Poison, 0.03f, 0.05f), E(Affix.Spi, 4f, 8f) }, ("cap", 6), ("gland", 3), ("ore", 2)),
+            R("rc_imp", "小鬼角盔", Slot.Head, 2, 0, "力量、灼燒機率", 300, new[] { E(Affix.Str, 4f, 8f), E(Affix.Burn, 0.02f, 0.04f) }, ("horn", 6), ("powder", 3), ("ore", 3)),
+            R("rc_puffer", "河豚刺甲", Slot.Body, 2, 0, "物理減傷、體力", 350, new[] { E(Affix.Armor, 0.02f, 0.03f), E(Affix.Vit, 4f, 8f) }, ("spine", 6), ("gel", 3), ("ore", 5)),
+            R("rc_bolt", "雷鳴護腕", Slot.Trinket, 3, 1, "爆擊率、智力", 900, new[] { E(Affix.Crit, 0.04f, 0.07f), E(Affix.Int, 8f, 12f) }, ("tendril", 8), ("elite", 3), ("ore_hi", 3)),
+            R("rc_gale", "疾風奔靴", Slot.Feet, 3, 0, "敏捷、閃避後冷卻、閃避後增傷", 1000, new[] { E(Affix.Agi, 8f, 12f), E(Affix.DodgeCdr, 1f, 1f), E(Affix.DodgePower, 0.06f, 0.10f) }, ("swift_mane", 4), ("feather", 6), ("ore_hi", 4)),
+            R("rc_jade", "翠玉頭環", Slot.Head, 3, 0, "魔法減傷、冷卻", 900, new[] { E(Affix.MagicArmor, 0.02f, 0.03f), E(Affix.Cdr, 0.04f, 0.06f) }, ("jade_chip", 6), ("fiber", 6), ("ore_hi", 3)),
+            R("rc_root", "年輪樹皮甲", Slot.Body, 3, 0, "物理減傷、HP、精神", 1000, new[] { E(Affix.Armor, 0.02f, 0.03f), E(Affix.Hp, 60f, 100f), E(Affix.Spi, 6f, 10f) }, ("root_ring", 3), ("fiber", 10), ("ore_hi", 4)),
+            R("rc_whip", "潮鞭鞭刃", Slot.Weapon, 3, 0, "攻擊、冰凍機率", 1000, new[] { E(Affix.Atk, 0.06f, 0.09f), E(Affix.Freeze, 0.03f, 0.05f) }, ("whip_fin", 3), ("tendril", 6), ("ore_hi", 4)),
+            R("rc_shackle", "斷鐐護腕", Slot.Trinket, 3, 0, "力量、吸血", 1000, new[] { E(Affix.Str, 8f, 12f), E(Affix.Lifesteal, 0.02f, 0.03f) }, ("shackle", 3), ("badge", 8), ("ore_hi", 4)),
+            R("rc_rift", "熔紋岩盔", Slot.Head, 3, 0, "物理減傷、灼燒機率、體力", 1000, new[] { E(Affix.Armor, 0.02f, 0.03f), E(Affix.Burn, 0.03f, 0.05f), E(Affix.Vit, 6f, 10f) }, ("rift_shard", 3), ("crystal", 8), ("ore_hi", 4)),
+            R("rc_quake", "撼地重靴", Slot.Feet, 4, 1, "敏捷、物理減傷、閃避後冷卻", 2500, new[] { E(Affix.Agi, 12f, 18f), E(Affix.Armor, 0.02f, 0.03f), E(Affix.DodgeCdr, 1f, 1f) }, ("root_ring", 2), ("rift_shard", 2), ("core_tree", 1), ("elite", 5), ("ore_hi", 6)),
+            R("rc_chain", "鬥奴鎖鏈甲", Slot.Body, 4, 1, "物理減傷、HP、吸血", 2500, new[] { E(Affix.Armor, 0.025f, 0.03f), E(Affix.Hp, 90f, 150f), E(Affix.Lifesteal, 0.03f, 0.04f) }, ("shackle", 3), ("whip_fin", 2), ("core_arena", 1), ("elite", 5), ("ore_hi", 8)),
+            R("rc_tempest", "千風之翼", Slot.Trinket, 4, 1, "冷卻、敏捷、閃避後增傷", 2500, new[] { E(Affix.Cdr, 0.06f, 0.09f), E(Affix.Agi, 12f, 18f), E(Affix.DodgePower, 0.08f, 0.12f) }, ("swift_mane", 8), ("storm_gem", 3), ("core_sea", 1), ("elite", 5)),
         };
         static Effect E(Affix a, float lo, float hi) => new Effect { a = a, lo = lo, hi = hi };
         static Recipe R(string id, string name, Slot slot, int rarity, int minDiff, string note, int gold, Effect[] fx, params (string, int)[] need)

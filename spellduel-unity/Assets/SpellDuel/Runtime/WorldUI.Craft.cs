@@ -81,7 +81,7 @@ namespace SpellDuel
                 UiKit.Text(new Rect(rr.x + gap, rr.y + rowH * 0.5f, rr.width - gap * 2, rowH * 0.48f), b.look, Mathf.RoundToInt(fsS * 0.85f), new Color(1f, 0.92f, 0.75f), TextAnchor.MiddleLeft);
             }
             float y0 = bps.Count * (rowH + gap * 0.3f);
-            if (bps.Count == 0) { UiKit.Text(new Rect(0, 0, content.width, rowH), "📜 特殊裝備配方：打倒稀有的人形敵人有機會掉（Lv50～90）", fsS, new Color(1f, 0.85f, 0.5f), TextAnchor.MiddleLeft, true); y0 = rowH + gap * 0.3f; }
+            if (bps.Count == 0) { UiKit.Text(new Rect(0, 0, content.width, rowH), "📜 特殊裝備配方：打倒人形敵人、四隻稀有怪、疾風稀有怪、翠蔭迷林的守衛有機會掉（Lv50～90）", fsS, new Color(1f, 0.85f, 0.5f), TextAnchor.MiddleLeft, true); y0 = rowH + gap * 0.3f; }
             for (int i = 0; i < Crafting.Recipes.Count; i++)
             {
                 var rc = Crafting.Recipes[i];

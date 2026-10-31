@@ -8,9 +8,10 @@ namespace SpellDuel
   static readonly Color BGold=new Color(1,.68f,.17f),BInk=new Color(.13f,.16f,.22f),BCream=new Color(1,.93f,.72f),BRed=new Color(.84f,.16f,.10f),BGreen=new Color(.29f,.66f,.15f);
   internal float BlueprintHitAmount=>Mathf.Clamp01(hitT/HitDur);
   internal float BlueprintLift=>poseLastLift;
+  static bool HasBlueprintArt(string id)=>!string.IsNullOrEmpty(id)&&System.Array.IndexOf(SkillIcons.BlueprintArtIds,id)>=0&&Blueprints.Get(id)!=null;
   bool AddBlueprint(Transform parent,string slot,GearLook.Piece piece)
   {
-   var def=Blueprints.Get(piece.special);if(def==null)return false;
+   var def=Blueprints.Get(piece.special);if(def==null||!HasBlueprintArt(piece.special))return false;   // 還沒有專屬造型的配方：照一般裝備畫
    if(slot=="trinket")parent=piece.special=="bp_neonhalo"?head:spine;
    if(!blueprintMeshes.TryGetValue(piece.special,out var mesh)){mesh=MakeBlueprint(piece.special);blueprintMeshes[piece.special]=mesh;}
    var root=AnimeFace.Part(parent,"Blueprint "+piece.special,mesh,Vector3.zero,AnimeFace.Material(Color.white,4));GearPart(root);
