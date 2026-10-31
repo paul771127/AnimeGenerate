@@ -1,0 +1,234 @@
+name: SpellDuel art compile validation (no publishing)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/spellduel-art-compile.yml'
+
+# A new gameplay push must not interrupt a completed art revision's validation.
+concurrency:
+  group: spellduel-art-compile-${{ github.sha }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_PATH: spellduel-unity
+  BUILD_METHOD: SpellDuel.EditorTools.BuildScript.Build
+
+jobs:
+  # 沒有設定 Unity 授權時跳過編譯（顯示提示，不讓整個流程變紅）
+  check-license:
+    runs-on: ubuntu-latest
+    outputs:
+      ok: ${{ steps.check.outputs.ok }}
+    steps:
+      - id: check
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          if [ -n "$UNITY_LICENSE" ] && [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::尚未設定 UNITY_LICENSE / UNITY_EMAIL / UNITY_PASSWORD，略過 Unity 編譯。設定方式見 spellduel-unity/README.md"
+          fi
+
+  android:
+    needs: check-license
+    if: needs.check-license.outputs.ok == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: 釋放磁碟空間（Unity 映像檔很大）
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.PROJECT_PATH }}/Library
+          key: Library-Android-${{ hashFiles('spellduel-unity/Packages/manifest.json', 'spellduel-unity/ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: Library-Android-
+      # 固定的 Android 簽章金鑰：每次建置都用同一把，手機才能直接覆蓋更新。
+      # 有設定 secrets.ANDROID_KEYSTORE_BASE64（＋ANDROID_KEYSTORE_PASS）就用它；否則第一次自動產生一把，存在 Actions 快取裡重複使用。
+      - name: 簽章金鑰（快取）
+        uses: actions/cache@v4
+        with:
+          path: ci-keystore
+          key: spellduel-android-keystore-v1
+      - name: 準備簽章金鑰
+        id: keystore
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+        run: |
+          set -eo pipefail
+          mkdir -p ci-keystore
+          PASS="${KS_PASS:-spellduel-ci}"
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > ci-keystore/spellduel.keystore
+            echo "使用 secrets 裡的簽章金鑰"
+          elif [ ! -f ci-keystore/spellduel.keystore ]; then
+            keytool -genkeypair -keystore ci-keystore/spellduel.keystore -alias spellduel -keyalg RSA -keysize 2048 \
+              -validity 10000 -storepass "$PASS" -keypass "$PASS" -dname "CN=SpellDuel, O=SpellDuel"
+            echo "產生新的簽章金鑰（之後都用這一把）"
+          else
+            echo "沿用快取裡的簽章金鑰"
+          fi
+          keytool -list -v -keystore ci-keystore/spellduel.keystore -storepass "$PASS" | grep -m1 "SHA256:" || true
+          B64=$(base64 -w0 ci-keystore/spellduel.keystore)
+          echo "::add-mask::$B64"
+          echo "::add-mask::$PASS"
+          echo "b64=$B64" >> "$GITHUB_OUTPUT"
+          echo "pass=$PASS" >> "$GITHUB_OUTPUT"
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: ${{ env.PROJECT_PATH }}
+          targetPlatform: Android
+          buildName: SpellDuel
+          buildMethod: ${{ env.BUILD_METHOD }}
+          allowDirtyBuild: true
+          customParameters: -sdCloudProjectId ${{ secrets.UNITY_CLOUD_PROJECT_ID }}
+          androidKeystoreName: spellduel.keystore
+          androidKeystoreBase64: ${{ steps.keystore.outputs.b64 }}
+          androidKeystorePass: ${{ steps.keystore.outputs.pass }}
+          androidKeyaliasName: spellduel
+          androidKeyaliasPass: ${{ steps.keystore.outputs.pass }}
+      - name: 檢查 APK 簽章
+        run: |
+          APK=$(ls build/Android/*.apk | head -1)
+          SIGNER=$(ls /usr/local/lib/android/sdk/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
+          if [ -n "$SIGNER" ]; then "$SIGNER" verify --print-certs "$APK" | grep -m2 -E "SHA-256|DN" || true; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SpellDuel-Android-APK
+          path: build/Android/*.apk
+          if-no-files-found: error
+
+  ios-export:
+    needs: check-license
+    if: needs.check-license.outputs.ok == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: 釋放磁碟空間（Unity 映像檔很大）
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.PROJECT_PATH }}/Library
+          key: Library-iOS-${{ hashFiles('spellduel-unity/Packages/manifest.json', 'spellduel-unity/ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: Library-iOS-
+      # 第一階段：只做設定（加入 ARKit 編譯符號），第二階段重新開 Unity 才會把 ARKit 原生程式庫打包進去
+      - name: Unity 設定（第一階段）
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: ${{ env.PROJECT_PATH }}
+          targetPlatform: iOS
+          buildName: SpellDuel
+          buildMethod: SpellDuel.EditorTools.BuildScript.ConfigureCI
+          allowDirtyBuild: true
+          customParameters: -sdCloudProjectId ${{ secrets.UNITY_CLOUD_PROJECT_ID }}
+      - name: Unity 匯出 Xcode 專案（第二階段）
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: ${{ env.PROJECT_PATH }}
+          targetPlatform: iOS
+          buildName: SpellDuel
+          buildMethod: ${{ env.BUILD_METHOD }}
+          allowDirtyBuild: true
+          customParameters: -sdCloudProjectId ${{ secrets.UNITY_CLOUD_PROJECT_ID }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SpellDuel-iOS-XcodeProject
+          path: build/iOS
+          if-no-files-found: error
+
+  # 公開 repo 的 GitHub macOS 機器免費；產出「未簽署」IPA（之後由 ios-testflight 簽章上傳）
+  # App Store Connect 要求用 iOS 26 SDK（Xcode 26）以上編譯，所以用 macos-26 機器
+  ios-ipa:
+    needs: ios-export
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src
+          sparse-checkout: spellduel-unity/AppIcon
+      - uses: actions/download-artifact@v4
+        with:
+          name: SpellDuel-iOS-XcodeProject
+          path: xcode
+      - name: 放入 App 圖示（1024×1024，App Store 必要）
+        run: |
+          set -eo pipefail
+          ICON=src/spellduel-unity/AppIcon/AppIcon-1024.png
+          ICONSET=$(find xcode -type d -path "*Images.xcassets/AppIcon.appiconset" | head -1)
+          if [ -z "$ICONSET" ]; then
+            XCASSETS=$(find xcode -type d -name "Images.xcassets" | head -1)
+            ICONSET="$XCASSETS/AppIcon.appiconset"; mkdir -p "$ICONSET"
+          fi
+          echo "圖示資料夾：$ICONSET"
+          rm -f "$ICONSET"/*
+          cp "$ICON" "$ICONSET/AppIcon-1024.png"
+          # 單一尺寸圖示：Xcode 會自動產生其他所有尺寸
+          cat > "$ICONSET/Contents.json" <<'JSON'
+          {
+            "images" : [
+              { "filename" : "AppIcon-1024.png", "idiom" : "universal", "platform" : "ios", "size" : "1024x1024" }
+            ],
+            "info" : { "author" : "xcode", "version" : 1 }
+          }
+          JSON
+      - name: 編譯未簽署 IPA
+        run: |
+          set -eo pipefail
+          xcodebuild -version
+          PROJ=$(find xcode -name "Unity-iPhone.xcodeproj" -maxdepth 3 | head -1)
+          echo "Xcode 專案：$PROJ"
+          xcodebuild -project "$PROJ" -scheme Unity-iPhone -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath dd \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            build | tail -50
+          APP=$(find dd/Build/Products -name "*.app" -maxdepth 3 | head -1)
+          mkdir -p Payload && cp -R "$APP" Payload/
+          zip -qry SpellDuel-unsigned.ipa Payload
+          ls -la SpellDuel-unsigned.ipa
+          echo "--- 檢查：SDK 版本與 1024 圖示 ---"
+          /usr/libexec/PlistBuddy -c "Print :DTSDKName" Payload/*.app/Info.plist || true
+          xcrun --sdk iphoneos assetutil --info Payload/*.app/Assets.car | grep -E '"(Name|PixelHeight)"' | grep -B1 '1024' | head -4 || echo "::warning::Assets.car 裡沒找到 1024 圖示"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SpellDuel-iOS-unsigned-IPA
+          path: SpellDuel-unsigned.ipa
+          if-no-files-found: error
+
+  # 把最新 APK 放到公開的 Release（不用登入 GitHub 就能下載，網址固定）：
+  #   https://github.com/<owner>/<repo>/releases/download/spellduel-latest/SpellDuel.apk
