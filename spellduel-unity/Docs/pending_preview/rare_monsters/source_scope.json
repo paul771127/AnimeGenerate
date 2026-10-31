@@ -1,0 +1,51 @@
+{
+  "source_commits": [
+    {
+      "commit": "d01dfa4",
+      "files": [
+        ".github/workflows/spellduel-rare-monsters.yml",
+        "spellduel-unity/Assets/SpellDuel/Editor/Snapshot.RareMonsters.cs",
+        "spellduel-unity/Assets/SpellDuel/Editor/Snapshot.RareMonsters.cs.meta",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Area.Detail.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Area.Detail.cs.meta",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Area.Legacy.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Area.Legacy.cs.meta",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Area.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/SpellFx.cs",
+        "spellduel-unity/CODEX_PENDING_BRIEF.md"
+      ]
+    },
+    {
+      "commit": "66ad0eb",
+      "files": [
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Area.Detail.cs"
+      ]
+    },
+    {
+      "commit": "a06c46a",
+      "files": [
+        "spellduel-unity/Assets/SpellDuel/Editor/Snapshot.RareMonsters.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Area.Detail.cs",
+        "spellduel-unity/CODEX_PENDING_BRIEF.md"
+      ]
+    },
+    {
+      "commit": "10e7dc1",
+      "files": [
+        "spellduel-unity/Assets/SpellDuel/Editor/Snapshot.RareMonsters.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Dress.cs",
+        "spellduel-unity/CODEX_PENDING_BRIEF.md"
+      ]
+    },
+    {
+      "commit": "74b2663",
+      "files": [
+        "spellduel-unity/Assets/SpellDuel/Editor/Snapshot.RareMonsters.cs",
+        "spellduel-unity/Assets/SpellDuel/Runtime/MinionRig.Area.Detail.cs",
+        "spellduel-unity/CODEX_PENDING_BRIEF.md"
+      ]
+    }
+  ],
+  "no_combat_or_solobattle_edits": true,
+  "note": "Remote gameplay commits were pulled unchanged; source revisions above are this art task."
+}
