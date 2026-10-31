@@ -818,7 +818,7 @@ namespace SpellDuel
         /// <summary>現在該播的背景音樂：戰鬥中＝依地圖主題（Boss 在場＝Boss 曲）；結算＝安靜；其他（城鎮、選單）＝城鎮曲</summary>
         public string MusicTrack => StoryVideo.Playing ? "town"   // 播劇情影片：整支用同一首城鎮曲（壓低音量，旁白聽得清楚）
             : phase == Phase.Over ? null
-            : phase == Phase.Fighting && battle != null ? (bossMode && En.Alive ? "boss" : "battle" + (battle.Theme % 3))
+            : phase == Phase.Fighting && battle != null ? Music.TrackFor(dungeon != null ? dungeon.id : NetMode && netDungeon ? netDungeonId : null, exploreRun != null, battle.Theme, bossMode && En.Alive)   // 每章、每個副本、故事探索各一首；Boss 戰是同一首的 Boss 版
             : "town";
 
         void UpdateTownWalk()
