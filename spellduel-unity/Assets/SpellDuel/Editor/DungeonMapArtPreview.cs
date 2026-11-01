@@ -81,7 +81,14 @@ namespace SpellDuel.EditorTools
    {
     if(!DungeonMaze.Supports(d))continue;var map=DungeonMaze.Build(d);var row=new Row{id=d.id,areas=map.areas.Count};row.deterministic=Fingerprint(map)==Fingerprint(DungeonMaze.Build(d));Check(row.deterministic,d.id+" seed differs");
     row.baselineUnreachable=RouteAudit(map,out row.edges);var before=Fingerprint(map);
-    foreach(var a in map.areas){int t=map.nodeAreas?5:d.ThemeOf(a.node);if(representatives[t]==null){representatives[t]=map;targetAreas[t]=a;}}
+    foreach(var a in map.areas)
+    {
+     int t=map.nodeAreas?5:d.ThemeOf(a.node);
+     // Prefer a dedicated theme map over a side room in a mixed dungeon, so its sky agrees.
+     bool matching=map.nodeAreas||d.BossTheme==t;
+     bool priorMatching=representatives[t]!=null&&(representatives[t].nodeAreas||representatives[t].dungeon.BossTheme==t);
+     if(representatives[t]==null||matching&&!priorMatching){representatives[t]=map;targetAreas[t]=a;}
+    }
     // Exercise all area geometry, but keep production's 6-cell streaming window.
     foreach(var a in map.areas){int unused;var root=BuildView(map,map.Cell(a.center),out unused);UnityEngine.Object.DestroyImmediate(root);}
     row.unchanged=Fingerprint(map)==before;Check(row.unchanged,d.id+" art changed map data");int edges;Check(RouteAudit(map,out edges)==row.baselineUnreachable,d.id+" art changed reachability");

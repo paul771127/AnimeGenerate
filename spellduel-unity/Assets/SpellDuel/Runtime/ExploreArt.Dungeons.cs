@@ -136,10 +136,38 @@ namespace SpellDuel
    for(int i=0;i<16;i++){float a=i*Mathf.PI/8,z=(i+1)*Mathf.PI/8;float ra=i%2==0?r:r*.82f,rb=(i+1)%2==0?r:r*.82f;var c=V(Mathf.Cos(a),Mathf.Sin(a),0);var d=V(Mathf.Cos(z),Mathf.Sin(z),0);b.Quad(p+c*r*.43f,p+c*ra,p+d*rb,p+d*r*.43f,col,true);}
    for(int i=0;i<4;i++){float a=i*Mathf.PI*.5f;b.Rod(p,p+V(Mathf.Cos(a)*r*.5f,Mathf.Sin(a)*r*.5f,0),.055f,col,4);}
   }
+  static bool DungeonCragFront(Geo rock,float x,float y,out float z)
+  {
+   z=float.NegativeInfinity;
+   for(int k=0;k<rock.v.Count;k+=3)
+   {
+    var a=rock.v[k];var b=rock.v[k+1];var c=rock.v[k+2];
+    float det=(b.y-c.y)*(a.x-c.x)+(c.x-b.x)*(a.y-c.y);if(Mathf.Abs(det)<.00001f)continue;
+    float u=((b.y-c.y)*(x-c.x)+(c.x-b.x)*(y-c.y))/det;
+    float v=((c.y-a.y)*(x-c.x)+(a.x-c.x)*(y-c.y))/det,w=1-u-v;
+    if(u>=0&&v>=0&&w>=0)z=Mathf.Max(z,u*a.z+v*b.z+w*c.z);
+   }
+   return !float.IsNegativeInfinity(z);
+  }
   static void DungeonWallGlow(Geo b,int t,int n,int role)
   {
    var c=DungeonThemeColor(t);c.a=.55f;
-   if(t==0)for(int i=0;i<3;i++){float x=(i-1)*.70f;float z=n==0||role>0?.12f:1.48f;b.Vine(V(x,.25f,z),V(x+.22f,2.3f,z),.14f,.024f,c,6);}
+   if(t==0)
+   {
+    // Sample the actual crag faces once when this cached mesh is built; cracks hug stone.
+    bool alcove=n==0||role>0;var rock=new Geo();
+    rock.Crag(V(0,0,alcove?-.65f:0),V(2.96f,2.5f+n*.22f,alcove?1.55f:2.96f),DungeonRock(t),n);
+    for(int i=0;i<3;i++)
+    {
+     Vector3 last=Vector3.zero;bool previous=false;
+     for(int j=0;j<=8;j++)
+     {
+      float u=j/8f,x=(i-1)*.70f+u*.22f+Mathf.Sin(u*9+i)*.08f,y=.25f+u*2.05f;
+      bool hit=DungeonCragFront(rock,x,y,out float z);var at=V(x,y,z+.012f);
+      if(hit&&previous)b.Rod(last,at,.018f,c,4);last=at;previous=hit;
+     }
+    }
+   }
    if(t==1)b.Box(V(.65f,2.12f,1.18f),V(.23f,.37f,.02f),new Color(.87f,1,.5f,.65f));
    if(t==5){b.Box(V(0,.72f,.14f),V(1.9f,.035f,.015f),new Color(.32f,.82f,.91f,.48f));}
    if(role==4){b.Ring(V(1.13f,.04f,1.15f),.25f,.08f,new Color(1,.40f,.09f,.8f),10);FlameTongue(b,V(1.13f,.06f,1.15f),.65f,.12f,0,new Color(1,.6f,.14f,.7f),n);}

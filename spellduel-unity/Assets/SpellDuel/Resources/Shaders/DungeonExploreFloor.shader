@@ -25,11 +25,11 @@ Shader "SpellDuel/DungeonExploreFloor"
  for(int n=0;n<16;n++){if(n>=_PropCount)break;d=min(d,length(i.p-_Props[n].xy)-_Props[n].z);}
  float aa=max(fwidth(d),.008),lane=smoothstep(-aa,aa,d);float edge=smoothstep(0,.28,d);
  float2 p=i.p+_TexOffset.xy;float grain=tex2D(_MainTex,p/3).r;
- float3 base=_Theme<.5?float3(.29,.30,.35):_Theme<1.5?float3(.39,.40,.23):_Theme<2.5?float3(.65,.66,.47):_Theme<3.5?float3(.64,.49,.30):_Theme<4.5?float3(.66,.43,.26):float3(.34,.40,.43);
+ float3 base=_Theme<.5?float3(.29,.30,.35):_Theme<1.5?float3(.48,.36,.22):_Theme<2.5?float3(.77,.72,.56):_Theme<3.5?float3(.64,.49,.30):_Theme<4.5?float3(.66,.43,.26):float3(.34,.40,.43);
  float detail=.87+grain*.25;
  if(_Theme>4.5){float2 q=abs(frac(p*2)-.5);float grate=step(.13,q.x)*step(.13,q.y);detail*=lerp(.35,1,grate);float seam=min(frac(p.x/2),frac(p.y/2));detail*=lerp(.55,1,smoothstep(.01,.035,seam));}
- else if(_Room>.5){float row=floor(p.y/1.2);float2 q=frac(float2(p.x/1.6+row*.5,p.y/1.2));float joint=min(min(q.x,1-q.x),min(q.y,1-q.y));detail*=lerp(.69,1,smoothstep(.015,.045,joint));}
- else if(_Theme>1.5&&_Theme<2.5){float ripple=pow(saturate(sin(length(p-float2(3,4))*6-_Time.y*1.2)),18);base=lerp(base,float3(.30,.62,.67),.25+.1*sin(p.x*.6));detail+=ripple*.07;}
+ else if(_Room>.5&&(_Theme<.5||_Theme>2.5)){float row=floor(p.y/1.2);float2 q=frac(float2(p.x/1.6+row*.5,p.y/1.2));float joint=min(min(q.x,1-q.x),min(q.y,1-q.y));detail*=lerp(.69,1,smoothstep(.015,.045,joint));}
+ else if(_Theme>1.5&&_Theme<2.5){float ripple=pow(saturate(sin(length(p-float2(3,4))*6-_Time.y*1.2)),18);base=lerp(base,float3(.30,.62,.67),.16+.08*sin(p.x*.6));detail+=ripple*.07;}
  float rim=100;if(bit(_RoomEdge,1)>.5)rim=min(rim,h-i.p.x);if(bit(_RoomEdge,2)>.5)rim=min(rim,h+i.p.x);if(bit(_RoomEdge,4)>.5)rim=min(rim,h-i.p.y);if(bit(_RoomEdge,8)>.5)rim=min(rim,h+i.p.y);
  float border=(1-smoothstep(.13,.19,rim))*step(.055,rim)*_Room;
  float3 road=base*detail*lerp(.78,1,edge);road=lerp(road,_Accent.rgb*.7,border*.8);
