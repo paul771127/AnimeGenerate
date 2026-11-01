@@ -99,7 +99,7 @@ namespace SpellDuel
                 OnNodeCleared();
             }
             // 房主：只有一條路 → 4 秒後自動前進（寶箱開完、沒有抉擇）
-            if (DungeonDecider && battle.awaitingNext && !battle.Over && RouteReady && drun.Exits.Count == 1)
+            if (DungeonDecider && exploreRun == null && battle.awaitingNext && !battle.Over && RouteReady && drun.Exits.Count == 1)   // 副本大地圖：自己走過去，不自動前進
             {
                 if (routeAutoAt <= 0f) routeAutoAt = Time.time + 4f;
                 else if (Time.time >= routeAutoAt) HostGoNode(drun.Exits[0]);

@@ -72,7 +72,7 @@ namespace SpellDuel
             int bands = (cols + PerBand - 1) / PerBand, perBand = Math.Min(cols, PerBand);
             int bandH = (rows - 1) * rowH + BossSize + GapZ + 1;
             int W = 1 + StartLead + perBand * colStep + 1, H = Margin * 2 + bands * bandH - (GapZ + 1);
-            var m = new ExploreMap(W, H) { name = d.name, theme = ThemeName(d.ThemeOf(d.rooms[boss])), dungeon = d };
+            var m = new ExploreMap(W, H) { name = d.name, theme = ThemeName(d.ThemeOf(d.rooms[boss])), dungeon = d, nodeAreas = d.id == TrapGallery.Id };
             var rng = new System.Random(StableHash(d.id));
 
             // ---- 區域
@@ -167,7 +167,7 @@ namespace SpellDuel
             int id = 0;
             foreach (var a in areaOf)
             {
-                if (a.IsChest || a.IsBoss || a.IsEvent) continue;   // 寶箱、首領、特殊事件：沒有守著的營地（事件自己出怪）
+                if (a.IsChest || a.IsBoss || a.IsEvent || m.nodeAreas) continue;   // 寶箱、首領、特殊事件、千機迴廊的機關房：沒有守著的營地（地點自己出怪）
                 int theme = d.ThemeOf(a.node);
                 var offs = new[] { new Vector2Int(0, 0), new Vector2Int(-1, 1), new Vector2Int(1, 1), new Vector2Int(-1, -1), new Vector2Int(1, -1), new Vector2Int(0, 2), new Vector2Int(0, -2) };
                 int cx = a.rect.xMin + a.rect.width / 2, cz = a.rect.yMin + a.rect.height / 2;

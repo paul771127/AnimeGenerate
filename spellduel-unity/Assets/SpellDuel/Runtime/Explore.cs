@@ -136,6 +136,8 @@ namespace SpellDuel
 
         /// <summary>副本大地圖（使用者要求：副本全部改成像翠蔭迷林那樣的大地圖）：原本的副本；null＝故事探索</summary>
         public DungeonDef dungeon;
+        /// <summary>副本大地圖：每個區域都照原本的地點流程開打（千機迴廊：每個房間都有機關，過完才能往下一個房間）</summary>
+        public bool nodeAreas;
         /// <summary>副本大地圖：每個原本的房間（地點）變成地圖上的一個區域</summary>
         public readonly List<ExArea> areas = new List<ExArea>();
         public ExArea AreaAt(Vector2Int c) { foreach (var a in areas) if (a.Contains(c)) return a; return null; }
@@ -651,7 +653,7 @@ namespace SpellDuel
                 bool final = map.arenas.Exists(x => x.n == 4 && Vector3.Distance(x.center, a.center) < 0.1f);
                 if (final) { areaStarts.Add(a); continue; }   // 最終首領：走進王座由戰鬥那邊叫出來（訊息在競技場那邊說）
                 Say(a.IsChest ? $"🧰 {a.Title}" : a.IsBoss ? $"💀 {a.Title}——首領現身了！" : a.IsEvent ? $"⚠ {a.Title}" : $"⚔ {a.Title}——守在這裡的怪物發現你了！");
-                if (a.IsChest || a.IsEvent || a.IsBoss) areaStarts.Add(a);
+                if (a.IsChest || a.IsEvent || a.IsBoss || map.nodeAreas) areaStarts.Add(a);
                 else if (AreaAlive(a) == 0) ClearArea(a);
             }
         }

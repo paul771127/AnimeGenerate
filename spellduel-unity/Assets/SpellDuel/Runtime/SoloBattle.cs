@@ -1479,7 +1479,8 @@ namespace SpellDuel
             {
                 if (!host) battle.endless = true;   // 隊友端：只用來判斷結束（兩人都倒下才結束）
                 bossRig.SetVisible(false);
-                if (dungeon != null && exploreRun != null) Say($"🏰 {dungeon.name}：在大地圖上探索，清除每個地點才會打開往下一站的門", 4f);   // 副本大地圖：不用一站一站的地點流程
+                if (dungeon != null && exploreRun != null && exploreRun.map.nodeAreas) BeginDungeonExploreRun();   // 千機迴廊大地圖：保留原本的地點流程（機關、抉擇、寶箱），走進房間才開打
+                else if (dungeon != null && exploreRun != null) Say($"🏰 {dungeon.name}：在大地圖上探索，清除每個地點才會打開往下一站的門", 4f);   // 副本大地圖：不用一站一站的地點流程
                 else if (dungeon != null) BeginDungeonRun();   // 副本：從第一個地點開始（房主開打；隊友跟著房主的訊息走）
                 else if (towerRun) Say($"🗼 無盡塔 第 {towerFrom}～{towerFrom + TowerBlock - 1} 波：" + (towerFrom % 10 == 6 ? "第 5 波（第 " + (towerFrom + 4) + " 波）有大 Boss！" : "最後一波有精銳敵人！") + "全部打完就挑戰成功", 4f);
                 else Say("♾ 無盡模式：小怪會從場地邊緣不斷出現，每 60 秒來一隻 Boss！撐越久越好", 4f);

@@ -18,8 +18,18 @@ namespace SpellDuel
         readonly Queue<ExArea> exNodeQueue = new Queue<ExArea>();
 
         /// <summary>這個副本要不要用大地圖：飛毯副本不改；千機迴廊之後改成機關房間。單人、連線都用（地圖每台手機各自產生，長得一樣）</summary>
-        bool DungeonExploreOk(DungeonDef d, bool coopMode) => DungeonMaze.Supports(d) && d.id != TrapGallery.Id;
-        float exAreaSendAt; string exAreaSent;
+        bool DungeonExploreOk(DungeonDef d, bool coopMode) => DungeonMaze.Supports(d);
+
+        /// <summary>千機迴廊大地圖：開一個原本的副本進度（DungeonRun），但不馬上開打第一站——走進房間才開打（StartAreaNode）</summary>
+        void BeginDungeonExploreRun()
+        {
+            drun = new DungeonRun(dungeon); exFirstNodeApplied = false;
+            BeginGallery();
+            chest = null; chatLog.Clear(); ClearNpcRigs();
+            if (DungeonDecider) battle.OnNpcDown += OnNpcDown;
+            Say($"⚙ {dungeon.name}：每個房間都有機關，過完一個房間才會打開往下一個房間的門", 4f);
+        }
+        float exAreaSendAt; string exAreaSent; bool exFirstNodeApplied;
 
         /// <summary>StartBossBattle（副本那一段）叫：把副本大地圖接上戰鬥</summary>
         void SetupDungeonExplore()
@@ -69,13 +79,15 @@ namespace SpellDuel
             run.areaStarts.Clear();
             while (exNodeArea == null && exNodeQueue.Count > 0) StartAreaNode(run, exNodeQueue.Dequeue());
             // 地點的戰鬥（事件、首領）打完
-            if (exNodeArea != null && battle.awaitingNext && !battle.Over && Time.time >= exNodeAt + 1f)
+            bool nodeDone = exNodeArea != null && (run.map.nodeAreas && exNodeArea.IsChest ? chest != null && chest.done && Time.time >= chest.doneAt + 2.5f && GalleryRouteReady
+                : battle.awaitingNext && (!run.map.nodeAreas || GalleryRouteReady && (drun == null || drun.pendingChoice == null)));
+            if (nodeDone && !battle.Over && Time.time >= exNodeAt + 1f)
             {
                 var a = exNodeArea; exNodeArea = null;
                 battle.CleanupRoomEvent(); battle.arenaPoly = exSavedPoly; battle.bossPoint = null;
                 run.ClearArea(a);
             }
-            foreach (var a in run.areaCleared) Ticker(a.node.clear);
+            foreach (var a in run.areaCleared) if (!run.map.nodeAreas) Ticker(a.node.clear);   // 千機迴廊：台詞由原本的副本進度送
             run.areaCleared.Clear();
             // 首領剩一半血
             if (exNodeArea != null && exNodeArea.IsBoss && dungeonHalfSaid != exNodeArea.index && battle.IsBossWave && En.Alive && En.maxHp > 0 && En.hp <= En.maxHp * 0.5f)
@@ -101,6 +113,8 @@ namespace SpellDuel
             if (m.t != "dxa") return false;
             if (NetIsHost || exploreRun == null || !exploreRun.IsDungeon || string.IsNullOrEmpty(m.k)) return true;
             var areas = exploreRun.map.areas;
+            // 千機迴廊：第一個房間（隊友的進度一開始就在這裡，不會收到 dnode）——主機走進去時，隊友也套用一次
+            if (exploreRun.map.nodeAreas && drun != null && !exFirstNodeApplied && m.k.Length > 0 && m.k[0] >= '1' && drun.node == dungeon.rooms[0]) { exFirstNodeApplied = true; ApplyNodeNow(); }
             for (int i = 0; i < areas.Count && i < m.k.Length; i++)
             {
                 var a = areas[i];
@@ -113,11 +127,20 @@ namespace SpellDuel
         /// <summary>走進一個區域：寶箱直接打開；事件、首領照原本副本的地點流程開打（場地＝這塊區域）</summary>
         void StartAreaNode(ExploreRun run, ExArea a)
         {
-            Ticker(a.node.enter);
-            if (a.IsChest) { ChestAreaLoot(a); run.ClearArea(a); return; }
+            if (!run.map.nodeAreas) Ticker(a.node.enter);   // 千機迴廊：台詞由原本的副本進度送（DungeonRun）
+            if (a.IsChest && !run.map.nodeAreas) { ChestAreaLoot(a); run.ClearArea(a); return; }
             bool final = run.map.arenas.Exists(x => x.n == 4 && Vector3.Distance(x.center, a.center) < 0.1f);
             exSavedPoly = battle.arenaPoly;
             battle.arenaPoly = AreaPoly(run.map, a);
+            if (run.map.nodeAreas && drun != null)
+            {
+                // 千機迴廊：原本的地點流程（機關房、抉擇、商店、寶箱擲骰），場地＝這個房間
+                if (drun.node != a.node) { drun.Enter(a.node); if (coop) NetSend?.Invoke(new Msg { t = "dnode", k = a.node.id }); }   // 連線：隊友跟著換到這個房間（機關、畫面）
+                var c0 = a.center; battle.bossPoint = () => c0;
+                exNodeArea = a; exNodeAt = Time.time;
+                ApplyNodeNow();
+                return;
+            }
             battle.themeOverride = dungeon.ThemeOf(a.node);
             var center = a.center;
             battle.bossPoint = () => center;
