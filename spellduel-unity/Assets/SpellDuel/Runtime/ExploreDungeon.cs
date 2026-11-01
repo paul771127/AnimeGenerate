@@ -38,7 +38,7 @@ namespace SpellDuel
     public static class DungeonMaze
     {
         public const int AreaSize = 5, BossSize = 7, GapX = 6, GapZ = 5, StartLead = 4, Margin = 3, PerBand = 5;
-        public const int CampMonsters = 5, PatrolPerCorridor = 2;
+        public const int CampMonsters = 8, PackSize = 3;   // 使用者要求：敵人密度 +50%、一群一群的（營地 5 → 8 隻；走道原本 2 隻單獨巡邏 → 一群 3 隻一起巡邏）
 
         /// <summary>這個副本能不能改成大地圖（飛毯副本不改：使用者要求）</summary>
         public static bool Supports(DungeonDef d) => d != null && d.rooms.Count > 0 && !d.rooms.Exists(r => r.CarpetStation >= 0);
@@ -169,13 +169,13 @@ namespace SpellDuel
             {
                 if (a.IsChest || a.IsBoss || a.IsEvent || m.nodeAreas) continue;   // 寶箱、首領、特殊事件、千機迴廊的機關房：沒有守著的營地（地點自己出怪）
                 int theme = d.ThemeOf(a.node);
-                var offs = new[] { new Vector2Int(0, 0), new Vector2Int(-1, 1), new Vector2Int(1, 1), new Vector2Int(-1, -1), new Vector2Int(1, -1), new Vector2Int(0, 2), new Vector2Int(0, -2) };
+                var offs = new[] { new Vector2Int(0, 0), new Vector2Int(-1, 1), new Vector2Int(1, 1), new Vector2Int(-1, -1), new Vector2Int(1, -1), new Vector2Int(0, 2), new Vector2Int(0, -2), new Vector2Int(2, 0), new Vector2Int(-2, 0) };
                 int cx = a.rect.xMin + a.rect.width / 2, cz = a.rect.yMin + a.rect.height / 2;
                 for (int k = 0; k < CampMonsters; k++)
                     m.monsters.Add(new ExMonster { id = ++id, kind = PickKind(theme, a.wave, rng), zone = a.index, area = a.index, wave = a.wave, camp = 100 + a.index, caller = k == 0, home = m.World(cx + offs[k].x, cz + offs[k].y) });
             }
             // 走道上巡邏的怪：每條走道幾隻（強度照出發的地點）
-            var byFrom = new Dictionary<int, List<Vector2Int>>();
+            var byFrom = new Dictionary<int, List<Vector2Int>>(); int packs = 0;
             foreach (var (c, from) in corridorCells) { if (!byFrom.TryGetValue(from, out var l)) byFrom[from] = l = new List<Vector2Int>(); l.Add(c); }
             foreach (var kv in byFrom)
             {
@@ -183,7 +183,7 @@ namespace SpellDuel
                 int theme = d.ThemeOf(a.node);
                 int w = Mathf.Max(1, a.wave > 0 ? a.wave : NearestWave(d, kv.Key));
                 var list = kv.Value; int placed = 0;
-                for (int t = 0; t < 200 && placed < PatrolPerCorridor * Mathf.Max(1, a.next.Count); t++)
+                for (int t = 0; t < 200 && placed < Mathf.Max(1, a.next.Count); t++)   // 每條走道一群（同一個地點出去幾條路就幾群）
                 {
                     var c = list[rng.Next(list.Count)];
                     var p = m.World(c.x, c.y);
@@ -199,7 +199,13 @@ namespace SpellDuel
                         if (opts.Count == 0) break;
                         cur = opts[rng.Next(opts.Count)]; path.Add(m.World(cur.x, cur.y));
                     }
-                    m.monsters.Add(new ExMonster { id = ++id, kind = PickKind(theme, w, rng), zone = a.index, wave = w, home = p, patrol = path.ToArray() });
+                    // 一群 PackSize 隻：同一條巡邏路線，跟在後面；同一群（camp）一隻發現就全部發現
+                    var route = path.ToArray(); int pack = 200 + (++packs);
+                    for (int e = 0; e < PackSize; e++)
+                    {
+                        var at = route.Length > 1 ? Vector3.Lerp(route[0], route[1], 0.3f * e) : p + new Vector3((e - 1) * 0.7f, 0f, 0f);
+                        m.monsters.Add(new ExMonster { id = ++id, kind = PickKind(theme, w, rng), zone = a.index, wave = w, home = at, patrol = route, camp = pack, caller = e == 0 });
+                    }
                     placed++;
                 }
             }
