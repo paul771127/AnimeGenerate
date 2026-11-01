@@ -727,7 +727,14 @@ namespace SpellDuel
         {
             if (d == null) return;
             storyMapOpen = false; storyStage = null;
-            void Go() { if (!coopMode && GateArea(Go)) return; pendingDungeon = d; StartBossBattle(coopMode, true); }
+            void Go()
+            {
+                if (!coopMode && GateArea(Go)) return;
+                pendingDungeon = d;
+                // 副本大地圖（使用者要求：副本改成像翠蔭迷林那樣，在一張大地圖上探索打怪；飛毯副本不改）
+                if (DungeonExploreOk(d, coopMode)) { pendingExplore = new ExploreRun(DungeonMaze.Build(d)); ExploreFx.Prefetch(); }
+                StartBossBattle(coopMode, true);
+            }
             if (d.id == TrapGallery.Id) { Story.MarkSeen("dg:"+d.id); Go(); return; }
             if (!coopMode && !Story.IsSeen("dg:" + d.id)) { Story.MarkSeen("dg:" + d.id); ShowDialogue(d.before, Go); }
             else { Go(); Ticker(d.before); }   // 連線（或看過開場）：開場白改成戰鬥中的字幕卡，大家都看得到
@@ -1432,7 +1439,7 @@ namespace SpellDuel
                         if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.id != "1-1" && pendingStage.id != "1-2" && pendingStage.id != "1-3") { battle.treasureChance = TreasureChance; battle.extraPerWave = StoryExtraPerWave; }   // 每波多 3 隻（新手關、試煉不加）   // 寶箱怪：新手關、試煉不出（Combat.Treasure.cs）
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
                     }
-                    else if (exploreRun != null) SetupExploreBattle();   // 故事探索：大迷宮（SoloBattle.Explore.cs）
+                    else if (exploreRun != null && !exploreRun.IsDungeon) SetupExploreBattle();   // 故事探索：大迷宮（SoloBattle.Explore.cs）
                     else if (dungeon != null)
                     {
                         battle.dungeonParty = Dungeons.PartyScale(partyN);          // 副本：浮動難度（最少 2 人；敵人數量、Boss 血量 ×人數）
@@ -1440,6 +1447,8 @@ namespace SpellDuel
                         battle.hpBoost = dungeonRelief;                          // 等級差修正（主機的等級決定）
                         // 副本強度（使用者要求）：比照同等級的故事關卡（同一章、同一個位置的倍率），再 ×2；小怪與 Boss 都是。每個地點照它的波次設定
                         battle.OnDungeonNode = ApplyDungeonStrength; ApplyDungeonStrength(1);
+                        if (exploreRun != null) SetupDungeonExplore();   // 副本大地圖（SoloBattle.DungeonExplore.cs）
+                        else
                         battle.StartDungeonMap();   // 副本地圖：每個地點由 BeginDungeonRun／房主選路線決定（SoloBattle.DungeonMap.cs）
                     }
                     else if (towerRun)
@@ -1470,7 +1479,8 @@ namespace SpellDuel
             {
                 if (!host) battle.endless = true;   // 隊友端：只用來判斷結束（兩人都倒下才結束）
                 bossRig.SetVisible(false);
-                if (dungeon != null) BeginDungeonRun();   // 副本：從第一個地點開始（房主開打；隊友跟著房主的訊息走）
+                if (dungeon != null && exploreRun != null) Say($"🏰 {dungeon.name}：在大地圖上探索，清除每個地點才會打開往下一站的門", 4f);   // 副本大地圖：不用一站一站的地點流程
+                else if (dungeon != null) BeginDungeonRun();   // 副本：從第一個地點開始（房主開打；隊友跟著房主的訊息走）
                 else if (towerRun) Say($"🗼 無盡塔 第 {towerFrom}～{towerFrom + TowerBlock - 1} 波：" + (towerFrom % 10 == 6 ? "第 5 波（第 " + (towerFrom + 4) + " 波）有大 Boss！" : "最後一波有精銳敵人！") + "全部打完就挑戰成功", 4f);
                 else Say("♾ 無盡模式：小怪會從場地邊緣不斷出現，每 60 秒來一隻 Boss！撐越久越好", 4f);
             }
@@ -2092,7 +2102,7 @@ namespace SpellDuel
                 else { LoseLoot(); Say("💀 試煉失敗…準備好再來挑戰（可以直接再挑戰，不用再付報名費）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
             }
-            if (endless && exploreRun != null) { ExploreResult(); return; }   // 故事探索（SoloBattle.Explore.cs）
+            if (endless && exploreRun != null && !exploreRun.IsDungeon) { ExploreResult(); return; }   // 故事探索（SoloBattle.Explore.cs）
             if (endless && dungeon != null)
             {
                 // 副本：通關 → 每個房間保底一件稀有以上、最後的首領保底一件史詩套裝（物品等級＝副本等級）
@@ -2103,7 +2113,8 @@ namespace SpellDuel
                     Dungeons.MarkCleared(d.id);
                     // 走過的戰鬥地點（寶箱不算）：每個保底一件
                     var fought = new List<DungeonRoom>();
-                    if (drun != null) { foreach (var r in drun.path) if (!r.IsChest) fought.Add(r); } else fought.AddRange(d.rooms);
+                    if (exploreRun != null && exploreRun.IsDungeon) { foreach (var a in exploreRun.map.areas) if ((a.cleared || a.IsBoss && a.entered) && !a.IsChest) fought.Add(a.node); pendingGold += exploreRun.gold; for (int c = 0; c < exploreRun.chestsFound; c++) pendingItems.Add(ItemGen.Make(dropRng, d.level + battle.levelBoost, Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass)); }   // 副本大地圖：清除過的戰鬥地點；走道的藏寶箱：金幣＋每個一件稀有以上
+                    else if (drun != null) { foreach (var r in drun.path) if (!r.IsChest) fought.Add(r); } else fought.AddRange(d.rooms);
                     for (int i = 0; i < fought.Count; i++)
                     {
                         bool last = i == fought.Count - 1;

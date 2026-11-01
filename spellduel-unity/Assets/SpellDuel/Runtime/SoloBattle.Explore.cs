@@ -70,6 +70,13 @@ namespace SpellDuel
             battle.exBossHp = (StoryBossHp.Length > 1 ? StoryBossHp[1] : 1600f) * LateBossMul;
             battle.enemyAccuracy = StoryEnemyAccuracy(1, difficulty);
             battle.StartExplore(run);
+            ExHookBattle();
+            Ticker(ExLines("📜 和林語長老說話，接下主線任務"));
+        }
+
+        /// <summary>探索共用：沒有場地框、怪物的對話框與發現玩家的提示（故事探索、副本大地圖都用）</summary>
+        void ExHookBattle()
+        {
             if (area != null) area.BoundsOff = true;   // 不要 10m×10m 的場地框、不提示場地外（高度照樣檢查）
             battle.OnExSay += (m, text) => { exBubbles[m] = (text, Time.time + 2.2f); };   // 怪物的對話框（聊天、發現玩家時喊一句）
             battle.OnExAlert += (m, call) =>
@@ -80,7 +87,6 @@ namespace SpellDuel
                 if (minionGo.TryGetValue(m, out var mr) && mr) { ExploreArt.AlertMark(mr.transform, call); var t = mr.transform.Find("AlertMark"); if (t) exAlertMarks.Add((t, Time.time + (call ? 1.8f : 1.1f))); }
             };
             exHasValid = false; exLastCell = new Vector2Int(-999, -999);
-            Ticker(ExLines("📜 和林語長老說話，接下主線任務"));
         }
 
         void UpdateExplore(float dt)
@@ -94,6 +100,7 @@ namespace SpellDuel
             {
                 ExKeepInside();
                 run.Update(Me.Feet, battle.exEscort != null && battle.exEscort.Alive ? battle.exEscort.Feet : (Vector3?)null);
+                if (run.IsDungeon) UpdateDungeonExplore(run);   // 副本大地圖：地點的內容（SoloBattle.DungeonExplore.cs）
                 ExTapSparkles();
             }
             foreach (var s in run.log) { Say(s, 3.5f); ChatLine(new StoryLine { text = s }); }
@@ -154,7 +161,7 @@ namespace SpellDuel
                 ExploreFx.Loop(exRoot, p, fire ? "fx_D3_fire" : "fx_D4_spores", Battle.FlatDistance(at, me) <= ExFxLoopRange, () => at + Vector3.up * (fire ? 0.45f : 1.4f), fire ? 1.0f : 2.2f);
             }
             // 古樹之心：Boss 倒下時從祭壇浮出、拿走時化成光
-            if (run.bossDead && !exFxBoss) { exFxBoss = true; var at = map.altar; ExploreFx.Once(exRoot, "fx_C4_heart_rise", () => at + Vector3.up * 1.1f, 2.4f); }
+            if (run.bossDead && !exFxBoss && !run.IsDungeon) { exFxBoss = true; var at = map.altar; ExploreFx.Once(exRoot, "fx_C4_heart_rise", () => at + Vector3.up * 1.1f, 2.4f); }
             if (run.hasHeart && !exFxHeart) { exFxHeart = true; var at = map.altar; ExploreFx.Once(exRoot, "fx_C4_heart_take", () => at + Vector3.up * 1.2f, 1.6f); }
         }
 
@@ -164,6 +171,7 @@ namespace SpellDuel
             int h = 0; foreach (var a in run.map.arenas) h = h * 2 + (a.cleared ? 1 : 0);
             foreach (var s in run.map.sparkles) h = h * 2 + (s.found ? 1 : 0);
             foreach (var se in run.map.seals) h = h * 7 + se.have + (se.open ? 5 : 0);
+            foreach (var ar in run.map.areas) h = h * 3 + (ar.cleared ? 1 : 0);   // 副本大地圖：區域清除＝門打開
             if (h == exGateHash) return false;
             exGateHash = h; foreach (var w in exWalls.Values) if (w) Destroy(w); exWalls.Clear(); foreach (var w in exUnder.Values) if (w) Destroy(w); exUnder.Clear();
             return true;

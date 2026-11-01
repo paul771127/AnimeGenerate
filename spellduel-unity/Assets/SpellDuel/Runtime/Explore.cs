@@ -649,7 +649,7 @@ namespace SpellDuel
                 if (a.entered || !a.Contains(pc)) continue;
                 a.entered = true;
                 bool final = map.arenas.Exists(x => x.n == 4 && Vector3.Distance(x.center, a.center) < 0.1f);
-                if (final) continue;   // 最終首領：走進王座（競技場 n＝4）由戰鬥那邊叫出來
+                if (final) { areaStarts.Add(a); continue; }   // 最終首領：走進王座由戰鬥那邊叫出來（訊息在競技場那邊說）
                 Say(a.IsChest ? $"🧰 {a.Title}" : a.IsBoss ? $"💀 {a.Title}——首領現身了！" : a.IsEvent ? $"⚠ {a.Title}" : $"⚔ {a.Title}——守在這裡的怪物發現你了！");
                 if (a.IsChest || a.IsEvent || a.IsBoss) areaStarts.Add(a);
                 else if (AreaAlive(a) == 0) ClearArea(a);

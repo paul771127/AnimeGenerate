@@ -54,6 +54,8 @@ namespace SpellDuel
         public event System.Action<Fighter, bool> OnExAlert;
         /// <summary>探索的怪說話（對話框）：說話的怪、內容</summary>
         public event System.Action<Fighter, string> OnExSay;
+        /// <summary>副本大地圖：放上戰場的怪的副本波次（SoloBattle 照副本等級設定小怪倍率）</summary>
+        public System.Action<int> OnExWave;
         public const float ExSurprise = 0.8f;   // 發現玩家後愣住幾秒才開始追／攻擊
 
         /// <summary>開始一次探索：不自動出怪（手動模式），怪物只能走走道，主題＝叢林</summary>
@@ -62,7 +64,7 @@ namespace SpellDuel
             explore = run;
             StartDungeonMap();          // 手動模式：不自動出怪、沒有 Boss
             finalRoom = false;
-            themeOverride = 1;           // 叢林（第二章的森林）
+            themeOverride = run.IsDungeon ? themeOverride : 1;           // 叢林（第二章的森林）；副本大地圖照所在區域（SoloBattle 每幀設定）
             minionInside = p => run.map.Walkable(p, 0.45f);
             attackHalf = 0f;
             exActive.Clear(); exEscort = null; exBossSpawned = false;
@@ -70,7 +72,8 @@ namespace SpellDuel
 
         Fighter ExSpawn(ExMonster mon)
         {
-            wave = exBaseWave + mon.zone * ExWavePerZone;
+            wave = mon.wave > 0 ? mon.wave : exBaseWave + mon.zone * ExWavePerZone;
+            if (mon.wave > 0) OnExWave?.Invoke(mon.wave);   // 副本大地圖：強度照這隻怪所在地點的副本波次（SoloBattle 設定倍率）
             float hp = HpMul * (mon.guardian > 0 ? GuardianHpMul : mon.rare ? RareHpMul : 1f) * mon.hpFrac;
             var sv = mon.variant > 0 ? MonsterVariants.Get(mon.variant) : null;
             var m = sv != null ? SpawnMinion(mon.home, 0, sv.baseKind, hp * sv.hp, DmgMul * sv.dmg, SpeedMul * sv.speed) : SpawnMinion(mon.home, 0, mon.kind, hp, DmgMul, SpeedMul);
@@ -361,7 +364,7 @@ namespace SpellDuel
             else if (!run.escortFollowing && exEscort != null) { npcs.Remove(exEscort); exEscort = null; }
             // 最終 Boss：走進王座才出現
             var throne = run.map.arenas.Find(x => x.n == 4);
-            if (!exBossSpawned && throne.entered)
+            if (!exBossSpawned && throne.entered && !run.IsDungeon)   // 副本大地圖：首領由地點的戰鬥流程叫出來（SoloBattle.DungeonExplore.cs）
             {
                 exBossSpawned = true;
                 wave = BossEvery * (1 + exBaseWave / BossEvery + 3);
