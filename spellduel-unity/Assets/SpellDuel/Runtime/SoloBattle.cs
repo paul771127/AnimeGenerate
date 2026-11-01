@@ -2798,7 +2798,7 @@ namespace SpellDuel
 
         /// <summary>
         /// 法術從手射出、飛向準星：起點＝畫面上手掌的位置往前 0.35m（手不在畫面＝手機前下方）；
-        /// 終點＝準星 12° 內最近的敵人胸口，沒有就沿準星方向到敵人的距離（不低於 0.7m，不會往地上飛）。回傳飛行方向（場地座標）。
+        /// 終點＝準星 12° 內最近的敵人胸口，沒有就沿準星方向到敵人的距離；準心先碰到地板就是地板那一點（往地上、往天空都照準心）。回傳飛行方向（場地座標）。
         /// </summary>
         Vector3 AimFromHand(Ray ray, out Vector3 castAt)
         {
@@ -2814,9 +2814,10 @@ namespace SpellDuel
             if (bestAng < AimAssistDeg) target = best;
             else
             {
+                // 使用者要求：技能朝準心的方向放（準心往地上就打地上、往天空就打天空），不再固定高度往前
                 float dist = En != null && En.Alive ? Mathf.Clamp(Battle.FlatDistance(camW, En.Feet), 3f, 12f) : 8f;
+                if (d.y < -0.01f) dist = Mathf.Min(dist, -camW.y / d.y);   // 準心先碰到地板：就打到地板那一點
                 target = camW + d * dist;
-                if (target.y < 0.7f) target.y = 0.7f;
             }
             var dir = target - castAt;
             return dir.sqrMagnitude > 1e-6f ? dir.normalized : d;
@@ -2862,7 +2863,7 @@ namespace SpellDuel
             var floor = d.y < -0.01f ? o + d * (-o.y / d.y) : Me.Feet + Fighter.Flat(d) * 15f;
             // 沒鎖定敵人也能放招：一律朝準星方向（打不打得到看瞄準）
             var visualSkill=Me.charging; // Presentation snapshot: TryRelease clears charging.
-            // 法球：從畫面上手的位置射出，飛向準星對準的敵人（沒對準敵人＝準星方向、不往地上飛）
+            // 法球：從畫面上手的位置射出，飛向準星對準的敵人（沒對準敵人＝準星方向，地上、天空都照準心）
             var aim = AimFromHand(ray, out var castAt);
             Me.castFrom = castAt; Me.hasCastFrom = true;
             bool released = battle.TryRelease(Me, aim, floor, out var why, enemyOnScreen);
