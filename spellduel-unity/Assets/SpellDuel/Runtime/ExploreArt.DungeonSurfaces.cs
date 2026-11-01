@@ -81,10 +81,16 @@ namespace SpellDuel
     float px=box.x+(cx-x0+.5f)*cs,py=box.y+(span-1-(cz-z0)+.5f)*cs,s=Mathf.Clamp(cs*2,10,28);
     var col=DungeonThemeColor(DungeonThemeAt(map,cx,cz));if(a.entered&&!a.cleared)col=Color.Lerp(col,Color.white,.35f+.30f*Mathf.Sin(Time.time*4));
     UiKit.Disc(new Rect(px-s*.65f,py-s*.65f,s*1.3f,s*1.3f),new Color(.06f,.09f,.13f,.95f));
-    if(a.cleared){DungeonMapLine(new Vector2(px-s*.4f,py),new Vector2(px-s*.08f,py+s*.3f),s*.14f,UiKit.Theme.Positive);DungeonMapLine(new Vector2(px-s*.08f,py+s*.3f),new Vector2(px+s*.42f,py-s*.35f),s*.14f,UiKit.Theme.Positive);}
-    else if(a.IsBoss){for(int i=-1;i<=1;i++){float xx=px+i*s*.35f;UiKit.Gem(new Rect(xx-s*.12f,py-s*(i==0?.5f:.35f),s*.24f,s*.6f),col);}UiKit.Divider(new Rect(px-s*.5f,py+s*.1f,s,s*.2f),col);}
+    if(a.IsBoss){for(int i=-1;i<=1;i++){float xx=px+i*s*.35f;UiKit.Gem(new Rect(xx-s*.12f,py-s*(i==0?.5f:.35f),s*.24f,s*.6f),col);}UiKit.Divider(new Rect(px-s*.5f,py+s*.1f,s,s*.2f),col);}
     else if(a.IsChest){UiKit.Divider(new Rect(px-s*.4f,py-s*.24f,s*.8f,s*.52f),col);UiKit.Divider(new Rect(px-s*.06f,py-s*.24f,s*.12f,s*.52f),UiKit.Theme.Ink);}
     else UiKit.Gem(new Rect(px-s*.35f,py-s*.35f,s*.7f,s*.7f),col);
+    if(a.cleared)
+    {
+     float bx=px+s*.46f,by=py+s*.40f,k=s*.5f;
+     UiKit.Disc(new Rect(bx-k*.65f,by-k*.65f,k*1.3f,k*1.3f),UiKit.Theme.Ink);
+     DungeonMapLine(new Vector2(bx-k*.4f,by),new Vector2(bx-k*.08f,by+k*.3f),k*.19f,UiKit.Theme.Positive);
+     DungeonMapLine(new Vector2(bx-k*.08f,by+k*.3f),new Vector2(bx+k*.42f,by-k*.35f),k*.19f,UiKit.Theme.Positive);
+    }
    }
    GUI.color=old;
   }

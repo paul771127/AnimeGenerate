@@ -19,7 +19,9 @@ namespace SpellDuel
    if(corners==0)return root;
    foreach(var f in root.GetComponentsInChildren<MeshFilter>())
    {
-    string key="wall/rounded/"+f.sharedMesh.name+"/"+corners+"/"+ExploreMap.CellSize;
+    // Dungeon facades rotate toward their corridor; rounded meshes must include that orientation.
+    string facing=map.dungeon!=null?"/f"+Mathf.RoundToInt(f.transform.localEulerAngles.y):"";
+    string key="wall/rounded/"+f.sharedMesh.name+"/"+corners+"/"+ExploreMap.CellSize+facing;
     if(!meshes.TryGetValue(key,out var mesh)||!mesh){mesh=UnityEngine.Object.Instantiate(f.sharedMesh);mesh.name=key;var vertices=mesh.vertices;float radius=.45f*3/ExploreMap.CellSize;
      for(int j=0;j<vertices.Length;j++){var v=root.transform.InverseTransformPoint(f.transform.TransformPoint(vertices[j]));
       for(int i=0;i<4;i++)if((corners&(1<<i))!=0){int sx=i%2==0?1:-1,sz=i<2?1:-1;var delta=new Vector2(v.x*sx-(1.5f-radius),v.z*sz-(1.5f-radius));if(delta.x>0&&delta.y>0&&delta.magnitude>radius){delta=delta.normalized*radius;v.x=(1.5f-radius+delta.x)*sx;v.z=(1.5f-radius+delta.y)*sz;}}

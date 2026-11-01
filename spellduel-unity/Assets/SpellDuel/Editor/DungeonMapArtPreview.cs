@@ -88,6 +88,15 @@ namespace SpellDuel.EditorTools
     // Do not conceal pre-existing topology bugs behind an art change.
     Check(row.baselineUnreachable==0,d.id+" has "+row.baselineUnreachable+" unreachable baseline connections");row.cache=true;report.maps.Add(row);
    }
+   // Arena/canyon currently occur only inside the mechanical gallery. Preview their
+   // normal art using editor-only fixtures; do not edit the authored dungeon catalog.
+   for(int t=0;t<5;t++)if(representatives[t]==null)
+   {
+    var fixture=new DungeonDef{id="art_fixture_theme_"+t,name="Theme art fixture",level=10};
+    fixture.rooms.Add(new DungeonRoom{id="camp",title="Camp",wave=1,theme=t});
+    fixture.rooms.Add(new DungeonRoom{id="boss",title="Throne",kind="boss",wave=10,theme=t});
+    representatives[t]=DungeonMaze.Build(fixture);targetAreas[t]=representatives[t].areas[0];
+   }
    string[] names={"volcano","jungle","sea","arena","canyon","clockwork"};
    for(int t=0;t<6;t++)
    {
