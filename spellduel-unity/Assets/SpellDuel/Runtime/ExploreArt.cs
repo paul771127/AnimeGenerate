@@ -49,6 +49,7 @@ namespace SpellDuel
    internal void FadeTile(float radius,Color col)
    {Vector3[] a={V(-radius,.002f,-radius),V(-radius,.002f,radius),V(radius,.002f,radius),V(radius,.002f,-radius)};Color clear=col;clear.a=0;Quad(a[0]*.85f,a[1]*.85f,a[2]*.85f,a[3]*.85f,col);for(int i=0;i<4;i++){int j=(i+1)%4;int k=v.Count;v.Add(a[i]*.85f);v.Add(a[j]*.85f);v.Add(a[j]);v.Add(a[i]);c.Add(col);c.Add(col);c.Add(clear);c.Add(clear);t.AddRange(new[]{k,k+1,k+2,k,k+2,k+3});}}
    internal void ClampCell(float half){for(int i=0;i<v.Count;i++){var p=v[i];p.x=Mathf.Clamp(p.x,-half,half);p.z=Mathf.Clamp(p.z,-half,half);p.y=Mathf.Max(0,p.y);v[i]=p;}}
+   internal void ColorBy(int first,System.Func<Vector3,Color> f){for(int i=first;i<v.Count;i++)c[i]=f(v[i]);}
    internal void HeightTint(int first,float low,float high,Color bottom,Color top){for(int i=first;i<v.Count;i++)c[i]=Color.Lerp(bottom,top,Mathf.InverseLerp(low,high,v[i].y));}
    internal Mesh Finish(string name){var m=new Mesh{name="Explore cached "+name};if(v.Count>65535)m.indexFormat=UnityEngine.Rendering.IndexFormat.UInt32;m.SetVertices(v);m.SetTriangles(t,0);m.SetColors(c);m.RecalculateNormals();if(foliageNormals.Count>0){var normals=m.normals;foreach(var pair in foliageNormals)normals[pair.Key]=pair.Value;m.normals=normals;}m.RecalculateBounds();return m;}
   }

@@ -220,7 +220,9 @@ namespace SpellDuel
             var shader = Resources.Load<Shader>("Shaders/ExploreBaseGround") ?? Shader.Find("SpellDuel/ExploreBaseGround");
             if (!shader) return null;
             float cs = ExploreMap.CellSize, k = 1.02f / cs;   // 和原本每格的地貼同樣的貼圖密度
-            Vector3 a = map.World(0, 0) - new Vector3(cs, 0f, cs) * 0.5f, b = map.World(map.W - 1, map.H - 1) + new Vector3(cs, 0f, cs) * 0.5f;
+            // 地圖外面也鋪很遠（使用者要求：補起來的地方要自然）：地面的邊永遠在 60m 遠裁切以外，看不到方形的邊；遠處淡成霧氣色接到地面碗
+            const float ExGroundSkirt = 160f;
+            Vector3 a = map.World(0, 0) - new Vector3(cs, 0f, cs) * 0.5f - new Vector3(ExGroundSkirt, 0f, ExGroundSkirt), b = map.World(map.W - 1, map.H - 1) + new Vector3(cs, 0f, cs) * 0.5f + new Vector3(ExGroundSkirt, 0f, ExGroundSkirt);
             const float y = -0.006f;
             var mesh = new Mesh { name = "Explore base ground" };
             mesh.vertices = new[] { new Vector3(a.x, y, a.z), new Vector3(a.x, y, b.z), new Vector3(b.x, y, b.z), new Vector3(b.x, y, a.z) };
@@ -232,6 +234,7 @@ namespace SpellDuel
             var mat = new Material(shader) { name = "Explore base ground" };
             mat.mainTexture = ExploreArt.GroundTexture(map.dungeon != null ? ExploreArt.DungeonBaseGround(map) : ExGround.Grass);
             mat.SetColor("_Tint", new Color(0.92f, 0.95f, 0.9f));
+            ExploreArt.HorizonColors(map, out var hg, out var hs); mat.SetColor("_Haze", ExploreArt.HazeOf(hg, hs));
             mr.sharedMaterial = mat; mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; mr.receiveShadows = false;
             return go;
         }

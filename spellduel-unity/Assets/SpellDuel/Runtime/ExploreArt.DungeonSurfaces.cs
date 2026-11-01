@@ -71,7 +71,7 @@ namespace SpellDuel
     else for(int k=0;k<3;k++)b.Crag(V((k-1)*8,0,0),V(16,12+(k+n)%3*5,12),Color.Lerp(low,high,.5f),k+n);
    },V(Mathf.Cos(angle)*radius,0,Mathf.Sin(angle)*radius),true);distant.localRotation=Quaternion.Euler(0,-angle*Mathf.Rad2Deg,0);BackdropLayer(distant,1400);}
    // 地平線以下的地面碗（不透出現實背景）：各主題的地面色
-   GroundBowl(root.transform,theme==0?new Color(.20f,.17f,.18f):theme==2?new Color(.72f,.68f,.55f):theme==3?new Color(.58f,.44f,.30f):theme==5?new Color(.28f,.28f,.30f):new Color(.55f,.33f,.22f),radius*1.7f);
+   {HorizonColors(map,out var gc,out var sl);GroundBowl(root.transform,gc,sl,radius*1.7f);}
    return root;
   }
   public static void DrawDungeonAreaMap(ExploreRun run,Rect box,int x0,int z0,int span)
