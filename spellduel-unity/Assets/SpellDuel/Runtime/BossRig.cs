@@ -3014,6 +3014,7 @@ namespace SpellDuel
         /// 頭目招式的飛行物外觀（+Z＝飛行方向）。呼叫者每幀設定位置與旋轉，結束時 Destroy。未知的 id 回傳 null。
         ///   b_bolt：約 0.35 m 的熔岩球（暗色岩殼碎塊、發光核心、火焰拖尾、滴落的火星）。
         ///   b_sweep：約 2.4 m 寬、0.5 m 高的水平新月衝擊波（火焰＋翻滾岩塊），一看就知道要蹲下。
+        ///   w_sweep（世界 Boss 巨臂橫掃）同 b_sweep；p_whip（藤鞭橫掃）同樣的新月，綠色、沒有岩塊。
         ///   b_rain：約 0.6 m 的燃燒巨石（煙＋火拖尾），+Z 朝下落下；外型對 Z 軸對稱，翻滾角度不影響外觀。
         ///   m_fireball：火焰射手小鬼的青白色小火球（約 0.18 m）＋短拖尾。
         ///   m_rock：岩石投擲者丟出的約 0.35 m 燃燒岩塊（與 b_rain 同造型、縮小；+Z 朝下落下，翻滾角度不影響外觀）。
@@ -3033,7 +3034,10 @@ namespace SpellDuel
             switch (skillId)
             {
                 case "b_bolt": return BuildBolt();
-                case "b_sweep": return BuildSweep();
+                case "b_sweep": return BuildSweep("b_sweep", SweepFire, true);
+                // 其他胸口高度的橫掃（使用者回報：以前畫成一顆光球，看起來像火球術）：同樣的水平新月衝擊波，換成各自的顏色
+                case "w_sweep": return BuildSweep("w_sweep", SweepFire, true);        // 世界 Boss 巨臂橫掃
+                case "p_whip": return BuildSweep("p_whip", SweepVine, false);         // 腐化樹王 藤鞭橫掃
                 case "b_rain": return BuildRain("b_rain", 1f);
                 case "m_rock": return BuildRain("m_rock", 0.58f);
                 case "m_snipe": return BuildSnipe();
@@ -3135,23 +3139,28 @@ namespace SpellDuel
             return root;
         }
 
-        static GameObject BuildSweep()
+        /// <summary>橫掃新月的配色：deep 外層、mid 中層、core 中心亮線、dust 塵土</summary>
+        struct SweepPalette { public Color deep, mid, core, dust1, dust2; }
+        static readonly SweepPalette SweepFire = new SweepPalette { deep = new Color(1f, 0.22f, 0.04f), mid = new Color(1f, 0.55f, 0.12f), core = new Color(1f, 0.93f, 0.65f), dust1 = new Color(0.35f, 0.28f, 0.24f, 0.5f), dust2 = new Color(0.2f, 0.16f, 0.14f, 0.45f) };
+        static readonly SweepPalette SweepVine = new SweepPalette { deep = new Color(0.08f, 0.45f, 0.12f), mid = new Color(0.3f, 0.8f, 0.25f), core = new Color(0.85f, 1f, 0.65f), dust1 = new Color(0.25f, 0.4f, 0.15f, 0.5f), dust2 = new Color(0.3f, 0.25f, 0.12f, 0.45f) };
+
+        static GameObject BuildSweep(string id, SweepPalette pal, bool withRocks)
         {
             InitProjMats();
-            var root = new GameObject("Boss Projectile b_sweep");
+            var root = new GameObject("Boss Projectile " + id);
             var anim = root.AddComponent<BossFxSpin>();
             var rt = root.transform;
 
             // 火焰新月：直立的光幕（中心最亮、上下淡出）＋水平的新月薄片＋後方殘影
             var wave = Pivot("Wave", rt, Vector3.zero);
-            GlowMesh(wave, "sweep.wave", m =>
+            GlowMesh(wave, "sweep.wave." + id, m =>
             {
                 const int N = 17;
-                SweepCurtain(m, N, 0f, 1f, 1f, new Color(1f, 0.22f, 0.04f), 0.45f);
-                SweepCurtain(m, N, 0f, 1f, 0.6f, new Color(1f, 0.55f, 0.12f), 0.7f);
-                SweepCurtain(m, N, 0.01f, 1f, 0.22f, new Color(1f, 0.93f, 0.65f), 0.9f);
-                SweepCurtain(m, N, -0.35f, 0.85f, 0.7f, new Color(1f, 0.3f, 0.06f), 0.28f);
-                SweepCurtain(m, N, -0.7f, 0.65f, 0.5f, new Color(1f, 0.25f, 0.05f), 0.14f);
+                SweepCurtain(m, N, 0f, 1f, 1f, pal.deep, 0.45f);
+                SweepCurtain(m, N, 0f, 1f, 0.6f, pal.mid, 0.7f);
+                SweepCurtain(m, N, 0.01f, 1f, 0.22f, pal.core, 0.9f);
+                SweepCurtain(m, N, -0.35f, 0.85f, 0.7f, Color.Lerp(pal.deep, pal.mid, 0.2f), 0.28f);
+                SweepCurtain(m, N, -0.7f, 0.65f, 0.5f, pal.deep, 0.14f);
                 // 水平新月薄片（從上方或斜上方看也一目了然是「橫的」）
                 var pts = new Vector3[N]; var half = new Vector3[N]; var cols = new Color[N];
                 for (int i = 0; i < N; i++)
@@ -3160,13 +3169,13 @@ namespace SpellDuel
                     float k = 1f - u * u;
                     pts[i] = new Vector3(1.2f * u, 0f, 0.35f * k - 0.22f);
                     half[i] = new Vector3(0f, 0f, 0.16f * k + 0.01f);
-                    cols[i] = new Color(1f, 0.42f, 0.08f, 0.55f * Mathf.Sqrt(k));
+                    cols[i] = SpellFx.WithA(Color.Lerp(pal.deep, pal.mid, 0.5f), 0.55f * Mathf.Sqrt(k));
                 }
                 m.Ribbon(pts, half, cols);
             });
 
             // 衝擊波前緣翻滾的岩塊
-            const int R = 7;
+            int R = withRocks ? 7 : 0;
             var rocks = new Transform[R]; var axes = new Vector3[R]; var speeds = new float[R];
             for (int i = 0; i < R; i++)
             {
@@ -3195,7 +3204,7 @@ namespace SpellDuel
                 m.startLifetime = new ParticleSystem.MinMaxCurve(0.3f, 0.5f);
                 m.startSpeed = new ParticleSystem.MinMaxCurve(0.1f, 0.4f);
                 m.startSize = new ParticleSystem.MinMaxCurve(0.15f, 0.3f);
-                m.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.6f, 0.15f, 0.8f), new Color(1f, 0.25f, 0.05f, 0.7f));
+                m.startColor = new ParticleSystem.MinMaxGradient(SpellFx.WithA(pal.mid, 0.8f), SpellFx.WithA(pal.deep, 0.7f));
                 var sh = fire.shape; sh.shapeType = ParticleSystemShapeType.SingleSidedEdge; sh.radius = 1.1f;
                 SpellFx.FadeOut(fire);
                 SpellFx.SizeCurve(fire, SpellFx.Shrink);
@@ -3210,7 +3219,7 @@ namespace SpellDuel
                 m.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 0.6f);
                 m.startSize = new ParticleSystem.MinMaxCurve(0.25f, 0.4f);
                 m.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
-                m.startColor = new ParticleSystem.MinMaxGradient(new Color(0.35f, 0.28f, 0.24f, 0.5f), new Color(0.2f, 0.16f, 0.14f, 0.45f));
+                m.startColor = new ParticleSystem.MinMaxGradient(pal.dust1, pal.dust2);
                 var sh = dust.shape; sh.shapeType = ParticleSystemShapeType.SingleSidedEdge; sh.radius = 1.1f;
                 SpellFx.FadeOut(dust);
                 SpellFx.SizeCurve(dust, SpellFx.Grow);

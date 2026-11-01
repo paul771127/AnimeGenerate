@@ -238,7 +238,15 @@ namespace SpellDuel
                 for(int i=0;i<2;i++){float radius=.25f+i*.22f;Glyph(cv,(x,y)=>Math.Abs(Len(x,y*1.5f)-radius)-.045f,colour);}
                 Glyph(cv,(x,y)=>Box(x,y,0,.28f,.09f,.23f,0,.03f),colour);return;
             }
-            if(id.Contains("sweep")||id.Contains("whip")||id.Contains("tentacle")||id.Contains("whirl"))
+            if(id.Contains("sweep")||id.Contains("whip"))
+            {
+                // 橫掃（使用者要求：看得出是「橫向」的招，不像火球）：一道橫躺、中間粗兩端收尖的弧形刀光，右端箭頭表示掃的方向，左邊拖著速度線
+                Glyph(cv,(x,y)=>{float t=Math.Min(1f,Math.Abs(x+.04f)/.44f);return Math.Max(Math.Abs(Len(x,y+.62f)-.72f)-(.12f*(1f-t*t)+.015f),Math.Abs(x+.04f)-.44f);},colour);
+                Glyph(cv,(x,y)=>Math.Max(Math.Max(-(x-.3f),(x-.3f)*.55f+Math.Abs(y+.05f)-.13f),0f-1f),colour);
+                for(int i=0;i<3;i++){float yy=-.2f-i*.1f,len=.3f-i*.07f;Glyph(cv,(x,y)=>Seg(x,y,-.42f,yy,-.42f+len,yy)-.024f,colour,.8f-.2f*i);}
+                return;
+            }
+            if(id.Contains("tentacle")||id.Contains("whirl"))
             {
                 Glyph(cv,(x,y)=>Math.Max(Math.Abs(Len(x,y)-.43f)-.075f,y-.15f),colour);
                 Glyph(cv,(x,y)=>Diamond(x,y,.42f,.12f,.12f,.22f,-.6f),colour);return;
