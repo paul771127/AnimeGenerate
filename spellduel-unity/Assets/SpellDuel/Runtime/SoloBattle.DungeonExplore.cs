@@ -17,8 +17,9 @@ namespace SpellDuel
         List<Vector3> exSavedPoly;
         readonly Queue<ExArea> exNodeQueue = new Queue<ExArea>();
 
-        /// <summary>這個副本要不要用大地圖：飛毯副本不改；千機迴廊之後改成機關房間；連線多人之後接</summary>
-        bool DungeonExploreOk(DungeonDef d, bool coopMode) => !coopMode && !NetMode && DungeonMaze.Supports(d) && d.id != TrapGallery.Id;
+        /// <summary>這個副本要不要用大地圖：飛毯副本不改；千機迴廊之後改成機關房間。單人、連線都用（地圖每台手機各自產生，長得一樣）</summary>
+        bool DungeonExploreOk(DungeonDef d, bool coopMode) => DungeonMaze.Supports(d) && d.id != TrapGallery.Id;
+        float exAreaSendAt; string exAreaSent;
 
         /// <summary>StartBossBattle（副本那一段）叫：把副本大地圖接上戰鬥</summary>
         void SetupDungeonExplore()
@@ -26,6 +27,7 @@ namespace SpellDuel
             var run = exploreRun;
             exNodeArea = null; exNodeQueue.Clear(); exSavedPoly = null;
             battle.StartExplore(run);
+            battle.exMirror = coop && !NetIsHost;   // 連線的隊友：怪物、事件、首領都照主機送來的顯示
             battle.OnExWave = ApplyDungeonMinionStrength;
             battle.themeOverride = dungeon.ThemeOf(run.map.areas[0].node);
             ExHookBattle();
@@ -51,6 +53,18 @@ namespace SpellDuel
                 foreach (var a in run.map.areas) { float d = Battle.FlatDistance(a.center, Me.Feet); if (d < best) { best = d; near = a; } }
                 if (near != null) { int th = dungeon.ThemeOf(near.node); if (battle.themeOverride != th) battle.themeOverride = th; }
             }
+            if (!DungeonDecider)
+            {
+                // 連線的隊友端：區域的進度照主機（dxa）；地點的戰鬥由主機開
+                if (battle.explore == null) { battle.exMirror = true; battle.StartExplore(run); ExHookBattle(); }   // 牆擋法術、怪物照主機（自己不放怪）
+                run.areaStarts.Clear();
+                foreach (var a in run.areaCleared) Ticker(a.node.clear);
+                run.areaCleared.Clear();
+                UpdateRoomEventVisuals();
+                return;
+            }
+            // 主機：隊友走進區域也算（照他們的位置更新）
+            if (coop) foreach (var al in battle.allies) if (al != null && al.Alive) run.Update(al.Feet, null);
             foreach (var a in run.areaStarts) exNodeQueue.Enqueue(a);
             run.areaStarts.Clear();
             while (exNodeArea == null && exNodeQueue.Count > 0) StartAreaNode(run, exNodeQueue.Dequeue());
@@ -67,22 +81,40 @@ namespace SpellDuel
             if (exNodeArea != null && exNodeArea.IsBoss && dungeonHalfSaid != exNodeArea.index && battle.IsBossWave && En.Alive && En.maxHp > 0 && En.hp <= En.maxHp * 0.5f)
             { dungeonHalfSaid = exNodeArea.index; Ticker(exNodeArea.node.bossHalf); }
             UpdateRoomEventVisuals();
+            if (coop) { SendRoomEventState(); SendAreaState(run); }
+        }
+
+        /// <summary>主機：區域的進度（走進過、清除）送給隊友（有變化馬上送，沒變化每 2 秒再送一次）</summary>
+        void SendAreaState(ExploreRun run)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var a in run.map.areas) sb.Append(a.cleared ? '2' : a.entered ? '1' : '0');
+            string st = sb.ToString();
+            if (st == exAreaSent && Time.time < exAreaSendAt) return;
+            exAreaSent = st; exAreaSendAt = Time.time + 2f;
+            NetSend?.Invoke(new Msg { t = "dxa", k = st });
+        }
+
+        /// <summary>隊友：收到主機的區域進度（清除的區域打開門、顯示台詞）</summary>
+        bool DungeonExploreMsg(Msg m)
+        {
+            if (m.t != "dxa") return false;
+            if (NetIsHost || exploreRun == null || !exploreRun.IsDungeon || string.IsNullOrEmpty(m.k)) return true;
+            var areas = exploreRun.map.areas;
+            for (int i = 0; i < areas.Count && i < m.k.Length; i++)
+            {
+                var a = areas[i];
+                if (m.k[i] >= '1') a.entered = true;
+                if (m.k[i] == '2' && !a.cleared) { if (a.IsChest && battle != null) ChestAreaLoot(a); exploreRun.ClearArea(a); }
+            }
+            return true;
         }
 
         /// <summary>走進一個區域：寶箱直接打開；事件、首領照原本副本的地點流程開打（場地＝這塊區域）</summary>
         void StartAreaNode(ExploreRun run, ExArea a)
         {
             Ticker(a.node.enter);
-            if (a.IsChest)
-            {
-                ItemGen.SetTheme = dungeon.ThemeOf(a.node);
-                pendingItems.Add(ItemGen.Make(dropRng, dungeon.level + battle.levelBoost, Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
-                pendingGold += 40 * dungeon.level;
-                floaters.Add(new Floater { text = $"🧰 {a.Title}：裝備＋金幣（通關後獲得）", color = new Color(1f, 0.85f, 0.35f), born = Time.time, screen = true });
-                Sfx.Play("coin", 0.9f); Haptics.Play(Haptics.Kind.Success);
-                run.ClearArea(a);
-                return;
-            }
+            if (a.IsChest) { ChestAreaLoot(a); run.ClearArea(a); return; }
             bool final = run.map.arenas.Exists(x => x.n == 4 && Vector3.Distance(x.center, a.center) < 0.1f);
             exSavedPoly = battle.arenaPoly;
             battle.arenaPoly = AreaPoly(run.map, a);
@@ -93,6 +125,16 @@ namespace SpellDuel
             if (a.IsEvent) battle.StartRoomEvent(a.node.kind, a.node.param);
             exNodeArea = a; exNodeAt = Time.time;
             Say(final ? $"👑 {a.Title}" : a.IsBoss ? $"💀 {a.Title}" : $"⚠ {a.Title}", 3f);
+        }
+
+        /// <summary>寶箱地點：一件稀有以上的裝備＋金幣（每個人各自拿；連線的隊友在收到主機的清除時拿）</summary>
+        void ChestAreaLoot(ExArea a)
+        {
+            ItemGen.SetTheme = dungeon.ThemeOf(a.node);
+            pendingItems.Add(ItemGen.Make(dropRng, dungeon.level + battle.levelBoost, Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
+            pendingGold += 40 * dungeon.level;
+            floaters.Add(new Floater { text = $"🧰 {a.Title}：裝備＋金幣（通關後獲得）", color = new Color(1f, 0.85f, 0.35f), born = Time.time, screen = true });
+            Sfx.Play("coin", 0.9f); Haptics.Play(Haptics.Kind.Success);
         }
 
         /// <summary>區域的場地（四個角，往內縮一點；事件的道具、出怪位置照這個）</summary>

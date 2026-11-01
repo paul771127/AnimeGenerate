@@ -56,6 +56,15 @@ namespace SpellDuel
         public event System.Action<Fighter, string> OnExSay;
         /// <summary>副本大地圖：放上戰場的怪的副本波次（SoloBattle 照副本等級設定小怪倍率）</summary>
         public System.Action<int> OnExWave;
+        /// <summary>副本大地圖連線：隊友端只照主機送來的怪顯示（自己不放怪、不叫首領）</summary>
+        public bool exMirror;
+        /// <summary>離這一點最近、還活著的玩家（自己或隊友；副本大地圖連線時怪物會找最近的人）</summary>
+        public Fighter ExNearestPlayer(Vector3 p)
+        {
+            Fighter best = null; float bd = float.MaxValue;
+            foreach (var f in Players()) { if (f == null || !f.Alive) continue; float d = FlatDistance(f.Feet, p); if (d < bd) { bd = d; best = f; } }
+            return best ?? player;
+        }
         public const float ExSurprise = 0.8f;   // 發現玩家後愣住幾秒才開始追／攻擊
 
         /// <summary>開始一次探索：不自動出怪（手動模式），怪物只能走走道，主題＝叢林</summary>
@@ -331,10 +340,12 @@ namespace SpellDuel
         void UpdateExplore(float dt)
         {
             var run = explore; if (run == null || player == null) return;
-            var pf = player.Feet;
+            if (exMirror) return;   // 連線的隊友端：怪物由主機算
             foreach (var mon in run.map.monsters)
             {
                 if (mon.dead || mon.hidden) continue;
+                exActive.TryGetValue(mon, out var m0);
+                var pf = ExNearestPlayer(m0 != null ? m0.Feet : mon.home).Feet;   // 最近的玩家（連線時隊友也算）
                 float d = FlatDistance(mon.home, pf);
                 exActive.TryGetValue(mon, out var m);
                 if (m == null)

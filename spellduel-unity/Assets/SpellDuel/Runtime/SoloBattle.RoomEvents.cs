@@ -223,7 +223,7 @@ namespace SpellDuel
         /// <summary>房主：每 0.25 秒送狀態（沒有特殊地點時送一次空的，讓隊友清掉）</summary>
         void SendRoomEventState()
         {
-            if (!coop || !NetIsHost || battle == null || drun == null || Time.time < nextRevSend) return;
+            if (!coop || !NetIsHost || battle == null || drun == null && exploreRun == null || Time.time < nextRevSend) return;
             bool active = battle.roomEvent != null;
             if (!active && !revWasActive) return;
             revWasActive = active;

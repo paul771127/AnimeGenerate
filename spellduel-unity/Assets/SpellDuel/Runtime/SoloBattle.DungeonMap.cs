@@ -425,6 +425,7 @@ namespace SpellDuel
         bool OnDungeonMsg(Msg m)
         {
             if(GalleryMessage(m))return true;
+            if (DungeonExploreMsg(m)) return true;   // 副本大地圖（SoloBattle.DungeonExplore.cs）
             if (SkyMessage(m)) return true;   // 天穹飛毯（SoloBattle.Carpet.cs）
             if (OnRoomEventMsg(m)) return true;   // 特殊地點（SoloBattle.RoomEvents.cs）
             if (drun == null) return false;
