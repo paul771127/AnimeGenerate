@@ -595,7 +595,7 @@ namespace SpellDuel
                     var cell = map.At(x, z);
                     Color c = cell == ExCell.Gate ? (map.GateOpen(x, z) ? new Color(0.55f, 0.8f, 0.5f, 0.9f) : new Color(0.9f, 0.35f, 0.25f, 0.95f))
                         : cell == ExCell.Wall ? MiniTerrainColor(map.TerrainAt(x, z)) : map.GroundAt(x, z) == ExGround.Stone ? new Color(0.85f, 0.85f, 0.8f, 0.85f) : map.GroundAt(x, z) == ExGround.Cave ? new Color(0.55f, 0.5f, 0.48f, 0.85f) : new Color(0.75f, 0.85f, 0.7f, 0.85f);
-                    if (map.dungeon != null && cell == ExCell.Floor) c = Color.Lerp(ExploreArt.DungeonThemeColor(ExploreArt.DungeonThemeAt(map, x, z)), new Color(.16f,.19f,.22f), map.AreaAt(new Vector2Int(x,z)) != null ? .20f : .62f);
+                    if (map.dungeon != null && cell == ExCell.Floor) c = Color.Lerp(ExploreArt.DungeonRegionColor(map, x, z), new Color(.16f,.19f,.22f), map.AreaAt(new Vector2Int(x,z)) != null ? .20f : .62f);
                     GUI.color = c;
                     GUI.DrawTexture(new Rect(box.x + (x - x0) * cs, box.y + (span - 1 - (z - z0)) * cs, cs + 0.5f, cs + 0.5f), Texture2D.whiteTexture);
                 }

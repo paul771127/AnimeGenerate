@@ -19,7 +19,7 @@ namespace SpellDuel
     {
      ExArea best=null;float distance=float.MaxValue;
      foreach(var a in map.areas){float dx=Mathf.Max(a.rect.xMin-x,0,x-a.rect.xMax),dz=Mathf.Max(a.rect.yMin-z,0,z-a.rect.yMax);float d=dx*dx+dz*dz;if(d<distance){distance=d;best=a;}}
-     nearest[x,z]=best;theme[x,z]=map.nodeAreas?5:best!=null?Mathf.Clamp(map.dungeon.ThemeOf(best.node),0,4):0;
+     nearest[x,z]=best;theme[x,z]=best!=null?Mathf.Clamp(map.dungeon.ThemeOf(best.node),0,4):0;
     }
    }
   }
@@ -27,6 +27,8 @@ namespace SpellDuel
   static DungeonArtLayout DungeonLayout(ExploreMap m)=>dungeonLayouts.GetValue(m,map=>new DungeonArtLayout(map));
   public static int DungeonThemeAt(ExploreMap m,int x,int z)
   {if(m.nodeAreas)return 5;return m.InGrid(x,z)?DungeonLayout(m).theme[x,z]:0;}
+  static int DungeonRegionAt(ExploreMap m,int x,int z)=>m.InGrid(x,z)?DungeonLayout(m).theme[x,z]:0;
+  public static Color DungeonRegionColor(ExploreMap m,int x,int z)=>DungeonThemeColor(DungeonRegionAt(m,x,z));
   public static Color DungeonThemeColor(int theme)=>theme==0?new Color(1,.36f,.12f):theme==1?new Color(.38f,.80f,.47f):theme==2?new Color(.28f,.77f,.88f):theme==3?new Color(.86f,.34f,.22f):theme==4?new Color(.88f,.61f,.31f):new Color(.94f,.72f,.30f);
   static Color DungeonRock(int t)=>t==0?new Color(.22f,.24f,.30f):t==2?new Color(.31f,.48f,.52f):t==4?new Color(.59f,.32f,.22f):t==5?new Color(.28f,.34f,.39f):new Color(.48f,.43f,.34f);
   public static ExGround DungeonBaseGround(ExploreMap m)=>m.nodeAreas?ExGround.Stone:m.theme=="volcano"?ExGround.Cave:m.theme=="sea"?ExGround.Shore:m.theme=="arena"?ExGround.Stone:m.theme=="canyon"?ExGround.Dirt:ExGround.Grass;

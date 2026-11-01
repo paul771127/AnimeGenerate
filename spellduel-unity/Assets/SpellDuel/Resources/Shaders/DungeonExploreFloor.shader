@@ -9,7 +9,7 @@ Shader "SpellDuel/DungeonExploreFloor"
  #pragma fragment frag
  #pragma target 3.0
  #include "UnityCG.cginc"
- sampler2D _MainTex;float4 _PathColor,_VergeColor,_TexOffset,_Props[16];int _PropCount;float _Theme,_Room,_RoomEdge;float4 _Accent;
+ sampler2D _MainTex;float4 _PathColor,_VergeColor,_TexOffset,_Props[16];int _PropCount;float _Theme,_Room,_RoomEdge,_RegionTheme;float4 _Accent;
  struct appdata {float4 vertex:POSITION;float2 uv:TEXCOORD0;float4 links:TEXCOORD1;};
  struct v2f {float4 pos:SV_POSITION;float2 p:TEXCOORD0;float4 links:TEXCOORD1;};
  v2f vert(appdata v){v2f o;o.pos=UnityObjectToClipPos(v.vertex);o.p=v.uv;o.links=v.links;return o;}
@@ -25,7 +25,9 @@ Shader "SpellDuel/DungeonExploreFloor"
  for(int n=0;n<16;n++){if(n>=_PropCount)break;d=min(d,length(i.p-_Props[n].xy)-_Props[n].z);}
  float aa=max(fwidth(d),.008),lane=smoothstep(-aa,aa,d);float edge=smoothstep(0,.28,d);
  float2 p=i.p+_TexOffset.xy;float grain=tex2D(_MainTex,p/3).r;
- float3 base=_Theme<.5?float3(.29,.30,.35):_Theme<1.5?float3(.48,.36,.22):_Theme<2.5?float3(.77,.72,.56):_Theme<3.5?float3(.64,.49,.30):_Theme<4.5?float3(.66,.43,.26):float3(.34,.40,.43);
+ float tone=_Theme>4.5?_RegionTheme:_Theme;
+ float3 base=tone<.5?float3(.29,.30,.35):tone<1.5?float3(.48,.36,.22):tone<2.5?float3(.77,.72,.56):tone<3.5?float3(.64,.49,.30):tone<4.5?float3(.66,.43,.26):float3(.34,.40,.43);
+ if(_Theme>4.5)base=lerp(float3(.34,.40,.43),base,.22);
  float detail=.87+grain*.25;
  if(_Theme>4.5){float2 q=abs(frac(p*2)-.5);float grate=step(.13,q.x)*step(.13,q.y);detail*=lerp(.35,1,grate);float seam=min(frac(p.x/2),frac(p.y/2));detail*=lerp(.55,1,smoothstep(.01,.035,seam));}
  else if(_Room>.5&&(_Theme<.5||_Theme>2.5)){float row=floor(p.y/1.2);float2 q=frac(float2(p.x/1.6+row*.5,p.y/1.2));float joint=min(min(q.x,1-q.x),min(q.y,1-q.y));detail*=lerp(.69,1,smoothstep(.015,.045,joint));}

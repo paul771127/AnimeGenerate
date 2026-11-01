@@ -19,13 +19,13 @@ namespace SpellDuel
    var surface=root.transform.Find("PathSurface").GetComponent<Renderer>();surface.sharedMaterial=mat;
    var block=new MaterialPropertyBlock();surface.GetPropertyBlock(block);int edges=0;
    if(area!=null){if(x==area.rect.xMax)edges|=1;if(x==area.rect.xMin)edges|=2;if(z==area.rect.yMax)edges|=4;if(z==area.rect.yMin)edges|=8;}
-   block.SetFloat("_RoomEdge",edges);surface.SetPropertyBlock(block);
+   block.SetFloat("_RoomEdge",edges);block.SetFloat("_RegionTheme",DungeonRegionAt(map,x,z));block.SetColor("_Accent",DungeonRegionColor(map,x,z));surface.SetPropertyBlock(block);
    var shoulder=root.transform.Find("BlockedShoulder");if(shoulder)shoulder.gameObject.SetActive(false);
    if(area!=null&&x==area.rect.xMin+area.rect.width/2&&z==area.rect.yMin+area.rect.height/2)
    {
     int kind=area.IsBoss?3:area.IsChest?1:area.IsEvent?2:0;
-    Part(root.transform,"dungeon/roomMark/"+theme+"/"+kind,b=>{
-     Color c=DungeonThemeColor(theme);c.a=.70f;
+    Part(root.transform,"dungeon/roomMark/"+theme+"/"+DungeonRegionAt(map,x,z)+"/"+kind,b=>{
+     Color c=DungeonRegionColor(map,x,z);c.a=.70f;
      b.Ring(V(0,.016f,0),kind==3?1.65f:1.25f,.04f,c,32);
      if(kind==1){b.Quad(V(-.55f,.017f,-.32f),V(-.55f,.017f,.35f),V(.55f,.017f,.35f),V(.55f,.017f,-.32f),new Color(.72f,.54f,.25f,.55f));b.Ring(V(0,.018f,0),.22f,.06f,c,8);}
      else for(int i=0;i<(kind==2?8:4);i++){float a=i*Mathf.PI*2/(kind==2?8:4);var p=V(Mathf.Cos(a)*.95f,.018f,Mathf.Sin(a)*.95f);b.Gem(p,V(.20f,.005f,.30f),c,4);}
@@ -52,7 +52,7 @@ namespace SpellDuel
     for(int i=0;i<7;i++){float px=(i-3)*.51f;if(theme==1)b.Vine(V(px,0,0),V(-px,3.25f,0),.25f,.08f,c,6);else b.Rod(V(px,0,0),V(px,3.25f,0),.065f,c,6);}
     for(int i=0;i<2;i++)b.Rod(V(-1.65f,.7f+i*1.5f,0),V(1.65f,.7f+i*1.5f,0),.07f,c,6);
    });
-   var rune=Part(moving,"dungeon/gateRune/"+theme,b=>{var c=DungeonThemeColor(theme);c.a=.55f;b.Ring(Vector3.zero,.66f,.035f,c,28);for(int i=0;i<4;i++){float a=i*Mathf.PI*.5f;b.Gem(V(Mathf.Cos(a)*.76f,0,Mathf.Sin(a)*.76f),V(.17f,.025f,.17f),c,4);}},V(0,1.6f,.15f),true);rune.localRotation=Quaternion.Euler(90,0,0);
+   var rune=Part(moving,"dungeon/gateRune/"+theme+"/"+DungeonRegionAt(map,x,z),b=>{var c=DungeonRegionColor(map,x,z);c.a=.55f;b.Ring(Vector3.zero,.66f,.035f,c,28);for(int i=0;i<4;i++){float a=i*Mathf.PI*.5f;b.Gem(V(Mathf.Cos(a)*.76f,0,Mathf.Sin(a)*.76f),V(.17f,.025f,.17f),c,4);}},V(0,1.6f,.15f),true);rune.localRotation=Quaternion.Euler(90,0,0);
    var state=root.AddComponent<DungeonGateArt>();state.closed=moving;state.open=open;state.elapsed=open?Time.time-layout.openedAt[key]:0;state.Sample(state.elapsed);return root;
   }
   static GameObject CreateDungeonBackdrop(ExploreMap map)
@@ -79,7 +79,7 @@ namespace SpellDuel
    {
     int cx=a.rect.xMin+a.rect.width/2,cz=a.rect.yMin+a.rect.height/2;if(cx<x0||cz<z0||cx>=x0+span||cz>=z0+span||!run.explored.Contains(new Vector2Int(cx,cz)))continue;
     float px=box.x+(cx-x0+.5f)*cs,py=box.y+(span-1-(cz-z0)+.5f)*cs,s=Mathf.Clamp(cs*2,10,28);
-    var col=DungeonThemeColor(DungeonThemeAt(map,cx,cz));if(a.entered&&!a.cleared)col=Color.Lerp(col,Color.white,.35f+.30f*Mathf.Sin(Time.time*4));
+    var col=DungeonRegionColor(map,cx,cz);if(a.entered&&!a.cleared)col=Color.Lerp(col,Color.white,.35f+.30f*Mathf.Sin(Time.time*4));
     UiKit.Disc(new Rect(px-s*.65f,py-s*.65f,s*1.3f,s*1.3f),new Color(.06f,.09f,.13f,.95f));
     if(a.IsBoss){for(int i=-1;i<=1;i++){float xx=px+i*s*.35f;UiKit.Gem(new Rect(xx-s*.12f,py-s*(i==0?.5f:.35f),s*.24f,s*.6f),col);}UiKit.Divider(new Rect(px-s*.5f,py+s*.1f,s,s*.2f),col);}
     else if(a.IsChest){UiKit.Divider(new Rect(px-s*.4f,py-s*.24f,s*.8f,s*.52f),col);UiKit.Divider(new Rect(px-s*.06f,py-s*.24f,s*.12f,s*.52f),UiKit.Theme.Ink);}
