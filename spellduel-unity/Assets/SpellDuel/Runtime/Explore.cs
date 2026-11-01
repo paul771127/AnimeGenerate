@@ -53,6 +53,10 @@ namespace SpellDuel
         public int wave;
         /// <summary>副本大地圖：營地外圍巡邏的怪（使用者要求）：wander＝在營地附近隨機晃；role 1＝斥候（跑得快）、2＝哨兵（警戒範圍大）、0＝一般</summary>
         public bool wander; public int role;
+        /// <summary>外圍巡邏的小隊編號（同一隊一起行動：斥候、哨兵回去通報時整隊一起跑）；−1＝不是外圍巡邏</summary>
+        public int squad = -1;
+        /// <summary>副本營地中間的怪（不巡邏、不晃）</summary>
+        public bool CampCore => area >= 0 && patrol == null && !wander;
         public float SpeedMul => role == 1 ? 1.6f : 1f;
         public float DetectMul => role == 2 ? 2.4f : 1f;
     }

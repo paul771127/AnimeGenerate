@@ -12,7 +12,8 @@ namespace SpellDuel
         public int exPatrolIdx, exPatrolDir = 1;
         public float exLastHp = -1f;
         public float exPathAt; public Vector3 exNext; public bool exHasNext;
-        public Vector3 exWanderTo; public bool exHasWander;   // 副本營地外圍隨機晃的怪：現在要走去的點
+        public Vector3 exWanderTo; public bool exHasWander;
+        public bool exRunHome;   // 斥候、哨兵：發現玩家後跑回營地通報（跑到之前不攻擊）   // 副本營地外圍隨機晃的怪：現在要走去的點
         // 沒發現玩家時的日常（使用者要求：自己做些事、互相互動，自然一點）
         public int exIdleKind;            // 0 沒事、1 張望、2 覓食（低頭咀嚼）、3 和同伴聊天、4 打盹
         public float exIdleUntil, exIdleCd, exEmoteAt;
@@ -121,6 +122,27 @@ namespace SpellDuel
             Emit("exalert", m.Chest + Vector3.up * 0.3f, new Color(1f, 0.4f, 0.3f), call ? "❗ 呼叫同伴！" : "❗");
             OnExAlert?.Invoke(m, call);
             if (!spread || mon == null) return;
+            if (explore.map.dungeon != null && mon.area >= 0)
+            {
+                // 副本營地（使用者要求）：
+                if (mon.role == 1 || mon.role == 2)
+                {
+                    // 斥候、哨兵：不打，整隊跑回營地中間通報（跑到才叫醒整群；半路被打倒就沒人通報）
+                    foreach (var o in explore.map.monsters)
+                    {
+                        if (o.dead || o.hidden || o.squad != mon.squad || mon.squad < 0) continue;
+                        if (!exActive.TryGetValue(o, out var om)) om = ExSpawn(o);
+                        if (om != m) { if (om.exAware) continue; om.exAware = true; om.exAlertAt = now; om.exSleep = false; om.exIdleKind = 0; om.exIdleUntil = 0f; }
+                        om.exRunHome = true; om.exHasNext = false;
+                        Emit("exemote", om.head + Vector3.up * 0.5f, new Color(1f, 0.8f, 0.3f), "‼ 回去通報！");
+                    }
+                    m.exRunHome = true;
+                    return;
+                }
+                if (mon.CampCore) { ExWakeNear(mon.camp, m.Feet, ExCampNear); return; }   // 中間的怪：附近的一群出來
+                ExWakeCamp(mon.camp);   // 一般的外圍巡邏：整群
+                return;
+            }
             foreach (var o in explore.map.monsters)
             {
                 if (o == mon || o.dead || o.hidden || o.guardian > 0) continue;
@@ -130,6 +152,66 @@ namespace SpellDuel
                 if (!exActive.TryGetValue(o, out var om)) om = ExSpawn(o);
                 ExAlert(om, false);
             }
+        }
+
+        /// <summary>副本營地：中間的怪發現玩家時，這個距離內同一群的一起出來</summary>
+        public const float ExCampNear = 7f, ExRunHomeSpeed = 2.6f;
+        readonly List<int> exWakeQueue = new List<int>();
+        /// <summary>叫醒整群（斥候、哨兵通報到了；一般巡邏發現玩家或被打倒）</summary>
+        void ExWakeCamp(int camp)
+        {
+            foreach (var o in explore.map.monsters)
+            {
+                if (o.dead || o.hidden || o.camp != camp) continue;
+                if (!exActive.TryGetValue(o, out var om)) om = ExSpawn(o);
+                om.exRunHome = false;
+                if (!om.exAware) ExAlert(om, false);
+            }
+        }
+        /// <summary>叫醒 at 附近 r 公尺內同一群的（中間的營地：附近的一群出來）</summary>
+        void ExWakeNear(int camp, Vector3 at, float r)
+        {
+            foreach (var o in explore.map.monsters)
+            {
+                if (o.dead || o.hidden || o.camp != camp) continue;
+                exActive.TryGetValue(o, out var om);
+                if (FlatDistance(om != null ? om.Feet : o.home, at) > r) continue;
+                if (om == null) om = ExSpawn(o);
+                if (!om.exAware && !om.exRunHome) ExAlert(om, false);
+            }
+        }
+        /// <summary>營地中間（中間那群怪的家的平均）</summary>
+        Vector3 ExCampCenter(int camp)
+        {
+            Vector3 c = Vector3.zero; int n = 0;
+            foreach (var o in explore.map.monsters) if (o.camp == camp && o.CampCore) { c += o.home; n++; }
+            return n > 0 ? c / n : Vector3.zero;
+        }
+        /// <summary>斥候、哨兵跑回營地：沿走道跑到營地中間，到了就叫醒整群（之後照一般的追擊）</summary>
+        void ExRunHome(Fighter m, float dt)
+        {
+            var mon = m.exMon; var home = ExCampCenter(mon.camp);
+            if (FlatDistance(m.Feet, home) <= 2.5f)
+            {
+                m.exRunHome = false;
+                Emit("exalert", m.Chest + Vector3.up * 0.3f, new Color(1f, 0.4f, 0.3f), "📣 敵人來了！");
+                OnExAlert?.Invoke(m, true);
+                exWakeQueue.Add(mon.camp);   // 在小怪的迴圈裡不能放怪上戰場：UpdateExplore 再叫醒整群
+                return;
+            }
+            m.windupUntil = 0f;
+            if (now >= m.exPathAt || !m.exHasNext)
+            {
+                m.exPathAt = now + 0.4f; var map = explore.map;
+                m.exHasNext = ExNextStep(map.Cell(m.Feet), map.Cell(home), out var nc);
+                m.exNext = m.exHasNext ? (nc == map.Cell(m.Feet) ? home : map.World(nc.x, nc.y)) : home;
+            }
+            var to = Fighter.Flat(m.exNext - m.Feet);
+            if (to.magnitude < 0.25f) { m.exPathAt = 0f; return; }
+            m.forward = to.normalized;
+            var step = m.Feet + to.normalized * Mathf.Min(to.magnitude, ExRunHomeSpeed * Mathf.Max(0.6f, m.speedMul) * dt);
+            if (minionInside == null || minionInside(step)) m.head = new Vector3(step.x, m.head.y, step.z);
+            else m.head = new Vector3(m.head.x + (m.exNext.x - m.Feet.x) * 0.2f, m.head.y, m.head.z + (m.exNext.z - m.Feet.z) * 0.2f);
         }
 
         /// <summary>m 被打中或被打倒：ExNoiseRange 內的其他怪也發現玩家（還沒放上戰場的先放上來；守衛、稀有怪不算）</summary>
@@ -365,6 +447,7 @@ namespace SpellDuel
         {
             var run = explore; if (run == null || player == null) return;
             if (exMirror) return;   // 連線的隊友端：怪物由主機算
+            if (exWakeQueue.Count > 0) { var q = exWakeQueue.ToArray(); exWakeQueue.Clear(); foreach (var c in q) ExWakeCamp(c); }   // 斥候、哨兵通報到了
             foreach (var mon in run.map.monsters)
             {
                 if (mon.dead || mon.hidden) continue;
@@ -380,8 +463,13 @@ namespace SpellDuel
                 if (!m.Alive)
                 {
                     exActive.Remove(mon); run.OnMonsterKilled(mon); ExNoise(m);
-                    // 同一群的（營地、外圍巡邏）被打倒：整群驚醒衝過來（使用者要求）
-                    if (mon.camp >= 0)
+                    // 副本營地被打倒（使用者要求）：一般的外圍巡邏＝整群驚醒；中間的怪＝附近的一群出來；斥候、哨兵＝沒人通報（只有旁邊聽到的）
+                    if (mon.camp >= 0 && run.map.dungeon != null && mon.area >= 0)
+                    {
+                        if (mon.CampCore) ExWakeNear(mon.camp, m.Feet, ExCampNear);
+                        else if (mon.role == 0) ExWakeCamp(mon.camp);
+                    }
+                    else if (mon.camp >= 0)
                         foreach (var o in run.map.monsters)
                         {
                             if (o == mon || o.dead || o.hidden || o.camp != mon.camp) continue;

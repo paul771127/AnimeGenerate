@@ -190,7 +190,7 @@ namespace SpellDuel
                     for (int e = 0; e < size; e++)
                     {
                         var home = m.World(corner.x, corner.y) + new Vector3(e * 0.8f, 0f, e * 0.5f);
-                        m.monsters.Add(new ExMonster { id = ++id, kind = PickKind(theme, a.wave, rng), zone = a.index, area = a.index, wave = a.wave, camp = 100 + a.index, home = home, patrol = route, wander = wander, role = role });
+                        m.monsters.Add(new ExMonster { id = ++id, kind = PickKind(theme, a.wave, rng), zone = a.index, area = a.index, wave = a.wave, camp = 100 + a.index, home = home, patrol = route, wander = wander, role = role, squad = a.index * 10 + g });
                     }
                 }
             }
