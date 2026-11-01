@@ -239,7 +239,9 @@ namespace SpellDuel
                     waveToSpawn = 0;
                     int n = Mathf.Clamp(PI("count", 4), 3, 6);
                     for (int i = 0; i < n; i++) { evPts.Add(Ring(r, 360f * i / n + 45f)); evState.Add(0); }
-                    NewRuneSequence();
+                    evRuneCount = n;
+                    evPts.Add(ArenaCenter()); evState.Add(1);   // 最後一個點＝中間的開關（使用者要求：踩下去才開始亮順序，不會在打怪時就亮完）
+                    WaitRuneSwitch();
                     break;
                 }
                 case "chant":
@@ -421,11 +423,22 @@ namespace SpellDuel
         }
 
         // ------------------------------------------------------------ 符文
+        /// <summary>符文：有幾塊符文（evPts 最後一個是開關，不算）</summary>
+        int evRuneCount;
+        public int RuneSwitchIndex => roomEvent == "runes" ? evRuneCount : -1;
+        /// <summary>等人踩中間的開關（evPhase 3）：踩下去才開始亮順序。現在就站在開關上的要先離開再踩</summary>
+        void WaitRuneSwitch()
+        {
+            evPhase = 3; evRuneOwner = -1;
+            for (int i = 0; i < evState.Count; i++) evState[i] = i == evRuneCount ? 1 : 0;
+            evOnPoint.Clear(); foreach (var pl in Players()) evOnPoint[pl] = PointUnder(pl);
+        }
+
         void NewRuneSequence()
         {
             int len = Mathf.Clamp(PI("seq", 3) + (evFails >= 2 ? 0 : 0), 2, 7);
             evSeq = new int[len];
-            for (int i = 0; i < len; i++) { int k; do k = rng.Next(evPts.Count); while (i > 0 && k == evSeq[i - 1]); evSeq[i] = k; }
+            for (int i = 0; i < len; i++) { int k; do k = rng.Next(evRuneCount); while (i > 0 && k == evSeq[i - 1]); evSeq[i] = k; }
             evRuneOwner=-1;
             evSeqPos = 0; evPhase = 0; evPhaseAt = now + 1.2f;
             for (int i = 0; i < evState.Count; i++) evState[i] = 0;
@@ -435,6 +448,22 @@ namespace SpellDuel
         void TickRunes()
         {
             const float Show = 0.9f;
+            if (evPhase == 3)
+            {
+                // 等開關：有人踩上中間的開關（新踩上去才算）→ 開始亮順序
+                foreach (var pl in Players())
+                {
+                    if (!pl.Alive) continue;
+                    int on = PointUnder(pl); evOnPoint.TryGetValue(pl, out var was); evOnPoint[pl] = on;
+                    if (on == evRuneCount && was != evRuneCount)
+                    {
+                        NewRuneSequence();
+                        Emit("evinfo", player.Feet, Color.white, "開關啟動！看清楚符文亮起的順序");
+                        return;
+                    }
+                }
+                return;
+            }
             for (int i = 0; i < evState.Count; i++) if (evState[i] == 3 && now > evPhaseAt + 0.6f && evPhase != 0) evState[i] = 0;
             if (evPhase == 0)
             {
@@ -449,14 +478,14 @@ namespace SpellDuel
                 Emit("evinfo", player.Feet, Color.white, "照順序踩上符文！");
                 return;
             }
-            if (evPhase == 2) { if (PenaltyOver()) { NewRuneSequence(); Emit("evinfo", player.Feet, Color.white, "符文重新亮起，看清楚順序！"); } return; }
+            if (evPhase == 2) { if (PenaltyOver()) { WaitRuneSwitch(); Emit("evinfo", player.Feet, Color.white, "準備好了就踩中間的開關，符文會重新亮起"); } return; }
             foreach (var pl in Players())
             {
                 if (!pl.Alive) continue;
                 int on = PointUnder(pl);
                 evOnPoint.TryGetValue(pl, out var was);
                 evOnPoint[pl] = on;
-                if (on < 0 || on == was) continue;   // 踏上新的符文才算
+                if (on < 0 || on == was || on == evRuneCount) continue;   // 踏上新的符文才算（中間的開關不算）
                 if (on == evSeq[evSeqPos])
                 {
                     evState[on] = 2; evSeqPos++;
@@ -687,7 +716,7 @@ namespace SpellDuel
                 case "escort": evText = evWalker != null ? $"🚶 護送{evWalker.name}走到出口（{Mathf.CeilToInt(evWalker.hp)}/{evWalker.maxHp}）：有怪貼近他就會停下來" : ""; break;
                 case "hunt": evText = evHunt != null ? $"🎯 斬首：打倒「{evHunt.name}」！其他怪會不斷湧出" : ""; break;
                 case "totems": { int a = 0; foreach (var n in npcs) if (n.Alive && n.npcId != null && n.npcId.StartsWith("ev_totem")) a++; evText = a > 0 ? $"🗿 打掉封印圖騰（剩 {a} 根）：圖騰會一直叫怪" : "🗿 圖騰都倒了，清掉剩下的怪！"; break; }
-                case "runes": evText = evPhase == 0 ? "👁 看清楚符文亮起的順序…" : evPhase == 1 ? $"👣 照順序踩上符文（{evSeqPos}/{evSeq.Length}）" : $"⚔ 踩錯了！打倒湧出來的怪（錯 {evFails} 次）"; break;
+                case "runes": evText = evPhase == 3 ? "🟢 準備好了就踩中間的開關，符文才會開始亮" : evPhase == 0 ? "👁 看清楚符文亮起的順序…" : evPhase == 1 ? $"👣 照順序踩上符文（{evSeqPos}/{evSeq.Length}）" : $"⚔ 踩錯了！打倒湧出來的怪（錯 {evFails} 次）"; break;
                 case "chant": evText = evPhase == 1 ? $"🗣 唸出答案：{evRiddle}" + (evFails > 0 && evHint != null ? $"（提示：{evHint}）" : "") : $"⚔ 唸錯了！打倒湧出來的怪（錯 {evFails} 次）"; break;
                 case "elements": evText = evPhase == 1 ? "🔥❄⚡ 用對的屬性打雕像" + (evCharge > 0 ? $"（全隊帶{ElementNames[evCharge]}屬性，剩 {Mathf.Max(0f, evChargeUntil - now):0} 秒）" : "（碰場邊的屬性球，或用火、冰、雷的招式）") : $"⚔ 打錯了！打倒湧出來的怪（錯 {evFails} 次）"; break;
                 case "mimic": evText = evPhase == 2 ? $"⚔ 寶箱怪！打倒牠（錯 {evFails} 次）" : "🎁 找出真的寶箱：真的會偶爾閃一下（打錯會變成怪物）"; break;

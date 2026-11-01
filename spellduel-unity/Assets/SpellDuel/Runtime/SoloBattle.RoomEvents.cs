@@ -80,7 +80,7 @@ namespace SpellDuel
                 var go = evPointGo[i]; if (!go) continue;
                 int st = i < battle.evState.Count ? battle.evState[i] : 0;
                 var art=go.GetComponent<RoomPointArt>();
-                if(kind=="runes" && st==1 && !battle.RuneVisibleFor(MyPid))st=0;
+                if(kind=="runes" && st==1 && i<battle.evPts.Count-1 && !battle.RuneVisibleFor(MyPid))st=0;   // 中間的開關大家都看得到
                 if(art)art.Tick(st,Time.time);
                 switch(kind)
                 {
@@ -105,6 +105,7 @@ namespace SpellDuel
                 var p = battle.evPts[i]; GameObject go;
                 string type=evViewKind;
                 if(type=="elements")type=Battle.IsEventOrb(i)?"orb":"seal";
+                if(type=="runes"&&i==battle.evPts.Count-1)type="escort";   // 符文：最後一個點是中間的開關（綠色踏板）
                 if(type=="runes"||type=="orb"||type=="seal"||type=="collapse"||type=="chant"||type=="escort")
                 {
                     Color color=type=="orb"?Battle.ElementColor(battle.evState[i]):type=="escort"?new Color(.3f,1,.5f):new Color(.65f,.4f,1,.8f);
