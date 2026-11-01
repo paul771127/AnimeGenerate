@@ -1,0 +1,125 @@
+{
+    "unity": "2022.3.62f2",
+    "cellSize": 4.0,
+    "noColliders": true,
+    "wallBounds": true,
+    "gateAnimation": true,
+    "maps": [
+        {
+            "id": "ash_mine",
+            "areas": 6,
+            "edges": 8,
+            "baselineUnreachable": 0,
+            "unchanged": true,
+            "deterministic": true,
+            "cache": true
+        },
+        {
+            "id": "rot_temple",
+            "areas": 4,
+            "edges": 3,
+            "baselineUnreachable": 0,
+            "unchanged": true,
+            "deterministic": true,
+            "cache": true
+        },
+        {
+            "id": "sunken_throne",
+            "areas": 4,
+            "edges": 3,
+            "baselineUnreachable": 0,
+            "unchanged": true,
+            "deterministic": true,
+            "cache": true
+        },
+        {
+            "id": "dawn_gate",
+            "areas": 3,
+            "edges": 2,
+            "baselineUnreachable": 0,
+            "unchanged": true,
+            "deterministic": true,
+            "cache": true
+        },
+        {
+            "id": "ember_bell_foundry",
+            "areas": 9,
+            "edges": 9,
+            "baselineUnreachable": 0,
+            "unchanged": true,
+            "deterministic": true,
+            "cache": true
+        },
+        {
+            "id": "mist_name_grove",
+            "areas": 10,
+            "edges": 10,
+            "baselineUnreachable": 0,
+            "unchanged": true,
+            "deterministic": true,
+            "cache": true
+        },
+        {
+            "id": "white_sail_echo_reef",
+            "areas": 11,
+            "edges": 11,
+            "baselineUnreachable": 0,
+            "unchanged": true,
+            "deterministic": true,
+            "cache": true
+        },
+        {
+            "id": "thousand_trap_gallery",
+            "areas": 13,
+            "edges": 13,
+            "baselineUnreachable": 0,
+            "unchanged": true,
+            "deterministic": true,
+            "cache": true
+        }
+    ],
+    "views": [
+        {
+            "theme": "volcano",
+            "dungeon": "ash_mine",
+            "cells": 77,
+            "triangles": 32044,
+            "renderers": 130
+        },
+        {
+            "theme": "jungle",
+            "dungeon": "rot_temple",
+            "cells": 66,
+            "triangles": 10798,
+            "renderers": 192
+        },
+        {
+            "theme": "sea",
+            "dungeon": "sunken_throne",
+            "cells": 73,
+            "triangles": 22632,
+            "renderers": 122
+        },
+        {
+            "theme": "arena",
+            "dungeon": "art_fixture_theme_3",
+            "cells": 77,
+            "triangles": 15202,
+            "renderers": 128
+        },
+        {
+            "theme": "canyon",
+            "dungeon": "art_fixture_theme_4",
+            "cells": 67,
+            "triangles": 11558,
+            "renderers": 111
+        },
+        {
+            "theme": "clockwork",
+            "dungeon": "thousand_trap_gallery",
+            "cells": 72,
+            "triangles": 23250,
+            "renderers": 118
+        }
+    ]
+}

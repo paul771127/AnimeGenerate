@@ -37,4 +37,5 @@ if '--native' in sys.argv:
    expected=subprocess.check_output(['git','rev-parse',ci['head']+':'+path],text=True).strip()
    actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
    assert actual==expected, 'Art changed since native/mobile validation: '+path
- print('PASS: native themes, unchanged routes, cache, bounds, gates and mobile evidence')
+ print('PASS: native themes, unchanged routes, cache, bounds and gates')
+ if '--require-mobile' in sys.argv: print('PASS: Android/iOS and native evidence match the delivered art sources')
