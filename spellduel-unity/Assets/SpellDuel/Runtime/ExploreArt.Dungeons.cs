@@ -77,7 +77,7 @@ namespace SpellDuel
    {
     b.Crag(V(0,0,alcove?-.65f:0),V(2.96f,2.5f+n*.22f,alcove?1.55f:2.96f),stone,n+7*t);
     for(int j=0;j<3;j++)b.Crag(V((j-1)*.95f,0,alcove?-.15f:.9f),V(.85f,.4f+(j%2)*.18f,.8f),Color.Lerp(stone,Bone,.10f),j+n);
-    if(t==4){for(int j=0;j<3;j++)b.Box(V(0,.6f+j*.7f,alcove?.1f:1.30f),V(2.7f,.065f,.075f),new Color(.78f,.51f,.30f));}
+    // Crag height bands supply canyon strata without floating horizontal strips.
    }
    if(role==3)
    {

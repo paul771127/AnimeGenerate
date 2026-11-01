@@ -1,6 +1,6 @@
 """Check the dungeon art delivery; --native requires Unity evidence."""
 from pathlib import Path
-import json,re,sys
+import json,re,sys,subprocess
 r=Path('spellduel-unity/Assets/SpellDuel/Runtime')
 for p in r.glob('ExploreArt.Dungeon*.cs'):
  s=p.read_text(encoding='utf-8-sig')
@@ -27,4 +27,14 @@ if '--native' in sys.argv:
   ci=json.loads((root/'platform_ci.json').read_text())
   jobs={j['name']:j['conclusion'] for j in ci['jobs']}
   assert all(jobs.get(k)=='success' for k in ['android','ios-export','ios-ipa']),jobs
+  native=json.loads((root/'native_ci.json').read_text())
+  assert native['conclusion']=='success' and native['head_sha']==ci['head'], 'Native/mobile revisions differ'
+  for relative in [
+   'Runtime/ExploreArt.Dungeons.cs','Runtime/ExploreArt.DungeonSurfaces.cs',
+   'Runtime/ExploreArt.Paths.cs','Runtime/ExploreArt.Atmosphere.cs','Runtime/ExploreArt.Landmarks.cs',
+   'Runtime/SoloBattle.Explore.cs','Resources/Shaders/DungeonExploreFloor.shader','Editor/DungeonMapArtPreview.cs']:
+   path='spellduel-unity/Assets/SpellDuel/'+relative
+   expected=subprocess.check_output(['git','rev-parse',ci['head']+':'+path],text=True).strip()
+   actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
+   assert actual==expected, 'Art changed since native/mobile validation: '+path
  print('PASS: native themes, unchanged routes, cache, bounds, gates and mobile evidence')
