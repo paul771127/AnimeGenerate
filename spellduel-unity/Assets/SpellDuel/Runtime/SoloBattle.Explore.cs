@@ -230,7 +230,7 @@ namespace SpellDuel
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
             var mr = go.AddComponent<MeshRenderer>();
             var mat = new Material(shader) { name = "Explore base ground" };
-            mat.mainTexture = ExploreArt.GroundTexture(ExGround.Grass);
+            mat.mainTexture = ExploreArt.GroundTexture(map.dungeon != null ? ExploreArt.DungeonBaseGround(map) : ExGround.Grass);
             mat.SetColor("_Tint", new Color(0.92f, 0.95f, 0.9f));
             mr.sharedMaterial = mat; mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; mr.receiveShadows = false;
             return go;
@@ -266,8 +266,8 @@ namespace SpellDuel
                         else
                         {
                             int an = 1; foreach (var a in map.arenas) if (a.gate.Contains(k)) an = a.n;
-                            go = ExploreArt.CreateGate(an, cs);
-                            ExploreArt.SetGateOpen(go, map.GateOpen(x, z));
+                            go = map.dungeon != null ? ExploreArt.CreateDungeonGate(map, x, z) : ExploreArt.CreateGate(an, cs);
+                            if (map.dungeon == null) ExploreArt.SetGateOpen(go, map.GateOpen(x, z));
                         }
                         if (go) go.transform.localRotation = ExGateRot(map, x, z);
                     }
@@ -332,7 +332,7 @@ namespace SpellDuel
                 ExArt(l, () => ExploreArt.CreateLandmark(l, map), Battle.FlatDistance(ctr, me) <= view + r, null);
                 if (l.found && l.kind != "start" && l.kind != "arena" && exBannerSeen.Add(l)) { ExploreArt.LandmarkFound(l); exBannerUntil = Time.time + 2.5f; }
             }
-            foreach (var a in map.arenas) ExArt(a, () => ExploreArt.CreateArena(a.n, a.radius), Battle.FlatDistance(a.center, me) <= view + a.radius, a.center);
+            foreach (var a in map.arenas) ExArt(a, () => map.dungeon != null ? ExploreArt.CreateDungeonArena(ExploreArt.DungeonThemeAt(map, map.Cell(a.center).x, map.Cell(a.center).y), a.radius) : ExploreArt.CreateArena(a.n, a.radius), Battle.FlatDistance(a.center, me) <= view + a.radius, a.center);
             // 地名橫幅、怪物頭上的「！」：顯示一下就收
             if (exBannerUntil > 0f && Time.time > exBannerUntil) { exBannerUntil = -1f; ExploreArt.LandmarkFound(null); }
             for (int i = exAlertMarks.Count - 1; i >= 0; i--)
@@ -582,7 +582,7 @@ namespace SpellDuel
         {
             var map = run.map;
             float size = exMapBig ? Mathf.Min(W, H) * 0.8f : Mathf.Min(W, H) * 0.3f;
-            int span = exMapBig ? map.W : 25;
+            int span = exMapBig ? Mathf.Max(map.W, map.H) : 25;
             var box = exMapBig ? new Rect((W - size) / 2f, (H - size) / 2f, size, size) : new Rect(W - size - W * 0.02f, H * 0.16f, size, size);
             UiKit.Card(box,.96f,UiKit.Gold,1f);
             var pc = map.Cell(Me.Feet);
@@ -595,9 +595,11 @@ namespace SpellDuel
                     var cell = map.At(x, z);
                     Color c = cell == ExCell.Gate ? (map.GateOpen(x, z) ? new Color(0.55f, 0.8f, 0.5f, 0.9f) : new Color(0.9f, 0.35f, 0.25f, 0.95f))
                         : cell == ExCell.Wall ? MiniTerrainColor(map.TerrainAt(x, z)) : map.GroundAt(x, z) == ExGround.Stone ? new Color(0.85f, 0.85f, 0.8f, 0.85f) : map.GroundAt(x, z) == ExGround.Cave ? new Color(0.55f, 0.5f, 0.48f, 0.85f) : new Color(0.75f, 0.85f, 0.7f, 0.85f);
+                    if (map.dungeon != null && cell == ExCell.Floor) c = Color.Lerp(ExploreArt.DungeonThemeColor(ExploreArt.DungeonThemeAt(map, x, z)), new Color(.16f,.19f,.22f), map.AreaAt(new Vector2Int(x,z)) != null ? .20f : .62f);
                     GUI.color = c;
                     GUI.DrawTexture(new Rect(box.x + (x - x0) * cs, box.y + (span - 1 - (z - z0)) * cs, cs + 0.5f, cs + 0.5f), Texture2D.whiteTexture);
                 }
+            ExploreArt.DrawDungeonAreaMap(run, box, x0, z0, span);
             void Dot(Vector3 p, Color c, float k, int symbol=0)
             {
                 var cc = map.Cell(p); if (cc.x < x0 || cc.y < z0 || cc.x >= x0 + span || cc.y >= z0 + span || !run.explored.Contains(cc)) return;

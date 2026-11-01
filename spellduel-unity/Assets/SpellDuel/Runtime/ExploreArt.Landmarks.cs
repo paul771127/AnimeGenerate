@@ -5,6 +5,8 @@ namespace SpellDuel
  {
   public static GameObject CreateLandmark(ExLandmark l,ExploreMap map)
   {
+   if(map!=null&&l!=null&&map.dungeon!=null)return Root("Dungeon area "+l.id); // Streamed floors/walls own dungeon room dressing.
+
    if(l==null||map==null)return null;var root=Root("Landmark "+l.id);var center=map.World((l.rect.xMin+l.rect.xMax)/2,(l.rect.yMin+l.rect.yMax)/2);root.transform.localPosition=center;
    if(l.kind=="lake")RoundedLake(root.transform,l,map,center);
    // Only solid wall cells carry tall scenery. Never span a path with roofs or tree crowns.

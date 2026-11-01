@@ -44,7 +44,7 @@ namespace SpellDuel
   // Its localPosition is already the map centre. All distant geometry is outside the playable map.
   public static GameObject CreateBackdrop(ExploreMap map)
   {
-   if(map==null)return null;var root=Root("Sky backdrop");root.transform.localPosition=(map.World(0,0)+map.World(map.W-1,map.H-1))*.5f;
+   if(map==null)return null;if(map.dungeon!=null&&(map.nodeAreas||map.theme!="jungle"))return CreateDungeonBackdrop(map);var root=Root("Sky backdrop");root.transform.localPosition=(map.World(0,0)+map.World(map.W-1,map.H-1))*.5f;
    float radius=Mathf.Max(map.W,map.H)*ExploreMap.CellSize*.95f;
    var dome=Part(root.transform,"sky/dome",b=>{
     const int sectors=40,bands=8;for(int j=0;j<bands;j++)for(int i=0;i<sectors;i++)

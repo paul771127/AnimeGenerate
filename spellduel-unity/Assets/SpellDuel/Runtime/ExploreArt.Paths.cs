@@ -8,7 +8,7 @@ namespace SpellDuel
   // Map-aware wall factory rounds exposed convex corners without crossing the cell boundary.
   public static GameObject CreateWall(ExploreMap map,int x,int z)
   {
-   if(map==null)return null;var root=CreateWall(map.TerrainAt(x,z),x,z,ExploreMap.CellSize);int corners=0;
+   if(map==null)return null;var root=map.dungeon!=null?CreateDungeonWall(map,x,z):CreateWall(map.TerrainAt(x,z),x,z,ExploreMap.CellSize);int corners=0;
    if(map.TerrainAt(x,z)==ExTerrain.Water){
     bool edgeX=map.TerrainAt(x-1,z)!=ExTerrain.Water||map.TerrainAt(x+1,z)!=ExTerrain.Water;
     bool edgeZ=map.TerrainAt(x,z-1)!=ExTerrain.Water||map.TerrainAt(x,z+1)!=ExTerrain.Water;
@@ -60,6 +60,7 @@ namespace SpellDuel
     for(int k=0;k<4;k++){int sx=k%2==0?1:-1,sz=k<2?1:-1;int bx=sx>0?1:2,bz=sz>0?4:8;if((mask&bx)!=0||(mask&bz)!=0)continue;
      for(int j=1;j<5;j++){float a=j*Mathf.PI/10,r=ExploreMap.PathFillet-.35f+.16f;var at=V((half-ExploreMap.PathFillet+Mathf.Cos(a)*r)*sx,.04f,(half-ExploreMap.PathFillet+Mathf.Sin(a)*r)*sz);b.Crown(at,V(.18f,.10f,.18f),Moss,j,5,2);}}
    }).name="BlockedShoulder";
+   if(map.dungeon!=null)DressDungeonPath(root,map,x,z);
    return root;
   }
  }
