@@ -36,6 +36,7 @@ namespace SpellDuel
         {
             var run = exploreRun;
             exNodeArea = null; exNodeQueue.Clear(); exSavedPoly = null;
+            exFxAreaEntered.Clear(); exFxAreaCleared.Clear(); exFxBossRose = false; dgFxKeys.Clear();
             battle.StartExplore(run);
             battle.exMirror = coop && !NetIsHost;   // 連線的隊友：怪物、事件、首領都照主機送來的顯示
             battle.OnExWave = ApplyDungeonMinionStrength;
@@ -167,6 +168,80 @@ namespace SpellDuel
             var lo = m.World(a.rect.xMin, a.rect.yMin); var hi = m.World(a.rect.xMax, a.rect.yMax);
             float x0 = lo.x - half + inset, z0 = lo.z - half + inset, x1 = hi.x + half - inset, z1 = hi.z + half - inset;
             return new List<Vector3> { new Vector3(x0, 0f, z0), new Vector3(x1, 0f, z0), new Vector3(x1, 0f, z1), new Vector3(x0, 0f, z1) };
+        }
+
+        // ---------------------------------------------------------------- 特效影片（影片生成機做的 mp4；Docs/dungeon_fx）
+        readonly HashSet<ExArea> exFxAreaEntered = new HashSet<ExArea>(), exFxAreaCleared = new HashSet<ExArea>();
+        bool exFxBossRose;
+        /// <summary>循環特效的 key 要是同一個物件（ExploreFx.Loop 用參照比對）：每個區域的每個位置一個固定的 key</summary>
+        readonly Dictionary<(ExArea, int), object> dgFxKeys = new Dictionary<(ExArea, int), object>();
+        static readonly object DgThroneKey = new object();
+        object DgKey(ExArea a, int slot) { if (!dgFxKeys.TryGetValue((a, slot), out var k)) dgFxKeys[(a, slot)] = k = new object(); return k; }
+        const float DgFxGateRange = 16f, DgFxAmbientRange = 12f, DgFxThroneRange = 22f;
+
+        /// <summary>區域的特效主題：千機迴廊＝clockwork，其他照那個地點的場景主題</summary>
+        string DgFxTheme(ExploreRun run, ExArea a)
+        {
+            if (run.map.nodeAreas) return "clockwork";
+            int th = dungeon != null ? dungeon.ThemeOf(a.node) : 1;
+            return th == 0 ? "volcano" : th == 1 ? "forest" : th == 2 ? "sea" : th == 3 ? "arena" : "canyon";
+        }
+        static string DgAmbient(string theme) => theme == "volcano" ? "fx_DG_lava_vent" : theme == "forest" ? "fx_DG_forest_fireflies" : theme == "sea" ? "fx_DG_sea_spray" : theme == "arena" ? "fx_DG_arena_sand" : theme == "canyon" ? "fx_DG_canyon_dust" : "fx_DG_clockwork_steam";
+
+        /// <summary>
+        /// 每幀（UpdateExplore 叫）：
+        ///   出口門：還沒清除＝封印循環（只播附近的）；清除時每個門播一次碎掉。
+        ///   走進區域：戰鬥＝警告圈、事件＝魔法陣、中途首領＝光柱；清除：金光（寶箱地點＝寶物光、千機迴廊的房間＝齒輪光）。
+        ///   王座：還沒走進去時有不祥的氣；首領出來時一道光柱。環境：每個區域附近播那個主題的環境特效。
+        /// </summary>
+        void UpdateDungeonFx(ExploreRun run)
+        {
+            if (!exRoot || battle == null || Me == null) return;
+            var me = Me.Feet; var map = run.map;
+            var fin = map.arenas.Find(x => x.n == 4);
+            foreach (var a in map.areas)
+            {
+                string th = DgFxTheme(run, a);
+                bool final = fin != null && Vector3.Distance(fin.center, a.center) < 0.1f;
+                // 出口門的封印
+                for (int i = 0; i < a.exits.Count; i++)
+                {
+                    var c = a.exits[i]; var at = map.World(c.x, c.y) + Vector3.up * 1.6f;
+                    bool near = Battle.FlatDistance(at, me) <= DgFxGateRange;
+                    ExploreFx.Loop(exRoot, DgKey(a, i), "fx_DG_gate_idle_" + th, !a.cleared && near, () => at, 3.6f);
+                }
+                // 走進區域
+                if (a.entered && exFxAreaEntered.Add(a))
+                {
+                    var ac = a.center;
+                    string id = a.IsChest ? null : a.IsEvent ? "fx_DG_event_start" : a.IsBoss ? (final ? null : "fx_DG_midboss_rise") : "fx_DG_area_enter";
+                    if (id != null) ExploreFx.Once(exRoot, id, () => ac + Vector3.up * (a.IsBoss ? 2f : 0.3f), a.IsBoss ? 6f : 7f);
+                }
+                // 清除
+                if (a.cleared && exFxAreaCleared.Add(a))
+                {
+                    var ac = a.center;
+                    string id = a.IsChest ? "fx_DG_chest_open" : run.map.nodeAreas ? "fx_DG_trap_room_clear" : "fx_DG_area_clear";
+                    ExploreFx.Once(exRoot, id, () => ac + Vector3.up * 1f, 7f);
+                    foreach (var c in a.exits) { var at = map.World(c.x, c.y) + Vector3.up * 1.6f; ExploreFx.Once(exRoot, "fx_DG_gate_open_" + th, () => at, 3.6f); }
+                    Sfx.Play("charged", 0.5f, 1.2f);
+                }
+                // 王座的不祥氣息
+                if (final) { var ac = a.center; ExploreFx.Loop(exRoot, DgThroneKey, "fx_DG_throne_aura", !a.entered && Battle.FlatDistance(ac, me) <= DgFxThroneRange, () => ac + Vector3.up * 2f, 8f); }
+                // 環境：區域裡兩個點（不同角落）
+                for (int k = 0; k < 2; k++)
+                {
+                    var off = new Vector3((k == 0 ? -1f : 1f) * a.rect.width * 0.3f, 0f, (k == 0 ? 1f : -1f) * a.rect.height * 0.3f) * ExploreMap.CellSize;
+                    var at = a.center + off + Vector3.up * 0.8f;
+                    ExploreFx.Loop(exRoot, DgKey(a, 100 + k), DgAmbient(th), Battle.FlatDistance(at, me) <= DgFxAmbientRange, () => at, 2.2f);
+                }
+            }
+            // 最後的首領現身：王座裡首領第一次出現
+            if (!exFxBossRose && fin != null && fin.entered && battle.IsBossWave && En.Alive)
+            {
+                exFxBossRose = true; var bc = En.Feet;
+                ExploreFx.Once(exRoot, "fx_DG_boss_rise", () => bc + Vector3.up * 2.5f, 8f);
+            }
         }
     }
 }

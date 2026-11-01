@@ -109,6 +109,7 @@ namespace SpellDuel
             if (cell != exLastCell || exGatesDirty(run)) { exLastCell = cell; RefreshExploreCells(run, cell); }
             UpdateExploreProps(run);
             UpdateExploreFx(run);
+            if (run.IsDungeon) UpdateDungeonFx(run);   // 副本大地圖的特效影片（SoloBattle.DungeonExplore.cs）
         }
 
         // ---------------------------------------------------------------- 特效影片（影片生成機做的 mp4；ExploreFx.cs）
@@ -399,6 +400,7 @@ namespace SpellDuel
             if (exRoot) Destroy(exRoot.gameObject);
             if (area != null) area.BoundsOff = false;
             ExploreFx.Clear(); exFxSeen.Clear(); exFxSealHave.Clear(); exFxInit = false;
+            exFxAreaEntered.Clear(); exFxAreaCleared.Clear(); exFxBossRose = false; dgFxKeys.Clear();   // 副本大地圖的特效（隊友端沒有經過 SetupDungeonExplore）
             exRoot = null; exWalls.Clear(); exUnder.Clear(); exBubbles.Clear(); exProps.Clear(); exSwitchShownDone.Clear(); exAlertMarks.Clear(); exBannerSeen.Clear();
             if (exBannerUntil > 0f || exploreRun != null) ExploreArt.LandmarkFound(null);
             exBannerUntil = -1f;

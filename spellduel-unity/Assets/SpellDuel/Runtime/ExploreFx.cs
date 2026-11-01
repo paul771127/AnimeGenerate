@@ -29,7 +29,12 @@ namespace SpellDuel
             ["fx_C2_discover"] = (false, 1f), ["fx_C4_heart_rise"] = (false, 2f), ["fx_C4_heart_take"] = (false, 1f),
             ["fx_D3_fire"] = (false, 1f), ["fx_D4_spores"] = (false, 4f),
             ["fx_E2_alert"] = (false, 0.8f), ["fx_E2_roar_wave"] = (false, 1f),
+            // 副本大地圖（Docs/dungeon_fx/shots.json；影片在 dungeon_fx/videos）
+            ["fx_DG_gate_idle_volcano"] = (false, 2.0f), ["fx_DG_gate_open_volcano"] = (false, 1.5f), ["fx_DG_gate_idle_forest"] = (false, 2.0f), ["fx_DG_gate_open_forest"] = (false, 1.5f), ["fx_DG_gate_idle_sea"] = (false, 2.0f), ["fx_DG_gate_open_sea"] = (false, 1.5f), ["fx_DG_gate_idle_arena"] = (false, 2.0f), ["fx_DG_gate_open_arena"] = (false, 1.5f), ["fx_DG_gate_idle_canyon"] = (false, 2.0f), ["fx_DG_gate_open_canyon"] = (false, 1.5f), ["fx_DG_gate_idle_clockwork"] = (false, 2.0f), ["fx_DG_gate_open_clockwork"] = (false, 1.5f), ["fx_DG_area_enter"] = (false, 1.0f), ["fx_DG_area_clear"] = (false, 1.4f), ["fx_DG_chest_open"] = (false, 1.2f), ["fx_DG_event_start"] = (false, 1.2f), ["fx_DG_throne_aura"] = (false, 3.0f), ["fx_DG_boss_rise"] = (false, 2.0f), ["fx_DG_midboss_rise"] = (false, 1.6f), ["fx_DG_lava_vent"] = (false, 3.0f), ["fx_DG_forest_fireflies"] = (false, 3.0f), ["fx_DG_sea_spray"] = (false, 3.0f), ["fx_DG_arena_sand"] = (false, 3.0f), ["fx_DG_canyon_dust"] = (false, 3.0f), ["fx_DG_clockwork_steam"] = (false, 2.5f), ["fx_DG_trap_room_clear"] = (false, 1.4f),
         };
+        /// <summary>副本大地圖的特效影片放在另一個資料夾</summary>
+        public const string DungeonBaseUrl = "https://raw.githubusercontent.com/paul771127/AnimeGenerate/claude/mobile-camera-mic-battle-game-v5nhfr/spellduel-unity/Docs/dungeon_fx/videos/";
+        static string UrlOf(string id) => (id.StartsWith("fx_DG_") ? DungeonBaseUrl : BaseUrl) + id + ".mp4";
 
         static string Dir => Path.Combine(Application.persistentDataPath, "explore_fx");
         static string PathOf(string id) => Path.Combine(Dir, id + ".mp4");
@@ -52,7 +57,7 @@ namespace SpellDuel
             {
                 if (Ready(id)) continue;
                 string tmp = PathOf(id) + ".part";
-                using (var req = new UnityWebRequest(BaseUrl + id + ".mp4", UnityWebRequest.kHttpVerbGET) { downloadHandler = new DownloadHandlerFile(tmp) { removeFileOnAbort = true }, timeout = 60 })
+                using (var req = new UnityWebRequest(UrlOf(id), UnityWebRequest.kHttpVerbGET) { downloadHandler = new DownloadHandlerFile(tmp) { removeFileOnAbort = true }, timeout = 60 })
                 {
                     yield return req.SendWebRequest();
                     bool ok = req.result == UnityWebRequest.Result.Success && req.responseCode == 200;
