@@ -270,6 +270,8 @@ namespace SpellDuel
                 }
             }
 
+            DrawWorldMapAmbient(s, wmScrollX, view.width, front, now, fs);   // 環境動態：雲影、火山煙、螢火蟲、海面反光、風沙、飛鳥（WorldUI.WorldMapAmbient.cs）
+
             // 雲霧：還沒開的地方（前線右邊）全部蓋住，邊緣是雲
             float fx = (front + 220f) * s;
             if (fx < cw)
@@ -300,6 +302,14 @@ namespace SpellDuel
                 if (n.id == revealNode) isz *= 0.4f + 0.6f * Mathf.Clamp01((rk - 0.5f) * 2.5f) + Mathf.Sin(Mathf.Clamp01((rk - 0.5f) * 2f) * Mathf.PI) * 0.25f;   // 新旗子彈出來
                 var c = n.pos * s; var ir = new Rect(c.x - isz / 2f, c.y - isz * 0.85f, isz, isz);
                 if (n.id == revealNode && rk < 0.5f) continue;
+                // 還沒通關的點：腳下一圈光一明一暗、旗子輕輕上下浮（使用者要求世界地圖要有動態）
+                if (st != null && !clear && Event.current.type == EventType.Repaint)
+                {
+                    float nph = now * 2.2f + n.pos.x * 0.013f, pulse = 0.5f + 0.5f * Mathf.Sin(nph);
+                    var gr = new Rect(c.x - isz * (0.45f + 0.1f * pulse), c.y - isz * 0.16f, isz * (0.9f + 0.2f * pulse), isz * 0.32f);
+                    UiKit.Disc(gr, boss ? new Color(1f, 0.3f, 0.2f, 0.18f + 0.22f * pulse) : new Color(1f, 0.9f, 0.45f, 0.15f + 0.2f * pulse));
+                    ir.y += Mathf.Sin(nph * 0.8f) * isz * 0.035f;
+                }
                 var it = WMTex(icon); if (it != null) GUI.DrawTexture(ir, it, ScaleMode.ScaleToFit, true);
                 bool selN = sel != null && sel.id == n.id;
                 if (selN) { float pz = 1f + 0.06f * Mathf.Sin(now * 5f); var rr = new Rect(c.x - isz * 0.6f * pz, c.y - isz * 0.25f * pz, isz * 1.2f * pz, isz * 0.5f * pz); UiKit.Disc(rr, new Color(1f, 0.9f, 0.4f, 0.35f)); }
