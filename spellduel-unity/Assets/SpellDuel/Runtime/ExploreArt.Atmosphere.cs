@@ -40,6 +40,22 @@ namespace SpellDuel
    for(int plane=0;plane<2;plane++){var side=V(Mathf.Cos(angle+plane*Mathf.PI/2),0,Mathf.Sin(angle+plane*Mathf.PI/2));
     for(int j=0;j<5;j++){float t=j/5f,u=(j+1)/5f;var a=origin+V(Mathf.Sin(t*3+seed)*.14f*t,height*t,Mathf.Sin(t*4+seed)*.09f*t);var z=origin+V(Mathf.Sin(u*3+seed)*.14f*u,height*u,Mathf.Sin(u*4+seed)*.09f*u);float wa=width*(1-t)*(.6f+Mathf.Sin(t*Mathf.PI)*.6f),wz=width*(1-u)*(.6f+Mathf.Sin(u*Mathf.PI)*.6f);b.Quad(a-side*wa,a+side*wa,z+side*wz,z-side*wz,c,true);}}
   }
+  /// <summary>
+  /// 地平線以下的「地面碗」（使用者要求：不能透出外面的現實背景）：跟天空一樣用 ExploreBackdrop（拉到遠裁切面以內、最先畫），
+  /// 蓋住整個下半球。地面網格超過 60m 遠裁切、地圖邊界外面沒有地面、遠方山影之間的縫——這些地方原本會看到相機畫面，現在看到地面色。
+  /// 上緣多蓋到地平線上方 4°，和天空的底邊重疊（天空後畫，蓋在上面）。
+  /// </summary>
+  static void GroundBowl(Transform root,Color c,float scale)
+  {
+   var key="sky/bowl/"+ColorUtility.ToHtmlStringRGB(c);
+   var bowl=Part(root,key,b=>{
+    const int sectors=32,bands=10;float top=4f*Mathf.Deg2Rad;
+    for(int j=0;j<bands;j++)for(int i=0;i<sectors;i++)
+    {float a=i*Mathf.PI*2/sectors,z=(i+1)*Mathf.PI*2/sectors,hi=top-j*(Mathf.PI*.5f+top)/bands,lo=top-(j+1)*(Mathf.PI*.5f+top)/bands;
+     b.Quad(V(Mathf.Cos(a)*Mathf.Cos(lo),Mathf.Sin(lo),Mathf.Sin(a)*Mathf.Cos(lo)),V(Mathf.Cos(z)*Mathf.Cos(lo),Mathf.Sin(lo),Mathf.Sin(z)*Mathf.Cos(lo)),V(Mathf.Cos(z)*Mathf.Cos(hi),Mathf.Sin(hi),Mathf.Sin(z)*Mathf.Cos(hi)),V(Mathf.Cos(a)*Mathf.Cos(hi),Mathf.Sin(hi),Mathf.Sin(a)*Mathf.Cos(hi)),c);}
+   },Vector3.zero,true);
+   bowl.name="GroundBowl";bowl.localScale=Vector3.one*scale;BackdropLayer(bowl,990);
+  }
   // Create once beneath the exploration world root, not inside the 24m streamed cell set.
   // Its localPosition is already the map centre. All distant geometry is outside the playable map.
   public static GameObject CreateBackdrop(ExploreMap map)
@@ -55,6 +71,7 @@ namespace SpellDuel
    for(int i=0;i<12;i++){int key=i%4;float a=i*Mathf.PI/6;Part(root.transform,"sky/cloud/"+key,b=>{for(int l=0;l<6;l++){var at=V((l-2.5f)*4,1.5f*Mathf.Sin(l+key),Mathf.Sin(l*2+key)*3);b.Crown(at,V(11,5+(l%3)*2,8),new Color(.90f,.96f,.95f,.94f),l+key,10,4);b.Crown(at-V(0,1.9f,0),V(10,2,7),new Color(.69f,.82f,.86f,.6f),l+key,8,3);}b.HeightTint(0,-3,8,new Color(.68f,.81f,.85f,.9f),Color.white);},V(Mathf.Cos(a)*radius,26+(i%3)*13,Mathf.Sin(a)*radius),true).name="Cloud_"+i;}
    for(int i=0;i<40;i++){int key=i%4;float a=i*Mathf.PI/20;var t=Part(root.transform,"sky/forest/"+key,b=>{for(int j=0;j<3;j++){float x=(j-1)*5;b.Rod(V(x,0,0),V(x+.7f,15+j*2,0),.48f,new Color(.22f,.40f,.37f),5,.15f);b.Crown(V(x,16+j*2,0),V(10,12,8),Color.Lerp(new Color(.26f,.48f,.42f),new Color(.37f,.59f,.49f),j*.2f),key+j,7,3);}},V(Mathf.Cos(a)*radius,0,Mathf.Sin(a)*radius),true);t.name="DistantForest_"+i;t.localRotation=Quaternion.Euler(0,-a*Mathf.Rad2Deg,0);}
    foreach(Transform child in root.transform){if(child.name.StartsWith("Cloud_"))BackdropLayer(child,1200);else if(child.name.StartsWith("DistantForest_"))BackdropLayer(child,1500);}
+   GroundBowl(root.transform,new Color(.30f,.42f,.24f),radius*1.7f);   // 叢林：草地色
    return root;
   }
  }
