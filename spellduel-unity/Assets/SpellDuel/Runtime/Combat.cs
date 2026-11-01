@@ -2367,6 +2367,24 @@ namespace SpellDuel
             if (fw == Vector3.zero) return true;
             return Vector3.Dot(new Vector3(d.x, 0f, d.z), fw) >= -v.bodyRadius;   // 身體有碰到前半邊就算
         }
+
+        /// <summary>玩家近戰砍到的高度帶：刀身上下各這麼寬（公尺）</summary>
+        public const float MeleeAimBand = 0.5f;
+        /// <summary>
+        /// 玩家近戰照準心砍高砍低（使用者要求）：沿準心的仰角，算出刀在敵人那個水平距離的高度，碰到敵人身體（上下各 MeleeAimBand）才算。
+        /// 準心往地上＝砍低（打得到矮的、趴在地上的），往天空＝砍高（打得到飛在空中的），平視＝胸口。貼身時高度幾乎不變，一樣砍得到。
+        /// </summary>
+        public static bool InAimBand(Vector3 from, Vector3 aim, Fighter v)
+        {
+            if (aim.sqrMagnitude < 1e-6f) return true;
+            aim.Normalize();
+            float flat = new Vector2(aim.x, aim.z).magnitude;
+            float slope = aim.y / Mathf.Max(0.17f, flat);   // 接近垂直時限制在約 80°
+            float hd = Mathf.Max(0f, FlatDistance(from, v.head) - v.bodyRadius);
+            float y = Mathf.Max(0f, from.y + slope * hd);   // 砍進地板：刀貼著地面
+            v.BodySegment(out var top, out var bottom);
+            return y >= bottom.y - MeleeAimBand && y <= top.y + MeleeAimBand;
+        }
         /// <summary>
         /// 法術有沒有碰到身體：一般法球＝球；新月形（劍氣、風刃）＝沿著新月弧取樣的一串小球（和畫面上的新月同樣大小、朝飛行方向）。
         /// </summary>
@@ -2566,10 +2584,12 @@ namespace SpellDuel
         void PlayerStab(Fighter f, SkillDef s, Vector3 aimDir)
         {
             var o = f.Chest;
-            var dir = Fighter.Flat(aimDir);
+            var aim3 = aimDir.sqrMagnitude > 1e-6f ? aimDir.normalized : f.forward;   // 準心的方向（含上下）：刺高刺低
+            var dir = Fighter.Flat(aim3);
             dir = dir == Vector3.zero ? Fighter.Flat(f.forward) : dir.normalized;
             float reach = s.rangeMax * f.rangeMul + Fighter.BodyRadius + f.reachBonus;
-            Emit("stab", o + dir * reach, s.color, s.id);
+            var tip = o + aim3 * reach; if (tip.y < 0.05f) tip.y = 0.05f;
+            Emit("stab", tip, s.color, s.id);
             int dmg = Riposte(f, Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now)));
             int landed = 0;
             foreach (var v in MeleeFoes(f))
@@ -2578,6 +2598,7 @@ namespace SpellDuel
                 var to = v.Chest - o; to.y = 0f;
                 if (to.magnitude > reach + v.bodyRadius) continue;
                 if (to.magnitude > v.bodyRadius && Vector3.Angle(dir, to) > StabHalfAngle) continue;   // 貼身（在身體半徑內）不看角度
+                if (!InAimBand(o, aim3, v)) continue;   // 上下：照準心刺高刺低
                 MeleeHit(f, s, v, dmg); landed++;
             }
             if (landed == 0) Emit("whiff", o + dir * 1.2f, s.color, "刺空（太遠或沒對準）");
@@ -2687,7 +2708,7 @@ namespace SpellDuel
             if (s.id == "na_sword" && f.comboStrike > 0f && ++f.basicHits % 3 == 0) { dmg = Mathf.RoundToInt(dmg * (1f + f.comboStrike)); Emit("buff", f.Chest, s.color, "連斬・重擊！"); }
             dmg = Riposte(f, dmg);
             foreach (var v in MeleeFoes(f))
-                if (v != null && v.Alive && InFrontHemisphere(f, v, s.rangeMax + f.reachBonus)) MeleeHit(f, s, v, dmg);   // 前方半球
+                if (v != null && v.Alive && InFrontHemisphere(f, v, s.rangeMax + f.reachBonus) && (!f.isPlayer || InAimBand(f.Chest, f.forward, v))) MeleeHit(f, s, v, dmg);   // 前方半球；玩家：照準心砍高砍低
         }
 
         /// <summary>刺客伏擊技能（刺殺、影襲、毒刃）：身邊這個半徑內不能有敵人才能蓄力；蓄力完成後靠近到這個距離就自動出手</summary>
