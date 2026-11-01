@@ -1,0 +1,228 @@
+{
+ "style": "Japanese anime cel-shaded style, two-tone toon shading, crisp clean shapes, saturated colors, game VFX asset, static camera, no camera movement",
+ "negative": "text, letters, words, watermark, logo, subtitles, camera shake, camera movement, people, hands, realistic photo, blurry",
+ "backgrounds": {
+  "black": "centered in frame, isolated on a pure solid black background, nothing else in the scene, no ground, no floor",
+  "green": "centered in frame, isolated on a pure solid flat chroma-key green (#00FF00) background, nothing else in the scene, no ground, no shadows on the background",
+  "full": ""
+ },
+ "spec": {
+  "size": [
+   960,
+   544
+  ],
+  "fps": 24,
+  "codec": "H.264 mp4, no audio track",
+  "note": "seconds = length used in game; generate the model's normal length, Claude trims/loops"
+ },
+ "clips": [
+  {
+   "id": "fx_DG_gate_idle_volcano",
+   "background": "black",
+   "mode": "loop",
+   "seconds": 2.0,
+   "zh": "熔岩（灰燼礦坑、餘燼鑄鐘坊）：區域出口的封印（還沒清除時一直播，疊在門上）",
+   "prompt": "a translucent vertical magic barrier wall made of molten orange-red lava light and black obsidian cinders, slowly shimmering with faint flowing patterns and a few drifting glowing orange embers and black ash flakes, steady seamless loop, the barrier stays in place"
+  },
+  {
+   "id": "fx_DG_gate_open_volcano",
+   "background": "black",
+   "mode": "once",
+   "seconds": 1.5,
+   "zh": "熔岩（灰燼礦坑、餘燼鑄鐘坊）：區域清除、出口的封印碎掉（播一次）",
+   "prompt": "a translucent vertical magic barrier of molten orange-red lava light and black obsidian cinders cracks from the center, shatters into glowing shards and bursts outward into a spray of glowing orange embers and black ash flakes that scatter and fade away, leaving nothing"
+  },
+  {
+   "id": "fx_DG_gate_idle_forest",
+   "background": "black",
+   "mode": "loop",
+   "seconds": 2.0,
+   "zh": "森林（腐根神殿、霧燈記名徑）：區域出口的封印（還沒清除時一直播，疊在門上）",
+   "prompt": "a translucent vertical magic barrier wall made of eerie green rot-light and pale lantern glow, slowly shimmering with faint flowing patterns and a few drifting green leaves, pale spores and firefly lights, steady seamless loop, the barrier stays in place"
+  },
+  {
+   "id": "fx_DG_gate_open_forest",
+   "background": "black",
+   "mode": "once",
+   "seconds": 1.5,
+   "zh": "森林（腐根神殿、霧燈記名徑）：區域清除、出口的封印碎掉（播一次）",
+   "prompt": "a translucent vertical magic barrier of eerie green rot-light and pale lantern glow cracks from the center, shatters into glowing shards and bursts outward into a spray of green leaves, pale spores and firefly lights that scatter and fade away, leaving nothing"
+  },
+  {
+   "id": "fx_DG_gate_idle_sea",
+   "background": "black",
+   "mode": "loop",
+   "seconds": 2.0,
+   "zh": "海上（沉沒王座、白帆回聲礁）：區域出口的封印（還沒清除時一直播，疊在門上）",
+   "prompt": "a translucent vertical magic barrier wall made of cold turquoise sea-light and white foam, slowly shimmering with faint flowing patterns and a few drifting water droplets, bubbles and white sea spray, steady seamless loop, the barrier stays in place"
+  },
+  {
+   "id": "fx_DG_gate_open_sea",
+   "background": "black",
+   "mode": "once",
+   "seconds": 1.5,
+   "zh": "海上（沉沒王座、白帆回聲礁）：區域清除、出口的封印碎掉（播一次）",
+   "prompt": "a translucent vertical magic barrier of cold turquoise sea-light and white foam cracks from the center, shatters into glowing shards and bursts outward into a spray of water droplets, bubbles and white sea spray that scatter and fade away, leaving nothing"
+  },
+  {
+   "id": "fx_DG_gate_idle_arena",
+   "background": "black",
+   "mode": "loop",
+   "seconds": 2.0,
+   "zh": "角鬥場：區域出口的封印（還沒清除時一直播，疊在門上）",
+   "prompt": "a translucent vertical magic barrier wall made of bright golden-red arena torchlight, slowly shimmering with faint flowing patterns and a few drifting golden sparks and swirling sand grains, steady seamless loop, the barrier stays in place"
+  },
+  {
+   "id": "fx_DG_gate_open_arena",
+   "background": "black",
+   "mode": "once",
+   "seconds": 1.5,
+   "zh": "角鬥場：區域清除、出口的封印碎掉（播一次）",
+   "prompt": "a translucent vertical magic barrier of bright golden-red arena torchlight cracks from the center, shatters into glowing shards and bursts outward into a spray of golden sparks and swirling sand grains that scatter and fade away, leaving nothing"
+  },
+  {
+   "id": "fx_DG_gate_idle_canyon",
+   "background": "black",
+   "mode": "loop",
+   "seconds": 2.0,
+   "zh": "峽谷：區域出口的封印（還沒清除時一直播，疊在門上）",
+   "prompt": "a translucent vertical magic barrier wall made of dusty amber desert-sun light, slowly shimmering with faint flowing patterns and a few drifting sand dust and small crumbling rock chips, steady seamless loop, the barrier stays in place"
+  },
+  {
+   "id": "fx_DG_gate_open_canyon",
+   "background": "black",
+   "mode": "once",
+   "seconds": 1.5,
+   "zh": "峽谷：區域清除、出口的封印碎掉（播一次）",
+   "prompt": "a translucent vertical magic barrier of dusty amber desert-sun light cracks from the center, shatters into glowing shards and bursts outward into a spray of sand dust and small crumbling rock chips that scatter and fade away, leaving nothing"
+  },
+  {
+   "id": "fx_DG_gate_idle_clockwork",
+   "background": "black",
+   "mode": "loop",
+   "seconds": 2.0,
+   "zh": "千機迴廊：區域出口的封印（還沒清除時一直播，疊在門上）",
+   "prompt": "a translucent vertical magic barrier wall made of brass-gold mechanical light with electric blue arcs, slowly shimmering with faint flowing patterns and a few drifting tiny brass gear pieces, bolts and steam puffs, steady seamless loop, the barrier stays in place"
+  },
+  {
+   "id": "fx_DG_gate_open_clockwork",
+   "background": "black",
+   "mode": "once",
+   "seconds": 1.5,
+   "zh": "千機迴廊：區域清除、出口的封印碎掉（播一次）",
+   "prompt": "a translucent vertical magic barrier of brass-gold mechanical light with electric blue arcs cracks from the center, shatters into glowing shards and bursts outward into a spray of tiny brass gear pieces, bolts and steam puffs that scatter and fade away, leaving nothing"
+  },
+  {
+   "id": "fx_DG_area_enter",
+   "background": "black",
+   "mode": "once",
+   "seconds": 1.0,
+   "zh": "走進戰鬥／事件區域：腳下炸開一圈警告（播一次）",
+   "prompt": "a thin red warning ring of light flashes and expands quickly outward on an invisible ground plane seen at a low angle, with a few red sparks, then fades"
+  },
+  {
+   "id": "fx_DG_area_clear",
+   "background": "black",
+   "mode": "once",
+   "seconds": 1.4,
+   "zh": "區域清除：一圈金光往上升（播一次）",
+   "prompt": "a bright golden ring of light rises upward from the bottom of the frame, releasing a soft burst of small golden stars and light motes that drift up and fade"
+  },
+  {
+   "id": "fx_DG_chest_open",
+   "background": "black",
+   "mode": "once",
+   "seconds": 1.2,
+   "zh": "寶箱地點打開：寶物光芒（播一次，疊在寶箱上）",
+   "prompt": "a warm golden light beam bursts upward from the center, surrounded by sparkling coins of light and twinkling stars that pop and fade"
+  },
+  {
+   "id": "fx_DG_event_start",
+   "background": "black",
+   "mode": "once",
+   "seconds": 1.2,
+   "zh": "特殊事件開始（護送、守護、詠唱、符文…）：魔法陣亮起（播一次）",
+   "prompt": "a circular magic rune circle of pale blue-white light draws itself quickly, glows brightly once and fades, seen from a slightly high angle, no ground visible"
+  },
+  {
+   "id": "fx_DG_throne_aura",
+   "background": "black",
+   "mode": "loop",
+   "seconds": 3.0,
+   "zh": "首領房（王座）入口：不祥的氣（還沒進去時一直播）",
+   "prompt": "a heavy ominous aura of dark purple and crimson smoke-light rising slowly in waves, with faint drifting dark embers, seamless loop"
+  },
+  {
+   "id": "fx_DG_boss_rise",
+   "background": "black",
+   "mode": "once",
+   "seconds": 2.0,
+   "zh": "首領現身：地面爆開的光柱（播一次）",
+   "prompt": "a massive pillar of dark crimson and purple light erupts upward from the center with a shockwave ring and flying dark embers, then the light collapses inward and fades"
+  },
+  {
+   "id": "fx_DG_midboss_rise",
+   "background": "black",
+   "mode": "once",
+   "seconds": 1.6,
+   "zh": "中途首領現身（黎明之門的前兩道門）",
+   "prompt": "a pillar of bright orange-gold light erupts upward with a ring shockwave and sparks, then fades"
+  },
+  {
+   "id": "fx_DG_lava_vent",
+   "background": "black",
+   "mode": "loop",
+   "seconds": 3.0,
+   "zh": "熔岩副本的環境：地上裂縫冒出的火星（走道、區域裡隨機放幾個）",
+   "prompt": "a small column of glowing orange embers and heat shimmer rising slowly from a single point at the bottom of the frame, seamless loop"
+  },
+  {
+   "id": "fx_DG_forest_fireflies",
+   "background": "black",
+   "mode": "loop",
+   "seconds": 3.0,
+   "zh": "森林副本的環境：螢火蟲與孢子",
+   "prompt": "a few soft green firefly lights and pale spores floating lazily in the air, gently blinking, seamless loop"
+  },
+  {
+   "id": "fx_DG_sea_spray",
+   "background": "black",
+   "mode": "loop",
+   "seconds": 3.0,
+   "zh": "海上副本的環境：浪花水氣",
+   "prompt": "soft white sea spray mist and small water droplets puffing up and drifting sideways, faint turquoise light, seamless loop"
+  },
+  {
+   "id": "fx_DG_arena_sand",
+   "background": "black",
+   "mode": "loop",
+   "seconds": 3.0,
+   "zh": "角鬥場副本的環境：捲起的沙塵與火星",
+   "prompt": "golden sand grains swirling in a small whirl with a few torch sparks, seamless loop"
+  },
+  {
+   "id": "fx_DG_canyon_dust",
+   "background": "black",
+   "mode": "loop",
+   "seconds": 3.0,
+   "zh": "峽谷副本的環境：風吹過的沙塵",
+   "prompt": "a gust of amber sand dust blowing sideways across the frame in soft waves, seamless loop"
+  },
+  {
+   "id": "fx_DG_clockwork_steam",
+   "background": "black",
+   "mode": "loop",
+   "seconds": 2.5,
+   "zh": "千機迴廊的環境：管線噴出的蒸汽與電弧",
+   "prompt": "a puff of white steam bursting from a single point and dissipating, with a small electric blue arc flickering, seamless loop"
+  },
+  {
+   "id": "fx_DG_trap_room_clear",
+   "background": "black",
+   "mode": "once",
+   "seconds": 1.4,
+   "zh": "千機迴廊：一個機關房過完（機關停止）",
+   "prompt": "brass gear-shaped rings of golden light spin, slow down and break apart into fading sparks and small steam puffs"
+  }
+ ]
+}
