@@ -4021,6 +4021,7 @@ namespace SpellDuel
             }
             if (target == null) return;
             f.armed = null;
+            if (s.id == "backstab") { BackstabKnife(f, s, target); return; }   // 刺殺：從被刺的人正面 1m 飛來一把刀（打得掉）
             Emit("ambush", target.Chest, s.color, s.name + "！");
             int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
             if (s.execute && target.maxHp > 0 && target.hp < target.maxHp * 0.25f) { dmg *= 3; Emit("crit", target.Chest, s.color, "處決！"); }
@@ -4037,6 +4038,34 @@ namespace SpellDuel
             if (remoteEnemy && (target.isMinion || IsHostileRoomProp(target))) { EmitHit(s, target.Chest); OnMinionHit?.Invoke(target.minionId, dmg, s); OnDealt(f, dmg, target, s); }
             else if (remoteEnemy && target == enemy) { EmitHit(s, target.Chest); OnRemoteHit?.Invoke(s, dmg, target.Chest, 0); OnDealt(f, dmg, target, s); }
             else Hit(target, new Projectile { owner = f, skill = s, pos = target.Chest, dir = Fighter.Flat(target.head - f.head), damage = dmg, effect = s.effect, effectDps = s.effectDps, effectDur = s.effectDur });
+        }
+
+        /// <summary>刺殺的飛刀：出現在被刺的人正面這麼遠（公尺）、以這個速度（公尺／秒）飛向他的胸口</summary>
+        public const float BackstabKnifeDist = 1f, BackstabKnifeSpeed = 1.2f;
+        /// <summary>
+        /// 刺殺（使用者要求）：不再當下直接命中，改成從被刺的人「正面」1m 的地方出現一把刀、飛向他的胸口。
+        /// 它是一般的投射物：玩家的法球可以對轟（法術角力／打碎），側步、走開也躲得掉。處決、連殺、遁影照舊。
+        /// </summary>
+        void BackstabKnife(Fighter f, SkillDef s, Fighter target)
+        {
+            var fw = Fighter.Flat(target.forward);
+            if (fw == Vector3.zero) fw = Fighter.Flat(f.head - target.head);
+            if (fw == Vector3.zero) fw = Vector3.forward;
+            fw.Normalize();
+            var from = target.Chest + fw * BackstabKnifeDist;
+            int dmg = s.damage;
+            if (s.execute && target.maxHp > 0 && target.hp < target.maxHp * 0.25f) { dmg *= 3; Emit("crit", target.Chest, s.color, "處決！"); }
+            if (f.adv == "shadowdancer")
+            {
+                f.comboUntil = now + 3f;
+                foreach (var sk in f.loadout) if (sk.releaseNear) f.cooldownUntil[sk.id] = now;
+                Emit("buff", f.Chest, new Color(0.9f, 0.4f, 1f), "連殺！馬上再伏擊");
+            }
+            if (f.vanish > 0f) { f.vanishUntil = now + f.vanish; Emit("buff", f.Chest, new Color(0.7f, 0.5f, 1f), $"遁影：{f.vanish:0} 秒內下一次物理攻擊必閃"); }
+            var p = Spawn(f, s, from, target.Chest - from, dmg, s.effect, s.effectDps, s.effectDur, false);   // 攻擊力、爆擊等照一般投射物算
+            p.target = target;
+            p.speedMul = BackstabKnifeSpeed / Mathf.Max(0.1f, s.speed);
+            Emit("backstabknife", from, s.color, $"⚠ {s.name}：正面飛刀！");
         }
 
         /// <summary>以自己為中心的招式（審判）落地：範圍內的敵人各吃一次傷害</summary>
