@@ -155,7 +155,9 @@ namespace SpellDuel
         }
 
         /// <summary>副本營地：中間的怪發現玩家時，這個距離內同一群的一起出來</summary>
-        public const float ExCampNear = 7f, ExRunHomeSpeed = 2.6f;
+        public const float ExCampNear = 7f, ExRunHomeSpeed = 2.6f;   // 中間的怪彼此相隔約 5.7m：7m 內才抓得到旁邊的
+        /// <summary>中間的怪發現玩家或被打：叫附近範圍內最近的幾隻一起出來（使用者更正：不是附近整群）</summary>
+        public const int ExCampNearMin = 2, ExCampNearMax = 3;
         readonly List<int> exWakeQueue = new List<int>();
         /// <summary>叫醒整群（斥候、哨兵通報到了；一般巡邏發現玩家或被打倒）</summary>
         void ExWakeCamp(int camp)
@@ -168,16 +170,24 @@ namespace SpellDuel
                 if (!om.exAware) ExAlert(om, false);
             }
         }
-        /// <summary>叫醒 at 附近 r 公尺內同一群的（中間的營地：附近的一群出來）</summary>
+        /// <summary>叫醒 at 附近 r 公尺內同一群、還沒發現玩家的怪裡最近的幾隻（2～3 隻，r＝7m；使用者更正：中間的怪只叫附近幾隻出來）</summary>
         void ExWakeNear(int camp, Vector3 at, float r)
         {
+            var cand = new List<(ExMonster o, float d)>();
             foreach (var o in explore.map.monsters)
             {
                 if (o.dead || o.hidden || o.camp != camp) continue;
                 exActive.TryGetValue(o, out var om);
-                if (FlatDistance(om != null ? om.Feet : o.home, at) > r) continue;
-                if (om == null) om = ExSpawn(o);
-                if (!om.exAware && !om.exRunHome) ExAlert(om, false);
+                if (om != null && (om.exAware || om.exRunHome)) continue;
+                float d = FlatDistance(om != null ? om.Feet : o.home, at);
+                if (d <= r) cand.Add((o, d));
+            }
+            cand.Sort((x, y) => x.d.CompareTo(y.d));
+            int n = ExCampNearMin + rng.Next(ExCampNearMax - ExCampNearMin + 1);
+            for (int i = 0; i < cand.Count && i < n; i++)
+            {
+                if (!exActive.TryGetValue(cand[i].o, out var om)) om = ExSpawn(cand[i].o);
+                ExAlert(om, false);
             }
         }
         /// <summary>營地中間（中間那群怪的家的平均）</summary>
@@ -225,7 +235,7 @@ namespace SpellDuel
                 var p = om != null ? om.Feet : o.home;
                 if (FlatDistance(p, at) > ExNoiseRange || !ExSight(p, at)) continue;   // 隔著牆不會被吵醒
                 if (om == null) om = ExSpawn(o);
-                if (!om.exAware) ExAlert(om, true);   // 被吵醒的如果是會叫同伴的，一樣會叫
+                if (!om.exAware) ExAlert(om, !(explore.map.dungeon != null && o.area >= 0 && o.role == 0));   // 副本營地：聽到聲音的只有自己醒（不連鎖叫人；斥候、哨兵照樣跑回去通報）   // 被吵醒的如果是會叫同伴的，一樣會叫
             }
         }
 
