@@ -173,6 +173,26 @@ namespace SpellDuel
                 int cx = a.rect.xMin + a.rect.width / 2, cz = a.rect.yMin + a.rect.height / 2;
                 for (int k = 0; k < CampMonsters; k++)
                     m.monsters.Add(new ExMonster { id = ++id, kind = PickKind(theme, a.wave, rng), zone = a.index, area = a.index, wave = a.wave, camp = 100 + a.index, caller = k == 0, home = m.World(cx + offs[k].x, cz + offs[k].y) });
+                // 外圍巡邏的小隊（使用者要求）：2～3 隊、每隊 1～2 隻，跟中間的營地是同一群（一隻發現或被打倒，整群醒來衝過來）
+                //   有的沿區域邊緣固定路線來回巡，有的在營地附近隨機晃；每隊一種：斥候（快）、哨兵（警戒範圍大）、一般
+                var r = a.rect;
+                var loop = new[] { m.World(r.xMin, r.yMin), m.World(r.xMax, r.yMin), m.World(r.xMax, r.yMax), m.World(r.xMin, r.yMax), m.World(r.xMin, r.yMin) };
+                var corners = new[] { new Vector2Int(r.xMin, r.yMin), new Vector2Int(r.xMax, r.yMax), new Vector2Int(r.xMax, r.yMin), new Vector2Int(r.xMin, r.yMax) };
+                int squads = 2 + rng.Next(2);
+                for (int g = 0; g < squads; g++)
+                {
+                    bool wander = g % 2 == 1;
+                    int role = rng.Next(3), size = 1 + rng.Next(2);
+                    var corner = corners[(g + a.index) % corners.Length];
+                    // 固定路線：從這個角落出發繞區域一圈（起點轉到這個角落）
+                    Vector3[] route = null;
+                    if (!wander) { int s0 = (g + a.index) % 4; route = new Vector3[5]; for (int q = 0; q < 5; q++) route[q] = loop[(s0 + q) % 4]; }
+                    for (int e = 0; e < size; e++)
+                    {
+                        var home = m.World(corner.x, corner.y) + new Vector3(e * 0.8f, 0f, e * 0.5f);
+                        m.monsters.Add(new ExMonster { id = ++id, kind = PickKind(theme, a.wave, rng), zone = a.index, area = a.index, wave = a.wave, camp = 100 + a.index, home = home, patrol = route, wander = wander, role = role });
+                    }
+                }
             }
             // 走道上巡邏的怪：每條走道幾隻（強度照出發的地點）
             var byFrom = new Dictionary<int, List<Vector2Int>>(); int packs = 0;

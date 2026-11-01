@@ -12,6 +12,7 @@ namespace SpellDuel
         public int exPatrolIdx, exPatrolDir = 1;
         public float exLastHp = -1f;
         public float exPathAt; public Vector3 exNext; public bool exHasNext;
+        public Vector3 exWanderTo; public bool exHasWander;   // 副本營地外圍隨機晃的怪：現在要走去的點
         // 沒發現玩家時的日常（使用者要求：自己做些事、互相互動，自然一點）
         public int exIdleKind;            // 0 沒事、1 張望、2 覓食（低頭咀嚼）、3 和同伴聊天、4 打盹
         public float exIdleUntil, exIdleCd, exEmoteAt;
@@ -90,7 +91,10 @@ namespace SpellDuel
             if (mon.hpFrac < 1f) { m.maxHp = Mathf.RoundToInt(m.maxHp / mon.hpFrac); m.hp = m.maxHp * mon.hpFrac; }
             m.exMon = mon; m.exAware = false; m.exPatrolIdx = 0; m.exPatrolDir = 1;
             m.exIdleKind = 0; m.exIdleUntil = 0f; m.exIdleCd = now + 1f + (float)rng.NextDouble() * 3f; m.exTalkTo = null;
-            m.exSleep = mon.camp >= 0 && !mon.caller && mon.patrol == null && rng.Next(4) == 0;   // 營地四隻裡大約一隻在打盹（叫同伴的那隻不睡）
+            m.exSleep = mon.camp >= 0 && !mon.caller && mon.patrol == null && !mon.wander && rng.Next(4) == 0;
+            if (mon.role == 1) { m.speedMul *= mon.SpeedMul; m.name += "（斥候）"; }   // 外圍巡邏：斥候跑得快
+            else if (mon.role == 2) m.name += "（哨兵）";                               // 哨兵：警戒範圍大
+            m.exHasWander = false;   // 營地四隻裡大約一隻在打盹（叫同伴的那隻不睡）
             if (m.exSleep) { m.exIdleKind = 4; m.exIdleUntil = float.MaxValue; }
             m.attackReadyAt = now + 1f;
             if (mon.guardian > 0) m.name = (EliteCatalog.Get(mon.kind)?.name ?? m.name) + "（守衛）";
@@ -300,6 +304,26 @@ namespace SpellDuel
                 }
             }
             var p = m.exMon.patrol;
+            if (m.exMon.wander && (p == null || p.Length < 2))
+            {
+                // 營地外圍隨機晃（使用者要求）：在家附近 7m 內挑一個走得到的點走過去，到了停一下再挑下一個
+                if (!m.exHasWander || FlatDistance(m.Feet, m.exWanderTo) < 0.4f)
+                {
+                    if (m.exHasWander && rng.Next(2) == 0) { m.exHasWander = false; ExIdle(m, 1, Rand(1.5f, 3f)); return; }
+                    for (int t = 0; t < 8; t++)
+                    {
+                        float ang = Rand(0f, Mathf.PI * 2f), rr = Rand(2f, 7f);
+                        var cand = m.exMon.home + new Vector3(Mathf.Cos(ang) * rr, 0f, Mathf.Sin(ang) * rr);
+                        if (explore.map.Walkable(cand, 0.6f) && ExLineClear(m.Feet, cand)) { m.exWanderTo = cand; m.exHasWander = true; break; }
+                    }
+                    if (!m.exHasWander) return;
+                }
+                var wd = Fighter.Flat(m.exWanderTo - m.Feet);
+                if (wd.sqrMagnitude > 1e-4f) m.forward = wd.normalized;
+                var wn = m.Feet + wd.normalized * Mathf.Min(wd.magnitude, ExPatrolSpeed * 1.3f * m.speedMul * dt);
+                if (minionInside == null || minionInside(wn)) m.head = new Vector3(wn.x, m.head.y, wn.z); else m.exHasWander = false;
+                return;
+            }
             if (p == null || p.Length < 2)
             {
                 // 不巡邏的（營地）：轉向營地中間（圍著篝火）、偶爾覓食或張望
@@ -353,7 +377,20 @@ namespace SpellDuel
                     if (d <= ExActivate) m = ExSpawn(mon);
                     else continue;
                 }
-                if (!m.Alive) { exActive.Remove(mon); run.OnMonsterKilled(mon); ExNoise(m); continue; }
+                if (!m.Alive)
+                {
+                    exActive.Remove(mon); run.OnMonsterKilled(mon); ExNoise(m);
+                    // 同一群的（營地、外圍巡邏）被打倒：整群驚醒衝過來（使用者要求）
+                    if (mon.camp >= 0)
+                        foreach (var o in run.map.monsters)
+                        {
+                            if (o == mon || o.dead || o.hidden || o.camp != mon.camp) continue;
+                            if (!exActive.TryGetValue(o, out var om)) om = ExSpawn(o);
+                            if (!om.exAware) ExAlert(om, true);
+                            break;   // ExAlert 會把同一群的全部叫醒
+                        }
+                    continue;
+                }
                 if (m.exLastHp >= 0f && m.hp < m.exLastHp - 0.01f) ExNoise(m);   // 被打中：附近的怪聽到動靜
                 m.exLastHp = m.hp;
                 float md = FlatDistance(m.Feet, pf);
@@ -362,7 +399,7 @@ namespace SpellDuel
                     if (md > ExDespawn && d > ExDespawn) { ExStow(mon, m); continue; }
                     bool hurt = m.hp < m.maxHp - 0.01f;
                     if (mon.guardian > 0) { var a = run.map.arenas.Find(x => x.n == mon.guardian); if (a.entered || hurt) ExAlert(m); }
-                    else if (md <= ExDetect * (m.exSleep ? 0.5f : 1f) + m.bodyRadius && ExSight(m.Feet, pf) || hurt) ExAlert(m);   // 打盹的：要走得更近才會發現   // 警戒範圍不穿牆
+                    else if (md <= ExDetect * mon.DetectMul * (m.exSleep ? 0.5f : 1f) + m.bodyRadius && ExSight(m.Feet, pf) || hurt) ExAlert(m);   // 哨兵：警戒範圍大   // 打盹的：要走得更近才會發現   // 警戒範圍不穿牆
                 }
                 // 發現玩家之後就一直追，直到追上為止（使用者要求）：不會放棄、也不會收起來
             }

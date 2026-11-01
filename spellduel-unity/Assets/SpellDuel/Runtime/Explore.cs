@@ -51,6 +51,10 @@ namespace SpellDuel
         public int area = -1;
         /// <summary>副本大地圖：這隻怪的強度波次（照原本副本那個房間的 wave）；0＝照叢林的區域算</summary>
         public int wave;
+        /// <summary>副本大地圖：營地外圍巡邏的怪（使用者要求）：wander＝在營地附近隨機晃；role 1＝斥候（跑得快）、2＝哨兵（警戒範圍大）、0＝一般</summary>
+        public bool wander; public int role;
+        public float SpeedMul => role == 1 ? 1.6f : 1f;
+        public float DetectMul => role == 2 ? 2.4f : 1f;
     }
 
     public class ExNpc
