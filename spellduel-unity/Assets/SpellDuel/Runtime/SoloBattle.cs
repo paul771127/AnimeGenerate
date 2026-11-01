@@ -3142,7 +3142,7 @@ namespace SpellDuel
                     if (at == Me.Chest) { SpellFx.CastBurst(myClass, c, cam.transform.position + cam.transform.forward * 0.5f - cam.transform.up * 0.08f, cam.transform.forward, 0.35f); Sfx.Cast(myClass); Haptics.Play(Haptics.Kind.Medium); }
                     break;
                 case "backstabknife":
-                    // 刺殺的飛刀出現（被刺的人正面 1m）：提示、出手聲；刺的是我＝敵人刺客撲上來
+                    // 刺殺的染血飛刀出現（被刺的人正面 1.5m）：提示、出手聲；刺的是我＝敵人刺客撲上來
                     floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time });
                     Sfx.Play("blade_warn", 0.9f, 1.3f);
                     if (Battle.FlatDistance(at, Me.Chest) < Battle.BackstabKnifeDist + 0.3f && enemyRig && !bossMode) enemyRig.PlayAttack("lunge", 0.05f);

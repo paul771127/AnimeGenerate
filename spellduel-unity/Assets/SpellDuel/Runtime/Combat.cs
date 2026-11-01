@@ -4021,7 +4021,7 @@ namespace SpellDuel
             }
             if (target == null) return;
             f.armed = null;
-            if (s.id == "backstab") { BackstabKnife(f, s, target); return; }   // 刺殺：從被刺的人正面 1m 飛來一把刀（打得掉）
+            if (s.id == "backstab") { BackstabKnife(f, s, target); return; }   // 刺殺：從被刺的人正面 1.5m 飛來一把染血的飛刀（打得掉）
             Emit("ambush", target.Chest, s.color, s.name + "！");
             int dmg = Mathf.RoundToInt(s.damage * f.atkMul * f.OutMul(now));
             if (s.execute && target.maxHp > 0 && target.hp < target.maxHp * 0.25f) { dmg *= 3; Emit("crit", target.Chest, s.color, "處決！"); }
@@ -4041,9 +4041,9 @@ namespace SpellDuel
         }
 
         /// <summary>刺殺的飛刀：出現在被刺的人正面這麼遠（公尺）、以這個速度（公尺／秒）飛向他的胸口</summary>
-        public const float BackstabKnifeDist = 1f, BackstabKnifeSpeed = 1.2f;
+        public const float BackstabKnifeDist = 1.5f, BackstabKnifeSpeed = 1.2f;   // 使用者要求：正面 1.5m
         /// <summary>
-        /// 刺殺（使用者要求）：不再當下直接命中，改成從被刺的人「正面」1m 的地方出現一把刀、飛向他的胸口。
+        /// 刺殺（使用者要求）：不再當下直接命中，改成從被刺的人「正面」1.5m 的地方出現一把染血的飛刀、飛向他的胸口。
         /// 它是一般的投射物：玩家的法球可以對轟（法術角力／打碎），側步、走開也躲得掉。處決、連殺、遁影照舊。
         /// </summary>
         void BackstabKnife(Fighter f, SkillDef s, Fighter target)

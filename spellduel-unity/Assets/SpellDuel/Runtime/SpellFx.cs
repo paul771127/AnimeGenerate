@@ -595,15 +595,38 @@ namespace SpellDuel
                     bool knife = id != "backstab";
                     var spin = NewChild(body, "Blade");
                     if (knife) spin.localScale = Vector3.one * 1.6f;   // 飛刀的判定小，刀身相對放大才看得見
-                    var edge = knife ? Color.Lerp(sc, new Color(0.8f, 0.5f, 1f), 0.5f) : new Color(1f, 0.12f, 0.25f);
+                    else spin.localScale = Vector3.one * 1.8f;        // 刺殺的染血飛刀：從正面 1.5m 飛來，要看得清楚
+                    var edge = knife ? Color.Lerp(sc, new Color(0.8f, 0.5f, 1f), 0.5f) : new Color(0.75f, 0.03f, 0.06f);
                     GlowPart(spin, id + ".glow", m => DaggerGlow(m, edge, knife));
-                    SolidPart(spin, id + ".solid", m => DaggerSolid(m, knife), new[]
+                    SolidPart(spin, id + ".solid", m => DaggerSolid(m, knife), knife ? new[]
                     {
                         new Color(0.88f, 0.9f, 0.97f),
-                        knife ? new Color(0.5f, 0.5f, 0.56f) : new Color(0.8f, 0.6f, 0.25f),
-                        knife ? new Color(0.22f, 0.12f, 0.26f) : new Color(0.3f, 0.1f, 0.32f),
+                        new Color(0.5f, 0.5f, 0.56f),
+                        new Color(0.22f, 0.12f, 0.26f),
                         sc,
+                    } : new[]
+                    {
+                        new Color(0.78f, 0.8f, 0.86f),   // 刀身靠護手的一段：鋼色
+                        new Color(0.3f, 0.26f, 0.24f),   // 護手：舊鐵
+                        new Color(0.16f, 0.08f, 0.07f),  // 握柄：沾了血的深色皮革
+                        new Color(0.38f, 0.02f, 0.03f),  // 柄頭
+                        new Color(0.5f, 0.02f, 0.04f),   // 刀尖到刀身一半：染滿了血（暗紅）
                     });
+                    if (!knife)
+                    {
+                        // 染血：刀尖往後滴落的血珠（世界座標，會往下掉）
+                        var drip = NewPS(root.transform, "Blood drips", BlendMat(TexSoft), 24, true);
+                        var dm = drip.main;
+                        dm.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, 0.6f);
+                        dm.startSpeed = new ParticleSystem.MinMaxCurve(0.05f, 0.2f);
+                        dm.startSize = new ParticleSystem.MinMaxCurve(D * 0.18f, D * 0.32f);
+                        dm.startColor = new ParticleSystem.MinMaxGradient(new Color(0.55f, 0.02f, 0.04f, 0.95f), new Color(0.32f, 0.01f, 0.02f, 0.9f));
+                        dm.gravityModifier = 0.8f;
+                        Sphere(drip, D * 0.3f);
+                        FadeOut(drip);
+                        var em = drip.emission; em.rateOverTime = 40f;
+                        drip.Play();
+                    }
                     if (knife) { anim.spin = spin; anim.spinAxis = Vector3.right; anim.spinSpeed = 1080f; }
                     CoreGlow(root.transform, edge, D * 1.1f, Vector3.zero);
                     break;
@@ -972,7 +995,9 @@ namespace SpellDuel
         static void DaggerSolid(PMesh m, bool knife)
         {
             // 刀刃：扁菱形剖面；護手；握柄；柄頭（飛刀是苦無的圓環）
-            m.sub = 0; m.Lathe(knife ? Prof(-0.3f, 0.06f, -0.18f, 0.15f, 0.5f, 0f) : Prof(-0.34f, 0.1f, -0.2f, 0.17f, 0.35f, 0.1f, 0.82f, 0f), 4, null, 1f, 0.24f);
+            m.sub = 0;
+            if (knife) m.Lathe(Prof(-0.3f, 0.06f, -0.18f, 0.15f, 0.5f, 0f), 4, null, 1f, 0.24f);
+            else m.Lathe(Prof(-0.34f, 0.1f, -0.2f, 0.17f, 0.12f, 0.129f), 4, null, 1f, 0.24f);   // 刺殺：刀身靠護手的一段（鋼色），前半段是染血的 sub 4
             m.sub = 1;
             if (knife) m.Lathe(Prof(-0.36f, 0f, -0.36f, 0.08f, -0.3f, 0.08f, -0.3f, 0f), 6, null);
             else m.Lathe(Prof(-0.43f, 0f, -0.43f, 0.32f, -0.35f, 0.32f, -0.35f, 0f), 4, null, 1f, 0.28f, 45f);
@@ -980,6 +1005,7 @@ namespace SpellDuel
             m.sub = 3;
             if (knife) m.Lathe(Prof(-0.95f, 0f, -0.9f, 0.1f, -0.78f, 0.1f, -0.72f, 0f), 8, null, 1f, 0.3f);
             else m.Lathe(SphereProf(0.08f, 4), 6, null, 1f, 1f, 0f, null, new Vector3(0f, 0f, -0.92f), Quaternion.identity);
+            if (!knife) { m.sub = 4; m.Lathe(Prof(0.12f, 0.129f, 0.35f, 0.1f, 0.82f, 0f), 4, null, 1f, 0.24f); }   // 刺殺：染血的刀尖
         }
 
         static void DaggerGlow(PMesh m, Color edge, bool knife)
