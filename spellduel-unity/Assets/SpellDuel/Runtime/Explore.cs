@@ -47,6 +47,10 @@ namespace SpellDuel
         public bool Swift => variant > 0;
         public bool dead;
         public float hpFrac = 1f;         // 收起來時剩的血量比例
+        /// <summary>副本大地圖：這隻怪屬於哪個區域（守著那個區域，全部打倒＝區域清除）；−1＝走道上巡邏的</summary>
+        public int area = -1;
+        /// <summary>副本大地圖：這隻怪的強度波次（照原本副本那個房間的 wave）；0＝照叢林的區域算</summary>
+        public int wave;
     }
 
     public class ExNpc
@@ -130,6 +134,12 @@ namespace SpellDuel
         public readonly List<ExSwitch> switches = new List<ExSwitch>();
         readonly Dictionary<Vector2Int, List<ExProp>> propCells = new Dictionary<Vector2Int, List<ExProp>>();
 
+        /// <summary>副本大地圖（使用者要求：副本全部改成像翠蔭迷林那樣的大地圖）：原本的副本；null＝故事探索</summary>
+        public DungeonDef dungeon;
+        /// <summary>副本大地圖：每個原本的房間（地點）變成地圖上的一個區域</summary>
+        public readonly List<ExArea> areas = new List<ExArea>();
+        public ExArea AreaAt(Vector2Int c) { foreach (var a in areas) if (a.Contains(c)) return a; return null; }
+
         public ExploreMap(int w, int h) { W = w; H = h; cells = new ExCell[w, h]; terrain = new ExTerrain[w, h]; ground = new ExGround[w, h]; }
 
         public ExTerrain TerrainAt(int x, int z) => InGrid(x, z) ? terrain[x, z] : ExTerrain.Thicket;
@@ -167,6 +177,7 @@ namespace SpellDuel
             var c = new Vector2Int(x, z);
             foreach (var a in arenas) if (a.gate.Contains(c)) return a.cleared;
             foreach (var s in seals) if (s.cells.Contains(c)) return s.open;
+            foreach (var a in areas) if (a.exits.Contains(c)) return a.cleared;
             return true;
         }
         /// <summary>這一點在哪個還沒打開的封印上；沒有＝null</summary>
@@ -607,6 +618,44 @@ namespace SpellDuel
 
         public ExploreRun(ExploreMap m) { map = m; }
 
+        // ---------------------------------------------------------------- 副本大地圖（使用者要求：副本改成像翠蔭迷林的大地圖）
+        public DungeonDef Dungeon => map.dungeon;
+        public bool IsDungeon => map.dungeon != null;
+        /// <summary>副本：剛走進去、要由戰鬥那邊開始的區域（特殊事件、中途首領、寶箱）；戰鬥那邊拿走後清掉</summary>
+        public readonly List<ExArea> areaStarts = new List<ExArea>();
+        /// <summary>副本：剛清除的區域（畫面、戰鬥那邊顯示劇情、結算用）；拿走後清掉</summary>
+        public readonly List<ExArea> areaCleared = new List<ExArea>();
+        /// <summary>副本走道盡頭藏的寶箱：金幣（副本等級越高越多）；找到幾個（結算多給裝備）</summary>
+        public int DungeonChestGold => 150 + 15 * (map.dungeon != null ? map.dungeon.level : 0);
+        public int chestsFound;
+        public int AreasCleared { get { int n = 0; foreach (var a in map.areas) if (a.cleared) n++; return n; } }
+
+        /// <summary>副本：這個區域還有幾隻守著的怪活著</summary>
+        public int AreaAlive(ExArea a) { int n = 0; foreach (var mon in map.monsters) if (mon.area == a.index && !mon.dead) n++; return n; }
+
+        /// <summary>副本：區域清除（打倒營地、完成事件、打倒中途首領、打開寶箱）：往下一站的門打開</summary>
+        public void ClearArea(ExArea a)
+        {
+            if (a == null || a.cleared) return;
+            a.cleared = true; areaCleared.Add(a);
+            if (a.IsChest) Say($"🧰 {a.Title}：打開了寶箱！");
+            else Say($"✅ {a.Title} 清除！" + (a.next.Count > 0 ? "往下一站的門打開了" : ""));
+        }
+
+        void UpdateDungeon(Vector2Int pc)
+        {
+            foreach (var a in map.areas)
+            {
+                if (a.entered || !a.Contains(pc)) continue;
+                a.entered = true;
+                bool final = map.arenas.Exists(x => x.n == 4 && Vector3.Distance(x.center, a.center) < 0.1f);
+                if (final) continue;   // 最終首領：走進王座（競技場 n＝4）由戰鬥那邊叫出來
+                Say(a.IsChest ? $"🧰 {a.Title}" : a.IsBoss ? $"💀 {a.Title}——首領現身了！" : a.IsEvent ? $"⚠ {a.Title}" : $"⚔ {a.Title}——守在這裡的怪物發現你了！");
+                if (a.IsChest || a.IsEvent || a.IsBoss) areaStarts.Add(a);
+                else if (AreaAlive(a) == 0) ClearArea(a);
+            }
+        }
+
         public ExQuest Main => map.Quest("main");
         public int GuardiansDown { get { int n = 0; foreach (var a in map.arenas) if (a.n <= 3 && a.cleared) n++; return n; } }
 
@@ -627,6 +676,7 @@ namespace SpellDuel
                 if (d > TalkRange + 1f) talkedAway.Remove(n.id);
                 if (d <= TalkRange && !talkedAway.Contains(n.id)) { talkedAway.Add(n.id); Talk(n); }
             }
+            if (IsDungeon) UpdateDungeon(pc);
             // 撿東西
             foreach (var it in map.items)
             {
@@ -635,6 +685,7 @@ namespace SpellDuel
                 var q = map.Quest(it.quest);
                 if (q != null) { q.have = Mathf.Min(q.need, q.have + 1); Say($"🌿 撿到{it.name}（{q.have}/{q.need}）"); if (q.state == ExQuestState.Active && q.have >= q.need) { q.state = ExQuestState.Ready; Say($"「{q.title}」可以回報了！"); } }
             }
+            if (IsDungeon) { foreach (var l in map.landmarks) if (!l.found && l.Contains(pc)) l.found = true; foreach (var a in map.arenas) if (!a.entered && Battle.FlatDistance(player, a.center) <= a.radius - 1f) { a.entered = true; Say($"👑 {a.name}——首領現身了！"); } return; }
             // 古樹之心
             if (bossDead && !hasHeart && Battle.FlatDistance(player, map.altar) <= PickRange + 0.6f) { hasHeart = true; Say("💚 取得「古樹之心」！交給守林人吧"); var m = Main; if (m.state == ExQuestState.Active) m.state = ExQuestState.Ready; }
             // 護送：探險家到前哨站附近
@@ -724,7 +775,7 @@ namespace SpellDuel
 
         void Complete(ExQuest q)
         {
-            if (q.state == ExQuestState.Done) return;
+            if (q == null || q.state == ExQuestState.Done) return;
             q.state = ExQuestState.Done; gold += q.gold; xp += q.xp;
             rewards.Add($"{q.title}：{q.gold} 金幣、{q.xp} 經驗");
             Say($"✅ 完成「{q.title}」（+{q.gold} 金幣、+{q.xp} 經驗）");
@@ -737,6 +788,11 @@ namespace SpellDuel
         {
             if (mon.dead) return;
             mon.dead = true;
+            if (IsDungeon)
+            {
+                if (mon.area >= 0) { var a = map.areas.Find(x => x.index == mon.area); if (a != null && !a.IsEvent && !a.IsBoss && AreaAlive(a) == 0) ClearArea(a); }
+                return;
+            }
             var camp = map.Quest("camp");
             if (mon.camp == 0) { camp.have = Mathf.Min(camp.need, camp.have + 1); if (camp.state == ExQuestState.Active && camp.have >= camp.need) { camp.state = ExQuestState.Ready; Say("營地清除了！回去找獵人巴克"); } }
             if (mon.guardian > 0)
@@ -752,6 +808,13 @@ namespace SpellDuel
         {
             if (bossDead) return;
             bossDead = true; map.arenas.Find(x => x.n == 4).cleared = true;
+            if (IsDungeon)
+            {
+                var fa = map.areas.Find(x => x.IsBoss && Vector3.Distance(x.center, map.arenas.Find(y => y.n == 4).center) < 0.1f);
+                if (fa != null) ClearArea(fa);
+                finished = true; Say($"👑 首領倒下了！{map.name} 通關！");
+                return;
+            }
             Say("👑 腐化樹王倒下了！王座後面的祭壇在發光……");
             // 守林人到祭壇旁邊等（使用者要求：拿到古樹之心不用再走回去）
             var g = map.Npc("guardian");
@@ -762,7 +825,7 @@ namespace SpellDuel
         public void OnEscortDown()
         {
             var e = map.Quest("escort");
-            if (e.state != ExQuestState.Active) return;
+            if (e == null || e.state != ExQuestState.Active) return;
             e.state = ExQuestState.Failed; escortFollowing = false;
             Say("❌ 探險家倒下了……（回到他原本的地方可以重新接任務）");
         }
@@ -776,7 +839,10 @@ namespace SpellDuel
             Say($"✨ {s.title}：{s.text}");
             switch (s.kind)
             {
-                case "chest": Complete(map.Quest("h_chest")); break;
+                case "chest":
+                    if (IsDungeon) { int g = DungeonChestGold; gold += g; rewards.Add($"{s.title}：{g} 金幣"); Say($"💰 +{g} 金幣（通關後獲得）"); chestsFound++; }
+                    else Complete(map.Quest("h_chest"));
+                    break;
                 case "beast": Complete(map.Quest("h_beast")); break;
                 case "rare": { var r = map.monsters.Find(x => x.rare); r.hidden = false; var q = map.Quest("h_rare"); q.state = ExQuestState.Active; Say("📜 隱藏任務「沉睡的古根」：打倒古根撼地獸"); break; }
                 case "spirit": { map.Npc("spirit").hidden = false; map.Quest("h_spirit").state = ExQuestState.Active; break; }
@@ -800,6 +866,14 @@ namespace SpellDuel
         {
             get
             {
+                if (IsDungeon)
+                {
+                    if (finished) return "副本通關！";
+                    foreach (var a in map.areas) if (a.entered && !a.cleared) return a.IsEvent ? $"完成「{a.Title}」的事件" : a.IsBoss ? $"打倒「{a.Title}」的首領" : $"打倒守在「{a.Title}」的怪物（剩 {AreaAlive(a)} 隻）";
+                    var fin = map.arenas.Find(x => x.n == 4);
+                    foreach (var a in map.areas) if (!a.entered) { bool open = false; foreach (var b in map.areas) if (b.cleared && b.next.Contains(a.index)) open = true; if (open || a.index == 0) return Vector3.Distance(a.center, fin.center) < 0.1f ? $"前往「{a.Title}」打倒首領" : $"前往「{a.Title}」"; }
+                    return $"前往「{fin.name}」打倒首領";
+                }
                 var m = Main;
                 if (m.state == ExQuestState.Offered) return "和林語長老說話";
                 if (m.state == ExQuestState.Done) return "探索完成！";

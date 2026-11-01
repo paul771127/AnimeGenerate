@@ -1385,6 +1385,15 @@ namespace SpellDuel
         static readonly int[] ArenaKinds = { 0, 1, 2, 3, 5, 7, 8, 9, 11, 12, 16, 17 };
         static readonly int[] CanyonKinds = { 0, 1, 2, 3, 4, 5, 7, 8, 9, 11 };   // 虛空術士（6）不在山道出現：牠只會叫物理小鬼
         /// <summary>角鬥場／山道第一輪：自爆小鬼、虛空術士第 4 波起，其他一開始就有</summary>
+        /// <summary>這種小怪會不會出現在這個主題、這個強度（副本大地圖配怪用；不分近戰遠程）</summary>
+        public static bool KindInTheme(int k, int theme, int wave)
+        {
+            int local = Mathf.Clamp(wave - (Mathf.Max(1, wave) - 1) / 10 * 10, 1, 10);
+            bool firstCycle = wave <= 10 * ThemeCount;
+            if (theme == 0) return k < 7 && (!firstCycle || local >= UnlockWave[k] || wave > 10);
+            if (theme >= ArenaTheme) return Array.IndexOf(theme == ArenaTheme ? ArenaKinds : CanyonKinds, k) >= 0;
+            return (theme == 1 ? IsPlant(k) : IsSea(k)) && (!firstCycle || local >= ThemeUnlock[k]);
+        }
         static int LateUnlock(int k) => k == 3 || k == 6 ? 4 : 1;
 
         void SpawnBoss()
