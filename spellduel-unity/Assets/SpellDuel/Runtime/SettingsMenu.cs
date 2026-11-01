@@ -88,11 +88,11 @@ namespace SpellDuel
             Row(ref y, r, pad, rowH, fs, fsS, "🪂 飛毯晃動", SoloBattle.CarpetSway >= 0.99f, v => { SoloBattle.CarpetSway = v ? 1f : 0.3f; PlayerPrefs.Save(); }, -1f, null);   // 天穹飛毯：關＝降低晃動（只晃畫面，不影響判定）
             Row(ref y, r, pad, rowH, fs, fsS, "📊 手勢速度", GestureStatsPref.On, GestureStatsPref.Set, -1f, null);   // 畫面左邊顯示手勢辨識每一段花的時間（找延遲用）   // 唸完技能後一步一步教你怎麼放   // AR 光照估計：角色跟著房間明暗
 
-            // 語音校正：自己唸幾次技能名稱，記下辨識器聽到的字（VoiceCalib.cs）；戰鬥中不能開
+            // 語音校正：自己唸幾次技能名稱，記下辨識器聽到的字（VoiceCalib.cs）；戰鬥中也能開（使用者要求；單人時戰鬥暫停）
             {
                 bool fighting = InBattle != null && InBattle();
                 var vr = new Rect(r.x + pad, y + fs * 0.2f, r.width - pad * 2, fs * 2.2f);
-                if (UiKit.Button(vr, fighting ? "🎙 語音校正（戰鬥中不能用）" : "🎙 語音校正", fighting ? fsS : fs, false, new Color(1f, 0.6f, 0.45f), !fighting)) { Open = false; VoiceCalib.Show(); }
+                if (UiKit.Button(vr, fighting ? "🎙 語音校正（校正時戰鬥暫停）" : "🎙 語音校正", fighting ? fsS : fs, false, new Color(1f, 0.6f, 0.45f))) { Open = false; VoiceCalib.Show(); }
                 y += fs * 2.8f;
             }
             // 回首頁：戰鬥中要再按一次確認（這一場的戰利品不會保留）

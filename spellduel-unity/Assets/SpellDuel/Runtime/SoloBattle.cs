@@ -2562,7 +2562,7 @@ namespace SpellDuel
             bool full = Me.charging != null && battle.ChargeProgress(Me) >= 1f;
             if (full && !chargeWasFull && Me.charging.charge > 0f) { Sfx.Play("charged", 0.8f); Haptics.Play(Haptics.Kind.Light); }
             chargeWasFull = full;
-            frozen = phase == Phase.Fighting && !Tracking.Ok;
+            frozen = phase == Phase.Fighting && (!Tracking.Ok || VoiceCalib.Open && !NetMode);   // 戰鬥中開語音校正：單人時暫停（連線不能停，照常進行）
             UpdateScene();
             if (NetMode) SyncRemote();
             UpdateLock();
@@ -2898,7 +2898,7 @@ namespace SpellDuel
         {
             // 手機內建語音辨識：戰鬥中語音開啟就聽，唸技能名稱即詠唱（不能和下面的錄音比對同時用麥克風）
             // 城鎮裡走動時也開著：聽「你好」之類的招呼語
-            bool calib = VoiceCalib.Listening && UseSpeech && phase != Phase.Fighting;   // 語音校正中（⚙ 設定）
+            bool calib = VoiceCalib.Listening && UseSpeech;   // 語音校正中（⚙ 設定；戰鬥中也可以）
             bool town = TownWalking && UseSpeech && !calib;
             bool wantSpeech = UseSpeech && (voiceOn && phase == Phase.Fighting || town || calib) && recordingSkill == null;
             if (calib != speechCalib && speech.Running) speech.Stop();   // 換成校正／換回來：重新開（候選名稱不同）
