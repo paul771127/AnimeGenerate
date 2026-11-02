@@ -79,7 +79,14 @@ namespace SpellDuel
             }
             // 區域圖：從 1 開始連續有幾張
             var regs = new List<Texture2D>();
-            for (int r = 1; r <= 5; r++) { var t = Resources.Load<Texture2D>("WorldMap/region_" + r); if (t == null) break; regs.Add(t); }
+            for (int r = 1; r <= 5; r++)
+            {
+                // 乾淨版（影片生成機把煙、瀑布、漩渦、浪花、風車扇葉拿掉的版本；Docs/worldmap_clean）：有就用，那個區域改用程式畫的動畫
+                var clean = Resources.Load<Texture2D>("WorldMap/region_" + r + "_clean");
+                var t = clean != null ? clean : Resources.Load<Texture2D>("WorldMap/region_" + r);
+                if (t == null) break;
+                regs.Add(t); WmClean[r - 1] = clean != null;
+            }
             wmRegions = regs.ToArray(); wmMaxRegion = regs.Count;
         }
 
