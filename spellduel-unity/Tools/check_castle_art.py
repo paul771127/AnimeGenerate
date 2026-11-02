@@ -23,7 +23,7 @@ for name in ['walls','props','surfaces']:
  if name=='props':check(im.mode=='RGBA' and im.getchannel('A').getextrema()==(0,255),'props alpha')
  meta=Path(str(p)+'.meta').read_text()
  for value in ['enableMipMap: 0','maxTextureSize: 2048','nPOTScale: 0']:check(value in meta,name+' '+value)
-# Presentation scope: gameplay/data/enemy animation sources stay byte-identical.
+# Presentation scope: gameplay and data stay byte-identical to the task baseline.
 protected=['Assets/SpellDuel/Runtime/Combat*.cs','Assets/SpellDuel/Runtime/SoloBattle*.cs','Assets/SpellDuel/Runtime/Explore.cs','Assets/SpellDuel/Runtime/ExploreDungeon.cs','Assets/SpellDuel/Resources/dungeons.txt']
 for pattern in protected:
  for p in root.glob(pattern):

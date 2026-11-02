@@ -16,4 +16,6 @@
 重建：`python spellduel-unity/Tools/sprite_enemies/pack_castle_painted.py`
 驗證：`python spellduel-unity/Tools/check_castle_enemies.py`
 
-原生 Unity 預覽及 Android/iOS 編譯證據完成後補入。本輪沒有修改 Runtime、戰鬥、連線、資料或動畫時間。
+原生 Unity 驗證：[41536524288](https://github.com/paul771127/AnimeGenerate/actions/runs/41536524288)，來源 commit `8242dcb`，成功。`castle_redesign_castle_*.png` 是 Unity 直接使用 SpriteEnemyView 的貼圖、材質及 UV 格式渲染；六列依序是待機、移動、蓄力、攻擊、受擊、倒地，每列八方向。`native_overview.jpg` 是八種原生檢查圖的縮圖總覽。五間城堡的新版敵人場景圖在上一層資料夾。
+
+八張遊戲 PNG 合計約 20.97 MiB，尺寸與原版相同；大型來源圖保存在 Tools，沒有放進 Assets，不會隨遊戲打包。本輪沒有修改 Runtime、戰鬥、連線、資料或動畫時間。Android／iOS 驗證：[41536527888](https://github.com/paul771127/AnimeGenerate/actions/runs/41536527888)，來源 commit `8242dcb`，Android、iOS Unity 匯出、Xcode 未簽署 IPA 均成功。原生及平台 CI JSON 位於上一層資料夾；check_castle_art.py 會比對實際受測內容，避免拿舊版驗證當作新版通過。這是 CI 編譯與原生渲染驗證，未宣稱手機實機遊玩驗收。
