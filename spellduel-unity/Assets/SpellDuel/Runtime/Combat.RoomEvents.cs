@@ -20,7 +20,7 @@ namespace SpellDuel
     /// </summary>
     public partial class Battle
     {
-        public static readonly string[] RoomEventKinds = { "defend", "survive", "escort", "hunt", "totems", "runes", "chant", "elements", "mimic", "collapse", "dark", "carpet" };
+        public static readonly string[] RoomEventKinds = { "defend", "survive", "escort", "hunt", "totems", "runes", "chant", "elements", "mimic", "collapse", "dark", "carpet", "capture", "chase" };
         public static bool IsRoomEvent(string kind) => Array.IndexOf(RoomEventKinds, kind) >= 0;
 
         /// <summary>目前地點的特殊玩法（null＝一般戰鬥）；隊友端由 rev 訊息設定，只用來顯示</summary>
@@ -228,7 +228,7 @@ namespace SpellDuel
                     float rr = Mathf.Max(1.4f, ArenaInner() * 0.85f);
                     for (int i = 0; i < n; i++)
                     {
-                        var t = SpawnNpc("ev_totem_" + i, "封印圖騰", "priest", 1, false, PI("hp", 260), 0, Ring(rr, 360f * i / n + 30f));
+                        var t = SpawnNpc("ev_totem_" + i, P("name", "封印圖騰"), "priest", 1, false, PI("hp", 260), 0, Ring(rr, 360f * i / n + 30f));
                         t.rooted = true; t.bodyRadius = 0.45f;evLinked.Add(t);
                     }
                     evNextTick = waveStartAt + 2f;
@@ -287,6 +287,8 @@ namespace SpellDuel
                     break;
                 }
                 case "carpet": StartCarpet(); break;   // 天穹飛毯（Combat.Carpet.cs）
+                case "capture": StartCapture(); break;   // 故事的波次目標（Combat.WaveGoals.cs）
+                case "chase": StartChase(); break;
                 case "collapse":
                     BuildCollapseCells();
                     evNextTick = waveStartAt + 4f;
@@ -306,18 +308,23 @@ namespace SpellDuel
             if (roomEvent == "carpet") ClearSky();
             roomEvent = null; evPts.Clear(); evState.Clear(); evQueue.Clear(); evRespawn.Clear(); evText = ""; evPhase = 0;
             evWalker = evHunt = null; evCharge = 0;ResetRoomCoop();
+            evSoft = false; chaseRunner = null;
         }
 
         /// <summary>過關：剩下的怪消失、拿掉道具、照一般地點的流程結束</summary>
         void FinishRoomEvent(string msg)
         {
+            ChaseWaveOver();   // 追獵：盜寶頭目還沒打倒就趁亂逃走（Combat.WaveGoals.cs）
+            bool story = evSoft, goal = evSoft && roomEvent != "chase";
             foreach (var m in minions) if (m.Alive) { m.hp = 0f; Emit("miniondie", m.Feet, m.cls.color, null); }
             evPhase = 3;
             Emit("evdone", player.Feet, new Color(0.5f, 1f, 0.6f), msg);
+            if (goal) Emit("evgoal", player.Feet, new Color(1f, 0.9f, 0.5f), null);   // 故事的波次目標達成：通關時加金幣
             CleanupRoomEvent();
             waveToSpawn = 0;
+            if (story) BonusOnWaveCleared();
             Emit("wavecleared", player.Feet, Color.white, $"{WaveLabel}清空！");
-            StageDone();
+            if (!StageDone() && !manualWaves) NextWave(4f);   // 故事關卡：接下一波（副本由房主選下一站）
         }
 
         // ------------------------------------------------------------ 每幀（UpdateEndless 開頭叫；回傳 true＝這一幀的出怪、過關都由這裡處理）
@@ -334,11 +341,17 @@ namespace SpellDuel
                 {
                     var core = npcs.Find(n => n.npcId == "ev_core");
                     bool lost=core==null||!core.Alive;foreach(var guard in evCores)if(!guard.Alive)lost=true;
-                    if (lost) { FailStage(P("fail", "守護目標被打壞了…")); return true; }
+                    if (lost)
+                    {
+                        if (evSoft) { SoftFailGoal(P("fail", "守護目標被打壞了…")); return false; }   // 故事：目標失敗，這一波照常清怪
+                        FailStage(P("fail", "守護目標被打壞了…")); return true;
+                    }
                     handled = false;   // 出怪、過關照一般流程（清完這一波）
                     break;
                 }
                 case "dark": handled = false; break;
+                case "capture": if (TickCapture(dt)) return true; break;
+                case "chase": TickChase(); handled = false; break;   // 出怪、過關照一般流程
                 case "collapse": TickCollapse(dt); handled = false; break;
                 case "survive":
                     RefillEv(1.2f);
@@ -368,7 +381,7 @@ namespace SpellDuel
                             if (n.Alive && n.npcId != null && n.npcId.StartsWith("ev_totem") && cnt < EvCap() + 1)
                             { var nm = EvSpawn(n.Feet + Fighter.Flat(ArenaCenter() - n.Feet) * 0.8f); if (nm != null) { cnt++; Emit("evinfo", n.Feet, new Color(0.7f, 0.4f, 1f), null); } }
                     }
-                    if (linkedReady && alive == 0 && !AnyMinionAlive() && evQueue.Count == 0) { FinishRoomEvent("封印解除了！"); return true; }
+                    if (linkedReady && alive == 0 && !AnyMinionAlive() && evQueue.Count == 0) { FinishRoomEvent(P("done", "封印解除了！")); return true; }
                     break;
                 }
                 case "runes": TickRunes(); break;
@@ -715,7 +728,9 @@ namespace SpellDuel
                 case "survive": evText = $"⏳ 撐住！剩 {Mathf.Max(0f, evEndAt - now):0} 秒"; break;
                 case "escort": evText = evWalker != null ? $"🚶 護送{evWalker.name}走到出口（{Mathf.CeilToInt(evWalker.hp)}/{evWalker.maxHp}）：有怪貼近他就會停下來" : ""; break;
                 case "hunt": evText = evHunt != null ? $"🎯 斬首：打倒「{evHunt.name}」！其他怪會不斷湧出" : ""; break;
-                case "totems": { int a = 0; foreach (var n in npcs) if (n.Alive && n.npcId != null && n.npcId.StartsWith("ev_totem")) a++; evText = a > 0 ? $"🗿 打掉封印圖騰（剩 {a} 根）：圖騰會一直叫怪" : "🗿 圖騰都倒了，清掉剩下的怪！"; break; }
+                case "totems": { int a = 0; foreach (var n in npcs) if (n.Alive && n.npcId != null && n.npcId.StartsWith("ev_totem")) a++; string tn = P("name", "封印圖騰"); bool gate = tn == "召喚門"; evText = a > 0 ? (gate ? $"🌀 打壞{tn}（剩 {a} 座）：門會一直出怪" : $"🗿 打掉{tn}（剩 {a} 根）：圖騰會一直叫怪") : gate ? "🌀 召喚門都毀了，清掉剩下的怪！" : "🗿 圖騰都倒了，清掉剩下的怪！"; break; }
+                case "capture": { int st = evState.Count > 0 ? evState[0] : 0; int pc = st % 1000; evText = $"⭕ 站進發光的圈裡佔領（{pc}%）" + (st >= 2000 ? "　佔領中…" : st >= 1000 ? "　有敵人在圈裡，進度暫停！" : evPhase == 1 ? "　一半時圈會換位置" : ""); break; }
+                case "chase": evText = chaseRunner == null ? (chaseGone ? "" : "💰 盜寶頭目要來了…") : chaseGone ? (chaseWon ? "💰 寶物搶回來了！清掉剩下的怪" : "") : $"💰 打倒「{chaseRunner.name}」！剩 {Mathf.Max(0f, evEndAt - now):0} 秒　（其他怪清完這一波就過關）"; if (evText == "") evText = "⚔ 清掉剩下的怪！"; break;
                 case "runes": evText = evPhase == 3 ? "🟢 準備好了就踩中間的開關，符文才會開始亮" : evPhase == 0 ? "👁 看清楚符文亮起的順序…" : evPhase == 1 ? $"👣 照順序踩上符文（{evSeqPos}/{evSeq.Length}）" : $"⚔ 踩錯了！打倒湧出來的怪（錯 {evFails} 次）"; break;
                 case "chant": evText = evPhase == 1 ? $"🗣 唸出答案：{evRiddle}" + (evFails > 0 && evHint != null ? $"（提示：{evHint}）" : "") : $"⚔ 唸錯了！打倒湧出來的怪（錯 {evFails} 次）"; break;
                 case "elements": evText = evPhase == 1 ? "🔥❄⚡ 用對的屬性打雕像" + (evCharge > 0 ? $"（全隊帶{ElementNames[evCharge]}屬性，剩 {Mathf.Max(0f, evChargeUntil - now):0} 秒）" : "（碰場邊的屬性球，或用火、冰、雷的招式）") : $"⚔ 打錯了！打倒湧出來的怪（錯 {evFails} 次）"; break;

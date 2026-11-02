@@ -715,7 +715,7 @@ namespace SpellDuel
         /// <summary>點地圖上的關卡：開場對話 → 開打</summary>
         void StartStory(StoryStage st)
         {
-            storyMapOpen = false; storyStage = st;
+            storyMapOpen = false; storyStage = st; storyGoalsDone = 0;
             // 故事只自動播一次；看過了直接開打（要看就在關卡說明按「📖 看故事」）
             if (Story.IsSeen(st.id)) { StartStageBattle(); return; }
             Story.MarkSeen(st.id);

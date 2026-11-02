@@ -30,7 +30,7 @@ namespace SpellDuel
         static T[] TreasureArray<T>(T[] old, T value) { var a = new T[TreasureKind + 1]; Array.Copy(old, a, old.Length); a[TreasureKind] = value; return a; }
         public static bool IsTreasure(int kind) => kind == TreasureKind;
         /// <summary>會卡住清波的小怪數（寶箱怪不算）</summary>
-        public int BlockingMinions { get { int n = 0; foreach (var m in minions) if (!m.treasure && m.exMon == null) n++; return n; } }   // 探索地圖上的怪（副本大地圖走道上的）不擋事件／地點的過關
+        public int BlockingMinions { get { int n = 0; foreach (var m in minions) if (!m.treasure && !m.evRunner && m.exMon == null) n++; return n; } }   // 探索地圖上的怪（副本大地圖走道上的）不擋事件／地點的過關
 
         void SetupTreasure(Fighter m)
         {

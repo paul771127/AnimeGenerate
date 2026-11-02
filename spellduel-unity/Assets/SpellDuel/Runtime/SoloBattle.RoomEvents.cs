@@ -55,7 +55,10 @@ namespace SpellDuel
         GameObject MakeProp(string id)
         {
             var n=battle.npcs.Find(x=>x.npcId==id);
-            var prop=HazardArt.RoomProp(id,Color.white);if(id.StartsWith("ev_statue"))prop.SetElement(RoomElementLook(id));return prop.gameObject;
+            string art=n!=null && n.name!=null && n.name.Contains("水晶")?"ev_crystal":n!=null && n.name=="召喚門"?"ev_portal":id;   // 故事的波次目標：守護水晶、召喚門（同一套流程，換外觀）
+            var prop=HazardArt.RoomProp(art,Color.white);
+            if(art=="ev_portal" && Me!=null){var face=Fighter.Flat(Me.Feet-n.Feet);if(face!=Vector3.zero)prop.transform.rotation=Quaternion.LookRotation(WorldFrame.DirFromWorld(face),Vector3.up);}
+            if(id.StartsWith("ev_statue"))prop.SetElement(RoomElementLook(id));return prop.gameObject;
         }
 
         void CleanupProps()
@@ -89,6 +92,7 @@ namespace SpellDuel
                         else go.SetActive(st==1);
                         break;
                     case "collapse":go.SetActive(st>0);break;
+                    case "capture":go.transform.position=WorldFrame.FromWorld(battle.evPts[i]);break;   // 進度一半時圈會換位置
                 }
             }
             UpdateDarkness(kind == "dark");
@@ -106,9 +110,9 @@ namespace SpellDuel
                 string type=evViewKind;
                 if(type=="elements")type=Battle.IsEventOrb(i)?"orb":"seal";
                 if(type=="runes"&&i==battle.evPts.Count-1)type="escort";   // 符文：最後一個點是中間的開關（綠色踏板）
-                if(type=="runes"||type=="orb"||type=="seal"||type=="collapse"||type=="chant"||type=="escort")
+                if(type=="runes"||type=="orb"||type=="seal"||type=="collapse"||type=="chant"||type=="escort"||type=="capture")
                 {
-                    Color color=type=="orb"?Battle.ElementColor(battle.evState[i]):type=="escort"?new Color(.3f,1,.5f):new Color(.65f,.4f,1,.8f);
+                    Color color=type=="orb"?Battle.ElementColor(battle.evState[i]):type=="escort"?new Color(.3f,1,.5f):type=="capture"?new Color(.45f,.9f,1):new Color(.65f,.4f,1,.8f);
                     go=HazardArt.RoomPoint(type,type=="orb"?battle.evState[i]:i,color).gameObject;
                     go.transform.position=WorldFrame.FromWorld(p+Vector3.up*(type=="orb"?.9f:0));
                     if(type=="seal"||type=="collapse")go.SetActive(false);
@@ -171,6 +175,23 @@ namespace SpellDuel
                 var r = new Rect(sp.x - W * 0.08f, H - sp.y, W * 0.16f, fs * 0.6f);
                 UiKit.Bar(r, n.hp / Mathf.Max(1, n.maxHp), n.npcSide == 1 ? new Color(0.75f, 0.4f, 1f) : new Color(0.4f, 1f, 0.6f), "", Mathf.RoundToInt(fs * 0.7f));
             }
+            if (battle.roomEvent == "chase") DrawRunnerMarker(W, H, fs);
+        }
+
+        /// <summary>追獵：盜寶頭目頭上的錢袋和倒數（房主／單人才知道是哪一隻）</summary>
+        void DrawRunnerMarker(float W, float H, int fs)
+        {
+            foreach (var m in battle.minions)
+            {
+                if (!m.Alive || !m.evRunner) continue;
+                float left = battle.RunnerLeft(m); if (left < 0f) continue;
+                var sp = cam.WorldToScreenPoint(WorldFrame.FromWorld(m.head + Vector3.up * 0.5f));
+                if (sp.z <= 0) continue;
+                float bob = Mathf.Sin(Time.time * 6f) * fs * 0.2f;
+                UiKit.Text(new Rect(sp.x - W * 0.15f, H - sp.y - fs * 2.2f + bob, W * 0.3f, fs * 1.6f), $"💰 {left:0}", Mathf.RoundToInt(fs * 1.2f), new Color(1f, 0.85f, 0.3f), TextAnchor.MiddleCenter, true);
+                var r = new Rect(sp.x - W * 0.08f, H - sp.y - fs * 0.5f, W * 0.16f, fs * 0.6f);
+                UiKit.Bar(r, m.hp / Mathf.Max(1, m.maxHp), new Color(1f, 0.8f, 0.25f), "", Mathf.RoundToInt(fs * 0.7f));
+            }
         }
 
         // ---------------------------------------------------------------- 事件（Battle.Emit）
@@ -216,6 +237,18 @@ namespace SpellDuel
                 case "evinfo":
                     if (!string.IsNullOrEmpty(text)) Say(text, 2f);
                     break;
+                // 故事的波次目標（Combat.WaveGoals.cs）：每支手機各自記、各自拿獎勵
+                case "evgoal":
+                    if (storyStage != null) storyGoalsDone++;
+                    break;
+                case "evbounty":
+                    if (storyStage != null) { storyGoalsDone++; GrantBounty(); }
+                    if (!string.IsNullOrEmpty(text)) { Say(text, 3f); ChatEvent(text); }
+                    break;
+                case "evfail":
+                    Sfx.Play("warn", 0.7f, 0.9f); Haptics.Play(Haptics.Kind.Warning);
+                    if (!string.IsNullOrEmpty(text)) { Say("❌ " + text + "（關卡繼續）", 3f); ChatEvent("❌ " + text); }
+                    break;
             }
             return true;
         }
@@ -224,7 +257,7 @@ namespace SpellDuel
         /// <summary>房主：每 0.25 秒送狀態（沒有特殊地點時送一次空的，讓隊友清掉）</summary>
         void SendRoomEventState()
         {
-            if (!coop || !NetIsHost || battle == null || drun == null && exploreRun == null || Time.time < nextRevSend) return;
+            if (!coop || !NetIsHost || battle == null || drun == null && exploreRun == null && storyStage == null || Time.time < nextRevSend) return;   // 故事合作：波次目標也要送
             bool active = battle.roomEvent != null;
             if (!active && !revWasActive) return;
             revWasActive = active;

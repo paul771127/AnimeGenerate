@@ -10,7 +10,33 @@ namespace SpellDuel
             var mb=new ArtKit.MB(3);
             void Pillar(Vector3 at,float h,float r,int mat=0)=>ArtKit.Lathe(mb,mat,at,Quaternion.identity,new[]{0f,.08f,h-.08f,h},new[]{r*1.15f,r,r,r*.85f},10,true,true);
             void Box(Vector3 at,Vector3 size,int mat=0)=>ArtKit.Box(mb,mat,at,size,Quaternion.identity);
-            if(id.StartsWith("ev_core"))
+            if(id=="ev_crystal")
+            {
+                // 故事的波次目標「守護水晶」：石座上浮著一顆發光的長水晶，旁邊三片小碎晶繞著轉
+                Pillar(Vector3.zero,.18f,.42f,1);Pillar(new Vector3(0,.18f,0),.1f,.3f,2);
+                var g=new GameObject("Glow").transform;g.SetParent(body,false);g.localPosition=new Vector3(0,.95f,0);v.Glow=g;
+                var core=Orb(g,"Crystal",Vector3.zero,.2f,new Color(.45f,.85f,1));core.localScale=new Vector3(1,2.6f,1);
+                for(int i=0;i<3;i++){float a=i*Mathf.PI*2/3;var shard=Orb(g,"Shard",new Vector3(Mathf.Cos(a)*.38f,-.15f+.15f*i,Mathf.Sin(a)*.38f),.06f,new Color(.6f,.92f,1));shard.localScale=new Vector3(1,2.2f,1);}
+                Ring(v.transform,"Guard circle",.55f,new Color(.45f,.85f,1,.6f));
+                v.Cracks=new GameObject("Damage cracks");v.Cracks.transform.SetParent(g,false);
+                Ribbon(v.Cracks.transform,"Crystal fracture",new[]{new Vector3(.02f,.35f,.19f),new Vector3(-.05f,.12f,.21f),new Vector3(.04f,-.08f,.21f),new Vector3(-.02f,-.3f,.18f)},.014f,new Color(.1f,.15f,.3f));v.Cracks.SetActive(false);
+            }
+            else if(id=="ev_portal")
+            {
+                // 故事的波次目標「召喚門」：兩根石柱＋橫樑，中間一面旋轉的紫色漩渦
+                foreach(float x in new[]{-.5f,.5f})Pillar(new Vector3(x,0,0),1.55f,.1f,1);
+                Box(new Vector3(0,1.6f,0),new Vector3(1.25f,.14f,.24f),1);
+                Box(new Vector3(0,1.72f,0),new Vector3(.3f,.12f,.26f),2);
+                var g=new GameObject("Glow").transform;g.SetParent(body,false);g.localPosition=new Vector3(0,.82f,0);v.Glow=g;
+                var disc=Orb(g,"Vortex",Vector3.zero,.42f,new Color(.6f,.25f,1));disc.localScale=new Vector3(1,1,.12f);
+                for(int i=0;i<3;i++)
+                {
+                    var pts=new Vector3[24];
+                    for(int k=0;k<24;k++){float t=k/23f,a=t*Mathf.PI*3+i*Mathf.PI*2/3,rr=.38f*(1-t*.85f);pts[k]=new Vector3(Mathf.Cos(a)*rr,Mathf.Sin(a)*rr,-.06f);}
+                    Ribbon(g,"Swirl",pts,.025f,new Color(.85f,.6f,1));
+                }
+            }
+            else if(id.StartsWith("ev_core"))
             {
                 Pillar(Vector3.zero,.16f,.38f,1);
                 foreach(float x in new[]{-.29f,.29f})Pillar(new Vector3(x,.15f,0),1.05f,.055f,1);
@@ -105,6 +131,16 @@ namespace SpellDuel
                 var hole=Part(v.transform,"Hole",ArtKit.FlatDisc(.48f,32,.012f,"Dark opening"),NatureGlow);v.Hole=hole;
                 var block=new MaterialPropertyBlock();block.SetColor("_Color",new Color(.035f,.025f,.045f,.95f));hole.GetComponent<Renderer>().SetPropertyBlock(block);
                 for(int i=0;i<6;i++){float a=i*Mathf.PI/3;Ribbon(v.transform,"Red fracture",new[]{new Vector3(0,.025f,0),new Vector3(Mathf.Cos(a+.2f)*.25f,.025f,Mathf.Sin(a+.2f)*.25f),new Vector3(Mathf.Cos(a)*.48f,.025f,Mathf.Sin(a)*.48f)},.027f,new Color(1,.15f,.04f));}
+            }
+            else if(kind=="capture")
+            {
+                // 故事的波次目標「佔點」：外圈＋會跟著進度長大的內圈＋一道直立的光柱（遠遠就看得到）
+                Ring(v.transform,"Capture edge",Battle.CaptureRadius,color);
+                Ring(v.transform,"Capture edge inner",Battle.CaptureRadius-.06f,color);
+                var fill=new GameObject("Progress").transform;fill.SetParent(v.transform,false);v.Moving=fill;
+                Ring(fill,"Progress ring",Battle.CaptureRadius,new Color(1,.9f,.4f));
+                Ribbon(v.transform,"Beacon",new[]{new Vector3(0,.05f,0),new Vector3(0,2.6f,0)},.08f,color);
+                for(int i=0;i<4;i++){float a=i*Mathf.PI/2;Ribbon(v.transform,"Beacon arrow",new[]{new Vector3(Mathf.Cos(a)*(Battle.CaptureRadius+.25f),.03f,Mathf.Sin(a)*(Battle.CaptureRadius+.25f)),new Vector3(Mathf.Cos(a)*(Battle.CaptureRadius+.05f),.03f,Mathf.Sin(a)*(Battle.CaptureRadius+.05f))},.06f,color);}
             }
             else if(kind=="eyes")
             {

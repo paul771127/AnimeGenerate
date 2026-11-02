@@ -19,7 +19,10 @@ namespace SpellDuel
             Body.localRotation=Quaternion.Euler(0,0,clock<hitUntil?Mathf.Sin(clock*50)*6:0);
             if(Cracks)Cracks.SetActive(hp<maxHp*.65f);
             if(Halo)Halo.SetActive(lit);
-            if(Glow){float s=lit?1.5f:1; if(clock<flashUntil)s*=1.6f;Glow.localScale=Vector3.one*s*(1+.04f*Mathf.Sin(clock*3));if(Id.StartsWith("ev_chest"))Glow.gameObject.SetActive(clock<flashUntil);}
+            if(Glow){float s=lit?1.5f:1; if(clock<flashUntil)s*=1.6f;Glow.localScale=Vector3.one*s*(1+.04f*Mathf.Sin(clock*3));
+                if(Id=="ev_crystal")Glow.localRotation=Quaternion.Euler(0,clock*40,0);      // 守護水晶：慢慢轉
+                if(Id=="ev_portal")Glow.localRotation=Quaternion.Euler(0,0,-clock*90);      // 召喚門：漩渦轉
+                if(Id.StartsWith("ev_chest"))Glow.gameObject.SetActive(clock<flashUntil);}
         }
         void OnDestroy(){foreach(var f in GetComponentsInChildren<MeshFilter>(true))if(f.sharedMesh){if(Application.isPlaying)Destroy(f.sharedMesh);else DestroyImmediate(f.sharedMesh);}}
     }

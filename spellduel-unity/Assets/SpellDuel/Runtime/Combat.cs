@@ -171,6 +171,7 @@ namespace SpellDuel
         public List<Vector3> walkPath; public int walkIdx;   // 護送：沿著這條路走
         public int evElement;                  // 對應元素的雕像：要的屬性（1 火、2 冰、3 雷）
         public bool evReal;                    // 找出真身：真的寶箱
+        public bool evRunner;                  // 故事的波次目標「追獵」：扛著寶物逃跑的盜寶頭目（Combat.WaveGoals.cs）
         public bool huntTarget;                // 斬首的目標
         public Vector3 homePos;                // 跳躍魚：海裡的家（咬完跳回去）
         public Vector3 dashFrom;               // 衝刺起點（荊棘衝鋒獸衝完沿路留下荊棘帶）
@@ -831,6 +832,7 @@ namespace SpellDuel
             bossAfterMinions = true;   // 故事關卡：Boss 波先來一整波小怪，全部打倒後 Boss 才現身
             waveSeq = null;
             wave = Mathf.Max(0, firstWave - 1); stageStart = firstWave; stageEnd = Mathf.Max(firstWave, lastWave);
+            PlanWaveGoal();   // 波次目標：挑一波換成守護／佔點／召喚門／追獵／撐住（Combat.WaveGoals.cs）
             enemy.hp = 0f;
             NextWave(3f);
         }
@@ -938,6 +940,8 @@ namespace SpellDuel
             if (MiniBossWave) { waveTotal = 1; waveToSpawn = 1; nextSpecialAt = waveStartAt; }
             batchOut = false; lastMinionCount = 0; refillAt.Clear(); pendingRefill = 0;
             SetupHazards();   // 角鬥場：這一波的陷阱配置；山道：落石計時（Combat.Hazards.cs）
+            MaybeStartWaveGoal();   // 故事：這一波是目標波（Combat.WaveGoals.cs）
+            if (roomEvent != null && evSoft) { Emit("wavestart", player.Feet, Color.white, $"{WaveLabel}：特殊目標！"); return; }
             Emit("wavestart", player.Feet, Color.white, IsBossWave ? (bossPending ? $"{WaveLabel}：{waveTotal} 隻小怪…（最深處有什麼在等著）" : $"{WaveLabel}：Boss 來了！") : MiniBossWave ? $"{WaveLabel}：小 Boss「{MinionNames[specialKind]}」單獨登場！" : $"{WaveLabel}：{waveTotal} 隻小怪");
         }
 
@@ -1212,7 +1216,7 @@ namespace SpellDuel
                 return;
             }
             if (waveToSpawn <= 0) return;
-            bool anyAlive = false; foreach (var m in minions) if (m.Alive && !m.treasure) { anyAlive = true; break; }
+            bool anyAlive = false; foreach (var m in minions) if (m.Alive && !m.treasure && !m.evRunner) { anyAlive = true; break; }
             if (anyAlive) { roundWaiting = false; return; }
             // 這一輪全部打完：停 3 秒（第一輪照波次開始時間）
             if (!roundWaiting) { roundWaiting = true; if (roundNo > 0) nextRoundAt = now + RoundGap; }
@@ -1275,7 +1279,7 @@ namespace SpellDuel
             if (MiniBossWave) return;   // 小 Boss 波：只有牠（UpdateSpecialSpawn）
             if (waveToSpawn <= 0 || minions.Count >= maxAlive) return;
             int front = 0, back = 0, special = 0;
-            foreach (var m in minions) if (m.Alive && !m.treasure) { var r = RoleOf(m.minionKind); if (r == MinionRole.Front) front++; else if (r == MinionRole.Back) back++; else special++; }
+            foreach (var m in minions) if (m.Alive && !m.treasure && !m.evRunner) { var r = RoleOf(m.minionKind); if (r == MinionRole.Front) front++; else if (r == MinionRole.Back) back++; else special++; }
             bool threeBeats = Theme >= 1 || wave >= 4;   // 第一章 1-1～1-3：只有前兩拍
             int wantFront = rhythmMaxAlive <= 3 ? 1 : 2, wantBack = 1, wantSpecial = threeBeats && rhythmMaxAlive >= 3 ? 1 : 0;
             float t = now - waveStartAt;
@@ -1511,6 +1515,7 @@ namespace SpellDuel
                 if (tgt.npcSide >= 0) best = FlatDistance(m.Feet, tgt.Feet);
                 m.target = tgt;
                 if (m.treasure) { UpdateTreasure(m, dt); continue; }   // 寶箱怪：只會逃
+                if (m.evRunner) { UpdateRunner(m, dt); continue; }    // 盜寶頭目：只會逃（Combat.WaveGoals.cs）
                 if (m.march != null && UpdateMarch(m, dt)) continue;   // 軍陣行進中：整隊一起推進，到定點才散開
                 // 保險（使用者回報「有的敵人有顯示但打不到，關卡無法進行」）：在場外待超過 OutsideRescue 秒（不是正在跳崖、出場中），就拉回場內
                 if (minionInside != null && !minionInside(m.Feet) && m.leapEnd <= 0f && carpetStation < 0)   // 埋著的食人花也算（埋在場外會永遠打不到）

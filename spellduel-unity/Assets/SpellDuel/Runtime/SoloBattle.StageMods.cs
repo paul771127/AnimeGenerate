@@ -90,6 +90,7 @@ namespace SpellDuel
         void SetupStageMods(StoryStage st)
         {
             battle.SetWeather(Battle.Weather.None); battle.SetBonus(Battle.Bonus.None); battle.night = false;
+            storyGoalsDone = 0; battle.waveGoals = false;
             if (st == null || st.id == "trial" || st.id == JobTrialStageId || st.id == "1-1" || st.id == "1-2" || st.id == "1-3") return;
             // 白天／夜晚（使用者要求：故事關卡也有夜晚）：和副本一樣每 3 小時輪替，約四成是夜晚；夜晚只是場景變暗＋夜晚限定的人形敵人
             battle.night = StoryNight(st.id, System.DateTime.Now);
@@ -102,6 +103,7 @@ namespace SpellDuel
                 battle.SetWeather(k < 3 ? Battle.Weather.Rain : k < 6 ? Battle.Weather.Fog : k < 9 ? Battle.Weather.Wind : battle.night ? Battle.Weather.Moon : new[] { Battle.Weather.Rain, Battle.Weather.Fog, Battle.Weather.Wind }[k % 3]);
             }
             battle.SetBonus((Battle.Bonus)(1 + r.Next(3)));
+            battle.waveGoals = true;   // 波次目標：這一關挑一波換成守護／佔點／召喚門／追獵／撐住（StartStage 時挑）
             string wl = battle.weather != Battle.Weather.None ? $"\n今天的天候：{Battle.WeatherName(battle.weather)}——{Battle.WeatherDesc(battle.weather)}；{Battle.WeatherTraitText(battle.weather)}" : "";
             Say((battle.night ? "🌙 夜晚的關卡" : "☀ 白天的關卡") + wl, 5f);
         }
@@ -109,10 +111,33 @@ namespace SpellDuel
         /// <summary>通關：小目標達成 → 額外金幣＋試煉幣</summary>
         string GrantStageBonus(StoryStage st, float rmul)
         {
-            if (battle == null || battle.bonus == Battle.Bonus.None || !battle.BonusDone) return "";
+            string note = "";
+            if (battle != null && storyGoalsDone > 0)
+            {
+                int gg = Mathf.RoundToInt(Economy.StageGold(st) * rmul * GoalGoldMul * storyGoalsDone);
+                pendingGold += gg;
+                note += $"\n🎯 波次目標達成：金幣 +{gg}";
+            }
+            if (battle == null || battle.bonus == Battle.Bonus.None || !battle.BonusDone) return note;
             int g = Mathf.RoundToInt(Economy.StageGold(st) * rmul * BonusGoldMul);
             pendingGold += g; TrialCoins.Coins += BonusCoins;
-            return $"\n⭐ 小目標達成：金幣 +{g}、試煉幣 +{BonusCoins}";
+            return note + $"\n⭐ 小目標達成：金幣 +{g}、試煉幣 +{BonusCoins}";
+        }
+
+        // ---------------------------------------------------------------- 波次目標（Combat.WaveGoals.cs）
+        /// <summary>這一關達成了幾個波次目標（每支手機各自記：收到 evgoal／evbounty）</summary>
+        int storyGoalsDone;
+        public const float GoalGoldMul = 0.25f;     // 每達成一個：通關時多拿這一關 25% 的金幣
+        public const float BountyGoldMul = 1.5f;    // 追獵的賞金＝Boss 金幣 ×1.5，另外一件精良以上的裝備
+        public const int BountyMinRarity = 1;
+        void GrantBounty()
+        {
+            float goldMul = 1f + Souls.Sum(prof, SoulOp.Gold);
+            int g = Mathf.RoundToInt(Economy.BossGold(battle.wave) * BountyGoldMul * goldMul * WeatherLootMul);
+            pendingGold += g;
+            TryDrop(true, BountyMinRarity);
+            floaters.Add(new Floater { text = $"💰 賞金 +{g}（過關後獲得）", color = new Color(1f, 0.85f, 0.3f), born = Time.time, screen = true });
+            Sfx.Play("win", 0.6f, 1.3f); Haptics.Play(Haptics.Kind.Success);
         }
 
         /// <summary>月夜：掉寶率 ×1.5</summary>
