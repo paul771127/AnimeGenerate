@@ -45,3 +45,4 @@ jobs:
             spellduel-unity/snapshots/castle_audit.json
             spellduel-unity/snapshots/castle_*.png
           if-no-files-found: error
+# Native previews validate the painted castle before final delivery.
