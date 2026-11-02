@@ -17,7 +17,7 @@ namespace SpellDuel
         int readyStep = -1;              // -1 不用（連線、沒開打）、0～4 進行中（4＝手勢校正的結果）、5（ReadyDone）完成
         public const int ReadyDone = 5;
         /// <summary>手勢校正的結果畫面停幾秒（可以重新校正）</summary>
-        public const float HandResultTime = 5f;
+        public const float HandResultTime = 30f;   // 使用者要求：5 → 30 秒（可以按「⚔ 開始」提早開打）
         string handResult;
         /// <summary>GameRoot：手勢影像上下翻過來（並鎖住）／確認方向正確（鎖住）</summary>
         public System.Action FlipHand, LockHand;
