@@ -123,6 +123,8 @@ namespace SpellDuel
             }
         }
 
+        /// <summary>黑暗房藏起來的 Renderer（只還原自己藏的：2D 圖片敵人、人形敵人原本就藏起來的 3D 骨架不能被打開）</summary>
+        readonly Dictionary<Fighter, List<Renderer>> darkHidden = new Dictionary<Fighter, List<Renderer>>();
         /// <summary>黑暗房：2.5m 外的小怪看不到身體，只剩一對發光的眼睛</summary>
         void UpdateDarkness(bool on)
         {
@@ -130,7 +132,14 @@ namespace SpellDuel
             {
                 var m = kv.Key; var rig = kv.Value; if (!rig) continue;
                 bool far = on && m.Alive && (battle.RoomCoop?!battle.EventLitByTeam(m.Feet,DarkSight):Battle.FlatDistance(m.Feet, Me.Feet)>DarkSight);
-                foreach (var r in rig.GetComponentsInChildren<Renderer>()) r.enabled = !far;
+                // 以前每幀把所有 Renderer 設成 !far，會把 2D 敵人藏起來的 3D 骨架打開（使用者回報「3D 敵人身上閃 2D」）
+                if (far && !darkHidden.ContainsKey(m))
+                {
+                    var list = new List<Renderer>();
+                    foreach (var r in rig.GetComponentsInChildren<Renderer>()) if (r.enabled) { r.enabled = false; list.Add(r); }
+                    darkHidden[m] = list;
+                }
+                else if (!far && darkHidden.TryGetValue(m, out var hid)) { foreach (var r in hid) if (r) r.enabled = true; darkHidden.Remove(m); }
                 if (far)
                 {
                     if (!darkEyes.TryGetValue(m, out var eye) || !eye)
@@ -156,7 +165,7 @@ namespace SpellDuel
             foreach (var g in propGo.Values) if (g) Destroy(g);
             propGo.Clear();roomElementLooks.Clear();
             foreach (var g in darkEyes.Values) if (g) Destroy(g);
-            darkEyes.Clear();
+            darkEyes.Clear(); darkHidden.Clear();
             ClearArenaPropViews();
         }
 

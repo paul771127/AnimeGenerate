@@ -113,7 +113,11 @@ namespace SpellDuel
             // 受擊閃白、倒下淡出；場景偏暗時跟著暗一點
             float fade = deadAt >= 0f ? Mathf.Clamp01(1f - (Time.time - deadAt - 0.6f) / 0.5f) : 1f;
             var c = Time.time < flashUntil ? new Color(1f, 0.55f, 0.55f, fade) : new Color(1f, 1f, 1f, fade);
-            mr.GetPropertyBlock(block); block.SetColor("_Color", c); mr.SetPropertyBlock(block);
+            // Sprites/Default 的 _MainTex 是 [PerRendererData]：用了 MaterialPropertyBlock 就一定要把圖也放進去，不然會取到預設的白圖（使用者回報「白背景」）
+            mr.GetPropertyBlock(block);
+            var tex = mr.sharedMaterial ? mr.sharedMaterial.mainTexture : null;
+            if (tex) block.SetTexture("_MainTex", tex);
+            block.SetColor("_Color", c); mr.SetPropertyBlock(block);
         }
 
         void OnDestroy() { if (mesh) { if (Application.isPlaying) Destroy(mesh); else DestroyImmediate(mesh); } }
