@@ -1,0 +1,233 @@
+{
+  "baseline": "221757e",
+  "generator": "built-in image_gen",
+  "cell": 128,
+  "slots": 168,
+  "enemies": {
+    "skeleton": {
+      "sha256": "53db64ff3b2da9fbe71b7e7847c496a351efdd7a091384efd1ae3df8c328b37a",
+      "groups": {
+        "idle": {
+          "rows": 4,
+          "scale": 0.4830917874396135
+        },
+        "walk": {
+          "rows": 6,
+          "scale": 0.6134969325153374
+        },
+        "combat": {
+          "rows": 5,
+          "scale": 0.5698005698005698
+        },
+        "reaction": {
+          "rows": 6,
+          "scale": 0.5714285714285714
+        }
+      },
+      "sources": {
+        "combat.png": "d71cce61a2129cf000a23f99f47f155fe850e0f2ad71644a9509981e1eea80a1",
+        "idle.png": "b068df1a6a8bfeca952036c07d71f996ab15ba90c709c2114953443784284445",
+        "reaction.png": "104a92d64c3616eeca6e2d43581620b55238af7b0274b17159bac268a7e5712a",
+        "turnaround.png": "fb926dc2f9c538716e754e090dfb04c839fd46633bfca2da13bbee248dd3e895",
+        "walk.png": "68747edcd1c869f460e5d1e8f72f5f0d3e1091c067ae41e870ebbbda1134fed6"
+      }
+    },
+    "knight": {
+      "sha256": "3291f4ccb9b6b1cd299e57e665079b1b2612b7429435d621657fad572810fdb2",
+      "groups": {
+        "idle": {
+          "rows": 4,
+          "scale": 0.5025125628140703
+        },
+        "walk": {
+          "rows": 6,
+          "scale": 0.6042296072507553
+        },
+        "combat": {
+          "rows": 5,
+          "scale": 0.5865102639296188
+        },
+        "reaction": {
+          "rows": 6,
+          "scale": 0.6369426751592356
+        }
+      },
+      "sources": {
+        "combat.png": "0c6e25da9b20fd4f6aa726e2e4bcaf9adef8a67e37d02ac2eebafc024fc5514c",
+        "idle.png": "8f684cc591d30cf75552c4b826311bc4f5723294169b35d11cf8cad8583b1080",
+        "reaction.png": "7397e620d2563a298c8f3e6c87f0537f4a369c69417f32a2701ddad12b5df4bc",
+        "turnaround.png": "3392508ed2ee741fd70b31a858f9df19b14947bfd5d1c0765233db1cfdde9ac0",
+        "walk.png": "0a5ae41f9c15518c9023c77d9116f1c44170a54f1d3075ba702a3cb5d6e21c73"
+      }
+    },
+    "archer": {
+      "sha256": "c61391d5f3f7bcfd73a033b50a40f3b40b304da2054a40ee7da7521ceffa544c",
+      "groups": {
+        "idle": {
+          "rows": 4,
+          "scale": 0.4914004914004914
+        },
+        "walk": {
+          "rows": 6,
+          "scale": 0.6060606060606061
+        },
+        "combat": {
+          "rows": 5,
+          "scale": 0.5434782608695652
+        },
+        "reaction": {
+          "rows": 6,
+          "scale": 0.5319148936170213
+        }
+      },
+      "sources": {
+        "combat.png": "78c40e9184de317ea00290f45b312d2c57c16030f097aeaaabda8dd8e5889c0a",
+        "idle.png": "f0aff1a4c1ba84076c4ab0c37a09ffff214c15ef24adffa204a3f3571d35df23",
+        "idle_back_left.png": "3bfac0a0fb5507aa5223e8123dc78e6732fee7ef4a84baa266f9d03ab8a0cd73",
+        "reaction.png": "d0330d801cd30a5effc00ceff158fd74c8f4e225729402d778ddf063461823f5",
+        "turnaround.png": "e9341e7add0581449b010fbfeb03c1506ec39cd315326dd46070ca817f86dadf",
+        "walk.png": "84a90f5dba0e6b2d8a4f57a13364dda73d7f0ef0a40c711bedd4c24155ea4c18"
+      }
+    },
+    "ghost": {
+      "sha256": "893c68e4ff9331cbfd2506868b4740d291e5012f16e094d55e4816ffd82aeeef",
+      "groups": {
+        "idle": {
+          "rows": 4,
+          "scale": 0.4889975550122249
+        },
+        "walk": {
+          "rows": 6,
+          "scale": 0.5988023952095808
+        },
+        "combat": {
+          "rows": 5,
+          "scale": 0.5434782608695652
+        },
+        "reaction": {
+          "rows": 6,
+          "scale": 0.5434782608695652
+        }
+      },
+      "sources": {
+        "combat.png": "78681cb74697105cfeb5149e606a024a1fdb1b37d7c2e07ceee6824015d8503f",
+        "idle.png": "a5c57a32d2536d7fc00fb9c6e74f6ef6ac815ca574d05dfd4eb4156825acf8b2",
+        "reaction.png": "43c1cdc0adf20f4b569e6f947b66034493250c8187b5644c32ca2b25d851a0a7",
+        "turnaround.png": "2db1f8caa1fd1cb13a57478850a44be0126d25256c6b49ca9c7ce698443868d7",
+        "walk.png": "102711f94b0299fc0eb0b56a34ae08a591f058dae73a1c54525e803881937f2f"
+      }
+    },
+    "bat": {
+      "sha256": "bed6561666093c2f0dcce61eb8999fd2374aa276e170907407c3a1e1e82fb908",
+      "groups": {
+        "idle": {
+          "rows": 4,
+          "scale": 0.45429362880886426
+        },
+        "walk": {
+          "rows": 6,
+          "scale": 0.5985401459854015
+        },
+        "combat": {
+          "rows": 5,
+          "scale": 0.5173501577287066
+        },
+        "reaction": {
+          "rows": 6,
+          "scale": 0.5655172413793104
+        }
+      },
+      "sources": {
+        "combat.png": "5b65900d24cf64ed0620e67da46fbd89a92c59eaa772b93dc277f07c049e436a",
+        "idle.png": "0cde1381d48fbb5da788ce7d5a8cd8e915fc0427225f0505fb9f30e411b213a3",
+        "reaction.png": "331e70495e6d9170728aebbda0ecbf2476db1c261856c7549d1d8ae7c428745d",
+        "turnaround.png": "931d800cc74a6e25228d66b613040f63093ce20930ebfbb1c0548168d4832536",
+        "walk.png": "b2d715dadd9cbb5240678fa2dabd33849ff104e289fb961dc09ab621b119f2bd"
+      }
+    },
+    "pumpkin": {
+      "sha256": "183213468aff463d8e6195ba8704aa2417aba51af69ed04a6336f414c87a73d8",
+      "groups": {
+        "idle": {
+          "rows": 4,
+          "scale": 0.4889975550122249
+        },
+        "walk": {
+          "rows": 6,
+          "scale": 0.5714285714285714
+        },
+        "combat": {
+          "rows": 5,
+          "scale": 0.5235602094240838
+        },
+        "reaction": {
+          "rows": 6,
+          "scale": 0.5291005291005291
+        }
+      },
+      "sources": {
+        "combat.png": "0289a19fe080578ef3e54860efb25db4fdd44404fbbdd8fe0c80fd1eb4b84a01",
+        "idle.png": "3fb56484dede7a7d0a3ac92abc043ed78cde0da11c79703da7014d351c7ae462",
+        "reaction.png": "498cf83d4aa4dc396ce939559c12aece21d4227087f647f0b7d1374a89b3ea7e",
+        "turnaround.png": "2450a625636f9ddb63ad2860b0d2f0c2736135b37749b30446526a92d4b20913",
+        "walk.png": "d930cb22ef89f602900673ff7289f75991d6de75853423bda59fa643f073e453"
+      }
+    },
+    "gargoyle": {
+      "sha256": "9caaa9f24fd42b8e00ed4fee73c81468fb637a7bb9f45ee0605854695d3e91be",
+      "groups": {
+        "idle": {
+          "rows": 4,
+          "scale": 0.5154639175257731
+        },
+        "walk": {
+          "rows": 6,
+          "scale": 0.6191950464396285
+        },
+        "combat": {
+          "rows": 5,
+          "scale": 0.5882352941176471
+        },
+        "reaction": {
+          "rows": 6,
+          "scale": 0.5681818181818182
+        }
+      },
+      "sources": {
+        "combat.png": "81998bc36af1b1006a3e9844ed406298cef22d9c6ecff9858e9c7a6222fc98e1",
+        "idle.png": "9d3dd77f51dac85f4316e182e3eeb847d58ee59efb9f839c43d02e527ee9402e",
+        "reaction.png": "84a927acc335c750d6760411b37b7a4f42a97e7cc30b97d7525d125c4b319547",
+        "turnaround.png": "11cda40fe625950d5ea6601ad949b125016b43ba62a4649b0d258d093d09f46d",
+        "walk.png": "01ffa0c3131fdcec357ebd6bb2a0e565db37ebca6878d42ccec880f86f3e8d8e"
+      }
+    },
+    "mage": {
+      "sha256": "4d61452c614ffe000e8b50fb48a1fb6839b198d18f46804922e347f0b71062e5",
+      "groups": {
+        "idle": {
+          "rows": 4,
+          "scale": 0.5128205128205128
+        },
+        "walk": {
+          "rows": 6,
+          "scale": 0.6211180124223602
+        },
+        "combat": {
+          "rows": 5,
+          "scale": 0.5633802816901409
+        },
+        "reaction": {
+          "rows": 6,
+          "scale": 0.591715976331361
+        }
+      },
+      "sources": {
+        "combat.png": "e71a88685b1f97dcf3c74bea043efe285286d31d72e86ad6870348d3cfa1ec80",
+        "idle.png": "dfe643693c80f910a5734fc90023c46ead5afea62cfed8fefd6942f512a955c7",
+        "reaction.png": "a5803736b27e1ef7a3aec0a9a8ff1ad61ada1498a77960cda548f0ee1ecf656f",
+        "turnaround.png": "efecba7154aac34acfb2ed9a4d7e5ae6d8e54839c971a5b57f09e79a964da0a7",
+        "walk.png": "d95738d982e6e0e91c2bcbcbea2dff4228367326d37ffa10f9772d541e217a3f"
+      }
+    }
+  }
+}

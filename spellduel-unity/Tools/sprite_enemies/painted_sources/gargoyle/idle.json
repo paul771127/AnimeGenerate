@@ -1,0 +1,13 @@
+{
+  "id": "gargoyle",
+  "group": "idle",
+  "columns": 8,
+  "rows": 4,
+  "frames": [
+    "idle0",
+    "idle1",
+    "idle2",
+    "idle3"
+  ],
+  "prompt": "Use this exact approved character design. Produce precisely THIRTY-TWO complete sprites: EIGHT columns, FOUR rows (8x4 grid), output2048x1024, transparent background. This is the four-frame IDLE animation in eight directions. Columns 1 front;2 front-right diagonal;3 right profile;4 back-right diagonal;5 straight back;6 back-left diagonal (must include this distinct view);7 left profile;8 front-left diagonal. All four rows contain ALL EIGHT directions in the SAME order. Do NOT omit column6 or merge directions. Rows: neutral ready; gentle breath/cloth-or-wing lift; blink/soft eyes with tiny breath dip; return relaxed ready. Flying bat wings gently pulse while hovering, giant ears and wings wholly inside each cell. Rear views have no face. Preserve costume/equipment/details/proportions exactly, 2.5-head refined hand-painted Japanese fantasy chibi, dark plum outline, cel-shaded detail. Character scale identical across cells, entire figure height max80% of cell, foot/hover anchor90% down cell, centered with clear margin on all sides. Pure transparent between sprites, no large halos, fog, floor, shadow, text or gridlines. Stone gargoyle holds boulder in both hands. Combat rows: lift boulder above horns, lean back loaded; then throw forward with extended arms, empty-handed follow through, recover bringing arms back. Do not include detached flying rock projectile. Walking alternates claw feet, tail balances, wings tuck."
+}

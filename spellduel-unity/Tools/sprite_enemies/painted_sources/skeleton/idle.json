@@ -1,0 +1,13 @@
+{
+  "id": "skeleton",
+  "group": "idle",
+  "columns": 8,
+  "rows": 4,
+  "frames": [
+    "idle0",
+    "idle1",
+    "idle2",
+    "idle3"
+  ],
+  "prompt": "Exact approved skeleton reference. Cute detailed Japanese chibi, 2.5 heads, red scarf, sword and moon shield. Transparent 8 columns x 4 rows. Directions front, front-right, right, back-right, back, back-left, left, front-left. Four idle breathing/blinking poses; equipment and scale unchanged."
+}

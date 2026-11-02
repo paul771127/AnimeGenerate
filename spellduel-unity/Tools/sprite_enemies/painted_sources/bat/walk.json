@@ -1,0 +1,15 @@
+{
+  "id": "bat",
+  "group": "walk",
+  "columns": 8,
+  "rows": 6,
+  "frames": [
+    "walk0",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "walk5"
+  ],
+  "prompt": "Production sprite animation from EXACT reference character, same detailed Japanese hand-painted anime chibi, costume, face, body scale and equipment. PURE TRANSPARENT BACKGROUND, alpha zero everywhere outside actual character; NO fog, haze, external glows, floor, shadow, labels, gridlines or text. Output wide 2048x1536. EXACTLY EIGHT columns and 6 rows =48 full individual sprites. Columns fixed across EVERY row: 1 FRONT; 2 FRONT-RIGHT45; 3 RIGHT PROFILE90; 4 BACK-RIGHT135; 5 STRAIGHT BACK180; 6 BACK-LEFT225 (include this separate column!); 7 LEFT PROFILE270; 8 FRONT-LEFT315. Back and rear obliques show back of head/cape with no eyes. Rows: SIX consecutive WALK cycle frames. Row1 left foot forward/right back; row2 passing low; row3 right foot forward/left back; row4 passing high; row5 left foot advancing; row6 returning toward first pose. Clearly alternate knees and boots, avoid six copies of same stance. Bat instead uses SIX wingbeat stages (high, downstroke, low, upstroke, high, settling). Ghost uses six hovering bob/tail/lantern swing phases. Flying bat. Combat rows: raise wings and lean back, wings highest ready to dive; then dive forward head down with wings pulled back, diving follow through, spread wings to recover. Walking animation is a six-frame wingbeat cycle: high, halfway down, low, halfway up, high, neutral. No floor shadow. Same orthographic 10-degree elevated camera, same camera distance and character size in ALL cells. Center root at horizontal50%, foot/ground baseline90% down each cell. Entire full body/wings/weapon fit with 10% margin in every cell; crouching/death poses naturally lower, never enlarge collapsed poses to fill cell. Clear visible motion while design remains identical. Do not omit columns/rows. Do not mirror equipment into wrong hand."
+}

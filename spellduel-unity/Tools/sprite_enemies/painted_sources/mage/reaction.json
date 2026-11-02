@@ -1,0 +1,15 @@
+{
+  "id": "mage",
+  "group": "reaction",
+  "columns": 8,
+  "rows": 6,
+  "frames": [
+    "hurt0",
+    "hurt1",
+    "die0",
+    "die1",
+    "die2",
+    "die3"
+  ],
+  "prompt": "Production sprite animation from EXACT reference character, same detailed Japanese hand-painted anime chibi, costume, face, body scale and equipment. PURE TRANSPARENT BACKGROUND, alpha zero everywhere outside actual character; NO fog, haze, external glows, floor, shadow, labels, gridlines or text. Output wide 2048x1536. EXACTLY EIGHT columns and 6 rows =48 full individual sprites. Columns fixed across EVERY row: 1 FRONT; 2 FRONT-RIGHT45; 3 RIGHT PROFILE90; 4 BACK-RIGHT135; 5 STRAIGHT BACK180; 6 BACK-LEFT225 (include this separate column!); 7 LEFT PROFILE270; 8 FRONT-LEFT315. Back and rear obliques show back of head/cape with no eyes. Rows: SIX sequential reaction rows: row1 HURT initial recoil, eyes squeeze/shocked; row2 HURT recoil settling; row3 DEFEAT loses balance/knees bend; row4 DEFEAT collapses lower; row5 DEFEAT lying/slumped near ground; row6 DEFEAT final cute unconscious resting pose, eyes closed, low silhouette. Floating creatures fold wings/tail and curl low in cell. No gore, no severed body parts, no bones exploding, no fading opacity (game handles fade). NO standing figures in last two rows. Direction columns remain oriented consistently. Keep all reference equipment; walking holds weapons steadily without attacks or throwing. Staff in right hand.  Same orthographic 10-degree elevated camera, same camera distance and character size in ALL cells. Center root at horizontal50%, foot/ground baseline90% down each cell. Entire full body/wings/weapon fit with 10% margin in every cell; crouching/death poses naturally lower, never enlarge collapsed poses to fill cell. Clear visible motion while design remains identical. Do not omit columns/rows. Do not mirror equipment into wrong hand."
+}

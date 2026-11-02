@@ -1,0 +1,42 @@
+[
+  {
+    "id": "skeleton",
+    "motion": "Right-hand sword, left-hand shield. Combat rows: draw sword back, raise sword ready; then slash down-forward, follow through, return guard. Walking alternating bony legs, scarf sway.",
+    "reference": "painted_sources/skeleton/turnaround.png"
+  },
+  {
+    "id": "knight",
+    "motion": "Two-handed heavy mace. Combat rows: lift mace above helmet, lean back at maximum windup; then powerful overhead downward smash, low impact crouch, recover. Heavy alternating marching steps.",
+    "reference": "painted_sources/knight/turnaround.png"
+  },
+  {
+    "id": "archer",
+    "motion": "Bow anatomical left hand, arrow/drawing string right hand. Combat rows: nock arrow, fully draw string aiming forward; then release arrow with bow recoil, arm follow through, return ready. No separate flying projectile in sprite. Agile alternating walking steps.",
+    "reference": "painted_sources/archer/turnaround.png"
+  },
+  {
+    "id": "ghost",
+    "motion": "Floating lantern ghost. Combat rows: lift lantern and gather small internal light, lean back charged; then thrust lantern and free hand forward casting, follow through, settle. Walking is hovering bob with tail waving and cloak/lantern swaying, no legs. No ambient fog or huge halos.",
+    "reference": "painted_sources/ghost/turnaround.png"
+  },
+  {
+    "id": "bat",
+    "motion": "Flying bat. Combat rows: raise wings and lean back, wings highest ready to dive; then dive forward head down with wings pulled back, diving follow through, spread wings to recover. Walking animation is a six-frame wingbeat cycle: high, halfway down, low, halfway up, high, neutral. No floor shadow.",
+    "reference": "painted_sources/bat/turnaround.png"
+  },
+  {
+    "id": "pumpkin",
+    "motion": "Pumpkin bomb creature. Combat rows: crouch and clutch bomb, compress with tiny burning fuse; then spring forward eagerly, flare carved eyes and spread arms, collapse into low recoil. No large explosion/projectile because gameplay draws those. Walking uses small energetic alternating boots and coat bounce.",
+    "reference": "painted_sources/pumpkin/turnaround.png"
+  },
+  {
+    "id": "gargoyle",
+    "motion": "Stone gargoyle holds boulder in both hands. Combat rows: lift boulder above horns, lean back loaded; then throw forward with extended arms, empty-handed follow through, recover bringing arms back. Do not include detached flying rock projectile. Walking alternates claw feet, tail balances, wings tuck.",
+    "reference": "painted_sources/gargoyle/turnaround.png"
+  },
+  {
+    "id": "mage",
+    "motion": "Staff in right hand. Combat rows: raise staff and free hand to gather magic, staff orb lights internally at full charge; then aim staff forward and cast with left hand, follow through with robe swing, recover. No detached magic projectile. Walking alternates boots with robe/hat sway.",
+    "reference": "painted_sources/mage/turnaround.png"
+  }
+]

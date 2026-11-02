@@ -1,0 +1,14 @@
+{
+  "id": "mage",
+  "group": "combat",
+  "columns": 8,
+  "rows": 5,
+  "frames": [
+    "windup0",
+    "windup1",
+    "attack0",
+    "attack1",
+    "attack2"
+  ],
+  "prompt": "Production sprite animation from EXACT reference character, same detailed Japanese hand-painted anime chibi, costume, face, body scale and equipment. PURE TRANSPARENT BACKGROUND, alpha zero everywhere outside actual character; NO fog, haze, external glows, floor, shadow, labels, gridlines or text. Output wide 2048x1280. EXACTLY EIGHT columns and 5 rows =40 full individual sprites. Columns fixed across EVERY row: 1 FRONT; 2 FRONT-RIGHT45; 3 RIGHT PROFILE90; 4 BACK-RIGHT135; 5 STRAIGHT BACK180; 6 BACK-LEFT225 (include this separate column!); 7 LEFT PROFILE270; 8 FRONT-LEFT315. Back and rear obliques show back of head/cape with no eyes. Rows: FIVE sequential combat rows: row1 early WINDUP; row2 maximum WINDUP (clear anticipation); row3 ATTACK release/strike; row4 ATTACK follow-through; row5 ATTACK recovery. Make poses distinctly different, preserve anatomy and equipment. Direction column remains fixed through every row. Never rotate attack toward camera when it is a rear-facing column. Use this character's specific weapon/action description below. Staff in right hand. Combat rows: raise staff and free hand to gather magic, staff orb lights internally at full charge; then aim staff forward and cast with left hand, follow through with robe swing, recover. No detached magic projectile. Walking alternates boots with robe/hat sway. Same orthographic 10-degree elevated camera, same camera distance and character size in ALL cells. Center root at horizontal50%, foot/ground baseline90% down each cell. Entire full body/wings/weapon fit with 10% margin in every cell; crouching/death poses naturally lower, never enlarge collapsed poses to fill cell. Clear visible motion while design remains identical. Do not omit columns/rows. Do not mirror equipment into wrong hand."
+}

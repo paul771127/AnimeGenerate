@@ -1,0 +1,14 @@
+{
+  "id": "archer",
+  "group": "idle",
+  "columns": 8,
+  "rows": 4,
+  "frames": [
+    "idle0",
+    "idle1",
+    "idle2",
+    "idle3"
+  ],
+  "prompt": "Use this EXACT approved character design as reference. Create a NEW production animation sheet, not a turnaround repeat. Preserve costume, face, proportions, materials and equipment perfectly. Detailed Japanese fantasy chibi art, 2.5 heads tall. EXACTLY 8 COLUMNS x 4 ROWS =32 sprites, output2048x1024 transparent PNG. Columns in EVERY row: FRONT, FRONT-RIGHT45, RIGHT90, BACK-RIGHT135, BACK180, BACK-LEFT225, LEFT270, FRONT-LEFT315. Rear views no face/eyes. Rows are four IDLE frames: 1 neutral ready, 2 subtle inhale and cloth rise, 3 soft blink with slightly lowered eyelids (no added face on backs), 4 exhale returning to neutral. For armored knight eyes narrow glowing slit rather than eyelids; ghost gently bobs floating tail. All 32 full figures SAME scale and foot/hover baseline90% down cell, centered; weapons fit within individual cells; clear transparent margins. Gentle changes only, no movement away from cell center. No labels/grid/floor/shadows/fog/ambient halos; alpha zero outside character. Reference details: Bow anatomical left hand, arrow/drawing string right hand. Combat rows: nock arrow, fully draw string aiming forward; then release arrow with bow recoil, arm follow through, return ready. No separate flying projectile in sprite. Agile alternating walking steps.",
+  "correction_prompt": "First image is EDIT TARGET, archer art to preserve. Second image is LAYOUT REFERENCE ONLY, showing correct 8 columns; do NOT copy skeleton outfit. Repair archer sheet: target currently has only SEVEN columns! ADD the missing BACK-LEFT oblique view between straight back and left profile in EVERY row, re-layout to EIGHT evenly spaced columns x FOUR rows =32 complete sprites. Correct columns: front, front-right, right profile, back-right, straight back, BACK-LEFT facing AWAY to left with quiver/back and NO eyes, left profile, front-left. Four idle rows remain neutral, inhale, blink, exhale. Preserve archer appearance exactly. Uniform scale and full transparent padding. All32 sprites; no words, no grids, no floor, no haze."
+}

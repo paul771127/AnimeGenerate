@@ -1,6 +1,6 @@
 """Validate castle assets; Unity performs geometry, route and cache checks separately."""
 from pathlib import Path
-import json, subprocess
+import json, subprocess, hashlib
 from PIL import Image
 root=Path(__file__).resolve().parents[1]
 repo=root.parent
@@ -15,8 +15,8 @@ for name in ['skeleton','knight','archer','ghost','bat','pumpkin','gargoyle','ma
  for slot in range(168):
   x=slot%16*128;y=slot//16*128
   check(im.getchannel('A').crop((x,y,x+128,y+128)).getbbox() is not None,f'{name} slot {slot} empty')
- original=subprocess.check_output(['git','show','8c3b218:'+p.relative_to(repo).as_posix()],cwd=repo)
- check(original==p.read_bytes(),name+' existing animation changed')
+ manifest=json.loads((root/'Docs/castle_2d_preview/enemy_redesign/atlas_manifest.json').read_text())
+ check(hashlib.sha256(p.read_bytes()).hexdigest()==manifest['enemies'][name]['sha256'],name+' approved redraw differs')
 for name in ['walls','props','surfaces']:
  p=assets/'CastleScene'/(name+'.png');im=Image.open(p)
  check(max(im.size)<=2048,name+' atlas too large')
@@ -27,11 +27,11 @@ for name in ['walls','props','surfaces']:
 protected=['Assets/SpellDuel/Runtime/Combat*.cs','Assets/SpellDuel/Runtime/SoloBattle*.cs','Assets/SpellDuel/Runtime/Explore.cs','Assets/SpellDuel/Runtime/ExploreDungeon.cs','Assets/SpellDuel/Resources/dungeons.txt']
 for pattern in protected:
  for p in root.glob(pattern):
-  prior=subprocess.check_output(['git','show','8c3b218:'+p.relative_to(repo).as_posix()],cwd=repo)
+  prior=subprocess.check_output(['git','show','221757e:'+p.relative_to(repo).as_posix()],cwd=repo)
   check(prior.replace(b'\r\n',b'\n')==p.read_bytes().replace(b'\r\n',b'\n'),str(p)+' protected source changed')
 sprite='spellduel-unity/Assets/SpellDuel/Runtime/SpriteEnemyView.cs'
-expected=subprocess.check_output(['git','show','8c3b218:'+sprite],cwd=repo).replace(b'GetInstanceID() * 0.37f',b'Mathf.Abs(GetInstanceID() % 1000) * 0.37f')
-check(expected.replace(b'\r\n',b'\n')==(repo/sprite).read_bytes().replace(b'\r\n',b'\n'),'sprite changes beyond positive idle phase')
+expected=subprocess.check_output(['git','show','221757e:'+sprite],cwd=repo)
+check(expected.replace(b'\r\n',b'\n')==(repo/sprite).read_bytes().replace(b'\r\n',b'\n'),'sprite runtime changed')
 preview=root/'Docs/castle_2d_preview'
 audit=preview/'castle_audit.json'
 if audit.exists():
