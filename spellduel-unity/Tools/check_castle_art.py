@@ -29,6 +29,9 @@ for pattern in protected:
  for p in root.glob(pattern):
   prior=subprocess.check_output(['git','show','8c3b218:'+p.relative_to(repo).as_posix()],cwd=repo)
   check(prior.replace(b'\r\n',b'\n')==p.read_bytes().replace(b'\r\n',b'\n'),str(p)+' protected source changed')
+sprite='spellduel-unity/Assets/SpellDuel/Runtime/SpriteEnemyView.cs'
+expected=subprocess.check_output(['git','show','8c3b218:'+sprite],cwd=repo).replace(b'GetInstanceID() * 0.37f',b'Mathf.Abs(GetInstanceID() % 1000) * 0.37f')
+check(expected.replace(b'\r\n',b'\n')==(repo/sprite).read_bytes().replace(b'\r\n',b'\n'),'sprite changes beyond positive idle phase')
 preview=root/'Docs/castle_2d_preview'
 audit=preview/'castle_audit.json'
 if audit.exists():

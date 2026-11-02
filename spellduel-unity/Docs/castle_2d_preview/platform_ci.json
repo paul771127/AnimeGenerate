@@ -1,0 +1,33 @@
+{
+  "id": 41437407254,
+  "head": "d3d6852b46958180bb006064fa9a3611ad1cf1d1",
+  "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41437407254",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "check-license",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41437407254/job/125250562185"
+    },
+    {
+      "name": "android",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41437407254/job/125250683488"
+    },
+    {
+      "name": "ios-export",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41437407254/job/125250683580"
+    },
+    {
+      "name": "ios-ipa",
+      "conclusion": "success",
+      "status": "completed",
+      "url": "https://github.com/paul771127/AnimeGenerate/actions/runs/41437407254/job/125256548062"
+    }
+  ]
+}

@@ -17,3 +17,21 @@
 ## 驗證
 
 Tools/check_castle_art.py 檢查圖集、匯入設定及既有敵人原始資料。Editor/CastleArtPreview.cs 輸出五室第一人稱／俯視、上下視野、閘門三態，並在 Unity 檢查路線、牆界、碰撞元件、快取與地圖資料不變。原生與行動平台結果以本目錄後續 CI 證據為準。
+
+## 原生檢視後修正
+
+- 凹壁內加大理石底板，避免原本地圖底面綠色露出。
+- 王座帷幕集中於中央特徵牆；其餘牆交替石磚、旗幟與彩窗，畫廊交替肖像與石牆。
+- SpriteEnemyView 僅修改待機相位的 Instance ID 部分：先取有界餘數再絕對值，避免負 ID 算出負影格／圖集外 UV。PNG、方向、動作格數、出招／受擊／死亡與戰鬥時序都不變。檢查腳本逐位元比對，確認該檔只有這一處修改。
+- 原生預覽直接呼叫動畫取樣，避免 Editor 非播放模式的 SendMessage 斷言；新增 slot 0～167 檢查。閘門三態是獨立模型展示，用深灰背景；上／下視野才使用洋紅清屏來偵測漏底。
+- 俯視圖刻意隱藏房間天花板，保留牆頂；外側綠色為未開放牆格底面，非可行走室內。實際第一人稱保留完整天花板。
+
+## 最終原生證據
+
+Actions 41437882006，來源 26bc6e7，Unity原生成功。15張PNG加2張檢視總覽：五室第一人稱／俯視、抬頭／低頭、閘門三態。native_ci.json記錄來源；castle_audit.json記錄路線／快取／範圍／開門驗證。沒有以生成概念圖代替實際遊戲渲染。
+
+行動平台驗證的Runtime來源為d3d6852；後續26bc6e7只改Editor預覽取樣與驗證工具。手機FPS、實機AR與多人完整遊玩仍須設備驗收。
+
+## 雙平台結果
+
+Actions [41437407254](https://github.com/paul771127/AnimeGenerate/actions/runs/41437407254) 全部成功：Android APK、iOS Unity匯出、Xcode未簽署IPA。來源d3d6852，Runtime／Resources與最終原生預覽一致；platform_ci.json保存工作結果。check_castle_art.py逐檔核對來源後0錯誤。
