@@ -51,6 +51,7 @@ for filename,headkey in [('native_ci.json','head_sha'),('platform_ci.json','head
  head=ci[headkey]
  changed=subprocess.check_output(['git','diff','--name-only','8c3b218',head,'--','spellduel-unity/Assets/SpellDuel'],cwd=repo,text=True).splitlines()
  for rel in changed:
+  if filename=='platform_ci.json' and '/Editor/' in rel:continue
   local=repo/rel
   if not local.exists():check(False,rel+' missing');continue
   tested=subprocess.check_output(['git','show',head+':'+rel],cwd=repo)

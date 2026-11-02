@@ -15,7 +15,7 @@ namespace SpellDuel.EditorTools
   static void Save(Camera cam,GameObject root,string name,bool top=false)
   {
    foreach(var b in root.GetComponentsInChildren<CastleBillboardArt>())b.Face(cam,1.2f);
-   foreach(var v in root.GetComponentsInChildren<SpriteEnemyView>()){v.SendMessage("LateUpdate");int slot=(int)typeof(SpriteEnemyView).GetField("lastSlot",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(v);Check(slot>=0&&slot<168,"sprite animation slot "+slot);}
+   foreach(var v in root.GetComponentsInChildren<SpriteEnemyView>()){typeof(SpriteEnemyView).GetMethod("LateUpdate",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(v,null);int slot=(int)typeof(SpriteEnemyView).GetField("lastSlot",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(v);Check(slot>=0&&slot<168,"sprite animation slot "+slot);}
    foreach(var t in root.GetComponentsInChildren<Transform>(true))if(t.name=="CastleCellCeiling")t.gameObject.SetActive(!top);
    Old("Save",cam,name,top?1400:1080,top?1400:1440);
   }
@@ -43,7 +43,7 @@ namespace SpellDuel.EditorTools
    int meshes=0,materials=0,textures=0;
    for(int pass=0;pass<2;pass++){var root=View(map,map.Cell(map.areas[0].center));UnityEngine.Object.DestroyImmediate(root);int mm=Resources.FindObjectsOfTypeAll<Mesh>().Length,mt=Resources.FindObjectsOfTypeAll<Material>().Length,tt=Resources.FindObjectsOfTypeAll<Texture2D>().Length;if(pass==1)Check(mm==meshes+1&&mt==materials+1&&tt==textures,"cache growth");meshes=mm;materials=mt;textures=tt;}
    var area=map.areas[0];var door=area.exits[0];area.cleared=false;var closed=ExploreArt.CreateDungeonGate(map,door.x,door.y);UnityEngine.Object.DestroyImmediate(closed);area.cleared=true;var gate=ExploreArt.CreateDungeonGate(map,door.x,door.y);var state=gate.GetComponent<DungeonGateArt>();Check(state!=null,"gate animation contract");
-   cam.orthographic=false;cam.transform.position=new Vector3(0,2,-7);cam.transform.LookAt(new Vector3(0,2,0));
+   cam.backgroundColor=new Color(.12f,.09f,.11f);cam.orthographic=false;cam.transform.position=new Vector3(0,2,-7);cam.transform.LookAt(new Vector3(0,2,0));
    state.Sample(0);Save(cam,gate,"castle_gate_closed");state.Sample(.375f);Check(state.closed.localPosition.y>1&&state.closed.localPosition.y<3,"gate midway");Save(cam,gate,"castle_gate_half");state.Sample(.8f);Check(!state.closed.gameObject.activeSelf&&map.GateOpen(door.x,door.y),"gate open");Save(cam,gate,"castle_gate_open");UnityEngine.Object.DestroyImmediate(gate);area.cleared=false;
    File.WriteAllText("snapshots/castle_audit.json","{\"theme\":6,\"rooms\":5,\"routes\":true,\"mapUnchanged\":true,\"cache\":true,\"noColliders\":true,\"wallBounds\":true,\"gateAnimation\":true,\"enclosedBackdrop\":true}");
    Debug.Log("Castle native art, routes, cache and gate audit passed");
