@@ -35,6 +35,18 @@ namespace SpellDuel
         }
         VariantRig VariantBody(Fighter m) => variantBodies.TryGetValue(m, out var b) && b ? b : null;
 
+        // ---------------------------------------------------------------- 2D 圖片的城堡敵人（201～208；SpriteEnemyView.cs）
+        readonly Dictionary<Fighter, SpriteEnemyView> spriteBodies = new Dictionary<Fighter, SpriteEnemyView>();
+        SpriteEnemyView DressSprite(Fighter m, MinionRig rig)
+        {
+            var d = SpriteMonsters.Get(m.variant); if (d == null) return null;
+            foreach (var r in rig.GetComponentsInChildren<Renderer>(true)) r.enabled = false;   // 原本的骨架藏起來（位置、面向照舊由它帶）
+            var v = SpriteEnemyView.Create(d, rig.transform);
+            spriteBodies[m] = v;
+            return v;
+        }
+        SpriteEnemyView SpriteBody(Fighter m) => spriteBodies.TryGetValue(m, out var b) && b ? b : null;
+
         /// <summary>這一下預備的是哪一招：讀條中的招（房主）→ 這隻的預警（隊友端）→ 補師輔助的讀條 → basic</summary>
         string MoveOf(Fighter m)
         {
@@ -46,6 +58,7 @@ namespace SpellDuel
         /// <summary>UpdateMinionVisuals 叫：位置跟好之後的每幀狀態</summary>
         void TickVariantBody(Fighter m, MinionRig rig)
         {
+            var sb = SpriteBody(m); if (sb) sb.MoveSpeed = rig.MoveSpeed;
             var b = VariantBody(m); if (!b) return;
             b.MoveSpeed = rig.MoveSpeed;
             b.SetFleeing(m.humState == 1);
@@ -58,6 +71,7 @@ namespace SpellDuel
         }
         void VariantWindupStart(Fighter m, float windup)
         {
+            var sb = SpriteBody(m); if (sb) sb.Windup(windup);
             var b = VariantBody(m); if (!b) return;
             string move = MoveOf(m);
             variantMove[m] = move; variantWindEnd[m] = m.windupUntil;
@@ -66,19 +80,21 @@ namespace SpellDuel
         }
         void VariantWindupEnd(Fighter m)
         {
+            var sb = SpriteBody(m); if (sb) sb.Attack();
             var b = VariantBody(m); if (!b) return;
             variantMove.TryGetValue(m, out var move);
             bool broken = variantWindEnd.TryGetValue(m, out var end) && battle.now < end - 0.08f;   // 還沒到時間就結束＝被打斷
             if (broken) b.ChannelBroken(); else b.Strike(move ?? "basic");
             b.SetChannel(false);
         }
-        void VariantHit(Fighter m) { var b = VariantBody(m); if (b) b.PlayHit(); }
+        void VariantHit(Fighter m) { var b = VariantBody(m); if (b) b.PlayHit(); var sb = SpriteBody(m); if (sb) sb.PlayHit(); }
         void VariantDead(Fighter m)
         {
             if (variantBodies.TryGetValue(m, out var b)) { if (b) b.SetDead(true); variantBodies.Remove(m); }
             variantMove.Remove(m); variantWindEnd.Remove(m); variantShield.Remove(m);
+            if (spriteBodies.TryGetValue(m, out var sb)) { if (sb) sb.SetDead(true); spriteBodies.Remove(m); }
         }
-        void ClearVariantBodies() { variantBodies.Clear(); variantMove.Clear(); variantWindEnd.Clear(); variantShield.Clear(); }
+        void ClearVariantBodies() { spriteBodies.Clear(); variantBodies.Clear(); variantMove.Clear(); variantWindEnd.Clear(); variantShield.Clear(); }
 
         // ---------------------------------------------------------------- 輔助效果
         /// <summary>esfx 事件（「種類|施法者id|目標id|秒數」）：房主自己畫，合作時送給隊友</summary>

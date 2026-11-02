@@ -1444,6 +1444,7 @@ namespace SpellDuel
                     else if (exploreRun != null && !exploreRun.IsDungeon) SetupExploreBattle();   // 故事探索：大迷宮（SoloBattle.Explore.cs）
                     else if (dungeon != null)
                     {
+                        battle.castleSprites = dungeon.style == "castle";           // 城堡副本：小怪換成 2D 圖片的城堡敵人（Combat.SpriteMonsters.cs）
                         battle.dungeonParty = Dungeons.PartyScale(partyN);          // 副本：浮動難度（最少 2 人；敵人數量、Boss 血量 ×人數）
                         battle.scaleAllies = battle.dungeonParty - 1;               // Boss 出招頻率、召喚數也照人數
                         battle.hpBoost = dungeonRelief;                          // 等級差修正（主機的等級決定）
@@ -1929,7 +1930,8 @@ namespace SpellDuel
                     rig.SetVariant(m.minionKind);
                     rig.SetDress(battle.Theme);   // 角鬥場：黑晶項圈；山道：沙塵與頭巾（美術第十一輪）
                     if (m.treasure) DressTreasure(rig);   // 寶箱怪：換成會跑的寶箱
-                    if (MonsterVariants.IsSky(m.variant)) DressSky(m, rig);
+                    if (SpriteMonsters.Has(m.variant)) DressSprite(m, rig);   // 城堡的 2D 圖片敵人（SoloBattle.VariantArt.cs、SpriteEnemyView.cs）
+                    else if (MonsterVariants.IsSky(m.variant)) DressSky(m, rig);
                     else if (HasVariantArt(m.variant)) DressVariant(m, rig);   // 補師、輔助型、人形敵人：Codex 的 VariantRig（SoloBattle.VariantArt.cs）   // 天穹飛毯的敵人：Codex 的全新骨架（SoloBattle.Carpet.cs）
                     else if (m.variant > 0 && MonsterVariants.Get(m.variant) != null) MinionLook.Apply(rig, MonsterVariants.Get(m.variant));   // 刺客怪、天候怪：換配色、武器（MinionLook.cs）
                     if (m.isElite && !EliteCatalog.IsElite(m.minionKind)) rig.transform.localScale = Vector3.one * 1.5f;   // 無盡塔的精銳：大一號

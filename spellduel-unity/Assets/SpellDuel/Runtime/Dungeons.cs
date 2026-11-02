@@ -70,6 +70,7 @@ namespace SpellDuel
         public int level;                          // 副本等級（掉落的物品等級、難度基準）
         public int minPlayers = 2, maxPlayers = 4; // 建議人數
         public string unlock;                      // 要先通關的故事關卡（例如 2-3；null＝一開始就開放）
+        public string style;                       // 場景風格（castle＝歐式城堡內部＋2D 圖片的城堡敵人；null＝照章節主題）
         public bool Unlocked => string.IsNullOrEmpty(unlock) || Story.IsCleared(unlock);
         public readonly List<DungeonRoom> rooms = new List<DungeonRoom>();
         public readonly List<StoryLine> before = new List<StoryLine>();
@@ -248,6 +249,7 @@ namespace SpellDuel
                         else if (k == "time_limit") { if (!int.TryParse(v, out d.timeLimit) || d.timeLimit < 1) errors.Add($"第 {ln} 行：time_limit 為分鐘正整數"); }
                         else if (k == "traps") d.traps = v == "on";
                         else if (k == "unlock") d.unlock = v.Length == 0 || v == "none" ? null : v;
+                        else if (k == "style") d.style = v.Length == 0 || v == "none" ? null : v.ToLowerInvariant();
                         else errors.Add($"第 {ln} 行：副本不認得的設定 {k}");
                     }
                     continue;

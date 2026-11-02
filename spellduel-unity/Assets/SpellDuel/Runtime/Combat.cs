@@ -724,6 +724,7 @@ namespace SpellDuel
 
         public Fighter SpawnMinion(Vector3 feet, int id = 0, int kind = 0, float hpMul = 1f, float dmgMul = 1f, float speedMul = 1f)
         {
+            int castleV = CastleRemap(ref kind, ref hpMul, ref dmgMul, ref speedMul);   // 城堡副本：換成 2D 圖片的城堡敵人（Combat.SpriteMonsters.cs）
             kind = Mathf.Clamp(kind, 0, MinionKinds - 1);
             var c = Skills.Classes["minion"];
             var m = new Fighter(MinionNames[kind], c, new string[0], false)
@@ -741,6 +742,7 @@ namespace SpellDuel
             m.accuracy = enemyAccuracy;   // 敵人的命中率（故事各章；抵掉玩家的閃避）
             if (kind == 3) { m.fuseAt = now + BombFuse; m.speedMul *= BombSpeedMul; }   // 自爆小鬼：直直衝過來，引信到就爆
             if (kind == TreasureKind) SetupTreasure(m);
+            if (castleV > 0) ApplyVariant(m, castleV);
             ApplyWeatherTraits(m);   // 天候讓怪物表現不同（Combat.Variants.cs）
             minions.Add(m);
             Emit("minionspawn", m.Feet, c.color, null);

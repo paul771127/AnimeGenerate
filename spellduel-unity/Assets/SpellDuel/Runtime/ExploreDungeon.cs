@@ -72,7 +72,7 @@ namespace SpellDuel
             int bands = (cols + PerBand - 1) / PerBand, perBand = Math.Min(cols, PerBand);
             int bandH = (rows - 1) * rowH + BossSize + GapZ + 1;
             int W = 1 + StartLead + perBand * colStep + 1, H = Margin * 2 + bands * bandH - (GapZ + 1);
-            var m = new ExploreMap(W, H) { name = d.name, theme = ThemeName(d.ThemeOf(d.rooms[boss])), dungeon = d, nodeAreas = d.id == TrapGallery.Id };
+            var m = new ExploreMap(W, H) { name = d.name, theme = d.style == "castle" ? "castle" : ThemeName(d.ThemeOf(d.rooms[boss])), dungeon = d, nodeAreas = d.id == TrapGallery.Id };
             var rng = new System.Random(StableHash(d.id));
 
             // ---- 區域

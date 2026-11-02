@@ -14,6 +14,7 @@ namespace SpellDuel
         public int id, baseKind;
         public string name, dungeon, desc;
         public bool assassin, claws, healer, summoner, summon;   // summon＝召喚物（沒有經驗、不掉寶）
+        public bool sprite;      // 2D 圖片的城堡敵人（Combat.SpriteMonsters.cs）：外觀是 SpriteEnemyView，登場不喊話
         public bool swift;       // 疾風稀有怪（使用者要求：跑得跟衝刺的玩家一樣快）：離玩家遠時用 SwiftRun 衝過來，探索裡追擊 ExSwiftChase
         public int theme = -1;   // 補師：哪一章（3 角鬥場、4 黃土山道）
         public int sky = -1;
@@ -86,6 +87,15 @@ namespace SpellDuel
             new VariantDef { id = 178, baseKind = 8,  name = "影步鬥犬",   swift = true, theme = 3, hp = 2.4f, dmg = 1.3f, speed = 1.5f, tint = new Color(0.6f, 0.5f, 0.9f), desc = "沒有聲音的鬥犬，影子比身體先到" },
             new VariantDef { id = 179, baseKind = 0,  name = "砂暴狐魅",   swift = true, theme = 4, hp = 2.4f, dmg = 1.3f, speed = 1.5f, tint = new Color(1f, 0.75f, 0.45f), desc = "捲著砂暴奔跑的小妖，跑過的地方留下一道砂塵" },
             new VariantDef { id = 180, baseKind = 2,  name = "砂塵疾奔獸", swift = true, theme = 4, hp = 2.6f, dmg = 1.3f, speed = 1.5f, tint = new Color(0.9f, 0.65f, 0.35f), desc = "峽谷裡追著商隊跑的衝鋒獸，從來沒跟丟過" },
+            // ---- 2D 圖片的城堡敵人（測試副本 castle_test；Combat.SpriteMonsters.cs）
+            new VariantDef { id = 201, baseKind = 0,  name = "骷髏劍兵",   sprite = true, desc = "拿著生鏽短劍和小圓盾的骷髏" },
+            new VariantDef { id = 202, baseKind = 2,  name = "空殼騎士",   sprite = true, desc = "裡面沒有人的盔甲" },
+            new VariantDef { id = 203, baseKind = 1,  name = "骷髏弓手",   sprite = true, desc = "戴著綠色兜帽的骷髏弓手" },
+            new VariantDef { id = 204, baseKind = 6,  name = "提燈幽靈",   sprite = true, desc = "提著紫色燈籠的小幽靈" },
+            new VariantDef { id = 205, baseKind = 14, name = "吸血小蝙蝠", sprite = true, desc = "圓滾滾的紫色蝙蝠" },
+            new VariantDef { id = 206, baseKind = 3,  name = "南瓜炸彈",   sprite = true, desc = "點著引信的南瓜燈" },
+            new VariantDef { id = 207, baseKind = 4,  name = "小石像鬼",   sprite = true, desc = "把石塊舉過頭丟過來的石像鬼" },
+            new VariantDef { id = 208, baseKind = 5,  name = "見習黑魔導", sprite = true, desc = "尖帽子底下只看得到黃色眼睛的小魔導士" },
             new VariantDef { id = 114, baseKind = 8,  name = "月牙狼",   weather = Battle.Weather.Moon, hp = 1.6f, dmg = 1.3f, speed = 1.4f, tint = new Color(0.72f, 0.78f, 1f), desc = "月夜才現身的銀色衝鋒獸" },
         };
         static readonly Dictionary<int, VariantDef> byId = new Dictionary<int, VariantDef>();
@@ -139,7 +149,9 @@ namespace SpellDuel
         {
             float hp = v.hp, dmg = v.dmg, spd = v.speed;
             if (v.assassin) { dmg *= AssassinDmg; spd *= AssassinSpeed; }
+            spawningVariant = true;
             var m = SpawnMinion(at, 0, v.baseKind, HpMul * hp, DmgMul * dmg, SpeedMul * spd);
+            spawningVariant = false;
             ApplyVariant(m, v.id);
             return m;
         }
@@ -151,6 +163,7 @@ namespace SpellDuel
             if (v == null || m.variant == id) return;
             m.variant = id; m.name = v.name;
             if (EnemySkills.Has(id)) m.esBornAt = now;   // 新招式：進場 2 秒後才出第一招
+            if (v.sprite) return;   // 城堡的 2D 敵人：只換名字和外觀
             if (v.healer) { m.healer = true; m.attackReadyAt = now + HealerFirst; Emit("healer", m.Feet, v.tint, null); return; }
             if (v.summoner) { m.summoner = true; m.attackReadyAt = now + SummonerFirst; Emit("summoner", m.Feet, v.tint, null); return; }
             if (v.summon) { m.summoned = true; return; }
