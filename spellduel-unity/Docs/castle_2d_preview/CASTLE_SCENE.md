@@ -31,3 +31,7 @@ Tools/check_castle_art.py 檢查圖集、匯入設定及既有敵人原始資料
 Actions 41437882006，來源 26bc6e7，Unity原生成功。15張PNG加2張檢視總覽：五室第一人稱／俯視、抬頭／低頭、閘門三態。native_ci.json記錄來源；castle_audit.json記錄路線／快取／範圍／開門驗證。沒有以生成概念圖代替實際遊戲渲染。
 
 行動平台驗證的Runtime來源為d3d6852；後續26bc6e7只改Editor預覽取樣與驗證工具。手機FPS、實機AR與多人完整遊玩仍須設備驗收。
+
+## 雙平台結果
+
+Actions [41437407254](https://github.com/paul771127/AnimeGenerate/actions/runs/41437407254) 全部成功：Android APK、iOS Unity匯出、Xcode未簽署IPA。來源d3d6852，Runtime／Resources與最終原生預覽一致；platform_ci.json保存工作結果。check_castle_art.py逐檔核對來源後0錯誤。

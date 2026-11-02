@@ -1039,3 +1039,8 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 原生檢視後補齊凹壁大理石底面、降低王座帷幕重複；另修 SpriteEnemyView 待機相位負 Instance ID 導致負影格的單行視覺問題，方向／動作格數與戰鬥時序不變。
 - Unity原生 Actions 41437882006（26bc6e7）成功：五室、路線、牆格範圍、無Collider、快取、地圖不變、鐵閘三態與sprite slot範圍通過。15張原始截圖、兩張總覽與稽核JSON保存於 Docs/castle_2d_preview/；上／下視野洋紅漏底檢查通過。前一輪預覽與被新版取代的建置不作最終證據。
 - Android APK 與 iOS Unity匯出已通過；Xcode IPA仍在建置，最終平台結果另補。未以原生預覽宣稱手機FPS或實機AR驗收完成。
+
+
+### 月影古堡最終雙平台驗收（2026-11-02）
+- Actions 41437407254（Runtime來源d3d6852）：Android APK、iOS Unity匯出、Xcode未簽署IPA全部成功；platform_ci.json已保存。本流程僅驗證編譯，不發布Release或TestFlight。
+- 最終原生來源26bc6e7相較d3d6852只有Editor預覽及檢查工具修正，Runtime／Resources完全一致。check_castle_art.py核對原生與平台來源、8張敵人PNG、1344個格、三張場景圖集及保護程式，0錯誤。場景與敵人圖示範原生圖已目視確認；手機效能與實機AR仍待設備測試。
