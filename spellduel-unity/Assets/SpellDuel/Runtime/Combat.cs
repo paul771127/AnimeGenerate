@@ -171,6 +171,7 @@ namespace SpellDuel
         public List<Vector3> walkPath; public int walkIdx;   // 護送：沿著這條路走
         public int evElement;                  // 對應元素的雕像：要的屬性（1 火、2 冰、3 雷）
         public bool evReal;                    // 找出真身：真的寶箱
+        public int troop; public bool troopCaptain; public float routUntil;   // 故事的小隊：哪一隊、隊長、潰散逃跑到什麼時候（Combat.ArenaProps.cs）
         public bool evRunner;                  // 故事的波次目標「追獵」：扛著寶物逃跑的盜寶頭目（Combat.WaveGoals.cs）
         public bool huntTarget;                // 斬首的目標
         public Vector3 homePos;                // 跳躍魚：海裡的家（咬完跳回去）
@@ -832,6 +833,7 @@ namespace SpellDuel
             bossAfterMinions = true;   // 故事關卡：Boss 波先來一整波小怪，全部打倒後 Boss 才現身
             waveSeq = null;
             wave = Mathf.Max(0, firstWave - 1); stageStart = firstWave; stageEnd = Mathf.Max(firstWave, lastWave);
+            PlaceArenaProps();   // 故事：場地機關（爆炸桶、石柱、草叢、水窪；Combat.ArenaProps.cs）
             PlanWaveGoal();   // 波次目標：挑一波換成守護／佔點／召喚門／追獵／撐住（Combat.WaveGoals.cs）
             enemy.hp = 0f;
             NextWave(3f);
@@ -941,6 +943,7 @@ namespace SpellDuel
             batchOut = false; lastMinionCount = 0; refillAt.Clear(); pendingRefill = 0;
             SetupHazards();   // 角鬥場：這一波的陷阱配置；山道：落石計時（Combat.Hazards.cs）
             MaybeStartWaveGoal();   // 故事：這一波是目標波（Combat.WaveGoals.cs）
+            PlanReinforce();        // 故事：這一波會不會有增援突襲（Combat.ArenaProps.cs）
             if (roomEvent != null && evSoft) { Emit("wavestart", player.Feet, Color.white, $"{WaveLabel}：特殊目標！"); return; }
             Emit("wavestart", player.Feet, Color.white, IsBossWave ? (bossPending ? $"{WaveLabel}：{waveTotal} 隻小怪…（最深處有什麼在等著）" : $"{WaveLabel}：Boss 來了！") : MiniBossWave ? $"{WaveLabel}：小 Boss「{MinionNames[specialKind]}」單獨登場！" : $"{WaveLabel}：{waveTotal} 隻小怪");
         }
@@ -1018,6 +1021,7 @@ namespace SpellDuel
             if (stageCleared) return;   // 故事關卡已經通關
             if (manualWaves && awaitingNext) return;   // 副本地圖：等房主選下一站（不能把剛打倒的首領又叫出來）
             if (!player.Alive && !AnyAllyAlive) return;
+            if (storyTactics || storyProps) TickArenaProps();   // 故事：隊長、增援、場地機關（Combat.ArenaProps.cs）
             if (now < waveStartAt) return;
             if (roomEvent != null && UpdateRoomEvent()) return;   // 副本特殊地點（Combat.RoomEvents.cs）
             if (IsBossWave && !bossPending)
@@ -1207,6 +1211,7 @@ namespace SpellDuel
                 Fighter sp;
                 if (q.healer && q.role == MinionRole.Special) sp = SpawnSummonerAt(q.ang); else if (q.healer) sp = SpawnHealerAt(q.ang); else sp = SpawnRoleAt(q.role, q.ang, q.ambush);
                 formationPos = NoPos;
+                TagTroop(sp, q.at);   // 故事：記是哪一隊、是不是隊長（Combat.ArenaProps.cs）
                 if (q.march != null)
                 {
                     q.march.spawned++;
@@ -1250,6 +1255,7 @@ namespace SpellDuel
                 int i = layout ? forder[j] : j;
                 groupQueue.Add((now + j * RoundStagger, slots[i].role, slots[i].ang, slots[i].amb, false, layout ? fpos[i] : NoPos, layout ? fgrp[i] : null));
             }
+            PlanCaptain(groupQueue, 0, n);   // 故事：這一輪要不要有隊長
             // 第四、五章：每一輪額外帶一～兩隻補師（最後出來，躲在隊伍後面；不佔這一波的數量）；第五章再加一隻召喚師（role＝Special 當記號）
             if (late) for (int h = 0; h < HealersPerRound(n); h++) groupQueue.Add((now + (n + h) * RoundStagger, MinionRole.Back, easySides ? easyBearing + (h - 0.5f) * 20f : (h - 0.5f) * 30f, false, true, NoPos, null));
             if (late && MonsterVariants.SummonerFor(Theme) != null) groupQueue.Add((now + (n + HealersPerRound(n)) * RoundStagger, MinionRole.Special, easySides ? easyBearing + 15f : 15f, false, true, NoPos, null));
@@ -1516,6 +1522,7 @@ namespace SpellDuel
                 m.target = tgt;
                 if (m.treasure) { UpdateTreasure(m, dt); continue; }   // 寶箱怪：只會逃
                 if (m.evRunner) { UpdateRunner(m, dt); continue; }    // 盜寶頭目：只會逃（Combat.WaveGoals.cs）
+                if (m.routUntil > now) { UpdateRout(m, dt); continue; }   // 隊長倒下：潰散逃跑（Combat.ArenaProps.cs）
                 if (m.march != null && UpdateMarch(m, dt)) continue;   // 軍陣行進中：整隊一起推進，到定點才散開
                 // 保險（使用者回報「有的敵人有顯示但打不到，關卡無法進行」）：在場外待超過 OutsideRescue 秒（不是正在跳崖、出場中），就拉回場內
                 if (minionInside != null && !minionInside(m.Feet) && m.leapEnd <= 0f && carpetStation < 0)   // 埋著的食人花也算（埋在場外會永遠打不到）
@@ -2692,7 +2699,7 @@ namespace SpellDuel
 
         // Room props share the NPC ID / mhit authority path; ordinary NPC targeting is unchanged.
         static bool IsHostileRoomProp(Fighter f) => f != null && f.npcSide == 1 &&
-            f.npcId != null && f.npcId.StartsWith("ev_", StringComparison.Ordinal);
+            f.npcId != null && (f.npcId.StartsWith("ev_", StringComparison.Ordinal) || f.npcId.StartsWith("pr_", StringComparison.Ordinal));
 
         List<Fighter> MeleeFoes(Fighter f)
         {
@@ -4668,6 +4675,8 @@ namespace SpellDuel
         void ApplyDamageAndEffect(Fighter target, int damage, EffectKind eff, float dps, float dur, Vector3 at, Fighter by = null)
         {
             if (target.npcSide == 1 && target.npcId != null && target.npcId.StartsWith("ev_") && EvPropHit(target, by)) return;   // 副本：雕像、寶箱（Combat.RoomEvents.cs）
+            if (ArenaPropHit(target, by)) return;   // 故事的場地機關：爆炸桶、石柱（Combat.ArenaProps.cs）
+            if (damage > 0) ArenaZoneHit(target, by);   // 草叢著火、水窪導電／結凍
             if (weather != Weather.None && damage > 0) damage = Mathf.Max(1, Mathf.RoundToInt(damage * WeatherMul(incoming ?? HitSkill, by ?? (FoeSide(target) ? player : enemy))));   // 故事關卡的天候（Combat.StageMods.cs）
             if (by == null) by = FoeSide(target) ? player : enemy;   // 不知道是誰打的：對面那一方的主角
             // 閃避率（刺客技能樹）：整次攻擊（傷害＋效果）完全閃開

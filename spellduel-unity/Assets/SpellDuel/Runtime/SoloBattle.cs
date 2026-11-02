@@ -4252,6 +4252,7 @@ namespace SpellDuel
             DrawExploreHud(W, H);   // 故事探索：目標、任務、小地圖、對話框      // 衝刺中：畫面兩側的速度線
             DrawTravelFade(W, H);   // 副本走通道：走進黑霧／到站亮起
             DrawRoomEventHud(W, H);   // 副本特殊地點：任務說明、黑暗、道具血條
+            DrawArenaHud(W, H);       // 故事：隊長的旗子、增援方向（SoloBattle.ArenaProps.cs）
             DrawStageModsHud(W, H);   // 故事關卡：天候色調、天候與小目標
 
             // 致盲：畫面蓋上煙霧

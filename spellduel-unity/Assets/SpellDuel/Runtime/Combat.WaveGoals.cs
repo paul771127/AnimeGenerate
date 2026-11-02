@@ -25,7 +25,7 @@ namespace SpellDuel
         static int lastGoalKind = -1;   // 連續兩關不要同一種
 
         public const float CrystalHpMul = 3f;     // 守護水晶的血量＝玩家最大 HP ×3（×人數）
-        public const int GateBaseHp = 120;          // 召喚門的血量＝120 × 這一波小怪的血量倍率
+        public const int GateBaseHp = 120;          // 召喚門的血量＝120 × 這一波小怪的血量倍率（約 6 隻小怪）
         public const float CaptureRadius = 0.9f, CaptureTime = 12f, CaptureDecay = 0.25f;
         public const float RunnerTime = 25f, RunnerSpeed = 1.05f, RunnerScare = 4.5f, RunnerHpMul = 4f;
 
@@ -58,11 +58,11 @@ namespace SpellDuel
             {
                 case "defend":
                     p["name"] = "守護水晶"; p["fail"] = "守護水晶被打碎了…";
-                    p["hp"] = Mathf.RoundToInt(Mathf.Max(300f, player.maxHp * CrystalHpMul)).ToString();
+                    p["hp"] = Mathf.RoundToInt(Mathf.Max(300f, player.maxHp * CrystalHpMul) / (1f + HpPerWave * Tier)).ToString();   // SpawnNpc 會再乘友方的波次倍率
                     break;
                 case "gates":
                     p["name"] = "召喚門"; p["done"] = "召喚門全部毀掉了！"; p["count"] = "2";
-                    p["hp"] = Mathf.RoundToInt(GateBaseHp * HpMul).ToString();
+                    p["hp"] = GateBaseHp.ToString();   // SpawnNpc 會再乘這一波的血量倍率
                     break;
                 case "survive": p["time"] = "30"; break;
             }

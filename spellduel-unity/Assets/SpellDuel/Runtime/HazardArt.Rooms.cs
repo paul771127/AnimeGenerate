@@ -10,7 +10,25 @@ namespace SpellDuel
             var mb=new ArtKit.MB(3);
             void Pillar(Vector3 at,float h,float r,int mat=0)=>ArtKit.Lathe(mb,mat,at,Quaternion.identity,new[]{0f,.08f,h-.08f,h},new[]{r*1.15f,r,r,r*.85f},10,true,true);
             void Box(Vector3 at,Vector3 size,int mat=0)=>ArtKit.Box(mb,mat,at,size,Quaternion.identity);
-            if(id=="ev_crystal")
+            if(id.StartsWith("pr_barrel"))
+            {
+                // 故事的場地機關「爆炸桶」：木桶＋兩道銅箍，桶蓋上一圈紅色警示＋冒火星的引信
+                ArtKit.Lathe(mb,1,Vector3.zero,Quaternion.identity,new[]{0f,.04f,.3f,.56f,.6f},new[]{.21f,.24f,.27f,.24f,.21f},16,true,true);
+                foreach(float y in new[]{.1f,.5f})ArtKit.Lathe(mb,2,new Vector3(0,y,0),Quaternion.identity,new[]{0f,.04f},new[]{.255f,.255f},16,false,false);
+                Ring(v.transform,"Warning",.22f,new Color(1,.2f,.1f));v.transform.GetChild(v.transform.childCount-1).localPosition=Vector3.up*.585f;
+                Ribbon(body,"Fuse",new[]{new Vector3(0,.6f,0),new Vector3(.03f,.68f,.02f),new Vector3(.06f,.72f,0)},.012f,new Color(.2f,.15f,.1f));
+                v.Glow=Orb(body,"Spark",new Vector3(.06f,.74f,0),.035f,new Color(1,.6f,.15f));
+                v.Cracks=new GameObject("Damage cracks");v.Cracks.transform.SetParent(body,false);
+                Ribbon(v.Cracks.transform,"Split stave",new[]{new Vector3(.05f,.5f,.25f),new Vector3(-.02f,.35f,.27f),new Vector3(.04f,.18f,.25f)},.014f,new Color(1,.45f,.1f));v.Cracks.SetActive(false);
+            }
+            else if(id.StartsWith("pr_pillar"))
+            {
+                // 故事的場地機關「石柱」：台座＋柱身＋柱頭（打 4 下倒下）
+                Pillar(Vector3.zero,.16f,.36f,1);Pillar(new Vector3(0,.16f,0),1.9f,.2f);Pillar(new Vector3(0,2.06f,0),.16f,.3f,1);
+                v.Cracks=new GameObject("Damage cracks");v.Cracks.transform.SetParent(body,false);
+                Ribbon(v.Cracks.transform,"Pillar fracture",new[]{new Vector3(.03f,1.3f,.2f),new Vector3(-.05f,1.05f,.2f),new Vector3(.04f,.8f,.21f),new Vector3(-.02f,.55f,.2f)},.016f,new Color(.12f,.1f,.1f));v.Cracks.SetActive(false);
+            }
+            else if(id=="ev_crystal")
             {
                 // 故事的波次目標「守護水晶」：石座上浮著一顆發光的長水晶，旁邊三片小碎晶繞著轉
                 Pillar(Vector3.zero,.18f,.42f,1);Pillar(new Vector3(0,.18f,0),.1f,.3f,2);

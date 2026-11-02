@@ -23,7 +23,7 @@ namespace SpellDuel
             if (battle == null) return;
             if (dungeon == null)
             {
-                if (storyStage != null && drun == null && exploreRun == null) { UpdateRoomEventVisuals(); SendRoomEventState(); }   // 故事關卡的波次目標（Combat.WaveGoals.cs）
+                if (storyStage != null && drun == null && exploreRun == null) { UpdateRoomEventVisuals(); SendRoomEventState(); UpdateArenaPropViews(); }   // 故事關卡的波次目標（Combat.WaveGoals.cs）
                 if (StoryCoop) AdvanceTicker();   // 故事合作：開場／結尾的字幕卡
                 return;
             }

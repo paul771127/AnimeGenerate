@@ -185,27 +185,27 @@ namespace SpellDuel
         /// <summary>房主：每 0.1 秒把人物的位置、血量送給隊友（跟 SendBossState 一起）</summary>
         void SendNpcState()
         {
-            if (drun == null || !coop || !NetIsHost) return;
+            if (drun == null && storyStage == null || !coop || !NetIsHost) return;   // 故事合作：波次目標的道具、場地機關也要送
             var ns = battle.npcs.FindAll(n => !n.localFriend && n.friendOwner < 0);   // 收服的魔物、影分身另外送（SoloBattle.Friends.cs）
             if (ns.Count == 0 && npcSentCount == 0) return;
             npcSentCount = ns.Count;
             var pts = new Vector3[ns.Count]; var ks = new string[ns.Count];
-            for (int i = 0; i < ns.Count; i++) { var n = ns[i]; pts[i] = n.head; ks[i] = $"{n.minionId}|{n.npcId}|{n.npcSide}|{(n.npcEscort ? 1 : 0)}|{Mathf.CeilToInt(n.hp)}|{n.maxHp}"; }
+            for (int i = 0; i < ns.Count; i++) { var n = ns[i]; pts[i] = n.head; ks[i] = $"{n.minionId}|{n.npcId}|{n.npcSide}|{(n.npcEscort ? 1 : 0)}|{Mathf.CeilToInt(n.hp)}|{n.maxHp}|{(n.name ?? "").Replace("|", "")}"; }
             NetSend?.Invoke(new Msg { t = "npcs", pts = pts, ks = ks });
         }
         int npcSentCount;
 
         void OnNpcsMsg(Msg m)
         {
-            if (drun == null || NetIsHost) return;
+            if (drun == null && storyStage == null || NetIsHost) return;
             var keep = new HashSet<int>();
             for (int i = 0; m.ks != null && i < m.ks.Length && m.pts != null && i < m.pts.Length; i++)
             {
                 var a = m.ks[i].Split('|');
                 if (a.Length < 6 || !int.TryParse(a[0], out var id)) continue;
-                var def = dungeon.Npc(a[1]);
+                var def = dungeon != null ? dungeon.Npc(a[1]) : null;
                 int.TryParse(a[2], out var side); int.TryParse(a[4], out var hp); int.TryParse(a[5], out var mhp);
-                battle.SyncNpc(id, a[1], def != null ? def.name : a[1], def != null ? def.look : "priest", side, a[3] == "1", m.pts[i], hp, mhp);
+                battle.SyncNpc(id, a[1], def != null ? def.name : a.Length > 6 && a[6].Length > 0 ? a[6] : a[1], def != null ? def.look : "priest", side, a[3] == "1", m.pts[i], hp, mhp);
                 keep.Add(id);
             }
             battle.npcs.RemoveAll(n => !n.localFriend && n.friendOwner < 0 && !keep.Contains(n.minionId));
@@ -428,6 +428,7 @@ namespace SpellDuel
             if (DungeonExploreMsg(m)) return true;   // 副本大地圖（SoloBattle.DungeonExplore.cs）
             if (SkyMessage(m)) return true;   // 天穹飛毯（SoloBattle.Carpet.cs）
             if (OnRoomEventMsg(m)) return true;   // 特殊地點（SoloBattle.RoomEvents.cs）
+            if (m.t == "npcs" && drun == null) { OnNpcsMsg(m); return true; }   // 故事合作：波次目標的道具、場地機關
             if (drun == null) return false;
             switch (m.t)
             {

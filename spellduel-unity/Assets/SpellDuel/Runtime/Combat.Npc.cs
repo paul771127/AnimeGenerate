@@ -20,7 +20,7 @@ namespace SpellDuel
         static bool NpcMelee(Fighter n) => n.tamedKind >= 0 ? !IsRanged(n.tamedKind) : n.cls != null && (n.cls.id == "swordsman" || n.cls.id == "assassin");
 
         /// <summary>還有活著的敵方人物（第三勢力不算：打完這波就撤退）</summary>
-        public bool HostileNpcAlive { get { foreach (var n in npcs) if (n.Alive && n.npcSide == 1) return true; return false; } }
+        public bool HostileNpcAlive { get { foreach (var n in npcs) if (n.Alive && n.npcSide == 1 && !IsArenaProp(n)) return true; return false; } }   // 場地機關不擋過關
 
         /// <summary>
         /// 叫出一個劇情人物：side 0 我方、1 敵方、2 第三勢力；baseHp 是劇本寫的 hp。

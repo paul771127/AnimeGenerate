@@ -90,7 +90,7 @@ namespace SpellDuel
         void SetupStageMods(StoryStage st)
         {
             battle.SetWeather(Battle.Weather.None); battle.SetBonus(Battle.Bonus.None); battle.night = false;
-            storyGoalsDone = 0; battle.waveGoals = false;
+            storyGoalsDone = 0; battle.waveGoals = false; battle.storyTactics = false; battle.storyProps = false;
             if (st == null || st.id == "trial" || st.id == JobTrialStageId || st.id == "1-1" || st.id == "1-2" || st.id == "1-3") return;
             // 白天／夜晚（使用者要求：故事關卡也有夜晚）：和副本一樣每 3 小時輪替，約四成是夜晚；夜晚只是場景變暗＋夜晚限定的人形敵人
             battle.night = StoryNight(st.id, System.DateTime.Now);
@@ -103,7 +103,9 @@ namespace SpellDuel
                 battle.SetWeather(k < 3 ? Battle.Weather.Rain : k < 6 ? Battle.Weather.Fog : k < 9 ? Battle.Weather.Wind : battle.night ? Battle.Weather.Moon : new[] { Battle.Weather.Rain, Battle.Weather.Fog, Battle.Weather.Wind }[k % 3]);
             }
             battle.SetBonus((Battle.Bonus)(1 + r.Next(3)));
-            battle.waveGoals = true;   // 波次目標：這一關挑一波換成守護／佔點／召喚門／追獵／撐住（StartStage 時挑）
+            battle.waveGoals = true;
+            battle.storyTactics = true;   // 小隊戰術：隊長、增援突襲（Combat.ArenaProps.cs）
+            battle.storyProps = true;     // 場地機關：爆炸桶、石柱、草叢、水窪   // 波次目標：這一關挑一波換成守護／佔點／召喚門／追獵／撐住（StartStage 時挑）
             string wl = battle.weather != Battle.Weather.None ? $"\n今天的天候：{Battle.WeatherName(battle.weather)}——{Battle.WeatherDesc(battle.weather)}；{Battle.WeatherTraitText(battle.weather)}" : "";
             Say((battle.night ? "🌙 夜晚的關卡" : "☀ 白天的關卡") + wl, 5f);
         }

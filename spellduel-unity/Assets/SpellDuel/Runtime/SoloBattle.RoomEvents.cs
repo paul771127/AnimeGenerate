@@ -34,7 +34,7 @@ namespace SpellDuel
         /// <summary>UpdateNpcRigs 叫：這個人物是道具 → 這裡畫，回傳 true（護送的人不算道具）</summary>
         bool PropVisual(Fighter n)
         {
-            if (n.npcId == null || !n.npcId.StartsWith("ev_") || n.npcId == "ev_walker") return false;
+            if (n.npcId == null || !(n.npcId.StartsWith("ev_") || n.npcId.StartsWith("pr_")) || n.npcId == "ev_walker") return false;   // pr_＝故事的場地機關（爆炸桶、石柱）
             if (!propGo.TryGetValue(n.minionId, out var go) || !go)
             {
                 go = MakeProp(n.npcId);
@@ -157,6 +157,7 @@ namespace SpellDuel
             propGo.Clear();roomElementLooks.Clear();
             foreach (var g in darkEyes.Values) if (g) Destroy(g);
             darkEyes.Clear();
+            ClearArenaPropViews();
         }
 
         // ---------------------------------------------------------------- 上方說明、黑暗、頭上的血條
@@ -205,6 +206,7 @@ namespace SpellDuel
             if(kind=="evinfo" || kind=="evglint")
                 foreach(var g in propGo.Values)if(g && Vector3.Distance(g.transform.position,WorldFrame.FromWorld(at))<.8f)g.GetComponent<RoomPropArt>().Pulse(Time.time);
             if(kind=="evwrong" && battle!=null && battle.roomEvent=="mimic")MinionRig.SpawnFx(WorldFrame.FromWorld(at));
+            if (ArenaFx(kind, at, c, text)) return true;   // 故事的小隊戰術、場地機關（SoloBattle.ArenaProps.cs）
             switch (kind)
             {
                 case "evstart":
@@ -288,6 +290,9 @@ namespace SpellDuel
                 case "reve":
                     if (NetIsHost) return true;
                     OnRoomEventFx(m.k ?? "", m.p, new Color(m.d.x, m.d.y, m.d.z), string.IsNullOrEmpty(m.a) ? null : m.a,m.ok?m.id:-1);
+                    return true;
+                case "azones":   // 故事的場地機關：草叢、水窪的狀態（SoloBattle.ArenaProps.cs）
+                    if (!NetIsHost && battle != null) battle.SetRemoteZones(m.pts, m.ks);
                     return true;
                 case "evsay":
                     if (NetIsHost && battle != null) battle.EvChant(m.k);
