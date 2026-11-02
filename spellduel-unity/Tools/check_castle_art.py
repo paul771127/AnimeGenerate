@@ -23,6 +23,12 @@ for name in ['walls','props','surfaces']:
  if name=='props':check(im.mode=='RGBA' and im.getchannel('A').getextrema()==(0,255),'props alpha')
  meta=Path(str(p)+'.meta').read_text()
  for value in ['enableMipMap: 0','maxTextureSize: 2048','nPOTScale: 0']:check(value in meta,name+' '+value)
+# Presentation scope: gameplay/data/enemy animation sources stay byte-identical.
+protected=['Assets/SpellDuel/Runtime/Combat*.cs','Assets/SpellDuel/Runtime/SoloBattle*.cs','Assets/SpellDuel/Runtime/Explore.cs','Assets/SpellDuel/Runtime/ExploreDungeon.cs','Assets/SpellDuel/Resources/dungeons.txt']
+for pattern in protected:
+ for p in root.glob(pattern):
+  prior=subprocess.check_output(['git','show','8c3b218:'+p.relative_to(repo).as_posix()],cwd=repo)
+  check(prior.replace(b'\r\n',b'\n')==p.read_bytes().replace(b'\r\n',b'\n'),str(p)+' protected source changed')
 preview=root/'Docs/castle_2d_preview'
 audit=preview/'castle_audit.json'
 if audit.exists():
@@ -37,6 +43,21 @@ if audit.exists():
    check(magenta/len(pixels)<.001,name+' exposed clear background')
  print('Native Unity evidence checked')
 else:print('Native Unity evidence pending; asset validation only')
+# CI may run on separate commits with identical art trees (workflow-only changes).
+for filename,headkey in [('native_ci.json','head_sha'),('platform_ci.json','head')]:
+ evidence=preview/filename
+ if not evidence.exists():continue
+ ci=json.loads(evidence.read_text());check(ci['status']=='completed' and ci['conclusion']=='success',filename+' failed/incomplete')
+ head=ci[headkey]
+ changed=subprocess.check_output(['git','diff','--name-only','8c3b218',head,'--','spellduel-unity/Assets/SpellDuel'],cwd=repo,text=True).splitlines()
+ for rel in changed:
+  local=repo/rel
+  if not local.exists():check(False,rel+' missing');continue
+  tested=subprocess.check_output(['git','show',head+':'+rel],cwd=repo)
+  check(tested.replace(b'\r\n',b'\n')==local.read_bytes().replace(b'\r\n',b'\n'),filename+' stale '+rel)
+ if filename=='platform_ci.json':
+  jobs={j['name']:j for j in ci['jobs']}
+  for name in ['android','ios-export','ios-ipa']:check(name in jobs and jobs[name]['conclusion']=='success',name+' compilation')
 print(f'{len(errors)} errors; 8 enemies / 1344 occupied animation cells / 3 castle atlases')
 for e in errors: print(e)
 raise SystemExit(bool(errors))

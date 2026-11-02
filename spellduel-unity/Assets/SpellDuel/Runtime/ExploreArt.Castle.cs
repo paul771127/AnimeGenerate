@@ -44,7 +44,7 @@ namespace SpellDuel
    for(int i=0;i<4;i++){var d=ExploreMap.Dirs[i];if(map.At(x+d.x,z+d.y)!=ExCell.Wall)open++;}
    var a=DungeonLayout(map).nearest[x,z];bool feature=a!=null&&x==a.rect.xMin+a.rect.width/2&&z==a.rect.yMax+1;
    bool niche=open==1&&(feature||n==0);
-   int tile=room==1?3:room==2?4:room==3?5:room==4?6:n%3;
+   int tile=room==1?(feature||n%2==0?3:0):room==2?4:room==3?(feature||n%2==0?5:0):room==4?(feature?6:n%3):n%3;
    float half=ExploreMap.CellSize*.5f;
    for(int i=0;i<4;i++)
    {
@@ -58,6 +58,7 @@ namespace SpellDuel
      CastleProp(face,prop,V(0,0,.8f),prop==5?1.45f:prop==6?1.2f:2.7f);
     }
    }
+   var baseFloor=CastlePanel(root.transform,"AlcoveMarble","surfaces",CastleTile(0,2,2),V(0,.007f,-half),ExploreMap.CellSize,ExploreMap.CellSize);baseFloor.localRotation=Quaternion.Euler(90,0,0);
    var cap=CastlePanel(root.transform,"WallTop","surfaces",CastleTile(3,2,2),V(0,7,-half),ExploreMap.CellSize,ExploreMap.CellSize);cap.localRotation=Quaternion.Euler(90,0,0);
    return root;
   }

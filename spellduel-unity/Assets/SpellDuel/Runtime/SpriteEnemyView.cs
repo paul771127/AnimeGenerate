@@ -98,7 +98,7 @@ namespace SpellDuel
             {
                 if (act == Act.Attack) act = Act.Idle;
                 if (MoveSpeed > 0.12f) { walkPhase += dt * Mathf.Clamp(MoveSpeed * 7f, 5f, 14f); a = Act.Walk; frame = Mathf.FloorToInt(walkPhase) % Frames[1]; }
-                else { a = Act.Idle; frame = Mathf.FloorToInt(Time.time * 5f + GetInstanceID() * 0.37f) % Frames[0]; }
+                else { a = Act.Idle; frame = Mathf.FloorToInt(Time.time * 5f + Mathf.Abs(GetInstanceID() % 1000) * 0.37f) % Frames[0]; }
             }
             int slot = (First[(int)a] + frame) * Dirs + DirIndex(cam);
             if (slot != lastSlot)

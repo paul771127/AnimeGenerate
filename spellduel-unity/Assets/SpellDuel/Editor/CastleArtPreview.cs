@@ -15,7 +15,7 @@ namespace SpellDuel.EditorTools
   static void Save(Camera cam,GameObject root,string name,bool top=false)
   {
    foreach(var b in root.GetComponentsInChildren<CastleBillboardArt>())b.Face(cam,1.2f);
-   foreach(var v in root.GetComponentsInChildren<SpriteEnemyView>())v.SendMessage("LateUpdate");
+   foreach(var v in root.GetComponentsInChildren<SpriteEnemyView>()){v.SendMessage("LateUpdate");int slot=(int)typeof(SpriteEnemyView).GetField("lastSlot",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(v);Check(slot>=0&&slot<168,"sprite animation slot "+slot);}
    foreach(var t in root.GetComponentsInChildren<Transform>(true))if(t.name=="CastleCellCeiling")t.gameObject.SetActive(!top);
    Old("Save",cam,name,top?1400:1080,top?1400:1440);
   }
@@ -33,7 +33,7 @@ namespace SpellDuel.EditorTools
     var background=ExploreArt.CreateBackdrop(map);background.transform.SetParent(root.transform,false);
     Check(background.transform.Find("Sun")==null&&background.transform.Find("SkyDome")==null,"outdoor sky");Check(background.transform.Find("GroundBowl")!=null,"missing lower hemisphere");
     cam.orthographic=false;cam.transform.position=a.center+new Vector3(-3,1.65f,-5);cam.transform.LookAt(a.center+new Vector3(0,2.8f,9));
-    for(int i=0;i<3;i++){var actor=new GameObject("Castle sprite demonstration");actor.transform.SetParent(root.transform,false);actor.transform.position=a.center+new Vector3((i-1)*2.2f,0,1);actor.transform.rotation=Quaternion.Euler(0,180,0);SpriteEnemyView.Create(SpriteMonsters.All[(a.index*2+i)%8],actor.transform);}
+    for(int i=0;i<3;i++){var actor=new GameObject("Castle sprite demonstration");actor.transform.SetParent(root.transform,false);actor.transform.position=a.center+new Vector3((i-1)*1.8f,0,4);actor.transform.rotation=Quaternion.Euler(0,180,0);SpriteEnemyView.Create(SpriteMonsters.All[(a.index*2+i)%8],actor.transform);}
     Save(cam,root,"castle_"+a.node.id+"_first");
     if(a.index==0){cam.transform.rotation=Quaternion.Euler(-70,0,0);Save(cam,root,"castle_ceiling");cam.transform.rotation=Quaternion.Euler(48,120,0);Save(cam,root,"castle_lower_hemisphere");}
     UnityEngine.Object.DestroyImmediate(root);
