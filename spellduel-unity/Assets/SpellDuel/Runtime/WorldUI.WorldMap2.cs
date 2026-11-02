@@ -370,7 +370,7 @@ namespace SpellDuel
                 UiKit.MenuCard(dr, 0.93f, null, 0.8f);
                 bool ok = Story.IsUnlocked(sel), story = Story.HasStory(sel) && Story.IsSeen(sel.id);
                 string waves = sel.HasBoss && sel.fromWave >= 10 ? "Boss 戰" : $"{sel.toWave - sel.fromWave + 1} 波" + (sel.HasBoss ? "＋Boss" : "");
-                UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.3f, dr.width - gap * 2, fs * 1.5f), $"{sel.id}　{sel.title}　{Story.StarText(sel.id)}", fs, Color.white, TextAnchor.MiddleLeft, true);
+                UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.3f, dr.width - gap * 2, fs * 1.5f), $"{sel.id}　{sel.title}　{Story.StarText(sel.id)}" + (SoloBattle.BestRank(sel.id, Difficulty) is string rk2 && rk2.Length > 0 ? $"　🏅 最佳 {rk2}" : ""), fs, Color.white, TextAnchor.MiddleLeft, true);
                 UiKit.Text(new Rect(dr.x + gap, dr.y + fs * 1.8f, dr.width - gap * 2, fs * 2.2f),
                     $"{waves}・推薦 Lv{Mathf.Max(1, sel.FirstWave - 1) + Boost}+・掉落裝備 Lv{Story.LevelBand(sel.theme).lo + Boost}–{Story.LevelBand(sel.theme).hi + Boost}\n經驗 {Mathf.RoundToInt(sel.xp * SoloBattle.RewardMulFor(Difficulty))}・💰 {Mathf.RoundToInt(Economy.StageGold(sel) * SoloBattle.RewardMulFor(Difficulty))}" + (Story.LockReason(sel) is string why ? $"\n🔒 {why}" : ""),
                     fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.UpperLeft, false, 0.55f);

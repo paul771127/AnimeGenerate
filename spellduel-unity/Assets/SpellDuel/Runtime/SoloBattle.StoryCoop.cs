@@ -118,7 +118,7 @@ namespace SpellDuel
         void StartStoryCoop(StoryStage st)
         {
             if (st == null) return;
-            storyMapOpen = false; storyStage = st; pendingDungeon = null; storyGoalsDone = 0;
+            storyMapOpen = false; storyStage = st; pendingDungeon = null; storyGoalsDone = 0; ResetStageRating();
             heightSynced = NetIsHost; lootRolls.Clear(); partyStats.Clear(); myDealtHist.Clear(); myHealHist.Clear();
             pendingStage = st;
             StartBossBattle(true, true);

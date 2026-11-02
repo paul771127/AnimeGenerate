@@ -288,6 +288,7 @@ namespace SpellDuel
             }
             UpdateDungeonStory();   // 副本：房間的劇情字幕卡（SoloBattle.DungeonStory.cs）
             int dk = battle.kills - lastKillsSeen; lastKillsSeen = battle.kills;
+            ComboOnKills(dk);   // 故事：連殺（SoloBattle.StageRating.cs）
             if (dk > 0 && prof != null && prof.NoviceKills(dk, dropRng)) { Progress.SaveChar(prof); NoviceQuestTick(); }   // 初心者的招式任務（打倒／收集）
             QuestKills(dk);   // 副本任務：打倒幾隻敵人、收集東西
             float goldMul = 1f + Souls.Sum(prof, SoulOp.Gold);   // 精魄：金幣加成
@@ -618,6 +619,7 @@ namespace SpellDuel
             if (prof == null) return false;
             int luk = prof.Total(Stat.Luk);
             float lootMul = (dungeon != null ? Dungeons.LootMul(coop ? 1 + PeerIds.Count : 1) : 1f) * WeatherLootMul;   // 副本：人越多掉寶率越高（最多 ×1.5）；月夜 ×1.5
+            if (!boss) lootMul *= ComboLootMul;   // 故事：連殺越高掉寶率越高
             if (!boss && dropRng.NextDouble() > (0.06 + 0.002 * luk) * lootMul) return false;
             int rar = Mathf.Max(minRarity, ItemGen.RollRarity(dropRng, luk * 0.3f, boss ? 2 : 0));
             int ilvl = Mathf.Max(1, prof.level + dropRng.Next(-1, 3) + battle.wave / 10);   // 無盡：物品等級跟著角色等級（越後面的波次略高）
@@ -2158,6 +2160,7 @@ namespace SpellDuel
                     int stXp = Mathf.RoundToInt(st.xp * rmul);
                     pendingGold += Mathf.RoundToInt(Economy.StageGold(st) * rmul);
                     string bonusNote = GrantStageBonus(st, rmul);   // 小目標達成：額外金幣＋試煉幣
+                    bonusNote += GrantStageRating(st, rmul);        // 評等 S／A：額外獎勵（SoloBattle.StageRating.cs）
                     string loot = GrantLoot($"{st.title} 通關", false) + bonusNote;
                     if (prof != null)
                     {
@@ -2548,6 +2551,7 @@ namespace SpellDuel
             if (phase != Phase.Fighting && phase != Phase.Over) return;
             if (battle == null) return;
             SyncPlayer(Me);
+            TrackMyHits();   // 故事評等：被打中幾次（SoloBattle.StageRating.cs）
             float dt = Mathf.Min(Time.deltaTime, 0.1f);
             if (Time.time < hitStopUntil) dt = 0f;   // 命中停頓
             if (endless) TrackProgress();
@@ -4254,6 +4258,7 @@ namespace SpellDuel
             DrawRoomEventHud(W, H);   // 副本特殊地點：任務說明、黑暗、道具血條
             DrawArenaHud(W, H);       // 故事：隊長的旗子、增援方向（SoloBattle.ArenaProps.cs）
             DrawStageModsHud(W, H);   // 故事關卡：天候色調、天候與小目標
+            DrawComboHud(W, H);       // 故事：連殺（SoloBattle.StageRating.cs）
 
             // 致盲：畫面蓋上煙霧
             if (me.blindUntil > now) { GUI.color = new Color(0.55f, 0.55f, 0.6f, 0.92f); GUI.DrawTexture(new Rect(0, 0, W, H), Texture2D.whiteTexture); GUI.color = Color.white; UiKit.Pill(H * 0.32f, $"煙霧中… {me.blindUntil - now:F1}s", fsL, Color.white, pillW); }

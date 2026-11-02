@@ -90,7 +90,7 @@ namespace SpellDuel
         void SetupStageMods(StoryStage st)
         {
             battle.SetWeather(Battle.Weather.None); battle.SetBonus(Battle.Bonus.None); battle.night = false;
-            storyGoalsDone = 0; battle.waveGoals = false; battle.storyTactics = false; battle.storyProps = false;
+            storyGoalsDone = 0; ResetStageRating(); battle.waveGoals = false; battle.storyTactics = false; battle.storyProps = false;
             if (st == null || st.id == "trial" || st.id == JobTrialStageId || st.id == "1-1" || st.id == "1-2" || st.id == "1-3") return;
             // 白天／夜晚（使用者要求：故事關卡也有夜晚）：和副本一樣每 3 小時輪替，約四成是夜晚；夜晚只是場景變暗＋夜晚限定的人形敵人
             battle.night = StoryNight(st.id, System.DateTime.Now);
