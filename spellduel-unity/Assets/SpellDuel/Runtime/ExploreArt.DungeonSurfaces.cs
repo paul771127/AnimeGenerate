@@ -7,6 +7,7 @@ namespace SpellDuel
   static readonly Dictionary<int,Material> dungeonFloors=new Dictionary<int,Material>();
   internal static void DressDungeonPath(GameObject root,ExploreMap map,int x,int z)
   {
+   if(map.theme=="castle"){DressCastlePath(root,map,x,z);return;}
    int theme=DungeonThemeAt(map,x,z);var near=DungeonLayout(map).nearest[x,z];var area=near!=null&&near.Contains(new Vector2Int(x,z))?near:null;
    int key=theme*2+(area!=null?1:0);
    if(!dungeonFloors.TryGetValue(key,out var mat)||!mat)
@@ -34,10 +35,12 @@ namespace SpellDuel
   }
   public static GameObject CreateDungeonArena(int theme,float radius)
   {
+   if(theme==6)return Root("Castle floor border owns arena mark");
    var g=Root("Dungeon boss arena perimeter");Part(g.transform,"dungeon/arena/"+theme,b=>{var c=DungeonThemeColor(theme);c.a=.45f;b.Ring(V(0,.012f,0),1,.008f,c,64);},Vector3.zero,true).localScale=new Vector3(radius*.94f,1,radius*.94f);return g;
   }
   public static GameObject CreateDungeonGate(ExploreMap map,int x,int z)
   {
+   if(map.theme=="castle")return CreateCastleGate(map,x,z);
    int theme=DungeonThemeAt(map,x,z);var key=new Vector2Int(x,z);var layout=DungeonLayout(map);bool open=map.GateOpen(x,z);
    if(!open)layout.closedSeen.Add(key);
    else if(!layout.openedAt.ContainsKey(key))layout.openedAt[key]=layout.closedSeen.Contains(key)?Time.time:Time.time-1;
@@ -57,6 +60,7 @@ namespace SpellDuel
   }
   static GameObject CreateDungeonBackdrop(ExploreMap map)
   {
+   if(map.theme=="castle")return CreateCastleBackdrop(map);
    int theme=map.nodeAreas?5:map.theme=="volcano"?0:map.theme=="sea"?2:map.theme=="arena"?3:4;
    var root=Root("Dungeon horizon "+theme);root.transform.localPosition=(map.World(0,0)+map.World(map.W-1,map.H-1))*.5f;
    float radius=Mathf.Max(map.W,map.H)*ExploreMap.CellSize;

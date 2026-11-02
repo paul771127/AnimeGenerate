@@ -1,6 +1,6 @@
 Shader "SpellDuel/DungeonExploreFloor"
 {
- Properties { _Theme("Theme",Float)=0 _Room("Room",Float)=0 _Accent("Accent",Color)=(1,.4,.2,1)  _MainTex("Ground detail",2D)="white"{} _PathColor("Lane",Color)=(.76,.59,.34,1) _VergeColor("Blocked verge",Color)=(.2,.32,.12,1) }
+ Properties { _CastleAtlas("Castle painted surfaces",2D)="white"{} _Theme("Theme",Float)=0 _Room("Room",Float)=0 _Accent("Accent",Color)=(1,.4,.2,1)  _MainTex("Ground detail",2D)="white"{} _PathColor("Lane",Color)=(.76,.59,.34,1) _VergeColor("Blocked verge",Color)=(.2,.32,.12,1) }
  SubShader {
  Tags { "Queue"="Transparent-35" "RenderType"="Transparent" }
  Cull Off ZWrite Off Blend SrcAlpha OneMinusSrcAlpha
@@ -9,7 +9,7 @@ Shader "SpellDuel/DungeonExploreFloor"
  #pragma fragment frag
  #pragma target 3.0
  #include "UnityCG.cginc"
- sampler2D _MainTex;float4 _PathColor,_VergeColor,_TexOffset,_Props[16];int _PropCount;float _Theme,_Room,_RoomEdge,_RegionTheme;float4 _Accent;
+ sampler2D _CastleAtlas;float4 _CastleCenter;sampler2D _MainTex;float4 _PathColor,_VergeColor,_TexOffset,_Props[16];int _PropCount;float _Theme,_Room,_RoomEdge,_RegionTheme;float4 _Accent;
  struct appdata {float4 vertex:POSITION;float2 uv:TEXCOORD0;float4 links:TEXCOORD1;};
  struct v2f {float4 pos:SV_POSITION;float2 p:TEXCOORD0;float4 links:TEXCOORD1;};
  v2f vert(appdata v){v2f o;o.pos=UnityObjectToClipPos(v.vertex);o.p=v.uv;o.links=v.links;return o;}
@@ -35,6 +35,17 @@ Shader "SpellDuel/DungeonExploreFloor"
  float rim=100;if(bit(_RoomEdge,1)>.5)rim=min(rim,h-i.p.x);if(bit(_RoomEdge,2)>.5)rim=min(rim,h+i.p.x);if(bit(_RoomEdge,4)>.5)rim=min(rim,h-i.p.y);if(bit(_RoomEdge,8)>.5)rim=min(rim,h+i.p.y);
  float border=(1-smoothstep(.13,.19,rim))*step(.055,rim)*_Room;
  float3 road=base*detail*lerp(.78,1,edge);road=lerp(road,_Accent.rgb*.7,border*.8);
+ if(_Theme>5.5){
+ float2 uv=frac(p/4);float2 auv=uv*.496+.002;
+ float3 marble=tex2D(_CastleAtlas,auv+float2(0,.5)).rgb;
+ float3 carpet=tex2D(_CastleAtlas,auv+float2(.5,.5)).rgb;
+ float horizontal=max(open.x,open.y),vertical=max(open.z,open.w);
+ float cd=_Room>.5?1.25-abs(p.y-_CastleCenter.y):max(horizontal>.5?.95-abs(i.p.y):-100,vertical>.5?.95-abs(i.p.x):-100);
+ float ca=smoothstep(-.025,.025,cd)*lane;
+ road=lerp(marble,carpet,ca);float piping=(1-smoothstep(.025,.065,abs(cd)))*lane;
+ road=lerp(road,float3(.83,.60,.24),max(piping,border));
+ return fixed4(lerp(road*.35,road,lane),1);
+ }
  float3 verge=base*.48;return fixed4(lerp(verge,road,lane),.98);
 
  }

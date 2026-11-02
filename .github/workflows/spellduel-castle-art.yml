@@ -1,0 +1,47 @@
+name: SpellDuel castle 2D art validation
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/spellduel-castle-art.yml'
+concurrency:
+  group: castle-art-${{ github.sha }}
+  # Finish the current visual proof even when another session pushes gameplay updates.
+  cancel-in-progress: false
+jobs:
+  explore-art:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: spellduel-unity/Library
+          key: Library-Android-${{ hashFiles('spellduel-unity/Packages/manifest.json', 'spellduel-unity/ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: Library-Android-
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: spellduel-unity
+          targetPlatform: Android
+          buildName: SpellDuel
+          buildMethod: SpellDuel.EditorTools.CastleArtPreview.Render
+          allowDirtyBuild: true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SpellDuel-castle-2d
+          path: |
+            spellduel-unity/snapshots/castle_audit.json
+            spellduel-unity/snapshots/castle_*.png
+          if-no-files-found: error

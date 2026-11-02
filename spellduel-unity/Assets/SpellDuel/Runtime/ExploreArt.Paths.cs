@@ -8,7 +8,7 @@ namespace SpellDuel
   // Map-aware wall factory rounds exposed convex corners without crossing the cell boundary.
   public static GameObject CreateWall(ExploreMap map,int x,int z)
   {
-   if(map==null)return null;var root=map.dungeon!=null?CreateDungeonWall(map,x,z):CreateWall(map.TerrainAt(x,z),x,z,ExploreMap.CellSize);int corners=0;
+   if(map==null)return null;if(map.theme=="castle")return CreateCastleWall(map,x,z);var root=map.dungeon!=null?CreateDungeonWall(map,x,z):CreateWall(map.TerrainAt(x,z),x,z,ExploreMap.CellSize);int corners=0;
    if(map.TerrainAt(x,z)==ExTerrain.Water){
     bool edgeX=map.TerrainAt(x-1,z)!=ExTerrain.Water||map.TerrainAt(x+1,z)!=ExTerrain.Water;
     bool edgeZ=map.TerrainAt(x,z-1)!=ExTerrain.Water||map.TerrainAt(x,z+1)!=ExTerrain.Water;
