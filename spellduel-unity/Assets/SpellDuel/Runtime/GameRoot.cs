@@ -331,7 +331,7 @@ namespace SpellDuel
             // 雙人職業對戰：SoloBattle 的連線模式（訊息經由這裡收送）
             solo.NetSend = m => { if (net.Connected && mode != Mode.Watch) Send(m); };   // 觀戰者不送戰鬥訊息
             solo.SharedClock = () => SharedTime;
-            // 單人每場戰鬥開打前：重新放置場地（剛放好場地、還沒打過仗的第一場不用再放）
+            // 單人：每場戰鬥開打前才放置場地（使用者要求：進遊戲不用先放場地，每一場開打前都放一次）
             // 戰鬥準備（站直、蹲下）發現地板抓錯：場地與世界原點一起上下移
             solo.RequestRelevel = d =>
             {
@@ -342,7 +342,8 @@ namespace SpellDuel
             };
             solo.RequestAreaConfirm = go =>
             {
-                if (mode != Mode.Solo || areaFresh) { areaFresh = false; go(); return; }
+                if (mode != Mode.Solo) { go(); return; }
+                areaFresh = false;
                 areaPreviewBattle = true;
                 BeginAreaPreview(() =>
                 {
@@ -528,9 +529,9 @@ namespace SpellDuel
                 if (battle) return;
                 if (!areaPreviewFirst) Log($"✅ 場地已放在新的位置");
             }
-            if (areaPreviewFirst)
+            if (areaPreviewFirst && !areaPreviewBattle)
             {
-                // 還沒有場地：沒有「取消」可以退回，只能回首頁
+                // 還沒有場地：沒有「取消」可以退回，只能回首頁（開戰前的放置可以取消，回到原本的畫面）
                 if (UiKit.Button(new Rect(pad, by + bh * 1.2f, pw, bh), "返回首頁", fsS))
                 { areaPreview = false; areaPreviewBattle = false; areaPreviewConfirm = null; playArea.HidePreview(); solo.Hide(); LeaveLobby(); }
             }
@@ -568,7 +569,7 @@ namespace SpellDuel
         {
             if (!remoteMode && !AreaMode && mode != Mode.Solo) return;
             // 同一個地方：房主自動建場地（收到別人的場地就不建）；並排對齊過才自動進選職業（不然會蓋住對齊按鈕）
-            bool canAutoArea = remoteMode || mode == Mode.Solo || (net.IsHost && !areaReceived && !areaOwner);
+            bool canAutoArea = remoteMode || (net.IsHost && !areaReceived && !areaOwner);   // 單人：不自動放場地，開打前才放（RequestAreaConfirm）
             if (canAutoArea && !autoArea && playArea.HasFloor && playArea.state != PlayArea.State.Done && playArea.state != PlayArea.State.Drawing && Tracking.Ok)
             {
                 autoArea = true;
@@ -633,7 +634,9 @@ namespace SpellDuel
                 playArea.Begin();
                 practiceDummy = false;
                 autoArea = false;
-                Log($"單人模式：面向空地慢慢移動手機掃地板，掃到就自動建好 {AutoAreaSize:0}m 場地");
+                playArea.Clear();
+                solo.ShowSetup();   // 不用先放場地，直接進主畫面；每場戰鬥開打前才放（使用者要求）
+                Log($"單人模式：每場戰鬥開打前才放置 {AutoAreaSize:0}m 場地（先慢慢移動手機讓鏡頭掃過地板）");
             }
             else if (!marker)
             {
