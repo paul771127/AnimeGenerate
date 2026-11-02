@@ -1046,10 +1046,12 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 最終原生來源26bc6e7相較d3d6852只有Editor預覽及檢查工具修正，Runtime／Resources完全一致。check_castle_art.py核對原生與平台來源、8張敵人PNG、1344個格、三張場景圖集及保護程式，0錯誤。場景與敵人圖示範原生圖已目視確認；手機效能與實機AR仍待設備測試。
 
 
-### 2026-11-02 月影古堡八種敵人重畫（製作完成，進行 Unity 驗證）
+### 2026-11-02 月影古堡八種敵人重畫（已完成與驗證）
 - 使用者確認「可愛但有戰鬥感、精緻服裝、大眼睛、約 2.5 頭身」；重新繪製八種敵人與六類動作的八方向，取代先前簡化幾何造型。
 - 8 張 2048×2048 RGBA 圖集，每種 168 格，共 1,344 格。保留 SpriteEnemyView 的方向順序、動作格數、6% 腳底留白與既有匯入設定；Runtime、戰鬥、連線與關卡資料均未改。
 - 定稿與各組動畫原圖、提示詞保存在 Tools/sprite_enemies/painted_sources/；機械切格、透明間隙辨識、預乘 alpha 等比縮圖由 pack_castle_painted.py 完成。
 - Docs/castle_2d_preview/enemy_redesign/ 包含新舊比較、八種全影格總覽、八方向動態 GIF 與 SHA-256 manifest。Editor 原生預覽補入各敵人六類動作、八方向與 PerRendererData 貼圖檢查。
 - check_castle_enemies.py：0 errors，檢查 1,344 格、704 空格、動作不重複、安全邊界、倒地輪廓、來源與 Runtime 不變。Roslyn 語法檢查 0 errors；這不代表 Unity 平台編譯已通過。
-- 2026-11-03 使用者已釋放空間（約 17 GB 可用），恢復提交與驗證。Android、iOS 與 Unity 原生預覽完成後補上證據。
+- 2026-11-03 恢復後已提交並推送美術 `8242dcb`。Unity 原生預覽 CI `41536524288` 成功：八種敵人六類動作與八方向貼圖正確、透明材質正常，城堡既有路線／快取／門／遮罩驗證通過；原生 PNG 在 Docs/castle_2d_preview/enemy_redesign/，場景總覽同步更新。
+- 雙平台 CI `41536527888`（同一美術 commit）成功：Android、iOS 匯出、Xcode 未簽署 IPA 全部通過。證據 native_ci.json／platform_ci.json 已更新；沒有宣稱已做手機實機遊玩測試。
+- 最終圖集驗證 check_castle_enemies.py 與城堡驗證 check_castle_art.py 均為 0 errors；本輪不增加事件、公開介面或連線欄位。
