@@ -26,7 +26,8 @@ namespace SpellDuel
         Transform quad; Mesh mesh; MeshRenderer mr; MaterialPropertyBlock block;
         readonly Vector2[] uv = new Vector2[4];
         Act act = Act.Idle; float actT, actDur, hurtUntil, deadAt = -1f, flashUntil;
-        int lastSlot = -1; bool dead; float walkPhase;
+        int lastSlot = -1; bool dead; float walkPhase, born;
+        public const float FadeIn = 0.6f;   // 出現時淡入（SpawnFade 換材質的透明度會被這裡每幀設的 _Color 蓋掉，所以自己做）
 
         static readonly Dictionary<string, Material> mats = new Dictionary<string, Material>();
         static Material MatFor(string sheet)
@@ -47,6 +48,7 @@ namespace SpellDuel
             v.def = d;
             var q = new GameObject("Billboard");
             q.transform.SetParent(go.transform, false);
+            q.transform.localPosition = Vector3.up * d.lift;
             v.quad = q.transform;
             v.mesh = new Mesh { name = "Sprite enemy quad" };
             float h = d.height, w = h, foot = h * FootPad;
@@ -59,7 +61,7 @@ namespace SpellDuel
             v.mr.sharedMaterial = MatFor(d.sheet);
             v.mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             v.mr.receiveShadows = false;
-            v.block = new MaterialPropertyBlock();
+            v.block = new MaterialPropertyBlock(); v.born = Time.time;
             v.LateUpdate();
             return v;
         }
@@ -112,6 +114,7 @@ namespace SpellDuel
             }
             // 受擊閃白、倒下淡出；場景偏暗時跟著暗一點
             float fade = deadAt >= 0f ? Mathf.Clamp01(1f - (Time.time - deadAt - 0.6f) / 0.5f) : 1f;
+            fade *= Mathf.Clamp01((Time.time - born) / FadeIn);
             var c = Time.time < flashUntil ? new Color(1f, 0.55f, 0.55f, fade) : new Color(1f, 1f, 1f, fade);
             // Sprites/Default 的 _MainTex 是 [PerRendererData]：用了 MaterialPropertyBlock 就一定要把圖也放進去，不然會取到預設的白圖（使用者回報「白背景」）
             mr.GetPropertyBlock(block);

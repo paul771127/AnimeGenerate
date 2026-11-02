@@ -87,7 +87,9 @@ namespace SpellDuel
             if (mon.wave > 0) OnExWave?.Invoke(mon.wave);   // 副本大地圖：強度照這隻怪所在地點的副本波次（SoloBattle 設定倍率）
             float hp = HpMul * (mon.guardian > 0 ? GuardianHpMul : mon.rare ? RareHpMul : 1f) * mon.hpFrac;
             var sv = mon.variant > 0 ? MonsterVariants.Get(mon.variant) : null;
+            castleSeed = mon.id;   // 城堡副本：同一隻怪每次放出來都是同一種 2D 敵人（Combat.SpriteMonsters.cs）
             var m = sv != null ? SpawnMinion(mon.home, 0, sv.baseKind, hp * sv.hp, DmgMul * sv.dmg, SpeedMul * sv.speed) : SpawnMinion(mon.home, 0, mon.kind, hp, DmgMul, SpeedMul);
+            castleSeed = -1;
             if (sv != null) ApplyVariant(m, sv.id);
             if (mon.hpFrac < 1f) { m.maxHp = Mathf.RoundToInt(m.maxHp / mon.hpFrac); m.hp = m.maxHp * mon.hpFrac; }
             m.exMon = mon; m.exAware = false; m.exPatrolIdx = 0; m.exPatrolDir = 1;

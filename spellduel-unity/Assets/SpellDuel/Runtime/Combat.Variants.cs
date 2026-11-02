@@ -92,7 +92,7 @@ namespace SpellDuel
             new VariantDef { id = 202, baseKind = 2,  name = "空殼騎士",   sprite = true, desc = "裡面沒有人的盔甲" },
             new VariantDef { id = 203, baseKind = 1,  name = "骷髏弓手",   sprite = true, desc = "戴著綠色兜帽的骷髏弓手" },
             new VariantDef { id = 204, baseKind = 6,  name = "提燈幽靈",   sprite = true, desc = "提著紫色燈籠的小幽靈" },
-            new VariantDef { id = 205, baseKind = 14, name = "吸血小蝙蝠", sprite = true, desc = "圓滾滾的紫色蝙蝠" },
+            new VariantDef { id = 205, baseKind = 8,  name = "吸血小蝙蝠", sprite = true, desc = "圓滾滾的紫色蝙蝠" },
             new VariantDef { id = 206, baseKind = 3,  name = "南瓜炸彈",   sprite = true, desc = "點著引信的南瓜燈" },
             new VariantDef { id = 207, baseKind = 4,  name = "小石像鬼",   sprite = true, desc = "把石塊舉過頭丟過來的石像鬼" },
             new VariantDef { id = 208, baseKind = 5,  name = "見習黑魔導", sprite = true, desc = "尖帽子底下只看得到黃色眼睛的小魔導士" },
