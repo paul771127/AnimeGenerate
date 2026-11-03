@@ -1,0 +1,3 @@
+{
+  "prompt": "Background extraction ONLY. Remove ALL white/paper/background and gray ground shadows from this sprite sheet. Return genuine RGBA transparent alpha=0 across ALL empty space, including gaps inside staff and between arms and body. Keep every sprite exactly in place, preserve all EIGHT columns and SIX rows, same pixels of painted shaman body/robes/staff wherever possible. Do not change artwork style, poses, scale, count, layout, no cropping. No white background, no checkerboard painted in image. The background must be completely transparent, not translucent white."
+}

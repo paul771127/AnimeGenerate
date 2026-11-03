@@ -1,0 +1,3 @@
+{
+  "prompt": "Repair this druid animation sheet: it has only seven columns. Redraw EXACTLY EIGHT columns by FIVE rows, forty complete full-body sprites. Direction columns: FRONT, FRONT RIGHT, RIGHT, BACK RIGHT, BACK, BACK LEFT, LEFT, FRONT LEFT. ALL EIGHT DIRECTIONS every row. Row1 preparing flower staff, row2 raised staff full windup, row3 emitting teal healing magic from hand, row4 sustaining, row5 recovery. Keep exact antler masked druid identity, robes, flowers, compact semi-chibi proportions. Maintain consistent scale, 15% clear gutters, fit antlers staff boots entirely inside cells. Fully transparent RGBA background, no text no grid, no ambient background. No missing columns."
+}

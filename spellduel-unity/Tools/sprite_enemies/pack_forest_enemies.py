@@ -73,10 +73,13 @@ def pack():
      c=frames[g][r*8+d].resize((192,192),Image.Resampling.LANCZOS);f.paste(c,(d*192,16),c)
     gif.append(f)
    gif[0].save(PREVIEW/f'{name}_{action}.gif',save_all=True,append_images=gif[1:],duration=150 if action=='walk' else [170,380,130,130,250],loop=0)
-  old=Image.open(OUT/'castle_knight.png').convert('RGBA').crop((0,0,128,128)).resize((256,256),Image.Resampling.NEAREST)
   roster.paste(frames['idle'][0],(ni*256,300),frames['idle'][0]);rd.text((ni*256+8,280),name,fill='white')
   report['enemies'][name]={'files':files,'scale_safety':safety,'source_edge_contacts':source_edges,'sources':{p.name:digest(p) for p in sorted((SOURCE/name).glob('*.png'))}}
  rd.text((4,3),'FOREST ENEMY ROSTER',fill='white');rd.text((4,288),'MANGA FANTASY',fill='white');roster.crop((0,280,max(1,len(IDS))*256,560)).save(PREVIEW/'roster.jpg',quality=95)
+ grid=Image.new('RGB',(6*256,((len(IDS)+5)//6)*280),(28,25,39))
+ for i in range(len(IDS)):
+  grid.paste(roster.crop((i*256,280,(i+1)*256,560)),((i%6)*256,(i//6)*280))
+ grid.save(PREVIEW/'roster_grid.jpg',quality=95)
  (PREVIEW/'atlas_manifest.json').write_text(json.dumps(report,indent=2))
  print('Packed',len(IDS),'forest enemies,',len(IDS)*6,'atlases,',len(IDS)*168,'cells')
 if __name__=='__main__':pack()

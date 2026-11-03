@@ -706,6 +706,277 @@
         "reaction.png": "3016c97763aa7d90eddb75ca6659524d69693f12c3374683052311803487c61b",
         "walk.png": "3094d5a2d134952a067bdd4d8c9dc87f73c20c3b269fe4b152e6065bfc4db1bd"
       }
+    },
+    "forest_ranger_archer": {
+      "files": {
+        "idle": {
+          "sha256": "a1215981087ae7c497558abf8b60d5d4225e01afb76685f27b6025cf5dd3ad4a",
+          "bytes": 2015377,
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "dd9a05fc57f80c035562360aa2a29d9c78671794c5c18b4a2aaa9735da360905",
+          "bytes": 2909078,
+          "rows": 6
+        },
+        "windup": {
+          "sha256": "cd9435e2c0b7b035beacf10d739ccaabe95f16bbcdd75ff1c1995030a8186d9c",
+          "bytes": 1039357,
+          "rows": 2
+        },
+        "attack": {
+          "sha256": "e6a8d6499f339bce6b77f210f62587eaa1b03476c2588efa80525be5f0bef221",
+          "bytes": 1578369,
+          "rows": 3
+        },
+        "hurt": {
+          "sha256": "1545846298d2120890566f215f6cabbfa4a5542bbbc4f28207e59ca82d6b5112",
+          "bytes": 914116,
+          "rows": 2
+        },
+        "die": {
+          "sha256": "c52880d73e622dce6e84316cbc7e3731325e715edc10c234c7851344eea0139a",
+          "bytes": 1557698,
+          "rows": 4
+        }
+      },
+      "scale_safety": 1,
+      "source_edge_contacts": [],
+      "sources": {
+        "combat.png": "f338cf70ab2bcbb7843988125352d09f5d153ad8b1151686ec1a490d4c0dd7ec",
+        "idle.png": "800dbad6280a7449dbc9d3e5d388b45dfebe71ec6a1a659d6c1f2cc7a2ebce56",
+        "master.png": "11bd9a834dff2b8341e384f4e0dcf2eadb992673be3d3e6bc6f50d866a81ea30",
+        "reaction.png": "9d376a96879735b1112ca73356908c67688af0bcacbfa82b69a81d050282bdbb",
+        "walk.png": "11802f3418c13c7be52360bdbe1a77501ab39a02a2ab8f90c8d3b483360f3d82"
+      }
+    },
+    "forest_druid": {
+      "files": {
+        "idle": {
+          "sha256": "f35c945a6c4a3171f0fe4592d04e5e6eacd51353c960a0ace87a0e72e27fab81",
+          "bytes": 2132188,
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "49da740a776c86f229a3b69d845f8c52be62406e47f40013ee494358b9dd0063",
+          "bytes": 3028498,
+          "rows": 6
+        },
+        "windup": {
+          "sha256": "41f6e353a73d78347bf25c27e4f86e9a45d3416fc8173f709f5fd771e4518184",
+          "bytes": 1149817,
+          "rows": 2
+        },
+        "attack": {
+          "sha256": "703c75c0264c37a049ea5527838f8197fc10ea742c6f213cbc7d932482cd14c9",
+          "bytes": 1784950,
+          "rows": 3
+        },
+        "hurt": {
+          "sha256": "6c1977db168b944891de17aec1d82830fba766106f356d19e7d2c70356b4c689",
+          "bytes": 1212064,
+          "rows": 2
+        },
+        "die": {
+          "sha256": "e142f3e4b709196bb7cbb8cef8a6b01303399aaf66ad4590ed9c3a953d5577fd",
+          "bytes": 1711504,
+          "rows": 4
+        }
+      },
+      "scale_safety": 1,
+      "source_edge_contacts": [
+        [
+          "walk",
+          7
+        ],
+        [
+          "combat",
+          0
+        ],
+        [
+          "combat",
+          1
+        ],
+        [
+          "combat",
+          2
+        ],
+        [
+          "combat",
+          4
+        ],
+        [
+          "combat",
+          6
+        ],
+        [
+          "combat",
+          7
+        ],
+        [
+          "combat",
+          8
+        ],
+        [
+          "combat",
+          9
+        ],
+        [
+          "combat",
+          10
+        ],
+        [
+          "combat",
+          12
+        ],
+        [
+          "combat",
+          13
+        ],
+        [
+          "combat",
+          14
+        ],
+        [
+          "combat",
+          15
+        ],
+        [
+          "combat",
+          16
+        ],
+        [
+          "combat",
+          17
+        ],
+        [
+          "combat",
+          18
+        ],
+        [
+          "combat",
+          19
+        ],
+        [
+          "combat",
+          20
+        ],
+        [
+          "combat",
+          21
+        ],
+        [
+          "combat",
+          22
+        ],
+        [
+          "combat",
+          23
+        ],
+        [
+          "combat",
+          24
+        ],
+        [
+          "combat",
+          25
+        ],
+        [
+          "combat",
+          26
+        ],
+        [
+          "combat",
+          28
+        ],
+        [
+          "combat",
+          29
+        ],
+        [
+          "combat",
+          30
+        ],
+        [
+          "combat",
+          31
+        ]
+      ],
+      "sources": {
+        "combat.png": "cc20f6fdfe83c8fdc372fd3067a50562e672c18b5321eb9f26dfc6b93d4a57d7",
+        "idle.png": "57c2b2cffcb21c03599a26dcff3a4a01ab29de36f3198f7df4c2a44fda34e6f1",
+        "master.png": "74328280e04057fd194540cd957b3ee00cfaa1066eee013decb8a5a267f41bb2",
+        "reaction.png": "c782ca0f797c79d311aef1beb57a0ed0b40bd83e021a24ff84c14e831133af29",
+        "walk.png": "8b0cc38160b6887c0f092c149b33868640d2339e75bc68b6ad5fa6256ef9a07a"
+      }
+    },
+    "forest_shaman": {
+      "files": {
+        "idle": {
+          "sha256": "51f43313c0f1100da95eeae781a4d3b363259ba4ae81dcf729dde1eeea7e60f1",
+          "bytes": 2505601,
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "48257840bc17547ecfc6dfefc83b1ef98ff63d9a151d56bc7bafb197bfa07a11",
+          "bytes": 3455627,
+          "rows": 6
+        },
+        "windup": {
+          "sha256": "80deab82373764e8fce8e47b3536d5b162d45a806d0a5ca5ccfbf0afad824ee6",
+          "bytes": 1213224,
+          "rows": 2
+        },
+        "attack": {
+          "sha256": "5362473ee9a46e417364e680218d0d0bc23befc9f9f78d0563b479ac03aba1fb",
+          "bytes": 1880255,
+          "rows": 3
+        },
+        "hurt": {
+          "sha256": "e2a4e61dc00e1b291ad2a50aa6eaab5497383486492233c063f9c82ca23d8ddc",
+          "bytes": 1245224,
+          "rows": 2
+        },
+        "die": {
+          "sha256": "7cb0e08d33da50ba3e49d1d9eac21f5b3d3aa16ae85552fe1514f801845ec11e",
+          "bytes": 1742428,
+          "rows": 4
+        }
+      },
+      "scale_safety": 1,
+      "source_edge_contacts": [
+        [
+          "combat",
+          8
+        ],
+        [
+          "combat",
+          9
+        ],
+        [
+          "combat",
+          10
+        ],
+        [
+          "combat",
+          16
+        ],
+        [
+          "combat",
+          17
+        ],
+        [
+          "combat",
+          18
+        ]
+      ],
+      "sources": {
+        "combat.png": "8439688f1db455358d92fd037d983fb85c3d4f015a732b651ecfb19f77b8204c",
+        "idle.png": "7b2264013b9853b5d95480063055afd700f58d07f38ce64d23ef98a0772dfdb4",
+        "master.png": "4fbf0d732babee3128ca5783fa3b4972bfd2749ffe3ad2cbacc16fe3b729f3dc",
+        "reaction.png": "00626b68c6dde7e512d38d165308685df5039de3889d908009903b0bd948cf85",
+        "walk.png": "ae5293724bd63df17ec8447aa4997a1c23d68098deb7612360a933eb04caab21"
+      }
     }
   }
 }

@@ -20,3 +20,16 @@
 
 
 追加完成：疾風翠豹、竄林孢子菇、霧林斥候。累計 15 / 18 隻；詳見 validation.json。
+
+
+## 全部交付
+18 隻全部完成，共 108 張 RGBA 動作圖集、3024 格；castle_boss 另外 11 張、272 格。森林圖集約 191.34 MiB，首領約 13.21 MiB。
+
+使用內建 image_gen 繪製，母圖、各組動作提示詞和修正提示詞保存在 Tools/sprite_enemies/forest_boss_sources/。Python 僅負責切格、縮放、打包與預覽組版，沒有鏡像補方向或程序生成替代姿勢。
+
+roster_grid.jpg 為三排全員總覽，每隻有 directions.jpg、all_frames.jpg、walk.gif、attack.gif。後十五隻遵照使用者追加要求採稍微 Q 版的緊湊比例；首三隻與首領維持先前確認畫風。
+
+執行 check_forest_enemies.py（完整模式）與 check_forest_boss.py：0 錯誤。未變更 Runtime 或玩法。此環境未執行 Unity；平台建置以 GitHub Actions 為準。
+
+
+追加完成：林間弓手、森林德魯伊、林語薩滿。累計 18 / 18 隻；詳見 validation.json。
