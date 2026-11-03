@@ -12,6 +12,12 @@ namespace SpellDuel
     ///   每一格裡角色的腳底在格子底邊往上 FootPad（0.06）的地方、水平置中；一格的高度對應 def.height 公尺。
     ///   顯示：一片永遠正對鏡頭（只轉水平方向）的四邊形，依面向與鏡頭的夾角選方向；Sprites/Default 材質（不受光，跟著場景亮度另外調色）。
     ///   介面跟 MinionRig 一樣（MoveSpeed、Windup、Attack、PlayHit、SetDead），由 SoloBattle 轉過來。
+    ///
+    ///   高解析度格式（優先用；6 張都在才用，不然退回上面的單張圖）：每個動作一張
+    ///     Resources/SpriteEnemies/{sheet}_{idle|walk|windup|attack|hurt|die}.png
+    ///     橫的 8 格＝方向 0～7（同上），直的每一列＝這個動作的第幾張（最上面＝第 0 張）；每格正方形，邊長＝圖寬 ÷ 8（建議 256）。
+    ///     例：walk 是 6 張 → 2048×1536；idle、die 4 張 → 2048×1024；windup、hurt 2 張 → 2048×512；attack 3 張 → 2048×768。
+    ///     腳底位置、高度的規則跟單張圖一樣（腳底在格子底邊往上 6%）。
     /// </summary>
     public sealed class SpriteEnemyView : MonoBehaviour
     {
@@ -29,7 +35,24 @@ namespace SpellDuel
         int lastSlot = -1; bool dead; float walkPhase, born;
         public const float FadeIn = 0.6f;   // 出現時淡入（SpawnFade 換材質的透明度會被這裡每幀設的 _Color 蓋掉，所以自己做）
 
+        public static readonly string[] ActNames = { "idle", "walk", "windup", "attack", "hurt", "die" };
         static readonly Dictionary<string, Material> mats = new Dictionary<string, Material>();
+        static readonly Dictionary<string, Texture2D[]> hiRes = new Dictionary<string, Texture2D[]>();
+        /// <summary>高解析度的每動作圖（6 張都在才回傳；沒有＝null，用單張圖）</summary>
+        static Texture2D[] HiResFor(string sheet)
+        {
+            if (hiRes.TryGetValue(sheet, out var t)) return t;
+            t = new Texture2D[ActNames.Length];
+            for (int i = 0; i < t.Length; i++)
+            {
+                t[i] = Resources.Load<Texture2D>("SpriteEnemies/" + sheet + "_" + ActNames[i]);
+                if (!t[i]) { t = null; break; }
+                t[i].wrapMode = TextureWrapMode.Clamp; t[i].filterMode = FilterMode.Bilinear;
+            }
+            hiRes[sheet] = t;
+            return t;
+        }
+        Texture2D[] hi;
         static Material MatFor(string sheet)
         {
             if (mats.TryGetValue(sheet, out var m) && m) return m;
@@ -50,8 +73,9 @@ namespace SpellDuel
             q.transform.SetParent(go.transform, false);
             q.transform.localPosition = Vector3.up * d.lift;
             v.quad = q.transform;
+            v.hi = HiResFor(d.sheet);
             v.mesh = new Mesh { name = "Sprite enemy quad" };
-            float h = d.height, w = h, foot = h * FootPad;
+            float h = v.hi != null && d.hiHeight > 0f ? d.hiHeight : d.height, w = h, foot = h * FootPad;
             v.mesh.vertices = new[] { new Vector3(-w / 2f, -foot, 0f), new Vector3(w / 2f, -foot, 0f), new Vector3(w / 2f, h - foot, 0f), new Vector3(-w / 2f, h - foot, 0f) };
             v.mesh.triangles = new[] { 0, 2, 1, 0, 3, 2 };
             v.mesh.uv = new Vector2[4];
@@ -106,10 +130,21 @@ namespace SpellDuel
             if (slot != lastSlot)
             {
                 lastSlot = slot;
-                int cx = slot % Grid, cy = slot / Grid;
-                float u0 = cx / (float)Grid, u1 = (cx + 1) / (float)Grid, v1 = 1f - cy / (float)Grid, v0 = 1f - (cy + 1) / (float)Grid;
-                const float inset = 0.5f / (Cell * Grid);   // 往內縮半個像素，避免取到隔壁格
-                uv[0] = new Vector2(u0 + inset, v0 + inset); uv[1] = new Vector2(u1 - inset, v0 + inset); uv[2] = new Vector2(u1 - inset, v1 - inset); uv[3] = new Vector2(u0 + inset, v1 - inset);
+                float u0, u1, v0, v1, ix, iy;
+                if (hi != null)
+                {
+                    // 每動作一張：橫＝方向、直＝第幾張（最上面是第 0 張）
+                    var t = hi[(int)a]; int rows = Frames[(int)a], dir = slot % Dirs;
+                    u0 = dir / (float)Dirs; u1 = (dir + 1) / (float)Dirs; v1 = 1f - frame / (float)rows; v0 = 1f - (frame + 1) / (float)rows;
+                    ix = 0.5f / t.width; iy = 0.5f / t.height;
+                }
+                else
+                {
+                    int cx = slot % Grid, cy = slot / Grid;
+                    u0 = cx / (float)Grid; u1 = (cx + 1) / (float)Grid; v1 = 1f - cy / (float)Grid; v0 = 1f - (cy + 1) / (float)Grid;
+                    ix = iy = 0.5f / (Cell * Grid);   // 往內縮半個像素，避免取到隔壁格
+                }
+                uv[0] = new Vector2(u0 + ix, v0 + iy); uv[1] = new Vector2(u1 - ix, v0 + iy); uv[2] = new Vector2(u1 - ix, v1 - iy); uv[3] = new Vector2(u0 + ix, v1 - iy);
                 mesh.uv = uv;
             }
             // 受擊閃白、倒下淡出；場景偏暗時跟著暗一點
@@ -118,7 +153,7 @@ namespace SpellDuel
             var c = Time.time < flashUntil ? new Color(1f, 0.55f, 0.55f, fade) : new Color(1f, 1f, 1f, fade);
             // Sprites/Default 的 _MainTex 是 [PerRendererData]：用了 MaterialPropertyBlock 就一定要把圖也放進去，不然會取到預設的白圖（使用者回報「白背景」）
             mr.GetPropertyBlock(block);
-            var tex = mr.sharedMaterial ? mr.sharedMaterial.mainTexture : null;
+            Texture tex = hi != null ? hi[(int)a] : mr.sharedMaterial ? mr.sharedMaterial.mainTexture : null;
             if (tex) block.SetTexture("_MainTex", tex);
             block.SetColor("_Color", c); mr.SetPropertyBlock(block);
         }

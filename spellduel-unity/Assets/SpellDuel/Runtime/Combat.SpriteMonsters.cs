@@ -13,6 +13,7 @@ namespace SpellDuel
         public int id, baseKind, weight = 1;
         public string sheet, name, desc;
         public float hp = 1f, dmg = 1f, speed = 1f, height = 1.6f;   // height＝一格圖對應的世界高度（公尺）
+        public float hiHeight;   // 高解析度每動作圖（FF 風、正常比例）的一格高度（公尺）；0＝跟 height 一樣
         public float lift;   // 圖往上浮多少公尺（蝙蝠：AI 在地上衝，圖畫在低空）
         public bool ranged;
     }
@@ -21,14 +22,14 @@ namespace SpellDuel
     {
         public static readonly SpriteMonsterDef[] All =
         {
-            new SpriteMonsterDef { id = 201, baseKind = 0,  sheet = "castle_skeleton", name = "骷髏劍兵",   weight = 4, desc = "拿著生鏽短劍和小圓盾的骷髏，喀啦喀啦地衝過來" },
-            new SpriteMonsterDef { id = 202, baseKind = 2,  sheet = "castle_knight",   name = "空殼騎士",   weight = 2, hp = 1.2f, height = 2.0f, desc = "裡面沒有人的盔甲，頭盔縫裡亮著兩點藍光" },
-            new SpriteMonsterDef { id = 203, baseKind = 1,  sheet = "castle_archer",   name = "骷髏弓手",   weight = 3, ranged = true, desc = "戴著綠色兜帽的骷髏，躲在後面放箭" },
-            new SpriteMonsterDef { id = 204, baseKind = 6,  sheet = "castle_ghost",    name = "提燈幽靈",   weight = 2, ranged = true, desc = "提著紫色燈籠飄來飄去的小幽靈，會瞬間移動" },
-            new SpriteMonsterDef { id = 205, baseKind = 8,  sheet = "castle_bat",      name = "吸血小蝙蝠", weight = 2, height = 1.4f, lift = 0.5f, desc = "圓滾滾的紫色蝙蝠，低空衝過來咬人" },   // 原本用俯衝海鳥（飛到 3.5～5m 高），室內看起來很怪、還會飛過牆頂 → 改用衝鋒的 AI
-            new SpriteMonsterDef { id = 206, baseKind = 3,  sheet = "castle_pumpkin",  name = "南瓜炸彈",   weight = 1, height = 1.4f, desc = "點著引信的南瓜燈，跑到你腳邊就爆炸" },
-            new SpriteMonsterDef { id = 207, baseKind = 4,  sheet = "castle_gargoyle", name = "小石像鬼",   weight = 2, ranged = true, desc = "從屋簷上跳下來的石像鬼，把石塊舉過頭丟過來" },
-            new SpriteMonsterDef { id = 208, baseKind = 5,  sheet = "castle_mage",     name = "見習黑魔導", weight = 2, ranged = true, desc = "尖帽子底下只看得到兩隻黃色眼睛，法杖的寶珠會發光" },
+            new SpriteMonsterDef { id = 201, baseKind = 0,  sheet = "castle_skeleton", name = "骷髏劍兵",   weight = 4, hiHeight = 2.0f, desc = "拿著生鏽短劍和小圓盾的骷髏，喀啦喀啦地衝過來" },
+            new SpriteMonsterDef { id = 202, baseKind = 2,  sheet = "castle_knight",   name = "空殼騎士",   weight = 2, hp = 1.2f, height = 2.0f, hiHeight = 2.4f, desc = "裡面沒有人的盔甲，頭盔縫裡亮著兩點藍光" },
+            new SpriteMonsterDef { id = 203, baseKind = 1,  sheet = "castle_archer",   name = "骷髏弓手",   weight = 3, hiHeight = 2.0f, ranged = true, desc = "戴著綠色兜帽的骷髏，躲在後面放箭" },
+            new SpriteMonsterDef { id = 204, baseKind = 6,  sheet = "castle_ghost",    name = "提燈幽靈",   weight = 2, hiHeight = 2.0f, ranged = true, desc = "提著紫色燈籠飄來飄去的小幽靈，會瞬間移動" },
+            new SpriteMonsterDef { id = 205, baseKind = 8,  sheet = "castle_bat",      name = "吸血小蝙蝠", weight = 2, height = 1.4f, hiHeight = 1.6f, lift = 0.5f, desc = "圓滾滾的紫色蝙蝠，低空衝過來咬人" },   // 原本用俯衝海鳥（飛到 3.5～5m 高），室內看起來很怪、還會飛過牆頂 → 改用衝鋒的 AI
+            new SpriteMonsterDef { id = 206, baseKind = 3,  sheet = "castle_pumpkin",  name = "南瓜炸彈",   weight = 1, height = 1.4f, hiHeight = 1.6f, desc = "點著引信的南瓜燈，跑到你腳邊就爆炸" },
+            new SpriteMonsterDef { id = 207, baseKind = 4,  sheet = "castle_gargoyle", name = "小石像鬼",   weight = 2, hiHeight = 1.8f, ranged = true, desc = "從屋簷上跳下來的石像鬼，把石塊舉過頭丟過來" },
+            new SpriteMonsterDef { id = 208, baseKind = 5,  sheet = "castle_mage",     name = "見習黑魔導", weight = 2, hiHeight = 2.0f, ranged = true, desc = "尖帽子底下只看得到兩隻黃色眼睛，法杖的寶珠會發光" },
         };
         public static SpriteMonsterDef Get(int id) { foreach (var d in All) if (d.id == id) return d; return null; }
         public static bool Has(int id) => id >= 201 && id <= 208;
