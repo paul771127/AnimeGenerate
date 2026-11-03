@@ -1,0 +1,110 @@
+[
+  [
+    "spitter",
+    "毒液噴花",
+    "Giant poisonous purple-green flower monster, layered veined petals, circular fanged maw in flower center, articulated walking root tendrils, no human face.",
+    "Bud leans backward and swells, then sprays compact poison droplets forward; recoils and recovers."
+  ],
+  [
+    "boar",
+    "荊棘衝鋒獸",
+    "Natural proportion muscular quadruped wild boar monster, woody tusks, dense thorn ridges growing along spine, mossy dark green bristles, glowing green eyes; four jointed legs with upper/lower segments.",
+    "Paw ground, lower tusked head, then lunge into fierce forward ram."
+  ],
+  [
+    "vinemage",
+    "藤蔓術士",
+    "Normal adult slender human forest sorcerer, sinister carved bark mask, woven vine long robe, luminous seed-topped wooden staff in right hand, deep green and poison purple accents.",
+    "Raise seed staff and charge, thrust staff to shoot compact vine magic, followthrough and recover."
+  ],
+  [
+    "chomper",
+    "食人花",
+    "Large carnivorous venus flytrap monster, two hinged toothed jaw leaves, thick flexible stem torso, two broad leaf arms, rooted walking feet, mottled green with purple mouth.",
+    "Open giant mouth wide and flex stem backward, then snap mouth forward to bite."
+  ],
+  [
+    "sporecap",
+    "孢子菇",
+    "Menacing stout mushroom humanoid, broad glowing mottled fungus cap, two small yellow eyes in shadow under cap, fibrous stem limbs, moss green and poisonous purple gills; no cute face.",
+    "Inflate luminous mushroom cap then expel a compact spore puff and recover."
+  ],
+  [
+    "seedgunner",
+    "種子槍手",
+    "Peapod plant gunner, upright botanical body, long tubular hollow seedpod head aimed forward, overlapping green pod armor and vine limbs, deep forest green/purple seed chambers, no firearm.",
+    "Aim tubular pod head, swell seed chamber, then recoil in rapid seed burst."
+  ],
+  [
+    "rootbeast",
+    "古根撼地獸",
+    "Ancient quadruped root giant, body braided intertwining thick roots, four strong articulated claw-root legs, stumpy tree crown head, branch antlers, moss and tiny trees on back, yellow-green sap fissures.",
+    "Raise BOTH front legs high, rear back, then slam forelegs onto ground and recoil."
+  ],
+  [
+    "elite_guardian",
+    "苔甲守根者",
+    "Elite giant forest sentinel, mature normal humanoid proportions, thick moss-covered bark armor, carved wood face, enormous layered wooden shield on LEFT arm, heavy rooted legs.",
+    "Raise wooden shield defensively then drive shield forward with force."
+  ],
+  [
+    "elite_sniper",
+    "棘莢狙擊手",
+    "Elite tall slender plant humanoid sniper, thorned hood, narrow glowing eyes, long thornpod crossbow made of dark twisted wood held in both hands, leaf camouflage, quiverlike seedpod pack.",
+    "Slowly level long thorn crossbow and aim precisely, then powerful recoil from one shot."
+  ],
+  [
+    "elite_priest",
+    "夢孢司祭",
+    "Elite mushroom priest, enormous luminous layered mushroom crown, long root-woven ceremonial robes, narrow eyes in shadow, glowing teal/yellow-green spores, purple gills, no staff.",
+    "Raise both hands slowly overhead, release compact blessing/curse spore glow, lower hands."
+  ],
+  [
+    "elite_brood",
+    "菌冠育巢者",
+    "Elite fungus humanoid broodkeeper, hunched shoulders, multiple swollen fungal nursery sacs fused on BACK, bark ribs and mycelium straps, small yellow eyes under irregular cap, deep purple and moss green.",
+    "Back nursery sacs swell and pulse, lean forward releasing one tiny fungal spawn, recover."
+  ],
+  [
+    "elite_hunter",
+    "翠翼巡獵者",
+    "Elite athletic normal-proportion humanoid forest hunter, emerald translucent segmented insect wings on back, leaf and chitin armor, masked stern face, TWO curved blades one in each hand.",
+    "Cross both blades before chest, crouch, then lunging dual-blade slash."
+  ],
+  [
+    "swift_panther",
+    "疾風翠豹",
+    "Rare natural athletic emerald panther, believable feline anatomy FOUR jointed legs with muscular thighs calves and paws, leaf-shaped fur patterns, vine tail, bright teal eyes, flowing small wind accents.",
+    "Lower to feline stalking crouch then powerful forward pouncing bite."
+  ],
+  [
+    "swift_spore",
+    "竄林孢子菇",
+    "Rare agile small mushroom humanoid runner, aerodynamic swept cap with luminous trailing gills, long flexible root legs, narrow sharp yellow eyes under cap, teal light accents, no cute smile.",
+    "Crouch into fast sprint then erupt in a compact glowing spore burst."
+  ],
+  [
+    "ranger_scout",
+    "霧林斥候",
+    "Normal adult humanoid forest scout, mist-gray hooded cloak, fitted layered dark green leather, cloth lower-face mask, sharp watchful eyes, short dagger in right hand, agile light boots.",
+    "Lower body and draw dagger back, then fast precise forward stab."
+  ],
+  [
+    "ranger_archer",
+    "林間弓手",
+    "Normal adult humanoid forest archer, dark green leather armor, deep hood concealing face, stern narrow eyes, longbow in LEFT hand and arrow drawn RIGHT, back quiver, asymmetric leaf cape.",
+    "Raise longbow, draw arrow fully, release, followthrough, recover."
+  ],
+  [
+    "druid",
+    "森林德魯伊",
+    "Normal adult humanoid druid with branching antler headdress, solemn masked weathered face, layered moss-green robes, wood staff wound with luminous flowers in right hand, bark and leaf jewelry.",
+    "Raise flower staff overhead then channel compact teal healing glow around hands."
+  ],
+  [
+    "shaman",
+    "林語薩滿",
+    "Normal adult humanoid forest shaman, bone and feather ornaments, carved wooden ritual mask, woven forest robes, rattling bell staff in right hand, dangling seed charms, teal and bark brown.",
+    "Lift and shake bell staff in escalating rhythm, release compact haste magic glow then recover."
+  ]
+]

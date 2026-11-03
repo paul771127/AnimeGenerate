@@ -1068,3 +1068,9 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 依 CODEX_TASK_FOREST_AND_CASTLE_BOSS.md 完成 castle_boss 的 11 張圖集與 meta：6 基本動作、5 招式專用動作，共 272 格；快步逼近、斜斬、橫掃、腰高劍氣、爪手火球與碎甲倒地。
 - Docs/castle_2d_preview/boss/ 提供八方向、全影格及五組動作 GIF；原圖與提示詞保存在 Tools/sprite_enemies/forest_boss_sources/castle_boss/。
 - check_forest_boss.py 0 errors。僅美術／工具／文件，未修改 Runtime、戰鬥或連線；平台建置仍由推送後 CI 驗證。森林 18 隻另外分批交付。
+
+
+### 2026-11-04 森林 2D 第一批
+- 完成毒液噴花、荊棘衝鋒獸、藤蔓術士的六種八方向動作，18 張圖集、504 格與 meta。補正術士受擊／倒地原圖缺少的方向。
+- Docs/forest_2d_preview/ 提供方向、全影格、走路／攻擊 GIF；來源及提示詞保存在 forest_boss_sources。check_forest_enemies.py --partial 驗證已完成批次。
+- 使用者追加「剩下敵人稍微 Q 版一點」，後續 15 隻依約 4.5～5 頭身／生物頭略放大處理，保留兇狠表情。未改玩法程式。
