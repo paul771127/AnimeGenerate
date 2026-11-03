@@ -8,3 +8,6 @@
 - *_directions.jpg、*_walk.gif、*_attack.gif 與 *_all_frames.jpg 供方向與動作檢視。manifest 含來源與輸出 SHA。
 - 2026-11-04 使用者追加：其餘 15 隻稍微 Q 一點。後續人形約 4.5～5 頭身、生物頭略放大約 12%，保持精緻與戰鬥表情，不採 2.5 頭身幼兒風。前三隻及首領維持已完成比例。
 - 不修改 Runtime、戰鬥、資料或網路。格式檢查不代表 Unity 平台編譯或手機實機驗收。
+
+
+第二批：forest_chomper、forest_sporecap、forest_seedgunner 已完成；採用使用者要求的稍微 Q 版比例。累計六隻，格式與透明度驗證通過。
