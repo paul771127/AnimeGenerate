@@ -216,7 +216,7 @@ namespace SpellDuel
 
             if (me.charging != null) { TryRelease(tgt); return; }
             if (b.now < nextThink) return;
-            nextThink = b.now + (Agile ? Rand(0.7f, 1.3f) * (Hasted ? 0.6f : 1f) : Enraged ? Rand(1.2f, 2f) : Rand(2f, 3f)) * thinkScale / (1f + PartyCast * extra) * (storyIntense ? StoryThinkMul : 1f);
+            nextThink = b.now + (Agile ? (Hasted ? Rand(0.12f, 0.25f) : Rand(0.7f, 1.3f)) : Enraged ? Rand(1.2f, 2f) : Rand(2f, 3f)) * thinkScale / (1f + PartyCast * extra) * (storyIntense ? StoryThinkMul : 1f);
 
             // 依距離挑招：近身多用地裂／橫掃，遠距離用熔岩彈／落石雨
             float d = Battle.FlatDistance(me.Feet, tgt.Feet);
@@ -230,6 +230,7 @@ namespace SpellDuel
                     if (m > 1f && cdu - b.now <= s.cooldown * me.cdMul * (1f - 1f / m)) me.cooldownUntil[s.id] = b.now;
                 }
                 if (!Ready(s)) continue;
+                if (Agile && Hasted && s.id != "k_strike") continue;   // 魔劍士加速中：只追著玩家普攻（使用者要求）
                 bool close = d < CloseDistance;
                 float w = s.id switch
                 {
@@ -259,7 +260,7 @@ namespace SpellDuel
                     "x_rootwave" => Last == "p_whip" ? 9f : 2.5f,
                     "x_ripple" => close ? 4f : 1f,
                     // 魔劍士惡靈（敏捷型）：近身普攻、重斬；離遠了劍氣、連彈；加速
-                    "k_strike" => d < 2.6f ? 6f : 0f,
+                    "k_strike" => d < 2.6f || Hasted && d < 3f ? 6f : 0f,
                     "k_cleave" => d < 3.2f ? 3f : 0f,
                     "k_wave" => d > 3.5f ? 3.5f : 0.3f,
                     "k_fire" => d > 3f ? 3f : 0.3f,
@@ -348,16 +349,16 @@ namespace SpellDuel
         {
             var c = me.charging;
             if (c != null && c.areaRadius > 0f) return;   // 斬擊蓄力：站定（紅色扇形固定）
-            float want = c != null ? AgileRangedKeep : AgileWant;
+            float want = Hasted ? Keep : c != null ? AgileRangedKeep : AgileWant;   // 加速中：貼身追著打
             var feet = me.Feet; feet.y = 0f;
             var toMe = Fighter.Flat(feet - tgt.Feet); if (toMe == Vector3.zero) toMe = Vector3.forward;
             float cur = Battle.FlatDistance(feet, tgt.Feet);
             // 想站的位置：離目標 want 公尺，再沿著目標繞一點（左右換邊）
-            float side = Mathf.Sin(b.now * 0.9f + me.minionId) * 35f;
+            float side = Mathf.Sin(b.now * 0.9f + me.minionId) * (Hasted ? 10f : 35f);
             var dest = tgt.Feet + Battle.RotateY(toMe, side) * Mathf.Max(Keep, want); dest.y = 0f;
             var delta = dest - feet; float dist = delta.magnitude;
             if (dist < 0.15f || (Mathf.Abs(cur - want) < 0.4f && c == null && dist < 0.8f)) return;
-            float speed = AgileSpeed * (Hasted ? 1.25f : 1f) * (Enraged ? 1.15f : 1f);
+            float speed = AgileSpeed * (Hasted ? 1.4f : 1f) * (Enraged ? 1.15f : 1f);
             var next = feet + delta / dist * Mathf.Min(dist, speed * dt);
             if (inside(next)) me.head = new Vector3(next.x, me.head.y, next.z);
             else { var home = center - feet; home.y = 0f; if (home.sqrMagnitude > 1e-4f) me.head += home.normalized * speed * dt; }

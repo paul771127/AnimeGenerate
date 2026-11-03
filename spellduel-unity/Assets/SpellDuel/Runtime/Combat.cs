@@ -2813,7 +2813,7 @@ namespace SpellDuel
             if (s.id == "wave" && f.waveFreeUntil > now) { f.waveFreeUntil = 0f; Emit("buff", f.Chest, s.color, "劍意：劍氣免費！"); }
             f.mp -= mpCost;
             if (hpCost > 0) { f.hp = Mathf.Max(1f, f.hp - hpCost); Emit("buff", f.Chest, new Color(1f, 0.4f, 0.4f), $"殉道 -{hpCost} HP"); }
-            f.cooldownUntil[s.id] = now + s.cooldown * (s.cls == "basic" ? f.basicCdMul : f.cdMul * (f.focusUntil > now ? 0.5f : 1f)) * CdFactor(f);   // 普攻看敏捷、技能看精神
+            f.cooldownUntil[s.id] = now + s.cooldown * (s.cls == "basic" ? f.basicCdMul : f.cdMul * (f.focusUntil > now ? 0.5f : 1f)) * CdFactor(f) * (s.id == "k_strike" ? f.HasteMul(now) : 1f);   // 普攻看敏捷、技能看精神；魔劍士加速中普攻冷卻減半
             { float cs = Sty(f, PassiveKind.CastShield); if (cs > 0f && s.cls != "basic") GrantShield(f, f.maxHp * cs, CastShieldDur, "施法護盾"); }   // 流派被動：每放一個技能得到護盾
             f.charging = null;
             if (s.id == "slash" || s.id == "nv_swing")   // 初心者的木棍揮擊和斬擊一樣砍前方半球
@@ -2999,7 +2999,7 @@ namespace SpellDuel
             if (s.id == "k_haste")   // 魔劍士：攻擊加速（蓄力變快；BossAI 出招間隔也縮短）
             {
                 f.teamHasteUntil = now + s.buffDur; f.teamHaste = s.buffAmount / 100f;
-                Emit("buff", f.Chest, s.color, $"{f.name}：{s.name}！攻擊加速");
+                Emit("buff", f.Chest, s.color, $"{f.name}：{s.name}！30 秒內普攻快兩倍");
                 return;
             }
             if (f == player) NoteBuff(f, s);   // 畫面：自己的增益特效
