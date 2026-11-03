@@ -1,0 +1,110 @@
+[
+  [
+    "spitter",
+    "毒液噴花",
+    "Elegant tall poison flower, curved teal stem, wine-purple trumpet petals with a few fine veins, small ivory fangs, two leaf arms and three articulated root feet. No eyes or humanoid torso.",
+    "Bud leans backward and swells, then sprays compact poison droplets forward; recoils and recovers."
+  ],
+  [
+    "boar",
+    "荊棘衝鋒獸",
+    "Mature russet boar, muscular shoulders and hindquarters, four jointed legs with hooves, short fur tufts, ivory tusks and cream snout, three large moss-green thorn plates along spine. Focused narrow eyes, powerful compact quadruped.",
+    "Paw ground, lower tusked head, then lunge into fierce forward ram."
+  ],
+  [
+    "vinemage",
+    "藤蔓術士",
+    "Mysterious 5-head humanoid vine mage in deep-teal flowing folded cloak, pale oval wooden mask with two dark eye slits, layered collar, single lime vine sash, leather wrist wraps, amber seed orb staff in RIGHT hand. No leaf armor.",
+    "Raise seed staff and charge, thrust staff to shoot compact vine magic, followthrough and recover."
+  ],
+  [
+    "chomper",
+    "食人花",
+    "Lime-green carnivorous flytrap: two huge hinged jaw leaves with six ivory teeth and salmon interior, slender segmented neck, two broad leaf hands with few veins, articulated walking roots. Hungry alert botanical creature, no humanoid face.",
+    "Open giant mouth wide and flex stem backward, then snap mouth forward to bite."
+  ],
+  [
+    "sporecap",
+    "孢子菇",
+    "Charming orange mushroom adventurer, cream slim stem body, articulated arms and legs, orange cap with THREE cream spots and subtle gills, refined dark anime eyes and determined small mouth, russet scarf, brown leather wrist bands and boots, single small belt pouch. Not a baby, 3.5-head proportions excluding cap.",
+    "Inflate luminous mushroom cap then expel a compact spore puff and recover."
+  ],
+  [
+    "seedgunner",
+    "種子槍手",
+    "Upright green seedpod gunner, modest short hollow muzzle, focused large anime eyes, swept folded-leaf crest, three smooth pea lobes on upper torso, articulated leaf arms and legs, subtle leaf-vein structure. Slim agile proportions rather than round baby, stern but endearing.",
+    "Aim tubular pod head, swell seed chamber, then recoil in rapid seed burst."
+  ],
+  [
+    "rootbeast",
+    "古根撼地獸",
+    "Ancient root beast: imposing four-legged broad wooden tortoise-bear, smooth dark walnut trunk body with FOUR thick articulated root legs, flat moss saddle on back carrying THREE tiny triangular saplings, blunt stump head with two short branch horns and amber eye slits. One yellow sap seam down forehead. Sparse large bark plates, no tangled vines.",
+    "Raise BOTH front legs high, rear back, then slam forelegs onto ground and recoil."
+  ],
+  [
+    "elite_guardian",
+    "苔甲守根者",
+    "Moss guardian: broad sturdy square-bodied tree sentinel, warm ochre wooden block-like armor with rounded edges, dark green moss shoulder pads, low broad head with cyan slit eyes. ONE enormous round cut-log shield on LEFT arm, free heavy right fist. Short wide rooted legs. No cape, no antlers.",
+    "Raise wooden shield defensively then drive shield forward with force."
+  ],
+  [
+    "elite_sniper",
+    "棘莢狙擊手",
+    "Thorn sniper: slender angular insect-like plant marksman, narrow burgundy hood and dark burgundy tunic, pale mint arms, ONE long ivory thorn-pod crossbow held in both hands, single small seed quiver. Alert pale eyes. Long tapered silhouette and tiny boots, not bark armor.",
+    "Slowly level long thorn crossbow and aim precisely, then powerful recoil from one shot."
+  ],
+  [
+    "elite_priest",
+    "夢孢司祭",
+    "Dreamspore priest: mysterious pear-shaped mushroom monk, ONE broad pale lavender bell-shaped cap, dark violet face shadow with two small cyan eyes, smooth white robe with ONE purple vertical panel, short hovering-looking feet still on ground, empty hands. Only three floating cyan spores near shoulders. Calm mystical silhouette, no layered crown.",
+    "Raise both hands slowly overhead, release compact blessing/curse spore glow, lower hands."
+  ],
+  [
+    "elite_brood",
+    "菌冠育巢者",
+    "Fungal broodkeeper: endearing bulky elderly mushroom creature, honey-beige body, small russet cap, sleepy drooping eyes, HUGE rounded turquoise nursery sac on BACK with THREE pale yellow oval pods, simple brown carrying straps, short sturdy feet and soft hands. Kindly resting face but determined combat face. No complex roots.",
+    "Back nursery sacs swell and pulse, lean forward releasing one tiny fungal spawn, recover."
+  ],
+  [
+    "elite_hunter",
+    "翠翼巡獵者",
+    "Emerald-wing hunter: sharp agile elf-like humanoid in simple emerald sleeveless tunic and charcoal leggings, short navy hair, pale face with stern large eyes, FOUR translucent mint dragonfly wings, TWO short curved ivory blades, one each hand. ONE yellow belt. 5-head proportion. No leaf cape or full armor.",
+    "Cross both blades before chest, crouch, then lunging dual-blade slash."
+  ],
+  [
+    "swift_panther",
+    "疾風翠豹",
+    "Swift panther: sleek compact teal-green feline, large rounded ears, large cyan eyes, cream muzzle and chest, THREE simple dark leaf-shaped markings on flanks, slender vine tail ending in one leaf. FOUR anatomically jointed legs with rounded paws. Proud and slightly cute, focused snarl during pounce. No mane or layered leaves.",
+    "Lower to feline stalking crouch then powerful forward pouncing bite."
+  ],
+  [
+    "swift_spore",
+    "竄林孢子菇",
+    "Swift spore: playful small mushroom runner, asymmetrical turquoise cap swept backward like a cycling helmet, tiny cream face with two amber eyes, slim cream body, short arms and springy bent legs, TWO short cyan streaks behind cap. Determined pout. No claws or bark limbs. Distinct tall tilted cap silhouette.",
+    "Crouch into fast sprint then erupt in a compact glowing spore burst."
+  ],
+  [
+    "ranger_scout",
+    "霧林斥候",
+    "Mist ranger scout: compact 5-head adult humanoid, silver-gray short asymmetric hooded poncho, charcoal trousers, one muted blue scarf covering mouth, short dark hair, alert eyes. Small steel dagger RIGHT hand, plain brown boots and one belt pouch. No leaf ornaments.",
+    "Lower body and draw dagger back, then fast precise forward stab."
+  ],
+  [
+    "ranger_archer",
+    "林間弓手",
+    "Forest archer: compact 5-head young adult humanoid with dark green hood, mustard-yellow short leather vest, cream sleeves and navy trousers, copper hair peeking out, narrowed eyes. Simple longbow LEFT hand, arrow RIGHT, ONE small quiver on back. No leaf cape or ornate armor.",
+    "Raise longbow, draw arrow fully, release, followthrough, recover."
+  ],
+  [
+    "druid",
+    "森林德魯伊",
+    "Forest druid: round sturdy 5-head older human with short white beard, simple olive robe, orange scarf, small TWO-branch antler circlet, calm large eyes, curved wooden staff with ONE white lily in RIGHT hand. One broad belt. Warm approachable resting expression; solemn casting. No layered foliage.",
+    "Raise flower staff overhead then channel compact teal healing glow around hands."
+  ],
+  [
+    "shaman",
+    "林語薩滿",
+    "Forest shaman: compact 5-head adult humanoid with a large simple ivory half-mask across forehead, TWO broad blue feathers, ochre poncho with ONE turquoise zigzag border, indigo trousers, stern eyes. Wooden bell staff RIGHT hand carrying ONE large copper bell, LEFT palm free. No dense necklaces or hanging charms.",
+    "Lift and shake bell staff in escalating rhythm, release compact haste magic glow then recover."
+  ]
+]

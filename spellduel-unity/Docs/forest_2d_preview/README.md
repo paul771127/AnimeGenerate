@@ -33,3 +33,6 @@ roster_grid.jpg 為三排全員總覽，每隻有 directions.jpg、all_frames.jp
 
 
 追加完成：林間弓手、森林德魯伊、林語薩滿。累計 18 / 18 隻；詳見 validation.json。
+
+
+2026-11-04 中等細節新風格：毒液噴花、荊棘衝鋒獸、藤蔓術士、食人花 已換新，累計 4/18。使用者已確認 concepts_01.png 的比例與細節程度。

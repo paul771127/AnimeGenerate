@@ -7,6 +7,7 @@ from PIL import Image, ImageDraw
 from pack_castle_painted import split, bounds
 ROOT=Path(__file__).resolve().parents[2]
 SOURCE=Path(__file__).parent/'forest_boss_sources'
+REFINED=Path(__file__).parent/'forest_refined_sources'
 OUT=ROOT/'Assets/SpellDuel/Resources/SpriteEnemies'
 PREVIEW=ROOT/'Docs/forest_2d_preview'
 IDS=['forest_'+a[0] for a in json.loads((SOURCE/'forest_actors.json').read_text(encoding='utf-8-sig'))]
@@ -16,10 +17,13 @@ ACTIONS={'idle':('idle',0,4),'walk':('walk',0,6),'windup':('combat',0,2),'attack
 def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def height(im):
  b=bounds(im);return b[3]-b[1]
+def source_dir(name):
+ revised=REFINED/name
+ return revised if all((revised/(g+'.png')).exists() for g in GROUPS) else SOURCE/name
 def sources(name):
  groups={}; factors={}
  for g,rows in GROUPS.items():
-  groups[g]=split(Image.open(SOURCE/name/(g+'.png')).convert('RGBA'),8,rows)
+  groups[g]=split(Image.open(source_dir(name)/(g+'.png')).convert('RGBA'),8,rows)
   scale=204/statistics.median(height(c) for c in groups[g][:8])
   factors[g]=[scale,scale]
  return groups,factors
@@ -74,7 +78,7 @@ def pack():
     gif.append(f)
    gif[0].save(PREVIEW/f'{name}_{action}.gif',save_all=True,append_images=gif[1:],duration=150 if action=='walk' else [170,380,130,130,250],loop=0)
   roster.paste(frames['idle'][0],(ni*256,300),frames['idle'][0]);rd.text((ni*256+8,280),name,fill='white')
-  report['enemies'][name]={'files':files,'scale_safety':safety,'source_edge_contacts':source_edges,'sources':{p.name:digest(p) for p in sorted((SOURCE/name).glob('*.png'))}}
+  report['enemies'][name]={'files':files,'style':'refined' if source_dir(name).parent==REFINED else 'original','scale_safety':safety,'source_edge_contacts':source_edges,'sources':{p.name:digest(p) for p in sorted(source_dir(name).glob('*.png'))}}
  rd.text((4,3),'FOREST ENEMY ROSTER',fill='white');rd.text((4,288),'MANGA FANTASY',fill='white');roster.crop((0,280,max(1,len(IDS))*256,560)).save(PREVIEW/'roster.jpg',quality=95)
  grid=Image.new('RGB',(6*256,((len(IDS)+5)//6)*280),(28,25,39))
  for i in range(len(IDS)):
