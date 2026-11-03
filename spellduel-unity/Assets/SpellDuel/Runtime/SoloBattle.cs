@@ -3572,6 +3572,7 @@ namespace SpellDuel
                     bossRig.transform.localScale = Vector3.zero;   // 3D 巨像藏起來（SetVisible 會把零件重新打開，所以用縮放）
                     bossSpriteRoot.transform.SetPositionAndRotation(feetS, rot);
                     bossSprite.MoveSpeed = bossRig.MoveSpeed;
+                    bossSprite.Aura = en.Alive && en.teamHasteUntil > battle.now ? new Color(1f, 0.08f, 0.04f, 1f) : Color.clear;   // 攻擊加速中：身上冒紅光
                     bool showB = !en.Alive || bossSeen || bossAliveShown;
                     if (bossSpriteRoot.activeSelf != showB) bossSpriteRoot.SetActive(showB);
                 }
