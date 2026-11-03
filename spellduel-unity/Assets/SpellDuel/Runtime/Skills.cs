@@ -43,6 +43,8 @@ namespace SpellDuel
         public bool duckable;           // 胸口高度的橫向衝擊波（Boss 的橫掃、藤鞭）：蹲下就躲得過
         public bool jumpable;           // 貼地的攻擊（閃避訓練的低火球）：跳起來就躲得過
         public bool crescent;           // 新月形法球（劍氣、風刃）：碰到新月本體才算命中（不是整片橫掃）
+        public float arcHalf;           // 範圍重擊（areaRadius）只打前方的扇形：左右各幾度（90＝前方半圓；0＝整圈）；蓄力時面向鎖住
+        public int volley = 1; public float volleyGap = 0.3f;   // 連續射出：放出後每 volleyGap 秒朝目標再補一發，總共 volley 發（魔劍士的冥火連彈）
         public bool fromAbove; public float dropHeight = 6f;   // 從目標正上方落下（隕石、審判）
         public float areaRadius;        // 範圍攻擊：放招當下目標在施放者周圍這個半徑內就命中（Boss 的地裂重擊）
         public float originHeight;      // 法術從離地這個高度水平射出（Boss 的橫掃）；0＝從手的位置
@@ -316,6 +318,13 @@ namespace SpellDuel
             // 世界 Boss（大地圖的大型討伐；WorldBossAI 三個固定階段）：三隻共用一套招式，外觀各自（BossRig.CreateWorld）
             foreach (var wb in new[] { ("wb_furnace", "晨鐘熔爐泰坦", "#ff6420"), ("wb_canopy", "記名林冠龍", "#61cc6b"), ("wb_leviathan", "白帆淵鯨", "#2ea8e6") })
                 Classes["boss_" + wb.Item1] = new ClassDef { id = "boss_" + wb.Item1, name = wb.Item2, color = C(wb.Item3), maxHp = 4000, maxMp = 999, mpRegen = 100, skills = new[] { "w_lance", "w_sweep", "w_quake", "w_scatter", "w_transition" }, defaultLoadout = new[] { "w_lance", "w_sweep", "w_quake", "w_scatter", "w_transition" }, desc = "世界 Boss" };
+            // 月影古堡的首領（使用者要求）：跟玩家差不多大的人形魔劍士惡靈，移動快，遠近都有招（BossAI 的敏捷型走位；外觀是 2D 圖 castle_boss）
+            P(new SkillDef { id = "k_strike", cls = "boss", name = "魔劍斬", type = SkillType.Projectile, color = C("#e11d48"), cost = 0, damage = 12, charge = 0.5f, cooldown = 1.3f, speed = 1f, radius = 0f, areaRadius = 1.9f, arcHalf = 75f, rangeMax = 2.2f, desc = "普攻：往前方砍一刀（離開前方就砍不到）" });
+            P(new SkillDef { id = "k_cleave", cls = "boss", name = "冥月重斬", type = SkillType.Projectile, color = C("#be123c"), cost = 0, damage = 32, charge = 1.6f, cooldown = 6f, speed = 1f, radius = 0f, areaRadius = 3.0f, arcHalf = 90f, rangeMax = 3.0f, desc = "蓄力後砍前方半圓 3m（繞到側面、背後或退出紅色扇形）" });
+            P(new SkillDef { duckable = true, originHeight = 1.2f, id = "k_wave", cls = "boss", name = "半月劍氣", type = SkillType.Projectile, color = C("#a855f7"), cost = 0, damage = 24, charge = 1.8f, cooldown = 7f, speed = 3f, radius = 1.1f, rangeMax = 16f, desc = "蓄力後揮出胸口高度的橫向半月形劍氣，每秒 3m 飛過來（蹲下躲）" });
+            P(new SkillDef { id = "k_fire", cls = "boss", name = "冥火連彈", type = SkillType.Projectile, color = C("#f97316"), cost = 0, damage = 9, charge = 1.0f, cooldown = 6f, speed = 7f, radius = 0.2f, rangeMax = 14f, volley = 5, volleyGap = 0.3f, desc = "朝玩家方向連續射出 5 顆火球（一直橫移閃開）" });
+            P(new SkillDef { id = "k_haste", cls = "boss", name = "魔劍・疾風", type = SkillType.Self, color = C("#f43f5e"), cost = 0, damage = 0, charge = 0.6f, cooldown = 18f, buffDur = 8f, buffAmount = 40, desc = "攻擊加速：8 秒內蓄力、出招都變快" });
+            Classes["boss_castle"] = new ClassDef { id = "boss_castle", name = "魔劍士惡靈", color = C("#e11d48"), maxHp = 500, maxMp = 999, mpRegen = 100, skills = new[] { "k_strike", "k_cleave", "k_wave", "k_fire", "k_haste" }, defaultLoadout = new[] { "k_strike", "k_cleave", "k_wave", "k_fire", "k_haste" }, desc = "月影古堡的首領" };
             Classes["boss"] = new ClassDef { id = "boss", name = "熔岩巨像", color = C("#ff5a1f"), maxHp = 500, maxMp = 999, mpRegen = 100, skills = new[] { "b_bolt", "b_sweep", "b_slam", "b_rain", "b_leap", "b_summon" }, defaultLoadout = new[] { "b_bolt", "b_sweep", "b_slam", "b_rain", "b_leap", "b_summon" }, desc = "Boss" };
             Classes["minion"] = new ClassDef { id = "minion", name = "熔岩小鬼", color = C("#ff8c42"), maxHp = 40, maxMp = 0, mpRegen = 0, skills = new string[0], defaultLoadout = new string[0], desc = "Boss 召喚的小怪" };
 

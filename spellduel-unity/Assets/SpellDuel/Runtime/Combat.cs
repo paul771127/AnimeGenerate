@@ -1419,7 +1419,8 @@ namespace SpellDuel
             enemy.head = new Vector3(at.x, enemy.head.y > 0.5f ? enemy.head.y : 3.2f, at.z);
             enemy.charging = null; enemy.cooldownUntil.Clear(); enemy.dots.Clear(); enemy.snaredUntil = 0f; enemy.blindUntil = 0f; enemy.silencedUntil = 0f;
             // 依主題換 Boss：熔岩巨像／腐化樹王（招式不同）
-            var bc = Skills.Classes[Gallery ? "boss_clockwork" : CarpetBoss ? Carpet.BossClass : BossClassOf(Theme)];   // 天穹飛毯：空賊飛艇（Combat.Carpet.cs）
+            var bc = Skills.Classes[Gallery ? "boss_clockwork" : CarpetBoss ? Carpet.BossClass : castleSprites ? "boss_castle" : BossClassOf(Theme)];   // 天穹飛毯：空賊飛艇（Combat.Carpet.cs）；月影古堡：魔劍士惡靈
+            if (bc.id == "boss_castle") { enemy.head = new Vector3(enemy.head.x, 1.7f, enemy.head.z); enemy.bodyRadius = 0.35f; }   // 跟玩家差不多大
             if (enemy.cls != bc)
             {
                 enemy.cls = bc; enemy.name = bc.name;
@@ -1428,7 +1429,7 @@ namespace SpellDuel
             }
             // 故事關卡的 Boss 多一招震地波（跳起來躲）
             enemy.loadout.RemoveAll(IsQuake);
-            if (bossAfterMinions && !enemy.loadout.Contains(Skills.All[QuakeOf(Theme)])) enemy.loadout.Add(Skills.All[QuakeOf(Theme)]);   // 深淵海妖本來就有潮汐環（被靠近時用）
+            if (bossAfterMinions && bc.id != "boss_castle" && !enemy.loadout.Contains(Skills.All[QuakeOf(Theme)])) enemy.loadout.Add(Skills.All[QuakeOf(Theme)]);   // 魔劍士不用震地波   // 深淵海妖本來就有潮汐環（被靠近時用）
             Emit("bossarrive", enemy.Feet, enemy.cls.color, bossAfterMinions ? $"{enemy.name}現身！" : $"第 {wave} 波 Boss 出現！");
             OnBossSpawn?.Invoke(bossIndex);
         }
@@ -2870,6 +2871,7 @@ namespace SpellDuel
                     foreach (var v in new List<Fighter>(Players()))
                     {
                         if (v == f || !v.Alive || FlatDistance(ac, v.Feet) > s.areaRadius + v.bodyRadius) continue;
+                        if (s.arcHalf > 0f) { var to = v.Feet - ac; to.y = 0f; var fw = f.forward; fw.y = 0f; if (to.sqrMagnitude > 0.04f && fw.sqrMagnitude > 1e-6f && Vector3.Angle(fw, to) > s.arcHalf) continue; }   // 只打前方的扇形（魔劍士的斬擊）
                         if (v.dodgeUntil > now && SidestepInvuln) { Emit("evade", v.Chest, s.color, "閃避！"); continue; }
                         int ad = Mathf.RoundToInt(s.damage * f.atkMul);   // Boss 攻擊力（人多時更痛）
                         if (v.isAlly) { Emit("allyhit", v.Chest, s.color, null); OnAllyHit?.Invoke(v, s, ad, v.Chest, 0); }
@@ -2959,6 +2961,7 @@ namespace SpellDuel
                         float ang = s.multi > 1 ? (i - (s.multi - 1) / 2f) * s.spreadDeg : 0f;
                         Spawn(f, s, hand, RotateY(aimDir, ang), s.damage, s.effect, s.effectDps, s.effectDur, false);
                     }
+                    if (s.volley > 1) volleys.Add(new Volley { owner = f, skill = s, left = s.volley - 1, next = now + s.volleyGap });   // 連續射出：之後每隔一下再補一發
                     Emit("cast", hand, s.color, null);
                     break;
             }
@@ -2971,8 +2974,34 @@ namespace SpellDuel
         public const float AmpBonus = 0.5f;   // 大魔導士增幅咒：傷害 +50%
         public event Action<SkillDef> OnTaunt;      // 合作的隊友端：我嘲諷了 → 告訴主機（主機的 Boss 才有仇恨）   // 合作：牧師的輔助技能也要作用在隊友（隊友那支手機自己套用）
 
+        // ------------------------------------------------------------ 連續射出（魔劍士的冥火連彈）：每發都朝目標當下的位置
+        class Volley { public Fighter owner; public SkillDef skill; public int left; public float next; }
+        readonly List<Volley> volleys = new List<Volley>();
+        void UpdateVolleys()
+        {
+            for (int i = volleys.Count - 1; i >= 0; i--)
+            {
+                var v = volleys[i];
+                if (!v.owner.Alive || Over) { volleys.RemoveAt(i); continue; }
+                if (now < v.next) continue;
+                var tgt = v.owner.target != null && v.owner.target.Alive ? v.owner.target : Opponent(v.owner);
+                var hand = v.owner.head + Fighter.Flat(v.owner.forward) * 0.25f + Vector3.down * 0.25f;
+                var dir = tgt != null ? (tgt.Chest - hand).normalized : Fighter.Flat(v.owner.forward);
+                Spawn(v.owner, v.skill, hand, RotateY(dir, ((float)rng.NextDouble() - 0.5f) * 6f), v.skill.damage, v.skill.effect, v.skill.effectDps, v.skill.effectDur, false);
+                Emit("cast", hand, v.skill.color, null);
+                v.left--; v.next = now + v.skill.volleyGap;
+                if (v.left <= 0) volleys.RemoveAt(i);
+            }
+        }
+
         void CastSelf(Fighter f, SkillDef s)
         {
+            if (s.id == "k_haste")   // 魔劍士：攻擊加速（蓄力變快；BossAI 出招間隔也縮短）
+            {
+                f.teamHasteUntil = now + s.buffDur; f.teamHaste = s.buffAmount / 100f;
+                Emit("buff", f.Chest, s.color, $"{f.name}：{s.name}！攻擊加速");
+                return;
+            }
             if (f == player) NoteBuff(f, s);   // 畫面：自己的增益特效
             if (s.self == SelfKind.StyleBuff) { CastStyleBuff(f, s); return; }   // 流派爆發（只作用在自己）
             // 牧師的輔助技能：作用在所有己方單位（自己＋合作隊友）
@@ -3275,6 +3304,7 @@ namespace SpellDuel
             now += dt;
             if (allies.Count > 0) { if (!player.Alive) playerDown = true; else if (playerDown) player.hp = 0f; }
             if (shockwaves.Count > 0) UpdateShockwaves();
+            if (volleys.Count > 0) UpdateVolleys();
             UpdateTeamRegen(dt);
             if (windOrbits.Count > 0) UpdateWindOrbits(dt);
             // 計時的效果（旋風斬的後兩段…）

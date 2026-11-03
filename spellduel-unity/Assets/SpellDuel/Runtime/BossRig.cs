@@ -3034,6 +3034,8 @@ namespace SpellDuel
             switch (skillId)
             {
                 case "b_bolt": return BuildBolt();
+                case "k_wave": return BuildSweep("k_wave", SweepVoid, false);   // 魔劍士：半月劍氣（紫紅色的橫向新月）
+                case "k_fire": return BuildImpFireball();                       // 魔劍士：冥火連彈
                 case "b_sweep": return BuildSweep("b_sweep", SweepFire, true);
                 // 其他胸口高度的橫掃（使用者回報：以前畫成一顆光球，看起來像火球術）：同樣的水平新月衝擊波，換成各自的顏色
                 case "w_sweep": return BuildSweep("w_sweep", SweepFire, true);        // 世界 Boss 巨臂橫掃
@@ -3142,6 +3144,7 @@ namespace SpellDuel
         /// <summary>橫掃新月的配色：deep 外層、mid 中層、core 中心亮線、dust 塵土</summary>
         struct SweepPalette { public Color deep, mid, core, dust1, dust2; }
         static readonly SweepPalette SweepFire = new SweepPalette { deep = new Color(1f, 0.22f, 0.04f), mid = new Color(1f, 0.55f, 0.12f), core = new Color(1f, 0.93f, 0.65f), dust1 = new Color(0.35f, 0.28f, 0.24f, 0.5f), dust2 = new Color(0.2f, 0.16f, 0.14f, 0.45f) };
+        static readonly SweepPalette SweepVoid = new SweepPalette { deep = new Color(0.45f, 0.05f, 0.35f), mid = new Color(0.8f, 0.2f, 0.75f), core = new Color(1f, 0.8f, 1f), dust1 = new Color(0.3f, 0.12f, 0.3f, 0.5f), dust2 = new Color(0.18f, 0.08f, 0.2f, 0.45f) };
         static readonly SweepPalette SweepVine = new SweepPalette { deep = new Color(0.08f, 0.45f, 0.12f), mid = new Color(0.3f, 0.8f, 0.25f), core = new Color(0.85f, 1f, 0.65f), dust1 = new Color(0.25f, 0.4f, 0.15f, 0.5f), dust2 = new Color(0.3f, 0.25f, 0.12f, 0.45f) };
 
         static GameObject BuildSweep(string id, SweepPalette pal, bool withRocks)

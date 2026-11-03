@@ -18,6 +18,8 @@ namespace SpellDuel
     ///     橫的 8 格＝方向 0～7（同上），直的每一列＝這個動作的第幾張（最上面＝第 0 張）；每格正方形，邊長＝圖寬 ÷ 8（建議 256）。
     ///     例：walk 是 6 張 → 2048×1536；idle、die 4 張 → 2048×1024；windup、hurt 2 張 → 2048×512；attack 3 張 → 2048×768。
     ///     腳底位置、高度的規則跟單張圖一樣（腳底在格子底邊往上 6%）。
+    ///   招式專屬動作（可選，Boss 用；沒有就用 windup／attack）：{sheet}_{名稱}.png，同樣橫 8 方向、直每張
+    ///     cleave_windup（2）、cleave（3）＝重斬；wave_windup（2）、wave（3）＝劍氣；cast（3）＝施法（前 2 張蓄力、第 3 張放出）
     /// </summary>
     public sealed class SpriteEnemyView : MonoBehaviour
     {
@@ -53,6 +55,14 @@ namespace SpellDuel
             return t;
         }
         Texture2D[] hi;
+        static readonly Dictionary<string, bool> hasArt = new Dictionary<string, bool>();
+        /// <summary>這套圖有沒有放進 Resources（高解析度每動作圖或單張圖其中一種）</summary>
+        public static bool HasArt(string sheet)
+        {
+            if (hasArt.TryGetValue(sheet, out var ok)) return ok;
+            ok = HiResFor(sheet) != null || Resources.Load<Texture2D>("SpriteEnemies/" + sheet) != null;
+            hasArt[sheet] = ok; return ok;
+        }
         static Material MatFor(string sheet)
         {
             if (mats.TryGetValue(sheet, out var m) && m) return m;
@@ -90,8 +100,20 @@ namespace SpellDuel
             return v;
         }
 
-        public void Windup(float duration) { if (dead) return; act = Act.Windup; actT = 0f; actDur = Mathf.Max(0.05f, duration); }
-        public void Attack() { if (dead) return; act = Act.Attack; actT = 0f; actDur = 0.36f; }
+        public void Windup(float duration) { Windup(duration, null); }
+        public void Attack() { Attack(null); }
+        /// <summary>招式專屬動作：skillId 對應到 cleave／wave／cast（Boss 用；沒有那張圖就用一般的 windup／attack）</summary>
+        public void Windup(float duration, string skillId) { if (dead) return; act = Act.Windup; actT = 0f; actDur = Mathf.Max(0.05f, duration); move = MoveOf(skillId); }
+        public void Attack(string skillId) { if (dead) return; act = Act.Attack; actT = 0f; actDur = 0.36f; move = MoveOf(skillId) ?? move; }
+        string move;
+        static string MoveOf(string id) => id == "k_cleave" ? "cleave" : id == "k_wave" ? "wave" : id == "k_fire" || id == "k_haste" ? "cast" : null;
+        static readonly Dictionary<string, Texture2D> extra = new Dictionary<string, Texture2D>();
+        Texture2D Extra(string name)
+        {
+            string key = def.sheet + "_" + name;
+            if (!extra.TryGetValue(key, out var t)) { t = Resources.Load<Texture2D>("SpriteEnemies/" + key); if (t) { t.wrapMode = TextureWrapMode.Clamp; t.filterMode = FilterMode.Bilinear; } extra[key] = t; }
+            return t;
+        }
         public void PlayHit() { if (dead) return; hurtUntil = Time.time + 0.28f; flashUntil = Time.time + 0.12f; }
         public void SetDead(bool d) { if (d == dead) return; dead = d; if (d) { act = Act.Die; actT = 0f; actDur = 0.6f; deadAt = Time.time; } }
 
@@ -126,7 +148,16 @@ namespace SpellDuel
                 if (MoveSpeed > 0.12f) { walkPhase += dt * Mathf.Clamp(MoveSpeed * 7f, 5f, 14f); a = Act.Walk; frame = Mathf.FloorToInt(walkPhase) % Frames[1]; }
                 else { a = Act.Idle; frame = Mathf.FloorToInt(Time.time * 5f + Mathf.Abs(GetInstanceID() % 1000) * 0.37f) % Frames[0]; }
             }
-            int slot = (First[(int)a] + frame) * Dirs + DirIndex(cam);
+            // 招式專屬動作（有圖才用）
+            Texture2D mt = null; int mRows = 0, mFrame = 0;
+            if (hi != null && move != null && (a == Act.Windup || a == Act.Attack))
+            {
+                if (move == "cast") { mt = Extra("cast"); mRows = 3; mFrame = a == Act.Windup ? frame : 2; }
+                else { mt = Extra(a == Act.Windup ? move + "_windup" : move); mRows = a == Act.Windup ? 2 : 3; mFrame = frame; }
+                if (mt == null) mRows = 0;
+            }
+            if (a == Act.Idle || a == Act.Walk) move = null;   // 受擊打斷不清掉（受擊完回到同一招的預備）
+            int slot = (First[(int)a] + frame) * Dirs + DirIndex(cam) + (mRows > 0 ? 10000 + mRows * 1000 + (move == "cast" ? 500 : move == "wave" ? 300 : 100) : 0);
             if (slot != lastSlot)
             {
                 lastSlot = slot;
@@ -134,8 +165,8 @@ namespace SpellDuel
                 if (hi != null)
                 {
                     // 每動作一張：橫＝方向、直＝第幾張（最上面是第 0 張）
-                    var t = hi[(int)a]; int rows = Frames[(int)a], dir = slot % Dirs;
-                    u0 = dir / (float)Dirs; u1 = (dir + 1) / (float)Dirs; v1 = 1f - frame / (float)rows; v0 = 1f - (frame + 1) / (float)rows;
+                    var t = mRows > 0 ? mt : hi[(int)a]; int rows = mRows > 0 ? mRows : Frames[(int)a], dir = DirIndex(cam), fr = mRows > 0 ? mFrame : frame;
+                    u0 = dir / (float)Dirs; u1 = (dir + 1) / (float)Dirs; v1 = 1f - fr / (float)rows; v0 = 1f - (fr + 1) / (float)rows;
                     ix = 0.5f / t.width; iy = 0.5f / t.height;
                 }
                 else
@@ -155,7 +186,7 @@ namespace SpellDuel
             var c = Time.time < flashUntil ? new Color(fog, 0.55f * fog, 0.55f * fog, fade) : new Color(fog, fog, fog, fade);
             // Sprites/Default 的 _MainTex 是 [PerRendererData]：用了 MaterialPropertyBlock 就一定要把圖也放進去，不然會取到預設的白圖（使用者回報「白背景」）
             mr.GetPropertyBlock(block);
-            Texture tex = hi != null ? hi[(int)a] : mr.sharedMaterial ? mr.sharedMaterial.mainTexture : null;
+            Texture tex = hi != null ? (mRows > 0 ? mt : hi[(int)a]) : mr.sharedMaterial ? mr.sharedMaterial.mainTexture : null;
             if (tex) block.SetTexture("_MainTex", tex);
             block.SetColor("_Color", c); mr.SetPropertyBlock(block);
         }

@@ -888,7 +888,9 @@ namespace SpellDuel
         int NetModeCode => coop ? (netStory ? 4 : netDungeon ? 3 : netEndless ? 2 : 1) : 0;
         /// <summary>首頁直接選模式（例如「🏰 副本」）：0 對戰、1 合作 Boss、2 無盡合作、3 副本</summary>
         public void PresetNetMode(int mi) { coop = mi >= 1; netEndless = mi == 2; netDungeon = mi == 3; netStory = mi == 4; localReady = false; }
-        BossRig bossRig; BossAI bossAi; GameObject slamGo;
+        BossRig bossRig; BossAI bossAi; GameObject slamGo, slamFanGo;
+        /// <summary>月影古堡的首領（魔劍士惡靈）：2D 圖（3D 的 bossRig 照樣在、縮到看不見，只用來帶位置與原本的流程）</summary>
+        GameObject bossSpriteRoot; SpriteEnemyView bossSprite;
         VolcanoScene volcano;   // 無盡模式第 1～10 波的熔岩火山場景
         ForestScene forest;     // 第 11～20 波的森林場景
         SeaScene sea;           // 第 21～30 波的海上礁石場景
@@ -1763,8 +1765,8 @@ namespace SpellDuel
                         if (battle.endless)
                         {
                             // 隊友端：依波次主題換 Boss 名稱（熔岩巨像／腐化樹王）
-                            var bcls = Skills.Classes[battle.CarpetBoss ? Carpet.BossClass : Battle.BossClassOf(battle.Theme)];
-                            if (b.cls != bcls) { b.cls = bcls; b.name = bcls.name; }
+                            var bcls = Skills.Classes[battle.CarpetBoss ? Carpet.BossClass : battle.castleSprites ? "boss_castle" : Battle.BossClassOf(battle.Theme)];   // 月影古堡：魔劍士惡靈
+                            if (b.cls != bcls) { b.cls = bcls; b.name = bcls.name; if (bcls.id == "boss_castle") b.bodyRadius = 0.35f; }
                         }
                         if (!string.IsNullOrEmpty(m.k) && Skills.All.TryGetValue(m.k, out var bs))
                         {
@@ -1836,6 +1838,7 @@ namespace SpellDuel
                 case "bfx":
                     // 主機的 Boss 出手：播動作與特效
                     if (bossRig) bossRig.Attack(m.k);
+                    if (bossSprite) bossSprite.Attack(m.k);
                     if (m.k == "b_slam") BossSlamFx(m.p);
                     Sfx.Play(m.k == "b_slam" ? "boom" : "cast_mage", m.k == "b_slam" ? 1f : 0.6f, 0.6f);
                     break;
@@ -1930,7 +1933,7 @@ namespace SpellDuel
                     rig.SetVariant(m.minionKind);
                     rig.SetDress(battle.Theme);   // 角鬥場：黑晶項圈；山道：沙塵與頭巾（美術第十一輪）
                     if (m.treasure) DressTreasure(rig);   // 寶箱怪：換成會跑的寶箱
-                    if (SpriteMonsters.Has(m.variant)) DressSprite(m, rig);   // 城堡的 2D 圖片敵人（SoloBattle.VariantArt.cs、SpriteEnemyView.cs）
+                    if (SpriteMonsters.ForFighter(m) != null) DressSprite(m, rig);   // 2D 圖的敵人：城堡、第二章森林（有圖才換）   // 城堡的 2D 圖片敵人（SoloBattle.VariantArt.cs、SpriteEnemyView.cs）
                     else if (MonsterVariants.IsSky(m.variant)) DressSky(m, rig);
                     else if (HasVariantArt(m.variant)) DressVariant(m, rig);   // 補師、輔助型、人形敵人：Codex 的 VariantRig（SoloBattle.VariantArt.cs）   // 天穹飛毯的敵人：Codex 的全新骨架（SoloBattle.Carpet.cs）
                     else if (m.variant > 0 && MonsterVariants.Get(m.variant) != null) MinionLook.Apply(rig, MonsterVariants.Get(m.variant));   // 刺客怪、天候怪：換配色、武器（MinionLook.cs）
@@ -1956,7 +1959,7 @@ namespace SpellDuel
                 var newPos = WorldFrame.FromWorld(m.Feet + Vector3.up * m.alt);   // 飛在空中／浮著／跳起來的高度
                 var f = WorldFrame.DirFromWorld(m.forward); f.y = 0f;
                 rig.transform.SetPositionAndRotation(newPos, f.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(f.normalized, Vector3.up) : rig.transform.rotation);
-                UpdateEliteVisual(m, rig);
+                UpdateEliteVisual(m, rig);   // 菁英怪的出招預警（2D 圖的菁英一樣要畫）
                 if (m.treasure) { var cp = rig.GetComponentInChildren<RoomPropArt>(); if (cp) cp.Tick(m.hp, m.maxHp, false, Time.time); }   // 寶箱怪：被打中會晃
                 rig.SetEating(m.lureUntil > 0f || (m.exMon != null && !m.exAware && (m.exForage || m.exIdleKind == 4)));   // 吃誘餌中、探索的怪在覓食／打盹：低頭（MinionRig.Pets.cs）
                 bool jumped = (newPos - oldPos).magnitude > 2f;   // 虛空術士瞬移（隊友端也看得到）：兩邊都冒出傳送光
@@ -2510,6 +2513,8 @@ namespace SpellDuel
             foreach (var go in laneGo.Values) if (go) Destroy(go);
             laneGo.Clear();
             if (bossRig) Destroy(bossRig.gameObject);
+            if (bossSpriteRoot) Destroy(bossSpriteRoot); bossSpriteRoot = null; bossSprite = null;
+            if (slamFanGo) Destroy(slamFanGo); slamFanGo = null;
             ClearWorldBoss();
             foreach (var mr in minionGo.Values) if (mr) Destroy(mr.gameObject);
             minionGo.Clear(); minionLastHp.Clear(); minionWinding.Clear(); esWinding.Clear();
@@ -3133,6 +3138,7 @@ namespace SpellDuel
                     {
                         // Boss 出手：出招動作；合作主機告訴隊友播動作／特效
                         if (bossRig && bossWindup != null) bossRig.Attack(bossWindup);
+                        if (bossSprite && bossWindup != null) bossSprite.Attack(bossWindup);
                         if (coop && NetIsHost) NetSend?.Invoke(new Msg { t = "bfx", k = bossWindup ?? "", p = En.Feet });
                         if (bossWindup != "b_slam") Sfx.Play("cast_mage", 0.6f, 0.6f);
                         break;
@@ -3560,17 +3566,28 @@ namespace SpellDuel
                 var rot = fwdS.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(new Vector3(fwdS.x, 0f, fwdS.z).normalized, Vector3.up) : bossRig.transform.rotation;
                 bossRig.transform.SetPositionAndRotation(feetS, rot);
                 bossRig.MoveSpeed = Mathf.Lerp(bossRig.MoveSpeed, Fighter.Flat(en.Feet - lastEnemyFeet).magnitude / dt, 0.2f);
+                if (en.cls != null && en.cls.id == "boss_castle")
+                {
+                    if (!bossSpriteRoot) { bossSpriteRoot = new GameObject("Castle boss sprite"); bossSprite = SpriteEnemyView.Create(SpriteMonsters.CastleBoss, bossSpriteRoot.transform); }
+                    bossRig.transform.localScale = Vector3.zero;   // 3D 巨像藏起來（SetVisible 會把零件重新打開，所以用縮放）
+                    bossSpriteRoot.transform.SetPositionAndRotation(feetS, rot);
+                    bossSprite.MoveSpeed = bossRig.MoveSpeed;
+                    bool showB = !en.Alive || bossSeen || bossAliveShown;
+                    if (bossSpriteRoot.activeSelf != showB) bossSpriteRoot.SetActive(showB);
+                }
                 string cid = en.charging != null ? en.charging.id : null;
                 if (cid != null && cid != bossChargingId)
                 {
                     bossWindup = cid;
                     bossRig.Windup(cid, Mathf.Max(0.3f, en.charging.charge * en.chargeScale * (1f - battle.ChargeProgress(en))));
+                    if (bossSprite) bossSprite.Windup(Mathf.Max(0.3f, battle.ChargeTime(en, en.charging) * (1f - battle.ChargeProgress(en))), cid);
                     if (cid == "b_rain") Sfx.Play("roar", 0.7f);
                 }
                 bossChargingId = cid;
-                if (en.hp < lastBossHp - 0.01f) bossRig.PlayHit();
+                if (en.hp < lastBossHp - 0.01f) { bossRig.PlayHit(); if (bossSprite) bossSprite.PlayHit(); }
                 lastBossHp = en.hp;
                 if (!endless && !en.Alive && !enemyDeadShown) bossRig.SetDead(true);
+                if (bossSprite && !en.Alive) bossSprite.SetDead(true);
                 if (endless)
                 {
                     // 無盡模式：Boss 出現（從地底冒出）／倒下（崩塌，3 秒後隱藏）
@@ -3600,6 +3617,21 @@ namespace SpellDuel
                 }
                 // 地裂重擊蓄力中：Boss 周圍的紅圈（站在圈裡會被打）
                 bool slamming = en.charging != null && en.charging.areaRadius > 0f && en.Alive;
+                bool fan = slamming && en.charging.arcHalf > 0f;   // 魔劍士的斬擊：只打前方扇形 → 地上畫扇形
+                if (fan)
+                {
+                    if (!slamFanGo) { slamFanGo = Prim(PrimitiveType.Quad, new Color(1f, 0.1f, 0.05f, 0.3f), true); }
+                    slamFanGo.GetComponent<MeshFilter>().sharedMesh = FanMesh(en.charging.arcHalf);
+                    float rr = en.charging.areaRadius + Fighter.BodyRadius;
+                    slamFanGo.SetActive(true);
+                    slamFanGo.transform.position = WorldFrame.FromWorld(new Vector3(en.Feet.x, 0.02f, en.Feet.z));
+                    var ff = WorldFrame.DirFromWorld(en.forward); ff.y = 0f; if (ff.sqrMagnitude > 1e-6f) slamFanGo.transform.rotation = Quaternion.LookRotation(ff.normalized, Vector3.up);
+                    slamFanGo.transform.localScale = new Vector3(rr, 1f, rr);
+                    float pr = battle.ChargeProgress(en), k = 0.5f + 0.5f * Mathf.Sin(Time.time * (6f + 12f * pr));
+                    slamFanGo.GetComponent<Renderer>().material.color = new Color(1f, 0.12f, 0.05f, (0.18f + 0.35f * pr) * (0.6f + 0.4f * k));
+                    slamming = false;
+                }
+                else if (slamFanGo) slamFanGo.SetActive(false);
                 if (slamming)
                 {
                     if (!slamGo) slamGo = Prim(PrimitiveType.Cylinder, new Color(1f, 0.1f, 0.05f, 0.3f), true);

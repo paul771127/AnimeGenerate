@@ -123,7 +123,7 @@ namespace SpellDuel
             {
                 // 學會震地波；召喚援軍並張開護盾（沒有召喚招式的 Boss——例如無盡模式——就只有震地波）
                 var q = Skills.All[Battle.QuakeOf(Battle.ThemeOf(BossWave))];
-                if (!me.loadout.Contains(q)) me.loadout.Add(q);
+                if (!Agile && !me.loadout.Contains(q)) me.loadout.Add(q);   // 魔劍士不用震地波
                 if (me.loadout.Exists(s => s.self == SelfKind.Summon)) { pendingSummon = true; SetShell(true); }
             }
             else if (p == 3 && !Enraged)
@@ -149,8 +149,16 @@ namespace SpellDuel
         public const float PreferDistance = 5.5f;
         /// <summary>玩家靠近到這個距離內，才會偶爾用近身範圍招</summary>
         public const float CloseDistance = 4.6f;
-        /// <summary>離目標最近的距離＝Boss 的身高</summary>
-        float Keep => Mathf.Max(2f, me.head.y + 0.1f);
+        /// <summary>離目標最近的距離＝Boss 的身高（敏捷型：可以貼身）</summary>
+        float Keep => Agile ? me.bodyRadius + 0.7f : Mathf.Max(2f, me.head.y + 0.1f);
+        /// <summary>
+        /// 敏捷型 Boss（月影古堡的魔劍士惡靈，使用者要求）：跟玩家差不多大、移動快（AgileSpeed m/s，不吃小怪的慢速倍率）、不受場地中心的限制。
+        ///   平常逼近到 AgileWant 公尺附近、一邊左右繞；要近戰時衝到身邊，要放劍氣、火球時拉開到 5m。
+        ///   選招：近身普攻（魔劍斬）、前方半圓重斬（冥月重斬）；3m 外半月劍氣（蹲下躲）、冥火連彈；隨時可能開攻擊加速。
+        /// </summary>
+        bool Agile => me.cls.id == "boss_castle";
+        public const float AgileSpeed = 2.2f, AgileWant = 2.0f, AgileRangedKeep = 5f;
+        bool Hasted => me.teamHasteUntil > b.now;
         bool Ready(SkillDef s) => !me.cooldownUntil.TryGetValue(s.id, out var cd) || cd <= b.now;
 
         public void Update(float dt)
@@ -179,7 +187,7 @@ namespace SpellDuel
             me.atkMul = (1f + PartyAtk * extra) * b.BossDmgMul;   // 故事／副本的普通、困難：Boss 攻擊跟著難度等級變強
             PickTarget();
             var tgt = me.target ?? b.player;
-            me.forward = Fighter.Flat(tgt.head - me.head);
+            if (!(me.charging != null && me.charging.arcHalf > 0f)) me.forward = Fighter.Flat(tgt.head - me.head);   // 扇形重擊蓄力中：面向鎖住（玩家可以繞到側面躲）
             if (me.snaredUntil > b.now) { Status = "被定身"; return; }
             if (leapT >= 0f)
             {
@@ -197,17 +205,18 @@ namespace SpellDuel
                 }
                 return;
             }
+            if (Agile) centerDone = true;   // 敏捷型：一出場就直接逼近
             if (!centerDone && me.charging == null)
             {
                 if (centerSince < 0f) centerSince = b.now;
                 if (WalkToCenter(dt, tgt) || b.now - centerSince > CenterMaxTime) { centerDone = true; nextThink = Mathf.Max(nextThink, b.now + 0.6f); }
                 else { Status = "走向場地中間"; return; }
             }
-            Move(dt, tgt);
+            if (Agile) AgileMove(dt, tgt); else Move(dt, tgt);
 
             if (me.charging != null) { TryRelease(tgt); return; }
             if (b.now < nextThink) return;
-            nextThink = b.now + (Enraged ? Rand(1.2f, 2f) : Rand(2f, 3f)) * thinkScale / (1f + PartyCast * extra) * (storyIntense ? StoryThinkMul : 1f);
+            nextThink = b.now + (Agile ? Rand(0.7f, 1.3f) * (Hasted ? 0.6f : 1f) : Enraged ? Rand(1.2f, 2f) : Rand(2f, 3f)) * thinkScale / (1f + PartyCast * extra) * (storyIntense ? StoryThinkMul : 1f);
 
             // 依距離挑招：近身多用地裂／橫掃，遠距離用熔岩彈／落石雨
             float d = Battle.FlatDistance(me.Feet, tgt.Feet);
@@ -249,6 +258,12 @@ namespace SpellDuel
                     "x_quake" => close ? 6f : 3f,
                     "x_rootwave" => Last == "p_whip" ? 9f : 2.5f,
                     "x_ripple" => close ? 4f : 1f,
+                    // 魔劍士惡靈（敏捷型）：近身普攻、重斬；離遠了劍氣、連彈；加速
+                    "k_strike" => d < 2.6f ? 6f : 0f,
+                    "k_cleave" => d < 3.2f ? 3f : 0f,
+                    "k_wave" => d > 3.5f ? 3.5f : 0.3f,
+                    "k_fire" => d > 3f ? 3f : 0.3f,
+                    "k_haste" => Hasted ? 0f : 1.5f,
                     _ => 1f,
                 };
                 // 故事 Boss：大範圍、逼人動的招式更常出（橫掃→蹲、地裂／落石／觸手→跑、震地波→跳）；召喚少一點
@@ -326,6 +341,26 @@ namespace SpellDuel
             var next = feet + d / dist * Mathf.Min(dist, walkSpeed * 1.5f * dt);   // 出場走位比平常快（平常 ×0.3），約 3 秒走到
             me.head = new Vector3(next.x, me.head.y, next.z);
             return false;
+        }
+
+        /// <summary>敏捷型的走位：近戰招蓄力時站定；遠程招拉開到 5m；平常逼近到 2m 左右並左右繞</summary>
+        void AgileMove(float dt, Fighter tgt)
+        {
+            var c = me.charging;
+            if (c != null && c.areaRadius > 0f) return;   // 斬擊蓄力：站定（紅色扇形固定）
+            float want = c != null ? AgileRangedKeep : AgileWant;
+            var feet = me.Feet; feet.y = 0f;
+            var toMe = Fighter.Flat(feet - tgt.Feet); if (toMe == Vector3.zero) toMe = Vector3.forward;
+            float cur = Battle.FlatDistance(feet, tgt.Feet);
+            // 想站的位置：離目標 want 公尺，再沿著目標繞一點（左右換邊）
+            float side = Mathf.Sin(b.now * 0.9f + me.minionId) * 35f;
+            var dest = tgt.Feet + Battle.RotateY(toMe, side) * Mathf.Max(Keep, want); dest.y = 0f;
+            var delta = dest - feet; float dist = delta.magnitude;
+            if (dist < 0.15f || (Mathf.Abs(cur - want) < 0.4f && c == null && dist < 0.8f)) return;
+            float speed = AgileSpeed * (Hasted ? 1.25f : 1f) * (Enraged ? 1.15f : 1f);
+            var next = feet + delta / dist * Mathf.Min(dist, speed * dt);
+            if (inside(next)) me.head = new Vector3(next.x, me.head.y, next.z);
+            else { var home = center - feet; home.y = 0f; if (home.sqrMagnitude > 1e-4f) me.head += home.normalized * speed * dt; }
         }
 
         void Move(float dt, Fighter tgt)

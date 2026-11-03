@@ -1030,15 +1030,16 @@ carpet = 4
 # ---- 測試用（使用者要求）：歐式城堡內部的場景＋8 方向 2D 圖片的日式 Q 版敵人
 # style = castle：場景換成城堡內部（石牆、拱窗彩繪玻璃、紅地毯、旗幟、火把），小怪全部換成 8 種 2D 圖片敵人
 [dungeon castle_test] 🧪 月影古堡（2D 敵人測試）
-測試用的副本：歐式古堡內部，敵人是 8 方向的 2D 日式 Q 版圖片。
-level = 5
+測試用的副本（50 級）：歐式古堡內部，敵人是 8 方向的 2D 日式奇幻風圖片；每個房間都有陷阱（地刺、南瓜炸彈、牆中幽靈）。
+level = 50
 players = 1-4
 style = castle
 <before>
 旁白：被遺忘的古堡，大門自己打開了。走廊深處傳來喀啦喀啦的骨頭聲。
 
 [node castle_hall] 玄關大廳
-wave = 2
+wave = 44
+theme = volcano
 next = castle_gallery
 <enter>
 旁白：水晶吊燈還在搖晃。盔甲、骷髏、南瓜……城堡的住民全醒了！
@@ -1046,13 +1047,15 @@ next = castle_gallery
 旁白：大廳安靜下來了。畫廊的門半開著。
 
 [node castle_gallery] 肖像畫廊
-wave = 3
+wave = 46
+theme = volcano
 next = castle_library
 <enter>
 旁白：畫像的眼睛跟著你轉。天花板上倒掛著一排蝙蝠。
 
 [node castle_library] 禁書圖書館
-wave = 4
+wave = 48
+theme = volcano
 next = castle_vault
 <enter>
 旁白：魔導書自己翻頁，小小的黑魔導士躲在書架後面念咒。
@@ -1064,6 +1067,7 @@ next = castle_throne
 旁白：鎖著的寶箱上積滿了灰。
 
 [node castle_throne] 首領：王座之間
-wave = 10
+wave = 50
+theme = volcano
 <enter>
-旁白：王座上坐著的不是國王——地面開始震動！
+旁白：王座上坐著的不是國王——一個拖著黑劍的惡靈站了起來。

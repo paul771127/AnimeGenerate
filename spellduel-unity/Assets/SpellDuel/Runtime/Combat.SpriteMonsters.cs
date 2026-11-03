@@ -31,7 +31,53 @@ namespace SpellDuel
             new SpriteMonsterDef { id = 207, baseKind = 4,  sheet = "castle_gargoyle", name = "小石像鬼",   weight = 2, hiHeight = 1.8f, ranged = true, desc = "從屋簷上跳下來的石像鬼，把石塊舉過頭丟過來" },
             new SpriteMonsterDef { id = 208, baseKind = 5,  sheet = "castle_mage",     name = "見習黑魔導", weight = 2, hiHeight = 2.0f, ranged = true, desc = "尖帽子底下只看得到兩隻黃色眼睛，法杖的寶珠會發光" },
         };
+        /// <summary>
+        /// 第二章（森林）的敵人改成 2D 圖（使用者要求：跟月影古堡一樣的精緻日式漫畫風）。不換種類、不換 AI，只換外觀；
+        /// 依小怪種類（kind）或變種 id（variant）對應。圖還沒畫好（Resources 裡沒有）就照舊用 3D 模型。圖的規格同城堡（SpriteEnemyView.cs）。
+        /// </summary>
+        public static readonly SpriteMonsterDef[] Forest =
+        {
+            // 一般小怪
+            new SpriteMonsterDef { id = -7,  sheet = "forest_spitter",    name = "毒液噴花",   hiHeight = 1.8f },
+            new SpriteMonsterDef { id = -8,  sheet = "forest_boar",       name = "荊棘衝鋒獸", hiHeight = 1.6f },
+            new SpriteMonsterDef { id = -9,  sheet = "forest_vinemage",   name = "藤蔓術士",   hiHeight = 2.0f },
+            new SpriteMonsterDef { id = -10, sheet = "forest_chomper",    name = "食人花",     hiHeight = 1.8f },
+            new SpriteMonsterDef { id = -11, sheet = "forest_sporecap",   name = "孢子菇",     hiHeight = 1.6f },
+            new SpriteMonsterDef { id = -12, sheet = "forest_seedgunner", name = "種子槍手",   hiHeight = 1.8f },
+            // 第二章的小 Boss
+            new SpriteMonsterDef { id = -19, sheet = "forest_rootbeast",  name = "古根撼地獸", hiHeight = 2.8f },
+            // 第二章的菁英怪
+            new SpriteMonsterDef { id = -28, sheet = "forest_elite_guardian", name = "苔甲守根者", hiHeight = 2.4f },
+            new SpriteMonsterDef { id = -29, sheet = "forest_elite_sniper",   name = "棘莢狙擊手", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = -30, sheet = "forest_elite_priest",   name = "夢孢司祭",   hiHeight = 2.0f },
+            new SpriteMonsterDef { id = -31, sheet = "forest_elite_brood",    name = "菌冠育巢者", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = -32, sheet = "forest_elite_hunter",   name = "翠翼巡獵者", hiHeight = 2.0f },
+            // 第二章的稀有怪、人形敵人、輔助型（變種 id）
+            new SpriteMonsterDef { id = 173, sheet = "forest_swift_panther", name = "疾風翠豹",   hiHeight = 1.8f },
+            new SpriteMonsterDef { id = 174, sheet = "forest_swift_spore",   name = "竄林孢子菇", hiHeight = 1.6f },
+            new SpriteMonsterDef { id = 154, sheet = "forest_ranger_scout",  name = "霧林斥候",   hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 155, sheet = "forest_ranger_archer", name = "林間弓手",   hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 156, sheet = "forest_druid",         name = "森林德魯伊", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 141, sheet = "forest_shaman",        name = "林語薩滿",   hiHeight = 2.0f },
+        };
+
+        /// <summary>這隻怪要用哪一套 2D 圖（null＝用 3D 模型）：城堡敵人（變種 201～208）一定有；森林的要圖已經放進 Resources 才用</summary>
+        public static SpriteMonsterDef ForFighter(Fighter m)
+        {
+            if (m == null) return null;
+            if (Has(m.variant)) return Get(m.variant);
+            foreach (var d in Forest)
+                if (d.id > 0 ? m.variant == d.id : m.variant <= 0 && m.minionKind == -d.id)
+                    return SpriteEnemyView.HasArt(d.sheet) ? d : null;
+            return null;
+        }
+
         public static SpriteMonsterDef Get(int id) { foreach (var d in All) if (d.id == id) return d; return null; }
+
+        /// <summary>月影古堡的首領：魔劍士惡靈（跟玩家差不多大）。圖 castle_boss 還沒畫好之前先借空殼騎士的圖</summary>
+        public static SpriteMonsterDef CastleBoss => SpriteEnemyView.HasArt("castle_boss")
+            ? new SpriteMonsterDef { id = 0, sheet = "castle_boss", name = "魔劍士惡靈", height = 2.1f, hiHeight = 2.1f }
+            : new SpriteMonsterDef { id = 0, sheet = "castle_knight", name = "魔劍士惡靈", height = 2.0f, hiHeight = 2.1f };
         public static bool Has(int id) => id >= 201 && id <= 208;
 
         /// <summary>原本要出的小怪 → 城堡敵人（遠程換遠程、近戰換近戰，照權重）</summary>

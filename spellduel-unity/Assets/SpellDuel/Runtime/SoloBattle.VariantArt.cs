@@ -39,7 +39,7 @@ namespace SpellDuel
         readonly Dictionary<Fighter, SpriteEnemyView> spriteBodies = new Dictionary<Fighter, SpriteEnemyView>();
         SpriteEnemyView DressSprite(Fighter m, MinionRig rig)
         {
-            var d = SpriteMonsters.Get(m.variant); if (d == null) return null;
+            var d = SpriteMonsters.ForFighter(m); if (d == null) return null;
             foreach (var r in rig.GetComponentsInChildren<Renderer>(true)) r.enabled = false;   // 原本的骨架藏起來（位置、面向照舊由它帶）
             var v = SpriteEnemyView.Create(d, rig.transform);
             spriteBodies[m] = v;
