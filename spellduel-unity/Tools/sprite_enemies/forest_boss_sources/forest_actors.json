@@ -44,13 +44,13 @@
   [
     "elite_guardian",
     "苔甲守根者",
-    "Elite giant forest sentinel, mature normal humanoid proportions, thick moss-covered bark armor, carved wood face, enormous layered wooden shield on LEFT arm, heavy rooted legs.",
+    "Elite giant forest sentinel, compact semi-chibi humanoid proportions about 4.5 heads tall, thick moss-covered bark armor, carved wood face, enormous layered wooden shield on LEFT arm, heavy rooted legs.",
     "Raise wooden shield defensively then drive shield forward with force."
   ],
   [
     "elite_sniper",
     "棘莢狙擊手",
-    "Elite tall slender plant humanoid sniper, thorned hood, narrow glowing eyes, long thornpod crossbow made of dark twisted wood held in both hands, leaf camouflage, quiverlike seedpod pack.",
+    "Elite compact slender plant humanoid, 4.5 heads tall sniper, thorned hood, narrow glowing eyes, long thornpod crossbow made of dark twisted wood held in both hands, leaf camouflage, quiverlike seedpod pack.",
     "Slowly level long thorn crossbow and aim precisely, then powerful recoil from one shot."
   ],
   [
@@ -68,7 +68,7 @@
   [
     "elite_hunter",
     "翠翼巡獵者",
-    "Elite athletic normal-proportion humanoid forest hunter, emerald translucent segmented insect wings on back, leaf and chitin armor, masked stern face, TWO curved blades one in each hand.",
+    "Elite athletic compact semi-chibi humanoid forest hunter, emerald translucent segmented insect wings on back, leaf and chitin armor, masked stern face, TWO curved blades one in each hand.",
     "Cross both blades before chest, crouch, then lunging dual-blade slash."
   ],
   [
@@ -86,25 +86,25 @@
   [
     "ranger_scout",
     "霧林斥候",
-    "Normal adult humanoid forest scout, mist-gray hooded cloak, fitted layered dark green leather, cloth lower-face mask, sharp watchful eyes, short dagger in right hand, agile light boots.",
+    "Mature-faced semi-chibi humanoid, 4.5 heads tall forest scout, mist-gray hooded cloak, fitted layered dark green leather, cloth lower-face mask, sharp watchful eyes, short dagger in right hand, agile light boots.",
     "Lower body and draw dagger back, then fast precise forward stab."
   ],
   [
     "ranger_archer",
     "林間弓手",
-    "Normal adult humanoid forest archer, dark green leather armor, deep hood concealing face, stern narrow eyes, longbow in LEFT hand and arrow drawn RIGHT, back quiver, asymmetric leaf cape.",
+    "Mature-faced semi-chibi humanoid, 4.5 heads tall forest archer, dark green leather armor, deep hood concealing face, stern narrow eyes, longbow in LEFT hand and arrow drawn RIGHT, back quiver, asymmetric leaf cape.",
     "Raise longbow, draw arrow fully, release, followthrough, recover."
   ],
   [
     "druid",
     "森林德魯伊",
-    "Normal adult humanoid druid with branching antler headdress, solemn masked weathered face, layered moss-green robes, wood staff wound with luminous flowers in right hand, bark and leaf jewelry.",
+    "Mature-faced semi-chibi humanoid, 4.5 heads tall druid with branching antler headdress, solemn masked weathered face, layered moss-green robes, wood staff wound with luminous flowers in right hand, bark and leaf jewelry.",
     "Raise flower staff overhead then channel compact teal healing glow around hands."
   ],
   [
     "shaman",
     "林語薩滿",
-    "Normal adult humanoid forest shaman, bone and feather ornaments, carved wooden ritual mask, woven forest robes, rattling bell staff in right hand, dangling seed charms, teal and bark brown.",
+    "Mature-faced semi-chibi humanoid, 4.5 heads tall forest shaman, bone and feather ornaments, carved wooden ritual mask, woven forest robes, rattling bell staff in right hand, dangling seed charms, teal and bark brown.",
     "Lift and shake bell staff in escalating rhythm, release compact haste magic glow then recover."
   ]
 ]

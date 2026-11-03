@@ -11,3 +11,6 @@
 
 
 第二批：forest_chomper、forest_sporecap、forest_seedgunner 已完成；採用使用者要求的稍微 Q 版比例。累計六隻，格式與透明度驗證通過。
+
+
+追加完成：古根撼地獸、苔甲守根者、棘莢狙擊手。累計 9 / 18 隻；詳見 validation.json。
