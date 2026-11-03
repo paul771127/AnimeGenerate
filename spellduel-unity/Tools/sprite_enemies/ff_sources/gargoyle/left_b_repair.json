@@ -1,0 +1,3 @@
+{
+  "prompt": "Edit target sprite sheet. KEEP the exact number, order, identity and pose of its sprites. Fix clipping: REDRAW ALL sprites at a SMALLER camera scale with a generous empty transparent border around EACH drawing, at least 15% cell on all sides. Reconstruct any cropped sword tips, hat tips, bows, wings and magic glow so absolutely every object is complete. All drawings have identical anatomy scale. No merging between neighbouring cells. Fully transparent background, no text/grid. THREE columns FOUR rows. Restore full upper wingtips, remove grey cutout residue. All figures look FRONT LEFT."
+}

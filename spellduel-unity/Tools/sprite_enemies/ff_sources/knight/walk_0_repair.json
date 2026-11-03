@@ -1,0 +1,3 @@
+{
+  "prompt": "Background extraction only. Remove ALL grey/white background, vignette, haze and cast shadows from this sprite sheet, including between the limbs and between ALL sprites. Preserve exact character drawings, pixel positions, frame counts and poses. Output actual clean RGBA transparent background. Do not add or remove sprites. "
+}

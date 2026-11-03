@@ -1,0 +1,11 @@
+{
+  "prompt": "CRISP HAND-INKED JAPANESE MANGA fantasy monster game sprites, NOT photorealistic. Normal adult anatomy 6.5 heads tall, small heads and narrow eyes, NEVER cute or smiling. Elegant tapered dark contours, readable detailed armour and cloth shapes, two-tone cel shadows with restrained gradients, upper-left light. Gothic cold grey, dark crimson, deep purple and antique gold. PURE zero-alpha transparency outside tight silhouettes, no fog, halo, vignette, floor or text. Create a production TRANSPARENT SPRITE SHEET using ONLY reference character identity, NOT its background. EXACTLY FOUR columns x FOUR rows, 16 separate FULL BODY adult skeleton soldiers, 6.5 heads tall, small skull. Columns fixed across all rows: FRONT, FRONT-RIGHT 45 degrees, RIGHT PROFILE 90 degrees, BACK-RIGHT 135 degrees. Back-right shows back of skull and cape without eyes. Four rows are consecutive subtle idle breathing/guard shifts, no attacking. Same rust armour, burgundy cape, long sword RIGHT, kite shield LEFT. Important: NO BLACK/GREY VIGNETTE, NO BACKGROUND GRADIENT, NO DROP SHADOW OR GLOW HALO. Isolated clean alpha cutouts with fully transparent gaps. Full sword and shield included. Each character centered in its cell, same scale, foot baseline94% down, 12% padding on all sides. Refined sharp Japanese manga cel-shaded enemy art, severe and menacing, not chibi or smiling. Square output 2048x2048.",
+  "columns": 4,
+  "rows": 4,
+  "directions": [
+    0,
+    1,
+    2,
+    3
+  ]
+}

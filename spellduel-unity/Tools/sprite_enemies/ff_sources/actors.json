@@ -1,0 +1,50 @@
+[
+  {
+    "id": "skeleton",
+    "design": "Ancient skeletal soldier, rusted iron breastplate and pauldrons, torn burgundy cape, small red eye socket lights, long sword in RIGHT hand, kite shield LEFT. Adult skeleton 6.5 heads.",
+    "combat": "Raise long sword over shoulder, fully wind up; diagonal slash, low follow-through, guard recovery.",
+    "walk": "Alternating long strides, sword and kite shield held steadily in guard."
+  },
+  {
+    "id": "knight",
+    "design": "Tall EMPTY ornate full plate armour, antique gold engraved borders over cold steel, blue ghostfire through narrow closed visor, long navy cape, TWO-HANDED GREAT SWORD (NO mace). 7 heads tall, imposing broad shoulders and long legs; no skin or human face.",
+    "combat": "Raise two-handed greatsword, fully extend above helmet; vertical downward smash, low impact follow-through, recovery.",
+    "walk": "Heavy alternating marching steps with two-handed greatsword held low in front."
+  },
+  {
+    "id": "archer",
+    "design": "Adult skeletal ranger 6.5 heads tall, small skull beneath torn deep forest-purple hooded cloak, dark leather chest armour and bracers, quiver on back, LONG BOW in anatomical LEFT hand, string/arrow RIGHT hand. Narrow cold violet eye socket lights. No smiling.",
+    "combat": "Nock arrow, draw bow fully aiming; release (no flying projectile), recoil, recovery.",
+    "walk": "Agile alternating strides, steady low bow and quiver."
+  },
+  {
+    "id": "ghost",
+    "design": "Tall thin vengeful wraith in shredded deep plum ankle-length robes and hood, face absolute black shadow with only narrow icy violet lights, elongated claw hands, antique brass lantern with purple soul fire. Lower body dissolves into narrow ghostly trailing cloth/mist inside silhouette. No cute face, no mouth, no legs.",
+    "combat": "Raise lantern, hold high fully charged; thrust lantern and claw to cast soul fire, follow-through, recovery.",
+    "walk": "Hovering six phases, robe tips and long claws flow, lantern swings subtly; remain airborne."
+  },
+  {
+    "id": "bat",
+    "design": "Large threatening natural vampire BAT, leathery dark violet wings spanning 1.5m, lean charcoal fur torso, realistic pointed ears, tiny predatory red eyes, long fangs. Natural animal proportions, not a round pet, no jewellery or clothes, NO smile.",
+    "combat": "Raise wings and bare fangs in screech, tense dive; forward bite lunge, wings swept back, recover flight.",
+    "walk": "Six clear wingbeat stages up, downstroke, low, recovery, upsweep, high. Whole wings always fit."
+  },
+  {
+    "id": "pumpkin",
+    "design": "Menacing pumpkin-headed plant demon, orange deeply ribbed pumpkin with narrowed triangular eyes and jagged sinister carved snarl, NOT a cute smile. Burning short wick on crown, long twisted thorn-vine limbs, woody claw roots, dark purple leaf mantle. NOT a child in clothing. Lean monstrous proportions.",
+    "combat": "Crouch with vines tensed, swell and glow strongly at cracks; ignite in fierce orange flash, explosive scattered husk/vines, recoil fragments. No friendly expression.",
+    "walk": "Six clear loping steps with long vine limbs and planted root claws, no exploding or collapse while walking."
+  },
+  {
+    "id": "gargoyle",
+    "design": "Predatory crouching GREY STONE GARGOYLE, lean muscular adult demonic anatomy, long bent ram horns, batlike carved wings, sharp claws, long whip tail, subtle cracked stone surface. Narrow ember eyes, snarling shut jaw. Holds rough angular boulder in both claws. NOT round or baby-like.",
+    "combat": "Lift boulder from chest, fully overhead; throw forwards, empty-handed follow-through, crouched recovery.",
+    "walk": "Low stalking alternating claw steps, boulder held in BOTH claws ALL six frames, tail counterbalances."
+  },
+  {
+    "id": "mage",
+    "design": "Adult malevolent dark-robed sorcerer 6.5 heads tall, long layered black-purple robe and antique gold trim, broad-brim angular pointed hat, face pure black with ONLY two narrow glowing amber eyes, no mouth. Tall staff with large RED ruby in anatomical RIGHT hand, clawed gloved LEFT hand. No stars or cute trinkets.",
+    "combat": "Raise ruby staff, charge orb; aim staff forward and cast, follow-through, return upright.",
+    "walk": "Alternating walking legs beneath flowing long robe, staff steady in right hand."
+  }
+]

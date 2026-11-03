@@ -1055,3 +1055,10 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 2026-11-03 恢復後已提交並推送美術 `8242dcb`。Unity 原生預覽 CI `41536524288` 成功：八種敵人六類動作與八方向貼圖正確、透明材質正常，城堡既有路線／快取／門／遮罩驗證通過；原生 PNG 在 Docs/castle_2d_preview/enemy_redesign/，場景總覽同步更新。
 - 雙平台 CI `41536527888`（同一美術 commit）成功：Android、iOS 匯出、Xcode 未簽署 IPA 全部通過。證據 native_ci.json／platform_ci.json 已更新；沒有宣稱已做手機實機遊玩測試。
 - 最終圖集驗證 check_castle_enemies.py 與城堡驗證 check_castle_art.py 均為 0 errors；本輪不增加事件、公開介面或連線欄位。
+
+
+### 2026-11-03 月影古堡 FF 日式漫畫奇幻重畫
+- 依 CODEX_TASK_CASTLE_ENEMIES_FF.md 新增 8 種敵人的 48 張高解析動作圖集與 meta，共 1,344 格。正常比例、冷酷戰鬥表情，細化鎧甲、破布、骨骼、皮膜與魔法道具。
+- 保留 8 張舊圖當 fallback；Runtime、戰鬥、網路、關卡及動作切換程式未修改。透明安全邊界與飛行角色留白已檢查。
+- Docs/castle_2d_preview/ff_redesign/ 提供八方向待機、走路／出手 GIF、全影格、新舊比較與 SHA manifest；生成來源與提示詞在 Tools/sprite_enemies/ff_sources/。
+- check_castle_ff.py：48 張、1,344 格，0 errors；PNG 約 69.11 MiB。本機無 Unity，本輪平台編譯需由推送後 CI 確認，未沿用上一版的成功結果作證。

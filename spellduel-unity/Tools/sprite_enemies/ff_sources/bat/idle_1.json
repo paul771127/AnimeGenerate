@@ -1,0 +1,13 @@
+{
+  "id": "bat",
+  "group": "idle",
+  "columns": 4,
+  "rows": 4,
+  "directions": [
+    4,
+    5,
+    6,
+    7
+  ],
+  "prompt": "CRISP HAND-INKED JAPANESE MANGA fantasy monster game sprites, NOT photorealistic. Normal adult anatomy 6.5 heads tall, small heads and narrow eyes, NEVER cute or smiling. Elegant tapered dark contours, readable detailed armour and cloth shapes, two-tone cel shadows with restrained gradients, upper-left light. Gothic cold grey, dark crimson, deep purple and antique gold. PURE zero-alpha transparency outside tight silhouettes, no fog, halo, vignette, floor or text. Reference is CHARACTER IDENTITY ONLY, ignore its background. Large threatening natural vampire BAT, leathery dark violet wings spanning 1.5m, lean charcoal fur torso, realistic pointed ears, tiny predatory red eyes, long fangs. Natural animal proportions, not a round pet, no jewellery or clothes, NO smile. ANATOMY: exactly TWO small hind feet tucked under flying abdomen; the TWO wings ARE the forelimbs. No extra front arms or feet, NEVER four legs. Airborne in every non-death pose. Production animation sheet, EXACTLY FOUR columns by 4 rows, 16 individual full-body sprites. Columns left to right: STRAIGHT BACK 180, BACK-LEFT 225, LEFT PROFILE 270 (faces screen left), FRONT-LEFT 315. Each column ALWAYS has that same view in ALL rows. IMPORTANT: for LEFT views the nose/snout/visor points toward the LEFT EDGE of the canvas, opposite the supplied reference; do not reuse the reference facing-right pose for a left view. Back-left shows leftward rear oblique. Front-left shows leftward front oblique. Rear views show backs, not faces. FOUR IDLE frames: relaxed combat guard, inhale/shoulders rise slightly, exhale and grip adjustment, settle. Subtle but distinct cape/arm changes. No attack.  Same anatomy, outfit, proportions, weapon hand and camera scale in every cell. Camera orthographic, slightly elevated 10 degrees. Each drawing occupies at most 75% cell width/height, with WIDE FULLY TRANSPARENT GUTTERS and outside padding; never crop head/hat/wing/sword/feet. Center ground anchor at horizontal 50% and vertical94% of each square cell. Leave 12% padding around silhouette (including top of first row). Small mature heads, long limbs, no chibi. No background, fog, halos, vignette or cast shadow. No gridlines, labels or text. Square cells, requested canvas 2048x2048."
+}
