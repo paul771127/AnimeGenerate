@@ -236,6 +236,7 @@ namespace SpellDuel
             mat.mainTexture = ExploreArt.GroundTexture(map.dungeon != null ? ExploreArt.DungeonBaseGround(map) : ExGround.Grass);
             mat.SetColor("_Tint", new Color(0.92f, 0.95f, 0.9f));
             ExploreArt.HorizonColors(map, out var hg, out var hs); mat.SetColor("_Haze", ExploreArt.HazeOf(hg, hs));
+            if (map.theme == "castle") { mat.SetFloat("_FadeStart", ExploreArt.CastleFogNear); mat.SetFloat("_FadeEnd", ExploreArt.CastleFogFar); }   // 城堡：底下的地面也跟著距離變黑（載入範圍外不會露出有顏色的一片）
             mr.sharedMaterial = mat; mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; mr.receiveShadows = false;
             return go;
         }

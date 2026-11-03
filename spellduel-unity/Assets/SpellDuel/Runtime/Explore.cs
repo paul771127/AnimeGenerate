@@ -58,7 +58,7 @@ namespace SpellDuel
         /// <summary>副本營地中間的怪（不巡邏、不晃）</summary>
         public bool CampCore => area >= 0 && patrol == null && !wander;
         public float SpeedMul => role == 1 ? 1.6f : 1f;
-        public float DetectMul => role == 2 ? 2.4f : 1f;
+        public float DetectMul => role == 2 ? 2.4f : 1f;   // 舊的全方位警戒用；現在的警戒是 Battle.ExSees（正面扇形）
     }
 
     public class ExNpc

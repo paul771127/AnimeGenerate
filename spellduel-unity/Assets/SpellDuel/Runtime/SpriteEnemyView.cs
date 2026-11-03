@@ -150,7 +150,9 @@ namespace SpellDuel
             // 受擊閃白、倒下淡出；場景偏暗時跟著暗一點
             float fade = deadAt >= 0f ? Mathf.Clamp01(1f - (Time.time - deadAt - 0.6f) / 0.5f) : 1f;
             fade *= Mathf.Clamp01((Time.time - born) / FadeIn);
-            var c = Time.time < flashUntil ? new Color(1f, 0.55f, 0.55f, fade) : new Color(1f, 1f, 1f, fade);
+            // 城堡的距離漸暗：跟牆、地板一樣，遠處由黑慢慢變出顏色
+            float fog = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(ExploreArt.CastleFogNear, ExploreArt.CastleFogFar, Vector3.Distance(cam.transform.position, quad.position)));
+            var c = Time.time < flashUntil ? new Color(fog, 0.55f * fog, 0.55f * fog, fade) : new Color(fog, fog, fog, fade);
             // Sprites/Default 的 _MainTex 是 [PerRendererData]：用了 MaterialPropertyBlock 就一定要把圖也放進去，不然會取到預設的白圖（使用者回報「白背景」）
             mr.GetPropertyBlock(block);
             Texture tex = hi != null ? hi[(int)a] : mr.sharedMaterial ? mr.sharedMaterial.mainTexture : null;

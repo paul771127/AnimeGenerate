@@ -229,7 +229,7 @@ namespace SpellDuel
                 // 王座的不祥氣息
                 if (final) { var ac = a.center; ExploreFx.Loop(exRoot, DgThroneKey, "fx_DG_throne_aura", !a.entered && Battle.FlatDistance(ac, me) <= DgFxThroneRange, () => ac + Vector3.up * 2f, 8f); }
                 // 環境：區域裡兩個點（不同角落）
-                for (int k = 0; k < 2; k++)
+                for (int k = 0; k < 2 && run.map.theme != "castle"; k++)   // 城堡：不播（原本照章節主題播熔岩冒煙，在室內牆邊像一團黑影）
                 {
                     var off = new Vector3((k == 0 ? -1f : 1f) * a.rect.width * 0.3f, 0f, (k == 0 ? 1f : -1f) * a.rect.height * 0.3f) * ExploreMap.CellSize;
                     var at = a.center + off + Vector3.up * 0.8f;

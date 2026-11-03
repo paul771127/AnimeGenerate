@@ -4,6 +4,8 @@ namespace SpellDuel
 {
  public static partial class ExploreArt
  {
+  /// <summary>城堡的距離漸暗：近處原色，CastleFogNear 公尺開始變暗，CastleFogFar 全黑（場景只載入約 24m）。shader 裡寫死同樣的數字（CastleIllustration、DungeonExploreFloor）</summary>
+  public const float CastleFogNear=9f,CastleFogFar=21f;
   static readonly Dictionary<string,Material> castleMaterials=new Dictionary<string,Material>();
   static Mesh castleQuad;
   static readonly Vector4[] castleProps={

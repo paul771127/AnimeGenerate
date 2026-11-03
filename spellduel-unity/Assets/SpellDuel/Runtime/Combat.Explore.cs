@@ -39,6 +39,23 @@ namespace SpellDuel
         /// <summary>被擊中或被擊殺時，這個範圍內的其他怪也會發現玩家（使用者要求）</summary>
         public const float ExNoiseRange = 4f;
         public const float ExActivate = 16f, ExDespawn = 24f, ExDetect = 2.5f, ExCallRange = 9f, ExPatrolSpeed = 0.55f;
+        /// <summary>警戒範圍（使用者要求）：怪的正面扇形 90°、半徑 7m（哨兵 ×1.4、扇形 120°；打盹的半徑減半）；背後看不到，隔著牆也看不到</summary>
+        public const float ExSightRange = 7f, ExSightHalfAngle = 45f, ExSentryRangeMul = 1.4f, ExSentryHalfAngle = 60f;
+
+        bool ExSees(Fighter m, ExMonster mon, Vector3 pf)
+        {
+            bool sentry = mon.role == 2;
+            float range = ExSightRange * (sentry ? ExSentryRangeMul : 1f) * (m.exSleep ? 0.5f : 1f) + m.bodyRadius;
+            var to = pf - m.Feet; to.y = 0f;
+            float d = to.magnitude;
+            if (d > range) return false;
+            if (d > 0.01f)
+            {
+                var f = m.forward; f.y = 0f;
+                if (f.sqrMagnitude > 1e-6f && Vector3.Angle(f, to) > (sentry ? ExSentryHalfAngle : ExSightHalfAngle)) return false;   // 不在正面的扇形裡
+            }
+            return ExSight(m.Feet, pf);
+        }
         /// <summary>追擊：離玩家超過 ExChaseNear（或中間隔著牆）就沿迷宮走道追，速度 ExChaseSpeed（比衝刺慢，玩家停下來就會被追上）</summary>
         public const float ExChaseSpeed = 1.6f, ExChaseNear = 4f, ExRangedNear = 6.5f;
         /// <summary>疾風稀有怪的追擊速度（m/s）：比探索衝刺（2.5×1.5＝3.75）快一點，甩不掉</summary>
@@ -499,7 +516,7 @@ namespace SpellDuel
                     if (md > ExDespawn && d > ExDespawn) { ExStow(mon, m); continue; }
                     bool hurt = m.hp < m.maxHp - 0.01f;
                     if (mon.guardian > 0) { var a = run.map.arenas.Find(x => x.n == mon.guardian); if (a.entered || hurt) ExAlert(m); }
-                    else if (md <= ExDetect * mon.DetectMul * (m.exSleep ? 0.5f : 1f) + m.bodyRadius && ExSight(m.Feet, pf) || hurt) ExAlert(m);   // 哨兵：警戒範圍大   // 打盹的：要走得更近才會發現   // 警戒範圍不穿牆
+                    else if (ExSees(m, mon, pf) || hurt) ExAlert(m);   // 哨兵：警戒範圍大   // 打盹的：要走得更近才會發現   // 警戒範圍不穿牆
                 }
                 // 發現玩家之後就一直追，直到追上為止（使用者要求）：不會放棄、也不會收起來
             }

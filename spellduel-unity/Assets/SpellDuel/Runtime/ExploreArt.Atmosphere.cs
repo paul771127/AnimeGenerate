@@ -74,7 +74,7 @@ namespace SpellDuel
   /// <summary>這張地圖的地面色、天空底色（地面碗與地面網格的遠方淡出用）</summary>
   public static void HorizonColors(ExploreMap map,out Color ground,out Color skyLow)
   {
-   if(map!=null&&map.theme=="castle"){ground=new Color(.16f,.10f,.12f);skyLow=new Color(.12f,.08f,.11f);return;}
+   if(map!=null&&map.theme=="castle"){ground=new Color(.01f,.008f,.01f);skyLow=new Color(.01f,.008f,.01f);return;}   // 城堡：遠處全黑（距離漸暗的終點，見 CastleFogNear／Far）
    if(map==null||map.dungeon==null||!(map.nodeAreas||map.theme!="jungle")){ground=new Color(.30f,.42f,.24f);skyLow=new Color(.64f,.84f,.83f);return;}
    int theme=map.nodeAreas?5:map.theme=="volcano"?0:map.theme=="sea"?2:map.theme=="arena"?3:4;
    skyLow=theme==0?new Color(.58f,.23f,.14f):theme==2?new Color(.68f,.86f,.89f):theme==5?new Color(.32f,.29f,.22f):new Color(.86f,.68f,.46f);

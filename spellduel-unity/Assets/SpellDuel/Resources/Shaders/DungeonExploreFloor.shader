@@ -11,8 +11,8 @@ Shader "SpellDuel/DungeonExploreFloor"
  #include "UnityCG.cginc"
  sampler2D _CastleAtlas;float4 _CastleCenter;sampler2D _MainTex;float4 _PathColor,_VergeColor,_TexOffset,_Props[16];int _PropCount;float _Theme,_Room,_RoomEdge,_RegionTheme;float4 _Accent;
  struct appdata {float4 vertex:POSITION;float2 uv:TEXCOORD0;float4 links:TEXCOORD1;};
- struct v2f {float4 pos:SV_POSITION;float2 p:TEXCOORD0;float4 links:TEXCOORD1;};
- v2f vert(appdata v){v2f o;o.pos=UnityObjectToClipPos(v.vertex);o.p=v.uv;o.links=v.links;return o;}
+ struct v2f {float4 pos:SV_POSITION;float2 p:TEXCOORD0;float4 links:TEXCOORD1;float3 wp:TEXCOORD2;};
+ v2f vert(appdata v){v2f o;o.pos=UnityObjectToClipPos(v.vertex);o.p=v.uv;o.links=v.links;o.wp=mul(unity_ObjectToWorld,v.vertex).xyz;return o;}
  float bit(float mask,float place){return fmod(floor(floor(mask+.5)/place),2);}
  fixed4 frag(v2f i):SV_Target {
  float h=i.links.z,f=i.links.w,d=100;float4 open=float4(bit(i.links.x,1),bit(i.links.x,2),bit(i.links.x,4),bit(i.links.x,8));
@@ -44,7 +44,8 @@ Shader "SpellDuel/DungeonExploreFloor"
  float ca=smoothstep(-.025,.025,cd)*lane;
  road=lerp(marble,carpet,ca);float piping=(1-smoothstep(.025,.065,abs(cd)))*lane;
  road=lerp(road,float3(.83,.60,.24),max(piping,border));
- return fixed4(lerp(road*.35,road,lane),1);
+ float fog=1-smoothstep(9,21,length(i.wp-_WorldSpaceCameraPos));   // 城堡：距離漸暗（和 CastleIllustration 一致）
+ return fixed4(lerp(road*.35,road,lane)*fog,1);
  }
  float3 verge=base*.48;return fixed4(lerp(verge,road,lane),.98);
 
