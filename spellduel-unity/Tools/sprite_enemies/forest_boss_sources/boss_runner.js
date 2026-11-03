@@ -1,0 +1,10 @@
+for(const job of jobs){
+const [rows,act]=load("bossGroups")[job.group];
+const dirs=job.half===0?"column1 FRONT (toward viewer); column2 FRONT-RIGHT threequarter (nose and chest toward screen RIGHT); column3 RIGHT PROFILE (nose toward screen RIGHT); column4 BACK-RIGHT (back visible, face to RIGHT).":"column1 BACK (no face visible); column2 BACK-LEFT (back visible, face toward screen LEFT); column3 LEFT PROFILE (nose toward screen LEFT); column4 FRONT-LEFT (face/chest toward screen LEFT). All non-back columns in this sheet must face LEFT.";
+const prompt="Production animation sprite sheet of EXACT character in reference. FOUR equally spaced columns, "+rows+" equally spaced rows, exactly "+(rows*4)+" full-body drawings. Columns are directions fixed down every row: "+dirs+" Each row is next action frame: "+act+" Match reference shattered black steel armor, purple-magenta fire, smoky thin cloak ribbons, RIGHT-hand longsword and LEFT flame claw. Same normal adult 7-head proportions, compact fast athletic swordsman, threatening no smile. Crisp detailed Japanese manga JRPG style, cel shadows soft highlights upper-left light. IDENTICAL body scale throughout all cells including collapse (do not enlarge death). Keep ALL sword tips/feet/fire/smoke inside cells, generous 15% transparent padding EVERY SIDE of each cell. Absolutely clear transparent gutters. No scene, floor, shadow, text, grid or paper. Genuine RGBA alpha0 background. No mirror flip of handedness. Maximum available resolution.";
+const root=load("artRoot"),dir="spellduel-unity/Tools/sprite_enemies/forest_boss_sources/castle_boss",file=job.group+"_"+job.half;
+const r=await tools.image_gen__imagegen({prompt,referenced_image_paths:[root+"/"+dir+"/master.png"],transparent_background:true});generatedImage(r);
+const src=r.output_hint.match(/as (C:\\[^\n]+?\.png) by default/)[1].replaceAll("\\","/");
+text(await tools.exec_command({cmd:"Copy-Item -LiteralPath '"+src+"' -Destination '"+dir+"/"+file+".png'",workdir:root,max_output_tokens:100}));
+store("boss_prompt_"+file,prompt);
+}

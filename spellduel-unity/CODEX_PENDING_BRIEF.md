@@ -1062,3 +1062,9 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 保留 8 張舊圖當 fallback；Runtime、戰鬥、網路、關卡及動作切換程式未修改。透明安全邊界與飛行角色留白已檢查。
 - Docs/castle_2d_preview/ff_redesign/ 提供八方向待機、走路／出手 GIF、全影格、新舊比較與 SHA manifest；生成來源與提示詞在 Tools/sprite_enemies/ff_sources/。
 - check_castle_ff.py：48 張、1,344 格，0 errors；PNG 約 69.11 MiB。本機無 Unity，本輪平台編譯需由推送後 CI 確認，未沿用上一版的成功結果作證。
+
+
+### 2026-11-04 月影古堡魔劍士惡靈 2D 首領
+- 依 CODEX_TASK_FOREST_AND_CASTLE_BOSS.md 完成 castle_boss 的 11 張圖集與 meta：6 基本動作、5 招式專用動作，共 272 格；快步逼近、斜斬、橫掃、腰高劍氣、爪手火球與碎甲倒地。
+- Docs/castle_2d_preview/boss/ 提供八方向、全影格及五組動作 GIF；原圖與提示詞保存在 Tools/sprite_enemies/forest_boss_sources/castle_boss/。
+- check_forest_boss.py 0 errors。僅美術／工具／文件，未修改 Runtime、戰鬥或連線；平台建置仍由推送後 CI 驗證。森林 18 隻另外分批交付。
