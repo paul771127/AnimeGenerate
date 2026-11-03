@@ -42,6 +42,18 @@ namespace SpellDuel
         /// <summary>警戒範圍（使用者要求）：怪的正面扇形 90°、半徑 7m（哨兵 ×1.4、扇形 120°；打盹的半徑減半）；背後看不到，隔著牆也看不到</summary>
         public const float ExSightRange = 7f, ExSightHalfAngle = 45f, ExSentryRangeMul = 1.4f, ExSentryHalfAngle = 60f;
 
+        /// <summary>原地附近挑一個走得到、中間沒有牆的點（離家 1.5～3.5m）</summary>
+        bool ExPickStroll(Fighter m)
+        {
+            for (int t = 0; t < 8; t++)
+            {
+                float ang = Rand(0f, Mathf.PI * 2f), rr = Rand(1.5f, 3.5f);
+                var cand = m.exMon.home + new Vector3(Mathf.Cos(ang) * rr, 0f, Mathf.Sin(ang) * rr);
+                if (explore.map.Walkable(cand, 0.6f) && ExLineClear(m.Feet, cand)) { m.exWanderTo = cand; m.exHasWander = true; return true; }
+            }
+            return false;
+        }
+
         bool ExSees(Fighter m, ExMonster mon, Vector3 pf)
         {
             bool sentry = mon.role == 2;
@@ -437,6 +449,16 @@ namespace SpellDuel
             }
             if (p == null || p.Length < 2)
             {
+                // 平時不時走來走去（使用者要求；警戒是正面扇形，一直面向營地中間就永遠看不到人）：到附近 1.5～3.5m 的點，停下來張望，再回到原地附近
+                if (m.exHasWander)
+                {
+                    var sd = Fighter.Flat(m.exWanderTo - m.Feet);
+                    if (sd.magnitude < 0.35f) { m.exHasWander = false; ExIdle(m, 1, Rand(2f, 4f)); return; }
+                    m.forward = TurnToward(m.forward, sd.normalized, dt * 4f);
+                    var sn = m.Feet + sd.normalized * Mathf.Min(sd.magnitude, ExPatrolSpeed * m.speedMul * dt);
+                    if (minionInside == null || minionInside(sn)) m.head = new Vector3(sn.x, m.head.y, sn.z); else m.exHasWander = false;
+                    return;
+                }
                 // 不巡邏的（營地）：轉向營地中間（圍著篝火）、偶爾覓食或張望
                 if (m.exMon.camp >= 0)
                 {
@@ -447,8 +469,9 @@ namespace SpellDuel
                 }
                 if (now >= m.exIdleCd)
                 {
-                    int r = rng.Next(3);
-                    if (r == 0) ExIdle(m, 2, Rand(3f, 5f)); else if (r == 1) ExIdle(m, 1, Rand(2f, 3.5f)); else { ExEmote(m, Pick(ExMutter)); m.exIdleCd = now + Rand(4f, 8f); }
+                    int r = rng.Next(5);
+                    if (r >= 3 && ExPickStroll(m)) { m.exIdleCd = now + Rand(6f, 12f); return; }   // 走一走
+                    if (r == 0) ExIdle(m, 2, Rand(3f, 5f)); else if (r == 1 || r >= 3) ExIdle(m, 1, Rand(2f, 3.5f)); else { ExEmote(m, Pick(ExMutter)); m.exIdleCd = now + Rand(4f, 8f); }
                 }
                 return;
             }
