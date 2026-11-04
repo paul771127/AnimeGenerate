@@ -1,0 +1,9 @@
+{
+  "prompt": "Edit this sprite atlas. ONLY CHANGE THE SIXTH COLUMN FROM THE LEFT (index5). All four sprites in sixth column must turn to BACK-LEFT REAR THREE QUARTER: their face, eyes, nose, chest and bandaged arm must be hidden behind their body. Show the back surface of ochre hood and cloak, with left rear shoulder visible, oriented opposite fourth column. Maintain exact same cute 2.5head traveler. Preserve remaining seven columns. Four rows eight columns. Transparent background.",
+  "tool": "built-in image_gen",
+  "applies_to": [
+    "idle",
+    "walk (six rows)",
+    "gesture"
+  ]
+}

@@ -19,3 +19,15 @@ Five additional NPCs with full idle/walk/gesture atlases, eight-direction previe
 ## Batch 3: Lingyin, Ark, Xiaomai, Oldsmith shade, Gearmerchant
 
 Full eight-direction idle/walk/gesture sets and previews. Total 11 NPCs, 1232 cells, 0 partial validation errors. Ghost retains blue ethereal appearance; mechanical merchant follows the existing automaton portrait.
+
+## Batch 4: Foreman, Ayan, Bellsmith
+
+Mine NPCs now have all three eight-direction animation atlases and previews. Total 14 NPCs, 1568 cells, 0 errors. No gameplay changes.
+
+## Batch 5: Jungle elder, hunter, explorer, outpost guard
+
+Four original forest NPC designs with all three animation sets and previews. Total 18 NPCs, 2016 cells, 0 errors. Designs follow the brief's sprouting staff, fur vest, backpack/map, light armor/green cloak/spear requirements.
+
+## Final batch: Herbalist, guardian, spirit, traveler
+
+All 22 NPCs complete: 66 RGBA atlases, 2464 cells. Full check_npc_sprites.py reports 0 errors. Includes per-NPC direction sheets, walk/gesture GIFs, portrait comparisons and all_npcs.jpg. Traveler rear-left direction corrected with image_gen. Original generated sources and prompts are retained under Tools/sprite_npcs/sources. No Runtime code changed. Unity Editor compilation was not run in this environment.
