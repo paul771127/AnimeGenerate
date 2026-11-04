@@ -7,3 +7,7 @@ Batch 1: sea_jumpfish, sea_seabird, sea_bubblerider. Each has idle 4, walk 6, wi
 ## Batch 2
 
 Added sea_hermitcrab, sea_jellyfish, sea_puffer, including shell side-collapse correction and puffer needle attack revision. Cumulative 6 enemies,36 atlases,1008 cells,0 partial-validation errors. Remaining 12 sea,25 arena,25 canyon.
+
+## Batch 3
+
+Added sea_whipeel, sea_elite_crab, sea_elite_gunner. Cumulative 9 enemies,54 atlases,1512 cells,0 partial-validation errors. Remaining 9 sea,25 arena,25 canyon.

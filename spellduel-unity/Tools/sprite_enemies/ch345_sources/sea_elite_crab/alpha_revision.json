@@ -1,0 +1,4 @@
+{
+  "prompt": "Background extraction edit. Keep these exact32 coral crab sprites in their exact8columns4rows positions and sizes. Remove ALL beige background and all ground/drop shadows completely. Genuine alpha transparency between and around every crab and between legs and coral branches. Do not alter character artwork. Output RGBA transparent sprite sheet, no checkerboard painted.",
+  "tool": "built-in image_gen"
+}
