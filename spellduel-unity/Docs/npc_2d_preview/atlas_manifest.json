@@ -134,6 +134,116 @@
         "walk": "00a509d0078691b4097a84d235760ceab77badd8cbca4a8f92b005d2271f100e",
         "gesture": "362b36e3e1362c3d5633089d91916a74cf9e57cceb0a16a02a3a9b564146af96"
       }
+    },
+    "lingyin": {
+      "files": {
+        "idle": {
+          "sha256": "95ccc773db8d2f3353d259779180ff52d498251399b2adfcf8c7be8a8581c1cb",
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "3d1fb5afa3b306bd2b1c8f3d372dc9ecb2aad28088c80b093d397fee2c67cb90",
+          "rows": 6
+        },
+        "gesture": {
+          "sha256": "2904f6fed8cf06679343817998d08ba9517736537f574a7231dba49694ba3567",
+          "rows": 4
+        }
+      },
+      "source_edge_contacts": [],
+      "sources": {
+        "idle": "c629d712fd9929195b8016321777f6c64ff57fd8f12a0758df04c3140f0e7f77",
+        "walk": "c1bdb00766fadb0f0ebb4b5ded1e4922cf0c36a2423d2d842c98f42a0e4cbdea",
+        "gesture": "7e4d6caeb1e3eac4136e689ef726bb7125aef078792daa94c48db7ee56939a90"
+      }
+    },
+    "ark": {
+      "files": {
+        "idle": {
+          "sha256": "905020908dc1a51a18303902c4f00c3222ee48343332a6412d9d69e7582b00c1",
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "ac84b923d381559a09bb8fa63c92dd57b99e8d1b4901185c1bbbc7ee58b27f77",
+          "rows": 6
+        },
+        "gesture": {
+          "sha256": "58ff6c2748581eadbfd8129be68c4b6f766b34e5a9b8715206ce97fe2087acf0",
+          "rows": 4
+        }
+      },
+      "source_edge_contacts": [],
+      "sources": {
+        "idle": "f5a59a13a21280e1adb5cd69d1de9b2f32f7c05e8ec4c34eeeab200d8580659e",
+        "walk": "c79a2815663919a4ba30088f7e5ff9628836fcedefc5d978d28fa5969f8b17ad",
+        "gesture": "0cbcc0a115db9ade6f13abaeefd468f8f6e44396dc8847c09d290ca1a5bc3e17"
+      }
+    },
+    "xiaomai": {
+      "files": {
+        "idle": {
+          "sha256": "f8ceb1f00eb0356c72cb0367ce2e179853ac6343a35b22cd2f43083ce2d2d3c7",
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "ad52aeafaaa07cfade6881f9b9e3def2d03d36937ed520e0b48ec2d4498136f3",
+          "rows": 6
+        },
+        "gesture": {
+          "sha256": "d95d6df1c6ffe96240be158cdea78da65a83b12fdf74474c0d22432b9b9ef607",
+          "rows": 4
+        }
+      },
+      "source_edge_contacts": [],
+      "sources": {
+        "idle": "42072264745a73750e158568363bc53ef42835fc92814933599659717fd784ac",
+        "walk": "245f35e332c9a01140f4d62ef615e8678964aa4846f490b7cb32af15a051a856",
+        "gesture": "3fc402a20028690f8fd57611761a6eaed387d1e1ba18295229e47fa137393cd5"
+      }
+    },
+    "oldsmith_shade": {
+      "files": {
+        "idle": {
+          "sha256": "464f792945ce21282e7b80cf5724557b69c3a35353da9fa54697d76d9ba0fc87",
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "47f988a5806b198aaec5c25e14ca04dcfd49e007b8ddb65bdd88a71f6b03edd7",
+          "rows": 6
+        },
+        "gesture": {
+          "sha256": "e2146bc2fcaea8fa25b06d5ae51f7a6bf2e4bf30cc48e9c5332a77704982df6c",
+          "rows": 4
+        }
+      },
+      "source_edge_contacts": [],
+      "sources": {
+        "idle": "3f2e34e1ed6431ae1c3c8d60ad5f06c21531dc10b434cbf3e0da7725431722ce",
+        "walk": "2da035ff1e94bda864a77dca8b28a7eac023a2495794b881c67ac3f715b82c7a",
+        "gesture": "abc3536aeb7a54184868db1910d6f030454a43020940f8746bccc88611e2c26c"
+      }
+    },
+    "gearmerchant": {
+      "files": {
+        "idle": {
+          "sha256": "7790e7c987063ae5577ac7d271517313889787df0a6925a7c38723871ee6ea40",
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "d5c0f4c7070387297120a58556b78b35f806f4e7d739b74b23c543d5c0f95beb",
+          "rows": 6
+        },
+        "gesture": {
+          "sha256": "3b44ef30ee7632505353052afb7432e099eccfe12261fc2202de0b26a8e76112",
+          "rows": 4
+        }
+      },
+      "source_edge_contacts": [],
+      "sources": {
+        "idle": "80e9b4ba3e6352f6c0f306ae552053226a500020600f78455839ad02ad2b5122",
+        "walk": "0bf81903c32bcf42fcc54254c82deb462e660892fba0504131b6b5a9e3dbf984",
+        "gesture": "8ebc9ad4d3f9a3985931eb1f4f15eea3b0aac2edc8bf86793a558df257553353"
+      }
     }
   }
 }
