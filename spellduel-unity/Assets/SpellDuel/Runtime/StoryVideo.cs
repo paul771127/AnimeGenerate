@@ -43,6 +43,10 @@ namespace SpellDuel
         /// 影片推到 videos/ 之前 CastleBossFile＝null（不播，直接接對話）；交貨後填檔名、LineTimes、Subs。
         /// </summary>
         public const string CastleBossFile = null;   // 例："vd_castle_boss_v1.mp4"
+        /// <summary>副本的開場影片（第一次進副本、開打前；「📖 看故事」也會播）。分鏡在 shots.json 的 vd_castle_intro；交貨前＝null（改用對話）</summary>
+        public const string CastleIntroFile = null;  // 例："vd_castle_intro_v1.mp4"
+        public static Clip ForDungeonIntro(string dungeonId) =>
+            dungeonId == "castle_test" && CastleIntroFile != null ? new Clip { file = CastleIntroFile, title = "月影古堡・開場", from = 0, to = 6, shots = 6, mb = 6 } : null;
         public static Clip ForDungeonBoss(string dungeonId) =>
             dungeonId == "castle_test" && CastleBossFile != null ? new Clip { file = CastleBossFile, title = "月影古堡・魔劍士惡靈", from = 0, to = 6, shots = 6, mb = 6 } : null;
 

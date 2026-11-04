@@ -250,6 +250,49 @@
           "prompt": "{Wraith} sweeping the sword sideways, a crescent of magenta ghost fire racing across the hall, skeletons and armored knights charging toward the camera, fast push in then fade to black"
         }
       ]
+    },
+    {
+      "id": "vd_castle_intro",
+      "title": "月影古堡・開場",
+      "play": "月影古堡（castle_test）第一次進副本、開打前（約 30 秒）；播完直接進地圖",
+      "shots": [
+        {
+          "id": "vd_castle_intro_s01",
+          "seconds": 5,
+          "zh": "月亮被雲遮住的夜裡，山丘上那座沒人住的古堡，窗戶一扇一扇亮了起來。",
+          "prompt": "a gothic castle on a moonlit hill at night, the moon half hidden by clouds, its dark windows lighting up one after another with cold violet light, slow push in from far away, mist over the hill"
+        },
+        {
+          "id": "vd_castle_intro_s02",
+          "seconds": 5,
+          "zh": "村裡的人說，每到這種夜晚，古堡的鐘就會響；聽見鐘聲的人，再也沒有回來。",
+          "prompt": "a small medieval village at the foot of the hill at night, a distant bell tolling from the castle, a lone villager with a lantern walking in a trance up the hill path, villagers watching fearfully from behind shutters"
+        },
+        {
+          "id": "vd_castle_intro_s03",
+          "seconds": 5,
+          "zh": "{玩家}，地圖上沒有這座城堡的名字……書裡只寫了「月影」兩個字。",
+          "prompt": "{Erin} and {Player} standing before the huge iron-bound castle gate at night, Erin holding an old book open with a faint violet glow, looking up at the gate, moonlight, medium shot"
+        },
+        {
+          "id": "vd_castle_intro_s04",
+          "seconds": 5,
+          "zh": "沉重的城門自己打開了，又在兩人身後「砰」地關上。",
+          "prompt": "the heavy castle gate creaking open by itself, {Erin} and {Player} stepping into a dark entrance hall with a crystal chandelier, then the gate slamming shut behind them, dust bursting, the candles flaring"
+        },
+        {
+          "id": "vd_castle_intro_s05",
+          "seconds": 5,
+          "zh": "走廊深處傳來喀啦喀啦的骨頭聲。盔甲、骷髏、提燈的幽靈，全都醒了。",
+          "prompt": "a long gothic corridor with red carpet and portraits, skeleton soldiers rising and turning their heads, an empty suit of armor's visor lighting blue, a hooded ghost with a purple lantern floating out of a wall, bats scattering, tracking shot"
+        },
+        {
+          "id": "vd_castle_intro_s06",
+          "seconds": 5,
+          "zh": "小心腳下——地板的縫裡有東西在發光。這座城堡，到處都是機關。",
+          "prompt": "close-up of a stone floor tile with thin red light glowing in its seams, steel spikes rising slightly, {Erin} catching {Player}'s arm to stop them, then both raising weapons as the corridor ahead fills with glowing eyes, push in, fade to black"
+        }
+      ]
     }
   ],
   "style_position": "prefix"

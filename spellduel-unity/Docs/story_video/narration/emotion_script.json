@@ -349,6 +349,68 @@
     "tts_emotion": "憤怒、下令",
     "tts_direction": "前兩字低沉，後半句爆發成命令"
    }
+  ],
+  "vd_castle_intro.mp4": [
+   {
+    "file": "vd_castle_intro_00.mp3",
+    "speaker": "旁白",
+    "text": "月亮被雲遮住的夜裡，山丘上那座沒人住的古堡，窗戶一扇一扇亮了起來。",
+    "emotion": "陰森、神祕",
+    "direction": "放慢，像在講鬼故事",
+    "tts_text": "月亮被云遮住的夜里，山丘上那座没人住的古堡，窗户一扇一扇亮了起来。",
+    "tts_emotion": "陰森、神祕",
+    "tts_direction": "放慢，像在講鬼故事"
+   },
+   {
+    "file": "vd_castle_intro_01.mp3",
+    "speaker": "旁白",
+    "text": "村裡的人說，每到這種夜晚，古堡的鐘就會響；聽見鐘聲的人，再也沒有回來。",
+    "emotion": "不安、低語",
+    "direction": "壓低聲音，『再也沒有回來』放輕",
+    "tts_text": "村里的人说，每到这种夜晚，古堡的钟就会响；听见钟声的人，再也没有回来。",
+    "tts_emotion": "不安、低語",
+    "tts_direction": "壓低聲音，『再也沒有回來』放輕"
+   },
+   {
+    "file": "vd_castle_intro_02.mp3",
+    "speaker": "艾琳",
+    "text": "{玩家}，地圖上沒有這座城堡的名字……書裡只寫了「月影」兩個字。",
+    "emotion": "認真、警戒",
+    "direction": "溫柔但緊繃，『月影』兩字放慢",
+    "tts_text": "你，地图上没有这座城堡的名字……书里只写了『月影』两个字。",
+    "tts_emotion": "認真、警戒",
+    "tts_direction": "溫柔但緊繃，『月影』兩字放慢"
+   },
+   {
+    "file": "vd_castle_intro_03.mp3",
+    "speaker": "旁白",
+    "text": "沉重的城門自己打開了，又在兩人身後「砰」地關上。",
+    "emotion": "緊張、驚嚇",
+    "direction": "前半慢，『砰』要突然",
+    "tts_text": "沉重的城门自己打开了，又在两人身后『砰』地关上。",
+    "tts_emotion": "緊張、驚嚇",
+    "tts_direction": "前半慢，『砰』要突然"
+   },
+   {
+    "file": "vd_castle_intro_04.mp3",
+    "speaker": "旁白",
+    "text": "走廊深處傳來喀啦喀啦的骨頭聲。盔甲、骷髏、提燈的幽靈，全都醒了。",
+    "emotion": "驚悚、加速",
+    "direction": "逐漸加快，製造被包圍的感覺",
+    "tts_text": "走廊深处传来喀啦喀啦的骨头声。盔甲、骷髅、提灯的幽灵，全都醒了。",
+    "tts_emotion": "驚悚、加速",
+    "tts_direction": "逐漸加快，製造被包圍的感覺"
+   },
+   {
+    "file": "vd_castle_intro_05.mp3",
+    "speaker": "艾琳",
+    "text": "小心腳下——地板的縫裡有東西在發光。這座城堡，到處都是機關。",
+    "emotion": "警告、堅定",
+    "direction": "前半急促，後半沉穩下定決心",
+    "tts_text": "小心脚下——地板的缝里有东西在发光。这座城堡，到处都是机关。",
+    "tts_emotion": "警告、堅定",
+    "tts_direction": "前半急促，後半沉穩下定決心"
+   }
   ]
  },
  "tts_note": "tts_text＝送進 CosyVoice 的文字：轉成簡體（繁體字容易念錯），罕用字換成同音常用字（凪→止）。v5 用的 [聲母][韻母] 拼音標記實測會把整句念壞（海斗那句），不要再用；多音字照常見讀法模型會念對，真的念錯再換同音字。字幕仍用 text。"

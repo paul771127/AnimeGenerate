@@ -738,16 +738,23 @@ namespace SpellDuel
                 StartBossBattle(coopMode, true);
             }
             if (d.id == TrapGallery.Id) { Story.MarkSeen("dg:"+d.id); Go(); return; }
-            if (!coopMode && !Story.IsSeen("dg:" + d.id)) { Story.MarkSeen("dg:" + d.id); ShowDialogue(d.before, Go); }
+            string introKey = d.id == "castle_test" ? "dg:castle_test@2" : "dg:" + d.id;   // 月影古堡的開場劇情改過（使用者要求加劇情）：看過舊版的也再播一次
+            if (!coopMode && !Story.IsSeen(introKey))
+            {
+                Story.MarkSeen(introKey); Story.MarkSeen("dg:" + d.id);
+                var vclip = StoryVideo.ForDungeonIntro(d.id);   // 有開場影片就先播（影片已經演過開場台詞，就不再跳對話）
+                StoryVideo.Play(vclip, () => ShowDialogue(vclip != null ? new List<StoryLine>() : d.before, Go));
+            }
             else { Go(); Ticker(d.before); }   // 連線（或看過開場）：開場白改成戰鬥中的字幕卡，大家都看得到
         }
 
         /// <summary>重看副本的故事（開場＋通關過的結尾）</summary>
         void WatchDungeonStory(DungeonDef d)
         {
-            var lines = new List<StoryLine>(d.before);
+            var vclip = StoryVideo.ForDungeonIntro(d.id);
+            var lines = new List<StoryLine>(vclip != null ? new List<StoryLine>() : d.before);
             if (Dungeons.IsCleared(d.id)) lines.AddRange(d.after);
-            ShowDialogue(lines, null);
+            StoryVideo.Play(vclip, () => ShowDialogue(lines, null), true);   // 重看：可以長按跳過
         }
 
         /// <summary>重看故事：開場＋（通關過的）結尾，看完回到地圖</summary>
