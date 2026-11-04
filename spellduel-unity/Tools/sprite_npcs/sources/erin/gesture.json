@@ -1,0 +1,4 @@
+{
+  "prompt": "Create ERIN gesture animation sprites matching attached idle sheet EXACTLY: refined Japanese anime 2.5 heads tall chibi silverbob purpleeyes purple gold-trim hood cloak, white tunic, crossed brown belts, satchel scrolls, brownboots, woodstaff purpleorb. EXACTLY8 columns x4 rows =32 fullbody individual sprites transparent gutters. Direction columns front, front-right, rightprofile, back-right, back, back-left, leftprofile, front-left (all8everyrow). Rows chronological: 0 relaxedidle freehanddown;1 freehandraises toward silver fringe;2 gently brushes hair near temple under hood while small warm smile;3 hand lowers returning to relaxedidle. Other hand consistently holdsstaff. Tiny movement only, stay centered at samebaseline scale and2.5head ratio. Not fighting. Transparentbackground no text no grid no ground shadows. Wide2:1sheet, allbootsvisible.",
+  "tool": "built-in imagegen"
+}

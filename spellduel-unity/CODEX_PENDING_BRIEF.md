@@ -1136,3 +1136,9 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 依使用者確認的中等細節動畫風重畫，減少密集紋理，保留衣料與植物結構；各敵人採不同輪廓、主色與性格，部分菇類較可愛。
 - 本批各六種動作、八方向，沿用檔名與匯入 GUID。新風格累計 18/18 隻。
 - 全部 108 張圖集格式驗證 0 錯誤；未修改 Runtime 或戰鬥邏輯。母圖與提示詞位於 Tools/sprite_enemies/forest_refined_sources/。
+
+### 2026-11-04：場上 NPC 2.5 頭身，第一批艾琳
+- 依使用者最新修正，改用 2.5 頭身，保留 Story2D 的銀髮、紫兜帽、服裝、法杖與卷軸袋。
+- 交付 erin 的 idle 4、walk 6、gesture 4，各 8 方向；透明 256 格、三張圖集與同敵人的匯入設定。
+- 預覽、走路／撥髮 GIF 和立繪比對位於 Docs/npc_2d_preview/；生成原圖與提示詞一併保留。
+- check_npc_sprites.py --partial：112 格，0 錯誤。未改遊戲程式；其餘 21 位尚待後續批次。

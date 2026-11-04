@@ -1,0 +1,29 @@
+{
+  "baseline": "100d3bc",
+  "proportions": "2.5 heads (user override)",
+  "generator": "built-in image_gen",
+  "npcs": {
+    "erin": {
+      "files": {
+        "idle": {
+          "sha256": "e11d19fc271932c350177b79af7b49c333da85bf7cf579503674f888ccd0e7a4",
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "7985e6a81328df1112c80ce13f3b0d8e07e168b0dd3045448b61c3faeb6e359f",
+          "rows": 6
+        },
+        "gesture": {
+          "sha256": "1e216ec587483e4cc1261d2a8479a67fe7b2c8bbbd722922bebcb511b3bec7cf",
+          "rows": 4
+        }
+      },
+      "source_edge_contacts": [],
+      "sources": {
+        "idle": "a6879af548d4a9f31a69f2e07399375e094ad38ba9e018d8078af8a308bb5b6c",
+        "walk": "21ea643507a641fa2a0c7c974ae209d7eb733b52a538f1bf31e06aa71425acf1",
+        "gesture": "12bce0b78d12ef2254f13ecdbec894780022cbda0019003646725e4300f3c6a3"
+      }
+    }
+  }
+}
