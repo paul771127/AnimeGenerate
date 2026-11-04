@@ -24,6 +24,116 @@
         "walk": "21ea643507a641fa2a0c7c974ae209d7eb733b52a538f1bf31e06aa71425acf1",
         "gesture": "12bce0b78d12ef2254f13ecdbec894780022cbda0019003646725e4300f3c6a3"
       }
+    },
+    "xiaotie": {
+      "files": {
+        "idle": {
+          "sha256": "52aaecffbd5818c32c4033d85de0abfdfd9378d1f3b6d30c563e1bbfcdd15cdc",
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "7f11a367cc48dd0996ad8b02ad070f75feeeffb739b3bf1698d2df2659c726fe",
+          "rows": 6
+        },
+        "gesture": {
+          "sha256": "53895557e3f7a292f2297e4554522726ce4047cd371b055a2e8c10aa98b68432",
+          "rows": 4
+        }
+      },
+      "source_edge_contacts": [],
+      "sources": {
+        "idle": "e6375309bd903a50dca33c6cc26f5572f34abdd8c825ac75d905737df00f0219",
+        "walk": "9d8a691eb9c9f8b67543dd0e4531b1ec41d42ea6d3e95dd1226ebf80cd4ad0bf",
+        "gesture": "881581a48997163b80321beb2569a1c20db31a1447235c16729e51855a0a7fa8"
+      }
+    },
+    "laoyan": {
+      "files": {
+        "idle": {
+          "sha256": "0451e8b381f084f692e79d0f51d87608ad759dddd1b42a4004092eacb694e611",
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "a7fe8750173672e6b074898ec4c0767e832b06ef6d216d07fd01e33250d61aba",
+          "rows": 6
+        },
+        "gesture": {
+          "sha256": "d5ac7f2a1bf98eabe6aba4bb9272cde1405c05969cac2ad06d0c17d058cb184c",
+          "rows": 4
+        }
+      },
+      "source_edge_contacts": [],
+      "sources": {
+        "idle": "ec2799afa948b0ef6783dd684dd5ce3602b39f750dda60a606d921a4cf29290f",
+        "walk": "23559acd49b41bdfd28c08b50aaa9425d498e6d4a9c1d60e34fa4935d738fb59",
+        "gesture": "5d0aca0e5b71c8d35bf1fbdbe288e5d89ce48ffd61815444e1b9d068b633886c"
+      }
+    },
+    "cui": {
+      "files": {
+        "idle": {
+          "sha256": "85dd93e69ca303551750f8d7c691887c90fa978cc34b5eb61d9b047acf414a84",
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "0dbf25f2e9e738c85d806ce2e3365998788c33526c1a4f0e977fcf517e4c8f21",
+          "rows": 6
+        },
+        "gesture": {
+          "sha256": "fb2aa7b88eaceecedfe20016772012566948552b3f44a57b345c8e7826071403",
+          "rows": 4
+        }
+      },
+      "source_edge_contacts": [],
+      "sources": {
+        "idle": "2f38dcafca8af74299a923f98848dbd910779883a93b8c464daad3458ed3ec57",
+        "walk": "1303f554b98c518e7d758028c2185127d6194ce333bc2b8fda8c6d5a171bb0be",
+        "gesture": "d7d31f6bc41b44977ee589cd9419535752570a844d79f81808a0807fcbf0b709"
+      }
+    },
+    "feng": {
+      "files": {
+        "idle": {
+          "sha256": "f15a54fa0b652048b5b180355ab7378a4cc8e562bbf39bfa1854e5308b6b0c88",
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "ef04a7119ff2f80cc09739f2945741917f5dfa170fbc3194c6503142600f327b",
+          "rows": 6
+        },
+        "gesture": {
+          "sha256": "a3f435a3855d7a6910e65c21e58d65b93f578552e6d28e01db1679b028ddb04e",
+          "rows": 4
+        }
+      },
+      "source_edge_contacts": [],
+      "sources": {
+        "idle": "f5b4aa6340575dd0b64918a46b933776364ceba2a939784c57fb185246e8f54b",
+        "walk": "49b8b62aea5b423cc51ee0e567321fe825bc5bc39584f58a05988c534cdd3bea",
+        "gesture": "caeac810bf9f580b102f4c461d3bcf270cb979315507a953f32f521e7ea92ef6"
+      }
+    },
+    "haido": {
+      "files": {
+        "idle": {
+          "sha256": "cf0fee809e0ba04eea89584b788e816d287b7759c89696b75a7a6b6fcb69966e",
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "4339a32ca249c93ace6f194168a82c2c54555518a8e725287f44e490922bdc53",
+          "rows": 6
+        },
+        "gesture": {
+          "sha256": "0f74315cfa19936f25c2a602418cfeb7cd18b626849ed15b9ac090ac520b4bb3",
+          "rows": 4
+        }
+      },
+      "source_edge_contacts": [],
+      "sources": {
+        "idle": "73e1a1ea61f3c6763ffb9d0b557c7a3885c07d23b15e081b997513bbbe9fe3c3",
+        "walk": "00a509d0078691b4097a84d235760ceab77badd8cbca4a8f92b005d2271f100e",
+        "gesture": "362b36e3e1362c3d5633089d91916a74cf9e57cceb0a16a02a3a9b564146af96"
+      }
     }
   }
 }

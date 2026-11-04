@@ -11,3 +11,7 @@ User override (2026-11-04): all NPCs use refined Japanese fantasy **2.5-head pro
 - Adult sprite height approximately 179 px; feet at y=241.
 - check_npc_sprites.py --partial: 1 NPC, 112 cells, 0 errors.
 - No runtime or gameplay code changed. Full 22-NPC validation remains pending until later batches.
+
+## Batch 2: Xiaotie, Laoyan, Cui, Feng, Haido
+
+Five additional NPCs with full idle/walk/gesture atlases, eight-direction previews, animation GIFs and Story2D comparisons. Total: 6 NPCs, 672 cells; partial validator reports 0 errors. Laoyan source edge inspection confirmed complete shoes; alpha below 64 is excluded only from edge-contact diagnosis, never removed from artwork.

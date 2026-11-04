@@ -27,7 +27,10 @@ def pack():
    frames[g]=[];atlas=Image.new('RGBA',(2048,rows*256))
    for k,c in enumerate(cells):
     b=bounds(c)
-    if b[0]==0 or b[1]==0 or b[2]==c.width or b[3]==c.height:edges.append([g,k])
+    # Ignore faint generated matte residue only for edge-contact diagnosis;
+    # retain the source alpha and alpha-16 crop measurement unchanged.
+    solid=c.getchannel('A').point(lambda a:255 if a>=64 else 0).getbbox()
+    if solid and (solid[0]==0 or solid[1]==0 or solid[2]==c.width or solid[3]==c.height):edges.append([g,k])
     crop=c.crop((max(0,b[0]-1),max(0,b[1]-1),min(c.width,b[2]+1),min(c.height,b[3]+1)))
     crop=crop.convert('RGBa').resize((round(crop.width*scale),round(crop.height*scale)),Image.Resampling.LANCZOS).convert('RGBA')
     f=Image.new('RGBA',(256,256));bottom=229 if name in ('jungle_spirit','oldsmith_shade') else 241

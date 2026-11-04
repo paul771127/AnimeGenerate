@@ -1142,3 +1142,8 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 交付 erin 的 idle 4、walk 6、gesture 4，各 8 方向；透明 256 格、三張圖集與同敵人的匯入設定。
 - 預覽、走路／撥髮 GIF 和立繪比對位於 Docs/npc_2d_preview/；生成原圖與提示詞一併保留。
 - check_npc_sprites.py --partial：112 格，0 錯誤。未改遊戲程式；其餘 21 位尚待後續批次。
+
+### 2026-11-04：場上 NPC 2.5 頭身，第二批五位
+- 新增小鐵、老焰、翠、楓、海斗各三張八方向圖集，保留立繪服裝髮型配色。
+- 小動作分別為撓頭、摸鬍點頭、合十、調弓、扶帽；每人都有方向圖、走路／互動 GIF 與立繪比對。
+- check_npc_sprites.py --partial：累計 6 位、672 格、0 錯誤。沒有改 Runtime 或遊戲邏輯；其餘 16 位待後續批次。
