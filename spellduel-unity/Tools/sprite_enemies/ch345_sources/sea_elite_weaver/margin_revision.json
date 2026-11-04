@@ -1,0 +1,4 @@
+{
+  "prompt": "Re-layout this 8column5row sprite atlas preserving the exact character and actions: row1 idle, row2 raise parasol, row3 lightning, row4 followthrough,row5 recover. Reduce every whole character with parasol and lightning uniformly to 60% cell size, centered with generous25% blank transparent gutters between rows and columns. Critical: umbrellas MUST NOT touch top row seam or neighbor, lightning glow must end inside each cell, no connecting glow across sprites. Keep all8 views. Same anime sea witch. True transparent empty background with alpha zero, no haze outside sprites.",
+  "tool": "built-in image_gen"
+}

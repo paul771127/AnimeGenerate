@@ -1,0 +1,4 @@
+{
+  "prompt": "Re-layout this exact conch navigator combat atlas 8columns5rows with more generous transparent margins. Every complete character AND water shield scaled uniformly to60% of its cell size. Keep all40 poses, colors, objects and8 directions. Water shield and glow MUST end before cell boundaries, leave fully transparent empty gutters no surrounding haze. Row1 ready,row2 blow conch,row3 water shield,row4 fading shield,row5 recover. True alpha transparency.",
+  "tool": "built-in image_gen"
+}

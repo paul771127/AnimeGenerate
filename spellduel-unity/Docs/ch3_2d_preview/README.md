@@ -11,3 +11,7 @@ Added sea_hermitcrab, sea_jellyfish, sea_puffer, including shell side-collapse c
 ## Batch 3
 
 Added sea_whipeel, sea_elite_crab, sea_elite_gunner. Cumulative 9 enemies,54 atlases,1512 cells,0 partial-validation errors. Remaining 9 sea,25 arena,25 canyon.
+
+## Batch 4
+
+Added sea_elite_weaver, sea_elite_pilot, sea_elite_hunter. Cumulative12 enemies,72 atlases,2016 cells,0 partial-validation errors. Remaining6 sea,25 arena,25 canyon.

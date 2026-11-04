@@ -18,6 +18,7 @@ def check(ok,text):
 def sha(b):return hashlib.sha256(b).hexdigest()
 manifest=json.loads((PREVIEW/'atlas_manifest.json').read_text())
 for name in IDS:
+ check(not manifest["enemies"].get(name,{}).get("source_edge_contacts",[]),f"{name} source artwork touches seam")
  for action,rows in ACTIONS.items():
   p=OUT/f'{name}_{action}.png';check(p.exists(),f'missing {p.name}')
   if not p.exists():continue
