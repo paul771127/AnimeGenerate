@@ -2591,6 +2591,7 @@ namespace SpellDuel
             CheckHostAlive();
             UpdateBuffPotions();   // 強化藥劑：開打開始算、時間到扣掉（SoloBattle.Potions.cs）
             if (InIntro) { UpdateVisuals(); return; }   // 開場：先停幾秒（敵人不動、不能出手）
+            if (bossIntroArea != null && phase == Phase.Fighting) { UpdateVisuals(); return; }   // 副本首領房的開場劇情：戰鬥暫停（SoloBattle.DungeonExplore.cs）
             if (scrollAsk && phase == Phase.Fighting && !NetMode) { UpdateVisuals(); return; }   // 回城捲軸的確認視窗：戰鬥暫停
             if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
             {

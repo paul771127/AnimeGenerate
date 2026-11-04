@@ -78,7 +78,7 @@ namespace SpellDuel
             if (coop) foreach (var al in battle.allies) if (al != null && al.Alive) run.Update(al.Feet, null);
             foreach (var a in run.areaStarts) exNodeQueue.Enqueue(a);
             run.areaStarts.Clear();
-            while (exNodeArea == null && exNodeQueue.Count > 0) StartAreaNode(run, exNodeQueue.Dequeue());
+            while (exNodeArea == null && bossIntroArea == null && exNodeQueue.Count > 0) StartAreaNode(run, exNodeQueue.Dequeue());
             // 地點的戰鬥（事件、首領）打完
             bool nodeDone = exNodeArea != null && (run.map.nodeAreas && exNodeArea.IsChest ? chest != null && chest.done && Time.time >= chest.doneAt + 2.5f && GalleryRouteReady
                 : battle.awaitingNext && (!run.map.nodeAreas || GalleryRouteReady && (drun == null || drun.pendingChoice == null)));
@@ -126,9 +126,27 @@ namespace SpellDuel
         }
 
         /// <summary>走進一個區域：寶箱直接打開；事件、首領照原本副本的地點流程開打（場地＝這塊區域）</summary>
+        /// <summary>
+        /// 最後的首領房（使用者要求）：走進去先播一段劇情（這個地點的 &lt;enter&gt; 台詞），戰鬥暫停；看完敵人才撲過來。
+        /// 單人才停（連線不能停，照舊用字幕卡）。
+        /// </summary>
+        ExArea bossIntroArea;
         void StartAreaNode(ExploreRun run, ExArea a)
         {
+            bool fin = run.map.arenas.Exists(x => x.n == 4 && Vector3.Distance(x.center, a.center) < 0.1f);
+            if (fin && !run.map.nodeAreas && !coop && !NetMode && a.node.enter.Count > 0 && bossIntroArea == null)
+            {
+                bossIntroArea = a;
+                Say($"👑 {a.Title}", 3f);
+                ShowDialogue(a.node.enter, () => { var ar = bossIntroArea; bossIntroArea = null; if (exploreRun == run && battle != null && !battle.Over) BeginAreaNode(run, ar); });
+                return;
+            }
             if (!run.map.nodeAreas) Ticker(a.node.enter);   // 千機迴廊：台詞由原本的副本進度送（DungeonRun）
+            BeginAreaNode(run, a);
+        }
+
+        void BeginAreaNode(ExploreRun run, ExArea a)
+        {
             if (a.IsChest && !run.map.nodeAreas) { ChestAreaLoot(a); run.ClearArea(a); return; }
             bool final = run.map.arenas.Exists(x => x.n == 4 && Vector3.Distance(x.center, a.center) < 0.1f);
             exSavedPoly = battle.arenaPoly;
