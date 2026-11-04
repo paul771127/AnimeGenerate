@@ -15,6 +15,7 @@ namespace SpellDuel
         public float hp = 1f, dmg = 1f, speed = 1f, height = 1.6f;   // height＝一格圖對應的世界高度（公尺）
         public float hiHeight;   // 高解析度每動作圖（FF 風、正常比例）的一格高度（公尺）；0＝跟 height 一樣
         public float lift;   // 圖往上浮多少公尺（蝙蝠：AI 在地上衝，圖畫在低空）
+        public int kind = -1;   // 第三章起的表：依小怪種類對應（≥0；同一種怪在不同章節有不同的圖，所以照章節分表）
         public bool ranged;
     }
 
@@ -61,13 +62,113 @@ namespace SpellDuel
             new SpriteMonsterDef { id = 141, sheet = "forest_shaman",        name = "林語薩滿",   hiHeight = 2.0f },
         };
 
-        /// <summary>這隻怪要用哪一套 2D 圖（null＝用 3D 模型）：城堡敵人（變種 201～208）一定有；森林的要圖已經放進 Resources 才用</summary>
-        public static SpriteMonsterDef ForFighter(Fighter m)
+        /// <summary>第三章（海上）：潮騷港一帶的海洋魔物（跟森林同規格，有圖才換）</summary>
+        public static readonly SpriteMonsterDef[] Sea =
+        {
+            new SpriteMonsterDef { kind = 13, sheet = "sea_jumpfish", name = "跳躍魚", hiHeight = 1.6f },
+            new SpriteMonsterDef { kind = 14, sheet = "sea_seabird", name = "俯衝海鳥", hiHeight = 1.6f },
+            new SpriteMonsterDef { kind = 15, sheet = "sea_bubblerider", name = "騎魚泡泡怪", hiHeight = 1.8f },
+            new SpriteMonsterDef { kind = 16, sheet = "sea_hermitcrab", name = "寄居蟹", hiHeight = 1.6f },
+            new SpriteMonsterDef { kind = 17, sheet = "sea_jellyfish", name = "雷電水母", hiHeight = 1.8f },
+            new SpriteMonsterDef { kind = 18, sheet = "sea_puffer", name = "河豚", hiHeight = 1.6f },
+            // 第三章的小 Boss、菁英怪
+            new SpriteMonsterDef { kind = 20, sheet = "sea_whipeel", name = "潮鞭鰻", hiHeight = 2.8f },
+            new SpriteMonsterDef { kind = 33, sheet = "sea_elite_crab", name = "珊瑚重鉗", hiHeight = 2.4f },
+            new SpriteMonsterDef { kind = 34, sheet = "sea_elite_gunner", name = "帆鰭砲手", hiHeight = 2.0f },
+            new SpriteMonsterDef { kind = 35, sheet = "sea_elite_weaver", name = "雷傘織潮者", hiHeight = 2.0f },
+            new SpriteMonsterDef { kind = 36, sheet = "sea_elite_pilot", name = "螺笛領航者", hiHeight = 2.0f },
+            new SpriteMonsterDef { kind = 37, sheet = "sea_elite_hunter", name = "浪刃追獵者", hiHeight = 2.0f },
+            // 稀有怪、人形敵人、輔助型
+            new SpriteMonsterDef { id = 142, sheet = "sea_fairy", name = "霧海仙女", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 157, sheet = "sea_pirate_blade", name = "黑潮刀客", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 158, sheet = "sea_tide_mage", name = "潮汐術士", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 159, sheet = "sea_deck_assassin", name = "甲板刺客", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 175, sheet = "sea_swift_fin", name = "浪尖飛鰭", hiHeight = 1.6f },
+            new SpriteMonsterDef { id = 176, sheet = "sea_swift_crab", name = "疾行寄居蟹", hiHeight = 1.6f },
+        };
+        /// <summary>第四章（角鬥場）：被抓來鬥場的各地魔物（戴著鐵項圈、斷掉的鎖鏈、胸前黑晶）＋鬥場的人</summary>
+        public static readonly SpriteMonsterDef[] Arena =
+        {
+            new SpriteMonsterDef { kind = 0, sheet = "arena_imp", name = "熔岩小鬼", hiHeight = 1.6f },
+            new SpriteMonsterDef { kind = 1, sheet = "arena_fire_archer", name = "火焰射手", hiHeight = 1.8f },
+            new SpriteMonsterDef { kind = 2, sheet = "arena_rock_charger", name = "岩石衝鋒獸", hiHeight = 1.8f },
+            new SpriteMonsterDef { kind = 3, sheet = "arena_bomb_imp", name = "自爆小鬼", hiHeight = 1.6f },
+            new SpriteMonsterDef { kind = 5, sheet = "arena_lava_sniper", name = "熔岩狙擊手", hiHeight = 2.0f },
+            new SpriteMonsterDef { kind = 7, sheet = "arena_spitter", name = "毒液噴花", hiHeight = 1.8f },
+            new SpriteMonsterDef { kind = 8, sheet = "arena_boar", name = "荊棘衝鋒獸", hiHeight = 1.6f },
+            new SpriteMonsterDef { kind = 9, sheet = "arena_vinemage", name = "藤蔓術士", hiHeight = 2.0f },
+            new SpriteMonsterDef { kind = 11, sheet = "arena_sporecap", name = "孢子菇", hiHeight = 1.6f },
+            new SpriteMonsterDef { kind = 12, sheet = "arena_seedgunner", name = "種子槍手", hiHeight = 1.8f },
+            new SpriteMonsterDef { kind = 16, sheet = "arena_hermitcrab", name = "寄居蟹", hiHeight = 1.6f },
+            new SpriteMonsterDef { kind = 17, sheet = "arena_jellyfish", name = "雷電水母", hiHeight = 1.8f },
+            // 第四章的小 Boss、菁英怪
+            new SpriteMonsterDef { kind = 21, sheet = "arena_chain_slave", name = "鏈錘鬥奴", hiHeight = 2.6f },
+            new SpriteMonsterDef { kind = 38, sheet = "arena_elite_centurion", name = "銅盾百夫長", hiHeight = 2.4f },
+            new SpriteMonsterDef { kind = 39, sheet = "arena_elite_crossbow", name = "鎖弩監軍", hiHeight = 2.0f },
+            new SpriteMonsterDef { kind = 40, sheet = "arena_elite_binder", name = "砂鐘縛鬥士", hiHeight = 2.0f },
+            new SpriteMonsterDef { kind = 41, sheet = "arena_elite_drummer", name = "戰鼓旗手", hiHeight = 2.0f },
+            new SpriteMonsterDef { kind = 42, sheet = "arena_elite_blade", name = "赤刃角鬥士", hiHeight = 2.0f },
+            // 稀有怪、人形敵人、輔助型
+            new SpriteMonsterDef { id = 121, sheet = "arena_priest", name = "鬥場祭司", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 143, sheet = "arena_war_drummer", name = "鬥場戰鼓手", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 160, sheet = "arena_champion", name = "冠軍劍鬥士", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 161, sheet = "arena_javelin", name = "標槍手", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 162, sheet = "arena_temple_priest", name = "鬥場神官", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 177, sheet = "arena_swift_beast", name = "金蹄戰獸", hiHeight = 1.8f },
+            new SpriteMonsterDef { id = 178, sheet = "arena_swift_hound", name = "影步鬥犬", hiHeight = 1.6f },
+        };
+        /// <summary>第五章（黃土山道）：被砂暴磨過的各地魔物（披著砂色圍巾、身上卡著砂粒）＋沙漠盜匪</summary>
+        public static readonly SpriteMonsterDef[] Canyon =
+        {
+            new SpriteMonsterDef { kind = 0, sheet = "canyon_imp", name = "熔岩小鬼", hiHeight = 1.6f },
+            new SpriteMonsterDef { kind = 1, sheet = "canyon_fire_archer", name = "火焰射手", hiHeight = 1.8f },
+            new SpriteMonsterDef { kind = 2, sheet = "canyon_rock_charger", name = "岩石衝鋒獸", hiHeight = 1.8f },
+            new SpriteMonsterDef { kind = 3, sheet = "canyon_bomb_imp", name = "自爆小鬼", hiHeight = 1.6f },
+            new SpriteMonsterDef { kind = 4, sheet = "canyon_rock_thrower", name = "岩石投擲者", hiHeight = 1.8f },
+            new SpriteMonsterDef { kind = 5, sheet = "canyon_lava_sniper", name = "熔岩狙擊手", hiHeight = 2.0f },
+            new SpriteMonsterDef { kind = 7, sheet = "canyon_spitter", name = "毒液噴花", hiHeight = 1.8f },
+            new SpriteMonsterDef { kind = 8, sheet = "canyon_boar", name = "荊棘衝鋒獸", hiHeight = 1.6f },
+            new SpriteMonsterDef { kind = 9, sheet = "canyon_vinemage", name = "藤蔓術士", hiHeight = 2.0f },
+            new SpriteMonsterDef { kind = 11, sheet = "canyon_sporecap", name = "孢子菇", hiHeight = 1.6f },
+            // 第五章的小 Boss、菁英怪
+            new SpriteMonsterDef { kind = 22, sheet = "canyon_crag_lizard", name = "裂岩甲蜥", hiHeight = 2.6f },
+            new SpriteMonsterDef { kind = 43, sheet = "canyon_elite_guardian", name = "晶甲守隘獸", hiHeight = 2.4f },
+            new SpriteMonsterDef { kind = 44, sheet = "canyon_elite_lizard_gunner", name = "砂晶砲蜥", hiHeight = 2.0f },
+            new SpriteMonsterDef { kind = 45, sheet = "canyon_elite_sand_witch", name = "流砂咒巫", hiHeight = 2.0f },
+            new SpriteMonsterDef { kind = 46, sheet = "canyon_elite_herder", name = "石巢牧者", hiHeight = 2.0f },
+            new SpriteMonsterDef { kind = 47, sheet = "canyon_elite_hunter", name = "裂風獵蜥", hiHeight = 2.0f },
+            // 稀有怪、人形敵人、輔助型、召喚物
+            new SpriteMonsterDef { id = 122, sheet = "canyon_apothecary", name = "砂谷藥師", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 123, sheet = "canyon_summoner", name = "砂谷召喚師", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 124, sheet = "canyon_sand_spirit", name = "砂靈", hiHeight = 1.6f },
+            new SpriteMonsterDef { id = 144, sheet = "canyon_banner", name = "砂王旗手", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 163, sheet = "canyon_bandit_assassin", name = "沙匪刺客", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 164, sheet = "canyon_sand_mage", name = "砂咒術士", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 165, sheet = "canyon_hunter", name = "沙漠獵手", hiHeight = 2.0f },
+            new SpriteMonsterDef { id = 179, sheet = "canyon_swift_fox", name = "砂暴狐魅", hiHeight = 1.6f },
+            new SpriteMonsterDef { id = 180, sheet = "canyon_swift_beast", name = "砂塵疾奔獸", hiHeight = 1.8f },
+        };
+        /// <summary>主題 → 這一章的 2D 敵人表（1 森林、2 海上、3 角鬥場、4 黃土山道）</summary>
+        static SpriteMonsterDef[] ListOf(int theme) => theme == 1 ? Forest : theme == 2 ? Sea : theme == 3 ? Arena : theme == 4 ? Canyon : null;
+
+        /// <summary>
+        /// 這隻怪要用哪一套 2D 圖（null＝用 3D 模型）：城堡敵人（變種 201～208）一定有；各章的要圖已經放進 Resources 才用。
+        /// 變種（稀有怪、人形、輔助型）照變種 id，哪一章都一樣；一般小怪、菁英、小 Boss 照這一場的主題（theme）那一章的表
+        /// （角鬥場、山道會出現前面章節的怪，換上那一章的打扮）。
+        /// </summary>
+        public static SpriteMonsterDef ForFighter(Fighter m, int theme)
         {
             if (m == null) return null;
             if (Has(m.variant)) return Get(m.variant);
-            foreach (var d in Forest)
-                if (d.id > 0 ? m.variant == d.id : m.variant <= 0 && m.minionKind == -d.id)
+            if (m.variant > 0)
+            {
+                foreach (var l in new[] { Forest, Sea, Arena, Canyon })
+                    foreach (var d in l) if (d.kind < 0 && d.id > 0 && d.id == m.variant) return SpriteEnemyView.HasArt(d.sheet) ? d : null;
+                return null;
+            }
+            var list = ListOf(theme); if (list == null) return null;
+            foreach (var d in list)
+                if (d.kind >= 0 ? m.minionKind == d.kind : d.id < 0 && m.minionKind == -d.id)
                     return SpriteEnemyView.HasArt(d.sheet) ? d : null;
             return null;
         }
