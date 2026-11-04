@@ -102,6 +102,7 @@ namespace SpellDuel
                 run.Update(Me.Feet, battle.exEscort != null && battle.exEscort.Alive ? battle.exEscort.Feet : (Vector3?)null);
                 if (run.IsDungeon) UpdateDungeonExplore(run);   // 副本大地圖：地點的內容（SoloBattle.DungeonExplore.cs）
                 UpdateCastleTraps(run, dt);   // 月影古堡：地刺、南瓜炸彈、牆中幽靈（SoloBattle.CastleTraps.cs）
+                if (run.IsDungeon) UpdateStoryMaze(run);   // 故事的探索／護送玩法（SoloBattle.StoryModes.cs）
                 ExTapSparkles();
             }
             foreach (var s in run.log) { Say(s, 3.5f); ChatLine(new StoryLine { text = s }); }
@@ -400,7 +401,7 @@ namespace SpellDuel
         void ClearExplore()
         {
             if (exRoot) Destroy(exRoot.gameObject);
-            ClearCastleTraps();
+            ClearCastleTraps(); storyEscort = null; storyTrail.Clear();
             if (area != null) area.BoundsOff = false;
             ExploreFx.Clear(); exFxSeen.Clear(); exFxSealHave.Clear(); exFxInit = false;
             exFxAreaEntered.Clear(); exFxAreaCleared.Clear(); exFxBossRose = false; dgFxKeys.Clear();   // 副本大地圖的特效（隊友端沒有經過 SetupDungeonExplore）

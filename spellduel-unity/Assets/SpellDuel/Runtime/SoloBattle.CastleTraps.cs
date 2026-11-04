@@ -29,7 +29,9 @@ namespace SpellDuel
         static SkillDef trapSpike, trapBomb, trapGhost;
         static Mesh spikeMesh;
 
-        bool CastleTrapsOn(ExploreRun run) => run != null && run.IsDungeon && dungeon != null && dungeon.style == "castle";
+        bool CastleTrapsOn(ExploreRun run) => run != null && run.IsDungeon && dungeon != null && (dungeon.style == "castle" || dungeon.storyMode == "explore");
+        /// <summary>故事的探索玩法（森林）：同一套陷阱換成森林的樣子——荊棘地刺、樹上丟下來的爆裂毒果、從樹叢竄出來的孢子菇</summary>
+        bool ForestTraps => dungeon != null && dungeon.story != null;
 
         /// <summary>UpdateExplore（戰鬥中、自己活著）每幀叫</summary>
         void UpdateCastleTraps(ExploreRun run, float dt)
@@ -62,7 +64,7 @@ namespace SpellDuel
                 if (p.rend) p.rend.material.color = t < p.readyAt ? new Color(.35f, .25f, .15f) : on ? new Color(1f, .6f, .1f) : new Color(.62f, .48f, .22f);
                 if (!on || t < p.readyAt) continue;
                 p.readyAt = t + PlateCooldown;
-                Say("喀嚓——牆裡傳來引信的嘶嘶聲！", 1.6f);
+                Say(ForestTraps ? "喀嚓——樹枝上的毒果搖晃起來了！" : "喀嚓——牆裡傳來引信的嘶嘶聲！", 1.6f);
                 Haptics.Play(Haptics.Kind.Light);
                 for (int i = 0; i < 2; i++)   // 一發瞄準腳下、一發瞄準前方（往前跑也躲不掉，要橫向閃）
                 {
@@ -100,11 +102,13 @@ namespace SpellDuel
                 var start = h.pos - h.outDir * 0.3f;
                 var dir = Fighter.Flat(me - start); dir = dir.sqrMagnitude > 1e-4f ? dir.normalized : h.outDir;
                 go.transform.localPosition = start; go.transform.localRotation = Quaternion.LookRotation(dir, Vector3.up);
-                var v = SpriteEnemyView.Create(SpriteMonsters.Get(204), go.transform);
+                var gdef = SpriteMonsters.Get(204);
+                if (ForestTraps) foreach (var fd in SpriteMonsters.Forest) if (fd.sheet == "forest_swift_spore" && SpriteEnemyView.HasArt(fd.sheet)) gdef = fd;
+                var v = SpriteEnemyView.Create(gdef, go.transform);
                 v.Attack(null);
                 cGhosts.Add(new CastleGhost { pos = start, dir = dir, t0 = t, go = go, view = v });
                 Haptics.Play(Haptics.Kind.Medium);
-                Say("牆壁裡有東西衝出來了！", 1.4f);
+                Say(ForestTraps ? "樹叢裡有東西竄出來了！" : "牆壁裡有東西衝出來了！", 1.4f);
             }
             for (int i = cGhosts.Count - 1; i >= 0; i--)
             {
@@ -133,7 +137,7 @@ namespace SpellDuel
         void LaunchBomb(Vector3 from, Vector3 to, float t0)
         {
             var bomb = new GameObject("Pumpkin bomb"); bomb.transform.SetParent(cTrapRoot, false);
-            var body = Prim(PrimitiveType.Sphere, new Color(1f, .5f, .08f)); body.transform.SetParent(bomb.transform, false); body.transform.localScale = new Vector3(.55f, .45f, .55f);
+            var body = Prim(PrimitiveType.Sphere, ForestTraps ? new Color(.55f, .2f, .65f) : new Color(1f, .5f, .08f)); body.transform.SetParent(bomb.transform, false); body.transform.localScale = new Vector3(.55f, .45f, .55f);
             var stem = Prim(PrimitiveType.Cylinder, new Color(.25f, .45f, .12f)); stem.transform.SetParent(bomb.transform, false); stem.transform.localPosition = new Vector3(0, .25f, 0); stem.transform.localScale = new Vector3(.08f, .08f, .08f);
             var fuse = Prim(PrimitiveType.Sphere, new Color(1f, .95f, .4f), true); fuse.transform.SetParent(bomb.transform, false); fuse.transform.localPosition = new Vector3(0, .36f, 0); fuse.transform.localScale = Vector3.one * .12f;
             bomb.transform.localPosition = from;
@@ -150,9 +154,10 @@ namespace SpellDuel
         {
             ClearCastleTraps();
             cSpikes = new List<CastleSpike>(); cPlates = new List<CastlePlate>(); cHaunts = new List<CastleHaunt>();
-            trapSpike ??= new SkillDef { id = "trap_spike", name = "地刺", color = new Color(.85f, .85f, .9f) };
-            trapBomb ??= new SkillDef { id = "trap_bomb", name = "南瓜炸彈", color = new Color(1f, .5f, .1f) };
-            trapGhost ??= new SkillDef { id = "trap_ghost", name = "牆中幽靈", color = new Color(.7f, .5f, 1f) };
+            bool fo = ForestTraps;
+            trapSpike = new SkillDef { id = "trap_spike", name = fo ? "荊棘地刺" : "地刺", color = fo ? new Color(.5f, .7f, .3f) : new Color(.85f, .85f, .9f) };
+            trapBomb = new SkillDef { id = "trap_bomb", name = fo ? "爆裂毒果" : "南瓜炸彈", color = fo ? new Color(.6f, .3f, .8f) : new Color(1f, .5f, .1f) };
+            trapGhost = new SkillDef { id = "trap_ghost", name = fo ? "竄林孢子菇" : "牆中幽靈", color = fo ? new Color(.4f, .9f, .8f) : new Color(.7f, .5f, 1f) };
             cTrapRoot = new GameObject("Castle traps").transform; cTrapRoot.SetParent(exRoot, false);
             var map = run.map;
             foreach (var a in map.areas)
@@ -245,7 +250,7 @@ namespace SpellDuel
             if (!spikeMesh) spikeMesh = BuildSpikeMesh();
             for (int x = -2; x <= 2; x++) for (int z = -2; z <= 2; z++)
             {
-                var sp = Prim(PrimitiveType.Cube, new Color(.78f, .78f, .82f));
+                var sp = Prim(PrimitiveType.Cube, ForestTraps ? new Color(.45f, .55f, .25f) : new Color(.78f, .78f, .82f));
                 sp.GetComponent<MeshFilter>().sharedMesh = spikeMesh;
                 sp.transform.SetParent(spikes, false);
                 sp.transform.localPosition = new Vector3(x * 0.34f + ((z & 1) * 0.17f), 0f, z * 0.34f);

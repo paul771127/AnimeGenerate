@@ -298,7 +298,9 @@ namespace SpellDuel
             RefreshEvText();
         }
 
-        int EvCap() => roomEvent == "survive" ? 4 + EvParty : 3 + EvParty;
+        int EvCap() => roomEvent == "survive" ? 4 + EvParty + SurviveRamp : 3 + EvParty;
+        /// <summary>生存玩法（ramp）：已經過了幾輪 → 場上同時多幾隻</summary>
+        int SurviveRamp => roomEvent == "survive" && P("ramp", "") == "1" ? Mathf.Min(SurviveRampMax, Mathf.FloorToInt(Mathf.Max(0f, now - waveStartAt) / SurviveRampEvery)) : 0;
 
         /// <summary>這個地點結束（清完、換地點、副本結束）：拿掉道具、清狀態</summary>
         public void CleanupRoomEvent()
@@ -354,7 +356,7 @@ namespace SpellDuel
                 case "chase": TickChase(); handled = false; break;   // 出怪、過關照一般流程
                 case "collapse": TickCollapse(dt); handled = false; break;
                 case "survive":
-                    RefillEv(1.2f);
+                    RefillEv(SurviveRamp > 0 ? Mathf.Lerp(1.2f, 0.35f, SurviveRamp / (float)SurviveRampMax) : 1.2f);   // 生存玩法：越後面補得越快
                     if (evNextSummon > 0f && now >= evNextSummon) { evNextSummon = 0f; for (int i = 0; i < PlayersN; i++) { var el = EvSpawn(); if (el != null) MakeElite(el); } }   // 多人：最後衝刺的菁英數＝人數
                     if (now >= evEndAt) { FinishRoomEvent("撐住了！"); return true; }
                     break;
@@ -725,7 +727,7 @@ namespace SpellDuel
             switch (roomEvent)
             {
                 case "defend": { if(evCoop){evText="🛡 分頭守住兩座鐘！任一座破壞都會失敗";break;} var core = npcs.Find(n => n.npcId == "ev_core"); evText = core != null ? $"🛡 守住{core.name}！（{Mathf.CeilToInt(core.hp)}/{core.maxHp}）清完這一波就過關" : ""; break; }
-                case "survive": evText = $"⏳ 撐住！剩 {Mathf.Max(0f, evEndAt - now):0} 秒"; break;
+                case "survive": evText = $"⏳ 撐住！剩 {Mathf.Max(0f, evEndAt - now):0} 秒" + (SurviveRamp > 0 ? $"・敵人增援 +{SurviveRamp}" : ""); break;
                 case "escort": evText = evWalker != null ? $"🚶 護送{evWalker.name}走到出口（{Mathf.CeilToInt(evWalker.hp)}/{evWalker.maxHp}）：有怪貼近他就會停下來" : ""; break;
                 case "hunt": evText = evHunt != null ? $"🎯 斬首：打倒「{evHunt.name}」！其他怪會不斷湧出" : ""; break;
                 case "totems": { int a = 0; foreach (var n in npcs) if (n.Alive && n.npcId != null && n.npcId.StartsWith("ev_totem")) a++; string tn = P("name", "封印圖騰"); bool gate = tn == "召喚門"; evText = a > 0 ? (gate ? $"🌀 打壞{tn}（剩 {a} 座）：門會一直出怪" : $"🗿 打掉{tn}（剩 {a} 根）：圖騰會一直叫怪") : gate ? "🌀 召喚門都毀了，清掉剩下的怪！" : "🗿 圖騰都倒了，清掉剩下的怪！"; break; }

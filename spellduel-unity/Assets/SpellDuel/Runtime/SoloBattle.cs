@@ -765,6 +765,7 @@ namespace SpellDuel
         {
             if (storyStage == null) return;
             if (GateArea(StartStageBattle)) return;   // 先重新放置場地
+            if (StoryMazeMode(storyStage)) { StartStoryMaze(); return; }   // 探索、護送玩法：小地圖（SoloBattle.StoryModes.cs）
             pendingStage = storyStage;
             StartBossBattle(false, true);
             pendingStage = null;
@@ -982,7 +983,7 @@ namespace SpellDuel
         void ApplyDungeonStrength(int w)
         {
             if (battle == null) return;
-            ApplyEquivalentStrength(Mathf.Max(1, w), Mathf.Clamp((Mathf.Max(1, w) - 1) / 10, 0, StoryMinionHp.Length - 1), DungeonVsStory);
+            ApplyEquivalentStrength(Mathf.Max(1, w), Mathf.Clamp((Mathf.Max(1, w) - 1) / 10, 0, StoryMinionHp.Length - 1), dungeon != null && dungeon.story != null ? 1f : DungeonVsStory);   // 故事的探索／護送小地圖：跟故事關卡一樣強（不 ×2）
         }
 
         /// <summary>
@@ -1309,7 +1310,7 @@ namespace SpellDuel
             if (dungeon != null)
             {
                 // 副本：以 3 人隊伍設計的難度；角色等級遠高於副本時才變簡單（每台手機用自己的等級算自己受到的傷害）
-                dungeonRelief = Dungeons.LevelRelief(prof != null ? prof.level : 1, dungeon.level);
+                dungeonRelief = dungeon.story != null ? 1f : Dungeons.LevelRelief(prof != null ? prof.level : 1, dungeon.level);   // 故事的小地圖：照故事關卡的難度
                 me.damageTakenMul *= dungeonRelief;   // 等級差修正（敵人攻擊 ×2 在 battle.enemyDmgMul）
             }
             SyncPlayer(me);
@@ -1441,13 +1442,20 @@ namespace SpellDuel
                             ApplyEquivalentStrength(pendingStage.theme * 10 + Mathf.Clamp(pendingStage.fromWave, 1, 10), pendingStage.theme, 1f);
                         SetupStageMods(pendingStage);   // 天候、小目標（SoloBattle.StageMods.cs）
                         if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.id != "1-1" && pendingStage.id != "1-2" && pendingStage.id != "1-3") { battle.treasureChance = TreasureChance; battle.extraPerWave = StoryExtraPerWave; }   // 每波多 3 隻（新手關、試煉不加）   // 寶箱怪：新手關、試煉不出（Combat.Treasure.cs）
+                        if (pendingStage.mode == "survive")
+                        {
+                            // 生存玩法（使用者要求）：一塊區域，怪越出越多，撐過時間就贏（強度照這一關的最後一波）
+                            battle.stageMode = "survive"; battle.surviveTime = SurviveSecondsOf(pendingStage);
+                            battle.StartStage(pendingStage.LastWave, pendingStage.LastWave);
+                        }
+                        else
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
                     }
                     else if (exploreRun != null && !exploreRun.IsDungeon) SetupExploreBattle();   // 故事探索：大迷宮（SoloBattle.Explore.cs）
                     else if (dungeon != null)
                     {
                         battle.castleSprites = dungeon.style == "castle";           // 城堡副本：小怪換成 2D 圖片的城堡敵人（Combat.SpriteMonsters.cs）
-                        battle.dungeonParty = Dungeons.PartyScale(partyN);          // 副本：浮動難度（最少 2 人；敵人數量、Boss 血量 ×人數）
+                        battle.dungeonParty = dungeon.story != null ? partyN : Dungeons.PartyScale(partyN);          // 副本：浮動難度（最少 2 人；敵人數量、Boss 血量 ×人數）；故事的小地圖照實際人數
                         battle.scaleAllies = battle.dungeonParty - 1;               // Boss 出招頻率、召喚數也照人數
                         battle.hpBoost = dungeonRelief;                          // 等級差修正（主機的等級決定）
                         // 副本強度（使用者要求）：比照同等級的故事關卡（同一章、同一個位置的倍率），再 ×2；小怪與 Boss 都是。每個地點照它的波次設定
@@ -1485,6 +1493,7 @@ namespace SpellDuel
                 if (!host) battle.endless = true;   // 隊友端：只用來判斷結束（兩人都倒下才結束）
                 bossRig.SetVisible(false);
                 if (dungeon != null && exploreRun != null && exploreRun.map.nodeAreas) BeginDungeonExploreRun();   // 千機迴廊大地圖：保留原本的地點流程（機關、抉擇、寶箱），走進房間才開打
+                else if (dungeon != null && exploreRun != null && dungeon.story != null) StoryMazeBegun();   // 故事的探索／護送（SoloBattle.StoryModes.cs）
                 else if (dungeon != null && exploreRun != null) Say($"🏰 {dungeon.name}：在大地圖上探索，清除每個地點才會打開往下一站的門", 4f);   // 副本大地圖：不用一站一站的地點流程
                 else if (dungeon != null) BeginDungeonRun();   // 副本：從第一個地點開始（房主開打；隊友跟著房主的訊息走）
                 else if (towerRun) Say($"🗼 無盡塔 第 {towerFrom}～{towerFrom + TowerBlock - 1} 波：" + (towerFrom % 10 == 6 ? "第 5 波（第 " + (towerFrom + 4) + " 波）有大 Boss！" : "最後一波有精銳敵人！") + "全部打完就挑戰成功", 4f);
@@ -2111,7 +2120,7 @@ namespace SpellDuel
                 return;
             }
             if (endless && exploreRun != null && !exploreRun.IsDungeon) { ExploreResult(); return; }   // 故事探索（SoloBattle.Explore.cs）
-            if (endless && dungeon != null)
+            if (endless && dungeon != null && dungeon.story == null)
             {
                 // 副本：通關 → 每個房間保底一件稀有以上、最後的首領保底一件史詩套裝（物品等級＝副本等級）
                 var d = dungeon;
@@ -2181,7 +2190,7 @@ namespace SpellDuel
                     if (guest) { }   // 故事合作的隊友：不播結尾（故事進度是房主的）
                     else if (!Story.IsSeen(st.id + "!")) { Story.MarkSeen(st.id + "!"); StoryVideo.Play(StoryVideo.For(st.id, false), () => ShowDialogue(st.after, null)); }   // 結尾（影片＋對話）也只自動播一次
                 }
-                else { LoseLoot(); Say($"💀 {st.title} 失敗…再挑戰一次吧（戰利品沒拿到）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
+                else { LoseLoot(); Say($"💀 {st.title} 失敗…" + StoryFailNote() + "再挑戰一次吧（戰利品沒拿到）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 return;
             }
             if (endless && towerRun)

@@ -22,6 +22,10 @@ namespace SpellDuel
         /// <summary>故事的波次目標：失敗不會讓關卡失敗</summary>
         public bool evSoft;
         int goalWave = -1; string goalKind;
+        /// <summary>故事關卡的玩法（使用者要求）：survive＝整關就是生存（撐過 surviveTime 秒，怪越出越多）；null＝一般</summary>
+        public string stageMode; public int surviveTime = 90;
+        /// <summary>生存：每過幾秒，場上同時的怪多一隻（最多多 SurviveRampMax 隻）</summary>
+        public const float SurviveRampEvery = 12f; public const int SurviveRampMax = 7;
         static int lastGoalKind = -1;   // 連續兩關不要同一種
 
         public const float CrystalHpMul = 3f;     // 守護水晶的血量＝玩家最大 HP ×3（×人數）
@@ -33,6 +37,7 @@ namespace SpellDuel
         void PlanWaveGoal()
         {
             goalWave = -1; goalKind = null;
+            if (stageMode == "survive" && stageEnd > 0) { goalWave = stageStart; goalKind = "survive"; return; }   // 生存玩法：第一波就是整關
             if (!waveGoals || stageEnd <= 0) return;
             var ok = new List<int>();
             for (int w = stageStart; w <= stageEnd; w++)
@@ -64,11 +69,14 @@ namespace SpellDuel
                     p["name"] = "召喚門"; p["done"] = "召喚門全部毀掉了！"; p["count"] = "2";
                     p["hp"] = GateBaseHp.ToString();   // SpawnNpc 會再乘這一波的血量倍率
                     break;
-                case "survive": p["time"] = "30"; break;
+                case "survive":
+                    p["time"] = stageMode == "survive" ? surviveTime.ToString() : "30";
+                    if (stageMode == "survive") p["ramp"] = "1";
+                    break;
             }
             StartRoomEvent(goalKind == "gates" ? "totems" : goalKind, p);
-            evSoft = true;
-            Emit("evinfo", player.Feet, new Color(1f, 0.9f, 0.5f), GoalIntro(goalKind));
+            evSoft = stageMode != "survive";   // 生存玩法：撐不住（倒下）就是關卡失敗；時間到＝通關
+            Emit("evinfo", player.Feet, new Color(1f, 0.9f, 0.5f), stageMode == "survive" ? $"⏳ 生存：撐過 {surviveTime} 秒！敵人會越來越多" : GoalIntro(goalKind));
         }
 
         static string GoalIntro(string kind) => kind switch

@@ -93,6 +93,7 @@ req = 1-3
 
 [stage 2-1] 葉燈照著來時路
 清除聚落外的毒花，找回通向記名林的路。
+mode = explore
 theme = forest
 waves = 1-3
 xp = 400
@@ -114,6 +115,7 @@ req = 1-4
 
 [stage 2-2] 碑文缺去的半行
 打退盤踞古碑的魔物，讀出被掩藏的封印記錄。
+mode = survive
 theme = forest
 waves = 4-6
 xp = 600
@@ -135,6 +137,7 @@ req = 2-1
 
 [stage 2-3] 接住快要散去的字
 打通樹心祭道，把倖存的名牌送到樹王面前。
+mode = escort
 theme = forest
 waves = 7-9
 xp = 800
@@ -156,6 +159,7 @@ req = 2-2
 
 [stage 2-4] 根下仍有回聲
 穿過古根撼地獸守住的根橋，保護送往樹心的名冊。
+mode = battle
 theme = forest
 waves = 7-9
 xp = 800
@@ -179,6 +183,7 @@ req = 2-3
 
 [stage 2-5] 把名字讀到天亮
 清開祭壇外圍的黑晶根網，讓名冊的聲音抵達樹王。
+mode = explore
 theme = forest
 waves = 7-9
 xp = 800
@@ -202,6 +207,7 @@ req = 2-4
 
 [stage 2-6] 腐化樹王・不肯入睡的心
 打碎束縛樹心的黑晶，讓記憶有人接手。
+mode = battle
 theme = forest
 waves = 10
 xp = 1200

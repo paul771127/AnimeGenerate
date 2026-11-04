@@ -67,6 +67,8 @@ namespace SpellDuel
     {
         public string id, name, desc;
         public int timeLimit; public bool traps;
+        /// <summary>故事關卡的探索／護送玩法用程式產生的小地圖（SoloBattle.StoryModes.cs）：哪一關、哪一種玩法；null＝真的副本</summary>
+        public StoryStage story; public string storyMode;
         public int level;                          // 副本等級（掉落的物品等級、難度基準）
         public int minPlayers = 2, maxPlayers = 4; // 建議人數
         public string unlock;                      // 要先通關的故事關卡（例如 2-3；null＝一開始就開放）
