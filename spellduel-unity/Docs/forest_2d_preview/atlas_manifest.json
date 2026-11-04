@@ -338,203 +338,208 @@
     "forest_rootbeast": {
       "files": {
         "idle": {
-          "sha256": "1a5e8665569fa7a41134ed1c652eb47c65082cc289487e31c865c771f6079c7a",
-          "bytes": 2256652,
+          "sha256": "6483b6894faffee5ccc937f16af37e3a951267a1497cf5c1f76539bd4d47acaf",
+          "bytes": 2288537,
           "rows": 4
         },
         "walk": {
-          "sha256": "98e15ada5379f18bdd0f63a61a0b133e79a6bd9087064fbd26be09d5d22653f6",
-          "bytes": 3398007,
+          "sha256": "af04e3f857659d5e2f3a2fbb355ed1cff03cf6f762e626a5423b3c3a3e51ed58",
+          "bytes": 3388173,
           "rows": 6
         },
         "windup": {
-          "sha256": "ca032bb84f353d66de01f43a26daacf4e4ed9a1de465ce805ede675955005437",
-          "bytes": 1309178,
+          "sha256": "97a91b295b55fcb3746fccd37f0358925f9b4beecbc6a40beba5e28af075b4d2",
+          "bytes": 1110220,
           "rows": 2
         },
         "attack": {
-          "sha256": "33aec59c4460d0d701003f83d60c9b6e18d6a1151174eee52462d6cae6096371",
-          "bytes": 1979577,
+          "sha256": "81ea7724170f5c0fe9a12d7494d1af221828909e7bfd3599666727cb197437fb",
+          "bytes": 1639476,
           "rows": 3
         },
         "hurt": {
-          "sha256": "81110dfc0e8bf2080bca283240bd62ec5afd1fd116217372f57ec4c5d79af494",
-          "bytes": 1085354,
+          "sha256": "ae42d70c1e6b038b8eda9e035e2de66d52e7c72b399228b4bb7a8d9ba197da6a",
+          "bytes": 1270685,
           "rows": 2
         },
         "die": {
-          "sha256": "a236fa45b930f41f7dcf4e1efc241d52888da683b250e266fb620edda48618fa",
-          "bytes": 1672389,
+          "sha256": "081d0967cdcf06f2a6eb0987422a9aa393d995d50df6d9bfd97c053c833b5551",
+          "bytes": 2043556,
           "rows": 4
         }
       },
-      "style": "original",
-      "scale_safety": 0.8293639406982305,
+      "style": "refined",
+      "scale_safety": 0.994337842088707,
       "source_edge_contacts": [
         [
           "reaction",
-          16
+          34
         ],
         [
           "reaction",
-          17
+          35
         ],
         [
           "reaction",
-          18
-        ],
-        [
-          "reaction",
-          19
-        ],
-        [
-          "reaction",
-          21
+          38
         ]
       ],
       "sources": {
-        "combat.png": "0dfd268cb31fdd2f8d64c9a77ea071f94eb8422ceb60e956048364d06f298080",
-        "idle.png": "dd43e16fdcd31ff44b3cb3155e660dfe80dc1515b29c38874112326aceff3d60",
-        "master.png": "232767ca807e14f8f5ab05131771f0729cb34c722eee282bad8ed65d9d198027",
-        "reaction.png": "5779df298f63b2c7160d490fc6a69d17779f4de4e447be03d0a4addfef78a952",
-        "walk.png": "7330cba68e1e248c15a46f8904ba4cfaf875675bd7a0806517093ba83f63b313"
+        "combat.png": "f76cc3d175bfa57e51df9f69125e75928566da9838157a1ed5693c5982442632",
+        "idle.png": "d537d5dbac43d98234c53c7ef2be9c751dab14230aa180965fc6532a80dfc85d",
+        "master.png": "e7a00117678e91ce3a69ff3b5ce3ebb73292c3f69d0c19a0ad9defda09a1a452",
+        "reaction.png": "cfab060b029c90aef27ac3440645e7bf3931cacc9918db684cc5d866c1acf8a2",
+        "walk.png": "f2993c18ea36bd9730c38bb434f65bcdfe71c7276b15810245aefaf2a39b0572"
       }
     },
     "forest_elite_guardian": {
       "files": {
         "idle": {
-          "sha256": "047d18b250aa10fb8a305208c5fef198d1eaa3135c18c9240fa3576133f7802b",
-          "bytes": 2376381,
+          "sha256": "4da463ae7dc8d04c42afa6ff2aee2d0690ca9346a8a04d06ea8df57c12783b94",
+          "bytes": 2210162,
           "rows": 4
         },
         "walk": {
-          "sha256": "f336eb61388d5cc964b00648ec3cff67030b457fa7d6d308b1a24aab6126b815",
-          "bytes": 3608863,
+          "sha256": "1b2126c795e1cd2da36e3f6dc0195705afda630dbaeb9a7d0f625408e268eb6b",
+          "bytes": 3227252,
           "rows": 6
         },
         "windup": {
-          "sha256": "a79c4050488a2a4352fffa24f0eb574f2cba973ae5138e363eedd13f5b07de09",
-          "bytes": 1215014,
+          "sha256": "af17841ff42e36185bd64ad437adb388c040e3698041322a7c79f194df81d11f",
+          "bytes": 1106032,
           "rows": 2
         },
         "attack": {
-          "sha256": "0e1e57beaa150f5aab31019f88df1dabde40b816c06bd7a420013816cef8efd0",
-          "bytes": 1905919,
+          "sha256": "8bfb8ac4e038387c17a4dc087c3107414ffd2d4930ace847d098c968193e0692",
+          "bytes": 1658810,
           "rows": 3
         },
         "hurt": {
-          "sha256": "a9bfbd150e29aea4bfaad495c33c5a82f25c6646d3bf5b4cfb11578873621679",
-          "bytes": 1260379,
+          "sha256": "f62a4252286a2a1f9a1ae75bc0dac0899a10573526bcf9126bd007394324ab7e",
+          "bytes": 1062315,
           "rows": 2
         },
         "die": {
-          "sha256": "d6082024650b6db50aed852d36e2b0782788934589f1bf6a4c946754f9d2ea18",
-          "bytes": 1879420,
+          "sha256": "e79948ee3281efff266b3ed2f6536e017f734a842d348c7d080e072e6475dcd1",
+          "bytes": 1653890,
           "rows": 4
         }
       },
-      "style": "original",
-      "scale_safety": 1,
+      "style": "refined",
+      "scale_safety": 0.942296918767507,
       "source_edge_contacts": [],
       "sources": {
-        "combat.png": "5e0f993f5a5b9bd509f40d047b0f728f907f3fd3502169ece609a601d4518a92",
-        "idle.png": "3e91fa9588d9e87cc29c02111ab262f70245da93221189e0535490afe39b3d86",
-        "master.png": "c1d4e11c1b2f87d4696d2dacc8a8d4769d54d58ad29f1061422d0ed3727e1ad2",
-        "reaction.png": "0073e573ed04f6bcf58632b6035df832cc7595c69fce045be836c110f1ab19cc",
-        "walk.png": "473be83cc11d901f9d1b12370b86163db4c29f3975c09616b44e54b608a78982"
+        "combat.png": "8ccbe56730cbf0636803967805f374eae7521e53375b63da7279e7799e185ef6",
+        "idle.png": "a563259b34008a9192c9d17e6fce2e9ebb2d8a3510c7bed7169d8e68ae63d919",
+        "master.png": "6fe55331e3bb40323fdf9f2916d2726cce1f875ad4b45b3243fd53679c940722",
+        "reaction.png": "47035a0462ddc868f4ceca4938704648e21357007ca523a8ff0367b3ffe8a026",
+        "walk.png": "3375dc7c74fc186c794639d45b5bb21828e4251b714fd58bde6999094bf6acd2"
       }
     },
     "forest_elite_sniper": {
       "files": {
         "idle": {
-          "sha256": "5bb0f0669bc1a1c5eeeb2b241780ab8883648bed1af662b3301ba22a7b02a30a",
-          "bytes": 2013781,
+          "sha256": "fa179f43e4f36c2ddaf1ff0c9eea611c5302d4d815a7c418774520b5e7d382d3",
+          "bytes": 1429503,
           "rows": 4
         },
         "walk": {
-          "sha256": "2ff1b8fbfecc86a48ea10699cab9fbef36709bc227b1b0ec756b316c5a3f6412",
-          "bytes": 3481433,
+          "sha256": "2a979bc863e2935ee7a67499c5c120e55d6cb51c78191635a619bf454ca0addc",
+          "bytes": 2124672,
           "rows": 6
         },
         "windup": {
-          "sha256": "8ab166cc89bb1aebe8d46ec1fd283b2a9b5fef35696bc22e1606ae67918eef3d",
-          "bytes": 1101519,
+          "sha256": "f76d75cb7d2b94042f05d96ff1e8ac386c63aada1d34744193519bf270d9395c",
+          "bytes": 734186,
           "rows": 2
         },
         "attack": {
-          "sha256": "6f5418195f8915531fbd1d0a8f499d28d1d2646131150e30878d33f33f38a57f",
-          "bytes": 1653040,
+          "sha256": "9bcf0e316dd6f163a90b8f963d23cb01169af444af3db2951c4e70e99b9f39ec",
+          "bytes": 1081986,
           "rows": 3
         },
         "hurt": {
-          "sha256": "92222735cae068c1953c4a85b3f474dc2ec89fb7130f78b1f14a130dc72988b3",
-          "bytes": 1056996,
+          "sha256": "3f2c4b7a16f5efcc0f22c0f490ba5b700eb4379582be1f83d03517b9f921505e",
+          "bytes": 752331,
           "rows": 2
         },
         "die": {
-          "sha256": "8f17a8135d5530c1ccc75a4dfaa6970b6204e5a2a614850e2638de99830c1510",
-          "bytes": 1736698,
+          "sha256": "c950d30bfe55aee239e294c03aa3db27cb70ca43ad3216d3072c00ecd083d7fd",
+          "bytes": 1137814,
           "rows": 4
         }
       },
-      "style": "original",
+      "style": "refined",
       "scale_safety": 1,
-      "source_edge_contacts": [],
+      "source_edge_contacts": [
+        [
+          "idle",
+          10
+        ]
+      ],
       "sources": {
-        "combat.png": "664fd18e265d6a5f7ecacc448f0b789adc7c412c0d704635d2228d3739e49197",
-        "idle.png": "d1c81e3113a1e02c679a12188881f5e4b296d4abbcc64909157070941d118781",
-        "master.png": "187738fa81d44936d27780cfa861712254f7972bef4165b0307a99b135d58554",
-        "reaction.png": "9ff7bae9647f643a7c25f36cd18d9d2631000df561f82b9c4867348afcccfae4",
-        "walk.png": "041a3e27b5af4e0b83e93ed0257c7e4e18f92d3ab966572ec9096d84088415d4"
+        "combat.png": "cd5bb3aa698da5d9afae437a1a1b0aaa89b461909aee8623e9a3c601e1d3f3ad",
+        "idle.png": "079a4689f5dc3ce1eaa2c796859f6514387c15b85a3edeb6869eab6f36bdb86f",
+        "master.png": "abbe37408e1c5f73a0abcc095452f6429851d894d2b7c337689d1bbc28f76d47",
+        "reaction.png": "1d0752b98c6acf1b37d5db794ee56f76dadd84f23e341936a2d0e5b7860d13ae",
+        "walk.png": "fd96690dfea5f054beaf587f4ca10f1052a4f21094b884cb43f58f2d2a5433b4"
       }
     },
     "forest_elite_priest": {
       "files": {
         "idle": {
-          "sha256": "332b439db06cc57e25eb5e33506a2fdd51e35371cd1e6ea7c00f4a9939cca5cb",
-          "bytes": 2292659,
+          "sha256": "c92c231bd270c6c03c53e9920242dfc7ea352c98b5cee6989bb5bfbe7e8a5eb2",
+          "bytes": 1824990,
           "rows": 4
         },
         "walk": {
-          "sha256": "3f45ab18b945afd84df8732e1a2b64601a0a05afc8736f7e453be3454effdbf9",
-          "bytes": 3770469,
+          "sha256": "3e27806e33d1e52beae412150e97bd54220af7601f577ee0eec67897d0239221",
+          "bytes": 2689012,
           "rows": 6
         },
         "windup": {
-          "sha256": "9f584818fddae9177f0fe4a16cdcee7f55a6c6072d29a893e0b934fccfd96ffb",
-          "bytes": 1094507,
+          "sha256": "31e9b23cec4f93e5ced2102a528ad1e33201deaeccca77371e4226bc2e282923",
+          "bytes": 909456,
           "rows": 2
         },
         "attack": {
-          "sha256": "e02241d8e92c53b5e7d7f7b6269710b15a0142d90ad749b32ab0920e088862fb",
-          "bytes": 1715257,
+          "sha256": "fa4a2414046327ee95cee74352c0413cf4f4b93c6cdf6a05af4e913a9213bfa7",
+          "bytes": 1354863,
           "rows": 3
         },
         "hurt": {
-          "sha256": "3059ebd57026225fbec520555e974ccb3e05e673cfe9765b5d3d48ff53be1cb0",
-          "bytes": 1341828,
+          "sha256": "c094bbc565fddf24b351109c1cc8d4b8edc4be02ec0cf7e62bf342c8761ae996",
+          "bytes": 993626,
           "rows": 2
         },
         "die": {
-          "sha256": "d3dc220d3822293edc3fc6ae945e450b6f8c035a72d290ee7fbeecda300df952",
-          "bytes": 1966449,
+          "sha256": "a4b3d53e9279a63477dd409a89498b9db78850a2862385ec41baf4da12691d1d",
+          "bytes": 1450325,
           "rows": 4
         }
       },
-      "style": "original",
+      "style": "refined",
       "scale_safety": 1,
       "source_edge_contacts": [
         [
-          "walk",
-          7
+          "combat",
+          25
+        ],
+        [
+          "combat",
+          26
+        ],
+        [
+          "combat",
+          27
         ]
       ],
       "sources": {
-        "combat.png": "2efd1ff69475dd8b05e108e72b9b71640ffc98de4864782752dd49d1b1359486",
-        "idle.png": "31e4374768b2e7ac542b71418dc956c71a0a504c4f5110aa955877426b501fdd",
-        "master.png": "8314498f86dda80133683a6fc9567ea19f2625bcc84b79a958b29c9f133138ba",
-        "reaction.png": "322a74bd7c5981ed72fbbd1caffeea0383f6d663ee0b17e6a834a20ad09b0e9d",
-        "walk.png": "6531d6a6e7cc38b3f1de206946691f655d6bb69a9b32ec4255298ba9e17fd276"
+        "combat.png": "43b2f99aac7cbf9a879bfe886357435826d219efcb113855cf11209db9e7eae3",
+        "idle.png": "e74236f33cc7a5ca155a92a32e44adc83f6b8b8d6105589aa31128da50f90db2",
+        "master.png": "7b92934ebafaeced10fe7281dbd4030390281be9ff286cd447df24f82d04d02a",
+        "reaction.png": "4a08be01bb45e3c2bd0e79e95a6887c333a61fe5cde9d330fa22dc5ca828bb19",
+        "walk.png": "294fb73bc8e0317e9c81a171f1019797b142bbc1f4d669244cecbf3c9faf8e68"
       }
     },
     "forest_elite_brood": {
