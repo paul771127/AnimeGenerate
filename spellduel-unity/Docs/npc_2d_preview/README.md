@@ -23,3 +23,7 @@ Full eight-direction idle/walk/gesture sets and previews. Total 11 NPCs, 1232 ce
 ## Batch 4: Foreman, Ayan, Bellsmith
 
 Mine NPCs now have all three eight-direction animation atlases and previews. Total 14 NPCs, 1568 cells, 0 errors. No gameplay changes.
+
+## Batch 5: Jungle elder, hunter, explorer, outpost guard
+
+Four original forest NPC designs with all three animation sets and previews. Total 18 NPCs, 2016 cells, 0 errors. Designs follow the brief's sprouting staff, fur vest, backpack/map, light armor/green cloak/spear requirements.
