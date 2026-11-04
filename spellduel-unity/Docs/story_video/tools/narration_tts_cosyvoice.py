@@ -30,6 +30,8 @@ CAST = {
     '腐化樹王': ('zh_male_calm.wav',      '古老的树精，声音低沉、空洞', 0.95,   # v5：原本用英文参考音，中文发音会怪
                  'asetrate=24000*0.86,aresample=24000,atempo=1.16,chorus=0.6:0.8:45|60:0.4|0.3:0.25|0.4:2|1.5,aecho=0.8:0.7:90|180:0.3|0.2'),
     '海斗':     ('zh_cn_male.wav',        '年轻男性，热血、有精神', 1.0, f'{WARM},{ROOM}'),
+    '魔劍士惡靈': ('zh_male_calm.wav',    '冷酷的亡灵剑士，声音低沉、干冷、带金属感，语速慢但字字清楚', 0.95,   # 月影古堡首領（vd_castle_boss）：略降音＋金屬感的短迴音，不要怪獸吼
+                 'asetrate=24000*0.9,aresample=24000,atempo=1.111,flanger=delay=2:depth=1.5:speed=0.4,aecho=0.8:0.55:45|90:0.3|0.18,lowpass=f=6500'),
     '澪':       ('zh_female_bright.wav',  '年轻女性，空灵、温柔、带一点哀伤', 0.95,
                  f'{WARM},aecho=0.7:0.6:60|120|240:0.35|0.22|0.12,highpass=f=120'),
 }

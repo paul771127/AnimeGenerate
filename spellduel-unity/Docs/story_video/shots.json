@@ -13,7 +13,9 @@
     "Mio": "Mio, ghostly singer of the old ship, translucent pale blue figure, long flowing hair, soft glowing outline",
     "Golem": "the Lava Colossus, a 3-meter golem of cracked black basalt with glowing orange magma veins, a black crystal lodged in its chest",
     "TreeKing": "the Corrupted Tree King, a towering tree creature with twisted bark limbs, glowing purple spores, a black crystal binding its heart",
-    "Kraken": "the Abyssal Kraken, a colossal sea monster with deep teal skin, glowing cyan runes, huge tentacles, a black crystal engraved with names on its chest"
+    "Kraken": "the Abyssal Kraken, a colossal sea monster with deep teal skin, glowing cyan runes, huge tentacles, a black crystal engraved with names on its chest",
+    "Wraith": "the Demon Swordsman Wraith, a player-sized humanoid undead knight in shattered black plate armor, violet-magenta ghost fire burning in the armor gaps and the empty visor, a long cape torn into strips of black mist, a black longsword with magenta light flowing along the blade, the other hand a clawed gauntlet wreathed in ghost fire, lean agile swordsman stance (not a giant)",
+    "Castle": "a gothic European castle throne room at night: tall stone pillars, red-and-gold banners, candelabras, a stained-glass rose window glowing violet behind a dark throne, suits of armor along the walls"
   },
   "videos": [
     {
@@ -203,6 +205,49 @@
           "seconds": 5,
           "zh": "艾琳合上紀行，對旅人微笑（片尾）。",
           "prompt": "{Erin} closes a leather-bound travel journal and smiles warmly at the viewer, behind her the volcanic village with its stone bell tower and the volcano at sunrise, soft focus, ending shot, no modern buildings, no skyscrapers, no city skyline"
+        }
+      ]
+    },
+    {
+      "id": "vd_castle_boss",
+      "title": "月影古堡・魔劍士惡靈",
+      "play": "月影古堡（castle_test）走進王座之間、開打前（約 30 秒）；播完接王座之間的對話，敵人才撲過來",
+      "shots": [
+        {
+          "id": "vd_castle_s01",
+          "seconds": 5,
+          "zh": "王座之間的燭火一盞接一盞熄滅，只剩王座後方的彩繪玻璃透著紫光。",
+          "prompt": "{Castle}, candle flames along the hall going out one after another from near to far, darkness creeping toward the throne, only the violet stained-glass window still glowing, slow dolly forward, ominous"
+        },
+        {
+          "id": "vd_castle_s02",
+          "seconds": 5,
+          "zh": "王座上的身影緩緩站起，拖著黑劍，劍尖在石地上劃出火花。",
+          "prompt": "{Wraith} slowly rising from the dark throne, dragging the black longsword so its tip scrapes sparks across the stone floor, low angle, violet backlight from the stained glass"
+        },
+        {
+          "id": "vd_castle_s03",
+          "seconds": 5,
+          "zh": "特寫：面甲的縫隙裡亮起兩點紫紅冥火。",
+          "prompt": "extreme close-up of {Wraith}'s empty helmet visor, two points of magenta ghost fire igniting inside the slit, wisps of black mist, slow push in"
+        },
+        {
+          "id": "vd_castle_s04",
+          "seconds": 5,
+          "zh": "惡靈舉劍指向鏡頭（玩家），劍身的紫光流動。",
+          "prompt": "{Wraith} raising the black longsword and pointing it straight at the camera, magenta light flowing along the blade, cape of black mist billowing, medium shot, {Castle} behind"
+        },
+        {
+          "id": "vd_castle_s05",
+          "seconds": 5,
+          "zh": "牆邊的盔甲、骷髏、石像鬼一個接一個轉過頭，眼裡亮起光。",
+          "prompt": "{Castle}, along the walls suits of armor, skeleton soldiers and stone gargoyles turning their heads one after another toward the camera, their eyes lighting up red and blue, tracking shot"
+        },
+        {
+          "id": "vd_castle_s06",
+          "seconds": 5,
+          "zh": "惡靈劍一揮，冥火掃過大廳，敵人一起衝過來，畫面衝向鏡頭後淡出。",
+          "prompt": "{Wraith} sweeping the sword sideways, a crescent of magenta ghost fire racing across the hall, skeletons and armored knights charging toward the camera, fast push in then fade to black"
         }
       ]
     }

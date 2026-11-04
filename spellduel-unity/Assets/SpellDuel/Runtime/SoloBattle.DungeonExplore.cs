@@ -138,7 +138,11 @@ namespace SpellDuel
             {
                 bossIntroArea = a;
                 Say($"👑 {a.Title}", 3f);
-                ShowDialogue(a.node.enter, () => { var ar = bossIntroArea; bossIntroArea = null; if (exploreRun == run && battle != null && !battle.Over) BeginAreaNode(run, ar); });
+                // 有開場影片（StoryVideo.ForDungeonBoss）就先播影片，再接對話；影片已經演過的台詞，對話就不重複（只留影片沒有的）
+                var vclip = StoryVideo.ForDungeonBoss(dungeon != null ? dungeon.id : null);
+                string vseen = "dgv:" + (dungeon != null ? dungeon.id : "");
+                bool vskip = Story.IsSeen(vseen); if (vclip != null) Story.MarkSeen(vseen);   // 看過的可以長按跳過
+                StoryVideo.Play(vclip, () => ShowDialogue(vclip != null ? new List<StoryLine>() : a.node.enter, () => { var ar = bossIntroArea; bossIntroArea = null; if (exploreRun == run && battle != null && !battle.Over) BeginAreaNode(run, ar); }), vskip);
                 return;
             }
             if (!run.map.nodeAreas) Ticker(a.node.enter);   // 千機迴廊：台詞由原本的副本進度送（DungeonRun）
