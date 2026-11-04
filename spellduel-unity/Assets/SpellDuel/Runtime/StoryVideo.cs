@@ -42,9 +42,9 @@ namespace SpellDuel
         /// 副本首領房的開場影片（走進王座、開打前；播完接那個地點的對話）。分鏡在 Docs/story_video/shots.json 的 vd_castle_boss。
         /// 影片推到 videos/ 之前 CastleBossFile＝null（不播，直接接對話）；交貨後填檔名、LineTimes、Subs。
         /// </summary>
-        public const string CastleBossFile = null;   // 例："vd_castle_boss_v1.mp4"
+        public const string CastleBossFile = "vd_castle_boss_v1.mp4";
         /// <summary>副本的開場影片（第一次進副本、開打前；「📖 看故事」也會播）。分鏡在 shots.json 的 vd_castle_intro；交貨前＝null（改用對話）</summary>
-        public const string CastleIntroFile = null;  // 例："vd_castle_intro_v1.mp4"
+        public const string CastleIntroFile = "vd_castle_intro_v1.mp4";
         public static Clip ForDungeonIntro(string dungeonId) =>
             dungeonId == "castle_test" && CastleIntroFile != null ? new Clip { file = CastleIntroFile, title = "月影古堡・開場", from = 0, to = 6, shots = 6, mb = 6 } : null;
         public static Clip ForDungeonBoss(string dungeonId) =>
@@ -82,6 +82,8 @@ namespace SpellDuel
         /// 所以字幕和分段播放都照這個時間，不用鏡頭長度推算。由 Docs/story_video/tools/narration_mix.py 算出（narration/timing.json），換配音要一起更新。</summary>
         static readonly System.Collections.Generic.Dictionary<string, float[]> LineTimes = new System.Collections.Generic.Dictionary<string, float[]>
         {
+            ["vd_castle_intro_v1.mp4"] = new[] { 0.12f, 9.39f, 9.86f, 18.27f, 18.74f, 24.36f, 24.83f, 31.83f, 32.30f, 38.78f, 39.25f, 44.76f },
+            ["vd_castle_boss_v1.mp4"] = new[] { 0.12f, 5.00f, 5.47f, 11.51f, 11.98f, 14.02f, 17.19f, 25.78f, 26.25f, 31.03f, 31.50f, 37.98f },
             ["v0_prologue_v10.mp4"] = new[] { 0.12f, 7.72f, 8.19f, 14.07f, 14.54f, 21.91f, 22.38f, 25.48f, 27.54f, 32.66f, 33.13f, 40.00f, 40.47f, 47.24f, 47.71f, 51.50f },
             ["v1_golem_v10.mp4"] = new[] { 0.12f, 6.44f, 6.91f, 16.00f, 16.47f, 19.63f, 21.68f, 25.02f, 26.85f, 34.14f, 34.61f, 40.14f },
             ["v2_treeking_v10.mp4"] = new[] { 0.12f, 5.48f, 5.95f, 13.78f, 14.25f, 19.92f, 20.39f, 25.43f, 25.90f, 31.75f },
@@ -98,6 +100,24 @@ namespace SpellDuel
         /// 旁白的句子不標「旁白：」，角色的台詞前面寫名字。影片檔是 *_v10.mp4（v10：艾琳每句用同一個聲音；v9：再修 7 句讀音（哑、晶）；v8：重新配音（老焰後製減輕、取消拼音標記）；v7 起結尾定格推近淡出；v6 起畫面配合配音——每個鏡頭放慢／停格到台詞講完，每句都在自己的鏡頭開口；換了聲音，檔名不同才會重新下載）。</summary>
         static readonly System.Collections.Generic.Dictionary<string, string[]> Subs = new System.Collections.Generic.Dictionary<string, string[]>
         {
+            ["vd_castle_intro_v1.mp4"] = new[]
+            {
+                "月亮被雲遮住的夜裡，山丘上那座沒人住的古堡，窗戶一扇一扇亮了起來。",
+                "村裡的人說，每到這種夜晚，古堡的鐘就會響；聽見鐘聲的人，再也沒有回來。",
+                "艾琳：{玩家}，地圖上沒有這座城堡的名字……書裡只寫了「月影」兩個字。",
+                "沉重的城門自己打開了，又在兩人身後「砰」地關上。",
+                "走廊深處傳來喀啦喀啦的骨頭聲。盔甲、骷髏、提燈的幽靈，全都醒了。",
+                "艾琳：小心腳下——地板的縫裡有東西在發光。這座城堡，到處都是機關。",
+            },
+            ["vd_castle_boss_v1.mp4"] = new[]
+            {
+                "王座之間的燭火，一盞接一盞熄滅了。",
+                "王座上坐著的不是國王——一個拖著黑劍的惡靈，緩緩站了起來。",
+                "魔劍士惡靈：……又一個闖進來的。",
+                "魔劍士惡靈：這座城堡的主人早就不在了。剩下的，由我和這把劍來守。",
+                "牆邊的盔甲、骷髏、石像鬼，一個接一個轉過頭來。",
+                "魔劍士惡靈：上吧。把他們的名字，也刻進這座城堡的墓碑裡！",
+            },
             ["v0_prologue_v10.mp4"] = new[]
             {
                 "灰燼像雪一樣落下。炎之里的晨鐘，已經三天沒有響過。",
