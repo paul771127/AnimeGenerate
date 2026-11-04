@@ -415,7 +415,7 @@ namespace SpellDuel
         void ClearExplore()
         {
             if (exRoot) Destroy(exRoot.gameObject);
-            ClearCastleTraps(); bossIntroArea = null; storyEscort = null; storyTrail.Clear(); SpriteEnemyView.CastleFog = false;
+            ClearCastleTraps(); ClearRace(true); bossIntroArea = null; storyEscort = null; storyTrail.Clear(); SpriteEnemyView.CastleFog = false;
             if (area != null) area.BoundsOff = false;
             ExploreFx.Clear(); exFxSeen.Clear(); exFxSealHave.Clear(); exFxInit = false;
             exFxAreaEntered.Clear(); exFxAreaCleared.Clear(); exFxBossRose = false; dgFxKeys.Clear();   // 副本大地圖的特效（隊友端沒有經過 SetupDungeonExplore）

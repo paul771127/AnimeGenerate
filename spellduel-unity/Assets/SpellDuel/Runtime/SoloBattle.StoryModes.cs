@@ -17,7 +17,7 @@ namespace SpellDuel
         /// <summary>生存要撐幾秒：越後面的關卡越久</summary>
         public static int SurviveSecondsOf(StoryStage st) => st == null ? 90 : 75 + 5 * Mathf.Clamp(st.fromWave - 1, 0, 9);
 
-        bool StoryMazeMode(StoryStage st) => st != null && (st.mode == "explore" || st.mode == "escort") && !StoryCoop && !NetMode;
+        bool StoryMazeMode(StoryStage st) => st != null && (st.mode == "explore" || st.mode == "escort" || st.mode == "race" || st.mode == "stealth") && !StoryCoop && !NetMode;
 
         /// <summary>這一關的小地圖：地點名稱、事件照關卡挑；沒寫的關卡用通用的名稱</summary>
         static DungeonDef StoryMazeDef(StoryStage st)
@@ -25,6 +25,13 @@ namespace SpellDuel
             var d = new DungeonDef { id = "story_" + st.id, name = st.title, level = Story.LevelBand(st.theme).lo, story = st, storyMode = st.mode, minPlayers = 1, maxPlayers = 1 };
             int w0 = st.FirstWave, w1 = Mathf.Max(st.FirstWave, st.LastWave), wm = (w0 + w1) / 2;
             bool escort = st.mode == "escort";
+            if (st.mode == "race")
+            {
+                // 賽跑：只有起點、終點兩塊（RaceTrack 自己做跑道）
+                d.rooms.Add(new DungeonRoom { id = "start", title = "起跑線", kind = "battle", wave = w0, theme = st.theme });
+                d.rooms.Add(new DungeonRoom { id = "goal", title = "終點", kind = "battle", wave = w1, theme = st.theme });
+                return d;
+            }
             (string a, string b, string chest, string fin, string ev) names = st.id switch
             {
                 "2-1" => ("毒花叢", "葉燈小徑", "採藥人的箱子", "聚落外的林道", "runes"),
@@ -32,6 +39,7 @@ namespace SpellDuel
                 "2-5" => ("黑晶根網", "黑晶圖騰", "翠留下的補給", "祭壇外圍", "totems"),
                 _ => ("林間空地", "古老的遺跡", "藏起來的箱子", "最深處", escort ? null : "runes"),
             };
+            if (st.mode == "stealth") names = ("外圍哨站", "巡邏的走廊", "沒人看守的貨箱", "目的地", null);
             void Room(string id, string title, string kind, int wave, string line, params (string k, string v)[] ps)
             {
                 var r = new DungeonRoom { id = id, title = title, kind = kind, wave = wave, theme = st.theme };
@@ -39,12 +47,13 @@ namespace SpellDuel
                 if (!string.IsNullOrEmpty(line)) r.enter.Add(new StoryLine { text = line });
                 d.rooms.Add(r);
             }
-            Room("s1", names.a, "battle", w0, escort ? "敵人盯上了同伴！擋在他前面！" : "這裡的魔物守著路，清開牠們！");
+            bool sneak = st.mode == "stealth";
+            Room("s1", names.a, "battle", w0, sneak ? "" : escort ? "敵人盯上了同伴！擋在他前面！" : "這裡的魔物守著路，清開牠們！");
             if (names.ev == "runes") Room("s2", names.b, "runes", wm, "地上的葉燈照順序亮了一遍——照同樣的順序踩上去！", ("count", "4"), ("seq", "3"));
             else if (names.ev == "totems") Room("s2", names.b, "totems", wm, "黑晶圖騰會一直叫出魔物，先把圖騰打碎！", ("count", "3"));
-            else Room("s2", names.b, "battle", wm, escort ? "伏兵！別讓牠們碰到同伴！" : "又有一群魔物擋路！");
+            else Room("s2", names.b, "battle", wm, sneak ? "" : escort ? "伏兵！別讓牠們碰到同伴！" : "又有一群魔物擋路！");
             Room("s3", names.chest, "chest", wm, "找到補給了！");
-            Room("s4", names.fin, "battle", w1, escort ? "最後一段路——把同伴平安送到！" : "最後的守衛！打倒牠們就能通過！");
+            Room("s4", names.fin, "battle", w1, sneak ? "" : escort ? "最後一段路——把同伴平安送到！" : "最後的守衛！打倒牠們就能通過！");
             return d;
         }
 
@@ -53,7 +62,14 @@ namespace SpellDuel
         {
             var d = StoryMazeDef(storyStage);
             pendingDungeon = d;
-            pendingExplore = new ExploreRun(DungeonMaze.Build(d));
+            ClearRace(true);
+            if (d.storyMode == "race") pendingExplore = new ExploreRun(BuildRaceMap(d, storyStage));   // 賽跑：跑道（SoloBattle.Race.cs）
+            else
+            {
+                var map = DungeonMaze.Build(d);
+                if (d.storyMode == "stealth") ThinForStealth(map);   // 潛入：怪少一點
+                pendingExplore = new ExploreRun(map);
+            }
             ExploreFx.Prefetch();
             StartBossBattle(false, true);
         }
@@ -68,6 +84,8 @@ namespace SpellDuel
         {
             storyEscort = null; storyTrail.Clear();
             var st = dungeon.story;
+            if (dungeon.storyMode == "race") { BeginRace(); return; }
+            if (dungeon.storyMode == "stealth") { BeginStealth(); return; }
             Say($"{StoryStage.ModeName(dungeon.storyMode)}：{st.title}\n" + (dungeon.storyMode == "escort"
                 ? "同伴會跟著你走；敵人會優先撲向他，他倒下就失敗。走到最後的地點並清除就過關"
                 : "在地圖上探索：清除每個地點才會打開下一扇門；小心地上的陷阱"), 5f);
@@ -84,6 +102,7 @@ namespace SpellDuel
         void UpdateStoryMaze(ExploreRun run)
         {
             if (dungeon == null || dungeon.story == null || battle == null || Me == null) return;
+            if (dungeon.storyMode == "race") { UpdateRace(Time.deltaTime); return; }
             if (storyTrail.Count == 0 || Battle.FlatDistance(storyTrail[storyTrail.Count - 1], Me.Feet) > 0.5f)
             {
                 storyTrail.Add(Me.Feet);

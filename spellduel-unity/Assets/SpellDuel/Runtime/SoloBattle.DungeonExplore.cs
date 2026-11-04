@@ -134,6 +134,12 @@ namespace SpellDuel
         void StartAreaNode(ExploreRun run, ExArea a)
         {
             bool fin = run.map.arenas.Exists(x => x.n == 4 && Vector3.Distance(x.center, a.center) < 0.1f);
+            if (dungeon != null && dungeon.storyMode == "stealth" && !a.IsChest)
+            {
+                // 潛入：走到最後的地點＝過關（不打）；其他地點不開戰（守衛照樣在、被發現才失敗）
+                if (fin && !battle.Over) { Say("🥷 成功潛入，沒有被發現！", 3f); battle.stageCleared = true; }
+                return;
+            }
             if (fin && !run.map.nodeAreas && !coop && !NetMode && a.node.enter.Count > 0 && bossIntroArea == null)
             {
                 bossIntroArea = a;

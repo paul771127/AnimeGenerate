@@ -18,7 +18,7 @@ namespace SpellDuel
         public const float DashSpeed = 2.5f;   // 公尺／秒（試過 3.5，使用者覺得太快，改回 2.5）
         /// <summary>故事探索的衝刺：1.5 倍（使用者要求；地圖一格改 4m、路線變長）</summary>
         public const float ExploreDashMul = 1.5f;
-        float DashSpeedNow => exploreRun != null ? DashSpeed * ExploreDashMul : DashSpeed;
+        float DashSpeedNow => exploreRun != null ? DashSpeed * ExploreDashMul * RaceSpeedMul : DashSpeed;   // 賽跑：泥沼、加速（SoloBattle.Race.cs）
         // 和普攻分開（使用者回報以前的「比 5→握拳」很容易干涉：獵人握拳→張開放箭、劍士手掌橫劃；現在改比讚）：
         bool dashHold;                         // 手指按在畫面中間（按住就衝）
         /// <summary>可以按住衝刺的範圍：畫面中間（上面的目標、小地圖和下面的技能欄不算）</summary>
@@ -54,7 +54,7 @@ namespace SpellDuel
 
         bool DashAllowed => (storyStage != null || exploreRun != null) && (!NetMode || exploreRun != null && dungeon != null) && (dungeon == null || exploreRun != null) && battle != null && !battle.Over && !ExDialogOpen   // 跟 NPC 說話時不衝刺
             && phase == Phase.Fighting && !InIntro && !frozen && Me != null && Me.Alive && Me.charging == null && chantPending == null
-            && !battle.Gallery && !battle.CarpetBoss && battle.clash == null && area != null && area.state == PlayArea.State.Done;
+            && !battle.Gallery && !battle.CarpetBoss && !RaceFrozen && battle.clash == null && area != null && area.state == PlayArea.State.Done;
 
         void UpdateDash(float dt)
         {

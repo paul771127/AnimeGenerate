@@ -26,7 +26,7 @@ namespace SpellDuel
         public string desc = "";
         /// <summary>玩法（使用者要求，第二章起）：battle 死鬥（10m×10m 場地清怪，預設）、explore 探索、escort 護送、survive 生存</summary>
         public string mode = "battle";
-        public static string ModeName(string m) => m == "explore" ? "🗺 探索" : m == "escort" ? "🛡 護送" : m == "survive" ? "⏳ 生存" : "⚔ 死鬥";
+        public static string ModeName(string m) => m == "explore" ? "🗺 探索" : m == "escort" ? "🛡 護送" : m == "survive" ? "⏳ 生存" : m == "race" ? "🏁 賽跑" : m == "stealth" ? "🥷 潛入" : "⚔ 死鬥";
         public readonly List<StoryLine> before = new List<StoryLine>();
         public readonly List<StoryLine> after = new List<StoryLine>();
         /// <summary>實際的波次（三種主題各 10 波：熔岩 1～10、森林 11～20、海上 21～30）</summary>
@@ -146,7 +146,7 @@ namespace SpellDuel
                             case "mode": case "玩法":
                             {
                                 var mv = v.Trim().ToLowerInvariant();
-                                st.mode = mv == "explore" || mv == "探索" ? "explore" : mv == "escort" || mv == "護送" ? "escort" : mv == "survive" || mv == "生存" ? "survive" : "battle";
+                                st.mode = mv == "explore" || mv == "探索" ? "explore" : mv == "escort" || mv == "護送" ? "escort" : mv == "survive" || mv == "生存" ? "survive" : mv == "race" || mv == "賽跑" ? "race" : mv == "stealth" || mv == "潛入" ? "stealth" : "battle";
                                 break;
                             }
                             default: errors.Add($"第 {ln} 行：不認得的設定 {k}"); break;
