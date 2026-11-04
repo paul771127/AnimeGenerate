@@ -22,7 +22,7 @@ namespace SpellDuel
         /// <summary>賽跑中的衝刺倍率（泥沼、加速）；不在賽跑＝1</summary>
         float RaceSpeedMul => race == null ? 1f : Time.time < raceBoostUntil ? 1.8f : Time.time < raceMudUntil ? 0.45f : 1f;
         /// <summary>賽跑中不能衝刺（開跑前倒數、被暈眩）</summary>
-        bool RaceFrozen => race != null && (Time.time < raceGoAt || Time.time < raceStunUntil || raceDone);
+        bool RaceFrozen => race != null && (Time.time < raceGoAt || Time.time < raceStunUntil || raceDone) || Time.time < stumbleUntil;   // 身體障礙絆倒（SoloBattle.BodyGates.cs）也不能衝刺
 
         class Racer { public Fighter f; public List<Vector3> route; public int idx; public float baseSpeed, stunUntil, boostUntil, mudUntil, nextShotAt, aimUntil = -1f; public bool done; public int rank; public GameObject aimLine, stars; }
         class RaceBolt { public Vector3 pos, dir; public float t0; public GameObject go; }
