@@ -1,3 +1,17 @@
+# 森林敵人：中等細節動畫風重製完成
+
+18 隻全部依使用者確認的新風格重畫。每隻六種動作、八方向，共 108 張 RGBA 圖集、3024 格，約 155.47 MiB。保留原有檔名、GUID、匯入設定，未修改 Runtime。
+
+- roster_grid.jpg：全員最新總覽。
+- before_after.jpg：上方原版，下方新版本。
+- 各角色 directions.jpg、all_frames.jpg、walk.gif、attack.gif：八方向及動作預覽。
+- validation.json：完整圖集檢查 0 錯誤。
+- 母圖與動作來源：Tools/sprite_enemies/forest_refined_sources/。三張概念總覽供造型追溯。
+
+此環境未執行 Unity 編譯；平台建置由推送觸發 GitHub Actions，不能將素材格式檢查視為編譯通過。
+
+## 前次交付與分批紀錄
+
 # 森林敵人 2D 美術
 
 ## 第一批
@@ -48,3 +62,6 @@ roster_grid.jpg 為三排全員總覽，每隻有 directions.jpg、all_frames.jp
 
 
 2026-11-04 中等細節新風格：竄林孢子菇、霧林斥候、林間弓手 已換新，累計 16/18。使用者已確認 concepts_01.png 的比例與細節程度。
+
+
+2026-11-04 中等細節新風格：森林德魯伊、林語薩滿 已換新，累計 18/18。使用者已確認 concepts_01.png 的比例與細節程度。
