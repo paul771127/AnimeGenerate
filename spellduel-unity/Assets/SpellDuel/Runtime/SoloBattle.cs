@@ -751,10 +751,14 @@ namespace SpellDuel
         /// <summary>重看副本的故事（開場＋通關過的結尾）</summary>
         void WatchDungeonStory(DungeonDef d)
         {
+            // 重看：開場影片 → 開場對話 →（通關過）結局影片 → 結局對話；影片演過的台詞不再跳對話；可以長按跳過
             var vclip = StoryVideo.ForDungeonIntro(d.id);
-            var lines = new List<StoryLine>(vclip != null ? new List<StoryLine>() : d.before);
-            if (Dungeons.IsCleared(d.id)) lines.AddRange(d.after);
-            StoryVideo.Play(vclip, () => ShowDialogue(lines, null), true);   // 重看：可以長按跳過
+            bool cleared = Dungeons.IsCleared(d.id);
+            var eclip = cleared ? StoryVideo.ForDungeonEnd(d.id) : null;
+            StoryVideo.Play(vclip, () => ShowDialogue(vclip != null ? new List<StoryLine>() : d.before, () =>
+            {
+                if (cleared) StoryVideo.Play(eclip, () => ShowDialogue(eclip != null ? new List<StoryLine>() : d.after, null), true);
+            }), true);
         }
 
         /// <summary>重看故事：開場＋（通關過的）結尾，看完回到地圖</summary>
@@ -2162,7 +2166,7 @@ namespace SpellDuel
                     Say($"🏰 {d.name} 通關！獲得經驗 {xp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "（首次通關）" : "")
                         + (loot.Length > 0 ? "\n" + loot : "") + (over >= 8 ? $"\n（掉落的裝備是 Lv{d.level}，比你低 {over} 級）" : ""), 99f);
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
-                    if (!Story.IsSeen("dg!" + d.id)) { Story.MarkSeen("dg!" + d.id); ShowDialogue(d.after, null); }
+                    if (!Story.IsSeen("dg!" + d.id)) { Story.MarkSeen("dg!" + d.id); var ev = StoryVideo.ForDungeonEnd(d.id); StoryVideo.Play(ev, () => ShowDialogue(ev != null ? new List<StoryLine>() : d.after, null)); }   // 結局影片（有就播，播完不再跳同樣的對話）
                 }
                 else if (drun != null && drun.failed) { LoseLoot(); Say($"💀 {drun.failText}\n（保護目標倒下就算失敗：小怪會優先撲向他，記得幫他擋）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 else { LoseLoot(); Say($"💀 {d.name} 失敗…副本的敵人跟著人數變多（最少以 2 人計算），等級再高一點或找夥伴一起來吧", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
