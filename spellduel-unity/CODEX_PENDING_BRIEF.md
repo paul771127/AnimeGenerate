@@ -1172,3 +1172,7 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 先確認 22 位 NPC 圖集完整（check_npc_sprites.py：2464 格、0 錯誤）。
 - 完成跳躍魚、俯衝海鳥、騎魚泡泡怪，各六組八方向動作、meta 與方向／動畫預覽。風格參考森林 a56bf4d4。
 - check_ch345_enemies.py 3 --partial：3 隻、18 圖集、504 格、0 錯誤。只改素材與工具，未改 Runtime。其餘 65 隻仍待製作。
+
+### 2026-11-05：第三章 2D 敵人第二批
+- 完成寄居蟹、雷電水母、河豚六組八方向動作、meta、方向圖及動畫 GIF。寄居蟹螺殼補短刺與側翻倒地，河豚補鼓脹噴刺，水母保留透明觸手與電光。
+- check_ch345_enemies.py 3 --partial：累計 6 隻、36 圖集、1008 格、0 錯誤。其餘 62 隻尚未交付；沒有改 Runtime。

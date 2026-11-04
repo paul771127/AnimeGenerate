@@ -1,0 +1,4 @@
+{
+  "prompt": "Edit existing atlas, preserve all 32 poses, 8 direction columns and4 rows, proportions, colors, transparent background. Add a small crown of 3 ivory conical shell spines to the upper spiral shell in every view. Keep spines short and clearly part of shell, not separate objects. Same hermit crab with asymmetrical claws.",
+  "tool": "built-in image_gen"
+}
