@@ -19,3 +19,7 @@ Five additional NPCs with full idle/walk/gesture atlases, eight-direction previe
 ## Batch 3: Lingyin, Ark, Xiaomai, Oldsmith shade, Gearmerchant
 
 Full eight-direction idle/walk/gesture sets and previews. Total 11 NPCs, 1232 cells, 0 partial validation errors. Ghost retains blue ethereal appearance; mechanical merchant follows the existing automaton portrait.
+
+## Batch 4: Foreman, Ayan, Bellsmith
+
+Mine NPCs now have all three eight-direction animation atlases and previews. Total 14 NPCs, 1568 cells, 0 errors. No gameplay changes.

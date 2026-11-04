@@ -244,6 +244,72 @@
         "walk": "0bf81903c32bcf42fcc54254c82deb462e660892fba0504131b6b5a9e3dbf984",
         "gesture": "8ebc9ad4d3f9a3985931eb1f4f15eea3b0aac2edc8bf86793a558df257553353"
       }
+    },
+    "foreman": {
+      "files": {
+        "idle": {
+          "sha256": "f1b36abf2cdeca3ae03a52cc8b20e96244e004ffb451e2593f7bd2ca952cbe3d",
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "8c00b1acecc4f2ba574054349ca33db47b2eba698b4e47f9545a56a2275f3e5a",
+          "rows": 6
+        },
+        "gesture": {
+          "sha256": "fa25e02fa7f88bd4e3eb519c6748e711e2e736a1d4429b069617776bff50a6a0",
+          "rows": 4
+        }
+      },
+      "source_edge_contacts": [],
+      "sources": {
+        "idle": "2bbb4f87304fda51b231f067abb4bb570428a70d3136cd62b3d77191347ff256",
+        "walk": "328e65840507e84eefacb5ee4dc00b38f3a9bedea4848b5ffb6edba27e2d8082",
+        "gesture": "f99f0ecd32f7f0a91b1dc9a8c0144860d13b144c82190d66837461e9f976427f"
+      }
+    },
+    "ayan": {
+      "files": {
+        "idle": {
+          "sha256": "5fb54756e467bc6af9801214f485276d225e7f98d18949bc2136066a229969b4",
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "7af5218cbbcddbcd79d45381b5e86a184fcc6c7d731ce48931540bae0298116c",
+          "rows": 6
+        },
+        "gesture": {
+          "sha256": "25874bad02e15dee2f1589e5c42675f1524ee9a86ac1a9e8621de19c2a5fb99d",
+          "rows": 4
+        }
+      },
+      "source_edge_contacts": [],
+      "sources": {
+        "idle": "467068007ae31fde488e4f401da1539dc9cc89a3447b0d2b2cfc67a323279194",
+        "walk": "2de883f78ba2eb8f603ecea1274aeabc8f31a893fcaefc065cefc9b6958c3f63",
+        "gesture": "8e2a7d303affa6e105714c1411b1997e1751f365070c33441949036096fafb86"
+      }
+    },
+    "bellsmith": {
+      "files": {
+        "idle": {
+          "sha256": "09870ab81a56f82a3fc847495b50e18ff956398fab0af2dc89a3848a65a9cba6",
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "f53fc682e864281edc258cec2ff50c3e75ef316782c2b6fa9f93de5d1650bcf9",
+          "rows": 6
+        },
+        "gesture": {
+          "sha256": "abba74723acb28c7e651c97c70bc1421210ec42db6f02e3e88920ed835aedc7e",
+          "rows": 4
+        }
+      },
+      "source_edge_contacts": [],
+      "sources": {
+        "idle": "a2f628562111a606c3c1dce15114052d0c51b9c94abe7e15accb141ce358fffc",
+        "walk": "86b4e791699e97fc69901984563fce203a7b13ad0a0dcec361f0a8a3da77aced",
+        "gesture": "17926e1d8b4dfff5e806ee6c2f6c2841a1b70d8378f4dfc2ffa1194646894d9c"
+      }
     }
   }
 }
