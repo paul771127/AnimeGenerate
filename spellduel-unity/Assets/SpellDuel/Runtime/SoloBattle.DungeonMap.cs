@@ -221,6 +221,7 @@ namespace SpellDuel
             {
                 if (n.tamedKind >= 0) continue;
                 if (PropVisual(n)) continue;   // 特殊地點的道具：用道具模型
+                if (n.cloneOf == null && n.friendOwner < 0 && n.petUid == 0 && SpriteNpcView.KeyFor(n.npcId, n.name) is string skey) { NpcSprite(n, skey, dt); continue; }   // 有 2D 圖的人物（SpriteNpcView.cs）
                 if (!npcRigs.TryGetValue(n.minionId, out var rig) || !rig)
                 {
                     bool shadow=n.cloneOf!=null||n.friendOwner>=0&&n.tamedKind<0;
@@ -238,6 +239,8 @@ namespace SpellDuel
                 rig.SetDead(!n.Alive);
                 var shadowView=rig.GetComponent<ShadowDoubleView>();if(shadowView&&!n.Alive)shadowView.Dissolve();
             }
+            foreach (var kv in new List<KeyValuePair<int, SpriteNpcView>>(npcSprites))
+                if (battle.npcs.Find(n => n.minionId == kv.Key) == null) { if (kv.Value) Destroy(kv.Value.gameObject); npcSprites.Remove(kv.Key); npcLastHp.Remove(kv.Key); }
             foreach (var kv in new List<KeyValuePair<int, CharacterRig>>(npcRigs))
                 if (battle.npcs.Find(n => n.minionId == kv.Key) == null) { if (kv.Value) {var shadow=kv.Value.GetComponent<ShadowDoubleView>();if(shadow)shadow.Dissolve();Destroy(kv.Value.gameObject);} npcRigs.Remove(kv.Key); npcLastFeet.Remove(kv.Key); }
         }
@@ -282,8 +285,29 @@ namespace SpellDuel
             if(best)best.Flash();
         }
 
+        readonly Dictionary<int, SpriteNpcView> npcSprites = new Dictionary<int, SpriteNpcView>();
+        readonly Dictionary<int, float> npcLastHp = new Dictionary<int, float>();
+        /// <summary>人物的 2D 圖：位置、面向、走路速度、受傷閃紅、倒下淡出</summary>
+        void NpcSprite(Fighter n, string key, float dt)
+        {
+            if (!npcSprites.TryGetValue(n.minionId, out var v) || !v)
+            {
+                v = SpriteNpcView.Create(key);
+                npcSprites[n.minionId] = v; npcLastFeet[n.minionId] = n.Feet; npcLastHp[n.minionId] = n.hp;
+            }
+            v.SetPose(WorldFrame.FromWorld(n.Feet), WorldFrame.DirFromWorld(n.forward));
+            npcLastFeet.TryGetValue(n.minionId, out var lf);
+            v.MoveSpeed = Mathf.Lerp(v.MoveSpeed, Fighter.Flat(n.Feet - lf).magnitude / dt, 0.2f);
+            npcLastFeet[n.minionId] = n.Feet;
+            if (npcLastHp.TryGetValue(n.minionId, out var lh) && n.hp < lh - 0.01f) v.PlayHit();
+            npcLastHp[n.minionId] = n.hp;
+            v.SetDead(!n.Alive);
+        }
+
         void ClearNpcRigs()
         {
+            foreach (var s in npcSprites.Values) if (s) Destroy(s.gameObject);
+            npcSprites.Clear(); npcLastHp.Clear();
             foreach (var r in tamedRigs.Values) if (r) Destroy(r.gameObject);
             tamedRigs.Clear();
             foreach (var r in npcRigs.Values) if (r) Destroy(r.gameObject);

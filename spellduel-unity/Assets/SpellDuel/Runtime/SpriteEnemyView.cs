@@ -30,6 +30,8 @@ namespace SpellDuel
         static readonly int[] First = { 0, 4, 10, 12, 15, 17 };
 
         public float MoveSpeed;
+        /// <summary>城堡的距離漸暗（遠處變黑）：只有城堡地圖開著時才要（森林的 2D 敵人不能變黑）；SoloBattle.UpdateExplore 設定</summary>
+        public static bool CastleFog;
         SpriteMonsterDef def;
         Transform quad; Mesh mesh; MeshRenderer mr; MaterialPropertyBlock block;
         readonly Vector2[] uv = new Vector2[4];
@@ -207,7 +209,7 @@ namespace SpellDuel
             float fade = deadAt >= 0f ? Mathf.Clamp01(1f - (Time.time - deadAt - 0.6f) / 0.5f) : 1f;
             fade *= Mathf.Clamp01((Time.time - born) / FadeIn);
             // 城堡的距離漸暗：跟牆、地板一樣，遠處由黑慢慢變出顏色
-            float fog = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(ExploreArt.CastleFogNear, ExploreArt.CastleFogFar, Vector3.Distance(cam.transform.position, quad.position)));
+            float fog = !SpriteEnemyView.CastleFog ? 1f : 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(ExploreArt.CastleFogNear, ExploreArt.CastleFogFar, Vector3.Distance(cam.transform.position, quad.position)));
             var c = Time.time < flashUntil ? new Color(fog, 0.55f * fog, 0.55f * fog, fade) : new Color(fog, fog, fog, fade);
             if (Aura.a > 0.001f && !dead && Time.time >= flashUntil) { float k = 0.25f * Aura.a * (0.7f + 0.3f * Mathf.Sin(Time.time * 7f)); c = new Color(fog, fog * (1f - k), fog * (1f - k), fade); }   // 身體也帶一點紅
             // Sprites/Default 的 _MainTex 是 [PerRendererData]：用了 MaterialPropertyBlock 就一定要把圖也放進去，不然會取到預設的白圖（使用者回報「白背景」）

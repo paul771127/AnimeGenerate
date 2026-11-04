@@ -21,6 +21,7 @@ namespace SpellDuel
         readonly Dictionary<Vector2Int, GameObject> exUnder = new Dictionary<Vector2Int, GameObject>();   // 牆格底下的森林地面（樹底下不要透出真實地板）
         readonly Dictionary<object, GameObject> exProps = new Dictionary<object, GameObject>();
         readonly Dictionary<string, CharacterRig> exNpcRigs = new Dictionary<string, CharacterRig>();
+        readonly Dictionary<string, SpriteNpcView> exNpcSprites = new Dictionary<string, SpriteNpcView>();
         Vector2Int exLastCell = new Vector2Int(-999, -999);
         Vector3 exLastValid; bool exHasValid;
         float exPushSaidAt = -99f, exSparkleTapAt = -99f;
@@ -96,6 +97,7 @@ namespace SpellDuel
             if (!exRoot) BuildExploreTemplates();
             // 迷宮跟著世界原點（衝刺時世界平移，這裡每幀對齊）
             exRoot.SetPositionAndRotation(WorldFrame.Marker.position, WorldFrame.Marker.rotation);
+            SpriteEnemyView.CastleFog = run.map.theme == "castle";
             if (phase == Phase.Fighting && Me.Alive)
             {
                 ExKeepInside();
@@ -298,6 +300,18 @@ namespace SpellDuel
             foreach (var n in map.npcs)
             {
                 bool show = !n.hidden && Battle.FlatDistance(n.pos, me) <= view && !(n.id == "lost" && (run.escortFollowing || battle.exEscort != null));
+                // 有 2D 圖（SpriteNpcView.cs）：用圖，不用 3D 模型
+                if (SpriteNpcView.KeyFor(n.id, n.name) is string skey)
+                {
+                    exNpcSprites.TryGetValue(n.id, out var sv);
+                    if (sv && Battle.FlatDistance(WorldFrame.ToWorld(sv.transform.position), n.pos) > 3f) { Destroy(sv.gameObject); exNpcSprites.Remove(n.id); sv = null; }
+                    if (!show) { if (sv) { Destroy(sv.gameObject); exNpcSprites.Remove(n.id); } continue; }
+                    if (!sv) { sv = SpriteNpcView.Create(skey); exNpcSprites[n.id] = sv; }
+                    var sf = Fighter.Flat(me - n.pos); if (sf == Vector3.zero) sf = Vector3.back;
+                    sv.SetPose(WorldFrame.FromWorld(n.pos), WorldFrame.DirFromWorld(sf));
+                    ExploreArt.QuestMark(sv.transform, ExNpcMark(run, n));
+                    continue;
+                }
                 exNpcRigs.TryGetValue(n.id, out var rig);
                 if (rig && Battle.FlatDistance(WorldFrame.ToWorld(rig.transform.position), n.pos) > 3f) { Destroy(rig.gameObject); exNpcRigs.Remove(n.id); rig = null; }   // 換位置了（守林人到祭壇旁）：在新位置淡入
                 if (!show) { if (rig) { Destroy(rig.gameObject); exNpcRigs.Remove(n.id); } continue; }
@@ -401,7 +415,7 @@ namespace SpellDuel
         void ClearExplore()
         {
             if (exRoot) Destroy(exRoot.gameObject);
-            ClearCastleTraps(); storyEscort = null; storyTrail.Clear();
+            ClearCastleTraps(); storyEscort = null; storyTrail.Clear(); SpriteEnemyView.CastleFog = false;
             if (area != null) area.BoundsOff = false;
             ExploreFx.Clear(); exFxSeen.Clear(); exFxSealHave.Clear(); exFxInit = false;
             exFxAreaEntered.Clear(); exFxAreaCleared.Clear(); exFxBossRose = false; dgFxKeys.Clear();   // 副本大地圖的特效（隊友端沒有經過 SetupDungeonExplore）
@@ -409,6 +423,8 @@ namespace SpellDuel
             if (exBannerUntil > 0f || exploreRun != null) ExploreArt.LandmarkFound(null);
             exBannerUntil = -1f;
             foreach (var r in exNpcRigs.Values) if (r) Destroy(r.gameObject);
+            foreach (var sv in exNpcSprites.Values) if (sv) Destroy(sv.gameObject);
+            exNpcSprites.Clear();
             exNpcRigs.Clear(); exGateHash = -1; exLastCell = new Vector2Int(-999, -999);
             exploreRun = null;
         }
