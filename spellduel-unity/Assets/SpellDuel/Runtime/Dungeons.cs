@@ -69,6 +69,8 @@ namespace SpellDuel
         public int timeLimit; public bool traps;
         /// <summary>故事關卡的探索／護送玩法用程式產生的小地圖（SoloBattle.StoryModes.cs）：哪一關、哪一種玩法；null＝真的副本</summary>
         public StoryStage story; public string storyMode;
+        /// <summary>測試副本（dungeons.txt 寫 mode = 玩法）：整個副本用這個故事玩法打（SoloBattle.StartDungeonRun 轉成一關臨時的故事關卡）；只在開發版顯示</summary>
+        public string labMode;
         public int level;                          // 副本等級（掉落的物品等級、難度基準）
         public int minPlayers = 2, maxPlayers = 4; // 建議人數
         public string unlock;                      // 要先通關的故事關卡（例如 2-3；null＝一開始就開放）
@@ -158,6 +160,7 @@ namespace SpellDuel
             if (loaded && text == null) return;
             if (text == null) { var ta = Resources.Load<TextAsset>("dungeons"); text = ta != null ? ta.text : ""; }
             Parse(text);
+            if (!DevSeed.IsDevApp(Application.identifier)) all.RemoveAll(x => x.id.StartsWith("lab_"));   // 玩法實驗室：只在開發版
             loaded = true;
         }
 
@@ -252,6 +255,7 @@ namespace SpellDuel
                         else if (k == "traps") d.traps = v == "on";
                         else if (k == "unlock") d.unlock = v.Length == 0 || v == "none" ? null : v;
                         else if (k == "style") d.style = v.Length == 0 || v == "none" ? null : v.ToLowerInvariant();
+                        else if (k == "mode") d.labMode = v.Length == 0 || v == "none" ? null : StoryStage.ModeOf(v);
                         else errors.Add($"第 {ln} 行：副本不認得的設定 {k}");
                     }
                     continue;

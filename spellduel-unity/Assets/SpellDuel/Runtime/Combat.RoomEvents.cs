@@ -247,6 +247,7 @@ namespace SpellDuel
                 case "chant":
                 {
                     waveToSpawn = 0;
+                    evChantDone = 0;
                     var q = Riddles[(wave * 7 + (evParam != null ? evParam.Count : 0)) % Riddles.Length];
                     evRiddle = P("riddle", q.riddle); evAnswer = P("answer", q.answer); evHint = P("hint", q.hint);
                     evPts.Add(c + Fighter.Flat(player.forward) * Mathf.Min(2f, ArenaInner())); evState.Add(0);   // 門的位置（畫面用）
@@ -534,12 +535,27 @@ namespace SpellDuel
         };
 
         /// <summary>咒語之門：有人唸出一句話（房主判定；隊友的話用 evsay 送來）。回傳是不是唸對</summary>
+        int evChantDone;
         public bool EvChant(string text)
         {
             if (remoteEnemy || roomEvent != "chant" || evPhase != 1 || string.IsNullOrEmpty(text) || string.IsNullOrEmpty(evAnswer)) return false;
             var t = SpeechMatcher.Normalize(text); var a = SpeechMatcher.Normalize(evAnswer);
             if (t.Length == 0) return false;
-            if (SpeechMatcher.Score(t, a) >= 0.75f) { FinishRoomEvent($"「{evAnswer}」——門開了！"); return true; }
+            if (SpeechMatcher.Score(t, a) >= 0.75f)
+            {
+                // 詠唱接龍（count > 1）：連續唸對幾道謎題才開門
+                evChantDone++;
+                if (evChantDone < Mathf.Clamp(PI("count", 1), 1, 8))
+                {
+                    var q = Riddles[rng.Next(Riddles.Length)];
+                    if (q.answer == evAnswer) q = Riddles[(System.Array.IndexOf(Riddles, q) + 1) % Riddles.Length];
+                    evRiddle = q.riddle; evAnswer = q.answer; evHint = q.hint; evFails = 0;
+                    Emit("evinfo", player.Feet, new Color(0.5f, 1f, 0.6f), $"「{a}」答對了！下一題（{evChantDone}/{PI("count", 1)}）");
+                    Emit("evspeak", player.Feet, Color.white, evRiddle);
+                    return true;
+                }
+                FinishRoomEvent($"「{evAnswer}」——門開了！"); return true;
+            }
             if (t.Length < Mathf.Max(2, a.Length - 1)) return false;   // 太短（雜音）不算
             EvPenalty($"「{text}」不是答案！");
             return false;

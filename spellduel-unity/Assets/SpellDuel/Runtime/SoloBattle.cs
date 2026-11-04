@@ -729,6 +729,17 @@ namespace SpellDuel
         {
             if (d == null) return;
             storyMapOpen = false; storyStage = null;
+            if (d.labMode != null && !coopMode)
+            {
+                // 玩法實驗室：整個副本用一種故事玩法打（臨時的故事關卡：主題、波次照副本的第一個地點）
+                var r0 = d.rooms.Count > 0 ? d.rooms[0] : null;
+                int wv = r0 != null ? Mathf.Max(1, r0.wave) : 1, th = r0 != null ? d.ThemeOf(r0) : 0, local = (wv - 1) % 10 + 1;
+                var lst = new StoryStage { id = "lab:" + d.id, title = d.name, theme = th, fromWave = local, toWave = Mathf.Min(10, local + 2), xp = 50, mode = d.labMode, desc = d.desc ?? "" };
+                lst.before.AddRange(d.before); lst.after.AddRange(d.after);
+                storyStage = lst; storyGoalsDone = 0;
+                StartStageBattle();
+                return;
+            }
             void Go()
             {
                 if (!coopMode && GateArea(Go)) return;
@@ -876,7 +887,7 @@ namespace SpellDuel
         void OnSpeechText(string text)
         {
             if (VoiceCalib.Open) { VoiceCalib.Heard(text); return; }
-            if (phase == Phase.Fighting && battle != null) { if (scrollAsk) return; if (ExDialogSpeech(text)) return; if (ClassTrialSpeech(text)) return; if (RoomEventSpeech(text)) { DungeonSpeech(text); return; } DungeonSpeech(text); if (PotionByVoice(text)) return; ItemByVoice(text); CoatByVoice(text); return; }   // 回城確認中：暫停，不聽指令
+            if (phase == Phase.Fighting && battle != null) { if (scrollAsk) return; if (ExDialogSpeech(text)) return; if (MapModeSpeech(text)) return; if (ClassTrialSpeech(text)) return; if (RoomEventSpeech(text)) { DungeonSpeech(text); return; } DungeonSpeech(text); if (PotionByVoice(text)) return; ItemByVoice(text); CoatByVoice(text); return; }   // 回城確認中：暫停，不聽指令
             if (!TownWalking) return;
             if (Greeting.Find(text) != null) { world.Heard = text; world.HeardAt = Time.time; }
             townWalk.Heard(text);
@@ -1453,7 +1464,12 @@ namespace SpellDuel
                             ApplyEquivalentStrength(pendingStage.theme * 10 + Mathf.Clamp(pendingStage.fromWave, 1, 10), pendingStage.theme, 1f);
                         SetupStageMods(pendingStage);   // 天候、小目標（SoloBattle.StageMods.cs）
                         if (pendingStage.id != "trial" && pendingStage.id != JobTrialStageId && pendingStage.id != "1-1" && pendingStage.id != "1-2" && pendingStage.id != "1-3") { battle.treasureChance = TreasureChance; battle.extraPerWave = StoryExtraPerWave; }   // 每波多 3 隻（新手關、試煉不加）   // 寶箱怪：新手關、試煉不出（Combat.Treasure.cs）
-                        if (pendingStage.mode == "survive")
+                        if (pendingStage.mode == "bossrush")
+                        {
+                            battle.StartDungeon(BossRushWaves(pendingStage));   // Boss 連戰：三個 Boss 波次接著打（中間不回血）
+                            battle.bossAfterMinions = false;
+                        }
+                        else if (pendingStage.mode == "survive")
                         {
                             // 生存玩法（使用者要求）：一塊區域，怪越出越多，撐過時間就贏（強度照這一關的最後一波）
                             battle.stageMode = "survive"; battle.surviveTime = SurviveSecondsOf(pendingStage);
@@ -1461,6 +1477,7 @@ namespace SpellDuel
                         }
                         else
                         battle.StartStage(pendingStage.FirstWave, pendingStage.LastWave);   // 故事關卡
+                        ApplyCombatMode(pendingStage);   // 玻璃大砲、鬥場賭局、Boss 連戰的說明（SoloBattle.MapModes.cs）
                     }
                     else if (exploreRun != null && !exploreRun.IsDungeon) SetupExploreBattle();   // 故事探索：大迷宮（SoloBattle.Explore.cs）
                     else if (dungeon != null)
@@ -2183,7 +2200,7 @@ namespace SpellDuel
                     if (!guest) Story.MarkCleared(st.id, difficulty);   // 記下在哪個難度通關（簡單全破開普通、普通全破開困難）
                     float rmul = 1f + battle.levelBoost / (2f * LevelPerDifficulty);   // 普通 ×1.5、困難 ×2
                     int stXp = Mathf.RoundToInt(st.xp * rmul);
-                    pendingGold += Mathf.RoundToInt(Economy.StageGold(st) * rmul);
+                    pendingGold += Mathf.RoundToInt(Economy.StageGold(st) * rmul * (1f + gambleBonus));   // 鬥場賭局：每張詛咒卡 +30%
                     string bonusNote = GrantStageBonus(st, rmul);   // 小目標達成：額外金幣＋試煉幣
                     bonusNote += GrantStageRating(st, rmul);        // 評等 S／A：額外獎勵（SoloBattle.StageRating.cs）
                     string loot = GrantLoot($"{st.title} 通關", false) + bonusNote;
@@ -2602,7 +2619,7 @@ namespace SpellDuel
             CheckHostAlive();
             UpdateBuffPotions();   // 強化藥劑：開打開始算、時間到扣掉（SoloBattle.Potions.cs）
             if (InIntro) { UpdateVisuals(); return; }   // 開場：先停幾秒（敵人不動、不能出手）
-            if (bossIntroArea != null && phase == Phase.Fighting) { UpdateVisuals(); return; }   // 副本首領房的開場劇情：戰鬥暫停（SoloBattle.DungeonExplore.cs）
+            if ((bossIntroArea != null || gambleOpen) && phase == Phase.Fighting) { UpdateVisuals(); return; }   // 鬥場賭局選卡中也暫停   // 副本首領房的開場劇情：戰鬥暫停（SoloBattle.DungeonExplore.cs）
             if (scrollAsk && phase == Phase.Fighting && !NetMode) { UpdateVisuals(); return; }   // 回城捲軸的確認視窗：戰鬥暫停
             if (phase == Phase.Fighting && (!frozen || NetMode))   // 雙人：追蹤中斷不暫停（只是暫時不能施法）
             {
@@ -4313,7 +4330,9 @@ namespace SpellDuel
             DrawDashHud(W, H);
             DrawExploreHud(W, H);   // 故事探索：目標、任務、小地圖、對話框      // 衝刺中：畫面兩側的速度線
             DrawTravelFade(W, H);   // 副本走通道：走進黑霧／到站亮起
+            DrawDarkVignette(W, H); DrawQuietMeter(W, H);   // 黑暗探索的視野、噤聲潛行的音量計（SoloBattle.MapModes.cs）
             DrawRoomEventHud(W, H);   // 副本特殊地點：任務說明、黑暗、道具血條
+            DrawGamble(W, H);   // 鬥場賭局：選詛咒卡
             DrawArenaHud(W, H);       // 故事：隊長的旗子、增援方向（SoloBattle.ArenaProps.cs）
             DrawStageModsHud(W, H);   // 故事關卡：天候色調、天候與小目標
             DrawComboHud(W, H);       // 故事：連殺（SoloBattle.StageRating.cs）

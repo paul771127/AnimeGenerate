@@ -660,8 +660,9 @@ namespace SpellDuel
                 a.entered = true;
                 bool final = map.arenas.Exists(x => x.n == 4 && Vector3.Distance(x.center, a.center) < 0.1f);
                 if (final) { areaStarts.Add(a); continue; }   // 最終首領：走進王座由戰鬥那邊叫出來（訊息在競技場那邊說）
-                bool sneak = map.dungeon.storyMode == "stealth";   // 潛入：進區域不會被發現（看到才算）
-                Say(a.IsChest ? $"🧰 {a.Title}" : sneak ? $"🥷 {a.Title}——小心守衛的視線" : a.IsBoss ? $"💀 {a.Title}——首領現身了！" : a.IsEvent ? $"⚠ {a.Title}" : $"⚔ {a.Title}——守在這裡的怪物發現你了！");
+                string sm = map.dungeon.storyMode;
+                bool sneak = sm == "stealth" || sm == "quiet" || sm == "ghost" || sm == "bombs";   // 潛入：進區域不會被發現（看到才算）；鬼抓人、拆彈：地點不開戰
+                Say(a.IsChest ? $"🧰 {a.Title}" : sneak ? (sm == "ghost" || sm == "bombs" ? $"📍 {a.Title}" : $"🥷 {a.Title}——小心守衛的視線") : a.IsBoss ? $"💀 {a.Title}——首領現身了！" : a.IsEvent ? $"⚠ {a.Title}" : $"⚔ {a.Title}——守在這裡的怪物發現你了！");
                 if (sneak) { areaStarts.Add(a); continue; }
                 if (a.IsChest || a.IsEvent || a.IsBoss || map.nodeAreas) areaStarts.Add(a);
                 else if (AreaAlive(a) == 0) ClearArea(a);

@@ -22,7 +22,7 @@ namespace SpellDuel
         float stumbleUntil; readonly bool[] gateHintSaid = new bool[4];
         static SkillDef gateHitSkill;
 
-        bool BodyGatesOn(ExploreRun run) => run != null && run.IsDungeon && dungeon != null && !run.map.nodeAreas && dungeon.storyMode != "stealth";
+        bool BodyGatesOn(ExploreRun run) => run != null && run.IsDungeon && dungeon != null && !run.map.nodeAreas && !StealthLike;
 
         void BuildBodyGates(ExploreRun run)
         {

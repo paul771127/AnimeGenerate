@@ -26,7 +26,16 @@ namespace SpellDuel
         public string desc = "";
         /// <summary>玩法（使用者要求，第二章起）：battle 死鬥（10m×10m 場地清怪，預設）、explore 探索、escort 護送、survive 生存</summary>
         public string mode = "battle";
-        public static string ModeName(string m) => m == "explore" ? "🗺 探索" : m == "escort" ? "🛡 護送" : m == "survive" ? "⏳ 生存" : m == "race" ? "🏁 賽跑" : m == "stealth" ? "🥷 潛入" : "⚔ 死鬥";
+        /// <summary>所有玩法：id、名稱（含圖示）、中文別名</summary>
+        public static readonly (string id, string name, string zh)[] Modes =
+        {
+            ("battle", "⚔ 死鬥", "死鬥"), ("explore", "🗺 探索", "探索"), ("escort", "🛡 護送", "護送"), ("survive", "⏳ 生存", "生存"),
+            ("race", "🏁 賽跑", "賽跑"), ("stealth", "🥷 潛入", "潛入"), ("escape", "🌋 崩塌逃脫", "逃脫"), ("thief", "🏃 追捕盜賊", "追捕"),
+            ("ghost", "👻 鬼抓人", "鬼抓人"), ("keys", "🗝 鑰匙尋寶", "尋寶"), ("bombs", "💣 限時拆彈", "拆彈"), ("dark", "🕯 黑暗探索", "黑暗"),
+            ("track", "🦶 追蹤狩獵", "追蹤"), ("quiet", "🤫 噤聲潛行", "噤聲"), ("bossrush", "⏱ Boss 連戰", "連戰"), ("glass", "💎 玻璃大砲", "玻璃大砲"), ("gamble", "🎰 鬥場賭局", "賭局"),
+        };
+        public static string ModeName(string m) { foreach (var x in Modes) if (x.id == m) return x.name; return "⚔ 死鬥"; }
+        public static string ModeOf(string v) { v = (v ?? "").Trim().ToLowerInvariant(); foreach (var x in Modes) if (x.id == v || x.zh == v) return x.id; return "battle"; }
         public readonly List<StoryLine> before = new List<StoryLine>();
         public readonly List<StoryLine> after = new List<StoryLine>();
         /// <summary>實際的波次（三種主題各 10 波：熔岩 1～10、森林 11～20、海上 21～30）</summary>
@@ -145,8 +154,7 @@ namespace SpellDuel
                             case "desc": st.desc = v; break;
                             case "mode": case "玩法":
                             {
-                                var mv = v.Trim().ToLowerInvariant();
-                                st.mode = mv == "explore" || mv == "探索" ? "explore" : mv == "escort" || mv == "護送" ? "escort" : mv == "survive" || mv == "生存" ? "survive" : mv == "race" || mv == "賽跑" ? "race" : mv == "stealth" || mv == "潛入" ? "stealth" : "battle";
+                                st.mode = StoryStage.ModeOf(v);
                                 break;
                             }
                             default: errors.Add($"第 {ln} 行：不認得的設定 {k}"); break;

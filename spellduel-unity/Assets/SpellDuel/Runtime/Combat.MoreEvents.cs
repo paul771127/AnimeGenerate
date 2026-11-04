@@ -374,7 +374,7 @@ namespace SpellDuel
             {
                 labNext = now + Mathf.Lerp(3.2f, 1.6f, Mathf.Clamp01((now - waveStartAt) / 60f));
                 int lane = rng.Next(3);
-                EvSpawn(edgePointAt != null ? edgePointAt(120f * lane) : RandomInsidePoint(Ring(ArenaInner(), 120f * lane)));
+                if (FixedDungeonSpawns) EvSpawn(); else EvSpawn(edgePointAt != null ? edgePointAt(120f * lane) : RandomInsidePoint(Ring(ArenaInner(), 120f * lane)));   // 副本：照副本的出怪點
             }
             // 蓋砲台：站在空的砲台座上 2 秒（30 MP）
             LabProp on = null; foreach (var p in labProps) if (p.kind == "pad" && FlatDistance(player.Feet, p.pos) < 0.7f) on = p;
@@ -467,6 +467,29 @@ namespace SpellDuel
         void LabOnDodge() { if (roomEvent == "parry") { labOpenUntil = now + 3f; Emit("evinfo", player.Chest, new Color(1f, 0.85f, 0.3f), "⚡ 破綻！3 秒內打得傷鐵壁（傷害 ×2）"); } }
         /// <summary>捕獲大賽：收服一隻</summary>
         void LabOnTamed() { if (roomEvent == "tame") { labTamed++; Emit("evinfo", player.Feet, new Color(0.5f, 1f, 0.8f), $"🐾 {labTamed}/{labNeed}"); } }
+
+        // ------------------------------------------------------------ 地圖玩法用（SoloBattle.MapModes.cs）
+        /// <summary>追蹤狩獵的獵物：這一區的菁英（血量 ×4）</summary>
+        public Fighter SpawnTrackTarget(Vector3 at)
+        {
+            var m = SpawnMinion(at, 0, PickMinionKind(MinionRole.Front), HpMul * 4f, DmgMul, SpeedMul);
+            MakeElite(m); m.name = "稀有・" + m.name;
+            return m;
+        }
+        /// <summary>讓一隻怪這段時間不自己走、不出手（逃跑由外面移動）</summary>
+        public void HoldMinion(Fighter m, float t) { if (m != null) m.recoverUntil = Mathf.Max(m.recoverUntil, now + t); }
+        /// <summary>噤聲潛行：聲音傳到 at 附近 → 還沒發現玩家的怪轉頭過來張望（看到就算發現）。回傳轉頭的數量</summary>
+        public int ExHear(Vector3 at, float radius)
+        {
+            int n = 0;
+            foreach (var kv in exActive)
+            {
+                var m = kv.Value; if (m == null || !m.Alive || m.exAware || FlatDistance(m.Feet, at) > radius) continue;
+                var d = Fighter.Flat(at - m.Feet); if (d == Vector3.zero) continue;
+                m.exSleep = false; m.forward = d; ExIdle(m, 1, 3f); n++;
+            }
+            return n;
+        }
 
         string LabEvText()
         {

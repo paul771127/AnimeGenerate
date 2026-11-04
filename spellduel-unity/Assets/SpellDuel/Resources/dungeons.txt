@@ -1081,3 +1081,319 @@ theme = volcano
 魔劍士惡靈（boss）［serious］：這座城堡的主人早就不在了。剩下的，由我和這把劍來守。
 旁白：牆邊的盔甲、骷髏、石像鬼，一個接一個轉過頭來，眼裡亮起了光。
 魔劍士惡靈（boss）［angry］：上吧。把他們的名字，也刻進這座城堡的墓碑裡！
+
+# ================================================================
+# 🧪 玩法實驗室（只在開發版顯示；dungeons.txt 的 mode = 讓整個副本用一種故事玩法打）
+# 使用者要求「點子都先做起來，先不用急著放入關卡」：這裡只是讓你試玩每一種玩法
+
+[dungeon lab_race] 🧪 實驗：賽跑
+跟 3 個對手比賽，岔路、擋路物、泥沼、加速球，互相暈眩
+level = 15
+players = 1-4
+mode = race
+<before>
+旁白：玩法實驗——賽跑。跟 3 個對手比賽，岔路、擋路物、泥沼、加速球，互相暈眩。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_escape] 🧪 實驗：崩塌逃脫
+岩漿從後面追上來，一路衝到終點
+level = 15
+players = 1-4
+mode = escape
+<before>
+旁白：玩法實驗——崩塌逃脫。岩漿從後面追上來，一路衝到終點。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_thief] 🧪 實驗：追捕盜賊
+用技能把盜賊打暈，暈著時追到身邊就抓到
+level = 15
+players = 1-4
+mode = thief
+<before>
+旁白：玩法實驗——追捕盜賊。用技能把盜賊打暈，暈著時追到身邊就抓到。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_stealth] 🧪 實驗：潛入
+別被巡邏的敵人看到，走到最後的地點
+level = 15
+players = 1-4
+mode = stealth
+<before>
+旁白：玩法實驗——潛入。別被巡邏的敵人看到，走到最後的地點。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_quiet] 🧪 實驗：噤聲潛行
+潛入＋麥克風：太大聲敵人會轉頭過來
+level = 15
+players = 1-4
+mode = quiet
+<before>
+旁白：玩法實驗——噤聲潛行。潛入＋麥克風：太大聲敵人會轉頭過來。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_ghost] 🧪 實驗：鬼抓人
+點亮全部燈籠；鬼會穿牆追你
+level = 15
+players = 1-4
+mode = ghost
+<before>
+旁白：玩法實驗——鬼抓人。點亮全部燈籠；鬼會穿牆追你。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_keys] 🧪 實驗：鑰匙尋寶
+找 3 把鑰匙（靠近時手機會震）才能開最後的門
+level = 15
+players = 1-4
+mode = keys
+<before>
+旁白：玩法實驗——鑰匙尋寶。找 3 把鑰匙（靠近時手機會震）才能開最後的門。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_bombs] 🧪 實驗：限時拆彈
+跑去拆炸彈：蹲、跳或說「解除」
+level = 15
+players = 1-4
+mode = bombs
+<before>
+旁白：玩法實驗——限時拆彈。跑去拆炸彈：蹲、跳或說「解除」。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_dark] 🧪 實驗：黑暗探索
+油燈越來越暗，撿油瓶補充
+level = 15
+players = 1-4
+mode = dark
+<before>
+旁白：玩法實驗——黑暗探索。油燈越來越暗，撿油瓶補充。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_track] 🧪 實驗：追蹤狩獵
+跟著足跡追稀有魔物，打傷會逃到下一個巢穴
+level = 15
+players = 1-4
+mode = track
+<before>
+旁白：玩法實驗——追蹤狩獵。跟著足跡追稀有魔物，打傷會逃到下一個巢穴。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_explore] 🧪 實驗：探索
+小地圖，有符文機關、陷阱、身體障礙
+level = 15
+players = 1-4
+mode = explore
+<before>
+旁白：玩法實驗——探索。小地圖，有符文機關、陷阱、身體障礙。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_escort] 🧪 實驗：護送
+艾琳跟著你走，敵人優先打她
+level = 15
+players = 1-4
+mode = escort
+<before>
+旁白：玩法實驗——護送。艾琳跟著你走，敵人優先打她。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_survive] 🧪 實驗：生存
+怪越出越多，撐過時間
+level = 15
+players = 1-4
+mode = survive
+<before>
+旁白：玩法實驗——生存。怪越出越多，撐過時間。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_bossrush] 🧪 實驗：Boss 連戰
+連打三隻 Boss，中間不回血
+level = 15
+players = 1-4
+mode = bossrush
+<before>
+旁白：玩法實驗——Boss 連戰。連打三隻 Boss，中間不回血。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_glass] 🧪 實驗：玻璃大砲
+你和敵人都一擊就倒
+level = 15
+players = 1-4
+mode = glass
+<before>
+旁白：玩法實驗——玻璃大砲。你和敵人都一擊就倒。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_gamble] 🧪 實驗：鬥場賭局
+開打前選詛咒卡，選越多獎勵越多
+level = 15
+players = 1-4
+mode = gamble
+<before>
+旁白：玩法實驗——鬥場賭局。開打前選詛咒卡，選越多獎勵越多。
+
+[room] 實驗場
+wave = 12
+theme = forest
+
+[dungeon lab_events1] 🧪 實驗：特殊地點（一）
+一個地點一種新玩法，照順序體驗。
+level = 15
+players = 1-4
+<before>
+旁白：玩法實驗——每個地點都是一種新玩法。
+
+[room] 鏡像試煉
+event = mirror
+wave = 12
+theme = forest
+<enter>
+旁白：鏡像試煉：照示範的順序做出蹲、跳、左右跨步。
+
+[room] 彈幕閃避
+event = barrage
+wave = 12
+theme = forest
+<enter>
+旁白：彈幕閃避：紅的跳、藍的蹲、橘牆往另一邊。
+
+[room] 節奏戰鬥
+event = rhythm
+wave = 12
+theme = forest
+<enter>
+旁白：節奏戰鬥：跟著節拍在拍點蹲或跳。
+
+[room] 運送易碎品
+event = fragile
+wave = 12
+theme = forest
+<enter>
+旁白：運送易碎品：穩穩拿著聖水罐走到發光處，別晃。
+
+[room] 只能反擊
+event = parry
+wave = 12
+theme = forest
+<enter>
+旁白：只能反擊：先跳或蹲閃過鐵壁的攻擊，才打得傷。
+
+[room] 靶場
+event = targets
+wave = 12
+theme = forest
+<enter>
+旁白：靶場：打靶子，別打綠色的平民。
+
+[room] 推箱機關
+event = push
+wave = 12
+theme = forest
+<enter>
+旁白：推箱機關：把箱子推到壓力板上。
+
+[dungeon lab_events2] 🧪 實驗：特殊地點（二）
+一個地點一種新玩法，照順序體驗。
+level = 15
+players = 1-4
+<before>
+旁白：玩法實驗——每個地點都是一種新玩法。
+
+[room] 據點爭奪
+event = koth
+wave = 12
+theme = forest
+<enter>
+旁白：據點爭奪：站在據點上佔領，先到 60 分贏。
+
+[room] 塔防
+event = towers
+wave = 12
+theme = forest
+<enter>
+旁白：塔防：站在砲台座上 2 秒蓋砲台，守住核心。
+
+[room] 守夜
+event = vigil
+wave = 12
+theme = forest
+<enter>
+旁白：守夜：燈快熄了就站在旁邊點亮，撐到天亮。
+
+[room] 元素調和
+event = elemshield
+wave = 12
+theme = forest
+<enter>
+旁白：元素調和：碰屬性球，用同屬性打破護盾。
+
+[room] 捕獲大賽
+event = tame
+wave = 12
+theme = forest
+<enter>
+旁白：捕獲大賽：把血壓到三成以下收服魔物。
+
+[room] 背誦試煉
+event = recite
+wave = 12
+theme = forest
+<enter>
+旁白：背誦試煉：聽電腦唸一句，背出來。
+
+[room] 快問快答
+event = quiz
+wave = 12
+theme = forest
+<enter>
+旁白：快問快答：用說的回答。
+
+[room] 詠唱接龍
+event = chant
+wave = 12
+theme = forest
+count = 3
+<enter>
+旁白：詠唱接龍：連續唸出三道謎題的答案。

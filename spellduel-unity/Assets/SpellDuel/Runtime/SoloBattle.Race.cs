@@ -22,13 +22,16 @@ namespace SpellDuel
         /// <summary>賽跑中的衝刺倍率（泥沼、加速）；不在賽跑＝1</summary>
         float RaceSpeedMul => race == null ? 1f : Time.time < raceBoostUntil ? 1.8f : Time.time < raceMudUntil ? 0.45f : 1f;
         /// <summary>賽跑中不能衝刺（開跑前倒數、被暈眩）</summary>
-        bool RaceFrozen => race != null && (Time.time < raceGoAt || Time.time < raceStunUntil || raceDone) || Time.time < stumbleUntil;   // 身體障礙絆倒（SoloBattle.BodyGates.cs）也不能衝刺
+        bool RaceFrozen => race != null && (Time.time < raceGoAt || Time.time < raceStunUntil || raceDone) || Time.time < stumbleUntil || GambleNoDash || gambleOpen;   // 身體障礙絆倒（SoloBattle.BodyGates.cs）也不能衝刺
 
         class Racer { public Fighter f; public List<Vector3> route; public int idx; public float baseSpeed, stunUntil, boostUntil, mudUntil, nextShotAt, aimUntil = -1f; public bool done; public int rank; public GameObject aimLine, stars; }
         class RaceBolt { public Vector3 pos, dir; public float t0; public GameObject go; }
         class RaceItem { public Vector3 pos; public float back; public GameObject go; }
 
         RaceTrack race;
+        /// <summary>跑道玩法：race 賽跑、escape 崩塌逃脫、thief 追捕盜賊（SoloBattle.MapModes.cs）</summary>
+        string raceKind = "race";
+        float escapeFront = -999f; GameObject escapeWall;
         readonly List<Racer> racers = new List<Racer>();
         readonly List<RaceBolt> raceBolts = new List<RaceBolt>();
         readonly List<RaceItem> raceBoostItems = new List<RaceItem>();
@@ -59,16 +62,18 @@ namespace SpellDuel
         }
 
         /// <summary>StoryMazeBegun 叫：放對手、道具，開始倒數</summary>
-        void BeginRace()
+        void BeginRace(string kind = "race")
         {
             ClearRace(false);
+            raceKind = kind;
             var st = dungeon.story;
             raceRoot = new GameObject("Race").transform; raceRoot.SetParent(exRoot ? exRoot : null, false);
             raceGoAt = Time.time + 3.5f; raceStunUntil = raceBoostUntil = raceMudUntil = 0f; raceDone = false; raceFinishedAhead = 0; raceCountSaid = -1;
             var rng = new System.Random(st.id.GetHashCode());
             var names = RacerNames[Mathf.Clamp(st.theme, 0, RacerNames.Length - 1)];
             var startW = race.map.World(race.map.start.x, race.map.start.y);
-            for (int i = 0; i < 3; i++)
+            int nRacers = kind == "race" ? 3 : kind == "thief" ? 1 : 0;
+            for (int i = 0; i < nRacers; i++)
             {
                 var at = startW + new Vector3(-0.6f * (i % 2), 0f, (i - 1) * 1.3f);
                 var f = battle.SpawnNpc("racer_" + i, names[i], RacerLooks[i], 1, false, 99999, 0, at);
@@ -76,6 +81,13 @@ namespace SpellDuel
                 f.forward = Vector3.right;
                 racers.Add(new Racer { f = f, route = race.RouteFor(rng), idx = 1, baseSpeed = Mathf.Lerp(RacerSpeedLo, RacerSpeedHi, i / 2f), nextShotAt = raceGoAt + 4f + i * 2.5f });
             }
+            if (kind == "thief" && racers.Count > 0)
+            {
+                // 追捕盜賊：一個盜賊，先跑 4 格，不會攻擊
+                var th = racers[0]; th.f.name = "搶走寶物的盜賊"; th.idx = 5; th.baseSpeed = 0.93f; th.nextShotAt = float.MaxValue;
+                var p0 = th.route[Mathf.Min(4, th.route.Count - 1)]; th.f.head = new Vector3(p0.x, th.f.head.y, p0.z);
+            }
+            if (kind == "escape") escapeFront = -5f;
             // 道具：泥沼、加速（畫在地上）
             foreach (var p in race.mud)
             {
@@ -90,7 +102,9 @@ namespace SpellDuel
                 var orb = Prim(PrimitiveType.Sphere, new Color(1f, 0.95f, 0.5f), true); orb.transform.SetParent(g.transform, false); orb.transform.localPosition = Vector3.up * 0.7f; orb.transform.localScale = Vector3.one * 0.35f;
                 raceBoostItems.Add(new RaceItem { pos = p, go = g });
             }
-            Say("🏁 賽跑！跑到終點就過關（名次越前面獎勵越多）\n岩石、木箱會擋路；泥沼會變慢；黃色光球加速；用技能打中對手可以讓他暈 5 秒", 5f);
+            Say(kind == "escape" ? "🌋 崩塌逃脫！岩漿從後面追上來了，一路往終點衝（被追上就失敗）\n岩石、木箱擋路、泥沼變慢、黃色光球加速"
+                : kind == "thief" ? "🏃 追捕盜賊！用技能打中他讓他暈 5 秒，暈著時追到身邊就抓到；他先跑到終點就失敗"
+                : "🏁 賽跑！跑到終點就過關（名次越前面獎勵越多）\n岩石、木箱會擋路；泥沼會變慢；黃色光球加速；用技能打中對手可以讓他暈 5 秒", 5f);
         }
 
         void UpdateRace(float dt)
@@ -145,7 +159,8 @@ namespace SpellDuel
                 if (now < r.aimUntil) sp *= 0.4f;   // 瞄準時放慢
                 var target = r.route[Mathf.Min(r.idx, r.route.Count - 1)];
                 var to = Fighter.Flat(target - f.Feet); float dist = Battle.FlatDistance(target, f.Feet);
-                if (dist < 0.4f) { r.idx++; if (r.idx >= r.route.Count) { r.done = true; r.rank = 1 + racers.FindAll(o => o.done && o != r).Count + (raceDone ? 1 : 0); if (!raceDone) raceFinishedAhead++; Say($"🏁 {f.name}抵達終點（第 {r.rank} 名）", 2f); } }
+                if (raceKind == "thief" && now < r.stunUntil && Battle.FlatDistance(f.Feet, me) < 1.6f) { raceDone = true; Say("🏃 抓到盜賊了！寶物拿回來了", 4f); battle.stageCleared = true; return; }
+                if (dist < 0.4f) { r.idx++; if (r.idx >= r.route.Count) { if (raceKind == "thief") { battle.FailStage("盜賊逃到終點了…"); return; } r.done = true; r.rank = 1 + racers.FindAll(o => o.done && o != r).Count + (raceDone ? 1 : 0); if (!raceDone) raceFinishedAhead++; Say($"🏁 {f.name}抵達終點（第 {r.rank} 名）", 2f); } }
                 else
                 {
                     var step = to * Mathf.Min(dist, sp * dt);
@@ -185,10 +200,33 @@ namespace SpellDuel
                 }
                 if (hit || now - b.t0 > 1.6f || !race.map.Walkable(new Vector3(b.pos.x, 0f, b.pos.z), 0f)) { if (b.go) Destroy(b.go); raceBolts.RemoveAt(i); }
             }
+            // 崩塌逃脫：岩漿從後面追上來（越來越快）
+            if (raceKind == "escape" && !raceDone)
+            {
+                float spd = RacerTopSpeed * 0.7f / ExploreMap.CellSize * (1f + (now - raceGoAt) / 120f);
+                escapeFront += spd * dt;
+                int fi = Mathf.Clamp(Mathf.FloorToInt(escapeFront), 0, race.main.Count - 1);
+                if (escapeFront >= 0f)
+                {
+                    if (!escapeWall)
+                    {
+                        escapeWall = new GameObject("Lava front"); escapeWall.transform.SetParent(raceRoot, false);
+                        var w = Prim(PrimitiveType.Cube, new Color(1f, 0.35f, 0.05f, 0.75f), true); w.transform.SetParent(escapeWall.transform, false); w.transform.localPosition = new Vector3(0f, 1.2f, 0f); w.transform.localScale = new Vector3(4.2f, 2.4f, 0.4f);
+                        var fl = Prim(PrimitiveType.Cube, new Color(0.9f, 0.2f, 0.02f), true); fl.transform.SetParent(escapeWall.transform, false); fl.transform.localPosition = new Vector3(0f, 0.02f, -2f); fl.transform.localScale = new Vector3(4.2f, 0.04f, 4f);
+                    }
+                    var c0 = race.main[fi]; var c1 = race.main[Mathf.Min(fi + 1, race.main.Count - 1)];
+                    var p0 = race.map.World(c0.x, c0.y); var p1 = race.map.World(c1.x, c1.y);
+                    escapeWall.transform.localPosition = Vector3.Lerp(p0, p1, escapeFront - Mathf.Floor(escapeFront));
+                    if (p1 != p0) escapeWall.transform.localRotation = Quaternion.LookRotation(p1 - p0, Vector3.up);
+                }
+                if (myProg < escapeFront) { battle.FailStage("被岩漿追上了…"); return; }
+                if (myProg - escapeFront < 3f && now > raceSaidAt + 1f) { raceSaidAt = now; Say($"🌋 岩漿就在後面！快跑！（只差 {(myProg - escapeFront) * ExploreMap.CellSize:0}m）", 1.1f); Haptics.Play(Haptics.Kind.Warning); }
+            }
             // 到終點
-            if (!raceDone && race.AtFinish(me))
+            if (!raceDone && raceKind != "thief" && race.AtFinish(me))
             {
                 raceDone = true;
+                if (raceKind == "escape") { raceDone = true; Say("🌋 逃出來了！", 4f); battle.stageCleared = true; return; }
                 int rank = 1 + raceFinishedAhead;
                 int bonus = rank == 1 ? 300 : rank == 2 ? 150 : rank == 3 ? 60 : 0;
                 pendingGold += Mathf.RoundToInt(bonus * (1f + 0.5f * Mathf.Max(0, dungeon.story.theme)));
@@ -202,7 +240,8 @@ namespace SpellDuel
                 raceSaidAt = now;
                 float left = Mathf.Max(0f, (race.Length - myProg) * ExploreMap.CellSize);
                 string st = now < raceStunUntil ? $"💫 暈眩 {raceStunUntil - now:0} 秒・" : now < raceBoostUntil ? "⚡ 加速中・" : now < raceMudUntil ? "🟫 泥沼・" : "";
-                Say($"🏁 {st}第 {1 + ahead} 名・終點還有 {left:0}m", 1.1f);
+                string head = raceKind == "escape" ? $"🌋 岩漿在後面 {Mathf.Max(0f, (myProg - escapeFront) * ExploreMap.CellSize):0}m" : raceKind == "thief" && racers.Count > 0 ? $"🏃 盜賊在 {Battle.FlatDistance(racers[0].f.Feet, me):0}m 外" + (now < racers[0].stunUntil ? "（暈著！快追）" : "") : $"第 {1 + ahead} 名";
+                Say($"🏁 {st}{head}・終點還有 {left:0}m", 1.1f);
             }
         }
 
@@ -212,12 +251,12 @@ namespace SpellDuel
             racers.Clear();
             foreach (var b in raceBolts) if (b.go) Destroy(b.go);
             raceBolts.Clear(); raceBoostItems.Clear(); raceMudGo.Clear();
-            if (raceRoot) Destroy(raceRoot.gameObject); raceRoot = null;
+            if (raceRoot) Destroy(raceRoot.gameObject); raceRoot = null; escapeWall = null; escapeFront = -999f;
             if (all) race = null;
         }
 
         // ---------------------------------------------------------------- 潛入
-        bool stealthHooked;
+        Battle stealthHookedTo;   // 已經掛上「被發現就失敗」的那一場（每一場是新的 Battle，要重新掛）
         /// <summary>潛入：怪物少一點（營地最多 3 隻、巡邏一群只留 1 隻），不然幾乎不可能不被發現</summary>
         static void ThinForStealth(ExploreMap m)
         {
@@ -236,12 +275,12 @@ namespace SpellDuel
         void BeginStealth()
         {
             Say("🥷 潛入：別被巡邏的敵人發現！牠們只看得到正面約 7m 的扇形，牆後看不到；被發現就失敗。走進最後的地點就過關", 6f);
-            if (!stealthHooked)
+            if (stealthHookedTo != battle)
             {
-                stealthHooked = true;
+                stealthHookedTo = battle;
                 battle.OnExAlert += (m, call) =>
                 {
-                    if (dungeon == null || dungeon.storyMode != "stealth" || battle.Over) return;
+                    if (!StealthLike || battle.Over) return;
                     Haptics.Play(Haptics.Kind.Warning);
                     battle.FailStage($"被{m.name}發現了！");
                 };

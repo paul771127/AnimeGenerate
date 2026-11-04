@@ -96,7 +96,7 @@ namespace SpellDuel
                     case "capture":go.transform.position=WorldFrame.FromWorld(battle.evPts[i]);break;   // 進度一半時圈會換位置
                 }
             }
-            UpdateDarkness(kind == "dark");
+            UpdateDarkness(kind == "dark" || darkOn);   // 黑暗探索玩法也用（SoloBattle.MapModes.cs）
         }
 
         void RebuildEventPoints()
@@ -132,7 +132,7 @@ namespace SpellDuel
             foreach (var kv in minionGo)
             {
                 var m = kv.Key; var rig = kv.Value; if (!rig) continue;
-                bool far = on && m.Alive && (battle.RoomCoop?!battle.EventLitByTeam(m.Feet,DarkSight):Battle.FlatDistance(m.Feet, Me.Feet)>DarkSight);
+                bool far = on && m.Alive && (battle.RoomCoop?!battle.EventLitByTeam(m.Feet,DarkSight):Battle.FlatDistance(m.Feet, Me.Feet)>(darkOn ? MapDarkSight : DarkSight));
                 // 以前每幀把所有 Renderer 設成 !far，會把 2D 敵人藏起來的 3D 骨架打開（使用者回報「3D 敵人身上閃 2D」）
                 if (far && !darkHidden.ContainsKey(m))
                 {
