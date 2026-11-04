@@ -1,0 +1,17 @@
+{
+  "batch_seconds": 527,
+  "size": [
+    544,
+    960,
+    5
+  ],
+  "steps": 20,
+  "characters": [
+    {
+      "name": "Wraith",
+      "seed": 1634301032,
+      "prompt": "High-quality anime film still, modern Japanese action RPG look inspired by Zenless Zone Zero: thin clean line art, detailed anime illustration, flat two-tone cel shading, soft rim light, vivid color grading, smooth camera motion, 16:9, consistent character design. Character reference sheet, full-body standing pose, facing the camera directly, whole body visible from head to feet, human height with a slim agile swordsman build, NOT a giant, even soft lighting, plain flat light grey studio background, nothing else in the frame, still camera. Character: the Demon Swordsman Wraith, an undead knight in ornate gothic plate armour of dark gunmetal steel with gold filigree trim, a horned closed helm with an empty black visor slit, a crown of magenta ghost fire burning above the helm, glowing magenta runes on the breastplate, a tattered cape of dark violet mist trailing in strips, a slender longsword glowing magenta held point-down in the right hand, a wisp of magenta ghost fire hovering over the open left gauntlet.",
+      "file": "ref\\Wraith.png"
+    }
+  ]
+}

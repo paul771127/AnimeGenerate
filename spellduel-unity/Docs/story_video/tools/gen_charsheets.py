@@ -37,6 +37,16 @@ SHEET_OVERRIDES = {
                "frame, still camera. Character: a hooded traveler seen from the back, long weathered dark brown "
                "hooded cloak with a leather strap and a sword hilt at the hip, worn boots, the hood is up and the face "
                "is never shown."),
+    # 魔劍士惡靈：外觀照遊戲裡的 2D 圖（Docs/castle_2d_preview/boss/castle_boss_directions.jpg）——
+    # 深灰鋼甲配金邊、頭盔上一圈洋紅冥火、胸甲發光符文、紫霧披風、細長發光黑劍，跟玩家差不多高。
+    "Wraith": ("Character reference sheet, full-body standing pose, facing the camera directly, whole body visible "
+               "from head to feet, human height with a slim agile swordsman build, NOT a giant, even soft lighting, "
+               "plain flat light grey studio background, nothing else in the frame, still camera. Character: the "
+               "Demon Swordsman Wraith, an undead knight in ornate gothic plate armour of dark gunmetal steel with "
+               "gold filigree trim, a horned closed helm with an empty black visor slit, a crown of magenta ghost "
+               "fire burning above the helm, glowing magenta runes on the breastplate, a tattered cape of dark violet "
+               "mist trailing in strips, a slender longsword glowing magenta held point-down in the right hand, a "
+               "wisp of magenta ghost fire hovering over the open left gauntlet."),
     "Mio": ("Character reference sheet, full-body standing pose, facing the camera, whole body visible, even soft "
             "lighting, plain flat light grey studio background, nothing else in the frame, still camera. Character: "
             "Mio, the ghostly singer of the old ship, a translucent pale blue spirit of a young woman wearing a long "

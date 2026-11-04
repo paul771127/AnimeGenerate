@@ -1,10 +1,76 @@
 [
  {
-  "file": "v3_kraken_02.mp3",
-  "speaker": "海斗",
-  "heard": "纸还在暗下守着灯,我们也不退。",
+  "file": "vd_castle_boss_00.mp3",
+  "speaker": "旁白",
+  "heard": "王座之间的烛火,一盏接一盏熄灭了。",
+  "diffs": []
+ },
+ {
+  "file": "vd_castle_boss_01.mp3",
+  "speaker": "旁白",
+  "heard": "王座上坐着的不是国王,一个拖着黑剑的恶灵,缓缓站了起来。",
+  "diffs": []
+ },
+ {
+  "file": "vd_castle_boss_02.mp3",
+  "speaker": "魔劍士惡靈",
+  "heard": "又一个闯进来的。",
+  "diffs": []
+ },
+ {
+  "file": "vd_castle_boss_03.mp3",
+  "speaker": "魔劍士惡靈",
+  "heard": "这座城堡的主人早就不在了,剩下的由我和这把剑来守。",
+  "diffs": []
+ },
+ {
+  "file": "vd_castle_boss_04.mp3",
+  "speaker": "旁白",
+  "heard": "墙边的盔甲、骷髅、石像鬼,一个接一个转过头来。",
+  "diffs": []
+ },
+ {
+  "file": "vd_castle_boss_05.mp3",
+  "speaker": "魔劍士惡靈",
+  "heard": "上吧,把他们的名字也刻进这座城堡的墓碑里。",
+  "diffs": []
+ },
+ {
+  "file": "vd_castle_intro_00.mp3",
+  "speaker": "旁白",
+  "heard": "月亮被云遮住的夜里,山丘上那座没人住的古堡,窗户一扇一扇亮了起来。",
+  "diffs": []
+ },
+ {
+  "file": "vd_castle_intro_01.mp3",
+  "speaker": "旁白",
+  "heard": "村里的人说,每到这种夜晚,古堡的钟就会响,听见钟声的人再也没有回来。",
+  "diffs": []
+ },
+ {
+  "file": "vd_castle_intro_02.mp3",
+  "speaker": "艾琳",
+  "heard": "你,地图上没有这座城堡的名字,书里只写了月影两个字。",
+  "diffs": []
+ },
+ {
+  "file": "vd_castle_intro_03.mp3",
+  "speaker": "旁白",
+  "heard": "沉重的城门自己打开了,又在两人身后碰的关上。",
   "diffs": [
-   "預期「上」(shàng) 聽到「下」(xià)"
+   "預期「地」(dì) 聽到「的」(de)"
   ]
+ },
+ {
+  "file": "vd_castle_intro_04.mp3",
+  "speaker": "旁白",
+  "heard": "走廊深处传来咔啦咔啦的骨头声,盔甲、骷髅、提灯的幽灵,全都醒了。",
+  "diffs": []
+ },
+ {
+  "file": "vd_castle_intro_05.mp3",
+  "speaker": "艾琳",
+  "heard": "小心脚下,地板的缝里有东西在发光,这座城堡到处都是机关。",
+  "diffs": []
  }
 ]

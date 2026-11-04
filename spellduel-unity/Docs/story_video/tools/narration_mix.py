@@ -4,7 +4,7 @@
 # 遊戲字幕用，貼到 StoryVideo.cs 的 LineTimes）。
 # 結尾：最後一句講完後定格約 2 秒，慢慢推近並淡出（自然收尾，畫面一定比聲音長）。
 # 在 narration/ 底下執行：python ../tools/narration_mix.py [版本，預設 v8]
-import json, subprocess, sys, shutil
+import json, os, subprocess, sys, shutil
 from pathlib import Path
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'v8'
 V = str(Path(__file__).resolve().parent.parent / 'videos') + '/'
@@ -14,8 +14,12 @@ LEAD, TAIL = 0.12, 0.35   # 鏡頭開始後多久開口；講完後畫面再留�
 MAX_SLOW = 1.3        # 鏡頭最多放慢幾倍（再多就停格）
 END_HOLD, END_ZOOM = 2.2, 0.06   # 結尾：最後一句講完後，最後一格定格 2.2 秒，慢慢推近 6% 並淡出成黑畫面（字幕在遊戲裡照常顯示）
 subs = json.load(open('subs.json', encoding='utf-8'))
+# ONLY=vd_castle_boss,vd_castle_intro 只混這幾支（其餘不動，timing.json 也只換這幾支的數字）
+only = {s.replace('.mp4', '') for s in os.environ.get('ONLY', '').split(',') if s}
+if only: subs = {k: v for k, v in subs.items() if k[:-4] in only}
 def dur(p): return float(subprocess.check_output([FFPROBE, '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', p]))
-timing = {}
+# 舊的數字要留著：遊戲端 LineTimes 四支舊影片還在用，這次只加／換這次混的那幾支
+timing = json.load(open('timing.json', encoding='utf-8')) if Path('timing.json').exists() else {}
 for f, lines in subs.items():
     base = f.replace('_v2', '')[:-4]; src = V + base + '_v2.mp4'
     n = len(lines); vlen = dur(src)
@@ -27,8 +31,10 @@ for f, lines in subs.items():
         SHOT = b - a
         need = max(SHOT, LEAD + d + TAIL)
         slow = min(MAX_SLOW, need / SHOT); hold = max(0.0, need - SHOT * slow)
-        filt.append(f'[0:v]trim=start={a + 0.01:.3f}:end={b - 0.01:.3f},setpts=(PTS-STARTPTS)*{slow:.4f}'
-                    + (f',tpad=stop_mode=clone:stop_duration={hold:.3f}' if hold > 0 else '') + f',fps=24[v{i}]')
+        # fps=24 要放在 tpad 前面：setpts 改過時間戳之後直接接 tpad，ffmpeg（實測 2024-05-23 build）不會補畫格，
+        # 停格那段會整個失效，畫面就比聲音短、台詞對不上鏡頭。先 fps=24 把畫格重新排好，tpad 才補得出來。
+        filt.append(f'[0:v]trim=start={a + 0.01:.3f}:end={b - 0.01:.3f},setpts=(PTS-STARTPTS)*{slow:.4f},fps=24'
+                    + (f',tpad=stop_mode=clone:stop_duration={hold:.3f}' if hold > 0 else '') + f'[v{i}]')
         args += ['-i', f'{base}_{i:02d}.mp3']
         ms = int((t0 + LEAD) * 1000)
         filt.append(f'[{i + 1}:a]adelay={ms}|{ms},volume=1.5[a{i}]')

@@ -1,0 +1,102 @@
+{
+ "tool": "CosyVoice3 Fun-CosyVoice3-0.5B via ComfyUI FL_CosyVoice3_Instruct2",
+ "post": "ffmpeg: 去頭尾空白、句中停頓最多 0.4 秒、角色後製、loudnorm I=-17",
+ "lines": [
+  {
+   "file": "vd_castle_boss_00.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 0.97,
+   "instruct": "你是沉稳自然的说书人。请用陰森、壓低的情绪说这句话，放慢，像在講鬼故事，最後一個字收輕。",
+   "prompt_id": "84e6366a-fc3c-43fa-b5ca-776e056f7061"
+  },
+  {
+   "file": "vd_castle_boss_01.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 1.0,
+   "instruct": "你是沉稳自然的说书人。请用緊張、壓迫的情绪说这句话，『不是國王』之後停半拍，後半句壓低。",
+   "prompt_id": "84e6366a-fc3c-43fa-b5ca-776e056f7061"
+  },
+  {
+   "file": "vd_castle_boss_02.mp3",
+   "speaker": "魔劍士惡靈",
+   "reference": "zh_male_calm.wav",
+   "speed": 0.92,
+   "instruct": "你是冷酷的亡灵剑士，声音低沉、干冷、带金属感，语速慢但字字清楚。请用冷淡、輕蔑的情绪说这句话，很慢，像自言自語，尾音帶迴音。",
+   "prompt_id": "84e6366a-fc3c-43fa-b5ca-776e056f7061"
+  },
+  {
+   "file": "vd_castle_boss_03.mp3",
+   "speaker": "魔劍士惡靈",
+   "reference": "zh_male_calm.wav",
+   "speed": 0.95,
+   "instruct": "你是冷酷的亡灵剑士，声音低沉、干冷、带金属感，语速慢但字字清楚。请用冷酷、執念的情绪说这句话，平穩有力，『這把劍』加重。",
+   "prompt_id": "84e6366a-fc3c-43fa-b5ca-776e056f7061"
+  },
+  {
+   "file": "vd_castle_boss_04.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 1.08,
+   "instruct": "你是沉稳自然的说书人。请用驚悚的情绪说这句话，逐漸加快，製造被包圍的感覺。",
+   "prompt_id": "84e6366a-fc3c-43fa-b5ca-776e056f7061"
+  },
+  {
+   "file": "vd_castle_boss_05.mp3",
+   "speaker": "魔劍士惡靈",
+   "reference": "zh_male_calm.wav",
+   "speed": 0.95,
+   "instruct": "你是冷酷的亡灵剑士，声音低沉、干冷、带金属感，语速慢但字字清楚。请用憤怒、下令的情绪说这句话，前兩字低沉，後半句爆發成命令。",
+   "prompt_id": "84e6366a-fc3c-43fa-b5ca-776e056f7061"
+  },
+  {
+   "file": "vd_castle_intro_00.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 0.97,
+   "instruct": "你是沉稳自然的说书人。请用陰森、神祕的情绪说这句话，放慢，像在講鬼故事。",
+   "prompt_id": "84e6366a-fc3c-43fa-b5ca-776e056f7061"
+  },
+  {
+   "file": "vd_castle_intro_01.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 1.0,
+   "instruct": "你是沉稳自然的说书人。请用不安、低語的情绪说这句话，壓低聲音，『再也沒有回來』放輕。",
+   "prompt_id": "84e6366a-fc3c-43fa-b5ca-776e056f7061"
+  },
+  {
+   "file": "vd_castle_intro_02.mp3",
+   "speaker": "艾琳",
+   "reference": "zh_female_warm.wav",
+   "speed": 0.97,
+   "instruct": "你是年轻女性，声音温柔、柔和、亲切。请用認真、警戒的情绪说这句话，溫柔但緊繃，『月影』兩字放慢。",
+   "prompt_id": "84e6366a-fc3c-43fa-b5ca-776e056f7061"
+  },
+  {
+   "file": "vd_castle_intro_03.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 0.97,
+   "instruct": "你是沉稳自然的说书人。请用緊張、驚嚇的情绪说这句话，前半慢，『砰』要突然。",
+   "prompt_id": "84e6366a-fc3c-43fa-b5ca-776e056f7061"
+  },
+  {
+   "file": "vd_castle_intro_04.mp3",
+   "speaker": "旁白",
+   "reference": "zh_cn_female.wav",
+   "speed": 1.08,
+   "instruct": "你是沉稳自然的说书人。请用驚悚、加速的情绪说这句话，逐漸加快，製造被包圍的感覺。",
+   "prompt_id": "830d243b-b678-41ca-acc0-b734ce8ee7a8"
+  },
+  {
+   "file": "vd_castle_intro_05.mp3",
+   "speaker": "艾琳",
+   "reference": "zh_female_warm.wav",
+   "speed": 1.08,
+   "instruct": "你是年轻女性，声音温柔、柔和、亲切。请用警告、堅定的情绪说这句话，前半急促，後半沉穩下定決心。",
+   "prompt_id": "84e6366a-fc3c-43fa-b5ca-776e056f7061"
+  }
+ ]
+}
