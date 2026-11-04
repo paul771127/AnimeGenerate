@@ -3083,6 +3083,7 @@ namespace SpellDuel
         void OnBattleEvent(string kind, Vector3 at, Color c, string text)
         {
             if (kind == "exemote") { if (!string.IsNullOrEmpty(text)) floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time }); return; }   // 探索的怪自言自語、聊天、打盹
+            if (kind == "evspeak") { Tts.Warmup(); Tts.Speak(text); return; }   // 聲控小遊戲：電腦唸題目（Tts.cs）
             if (OnRoomEventFx(kind, at, c, text)) return;   // 副本特殊地點（SoloBattle.RoomEvents.cs）
             if (kind == "petcaught") PetArtFx.Capture(WorldFrame.FromWorld(at), true);   // 收服成功：繩結收合＋爪印（PetArtFx.cs）
             else if (kind == "lurefail" && text != null && text.Contains("掙脫")) PetArtFx.Capture(WorldFrame.FromWorld(new Vector3(at.x, 0f, at.z)), false);   // 收服失敗：繩結鬆開

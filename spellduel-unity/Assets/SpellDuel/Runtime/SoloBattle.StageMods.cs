@@ -103,7 +103,7 @@ namespace SpellDuel
                 battle.SetWeather(k < 3 ? Battle.Weather.Rain : k < 6 ? Battle.Weather.Fog : k < 9 ? Battle.Weather.Wind : battle.night ? Battle.Weather.Moon : new[] { Battle.Weather.Rain, Battle.Weather.Fog, Battle.Weather.Wind }[k % 3]);
             }
             battle.SetBonus((Battle.Bonus)(1 + r.Next(3)));
-            battle.waveGoals = true;
+            battle.waveGoals = true; battle.voiceGoals = UseSpeech;   // 聲控小遊戲：這支手機能語音辨識才抽
             battle.storyTactics = true;   // 小隊戰術：隊長、增援突襲（Combat.ArenaProps.cs）
             battle.storyProps = true;     // 場地機關：爆炸桶、石柱、草叢、水窪   // 波次目標：這一關挑一波換成守護／佔點／召喚門／追獵／撐住（StartStage 時挑）
             string wl = battle.weather != Battle.Weather.None ? $"\n今天的天候：{Battle.WeatherName(battle.weather)}——{Battle.WeatherDesc(battle.weather)}；{Battle.WeatherTraitText(battle.weather)}" : "";

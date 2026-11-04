@@ -16,7 +16,7 @@ namespace SpellDuel
     /// </summary>
     public partial class Battle
     {
-        public static readonly string[] WaveGoalKinds = { "defend", "capture", "gates", "chase", "survive" };
+        public static readonly string[] WaveGoalKinds = { "defend", "capture", "gates", "chase", "survive", "recite", "quiz" };
         /// <summary>這一關要不要排波次目標（SoloBattle 在故事關卡設定）</summary>
         public bool waveGoals;
         /// <summary>故事的波次目標：失敗不會讓關卡失敗</summary>
@@ -50,7 +50,7 @@ namespace SpellDuel
             }
             if (ok.Count == 0) return;
             goalWave = ok[rng.Next(ok.Count)];
-            int k; do k = rng.Next(WaveGoalKinds.Length); while (k == lastGoalKind);
+            int k; do k = rng.Next(WaveGoalKinds.Length); while (k == lastGoalKind || !voiceGoals && IsVoiceGame(WaveGoalKinds[k]));   // 聲控小遊戲：手機要能語音辨識
             lastGoalKind = k; goalKind = WaveGoalKinds[k];
         }
 
@@ -86,6 +86,8 @@ namespace SpellDuel
             "gates" => "🌀 這一波：打壞召喚門，不然怪會一直出來！",
             "chase" => $"💰 這一波：盜寶頭目要來了，{RunnerTime:0} 秒內打倒牠有賞金！",
             "survive" => "⏳ 這一波：撐住 30 秒！",
+            "recite" => "📖 這一波：背誦試煉！聽電腦唸一句，背出來",
+            "quiz" => "🧠 這一波：快問快答！用說的回答",
             _ => "",
         };
 

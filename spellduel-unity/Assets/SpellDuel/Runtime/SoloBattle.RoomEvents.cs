@@ -304,7 +304,7 @@ namespace SpellDuel
                     if (!NetIsHost && battle != null) battle.SetRemoteZones(m.pts, m.ks);
                     return true;
                 case "evsay":
-                    if (NetIsHost && battle != null) battle.EvChant(m.k);
+                    if (NetIsHost && battle != null) { if (Battle.IsVoiceGame(battle.roomEvent)) battle.EvVoice(m.k); else battle.EvChant(m.k); }
                     return true;
             }
             return false;
@@ -313,8 +313,9 @@ namespace SpellDuel
         /// <summary>語音：咒語之門作答（房主直接判定；隊友送給房主）。回傳 true＝這句話當作答案用掉了</summary>
         bool RoomEventSpeech(string text)
         {
-            if (battle == null || battle.roomEvent != "chant" || battle.evPhase != 1 || string.IsNullOrEmpty(text)) return false;
-            if (DungeonDecider) battle.EvChant(text);
+            if (battle == null || battle.roomEvent != "chant" && !Battle.IsVoiceGame(battle.roomEvent) || battle.evPhase != 1 || string.IsNullOrEmpty(text)) return false;
+            if (Time.time < Tts.BusyUntil) return true;   // 電腦還在唸：聽到的是它自己的聲音，不算
+            if (DungeonDecider) { if (Battle.IsVoiceGame(battle.roomEvent)) battle.EvVoice(text); else battle.EvChant(text); }
             else NetSend?.Invoke(new Msg { t = "evsay", k = text });
             return true;
         }
