@@ -76,7 +76,7 @@ namespace SpellDuel
 
         /// <summary>月影古堡的首領：魔劍士惡靈（跟玩家差不多大）。圖 castle_boss 還沒畫好之前先借空殼騎士的圖</summary>
         public static SpriteMonsterDef CastleBoss => SpriteEnemyView.HasArt("castle_boss")
-            ? new SpriteMonsterDef { id = 0, sheet = "castle_boss", name = "魔劍士惡靈", height = 2.1f, hiHeight = 2.1f }
+            ? new SpriteMonsterDef { id = 0, sheet = "castle_boss", name = "魔劍士惡靈", height = 2.9f, hiHeight = 2.9f }   // Codex 的圖：角色佔格子 64% 高 → 一格 2.9m，人約 1.85m（跟玩家差不多）
             : new SpriteMonsterDef { id = 0, sheet = "castle_knight", name = "魔劍士惡靈", height = 2.0f, hiHeight = 2.1f };
         public static bool Has(int id) => id >= 201 && id <= 208;
 
