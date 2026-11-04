@@ -9,6 +9,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <Speech/Speech.h>
 #include <pthread.h>
+#include <math.h>
 #include <string.h>
 #include <string>
 
@@ -29,6 +30,7 @@
 #define SP_SILENCE_SECONDS 0.9    // 有文字後這麼久沒有變化 → 這句話講完了
 
 static pthread_mutex_t sp_lock = PTHREAD_MUTEX_INITIALIZER;
+static volatile float sp_level = -160.0f;   // 麥克風音量（dBFS，音訊執行緒寫、主執行緒讀；噤聲潛行用）
 static std::string sp_out;       // 待取回的辨識結果（加鎖）
 static std::string sp_status;    // 狀態／錯誤文字（加鎖）
 static SFSpeechAudioBufferRecognitionRequest* sp_req = nil;   // 音訊執行緒也會讀取（加鎖）
@@ -223,7 +225,14 @@ static void sp_begin(void)
         return;
     }
     [input installTapOnBus:0 bufferSize:1024 format:fmt block:^(AVAudioPCMBuffer* buffer, AVAudioTime* when) {
-        // 音訊執行緒：送進目前的 request
+        // 音訊執行緒：先算音量（RMS → dBFS），再送進目前的 request
+        if (buffer.floatChannelData != NULL && buffer.frameLength > 0)
+        {
+            const float* d = buffer.floatChannelData[0]; double acc = 0;
+            for (AVAudioFrameCount i = 0; i < buffer.frameLength; i++) acc += (double)d[i] * d[i];
+            double rms = sqrt(acc / buffer.frameLength);
+            sp_level = (float)(rms > 1e-8 ? 20.0 * log10(rms) : -160.0);
+        }
         pthread_mutex_lock(&sp_lock);
         SFSpeechAudioBufferRecognitionRequest* r = sp_req;
         SP_MRC_RETAIN(r);
@@ -412,3 +421,5 @@ int sd_speech_status(char* buf, int len)
 }
 
 }
+
+extern "C" float sd_speech_level() { return sp_level; }   // 噤聲潛行：目前的麥克風音量（dBFS）

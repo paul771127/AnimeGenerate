@@ -2252,7 +2252,7 @@ namespace SpellDuel
                 LastProcs = RollProcs(p.owner, p.skill);
                 int pd = PreHit(p.owner, m, p.skill, p.damage, p);
                 if (remoteEnemy) { EmitHit(p.skill, p.pos); OnMinionHit?.Invoke(m.minionId, pd, p.skill); }
-                else { HitSkill = p.skill; HitCrit = p.crit; ApplyDamageAndEffect(m, pd, p.effect, p.effectDps, p.effectDur, p.pos, p.owner); HitSkill = null; HitCrit = false; ApplyProcs(m, LastProcs, p.pos); }
+                else { HitSkill = p.skill; HitCrit = p.crit; hitProj = p; ApplyDamageAndEffect(m, pd, p.effect, p.effectDps, p.effectDur, p.pos, p.owner); hitProj = null; HitSkill = null; HitCrit = false; ApplyProcs(m, LastProcs, p.pos); }
                 OnDealt(p.owner, pd, m, p.skill, p);
                 OnProjectileHit?.Invoke(p);
                 if (p.skill.groundZone) AddBurn(p, m.Feet);   // 審判砸中小怪：一樣留下審判之地
@@ -4704,8 +4704,11 @@ namespace SpellDuel
             }
         }
 
+        /// <summary>正在打到人的法術（"只能反擊" 看是不是反彈回去的）</summary>
+        Projectile hitProj;
         void ApplyDamageAndEffect(Fighter target, int damage, EffectKind eff, float dps, float dur, Vector3 at, Fighter by = null)
         {
+            if (roomEvent != null && LabDamageFilter(target, ref damage, by)) return;   // 只能反擊、元素調和、運送易碎品（Combat.MoreEvents.cs）
             if (target.npcSide == 1 && target.npcId != null && target.npcId.StartsWith("ev_") && EvPropHit(target, by)) return;   // 副本：雕像、寶箱（Combat.RoomEvents.cs）
             if (ArenaPropHit(target, by)) return;   // 故事的場地機關：爆炸桶、石柱（Combat.ArenaProps.cs）
             if (damage > 0) ArenaZoneHit(target, by);   // 草叢著火、水窪導電／結凍

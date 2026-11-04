@@ -76,6 +76,7 @@ namespace SpellDuel
         {
             if (battle == null) return;
             CleanupProps();
+            UpdateLabVisuals();   // 更多特殊地點的道具（SoloBattle.MoreEvents.cs）
             string kind = battle.roomEvent;
             if (kind != evViewKind || battle.evPts.Count != evViewCount) RebuildEventPoints();
             for (int i = 0; i < evPointGo.Count && i < battle.evPts.Count; i++)
@@ -160,6 +161,7 @@ namespace SpellDuel
 
         void ClearRoomEventViews()
         {
+            ClearLabVisuals();
             foreach (var g in evPointGo) if (g) Destroy(g);
             evPointGo.Clear(); evViewKind = null; evViewCount = -1;
             foreach (var g in propGo.Values) if (g) Destroy(g);

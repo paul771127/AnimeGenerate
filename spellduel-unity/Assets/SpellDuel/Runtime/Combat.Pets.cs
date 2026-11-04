@@ -66,6 +66,7 @@ namespace SpellDuel
             {
                 m.capturedPet = true; m.hp = 0f; m.lureUntil = 0f;   // 不算擊倒：沒有經驗、掉寶（Damage 收到就直接返回）
                 Emit("petcaught", m.Feet, new Color(0.45f, 1f, 0.8f), $"🐾 收服了{m.name}！下一場可以出戰");
+                LabOnTamed();   // 捕獲大賽（Combat.MoreEvents.cs）
                 OnPetCaught?.Invoke(m.minionKind, m.Feet);
                 return true;
             }

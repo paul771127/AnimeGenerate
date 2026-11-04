@@ -221,6 +221,7 @@ namespace SpellDuel
             {
                 if (n.tamedKind >= 0) continue;
                 if (PropVisual(n)) continue;   // 特殊地點的道具：用道具模型
+                if (n.npcId != null && n.npcId.StartsWith("lab_")) continue;   // 靶場的靶子、平民：SoloBattle.MoreEvents.cs 畫
                 if (n.cloneOf == null && n.friendOwner < 0 && n.petUid == 0 && SpriteNpcView.KeyFor(n.npcId, n.name) is string skey) { NpcSprite(n, skey, dt); continue; }   // 有 2D 圖的人物（SpriteNpcView.cs）
                 if (!npcRigs.TryGetValue(n.minionId, out var rig) || !rig)
                 {
@@ -320,7 +321,7 @@ namespace SpellDuel
             if (battle == null || battle.npcs.Count == 0) return;
             foreach (var n in battle.npcs)
             {
-                if (!n.Alive) continue;
+                if (!n.Alive || n.npcId != null && n.npcId.StartsWith("lab_")) continue;
                 var s = cam.WorldToScreenPoint(WorldFrame.FromWorld(n.head + Vector3.up * 0.35f));
                 if (s.z <= 0) continue;
                 var col = n.npcSide == 0 ? new Color(0.35f, 0.9f, 0.45f) : n.npcSide == 1 ? new Color(1f, 0.3f, 0.3f) : new Color(0.75f, 0.45f, 1f);

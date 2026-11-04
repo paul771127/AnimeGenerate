@@ -20,7 +20,7 @@ namespace SpellDuel
     /// </summary>
     public partial class Battle
     {
-        public static readonly string[] RoomEventKinds = { "defend", "survive", "escort", "hunt", "totems", "runes", "chant", "elements", "mimic", "collapse", "dark", "carpet", "capture", "chase", "recite", "quiz" };
+        public static readonly string[] RoomEventKinds = { "defend", "survive", "escort", "hunt", "totems", "runes", "chant", "elements", "mimic", "collapse", "dark", "carpet", "capture", "chase", "recite", "quiz", "mirror", "barrage", "rhythm", "fragile", "parry", "targets", "push", "koth", "towers", "vigil", "elemshield", "tame" };   // 後面 12 種：Combat.MoreEvents.cs
         public static bool IsRoomEvent(string kind) => Array.IndexOf(RoomEventKinds, kind) >= 0;
 
         /// <summary>目前地點的特殊玩法（null＝一般戰鬥）；隊友端由 rev 訊息設定，只用來顯示</summary>
@@ -287,7 +287,8 @@ namespace SpellDuel
                     break;
                 }
                 case "carpet": StartCarpet(); break;
-                case "recite": case "quiz": StartVoiceGame(kind); break;   // 背誦試煉、快問快答（Combat.VoiceGames.cs）   // 天穹飛毯（Combat.Carpet.cs）
+                case "recite": case "quiz": StartVoiceGame(kind); break;
+                default: if (IsLabEvent(kind)) StartLabEvent(kind); break;   // 更多特殊地點（Combat.MoreEvents.cs）   // 背誦試煉、快問快答（Combat.VoiceGames.cs）   // 天穹飛毯（Combat.Carpet.cs）
                 case "capture": StartCapture(); break;   // 故事的波次目標（Combat.WaveGoals.cs）
                 case "chase": StartChase(); break;
                 case "collapse":
@@ -307,8 +308,9 @@ namespace SpellDuel
         public void CleanupRoomEvent()
         {
             if (roomEvent == null && evPts.Count == 0) return;
-            npcs.RemoveAll(n => n.npcId != null && n.npcId.StartsWith("ev_"));
+            npcs.RemoveAll(n => n.npcId != null && (n.npcId.StartsWith("ev_") || n.npcId.StartsWith("lab_")));
             if (roomEvent == "carpet") ClearSky();
+            labProps.Clear(); labElem.Clear(); LabRhythmCue = -1;
             roomEvent = null; evPts.Clear(); evState.Clear(); evQueue.Clear(); evRespawn.Clear(); evText = ""; evPhase = 0;
             evWalker = evHunt = null; evCharge = 0;ResetRoomCoop();
             evSoft = false; chaseRunner = null;
@@ -338,6 +340,7 @@ namespace SpellDuel
             // 排隊的怪：到時間就出
             for (int i = evQueue.Count - 1; i >= 0; i--) if (now >= evQueue[i]) { evQueue.RemoveAt(i); EvSpawn(); }
             bool handled = true;
+            if (IsLabEvent(roomEvent)) { TickLabEvent(dt); RefreshEvText(); return true; }   // 更多特殊地點（Combat.MoreEvents.cs）
             switch (roomEvent)
             {
                 case "defend":
@@ -737,6 +740,7 @@ namespace SpellDuel
                 case "chase": evText = chaseRunner == null ? (chaseGone ? "" : "💰 盜寶頭目要來了…") : chaseGone ? (chaseWon ? "💰 寶物搶回來了！清掉剩下的怪" : "") : $"💰 打倒「{chaseRunner.name}」！剩 {Mathf.Max(0f, evEndAt - now):0} 秒　（其他怪清完這一波就過關）"; if (evText == "") evText = "⚔ 清掉剩下的怪！"; break;
                 case "runes": evText = evPhase == 3 ? "🟢 準備好了就踩中間的開關，符文才會開始亮" : evPhase == 0 ? "👁 看清楚符文亮起的順序…" : evPhase == 1 ? $"👣 照順序踩上符文（{evSeqPos}/{evSeq.Length}）" : $"⚔ 踩錯了！打倒湧出來的怪（錯 {evFails} 次）"; break;
                 case "recite": case "quiz": evText = VoiceEvText(); break;
+                case "mirror": case "barrage": case "rhythm": case "fragile": case "parry": case "targets": case "push": case "koth": case "towers": case "vigil": case "elemshield": case "tame": evText = LabEvText(); break;
                 case "chant": evText = evPhase == 1 ? $"🗣 唸出答案：{evRiddle}" + (evFails > 0 && evHint != null ? $"（提示：{evHint}）" : "") : $"⚔ 唸錯了！打倒湧出來的怪（錯 {evFails} 次）"; break;
                 case "elements": evText = evPhase == 1 ? "🔥❄⚡ 用對的屬性打雕像" + (evCharge > 0 ? $"（全隊帶{ElementNames[evCharge]}屬性，剩 {Mathf.Max(0f, evChargeUntil - now):0} 秒）" : "（碰場邊的屬性球，或用火、冰、雷的招式）") : $"⚔ 打錯了！打倒湧出來的怪（錯 {evFails} 次）"; break;
                 case "mimic": evText = evPhase == 2 ? $"⚔ 寶箱怪！打倒牠（錯 {evFails} 次）" : "🎁 找出真的寶箱：真的會偶爾閃一下（打錯會變成怪物）"; break;

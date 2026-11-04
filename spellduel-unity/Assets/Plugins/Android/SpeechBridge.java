@@ -41,6 +41,8 @@ public class SpeechBridge {
 
     private volatile boolean wanted, listening;
     private volatile long lastEvent;
+    private volatile float level = -2f;   // 麥克風音量（onRmsChanged 的 dB，大約 -2～10；噤聲潛行用）
+    public float getLevel() { return level; }
     private volatile String error = "";
     private volatile ArrayList<String> hints;
 
@@ -224,7 +226,7 @@ public class SpeechBridge {
             listening = true;
         }
         @Override public void onBeginningOfSpeech() { if (current()) lastEvent = SystemClock.elapsedRealtime(); }
-        @Override public void onRmsChanged(float rmsdB) { if (current()) lastEvent = SystemClock.elapsedRealtime(); }
+        @Override public void onRmsChanged(float rmsdB) { level = rmsdB; if (current()) lastEvent = SystemClock.elapsedRealtime(); }
         @Override public void onBufferReceived(byte[] buffer) { }
         @Override public void onEndOfSpeech() { if (current()) lastEvent = SystemClock.elapsedRealtime(); }
 

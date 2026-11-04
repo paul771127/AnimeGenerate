@@ -58,8 +58,32 @@ namespace SpellDuel
         [DllImport("__Internal")] static extern void sd_speech_set_hints(byte[] utf8);
         [DllImport("__Internal")] static extern int sd_speech_poll(byte[] buf, int len);
         [DllImport("__Internal")] static extern int sd_speech_status(byte[] buf, int len);
+        [DllImport("__Internal")] static extern float sd_speech_level();
         readonly byte[] pollBuf = new byte[8192], statusBuf = new byte[512];
 #endif
+
+        /// <summary>
+        /// 麥克風現在的音量，0（安靜）～1（大聲）：噤聲潛行用。iOS 是辨識用的麥克風 RMS（dBFS −60～−15 對到 0～1），
+        /// Android 是 SpeechRecognizer 的 onRmsChanged（約 −2～10 dB）。不支援或沒在聽＝0。
+        /// </summary>
+        public float Level01
+        {
+            get
+            {
+                if (!Supported || !Running) return 0f;
+                try
+                {
+#if UNITY_IOS && !UNITY_EDITOR
+                    return Mathf.InverseLerp(-60f, -15f, sd_speech_level());
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                    return bridge != null ? Mathf.InverseLerp(0f, 9f, bridge.Call<float>("getLevel")) : 0f;
+#else
+                    return 0f;
+#endif
+                }
+                catch (Exception) { return 0f; }
+            }
+        }
 
         public SpeechInput()
         {

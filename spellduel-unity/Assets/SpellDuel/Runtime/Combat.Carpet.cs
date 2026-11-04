@@ -395,6 +395,7 @@ namespace SpellDuel
         public void BodyDodge(Fighter f, bool duck)
         {
             if (f == null || !f.Alive) return;
+            if (f == player) LabOnDodge();   // 只能反擊：閃過攻擊 → 破綻（Combat.MoreEvents.cs）
             f.evadeBoostUntil = now + 3f;
             if (f.dodgeCdr > 0f && now >= f.dodgeCdrAt)
             {
