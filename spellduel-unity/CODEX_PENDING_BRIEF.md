@@ -1200,3 +1200,8 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 ### 2026-11-05：第四章 2D 敵人第二批
 - 完成自爆小鬼、熔岩狙擊手六組八方向圖集、meta 與預覽；分別有腹部膨脹火光、長銃瞄準開火，保留鐵項圈黑晶斷鍊。
 - check_ch345_enemies.py 4 --partial：累計 5 隻、30 圖集、840 格、0 錯誤。全任務 23/68；其餘 45 隻尚未交付。沒有改 Runtime。
+
+### 2026-11-05：第四章敵人 2D 第三批
+- 完成毒液噴花、荊棘衝鋒獸、藤蔓術士，六動作八方向；保留森林造型，加鐵項圈、黑晶、斷鍊。
+- 累計角鬥場 8/25 隻、48 圖集、1344 格；驗證 0 錯誤，原圖切格邊界接觸 0，未改 Runtime。內建 image_gen 原圖與提示詞保存在 Tools/sprite_enemies/ch345_sources；預覽在 Docs/ch4_2d_preview。
+- 本機無 Unity Editor，未宣稱完成原生 Android／iOS 編譯。尚餘角鬥場 17 隻、山道 25 隻。

@@ -1,9 +1,9 @@
 {
   "errors": [],
-  "atlases": 30,
-  "cells": 840,
-  "pngMiB": 44.26,
+  "atlases": 48,
+  "cells": 1344,
+  "pngMiB": 69.35,
   "runtimeUnchanged": true,
-  "enemies": 5,
+  "enemies": 8,
   "complete": false
 }

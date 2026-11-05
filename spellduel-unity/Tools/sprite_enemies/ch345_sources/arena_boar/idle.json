@@ -1,0 +1,5 @@
+{
+  "prompt": "Use case: precise-object-edit. Game sprite costume variant. Preserve the reference character's exact species, anatomy, colors, proportions and all poses. Preserve the 4 rows and eight columns of directions FRONT, FRONT RIGHT, RIGHT, REAR RIGHT, BACK, REAR LEFT, LEFT, FRONT LEFT. Add CLOSED iron collar around neck behind tusks, with central black crystal and dangling broken chain of THREE links. Collar must fit under head and around neck, never replace face or legs. Rear chain naturally occluded. Apply consistently to every frame and direction, obey perspective. Keep current action and death progression. True transparent background. No floor, shadows, labels or scenery. Keep full figure within each square cell with at least 10% transparent margin on all sides. Clean approved medium-detail Japanese anime style. No smiling.",
+  "reference": "C:/Users/USER/Documents/Codex/2026-10-12/spellduel-unity-unity-2022-3-claude/work/AnimeGenerate-art/spellduel-unity/Tools/sprite_enemies/forest_refined_sources/forest_boar/idle.png",
+  "tool": "built-in image_gen"
+}

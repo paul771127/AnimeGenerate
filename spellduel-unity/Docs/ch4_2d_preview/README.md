@@ -9,3 +9,7 @@ arena_imp, arena_fire_archer, arena_rock_charger: all six actions and eight dire
 ## Batch 2
 
 Added arena_bomb_imp and arena_lava_sniper. Cumulative 5 enemies / 30 atlases / 840 cells; partial validation 0 errors. Remaining 20 arena and 25 canyon enemies.
+
+## Batch 3
+
+Added arena_spitter, arena_boar and arena_vinemage with iron collars, black crystals and broken chains. Cumulative 8 enemies / 48 atlases / 1344 cells; partial validation 0 errors, source seam contacts 0. Remaining 17 arena and 25 canyon enemies.
