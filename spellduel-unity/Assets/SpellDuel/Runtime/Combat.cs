@@ -714,7 +714,9 @@ namespace SpellDuel
         /// <summary>小怪最近只走到離玩家這麼遠（約一個身高，至少 1m），免得貼在鏡頭上看不清楚；近身攻擊的距離會補到打得到這裡</summary>
         public static float MinionKeep(int kind) => Mathf.Max(1f, MinionHead[kind] + 0.1f);
         /// <summary>近身小怪的出手距離：至少要打得到停下來的位置</summary>
-        static float MeleeReach(int kind, float reach) => Mathf.Max(reach, MinionKeep(kind) + 0.15f);
+        static float MeleeReach(int kind, float reach) => Mathf.Max(Mathf.Max(reach, MinionKeep(kind) + 0.15f), MeleeAttackRadius - 0.1f - Fighter.BodyRadius);
+        /// <summary>近戰小怪的攻擊半徑（使用者要求：3m）：地上的紅色扇形、出手距離、打不打得到都照這個（從怪的中心算到玩家身體邊緣）</summary>
+        public const float MeleeAttackRadius = 3f;
         public static bool IsRanged(int kind) => kind == 1 || kind == 4 || kind == 5 || kind == 6 || kind == 7 || kind == 9 || kind == 12 || kind == 15 || kind == 18;
         public const float VoidStay = 1f;   // 虛空術士召喚後停留幾秒再瞬移
         public const float CrabShellMul = 0.5f, CrabTurn = 70f;   // 寄居蟹正面減傷、每秒最多轉幾度（轉身慢，繞到背後打）
