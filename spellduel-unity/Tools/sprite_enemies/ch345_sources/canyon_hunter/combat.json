@@ -1,0 +1,4 @@
+{
+  "prompt": "Preserve exact character design and all poses and8directions. EXACTLY8columns5rows. Correct one issue: arrows and bowtips must stay well inside individual squarecells. Make ALL figures including all bows arrows scarf and hair smaller occupying ONLY55% cell dimensions. Huge clear transparent gutters. Row1 nock, row2 full draw, row3 release a SHORT arrow just beyond bow, row4 followthrough, row5 ready. No projectile or particle crosses gutter. Actual transparent background no shadows no text. Eightcolumns front/front right/right/rear right/back/rear left/left/front left.",
+  "tool": "built-in image_gen"
+}

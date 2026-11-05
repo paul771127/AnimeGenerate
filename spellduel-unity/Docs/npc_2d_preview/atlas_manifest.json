@@ -98,7 +98,7 @@
           "rows": 4
         },
         "walk": {
-          "sha256": "ef04a7119ff2f80cc09739f2945741917f5dfa170fbc3194c6503142600f327b",
+          "sha256": "824458348b95118951dc8216e8509c40cb990a8b193bc1af2a7fbcc3875a31a3",
           "rows": 6
         },
         "gesture": {
@@ -212,7 +212,7 @@
           "rows": 6
         },
         "gesture": {
-          "sha256": "e2146bc2fcaea8fa25b06d5ae51f7a6bf2e4bf30cc48e9c5332a77704982df6c",
+          "sha256": "bf1cc9352482e8d390f6187ec2925ac00978f2a6ea0d4546ebe2a878bc7e2a7f",
           "rows": 4
         }
       },
@@ -450,7 +450,7 @@
           "rows": 4
         },
         "walk": {
-          "sha256": "8a5703a90df9cd44caf1f8e52be92f1bdffbd2465d74ed862dad8c35929ac568",
+          "sha256": "3888db1df4a3936f8ecbe658bd7aa90d75578ab18fdedc18ad2510cdda14546f",
           "rows": 6
         },
         "gesture": {
@@ -487,5 +487,6 @@
         "gesture": "a2a60c335bcf695eea70ace6fb92db4739d164334a961fb3f19727fe2409349b"
       }
     }
-  }
+  },
+  "postprocess": "Remote 146ab9e alpha <= 12 residue cleanup; source artwork unchanged"
 }
