@@ -141,6 +141,22 @@ namespace SpellDuel
             All[s.id] = s;
         }
         public const float MageDamageMul = 1.5f;
+        /// <summary>我方近戰的判定距離（使用者要求：3m，跟敵人近戰一樣）；遠攻（射程 3m 以上）多 +2m</summary>
+        public const float PlayerMeleeReach = 3f, PlayerRangedBonus = 2f;
+        static readonly string[] PlayerSkillClasses = { "mage", "assassin", "swordsman", "priest", "archer", "basic", "novice" };
+        /// <summary>
+        /// 我方的投射類技能：射程不到 3m 的近戰（普攻揮砍、刺擊、斬擊、伏擊）判定改成 3m；3m 以上的遠攻射程 +2m。
+        /// 自身周圍爆發的範圍招（areaRadius）不動。技能樹強化會 Clone 這裡的數值，所以強化後一樣有效。
+        /// </summary>
+        static void PlayerRangeTweak()
+        {
+            foreach (var sk in All.Values)
+            {
+                if (sk.type != SkillType.Projectile || System.Array.IndexOf(PlayerSkillClasses, sk.cls) < 0 || sk.areaRadius > 0f) continue;
+                if (sk.rangeMax < PlayerMeleeReach) sk.rangeMax = PlayerMeleeReach;
+                else sk.rangeMax += PlayerRangedBonus;
+            }
+        }
         /// <summary>會飛出去的遠距投射物（射程 3m 以上；伏擊、近身揮砍、小怪衝刺／跳躍／俯衝不算）</summary>
         static bool Flies(SkillDef sk) => sk.type == SkillType.Projectile && !sk.releaseNear && sk.rangeMax >= 3f && sk.id != "m_dash" && sk.id != "m_leap" && sk.id != "m_dive";
 
@@ -492,6 +508,7 @@ namespace SpellDuel
             EliteCatalog.RegisterSkills();
             TrapGallery.Register();
             Carpet.Register();   // 天穹飛毯的 Boss（空賊飛艇）
+            PlayerRangeTweak();   // 我方近戰判定 3m、遠攻射程 +2m（使用者要求）
         }
     }
 }
