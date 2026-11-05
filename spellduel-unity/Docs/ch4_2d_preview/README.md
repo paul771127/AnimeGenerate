@@ -17,3 +17,7 @@ Added arena_spitter, arena_boar and arena_vinemage with iron collars, black crys
 ## Batch 4
 
 Added arena_sporecap, arena_seedgunner, arena_hermitcrab and arena_jellyfish. Cumulative 12 enemies / 72 atlases / 2016 cells, 0 validation errors. Arena jellyfish retains floating offset. Remaining 13 arena and 25 canyon enemies.
+
+## Batch 5
+
+Added arena_chain_slave, arena_elite_centurion and arena_elite_crossbow, including chain-flail smash, shield bash and repeater firing. Cumulative 15 enemies / 90 atlases / 2520 cells; validator 0 errors. Remaining 10 arena and 25 canyon enemies.
