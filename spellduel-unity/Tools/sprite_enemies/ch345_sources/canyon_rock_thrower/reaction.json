@@ -1,0 +1,4 @@
+{
+  "prompt": "Preserve exact character design poses and 8 columns, 6 rows. Make EVERY complete figure and effects smaller to at most65% square-cell width and height. Generous clear transparent gutters, no touching neighboring cells. Keep actions and directions same, exact weapons and woven sand scarf. No backgrounds or floor shadow; transparent PNG.",
+  "tool": "built-in image_gen"
+}
