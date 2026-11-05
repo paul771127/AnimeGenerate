@@ -1,0 +1,137 @@
+[
+  {
+    "file": "volcano_0_far.png",
+    "prompt": "Hand-painted Japanese anime fantasy game environment, medium detail, clean cel shadows with soft gradients, restrained fine outlines, upper-left lighting. Quiet backdrop for vibrant character sprites, atmospheric dark red haze, no people, no text, no borders, no labels. Open lava river valley, far volcanoes, muted mauve ash sky, basalt and sparse glowing orange lava. Create ONLY far background panorama texture, 4096x512 ultra-wide 8:1 composition. Full opaque image. Seamlessly wrap left to right around a 360 degree cylinder: identical edge atmosphere and continuing terrain. Horizon at y=86% from top (14% from bottom); mountain summits no higher than halfway up image, upper half quiet sky. Ground confined to bottom14%. No near objects, no foreground rocks. Gentle broad silhouettes and low contrast at horizon, quiet center. Do not make a conventional landscape with high horizon.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      2172,
+      724
+    ]
+  },
+  {
+    "file": "volcano_0_mid.png",
+    "prompt": "Hand-painted Japanese anime fantasy game environment, medium detail, clean cel shadows with soft gradients, restrained fine outlines, upper-left lighting. Quiet backdrop for vibrant character sprites, atmospheric dark red haze, no people, no text, no borders, no labels. Open lava river valley, far volcanoes, muted mauve ash sky, basalt and sparse glowing orange lava. ONLY transparent midground scenery strip, ultra-wide horizontal composition intended 4096x384 cylindrical game parallax texture. True transparent sky and gaps, NO backdrop, NO ground plane. A few unevenly spaced clusters growing from bottom edge: basalt escarpments, thin lava waterfalls, worn volcanic stone columns. Varied heights from 15 to 80 percent. Broad empty transparent center gap. Objects grounded on bottom edge, left and right ends low and seamless. Restrained detailed anime handpainted silhouettes, no grid.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      2172,
+      724
+    ]
+  },
+  {
+    "file": "volcano_0_ground.png",
+    "prompt": "Hand-painted Japanese anime fantasy game environment, medium detail, clean cel shadows with soft gradients, restrained fine outlines, upper-left lighting. Quiet backdrop for vibrant character sprites, atmospheric dark red haze, no people, no text, no borders, no labels.  Make one seamless 1024x1024 square opaque ground texture tile, top-down orthographic flat material with NO perspective, NO vignette, NO border. Seamless BOTH axes, features continue across opposite edges. Warm muted charcoal basalt, broad irregular worn smooth slabs, only few subtle thin dull red seams, quiet warm grey ash. Small scale 2.5m ground tile. Low contrast, uniform lighting across tile, no large bright lava pools, no large rocks, not busy, clearly handpainted anime cel shaded.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      1254,
+      1254
+    ]
+  },
+  {
+    "file": "volcano_0_decals.png",
+    "prompt": "Hand-painted Japanese anime fantasy game environment, medium detail, clean cel shadows with soft gradients, restrained fine outlines, upper-left lighting. Quiet backdrop for vibrant character sprites, atmospheric dark red haze, no people, no text, no borders, no labels. ONLY a transparent square 2048x2048 terrain DECAL atlas. Exactly 4 columns x4 rows equally sized invisible512x512 cells, 16 isolated individual top-down ground decals, one percell, no background or grid lines. Each stays within central80% ofcell with generous transparent margins. Orthographic directly overhead view, flat on ground not upright, no perspective, no cast background. Row major contents: branching lava crack; crescent lava puddle; round ember pool; cooled lava crust; soot splash; grey ash drift; basalt chips; pumice scatter; thin winding fissure; cooled orange seam; burnt root scar; small obsidian shards; crushed cinder patch; charcoal fragments; concentric scorch; broad stone fracture. Medium simple readable detail, no text.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      1254,
+      1254
+    ]
+  },
+  {
+    "file": "volcano_0_props.png",
+    "prompt": "Hand-painted Japanese anime fantasy game environment, medium detail, clean cel shadows with soft gradients, restrained fine outlines, upper-left lighting. Quiet backdrop for vibrant character sprites, atmospheric dark red haze, no people, no text, no borders, no labels.  ONLY transparent 2048x2048 square game scenery billboard atlas. EXACT 4 columns x4 rows invisible equal512px cells, ONE separate complete upright object percell. Every object foot/base at 96% cellheight, centered horizontally, top margin 10%, side margins15%; small props appropriately shorter. Front threequarter view with minimal top visibility, designed as 3m-tall billboard sprites. True alpha transparent background, NO white background, no groundplate, no contact shadow outside object, no text, no grid. Sixteen objects rowmajor: tall basalt pillar; pointed obsidian cluster; steaming lava vent; burnt branching tree; short broken rock pillar; worn stone stele; glowing basalt fissure boulder; charred stump; clustered low rocks; tall split volcanic monolith; small stone cairn; dead twisted sapling; narrow lava spout cone; eroded arch rock; squat obsidian block; rocky brazier. Distinct readable silhouettes, restrained rich painted texture, warm highlight upperleft. All objects completely separated.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      1254,
+      1254
+    ]
+  },
+  {
+    "file": "volcano_1_far.png",
+    "prompt": "Hand-painted Japanese anime fantasy game environment, medium detail, clean cel shadows with soft gradients, restrained fine outlines, upper-left lighting. Quiet backdrop for vibrant character sprites, atmospheric dark red haze, no people, no text, no borders, no labels. High crater rim, enormous elliptical volcanic caldera and restrained eruption, smoky rose and charcoal palette, elevated vista. Create ONLY far background panorama texture, 4096x512 ultra-wide 8:1 composition. Full opaque image. Seamlessly wrap left to right around a 360 degree cylinder: identical edge atmosphere and continuing terrain. Horizon at y=86% from top (14% from bottom); mountain summits no higher than halfway up image, upper half quiet sky. Ground confined to bottom14%. No near objects, no foreground rocks. Gentle broad silhouettes and low contrast at horizon, quiet center. Do not make a conventional landscape with high horizon.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      2172,
+      724
+    ]
+  },
+  {
+    "file": "volcano_1_mid.png",
+    "prompt": "Hand-painted Japanese anime fantasy game environment, medium detail, clean cel shadows with soft gradients, restrained fine outlines, upper-left lighting. Quiet backdrop for vibrant character sprites, atmospheric dark red haze, no people, no text, no borders, no labels. High crater rim, enormous elliptical volcanic caldera and restrained eruption, smoky rose and charcoal palette, elevated vista. ONLY transparent midground scenery strip, ultra-wide horizontal composition intended 4096x384 cylindrical game parallax texture. True transparent sky and gaps, NO backdrop, NO ground plane. A few unevenly spaced clusters growing from bottom edge: layered broken crater shelves, tall obsidian spires, fumarole wisps. Varied heights from 15 to 80 percent. Broad empty transparent center gap. Objects grounded on bottom edge, left and right ends low and seamless. Restrained detailed anime handpainted silhouettes, no grid.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      2172,
+      724
+    ]
+  },
+  {
+    "file": "volcano_1_ground.png",
+    "prompt": "Hand-painted Japanese anime fantasy game environment, medium detail, clean cel shadows with soft gradients, restrained fine outlines, upper-left lighting. Quiet backdrop for vibrant character sprites, atmospheric dark red haze, no people, no text, no borders, no labels.  Make one seamless 1024x1024 square opaque ground texture tile, top-down orthographic flat material with NO perspective, NO vignette, NO border. Seamless BOTH axes, features continue across opposite edges. Cool dark plum solidified lava, rounded flowing cooled rock bands with occasional ochre volcanic dust, tiny restrained ember seams. Small scale 2.5m ground tile. Low contrast, uniform lighting across tile, no large bright lava pools, no large rocks, not busy, clearly handpainted anime cel shaded.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      1254,
+      1254
+    ]
+  },
+  {
+    "file": "volcano_1_decals.png",
+    "prompt": "Hand-painted Japanese anime fantasy game environment, medium detail, clean cel shadows with soft gradients, restrained fine outlines, upper-left lighting. Quiet backdrop for vibrant character sprites, atmospheric dark red haze, no people, no text, no borders, no labels. ONLY a transparent square 2048x2048 terrain DECAL atlas. Exactly 4 columns x4 rows equally sized invisible512x512 cells, 16 isolated individual top-down ground decals, one percell, no background or grid lines. Each stays within central80% ofcell with generous transparent margins. Orthographic directly overhead view, flat on ground not upright, no perspective, no cast background. Row major contents: star-shaped magma crack; curved crater fissure; small bubbling lava pool; orange cooling crust; sulphur dust; pale ash crescent; basalt gravel; obsidian chips; heat scorch; elongated ember slit; broken slab fragments; volcanic bomb scar; layered ash stain; solidified lava swirl; burnt mineral patch; scattered pumice. Medium simple readable detail, no text.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      1254,
+      1254
+    ]
+  },
+  {
+    "file": "volcano_1_props.png",
+    "prompt": "Hand-painted Japanese anime fantasy game environment, medium detail, clean cel shadows with soft gradients, restrained fine outlines, upper-left lighting. Quiet backdrop for vibrant character sprites, atmospheric dark red haze, no people, no text, no borders, no labels.  ONLY transparent 2048x2048 square game scenery billboard atlas. EXACT 4 columns x4 rows invisible equal512px cells, ONE separate complete upright object percell. Every object foot/base at 96% cellheight, centered horizontally, top margin 10%, side margins15%; small props appropriately shorter. Front threequarter view with minimal top visibility, designed as 3m-tall billboard sprites. True alpha transparent background, NO white background, no groundplate, no contact shadow outside object, no text, no grid. Sixteen objects rowmajor: slender obsidian spire; stacked crater rock pillar; smoking fumarole; fractured rim slab; tall dark volcanic bomb; sulphur crust boulder; stone warning stele without writing; split glowing monolith; worn marker cairn; short jagged column; curved basalt arch; burnt twisted tree; cracked lava boulder; ash coated stump; crystalline black rock cluster; low vent cone. Distinct readable silhouettes, restrained rich painted texture, warm highlight upperleft. All objects completely separated.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      1254,
+      1254
+    ]
+  },
+  {
+    "file": "volcano_2_far.png",
+    "prompt": "Hand-painted Japanese anime fantasy game environment, medium detail, clean cel shadows with soft gradients, restrained fine outlines, upper-left lighting. Quiet backdrop for vibrant character sprites, atmospheric dark red haze, no people, no text, no borders, no labels. Abandoned underground volcanic mine, deep plum charcoal cavern, distant timber galleries, tiny amber lanterns, subdued warm haze. Create ONLY far background panorama texture, 4096x512 ultra-wide 8:1 composition. Full opaque image. Seamlessly wrap left to right around a 360 degree cylinder: identical edge atmosphere and continuing terrain. Horizon at y=86% from top (14% from bottom); mountain summits no higher than halfway up image, upper half quiet sky or gently shadowed cavern ceiling. Ground confined to bottom14%. No near objects, no foreground rocks. Gentle broad silhouettes and low contrast at horizon, quiet center. Do not make a conventional landscape with high horizon.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      2172,
+      724
+    ]
+  },
+  {
+    "file": "volcano_2_mid.png",
+    "prompt": "Hand-painted Japanese anime fantasy game environment, medium detail, clean cel shadows with soft gradients, restrained fine outlines, upper-left lighting. Quiet backdrop for vibrant character sprites, atmospheric dark red haze, no people, no text, no borders, no labels. Abandoned underground volcanic mine, deep plum charcoal cavern, distant timber galleries, tiny amber lanterns, subdued warm haze. ONLY transparent midground scenery strip, ultra-wide horizontal composition intended 4096x384 cylindrical game parallax texture. True transparent sky and gaps, NO backdrop, NO ground plane. A few unevenly spaced clusters growing from bottom edge: old timber trestles, crooked rock walls, hanging lanterns, cave support posts. Varied heights from 15 to 80 percent. Broad empty transparent center gap. Objects grounded on bottom edge, left and right ends low and seamless. Restrained detailed anime handpainted silhouettes, no grid.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      2172,
+      724
+    ]
+  },
+  {
+    "file": "volcano_2_ground.png",
+    "prompt": "Hand-painted Japanese anime fantasy game environment, medium detail, clean cel shadows with soft gradients, restrained fine outlines, upper-left lighting. Quiet backdrop for vibrant character sprites, atmospheric dark red haze, no people, no text, no borders, no labels.  Make one seamless 1024x1024 square opaque ground texture tile, top-down orthographic flat material with NO perspective, NO vignette, NO border. Seamless BOTH axes, features continue across opposite edges. Dusty brown-grey mine floor, worn flat stone, soft ochre ash and scant tiny crushed ore flecks, no tracks or tools. Small scale 2.5m ground tile. Low contrast, uniform lighting across tile, no large bright lava pools, no large rocks, not busy, clearly handpainted anime cel shaded.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      1254,
+      1254
+    ]
+  },
+  {
+    "file": "volcano_2_decals.png",
+    "prompt": "Edit this terrain decal atlas: remove ALL white backdrop including between rails and inside rope and chain openings. Real transparent alpha background, not painted white. Preserve exact 4x4 layout and each object design. Separate 16 islands with generous fully transparent gutters. Keep dusty patches themselves visible, but absolutely transparent empty space outside them. No checkerboard drawn. Output transparent PNG.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      1254,
+      1254
+    ]
+  },
+  {
+    "file": "volcano_2_props.png",
+    "prompt": "Hand-painted Japanese anime fantasy game environment, medium detail, clean cel shadows with soft gradients, restrained fine outlines, upper-left lighting. Quiet backdrop for vibrant character sprites, atmospheric dark red haze, no people, no text, no borders, no labels.  ONLY transparent 2048x2048 square game scenery billboard atlas. EXACT 4 columns x4 rows invisible equal512px cells, ONE separate complete upright object percell. Every object foot/base at 96% cellheight, centered horizontally, top margin 10%, side margins15%; small props appropriately shorter. Front threequarter view with minimal top visibility, designed as 3m-tall billboard sprites. True alpha transparent background, NO white background, no groundplate, no contact shadow outside object, no text, no grid. Sixteen objects rowmajor: timber mine entrance arch; ore filled mine cart; standing lantern post; double braced support frame; stack of ore crates; pickaxe leaning on barrel; coiled rope winch; broken ore cart; upright cave stalagmite; wooden warning sign without text; hanging lantern on hook stand; battered ore hopper; short timber fence; stacked wooden sleepers; glowing mineral boulder; closed supply chest. Distinct readable silhouettes, restrained rich painted texture, warm highlight upperleft. All objects completely separated.",
+    "mode": "built-in image_gen",
+    "source_size": [
+      1254,
+      1254
+    ]
+  }
+]
