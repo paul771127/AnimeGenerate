@@ -15,3 +15,7 @@ Added sea_whipeel, sea_elite_crab, sea_elite_gunner. Cumulative 9 enemies,54 atl
 ## Batch 4
 
 Added sea_elite_weaver, sea_elite_pilot, sea_elite_hunter. Cumulative12 enemies,72 atlases,2016 cells,0 partial-validation errors. Remaining6 sea,25 arena,25 canyon.
+
+## Batch 5
+
+Added sea_fairy, sea_pirate_blade, sea_tide_mage. Cumulative 15 enemies, 90 atlases, 2520 cells, 0 partial-validation errors. Remaining 3 sea, 25 arena, 25 canyon. Transparent-background correction retained in tide mage provenance.
