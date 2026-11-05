@@ -13,6 +13,49 @@
     7
   ],
   "enemies": {
+    "canyon_apothecary": {
+      "files": {
+        "idle": {
+          "sha256": "0022e582716a7fa8690b10249cc4cef3bdceddd2272d1eb6f5b4b0cc4595b612",
+          "bytes": 1476128,
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "bd1c1f6de461839e6ace57a42fde32d046cf6b11c251f41b866f5136b9862f66",
+          "bytes": 2061020,
+          "rows": 6
+        },
+        "windup": {
+          "sha256": "1ba8cc65bc289a51bee4a06a30b16ef061c2dc3da355d711ffdc8242b2fab2fa",
+          "bytes": 722608,
+          "rows": 2
+        },
+        "attack": {
+          "sha256": "1d07a4f17861d678277657bc489cb55bc4af9e0d9cf3aad4cdc6c60dc1a56676",
+          "bytes": 1147913,
+          "rows": 3
+        },
+        "hurt": {
+          "sha256": "ff33b0e4ba0ed3a2ce4471840b4e06125ba9f5d0cedad33649862b912c8bc936",
+          "bytes": 790252,
+          "rows": 2
+        },
+        "die": {
+          "sha256": "267c7e773353a5099ca7e4e4638f25454706cd7ea3a341c2ee07daf93c73f833",
+          "bytes": 1221749,
+          "rows": 4
+        }
+      },
+      "style": "forest-approved-medium-detail",
+      "scale_safety": 1,
+      "source_edge_contacts": [],
+      "sources": {
+        "combat.png": "874224cbbd9e802ac7d2a4875edbf7576fb78e4f9dfcdef4329601ff3784cb76",
+        "idle.png": "e504ac2280efd585049fb1150f174d01f1251beee2683482d59da822afbcf5b5",
+        "reaction.png": "f7968f755b4a0fca7f7c3232bdb9f82bcbad56b7999febd2546bbc0c2db25bfb",
+        "walk.png": "7a5323f6acdabb69d767ff5eb67c5d0a6df8176169956a16de3445b8c42b0d9f"
+      }
+    },
     "canyon_boar": {
       "files": {
         "idle": {
@@ -572,6 +615,49 @@
         "walk.png": "f1b6827cac9eb15728046790ba8d92b01a0b5f2c12916a0abe91d09805bd2735"
       }
     },
+    "canyon_sand_spirit": {
+      "files": {
+        "idle": {
+          "sha256": "e10f4ce0fa7675404883498ea9b07bf277d848cdc54717eed4cfd4d112292567",
+          "bytes": 1395593,
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "e7a52085972558380f2d0c3778428c8ccce1f8cfe88d2ef6bf8aeadd65229370",
+          "bytes": 2153578,
+          "rows": 6
+        },
+        "windup": {
+          "sha256": "aa5040b00433698c534ddd3537a5888b2afcb28159a471d2ca958bcac2644bb9",
+          "bytes": 778604,
+          "rows": 2
+        },
+        "attack": {
+          "sha256": "065dbd45d699039ea1be0c06369dd2e2c0e2012a792853c128c1faa03c333770",
+          "bytes": 1140713,
+          "rows": 3
+        },
+        "hurt": {
+          "sha256": "f6dc595b4a0343bb5eae8693753588927ae1ae1c96ccbb368c38f94edc60f340",
+          "bytes": 720879,
+          "rows": 2
+        },
+        "die": {
+          "sha256": "57344388649e8edead9ddd592beeae569ab5d59eef8a6f3284c2c6a24f8d4adc",
+          "bytes": 1208111,
+          "rows": 4
+        }
+      },
+      "style": "forest-approved-medium-detail",
+      "scale_safety": 1,
+      "source_edge_contacts": [],
+      "sources": {
+        "combat.png": "c318d27ad1ce6234f8bc85e8abeac442b7ad111c4b7f756e6ba956778eb0421f",
+        "idle.png": "ee72d40543c40038bc266635123405bf069c0139315f1cf539f4ce47934fb53c",
+        "reaction.png": "69f59d00ef24849c1a55ff08a05042d5dbf754a82c98d01b98c51c2ae49eff27",
+        "walk.png": "d0f4f21981c7c1596dd51dda0e35a8d03804268ce7bee5f0f079534c2d6ad9d5"
+      }
+    },
     "canyon_spitter": {
       "files": {
         "idle": {
@@ -656,6 +742,49 @@
         "idle.png": "cc65e86eee4a84561bbfd02ef4b094a81f699adb5507d9cd147c9632f98157a2",
         "reaction.png": "ba2a3f4ee30646f4f3d4212fb04ec314a1cf6f316e04316549cfd95430b695ad",
         "walk.png": "7ebe27ab8b9d3fef2368abf6d22b2275e792daf7eecb260762a35361ab53d057"
+      }
+    },
+    "canyon_summoner": {
+      "files": {
+        "idle": {
+          "sha256": "6081ff7416ede922c9d8bc64f0541131760da800d7d8cd7cc436548c4bdcab32",
+          "bytes": 1443851,
+          "rows": 4
+        },
+        "walk": {
+          "sha256": "99ac325c9da1d6bdae5cb87f311c8d6cf20055239c4d36d98b6bc014e63f0318",
+          "bytes": 2142671,
+          "rows": 6
+        },
+        "windup": {
+          "sha256": "030feb7e01d10f33cdf61c0fa9610d8b792468c03889f6428430451219b28a2e",
+          "bytes": 745642,
+          "rows": 2
+        },
+        "attack": {
+          "sha256": "e40cab510e4cb8bd86b52abaa85c4bd296d8fbe28ae8f0d35e388661ef49a26d",
+          "bytes": 1094183,
+          "rows": 3
+        },
+        "hurt": {
+          "sha256": "374659ae6f5d30f3265550b28437c1d73a6770a5d73f3d88f01438445466a31c",
+          "bytes": 808839,
+          "rows": 2
+        },
+        "die": {
+          "sha256": "b8334d37d12a14f979ca640eb6f4ed3abcacc1a87849ebae4d49b44d5a8ac996",
+          "bytes": 1138296,
+          "rows": 4
+        }
+      },
+      "style": "forest-approved-medium-detail",
+      "scale_safety": 1,
+      "source_edge_contacts": [],
+      "sources": {
+        "combat.png": "7d750d86ce7df4d27b012dc0f5efb58080e6ea5c4a1fa6a315583cd7b3308c37",
+        "idle.png": "86d49aa74f77a479f6a34188ee5653e705c14e7a666c83900f7cafe8d31529ff",
+        "reaction.png": "00b9dd82442af1eac752acd9b619f2ebebdc8c8cec984eaaa1dc68b42182661e",
+        "walk.png": "19783e724875117fbffbe933f791ead6c0faaf5322970fc38e665a1a87d80757"
       }
     },
     "canyon_vinemage": {

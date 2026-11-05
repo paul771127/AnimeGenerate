@@ -21,3 +21,7 @@ Added canyon_crag_lizard, canyon_elite_guardian and canyon_elite_lizard_gunner. 
 ## Batch 5
 
 Added canyon_elite_sand_witch, canyon_elite_herder and canyon_elite_hunter. Veiled bone-adorned witch, stone nest shepherd and crescent blade lizard hunter. Cumulative 16 enemies / 96 atlases / 2688 cells, 0 validation errors. Remaining 9.
+
+## Batch 6
+
+Added canyon_apothecary, canyon_summoner and canyon_sand_spirit. Medicine powder, brass sand bell and elemental pounce. Cumulative 19 enemies / 114 atlases / 3192 cells, 0 validation errors. Remaining 6.
