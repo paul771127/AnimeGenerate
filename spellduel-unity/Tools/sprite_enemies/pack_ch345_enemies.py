@@ -48,7 +48,9 @@ def pack():
     crop=crop.convert('RGBa').resize(size,Image.Resampling.LANCZOS).convert('RGBA')
     cell=Image.new('RGBA',(256,256));bottom=241
     if name in ('sea_seabird','sea_jellyfish','sea_fairy','arena_jellyfish') and not (g=='reaction' and k//8>=3):bottom-=12
-    cell.alpha_composite(crop,((256-size[0])//2,bottom-size[1]));frames[g].append(cell)
+    cell.alpha_composite(crop,((256-size[0])//2,bottom-size[1]))
+    pixels=np.array(cell);pixels[pixels[:,:,3]<=12]=0
+    frames[g].append(Image.fromarray(pixels,'RGBA'))
   files={}
   for action,(g,start,count) in ACTIONS.items():
    atlas=Image.new('RGBA',(2048,count*256))
