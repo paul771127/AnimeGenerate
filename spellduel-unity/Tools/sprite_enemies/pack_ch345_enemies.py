@@ -34,7 +34,7 @@ def pack():
  for ni,name in enumerate(IDS):
   groups,factors=sources(name)
   def factor(g,k):return factors[g][2] if k%8==7 and len(factors[g])==3 else factors[g][(k%8)//4]
-  safety=min([1]+[min(232/((bounds(c)[2]-bounds(c)[0])*factor(g,k)),(212 if name in ('sea_seabird','sea_jellyfish','sea_fairy') else 228)/(height(c)*factor(g,k))) for g,cells in groups.items() for k,c in enumerate(cells)])
+  safety=min([1]+[min(232/((bounds(c)[2]-bounds(c)[0])*factor(g,k)),(212 if name in ('sea_seabird','sea_jellyfish','sea_fairy','arena_jellyfish') else 228)/(height(c)*factor(g,k))) for g,cells in groups.items() for k,c in enumerate(cells)])
   frames={}; source_edges=[]
   for g,cells in groups.items():
    frames[g]=[]
@@ -46,7 +46,7 @@ def pack():
     size=(max(1,round(crop.width*scale)),max(1,round(crop.height*scale)))
     crop=crop.convert('RGBa').resize(size,Image.Resampling.LANCZOS).convert('RGBA')
     cell=Image.new('RGBA',(256,256));bottom=241
-    if name in ('sea_seabird','sea_jellyfish','sea_fairy') and not (g=='reaction' and k//8>=3):bottom-=12
+    if name in ('sea_seabird','sea_jellyfish','sea_fairy','arena_jellyfish') and not (g=='reaction' and k//8>=3):bottom-=12
     cell.alpha_composite(crop,((256-size[0])//2,bottom-size[1]));frames[g].append(cell)
   files={}
   for action,(g,start,count) in ACTIONS.items():

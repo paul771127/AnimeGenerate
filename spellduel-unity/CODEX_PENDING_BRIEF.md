@@ -1205,3 +1205,7 @@ CharacterRig.BlueprintArt依Piece.special建立15種專屬模型：肉椒洋蔥�
 - 完成毒液噴花、荊棘衝鋒獸、藤蔓術士，六動作八方向；保留森林造型，加鐵項圈、黑晶、斷鍊。
 - 累計角鬥場 8/25 隻、48 圖集、1344 格；驗證 0 錯誤，原圖切格邊界接觸 0，未改 Runtime。內建 image_gen 原圖與提示詞保存在 Tools/sprite_enemies/ch345_sources；預覽在 Docs/ch4_2d_preview。
 - 本機無 Unity Editor，未宣稱完成原生 Android／iOS 編譯。尚餘角鬥場 17 隻、山道 25 隻。
+
+### 2026-11-05：第四章敵人 2D 第四批
+- 完成孢子菇、種子槍手、寄居蟹、雷電水母，六動作八方向，追加閉合鐵項圈、黑晶、斷鍊。水母保留飄浮高度。
+- 角鬥場累計 12/25、72 圖集、2016 格；驗證 0 錯誤，切格接觸 0；未改 Runtime。原圖和提示詞在 Tools/sprite_enemies/ch345_sources，預覽在 Docs/ch4_2d_preview。尚餘第四章 13、第五章 25 隻。
