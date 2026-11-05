@@ -29,3 +29,10 @@ Added canyon_apothecary, canyon_summoner and canyon_sand_spirit. Medicine powder
 ## Batch 7
 
 Added canyon_banner, canyon_bandit_assassin and canyon_sand_mage. Flag rally, low dagger thrust and sand orb spell. Cumulative 22 enemies / 132 atlases / 3696 cells, 0 validation errors. Remaining 3.
+
+## Batch 8 — complete
+
+Added canyon_hunter, canyon_swift_fox and canyon_swift_beast, with full-draw/release bow timing and articulated quadruped strides. Chapter 5 complete: 25 enemies / 150 atlases / 4200 cells, 0 validation errors.
+
+All chapters complete: chapter 3 = 18, chapter 4 = 25, chapter 5 = 25; total 68 enemies / 408 atlases / 11424 cells. All chapter validators pass. NPC validator also passes: 22 NPC / 2464 cells.
+Refreshed chapter 3/4 and NPC manifest hashes to reflect Claude's remote 146ab9e alpha-residue cleanup without altering those artwork files. No Runtime changes.

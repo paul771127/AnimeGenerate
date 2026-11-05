@@ -21,23 +21,23 @@
           "rows": 4
         },
         "walk": {
-          "sha256": "dc5c4089e11b44cc00d34117402c9a38504754d1c6477056979346625bfaca2d",
-          "bytes": 2747761,
+          "sha256": "ee217f57a519f3c83140fa0513a7b99bcad9f2ef2a6e4c67a8fda61663f52430",
+          "bytes": 2715757,
           "rows": 6
         },
         "windup": {
-          "sha256": "e2710d2cbc37167ddb287ebb879b6be359b169638eacee9c6a1a2fc3d687023f",
-          "bytes": 915256,
+          "sha256": "dff2a49f43b7be3333b7b87162f3c6858ae8e17aac862274e302f11de0f95c36",
+          "bytes": 901193,
           "rows": 2
         },
         "attack": {
-          "sha256": "1875313c899e7df59a9df03a4c042dc752c6dad18c310684ec7935816659e98c",
-          "bytes": 1281466,
+          "sha256": "6578b54e24828e01d1de4712818197fad16f168240ba012c23231b8a99a36f3f",
+          "bytes": 1263738,
           "rows": 3
         },
         "hurt": {
-          "sha256": "eaaa549df6a2230a9844f1e4e6d8d9651feb36fd0e96c52f938c398610e14e63",
-          "bytes": 907735,
+          "sha256": "b88a8ec5f40774fc5fdcb08ea3a9ffa482280df0335c5343b7231a4bd9b5de01",
+          "bytes": 893683,
           "rows": 2
         },
         "die": {
@@ -59,8 +59,8 @@
     "arena_bomb_imp": {
       "files": {
         "idle": {
-          "sha256": "bf9940683d2989f436b757f07a2c9e194c3bc84afe503b1eeaec4bf151d2104a",
-          "bytes": 1833382,
+          "sha256": "a186ad7aaefa6c79eb2c71b8d2b9b7cda6a211fc17923839a1820ae618a10d27",
+          "bytes": 1786985,
           "rows": 4
         },
         "walk": {
@@ -69,13 +69,13 @@
           "rows": 6
         },
         "windup": {
-          "sha256": "11f6b2ef05f1ad190ec4987fa032257ef05201b9246b2709689e8d0d27a98e1a",
-          "bytes": 941219,
+          "sha256": "80919c8902ee711f4d93e9ba933efade5e05b050ead449895d5e7b46b570c257",
+          "bytes": 921863,
           "rows": 2
         },
         "attack": {
-          "sha256": "b56847c94dfae098bda3f7da80ae6bd65ed9c51d7a25b2b6945b72dd1dcbec64",
-          "bytes": 1476834,
+          "sha256": "1563d036c7e556df01769d333c0b486b0ce427329885e27e82a5ae2f09699425",
+          "bytes": 1448970,
           "rows": 3
         },
         "hurt": {
@@ -84,8 +84,8 @@
           "rows": 2
         },
         "die": {
-          "sha256": "31d5adb714be1ef8d2b6a40fe453f7f119cd1e37f62f59d8212bbfeb0b99fe6f",
-          "bytes": 1381173,
+          "sha256": "1ce6efabe0492dbdb478b85e8063c07dd8a2281b9ff8ef859067d9cce1de331a",
+          "bytes": 1351685,
           "rows": 4
         }
       },
@@ -102,8 +102,8 @@
     "arena_chain_slave": {
       "files": {
         "idle": {
-          "sha256": "8b8111993b25245d2298bf8ee5101e87f19bfdcb30a05bcc13f70b900409e2f1",
-          "bytes": 1910378,
+          "sha256": "9138ed96ea2e5982690516c8bc0ab6254be4f8351cf5ba870a968a7715d839aa",
+          "bytes": 1862391,
           "rows": 4
         },
         "walk": {
@@ -112,23 +112,23 @@
           "rows": 6
         },
         "windup": {
-          "sha256": "f7bbfc0d9f52c03cc7e23774de436d5ce6e031c2b2a2687ef92b2e9ca174d300",
-          "bytes": 990254,
+          "sha256": "c81f0e17004f9a7b742999b5cf1b7af4ff9b1574da03da6eedc823018eeca691",
+          "bytes": 971204,
           "rows": 2
         },
         "attack": {
-          "sha256": "6ff12067a6e3305861be0562d52b3fcd4aaa68e648b5df69f717644b13c256a5",
-          "bytes": 1380025,
+          "sha256": "b1cf36a22db1216105c479eb5e2024e97e5416d6b3d2a3b8c5878d863ad7761a",
+          "bytes": 1351729,
           "rows": 3
         },
         "hurt": {
-          "sha256": "fac9540dc4cd083ce5d711258a9cf217da084e9a00dcea0d4dc229d94774138f",
-          "bytes": 1043412,
+          "sha256": "a9ff3d7db1ef16f9d20e74cd4d6388741f6e42da5da8e01a48f90d9fa4bd76bb",
+          "bytes": 1029086,
           "rows": 2
         },
         "die": {
-          "sha256": "eab131c4ba9438f861df0c1831eff0712059d4b395cd4bbe75ea93b3bb20bfad",
-          "bytes": 1625250,
+          "sha256": "55c055e84eb1a9c3fda8c7b8f9dd39ba2346eb4ff163cef7de10db76039e2bf8",
+          "bytes": 1605181,
           "rows": 4
         }
       },
@@ -155,8 +155,8 @@
           "rows": 6
         },
         "windup": {
-          "sha256": "328d5c2ebcb2be4b6715c882288721f40cb79907bd9190ccfbe7e6385cd79624",
-          "bytes": 704996,
+          "sha256": "a425d454d371739231370e098951a12c5fdc7d5d9f92339b2bf5fea3039db4da",
+          "bytes": 697503,
           "rows": 2
         },
         "attack": {
@@ -165,13 +165,13 @@
           "rows": 3
         },
         "hurt": {
-          "sha256": "c5028614e599c481255e4ce270a37012fc9eb67010f32f22c6490055bf83b87d",
-          "bytes": 736337,
+          "sha256": "7294b6c47b04b6cc659c22e35aadb4d39d692069ecb086bb78f8e4f3cd0a4215",
+          "bytes": 728929,
           "rows": 2
         },
         "die": {
-          "sha256": "08afb9608b1268d07f3c929fd524e71a22cdab80054b22a9aafb3f84f3106bbd",
-          "bytes": 1007213,
+          "sha256": "ba73113bfee5cdab6efa9107ed3dd0a1cdfa3a7b60473ed8d2fd48645bc61c84",
+          "bytes": 996597,
           "rows": 4
         }
       },
@@ -198,23 +198,23 @@
           "rows": 6
         },
         "windup": {
-          "sha256": "de86d824b147e9cf973e3d08bfb92cf13e1477e0b7f911b957d5c3233cd6d04c",
-          "bytes": 825497,
+          "sha256": "014325667c247d390b85adc7412cdf31c5e885038586aa6078da172e38986287",
+          "bytes": 805807,
           "rows": 2
         },
         "attack": {
-          "sha256": "a58b19b49da4c3f04ca3920f7762f36fb10e080dd430614db2f40f763de9c1ee",
-          "bytes": 1284259,
+          "sha256": "b983484860e6920ccee98e07f8d0e9133d0e166d9efd7cf760cb694b9c4ced47",
+          "bytes": 1233049,
           "rows": 3
         },
         "hurt": {
-          "sha256": "98c83c6a12e1d59cd951dfe0d48a63c9db0f0d73337f7bc19e7bef8712c1f670",
-          "bytes": 930962,
+          "sha256": "1a1e14a7af6fbc7a0c606340da8ca5e02b9d65aaeb45c57ef7ad93ecb9673cf6",
+          "bytes": 907065,
           "rows": 2
         },
         "die": {
-          "sha256": "a6491ad657b44043f24327f77fc3a0f36e5a3fb8ffa2f53e1c2df8588eecc58b",
-          "bytes": 1205152,
+          "sha256": "de8fb49524517695673484722439de810de1f1875918f0ce00bff494e7630fb6",
+          "bytes": 1173892,
           "rows": 4
         }
       },
@@ -231,33 +231,33 @@
     "arena_elite_blade": {
       "files": {
         "idle": {
-          "sha256": "a37d17e2503f31e9461c22d7d07134d1fcdf566c8489d03576ac2d6fc1880367",
-          "bytes": 1458874,
+          "sha256": "9716a8160bea2f5a5a744e6a07be3a771d3f31e1fa4074acd7d784aefe71dd18",
+          "bytes": 1428564,
           "rows": 4
         },
         "walk": {
-          "sha256": "f123e3a83eb750b6415e1782034677e23bf238032bfbe03f676d3f5c1e475312",
-          "bytes": 2149590,
+          "sha256": "b1a08c4766f17e557efc69ebe16e5cf40f2a21df346292f4c6b7059bcef023b1",
+          "bytes": 2093064,
           "rows": 6
         },
         "windup": {
-          "sha256": "f4291350369b1b5dd0a9d00c92f58a116f5a50431d19e838be463204613891f1",
-          "bytes": 736223,
+          "sha256": "87dc038927020ee8716d3af78b8b4e5ea7c8b527e2dd926d42f47d3d8722dcaa",
+          "bytes": 715607,
           "rows": 2
         },
         "attack": {
-          "sha256": "716ba8cf51a28bd96c674d9e08c5a683ec5ba05edce78a33852026e89f9e6642",
-          "bytes": 1148845,
+          "sha256": "b89b8dbd6031a1cdfda34697f4ba6420c87c110e8b1617799f3b47f315d21260",
+          "bytes": 1115905,
           "rows": 3
         },
         "hurt": {
-          "sha256": "2a47e3d67fcd0de69850056f49084bff6869db73ccea1efd49353f20400f10c1",
-          "bytes": 831073,
+          "sha256": "5ef908e05807a918a14c827bfcdd491c076dde1bae66ac9348ca9ac9c91b1f82",
+          "bytes": 807743,
           "rows": 2
         },
         "die": {
-          "sha256": "8af55e27f99546c9159b4b03ba31e23b8a763def78edab82254e69a0fe6281d2",
-          "bytes": 1109863,
+          "sha256": "102f4948af3372de26ffccb2169d6b39a500d9544cd44bf3612d276e39e7c64a",
+          "bytes": 1085485,
           "rows": 4
         }
       },
@@ -289,18 +289,18 @@
           "rows": 2
         },
         "attack": {
-          "sha256": "21d5e025d08d129b950850fe66555013d91edd9e6b3ae457f3863855a2a4f61a",
-          "bytes": 1289302,
+          "sha256": "f2f2b21e6063d8ac0c4e14358eaf6f2ae1337979ddf28182e5dde3af9b650f2a",
+          "bytes": 1277167,
           "rows": 3
         },
         "hurt": {
-          "sha256": "2855fe05c8f25007b50101eaefc361a760c747f8a394d65132aa49f874c73cf3",
-          "bytes": 1020517,
+          "sha256": "cc540e63a490ae8b722f988b181dbf747018422297874ab9e3ad9b6c19b1464f",
+          "bytes": 1011121,
           "rows": 2
         },
         "die": {
-          "sha256": "0c0aa70b800059450e9fbf4cc30e5f68d2b60b7ec25915348ac21af1b0555e13",
-          "bytes": 1531145,
+          "sha256": "d7339d4ff8aa2f9abc00ad5692af5a90cc4c0ee6daa9a8cea7a5ed00d79cd2c1",
+          "bytes": 1518630,
           "rows": 4
         }
       },
@@ -332,18 +332,18 @@
           "rows": 2
         },
         "attack": {
-          "sha256": "e70e92d2e5c75cee60190497be2f99208e7e9e5bf55ce6b222ce6ed9219c2faf",
-          "bytes": 1090501,
+          "sha256": "12f970ffa5ee44ff166d24e9fd9dbac536379c85d3061e1749b57c435655111a",
+          "bytes": 1052196,
           "rows": 3
         },
         "hurt": {
-          "sha256": "07fbc434d02d26b1f67522c6c45b0b64fa88682c3f1104c1c8e5b5915b49579b",
-          "bytes": 909424,
+          "sha256": "e813618c81d12bc31866779732c7c8e5d9a22db672337676a953a302d61abf6b",
+          "bytes": 902623,
           "rows": 2
         },
         "die": {
-          "sha256": "150bc3899f62cff5c37c996f7a1b8b1958a8a9afbb40add1872de2c4a519014d",
-          "bytes": 1319809,
+          "sha256": "82748be4232c5a57dcd3a0eae9f969561e853f0bde1aaf30a28bda026d628849",
+          "bytes": 1309598,
           "rows": 4
         }
       },
@@ -370,13 +370,13 @@
           "rows": 6
         },
         "windup": {
-          "sha256": "71dbca6b626874aa5c07392e33adf0d11932f49f3abb25a6fbcf9a4076cafe5b",
-          "bytes": 964293,
+          "sha256": "2a3237fb06f08aa59bdfe1c7e77bff8544604a31e2a111bbc65153c1df79d75e",
+          "bytes": 957850,
           "rows": 2
         },
         "attack": {
-          "sha256": "6836647a182c173eb5be9922f4335d7eec327934077137454d15f1f5d6b2b28e",
-          "bytes": 1417348,
+          "sha256": "25446b5cf6a5a3b5656c08cdd92c50301f3e9ff997760da554f0af5124504500",
+          "bytes": 1409102,
           "rows": 3
         },
         "hurt": {
@@ -385,8 +385,8 @@
           "rows": 2
         },
         "die": {
-          "sha256": "6f1afb8050165a716f17e67168854211ab518579e3ef2bfb3381cb526379e5ee",
-          "bytes": 1468807,
+          "sha256": "953081f5d21f3fe5a21c7bb6dd6a4919d861022600337f640b1298343e762413",
+          "bytes": 1453004,
           "rows": 4
         }
       },
@@ -428,8 +428,8 @@
           "rows": 2
         },
         "die": {
-          "sha256": "af003a978d6bdd0daa2c489483c0c15a82b2011332ea70551fa2674e25c614ac",
-          "bytes": 1576824,
+          "sha256": "a63c47b2e3577797b4cfc0acb3b50819a6759f288a964a346749e5abd7e94687",
+          "bytes": 1539466,
           "rows": 4
         }
       },
@@ -446,33 +446,33 @@
     "arena_hermitcrab": {
       "files": {
         "idle": {
-          "sha256": "e7737feaef5c41f09081e46f1c5b318272529acb1a43b044d23a623515b3559a",
-          "bytes": 1888094,
+          "sha256": "ce7dcd3837ad2e7c34eb78b5ba1dc59888bb8df19e104651886ce70902b7375c",
+          "bytes": 1864706,
           "rows": 4
         },
         "walk": {
-          "sha256": "3096daa8a05da4f8a64cf46b7fd3e7242d835a6238d5a0b5a7b6c1b50cc86e52",
-          "bytes": 2819307,
+          "sha256": "b9d6c2ae102ca511e54ef227511e984939ed69dafcfc0c32c36c565b6384002f",
+          "bytes": 2786453,
           "rows": 6
         },
         "windup": {
-          "sha256": "e31fb0494a88d7f28c1ffa02a7f1e104b7fe987070d0b199864763cb8f6a523d",
-          "bytes": 1053448,
+          "sha256": "ff4e5c30306606e6d9b24bacadddc9b355e0f8f0b766fa14fee412f6592f14cf",
+          "bytes": 1042836,
           "rows": 2
         },
         "attack": {
-          "sha256": "a3f28a21af6d83ee4015695fde49cd12bd8be9c15c877a9963924e685b1eb889",
-          "bytes": 1515689,
+          "sha256": "46ace424455785d26e36b60d585f9db6a7f5e5d31667d73528380d3e9d370bd3",
+          "bytes": 1498214,
           "rows": 3
         },
         "hurt": {
-          "sha256": "053a3f6ee4767b93896792b2c7799049de69cbe4678ef0c4fbda59d924126495",
-          "bytes": 1027770,
+          "sha256": "d42bee087c77a7788b3b6785659a659031cc8bbe66959de60295e5f64088f96a",
+          "bytes": 1018488,
           "rows": 2
         },
         "die": {
-          "sha256": "2b6c5d0dc845ccd32c3fb6a9778611075e2afa192bd0d70d38fa3fc052ebbf94",
-          "bytes": 1794877,
+          "sha256": "a8092018c24a6f05ef92fc61c22b2d1f425b1e3c53b3ec56a38dc0e59ec135ef",
+          "bytes": 1777645,
           "rows": 4
         }
       },
@@ -499,23 +499,23 @@
           "rows": 6
         },
         "windup": {
-          "sha256": "41b2bf2ece5b963a925032055d73c2751b067e2cdc0091386995aea8b5cd8658",
-          "bytes": 952809,
+          "sha256": "8de326d234624a2b3757193c778099c2011deeef1cd0a4afaf3f36bab31b0de6",
+          "bytes": 928872,
           "rows": 2
         },
         "attack": {
-          "sha256": "dd5ad0ea8e92fb580470c3c1ed7d2d9ffca17c778f252169c7fe695f5c575fb7",
-          "bytes": 1391058,
+          "sha256": "f29eed9bfbecb733eaa61fc47f6b5a0a4d58e170fb94c3c63fcd9ef70f10cc45",
+          "bytes": 1355822,
           "rows": 3
         },
         "hurt": {
-          "sha256": "3be3dcf356563badfe080ab8febab70ab62e6bdedcee309fa9a36dd8b29133a2",
-          "bytes": 982186,
+          "sha256": "988a01f6559dbe0b0a8f958e160482f838944f314de3be10ad7a95a5a831edbb",
+          "bytes": 956104,
           "rows": 2
         },
         "die": {
-          "sha256": "524bf0f68ea7ce1ec61ac56ceae1fd710a010a71b9bdf73513e49a09218fdfa5",
-          "bytes": 1443582,
+          "sha256": "a603030a15c805bbb2a362e96c4aede3cd4ea6f1b6fc7d43697d62b281f6c453",
+          "bytes": 1404316,
           "rows": 4
         }
       },
@@ -542,23 +542,23 @@
           "rows": 6
         },
         "windup": {
-          "sha256": "1cc778d2f58a85700924a0aec289c7cc9f76a2ae16573b2b4291e3421c166d5b",
-          "bytes": 757961,
+          "sha256": "113d996daf40d3c1ac5562900ad8f2f1db5803b601cc3896cf22c249ad4afc03",
+          "bytes": 736515,
           "rows": 2
         },
         "attack": {
-          "sha256": "d6a17e6b3750be237895077bcc8dd9845478edbbd6e91830172d0fc37b2aebc4",
-          "bytes": 1010902,
+          "sha256": "1ec99fe8ff3b76f0248121d1cf7e3ccbbaf86429955de3fd97af0bf73347c0a1",
+          "bytes": 981376,
           "rows": 3
         },
         "hurt": {
-          "sha256": "937190643684266b0a198028c0ebb9bfa5d731591e92e6e70c76627df348a554",
-          "bytes": 943367,
+          "sha256": "533c2639ecf78c42b4a146533057a044fbde22dc44dced7570763415451370a1",
+          "bytes": 921460,
           "rows": 2
         },
         "die": {
-          "sha256": "ce0e4c212bf636b39a25b74863e3af8b93eb03c1333e09d8c7b60264e5e70a2d",
-          "bytes": 1333308,
+          "sha256": "a009dd10876d29e1009d7012c662b345c5077978618636255dcb4911f81144fb",
+          "bytes": 1300677,
           "rows": 4
         }
       },
@@ -575,33 +575,33 @@
     "arena_jellyfish": {
       "files": {
         "idle": {
-          "sha256": "1bdb610d3cef0ac924235a1ceeedc5fb0c143d52368d070991b158044e4db22f",
-          "bytes": 2267981,
+          "sha256": "d08bcb444277968cdfc25217d1dabc4fc0f1e1d11cd4f2b96e2a28ae59dea140",
+          "bytes": 2256890,
           "rows": 4
         },
         "walk": {
-          "sha256": "b69f52b470acd5aa1fdf2afd30421557fa16a18bff6477c27a01f4ad4b296a48",
-          "bytes": 3241894,
+          "sha256": "9871f55a60fb1a93aec4c580a7cf9c16d31441ac42727dcebddbbe2e3792c620",
+          "bytes": 3232380,
           "rows": 6
         },
         "windup": {
-          "sha256": "c047507dc5e9386760a0a35eba2b9987508409a1a8e617fc61dd52c7eaddd812",
-          "bytes": 1049776,
+          "sha256": "c7f48eda80b43544fcb2994205bcead14b3f7751e4ba44ba1c242e589aec5ea9",
+          "bytes": 1044551,
           "rows": 2
         },
         "attack": {
-          "sha256": "0634c6959b8e3db9a0956d00104b35f3d8f455aa8afa11add2f152a8775d1a72",
-          "bytes": 1677189,
+          "sha256": "af4b4d3403996c99c227e763e65626be482490cbd79b9025efdd4ab4609dcca1",
+          "bytes": 1671725,
           "rows": 3
         },
         "hurt": {
-          "sha256": "e5bb09b3fd868676f00c645ad14ec4ac8ef99c3cb2fb44895df7255a54e4d59e",
-          "bytes": 1023446,
+          "sha256": "616de0e3c8c072767b9072c9b8ca21b66fccc376b7a96e5c973ce81feaaf0437",
+          "bytes": 1017991,
           "rows": 2
         },
         "die": {
-          "sha256": "483444e66c5e52d017c5f4375de85efe24e5da5d8062853c2361b5fab7035454",
-          "bytes": 1716128,
+          "sha256": "0ea573da7f5cb1265e5b14e88625a43df560a5b672da3f45ef9f5d90cc8d1261",
+          "bytes": 1705791,
           "rows": 4
         }
       },
@@ -618,8 +618,8 @@
     "arena_lava_sniper": {
       "files": {
         "idle": {
-          "sha256": "928be7a35468cdb23831ce63a8e0b4be8c9d73e92b7d3e5991b68a926e88c499",
-          "bytes": 1941715,
+          "sha256": "ab3d9806d8b2410d66a91cf028c3a753139bddd74a2f633915a3b914fe3b30ea",
+          "bytes": 1874288,
           "rows": 4
         },
         "walk": {
@@ -633,18 +633,18 @@
           "rows": 2
         },
         "attack": {
-          "sha256": "72e70040694a9af1cabbdb2214061f39189e2bd07136e3bc5320a94b9527707a",
-          "bytes": 1379648,
+          "sha256": "3eb7d833867f971e1a349f043d48a11f022c26b4e07b82867c09961f1cb0df7f",
+          "bytes": 1331312,
           "rows": 3
         },
         "hurt": {
-          "sha256": "84022a661ef24ad1340055ac7fb4e3081b524447d3e65ad8e46fae13b448722e",
-          "bytes": 1057806,
+          "sha256": "7cc2febee2df1a15f4e0f69f73b9e41b1cc92af9d4dffb06adcacfad5894b55d",
+          "bytes": 1016784,
           "rows": 2
         },
         "die": {
-          "sha256": "1bfcc096f0f98c30f0796b319f52799f3f13da7865a366f1711d4342d2716d35",
-          "bytes": 1590665,
+          "sha256": "154055781c464f71036b0178560aae9bddc5ba87061b13aa4b5641d64d8fa337",
+          "bytes": 1533909,
           "rows": 4
         }
       },
@@ -661,33 +661,33 @@
     "arena_priest": {
       "files": {
         "idle": {
-          "sha256": "935e6cdf67902a645c69f850c83896153978e7fcaf99cfe4b07d5118c0e28372",
-          "bytes": 1987862,
+          "sha256": "fc6c885fce7f624bf7119d4239d5cee05e5fb3fcc5c9c133812f8fd90f99d682",
+          "bytes": 1968885,
           "rows": 4
         },
         "walk": {
-          "sha256": "0e120e3064171280eb9a06db597e6061cec0834a94da3a44488c7a83f2f4dda4",
-          "bytes": 2873060,
+          "sha256": "9024e2b69d834be76c00ef9190984cef6cd5f49d55dfd3c806dc81591df56227",
+          "bytes": 2847948,
           "rows": 6
         },
         "windup": {
-          "sha256": "295740a3c75f70d338dac2370209f46f85a69c9ea8f2f06c484bd9fc9748c50d",
-          "bytes": 1030085,
+          "sha256": "26548efa0705376c377c480b3e215bec308c709c2f05d45d3c55ca951fc4f20c",
+          "bytes": 1023666,
           "rows": 2
         },
         "attack": {
-          "sha256": "9b68592c82f434452c3864e1fe7f9cd1066910ea1d7fdb55b07e39361c455116",
-          "bytes": 1603479,
+          "sha256": "992865f1d23313869712fcc9a71dd2e4c4b39ce37578fc7938311fd194f0cb85",
+          "bytes": 1593819,
           "rows": 3
         },
         "hurt": {
-          "sha256": "0d1bed54a0fccc594b0bfa9e73d41d7d05acb8ed8492bf6598eabb99d6a30cae",
-          "bytes": 1122836,
+          "sha256": "99ac41731f9a5848fee1f180ef58c806bb01887bba0d9960a6ec4bd0172c95f0",
+          "bytes": 1113001,
           "rows": 2
         },
         "die": {
-          "sha256": "e0d0963abef5b538b4a6c0c50abc9227dbe10c77a03d0d6504f456f76c237ece",
-          "bytes": 1641380,
+          "sha256": "981f2811c1de47cefa47468bf7f0053dc83033115fd13e438f7c8763986b70c9",
+          "bytes": 1626853,
           "rows": 4
         }
       },
@@ -704,33 +704,33 @@
     "arena_rock_charger": {
       "files": {
         "idle": {
-          "sha256": "366627e046897a247e999703dbbbd73f103c16853d0f60635ae323d73a7c4048",
-          "bytes": 1913307,
+          "sha256": "fc15c42cb529a6c3be7673a01dec1f1443c22186243605439e30316f2c6ff155",
+          "bytes": 1858307,
           "rows": 4
         },
         "walk": {
-          "sha256": "d83c868c3e039d1f65d50b54a190580e4c10574cafd894ec72c4d5e3062d6c60",
-          "bytes": 2478698,
+          "sha256": "f11467b69686170f9fba82178748ba663b8732542519075ba5e69bd0fa2c6cd8",
+          "bytes": 2425209,
           "rows": 6
         },
         "windup": {
-          "sha256": "9aa88d74783aa26b3bec60eb058a2515b4ff198f087eecf34e25231c9887afb3",
-          "bytes": 949492,
+          "sha256": "2298eb3453b4dc275c54f0c802dfaf250fe6ce35f381b05e758d220dfa01ff99",
+          "bytes": 929081,
           "rows": 2
         },
         "attack": {
-          "sha256": "53a379bee5ee0a1f869f97e88f424f67cce9d2c3ac97f2b106085f92a991c25a",
-          "bytes": 1360841,
+          "sha256": "602db268ed1866d1d1cb045bae3cb6592856f2101817efdf1b1d04e3ac37a1d3",
+          "bytes": 1329724,
           "rows": 3
         },
         "hurt": {
-          "sha256": "bb30edc6aaae9e9f38a7dc3cad0ca0846b4a7b15f587b4e6b2f1e6e2ca89cbff",
-          "bytes": 743434,
+          "sha256": "93c8830bb94675cef392c0a48ecf4f5f84c012def4a27e52d867c46ad78d03c3",
+          "bytes": 726539,
           "rows": 2
         },
         "die": {
-          "sha256": "f7ce700802cc75e440aef690e280b0a43a96f253b0f26a4d08bfbaa037638239",
-          "bytes": 1215691,
+          "sha256": "d28d4a7052a7bba638eae3a66d9f018acbbfc72842b56c173ae6502b1d0913a2",
+          "bytes": 1189757,
           "rows": 4
         }
       },
@@ -747,8 +747,8 @@
     "arena_seedgunner": {
       "files": {
         "idle": {
-          "sha256": "1f409b694ae0cde35c2ec577016228193e2c7f0ec2a1e434c5e9bc0f3135d2bc",
-          "bytes": 1613467,
+          "sha256": "966923686674003c29ce3d1605d8ef7a2a9eddd13cd77251fa2b4598d44fe789",
+          "bytes": 1573466,
           "rows": 4
         },
         "walk": {
@@ -757,23 +757,23 @@
           "rows": 6
         },
         "windup": {
-          "sha256": "03c2a85ee53e3b37e686dd2462b4868ce979a1a509416d673821e77af90d9a95",
-          "bytes": 866073,
+          "sha256": "71823b36fabf0a15a4bccee555edde207dda8184c4eb94a0b7634e978843907c",
+          "bytes": 851125,
           "rows": 2
         },
         "attack": {
-          "sha256": "9a1ae0ca0761d69c8ca06b1a012a05480198d39dacb1868dd5f9b81b5897fa72",
-          "bytes": 1333463,
+          "sha256": "c9774f3477a8e7c7f9b940db5997fb43ec078ff38ae31014297b2e4975dd1263",
+          "bytes": 1311882,
           "rows": 3
         },
         "hurt": {
-          "sha256": "989ceb233ca113230d6afcc608cad8728330f1ef9f3cf48c17850a8f7d417e68",
-          "bytes": 948582,
+          "sha256": "8975ec96a9dcf3c7734eb5298e63cbaa8dff43b8619a990d3f9cab30cb534952",
+          "bytes": 927188,
           "rows": 2
         },
         "die": {
-          "sha256": "f19dc26a7c109ab2a5ff7234157dadc0e512c79fdc58793edb7c69bc925bd76d",
-          "bytes": 1679016,
+          "sha256": "59a7eeeefca332e2b900d2936c518ab747ff0e520092c1a941feb8ffe12d8e15",
+          "bytes": 1641931,
           "rows": 4
         }
       },
@@ -815,8 +815,8 @@
           "rows": 2
         },
         "die": {
-          "sha256": "fba96d93dabe856955ee3669669892124df98fe5ad6dabf21a99ccdb6ae35426",
-          "bytes": 1485521,
+          "sha256": "ddb0b8de093083d48a7a76fcdd538d5a6813832168a76efd5959a7a439084f4a",
+          "bytes": 1457941,
           "rows": 4
         }
       },
@@ -833,33 +833,33 @@
     "arena_sporecap": {
       "files": {
         "idle": {
-          "sha256": "91bf892fcb494242380c960f8dcf08a9bc1d885f6234c8e1d35544132cb7aaa6",
-          "bytes": 1429230,
+          "sha256": "89e4ad36333255659bdc252241234b4f3d780b95c40c8773027e5dcb5915c7e5",
+          "bytes": 1411910,
           "rows": 4
         },
         "walk": {
-          "sha256": "2f9faeae7c04aa7c4056ea7d4f88b9f395d9a5d01486aee613aee9d7d2e9b702",
-          "bytes": 2248143,
+          "sha256": "3c3c2ae3adf2fbe843853019e03637f95edbaace77e039f873dcfcfdd0232c1b",
+          "bytes": 2225121,
           "rows": 6
         },
         "windup": {
-          "sha256": "1a2b47757ffd2701e311863637d3d6696c0c399b9fd90484787dfe67dd215d20",
-          "bytes": 803499,
+          "sha256": "c8f5ae3f40d5d1286af1cbba43bc20e6e31f6fee5a63b01900468fb951b38abf",
+          "bytes": 797617,
           "rows": 2
         },
         "attack": {
-          "sha256": "4d060dcd660713a20cd50d1fc8946a5d2f8b0772c64a3e8428cee45c6fdff184",
-          "bytes": 1180541,
+          "sha256": "7f8c564af09657b0a519fa2c27abf9e8c1d738c8ef5fc5300deb122e4fb73548",
+          "bytes": 1169194,
           "rows": 3
         },
         "hurt": {
-          "sha256": "cd5d4bd2c21a12a06ca057413c9743109bf02dcb93e1a7150b9ae0eacd584a15",
-          "bytes": 798419,
+          "sha256": "2ac93d39fe2e094c8e9144fc528380abb7a72f3ce137c66495ad69895a805a5f",
+          "bytes": 789951,
           "rows": 2
         },
         "die": {
-          "sha256": "7444fe02a767e89359f34bde9a706bdd2f83741dd13e4c3a74a61597241d18f7",
-          "bytes": 1218804,
+          "sha256": "1b54e107ec2687db840e3106eb77d5d848198d7b41cc8da8ee9c1ed5b6f87c30",
+          "bytes": 1205252,
           "rows": 4
         }
       },
@@ -881,28 +881,28 @@
           "rows": 4
         },
         "walk": {
-          "sha256": "111f479dc20ab1be13fd7db54b03483e1a31bb49ff20a09d361140432817d567",
-          "bytes": 1670085,
+          "sha256": "6e4f22a697b2e322262b203623fc59a7863e4dbc7a4771ddc5896472f531f79b",
+          "bytes": 1655950,
           "rows": 6
         },
         "windup": {
-          "sha256": "6e1eb8d4f8f5d22ed04b0d3418235e11476f8861dfc044fd2099e171eb9da5ef",
-          "bytes": 644425,
+          "sha256": "1dbbdf415546eb908e634362aaa1ecc5faa298d503e2ef7cc0255ee6fe9c7f57",
+          "bytes": 637546,
           "rows": 2
         },
         "attack": {
-          "sha256": "3a4a1cccec1c20047e778689d39011d3d34d32de7948e0c0d3e08ffbe83ef0b6",
-          "bytes": 1074036,
+          "sha256": "7265fb7fca854dcbd929d070d2168477626727b54f5bbfc47d1126c222540420",
+          "bytes": 1063941,
           "rows": 3
         },
         "hurt": {
-          "sha256": "afd494e174049e7ad466985d82940bca57481d88270f6e226387263317eaaabc",
-          "bytes": 554999,
+          "sha256": "59d04b37c9cc6b758d3c5cdb5db826593047a5184825ffc956930923a2583000",
+          "bytes": 548875,
           "rows": 2
         },
         "die": {
-          "sha256": "e3462a539975ff4221be4e881619f37916da1676ac87db4094aba4b3eac6eeea",
-          "bytes": 827856,
+          "sha256": "d4954f8dbc10629618866c70bdc18c1c5273cf0850d9a8468120cfa0294be0ea",
+          "bytes": 820791,
           "rows": 4
         }
       },
@@ -919,8 +919,8 @@
     "arena_swift_hound": {
       "files": {
         "idle": {
-          "sha256": "94bdf663d22e4047e019e02dfdf0004558962ddcb7730b518de934b733c25b40",
-          "bytes": 1228550,
+          "sha256": "4ce585ee4ebd247bfe9d76dfe0b58715d15f21e7b9fe0c512c0b0aed18963106",
+          "bytes": 1173310,
           "rows": 4
         },
         "walk": {
@@ -929,23 +929,23 @@
           "rows": 6
         },
         "windup": {
-          "sha256": "beaf93786152ddf85c3fdc267cb9166228be185fb76a1442fec0c51c9a835b2c",
-          "bytes": 658536,
+          "sha256": "005e60b3663d7fe967669a0e6fc9f2595effe39a861e569db03dd8ae50507e9c",
+          "bytes": 639826,
           "rows": 2
         },
         "attack": {
-          "sha256": "b6a03ae57945182271729ce0dd1ebbd27f7b5e1c8aea420abf254775f16fab2c",
-          "bytes": 1106478,
+          "sha256": "9f302a6a63dc1f035f8135bed9732b812145961d76867d75100fe4eac7ac9b10",
+          "bytes": 1072099,
           "rows": 3
         },
         "hurt": {
-          "sha256": "63c533cc6b80707b0007055eb0b4c1fcb6823391f39427efc5d5b0da32976b12",
-          "bytes": 606982,
+          "sha256": "373b43b4dcac71047c7f1a504e801838db64993af9bd8a2dc804e9de64a9cd7d",
+          "bytes": 583968,
           "rows": 2
         },
         "die": {
-          "sha256": "99507c46de9db5df6b53269369bb68451c3165d215fa08f64902851db626b44a",
-          "bytes": 877591,
+          "sha256": "4c459a1416ba231f4a7de351b7477a137311de817dd81efd7078d4ef67b8c13f",
+          "bytes": 846738,
           "rows": 4
         }
       },
@@ -962,33 +962,33 @@
     "arena_temple_priest": {
       "files": {
         "idle": {
-          "sha256": "83de468f72c056fc9276fafef2c787e6646a64dda9f2a504eb6c26ac4e949baf",
-          "bytes": 1683237,
+          "sha256": "f7815ad0942812f18d98edffe62e35ab0e1aeeab0d45ae8de9f289f212079ebb",
+          "bytes": 1669275,
           "rows": 4
         },
         "walk": {
-          "sha256": "510d4aa4b15b6f7abdd14bb89383cdb2cffd72ccd09aad433389403f463bd047",
-          "bytes": 2473804,
+          "sha256": "5a9e3d3a60e3da3043cc9b3fac8244260bb444f29d523e6f26bee0e1e620ae13",
+          "bytes": 2449573,
           "rows": 6
         },
         "windup": {
-          "sha256": "c9a6b6aab4fbfb7d4223d3acf55c4e8d93f31a1cf2a7c7979df88f62604eb0b1",
-          "bytes": 825690,
+          "sha256": "bdcac91a26891c033a0625f9ec522a29514bc1b668d70a0bdf4fe7cb0d06d602",
+          "bytes": 816147,
           "rows": 2
         },
         "attack": {
-          "sha256": "bdf57b9fc8cfc4d7c29a805ab0da09a771229f6fa846f94ae11ec50624bf28ea",
-          "bytes": 1403359,
+          "sha256": "e77aa5171c398dbd71e6c351300b82a769ee2558b661b17816325ad60d53884a",
+          "bytes": 1390736,
           "rows": 3
         },
         "hurt": {
-          "sha256": "d03c9b0018e22b53211ddb7caeb873ee3e8c3ebe894126bae329b73e41b88c12",
-          "bytes": 1056111,
+          "sha256": "e26cbf1c1cb1eb4ce6915013e2d333274cb8519893559174b341cef9574403ca",
+          "bytes": 1043135,
           "rows": 2
         },
         "die": {
-          "sha256": "b27c998e4e137656c9576daa4ed2bba9c2fbbae87f973a254ea1a53343dd8ecf",
-          "bytes": 1674622,
+          "sha256": "359d7677761ad9211bc5ab6e2f27956d02c814b51f3bee4aa7343551f6d73943",
+          "bytes": 1652502,
           "rows": 4
         }
       },
@@ -1010,8 +1010,8 @@
           "rows": 4
         },
         "walk": {
-          "sha256": "b7f76ddd2d2a55b28b52f1484b7851b46919874caa339878881388c683106a25",
-          "bytes": 2508892,
+          "sha256": "03153905622695ba01c0e0d10529081c814082cd16c5c7f7bcde3e86f62d9f65",
+          "bytes": 2446465,
           "rows": 6
         },
         "windup": {
@@ -1020,8 +1020,8 @@
           "rows": 2
         },
         "attack": {
-          "sha256": "e1ac280f1164e365c8f75ad4993c7a7404edd8c65fa36de5c01a49918e9de316",
-          "bytes": 1241356,
+          "sha256": "273f96e53c7af22f3cae23117aa4e7e43f363b609d93b0916120eedd99a0f862",
+          "bytes": 1205026,
           "rows": 3
         },
         "hurt": {
@@ -1030,8 +1030,8 @@
           "rows": 2
         },
         "die": {
-          "sha256": "6217ddda6597783e6f160e3ab1d920eac5ead3b4ccf9961f69e1f4aeff1441bb",
-          "bytes": 1232318,
+          "sha256": "4866755db81d33cb01d55f2ab713fd401b88d6fe7b49b27ad500952cd18087e8",
+          "bytes": 1200937,
           "rows": 4
         }
       },
@@ -1063,8 +1063,8 @@
           "rows": 2
         },
         "attack": {
-          "sha256": "bbf620db91658376f3d25b518cb8f3f3dc28766539db6c32b5f875eaa50aaf81",
-          "bytes": 1046214,
+          "sha256": "cf925c3cab82b9fce133716f35eb81c892f335bc4598e8847602211cd208b451",
+          "bytes": 1015883,
           "rows": 3
         },
         "hurt": {
@@ -1073,8 +1073,8 @@
           "rows": 2
         },
         "die": {
-          "sha256": "4586e35c7e5053af840eea79ff80b28c0dc387327f173b2d51c338d6de3ab4a1",
-          "bytes": 1135208,
+          "sha256": "7f613c8938d7ea1261b4a3a947e80be9c11d273587b80d2dd3fe2d4fb4c323aa",
+          "bytes": 1103084,
           "rows": 4
         }
       },
@@ -1088,5 +1088,6 @@
         "walk.png": "68e8eff244c1b0db02b7640d68294f599d524b948d543c2c2b293b6785876432"
       }
     }
-  }
+  },
+  "postprocess": "Remote 146ab9e alpha <= 12 residue cleanup; source artwork unchanged"
 }
