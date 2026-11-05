@@ -4,6 +4,7 @@ Source drawings/prompt JSON are retained; output matches SpriteEnemyView hi atla
 from pathlib import Path
 import hashlib, json, statistics, uuid, re, sys
 from PIL import Image, ImageDraw
+import numpy as np
 from pack_castle_painted import split, bounds
 ROOT=Path(__file__).resolve().parents[2]
 SOURCE=Path(__file__).parent/'ch345_sources'
@@ -53,7 +54,17 @@ def pack():
    atlas=Image.new('RGBA',(2048,count*256))
    for r in range(count):
     for d in range(8):atlas.paste(frames[g][(start+r)*8+d],(d*256,r*256))
-   dest=OUT/f'{name}_{action}.png';atlas.save(dest,optimize=True)
+   dest=OUT/f'{name}_{action}.png'
+   # Keep Claude's alpha-residue cleanup (146ab9e); do not restore faint boxes.
+   pixels=np.array(atlas);pixels[pixels[:,:,3]<=12]=0
+   atlas=Image.fromarray(pixels,'RGBA')
+   unchanged=False
+   if dest.exists():
+    prior=np.array(Image.open(dest).convert('RGBA'))
+    has_residue=np.any((prior[:,:,3]>0)&(prior[:,:,3]<=12))
+    prior[prior[:,:,3]<=12]=0
+    unchanged=not has_residue and prior.shape==pixels.shape and np.array_equal(prior,pixels)
+   if not unchanged:atlas.save(dest,optimize=True)
    meta=Path(str(dest)+'.meta')
    if not meta.exists():meta.write_text(re.sub(r'guid: [0-9a-f]+','guid: '+uuid.uuid4().hex,template))
    files[action]={'sha256':digest(dest),'bytes':dest.stat().st_size,'rows':count}

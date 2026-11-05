@@ -13,3 +13,7 @@ Added canyon_bomb_imp, canyon_lava_sniper and canyon_rock_thrower. Overhead boul
 ## Batch 3
 
 Added canyon_spitter, canyon_boar, canyon_vinemage and canyon_sporecap, with sand scarves and grains. Cumulative 10 enemies / 60 atlases / 1680 cells, 0 validation errors. Remaining 15.
+
+## Batch 4
+
+Added canyon_crag_lizard, canyon_elite_guardian and canyon_elite_lizard_gunner. Raised forebody then ground slam, crystal forepaw sweep and cannon release. Cumulative 13 enemies / 78 atlases / 2184 cells, 0 validation errors. Remaining 12.

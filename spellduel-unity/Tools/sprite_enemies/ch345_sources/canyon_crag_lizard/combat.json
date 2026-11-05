@@ -1,0 +1,4 @@
+{
+  "prompt": "Edit this exact character sprite sheet. Keep the rock lizard identity sandstone scarf, eight directions, transparent background and clean anime style. EXACTLY8 columns5 rows. Columns FRONT, FRONT RIGHT, RIGHT, REAR RIGHT, BACK, REAR LEFT, LEFT, FRONT LEFT. Correct attack timing: ROW1 starts raising forelegs. ROW2 rears up maximally, BOTH forelegs lifted high, chest upright, hindlegs grounded, peak windup. ROW3 slams BOTH front feet down hard, torso LOW and horizontal, head lowered, forefeet spread touching invisible ground, compact amber impact only. ROW4 stays crouched low recovering, no raised forelegs. ROW5 returns idle allfour feet down. Allposes complete body and tail, occupy only65% of eachcell width andheight, large transparent gutters. NO ground, NO floor shadows, no text.",
+  "tool": "built-in image_gen"
+}

@@ -1,0 +1,4 @@
+{
+  "prompt": "Keep exact lizard design all poses. Regenerate transparent sprite sheet EXACTLY8columns6rows. Front,front right,right,rear right,back,rear left,left,front left. Rows hit recoil,hit recover,collapse,falling,collapsed,fully prone dead closedeyes. Shrink ALL figures including tails and scarf to ONLY60% each squarecell width andheight leaving wide fully transparent gutters. No shadows no background no terrain. Preserve sandstone plates scarf amber cracks.",
+  "tool": "built-in image_gen"
+}
