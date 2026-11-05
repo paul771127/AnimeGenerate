@@ -17,6 +17,8 @@ namespace SpellDuel
         /// <summary>房主：劇情人物倒下（SoloBattle 套用到 DungeonRun、送給隊友）</summary>
         public event Action<Fighter> OnNpcDown;
         public const float NpcSpeed = 1.3f, NpcAttackGap = 1.6f;
+        /// <summary>跟著玩家的人物站在玩家身後多遠、往旁邊多遠（不擋鏡頭）</summary>
+        public const float FollowBehind = 1.8f, FollowSide = 1.4f;
         static bool NpcMelee(Fighter n) => n.tamedKind >= 0 ? !IsRanged(n.tamedKind) : n.cls != null && (n.cls.id == "swordsman" || n.cls.id == "assassin");
 
         /// <summary>還有活著的敵方人物（第三勢力不算：打完這波就撤退）</summary>
@@ -210,8 +212,13 @@ namespace SpellDuel
                     Fighter pl = null; float pd = float.MaxValue;
                     foreach (var p in Players()) { if (!p.Alive) continue; float d0 = FlatDistance(n.Feet, p.Feet); if (d0 < pd) { pd = d0; pl = p; } }
                     if (pl == null) continue;
-                    goal = pl.Feet; stop = 1.3f; best = pd;
-                    if (pd > 0.3f) n.forward = Fighter.Flat(pl.Feet - n.Feet);
+                    // 跟在玩家的斜後方（使用者回報「跟太近，視野會被遮擋大半」）：身後 1.8m、往左或右 1.4m（照編號錯開），不擋在鏡頭前
+                    var pf = Fighter.Flat(pl.forward); if (pf == Vector3.zero) pf = Vector3.forward;
+                    var pr = new Vector3(pf.z, 0f, -pf.x); float side = (n.minionId & 1) == 0 ? 1f : -1f;
+                    var spot = pl.Feet - pf * FollowBehind + pr * side * FollowSide;
+                    if (minionInside != null && !minionInside(spot)) { spot = pl.Feet - pf * FollowBehind; if (!minionInside(spot)) spot = pl.Feet - pr * side * FollowSide; }   // 牆邊：改站正後方或另一邊
+                    goal = spot; stop = 0.35f; best = FlatDistance(n.Feet, spot);
+                    n.forward = pd > 0.3f && best > 0.6f ? Fighter.Flat(spot - n.Feet) : pf;
                 }
                 if (best <= stop) continue;
                 // 跟著玩家（沒有要打的敵人）：落後越多走越快（玩家衝刺 3.75 m/s，原本固定 1.3 m/s 會一直落後 5m 左右）
