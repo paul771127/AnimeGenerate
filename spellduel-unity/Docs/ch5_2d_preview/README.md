@@ -17,3 +17,7 @@ Added canyon_spitter, canyon_boar, canyon_vinemage and canyon_sporecap, with san
 ## Batch 4
 
 Added canyon_crag_lizard, canyon_elite_guardian and canyon_elite_lizard_gunner. Raised forebody then ground slam, crystal forepaw sweep and cannon release. Cumulative 13 enemies / 78 atlases / 2184 cells, 0 validation errors. Remaining 12.
+
+## Batch 5
+
+Added canyon_elite_sand_witch, canyon_elite_herder and canyon_elite_hunter. Veiled bone-adorned witch, stone nest shepherd and crescent blade lizard hunter. Cumulative 16 enemies / 96 atlases / 2688 cells, 0 validation errors. Remaining 9.

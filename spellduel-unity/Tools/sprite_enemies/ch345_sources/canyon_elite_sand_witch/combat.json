@@ -1,0 +1,4 @@
+{
+  "prompt": "EDIT this exact sprite sheet. Actual FULLY TRANSPARENT background, remove all white/cream/checkerboard background and floor shadows. Preserve all exact poses, directions and positions and forest anime style. Add a fine sand-colored opaque face veil covering NOSE AND MOUTH in every visible-face pose, eyes still visible, plus small ivory bone beads at veil edge. Keep hood and sand scarf, bone ornaments and amber staff. EXACTLY8columns 5rows. Each entire figure and spell fits within65% cell width andheight, generous fully transparent gutters. No background, no text.",
+  "tool": "built-in image_gen"
+}
