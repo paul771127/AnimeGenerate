@@ -1,0 +1,3 @@
+{
+  "prompt": "Background extraction edit. Keep all 48 fish sprites in exactly the same poses, positions and 8 columns 6 rows. Remove only white background and floor shadows to actual transparent alpha. Preserve fish colors and closed eyes in last row. No new elements."
+}

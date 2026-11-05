@@ -19,3 +19,7 @@ Added sea_elite_weaver, sea_elite_pilot, sea_elite_hunter. Cumulative12 enemies,
 ## Batch 5
 
 Added sea_fairy, sea_pirate_blade, sea_tide_mage. Cumulative 15 enemies, 90 atlases, 2520 cells, 0 partial-validation errors. Remaining 3 sea, 25 arena, 25 canyon. Transparent-background correction retained in tide mage provenance.
+
+## Batch 6 / chapter complete
+
+Added sea_deck_assassin, sea_swift_fin, sea_swift_crab. All 18 sea enemies complete: 108 atlases, 3024 cells, full validation 0 errors. All character artwork generated with built-in image_gen; alpha corrections and prompts retained. Remaining 25 arena and 25 canyon enemies are not delivered yet.
