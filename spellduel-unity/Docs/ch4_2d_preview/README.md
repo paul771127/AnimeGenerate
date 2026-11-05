@@ -29,3 +29,7 @@ Added arena_elite_binder, arena_elite_drummer and arena_elite_blade. Cumulative 
 ## Batch 7
 
 Added arena_priest, arena_war_drummer and arena_champion, including sun prayer, drum beat and overhead greatsword strike. Cumulative 21 enemies / 126 atlases / 3528 cells, 0 validation errors. Remaining 4 arena and 25 canyon enemies.
+
+## Batch 8 — chapter complete
+
+Added arena_javelin, arena_temple_priest, arena_swift_beast and arena_swift_hound. All 25 arena enemies / 150 atlases / 4200 cells passed validation with 0 errors and no source seam contacts. Runtime unchanged. Chapter 5 remains.
