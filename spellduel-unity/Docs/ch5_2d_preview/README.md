@@ -9,3 +9,7 @@ canyon_imp, canyon_fire_archer, canyon_rock_charger: 18 atlases / 504 cells, par
 ## Batch 2
 
 Added canyon_bomb_imp, canyon_lava_sniper and canyon_rock_thrower. Overhead boulder windup, single rifle shot and inflated blast. Cumulative 6 enemies / 36 atlases / 1008 cells, 0 validation errors. Remaining 19.
+
+## Batch 3
+
+Added canyon_spitter, canyon_boar, canyon_vinemage and canyon_sporecap, with sand scarves and grains. Cumulative 10 enemies / 60 atlases / 1680 cells, 0 validation errors. Remaining 15.

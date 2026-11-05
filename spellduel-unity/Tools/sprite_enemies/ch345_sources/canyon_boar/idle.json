@@ -1,0 +1,4 @@
+{
+  "prompt": "Fix this 8x4 sprite sheet costume placement. Sand woven scarf wraps ONLY around neck immediately behind jaw, in front of front shoulders. Rear views must show bare russet rump and bare tail base; remove all cloth on hips belly back rump. Scarf tail hangs at front shoulder only. Preserve boar anatomy all directions poses and dorsal thorns. Keep true transparency and generous gutters.",
+  "tool": "built-in image_gen"
+}
