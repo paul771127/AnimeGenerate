@@ -1939,6 +1939,7 @@ namespace SpellDuel
             int sv = SceneVariant;   // 同一主題的場景變化（Codex 做美術）
             if (volcano) volcano.SetVariant(sv); if (forest) forest.SetVariant(sv); if (sea) sea.SetVariant(sv);
             if (arenaScene) arenaScene.SetVariant(sv); if (canyon) canyon.SetVariant(sv);
+            SpriteEnemyView.SetTheme(theme);   // 2D 角色的輪廓光、遠處的空氣色跟著場景主題
             if (volcano) volcano.SetVisible(theme == 0);
             if (forest) forest.SetVisible(theme == 1);
             if (sea) sea.SetVisible(theme == 2);

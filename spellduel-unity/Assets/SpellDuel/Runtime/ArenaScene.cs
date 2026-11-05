@@ -41,6 +41,7 @@ namespace SpellDuel
             var a = go.AddComponent<ArenaScene>();
             a.Build(polygon, floorY);
             a.variantArt=SceneVariantArt.Install(a.transform,polygon,floorY,3);
+            foreach (var s in a.fireSpots) GlowHalo.Create(a.transform, a.transform.InverseTransformPoint(s) + Vector3.up * 0.15f, new Color(1f, 0.6f, 0.2f, 0.85f), 1.8f, 0.8f);   // 火盆的光暈（假的 Bloom）
             return a;
         }
 

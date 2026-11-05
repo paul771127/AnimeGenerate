@@ -496,6 +496,7 @@ namespace SpellDuel
             var toC = new Vector3(-p2.x, 0f, -p2.y);
             go.transform.rotation = Quaternion.LookRotation(toC.sqrMagnitude > 1e-4f ? toC.normalized : Vector3.forward, Vector3.up);
 
+            GlowHalo.Create(transform, transform.InverseTransformPoint(go.transform.TransformPoint(new Vector3(0f, 0.4f, 0.42f))), new Color(1f, 0.7f, 0.35f, 0.7f), 0.9f, 0.5f);   // 香爐的火光
             var incense = SpellFx.NewPS(transform, "Incense", SpellFx.BlendMat(SpellFx.TexSoft), 30, true);
             incense.transform.position = go.transform.TransformPoint(new Vector3(0f, 0.42f, 0.42f));
             SpellFx.Sphere(incense, 0.02f);

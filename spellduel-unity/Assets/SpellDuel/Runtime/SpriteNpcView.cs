@@ -87,6 +87,7 @@ namespace SpellDuel
             v.mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; v.mr.receiveShadows = false;
             v.block = new MaterialPropertyBlock(); v.born = Time.time;
             v.nextGesture = Time.time + Random.Range(3f, 9f);
+            BlobShadow.Attach(go.transform, 0.3f, 0.24f);   // 腳下的接觸陰影（2D 圖也要「站在」地上）
             v.LateUpdate();
             return v;
         }
