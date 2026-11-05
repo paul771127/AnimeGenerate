@@ -1,0 +1,4 @@
+{
+  "prompt": "Edit this transparent sprite sheet. Preserve exact character design, same poses, eight directions, 5 rows, 8 columns. Shrink each complete character INCLUDING sword and cape to 65% of its square cell width and height, leave generous clear transparent gutters around each cell and canvas. Do not crop weapons. Preserve one sword only per character. Remove all backdrop, speckles, haze and ground shadows, genuine clean transparency. Keep current art style and action progression.",
+  "tool": "built-in image_gen"
+}

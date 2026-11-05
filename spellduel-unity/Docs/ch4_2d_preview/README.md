@@ -25,3 +25,7 @@ Added arena_chain_slave, arena_elite_centurion and arena_elite_crossbow, includi
 ## Batch 6
 
 Added arena_elite_binder, arena_elite_drummer and arena_elite_blade. Cumulative 18 enemies / 108 atlases / 3024 cells, 0 validation errors. Remaining 7 arena and 25 canyon enemies.
+
+## Batch 7
+
+Added arena_priest, arena_war_drummer and arena_champion, including sun prayer, drum beat and overhead greatsword strike. Cumulative 21 enemies / 126 atlases / 3528 cells, 0 validation errors. Remaining 4 arena and 25 canyon enemies.
