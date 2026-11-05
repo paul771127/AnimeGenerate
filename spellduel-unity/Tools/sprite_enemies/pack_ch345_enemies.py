@@ -78,7 +78,7 @@ def pack():
    gif[0].save(PREVIEW/f'{name}_{action}.gif',save_all=True,append_images=gif[1:],duration=150 if action=='walk' else [170,380,130,130,250],loop=0)
   roster.paste(frames['idle'][0],(ni*256,300),frames['idle'][0]);rd.text((ni*256+8,280),name,fill='white')
   report['enemies'][name]={'files':files,'style':'forest-approved-medium-detail','scale_safety':safety,'source_edge_contacts':source_edges,'sources':{p.name:digest(p) for p in sorted(source_dir(name).glob('*.png'))}}
- rd.text((4,3),'CHAPTER ENEMY ROSTER',fill='white');rd.text((4,288),'MANGA FANTASY',fill='white');roster.crop((0,280,max(1,len(IDS))*256,560)).save(PREVIEW/'roster.jpg',quality=95)
+ rd.text((4,3),'CHAPTER ENEMY ROSTER',fill='white');roster.crop((0,280,max(1,len(IDS))*256,560)).save(PREVIEW/'roster.jpg',quality=95)
  grid=Image.new('RGB',(6*256,((len(IDS)+5)//6)*280),(28,25,39))
  for i in range(len(IDS)):
   grid.paste(roster.crop((i*256,280,(i+1)*256,560)),((i%6)*256,(i//6)*280))
