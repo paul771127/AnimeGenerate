@@ -83,7 +83,7 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 護送：同伴跟著玩家
         Fighter storyEscort; float storyEscortSaidAt;
         readonly List<Vector3> storyTrail = new List<Vector3>();
-        const float EscortLure = 4f, EscortCatchUp = 7f;
+        const float EscortLure = 4f, EscortCatchUp = 5f;
 
         /// <summary>StartBossBattle（故事的小地圖開好之後）叫</summary>
         void StoryMazeBegun()

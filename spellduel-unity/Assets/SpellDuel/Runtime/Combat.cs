@@ -712,7 +712,9 @@ namespace SpellDuel
         public const float VineStay = 3f;   // 藤蔓術士放出藤蔓後不能移動的秒數（＝藤蔓持續時間）
         public static bool IsPlant(int kind) => kind >= 7 && kind <= 12;
         /// <summary>小怪最近只走到離玩家這麼遠（約一個身高，至少 1m），免得貼在鏡頭上看不清楚；近身攻擊的距離會補到打得到這裡</summary>
-        public static float MinionKeep(int kind) => Mathf.Max(1f, MinionHead[kind] + 0.1f);
+        public static float MinionKeep(int kind) => Mathf.Max(Mathf.Max(1f, MinionHead[kind] + 0.1f), !IsRanged(kind) && kind != 3 && !IsSpecial(kind) ? MeleeKeepDist : 0f);
+        /// <summary>近戰小怪停在離玩家多遠（使用者回報「怪貼太近根本看不清楚」：攻擊半徑 3m，停在 2.4m 就好；自爆小鬼、小 Boss 不變）</summary>
+        public const float MeleeKeepDist = 2.4f;
         /// <summary>近身小怪的出手距離：至少要打得到停下來的位置</summary>
         static float MeleeReach(int kind, float reach) => Mathf.Max(Mathf.Max(reach, MinionKeep(kind) + 0.15f), MeleeAttackRadius - 0.1f - Fighter.BodyRadius);
         /// <summary>近戰小怪的攻擊半徑（使用者要求：3m）：地上的紅色扇形、出手距離、打不打得到都照這個（從怪的中心算到玩家身體邊緣）</summary>

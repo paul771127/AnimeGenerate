@@ -4332,6 +4332,7 @@ namespace SpellDuel
             DrawTravelFade(W, H);   // 副本走通道：走進黑霧／到站亮起
             DrawDarkVignette(W, H); DrawQuietMeter(W, H);   // 黑暗探索的視野、噤聲潛行的音量計（SoloBattle.MapModes.cs）
             DrawRoomEventHud(W, H);   // 副本特殊地點：任務說明、黑暗、道具血條
+            DrawDangerHud(W, H);   // 站在敵人蓄力中的攻擊範圍裡：畫面邊緣發紅光（SoloBattle.DangerHud.cs）
             DrawGamble(W, H);   // 鬥場賭局：選詛咒卡
             DrawArenaHud(W, H);       // 故事：隊長的旗子、增援方向（SoloBattle.ArenaProps.cs）
             DrawStageModsHud(W, H);   // 故事關卡：天候色調、天候與小目標

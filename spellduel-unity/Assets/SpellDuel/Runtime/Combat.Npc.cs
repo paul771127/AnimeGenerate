@@ -210,11 +210,13 @@ namespace SpellDuel
                     Fighter pl = null; float pd = float.MaxValue;
                     foreach (var p in Players()) { if (!p.Alive) continue; float d0 = FlatDistance(n.Feet, p.Feet); if (d0 < pd) { pd = d0; pl = p; } }
                     if (pl == null) continue;
-                    goal = pl.Feet; stop = 1.6f; best = pd;
+                    goal = pl.Feet; stop = 1.3f; best = pd;
                     if (pd > 0.3f) n.forward = Fighter.Flat(pl.Feet - n.Feet);
                 }
                 if (best <= stop) continue;
-                var step = Fighter.Flat(goal - n.Feet) * Mathf.Min(NpcSpeed * dt, best - stop);
+                // 跟著玩家（沒有要打的敵人）：落後越多走越快（玩家衝刺 3.75 m/s，原本固定 1.3 m/s 會一直落後 5m 左右）
+                float spd = tgt == null ? Mathf.Clamp(NpcSpeed + (best - stop) * 1.6f, NpcSpeed, 4.5f) : NpcSpeed;
+                var step = Fighter.Flat(goal - n.Feet) * Mathf.Min(spd * dt, best - stop);
                 foreach (var o in npcs)
                 {
                     if (o == n) continue;
