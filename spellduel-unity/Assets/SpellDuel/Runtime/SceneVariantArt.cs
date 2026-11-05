@@ -19,6 +19,7 @@ namespace SpellDuel
             foreach(var t in originals)t.SetParent(art.groups[0].transform,true);
             ArtKit.CenterAndRadius(polygon,floorY,out var center,out float radius);
             for(int v=1;v<=2;v++)art.Build(polygon,center,radius,theme,v);
+            StageArtLayer.Apply(art.groups,polygon,floorY,theme);   // 有手繪場景圖（Resources/StageArt）的變化換成 HD-2D
             art.Set(0);return art;
         }
         public void Set(int v){Current=Mathf.Clamp(v,0,2);for(int i=0;i<3;i++)if(groups[i].activeSelf!=(i==Current))groups[i].SetActive(i==Current);}
