@@ -1,0 +1,210 @@
+[
+  {
+    "file": "volcano_jump_0.png",
+    "source_size": [
+      2172,
+      724
+    ],
+    "output_size": [
+      2048,
+      512
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Production game asset, hand-painted Japanese anime fantasy matching the reference volcanic scenery. Medium detail, crisp cel shading plus soft gradients, elegant readable outline, charcoal basalt and muted red brown, subtle orange fissures, upper-left lighting. No text, no labels, no grid, no people. True transparent background including all openings. Draw ONE low broad jump-over obstacle: horizontal weathered basalt ridge with a distinct raised center and a few thin ember veins. Front view looking down only10 degrees, spans4 meters but ONLY0.4m high. Extremely low long silhouette ratio10:1. Canvas2048x512, object spans x4%-96%, feet y96%, highest tip y55% from top, upper55% totally transparent empty. Soft subtle contact shadow under base. No vertical pillars, no backdrop. Clearly low enough to jump over."
+  },
+  {
+    "file": "volcano_jump_1.png",
+    "source_size": [
+      2172,
+      724
+    ],
+    "output_size": [
+      2048,
+      512
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Production game asset, hand-painted Japanese anime fantasy matching the reference volcanic scenery. Medium detail, crisp cel shading plus soft gradients, elegant readable outline, charcoal basalt and muted red brown, subtle orange fissures, upper-left lighting. No text, no labels, no grid, no people. True transparent background including all openings. Draw ONE low broad jump-over obstacle: fallen long black obsidian column, broken angular ends, dark polished surfaces and subtle warm reflections. Front view looking down only10 degrees, spans4 meters but ONLY0.4m high. Extremely low long silhouette ratio10:1. Canvas2048x512, object spans x4%-96%, feet y96%, highest tip y55% from top, upper55% totally transparent empty. Soft subtle contact shadow under base. No vertical pillars, no backdrop. Clearly low enough to jump over."
+  },
+  {
+    "file": "volcano_jump_2.png",
+    "source_size": [
+      2172,
+      724
+    ],
+    "output_size": [
+      2048,
+      512
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Production game asset, hand-painted Japanese anime fantasy matching the reference volcanic scenery. Medium detail, crisp cel shading plus soft gradients, elegant readable outline, charcoal basalt and muted red brown, subtle orange fissures, upper-left lighting. No text, no labels, no grid, no people. True transparent background including all openings. Draw ONE low broad jump-over obstacle: low lumpy mound of cooled flowing lava crust, broad rounded folds and dull ember seams. Front view looking down only10 degrees, spans4 meters but ONLY0.4m high. Extremely low long silhouette ratio10:1. Canvas2048x512, object spans x4%-96%, feet y96%, highest tip y55% from top, upper55% totally transparent empty. Soft subtle contact shadow under base. No vertical pillars, no backdrop. Clearly low enough to jump over."
+  },
+  {
+    "file": "volcano_duck_0.png",
+    "source_size": [
+      1774,
+      887
+    ],
+    "output_size": [
+      2048,
+      1024
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Production game asset, hand-painted Japanese anime fantasy matching the reference volcanic scenery. Medium detail, crisp cel shading plus soft gradients, elegant readable outline, charcoal basalt and muted red brown, subtle orange fissures, upper-left lighting. No text, no labels, no grid, no people. True transparent background including all openings. One crouch-under obstacle spanning4m wide x2m tall. Canvas2048x1024, FRONT elevation looking down10degrees. A broad horizontal basalt lintel supported by two narrow weathered stone pillars at extreme sides. The underside of horizontal beam in central70% MUST be at y=55% from TOP of canvas. Below this line central70% is completely EMPTY TRANSPARENT all the way to floor at y96%. Supports only outer15% each side, feet at96%, top margin8%. Broad readable flat overhead silhouette, subtle contact shadows only beneath supports, no shadow blanket covering opening, no door, no backdrop, no groundplane."
+  },
+  {
+    "file": "volcano_duck_1.png",
+    "source_size": [
+      1774,
+      887
+    ],
+    "output_size": [
+      2048,
+      1024
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Production game asset, hand-painted Japanese anime fantasy matching the reference volcanic scenery. Medium detail, crisp cel shading plus soft gradients, elegant readable outline, charcoal basalt and muted red brown, subtle orange fissures, upper-left lighting. No text, no labels, no grid, no people. True transparent background including all openings. One crouch-under obstacle spanning4m wide x2m tall. Canvas2048x1024, FRONT elevation looking down10degrees. A low wide natural volcanic stone arch, flattened shallow arch curve with layered basalt. The underside of horizontal beam in central70% MUST be at y=55% from TOP of canvas. Below this line central70% is completely EMPTY TRANSPARENT all the way to floor at y96%. Supports only outer15% each side, feet at96%, top margin8%. Broad readable flat overhead silhouette, subtle contact shadows only beneath supports, no shadow blanket covering opening, no door, no backdrop, no groundplane."
+  },
+  {
+    "file": "volcano_duck_2.png",
+    "source_size": [
+      1774,
+      887
+    ],
+    "output_size": [
+      2048,
+      1024
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Production game asset, hand-painted Japanese anime fantasy matching the reference volcanic scenery. Medium detail, crisp cel shading plus soft gradients, elegant readable outline, charcoal basalt and muted red brown, subtle orange fissures, upper-left lighting. No text, no labels, no grid, no people. True transparent background including all openings. One crouch-under obstacle spanning4m wide x2m tall. Canvas2048x1024, FRONT elevation looking down10degrees. A long charred fallen tree trunk resting horizontally on two low basalt pedestals at far ends, burnt bark and slight ember cracks. The underside of horizontal beam in central70% MUST be at y=55% from TOP of canvas. Below this line central70% is completely EMPTY TRANSPARENT all the way to floor at y96%. Supports only outer15% each side, feet at96%, top margin8%. Broad readable flat overhead silhouette, subtle contact shadows only beneath supports, no shadow blanket covering opening, no door, no backdrop, no groundplane."
+  },
+  {
+    "file": "volcano_side_0.png",
+    "source_size": [
+      1254,
+      1254
+    ],
+    "output_size": [
+      1024,
+      1024
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Production game asset, hand-painted Japanese anime fantasy matching the reference volcanic scenery. Medium detail, crisp cel shading plus soft gradients, elegant readable outline, charcoal basalt and muted red brown, subtle orange fissures, upper-left lighting. No text, no labels, no grid, no people. True transparent background including all openings. ONE tall thick impassable side-step obstacle, 1024x1024 square transparent sprite, 2m wide x2m tall. Massive collapsed basalt boulder pile, one towering irregular boulder left and smaller heavy stones cascading down right. Frontview down10degrees, dark redbrown rock upperleft warm highlights, minimal lava seams. Full object isolated, 6% transparent margin on sides and top, base at96% height with soft contact shadow. Naturally irregular tapered RIGHT edge, absolutely no straight rectangular cutoff. No background, no lava pool."
+  },
+  {
+    "file": "volcano_side_1.png",
+    "source_size": [
+      1254,
+      1254
+    ],
+    "output_size": [
+      1024,
+      1024
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Production game asset, hand-painted Japanese anime fantasy matching the reference volcanic scenery. Medium detail, crisp cel shading plus soft gradients, elegant readable outline, charcoal basalt and muted red brown, subtle orange fissures, upper-left lighting. No text, no labels, no grid, no people. True transparent background including all openings. ONE tall thick impassable side-step obstacle, 1024x1024 square transparent sprite, 2m wide x2m tall. Broken fallen volcanic column section propped steeply diagonally, visible fractured polygonal end and heavy rubble around base. Frontview down10degrees, dark redbrown rock upperleft warm highlights, minimal lava seams. Full object isolated, 6% transparent margin on sides and top, base at96% height with soft contact shadow. Naturally irregular tapered RIGHT edge, absolutely no straight rectangular cutoff. No background, no lava pool."
+  },
+  {
+    "file": "volcano_side_2.png",
+    "source_size": [
+      1254,
+      1254
+    ],
+    "output_size": [
+      1024,
+      1024
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Production game asset, hand-painted Japanese anime fantasy matching the reference volcanic scenery. Medium detail, crisp cel shading plus soft gradients, elegant readable outline, charcoal basalt and muted red brown, subtle orange fissures, upper-left lighting. No text, no labels, no grid, no people. True transparent background including all openings. ONE tall thick impassable side-step obstacle, 1024x1024 square transparent sprite, 2m wide x2m tall. Partially collapsed ancient basalt stone wall, tall irregular masonry on left transitioning organically to a sloping rubble tail on right. Frontview down10degrees, dark redbrown rock upperleft warm highlights, minimal lava seams. Full object isolated, 6% transparent margin on sides and top, base at96% height with soft contact shadow. Naturally irregular tapered RIGHT edge, absolutely no straight rectangular cutoff. No background, no lava pool."
+  },
+  {
+    "file": "volcano_vent_idle.png",
+    "source_size": [
+      1254,
+      1254
+    ],
+    "output_size": [
+      512,
+      512
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Production game asset, hand-painted Japanese anime fantasy matching the reference volcanic scenery. Medium detail, crisp cel shading plus soft gradients, elegant readable outline, charcoal basalt and muted red brown, subtle orange fissures, upper-left lighting. No text, no labels, no grid, no people. True transparent background including all openings. 512x512 square. One TOP DOWN orthographic volcanic vent ground decal, circular irregular charred basalt ring, recessed dark opening with very faint red embers in center, restrained warm cracks. Fits central86%, edges soft fading to transparent, flat overhead NO perspective, not a standing cone. Intended1.4m footprint."
+  },
+  {
+    "file": "volcano_rock_fall.png",
+    "source_size": [
+      1254,
+      1254
+    ],
+    "output_size": [
+      512,
+      512
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Production game asset, hand-painted Japanese anime fantasy matching the reference volcanic scenery. Medium detail, crisp cel shading plus soft gradients, elegant readable outline, charcoal basalt and muted red brown, subtle orange fissures, upper-left lighting. No text, no labels, no grid, no people. True transparent background including all openings. 512x512 square. One massive roughly round irregular falling basalt boulder,3/4 front view,1.1m diameter. Cracked charcoal and reddish rock, warm upperleft highlight, tiny dull orange seams. Fully isolated 8% margins, no motionlines, no floor or shadow, no firetrail."
+  },
+  {
+    "file": "volcano_rock_rubble.png",
+    "source_size": [
+      1254,
+      1254
+    ],
+    "output_size": [
+      512,
+      512
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Production game asset, hand-painted Japanese anime fantasy matching the reference volcanic scenery. Medium detail, crisp cel shading plus soft gradients, elegant readable outline, charcoal basalt and muted red brown, subtle orange fissures, upper-left lighting. No text, no labels, no grid, no people. True transparent background including all openings. 512x512 square. TOP DOWN orthographic scattered smashed basalt rubble pile grounddecal, about2.4m footprint, large angular fragments center smaller chips irregularly around, dusty dark red brown crushed stone. Transparent outermargin8%, soft contact shadows, no perspective, not a standing wall."
+  },
+  {
+    "file": "exit_circle.png",
+    "source_size": [
+      1254,
+      1254
+    ],
+    "output_size": [
+      1024,
+      1024
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Production game asset, hand-painted Japanese anime fantasy matching the reference volcanic scenery. Medium detail, crisp cel shading plus soft gradients, elegant readable outline, charcoal basalt and muted red brown, subtle orange fissures, upper-left lighting. No text, no labels, no grid, no people. True transparent background including all openings. 1024x1024 square. TOP DOWN orthographic magical return-to-town circle, luminous cyan blue geometric concentric rings and delicate symmetric diamond motifs, NO letters or runes or writing, eight tiny volcanic stone lanterns evenly spaced outerring glowing blue. Transparent center with thin geometric lines, transparent outside. Radial symmetry suitable for slow rotation, diameter86%image. Gentle turquoise halo feathered into transparency, graceful anime fantasy, unmistakably a safe exit amid lava."
+  },
+  {
+    "file": "volcano_vent_warn.png",
+    "source_size": [
+      1254,
+      1254
+    ],
+    "output_size": [
+      512,
+      512
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Edit reference volcanic vent to WARNING state. Keep exact overhead camera, canvas, center, rim outline, stone positions and scale unchanged. ONLY brighten existing internal fissures vivid orange and add glowing magma bubbles inside central hole. No plume yet. Preserve transparent outer boundary exactly. No new outside rocks, no backdrop."
+  },
+  {
+    "file": "volcano_vent_erupt.png",
+    "source_size": [
+      2172,
+      724
+    ],
+    "output_size": [
+      1024,
+      1024
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "Production game asset, hand-painted Japanese anime fantasy matching the reference volcanic scenery. Medium detail, crisp cel shading plus soft gradients, elegant readable outline, charcoal basalt and muted red brown, subtle orange fissures, upper-left lighting. No text, no labels, no grid, no people. True transparent background including all openings. Square1024x1024 sprite sheet with EXACTLY FOUR vertical columns256x1024 in ONE horizontal row. Four consecutive animation frames of a NARROW upright erupting magma jet. Eachcell represents1m wide and4m high. Same centerline and base at bottom of EACH cell. 1: just starting, plume reaches45%cellheight. 2: narrow lavajet fullheight90%, tapered top with molten droplets. 3: second fullheight95% twisting jet and falling droplets. 4: collapsing splash at40%height with a few droplets above. Transparent background, transparent gutters between columns. Orange/red liquid lava with yellow hot cores, not smoke or fire, drawn anime fluid shapes. No rock base, no text, no landscape. All four start from exactlysame bottomlevel, never touch neighboring cell."
+  },
+  {
+    "file": "exit_pillar.png",
+    "source_size": [
+      724,
+      2172
+    ],
+    "output_size": [
+      256,
+      1024
+    ],
+    "tool": "built-in image_gen",
+    "prompt": "One vertical magical exit light column game VFX texture, narrow256x1024 aspect1:4. Pure BLACK RGB background for additive blending. Soft elegant cyan blue column, pale bluewhite brightest BASE at bottomcenter, smoothly fades upward to complete black at top. Sideedges black. Slight wispy vertical rays and tiny restrained blue motes, no groundring, no object, no text, no border. Anime fantasy spell light, luminous not solid, clean soft gradient, lowerquarter bright and upperhalf very faint."
+  }
+]
