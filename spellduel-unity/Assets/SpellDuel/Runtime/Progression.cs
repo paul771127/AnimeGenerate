@@ -1154,7 +1154,10 @@ namespace SpellDuel
     public class CharacterProfile
     {
         public string cls;
-        public int level = 1, xp, statPoints, skillPoints = SkillPerLevel;   // 技能點：1 級就有 1 點，之後每升一級 +1（30 級共 30 點）
+        public int level = 1, xp, statPoints, skillPoints = SkillPerLevel;
+        /// <summary>到過的最高等級（使用者要求：第一大關倒下會損失經驗、可能降級；技能點、能力點不會少，但升回去也不會再給一次）</summary>
+        public int peakLevel;
+        public int PeakLevel => Mathf.Max(level, peakLevel);   // 技能點：1 級就有 1 點，之後每升一級 +1（30 級共 30 點）
         public readonly int[] alloc = new int[StatInfo.Count];        // 自己加的能力點（不含初始值、技能樹、裝備）
         public readonly Dictionary<string, int> ranks = new Dictionary<string, int>();
         public readonly Item[] equipped = new Item[5];
@@ -1194,9 +1197,10 @@ namespace SpellDuel
         /// </summary>
         public int EarnedIn(string tree)
         {
-            if (tree == Skills.Novice) return cls == Skills.Novice || novicePast ? Mathf.Min(level, Skills.JobLevel) * SkillPerLevel : 0;
-            if (tree == cls) return Mathf.Max(0, Mathf.Min(level, Advanced.Level) - (novicePast ? Skills.JobLevel : 0)) * SkillPerLevel;
-            if (!string.IsNullOrEmpty(adv) && tree == adv) return Mathf.Max(0, level - Advanced.Level) * SkillPerLevel;
+            int lv = PeakLevel;   // 降級不會少技能點（升回去也不會多給）
+            if (tree == Skills.Novice) return cls == Skills.Novice || novicePast ? Mathf.Min(lv, Skills.JobLevel) * SkillPerLevel : 0;
+            if (tree == cls) return Mathf.Max(0, Mathf.Min(lv, Advanced.Level) - (novicePast ? Skills.JobLevel : 0)) * SkillPerLevel;
+            if (!string.IsNullOrEmpty(adv) && tree == adv) return Mathf.Max(0, lv - Advanced.Level) * SkillPerLevel;
             return 0;
         }
         public int SpentIn(string tree) { int v = 0; foreach (var n in SkillTrees.Of(tree)) v += Rank(n.id); return v; }
@@ -1294,10 +1298,27 @@ namespace SpellDuel
             if (amount <= 0 || level >= MaxLevel) return 0;
             xp += amount;
             int ups = 0;
-            while (level < MaxLevel && !LevelLocked && xp >= XpForLevel(level + 1)) { level++; statPoints += StatPerLevel; ups++; }
+            while (level < MaxLevel && !LevelLocked && xp >= XpForLevel(level + 1)) { level++; if (level > peakLevel) statPoints += StatPerLevel; ups++; }   // 降級後升回去：能力點不再給
+            peakLevel = PeakLevel;
             RecalcSkillPoints();
             if (LevelLocked) xp = Mathf.Min(xp, XpForLevel(level + 1));   // 經驗條停在滿格；轉職後下一次拿到經驗就升級
             return ups;
+        }
+
+        /// <summary>
+        /// 倒下的懲罰（第一大關）：損失這一級經驗條的 frac（30%）；不夠扣就降級（可以連降）。
+        /// 技能點、能力點不會少（PeakLevel 記住最高等級），升回去也不會再給。回傳降了幾級；lost＝實際扣掉的經驗。
+        /// </summary>
+        public int LoseXp(float frac, out int lost)
+        {
+            peakLevel = PeakLevel;
+            int span = Mathf.Max(1, XpForLevel(level + 1) - XpForLevel(level));
+            lost = Mathf.Min(xp, Mathf.RoundToInt(span * Mathf.Clamp01(frac)));
+            xp -= lost;
+            int downs = 0;
+            while (level > 1 && xp < XpForLevel(level)) { level--; downs++; }
+            RecalcSkillPoints();
+            return downs;
         }
 
         // ---- 能力值
@@ -1339,7 +1360,7 @@ namespace SpellDuel
             // 技能樹清空；轉職前的初心者技能樹不能重置（點數固定在上面）
             foreach (var k in new List<string>(ranks.Keys))
                 if (!(novicePast && cls != Skills.Novice && SkillTrees.Find(Skills.Novice, k) != null)) ranks.Remove(k);
-            statPoints = (level - 1) * StatPerLevel;
+            statPoints = (PeakLevel - 1) * StatPerLevel;
             RecalcSkillPoints();
             return DropInvalid();
         }
@@ -1609,6 +1630,7 @@ namespace SpellDuel
             var sb = new StringBuilder();
             sb.Append("level=").Append(level).Append('\n');
             sb.Append("xp=").Append(xp).Append('\n');
+            if (peakLevel > level) sb.Append("pk=").Append(peakLevel).Append('\n');
             sb.Append("sp=").Append(statPoints).Append('\n');
             sb.Append("kp=").Append(skillPoints).Append('\n');
             sb.Append("tv=").Append(TreeVersion).Append('\n');
@@ -1643,6 +1665,7 @@ namespace SpellDuel
                     {
                         case "level": p.level = Mathf.Clamp(int.Parse(v), 1, MaxLevel); break;
                         case "xp": p.xp = int.Parse(v); break;
+                        case "pk": p.peakLevel = Mathf.Clamp(int.Parse(v), 1, MaxLevel); break;
                         case "sp": p.statPoints = int.Parse(v); break;
                         case "kp": p.skillPoints = int.Parse(v); break;
                         case "tv": p.treeVersion = int.Parse(v); break;

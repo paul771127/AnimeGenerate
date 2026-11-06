@@ -43,6 +43,7 @@ namespace SpellDuel
             battle.themeOverride = dungeon.ThemeOf(run.map.areas[0].node);
             ExHookBattle();
             Ticker(ExLines($"📜 {run.Objective}"));
+            if (dungeon.IsChapter) ChapterBegin(run);   // 第一大關：脫出點、支線 NPC、岩漿、存檔（SoloBattle.Chapter.cs）
         }
 
         /// <summary>地圖上的怪放上戰場時：小怪倍率照那個地點的波次（不動首領的設定）</summary>
@@ -76,6 +77,7 @@ namespace SpellDuel
             }
             // 主機：隊友走進區域也算（照他們的位置更新）
             if (coop) foreach (var al in battle.allies) if (al != null && al.Alive) run.Update(al.Feet, null);
+            if (dungeon.IsChapter) ChapterHoldStarts(run);   // 支線地點：接了任務才開始
             foreach (var a in run.areaStarts) exNodeQueue.Enqueue(a);
             run.areaStarts.Clear();
             while (exNodeArea == null && bossIntroArea == null && exNodeQueue.Count > 0) StartAreaNode(run, exNodeQueue.Dequeue());
@@ -149,7 +151,7 @@ namespace SpellDuel
                 var vclip = StoryVideo.ForDungeonBoss(dungeon != null ? dungeon.id : null);
                 string vseen = "dgv:" + (dungeon != null ? dungeon.id : "");
                 bool vskip = Story.IsSeen(vseen); if (vclip != null) Story.MarkSeen(vseen);   // 看過的可以長按跳過
-                StoryVideo.Play(vclip, () => ShowDialogue(vclip != null ? new List<StoryLine>() : a.node.enter, () => { var ar = bossIntroArea; bossIntroArea = null; if (exploreRun == run && battle != null && !battle.Over) BeginAreaNode(run, ar); }), vskip);
+                StoryVideo.Play(vclip, () => ShowDialogue(vclip != null && !dungeon.IsChapter ? new List<StoryLine>() : a.node.enter, () => { var ar = bossIntroArea; bossIntroArea = null; if (exploreRun == run && battle != null && !battle.Over) BeginAreaNode(run, ar); }), vskip);
                 return;
             }
             if (!run.map.nodeAreas) Ticker(a.node.enter);   // 千機迴廊：台詞由原本的副本進度送（DungeonRun）

@@ -18,6 +18,8 @@ namespace SpellDuel
         public Action<StoryStage> OnWatchStory;  // 重看這一關的故事（開場＋已通關的結尾）
         public Action<DungeonDef> OnStartDungeon, OnWatchDungeon;   // 副本：進入／看故事
         public Action OnStartExplore;   // 故事探索：翠蔭迷林（大迷宮）
+        public Func<string> ChapterResumeInfo;   // 第一大關的存檔（脫出點名稱；沒有＝null）
+        public Action OnChapterResume;           // 傳送陣：回到第一大關的脫出點
         public Action OnBack;                    // 離開大地圖（回選擇畫面）
         public Action OnCharacter;               // 打開角色畫面
         public Action OnStartTrial;              // 出發挑戰轉職試煉
@@ -594,6 +596,16 @@ namespace SpellDuel
             UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), "抵達過的城鎮可以直接傳送過去；打通一章後就能走到下一個城鎮。", fsS, new Color(0.85f, 0.88f, 1f));
             y += fs * 1.6f;
             float ch = fs * 4.2f;
+            // 第一大關的脫出點（存檔回村後，從這裡傳回去繼續冒險）
+            if (ChapterResumeInfo?.Invoke() is string exitName)
+            {
+                var xr = new Rect(r.x + gap, y, r.width - gap * 2, ch);
+                UiKit.MenuCard(xr, 0.7f, new Color(1f, 0.5f, 0.2f), 0.9f);
+                UiKit.Text(new Rect(xr.x + gap, xr.y, xr.width * 0.62f, xr.height), $"🌋 炎之山　脫出點：{exitName}\n從存檔的地方繼續冒險", fsS, Color.white, TextAnchor.MiddleLeft, true);
+                var xb = new Rect(xr.xMax - xr.width * 0.34f, xr.y + gap * 0.4f, xr.width * 0.34f - gap * 0.4f, xr.height - gap * 0.8f);
+                if (UiKit.Button(xb, "🌀 回到炎之山", fsS, false, new Color(1f, 0.55f, 0.25f))) { Sfx.Play("poof", 0.8f); Haptics.Play(Haptics.Kind.Success); OnChapterResume?.Invoke(); return; }
+                y += ch + gap * 0.5f;
+            }
             for (int t = 0; t < Towns.Length; t++)
             {
                 bool open = TownOpen(t), here = t == town;

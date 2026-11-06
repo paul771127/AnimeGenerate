@@ -106,6 +106,7 @@ namespace SpellDuel
                 UpdateCastleTraps(run, dt);   // 月影古堡：地刺、南瓜炸彈、牆中幽靈（SoloBattle.CastleTraps.cs）
                 if (run.IsDungeon) UpdateStoryMaze(run);   // 故事的探索／護送玩法（SoloBattle.StoryModes.cs）
                 UpdateBodyGates(run);   // 跳、蹲、側步的身體障礙（SoloBattle.BodyGates.cs）
+                if (run.IsDungeon && dungeon != null && dungeon.IsChapter) UpdateChapter(run, dt);   // 第一大關（SoloBattle.Chapter.cs）
                 ExTapSparkles();
             }
             foreach (var s in run.log) { Say(s, 3.5f); ChatLine(new StoryLine { text = s }); }

@@ -871,7 +871,9 @@ namespace SpellDuel
             NextWave(delay);
         }
         /// <summary>保護目標倒下：副本失敗</summary>
-        public void FailStage(string why) { if (stageFailed || stageCleared) return; stageFailed = true; Emit("stagefail", player.Feet, Color.red, why); }
+        /// <summary>失敗前先問一下（第一大關的支線：失敗只算支線失敗，不結束整個關卡）；true＝已經處理掉了</summary>
+        public System.Func<string, bool> failFilter;
+        public void FailStage(string why) { if (stageFailed || stageCleared) return; if (failFilter != null && failFilter(why)) return; stageFailed = true; Emit("stagefail", player.Feet, Color.red, why); }
         public void StartDungeon(int[] waves)
         {
             endless = true; kills = 0; bossKills = 0; stageCleared = false;

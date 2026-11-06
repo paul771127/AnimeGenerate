@@ -1,6 +1,200 @@
 # SpellDuel 副本劇本（格式見 spellduel-unity/DUNGEON_FORMAT.md）
 # 新增副本：照下面的格式複製一個 [dungeon] 區塊，改 id、名稱、等級、房間與台詞即可，不用改程式。
 
+# ==== 第一大關（使用者要求：第一章整章做成一張大地圖，約副本 3 倍大；故事 1-1～1-4 的劇情與教學都在路上）
+# style = chapter：強度照故事關卡、單人；打倒怪掉的東西馬上放進背包；脫出點（exit = yes）可以存檔回村；
+# 倒下：損失 30% 經驗（可能降級），下次從入口重新開始。支線 NPC、岩漿噴發、落石寫在 SoloBattle.Chapter.cs。
+[dungeon ch1_volcano] 🌋 第一大關・炎之山
+炎之里的晨鐘啞了。從礦道口一路走到山腹的火之鐘，路上的事都要自己解決。
+level = 5
+players = 1-1
+style = chapter
+<before>
+背景：village
+旁白：灰燼落滿空飯桌。炎之里的晨鐘，已經三天沒有響過。
+老焰［sad］：{玩家}，採礦隊還在山上。拜託你，替他們清出一條路。
+艾琳（mage）［normal］：我是來抄鐘文的艾琳。礦道圖我讀得懂，我帶你找人。
+老焰［serious］：看見紅頭巾的少年，別讓他再往裡跑。那是小鐵。
+旁白：這座山會呼吸。地面會噴出岩漿，頭上會掉石頭，路上也有倒下的岩柱。
+艾琳（mage）［serious］：累了就找發光的脫出點，可以存檔回村補給，再從傳送陣回來。
+<after>
+旁白：巨像跪下。艾琳扣回鐘舌，鐘聲引著熔岩轉入地下。
+熔岩巨像（boss）［normal］：這一次……鐘裡的聲音，不是敵人……
+熔岩巨像（boss）［normal］：去找木之鐘……它還記得……白帆號……
+艾琳（mage）［smile］：山下也響了！他們安全了，老焰終於能向大家報平安。
+艾琳（mage）［normal］：翠收的是老焰的信。我們帶上鐘文去森之里，問清白帆號的事。
+
+[node gate] 礦道口
+wave = 1
+next = drill
+<enter>
+艾琳（mage）［normal］：教學：走近敵人，做出技能的手勢或唸出技能名稱就能攻擊。
+艾琳（mage）［serious］：敵人蓄力時地上會亮紅圈，畫面邊緣也會發紅——快閃開！
+<clear>
+艾琳（mage）［smile］：很好！地上亮著的閃光點是藏起來的寶物，走過去看看。
+
+[node drill] 避難洞前的空地
+wave = 1
+event = mirror
+count = 3
+next = shelter
+<enter>
+艾琳（mage）［normal］：教學：跟著我做——蹲下、跳起來、往旁邊跨一步！
+艾琳（mage）［serious］：前面的路上有倒下的岩柱和石牆，身體要跟著動才過得去。
+<clear>
+艾琳（mage）［smile］：記住了！紅線要跳、藍線要蹲、綠色那一邊才是路。
+
+[node shelter] 避難洞
+wave = 2
+next = crossroad
+<enter>
+艾琳（mage）［serious］：小鬼堵住了避難洞。打退牠們，我就能帶傷員下山。
+旁白：洞裡傳來敲擊聲。三下，停一拍，又是三下。
+<clear>
+旁白：洞口安靜下來，小鐵背著受傷的師父，一步步走進光裡。
+小鐵［sad］：我沒亂跑……師父走不動，我不能把他留在那裡。
+小鐵［serious］：這片銅是在廢礦撿的，剩下那截還埋在赤爐裡。
+
+[node crossroad] 礦工的岔路
+wave = 3
+exit = yes
+next = forge_gate, quarry
+<enter>
+旁白：岔路口擺著礦工的路標。一條通往赤爐，一條通往舊採石場。
+艾琳（mage）［normal］：打完這裡，路標旁的光圈就是脫出點，可以存檔回村。
+<clear>
+艾琳（mage）［normal］：採石場那邊有人在喊，好像需要幫忙。要不要繞過去看看？
+
+[node quarry] 舊採石場
+wave = 3
+event = targets
+count = 12
+next = forge_gate
+<enter>
+礦工阿岩［serious］：靶子冒出來就打！綠色的是村民的稻草人，別打到。
+<clear>
+礦工阿岩［smile］：好準！這手法，赤爐那邊的怪也擋不住你。
+
+[node forge_gate] 赤爐口
+wave = 4
+next = lava_falls
+<enter>
+小鐵［serious］：這不是礦石，是鐘舌。師父說，斷口像被人敲開的。
+米菈［serious］：我見老焰半夜推車進廢礦。他只叫我別問載著什麼。
+艾琳（mage）［serious］：火焰射手守住赤爐口。{玩家}，打開入口！
+<clear>
+艾琳（mage）［serious］：鐘文缺了後半句，得找到另一截才讀得通。
+
+[node lava_falls] 熔岩瀑布
+wave = 5
+event = collapse
+next = rails, cart
+<enter>
+旁白：地面一格一格裂開，熔岩從縫裡往上冒。
+艾琳（mage）［surprised］：紅框亮起來的地方會塌！別站在上面！
+<clear>
+米菈［normal］：我的貨車翻在旁邊的坑道裡……有人能幫我一把嗎？
+
+[node cart] 翻倒的貨車
+wave = 5
+event = fragile
+next = rails
+<enter>
+米菈［serious］：這罐冷泉水要送到前面的光圈。慢慢走，別晃，別被打到！
+<clear>
+米菈［smile］：一滴都沒灑！這罐水能幫礦工降溫，謝謝你。
+
+[node rails] 廢礦軌道
+wave = 5
+next = furnace
+<enter>
+旁白：翻倒的礦車擋住了半條路，車裡的礦石還在發紅。
+小鐵［serious］：軌道上全是爪痕。小心頭上，石頭隨時會掉下來！
+<clear>
+小鐵［serious］：軌道盡頭就是赤爐。鐘舌的另一截，一定在裡面。
+
+[node furnace] 赤爐深處
+wave = 6
+event = runes
+count = 4
+seq = 3
+next = locker
+<enter>
+旁白：爐前的地磚刻著古鐘文，一塊一塊亮了起來。
+艾琳（mage）［serious］：照著亮起來的順序踩上去！踩錯會叫醒守爐的怪。
+<clear>
+旁白：碎石下露出半截鐘舌，旁邊是繡著「焰」的舊手套。
+艾琳（mage）［surprised］：「火照路，木記名，潮送人歸」……三地的鐘原來相連。
+
+[node locker] 礦工的置物箱
+event = chest
+next = rest
+<enter>
+旁白：爐邊擺著一排生鏽的置物箱，有一個還鎖得好好的。
+
+[node rest] 礦道休息站
+wave = 6
+exit = yes
+next = altar_path, archive
+<enter>
+旁白：休息站裡，老焰正等著。小鐵把兩截鐘舌放到他面前。
+老焰［sad］：是我折斷的。鐘裡有人喊救命，我怕得不敢再聽。
+<clear>
+老焰［normal］：真正的火之鐘在山腹。村裡這口，只傳它的回音。
+老焰［sad］：呼救聲叫著四十年前的名字。我把鐘舌折斷，埋進廢礦。
+艾琳（mage）［angry］：鐘沒響，山卻醒了。你想藏住的事，正在傷害村子。
+小鐵［smile］：鐘舌補好了。師父說，修東西得先承認哪裡裂了。
+
+[node archive] 礦工的石壁
+wave = 7
+event = recite
+count = 2
+next = altar_path
+<enter>
+老礦工［normal］：石壁上刻的是礦工的保命守則。我唸一句，你背一句。
+<clear>
+老礦工［smile］：記住了就好。這些話，比鐘文還救過更多人。
+
+[node altar_path] 祭道
+wave = 7
+next = totems
+<enter>
+老焰［serious］：我留下疏散村民，也託米菈送信給森之里的翠。
+艾琳（mage）［serious］：{玩家}，清開祭道吧。把鐘舌送回去，還能擋住熔岩。
+<clear>
+旁白：祭道的盡頭，黑色的晶石從岩壁裡長了出來。
+
+[node totems] 黑晶圖騰
+wave = 8
+event = totems
+count = 3
+next = sluice
+<enter>
+艾琳（mage）［serious］：黑晶圖騰一直在叫出魔物，先把圖騰打碎！
+<clear>
+艾琳（mage）［normal］：黑晶碎了……可是更深的地方，還有一顆大的。
+
+[node sluice] 石閘前
+wave = 9
+exit = yes
+next = boss
+<enter>
+旁白：熔岩從石閘的縫裡滲出來。守在閘前的魔物最多、最兇。
+<clear>
+艾琳（mage）［serious］：前面就是巨像。準備好了就往前走；要補給就先回村。
+
+[node boss] 熔岩巨像・守門人的拳
+wave = 10
+<enter>
+旁白：石閘後露出巨大的手掌。巨像正抵住湧來的熔岩。
+艾琳（mage）［sad］：牠一直在護著山下……可胸前的黑晶正在往手臂蔓延。
+熔岩巨像（boss）［normal］：放過一人……洪潮便會進來……山下的人，會死……
+旁白：黑晶猛然收緊，巨像鬆開石閘，朝兩人舉起雙拳。
+熔岩巨像（boss）［angry］：封住……所有的路！
+艾琳（mage）［serious］：攔住牠！等黑晶碎開，我就把鐘舌送進鐘架。
+<boss_half>
+艾琳（mage）［serious］：黑晶裂開了！再撐一下！
+
 [dungeon ash_mine] 灰燼礦坑
 炎之里地底的廢礦。礦工說，坑道最深處有東西在模仿晨鐘的聲音。
 level = 12

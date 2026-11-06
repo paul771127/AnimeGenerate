@@ -749,6 +749,7 @@ namespace SpellDuel
                 StartBossBattle(coopMode, true);
             }
             if (d.id == TrapGallery.Id) { Story.MarkSeen("dg:"+d.id); Go(); return; }
+            if (d.IsChapter) { ChapterIntro(d, Go); return; }   // 第一大關：開場影片＋劇情（有存檔就直接回到脫出點）
             string introKey = d.id == "castle_test" ? "dg:castle_test@2" : "dg:" + d.id;   // 月影古堡的開場劇情改過（使用者要求加劇情）：看過舊版的也再播一次
             if (!coopMode && !Story.IsSeen(introKey))
             {
@@ -811,6 +812,7 @@ namespace SpellDuel
                 world.OnStartStage = st => { OpenPrep(st.title, true, null, () => { storyMapOpen = false; StartStory(st); }); prepStage = IsGuideStage(st) ? null : st; };   // 先整備再出發（可以邀請隊友一起打）
                 world.OnWatchStory = WatchStory;
                 world.OnStartDungeon = d => OpenPrep("🏰 " + d.name, true, null, () => StartDungeonRun(d, false));
+                world.ChapterResumeInfo = ChapterSaveInfo; world.OnChapterResume = ChapterResumeFromWarp;   // 傳送陣：回到第一大關的脫出點
                 world.OnStartExplore = () => OpenPrep("🌿 故事探索：翠蔭迷林", true, null, StartExplore);
                 world.OnWatchDungeon = WatchDungeonStory;
                 world.OnBack = () => storyMapOpen = false;
@@ -1005,7 +1007,7 @@ namespace SpellDuel
         void ApplyDungeonStrength(int w)
         {
             if (battle == null) return;
-            ApplyEquivalentStrength(Mathf.Max(1, w), Mathf.Clamp((Mathf.Max(1, w) - 1) / 10, 0, StoryMinionHp.Length - 1), dungeon != null && dungeon.story != null ? 1f : DungeonVsStory);   // 故事的探索／護送小地圖：跟故事關卡一樣強（不 ×2）
+            ApplyEquivalentStrength(Mathf.Max(1, w), Mathf.Clamp((Mathf.Max(1, w) - 1) / 10, 0, StoryMinionHp.Length - 1), dungeon != null && dungeon.StoryStrength ? 1f : DungeonVsStory);   // 故事的探索／護送小地圖：跟故事關卡一樣強（不 ×2）
         }
 
         /// <summary>
@@ -1332,7 +1334,7 @@ namespace SpellDuel
             if (dungeon != null)
             {
                 // 副本：以 3 人隊伍設計的難度；角色等級遠高於副本時才變簡單（每台手機用自己的等級算自己受到的傷害）
-                dungeonRelief = dungeon.story != null ? 1f : Dungeons.LevelRelief(prof != null ? prof.level : 1, dungeon.level);   // 故事的小地圖：照故事關卡的難度
+                dungeonRelief = dungeon.StoryStrength ? 1f : Dungeons.LevelRelief(prof != null ? prof.level : 1, dungeon.level);   // 故事的小地圖：照故事關卡的難度
                 me.damageTakenMul *= dungeonRelief;   // 等級差修正（敵人攻擊 ×2 在 battle.enemyDmgMul）
             }
             SyncPlayer(me);
@@ -1483,7 +1485,7 @@ namespace SpellDuel
                     else if (dungeon != null)
                     {
                         battle.castleSprites = dungeon.style == "castle";           // 城堡副本：小怪換成 2D 圖片的城堡敵人（Combat.SpriteMonsters.cs）
-                        battle.dungeonParty = dungeon.story != null ? partyN : Dungeons.PartyScale(partyN);          // 副本：浮動難度（最少 2 人；敵人數量、Boss 血量 ×人數）；故事的小地圖照實際人數
+                        battle.dungeonParty = dungeon.StoryStrength ? partyN : Dungeons.PartyScale(partyN);          // 副本：浮動難度（最少 2 人；敵人數量、Boss 血量 ×人數）；故事的小地圖照實際人數
                         battle.scaleAllies = battle.dungeonParty - 1;               // Boss 出招頻率、召喚數也照人數
                         battle.hpBoost = dungeonRelief;                          // 等級差修正（主機的等級決定）
                         // 副本強度（使用者要求）：比照同等級的故事關卡（同一章、同一個位置的倍率），再 ×2；小怪與 Boss 都是。每個地點照它的波次設定
@@ -2153,8 +2155,10 @@ namespace SpellDuel
             {
                 // 副本：通關 → 每個房間保底一件稀有以上、最後的首領保底一件史詩套裝（物品等級＝副本等級）
                 var d = dungeon;
+                if (!battle.stageCleared && d.IsChapter) { ChapterDied(); return; }   // 第一大關倒下：損失經驗、下次從入口重來（SoloBattle.Chapter.cs）
                 if (battle.stageCleared)
                 {
+                    if (d.IsChapter) ChapterWon();
                     bool first = !Dungeons.IsCleared(d.id);
                     Dungeons.MarkCleared(d.id);
                     // 走過的戰鬥地點（寶箱不算）：每個保底一件
@@ -2184,7 +2188,7 @@ namespace SpellDuel
                     Say($"🏰 {d.name} 通關！獲得經驗 {xp}" + (ups > 0 ? $"，升到 Lv{prof.level}！" : "") + (first ? "（首次通關）" : "")
                         + (loot.Length > 0 ? "\n" + loot : "") + (over >= 8 ? $"\n（掉落的裝備是 Lv{d.level}，比你低 {over} 級）" : ""), 99f);
                     Sfx.Play("win"); Haptics.Play(Haptics.Kind.Success);
-                    if (!Story.IsSeen("dg!" + d.id)) { Story.MarkSeen("dg!" + d.id); var ev = StoryVideo.ForDungeonEnd(d.id); StoryVideo.Play(ev, () => ShowDialogue(ev != null ? new List<StoryLine>() : d.after, null)); }   // 結局影片（有就播，播完不再跳同樣的對話）
+                    if (!Story.IsSeen("dg!" + d.id)) { Story.MarkSeen("dg!" + d.id); var ev = StoryVideo.ForDungeonEnd(d.id); StoryVideo.Play(ev, () => ShowDialogue(ev != null && !d.IsChapter ? new List<StoryLine>() : d.after, null)); }   // 結局影片（有就播，播完不再跳同樣的對話）
                 }
                 else if (drun != null && drun.failed) { LoseLoot(); Say($"💀 {drun.failText}\n（保護目標倒下就算失敗：小怪會優先撲向他，記得幫他擋）", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
                 else { LoseLoot(); Say($"💀 {d.name} 失敗…副本的敵人跟著人數變多（最少以 2 人計算），等級再高一點或找夥伴一起來吧", 99f); Sfx.Play("lose"); Haptics.Play(Haptics.Kind.Warning); }
@@ -4215,7 +4219,7 @@ namespace SpellDuel
                     int shown = 0;
                     foreach (var dd in Dungeons.All)
                     {
-                        if (!dd.Unlocked) continue;
+                        if (!dd.Unlocked || dd.IsChapter) continue;   // 第一大關只有單人
                         int di = shown++;
                         if (UiKit.Button(new Rect(pad + (di % 2) * (dw + gap), y + (di / 2) * (u * 1.3f + gap * 0.5f), dw, u * 1.3f), $"{dd.name}\nLv{dd.level}・{dd.minPlayers}～{dd.maxPlayers} 人", fsS, netDungeonId == dd.id, modeCols[3]) && netDungeonId != dd.id)
                         { netDungeonId = dd.id; localReady = false; NetSend?.Invoke(new Msg { t = "mode", e = 3, k = dd.id }); }
@@ -4333,7 +4337,8 @@ namespace SpellDuel
             DrawTravelFade(W, H);   // 副本走通道：走進黑霧／到站亮起
             DrawDarkVignette(W, H); DrawQuietMeter(W, H);   // 黑暗探索的視野、噤聲潛行的音量計（SoloBattle.MapModes.cs）
             DrawRoomEventHud(W, H);   // 副本特殊地點：任務說明、黑暗、道具血條
-            DrawDangerHud(W, H);   // 站在敵人蓄力中的攻擊範圍裡：畫面邊緣發紅光（SoloBattle.DangerHud.cs）
+            DrawDangerHud(W, H);
+            DrawChapterHud(W, H);   // 第一大關：脫出點（存檔回村）、岩漿與落石的提示（SoloBattle.Chapter.cs）   // 站在敵人蓄力中的攻擊範圍裡：畫面邊緣發紅光（SoloBattle.DangerHud.cs）
             DrawGamble(W, H);   // 鬥場賭局：選詛咒卡
             DrawArenaHud(W, H);       // 故事：隊長的旗子、增援方向（SoloBattle.ArenaProps.cs）
             DrawStageModsHud(W, H);   // 故事關卡：天候色調、天候與小目標

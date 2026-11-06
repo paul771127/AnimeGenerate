@@ -11,8 +11,8 @@ DEFAULT = os.path.join(HERE, "..", "Assets", "SpellDuel", "Resources", "dungeons
 STORY = os.path.join(HERE, "..", "Assets", "SpellDuel", "Resources", "story.txt")
 THEMES = {"vault","volcano", "熔岩", "0", "forest", "森林", "1", "sea", "海", "海上", "2", "arena", "角鬥場", "3", "canyon", "山道", "黃土山道", "4"}
 LOOKS = {"mage", "archer", "swordsman", "priest", "assassin"}
-ROOM_EVENTS = {"defend", "survive", "escort", "hunt", "totems", "runes", "chant", "elements", "mimic", "collapse", "dark"}
-EVENT_KEYS = {"name", "hp", "time", "count", "seq", "riddle", "answer", "hint", "look", "fail", "carpet"}
+ROOM_EVENTS = {"defend", "survive", "escort", "hunt", "totems", "runes", "chant", "elements", "mimic", "collapse", "dark", "carpet", "capture", "chase", "recite", "quiz", "mirror", "barrage", "rhythm", "fragile", "parry", "targets", "push", "koth", "towers", "vigil", "elemshield", "tame"}
+EVENT_KEYS = {"name", "hp", "time", "count", "seq", "riddle", "answer", "hint", "look", "fail", "carpet", "exit"}
 MAX_LINE = 60
 ROOM_TAGS = ("enter", "clear", "boss_half")
 NPC_TAGS = ("meet", "die", "done", "safe", "ally", "enemy", "third")
@@ -148,6 +148,7 @@ def check(path):
                     if v not in ("on","off"): errors.append(f"第 {ln} 行：traps 只能是 on/off")
                     d["traps"]=v
                 elif k == "unlock": d["unlock"] = None if v in ("", "none") else v
+                elif k in ("style", "mode"): d[k] = v
                 else: errors.append(f"第 {ln} 行：副本不認得的設定 {k}")
             continue
 

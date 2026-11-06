@@ -33,6 +33,7 @@ namespace SpellDuel
             var map = run.map;
             var rng = new System.Random(map.name != null ? map.name.GetHashCode() : 7);
             var spots = new List<(Vector3 pos, Vector3 fwd)>();
+            bool chap = dungeon != null && dungeon.IsChapter;   // 第一大關：障礙多很多（倒下的岩柱、崩落的石牆、橫在路上的岩梁）
             if (race != null)
             {
                 // 賽跑：主線上每 4～6 格一個
@@ -57,12 +58,12 @@ namespace SpellDuel
                     foreach (var d in dirs)
                     {
                         var p = new Vector2Int(-d.y, d.x);
-                        if (map.Open(x + d.x, z + d.y) && map.Open(x - d.x, z - d.y) && !map.Open(x + p.x, z + p.y) && !map.Open(x - p.x, z - p.y) && rng.Next(100) < 14)
+                        if (map.Open(x + d.x, z + d.y) && map.Open(x - d.x, z - d.y) && !map.Open(x + p.x, z + p.y) && !map.Open(x - p.x, z - p.y) && rng.Next(100) < (chap ? 34 : 14))
                         {
                             var w = map.World(x, z);
                             if (map.PropAt(w, 1.2f) != null) continue;
-                            bool far = true; foreach (var s in spots) if (Battle.FlatDistance(s.pos, w) < 12f) { far = false; break; }
-                            if (far && spots.Count < 14) spots.Add((w, new Vector3(d.x, 0f, d.y)));
+                            bool far = true; foreach (var s in spots) if (Battle.FlatDistance(s.pos, w) < (chap ? 8f : 12f)) { far = false; break; }
+                            if (far && spots.Count < (chap ? 70 : 14)) spots.Add((w, new Vector3(d.x, 0f, d.y)));
                         }
                     }
                 }
@@ -70,7 +71,8 @@ namespace SpellDuel
             foreach (var s in spots)
             {
                 int r = rng.Next(100);
-                int kind = r < 38 ? GateJump : r < 72 ? GateDuck : rng.Next(2) == 0 ? GateWallLeft : GateWallRight;
+                int kind = chap ? (r < 26 ? GateJump : r < 60 ? GateDuck : rng.Next(2) == 0 ? GateWallLeft : GateWallRight)   // 第一大關：側步閃岩石、蹲過橫的岩梁多一點
+                    : r < 38 ? GateJump : r < 72 ? GateDuck : rng.Next(2) == 0 ? GateWallLeft : GateWallRight;
                 var g = new BodyGate { pos = s.pos, fwd = s.fwd, kind = kind };
                 g.go = ThemedGate(kind, map.theme);   // 跟地圖主題搭的地形（SoloBattle.GateArt.cs）；原本的色塊 GateVisual 留著備用 g.go.transform.SetParent(bodyGateRoot, false);
                 g.go.transform.localPosition = s.pos; g.go.transform.localRotation = Quaternion.LookRotation(s.fwd, Vector3.up);

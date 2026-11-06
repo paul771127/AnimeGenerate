@@ -75,6 +75,8 @@ namespace SpellDuel
         };
 
         // ---------------------------------------------------------------- 進城／離開
+        /// <summary>下一次進村子出現在傳送陣旁邊（第一大關的脫出點存檔回村）</summary>
+        public static bool SpawnNearWarp;
         public void Enter(int town, Camera cam, float floorY)
         {
             Leave();
@@ -83,6 +85,7 @@ namespace SpellDuel
             var f = cam.transform.forward; f.y = 0f;
             if (f.sqrMagnitude < 1e-4f) f = Vector3.forward;
             root.transform.SetPositionAndRotation(new Vector3(cam.transform.position.x, floorY, cam.transform.position.z), Quaternion.LookRotation(f.normalized, Vector3.up));
+            if (SpawnNearWarp) { SpawnNearWarp = false; root.transform.position -= root.transform.rotation * new Vector3(3.2f, 0f, -1.2f); }   // 傳送陣（5, 0.5）左前方約 2.6m：一抬頭就看到
             TownArt.BuildScenery(town, root.transform);
             walls.Clear(); sites.Clear();
             // 設施＋地標＋民房（門朝廣場）

@@ -8,7 +8,7 @@ namespace SpellDuel
     public class DungeonRoom
     {
         /// <summary>特殊地點可以寫的設定</summary>
-        public static readonly string[] EventKeysAll = { "name", "hp", "time", "count", "seq", "riddle", "answer", "hint", "look", "fail", "carpet" };
+        public static readonly string[] EventKeysAll = { "name", "hp", "time", "count", "seq", "riddle", "answer", "hint", "look", "fail", "carpet", "exit" };
         /// <summary>地點 id（地圖用；[room] 沒寫就是 r1、r2…）</summary>
         public string id;
         /// <summary>事件：battle 戰鬥、chest 寶箱（不用打）、boss 首領（wave 是 10 的倍數就自動是首領）</summary>
@@ -76,6 +76,10 @@ namespace SpellDuel
         public string unlock;                      // 要先通關的故事關卡（例如 2-3；null＝一開始就開放）
         public string style;                       // 場景風格（castle＝歐式城堡內部＋2D 圖片的城堡敵人；null＝照章節主題）
         public bool Unlocked => string.IsNullOrEmpty(unlock) || Story.IsCleared(unlock);
+        /// <summary>章節大關卡（style = chapter，SoloBattle.Chapter.cs）：一整章的大地圖，強度照故事關卡、單人</summary>
+        public bool IsChapter => style == "chapter";
+        /// <summary>強度照故事關卡（不 ×2、不以 2 人計）：故事的小地圖、章節大關卡</summary>
+        public bool StoryStrength => story != null || IsChapter;
         public readonly List<DungeonRoom> rooms = new List<DungeonRoom>();
         public readonly List<StoryLine> before = new List<StoryLine>();
         public readonly List<StoryLine> after = new List<StoryLine>();

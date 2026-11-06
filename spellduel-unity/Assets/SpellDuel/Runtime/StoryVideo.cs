@@ -72,6 +72,7 @@ namespace SpellDuel
         public static Clip ForDungeon(string dungeonId, string kind)
         {
             if (string.IsNullOrEmpty(dungeonId)) return null;
+            if (dungeonId == "ch1_volcano") return kind == "intro" ? For("1-1", true) : kind == "boss" ? For("1-4", true) : kind == "end" ? For("1-4", false) : null;   // 第一大關：沿用故事 1-1、1-4 的影片
             foreach (var v in DgVideos)
                 if (v != null && v.dungeon == dungeonId && v.kind == kind && !string.IsNullOrEmpty(v.file))
                 {
