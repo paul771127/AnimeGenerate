@@ -72,7 +72,7 @@ namespace SpellDuel
                 int r = rng.Next(100);
                 int kind = r < 38 ? GateJump : r < 72 ? GateDuck : rng.Next(2) == 0 ? GateWallLeft : GateWallRight;
                 var g = new BodyGate { pos = s.pos, fwd = s.fwd, kind = kind };
-                g.go = GateVisual(kind); g.go.transform.SetParent(bodyGateRoot, false);
+                g.go = ThemedGate(kind, map.theme);   // 跟地圖主題搭的地形（SoloBattle.GateArt.cs）；原本的色塊 GateVisual 留著備用 g.go.transform.SetParent(bodyGateRoot, false);
                 g.go.transform.localPosition = s.pos; g.go.transform.localRotation = Quaternion.LookRotation(s.fwd, Vector3.up);
                 g.go.SetActive(false);
                 bodyGates.Add(g);
@@ -124,7 +124,7 @@ namespace SpellDuel
                 if (!g.hinted && Mathf.Abs(s) < 5f && inLane && !gateHintSaid[g.kind])
                 {
                     g.hinted = true; gateHintSaid[g.kind] = true;
-                    Say(g.kind == GateJump ? "🟥 紅色低欄：衝過去的時候跳起來！" : g.kind == GateDuck ? "🟦 藍色橫樑：蹲下鑽過去！" : "🟧 半邊牆：從綠色那一邊過（往旁邊跨一步）！", 2.5f);
+                    Say(GateHint(g.kind, run.map.theme), 2.5f);
                 }
                 if (Mathf.Abs(s) < GatePoseRange)
                 {
@@ -157,7 +157,7 @@ namespace SpellDuel
             else
             {
                 stumbleUntil = Time.time + 1.2f;
-                Say(g.kind == GateJump ? "💥 被低欄絆倒了！" : g.kind == GateDuck ? "💥 撞上橫樑了！" : "💥 撞上牆了！", 1.5f);
+                Say(g.kind == GateJump ? "💥 被絆倒了！要跳過去" : g.kind == GateDuck ? "💥 撞到頭了！要蹲下" : "💥 撞上去了！要從旁邊過", 1.5f);
                 Haptics.Play(Haptics.Kind.Heavy); Kick(10f, 0f);
                 if (race == null)
                 {
