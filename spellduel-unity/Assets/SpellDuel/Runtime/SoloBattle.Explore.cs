@@ -260,10 +260,12 @@ namespace SpellDuel
                 {
                     var k = new Vector2Int(x, z);
                     var cell = map.At(x, z);
+                    bool kit = StageKit.UseAt(map, x, z);   // 熔岩區的副本：場景生成器的 3D 岩壁、岩門（StageKit.cs）
                     // 底層地面改成整張地圖一片（CreateExploreBaseGround）：每格一塊會變成一格一格不同顏色的方塊
                     if (cell == ExCell.Wall)
                     {
                         bool edge = false; foreach (var d in ExploreMap.Dirs) if (map.Open(x + d.x, z + d.y)) edge = true;
+                        if (kit) edge = StageKit.WallVisible(map, x, z);   // 3D 岩壁：斜角有路也要畫（凹角）
                         if (!edge) continue;
                     }
                     keep.Add(k);
@@ -277,12 +279,12 @@ namespace SpellDuel
                         else
                         {
                             int an = 1; foreach (var a in map.arenas) if (a.gate.Contains(k)) an = a.n;
-                            go = map.dungeon != null ? ExploreArt.CreateDungeonGate(map, x, z) : ExploreArt.CreateGate(an, cs);
+                            go = map.dungeon != null ? (kit ? StageKit.CreateGate(map, x, z) : ExploreArt.CreateDungeonGate(map, x, z)) : ExploreArt.CreateGate(an, cs);
                             if (map.dungeon == null) ExploreArt.SetGateOpen(go, map.GateOpen(x, z));
                         }
                         if (go) go.transform.localRotation = ExGateRot(map, x, z);
                     }
-                    else go = ExploreArt.CreateWall(map, x, z);   // 兩面臨路的凸牆角會導圓；湖水格不畫方塊（整片圓弧湖面在地標裡）
+                    else go = kit ? StageKit.CreateWall(map, x, z) : ExploreArt.CreateWall(map, x, z);   // 兩面臨路的凸牆角會導圓；湖水格不畫方塊（整片圓弧湖面在地標裡）
                     if (!go) continue;
                     var rot = go.transform.localRotation;
                     go.transform.SetParent(exRoot, false);

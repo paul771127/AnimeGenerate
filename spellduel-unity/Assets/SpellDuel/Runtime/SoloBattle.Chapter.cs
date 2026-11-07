@@ -139,6 +139,7 @@ namespace SpellDuel
                 map.quests.Add(new ExQuest { id = cs.npc, title = "支線：" + cs.title, giver = cs.npc, kind = "side", desc = cs.desc, offer = cs.offer, thanks = cs.thanks, state = ExQuestState.Offered, gold = cs.gold, xp = cs.xp });
             }
             BuildVents(map);
+            StageKit.Decorate(map, chRoot);   // 首領的岩洞入口、遠景岩塊（場景生成器的 3D 零件）
             // 存檔：清過的地點、找過的寶物、支線進度；位置回到脫出點
             var sv = LoadChSave();
             if (sv != null)
