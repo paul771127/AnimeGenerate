@@ -1927,6 +1927,8 @@ namespace SpellDuel
         {
             // 主題：第 1～10 波熔岩火山、11～20 波森林、21～30 波海上礁石，之後輪流
             int theme = endless && battle.wave >= 1 ? battle.Theme : -1;   // 副本的房間可以指定主題
+            int roleTheme = theme;   // 2D 角色的輪廓光照主題
+            if (exploreRun != null) theme = -1;   // 大地圖（副本、探索）有自己的地形和天空：不顯示 10m×10m 場地的主題場景（使用者回報破圖：紅天空、暗色大平板疊在地圖上）
             if (SkyStationNow >= 0) theme = -1;   // 天穹飛毯：不顯示主題場景（CarpetScene 取代）
             var poly = area.Polygon;
             float fy = poly.Count > 0 ? poly[0].y : area.FloorY;
@@ -1941,7 +1943,7 @@ namespace SpellDuel
             int sv = SceneVariant;   // 同一主題的場景變化（Codex 做美術）
             if (volcano) volcano.SetVariant(sv); if (forest) forest.SetVariant(sv); if (sea) sea.SetVariant(sv);
             if (arenaScene) arenaScene.SetVariant(sv); if (canyon) canyon.SetVariant(sv);
-            SpriteEnemyView.SetTheme(theme);   // 2D 角色的輪廓光、遠處的空氣色跟著場景主題
+            SpriteEnemyView.SetTheme(roleTheme);   // 2D 角色的輪廓光、遠處的空氣色跟著場景主題
             if (volcano) volcano.SetVisible(theme == 0);
             if (forest) forest.SetVisible(theme == 1);
             if (sea) sea.SetVisible(theme == 2);
@@ -4338,6 +4340,7 @@ namespace SpellDuel
             DrawDarkVignette(W, H); DrawQuietMeter(W, H);   // 黑暗探索的視野、噤聲潛行的音量計（SoloBattle.MapModes.cs）
             DrawRoomEventHud(W, H);   // 副本特殊地點：任務說明、黑暗、道具血條
             DrawDangerHud(W, H);
+            DrawActionCue(W, H);   // 鏡像試煉的動作卡、路上身體障礙的「跳／蹲／閃」提示（SoloBattle.ActionCue.cs）
             DrawChapterHud(W, H);   // 第一大關：脫出點（存檔回村）、岩漿與落石的提示（SoloBattle.Chapter.cs）   // 站在敵人蓄力中的攻擊範圍裡：畫面邊緣發紅光（SoloBattle.DangerHud.cs）
             DrawGamble(W, H);   // 鬥場賭局：選詛咒卡
             DrawArenaHud(W, H);       // 故事：隊長的旗子、增援方向（SoloBattle.ArenaProps.cs）

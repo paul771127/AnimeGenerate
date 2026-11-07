@@ -51,6 +51,19 @@ namespace SpellDuel
         public float LabRhythmCueAt { get; private set; }
 
         const int MvSquat = 0, MvJump = 1, MvLeft = 2, MvRight = 3;
+        // ---- 鏡像試煉的畫面提示（使用者回報：連續多個動作，要明確標出該做哪些、完成哪些）：SoloBattle.ActionCue.cs 畫
+        float labDemoAt;
+        public bool MirrorActive => roomEvent == "mirror" && evPhase != 0;
+        public bool MirrorPenalty => roomEvent == "mirror" && evPhase == 2;
+        public IReadOnlyList<int> MirrorSeq => labSeq;
+        /// <summary>-1＝還在示範；0 起＝玩家正在做第幾個</summary>
+        public int MirrorStep => labStep;
+        public int MirrorRound => labRound;
+        public int MirrorRounds => labNeed;
+        /// <summary>示範時現在亮到第幾個（每個 1.1 秒）；玩家回合：這個動作還剩幾秒</summary>
+        public int MirrorDemoIndex => Mathf.FloorToInt((now - labDemoAt - 0.6f) / 1.1f);
+        public float MirrorTimeLeft => Mathf.Max(0f, labMoveAt - now);
+        public float MirrorDemoLeft => Mathf.Max(0f, labMoveAt - now);
         public static readonly string[] MoveNames = { "蹲下", "跳起來", "往左一步", "往右一步" };
 
         // ------------------------------------------------------------ 開始
@@ -170,7 +183,7 @@ namespace SpellDuel
             labSeq.Clear();
             int len = 2 + labRound;
             for (int i = 0; i < len; i++) labSeq.Add(rng.Next(4));
-            labStep = -1; labMoveAt = now + 1.2f + len * 1.1f;   // 先示範
+            labStep = -1; labDemoAt = now; labMoveAt = now + 1.2f + len * 1.1f;   // 先示範
             Emit("evspeak", player.Feet, Color.white, "看好了：" + string.Join("，", labSeq.ConvertAll(k => MoveNames[k])));
         }
         void TickMirror(bool jumped, bool squatted)
@@ -179,7 +192,7 @@ namespace SpellDuel
             if (labStep < 0)
             {
                 if (now < labMoveAt) return;
-                labStep = 0; labRef = player.Feet; labRight = Fighter.Flat(new Vector3(player.forward.z, 0f, -player.forward.x)); labMoveAt = now + 6f;
+                labStep = 0; labRef = player.Feet; labRight = Fighter.Flat(new Vector3(player.forward.z, 0f, -player.forward.x)); labMoveAt = now + 8f;   // 每個動作 8 秒（原本 6 秒太趕）
                 Emit("evinfo", player.Feet, Color.white, "換你了！");
                 return;
             }
@@ -188,7 +201,7 @@ namespace SpellDuel
             bool done = want == MvSquat ? squatted : want == MvJump ? jumped : want == MvLeft ? lat < -0.5f : lat > 0.5f;
             if (done)
             {
-                labStep++; labRef = player.Feet; labMoveAt = now + 6f;
+                labStep++; labRef = player.Feet; labMoveAt = now + 8f;
                 Emit("evinfo", player.Feet, new Color(0.5f, 1f, 0.6f), $"✓ {MoveNames[want]}");
                 if (labStep >= labSeq.Count)
                 {

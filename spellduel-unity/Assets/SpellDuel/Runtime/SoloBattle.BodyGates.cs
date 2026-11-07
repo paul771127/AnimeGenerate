@@ -58,12 +58,12 @@ namespace SpellDuel
                     foreach (var d in dirs)
                     {
                         var p = new Vector2Int(-d.y, d.x);
-                        if (map.Open(x + d.x, z + d.y) && map.Open(x - d.x, z - d.y) && !map.Open(x + p.x, z + p.y) && !map.Open(x - p.x, z - p.y) && rng.Next(100) < (chap ? 34 : 14))
+                        if (map.Open(x + d.x, z + d.y) && map.Open(x - d.x, z - d.y) && !map.Open(x + p.x, z + p.y) && !map.Open(x - p.x, z - p.y) && rng.Next(100) < (chap ? 22 : 14))
                         {
                             var w = map.World(x, z);
                             if (map.PropAt(w, 1.2f) != null) continue;
-                            bool far = true; foreach (var s in spots) if (Battle.FlatDistance(s.pos, w) < (chap ? 8f : 12f)) { far = false; break; }
-                            if (far && spots.Count < (chap ? 70 : 14)) spots.Add((w, new Vector3(d.x, 0f, d.y)));
+                            bool far = true; foreach (var s in spots) if (Battle.FlatDistance(s.pos, w) < (chap ? 11f : 12f)) { far = false; break; }
+                            if (far && spots.Count < (chap ? 36 : 14)) spots.Add((w, new Vector3(d.x, 0f, d.y)));
                         }
                     }
                 }
