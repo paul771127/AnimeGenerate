@@ -17,7 +17,8 @@ namespace SpellDuel
     mat.mainTexture=GroundTexture(ground);mat.SetFloat("_Theme",theme);mat.SetFloat("_Room",area!=null?1:0);
     mat.SetColor("_Accent",DungeonThemeColor(theme));dungeonFloors[key]=mat;
    }
-   var surface=root.transform.Find("PathSurface").GetComponent<Renderer>();surface.sharedMaterial=mat;
+   var kitGround=StageKit.GroundAt(map,theme);   // 賽璐璐版火山：手繪地面（StageKit.cs）
+   var surface=root.transform.Find("PathSurface").GetComponent<Renderer>();surface.sharedMaterial=kitGround?kitGround:mat;
    var block=new MaterialPropertyBlock();surface.GetPropertyBlock(block);int edges=0;
    if(area!=null){if(x==area.rect.xMax)edges|=1;if(x==area.rect.xMin)edges|=2;if(z==area.rect.yMax)edges|=4;if(z==area.rect.yMin)edges|=8;}
    block.SetFloat("_RoomEdge",edges);block.SetFloat("_RegionTheme",DungeonRegionAt(map,x,z));block.SetColor("_Accent",DungeonRegionColor(map,x,z));surface.SetPropertyBlock(block);
@@ -64,8 +65,9 @@ namespace SpellDuel
    int theme=map.nodeAreas?5:map.theme=="volcano"?0:map.theme=="sea"?2:map.theme=="arena"?3:4;
    var root=Root("Dungeon horizon "+theme);root.transform.localPosition=(map.World(0,0)+map.World(map.W-1,map.H-1))*.5f;
    float radius=Mathf.Max(map.W,map.H)*ExploreMap.CellSize;
-   Color low=theme==0?new Color(.58f,.23f,.14f):theme==2?new Color(.68f,.86f,.89f):theme==5?new Color(.32f,.29f,.22f):new Color(.86f,.68f,.46f);
-   Color high=theme==0?new Color(.12f,.13f,.21f):theme==5?new Color(.09f,.14f,.20f):new Color(.21f,.46f,.67f);
+   bool cel=theme==0&&StageKit.CelMap(map);   // 賽璐璐版火山：清透的青藍天空
+   Color low=cel?StageKit.CelSkyLow:theme==0?new Color(.58f,.23f,.14f):theme==2?new Color(.68f,.86f,.89f):theme==5?new Color(.32f,.29f,.22f):new Color(.86f,.68f,.46f);
+   Color high=cel?StageKit.CelSkyHigh:theme==0?new Color(.12f,.13f,.21f):theme==5?new Color(.09f,.14f,.20f):new Color(.21f,.46f,.67f);
    var sky=Part(root.transform,"dungeon/sky/"+theme,b=>{
     for(int j=0;j<8;j++)for(int i=0;i<32;i++){float a=i*Mathf.PI/16,z=(i+1)*Mathf.PI/16,l=j*Mathf.PI/16,h=(j+1)*Mathf.PI/16;b.Quad(V(Mathf.Cos(a)*Mathf.Cos(l),Mathf.Sin(l),Mathf.Sin(a)*Mathf.Cos(l)),V(Mathf.Cos(z)*Mathf.Cos(l),Mathf.Sin(l),Mathf.Sin(z)*Mathf.Cos(l)),V(Mathf.Cos(z)*Mathf.Cos(h),Mathf.Sin(h),Mathf.Sin(z)*Mathf.Cos(h)),V(Mathf.Cos(a)*Mathf.Cos(h),Mathf.Sin(h),Mathf.Sin(a)*Mathf.Cos(h)),Color.Lerp(low,high,j/8f));}b.HeightTint(0,0,1,low,high);
    },V(0,-2,0),true);sky.localScale=Vector3.one*radius*1.7f;BackdropLayer(sky,1000);

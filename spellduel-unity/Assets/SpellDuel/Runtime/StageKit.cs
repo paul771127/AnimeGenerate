@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SpellDuel
 {
     /// <summary>
-    /// 場景生成器的 3D 地形零件（scenegen 工單 003：Resources/SceneKit/volcano_v3/）接到副本大地圖（熔岩區）：
+    /// 場景生成器的 3D 地形零件（scenegen 工單 003：Resources/SceneKit/volcano_cel_v1/）接到副本大地圖（熔岩區）：
     ///   ・牆格：每一面臨路的邊放一段直岩壁（可走的那面朝路）；凸角放 corner_out、凹角放 corner_in。
     ///   ・門格：岩門（門框＋門板）；區域清除後門板沉進地底。
     ///   ・首領區域：最裡面那一邊放岩洞入口（首領從洞裡出來的感覺）；地圖外圈放遠景岩塊。
@@ -13,9 +13,10 @@ namespace SpellDuel
     /// </summary>
     public static class StageKit
     {
-        const string Dir = "SceneKit/volcano_v3/";
+        const string Dir = "SceneKit/volcano_cel_v1/";
         static bool loaded, ok;
-        static Material mainMat, backMat;
+        static Material mainMat, backMat, groundMat;
+        static Texture2D groundAsh;
         static readonly Dictionary<string, GameObject> parts = new Dictionary<string, GameObject>();
         static readonly string[] StraightV = { "a", "b", "c", "d" }, CornerV = { "a", "b", "c" };
         static readonly Vector2Int[] Dirs4 = { new Vector2Int(1, 0), new Vector2Int(0, 1), new Vector2Int(-1, 0), new Vector2Int(0, -1) };
@@ -31,13 +32,18 @@ namespace SpellDuel
             if (loaded) return;
             loaded = true;
             var sh = Resources.Load<Shader>("Shaders/StageKit");
-            var alb = Resources.Load<Texture2D>(Dir + "volcano_kit_v3_albedo");
-            var em = Resources.Load<Texture2D>(Dir + "volcano_kit_v3_emissive");
-            var back = Resources.Load<Texture2D>(Dir + "volcano_kit_v3_backdrop_albedo");
+            var alb = Resources.Load<Texture2D>(Dir + "volcano_cel_albedo");
+            var em = Resources.Load<Texture2D>(Dir + "volcano_cel_emissive");
+            var back = Resources.Load<Texture2D>(Dir + "volcano_cel_backdrop");
             ok = sh != null && sh.isSupported && alb && Part("wall_straight_a") && Part("wall_corner_out_a") && Part("wall_corner_in_a");
             if (!ok) return;
             mainMat = new Material(sh) { name = "Stage kit (volcano)", mainTexture = alb, enableInstancing = true };
             if (em) mainMat.SetTexture("_EmissionMap", em);
+            mainMat.SetFloat("_Glow", 0.8f);   // 賽璐璐版的顏色圖已經畫了一點熔岩光，發光遮罩只補一點
+            // 手繪地面（賽璐璐版附的火山灰地面，每 3m 重複一次）
+            groundAsh = Resources.Load<Texture2D>(Dir + "cel_ground_ash");
+            var gsh = Resources.Load<Shader>("Shaders/StageKitGround");
+            if (groundAsh && gsh != null && gsh.isSupported) groundMat = new Material(gsh) { name = "Stage kit ground (volcano)", mainTexture = groundAsh };
             backMat = new Material(sh) { name = "Stage kit backdrop (volcano)", mainTexture = back ? back : alb, enableInstancing = true };
             backMat.SetFloat("_Glow", 0f); backMat.SetFloat("_HazeNear", 25f); backMat.SetFloat("_HazeFar", 90f); backMat.SetFloat("_HazeMax", 0.75f);
         }
@@ -50,6 +56,21 @@ namespace SpellDuel
             return ok && ExploreArt.DungeonThemeAt(map, x, z) == 0;
         }
 
+        /// <summary>整張地圖用賽璐璐版的火山（天空、霧色、地面都跟著換）：副本大地圖的熔岩主題</summary>
+        public static bool CelMap(ExploreMap map)
+        {
+            if (map == null || map.dungeon == null || map.nodeAreas || map.theme != "volcano") return false;
+            Load();
+            return ok && groundAsh;
+        }
+
+        /// <summary>賽璐璐版的天空：地平線附近是帶一點火山暖色的薄霧，上面是清透的青藍色</summary>
+        public static readonly Color CelSkyLow = new Color(0.80f, 0.66f, 0.58f), CelSkyHigh = new Color(0.36f, 0.58f, 0.68f), CelGround = new Color(0.36f, 0.35f, 0.39f);
+
+        /// <summary>這一格地面的材質（熔岩區用手繪地面；沒有＝null，照舊）</summary>
+        public static Material GroundAt(ExploreMap map, int theme) => theme == 0 && CelMap(map) ? groundMat : null;
+        public static Texture2D GroundTexture => groundAsh;
+
         /// <summary>遠處的霧色跟著地圖的天色（ExploreArt.HorizonColors）</summary>
         public static void SetHaze(ExploreMap map)
         {
@@ -57,6 +78,7 @@ namespace SpellDuel
             ExploreArt.HorizonColors(map, out var g, out var s);
             var h = ExploreArt.HazeOf(g, s);
             mainMat.SetColor("_Haze", h); backMat.SetColor("_Haze", h);
+            if (groundMat) groundMat.SetColor("_Haze", h);
         }
 
         static GameObject Spawn(Transform parent, string name, Vector3 pos, Quaternion rot, Material m)

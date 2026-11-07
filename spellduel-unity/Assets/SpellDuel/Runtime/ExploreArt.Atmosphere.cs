@@ -77,6 +77,7 @@ namespace SpellDuel
    if(map!=null&&map.theme=="castle"){ground=new Color(.01f,.008f,.01f);skyLow=new Color(.01f,.008f,.01f);return;}   // 城堡：遠處全黑（距離漸暗的終點，見 CastleFogNear／Far）
    if(map==null||map.dungeon==null||!(map.nodeAreas||map.theme!="jungle")){ground=new Color(.30f,.42f,.24f);skyLow=new Color(.64f,.84f,.83f);return;}
    int theme=map.nodeAreas?5:map.theme=="volcano"?0:map.theme=="sea"?2:map.theme=="arena"?3:4;
+   if(theme==0&&StageKit.CelMap(map)){ground=StageKit.CelGround;skyLow=StageKit.CelSkyLow;return;}   // 賽璐璐版火山（StageKit.cs）
    skyLow=theme==0?new Color(.58f,.23f,.14f):theme==2?new Color(.68f,.86f,.89f):theme==5?new Color(.32f,.29f,.22f):new Color(.86f,.68f,.46f);
    ground=theme==0?new Color(.20f,.17f,.18f):theme==2?new Color(.72f,.68f,.55f):theme==3?new Color(.58f,.44f,.30f):theme==5?new Color(.28f,.28f,.30f):new Color(.55f,.33f,.22f);
   }
