@@ -33,8 +33,8 @@ namespace SpellDuel
         };
 
         class ChExit { public ExArea area; public Vector3 pos; public GameObject go; }
-        class ChVent { public Vector3 pos; public float next, warnAt = -1f, eruptAt = -1f; public bool hitDone; public GameObject go, ring, column, core; }
-        class ChRock { public Vector3 pos; public float hitAt; public bool done; public GameObject go, shadow, rock; }
+        class ChVent { public Vector3 pos; public float next, warnAt = -1f, eruptAt = -1f; public bool hitDone, painted; public GameObject go, ring, column, core; }
+        class ChRock { public Vector3 pos; public float hitAt; public bool done; public GameObject go, shadow, rock, rubble; }
 
         readonly List<ChExit> chExits = new List<ChExit>();
         readonly List<ChVent> chVents = new List<ChVent>();
@@ -192,6 +192,7 @@ namespace SpellDuel
             bool calm = exploreRun.talking != null || bossIntroArea != null || chExitNear != null;
             UpdateVents(run, dt, calm);
             UpdateRocks(run, calm);
+            FacePaintedChapter();
         }
 
         bool ChEnemyNear(float r)
@@ -277,6 +278,7 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 脫出點
         GameObject ExitVisual()
         {
+            var pe = PaintedExit(); if (pe) return pe;   // 手繪圖（SoloBattle.ChapterArt.cs）
             var root = new GameObject("Exit point");
             void Add(PrimitiveType t, Vector3 at, Vector3 s, Color c) { var g = Prim(t, c); g.transform.SetParent(root.transform, false); g.transform.localPosition = at; g.transform.localScale = s; }
             Add(PrimitiveType.Cylinder, new Vector3(0f, 0.01f, 0f), new Vector3(2.4f, 0.01f, 2.4f), new Color(0.35f, 0.75f, 1f));
@@ -356,7 +358,7 @@ namespace SpellDuel
                 foreach (var e in chExits) if (Battle.FlatDistance(e.pos, p) < 4f) ok = false;
                 if (!ok || chVents.Count >= 140) continue;
                 var vent = new ChVent { pos = p, next = Time.time + 4f + (float)rng.NextDouble() * 10f };
-                VentVisual(vent);
+                if (!PaintedVent(vent)) VentVisual(vent);   // 手繪圖（SoloBattle.ChapterArt.cs）
                 chVents.Add(vent);
             }
         }
@@ -385,17 +387,25 @@ namespace SpellDuel
                 if (v.warnAt >= 0f)
                 {
                     float k = (now - v.warnAt) / Warn;
-                    v.ring.SetActive(true);
-                    float s = 0.55f + 0.5f * k + 0.1f * Mathf.Sin(now * 30f);
-                    v.core.transform.localScale = new Vector3(s, 0.01f, s);
+                    if (v.painted) v.ring.SetActive(Mathf.Sin(now * (10f + 18f * k)) > -0.4f);   // 手繪：發紅的噴口越閃越快
+                    else
+                    {
+                        v.ring.SetActive(true);
+                        float s = 0.55f + 0.5f * k + 0.1f * Mathf.Sin(now * 30f);
+                        v.core.transform.localScale = new Vector3(s, 0.01f, s);
+                    }
                     if (!chVentSaid && d < 6f) { chVentSaid = true; Say("⚠ 地面冒煙發紅＝岩漿要噴了！快離開紅圈", 3f); }
                     if (k >= 1f) { v.warnAt = -1f; v.eruptAt = now; v.column.SetActive(true); Sfx.Play("boom", 0.5f); }
                 }
                 else if (v.eruptAt >= 0f)
                 {
                     float k = (now - v.eruptAt) / Erupt;
-                    float h = Mathf.Sin(Mathf.Clamp01(k) * Mathf.PI) * 1.6f + 0.2f;
-                    v.column.transform.localScale = new Vector3(0.9f, h, 0.9f); v.column.transform.localPosition = new Vector3(0f, h, 0f);
+                    if (v.painted) { int f = Mathf.Clamp(Mathf.FloorToInt(k * 4f), 0, 3); ObSetU(v.column, f * 0.25f, (f + 1) * 0.25f); v.ring.SetActive(true); }   // 4 格：剛噴、最高、最高、落下
+                    else
+                    {
+                        float h = Mathf.Sin(Mathf.Clamp01(k) * Mathf.PI) * 1.6f + 0.2f;
+                        v.column.transform.localScale = new Vector3(0.9f, h, 0.9f); v.column.transform.localPosition = new Vector3(0f, h, 0f);
+                    }
                     if (!v.hitDone && k > 0.1f)
                     {
                         v.hitDone = true;
@@ -406,7 +416,7 @@ namespace SpellDuel
                             Haptics.Play(Haptics.Kind.Heavy); Kick(8f, 0f);
                         }
                     }
-                    if (k >= 1f) { v.eruptAt = -1f; v.column.SetActive(false); v.ring.SetActive(false); v.core.transform.localScale = new Vector3(0.55f, 0.01f, 0.55f); v.next = now + Random.Range(5f, 13f); }
+                    if (k >= 1f) { v.eruptAt = -1f; v.column.SetActive(false); v.ring.SetActive(false); if (!v.painted) v.core.transform.localScale = new Vector3(0.55f, 0.01f, 0.55f); v.next = now + Random.Range(5f, 13f); }
                 }
             }
         }
@@ -426,7 +436,7 @@ namespace SpellDuel
                 var rk = new ChRock { pos = p, hitAt = now + Fall };
                 rk.go = new GameObject("Falling rock"); rk.go.transform.SetParent(chRoot, false); rk.go.transform.localPosition = p;
                 rk.shadow = Prim(PrimitiveType.Cylinder, new Color(0.05f, 0.03f, 0.03f)); rk.shadow.transform.SetParent(rk.go.transform, false); rk.shadow.transform.localPosition = new Vector3(0f, 0.015f, 0f); rk.shadow.transform.localScale = new Vector3(0.4f, 0.005f, 0.4f);
-                rk.rock = Prim(PrimitiveType.Sphere, new Color(0.32f, 0.26f, 0.24f)); rk.rock.transform.SetParent(rk.go.transform, false); rk.rock.transform.localScale = new Vector3(1.1f, 0.85f, 1f); rk.rock.SetActive(false);
+                if (!PaintedRock(rk)) { rk.rock = Prim(PrimitiveType.Sphere, new Color(0.32f, 0.26f, 0.24f)); rk.rock.transform.SetParent(rk.go.transform, false); rk.rock.transform.localScale = new Vector3(1.1f, 0.85f, 1f); rk.rock.SetActive(false); }
                 chRocks.Add(rk);
                 if (!chRockSaid) { chRockSaid = true; Say("⚠ 頭上掉石頭！看到地上的黑影，快往旁邊閃", 3f); }
             }
@@ -442,6 +452,7 @@ namespace SpellDuel
                     if (now >= rk.hitAt)
                     {
                         rk.done = true; rk.rock.transform.localPosition = new Vector3(0f, 0.35f, 0f);
+                        if (rk.rubble != null) { rk.rock.SetActive(false); rk.rubble.SetActive(true); }   // 手繪：落地變成碎石
                         Sfx.Play("boom", 0.4f);
                         if (Battle.FlatDistance(rk.pos, Me.Feet) <= HitR + Me.bodyRadius && Me.Alive)
                         {

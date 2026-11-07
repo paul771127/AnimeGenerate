@@ -74,7 +74,7 @@ namespace SpellDuel
                 int kind = chap ? (r < 26 ? GateJump : r < 60 ? GateDuck : rng.Next(2) == 0 ? GateWallLeft : GateWallRight)   // 第一大關：側步閃岩石、蹲過橫的岩梁多一點
                     : r < 38 ? GateJump : r < 72 ? GateDuck : rng.Next(2) == 0 ? GateWallLeft : GateWallRight;
                 var g = new BodyGate { pos = s.pos, fwd = s.fwd, kind = kind };
-                g.go = ThemedGate(kind, map.theme);   // 跟地圖主題搭的地形（SoloBattle.GateArt.cs）；原本的色塊 GateVisual 留著備用 g.go.transform.SetParent(bodyGateRoot, false);
+                g.go = PaintedGate(kind, map.theme) ?? ThemedGate(kind, map.theme);   // 手繪圖（SoloBattle.ChapterArt.cs）→ 沒有就用主題地形（SoloBattle.GateArt.cs）   // 跟地圖主題搭的地形（SoloBattle.GateArt.cs）；原本的色塊 GateVisual 留著備用 g.go.transform.SetParent(bodyGateRoot, false);
                 g.go.transform.localPosition = s.pos; g.go.transform.localRotation = Quaternion.LookRotation(s.fwd, Vector3.up);
                 g.go.SetActive(false);
                 bodyGates.Add(g);
