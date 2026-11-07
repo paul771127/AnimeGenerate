@@ -1,0 +1,178 @@
+{
+  "_note": "control.py API v1 requests actually executed for work order 002, in order, followed by the stand-alone kit build. The public API still has no modular-kit action, so the scene pipeline supplies the style reference and run record; kit_builder_v2.py builds the parts.",
+  "controlApi": {
+    "sequence": [
+      {
+        "apiVersion": 1,
+        "requestId": "spellduel-002-volcano-kit-v2-capabilities",
+        "action": "capabilities"
+      },
+      {
+        "apiVersion": 1,
+        "requestId": "spellduel-002-volcano-kit-v2-plan",
+        "action": "plan",
+        "configFile": "E:/AI接案/rpg-world-builder/dungeon.volcano.painted.json",
+        "timeoutSeconds": 1200
+      },
+      {
+        "apiVersion": 1,
+        "requestId": "spellduel-002-volcano-kit-v2-validate",
+        "action": "validate",
+        "configFile": "E:/AI接案/rpg-world-builder/dungeon.volcano.painted.json",
+        "timeoutSeconds": 1200
+      },
+      {
+        "apiVersion": 1,
+        "requestId": "spellduel-002-volcano-kit-v2-generate",
+        "action": "generate",
+        "configFile": "E:/AI接案/rpg-world-builder/dungeon.volcano.painted.json",
+        "outputFolder": "E:/AI接案/rpg-world-builder/runs/spellduel-volcano-kit-002",
+        "timeoutSeconds": 1200
+      },
+      {
+        "apiVersion": 1,
+        "requestId": "spellduel-002-volcano-kit-v2-inspect",
+        "action": "inspect",
+        "outputFolder": "E:/AI接案/rpg-world-builder/runs/spellduel-volcano-kit-002",
+        "timeoutSeconds": 1200
+      }
+    ]
+  },
+  "kitBuilder": {
+    "script": "jobs/spellduel-cloud/002-volcano-kit-v2/kit_builder_v2.py",
+    "command": "tools/blender-4.5.15-windows-x64/blender.exe -b --python kit_builder_v2.py -- --out <KIT_OUT> --ground <SpellDuel>/StageArt/volcano_0_ground.png --codex <SpellDuel>/StageArt/Obstacles --v1 <SpellDuel>/SceneKit/volcano",
+    "inputs": {
+      "groundReference": "spellduel-unity/Assets/SpellDuel/Resources/StageArt/volcano_0_ground.png",
+      "codexBillboards": [
+        "StageArt/Obstacles/volcano_duck_0.png",
+        "StageArt/Obstacles/volcano_side_0.png"
+      ],
+      "palette": {
+        "darkest": "#2b1e1f",
+        "dark": [
+          "#3a282a",
+          "#492c2c"
+        ],
+        "mid": "#5b3837",
+        "lit": "#6e413f",
+        "highlight": "#a6624c"
+      },
+      "kit001ForCompare": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano (read only)"
+    }
+  },
+  "spec": {
+    "_note": "SpellDuel 遊戲端的需求摘要（不是 control.py 的格式）。001 的規格全部沿用，這裡只列改的地方；詳見 REQUEST.md。請轉成 generator_request.json 再 validate / generate / inspect。",
+    "job": "002-volcano-kit-v2",
+    "from": "spellduel-cloud",
+    "revises": "001-volcano-kit",
+    "kind": "modular_kit",
+    "theme": "natural_volcano",
+    "parts": [
+      {
+        "id": "wall_straight",
+        "variants": 4,
+        "tri_max": 600
+      },
+      {
+        "id": "wall_corner_out",
+        "variants": 3,
+        "tri_max": 600
+      },
+      {
+        "id": "wall_corner_in",
+        "variants": 3,
+        "tri_max": 600
+      },
+      {
+        "id": "wall_end",
+        "variants": 3,
+        "tri_max": 600
+      },
+      {
+        "id": "gate",
+        "variants": 2,
+        "tri_max": 1200,
+        "children": [
+          "gate_frame",
+          "gate_door"
+        ]
+      },
+      {
+        "id": "cave_entrance",
+        "variants": 1,
+        "tri_max": 3000
+      },
+      {
+        "id": "backdrop_rock",
+        "variants": 4,
+        "tri_max": 1500
+      }
+    ],
+    "dropped": [
+      "ob_jump",
+      "ob_duck",
+      "ob_side",
+      "vent",
+      "exit_altar"
+    ],
+    "shape": {
+      "silhouette": "irregular top line (3-6 m), leaning slabs, overhangs, broken basalt columns, scree at the foot",
+      "max_flat_face_m2": 1.0,
+      "bevel_edges": true,
+      "variants_differ_in_silhouette": true,
+      "seam": "straight wall ends at x=+-2 m share one profile; slight overlap allowed"
+    },
+    "texture": {
+      "style": "hand-painted cel shading: one flat colour per rock face with soft gradient, clear light/dark split, light from top-left, rim highlight on edges, few crisp dark cracks, no fine noise",
+      "reference": [
+        "spellduel-unity/Assets/SpellDuel/Resources/StageArt/Obstacles/volcano_side_0.png",
+        "spellduel-unity/Assets/SpellDuel/Resources/StageArt/Obstacles/volcano_duck_0.png",
+        "spellduel-unity/Docs/stage_art_preview/obstacles/all_assets.jpg"
+      ],
+      "palette": {
+        "darkest": "#2b1e1f",
+        "dark": [
+          "#3a282a",
+          "#492c2c"
+        ],
+        "mid": "#5b3837",
+        "lit": "#6e413f",
+        "highlight": "#a6624c"
+      },
+      "min_detail_m": 0.2,
+      "texel_density_px_per_m": 128,
+      "emissive": "only a few orange cracks near the ground, <= 5% of the surface; gate seam and cave depth may glow more",
+      "albedo": "volcano_kit_v2_albedo.png 2048x2048 sRGB",
+      "emissive_mask": "volcano_kit_v2_emissive.png"
+    },
+    "previews": {
+      "lighting": "warm key light from top-left, dark red-brown sky, NOT purple",
+      "player_view": "same camera as 001; ground = StageArt/volcano_0_ground.png tiled every 2.5 m; Codex billboards volcano_duck_0 and volcano_side_0 in the corridor",
+      "compare": "compare_001_002.png side by side",
+      "per_part": true
+    },
+    "target": {
+      "engine": "Unity 2022.3",
+      "pipeline": "built-in (NOT URP)",
+      "materials": "none",
+      "meta_files": false
+    },
+    "output": {
+      "assets": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_v2/",
+      "manifest": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_v2/kit.json",
+      "job_folder": "scenegen/jobs/spellduel-cloud/002-volcano-kit-v2/",
+      "write_back": [
+        "generator_request.json",
+        "response.json",
+        "inspect.json",
+        "previews/"
+      ],
+      "do_not_overwrite": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano/"
+    },
+    "git": {
+      "branch": "claude/mobile-camera-mic-battle-game-v5nhfr",
+      "commit_prefix": "scenegen 002:",
+      "verify_push": true
+    }
+  }
+}

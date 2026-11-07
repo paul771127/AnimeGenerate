@@ -1,0 +1,659 @@
+{
+  "job": "002-volcano-kit-v2",
+  "revises": "001-volcano-kit",
+  "ok": true,
+  "executedAt": "2026-11-07T18:57:11",
+  "executedBy": "rpg-world-builder local session (Claude Code), E:\\AI接案\\rpg-world-builder",
+  "controlApi": {
+    "apiVersion": 1,
+    "capabilities": {
+      "ok": true,
+      "actions": [
+        "capabilities",
+        "validate",
+        "plan",
+        "generate",
+        "inspect"
+      ],
+      "generators": [
+        "chapter",
+        "village",
+        "dungeon"
+      ],
+      "note": "no modular_kit generator exists in API v1"
+    },
+    "plan": {
+      "ok": true,
+      "requestId": "spellduel-002-volcano-kit-v2-plan",
+      "landformsStyle": "volcanic_wilderness",
+      "landformsRevision": 3,
+      "rooms": 49,
+      "connections": 52
+    },
+    "validate": {
+      "ok": true,
+      "requestId": "spellduel-002-volcano-kit-v2-validate",
+      "valid": true,
+      "warnings": [],
+      "geometrySummary": {
+        "objects": 1444,
+        "sourceTriangles": 44330
+      }
+    },
+    "generate": {
+      "ok": true,
+      "requestId": "spellduel-002-volcano-kit-v2-generate",
+      "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-volcano-kit-002",
+      "state": "complete",
+      "configSha256": "f8d6e5b7e2ec864edde1c16e0bbd19aa6840f7bf2af569d7c8c441e918124a2b",
+      "seed": 20261108,
+      "sceneName": "Dungeon_Volcano_Painted",
+      "secondsInBlender": 15.2,
+      "glb": {
+        "bytes": 5229116,
+        "vertices": 64954,
+        "triangles": 43814,
+        "primitives": 15,
+        "materials": 5,
+        "devicePerformance": "not measured"
+      }
+    },
+    "inspect": {
+      "ok": true,
+      "requestId": "spellduel-002-volcano-kit-v2-inspect",
+      "files": [
+        {
+          "path": "collision.zup-source.json",
+          "bytes": 2730569
+        },
+        {
+          "path": "config.json",
+          "bytes": 897
+        },
+        {
+          "path": "dungeon_first_person.png",
+          "bytes": 2361442
+        },
+        {
+          "path": "dungeon_overview.png",
+          "bytes": 3160241
+        },
+        {
+          "path": "dungeon_plan.svg",
+          "bytes": 11133
+        },
+        {
+          "path": "generation.log",
+          "bytes": 3527
+        },
+        {
+          "path": "level.blend",
+          "bytes": 15453463
+        },
+        {
+          "path": "level.fbx",
+          "bytes": 6084844
+        },
+        {
+          "path": "level.glb",
+          "bytes": 5229116
+        },
+        {
+          "path": "level_cel.blend",
+          "bytes": 15326185
+        },
+        {
+          "path": "manifest.json",
+          "bytes": 61919
+        },
+        {
+          "path": "materials/atlas.png",
+          "bytes": 1762825
+        },
+        {
+          "path": "materials/atmosphere.png",
+          "bytes": 895955
+        },
+        {
+          "path": "materials/background.png",
+          "bytes": 1825845
+        },
+        {
+          "path": "materials/sand.png",
+          "bytes": 434411
+        },
+        {
+          "path": "materials/soil.png",
+          "bytes": 451251
+        },
+        {
+          "path": "materials/stone.png",
+          "bytes": 442793
+        },
+        {
+          "path": "materials/wood.png",
+          "bytes": 422720
+        },
+        {
+          "path": "mobile-report.json",
+          "bytes": 149
+        },
+        {
+          "path": "painted_volcano_first_person.png",
+          "bytes": 2249337
+        },
+        {
+          "path": "painted_volcano_hero.png",
+          "bytes": 2424006
+        },
+        {
+          "path": "painted_volcano_terrace.png",
+          "bytes": 2183041
+        },
+        {
+          "path": "status.json",
+          "bytes": 264
+        }
+      ]
+    }
+  },
+  "kitBuilder": {
+    "blender": "4.5.15 LTS",
+    "out": "E:\\AI接案\\rpg-world-builder\\jobs\\spellduel-cloud\\002-volcano-kit-v2\\kit-final",
+    "parts": 20,
+    "triangles": 15891,
+    "albedo": "volcano_kit_v2_albedo.png 2048x2048 sRGB (cel-shaded key light + soft AO baked in)",
+    "emissive": "volcano_kit_v2_emissive.png 1024x1024 linear mask",
+    "emissiveTexelFraction": 0.02499695583349279,
+    "texelsPerMetreWalls": {
+      "min": 31.8,
+      "max": 35.7
+    },
+    "allChecksPassed": true,
+    "checks": [
+      {
+        "part": "wall_straight_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.976,
+        "topLineMetres": [
+          3.92,
+          3.96,
+          5.41,
+          5.75,
+          4.42,
+          5.72,
+          5.75,
+          4.59,
+          4.63,
+          2.82
+        ],
+        "topLineIrregular": true,
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "backdrop_rock_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 4.453,
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "wall_straight_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.938,
+        "topLineMetres": [
+          3.64,
+          4.29,
+          4.36,
+          4.42,
+          5.86,
+          5.93,
+          5.87,
+          4.71,
+          4.04,
+          3.08
+        ],
+        "topLineIrregular": true,
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "backdrop_rock_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 5.853,
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "wall_straight_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.999,
+        "topLineMetres": [
+          4.61,
+          4.51,
+          4.45,
+          5.07,
+          4.92,
+          5.05,
+          5.11,
+          4.86,
+          4.73,
+          3.66
+        ],
+        "topLineIrregular": true,
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "backdrop_rock_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 3.822,
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "wall_straight_d",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.833,
+        "topLineMetres": [
+          3.33,
+          3.31,
+          4.32,
+          4.67,
+          4.57,
+          4.35,
+          4.29,
+          4.16,
+          3.54,
+          3.3
+        ],
+        "topLineIrregular": true,
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "backdrop_rock_d",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 4.495,
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "wall_corner_out_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.708,
+        "topLineMetres": [
+          2.83,
+          3.35,
+          3.96,
+          4.84,
+          4.87,
+          2.76
+        ],
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "wall_corner_in_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.86,
+        "topLineMetres": [
+          4.3,
+          4.51,
+          4.63,
+          4.72,
+          3.66,
+          2.68,
+          0.56
+        ],
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "wall_end_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.718,
+        "topLineMetres": [
+          3.57,
+          3.51,
+          3.25,
+          2.77,
+          2.6,
+          1.32
+        ],
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "wall_corner_out_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.961,
+        "topLineMetres": [
+          3.63,
+          3.7,
+          4.98,
+          5.25,
+          5.24,
+          2.85
+        ],
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "wall_corner_in_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.817,
+        "topLineMetres": [
+          4.29,
+          4.52,
+          4.61,
+          4.64,
+          3.74,
+          2.65,
+          0.54
+        ],
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "wall_end_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.472,
+        "topLineMetres": [
+          3.58,
+          3.5,
+          3.43,
+          2.8,
+          2.58,
+          1.31
+        ],
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "wall_corner_out_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.518,
+        "topLineMetres": [
+          3.27,
+          3.47,
+          4.42,
+          4.8,
+          4.7,
+          4.41
+        ],
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "wall_corner_in_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.903,
+        "topLineMetres": [
+          4.36,
+          4.69,
+          4.81,
+          4.65,
+          4.35,
+          3.12,
+          0.55
+        ],
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "wall_end_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.745,
+        "topLineMetres": [
+          3.61,
+          3.5,
+          3.2,
+          2.86,
+          2.62,
+          1.3
+        ],
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "gate_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.857,
+        "doorWidth": 2.28,
+        "doorHeight": 3.563,
+        "doorInsideFrame": true,
+        "openingClear": true,
+        "openingHeight": 3.5,
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "gate_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 0.831,
+        "doorWidth": 2.28,
+        "doorHeight": 3.759,
+        "doorInsideFrame": true,
+        "openingClear": true,
+        "openingHeight": 3.7,
+        "emissiveFractionOk": true
+      },
+      {
+        "part": "cave_entrance_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "noLargeFlatFace": true,
+        "maxFaceAreaM2": 2.375,
+        "tunnelClear": true
+      }
+    ]
+  },
+  "deliverables": {
+    "assetsFolder": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_v2/",
+    "files": [
+      "backdrop_rock_a.fbx",
+      "backdrop_rock_b.fbx",
+      "backdrop_rock_c.fbx",
+      "backdrop_rock_d.fbx",
+      "cave_entrance_a.fbx",
+      "gate_a.fbx",
+      "gate_b.fbx",
+      "gate_door_a.fbx",
+      "gate_door_b.fbx",
+      "gate_frame_a.fbx",
+      "gate_frame_b.fbx",
+      "wall_corner_in_a.fbx",
+      "wall_corner_in_b.fbx",
+      "wall_corner_in_c.fbx",
+      "wall_corner_out_a.fbx",
+      "wall_corner_out_b.fbx",
+      "wall_corner_out_c.fbx",
+      "wall_end_a.fbx",
+      "wall_end_b.fbx",
+      "wall_end_c.fbx",
+      "wall_straight_a.fbx",
+      "wall_straight_b.fbx",
+      "wall_straight_c.fbx",
+      "wall_straight_d.fbx",
+      "volcano_kit_v2_albedo.png",
+      "volcano_kit_v2_emissive.png",
+      "kit.json"
+    ],
+    "assetBytes": 3365125,
+    "assetMegabytes": 3.37,
+    "budgetMegabytes": 15,
+    "withinBudget": true,
+    "previews": [
+      "corridor_overview.png",
+      "part_backdrop_rock.png",
+      "part_cave_entrance.png",
+      "part_gate.png",
+      "part_wall_corner_in.png",
+      "part_wall_corner_out.png",
+      "part_wall_end.png",
+      "part_wall_straight.png",
+      "player_view.png",
+      "compare_001_002.png",
+      "generator_run_hero.png"
+    ],
+    "untouched": [
+      "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano/",
+      "scenegen/jobs/spellduel-cloud/001-volcano-kit/"
+    ]
+  },
+  "whatChangedFrom001": [
+    "Shape: every part is assembled from rock chunks (boulders, leaning slabs, hexagonal basalt columns, scree) fused by a voxel remesh and decimated; straight walls have top lines between about 2.8 and 5.9 m within one piece, overhanging slabs, broken columns and scree at the foot; any triangle larger than 1 m2 (walls/gate), 2.5 m2 (cave) or 6 m2 (backdrop) is split and bumped, so no large flat face remains (per-part maxFaceAreaM2 in kit.json).",
+    "Seams: the ends of straight walls (x = +-2) are low boulder saddles that overlap the neighbour by up to 0.35 m; the middle is higher (\"ends lower, middle higher\").",
+    "Texture: a cel-shaded bake instead of projected noise tiles - quantised key light from the part-local upper left using the Codex palette (#2b1e1f / #3a282a / #492c2c / #5b3837 / #6e413f / #a6624c), one flat colour per face with a soft gradient, rim highlight on convex edges, a few crisp 10 cm dark cracks (2 m cells), soft AO; no fine noise.",
+    "Glow: orange cracks only below ~0.9 m and sparse (2.5%% of all covered texels; every wall part is under 5%%, kit.json lists emissiveFraction per object); the gate door carries a glowing seam and a carved ring/tick pattern (no text); the cave glows only deeper than z = -2 inside the tunnel.",
+    "Previews: warm key light from the upper left, dark red-brown sky, no purple; player_view uses the 001 camera with the game ground tiled every 2.5 m and the Codex volcano_duck_0 / volcano_side_0 billboards in the corridor; compare_001_002.png renders the delivered 001 FBX in the same shot.",
+    "Only walls, gates, cave and backdrop rocks were built (wall_straight x4, backdrop_rock x4, corners/end x3, gate x2, cave x1); obstacles, vents and the altar were dropped as requested."
+  ],
+  "deviations": [
+    "control.py API v1 still only produces whole scenes; the official pipeline (capabilities -> plan -> validate -> generate -> inspect) was run unchanged into runs/spellduel-volcano-kit-002 for the run record and style reference, and the parts were built by the stand-alone kit_builder_v2.py in the job folder. No generator source file was modified.",
+    "Texel density: the whole kit shares one 2048 atlas, so walls get about 31-35 texels per metre instead of the requested 128 (backdrops ~10-13, cave ~20). The cel style uses flat colour regions and 10 cm crack lines, which stay clean at 3 m; a 4096 atlas would be needed for 128 px/m.",
+    "Hand-painted look is approximated procedurally: quantised lighting bands, per-face colour variation and rim highlight are computed in the bake shader rather than painted by hand; the facets of the low-poly mesh provide the \"one colour per rock face\" read.",
+    "Backdrop rocks (budget 1500 triangles, 10-23 m tall) cannot keep every face under 1 m2; their largest faces are up to 6 m2 (listed per part). Cave faces are kept under 2.5 m2.",
+    "Lighting is baked in part space (lit side toward the part's +X); instances rotated by 180 degrees show the shadow side toward the player. Use an Unlit material if the game adds its own real-time key light to avoid double shading.",
+    "The 001 half of compare_001_002.png is rendered under the new warm lighting (not the 001 purple preview) so only the models and textures differ.",
+    "Import was verified in a throwaway Unity 2022.3 project for the identical exporter settings in 001, not inside the SpellDuel project this time. Mobile frame rate was not measured."
+  ],
+  "triangles": {
+    "wall_straight": {
+      "budget": 600,
+      "perVariant": {
+        "a": 493,
+        "b": 492,
+        "c": 488,
+        "d": 495
+      },
+      "maxFaceAreaM2": {
+        "a": 0.976,
+        "b": 0.938,
+        "c": 0.999,
+        "d": 0.833
+      }
+    },
+    "backdrop_rock": {
+      "budget": 1500,
+      "perVariant": {
+        "a": 1241,
+        "b": 1247,
+        "c": 1240,
+        "d": 1241
+      },
+      "maxFaceAreaM2": {
+        "a": 4.453,
+        "b": 5.853,
+        "c": 3.822,
+        "d": 4.495
+      }
+    },
+    "wall_corner_out": {
+      "budget": 600,
+      "perVariant": {
+        "a": 484,
+        "b": 484,
+        "c": 485
+      },
+      "maxFaceAreaM2": {
+        "a": 0.708,
+        "b": 0.961,
+        "c": 0.518
+      }
+    },
+    "wall_corner_in": {
+      "budget": 600,
+      "perVariant": {
+        "a": 485,
+        "b": 484,
+        "c": 485
+      },
+      "maxFaceAreaM2": {
+        "a": 0.86,
+        "b": 0.817,
+        "c": 0.903
+      }
+    },
+    "wall_end": {
+      "budget": 600,
+      "perVariant": {
+        "a": 484,
+        "b": 484,
+        "c": 484
+      },
+      "maxFaceAreaM2": {
+        "a": 0.718,
+        "b": 0.472,
+        "c": 0.745
+      }
+    },
+    "gate": {
+      "budget": 1200,
+      "perVariant": {
+        "a": 1030,
+        "b": 1034
+      },
+      "maxFaceAreaM2": {
+        "a": 0.857,
+        "b": 0.831
+      }
+    },
+    "cave_entrance": {
+      "budget": 3000,
+      "perVariant": {
+        "a": 2531
+      },
+      "maxFaceAreaM2": {
+        "a": 2.375
+      }
+    }
+  },
+  "sha256": {
+    "volcano_kit_v2_albedo.png": "845bba6d9e91d9efd3ec21f9d26e7cafbc59b2c19b1069c881c4c73b0e52016d",
+    "volcano_kit_v2_emissive.png": "efae848c2e6df37cddf2ca5b0287c92e481f3885ed7f98aad8092e44cc271190",
+    "kit.json": "5a51e931321727b53b8a143845de4e50a6e350bf468b03bddbd19a801a055223"
+  }
+}
