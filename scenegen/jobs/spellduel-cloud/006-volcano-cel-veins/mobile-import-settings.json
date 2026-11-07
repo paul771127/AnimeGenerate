@@ -1,0 +1,40 @@
+{
+  "pipeline": "Unity 2022.3 Built-in",
+  "material": "Unlit/Texture; shading/AO baked. Main atlas contains its small glow accents; emissive mask is optional for the host.",
+  "textures": {
+    "volcano_cel_v3_albedo.png": {
+      "maxSize": 2048,
+      "sRGB": true
+    },
+    "volcano_cel_v3_backdrop_albedo.png": {
+      "maxSize": 1024,
+      "sRGB": true
+    },
+    "volcano_cel_v3_emissive.png": {
+      "maxSize": 512,
+      "sRGB": false
+    },
+    "volcano_cel_v3_backdrop_emissive.png": {
+      "maxSize": 512,
+      "sRGB": false
+    },
+    "cel_ground_ash.png": {
+      "maxSize": 512,
+      "sRGB": true
+    },
+    "cel_ground_crust.png": {
+      "maxSize": 512,
+      "sRGB": true
+    }
+  },
+  "shared": {
+    "mipmaps": true,
+    "readWrite": false,
+    "filter": "Trilinear",
+    "Android": "ASTC 6x6",
+    "iPhone": "ASTC 6x6"
+  },
+  "highQualityOption": "The authoring main atlas is 4096px. Raise the import maximum only after profiling a target phone.",
+  "estimatedKitTextureGpuBytesASTC6x6WithMips": 3757728,
+  "estimateNote": "Texture storage estimate only; excludes meshes, render buffers, driver overhead, game/UI, camera capture and tracking. Not a measured device memory figure."
+}

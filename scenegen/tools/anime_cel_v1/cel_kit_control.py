@@ -22,6 +22,10 @@ STYLE = 'anime_cel_volcano_v1'
 LAVA_STYLE = 'anime_cel_volcano_lava_v2'
 LAVA_BUILDER = ROOT / 'extensions' / 'anime_cel_lava_v2' / 'cel_lava_builder.py'
 LAVA_AUDIT = ROOT / 'extensions' / 'anime_cel_lava_v2' / 'validate_exports.py'
+VEINS_STYLE = 'anime_cel_volcano_veins_v3'
+VEINS_DIR = ROOT / 'extensions' / 'anime_cel_veins_v3'
+VEINS_BUILDER = VEINS_DIR / 'cel_veins_builder.py'
+VEINS_AUDIT = VEINS_DIR / 'validate_exports.py'
 
 
 class RequestError(Exception):
@@ -74,7 +78,7 @@ def load_config(request, base):
         cfg = dict(request['config'])
         cfgbase = base
     style = cfg.get('styleId', STYLE)
-    if style not in (STYLE, LAVA_STYLE):
+    if style not in (STYLE, LAVA_STYLE, VEINS_STYLE):
         raise RequestError('invalid_config', 'Unsupported styleId')
     quality = cfg.get('quality', 'mobile')
     if quality not in ('mobile', 'draft'):
@@ -101,18 +105,31 @@ def load_config(request, base):
         files.append({'file': part['file'], 'sha256': sha(model)})
     if style == LAVA_STYLE and kit.get('styleId') != STYLE:
         raise RequestError('invalid_config', 'Lava v2 requires the protected cel-v1 source kit')
-    return dict(styleId=style, sourceKit=str(kitdir), surfaceAtlas=str(atlas), quality=quality), kit, files
+    config = dict(styleId=style, sourceKit=str(kitdir), surfaceAtlas=str(atlas), quality=quality)
+    if style == VEINS_STYLE:
+        if kit.get('styleId') != LAVA_STYLE or kit.get('version') != 5:
+            raise RequestError('invalid_config', 'Veins v3 requires the protected work-order 005 kit, version 5')
+        cold = resolve(cfg['coldMain'], cfgbase) if 'coldMain' in cfg else VEINS_DIR/'reference/cold_main_v1.png'
+        if not cold.is_file() or not cold.with_name('cold_emissive_v1.png').is_file():
+            raise RequestError('invalid_config', 'Missing cold-rock restoration reference pair')
+        config['coldMain'] = str(cold)
+    return config, kit, files
 
 
 def plan(cfg, kit, files):
     lava = cfg['styleId'] == LAVA_STYLE
+    veins = cfg['styleId'] == VEINS_STYLE
     return {'styleId': cfg['styleId'], 'quality': cfg['quality'], 'parts': len(kit['parts'])+(2 if lava else 0),
             'sourceTriangles': sum(p['triangles'] for p in kit['parts']),
             'sourcePartFiles': files, 'sourceKitSha256': sha(pathlib.Path(cfg['sourceKit']) / 'kit.json'),
             'surfaceAtlasSha256': sha(cfg['surfaceAtlas']),
-            'atlasSizes': {'main': 4096 if cfg['quality'] == 'mobile' else 1024,
-                           'backdrop': 1024 if cfg['quality'] == 'mobile' else 512,
-                           'emissive': 1024 if cfg['quality'] == 'mobile' else 256, 'ground': 1024},
+            'atlasSizes': {'main': 4096 if veins or cfg['quality'] == 'mobile' else 1024,
+                           'backdrop': 1024 if veins or cfg['quality'] == 'mobile' else 512,
+                           'emissive': 1024 if veins or cfg['quality'] == 'mobile' else 256, 'ground': 1024},
+            'veinFeatures': (['005 FBX byte identity including every UV and lava_flow child',
+                             'mesh-crease-guided branching fissures; sparse and dense wall variants',
+                             'vertical segments <=40% by count and length; 5-9% aggregate wall emission',
+                             'unchanged flow texture band, ground, door seal and crater pools'] if veins else []),
             'lavaFeatures': (['6-10% physical-area wall veins','wall_lavafall a/b <=700 triangles with lava_flow child','geometric door seal and cave interior glow','two cratered volcano cones','separate backdrop emission mask','no baked wall-foot underglow'] if lava else []),
             'warnings': ['Baked shading is part-local; rotated instances do not relight automatically.',
                          'Existing 2D obstacle sprites keep their former style until separately restyled.',
@@ -139,12 +156,19 @@ def inspect(folder):
             raise RequestError('invalid_output', 'Triangle budget exceeded')
     for key in ('albedo', 'backdropAlbedo', 'emissive', 'ground', 'groundCrust'):
         names.add(kit['textures'][key])
-    if kit.get('styleId') == LAVA_STYLE:
+    if kit.get('styleId') in (LAVA_STYLE, VEINS_STYLE):
         names.add(kit['textures']['backdropEmissive'])
-        if kit.get('version') != 5 or report.get('footUnderglowBaked') is not False:
-            raise RequestError('invalid_output', '005 requires kit version 5 and no baked foot underglow')
+        expected = 6 if kit.get('styleId') == VEINS_STYLE else 5
+        if kit.get('version') != expected or report.get('footUnderglowBaked') is not False:
+            raise RequestError('invalid_output', 'Unexpected kit version or baked foot underglow')
         if not report.get('exportAudit',{}).get('ok'):
-            raise RequestError('invalid_output', '005 requires the independent exported-FBX audit')
+            raise RequestError('invalid_output', 'Independent exported-FBX audit is required')
+        if kit.get('styleId') == VEINS_STYLE:
+            for key in ('fbxBytesIdentical', 'flowColorPixelsIdentical', 'flowMaskPixelsIdentical',
+                        'verticalFractionWithin40Percent', 'lengthWeightedVerticalWithin40Percent',
+                        'wallAggregateWithinFiveToNinePercent'):
+                if report.get('checks',{}).get(key) is not True:
+                    raise RequestError('invalid_output', '006 check failed: '+key)
     names.add('kit.json')
     inventory = []
     for name in sorted(names):
@@ -169,7 +193,7 @@ def respond(request, base=None):
             raise RequestError('unsupported_version', 'apiVersion must be 1')
         action = request.get('action')
         if action == 'capabilities':
-            result = {'extension': 'anime_cel_modular_kit', 'styleIds': [STYLE,LAVA_STYLE], 'apiVersion': 1,
+            result = {'extension': 'anime_cel_modular_kit', 'styleIds': [STYLE,LAVA_STYLE,VEINS_STYLE], 'apiVersion': 1,
                       'actions': ['capabilities', 'plan', 'validate', 'generate', 'inspect'],
                       'input': 'Existing volcano v3-compatible kit + original 2x2 surface PNG atlas',
                       'output': 'FBX part kit, baked albedo/mask, sample GLB level, actual 3D previews',
@@ -190,13 +214,15 @@ def respond(request, base=None):
                 write(folder / 'config.json', cfg)
                 write(folder / 'status.json', {'status': 'running', 'requestId': response['requestId'], 'input': result})
                 blender = resolve(request['blender'], base) if 'blender' in request else BLENDER
-                builder = LAVA_BUILDER if cfg['styleId']==LAVA_STYLE else BUILDER
-                cleaner = LAVA_AUDIT if cfg['styleId']==LAVA_STYLE else CLEANER
+                builder = VEINS_BUILDER if cfg['styleId']==VEINS_STYLE else LAVA_BUILDER if cfg['styleId']==LAVA_STYLE else BUILDER
+                cleaner = VEINS_AUDIT if cfg['styleId']==VEINS_STYLE else LAVA_AUDIT if cfg['styleId']==LAVA_STYLE else CLEANER
                 if not blender.is_file() or not builder.is_file() or not cleaner.is_file():
                     write(folder / 'status.json', {'status': 'failed', 'reason': 'blender_missing'})
                     raise RequestError('blender_missing', 'Blender or cel builder unavailable')
                 cmd = [str(blender), '-b', '--python-exit-code', '1', '--python', str(builder), '--',
                        '--out', str(folder), '--v2', cfg['sourceKit'], '--surface-atlas', cfg['surfaceAtlas']]
+                if cfg['styleId'] == VEINS_STYLE:
+                    cmd.extend(['--cold-main', cfg['coldMain']])
                 if cfg['quality'] == 'draft':
                     cmd.append('--quick')
                 cleanup = [str(blender), '-b', '--python-exit-code', '1', '--python', str(cleaner), '--', '--run', str(folder)]

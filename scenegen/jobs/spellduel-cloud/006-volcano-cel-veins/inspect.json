@@ -1,0 +1,1804 @@
+{
+  "ok": true,
+  "directionStats": {
+    "segments": 1695,
+    "verticalSegments": 3,
+    "verticalFraction": 0.0017699115044247787,
+    "lengthWeightedVerticalFraction": 0.005995585714959261,
+    "totalLengthM": 534.7784255423264,
+    "angleDefinition": "Acute angle from projected local surface vertical in metre-scale H/Y charts; vertical <=15 degrees. Flow sheets and preserved seal/crater pools are not vein segments.",
+    "angleBins": [
+      3,
+      225,
+      589,
+      295,
+      583
+    ]
+  },
+  "wallAggregateEmissionFraction": 0.07906557648792084,
+  "emissionByObject": {
+    "wall_straight_a/wall_straight_a": {
+      "emissiveFraction": 0.08433383900168023,
+      "triangles": 493
+    },
+    "backdrop_rock_a/backdrop_rock_a": {
+      "emissiveFraction": 0.08951393709977869,
+      "triangles": 440
+    },
+    "wall_straight_b/wall_straight_b": {
+      "emissiveFraction": 0.1150061151809403,
+      "triangles": 492
+    },
+    "backdrop_rock_b/backdrop_rock_b": {
+      "emissiveFraction": 0.09789053932494504,
+      "triangles": 440
+    },
+    "wall_straight_c/wall_straight_c": {
+      "emissiveFraction": 0.08066086656257816,
+      "triangles": 488
+    },
+    "backdrop_rock_c/backdrop_rock_c": {
+      "emissiveFraction": 0.0,
+      "triangles": 1240
+    },
+    "wall_straight_d/wall_straight_d": {
+      "emissiveFraction": 0.0029703689489918154,
+      "triangles": 494
+    },
+    "backdrop_rock_d/backdrop_rock_d": {
+      "emissiveFraction": 0.0,
+      "triangles": 1241
+    },
+    "wall_corner_out_a/wall_corner_out_a": {
+      "emissiveFraction": 0.1290844497113171,
+      "triangles": 484
+    },
+    "wall_corner_in_a/wall_corner_in_a": {
+      "emissiveFraction": 0.09503176804555723,
+      "triangles": 485
+    },
+    "wall_end_a/wall_end_a": {
+      "emissiveFraction": 0.1188799801316251,
+      "triangles": 480
+    },
+    "wall_corner_out_b/wall_corner_out_b": {
+      "emissiveFraction": 0.09135193350683267,
+      "triangles": 484
+    },
+    "wall_corner_in_b/wall_corner_in_b": {
+      "emissiveFraction": 0.0027235781303234967,
+      "triangles": 484
+    },
+    "wall_end_b/wall_end_b": {
+      "emissiveFraction": 0.08900703883203478,
+      "triangles": 484
+    },
+    "wall_corner_out_c/wall_corner_out_c": {
+      "emissiveFraction": 0.0937466130464596,
+      "triangles": 485
+    },
+    "wall_corner_in_c/wall_corner_in_c": {
+      "emissiveFraction": 0.11453702190213225,
+      "triangles": 485
+    },
+    "wall_end_c/wall_end_c": {
+      "emissiveFraction": 0.010999919810764144,
+      "triangles": 484
+    },
+    "gate_a/gate_frame": {
+      "emissiveFraction": 0.06586601498294631,
+      "triangles": 456
+    },
+    "gate_a/gate_door": {
+      "emissiveFraction": 0.3498043812503002,
+      "triangles": 312
+    },
+    "gate_b/gate_frame": {
+      "emissiveFraction": 0.06070182339426422,
+      "triangles": 456
+    },
+    "gate_b/gate_door": {
+      "emissiveFraction": 0.2749065998192691,
+      "triangles": 314
+    },
+    "cave_entrance_a/cave_entrance_a": {
+      "emissiveFraction": 0.0502467672968898,
+      "triangles": 2502
+    },
+    "cave_entrance_a/lava_pool": {
+      "emissiveFraction": 1.0,
+      "triangles": 46
+    },
+    "wall_lavafall_a/wall_rock": {
+      "emissiveFraction": 0.08433383900168023,
+      "triangles": 493
+    },
+    "wall_lavafall_a/lava_flow": {
+      "emissiveFraction": 1.0,
+      "triangles": 50
+    },
+    "wall_lavafall_b/wall_rock": {
+      "emissiveFraction": 0.1150061151809403,
+      "triangles": 492
+    },
+    "wall_lavafall_b/lava_flow": {
+      "emissiveFraction": 1.0,
+      "triangles": 50
+    }
+  },
+  "distribution": {
+    "wall_straight_a": {
+      "profile": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 16
+      },
+      "widthScale": 0.8456669855117799,
+      "lowerHalfLengthFraction": 0.48198392176998606,
+      "shortCrackCount": 20,
+      "shortCrackLengthMRange": [
+        0.10914996356394609,
+        0.3868182150213865
+      ]
+    },
+    "backdrop_rock_a": {
+      "profile": {
+        "distribution": "branched_rivers",
+        "branches": 4,
+        "shortCracks": 0
+      },
+      "widthScale": 1.0,
+      "lowerHalfLengthFraction": 0.44927800311808186,
+      "shortCrackCount": 0,
+      "shortCrackLengthMRange": null
+    },
+    "wall_straight_b": {
+      "profile": {
+        "distribution": "dense",
+        "shortCracks": 36,
+        "branches": 5
+      },
+      "widthScale": 2.196008009910584,
+      "lowerHalfLengthFraction": 0.6294243707910364,
+      "shortCrackCount": 36,
+      "shortCrackLengthMRange": [
+        0.11031719639288387,
+        0.3617092303993934
+      ]
+    },
+    "backdrop_rock_b": {
+      "profile": {
+        "distribution": "branched_rivers",
+        "branches": 4,
+        "shortCracks": 0
+      },
+      "widthScale": 1.0,
+      "lowerHalfLengthFraction": 0.42694535053376775,
+      "shortCrackCount": 0,
+      "shortCrackLengthMRange": null
+    },
+    "wall_straight_c": {
+      "profile": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 10
+      },
+      "widthScale": 1.0870791101455692,
+      "lowerHalfLengthFraction": 0.4458476006915877,
+      "shortCrackCount": 20,
+      "shortCrackLengthMRange": [
+        0.11939268889852953,
+        0.35772866184921404
+      ]
+    },
+    "wall_straight_d": {
+      "profile": {
+        "distribution": "sparse",
+        "shortCracks": 8,
+        "branches": 0
+      },
+      "widthScale": 1.0,
+      "lowerHalfLengthFraction": 0.8179563758341486,
+      "shortCrackCount": 8,
+      "shortCrackLengthMRange": [
+        0.18162548950847643,
+        0.3887510742960113
+      ]
+    },
+    "wall_corner_out_a": {
+      "profile": {
+        "distribution": "dense",
+        "shortCracks": 36,
+        "branches": 12
+      },
+      "widthScale": 0.6784320497512817,
+      "lowerHalfLengthFraction": 0.7057229415880873,
+      "shortCrackCount": 36,
+      "shortCrackLengthMRange": [
+        0.09563565147401239,
+        0.3885807600365708
+      ]
+    },
+    "wall_corner_in_a": {
+      "profile": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 14
+      },
+      "widthScale": 0.6295211362838744,
+      "lowerHalfLengthFraction": 0.3785703721355909,
+      "shortCrackCount": 20,
+      "shortCrackLengthMRange": [
+        0.09117958788132319,
+        0.3414555004410305
+      ]
+    },
+    "wall_end_a": {
+      "profile": {
+        "distribution": "dense",
+        "shortCracks": 36,
+        "branches": 10
+      },
+      "widthScale": 1.2636747694015504,
+      "lowerHalfLengthFraction": 0.9307879405866829,
+      "shortCrackCount": 36,
+      "shortCrackLengthMRange": [
+        0.10995287173265438,
+        0.38907161186046096
+      ]
+    },
+    "wall_corner_out_b": {
+      "profile": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 16
+      },
+      "widthScale": 0.5328991174697876,
+      "lowerHalfLengthFraction": 0.734268421351595,
+      "shortCrackCount": 20,
+      "shortCrackLengthMRange": [
+        0.10093431562955522,
+        0.3805165627215801
+      ]
+    },
+    "wall_corner_in_b": {
+      "profile": {
+        "distribution": "sparse",
+        "shortCracks": 8,
+        "branches": 0
+      },
+      "widthScale": 1.0,
+      "lowerHalfLengthFraction": 0.5667054636361962,
+      "shortCrackCount": 8,
+      "shortCrackLengthMRange": [
+        0.1171413472712349,
+        0.32594739981808746
+      ]
+    },
+    "wall_end_b": {
+      "profile": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 11
+      },
+      "widthScale": 0.6241252374649048,
+      "lowerHalfLengthFraction": 0.9254950511692548,
+      "shortCrackCount": 20,
+      "shortCrackLengthMRange": [
+        0.08215955148931599,
+        0.3608915114352875
+      ]
+    },
+    "wall_corner_out_c": {
+      "profile": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 16
+      },
+      "widthScale": 0.549438338279724,
+      "lowerHalfLengthFraction": 0.7391007409795463,
+      "shortCrackCount": 20,
+      "shortCrackLengthMRange": [
+        0.10979606153020477,
+        0.3991777150252619
+      ]
+    },
+    "wall_corner_in_c": {
+      "profile": {
+        "distribution": "dense",
+        "shortCracks": 36,
+        "branches": 8
+      },
+      "widthScale": 1.3335300588607788,
+      "lowerHalfLengthFraction": 0.7037487295693204,
+      "shortCrackCount": 36,
+      "shortCrackLengthMRange": [
+        0.10338840685286634,
+        0.38044192894153006
+      ]
+    },
+    "wall_end_c": {
+      "profile": {
+        "distribution": "sparse",
+        "shortCracks": 8,
+        "branches": 0
+      },
+      "widthScale": 1.0,
+      "lowerHalfLengthFraction": 1.0,
+      "shortCrackCount": 8,
+      "shortCrackLengthMRange": [
+        0.11271807615848914,
+        0.3316185789768396
+      ]
+    },
+    "gate_a": {
+      "profile": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 13
+      },
+      "widthScale": 0.5024941110610964,
+      "lowerHalfLengthFraction": 0.439439121617657,
+      "shortCrackCount": 20,
+      "shortCrackLengthMRange": [
+        0.0899999812245369,
+        0.3541870151443965
+      ]
+    },
+    "gate_b": {
+      "profile": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 14
+      },
+      "widthScale": 0.19242928028106687,
+      "lowerHalfLengthFraction": 0.37958333836402086,
+      "shortCrackCount": 20,
+      "shortCrackLengthMRange": [
+        0.07861227566678461,
+        0.39371153177721635
+      ]
+    },
+    "cave_entrance_a": {
+      "profile": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 14
+      },
+      "widthScale": 1.858078398704529,
+      "lowerHalfLengthFraction": 0.989520076422327,
+      "shortCrackCount": 20,
+      "shortCrackLengthMRange": [
+        0.11152551518781878,
+        0.39953589568373515
+      ]
+    }
+  },
+  "nonConeLowerHalfVeinLengthFraction": 0.6477611603948369,
+  "meshIdentity": [
+    {
+      "file": "backdrop_rock_a.fbx",
+      "v2Sha256": "2f3b956d4384fc8554d48f1cf9d3d0ac4d00df4d91e03ae09f25a4a5317af32e",
+      "v3Sha256": "2f3b956d4384fc8554d48f1cf9d3d0ac4d00df4d91e03ae09f25a4a5317af32e",
+      "identical": true
+    },
+    {
+      "file": "backdrop_rock_b.fbx",
+      "v2Sha256": "ddfa8000d4dede72fcaedcaf230373a31fc5d4acbbd2458fa51ef52f2b1afdd6",
+      "v3Sha256": "ddfa8000d4dede72fcaedcaf230373a31fc5d4acbbd2458fa51ef52f2b1afdd6",
+      "identical": true
+    },
+    {
+      "file": "backdrop_rock_c.fbx",
+      "v2Sha256": "ac989319d502adf6f251219703275ab0c1b9747454855c10cfdc794c23b7282b",
+      "v3Sha256": "ac989319d502adf6f251219703275ab0c1b9747454855c10cfdc794c23b7282b",
+      "identical": true
+    },
+    {
+      "file": "backdrop_rock_d.fbx",
+      "v2Sha256": "7745b6550967923e9c5b1dd8dd37511fec0cf08bbb2b1305567f12ed6136299d",
+      "v3Sha256": "7745b6550967923e9c5b1dd8dd37511fec0cf08bbb2b1305567f12ed6136299d",
+      "identical": true
+    },
+    {
+      "file": "cave_entrance_a.fbx",
+      "v2Sha256": "86b0725ff5e120a6acb89612d2dbd8cedd8f91bfa3d5862760561fd6c9b38895",
+      "v3Sha256": "86b0725ff5e120a6acb89612d2dbd8cedd8f91bfa3d5862760561fd6c9b38895",
+      "identical": true
+    },
+    {
+      "file": "gate_a.fbx",
+      "v2Sha256": "a00206a2e7cbb60e23cba0aa26d39cc26ac7fee6dfe39daa984b940dd5a44e59",
+      "v3Sha256": "a00206a2e7cbb60e23cba0aa26d39cc26ac7fee6dfe39daa984b940dd5a44e59",
+      "identical": true
+    },
+    {
+      "file": "gate_b.fbx",
+      "v2Sha256": "44e47d4defd8a8cf187b8c74400c89d614edcd3699be8f343e3bf9c5e9c30c70",
+      "v3Sha256": "44e47d4defd8a8cf187b8c74400c89d614edcd3699be8f343e3bf9c5e9c30c70",
+      "identical": true
+    },
+    {
+      "file": "gate_door_a.fbx",
+      "v2Sha256": "7211b63346b61c1f4568d074ab238cf7d9f1505da1ea9294c3e000d7a8f2a960",
+      "v3Sha256": "7211b63346b61c1f4568d074ab238cf7d9f1505da1ea9294c3e000d7a8f2a960",
+      "identical": true
+    },
+    {
+      "file": "gate_door_b.fbx",
+      "v2Sha256": "015895e66d2f0a706a53a4392f39bc14f232673ae69895009a1b18fc0475929e",
+      "v3Sha256": "015895e66d2f0a706a53a4392f39bc14f232673ae69895009a1b18fc0475929e",
+      "identical": true
+    },
+    {
+      "file": "gate_frame_a.fbx",
+      "v2Sha256": "bc4c1a1a3e8a2d632862e4cbaa52992197cad83c209a712415c84d4d8c00c88d",
+      "v3Sha256": "bc4c1a1a3e8a2d632862e4cbaa52992197cad83c209a712415c84d4d8c00c88d",
+      "identical": true
+    },
+    {
+      "file": "gate_frame_b.fbx",
+      "v2Sha256": "4471096b5e845cc97467771e4ecc869ee699deec6a279261a172a556c4318533",
+      "v3Sha256": "4471096b5e845cc97467771e4ecc869ee699deec6a279261a172a556c4318533",
+      "identical": true
+    },
+    {
+      "file": "wall_corner_in_a.fbx",
+      "v2Sha256": "59d344436f44f26615fd26207e93ba5583e91f3fdfbb28b0c72f447b2bff4165",
+      "v3Sha256": "59d344436f44f26615fd26207e93ba5583e91f3fdfbb28b0c72f447b2bff4165",
+      "identical": true
+    },
+    {
+      "file": "wall_corner_in_b.fbx",
+      "v2Sha256": "59ae8afbe79b908039f16df379172f88d522b8185b1c9894b740cbb8a805a5f7",
+      "v3Sha256": "59ae8afbe79b908039f16df379172f88d522b8185b1c9894b740cbb8a805a5f7",
+      "identical": true
+    },
+    {
+      "file": "wall_corner_in_c.fbx",
+      "v2Sha256": "c8768a42d8714fd9f818258afa8db788d1210264eedc767a7daf8a42a41c0c7e",
+      "v3Sha256": "c8768a42d8714fd9f818258afa8db788d1210264eedc767a7daf8a42a41c0c7e",
+      "identical": true
+    },
+    {
+      "file": "wall_corner_out_a.fbx",
+      "v2Sha256": "99f7123cd1d78c5203bf8c703fbef9b982ab2fc426afc590b1e6e6e2ad754435",
+      "v3Sha256": "99f7123cd1d78c5203bf8c703fbef9b982ab2fc426afc590b1e6e6e2ad754435",
+      "identical": true
+    },
+    {
+      "file": "wall_corner_out_b.fbx",
+      "v2Sha256": "bd37b9ce2915b83aa289ae5b88c8ecf0cb004328387f92b71678beba992abd48",
+      "v3Sha256": "bd37b9ce2915b83aa289ae5b88c8ecf0cb004328387f92b71678beba992abd48",
+      "identical": true
+    },
+    {
+      "file": "wall_corner_out_c.fbx",
+      "v2Sha256": "551b5246837e088f1a06f3e6bd0b5de1113b507247b20b25e73ae2ec8406c543",
+      "v3Sha256": "551b5246837e088f1a06f3e6bd0b5de1113b507247b20b25e73ae2ec8406c543",
+      "identical": true
+    },
+    {
+      "file": "wall_end_a.fbx",
+      "v2Sha256": "79a30a8a375a4941fbd36cc738a574d7257652a0397fc56105b6ba5d2a2da766",
+      "v3Sha256": "79a30a8a375a4941fbd36cc738a574d7257652a0397fc56105b6ba5d2a2da766",
+      "identical": true
+    },
+    {
+      "file": "wall_end_b.fbx",
+      "v2Sha256": "943429846f7d98be2281a5ad84703b07ccce24d698161beb8afb313807f4935e",
+      "v3Sha256": "943429846f7d98be2281a5ad84703b07ccce24d698161beb8afb313807f4935e",
+      "identical": true
+    },
+    {
+      "file": "wall_end_c.fbx",
+      "v2Sha256": "e38139044a200313577c9cff082c58ba73afaff404e6f0c3803e27a18afb0e22",
+      "v3Sha256": "e38139044a200313577c9cff082c58ba73afaff404e6f0c3803e27a18afb0e22",
+      "identical": true
+    },
+    {
+      "file": "wall_lavafall_a.fbx",
+      "v2Sha256": "44883a775bbc06680166d7351ed07e5bb71aa76c9c5aa3576a1825b3405f31c0",
+      "v3Sha256": "44883a775bbc06680166d7351ed07e5bb71aa76c9c5aa3576a1825b3405f31c0",
+      "identical": true
+    },
+    {
+      "file": "wall_lavafall_b.fbx",
+      "v2Sha256": "ab487c1272a827e18c413aca14741dac4c35dea39e51040660affed9c0c0831e",
+      "v3Sha256": "ab487c1272a827e18c413aca14741dac4c35dea39e51040660affed9c0c0831e",
+      "identical": true
+    },
+    {
+      "file": "wall_straight_a.fbx",
+      "v2Sha256": "9495259cc10041f9d342c6dc551fae80e7d88c8a62b153dab9c873da5987921f",
+      "v3Sha256": "9495259cc10041f9d342c6dc551fae80e7d88c8a62b153dab9c873da5987921f",
+      "identical": true
+    },
+    {
+      "file": "wall_straight_b.fbx",
+      "v2Sha256": "8d52526b5cd5e9908c3f460931f6d0ab40fbe70a3740a28a75c4c2416ce0b4d1",
+      "v3Sha256": "8d52526b5cd5e9908c3f460931f6d0ab40fbe70a3740a28a75c4c2416ce0b4d1",
+      "identical": true
+    },
+    {
+      "file": "wall_straight_c.fbx",
+      "v2Sha256": "a2eb1b8033fd2b80f4c2278e92c3be393b44e96d3f0d274f464a01d111549bbe",
+      "v3Sha256": "a2eb1b8033fd2b80f4c2278e92c3be393b44e96d3f0d274f464a01d111549bbe",
+      "identical": true
+    },
+    {
+      "file": "wall_straight_d.fbx",
+      "v2Sha256": "72c38da0a2e40c0b6043c5779379405d2b22da7785fa0490a0244b9e53ac18ec",
+      "v3Sha256": "72c38da0a2e40c0b6043c5779379405d2b22da7785fa0490a0244b9e53ac18ec",
+      "identical": true
+    }
+  ],
+  "lavaFlowDescriptorIdentical": true,
+  "flowTextureBandDecodedPixelsIdentical": true,
+  "preservedDetailsAudit": {
+    "ok": true,
+    "method": "Read-only FBX UV0 interior surface samples; decoded source and delivered RGB values compared without recolouring.",
+    "preservedDetails": [
+      {
+        "file": "backdrop_rock_a.fbx",
+        "role": "crater_pool",
+        "samples": 2560,
+        "albedoMaxDelta": 0.0,
+        "emissiveMaxDelta": 0.0
+      },
+      {
+        "file": "backdrop_rock_b.fbx",
+        "role": "crater_pool",
+        "samples": 2560,
+        "albedoMaxDelta": 0.0,
+        "emissiveMaxDelta": 0.0
+      },
+      {
+        "file": "gate_a.fbx",
+        "role": "gate_door",
+        "samples": 19968,
+        "albedoMaxDelta": 0.0,
+        "emissiveMaxDelta": 0.0
+      },
+      {
+        "file": "gate_b.fbx",
+        "role": "gate_door",
+        "samples": 20096,
+        "albedoMaxDelta": 0.0,
+        "emissiveMaxDelta": 0.0
+      },
+      {
+        "file": "cave_entrance_a.fbx",
+        "role": "lava_pool",
+        "samples": 2944,
+        "albedoMaxDelta": 0.0,
+        "emissiveMaxDelta": 0.0
+      },
+      {
+        "file": "wall_lavafall_a.fbx",
+        "role": "lava_flow",
+        "samples": 3200,
+        "albedoMaxDelta": 0.0,
+        "emissiveMaxDelta": 0.0
+      },
+      {
+        "file": "wall_lavafall_b.fbx",
+        "role": "lava_flow",
+        "samples": 3200,
+        "albedoMaxDelta": 0.0,
+        "emissiveMaxDelta": 0.0
+      }
+    ],
+    "lavaFlowDescriptorIdentical": true,
+    "groundFilesByteIdentical": {
+      "ground": true,
+      "groundCrust": true
+    }
+  },
+  "worker": {
+    "quick": false,
+    "allChecksPassed": true,
+    "checks": {
+      "fbxBytesIdentical": true,
+      "flowColorPixelsIdentical": true,
+      "flowMaskPixelsIdentical": true,
+      "verticalFractionWithin40Percent": true,
+      "lengthWeightedVerticalWithin40Percent": true,
+      "wallAggregateWithinFiveToNinePercent": true
+    },
+    "totals": {
+      "parts": 22,
+      "partTriangles": 14854,
+      "demoTriangles": 15692
+    },
+    "directionStats": {
+      "segments": 1695,
+      "verticalSegments": 3,
+      "verticalFraction": 0.0017699115044247787,
+      "lengthWeightedVerticalFraction": 0.005995585714959261,
+      "totalLengthM": 534.7784255423264,
+      "angleDefinition": "Acute angle from projected local surface vertical in metre-scale H/Y charts; vertical <=15 degrees. Flow sheets and preserved seal/crater pools are not vein segments.",
+      "angleBins": [
+        3,
+        225,
+        589,
+        295,
+        583
+      ]
+    },
+    "partEmission": {
+      "wall_straight_a/wall_straight_a": {
+        "emissiveFraction": 0.08433383900168023,
+        "triangles": 493
+      },
+      "backdrop_rock_a/backdrop_rock_a": {
+        "emissiveFraction": 0.08951393709977869,
+        "triangles": 440
+      },
+      "wall_straight_b/wall_straight_b": {
+        "emissiveFraction": 0.1150061151809403,
+        "triangles": 492
+      },
+      "backdrop_rock_b/backdrop_rock_b": {
+        "emissiveFraction": 0.09789053932494504,
+        "triangles": 440
+      },
+      "wall_straight_c/wall_straight_c": {
+        "emissiveFraction": 0.08066086656257816,
+        "triangles": 488
+      },
+      "backdrop_rock_c/backdrop_rock_c": {
+        "emissiveFraction": 0.0,
+        "triangles": 1240
+      },
+      "wall_straight_d/wall_straight_d": {
+        "emissiveFraction": 0.0029703689489918154,
+        "triangles": 494
+      },
+      "backdrop_rock_d/backdrop_rock_d": {
+        "emissiveFraction": 0.0,
+        "triangles": 1241
+      },
+      "wall_corner_out_a/wall_corner_out_a": {
+        "emissiveFraction": 0.1290844497113171,
+        "triangles": 484
+      },
+      "wall_corner_in_a/wall_corner_in_a": {
+        "emissiveFraction": 0.09503176804555723,
+        "triangles": 485
+      },
+      "wall_end_a/wall_end_a": {
+        "emissiveFraction": 0.1188799801316251,
+        "triangles": 480
+      },
+      "wall_corner_out_b/wall_corner_out_b": {
+        "emissiveFraction": 0.09135193350683267,
+        "triangles": 484
+      },
+      "wall_corner_in_b/wall_corner_in_b": {
+        "emissiveFraction": 0.0027235781303234967,
+        "triangles": 484
+      },
+      "wall_end_b/wall_end_b": {
+        "emissiveFraction": 0.08900703883203478,
+        "triangles": 484
+      },
+      "wall_corner_out_c/wall_corner_out_c": {
+        "emissiveFraction": 0.0937466130464596,
+        "triangles": 485
+      },
+      "wall_corner_in_c/wall_corner_in_c": {
+        "emissiveFraction": 0.11453702190213225,
+        "triangles": 485
+      },
+      "wall_end_c/wall_end_c": {
+        "emissiveFraction": 0.010999919810764144,
+        "triangles": 484
+      },
+      "gate_a/gate_frame": {
+        "emissiveFraction": 0.06586601498294631,
+        "triangles": 456
+      },
+      "gate_a/gate_door": {
+        "emissiveFraction": 0.3498043812503002,
+        "triangles": 312
+      },
+      "gate_b/gate_frame": {
+        "emissiveFraction": 0.06070182339426422,
+        "triangles": 456
+      },
+      "gate_b/gate_door": {
+        "emissiveFraction": 0.2749065998192691,
+        "triangles": 314
+      },
+      "cave_entrance_a/cave_entrance_a": {
+        "emissiveFraction": 0.0502467672968898,
+        "triangles": 2502
+      },
+      "cave_entrance_a/lava_pool": {
+        "emissiveFraction": 1.0,
+        "triangles": 46
+      },
+      "wall_lavafall_a/wall_rock": {
+        "emissiveFraction": 0.08433383900168023,
+        "triangles": 493
+      },
+      "wall_lavafall_a/lava_flow": {
+        "emissiveFraction": 1.0,
+        "triangles": 50
+      },
+      "wall_lavafall_b/wall_rock": {
+        "emissiveFraction": 0.1150061151809403,
+        "triangles": 492
+      },
+      "wall_lavafall_b/lava_flow": {
+        "emissiveFraction": 1.0,
+        "triangles": 50
+      }
+    },
+    "wallAggregateEmissionFraction": 0.07906557648792084,
+    "profiles": {
+      "wall_straight_a": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 16
+      },
+      "backdrop_rock_a": {
+        "distribution": "branched_rivers",
+        "branches": 4,
+        "shortCracks": 0
+      },
+      "wall_straight_b": {
+        "distribution": "dense",
+        "shortCracks": 36,
+        "branches": 5
+      },
+      "backdrop_rock_b": {
+        "distribution": "branched_rivers",
+        "branches": 4,
+        "shortCracks": 0
+      },
+      "wall_straight_c": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 10
+      },
+      "wall_straight_d": {
+        "distribution": "sparse",
+        "shortCracks": 8,
+        "branches": 0
+      },
+      "wall_corner_out_a": {
+        "distribution": "dense",
+        "shortCracks": 36,
+        "branches": 12
+      },
+      "wall_corner_in_a": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 14
+      },
+      "wall_end_a": {
+        "distribution": "dense",
+        "shortCracks": 36,
+        "branches": 10
+      },
+      "wall_corner_out_b": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 16
+      },
+      "wall_corner_in_b": {
+        "distribution": "sparse",
+        "shortCracks": 8,
+        "branches": 0
+      },
+      "wall_end_b": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 11
+      },
+      "wall_corner_out_c": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 16
+      },
+      "wall_corner_in_c": {
+        "distribution": "dense",
+        "shortCracks": 36,
+        "branches": 8
+      },
+      "wall_end_c": {
+        "distribution": "sparse",
+        "shortCracks": 8,
+        "branches": 0
+      },
+      "gate_a": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 13
+      },
+      "gate_b": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 14
+      },
+      "cave_entrance_a": {
+        "distribution": "medium",
+        "shortCracks": 20,
+        "branches": 14
+      }
+    },
+    "footUnderglowBaked": false,
+    "budgets": {
+      "wall_straight": {
+        "limit": 600,
+        "max": 494,
+        "passed": true
+      },
+      "backdrop_rock": {
+        "limit": 1500,
+        "max": 1241,
+        "passed": true
+      },
+      "wall_corner_out": {
+        "limit": 600,
+        "max": 485,
+        "passed": true
+      },
+      "wall_corner_in": {
+        "limit": 600,
+        "max": 485,
+        "passed": true
+      },
+      "wall_end": {
+        "limit": 600,
+        "max": 484,
+        "passed": true
+      },
+      "gate": {
+        "limit": 1200,
+        "max": 770,
+        "passed": true
+      },
+      "cave_entrance": {
+        "limit": 3000,
+        "max": 2548,
+        "passed": true
+      },
+      "wall_lavafall": {
+        "limit": 700,
+        "max": 543,
+        "passed": true
+      }
+    },
+    "phoneFpsMeasured": false,
+    "previewIsActual3D": true,
+    "exportAudit": {
+      "ok": true,
+      "fbxByteIdentityAgainst005": {
+        "backdrop_rock_a.fbx": true,
+        "backdrop_rock_b.fbx": true,
+        "backdrop_rock_c.fbx": true,
+        "backdrop_rock_d.fbx": true,
+        "cave_entrance_a.fbx": true,
+        "gate_a.fbx": true,
+        "gate_b.fbx": true,
+        "gate_door_a.fbx": true,
+        "gate_door_b.fbx": true,
+        "gate_frame_a.fbx": true,
+        "gate_frame_b.fbx": true,
+        "wall_corner_in_a.fbx": true,
+        "wall_corner_in_b.fbx": true,
+        "wall_corner_in_c.fbx": true,
+        "wall_corner_out_a.fbx": true,
+        "wall_corner_out_b.fbx": true,
+        "wall_corner_out_c.fbx": true,
+        "wall_end_a.fbx": true,
+        "wall_end_b.fbx": true,
+        "wall_end_c.fbx": true,
+        "wall_lavafall_a.fbx": true,
+        "wall_lavafall_b.fbx": true,
+        "wall_straight_a.fbx": true,
+        "wall_straight_b.fbx": true,
+        "wall_straight_c.fbx": true,
+        "wall_straight_d.fbx": true
+      },
+      "allMeshUvPivotNamesAndTrianglesUnchanged": true,
+      "independentlyRecomputedDirections": {
+        "segments": 1695,
+        "verticalSegments": 3,
+        "verticalFraction": 0.0017699115044247787,
+        "lengthWeightedVerticalFraction": 0.005995585714959261,
+        "totalLengthM": 534.7784255423264,
+        "angleDefinition": "Acute angle from projected local surface vertical in metre-scale H/Y charts; vertical <=15 degrees. Flow sheets and preserved seal/crater pools are not vein segments.",
+        "angleBins": [
+          3,
+          225,
+          589,
+          295,
+          583
+        ]
+      },
+      "blender": "4.5.15 LTS",
+      "logicalParts": 22,
+      "fbxFiles": 26,
+      "uniquePartTriangles": 14854,
+      "allExportedTriangleInstances": 16392,
+      "boundsPreserved": true,
+      "uvWithin01": true,
+      "originsZero": true,
+      "noZeroAreaFaces": true,
+      "wallLavaCoverage": {
+        "wall_straight_a": 0.08433383978389476,
+        "wall_straight_b": 0.11500611454686528,
+        "wall_straight_c": 0.08066086563350329,
+        "wall_straight_d": 0.002970369148432766,
+        "wall_corner_out_a": 0.12908444992019427,
+        "wall_corner_in_a": 0.09503176767165854,
+        "wall_end_a": 0.11887998278848809,
+        "wall_corner_out_b": 0.09135193205716076,
+        "wall_corner_in_b": 0.0027235780539806576,
+        "wall_end_b": 0.08900704036101999,
+        "wall_corner_out_c": 0.09374661446255966,
+        "wall_corner_in_c": 0.11453702286956483,
+        "wall_end_c": 0.010999920442110784
+      },
+      "crateredCones": 2,
+      "flowChildrenAndUvDirectionVerified": true,
+      "glbExplicitlyUnlit": true,
+      "glbImagesEmbedded": true,
+      "records": [
+        {
+          "file": "wall_straight_a.fbx",
+          "maximumBoundsDelta": 1.3310612700934144e-07,
+          "triangles": 493,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.3310612700934144e-07,
+              -1.890208125114441
+            ],
+            "max": [
+              2.3499999046325684,
+              5.748317241668701,
+              0.5500000715255737
+            ]
+          },
+          "objects": [
+            "wall_straight_a"
+          ]
+        },
+        {
+          "file": "backdrop_rock_a.fbx",
+          "maximumBoundsDelta": 4.998715894544148e-07,
+          "triangles": 440,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -8.456000328063965,
+              -4.998715894544148e-07,
+              -6.620999813079834
+            ],
+            "max": [
+              8.437999725341797,
+              22.856000900268555,
+              2.6510000228881836
+            ]
+          },
+          "objects": [
+            "backdrop_rock_a"
+          ],
+          "coneOuterFacesOutward": true,
+          "craterFloorFacesUpward": true,
+          "craterDepthM": 3.656961441040039
+        },
+        {
+          "file": "wall_straight_b.fbx",
+          "maximumBoundsDelta": 1.3371555951380287e-07,
+          "triangles": 492,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.349696636199951,
+              -1.3371555951380287e-07,
+              -1.885954737663269
+            ],
+            "max": [
+              2.3499999046325684,
+              5.928088665008545,
+              0.550000011920929
+            ]
+          },
+          "objects": [
+            "wall_straight_b"
+          ]
+        },
+        {
+          "file": "backdrop_rock_b.fbx",
+          "maximumBoundsDelta": 5.337701622920576e-07,
+          "triangles": 440,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -10.246999740600586,
+              -5.337701622920576e-07,
+              -7.070000171661377
+            ],
+            "max": [
+              10.329000473022461,
+              16.323999404907227,
+              1.9160000085830688
+            ]
+          },
+          "objects": [
+            "backdrop_rock_b"
+          ],
+          "coneOuterFacesOutward": true,
+          "craterFloorFacesUpward": true,
+          "craterDepthM": 2.6118392944335938
+        },
+        {
+          "file": "wall_straight_c.fbx",
+          "maximumBoundsDelta": 1.287239257408146e-07,
+          "triangles": 488,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.287239257408146e-07,
+              -1.9999998807907104
+            ],
+            "max": [
+              2.3499999046325684,
+              5.1080803871154785,
+              0.5500000715255737
+            ]
+          },
+          "objects": [
+            "wall_straight_c"
+          ]
+        },
+        {
+          "file": "backdrop_rock_c.fbx",
+          "maximumBoundsDelta": 3.402412573905167e-07,
+          "triangles": 1240,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -8.873635292053223,
+              -3.402412573905167e-07,
+              -5.303014278411865
+            ],
+            "max": [
+              9.565387725830078,
+              17.118850708007812,
+              3.3677000999450684
+            ]
+          },
+          "objects": [
+            "backdrop_rock_c"
+          ]
+        },
+        {
+          "file": "wall_straight_d.fbx",
+          "maximumBoundsDelta": 2.384185791015625e-07,
+          "triangles": 494,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.335410502179002e-07,
+              -2.000000476837158
+            ],
+            "max": [
+              2.3499999046325684,
+              4.674435138702393,
+              0.550000011920929
+            ]
+          },
+          "objects": [
+            "wall_straight_d"
+          ]
+        },
+        {
+          "file": "backdrop_rock_d.fbx",
+          "maximumBoundsDelta": 4.351768723154237e-07,
+          "triangles": 1241,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -11.566431045532227,
+              -4.351768723154237e-07,
+              -5.776902675628662
+            ],
+            "max": [
+              11.605506896972656,
+              10.67459774017334,
+              2.930969715118408
+            ]
+          },
+          "objects": [
+            "backdrop_rock_d"
+          ]
+        },
+        {
+          "file": "wall_corner_out_a.fbx",
+          "maximumBoundsDelta": 1.4621616628573975e-07,
+          "triangles": 484,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.4621616628573975e-07,
+              -2.3499996662139893
+            ],
+            "max": [
+              0.550000011920929,
+              4.865777492523193,
+              0.5500000715255737
+            ]
+          },
+          "objects": [
+            "wall_corner_out_a"
+          ]
+        },
+        {
+          "file": "wall_corner_in_a.fbx",
+          "maximumBoundsDelta": 2.384185791015625e-07,
+          "triangles": 485,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3496286869049072,
+              -1.668083910999485e-07,
+              -2.349942684173584
+            ],
+            "max": [
+              1.024980902671814,
+              4.72395133972168,
+              1.0965642929077148
+            ]
+          },
+          "objects": [
+            "wall_corner_in_a"
+          ]
+        },
+        {
+          "file": "wall_end_a.fbx",
+          "maximumBoundsDelta": 1.0958680007888688e-07,
+          "triangles": 480,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -1.0,
+              -1.0958680007888688e-07,
+              -1.7691291570663452
+            ],
+            "max": [
+              1.75,
+              3.5664913654327393,
+              0.6000000238418579
+            ]
+          },
+          "objects": [
+            "wall_end_a"
+          ]
+        },
+        {
+          "file": "wall_corner_out_b.fbx",
+          "maximumBoundsDelta": 1.5760954852339637e-07,
+          "triangles": 484,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.5760954852339637e-07,
+              -2.3499996662139893
+            ],
+            "max": [
+              0.5498637557029724,
+              5.245465278625488,
+              0.550000011920929
+            ]
+          },
+          "objects": [
+            "wall_corner_out_b"
+          ]
+        },
+        {
+          "file": "wall_corner_in_b.fbx",
+          "maximumBoundsDelta": 2.384185791015625e-07,
+          "triangles": 484,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.1176039294014117e-07,
+              -2.3500003814697266
+            ],
+            "max": [
+              1.0233113765716553,
+              4.635156631469727,
+              1.067916989326477
+            ]
+          },
+          "objects": [
+            "wall_corner_in_b"
+          ]
+        },
+        {
+          "file": "wall_end_b.fbx",
+          "maximumBoundsDelta": 2.384185791015625e-07,
+          "triangles": 484,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -1.0,
+              -1.1469459337831722e-07,
+              -1.844273328781128
+            ],
+            "max": [
+              1.7499470710754395,
+              3.5823113918304443,
+              0.6000000834465027
+            ]
+          },
+          "objects": [
+            "wall_end_b"
+          ]
+        },
+        {
+          "file": "wall_corner_out_c.fbx",
+          "maximumBoundsDelta": 2.384185791015625e-07,
+          "triangles": 485,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3497226238250732,
+              -1.5363823990810488e-07,
+              -2.3500001430511475
+            ],
+            "max": [
+              0.5477937459945679,
+              4.803472995758057,
+              0.5392090678215027
+            ]
+          },
+          "objects": [
+            "wall_corner_out_c"
+          ]
+        },
+        {
+          "file": "wall_corner_in_c.fbx",
+          "maximumBoundsDelta": 2.384185791015625e-07,
+          "triangles": 485,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.652023229326005e-07,
+              -2.3500003814697266
+            ],
+            "max": [
+              1.0265299081802368,
+              4.805431365966797,
+              1.0969462394714355
+            ]
+          },
+          "objects": [
+            "wall_corner_in_c"
+          ]
+        },
+        {
+          "file": "wall_end_c.fbx",
+          "maximumBoundsDelta": 1.1095201557509426e-07,
+          "triangles": 484,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -1.0,
+              -1.1095201557509426e-07,
+              -1.7695974111557007
+            ],
+            "max": [
+              1.748438835144043,
+              3.606177568435669,
+              0.5999999046325684
+            ]
+          },
+          "objects": [
+            "wall_end_c"
+          ]
+        },
+        {
+          "file": "gate_a.fbx",
+          "maximumBoundsDelta": 3.5762786865234375e-07,
+          "triangles": 768,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.299999952316284,
+              -1.6578161066149733e-08,
+              -0.8777265548706055
+            ],
+            "max": [
+              2.299999952316284,
+              5.4983954429626465,
+              0.9899761080741882
+            ]
+          },
+          "objects": [
+            "gate_door",
+            "gate_frame"
+          ]
+        },
+        {
+          "file": "gate_frame_a.fbx",
+          "triangles": 456,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.299999952316284,
+              -1.6578161066149733e-08,
+              -0.8777265548706055
+            ],
+            "max": [
+              2.299999952316284,
+              5.4983954429626465,
+              0.9899761080741882
+            ]
+          },
+          "objects": [
+            "gate_frame"
+          ]
+        },
+        {
+          "file": "gate_door_a.fbx",
+          "triangles": 312,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -1.1399610042572021,
+              -1.181669961880516e-08,
+              -0.2105587124824524
+            ],
+            "max": [
+              1.1399999856948853,
+              3.563281774520874,
+              0.18514040112495422
+            ]
+          },
+          "objects": [
+            "gate_door"
+          ]
+        },
+        {
+          "file": "gate_b.fbx",
+          "maximumBoundsDelta": 3.5762786865234375e-07,
+          "triangles": 770,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.299999952316284,
+              -5.092539012707675e-08,
+              -0.8889521360397339
+            ],
+            "max": [
+              2.299999952316284,
+              5.691817760467529,
+              0.9999913573265076
+            ]
+          },
+          "objects": [
+            "gate_door",
+            "gate_frame"
+          ]
+        },
+        {
+          "file": "gate_frame_b.fbx",
+          "triangles": 456,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.299999952316284,
+              -5.092539012707675e-08,
+              -0.8889521360397339
+            ],
+            "max": [
+              2.299999952316284,
+              5.691817760467529,
+              0.9999913573265076
+            ]
+          },
+          "objects": [
+            "gate_frame"
+          ]
+        },
+        {
+          "file": "gate_door_b.fbx",
+          "triangles": 314,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -1.1399999856948853,
+              -1.1970161750696207e-08,
+              -0.2093234658241272
+            ],
+            "max": [
+              1.1399731636047363,
+              3.7594728469848633,
+              0.21022894978523254
+            ]
+          },
+          "objects": [
+            "gate_door"
+          ]
+        },
+        {
+          "file": "cave_entrance_a.fbx",
+          "maximumBoundsDelta": 5.067986421636306e-07,
+          "triangles": 2548,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -7.0,
+              -5.067986421636306e-07,
+              -6.945445537567139
+            ],
+            "max": [
+              7.0,
+              9.982378005981445,
+              2.8000001907348633
+            ]
+          },
+          "objects": [
+            "cave_entrance_a",
+            "lava_pool"
+          ]
+        },
+        {
+          "file": "wall_lavafall_a.fbx",
+          "maximumBoundsDelta": 1.3310612700934144e-07,
+          "triangles": 543,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.3310612700934144e-07,
+              -1.890208125114441
+            ],
+            "max": [
+              2.3499999046325684,
+              5.748317241668701,
+              0.6000000238418579
+            ]
+          },
+          "objects": [
+            "lava_flow",
+            "wall_rock"
+          ],
+          "lavaFlowMaxForwardM": 0.6000000238418579,
+          "flowYVCorrelation": -0.9999999999999977,
+          "lavaFlowNamed": true
+        },
+        {
+          "file": "wall_lavafall_b.fbx",
+          "maximumBoundsDelta": 1.3371555951380287e-07,
+          "triangles": 542,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.349696636199951,
+              -1.3371555951380287e-07,
+              -1.885954737663269
+            ],
+            "max": [
+              2.3499999046325684,
+              5.928088665008545,
+              0.6000000238418579
+            ]
+          },
+          "objects": [
+            "lava_flow",
+            "wall_rock"
+          ],
+          "lavaFlowMaxForwardM": 0.6000000238418579,
+          "flowYVCorrelation": -0.9999999999999979,
+          "lavaFlowNamed": true
+        }
+      ]
+    }
+  },
+  "unity": {
+    "ok": true,
+    "engine": "Unity 2022.3.62f2",
+    "pipeline": "Built-in",
+    "parts": 22,
+    "triangles": 14854,
+    "mobileFpsMeasured": false,
+    "defaultMainTextureMax": 2048,
+    "shaderErrors": 0,
+    "flowMotionChangedPixels": 1396,
+    "flowUvAnimationVerified": true
+  },
+  "protectedV2": {
+    "files": 39,
+    "allSha256Unchanged": true,
+    "snapshot": {
+      "backdrop_rock_a.fbx": "2f3b956d4384fc8554d48f1cf9d3d0ac4d00df4d91e03ae09f25a4a5317af32e",
+      "backdrop_rock_b.fbx": "ddfa8000d4dede72fcaedcaf230373a31fc5d4acbbd2458fa51ef52f2b1afdd6",
+      "backdrop_rock_c.fbx": "ac989319d502adf6f251219703275ab0c1b9747454855c10cfdc794c23b7282b",
+      "backdrop_rock_d.fbx": "7745b6550967923e9c5b1dd8dd37511fec0cf08bbb2b1305567f12ed6136299d",
+      "cave_entrance_a.fbx": "86b0725ff5e120a6acb89612d2dbd8cedd8f91bfa3d5862760561fd6c9b38895",
+      "cel_ground_ash.png": "3580680d52ad53e284834e49115e293ea91d4427dbbf41c2164f51a587fc798d",
+      "cel_ground_ash.png.meta": "fa4e07b07abe07a35086caf8667d37c7e623338c4aac41026982333a0b6b4a96",
+      "cel_ground_crust.png": "d0a41b9697e87af783f603e9d75d3995bf4d0093d2984705df554f11732811d8",
+      "cel_ground_crust.png.meta": "be5a635850b2d1fc0a8f8837fa4e13cfaeed38f08cdaf582e3c83debd63d76a0",
+      "gate_a.fbx": "a00206a2e7cbb60e23cba0aa26d39cc26ac7fee6dfe39daa984b940dd5a44e59",
+      "gate_b.fbx": "44e47d4defd8a8cf187b8c74400c89d614edcd3699be8f343e3bf9c5e9c30c70",
+      "gate_door_a.fbx": "7211b63346b61c1f4568d074ab238cf7d9f1505da1ea9294c3e000d7a8f2a960",
+      "gate_door_b.fbx": "015895e66d2f0a706a53a4392f39bc14f232673ae69895009a1b18fc0475929e",
+      "gate_frame_a.fbx": "bc4c1a1a3e8a2d632862e4cbaa52992197cad83c209a712415c84d4d8c00c88d",
+      "gate_frame_b.fbx": "4471096b5e845cc97467771e4ecc869ee699deec6a279261a172a556c4318533",
+      "kit.json": "d06461d109937caaaf22100478100993d23eec0234bdf10fff194f84a5286780",
+      "volcano_cel_v2_albedo.png": "372be5ee1c732a041a1426e7f0ebaaf5ed1a1f900db5e74a7c91ef14b1a77cf8",
+      "volcano_cel_v2_albedo.png.meta": "7edea61c0a86f0b5f64e4f8c7a60baaa4e503e91e1e297176e752be55544c200",
+      "volcano_cel_v2_backdrop_albedo.png": "033be3a6bc1a17d2d2bb4566c31accfc0d55683c5b6f466598a2955127850250",
+      "volcano_cel_v2_backdrop_albedo.png.meta": "1799409b1082143dba2ffd35986029b71b6bbb1de0f0e4f43ba3fbfb0da706d6",
+      "volcano_cel_v2_backdrop_emissive.png": "ec2f48a723a16d70ba860a7284f40ce40893e509184b7785eee37a5a800e333f",
+      "volcano_cel_v2_backdrop_emissive.png.meta": "fbc587fff83978433984d05ca71b8634ce453c6d5ef449ec8bd7c66e488767be",
+      "volcano_cel_v2_emissive.png": "3cb82c9f16c8915f16aa5fd3b98e99f331b4711e95e337f784abe5199012f041",
+      "volcano_cel_v2_emissive.png.meta": "b432b1e34016695d6370911929ac8d7a58a373112199dd3a411bdd30c22e26f1",
+      "wall_corner_in_a.fbx": "59d344436f44f26615fd26207e93ba5583e91f3fdfbb28b0c72f447b2bff4165",
+      "wall_corner_in_b.fbx": "59ae8afbe79b908039f16df379172f88d522b8185b1c9894b740cbb8a805a5f7",
+      "wall_corner_in_c.fbx": "c8768a42d8714fd9f818258afa8db788d1210264eedc767a7daf8a42a41c0c7e",
+      "wall_corner_out_a.fbx": "99f7123cd1d78c5203bf8c703fbef9b982ab2fc426afc590b1e6e6e2ad754435",
+      "wall_corner_out_b.fbx": "bd37b9ce2915b83aa289ae5b88c8ecf0cb004328387f92b71678beba992abd48",
+      "wall_corner_out_c.fbx": "551b5246837e088f1a06f3e6bd0b5de1113b507247b20b25e73ae2ec8406c543",
+      "wall_end_a.fbx": "79a30a8a375a4941fbd36cc738a574d7257652a0397fc56105b6ba5d2a2da766",
+      "wall_end_b.fbx": "943429846f7d98be2281a5ad84703b07ccce24d698161beb8afb313807f4935e",
+      "wall_end_c.fbx": "e38139044a200313577c9cff082c58ba73afaff404e6f0c3803e27a18afb0e22",
+      "wall_lavafall_a.fbx": "44883a775bbc06680166d7351ed07e5bb71aa76c9c5aa3576a1825b3405f31c0",
+      "wall_lavafall_b.fbx": "ab487c1272a827e18c413aca14741dac4c35dea39e51040660affed9c0c0831e",
+      "wall_straight_a.fbx": "9495259cc10041f9d342c6dc551fae80e7d88c8a62b153dab9c873da5987921f",
+      "wall_straight_b.fbx": "8d52526b5cd5e9908c3f460931f6d0ab40fbe70a3740a28a75c4c2416ce0b4d1",
+      "wall_straight_c.fbx": "a2eb1b8033fd2b80f4c2278e92c3be393b44e96d3f0d274f464a01d111549bbe",
+      "wall_straight_d.fbx": "72c38da0a2e40c0b6043c5779379405d2b22da7785fa0490a0244b9e53ac18ec"
+    }
+  },
+  "protectedJob005": {
+    "files": 26,
+    "allSha256Unchanged": true
+  },
+  "comparison": {
+    "method": "Direct side-by-side pixel paste of actual Unity renders; same geometry, camera, shader snapshot, material values and execution frame; only v2/v3 atlas pair switched. No recolouring, resizing or AI editing.",
+    "left": "005 / volcano_cel_v2",
+    "right": "006 / volcano_cel_v3",
+    "camera": {
+      "position": [
+        0,
+        1.5,
+        -3
+      ],
+      "target": [
+        0.1,
+        1.5,
+        17
+      ],
+      "horizontalFov": 76
+    },
+    "v2ScreenshotSha256": "d2ebf28d018f9758de38f982a91d1f08acc5e30a95e59ea46dcf51d859520a95",
+    "v3ScreenshotSha256": "a0022e643553e0696c7f51193d0770cad14ed6ad8066832eb0e8529e0bce237f",
+    "shaderSha256": "34a8036a640a305dae2a504dc4f1e4aa4aab916585f187a8863999dc5e69fe40"
+  },
+  "assetInventory": [
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/backdrop_rock_a.fbx",
+      "bytes": 25116,
+      "sha256": "2f3b956d4384fc8554d48f1cf9d3d0ac4d00df4d91e03ae09f25a4a5317af32e"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/backdrop_rock_b.fbx",
+      "bytes": 25004,
+      "sha256": "ddfa8000d4dede72fcaedcaf230373a31fc5d4acbbd2458fa51ef52f2b1afdd6"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/backdrop_rock_c.fbx",
+      "bytes": 67436,
+      "sha256": "ac989319d502adf6f251219703275ab0c1b9747454855c10cfdc794c23b7282b"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/backdrop_rock_d.fbx",
+      "bytes": 64972,
+      "sha256": "7745b6550967923e9c5b1dd8dd37511fec0cf08bbb2b1305567f12ed6136299d"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/cave_entrance_a.fbx",
+      "bytes": 161100,
+      "sha256": "86b0725ff5e120a6acb89612d2dbd8cedd8f91bfa3d5862760561fd6c9b38895"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/cel_ground_ash.png",
+      "bytes": 607835,
+      "sha256": "3580680d52ad53e284834e49115e293ea91d4427dbbf41c2164f51a587fc798d"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/cel_ground_crust.png",
+      "bytes": 592580,
+      "sha256": "d0a41b9697e87af783f603e9d75d3995bf4d0093d2984705df554f11732811d8"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/gate_a.fbx",
+      "bytes": 59132,
+      "sha256": "a00206a2e7cbb60e23cba0aa26d39cc26ac7fee6dfe39daa984b940dd5a44e59"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/gate_b.fbx",
+      "bytes": 59020,
+      "sha256": "44e47d4defd8a8cf187b8c74400c89d614edcd3699be8f343e3bf9c5e9c30c70"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/gate_door_a.fbx",
+      "bytes": 29804,
+      "sha256": "7211b63346b61c1f4568d074ab238cf7d9f1505da1ea9294c3e000d7a8f2a960"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/gate_door_b.fbx",
+      "bytes": 29868,
+      "sha256": "015895e66d2f0a706a53a4392f39bc14f232673ae69895009a1b18fc0475929e"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/gate_frame_a.fbx",
+      "bytes": 41836,
+      "sha256": "bc4c1a1a3e8a2d632862e4cbaa52992197cad83c209a712415c84d4d8c00c88d"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/gate_frame_b.fbx",
+      "bytes": 41660,
+      "sha256": "4471096b5e845cc97467771e4ecc869ee699deec6a279261a172a556c4318533"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/kit.json",
+      "bytes": 41378,
+      "sha256": "6068b87e734da693e5a5235fc4d55f1d5a07c6aea15b5ca0a2b12f53bbdb5de5"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/volcano_cel_v3_albedo.png",
+      "bytes": 9681432,
+      "sha256": "6bfc670d62e6747be9cf134fecf99e97c7e6ffef5d13915ef934cb12b574f4cb"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/volcano_cel_v3_backdrop_albedo.png",
+      "bytes": 980076,
+      "sha256": "f3334b1e392c8c2d6fd0fc03e8e16bfad6a24228a39447e6f2e741f4f62edae7"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/volcano_cel_v3_backdrop_emissive.png",
+      "bytes": 31279,
+      "sha256": "473d644d56f2927a10cadf9f2550150ef0fdaa9c6f42fbf0265860729c8bf916"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/volcano_cel_v3_emissive.png",
+      "bytes": 162769,
+      "sha256": "f96a1ae60fd6db45f6efa98326631afb0eff4c75af8bf73e9aacfbb9cccff95f"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_corner_in_a.fbx",
+      "bytes": 41900,
+      "sha256": "59d344436f44f26615fd26207e93ba5583e91f3fdfbb28b0c72f447b2bff4165"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_corner_in_b.fbx",
+      "bytes": 41084,
+      "sha256": "59ae8afbe79b908039f16df379172f88d522b8185b1c9894b740cbb8a805a5f7"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_corner_in_c.fbx",
+      "bytes": 40236,
+      "sha256": "c8768a42d8714fd9f818258afa8db788d1210264eedc767a7daf8a42a41c0c7e"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_corner_out_a.fbx",
+      "bytes": 40492,
+      "sha256": "99f7123cd1d78c5203bf8c703fbef9b982ab2fc426afc590b1e6e6e2ad754435"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_corner_out_b.fbx",
+      "bytes": 41852,
+      "sha256": "bd37b9ce2915b83aa289ae5b88c8ecf0cb004328387f92b71678beba992abd48"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_corner_out_c.fbx",
+      "bytes": 40092,
+      "sha256": "551b5246837e088f1a06f3e6bd0b5de1113b507247b20b25e73ae2ec8406c543"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_end_a.fbx",
+      "bytes": 41468,
+      "sha256": "79a30a8a375a4941fbd36cc738a574d7257652a0397fc56105b6ba5d2a2da766"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_end_b.fbx",
+      "bytes": 42396,
+      "sha256": "943429846f7d98be2281a5ad84703b07ccce24d698161beb8afb313807f4935e"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_end_c.fbx",
+      "bytes": 40668,
+      "sha256": "e38139044a200313577c9cff082c58ba73afaff404e6f0c3803e27a18afb0e22"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_lavafall_a.fbx",
+      "bytes": 46924,
+      "sha256": "44883a775bbc06680166d7351ed07e5bb71aa76c9c5aa3576a1825b3405f31c0"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_lavafall_b.fbx",
+      "bytes": 49996,
+      "sha256": "ab487c1272a827e18c413aca14741dac4c35dea39e51040660affed9c0c0831e"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_straight_a.fbx",
+      "bytes": 43132,
+      "sha256": "9495259cc10041f9d342c6dc551fae80e7d88c8a62b153dab9c873da5987921f"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_straight_b.fbx",
+      "bytes": 46188,
+      "sha256": "8d52526b5cd5e9908c3f460931f6d0ab40fbe70a3740a28a75c4c2416ce0b4d1"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_straight_c.fbx",
+      "bytes": 42924,
+      "sha256": "a2eb1b8033fd2b80f4c2278e92c3be393b44e96d3f0d274f464a01d111549bbe"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3/wall_straight_d.fbx",
+      "bytes": 43596,
+      "sha256": "72c38da0a2e40c0b6043c5779379405d2b22da7785fa0490a0244b9e53ac18ec"
+    }
+  ],
+  "mobileImport": {
+    "pipeline": "Unity 2022.3 Built-in",
+    "material": "Unlit/Texture; shading/AO baked. Main atlas contains its small glow accents; emissive mask is optional for the host.",
+    "textures": {
+      "volcano_cel_v3_albedo.png": {
+        "maxSize": 2048,
+        "sRGB": true
+      },
+      "volcano_cel_v3_backdrop_albedo.png": {
+        "maxSize": 1024,
+        "sRGB": true
+      },
+      "volcano_cel_v3_emissive.png": {
+        "maxSize": 512,
+        "sRGB": false
+      },
+      "volcano_cel_v3_backdrop_emissive.png": {
+        "maxSize": 512,
+        "sRGB": false
+      },
+      "cel_ground_ash.png": {
+        "maxSize": 512,
+        "sRGB": true
+      },
+      "cel_ground_crust.png": {
+        "maxSize": 512,
+        "sRGB": true
+      }
+    },
+    "shared": {
+      "mipmaps": true,
+      "readWrite": false,
+      "filter": "Trilinear",
+      "Android": "ASTC 6x6",
+      "iPhone": "ASTC 6x6"
+    },
+    "highQualityOption": "The authoring main atlas is 4096px. Raise the import maximum only after profiling a target phone.",
+    "estimatedKitTextureGpuBytesASTC6x6WithMips": 3757728,
+    "estimateNote": "Texture storage estimate only; excludes meshes, render buffers, driver overhead, game/UI, camera capture and tracking. Not a measured device memory figure."
+  },
+  "phoneFpsMeasured": false
+}

@@ -1,0 +1,27 @@
+工單 006：只重畫不規則熔岩脈
+
+成果為 SceneKit/volcano_cel_v3，kit.version=6。volcano_cel_v2 與工單 005 全部檔案 SHA256 保持不變。
+22 個零件／26 個 FBX／6 張 PNG／kit.json。所有 FBX 直接複製 005，位元組完全一致；14,854 個邏輯零件三角面。
+
+遊戲端只需切換 SceneKit 資料夾與四張 volcano_cel_v3_* 貼圖名稱。地面檔名、模型檔名、子物件與材質角色不變。
+lava_flow 保持 005 UV 帶與方向：sampleUV=float2(uv.x,frac(uv.y-timeSeconds*0.18))，主圖與遮罩一起捲 V；不要捲 U。
+門扉幾何封印、洞口熔岩池、火山口熔岩與瀑布保留。牆腳暖橘反光仍由遊戲 shader 負責，沒有另加烘焙。
+
+熔岩脈沿實際網格的岩層折線構成分岔圖，寬度沿線變化，交點稍粗亮。每個可見面稀疏版本只有兩個小裂口；其他版本有大裂縫網與短支脈。
+5-9% 解讀為普通牆版本按實體表面積加權的整體比例，讓稀疏／密集版本有明顯差異；逐物件數值見 inspect.json。
+垂直比例同時計算脈段數與長度加權；角度是相對局部表面垂直的銳角。既有瀑布／門封印／火山口池不計入新脈段。
+vein-layout.json 保留每段端點、寬度、所跟隨的網格邊與種子結果，可重算方向；inspect.json 有上下半部分布。
+
+預覽：compare_v2_v3.png 左 005、右 006；同一份幾何、005 鏡頭、同一 shader 和材質參數、同一執行幀，只切換貼圖。
+closeup_veins.png 與 compare_closeup_v2_v3.png 看近距離分岔。各種零件另有 part_*.png。
+預覽沿用 005 的 Built-in shader 快照；不是另作概念圖。手機 FPS／發熱未實測。
+
+控制接口仍為 cel_kit_control.py API v1；新 styleId=anime_cel_volcano_veins_v3，sourceKit 必須是 005 version=5。
+新增後端 extensions/anime_cel_veins_v3；原 v1／v2 後端沒有改動。
+capabilities → plan → validate → generate → inspect。generator_request.json 是本機實際請求，重播要替換 outputFolder，不能覆寫既有 run。
+style.json 提供相對 repo 的可搬移輸入；透過 configFile 引用。BLENDER_PATH 指向 Blender 4.5 執行檔。
+新增後端 reference/ 保留歷史 cel-v1 冷色主圖與遮罩，僅用來恢復 005 舊線條覆蓋的岩石。
+
+貼圖匯入仍用 Android/iPhone ASTC 6x6、mipmap、Read/Write 關閉。主圖上限 2048；遠景 1024；兩張遮罩與兩張地面 512。
+遮罩 sRGB=false，其餘 sRGB=true。不要匯入 URP 材質；套用遊戲已有的共用 Built-in 材質。
+驗證：19 個接口測試通過；26 FBX 再匯入、位元組比較、解碼後瀑布帶像素比較、Unity 22 個零件匯入與尺寸／面數／命名檢查、兩時間點瀑布動畫檢查。

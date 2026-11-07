@@ -1,0 +1,6 @@
+{
+  "styleId": "anime_cel_volcano_veins_v3",
+  "sourceKit": "../../../../spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2",
+  "surfaceAtlas": "../../codex-style/volcano-cel-v1/source/anime-volcano-source-atlas.png",
+  "quality": "mobile"
+}

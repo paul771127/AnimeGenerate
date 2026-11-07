@@ -1,0 +1,21 @@
+{
+  "method": "Direct side-by-side pixel paste of actual Unity renders; same geometry, camera, shader snapshot, material values and execution frame; only v2/v3 atlas pair switched. No recolouring, resizing or AI editing.",
+  "left": "005 / volcano_cel_v2",
+  "right": "006 / volcano_cel_v3",
+  "camera": {
+    "position": [
+      0,
+      1.5,
+      -3
+    ],
+    "target": [
+      0.1,
+      1.5,
+      17
+    ],
+    "horizontalFov": 76
+  },
+  "v2ScreenshotSha256": "d2ebf28d018f9758de38f982a91d1f08acc5e30a95e59ea46dcf51d859520a95",
+  "v3ScreenshotSha256": "a0022e643553e0696c7f51193d0770cad14ed6ad8066832eb0e8529e0bce237f",
+  "shaderSha256": "34a8036a640a305dae2a504dc4f1e4aa4aab916585f187a8863999dc5e69fe40"
+}

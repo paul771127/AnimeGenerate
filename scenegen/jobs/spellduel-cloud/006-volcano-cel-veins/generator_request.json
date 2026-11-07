@@ -1,0 +1,13 @@
+{
+  "apiVersion": 1,
+  "requestId": "spellduel-006-generate",
+  "action": "generate",
+  "config": {
+    "styleId": "anime_cel_volcano_veins_v3",
+    "quality": "mobile",
+    "sourceKit": "E:\\AI接案\\SpellDuel-repo\\spellduel-unity\\Assets\\SpellDuel\\Resources\\SceneKit\\volcano_cel_v2",
+    "surfaceAtlas": "E:\\AI接案\\SpellDuel-repo\\scenegen\\jobs\\codex-style\\volcano-cel-v1\\source\\anime-volcano-source-atlas.png"
+  },
+  "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-006-cel-veins-20261107T232933407441-r2",
+  "timeoutSeconds": 1800
+}

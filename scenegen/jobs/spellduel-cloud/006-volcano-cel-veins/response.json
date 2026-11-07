@@ -1,0 +1,858 @@
+{
+  "ok": true,
+  "job": "006-volcano-cel-veins",
+  "styleId": "anime_cel_volcano_veins_v3",
+  "kitVersion": 6,
+  "assets": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3",
+  "privateJob": "E:\\AI接案\\rpg-world-builder\\jobs\\spellduel-cloud\\006-volcano-cel-veins\\20261107T232933407441",
+  "privateRun": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-006-cel-veins-20261107T232933407441-r2",
+  "baseCommit": "945f10d260815b8670f1b5e78067428a3c3c5680",
+  "controlApi": {
+    "entry": "cel_kit_control.py",
+    "apiVersion": 1,
+    "actions": [
+      {
+        "action": "capabilities",
+        "request": {
+          "apiVersion": 1,
+          "requestId": "spellduel-006-capabilities",
+          "action": "capabilities"
+        },
+        "response": {
+          "apiVersion": 1,
+          "requestId": "spellduel-006-capabilities",
+          "ok": true,
+          "result": {
+            "extension": "anime_cel_modular_kit",
+            "styleIds": [
+              "anime_cel_volcano_v1",
+              "anime_cel_volcano_lava_v2",
+              "anime_cel_volcano_veins_v3"
+            ],
+            "apiVersion": 1,
+            "actions": [
+              "capabilities",
+              "plan",
+              "validate",
+              "generate",
+              "inspect"
+            ],
+            "input": "Existing volcano v3-compatible kit + original 2x2 surface PNG atlas",
+            "output": "FBX part kit, baked albedo/mask, sample GLB level, actual 3D previews",
+            "coreApiChanged": false
+          }
+        }
+      },
+      {
+        "action": "plan",
+        "request": {
+          "apiVersion": 1,
+          "requestId": "spellduel-006-plan",
+          "action": "plan",
+          "config": {
+            "styleId": "anime_cel_volcano_veins_v3",
+            "quality": "mobile",
+            "sourceKit": "E:\\AI接案\\SpellDuel-repo\\spellduel-unity\\Assets\\SpellDuel\\Resources\\SceneKit\\volcano_cel_v2",
+            "surfaceAtlas": "E:\\AI接案\\SpellDuel-repo\\scenegen\\jobs\\codex-style\\volcano-cel-v1\\source\\anime-volcano-source-atlas.png"
+          }
+        },
+        "response": {
+          "apiVersion": 1,
+          "requestId": "spellduel-006-plan",
+          "ok": true,
+          "result": {
+            "styleId": "anime_cel_volcano_veins_v3",
+            "quality": "mobile",
+            "parts": 22,
+            "sourceTriangles": 14854,
+            "sourcePartFiles": [
+              {
+                "file": "wall_straight_a.fbx",
+                "sha256": "9495259cc10041f9d342c6dc551fae80e7d88c8a62b153dab9c873da5987921f"
+              },
+              {
+                "file": "backdrop_rock_a.fbx",
+                "sha256": "2f3b956d4384fc8554d48f1cf9d3d0ac4d00df4d91e03ae09f25a4a5317af32e"
+              },
+              {
+                "file": "wall_straight_b.fbx",
+                "sha256": "8d52526b5cd5e9908c3f460931f6d0ab40fbe70a3740a28a75c4c2416ce0b4d1"
+              },
+              {
+                "file": "backdrop_rock_b.fbx",
+                "sha256": "ddfa8000d4dede72fcaedcaf230373a31fc5d4acbbd2458fa51ef52f2b1afdd6"
+              },
+              {
+                "file": "wall_straight_c.fbx",
+                "sha256": "a2eb1b8033fd2b80f4c2278e92c3be393b44e96d3f0d274f464a01d111549bbe"
+              },
+              {
+                "file": "backdrop_rock_c.fbx",
+                "sha256": "ac989319d502adf6f251219703275ab0c1b9747454855c10cfdc794c23b7282b"
+              },
+              {
+                "file": "wall_straight_d.fbx",
+                "sha256": "72c38da0a2e40c0b6043c5779379405d2b22da7785fa0490a0244b9e53ac18ec"
+              },
+              {
+                "file": "backdrop_rock_d.fbx",
+                "sha256": "7745b6550967923e9c5b1dd8dd37511fec0cf08bbb2b1305567f12ed6136299d"
+              },
+              {
+                "file": "wall_corner_out_a.fbx",
+                "sha256": "99f7123cd1d78c5203bf8c703fbef9b982ab2fc426afc590b1e6e6e2ad754435"
+              },
+              {
+                "file": "wall_corner_in_a.fbx",
+                "sha256": "59d344436f44f26615fd26207e93ba5583e91f3fdfbb28b0c72f447b2bff4165"
+              },
+              {
+                "file": "wall_end_a.fbx",
+                "sha256": "79a30a8a375a4941fbd36cc738a574d7257652a0397fc56105b6ba5d2a2da766"
+              },
+              {
+                "file": "wall_corner_out_b.fbx",
+                "sha256": "bd37b9ce2915b83aa289ae5b88c8ecf0cb004328387f92b71678beba992abd48"
+              },
+              {
+                "file": "wall_corner_in_b.fbx",
+                "sha256": "59ae8afbe79b908039f16df379172f88d522b8185b1c9894b740cbb8a805a5f7"
+              },
+              {
+                "file": "wall_end_b.fbx",
+                "sha256": "943429846f7d98be2281a5ad84703b07ccce24d698161beb8afb313807f4935e"
+              },
+              {
+                "file": "wall_corner_out_c.fbx",
+                "sha256": "551b5246837e088f1a06f3e6bd0b5de1113b507247b20b25e73ae2ec8406c543"
+              },
+              {
+                "file": "wall_corner_in_c.fbx",
+                "sha256": "c8768a42d8714fd9f818258afa8db788d1210264eedc767a7daf8a42a41c0c7e"
+              },
+              {
+                "file": "wall_end_c.fbx",
+                "sha256": "e38139044a200313577c9cff082c58ba73afaff404e6f0c3803e27a18afb0e22"
+              },
+              {
+                "file": "gate_a.fbx",
+                "sha256": "a00206a2e7cbb60e23cba0aa26d39cc26ac7fee6dfe39daa984b940dd5a44e59"
+              },
+              {
+                "file": "gate_b.fbx",
+                "sha256": "44e47d4defd8a8cf187b8c74400c89d614edcd3699be8f343e3bf9c5e9c30c70"
+              },
+              {
+                "file": "cave_entrance_a.fbx",
+                "sha256": "86b0725ff5e120a6acb89612d2dbd8cedd8f91bfa3d5862760561fd6c9b38895"
+              },
+              {
+                "file": "wall_lavafall_a.fbx",
+                "sha256": "44883a775bbc06680166d7351ed07e5bb71aa76c9c5aa3576a1825b3405f31c0"
+              },
+              {
+                "file": "wall_lavafall_b.fbx",
+                "sha256": "ab487c1272a827e18c413aca14741dac4c35dea39e51040660affed9c0c0831e"
+              }
+            ],
+            "sourceKitSha256": "d06461d109937caaaf22100478100993d23eec0234bdf10fff194f84a5286780",
+            "surfaceAtlasSha256": "43894e7564e8b4d1e222078f6af07658b1de9e3cc1136c7a3f4ac7b9233781e2",
+            "atlasSizes": {
+              "main": 4096,
+              "backdrop": 1024,
+              "emissive": 1024,
+              "ground": 1024
+            },
+            "veinFeatures": [
+              "005 FBX byte identity including every UV and lava_flow child",
+              "mesh-crease-guided branching fissures; sparse and dense wall variants",
+              "vertical segments <=40% by count and length; 5-9% aggregate wall emission",
+              "unchanged flow texture band, ground, door seal and crater pools"
+            ],
+            "lavaFeatures": [],
+            "warnings": [
+              "Baked shading is part-local; rotated instances do not relight automatically.",
+              "Existing 2D obstacle sprites keep their former style until separately restyled.",
+              "This extension makes visuals and an example layout; game tracking/combat/controllers are external.",
+              "Mobile FPS, heat and camera overhead require device profiling."
+            ]
+          }
+        }
+      },
+      {
+        "action": "validate",
+        "request": {
+          "apiVersion": 1,
+          "requestId": "spellduel-006-validate",
+          "action": "validate",
+          "config": {
+            "styleId": "anime_cel_volcano_veins_v3",
+            "quality": "mobile",
+            "sourceKit": "E:\\AI接案\\SpellDuel-repo\\spellduel-unity\\Assets\\SpellDuel\\Resources\\SceneKit\\volcano_cel_v2",
+            "surfaceAtlas": "E:\\AI接案\\SpellDuel-repo\\scenegen\\jobs\\codex-style\\volcano-cel-v1\\source\\anime-volcano-source-atlas.png"
+          }
+        },
+        "response": {
+          "apiVersion": 1,
+          "requestId": "spellduel-006-validate",
+          "ok": true,
+          "result": {
+            "styleId": "anime_cel_volcano_veins_v3",
+            "quality": "mobile",
+            "parts": 22,
+            "sourceTriangles": 14854,
+            "sourcePartFiles": [
+              {
+                "file": "wall_straight_a.fbx",
+                "sha256": "9495259cc10041f9d342c6dc551fae80e7d88c8a62b153dab9c873da5987921f"
+              },
+              {
+                "file": "backdrop_rock_a.fbx",
+                "sha256": "2f3b956d4384fc8554d48f1cf9d3d0ac4d00df4d91e03ae09f25a4a5317af32e"
+              },
+              {
+                "file": "wall_straight_b.fbx",
+                "sha256": "8d52526b5cd5e9908c3f460931f6d0ab40fbe70a3740a28a75c4c2416ce0b4d1"
+              },
+              {
+                "file": "backdrop_rock_b.fbx",
+                "sha256": "ddfa8000d4dede72fcaedcaf230373a31fc5d4acbbd2458fa51ef52f2b1afdd6"
+              },
+              {
+                "file": "wall_straight_c.fbx",
+                "sha256": "a2eb1b8033fd2b80f4c2278e92c3be393b44e96d3f0d274f464a01d111549bbe"
+              },
+              {
+                "file": "backdrop_rock_c.fbx",
+                "sha256": "ac989319d502adf6f251219703275ab0c1b9747454855c10cfdc794c23b7282b"
+              },
+              {
+                "file": "wall_straight_d.fbx",
+                "sha256": "72c38da0a2e40c0b6043c5779379405d2b22da7785fa0490a0244b9e53ac18ec"
+              },
+              {
+                "file": "backdrop_rock_d.fbx",
+                "sha256": "7745b6550967923e9c5b1dd8dd37511fec0cf08bbb2b1305567f12ed6136299d"
+              },
+              {
+                "file": "wall_corner_out_a.fbx",
+                "sha256": "99f7123cd1d78c5203bf8c703fbef9b982ab2fc426afc590b1e6e6e2ad754435"
+              },
+              {
+                "file": "wall_corner_in_a.fbx",
+                "sha256": "59d344436f44f26615fd26207e93ba5583e91f3fdfbb28b0c72f447b2bff4165"
+              },
+              {
+                "file": "wall_end_a.fbx",
+                "sha256": "79a30a8a375a4941fbd36cc738a574d7257652a0397fc56105b6ba5d2a2da766"
+              },
+              {
+                "file": "wall_corner_out_b.fbx",
+                "sha256": "bd37b9ce2915b83aa289ae5b88c8ecf0cb004328387f92b71678beba992abd48"
+              },
+              {
+                "file": "wall_corner_in_b.fbx",
+                "sha256": "59ae8afbe79b908039f16df379172f88d522b8185b1c9894b740cbb8a805a5f7"
+              },
+              {
+                "file": "wall_end_b.fbx",
+                "sha256": "943429846f7d98be2281a5ad84703b07ccce24d698161beb8afb313807f4935e"
+              },
+              {
+                "file": "wall_corner_out_c.fbx",
+                "sha256": "551b5246837e088f1a06f3e6bd0b5de1113b507247b20b25e73ae2ec8406c543"
+              },
+              {
+                "file": "wall_corner_in_c.fbx",
+                "sha256": "c8768a42d8714fd9f818258afa8db788d1210264eedc767a7daf8a42a41c0c7e"
+              },
+              {
+                "file": "wall_end_c.fbx",
+                "sha256": "e38139044a200313577c9cff082c58ba73afaff404e6f0c3803e27a18afb0e22"
+              },
+              {
+                "file": "gate_a.fbx",
+                "sha256": "a00206a2e7cbb60e23cba0aa26d39cc26ac7fee6dfe39daa984b940dd5a44e59"
+              },
+              {
+                "file": "gate_b.fbx",
+                "sha256": "44e47d4defd8a8cf187b8c74400c89d614edcd3699be8f343e3bf9c5e9c30c70"
+              },
+              {
+                "file": "cave_entrance_a.fbx",
+                "sha256": "86b0725ff5e120a6acb89612d2dbd8cedd8f91bfa3d5862760561fd6c9b38895"
+              },
+              {
+                "file": "wall_lavafall_a.fbx",
+                "sha256": "44883a775bbc06680166d7351ed07e5bb71aa76c9c5aa3576a1825b3405f31c0"
+              },
+              {
+                "file": "wall_lavafall_b.fbx",
+                "sha256": "ab487c1272a827e18c413aca14741dac4c35dea39e51040660affed9c0c0831e"
+              }
+            ],
+            "sourceKitSha256": "d06461d109937caaaf22100478100993d23eec0234bdf10fff194f84a5286780",
+            "surfaceAtlasSha256": "43894e7564e8b4d1e222078f6af07658b1de9e3cc1136c7a3f4ac7b9233781e2",
+            "atlasSizes": {
+              "main": 4096,
+              "backdrop": 1024,
+              "emissive": 1024,
+              "ground": 1024
+            },
+            "veinFeatures": [
+              "005 FBX byte identity including every UV and lava_flow child",
+              "mesh-crease-guided branching fissures; sparse and dense wall variants",
+              "vertical segments <=40% by count and length; 5-9% aggregate wall emission",
+              "unchanged flow texture band, ground, door seal and crater pools"
+            ],
+            "lavaFeatures": [],
+            "warnings": [
+              "Baked shading is part-local; rotated instances do not relight automatically.",
+              "Existing 2D obstacle sprites keep their former style until separately restyled.",
+              "This extension makes visuals and an example layout; game tracking/combat/controllers are external.",
+              "Mobile FPS, heat and camera overhead require device profiling."
+            ],
+            "valid": true
+          }
+        }
+      },
+      {
+        "action": "generate",
+        "request": {
+          "apiVersion": 1,
+          "requestId": "spellduel-006-generate",
+          "action": "generate",
+          "config": {
+            "styleId": "anime_cel_volcano_veins_v3",
+            "quality": "mobile",
+            "sourceKit": "E:\\AI接案\\SpellDuel-repo\\spellduel-unity\\Assets\\SpellDuel\\Resources\\SceneKit\\volcano_cel_v2",
+            "surfaceAtlas": "E:\\AI接案\\SpellDuel-repo\\scenegen\\jobs\\codex-style\\volcano-cel-v1\\source\\anime-volcano-source-atlas.png"
+          },
+          "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-006-cel-veins-20261107T232933407441-r2",
+          "timeoutSeconds": 1800
+        },
+        "response": {
+          "apiVersion": 1,
+          "requestId": "spellduel-006-generate",
+          "ok": true,
+          "result": {
+            "valid": true,
+            "styleId": "anime_cel_volcano_veins_v3",
+            "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-006-cel-veins-20261107T232933407441-r2",
+            "statistics": {
+              "parts": 22,
+              "partTriangles": 14854,
+              "demoTriangles": 15692
+            },
+            "budgetChecks": {
+              "wall_straight": {
+                "limit": 600,
+                "max": 494,
+                "passed": true
+              },
+              "backdrop_rock": {
+                "limit": 1500,
+                "max": 1241,
+                "passed": true
+              },
+              "wall_corner_out": {
+                "limit": 600,
+                "max": 485,
+                "passed": true
+              },
+              "wall_corner_in": {
+                "limit": 600,
+                "max": 485,
+                "passed": true
+              },
+              "wall_end": {
+                "limit": 600,
+                "max": 484,
+                "passed": true
+              },
+              "gate": {
+                "limit": 1200,
+                "max": 770,
+                "passed": true
+              },
+              "cave_entrance": {
+                "limit": 3000,
+                "max": 2548,
+                "passed": true
+              },
+              "wall_lavafall": {
+                "limit": 700,
+                "max": 543,
+                "passed": true
+              }
+            },
+            "assetInventory": [
+              {
+                "file": "cel_ground_ash.png",
+                "bytes": 607835,
+                "sha256": "3580680d52ad53e284834e49115e293ea91d4427dbbf41c2164f51a587fc798d"
+              },
+              {
+                "file": "cel_ground_crust.png",
+                "bytes": 592580,
+                "sha256": "d0a41b9697e87af783f603e9d75d3995bf4d0093d2984705df554f11732811d8"
+              },
+              {
+                "file": "fbx/backdrop_rock_a.fbx",
+                "bytes": 25116,
+                "sha256": "2f3b956d4384fc8554d48f1cf9d3d0ac4d00df4d91e03ae09f25a4a5317af32e"
+              },
+              {
+                "file": "fbx/backdrop_rock_b.fbx",
+                "bytes": 25004,
+                "sha256": "ddfa8000d4dede72fcaedcaf230373a31fc5d4acbbd2458fa51ef52f2b1afdd6"
+              },
+              {
+                "file": "fbx/backdrop_rock_c.fbx",
+                "bytes": 67436,
+                "sha256": "ac989319d502adf6f251219703275ab0c1b9747454855c10cfdc794c23b7282b"
+              },
+              {
+                "file": "fbx/backdrop_rock_d.fbx",
+                "bytes": 64972,
+                "sha256": "7745b6550967923e9c5b1dd8dd37511fec0cf08bbb2b1305567f12ed6136299d"
+              },
+              {
+                "file": "fbx/cave_entrance_a.fbx",
+                "bytes": 161100,
+                "sha256": "86b0725ff5e120a6acb89612d2dbd8cedd8f91bfa3d5862760561fd6c9b38895"
+              },
+              {
+                "file": "fbx/gate_a.fbx",
+                "bytes": 59132,
+                "sha256": "a00206a2e7cbb60e23cba0aa26d39cc26ac7fee6dfe39daa984b940dd5a44e59"
+              },
+              {
+                "file": "fbx/gate_b.fbx",
+                "bytes": 59020,
+                "sha256": "44e47d4defd8a8cf187b8c74400c89d614edcd3699be8f343e3bf9c5e9c30c70"
+              },
+              {
+                "file": "fbx/gate_door_a.fbx",
+                "bytes": 29804,
+                "sha256": "7211b63346b61c1f4568d074ab238cf7d9f1505da1ea9294c3e000d7a8f2a960"
+              },
+              {
+                "file": "fbx/gate_door_b.fbx",
+                "bytes": 29868,
+                "sha256": "015895e66d2f0a706a53a4392f39bc14f232673ae69895009a1b18fc0475929e"
+              },
+              {
+                "file": "fbx/gate_frame_a.fbx",
+                "bytes": 41836,
+                "sha256": "bc4c1a1a3e8a2d632862e4cbaa52992197cad83c209a712415c84d4d8c00c88d"
+              },
+              {
+                "file": "fbx/gate_frame_b.fbx",
+                "bytes": 41660,
+                "sha256": "4471096b5e845cc97467771e4ecc869ee699deec6a279261a172a556c4318533"
+              },
+              {
+                "file": "fbx/wall_corner_in_a.fbx",
+                "bytes": 41900,
+                "sha256": "59d344436f44f26615fd26207e93ba5583e91f3fdfbb28b0c72f447b2bff4165"
+              },
+              {
+                "file": "fbx/wall_corner_in_b.fbx",
+                "bytes": 41084,
+                "sha256": "59ae8afbe79b908039f16df379172f88d522b8185b1c9894b740cbb8a805a5f7"
+              },
+              {
+                "file": "fbx/wall_corner_in_c.fbx",
+                "bytes": 40236,
+                "sha256": "c8768a42d8714fd9f818258afa8db788d1210264eedc767a7daf8a42a41c0c7e"
+              },
+              {
+                "file": "fbx/wall_corner_out_a.fbx",
+                "bytes": 40492,
+                "sha256": "99f7123cd1d78c5203bf8c703fbef9b982ab2fc426afc590b1e6e6e2ad754435"
+              },
+              {
+                "file": "fbx/wall_corner_out_b.fbx",
+                "bytes": 41852,
+                "sha256": "bd37b9ce2915b83aa289ae5b88c8ecf0cb004328387f92b71678beba992abd48"
+              },
+              {
+                "file": "fbx/wall_corner_out_c.fbx",
+                "bytes": 40092,
+                "sha256": "551b5246837e088f1a06f3e6bd0b5de1113b507247b20b25e73ae2ec8406c543"
+              },
+              {
+                "file": "fbx/wall_end_a.fbx",
+                "bytes": 41468,
+                "sha256": "79a30a8a375a4941fbd36cc738a574d7257652a0397fc56105b6ba5d2a2da766"
+              },
+              {
+                "file": "fbx/wall_end_b.fbx",
+                "bytes": 42396,
+                "sha256": "943429846f7d98be2281a5ad84703b07ccce24d698161beb8afb313807f4935e"
+              },
+              {
+                "file": "fbx/wall_end_c.fbx",
+                "bytes": 40668,
+                "sha256": "e38139044a200313577c9cff082c58ba73afaff404e6f0c3803e27a18afb0e22"
+              },
+              {
+                "file": "fbx/wall_lavafall_a.fbx",
+                "bytes": 46924,
+                "sha256": "44883a775bbc06680166d7351ed07e5bb71aa76c9c5aa3576a1825b3405f31c0"
+              },
+              {
+                "file": "fbx/wall_lavafall_b.fbx",
+                "bytes": 49996,
+                "sha256": "ab487c1272a827e18c413aca14741dac4c35dea39e51040660affed9c0c0831e"
+              },
+              {
+                "file": "fbx/wall_straight_a.fbx",
+                "bytes": 43132,
+                "sha256": "9495259cc10041f9d342c6dc551fae80e7d88c8a62b153dab9c873da5987921f"
+              },
+              {
+                "file": "fbx/wall_straight_b.fbx",
+                "bytes": 46188,
+                "sha256": "8d52526b5cd5e9908c3f460931f6d0ab40fbe70a3740a28a75c4c2416ce0b4d1"
+              },
+              {
+                "file": "fbx/wall_straight_c.fbx",
+                "bytes": 42924,
+                "sha256": "a2eb1b8033fd2b80f4c2278e92c3be393b44e96d3f0d274f464a01d111549bbe"
+              },
+              {
+                "file": "fbx/wall_straight_d.fbx",
+                "bytes": 43596,
+                "sha256": "72c38da0a2e40c0b6043c5779379405d2b22da7785fa0490a0244b9e53ac18ec"
+              },
+              {
+                "file": "kit.json",
+                "bytes": 41378,
+                "sha256": "6068b87e734da693e5a5235fc4d55f1d5a07c6aea15b5ca0a2b12f53bbdb5de5"
+              },
+              {
+                "file": "volcano_cel_v3_albedo.png",
+                "bytes": 9681432,
+                "sha256": "6bfc670d62e6747be9cf134fecf99e97c7e6ffef5d13915ef934cb12b574f4cb"
+              },
+              {
+                "file": "volcano_cel_v3_backdrop_albedo.png",
+                "bytes": 980076,
+                "sha256": "f3334b1e392c8c2d6fd0fc03e8e16bfad6a24228a39447e6f2e741f4f62edae7"
+              },
+              {
+                "file": "volcano_cel_v3_backdrop_emissive.png",
+                "bytes": 31279,
+                "sha256": "473d644d56f2927a10cadf9f2550150ef0fdaa9c6f42fbf0265860729c8bf916"
+              },
+              {
+                "file": "volcano_cel_v3_emissive.png",
+                "bytes": 162769,
+                "sha256": "f96a1ae60fd6db45f6efa98326631afb0eff4c75af8bf73e9aacfbb9cccff95f"
+              }
+            ],
+            "assetBytes": 13345245,
+            "phoneFpsMeasured": false
+          }
+        }
+      },
+      {
+        "action": "inspect",
+        "request": {
+          "apiVersion": 1,
+          "requestId": "spellduel-006-inspect",
+          "action": "inspect",
+          "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-006-cel-veins-20261107T232933407441-r2"
+        },
+        "response": {
+          "apiVersion": 1,
+          "requestId": "spellduel-006-inspect",
+          "ok": true,
+          "result": {
+            "valid": true,
+            "styleId": "anime_cel_volcano_veins_v3",
+            "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-006-cel-veins-20261107T232933407441-r2",
+            "statistics": {
+              "parts": 22,
+              "partTriangles": 14854,
+              "demoTriangles": 15692
+            },
+            "budgetChecks": {
+              "wall_straight": {
+                "limit": 600,
+                "max": 494,
+                "passed": true
+              },
+              "backdrop_rock": {
+                "limit": 1500,
+                "max": 1241,
+                "passed": true
+              },
+              "wall_corner_out": {
+                "limit": 600,
+                "max": 485,
+                "passed": true
+              },
+              "wall_corner_in": {
+                "limit": 600,
+                "max": 485,
+                "passed": true
+              },
+              "wall_end": {
+                "limit": 600,
+                "max": 484,
+                "passed": true
+              },
+              "gate": {
+                "limit": 1200,
+                "max": 770,
+                "passed": true
+              },
+              "cave_entrance": {
+                "limit": 3000,
+                "max": 2548,
+                "passed": true
+              },
+              "wall_lavafall": {
+                "limit": 700,
+                "max": 543,
+                "passed": true
+              }
+            },
+            "assetInventory": [
+              {
+                "file": "cel_ground_ash.png",
+                "bytes": 607835,
+                "sha256": "3580680d52ad53e284834e49115e293ea91d4427dbbf41c2164f51a587fc798d"
+              },
+              {
+                "file": "cel_ground_crust.png",
+                "bytes": 592580,
+                "sha256": "d0a41b9697e87af783f603e9d75d3995bf4d0093d2984705df554f11732811d8"
+              },
+              {
+                "file": "fbx/backdrop_rock_a.fbx",
+                "bytes": 25116,
+                "sha256": "2f3b956d4384fc8554d48f1cf9d3d0ac4d00df4d91e03ae09f25a4a5317af32e"
+              },
+              {
+                "file": "fbx/backdrop_rock_b.fbx",
+                "bytes": 25004,
+                "sha256": "ddfa8000d4dede72fcaedcaf230373a31fc5d4acbbd2458fa51ef52f2b1afdd6"
+              },
+              {
+                "file": "fbx/backdrop_rock_c.fbx",
+                "bytes": 67436,
+                "sha256": "ac989319d502adf6f251219703275ab0c1b9747454855c10cfdc794c23b7282b"
+              },
+              {
+                "file": "fbx/backdrop_rock_d.fbx",
+                "bytes": 64972,
+                "sha256": "7745b6550967923e9c5b1dd8dd37511fec0cf08bbb2b1305567f12ed6136299d"
+              },
+              {
+                "file": "fbx/cave_entrance_a.fbx",
+                "bytes": 161100,
+                "sha256": "86b0725ff5e120a6acb89612d2dbd8cedd8f91bfa3d5862760561fd6c9b38895"
+              },
+              {
+                "file": "fbx/gate_a.fbx",
+                "bytes": 59132,
+                "sha256": "a00206a2e7cbb60e23cba0aa26d39cc26ac7fee6dfe39daa984b940dd5a44e59"
+              },
+              {
+                "file": "fbx/gate_b.fbx",
+                "bytes": 59020,
+                "sha256": "44e47d4defd8a8cf187b8c74400c89d614edcd3699be8f343e3bf9c5e9c30c70"
+              },
+              {
+                "file": "fbx/gate_door_a.fbx",
+                "bytes": 29804,
+                "sha256": "7211b63346b61c1f4568d074ab238cf7d9f1505da1ea9294c3e000d7a8f2a960"
+              },
+              {
+                "file": "fbx/gate_door_b.fbx",
+                "bytes": 29868,
+                "sha256": "015895e66d2f0a706a53a4392f39bc14f232673ae69895009a1b18fc0475929e"
+              },
+              {
+                "file": "fbx/gate_frame_a.fbx",
+                "bytes": 41836,
+                "sha256": "bc4c1a1a3e8a2d632862e4cbaa52992197cad83c209a712415c84d4d8c00c88d"
+              },
+              {
+                "file": "fbx/gate_frame_b.fbx",
+                "bytes": 41660,
+                "sha256": "4471096b5e845cc97467771e4ecc869ee699deec6a279261a172a556c4318533"
+              },
+              {
+                "file": "fbx/wall_corner_in_a.fbx",
+                "bytes": 41900,
+                "sha256": "59d344436f44f26615fd26207e93ba5583e91f3fdfbb28b0c72f447b2bff4165"
+              },
+              {
+                "file": "fbx/wall_corner_in_b.fbx",
+                "bytes": 41084,
+                "sha256": "59ae8afbe79b908039f16df379172f88d522b8185b1c9894b740cbb8a805a5f7"
+              },
+              {
+                "file": "fbx/wall_corner_in_c.fbx",
+                "bytes": 40236,
+                "sha256": "c8768a42d8714fd9f818258afa8db788d1210264eedc767a7daf8a42a41c0c7e"
+              },
+              {
+                "file": "fbx/wall_corner_out_a.fbx",
+                "bytes": 40492,
+                "sha256": "99f7123cd1d78c5203bf8c703fbef9b982ab2fc426afc590b1e6e6e2ad754435"
+              },
+              {
+                "file": "fbx/wall_corner_out_b.fbx",
+                "bytes": 41852,
+                "sha256": "bd37b9ce2915b83aa289ae5b88c8ecf0cb004328387f92b71678beba992abd48"
+              },
+              {
+                "file": "fbx/wall_corner_out_c.fbx",
+                "bytes": 40092,
+                "sha256": "551b5246837e088f1a06f3e6bd0b5de1113b507247b20b25e73ae2ec8406c543"
+              },
+              {
+                "file": "fbx/wall_end_a.fbx",
+                "bytes": 41468,
+                "sha256": "79a30a8a375a4941fbd36cc738a574d7257652a0397fc56105b6ba5d2a2da766"
+              },
+              {
+                "file": "fbx/wall_end_b.fbx",
+                "bytes": 42396,
+                "sha256": "943429846f7d98be2281a5ad84703b07ccce24d698161beb8afb313807f4935e"
+              },
+              {
+                "file": "fbx/wall_end_c.fbx",
+                "bytes": 40668,
+                "sha256": "e38139044a200313577c9cff082c58ba73afaff404e6f0c3803e27a18afb0e22"
+              },
+              {
+                "file": "fbx/wall_lavafall_a.fbx",
+                "bytes": 46924,
+                "sha256": "44883a775bbc06680166d7351ed07e5bb71aa76c9c5aa3576a1825b3405f31c0"
+              },
+              {
+                "file": "fbx/wall_lavafall_b.fbx",
+                "bytes": 49996,
+                "sha256": "ab487c1272a827e18c413aca14741dac4c35dea39e51040660affed9c0c0831e"
+              },
+              {
+                "file": "fbx/wall_straight_a.fbx",
+                "bytes": 43132,
+                "sha256": "9495259cc10041f9d342c6dc551fae80e7d88c8a62b153dab9c873da5987921f"
+              },
+              {
+                "file": "fbx/wall_straight_b.fbx",
+                "bytes": 46188,
+                "sha256": "8d52526b5cd5e9908c3f460931f6d0ab40fbe70a3740a28a75c4c2416ce0b4d1"
+              },
+              {
+                "file": "fbx/wall_straight_c.fbx",
+                "bytes": 42924,
+                "sha256": "a2eb1b8033fd2b80f4c2278e92c3be393b44e96d3f0d274f464a01d111549bbe"
+              },
+              {
+                "file": "fbx/wall_straight_d.fbx",
+                "bytes": 43596,
+                "sha256": "72c38da0a2e40c0b6043c5779379405d2b22da7785fa0490a0244b9e53ac18ec"
+              },
+              {
+                "file": "kit.json",
+                "bytes": 41378,
+                "sha256": "6068b87e734da693e5a5235fc4d55f1d5a07c6aea15b5ca0a2b12f53bbdb5de5"
+              },
+              {
+                "file": "volcano_cel_v3_albedo.png",
+                "bytes": 9681432,
+                "sha256": "6bfc670d62e6747be9cf134fecf99e97c7e6ffef5d13915ef934cb12b574f4cb"
+              },
+              {
+                "file": "volcano_cel_v3_backdrop_albedo.png",
+                "bytes": 980076,
+                "sha256": "f3334b1e392c8c2d6fd0fc03e8e16bfad6a24228a39447e6f2e741f4f62edae7"
+              },
+              {
+                "file": "volcano_cel_v3_backdrop_emissive.png",
+                "bytes": 31279,
+                "sha256": "473d644d56f2927a10cadf9f2550150ef0fdaa9c6f42fbf0265860729c8bf916"
+              },
+              {
+                "file": "volcano_cel_v3_emissive.png",
+                "bytes": 162769,
+                "sha256": "f96a1ae60fd6db45f6efa98326631afb0eff4c75af8bf73e9aacfbb9cccff95f"
+              }
+            ],
+            "assetBytes": 13345245,
+            "phoneFpsMeasured": false
+          }
+        }
+      }
+    ]
+  },
+  "totals": {
+    "parts": 22,
+    "partTriangles": 14854,
+    "demoTriangles": 15692,
+    "fbxFiles": 26,
+    "pngFiles": 6,
+    "assetBytes": 13345245
+  },
+  "implemented": [
+    "Replaced regular wall lines with deterministic crease-following, tapered and branching fissures, plus 10-40cm short cracks.",
+    "Distinct sparse, medium and dense variants; sparse variants use only two small cracks per visible side.",
+    "Lower half denser; gate frames, cave and volcano cones receive the same irregular treatment. Cone rivers bend and branch.",
+    "Restored cold rock where the old 005 veins had been; no new wall-foot orange ambient bake.",
+    "Copied all 26 source FBX byte-for-byte, including UVs, pivots, dimensions, file names, child names and triangle counts.",
+    "Preserved flow UV band and decoded pixels, UV direction, scroll rules, ground maps, door seal and crater pools.",
+    "Supplied native Unity player view at the 005 camera, v2/v3 comparison, close-up and eight category sheets."
+  ],
+  "checks": {
+    "fbxBytesIdentical": true,
+    "v2Unchanged": true,
+    "job005Unchanged": true,
+    "verticalSegmentFraction": 0.0017699115044247787,
+    "lengthWeightedVerticalFraction": 0.005995585714959261,
+    "verticalLimit": 0.4,
+    "wallAggregateEmissionFraction": 0.07906557648792084,
+    "lowerHalfNonConeLengthFraction": 0.6477611603948369,
+    "nativeUnityImport": true,
+    "nativeFlowUvMotionVerified": true,
+    "flowChangedPixels": 1396,
+    "v1ApiTestsPassed": 8,
+    "v2ApiTestsPassed": 5,
+    "v3ApiTestsPassed": 6,
+    "noMetaNoMatNoUrp": true
+  },
+  "deviations": [],
+  "interpretations": [
+    "The requested 5-9% glow is the physical-area-weighted total across ordinary wall variants. Individual nearly empty variants are intentionally below 5%, and dense variants can be above 9%, so the requested variant contrast remains visible. See every object fraction in inspect.json.",
+    "Angles are measured from local projected surface vertical in metre-scale H/Y charts, both by segment count and total length. The unchanged flow sheets, geometric door seal and crater pools are not vein segments."
+  ],
+  "implementationNotes": [
+    "Texture dimensions, shared material roles, model counts and phone import caps are unchanged from 005. No extra runtime mesh, texture slot, light or animation was added.",
+    "The preview retains the 005 Built-in StageKit shader snapshot and its runtime wall-foot reflection/pulse. These orange reflections are not added to the baked texture.",
+    "The generator API adds a new styleId; v1 and v2 routes remain available. Replaying requires a new outputFolder.",
+    "The backend includes the original cold-v1 reference atlas and mask recovered from the historical Git commit solely to restore rock under the removed 005 lines."
+  ],
+  "limits": [
+    "Phone FPS and temperature were not measured; the geometry and texture import budgets are unchanged."
+  ],
+  "provenance": {
+    "newAiImageGeneration": false,
+    "method": "Deterministic mesh-crease graph and texture bake on existing cel artwork.",
+    "sourceKitSha256": "d06461d109937caaaf22100478100993d23eec0234bdf10fff194f84a5286780",
+    "coldMainSha256": "efa825032fd57461bef97a13d231e58c7db68589d6ebf46080d7896c7f4e54b3",
+    "coldReferenceGitCommit": "c3c5d02faaeeed0b34e15ff5864e4b5f4d4c68b0"
+  },
+  "git": {
+    "branch": "claude/mobile-camera-mic-battle-game-v5nhfr",
+    "commitPrefix": "scenegen 006:",
+    "verification": "After pushing, executing session compares git ls-remote origin branch with git log -1 --format=%H and reports the raw outputs."
+  }
+}
