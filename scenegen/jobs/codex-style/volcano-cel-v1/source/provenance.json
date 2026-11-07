@@ -1,0 +1,18 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "intent": "original production surface atlas; reference environment style only",
+  "sourceFile": "anime-volcano-source-atlas.png",
+  "sha256": "43894e7564e8b4d1e222078f6af07658b1de9e3cc1136c7a3f4ac7b9233781e2",
+  "actualSize": [
+    1254,
+    1254
+  ],
+  "requestedSizeInPrompt": [
+    2048,
+    2048
+  ],
+  "technicalPreparation": "Blender crops four quadrants, linearises PNG byte values into float buffers, resamples each swatch to 1024 and bakes part-local two-band shading/AO to UV atlases. No new image detail is claimed from resampling.",
+  "promptFile": "imagegen-prompt.txt",
+  "reference": "User-supplied anime game environment screenshot; characters and UI ignored.",
+  "licenseNote": "Generated original material artwork; no original game textures or characters are distributed."
+}

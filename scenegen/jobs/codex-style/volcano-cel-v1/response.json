@@ -1,0 +1,111 @@
+{
+  "ok": true,
+  "styleId": "anime_cel_volcano_v1",
+  "generatorRoot": "E:\\AI接案\\rpg-world-builder",
+  "privateJob": "E:\\AI接案\\rpg-world-builder\\jobs\\codex-cel-style\\volcano-20261107T200348076029",
+  "privateRun": "E:\\AI接案\\rpg-world-builder\\runs\\volcano-cel-20261107T200348076029-r3",
+  "sourceGameCommit": "ef83e10ee91411e0dc72e7721ce623973d9fbc51",
+  "kit": {
+    "logicalParts": 20,
+    "fbxFiles": 24,
+    "uniquePartTriangles": 15331,
+    "allExportedTriangleInstances": 16869,
+    "assetBytes": 13150136
+  },
+  "demo": {
+    "triangles": 31414,
+    "glbBytes": 13249876,
+    "visualLayoutOnly": true,
+    "explicitlyUnlitGlb": true
+  },
+  "checks": {
+    "sourceTestsPassed": 62,
+    "extensionTestsPassed": 8,
+    "blenderFbxRoundTrip": true,
+    "unityNativeImport": {
+      "ok": true,
+      "engine": "Unity 2022.3.62f2",
+      "pipeline": "Built-in",
+      "parts": 20,
+      "triangles": 15331,
+      "mobileFpsMeasured": false,
+      "defaultMainTextureMax": 2048,
+      "shaderErrors": 0
+    },
+    "glbRoundTrip": {
+      "ok": true,
+      "importedTriangleInstances": 31414,
+      "renderedFromExportedGLB": true,
+      "materialsExplicitlyUnlit": true
+    },
+    "budgets": {
+      "wall_straight": {
+        "max": 494,
+        "limit": 600,
+        "passed": true
+      },
+      "backdrop_rock": {
+        "max": 1247,
+        "limit": 1500,
+        "passed": true
+      },
+      "wall_corner_out": {
+        "max": 485,
+        "limit": 600,
+        "passed": true
+      },
+      "wall_corner_in": {
+        "max": 485,
+        "limit": 600,
+        "passed": true
+      },
+      "wall_end": {
+        "max": 484,
+        "limit": 600,
+        "passed": true
+      },
+      "gate": {
+        "max": 1034,
+        "limit": 1200,
+        "passed": true
+      },
+      "cave_entrance": {
+        "max": 2530,
+        "limit": 3000,
+        "passed": true
+      }
+    },
+    "allChecksPassed": true,
+    "deliveryPackagePlanValidated": true,
+    "portableEntryValidated": true,
+    "glbSkyVertexColoursVerified": true
+  },
+  "changes": [
+    "Original hand-painted surface atlas generated with built-in image_gen using the supplied environment screenshot for style only.",
+    "Clean large painted shapes, two broad baked light bands, cool shadows/warm edges, restrained AO; no extra realtime lights, outline or volume pass.",
+    "558 zero-area logical-part triangles removed; UVs, bounds and actual surface area preserved.",
+    "20 compatible modular parts, 24 FBX exports including independent gate frames/doors.",
+    "Example canyon route, clearing, cave, distant caldera and lava ribbon exported as real geometry, not a concept image."
+  ],
+  "limits": [
+    "The generated cel kit is available through Git in a separate resource folder. The game consumer must apply the included optional style-switch patch to select it; no game logic was changed by this delivery.",
+    "The v3 part silhouettes are preserved. This change focuses on materials, cel shading and example layout.",
+    "Old 2D obstacle sprites are not restyled; their previous palette may differ until the game session updates them.",
+    "Cel illumination is baked in part space. Rotating a part also rotates its painted key light; a host cel shader or offline scene bake is needed for globally consistent moving lighting.",
+    "The independent example GLB has static sky/lava; the existing generator smoke/cloud animation APIs are unchanged and require the host to connect them when used.",
+    "The example has no game movement, tracking, battle, hazard triggers or collision components. Unity preview has a desktop free camera only.",
+    "No phone FPS, heat, physical tracking or stereoscopic performance test was performed."
+  ],
+  "provenance": "source/provenance.json",
+  "prompt": "source/imagegen-prompt.txt",
+  "imageGenerationMode": "built-in image_gen.imagegen",
+  "git": {
+    "branch": "claude/mobile-camera-mic-battle-game-v5nhfr",
+    "integrationBaseCommit": "3ce6e32153028921ce3ccb46eb8012e975d56b46",
+    "assets": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v1",
+    "job": "scenegen/jobs/codex-style/volcano-cel-v1",
+    "tools": "scenegen/tools/anime_cel_v1",
+    "commitMessage": "scenegen style: anime cel volcano kit",
+    "pushVerification": "Publishing session verifies the server ref after committing; the resulting SHA is recorded in the local delivery proof."
+  }
+}

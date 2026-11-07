@@ -1,0 +1,44 @@
+日式動畫／賽璐璐火山關卡 V1
+
+這是實際 3D 零件與場景，圖片皆由實際模型渲染。source/ 的圖片只是表面貼圖，不是整張關卡的替代圖。
+
+先看：previews/unity_player_view.png、unity_clearing_view.png、hero_view.png。
+Unity 原生預覽專案（本機）：C:\Users\demog\Documents\Codex\2026-11-06\e-ai-rpg-world-builder\outputs\CelVolcanoUnityPreview
+用 Unity Hub 匯入該資料夾，開 Assets/CelVolcano/CelVolcano.unity，Play。
+WASD 移動；按住滑鼠右鍵轉向；Q/E 上下；Shift 加速。這是檢視相機，不是遊戲的物理／VR 控制器。
+
+零件交接：kit/ 的 FBX、貼圖與 kit.json 可複製到一個新的 SceneKit 資料夾。
+part IDs、4m 網格、Y-up/+Z-forward、腳底原點及 gate_frame/gate_door 接口沿用 v3。
+請保留舊版，遊戲端選擇切換到新資料夾；新版已透過 Git 交付至 SceneKit/volcano_cel_v1；遊戲程式切換補丁放在 scenegen/jobs/codex-style/volcano-cel-v1/StageKit-style-switch.patch，由遊戲端 session 選擇套用。
+材質用 Built-in Unlit/Texture，按 kit.json 的 main/backdrop 分配貼圖。不要再乘一次即時光照。
+mobile-import-settings.json 提供手機貼圖預設，Unity 預覽專案已實際套用：主圖 2048、遠景 1024、其餘 512，mipmap、ASTC 6x6、關閉 Read/Write。
+kit/ 不含 .meta、.mat 或 URP 材質。UnityTools/ 中唯一自訂 shader 是 Built-in 的預覽天空頂點色 shader。
+
+已安裝的生成器入口：E:\AI接案\rpg-world-builder\cel_kit_control.py
+說明：E:\AI接案\rpg-world-builder\interfaces\ANIME_CEL_KIT.txt
+這是獨立 extension API v1，沒有把原本 control.py 的整張地圖 API 改成新介面。
+configFile 路徑以請求 JSON 所在資料夾為準；sourceKit/surfaceAtlas 以 config 所在資料夾為準。
+每次 generate 必須指定新的 outputFolder；既有資料夾會回 output_exists。
+
+以本機生成器直接驗證交付包：
+python "E:\AI接案\rpg-world-builder\cel_kit_control.py" --request "C:\Users\demog\Documents\Codex\2026-11-06\e-ai-rpg-world-builder\outputs\CelVolcanoStyleV1\control\requests\plan.json" --response "PLAN_RESPONSE.json"
+
+交付包可攜入口 control/cel_kit_control.py：
+先安裝 Blender 4.5；設定 BLENDER_PATH 為該版本 blender.exe 的完整路徑，或在 generate 請求加 blender。
+依序跑 control/requests/capabilities.json、plan.json、validate.json、generate.json、inspect.json。
+generate 範例的 outputFolder 是新的 runs/new-cel-demo-001；重跑前換一個目錄名。
+呼叫：python control/cel_kit_control.py --request control/requests/plan.json --response plan-response.json
+可用 sourceKit 換成另一個包含同一組 ID/邊界契約的零件包，surfaceAtlas 換成 2x2 原始材質圖。
+圖集象限：左上冷色岩面，右上火山灰地面，左下暖色岩面，右下凝固熔岩。
+不會自動生成新的 AI 圖；新貼圖由呼叫端提供。建模／烘焙／匯出／清理／檢查全程可由 CLI 控制。
+
+示例 demo/level.glb 自帶所有圖片，材質明確宣告 KHR_materials_unlit，網格以 glTF Y-up 匯出。
+示例 FBX 沿用 Unity 的 Y-up/+Z 契約；GLB 與 FBX 的 handedness 不同，請使用 level.json 的 glbSpawn/glbForward。
+整張示例是視覺配置，沒有新增碰撞器、戰鬥、危險區域邏輯或手機定位。
+舊版 2D 障礙物尚未重畫；原有煙雲動畫接口仍在舊生成器，需宿主接入到新示例。
+這次不是把所有五種主題都換成新美術；先完成目前火山的可重用風格。
+
+實測檢查：62 項原測試、8 項新接口測試；FBX 匯出再匯入；Unity Built-in 原生匯入與尺寸／原點／門零件／面數；GLB 匯出再匯入並渲染。
+手機 FPS、發熱及攝影機定位負擔尚未實測。
+
+素材使用內建 image_gen.imagegen，完整提示詞、來源與實際原圖尺寸位於 source/。

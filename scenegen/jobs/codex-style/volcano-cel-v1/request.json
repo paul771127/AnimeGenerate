@@ -1,0 +1,13 @@
+{
+  "from": "current user in the local Codex chat",
+  "kind": "modular_kit_style_revision",
+  "styleId": "anime_cel_volcano_v1",
+  "theme": "volcano",
+  "request": "Change to a clean Japanese anime/cel shaded level style using the user-supplied Genshin environment screenshot for visual direction; minimise phone cost.",
+  "referenceUse": "Environment style only; no original game UI, characters or textures shipped.",
+  "sourceKit": "SceneKit/volcano_v3",
+  "parts": "v3 IDs, pivots, sizes and per-part budgets preserved; zero-area triangles removed.",
+  "outputAssets": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v1",
+  "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\volcano-cel-20261107T200348076029-r3",
+  "controllerEntry": "scenegen/tools/anime_cel_v1/cel_kit_control.py"
+}

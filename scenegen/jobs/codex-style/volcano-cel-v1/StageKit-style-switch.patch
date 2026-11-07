@@ -1,0 +1,33 @@
+--- a/spellduel-unity/Assets/SpellDuel/Runtime/StageKit.cs
++++ b/spellduel-unity/Assets/SpellDuel/Runtime/StageKit.cs
+@@ -4,7 +4,7 @@
+ namespace SpellDuel
+ {
+     /// <summary>
+-    /// 場景生成器的 3D 地形零件（scenegen 工單 003：Resources/SceneKit/volcano_v3/）接到副本大地圖（熔岩區）：
++    /// 場景生成器的 3D 地形零件（scenegen 工單 003：Resources/SceneKit/volcano_cel_v1/）接到副本大地圖（熔岩區）：
+     ///   ・牆格：每一面臨路的邊放一段直岩壁（可走的那面朝路）；凸角放 corner_out、凹角放 corner_in。
+     ///   ・門格：岩門（門框＋門板）；區域清除後門板沉進地底。
+     ///   ・首領區域：最裡面那一邊放岩洞入口（首領從洞裡出來的感覺）；地圖外圈放遠景岩塊。
+@@ -13,7 +13,7 @@
+     /// </summary>
+     public static class StageKit
+     {
+-        const string Dir = "SceneKit/volcano_v3/";
++        const string Dir = "SceneKit/volcano_cel_v1/";
+         static bool loaded, ok;
+         static Material mainMat, backMat;
+         static readonly Dictionary<string, GameObject> parts = new Dictionary<string, GameObject>();
+@@ -31,9 +31,9 @@
+             if (loaded) return;
+             loaded = true;
+             var sh = Resources.Load<Shader>("Shaders/StageKit");
+-            var alb = Resources.Load<Texture2D>(Dir + "volcano_kit_v3_albedo");
+-            var em = Resources.Load<Texture2D>(Dir + "volcano_kit_v3_emissive");
+-            var back = Resources.Load<Texture2D>(Dir + "volcano_kit_v3_backdrop_albedo");
++            var alb = Resources.Load<Texture2D>(Dir + "volcano_cel_albedo");
++            var em = Resources.Load<Texture2D>(Dir + "volcano_cel_emissive");
++            var back = Resources.Load<Texture2D>(Dir + "volcano_cel_backdrop");
+             ok = sh != null && sh.isSupported && alb && Part("wall_straight_a") && Part("wall_corner_out_a") && Part("wall_corner_in_a");
+             if (!ok) return;
+             mainMat = new Material(sh) { name = "Stage kit (volcano)", mainTexture = alb, enableInstancing = true };
