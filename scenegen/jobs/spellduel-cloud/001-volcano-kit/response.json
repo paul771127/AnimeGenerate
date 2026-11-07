@@ -1,0 +1,379 @@
+{
+  "job": "001-volcano-kit",
+  "ok": true,
+  "executedAt": "2026-11-07T15:26:17",
+  "executedBy": "rpg-world-builder local session (Claude Code), E:\\AI接案\\rpg-world-builder",
+  "controlApi": {
+    "apiVersion": 1,
+    "capabilities": {
+      "ok": true,
+      "generators": [
+        "chapter",
+        "village",
+        "dungeon"
+      ],
+      "note": "no modular_kit generator exists in API v1"
+    },
+    "plan": {
+      "ok": true,
+      "requestId": "spellduel-001-volcano-kit-plan",
+      "landformsStyle": "volcanic_wilderness",
+      "landformsRevision": 3,
+      "rooms": 49,
+      "connections": 52
+    },
+    "validate": {
+      "ok": true,
+      "requestId": "spellduel-001-volcano-kit-validate",
+      "valid": true,
+      "warnings": [],
+      "geometrySummary": {
+        "objects": 1444,
+        "sourceTriangles": 44330
+      }
+    },
+    "generate": {
+      "ok": true,
+      "requestId": "spellduel-001-volcano-kit-generate",
+      "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-volcano-kit-001",
+      "state": "complete",
+      "configSha256": "f8d6e5b7e2ec864edde1c16e0bbd19aa6840f7bf2af569d7c8c441e918124a2b",
+      "seed": 20261108,
+      "sceneName": "Dungeon_Volcano_Painted",
+      "exterior": "painted_volcano",
+      "surfaceProfile": "volcanic-natural-v3",
+      "secondsInBlender": 14.5,
+      "glb": {
+        "bytes": 5229116,
+        "vertices": 64954,
+        "triangles": 43814,
+        "primitives": 15,
+        "materials": 5,
+        "devicePerformance": "not measured"
+      }
+    },
+    "inspect": {
+      "ok": true,
+      "requestId": "spellduel-001-volcano-kit-inspect",
+      "files": [
+        {
+          "path": "collision.zup-source.json",
+          "bytes": 2730569
+        },
+        {
+          "path": "config.json",
+          "bytes": 897
+        },
+        {
+          "path": "dungeon_first_person.png",
+          "bytes": 2361442
+        },
+        {
+          "path": "dungeon_overview.png",
+          "bytes": 3160241
+        },
+        {
+          "path": "dungeon_plan.svg",
+          "bytes": 11133
+        },
+        {
+          "path": "generation.log",
+          "bytes": 3528
+        },
+        {
+          "path": "level.blend",
+          "bytes": 15453463
+        },
+        {
+          "path": "level.fbx",
+          "bytes": 6084844
+        },
+        {
+          "path": "level.glb",
+          "bytes": 5229116
+        },
+        {
+          "path": "level_cel.blend",
+          "bytes": 15326185
+        },
+        {
+          "path": "manifest.json",
+          "bytes": 61919
+        },
+        {
+          "path": "materials/atlas.png",
+          "bytes": 1762825
+        },
+        {
+          "path": "materials/atmosphere.png",
+          "bytes": 895955
+        },
+        {
+          "path": "materials/background.png",
+          "bytes": 1825845
+        },
+        {
+          "path": "materials/sand.png",
+          "bytes": 434411
+        },
+        {
+          "path": "materials/soil.png",
+          "bytes": 451251
+        },
+        {
+          "path": "materials/stone.png",
+          "bytes": 442793
+        },
+        {
+          "path": "materials/wood.png",
+          "bytes": 422720
+        },
+        {
+          "path": "mobile-report.json",
+          "bytes": 149
+        },
+        {
+          "path": "painted_volcano_first_person.png",
+          "bytes": 2249337
+        },
+        {
+          "path": "painted_volcano_hero.png",
+          "bytes": 2424006
+        },
+        {
+          "path": "painted_volcano_terrace.png",
+          "bytes": 2183041
+        },
+        {
+          "path": "status.json",
+          "bytes": 260
+        }
+      ]
+    }
+  },
+  "kitBuilder": {
+    "blender": "4.5.15 LTS",
+    "out": "E:\\AI接案\\rpg-world-builder\\jobs\\spellduel-cloud\\001-volcano-kit\\kit-final3",
+    "parts": 32,
+    "triangles": 20477,
+    "albedo": "volcano_kit_albedo.png 2048x2048 sRGB (AO + top-left key light baked in)",
+    "emissive": "volcano_kit_emissive.png 1024x1024 linear mask",
+    "textureStats": {
+      "exposure": 0.7145196723346721,
+      "meanRockColorSRGB": [
+        0.35129299759864807,
+        0.2827625572681427,
+        0.25451964139938354
+      ],
+      "lavaTexelFraction": 0.01168142106794812,
+      "coverage": 0.7062087059020996
+    },
+    "allChecksPassed": true
+  },
+  "deliverables": {
+    "assetsFolder": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano/",
+    "files": [
+      "backdrop_rock_a.fbx",
+      "backdrop_rock_b.fbx",
+      "backdrop_rock_c.fbx",
+      "cave_entrance_a.fbx",
+      "exit_altar_a.fbx",
+      "gate_a.fbx",
+      "gate_b.fbx",
+      "gate_c.fbx",
+      "ob_duck_a.fbx",
+      "ob_duck_b.fbx",
+      "ob_duck_c.fbx",
+      "ob_jump_a.fbx",
+      "ob_jump_b.fbx",
+      "ob_jump_c.fbx",
+      "ob_side_a.fbx",
+      "ob_side_b.fbx",
+      "ob_side_c.fbx",
+      "vent_a.fbx",
+      "vent_b.fbx",
+      "vent_c.fbx",
+      "wall_corner_in_a.fbx",
+      "wall_corner_in_b.fbx",
+      "wall_corner_in_c.fbx",
+      "wall_corner_out_a.fbx",
+      "wall_corner_out_b.fbx",
+      "wall_corner_out_c.fbx",
+      "wall_end_a.fbx",
+      "wall_end_b.fbx",
+      "wall_end_c.fbx",
+      "wall_straight_a.fbx",
+      "wall_straight_b.fbx",
+      "wall_straight_c.fbx",
+      "volcano_kit_albedo.png",
+      "volcano_kit_emissive.png",
+      "volcano_smoke_flipbook.png",
+      "volcano_smoke_atlas.png",
+      "kit.json"
+    ],
+    "assetBytes": 7393536,
+    "assetMegabytes": 7.39,
+    "budgetMegabytes": 15,
+    "withinBudget": true,
+    "previews": [
+      "corridor_overview.png",
+      "part_backdrop_rock.png",
+      "part_cave_entrance.png",
+      "part_exit_altar.png",
+      "part_gate.png",
+      "part_ob_duck.png",
+      "part_ob_jump.png",
+      "part_ob_side.png",
+      "part_vent.png",
+      "part_wall_corner_in.png",
+      "part_wall_corner_out.png",
+      "part_wall_end.png",
+      "part_wall_straight.png",
+      "player_view.png",
+      "generator_run_hero.png",
+      "smoke_flipbook_sheet.png"
+    ]
+  },
+  "smoke": {
+    "keptGeneratorAnimation": true,
+    "atlas": "volcano_smoke_atlas.png = the generator's materials/atmosphere.png (1024x1024 RGBA; top half cloud band, bottom half one puff)",
+    "flipbook": {
+      "file": "volcano_smoke_flipbook.png",
+      "sheet": [
+        1024,
+        1024
+      ],
+      "frameSize": [
+        256,
+        256
+      ],
+      "frames": 16,
+      "columns": 4,
+      "rows": 4,
+      "loopSeconds": 5.556,
+      "fps": 2.88,
+      "loop": true,
+      "order": "row-major from the top-left",
+      "alpha": "straight (not premultiplied); draw with standard alpha blending, no depth write",
+      "ventAnchor": {
+        "u": 0.5,
+        "v": 0.1375,
+        "note": "frame-relative, v measured from the bottom; put this point on the crater"
+      },
+      "worldSize": "the window is 0.40 x 0.40 panorama units; on a 2048x1024 panorama that is ~819 px wide, so scale the quad to the backdrop",
+      "source": "port of RPGWorldBuilder/PaintedBackground.shader smoke pass (four puffs, age = frac(t*0.045 + j*0.25 + 0.04)) at smokeSpeed = 1",
+      "atlas": "volcano_smoke_atlas.png is the generator's original RGBA atlas (top half cloud band, bottom half single puff) for engines that re-implement the shader"
+    },
+    "shaderMaths": "time t (s); for j in 3..0: age = frac(t*0.045*smokeSpeed + j*0.25 + 0.04); centre = (0.126 - 0.065*age + 0.006*sin(age*7 + t*0.18*smokeSpeed), 0.515 + 0.22*age) in panorama UV; size = (0.055 + 0.18*age, 0.065 + 0.13*age); q = (uv - centre)/size + 0.5; puff = atlas(0.008 + q.x*0.984, 0.008 + q.y*0.484); fade = smoothstep(0,0.04,age) * (1 - smoothstep(0.78,1,age)); colour = lerp(colour, puff.rgb, puff.a*fade*0.82). Clouds: atlas top half scrolled by frac(uv.x - t*0.0018*cloudSpeed).",
+    "howToUse": "Simplest: a world-space quad above the backdrop crater playing volcano_smoke_flipbook.png (4x4, 16 frames, 2.88 fps, loop) with alpha blending and the ventAnchor on the crater. Or re-implement shaderMaths in a built-in pipeline shader with volcano_smoke_atlas.png. The URP shader itself is not shipped."
+  },
+  "deviations": [
+    "The scene generator's public API (control.py v1) only produces whole scenes (village / chapter / dungeon). It has no modular-kit action, so the parts could not come out of generate directly. The official pipeline was run unchanged (capabilities -> plan -> validate -> generate -> inspect, natural volcano preset, landforms.style=volcanic_wilderness) into runs/spellduel-volcano-kit-001 to supply the generator's tile textures, the smoke atlas and the style reference; the parts themselves were built by a separate stand-alone Blender script (kit_builder.py, in the job folder) that reuses the generator's Blender, tiles and FBX conventions. No generator source file was modified.",
+    "Art: parts are procedural rock (noise-displaced, decimated) textured by projecting the generator's volcanic-natural-v3 tiles and re-grading them to the ground texture's red-brown family; AO and a top-left key light are baked into the albedo. It reads as stylised low-poly rock rather than individually hand-painted sculpts.",
+    "Dimensions: wall_corner_in is about 3.2 x 3.2 m in footprint (2 x 2 m filler block plus a scree pile in the player-side crease) instead of ~2 x 2; wall pieces measure about 4.3 m wide so neighbours overlap by ~0.15 m per side; gate frames are ~4.3-4.5 m wide; the cave entrance is ~13 x 9 x 7.8 m; the exit altar is 0.5 m high at the tallest pillar with a 0.3 m flat platform. Exact bounds per part are in kit.json.",
+    "A single FBX per gate variant contains both objects (gate_frame, gate_door) as siblings rather than two separate files; the same applies to vent (vent_rim + vent_core).",
+    "Import was verified only in a throwaway Unity 2022.3.62f2 project (axis, scale, pivot, child placement), not inside the SpellDuel Unity project.",
+    "Mobile frame rate was not measured; only triangle counts and texture sizes are reported."
+  ],
+  "triangles": {
+    "wall_straight": {
+      "budget": 600,
+      "perVariant": {
+        "a": 504,
+        "b": 504,
+        "c": 504
+      }
+    },
+    "wall_corner_out": {
+      "budget": 600,
+      "perVariant": {
+        "a": 503,
+        "b": 504,
+        "c": 503
+      }
+    },
+    "wall_corner_in": {
+      "budget": 600,
+      "perVariant": {
+        "a": 522,
+        "b": 522,
+        "c": 523
+      }
+    },
+    "wall_end": {
+      "budget": 600,
+      "perVariant": {
+        "a": 504,
+        "b": 504,
+        "c": 504
+      }
+    },
+    "gate": {
+      "budget": 1200,
+      "perVariant": {
+        "a": 1084,
+        "b": 1085,
+        "c": 1085
+      }
+    },
+    "ob_jump": {
+      "budget": 800,
+      "perVariant": {
+        "a": 162,
+        "b": 125,
+        "c": 490
+      }
+    },
+    "ob_duck": {
+      "budget": 800,
+      "perVariant": {
+        "a": 658,
+        "b": 659,
+        "c": 659
+      }
+    },
+    "ob_side": {
+      "budget": 800,
+      "perVariant": {
+        "a": 215,
+        "b": 288,
+        "c": 292
+      }
+    },
+    "vent": {
+      "budget": 800,
+      "perVariant": {
+        "a": 412,
+        "b": 410,
+        "c": 416
+      }
+    },
+    "backdrop_rock": {
+      "budget": 1500,
+      "perVariant": {
+        "a": 1261,
+        "b": 1260,
+        "c": 975
+      }
+    },
+    "cave_entrance": {
+      "budget": 3000,
+      "perVariant": {
+        "a": 2522
+      }
+    },
+    "exit_altar": {
+      "budget": 800,
+      "perVariant": {
+        "a": 318
+      }
+    }
+  },
+  "sha256": {
+    "volcano_kit_albedo.png": "bbc4aa64f195ee4fc9a836ee091df45e71c97481e837edc7e9a9b591605bc393",
+    "volcano_kit_emissive.png": "d7fd671ee415f093d58090004b70906f612d0e53c2a798189ab5686cd338f5ea",
+    "volcano_smoke_flipbook.png": "3008f660074d0f4f7e1e4cca4554ca8a54ca68ce09031261109a60ce6ee082b7",
+    "volcano_smoke_atlas.png": "f9ce29b7b522b727381c672e352c3d849b2e175c64b3bea318d5ae79d932e3fb",
+    "kit.json": "e89840be3b4d09104b7772bbe9b64a20bf816482ccc6b1b89abd885606e373cc"
+  }
+}

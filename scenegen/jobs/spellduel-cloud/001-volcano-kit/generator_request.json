@@ -1,0 +1,46 @@
+{
+  "_note": "control.py API v1 requests actually executed for this work order, in order, followed by the stand-alone kit build. The public API has no modular-kit generator, so the scene pipeline supplies tiles, smoke atlas and the style reference; kit_builder.py builds the parts.",
+  "controlApi": {
+    "capabilities": "examples/capabilities.json",
+    "sequence": [
+      {
+        "apiVersion": 1,
+        "requestId": "spellduel-001-volcano-kit-plan",
+        "action": "plan",
+        "configFile": "E:/AI接案/rpg-world-builder/dungeon.volcano.painted.json",
+        "timeoutSeconds": 1200
+      },
+      {
+        "apiVersion": 1,
+        "requestId": "spellduel-001-volcano-kit-validate",
+        "action": "validate",
+        "configFile": "E:/AI接案/rpg-world-builder/dungeon.volcano.painted.json",
+        "timeoutSeconds": 1200
+      },
+      {
+        "apiVersion": 1,
+        "requestId": "spellduel-001-volcano-kit-generate",
+        "action": "generate",
+        "configFile": "E:/AI接案/rpg-world-builder/dungeon.volcano.painted.json",
+        "outputFolder": "E:/AI接案/rpg-world-builder/runs/spellduel-volcano-kit-001",
+        "timeoutSeconds": 1200
+      },
+      {
+        "apiVersion": 1,
+        "requestId": "spellduel-001-volcano-kit-inspect",
+        "action": "inspect",
+        "outputFolder": "E:/AI接案/rpg-world-builder/runs/spellduel-volcano-kit-001",
+        "timeoutSeconds": 1200
+      }
+    ]
+  },
+  "kitBuilder": {
+    "script": "jobs/spellduel-cloud/001-volcano-kit/kit_builder.py",
+    "command": "tools/blender-4.5.15-windows-x64/blender.exe -b --python kit_builder.py -- --out <KIT_OUT> --tiles runs/spellduel-volcano-kit-001/materials --ground <SpellDuel>/StageArt/volcano_0_ground.png",
+    "inputs": {
+      "tiles": "runs/spellduel-volcano-kit-001/materials/{wood,stone,sand,soil}.png (generator output of assets/materials/volcanic-natural-v3.png)",
+      "groundReference": "spellduel-unity/Assets/SpellDuel/Resources/StageArt/volcano_0_ground.png"
+    },
+    "smoke": "python smoke_flipbook.py runs/spellduel-volcano-kit-001/materials/atmosphere.png smoke/"
+  }
+}

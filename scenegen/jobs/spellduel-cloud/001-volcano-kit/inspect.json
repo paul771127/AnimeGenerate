@@ -1,0 +1,1218 @@
+{
+  "generator": {
+    "validate": {
+      "valid": true,
+      "warnings": [],
+      "geometrySummary": {
+        "objects": 1444,
+        "sourceTriangles": 44330
+      }
+    },
+    "generatedScene": {
+      "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-volcano-kit-001",
+      "meshStats": {
+        "objects": 1444,
+        "vertices": 26364,
+        "faces": 23081
+      },
+      "glb": {
+        "bytes": 5229116,
+        "vertices": 64954,
+        "triangles": 43814,
+        "primitives": 15,
+        "materials": 5,
+        "devicePerformance": "not measured"
+      },
+      "status": {
+        "apiVersion": 1,
+        "requestId": "spellduel-001-volcano-kit-generate",
+        "state": "complete",
+        "configSha256": "f8d6e5b7e2ec864edde1c16e0bbd19aa6840f7bf2af569d7c8c441e918124a2b",
+        "startedAt": 1794033961.5939279,
+        "finishedAt": 1794033976.110557
+      }
+    }
+  },
+  "kit": {
+    "generatedAt": "2026-11-07T15:25:59",
+    "blender": "4.5.15 LTS",
+    "forwardSign": -1.0,
+    "quick": false,
+    "totals": {
+      "parts": 32,
+      "triangles": 20477,
+      "fbxBytes": 1437616,
+      "albedoBytes": 4442111,
+      "emissiveBytes": 256671
+    },
+    "textureStats": {
+      "exposure": 0.7145196723346721,
+      "meanRockColorSRGB": [
+        0.35129299759864807,
+        0.2827625572681427,
+        0.25451964139938354
+      ],
+      "lavaTexelFraction": 0.01168142106794812,
+      "coverage": 0.7062087059020996
+    },
+    "budgets": {
+      "wall_straight": {
+        "budget": 600,
+        "max": 504,
+        "ok": true
+      },
+      "wall_corner_out": {
+        "budget": 600,
+        "max": 504,
+        "ok": true
+      },
+      "wall_corner_in": {
+        "budget": 600,
+        "max": 523,
+        "ok": true
+      },
+      "wall_end": {
+        "budget": 600,
+        "max": 504,
+        "ok": true
+      },
+      "gate": {
+        "budget": 1200,
+        "max": 1085,
+        "ok": true
+      },
+      "ob_jump": {
+        "budget": 800,
+        "max": 490,
+        "ok": true
+      },
+      "ob_duck": {
+        "budget": 800,
+        "max": 659,
+        "ok": true
+      },
+      "ob_side": {
+        "budget": 800,
+        "max": 292,
+        "ok": true
+      },
+      "vent": {
+        "budget": 800,
+        "max": 416,
+        "ok": true
+      },
+      "backdrop_rock": {
+        "budget": 1500,
+        "max": 1261,
+        "ok": true
+      },
+      "cave_entrance": {
+        "budget": 3000,
+        "max": 2522,
+        "ok": true
+      },
+      "exit_altar": {
+        "budget": 800,
+        "max": 318,
+        "ok": true
+      }
+    },
+    "checks": [
+      {
+        "part": "wall_straight_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_corner_out_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_corner_in_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_end_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "gate_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "doorWidth": 2.266,
+        "doorHeight": 3.458,
+        "doorInsideFrame": true
+      },
+      {
+        "part": "ob_jump_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "ob_duck_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "beamUndersideY": 1.299,
+        "clearBelowBeam": true
+      },
+      {
+        "part": "ob_side_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "vent_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "hasVentCore": true
+      },
+      {
+        "part": "backdrop_rock_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_straight_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_corner_out_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_corner_in_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_end_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "gate_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "doorWidth": 2.274,
+        "doorHeight": 3.735,
+        "doorInsideFrame": true
+      },
+      {
+        "part": "ob_jump_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "ob_duck_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "beamUndersideY": 1.298,
+        "clearBelowBeam": true
+      },
+      {
+        "part": "ob_side_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "vent_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "hasVentCore": true
+      },
+      {
+        "part": "backdrop_rock_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_straight_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_corner_out_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_corner_in_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_end_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "gate_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "doorWidth": 2.331,
+        "doorHeight": 3.367,
+        "doorInsideFrame": true
+      },
+      {
+        "part": "ob_jump_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "ob_duck_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "beamUndersideY": 1.299,
+        "clearBelowBeam": true
+      },
+      {
+        "part": "ob_side_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "vent_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "hasVentCore": true
+      },
+      {
+        "part": "backdrop_rock_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "cave_entrance_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "exit_altar_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "centreTopFlat": true
+      }
+    ],
+    "allChecksPassed": true
+  },
+  "parts": [
+    {
+      "file": "wall_straight_a.fbx",
+      "triangles": 504,
+      "budget": 600,
+      "size": [
+        4.312,
+        3.912,
+        2.254
+      ],
+      "bounds": {
+        "min": [
+          -2.151,
+          0.0,
+          -1.884
+        ],
+        "max": [
+          2.16,
+          3.912,
+          0.37
+        ]
+      },
+      "objects": [
+        "wall_straight_a"
+      ],
+      "fileBytes": 39756
+    },
+    {
+      "file": "wall_corner_out_a.fbx",
+      "triangles": 503,
+      "budget": 600,
+      "size": [
+        2.497,
+        3.811,
+        2.515
+      ],
+      "bounds": {
+        "min": [
+          -2.157,
+          0.0,
+          -2.153
+        ],
+        "max": [
+          0.34,
+          3.811,
+          0.362
+        ]
+      },
+      "objects": [
+        "wall_corner_out_a"
+      ],
+      "fileBytes": 38476
+    },
+    {
+      "file": "wall_corner_in_a.fbx",
+      "triangles": 522,
+      "budget": 600,
+      "size": [
+        3.197,
+        3.678,
+        3.149
+      ],
+      "bounds": {
+        "min": [
+          -2.156,
+          0.0,
+          -2.151
+        ],
+        "max": [
+          1.04,
+          3.678,
+          0.998
+        ]
+      },
+      "objects": [
+        "wall_corner_in_a"
+      ],
+      "fileBytes": 39340
+    },
+    {
+      "file": "wall_end_a.fbx",
+      "triangles": 504,
+      "budget": 600,
+      "size": [
+        1.916,
+        3.614,
+        2.135
+      ],
+      "bounds": {
+        "min": [
+          -0.908,
+          0.0,
+          -1.84
+        ],
+        "max": [
+          1.008,
+          3.614,
+          0.295
+        ]
+      },
+      "objects": [
+        "wall_end_a"
+      ],
+      "fileBytes": 38716
+    },
+    {
+      "file": "gate_a.fbx",
+      "triangles": 1084,
+      "budget": 1200,
+      "size": [
+        4.366,
+        4.396,
+        1.713
+      ],
+      "bounds": {
+        "min": [
+          -2.211,
+          0.0,
+          -0.865
+        ],
+        "max": [
+          2.155,
+          4.396,
+          0.848
+        ]
+      },
+      "objects": [
+        "gate_frame",
+        "gate_door"
+      ],
+      "fileBytes": 63980
+    },
+    {
+      "file": "ob_jump_a.fbx",
+      "triangles": 162,
+      "budget": 800,
+      "size": [
+        3.802,
+        0.415,
+        0.8
+      ],
+      "bounds": {
+        "min": [
+          -1.898,
+          0.0,
+          -0.401
+        ],
+        "max": [
+          1.903,
+          0.415,
+          0.399
+        ]
+      },
+      "objects": [
+        "ob_jump_a"
+      ],
+      "fileBytes": 24140
+    },
+    {
+      "file": "ob_duck_a.fbx",
+      "triangles": 658,
+      "budget": 800,
+      "size": [
+        3.813,
+        2.198,
+        0.921
+      ],
+      "bounds": {
+        "min": [
+          -1.904,
+          0.0,
+          -0.458
+        ],
+        "max": [
+          1.909,
+          2.198,
+          0.462
+        ]
+      },
+      "objects": [
+        "ob_duck_a"
+      ],
+      "fileBytes": 43580
+    },
+    {
+      "file": "ob_side_a.fbx",
+      "triangles": 215,
+      "budget": 800,
+      "size": [
+        2.0,
+        1.999,
+        1.2
+      ],
+      "bounds": {
+        "min": [
+          -1.0,
+          0.0,
+          -0.6
+        ],
+        "max": [
+          1.0,
+          1.999,
+          0.6
+        ]
+      },
+      "objects": [
+        "ob_side_a"
+      ],
+      "fileBytes": 26540
+    },
+    {
+      "file": "vent_a.fbx",
+      "triangles": 412,
+      "budget": 800,
+      "size": [
+        1.4,
+        0.287,
+        1.4
+      ],
+      "bounds": {
+        "min": [
+          -0.7,
+          0.0,
+          -0.7
+        ],
+        "max": [
+          0.7,
+          0.287,
+          0.7
+        ]
+      },
+      "objects": [
+        "vent_rim",
+        "vent_core"
+      ],
+      "fileBytes": 36108
+    },
+    {
+      "file": "backdrop_rock_a.fbx",
+      "triangles": 1261,
+      "budget": 1500,
+      "size": [
+        18.124,
+        21.813,
+        15.051
+      ],
+      "bounds": {
+        "min": [
+          -8.991,
+          0.0,
+          -5.853
+        ],
+        "max": [
+          9.133,
+          21.813,
+          9.199
+        ]
+      },
+      "objects": [
+        "backdrop_rock_a"
+      ],
+      "fileBytes": 82444
+    },
+    {
+      "file": "wall_straight_b.fbx",
+      "triangles": 504,
+      "budget": 600,
+      "size": [
+        4.316,
+        4.284,
+        2.372
+      ],
+      "bounds": {
+        "min": [
+          -2.16,
+          0.0,
+          -2.005
+        ],
+        "max": [
+          2.156,
+          4.284,
+          0.367
+        ]
+      },
+      "objects": [
+        "wall_straight_b"
+      ],
+      "fileBytes": 37964
+    },
+    {
+      "file": "wall_corner_out_b.fbx",
+      "triangles": 504,
+      "budget": 600,
+      "size": [
+        2.508,
+        4.212,
+        2.526
+      ],
+      "bounds": {
+        "min": [
+          -2.154,
+          0.0,
+          -2.163
+        ],
+        "max": [
+          0.354,
+          4.212,
+          0.363
+        ]
+      },
+      "objects": [
+        "wall_corner_out_b"
+      ],
+      "fileBytes": 38108
+    },
+    {
+      "file": "wall_corner_in_b.fbx",
+      "triangles": 522,
+      "budget": 600,
+      "size": [
+        3.218,
+        4.103,
+        3.144
+      ],
+      "bounds": {
+        "min": [
+          -2.167,
+          0.0,
+          -2.158
+        ],
+        "max": [
+          1.051,
+          4.103,
+          0.986
+        ]
+      },
+      "objects": [
+        "wall_corner_in_b"
+      ],
+      "fileBytes": 39564
+    },
+    {
+      "file": "wall_end_b.fbx",
+      "triangles": 504,
+      "budget": 600,
+      "size": [
+        1.922,
+        3.992,
+        2.044
+      ],
+      "bounds": {
+        "min": [
+          -0.916,
+          0.0,
+          -1.785
+        ],
+        "max": [
+          1.006,
+          3.992,
+          0.259
+        ]
+      },
+      "objects": [
+        "wall_end_b"
+      ],
+      "fileBytes": 38252
+    },
+    {
+      "file": "gate_b.fbx",
+      "triangles": 1085,
+      "budget": 1200,
+      "size": [
+        4.398,
+        4.75,
+        1.716
+      ],
+      "bounds": {
+        "min": [
+          -2.214,
+          0.0,
+          -0.86
+        ],
+        "max": [
+          2.184,
+          4.75,
+          0.856
+        ]
+      },
+      "objects": [
+        "gate_frame",
+        "gate_door"
+      ],
+      "fileBytes": 62956
+    },
+    {
+      "file": "ob_jump_b.fbx",
+      "triangles": 125,
+      "budget": 800,
+      "size": [
+        3.719,
+        0.428,
+        0.701
+      ],
+      "bounds": {
+        "min": [
+          -1.852,
+          0.0,
+          -0.341
+        ],
+        "max": [
+          1.867,
+          0.428,
+          0.36
+        ]
+      },
+      "objects": [
+        "ob_jump_b"
+      ],
+      "fileBytes": 23532
+    },
+    {
+      "file": "ob_duck_b.fbx",
+      "triangles": 659,
+      "budget": 800,
+      "size": [
+        3.805,
+        2.068,
+        0.915
+      ],
+      "bounds": {
+        "min": [
+          -1.904,
+          0.0,
+          -0.456
+        ],
+        "max": [
+          1.901,
+          2.068,
+          0.458
+        ]
+      },
+      "objects": [
+        "ob_duck_b"
+      ],
+      "fileBytes": 43708
+    },
+    {
+      "file": "ob_side_b.fbx",
+      "triangles": 288,
+      "budget": 800,
+      "size": [
+        2.0,
+        1.692,
+        1.2
+      ],
+      "bounds": {
+        "min": [
+          -1.0,
+          0.0,
+          -0.6
+        ],
+        "max": [
+          1.0,
+          1.692,
+          0.6
+        ]
+      },
+      "objects": [
+        "ob_side_b"
+      ],
+      "fileBytes": 29292
+    },
+    {
+      "file": "vent_b.fbx",
+      "triangles": 410,
+      "budget": 800,
+      "size": [
+        1.4,
+        0.252,
+        1.4
+      ],
+      "bounds": {
+        "min": [
+          -0.7,
+          0.0,
+          -0.7
+        ],
+        "max": [
+          0.7,
+          0.252,
+          0.7
+        ]
+      },
+      "objects": [
+        "vent_rim",
+        "vent_core"
+      ],
+      "fileBytes": 35932
+    },
+    {
+      "file": "backdrop_rock_b.fbx",
+      "triangles": 1260,
+      "budget": 1500,
+      "size": [
+        20.156,
+        15.937,
+        11.212
+      ],
+      "bounds": {
+        "min": [
+          -9.539,
+          0.0,
+          -5.324
+        ],
+        "max": [
+          10.617,
+          15.937,
+          5.887
+        ]
+      },
+      "objects": [
+        "backdrop_rock_b"
+      ],
+      "fileBytes": 77020
+    },
+    {
+      "file": "wall_straight_c.fbx",
+      "triangles": 504,
+      "budget": 600,
+      "size": [
+        4.314,
+        3.499,
+        2.253
+      ],
+      "bounds": {
+        "min": [
+          -2.161,
+          0.0,
+          -1.902
+        ],
+        "max": [
+          2.153,
+          3.499,
+          0.351
+        ]
+      },
+      "objects": [
+        "wall_straight_c"
+      ],
+      "fileBytes": 38876
+    },
+    {
+      "file": "wall_corner_out_c.fbx",
+      "triangles": 503,
+      "budget": 600,
+      "size": [
+        2.51,
+        3.428,
+        2.521
+      ],
+      "bounds": {
+        "min": [
+          -2.155,
+          0.0,
+          -2.153
+        ],
+        "max": [
+          0.355,
+          3.428,
+          0.368
+        ]
+      },
+      "objects": [
+        "wall_corner_out_c"
+      ],
+      "fileBytes": 38012
+    },
+    {
+      "file": "wall_corner_in_c.fbx",
+      "triangles": 523,
+      "budget": 600,
+      "size": [
+        3.188,
+        3.276,
+        3.163
+      ],
+      "bounds": {
+        "min": [
+          -2.157,
+          0.0,
+          -2.156
+        ],
+        "max": [
+          1.032,
+          3.276,
+          1.007
+        ]
+      },
+      "objects": [
+        "wall_corner_in_c"
+      ],
+      "fileBytes": 39388
+    },
+    {
+      "file": "wall_end_c.fbx",
+      "triangles": 504,
+      "budget": 600,
+      "size": [
+        1.911,
+        3.254,
+        2.154
+      ],
+      "bounds": {
+        "min": [
+          -0.905,
+          0.0,
+          -1.853
+        ],
+        "max": [
+          1.006,
+          3.254,
+          0.301
+        ]
+      },
+      "objects": [
+        "wall_end_c"
+      ],
+      "fileBytes": 38812
+    },
+    {
+      "file": "gate_c.fbx",
+      "triangles": 1085,
+      "budget": 1200,
+      "size": [
+        4.386,
+        4.216,
+        1.724
+      ],
+      "bounds": {
+        "min": [
+          -2.192,
+          0.0,
+          -0.857
+        ],
+        "max": [
+          2.194,
+          4.216,
+          0.867
+        ]
+      },
+      "objects": [
+        "gate_frame",
+        "gate_door"
+      ],
+      "fileBytes": 63484
+    },
+    {
+      "file": "ob_jump_c.fbx",
+      "triangles": 490,
+      "budget": 800,
+      "size": [
+        3.829,
+        0.348,
+        0.892
+      ],
+      "bounds": {
+        "min": [
+          -1.917,
+          0.0,
+          -0.447
+        ],
+        "max": [
+          1.913,
+          0.348,
+          0.445
+        ]
+      },
+      "objects": [
+        "ob_jump_c"
+      ],
+      "fileBytes": 35068
+    },
+    {
+      "file": "ob_duck_c.fbx",
+      "triangles": 659,
+      "budget": 800,
+      "size": [
+        3.806,
+        2.19,
+        0.914
+      ],
+      "bounds": {
+        "min": [
+          -1.901,
+          0.0,
+          -0.46
+        ],
+        "max": [
+          1.905,
+          2.19,
+          0.454
+        ]
+      },
+      "objects": [
+        "ob_duck_c"
+      ],
+      "fileBytes": 43404
+    },
+    {
+      "file": "ob_side_c.fbx",
+      "triangles": 292,
+      "budget": 800,
+      "size": [
+        2.0,
+        2.053,
+        1.2
+      ],
+      "bounds": {
+        "min": [
+          -1.0,
+          0.0,
+          -0.6
+        ],
+        "max": [
+          1.0,
+          2.053,
+          0.6
+        ]
+      },
+      "objects": [
+        "ob_side_c"
+      ],
+      "fileBytes": 29404
+    },
+    {
+      "file": "vent_c.fbx",
+      "triangles": 416,
+      "budget": 800,
+      "size": [
+        1.4,
+        0.287,
+        1.4
+      ],
+      "bounds": {
+        "min": [
+          -0.7,
+          0.0,
+          -0.7
+        ],
+        "max": [
+          0.7,
+          0.287,
+          0.7
+        ]
+      },
+      "objects": [
+        "vent_rim",
+        "vent_core"
+      ],
+      "fileBytes": 36268
+    },
+    {
+      "file": "backdrop_rock_c.fbx",
+      "triangles": 975,
+      "budget": 1500,
+      "size": [
+        13.882,
+        13.739,
+        9.529
+      ],
+      "bounds": {
+        "min": [
+          -6.803,
+          0.0,
+          -4.604
+        ],
+        "max": [
+          7.078,
+          13.739,
+          4.925
+        ]
+      },
+      "objects": [
+        "backdrop_rock_c"
+      ],
+      "fileBytes": 62412
+    },
+    {
+      "file": "cave_entrance_a.fbx",
+      "triangles": 2522,
+      "budget": 3000,
+      "size": [
+        13.278,
+        7.826,
+        8.917
+      ],
+      "bounds": {
+        "min": [
+          -6.783,
+          0.0,
+          -6.694
+        ],
+        "max": [
+          6.495,
+          7.826,
+          2.223
+        ]
+      },
+      "objects": [
+        "cave_entrance_a"
+      ],
+      "fileBytes": 120300
+    },
+    {
+      "file": "exit_altar_a.fbx",
+      "triangles": 318,
+      "budget": 800,
+      "size": [
+        2.698,
+        0.5,
+        2.719
+      ],
+      "bounds": {
+        "min": [
+          -1.35,
+          0.0,
+          -1.362
+        ],
+        "max": [
+          1.348,
+          0.5,
+          1.357
+        ]
+      },
+      "objects": [
+        "exit_altar_a"
+      ],
+      "fileBytes": 32780
+    }
+  ],
+  "assets": {
+    "bytes": 7393536,
+    "megabytes": 7.39,
+    "files": {
+      "backdrop_rock_a.fbx": 82444,
+      "backdrop_rock_b.fbx": 77020,
+      "backdrop_rock_c.fbx": 62412,
+      "cave_entrance_a.fbx": 120300,
+      "exit_altar_a.fbx": 32780,
+      "gate_a.fbx": 63980,
+      "gate_b.fbx": 62956,
+      "gate_c.fbx": 63484,
+      "ob_duck_a.fbx": 43580,
+      "ob_duck_b.fbx": 43708,
+      "ob_duck_c.fbx": 43404,
+      "ob_jump_a.fbx": 24140,
+      "ob_jump_b.fbx": 23532,
+      "ob_jump_c.fbx": 35068,
+      "ob_side_a.fbx": 26540,
+      "ob_side_b.fbx": 29292,
+      "ob_side_c.fbx": 29404,
+      "vent_a.fbx": 36108,
+      "vent_b.fbx": 35932,
+      "vent_c.fbx": 36268,
+      "wall_corner_in_a.fbx": 39340,
+      "wall_corner_in_b.fbx": 39564,
+      "wall_corner_in_c.fbx": 39388,
+      "wall_corner_out_a.fbx": 38476,
+      "wall_corner_out_b.fbx": 38108,
+      "wall_corner_out_c.fbx": 38012,
+      "wall_end_a.fbx": 38716,
+      "wall_end_b.fbx": 38252,
+      "wall_end_c.fbx": 38812,
+      "wall_straight_a.fbx": 39756,
+      "wall_straight_b.fbx": 37964,
+      "wall_straight_c.fbx": 38876,
+      "volcano_kit_albedo.png": 4442111,
+      "volcano_kit_emissive.png": 256671,
+      "volcano_smoke_flipbook.png": 332349,
+      "volcano_smoke_atlas.png": 895955,
+      "kit.json": 28834
+    }
+  }
+}
