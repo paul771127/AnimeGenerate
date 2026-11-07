@@ -641,7 +641,11 @@ namespace SpellDuel
         public int AreasCleared { get { int n = 0; foreach (var a in map.areas) if (a.cleared) n++; return n; } }
 
         /// <summary>副本：這個區域還有幾隻守著的怪活著</summary>
-        public int AreaAlive(ExArea a) { int n = 0; foreach (var mon in map.monsters) if (mon.area == a.index && !mon.dead) n++; return n; }
+        /// <summary>
+        /// 副本：這個區域還有幾隻守著的怪活著。只算站在區域裡的營地守衛；在外面巡邏、遊蕩的小隊不算
+        /// （使用者回報清完敵人後門打不開：巡邏的怪走遠了，找不到也就清不完）。巡邏的怪清除後照樣在地圖上走動。
+        /// </summary>
+        public int AreaAlive(ExArea a) { int n = 0; foreach (var mon in map.monsters) if (mon.area == a.index && !mon.dead && mon.patrol == null && !mon.wander) n++; return n; }
 
         /// <summary>副本：區域清除（打倒營地、完成事件、打倒中途首領、打開寶箱）：往下一站的門打開</summary>
         public void ClearArea(ExArea a)

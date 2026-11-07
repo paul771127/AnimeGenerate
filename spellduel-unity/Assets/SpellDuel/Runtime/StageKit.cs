@@ -16,7 +16,7 @@ namespace SpellDuel
         const string Dir = "SceneKit/volcano_cel_v1/";
         static bool loaded, ok;
         static Material mainMat, backMat, groundMat;
-        static Texture2D groundAsh;
+        static Texture2D groundAsh, groundCrust;
         static readonly Dictionary<string, GameObject> parts = new Dictionary<string, GameObject>();
         static readonly string[] StraightV = { "a", "b", "c", "d" }, CornerV = { "a", "b", "c" };
         static readonly Vector2Int[] Dirs4 = { new Vector2Int(1, 0), new Vector2Int(0, 1), new Vector2Int(-1, 0), new Vector2Int(0, -1) };
@@ -43,8 +43,9 @@ namespace SpellDuel
             mainMat.SetFloat("_UnderGlowStrength", 0.55f);   // 使用者要求岩壁要有熔岩感：牆腳有地上熔岩照上來的暖橘反光（StageKit.shader）
             // 手繪地面（賽璐璐版附的火山灰地面，每 3m 重複一次）
             groundAsh = Resources.Load<Texture2D>(Dir + "cel_ground_ash");
+            groundCrust = Resources.Load<Texture2D>(Dir + "cel_ground_crust");
             var gsh = Resources.Load<Shader>("Shaders/StageKitGround");
-            if (groundAsh && gsh != null && gsh.isSupported) groundMat = new Material(gsh) { name = "Stage kit ground (volcano)", mainTexture = groundAsh };
+            if (groundAsh && gsh != null && gsh.isSupported) { groundMat = new Material(gsh) { name = "Stage kit ground (volcano)", mainTexture = groundAsh }; groundMat.SetFloat("_Bright", 1.18f); }   // 可以走的路：亮一點的火山灰
             backMat = new Material(sh) { name = "Stage kit backdrop (volcano)", mainTexture = back ? back : alb, enableInstancing = true };
             backMat.SetFloat("_Glow", 0f); backMat.SetFloat("_HazeNear", 25f); backMat.SetFloat("_HazeFar", 90f); backMat.SetFloat("_HazeMax", 0.75f);
         }
@@ -70,7 +71,8 @@ namespace SpellDuel
 
         /// <summary>這一格地面的材質（熔岩區用手繪地面；沒有＝null，照舊）</summary>
         public static Material GroundAt(ExploreMap map, int theme) => theme == 0 && CelMap(map) ? groundMat : null;
-        public static Texture2D GroundTexture => groundAsh;
+        /// <summary>底下整片（不能走的地方）：暗的凝固熔岩地殼，跟可以走的火山灰路分得清楚</summary>
+        public static Texture2D GroundTexture => groundCrust ? groundCrust : groundAsh;
 
         /// <summary>遠處的霧色跟著地圖的天色（ExploreArt.HorizonColors）</summary>
         public static void SetHaze(ExploreMap map)
@@ -82,12 +84,18 @@ namespace SpellDuel
             if (groundMat) groundMat.SetColor("_Haze", h);
         }
 
-        static GameObject Spawn(Transform parent, string name, Vector3 pos, Quaternion rot, Material m)
+        /// <summary>岩壁的高度倍率（使用者要求：不能走的地方岩壁至少要人的 2 倍高 → 最矮的鞍部約 3.9m、中間 7～9m）</summary>
+        const float WallScaleY = 1.55f;
+        /// <summary>岩壁可走的那面原本往路上凸 0.55m：往牆裡退，不擋路、走路邊時也不會鑽進岩石裡（使用者回報走一走有奇怪的遮擋物）</summary>
+        const float WallBack = 0.6f;
+
+        static GameObject Spawn(Transform parent, string name, Vector3 pos, Quaternion rot, Material m, Vector3? scale = null)
         {
             var src = Part(name); if (!src) return null;
             var g = Object.Instantiate(src, parent, false);
             g.name = name;
             g.transform.localPosition = pos; g.transform.localRotation = rot;
+            if (scale.HasValue) g.transform.localScale = Vector3.Scale(g.transform.localScale, scale.Value);
             foreach (var r in g.GetComponentsInChildren<Renderer>(true))
             {
                 var mats = r.sharedMaterials; for (int i = 0; i < mats.Length; i++) mats[i] = m; r.sharedMaterials = mats;
@@ -119,7 +127,7 @@ namespace SpellDuel
             {
                 var d = Dirs4[i]; if (Wall(d.x, d.y)) continue;
                 var dv = new Vector3(d.x, 0f, d.y);
-                Spawn(t, "wall_straight_" + StraightV[(hash + i) % 4], dv * h, Quaternion.LookRotation(dv, Vector3.up), mainMat);   // 可走的那面（+Z）朝路
+                Spawn(t, "wall_straight_" + StraightV[(hash + i) % 4], dv * (h - WallBack), Quaternion.LookRotation(dv, Vector3.up), mainMat, new Vector3(1.1f, WallScaleY, 1f));   // 可走的那面（+Z）朝路；寬一點補退後留下的縫
             }
             for (int i = 0; i < 4; i++)
             {
@@ -128,7 +136,8 @@ namespace SpellDuel
                 string kind = oa && ob ? "wall_corner_out_" : !oa && !ob && diag ? "wall_corner_in_" : null;
                 if (kind == null) continue;
                 var va = new Vector3(a.x, 0f, a.y); var vb = new Vector3(b.x, 0f, b.y);
-                Spawn(t, kind + CornerV[(hash + 7 * i) % 3], (va + vb) * h, Corner(va, vb), mainMat);
+                bool outer = kind == "wall_corner_out_";
+                Spawn(t, kind + CornerV[(hash + 7 * i) % 3], (va + vb) * (h - (outer ? WallBack : WallBack * 0.5f)), Corner(va, vb), mainMat, new Vector3(1f, WallScaleY, 1f));
             }
             return root;
         }
@@ -156,8 +165,10 @@ namespace SpellDuel
             if (sunkMap != map) { sunkMap = map; sunk.Clear(); }
             var root = new GameObject("Kit gate");
             string v = ((x + z) & 1) == 0 ? "a" : "b";
-            Spawn(root.transform, "gate_frame_" + v, Vector3.zero, Quaternion.identity, mainMat);
-            var door = Spawn(root.transform, "gate_door_" + v, Vector3.zero, Quaternion.identity, mainMat);
+            // 開口原本只有 2.2m（走道 4m）：橫向放大，開口約 3.5m，走路邊也不會撞進門框；高度跟著岩壁加高
+            var gs = new Vector3(1.6f, 1.35f, 1f);
+            Spawn(root.transform, "gate_frame_" + v, Vector3.zero, Quaternion.identity, mainMat, gs);
+            var door = Spawn(root.transform, "gate_door_" + v, Vector3.zero, Quaternion.identity, mainMat, gs);
             var cell = new Vector2Int(x, z);
             bool open = map.GateOpen(x, z);
             if (door != null && open && sunk.Contains(cell)) door.SetActive(false);

@@ -44,7 +44,7 @@ namespace SpellDuel
         Transform chRoot; ExploreRun chRun;
         ChExit chExitNear, chExitDeclined;
         Vector3? chResumeAt; bool chVentSaid, chRockSaid;
-        float chNextRock; Vector3 chLastFeet; Vector3 chMoveDir = Vector3.forward;
+        float chNextRock, chGateHintAt; Vector3 chLastFeet; Vector3 chMoveDir = Vector3.forward;
         static SkillDef chLavaSkill, chRockSkill;
 
         bool ChapterMode => dungeon != null && dungeon.IsChapter && exploreRun != null && exploreRun.IsDungeon && !coop && !NetMode;
@@ -193,7 +193,37 @@ namespace SpellDuel
             bool calm = exploreRun.talking != null || bossIntroArea != null || chExitNear != null;
             UpdateVents(run, dt, calm);
             UpdateRocks(run, calm);
+            UpdateChapterGates(run);
             FacePaintedChapter();
+        }
+
+        /// <summary>
+        /// 門打不開時（使用者回報清完敵人後紅色的門過不去）：
+        ///   ・守衛都倒了卻還沒清除的區域，補清除（巡邏的怪不算，見 ExploreRun.AreaAlive）。
+        ///   ・站在關著的門前面，說明還差什麼（事件沒完成、還有幾隻守衛、支線的出口）。
+        /// </summary>
+        void UpdateChapterGates(ExploreRun run)
+        {
+            var map = run.map;
+            foreach (var a in map.areas)
+                if (a.entered && !a.cleared && !a.IsEvent && !a.IsBoss && !a.IsChest && a != exNodeArea && run.AreaAlive(a) == 0) run.ClearArea(a);
+            if (Time.time < chGateHintAt) return;
+            var pc = map.Cell(Me.Feet);
+            for (int dx = -2; dx <= 2; dx++) for (int dz = -2; dz <= 2; dz++)
+            {
+                int x = pc.x + dx, z = pc.y + dz;
+                if (map.At(x, z) != ExCell.Gate || map.GateOpen(x, z) || Battle.FlatDistance(map.World(x, z), Me.Feet) > 5.5f) continue;
+                var c = new Vector2Int(x, z);
+                var a = map.areas.Find(q => q.exits.Contains(c)); if (a == null) continue;
+                chGateHintAt = Time.time + 6f;
+                var side = System.Array.Find(ChSides, q => q.node == a.node.id);
+                string why = side != null ? $"這是支線「{side.title}」的出口：跟{side.name}接任務、完成之後才會打開（主線走另一扇門）"
+                    : !a.entered ? $"先到「{a.Title}」"
+                    : a.IsEvent ? $"完成「{a.Title}」的試煉才會打開" + (a == exNodeArea ? "（試煉進行中）" : "")
+                    : $"「{a.Title}」還有 {run.AreaAlive(a)} 隻守衛沒打倒（看小地圖的紅點）";
+                Say("🚪 門還關著：" + why, 4f);
+                return;
+            }
         }
 
         bool ChEnemyNear(float r)
