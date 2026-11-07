@@ -1,0 +1,39 @@
+{
+  "_note": "SpellDuel 遊戲端的需求摘要（不是 control.py 的格式）。請用 control.py capabilities / plan 轉成生成器自己的請求，存成 generator_request.json 放在同一個資料夾，再 validate / generate / inspect。詳細規格見 REQUEST.md。",
+  "job": "001-volcano-kit",
+  "from": "spellduel-cloud",
+  "kind": "modular_kit",
+  "theme": "natural_volcano",
+  "style": {
+    "terrain": ["solidified_lava", "volcanic_ash", "curved_rock_shore", "cave_entrance"],
+    "forbid": ["paved_tiles", "tourist_platform"],
+    "look": "hand-painted anime fantasy, light from top-left, AO baked into albedo",
+    "match_texture": "spellduel-unity/Assets/SpellDuel/Resources/StageArt/volcano_0_ground.png"
+  },
+  "units": { "length": "meter", "up": "Y", "forward": "+Z", "pivot": "bottom, on ground", "grid_cell": 4.0 },
+  "target": { "engine": "Unity 2022.3", "pipeline": "built-in (NOT URP)", "materials": "none (game assigns)", "meta_files": false },
+  "texture_atlas": { "albedo": "volcano_kit_albedo.png 2048x2048 sRGB", "emissive_mask": "volcano_kit_emissive.png 1024x1024", "uv_range": "0-1", "normal_map": false },
+  "parts": [
+    { "id": "wall_straight",   "variants": 3, "size_m": [4.0, 2.0, 4.0], "tri_max": 600,  "walk_side": "+Z" },
+    { "id": "wall_corner_out", "variants": 3, "size_m": [2.0, 2.0, 4.0], "tri_max": 600 },
+    { "id": "wall_corner_in",  "variants": 3, "size_m": [2.0, 2.0, 4.0], "tri_max": 600 },
+    { "id": "wall_end",        "variants": 3, "size_m": [1.5, 2.0, 4.0], "tri_max": 600 },
+    { "id": "gate",            "variants": 3, "size_m": [4.0, 1.5, 4.5], "tri_max": 1200, "children": ["gate_frame", "gate_door"] },
+    { "id": "ob_jump",         "variants": 3, "size_m": [3.8, 0.8, 0.45], "tri_max": 800 },
+    { "id": "ob_duck",         "variants": 3, "size_m": [3.8, 0.8, 2.2], "tri_max": 800, "beam_underside_m": 1.30, "clear_below_beam": true },
+    { "id": "ob_side",         "variants": 3, "size_m": [2.0, 1.2, 2.0], "tri_max": 800 },
+    { "id": "vent",            "variants": 3, "size_m": [1.4, 1.4, 0.2], "tri_max": 800, "children": ["vent_core"] },
+    { "id": "cave_entrance",   "variants": 1, "size_m": [12.0, 6.0, 8.0], "tri_max": 3000, "opening": "+Z" },
+    { "id": "backdrop_rock",   "variants": 3, "size_m": [12.0, 12.0, 20.0], "tri_max": 1500, "back_faces": false },
+    { "id": "exit_altar",      "variants": 1, "size_m": [2.8, 2.8, 0.5], "tri_max": 800, "flat_center": true }
+  ],
+  "extra": [ { "id": "smoke_column", "keep_existing_generator_smoke": true } ],
+  "budget": { "total_mb_max": 15 },
+  "output": {
+    "assets": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano/",
+    "manifest": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano/kit.json",
+    "job_folder": "scenegen/jobs/spellduel-cloud/001-volcano-kit/",
+    "write_back": ["generator_request.json", "response.json", "inspect.json", "previews/"]
+  },
+  "git": { "branch": "claude/mobile-camera-mic-battle-game-v5nhfr", "commit_prefix": "scenegen 001:", "verify_push": true }
+}
