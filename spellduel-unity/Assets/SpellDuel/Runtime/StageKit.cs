@@ -39,7 +39,8 @@ namespace SpellDuel
             if (!ok) return;
             mainMat = new Material(sh) { name = "Stage kit (volcano)", mainTexture = alb, enableInstancing = true };
             if (em) mainMat.SetTexture("_EmissionMap", em);
-            mainMat.SetFloat("_Glow", 0.8f);   // 賽璐璐版的顏色圖已經畫了一點熔岩光，發光遮罩只補一點
+            mainMat.SetFloat("_Glow", 1.8f);   // 裂縫的熔岩光（會慢慢脈動）
+            mainMat.SetFloat("_UnderGlowStrength", 0.55f);   // 使用者要求岩壁要有熔岩感：牆腳有地上熔岩照上來的暖橘反光（StageKit.shader）
             // 手繪地面（賽璐璐版附的火山灰地面，每 3m 重複一次）
             groundAsh = Resources.Load<Texture2D>(Dir + "cel_ground_ash");
             var gsh = Resources.Load<Shader>("Shaders/StageKitGround");
