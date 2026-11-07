@@ -1,7 +1,7 @@
 {
   "kit": "volcano",
   "version": 1,
-  "generatedAt": "2026-11-07T15:25:59",
+  "generatedAt": "2026-11-07T18:07:18",
   "source": "rpg-world-builder kit_builder.py (jobs/spellduel-cloud/001-volcano-kit) with Blender 4.5.15 LTS",
   "units": "metres",
   "up": "+Y",
@@ -68,7 +68,7 @@
       ],
       "children": [],
       "emissive": true,
-      "fileBytes": 39756
+      "fileBytes": 39836
     },
     {
       "id": "wall_corner_out",
@@ -102,7 +102,7 @@
       ],
       "children": [],
       "emissive": true,
-      "fileBytes": 38476
+      "fileBytes": 38572
     },
     {
       "id": "wall_corner_in",
@@ -136,7 +136,7 @@
       ],
       "children": [],
       "emissive": false,
-      "fileBytes": 39340
+      "fileBytes": 39436
     },
     {
       "id": "wall_end",
@@ -170,7 +170,7 @@
       ],
       "children": [],
       "emissive": false,
-      "fileBytes": 38716
+      "fileBytes": 38812
     },
     {
       "id": "gate",
@@ -208,7 +208,11 @@
         "gate_door"
       ],
       "emissive": true,
-      "fileBytes": 63980
+      "fileBytes": 64060,
+      "separateFiles": {
+        "gate_frame": "gate_frame_a.fbx",
+        "gate_door": "gate_door_a.fbx"
+      }
     },
     {
       "id": "ob_jump",
@@ -242,7 +246,7 @@
       ],
       "children": [],
       "emissive": true,
-      "fileBytes": 24140
+      "fileBytes": 24236
     },
     {
       "id": "ob_duck",
@@ -276,7 +280,7 @@
       ],
       "children": [],
       "emissive": false,
-      "fileBytes": 43580
+      "fileBytes": 43676
     },
     {
       "id": "ob_side",
@@ -310,7 +314,7 @@
       ],
       "children": [],
       "emissive": true,
-      "fileBytes": 26540
+      "fileBytes": 26620
     },
     {
       "id": "vent",
@@ -348,7 +352,7 @@
         "vent_core"
       ],
       "emissive": true,
-      "fileBytes": 36108
+      "fileBytes": 36204
     },
     {
       "id": "backdrop_rock",
@@ -382,7 +386,7 @@
       ],
       "children": [],
       "emissive": true,
-      "fileBytes": 82444
+      "fileBytes": 82540
     },
     {
       "id": "wall_straight",
@@ -416,7 +420,7 @@
       ],
       "children": [],
       "emissive": false,
-      "fileBytes": 37964
+      "fileBytes": 38060
     },
     {
       "id": "wall_corner_out",
@@ -450,7 +454,7 @@
       ],
       "children": [],
       "emissive": false,
-      "fileBytes": 38108
+      "fileBytes": 38204
     },
     {
       "id": "wall_corner_in",
@@ -484,7 +488,7 @@
       ],
       "children": [],
       "emissive": false,
-      "fileBytes": 39564
+      "fileBytes": 39644
     },
     {
       "id": "wall_end",
@@ -518,7 +522,7 @@
       ],
       "children": [],
       "emissive": false,
-      "fileBytes": 38252
+      "fileBytes": 38348
     },
     {
       "id": "gate",
@@ -556,7 +560,11 @@
         "gate_door"
       ],
       "emissive": true,
-      "fileBytes": 62956
+      "fileBytes": 63052,
+      "separateFiles": {
+        "gate_frame": "gate_frame_b.fbx",
+        "gate_door": "gate_door_b.fbx"
+      }
     },
     {
       "id": "ob_jump",
@@ -590,7 +598,7 @@
       ],
       "children": [],
       "emissive": true,
-      "fileBytes": 23532
+      "fileBytes": 23628
     },
     {
       "id": "ob_duck",
@@ -624,7 +632,7 @@
       ],
       "children": [],
       "emissive": false,
-      "fileBytes": 43708
+      "fileBytes": 43804
     },
     {
       "id": "ob_side",
@@ -658,7 +666,7 @@
       ],
       "children": [],
       "emissive": false,
-      "fileBytes": 29292
+      "fileBytes": 29388
     },
     {
       "id": "vent",
@@ -696,7 +704,7 @@
         "vent_core"
       ],
       "emissive": true,
-      "fileBytes": 35932
+      "fileBytes": 36028
     },
     {
       "id": "backdrop_rock",
@@ -730,7 +738,7 @@
       ],
       "children": [],
       "emissive": true,
-      "fileBytes": 77020
+      "fileBytes": 77116
     },
     {
       "id": "wall_straight",
@@ -764,7 +772,7 @@
       ],
       "children": [],
       "emissive": true,
-      "fileBytes": 38876
+      "fileBytes": 38972
     },
     {
       "id": "wall_corner_out",
@@ -798,7 +806,7 @@
       ],
       "children": [],
       "emissive": false,
-      "fileBytes": 38012
+      "fileBytes": 38108
     },
     {
       "id": "wall_corner_in",
@@ -832,7 +840,7 @@
       ],
       "children": [],
       "emissive": false,
-      "fileBytes": 39388
+      "fileBytes": 39484
     },
     {
       "id": "wall_end",
@@ -866,7 +874,7 @@
       ],
       "children": [],
       "emissive": false,
-      "fileBytes": 38812
+      "fileBytes": 38908
     },
     {
       "id": "gate",
@@ -904,7 +912,11 @@
         "gate_door"
       ],
       "emissive": true,
-      "fileBytes": 63484
+      "fileBytes": 63564,
+      "separateFiles": {
+        "gate_frame": "gate_frame_c.fbx",
+        "gate_door": "gate_door_c.fbx"
+      }
     },
     {
       "id": "ob_jump",
@@ -938,7 +950,7 @@
       ],
       "children": [],
       "emissive": true,
-      "fileBytes": 35068
+      "fileBytes": 35164
     },
     {
       "id": "ob_duck",
@@ -972,7 +984,7 @@
       ],
       "children": [],
       "emissive": true,
-      "fileBytes": 43404
+      "fileBytes": 43500
     },
     {
       "id": "ob_side",
@@ -1006,7 +1018,7 @@
       ],
       "children": [],
       "emissive": false,
-      "fileBytes": 29404
+      "fileBytes": 29484
     },
     {
       "id": "vent",
@@ -1044,7 +1056,7 @@
         "vent_core"
       ],
       "emissive": true,
-      "fileBytes": 36268
+      "fileBytes": 36364
     },
     {
       "id": "backdrop_rock",
@@ -1078,7 +1090,7 @@
       ],
       "children": [],
       "emissive": true,
-      "fileBytes": 62412
+      "fileBytes": 62508
     },
     {
       "id": "cave_entrance",
@@ -1112,7 +1124,7 @@
       ],
       "children": [],
       "emissive": true,
-      "fileBytes": 120300
+      "fileBytes": 120396
     },
     {
       "id": "exit_altar",
@@ -1146,9 +1158,246 @@
       ],
       "children": [],
       "emissive": false,
-      "fileBytes": 32780
+      "fileBytes": 32860
     }
   ],
+  "componentExports": [
+    {
+      "id": "gate_frame",
+      "variant": "a",
+      "file": "gate_frame_a.fbx",
+      "triangleBudget": 1200,
+      "pivot": "bottom centre on ground, shared origin with counterpart",
+      "triangles": 736,
+      "bounds": {
+        "min": [
+          -2.2107670307159424,
+          -5.0941707741003484e-08,
+          -0.8652666211128235
+        ],
+        "max": [
+          2.155345916748047,
+          4.3960137367248535,
+          0.8478079438209534
+        ]
+      },
+      "size": [
+        4.366112947463989,
+        4.396013787666561,
+        1.7130745649337769
+      ],
+      "uvRange": [
+        0.29082632064819336,
+        0.6241846680641174
+      ],
+      "objects": [
+        "gate_frame"
+      ],
+      "origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": "gate_door",
+      "variant": "a",
+      "file": "gate_door_a.fbx",
+      "triangleBudget": 1200,
+      "pivot": "bottom centre on ground, shared origin with counterpart",
+      "triangles": 348,
+      "bounds": {
+        "min": [
+          -1.1345055103302002,
+          -1.2894092016324521e-08,
+          -0.18888115882873535
+        ],
+        "max": [
+          1.1316267251968384,
+          3.4581329822540283,
+          0.19564233720302582
+        ]
+      },
+      "size": [
+        2.2661322355270386,
+        3.4581329951481203,
+        0.38452349603176117
+      ],
+      "uvRange": [
+        0.004000000189989805,
+        0.9532202482223511
+      ],
+      "objects": [
+        "gate_door"
+      ],
+      "origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": "gate_frame",
+      "variant": "b",
+      "file": "gate_frame_b.fbx",
+      "triangleBudget": 1200,
+      "pivot": "bottom centre on ground, shared origin with counterpart",
+      "triangles": 736,
+      "bounds": {
+        "min": [
+          -2.2135894298553467,
+          -5.122474533436616e-08,
+          -0.8603083491325378
+        ],
+        "max": [
+          2.1841979026794434,
+          4.750219821929932,
+          0.8561272025108337
+        ]
+      },
+      "size": [
+        4.39778733253479,
+        4.750219873154677,
+        1.7164355516433716
+      ],
+      "uvRange": [
+        0.29082632064819336,
+        0.4563926160335541
+      ],
+      "objects": [
+        "gate_frame"
+      ],
+      "origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": "gate_door",
+      "variant": "b",
+      "file": "gate_door_b.fbx",
+      "triangleBudget": 1200,
+      "pivot": "bottom centre on ground, shared origin with counterpart",
+      "triangles": 349,
+      "bounds": {
+        "min": [
+          -1.1421442031860352,
+          -1.5742802617069174e-08,
+          -0.2507309913635254
+        ],
+        "max": [
+          1.1315691471099854,
+          3.7350995540618896,
+          0.2528509497642517
+        ]
+      },
+      "size": [
+        2.2737133502960205,
+        3.7350995698046923,
+        0.5035819411277771
+      ],
+      "uvRange": [
+        0.7369747757911682,
+        0.8902060985565186
+      ],
+      "objects": [
+        "gate_door"
+      ],
+      "origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": "gate_frame",
+      "variant": "c",
+      "file": "gate_frame_c.fbx",
+      "triangleBudget": 1200,
+      "pivot": "bottom centre on ground, shared origin with counterpart",
+      "triangles": 736,
+      "bounds": {
+        "min": [
+          -2.1919467449188232,
+          -5.053179918945716e-08,
+          -0.8566997051239014
+        ],
+        "max": [
+          2.194077730178833,
+          4.215570449829102,
+          0.8674669861793518
+        ]
+      },
+      "size": [
+        4.386024475097656,
+        4.215570500360901,
+        1.7241666913032532
+      ],
+      "uvRange": [
+        0.29082632064819336,
+        0.7902925610542297
+      ],
+      "objects": [
+        "gate_frame"
+      ],
+      "origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "id": "gate_door",
+      "variant": "c",
+      "file": "gate_door_c.fbx",
+      "triangleBudget": 1200,
+      "pivot": "bottom centre on ground, shared origin with counterpart",
+      "triangles": 349,
+      "bounds": {
+        "min": [
+          -1.1674455404281616,
+          -1.3314650715301468e-08,
+          -0.24814993143081665
+        ],
+        "max": [
+          1.1634405851364136,
+          3.3670148849487305,
+          0.24739785492420197
+        ]
+      },
+      "size": [
+        2.330886125564575,
+        3.367014898263381,
+        0.4955477863550186
+      ],
+      "uvRange": [
+        0.7369747757911682,
+        0.9857364296913147
+      ],
+      "objects": [
+        "gate_door"
+      ],
+      "origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ]
+    }
+  ],
+  "sizeConvention": "size/bounds = Unity XYZ = width/height/depth; request.size_m is width/depth/height",
   "smoke": {
     "flipbook": {
       "file": "volcano_smoke_flipbook.png",
@@ -1183,13 +1432,21 @@
         1024,
         1024
       ],
-      "layout": "RGBA; top half = cloud band (scrolls horizontally), bottom half = one puff; see response.json for the shader maths"
+      "layout": "RGBA; clouds top half, puff bottom half"
     }
   },
+  "execution": {
+    "job": "001-volcano-kit",
+    "id": "20261107T180216605686",
+    "baseCommit": "2ff126b4d249a8e82187d763bc000fa8222de963",
+    "seed": 20261108
+  },
   "notes": [
-    "FBX exported from Blender 4.5.15 with -Z forward / Y up, apply unit scale, apply transform (bake_space_transform); verified to import into Unity 2022.3 at scale 1 with +Z forward and the pivot on the ground.",
-    "No .meta files and no material/shader files are shipped; assign one built-in pipeline material to every part (see material.recipe).",
-    "Each FBX carries a material slot named VolcanoKitPreview as a placeholder only; replace it in the import settings or at runtime.",
-    "Triangle counts are the exported triangle totals per part; mobile frame rate was not measured."
+    "Mesh parts only; no fixed map, ground mesh, Unity material, shader, meta file or LOD delivered.",
+    "Combined gate_[a-c].fbx files retained for existing consumers; separate gate_frame_[a-c].fbx and gate_door_[a-c].fbx also provided in parts[].separateFiles and componentExports.",
+    "Gate components share the bottom-centre origin. Leave both at identity to close; translate the door down or sideways to open.",
+    "Geometry shares one 2048px sRGB albedo atlas with baked AO/top-left key light and one 1024px linear emissive mask. Smoke images are separate effects resources.",
+    "All FBX files independently re-imported in Blender for geometry, UVs, bounds and pivot checks. This re-execution did not open the SpellDuel Unity project; prior Unity 2022.3 axis validation belongs to the original kit execution.",
+    "Phone FPS not measured."
   ]
 }
