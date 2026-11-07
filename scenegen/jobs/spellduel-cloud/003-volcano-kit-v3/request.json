@@ -1,0 +1,54 @@
+{
+  "_note": "SpellDuel 遊戲端的需求摘要（不是 control.py 的格式）。零件、尺寸、原點、面數沿用 002；這次只重做貼圖與著色，讓 3D 岩壁跟 Codex 的 2D 障礙物同一風格。詳見 REQUEST.md。",
+  "job": "003-volcano-kit-v3",
+  "from": "spellduel-cloud",
+  "revises": "002-volcano-kit-v2",
+  "keep": ["002 meshes and silhouettes", "pivots", "triangle budgets", "emissive <= 5%"],
+  "goal": "3D walls look painted by the same artist as the 2D obstacle billboards; no sudden colour jump between walls and obstacles",
+  "texture_source": {
+    "method": "crop painted rock surfaces out of the Codex 2D obstacle images (avoid alpha edges and glowing cracks), make 2-4 seamless tiles, triplanar-bake them into the part atlas",
+    "images": [
+      "spellduel-unity/Assets/SpellDuel/Resources/StageArt/Obstacles/volcano_side_0.png",
+      "spellduel-unity/Assets/SpellDuel/Resources/StageArt/Obstacles/volcano_side_1.png",
+      "spellduel-unity/Assets/SpellDuel/Resources/StageArt/Obstacles/volcano_side_2.png",
+      "spellduel-unity/Assets/SpellDuel/Resources/StageArt/Obstacles/volcano_duck_0.png",
+      "spellduel-unity/Assets/SpellDuel/Resources/StageArt/Obstacles/volcano_duck_1.png",
+      "spellduel-unity/Assets/SpellDuel/Resources/StageArt/Obstacles/volcano_rock_fall.png"
+    ],
+    "texel_density_px_per_m": [100, 150],
+    "ship_tiles": "volcano_rock_tile_*.png"
+  },
+  "shading": {
+    "flat_shading": false,
+    "smoothing_angle_deg": [40, 50],
+    "bake": "key light top-left, warm lit side, cool purple shadow side, soft AO in crevices and at the foot, thin rim highlight on upper edges",
+    "outline": "optional thin dark contour on major folds, anti-aliased, no jaggies"
+  },
+  "colour_targets": {
+    "reference_samples": {
+      "volcano_side_0":    { "avg": "#563532", "dark10": "#291e1f", "mid": "#54302e", "lit90": "#884b45" },
+      "volcano_side_1":    { "avg": "#513334", "dark10": "#301e1e", "mid": "#412e34", "lit90": "#915452" },
+      "volcano_duck_0":    { "avg": "#563e3d", "dark10": "#2f2526", "mid": "#5b3431", "lit90": "#8a5b59" },
+      "volcano_rock_fall": { "avg": "#533b39", "dark10": "#2e2326", "mid": "#43363a", "lit90": "#7e6364" }
+    },
+    "wall_avg_range": ["#4e3433", "#5a3e3c"],
+    "max_highlight": "#9a6058",
+    "orange_only_on": ["lit edges", "sparse glowing cracks"],
+    "walls_may_be": "slightly darker / lower contrast than the billboards, same hue"
+  },
+  "remove": ["black slash strokes", "jagged dark lines", "procedural noise / marble / grid cracks", "flat low-poly look"],
+  "self_check_in_inspect_json": ["per-part baked avg and lit90 colour vs targets (pass/fail)", "jagged dark lines (visual check)", "triangle counts"],
+  "previews": {
+    "lighting": "same as 002: warm key from top-left, dark red-brown sky, not purple",
+    "files": ["player_view.png (ground volcano_0_ground.png every 2.5 m; Codex billboards volcano_duck_0, volcano_side_0, volcano_jump_0 in the corridor)", "compare_002_003.png", "closeup_match.png (wall next to volcano_side_0.png)", "one image per part"]
+  },
+  "target": { "engine": "Unity 2022.3", "pipeline": "built-in (NOT URP)", "materials": "none", "meta_files": false },
+  "output": {
+    "assets": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_v3/",
+    "manifest": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_v3/kit.json",
+    "job_folder": "scenegen/jobs/spellduel-cloud/003-volcano-kit-v3/",
+    "write_back": ["generator_request.json", "response.json", "inspect.json", "previews/"],
+    "do_not_touch": ["SceneKit/volcano/", "SceneKit/volcano_v2/", "001-volcano-kit/", "002-volcano-kit-v2/"]
+  },
+  "git": { "branch": "claude/mobile-camera-mic-battle-game-v5nhfr", "commit_prefix": "scenegen 003:", "verify_push": true }
+}
