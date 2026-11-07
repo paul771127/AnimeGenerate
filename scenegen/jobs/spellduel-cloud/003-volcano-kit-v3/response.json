@@ -1,0 +1,706 @@
+{
+  "job": "003-volcano-kit-v3",
+  "revises": "002-volcano-kit-v2",
+  "ok": true,
+  "executedAt": "2026-11-07T19:32:43",
+  "executedBy": "rpg-world-builder local session (Claude Code), E:\\AI接案\\rpg-world-builder",
+  "controlApi": {
+    "apiVersion": 1,
+    "capabilities": {
+      "ok": true,
+      "actions": [
+        "capabilities",
+        "validate",
+        "plan",
+        "generate",
+        "inspect"
+      ],
+      "note": "no modular_kit / re-texture action exists in API v1"
+    },
+    "plan": {
+      "ok": true,
+      "requestId": "spellduel-003-volcano-kit-v3-plan",
+      "landformsStyle": "volcanic_wilderness",
+      "landformsRevision": 3,
+      "rooms": 49,
+      "connections": 52
+    },
+    "validate": {
+      "ok": true,
+      "requestId": "spellduel-003-volcano-kit-v3-validate",
+      "valid": true,
+      "warnings": [],
+      "geometrySummary": {
+        "objects": 1444,
+        "sourceTriangles": 44330
+      }
+    },
+    "generate": {
+      "ok": true,
+      "requestId": "spellduel-003-volcano-kit-v3-generate",
+      "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-volcano-kit-003",
+      "state": "complete",
+      "configSha256": "f8d6e5b7e2ec864edde1c16e0bbd19aa6840f7bf2af569d7c8c441e918124a2b",
+      "seed": 20261108,
+      "sceneName": "Dungeon_Volcano_Painted",
+      "secondsInBlender": 14.9,
+      "glb": {
+        "bytes": 5229116,
+        "vertices": 64954,
+        "triangles": 43814,
+        "primitives": 15,
+        "materials": 5,
+        "devicePerformance": "not measured"
+      }
+    },
+    "inspect": {
+      "ok": true,
+      "requestId": "spellduel-003-volcano-kit-v3-inspect",
+      "files": [
+        {
+          "path": "collision.zup-source.json",
+          "bytes": 2730569
+        },
+        {
+          "path": "config.json",
+          "bytes": 897
+        },
+        {
+          "path": "dungeon_first_person.png",
+          "bytes": 2361442
+        },
+        {
+          "path": "dungeon_overview.png",
+          "bytes": 3160241
+        },
+        {
+          "path": "dungeon_plan.svg",
+          "bytes": 11133
+        },
+        {
+          "path": "generation.log",
+          "bytes": 3528
+        },
+        {
+          "path": "level.blend",
+          "bytes": 15453463
+        },
+        {
+          "path": "level.fbx",
+          "bytes": 6084844
+        },
+        {
+          "path": "level.glb",
+          "bytes": 5229116
+        },
+        {
+          "path": "level_cel.blend",
+          "bytes": 15326185
+        },
+        {
+          "path": "manifest.json",
+          "bytes": 61919
+        },
+        {
+          "path": "materials/atlas.png",
+          "bytes": 1762825
+        },
+        {
+          "path": "materials/atmosphere.png",
+          "bytes": 895955
+        },
+        {
+          "path": "materials/background.png",
+          "bytes": 1825845
+        },
+        {
+          "path": "materials/sand.png",
+          "bytes": 434411
+        },
+        {
+          "path": "materials/soil.png",
+          "bytes": 451251
+        },
+        {
+          "path": "materials/stone.png",
+          "bytes": 442793
+        },
+        {
+          "path": "materials/wood.png",
+          "bytes": 422720
+        },
+        {
+          "path": "mobile-report.json",
+          "bytes": 149
+        },
+        {
+          "path": "painted_volcano_first_person.png",
+          "bytes": 2249337
+        },
+        {
+          "path": "painted_volcano_hero.png",
+          "bytes": 2424006
+        },
+        {
+          "path": "painted_volcano_terrace.png",
+          "bytes": 2183041
+        },
+        {
+          "path": "status.json",
+          "bytes": 264
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "pxPerMetreSource": 512.0,
+    "tiles": [
+      {
+        "file": "volcano_rock_tile_0.png",
+        "source": "volcano_side_0.png",
+        "cropPx": [
+          345,
+          373,
+          192
+        ],
+        "metresPerTile": 0.375,
+        "tilePx": 512,
+        "glowFractionInCrop": 0.025,
+        "meanSRGB": "#463132"
+      },
+      {
+        "file": "volcano_rock_tile_1.png",
+        "source": "volcano_side_1.png",
+        "cropPx": [
+          412,
+          658,
+          224
+        ],
+        "metresPerTile": 0.438,
+        "tilePx": 512,
+        "glowFractionInCrop": 0.0201,
+        "meanSRGB": "#3f2e34"
+      },
+      {
+        "file": "volcano_rock_tile_2.png",
+        "source": "volcano_duck_0.png",
+        "cropPx": [
+          1195,
+          168,
+          384
+        ],
+        "metresPerTile": 0.75,
+        "tilePx": 512,
+        "glowFractionInCrop": 0.0207,
+        "meanSRGB": "#4a3b3f"
+      },
+      {
+        "file": "volcano_rock_tile_3.png",
+        "source": "volcano_side_2.png",
+        "cropPx": [
+          357,
+          755,
+          192
+        ],
+        "metresPerTile": 0.375,
+        "tilePx": 512,
+        "glowFractionInCrop": 0.0248,
+        "meanSRGB": "#433233"
+      }
+    ]
+  },
+  "kitBuilder": {
+    "blender": "4.5.15 LTS",
+    "out": "E:\\AI接案\\rpg-world-builder\\jobs\\spellduel-cloud\\003-volcano-kit-v3\\kit-final",
+    "parts": 20,
+    "triangles": 15889,
+    "albedo": "volcano_kit_v3_albedo.jpg 4096x4096 (walls, gates, cave)",
+    "backdropAlbedo": "volcano_kit_v3_backdrop_albedo.jpg 2048x2048",
+    "emissive": "volcano_kit_v3_emissive.png 2048x2048 linear mask",
+    "texelsPerMetreWalls": {
+      "min": 83.7,
+      "max": 93.6
+    },
+    "emissiveTexelFraction": 0.023406654396983428,
+    "colourCheck": {
+      "wall_straight_a": {
+        "part": "wall_straight",
+        "avg": "#53393b",
+        "dark10": "#24151c",
+        "lit90": "#835b54",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.3199,
+          0.003,
+          0.2458
+        ]
+      },
+      "wall_straight_b": {
+        "part": "wall_straight",
+        "avg": "#54393b",
+        "dark10": "#25161d",
+        "lit90": "#825a53",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.5717,
+          0.003,
+          0.2444
+        ]
+      },
+      "wall_straight_c": {
+        "part": "wall_straight",
+        "avg": "#54393b",
+        "dark10": "#2a1a21",
+        "lit90": "#7e5751",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.003,
+          0.3199,
+          0.2437
+        ]
+      },
+      "wall_straight_d": {
+        "part": "wall_straight",
+        "avg": "#54383b",
+        "dark10": "#23141c",
+        "lit90": "#835d56",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.2527,
+          0.3199,
+          0.2287
+        ]
+      },
+      "wall_corner_out_a": {
+        "part": "wall_corner_out",
+        "avg": "#54383b",
+        "dark10": "#25151c",
+        "lit90": "#825952",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.6106,
+          0.5697,
+          0.191
+        ]
+      },
+      "wall_corner_in_a": {
+        "part": "wall_corner_in",
+        "avg": "#54383b",
+        "dark10": "#281920",
+        "lit90": "#7f5751",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.2083,
+          0.5697,
+          0.198
+        ]
+      },
+      "wall_end_a": {
+        "part": "wall_end",
+        "avg": "#54383b",
+        "dark10": "#26171f",
+        "lit90": "#845a54",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.365,
+          0.775,
+          0.1612
+        ]
+      },
+      "wall_corner_out_b": {
+        "part": "wall_corner_out",
+        "avg": "#54383b",
+        "dark10": "#281820",
+        "lit90": "#7d5651",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.003,
+          0.5697,
+          0.1993
+        ]
+      },
+      "wall_corner_in_b": {
+        "part": "wall_corner_in",
+        "avg": "#54383b",
+        "dark10": "#24151c",
+        "lit90": "#825953",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.6939,
+          0.3199,
+          0.2002
+        ]
+      },
+      "wall_end_b": {
+        "part": "wall_end",
+        "avg": "#54383b",
+        "dark10": "#24151d",
+        "lit90": "#855b55",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.1969,
+          0.775,
+          0.1622
+        ]
+      },
+      "wall_corner_out_c": {
+        "part": "wall_corner_out",
+        "avg": "#54383b",
+        "dark10": "#25161d",
+        "lit90": "#7e5752",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.4123,
+          0.5697,
+          0.1923
+        ]
+      },
+      "wall_corner_in_c": {
+        "part": "wall_corner_in",
+        "avg": "#54383b",
+        "dark10": "#291920",
+        "lit90": "#7f5852",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.4874,
+          0.3199,
+          0.2004
+        ]
+      },
+      "wall_end_c": {
+        "part": "wall_end",
+        "avg": "#54383b",
+        "dark10": "#271821",
+        "lit90": "#815751",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.5322,
+          0.775,
+          0.1591
+        ]
+      },
+      "gate_frame_a": {
+        "part": "gate",
+        "avg": "#54383b",
+        "dark10": "#281820",
+        "lit90": "#7f5750",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.003,
+          0.775,
+          0.1879
+        ]
+      },
+      "gate_door_a": {
+        "part": "gate",
+        "avg": "#54383b",
+        "dark10": "#251720",
+        "lit90": "#845a55",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.812,
+          0.775,
+          0.1061
+        ]
+      },
+      "gate_frame_b": {
+        "part": "gate",
+        "avg": "#54383b",
+        "dark10": "#291921",
+        "lit90": "#7c554f",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.8077,
+          0.5697,
+          0.1893
+        ]
+      },
+      "gate_door_b": {
+        "part": "gate",
+        "avg": "#54383b",
+        "dark10": "#261720",
+        "lit90": "#845a54",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.6974,
+          0.775,
+          0.1086
+        ]
+      },
+      "cave_entrance_a": {
+        "part": "cave_entrance",
+        "avg": "#543939",
+        "dark10": "#281922",
+        "lit90": "#825644",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "main",
+        "atlasRect": [
+          0.003,
+          0.003,
+          0.3109
+        ]
+      },
+      "backdrop_rock_a": {
+        "part": "backdrop_rock",
+        "avg": "#543939",
+        "dark10": "#26181f",
+        "lit90": "#78514d",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "back",
+        "atlasRect": [
+          0.003,
+          0.003,
+          0.4952
+        ]
+      },
+      "backdrop_rock_b": {
+        "part": "backdrop_rock",
+        "avg": "#54393a",
+        "dark10": "#2c1c24",
+        "lit90": "#754f4b",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "back",
+        "atlasRect": [
+          0.5042,
+          0.003,
+          0.4928
+        ]
+      },
+      "backdrop_rock_c": {
+        "part": "backdrop_rock",
+        "avg": "#54393a",
+        "dark10": "#2d1d25",
+        "lit90": "#734e49",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "back",
+        "atlasRect": [
+          0.4518,
+          0.5042,
+          0.3654
+        ]
+      },
+      "backdrop_rock_d": {
+        "part": "backdrop_rock",
+        "avg": "#54393a",
+        "dark10": "#271820",
+        "lit90": "#79534e",
+        "avgInRange": true,
+        "lit90BelowMax": true,
+        "passed": true,
+        "atlas": "back",
+        "atlasRect": [
+          0.003,
+          0.5042,
+          0.4428
+        ]
+      }
+    },
+    "colourChecksPassed": "22/22",
+    "visualJaggedLineCheck": "Checked player_view.png, closeup_match.png, corridor_overview.png and every part sheet at full resolution: no jagged dark lines remain. The only dark lines are the smooth pointiness-based contour in the folds and the thin curved emissive cracks at the foot; the 002 Voronoi slashes are gone. Remaining caveats: the painted tiles repeat visibly on the 2048 backdrop atlas at close range (they are meant for 20-40 m), and the smooth shading shows soft gradients across the larger facets near sharp folds.",
+    "allChecksPassed": true
+  },
+  "deliverables": {
+    "assetsFolder": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_v3/",
+    "files": [
+      "backdrop_rock_a.fbx",
+      "backdrop_rock_b.fbx",
+      "backdrop_rock_c.fbx",
+      "backdrop_rock_d.fbx",
+      "cave_entrance_a.fbx",
+      "gate_a.fbx",
+      "gate_b.fbx",
+      "gate_door_a.fbx",
+      "gate_door_b.fbx",
+      "gate_frame_a.fbx",
+      "gate_frame_b.fbx",
+      "wall_corner_in_a.fbx",
+      "wall_corner_in_b.fbx",
+      "wall_corner_in_c.fbx",
+      "wall_corner_out_a.fbx",
+      "wall_corner_out_b.fbx",
+      "wall_corner_out_c.fbx",
+      "wall_end_a.fbx",
+      "wall_end_b.fbx",
+      "wall_end_c.fbx",
+      "wall_straight_a.fbx",
+      "wall_straight_b.fbx",
+      "wall_straight_c.fbx",
+      "wall_straight_d.fbx",
+      "volcano_kit_v3_albedo.jpg",
+      "volcano_kit_v3_backdrop_albedo.jpg",
+      "volcano_kit_v3_emissive.png",
+      "volcano_rock_tile_0.png",
+      "volcano_rock_tile_1.png",
+      "volcano_rock_tile_2.png",
+      "volcano_rock_tile_3.png",
+      "kit.json"
+    ],
+    "assetBytes": 6475760,
+    "assetMegabytes": 6.48,
+    "budgetMegabytes": 15,
+    "withinBudget": true,
+    "previews": [
+      "closeup_match.png",
+      "corridor_overview.png",
+      "part_backdrop_rock.png",
+      "part_cave_entrance.png",
+      "part_gate.png",
+      "part_wall_corner_in.png",
+      "part_wall_corner_out.png",
+      "part_wall_end.png",
+      "part_wall_straight.png",
+      "player_view.png",
+      "compare_002_003.png",
+      "rock_tiles_sheet.png",
+      "generator_run_hero.png"
+    ],
+    "untouched": [
+      "SceneKit/volcano/",
+      "SceneKit/volcano_v2/",
+      "001-volcano-kit/",
+      "002-volcano-kit-v2/"
+    ]
+  },
+  "whatChangedFrom002": [
+    "Texture source: four seamless 512 px tiles were cut from the Codex art (volcano_side_0/1/2, volcano_duck_0; windows chosen automatically to be fully opaque, glow-free and at mid luminance) and box/triplanar-projected onto the 002 meshes, each tile twice with different orientations and mixed by soft masks so no aligned repeat shows.",
+    "Shading: smooth normals with sharp edges only above 45 degrees; baked key light from the part-local upper left with a warm lit side and a cool purple shadow side, soft AO, a thin warm rim on upper convex edges and a thin smooth dark contour in the folds. No flat low-poly facets, no procedural noise, no dark slashes.",
+    "Colour: every part is normalised to the 2D art values; all 22 baked objects have an average inside #4e3433..#5a3e3c (walls #53393b-#54393b) and a 90th-percentile highlight below #9a6058 (walls #7d5651-#855b55).",
+    "Glow: thin curved emissive cracks only below ~0.9 m (2.3 % of the main atlas; every wall <= 4.8 %), gate seam and cave depth as in 002.",
+    "Previews: same camera and lighting as 002; player_view has the three Codex billboards (jump, side, duck); compare_002_003.png and closeup_match.png added."
+  ],
+  "deviations": [
+    "The control.py API still only produces whole scenes; the pipeline was run unchanged into runs/spellduel-volcano-kit-003 for the run record, the tiles and the bake come from the two scripts in the job folder. No generator source was modified.",
+    "Texel density on the walls is 83-93 texels/m, a little under the requested 100-150: one 4096 atlas is shared by 13 walls, 2 gates and the cave. The backdrop rocks sit on a separate 2048 atlas at 25-32 texels/m (meant for 20-40 m).",
+    "The two albedo atlases are shipped as JPEG (quality 92, 4:4:4) because the 4096 PNG alone is 16 MB, above the 15 MB kit budget; emissive mask and rock tiles are PNG.",
+    "The painted facets are 2.4x larger than in the 2D obstacles (tile crops are 0.37-0.75 m, scaled to 0.9-1.8 m) so the repeat does not read on 4-6 m walls; brush strokes are therefore slightly larger than on the billboards.",
+    "Hue match comes from the 2D art itself; the lit/shadow tints and the rim are baked, so instances rotated 180 degrees show the cool side toward the player (use Unlit to avoid double lighting).",
+    "wall_straight_d and cave_entrance_a have one triangle fewer than 002 (degenerate triangle dropped in the FBX round trip); bounds are identical.",
+    "Import verified only through the identical 001 exporter settings in a throwaway Unity 2022.3 project, not inside SpellDuel; mobile frame rate not measured."
+  ],
+  "triangles": {
+    "wall_straight": {
+      "budget": 600,
+      "perVariant": {
+        "a": 493,
+        "b": 492,
+        "c": 488,
+        "d": 494
+      }
+    },
+    "backdrop_rock": {
+      "budget": 1500,
+      "perVariant": {
+        "a": 1241,
+        "b": 1247,
+        "c": 1240,
+        "d": 1241
+      }
+    },
+    "wall_corner_out": {
+      "budget": 600,
+      "perVariant": {
+        "a": 484,
+        "b": 484,
+        "c": 485
+      }
+    },
+    "wall_corner_in": {
+      "budget": 600,
+      "perVariant": {
+        "a": 485,
+        "b": 484,
+        "c": 485
+      }
+    },
+    "wall_end": {
+      "budget": 600,
+      "perVariant": {
+        "a": 484,
+        "b": 484,
+        "c": 484
+      }
+    },
+    "gate": {
+      "budget": 1200,
+      "perVariant": {
+        "a": 1030,
+        "b": 1034
+      }
+    },
+    "cave_entrance": {
+      "budget": 3000,
+      "perVariant": {
+        "a": 2530
+      }
+    }
+  },
+  "sha256": {
+    "volcano_kit_v3_albedo.jpg": "3619b06b08605d766ea2ce1cadb4f8915576a42c71ec564d895d6825dfeb2c6b",
+    "volcano_kit_v3_backdrop_albedo.jpg": "bf5c4497235f2b99b0713fbcda157607a886ec385772b48b8805d9c73cec8c78",
+    "volcano_kit_v3_emissive.png": "4bffe7c217528f499987978a4ea9e6f8585d7a94242fe67f2e0e675212431fa0",
+    "volcano_rock_tile_0.png": "00c91a41cd74002fb909163036786aaca5b8391d3444501bb794c32e6669069a",
+    "volcano_rock_tile_1.png": "59696ea0751622afe92243715d99be0a6b44b9dc9d02ddb7ac2bf9bfbd33d1c1",
+    "volcano_rock_tile_2.png": "44afc2dfd43693ff74e7a8097f22ccd01763990afdf26c93b6c3dee728b1cc40",
+    "volcano_rock_tile_3.png": "7aed22e895be1d841f9e629d05984a510a795105406eaec4638d3b607b2d98e8",
+    "kit.json": "760d11675aa3ea8c1db3bd8d1027c93fbc253f768ded7aac0cb349d0225d9b8d"
+  }
+}
