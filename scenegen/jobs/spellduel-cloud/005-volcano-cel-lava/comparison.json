@@ -1,0 +1,20 @@
+{
+  "method": "Direct pixel paste of actual Unity screenshots, no recolouring/resizing/AI edit",
+  "left": "cel-v1",
+  "right": "cel-v2",
+  "camera": {
+    "position": [
+      0,
+      1.5,
+      -3
+    ],
+    "target": [
+      0.1,
+      1.5,
+      17
+    ],
+    "horizontalFov": 76
+  },
+  "v1ScreenshotSha256": "859c034ff9f6c42a41c0750c34ba66f465df5d87fac2e8302d7418b9bf16bf5f",
+  "v2ScreenshotSha256": "f62561fce3e17c904bc0d7a7479fae9b3973e531342420512564cfc6ef9878aa"
+}

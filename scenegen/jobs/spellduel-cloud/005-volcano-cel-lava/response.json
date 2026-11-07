@@ -1,0 +1,829 @@
+{
+  "ok": true,
+  "job": "005-volcano-cel-lava",
+  "styleId": "anime_cel_volcano_lava_v2",
+  "kitVersion": 5,
+  "assets": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2",
+  "privateJob": "E:\\AI接案\\rpg-world-builder\\jobs\\spellduel-cloud\\005-volcano-cel-lava\\20261107T212037739477",
+  "privateRun": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-005-cel-lava-20261107T212037739477-r4",
+  "baseCommit": "940c29a4b4cc27919176b3c3dc66c6d76725fb71",
+  "controlApi": {
+    "entry": "cel_kit_control.py",
+    "apiVersion": 1,
+    "actions": [
+      {
+        "action": "capabilities",
+        "request": {
+          "apiVersion": 1,
+          "requestId": "spellduel-005-20261107T212037739477-capabilities",
+          "action": "capabilities"
+        },
+        "response": {
+          "apiVersion": 1,
+          "requestId": "spellduel-005-20261107T212037739477-capabilities",
+          "ok": true,
+          "result": {
+            "extension": "anime_cel_modular_kit",
+            "styleIds": [
+              "anime_cel_volcano_v1",
+              "anime_cel_volcano_lava_v2"
+            ],
+            "apiVersion": 1,
+            "actions": [
+              "capabilities",
+              "plan",
+              "validate",
+              "generate",
+              "inspect"
+            ],
+            "input": "Existing volcano v3-compatible kit + original 2x2 surface PNG atlas",
+            "output": "FBX part kit, baked albedo/mask, sample GLB level, actual 3D previews",
+            "coreApiChanged": false
+          }
+        }
+      },
+      {
+        "action": "plan",
+        "request": {
+          "apiVersion": 1,
+          "requestId": "spellduel-005-20261107T212037739477-plan",
+          "action": "plan",
+          "configFile": "E:\\AI接案\\rpg-world-builder\\jobs\\spellduel-cloud\\005-volcano-cel-lava\\20261107T212037739477\\config.json"
+        },
+        "response": {
+          "apiVersion": 1,
+          "requestId": "spellduel-005-20261107T212037739477-plan",
+          "ok": true,
+          "result": {
+            "styleId": "anime_cel_volcano_lava_v2",
+            "quality": "mobile",
+            "parts": 22,
+            "sourceTriangles": 15331,
+            "sourcePartFiles": [
+              {
+                "file": "wall_straight_a.fbx",
+                "sha256": "d60808d521802889ac0cd1510afcf0c913feff3baf389a90ba1838ca81edfefd"
+              },
+              {
+                "file": "backdrop_rock_a.fbx",
+                "sha256": "64e599d57d09e3751ba7e3fe6446eb107f436821b06baf7c69d10623495c60d7"
+              },
+              {
+                "file": "wall_straight_b.fbx",
+                "sha256": "f44a2795b3c2fe045ecd714356b30f71a9a2f0b0e225cca63b68ac21c4bfbe4d"
+              },
+              {
+                "file": "backdrop_rock_b.fbx",
+                "sha256": "a17966313b71e801fdcafa8a5726525917b763460b2b4286499e4159a0b00ef4"
+              },
+              {
+                "file": "wall_straight_c.fbx",
+                "sha256": "ac6910775fb582bf9805f2619b1ea18a9cb1fdb613dee7a126a6dc5609114e44"
+              },
+              {
+                "file": "backdrop_rock_c.fbx",
+                "sha256": "d5caf69d57b7d64a63a43bb93f87764f58326ab800ac6cdd6724a1d1c7f52a41"
+              },
+              {
+                "file": "wall_straight_d.fbx",
+                "sha256": "fa3e7ac7129c9bc067ee7835a3d0c7f3724a210e71af23513e2803ea561ecd6b"
+              },
+              {
+                "file": "backdrop_rock_d.fbx",
+                "sha256": "3d431885d12ef570058c66743ec01e949592a21f60ef88e9af31762759b67bb1"
+              },
+              {
+                "file": "wall_corner_out_a.fbx",
+                "sha256": "217c21d78d3fb2a6d9075afc6c908e24ff23724e4770052c202f1375d6ebeb33"
+              },
+              {
+                "file": "wall_corner_in_a.fbx",
+                "sha256": "66f25f3c9f1ccdc32202c8e1e7967693a0b21c2888650e468f438e1c8c59dbda"
+              },
+              {
+                "file": "wall_end_a.fbx",
+                "sha256": "c839a6fc8ebabd1cf060c2c005477bbd0fea7138b48a1db174bf739aa93d4486"
+              },
+              {
+                "file": "wall_corner_out_b.fbx",
+                "sha256": "8dd5aa0daf7fa29109d661ed5fa90bfc4307d2ab45ae303457fc85d86fc3d69d"
+              },
+              {
+                "file": "wall_corner_in_b.fbx",
+                "sha256": "827d385afe6960d2dfd25a3f88fc04a3784077c737766a9f9979adf7728eba99"
+              },
+              {
+                "file": "wall_end_b.fbx",
+                "sha256": "116918da8123ce9e6e9f32a145981e02404cb8bcb68127bfe11cf68b8e466f50"
+              },
+              {
+                "file": "wall_corner_out_c.fbx",
+                "sha256": "0b3232488e18465fd6173d6098d165ba6639e2a54cc7f280f6a50a0bdc0958e8"
+              },
+              {
+                "file": "wall_corner_in_c.fbx",
+                "sha256": "5c2939f2fc17886c721f431c6f020d424767e0b54bf5d06a4e11eafc7b73a8e7"
+              },
+              {
+                "file": "wall_end_c.fbx",
+                "sha256": "a8d6ee16a590344356858993d64ccbfb9aafef0b4f85a2a890b12addd3b741da"
+              },
+              {
+                "file": "gate_a.fbx",
+                "sha256": "4ee9029620fa8d48570e42c71943fb44f6f35e0db9889dbe47d46faed89cfb3c"
+              },
+              {
+                "file": "gate_b.fbx",
+                "sha256": "a19afa01de09da8e417356163f50f37e986a8e48c054fb3fa58ccccbd4717bb0"
+              },
+              {
+                "file": "cave_entrance_a.fbx",
+                "sha256": "33444497f81857baf7af3d6005c5694089eff8f7dc0b893546a9fd8093aecacc"
+              }
+            ],
+            "sourceKitSha256": "ad11698303375d2231efb7c3375f0ef48522cc6638c895ec246eafc2100ee60b",
+            "surfaceAtlasSha256": "43894e7564e8b4d1e222078f6af07658b1de9e3cc1136c7a3f4ac7b9233781e2",
+            "atlasSizes": {
+              "main": 4096,
+              "backdrop": 1024,
+              "emissive": 1024,
+              "ground": 1024
+            },
+            "lavaFeatures": [
+              "6-10% physical-area wall veins",
+              "wall_lavafall a/b <=700 triangles with lava_flow child",
+              "geometric door seal and cave interior glow",
+              "two cratered volcano cones",
+              "separate backdrop emission mask",
+              "no baked wall-foot underglow"
+            ],
+            "warnings": [
+              "Baked shading is part-local; rotated instances do not relight automatically.",
+              "Existing 2D obstacle sprites keep their former style until separately restyled.",
+              "This extension makes visuals and an example layout; game tracking/combat/controllers are external.",
+              "Mobile FPS, heat and camera overhead require device profiling."
+            ]
+          }
+        }
+      },
+      {
+        "action": "validate",
+        "request": {
+          "apiVersion": 1,
+          "requestId": "spellduel-005-20261107T212037739477-validate",
+          "action": "validate",
+          "configFile": "E:\\AI接案\\rpg-world-builder\\jobs\\spellduel-cloud\\005-volcano-cel-lava\\20261107T212037739477\\config.json"
+        },
+        "response": {
+          "apiVersion": 1,
+          "requestId": "spellduel-005-20261107T212037739477-validate",
+          "ok": true,
+          "result": {
+            "styleId": "anime_cel_volcano_lava_v2",
+            "quality": "mobile",
+            "parts": 22,
+            "sourceTriangles": 15331,
+            "sourcePartFiles": [
+              {
+                "file": "wall_straight_a.fbx",
+                "sha256": "d60808d521802889ac0cd1510afcf0c913feff3baf389a90ba1838ca81edfefd"
+              },
+              {
+                "file": "backdrop_rock_a.fbx",
+                "sha256": "64e599d57d09e3751ba7e3fe6446eb107f436821b06baf7c69d10623495c60d7"
+              },
+              {
+                "file": "wall_straight_b.fbx",
+                "sha256": "f44a2795b3c2fe045ecd714356b30f71a9a2f0b0e225cca63b68ac21c4bfbe4d"
+              },
+              {
+                "file": "backdrop_rock_b.fbx",
+                "sha256": "a17966313b71e801fdcafa8a5726525917b763460b2b4286499e4159a0b00ef4"
+              },
+              {
+                "file": "wall_straight_c.fbx",
+                "sha256": "ac6910775fb582bf9805f2619b1ea18a9cb1fdb613dee7a126a6dc5609114e44"
+              },
+              {
+                "file": "backdrop_rock_c.fbx",
+                "sha256": "d5caf69d57b7d64a63a43bb93f87764f58326ab800ac6cdd6724a1d1c7f52a41"
+              },
+              {
+                "file": "wall_straight_d.fbx",
+                "sha256": "fa3e7ac7129c9bc067ee7835a3d0c7f3724a210e71af23513e2803ea561ecd6b"
+              },
+              {
+                "file": "backdrop_rock_d.fbx",
+                "sha256": "3d431885d12ef570058c66743ec01e949592a21f60ef88e9af31762759b67bb1"
+              },
+              {
+                "file": "wall_corner_out_a.fbx",
+                "sha256": "217c21d78d3fb2a6d9075afc6c908e24ff23724e4770052c202f1375d6ebeb33"
+              },
+              {
+                "file": "wall_corner_in_a.fbx",
+                "sha256": "66f25f3c9f1ccdc32202c8e1e7967693a0b21c2888650e468f438e1c8c59dbda"
+              },
+              {
+                "file": "wall_end_a.fbx",
+                "sha256": "c839a6fc8ebabd1cf060c2c005477bbd0fea7138b48a1db174bf739aa93d4486"
+              },
+              {
+                "file": "wall_corner_out_b.fbx",
+                "sha256": "8dd5aa0daf7fa29109d661ed5fa90bfc4307d2ab45ae303457fc85d86fc3d69d"
+              },
+              {
+                "file": "wall_corner_in_b.fbx",
+                "sha256": "827d385afe6960d2dfd25a3f88fc04a3784077c737766a9f9979adf7728eba99"
+              },
+              {
+                "file": "wall_end_b.fbx",
+                "sha256": "116918da8123ce9e6e9f32a145981e02404cb8bcb68127bfe11cf68b8e466f50"
+              },
+              {
+                "file": "wall_corner_out_c.fbx",
+                "sha256": "0b3232488e18465fd6173d6098d165ba6639e2a54cc7f280f6a50a0bdc0958e8"
+              },
+              {
+                "file": "wall_corner_in_c.fbx",
+                "sha256": "5c2939f2fc17886c721f431c6f020d424767e0b54bf5d06a4e11eafc7b73a8e7"
+              },
+              {
+                "file": "wall_end_c.fbx",
+                "sha256": "a8d6ee16a590344356858993d64ccbfb9aafef0b4f85a2a890b12addd3b741da"
+              },
+              {
+                "file": "gate_a.fbx",
+                "sha256": "4ee9029620fa8d48570e42c71943fb44f6f35e0db9889dbe47d46faed89cfb3c"
+              },
+              {
+                "file": "gate_b.fbx",
+                "sha256": "a19afa01de09da8e417356163f50f37e986a8e48c054fb3fa58ccccbd4717bb0"
+              },
+              {
+                "file": "cave_entrance_a.fbx",
+                "sha256": "33444497f81857baf7af3d6005c5694089eff8f7dc0b893546a9fd8093aecacc"
+              }
+            ],
+            "sourceKitSha256": "ad11698303375d2231efb7c3375f0ef48522cc6638c895ec246eafc2100ee60b",
+            "surfaceAtlasSha256": "43894e7564e8b4d1e222078f6af07658b1de9e3cc1136c7a3f4ac7b9233781e2",
+            "atlasSizes": {
+              "main": 4096,
+              "backdrop": 1024,
+              "emissive": 1024,
+              "ground": 1024
+            },
+            "lavaFeatures": [
+              "6-10% physical-area wall veins",
+              "wall_lavafall a/b <=700 triangles with lava_flow child",
+              "geometric door seal and cave interior glow",
+              "two cratered volcano cones",
+              "separate backdrop emission mask",
+              "no baked wall-foot underglow"
+            ],
+            "warnings": [
+              "Baked shading is part-local; rotated instances do not relight automatically.",
+              "Existing 2D obstacle sprites keep their former style until separately restyled.",
+              "This extension makes visuals and an example layout; game tracking/combat/controllers are external.",
+              "Mobile FPS, heat and camera overhead require device profiling."
+            ],
+            "valid": true
+          }
+        }
+      },
+      {
+        "action": "generate",
+        "request": {
+          "apiVersion": 1,
+          "requestId": "spellduel-005-20261107T212037739477-r4-generate",
+          "action": "generate",
+          "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-005-cel-lava-20261107T212037739477-r4",
+          "configFile": "E:\\AI接案\\rpg-world-builder\\jobs\\spellduel-cloud\\005-volcano-cel-lava\\20261107T212037739477\\config.json",
+          "timeoutSeconds": 1200
+        },
+        "response": {
+          "apiVersion": 1,
+          "requestId": "spellduel-005-20261107T212037739477-r4-generate",
+          "ok": true,
+          "result": {
+            "valid": true,
+            "styleId": "anime_cel_volcano_lava_v2",
+            "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-005-cel-lava-20261107T212037739477-r4",
+            "statistics": {
+              "parts": 22,
+              "partTriangles": 14854,
+              "demoTriangles": 15692
+            },
+            "budgetChecks": {
+              "wall_straight": {
+                "limit": 600,
+                "max": 494,
+                "passed": true
+              },
+              "backdrop_rock": {
+                "limit": 1500,
+                "max": 1241,
+                "passed": true
+              },
+              "wall_corner_out": {
+                "limit": 600,
+                "max": 485,
+                "passed": true
+              },
+              "wall_corner_in": {
+                "limit": 600,
+                "max": 485,
+                "passed": true
+              },
+              "wall_end": {
+                "limit": 600,
+                "max": 484,
+                "passed": true
+              },
+              "gate": {
+                "limit": 1200,
+                "max": 770,
+                "passed": true
+              },
+              "cave_entrance": {
+                "limit": 3000,
+                "max": 2548,
+                "passed": true
+              },
+              "wall_lavafall": {
+                "limit": 700,
+                "max": 543,
+                "passed": true
+              }
+            },
+            "assetInventory": [
+              {
+                "file": "cel_ground_ash.png",
+                "bytes": 607835,
+                "sha256": "3580680d52ad53e284834e49115e293ea91d4427dbbf41c2164f51a587fc798d"
+              },
+              {
+                "file": "cel_ground_crust.png",
+                "bytes": 592580,
+                "sha256": "d0a41b9697e87af783f603e9d75d3995bf4d0093d2984705df554f11732811d8"
+              },
+              {
+                "file": "fbx/backdrop_rock_a.fbx",
+                "bytes": 25116,
+                "sha256": "2f3b956d4384fc8554d48f1cf9d3d0ac4d00df4d91e03ae09f25a4a5317af32e"
+              },
+              {
+                "file": "fbx/backdrop_rock_b.fbx",
+                "bytes": 25004,
+                "sha256": "ddfa8000d4dede72fcaedcaf230373a31fc5d4acbbd2458fa51ef52f2b1afdd6"
+              },
+              {
+                "file": "fbx/backdrop_rock_c.fbx",
+                "bytes": 67436,
+                "sha256": "ac989319d502adf6f251219703275ab0c1b9747454855c10cfdc794c23b7282b"
+              },
+              {
+                "file": "fbx/backdrop_rock_d.fbx",
+                "bytes": 64972,
+                "sha256": "7745b6550967923e9c5b1dd8dd37511fec0cf08bbb2b1305567f12ed6136299d"
+              },
+              {
+                "file": "fbx/cave_entrance_a.fbx",
+                "bytes": 161100,
+                "sha256": "86b0725ff5e120a6acb89612d2dbd8cedd8f91bfa3d5862760561fd6c9b38895"
+              },
+              {
+                "file": "fbx/gate_a.fbx",
+                "bytes": 59132,
+                "sha256": "a00206a2e7cbb60e23cba0aa26d39cc26ac7fee6dfe39daa984b940dd5a44e59"
+              },
+              {
+                "file": "fbx/gate_b.fbx",
+                "bytes": 59020,
+                "sha256": "44e47d4defd8a8cf187b8c74400c89d614edcd3699be8f343e3bf9c5e9c30c70"
+              },
+              {
+                "file": "fbx/gate_door_a.fbx",
+                "bytes": 29804,
+                "sha256": "7211b63346b61c1f4568d074ab238cf7d9f1505da1ea9294c3e000d7a8f2a960"
+              },
+              {
+                "file": "fbx/gate_door_b.fbx",
+                "bytes": 29868,
+                "sha256": "015895e66d2f0a706a53a4392f39bc14f232673ae69895009a1b18fc0475929e"
+              },
+              {
+                "file": "fbx/gate_frame_a.fbx",
+                "bytes": 41836,
+                "sha256": "bc4c1a1a3e8a2d632862e4cbaa52992197cad83c209a712415c84d4d8c00c88d"
+              },
+              {
+                "file": "fbx/gate_frame_b.fbx",
+                "bytes": 41660,
+                "sha256": "4471096b5e845cc97467771e4ecc869ee699deec6a279261a172a556c4318533"
+              },
+              {
+                "file": "fbx/wall_corner_in_a.fbx",
+                "bytes": 41900,
+                "sha256": "59d344436f44f26615fd26207e93ba5583e91f3fdfbb28b0c72f447b2bff4165"
+              },
+              {
+                "file": "fbx/wall_corner_in_b.fbx",
+                "bytes": 41084,
+                "sha256": "59ae8afbe79b908039f16df379172f88d522b8185b1c9894b740cbb8a805a5f7"
+              },
+              {
+                "file": "fbx/wall_corner_in_c.fbx",
+                "bytes": 40236,
+                "sha256": "c8768a42d8714fd9f818258afa8db788d1210264eedc767a7daf8a42a41c0c7e"
+              },
+              {
+                "file": "fbx/wall_corner_out_a.fbx",
+                "bytes": 40492,
+                "sha256": "99f7123cd1d78c5203bf8c703fbef9b982ab2fc426afc590b1e6e6e2ad754435"
+              },
+              {
+                "file": "fbx/wall_corner_out_b.fbx",
+                "bytes": 41852,
+                "sha256": "bd37b9ce2915b83aa289ae5b88c8ecf0cb004328387f92b71678beba992abd48"
+              },
+              {
+                "file": "fbx/wall_corner_out_c.fbx",
+                "bytes": 40092,
+                "sha256": "551b5246837e088f1a06f3e6bd0b5de1113b507247b20b25e73ae2ec8406c543"
+              },
+              {
+                "file": "fbx/wall_end_a.fbx",
+                "bytes": 41468,
+                "sha256": "79a30a8a375a4941fbd36cc738a574d7257652a0397fc56105b6ba5d2a2da766"
+              },
+              {
+                "file": "fbx/wall_end_b.fbx",
+                "bytes": 42396,
+                "sha256": "943429846f7d98be2281a5ad84703b07ccce24d698161beb8afb313807f4935e"
+              },
+              {
+                "file": "fbx/wall_end_c.fbx",
+                "bytes": 40668,
+                "sha256": "e38139044a200313577c9cff082c58ba73afaff404e6f0c3803e27a18afb0e22"
+              },
+              {
+                "file": "fbx/wall_lavafall_a.fbx",
+                "bytes": 46924,
+                "sha256": "44883a775bbc06680166d7351ed07e5bb71aa76c9c5aa3576a1825b3405f31c0"
+              },
+              {
+                "file": "fbx/wall_lavafall_b.fbx",
+                "bytes": 49996,
+                "sha256": "ab487c1272a827e18c413aca14741dac4c35dea39e51040660affed9c0c0831e"
+              },
+              {
+                "file": "fbx/wall_straight_a.fbx",
+                "bytes": 43132,
+                "sha256": "9495259cc10041f9d342c6dc551fae80e7d88c8a62b153dab9c873da5987921f"
+              },
+              {
+                "file": "fbx/wall_straight_b.fbx",
+                "bytes": 46188,
+                "sha256": "8d52526b5cd5e9908c3f460931f6d0ab40fbe70a3740a28a75c4c2416ce0b4d1"
+              },
+              {
+                "file": "fbx/wall_straight_c.fbx",
+                "bytes": 42924,
+                "sha256": "a2eb1b8033fd2b80f4c2278e92c3be393b44e96d3f0d274f464a01d111549bbe"
+              },
+              {
+                "file": "fbx/wall_straight_d.fbx",
+                "bytes": 43596,
+                "sha256": "72c38da0a2e40c0b6043c5779379405d2b22da7785fa0490a0244b9e53ac18ec"
+              },
+              {
+                "file": "kit.json",
+                "bytes": 38318,
+                "sha256": "d06461d109937caaaf22100478100993d23eec0234bdf10fff194f84a5286780"
+              },
+              {
+                "file": "volcano_cel_v2_albedo.png",
+                "bytes": 8925401,
+                "sha256": "372be5ee1c732a041a1426e7f0ebaaf5ed1a1f900db5e74a7c91ef14b1a77cf8"
+              },
+              {
+                "file": "volcano_cel_v2_backdrop_albedo.png",
+                "bytes": 913863,
+                "sha256": "033be3a6bc1a17d2d2bb4566c31accfc0d55683c5b6f466598a2955127850250"
+              },
+              {
+                "file": "volcano_cel_v2_backdrop_emissive.png",
+                "bytes": 16649,
+                "sha256": "ec2f48a723a16d70ba860a7284f40ce40893e509184b7785eee37a5a800e333f"
+              },
+              {
+                "file": "volcano_cel_v2_emissive.png",
+                "bytes": 135195,
+                "sha256": "3cb82c9f16c8915f16aa5fd3b98e99f331b4711e95e337f784abe5199012f041"
+              }
+            ],
+            "assetBytes": 12477737,
+            "phoneFpsMeasured": false
+          }
+        }
+      },
+      {
+        "action": "inspect",
+        "request": {
+          "apiVersion": 1,
+          "requestId": "spellduel-005-20261107T212037739477-r4-inspect",
+          "action": "inspect",
+          "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-005-cel-lava-20261107T212037739477-r4"
+        },
+        "response": {
+          "apiVersion": 1,
+          "requestId": "spellduel-005-20261107T212037739477-r4-inspect",
+          "ok": true,
+          "result": {
+            "valid": true,
+            "styleId": "anime_cel_volcano_lava_v2",
+            "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-005-cel-lava-20261107T212037739477-r4",
+            "statistics": {
+              "parts": 22,
+              "partTriangles": 14854,
+              "demoTriangles": 15692
+            },
+            "budgetChecks": {
+              "wall_straight": {
+                "limit": 600,
+                "max": 494,
+                "passed": true
+              },
+              "backdrop_rock": {
+                "limit": 1500,
+                "max": 1241,
+                "passed": true
+              },
+              "wall_corner_out": {
+                "limit": 600,
+                "max": 485,
+                "passed": true
+              },
+              "wall_corner_in": {
+                "limit": 600,
+                "max": 485,
+                "passed": true
+              },
+              "wall_end": {
+                "limit": 600,
+                "max": 484,
+                "passed": true
+              },
+              "gate": {
+                "limit": 1200,
+                "max": 770,
+                "passed": true
+              },
+              "cave_entrance": {
+                "limit": 3000,
+                "max": 2548,
+                "passed": true
+              },
+              "wall_lavafall": {
+                "limit": 700,
+                "max": 543,
+                "passed": true
+              }
+            },
+            "assetInventory": [
+              {
+                "file": "cel_ground_ash.png",
+                "bytes": 607835,
+                "sha256": "3580680d52ad53e284834e49115e293ea91d4427dbbf41c2164f51a587fc798d"
+              },
+              {
+                "file": "cel_ground_crust.png",
+                "bytes": 592580,
+                "sha256": "d0a41b9697e87af783f603e9d75d3995bf4d0093d2984705df554f11732811d8"
+              },
+              {
+                "file": "fbx/backdrop_rock_a.fbx",
+                "bytes": 25116,
+                "sha256": "2f3b956d4384fc8554d48f1cf9d3d0ac4d00df4d91e03ae09f25a4a5317af32e"
+              },
+              {
+                "file": "fbx/backdrop_rock_b.fbx",
+                "bytes": 25004,
+                "sha256": "ddfa8000d4dede72fcaedcaf230373a31fc5d4acbbd2458fa51ef52f2b1afdd6"
+              },
+              {
+                "file": "fbx/backdrop_rock_c.fbx",
+                "bytes": 67436,
+                "sha256": "ac989319d502adf6f251219703275ab0c1b9747454855c10cfdc794c23b7282b"
+              },
+              {
+                "file": "fbx/backdrop_rock_d.fbx",
+                "bytes": 64972,
+                "sha256": "7745b6550967923e9c5b1dd8dd37511fec0cf08bbb2b1305567f12ed6136299d"
+              },
+              {
+                "file": "fbx/cave_entrance_a.fbx",
+                "bytes": 161100,
+                "sha256": "86b0725ff5e120a6acb89612d2dbd8cedd8f91bfa3d5862760561fd6c9b38895"
+              },
+              {
+                "file": "fbx/gate_a.fbx",
+                "bytes": 59132,
+                "sha256": "a00206a2e7cbb60e23cba0aa26d39cc26ac7fee6dfe39daa984b940dd5a44e59"
+              },
+              {
+                "file": "fbx/gate_b.fbx",
+                "bytes": 59020,
+                "sha256": "44e47d4defd8a8cf187b8c74400c89d614edcd3699be8f343e3bf9c5e9c30c70"
+              },
+              {
+                "file": "fbx/gate_door_a.fbx",
+                "bytes": 29804,
+                "sha256": "7211b63346b61c1f4568d074ab238cf7d9f1505da1ea9294c3e000d7a8f2a960"
+              },
+              {
+                "file": "fbx/gate_door_b.fbx",
+                "bytes": 29868,
+                "sha256": "015895e66d2f0a706a53a4392f39bc14f232673ae69895009a1b18fc0475929e"
+              },
+              {
+                "file": "fbx/gate_frame_a.fbx",
+                "bytes": 41836,
+                "sha256": "bc4c1a1a3e8a2d632862e4cbaa52992197cad83c209a712415c84d4d8c00c88d"
+              },
+              {
+                "file": "fbx/gate_frame_b.fbx",
+                "bytes": 41660,
+                "sha256": "4471096b5e845cc97467771e4ecc869ee699deec6a279261a172a556c4318533"
+              },
+              {
+                "file": "fbx/wall_corner_in_a.fbx",
+                "bytes": 41900,
+                "sha256": "59d344436f44f26615fd26207e93ba5583e91f3fdfbb28b0c72f447b2bff4165"
+              },
+              {
+                "file": "fbx/wall_corner_in_b.fbx",
+                "bytes": 41084,
+                "sha256": "59ae8afbe79b908039f16df379172f88d522b8185b1c9894b740cbb8a805a5f7"
+              },
+              {
+                "file": "fbx/wall_corner_in_c.fbx",
+                "bytes": 40236,
+                "sha256": "c8768a42d8714fd9f818258afa8db788d1210264eedc767a7daf8a42a41c0c7e"
+              },
+              {
+                "file": "fbx/wall_corner_out_a.fbx",
+                "bytes": 40492,
+                "sha256": "99f7123cd1d78c5203bf8c703fbef9b982ab2fc426afc590b1e6e6e2ad754435"
+              },
+              {
+                "file": "fbx/wall_corner_out_b.fbx",
+                "bytes": 41852,
+                "sha256": "bd37b9ce2915b83aa289ae5b88c8ecf0cb004328387f92b71678beba992abd48"
+              },
+              {
+                "file": "fbx/wall_corner_out_c.fbx",
+                "bytes": 40092,
+                "sha256": "551b5246837e088f1a06f3e6bd0b5de1113b507247b20b25e73ae2ec8406c543"
+              },
+              {
+                "file": "fbx/wall_end_a.fbx",
+                "bytes": 41468,
+                "sha256": "79a30a8a375a4941fbd36cc738a574d7257652a0397fc56105b6ba5d2a2da766"
+              },
+              {
+                "file": "fbx/wall_end_b.fbx",
+                "bytes": 42396,
+                "sha256": "943429846f7d98be2281a5ad84703b07ccce24d698161beb8afb313807f4935e"
+              },
+              {
+                "file": "fbx/wall_end_c.fbx",
+                "bytes": 40668,
+                "sha256": "e38139044a200313577c9cff082c58ba73afaff404e6f0c3803e27a18afb0e22"
+              },
+              {
+                "file": "fbx/wall_lavafall_a.fbx",
+                "bytes": 46924,
+                "sha256": "44883a775bbc06680166d7351ed07e5bb71aa76c9c5aa3576a1825b3405f31c0"
+              },
+              {
+                "file": "fbx/wall_lavafall_b.fbx",
+                "bytes": 49996,
+                "sha256": "ab487c1272a827e18c413aca14741dac4c35dea39e51040660affed9c0c0831e"
+              },
+              {
+                "file": "fbx/wall_straight_a.fbx",
+                "bytes": 43132,
+                "sha256": "9495259cc10041f9d342c6dc551fae80e7d88c8a62b153dab9c873da5987921f"
+              },
+              {
+                "file": "fbx/wall_straight_b.fbx",
+                "bytes": 46188,
+                "sha256": "8d52526b5cd5e9908c3f460931f6d0ab40fbe70a3740a28a75c4c2416ce0b4d1"
+              },
+              {
+                "file": "fbx/wall_straight_c.fbx",
+                "bytes": 42924,
+                "sha256": "a2eb1b8033fd2b80f4c2278e92c3be393b44e96d3f0d274f464a01d111549bbe"
+              },
+              {
+                "file": "fbx/wall_straight_d.fbx",
+                "bytes": 43596,
+                "sha256": "72c38da0a2e40c0b6043c5779379405d2b22da7785fa0490a0244b9e53ac18ec"
+              },
+              {
+                "file": "kit.json",
+                "bytes": 38318,
+                "sha256": "d06461d109937caaaf22100478100993d23eec0234bdf10fff194f84a5286780"
+              },
+              {
+                "file": "volcano_cel_v2_albedo.png",
+                "bytes": 8925401,
+                "sha256": "372be5ee1c732a041a1426e7f0ebaaf5ed1a1f900db5e74a7c91ef14b1a77cf8"
+              },
+              {
+                "file": "volcano_cel_v2_backdrop_albedo.png",
+                "bytes": 913863,
+                "sha256": "033be3a6bc1a17d2d2bb4566c31accfc0d55683c5b6f466598a2955127850250"
+              },
+              {
+                "file": "volcano_cel_v2_backdrop_emissive.png",
+                "bytes": 16649,
+                "sha256": "ec2f48a723a16d70ba860a7284f40ce40893e509184b7785eee37a5a800e333f"
+              },
+              {
+                "file": "volcano_cel_v2_emissive.png",
+                "bytes": 135195,
+                "sha256": "3cb82c9f16c8915f16aa5fd3b98e99f331b4711e95e337f784abe5199012f041"
+              }
+            ],
+            "assetBytes": 12477737,
+            "phoneFpsMeasured": false
+          }
+        }
+      }
+    ]
+  },
+  "totals": {
+    "parts": 22,
+    "partTriangles": 14854,
+    "demoTriangles": 15692,
+    "fbxFiles": 26,
+    "pngFiles": 6,
+    "assetBytes": 12477737
+  },
+  "implemented": [
+    "Curved two/three-band wall veins with yellow core, orange body and red edge; lower half denser, no grid.",
+    "Two wall_lavafall variants, independent lava_flow child, +V downstream, pool max local +Z=0.6m.",
+    "Gate-frame fissures and geometric diamond door seal without text.",
+    "Warm cave depth and a small lava floor flow at the mouth.",
+    "Two open cratered volcano cones, two slope rivers each; original bounds/pivots retained.",
+    "Separate linear backdrop emission mask; lava also baked into albedo.",
+    "Requested Unity player view, pixel-exact side-by-side comparison and all eight part-category sheets."
+  ],
+  "checks": {
+    "allModelBudgetsPassed": true,
+    "v1HashesUnchanged": true,
+    "wallGlowRange": [
+      0.07412800614267265,
+      0.09069517080970417
+    ],
+    "phone512GlowRange": [
+      0.08314856598966425,
+      0.0983384805256154
+    ],
+    "exportedFbxRoundTrip": true,
+    "coneOuterWindingAndOpenCraterVerified": true,
+    "nativeUnityImport": true,
+    "nativeFlowUvMotionVerified": true,
+    "flowChangedPixels": 1396,
+    "coreTestsPassed": 62,
+    "v1ApiTestsPassed": 8,
+    "lavaApiTestsPassed": 5,
+    "noMetaNoMatNoUrp": true
+  },
+  "deviations": [],
+  "implementationNotes": [
+    "Reserved about 10% of main atlas U for a vertically periodic flow strip; ordinary rock horizontal UV density decreases about 10%, avoiding another runtime color texture. Atlas sizes and phone import caps remain cel-v1 compatible.",
+    "The optional ground texture change was not needed; cel_ground_ash/crust are byte-identical to cel-v1.",
+    "No wall-foot orange ambient wash is baked. The Unity preview uses the existing game StageKit shader with _UnderGlowStrength=0.55 and _Glow=1.8; those warm foot reflections/pulses remain runtime effects.",
+    "The example GLB carries static materials; the consuming game applies UV scroll to lava_flow. A tested Built-in reference flow shader is included under generator tools, not in the SceneKit assets.",
+    "The generator does not change the game StageKit.cs; its session must select the v2 folder, new texture names, optional backdrop mask, and a scrolling material for lava_flow."
+  ],
+  "limits": [
+    "Phone FPS, temperature and physical camera tracking were not measured.",
+    "Baked rock illumination remains part-local, as in cel-v1."
+  ],
+  "provenance": {
+    "newAiImageGeneration": false,
+    "rockArt": "Unmodified original cel-v1 artwork reused; new lava is a deterministic geometry-space texture bake.",
+    "sourceKitSha256": "ad11698303375d2231efb7c3375f0ef48522cc6638c895ec246eafc2100ee60b",
+    "sourceSurfaceAtlasSha256": "43894e7564e8b4d1e222078f6af07658b1de9e3cc1136c7a3f4ac7b9233781e2"
+  },
+  "git": {
+    "branch": "claude/mobile-camera-mic-battle-game-v5nhfr",
+    "commitPrefix": "scenegen 005:",
+    "verification": "Executing session will compare git ls-remote with git log -1 after pushing."
+  }
+}

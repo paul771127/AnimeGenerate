@@ -1,0 +1,29 @@
+工單 005：volcano_cel_v2 整合
+
+本工單獨立於前一張風格工單；kit.version=5，styleId=anime_cel_volcano_lava_v2。
+SceneKit/volcano_cel_v1 的 36 個檔案（含既有 .meta）SHA256 全部維持原樣。
+成果：SceneKit/volcano_cel_v2，22 個邏輯零件／26 FBX／6 PNG／kit.json，所有面數上限通過。
+
+遊戲端需要接的變更：
+1. StageKit.cs Dir 選到 SceneKit/volcano_cel_v2/。
+2. 三張原本主圖名稱改為 volcano_cel_v2_albedo、volcano_cel_v2_emissive、volcano_cel_v2_backdrop_albedo。
+3. 可再把 volcano_cel_v2_backdrop_emissive 指定給遠景材質的 _EmissionMap，_Glow 設成正值；即使不加這張遮罩，遠景顏色圖本身也有熔岩色。
+4. 直牆約每 6～8 段可選 wall_lavafall_a/b 取代普通 wall_straight；原點、底部網格與接縫沿用。它的 lava_flow 是獨立子物件。
+5. Spawn 指派材質時，lava_flow 要用共用的流動材質，其他子物件照原本的主材質。參考 scenegen/tools/anime_cel_v1/UnityTools/LavaFlow005.shader。
+   現有 StageKit.shader 直接取用 uv，不會套 _MainTex_ST，所以單設 Material.mainTextureOffset 沒有效果；請用參考 shader 或把下面的採樣運算加到 flow 分支。
+   sampleUV = float2(uv.x, frac(uv.y - timeSeconds * 0.18));
+   +V 是幾何上的下游方向，負的採樣偏移會讓紋理向 +V 移動。只捲 V，不能捲 U。
+   flow U 範圍見 kit.json.lavaFlow.uRange，V 0..1 可循環；主圖和發光遮罩必須使用同一組 UV。
+6. 保留現有牆腳反光與發光脈動；貼圖裡沒有重烘牆腳暖橘底色。原地面兩圖不變。
+
+Unity 範例：BuildLava005Preview.cs；需搭配既有 StageKit.shader 與附上的 CelLava005Sky.shader（FBX 頂點色在 Linear 專案需要 gamma 解碼）。
+本機原生預覽專案在 outputs/SpellDuel005/UnityPreview；Play 用 WASD、右鍵轉向、Q/E 上下，僅供視覺檢查。
+遮罩用 Non-Color / sRGB=false；Android/iPhone ASTC 6x6、mipmap、關閉 Read/Write。匯入上限見 mobile-import-settings.json。
+
+控制接口：cel_kit_control.py API v1 不變，新增 styleId=anime_cel_volcano_lava_v2；舊 styleId 繼續支援。
+sourceKit 指向 cel-v1，surfaceAtlas 用同一份原始四象限手繪圖。每次新建 requestId/outputFolder，輸出放生成器獨立 runs。
+capabilities → plan → validate → generate → inspect；實際本機請求、輸出、檢查記錄在 response.json.controlApi。
+generator_request.json 是實際執行的本機請求，重播前必須替換 outputFolder，不能覆寫已完成目錄。
+
+驗證：原 62 項測試、舊接口 8 項、新接口 5 項；26 FBX 匯出再匯入；Unity 2022.3 Built-in 全部零件尺寸／面數／命名；瀑布 UV 方向、0.6m 突出上限與兩時間點實際捲動畫面差異；火山錐外側朝向與開口熔岩池向上。
+手機 FPS、發熱、定位負擔沒有實測。GLB 的流動需宿主 shader 接入，沒有內建自動 UV 動畫。

@@ -1,0 +1,6 @@
+{
+  "styleId": "anime_cel_volcano_lava_v2",
+  "sourceKit": "../../../../spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v1",
+  "surfaceAtlas": "../../codex-style/volcano-cel-v1/source/anime-volcano-source-atlas.png",
+  "quality": "mobile"
+}
