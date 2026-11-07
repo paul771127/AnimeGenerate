@@ -1,0 +1,1182 @@
+{
+  "ok": true,
+  "worker": {
+    "allChecksPassed": true,
+    "quick": false,
+    "checks": [
+      {
+        "part": "wall_straight_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "veinsWithinSixToTenPercent": true,
+        "phone512VeinsWithinSixToTenPercent": true
+      },
+      {
+        "part": "backdrop_rock_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_straight_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "veinsWithinSixToTenPercent": true,
+        "phone512VeinsWithinSixToTenPercent": true
+      },
+      {
+        "part": "backdrop_rock_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_straight_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "veinsWithinSixToTenPercent": true,
+        "phone512VeinsWithinSixToTenPercent": true
+      },
+      {
+        "part": "backdrop_rock_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_straight_d",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "veinsWithinSixToTenPercent": true,
+        "phone512VeinsWithinSixToTenPercent": true
+      },
+      {
+        "part": "backdrop_rock_d",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_corner_out_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "veinsWithinSixToTenPercent": true,
+        "phone512VeinsWithinSixToTenPercent": true
+      },
+      {
+        "part": "wall_corner_in_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "veinsWithinSixToTenPercent": true,
+        "phone512VeinsWithinSixToTenPercent": true
+      },
+      {
+        "part": "wall_end_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "veinsWithinSixToTenPercent": true,
+        "phone512VeinsWithinSixToTenPercent": true
+      },
+      {
+        "part": "wall_corner_out_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "veinsWithinSixToTenPercent": true,
+        "phone512VeinsWithinSixToTenPercent": true
+      },
+      {
+        "part": "wall_corner_in_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "veinsWithinSixToTenPercent": true,
+        "phone512VeinsWithinSixToTenPercent": true
+      },
+      {
+        "part": "wall_end_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "veinsWithinSixToTenPercent": true,
+        "phone512VeinsWithinSixToTenPercent": true
+      },
+      {
+        "part": "wall_corner_out_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "veinsWithinSixToTenPercent": true,
+        "phone512VeinsWithinSixToTenPercent": true
+      },
+      {
+        "part": "wall_corner_in_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "veinsWithinSixToTenPercent": true,
+        "phone512VeinsWithinSixToTenPercent": true
+      },
+      {
+        "part": "wall_end_c",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "veinsWithinSixToTenPercent": true,
+        "phone512VeinsWithinSixToTenPercent": true
+      },
+      {
+        "part": "gate_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "gate_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "cave_entrance_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true
+      },
+      {
+        "part": "wall_lavafall_a",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "flowLipWithin06m": true,
+        "lavaFlowChildPresent": true
+      },
+      {
+        "part": "wall_lavafall_b",
+        "trianglesWithinBudget": true,
+        "uvWithin01": true,
+        "pivotOnGround": true,
+        "flowLipWithin06m": true,
+        "lavaFlowChildPresent": true
+      }
+    ],
+    "lavaCoverage": {
+      "wall_straight_a": {
+        "surfaceFraction": 0.07658249446514016,
+        "phone512Fraction": 0.09287359187270992,
+        "outerHalfWidthMetres": 0.06464883158649788
+      },
+      "wall_straight_b": {
+        "surfaceFraction": 0.07695610414020478,
+        "phone512Fraction": 0.09296526400276035,
+        "outerHalfWidthMetres": 0.05732734626223633
+      },
+      "wall_straight_c": {
+        "surfaceFraction": 0.0759534725878072,
+        "phone512Fraction": 0.09074435843971866,
+        "outerHalfWidthMetres": 0.07476368451180328
+      },
+      "wall_straight_d": {
+        "surfaceFraction": 0.07550188428111788,
+        "phone512Fraction": 0.09318330430517759,
+        "outerHalfWidthMetres": 0.05777308507270447
+      },
+      "wall_corner_out_a": {
+        "surfaceFraction": 0.07730892035025962,
+        "phone512Fraction": 0.0983384805256154,
+        "outerHalfWidthMetres": 0.03805024357010721
+      },
+      "wall_corner_in_a": {
+        "surfaceFraction": 0.07838793621201656,
+        "phone512Fraction": 0.09679589951550371,
+        "outerHalfWidthMetres": 0.040816023837679426
+      },
+      "wall_end_a": {
+        "surfaceFraction": 0.07921170894160938,
+        "phone512Fraction": 0.09158664736429942,
+        "outerHalfWidthMetres": 0.030211319517493562
+      },
+      "wall_corner_out_b": {
+        "surfaceFraction": 0.07637850089070888,
+        "phone512Fraction": 0.09671923227125354,
+        "outerHalfWidthMetres": 0.04172067261199761
+      },
+      "wall_corner_in_b": {
+        "surfaceFraction": 0.07412800614267265,
+        "phone512Fraction": 0.09453735802962897,
+        "outerHalfWidthMetres": 0.043242412871773855
+      },
+      "wall_end_b": {
+        "surfaceFraction": 0.0750776148045337,
+        "phone512Fraction": 0.09007301414608151,
+        "outerHalfWidthMetres": 0.03362702544882417
+      },
+      "wall_corner_out_c": {
+        "surfaceFraction": 0.07531846934267147,
+        "phone512Fraction": 0.09462202776276002,
+        "outerHalfWidthMetres": 0.04036091877720572
+      },
+      "wall_corner_in_c": {
+        "surfaceFraction": 0.07690679844374011,
+        "phone512Fraction": 0.09346318850450193,
+        "outerHalfWidthMetres": 0.04328416639044803
+      },
+      "wall_end_c": {
+        "surfaceFraction": 0.09069517080970417,
+        "phone512Fraction": 0.08314856598966425,
+        "outerHalfWidthMetres": 0.021498443555541872
+      }
+    },
+    "coverageMethod": "64 stratified UV samples/triangle weighted by physical area; linear mask >0.25; UV gutters excluded",
+    "footUnderglowBaked": false,
+    "originalV1RockBakePreserved": true,
+    "flow": {
+      "childName": "lava_flow",
+      "atlas": "main",
+      "uRange": [
+        0.912,
+        0.988
+      ],
+      "vRange": [
+        0,
+        1
+      ],
+      "direction": "+V is downstream (top to bottom, then toward the pool lip)",
+      "recommendedSpeedVPerSecond": 0.18,
+      "shaderSampling": "float2(uv.x, frac(uv.y - timeSeconds * 0.18))",
+      "unityMaterialOffsetYPerSecond": -0.18,
+      "wrap": "Repeat V only; keep U inside the reserved strip",
+      "hostNote": "Use one shared scrolling material for lava_flow children; the existing StageKit shader currently does not transform UVs and needs the small flow-UV branch."
+    },
+    "budgets": {
+      "wall_straight": {
+        "limit": 600,
+        "max": 494,
+        "passed": true
+      },
+      "backdrop_rock": {
+        "limit": 1500,
+        "max": 1241,
+        "passed": true
+      },
+      "wall_corner_out": {
+        "limit": 600,
+        "max": 485,
+        "passed": true
+      },
+      "wall_corner_in": {
+        "limit": 600,
+        "max": 485,
+        "passed": true
+      },
+      "wall_end": {
+        "limit": 600,
+        "max": 484,
+        "passed": true
+      },
+      "gate": {
+        "limit": 1200,
+        "max": 770,
+        "passed": true
+      },
+      "cave_entrance": {
+        "limit": 3000,
+        "max": 2548,
+        "passed": true
+      },
+      "wall_lavafall": {
+        "limit": 700,
+        "max": 543,
+        "passed": true
+      }
+    },
+    "totals": {
+      "parts": 22,
+      "partTriangles": 14854,
+      "demoTriangles": 15692
+    },
+    "phoneFpsMeasured": false,
+    "previewIsActual3D": true,
+    "exportAudit": {
+      "ok": true,
+      "blender": "4.5.15 LTS",
+      "logicalParts": 22,
+      "fbxFiles": 26,
+      "uniquePartTriangles": 14854,
+      "allExportedTriangleInstances": 16392,
+      "boundsPreserved": true,
+      "uvWithin01": true,
+      "originsZero": true,
+      "noZeroAreaFaces": true,
+      "wallLavaCoverage": {
+        "wall_straight_a": 0.07657294900981064,
+        "wall_straight_b": 0.07697952171040137,
+        "wall_straight_c": 0.07595347265970454,
+        "wall_straight_d": 0.07546859646208244,
+        "wall_corner_out_a": 0.07730892013986194,
+        "wall_corner_in_a": 0.07838793605216776,
+        "wall_end_a": 0.0792117092816499,
+        "wall_corner_out_b": 0.07639648658502542,
+        "wall_corner_in_b": 0.07412800594528024,
+        "wall_end_b": 0.07507761457225233,
+        "wall_corner_out_c": 0.07523919105231155,
+        "wall_corner_in_c": 0.07690679839831248,
+        "wall_end_c": 0.09069517096287108
+      },
+      "crateredCones": 2,
+      "flowChildrenAndUvDirectionVerified": true,
+      "glbExplicitlyUnlit": true,
+      "glbImagesEmbedded": true,
+      "records": [
+        {
+          "file": "wall_straight_a.fbx",
+          "maximumBoundsDelta": 1.3310612700934144e-07,
+          "triangles": 493,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.3310612700934144e-07,
+              -1.890208125114441
+            ],
+            "max": [
+              2.3499999046325684,
+              5.748317241668701,
+              0.5500000715255737
+            ]
+          },
+          "objects": [
+            "wall_straight_a"
+          ]
+        },
+        {
+          "file": "backdrop_rock_a.fbx",
+          "maximumBoundsDelta": 4.998715894544148e-07,
+          "triangles": 440,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -8.456000328063965,
+              -4.998715894544148e-07,
+              -6.620999813079834
+            ],
+            "max": [
+              8.437999725341797,
+              22.856000900268555,
+              2.6510000228881836
+            ]
+          },
+          "objects": [
+            "backdrop_rock_a"
+          ],
+          "coneOuterFacesOutward": true,
+          "craterFloorFacesUpward": true,
+          "craterDepthM": 3.656961441040039
+        },
+        {
+          "file": "wall_straight_b.fbx",
+          "maximumBoundsDelta": 1.3371555951380287e-07,
+          "triangles": 492,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.349696636199951,
+              -1.3371555951380287e-07,
+              -1.885954737663269
+            ],
+            "max": [
+              2.3499999046325684,
+              5.928088665008545,
+              0.550000011920929
+            ]
+          },
+          "objects": [
+            "wall_straight_b"
+          ]
+        },
+        {
+          "file": "backdrop_rock_b.fbx",
+          "maximumBoundsDelta": 5.337701622920576e-07,
+          "triangles": 440,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -10.246999740600586,
+              -5.337701622920576e-07,
+              -7.070000171661377
+            ],
+            "max": [
+              10.329000473022461,
+              16.323999404907227,
+              1.9160000085830688
+            ]
+          },
+          "objects": [
+            "backdrop_rock_b"
+          ],
+          "coneOuterFacesOutward": true,
+          "craterFloorFacesUpward": true,
+          "craterDepthM": 2.6118392944335938
+        },
+        {
+          "file": "wall_straight_c.fbx",
+          "maximumBoundsDelta": 1.287239257408146e-07,
+          "triangles": 488,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.287239257408146e-07,
+              -1.9999998807907104
+            ],
+            "max": [
+              2.3499999046325684,
+              5.1080803871154785,
+              0.5500000715255737
+            ]
+          },
+          "objects": [
+            "wall_straight_c"
+          ]
+        },
+        {
+          "file": "backdrop_rock_c.fbx",
+          "maximumBoundsDelta": 3.402412573905167e-07,
+          "triangles": 1240,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -8.873635292053223,
+              -3.402412573905167e-07,
+              -5.303014278411865
+            ],
+            "max": [
+              9.565387725830078,
+              17.118850708007812,
+              3.3677000999450684
+            ]
+          },
+          "objects": [
+            "backdrop_rock_c"
+          ]
+        },
+        {
+          "file": "wall_straight_d.fbx",
+          "maximumBoundsDelta": 2.384185791015625e-07,
+          "triangles": 494,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.335410502179002e-07,
+              -2.000000476837158
+            ],
+            "max": [
+              2.3499999046325684,
+              4.674435138702393,
+              0.550000011920929
+            ]
+          },
+          "objects": [
+            "wall_straight_d"
+          ]
+        },
+        {
+          "file": "backdrop_rock_d.fbx",
+          "maximumBoundsDelta": 4.351768723154237e-07,
+          "triangles": 1241,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -11.566431045532227,
+              -4.351768723154237e-07,
+              -5.776902675628662
+            ],
+            "max": [
+              11.605506896972656,
+              10.67459774017334,
+              2.930969715118408
+            ]
+          },
+          "objects": [
+            "backdrop_rock_d"
+          ]
+        },
+        {
+          "file": "wall_corner_out_a.fbx",
+          "maximumBoundsDelta": 1.4621616628573975e-07,
+          "triangles": 484,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.4621616628573975e-07,
+              -2.3499996662139893
+            ],
+            "max": [
+              0.550000011920929,
+              4.865777492523193,
+              0.5500000715255737
+            ]
+          },
+          "objects": [
+            "wall_corner_out_a"
+          ]
+        },
+        {
+          "file": "wall_corner_in_a.fbx",
+          "maximumBoundsDelta": 2.384185791015625e-07,
+          "triangles": 485,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3496286869049072,
+              -1.668083910999485e-07,
+              -2.349942684173584
+            ],
+            "max": [
+              1.024980902671814,
+              4.72395133972168,
+              1.0965642929077148
+            ]
+          },
+          "objects": [
+            "wall_corner_in_a"
+          ]
+        },
+        {
+          "file": "wall_end_a.fbx",
+          "maximumBoundsDelta": 1.0958680007888688e-07,
+          "triangles": 480,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -1.0,
+              -1.0958680007888688e-07,
+              -1.7691291570663452
+            ],
+            "max": [
+              1.75,
+              3.5664913654327393,
+              0.6000000238418579
+            ]
+          },
+          "objects": [
+            "wall_end_a"
+          ]
+        },
+        {
+          "file": "wall_corner_out_b.fbx",
+          "maximumBoundsDelta": 1.5760954852339637e-07,
+          "triangles": 484,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.5760954852339637e-07,
+              -2.3499996662139893
+            ],
+            "max": [
+              0.5498637557029724,
+              5.245465278625488,
+              0.550000011920929
+            ]
+          },
+          "objects": [
+            "wall_corner_out_b"
+          ]
+        },
+        {
+          "file": "wall_corner_in_b.fbx",
+          "maximumBoundsDelta": 2.384185791015625e-07,
+          "triangles": 484,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.1176039294014117e-07,
+              -2.3500003814697266
+            ],
+            "max": [
+              1.0233113765716553,
+              4.635156631469727,
+              1.067916989326477
+            ]
+          },
+          "objects": [
+            "wall_corner_in_b"
+          ]
+        },
+        {
+          "file": "wall_end_b.fbx",
+          "maximumBoundsDelta": 2.384185791015625e-07,
+          "triangles": 484,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -1.0,
+              -1.1469459337831722e-07,
+              -1.844273328781128
+            ],
+            "max": [
+              1.7499470710754395,
+              3.5823113918304443,
+              0.6000000834465027
+            ]
+          },
+          "objects": [
+            "wall_end_b"
+          ]
+        },
+        {
+          "file": "wall_corner_out_c.fbx",
+          "maximumBoundsDelta": 2.384185791015625e-07,
+          "triangles": 485,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3497226238250732,
+              -1.5363823990810488e-07,
+              -2.3500001430511475
+            ],
+            "max": [
+              0.5477937459945679,
+              4.803472995758057,
+              0.5392090678215027
+            ]
+          },
+          "objects": [
+            "wall_corner_out_c"
+          ]
+        },
+        {
+          "file": "wall_corner_in_c.fbx",
+          "maximumBoundsDelta": 2.384185791015625e-07,
+          "triangles": 485,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.652023229326005e-07,
+              -2.3500003814697266
+            ],
+            "max": [
+              1.0265299081802368,
+              4.805431365966797,
+              1.0969462394714355
+            ]
+          },
+          "objects": [
+            "wall_corner_in_c"
+          ]
+        },
+        {
+          "file": "wall_end_c.fbx",
+          "maximumBoundsDelta": 1.1095201557509426e-07,
+          "triangles": 484,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -1.0,
+              -1.1095201557509426e-07,
+              -1.7695974111557007
+            ],
+            "max": [
+              1.748438835144043,
+              3.606177568435669,
+              0.5999999046325684
+            ]
+          },
+          "objects": [
+            "wall_end_c"
+          ]
+        },
+        {
+          "file": "gate_a.fbx",
+          "maximumBoundsDelta": 3.5762786865234375e-07,
+          "triangles": 768,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.299999952316284,
+              -1.6578161066149733e-08,
+              -0.8777265548706055
+            ],
+            "max": [
+              2.299999952316284,
+              5.4983954429626465,
+              0.9899761080741882
+            ]
+          },
+          "objects": [
+            "gate_door",
+            "gate_frame"
+          ]
+        },
+        {
+          "file": "gate_frame_a.fbx",
+          "triangles": 456,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.299999952316284,
+              -1.6578161066149733e-08,
+              -0.8777265548706055
+            ],
+            "max": [
+              2.299999952316284,
+              5.4983954429626465,
+              0.9899761080741882
+            ]
+          },
+          "objects": [
+            "gate_frame"
+          ]
+        },
+        {
+          "file": "gate_door_a.fbx",
+          "triangles": 312,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -1.1399610042572021,
+              -1.181669961880516e-08,
+              -0.2105587124824524
+            ],
+            "max": [
+              1.1399999856948853,
+              3.563281774520874,
+              0.18514040112495422
+            ]
+          },
+          "objects": [
+            "gate_door"
+          ]
+        },
+        {
+          "file": "gate_b.fbx",
+          "maximumBoundsDelta": 3.5762786865234375e-07,
+          "triangles": 770,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.299999952316284,
+              -5.092539012707675e-08,
+              -0.8889521360397339
+            ],
+            "max": [
+              2.299999952316284,
+              5.691817760467529,
+              0.9999913573265076
+            ]
+          },
+          "objects": [
+            "gate_door",
+            "gate_frame"
+          ]
+        },
+        {
+          "file": "gate_frame_b.fbx",
+          "triangles": 456,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.299999952316284,
+              -5.092539012707675e-08,
+              -0.8889521360397339
+            ],
+            "max": [
+              2.299999952316284,
+              5.691817760467529,
+              0.9999913573265076
+            ]
+          },
+          "objects": [
+            "gate_frame"
+          ]
+        },
+        {
+          "file": "gate_door_b.fbx",
+          "triangles": 314,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -1.1399999856948853,
+              -1.1970161750696207e-08,
+              -0.2093234658241272
+            ],
+            "max": [
+              1.1399731636047363,
+              3.7594728469848633,
+              0.21022894978523254
+            ]
+          },
+          "objects": [
+            "gate_door"
+          ]
+        },
+        {
+          "file": "cave_entrance_a.fbx",
+          "maximumBoundsDelta": 5.067986421636306e-07,
+          "triangles": 2548,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -7.0,
+              -5.067986421636306e-07,
+              -6.945445537567139
+            ],
+            "max": [
+              7.0,
+              9.982378005981445,
+              2.8000001907348633
+            ]
+          },
+          "objects": [
+            "cave_entrance_a",
+            "lava_pool"
+          ]
+        },
+        {
+          "file": "wall_lavafall_a.fbx",
+          "maximumBoundsDelta": 1.3310612700934144e-07,
+          "triangles": 543,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.3499999046325684,
+              -1.3310612700934144e-07,
+              -1.890208125114441
+            ],
+            "max": [
+              2.3499999046325684,
+              5.748317241668701,
+              0.6000000238418579
+            ]
+          },
+          "objects": [
+            "lava_flow",
+            "wall_rock"
+          ],
+          "lavaFlowMaxForwardM": 0.6000000238418579,
+          "flowYVCorrelation": -0.9999999999999977,
+          "lavaFlowNamed": true
+        },
+        {
+          "file": "wall_lavafall_b.fbx",
+          "maximumBoundsDelta": 1.3371555951380287e-07,
+          "triangles": 542,
+          "zeroAreaTriangles": 0,
+          "bounds": {
+            "min": [
+              -2.349696636199951,
+              -1.3371555951380287e-07,
+              -1.885954737663269
+            ],
+            "max": [
+              2.3499999046325684,
+              5.928088665008545,
+              0.6000000238418579
+            ]
+          },
+          "objects": [
+            "lava_flow",
+            "wall_rock"
+          ],
+          "lavaFlowMaxForwardM": 0.6000000238418579,
+          "flowYVCorrelation": -0.9999999999999979,
+          "lavaFlowNamed": true
+        }
+      ]
+    }
+  },
+  "unity": {
+    "ok": true,
+    "engine": "Unity 2022.3.62f2",
+    "pipeline": "Built-in",
+    "parts": 22,
+    "triangles": 14854,
+    "mobileFpsMeasured": false,
+    "defaultMainTextureMax": 2048,
+    "shaderErrors": 0,
+    "flowMotionChangedPixels": 1396,
+    "flowUvAnimationVerified": true
+  },
+  "protectedV1": {
+    "files": 36,
+    "allSha256Unchanged": true,
+    "snapshot": {
+      "backdrop_rock_a.fbx": "64e599d57d09e3751ba7e3fe6446eb107f436821b06baf7c69d10623495c60d7",
+      "backdrop_rock_b.fbx": "a17966313b71e801fdcafa8a5726525917b763460b2b4286499e4159a0b00ef4",
+      "backdrop_rock_c.fbx": "d5caf69d57b7d64a63a43bb93f87764f58326ab800ac6cdd6724a1d1c7f52a41",
+      "backdrop_rock_d.fbx": "3d431885d12ef570058c66743ec01e949592a21f60ef88e9af31762759b67bb1",
+      "cave_entrance_a.fbx": "33444497f81857baf7af3d6005c5694089eff8f7dc0b893546a9fd8093aecacc",
+      "cel_ground_ash.png": "3580680d52ad53e284834e49115e293ea91d4427dbbf41c2164f51a587fc798d",
+      "cel_ground_ash.png.meta": "e8121718bd81c25a47a5cc53a89013420c96b3bcac8096b28d3c32d9270f85ea",
+      "cel_ground_crust.png": "d0a41b9697e87af783f603e9d75d3995bf4d0093d2984705df554f11732811d8",
+      "cel_ground_crust.png.meta": "59bf4a13456064d8e76c049bbeba9d7118547dac102e280cb01d16e8809320f2",
+      "export-audit.json": "9a414f232dfe8e795cac71136225abc425cdc7ab039bdcf6276bb468d151f5c8",
+      "gate_a.fbx": "4ee9029620fa8d48570e42c71943fb44f6f35e0db9889dbe47d46faed89cfb3c",
+      "gate_b.fbx": "a19afa01de09da8e417356163f50f37e986a8e48c054fb3fa58ccccbd4717bb0",
+      "gate_door_a.fbx": "8a200d486754fa6d328edcf2ca90a12c2134a36c33d5c8809d2a0a5032b37f6e",
+      "gate_door_b.fbx": "42bcdd774f985cbfd3e99efc269d1bf89617ce79d79fa5b9a1ff3d0893bb5d2a",
+      "gate_frame_a.fbx": "a72cbd51db31a232bb859a7f9ed32115964a38df83dc69f0ef177ef6a427e48e",
+      "gate_frame_b.fbx": "40f8b961ded2550df24884de5df869a62780cc69b549ad63e909f6d334879f47",
+      "kit.json": "ad11698303375d2231efb7c3375f0ef48522cc6638c895ec246eafc2100ee60b",
+      "volcano_cel_albedo.png": "efa825032fd57461bef97a13d231e58c7db68589d6ebf46080d7896c7f4e54b3",
+      "volcano_cel_albedo.png.meta": "462f118a1d5f00bf08106556f29f051eb5ffbef943ce29d9a20c133338ef5e48",
+      "volcano_cel_backdrop.png": "041d56d798c5e1314cee915f969ee8e04f6abb19f6b3a3e85a29c456df7e2052",
+      "volcano_cel_backdrop.png.meta": "5981354fde767f575db4e6b5ca0388514b27f5565b039fee0594b76728df35d9",
+      "volcano_cel_emissive.png": "2533bc8907ef230265336cac34cfa65df0b3c8fa7a5aeb92157d8b12a5afcd6c",
+      "volcano_cel_emissive.png.meta": "0ede2628bd5e55c3bea85a80cf2393b9298938df977eb20816932535a50e3306",
+      "wall_corner_in_a.fbx": "66f25f3c9f1ccdc32202c8e1e7967693a0b21c2888650e468f438e1c8c59dbda",
+      "wall_corner_in_b.fbx": "827d385afe6960d2dfd25a3f88fc04a3784077c737766a9f9979adf7728eba99",
+      "wall_corner_in_c.fbx": "5c2939f2fc17886c721f431c6f020d424767e0b54bf5d06a4e11eafc7b73a8e7",
+      "wall_corner_out_a.fbx": "217c21d78d3fb2a6d9075afc6c908e24ff23724e4770052c202f1375d6ebeb33",
+      "wall_corner_out_b.fbx": "8dd5aa0daf7fa29109d661ed5fa90bfc4307d2ab45ae303457fc85d86fc3d69d",
+      "wall_corner_out_c.fbx": "0b3232488e18465fd6173d6098d165ba6639e2a54cc7f280f6a50a0bdc0958e8",
+      "wall_end_a.fbx": "c839a6fc8ebabd1cf060c2c005477bbd0fea7138b48a1db174bf739aa93d4486",
+      "wall_end_b.fbx": "116918da8123ce9e6e9f32a145981e02404cb8bcb68127bfe11cf68b8e466f50",
+      "wall_end_c.fbx": "a8d6ee16a590344356858993d64ccbfb9aafef0b4f85a2a890b12addd3b741da",
+      "wall_straight_a.fbx": "d60808d521802889ac0cd1510afcf0c913feff3baf389a90ba1838ca81edfefd",
+      "wall_straight_b.fbx": "f44a2795b3c2fe045ecd714356b30f71a9a2f0b0e225cca63b68ac21c4bfbe4d",
+      "wall_straight_c.fbx": "ac6910775fb582bf9805f2619b1ea18a9cb1fdb613dee7a126a6dc5609114e44",
+      "wall_straight_d.fbx": "fa3e7ac7129c9bc067ee7835a3d0c7f3724a210e71af23513e2803ea561ecd6b"
+    }
+  },
+  "comparison": {
+    "method": "Direct pixel paste of actual Unity screenshots, no recolouring/resizing/AI edit",
+    "left": "cel-v1",
+    "right": "cel-v2",
+    "camera": {
+      "position": [
+        0,
+        1.5,
+        -3
+      ],
+      "target": [
+        0.1,
+        1.5,
+        17
+      ],
+      "horizontalFov": 76
+    },
+    "v1ScreenshotSha256": "859c034ff9f6c42a41c0750c34ba66f465df5d87fac2e8302d7418b9bf16bf5f",
+    "v2ScreenshotSha256": "f62561fce3e17c904bc0d7a7479fae9b3973e531342420512564cfc6ef9878aa"
+  },
+  "assetInventory": [
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/backdrop_rock_a.fbx",
+      "bytes": 25116,
+      "sha256": "2f3b956d4384fc8554d48f1cf9d3d0ac4d00df4d91e03ae09f25a4a5317af32e"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/backdrop_rock_b.fbx",
+      "bytes": 25004,
+      "sha256": "ddfa8000d4dede72fcaedcaf230373a31fc5d4acbbd2458fa51ef52f2b1afdd6"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/backdrop_rock_c.fbx",
+      "bytes": 67436,
+      "sha256": "ac989319d502adf6f251219703275ab0c1b9747454855c10cfdc794c23b7282b"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/backdrop_rock_d.fbx",
+      "bytes": 64972,
+      "sha256": "7745b6550967923e9c5b1dd8dd37511fec0cf08bbb2b1305567f12ed6136299d"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/cave_entrance_a.fbx",
+      "bytes": 161100,
+      "sha256": "86b0725ff5e120a6acb89612d2dbd8cedd8f91bfa3d5862760561fd6c9b38895"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/cel_ground_ash.png",
+      "bytes": 607835,
+      "sha256": "3580680d52ad53e284834e49115e293ea91d4427dbbf41c2164f51a587fc798d"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/cel_ground_crust.png",
+      "bytes": 592580,
+      "sha256": "d0a41b9697e87af783f603e9d75d3995bf4d0093d2984705df554f11732811d8"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/gate_a.fbx",
+      "bytes": 59132,
+      "sha256": "a00206a2e7cbb60e23cba0aa26d39cc26ac7fee6dfe39daa984b940dd5a44e59"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/gate_b.fbx",
+      "bytes": 59020,
+      "sha256": "44e47d4defd8a8cf187b8c74400c89d614edcd3699be8f343e3bf9c5e9c30c70"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/gate_door_a.fbx",
+      "bytes": 29804,
+      "sha256": "7211b63346b61c1f4568d074ab238cf7d9f1505da1ea9294c3e000d7a8f2a960"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/gate_door_b.fbx",
+      "bytes": 29868,
+      "sha256": "015895e66d2f0a706a53a4392f39bc14f232673ae69895009a1b18fc0475929e"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/gate_frame_a.fbx",
+      "bytes": 41836,
+      "sha256": "bc4c1a1a3e8a2d632862e4cbaa52992197cad83c209a712415c84d4d8c00c88d"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/gate_frame_b.fbx",
+      "bytes": 41660,
+      "sha256": "4471096b5e845cc97467771e4ecc869ee699deec6a279261a172a556c4318533"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/kit.json",
+      "bytes": 38318,
+      "sha256": "d06461d109937caaaf22100478100993d23eec0234bdf10fff194f84a5286780"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/volcano_cel_v2_albedo.png",
+      "bytes": 8925401,
+      "sha256": "372be5ee1c732a041a1426e7f0ebaaf5ed1a1f900db5e74a7c91ef14b1a77cf8"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/volcano_cel_v2_backdrop_albedo.png",
+      "bytes": 913863,
+      "sha256": "033be3a6bc1a17d2d2bb4566c31accfc0d55683c5b6f466598a2955127850250"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/volcano_cel_v2_backdrop_emissive.png",
+      "bytes": 16649,
+      "sha256": "ec2f48a723a16d70ba860a7284f40ce40893e509184b7785eee37a5a800e333f"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/volcano_cel_v2_emissive.png",
+      "bytes": 135195,
+      "sha256": "3cb82c9f16c8915f16aa5fd3b98e99f331b4711e95e337f784abe5199012f041"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_corner_in_a.fbx",
+      "bytes": 41900,
+      "sha256": "59d344436f44f26615fd26207e93ba5583e91f3fdfbb28b0c72f447b2bff4165"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_corner_in_b.fbx",
+      "bytes": 41084,
+      "sha256": "59ae8afbe79b908039f16df379172f88d522b8185b1c9894b740cbb8a805a5f7"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_corner_in_c.fbx",
+      "bytes": 40236,
+      "sha256": "c8768a42d8714fd9f818258afa8db788d1210264eedc767a7daf8a42a41c0c7e"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_corner_out_a.fbx",
+      "bytes": 40492,
+      "sha256": "99f7123cd1d78c5203bf8c703fbef9b982ab2fc426afc590b1e6e6e2ad754435"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_corner_out_b.fbx",
+      "bytes": 41852,
+      "sha256": "bd37b9ce2915b83aa289ae5b88c8ecf0cb004328387f92b71678beba992abd48"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_corner_out_c.fbx",
+      "bytes": 40092,
+      "sha256": "551b5246837e088f1a06f3e6bd0b5de1113b507247b20b25e73ae2ec8406c543"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_end_a.fbx",
+      "bytes": 41468,
+      "sha256": "79a30a8a375a4941fbd36cc738a574d7257652a0397fc56105b6ba5d2a2da766"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_end_b.fbx",
+      "bytes": 42396,
+      "sha256": "943429846f7d98be2281a5ad84703b07ccce24d698161beb8afb313807f4935e"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_end_c.fbx",
+      "bytes": 40668,
+      "sha256": "e38139044a200313577c9cff082c58ba73afaff404e6f0c3803e27a18afb0e22"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_lavafall_a.fbx",
+      "bytes": 46924,
+      "sha256": "44883a775bbc06680166d7351ed07e5bb71aa76c9c5aa3576a1825b3405f31c0"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_lavafall_b.fbx",
+      "bytes": 49996,
+      "sha256": "ab487c1272a827e18c413aca14741dac4c35dea39e51040660affed9c0c0831e"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_straight_a.fbx",
+      "bytes": 43132,
+      "sha256": "9495259cc10041f9d342c6dc551fae80e7d88c8a62b153dab9c873da5987921f"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_straight_b.fbx",
+      "bytes": 46188,
+      "sha256": "8d52526b5cd5e9908c3f460931f6d0ab40fbe70a3740a28a75c4c2416ce0b4d1"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_straight_c.fbx",
+      "bytes": 42924,
+      "sha256": "a2eb1b8033fd2b80f4c2278e92c3be393b44e96d3f0d274f464a01d111549bbe"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/wall_straight_d.fbx",
+      "bytes": 43596,
+      "sha256": "72c38da0a2e40c0b6043c5779379405d2b22da7785fa0490a0244b9e53ac18ec"
+    }
+  ],
+  "mobileImport": {
+    "pipeline": "Unity 2022.3 Built-in",
+    "material": "Unlit/Texture; shading/AO baked. Main atlas contains its small glow accents; emissive mask is optional for the host.",
+    "textures": {
+      "volcano_cel_v2_albedo.png": {
+        "maxSize": 2048,
+        "sRGB": true
+      },
+      "volcano_cel_v2_backdrop_albedo.png": {
+        "maxSize": 1024,
+        "sRGB": true
+      },
+      "volcano_cel_v2_emissive.png": {
+        "maxSize": 512,
+        "sRGB": false
+      },
+      "volcano_cel_v2_backdrop_emissive.png": {
+        "maxSize": 512,
+        "sRGB": false
+      },
+      "cel_ground_ash.png": {
+        "maxSize": 512,
+        "sRGB": true
+      },
+      "cel_ground_crust.png": {
+        "maxSize": 512,
+        "sRGB": true
+      }
+    },
+    "shared": {
+      "mipmaps": true,
+      "readWrite": false,
+      "filter": "Trilinear",
+      "Android": "ASTC 6x6",
+      "iPhone": "ASTC 6x6"
+    },
+    "highQualityOption": "The authoring main atlas is 4096px. Raise the import maximum only after profiling a target phone.",
+    "estimatedKitTextureGpuBytesASTC6x6WithMips": 3757728,
+    "estimateNote": "Texture storage estimate only; excludes meshes, render buffers, driver overhead, game/UI, camera capture and tracking. Not a measured device memory figure."
+  },
+  "phoneFpsMeasured": false
+}

@@ -1,0 +1,1431 @@
+{
+  "kit": "volcano_cel_v2",
+  "version": 5,
+  "styleId": "anime_cel_volcano_lava_v2",
+  "units": "metres",
+  "up": "+Y",
+  "forward": "+Z",
+  "gridCell": 4.0,
+  "pivot": "bottom centre on the ground unless the part says otherwise",
+  "placement": {
+    "wall_straight": "pivot = foot centre; walkable face toward +Z; ends at x=+-2 are low boulder saddles (~2.5-3 m) that overlap the neighbour by up to 0.35 m; middles rise to 4.6-5.9 m",
+    "wall_corner_out": "convex corner: pivot at the corner point, faces +Z (x in [-2,0]) and +X (z in [-2,0]), taller tower at the corner, mass at x<=0,z<=0",
+    "wall_corner_in": "concave corner: filler block at x<=0,z<=0 with faces +Z and +X plus scree in the +X+Z crease; the adjoining straight walls overlap it",
+    "wall_end": "foot centre; joins a wall on its -X side, collapsed boulders toward +X; use scale.x=-1 for the mirrored end",
+    "gate": "gate_frame + gate_door share the pivot at the ground centre of the opening; door closed at identity; translate gate_door by -y to sink it; gate_frame_<v>.fbx / gate_door_<v>.fbx are the same meshes as separate files",
+    "cave_entrance": "pivot at the ground centre of the mouth; opening faces +Z; irregular mouth ~3.3 m wide / ~3.7 m high with an overhanging lip, fallen pillars and scree at both sides; tunnel runs to z=-7",
+    "backdrop_rock": "bottom centre, front faces +Z, back faces removed; place outside the map and yaw toward the players",
+    "wall_lavafall": "Same base mesh, pivot and seams as wall_straight_a/b; lava_flow is a separate child. Pool lip is at most local +Z=0.6m."
+  },
+  "sourceKit": "volcano_cel_v1",
+  "parts": [
+    {
+      "id": "wall_straight",
+      "variant": "a",
+      "file": "wall_straight_a.fbx",
+      "triangles": 493,
+      "trianglesPerObject": {
+        "wall_straight_a": 493
+      },
+      "triangleBudget": 600,
+      "bounds": {
+        "min": [
+          -2.3499999046325684,
+          0.0,
+          -1.8902080059051514
+        ],
+        "max": [
+          2.3499999046325684,
+          5.748317241668701,
+          0.5500000715255737
+        ]
+      },
+      "size": [
+        4.699999809265137,
+        5.748317241668701,
+        2.440208077430725
+      ],
+      "pivot": "wall foot centre; walkable face +Z; body extends to -Z; ends at x=+-2 are low boulder saddles that overlap the neighbour",
+      "objects": [
+        "wall_straight_a"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        3.92,
+        3.96,
+        5.41,
+        5.75,
+        4.42,
+        5.72,
+        5.75,
+        4.59,
+        4.63,
+        2.82
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.9755854606628418,
+      "fileBytes": 43132,
+      "texture": {
+        "wall_straight_a": {
+          "emissiveFraction": 0.07658249446514016,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 493,
+      "sourceV1ColourStatistics": {
+        "wall_straight_a": {
+          "avg": "#545b60",
+          "lit90": "#787570",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "backdrop_rock",
+      "variant": "a",
+      "file": "backdrop_rock_a.fbx",
+      "triangles": 440,
+      "trianglesPerObject": {
+        "backdrop_rock_a": 440
+      },
+      "triangleBudget": 1500,
+      "bounds": {
+        "min": [
+          -8.456000328063965,
+          0.0,
+          -6.620999813079834
+        ],
+        "max": [
+          8.437999725341797,
+          22.856000900268555,
+          2.6510000228881836
+        ]
+      },
+      "size": [
+        16.89400005340576,
+        22.856000900268555,
+        9.271999835968018
+      ],
+      "pivot": "bottom centre; front faces +Z (back faces removed); place on the outer ring and yaw it toward the play area",
+      "objects": [
+        "backdrop_rock_a"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "backdrop",
+      "topLine": null,
+      "opening": null,
+      "maxFaceAreaM2": 10.552268981933594,
+      "fileBytes": 25116,
+      "texture": {
+        "backdrop_rock_a": {
+          "emissiveFraction": 0.1116032845061045,
+          "atlas": "backdrop"
+        }
+      },
+      "geometryStyle": "cratered_volcano_cone",
+      "lavaRiverCount": 2,
+      "crater": true,
+      "sourceBaseTriangles": 1241,
+      "sourceV1ColourStatistics": {
+        "backdrop_rock_a": {
+          "avg": "#556063",
+          "lit90": "#6c6e6c",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "wall_straight",
+      "variant": "b",
+      "file": "wall_straight_b.fbx",
+      "triangles": 492,
+      "trianglesPerObject": {
+        "wall_straight_b": 492
+      },
+      "triangleBudget": 600,
+      "bounds": {
+        "min": [
+          -2.349696636199951,
+          0.0,
+          -1.8859546184539795
+        ],
+        "max": [
+          2.3499999046325684,
+          5.928088665008545,
+          0.550000011920929
+        ]
+      },
+      "size": [
+        4.6996965408325195,
+        5.928088665008545,
+        2.4359546303749084
+      ],
+      "pivot": "wall foot centre; walkable face +Z; body extends to -Z; ends at x=+-2 are low boulder saddles that overlap the neighbour",
+      "objects": [
+        "wall_straight_b"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        3.64,
+        4.29,
+        4.36,
+        4.42,
+        5.86,
+        5.93,
+        5.87,
+        4.71,
+        4.04,
+        3.08
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.938433051109314,
+      "fileBytes": 46188,
+      "texture": {
+        "wall_straight_b": {
+          "emissiveFraction": 0.07695610414020478,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 492,
+      "sourceV1ColourStatistics": {
+        "wall_straight_b": {
+          "avg": "#565d61",
+          "lit90": "#7b7571",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "backdrop_rock",
+      "variant": "b",
+      "file": "backdrop_rock_b.fbx",
+      "triangles": 440,
+      "trianglesPerObject": {
+        "backdrop_rock_b": 440
+      },
+      "triangleBudget": 1500,
+      "bounds": {
+        "min": [
+          -10.246999740600586,
+          0.0,
+          -7.070000171661377
+        ],
+        "max": [
+          10.329000473022461,
+          16.323999404907227,
+          1.9160000085830688
+        ]
+      },
+      "size": [
+        20.576000213623047,
+        16.323999404907227,
+        8.986000180244446
+      ],
+      "pivot": "bottom centre; front faces +Z (back faces removed); place on the outer ring and yaw it toward the play area",
+      "objects": [
+        "backdrop_rock_b"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "backdrop",
+      "topLine": null,
+      "opening": null,
+      "maxFaceAreaM2": 9.237393379211426,
+      "fileBytes": 25004,
+      "texture": {
+        "backdrop_rock_b": {
+          "emissiveFraction": 0.11709990555815207,
+          "atlas": "backdrop"
+        }
+      },
+      "geometryStyle": "cratered_volcano_cone",
+      "lavaRiverCount": 2,
+      "crater": true,
+      "sourceBaseTriangles": 1247,
+      "sourceV1ColourStatistics": {
+        "backdrop_rock_b": {
+          "avg": "#545f63",
+          "lit90": "#6b6d6c",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "wall_straight",
+      "variant": "c",
+      "file": "wall_straight_c.fbx",
+      "triangles": 488,
+      "trianglesPerObject": {
+        "wall_straight_c": 488
+      },
+      "triangleBudget": 600,
+      "bounds": {
+        "min": [
+          -2.3499999046325684,
+          0.0,
+          -1.9999998807907104
+        ],
+        "max": [
+          2.3499999046325684,
+          5.1080803871154785,
+          0.5500000715255737
+        ]
+      },
+      "size": [
+        4.699999809265137,
+        5.1080803871154785,
+        2.549999952316284
+      ],
+      "pivot": "wall foot centre; walkable face +Z; body extends to -Z; ends at x=+-2 are low boulder saddles that overlap the neighbour",
+      "objects": [
+        "wall_straight_c"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        4.61,
+        4.51,
+        4.45,
+        5.07,
+        4.92,
+        5.05,
+        5.11,
+        4.86,
+        4.73,
+        3.66
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.9991298317909241,
+      "fileBytes": 42924,
+      "texture": {
+        "wall_straight_c": {
+          "emissiveFraction": 0.0759534725878072,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 488,
+      "sourceV1ColourStatistics": {
+        "wall_straight_c": {
+          "avg": "#575d63",
+          "lit90": "#797571",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "backdrop_rock",
+      "variant": "c",
+      "file": "backdrop_rock_c.fbx",
+      "triangles": 1240,
+      "trianglesPerObject": {
+        "backdrop_rock_c": 1240
+      },
+      "triangleBudget": 1500,
+      "bounds": {
+        "min": [
+          -8.873635292053223,
+          0.0,
+          -5.303014278411865
+        ],
+        "max": [
+          9.565387725830078,
+          17.118850708007812,
+          3.3677003383636475
+        ]
+      },
+      "size": [
+        18.4390230178833,
+        17.118850708007812,
+        8.670714616775513
+      ],
+      "pivot": "bottom centre; front faces +Z (back faces removed); place on the outer ring and yaw it toward the play area",
+      "objects": [
+        "backdrop_rock_c"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "backdrop",
+      "topLine": null,
+      "opening": null,
+      "maxFaceAreaM2": 3.8215835094451904,
+      "fileBytes": 67436,
+      "texture": {
+        "backdrop_rock_c": {
+          "emissiveFraction": 0.0,
+          "atlas": "backdrop"
+        }
+      },
+      "sourceBaseTriangles": 1240,
+      "sourceV1ColourStatistics": {
+        "backdrop_rock_c": {
+          "avg": "#525e63",
+          "lit90": "#6b6d6b",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "wall_straight",
+      "variant": "d",
+      "file": "wall_straight_d.fbx",
+      "triangles": 494,
+      "trianglesPerObject": {
+        "wall_straight_d": 494
+      },
+      "triangleBudget": 600,
+      "bounds": {
+        "min": [
+          -2.3499999046325684,
+          0.0,
+          -2.000000238418579
+        ],
+        "max": [
+          2.3499999046325684,
+          4.674435138702393,
+          0.550000011920929
+        ]
+      },
+      "size": [
+        4.699999809265137,
+        4.674435138702393,
+        2.550000250339508
+      ],
+      "pivot": "wall foot centre; walkable face +Z; body extends to -Z; ends at x=+-2 are low boulder saddles that overlap the neighbour",
+      "objects": [
+        "wall_straight_d"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        3.33,
+        3.31,
+        4.32,
+        4.67,
+        4.57,
+        4.35,
+        4.29,
+        4.16,
+        3.54,
+        3.3
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.8325897455215454,
+      "fileBytes": 43596,
+      "texture": {
+        "wall_straight_d": {
+          "emissiveFraction": 0.07550188428111788,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 494,
+      "sourceV1ColourStatistics": {
+        "wall_straight_d": {
+          "avg": "#53595f",
+          "lit90": "#7a7570",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "backdrop_rock",
+      "variant": "d",
+      "file": "backdrop_rock_d.fbx",
+      "triangles": 1241,
+      "trianglesPerObject": {
+        "backdrop_rock_d": 1241
+      },
+      "triangleBudget": 1500,
+      "bounds": {
+        "min": [
+          -11.566431045532227,
+          0.0,
+          -5.776902675628662
+        ],
+        "max": [
+          11.605506896972656,
+          10.67459774017334,
+          2.9309699535369873
+        ]
+      },
+      "size": [
+        23.171937942504883,
+        10.67459774017334,
+        8.70787262916565
+      ],
+      "pivot": "bottom centre; front faces +Z (back faces removed); place on the outer ring and yaw it toward the play area",
+      "objects": [
+        "backdrop_rock_d"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "backdrop",
+      "topLine": null,
+      "opening": null,
+      "maxFaceAreaM2": 4.4952802658081055,
+      "fileBytes": 64972,
+      "texture": {
+        "backdrop_rock_d": {
+          "emissiveFraction": 0.0,
+          "atlas": "backdrop"
+        }
+      },
+      "sourceBaseTriangles": 1241,
+      "sourceV1ColourStatistics": {
+        "backdrop_rock_d": {
+          "avg": "#545f63",
+          "lit90": "#6e6f6c",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "wall_corner_out",
+      "variant": "a",
+      "file": "wall_corner_out_a.fbx",
+      "triangles": 484,
+      "trianglesPerObject": {
+        "wall_corner_out_a": 484
+      },
+      "triangleBudget": 600,
+      "bounds": {
+        "min": [
+          -2.3499999046325684,
+          0.0,
+          -2.3499996662139893
+        ],
+        "max": [
+          0.550000011920929,
+          4.865777492523193,
+          0.5500000715255737
+        ]
+      },
+      "size": [
+        2.8999999165534973,
+        4.865777492523193,
+        2.899999737739563
+      ],
+      "pivot": "corner on the ground; visible faces +Z (x in [-2,0]) and +X (z in [-2,0]); taller corner tower; mass behind (x<=0, z<=0)",
+      "objects": [
+        "wall_corner_out_a"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        2.83,
+        3.35,
+        3.96,
+        4.84,
+        4.87,
+        2.76
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.708379328250885,
+      "fileBytes": 40492,
+      "texture": {
+        "wall_corner_out_a": {
+          "emissiveFraction": 0.07730892035025962,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 484,
+      "sourceV1ColourStatistics": {
+        "wall_corner_out_a": {
+          "avg": "#555c61",
+          "lit90": "#787470",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "wall_corner_in",
+      "variant": "a",
+      "file": "wall_corner_in_a.fbx",
+      "triangles": 485,
+      "trianglesPerObject": {
+        "wall_corner_in_a": 485
+      },
+      "triangleBudget": 600,
+      "bounds": {
+        "min": [
+          -2.3496286869049072,
+          0.0,
+          -2.349942445755005
+        ],
+        "max": [
+          1.024980902671814,
+          4.72395133972168,
+          1.0965642929077148
+        ]
+      },
+      "size": [
+        3.374609589576721,
+        4.72395133972168,
+        3.4465067386627197
+      ],
+      "pivot": "corner on the ground; filler block x<=0,z<=0 with faces +Z and +X, scree pile in the +X+Z crease; adjoining walls overlap it",
+      "objects": [
+        "wall_corner_in_a"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        4.3,
+        4.51,
+        4.63,
+        4.72,
+        3.66,
+        2.68,
+        0.56
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.8600807189941406,
+      "fileBytes": 41900,
+      "texture": {
+        "wall_corner_in_a": {
+          "emissiveFraction": 0.07838793621201656,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 485,
+      "sourceV1ColourStatistics": {
+        "wall_corner_in_a": {
+          "avg": "#555c62",
+          "lit90": "#787470",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "wall_end",
+      "variant": "a",
+      "file": "wall_end_a.fbx",
+      "triangles": 480,
+      "trianglesPerObject": {
+        "wall_end_a": 480
+      },
+      "triangleBudget": 600,
+      "bounds": {
+        "min": [
+          -1.0,
+          0.0,
+          -1.7691291570663452
+        ],
+        "max": [
+          1.75,
+          3.5664913654327393,
+          0.6000000834465027
+        ]
+      },
+      "size": [
+        2.75,
+        3.5664913654327393,
+        2.369129240512848
+      ],
+      "pivot": "wall foot centre; joins a wall at x=-0.75, collapsed free end toward +X; mirror in X to flip",
+      "objects": [
+        "wall_end_a"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        3.57,
+        3.51,
+        3.25,
+        2.77,
+        2.6,
+        1.32
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.7181512713432312,
+      "fileBytes": 41468,
+      "texture": {
+        "wall_end_a": {
+          "emissiveFraction": 0.07921170894160938,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 480,
+      "sourceV1ColourStatistics": {
+        "wall_end_a": {
+          "avg": "#575d61",
+          "lit90": "#7e7771",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "wall_corner_out",
+      "variant": "b",
+      "file": "wall_corner_out_b.fbx",
+      "triangles": 484,
+      "trianglesPerObject": {
+        "wall_corner_out_b": 484
+      },
+      "triangleBudget": 600,
+      "bounds": {
+        "min": [
+          -2.3499999046325684,
+          0.0,
+          -2.3499996662139893
+        ],
+        "max": [
+          0.5498637557029724,
+          5.245465278625488,
+          0.550000011920929
+        ]
+      },
+      "size": [
+        2.8998636603355408,
+        5.245465278625488,
+        2.899999678134918
+      ],
+      "pivot": "corner on the ground; visible faces +Z (x in [-2,0]) and +X (z in [-2,0]); taller corner tower; mass behind (x<=0, z<=0)",
+      "objects": [
+        "wall_corner_out_b"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        3.63,
+        3.7,
+        4.98,
+        5.25,
+        5.24,
+        2.85
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.9606092572212219,
+      "fileBytes": 41852,
+      "texture": {
+        "wall_corner_out_b": {
+          "emissiveFraction": 0.07637850089070888,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 484,
+      "sourceV1ColourStatistics": {
+        "wall_corner_out_b": {
+          "avg": "#575e63",
+          "lit90": "#797570",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "wall_corner_in",
+      "variant": "b",
+      "file": "wall_corner_in_b.fbx",
+      "triangles": 484,
+      "trianglesPerObject": {
+        "wall_corner_in_b": 484
+      },
+      "triangleBudget": 600,
+      "bounds": {
+        "min": [
+          -2.3499999046325684,
+          0.0,
+          -2.3500001430511475
+        ],
+        "max": [
+          1.0233113765716553,
+          4.635156631469727,
+          1.067916989326477
+        ]
+      },
+      "size": [
+        3.3733112812042236,
+        4.635156631469727,
+        3.4179171323776245
+      ],
+      "pivot": "corner on the ground; filler block x<=0,z<=0 with faces +Z and +X, scree pile in the +X+Z crease; adjoining walls overlap it",
+      "objects": [
+        "wall_corner_in_b"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        4.29,
+        4.52,
+        4.61,
+        4.64,
+        3.74,
+        2.65,
+        0.54
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.816970944404602,
+      "fileBytes": 41084,
+      "texture": {
+        "wall_corner_in_b": {
+          "emissiveFraction": 0.07412800614267265,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 484,
+      "sourceV1ColourStatistics": {
+        "wall_corner_in_b": {
+          "avg": "#555b60",
+          "lit90": "#78746f",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "wall_end",
+      "variant": "b",
+      "file": "wall_end_b.fbx",
+      "triangles": 484,
+      "trianglesPerObject": {
+        "wall_end_b": 484
+      },
+      "triangleBudget": 600,
+      "bounds": {
+        "min": [
+          -1.0,
+          0.0,
+          -1.8442730903625488
+        ],
+        "max": [
+          1.7499470710754395,
+          3.5823113918304443,
+          0.6000000834465027
+        ]
+      },
+      "size": [
+        2.7499470710754395,
+        3.5823113918304443,
+        2.4442731738090515
+      ],
+      "pivot": "wall foot centre; joins a wall at x=-0.75, collapsed free end toward +X; mirror in X to flip",
+      "objects": [
+        "wall_end_b"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        3.58,
+        3.5,
+        3.43,
+        2.8,
+        2.58,
+        1.31
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.4719582796096802,
+      "fileBytes": 42396,
+      "texture": {
+        "wall_end_b": {
+          "emissiveFraction": 0.0750776148045337,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 484,
+      "sourceV1ColourStatistics": {
+        "wall_end_b": {
+          "avg": "#565b5f",
+          "lit90": "#7f7871",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "wall_corner_out",
+      "variant": "c",
+      "file": "wall_corner_out_c.fbx",
+      "triangles": 485,
+      "trianglesPerObject": {
+        "wall_corner_out_c": 485
+      },
+      "triangleBudget": 600,
+      "bounds": {
+        "min": [
+          -2.3497226238250732,
+          0.0,
+          -2.3499999046325684
+        ],
+        "max": [
+          0.5477937459945679,
+          4.803472995758057,
+          0.5392090678215027
+        ]
+      },
+      "size": [
+        2.897516369819641,
+        4.803472995758057,
+        2.889208972454071
+      ],
+      "pivot": "corner on the ground; visible faces +Z (x in [-2,0]) and +X (z in [-2,0]); taller corner tower; mass behind (x<=0, z<=0)",
+      "objects": [
+        "wall_corner_out_c"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        3.27,
+        3.47,
+        4.42,
+        4.8,
+        4.7,
+        4.41
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.5177221894264221,
+      "fileBytes": 40092,
+      "texture": {
+        "wall_corner_out_c": {
+          "emissiveFraction": 0.07531846934267147,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 485,
+      "sourceV1ColourStatistics": {
+        "wall_corner_out_c": {
+          "avg": "#565c61",
+          "lit90": "#7a7570",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "wall_corner_in",
+      "variant": "c",
+      "file": "wall_corner_in_c.fbx",
+      "triangles": 485,
+      "trianglesPerObject": {
+        "wall_corner_in_c": 485
+      },
+      "triangleBudget": 600,
+      "bounds": {
+        "min": [
+          -2.3499999046325684,
+          0.0,
+          -2.3500001430511475
+        ],
+        "max": [
+          1.0265299081802368,
+          4.805431365966797,
+          1.0969462394714355
+        ]
+      },
+      "size": [
+        3.376529812812805,
+        4.805431365966797,
+        3.446946382522583
+      ],
+      "pivot": "corner on the ground; filler block x<=0,z<=0 with faces +Z and +X, scree pile in the +X+Z crease; adjoining walls overlap it",
+      "objects": [
+        "wall_corner_in_c"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        4.36,
+        4.69,
+        4.81,
+        4.65,
+        4.35,
+        3.12,
+        0.55
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.9027959108352661,
+      "fileBytes": 40236,
+      "texture": {
+        "wall_corner_in_c": {
+          "emissiveFraction": 0.07690679844374011,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 485,
+      "sourceV1ColourStatistics": {
+        "wall_corner_in_c": {
+          "avg": "#555c61",
+          "lit90": "#797570",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "wall_end",
+      "variant": "c",
+      "file": "wall_end_c.fbx",
+      "triangles": 484,
+      "trianglesPerObject": {
+        "wall_end_c": 484
+      },
+      "triangleBudget": 600,
+      "bounds": {
+        "min": [
+          -1.0,
+          0.0,
+          -1.7695974111557007
+        ],
+        "max": [
+          1.748438835144043,
+          3.606177568435669,
+          0.5999999642372131
+        ]
+      },
+      "size": [
+        2.748438835144043,
+        3.606177568435669,
+        2.369597375392914
+      ],
+      "pivot": "wall foot centre; joins a wall at x=-0.75, collapsed free end toward +X; mirror in X to flip",
+      "objects": [
+        "wall_end_c"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        3.61,
+        3.5,
+        3.2,
+        2.86,
+        2.62,
+        1.3
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.7453741431236267,
+      "fileBytes": 40668,
+      "texture": {
+        "wall_end_c": {
+          "emissiveFraction": 0.09069517080970417,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 484,
+      "sourceV1ColourStatistics": {
+        "wall_end_c": {
+          "avg": "#585e62",
+          "lit90": "#807972",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "gate",
+      "variant": "a",
+      "file": "gate_a.fbx",
+      "triangles": 768,
+      "trianglesPerObject": {
+        "gate_frame": 456,
+        "gate_door": 312
+      },
+      "triangleBudget": 1200,
+      "bounds": {
+        "min": [
+          -2.299999952316284,
+          0.0,
+          -0.8777261972427368
+        ],
+        "max": [
+          2.299999952316284,
+          5.4983954429626465,
+          0.9899764060974121
+        ]
+      },
+      "size": [
+        4.599999904632568,
+        5.4983954429626465,
+        1.867702603340149
+      ],
+      "pivot": "both objects pivot at the ground centre of the opening; door closed at identity, opening 2.2 m wide x 3.5 m high; sink the door (-y) to open",
+      "objects": [
+        "gate_frame",
+        "gate_door"
+      ],
+      "children": [
+        "gate_door"
+      ],
+      "separateFiles": {
+        "gate_frame": "gate_frame_a.fbx",
+        "gate_door": "gate_door_a.fbx"
+      },
+      "atlas": "main",
+      "topLine": null,
+      "opening": {
+        "width": 2.2,
+        "height": 3.5
+      },
+      "maxFaceAreaM2": 0.85657799243927,
+      "fileBytes": 59132,
+      "texture": {
+        "gate_frame": {
+          "emissiveFraction": 0.18788568596960084,
+          "atlas": "main"
+        },
+        "gate_door": {
+          "emissiveFraction": 0.3497984292137366,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 768,
+      "sourceV1ColourStatistics": {
+        "gate_frame": {
+          "avg": "#545b61",
+          "lit90": "#77746f",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        },
+        "gate_door": {
+          "avg": "#6d6259",
+          "lit90": "#ff956e",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "gate",
+      "variant": "b",
+      "file": "gate_b.fbx",
+      "triangles": 770,
+      "trianglesPerObject": {
+        "gate_frame": 456,
+        "gate_door": 314
+      },
+      "triangleBudget": 1200,
+      "bounds": {
+        "min": [
+          -2.299999952316284,
+          0.0,
+          -0.8889517784118652
+        ],
+        "max": [
+          2.299999952316284,
+          5.691817760467529,
+          0.9999917149543762
+        ]
+      },
+      "size": [
+        4.599999904632568,
+        5.691817760467529,
+        1.8889434933662415
+      ],
+      "pivot": "both objects pivot at the ground centre of the opening; door closed at identity, opening 2.2 m wide x 3.7 m high; sink the door (-y) to open",
+      "objects": [
+        "gate_frame",
+        "gate_door"
+      ],
+      "children": [
+        "gate_door"
+      ],
+      "separateFiles": {
+        "gate_frame": "gate_frame_b.fbx",
+        "gate_door": "gate_door_b.fbx"
+      },
+      "atlas": "main",
+      "topLine": null,
+      "opening": {
+        "width": 2.2,
+        "height": 3.7
+      },
+      "maxFaceAreaM2": 0.8309378027915955,
+      "fileBytes": 59020,
+      "texture": {
+        "gate_frame": {
+          "emissiveFraction": 0.17300485711070507,
+          "atlas": "main"
+        },
+        "gate_door": {
+          "emissiveFraction": 0.2749901558215184,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 770,
+      "sourceV1ColourStatistics": {
+        "gate_frame": {
+          "avg": "#545b61",
+          "lit90": "#77746f",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        },
+        "gate_door": {
+          "avg": "#6d6259",
+          "lit90": "#ff956e",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "cave_entrance",
+      "variant": "a",
+      "file": "cave_entrance_a.fbx",
+      "triangles": 2548,
+      "trianglesPerObject": {
+        "cave_entrance_a": 2502,
+        "lava_pool": 46
+      },
+      "triangleBudget": 3000,
+      "bounds": {
+        "min": [
+          -7.0,
+          0.0,
+          -6.9454450607299805
+        ],
+        "max": [
+          7.0,
+          9.982378005981445,
+          2.8000001907348633
+        ]
+      },
+      "size": [
+        14.0,
+        9.982378005981445,
+        9.745445251464844
+      ],
+      "pivot": "ground centre of the mouth; opening faces +Z, ~3.6 m wide at the ground and ~3.9 m high, jagged overhanging lip, pillars and scree at both sides; tunnel runs to z=-7",
+      "objects": [
+        "cave_entrance_a",
+        "lava_pool"
+      ],
+      "children": [
+        "lava_pool"
+      ],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": null,
+      "opening": null,
+      "maxFaceAreaM2": 2.3754489421844482,
+      "fileBytes": 161100,
+      "texture": {
+        "cave_entrance_a": {
+          "emissiveFraction": 8.903723719389054e-05,
+          "atlas": "main"
+        },
+        "lava_pool": {
+          "emissiveFraction": 1.0,
+          "atlas": "main"
+        }
+      },
+      "sourceBaseTriangles": 2502,
+      "sourceV1ColourStatistics": {
+        "cave_entrance_a": {
+          "avg": "#565c62",
+          "lit90": "#7b7670",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      }
+    },
+    {
+      "id": "wall_lavafall",
+      "variant": "a",
+      "file": "wall_lavafall_a.fbx",
+      "triangles": 543,
+      "trianglesPerObject": {
+        "wall_rock": 493,
+        "lava_flow": 50
+      },
+      "triangleBudget": 700,
+      "bounds": {
+        "min": [
+          -2.3499999046325684,
+          0.0,
+          -1.8902080059051514
+        ],
+        "max": [
+          2.3499999046325684,
+          5.748317241668701,
+          0.6000000238418579
+        ]
+      },
+      "size": [
+        4.699999809265137,
+        5.748317241668701,
+        2.4902080297470093
+      ],
+      "pivot": "wall foot centre; walkable face +Z; body extends to -Z; ends at x=+-2 are low boulder saddles that overlap the neighbour",
+      "objects": [
+        "wall_rock",
+        "lava_flow"
+      ],
+      "children": [
+        "lava_flow"
+      ],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        3.92,
+        3.96,
+        5.41,
+        5.75,
+        4.42,
+        5.72,
+        5.75,
+        4.59,
+        4.63,
+        2.82
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.9755854606628418,
+      "fileBytes": 46924,
+      "texture": {
+        "wall_rock": {
+          "emissiveFraction": 0.07658249446514016,
+          "atlas": "main"
+        },
+        "lava_flow": {
+          "emissiveFraction": 1.0,
+          "atlas": "main"
+        }
+      },
+      "basePart": "wall_straight_a",
+      "sourceBaseTriangles": 493,
+      "sourceV1ColourStatistics": {
+        "wall_straight_a": {
+          "avg": "#545b60",
+          "lit90": "#787570",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      },
+      "flowChild": "lava_flow",
+      "maximumLavaProtrusionM": 0.6000000238418579
+    },
+    {
+      "id": "wall_lavafall",
+      "variant": "b",
+      "file": "wall_lavafall_b.fbx",
+      "triangles": 542,
+      "trianglesPerObject": {
+        "wall_rock": 492,
+        "lava_flow": 50
+      },
+      "triangleBudget": 700,
+      "bounds": {
+        "min": [
+          -2.349696636199951,
+          0.0,
+          -1.8859546184539795
+        ],
+        "max": [
+          2.3499999046325684,
+          5.928088665008545,
+          0.6000000238418579
+        ]
+      },
+      "size": [
+        4.6996965408325195,
+        5.928088665008545,
+        2.4859546422958374
+      ],
+      "pivot": "wall foot centre; walkable face +Z; body extends to -Z; ends at x=+-2 are low boulder saddles that overlap the neighbour",
+      "objects": [
+        "wall_rock",
+        "lava_flow"
+      ],
+      "children": [
+        "lava_flow"
+      ],
+      "separateFiles": null,
+      "atlas": "main",
+      "topLine": [
+        3.64,
+        4.29,
+        4.36,
+        4.42,
+        5.86,
+        5.93,
+        5.87,
+        4.71,
+        4.04,
+        3.08
+      ],
+      "opening": null,
+      "maxFaceAreaM2": 0.938433051109314,
+      "fileBytes": 49996,
+      "texture": {
+        "wall_rock": {
+          "emissiveFraction": 0.07695610414020478,
+          "atlas": "main"
+        },
+        "lava_flow": {
+          "emissiveFraction": 1.0,
+          "atlas": "main"
+        }
+      },
+      "basePart": "wall_straight_b",
+      "sourceBaseTriangles": 492,
+      "sourceV1ColourStatistics": {
+        "wall_straight_b": {
+          "avg": "#565d61",
+          "lit90": "#7b7571",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      },
+      "flowChild": "lava_flow",
+      "maximumLavaProtrusionM": 0.6000000238418579
+    }
+  ],
+  "textures": {
+    "albedo": "volcano_cel_v2_albedo.png",
+    "backdropAlbedo": "volcano_cel_v2_backdrop_albedo.png",
+    "emissive": "volcano_cel_v2_emissive.png",
+    "backdropEmissive": "volcano_cel_v2_backdrop_emissive.png",
+    "ground": "cel_ground_ash.png",
+    "groundCrust": "cel_ground_crust.png",
+    "albedoSize": 4096,
+    "backdropAlbedoSize": 1024,
+    "emissiveSize": 1024,
+    "backdropEmissiveSize": 1024,
+    "colorSpace": "albedo/ground sRGB; both emission masks linear Non-Color",
+    "bodyAtlasURange": [
+      0,
+      0.89990234375
+    ],
+    "flowAtlasURange": [
+      0.912,
+      0.988
+    ]
+  },
+  "material": {
+    "pipeline": "Unity 2022.3 Built-in, no .mat/.meta/URP files",
+    "recipe": "Unlit main/backdrop albedo, separate linear emission masks; preserve game shader pulse and underglow. No wall-foot orange ambient term baked. lava_flow scrolls V in its reserved main-atlas U strip.",
+    "backdropGlow": "volcano_cel_v2_backdrop_emissive.png; lava colors are also present in albedo if the host leaves backdrop emission disabled."
+  },
+  "interfaces": {
+    "partIds": "same as volcano_v3",
+    "gate": "gate_frame/gate_door and separateFiles retained",
+    "demo": "level.glb + level.json; no gameplay scripts",
+    "builder": "cel_kit_control.py API v1 extension, independent from control.py whole-scene API"
+  },
+  "notes": [
+    "Source cel-v1 rock colour/light bake preserved outside the new lava marks.",
+    "Wall veins are measured over physical surface area with 64 stratified samples per triangle, not UV gutters.",
+    "No global orange foot lighting is baked; the host game already supplies it.",
+    "Two cratered cone replacements preserve source bounds/pivots; two original backdrop silhouettes remain.",
+    "No new AI image generation; reuses cel-v1 original painted artwork.",
+    "Phone frame rate/heat not measured."
+  ],
+  "lavaFlow": {
+    "childName": "lava_flow",
+    "atlas": "main",
+    "uRange": [
+      0.912,
+      0.988
+    ],
+    "vRange": [
+      0,
+      1
+    ],
+    "direction": "+V is downstream (top to bottom, then toward the pool lip)",
+    "recommendedSpeedVPerSecond": 0.18,
+    "shaderSampling": "float2(uv.x, frac(uv.y - timeSeconds * 0.18))",
+    "unityMaterialOffsetYPerSecond": -0.18,
+    "wrap": "Repeat V only; keep U inside the reserved strip",
+    "hostNote": "Use one shared scrolling material for lava_flow children; the existing StageKit shader currently does not transform UVs and needs the small flow-UV branch."
+  }
+}

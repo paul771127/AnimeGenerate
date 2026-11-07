@@ -19,6 +19,9 @@ BUILDER = ROOT / 'extensions' / 'anime_cel_v1' / 'cel_kit_builder.py'
 CLEANER = ROOT / 'extensions' / 'anime_cel_v1' / 'clean_cel_exports.py'
 BLENDER = pathlib.Path(os.environ.get('BLENDER_PATH', str(ROOT / 'tools' / 'blender-4.5.15-windows-x64' / 'blender.exe')))
 STYLE = 'anime_cel_volcano_v1'
+LAVA_STYLE = 'anime_cel_volcano_lava_v2'
+LAVA_BUILDER = ROOT / 'extensions' / 'anime_cel_lava_v2' / 'cel_lava_builder.py'
+LAVA_AUDIT = ROOT / 'extensions' / 'anime_cel_lava_v2' / 'validate_exports.py'
 
 
 class RequestError(Exception):
@@ -70,7 +73,8 @@ def load_config(request, base):
     else:
         cfg = dict(request['config'])
         cfgbase = base
-    if cfg.get('styleId', STYLE) != STYLE:
+    style = cfg.get('styleId', STYLE)
+    if style not in (STYLE, LAVA_STYLE):
         raise RequestError('invalid_config', 'Unsupported styleId')
     quality = cfg.get('quality', 'mobile')
     if quality not in ('mobile', 'draft'):
@@ -95,17 +99,21 @@ def load_config(request, base):
             if not math.isfinite(value):
                 raise RequestError('invalid_config', 'Nonfinite source bounds')
         files.append({'file': part['file'], 'sha256': sha(model)})
-    return dict(styleId=STYLE, sourceKit=str(kitdir), surfaceAtlas=str(atlas), quality=quality), kit, files
+    if style == LAVA_STYLE and kit.get('styleId') != STYLE:
+        raise RequestError('invalid_config', 'Lava v2 requires the protected cel-v1 source kit')
+    return dict(styleId=style, sourceKit=str(kitdir), surfaceAtlas=str(atlas), quality=quality), kit, files
 
 
 def plan(cfg, kit, files):
-    return {'styleId': STYLE, 'quality': cfg['quality'], 'parts': len(kit['parts']),
+    lava = cfg['styleId'] == LAVA_STYLE
+    return {'styleId': cfg['styleId'], 'quality': cfg['quality'], 'parts': len(kit['parts'])+(2 if lava else 0),
             'sourceTriangles': sum(p['triangles'] for p in kit['parts']),
             'sourcePartFiles': files, 'sourceKitSha256': sha(pathlib.Path(cfg['sourceKit']) / 'kit.json'),
             'surfaceAtlasSha256': sha(cfg['surfaceAtlas']),
             'atlasSizes': {'main': 4096 if cfg['quality'] == 'mobile' else 1024,
                            'backdrop': 1024 if cfg['quality'] == 'mobile' else 512,
                            'emissive': 1024 if cfg['quality'] == 'mobile' else 256, 'ground': 1024},
+            'lavaFeatures': (['6-10% physical-area wall veins','wall_lavafall a/b <=700 triangles with lava_flow child','geometric door seal and cave interior glow','two cratered volcano cones','separate backdrop emission mask','no baked wall-foot underglow'] if lava else []),
             'warnings': ['Baked shading is part-local; rotated instances do not relight automatically.',
                          'Existing 2D obstacle sprites keep their former style until separately restyled.',
                          'This extension makes visuals and an example layout; game tracking/combat/controllers are external.',
@@ -131,6 +139,12 @@ def inspect(folder):
             raise RequestError('invalid_output', 'Triangle budget exceeded')
     for key in ('albedo', 'backdropAlbedo', 'emissive', 'ground', 'groundCrust'):
         names.add(kit['textures'][key])
+    if kit.get('styleId') == LAVA_STYLE:
+        names.add(kit['textures']['backdropEmissive'])
+        if kit.get('version') != 5 or report.get('footUnderglowBaked') is not False:
+            raise RequestError('invalid_output', '005 requires kit version 5 and no baked foot underglow')
+        if not report.get('exportAudit',{}).get('ok'):
+            raise RequestError('invalid_output', '005 requires the independent exported-FBX audit')
     names.add('kit.json')
     inventory = []
     for name in sorted(names):
@@ -142,7 +156,7 @@ def inspect(folder):
         if not p.is_file():
             raise RequestError('invalid_output', 'Missing ' + name)
         inventory.append({'file': name, 'bytes': p.stat().st_size, 'sha256': sha(p)})
-    return {'valid': True, 'styleId': STYLE, 'outputFolder': str(folder), 'statistics': report['totals'],
+    return {'valid': True, 'styleId': kit.get('styleId',STYLE), 'outputFolder': str(folder), 'statistics': report['totals'],
             'budgetChecks': report['budgets'], 'assetInventory': inventory,
             'assetBytes': sum(i['bytes'] for i in inventory), 'phoneFpsMeasured': False}
 
@@ -155,7 +169,7 @@ def respond(request, base=None):
             raise RequestError('unsupported_version', 'apiVersion must be 1')
         action = request.get('action')
         if action == 'capabilities':
-            result = {'extension': 'anime_cel_modular_kit', 'styleIds': [STYLE], 'apiVersion': 1,
+            result = {'extension': 'anime_cel_modular_kit', 'styleIds': [STYLE,LAVA_STYLE], 'apiVersion': 1,
                       'actions': ['capabilities', 'plan', 'validate', 'generate', 'inspect'],
                       'input': 'Existing volcano v3-compatible kit + original 2x2 surface PNG atlas',
                       'output': 'FBX part kit, baked albedo/mask, sample GLB level, actual 3D previews',
@@ -176,16 +190,19 @@ def respond(request, base=None):
                 write(folder / 'config.json', cfg)
                 write(folder / 'status.json', {'status': 'running', 'requestId': response['requestId'], 'input': result})
                 blender = resolve(request['blender'], base) if 'blender' in request else BLENDER
-                if not blender.is_file() or not BUILDER.is_file() or not CLEANER.is_file():
+                builder = LAVA_BUILDER if cfg['styleId']==LAVA_STYLE else BUILDER
+                cleaner = LAVA_AUDIT if cfg['styleId']==LAVA_STYLE else CLEANER
+                if not blender.is_file() or not builder.is_file() or not cleaner.is_file():
                     write(folder / 'status.json', {'status': 'failed', 'reason': 'blender_missing'})
                     raise RequestError('blender_missing', 'Blender or cel builder unavailable')
-                cmd = [str(blender), '-b', '--python-exit-code', '1', '--python', str(BUILDER), '--',
+                cmd = [str(blender), '-b', '--python-exit-code', '1', '--python', str(builder), '--',
                        '--out', str(folder), '--v2', cfg['sourceKit'], '--surface-atlas', cfg['surfaceAtlas']]
                 if cfg['quality'] == 'draft':
                     cmd.append('--quick')
-                cleanup = [str(blender), '-b', '--python-exit-code', '1', '--python', str(CLEANER), '--', '--run', str(folder)]
-                write(folder / 'build-command.json', {'argv': cmd, 'builderSha256': sha(BUILDER),
-                                                       'cleanupArgv': cleanup, 'cleanerSha256': sha(CLEANER)})
+                cleanup = [str(blender), '-b', '--python-exit-code', '1', '--python', str(cleaner), '--', '--run', str(folder)]
+                write(folder / 'build-command.json', {'argv': cmd, 'builderSha256': sha(builder),
+                                                       'cleanupArgv': cleanup, 'cleanerSha256': sha(cleaner),
+                                                       'extraSources':{p.name:sha(p) for p in builder.parent.glob('*.py')}})
                 start = time.time()
                 try:
                     with (folder / 'generation.log').open('wb') as log:
@@ -206,7 +223,7 @@ def respond(request, base=None):
                         raise RequestError('timeout', 'Blender generation timed out')
                     raise
                 write(folder / 'status.json', {'status': 'complete', 'elapsedSeconds': round(time.time() - start, 2),
-                                                'requestId': response['requestId'], 'styleId': STYLE,
+                                                'requestId': response['requestId'], 'styleId': cfg['styleId'],
                                                 'exportCleanupComplete':cfg['quality']=='mobile'})
         else:
             raise RequestError('unknown_action', str(action))
