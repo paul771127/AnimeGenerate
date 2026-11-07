@@ -1,0 +1,254 @@
+{
+  "assets": [
+    {
+      "name": "volcano_jump_0",
+      "size": [
+        2048,
+        512
+      ],
+      "bytes": 415707,
+      "bounds": [
+        68,
+        282,
+        1980,
+        492
+      ]
+    },
+    {
+      "name": "volcano_jump_1",
+      "size": [
+        2048,
+        512
+      ],
+      "bytes": 316622,
+      "bounds": [
+        51,
+        326,
+        1996,
+        492
+      ]
+    },
+    {
+      "name": "volcano_jump_2",
+      "size": [
+        2048,
+        512
+      ],
+      "bytes": 520988,
+      "bounds": [
+        51,
+        284,
+        1997,
+        492
+      ]
+    },
+    {
+      "name": "volcano_duck_0",
+      "size": [
+        2048,
+        1024
+      ],
+      "bytes": 1639538,
+      "bounds": [
+        29,
+        100,
+        2019,
+        983
+      ],
+      "beam_underside_median": 563.0
+    },
+    {
+      "name": "volcano_duck_1",
+      "size": [
+        2048,
+        1024
+      ],
+      "bytes": 1599748,
+      "bounds": [
+        20,
+        97,
+        2028,
+        983
+      ],
+      "beam_underside_median": 563.0
+    },
+    {
+      "name": "volcano_duck_2",
+      "size": [
+        2048,
+        1024
+      ],
+      "bytes": 1264069,
+      "bounds": [
+        27,
+        91,
+        2027,
+        983
+      ],
+      "beam_underside_median": 563.0
+    },
+    {
+      "name": "volcano_side_0",
+      "size": [
+        1024,
+        1024
+      ],
+      "bytes": 994871,
+      "bounds": [
+        41,
+        109,
+        983,
+        983
+      ]
+    },
+    {
+      "name": "volcano_side_1",
+      "size": [
+        1024,
+        1024
+      ],
+      "bytes": 1015541,
+      "bounds": [
+        41,
+        72,
+        983,
+        983
+      ]
+    },
+    {
+      "name": "volcano_side_2",
+      "size": [
+        1024,
+        1024
+      ],
+      "bytes": 941973,
+      "bounds": [
+        41,
+        149,
+        983,
+        983
+      ]
+    },
+    {
+      "name": "volcano_vent_idle",
+      "size": [
+        512,
+        512
+      ],
+      "bytes": 285505,
+      "bounds": [
+        28,
+        23,
+        483,
+        472
+      ]
+    },
+    {
+      "name": "volcano_vent_warn",
+      "size": [
+        512,
+        512
+      ],
+      "bytes": 310131,
+      "bounds": [
+        28,
+        23,
+        484,
+        472
+      ]
+    },
+    {
+      "name": "volcano_vent_erupt",
+      "size": [
+        1024,
+        1024
+      ],
+      "bytes": 285119,
+      "bounds": [
+        82,
+        26,
+        968,
+        1024
+      ],
+      "frames": [
+        [
+          82,
+          545,
+          175,
+          1024
+        ],
+        [
+          75,
+          51,
+          183,
+          1024
+        ],
+        [
+          59,
+          26,
+          188,
+          1024
+        ],
+        [
+          51,
+          558,
+          200,
+          1024
+        ]
+      ]
+    },
+    {
+      "name": "volcano_rock_fall",
+      "size": [
+        512,
+        512
+      ],
+      "bytes": 275063,
+      "bounds": [
+        36,
+        30,
+        475,
+        481
+      ]
+    },
+    {
+      "name": "volcano_rock_rubble",
+      "size": [
+        512,
+        512
+      ],
+      "bytes": 292529,
+      "bounds": [
+        30,
+        44,
+        481,
+        481
+      ]
+    },
+    {
+      "name": "exit_circle",
+      "size": [
+        1024,
+        1024
+      ],
+      "bytes": 1005544,
+      "bounds": [
+        66,
+        63,
+        956,
+        963
+      ]
+    },
+    {
+      "name": "exit_pillar",
+      "size": [
+        256,
+        1024
+      ],
+      "bytes": 113464
+    }
+  ],
+  "errors": [],
+  "vent_alpha_iou": 0.9928655945221209,
+  "total_bytes": 11276412
+}
