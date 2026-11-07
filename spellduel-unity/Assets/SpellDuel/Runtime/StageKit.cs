@@ -13,9 +13,9 @@ namespace SpellDuel
     /// </summary>
     public static class StageKit
     {
-        const string Dir = "SceneKit/volcano_cel_v1/";
+        const string Dir = "SceneKit/volcano_cel_v2/";   // 工單 005：賽璐璐火山＋熔岩脈、熔岩瀑布牆
         static bool loaded, ok;
-        static Material mainMat, backMat, groundMat;
+        static Material mainMat, backMat, groundMat, flowMat;
         static Texture2D groundAsh, groundCrust;
         static readonly Dictionary<string, GameObject> parts = new Dictionary<string, GameObject>();
         static readonly string[] StraightV = { "a", "b", "c", "d" }, CornerV = { "a", "b", "c" };
@@ -32,22 +32,27 @@ namespace SpellDuel
             if (loaded) return;
             loaded = true;
             var sh = Resources.Load<Shader>("Shaders/StageKit");
-            var alb = Resources.Load<Texture2D>(Dir + "volcano_cel_albedo");
-            var em = Resources.Load<Texture2D>(Dir + "volcano_cel_emissive");
-            var back = Resources.Load<Texture2D>(Dir + "volcano_cel_backdrop");
+            var alb = Resources.Load<Texture2D>(Dir + "volcano_cel_v2_albedo");
+            var em = Resources.Load<Texture2D>(Dir + "volcano_cel_v2_emissive");
+            var back = Resources.Load<Texture2D>(Dir + "volcano_cel_v2_backdrop_albedo");
+            var backEm = Resources.Load<Texture2D>(Dir + "volcano_cel_v2_backdrop_emissive");
             ok = sh != null && sh.isSupported && alb && Part("wall_straight_a") && Part("wall_corner_out_a") && Part("wall_corner_in_a");
             if (!ok) return;
             mainMat = new Material(sh) { name = "Stage kit (volcano)", mainTexture = alb, enableInstancing = true };
             if (em) mainMat.SetTexture("_EmissionMap", em);
-            mainMat.SetFloat("_Glow", 1.8f);   // 裂縫的熔岩光（會慢慢脈動）
-            mainMat.SetFloat("_UnderGlowStrength", 0.55f);   // 使用者要求岩壁要有熔岩感：牆腳有地上熔岩照上來的暖橘反光（StageKit.shader）
+            mainMat.SetFloat("_Glow", 0.55f);   // 熔岩脈已經畫在顏色圖裡：發光遮罩只補一點、讓它慢慢脈動
+            mainMat.SetFloat("_UnderGlowStrength", 0.35f);   // 使用者要求岩壁要有熔岩感：牆腳有地上熔岩照上來的暖橘反光（StageKit.shader）
             // 手繪地面（賽璐璐版附的火山灰地面，每 3m 重複一次）
             groundAsh = Resources.Load<Texture2D>(Dir + "cel_ground_ash");
             groundCrust = Resources.Load<Texture2D>(Dir + "cel_ground_crust");
             var gsh = Resources.Load<Shader>("Shaders/StageKitGround");
             if (groundAsh && gsh != null && gsh.isSupported) { groundMat = new Material(gsh) { name = "Stage kit ground (volcano)", mainTexture = groundAsh }; groundMat.SetFloat("_Bright", 1.18f); }   // 可以走的路：亮一點的火山灰
             backMat = new Material(sh) { name = "Stage kit backdrop (volcano)", mainTexture = back ? back : alb, enableInstancing = true };
-            backMat.SetFloat("_Glow", 0f); backMat.SetFloat("_HazeNear", 25f); backMat.SetFloat("_HazeFar", 90f); backMat.SetFloat("_HazeMax", 0.75f);
+            // 熔岩瀑布：lava_flow 子物件用同一張圖，V 方向往下捲動（kit.json.lavaFlow：0.18／秒）
+            flowMat = new Material(mainMat) { name = "Stage kit lava flow (volcano)" };
+            flowMat.SetFloat("_FlowSpeed", 0.18f); flowMat.SetFloat("_Glow", 0.9f); flowMat.SetFloat("_UnderGlowStrength", 0f);
+            if (backEm) backMat.SetTexture("_EmissionMap", backEm);
+            backMat.SetFloat("_Glow", backEm ? 0.8f : 0f); backMat.SetFloat("_HazeNear", 25f); backMat.SetFloat("_HazeFar", 90f); backMat.SetFloat("_HazeMax", 0.75f);
         }
 
         /// <summary>這一格用不用 3D 零件：副本大地圖的熔岩區（千機迴廊、城堡不用）</summary>
@@ -81,6 +86,7 @@ namespace SpellDuel
             ExploreArt.HorizonColors(map, out var g, out var s);
             var h = ExploreArt.HazeOf(g, s);
             mainMat.SetColor("_Haze", h); backMat.SetColor("_Haze", h);
+            if (flowMat) flowMat.SetColor("_Haze", h);
             if (groundMat) groundMat.SetColor("_Haze", h);
         }
 
@@ -98,7 +104,8 @@ namespace SpellDuel
             if (scale.HasValue) g.transform.localScale = Vector3.Scale(g.transform.localScale, scale.Value);
             foreach (var r in g.GetComponentsInChildren<Renderer>(true))
             {
-                var mats = r.sharedMaterials; for (int i = 0; i < mats.Length; i++) mats[i] = m; r.sharedMaterials = mats;
+                var use = r.name == "lava_flow" && flowMat ? flowMat : m;   // 熔岩瀑布的熔岩：會流動的材質
+                var mats = r.sharedMaterials; for (int i = 0; i < mats.Length; i++) mats[i] = use; r.sharedMaterials = mats;
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
             }
             return g;
@@ -127,7 +134,8 @@ namespace SpellDuel
             {
                 var d = Dirs4[i]; if (Wall(d.x, d.y)) continue;
                 var dv = new Vector3(d.x, 0f, d.y);
-                Spawn(t, "wall_straight_" + StraightV[(hash + i) % 4], dv * (h - WallBack), Quaternion.LookRotation(dv, Vector3.up), mainMat, new Vector3(1.1f, WallScaleY, 1f));   // 可走的那面（+Z）朝路；寬一點補退後留下的縫
+                bool fall = Part("wall_lavafall_a") && (hash / 7 + i * 3) % 7 == 0;   // 大約每 7 段直牆一段熔岩瀑布牆
+                Spawn(t, fall ? "wall_lavafall_" + ((hash + i) % 2 == 0 ? "a" : "b") : "wall_straight_" + StraightV[(hash + i) % 4], dv * (h - WallBack), Quaternion.LookRotation(dv, Vector3.up), mainMat, new Vector3(1.1f, WallScaleY, 1f));   // 可走的那面（+Z）朝路；寬一點補退後留下的縫
             }
             for (int i = 0; i < 4; i++)
             {

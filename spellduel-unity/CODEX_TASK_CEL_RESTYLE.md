@@ -5,7 +5,7 @@
 > 全面換成原神風（賽璐璐風格的關卡風格）。
 
 場景生成器已經交了新的 3D 岩壁，遊戲已經換上：
-- 零件：`Assets/SpellDuel/Resources/SceneKit/volcano_cel_v1/`
+- 零件：`Assets/SpellDuel/Resources/SceneKit/volcano_cel_v2/`（工單 005：加了熔岩脈、熔岩瀑布牆；預覽在 `scenegen/jobs/spellduel-cloud/005-volcano-cel-lava/previews/`）
 - 預覽：`scenegen/jobs/codex-style/volcano-cel-v1/previews/`
   - 先看 `unity_player_view.png`、`unity_clearing_view.png`、`hero_view.png`
 - 材質原圖：`scenegen/jobs/codex-style/volcano-cel-v1/source/anime-volcano-source-atlas.png`
@@ -60,7 +60,7 @@
 | `exit_circle`（1024） | 俯視的藍色魔法陣 |
 | `exit_pillar`（256×1024） | 光柱 |
 
-- 岩石的顏色、筆觸要跟 3D 岩壁（`volcano_cel_v1`）像同一套。
+- 岩石的顏色、筆觸要跟 3D 岩壁（`volcano_cel_v1`）像同一套；熔岩脈的畫法參考 005 的 `compare_cel_v1_v2.png` 右半邊。
 - 噴口、碎石的地面色用火山灰 `#5c585f` 和凝固熔岩地殼 `#384353`。
 
 ### B. 一般關卡（10m×10m）的熔岩場景
@@ -76,7 +76,7 @@
 
 - 天空改成上面的新天空色。
 - 遠山是冷色的岩塊和火山錐，越遠越淡、越偏藍；火山口可以有一點橘紅的光和煙。
-- 地面 `ground` 跟 `SceneKit/volcano_cel_v1/cel_ground_ash.png` 協調。
+- 地面 `ground` 跟 `SceneKit/volcano_cel_v2/cel_ground_ash.png` 協調。
 - 廢棄礦坑偏暗，但也是冷色調，礦燈是暖色的點綴。
 
 ## 交貨
