@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: ac8504eb054c49f187809eb2871e0b47
+guid: 379f00cfc627442bb4d24e953739ba07
 TextureImporter:
   externalObjects: {}
   serializedVersion: 12
@@ -22,7 +22,7 @@ TextureImporter:
   textureShape: 1
   alphaSource: 1
   alphaIsTransparency: 0
-  sRGBTexture: 1
+  sRGBTexture: 0
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform

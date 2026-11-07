@@ -13,7 +13,7 @@ namespace SpellDuel
     /// </summary>
     public static class StageKit
     {
-        const string Dir = "SceneKit/volcano_cel_v2/";   // 工單 005：賽璐璐火山＋熔岩脈、熔岩瀑布牆
+        const string Dir = "SceneKit/volcano_cel_v3/";   // 工單 006：賽璐璐火山＋不規則熔岩脈（分岔、跟著岩層走）、熔岩瀑布牆
         static bool loaded, ok;
         static Material mainMat, backMat, groundMat, flowMat;
         static Texture2D groundAsh, groundCrust;
@@ -32,10 +32,10 @@ namespace SpellDuel
             if (loaded) return;
             loaded = true;
             var sh = Resources.Load<Shader>("Shaders/StageKit");
-            var alb = Resources.Load<Texture2D>(Dir + "volcano_cel_v2_albedo");
-            var em = Resources.Load<Texture2D>(Dir + "volcano_cel_v2_emissive");
-            var back = Resources.Load<Texture2D>(Dir + "volcano_cel_v2_backdrop_albedo");
-            var backEm = Resources.Load<Texture2D>(Dir + "volcano_cel_v2_backdrop_emissive");
+            var alb = Resources.Load<Texture2D>(Dir + "volcano_cel_v3_albedo");
+            var em = Resources.Load<Texture2D>(Dir + "volcano_cel_v3_emissive");
+            var back = Resources.Load<Texture2D>(Dir + "volcano_cel_v3_backdrop_albedo");
+            var backEm = Resources.Load<Texture2D>(Dir + "volcano_cel_v3_backdrop_emissive");
             ok = sh != null && sh.isSupported && alb && Part("wall_straight_a") && Part("wall_corner_out_a") && Part("wall_corner_in_a");
             if (!ok) return;
             mainMat = new Material(sh) { name = "Stage kit (volcano)", mainTexture = alb, enableInstancing = true };
