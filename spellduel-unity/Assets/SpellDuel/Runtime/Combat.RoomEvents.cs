@@ -238,9 +238,11 @@ namespace SpellDuel
                 {
                     waveToSpawn = 0;
                     int n = Mathf.Clamp(PI("count", 4), 3, 6);
-                    for (int i = 0; i < n; i++) { evPts.Add(Ring(r, 360f * i / n + 45f)); evState.Add(0); }
+                    // 符文一群擺在場地一邊、開關擺在另一邊，離每塊符文至少 RuneSwitchFar（使用者要求：踩完開關才看得清楚整群符文）
+                    RuneLayout(r, out var runeC, out var switchAt);
+                    for (int i = 0; i < n; i++) { float a = (360f * i / n + 45f) * Mathf.Deg2Rad; evPts.Add(runeC + new Vector3(Mathf.Sin(a) * r, 0f, Mathf.Cos(a) * r)); evState.Add(0); }
                     evRuneCount = n;
-                    evPts.Add(ArenaCenter()); evState.Add(1);   // 最後一個點＝中間的開關（使用者要求：踩下去才開始亮順序，不會在打怪時就亮完）
+                    evPts.Add(switchAt); evState.Add(1);   // 最後一個點＝開關（使用者要求：踩下去才開始亮順序，不會在打怪時就亮完）
                     WaitRuneSwitch();
                     break;
                 }
@@ -468,13 +470,51 @@ namespace SpellDuel
             evOnPoint.Clear(); foreach (var pl in Players()) evOnPoint[pl] = PointUnder(pl);
         }
 
+        public const float RuneSwitchFar = 10f, RuneShowDelay = 3f;
+
+        /// <summary>從場地中心往 dir 走，碰到場地邊之前能走多遠</summary>
+        float RayExtent(Vector3 c, Vector3 dir)
+        {
+            if (arenaPoly == null || arenaPoly.Count < 3) return 3f;
+            float best = 60f;
+            for (int i = 0; i < arenaPoly.Count; i++)
+            {
+                Vector3 a = arenaPoly[i], b = arenaPoly[(i + 1) % arenaPoly.Count];
+                float ex = b.x - a.x, ez = b.z - a.z, den = dir.x * ez - dir.z * ex;
+                if (Mathf.Abs(den) < 1e-5f) continue;
+                float wx = a.x - c.x, wz = a.z - c.z;
+                float t = (wx * ez - wz * ex) / den, u = (wx * dir.z - wz * dir.x) / den;
+                if (t > 0f && u >= 0f && u <= 1f) best = Mathf.Min(best, t);
+            }
+            return best;
+        }
+
+        /// <summary>符文群的中心、開關的位置：挑場地最長的方向，符文群靠一頭、開關靠另一頭（離每塊符文 ≥ RuneSwitchFar；場地不夠長就盡量遠）</summary>
+        void RuneLayout(float r, out Vector3 runeC, out Vector3 switchAt)
+        {
+            var c = ArenaCenter(); const float Margin = 1.2f;
+            Vector3 bestD = Vector3.forward; float bestLen = -1f;
+            for (int k = 0; k < 16; k++)
+            {
+                float a = k * Mathf.PI / 16f; var d = new Vector3(Mathf.Sin(a), 0f, Mathf.Cos(a));
+                float len = RayExtent(c, d) + RayExtent(c, -d);
+                if (len > bestLen) { bestLen = len; bestD = d; }
+            }
+            float fwd = Mathf.Max(0f, RayExtent(c, bestD) - Margin), back = Mathf.Max(0f, RayExtent(c, -bestD) - Margin - r);
+            float need = RuneSwitchFar + r;   // 開關到符文群中心的距離
+            // 兩頭先各退一半，夠了就不用貼到牆邊
+            float sw = Mathf.Min(fwd, need * 0.5f), rc = Mathf.Min(back, need - sw);
+            sw = Mathf.Min(fwd, need - rc);
+            runeC = c - bestD * rc; switchAt = c + bestD * sw;
+        }
+
         void NewRuneSequence()
         {
             int len = Mathf.Clamp(PI("seq", 3) + (evFails >= 2 ? 0 : 0), 2, 7);
             evSeq = new int[len];
             for (int i = 0; i < len; i++) { int k; do k = rng.Next(evRuneCount); while (i > 0 && k == evSeq[i - 1]); evSeq[i] = k; }
             evRuneOwner=-1;
-            evSeqPos = 0; evPhase = 0; evPhaseAt = now + 1.2f;
+            evSeqPos = 0; evPhase = 0; evPhaseAt = now + RuneShowDelay;   // 踩完開關等 3 秒才開始亮（使用者要求：先轉過去看符文）
             for (int i = 0; i < evState.Count; i++) evState[i] = 0;
             evOnPoint.Clear();
         }
@@ -492,7 +532,7 @@ namespace SpellDuel
                     if (on == evRuneCount && was != evRuneCount)
                     {
                         NewRuneSequence();
-                        Emit("evinfo", player.Feet, Color.white, "開關啟動！看清楚符文亮起的順序");
+                        Emit("evinfo", player.Feet, Color.white, $"開關啟動！轉向符文那邊，{RuneShowDelay:0} 秒後開始亮");
                         return;
                     }
                 }
@@ -512,7 +552,7 @@ namespace SpellDuel
                 Emit("evinfo", player.Feet, Color.white, "照順序踩上符文！");
                 return;
             }
-            if (evPhase == 2) { if (PenaltyOver()) { WaitRuneSwitch(); Emit("evinfo", player.Feet, Color.white, "準備好了就踩中間的開關，符文會重新亮起"); } return; }
+            if (evPhase == 2) { if (PenaltyOver()) { WaitRuneSwitch(); Emit("evinfo", player.Feet, Color.white, "準備好了就踩開關，符文會重新亮起"); } return; }
             foreach (var pl in Players())
             {
                 if (!pl.Alive) continue;
@@ -767,7 +807,7 @@ namespace SpellDuel
                 case "totems": { int a = 0; foreach (var n in npcs) if (n.Alive && n.npcId != null && n.npcId.StartsWith("ev_totem")) a++; string tn = P("name", "封印圖騰"); bool gate = tn == "召喚門"; evText = a > 0 ? (gate ? $"🌀 打壞{tn}（剩 {a} 座）：門會一直出怪" : $"🗿 打掉{tn}（剩 {a} 根）：圖騰會一直叫怪") : gate ? "🌀 召喚門都毀了，清掉剩下的怪！" : "🗿 圖騰都倒了，清掉剩下的怪！"; break; }
                 case "capture": { int st = evState.Count > 0 ? evState[0] : 0; int pc = st % 1000; evText = $"⭕ 站進發光的圈裡佔領（{pc}%）" + (st >= 2000 ? "　佔領中…" : st >= 1000 ? "　有敵人在圈裡，進度暫停！" : evPhase == 1 ? "　一半時圈會換位置" : ""); break; }
                 case "chase": evText = chaseRunner == null ? (chaseGone ? "" : "💰 盜寶頭目要來了…") : chaseGone ? (chaseWon ? "💰 寶物搶回來了！清掉剩下的怪" : "") : $"💰 打倒「{chaseRunner.name}」！剩 {Mathf.Max(0f, evEndAt - now):0} 秒　（其他怪清完這一波就過關）"; if (evText == "") evText = "⚔ 清掉剩下的怪！"; break;
-                case "runes": evText = evPhase == 3 ? "🟢 準備好了就踩中間的開關，符文才會開始亮" : evPhase == 0 ? "👁 看清楚符文亮起的順序…" : evPhase == 1 ? $"👣 照順序踩上符文（{evSeqPos}/{evSeq.Length}）" : $"⚔ 踩錯了！打倒湧出來的怪（錯 {evFails} 次）"; break;
+                case "runes": evText = evPhase == 3 ? "🟢 準備好了就踩遠處的開關（綠色），符文才會開始亮" : evPhase == 0 ? (now < evPhaseAt ? $"👁 看向符文那一群：{Mathf.CeilToInt(evPhaseAt - now)} 秒後開始亮…" : "👁 看清楚符文亮起的順序…") : evPhase == 1 ? $"👣 照順序踩上符文（{evSeqPos}/{evSeq.Length}）" : $"⚔ 踩錯了！打倒湧出來的怪（錯 {evFails} 次）"; break;
                 case "recite": case "quiz": evText = VoiceEvText(); break;
                 case "mirror": case "barrage": case "rhythm": case "fragile": case "parry": case "targets": case "push": case "koth": case "towers": case "vigil": case "elemshield": case "tame": evText = LabEvText(); break;
                 case "chant": evText = evPhase == 1 ? $"🗣 唸出答案：{evRiddle}" + (evFails > 0 && evHint != null ? $"（提示：{evHint}）" : "") : $"⚔ 唸錯了！打倒湧出來的怪（錯 {evFails} 次）"; break;
