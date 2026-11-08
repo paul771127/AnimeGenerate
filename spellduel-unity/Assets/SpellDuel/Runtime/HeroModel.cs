@@ -34,7 +34,7 @@ namespace SpellDuel
         AnimationMixerPlayable mixer;
         readonly Dictionary<string, AnimationClip> clips = new Dictionary<string, AnimationClip>();
         AnimationClipPlayable cur, prev;
-        string curName; bool curLoop; float curTime, prevTime, fade = 1f, lockUntil;
+        string curName; bool curLoop; float curTime, prevTime, fade = 1f, lockUntil, curSpeed = 1f;
         const float FadeTime = 0.18f;
 
         Vector3 smFeet, smFwd; bool posed;
@@ -111,15 +111,16 @@ namespace SpellDuel
             cur = AnimationClipPlayable.Create(graph, clip);
             cur.SetApplyFootIK(false);
             graph.Connect(cur, 0, mixer, 0);
-            curName = name; curLoop = loop; curTime = 0f; fade = force || !prev.IsValid() ? 1f : 0f;
+            curName = name; curLoop = loop; curTime = 0f; curSpeed = 1f; fade = force || !prev.IsValid() ? 1f : 0f;
         }
 
         /// <summary>一次性的動作（施法、被打、跳）：播完前不會被走路之類的蓋掉</summary>
-        public void PlayOnce(string name)
+        public void PlayOnce(string name, float speed = 1f)
         {
             if (!clips.TryGetValue(name, out var c)) return;
             curName = null; Play(name, false);
-            lockUntil = Time.time + Mathf.Max(0.2f, c.length * 0.9f);
+            curSpeed = Mathf.Max(0.1f, speed);
+            lockUntil = Time.time + Mathf.Max(0.2f, c.length * 0.9f / curSpeed);
         }
         public bool Busy => Time.time < lockUntil;
 
@@ -149,7 +150,7 @@ namespace SpellDuel
         void Tick(float dt)
         {
             if (!graph.IsValid() || !cur.IsValid()) return;
-            curTime += dt; prevTime += dt;
+            curTime += dt * curSpeed; prevTime += dt;
             float len = Mathf.Max(0.05f, cur.GetAnimationClip().length);
             cur.SetTime(curLoop ? curTime % len : Mathf.Min(curTime, len));
             if (prev.IsValid()) { float pl = Mathf.Max(0.05f, prev.GetAnimationClip().length); prev.SetTime(prevTime % pl); }

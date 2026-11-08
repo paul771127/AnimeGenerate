@@ -2914,6 +2914,7 @@ namespace SpellDuel
             if (!Skills.IsMeleeBasic(s)) { d = AimFromHand(ray, out castAt); Me.castFrom = castAt; Me.hasCastFrom = true; }   // 遠程普攻：從手射出、飛向準星對準的地方
             if (!battle.BasicAttack(Me, s, d, floor, enemyOnScreen, from, to)) { Me.hasCastFrom = false; return; }
             if (Skills.IsSwipeBasic(s)) StartHeldSwing(Hand.SwipeFrom, Hand.SwipeTo);   // 劍仙的劍來：手上的長劍跟著揮一個扇形
+            HeroAttackAnim(true);   // 第三人稱：主角的普攻動作（SoloBattle.ThirdPerson.cs）
             TriggerBasicFx(s);   // 出手的畫面光影（各職業顏色、動作）
             // 隊友畫面上的我：揮武器／出手（揮砍類送手劃過的方向：rad＝1 由左往右＝反手）
             NetSend?.Invoke(new Msg { t = "act", k = s.id, ok = true, d = d, rad = Skills.IsSwipeBasic(s) && Hand.SwipeTo.x > Hand.SwipeFrom.x ? 1f : 0f });
@@ -2943,6 +2944,7 @@ namespace SpellDuel
             else
             {
                 if (byGesture) Say("🖐️ 放招！", 0.8f);
+                HeroAttackAnim(false);   // 第三人稱：主角揮杖放招（SoloBattle.ThirdPerson.cs）
                 NetSend?.Invoke(new Msg { t = "act", k = visualSkill.id, ok = false, d = aim });   // 隊友畫面上的我：放招動作
                 // 放招光效：在手機前方爆開，朝法術飛行方向
                 SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(visualSkill.id):myClass=="swordsman"?SpellFx.SwordStyle(visualSkill.id):myClass, myClass==Skills.Novice?visualSkill.color:Me.charging != null ? Me.charging.color : Skills.Classes[myClass].color,

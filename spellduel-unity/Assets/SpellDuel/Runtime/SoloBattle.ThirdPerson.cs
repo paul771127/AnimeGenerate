@@ -78,6 +78,14 @@ namespace SpellDuel
         /// <summary>角色相對手機的位置：前方 ThirdPersonDist、往左 ThirdPersonSide</summary>
         static Vector3 TpOffset(Vector3 f) => f * ThirdPersonDist - new Vector3(f.z, 0f, -f.x) * ThirdPersonSide;
 
+        /// <summary>放招／普攻的動作（使用者回報大魔導師攻擊沒動作：以前只有詠唱放出才播，普攻沒有）。普攻播快一點</summary>
+        void HeroAttackAnim(bool basic)
+        {
+            if (heroModel) { heroModel.PlayOnce("cast", basic ? 2.2f : 1.3f); heroCastAnimAt = Time.time; }
+            else if (selfRig) { selfRig.PlayAttack(myClass == Skills.Novice ? "novice" : AttackKindOf(myClass), basic ? 0.06f : 0.15f); }
+        }
+        float heroCastAnimAt = -9f;
+
         /// <summary>每幀：主角的 3D 角色跟著角色位置、面向、動作（有生成器的模型就用模型：HeroModel.cs）</summary>
         HeroModel heroModel; bool heroWasCharging; float heroLastHp = -1f;
         void UpdateSelfRig()
@@ -101,7 +109,7 @@ namespace SpellDuel
             {
                 if (selfRig) { Destroy(selfRig.gameObject); selfRig = null; }
                 bool charging = Me.Alive && Me.charging != null;
-                if (heroWasCharging && !charging && Me.Alive) heroModel.PlayOnce("cast");   // 放出去了
+                if (heroWasCharging && !charging && Me.Alive && Time.time - heroCastAnimAt > 0.3f) heroModel.PlayOnce("cast", 1.3f);   // 放出去了（沒經過 ReleaseAt 的也播）
                 heroWasCharging = charging;
                 if (heroLastHp >= 0f && Me.hp < heroLastHp - 0.5f && Me.Alive && !charging) heroModel.PlayOnce("hit");
                 heroLastHp = Me.hp;
