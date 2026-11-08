@@ -50,19 +50,23 @@ namespace SpellDuel
         bool ChapterMode => dungeon != null && dungeon.IsChapter && exploreRun != null && exploreRun.IsDungeon && !coop && !NetMode;
 
         // ---------------------------------------------------------------- 存檔
-        struct ChSave { public int exit; public HashSet<int> cleared, sparkles; public Dictionary<string, ExQuestState> quests; }
+        struct ChSave { public int exit; public HashSet<int> cleared, sparkles, entered, dead, explored; public Dictionary<string, ExQuestState> quests; }
 
         static ChSave? LoadChSave()
         {
             string s = Progress.Get?.Invoke(ChapterSaveKey);
             if (string.IsNullOrEmpty(s)) return null;
-            var sv = new ChSave { exit = -1, cleared = new HashSet<int>(), sparkles = new HashSet<int>(), quests = new Dictionary<string, ExQuestState>() };
+            var sv = new ChSave { exit = -1, cleared = new HashSet<int>(), sparkles = new HashSet<int>(), entered = new HashSet<int>(), dead = new HashSet<int>(), explored = new HashSet<int>(), quests = new Dictionary<string, ExQuestState>() };
             foreach (var part in s.Split(';'))
             {
                 int eq = part.IndexOf('='); if (eq <= 0) continue;
                 string k = part.Substring(0, eq), v = part.Substring(eq + 1);
                 if (k == "a") int.TryParse(v, out sv.exit);
-                else if (k == "c" || k == "s") { foreach (var x in v.Split(',')) if (int.TryParse(x, out var n)) (k == "c" ? sv.cleared : sv.sparkles).Add(n); }
+                else if (k == "c" || k == "s" || k == "n" || k == "d" || k == "x")
+                {
+                    var set = k == "c" ? sv.cleared : k == "s" ? sv.sparkles : k == "n" ? sv.entered : k == "d" ? sv.dead : sv.explored;
+                    foreach (var x in v.Split(',')) if (int.TryParse(x, out var n)) set.Add(n);
+                }
                 else if (k == "q") foreach (var x in v.Split(',')) { var kv = x.Split(':'); if (kv.Length == 2 && int.TryParse(kv[1], out var st)) sv.quests[kv[0]] = (ExQuestState)st; }
             }
             return sv.exit >= 0 ? sv : (ChSave?)null;
@@ -75,7 +79,11 @@ namespace SpellDuel
             var c = new List<string>(); foreach (var a in run.map.areas) if (a.cleared) c.Add(a.index.ToString());
             var sp = new List<string>(); for (int i = 0; i < run.map.sparkles.Count; i++) if (run.map.sparkles[i].found) sp.Add(i.ToString());
             var q = new List<string>(); foreach (var cs in ChSides) { var qq = run.map.Quest(cs.npc); if (qq != null) q.Add($"{cs.npc}:{(int)(qq.state == ExQuestState.Active || qq.state == ExQuestState.Failed ? ExQuestState.Offered : qq.state)}"); }
-            Progress.Set?.Invoke(ChapterSaveKey, $"a={at.index};c={string.Join(",", c)};s={string.Join(",", sp)};q={string.Join(",", q)}");
+            // 使用者要求：地圖探索程度、已通過的任務、已擊殺的敵人都要存（回村再回來接著打）
+            var n = new List<string>(); foreach (var a in run.map.areas) if (a.entered) n.Add(a.index.ToString());
+            var dd = new List<string>(); foreach (var mon in run.map.monsters) if (mon.dead) dd.Add(mon.id.ToString());
+            var x = new List<string>(); foreach (var cell in run.explored) x.Add(((cell.x + 500) * 1000 + cell.y + 500).ToString());
+            Progress.Set?.Invoke(ChapterSaveKey, $"a={at.index};c={string.Join(",", c)};s={string.Join(",", sp)};q={string.Join(",", q)};n={string.Join(",", n)};d={string.Join(",", dd)};x={string.Join(",", x)}");
         }
 
         /// <summary>傳送陣的「回到炎之山」：有存檔才有（回傳脫出點的名字）</summary>
@@ -146,9 +154,13 @@ namespace SpellDuel
             {
                 var s = sv.Value;
                 foreach (var a in map.areas) if (s.cleared.Contains(a.index)) { a.entered = true; a.cleared = true; }
-                foreach (var mon in map.monsters) if (mon.area >= 0 && s.cleared.Contains(mon.area)) mon.dead = true;
+                foreach (var a in map.areas) if (s.entered.Contains(a.index)) a.entered = true;
+                foreach (var mon in map.monsters) if (mon.area >= 0 && s.cleared.Contains(mon.area) || s.dead.Contains(mon.id)) mon.dead = true;
+                foreach (var e in s.explored) run.explored.Add(new Vector2Int(e / 1000 - 500, e % 1000 - 500));
                 for (int i = 0; i < map.sparkles.Count; i++) if (s.sparkles.Contains(i)) map.sparkles[i].found = true;
                 foreach (var kv in s.quests) { var q = map.Quest(kv.Key); if (q != null) q.state = kv.Value; }
+                int nc = 0; foreach (var a in map.areas) if (a.cleared) nc++;
+                Say($"💾 讀取存檔：已清除 {nc} 個地點、打倒 {s.dead.Count} 隻敵人、地圖探索 {s.explored.Count} 格", 4f);
                 var at = chExits.Find(e => e.area.index == s.exit);
                 if (at != null) { chResumeAt = at.pos + new Vector3(-1.6f, 0f, 0f); chExitDeclined = at; }
             }
