@@ -13,10 +13,14 @@ namespace SpellDuel
     /// </summary>
     public partial class SoloBattle
     {
-        /// <summary>角色在手機前方幾公尺；攝影機（手機）比平常高多少（使用者要求：攝影機往後、高一點）</summary>
-        public const float ThirdPersonDist = 4f, ThirdPersonLift = 1f;
-        /// <summary>第三人稱的準心在畫面高度的哪裡（從上往下的比例）：往上移，手機往下看角色時準心才對著前方，不會打到自己腳邊</summary>
-        public const float TpAimY = 0.36f;
+        /// <summary>
+        /// 角色在手機前方幾公尺；往左偏多少（越肩：角色在畫面偏左，正前方近身的敵人從右肩旁邊看得到）；
+        /// 攝影機高度＝角色頭頂再高半顆頭（使用者要求）→ 世界往下降「這個高度 − 手機站著的高度」
+        /// </summary>
+        public const float ThirdPersonDist = 3.2f, ThirdPersonSide = 0.55f, HeroCamHeight = 1.86f, MaxLift = 1.2f;
+        float tpLift;
+        /// <summary>第三人稱的準心在畫面高度的哪裡（從上往下的比例）：比正中間高一點，不會對到角色的頭</summary>
+        public const float TpAimY = 0.44f;
         static bool tpAimNow;
         /// <summary>準心的位置（GUI 座標比例，從上往下）</summary>
         static float AimYFrac => tpAimNow ? TpAimY : 0.5f;
@@ -38,18 +42,24 @@ namespace SpellDuel
             tpAimNow = TpOn;
             if (!TpOn)
             {
-                if (tpLifted && area != null) { ShiftWorld(WorldFrame.DirFromWorld(Vector3.up) * ThirdPersonLift); me.head.y -= ThirdPersonLift; }   // 中途關掉：世界升回來
+                if (tpLifted && area != null) { ShiftWorld(WorldFrame.DirFromWorld(Vector3.up) * tpLift); me.head.y -= tpLift; }   // 中途關掉：世界升回來
                 tpLifted = false; tpHas = false; tpOffsetW = Vector3.zero; return;
             }
-            // 攝影機高一點：整個世界往下降 ThirdPersonLift（判定用的高度扣回來，蹲、跳照舊）
-            if (!tpLifted) { ShiftWorld(WorldFrame.DirFromWorld(Vector3.down) * ThirdPersonLift); tpLifted = true; }   // 這一幀的位置是平移前算的，不用扣
-            else me.head.y -= ThirdPersonLift;
+            // 攝影機比角色頭頂高半顆頭：整個世界往下降（判定用的高度扣回來，蹲、跳照舊）
+            if (!tpLifted)
+            {
+                float stand = standH > 0.8f ? standH : me.head.y;   // 站著時手機的高度（校正過就用校正值）
+                tpLift = Mathf.Clamp(HeroCamHeight - stand, 0f, MaxLift);
+                if (tpLift > 0.01f) ShiftWorld(WorldFrame.DirFromWorld(Vector3.down) * tpLift);
+                tpLifted = true;   // 這一幀的位置是平移前算的，不用扣
+            }
+            else me.head.y -= tpLift;
             var f = Fighter.Flat(me.forward);
             if (f.sqrMagnitude < 1e-4f) f = tpHas ? tpLastFwd : Vector3.forward;
             f.Normalize();
             if (tpHas)
             {
-                var delta = -(f - tpLastFwd) * ThirdPersonDist;
+                var delta = -(TpOffset(f) - TpOffset(tpLastFwd));
                 if (delta.sqrMagnitude > 0.004f * 0.004f)   // 手機微微晃動不平移（省效能）；累積夠了才一次移
                 {
                     ShiftWorld(-WorldFrame.DirFromWorld(delta));
@@ -59,9 +69,12 @@ namespace SpellDuel
                 else f = tpLastFwd;
             }
             else { tpLastFwd = f; tpHas = true; }
-            tpOffsetW = f * ThirdPersonDist;
+            tpOffsetW = TpOffset(f);
             me.head += tpOffsetW;
         }
+
+        /// <summary>角色相對手機的位置：前方 ThirdPersonDist、往左 ThirdPersonSide</summary>
+        static Vector3 TpOffset(Vector3 f) => f * ThirdPersonDist - new Vector3(f.z, 0f, -f.x) * ThirdPersonSide;
 
         /// <summary>每幀：主角的 3D 角色跟著角色位置、面向、動作（有生成器的模型就用模型：HeroModel.cs）</summary>
         HeroModel heroModel; bool heroWasCharging; float heroLastHp = -1f;
