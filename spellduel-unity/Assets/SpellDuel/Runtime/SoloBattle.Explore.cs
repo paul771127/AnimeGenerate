@@ -115,6 +115,7 @@ namespace SpellDuel
             var cell = run.map.Cell(Me.Feet);
             if (cell != exLastCell || exGatesDirty(run)) { exLastCell = cell; RefreshExploreCells(run, cell); }
             UpdateExploreProps(run);
+            UpdateChestArt(run);   // 副本的寶箱模型（SoloBattle.ChestArt.cs）
             UpdateExploreFx(run);
             if (run.IsDungeon) UpdateDungeonFx(run);   // 副本大地圖的特效影片（SoloBattle.DungeonExplore.cs）
         }
@@ -413,7 +414,7 @@ namespace SpellDuel
                 if (s.found || Battle.FlatDistance(s.pos, Me.Feet) > ExploreRun.SparkleTapRange) continue;
                 var sp = cam.WorldToScreenPoint(WorldFrame.FromWorld(s.pos + Vector3.up * 0.5f));
                 if (sp.z <= 0f || Vector2.Distance(new Vector2(sp.x, sp.y), tp) > Screen.width * 0.12f) continue;
-                if (exploreRun.TapSparkle(s.id, Me.Feet) != null) { exSparkleTapAt = Time.time; Sfx.Play("coin", 0.8f); Haptics.Play(Haptics.Kind.Success); Burst(s.pos + Vector3.up * 0.5f, new Color(1f, 0.95f, 0.6f)); var sat = s.pos; ExploreFx.Once(exRoot, "fx_C2_discover", () => sat + Vector3.up * 0.6f, 1.8f); }
+                if (exploreRun.TapSparkle(s.id, Me.Feet) != null) { exSparkleTapAt = Time.time; if (s.kind == "chest") OnDungeonChestOpened(exploreRun, s); Sfx.Play("coin", 0.8f); Haptics.Play(Haptics.Kind.Success); Burst(s.pos + Vector3.up * 0.5f, new Color(1f, 0.95f, 0.6f)); var sat = s.pos; ExploreFx.Once(exRoot, "fx_C2_discover", () => sat + Vector3.up * 0.6f, 1.8f); }
                 break;
             }
         }
@@ -631,6 +632,7 @@ namespace SpellDuel
                     GUI.DrawTexture(new Rect(box.x + (x - x0) * cs, box.y + (span - 1 - (z - z0)) * cs, cs + 0.5f, cs + 0.5f), Texture2D.whiteTexture);
                 }
             ExploreArt.DrawDungeonAreaMap(run, box, x0, z0, span);
+            DrawDungeonMapIcons(run, box, x0, z0, span, cs);   // 任務點、NPC、沒開的門、存檔點、寶箱（SoloBattle.ChestArt.cs）
             void Dot(Vector3 p, Color c, float k, int symbol=0)
             {
                 var cc = map.Cell(p); if (cc.x < x0 || cc.y < z0 || cc.x >= x0 + span || cc.y >= z0 + span || !run.explored.Contains(cc)) return;

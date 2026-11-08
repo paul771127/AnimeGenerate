@@ -186,10 +186,11 @@ namespace SpellDuel
         void ChestAreaLoot(ExArea a)
         {
             ItemGen.SetTheme = dungeon.ThemeOf(a.node);
-            pendingItems.Add(ItemGen.Make(dropRng, dungeon.level + battle.levelBoost, Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass));
-            pendingGold += 40 * dungeon.level;
-            floaters.Add(new Floater { text = $"🧰 {a.Title}：裝備＋金幣（通關後獲得）", color = new Color(1f, 0.85f, 0.35f), born = Time.time, screen = true });
-            Sfx.Play("coin", 0.9f); Haptics.Play(Haptics.Kind.Success);
+            var it = ItemGen.Make(dropRng, dungeon.level + battle.levelBoost, Mathf.Max(2, ItemGen.RollRarity(dropRng, 0f, 2)), myClass);
+            pendingItems.Add(it);
+            int g = 40 * dungeon.level;
+            pendingGold += g;
+            ShowChestLoot(a.Title, it, g, ChapterMode);   // 跳出拿到什麼（SoloBattle.ChestArt.cs）
         }
 
         /// <summary>區域的場地（四個角，往內縮一點；事件的道具、出怪位置照這個）</summary>
