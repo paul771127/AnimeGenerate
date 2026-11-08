@@ -2851,7 +2851,7 @@ namespace SpellDuel
             return false;
         }
 
-        static Vector2 ScreenCenter => new Vector2(Screen.width / 2f, Screen.height / 2f);
+        static Vector2 ScreenCenter => new Vector2(Screen.width / 2f, Screen.height * (1f - AimYFrac));   // 第三人稱：準心在畫面偏上（SoloBattle.ThirdPerson.cs）
         SkillDef sealFor; int sealStep;   // 忍者的手印：正在比第幾個
 
         /// <summary>人在場地外：只能移動，不能攻擊、詠唱、放招（回到場地內才可以）</summary>
@@ -2874,7 +2874,8 @@ namespace SpellDuel
         {
             var camW = WorldFrame.ToWorld(ray.origin);
             var d = WorldFrame.DirToWorld(ray.direction).normalized;
-            castAt = Hand != null && Hand.HandVisible
+            castAt = tpAimNow && Me != null ? Me.Chest + Fighter.Flat(Me.forward) * 0.45f + Vector3.up * 0.2f   // 第三人稱：從角色的法杖前方射出
+                : Hand != null && Hand.HandVisible
                 ? WorldFrame.ToWorld(cam.ScreenPointToRay(Hand.Palm).GetPoint(0.35f))
                 : WorldFrame.ToWorld(cam.transform.position + cam.transform.forward * 0.3f - cam.transform.up * 0.15f);
             Vector3 best = default; float bestAng = AimAssistDeg;
@@ -4511,7 +4512,7 @@ namespace SpellDuel
             if (nMin > 0) UiKit.Pill(top + lh * 3.6f + (coop ? lh : 0f) + (endless ? lh * 2.0f : 0f), $"👹 小怪 ×{nMin}", fsS, new Color(1f, 0.6f, 0.3f), W * 0.4f);
 
             // 準星（畫面中央）＋蓄力進度：所有技能都朝這裡放；外圈刻度＝蓄力進度，蓄滿閃爍（畫法在 ChargeReticle.cs）
-            ChargeReticle.Draw(new Vector2(W / 2f, H / 2f), W * 0.04f, me.charging != null, me.charging != null ? battle.ChargeProgress(me) : 0f,
+            ChargeReticle.Draw(new Vector2(W / 2f, H * AimYFrac), W * 0.04f, me.charging != null, me.charging != null ? battle.ChargeProgress(me) : 0f,
                 me.charging != null ? me.charging.color : Color.white, battle.OverchargeFrac(me));
             DrawRuneGuide(W, H);
             Hand?.DrawGUI(small, me.charging != null ? me.charging.color : Color.white);

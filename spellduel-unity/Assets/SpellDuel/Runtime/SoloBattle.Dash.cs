@@ -226,7 +226,7 @@ namespace SpellDuel
             StopDash(); dashOpenAt = -99f; dashDistance = 0f;
             if (area != null) DashCheckArea();
             if (dashTotalS.sqrMagnitude > 1e-8f && area != null) ShiftWorld(-dashTotalS);
-            dashTotalS = Vector3.zero; dashMoveW = Vector3.zero; dashRootMove.Clear(); tpHas = false;
+            dashTotalS = Vector3.zero; dashMoveW = Vector3.zero; dashRootMove.Clear(); tpHas = false; tpLifted = false;
         }
 
         /// <summary>衝過之後場地和實體房間對不上：手機走到真實房間邊緣（衝刺前的場地框）就提醒</summary>

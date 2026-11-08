@@ -13,7 +13,13 @@ namespace SpellDuel
     /// </summary>
     public partial class SoloBattle
     {
-        public const float ThirdPersonDist = 3f;
+        /// <summary>角色在手機前方幾公尺；攝影機（手機）比平常高多少（使用者要求：攝影機往後、高一點）</summary>
+        public const float ThirdPersonDist = 4f, ThirdPersonLift = 1f;
+        /// <summary>第三人稱的準心在畫面高度的哪裡（從上往下的比例）：往上移，手機往下看角色時準心才對著前方，不會打到自己腳邊</summary>
+        public const float TpAimY = 0.36f;
+        static bool tpAimNow;
+        /// <summary>準心的位置（GUI 座標比例，從上往下）</summary>
+        static float AimYFrac => tpAimNow ? TpAimY : 0.5f;
         const string ThirdPersonKey = "SD_ThirdPerson";
         public static bool ThirdPerson
         {
@@ -22,14 +28,22 @@ namespace SpellDuel
         }
 
         CharacterRig selfRig; Vector3 selfLastFeet;
-        Vector3 tpLastFwd, tpOffsetW; bool tpHas;
+        Vector3 tpLastFwd, tpOffsetW; bool tpHas, tpLifted;
 
         bool TpOn => ThirdPerson && !NetMode && !Watching && battle != null && phase == Phase.Fighting && Me != null && area != null;
 
         /// <summary>SyncPlayer 之後：把角色放到手機前方；轉身時世界平移，讓角色留在原地</summary>
         void ApplyThirdPerson(Fighter me)
         {
-            if (!TpOn) { tpHas = false; tpOffsetW = Vector3.zero; return; }
+            tpAimNow = TpOn;
+            if (!TpOn)
+            {
+                if (tpLifted && area != null) { ShiftWorld(WorldFrame.DirFromWorld(Vector3.up) * ThirdPersonLift); me.head.y -= ThirdPersonLift; }   // 中途關掉：世界升回來
+                tpLifted = false; tpHas = false; tpOffsetW = Vector3.zero; return;
+            }
+            // 攝影機高一點：整個世界往下降 ThirdPersonLift（判定用的高度扣回來，蹲、跳照舊）
+            if (!tpLifted) { ShiftWorld(WorldFrame.DirFromWorld(Vector3.down) * ThirdPersonLift); tpLifted = true; }   // 這一幀的位置是平移前算的，不用扣
+            else me.head.y -= ThirdPersonLift;
             var f = Fighter.Flat(me.forward);
             if (f.sqrMagnitude < 1e-4f) f = tpHas ? tpLastFwd : Vector3.forward;
             f.Normalize();
