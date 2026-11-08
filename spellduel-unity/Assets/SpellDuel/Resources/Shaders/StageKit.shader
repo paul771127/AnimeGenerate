@@ -8,10 +8,11 @@ Shader "SpellDuel/StageKit"
  // 同一個材質、同一個網格的零件會用 GPU instancing 合併繪製（不會變慢）。
  Properties { _MainTex("Albedo",2D)="white"{} _EmissionMap("Emission mask",2D)="black"{} _EmissionColor("Emission",Color)=(1,0.45,0.12,1) _Glow("Glow",Float)=1.6 _FlowSpeed("Flow (V per second, lava falls)",Float)=0
   _UnderGlow("Lava underglow",Color)=(1,0.38,0.1,1) _UnderGlowHeight("Underglow height (m)",Float)=1.6 _UnderGlowStrength("Underglow strength",Float)=0
-  _Haze("Haze",Color)=(0.32,0.2,0.18,1) _HazeNear("Haze near",Float)=16 _HazeFar("Haze far",Float)=46 _HazeMax("Haze max",Float)=0.6 }
+  _Haze("Haze",Color)=(0.32,0.2,0.18,1) _HazeNear("Haze near",Float)=16 _HazeFar("Haze far",Float)=46 _HazeMax("Haze max",Float)=0.6 _OffsetFactor("Depth offset factor",Float)=0 _OffsetUnits("Depth offset units",Float)=0 }
  SubShader {
  Tags { "Queue"="Geometry" "RenderType"="Opaque" }
- Pass { CGPROGRAM
+ Pass { Offset [_OffsetFactor], [_OffsetUnits]   // 疊在一起的地面（城鎮地面、路面、室內地板）：往後推一點，不會互相閃爍
+ CGPROGRAM
  #pragma vertex vert
  #pragma fragment frag
  #pragma multi_compile_instancing

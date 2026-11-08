@@ -68,6 +68,8 @@ namespace SpellDuel
         public const float GateHalf = 1.4f, ExitDepth = 1.2f;
         /// <summary>居民的障礙半徑：太近時 AR 角色看起來超大，保持約 1.5m 的距離</summary>
         public const float NpcKeepOff = 1.2f;
+        /// <summary>按住畫面中間衝刺的速度（m/s）</summary>
+        public const float DashSpeed = 3.2f;
         public const float TownRadius = 13f, StepSpeed = 1.4f, StepHold = 0.5f, TalkRange = 2.6f, TalkAngle = 50f;
         static readonly Vector2 PlazaC = new Vector2(0f, 5f);
         /// <summary>村子設施的位置：副本入口、訓練場在廣場兩側（原本的民房），討伐告示板、觀戰席在入口兩邊</summary>
@@ -292,14 +294,14 @@ namespace SpellDuel
             if (root == null || cam == null) return;
             float now = Time.time;
             // 晃動手機＝踏一步
-            if (steps.Feed(Input.acceleration, now)) { walkUntil = now + StepHold; Haptics.Play(Haptics.Kind.Light); }
+            // 使用者要求：取消晃動手機走路，改成跟戰鬥一樣按住畫面中間衝刺（holdWalk＝按住畫面中間）
             if (holdWalk) holdUntil = now + 0.1f;
             float key = 0f;
 #if UNITY_EDITOR
             if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) key = 1f;
             if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) key = -0.6f;
 #endif
-            float target = now < walkUntil || now < holdUntil ? StepSpeed : key * StepSpeed;
+            float target = now < holdUntil ? DashSpeed : now < walkUntil ? StepSpeed : key * StepSpeed;
             speed = Mathf.MoveTowards(speed, target, dt * (Mathf.Abs(target) > Mathf.Abs(speed) ? 6f : 4f));
             var tr = root.transform;
             // 轉身鈕：整個城鎮繞著玩家反方向轉，看起來就是玩家轉身

@@ -428,6 +428,8 @@ namespace SpellDuel
         // ---------------------------------------------------------------- 方向鍵（3D 城鎮走路）
         /// <summary>方向鍵目前按著的方向（x＝右、y＝前）與轉身（+1＝右轉）；padFrame＝最後一次畫方向鍵的幀（沒畫就不算）</summary>
         public Vector2 PadMove; public float PadTurn; int padFrame = -9;
+        /// <summary>按住畫面中間：往準心方向衝刺</summary>
+        public bool DashHeld;
         public bool PadLive => Time.frameCount - padFrame <= 2;
 
         /// <summary>手指（或滑鼠）有沒有按在這個 GUI 範圍裡（按住不放也算）</summary>
@@ -463,6 +465,9 @@ namespace SpellDuel
             Key(tl, "↺", htl); Key(tr, "↻", htr);
             UiKit.Text(new Rect(tl.x - gap, tl.y - fs * 1.3f, tr.xMax - tl.x + gap * 2, fs * 1.2f), "轉身", Mathf.RoundToInt(fs * 0.75f), new Color(1f, 1f, 1f, 0.75f), TextAnchor.MiddleCenter);
             PadMove = new Vector2((hr ? 1f : 0f) - (hl ? 1f : 0f), (hu ? 1f : 0f) - (hd ? 1f : 0f));
+            // 按住畫面中間（上方說明列以下、方向鍵以上）＝往準心方向衝刺（跟戰鬥一樣）
+            float H = UnityEngine.Screen.height;
+            DashHeld = Held(new Rect(r.x, H * 0.17f, r.width, Mathf.Max(0f, top - fs * 1.5f - H * 0.17f)));
             PadTurn = (htr ? 1f : 0f) - (htl ? 1f : 0f);
             padFrame = Time.frameCount;
             return top;
@@ -534,7 +539,7 @@ namespace SpellDuel
             UiKit.Text(new Rect(top.x + gap, top.y, top.width*.46f-gap, fs * 1.8f), $"🏘 {t.name}", fsL, Color.white, TextAnchor.MiddleLeft, true);
             string cn = Skills.Classes.TryGetValue(prof.cls, out var cd) ? cd.name : prof.cls;
             UiKit.Text(new Rect(top.x + top.width*.46f, top.y, SettingsMenu.RightEdge(top.y, top.y + fs * 1.8f, top.xMax - gap) - (top.x + top.width*.46f), fs * 1.8f), $"{cn} Lv{prof.level}　💰 {Economy.Gold}", fsS, new Color(1f, 0.9f, 0.5f), TextAnchor.MiddleRight, true);
-            UiKit.Text(new Rect(top.x + gap, top.y + fs * 1.7f, top.width - gap * 2, fs * 1.8f), "🕹 左下方向鍵走路、右下轉身（也可以上下晃動手機原地踏步）　💬 走到居民面前說「你好」或揮手聊天", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleLeft);
+            UiKit.Text(new Rect(top.x + gap, top.y + fs * 1.7f, top.width - gap * 2, fs * 1.8f), "🕹 按住畫面中間＝往準心方向衝刺、左下方向鍵走路、右下轉身　💬 走到居民面前說「你好」或揮手聊天", fsS, new Color(0.85f, 0.88f, 1f), TextAnchor.MiddleLeft);
             float y = top.yMax + gap * 0.5f;
             if (!string.IsNullOrEmpty(SpeechNote)) { UiKit.Text(new Rect(r.x + gap, y, r.width - gap * 2, fs * 1.3f), SpeechNote, fsS, new Color(1f, 0.8f, 0.5f), TextAnchor.MiddleLeft); y += fs * 1.4f; }
             if (Heard != null && Time.time - HeardAt < 2f) UiKit.Pill(y + fs, $"🎤 {Heard}", fsS, Color.white, r.width * 0.7f, 0.6f);

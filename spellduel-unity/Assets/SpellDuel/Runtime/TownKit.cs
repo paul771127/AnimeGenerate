@@ -22,6 +22,17 @@ namespace SpellDuel
 
         static readonly Dictionary<int, TownKit> cache = new Dictionary<int, TownKit>();
         static Material archMat, detailMat, backMat;
+        static readonly Dictionary<(Material, int), Material> layered = new Dictionary<(Material, int), Material>();
+        /// <summary>地面要往後推幾層（使用者回報村子多處貼圖閃爍：城鎮地面、路面、室內地板疊在幾乎同一個高度）</summary>
+        static int GroundLayer(string file) => file == null ? 0 : file.Contains("ground_outside") ? 3 : file.Contains("ground_town") ? 2 : file.Contains("ground_paths") ? 1 : 0;
+        static Material Layer(Material m, int layer)
+        {
+            if (layer <= 0 || !m) return m;
+            if (layered.TryGetValue((m, layer), out var lm) && lm) return lm;
+            lm = new Material(m) { name = m.name + " (ground " + layer + ")" };
+            lm.SetFloat("_OffsetFactor", layer); lm.SetFloat("_OffsetUnits", layer * 4f);
+            layered[(m, layer)] = lm; return lm;
+        }
         string dir; object layout;
 
         static readonly string[] Folders = { "TownKit/town0_cel_v1/" };
@@ -93,7 +104,8 @@ namespace SpellDuel
             foreach (var r in g.GetComponentsInChildren<Renderer>(true))
             {
                 var mats = r.sharedMaterials;
-                for (int i = 0; i < mats.Length; i++) mats[i] = backdrop ? backMat : i == 0 ? archMat : detailMat;   // 槽 0＝建築圖集、槽 1＝細節圖集；遠景全部用遠景圖集
+                int layer = GroundLayer(file);
+                for (int i = 0; i < mats.Length; i++) mats[i] = Layer(backdrop ? backMat : i == 0 ? archMat : detailMat, layer);   // 槽 0＝建築圖集、槽 1＝細節圖集；遠景全部用遠景圖集；地面往後推
                 r.sharedMaterials = mats;
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
             }
