@@ -111,8 +111,18 @@ namespace SpellDuel
             {
                 var mats = r.sharedMaterials;
                 int layer = GroundLayer(file);
-                for (int i = 0; i < mats.Length; i++) mats[i] = Layer(backdrop ? backMat : i == 0 ? archMat : detailMat, layer);   // 槽 0＝建築圖集、槽 1＝細節圖集；遠景全部用遠景圖集；地面往後推
-                r.sharedMaterials = mats;
+                // 材質槽比網格的子網格多時，多出來的材質會把最後一個子網格「再畫一次」（同一個面兩張不同的圖集互相搶）→ 使用者回報地面、建築一直閃爍。
+                // 只留跟子網格一樣多的槽；槽用原本材質的名字對應圖集（details＝細節圖集，其他＝建築圖集），不靠順序
+                Mesh mesh = r is SkinnedMeshRenderer smr ? smr.sharedMesh : r.GetComponent<MeshFilter>() ? r.GetComponent<MeshFilter>().sharedMesh : null;
+                int n = mesh ? Mathf.Clamp(mesh.subMeshCount, 1, mats.Length) : mats.Length;
+                var outMats = new Material[n];
+                for (int i = 0; i < n; i++)
+                {
+                    string mn = mats[i] ? mats[i].name.ToLowerInvariant() : "";
+                    bool detail = mn.Contains("detail") || (!mn.Contains("arch") && i == 1);
+                    outMats[i] = Layer(backdrop ? backMat : detail ? detailMat : archMat, layer);   // 遠景全部用遠景圖集；地面往後推
+                }
+                r.sharedMaterials = outMats;
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
             }
             return g;
