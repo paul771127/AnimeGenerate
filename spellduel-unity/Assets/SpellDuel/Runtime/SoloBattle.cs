@@ -1509,7 +1509,7 @@ namespace SpellDuel
                 battle.minionSpeed = diff == 0 ? 0.75f : diff == 1 ? 0.95f : 1.15f;
             }
             ai = null;
-            bossRig = BossRig.Create(); bossRig.transform.localScale = Vector3.one * DevSeed.BossScale;
+            bossRig = BossRig.Create(); ApplyBossRigScale(0);   // 熔岩巨像大兩倍（使用者要求）
             bossRig.SetVisible(bossSeen);
             if (bossSeen && !endlessMode) SpawnFade.Play(bossRig.gameObject);   // 淡入出現
             lastEnemyFeet = boss.Feet; lastEnemyHp = boss.hp; lastBossHp = boss.hp; enemyDeadShown = false;
@@ -2874,8 +2874,7 @@ namespace SpellDuel
         {
             var camW = WorldFrame.ToWorld(ray.origin);
             var d = WorldFrame.DirToWorld(ray.direction).normalized;
-            castAt = tpAimNow && Me != null ? Me.Chest + Fighter.Flat(Me.forward) * 0.45f + Vector3.up * 0.2f   // 第三人稱：從角色的法杖前方射出
-                : Hand != null && Hand.HandVisible
+            castAt = Hand != null && Hand.HandVisible
                 ? WorldFrame.ToWorld(cam.ScreenPointToRay(Hand.Palm).GetPoint(0.35f))
                 : WorldFrame.ToWorld(cam.transform.position + cam.transform.forward * 0.3f - cam.transform.up * 0.15f);
             Vector3 best = default; float bestAng = AimAssistDeg;
@@ -2889,6 +2888,14 @@ namespace SpellDuel
                 float dist = En != null && En.Alive ? Mathf.Clamp(Battle.FlatDistance(camW, En.Feet), 3f, 12f) : 8f;
                 if (d.y < -0.01f) dist = Mathf.Min(dist, -camW.y / d.y);   // 準心先碰到地板：就打到地板那一點
                 target = camW + d * dist;
+            }
+            if (tpAimNow && Me != null)
+            {
+                // 第三人稱（使用者要求）：以準心為主——角色轉向準心對到的目標，法球從角色的法杖頂端飛向準心
+                var to = Fighter.Flat(target - Me.Feet); if (to.sqrMagnitude < 1e-4f) to = Fighter.Flat(d);
+                to.Normalize();
+                castAt = Me.Feet + Vector3.up * 1.45f * HeroScale + to * 0.65f * HeroScale;
+                heroAimDir = to;
             }
             var dir = target - castAt;
             return dir.sqrMagnitude > 1e-6f ? dir.normalized : d;
@@ -2944,7 +2951,7 @@ namespace SpellDuel
             else
             {
                 if (byGesture) Say("🖐️ 放招！", 0.8f);
-                HeroAttackAnim(false);   // 第三人稱：主角揮杖放招（SoloBattle.ThirdPerson.cs）
+                HeroAttackAnim(false);   // 第三人稱：主角轉向準心、用法杖放招（SoloBattle.ThirdPerson.cs）
                 NetSend?.Invoke(new Msg { t = "act", k = visualSkill.id, ok = false, d = aim });   // 隊友畫面上的我：放招動作
                 // 放招光效：在手機前方爆開，朝法術飛行方向
                 SpellFx.CastBurst(myClass==Skills.Novice?SpellFx.NoviceStyle(visualSkill.id):myClass=="swordsman"?SpellFx.SwordStyle(visualSkill.id):myClass, myClass==Skills.Novice?visualSkill.color:Me.charging != null ? Me.charging.color : Skills.Classes[myClass].color,
@@ -3648,7 +3655,7 @@ namespace SpellDuel
                     {
                         // 換主題的 Boss（熔岩巨像 ↔ 腐化樹王）：重建外觀
                         Destroy(bossRig.gameObject);
-                        bossRig = BossRig.Create(battle.Theme); bossRig.transform.localScale = Vector3.one * DevSeed.BossScale;
+                        bossRig = BossRig.Create(battle.Theme); ApplyBossRigScale(battle.Theme);
                         bossRig.transform.SetPositionAndRotation(feetS, rot);
                     }
                     if (en.Alive && !bossAliveShown)
@@ -3962,6 +3969,21 @@ namespace SpellDuel
         }
 
         static Color WithAlpha(Color c, float a) { c.a = a; return c; }
+
+        /// <summary>Boss 外觀的大小：熔岩巨像（主題 0）是其他 Boss 的 2 倍（使用者要求）；判定半徑、身高跟著改</summary>
+        public const float GolemScaleMul = 2f;
+        static float BossVisScale(int theme) => DevSeed.BossScale * (theme == 0 ? GolemScaleMul : 1f);
+        void ApplyBossRigScale(int theme)
+        {
+            float s = BossVisScale(theme);
+            if (bossRig) bossRig.transform.localScale = Vector3.one * s;
+            var b = battle != null ? battle.enemy : null;
+            if (b != null && b.cls != null && b.cls.id == "boss")
+            {
+                b.bodyRadius = (Battle.BossModelRadius + Battle.BossBodyExtra) * s;
+                b.head.y = BossRig.Height * s;
+            }
+        }
         void Say(string s, float secs) { message = s; messageUntil = Time.time + secs; }
 
         // ================================================================ 介面（GameRoot 在單人場地完成後呼叫）

@@ -38,6 +38,9 @@ namespace SpellDuel
         const float FadeTime = 0.18f;
 
         Vector3 smFeet, smFwd; bool posed;
+        // 施法改用法杖（使用者回報：動作是空著的左手在施法）：施法時把右手（拿法杖）往前舉、左手放下
+        Transform rUpper, rLower, rHand, lUpper, lLower, lHand, staff;
+        float staffW;
 
         public static HeroModel Create(string cls, string adv)
         {
@@ -89,6 +92,10 @@ namespace SpellDuel
                 string n = c.name; int bar = n.LastIndexOf('|'); if (bar >= 0) n = n.Substring(bar + 1);
                 clips[n.ToLowerInvariant()] = c;
             }
+            Transform Bone(string n) { foreach (var t in GetComponentsInChildren<Transform>(true)) if (t.name == n) return t; return null; }
+            rUpper = Bone("J_Bip_R_UpperArm"); rLower = Bone("J_Bip_R_LowerArm"); rHand = Bone("J_Bip_R_Hand");
+            lUpper = Bone("J_Bip_L_UpperArm"); lLower = Bone("J_Bip_L_LowerArm"); lHand = Bone("J_Bip_L_Hand");
+            staff = Bone("Staff");
             if (clips.Count == 0) return true;   // 沒有動作也照樣顯示（站姿）
             graph = PlayableGraph.Create("Hero " + kit);
             graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
@@ -158,6 +165,37 @@ namespace SpellDuel
             mixer.SetInputWeight(0, fade);
             mixer.SetInputWeight(1, prev.IsValid() ? 1f - fade : 0f);
             graph.Evaluate(0f);
+            StaffPose(dt);
+        }
+
+        /// <summary>動作算完之後：施法中把右手法杖往前（放出）／往上前方（詠唱）舉，左手垂下</summary>
+        void StaffPose(float dt)
+        {
+            bool casting = curName == "cast" || curName == "cast_loop";
+            staffW = Mathf.MoveTowards(staffW, casting ? 1f : 0f, dt * 6f);
+            if (staffW <= 0.001f || !rUpper || !rLower || !rHand) return;
+            var f = transform.forward; var up = Vector3.up; var right = transform.right;
+            var armDir = curName == "cast" ? (f * 0.9f + up * 0.3f + right * 0.05f).normalized : (f * 0.45f + up * 0.85f + right * 0.1f).normalized;
+            void Aim(Transform a, Transform b, Vector3 dir)
+            {
+                var cur = b.position - a.position; if (cur.sqrMagnitude < 1e-8f) return;
+                var q = Quaternion.FromToRotation(cur.normalized, dir);
+                a.rotation = Quaternion.Slerp(Quaternion.identity, q, staffW) * a.rotation;
+            }
+            Aim(rUpper, rLower, armDir); Aim(rLower, rHand, armDir);
+            // 法杖頂端朝手臂的方向往前（法杖骨頭的 Y 軸當杖身）
+            if (staff) { var q = Quaternion.FromToRotation(staff.up, (armDir + up * 0.6f).normalized); staff.rotation = Quaternion.Slerp(Quaternion.identity, q, staffW * 0.8f) * staff.rotation; }
+            if (lUpper && lLower && lHand) { var down = (-up * 0.95f + f * 0.15f - right * 0.2f).normalized; Aim(lUpper, lLower, down); Aim(lLower, lHand, down); }
+        }
+
+        /// <summary>法球從哪裡射出（session 座標）：法杖頂端附近</summary>
+        public Vector3 CastPoint
+        {
+            get
+            {
+                float s = transform.lossyScale.y;
+                return transform.position + Vector3.up * 1.45f * s + transform.forward * 0.65f * s;
+            }
         }
     }
 }

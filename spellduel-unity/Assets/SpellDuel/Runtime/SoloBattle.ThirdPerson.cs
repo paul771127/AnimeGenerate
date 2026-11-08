@@ -20,7 +20,7 @@ namespace SpellDuel
         public const float ThirdPersonDist = 3.5f, ThirdPersonSide = 0.55f, HeroCamHeight = 2.9f, MaxLift = 2.3f;   // 使用者：至少比頭頂上方半顆頭再高 1m
         float tpLift;
         /// <summary>第三人稱主角的大小（使用者要求縮成 70%；只縮外觀，判定不變）</summary>
-        public const float HeroScale = 0.7f;
+        public const float HeroScale = 0.49f;   // 使用者：70% 再縮 70%
         /// <summary>第三人稱的準心在畫面高度的哪裡（從上往下的比例）：比正中間高一點，不會對到角色的頭</summary>
         public const float TpAimY = 0.38f;
         static bool tpAimNow;
@@ -81,10 +81,14 @@ namespace SpellDuel
         /// <summary>放招／普攻的動作（使用者回報大魔導師攻擊沒動作：以前只有詠唱放出才播，普攻沒有）。普攻播快一點</summary>
         void HeroAttackAnim(bool basic)
         {
+            if (heroAimDir.sqrMagnitude > 0.5f) { heroFaceDir = heroAimDir; heroFaceUntil = Time.time + 1.2f; }   // 轉向準心對的方向攻擊
             if (heroModel) { heroModel.PlayOnce("cast", basic ? 2.2f : 1.3f); heroCastAnimAt = Time.time; }
             else if (selfRig) { selfRig.PlayAttack(myClass == Skills.Novice ? "novice" : AttackKindOf(myClass), basic ? 0.06f : 0.15f); }
         }
-        float heroCastAnimAt = -9f;
+        float heroCastAnimAt = -9f, heroFaceUntil = -9f;
+        Vector3 heroAimDir, heroFaceDir;
+        /// <summary>角色現在要面對的方向（場地座標）：剛攻擊過＝準心的方向，否則＝手機面向</summary>
+        Vector3 HeroFacing => Time.time < heroFaceUntil ? heroFaceDir : Fighter.Flat(Me.forward);
 
         /// <summary>每幀：主角的 3D 角色跟著角色位置、面向、動作（有生成器的模型就用模型：HeroModel.cs）</summary>
         HeroModel heroModel; bool heroWasCharging; float heroLastHp = -1f;
@@ -113,7 +117,7 @@ namespace SpellDuel
                 heroWasCharging = charging;
                 if (heroLastHp >= 0f && Me.hp < heroLastHp - 0.5f && Me.Alive && !charging) heroModel.PlayOnce("hit");
                 heroLastHp = Me.hp;
-                heroModel.Drive(WorldFrame.FromWorld(Me.Feet), WorldFrame.DirFromWorld(Fighter.Flat(Me.forward)), speed, !Me.Alive, charging, Me.crouching, Me.airborneUntil > battle.now);
+                heroModel.Drive(WorldFrame.FromWorld(Me.Feet), WorldFrame.DirFromWorld(HeroFacing), speed, !Me.Alive, charging, Me.crouching, Me.airborneUntil > battle.now);
                 return;
             }
             // 沒有模型：程式拼的角色
@@ -124,7 +128,7 @@ namespace SpellDuel
                 selfRig.SetGear(GearLook.Of(Progress.Char(myClass).equipped));
                 selfRig.transform.localScale = selfRig.transform.localScale * HeroScale;
             }
-            selfRig.SetPose(WorldFrame.FromWorld(Me.Feet), WorldFrame.DirFromWorld(Fighter.Flat(Me.forward)));
+            selfRig.SetPose(WorldFrame.FromWorld(Me.Feet), WorldFrame.DirFromWorld(HeroFacing));
             selfRig.MoveSpeed = Mathf.Lerp(selfRig.MoveSpeed, speed, 0.2f);
             selfRig.SetDead(!Me.Alive);
             selfRig.Charge = Me.Alive && Me.charging != null ? Mathf.Clamp01((battle.now - Me.chargeStart) / Mathf.Max(0.3f, Me.charging.charge)) : 0f;
