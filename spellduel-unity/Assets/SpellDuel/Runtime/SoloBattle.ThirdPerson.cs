@@ -15,12 +15,12 @@ namespace SpellDuel
     {
         /// <summary>
         /// 角色在手機前方幾公尺；往左偏多少（越肩：角色在畫面偏左，正前方近身的敵人從右肩旁邊看得到）；
-        /// 攝影機高度＝角色頭頂再高半顆頭（使用者要求）→ 世界往下降「這個高度 − 手機站著的高度」
+        /// 攝影機高度＝約 2.9m（使用者要求：頭頂上方半顆頭再高 1m）→ 世界往下降「這個高度 − 手機站著的高度」
         /// </summary>
-        public const float ThirdPersonDist = 3.2f, ThirdPersonSide = 0.55f, HeroCamHeight = 1.86f, MaxLift = 1.2f;
+        public const float ThirdPersonDist = 3.5f, ThirdPersonSide = 0.55f, HeroCamHeight = 2.9f, MaxLift = 2.3f;   // 使用者：至少比頭頂上方半顆頭再高 1m
         float tpLift;
         /// <summary>第三人稱的準心在畫面高度的哪裡（從上往下的比例）：比正中間高一點，不會對到角色的頭</summary>
-        public const float TpAimY = 0.44f;
+        public const float TpAimY = 0.38f;
         static bool tpAimNow;
         /// <summary>準心的位置（GUI 座標比例，從上往下）</summary>
         static float AimYFrac => tpAimNow ? TpAimY : 0.5f;
