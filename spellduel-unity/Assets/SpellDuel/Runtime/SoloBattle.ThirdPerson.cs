@@ -19,6 +19,8 @@ namespace SpellDuel
         /// </summary>
         public const float ThirdPersonDist = 3.5f, ThirdPersonSide = 0.55f, HeroCamHeight = 2.9f, MaxLift = 2.3f;   // 使用者：至少比頭頂上方半顆頭再高 1m
         float tpLift;
+        /// <summary>第三人稱主角的大小（使用者要求縮成 70%；只縮外觀，判定不變）</summary>
+        public const float HeroScale = 0.7f;
         /// <summary>第三人稱的準心在畫面高度的哪裡（從上往下的比例）：比正中間高一點，不會對到角色的頭</summary>
         public const float TpAimY = 0.38f;
         static bool tpAimNow;
@@ -94,7 +96,7 @@ namespace SpellDuel
             // 生成器的模型
             string kit = HeroModel.KitFor(myClass, adv);
             if (heroModel && heroModel.Kit != kit) { Destroy(heroModel.gameObject); heroModel = null; }
-            if (!heroModel && kit != null) heroModel = HeroModel.Create(myClass, adv);
+            if (!heroModel && kit != null) { heroModel = HeroModel.Create(myClass, adv); if (heroModel) heroModel.transform.localScale = heroModel.transform.localScale * HeroScale; }
             if (heroModel)
             {
                 if (selfRig) { Destroy(selfRig.gameObject); selfRig = null; }
@@ -112,6 +114,7 @@ namespace SpellDuel
             {
                 selfRig = CharacterRig.Create(myClass, adv);
                 selfRig.SetGear(GearLook.Of(Progress.Char(myClass).equipped));
+                selfRig.transform.localScale = selfRig.transform.localScale * HeroScale;
             }
             selfRig.SetPose(WorldFrame.FromWorld(Me.Feet), WorldFrame.DirFromWorld(Fighter.Flat(Me.forward)));
             selfRig.MoveSpeed = Mathf.Lerp(selfRig.MoveSpeed, speed, 0.2f);
