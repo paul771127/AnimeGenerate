@@ -33,7 +33,7 @@ namespace SpellDuel
         {
             if (kind == GateJump) return theme switch
             {
-                "volcano" => "🟥 前方岩脊隆起：衝過去的時候跳起來！",
+                "volcano" => "🟥 火山噴出來的岩漿塊擋在路上：跳過去！",
                 "canyon" => "🟥 前方地面高起：跳上去！",
                 "sea" => "🟥 漂流木擋路：跳過去！",
                 "arena" => "🟥 矮木柵：跳過去！",
@@ -42,13 +42,14 @@ namespace SpellDuel
             };
             if (kind == GateDuck) return theme switch
             {
-                "volcano" or "canyon" => "🟦 低矮的岩石拱門：蹲下鑽過去！",
+                "volcano" => "🟦 熔岩從牆邊橫噴過來：蹲下鑽過去！",
+                "canyon" => "🟦 低矮的岩石拱門：蹲下鑽過去！",
                 "sea" => "🟦 斷掉的船桅橫在頭上：蹲下鑽過去！",
                 "arena" => "🟦 低橫梁：蹲下鑽過去！",
                 "castle" => "🟦 倒塌的屋梁：蹲下鑽過去！",
                 _ => "🟦 前方有大樹橫倒在頭上：蹲下鑽過去！",
             };
-            return "🟧 半邊路被擋住了：從綠色那一邊過（往旁邊跨一步）！";
+            return theme == "volcano" ? "🟧 熔岩巨石擋住半邊路：從綠色那一邊過（往旁邊跨一步）！" : "🟧 半邊路被擋住了：從綠色那一邊過（往旁邊跨一步）！";
         }
 
         /// <summary>照主題做地形外觀（座標：z＝前進方向，x＝橫跨路面，障礙在 z=0）</summary>

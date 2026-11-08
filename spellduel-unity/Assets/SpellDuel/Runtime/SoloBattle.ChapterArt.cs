@@ -98,6 +98,12 @@ namespace SpellDuel
             var line = kind == GateJump ? new Color(1f, 0.4f, 0.3f) : kind == GateDuck ? new Color(0.4f, 0.6f, 1f) : new Color(0.4f, 1f, 0.5f);
             var b = Prim(PrimitiveType.Cube, line); b.transform.SetParent(root.transform, false);
             if (kind == GateJump || kind == GateDuck) { b.transform.localPosition = new Vector3(0f, 0.01f, -1.2f); b.transform.localScale = new Vector3(GateHalfW * 2f - 0.2f, 0.01f, 0.15f); }
+            if (kind == GateJump || kind == GateDuck)
+            {
+                // 障礙正下方再一條發光的線（使用者回報看不出會絆倒的東西）：跳＝紅、蹲＝藍，從遠處就看得到障礙在哪
+                var g = Prim(PrimitiveType.Cube, Color.Lerp(line, Color.white, 0.35f)); g.transform.SetParent(root.transform, false);
+                g.transform.localPosition = new Vector3(0f, 0.015f, 0f); g.transform.localScale = new Vector3(GateHalfW * 2f + 0.2f, 0.02f, 0.28f);
+            }
             else { float side = kind == GateWallLeft ? -1f : 1f; b.transform.localPosition = new Vector3(-side * GateHalfW * 0.5f, 0.01f, -1.2f); b.transform.localScale = new Vector3(GateHalfW - 0.3f, 0.01f, 0.4f); }
             return root;
         }
