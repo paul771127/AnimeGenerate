@@ -25,6 +25,11 @@ namespace SpellDuel
         static readonly Dictionary<(Material, int), Material> layered = new Dictionary<(Material, int), Material>();
         /// <summary>地面要往後推幾層（使用者回報村子多處貼圖閃爍：城鎮地面、路面、室內地板疊在幾乎同一個高度）</summary>
         static int GroundLayer(string file) => file == null ? 0 : file.Contains("ground_outside") ? 3 : file.Contains("ground_town") ? 2 : file.Contains("ground_paths") ? 1 : 0;
+        /// <summary>
+        /// 地面實際往下放多少公尺（使用者回報城鎮地板和房屋一直閃爍：房屋的地板在 y=0，跟城鎮地面同一個高度；
+        /// 只靠深度偏移在手機上不夠）：路面 3cm、城鎮地面 6cm、外圍地面再 6cm，房屋的地板一定在最上面。
+        /// </summary>
+        static float GroundSink(string file) => file == null ? 0f : file.Contains("ground_outside") ? 0.06f : file.Contains("ground_town") ? 0.06f : file.Contains("ground_paths") ? 0.04f : 0f;
         static Material Layer(Material m, int layer)
         {
             if (layer <= 0 || !m) return m;
@@ -99,7 +104,7 @@ namespace SpellDuel
             if (!src) return null;
             var g = Object.Instantiate(src, root, false);
             g.name = file;
-            g.transform.localPosition = new Vector3(pos.x, height, pos.y);
+            g.transform.localPosition = new Vector3(pos.x, height - GroundSink(file), pos.y);
             g.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
             if (Mathf.Abs(scale - 1f) > 1e-4f) g.transform.localScale = g.transform.localScale * scale;
             foreach (var r in g.GetComponentsInChildren<Renderer>(true))
