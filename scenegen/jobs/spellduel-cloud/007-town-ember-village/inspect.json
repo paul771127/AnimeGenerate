@@ -1,0 +1,1951 @@
+{
+  "ok": true,
+  "town": 0,
+  "totalTriangles": 32295,
+  "uniqueAssetTriangles": 27246,
+  "buildings": {
+    "smith": {
+      "file": "bld_smith.fbx",
+      "triangles": 1730,
+      "enterable": true,
+      "doorWidth": 4.6,
+      "measuredDoorAtEyeHeight": {
+        "declared": 4.6,
+        "measuredAtEyeHeight": 4.575,
+        "sampleStep": 0.025
+      },
+      "interiorFloorArea": 33.2799871416,
+      "walkableAreaAfterSolids": 30.521988061049996,
+      "clearWalkSize": [
+        4.0,
+        4.0
+      ],
+      "clearWalkArea": 15.999992202000001,
+      "ceilingHeight": 3.3,
+      "measuredCeiling": 3.3199996948242188
+    },
+    "shop": {
+      "file": "bld_shop.fbx",
+      "triangles": 4480,
+      "enterable": true,
+      "doorWidth": 4.6,
+      "measuredDoorAtEyeHeight": {
+        "declared": 4.6,
+        "measuredAtEyeHeight": 4.575,
+        "sampleStep": 0.025
+      },
+      "interiorFloorArea": 33.2800052226,
+      "walkableAreaAfterSolids": 29.679982637400002,
+      "clearWalkSize": [
+        4.0,
+        4.0
+      ],
+      "clearWalkArea": 16.000006913200004,
+      "ceilingHeight": 3.3,
+      "measuredCeiling": 3.3199996948242188
+    },
+    "guild": {
+      "file": "bld_guild.fbx",
+      "triangles": 2076,
+      "enterable": true,
+      "doorWidth": 4.8,
+      "measuredDoorAtEyeHeight": {
+        "declared": 4.8,
+        "measuredAtEyeHeight": 4.8,
+        "sampleStep": 0.025
+      },
+      "interiorFloorArea": 34.56,
+      "walkableAreaAfterSolids": 31.610000000000003,
+      "clearWalkSize": [
+        4.0,
+        4.0
+      ],
+      "clearWalkArea": 16.0,
+      "ceilingHeight": 3.3,
+      "measuredCeiling": 3.319999933242798
+    },
+    "house_chief": {
+      "file": "bld_house_chief.fbx",
+      "triangles": 1700,
+      "enterable": true,
+      "doorWidth": 2.6,
+      "measuredDoorAtEyeHeight": {
+        "declared": 2.6,
+        "measuredAtEyeHeight": 2.575,
+        "sampleStep": 0.025
+      },
+      "interiorFloorArea": 33.28,
+      "walkableAreaAfterSolids": 29.425000000000004,
+      "clearWalkSize": [
+        4.0,
+        4.0
+      ],
+      "clearWalkArea": 16.0,
+      "ceilingHeight": 3.3,
+      "measuredCeiling": 3.3199996948242188
+    },
+    "dungeon": {
+      "file": "bld_dungeon.fbx",
+      "triangles": 1556,
+      "enterable": true,
+      "doorWidth": 4.0,
+      "measuredDoorAtEyeHeight": {
+        "declared": 4.0,
+        "measuredAtEyeHeight": 3.975,
+        "sampleStep": 0.025
+      },
+      "interiorFloorArea": 23.99997194199999,
+      "walkableAreaAfterSolids": 23.99997194199999,
+      "clearWalkSize": [
+        4.0,
+        4.0
+      ],
+      "clearWalkArea": 15.999979532199996,
+      "ceilingHeight": 3.3,
+      "measuredCeiling": 3.3199996948242188
+    },
+    "training": {
+      "file": "bld_training.fbx",
+      "triangles": 500,
+      "enterable": false,
+      "doorWidth": null,
+      "measuredDoorAtEyeHeight": null,
+      "interiorFloorArea": 0,
+      "walkableAreaAfterSolids": 0,
+      "clearWalkSize": null,
+      "clearWalkArea": 0,
+      "ceilingHeight": null,
+      "measuredCeiling": null
+    },
+    "bounty": {
+      "file": "bld_bounty.fbx",
+      "triangles": 952,
+      "enterable": false,
+      "doorWidth": null,
+      "measuredDoorAtEyeHeight": null,
+      "interiorFloorArea": 0,
+      "walkableAreaAfterSolids": 0,
+      "clearWalkSize": null,
+      "clearWalkArea": 0,
+      "ceilingHeight": null,
+      "measuredCeiling": null
+    },
+    "watch": {
+      "file": "bld_watch.fbx",
+      "triangles": 120,
+      "enterable": false,
+      "doorWidth": null,
+      "measuredDoorAtEyeHeight": null,
+      "interiorFloorArea": 0,
+      "walkableAreaAfterSolids": 0,
+      "clearWalkSize": null,
+      "clearWalkArea": 0,
+      "ceilingHeight": null,
+      "measuredCeiling": null
+    },
+    "landmark": {
+      "file": "bld_belltower.fbx",
+      "triangles": 1092,
+      "enterable": false,
+      "doorWidth": null,
+      "measuredDoorAtEyeHeight": null,
+      "interiorFloorArea": 0,
+      "walkableAreaAfterSolids": 0,
+      "clearWalkSize": null,
+      "clearWalkArea": 0,
+      "ceilingHeight": null,
+      "measuredCeiling": null
+    },
+    "house_a": {
+      "file": "bld_house_a.fbx",
+      "triangles": 688,
+      "enterable": false,
+      "doorWidth": null,
+      "measuredDoorAtEyeHeight": null,
+      "interiorFloorArea": 0,
+      "walkableAreaAfterSolids": 0,
+      "clearWalkSize": null,
+      "clearWalkArea": 0,
+      "ceilingHeight": null,
+      "measuredCeiling": null
+    },
+    "house_b": {
+      "file": "bld_house_b.fbx",
+      "triangles": 688,
+      "enterable": false,
+      "doorWidth": null,
+      "measuredDoorAtEyeHeight": null,
+      "interiorFloorArea": 0,
+      "walkableAreaAfterSolids": 0,
+      "clearWalkSize": null,
+      "clearWalkArea": 0,
+      "ceilingHeight": null,
+      "measuredCeiling": null
+    },
+    "house_c": {
+      "file": "bld_house_c.fbx",
+      "triangles": 688,
+      "enterable": false,
+      "doorWidth": null,
+      "measuredDoorAtEyeHeight": null,
+      "interiorFloorArea": 0,
+      "walkableAreaAfterSolids": 0,
+      "clearWalkSize": null,
+      "clearWalkArea": 0,
+      "ceilingHeight": null,
+      "measuredCeiling": null
+    },
+    "tool_shed": {
+      "file": "bld_tool_shed.fbx",
+      "triangles": 688,
+      "enterable": false,
+      "doorWidth": null,
+      "measuredDoorAtEyeHeight": null,
+      "interiorFloorArea": 0,
+      "walkableAreaAfterSolids": 0,
+      "clearWalkSize": null,
+      "clearWalkArea": 0,
+      "ceilingHeight": null,
+      "measuredCeiling": null
+    }
+  },
+  "npcs": {
+    "smith": {
+      "name": "鐵匠",
+      "pos": [
+        -9.69178,
+        8.44644
+      ],
+      "yaw": 113.19859,
+      "inside": "smith",
+      "distanceToDoor": 6.084813151593071,
+      "distanceToFacilityApproach": 6.084813151593071,
+      "conversationDistance": 1.9,
+      "conversationPlayerPos": [
+        -7.94541,
+        7.698
+      ],
+      "actualFbxCapsulePositionVerified": true
+    },
+    "story:小鐵": {
+      "name": "見習鐵匠・小鐵",
+      "pos": [
+        -8.17519,
+        10.08121
+      ],
+      "yaw": 113.19859,
+      "inside": "smith",
+      "distanceToDoor": 5.494770420135859,
+      "distanceToFacilityApproach": 5.494770420135859,
+      "conversationDistance": 1.9,
+      "conversationPlayerPos": [
+        -6.42882,
+        9.33276
+      ],
+      "actualFbxCapsulePositionVerified": true
+    },
+    "shop": {
+      "name": "店員",
+      "pos": [
+        10.13325,
+        10.45636
+      ],
+      "yaw": 241.69924,
+      "inside": "shop",
+      "distanceToDoor": 6.049998001032728,
+      "distanceToFacilityApproach": 6.049998001032728,
+      "conversationDistance": 1.9,
+      "conversationPlayerPos": [
+        8.46035,
+        9.55557
+      ],
+      "actualFbxCapsulePositionVerified": true
+    },
+    "guild": {
+      "name": "公會長",
+      "pos": [
+        -0.0,
+        16.15
+      ],
+      "yaw": 180.0,
+      "inside": "guild",
+      "distanceToDoor": 6.049999999999999,
+      "distanceToFacilityApproach": 6.049999999999999,
+      "conversationDistance": 1.9,
+      "conversationPlayerPos": [
+        -0.0,
+        14.25
+      ],
+      "actualFbxCapsulePositionVerified": true
+    },
+    "story:老焰": {
+      "name": "村長・老焰",
+      "pos": [
+        -0.65,
+        -6.2
+      ],
+      "yaw": 0.0,
+      "inside": "house_chief",
+      "distanceToDoor": 6.035105632878351,
+      "distanceToFacilityApproach": 6.035105632878351,
+      "conversationDistance": 1.9,
+      "conversationPlayerPos": [
+        -0.65,
+        -4.3
+      ],
+      "actualFbxCapsulePositionVerified": true
+    },
+    "dungeon": {
+      "name": "嚮導",
+      "pos": [
+        -10.196,
+        1.13255
+      ],
+      "yaw": 69.22775,
+      "inside": "dungeon",
+      "distanceToDoor": 4.200001150309366,
+      "distanceToFacilityApproach": 4.200001150309366,
+      "conversationDistance": 1.9,
+      "conversationPlayerPos": [
+        -8.4195,
+        1.8064
+      ],
+      "actualFbxCapsulePositionVerified": true
+    },
+    "training": {
+      "name": "教官",
+      "pos": [
+        8.82191,
+        0.49102
+      ],
+      "yaw": 297.07208,
+      "inside": null,
+      "distanceToDoor": null,
+      "distanceToFacilityApproach": 1.899994288544048,
+      "conversationDistance": 1.9,
+      "conversationPlayerPos": [
+        7.13009,
+        1.35573
+      ],
+      "actualFbxCapsulePositionVerified": true
+    },
+    "bounty": {
+      "name": "懸賞官",
+      "pos": [
+        -5.0,
+        -3.4
+      ],
+      "yaw": 0.0,
+      "inside": null,
+      "distanceToDoor": null,
+      "distanceToFacilityApproach": 1.9,
+      "conversationDistance": 1.9,
+      "conversationPlayerPos": [
+        -5.0,
+        -1.5
+      ],
+      "actualFbxCapsulePositionVerified": true
+    },
+    "watch": {
+      "name": "播報員",
+      "pos": [
+        4.8,
+        -3.3
+      ],
+      "yaw": 0.0,
+      "inside": null,
+      "distanceToDoor": null,
+      "distanceToFacilityApproach": 1.9,
+      "conversationDistance": 1.9,
+      "conversationPlayerPos": [
+        4.8,
+        -1.4
+      ],
+      "actualFbxCapsulePositionVerified": true
+    },
+    "story:米菈": {
+      "name": "旅行商人・米菈",
+      "pos": [
+        3.4,
+        3.4
+      ],
+      "yaw": 270,
+      "inside": null,
+      "distanceToDoor": null,
+      "distanceToFacilityApproach": 1.9,
+      "conversationDistance": 1.9,
+      "conversationPlayerPos": [
+        1.5,
+        3.4
+      ],
+      "actualFbxCapsulePositionVerified": true
+    }
+  },
+  "minimumRoadWidth": 2.0,
+  "roadChecks": {
+    "plaza": {
+      "width": 2.0,
+      "minimumCentreClearance": 1.3152946437965907,
+      "length": 5.0
+    },
+    "smith": {
+      "width": 2.0,
+      "minimumCentreClearance": 2.299994991516286,
+      "length": 4.215774229842011
+    },
+    "shop": {
+      "width": 2.0,
+      "minimumCentreClearance": 2.299997084964418,
+      "length": 5.458895082670118
+    },
+    "guild": {
+      "width": 2.0,
+      "minimumCentreClearance": 2.4,
+      "length": 5.1
+    },
+    "house_chief": {
+      "width": 2.0,
+      "minimumCentreClearance": 1.3,
+      "length": 5.2
+    },
+    "dungeon": {
+      "width": 2.0,
+      "minimumCentreClearance": 1.0912771093081717,
+      "length": 6.719193435577291
+    },
+    "training": {
+      "width": 2.0,
+      "minimumCentreClearance": 1.1502717070327344,
+      "length": 8.659014500003646
+    },
+    "bounty": {
+      "width": 2.0,
+      "minimumCentreClearance": 1.089417200020268,
+      "length": 8.212366016764474
+    },
+    "watch": {
+      "width": 2.0,
+      "minimumCentreClearance": 1.131370849898476,
+      "length": 8.055018499826462
+    },
+    "warp": {
+      "width": 2.0,
+      "minimumCentreClearance": 1.1303345743628301,
+      "length": 6.829219251648953
+    },
+    "mila_cart": {
+      "width": 2.0,
+      "minimumCentreClearance": 2.2,
+      "length": 2.193171219946131
+    },
+    "east": {
+      "width": 2.0,
+      "minimumCentreClearance": 1.0621501852374735,
+      "length": 15.592496380614602
+    }
+  },
+  "plaza": {
+    "center": [
+      0,
+      5
+    ],
+    "clearRadius": 3.5,
+    "solidClearanceAtClearBoundary": 0.3080799724227007
+  },
+  "eastExit": {
+    "id": "east",
+    "pos": [
+      13,
+      5
+    ],
+    "halfWidth": 1.4,
+    "directionYaw": 90
+  },
+  "worker": {
+    "ok": true,
+    "quick": false,
+    "layout": {
+      "buildings": {
+        "smith": {
+          "doorWidth": 4.6,
+          "ceilingHeight": 3.3,
+          "interiorFloorArea": 33.2799871416,
+          "walkableAreaAfterSolids": 30.521988061049996,
+          "clearRectangleSize": [
+            4.0,
+            4.0
+          ],
+          "clearWalkArea": 15.999992202000001
+        },
+        "shop": {
+          "doorWidth": 4.6,
+          "ceilingHeight": 3.3,
+          "interiorFloorArea": 33.2800052226,
+          "walkableAreaAfterSolids": 29.679982637400002,
+          "clearRectangleSize": [
+            4.0,
+            4.0
+          ],
+          "clearWalkArea": 16.000006913200004
+        },
+        "guild": {
+          "doorWidth": 4.8,
+          "ceilingHeight": 3.3,
+          "interiorFloorArea": 34.56,
+          "walkableAreaAfterSolids": 31.610000000000003,
+          "clearRectangleSize": [
+            4.0,
+            4.0
+          ],
+          "clearWalkArea": 16.0
+        },
+        "house_chief": {
+          "doorWidth": 2.6,
+          "ceilingHeight": 3.3,
+          "interiorFloorArea": 33.28,
+          "walkableAreaAfterSolids": 29.425000000000004,
+          "clearRectangleSize": [
+            4.0,
+            4.0
+          ],
+          "clearWalkArea": 16.0
+        },
+        "dungeon": {
+          "doorWidth": 4.0,
+          "ceilingHeight": 3.3,
+          "interiorFloorArea": 23.99997194199999,
+          "walkableAreaAfterSolids": 23.99997194199999,
+          "clearRectangleSize": [
+            4.0,
+            4.0
+          ],
+          "clearWalkArea": 15.999979532199996
+        }
+      },
+      "npcs": {
+        "smith": {
+          "inside": "smith",
+          "distanceToDoor": 6.084813151593071,
+          "conversationDistance": 1.9,
+          "solidClearance": 0.549997674795888
+        },
+        "story:小鐵": {
+          "inside": "smith",
+          "distanceToDoor": 5.494770420135859,
+          "conversationDistance": 1.9,
+          "solidClearance": 0.3899957108614467
+        },
+        "shop": {
+          "inside": "shop",
+          "distanceToDoor": 6.049998001032728,
+          "conversationDistance": 1.9,
+          "solidClearance": 0.32499847647452806
+        },
+        "guild": {
+          "inside": "guild",
+          "distanceToDoor": 6.049999999999999,
+          "conversationDistance": 1.9,
+          "solidClearance": 0.32500000000000284
+        },
+        "story:老焰": {
+          "inside": "house_chief",
+          "distanceToDoor": 6.035105632878351,
+          "conversationDistance": 1.9,
+          "solidClearance": 0.375
+        },
+        "dungeon": {
+          "inside": "dungeon",
+          "distanceToDoor": 4.200001150309366,
+          "conversationDistance": 1.9,
+          "solidClearance": 0.7999959740020319
+        },
+        "training": {
+          "inside": null,
+          "distanceToDoor": 1.899994288544048,
+          "conversationDistance": 1.9,
+          "solidClearance": 1.2619428169691365
+        },
+        "bounty": {
+          "inside": null,
+          "distanceToDoor": 1.9,
+          "conversationDistance": 1.9,
+          "solidClearance": 0.5
+        },
+        "watch": {
+          "inside": null,
+          "distanceToDoor": 1.9,
+          "conversationDistance": 1.9,
+          "solidClearance": 0.30000000000000027
+        },
+        "story:米菈": {
+          "inside": null,
+          "distanceToDoor": 1.9,
+          "conversationDistance": 1.9,
+          "solidClearance": 0.30000000000000027
+        }
+      },
+      "paths": {
+        "plaza": {
+          "width": 2.0,
+          "minimumCentreClearance": 1.3152946437965907,
+          "length": 5.0
+        },
+        "smith": {
+          "width": 2.0,
+          "minimumCentreClearance": 2.299994991516286,
+          "length": 4.215774229842011
+        },
+        "shop": {
+          "width": 2.0,
+          "minimumCentreClearance": 2.299997084964418,
+          "length": 5.458895082670118
+        },
+        "guild": {
+          "width": 2.0,
+          "minimumCentreClearance": 2.4,
+          "length": 5.1
+        },
+        "house_chief": {
+          "width": 2.0,
+          "minimumCentreClearance": 1.3,
+          "length": 5.2
+        },
+        "dungeon": {
+          "width": 2.0,
+          "minimumCentreClearance": 1.0912771093081717,
+          "length": 6.719193435577291
+        },
+        "training": {
+          "width": 2.0,
+          "minimumCentreClearance": 1.1502717070327344,
+          "length": 8.659014500003646
+        },
+        "bounty": {
+          "width": 2.0,
+          "minimumCentreClearance": 1.089417200020268,
+          "length": 8.212366016764474
+        },
+        "watch": {
+          "width": 2.0,
+          "minimumCentreClearance": 1.131370849898476,
+          "length": 8.055018499826462
+        },
+        "warp": {
+          "width": 2.0,
+          "minimumCentreClearance": 1.1303345743628301,
+          "length": 6.829219251648953
+        },
+        "mila_cart": {
+          "width": 2.0,
+          "minimumCentreClearance": 2.2,
+          "length": 2.193171219946131
+        },
+        "east": {
+          "width": 2.0,
+          "minimumCentreClearance": 1.0621501852374735,
+          "length": 15.592496380614602
+        }
+      },
+      "checks": {
+        "doorsAtLeast1_8m": true,
+        "interiorClearRectangleAtLeast4By4": true,
+        "ceilingsAtLeast3m": true,
+        "npcIndoorMembership": true,
+        "npcInteractionDistances": true,
+        "allFacilityRoadsConnected": true,
+        "roadWidthAtLeast2m": true,
+        "interiorPlayerRoutesConnected": true,
+        "plazaClear": true
+      },
+      "minimumRoadWidth": 2.0,
+      "plazaBoundarySolidClearance": 0.3080799724227007
+    },
+    "triangleCounts": {
+      "instancedTown": 32295,
+      "uniqueFiles": 27246,
+      "buildings": {
+        "smith": 1730,
+        "shop": 4480,
+        "guild": 2076,
+        "house_chief": 1700,
+        "dungeon": 1556,
+        "training": 500,
+        "bounty": 952,
+        "watch": 120,
+        "landmark": 1092,
+        "house_a": 688,
+        "house_b": 688,
+        "house_c": 688,
+        "tool_shed": 688
+      }
+    },
+    "checks": {
+      "doorsAtLeast1_8m": true,
+      "interiorClearRectangleAtLeast4By4": true,
+      "ceilingsAtLeast3m": true,
+      "npcIndoorMembership": true,
+      "npcInteractionDistances": true,
+      "allFacilityRoadsConnected": true,
+      "roadWidthAtLeast2m": true,
+      "interiorPlayerRoutesConnected": true,
+      "plazaClear": true,
+      "totalTrianglesWithin60000": true,
+      "singleBuildingWithin6000": true,
+      "shared2048AtlasCountTwo": true,
+      "backdrop1024": true
+    },
+    "textureSizes": {
+      "town0_arch_albedo.png": [
+        2048,
+        2048
+      ],
+      "town0_detail_albedo.png": [
+        2048,
+        2048
+      ],
+      "town0_backdrop_albedo.png": [
+        1024,
+        1024
+      ]
+    },
+    "phoneFpsMeasured": false,
+    "runtimeLights": 0,
+    "allModelsActual3D": true,
+    "exportAudit": {
+      "ok": true,
+      "blender": "4.5.15 LTS",
+      "models": 31,
+      "instancedTownTriangles": 32295,
+      "measuredDoors": {
+        "smith": {
+          "declared": 4.6,
+          "measuredAtEyeHeight": 4.575,
+          "sampleStep": 0.025
+        },
+        "shop": {
+          "declared": 4.6,
+          "measuredAtEyeHeight": 4.575,
+          "sampleStep": 0.025
+        },
+        "guild": {
+          "declared": 4.8,
+          "measuredAtEyeHeight": 4.8,
+          "sampleStep": 0.025
+        },
+        "house_chief": {
+          "declared": 2.6,
+          "measuredAtEyeHeight": 2.575,
+          "sampleStep": 0.025
+        },
+        "dungeon": {
+          "declared": 4.0,
+          "measuredAtEyeHeight": 3.975,
+          "sampleStep": 0.025
+        }
+      },
+      "measuredCeilingUnderside": {
+        "smith": 3.3199996948242188,
+        "shop": 3.3199996948242188,
+        "guild": 3.319999933242798,
+        "house_chief": 3.3199996948242188,
+        "dungeon": 3.3199996948242188
+      },
+      "freeFloorSamples": {
+        "smith": {
+          "points": 225,
+          "rectangle": [
+            4.0,
+            4.0
+          ],
+          "standingClearanceVerified": true
+        },
+        "shop": {
+          "points": 225,
+          "rectangle": [
+            4.0,
+            4.0
+          ],
+          "standingClearanceVerified": true
+        },
+        "guild": {
+          "points": 225,
+          "rectangle": [
+            4.0,
+            4.0
+          ],
+          "standingClearanceVerified": true
+        },
+        "house_chief": {
+          "points": 225,
+          "rectangle": [
+            4.0,
+            4.0
+          ],
+          "standingClearanceVerified": true
+        },
+        "dungeon": {
+          "points": 225,
+          "rectangle": [
+            4.0,
+            4.0
+          ],
+          "standingClearanceVerified": true
+        }
+      },
+      "textures": {
+        "town0_arch_albedo.png": [
+          2048,
+          2048
+        ],
+        "town0_detail_albedo.png": [
+          2048,
+          2048
+        ],
+        "town0_backdrop_albedo.png": [
+          1024,
+          1024
+        ]
+      },
+      "materialSlotsVerified": {
+        "bld_smith.fbx/BASE_smith": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_smith.fbx/ROOF_smith": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_shop.fbx/BASE_shop": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_shop.fbx/ROOF_shop": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_guild.fbx/BASE_guild": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_guild.fbx/ROOF_guild": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_house_chief.fbx/BASE_house_chief": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_house_chief.fbx/ROOF_house_chief": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_dungeon.fbx/BASE_dungeon": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_dungeon.fbx/ROOF_dungeon": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_training.fbx/BASE_training": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_bounty.fbx/BASE_bounty": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_bounty.fbx/ROOF_bounty": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_watch.fbx/BASE_watch": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_belltower.fbx/BASE_landmark": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_belltower.fbx/ROOF_landmark": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_house_a.fbx/BASE_house_a": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_house_a.fbx/ROOF_house_a": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_house_b.fbx/BASE_house_b": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_house_b.fbx/ROOF_house_b": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_house_c.fbx/BASE_house_c": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_house_c.fbx/ROOF_house_c": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_tool_shed.fbx/BASE_tool_shed": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "bld_tool_shed.fbx/ROOF_tool_shed": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "prop_crate.fbx/PROP_crate": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "prop_barrel.fbx/PROP_barrel": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "prop_lantern.fbx/PROP_lantern": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "prop_brazier.fbx/PROP_brazier": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "prop_ash.fbx/PROP_ash": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "prop_well.fbx/PROP_well": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "prop_mila_cart.fbx/PROP_mila_cart": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "ground_town.fbx/GROUND_ash": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "ground_paths.fbx/GROUND_paths": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "ground_warp.fbx/GROUND_warp": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "env_perimeter.fbx/ENV_perimeter": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "env_east_gate.fbx/ENV_east_gate": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "env_mine_entrance.fbx/ENV_mine_entrance": [
+          "TownArchitecture",
+          "TownDetails"
+        ],
+        "ground_outside.fbx/ENV_outside_ground": [
+          "TownArchitecture",
+          "TownDetails"
+        ]
+      },
+      "records": [
+        {
+          "file": "bld_smith.fbx",
+          "triangles": 1730,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -3.3350000381469727,
+              -2.6046777179544733e-07,
+              -3.9300005435943604
+            ],
+            "max": [
+              3.3350000381469727,
+              6.315000057220459,
+              3.979999542236328
+            ]
+          }
+        },
+        {
+          "file": "bld_shop.fbx",
+          "triangles": 4480,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -3.3350000381469727,
+              -2.6046777179544733e-07,
+              -3.9300005435943604
+            ],
+            "max": [
+              3.3350000381469727,
+              5.115000247955322,
+              4.480000019073486
+            ]
+          }
+        },
+        {
+          "file": "bld_guild.fbx",
+          "triangles": 2076,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -3.434999942779541,
+              -2.6046777179544733e-07,
+              -3.9300005435943604
+            ],
+            "max": [
+              3.434999942779541,
+              5.899971961975098,
+              3.979999542236328
+            ]
+          }
+        },
+        {
+          "file": "bld_house_chief.fbx",
+          "triangles": 1700,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -3.3350000381469727,
+              -2.6046777179544733e-07,
+              -3.9300005435943604
+            ],
+            "max": [
+              3.3350000381469727,
+              5.639999866485596,
+              3.979999542236328
+            ]
+          }
+        },
+        {
+          "file": "bld_dungeon.fbx",
+          "triangles": 1556,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -3.2350001335144043,
+              -2.0006945078421268e-07,
+              -3.130000591278076
+            ],
+            "max": [
+              3.2350001335144043,
+              5.115000247955322,
+              3.179999589920044
+            ]
+          }
+        },
+        {
+          "file": "bld_training.fbx",
+          "triangles": 500,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -2.0799999237060547,
+              -1.5703562894486822e-07,
+              -2.0799999237060547
+            ],
+            "max": [
+              2.0799999237060547,
+              1.5699784755706787,
+              2.0799999237060547
+            ]
+          }
+        },
+        {
+          "file": "bld_bounty.fbx",
+          "triangles": 952,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -1.8350000381469727,
+              -7.549790126404332e-09,
+              -0.8050002455711365
+            ],
+            "max": [
+              1.8350000381469727,
+              2.865000009536743,
+              0.854999840259552
+            ]
+          }
+        },
+        {
+          "file": "bld_watch.fbx",
+          "triangles": 120,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -1.6399999856948853,
+              -6.039832101123466e-08,
+              -0.8000000715255737
+            ],
+            "max": [
+              1.6399999856948853,
+              2.75,
+              0.7599999904632568
+            ]
+          }
+        },
+        {
+          "file": "bld_belltower.fbx",
+          "triangles": 1092,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -1.7350000143051147,
+              -7.549790126404332e-08,
+              -1.730000615119934
+            ],
+            "max": [
+              1.7350000143051147,
+              9.100000381469727,
+              1.7799993753433228
+            ]
+          }
+        },
+        {
+          "file": "bld_house_a.fbx",
+          "triangles": 688,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -1.7350000143051147,
+              -9.059748862227934e-08,
+              -1.730000376701355
+            ],
+            "max": [
+              1.7350000143051147,
+              4.114999771118164,
+              1.7799996137619019
+            ]
+          }
+        },
+        {
+          "file": "bld_house_b.fbx",
+          "triangles": 688,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -1.6349999904632568,
+              -8.304769494316133e-08,
+              -1.630000352859497
+            ],
+            "max": [
+              1.6349999904632568,
+              4.114999771118164,
+              1.679999589920044
+            ]
+          }
+        },
+        {
+          "file": "bld_house_c.fbx",
+          "triangles": 688,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -1.7350000143051147,
+              -9.059748862227934e-08,
+              -1.730000376701355
+            ],
+            "max": [
+              1.7350000143051147,
+              4.114999771118164,
+              1.7799996137619019
+            ]
+          }
+        },
+        {
+          "file": "bld_tool_shed.fbx",
+          "triangles": 688,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -1.4350000619888306,
+              -5.662342772438933e-08,
+              -1.2800003290176392
+            ],
+            "max": [
+              1.4350000619888306,
+              4.114999771118164,
+              1.3299996852874756
+            ]
+          }
+        },
+        {
+          "file": "prop_crate.fbx",
+          "triangles": 84,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -0.46000000834465027,
+              -3.208661070175367e-08,
+              -0.48750004172325134
+            ],
+            "max": [
+              0.46000000834465027,
+              0.8400000333786011,
+              0.48749998211860657
+            ]
+          }
+        },
+        {
+          "file": "prop_barrel.fbx",
+          "triangles": 148,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -0.3790000081062317,
+              -2.2976887947834257e-08,
+              -0.36045047640800476
+            ],
+            "max": [
+              0.3790000081062317,
+              0.8999999761581421,
+              0.36045041680336
+            ]
+          }
+        },
+        {
+          "file": "prop_lantern.fbx",
+          "triangles": 144,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -0.23000000417232513,
+              -0.33000004291534424,
+              -0.23000001907348633
+            ],
+            "max": [
+              0.23000000417232513,
+              0.5699999928474426,
+              0.23000001907348633
+            ]
+          }
+        },
+        {
+          "file": "prop_brazier.fbx",
+          "triangles": 140,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -0.3400000035762787,
+              -1.4360553635128781e-08,
+              -0.32335931062698364
+            ],
+            "max": [
+              0.3400000035762787,
+              1.399999976158142,
+              0.3233591318130493
+            ]
+          }
+        },
+        {
+          "file": "prop_ash.fbx",
+          "triangles": 96,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -0.75,
+              8.999239071272314e-06,
+              -0.5230810642242432
+            ],
+            "max": [
+              0.75,
+              0.15999099612236023,
+              0.5230810642242432
+            ]
+          }
+        },
+        {
+          "file": "prop_well.fbx",
+          "triangles": 672,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -1.1850000619888306,
+              -4.6808700915335066e-08,
+              -0.9300001859664917
+            ],
+            "max": [
+              1.1850000619888306,
+              2.7149999141693115,
+              0.979999840259552
+            ]
+          }
+        },
+        {
+          "file": "prop_mila_cart.fbx",
+          "triangles": 852,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -0.8700000047683716,
+              0.059087883681058884,
+              -1.3175528049468994
+            ],
+            "max": [
+              0.8700000047683716,
+              2.490000009536743,
+              1.4499998092651367
+            ]
+          }
+        },
+        {
+          "file": "ground_town.fbx",
+          "triangles": 504,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -13.0,
+              -6.039832101123466e-07,
+              -8.0
+            ],
+            "max": [
+              13.0,
+              1.358962208541925e-06,
+              18.0
+            ]
+          }
+        },
+        {
+          "file": "ground_paths.fbx",
+          "triangles": 281,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -6.51043176651001,
+              0.009000113233923912,
+              -2.014495849609375
+            ],
+            "max": [
+              13.316227912902832,
+              0.012000358663499355,
+              10.100000381469727
+            ]
+          }
+        },
+        {
+          "file": "ground_warp.fbx",
+          "triangles": 120,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -0.949999988079071,
+              0.009499955922365189,
+              -0.949999988079071
+            ],
+            "max": [
+              0.949999988079071,
+              0.03450004383921623,
+              0.949999988079071
+            ]
+          }
+        },
+        {
+          "file": "env_perimeter.fbx",
+          "triangles": 1824,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -13.109655380249023,
+              -6.121607043496624e-07,
+              -8.108551979064941
+            ],
+            "max": [
+              12.995942115783691,
+              1.3000012636184692,
+              18.108552932739258
+            ]
+          }
+        },
+        {
+          "file": "env_east_gate.fbx",
+          "triangles": 592,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -2.134999990463257,
+              -2.6424265442415162e-08,
+              -0.8800003528594971
+            ],
+            "max": [
+              2.134999990463257,
+              4.565000057220459,
+              0.9299996495246887
+            ]
+          }
+        },
+        {
+          "file": "env_mine_entrance.fbx",
+          "triangles": 252,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -2.75,
+              -7.549790126404332e-08,
+              -1.000000238418579
+            ],
+            "max": [
+              2.75,
+              3.5,
+              4.0
+            ]
+          }
+        },
+        {
+          "file": "ground_outside.fbx",
+          "triangles": 1218,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -65.0,
+              -0.03500453010201454,
+              -60.0
+            ],
+            "max": [
+              65.0,
+              -0.034994713962078094,
+              70.0
+            ]
+          }
+        },
+        {
+          "file": "env_volcano_a.fbx",
+          "triangles": 440,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -8.456000328063965,
+              -4.998715894544148e-07,
+              -6.620999813079834
+            ],
+            "max": [
+              8.437999725341797,
+              22.856000900268555,
+              2.6510000228881836
+            ]
+          }
+        },
+        {
+          "file": "env_volcano_b.fbx",
+          "triangles": 440,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -10.246999740600586,
+              -5.337701622920576e-07,
+              -7.070000171661377
+            ],
+            "max": [
+              10.329000473022461,
+              16.323999404907227,
+              1.9160000085830688
+            ]
+          }
+        },
+        {
+          "file": "env_cliff_a.fbx",
+          "triangles": 1240,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -8.873635292053223,
+              -3.402412573905167e-07,
+              -5.303014278411865
+            ],
+            "max": [
+              9.565387725830078,
+              17.118850708007812,
+              3.3677000999450684
+            ]
+          }
+        },
+        {
+          "file": "env_cliff_b.fbx",
+          "triangles": 1241,
+          "zeroAreaFaces": 0,
+          "uv01": true,
+          "originZero": true,
+          "bounds": {
+            "min": [
+              -11.566431045532227,
+              -4.351768723154237e-07,
+              -5.776902675628662
+            ],
+            "max": [
+              11.605506896972656,
+              10.67459774017334,
+              2.930969715118408
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "unity": {
+    "ok": true,
+    "engine": "Unity 2022.3.62f2",
+    "pipeline": "Built-in",
+    "triangleCount": 32295,
+    "uniqueTriangles": 27246,
+    "routeCapsuleSamples": 906,
+    "clearRoomCapsuleSamples": 845,
+    "npcPositionsAndTalkRanges": 10,
+    "actualFbxPhysicsVerified": true,
+    "phoneFpsMeasured": false
+  },
+  "atlasImport": {
+    "pipeline": "Unity 2022.3 Built-in",
+    "material": "Shared Unlit/Texture; cel light and shadow bands are baked into the albedo atlases.",
+    "textures": {
+      "town0_arch_albedo.png": {
+        "maxSize": 2048,
+        "sRGB": true
+      },
+      "town0_detail_albedo.png": {
+        "maxSize": 2048,
+        "sRGB": true
+      },
+      "town0_backdrop_albedo.png": {
+        "maxSize": 1024,
+        "sRGB": true
+      }
+    },
+    "shared": {
+      "mipmaps": true,
+      "readWrite": false,
+      "filter": "Trilinear",
+      "Android": "ASTC 6x6",
+      "iPhone": "ASTC 6x6"
+    },
+    "runtimeLights": 0,
+    "transparentMaterials": 0,
+    "estimatedKitTextureGpuBytesASTC6x6WithMips": 5621712,
+    "estimateNote": "Textures only; excludes game characters, UI, frame buffers, camera and tracking. Phone FPS/heat were not measured."
+  },
+  "protectedVolcanoCelV3": {
+    "files": 39,
+    "allSha256Unchanged": true
+  },
+  "assetInventory": [
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/bld_belltower.fbx",
+      "bytes": 48972,
+      "sha256": "191fc8a86fc9b7e13144018dd52a0b45507c08e07c04b42b1de47e12f9372236"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/bld_bounty.fbx",
+      "bytes": 41196,
+      "sha256": "f1f7bd51bc274d64961222eec0ce06ba0fa5bd5dadf456a0b2cdc451be6e5769"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/bld_dungeon.fbx",
+      "bytes": 56748,
+      "sha256": "efb9f90be3db08106d6ab580fc8e069cb7e74b5244eedf3a55e07aea2dcb8c69"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/bld_guild.fbx",
+      "bytes": 69436,
+      "sha256": "9ed5a852cdf5b824d19519af7110e72e9737af5a3ce6f24d7294d32cd3e3d90c"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/bld_house_a.fbx",
+      "bytes": 35036,
+      "sha256": "23a3a40b2704a1388dbc3508e5c5589686c35202da859a597ab2fea078f29df4"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/bld_house_b.fbx",
+      "bytes": 35100,
+      "sha256": "41aa214e7fa6489ed26942390de90d8af141de97f5008f35dd450062c921827c"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/bld_house_c.fbx",
+      "bytes": 35036,
+      "sha256": "fd9d020806e771d1c3033351dddba3d12fc915984ada7db068bcb190fef9ff7b"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/bld_house_chief.fbx",
+      "bytes": 60204,
+      "sha256": "52ed7e4c39c4bc8cd18491bbb9c931820452a51b950b055ba313660f674db800"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/bld_shop.fbx",
+      "bytes": 134396,
+      "sha256": "496130b3936055181e86ca0badc2605448b013b1da4a7c7213ee873cffa58ffa"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/bld_smith.fbx",
+      "bytes": 60684,
+      "sha256": "899aea32f9eec4be524bc4cd8ee90b80119429ab61c22eb8139bb07562dfeddd"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/bld_tool_shed.fbx",
+      "bytes": 35052,
+      "sha256": "3d6a2acc71c992935377d22efbe6ab746ca8b024dca75559a916bf880b3d49e3"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/bld_training.fbx",
+      "bytes": 29356,
+      "sha256": "823fcf1dd78e3b020bf5d7fd3dc89378a4c10ff528335511c5111437864e08b3"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/bld_watch.fbx",
+      "bytes": 18252,
+      "sha256": "7dcc7a9de83a31f106628607ab1f91dcbdcb6fc777cff8d568146eb3c1c0e41a"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/env_cliff_a.fbx",
+      "bytes": 67436,
+      "sha256": "ac989319d502adf6f251219703275ab0c1b9747454855c10cfdc794c23b7282b"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/env_cliff_b.fbx",
+      "bytes": 64972,
+      "sha256": "7745b6550967923e9c5b1dd8dd37511fec0cf08bbb2b1305567f12ed6136299d"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/env_east_gate.fbx",
+      "bytes": 30492,
+      "sha256": "9665e66fe76c860b329c972122a5800a8e306664c982dfe9554f1d376e77a459"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/env_mine_entrance.fbx",
+      "bytes": 22476,
+      "sha256": "ad99e2a223e2778afce498b3619c334bcce71d95fe1c79d65ceabb3e41f26c43"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/env_perimeter.fbx",
+      "bytes": 70716,
+      "sha256": "36ae0a5cba7fda946114486402cb479e548d87b0e2521a59c33c6bbc018d0465"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/env_volcano_a.fbx",
+      "bytes": 25116,
+      "sha256": "2f3b956d4384fc8554d48f1cf9d3d0ac4d00df4d91e03ae09f25a4a5317af32e"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/env_volcano_b.fbx",
+      "bytes": 25004,
+      "sha256": "ddfa8000d4dede72fcaedcaf230373a31fc5d4acbbd2458fa51ef52f2b1afdd6"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/ground_outside.fbx",
+      "bytes": 42044,
+      "sha256": "0c126e66fc1f0dfd1ec26d676f4e9fe034442b73874152f739a863334b06cb88"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/ground_paths.fbx",
+      "bytes": 23932,
+      "sha256": "91c0fcca4104dd76d228e5cad003826a82d5302a04189a1f455f3e3619bf7579"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/ground_town.fbx",
+      "bytes": 26892,
+      "sha256": "033e132b26a07db15e64e17b4330cdf5d0bb18b97bbd90be6b1a1d3168bf35a4"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/ground_warp.fbx",
+      "bytes": 19340,
+      "sha256": "41f2b6645e3efe5b1bd603eaca1e3d87aa0e7262a513949a1e73bb4e46168566"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/kit.json",
+      "bytes": 21678,
+      "sha256": "0c6af1aabe423097a310f2bbd1da25dacd5991855d46c7d72c9ac32bbe819536"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/prop_ash.fbx",
+      "bytes": 18956,
+      "sha256": "ef07e059746a71d8918507255dac5b0ec2c0f7b6ed2ad89b4a07b0b557dfc6a1"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/prop_barrel.fbx",
+      "bytes": 19996,
+      "sha256": "cefef18adacedd75b30e1f80552a867524ab757e21347db4e258a3e5563685d4"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/prop_brazier.fbx",
+      "bytes": 20316,
+      "sha256": "646e64ef8f84ff79a30b2d001cf35c7e5fda7e4762622b8983844581b7599989"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/prop_crate.fbx",
+      "bytes": 17740,
+      "sha256": "18a29f401579fa6e9c1739087625a3a8e25a5d6cc64f28f32b7f19d0799c2822"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/prop_lantern.fbx",
+      "bytes": 19340,
+      "sha256": "4889a6b048599829e4de1bd394879f5422e39bcb8f1ed2be49baa4a4e11fd88c"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/prop_mila_cart.fbx",
+      "bytes": 36908,
+      "sha256": "d54ac6577e5871f42cf92bc243b254b43049ff66bd4e692485d87eeffd38a20d"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/prop_well.fbx",
+      "bytes": 33388,
+      "sha256": "5ede85354d9a7422d7a580cdf1522d2e4db9f0a22dd6882dac828e68ac06a816"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/town0_arch_albedo.png",
+      "bytes": 3135212,
+      "sha256": "73f40a090cfee1b521f0f3c17d8261a618ea8d4edcfd0d3b926e7ef3afdf9b40"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/town0_backdrop_albedo.png",
+      "bytes": 980076,
+      "sha256": "f3334b1e392c8c2d6fd0fc03e8e16bfad6a24228a39447e6f2e741f4f62edae7"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/town0_detail_albedo.png",
+      "bytes": 2844248,
+      "sha256": "3066745f07df4c9549615d00176fadb5819ec31e471f846d3ae1c4f13582ac69"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/TownKit/town0_cel_v1/town_layout.json",
+      "bytes": 85347,
+      "sha256": "4928fb941484fb12c5e50167990f893c444a2840987b54e7ecc505458ed6f492"
+    }
+  ],
+  "previewAnnotation": {
+    "method": "Actual Unity capture, direct pixel paste with projected numbered labels and text legend only. No resizing, repainting or image generation used for previews.",
+    "overviewLabels": [
+      {
+        "id": "B1",
+        "name": "鐵匠鋪",
+        "x": 865.627136,
+        "y": 529.0222
+      },
+      {
+        "id": "B2",
+        "name": "道具店",
+        "x": 1461.1311,
+        "y": 744.7867
+      },
+      {
+        "id": "B3",
+        "name": "職業公會",
+        "x": 1251.81348,
+        "y": 529.0222
+      },
+      {
+        "id": "B4",
+        "name": "老焰的家",
+        "x": 728.7107,
+        "y": 921.6196
+      },
+      {
+        "id": "B5",
+        "name": "副本嚮導棚",
+        "x": 612.5796,
+        "y": 624.04
+      },
+      {
+        "id": "B6",
+        "name": "訓練場",
+        "x": 1271.87354,
+        "y": 1016.764
+      },
+      {
+        "id": "B7",
+        "name": "討伐告示板",
+        "x": 517.332642,
+        "y": 828.7955
+      },
+      {
+        "id": "B8",
+        "name": "觀戰席",
+        "x": 901.8215,
+        "y": 1067.00562
+      },
+      {
+        "id": "B9",
+        "name": "晨鐘鐘樓",
+        "x": 1017.09863,
+        "y": 451.066223
+      },
+      {
+        "id": "B10",
+        "name": "民房一",
+        "x": 474.878418,
+        "y": 732.5953
+      },
+      {
+        "id": "B11",
+        "name": "民房二",
+        "x": 1101.708,
+        "y": 1103.28918
+      },
+      {
+        "id": "B12",
+        "name": "民房三",
+        "x": 1499.748,
+        "y": 604.869263
+      },
+      {
+        "id": "B13",
+        "name": "礦工工具棚",
+        "x": 1139.21045,
+        "y": 432.391418
+      },
+      {
+        "id": "N1",
+        "name": "鐵匠",
+        "x": 795.776245,
+        "y": 517.7214
+      },
+      {
+        "id": "N2",
+        "name": "見習鐵匠・小鐵",
+        "x": 888.051758,
+        "y": 510.215454
+      },
+      {
+        "id": "N3",
+        "name": "店員",
+        "x": 1589.56787,
+        "y": 795.0062
+      },
+      {
+        "id": "N4",
+        "name": "公會長",
+        "x": 1309.97791,
+        "y": 516.2144
+      },
+      {
+        "id": "N5",
+        "name": "村長・老焰",
+        "x": 602.473755,
+        "y": 1023.31812
+      },
+      {
+        "id": "N6",
+        "name": "嚮導",
+        "x": 551.3074,
+        "y": 646.4768
+      },
+      {
+        "id": "N7",
+        "name": "教官",
+        "x": 1262.48743,
+        "y": 1047.45728
+      },
+      {
+        "id": "N8",
+        "name": "懸賞官",
+        "x": 555.4575,
+        "y": 844.6705
+      },
+      {
+        "id": "N9",
+        "name": "播報員",
+        "x": 945.3909,
+        "y": 1068.21362
+      },
+      {
+        "id": "N10",
+        "name": "旅行商人・米菈",
+        "x": 1110.29126,
+        "y": 839.482849
+      },
+      {
+        "id": "F1",
+        "name": "傳送陣",
+        "x": 1086.9286460529966,
+        "y": 954.209358494923
+      },
+      {
+        "id": "F2",
+        "name": "米菈的貨車",
+        "x": 1177.6480640625496,
+        "y": 872.6230660816631
+      },
+      {
+        "id": "F3",
+        "name": "水井",
+        "x": 1374.873078688879,
+        "y": 653.5008488885406
+      }
+    ],
+    "nativeCamera": [
+      22,
+      27,
+      -23
+    ],
+    "projectionVerifiedAgainstUnity": true
+  },
+  "phoneFpsMeasured": false
+}

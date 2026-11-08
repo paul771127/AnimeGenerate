@@ -1,0 +1,14 @@
+{
+  "tool": "built-in image_gen",
+  "newAiImageGeneration": true,
+  "asset": "town-surfaces-source.png",
+  "sourceDimensions": [
+    1254,
+    1254
+  ],
+  "sourceSha256": "949345a0355431ee442c89f0b6e047b8d9affef3c6a57cff0ac76e530af846c9",
+  "prompt": "Use case: stylized-concept. Asset type: a single production color texture source atlas for an original anime cel-shaded mobile 3D volcanic blacksmith village. The reference image is STYLE REFERENCE ONLY: match its broad painted brushwork, clean two-tone forms, muted natural material colors. Generate a perfectly square 2048 by 2048 flat orthographic 2 by 2 material swatch sheet, four equally sized square quadrants touching with no gutters, no frames, no text. TOP LEFT: warm smoked chestnut timber planks, long straight vertical wood grain, broad hand-painted grain strokes, subtle bevel highlights, occasional small knots, calm low contrast. TOP RIGHT: weathered red-brown terracotta roof tiles in layered horizontal rows, large overlapping rounded scales with slight irregularity and sparse charcoal ash. BOTTOM LEFT: warm ivory and sand plaster wall, broad chalky brush strokes, very subtle wear, no bricks, no symbols. BOTTOM RIGHT: pale warm linen canvas, softly painted woven strokes and very shallow folds, evenly lit neutral enough to tint for awnings and banners. All quadrants fill their square completely and show only the material at uniform scale, edge-to-edge, flat front view, no perspective, no objects, no architecture, no scenery, no characters, no light source, no glow, no deep cast shadows. Rich polished hand-painted Japanese animation background aesthetic, readable at small screen scale, NOT photorealistic, no noisy fine grain, no logos, no glyphs, no watermark. The atlas is a real texture input, not a village concept render.",
+  "styleReference": "scenegen/jobs/spellduel-cloud/006-volcano-cel-veins/previews/part_wall_straight.png",
+  "runtimeBake": "Source quadrants become two 2048 shared atlases, with baked cel light/shadow bands; stone luminance reuses the existing volcano source artwork in #2c3842..#6f6f6b. One 1024 backdrop atlas and four backdrop FBX come unchanged from volcano_cel_v3.",
+  "previewNote": "All scene previews are actual Unity or Blender renders. AI generated only material swatches, not the town previews."
+}

@@ -1,0 +1,7 @@
+{
+  "styleId": "ember_village_cel_v1",
+  "quality": "mobile",
+  "sourceKit": "../../../../spellduel-unity/Assets/SpellDuel/Resources/SceneKit/volcano_cel_v3",
+  "materialReference": "../../../tools/town_cel_v1/extensions/ember_town_v1/reference/town-surfaces-source.png",
+  "stoneSource": "../../codex-style/volcano-cel-v1/source/anime-volcano-source-atlas.png"
+}

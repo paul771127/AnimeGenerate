@@ -1,0 +1,1071 @@
+{
+  "version": 1,
+  "kit": "town0_cel_v1",
+  "town": 0,
+  "styleId": "ember_village_cel_v1",
+  "sourceStyle": "volcano_cel_v3",
+  "units": "metres",
+  "up": "+Y",
+  "forward": "+Z",
+  "textures": {
+    "architecture": "town0_arch_albedo.png",
+    "details": "town0_detail_albedo.png",
+    "backdrop": "town0_backdrop_albedo.png"
+  },
+  "materialRule": "Built-in Unlit/Texture. Main mesh slots: 0 architecture, 1 details. Backdrop uses only backdrop. No .mat required.",
+  "layout": "town_layout.json",
+  "assets": [
+    {
+      "file": "bld_smith.fbx",
+      "triangles": 1730,
+      "objects": [
+        "BASE_smith",
+        "ROOF_smith"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -3.3350000381469727,
+          0.0,
+          -3.930000066757202
+        ],
+        "max": [
+          3.3350000381469727,
+          6.315000057220459,
+          3.9800000190734863
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "bld_shop.fbx",
+      "triangles": 4480,
+      "objects": [
+        "BASE_shop",
+        "ROOF_shop"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -3.3350000381469727,
+          0.0,
+          -3.930000066757202
+        ],
+        "max": [
+          3.3350000381469727,
+          5.114999771118164,
+          4.480000019073486
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "bld_guild.fbx",
+      "triangles": 2076,
+      "objects": [
+        "BASE_guild",
+        "ROOF_guild"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -3.434999942779541,
+          0.0,
+          -3.930000066757202
+        ],
+        "max": [
+          3.434999942779541,
+          5.899971961975098,
+          3.9800000190734863
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "bld_house_chief.fbx",
+      "triangles": 1700,
+      "objects": [
+        "BASE_house_chief",
+        "ROOF_house_chief"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -3.3350000381469727,
+          0.0,
+          -3.930000066757202
+        ],
+        "max": [
+          3.3350000381469727,
+          5.639999866485596,
+          3.9800000190734863
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "bld_dungeon.fbx",
+      "triangles": 1556,
+      "objects": [
+        "BASE_dungeon",
+        "ROOF_dungeon"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -3.2350001335144043,
+          0.0,
+          -3.130000114440918
+        ],
+        "max": [
+          3.2350001335144043,
+          5.114999771118164,
+          3.180000066757202
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "bld_training.fbx",
+      "triangles": 500,
+      "objects": [
+        "BASE_training"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -2.0799999237060547,
+          0.0,
+          -2.0799999237060547
+        ],
+        "max": [
+          2.0799999237060547,
+          1.5699785947799683,
+          2.0799999237060547
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "bld_bounty.fbx",
+      "triangles": 952,
+      "objects": [
+        "BASE_bounty",
+        "ROOF_bounty"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -1.8350000381469727,
+          0.0,
+          -0.8050000071525574
+        ],
+        "max": [
+          1.8350000381469727,
+          2.865000009536743,
+          0.8550000190734863
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "bld_watch.fbx",
+      "triangles": 120,
+      "objects": [
+        "BASE_watch"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -1.6399999856948853,
+          0.0,
+          -0.800000011920929
+        ],
+        "max": [
+          1.6399999856948853,
+          2.75,
+          0.7599999904632568
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "bld_belltower.fbx",
+      "triangles": 1092,
+      "objects": [
+        "BASE_landmark",
+        "ROOF_landmark"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -1.7350000143051147,
+          0.0,
+          -1.7300000190734863
+        ],
+        "max": [
+          1.7350000143051147,
+          9.100000381469727,
+          1.7799999713897705
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "bld_house_a.fbx",
+      "triangles": 688,
+      "objects": [
+        "BASE_house_a",
+        "ROOF_house_a"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -1.7350000143051147,
+          0.0,
+          -1.7300000190734863
+        ],
+        "max": [
+          1.7350000143051147,
+          4.114999771118164,
+          1.7799999713897705
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "bld_house_b.fbx",
+      "triangles": 688,
+      "objects": [
+        "BASE_house_b",
+        "ROOF_house_b"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -1.6349999904632568,
+          0.0,
+          -1.6299999952316284
+        ],
+        "max": [
+          1.6349999904632568,
+          4.114999771118164,
+          1.6799999475479126
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "bld_house_c.fbx",
+      "triangles": 688,
+      "objects": [
+        "BASE_house_c",
+        "ROOF_house_c"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -1.7350000143051147,
+          0.0,
+          -1.7300000190734863
+        ],
+        "max": [
+          1.7350000143051147,
+          4.114999771118164,
+          1.7799999713897705
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "bld_tool_shed.fbx",
+      "triangles": 688,
+      "objects": [
+        "BASE_tool_shed",
+        "ROOF_tool_shed"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -1.4350000619888306,
+          0.0,
+          -1.2799999713897705
+        ],
+        "max": [
+          1.4350000619888306,
+          4.114999771118164,
+          1.3300000429153442
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "prop_crate.fbx",
+      "triangles": 84,
+      "objects": [
+        "PROP_crate"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -0.46000000834465027,
+          0.0,
+          -0.48749998211860657
+        ],
+        "max": [
+          0.46000000834465027,
+          0.8399999737739563,
+          0.48749998211860657
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "prop_barrel.fbx",
+      "triangles": 148,
+      "objects": [
+        "PROP_barrel"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -0.3790000081062317,
+          0.0,
+          -0.36045041680336
+        ],
+        "max": [
+          0.3790000081062317,
+          0.8999999761581421,
+          0.36045041680336
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "prop_lantern.fbx",
+      "triangles": 144,
+      "objects": [
+        "PROP_lantern"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -0.23000000417232513,
+          -0.33000001311302185,
+          -0.23000000417232513
+        ],
+        "max": [
+          0.23000000417232513,
+          0.5699999928474426,
+          0.23000000417232513
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "prop_brazier.fbx",
+      "triangles": 140,
+      "objects": [
+        "PROP_brazier"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -0.3400000035762787,
+          0.0,
+          -0.3233592212200165
+        ],
+        "max": [
+          0.3400000035762787,
+          1.399999976158142,
+          0.3233592212200165
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "prop_ash.fbx",
+      "triangles": 96,
+      "objects": [
+        "PROP_ash"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -0.75,
+          8.999831152323168e-06,
+          -0.5230810642242432
+        ],
+        "max": [
+          0.75,
+          0.15999099612236023,
+          0.5230810642242432
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "prop_well.fbx",
+      "triangles": 672,
+      "objects": [
+        "PROP_well"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -1.1850000619888306,
+          0.0,
+          -0.9300000071525574
+        ],
+        "max": [
+          1.1850000619888306,
+          2.7149999141693115,
+          0.9800000190734863
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "prop_mila_cart.fbx",
+      "triangles": 852,
+      "objects": [
+        "PROP_mila_cart"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -0.8700000047683716,
+          0.05908795818686485,
+          -1.3175528049468994
+        ],
+        "max": [
+          0.8700000047683716,
+          2.490000009536743,
+          1.4500000476837158
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "ground_town.fbx",
+      "triangles": 504,
+      "objects": [
+        "GROUND_ash"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -13.0,
+          0.0,
+          -8.0
+        ],
+        "max": [
+          13.0,
+          0.0,
+          18.0
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "ground_paths.fbx",
+      "triangles": 281,
+      "objects": [
+        "GROUND_paths"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -6.51043176651001,
+          0.008999999612569809,
+          -2.014495849609375
+        ],
+        "max": [
+          13.316227912902832,
+          0.012000000104308128,
+          10.100000381469727
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "ground_warp.fbx",
+      "triangles": 120,
+      "objects": [
+        "GROUND_warp"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -0.949999988079071,
+          0.009499999694526196,
+          -0.949999988079071
+        ],
+        "max": [
+          0.949999988079071,
+          0.03449999913573265,
+          0.949999988079071
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "env_perimeter.fbx",
+      "triangles": 1824,
+      "objects": [
+        "ENV_perimeter"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -13.109655380249023,
+          0.0,
+          -8.108551979064941
+        ],
+        "max": [
+          12.995942115783691,
+          1.2999999523162842,
+          18.108552932739258
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "env_east_gate.fbx",
+      "triangles": 592,
+      "objects": [
+        "ENV_east_gate"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -2.134999990463257,
+          0.0,
+          -0.8799999952316284
+        ],
+        "max": [
+          2.134999990463257,
+          4.565000057220459,
+          0.9300000071525574
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "env_mine_entrance.fbx",
+      "triangles": 252,
+      "objects": [
+        "ENV_mine_entrance"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -2.75,
+          0.0,
+          -1.0
+        ],
+        "max": [
+          2.75,
+          3.5,
+          4.0
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "ground_outside.fbx",
+      "triangles": 1218,
+      "objects": [
+        "ENV_outside_ground"
+      ],
+      "atlas": "architecture",
+      "materialSlots": [
+        "architecture",
+        "details"
+      ],
+      "bounds": {
+        "min": [
+          -65.0,
+          -0.03500000014901161,
+          -60.0
+        ],
+        "max": [
+          65.0,
+          -0.03500000014901161,
+          70.0
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "backdrop_rock",
+      "variant": "a",
+      "file": "env_volcano_a.fbx",
+      "triangles": 440,
+      "trianglesPerObject": {
+        "backdrop_rock_a": 440
+      },
+      "triangleBudget": 1500,
+      "bounds": {
+        "min": [
+          -8.456000328063965,
+          0.0,
+          -6.620999813079834
+        ],
+        "max": [
+          8.437999725341797,
+          22.856000900268555,
+          2.6510000228881836
+        ]
+      },
+      "size": [
+        16.89400005340576,
+        22.856000900268555,
+        9.271999835968018
+      ],
+      "pivot": "bottom centre; front faces +Z (back faces removed); place on the outer ring and yaw it toward the play area",
+      "objects": [
+        "backdrop_rock_a"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "backdrop",
+      "topLine": null,
+      "opening": null,
+      "maxFaceAreaM2": 10.552268981933594,
+      "fileBytes": 25116,
+      "texture": {
+        "backdrop_rock_a": {
+          "emissiveFraction": 0.08951393709977869,
+          "atlas": "backdrop"
+        }
+      },
+      "geometryStyle": "cratered_volcano_cone",
+      "lavaRiverCount": 2,
+      "crater": true,
+      "sourceBaseTriangles": 1241,
+      "sourceV1ColourStatistics": {
+        "backdrop_rock_a": {
+          "avg": "#556063",
+          "lit90": "#6c6e6c",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      },
+      "veinDistribution": {
+        "distribution": "branched_rivers",
+        "branches": 4,
+        "shortCracks": 0
+      },
+      "materialSlots": [
+        "backdrop"
+      ]
+    },
+    {
+      "id": "backdrop_rock",
+      "variant": "b",
+      "file": "env_volcano_b.fbx",
+      "triangles": 440,
+      "trianglesPerObject": {
+        "backdrop_rock_b": 440
+      },
+      "triangleBudget": 1500,
+      "bounds": {
+        "min": [
+          -10.246999740600586,
+          0.0,
+          -7.070000171661377
+        ],
+        "max": [
+          10.329000473022461,
+          16.323999404907227,
+          1.9160000085830688
+        ]
+      },
+      "size": [
+        20.576000213623047,
+        16.323999404907227,
+        8.986000180244446
+      ],
+      "pivot": "bottom centre; front faces +Z (back faces removed); place on the outer ring and yaw it toward the play area",
+      "objects": [
+        "backdrop_rock_b"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "backdrop",
+      "topLine": null,
+      "opening": null,
+      "maxFaceAreaM2": 9.237393379211426,
+      "fileBytes": 25004,
+      "texture": {
+        "backdrop_rock_b": {
+          "emissiveFraction": 0.09789053932494504,
+          "atlas": "backdrop"
+        }
+      },
+      "geometryStyle": "cratered_volcano_cone",
+      "lavaRiverCount": 2,
+      "crater": true,
+      "sourceBaseTriangles": 1247,
+      "sourceV1ColourStatistics": {
+        "backdrop_rock_b": {
+          "avg": "#545f63",
+          "lit90": "#6b6d6c",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      },
+      "veinDistribution": {
+        "distribution": "branched_rivers",
+        "branches": 4,
+        "shortCracks": 0
+      },
+      "materialSlots": [
+        "backdrop"
+      ]
+    },
+    {
+      "id": "backdrop_rock",
+      "variant": "c",
+      "file": "env_cliff_a.fbx",
+      "triangles": 1240,
+      "trianglesPerObject": {
+        "backdrop_rock_c": 1240
+      },
+      "triangleBudget": 1500,
+      "bounds": {
+        "min": [
+          -8.873635292053223,
+          0.0,
+          -5.303014278411865
+        ],
+        "max": [
+          9.565387725830078,
+          17.118850708007812,
+          3.3677003383636475
+        ]
+      },
+      "size": [
+        18.4390230178833,
+        17.118850708007812,
+        8.670714616775513
+      ],
+      "pivot": "bottom centre; front faces +Z (back faces removed); place on the outer ring and yaw it toward the play area",
+      "objects": [
+        "backdrop_rock_c"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "backdrop",
+      "topLine": null,
+      "opening": null,
+      "maxFaceAreaM2": 3.8215835094451904,
+      "fileBytes": 67436,
+      "texture": {
+        "backdrop_rock_c": {
+          "emissiveFraction": 0.0,
+          "atlas": "backdrop"
+        }
+      },
+      "sourceBaseTriangles": 1240,
+      "sourceV1ColourStatistics": {
+        "backdrop_rock_c": {
+          "avg": "#525e63",
+          "lit90": "#6b6d6b",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      },
+      "materialSlots": [
+        "backdrop"
+      ]
+    },
+    {
+      "id": "backdrop_rock",
+      "variant": "d",
+      "file": "env_cliff_b.fbx",
+      "triangles": 1241,
+      "trianglesPerObject": {
+        "backdrop_rock_d": 1241
+      },
+      "triangleBudget": 1500,
+      "bounds": {
+        "min": [
+          -11.566431045532227,
+          0.0,
+          -5.776902675628662
+        ],
+        "max": [
+          11.605506896972656,
+          10.67459774017334,
+          2.9309699535369873
+        ]
+      },
+      "size": [
+        23.171937942504883,
+        10.67459774017334,
+        8.70787262916565
+      ],
+      "pivot": "bottom centre; front faces +Z (back faces removed); place on the outer ring and yaw it toward the play area",
+      "objects": [
+        "backdrop_rock_d"
+      ],
+      "children": [],
+      "separateFiles": null,
+      "atlas": "backdrop",
+      "topLine": null,
+      "opening": null,
+      "maxFaceAreaM2": 4.4952802658081055,
+      "fileBytes": 64972,
+      "texture": {
+        "backdrop_rock_d": {
+          "emissiveFraction": 0.0,
+          "atlas": "backdrop"
+        }
+      },
+      "sourceBaseTriangles": 1241,
+      "sourceV1ColourStatistics": {
+        "backdrop_rock_d": {
+          "avg": "#545f63",
+          "lit90": "#6e6f6c",
+          "note": "new cel palette; obsolete v3 brown colour limits intentionally superseded; style is reviewed visually"
+        }
+      },
+      "materialSlots": [
+        "backdrop"
+      ]
+    }
+  ],
+  "triangles": {
+    "instancedTown": 32295,
+    "uniqueFiles": 27246,
+    "buildings": {
+      "smith": 1730,
+      "shop": 4480,
+      "guild": 2076,
+      "house_chief": 1700,
+      "dungeon": 1556,
+      "training": 500,
+      "bounty": 952,
+      "watch": 120,
+      "landmark": 1092,
+      "house_a": 688,
+      "house_b": 688,
+      "house_c": 688,
+      "tool_shed": 688
+    }
+  },
+  "previewNpcMarkersShipped": false,
+  "runtimeLights": 0,
+  "transparentMaterials": 0
+}

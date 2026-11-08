@@ -1,0 +1,14 @@
+{
+  "apiVersion": 1,
+  "requestId": "spellduel-007-generate",
+  "action": "generate",
+  "config": {
+    "styleId": "ember_village_cel_v1",
+    "quality": "mobile",
+    "sourceKit": "E:\\AI接案\\SpellDuel-repo\\spellduel-unity\\Assets\\SpellDuel\\Resources\\SceneKit\\volcano_cel_v3",
+    "materialReference": "E:\\AI接案\\rpg-world-builder\\extensions\\ember_town_v1\\reference\\town-surfaces-source.png",
+    "stoneSource": "E:\\AI接案\\SpellDuel-repo\\scenegen\\jobs\\codex-style\\volcano-cel-v1\\source\\anime-volcano-source-atlas.png"
+  },
+  "outputFolder": "E:\\AI接案\\rpg-world-builder\\runs\\spellduel-007-ember-town-20261108T073354569301-r7",
+  "timeoutSeconds": 1800
+}

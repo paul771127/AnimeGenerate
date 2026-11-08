@@ -1,0 +1,29 @@
+{
+  "pipeline": "Unity 2022.3 Built-in",
+  "material": "Shared Unlit/Texture; cel light and shadow bands are baked into the albedo atlases.",
+  "textures": {
+    "town0_arch_albedo.png": {
+      "maxSize": 2048,
+      "sRGB": true
+    },
+    "town0_detail_albedo.png": {
+      "maxSize": 2048,
+      "sRGB": true
+    },
+    "town0_backdrop_albedo.png": {
+      "maxSize": 1024,
+      "sRGB": true
+    }
+  },
+  "shared": {
+    "mipmaps": true,
+    "readWrite": false,
+    "filter": "Trilinear",
+    "Android": "ASTC 6x6",
+    "iPhone": "ASTC 6x6"
+  },
+  "runtimeLights": 0,
+  "transparentMaterials": 0,
+  "estimatedKitTextureGpuBytesASTC6x6WithMips": 5621712,
+  "estimateNote": "Textures only; excludes game characters, UI, frame buffers, camera and tracking. Phone FPS/heat were not measured."
+}
