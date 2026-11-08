@@ -45,6 +45,8 @@
 
 ### A. 第一大關的障礙物、陷阱、脫出點
 
+> **更新**：跳、蹲、側步的障礙物（`volcano_jump_*`、`volcano_duck_*`、`volcano_side_*`）**不用畫了**。使用者要求改成立體的「火山噴出來的岩漿塊」，遊戲已經用程式做成 3D（`SoloBattle.LavaGates.cs`）。A 部分只要重畫噴口、落石、脫出點（9 張）。
+
 位置：`Assets/SpellDuel/Resources/StageArt/Obstacles/`，共 18 張，原檔名覆蓋。
 
 規格照 `CODEX_TASK_OBSTACLE_ART.md`，**以下比例一定要跟舊圖一樣**（遊戲照這些數字擺放）：
