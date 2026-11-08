@@ -119,7 +119,7 @@ namespace SpellDuel
             {
                 float far = Battle.FlatDistance(g.pos, me);
                 if (g.go && g.go.activeSelf != (far < GateShow)) g.go.SetActive(far < GateShow);
-                if (far < 13f && g.go && g.go.GetComponent<LavaDrop>() is LavaDrop ld) ld.Trigger();   // 岩漿塊：走近時從天上砸下來／熔岩從噴口噴出來
+                if (far < 13f && g.go && g.go.GetComponent<LavaGateDrop>() is LavaGateDrop ld) ld.Trigger();   // 岩漿塊：走近時從天上砸下來／熔岩從噴口噴出來
                 if (far > 6f) { g.lastSide = 0f; g.seenPose = false; continue; }
                 var right = new Vector3(g.fwd.z, 0f, -g.fwd.x);
                 float s = Vector3.Dot(me - g.pos, g.fwd), lat = Vector3.Dot(me - g.pos, right);

@@ -26,26 +26,6 @@ namespace SpellDuel
             return lavaHotMat;
         }
 
-        /// <summary>落下／噴出的動畫：玩家走近才開始（BodyGates 裡叫 Trigger）</summary>
-        sealed class LavaDrop : MonoBehaviour
-        {
-            public Transform body; public bool jet; public float startAt = -1f;
-            const float FallTime = 0.55f, JetTime = 0.45f;
-            public bool Done => startAt >= 0f && Time.time - startAt > (jet ? JetTime : FallTime);
-            public void Trigger() { if (startAt < 0f) { startAt = Time.time; if (body) body.gameObject.SetActive(true); } }
-            void Awake() { }
-            void Update()
-            {
-                if (!body) return;
-                if (startAt < 0f) { if (body.gameObject.activeSelf) body.gameObject.SetActive(false); return; }
-                float k = Mathf.Clamp01((Time.time - startAt) / (jet ? JetTime : FallTime));
-                if (jet) body.localScale = new Vector3(Mathf.SmoothStep(0.02f, 1f, k), 1f, 1f);                 // 熔岩流從噴口往對面伸過去
-                else { float e = k * k; body.localPosition = new Vector3(0f, Mathf.Lerp(9f, 0f, e), 0f); }          // 從天上砸下來
-                // 落地後輕輕脈動（像還在發熱）
-                if (k >= 1f && !jet) { float p = 1f + 0.015f * Mathf.Sin(Time.time * 4f + transform.position.x); body.localScale = new Vector3(1f, p, 1f); }
-            }
-        }
-
         /// <summary>熔岩地圖的障礙（只有熔岩主題；其他主題 null）</summary>
         GameObject LavaGate(int kind, string theme)
         {
@@ -81,7 +61,7 @@ namespace SpellDuel
                 GlowHalo.Create(body, at + Vector3.up * size * 0.6f, new Color(1f, 0.45f, 0.15f, 0.55f), size * 2.2f, 0.35f);
             }
             float span = GateHalfW * 2f - 0.3f;
-            var drop = root.AddComponent<LavaDrop>(); drop.body = body;
+            var drop = root.AddComponent<LavaGateDrop>(); if (drop) drop.body = body; else body.gameObject.SetActive(true);   // 動畫元件建立失敗也要看得到岩漿塊
             if (kind == GateJump)
             {
                 int n = 4;
@@ -90,7 +70,7 @@ namespace SpellDuel
             }
             else if (kind == GateDuck)
             {
-                drop.jet = true;
+                if (drop) drop.jet = true;
                 float head = (StandH > 0.5f ? StandH : 1.55f) - 0.25f, y = head + 0.12f;   // 熔岩流的底部約在 head - 0.1
                 body.localPosition = new Vector3(-GateHalfW, 0f, 0f);   // 從左邊牆的噴口往右噴（縮放的原點在噴口）
                 var jet = Glow(PrimitiveType.Cylinder, new Vector3(GateHalfW, y, 0f), new Vector3(0.36f, GateHalfW, 0.36f)); jet.localRotation = Quaternion.Euler(0f, 0f, 90f);
@@ -112,8 +92,27 @@ namespace SpellDuel
             var b = Prim(PrimitiveType.Cube, line); b.transform.SetParent(root.transform, false);
             if (kind == GateJump || kind == GateDuck) { b.transform.localPosition = new Vector3(0f, 0.01f, -1.2f); b.transform.localScale = new Vector3(GateHalfW * 2f - 0.2f, 0.01f, 0.15f); }
             else { float s2 = kind == GateWallLeft ? -1f : 1f; b.transform.localPosition = new Vector3(-s2 * GateHalfW * 0.5f, 0.01f, -1.2f); b.transform.localScale = new Vector3(GateHalfW - 0.3f, 0.01f, 0.4f); }
-            body.gameObject.SetActive(false);
+            if (drop) body.gameObject.SetActive(false);
             return root;
+        }
+    }
+
+    /// <summary>岩漿塊落下／熔岩噴出的動畫（獨立的類別：巢狀的 MonoBehaviour 在打包後可能建立不起來）</summary>
+    public sealed class LavaGateDrop : MonoBehaviour
+    {
+        public Transform body; public bool jet; public float startAt = -1f;
+        const float FallTime = 0.55f, JetTime = 0.45f;
+        public bool Done => startAt >= 0f && Time.time - startAt > (jet ? JetTime : FallTime);
+        public void Trigger() { if (startAt < 0f) { startAt = Time.time; if (body) body.gameObject.SetActive(true); } }
+        void Update()
+        {
+            if (!body) return;
+            if (startAt < 0f) { if (body.gameObject.activeSelf) body.gameObject.SetActive(false); return; }
+            float k = Mathf.Clamp01((Time.time - startAt) / (jet ? JetTime : FallTime));
+            if (jet) body.localScale = new Vector3(Mathf.SmoothStep(0.02f, 1f, k), 1f, 1f);                 // 熔岩流從噴口往對面伸過去
+            else { float e = k * k; body.localPosition = new Vector3(0f, Mathf.Lerp(9f, 0f, e), 0f); }          // 從天上砸下來
+            // 落地後輕輕脈動（像還在發熱）
+            if (k >= 1f && !jet) { float p = 1f + 0.015f * Mathf.Sin(Time.time * 4f + transform.position.x); body.localScale = new Vector3(1f, p, 1f); }
         }
     }
 }

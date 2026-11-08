@@ -154,18 +154,9 @@ namespace SpellDuel
         static ExploreMap sunkMap;
         static readonly HashSet<Vector2Int> sunk = new HashSet<Vector2Int>();
 
-        sealed class KitGate : MonoBehaviour
-        {
-            public Transform door; public bool open; public Vector2Int cell;
-            void Update()
-            {
-                if (!door || !open) return;
-                var p = door.localPosition;
-                p.y = Mathf.MoveTowards(p.y, -5.9f, Time.deltaTime * 4f);
-                door.localPosition = p;
-                if (p.y <= -5.85f) { door.gameObject.SetActive(false); sunk.Add(cell); enabled = false; }
-            }
-        }
+        /// <summary>門板沉下去以後記起來（重建這一格時不用再沉一次）</summary>
+        internal static void MarkSunk(Vector2Int cell) => sunk.Add(cell);
+        static Mesh gateFloor;
 
         /// <summary>一個門格：門框＋門板；門開了門板沉下去（已經沉過的重建時直接藏起來）</summary>
         public static GameObject CreateGate(ExploreMap map, int x, int z)
@@ -180,7 +171,27 @@ namespace SpellDuel
             var cell = new Vector2Int(x, z);
             bool open = map.GateOpen(x, z);
             if (door != null && open && sunk.Contains(cell)) door.SetActive(false);
-            else if (door != null) { var g = root.AddComponent<KitGate>(); g.door = door.transform; g.open = open; g.cell = cell; }
+            else if (door != null) { var g = root.AddComponent<StageKitGate>(); if (g) { g.door = door.transform; g.open = open; g.cell = cell; } else if (open) door.SetActive(false); }
+            // 門格的地面（使用者回報走道上有一條暗色的帶子：門格原本沒有地面，露出底下的深色地殼）
+            if (groundMat)
+            {
+                float half = ExploreMap.CellSize * 0.5f;
+                if (!gateFloor)
+                {
+                    gateFloor = new Mesh { name = "Kit gate floor" };
+                    gateFloor.vertices = new[] { new Vector3(-half, 0.006f, -half), new Vector3(-half, 0.006f, half), new Vector3(half, 0.006f, half), new Vector3(half, 0.006f, -half) };
+                    gateFloor.uv = new[] { new Vector2(-half, -half), new Vector2(-half, half), new Vector2(half, half), new Vector2(half, -half) };   // uv＝公尺（跟走道一樣，貼圖照世界座標接起來）
+                    gateFloor.triangles = new[] { 0, 1, 2, 0, 2, 3 }; gateFloor.RecalculateBounds();
+                }
+                var f = new GameObject("Gate floor"); f.transform.SetParent(root.transform, false);
+                // 門會轉 90°（ExGateRot）：地面反轉回來，貼圖才跟旁邊的路對齊
+                bool ns = map.Open(x, z + 1) || map.Open(x, z - 1);
+                f.transform.localRotation = ns ? Quaternion.identity : Quaternion.Euler(0f, -90f, 0f);
+                f.AddComponent<MeshFilter>().sharedMesh = gateFloor;
+                var mr = f.AddComponent<MeshRenderer>(); mr.sharedMaterial = groundMat;
+                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; mr.receiveShadows = false;
+                var c = map.World(x, z); var block = new MaterialPropertyBlock(); block.SetVector("_TexOffset", new Vector4(c.x, c.z, 0f, 0f)); mr.SetPropertyBlock(block);
+            }
             return root;
         }
 
@@ -213,6 +224,20 @@ namespace SpellDuel
                     Spawn(parent, "backdrop_rock_" + "abcd"[i % 4], p, Quaternion.LookRotation(look.normalized, Vector3.up), backMat);   // 正面朝地圖
                 }
             }
+        }
+    }
+
+    /// <summary>岩門的門板：門開了慢慢沉下去（獨立的類別：巢狀的 MonoBehaviour 在打包後可能建立不起來）</summary>
+    public sealed class StageKitGate : MonoBehaviour
+    {
+        public Transform door; public bool open; public Vector2Int cell;
+        void Update()
+        {
+            if (!door || !open) return;
+            var p = door.localPosition;
+            p.y = Mathf.MoveTowards(p.y, -5.9f, Time.deltaTime * 4f);
+            door.localPosition = p;
+            if (p.y <= -5.85f) { door.gameObject.SetActive(false); StageKit.MarkSunk(cell); enabled = false; }
         }
     }
 }
