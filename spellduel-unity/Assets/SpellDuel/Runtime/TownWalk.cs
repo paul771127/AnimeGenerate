@@ -24,7 +24,8 @@ namespace SpellDuel
             // 村民的行為：一般居民在家附近閒晃（走走停停），設施的老闆守在店門口；玩家走近就停下來看玩家，打招呼會揮手
             public Vector2 home, target; public float idleUntil, waveCooldown; public bool walking, nearShown;
             internal HumanResidentMotion motion;
-            public bool Wanders => opens == null && motion != null && !motion.LongRobe;   // 沒有關節的居民（第 4、5 章）、長袍的人（腿會穿出衣服）先不走動
+            public bool stay;             // 生成器的城鎮：站在配置好的位置（屋裡的櫃台後面）不閒晃
+            public bool Wanders => !stay && opens == null && motion != null && !motion.LongRobe;   // 沒有關節的居民（第 4、5 章）、長袍的人（腿會穿出衣服）先不走動
         }
 
         /// <summary>城鎮出口（柵欄的缺口）：走出去打開這一章的關卡選單</summary>
@@ -59,6 +60,8 @@ namespace SpellDuel
         public float WarpProgress => warpEnterAt < 0f ? 0f : Mathf.Clamp01((Time.time - warpEnterAt) / WarpStay);
 
         GameObject root;
+        /// <summary>場景生成器做的城鎮（TownKit.cs；目前只有炎之里）；null＝程式畫的村子</summary>
+        TownKit kit;
         readonly List<(Vector2 c, float r)> walls = new List<(Vector2, float)>();
         readonly StepDetector steps = new StepDetector();
         float speed, walkUntil, holdUntil, greetLock;
@@ -86,16 +89,27 @@ namespace SpellDuel
             if (f.sqrMagnitude < 1e-4f) f = Vector3.forward;
             root.transform.SetPositionAndRotation(new Vector3(cam.transform.position.x, floorY, cam.transform.position.z), Quaternion.LookRotation(f.normalized, Vector3.up));
             if (SpawnNearWarp) { SpawnNearWarp = false; root.transform.position -= root.transform.rotation * new Vector3(3.2f, 0f, -1.2f); }   // 傳送陣（5, 0.5）左前方約 2.6m：一抬頭就看到
-            TownArt.BuildScenery(town, root.transform);
+            kit = TownKit.For(town);   // 場景生成器的城鎮（炎之里）：建築可以走進去，NPC 站在屋裡（使用者要求）
+            if (kit != null) kit.Build(root.transform); else TownArt.BuildScenery(town, root.transform);
             walls.Clear(); sites.Clear();
-            // 設施＋地標＋民房（門朝廣場）
             var t = WorldUI.Towns[town];
+            if (kit != null)
+            {
+                // 設施的招牌：照配置（門口上方）
+                foreach (var s in kit.signs)
+                    if (s.kind == "smith" || s.kind == "shop" || s.kind == "guild" || System.Array.Exists(FacilitySpots, f => f.kind == s.kind))
+                        sites.Add(new Site { kind = s.kind, pos = new Vector3(s.pos.x, 0f, s.pos.z), height = s.pos.y + 0.6f });
+            }
+            else
+            {
+            // 設施＋地標＋民房（門朝廣場）
             Building("smith", new Vector2(-7f, 8f), 2.1f);
             Building("shop", new Vector2(7f, 8f), 2.1f);
             Building("guild", new Vector2(0f, 13.5f), 2.9f);
             // 村子的其他設施（原本的兩間民房改成副本入口、訓練場；入口附近再加討伐告示板、觀戰席）
             foreach (var (kind, at) in FacilitySpots) Building(kind, at, kind == "bounty" || kind == "watch" ? 1.5f : 2.1f);
             Building("landmark", town == 2 ? new Vector2(8f, 12f) : new Vector2(-8f, 12f), 1.4f);
+            }
             // 柵欄＋出口：東邊往這一章（主題＝城鎮），西邊回上一章
             exits.Clear();
             if (town > 0) exits.Add(new Exit { dir = Vector2.left, theme = town - 1 });
@@ -110,17 +124,18 @@ namespace SpellDuel
                 g.transform.SetParent(root.transform, false);
                 g.transform.localPosition = e.pos;
                 g.transform.localRotation = Quaternion.Euler(0f, Yaw(e.dir), 0f);   // +z 朝外
-                TownArt.BuildGate(town, e.theme, g.transform);
+                if (kit == null) TownArt.BuildGate(town, e.theme, g.transform);   // 生成器的城鎮：門和柵欄在 kit 裡
             }
-            TownArt.BuildFence(town, root.transform, new Vector3(PlazaC.x, 0f, PlazaC.y), TownRadius, gaps, GateHalf);
+            if (kit == null) TownArt.BuildFence(town, root.transform, new Vector3(PlazaC.x, 0f, PlazaC.y), TownRadius, gaps, GateHalf);
             // 傳送陣（廣場東南角）
-            WarpPos = new Vector3(5f, 0f, 0.5f);
+            WarpPos = kit != null ? new Vector3(kit.warp.x, 0f, kit.warp.y) : new Vector3(5f, 0f, 0.5f);
             var w = new GameObject("Warp Circle");
             w.transform.SetParent(root.transform, false);
             w.transform.localPosition = WarpPos;
-            TownArt.BuildWarpPad(town, w.transform);
+            if (kit == null) TownArt.BuildWarpPad(town, w.transform);
             onWarp = false;
             npcs.Clear();
+            if (kit != null) { KitNpcs(t); speed = 0f; Near = null; greetLock = 0f; steps.Reset(); return; }
             Keeper("鐵匠", "鐵匠鋪老闆", "smith", new Vector2(-7f, 8f), new[] { "要強化裝備嗎？把東西放上鐵砧吧。" });
             Keeper("店員", "道具店店員", "shop", new Vector2(7f, 8f), new[] { "歡迎光臨！藥水、回城捲軸都有，也收裝備喔。" });
             Keeper("公會長", "職業工會", "guild", new Vector2(0f, 13.5f), new[] { "歡迎來到職業工會。轉職試煉與進階職業，都在這裡辦。" });
@@ -141,7 +156,7 @@ namespace SpellDuel
         public void Leave()
         {
             if (root != null) UnityEngine.Object.Destroy(root);
-            root = null; Town = -1; npcs.Clear(); walls.Clear(); exits.Clear(); Near = null; petRig = null; petRigKind = -1;
+            root = null; Town = -1; kit = null; npcs.Clear(); walls.Clear(); exits.Clear(); Near = null; petRig = null; petRigKind = -1;
         }
 
         static bool HasStages(int theme) { foreach (var st in Story.AllStages()) if (st.theme == theme) return true; return false; }
@@ -160,6 +175,38 @@ namespace SpellDuel
             TownArt.BuildBuilding(Town, kind, go.transform);
             walls.Add((at, radius));
             if (kind != "house" && kind != "landmark") sites.Add(new Site { kind = kind, pos = new Vector3(at.x, 0f, at.y), height = kind == "guild" ? 4.4f : radius >= 2f ? 3.6f : 3.0f });
+        }
+
+        /// <summary>生成器的城鎮：NPC 照配置的站位、面向（屋裡的在櫃台／鐵砧後面），不閒晃</summary>
+        void KitNpcs(WorldUI.Town t)
+        {
+            var used = new HashSet<string>();
+            foreach (var s in kit.npcs)
+            {
+                string name = null, role = null, opens = null; string[] lines = null;
+                switch (s.role)
+                {
+                    case "smith": name = "鐵匠"; role = "鐵匠鋪老闆"; opens = "smith"; lines = new[] { "要強化裝備嗎？把東西放上鐵砧吧。" }; break;
+                    case "shop": name = "店員"; role = "道具店店員"; opens = "shop"; lines = new[] { "歡迎光臨！藥水、回城捲軸都有，也收裝備喔。" }; break;
+                    case "guild": name = "公會長"; role = "職業工會"; opens = "guild"; lines = new[] { "歡迎來到職業工會。轉職試煉與進階職業，都在這裡辦。" }; break;
+                    default:
+                        if (s.role != null && s.role.StartsWith("story:"))
+                        {
+                            string who = s.role.Substring(6);
+                            foreach (var (n, r, l) in t.npcs) if (n.Contains(who)) { name = n; role = r; lines = l; break; }
+                        }
+                        else foreach (var fa in WorldUI.Facilities) if (fa.kind == s.role) { name = fa.npc; role = fa.role; opens = fa.kind; lines = new[] { fa.hello }; break; }
+                        break;
+                }
+                if (name == null) continue;
+                used.Add(name);
+                AddNpc(new Npc { name = name, role = role, lines = lines, opens = opens, pos = new Vector3(s.pos.x, 0f, s.pos.y), yaw = s.yaw, stay = true });
+            }
+            // 配置裡沒有的居民：站在廣場邊
+            var spots = new[] { new Vector2(-3.2f, 3.6f), new Vector2(3.4f, 4.2f), new Vector2(-1.2f, 8.4f) };
+            int k = 0;
+            foreach (var (n, r, l) in t.npcs)
+                if (!used.Contains(n)) { var p = spots[k++ % spots.Length]; AddNpc(new Npc { name = n, role = r, lines = l, pos = new Vector3(p.x, 0f, p.y), yaw = Yaw(PlazaC - p) }); }
         }
 
         void Keeper(string name, string role, string opens, Vector2 building, string[] lines)
@@ -188,6 +235,7 @@ namespace SpellDuel
         bool NpcFree(Npc self, Vector2 p, Vector2 me)
         {
             if (Vector2.Distance(p, PlazaC) > TownRadius - 1.5f) return false;
+            if (kit != null && kit.Blocked(p, 0.4f)) return false;
             foreach (var (c, r) in walls) if (Vector2.Distance(p, c) < r + 0.5f) return false;
             if (Vector2.Distance(p, me) < 1.1f) return false;
             if (Vector2.Distance(p, new Vector2(WarpPos.x, WarpPos.z)) < 1.2f) return false;
@@ -373,6 +421,7 @@ namespace SpellDuel
                 var v = p - c; float rr = r + 0.3f;
                 if (v.sqrMagnitude < rr * rr) p = c + (v.sqrMagnitude > 1e-6f ? v.normalized : Vector2.down) * rr;
             }
+            if (kit != null) p = kit.Push(p, 0.3f);
             return Fence(p, PlazaC, TownRadius, exits.ConvertAll(e => e.dir), GateHalf, ExitDepth + 0.5f);
         }
 
@@ -400,6 +449,7 @@ namespace SpellDuel
                     var c = new Vector2(n.pos.x, n.pos.z); var v = p - c; float rr = NpcKeepOff + 0.3f;
                     if (v.sqrMagnitude < rr * rr) p = c + (v.sqrMagnitude > 1e-6f ? v.normalized : Vector2.down) * rr;
                 }
+            if (kit != null) p = kit.Push(p, 0.3f);   // 生成器的城鎮：牆、櫃台、鐵砧（多邊形）
             return Fence(p, PlazaC, TownRadius, exits.ConvertAll(e => e.dir), GateHalf, ExitDepth + 0.5f);
         }
 
