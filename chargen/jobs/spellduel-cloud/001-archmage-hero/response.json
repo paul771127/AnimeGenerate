@@ -1,0 +1,336 @@
+{
+  "schemaVersion": 1,
+  "job": "001-archmage-hero",
+  "classId": "archmage",
+  "ok": true,
+  "status": "delivered_for_art_review",
+  "branch": "claude/mobile-camera-mic-battle-game-v5nhfr",
+  "files": [
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/CharKit/archmage_v1/archmage.fbx",
+      "bytes": 4069308,
+      "sha256": "1dadba207f54c304a0c24ec87904d2228e4475af6946098bb243450b6e12eb69"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/CharKit/archmage_v1/archmage_albedo.png",
+      "bytes": 1188818,
+      "sha256": "ffc698ebe3b7fd32c459434f1f177d97582dd8c20c19cdf7269125c29a26b335"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/CharKit/archmage_v1/archmage_emission.png",
+      "bytes": 12599,
+      "sha256": "1cbb511b88d1b91a5f979628823626252bd892ca3b452473c14307d7df787466"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/CharKit/archmage_v1/archmage_toon.shader",
+      "bytes": 2044,
+      "sha256": "5fd988a8e66b246e88e7fdb5e8b54cce6f3c08266ba2ed7cb362aad645c0955e"
+    },
+    {
+      "path": "spellduel-unity/Assets/SpellDuel/Resources/CharKit/archmage_v1/README.txt",
+      "bytes": 644,
+      "sha256": "daf0df762e1cf29a196cb78005ebfa3e35d50733f28a7c2f16dc15ca63d6b4da"
+    }
+  ],
+  "geometry": {
+    "bodyTriangles": 10084,
+    "outlineTriangles": 4218,
+    "totalTriangles": 14302,
+    "materials": 2,
+    "skinnedRenderers": 2,
+    "maxBoneInfluences": 4
+  },
+  "coordinates": {
+    "unit": "meter",
+    "up": "+Y",
+    "forward": "+Z",
+    "restHeightMeters": 1.72,
+    "feetAtRootOrigin": true,
+    "heightExcludesStaffAndBook": true
+  },
+  "rig": {
+    "type": "Unity Humanoid",
+    "unityVersion": "2022.3.62f2",
+    "avatarValid": true,
+    "avatarHuman": true,
+    "boneCount": 61,
+    "mapping": {
+      "hips": "J_Bip_C_Hips",
+      "leftUpperLeg": "J_Bip_L_UpperLeg",
+      "rightUpperLeg": "J_Bip_R_UpperLeg",
+      "leftLowerLeg": "J_Bip_L_LowerLeg",
+      "rightLowerLeg": "J_Bip_R_LowerLeg",
+      "leftFoot": "J_Bip_L_Foot",
+      "rightFoot": "J_Bip_R_Foot",
+      "spine": "J_Bip_C_Spine",
+      "chest": "J_Bip_C_Chest",
+      "neck": "J_Bip_C_Neck",
+      "head": "J_Bip_C_Head",
+      "leftShoulder": "J_Bip_L_Shoulder",
+      "rightShoulder": "J_Bip_R_Shoulder",
+      "leftUpperArm": "J_Bip_L_UpperArm",
+      "rightUpperArm": "J_Bip_R_UpperArm",
+      "leftLowerArm": "J_Bip_L_LowerArm",
+      "rightLowerArm": "J_Bip_R_LowerArm",
+      "leftHand": "J_Bip_L_Hand",
+      "rightHand": "J_Bip_R_Hand",
+      "leftToes": "J_Bip_L_ToeBase",
+      "rightToes": "J_Bip_R_ToeBase",
+      "leftEye": "J_Adj_L_FaceEye",
+      "rightEye": "J_Adj_R_FaceEye",
+      "leftThumbProximal": "J_Bip_L_Thumb1",
+      "leftThumbIntermediate": "J_Bip_L_Thumb2",
+      "leftThumbDistal": "J_Bip_L_Thumb3",
+      "leftIndexProximal": "J_Bip_L_Index1",
+      "leftIndexIntermediate": "J_Bip_L_Index2",
+      "leftIndexDistal": "J_Bip_L_Index3",
+      "leftMiddleProximal": "J_Bip_L_Middle1",
+      "leftMiddleIntermediate": "J_Bip_L_Middle2",
+      "leftMiddleDistal": "J_Bip_L_Middle3",
+      "leftRingProximal": "J_Bip_L_Ring1",
+      "leftRingIntermediate": "J_Bip_L_Ring2",
+      "leftRingDistal": "J_Bip_L_Ring3",
+      "leftLittleProximal": "J_Bip_L_Little1",
+      "leftLittleIntermediate": "J_Bip_L_Little2",
+      "leftLittleDistal": "J_Bip_L_Little3",
+      "rightThumbProximal": "J_Bip_R_Thumb1",
+      "rightThumbIntermediate": "J_Bip_R_Thumb2",
+      "rightThumbDistal": "J_Bip_R_Thumb3",
+      "rightIndexProximal": "J_Bip_R_Index1",
+      "rightIndexIntermediate": "J_Bip_R_Index2",
+      "rightIndexDistal": "J_Bip_R_Index3",
+      "rightMiddleProximal": "J_Bip_R_Middle1",
+      "rightMiddleIntermediate": "J_Bip_R_Middle2",
+      "rightMiddleDistal": "J_Bip_R_Middle3",
+      "rightRingProximal": "J_Bip_R_Ring1",
+      "rightRingIntermediate": "J_Bip_R_Ring2",
+      "rightRingDistal": "J_Bip_R_Ring3",
+      "rightLittleProximal": "J_Bip_R_Little1",
+      "rightLittleIntermediate": "J_Bip_R_Little2",
+      "rightLittleDistal": "J_Bip_R_Little3",
+      "upperChest": "J_Bip_C_UpperChest"
+    },
+    "additionalBones": {
+      "Staff": "parent J_Bip_R_Hand",
+      "Book": "parent J_Bip_L_Hand"
+    },
+    "fullBoneNames": [
+      "archmage",
+      "ArchmageBody",
+      "ArchmageRig",
+      "Root",
+      "J_Bip_C_Hips",
+      "J_Bip_C_Spine",
+      "J_Bip_C_Chest",
+      "chest",
+      "J_Bip_C_UpperChest",
+      "J_Bip_C_Neck",
+      "J_Bip_C_Head",
+      "head",
+      "J_Adj_L_FaceEye",
+      "J_Adj_R_FaceEye",
+      "J_Bip_L_Shoulder",
+      "J_Bip_L_UpperArm",
+      "J_Bip_L_LowerArm",
+      "J_Bip_L_Hand",
+      "Book",
+      "J_Bip_L_Index1",
+      "J_Bip_L_Index2",
+      "J_Bip_L_Index3",
+      "J_Bip_L_Little1",
+      "J_Bip_L_Little2",
+      "J_Bip_L_Little3",
+      "J_Bip_L_Middle1",
+      "J_Bip_L_Middle2",
+      "J_Bip_L_Middle3",
+      "J_Bip_L_Ring1",
+      "J_Bip_L_Ring2",
+      "J_Bip_L_Ring3",
+      "J_Bip_L_Thumb1",
+      "J_Bip_L_Thumb2",
+      "J_Bip_L_Thumb3",
+      "weapon_l",
+      "J_Bip_R_Shoulder",
+      "J_Bip_R_UpperArm",
+      "J_Bip_R_LowerArm",
+      "J_Bip_R_Hand",
+      "J_Bip_R_Index1",
+      "J_Bip_R_Index2",
+      "J_Bip_R_Index3",
+      "J_Bip_R_Little1",
+      "J_Bip_R_Little2",
+      "J_Bip_R_Little3",
+      "J_Bip_R_Middle1",
+      "J_Bip_R_Middle2",
+      "J_Bip_R_Middle3",
+      "J_Bip_R_Ring1",
+      "J_Bip_R_Ring2",
+      "J_Bip_R_Ring3",
+      "J_Bip_R_Thumb1",
+      "J_Bip_R_Thumb2",
+      "J_Bip_R_Thumb3",
+      "Staff",
+      "weapon_r",
+      "J_Bip_L_UpperLeg",
+      "J_Bip_L_LowerLeg",
+      "J_Bip_L_Foot",
+      "J_Bip_L_ToeBase",
+      "J_Bip_R_UpperLeg",
+      "J_Bip_R_LowerLeg",
+      "J_Bip_R_Foot",
+      "J_Bip_R_ToeBase",
+      "OUTLINE_Archmage"
+    ]
+  },
+  "animations": {
+    "file": "archmage.fbx",
+    "fps": 30,
+    "clips": [
+      {
+        "name": "cast",
+        "seconds": 1.2000000476837158,
+        "fps": 30.0,
+        "loop": false
+      },
+      {
+        "name": "cast_loop",
+        "seconds": 1.6000001430511475,
+        "fps": 30.0,
+        "loop": true
+      },
+      {
+        "name": "crouch",
+        "seconds": 2.933333396911621,
+        "fps": 30.0,
+        "loop": true
+      },
+      {
+        "name": "die",
+        "seconds": 2.366666793823242,
+        "fps": 30.0,
+        "loop": false
+      },
+      {
+        "name": "hit",
+        "seconds": 0.40000003576278687,
+        "fps": 30.0,
+        "loop": false
+      },
+      {
+        "name": "idle",
+        "seconds": 2.500000238418579,
+        "fps": 30.0,
+        "loop": true
+      },
+      {
+        "name": "jump",
+        "seconds": 0.8000000715255737,
+        "fps": 30.0,
+        "loop": false
+      },
+      {
+        "name": "run",
+        "seconds": 0.6666666865348816,
+        "fps": 30.0,
+        "loop": true
+      },
+      {
+        "name": "victory",
+        "seconds": 2.0,
+        "fps": 30.0,
+        "loop": false
+      },
+      {
+        "name": "walk",
+        "seconds": 1.3333333730697632,
+        "fps": 30.0,
+        "loop": true
+      }
+    ],
+    "horizontalRootMotion": "in_place",
+    "verticalHipsMotion": "retained for jump and die"
+  },
+  "textures": {
+    "size": [
+      2048,
+      2048
+    ],
+    "albedo": "archmage_albedo.png",
+    "emission": "archmage_emission.png",
+    "emissionChannels": "RGB; black non-emissive, violet orb/book runes"
+  },
+  "outline": {
+    "method": "inverted_hull",
+    "mesh": "OUTLINE_Archmage",
+    "normalExtrusionMeters": 0.012,
+    "material": "Archmage_BlackOutline",
+    "faceOutline": "Existing eye/brow/eyeline texture details; no face shell to avoid eyelash intersections"
+  },
+  "materials": {
+    "body": {
+      "shader": "SpellDuel/CharKit/ArchmageCel",
+      "shaderFile": "archmage_toon.shader",
+      "_MainTex": "archmage_albedo.png",
+      "_EmissionMap": "archmage_emission.png",
+      "_Cutoff": 0.3
+    },
+    "outline": {
+      "shader": "Unlit/Color",
+      "color": "#030205",
+      "culling": "Back"
+    },
+    "note": "FBX does not embed Unity shader assignments. Assign these two materials after Unity generates its own .meta; supplied cel shader is Built-in only."
+  },
+  "previews": [
+    "previews/back.png",
+    "previews/compare_with_2d.png",
+    "previews/front.png",
+    "previews/neck_proportions_v3.png",
+    "previews/pose_cast.png",
+    "previews/pose_cast_loop.png",
+    "previews/pose_crouch.png",
+    "previews/pose_die.png",
+    "previews/pose_hit.png",
+    "previews/pose_jump.png",
+    "previews/pose_run.png",
+    "previews/pose_victory.png",
+    "previews/pose_walk.png",
+    "previews/side.png",
+    "previews/third_person_back_3m_h1.5m.png",
+    "previews/unity_cast.png",
+    "previews/unity_cast_loop.png",
+    "previews/unity_crouch.png",
+    "previews/unity_die.png",
+    "previews/unity_hit.png",
+    "previews/unity_idle.png",
+    "previews/unity_jump.png",
+    "previews/unity_run.png",
+    "previews/unity_victory.png",
+    "previews/unity_walk.png"
+  ],
+  "neckRevision": {
+    "visibleSkinnedNeck": true,
+    "totalHeadAndNeckShorteningMeters": 0.044,
+    "lastRequestedShorteningMeters": 0.012,
+    "neckWidened": true,
+    "frontCollarAdjusted": true
+  },
+  "qa": {
+    "structural": "passed actual Unity FBX import",
+    "humanoid": "passed",
+    "animations": "all ten clips sampled with a Unity Animator; CPU-skinned snapshots rendered",
+    "visualReview": "selected Blender views and Unity poses reviewed; final artistic approval not assumed",
+    "mobileProfile": "not_measured",
+    "noRuntimeCodeChanges": true,
+    "noMeta": true,
+    "noPrefab": true
+  },
+  "differencesAndLimitations": [
+    "Gold embroidery and magic effects are simplified for mobile geometry; decorative energy trails, particles and bloom from the portrait are not included.",
+    "Book is a closed floating grimoire, not a fully articulated open-page book.",
+    "Robe uses ordinary skinning, without cloth simulation or dedicated skirt chains; extreme poses may need additional cloth/prop polish.",
+    "This is an authored 3D interpretation of the portrait, not a claim of pixel-exact likeness or approved final art.",
+    "Full continuous playback, action transitions, real phone FPS and thermal tests are not complete."
+  ],
+  "provenance": "sources.json"
+}

@@ -1,0 +1,1 @@
+Authoring/QA source snapshots. Blender 4.5.15; Unity 2022.3.62f2 Built-in. Scripts reference this workstation project-local audited CC0 base/library and work atlas inputs. They are provenance snapshots, not a standalone cloud installer. No tool binaries or paid assets are included.

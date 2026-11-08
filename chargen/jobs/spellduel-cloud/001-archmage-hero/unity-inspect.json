@@ -1,0 +1,140 @@
+{
+  "ok": true,
+  "humanoidValid": true,
+  "humanoidHuman": true,
+  "error": "",
+  "bodyTriangles": 10084,
+  "outlineTriangles": 4218,
+  "materials": 2,
+  "bones": 61,
+  "maxWeights": 4,
+  "animations": [
+    {
+      "name": "cast",
+      "seconds": 1.2000000476837158,
+      "fps": 30.0,
+      "loop": false
+    },
+    {
+      "name": "cast_loop",
+      "seconds": 1.6000001430511475,
+      "fps": 30.0,
+      "loop": true
+    },
+    {
+      "name": "crouch",
+      "seconds": 2.933333396911621,
+      "fps": 30.0,
+      "loop": true
+    },
+    {
+      "name": "die",
+      "seconds": 2.366666793823242,
+      "fps": 30.0,
+      "loop": false
+    },
+    {
+      "name": "hit",
+      "seconds": 0.40000003576278687,
+      "fps": 30.0,
+      "loop": false
+    },
+    {
+      "name": "idle",
+      "seconds": 2.500000238418579,
+      "fps": 30.0,
+      "loop": true
+    },
+    {
+      "name": "jump",
+      "seconds": 0.8000000715255737,
+      "fps": 30.0,
+      "loop": false
+    },
+    {
+      "name": "run",
+      "seconds": 0.6666666865348816,
+      "fps": 30.0,
+      "loop": true
+    },
+    {
+      "name": "victory",
+      "seconds": 2.0,
+      "fps": 30.0,
+      "loop": false
+    },
+    {
+      "name": "walk",
+      "seconds": 1.3333333730697632,
+      "fps": 30.0,
+      "loop": true
+    }
+  ],
+  "boneNames": [
+    "archmage",
+    "ArchmageBody",
+    "ArchmageRig",
+    "Root",
+    "J_Bip_C_Hips",
+    "J_Bip_C_Spine",
+    "J_Bip_C_Chest",
+    "chest",
+    "J_Bip_C_UpperChest",
+    "J_Bip_C_Neck",
+    "J_Bip_C_Head",
+    "head",
+    "J_Adj_L_FaceEye",
+    "J_Adj_R_FaceEye",
+    "J_Bip_L_Shoulder",
+    "J_Bip_L_UpperArm",
+    "J_Bip_L_LowerArm",
+    "J_Bip_L_Hand",
+    "Book",
+    "J_Bip_L_Index1",
+    "J_Bip_L_Index2",
+    "J_Bip_L_Index3",
+    "J_Bip_L_Little1",
+    "J_Bip_L_Little2",
+    "J_Bip_L_Little3",
+    "J_Bip_L_Middle1",
+    "J_Bip_L_Middle2",
+    "J_Bip_L_Middle3",
+    "J_Bip_L_Ring1",
+    "J_Bip_L_Ring2",
+    "J_Bip_L_Ring3",
+    "J_Bip_L_Thumb1",
+    "J_Bip_L_Thumb2",
+    "J_Bip_L_Thumb3",
+    "weapon_l",
+    "J_Bip_R_Shoulder",
+    "J_Bip_R_UpperArm",
+    "J_Bip_R_LowerArm",
+    "J_Bip_R_Hand",
+    "J_Bip_R_Index1",
+    "J_Bip_R_Index2",
+    "J_Bip_R_Index3",
+    "J_Bip_R_Little1",
+    "J_Bip_R_Little2",
+    "J_Bip_R_Little3",
+    "J_Bip_R_Middle1",
+    "J_Bip_R_Middle2",
+    "J_Bip_R_Middle3",
+    "J_Bip_R_Ring1",
+    "J_Bip_R_Ring2",
+    "J_Bip_R_Ring3",
+    "J_Bip_R_Thumb1",
+    "J_Bip_R_Thumb2",
+    "J_Bip_R_Thumb3",
+    "Staff",
+    "weapon_r",
+    "J_Bip_L_UpperLeg",
+    "J_Bip_L_LowerLeg",
+    "J_Bip_L_Foot",
+    "J_Bip_L_ToeBase",
+    "J_Bip_R_UpperLeg",
+    "J_Bip_R_LowerLeg",
+    "J_Bip_R_Foot",
+    "J_Bip_R_ToeBase",
+    "OUTLINE_Archmage"
+  ]
+}
