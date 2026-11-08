@@ -86,7 +86,7 @@ namespace SpellDuel
             if (!animator) animator = gameObject.AddComponent<Animator>();
             animator.applyRootMotion = false;
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-            foreach (var c in Resources.LoadAll<AnimationClip>(kit + "archmage"))
+            foreach (var c in Resources.LoadAll<AnimationClip>(kit.TrimEnd('/')))   // 整個資料夾：主 FBX 和 archmage@動作.fbx（工單 002 的側移、後退、法杖施法）
             {
                 if (c == null || c.name.StartsWith("__preview__")) continue;
                 string n = c.name; int bar = n.LastIndexOf('|'); if (bar >= 0) n = n.Substring(bar + 1);
@@ -124,6 +124,7 @@ namespace SpellDuel
         /// <summary>一次性的動作（施法、被打、跳）：播完前不會被走路之類的蓋掉</summary>
         public void PlayOnce(string name, float speed = 1f)
         {
+            if (name == "cast") name = CastClip;
             if (!clips.TryGetValue(name, out var c)) return;
             curName = null; Play(name, false);
             curSpeed = Mathf.Max(0.1f, speed);
@@ -132,9 +133,30 @@ namespace SpellDuel
         public bool Busy => Time.time < lockUntil;
 
         /// <summary>每幀：位置、面向（session 座標）＋動作狀態</summary>
-        public void Drive(Vector3 feet, Vector3 forward, float speed, bool dead, bool charging, bool crouch, bool air)
+        public bool Has(string n) => clips.ContainsKey(n);
+        /// <summary>有沒有側移／後退的動作（工單 002）；沒有＝往旁邊、往後走時轉身面向移動方向</summary>
+        bool HasStrafe => Has("walk_back") && Has("walk_left") && Has("walk_right");
+        string CastClip => Has("cast_staff") ? "cast_staff" : "cast";
+        string CastLoopClip => Has("cast_staff_loop") ? "cast_staff_loop" : "cast_loop";
+
+        /// <summary>每幀：位置、面向、移動方向（session 座標）＋動作狀態；lockFacing＝剛攻擊完、要一直面向準心</summary>
+        public void Drive(Vector3 feet, Vector3 forward, Vector3 move, float speed, bool dead, bool charging, bool crouch, bool air, bool lockFacing)
         {
             forward.y = 0f; if (forward.sqrMagnitude < 1e-4f) forward = transform.forward;
+            move.y = 0f;
+            string walk = "walk", run = "run";
+            if (speed > 0.25f && move.sqrMagnitude > 1e-6f && !charging && !lockFacing)
+            {
+                var m = move.normalized; var f = forward.normalized; var r = new Vector3(f.z, 0f, -f.x);
+                float fw = Vector3.Dot(m, f), rt = Vector3.Dot(m, r);
+                if (HasStrafe)
+                {
+                    // 面向前方，照移動方向挑：前、後、左、右
+                    if (fw < -0.5f) { walk = "walk_back"; run = Has("run_back") ? "run_back" : "walk_back"; }
+                    else if (Mathf.Abs(rt) > 0.6f) { walk = rt > 0 ? "walk_right" : "walk_left"; run = Has(rt > 0 ? "run_right" : "run_left") ? (rt > 0 ? "run_right" : "run_left") : walk; }
+                }
+                else if (fw < 0.7f) forward = m;   // 還沒有側移、後退動作：轉身面向移動方向走
+            }
             float dt = Time.deltaTime;
             if (!posed) { smFeet = feet; smFwd = forward.normalized; posed = true; }
             smFeet = Vector3.Lerp(smFeet, feet, 1f - Mathf.Exp(-dt * 18f));
@@ -145,10 +167,10 @@ namespace SpellDuel
             else if (!Busy)
             {
                 if (air) Play("jump", false);
-                else if (charging) Play("cast_loop", true);
+                else if (charging) Play(CastLoopClip, true);
                 else if (crouch) Play("crouch", true);
-                else if (speed > 1.6f) Play("run", true);
-                else if (speed > 0.25f) Play("walk", true);
+                else if (speed > 1.6f) Play(run, true);
+                else if (speed > 0.25f) Play(walk, true);
                 else Play("idle", true);
             }
             Tick(dt);
@@ -171,7 +193,7 @@ namespace SpellDuel
         /// <summary>動作算完之後：施法中把右手法杖往前（放出）／往上前方（詠唱）舉，左手垂下</summary>
         void StaffPose(float dt)
         {
-            bool casting = curName == "cast" || curName == "cast_loop";
+            bool casting = curName == "cast" || curName == "cast_loop";   // 有法杖施法的正式動作（cast_staff）就不用扳手臂
             staffW = Mathf.MoveTowards(staffW, casting ? 1f : 0f, dt * 6f);
             if (staffW <= 0.001f || !rUpper || !rLower || !rHand) return;
             var f = transform.forward; var up = Vector3.up; var right = transform.right;

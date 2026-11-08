@@ -86,7 +86,7 @@ namespace SpellDuel
             else if (selfRig) { selfRig.PlayAttack(myClass == Skills.Novice ? "novice" : AttackKindOf(myClass), basic ? 0.06f : 0.15f); }
         }
         float heroCastAnimAt = -9f, heroFaceUntil = -9f;
-        Vector3 heroAimDir, heroFaceDir;
+        Vector3 heroAimDir, heroFaceDir, heroMoveW, heroPrevFeet;
         /// <summary>角色現在要面對的方向（場地座標）：剛攻擊過＝準心的方向，否則＝手機面向</summary>
         Vector3 HeroFacing => Time.time < heroFaceUntil ? heroFaceDir : Fighter.Flat(Me.forward);
 
@@ -117,7 +117,8 @@ namespace SpellDuel
                 heroWasCharging = charging;
                 if (heroLastHp >= 0f && Me.hp < heroLastHp - 0.5f && Me.Alive && !charging) heroModel.PlayOnce("hit");
                 heroLastHp = Me.hp;
-                heroModel.Drive(WorldFrame.FromWorld(Me.Feet), WorldFrame.DirFromWorld(HeroFacing), speed, !Me.Alive, charging, Me.crouching, Me.airborneUntil > battle.now);
+                heroMoveW = Vector3.Lerp(heroMoveW, Fighter.Flat(Me.Feet - heroPrevFeet) / dt, 1f - Mathf.Exp(-dt * 10f)); heroPrevFeet = Me.Feet;
+                heroModel.Drive(WorldFrame.FromWorld(Me.Feet), WorldFrame.DirFromWorld(HeroFacing), WorldFrame.DirFromWorld(heroMoveW), speed, !Me.Alive, charging, Me.crouching, Me.airborneUntil > battle.now, Time.time < heroFaceUntil);
                 return;
             }
             // 沒有模型：程式拼的角色

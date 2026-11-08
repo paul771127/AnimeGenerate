@@ -1,0 +1,20 @@
+{
+  "job": "002-archmage-locomotion",
+  "kind": "character-animation",
+  "base": "spellduel-unity/Assets/SpellDuel/Resources/CharKit/archmage_v1/archmage.fbx",
+  "fps": 30,
+  "inPlace": true,
+  "animations": [
+    {"name": "walk_back", "loop": true},
+    {"name": "walk_left", "loop": true},
+    {"name": "walk_right", "loop": true},
+    {"name": "run_back", "loop": true},
+    {"name": "run_left", "loop": true},
+    {"name": "run_right", "loop": true},
+    {"name": "cast_staff", "loop": false, "seconds": 0.8, "note": "right hand staff thrust forward"},
+    {"name": "cast_staff_loop", "loop": true, "note": "staff raised forward-up while chanting"}
+  ],
+  "keepExistingClips": true,
+  "noMeta": true,
+  "branch": "claude/mobile-camera-mic-battle-game-v5nhfr"
+}
