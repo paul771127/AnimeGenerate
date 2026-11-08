@@ -1,42 +1,37 @@
-# 熔岩 HD-2D 試做素材
+# 一般關卡：火山賽璐璐重畫
 
-僅交付熔岩 0／1／2，待使用者確認後再製作其他主題。本批不改 Runtime 或玩法。
+依最新 CODEX_TASK_CEL_RESTYLE.md，以原檔名覆蓋 15 張 PNG，沿用全部 `.meta`。內建 image_gen 重畫三套場景；色調與 SceneKit/volcano_cel_v3 協調。
 
-## 交付
-- Resources/StageArt：15 張 PNG + TextureImporter .meta。
-- 0 熔岩谷：霧紅天空、遠方火山、熔岩瀑布、玄武岩與焦木。
-- 1 火山口邊緣：巨大環狀盆地、遠處噴發、黑曜石與硫磺岩。
-- 2 廢棄礦坑：洞頂、木構採礦廊道、礦車、提燈與散落軌道。
-- 每套 16 格景物、16 格貼花；順序從左上逐列往右，格尺寸 512。
-- 景物有透明留白，腳底在格內 y=491（由頂端起算；約距底 4%）。
+- 0 熔岩谷：青藍天空、暖薄霧、冷色遠方火山、玄武岩與焦木。
+- 1 火山口邊緣：遠處盆地與低火山錐、中景尖岩及少量熔岩瀑布。
+- 2 廢棄礦坑：暗藍灰洞頂、木構礦道、礦車、暖色礦燈與散落軌道。
 
-## 匯入與接線
-far 4096×512、mid 4096×384、ground 1024×1024、兩種 atlas 2048×2048。
-Default、sRGB、Bilinear、不開 mipmap、不縮放非方形貼圖。
-far／mid／ground Repeat；atlas Clamp。far／mid 最大 4096，其他 2048。
-far／ground 不透明；mid／atlas 真正 RGBA。
-所有 PNG 共約 24.53 MiB（不含預覽）。
+## 原規格保留
 
-mid 保留繪圖比例後分段排列，沒有將木架直接橫向拉扁。
-預覽使用 mid 圓筒半徑 22m、高 **13m**、底部 y=0；
-建議接線時沿用此高度，避免木架變寬。遠景半徑 32m、高 22m、底部 -1.5m。
-地板每張 2.5m，立牌每格對應 3m。實際光暈由遊戲加入。
+| 層 | 尺寸 | 格式與處理 |
+|---|---|---|
+| far | 4096×512 | RGB，不透明，距底約 6% 的地平線，左右週期銜接 |
+| mid | 4096×384 | RGBA，透明上方留白，左右銜接 |
+| ground | 1024×1024 | RGB，2.5m×2.5m，上下左右週期銜接 |
+| decals | 2048×2048 | RGBA，4×4／每格 512，16 格平躺貼花 |
+| props | 2048×2048 | RGBA，4×4／每格 512，16 格立牌，腳底 y=491 |
+
+六張圖集共有 96 個非空格，四周保留透明間隔。中景整張等比縮至高 384，保留原本上方透明留白，再排列三段；沒有把整個木架橫向拉寬或裁去留白後放大。遠景的生成器留白框已裁掉，並取成 8:1 長條；技術打包記錄見 generation_manifest.json。
+
+所有既有 Default／sRGB／Bilinear／Wrap／maxTextureSize 設定及 GUID 保留原樣，無新 `.meta`。貼圖 GPU 尺寸及數量不變。
 
 ## 預覽與檢查
-volcano_N_player_view.jpg 是資產投影合成示意，**不是 Unity 實機截圖**。
-相機眼高 1.5m、水平視角 80°，前方為現有 arena_imp 的 idle 格；
-無 UI、光暈或遊戲後製。ground 延伸只用來呈現透視，不能解讀成碰撞場地大小。
-volcano_N_far_strip.png 為交付遠景原尺寸長條。
-volcano_N_ground_repeat.jpg 為 2×2 接縫檢視。
 
-執行：python spellduel-unity/Tools/check_stage_art.py
-結果：15 張齊全，尺寸／alpha／匯入設定／接縫／32 格分割與基準線檢查 0 錯誤。
-每個主題的 atlas 各 16 格，總共 96 格。
-邊界像素一致不代表整張畫面完全沒有重複感；已另行查看合成圖和地面重複圖。
-本批為美術資產，不宣稱完成 Unity、Android 或 iOS 編譯／遊戲接線。
+- all_assets.jpg：三套 15 張圖總表。
+- volcano_N_player_view.jpg：場景加既有 arena_imp 的資產投影合成。
+- volcano_N_far_strip.png：成品原尺寸遠景長條。
+- volcano_N_ground_repeat.jpg：2×2 重複地面接縫檢視。
+- validation.json：原有工具的 15 張檢查結果，0 錯誤。
 
-## 製作
-使用內建 image_gen 生成手繪母圖；generation_manifest.json 保留每張提示詞。
-pack_stage_art.py 只做指定尺寸、邊界週期銜接、透明 atlas 分格與落地基準整理；
-check_stage_art.py 產生檢查報告與資產合成圖。
-生成來源尺寸與輸出尺寸分別記錄，4096 長條不是原生 4096 繪製。
+預覽採目前 StageArtLayer 的半徑 32m、遠景高 24m、地平線 6%、眼高 1.45m；中景半徑 22m、高 13m、底部 -0.15m。舊 check_stage_art.py 的預覽公式屬早期 22m／14% 設計，因此本批只沿用其資產驗證，另外生成正確相機的預覽。ground 延伸僅供透視檢視，不代表實際碰撞場地大小。
+
+所有預覽為資產合成，不是新 Unity／手機執行截圖。沒有執行手機效能量測或新增玩法。
+
+## 製作紀錄
+
+generation_manifest.json 保存逐檔 image_gen 提示詞、母圖尺寸與 SHA-256、裁切／等比縮放／邊界／格子處理。4096 成品長條為母圖技術取景與縮放，不宣稱原生 4096 生成；沒有用程式繪製岩石或套濾鏡替代重畫。

@@ -1,0 +1,251 @@
+{
+  "replaced_png_count": 22,
+  "base_commit": "3bea6f48ddf449e21cdc0c6f3215aa50d102fceb",
+  "validators": {
+    "check_stage_art": 0,
+    "check_obstacle_art": 0
+  },
+  "protected_files": {
+    "unchanged_meta_count": 31,
+    "unchanged_excluded_obstacle_count": 9,
+    "metaHashes": true,
+    "skippedHashes": true
+  },
+  "far_horizon_from_bottom": [
+    0.05904059040590406,
+    0.05904059040590406,
+    0.05904059040590406
+  ],
+  "preview_camera": {
+    "far_radius": 32,
+    "far_height": 24,
+    "far_horizon": 0.06,
+    "eye_height": 1.45
+  },
+  "cel_match": {
+    "base": "scenegen/jobs/codex-style/volcano-cel-v1/previews/unity_player_view.png",
+    "type": "projected 2D sprite composite on unchanged real Unity capture; not a new runtime capture"
+  },
+  "files": [
+    {
+      "file": "Obstacles/volcano_vent_idle.png",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "bytes": 209523,
+      "sha256": "6e4afaa5761eb32c18d5e984ffbc2d2d393dd06cd543c5eff16ccf92113ecff5"
+    },
+    {
+      "file": "Obstacles/volcano_vent_warn.png",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "bytes": 235286,
+      "sha256": "6da25ce1199227220e3c1ad7600097886b3209bface24e647c62952878ff7974"
+    },
+    {
+      "file": "Obstacles/volcano_vent_erupt.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "mode": "RGBA",
+      "bytes": 306983,
+      "sha256": "8fb640dbcdaea2631332515103d7d5b873a2007829199f600facc5519548a8e9"
+    },
+    {
+      "file": "Obstacles/volcano_rock_fall.png",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "bytes": 190909,
+      "sha256": "97eb360683e795e2446efc9ceeda9efd80d46e69340bf0fa476875f5c310e831"
+    },
+    {
+      "file": "Obstacles/volcano_rock_rubble.png",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA",
+      "bytes": 219945,
+      "sha256": "2d080f825e5ded1b0371475d24343e1094afd8a09aa8f88b72366e7384ec7588"
+    },
+    {
+      "file": "Obstacles/exit_circle.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "mode": "RGBA",
+      "bytes": 783044,
+      "sha256": "3b84ec9a1846e00052222638f6239711a18bf51c14c38c91c88114356a291cd6"
+    },
+    {
+      "file": "Obstacles/exit_pillar.png",
+      "size": [
+        256,
+        1024
+      ],
+      "mode": "RGB",
+      "bytes": 130709,
+      "sha256": "0b4c1510fae09c43bc93c1224e4fe7ab859c23849f7ed66872c20d3eea0cbfa5"
+    },
+    {
+      "file": "volcano_0_far.png",
+      "size": [
+        4096,
+        512
+      ],
+      "mode": "RGB",
+      "bytes": 696308,
+      "sha256": "c31c66dffb31cb2fd6705c280b1f494504525db7bb24fc2e9dc6546b3ed88a57"
+    },
+    {
+      "file": "volcano_0_mid.png",
+      "size": [
+        4096,
+        384
+      ],
+      "mode": "RGBA",
+      "bytes": 142709,
+      "sha256": "3efb4e1698379c057032120b7bd6ea7cea0c404c2758538dacb5986c58de36b5"
+    },
+    {
+      "file": "volcano_0_ground.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "mode": "RGB",
+      "bytes": 787182,
+      "sha256": "8926cfc89f80665190520d5a6c2f1f32e6e33c33f0b266a24d136bc905fcb8a1"
+    },
+    {
+      "file": "volcano_0_decals.png",
+      "size": [
+        2048,
+        2048
+      ],
+      "mode": "RGBA",
+      "bytes": 1245590,
+      "sha256": "b04480fc484cc594d7887ac82c5897f04ac45bef0542d134b18c6e2930249534"
+    },
+    {
+      "file": "volcano_0_props.png",
+      "size": [
+        2048,
+        2048
+      ],
+      "mode": "RGBA",
+      "bytes": 1566998,
+      "sha256": "7c27c3a72f07cef02f6859ec5fbdd62ac553c7fa8411e786a529a71b2ad48329"
+    },
+    {
+      "file": "volcano_1_far.png",
+      "size": [
+        4096,
+        512
+      ],
+      "mode": "RGB",
+      "bytes": 689494,
+      "sha256": "9e85fe28cff830b0e037d892ca2ac7ad035758e4afb87d19fbf645a8b6ddcc75"
+    },
+    {
+      "file": "volcano_1_mid.png",
+      "size": [
+        4096,
+        384
+      ],
+      "mode": "RGBA",
+      "bytes": 122000,
+      "sha256": "6a8913237dfd023c9615e4fd3235bafb96b1e8fa33098610fbf4c26b366c27e1"
+    },
+    {
+      "file": "volcano_1_ground.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "mode": "RGB",
+      "bytes": 840998,
+      "sha256": "a32af0d9d930b1e4c4e8702541f60df5a19a7447c294990b7ec5a7cc9b7c34e9"
+    },
+    {
+      "file": "volcano_1_decals.png",
+      "size": [
+        2048,
+        2048
+      ],
+      "mode": "RGBA",
+      "bytes": 1034343,
+      "sha256": "6c8931eea94cc466b0ec3114136c7336a0f49c30554405f6ca45a5f9c37aefca"
+    },
+    {
+      "file": "volcano_1_props.png",
+      "size": [
+        2048,
+        2048
+      ],
+      "mode": "RGBA",
+      "bytes": 1613097,
+      "sha256": "767a347781c839172186f30d593609a95e93a07ca1de9b562c9b9266bc12f6d0"
+    },
+    {
+      "file": "volcano_2_far.png",
+      "size": [
+        4096,
+        512
+      ],
+      "mode": "RGB",
+      "bytes": 1201864,
+      "sha256": "cf01bff50f1a7a0a95879a1ab49c25b3ee444c7cfc314a059c51660b3021ca76"
+    },
+    {
+      "file": "volcano_2_mid.png",
+      "size": [
+        4096,
+        384
+      ],
+      "mode": "RGBA",
+      "bytes": 156844,
+      "sha256": "fb0e71931fcf6b5f162f8990569579ed25527aab835626a86d2e3932a0c47235"
+    },
+    {
+      "file": "volcano_2_ground.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "mode": "RGB",
+      "bytes": 860958,
+      "sha256": "7383f1d4030148e916ee215dd11aae7dcdcfbaf4f6aab746ba5efe0e90ddf00d"
+    },
+    {
+      "file": "volcano_2_decals.png",
+      "size": [
+        2048,
+        2048
+      ],
+      "mode": "RGBA",
+      "bytes": 1289283,
+      "sha256": "507613abbbd0fa0dc1f17c961f30f8bf64e5bbfed514b3e71f58720541453e6d"
+    },
+    {
+      "file": "volcano_2_props.png",
+      "size": [
+        2048,
+        2048
+      ],
+      "mode": "RGBA",
+      "bytes": 2117181,
+      "sha256": "7f381751437be9154276779bf5313c3e2f44709824691988846c12485d67f6bf"
+    }
+  ]
+}
