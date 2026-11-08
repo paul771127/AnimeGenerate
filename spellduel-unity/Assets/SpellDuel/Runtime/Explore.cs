@@ -645,7 +645,20 @@ namespace SpellDuel
         /// 副本：這個區域還有幾隻守著的怪活著。只算站在區域裡的營地守衛；在外面巡邏、遊蕩的小隊不算
         /// （使用者回報清完敵人後門打不開：巡邏的怪走遠了，找不到也就清不完）。巡邏的怪清除後照樣在地圖上走動。
         /// </summary>
-        public int AreaAlive(ExArea a) { int n = 0; foreach (var mon in map.monsters) if (mon.area == a.index && !mon.dead && mon.patrol == null && !mon.wander) n++; return n; }
+        public int AreaAlive(ExArea a) { int n = 0; foreach (var mon in map.monsters) if (mon.area == a.index && !mon.dead && mon.patrol == null && !mon.wander && InArea(a, mon)) n++; return n; }
+
+        /// <summary>怪現在的位置（戰鬥中的怪由 Combat 回報；收起來的就是 home）</summary>
+        public System.Func<ExMonster, Vector3?> monPos;
+        public Vector3 MonPos(ExMonster mon) => monPos?.Invoke(mon) ?? mon.home;
+        /// <summary>
+        /// 這隻守衛還在區域裡（區域半徑外 12m 內都算）。被引走、卡在很遠的地方的不算進區域清除
+        /// （使用者回報第一大關說 100 多 m 外還有 3 隻怪，門過不去；試煉、任務只看那塊區域裡的敵人）
+        /// </summary>
+        public bool InArea(ExArea a, ExMonster mon)
+        {
+            var p = MonPos(mon); var c = a.center;
+            return new Vector2(p.x - c.x, p.z - c.z).magnitude <= a.radius + 12f;
+        }
 
         /// <summary>副本：區域清除（打倒營地、完成事件、打倒中途首領、打開寶箱）：往下一站的門打開</summary>
         public void ClearArea(ExArea a)

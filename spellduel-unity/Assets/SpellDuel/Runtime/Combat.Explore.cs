@@ -102,6 +102,7 @@ namespace SpellDuel
         public void StartExplore(ExploreRun run)
         {
             explore = run;
+            if (run != null) run.monPos = mon => exActive.TryGetValue(mon, out var f) && f != null ? f.Feet : (Vector3?)null;   // 區域清除只算還在區域裡的守衛
             StartDungeonMap();          // 手動模式：不自動出怪、沒有 Boss
             finalRoom = false;
             themeOverride = run.IsDungeon ? themeOverride : 1;           // 叢林（第二章的森林）；副本大地圖照所在區域（SoloBattle 每幀設定）
@@ -575,5 +576,16 @@ namespace SpellDuel
 
         /// <summary>探索中，畫面要知道某個地圖怪現在在戰場上的樣子（沒放上戰場＝null）</summary>
         public Fighter ExFighter(ExMonster mon) => exActive.TryGetValue(mon, out var m) ? m : null;
+
+        /// <summary>把怪叫到 at（卡在遠處的區域守衛：SoloBattle.ExRecallStuck）；放出來、發現玩家</summary>
+        public void ExRecall(ExMonster mon, Vector3 at)
+        {
+            if (mon == null || mon.dead) return;
+            mon.home = new Vector3(at.x, mon.home.y, at.z);
+            if (!exActive.TryGetValue(mon, out var m) || m == null) m = ExSpawn(mon);
+            m.head = new Vector3(at.x, m.head.y, at.z);
+            Emit("miniondie", m.Feet, new Color(1f, 0.55f, 0.25f), null);   // 冒一陣煙：從這裡出現
+            ExAlert(m, false);
+        }
     }
 }
