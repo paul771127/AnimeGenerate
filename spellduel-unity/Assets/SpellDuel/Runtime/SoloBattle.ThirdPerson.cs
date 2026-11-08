@@ -49,23 +49,45 @@ namespace SpellDuel
             me.head += tpOffsetW;
         }
 
-        /// <summary>每幀：主角的 3D 角色跟著角色位置、面向、動作</summary>
+        /// <summary>每幀：主角的 3D 角色跟著角色位置、面向、動作（有生成器的模型就用模型：HeroModel.cs）</summary>
+        HeroModel heroModel; bool heroWasCharging; float heroLastHp = -1f;
         void UpdateSelfRig()
         {
             bool show = TpOn && Me != null;
-            if (!show) { if (selfRig) { Destroy(selfRig.gameObject); selfRig = null; } return; }
+            if (!show)
+            {
+                if (selfRig) { Destroy(selfRig.gameObject); selfRig = null; }
+                if (heroModel) { Destroy(heroModel.gameObject); heroModel = null; }
+                heroLastHp = -1f; return;
+            }
             var adv = Progress.Char(myClass).adv;
+            float dt = Mathf.Max(1e-3f, Time.deltaTime);
+            float speed = Fighter.Flat(Me.Feet - selfLastFeet).magnitude / dt;
+            selfLastFeet = Me.Feet;
+            // 生成器的模型
+            string kit = HeroModel.KitFor(myClass, adv);
+            if (heroModel && heroModel.Kit != kit) { Destroy(heroModel.gameObject); heroModel = null; }
+            if (!heroModel && kit != null) heroModel = HeroModel.Create(myClass, adv);
+            if (heroModel)
+            {
+                if (selfRig) { Destroy(selfRig.gameObject); selfRig = null; }
+                bool charging = Me.Alive && Me.charging != null;
+                if (heroWasCharging && !charging && Me.Alive) heroModel.PlayOnce("cast");   // 放出去了
+                heroWasCharging = charging;
+                if (heroLastHp >= 0f && Me.hp < heroLastHp - 0.5f && Me.Alive && !charging) heroModel.PlayOnce("hit");
+                heroLastHp = Me.hp;
+                heroModel.Drive(WorldFrame.FromWorld(Me.Feet), WorldFrame.DirFromWorld(Fighter.Flat(Me.forward)), speed, !Me.Alive, charging, Me.crouching, Me.airborneUntil > battle.now);
+                return;
+            }
+            // 沒有模型：程式拼的角色
             if (selfRig && (selfRig.ClassId != myClass || selfRig.AdvancedId != adv)) { Destroy(selfRig.gameObject); selfRig = null; }
             if (!selfRig)
             {
                 selfRig = CharacterRig.Create(myClass, adv);
                 selfRig.SetGear(GearLook.Of(Progress.Char(myClass).equipped));
-                selfLastFeet = Me.Feet;
             }
-            float dt = Mathf.Max(1e-3f, Time.deltaTime);
             selfRig.SetPose(WorldFrame.FromWorld(Me.Feet), WorldFrame.DirFromWorld(Fighter.Flat(Me.forward)));
-            selfRig.MoveSpeed = Mathf.Lerp(selfRig.MoveSpeed, Fighter.Flat(Me.Feet - selfLastFeet).magnitude / dt, 0.2f);
-            selfLastFeet = Me.Feet;
+            selfRig.MoveSpeed = Mathf.Lerp(selfRig.MoveSpeed, speed, 0.2f);
             selfRig.SetDead(!Me.Alive);
             selfRig.Charge = Me.Alive && Me.charging != null ? Mathf.Clamp01((battle.now - Me.chargeStart) / Mathf.Max(0.3f, Me.charging.charge)) : 0f;
             selfRig.Guarding = Me.Alive && Me.crouching;
