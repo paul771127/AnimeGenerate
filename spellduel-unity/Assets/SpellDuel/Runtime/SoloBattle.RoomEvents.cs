@@ -238,6 +238,7 @@ namespace SpellDuel
                     foreach(var point in evPointGo)if(point){MinionRig.SpawnFx(point.transform.position);point.SetActive(false);}
                     Sfx.Play("charged", 0.9f, 1f); Haptics.Play(Haptics.Kind.Medium);
                     if (!string.IsNullOrEmpty(text)) { Say("✅ " + text, 3f); ChatEvent("✅ " + text); }
+                    GrantChallengeReward();   // 挑戰通過：稀有道具（含神秘盒子）、素材、金錢（SoloBattle.ChallengeReward.cs）
                     break;
                 case "evcharge":
                     Sfx.Play("select", 0.8f, 1.3f);
@@ -260,7 +261,7 @@ namespace SpellDuel
                     break;
                 case "evfail":
                     Sfx.Play("warn", 0.7f, 0.9f); Haptics.Play(Haptics.Kind.Warning);
-                    if (!string.IsNullOrEmpty(text)) { Say("❌ " + text + "（關卡繼續）", 3f); ChatEvent("❌ " + text); }
+                    if (!string.IsNullOrEmpty(text)) { Say("❌ " + text + "\n挑戰沒過（沒有挑戰獎勵），可以繼續往下走", 3.5f); ChatEvent("❌ " + text + "（挑戰沒過，關卡繼續）"); }
                     break;
             }
             return true;

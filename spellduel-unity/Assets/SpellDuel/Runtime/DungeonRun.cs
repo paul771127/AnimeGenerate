@@ -139,12 +139,14 @@ namespace SpellDuel
         }
 
         /// <summary>劇情人物倒下：保護目標（還沒抵達安全地點）＝副本失敗</summary>
+        public bool escortLost;
         public void NpcDied(string id)
         {
             if (!npcs.TryGetValue(id, out var st) || st.dead) return;
             st.dead = true;
             foreach (var l in st.def.die) lines.Enqueue(l);
-            if (st.side == "escort" && !st.safe && !st.def.optionalEscort) { failed = true; failText = $"{st.def.name}倒下了…副本失敗"; }
+            // 任務的挑戰改成不強迫（使用者要求：任務沒過也要能繼續往下打）：保護目標倒下只是任務失敗，副本照常繼續
+            if (st.side == "escort" && !st.safe && !st.def.optionalEscort) escortLost = true;
         }
 
         /// <summary>第三勢力：這個地點打完就撤退（不用打倒）</summary>

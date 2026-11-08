@@ -306,7 +306,7 @@ namespace SpellDuel
         void TickTargets()
         {
             if (labScore >= labNeed) { FinishRoomEvent($"🎯 命中 {labScore} 個！"); return; }
-            if (now > labEndAt) { if (labScore >= labNeed / 2) FinishRoomEvent($"⏰ 時間到，命中 {labScore}/{labNeed}"); else { FailStage($"靶場失敗：只命中 {labScore}/{labNeed}"); } return; }
+            if (now > labEndAt) { if (labScore >= labNeed / 2) FinishRoomEvent($"⏰ 時間到，命中 {labScore}/{labNeed}"); else { FailChallenge($"靶場沒過：只命中 {labScore}/{labNeed}"); } return; }
             // 靶留在場上 20 秒（法球飛得慢也打得到）；被打中或時間到才換下一個。
             // 同時在場的靶：一開始 1 個，每 5 秒多 1 個（使用者回報對法師太難）
             int cap = Mathf.Min(6, 1 + Mathf.FloorToInt((now - waveStartAt) / 5f)), alive = 0;
@@ -380,13 +380,13 @@ namespace SpellDuel
             }
             labScore += 0; labEnemyScore += theirs * dt * 1.2f; labMoveAt += mine * dt * 1.2f;
             if (labMoveAt >= labNeed) { FinishRoomEvent("🏰 據點爭奪勝利！"); return; }
-            if (labEnemyScore >= labNeed) { if (evSoft) { SoftFailGoal("據點被敵人搶走了…"); } else FailStage("據點被敵人搶走了…"); }
+            if (labEnemyScore >= labNeed) { if (evSoft) { SoftFailGoal("據點被敵人搶走了…"); } else FailChallenge("據點被敵人搶走了…"); }
         }
 
         // ---- 塔防
         void TickTowers(float dt)
         {
-            if (labCore == null || !labCore.Alive) { if (evSoft) SoftFailGoal("核心被打壞了…"); else FailStage("守護核心被打壞了…"); return; }
+            if (labCore == null || !labCore.Alive) { if (evSoft) SoftFailGoal("核心被打壞了…"); else FailChallenge("守護核心被打壞了…"); return; }
             if (now > labEndAt) { FinishRoomEvent("🗼 守住了！"); return; }
             // 三路出怪
             if (now >= labNext)

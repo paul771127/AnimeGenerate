@@ -305,6 +305,13 @@ namespace SpellDuel
         /// <summary>生存玩法（ramp）：已經過了幾輪 → 場上同時多幾隻</summary>
         int SurviveRamp => roomEvent == "survive" && P("ramp", "") == "1" ? Mathf.Min(SurviveRampMax, Mathf.FloorToInt(Mathf.Max(0f, now - waveStartAt) / SurviveRampEvery)) : 0;
 
+        /// <summary>挑戰沒過：關卡不失敗（第一大關的支線由 failFilter 自己處理：可以找 NPC 重來）</summary>
+        void FailChallenge(string why)
+        {
+            if (failFilter != null && failFilter(why)) return;
+            FinishRoomEvent(why, true);
+        }
+
         /// <summary>這個地點結束（清完、換地點、副本結束）：拿掉道具、清狀態</summary>
         public void CleanupRoomEvent()
         {
@@ -318,13 +325,19 @@ namespace SpellDuel
         }
 
         /// <summary>過關：剩下的怪消失、拿掉道具、照一般地點的流程結束</summary>
-        void FinishRoomEvent(string msg)
+        void FinishRoomEvent(string msg) => FinishRoomEvent(msg, false);
+        /// <summary>
+        /// 這個地點的挑戰結束。failed＝挑戰沒過：任務的挑戰不強迫（使用者要求），關卡不會失敗，
+        /// 一樣結束這個地點、可以往下走，只是拿不到挑戰獎勵（evdone 才給：SoloBattle.ChallengeReward.cs）。
+        /// </summary>
+        void FinishRoomEvent(string msg, bool failed)
         {
             ChaseWaveOver();   // 追獵：盜寶頭目還沒打倒就趁亂逃走（Combat.WaveGoals.cs）
-            bool story = evSoft, goal = evSoft && roomEvent != "chase";
+            bool story = evSoft && !failed, goal = story && roomEvent != "chase";
             foreach (var m in minions) if (m.Alive) { m.hp = 0f; Emit("miniondie", m.Feet, m.cls.color, null); }
             evPhase = 3;
-            Emit("evdone", player.Feet, new Color(0.5f, 1f, 0.6f), msg);
+            if (failed) Emit("evfail", player.Feet, new Color(1f, 0.4f, 0.3f), msg);
+            else Emit("evdone", player.Feet, new Color(0.5f, 1f, 0.6f), msg);
             if (goal) Emit("evgoal", player.Feet, new Color(1f, 0.9f, 0.5f), null);   // 故事的波次目標達成：通關時加金幣
             CleanupRoomEvent();
             waveToSpawn = 0;
@@ -351,7 +364,7 @@ namespace SpellDuel
                     if (lost)
                     {
                         if (evSoft) { SoftFailGoal(P("fail", "守護目標被打壞了…")); return false; }   // 故事：目標失敗，這一波照常清怪
-                        FailStage(P("fail", "守護目標被打壞了…")); return true;
+                        FailChallenge(P("fail", "守護目標被打壞了…")); return true;
                     }
                     handled = false;   // 出怪、過關照一般流程（清完這一波）
                     break;
@@ -366,7 +379,7 @@ namespace SpellDuel
                     if (now >= evEndAt) { FinishRoomEvent("撐住了！"); return true; }
                     break;
                 case "escort":
-                    if (evWalker == null || !evWalker.Alive) { FailStage(P("fail", $"{P("name", "受傷的旅人")}倒下了…")); return true; }
+                    if (evWalker == null || !evWalker.Alive) { FailChallenge(P("fail", $"{P("name", "受傷的旅人")}倒下了…")); return true; }
                     RefillEv(EvRespawnDelay);
                     if (evWalker.walkPath == null) { FinishRoomEvent($"{evWalker.name}平安抵達了！"); return true; }
                     break;

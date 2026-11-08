@@ -12,6 +12,7 @@ namespace SpellDuel
         Vector2 invScroll; float invContentH;
         string invSel;                // 選中的那一格（key）
         string invTitle, invBody; Color invColor;
+        readonly System.Random boxRng = new System.Random();
 
         sealed class InvRow { public string key, icon, name, body; public int n; public Color c; }
 
@@ -58,6 +59,7 @@ namespace SpellDuel
                 string use = c.scroll ? "・用法：故事關卡戰鬥中使用，出發前在整備畫面帶 1 張。" : $"・用法：戰鬥中按畫面上的藥水使用（冷卻 {c.cooldown:0} 秒；一場戰鬥不限瓶數，背包裡的都能喝）。";
                 rows.Add(new InvRow { key = "c_" + c.id, icon = c.icon, name = c.name, n = n, c = new Color(0.6f, 0.88f, 1f), body = $"{c.desc}。\n{use}\n・取得：城鎮的道具店（{c.price} 金幣）。" });
             }
+            { int nb = Economy.Count(MysteryBox.Id); if (nb > 0) rows.Insert(0, new InvRow { key = "x_box", icon = MysteryBox.Icon, name = MysteryBox.Name, n = nb, c = new Color(1f, 0.75f, 0.95f), body = MysteryBox.Desc + "\n・用法：按右上的「打開」。" }); }
             Header("🧪 道具");
             Grid(rows, "沒有藥水或捲軸：到城鎮的道具店買");
 
@@ -139,6 +141,20 @@ namespace SpellDuel
                 float bh = fs * 1.8f;
                 UiKit.Text(new Rect(dr.x + gap, dr.y + gap * 0.5f, dr.width - gap * 2 - fs * 4.5f, fs * 1.5f), invTitle, fs, invColor, TextAnchor.MiddleLeft, true);
                 if (UiKit.Button(new Rect(dr.xMax - gap - fs * 4.2f, dr.y + gap * 0.4f, fs * 4.2f, fs * 1.5f), "關閉", fsS)) invSel = null;
+                // 神秘盒子：在這裡打開（拿到的東西寫在說明框裡）
+                if (invSel == "x_box" && Economy.Count(MysteryBox.Id) > 0
+                    && UiKit.Button(new Rect(dr.xMax - gap * 2f - fs * 8.6f, dr.y + gap * 0.4f, fs * 4.2f, fs * 1.5f), "🎁 打開", fsS, false, new Color(1f, 0.75f, 0.95f)))
+                {
+                    string got = MysteryBox.Open(p, boxRng);
+                    if (got != null)
+                    {
+                        int left = Economy.Count(MysteryBox.Id);
+                        invTitle = $"{MysteryBox.Icon} {MysteryBox.Name}　×{left}";
+                        invBody = $"打開了！\n{got}" + (left > 0 ? $"\n\n（還有 {left} 個，可以再按「打開」）" : "\n\n（盒子用完了）");
+                        Sfx.Play(got.StartsWith("🌟") || got.StartsWith("✨") ? "win" : "coin", 0.8f, 1.2f);
+                        Haptics.Play(got.StartsWith("🌟") ? Haptics.Kind.Success : Haptics.Kind.Light);
+                    }
+                }
                 UiKit.Text(new Rect(dr.x + gap, dr.y + gap + fs * 1.6f, dr.width - gap * 2, dr.height - fs * 1.6f - gap * 2), invBody ?? "", fsS, new Color(0.9f, 0.92f, 1f), TextAnchor.UpperLeft, false, 0.5f);
                 // 點說明框外面：關閉
                 var e = Event.current;
