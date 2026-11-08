@@ -8,7 +8,7 @@ Shader "SpellDuel/StageKit"
  // 同一個材質、同一個網格的零件會用 GPU instancing 合併繪製（不會變慢）。
  Properties { _MainTex("Albedo",2D)="white"{} _EmissionMap("Emission mask",2D)="black"{} _EmissionColor("Emission",Color)=(1,0.45,0.12,1) _Glow("Glow",Float)=1.6 _FlowSpeed("Flow (V per second, lava falls)",Float)=0
   _UnderGlow("Lava underglow",Color)=(1,0.38,0.1,1) _UnderGlowHeight("Underglow height (m)",Float)=1.6 _UnderGlowStrength("Underglow strength",Float)=0
-  _Haze("Haze",Color)=(0.32,0.2,0.18,1) _HazeNear("Haze near",Float)=16 _HazeFar("Haze far",Float)=46 _HazeMax("Haze max",Float)=0.6 _OffsetFactor("Depth offset factor",Float)=0 _OffsetUnits("Depth offset units",Float)=0 }
+  _Haze("Haze",Color)=(0.32,0.2,0.18,1) _HazeNear("Haze near",Float)=16 _HazeFar("Haze far",Float)=46 _HazeMax("Haze max",Float)=0.6 _OffsetFactor("Depth offset factor",Float)=0 _OffsetUnits("Depth offset units",Float)=0 _LitHalf("Ground: lit half only",Float)=0 }
  SubShader {
  Tags { "Queue"="Geometry" "RenderType"="Opaque" }
  Pass { Offset [_OffsetFactor], [_OffsetUnits]   // 疊在一起的地面（城鎮地面、路面、室內地板）：往後推一點，不會互相閃爍
@@ -17,7 +17,7 @@ Shader "SpellDuel/StageKit"
  #pragma fragment frag
  #pragma multi_compile_instancing
  #include "UnityCG.cginc"
- sampler2D _MainTex,_EmissionMap;fixed4 _EmissionColor,_Haze,_UnderGlow;float _FlowSpeed,_Glow,_HazeNear,_HazeFar,_HazeMax,_UnderGlowHeight,_UnderGlowStrength;
+ sampler2D _MainTex,_EmissionMap;fixed4 _EmissionColor,_Haze,_UnderGlow;float _LitHalf,_FlowSpeed,_Glow,_HazeNear,_HazeFar,_HazeMax,_UnderGlowHeight,_UnderGlowStrength;
  struct appdata{float4 vertex:POSITION;float2 uv:TEXCOORD0;UNITY_VERTEX_INPUT_INSTANCE_ID};
  struct v2f{float4 pos:SV_POSITION;float2 uv:TEXCOORD0;float haze:TEXCOORD1;float under:TEXCOORD2;float pulse:TEXCOORD3;};
  v2f vert(appdata v){v2f o;UNITY_SETUP_INSTANCE_ID(v);o.uv=v.uv;o.pos=UnityObjectToClipPos(v.vertex);
@@ -29,6 +29,8 @@ Shader "SpellDuel/StageKit"
   o.pulse=0.75+0.35*sin(_Time.y*1.7+wp.x*0.5+wp.z*0.4);
   return o;}
  fixed4 frag(v2f i):SV_Target{float2 uv=_FlowSpeed>0?float2(i.uv.x,frac(i.uv.y-_Time.y*_FlowSpeed)):i.uv;   // 熔岩瀑布：只捲 V（往下游）
+  // 城鎮圖集每種材質分成兩半（左＝背光暗色、右＝受光亮色）：地面一律用亮的那一半，不會拼成一塊一塊的色差（使用者回報）
+  if(_LitHalf>0.5&&fmod(floor(uv.x*4),2)<0.5)uv.x+=0.25;
   fixed3 c=tex2D(_MainTex,uv).rgb;fixed g=tex2D(_EmissionMap,uv).r;
   c+=_EmissionColor.rgb*g*_Glow*i.pulse;
   c+=_UnderGlow.rgb*i.under;

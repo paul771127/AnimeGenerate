@@ -31,6 +31,7 @@ namespace SpellDuel
             if (layered.TryGetValue((m, layer), out var lm) && lm) return lm;
             lm = new Material(m) { name = m.name + " (ground " + layer + ")" };
             lm.SetFloat("_OffsetFactor", layer); lm.SetFloat("_OffsetUnits", layer * 4f);
+            lm.SetFloat("_LitHalf", 1f);   // 地面只用圖集的受光半邊（不會一塊暗一塊亮）
             layered[(m, layer)] = lm; return lm;
         }
         string dir; object layout;
