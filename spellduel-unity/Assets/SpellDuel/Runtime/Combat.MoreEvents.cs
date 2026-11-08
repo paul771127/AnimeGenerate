@@ -307,15 +307,19 @@ namespace SpellDuel
         {
             if (labScore >= labNeed) { FinishRoomEvent($"🎯 命中 {labScore} 個！"); return; }
             if (now > labEndAt) { if (labScore >= labNeed / 2) FinishRoomEvent($"⏰ 時間到，命中 {labScore}/{labNeed}"); else { FailStage($"靶場失敗：只命中 {labScore}/{labNeed}"); } return; }
-            if (now >= labNext)
+            // 靶留在場上 20 秒（法球飛得慢也打得到）；被打中或時間到才換下一個。
+            // 同時在場的靶：一開始 1 個，每 5 秒多 1 個（使用者回報對法師太難）
+            int cap = Mathf.Min(6, 1 + Mathf.FloorToInt((now - waveStartAt) / 5f)), alive = 0;
+            foreach (var p in labProps) if (!p.dead && p.kind == "target") alive++;
+            if (alive < cap && now >= labNext)
             {
-                labNext = now + Mathf.Lerp(1.4f, 0.7f, Mathf.Clamp01((now - waveStartAt) / 40f));
-                bool civ = rng.Next(5) == 0;
+                labNext = now + 0.35f;   // 一次補很多個時稍微錯開
+                bool civ = rng.Next(6) == 0;
                 var at = Ring(ArenaInner() * (0.6f + 0.35f * (float)rng.NextDouble()), rng.Next(360));
                 var n = SpawnNpc(civ ? "lab_civ" : "lab_tgt", civ ? "平民（別打）" : "靶子", "priest", 1, false, 1, 0, at);
                 n.rooted = true; n.maxHp = 1000; n.hp = 1000;
-                n.walkIdx = rng.Next(3) == 0 ? 1 : 0;   // 1＝會橫移
-                labProps.Add(new LabProp { kind = civ ? "civ" : "target", pos = at, until = now + Mathf.Lerp(3.5f, 2.2f, Mathf.Clamp01((now - waveStartAt) / 40f)), t0 = now, side = n.minionId });
+                n.walkIdx = rng.Next(4) == 0 ? 1 : 0;   // 1＝會橫移
+                labProps.Add(new LabProp { kind = civ ? "civ" : "target", pos = at, until = now + (civ ? 6f : 20f), t0 = now, side = n.minionId });   // 平民不佔靶的名額，6 秒就走
             }
             foreach (var p in labProps)
             {
@@ -329,6 +333,8 @@ namespace SpellDuel
                 }
             }
             foreach (var p in labProps) if (p.dead || now > p.until) { p.dead = true; npcs.RemoveAll(x => x.minionId == p.side); }
+            // 時間到的靶在 TickLabEvent 先被拿掉了：場上留下的靶／平民也要一起收掉
+            npcs.RemoveAll(x => (x.npcId == "lab_tgt" || x.npcId == "lab_civ") && !labProps.Exists(p => !p.dead && p.side == x.minionId));
         }
 
         // ---- 推箱
