@@ -47,7 +47,7 @@ namespace SpellDuel
         Vector3 dashTotalS;   // 到目前為止世界總共被平移多少（session 座標）
         Vector3 dashMoveW;    // 衝刺讓角色在場地上前進了多少（場地座標）
         /// <summary>扣掉衝刺之後「人真的走動」的位置：側跨閃避、運動紀錄用（衝刺不算側跨，也不算走路）</summary>
-        Vector3 PhysFeet(Fighter f) => f == Me ? f.Feet - dashMoveW : f.Feet;
+        Vector3 PhysFeet(Fighter f) => f == Me ? f.Feet - dashMoveW - tpOffsetW : f.Feet;   // 第三人稱：角色在手機前方的那段也扣掉
         int dashAreaRev = -1; // 開始平移時場地的版本：之後場地重畫／重新放置（新場地就是實體房間）→ 累積的平移作廢
         readonly List<GameObject> dashRoots = new List<GameObject>();
         readonly Dictionary<GameObject, bool> dashRootMove = new Dictionary<GameObject, bool>();
@@ -226,7 +226,7 @@ namespace SpellDuel
             StopDash(); dashOpenAt = -99f; dashDistance = 0f;
             if (area != null) DashCheckArea();
             if (dashTotalS.sqrMagnitude > 1e-8f && area != null) ShiftWorld(-dashTotalS);
-            dashTotalS = Vector3.zero; dashMoveW = Vector3.zero; dashRootMove.Clear();
+            dashTotalS = Vector3.zero; dashMoveW = Vector3.zero; dashRootMove.Clear(); tpHas = false;
         }
 
         /// <summary>衝過之後場地和實體房間對不上：手機走到真實房間邊緣（衝刺前的場地框）就提醒</summary>
