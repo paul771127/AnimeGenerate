@@ -1,0 +1,19 @@
+{
+  "job": "001-archmage-hero",
+  "kind": "character",
+  "classId": "archmage",
+  "reference": "spellduel-unity/Assets/SpellDuel/Resources/Story2D/classes/archmage.png",
+  "style": "japanese anime cel-shaded, two-tone shading, black outline (inverted hull OUTLINE_* or shader)",
+  "units": "meters",
+  "up": "+Y",
+  "forward": "+Z",
+  "height": 1.72,
+  "rig": "Unity Humanoid compatible; extra bones Staff, Book, optional robe skirt bones",
+  "maxTriangles": 15000,
+  "textures": {"albedo": "archmage_albedo.png", "emission": "archmage_emission.png", "size": 2048},
+  "animations": ["idle", "walk", "run", "cast", "cast_loop", "hit", "crouch", "jump", "die", "victory"],
+  "output": "spellduel-unity/Assets/SpellDuel/Resources/CharKit/archmage_v1/",
+  "noMeta": true,
+  "previews": ["front", "back", "side", "third_person_back_3m_h1.5m", "compare_with_2d"],
+  "branch": "claude/mobile-camera-mic-battle-game-v5nhfr"
+}
