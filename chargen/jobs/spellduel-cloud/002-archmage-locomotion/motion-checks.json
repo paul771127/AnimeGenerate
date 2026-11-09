@@ -1,0 +1,18 @@
+{
+  "importedClips": 18,
+  "sampledPoses": 104,
+  "rootTranslationMax": 0,
+  "releaseOrbMinusRightHand": {
+    "x": 0.0014490187168121338,
+    "y": 0.17834675312042236,
+    "z": 0.9708244800567627
+  },
+  "chantOrbMinusRightHand": {
+    "x": -0.0037509799003601074,
+    "y": 0.8678475618362427,
+    "z": 0.46997493505477905
+  },
+  "leftArmAtSide": true,
+  "shaderEmission": "unchanged existing purple orb mask",
+  "previewGIFs": "repeating demonstrations; source cast_staff remains non-looping"
+}

@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 1,
+  "job": "002-archmage-locomotion",
+  "ok": true,
+  "status": "completed",
+  "branch": "claude/mobile-camera-mic-battle-game-v5nhfr",
+  "updatedFile": {
+    "path": "spellduel-unity/Assets/SpellDuel/Resources/CharKit/archmage_v1/archmage.fbx",
+    "bytes": 6591708,
+    "sha256": "6b19a8d3121285dea03d7aa10e2ec653806bd67e2c73314bb400e97d78a0e24c"
+  },
+  "fps": 30,
+  "inPlace": true,
+  "newAnimations": [
+    {
+      "name": "walk_back",
+      "frames": 41,
+      "seconds": 1.3333333333333333,
+      "loop": true,
+      "localUnityTravel": [
+        0,
+        0,
+        -1
+      ],
+      "method": "authored two-bone IK foot cycle; upper-body gait copied from existing walk",
+      "fps": 30.0
+    },
+    {
+      "name": "walk_left",
+      "frames": 41,
+      "seconds": 1.3333333333333333,
+      "loop": true,
+      "localUnityTravel": [
+        -1,
+        0,
+        0
+      ],
+      "method": "authored two-bone IK foot cycle; upper-body gait copied from existing walk",
+      "fps": 30.0
+    },
+    {
+      "name": "walk_right",
+      "frames": 41,
+      "seconds": 1.3333333333333333,
+      "loop": true,
+      "localUnityTravel": [
+        1,
+        0,
+        0
+      ],
+      "method": "authored two-bone IK foot cycle; upper-body gait copied from existing walk",
+      "fps": 30.0
+    },
+    {
+      "name": "run_back",
+      "frames": 21,
+      "seconds": 0.6666666666666666,
+      "loop": true,
+      "localUnityTravel": [
+        0,
+        0,
+        -1
+      ],
+      "method": "authored two-bone IK foot cycle; upper-body gait copied from existing run",
+      "fps": 30.0
+    },
+    {
+      "name": "run_left",
+      "frames": 21,
+      "seconds": 0.6666666666666666,
+      "loop": true,
+      "localUnityTravel": [
+        -1,
+        0,
+        0
+      ],
+      "method": "authored two-bone IK foot cycle; upper-body gait copied from existing run",
+      "fps": 30.0
+    },
+    {
+      "name": "run_right",
+      "frames": 21,
+      "seconds": 0.6666666666666666,
+      "loop": true,
+      "localUnityTravel": [
+        1,
+        0,
+        0
+      ],
+      "method": "authored two-bone IK foot cycle; upper-body gait copied from existing run",
+      "fps": 30.0
+    },
+    {
+      "name": "cast_staff",
+      "frames": 25,
+      "seconds": 0.8,
+      "loop": false,
+      "method": "project-authored right-arm IK and palm attachment; staff orientation animated forward/up; idle left-arm retained",
+      "fps": 30.0
+    },
+    {
+      "name": "cast_staff_loop",
+      "frames": 49,
+      "seconds": 1.6,
+      "loop": true,
+      "method": "project-authored right-arm IK and palm attachment; staff orientation animated forward/up; idle left-arm retained",
+      "fps": 30.0
+    }
+  ],
+  "existingAnimationsPreserved": [
+    "idle",
+    "walk",
+    "run",
+    "cast",
+    "cast_loop",
+    "hit",
+    "crouch",
+    "jump",
+    "die",
+    "victory"
+  ],
+  "totalClips": 18,
+  "geometry": {
+    "unchanged": true,
+    "bodyTriangles": 10084,
+    "outlineTriangles": 4218,
+    "materials": 2,
+    "boneCount": 61,
+    "maxInfluences": 4,
+    "sourceGeometrySha256": "7f0d002596f87187a75fcd37b8684354379b6ebcfb1e572bd9dfaab4245e3694"
+  },
+  "appearance": "Job 001 mesh, neck proportions, UV, skinning and textures unchanged",
+  "staffCasting": {
+    "hand": "right",
+    "leftArm": "idle at side",
+    "castSeconds": 0.8,
+    "releaseRecommendedSeconds": 0.44,
+    "chantSeconds": 1.6,
+    "emission": "Uses existing violet orb emission mask; no texture or shader changes"
+  },
+  "qa": {
+    "unityVersion": "2022.3.62f2",
+    "humanoidValid": true,
+    "humanoidHuman": true,
+    "sampledPoses": 104,
+    "rootTranslationMaxMeters": 0,
+    "oldActionDataHashesUnchanged": true,
+    "existingClipDurationsUnchanged": true,
+    "loopMarkerSeamErrorMeters": {
+      "walk_back": 2.7069303579009993e-06,
+      "walk_left": 2.4756116699789142e-06,
+      "walk_right": 2.389256107665654e-06,
+      "run_back": 6.703866648198362e-07,
+      "run_left": 5.470979139413184e-07,
+      "run_right": 5.306152646173494e-07,
+      "cast_staff_loop": 8.566547841909414e-07
+    },
+    "measurements": {
+      "importedClips": 18,
+      "sampledPoses": 104,
+      "rootTranslationMax": 0,
+      "releaseOrbMinusRightHand": {
+        "x": 0.0014490187168121338,
+        "y": 0.17834675312042236,
+        "z": 0.9708244800567627
+      },
+      "chantOrbMinusRightHand": {
+        "x": -0.0037509799003601074,
+        "y": 0.8678475618362427,
+        "z": 0.46997493505477905
+      },
+      "leftArmAtSide": true,
+      "shaderEmission": "unchanged existing purple orb mask",
+      "previewGIFs": "repeating demonstrations; source cast_staff remains non-looping"
+    },
+    "visualReview": "Unity sampled poses, temporal contact sheet reviewed; preview GIFs provided",
+    "mobileProfile": "not_measured",
+    "deliveryImportHelper": "Compiled and executed in Unity 2022.3.62f2; original ten clip settings unchanged; 18 clips and Staff position/rotation curves retained"
+  },
+  "unityImport": {
+    "humanoidExtraBoneMaskRequired": true,
+    "reason": "Default Humanoid import can discard non-human Staff/Book Transform channels even though they are embedded in FBX.",
+    "instructions": "For the eight new clips, import a full Transform AvatarMask including Staff and Book. See UNITY_IMPORT.md and generation/ConfigureArchmage002Import.cs.txt. No Runtime edit is required.",
+    "genericRig": "Raw authored Transform curves are present in the FBX; tested delivery configuration is Humanoid with the explicit full mask."
+  },
+  "previews": [
+    "previews/cast_staff.gif",
+    "previews/cast_staff.png",
+    "previews/cast_staff_loop.gif",
+    "previews/cast_staff_loop.png",
+    "previews/locomotion_contact.png",
+    "previews/run_back.gif",
+    "previews/run_back.png",
+    "previews/run_left.gif",
+    "previews/run_left.png",
+    "previews/run_right.gif",
+    "previews/run_right.png",
+    "previews/walk_back.gif",
+    "previews/walk_back.png",
+    "previews/walk_left.gif",
+    "previews/walk_left.png",
+    "previews/walk_right.gif",
+    "previews/walk_right.png"
+  ],
+  "noMeta": true,
+  "runtimeChanged": false,
+  "limitations": [
+    "Humanoid import requires the additional Staff/Book Transform channels to be included in the clip mask.",
+    "GIF previews repeat for demonstration; cast_staff is a non-looping 0.8-second source clip.",
+    "Garment uses the existing ordinary skinning, without cloth simulation; no new mesh or dress adjustment was made.",
+    "Player translation, facing and projectile timing remain game-side responsibilities; actual phone FPS and thermal tests were not performed."
+  ]
+}

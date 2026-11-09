@@ -1,0 +1,72 @@
+// Copy to an Editor folder as ConfigureArchmage002Import.cs, then run the menu.
+// Preserves the existing rig mapping and original clip settings. No Runtime code.
+using System;
+using System.Linq;
+using UnityEditor;
+using UnityEngine;
+
+public static class ConfigureArchmage002Import
+{
+    const string ModelPath = "Assets/SpellDuel/Resources/CharKit/archmage_v1/archmage.fbx";
+    const string MaskFolder = "Assets/Editor/CharKitImportMasks";
+    const string MaskPath = MaskFolder + "/Archmage002.mask";
+    static readonly string[] NewNames = {
+        "walk_back", "walk_left", "walk_right", "run_back", "run_left", "run_right",
+        "cast_staff", "cast_staff_loop"
+    };
+
+    [MenuItem("SpellDuel/CharKit/Configure archmage job 002 clips")]
+    public static void Execute()
+    {
+        Configure(ModelPath);
+    }
+
+    public static void Configure(string modelPath)
+    {
+        var importer = AssetImporter.GetAtPath(modelPath) as ModelImporter;
+        var model = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
+        if (importer == null || model == null)
+            throw new InvalidOperationException("Import archmage.fbx before configuring its clips.");
+        if (importer.animationType != ModelImporterAnimationType.Human)
+            throw new InvalidOperationException("Configure the existing job 001 Humanoid rig first; this helper preserves its mapping.");
+
+        var clips = importer.clipAnimations;
+        if (clips.Length == 0) clips = importer.defaultClipAnimations;
+        foreach (var name in NewNames)
+            if (!clips.Any(c => c.name == name))
+                throw new InvalidOperationException("Missing job 002 clip: " + name);
+
+        if (!AssetDatabase.IsValidFolder("Assets/Editor"))
+            AssetDatabase.CreateFolder("Assets", "Editor");
+        if (!AssetDatabase.IsValidFolder(MaskFolder))
+            AssetDatabase.CreateFolder("Assets/Editor", "CharKitImportMasks");
+        var mask = AssetDatabase.LoadAssetAtPath<AvatarMask>(MaskPath);
+        if (mask == null)
+        {
+            mask = new AvatarMask();
+            AssetDatabase.CreateAsset(mask, MaskPath);
+        }
+        var transforms = model.GetComponentsInChildren<Transform>(true);
+        mask.transformCount = transforms.Length;
+        for (int i = 0; i < transforms.Length; ++i)
+        {
+            mask.SetTransformPath(i, AnimationUtility.CalculateTransformPath(transforms[i], model.transform));
+            mask.SetTransformActive(i, true);
+        }
+        for (int i = 0; i < (int)AvatarMaskBodyPart.LastBodyPart; ++i)
+            mask.SetHumanoidBodyPartActive((AvatarMaskBodyPart)i, true);
+        EditorUtility.SetDirty(mask);
+        AssetDatabase.SaveAssets();
+
+        foreach (var clip in clips.Where(c => NewNames.Contains(c.name)))
+        {
+            clip.loopTime = clip.name != "cast_staff";
+            clip.ConfigureClipFromMask(mask);
+            clip.maskType = ClipAnimationMaskType.CopyFromOther;
+            clip.maskSource = mask;
+        }
+        importer.clipAnimations = clips;
+        importer.SaveAndReimport();
+        Debug.Log("Configured eight archmage job 002 clips including Staff/Book Transform curves.");
+    }
+}

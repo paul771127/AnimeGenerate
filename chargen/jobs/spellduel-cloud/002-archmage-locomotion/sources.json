@@ -1,0 +1,6 @@
+{
+  "reuses": "../001-archmage-hero/sources.json",
+  "newThirdPartyAssets": [],
+  "newActions": "Project-authored two-bone IK locomotion and right-hand staff poses; upper-body motion copied from existing walk/run/idle actions",
+  "licensesUnchanged": true
+}

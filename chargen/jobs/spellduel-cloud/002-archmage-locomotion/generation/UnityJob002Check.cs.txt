@@ -1,0 +1,59 @@
+using UnityEngine;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEditor.Animations;
+using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+public static class ArchmageJob002 {
+ [Serializable] public class Pair {public string humanName,boneName;}
+ [Serializable] public class Request {public Pair[] mapping;}
+ [Serializable] public class ClipInfo {public string name;public float seconds,fps;public bool loop;}
+ [Serializable] public class PoseInfo {public string name;public float normalizedTime;public Vector3 rightHand,leftHand,orb,root;public int orbVertices;}
+ [Serializable] public class Report {public PoseInfo[] poses;public bool ok,humanoidValid,humanoidHuman;public string error;public int bodyTriangles,outlineTriangles,materials,bones,maxWeights;public ClipInfo[] animations;public string[] boneNames;}
+ const string W="C:/Users/demog/Documents/Codex/2026-11-08/se-3/work/archmage002/";
+ const string J="E:/AI接案/SpellDuel-repo/chargen/jobs/spellduel-cloud/002-archmage-locomotion/";
+ public static void Execute(){var r=new Report();try {
+  AssetDatabase.Refresh();string path="Assets/ArchmageJob002/archmage.fbx";
+  var model=AssetDatabase.LoadAssetAtPath<GameObject>(path);var imp=(ModelImporter)AssetImporter.GetAtPath(path);
+  var req=JsonUtility.FromJson<Request>(File.ReadAllText(W+"unity-request.json"));var desc=imp.humanDescription;
+  desc.human=req.mapping.Select(m=>new HumanBone{humanName=m.humanName,boneName=m.boneName,limit=new HumanLimit{useDefaultValues=true}}).ToArray();
+  desc.skeleton=model.GetComponentsInChildren<Transform>(true).Select(t=>new SkeletonBone{name=t.name,position=t.localPosition,rotation=t.localRotation,scale=t.localScale}).ToArray();
+  desc.upperArmTwist=.5f;desc.lowerArmTwist=.5f;desc.upperLegTwist=.5f;desc.lowerLegTwist=.5f;desc.armStretch=.05f;desc.legStretch=.05f;
+  imp.humanDescription=desc;imp.animationType=ModelImporterAnimationType.Human;imp.avatarSetup=ModelImporterAvatarSetup.CreateFromThisModel;imp.optimizeGameObjects=false;
+  var loops=new[]{"idle","walk","run","cast_loop","crouch","walk_back","walk_left","walk_right","run_back","run_left","run_right","cast_staff_loop"};var settings=imp.defaultClipAnimations;
+  var mask=new AvatarMask();var transforms=model.GetComponentsInChildren<Transform>(true);mask.transformCount=transforms.Length;for(int i=0;i<transforms.Length;i++){mask.SetTransformPath(i,AnimationUtility.CalculateTransformPath(transforms[i],model.transform));mask.SetTransformActive(i,true);}for(int i=0;i<(int)AvatarMaskBodyPart.LastBodyPart;i++)mask.SetHumanoidBodyPartActive((AvatarMaskBodyPart)i,true);
+  AssetDatabase.CreateAsset(mask,"Assets/ArchmageJob002/CompleteMask_"+DateTime.UtcNow.Ticks+".mask");
+  foreach(var c in settings){c.loopTime=loops.Contains(c.name);if(c.name.StartsWith("walk_")||c.name.StartsWith("run_")||c.name.StartsWith("cast_staff")){c.ConfigureClipFromMask(mask);c.maskType=ClipAnimationMaskType.CopyFromOther;c.maskSource=mask;}}
+  imp.clipAnimations=settings;imp.SaveAndReimport();
+  var avatar=AssetDatabase.LoadAllAssetsAtPath(path).OfType<Avatar>().First();r.humanoidValid=avatar.isValid;r.humanoidHuman=avatar.isHuman;
+  if(!r.humanoidValid||!r.humanoidHuman)throw new Exception("Avatar invalid");
+  var expected=new[]{"idle","walk","run","cast","cast_loop","hit","crouch","jump","die","victory","walk_back","walk_left","walk_right","run_back","run_left","run_right","cast_staff","cast_staff_loop"};
+  var clips=AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().Where(c=>!c.name.StartsWith("__preview")).ToArray();
+  foreach(var name in expected)if(!clips.Any(c=>c.name==name))throw new Exception("Missing clip "+name);
+  foreach(var cc in clips.Where(c=>c.name.StartsWith("cast_staff")))foreach(var bb in AnimationUtility.GetCurveBindings(cc).Where(b=>b.path.Contains("Staff")))Debug.Log("STAFF_BINDING "+cc.name+" "+bb.path+" "+bb.propertyName);
+  r.animations=clips.Select(c=>new ClipInfo{name=c.name,seconds=c.length,fps=c.frameRate,loop=loops.Contains(c.name)}).ToArray();
+  EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);model=AssetDatabase.LoadAssetAtPath<GameObject>(path);var root=(GameObject)PrefabUtility.InstantiatePrefab(model);
+  var anim=root.GetComponent<Animator>();anim.avatar=avatar;anim.applyRootMotion=false;
+  var main=new Material(Shader.Find("SpellDuel/CharKit/ArchmageCel"));main.mainTexture=AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/ArchmageJob002/archmage_albedo.png");main.SetTexture("_EmissionMap",AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/ArchmageJob002/archmage_emission.png"));
+  var outline=new Material(Shader.Find("Unlit/Color"));outline.color=new Color(.012f,.008f,.018f);
+  var skins=root.GetComponentsInChildren<SkinnedMeshRenderer>();var materialNames=new HashSet<string>();
+  foreach(var skin in skins){var mesh=skin.sharedMesh;bool shell=skin.name.StartsWith("OUTLINE_");if(shell)r.outlineTriangles+=mesh.triangles.Length/3;else r.bodyTriangles+=mesh.triangles.Length/3;
+   foreach(var m in skin.sharedMaterials)materialNames.Add(m.name);skin.sharedMaterials=skin.sharedMaterials.Select(m=>shell?outline:main).ToArray();
+   foreach(var weights in mesh.boneWeights){int count=0;if(weights.weight0>0)count++;if(weights.weight1>0)count++;if(weights.weight2>0)count++;if(weights.weight3>0)count++;r.maxWeights=Math.Max(r.maxWeights,count);}
+  }
+  r.materials=materialNames.Count;r.boneNames=root.GetComponentsInChildren<Transform>().Select(t=>t.name).ToArray();r.bones=skins[0].bones.Length;
+  if(r.bodyTriangles>15000||r.materials>2)throw new Exception("Budget exceeded");if(!r.boneNames.Contains("Staff")||!r.boneNames.Contains("Book"))throw new Exception("Missing props bones");
+  var light=new GameObject("Key").AddComponent<Light>();light.type=LightType.Directional;light.transform.rotation=Quaternion.Euler(30,150,0);
+  var cam=new GameObject("QA Camera").AddComponent<Camera>();cam.orthographic=true;cam.orthographicSize=1.40f;cam.transform.position=new Vector3(1.2f,1.3f,4);cam.transform.LookAt(new Vector3(0,1.1f,0));cam.backgroundColor=new Color(.25f,.28f,.34f);cam.clearFlags=CameraClearFlags.SolidColor;
+  var rt=new RenderTexture(720,900,24);rt.antiAliasing=4;cam.targetTexture=rt;
+  var controller=AnimatorController.CreateAnimatorControllerAtPath("Assets/ArchmageJob002/ArchmageQA_"+DateTime.UtcNow.Ticks+".controller");
+  foreach(var c in clips){var state=controller.layers[0].stateMachine.AddState(c.name);state.motion=c;}
+  anim.runtimeAnimatorController=controller;anim.cullingMode=AnimatorCullingMode.AlwaysAnimate;
+  var added=new[]{"walk_back","walk_left","walk_right","run_back","run_left","run_right","cast_staff","cast_staff_loop"};
+  var poses=new List<PoseInfo>();Directory.CreateDirectory(W+"frames");
+  foreach(var clip in clips.Where(c=>added.Contains(c.name)))for(int sampleIndex=0;sampleIndex<=12;sampleIndex++){anim.Rebind();anim.Update(0);anim.Play(clip.name,0,Mathf.Min(.999999f,sampleIndex/12f));anim.Update(0);Debug.Log("ARCHMAGE_POSE "+clip.name+" root="+root.transform.position+" scale="+root.transform.lossyScale+" head="+root.GetComponentsInChildren<Transform>().First(t=>t.name=="J_Bip_C_Head").position+" bounds="+skins[0].bounds);var pose=new PoseInfo{name=clip.name,normalizedTime=sampleIndex/12f,rightHand=root.GetComponentsInChildren<Transform>().First(t=>t.name=="J_Bip_R_Hand").position,leftHand=root.GetComponentsInChildren<Transform>().First(t=>t.name=="J_Bip_L_Hand").position,root=root.transform.position};var snapshots=new List<GameObject>();foreach(var skin in skins){var baked=new Mesh();skin.BakeMesh(baked,false);if(!skin.name.StartsWith("OUTLINE_")){int si=Array.FindIndex(skin.bones,t=>t.name=="Staff");var uv=skin.sharedMesh.uv;var bw=skin.sharedMesh.boneWeights;var verts=baked.vertices;for(int vi=0;vi<verts.Length;vi++)if(uv[vi].x>.9375f && uv[vi].y<.0625f && bw[vi].boneIndex0==si && bw[vi].weight0>.99f){pose.orb+=skin.transform.TransformPoint(verts[vi]);pose.orbVertices++;}}var snapshot=new GameObject("CPUPose");snapshot.transform.position=skin.transform.position;snapshot.transform.rotation=skin.transform.rotation;snapshot.transform.localScale=skin.transform.lossyScale;snapshot.AddComponent<MeshFilter>().sharedMesh=baked;snapshot.AddComponent<MeshRenderer>().sharedMaterials=skin.sharedMaterials;skin.enabled=false;snapshots.Add(snapshot);}cam.Render();RenderTexture.active=rt;var image=new Texture2D(720,900,TextureFormat.RGB24,false);image.ReadPixels(new Rect(0,0,720,900),0,0);image.Apply();File.WriteAllBytes(W+"frames/"+clip.name+"_"+sampleIndex.ToString("D2")+".png",image.EncodeToPNG());if(sampleIndex==7)File.WriteAllBytes(J+"previews/"+clip.name+".png",image.EncodeToPNG());UnityEngine.Object.DestroyImmediate(image);foreach(var snapshot in snapshots){UnityEngine.Object.DestroyImmediate(snapshot.GetComponent<MeshFilter>().sharedMesh);UnityEngine.Object.DestroyImmediate(snapshot);}foreach(var skin in skins)skin.enabled=true;if(pose.orbVertices>0)pose.orb/=pose.orbVertices;poses.Add(pose);}
+  RenderTexture.active=null;cam.targetTexture=null;rt.Release();r.poses=poses.ToArray();r.ok=true;
+ }catch(Exception ex){r.error=ex.ToString();Debug.LogException(ex);}File.WriteAllText(W+"unity-inspect.json",JsonUtility.ToJson(r,true));EditorApplication.Exit(r.ok?0:2);}
+}

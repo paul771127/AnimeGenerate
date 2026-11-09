@@ -1,0 +1,1 @@
+Animation authoring and Unity QA source snapshots. The authoring script uses the retained local job 001 .blend, whose geometry matches the committed base kit, and writes only new action data. No new third-party assets or paid services were used. These snapshots reference workstation paths and are not a standalone cloud installer.

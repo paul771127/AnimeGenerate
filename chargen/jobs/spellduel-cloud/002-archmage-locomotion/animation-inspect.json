@@ -1,0 +1,107 @@
+{
+  "newClips": [
+    {
+      "name": "walk_back",
+      "frames": 41,
+      "seconds": 1.3333333333333333,
+      "loop": true,
+      "localUnityTravel": [
+        0,
+        0,
+        -1
+      ],
+      "method": "authored two-bone IK foot cycle; upper-body gait copied from existing walk"
+    },
+    {
+      "name": "walk_left",
+      "frames": 41,
+      "seconds": 1.3333333333333333,
+      "loop": true,
+      "localUnityTravel": [
+        -1,
+        0,
+        0
+      ],
+      "method": "authored two-bone IK foot cycle; upper-body gait copied from existing walk"
+    },
+    {
+      "name": "walk_right",
+      "frames": 41,
+      "seconds": 1.3333333333333333,
+      "loop": true,
+      "localUnityTravel": [
+        1,
+        0,
+        0
+      ],
+      "method": "authored two-bone IK foot cycle; upper-body gait copied from existing walk"
+    },
+    {
+      "name": "run_back",
+      "frames": 21,
+      "seconds": 0.6666666666666666,
+      "loop": true,
+      "localUnityTravel": [
+        0,
+        0,
+        -1
+      ],
+      "method": "authored two-bone IK foot cycle; upper-body gait copied from existing run"
+    },
+    {
+      "name": "run_left",
+      "frames": 21,
+      "seconds": 0.6666666666666666,
+      "loop": true,
+      "localUnityTravel": [
+        -1,
+        0,
+        0
+      ],
+      "method": "authored two-bone IK foot cycle; upper-body gait copied from existing run"
+    },
+    {
+      "name": "run_right",
+      "frames": 21,
+      "seconds": 0.6666666666666666,
+      "loop": true,
+      "localUnityTravel": [
+        1,
+        0,
+        0
+      ],
+      "method": "authored two-bone IK foot cycle; upper-body gait copied from existing run"
+    },
+    {
+      "name": "cast_staff",
+      "frames": 25,
+      "seconds": 0.8,
+      "loop": false,
+      "method": "project-authored right-arm IK and palm attachment; staff orientation animated forward/up; idle left-arm retained"
+    },
+    {
+      "name": "cast_staff_loop",
+      "frames": 49,
+      "seconds": 1.6,
+      "loop": true,
+      "method": "project-authored right-arm IK and palm attachment; staff orientation animated forward/up; idle left-arm retained"
+    }
+  ],
+  "oldActionFingerprints": {
+    "idle": "46b3cf64fc3dd8b6550f4879ca377b6fecf8aa63bd6726eb82de6178c998cef2",
+    "walk": "a207dd3c7b9575b30a4865692d2834369daf34ddd80080d828867c1d5a9d4429",
+    "run": "0df08d5010985453cb0933435b18df5534f5697762a3e18acd4af2652013c7d6",
+    "cast": "b671559571d1d8a8085ef71abbca163029edbeed7e5bbc41f2df59032754c988",
+    "cast_loop": "c3552de292c89e969311a0ff95d369178b2540c8807204e86e1c93f231100723",
+    "hit": "cdfb8661618adf6df7f7f44ba4a8cc62af16a250e958e453964fec4f8d7a585c",
+    "crouch": "4fd8995ff10fec8131fb23b42b5e5ae742b3edbb3584342ededd563b0af6b7ac",
+    "jump": "6ef62124f1baf9087a17ec449f342e2989e6a08e0304bbc3dc0ec78c4142d590",
+    "die": "af27c597bba45bae36ca0f42846fde9d4f6226c15e497aad75ef00af8a587465",
+    "victory": "4e09096c95735a20c11aafe882fbb5f8aeca791be39fe9be56693cd6a22bb459"
+  },
+  "oldActionsUnchanged": true,
+  "geometryHashBefore": "7f0d002596f87187a75fcd37b8684354379b6ebcfb1e572bd9dfaab4245e3694",
+  "geometryHashAfter": "7f0d002596f87187a75fcd37b8684354379b6ebcfb1e572bd9dfaab4245e3694",
+  "geometryUnchanged": true,
+  "rootTransformChannelsAbsent": true
+}
