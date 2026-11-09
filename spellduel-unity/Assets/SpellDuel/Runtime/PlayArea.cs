@@ -214,7 +214,7 @@ namespace SpellDuel
         void UpdateHeight(float now)
         {
             if (IgnoreHeight) { HeightBad = false; heightOffSince = -1f; return; }
-            bool ok = HeightOk(cam.transform.position.y, Origin.position.y, out bool low);
+            bool ok = HeightOk(cam.transform.position.y, Origin.position.y - ShiftedY, out bool low);   // 扣掉衝刺／第三人稱的世界平移：比的是真實地板
             if (!ok) HeightLow = low;
             HeightBad = StepHeight(HeightBad, ok, ref heightOffSince, now);
         }
@@ -306,7 +306,7 @@ namespace SpellDuel
         void Finish(Vector3 forward)
         {
             // 原點＝場地中心（多邊形重心），+Z＝玩家完成時面向的方向
-            Origin = new Pose(Centroid(Polygon), Quaternion.LookRotation(forward, Vector3.up));
+            Origin = new Pose(Centroid(Polygon), Quaternion.LookRotation(forward, Vector3.up)); ShiftedY = 0f;
             ShowPolygon();
         }
 
@@ -317,13 +317,16 @@ namespace SpellDuel
             drawLine.positionCount = 0;
             Polygon.Clear();
             Polygon.AddRange(sessionPts);
-            Origin = origin;
+            Origin = origin; ShiftedY = 0f;
             ShowPolygon();
         }
 
         /// <summary>衝刺（SoloBattle.Dash.cs）：整個場地跟著世界平移 d（session 座標）——場地是遊戲世界的一部分，不跟著實體房間</summary>
+        /// <summary>Shift 累積的上下平移（第三人稱把世界往下降）：高度異常要跟真實地板比，不跟平移後的場地比</summary>
+        public float ShiftedY { get; private set; }
         public void Shift(Vector3 d)
         {
+            ShiftedY += d.y;
             for (int i = 0; i < Polygon.Count; i++) Polygon[i] += d;
             Origin = new Pose(Origin.position + d, Origin.rotation);
             for (int i = 0; i < outline.positionCount; i++) outline.SetPosition(i, outline.GetPosition(i) + d);
