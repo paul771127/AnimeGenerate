@@ -46,7 +46,7 @@ namespace SpellDuel
         /// <summary>蹲姿手機高度（m）；還沒校正站姿＝-1</summary>
         public float CrouchH => standH > 0f ? standH * CrouchRatio : -1f;
         /// <summary>蹲下的門檻：站姿與蹲姿高度差的 45%（夾在 18～40 公分）；還沒校正用預設值</summary>
-        float CrouchDropNow => standH > 0f ? Mathf.Clamp((standH - CrouchH) * 0.45f, 0.18f, 0.4f) : CrouchDrop;
+        float CrouchDropNow => (standH > 0f ? Mathf.Clamp((standH - CrouchH) * 0.45f, 0.18f, 0.4f) : CrouchDrop) + (tpAimNow ? 0.08f : 0f);   // 第三人稱：手機常常放低往下看，蹲下要蹲得明顯一點
         /// <summary>跳起來的門檻：站立高度的 7%（1.5m → 10.5cm）</summary>
         float JumpRiseNow => standH > 0f ? Mathf.Clamp(standH * 0.07f, 0.06f, 0.12f) : JumpRise;
 

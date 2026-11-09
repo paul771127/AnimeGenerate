@@ -2891,11 +2891,14 @@ namespace SpellDuel
             }
             if (tpAimNow && Me != null)
             {
-                // 第三人稱（使用者要求）：以準心為主——角色轉向準心對到的目標，法球從角色的法杖頂端飛向準心
-                var to = Fighter.Flat(target - Me.Feet); if (to.sqrMagnitude < 1e-4f) to = Fighter.Flat(d);
-                to.Normalize();
-                castAt = Me.Feet + Vector3.up * 1.45f * HeroScale + to * 0.65f * HeroScale;
-                heroAimDir = to;
+                // 第三人稱（使用者要求）：準心瞄哪邊，法球就從角色往那個方向射——方向＝準心的方向（跟攝影機高度、地板無關）；
+                // 準心正對著某個敵人（12° 內）才直接射向那個敵人
+                var flat = Fighter.Flat(d); if (flat.sqrMagnitude < 1e-4f) flat = Fighter.Flat(Me.forward);
+                flat.Normalize();
+                castAt = Me.Feet + Vector3.up * 1.45f * HeroScale + flat * 0.65f * HeroScale;
+                heroAimDir = flat;
+                if (bestAng < AimAssistDeg) { var toE = best - castAt; heroAimDir = Fighter.Flat(toE).sqrMagnitude > 1e-4f ? Fighter.Flat(toE).normalized : flat; return toE.normalized; }
+                return d;
             }
             var dir = target - castAt;
             return dir.sqrMagnitude > 1e-6f ? dir.normalized : d;

@@ -17,7 +17,7 @@ namespace SpellDuel
         /// 角色在手機前方幾公尺；往左偏多少（越肩：角色在畫面偏左，正前方近身的敵人從右肩旁邊看得到）；
         /// 攝影機高度＝約 2.9m（使用者要求：頭頂上方半顆頭再高 1m）→ 世界往下降「這個高度 − 手機站著的高度」
         /// </summary>
-        public const float ThirdPersonDist = 3.5f, ThirdPersonSide = 0.55f, HeroCamHeight = 3.9f, MaxLift = 3.3f;   // 使用者：至少比頭頂上方半顆頭再高 1m；之後再高 1m
+        public const float ThirdPersonDist = 3.5f, ThirdPersonSide = 0f /* 使用者：角色放在畫面正中間 */, HeroCamHeight = 3.9f, MaxLift = 3.3f;   // 使用者：至少比頭頂上方半顆頭再高 1m；之後再高 1m
         float tpLift;
         /// <summary>第三人稱主角的大小（使用者要求縮成 70%；只縮外觀，判定不變）</summary>
         public const float HeroScale = 0.49f;   // 使用者：70% 再縮 70%
@@ -57,6 +57,9 @@ namespace SpellDuel
                 tpLifted = true;   // 這一幀的位置是平移前算的，不用扣
             }
             else me.head.y -= tpLift;
+            // 第三人稱要把手機往下看角色：手機朝下時手會跟著放低，不算蹲下（使用者回報瞄前方會變成蹲下、瞄天空才站起來）
+            float pitchDown = Mathf.Max(0f, -cam.transform.forward.y);
+            me.head.y += pitchDown * TpPitchComp;
             var f = Fighter.Flat(me.forward);
             if (f.sqrMagnitude < 1e-4f) f = tpHas ? tpLastFwd : Vector3.forward;
             f.Normalize();
@@ -78,6 +81,8 @@ namespace SpellDuel
             me.head += tpOffsetW;
         }
 
+        /// <summary>手機往下看時高度的補償（手機朝正下方時補 0.35m）</summary>
+        const float TpPitchComp = 0.35f;
         /// <summary>手機離身體的距離（轉身時手機畫的弧半徑）</summary>
         const float TpArm = 0.3f;
 
