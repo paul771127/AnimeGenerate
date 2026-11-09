@@ -2898,7 +2898,9 @@ namespace SpellDuel
                 castAt = Me.Feet + Vector3.up * 1.45f * HeroScale + flat * 0.65f * HeroScale;
                 heroAimDir = flat;
                 if (bestAng < AimAssistDeg) { var toE = best - castAt; heroAimDir = Fighter.Flat(toE).sqrMagnitude > 1e-4f ? Fighter.Flat(toE).normalized : flat; return toE.normalized; }
-                return d;
+                // 鏡頭在角色後上方往下看：準心的「往下」只是為了看到角色，法球照準心的水平方向平飛（使用者回報看到攻擊動作但看不到法球：往下射一出手就打到地上）；
+                // 準心往天空抬才往上飛（打飛行的敵人）
+                return d.y > 0.05f ? (flat * Mathf.Sqrt(1f - d.y * d.y) + Vector3.up * d.y).normalized : flat;
             }
             var dir = target - castAt;
             return dir.sqrMagnitude > 1e-6f ? dir.normalized : d;

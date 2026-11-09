@@ -37,7 +37,7 @@ namespace SpellDuel
         Vector3 tpLastFwd, tpOffsetW; bool tpHas, tpLifted;
         Vector3 tpTurnMoveW;
 
-        bool TpOn => ThirdPerson && !NetMode && !Watching && battle != null && phase == Phase.Fighting && Me != null && area != null;
+        bool TpOn => ThirdPerson && !NetMode && !Watching && battle != null && phase == Phase.Fighting && Me != null && area != null && !InReady;   // 開場校正（站、蹲、手勢）做完才切第三人稱：校正要量手機真正的高度
 
         /// <summary>SyncPlayer 之後：把角色放到手機前方；轉身時世界平移，讓角色留在原地</summary>
         void ApplyThirdPerson(Fighter me)
