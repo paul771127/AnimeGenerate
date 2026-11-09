@@ -17,12 +17,38 @@ namespace SpellDuel
         /// 角色在手機前方幾公尺；往左偏多少（越肩：角色在畫面偏左，正前方近身的敵人從右肩旁邊看得到）；
         /// 攝影機高度＝約 2.9m（使用者要求：頭頂上方半顆頭再高 1m）→ 世界往下降「這個高度 − 手機站著的高度」
         /// </summary>
-        public const float ThirdPersonDist = 3.5f, ThirdPersonSide = 0.55f, HeroCamHeight = 3.9f, MaxLift = 3.3f;   // 使用者：至少比頭頂上方半顆頭再高 1m；之後再高 1m
+        public const float ThirdPersonDist = 4.5f, ThirdPersonSide = 0.55f, HeroCamHeight = 3.9f, MaxLift = 3.3f;   // 使用者：至少比頭頂上方半顆頭再高 1m；之後再高 1m
         float tpLift;
         /// <summary>第三人稱主角的大小（使用者要求縮成 70%；只縮外觀，判定不變）</summary>
         public const float HeroScale = 0.49f;   // 使用者：70% 再縮 70%
         /// <summary>第三人稱的準心在畫面高度的哪裡（從上往下的比例）：比正中間高一點，不會對到角色的頭</summary>
-        public const float TpAimY = 0.34f;
+        public const float TpAimY = 0.5f;   // 鏡頭已經往下照（TpLensShift），準心放回正中間
+        /// <summary>
+        /// 鏡頭預設微微朝下照（使用者要求）：手機拿平時畫面就像往下看。AR 的相機角度就是手機角度、轉不動，
+        /// 改用投影的「移軸」：畫面往上平移 TpLensShift（以半個畫面高為 1），正中間約往下 24°、角色在畫面下半部。
+        /// 只在第三人稱時套用；判定、準心的射線都照同一個投影算，所以瞄準一致。
+        /// </summary>
+        public const float TpLensShift = 0.7f;
+        Matrix4x4 tpProjBase, tpProjLast; bool tpProjApplied, tpPreCullHooked;
+        void TpApplyProjection()
+        {
+            if (!tpPreCullHooked) { Camera.onPreCull += TpPreCull; tpPreCullHooked = true; }
+            if (cam) TpPreCull(cam);
+        }
+        void OnDestroy() { if (tpPreCullHooked) Camera.onPreCull -= TpPreCull; }
+        void TpPreCull(Camera c)
+        {
+            if (c == null || c != cam) return;
+            var p = c.projectionMatrix;
+            if (tpProjApplied && p == tpProjLast) p = tpProjBase;   // 還是我們上次設的：拿原本的
+            else tpProjBase = p;                                     // AR 換了新的投影：當成原本的
+            if (tpAimNow)
+            {
+                var q = p; q.m12 -= TpLensShift;   // NDC y 往上移：下面的東西移到畫面中間
+                c.projectionMatrix = q; tpProjLast = q; tpProjApplied = true;
+            }
+            else if (tpProjApplied) { c.projectionMatrix = tpProjBase; tpProjApplied = false; }
+        }
         static bool tpAimNow;
         /// <summary>準心的位置（GUI 座標比例，從上往下）</summary>
         static float AimYFrac => tpAimNow ? TpAimY : 0.5f;

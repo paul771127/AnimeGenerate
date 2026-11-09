@@ -2589,6 +2589,7 @@ namespace SpellDuel
 
         void Update()
         {
+            TpApplyProjection();   // 第三人稱：鏡頭預設往下照（SoloBattle.ThirdPerson.cs）
             UpdateWeatherArt();
             GalleryTick();
             if (battle != null) battle.noNaturalRegen = dungeon != null || storyStage != null || exploreRun != null || NetMode && (netDungeon || netStory);   // 副本、故事（含故事探索）：不會自然回血（隊友端也一樣）；無盡模式照舊
