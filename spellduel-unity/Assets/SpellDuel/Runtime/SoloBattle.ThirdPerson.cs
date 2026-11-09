@@ -58,7 +58,8 @@ namespace SpellDuel
             }
             else me.head.y -= tpLift;
             // 第三人稱要把手機往下看角色：手機朝下時手會跟著放低，不算蹲下（使用者回報瞄前方會變成蹲下、瞄天空才站起來）
-            float pitchDown = Mathf.Max(0f, -cam.transform.forward.y);
+            // 開場校正（站／蹲）時不補：校正要量到真正的高度（使用者回報蹲下抓不到、要傾斜鏡頭才抓得到）
+            float pitchDown = InReady ? 0f : Mathf.Max(0f, -cam.transform.forward.y);
             me.head.y += pitchDown * TpPitchComp;
             var f = Fighter.Flat(me.forward);
             if (f.sqrMagnitude < 1e-4f) f = tpHas ? tpLastFwd : Vector3.forward;
